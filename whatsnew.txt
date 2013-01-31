@@ -1,3 +1,46 @@
+Cycle Action editor updates
++Added instruction CONSOLE to run ReaConsole commands, see example and details http://forum.cockos.com/showpost.php?p=1115796&postcount=1179|here|
+ Reminder: the syntax of ReaConsole commands is detailed http://www.standingwaterstudios.com/reaconsole.php|here|
++Better error/warning messages
++Improved toggle states for cycle actions using instructions IF and IF NOT
+
+ReaConsole updates
++Create actions made of console commands directly in the Cycle Action editor, see above
+ In other words, to create your own console actions, <b>you do not need to create/tweak a text file anymore</b> (i.e. reaconsole_customcommands.txt)
+ => better action names, for example: a custom "Select bass tracks" instead of "SWS: Run console command: s*bass*"
+ => much simpler configuration (no file edition/re-start)
+ => benefit from other Cycle Actions' features: toggle state reporting, etc..
+ => indirectly fixes little issues on OSX
+ Note: although it is deprecated now, the reaconsole_customcommands.txt file still parsed for ascendant compatibility, of course!
++<b>New command 'x' to add track FX</b>, see example and details http://forum.cockos.com/showpost.php?p=1115796&postcount=1179|here|
++<b>New command '/' to send local OSC messages</b> (as if they were sent by a device on the network), see example and details http://forum.cockos.com/showpost.php?p=1115796&postcount=1179|here|
+ Longer commands.. but this opens a bunch of doors! Receives, sends, FX parameters, etc..
++Issue 484: the console window is now modeless, dockable, resizable, etc..
+ => Inverted key shortcuts:
+ - The ENTER key runs a command but keeps the console window open
+ - CTRL+ENTER (CMD+ENTER on OSX) will close the console window after running a command
++Fixed a few console commands' undo points that were ignored
+
+Ported more features to OSX:
++<b>Theme helpers for OSX</b> (actions referenced in the http://www.houseofwhitetie.com/reaper/walter_themers_guide.pdf|WALTER user manual|):
+ - SWS/S&M: Show theme helper (all tracks)
+ - SWS/S&M: Show theme helper (selected tracks)
++More toolbar auto-refresh actions:
+ - SWS/S&M: Toolbar - Toggle offscreen item selection (top)
+ - SWS/S&M: Toolbar - Toggle offscreen item selection (bottom)
++More CMD+A support in text fields (select all)
+
+Issue 524: new actions to detect and unselect offscreen items (just to unify the 4 existing ones "Toggle offscreen item selection (left/right/top/bottom)")
++SWS/S&M: Unselect offscreen items
++SWS/S&M: Toolbar - Toggle offscreen item selection
+ This one deselects offscreen items and reselects them on toggle
++Reminder: toolbar buttons of those actions automatically light-up when at least one selected item is offscreen
+ (the option "Main menu > Extensions > SWS options > Auto-refresh toolbars" must be enabled)
+
+Other:
++Cue buss dialog box: key shorcuts pass through to the main window
++Fixed potential issues with relative paths like "./stuff.rpp"
+
 !v2.3.0 #12 (January 30, 2013)
 Automatic check for updates:
 +Option can be found in REAPER > Extensions > About SWS Extensions
@@ -31,11 +74,10 @@ Tempo improvements:
    => Big thanks to user http://forum.cockos.com/member.php?u=22191|G-Sun| for all the wiki work, suggestions and testing
 
 Added actions:
-+SWS/S&M: Set project startup action
-+SWS/S&M: Clear project startup action
++Issue 544: SWS/S&M: Set project startup action
++Issue 544: SWS/S&M: Clear project startup action
 +SWS/BR: Check for new SWS version...
 
-Other:
 Fix for OSC & MIDI CC relative "mode 3" learn
 
 !v2.3.0 #11 (January 15, 2013)
@@ -49,9 +91,9 @@ Live Configs: support OSC and rotary controllers
 +Support all types of MIDI CC controllers (like endless rotary encoders)
  - In addition to the "Absolute" mode, all "Relative" modes of the Learn dialog box are now supported too
  - Acceleration is also supported
-+Support OSC learn (OSC messages with float parameters)
++Support OSC learn (OSC message with float parameter)
  - Example: say you have learned the action "SWS/S&M: Apply Live Config 3 (MIDI CC/OSC only)" with the OSC message "/blabla",
-   sending "/blabla/f/107" will switch to the instrument/effect #107 of the Live Config #3
+   sending "/blabla/f/107.0" will switch to the instrument/effect #107 of the Live Config #3
 
 Added actions (http://forum.cockos.com/showthread.php?p=984786#post984786|customizable in the S&M.ini file|):
 +SWS/S&M: Bypass all FX (except n) for selected tracks - where 'n' is in [1; 8] by default
@@ -64,11 +106,11 @@ The following new actions are a bit specific, so they are <b>hidden by default</
 +SWS/S&M: Dummy toggle n
  - These actions just report a toggle state
 +SWS/S&M: Exclusive toggle n
- - These actions just report a toggle state, only one of these is ON at a time (all others are automatically turned OFF)
+ - These actions just report a toggle state, only one of them is ON at a time (all others are automatically turned OFF)
 
 ReaScript:
 +Added function SNM_AddTCPFXParm()
-+Hardened SNM_TieResourceSlotActions()
++Hardened http://forum.cockos.com/showpost.php?p=1099358&postcount=1162|SNM_TieResourceSlotActions()|
 
 Auto color/icon:
 +Fixed color edition in place in the list view
@@ -136,7 +178,7 @@ Region Playlist
 
 Cycle actions
 +<b>Added basic instructions: IF, IF NOT, and LOOP n</b>
- This is mainly to ensure consistent toggle states for cycle actions (see details http://forum.cockos.com/showpost.php?p=1090262&postcount=1136|here|) but this also introduces conditional macros
+ This is mainly to ensure consistent toggle states for cycle actions but this also introduces conditional macros, see details and examples http://forum.cockos.com/showpost.php?p=1090262&postcount=1136|here|
  This is a "basic" support because you cannot yet have nested LOOPs or nested IFs. However you can have an IF in a LOOP or a LOOP in an IF.
 +Toggle cycle actions now report real toggle states (i.e. the state of the first relevant action)
 +Cycle action editor
@@ -148,13 +190,15 @@ Export functions to ReaScript (BETA)
 +Fixed possible FNG function crash
 +Added functions:
  - SNM_RemoveReceivesFrom()
- - SNM_SelectResourceBookmark() - untested!
- - SNM_TieResourceSlotActions() - untested!
+ - SNM_SelectResourceBookmark()
+ - http://forum.cockos.com/showpost.php?p=1099358&postcount=1162|SNM_TieResourceSlotActions()|
 +Updated API, updated SNM_AddReceive() to obey preferences
 
 Added actions
-+Added "go to" marker/region actions (just meant to target up to 99 regions/markers)
- The number of actions is http://forum.cockos.com/showthread.php?p=984786#post984786|customizable in the S&M.ini file|, 0 by default (i.e. <b>hidden!</b>)
++Added "go to" marker/region actions 
+ REAPER already proposes 30 goto actions for markers and 40 for regions, so
+ those new S&M actions are are just meant to target up to 99 regions/markers => they are <b>hidden by default!</b>
+ This number of actions is http://forum.cockos.com/showthread.php?p=984786#post984786|customizable in the S&M.ini file|
  Note: comes in handy with the new Region Playlist "re-synchronization" feature, see above
  - SWS/S&M: Go to marker n (obeys smooth seek)
  - SWS/S&M: Go to region n (obeys smooth seek)
@@ -237,7 +281,7 @@ Fixes
 +Issue 519: fixed "SWS: Hide docker" and "SWS: Show docker" (broken since REAPER v4 and multi-dockers)
 +Fixed a possible crash in Convert project markers to tempo markers dialog
 
-House cleaning, renamed action (cryptic names)
+House cleaning, renamed cryptic "auto-refreshed" toolbar actions:
 +SWS/S&M: Toolbar left item selection toggle -> SWS/S&M: Toolbar - Toggle offscreen item selection (left)
 +SWS/S&M: Toolbar right item selection toggle -> SWS/S&M: Toolbar - Toggle offscreen item selection (right)
 +SWS/S&M: Toolbar top item selection toggle -> SWS/S&M: Toolbar - Toggle offscreen item selection (top)

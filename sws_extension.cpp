@@ -458,6 +458,7 @@ extern "C"
 			MarkerListExit();
 			AutoColorExit();
 			ProjectListExit();
+			ConsoleExit();
 			MiscExit();
 			PadreExit();
 			SNM_Exit();
@@ -702,6 +703,7 @@ extern "C"
 		IMPAPI(TimeMap2_timeToBeats);
 		IMPAPI(TimeMap2_timeToQN);
 		IMPAPI(TrackFX_FormatParamValue);
+		IMPAPI(TrackFX_GetByName);
 		IMPAPI(TrackFX_GetChainVisible);
 		IMPAPI(TrackFX_GetEnabled);
 		IMPAPI(TrackFX_GetFloatingWindow);

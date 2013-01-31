@@ -120,7 +120,6 @@ void SNM_NotesHelpWnd::OnInitDlg()
 	m_resize.init_item(IDC_EDIT, 0.0, 0.0, 1.0, 1.0);
 	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_EDIT), GWLP_USERDATA, 0xdeadf00b);
 
-	// WDL GUI init
 	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
 	m_parentVwnd.SetRealParent(m_hwnd);
 
@@ -307,22 +306,34 @@ HMENU SNM_NotesHelpWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 // -1: catch and send to the control, 
 //  0: pass-thru to main window (then -666 in SWS_DockWnd::keyHandler())
 //  1: eat
-int SNM_NotesHelpWnd::OnKey(MSG* msg, int iKeyState) 
+int SNM_NotesHelpWnd::OnKey(MSG* _msg, int _iKeyState)
 {
-	if (GetDlgItem(m_hwnd, IDC_EDIT) == msg->hwnd)
+	HWND h = GetDlgItem(m_hwnd, IDC_EDIT);
+/*JFB not needed: IDC_EDIT is the single control of this window..
+#ifdef _WIN32
+	if (_msg->hwnd == h)
+#else
+	if (GetFocus() == h)
+#endif
+*/
 	{
-		if (g_locked) {
-			msg->hwnd = m_hwnd; // redirect to main window
+		if (g_locked)
+		{
+			_msg->hwnd = m_hwnd; // redirect to main window
 			return 0;
 		}
-		else if ((msg->message == WM_KEYDOWN || msg->message == WM_CHAR) && msg->wParam == VK_RETURN)
+		else if ((_msg->message == WM_KEYDOWN || _msg->message == WM_CHAR) &&
+				 _msg->wParam == VK_RETURN)
+		{
 			return -1; // send the return key to the edit control
-#ifdef _WIN32
-		else if ((msg->message == WM_KEYDOWN || msg->message == WM_CHAR) && msg->wParam == 'A' && iKeyState == LVKF_CONTROL) {
-			SendMessage(msg->hwnd, EM_SETSEL, 0, -1); // ctrl+A => select all
+		}
+		else if ((_msg->message == WM_KEYDOWN || _msg->message == WM_CHAR) &&
+				 _msg->wParam == 'A' && _iKeyState == LVKF_CONTROL)
+		{
+			SetFocus(_msg->hwnd);
+			SendMessage(_msg->hwnd, EM_SETSEL, 0, -1); // ctrl+A => select all
 			return 1;
 		}
-#endif
 	}
 	return 0; 
 }
@@ -513,7 +524,7 @@ bool SNM_NotesHelpWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int
 void SNM_NotesHelpWnd::ToggleLock()
 {
 	g_locked = !g_locked;
-	RefreshToolbar(NamedCommandLookup("_S&M_ACTIONHELPTGLOCK"));
+	RefreshToolbar(SWSGetCommandID(ToggleNotesHelpLock));
 	if (g_notesViewType == SNM_NOTES_REGION_SUBTITLES || g_notesViewType == SNM_NOTES_REGION_NAME)
 		Update(true); // play vs edit cursor when unlocking
 	else

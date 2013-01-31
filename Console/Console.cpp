@@ -1,7 +1,7 @@
 /******************************************************************************
 / Console.cpp
 /
-/ Copyright (c) 2011 Tim Payne (SWS)
+/ Copyright (c) 2011 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -32,13 +32,18 @@
 /
 ******************************************************************************/
 
+//JFB mod: added command x (add fx), / (osc) and made the window modeless/dockable
+//JFB TODO: ! = insert marker instead of insert *maker action* ? (so insert marker action still prossible but would be "!!cmdId")
+
+
 #include "stdafx.h"
 #include "../reaper/localize.h"
 #include "../Freeze/Freeze.h"
-#include "../SnM/SnM_Dlg.h"
+#include "../SnM/SnM.h"
 #include "Console.h"
 
 // Globals, g_foo
+static ReaConsoleWnd* g_pConsoleWnd = NULL;
 static WDL_TypedBuf<int> g_selTracks;
 static char g_cLastKey = 0;
 static DWORD g_dwLastKeyMsg = 0;
@@ -88,17 +93,19 @@ static console_COMMAND_T g_commands[NUM_COMMANDS] =
 	{ FX_DISABLE,     '-', 'f',  0, "Disable FX on ",        0 },
 	{ FX_TOGGLE,        0, 'f',  0, "Toggle FX enable on ",  0 },
 	{ FX_EXCLUSIVE,     0, 'F',  0, "Enable FX on only ",    0 },
+	{ FX_ADD,           0, 'x',  9, "Add FX on ",            " %s" },
 	{ VOLUME_SET,       0, 'V',  1, "Set volume on ",        " %s dB" },
 	{ VOLUME_TRIM,      0, 'v',  1, "Trim volume on ",       " %s dB" },
-	{ PAN_SET,          0, 'P',  1, "Set pan on  ",          " %s%" },
-	{ PAN_TRIM,         0, 'p',  1, "Trim pan on  ",         " %s%" },
+	{ PAN_SET,          0, 'P',  1, "Set pan on ",           " %s%" },
+	{ PAN_TRIM,         0, 'p',  1, "Trim pan on ",          " %s%" },
 	{ NAME_SET,         0, 'n',  9, "Name ",                 " to %s" },
 	{ NAME_PREFIX,      0, 'b',  9, "Name ",                 " with prefix %s" },
 	{ NAME_SUFFIX,      0, 'z',  9, "Name ",                 " with suffix %s" },
 	{ CHANNELS_SET,     0, 'l',  1, "Set # channels on ",    " to %s" },
 	{ INPUT_SET,        0, 'i',  1, "Set input on ",         " to %s" },
-	{ COLOR_SET,		0, 'c',  9, "Change color on ",		 " to %s" },
-	{ MARKER_ADD,		0, '!', 25, "Insert action marker ", "!%s" },
+	{ COLOR_SET,        0, 'c',  9, "Change color on ",      " to %s" },
+	{ MARKER_ADD,       0, '!', 25, "Insert action marker ", "!%s" },
+	{ OSC_CMD,          0, '/', 25, "Send local OSC message",0 },
 	{ HELP_CMD,         0, '?', -1, "http://www.standingwaterstudios.com/reaconsole.php", 0 },
 	{ UNKNOWN_COMMAND,  0,   0, -1, "Enter a command...",    0 },
 };
@@ -110,7 +117,7 @@ CONSOLE_COMMAND Tokenize(char* strCommand, char** trackid, char** args)
 {
 	*trackid = *args = "";
 	char* p;
-	CONSOLE_COMMAND command;
+	CONSOLE_COMMAND command = UNKNOWN_COMMAND;
 	int index = 0;
 	int i;
 	if (!strCommand || !strCommand[0])
@@ -130,7 +137,7 @@ CONSOLE_COMMAND Tokenize(char* strCommand, char** trackid, char** args)
 	if (i == NUM_COMMANDS)
 		return UNKNOWN_COMMAND;
 
-    *trackid = &strCommand[index+1];
+	*trackid = &strCommand[index+1];
 
 	if ((g_commands[command].iNumArgs & ARGS_MASK) <= 0)
 		return command;
@@ -393,10 +400,17 @@ void ProcessCommand(CONSOLE_COMMAND command, const char* args)
 		{
 		case MARKER_ADD:
 			{
-				char markerStr[256];
-				_snprintf(markerStr, 64, "!%s", args);
+				char markerStr[64];
+				_snprintf(markerStr, sizeof(markerStr), "!%s", args);
 				AddProjectMarker(NULL, false, GetCursorPosition(), 0.0, markerStr, -1);
 				UpdateTimeline();
+				break;
+			}
+		case OSC_CMD:
+			{
+				char oscStr[256];
+				_snprintf(oscStr, sizeof(oscStr), "/%s", args);
+				SNM_SendLocalOscMessage(oscStr);
 				break;
 			}
 		}
@@ -471,6 +485,9 @@ void ProcessCommand(CONSOLE_COMMAND command, const char* args)
 				i = *((int*)GetSetMediaTrackInfo(pMt, "I_FXEN", NULL)) ? 0 : 1;
 				GetSetMediaTrackInfo(pMt, "I_FXEN", &i);
 				break;
+			case FX_ADD:
+				TrackFX_GetByName(pMt, args, true);
+				break;
 			case VOLUME_SET:
 				d = DB2VAL(dVal);
 				GetSetMediaTrackInfo(pMt, "D_VOL", &d);
@@ -491,7 +508,6 @@ void ProcessCommand(CONSOLE_COMMAND command, const char* args)
 					d = 1.0;
 				else if (d < -1.0)
 					d = -1.0;
-					
 				GetSetMediaTrackInfo(pMt, "D_PAN", &d);
 				break;
 			case NAME_SET:
@@ -560,7 +576,6 @@ void ProcessCommand(CONSOLE_COMMAND command, const char* args)
 				else
 				{
 					int index = (int)atol(args) - 1;
-					
 					if (index >= 0 && index < 16)
 					{
 						char colstr[3] = { 0, 0, 0 };
@@ -619,12 +634,14 @@ void ProcessCommand(CONSOLE_COMMAND command, const char* args)
 const char* StatusString(CONSOLE_COMMAND command, const char* args)
 {
 	static char status[512];
+
 	if (command >= NUM_COMMANDS)
 		return __LOCALIZE("Internal error, contact SWS","sws_DLG_100");
 
 	int n = sprintf(status, __localizeFunc(g_commands[command].cHelpPrefix, "sws_DLG_100", 0));
+
 	// add space if localized (trailing ' ' cannot be retrieved from LangPack files)
-	if (n>0 && n<(sizeof(status)-1) && status[n] != ' ')
+	if (IsLocalized() && n>0 && n<(sizeof(status)-1) && status[n-1] != ' ')
 	{
 		strcat(status, " ");
 		n++;
@@ -657,9 +674,9 @@ const char* StatusString(CONSOLE_COMMAND command, const char* args)
 						// Really grunge string overflow check.  Can't see the status string past two lines anyway.
 						return status;
 					if (cName && cName[0])
-						n += sprintf(status + n, "[%d]%s, ", i+1, cName);
+						n += sprintf(status + n, "[%d] %s, ", i+1, cName);
 					else
-						n += sprintf(status + n, "%d, ", i+1);
+						n += sprintf(status + n, "[%d], ", i+1);
 				}
 
 			if (n == previous_n)
@@ -678,115 +695,69 @@ const char* StatusString(CONSOLE_COMMAND command, const char* args)
 	return status;
 }
 
-INT_PTR WINAPI doConsole(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-	static char strCommand[100] = "";
-	static char* pTrackId = strCommand;
-	static char* pArgs = strCommand;
-	static CONSOLE_COMMAND command = UNKNOWN_COMMAND;
-
-	if (INT_PTR r = SNM_HookThemeColorsMessage(hwndDlg, uMsg, wParam, lParam))
-		return r;
-
-	switch (uMsg)
-	{
-		case WM_INITDIALOG:
-			if (g_cLastKey)
-			{
-				strCommand[0] = g_cLastKey;
-				strCommand[1] = 0;
-				SetDlgItemText(hwndDlg, IDC_COMMAND, strCommand);
-				// Move the cursor to the end 
-				HWND hwndCommand = GetDlgItem(hwndDlg, IDC_COMMAND);  
-				SetWindowLongPtr(hwndCommand, GWLP_USERDATA, 0xdeadf00b);
-				SetFocus(hwndCommand);
-				SendMessage(hwndCommand, EM_SETSEL, 1, 2);
-				command = Tokenize(strCommand, &pTrackId, &pArgs);
-				ParseTrackId(pTrackId);
-				SetDlgItemText(hwndDlg, IDC_STATUS, StatusString(command, pArgs));
-			}
-			else
-				SetDlgItemText(hwndDlg, IDC_STATUS, StatusString(UNKNOWN_COMMAND, pArgs));
-			RestoreWindowPos(hwndDlg, CONSOLE_WINDOWPOS_KEY, false);
-			return 0;
-		case WM_COMMAND:
-			//if you need to debug commands, you probably want to ignore the focus stuff.  Break a few lines down.
-			switch (LOWORD(wParam))
-			{
-			case IDC_COMMAND:
-				if (HIWORD(wParam) == EN_CHANGE)
-				{
-					GetDlgItemText(hwndDlg, IDC_COMMAND, strCommand, 100);
-					command = Tokenize(strCommand, &pTrackId, &pArgs);
-					ParseTrackId(pTrackId);
-					SetDlgItemText(hwndDlg, IDC_STATUS, StatusString(command, pArgs));
-				}
-#ifndef _WIN32
-				if (HIWORD(wParam) != 0)
-#endif
-				break;
-			case IDOK:
-				ProcessCommand(command, pArgs);
-				char cUndo[256];
-				_snprintf(cUndo, 256, __LOCALIZE("ReaConsole command %s","sws_undo"), strCommand);
-				Undo_OnStateChangeEx(cUndo, UNDO_STATE_TRACKCFG, -1);
-				// Don't close the window if ctrl-enter was pressed
-				if (GetAsyncKeyState(VK_CONTROL) & 0x8000)
-				{
-					HWND hwndCommand = GetDlgItem(hwndDlg, IDC_COMMAND);  
-					SendMessage(hwndCommand, EM_SETSEL, 0, -1);
-					break;
-				}
-				// fall through!
-			case IDCANCEL:
-				SaveWindowPos(hwndDlg, CONSOLE_WINDOWPOS_KEY);
-				EndDialog(hwndDlg,0);
-				break;
-			}
-			return 0;
-		case WM_DESTROY:
-			// We're done
-			return 0;
-	}
-	return 0;
-}
-
-void ShowConsole()
-{
-	DialogBox(g_hInst,MAKEINTRESOURCE(IDD_CONSOLE),g_hwndParent,doConsole);
-}
-
 void ConsoleCommand(COMMAND_T* ct)
 {
-	int i = (int)ct->user;
-	g_cLastKey = i;
-	ShowConsole();
+	g_cLastKey = (int)ct->user;
+	if (g_pConsoleWnd)
+		g_pConsoleWnd->ShowConsole();
 }
 
 void BringKeyCommand(COMMAND_T* = NULL)
 {
 	if (GetTickCount() - g_dwLastKeyMsg > 10)
-		g_cLastKey = 0;
-	ShowConsole();
+		g_cLastKey = '\0';
+	if (g_pConsoleWnd)
+		g_pConsoleWnd->ShowConsole();
 }
 
-void RunCommand(COMMAND_T* ct)
+// primitive (no undo point)
+void RunConsoleCommand(const char* cmd)
 {
-
-	char strCommand[100] = "";
-	strncpy(strCommand, (char*)ct->user, 100);
+	char strCommand[128] = "";
+	lstrcpyn(strCommand, cmd, sizeof(strCommand));
 	char* pTrackId = strCommand;
 	char* pArgs = strCommand;
 	CONSOLE_COMMAND command = Tokenize(strCommand, &pTrackId, &pArgs);
 	ParseTrackId(pTrackId);
 	ProcessCommand(command, pArgs);
-	char cUndo[256];
-	_snprintf(cUndo, 256, __LOCALIZE("ReaConsole custom command %s","sws_undo"), strCommand);
-	Undo_OnStateChangeEx(cUndo, UNDO_STATE_TRACKCFG, -1);
-
 }
 
+void RunConsoleCommand(COMMAND_T* ct)
+{
+	const char* strCommand = (const char*)ct->user;
+	RunConsoleCommand(strCommand);
+
+	char cUndo[256];
+	_snprintf(cUndo, sizeof(cUndo), __LOCALIZE("ReaConsole custom command %s","sws_undo"), strCommand);
+	Undo_OnStateChangeEx(cUndo, UNDO_STATE_ALL, -1); // UNDO_STATE_TRACKCFG is not enough (marker, osc, ..)
+}
+
+bool IsConsoleDisplayed(COMMAND_T*) {
+	return (g_pConsoleWnd && g_pConsoleWnd->IsValidWindow());
+}
+
+void EditCustomCommands(COMMAND_T*)
+{
+#ifdef _WIN32
+	// Open the custom commands file in notepad
+	char cArg[256];
+	strncpy(cArg, get_ini_file(), 256);
+	char* pC = strrchr(cArg, PATH_SLASH_CHAR);
+	if (!pC)
+		return;
+	strcpy(pC+1, "reaconsole_customcommands.txt");
+	WinSpawnNotepad(cArg);
+#endif
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+
 // This is really just a hack to find out what key the user hit 
+/*JFB oh yeah.. haha!
+  I keep this code because 1) it works fine 2) replacing it with the new ReaConsoleWnd::OnKey()
+  would look better but it would break the feature "SWS: Open console and copy keystroke"
+*/
 static int translateAccel(MSG *msg, accelerator_register_t *ctx)
 {
 	static bool bShift = false;
@@ -804,55 +775,48 @@ static int translateAccel(MSG *msg, accelerator_register_t *ctx)
 		else if (bShift && msg->wParam == '1')
 			g_cLastKey = '!';
 	}
-
 	return 0;
-}
-
-void EditCustomCommands(COMMAND_T* = NULL)
-{
-#ifdef _WIN32
-	// Open the custom commands file in notepad
-	char cArg[256];
-	strncpy(cArg, get_ini_file(), 256);
-	char* pC = strrchr(cArg, PATH_SLASH_CHAR);
-	if (!pC)
-		return;
-	strcpy(pC+1, "reaconsole_customcommands.txt");
-	WinSpawnNotepad(cArg);
-#endif
 }
 
 static accelerator_register_t g_ar = { translateAccel, TRUE, NULL };
 
+
+///////////////////////////////////////////////////////////////////////////////
+
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] = 
 {
-	{ { { 0, 'C', 0 }, "SWS: Open console" },								"SWSCONSOLE",       ConsoleCommand,  "SWS ReaConsole", 0 },
+	{ { { 0, 'C', 0 }, "SWS: Open console" },								"SWSCONSOLE",       ConsoleCommand,  "SWS ReaConsole", 0, IsConsoleDisplayed },
 	{ { DEFACCEL,   "SWS: Open console and copy keystroke" },				"SWSCONSOLE2",      BringKeyCommand, NULL, },
-	{ { DEFACCEL,   "SWS: Open console with 'S' to select track(s)" },		"SWSCONSOLEEXSEL",  ConsoleCommand,  NULL, 'S' },
-	{ { DEFACCEL,   "SWS: Open console with 'n' to name track(s)" },		"SWSCONSOLENAME",   ConsoleCommand,  NULL, 'n' },
-	{ { DEFACCEL,   "SWS: Open console with 'o' to solo track(s)" },		"SWSCONSOLESOLO",   ConsoleCommand,  NULL, 'o' },
-	{ { DEFACCEL,   "SWS: Open console with 'a' to arm track(s)" },			"SWSCONSOLEARM",    ConsoleCommand,  NULL, 'a' },
-	{ { DEFACCEL,   "SWS: Open console with 'm' to mute track(s)" },		"SWSCONSOLEMUTE",   ConsoleCommand,  NULL, 'm' },
-	{ { DEFACCEL,   "SWS: Open console with 'f' to toggle FX enable" },		"SWSCONSOLEFX",     ConsoleCommand,  NULL, 'f' },
-	{ { DEFACCEL,   "SWS: Open console with 'i' to set track(s) input" },	"SWSCONSOLEINPUT",  ConsoleCommand,  NULL, 'i' },
-	{ { DEFACCEL,   "SWS: Open console with 'b' to prefix track(s)" },		"SWSCONSOLEPREFIX", ConsoleCommand,  NULL, 'b' },
-	{ { DEFACCEL,   "SWS: Open console with 'z' to suffix track(s)" },		"SWSCONSOLESUFFIX", ConsoleCommand,  NULL, 'z' },
-	{ { DEFACCEL,   "SWS: Open console with 'c' to color track(s)" },		"SWSCONSOLECOLOR",  ConsoleCommand,  NULL, 'c' },
-	{ { DEFACCEL,   "SWS: Open console with 'h' to flip phase on track(s)" },"SWSCONSOLEPHASE",  ConsoleCommand,  NULL, 'h' },
-	{ { DEFACCEL,   "SWS: Open console with 'V' to set track(s) volume" },	"SWSCONSOLEVOL",    ConsoleCommand,  NULL, 'V' },
-	{ { DEFACCEL,   "SWS: Open console with 'P' to set track(s) pan" },		"SWSCONSOLEPAN",    ConsoleCommand,  NULL, 'P' },
-	{ { DEFACCEL,   "SWS: Open console with 'v' to trim volume on track(s)" },"SWSCONSOLEVOLT",   ConsoleCommand,  NULL, 'v' },
-	{ { DEFACCEL,   "SWS: Open console with 'p' to trim pan on track(s)" },	"SWSCONSOLEPANT",   ConsoleCommand,  NULL, 'p' },
-	{ { DEFACCEL,   "SWS: Open console with 'l' to set track(s) # channels" },"SWSCONSOLECHAN",   ConsoleCommand,  NULL, 'l' },
-	{ { DEFACCEL,   "SWS: Open console with '!' to add action marker" },	"SWSCONSOLEMARKER", ConsoleCommand,  NULL, '!' },
+	{ { DEFACCEL,   "SWS: Open console with 'S' to select track(s)" },		"SWSCONSOLEEXSEL",  ConsoleCommand,  NULL,   'S' },
+	{ { DEFACCEL,   "SWS: Open console with 'n' to name track(s)" },		"SWSCONSOLENAME",   ConsoleCommand,  NULL,   'n' },
+	{ { DEFACCEL,   "SWS: Open console with 'o' to solo track(s)" },		"SWSCONSOLESOLO",   ConsoleCommand,  NULL,   'o' },
+	{ { DEFACCEL,   "SWS: Open console with 'a' to arm track(s)" },			"SWSCONSOLEARM",    ConsoleCommand,  NULL,   'a' },
+	{ { DEFACCEL,   "SWS: Open console with 'm' to mute track(s)" },		"SWSCONSOLEMUTE",   ConsoleCommand,  NULL,   'm' },
+	{ { DEFACCEL,   "SWS: Open console with 'f' to toggle FX enable" },		"SWSCONSOLEFX",     ConsoleCommand,  NULL,   'f' },
+	{ { DEFACCEL,   "SWS: Open console with 'i' to set track(s) input" },	"SWSCONSOLEINPUT",  ConsoleCommand,  NULL,   'i' },
+	{ { DEFACCEL,   "SWS: Open console with 'b' to prefix track(s)" },		"SWSCONSOLEPREFIX", ConsoleCommand,  NULL,   'b' },
+	{ { DEFACCEL,   "SWS: Open console with 'z' to suffix track(s)" },		"SWSCONSOLESUFFIX", ConsoleCommand,  NULL,   'z' },
+	{ { DEFACCEL,   "SWS: Open console with 'c' to color track(s)" },		"SWSCONSOLECOLOR",  ConsoleCommand,  NULL,   'c' },
+	{ { DEFACCEL,   "SWS: Open console with 'h' to flip phase on track(s)" },"SWSCONSOLEPHASE", ConsoleCommand,  NULL,   'h' },
+	{ { DEFACCEL,   "SWS: Open console with 'V' to set track(s) volume" },	"SWSCONSOLEVOL",    ConsoleCommand,  NULL,   'V' },
+	{ { DEFACCEL,   "SWS: Open console with 'P' to set track(s) pan" },		"SWSCONSOLEPAN",    ConsoleCommand,  NULL,   'P' },
+	{ { DEFACCEL,   "SWS: Open console with 'v' to trim volume on track(s)" },"SWSCONSOLEVOLT", ConsoleCommand,  NULL,   'v' },
+	{ { DEFACCEL,   "SWS: Open console with 'p' to trim pan on track(s)" },	"SWSCONSOLEPANT",   ConsoleCommand,  NULL,   'p' },
+	{ { DEFACCEL,   "SWS: Open console with 'l' to set track(s) # channels" },"SWSCONSOLECHAN", ConsoleCommand,  NULL,   'l' },
+	{ { DEFACCEL,   "SWS: Open console with '!' to add action marker" },	"SWSCONSOLEMARKER", ConsoleCommand,  NULL,   '!' },
+	{ { DEFACCEL,   "SWS/S&M: Open console with 'x' to add track FX" },		"S&M_CONSOLE_ADDFX",  ConsoleCommand,  NULL, 'x' },
+	{ { DEFACCEL,   "SWS/S&M: Open console with '/' to send a local OSC message track FX" }, "S&M_CONSOLE_OSC",  ConsoleCommand,  NULL, '/' },
 #ifdef _WIN32
-	{ { DEFACCEL,   "SWS: Edit console custom commands (restart needed after save)" }, "SWSCONSOLEEDITCUST",  EditCustomCommands,  NULL, },
+	{ { DEFACCEL,   "SWS: [Deprecated, use the Cycle Action editor instead] Edit console custom commands (restart needed after save)" }, "SWSCONSOLEEDITCUST",  EditCustomCommands,  NULL, },
 #endif
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 //!WANT_LOCALIZE_1ST_STRING_END
+
+
+///////////////////////////////////////////////////////////////////////////////
 
 int ConsoleInit()
 {
@@ -884,11 +848,132 @@ int ConsoleInit()
 				char cDesc[BUFFER_SIZE];
 				_snprintf(cID, BUFFER_SIZE, "SWSCONSOLE_CUST%d", i++);
 				_snprintf(cDesc, BUFFER_SIZE, __LOCALIZE_VERFMT("SWS: Run console command: %s","sws_actions"), cBuf);
-				SWSRegisterCommandExt(RunCommand, cID, cDesc, (INT_PTR)_strdup(cBuf), false);
+				SWSRegisterCommandExt(RunConsoleCommand, cID, cDesc, (INT_PTR)_strdup(cBuf), false);
 			}
 		}
 		fclose(f);
 	}
 
+	g_pConsoleWnd = new ReaConsoleWnd();
+	if (!g_pConsoleWnd)
+		return 0;
+
 	return 1;
+}
+
+void ConsoleExit() {
+	DELETE_NULL(g_pConsoleWnd);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// ReaConsoleWnd
+///////////////////////////////////////////////////////////////////////////////
+
+ReaConsoleWnd::ReaConsoleWnd()
+	: SWS_DockWnd(IDD_CONSOLE, "ReaConsole", "ReaConsole", SWSGetCommandID(ConsoleCommand))
+{
+	*m_strCmd = '\0';
+	m_pTrackId = m_strCmd;
+	m_pArgs = m_strCmd;
+	m_cmd = UNKNOWN_COMMAND;
+
+	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
+	Init();
+}
+
+void ReaConsoleWnd::OnInitDlg()
+{
+	m_resize.init_item(IDC_COMMAND, 0.0, 0.0, 1.0, 0.0);
+	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_COMMAND), GWLP_USERDATA, 0xdeadf00b);
+	Update();
+}
+
+int ReaConsoleWnd::OnKey(MSG* msg, int iKeyState) 
+{
+	HWND h = GetDlgItem(m_hwnd, IDC_COMMAND);
+/*JFB not needed: IDC_COMMAND is the single control of this window..
+#ifdef _WIN32
+	if (_msg->hwnd == h)
+#else
+	if (GetFocus() == h)
+#endif
+*/
+	{
+		if ((msg->message == WM_KEYDOWN || msg->message == WM_CHAR) &&
+			msg->wParam == VK_RETURN)
+		{
+			SendMessage(m_hwnd, WM_COMMAND, MAKEWPARAM(IDC_APPLY, 0), 0);
+			return 1; // eat
+		}
+		// ctrl+A => select all
+		else if ((msg->message == WM_KEYDOWN || msg->message == WM_CHAR) &&
+				 msg->wParam == 'A' && iKeyState == LVKF_CONTROL)
+		{
+			SetFocus(h);
+			SendMessage(h, EM_SETSEL, 0, -1);
+			return 1; // eat
+		}
+	}
+	return 0; // pass-thru
+}
+
+void ReaConsoleWnd::OnCommand(WPARAM wParam, LPARAM lParam)
+{
+	switch(LOWORD(wParam))
+	{
+		case IDC_COMMAND:
+			if (HIWORD(wParam)==EN_CHANGE)
+				Update();
+			break;
+		case IDC_APPLY: // replaced IDOK: it would always close the window, see SWS_DockWnd::WndProc()
+		{
+			ProcessCommand(m_cmd, m_pArgs);
+
+			char cUndo[256];
+			_snprintf(cUndo, sizeof(cUndo), __LOCALIZE("ReaConsole command %s","sws_undo"), m_strCmd);
+			Undo_OnStateChangeEx(cUndo, UNDO_STATE_ALL, -1); // UNDO_STATE_TRACKCFG is not enough (marker, osc, ..)
+
+			HWND h = GetDlgItem(m_hwnd, IDC_COMMAND);
+			SetFocus(h);
+			SendMessage(h, EM_SETSEL, 0, -1);
+
+			// close the window if ctrl-enter was pressed
+			if (GetAsyncKeyState(VK_CONTROL) & 0x8000)
+			{
+				m_bUserClosed = true;
+				DestroyWindow(m_hwnd);
+			}
+			break;
+		}
+		default:
+			Main_OnCommand((int)wParam, (int)lParam);
+			break;
+	}
+}
+
+void ReaConsoleWnd::ShowConsole()
+{
+	Show(false, true);
+
+	m_strCmd[0] = g_cLastKey;
+	m_strCmd[1] = '\0';
+	SetDlgItemText(m_hwnd, IDC_COMMAND, m_strCmd);
+
+	// Move the cursor to the end 
+	HWND h = GetDlgItem(m_hwnd, IDC_COMMAND);  
+	SetFocus(h);
+	SendMessage(h, EM_SETSEL, 1, 2);
+
+	m_cmd = Tokenize(m_strCmd, &m_pTrackId, &m_pArgs);
+	ParseTrackId(m_pTrackId);
+	SetDlgItemText(m_hwnd, IDC_STATUS, StatusString(m_cmd, m_pArgs));
+}
+
+void ReaConsoleWnd::Update()
+{
+	GetDlgItemText(m_hwnd, IDC_COMMAND, m_strCmd, 100);
+	m_cmd = Tokenize(m_strCmd, &m_pTrackId, &m_pArgs);
+	ParseTrackId(m_pTrackId);
+	SetDlgItemText(m_hwnd, IDC_STATUS, StatusString(m_cmd, m_pArgs));
 }

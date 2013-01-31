@@ -29,6 +29,7 @@
 #include "SnM.h"
 #include "version.h"
 #include "../reaper/localize.h"
+#include "../OscPkt/oscpkt.h"
 #ifdef _SNM_HOST_AW
 #include "../Misc/Adam.h"
 #endif
@@ -385,12 +386,12 @@ static COMMAND_T g_SNM_cmdTable[] =
 	// Toolbar ----------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Toggle toolbars auto refresh enable" },	"S&M_TOOLBAR_REFRESH_ENABLE", EnableToolbarsAutoRefesh, "Enable toolbars auto refresh", 0, IsToolbarsAutoRefeshEnabled},
 	{ { DEFACCEL, "SWS/S&M: Toolbar - Toggle track envelopes in touch/latch/write" }, "S&M_TOOLBAR_WRITE_ENV", ToggleWriteEnvExists, NULL, 0, WriteEnvExists},
-	{ { DEFACCEL, "SWS/S&M: Toolbar - Toggle offscreen item selection (left)" }, "S&M_TOOLBAR_ITEM_SEL0", ToggleItemSelExists, NULL, SNM_ITEM_SEL_LEFT, ItemSelExists},
-	{ { DEFACCEL, "SWS/S&M: Toolbar - Toggle offscreen item selection (right)" },"S&M_TOOLBAR_ITEM_SEL1", ToggleItemSelExists, NULL, SNM_ITEM_SEL_RIGHT, ItemSelExists},
-#ifdef _WIN32
-	{ { DEFACCEL, "SWS/S&M: Toolbar - Toggle offscreen item selection (top)" }, "S&M_TOOLBAR_ITEM_SEL2", ToggleItemSelExists, NULL, SNM_ITEM_SEL_UP, ItemSelExists},
-	{ { DEFACCEL, "SWS/S&M: Toolbar - Toggle offscreen item selection (bottom)" }, "S&M_TOOLBAR_ITEM_SEL3", ToggleItemSelExists, NULL, SNM_ITEM_SEL_DOWN, ItemSelExists},
-#endif
+	{ { DEFACCEL, "SWS/S&M: Toolbar - Toggle offscreen item selection (left)" }, "S&M_TOOLBAR_ITEM_SEL0", ToggleOffscreenSelItems, NULL, SNM_ITEM_SEL_LEFT, HasOffscreenSelItems},
+	{ { DEFACCEL, "SWS/S&M: Toolbar - Toggle offscreen item selection (right)" },"S&M_TOOLBAR_ITEM_SEL1", ToggleOffscreenSelItems, NULL, SNM_ITEM_SEL_RIGHT, HasOffscreenSelItems},
+	{ { DEFACCEL, "SWS/S&M: Toolbar - Toggle offscreen item selection (top)" }, "S&M_TOOLBAR_ITEM_SEL2", ToggleOffscreenSelItems, NULL, SNM_ITEM_SEL_UP, HasOffscreenSelItems},
+	{ { DEFACCEL, "SWS/S&M: Toolbar - Toggle offscreen item selection (bottom)" }, "S&M_TOOLBAR_ITEM_SEL3", ToggleOffscreenSelItems, NULL, SNM_ITEM_SEL_DOWN, HasOffscreenSelItems},
+	{ { DEFACCEL, "SWS/S&M: Toolbar - Toggle offscreen item selection" }, "S&M_TGL_OFFSCREEN_ITEMS", ToggleOffscreenSelItems, NULL, -1, HasOffscreenSelItems},
+	{ { DEFACCEL, "SWS/S&M: Unselect offscreen items" }, "S&M_UNSEL_OFFSCREEN_ITEMS", UnselectOffscreenItems, NULL, -1, HasOffscreenSelItems}, // -1: trick to share HasOffscreenSelItems() w/ above actions
 
 	// Find -------------------------------------------------------------------
 	{ { {FCONTROL | FVIRTKEY, 'F', 0 }, "SWS/S&M: Find" }, "S&M_SHOWFIND", OpenFindView, NULL, NULL, IsFindViewDisplayed},
@@ -463,9 +464,9 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 	// Other, misc ------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Send all notes off to selected tracks" }, "S&M_CC123_SEL_TRACKS", SendAllNotesOff, NULL, },
-#ifdef _WIN32
 	{ { DEFACCEL, "SWS/S&M: Show theme helper (all tracks)" }, "S&M_THEME_HELPER_ALL", ShowThemeHelper, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Show theme helper (selected track)" }, "S&M_THEME_HELPER_SEL", ShowThemeHelper, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Show theme helper (selected tracks)" }, "S&M_THEME_HELPER_SEL", ShowThemeHelper, NULL, 1},
+#ifdef _WIN32
 	{ { DEFACCEL, "SWS/S&M: Left mouse click at cursor position (use w/o modifier)" }, "S&M_MOUSE_L_CLICK", SimulateMouseClick, NULL, 0},
 #endif
 	{ { DEFACCEL, "SWS/S&M: Dump ALR Wiki summary (w/o SWS extension)" }, "S&M_ALRSUMMARY1", DumpWikiActionList, NULL, 1},
@@ -737,28 +738,26 @@ void ExclusiveToggle(COMMAND_T* _ct)
 // Toolbars auto refresh option, see SNM_CSurfRun()
 ///////////////////////////////////////////////////////////////////////////////
 
-bool g_toolbarsAutoRefreshEnabled = false;
+bool g_SNM_ToolbarRefresh = false;
 int g_toolbarsAutoRefreshFreq = SNM_DEF_TOOLBAR_RFRSH_FREQ;
 
 void EnableToolbarsAutoRefesh(COMMAND_T* _ct) {
-	g_toolbarsAutoRefreshEnabled = !g_toolbarsAutoRefreshEnabled;
+	g_SNM_ToolbarRefresh = !g_SNM_ToolbarRefresh;
 }
 
 bool IsToolbarsAutoRefeshEnabled(COMMAND_T* _ct) {
-	return g_toolbarsAutoRefreshEnabled;
+	return g_SNM_ToolbarRefresh;
 }
 
 void RefreshToolbars()
 {
-	// item sel. buttons
-	RefreshToolbar(NamedCommandLookup("_S&M_TOOLBAR_ITEM_SEL0"));
-	RefreshToolbar(NamedCommandLookup("_S&M_TOOLBAR_ITEM_SEL1"));
-#ifdef _WIN32
-	RefreshToolbar(NamedCommandLookup("_S&M_TOOLBAR_ITEM_SEL2"));
-	RefreshToolbar(NamedCommandLookup("_S&M_TOOLBAR_ITEM_SEL3"));
-#endif
+	// offscreen item sel. buttons
+	for (int i=0; i<SNM_ITEM_SEL_COUNT; i++)
+		RefreshToolbar(SWSGetCommandID(ToggleOffscreenSelItems, i));
+	RefreshToolbar(SWSGetCommandID(UnselectOffscreenItems, -1));
+
 	// write automation button
-	RefreshToolbar(NamedCommandLookup("_S&M_TOOLBAR_WRITE_ENV"));
+	RefreshToolbar(SWSGetCommandID(ToggleWriteEnvExists));
 
 #ifdef _SNM_HOST_AW
 	// host AW's grid toolbar buttons auto refresh and track timebase auto refresh
@@ -924,7 +923,7 @@ void SNM_SaveDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// S&M.ini file
+// S&M.ini
 ///////////////////////////////////////////////////////////////////////////////
 
 WDL_FastString g_SNM_IniFn;
@@ -941,7 +940,7 @@ void IniFileInit()
 	// move from old location if needed/possible
 	WDL_String fn; // no fast string here: the buffer gets mangeled..
 	fn.SetFormatted(SNM_MAX_PATH, SNM_OLD_FORMATED_INI_FILE, GetExePath());
-	if (FileExists(fn.Get()))
+	if (FileOrDirExists(fn.Get()))
 		MoveFile(fn.Get(), g_SNM_IniFn.Get()); // no check: use the new file whatever happens
 
 	// ini files upgrade, if needed
@@ -949,7 +948,7 @@ void IniFileInit()
 
 	// load general prefs
 	g_SNMMediaFlags |= (GetPrivateProfileInt("General", "MediaFileLockAudio", 0, g_SNM_IniFn.Get()) ? 1:0);
-	g_toolbarsAutoRefreshEnabled = (GetPrivateProfileInt("General", "ToolbarsAutoRefresh", 1, g_SNM_IniFn.Get()) == 1);
+	g_SNM_ToolbarRefresh = (GetPrivateProfileInt("General", "ToolbarsAutoRefresh", 1, g_SNM_IniFn.Get()) == 1);
 	g_toolbarsAutoRefreshFreq = BOUNDED(GetPrivateProfileInt("General", "ToolbarsAutoRefreshFreq", SNM_DEF_TOOLBAR_RFRSH_FREQ, g_SNM_IniFn.Get()), 100, 5000);
 	g_buggyPlugSupport = GetPrivateProfileInt("General", "BuggyPlugsSupport", 0, g_SNM_IniFn.Get());
 #ifdef _WIN32
@@ -970,7 +969,7 @@ void IniFileExit()
 	iniSection.Append(g_SNM_IniFn.Get()); 
 	iniSection.AppendFormatted(128, "\nIniFileUpgrade=%d\n", g_SNM_IniVersion); 
 	iniSection.AppendFormatted(128, "MediaFileLockAudio=%d\n", g_SNMMediaFlags&1 ? 1:0); 
-	iniSection.AppendFormatted(128, "ToolbarsAutoRefresh=%d\n", g_toolbarsAutoRefreshEnabled ? 1:0); 
+	iniSection.AppendFormatted(128, "ToolbarsAutoRefresh=%d\n", g_SNM_ToolbarRefresh ? 1:0); 
 	iniSection.AppendFormatted(128, "ToolbarsAutoRefreshFreq=%d ; in ms (min: 100, max: 5000)\n", g_toolbarsAutoRefreshFreq);
 	iniSection.AppendFormatted(128, "BuggyPlugsSupport=%d\n", g_buggyPlugSupport ? 1:0);
 #ifdef _WIN32
@@ -986,94 +985,6 @@ void IniFileExit()
 #ifdef _WIN32
 	// force ini file's cache flush, see http://support.microsoft.com/kb/68827
 	WritePrivateProfileString(NULL, NULL, NULL, g_SNM_IniFn.Get());
-#endif
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-// S&M core stuff
-///////////////////////////////////////////////////////////////////////////////
-
-#ifdef _SNM_MISC
-static void SNM_Menuhook(const char* _menustr, HMENU _hMenu, int _flag) {
-	if (!strcmp(_menustr, "Main extensions") && !_flag) SWSCreateMenuFromCommandTable(g_SNM_cmdTable, _hMenu);
-	//else if (!strcmp(_menustr, "Media item context") && !_flag) {}
-	//else if (!strcmp(_menustr, "Track control panel context") && !_flag) {}
-	//else if (_flag == 1) {}
-}
-#endif
-
-bool SNM_HasExtension() {
-	WDL_FastString fn;
-	fn.SetFormatted(SNM_MAX_PATH, SNM_EXTENSION_FILE,
-#ifdef _WIN32
-		GetExePath());
-#else
-		GetResourcePath());
-#endif
-	return FileExists(fn.Get());
-}
-
-int SNM_Init(reaper_plugin_info_t* _rec)
-{
-	if (!_rec)
-		return 0;
-
-	IniFileInit();
-
-#ifdef _SNM_MISC
-	if (!plugin_register("hookcustommenu", (void*)SNM_Menuhook))
-		return 0;
-#endif
-	// actions must be registered before views
-	if (!SWSRegisterCommands(g_SNM_cmdTable) || 
-		!SNM_RegisterDynamicCommands(g_SNM_dynamicCmdTable, g_SNM_IniFn.Get()) ||
-		!SNM_SectionRegisterCommands(_rec, true))
-		return 0;
-
-	SNM_UIInit();
-	LiveConfigViewInit();
-	ResourceViewInit();
-	NotesHelpViewInit();
-	FindViewInit();
-	ImageViewInit();
-	RegionPlaylistInit();
-	ReaProjectInit();
-	CyclactionInit(); // keep it as the last one!
-
-#ifdef _SNM_CSURF_PROXY
-	g_SNM_CSurfProxy = new SNM_CSurfProxy();
-	if (!g_SNM_CSurfProxy || !_rec->Register("csurf_inst", g_SNM_CSurfProxy))
-		DELETE_NULL(g_SNM_CSurfProxy)
-	else {
-		_rec->Register("API_SNM_UnregisterCSurf", (void*)SNM_UnregisterCSurf);
-		_rec->Register("API_SNM_RegisterCSurf", (void*)SNM_RegisterCSurf);
-	}
-#endif
-
-	// init exlusive toggle actions
-	if (int cmdId = SWSGetCommandID(ExclusiveToggle, 0))
-		Main_OnCommand(cmdId, 0);
-
-	return 1;
-}
-
-void SNM_Exit()
-{
-	LiveConfigViewExit();
-	ResourceViewExit();
-	NotesHelpViewExit();
-	FindViewExit();
-	ImageViewExit();
-	RegionPlaylistExit();
-	CyclactionExit();
-	SNM_UIExit();
-	IniFileExit();
-
-#ifdef _SNM_CSURF_PROXY
-	if (g_SNM_CSurfProxy)
-		g_SNM_CSurfProxy->RemoveAll();
-	DELETE_NULL(g_SNM_CSurfProxy);
 #endif
 }
 
@@ -1132,7 +1043,7 @@ void AddOrReplaceScheduledJob(SNM_ScheduledJob* _job)
 // SNM_MidiActionJob
 ///////////////////////////////////////////////////////////////////////////////
 
-//JFB!!! learn with midi pitch is not supported atm (dunno how to distinguish pitch vs osc)
+// learn with midi pitch is not supported atm,
 // see http://forum.cockos.com/showthread.php?t=116377
 SNM_MidiActionJob::SNM_MidiActionJob(int _jobId, int _approxDelayMs, int _curCC, int _val, int _valhw, int _relmode, HWND _hwnd) 
 	: SNM_ScheduledJob(_jobId, _approxDelayMs),m_val(_val),m_valhw(_valhw),m_relmode(_relmode),m_hwnd(_hwnd)
@@ -1143,7 +1054,7 @@ SNM_MidiActionJob::SNM_MidiActionJob(int _jobId, int _approxDelayMs, int _curCC,
 	if (_valhw>=0)
 	{
 //		m_absval = BOUNDED(_valhw|_val<<7, 0, 16383); // for pitch
-		m_absval = _valhw || _val ? BOUNDED(16384 - (_valhw|_val<<7), 0, 16383) : 0; // for osc
+		m_absval = _valhw||_val ? BOUNDED(16384-(_valhw|_val<<7), 0, 16383) : 0; // for osc
 	}
 	// cc midi events
 	else if (_valhw==-1 && _val>=0 && _val<128)
@@ -1151,7 +1062,7 @@ SNM_MidiActionJob::SNM_MidiActionJob(int _jobId, int _approxDelayMs, int _curCC,
 		// absolute
 		if (!_relmode) 
 			m_absval = _val;
-		// relative, http://forum.cockos.com/project.php?issueid=4576
+		// relative, from http://forum.cockos.com/project.php?issueid=4576
 		else { 
 			if (_relmode==1)      { if (_val >= 0x40) _val|=~0x3f; } // sign extend if 0x40 set
 			else if (_relmode==2) { _val-=0x40; } // offset by 0x40
@@ -1322,12 +1233,12 @@ void SNM_CSurfRun()
 
 	if (g_itemSelToolbarMsCounter > 1000) { // might be hungry => gentle hard-coded freq
 		g_itemSelToolbarMsCounter = 0.0;
-		if (g_toolbarsAutoRefreshEnabled) 
-			ItemSelToolbarPoll();
+		if (g_SNM_ToolbarRefresh) 
+			OffscreenSelItemsPoll();
 	}
 	if (g_toolbarMsCounter > g_toolbarsAutoRefreshFreq) {
 		g_toolbarMsCounter = 0.0;
-		if (g_toolbarsAutoRefreshEnabled) 
+		if (g_SNM_ToolbarRefresh) 
 			RefreshToolbars();
 	}
 }
@@ -1365,5 +1276,173 @@ void SNM_CSurfSetPlayState(bool _play, bool _pause, bool _rec)
 
 int SNM_CSurfExtended(int _call, void* _parm1, void* _parm2, void* _parm3) {
 	return 0; // return 0 if unsupported
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Fake/local OSC CSurf
+///////////////////////////////////////////////////////////////////////////////
+
+#ifdef _SNM_MISC
+void SNM_LocalOscCallback(void* _obj, const char* _msg, int _msglen) 
+{
+	if (_msg && _msglen)
+	{
+		oscpkt::PacketReader pr;
+		pr.init(_msg, _msglen);
+		oscpkt::Message* msg;
+		while (pr.isOk() && (msg = pr.popMessage()) != 0)
+			cout << "SNM_LocalOscCallback: " << msg << "\n";
+	}
+}
+#endif
+
+// _oscMsg is a human readable osc message, ex:
+// - /track/1/fx/1/preset MyPreset
+// - /track/1/fx/1/preset "My Preset"
+// - /track/1/fx/1,2/fxparam/1,1/value 0.25 0.5
+// notes: 
+// 1) I do not use the API's OscLocalMessageToHost() because 
+//    there is no way to manage osc messages with string args
+// 2) no global osc handle/lazy init here because calling 
+//    DestroyLocalOscHandler() in SNM_Exit() crashes (REAPER 4.32)
+bool SNM_SendLocalOscMessage(const char* _oscMsg)
+{
+	if (!_oscMsg)
+		return false;
+
+	bool sent = false;
+#ifdef _SNM_MISC
+	if (void* oscHandler = CreateLocalOscHandler(NULL, SNM_LocalOscCallback))
+#else
+	if (void* oscHandler = CreateLocalOscHandler(NULL, NULL))
+#endif
+	{
+		LineParser lp(false);
+		if (!lp.parse(_oscMsg) && lp.getnumtokens()>0)
+		{
+			oscpkt::Message msg(lp.gettoken_str(0));
+			if (lp.getnumtokens()>1) // arguments(s)?
+			{
+				double d;
+				int success;
+				for (int i=1; i<lp.getnumtokens(); i++) // i=1!
+				{
+					d = lp.gettoken_float(i, &success);
+					if (success)
+						msg.pushFloat((float)d);
+					else
+					{
+						WDL_FastString arg(lp.gettoken_str(i));
+						// strip quotes, if needed
+						const char* p1 = arg.Get();
+						const char* p2 = p1 + arg.GetLength() - 1;
+						if ((*p1=='"' || *p1=='\'' || *p1=='`') && 
+							(*p2=='"' || *p2=='\'' || *p2=='`'))
+						{
+							arg.Set(p1+1, arg.GetLength()-2);
+						}
+						msg.pushStr(arg.Get());
+					}
+				}
+			}
+			oscpkt::PacketWriter pw;
+			pw.addMessage(msg);
+			SendLocalOscMessage(oscHandler, pw.packetData(), pw.packetSize());
+			sent = true;
+		}
+		DestroyLocalOscHandler(oscHandler); // see notes above..
+	}
+	return sent;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// S&M core stuff
+///////////////////////////////////////////////////////////////////////////////
+
+#ifdef _SNM_MISC
+static void SNM_Menuhook(const char* _menustr, HMENU _hMenu, int _flag) {
+	if (!strcmp(_menustr, "Main extensions") && !_flag) SWSCreateMenuFromCommandTable(g_SNM_cmdTable, _hMenu);
+	//else if (!strcmp(_menustr, "Media item context") && !_flag) {}
+	//else if (!strcmp(_menustr, "Track control panel context") && !_flag) {}
+	//else if (_flag == 1) {}
+}
+#endif
+
+bool SNM_HasExtension() 
+{
+	WDL_FastString fn;
+	fn.SetFormatted(SNM_MAX_PATH, SNM_EXTENSION_FILE,
+#ifdef _WIN32
+		GetExePath());
+#else
+		GetResourcePath());
+#endif
+	return FileOrDirExists(fn.Get());
+}
+
+int SNM_Init(reaper_plugin_info_t* _rec)
+{
+	if (!_rec)
+		return 0;
+
+	IniFileInit();
+
+#ifdef _SNM_MISC
+	if (!plugin_register("hookcustommenu", (void*)SNM_Menuhook))
+		return 0;
+#endif
+	// actions must be registered before views
+	if (!SWSRegisterCommands(g_SNM_cmdTable) || 
+		!SNM_RegisterDynamicCommands(g_SNM_dynamicCmdTable, g_SNM_IniFn.Get()) ||
+		!SNM_SectionRegisterCommands(_rec, true))
+		return 0;
+
+	SNM_UIInit();
+	CueBussInit();
+	LiveConfigViewInit();
+	ResourceViewInit();
+	NotesHelpViewInit();
+	FindViewInit();
+	ImageViewInit();
+	RegionPlaylistInit();
+	ReaProjectInit();
+	CyclactionInit(); // keep it as the last one!
+
+#ifdef _SNM_CSURF_PROXY
+	g_SNM_CSurfProxy = new SNM_CSurfProxy();
+	if (!g_SNM_CSurfProxy || !_rec->Register("csurf_inst", g_SNM_CSurfProxy))
+		DELETE_NULL(g_SNM_CSurfProxy)
+	else {
+		_rec->Register("API_SNM_UnregisterCSurf", (void*)SNM_UnregisterCSurf);
+		_rec->Register("API_SNM_RegisterCSurf", (void*)SNM_RegisterCSurf);
+	}
+#endif
+
+	// init exlusive toggle actions
+	if (int cmdId = SWSGetCommandID(ExclusiveToggle, 0))
+		Main_OnCommand(cmdId, 0);
+
+	return 1;
+}
+
+void SNM_Exit()
+{
+	LiveConfigViewExit();
+	ResourceViewExit();
+	NotesHelpViewExit();
+	FindViewExit();
+	ImageViewExit();
+	RegionPlaylistExit();
+	CyclactionExit();
+	SNM_UIExit();
+	IniFileExit();
+
+#ifdef _SNM_CSURF_PROXY
+	if (g_SNM_CSurfProxy)
+		g_SNM_CSurfProxy->RemoveAll();
+	DELETE_NULL(g_SNM_CSurfProxy);
+#endif
 }
 

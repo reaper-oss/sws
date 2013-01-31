@@ -26,6 +26,7 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+#include "../SnM/SnM_Util.h"
 
 using namespace std;
 
@@ -239,26 +240,6 @@ bool BrowseForDirectory(const char *text, const char *initialdir, char *fn, int 
 }
 #endif
 
-// the API function file_exists() is a bit different, it returns false for folder paths
-bool FileExists(const char* file)
-{
-	bool exists = false;
-	if (file && *file && strchr(file, PATH_SLASH_CHAR)) // valid absolute path?
-	{
-		if (char* fn = _strdup(file))
-		{
-			int len = (int)strlen(fn);
-			if (fn[len-1] == PATH_SLASH_CHAR) // bug fix for directories
-				fn[len-1] = '\0';
-
-			struct stat s;
-#ifdef _WIN32
-			exists = (statUTF8(fn, &s) == 0);
-#else
-			exists = (stat(fn, &s) == 0);
-#endif
-			free(fn);
-		}
-	}
-	return exists;
+bool FileExists(const char* file) {
+	return FileOrDirExists(file);
 }

@@ -415,7 +415,7 @@ bool FileSlotList::GetOrBrowseSlot(int _slot, char* _fn, int _fnSz, bool _errMsg
 		if (Get(_slot)->IsDefault())
 			ok = BrowseSlot(_slot, _fn, _fnSz);
 		else if (GetFullPath(_slot, _fn, _fnSz))
-			ok = FileExistsErrMsg(_fn, _errMsg);
+			ok = FileOrDirExistsErrMsg(_fn, _errMsg);
 	}
 	return ok;
 }
@@ -463,7 +463,7 @@ void FileSlotList::EditSlot(int _slot)
 	if (_slot >= 0 && _slot < GetSize())
 	{
 		char fullPath[SNM_MAX_PATH] = "";
-		if (GetFullPath(_slot, fullPath, sizeof(fullPath)) && FileExistsErrMsg(fullPath))
+		if (GetFullPath(_slot, fullPath, sizeof(fullPath)) && FileOrDirExistsErrMsg(fullPath))
 		{
 #ifdef _WIN32
 			WinSpawnNotepad(fullPath);
@@ -541,7 +541,7 @@ bool SNM_ResourceView::IsEditListItemAllowed(SWS_ListItem* item, int iCol)
 				switch (iCol) {
 					case COL_NAME: { // file renaming
 						char fn[SNM_MAX_PATH] = "";
-						return (GetSlotList()->GetFullPath(slot, fn, sizeof(fn)) && FileExists(fn));
+						return (GetSlotList()->GetFullPath(slot, fn, sizeof(fn)) && FileOrDirExists(fn));
 					}
 					case COL_COMMENT:
 						return true;
@@ -566,7 +566,7 @@ void SNM_ResourceView::SetItemText(SWS_ListItem* item, int iCol, const char* str
 					return;
 
 				char fn[SNM_MAX_PATH] = "";
-				if (GetSlotList()->GetFullPath(slot, fn, sizeof(fn)) && !pItem->IsDefault() && FileExistsErrMsg(fn))
+				if (GetSlotList()->GetFullPath(slot, fn, sizeof(fn)) && !pItem->IsDefault() && FileOrDirExistsErrMsg(fn))
 				{
 					const char* ext = GetFileExtension(fn);
 					char newFn[SNM_MAX_PATH]="", path[SNM_MAX_PATH]="";
@@ -578,7 +578,7 @@ void SNM_ResourceView::SetItemText(SWS_ListItem* item, int iCol, const char* str
 
 					if (_snprintfStrict(newFn, sizeof(newFn), "%s%c%s.%s", path, PATH_SLASH_CHAR, str, ext) > 0)
 					{
-						if (FileExists(newFn)) 
+						if (FileOrDirExists(newFn)) 
 						{
 							char msg[SNM_MAX_PATH]="";
 							_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("File already exists. Overwrite ?\n%s","sws_mbox"), newFn);
@@ -827,10 +827,10 @@ void SNM_ResourceWnd::OnInitDlg()
 	m_resize.init_item(IDC_FILTER, 1.0, 1.0, 1.0, 1.0);
 
 	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_FILTER), GWLP_USERDATA, 0xdeadf00b);
+	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_EDIT), GWLP_USERDATA, 0xdeadf00b);
 
 	m_pLists.Add(new SNM_ResourceView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
 
-	// WDL GUI init
 	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
 	m_parentVwnd.SetRealParent(m_hwnd);
 
@@ -1093,7 +1093,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		{
 			char path[SNM_MAX_PATH] = "";
 			if (_snprintfStrict(path, sizeof(path), "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, GetSlotList()->GetResourceDir()) > 0) {
-				if (!FileExists(path))
+				if (!FileOrDirExists(path))
 					CreateDirectory(path, NULL);
 				SetAutoFillDir(path);
 			}
@@ -1122,7 +1122,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			GetProjectPath(prjPath, sizeof(prjPath));
 			// see GetFileRelativePath..
 			if (_snprintfStrict(path, sizeof(path), "%s%c%s", prjPath, PATH_SLASH_CHAR, GetFileRelativePath(GetSlotList()->GetResourceDir())) > 0) {
-				if (!FileExists(path))
+				if (!FileOrDirExists(path))
 					CreateDirectory(path, NULL);
 				SetAutoSaveDir(path);
 			}
@@ -1132,7 +1132,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		{
 			char path[SNM_MAX_PATH] = "";
 			if (_snprintfStrict(path, sizeof(path), "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, GetSlotList()->GetResourceDir()) > 0) {
-				if (!FileExists(path))
+				if (!FileOrDirExists(path))
 					CreateDirectory(path, NULL);
 				SetAutoSaveDir(path);
 			}
@@ -1165,7 +1165,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case RENAME_MSG:
 			if (item) {
 				char fullPath[SNM_MAX_PATH] = "";
-				if (GetSlotList()->GetFullPath(slot, fullPath, sizeof(fullPath)) && FileExistsErrMsg(fullPath))
+				if (GetSlotList()->GetFullPath(slot, fullPath, sizeof(fullPath)) && FileOrDirExistsErrMsg(fullPath))
 					m_pLists.Get(0)->EditListItem((SWS_ListItem*)item, COL_NAME);
 			}
 			break;
@@ -1665,22 +1665,40 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 
 int SNM_ResourceWnd::OnKey(MSG* _msg, int _iKeyState) 
 {
-	if (_msg->message == WM_KEYDOWN && !_iKeyState)
+	if (_msg->message == WM_KEYDOWN)
 	{
-		switch(_msg->wParam)
+		if (!_iKeyState)
 		{
-			case VK_F2:
-				OnCommand(RENAME_MSG, 0);
-				return 1;
-			case VK_DELETE:
-				ClearDeleteSlots(1, true);
-				return 1;
-			case VK_INSERT:
-				InsertAtSelectedSlot(true);
-				return 1;
-			case VK_RETURN:
-				((SNM_ResourceView*)m_pLists.Get(0))->Perform();
-				return 1;
+			switch(_msg->wParam)
+			{
+				case VK_F2:
+					OnCommand(RENAME_MSG, 0);
+					return 1;
+				case VK_DELETE:
+					ClearDeleteSlots(1, true);
+					return 1;
+				case VK_INSERT:
+					InsertAtSelectedSlot(true);
+					return 1;
+				case VK_RETURN:
+					((SNM_ResourceView*)m_pLists.Get(0))->Perform();
+					return 1;
+			}
+		}
+		// ctrl+A => select all
+		else if (_iKeyState == LVKF_CONTROL && _msg->wParam == 'A')
+		{
+			HWND h = GetDlgItem(m_hwnd, IDC_FILTER);
+#ifdef _WIN32
+			if (_msg->hwnd == h)
+#else
+			if (GetFocus() == h)
+#endif
+			{
+				SetFocus(h);
+				SendMessage(h, EM_SETSEL, 0, -1);
+				return 1; // eat
+			}
 		}
 	}
 	return 0;
@@ -2117,7 +2135,7 @@ void SNM_ResourceWnd::ClearDeleteSlots(int _mode, bool _update)
 bool CheckSetAutoDirectory(const char* _title, int _type, bool _autoSave)
 {
 	WDL_FastString* dir = _autoSave ? g_autoSaveDirs.Get(_type) : g_autoFillDirs.Get(_type);
-	if (!FileExists(dir->Get()))
+	if (!FileOrDirExists(dir->Get()))
 	{
 		char buf[SNM_MAX_PATH] = "";
 		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("%s directory not found!\n%s%sDo you want to define one ?","sws_DLG_150"), _title, dir->Get(), dir->GetLength()?"\n":"");
@@ -2129,7 +2147,7 @@ bool CheckSetAutoDirectory(const char* _title, int _type, bool _autoSave)
 		}
 		else
 			return false;
-		return FileExists(dir->Get()); // re-check (browse cancelled, etc..)
+		return FileOrDirExists(dir->Get()); // re-check (browse cancelled, etc..)
 	}
 	return true;
 }
@@ -2338,7 +2356,7 @@ void NewBookmark(int _type, bool _copyCurrent)
 			{
 				char path[SNM_MAX_PATH] = "";
 				if (_snprintfStrict(path, sizeof(path), "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, g_slots.Get(_type)->GetResourceDir()) > 0) {
-					if (!FileExists(path))
+					if (!FileOrDirExists(path))
 						CreateDirectory(path, NULL);
 				}
 				else *path = '\0';
@@ -2702,7 +2720,7 @@ void ResourceViewExit()
 	DELETE_NULL(g_pResourcesWnd);
 }
 
-void OpenResourceView(COMMAND_T* _ct) 
+void OpenResourceView(COMMAND_T* _ct)
 {
 	if (g_pResourcesWnd) 
 	{
@@ -2815,8 +2833,6 @@ SNM_ImageWnd::SNM_ImageWnd()
 
 void SNM_ImageWnd::OnInitDlg()
 {
-	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_EDIT), GWLP_USERDATA, 0xdeadf00b);
-
 	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
 	m_parentVwnd.SetRealParent(m_hwnd);
 	

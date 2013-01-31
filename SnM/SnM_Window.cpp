@@ -34,30 +34,23 @@
 // Misc window actions/helpers
 ///////////////////////////////////////////////////////////////////////////////
 
-bool SNM_IsActiveWindow(HWND _h) {
+bool SNM_IsActiveWindow(HWND _h)
+{
 	if (!_h || !SWS_IsWindow(_h))
 		return false;
 	return (GetFocus() == _h || IsChild(_h, GetFocus()));
 }
 
-void AddUniqueHnwd(HWND _hAdd, HWND* _hwnds, int* count)
-{
-	for (int i=0; i < *count; i++)
-		if(_hwnds[i] == _hAdd)
-			return;
-	_hwnds[(*count)++] = _hAdd;
-}
-
 bool IsChildOf(HWND _hChild, const char* _title)
 {
 	HWND hCurrent = _hChild;
-	char buf[512] = "";
+	char buf[256] = "";
 	while (hCurrent) 
 	{
 		hCurrent = GetParent(hCurrent);
 		if (hCurrent)
 		{
-			GetWindowText(hCurrent, buf, 512);
+			GetWindowText(hCurrent, buf, sizeof(buf));
 			if (!strncmp(buf, _title, strlen(_title)))
 				return true;
 		}
@@ -65,16 +58,9 @@ bool IsChildOf(HWND _hChild, const char* _title)
 	return false;
 }
 
+
+/////////////////////////////////////// WIN ///////////////////////////////////
 #ifdef _WIN32
-
-#define MAX_ENUM_CHILD_HWNDS 512
-#define MAX_ENUM_HWNDS 256
-
-//JFB TODO: cleanup with WDL_PtrList instead
-static int g_hwndsCount = 0;
-static HWND g_hwnds[MAX_ENUM_CHILD_HWNDS];
-static int g_childHwndsCount = 0;
-static HWND g_childHwnds[MAX_ENUM_CHILD_HWNDS];
 
 BOOL CALLBACK EnumReaWindows(HWND _hwnd, LPARAM _lParam)
 {
@@ -91,39 +77,83 @@ BOOL CALLBACK EnumReaWindows(HWND _hwnd, LPARAM _lParam)
 		char buf[256];
 		GetClassName(_hwnd, buf, sizeof(buf));
 		if (!strcmp(buf, "#32770"))
-			AddUniqueHnwd(_hwnd, g_hwnds, &g_hwndsCount); 
+		{
+			WDL_PtrList<HWND__>* hwnds = (WDL_PtrList<HWND__>*)_lParam;
+			if (hwnds && hwnds->Find(_hwnd) == -1)
+				hwnds->Add(_hwnd);
+		}
 	}
 	return TRUE;
 }
 
 static BOOL CALLBACK EnumReaChildWindows(HWND _hwnd, LPARAM _lParam)
 {
-	char str[256];
-	GetClassName(_hwnd, str, sizeof(str));
-	if(strcmp(str, "#32770") == 0)
+	char buf[256];
+	GetClassName(_hwnd, buf, sizeof(buf));
+	if(strcmp(buf, "#32770") == 0)
 	{
-		if (g_childHwndsCount < MAX_ENUM_CHILD_HWNDS)
-			AddUniqueHnwd(_hwnd, g_childHwnds, &g_childHwndsCount); 
-		EnumChildWindows(_hwnd, EnumReaChildWindows, _lParam + 1);
+		WDL_PtrList<HWND__>* hwnds = (WDL_PtrList<HWND__>*)_lParam;
+		if (hwnds && hwnds->Find(_hwnd) == -1)
+			hwnds->Add(_hwnd);
+		EnumChildWindows(_hwnd, EnumReaChildWindows, _lParam);
 	}
 	return TRUE;
 }
 
 HWND GetReaChildWindowByTitle(HWND _parent, const char* _title)
 {
-	char buf[512] = "";
-	g_childHwndsCount = 0;
-	EnumChildWindows(_parent, EnumReaChildWindows, 0); 
-	for (int i=0; i < g_childHwndsCount && i < MAX_ENUM_CHILD_HWNDS; i++)
+	char buf[256] = "";
+	WDL_PtrList<HWND__> hwnds;
+	EnumChildWindows(_parent, EnumReaChildWindows, (LPARAM)&hwnds);
+	for (int i=0; i<hwnds.GetSize(); i++)
 	{
-		HWND w = g_childHwnds[i];
-		GetWindowText(w, buf, 512);
-		if (!strcmp(buf, _title))
-			return w;
+		if (HWND w = hwnds.Get(i))
+		{
+			GetWindowText(w, buf, sizeof(buf));
+			if (!strcmp(buf, _title))
+				return w;
+		}
 	}
 	return NULL;
 }
 
+// note: _title must be localized
+HWND GetReaWindowByTitle(const char* _title)
+{
+	// docked in main window?
+	HWND w = GetReaChildWindowByTitle(GetMainHwnd(), _title);
+	if (w) return w;
+
+	char buf[256] = "";
+	WDL_PtrList<HWND__> hwnds;
+	EnumWindows(EnumReaWindows, (LPARAM)&hwnds);
+	for (int i=0; i<hwnds.GetSize(); i++)
+	{
+		if (w = hwnds.Get(i))
+		{
+			GetWindowText(w, buf, sizeof(buf));
+
+			// in floating window?
+			if (!strcmp(_title, buf))
+				return w;
+			// in a floating docker (w/ other hwnds)?
+			else if (!strcmp(__localizeFunc("Docker", "docker", 0), buf)) {
+				if (w = GetReaChildWindowByTitle(w, _title))
+					return w;
+			}
+			// in a floating docker (w/o other hwnds)?
+			else {
+				char dockerName[256]="";
+				if (_snprintfStrict(dockerName, sizeof(dockerName), "%s%s", _title, __localizeFunc(" (docked)", "docker", 0)) > 0 && !strcmp(dockerName, buf))
+					if (w = GetReaChildWindowByTitle(w, _title))
+						return w;
+			}
+		}
+	}
+	return NULL;
+}
+
+/////////////////////////////////////// OSX ///////////////////////////////////
 #else
 
 // note: _title and _dockerName must be localized
@@ -142,47 +172,14 @@ HWND GetReaWindowByTitleInFloatingDocker(const char* _title, const char* _docker
 	return NULL;
 }
 
-#endif
-
 // note: _title must be localized
+// note: almost works on win + osx (since wdl 7cf02d) but utf8 issue on win
 HWND GetReaWindowByTitle(const char* _title)
 {
-#ifdef _WIN32
-	// docked in main window?
-	HWND w = GetReaChildWindowByTitle(GetMainHwnd(), _title);
-	if (w) return w;
-
-	g_hwndsCount = 0;
-	char buf[512] = "";
-	EnumWindows(EnumReaWindows, 0);
-	for (int i=0; i < g_hwndsCount && i < MAX_ENUM_HWNDS; i++)
-	{
-		w = g_hwnds[i];
-		GetWindowText(w, buf, 512);
-
-		// in floating window?
-		if (!strcmp(_title, buf))
-			return w;
-		// in a floating docker (w/ other hwnds)?
-		else if (!strcmp(__localizeFunc("Docker", "docker", 0), buf)) {
-			if (w = GetReaChildWindowByTitle(w, _title))
-				return w;
-		}
-		// in a floating docker (w/o other hwnds)?
-		else {
-			char dockerName[256]="";
-			if (_snprintfStrict(dockerName, sizeof(dockerName), "%s%s", _title, __localizeFunc(" (docked)", "docker", 0)) > 0 && !strcmp(dockerName, buf))
-				if (w = GetReaChildWindowByTitle(w, _title))
-					return w;
-		}
-	}
-
-#else // almost works on win + osx (since wdl 7cf02d) but utf8 issue on win
-
 	// in a floating window?
 	HWND w = FindWindowEx(NULL, NULL, NULL, _title);
 	if (w) return w;
-
+    
 	// docked in main window?
 	HWND hdock = FindWindowEx(GetMainHwnd(), NULL, NULL, "REAPER_dock");
 	while(hdock) {
@@ -199,9 +196,145 @@ HWND GetReaWindowByTitle(const char* _title)
 			if (w = GetReaWindowByTitleInFloatingDocker(_title, dockerName))
 				return w;
 	}
-#endif
 	return NULL;
 }
+
+#endif
+
+static BOOL CALLBACK EnumXCPWindows(HWND _hwnd, LPARAM _lParam)
+{
+	MediaTrack* tr = (MediaTrack*)GetWindowLongPtr(_hwnd, GWLP_USERDATA);
+	if (tr && CSurf_TrackToID(tr, false)>=0)
+	{
+		WDL_PtrList<HWND__>* hwnds = (WDL_PtrList<HWND__>*)_lParam;
+		if (hwnds && hwnds->Find(_hwnd) == -1)
+			hwnds->Add(_hwnd);
+	}
+	else
+		EnumChildWindows(_hwnd, EnumXCPWindows, _lParam);
+	return TRUE;
+}
+
+void GetVisibleTCPTracks(WDL_PtrList<void>* _trList)
+{
+	WDL_PtrList<HWND__> hwnds;
+	EnumChildWindows(GetMainHwnd(), EnumXCPWindows, (LPARAM)&hwnds);
+	for (int i=0; i < hwnds.GetSize(); i++)
+		if (HWND hwnd = hwnds.Get(i))
+			if (IsWindowVisible(hwnd) && !IsChildOf(hwnd, __localizeFunc("Mixer", "DLG_151", 0)))
+				_trList->Add((void*)GetWindowLongPtr(hwnd, GWLP_USERDATA));
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Global focus actions
+///////////////////////////////////////////////////////////////////////////////
+
+void FocusMainWindow(COMMAND_T* _ct) {
+	SetForegroundWindow(GetMainHwnd());
+}
+
+/////////////////////////////////////// WIN ///////////////////////////////////
+#ifdef _WIN32
+
+void CycleFocusWnd(COMMAND_T * _ct)
+{
+	if (GetMainHwnd())
+	{
+		HWND focusedWnd = GetForegroundWindow();
+		HWND w = GetWindow(GetMainHwnd(), GW_HWNDLAST);
+		while (w)
+		{
+			if (IsWindowVisible(w) && GetWindow(w, GW_OWNER) == GetMainHwnd() && focusedWnd != w) {
+				SetForegroundWindow(w);
+				return;
+			}
+			w = GetWindow(w, GW_HWNDPREV);
+		}
+	}
+}
+
+int g_lastFocusHideOthers = 0;
+
+void CycleFocusHideOthersWnd(COMMAND_T * _ct)
+{
+	WDL_PtrList<HWND__> reahwnds;
+	EnumWindows(EnumReaWindows, (LPARAM)&reahwnds);
+	if (reahwnds.Find(GetMainHwnd()) == -1)
+		reahwnds.Add(GetMainHwnd());
+
+	// sort & filter windows
+	char buf[256] = "";
+	WDL_PtrList<HWND__> hwnds;
+	for (int i =0; i<reahwnds.GetSize(); i++)
+	{
+		if (HWND w = reahwnds.Get(i))
+		{
+			GetWindowText(w, buf, sizeof(buf));
+			if (strcmp(__localizeFunc("Item/track info","sws_DLG_131",0), buf) && // xen stuff to remove
+				strcmp(__localizeFunc("Docker", "docker", 0), buf)) // "closed" floating dockers are in fact hidden (and not redrawn => issue)
+			{
+				int j=0;
+				char buf2[256] = "";
+				for (j=0; j<hwnds.GetSize(); j++)
+				{
+					GetWindowText(hwnds.Get(j), buf2, sizeof(buf2));
+					if (strcmp(buf, buf2) < 0)
+						break;
+				}
+				hwnds.Insert(j, w);
+			}
+		}
+	}
+
+	// find out the window to be displayed
+	g_lastFocusHideOthers += (int)_ct->user; // not a % !
+	if (g_lastFocusHideOthers < 0)
+		g_lastFocusHideOthers = hwnds.GetSize();
+	else if (g_lastFocusHideOthers == (hwnds.GetSize()+1))
+		g_lastFocusHideOthers = 0;
+
+	// focus one & hide others
+	if (g_lastFocusHideOthers < hwnds.GetSize())
+	{
+		int lastOk = g_lastFocusHideOthers;
+		for (int i=0; i < hwnds.GetSize(); i++)
+		{
+			if (HWND h = hwnds.Get(i))
+			{
+				if (i != g_lastFocusHideOthers) {
+					if (h != GetMainHwnd())
+						ShowWindow(h, SW_HIDE);
+				}
+				else {
+					ShowWindow(h, SW_SHOW);
+					lastOk = i;
+				}
+			}
+		}
+		SetForegroundWindow(hwnds.Get(lastOk));
+	}
+	// focus main window & unhide others
+	else
+	{
+		for (int i=0; i<hwnds.GetSize(); i++)
+			ShowWindow(hwnds.Get(i), SW_SHOW);
+		SetForegroundWindow(GetMainHwnd());
+	}
+}
+
+void FocusMainWindowCloseOthers(COMMAND_T* _ct)
+{
+	WDL_PtrList<HWND__> hwnds;
+	EnumWindows(EnumReaWindows, (LPARAM)&hwnds);
+	for (int i=0; i < hwnds.GetSize(); i++)
+		if (HWND w = hwnds.Get(i))
+			if (w != GetMainHwnd() && IsWindowVisible(w))
+				SendMessage(w, WM_SYSCOMMAND, SC_CLOSE, 0);
+	SetForegroundWindow(GetMainHwnd());
+}
+
+#endif
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -209,48 +342,37 @@ HWND GetReaWindowByTitle(const char* _title)
 // Note: intentionally not localized..
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef _WIN32
-static BOOL CALLBACK EnumXCPWindows(HWND _hwnd, LPARAM _lParam)
-{
-	char str[256] = "";
-	GetClassName(_hwnd, str, 256);
-	if (!strcmp(str, "REAPERVirtWndDlgHost"))
-		AddUniqueHnwd(_hwnd, g_childHwnds, &g_childHwndsCount);
-	else 
-		EnumChildWindows(_hwnd, EnumXCPWindows, _lParam);
-	return TRUE;
-}
-#endif
-
 void ShowThemeHelper(WDL_FastString* _report, HWND _hwnd, bool _mcp, bool _sel)
 {
-#ifdef _WIN32
-	g_childHwndsCount = 0;
-	EnumChildWindows(_hwnd, EnumXCPWindows, 0);
-	for (int i=0; i < g_childHwndsCount && i < MAX_ENUM_CHILD_HWNDS; i++)
+	WDL_PtrList<HWND__> hwnds;
+	EnumChildWindows(_hwnd, EnumXCPWindows, (LPARAM)&hwnds);
+	for (int i=0; i < hwnds.GetSize(); i++)
 	{
-		HWND w = g_childHwnds[i];
-		if (IsWindowVisible(w))
+		if (HWND w = hwnds.Get(i))
 		{
-			bool mcpChild = IsChildOf(w, __localizeFunc("Mixer", "DLG_151", 0));
-			if ((_mcp && mcpChild) || (!_mcp && !mcpChild))
+//			if (IsWindowVisible(w))
 			{
-				MediaTrack* tr = (MediaTrack*)GetWindowLongPtr(w, GWLP_USERDATA);
-
-				// using IP_TRACKNUMBER is a casting nightmare on osx but that's ok atm: win only
-				// (CSurf_TrackToID() would fail here)
-				int trIdx = (int)GetSetMediaTrackInfo(tr, "IP_TRACKNUMBER", NULL);
-				if (trIdx && (!_sel || (_sel && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))))
+				bool mcpChild = IsChildOf(w, __localizeFunc("Mixer", "DLG_151", 0));
+				if ((_mcp && mcpChild) || (!_mcp && !mcpChild))
 				{
-					RECT r;	GetClientRect(w, &r);
-					char* trName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
-					_report->AppendFormatted(512, "%s Track #%d '%s': W=%d, H=%d\n", _mcp ? "MCP" : "TCP", trIdx==-1 ? 0 : trIdx, trIdx==-1 ? "[MASTER]" : (trName?trName:""), r.right-r.left, r.bottom-r.top);
+					MediaTrack* tr = (MediaTrack*)GetWindowLongPtr(w, GWLP_USERDATA);
+					int trIdx = CSurf_TrackToID(tr, false);
+					if (trIdx>=0 && (!_sel || (_sel && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))))
+					{
+						RECT r;	GetClientRect(w, &r);
+						char* trName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
+						_report->AppendFormatted(
+							512, 
+							"%s Track #%d '%s': W=%d, H=%d\n", _mcp ? "MCP" : "TCP", 
+							trIdx==-1 ? 0 : trIdx, trIdx==-1 ? "[MASTER]" : (trName?trName:""), 
+							r.right-r.left, 
+							r.bottom-r.top);
+					}
 				}
 			}
 		}
 	}
-#endif
-} 
+}
 
 void ShowThemeHelper(COMMAND_T* _ct)
 {
@@ -623,7 +745,7 @@ void ToggleAllFXChainsWindows(COMMAND_T * _ct) {
 // _fx = -1 for selected FX
 void ToggleFloatFX(MediaTrack* _tr, int _fx)
 {
-	if (_tr &&  _fx < TrackFX_GetCount(_tr))
+	if (_tr && _fx < TrackFX_GetCount(_tr))
 	{
 		int currenSel = GetSelectedTrackFX(_tr); // avoids several parsings
 		if (TrackFX_GetFloatingWindow(_tr, (_fx == -1 ? currenSel : _fx)))
@@ -762,7 +884,7 @@ bool CycleTracksAndFXs(int _trStart, int _fxStart, int _dir, bool _selectedTrack
 
 				// perform custom stuff
 				if (job(tr, j, _selectedTracks))
-				   return true;
+					return true;
 
 				cpt2++;
 				j += _dir;
@@ -891,23 +1013,23 @@ void CycleFocusFXMainWnd(int _dir, bool _selectedTracks, bool _showmain)
 }
 
 #ifdef _SNM_MISC
-void CycleFocusFXWndAllTracks(COMMAND_T * _ct) {
+void CycleFocusFXWndAllTracks(COMMAND_T* _ct) {
 	CycleFocusFXMainWnd((int)_ct->user, false, false);
 }
-void CycleFocusFXWndSelTracks(COMMAND_T * _ct) {
+void CycleFocusFXWndSelTracks(COMMAND_T* _ct) {
 	CycleFocusFXMainWnd((int)_ct->user, true, false);
 }
 #endif
 
-void CycleFocusFXMainWndAllTracks(COMMAND_T * _ct) {
+void CycleFocusFXMainWndAllTracks(COMMAND_T* _ct) {
 	CycleFocusFXMainWnd((int)_ct->user, false, true);
 }
 
-void CycleFocusFXMainWndSelTracks(COMMAND_T * _ct) {
+void CycleFocusFXMainWndSelTracks(COMMAND_T* _ct) {
 	CycleFocusFXMainWnd((int)_ct->user, true, true);
 }
 
-void CycleFloatFXWndSelTracks(COMMAND_T * _ct)
+void CycleFloatFXWndSelTracks(COMMAND_T* _ct)
 {
 	int dir = (int)_ct->user;
 	if (SNM_CountSelectedTracks(NULL, true))
@@ -946,130 +1068,5 @@ void CycleFloatFXWndSelTracks(COMMAND_T * _ct)
 		if (firstTrFound) 
 			FloatOnlyJob(firstTrFound, firstFXFound, true);
 	}
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-// Other focus actions
-///////////////////////////////////////////////////////////////////////////////
-
-void CycleFocusWnd(COMMAND_T * _ct) 
-{
-#ifdef _WIN32
-	if (GetMainHwnd())
-	{
-		HWND focusedWnd = GetForegroundWindow();
-		HWND w = GetWindow(GetMainHwnd(), GW_HWNDLAST);
-		while (w)
-		{ 
-			if (IsWindowVisible(w) && GetWindow(w, GW_OWNER) == GetMainHwnd() && focusedWnd != w) {
-				SetForegroundWindow(w);
-				return;
-			}
-			w = GetWindow(w, GW_HWNDPREV);
-		}
-	}
-#endif
-}
-
-
-int g_lastFocusHideOthers = 0;
-
-void CycleFocusHideOthersWnd(COMMAND_T * _ct) 
-{
-#ifdef _WIN32
-	g_hwndsCount = 0;
-	EnumWindows(EnumReaWindows, 0);
-	AddUniqueHnwd(GetMainHwnd(), g_hwnds, &g_hwndsCount);
-
-	// sort & filter windows
-	WDL_PtrList<HWND> hwndList;
-	for (int i =0; i < g_hwndsCount && i < MAX_ENUM_HWNDS; i++)
-	{
-		char buf[512] = "";
-		GetWindowText(g_hwnds[i], buf, 512);
-		if (strcmp(__localizeFunc("Item/track info","sws_DLG_131",0), buf) &&
-			strcmp(__localizeFunc("Docker", "docker", 0), buf)) // "closed" floating dockers are in fact hidden (and not redrawn => issue)
-		{
-			int j = 0;
-			for (j=0; j < hwndList.GetSize(); j++)
-			{
-				char buf2[512] = "";
-				GetWindowText(*hwndList.Get(j), buf2, 512);
-				if (strcmp(buf, buf2) < 0)
-					break;
-			}
-			hwndList.Insert(j, &g_hwnds[i]);
-		}
-	}
-
-	// find out the window to be displayed
-	g_lastFocusHideOthers += (int)_ct->user; // not a % !
-	if (g_lastFocusHideOthers < 0)
-		g_lastFocusHideOthers = hwndList.GetSize();
-	else  if (g_lastFocusHideOthers == (hwndList.GetSize()+1))
-		g_lastFocusHideOthers = 0;
-
-	// focus one & hide others
-	if (g_lastFocusHideOthers < hwndList.GetSize())
-	{
-		int lastOk = g_lastFocusHideOthers;
-		for (int i=0; i < hwndList.GetSize(); i++)
-		{
-			HWND h = *hwndList.Get(i);
-			if (i != g_lastFocusHideOthers) {
-				if (h != GetMainHwnd())
-					ShowWindow(h, SW_HIDE);
-			}
-			else {
-				ShowWindow(h, SW_SHOW);
-				lastOk = i;
-			}
-		}
-		SetForegroundWindow(*hwndList.Get(lastOk)); 
-	}
-	// focus main window & unhide others
-	else
-	{
-		for (int i=0; i < hwndList.GetSize(); i++)
-			ShowWindow(*hwndList.Get(i), SW_SHOW);
-		SetForegroundWindow(GetMainHwnd()); 
-	}
-#endif
-}
-
-void FocusMainWindow(COMMAND_T* _ct) {
-	SetForegroundWindow(GetMainHwnd());
-}
-
-void FocusMainWindowCloseOthers(COMMAND_T* _ct) 
-{
-#ifdef _WIN32
-	g_hwndsCount = 0;
-	EnumWindows(EnumReaWindows, 0); 
-	for (int i=0; i < g_hwndsCount && i < MAX_ENUM_HWNDS; i++)
-		if (g_hwnds[i] != GetMainHwnd() && IsWindowVisible(g_hwnds[i]))
-			SendMessage(g_hwnds[i], WM_SYSCOMMAND, SC_CLOSE, 0);
-#endif
-	SetForegroundWindow(GetMainHwnd()); 
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-// Other
-///////////////////////////////////////////////////////////////////////////////
-
-void GetVisibleTCPTracks(WDL_PtrList<void>* _trList)
-{
-#ifdef _WIN32
-	g_childHwndsCount = 0;
-	EnumChildWindows(GetMainHwnd(), EnumXCPWindows, 0);
-	for (int i=0; i < g_childHwndsCount && i < MAX_ENUM_CHILD_HWNDS; i++)
-	{
-		HWND w = g_childHwnds[i];
-		if (IsWindowVisible(w) && !IsChildOf(w, __localizeFunc("Mixer", "DLG_151", 0)))
-			_trList->Add((void*)GetWindowLongPtr(w, GWLP_USERDATA));
-	}
-#endif
 }
 

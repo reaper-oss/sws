@@ -36,25 +36,26 @@
 class Cyclaction
 {
 public:
-	// constructors suppose params are valid
+	// constructors assume their params are valid
 	Cyclaction(const char* _desc=EMPTY_CYCLACTION, bool _added=false) : m_desc(_desc), m_performState(0), m_added(_added), m_empty(false) {UpdateNameAndCmds();}
 	Cyclaction(Cyclaction* _a) : m_desc(_a->m_desc), m_performState(_a->m_performState), m_added(_a->m_added), m_empty(_a->IsEmpty()) {UpdateNameAndCmds();}
 	~Cyclaction() {}
-	void Update(const char* _desc) {m_desc.Set(_desc); UpdateNameAndCmds();}
-	bool IsEmpty() {return m_empty;}
+	void Update(const char* _desc) { m_desc.Set(_desc); UpdateNameAndCmds(); }
+	bool IsEmpty() { return m_empty; }
 	bool IsToggle() {return *m_desc.Get() == '#';}
 	void SetToggle(bool _toggle);
-	const char* GetName() {return m_name.Get();}
-	void SetName(const char* _name) {m_name.Set(_name); UpdateFromCmd();}
+	const char* GetName() { return m_name.Get(); }
+	void SetName(const char* _name) { m_name.Set(_name); UpdateFromCmd(); }
 	const char* GetStepName(int _performState = -1);
-	int GetCmdSize() {return m_cmds.GetSize();}
-	const char* GetCmd(int _i) {return m_cmds.Get(_i)->Get();}
+	int GetCmdSize() { return m_cmds.GetSize(); }
+	int GetCurrentCmdIdx(WDL_FastString* _cyclePointName = NULL);
+	const char* GetCmd(int _i) { return m_cmds.Get(_i) ? m_cmds.Get(_i)->Get() : ""; }
 	void SetCmd(WDL_FastString* _cmd, const char* _newCmd);
 	WDL_FastString* AddCmd(const char* _cmd, int _pos = -1);
-	void InsertCmd(int _pos, WDL_FastString* _cmd) {m_cmds.Insert(_pos, _cmd); UpdateFromCmd();}
-	void RemoveCmd(WDL_FastString* _cmd, bool _wantDelete=false){m_cmds.Delete(m_cmds.Find(_cmd), _wantDelete); UpdateFromCmd();}
-	WDL_FastString* GetCmdString(int _i) {return m_cmds.Get(_i);}
-	int FindCmd(WDL_FastString* _cmd) {return m_cmds.Find(_cmd);}
+	void InsertCmd(int _pos, WDL_FastString* _cmd) { m_cmds.Insert(_pos, _cmd); UpdateFromCmd(); }
+	void RemoveCmd(WDL_FastString* _cmd, bool _wantDelete=false) { m_cmds.Delete(m_cmds.Find(_cmd), _wantDelete); UpdateFromCmd(); }
+	WDL_FastString* GetCmdString(int _i) { return m_cmds.Get(_i); }
+	int FindCmd(WDL_FastString* _cmd) { return m_cmds.Find(_cmd); }
 
 //JFB TODO? protected?
 	WDL_FastString m_desc; 

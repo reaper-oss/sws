@@ -55,12 +55,12 @@ void SNM_SetUIRefresh(COMMAND_T* _ct) {
 // Theming
 ///////////////////////////////////////////////////////////////////////////////
 
-// not configurable on osx, optional on win (.ini file)
-bool g_SNMClearType = 
+// native font rendering: not configurable on osx, optional on win
+bool g_SNMClearType =
 #ifdef _WIN32
-	false;
+	false; // default value (value overrided by the s&m.ini one)
 #else
-	true;
+	false; //JFB!!! disabled on OSX: font issue on x64 (ex: live config knobs)
 #endif
 
 ColorTheme* SNM_GetColorTheme(bool _checkForSize) {
@@ -81,10 +81,12 @@ LICE_CachedFont* SNM_GetThemeFont()
 	if (!themeFont.GetHFont()) // single lazy init..
 	{
 		LOGFONT lf = {
-			SNM_FONT_HEIGHT, 0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
+			SNM_FONT_HEIGHT,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
 			OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SNM_FONT_NAME
 		};
-		themeFont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT | (g_SNMClearType?LICE_FONT_FLAG_FORCE_NATIVE:0));
+		themeFont.SetFromHFont(
+			CreateFontIndirect(&lf),
+			LICE_FONT_FLAG_OWNS_HFONT | (g_SNMClearType?LICE_FONT_FLAG_FORCE_NATIVE:0));
 		// others props are set on demand (support theme switches)
 	}
 	ColorTheme* ct = SNM_GetColorTheme();
@@ -100,7 +102,7 @@ LICE_CachedFont* SNM_GetFont()
 	if (!themeFont.GetHFont()) // single lazy init..
 	{
 		LOGFONT lf = {
-			SNM_FONT_HEIGHT, 0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
+			SNM_FONT_HEIGHT,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
 			OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SNM_FONT_NAME
 		};
 		themeFont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT);
@@ -194,7 +196,7 @@ LICE_IBitmap* SNM_GetThemeLogo()
 		snmLogo = NULL;
 #endif
 */
-		// logo is now loaded from memory (OSX support)
+		// logo is now loaded from memory (for OSX support)
 		if (WDL_HeapBuf* hb = TranscodeStr64ToHeapBuf(SNM_LOGO_PNG_FILE)) {
 			snmLogo = LICE_LoadPNGFromMemory(hb->Get(), hb->GetSize());
 			delete hb;

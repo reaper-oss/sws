@@ -460,13 +460,13 @@ int GetUserPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL
 			fxType[i] = tolower(fxType[i]);
 		_snprintfSafe(iniFn, sizeof(iniFn), "%s%cpresets%c%s-%s.ini", GetResourcePath(), PATH_SLASH_CHAR, PATH_SLASH_CHAR, fxType, buf);
 
-		bool exitTst = FileExists(iniFn);
+		bool exitTst = FileOrDirExists(iniFn);
 		if (!exitTst)
 			_snprintfSafe(iniFn, sizeof(iniFn), "%s%cpresets-%s-%s.ini", GetResourcePath(), PATH_SLASH_CHAR, fxType, buf);
 		free(fxType);
 
 		// *** get presets ***
-		if (exitTst || (!exitTst && FileExists(iniFn)))
+		if (exitTst || (!exitTst && FileOrDirExists(iniFn)))
 		{
 			GetPrivateProfileString("General", "NbPresets", "0", buf, 5, iniFn);
 			nbPresets = atoi(buf);

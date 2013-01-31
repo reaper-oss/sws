@@ -1129,7 +1129,7 @@ bool SNM_RegionPlaylistWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut
 void SNM_RegionPlaylistWnd::ToggleLock()
 {
 	g_monitorMode = !g_monitorMode;
-	RefreshToolbar(NamedCommandLookup("_S&M_TGL_RGN_PLAYLIST_MODE"));
+	RefreshToolbar(SWSGetCommandID(ToggleRegionPlaylistMode));
 	Update();
 }
 
@@ -1497,7 +1497,7 @@ void SetPlaylistRepeat(COMMAND_T* _ct)
 		case 0: g_repeatPlaylist=false; break;
 		case 1: g_repeatPlaylist=true; break;
 	}
-	RefreshToolbar(NamedCommandLookup("_S&M_PLAYLIST_TGL_REPEAT"));
+	RefreshToolbar(SWSGetCommandID(SetPlaylistRepeat, -1));
 	PlaylistResync();
 	if (g_pRgnPlaylistWnd)
 		g_pRgnPlaylistWnd->Update();

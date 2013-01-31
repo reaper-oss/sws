@@ -1,7 +1,7 @@
 /******************************************************************************
 / Console.h
 /
-/ Copyright (c) 2009 Tim Payne (SWS)
+/ Copyright (c) 2009 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -52,6 +52,7 @@ typedef enum {
 	FX_DISABLE,
 	FX_TOGGLE,
 	FX_EXCLUSIVE,
+	FX_ADD,
 	VOLUME_SET,
 	VOLUME_TRIM,
 	PAN_SET,
@@ -63,6 +64,7 @@ typedef enum {
 	INPUT_SET,
 	COLOR_SET,
 	MARKER_ADD,
+	OSC_CMD,
 	HELP_CMD,
 	UNKNOWN_COMMAND,
 	NUM_COMMANDS,
@@ -73,8 +75,8 @@ typedef struct {
 	char			cPrefix;
 	char			cKey;
 	int				iNumArgs;  // + 8 if non-numeric args, + 16 for no track args either
-	const char*			cHelpPrefix;
-	const char*			cHelpSuffix;
+	const char*		cHelpPrefix;
+	const char*		cHelpSuffix;
 } console_COMMAND_T;
 
 #define ARGS_MASK    7
@@ -83,3 +85,24 @@ typedef struct {
 #define NUMERIC_ARGS(a) (g_commands[(a)].iNumArgs > 0 && !(g_commands[(a)].iNumArgs & STRING_ARG))
 
 int ConsoleInit();
+void ConsoleExit();
+void RunConsoleCommand(const char* cmd);
+
+class ReaConsoleWnd : public SWS_DockWnd
+{
+public:
+	ReaConsoleWnd();
+	void OnCommand(WPARAM wParam, LPARAM lParam);
+	void GetMinSize(int* w, int* h) { *w=150; *h=100; }
+	void ShowConsole();
+	void Update();
+protected:
+	void OnInitDlg();
+	int OnKey(MSG* msg, int iKeyState);
+private:
+	char m_strCmd[256];
+	char* m_pTrackId;
+	char* m_pArgs;
+	CONSOLE_COMMAND m_cmd;
+};
+

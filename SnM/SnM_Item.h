@@ -38,7 +38,8 @@ enum {
   SNM_ITEM_SEL_LEFT=0,
   SNM_ITEM_SEL_RIGHT,
   SNM_ITEM_SEL_UP,
-  SNM_ITEM_SEL_DOWN
+  SNM_ITEM_SEL_DOWN,
+  SNM_ITEM_SEL_COUNT
 };
 
 class SNM_ItemChunk {
@@ -65,6 +66,7 @@ bool GetItemsInInterval(WDL_PtrList<void>* _items, double _pos1, double _pos2, b
 void GetAllItemPointers(WDL_PtrList<void>* _items);
 void DiffItemPointers(WDL_PtrList<void>* _oldItemsIn, WDL_PtrList<void>* _newItemsOut);
 bool DupSelItems(const char* _undoTitle, double _nudgePos, WDL_PtrList<void>* _newItemsOut = NULL);
+
 void SplitMidiAudio(COMMAND_T*);
 void SmartSplitMidiAudio(COMMAND_T*);
 #ifdef _SNM_MISC // deprecated (v3.67)
@@ -74,8 +76,10 @@ void GoferSplitSelectedItems(COMMAND_T*);
 bool SplitSelectItemsInInterval(MediaTrack* _tr, double _pos1, double _pos2, WDL_PtrList<void>* _newItemsOut = NULL);
 bool SplitSelectItemsInInterval(const char* _undoTitle, double _pos1, double _pos2, bool _selTracks = false, WDL_PtrList<void>* _newItemsOut = NULL);
 void SplitSelectAllItemsInRegion(COMMAND_T*);
+
 void CopyCutTake(COMMAND_T*);
 void PasteTake(COMMAND_T*);
+
 bool IsEmptyMidi(MediaItem_Take* _take);
 void SetEmptyTakeChunk(WDL_FastString* _chunk, int _recPass = -1, int _color = -1, bool _v4style = true);
 bool RemoveEmptyTakes(MediaTrack* _tr, bool _empty, bool _midiEmpty, bool _trSel, bool _itemSel);
@@ -93,6 +97,7 @@ void RemoveEmptyTakes(COMMAND_T*);
 void RemoveEmptyMidiTakes(COMMAND_T*);
 void RemoveAllEmptyTakes(COMMAND_T*);
 void DeleteTakeAndMedia(COMMAND_T*);
+
 int GetPitchTakeEnvRangeFromPrefs();
 void PanTakeEnvelope(COMMAND_T*);
 void ShowHideTakeVolEnvelope(COMMAND_T*); 
@@ -103,13 +108,17 @@ bool ShowTakeEnvVol(MediaItem_Take* _take);
 bool ShowTakeEnvPan(MediaItem_Take* _take);
 bool ShowTakeEnvMute(MediaItem_Take* _take);
 bool ShowTakeEnvPitch(MediaItem_Take* _take);
-void ItemSelToolbarPoll();
-void ToggleItemSelExists(COMMAND_T*);
-bool ItemSelExists(COMMAND_T*);
+
+void OffscreenSelItemsPoll();
+void ToggleOffscreenSelItems(COMMAND_T*);
+bool HasOffscreenSelItems(COMMAND_T*);
+void UnselectOffscreenItems(COMMAND_T*);
+
 void ScrollToSelItem(MediaItem* _item);
 void ScrollToSelItem(COMMAND_T*);
 void SetPan(COMMAND_T*);
 void OpenMediaPathInExplorerFinder(COMMAND_T*);
+
 void PlaySelTrackMediaSlot(COMMAND_T*);
 void LoopSelTrackMediaSlot(COMMAND_T*);
 void SyncPlaySelTrackMediaSlot(COMMAND_T*);

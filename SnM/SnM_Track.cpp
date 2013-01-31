@@ -620,7 +620,7 @@ void ToggleWriteEnvExists(COMMAND_T* _ct)
 
 	if (updated) {
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
-		RefreshToolbar(NamedCommandLookup("_S&M_TOOLBAR_WRITE_ENV")); // in case auto refresh toolbar bar option is off..
+		RefreshToolbar(SWSGetCommandID(ToggleWriteEnvExists)); // in case auto-refresh toolbar option is off..
 	}
 }
 

@@ -40,5 +40,6 @@ void SaveCueBusIniFile(int _confId, const char* _busName, int _type, bool _trTem
 
 void OpenCueBussDlg(COMMAND_T*);
 bool IsCueBussDlgDisplayed(COMMAND_T*);
+int CueBussInit();
 
 #endif

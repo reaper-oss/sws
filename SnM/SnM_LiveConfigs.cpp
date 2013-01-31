@@ -773,7 +773,7 @@ void SNM_LiveConfigsWnd::Update()
 	if (LiveConfig* lc = g_liveConfigs.Get()->Get(g_configId)) {
 		m_vwndCC.SetValue(lc->m_ccDelay);
 		m_vwndFade.SetValue(lc->m_fade);
-//JFB!!!		AddOrReplaceScheduledJob(new LiveConfigsUpdateFadeJob(lc->m_fade)); // so that it works for undo..
+//		AddOrReplaceScheduledJob(new LiveConfigsUpdateFadeJob(lc->m_fade)); // so that it works for undo..
 	}
 	m_parentVwnd.RequestRedraw(NULL);
 }
@@ -1595,12 +1595,12 @@ bool SNM_LiveConfigsWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, i
 			case WNDID_CC_DELAY:
 			case KNBID_CC_DELAY:
 				// keep messages on a single line (for the langpack generator)
-				lstrcpyn(_bufOut, __LOCALIZE("Optional delay when applying/preloading configs\n(prevents REAPER to be stuck on intermediate configs)","sws_DLG_155"), _bufOutSz);
+				lstrcpyn(_bufOut, __LOCALIZE("Optional delay when applying/preloading configs","sws_DLG_155"), _bufOutSz);
 				return true;
 			case WNDID_FADE:
 			case KNBID_FADE:
 				// keep messages on a single line (for the langpack generator)
-				lstrcpyn(_bufOut, __LOCALIZE("Optional fades out/in when deactivating/activating configs\n(ensure smooth switches)","sws_DLG_155"), _bufOutSz);
+				lstrcpyn(_bufOut, __LOCALIZE("Optional fades out/in when deactivating/activating configs\n(ensure glitch-free switches)","sws_DLG_155"), _bufOutSz);
 				return true;
 		}
 	}
@@ -1998,7 +1998,7 @@ void MuteAndInitCC123AllConfigs(LiveConfig* _lc, DWORD* _muteTime, WDL_PtrList<v
 	for (int i=0; i<_lc->m_ccConfs.GetSize(); i++)
 		if (LiveConfigItem* item = _lc->m_ccConfs.Get(i))
 			if (item->m_track && _muteTracks->Find(item->m_track) < 0)
-/*JFB!!! always mute: no! e.g. using the live configs just to switch fx presets (all options disabled)
+/*JFB!!! no! e.g. using the live configs just to switch fx presets (with all options disabled)
 				MuteAndInitCC123(_lc, item->m_track, _muteTime, _muteTracks, _cc123Tracks, _muteStates, true); // always mute
 */
 				MuteAndInitCC123(_lc, item->m_track, _muteTime, _muteTracks, _cc123Tracks, _muteStates);

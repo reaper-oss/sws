@@ -138,11 +138,10 @@ void SNM_FindWnd::OnInitDlg()
 	m_resize.init_item(IDC_EDIT, 0.0, 0.0, 1.0, 0.0);
 	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_EDIT), GWLP_USERDATA, 0xdeadf00b);
 
-	// Load prefs 
+	// load prefs 
 	m_type = GetPrivateProfileInt(FIND_INI_SEC, "Type", 0, g_SNM_IniFn.Get());
 	m_zoomSrollItems = (GetPrivateProfileInt(FIND_INI_SEC, "ZoomScrollToFoundItems", 0, g_SNM_IniFn.Get()) == 1);
 
-	// WDL GUI init
 	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
 	m_parentVwnd.SetRealParent(m_hwnd);
 	
@@ -204,7 +203,6 @@ void SNM_FindWnd::OnDestroy()
 
 void SNM_FindWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 {
-	// WDL GUI
 	switch(LOWORD(wParam))
 	{
 		case IDC_EDIT:
@@ -241,7 +239,27 @@ void SNM_FindWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 
 int SNM_FindWnd::OnKey(MSG* _msg, int _iKeyState) 
 {
-	if (_msg->message == WM_KEYDOWN && (_msg->wParam == VK_F3 || _msg->wParam == VK_RETURN))
+	HWND h = GetDlgItem(m_hwnd, IDC_EDIT);
+/*JFB not needed: IDC_EDIT is the single control of this window..
+#ifdef _WIN32
+	if (_msg->hwnd == h)
+#else
+	if (GetFocus() == h)
+#endif
+*/
+	{
+		// ctrl+A => select all
+		if ((_msg->message == WM_KEYDOWN || _msg->message == WM_CHAR) &&
+			_msg->wParam == 'A' && _iKeyState == LVKF_CONTROL)
+		{
+			SetFocus(h);
+			SendMessage(h, EM_SETSEL, 0, -1);
+			return 1; // eat
+		}
+	}
+
+	if (_msg->message == WM_KEYDOWN &&
+		(_msg->wParam == VK_F3 || _msg->wParam == VK_RETURN))
 	{
 		// F3: find next
 		if (!_iKeyState) {
@@ -254,7 +272,7 @@ int SNM_FindWnd::OnKey(MSG* _msg, int _iKeyState)
 				return 1;
 		}
 	}
-	return 0;
+	return 0; // pass-thru
 }
 
 void SNM_FindWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight)
@@ -626,7 +644,7 @@ void OpenFindView(COMMAND_T*) {
 	}
 }
 
-bool IsFindViewDisplayed(COMMAND_T*){
+bool IsFindViewDisplayed(COMMAND_T*) {
 	return (g_pFindWnd && g_pFindWnd->IsValidWindow());
 }
 

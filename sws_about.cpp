@@ -53,7 +53,7 @@ void WhatsNew(COMMAND_T*)
 		GetResourcePath());
 #endif
 
-	if (FileExistsErrMsg(fnIn.Get()))
+	if (FileOrDirExistsErrMsg(fnIn.Get()))
 	{
 		WDL_FastString fnOut;
 		char tmpDir[BUFFER_SIZE] = "";

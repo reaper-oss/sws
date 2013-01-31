@@ -30,6 +30,11 @@
 #include "../reaper/localize.h"
 
 
+HWND g_cueBussHwnd = NULL;
+int g_cueBussConfId = 0; // not saved in prefs yet
+int g_cueBussLastSettingsId = 0; // 0 for ascendant compatibility
+bool g_cueBussDisableSave = false;
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Cue buss 
@@ -74,7 +79,7 @@ bool CueBuss(const char* _undoMsg, const char* _busName, int _type, bool _showRo
 		return false;
 
 	WDL_FastString tmplt;
-	if (_trTemplatePath && (!FileExists(_trTemplatePath) || !LoadChunk(_trTemplatePath, &tmplt) || !tmplt.GetLength()))
+	if (_trTemplatePath && (!FileOrDirExists(_trTemplatePath) || !LoadChunk(_trTemplatePath, &tmplt) || !tmplt.GetLength()))
 	{
 		char msg[SNM_MAX_PATH] = "";
 		lstrcpyn(msg, __LOCALIZE("Cue buss not created!\nNo track template file defined","sws_DLG_149"), sizeof(msg));
@@ -185,8 +190,6 @@ bool CueBuss(const char* _undoMsg, const char* _busName, int _type, bool _showRo
 	return updated;
 }
 
-int g_cueBussLastSettingsId = 0; // 0 for ascendant compatibility
-
 bool CueBuss(const char* _undoMsg, int _confId)
 {
 	if (_confId<0 || _confId>=SNM_MAX_CUE_BUSS_CONFS)
@@ -268,7 +271,7 @@ void SaveCueBusIniFile(int _confId, const char* _busName, int _type, bool _trTem
 // Cue buss dialog box
 ///////////////////////////////////////////////////////////////////////////////
 
-int GetComboSendIdxType(int _reaType) 
+int GetComboSendIdxType(int _reaType)
 {
 	switch(_reaType) {
 		case 0: return 1;
@@ -331,10 +334,6 @@ void FillHWoutDropDown(HWND _hwnd, int _idc)
 	stereos.Empty(true);
 }
 
-HWND g_cueBussHwnd = NULL;
-int g_cueBussConfId = 0; // not saved in prefs yet
-bool g_cueBussDisableSave = false;
-
 void FillCueBussDlg(HWND _hwnd = NULL)
 {
 	HWND hwnd = _hwnd?_hwnd:g_cueBussHwnd;
@@ -347,14 +346,16 @@ void FillCueBussDlg(HWND _hwnd = NULL)
 	bool trTemplate, showRouting, sendToMaster;
 	ReadCueBusIniFile(g_cueBussConfId, busName, sizeof(busName), &reaType, &trTemplate, trTemplatePath, sizeof(trTemplatePath), &showRouting, &soloDefeat, &sendToMaster, hwOuts);
 	userType = GetComboSendIdxType(reaType);
-	SetDlgItemText(hwnd,IDC_SNM_CUEBUS_NAME,busName);
+	SetWindowLongPtr(GetDlgItem(hwnd, IDC_SNM_CUEBUS_NAME), GWLP_USERDATA, 0xdeadf00b);
+	SetDlgItemText(hwnd, IDC_SNM_CUEBUS_NAME, busName);
 
 	for(int i=0; i<3; i++) {
 		if (_hwnd) SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_TYPE,CB_ADDSTRING,0,(LPARAM)GetSendTypeStr(i+1)); // do it once (WM_INITDIALOG)
 		if (userType==(i+1)) SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_TYPE,CB_SETCURSEL,i,0);
 	}
 
-	SetDlgItemText(hwnd,IDC_SNM_CUEBUS_TEMPLATE,trTemplatePath);
+	SetWindowLongPtr(GetDlgItem(hwnd, IDC_SNM_CUEBUS_TEMPLATE), GWLP_USERDATA, 0xdeadf00b);
+	SetDlgItemText(hwnd, IDC_SNM_CUEBUS_TEMPLATE, trTemplatePath);
 	CheckDlgButton(hwnd, IDC_CHECK1, sendToMaster);
 	CheckDlgButton(hwnd, IDC_CHECK2, showRouting);
 	CheckDlgButton(hwnd, IDC_CHECK3, trTemplate);
@@ -459,7 +460,7 @@ WDL_DLGRET CueBussDlgProc(HWND _hwnd, UINT _uMsg, WPARAM _wParam, LPARAM _lParam
 				case IDC_FILES: {
 					char curPath[SNM_MAX_PATH]="";
 					GetDlgItemText(_hwnd, IDC_SNM_CUEBUS_TEMPLATE, curPath, sizeof(curPath));
-					if (!*curPath || !FileExists(curPath))
+					if (!*curPath || !FileOrDirExists(curPath))
 						if (_snprintfStrict(curPath, sizeof(curPath), "%s%cTrackTemplates", GetResourcePath(), PATH_SLASH_CHAR) <= 0)
 							*curPath = '\0';
 					if (char* fn = BrowseForFiles(__LOCALIZE("S&M - Load track template","sws_DLG_149"), curPath, NULL, false, "REAPER Track Template (*.RTrackTemplate)\0*.RTrackTemplate\0")) {
@@ -531,4 +532,12 @@ void OpenCueBussDlg(COMMAND_T* _ct)
 
 bool IsCueBussDlgDisplayed(COMMAND_T* _ct) {
 	return (g_cueBussHwnd && SWS_IsWindow(g_cueBussHwnd) && IsWindowVisible(g_cueBussHwnd) ? true : false);
+}
+
+// pass-through to main window
+static int translateAccel(MSG* _msg, accelerator_register_t* _ctx) { return SNM_IsActiveWindow(g_cueBussHwnd) ? -666 : 0; }
+static accelerator_register_t g_ar = { translateAccel, TRUE, NULL };
+
+int CueBussInit() {
+	return plugin_register("accelerator", &g_ar);
 }

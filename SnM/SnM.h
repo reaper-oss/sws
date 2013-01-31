@@ -36,13 +36,14 @@
 
 // compil flags
 //#define _SNM_DEBUG
-//#define _SNM_DYN_FONT_DEBUG
-//#define _SNM_MISC	// not released, deprecated, tests, etc..
-//#define _SNM_WDL	// if my wdl version is used
-//#define _SNM_STANDALONE
+//#define _SNM_MISC					// not released, deprecated, tests, etc..
+//#define _SNM_WDL					// if my wdl version is used
 #define _SNM_CSURF_PROXY
 #define _SNM_HOST_AW
+//#define _SNM_DYN_FONT_DEBUG
 
+
+///////////////////////////////////////////////////////////////////////////////
 
 #define SNM_INI_FILE_VERSION		7
 
@@ -70,7 +71,7 @@
 #define SNM_CYCLACTION_EXPORT_FILE	"%s/S&M_Cyclactions_export.ini"
 #define SNM_EXTENSION_FILE			"%s/UserPlugins/reaper_snm.dylib"
 #define SNM_FONT_NAME				"Lucida Grande"
-#ifndef __LP64__					//JFB!!! SWELL issue: wtf!? same font, different look on x64!
+#ifndef __LP64__					//JFB!!! SWELL issue: wtf!? same font size, different look on x64!
 #define SNM_FONT_HEIGHT				10
 #else
 #define SNM_FONT_HEIGHT				11
@@ -178,7 +179,7 @@ class SNM_MarkerRegionSubscriber {
 public:
 	SNM_MarkerRegionSubscriber() {}
 	virtual ~SNM_MarkerRegionSubscriber() {}
-	// _updateFlags: 1 marker update, 2 region update, 3 both region & marker updates
+	// _updateFlags: &1 marker update, &2 region update
 	virtual void NotifyMarkerRegionUpdate(int _updateFlags) {}
 };
 
@@ -262,14 +263,16 @@ typedef struct MIDI_COMMAND_T {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-
 extern KbdSectionInfo g_SNM_Section;
-extern bool g_SNM_PlayState, g_SNM_PauseState, g_SNM_RecState;
+extern bool g_SNM_PlayState, g_SNM_PauseState, g_SNM_RecState, g_SNM_ToolbarRefresh;
 extern int g_SNM_IniVersion, g_SNM_Beta, g_SNM_LastImgSlot;
 extern WDL_FastString g_SNM_IniFn, g_SNM_CyclactionIniFn, g_SNM_DiffToolFn;
 #ifdef _SNM_CSURF_PROXY
 extern SNM_CSurfProxy* g_SNM_CSurfProxy;
 #endif
+
+
+///////////////////////////////////////////////////////////////////////////////
 
 void EnableToolbarsAutoRefesh(COMMAND_T*);
 bool IsToolbarsAutoRefeshEnabled(COMMAND_T*);
@@ -281,9 +284,6 @@ void DummyToggle(COMMAND_T*);
 void ExclusiveToggle(COMMAND_T*);
 
 int SNM_RegisterDynamicCommands(COMMAND_T* _pCommands);
-bool SNM_HasExtension();
-int SNM_Init(reaper_plugin_info_t* _rec);
-void SNM_Exit();
 
 void AddOrReplaceScheduledJob(SNM_ScheduledJob* _job);
 
@@ -300,6 +300,13 @@ void SNM_CSurfSetTrackTitle();
 void SNM_CSurfSetTrackListChange();
 void SNM_CSurfSetPlayState(bool _play, bool _pause, bool _rec);
 int SNM_CSurfExtended(int _call, void* _parm1, void* _parm2, void* _parm3);
+
+// fake/local osc csurf
+bool SNM_SendLocalOscMessage(const char* _oscMsg);
+
+bool SNM_HasExtension();
+int SNM_Init(reaper_plugin_info_t* _rec);
+void SNM_Exit();
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -370,24 +377,27 @@ vezn/Q+t/AIQiCv/Q4iRxAAAAABJRU5ErkJggg==\n"
 
 #include "SnM_ChunkParserPatcher.h" 
 #include "SnM_Chunk.h"
-#include "SnM_Routing.h"
-#include "SnM_Dlg.h"
 #include "SnM_VWnd.h"
 #include "SnM_Resources.h"
+// from this point, order does not matter
+#include "SnM_CueBuss.h"
 #include "SnM_Cyclactions.h"
+#include "SnM_Dlg.h"
 #include "SnM_Find.h"
-#include "SnM_fx.h"
+#include "SnM_FX.h"
 #include "SnM_FXChain.h"
 #include "SnM_Item.h"
 #include "SnM_LiveConfigs.h"
+#include "SnM_Marker.h"
 #include "SnM_ME.h"
 #include "SnM_Misc.h"
 #include "SnM_Notes.h"
 #include "SnM_Project.h"
 #include "SnM_RegionPlaylist.h"
+#include "SnM_Routing.h"
 #include "SnM_Track.h"
 #include "SnM_Util.h"
 #include "SnM_Window.h"
-#include "SnM_CueBuss.h"
+
 
 #endif

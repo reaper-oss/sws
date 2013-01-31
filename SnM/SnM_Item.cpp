@@ -944,7 +944,7 @@ bool DeleteTakeAndMedia(int _mode)
 						if (rc==IDYES)
 						{
 							nbRemainingTakes--;
-							if (pcm && pcm->GetFileName() && strlen(pcm->GetFileName()) && FileExists(pcm->GetFileName()))
+							if (pcm && pcm->GetFileName() && strlen(pcm->GetFileName()) && FileOrDirExists(pcm->GetFileName()))
 							{
 								// set all media offline (yeah, EACH TIME! Fails otherwise: http://code.google.com/p/sws-extension/issues/detail?id=175#c3)
 								Main_OnCommand(40100,0); 
@@ -1204,15 +1204,15 @@ bool ShowTakeEnvPitch(MediaItem_Take* _take) {
 // Toolbar item selection toggles
 ///////////////////////////////////////////////////////////////////////////////
 
-WDL_PtrList<void> g_toolbarItemSel[4];
-WDL_PtrList<void> g_toolbarItemSelToggle[4];
+WDL_PtrList<void> g_toolbarItemSel[SNM_ITEM_SEL_COUNT];
+WDL_PtrList<void> g_toolbarItemSelToggle[SNM_ITEM_SEL_COUNT];
 SWS_Mutex g_toolbarItemSelLock;
 
-void ItemSelToolbarPoll()
+void OffscreenSelItemsPoll()
 {
 	SWS_SectionLock lock(&g_toolbarItemSelLock);
 
-	for(int i=0; i < SNM_ITEM_SEL_DOWN; i++)
+	for(int i=0; i<SNM_ITEM_SEL_COUNT; i++)
 		g_toolbarItemSel[i].Empty(false);
 
 	if (CountSelectedMediaItems(NULL))
@@ -1221,8 +1221,7 @@ void ItemSelToolbarPoll()
 		double pos,len,start_time,end_time;
 		bool horizontal = false;
 
-		//JFB relies on (incomplete?) SWELL's FindWindowEx here rather than GetTrackWnd()
-		if (HWND w = FindWindowEx(GetMainHwnd(), 0, "REAPERTrackListWindow", "trackview"))
+		if (HWND w = GetTrackWnd()) // works on osx too
 		{
 			RECT r; GetWindowRect(w, &r);
 			GetSet_ArrangeView2(NULL, false, r.left, r.right-17, &start_time, &end_time); // -17 = width of the vert. scrollbar
@@ -1259,18 +1258,22 @@ void ItemSelToolbarPoll()
 							if (MediaTrack* tr2 = (MediaTrack*)trList.Get(k))
 							{
 								int trIdx = CSurf_TrackToID(tr2, false);
+								// >0: no items on master track..
 								if (trIdx > 0 && trIdx < minVis) minVis = trIdx;
 								if (trIdx > 0 && trIdx > maxVis) maxVis = trIdx;
 							}
 
-						MediaTrack* tr = GetMediaItem_Track(item);
-						if (tr && trList.Find((void*)tr) == -1)
+						if (minVis <= maxVis)
 						{
-							int trIdx = CSurf_TrackToID(tr, false);
-							if (trIdx <= minVis)
-								g_toolbarItemSel[SNM_ITEM_SEL_UP].Add(item);
-							else if (trIdx >= maxVis)
-								g_toolbarItemSel[SNM_ITEM_SEL_DOWN].Add(item);
+							MediaTrack* tr = GetMediaItem_Track(item);
+							if (tr && trList.Find((void*)tr) == -1)
+							{
+								int trIdx = CSurf_TrackToID(tr, false);
+								if (trIdx <= minVis)
+									g_toolbarItemSel[SNM_ITEM_SEL_UP].Add(item);
+								else if (trIdx >= maxVis)
+									g_toolbarItemSel[SNM_ITEM_SEL_DOWN].Add(item);
+							}
 						}
 					}
 				}
@@ -1279,56 +1282,96 @@ void ItemSelToolbarPoll()
 	}
 }
 
-// deselects items out of the scope and reselects those items -on toggle-
-void ToggleItemSelExists(COMMAND_T* _ct)
+// deselects offscreen items and reselects those items -on toggle-
+// note: callers must call UpdateTimeline() if it returns true
+bool ToggleOffscreenSelItems(int _dir)
 {
-	bool updated = false, toggle = false;
-	int dir = (int)_ct->user;
-	WDL_PtrList<void>* l1 = NULL;
-	WDL_PtrList<void>* l2 = NULL;
-
 	SWS_SectionLock lock(&g_toolbarItemSelLock);
 
-	if (g_toolbarItemSel[dir].GetSize()) 
-	{
-		l1 = &(g_toolbarItemSel[dir]);
-		l2 = &(g_toolbarItemSelToggle[dir]);
-	}
-	else if (g_toolbarItemSelToggle[dir].GetSize())
-	{
-		l2 = &(g_toolbarItemSel[dir]);
-		l1 = &(g_toolbarItemSelToggle[dir]);
-		toggle = true;
+	bool updated = false;
+
+	int dir1=_dir, dir2=_dir+1;
+	if (_dir<0) {
+		dir1=0;
+		dir2=SNM_ITEM_SEL_COUNT;
 	}
 
-	if (l1 && l2) 
+	for (int i=dir1; i<dir2; i++)
 	{
-		l2->Empty(false);
-		for (int i=0; i < l1->GetSize(); i++)
+		bool toggle = false;
+		WDL_PtrList<void>* l1 = NULL;
+		WDL_PtrList<void>* l2 = NULL;
+
+		if (g_toolbarItemSel[i].GetSize()) 
 		{
-			GetSetMediaItemInfo((MediaItem*)l1->Get(i), "B_UISEL", &toggle);
-			l2->Add((MediaItem*)l1->Get(i));
-			updated = true;
+			l1 = &(g_toolbarItemSel[i]);
+			l2 = &(g_toolbarItemSelToggle[i]);
 		}
-		l1->Empty(false);
-	}
+		else if (g_toolbarItemSelToggle[i].GetSize())
+		{
+			l2 = &(g_toolbarItemSel[i]);
+			l1 = &(g_toolbarItemSelToggle[i]);
+			toggle = true;
+		}
 
-	if (updated)
-	{
+		if (l1 && l2) 
+		{
+			if (PreventUIRefresh) PreventUIRefresh(1);
+			l2->Empty(false);
+			for (int j=0; j < l1->GetSize(); j++)
+			{
+				GetSetMediaItemInfo((MediaItem*)l1->Get(j), "B_UISEL", &toggle);
+				l2->Add((MediaItem*)l1->Get(j));
+				updated = true;
+			}
+			l1->Empty(false);
+			if (PreventUIRefresh) PreventUIRefresh(-1);
+
+			// in case auto-refresh toolbar option is off..
+			RefreshToolbar(SWSGetCommandID(ToggleOffscreenSelItems, i));
+		}
+	}
+	return updated;
+}
+
+void ToggleOffscreenSelItems(COMMAND_T* _ct)
+{
+	int dir = (int)_ct->user;
+	if (ToggleOffscreenSelItems(dir)) {
 		UpdateTimeline();
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
-
-		// in case auto refresh toolbar bar option is off..
-		char custId[SNM_MAX_ACTION_CUSTID_LEN] = "";
-		_snprintfSafe(custId, sizeof(custId), "_S&M_TOOLBAR_ITEM_SEL%d", dir);
-		RefreshToolbar(NamedCommandLookup(custId));
 	}
 }
 
-// returns the toggle state as fast as possible: background job done in itemSelToolbarPoll() 
-bool ItemSelExists(COMMAND_T* _ct) {
+// returns the toggle state as fast as possible: background job done in OffscreenSelItemsPoll() 
+bool HasOffscreenSelItems(COMMAND_T* _ct)
+{
 	SWS_SectionLock lock(&g_toolbarItemSelLock);
-	return (g_toolbarItemSel[(int)_ct->user].GetSize() > 0);
+	int dir = (int)_ct->user;
+	if (dir<0)
+		for(dir=0; dir<SNM_ITEM_SEL_COUNT; dir++)
+			if (g_toolbarItemSel[dir].GetSize() > 0)
+				return true;
+	return (g_toolbarItemSel[dir].GetSize() > 0);
+}
+
+// deselects offscreen items
+void UnselectOffscreenItems(COMMAND_T* _ct)
+{
+	SWS_SectionLock lock(&g_toolbarItemSelLock);
+
+	// force refresh if not auto
+	if (!g_SNM_ToolbarRefresh) 
+		OffscreenSelItemsPoll();
+
+	bool updated = false;
+	for(int i=0; i<SNM_ITEM_SEL_COUNT; i++)
+		if (g_toolbarItemSel[i].GetSize() > 0)
+			updated |= ToggleOffscreenSelItems(i);
+	if (updated) {
+		UpdateTimeline();
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+	}
 }
 
 
@@ -1405,7 +1448,7 @@ void OpenMediaPathInExplorerFinder(COMMAND_T*)
 					if (*(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
 						if (MediaItem_Take* tk = GetActiveTake(item))
 							if (PCM_source* pcm = (PCM_source*)GetSetMediaItemTakeInfo(tk, "P_SOURCE", NULL))
-								if (FileExists(pcm->GetFileName()))
+								if (FileOrDirExists(pcm->GetFileName()))
 								{
 									lstrcpyn(path, pcm->GetFileName(), sizeof(path));
 									if (char* p = strrchr(path, PATH_SLASH_CHAR))

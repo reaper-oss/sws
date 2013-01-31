@@ -33,7 +33,6 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 // File util
-// JFB TODO: WDL_UTF8, exist_fn, ..
 ///////////////////////////////////////////////////////////////////////////////
 
 const char* GetFileRelativePath(const char* _fn)
@@ -109,16 +108,36 @@ bool IsValidFilenameErrMsg(const char* _fn, bool _errMsg)
 	return !ko;
 }
 
-// the API function file_exists() is a bit different, it returns false for folder paths, etc..
-bool FileExistsErrMsg(const char* _fn, bool _errMsg)
+// the API function file_exists() is a bit different, it returns false for folder paths
+bool FileOrDirExists(const char* _fn)
 {
-	bool exists = FileExists(_fn);
+	if (_fn && *_fn && *_fn!='.') // valid absolute path (1/2)?
+	{
+		if (const char* p = strrchr(_fn, PATH_SLASH_CHAR)) // valid absolute path (2/2)?
+		{
+			WDL_FastString fn;
+			fn.Set(_fn, *(p+1)? 0 : p-_fn); // // bug fix for directories, skip last PATH_SLASH_CHAR if needed
+			struct stat s;
+#ifdef _WIN32
+			return (statUTF8(fn.Get(), &s) == 0);
+#else
+			return (stat(fn.Get(), &s) == 0);
+#endif
+		}
+	}
+	return false;
+}
+
+// see above remark..
+bool FileOrDirExistsErrMsg(const char* _fn, bool _errMsg)
+{
+	bool exists = FileOrDirExists(_fn);
 	if (!exists && _errMsg)
 	{
 		char buf[SNM_MAX_PATH] = "";
 		lstrcpyn(buf, __LOCALIZE("Empty filename!","sws_mbox"), sizeof(buf));
 		if (_fn && *_fn)
-			_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("File not found: %s","sws_mbox"), _fn);
+			_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("File or directory not found: %s","sws_mbox"), _fn);
 		MessageBox(GetMainHwnd(), buf, __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
 	}
 	return exists;
@@ -213,7 +232,7 @@ void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fu
 			{
 				lstrcpyn(resDir, resFn, sizeof(resDir));
 				if (char* p = strrchr(resDir, PATH_SLASH_CHAR)) *p = '\0';
-				if (FileExists(resDir)) {
+				if (FileOrDirExists(resDir)) {
 					lstrcpyn(_fullFn, resFn, _fullFnSize);
 					return;
 				}
@@ -325,7 +344,7 @@ bool TranscodeFileToFile64(const char* _outFn, const char* _inFn)
 		ProjectStateContext* ctx = ProjectCreateFileWrite(_outFn);
 		cfg_encode_binary(ctx, hb->Get(), hb->GetSize());
 		delete ctx;
-		ok = FileExists(_outFn);
+		ok = FileOrDirExists(_outFn);
 	}
 	delete hb;
 	return ok;
@@ -366,7 +385,7 @@ bool GenerateFilename(const char* _dir, const char* _name, const char* _ext, cha
 		}
 
 		int i=0;
-		while(FileExists(fn))
+		while(FileOrDirExists(fn))
 		{
 			if (slash) {
 				if (_snprintfStrict(fn, sizeof(fn), "%s%s_%03d.%s", _dir, _name, ++i, _ext) <= 0)
@@ -527,7 +546,7 @@ void SNM_UpgradeIniFiles()
 		// move cycle actions to a new dedicated file (+ make backup if it already exists)
 		WDL_FastString fn;
 		fn.SetFormatted(SNM_MAX_PATH, SNM_CYCLACTION_BAK_FILE, GetResourcePath());
-		if (FileExists(g_SNM_CyclactionIniFn.Get()))
+		if (FileOrDirExists(g_SNM_CyclactionIniFn.Get()))
 			MoveFile(g_SNM_CyclactionIniFn.Get(), fn.Get());
 		UpdatePrivateProfileSection("MAIN_CYCLACTIONS", "Main_Cyclactions", g_SNM_IniFn.Get(), g_SNM_CyclactionIniFn.Get());
 		UpdatePrivateProfileSection("ME_LIST_CYCLACTIONS", "ME_List_Cyclactions", g_SNM_IniFn.Get(), g_SNM_CyclactionIniFn.Get());

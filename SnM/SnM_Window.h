@@ -33,6 +33,14 @@
 bool SNM_IsActiveWindow(HWND _h);
 bool IsChildOf(HWND _hChild, const char* _title);
 HWND GetReaWindowByTitle(const char* _title);
+void GetVisibleTCPTracks(WDL_PtrList<void>* _trList);
+
+void FocusMainWindow(COMMAND_T*);
+#ifdef _WIN32
+void CycleFocusWnd(COMMAND_T*);
+void CycleFocusHideOthersWnd(COMMAND_T*);
+void FocusMainWindowCloseOthers(COMMAND_T*);
+#endif
 
 void ShowThemeHelper(COMMAND_T*);
 
@@ -68,11 +76,5 @@ void CycleFocusFXWndAllTracks(COMMAND_T*);
 void CycleFloatFXWndSelTracks(COMMAND_T*);
 void CycleFocusFXMainWndAllTracks(COMMAND_T*);
 void CycleFocusFXMainWndSelTracks(COMMAND_T*);
-
-void CycleFocusWnd(COMMAND_T*);
-void CycleFocusHideOthersWnd(COMMAND_T*);
-void FocusMainWindow(COMMAND_T*);
-void FocusMainWindowCloseOthers(COMMAND_T*);
-void GetVisibleTCPTracks(WDL_PtrList<void>* _trList);
 
 #endif

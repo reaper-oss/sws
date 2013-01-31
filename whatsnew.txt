@@ -1,3 +1,4 @@
+!v2.3.0 #12 (January 30, 2013)
 Automatic check for updates:
 +Option can be found in REAPER > Extensions > About SWS Extensions
  - Performed once per day (startup check is silent, user gets notified only if new version is available)

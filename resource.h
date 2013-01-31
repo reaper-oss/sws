@@ -81,7 +81,6 @@
 #define IDD_BR_VERSION                  172
 #define IDB_UP                          500
 #define IDB_DOWN                        501
-#define IDB_SNM                         502
 #define IDC_BUTTON1                     1000
 #define IDC_EDIT1                       1001
 #define IDC_BUTTON2                     1002

@@ -1865,13 +1865,6 @@ IDB_DOWN                BITMAP                  "downarrow.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// PNG
-//
-
-IDB_SNM                 PNG                     "SnM.png"
-
-/////////////////////////////////////////////////////////////////////////////
-//
 // Cursor
 //
 
@@ -1890,7 +1883,8 @@ IDC_ZOOMDRAG            CURSOR                  "zoomdrag.cur"
 // Generated from the TEXTINCLUDE 3 resource.
 //
 #include "version.h"
-#include "version.rc2"
+#include "version.rc2"
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

@@ -100,6 +100,7 @@ bool hookCommandProc(int command, int flag)
 		if (cmd->accel.accel.cmd && cmd->doCommand != SWS_NOOP)
 		{
 			bReentrancyCheck = true;
+			cmd->fakeToggle = !cmd->fakeToggle;
 			cmd->doCommand(cmd);
 			bReentrancyCheck = false;
 			return true;
@@ -160,7 +161,7 @@ int SWSRegisterCmds(COMMAND_T* pCommands, const char* cFile, bool localize)
 // Make and register a dynamic action (created at runtime)
 // If cmdId==0, get command ID from Reaper (use the provided cmdId otherwise)
 // Note: SWSFreeUnregisterDynamicCmd() can be used to free/unregister such an action
-int SWSCreateRegisterDynamicCmd(int cmdId, void (*doCommand)(COMMAND_T*), bool (*getEnabled)(COMMAND_T*), const char* cID, const char* cDesc, INT_PTR user, const char* cFile, bool localize)
+int SWSCreateRegisterDynamicCmd(int cmdId, void (*doCommand)(COMMAND_T*), int (*getEnabled)(COMMAND_T*), const char* cID, const char* cDesc, INT_PTR user, const char* cFile, bool localize)
 {
 	COMMAND_T* ct = new COMMAND_T;
 	memset(ct, 0, sizeof(COMMAND_T));

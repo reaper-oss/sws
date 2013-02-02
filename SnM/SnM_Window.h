@@ -54,7 +54,7 @@ void DumpActionList(COMMAND_T*);
 void ShowFXChain(COMMAND_T*);
 void HideFXChain(COMMAND_T*);
 void ToggleFXChain(COMMAND_T*);
-bool IsToggleFXChain(COMMAND_T*);
+int IsToggleFXChain(COMMAND_T*);
 void ShowAllFXChainsWindows(COMMAND_T*);
 void CloseAllFXChainsWindows(COMMAND_T*);
 void ToggleAllFXChainsWindows(COMMAND_T*);

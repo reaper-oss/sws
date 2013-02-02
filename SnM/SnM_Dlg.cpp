@@ -87,7 +87,7 @@ LICE_CachedFont* SNM_GetThemeFont()
 		themeFont.SetFromHFont(
 			CreateFontIndirect(&lf),
 			LICE_FONT_FLAG_OWNS_HFONT | (g_SNMClearType?LICE_FONT_FLAG_FORCE_NATIVE:0));
-		// others props are set on demand (support theme switches)
+		// others props are set on demand (to support theme switches)
 	}
 	ColorTheme* ct = SNM_GetColorTheme();
 	themeFont.SetBkMode(TRANSPARENT);
@@ -96,6 +96,7 @@ LICE_CachedFont* SNM_GetThemeFont()
 }
 
 // non native version
+// note: cannot really factorize the code with SNM_GetThemeFont() due to the static font declaration
 LICE_CachedFont* SNM_GetFont()
 {
 	static LICE_CachedFont themeFont;
@@ -106,7 +107,7 @@ LICE_CachedFont* SNM_GetFont()
 			OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SNM_FONT_NAME
 		};
 		themeFont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT);
-		// others props are set on demand (support theme switches)
+		// others props are set on demand (to support theme switches)
 	}
 	ColorTheme* ct = SNM_GetColorTheme();
 	themeFont.SetBkMode(TRANSPARENT);
@@ -114,6 +115,7 @@ LICE_CachedFont* SNM_GetFont()
 	return &themeFont;
 }
 
+// note: cannot really factorize the code with SNM_GetThemeFont() & SNM_GetFont() due to the static font declaration
 LICE_CachedFont* SNM_GetToolbarFont()
 {
 	static LICE_CachedFont themeFont;
@@ -208,7 +210,7 @@ LICE_IBitmap* SNM_GetThemeLogo()
 
 #ifdef _WIN32
 
-#define MAX_THEMED_CTRLS 256
+#define MAX_THEMED_CTRLS 512
 
 // calling RemoveXPStyle() straight in there would crash!
 static BOOL CALLBACK EnumRemoveXPStyles(HWND _hwnd, LPARAM _ids)

@@ -105,11 +105,9 @@ void PrintDebugString( string debugStr ){
 		debugStr += "\n";
 	}
 
-	#ifdef _WIN32
-		OutputDebugString( debugStr.c_str() );
-	#else
-		printf( debugStr.c_str() );
-	#endif
+#ifdef _WIN32
+	OutputDebugString( debugStr.c_str() );
+#endif
 }
 
 void TestFunction(COMMAND_T* = NULL){

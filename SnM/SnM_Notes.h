@@ -128,8 +128,8 @@ void NotesHelpViewExit();
 void ImportSubTitleFile(COMMAND_T*);
 void ExportSubTitleFile(COMMAND_T*);
 void OpenNotesHelpView(COMMAND_T*);
-bool IsNotesHelpViewDisplayed(COMMAND_T*);
+int IsNotesHelpViewDisplayed(COMMAND_T*);
 void ToggleNotesHelpLock(COMMAND_T*);
-bool IsNotesHelpLocked(COMMAND_T*);
+int IsNotesHelpLocked(COMMAND_T*);
 
 #endif

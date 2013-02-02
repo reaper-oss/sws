@@ -36,11 +36,11 @@
 
 // compil flags
 //#define _SNM_DEBUG
-//#define _SNM_MISC					// not released, deprecated, tests, etc..
-//#define _SNM_WDL					// if my wdl version is used
+//#define _SNM_DYN_FONT_DEBUG
+//#define _SNM_MISC				// not released, deprecated, tests, etc..
+//#define _SNM_WDL				// if my wdl version is used
 #define _SNM_CSURF_PROXY
 #define _SNM_HOST_AW
-//#define _SNM_DYN_FONT_DEBUG
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -257,7 +257,12 @@ typedef struct MIDI_COMMAND_T {
 	void (*doCommand)(MIDI_COMMAND_T*,int,int,int,HWND);
 	const char* menuText;
 	INT_PTR user;
-	bool (*getEnabled)(MIDI_COMMAND_T*);
+
+	//API LIMITATION: useless in other sections than the main one ATM, and we can only register MIDI_COMMAND_T in our own sections (i.e. not in the main one)
+#ifdef _SNM_MISC
+	int (*getEnabled)(MIDI_COMMAND_T*);
+	bool fakeToggle;
+#endif
 } MIDI_COMMAND_T;
 
 
@@ -275,11 +280,10 @@ extern SNM_CSurfProxy* g_SNM_CSurfProxy;
 ///////////////////////////////////////////////////////////////////////////////
 
 void EnableToolbarsAutoRefesh(COMMAND_T*);
-bool IsToolbarsAutoRefeshEnabled(COMMAND_T*);
+int IsToolbarsAutoRefeshEnabled(COMMAND_T*);
 void RefreshToolbars();
 
-void FakeToggle(COMMAND_T*);
-bool GetFakeToggleState(COMMAND_T*);
+int SNM_GetFakeToggleState(COMMAND_T*);
 void DummyToggle(COMMAND_T*);
 void ExclusiveToggle(COMMAND_T*);
 

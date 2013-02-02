@@ -95,7 +95,7 @@ void MarkerActionsToggle(COMMAND_T* = NULL)
 	RefreshMAToolbar();
 }
 
-bool MarkerActionsEnabled(COMMAND_T*)
+int MarkerActionsEnabled(COMMAND_T*)
 {
 	return g_bMAEnabled;
 }

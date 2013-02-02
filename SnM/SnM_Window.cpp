@@ -707,13 +707,9 @@ void ToggleFXChain(COMMAND_T* _ct)
 			TrackFX_Show(tr, GetSelectedTrackFX(tr), (currentFX == -2 || currentFX >= 0) ? 0 : 1);
 		}
 	}
-	// fake toggle state update
-	if (SNM_CountSelectedTracks(NULL, true) > 1)
-		FakeToggle(_ct);
 }
 
-// for toggle state
-bool IsToggleFXChain(COMMAND_T * _ct) 
+int IsToggleFXChain(COMMAND_T * _ct) 
 {
 	int selTrCount = SNM_CountSelectedTracks(NULL, true);
 	// single track selection: we can return a toggle state
@@ -722,7 +718,7 @@ bool IsToggleFXChain(COMMAND_T * _ct)
 	// several tracks selected: possible mix of different states 
 	// => return a fake toggle state (best effort)
 	else if (selTrCount)
-		return GetFakeToggleState(_ct);
+		return SNM_GetFakeToggleState(_ct);
 	return false;
 }
 
@@ -734,7 +730,6 @@ void CloseAllFXChainsWindows(COMMAND_T * _ct) {
 }
 void ToggleAllFXChainsWindows(COMMAND_T * _ct) {
 	ToggleFXChain(NULL);
-	FakeToggle(_ct);
 }
 
 
@@ -796,7 +791,6 @@ void UnfloatFX(COMMAND_T* _ct) {
 }
 void ToggleFloatFX(COMMAND_T* _ct) {
 	FloatUnfloatFXs(false, 0, (int)_ct->user, true);
-	FakeToggle(_ct);
 }
 
 void ShowAllFXWindows(COMMAND_T * _ct) {
@@ -807,7 +801,6 @@ void CloseAllFXWindows(COMMAND_T * _ct) {
 }
 void ToggleAllFXWindows(COMMAND_T * _ct) {
 	FloatUnfloatFXs(true, 0, -1, ((int)_ct->user == 1));
-	FakeToggle(_ct);
 }
 
 void CloseAllFXWindowsExceptFocused(COMMAND_T * _ct)

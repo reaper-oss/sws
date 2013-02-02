@@ -1893,7 +1893,7 @@ void OpenLiveConfigView(COMMAND_T*) {
 		g_pLiveConfigsWnd->Show(true, true);
 }
 
-bool IsLiveConfigViewDisplayed(COMMAND_T*) {
+int IsLiveConfigViewDisplayed(COMMAND_T*) {
 	return (g_pLiveConfigsWnd && g_pLiveConfigsWnd->IsValidWindow());
 }
 
@@ -2696,7 +2696,7 @@ void OpenLiveConfigMonitorWnd(COMMAND_T* _ct)
 		g_monitorWnds[wndId]->Show(true, true);
 }
 
-bool IsLiveConfigMonitorWndDisplayed(COMMAND_T* _ct) {
+int IsLiveConfigMonitorWndDisplayed(COMMAND_T* _ct) {
 	int wndId = (int)_ct->user;
 	return (wndId>=0 && wndId<SNM_LIVECFG_NB_CONFIGS && g_monitorWnds[wndId] && g_monitorWnds[wndId]->IsValidWindow());
 }
@@ -2771,7 +2771,7 @@ void SwapCurrentPreloadLiveConfigs(COMMAND_T* _ct)
 
 /////
 
-bool IsLiveConfigEnabled(COMMAND_T* _ct) {
+int IsLiveConfigEnabled(COMMAND_T* _ct) {
 	if (LiveConfig* lc = g_liveConfigs.Get()->Get((int)_ct->user))
 		return (lc->m_enable == 1);
 	return false;
@@ -2810,7 +2810,7 @@ void ToggleEnableLiveConfig(COMMAND_T* _ct) {
 
 /////
 
-bool IsMuteOthersLiveConfigEnabled(COMMAND_T* _ct) {
+int IsMuteOthersLiveConfigEnabled(COMMAND_T* _ct) {
 	if (LiveConfig* lc = g_liveConfigs.Get()->Get((int)_ct->user))
 		return (lc->m_muteOthers != 0);
 	return false;
@@ -2841,7 +2841,7 @@ void ToggleMuteOthersLiveConfig(COMMAND_T* _ct) {
 
 /////
 
-bool IsOfflineOthersLiveConfigEnabled(COMMAND_T* _ct) {
+int IsOfflineOthersLiveConfigEnabled(COMMAND_T* _ct) {
 	if (LiveConfig* lc = g_liveConfigs.Get()->Get((int)_ct->user))
 		return (lc->m_offlineOthers == 1);
 	return false;
@@ -2872,7 +2872,7 @@ void ToggleOfflineOthersLiveConfig(COMMAND_T* _ct) {
 
 /////
 
-bool IsAllNotesOffLiveConfigEnabled(COMMAND_T* _ct) {
+int IsAllNotesOffLiveConfigEnabled(COMMAND_T* _ct) {
 	if (LiveConfig* lc = g_liveConfigs.Get()->Get((int)_ct->user))
 		return (lc->m_cc123 == 1);
 	return false;
@@ -2903,7 +2903,7 @@ void ToggleAllNotesOffLiveConfig(COMMAND_T* _ct) {
 
 /////
 
-bool IsTinyFadesLiveConfigEnabled(COMMAND_T* _ct) {
+int IsTinyFadesLiveConfigEnabled(COMMAND_T* _ct) {
 	if (LiveConfig* lc = g_liveConfigs.Get()->Get((int)_ct->user))
 		return (lc->m_fade > 0);
 	return false;

@@ -1123,35 +1123,32 @@ void PanTakeEnvelope(COMMAND_T* _ct)
 
 void ShowHideTakeVolEnvelope(COMMAND_T* _ct) 
 {
-	char cVis[2] = ""; //empty means toggle
+	char cVis[2] = ""; // empty means toggle
 	int value = (int)_ct->user;
 	if (value >= 0 && _snprintfStrict(cVis, sizeof(cVis), "%d", value) < 0)
 		return;
 	WDL_FastString defaultPoint("PT 0.000000 1.000000 0");
-	if (PatchTakeEnvelopeVis(SWS_CMD_SHORTNAME(_ct), "VOLENV", cVis, &defaultPoint, false) && value < 0) // toggle
-		FakeToggle(_ct);
+	PatchTakeEnvelopeVis(SWS_CMD_SHORTNAME(_ct), "VOLENV", cVis, &defaultPoint, false);
 }
 
 void ShowHideTakePanEnvelope(COMMAND_T* _ct) 
 {
-	char cVis[2] = ""; //empty means toggle
+	char cVis[2] = ""; // empty means toggle
 	int value = (int)_ct->user;
 	if (value >= 0 && _snprintfStrict(cVis, sizeof(cVis), "%d", value) < 0)
 		return;
 	WDL_FastString defaultPoint("PT 0.000000 0.000000 0");
-	if (PatchTakeEnvelopeVis(SWS_CMD_SHORTNAME(_ct), "PANENV", cVis, &defaultPoint, false) && value < 0) // toggle
-		FakeToggle(_ct);
+	PatchTakeEnvelopeVis(SWS_CMD_SHORTNAME(_ct), "PANENV", cVis, &defaultPoint, false);
 }
 
 void ShowHideTakeMuteEnvelope(COMMAND_T* _ct) 
 {
-	char cVis[2] = ""; //empty means toggle
+	char cVis[2] = ""; // empty means toggle
 	int value = (int)_ct->user;
 	if (value >= 0 && _snprintfStrict(cVis, sizeof(cVis), "%d", value) < 0)
 		return;
 	WDL_FastString defaultPoint("PT 0.000000 1.000000 1");
-	if (PatchTakeEnvelopeVis(SWS_CMD_SHORTNAME(_ct), "MUTEENV", cVis, &defaultPoint, false) && value < 0) // toggle
-		FakeToggle(_ct);
+	PatchTakeEnvelopeVis(SWS_CMD_SHORTNAME(_ct), "MUTEENV", cVis, &defaultPoint, false);
 }
 
 void ShowHideTakePitchEnvelope(COMMAND_T* _ct) 
@@ -1161,8 +1158,7 @@ void ShowHideTakePitchEnvelope(COMMAND_T* _ct)
 	if (value >= 0 && _snprintfStrict(cVis, sizeof(cVis), "%d", value) < 0)
 		return;
 	WDL_FastString defaultPoint("PT 0.000000 0.000000 0");
-	if (PatchTakeEnvelopeVis(SWS_CMD_SHORTNAME(_ct), "PITCHENV", cVis, &defaultPoint, false) && value < 0) // toggle
-		FakeToggle(_ct);
+	PatchTakeEnvelopeVis(SWS_CMD_SHORTNAME(_ct), "PITCHENV", cVis, &defaultPoint, false);
 }
 
 // *** some wrappers for Padre ***
@@ -1344,7 +1340,7 @@ void ToggleOffscreenSelItems(COMMAND_T* _ct)
 }
 
 // returns the toggle state as fast as possible: background job done in OffscreenSelItemsPoll() 
-bool HasOffscreenSelItems(COMMAND_T* _ct)
+int HasOffscreenSelItems(COMMAND_T* _ct)
 {
 	SWS_SectionLock lock(&g_toolbarItemSelLock);
 	int dir = (int)_ct->user;
@@ -1506,23 +1502,19 @@ bool TogglePlaySelTrackMediaSlot(int _slotType, const char* _title, int _slot, b
 
 // no sync
 void TogglePlaySelTrackMediaSlot(COMMAND_T* _ct) {
-	if (TogglePlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, false))
-		FakeToggle(_ct);
+	TogglePlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, false);
 }
 
 void ToggleLoopSelTrackMediaSlot(COMMAND_T* _ct) {
-	if (TogglePlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, true))
-		FakeToggle(_ct);
+	TogglePlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, true);
 }
 
 void TogglePauseSelTrackMediaSlot(COMMAND_T* _ct) {
-	if (TogglePlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, false))
-		FakeToggle(_ct);
+	TogglePlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, false);
 }
 
 void ToggleLoopPauseSelTrackMediaSlot(COMMAND_T* _ct) {
-	if (TogglePlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, true))
-		FakeToggle(_ct);
+	TogglePlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, true);
 }
 
 // with sync

@@ -50,7 +50,7 @@ int GetTrackFXIdFromCmd(MediaTrack* _tr, int _fxCmdId)
 	return fxId;
 }
 
-bool IsFXBypassedSelTracks(COMMAND_T * _ct)
+int IsFXBypassedSelTracks(COMMAND_T* _ct)
 {
 	int selTrCount = SNM_CountSelectedTracks(NULL, true);
 
@@ -65,12 +65,12 @@ bool IsFXBypassedSelTracks(COMMAND_T * _ct)
 	// several selected tracks: possible mix of different states 
 	// => return a fake toggle state (best effort)
 	else if (selTrCount)
-		return GetFakeToggleState(_ct);
+		return SNM_GetFakeToggleState(_ct);
 	return false;
 }
 
 // _mode: 1=toggle all except, 2=toggle fx, 3=set fx, 4=set all
-bool SetOrToggleFXBypassSelTracks(const char * _undoMsg, int _mode, int _fxCmdId, bool _val = false)
+bool SetOrToggleFXBypassSelTracks(const char* _undoMsg, int _mode, int _fxCmdId, bool _val = false)
 {
 	bool updated = false;
 	for (int i=0; i <= GetNumTracks(); i++) // incl. master
@@ -132,18 +132,15 @@ bool SetOrToggleFXBypassSelTracks(const char * _undoMsg, int _mode, int _fxCmdId
 }
 
 void ToggleExceptFXBypassSelTracks(COMMAND_T* _ct) { 
-	if (SetOrToggleFXBypassSelTracks(SWS_CMD_SHORTNAME(_ct), 1, (int)_ct->user))
-		FakeToggle(_ct);
+	SetOrToggleFXBypassSelTracks(SWS_CMD_SHORTNAME(_ct), 1, (int)_ct->user);
 }
 
 void ToggleAllFXsBypassSelTracks(COMMAND_T* _ct) { 
-	if (SetOrToggleFXBypassSelTracks(SWS_CMD_SHORTNAME(_ct), 1, 0xFFFF)) // trick: unreachable fx number 
-		FakeToggle(_ct);
+	SetOrToggleFXBypassSelTracks(SWS_CMD_SHORTNAME(_ct), 1, 0xFFFF); // trick: unreachable fx number 
 }
 
 void ToggleFXBypassSelTracks(COMMAND_T* _ct) { 
-	if (SetOrToggleFXBypassSelTracks(SWS_CMD_SHORTNAME(_ct), 2, (int)_ct->user) && SNM_CountSelectedTracks(NULL, true) > 1)
-		FakeToggle(_ct);
+	SetOrToggleFXBypassSelTracks(SWS_CMD_SHORTNAME(_ct), 2, (int)_ct->user) && SNM_CountSelectedTracks(NULL, true);
 } 
 
 void BypassFXSelTracks(COMMAND_T* _ct) { 
@@ -171,9 +168,9 @@ void UnypassAllFXsExceptSelTracks(COMMAND_T* _ct) {
 // Track fx online/offline
 ///////////////////////////////////////////////////////////////////////////////
 
-int g_buggyPlugSupport = 0; // defined in S&M.ini
+int g_buggyPlugSupport = 0; // set by the user in S&M.ini
 
-bool IsFXOfflineSelTracks(COMMAND_T * _ct)
+int IsFXOfflineSelTracks(COMMAND_T * _ct)
 {
 	int selTrCount = SNM_CountSelectedTracks(NULL, true);
 
@@ -194,7 +191,7 @@ bool IsFXOfflineSelTracks(COMMAND_T * _ct)
 	// several selected tracks: possible mix of different states 
 	// => return a fake toggle state (best effort)
 	else if (selTrCount)
-		return GetFakeToggleState(_ct);
+		return SNM_GetFakeToggleState(_ct);
 	return false;
 }
 
@@ -232,18 +229,15 @@ bool PatchSelTracksFXOnline(const char * _undoMsg, int _mode, int _fxCmdId, cons
 }
 
 void ToggleFXOfflineSelTracks(COMMAND_T* _ct) { 
-	if (PatchSelTracksFXOnline(SWS_CMD_SHORTNAME(_ct), SNM_TOGGLE_CHUNK_INT, (int)_ct->user) && SNM_CountSelectedTracks(NULL, true) > 1)
-		FakeToggle(_ct);
+	PatchSelTracksFXOnline(SWS_CMD_SHORTNAME(_ct), SNM_TOGGLE_CHUNK_INT, (int)_ct->user);
 }
 
 void ToggleExceptFXOfflineSelTracks(COMMAND_T* _ct) { 
-	if (PatchSelTracksFXOnline(SWS_CMD_SHORTNAME(_ct), SNM_TOGGLE_CHUNK_INT_EXCEPT, (int)_ct->user))
-		FakeToggle(_ct);
+	PatchSelTracksFXOnline(SWS_CMD_SHORTNAME(_ct), SNM_TOGGLE_CHUNK_INT_EXCEPT, (int)_ct->user);
 }
   
 void ToggleAllFXsOfflineSelTracks(COMMAND_T* _ct) { 
-	if (PatchSelTracksFXOnline(SWS_CMD_SHORTNAME(_ct), SNM_TOGGLE_CHUNK_INT_EXCEPT, 0xFFFF)) // trick: unreachable fx number
-		FakeToggle(_ct);
+	PatchSelTracksFXOnline(SWS_CMD_SHORTNAME(_ct), SNM_TOGGLE_CHUNK_INT_EXCEPT, 0xFFFF); // trick: unreachable fx number
 }
  
 void SetFXOfflineSelTracks(COMMAND_T* _ct) { 
@@ -308,13 +302,11 @@ bool PatchSelItemsFXState(const char * _undoMsg, int _mode, int _token, int _fxI
 }
 
 void ToggleAllFXsOfflineSelItems(COMMAND_T* _ct) { 
-	if (PatchSelItemsFXState(SWS_CMD_SHORTNAME(_ct), SNM_TOGGLE_CHUNK_INT_EXCEPT, 2, 0xFFFF, NULL))
-		FakeToggle(_ct);
+	PatchSelItemsFXState(SWS_CMD_SHORTNAME(_ct), SNM_TOGGLE_CHUNK_INT_EXCEPT, 2, 0xFFFF, NULL);
 } 
   
 void ToggleAllFXsBypassSelItems(COMMAND_T* _ct) { 
-	if (PatchSelItemsFXState(SWS_CMD_SHORTNAME(_ct), SNM_TOGGLE_CHUNK_INT_EXCEPT, 1, 0xFFFF, NULL)) // trick: unreachable fx number
-		FakeToggle(_ct);
+	PatchSelItemsFXState(SWS_CMD_SHORTNAME(_ct), SNM_TOGGLE_CHUNK_INT_EXCEPT, 1, 0xFFFF, NULL); // trick: unreachable fx number
 } 
 
 void UpdateAllFXsOfflineSelItems(COMMAND_T* _ct) {

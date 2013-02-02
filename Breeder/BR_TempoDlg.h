@@ -31,7 +31,7 @@ WDL_DLGRET TempoShapeOptionsProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 void SetTempoShapeGlobalVariable (int split, char* splitRatio, int ratioLen);
 void LoadOptionsTempoShape (int &split, char* splitRatio, int ratioLen);
 void SaveOptionsTempoShape (HWND hwnd);
-bool IsTempoShapeOptionsVisible (COMMAND_T*);
+int IsTempoShapeOptionsVisible (COMMAND_T*);
 
 WDL_DLGRET RandomizeTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 void GetDeleteCurrentTempo(bool get);
@@ -45,7 +45,7 @@ void ConvertMarkersToTempo (int markers, int num, int den, int removeMarkers, in
 void ShowGradualOptions (bool show, HWND hwnd);
 void LoadOptionsConversion (int &markers, int &num, int &den, int &removeMarkers, int &timeSel, int &gradual, int &split, char* splitRatio, int ratioLen);
 void SaveOptionsConversion (HWND hwnd);
-bool IsConvertMarkersToTempoVisible (COMMAND_T*);
+int IsConvertMarkersToTempoVisible (COMMAND_T*);
 
 WDL_DLGRET SelectAdjustTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 void SelectTempo (int mode, int Nth, int timeSel, int bpm, double bpmStart, double bpmEnd, int shape, int sig, int num, int den, int type);
@@ -58,7 +58,7 @@ void AdjustTempoCase (HWND hwnd);
 void CallDeselTempoDialog(bool show, HWND parentHandle);
 void LoadOptionsSelAdj (double &bpmStart, double &bpmEnd, int &num, int &den, int &bpmEnb, int &sigEnb, int &timeSel, int &shape, int &type, int &selPref, int &invertPref, int &adjustType, int &adjustShape);
 void SaveOptionsSelAdj (HWND hwnd);
-bool IsSelectAdjustTempoVisible (COMMAND_T*);
+int IsSelectAdjustTempoVisible (COMMAND_T*);
 
 WDL_DLGRET DeselectNthProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 void LoadOptionsDeselectNth (int &Nth, int &criteria);

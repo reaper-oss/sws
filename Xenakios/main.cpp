@@ -34,8 +34,8 @@ using namespace std;
 int *ShuffledNumbers;
 int ShuffledNumbersGenerated=0;
 
-bool IsRippleOneTrack(COMMAND_T*) { return *(int*)GetConfigVar("projripedit") == 1; }
-bool IsRippleAll(COMMAND_T*)      { return *(int*)GetConfigVar("projripedit") == 2; }
+int IsRippleOneTrack(COMMAND_T*) { return *(int*)GetConfigVar("projripedit") == 1; }
+int IsRippleAll(COMMAND_T*)      { return *(int*)GetConfigVar("projripedit") == 2; }
 
 void DoToggleRippleOneTrack(COMMAND_T*)
 {
@@ -631,7 +631,7 @@ void DoSetStopAtEndOfTimeSel(int enabled) // -1 toggle 0 unset 1 set
 	}
 }
 
-bool IsStopAtEndOfTimeSel(COMMAND_T*) { return *(int*)GetConfigVar("stopendofloop") ? true : false; }
+int IsStopAtEndOfTimeSel(COMMAND_T*) { return *(int*)GetConfigVar("stopendofloop") ? true : false; }
 
 void DoToggleSTopAtEndOfTimeSel(COMMAND_T*)
 {

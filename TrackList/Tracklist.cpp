@@ -804,7 +804,7 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 	g_pList->GetFilter()->Cleanup();
 }
 
-static bool TrackListWindowEnabled(COMMAND_T*)
+int TrackListWindowEnabled(COMMAND_T*)
 {
 	return g_pList->IsValidWindow();
 }

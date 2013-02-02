@@ -40,20 +40,20 @@ void XFadeOff(COMMAND_T* = NULL)     { int* p = (int*)GetConfigVar("autoxfade");
 void MEPWIXOn(COMMAND_T* = NULL)     { int* p = (int*)GetConfigVar("envattach"); if (p && !(*p)) Main_OnCommand(40070, 0); }
 void MEPWIXOff(COMMAND_T* = NULL)    { int* p = (int*)GetConfigVar("envattach"); if (p && (*p))  Main_OnCommand(40070, 0); }
 
-bool IsOnRecStopMoveCursor(COMMAND_T*)  { int* p = (int*)GetConfigVar("itemclickmovecurs"); return p && (*p & 16); }
+int IsOnRecStopMoveCursor(COMMAND_T*)  { int* p = (int*)GetConfigVar("itemclickmovecurs"); return p && (*p & 16); }
 void TogOnRecStopMoveCursor(COMMAND_T*) { int* p = (int*)GetConfigVar("itemclickmovecurs"); if (p) *p ^= 16; }
 
 void TogSeekMode(COMMAND_T* ct)	{ int* p = (int*)GetConfigVar("seekmodes"); if (p) *p ^= ct->user; }
-bool IsSeekMode(COMMAND_T* ct)	{ int* p = (int*)GetConfigVar("seekmodes"); return p && (*p & ct->user); }
+int IsSeekMode(COMMAND_T* ct)	{ int* p = (int*)GetConfigVar("seekmodes"); return p && (*p & ct->user); }
 
 void TogAutoAddEnvs(COMMAND_T*) { int* p = (int*)GetConfigVar("env_autoadd"); if (p) *p ^= 1; }
-bool IsAutoAddEnvs(COMMAND_T*)  { int* p = (int*)GetConfigVar("env_autoadd"); return p && (*p & 1); }
+int IsAutoAddEnvs(COMMAND_T*)  { int* p = (int*)GetConfigVar("env_autoadd"); return p && (*p & 1); }
 
 void TogGridOverUnder(COMMAND_T*) { int* p = (int*)GetConfigVar("gridinbg"); if (p) *p = *p == 2 ? 0 : 2; UpdateArrange(); }
-bool IsGridOver(COMMAND_T*)  { int* p = (int*)GetConfigVar("gridinbg"); return p && !*p; }
+int IsGridOver(COMMAND_T*)  { int* p = (int*)GetConfigVar("gridinbg"); return p && !*p; }
 
 void TogSelGroupMode(COMMAND_T*) { int* p = (int*)GetConfigVar("projgroupsel"); if (p) *p = !*p; }
-bool IsSelGroupMode(COMMAND_T*)  { int* p = (int*)GetConfigVar("projgroupsel"); return p && *p; }
+int IsSelGroupMode(COMMAND_T*)  { int* p = (int*)GetConfigVar("projgroupsel"); return p && *p; }
 
 void SwitchGridSpacing(COMMAND_T*)
 {
@@ -127,7 +127,7 @@ void TogDefFadeZero(COMMAND_T*)
 	}
 }
 
-bool IsDefFadeOverriden(COMMAND_T*)
+int IsDefFadeOverriden(COMMAND_T*)
 {
 	double dDefFade = *(double*)GetConfigVar("deffadelen");
 	return g_dDefFadeLen != 0.0 && dDefFade != g_dDefFadeLen;

@@ -26,12 +26,12 @@
 ******************************************************************************/
 
 // IMPORTANT!
-// API LIMITATION: keep in mind that we cannot register actions in MIDI sections yet
-// that is why all cycle actions are registered in the main section ATM
+// API LIMITATION: we cannot register actions in MIDI sections yet, that is why
+// cycle actions are registered in the main section ATM
 // TODO:
 // - register cycle action in proper sections (when it will be possible)
 // - storage: use native macro format?
-//   (cycle actions have their own format for "historical" reasons)
+//   (cycle actions have their own format for historical reasons..)
 
 
 #include "stdafx.h"
@@ -46,7 +46,8 @@
 
 // add new intsructions here ------------------------------------------------->
 enum {
-  IDX_INSTRUC_IFNOT=0, // must be placed before IDX_INSTRUC_IF, see IsInstruction()
+  IDX_INSTRUC_IFNOT=0,	// gotcha: must be placed before IDX_INSTRUC_IF!
+						// (because "IF" starts like "IF NOT" => funcs like IsInstruction() would fail otherwise)
   IDX_INSTRUC_IF,
   IDX_INSTRUC_ENDIF,
   IDX_INSTRUC_LOOP,
@@ -71,7 +72,7 @@ const char g_instrucInfos[][64] = { "If not --->", "If --->", "<---", "Loop --->
 // <---------------------------------------------------------------------------
 
 
-int g_instrucLens[NB_INSTRUCTIONS]; // for optimization only, init in CyclactionInit()
+int g_instrucLens[NB_INSTRUCTIONS]; // for optimization, init in CyclactionInit()
 
 // [0] = main section, [1] = ME event list section, [2] = ME piano roll section
 WDL_PtrList_DeleteOnDestroy<Cyclaction> g_cyclactions[SNM_MAX_CYCLING_SECTIONS];
@@ -147,7 +148,7 @@ public:
 			{
 				if ((i+1)<m_actions.GetSize())
 				{
-					bool isIF = (_stricmp(INSTRUC_IF, cmdStr) == 0);
+					bool isIF = (_stricmp(INSTRUC_IFNOT, cmdStr) != 0);
 					cmdStr = m_actions.Get(++i)->Get(); //++i ! i.e. zap IF when used out of the main section
 					if (!m_section) // API LIMITATION: NamedCommandLookup() & GetToggleCommandState() are only available for the main section ATM
 					{
@@ -303,7 +304,7 @@ void RunMEPianoCyclaction(COMMAND_T* _ct) {RunCycleAction(2, _ct);}
 
 // important: this works because recursive cycle actions are forbidden
 // (getting toggle states could be recursive otherwise..)
-bool IsCyclactionEnabled(int _section, COMMAND_T* _ct)
+int IsCyclactionEnabled(int _section, COMMAND_T* _ct)
 {
 	Cyclaction* action = g_cyclactions[_section].Get((int)_ct->user-1); // id is 1-based
 
@@ -332,16 +333,16 @@ bool IsCyclactionEnabled(int _section, COMMAND_T* _ct)
 	return (action && /*action->IsToggle() &&*/ (action->m_performState % 2) != 0);
 }
 
-bool IsMainCyclactionEnabled(COMMAND_T* _ct) {return IsCyclactionEnabled(0, _ct);}
-bool IsMEListCyclactionEnabled(COMMAND_T* _ct) {return IsCyclactionEnabled(1, _ct);}
-bool IsMEPianoCyclactionEnabled(COMMAND_T* _ct) {return IsCyclactionEnabled(2, _ct);}
+int IsMainCyclactionEnabled(COMMAND_T* _ct) {return IsCyclactionEnabled(0, _ct);}
+int IsMEListCyclactionEnabled(COMMAND_T* _ct) {return IsCyclactionEnabled(1, _ct);}
+int IsMEPianoCyclactionEnabled(COMMAND_T* _ct) {return IsCyclactionEnabled(2, _ct);}
 
 bool CheckEditableCyclaction(const char* _actionStr, WDL_FastString* _errMsg, bool _allowEmpty = true)
 {
 	if (!(_actionStr && *_actionStr && *_actionStr != ',' && _strnicmp(_actionStr, "#,", 2)))
 	{
 		if (_errMsg) {
-			_errMsg->AppendFormatted(256, __LOCALIZE_VERFMT("Error: invalid cycle action '%s'","sws_DLG_161"), _actionStr ? _actionStr : "NULL");
+			_errMsg->AppendFormatted(256, __LOCALIZE_VERFMT("Error: invalid cycle action '%s'","sws_DLG_161"), _actionStr ? _actionStr : "?");
 			_errMsg->Append("\n\n");
 		}
 		return false;
@@ -367,8 +368,25 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_FastString* _
 {
 	if (_a)
 	{
+		int sz = _a->GetCmdSize();
+
+		// check steps '!' (these corner-cases are managed but let's not give bad habbits)
+		if (sz)
+		{
+			const char* cmd1 = _a->GetCmd(0);
+			const char* cmd2 = _a->GetCmd(sz-1);
+			if (*cmd1=='!' || *cmd2=='!')
+			{
+				if (AppendToErrMsg(_section, _a, _errMsg)) {
+					_errMsg->Append(__LOCALIZE("Details: cycle actions cannot start/end with a step '!'","sws_DLG_161"));
+					_errMsg->Append("\n\n");
+				}
+				return false;
+			}
+		}
+
 		int steps=0, noop=0, instructions=0;
-		for (int i=0; i<_a->GetCmdSize(); i++)
+		for (int i=0; i<sz; i++)
 		{
 			const char* cmd = _a->GetCmd(i);
 			if (strstr(cmd, "_CYCLACTION"))
@@ -385,10 +403,21 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_FastString* _
 				noop++;
 			else if (IsInstruction(cmd)>=0)
 			{
-/* no! we do not want to increment "instructions" for console commands (as they are valid commands)
-				instructions++;
+				if (!_strnicmp(INSTRUC_CONSOLE, cmd, g_instrucLens[IDX_INSTRUC_CONSOLE]))
+				{
+/* no! we do not want to increment "instructions" for console commands: they are valid commands
+					instructions++;
 */
-				if (!_stricmp(INSTRUC_IF, cmd) || !_stricmp(INSTRUC_IFNOT, cmd))
+					if (!strlen((char*)cmd + g_instrucLens[IDX_INSTRUC_CONSOLE]))
+					{
+						if (AppendToErrMsg(_section, _a, _errMsg)) {
+							_errMsg->AppendFormatted(256, __LOCALIZE_VERFMT("Details: %smust be followed by a ReaConsole command, see http://www.standingwaterstudios.com/reaconsole.php","sws_DLG_161"), INSTRUC_CONSOLE);
+							_errMsg->Append("\n\n");
+						}
+						return false;
+					}
+				}
+				else if (!_stricmp(INSTRUC_IF, cmd) || !_stricmp(INSTRUC_IFNOT, cmd))
 				{
 					instructions++;
 
@@ -401,7 +430,7 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_FastString* _
 						}
 						return false;
 					}
-					if ((i+1)>=_a->GetCmdSize() || GetToggleCommandState(NamedCommandLookup(_a->GetCmd(i+1))) < 0)
+					if ((i+1)>=sz || GetToggleCommandState(NamedCommandLookup(_a->GetCmd(i+1))) < 0)
 					{
 						if (AppendToErrMsg(_section, _a, _errMsg)) {
 							_errMsg->AppendFormatted(256, __LOCALIZE_VERFMT("Details: %s (or %s) must be followed by an action that reports a toggle state","sws_DLG_161"), INSTRUC_IF, INSTRUC_IFNOT);
@@ -410,7 +439,7 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_FastString* _
 						return false;
 					}
 					// nested if?
-					for (int j=i+1; j<_a->GetCmdSize(); j++)
+					for (int j=i+1; j<sz; j++)
 					{
 						if (_a->GetCmd(j)[0]=='!' || !_stricmp(INSTRUC_ENDIF, _a->GetCmd(j)))
 							break;
@@ -437,7 +466,7 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_FastString* _
 						return false;
 					}
 					// nested loops?
-					for (int j=i+1; j<_a->GetCmdSize(); j++)
+					for (int j=i+1; j<sz; j++)
 					{
 						if (_a->GetCmd(j)[0]=='!' || !_stricmp(INSTRUC_ENDLOOP, _a->GetCmd(j)))
 							break;
@@ -474,7 +503,7 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_FastString* _
 				}
 			}
 		}
-		if ((steps + noop + instructions) == _a->GetCmdSize())
+		if ((steps + noop + instructions) == sz)
 		{
 			if (_errMsg && !_a->IsEmpty()) {
 				AppendToErrMsg(_section, _a, _errMsg);
@@ -729,8 +758,7 @@ void Cyclaction::UpdateFromCmd()
 }
 
 // get the 1st valid command index of the current cycle point (where "valid" means index+1 to skip the current step command '!')
-// or 0 for the initial state (since cycle actions do not start with '!', well.. the user can do it but this corner-case in managed)
-// or -1 if failed
+// or 0 for the initial state (cycle actions do not start with '!') or -1 if failed
 int Cyclaction::GetCurrentCmdIdx(WDL_FastString* _cyclePointName)
 {
 	int idx=0, sz=GetCmdSize(), state=0;
@@ -1097,6 +1125,11 @@ void SNM_CommandsView::SetItemText(SWS_ListItem* _item, int _iCol, const char* _
 {
 	if (_iCol == COL_R_CMD)
 	{
+		if (strchr(_str, ',')) {
+			MessageBox(GetMainHwnd(), __LOCALIZE("Commands cannot contain the character: ,","sws_DLG_161"), __LOCALIZE("S&M - Error","sws_DLG_161"), MB_OK);
+			return;
+		}
+
 		WDL_FastString* cmd = (WDL_FastString*)_item;
 		if (cmd && _str && cmd != &g_EMPTY_R && cmd != &g_DEFAULT_R && g_editedAction && strcmp(cmd->Get(), _str))
 		{
@@ -1898,7 +1931,7 @@ void OpenCyclactionView(COMMAND_T* _ct)
 	}
 }
 
-bool IsCyclactionViewDisplayed(COMMAND_T*){
+int IsCyclactionViewDisplayed(COMMAND_T*){
 	return (g_pCyclactionWnd && g_pCyclactionWnd->IsValidWindow());
 }
 

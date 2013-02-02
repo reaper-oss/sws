@@ -6,7 +6,7 @@
 
 static COMMAND_T createSWSCommand(const char* description, const char* id, RprCommand* command);
 static void onSWSCommand(COMMAND_T* cmd);
-static bool onToggleCommand(COMMAND_T* cmd);
+static int onToggleCommand(COMMAND_T* cmd);
 static COMMAND_T createSWSToggleCommand(const char* description, const char* id, RprToggleCommand* command);
 
 class SWSCommandFinder
@@ -56,7 +56,7 @@ void RprCommand::registerCommand(const char *description, const char *id,
 }
 
 void RprCommand::registerToggleCommand(const char *description, const char *id,
-                                       void (*command)(int, void *), bool (*toggleCommand)(void), int undoFlag)
+                                       void (*command)(int, void *), int (*toggleCommand)(void), int undoFlag)
 {
     RprToggleCommand *newCmd = new RprToggleCommand(command, toggleCommand);
     newCmd->setUndoFlags(undoFlag);
@@ -117,13 +117,13 @@ RprCommandManager::~RprCommandManager()
 {}
 
 RprToggleCommand::RprToggleCommand(void (*command)(int, void *),
-                                   bool (*toggleCommand)(void), void *commandData , int commandDataSize)
+                                   int (*toggleCommand)(void), void *commandData , int commandDataSize)
                                    : RprCommand(command, commandData, commandDataSize)
 {
     mToggleCommand = toggleCommand;
 }
 
-bool RprToggleCommand::runToggleAction()
+int RprToggleCommand::runToggleAction()
 {
     return mToggleCommand();
 }
@@ -165,7 +165,7 @@ onSWSCommand(COMMAND_T* cmd)
     fingersCommand->run(0);
 }
 
-static bool
+static int
 onToggleCommand(COMMAND_T* cmd)
 {
     RprToggleCommand* fingersCommand = (RprToggleCommand*)cmd->user;

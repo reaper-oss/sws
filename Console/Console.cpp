@@ -32,9 +32,6 @@
 /
 ******************************************************************************/
 
-//JFB mod: added command x (add fx), / (osc) and made the window modeless/dockable
-//JFB TODO: ! = insert marker instead of insert *maker action* ? (so insert marker action still prossible but would be "!!cmdId")
-
 
 #include "stdafx.h"
 #include "../reaper/localize.h"
@@ -732,7 +729,7 @@ void RunConsoleCommand(COMMAND_T* ct)
 	Undo_OnStateChangeEx(cUndo, UNDO_STATE_ALL, -1); // UNDO_STATE_TRACKCFG is not enough (marker, osc, ..)
 }
 
-bool IsConsoleDisplayed(COMMAND_T*) {
+int IsConsoleDisplayed(COMMAND_T*) {
 	return (g_pConsoleWnd && g_pConsoleWnd->IsValidWindow());
 }
 
@@ -885,6 +882,7 @@ ReaConsoleWnd::ReaConsoleWnd()
 void ReaConsoleWnd::OnInitDlg()
 {
 	m_resize.init_item(IDC_COMMAND, 0.0, 0.0, 1.0, 0.0);
+	m_resize.init_item(IDC_STATUS, 0.0, 0.0, 1.0, 0.0);
 	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_COMMAND), GWLP_USERDATA, 0xdeadf00b);
 	Update();
 }

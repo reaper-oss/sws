@@ -214,7 +214,7 @@ void GetShortResourcePath(const char* _resSubDir, const char* _fullFn, char* _sh
 // get a full resource path from a short filename
 // ex: EQ\JS\test.RfxChain -> C:\Documents and Settings\<user>\Application Data\REAPER\FXChains\EQ\JS\test.RfxChain
 // notes: 
-// - work with non existing files //JFB!!!
+// - work with non existing files //JFB!!! the current code will fail with non existing files..
 // - no-op for non resource paths (c:\temp\test.RfxChain -> c:\temp\test.RfxChain)
 // - no-op for full resource paths 
 void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fullFn, int _fullFnSize)

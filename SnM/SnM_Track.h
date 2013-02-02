@@ -48,7 +48,7 @@ bool LookupTrackEnvName(const char* _str, bool _allEnvs);
 void ToggleArmTrackEnv(COMMAND_T*);
 void RemoveAllEnvsSelTracks(COMMAND_T*);
 void ToggleWriteEnvExists(COMMAND_T*);
-bool WriteEnvExists(COMMAND_T*);
+int WriteEnvExists(COMMAND_T*);
 
 MediaTrack* SNM_GetTrack(ReaProject* _proj, int _idx);
 int SNM_GetTrackId(ReaProject* _proj, MediaTrack* _tr);

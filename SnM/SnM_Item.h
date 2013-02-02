@@ -111,7 +111,7 @@ bool ShowTakeEnvPitch(MediaItem_Take* _take);
 
 void OffscreenSelItemsPoll();
 void ToggleOffscreenSelItems(COMMAND_T*);
-bool HasOffscreenSelItems(COMMAND_T*);
+int HasOffscreenSelItems(COMMAND_T*);
 void UnselectOffscreenItems(COMMAND_T*);
 
 void ScrollToSelItem(MediaItem* _item);

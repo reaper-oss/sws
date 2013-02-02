@@ -48,12 +48,12 @@ bool IsProjectLoaderConfValid();
 void ProjectLoaderConf(COMMAND_T*);
 void LoadOrSelectNextPreviousProject(COMMAND_T*);
 
-//class ProjectActionJob : public SNM_ScheduledJob {
-//public:
-//	ProjectActionJob(int _cmdId) : m_cmdId(_cmdId), SNM_ScheduledJob(SNM_SCHEDJOB_PRJ_ACTION, 1000) {}
-//	void Perform() { if (m_cmdId) Main_OnCommand(m_cmdId, 0); }
-//	int m_cmdId;
-//};
+class ProjectActionJob : public SNM_ScheduledJob {
+public:
+	ProjectActionJob(int _cmdId) : m_cmdId(_cmdId), SNM_ScheduledJob(SNM_SCHEDJOB_PRJ_ACTION, 500) {}
+	void Perform() { if (m_cmdId) Main_OnCommand(m_cmdId, 0); }
+	int m_cmdId;
+};
 
 void SetProjectStartupAction(COMMAND_T*);
 void ClearProjectStartupAction(COMMAND_T*);

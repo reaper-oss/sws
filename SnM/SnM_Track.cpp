@@ -562,10 +562,8 @@ void ToggleArmTrackEnv(COMMAND_T* _ct)
 			}
 		}
 	}
-	if (updated) {
+	if (updated)
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
-		FakeToggle(_ct);
-	}
 }
 
 void RemoveAllEnvsSelTracks(COMMAND_T* _ct)
@@ -624,7 +622,7 @@ void ToggleWriteEnvExists(COMMAND_T* _ct)
 	}
 }
 
-bool WriteEnvExists(COMMAND_T* _ct)
+int WriteEnvExists(COMMAND_T* _ct)
 {
 	for (int i=0; i <= GetNumTracks(); i++) // incl. master
 	{

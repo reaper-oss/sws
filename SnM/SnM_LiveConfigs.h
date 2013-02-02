@@ -173,13 +173,13 @@ public:
 int LiveConfigViewInit();
 void LiveConfigViewExit();
 void OpenLiveConfigView(COMMAND_T*);
-bool IsLiveConfigViewDisplayed(COMMAND_T*);
+int IsLiveConfigViewDisplayed(COMMAND_T*);
 
 void ApplyLiveConfig(int _cfgId, int _val, int _valhw, int _relmode, HWND _hwnd, bool _immediate = false);
 void PreloadLiveConfig(int _cfgId, int _val, int _valhw, int _relmode, HWND _hwnd, bool _immediate = false);
 
 void OpenLiveConfigMonitorWnd(COMMAND_T*);
-bool IsLiveConfigMonitorWndDisplayed(COMMAND_T*);
+int IsLiveConfigMonitorWndDisplayed(COMMAND_T*);
 
 // actions
 void ApplyLiveConfig(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
@@ -189,28 +189,28 @@ void NextLiveConfig(COMMAND_T*);
 void PreviousLiveConfig(COMMAND_T*);
 void SwapCurrentPreloadLiveConfigs(COMMAND_T*);
 
-bool IsLiveConfigEnabled(COMMAND_T*);
+int IsLiveConfigEnabled(COMMAND_T*);
 void UpdateEnableLiveConfig(int _cfgId, int _val);
 void EnableLiveConfig(COMMAND_T*);
 void DisableLiveConfig(COMMAND_T*);
 void ToggleEnableLiveConfig(COMMAND_T*);
 
-bool IsMuteOthersLiveConfigEnabled(COMMAND_T*);
+int IsMuteOthersLiveConfigEnabled(COMMAND_T*);
 void EnableMuteOthersLiveConfig(COMMAND_T*);
 void DisableMuteOthersLiveConfig(COMMAND_T*);
 void ToggleMuteOthersLiveConfig(COMMAND_T*);
 
-bool IsOfflineOthersLiveConfigEnabled(COMMAND_T*);
+int IsOfflineOthersLiveConfigEnabled(COMMAND_T*);
 void EnableOfflineOthersLiveConfig(COMMAND_T*);
 void DisableOfflineOthersLiveConfig(COMMAND_T*);
 void ToggleOfflineOthersLiveConfig(COMMAND_T*);
 
-bool IsAllNotesOffLiveConfigEnabled(COMMAND_T* _ct);
+int IsAllNotesOffLiveConfigEnabled(COMMAND_T* _ct);
 void EnableAllNotesOffLiveConfig(COMMAND_T* _ct);
 void DisableAllNotesOffLiveConfig(COMMAND_T* _ct);
 void ToggleAllNotesOffLiveConfig(COMMAND_T* _ct);
 
-bool IsTinyFadesLiveConfigEnabled(COMMAND_T* _ct);
+int IsTinyFadesLiveConfigEnabled(COMMAND_T* _ct);
 void EnableTinyFadesLiveConfig(COMMAND_T* _ct);
 void DisableTinyFadesLiveConfig(COMMAND_T* _ct);
 void ToggleTinyFadesLiveConfig(COMMAND_T* _ct);

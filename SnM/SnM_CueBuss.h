@@ -39,7 +39,7 @@ void ReadCueBusIniFile(int _confId, char* _busName, int _busNameSz, int* _reaTyp
 void SaveCueBusIniFile(int _confId, const char* _busName, int _type, bool _trTemplate, const char* _trTemplatePath, bool _showRouting, int _soloDefeat, bool _sendToMaster, int* _hwOuts);
 
 void OpenCueBussDlg(COMMAND_T*);
-bool IsCueBussDlgDisplayed(COMMAND_T*);
+int IsCueBussDlgDisplayed(COMMAND_T*);
 int CueBussInit();
 
 #endif

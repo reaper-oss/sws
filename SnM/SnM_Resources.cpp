@@ -2733,7 +2733,7 @@ void OpenResourceView(COMMAND_T* _ct)
 	}
 }
 
-bool IsResourceViewDisplayed(COMMAND_T* _ct) {
+int IsResourceViewDisplayed(COMMAND_T* _ct) {
 	return (g_pResourcesWnd && g_pResourcesWnd->IsValidWindow());
 }
 

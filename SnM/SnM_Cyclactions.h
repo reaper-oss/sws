@@ -134,6 +134,6 @@ int RegisterCyclation(const char* _name, bool _toggle, int _type, int _cycleId, 
 int CyclactionInit();
 void CyclactionExit();
 void OpenCyclactionView(COMMAND_T*);
-bool IsCyclactionViewDisplayed(COMMAND_T*);
+int IsCyclactionViewDisplayed(COMMAND_T*);
 
 #endif

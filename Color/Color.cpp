@@ -679,7 +679,7 @@ void RecRedRuler(COMMAND_T*)
 	WritePrivateProfileString(SWS_INI, RECREDRULER_KEY, g_bRecRedRuler ? "1" : "0", get_ini_file());
 }
 
-bool RecRedRulerEnabled(COMMAND_T*)
+int RecRedRulerEnabled(COMMAND_T*)
 {
 	return g_bRecRedRuler;
 }

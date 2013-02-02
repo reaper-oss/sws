@@ -140,7 +140,7 @@ void PlaylistStop();
 void PlaylistStopped();
 void PlaylistResync();
 void SetPlaylistRepeat(COMMAND_T*);
-bool IsPlaylistRepeat(COMMAND_T*);
+int IsPlaylistRepeat(COMMAND_T*);
 
 void AppendPasteCropPlaylist(SNM_Playlist* _playlist, int _mode);
 void AppendPasteCropPlaylist(COMMAND_T*);
@@ -148,8 +148,8 @@ void AppendPasteCropPlaylist(COMMAND_T*);
 int RegionPlaylistInit();
 void RegionPlaylistExit();
 void OpenRegionPlaylist(COMMAND_T*);
-bool IsRegionPlaylistDisplayed(COMMAND_T*);
+int IsRegionPlaylistDisplayed(COMMAND_T*);
 void ToggleRegionPlaylistMode(COMMAND_T*);
-bool IsRegionPlaylistMonitoring(COMMAND_T*);
+int IsRegionPlaylistMonitoring(COMMAND_T*);
 
 #endif

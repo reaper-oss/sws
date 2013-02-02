@@ -214,7 +214,7 @@ protected:
 int ResourceViewInit();
 void ResourceViewExit();
 void OpenResourceView(COMMAND_T*);
-bool IsResourceViewDisplayed(COMMAND_T*);
+int IsResourceViewDisplayed(COMMAND_T*);
 void ResViewDeleteAllSlots(COMMAND_T*);
 void ResViewClearSlotPrompt(COMMAND_T*);
 void ResViewClearFXChainSlot(COMMAND_T*);

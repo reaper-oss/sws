@@ -1308,7 +1308,7 @@ void ZoomTool(COMMAND_T*)
 		SendMessage(hTrackView, WM_CANCEL_ZOOM, 0, 0);
 }
 
-bool IsZoomMode(COMMAND_T*)
+int IsZoomMode(COMMAND_T*)
 {
 	return g_bZooming;
 }
@@ -1436,7 +1436,7 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 	g_zoomLevel.Cleanup();
 }
 
-bool IsTogZoomed(COMMAND_T*)
+int IsTogZoomed(COMMAND_T*)
 {
 	return g_bASToggled;
 }

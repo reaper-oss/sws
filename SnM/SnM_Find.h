@@ -61,7 +61,7 @@ protected:
 int FindViewInit();
 void FindViewExit();
 void OpenFindView(COMMAND_T*);
-bool IsFindViewDisplayed(COMMAND_T*);
+int IsFindViewDisplayed(COMMAND_T*);
 void FindNextPrev(COMMAND_T*);
 
 #endif

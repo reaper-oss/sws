@@ -117,7 +117,7 @@ static void SetRecordInputCheck(COMMAND_T* ct)
 	WritePrivateProfileString(SWS_INI, RECINPUTCHECK_KEY, g_bEnRecInputCheck ? "1" : "0", get_ini_file());
 }
 
-bool IsRecInputChecked(COMMAND_T*)
+int IsRecInputChecked(COMMAND_T*)
 {
 	return g_bEnRecInputCheck;
 }

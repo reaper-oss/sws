@@ -1252,14 +1252,17 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 			if (tn->m_notes.GetLength())
 			{
 				GUID g;
-				if (tn->m_tr && CSurf_TrackToID(tn->m_tr, false) > 0)
-					g = *(GUID*)GetSetMediaTrackInfo(tn->m_tr, "GUID", NULL);
-				else
-					g = GUID_NULL;
-				guidToString(&g, strId);
-				if (_snprintfStrict(startLine, sizeof(startLine), "<S&M_TRACKNOTES %s\n|", strId) > 0)
-					if (GetNotesChunkFromString(tn->m_notes.Get(), &formatedNotes, startLine))
-						StringToExtensionConfig(&formatedNotes, ctx);
+				if (tn->m_tr && CSurf_TrackToID(tn->m_tr, false) >= 0)
+				{
+					if (tn->m_tr != GetMasterTrack(NULL))
+						g = *(GUID*)GetSetMediaTrackInfo(tn->m_tr, "GUID", NULL);
+					else
+						g = GUID_NULL;
+					guidToString(&g, strId);
+					if (_snprintfStrict(startLine, sizeof(startLine), "<S&M_TRACKNOTES %s\n|", strId) > 0)
+						if (GetNotesChunkFromString(tn->m_notes.Get(), &formatedNotes, startLine))
+							StringToExtensionConfig(&formatedNotes, ctx);
+				}
 			}
 	}
 
@@ -1373,7 +1376,7 @@ void OpenNotesHelpView(COMMAND_T* _ct)
 	}
 }
 
-bool IsNotesHelpViewDisplayed(COMMAND_T* _ct) {
+int IsNotesHelpViewDisplayed(COMMAND_T* _ct) {
 	return (g_pNotesHelpWnd && g_pNotesHelpWnd->IsValidWindow());
 }
 
@@ -1382,6 +1385,6 @@ void ToggleNotesHelpLock(COMMAND_T*) {
 		g_pNotesHelpWnd->ToggleLock();
 }
 
-bool IsNotesHelpLocked(COMMAND_T*) {
+int IsNotesHelpLocked(COMMAND_T*) {
 	return g_locked;
 }

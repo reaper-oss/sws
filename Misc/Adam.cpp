@@ -902,7 +902,7 @@ void AWToggleAutoGroup(COMMAND_T* = NULL)
 	WritePrivateProfileString(SWS_INI, "AWAutoGroup", str, get_ini_file());
 }
 
-bool AWIsAutoGroupEnabled(COMMAND_T* = NULL)
+int AWIsAutoGroupEnabled(COMMAND_T* = NULL)
 {
     return g_AWAutoGroup;
 }
@@ -2407,10 +2407,10 @@ void AWMetrPlayToggle(COMMAND_T* = NULL)    { *(int*)GetConfigVar("projmetroen")
 void AWMetrRecToggle(COMMAND_T* = NULL)     { *(int*)GetConfigVar("projmetroen") ^= 4;}
 void AWCountPlayToggle(COMMAND_T* = NULL)   { *(int*)GetConfigVar("projmetroen") ^= 8;}
 void AWCountRecToggle(COMMAND_T* = NULL)    { *(int*)GetConfigVar("projmetroen") ^= 16;}
-bool IsMetrPlayOn(COMMAND_T* = NULL)		{ return (*(int*)GetConfigVar("projmetroen") & 2)  != 0; }
-bool IsMetrRecOn(COMMAND_T* = NULL)			{ return (*(int*)GetConfigVar("projmetroen") & 4)  != 0; }
-bool IsCountPlayOn(COMMAND_T* = NULL)		{ return (*(int*)GetConfigVar("projmetroen") & 8)  != 0; }
-bool IsCountRecOn(COMMAND_T* = NULL)		{ return (*(int*)GetConfigVar("projmetroen") & 16) != 0; }
+int IsMetrPlayOn(COMMAND_T* = NULL)		{ return (*(int*)GetConfigVar("projmetroen") & 2)  != 0; }
+int IsMetrRecOn(COMMAND_T* = NULL)			{ return (*(int*)GetConfigVar("projmetroen") & 4)  != 0; }
+int IsCountPlayOn(COMMAND_T* = NULL)		{ return (*(int*)GetConfigVar("projmetroen") & 8)  != 0; }
+int IsCountRecOn(COMMAND_T* = NULL)		{ return (*(int*)GetConfigVar("projmetroen") & 16) != 0; }
 
 // Editing Preferences
 
@@ -2446,12 +2446,12 @@ void AWClrTimeSelClkToggle(COMMAND_T* = NULL)
 		*(int*)GetConfigVar("itemclickmovecurs") |= 68;
 }
 
-bool IsClrTimeSelClkOn(COMMAND_T* = NULL)			{ return (*(int*)GetConfigVar("itemclickmovecurs") & 68)  != 0; }
+int IsClrTimeSelClkOn(COMMAND_T* = NULL)		{ return (*(int*)GetConfigVar("itemclickmovecurs") & 68)  != 0; }
 
 void AWClrLoopClkOn(COMMAND_T* = NULL)			{ *(int*)GetConfigVar("itemclickmovecurs") |= 32;}
 void AWClrLoopClkOff(COMMAND_T* = NULL)			{ *(int*)GetConfigVar("itemclickmovecurs") &= ~32;}
 void AWClrLoopClkToggle(COMMAND_T* = NULL)		{ *(int*)GetConfigVar("itemclickmovecurs") ^= 32;}
-bool IsClrLoopClkOn(COMMAND_T* = NULL)			{ return (*(int*)GetConfigVar("itemclickmovecurs") & 32)  != 0; }
+int IsClrLoopClkOn(COMMAND_T* = NULL)			{ return (*(int*)GetConfigVar("itemclickmovecurs") & 32)  != 0; }
 
 void UpdateTimebaseToolbar()
 {
@@ -2463,14 +2463,13 @@ void UpdateTimebaseToolbar()
 }
 
 void AWTimebaseTime(COMMAND_T* = NULL)			{ *(int*)GetConfigVar("itemtimelock") = 0; UpdateTimebaseToolbar();}
-bool IsTimebaseTime(COMMAND_T* = NULL)			{ return (*(int*)GetConfigVar("itemtimelock") == 0); }
-
+int IsTimebaseTime(COMMAND_T* = NULL)			{ return (*(int*)GetConfigVar("itemtimelock") == 0); }
 
 void AWTimebaseBeatPos(COMMAND_T* = NULL)		{ *(int*)GetConfigVar("itemtimelock") = 2; UpdateTimebaseToolbar();}
-bool IsTimebaseBeatPos(COMMAND_T* = NULL)		{ return (*(int*)GetConfigVar("itemtimelock") == 2); }
+int IsTimebaseBeatPos(COMMAND_T* = NULL)		{ return (*(int*)GetConfigVar("itemtimelock") == 2); }
 
 void AWTimebaseBeatAll(COMMAND_T* = NULL)		{ *(int*)GetConfigVar("itemtimelock") = 1; UpdateTimebaseToolbar();}
-bool IsTimebaseBeatAll(COMMAND_T* = NULL)		{ return (*(int*)GetConfigVar("itemtimelock") == 1); }
+int IsTimebaseBeatAll(COMMAND_T* = NULL)		{ return (*(int*)GetConfigVar("itemtimelock") == 1); }
 
 
 
@@ -2488,7 +2487,7 @@ void UpdateGridToolbar()
 	RefreshToolbar(NamedCommandLookup("_SWS_AWTOGGLECLICKTRACK"));
 }
 
-bool IsGridTriplet(COMMAND_T* = NULL)		
+int IsGridTriplet(COMMAND_T* = NULL)		
 {
 	double grid = *(double*)GetConfigVar("projgriddiv");
 	double n = 1.0/grid;
@@ -2499,7 +2498,7 @@ bool IsGridTriplet(COMMAND_T* = NULL)
 	return r < 0.000001 || r > 2.99999;
 }
 
-bool IsGridDotted(COMMAND_T* = NULL)		
+int IsGridDotted(COMMAND_T* = NULL)		
 {
 	double grid = *(double*)GetConfigVar("projgriddiv");
 	double n = 1.0/grid;
@@ -2568,7 +2567,7 @@ void AWGridWhole(COMMAND_T* = NULL)
 	
 }
 
-bool IsGridWhole(COMMAND_T* = NULL)		{ return (*(double*)GetConfigVar("projgriddiv") == 4.0 || *(double*)GetConfigVar("projgriddiv") == 4.0*(2.0/3.0) || *(double*)GetConfigVar("projgriddiv") == 4.0*(3.0/2.0)); }
+int IsGridWhole(COMMAND_T* = NULL)		{ return (*(double*)GetConfigVar("projgriddiv") == 4.0 || *(double*)GetConfigVar("projgriddiv") == 4.0*(2.0/3.0) || *(double*)GetConfigVar("projgriddiv") == 4.0*(3.0/2.0)); }
 
 void AWGridHalf(COMMAND_T* = NULL)
 {
@@ -2586,7 +2585,7 @@ void AWGridHalf(COMMAND_T* = NULL)
 	
 }
 
-bool IsGridHalf(COMMAND_T* = NULL)		{ return (*(double*)GetConfigVar("projgriddiv") == 2.0 || *(double*)GetConfigVar("projgriddiv") == 2.0*(2.0/3.0) || *(double*)GetConfigVar("projgriddiv") == 2.0*(3.0/2.0)); }
+int IsGridHalf(COMMAND_T* = NULL)		{ return (*(double*)GetConfigVar("projgriddiv") == 2.0 || *(double*)GetConfigVar("projgriddiv") == 2.0*(2.0/3.0) || *(double*)GetConfigVar("projgriddiv") == 2.0*(3.0/2.0)); }
 
 
 
@@ -2610,7 +2609,7 @@ void AWGrid4(COMMAND_T* = NULL)
 	
 }
 
-bool IsGrid4(COMMAND_T* = NULL)		{ return (*(double*)GetConfigVar("projgriddiv") == 1.0 || *(double*)GetConfigVar("projgriddiv") == 1.0*(2.0/3.0) || *(double*)GetConfigVar("projgriddiv") == 1.0*(3.0/2.0)); }
+int IsGrid4(COMMAND_T* = NULL)		{ return (*(double*)GetConfigVar("projgriddiv") == 1.0 || *(double*)GetConfigVar("projgriddiv") == 1.0*(2.0/3.0) || *(double*)GetConfigVar("projgriddiv") == 1.0*(3.0/2.0)); }
 	
 void AWGrid8(COMMAND_T* = NULL)
 {
@@ -2628,7 +2627,7 @@ void AWGrid8(COMMAND_T* = NULL)
 	
 }
 
-bool IsGrid8(COMMAND_T* = NULL)		{ return (*(double*)GetConfigVar("projgriddiv") == 0.5 || *(double*)GetConfigVar("projgriddiv") == 0.5*(2.0/3.0) || *(double*)GetConfigVar("projgriddiv") == 0.5*(3.0/2.0)); }
+int IsGrid8(COMMAND_T* = NULL)		{ return (*(double*)GetConfigVar("projgriddiv") == 0.5 || *(double*)GetConfigVar("projgriddiv") == 0.5*(2.0/3.0) || *(double*)GetConfigVar("projgriddiv") == 0.5*(3.0/2.0)); }
 
 void AWGrid16(COMMAND_T* = NULL)
 {
@@ -2646,7 +2645,7 @@ void AWGrid16(COMMAND_T* = NULL)
 	
 }
 
-bool IsGrid16(COMMAND_T* = NULL)		{ return (*(double*)GetConfigVar("projgriddiv") == 0.25 || *(double*)GetConfigVar("projgriddiv") == 0.25*(2.0/3.0) || *(double*)GetConfigVar("projgriddiv") == 0.25*(3.0/2.0)); }
+int IsGrid16(COMMAND_T* = NULL)		{ return (*(double*)GetConfigVar("projgriddiv") == 0.25 || *(double*)GetConfigVar("projgriddiv") == 0.25*(2.0/3.0) || *(double*)GetConfigVar("projgriddiv") == 0.25*(3.0/2.0)); }
 
 void AWGrid32(COMMAND_T* = NULL)
 {
@@ -2664,7 +2663,7 @@ void AWGrid32(COMMAND_T* = NULL)
 	
 }
 
-bool IsGrid32(COMMAND_T* = NULL)		{ return (*(double*)GetConfigVar("projgriddiv") == 0.125 || *(double*)GetConfigVar("projgriddiv") == 0.125*(2.0/3.0) || *(double*)GetConfigVar("projgriddiv") == 0.125*(3.0/2.0)); }
+int IsGrid32(COMMAND_T* = NULL)		{ return (*(double*)GetConfigVar("projgriddiv") == 0.125 || *(double*)GetConfigVar("projgriddiv") == 0.125*(2.0/3.0) || *(double*)GetConfigVar("projgriddiv") == 0.125*(3.0/2.0)); }
 
 
 void AWInsertClickTrack(COMMAND_T* t)
@@ -2721,7 +2720,7 @@ void AWToggleClickTrack(COMMAND_T*)
 	Main_OnCommand(40364, 0); // Toggle built in metronome
 }
 
-bool IsClickUnmuted(COMMAND_T* = NULL)			
+int IsClickUnmuted(COMMAND_T* = NULL)			
 { 
 	for (int i = 1; i <= GetNumTracks(); i++)
 	{
@@ -2890,7 +2889,7 @@ void AWSelTracksTimebaseTime(COMMAND_T* t)
 }
 
 
-bool IsSelTracksTimebaseTime(COMMAND_T* = NULL)			
+int IsSelTracksTimebaseTime(COMMAND_T* = NULL)			
 { 
     
     MediaTrack* tr;
@@ -2927,7 +2926,7 @@ void AWSelTracksTimebaseBeatPos(COMMAND_T* t)
 }
 
 
-bool IsSelTracksTimebaseBeatPos(COMMAND_T* = NULL)		
+int IsSelTracksTimebaseBeatPos(COMMAND_T* = NULL)		
 { 
     MediaTrack* tr;
     
@@ -2960,7 +2959,7 @@ void AWSelTracksTimebaseBeatAll(COMMAND_T* t)
 }
 
 
-bool IsSelTracksTimebaseBeatAll(COMMAND_T* = NULL)		
+int IsSelTracksTimebaseBeatAll(COMMAND_T* = NULL)		
 { 
     MediaTrack* tr;
     

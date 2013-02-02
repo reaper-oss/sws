@@ -113,7 +113,7 @@ void SetMasterOutputVol(COMMAND_T* ct)
 	}
 }
 
-bool IsMasterOutputMuted(COMMAND_T* ct)
+int IsMasterOutputMuted(COMMAND_T* ct)
 {
 	void* muted = GetSetTrackSendInfo(CSurf_TrackFromID(0,false), 1, (int)ct->user, "B_MUTE", NULL);
 	if (muted) return *(bool*)muted;
@@ -421,7 +421,7 @@ void UpdateTrackMute()
 	RefreshToolbar(cmdID);
 }
 
-bool CheckTrackParam(COMMAND_T* ct)
+int CheckTrackParam(COMMAND_T* ct)
 {
 	int iNumTracks = GetNumTracks();
 	for (int i = 1; i <= iNumTracks; i++)

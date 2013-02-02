@@ -399,8 +399,8 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 		if (!isUndo)
 			if (int cmdId = NamedCommandLookup(lp.gettoken_str(1)))
 			{
-//				AddOrReplaceScheduledJob(new ProjectActionJob(cmdId)); // ~1s delay
-				Main_OnCommand(cmdId, 0);
+//				Main_OnCommand(cmdId, 0);
+				AddOrReplaceScheduledJob(new ProjectActionJob(cmdId)); // ~0.5s delay + avoid multi-trigger
 			}
 		return true;
 	}

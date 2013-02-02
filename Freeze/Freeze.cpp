@@ -52,8 +52,6 @@ void PrintGuids(COMMAND_T* = NULL)
 		sprintf(debugStr, "Track %d %s GUID %s\n", i, (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL), guidStr);
 #ifdef _WIN32
 		OutputDebugString(debugStr);
-#else
-		printf(debugStr);
 #endif
 	}
 }

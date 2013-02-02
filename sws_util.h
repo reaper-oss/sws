@@ -52,14 +52,15 @@
 // +IsSwsAction() to skip "SWS: ", "SWS/S&M: ", "SWS/FNG: ", etc...
 #define SWS_CMD_SHORTNAME(_ct) (GetLocalizedActionName(_ct->accel.desc) + IsSwsAction(_ct->accel.desc))
 #define __ARRAY_SIZE(x) sizeof(x) / sizeof(x[0])
-// For checking to see if items are adjacent
-// Found one case of items after split having diff edges 5e-11 apart, 1e-9 (still much greater than one sample)
-#define SWS_ADJACENT_ITEM_THRESHOLD 1.0e-9
 #define BOUNDED(x,lo,hi) ((x) < (lo) ? (lo) : (x) > (hi) ? (hi) : (x))
 #define FREE_NULL(p) {free(p);p=0;}
 #define DELETE_NULL(p) {delete(p); p=0;}
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
+
+// For checking to see if items are adjacent
+// Found one case of items after split having diff edges 5e-11 apart, 1e-9 (still much greater than one sample)
+#define SWS_ADJACENT_ITEM_THRESHOLD 1.0e-9
 
 #ifdef _WIN32
 #define PATH_SLASH_CHAR '\\'
@@ -71,11 +72,13 @@
 #define SWS_ALT		LVKF_ALT		// 1
 #define SWS_CTRL	LVKF_CONTROL	// 2
 #define SWS_SHIFT	LVKF_SHIFT		// 4
+
 typedef struct MODIFIER
 {
 	int iModifier;
 	const char* cDesc;
 } MODIFIER;
+
 #define NUM_MODIFIERS 8
 extern MODIFIER g_modifiers[]; // sws_util.h
 
@@ -86,7 +89,8 @@ typedef struct COMMAND_T
 	void (*doCommand)(COMMAND_T*);
 	const char* menuText;
 	INT_PTR user;
-	bool (*getEnabled)(COMMAND_T*);
+	int (*getEnabled)(COMMAND_T*);
+	bool fakeToggle;
 } COMMAND_T;
 
 typedef void (*SWS_COMMANDFUNC)(COMMAND_T*);
@@ -197,7 +201,7 @@ COMMAND_T* SWSUnregisterCmd(int id);
 int SWSRegisterCmds(COMMAND_T* pCommands, const char* cFile, bool localize); // Multiple commands in a table, terminated with LAST_COMMAND
 #define SWSRegisterCommands(c) SWSRegisterCmds(c, __FILE__, true)
 
-int SWSCreateRegisterDynamicCmd(int cmdId, void (*doCommand)(COMMAND_T*), bool (*getEnabled)(COMMAND_T*), const char* cID, const char* cDesc, INT_PTR user, const char* cFile, bool localize);
+int SWSCreateRegisterDynamicCmd(int cmdId, void (*doCommand)(COMMAND_T*), int (*getEnabled)(COMMAND_T*), const char* cID, const char* cDesc, INT_PTR user, const char* cFile, bool localize);
 #define SWSRegisterCommandExt(a, b, c, d, e) SWSCreateRegisterDynamicCmd(0, a, NULL, b, c, d, __FILE__, e)
 void SWSFreeUnregisterDynamicCmd(int id);
 
@@ -231,11 +235,16 @@ MediaTrack* GuidToTrack(const GUID* guid);
 bool GuidsEqual(const GUID* g1, const GUID* g2);
 bool TrackMatchesGuid(MediaTrack* tr, const GUID* g);
 const char* stristr(const char* str1, const char* str2);
+
 #ifdef _WIN32
 void dprintf(const char* format, ...);
 #else
 #define dprintf printf
+#ifndef OutputDebugString
+#define OutputDebugString printf
 #endif
+#endif
+
 void SWS_GetSelectedTracks(WDL_TypedBuf<MediaTrack*>* buf, bool bMaster = false);
 void SWS_GetSelectedMediaItems(WDL_TypedBuf<MediaItem*>* buf);
 void SWS_GetSelectedMediaItemsOnTrack(WDL_TypedBuf<MediaItem*>* buf, MediaTrack* tr);
@@ -253,7 +262,7 @@ bool IsLocalizableAction(const char* _customId);
 TrackEnvelope* SWS_GetTakeEnvelopeByName(MediaItem_Take* take, const char* envname);
 TrackEnvelope* SWS_GetTrackEnvelopeByName(MediaTrack* track, const char* envname);
 
-// Generate html whatsnew, makewhatsnew.cpp
+// Generate html whatsnew, MakeWhatsNew.cpp
 int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML);
 
 // Functions export to reascript and c++ plugins, Reascript.cpp

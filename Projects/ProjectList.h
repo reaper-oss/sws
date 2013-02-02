@@ -53,7 +53,7 @@ protected:
 };
 
 void OpenProjectList(COMMAND_T*);
-bool ProjectListEnabled(COMMAND_T*);
+int ProjectListEnabled(COMMAND_T*);
 void ProjectListUpdate();
 int ProjectListInit();
 void ProjectListExit();

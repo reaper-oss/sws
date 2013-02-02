@@ -5,16 +5,16 @@ Cycle Action editor updates
 +Improved toggle states for cycle actions using instructions IF and IF NOT
 
 ReaConsole updates
-+Create actions made of console commands directly in the Cycle Action editor, see above
++Create actions made of console commands directly in the Cycle Action editor, see above + example and details http://forum.cockos.com/showpost.php?p=1115796&postcount=1179|here|
  In other words, to create your own console actions, <b>you do not need to create/tweak a text file anymore</b> (i.e. reaconsole_customcommands.txt)
  => better action names, for example: a custom "Select bass tracks" instead of "SWS: Run console command: s*bass*"
  => much simpler configuration (no file edition/re-start)
  => benefit from other Cycle Actions' features: toggle state reporting, etc..
  => indirectly fixes little issues on OSX
  Note: although it is deprecated now, the reaconsole_customcommands.txt file still parsed for ascendant compatibility, of course!
-+<b>New command 'x' to add track FX</b>, see example and details http://forum.cockos.com/showpost.php?p=1115796&postcount=1179|here|
-+<b>New command '/' to send local OSC messages</b> (as if they were sent by a device on the network), see example and details http://forum.cockos.com/showpost.php?p=1115796&postcount=1179|here|
- Longer commands.. but this opens a bunch of doors! Receives, sends, FX parameters, etc..
++<b>New command 'x' to add track FX</b> by names, see examples and details http://forum.cockos.com/showpost.php?p=1115796&postcount=1179|here|
++<b>New command '/' to send local OSC messages</b> (as if they were sent by a device on the network), see examples and details http://forum.cockos.com/showpost.php?p=1115796&postcount=1179|here|
+ Longer console commands.. but this opens a bunch of doors: receives, sends, FX parameters, FX presets, etc..
 +Issue 484: the console window is now modeless, dockable, resizable, etc..
  => Inverted key shortcuts:
  - The ENTER key runs a command but keeps the console window open
@@ -30,7 +30,7 @@ Ported more features to OSX:
  - SWS/S&M: Toolbar - Toggle offscreen item selection (bottom)
 +More CMD+A support in text fields (select all)
 
-Issue 524: new actions to detect and unselect offscreen items (just to unify the 4 existing ones "Toggle offscreen item selection (left/right/top/bottom)")
+Issue 524: new actions to detect and unselect offscreen items (just to unify the 4 existing actions "Toggle offscreen item selection (left/right/top/bottom)")
 +SWS/S&M: Unselect offscreen items
 +SWS/S&M: Toolbar - Toggle offscreen item selection
  This one deselects offscreen items and reselects them on toggle
@@ -196,8 +196,8 @@ Export functions to ReaScript (BETA)
 
 Added actions
 +Added "go to" marker/region actions 
- REAPER already proposes 30 goto actions for markers and 40 for regions, so
- those new S&M actions are are just meant to target up to 99 regions/markers => they are <b>hidden by default!</b>
+ REAPER already proposes 30 goto actions for markers and 40 for regions, 
+ so those new actions are just meant to target up to 99 regions/markers => they are <b>hidden by default!</b>
  This number of actions is http://forum.cockos.com/showthread.php?p=984786#post984786|customizable in the S&M.ini file|
  Note: comes in handy with the new Region Playlist "re-synchronization" feature, see above
  - SWS/S&M: Go to marker n (obeys smooth seek)

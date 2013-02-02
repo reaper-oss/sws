@@ -945,7 +945,7 @@ void ClearFilter(COMMAND_T*)	 { g_pSSWnd->SetFilterType(2); g_iMask = 0; UpdateS
 void SaveFilter(COMMAND_T*)		 { g_iSavedMask = g_iMask; g_iSavedType = g_pSSWnd->GetFilterType(); }
 void RestoreFilter(COMMAND_T*)	 { g_pSSWnd->SetFilterType(g_iSavedType); g_iMask = g_iSavedMask; UpdateSnapshotsDialog(); }
 
-bool IsSnapParamEn(COMMAND_T* ct)
+int IsSnapParamEn(COMMAND_T* ct)
 {
 	if (ct->doCommand == TogSnapParam)
 		return (g_iMask & ct->user) ? true : false;
@@ -961,7 +961,7 @@ bool IsSnapParamEn(COMMAND_T* ct)
 }
 
 
-static bool SnapshotsWindowEnabled(COMMAND_T*)
+int SnapshotsWindowEnabled(COMMAND_T*)
 {
 	return g_pSSWnd->IsValidWindow();
 }

@@ -984,7 +984,7 @@ void SetAllTrackSolos(int solomode)
 	}
 }
 
-bool IsRefTrack(COMMAND_T*) { return g_ReferenceTrackSolo; }
+int IsRefTrack(COMMAND_T*) { return g_ReferenceTrackSolo; }
 
 void DoToggleReferenceTrack(COMMAND_T*)
 {

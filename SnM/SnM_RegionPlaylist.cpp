@@ -1503,7 +1503,7 @@ void SetPlaylistRepeat(COMMAND_T* _ct)
 		g_pRgnPlaylistWnd->Update();
 }
 
-bool IsPlaylistRepeat(COMMAND_T*) {
+int IsPlaylistRepeat(COMMAND_T*) {
 	return g_repeatPlaylist;
 }
 
@@ -1913,7 +1913,7 @@ void OpenRegionPlaylist(COMMAND_T*) {
 		g_pRgnPlaylistWnd->Show(true, true);
 }
 
-bool IsRegionPlaylistDisplayed(COMMAND_T*){
+int IsRegionPlaylistDisplayed(COMMAND_T*){
 	return (g_pRgnPlaylistWnd && g_pRgnPlaylistWnd->IsValidWindow());
 }
 
@@ -1922,6 +1922,6 @@ void ToggleRegionPlaylistMode(COMMAND_T*) {
 		g_pRgnPlaylistWnd->ToggleLock();
 }
 
-bool IsRegionPlaylistMonitoring(COMMAND_T*) {
+int IsRegionPlaylistMonitoring(COMMAND_T*) {
 	return g_monitorMode;
 }

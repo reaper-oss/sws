@@ -19,7 +19,7 @@ public:
     /* Register command with command data */
     static void registerCommand(const char *description, const char *id, RprCommand *command, int undoFlag);
 
-    static void registerToggleCommand(const char *description, const char *id, void (*command)(int, void *), bool (*toggleCommand)(void), int undoFlag);
+    static void registerToggleCommand(const char *description, const char *id, void (*command)(int, void *), int (*toggleCommand)(void), int undoFlag);
 
     virtual ~RprCommand();
 
@@ -47,10 +47,10 @@ private:
 
 class RprToggleCommand: public RprCommand {
 public:
-    RprToggleCommand(void (*command)(int, void *), bool (*toggleCommand)(void), void *commandData = NULL, int commandDataSize = 0);
-    bool runToggleAction();
+    RprToggleCommand(void (*command)(int, void *), int (*toggleCommand)(void), void *commandData = NULL, int commandDataSize = 0);
+    int runToggleAction();
 private:
-    bool (*mToggleCommand)(void);
+    int (*mToggleCommand)(void);
 };
 
 class RprCommandManager

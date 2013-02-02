@@ -156,7 +156,7 @@ void OpenProjectList(COMMAND_T*)
 	g_pProjList->Show(true, true);
 }
 
-bool ProjectListEnabled(COMMAND_T*)
+int ProjectListEnabled(COMMAND_T*)
 {
 	return g_pProjList->IsValidWindow();
 }

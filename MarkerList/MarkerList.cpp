@@ -652,7 +652,7 @@ void ExportFormat(COMMAND_T*)
 	DialogBox(g_hInst,MAKEINTRESOURCE(IDD_FORMAT),g_hwndParent,doFormatDialog);
 }
 
-static bool MarkerListEnabled(COMMAND_T*)
+int MarkerListEnabled(COMMAND_T*)
 {
 	return g_pMarkerList->IsValidWindow();
 }

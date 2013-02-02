@@ -102,7 +102,7 @@ void ShowGrooveDialog(int flags, void *data)
     me->showGrooveDialog();     
 }
 
-bool IsGrooveDialogOpen()
+int IsGrooveDialogOpen()
 {
     GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
     return me->GetGrooveDialog()->IsValidWindow();

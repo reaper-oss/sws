@@ -161,8 +161,8 @@ void DoDeleteMutedItems(COMMAND_T*);
 
 //===========================================================
 // main.cpp
-bool IsRippleOneTrack(COMMAND_T*);
-bool IsRippleAll(COMMAND_T*);
+int IsRippleOneTrack(COMMAND_T*);
+int IsRippleAll(COMMAND_T*);
 void DoToggleRippleOneTrack(COMMAND_T*);
 void DoToggleRippleAll(COMMAND_T*);
 void DoSelectFiles(COMMAND_T*);
@@ -196,7 +196,7 @@ void DoScrollTVPageUp(COMMAND_T*);
 void DoScrollTVHome(COMMAND_T*);
 void DoScrollTVEnd(COMMAND_T*);
 void DoRenameMarkersWithAscendingNumbers(COMMAND_T*);
-bool IsStopAtEndOfTimeSel(COMMAND_T*);
+int IsStopAtEndOfTimeSel(COMMAND_T*);
 void DoToggleSTopAtEndOfTimeSel(COMMAND_T*);
 extern WDL_String g_XenIniFilename;
 int XenakiosInit();
@@ -256,7 +256,7 @@ void DoSetRenderSpeedToNonLim(COMMAND_T*);
 void DoStoreRenderSpeed(COMMAND_T*);
 void DoRecallRenderSpeed(COMMAND_T*);
 void DoSetSelTrackAsRefTrack(COMMAND_T*);
-bool IsRefTrack(COMMAND_T*);
+int IsRefTrack(COMMAND_T*);
 void DoToggleReferenceTrack(COMMAND_T*);
 void DoNudgeMasterVol1dbUp(COMMAND_T*);
 void DoNudgeMasterVol1dbDown(COMMAND_T*);

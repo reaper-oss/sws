@@ -961,10 +961,10 @@ void ApplyAutoColor(COMMAND_T*)
 	AutoColorMarkerRegion(true);
 }
 
-static bool IsAutoColorOpen(COMMAND_T*)		{ return g_pACWnd->IsValidWindow(); }
-static bool IsAutoIconEnabled(COMMAND_T*)	{ return g_bAIEnabled; }
+int IsAutoColorOpen(COMMAND_T*)		{ return g_pACWnd->IsValidWindow(); }
+int IsAutoIconEnabled(COMMAND_T*)	{ return g_bAIEnabled; }
 
-static bool IsAutoColorEnabled(COMMAND_T* ct)
+int IsAutoColorEnabled(COMMAND_T* ct)
 {
 	switch((int)ct->user) {
 		case 0: return g_bACEnabled;

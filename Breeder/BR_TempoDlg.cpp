@@ -188,7 +188,7 @@ void SaveOptionsTempoShape (HWND hwnd)
 	WritePrivateProfileString("SWS", SHAPE_KEY, tmp, get_ini_file());	
 };
 
-bool IsTempoShapeOptionsVisible (COMMAND_T* = NULL)
+int IsTempoShapeOptionsVisible (COMMAND_T*)
 {
 	return g_tempoShapeDialog;
 };
@@ -1032,7 +1032,7 @@ void SaveOptionsConversion (HWND hwnd)
 	WritePrivateProfileString("SWS", CONV_KEY, tmp, get_ini_file());	
 };
 
-bool IsConvertMarkersToTempoVisible (COMMAND_T* = NULL)
+int IsConvertMarkersToTempoVisible (COMMAND_T*)
 {
 	return g_convertMarkersToTempoDialog;
 };
@@ -2075,7 +2075,7 @@ void SaveOptionsSelAdj (HWND hwnd)
 	WritePrivateProfileString("SWS", SEL_ADJ_KEY, tmp, get_ini_file());
 };
 
-bool IsSelectAdjustTempoVisible (COMMAND_T* = NULL)
+int IsSelectAdjustTempoVisible (COMMAND_T* = NULL)
 {
 	return g_selectAdjustTempoDialog;
 };

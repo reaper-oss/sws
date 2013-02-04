@@ -29,7 +29,7 @@
 
 #define TOOLTIP_MAX_LEN					512
 #define MIN_DOCKWND_WIDTH				147
-#define MIN_DOCKWND_HEIGHT				175
+#define MIN_DOCKWND_HEIGHT				100
 
 #ifdef _WIN32
 #define SWSDLG_TYPEFACE					"MS Shell Dlg"

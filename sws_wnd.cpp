@@ -310,6 +310,14 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			{
 				int w, h;
 				GetMinSize(&w, &h);
+				if (!IsDocked())
+				{
+					RECT rClient, rWnd;
+					GetClientRect(m_hwnd, &rClient);
+					GetWindowRect(m_hwnd, &rWnd);
+					w += (rWnd.right - rWnd.left) - rClient.right;
+					h += (rWnd.bottom - rWnd.top) - rClient.bottom;
+				}
 				LPMINMAXINFO l = (LPMINMAXINFO)lParam;
 				l->ptMinTrackSize.x = w;
 				l->ptMinTrackSize.y = h;

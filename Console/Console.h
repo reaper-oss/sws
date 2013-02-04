@@ -93,7 +93,7 @@ class ReaConsoleWnd : public SWS_DockWnd
 public:
 	ReaConsoleWnd();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
-	void GetMinSize(int* w, int* h) { *w=150; *h=100; }
+	void GetMinSize(int* w, int* h) { *w=100; *h=38; }
 	void ShowConsole();
 	void Update();
 protected:

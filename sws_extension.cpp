@@ -294,7 +294,7 @@ int toggleActionHook(int iCmd)
 {
 	if (iCmd >= g_iFirstCommand && iCmd <= g_iLastCommand)
 		if (COMMAND_T* ct = g_commands.Get(iCmd, NULL))
-			return (ct->getEnabled ? (ct->getEnabled(ct) ? 1 : 0) : -1);
+			return (ct->getEnabled ? ct->getEnabled(ct) : -1);
 	return -1;
 }
 

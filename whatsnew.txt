@@ -1,3 +1,6 @@
+Other:
++Fixed disabled button in update checker in certain instances
+
 !v2.3.0 #13 (February 2, 2013)
 Cycle Action editor updates
 +Added instruction CONSOLE to run ReaConsole commands, see example and details http://forum.cockos.com/showpost.php?p=1115796&postcount=1179|here|

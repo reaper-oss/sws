@@ -38,6 +38,9 @@
 #define OFFICIAL_VERSION_URL	"http://sws-extension.googlecode.com/svn/tags/release/version.h"
 #define BETA_VERSION_URL		"http://sws-extension.googlecode.com/svn/trunk/version.h"
 
+#define OFFICIAL_DOWNLOAD		"http://www.standingwaterstudios.com/new.php"
+#define BETA_DOWNLOAD			"http://code.google.com/p/sws-extension/downloads/list"
+
 // General settings
 static time_t g_searchTimeOut = 5;			// timeout for web search (separate for beta and official)
 static bool g_searchOfficial;				// by default official version search is performed on startup
@@ -111,7 +114,7 @@ void VersionCheck ()
 	{
 		JNL_HTTPGet web;
 		web.addheader("User-Agent:SWS (Mozilla)");
-		web.addheader("User-Agent:SWS (Mozilla)");
+		web.addheader("Accept:*/*");
 		web.connect(OFFICIAL_VERSION_URL);
 		char* buf;
 
@@ -167,7 +170,7 @@ void VersionCheck ()
 	{
 		JNL_HTTPGet web;
 		web.addheader("User-Agent:SWS (Mozilla)");
-		web.addheader("User-Agent:SWS (Mozilla)");
+		web.addheader("Accept:*/*");
 		web.connect(BETA_VERSION_URL);
 		char* buf;
 		
@@ -323,6 +326,7 @@ void SetVersionMessage(HWND hwnd, int status)
 	else if (status == 1)
 	{
 		_snprintf(tmp, sizeof(tmp), __LOCALIZE("Official update is available: Version %d.%d.%d Build #%d","sws_DLG_172"), g_versionO.maj, g_versionO.min, g_versionO.rev, g_versionO.build);
+		EnableWindow(GetDlgItem(hwnd, IDC_BR_VER_DOWNLOAD), true);
 		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_DOWNLOAD), SW_SHOW);
 		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_OFF), SW_HIDE);
 		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_BETA), SW_HIDE);
@@ -333,6 +337,7 @@ void SetVersionMessage(HWND hwnd, int status)
 	else if (status == 2)
 	{
 		_snprintf(tmp, sizeof(tmp), __LOCALIZE("Beta update is available: Version %d.%d.%d Build #%d","sws_DLG_172"), g_versionB.maj, g_versionB.min, g_versionB.rev, g_versionB.build);
+		EnableWindow(GetDlgItem(hwnd, IDC_BR_VER_DOWNLOAD), true);
 		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_DOWNLOAD), SW_SHOW);
 		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_OFF), SW_HIDE);
 		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_BETA), SW_HIDE);
@@ -382,12 +387,12 @@ WDL_DLGRET CommandProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					}
 					if (g_status == 1)
 					{
-						ShellExecute(NULL, "open", "http://www.standingwaterstudios.com/new.php" , NULL, NULL, SW_SHOWNORMAL);
+						ShellExecute(NULL, "open", OFFICIAL_DOWNLOAD, NULL, NULL, SW_SHOWNORMAL);
 						EndDialog(hwnd, 0);
 					}
 					else if (g_status == 2)
 					{
-						ShellExecute(NULL, "open", "http://code.google.com/p/sws-extension/downloads/list" , NULL, NULL, SW_SHOWNORMAL);
+						ShellExecute(NULL, "open", BETA_DOWNLOAD, NULL, NULL, SW_SHOWNORMAL);
 						EndDialog(hwnd, 0);
 					}
 
@@ -396,14 +401,14 @@ WDL_DLGRET CommandProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 				case IDC_BR_VER_OFF:
 				{
-					ShellExecute(NULL, "open", "http://www.standingwaterstudios.com/new.php" , NULL, NULL, SW_SHOWNORMAL);
+					ShellExecute(NULL, "open", OFFICIAL_DOWNLOAD , NULL, NULL, SW_SHOWNORMAL);
 					EndDialog(hwnd, 0);
 				}
 				break;
 				
 				case IDC_BR_VER_BETA:
 				{
-					ShellExecute(NULL, "open", "http://code.google.com/p/sws-extension/downloads/list" , NULL, NULL, SW_SHOWNORMAL);
+					ShellExecute(NULL, "open", BETA_DOWNLOAD, NULL, NULL, SW_SHOWNORMAL);
 					EndDialog(hwnd, 0);
 				}
 				break;
@@ -458,12 +463,12 @@ WDL_DLGRET StartupProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				{
 					if (g_status == 1)
 					{
-						ShellExecute(NULL, "open", "http://www.standingwaterstudios.com/new.php" , NULL, NULL, SW_SHOWNORMAL);
+						ShellExecute(NULL, "open", OFFICIAL_DOWNLOAD , NULL, NULL, SW_SHOWNORMAL);
 						EndDialog(hwnd, 0);
 					}
 					else if (g_status == 2)
 					{
-						ShellExecute(NULL, "open", "http://code.google.com/p/sws-extension/downloads/list" , NULL, NULL, SW_SHOWNORMAL);
+						ShellExecute(NULL, "open", BETA_DOWNLOAD , NULL, NULL, SW_SHOWNORMAL);
 						EndDialog(hwnd, 0);
 					}
 
@@ -472,14 +477,14 @@ WDL_DLGRET StartupProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 				case IDC_BR_VER_OFF:
 				{
-					ShellExecute(NULL, "open", "http://www.standingwaterstudios.com/new.php" , NULL, NULL, SW_SHOWNORMAL);
+					ShellExecute(NULL, "open", OFFICIAL_DOWNLOAD , NULL, NULL, SW_SHOWNORMAL);
 					EndDialog(hwnd, 0);
 				}
 				break;
 				
 				case IDC_BR_VER_BETA:
 				{
-					ShellExecute(NULL, "open", "http://code.google.com/p/sws-extension/downloads/list" , NULL, NULL, SW_SHOWNORMAL);
+					ShellExecute(NULL, "open", BETA_DOWNLOAD , NULL, NULL, SW_SHOWNORMAL);
 					EndDialog(hwnd, 0);
 				}
 				break;

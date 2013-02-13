@@ -210,28 +210,23 @@ LICE_IBitmap* SNM_GetThemeLogo()
 
 #ifdef _WIN32
 
-#define MAX_THEMED_CTRLS 512
-
 // calling RemoveXPStyle() straight in there would crash!
-static BOOL CALLBACK EnumRemoveXPStyles(HWND _hwnd, LPARAM _ids)
+static BOOL CALLBACK EnumRemoveXPStyles(HWND _hwnd, LPARAM _childHwnds)
 {
 	int i=0;
 
 	// do not deal with list views & list boxes
 	char className[64] = "";
-	if (GetClassName(_hwnd, className, sizeof(className)) && strcmp(className, WC_LISTVIEW) && strcmp(className, WC_LISTBOX))
+	if (GetClassName(_hwnd, className, sizeof(className)) && 
+		strcmp(className, WC_LISTVIEW) && 
+		strcmp(className, WC_LISTBOX))
 	{
 		LONG style = GetWindowLong(_hwnd, GWL_STYLE);
 		if ((style & BS_AUTOCHECKBOX) == BS_AUTOCHECKBOX ||
 			(style & BS_AUTORADIOBUTTON) == BS_AUTORADIOBUTTON ||
 			(style & BS_GROUPBOX) == BS_GROUPBOX)
 		{
-			int* ids = (int*)_ids;
-			int i=0; while (ids[i]!=-1 && i<MAX_THEMED_CTRLS) i++;
-			if (i<MAX_THEMED_CTRLS)
-				ids[i] = (int)GetWindowLong(_hwnd, GWL_ID);
-			else
-				return FALSE;
+			((WDL_PtrList<HWND__>*)_childHwnds)->Add(_hwnd);
 		}
 	}
 	return TRUE;
@@ -249,12 +244,10 @@ WDL_DLGRET SNM_HookThemeColorsMessage(HWND _hwnd, UINT _uMsg, WPARAM _wParam, LP
 			case WM_INITDIALOG :
 			{
 				// remove XP style on some child ctrls (cannot be themed otherwise)
-				int ids[MAX_THEMED_CTRLS];
-				memset(ids, -1, sizeof(int)*MAX_THEMED_CTRLS);
-				EnumChildWindows(_hwnd, EnumRemoveXPStyles, (LPARAM)ids);
-				int i=0;
-				while (i<MAX_THEMED_CTRLS && ids[i]!=-1)
-					RemoveXPStyle(GetDlgItem(_hwnd, ids[i++]), 1);
+				WDL_PtrList<HWND__> childHwnds;
+				EnumChildWindows(_hwnd, EnumRemoveXPStyles, (LPARAM)&childHwnds);
+				for (int i=0; i<childHwnds.GetSize(); i++)
+					RemoveXPStyle(childHwnds.Get(i), 1);
 				return 0;
 			}
 #endif
@@ -265,7 +258,7 @@ WDL_DLGRET SNM_HookThemeColorsMessage(HWND _hwnd, UINT _uMsg, WPARAM _wParam, LP
 			case WM_CTLCOLORBTN:
 			case WM_CTLCOLORDLG:
 			case WM_CTLCOLORSTATIC:
-/* commented (allow custom implementations)
+/* commented (custom implementations)
 			case WM_DRAWITEM:
 */
 				return SendMessage(GetMainHwnd(), _uMsg,_wParam,_lParam);

@@ -292,10 +292,19 @@ HMENU SWSCreateMenuFromCommandTable(COMMAND_T pCommands[], HMENU hMenu, int* iIn
 //  1 = action belongs to this extension and is currently set to "on"
 int toggleActionHook(int iCmd)
 {
+	static bool bReentrancyCheck = false;
+	if (bReentrancyCheck)
+		return -1;
+
+	int state = -1;
 	if (iCmd >= g_iFirstCommand && iCmd <= g_iLastCommand)
 		if (COMMAND_T* ct = g_commands.Get(iCmd, NULL))
-			return (ct->getEnabled ? ct->getEnabled(ct) : -1);
-	return -1;
+		{
+			bReentrancyCheck = true;
+			state = ct->getEnabled ? ct->getEnabled(ct) : -1;
+			bReentrancyCheck = false;
+		}
+	return state;
 }
 
 // This function creates the extension menu (flag==0) and handles checking menu items (flag==1).

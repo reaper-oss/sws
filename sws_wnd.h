@@ -76,7 +76,7 @@ public:
 	int GetListItemCount() { return ListView_GetItemCount(m_hwndList); }
 	SWS_ListItem* GetListItem(int iIndex, int* iState = NULL);
 	bool IsSelected(int index);
-	SWS_ListItem* EnumSelected(int* i);
+	SWS_ListItem* EnumSelected(int* i, int iOffset = 0);
 	bool SelectByItem(SWS_ListItem* item, bool bSelectOnly = true, bool bEnsureVisible = true);
 	int OnNotify(WPARAM wParam, LPARAM lParam);
 	void OnDestroy();
@@ -96,6 +96,7 @@ public:
 	int DataToDisplayCol(int iCol);
 	int* GetOldColors() { return m_oldColors; }
 	int GetSortColumn() { return m_iSortCol; }
+	void SetSortColumn(int iCol) { m_iSortCol = iCol; }
 	
 	bool IsActive(bool bWantEdit) { return GetFocus() == m_hwndList || (bWantEdit && m_iEditingItem != -1); }
 	void DisableUpdates(bool bDisable) { m_bDisableUpdates = bDisable; }

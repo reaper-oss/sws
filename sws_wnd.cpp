@@ -758,7 +758,7 @@ bool SWS_ListView::IsSelected(int index)
 	return ListView_GetItemState(m_hwndList, index, LVIS_SELECTED) ? true : false;
 }
 
-SWS_ListItem* SWS_ListView::EnumSelected(int* i)
+SWS_ListItem* SWS_ListView::EnumSelected(int* i, int iOffset)
 {
 	if (!m_hwndList)
 		return NULL;
@@ -773,10 +773,18 @@ SWS_ListItem* SWS_ListView::EnumSelected(int* i)
 
 	while (*i < ListView_GetItemCount(m_hwndList))
 	{
-		li.iItem = (*i)++;
+		li.iItem = *i;
 		ListView_GetItem(m_hwndList, &li);
-		if (li.state)
+		if (li.state) 
+		{
+			if ((iOffset != 0) && (((*i) + iOffset) >= 0) && (((*i) + iOffset) < ListView_GetItemCount(m_hwndList)))  //sanitizing
+			{
+				li.iItem = (*i) + iOffset;  //this allows the selection of another item besides the one clicked.
+				ListView_GetItem(m_hwndList, &li);
+			}
 			return (SWS_ListItem*)li.lParam;
+		}
+		(*i)++;
 	}
 	return NULL;
 }

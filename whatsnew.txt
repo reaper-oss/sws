@@ -1,3 +1,16 @@
+Snapshot improvements:
++Added Previous and Next buttons for navigating snapshots 
+ =>added associated actions for assigning hotkeys.
++Added Move Up & Down buttons for re-ordering snapshots list.
+ =>also added actions
++Added Notes field
+ =>Including details view, import, export, save, & load.
+ =>Limited to 100 characters.
+ =>Not completely backwards compatible with previously saved snapshots that have no notes
+ -the date is junk and the timestamp ends up in the notes field
+ -all other parameters load normally 
++Changed the way snapshots are deleted so the sort column remains continuously numbered.
+
 Other:
 +Fixed disabled button in update checker in certain instances
 
@@ -137,7 +150,7 @@ Lots of changes: merged a dedicated extension plugin. The fine details will be p
  - Useful with controllers that do not provide visual feedback
  - Support 2 fingers scroll gesture over "Current" and "Preload" areas, e.g. switch or preload instruments/effects with a trackpad
  - Click on the "Preload" area to swap preloaded/current configs
- - Up to 4 Monitor Windowss can be used simultaneously, i.e. one per Live Config/controller
+ - Up to 4 Monitor Windows can be used simultaneously, i.e. one per Live Config/controller
 +Added options (per config):
  - "Offline all but active/preloaded tracks (RAM savings)"
    The only loaded instruments/effects will be those of the current and preloaded tracks.

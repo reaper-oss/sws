@@ -174,8 +174,9 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Toggle default fade time to zero" },						"SWS_TOGDEFFADEZERO",	TogDefFadeZero,		NULL, 0, IsDefFadeOverriden },
 	{ { DEFACCEL, "SWS: Metronome enable" },										"SWS_METROON",			MetronomeOn,		},
 	{ { DEFACCEL, "SWS: Metronome disable" },										"SWS_METROOFF",			MetronomeOff,		},
+#ifdef ACTION_DEBUG
 	{ { DEFACCEL, "SWS: Write SWS actions to sws_actions.csv" },					"SWS_ACTIONS",			ActionsList,		},
-
+#endif
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 //!WANT_LOCALIZE_1ST_STRING_END

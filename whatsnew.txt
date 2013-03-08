@@ -13,23 +13,25 @@ Snapshot improvements:
 
 Other:
 +Fixed disabled button in update checker in certain instances
++ReaMote: fixed unexpected "Version Incompatibility" error message
 
 !v2.3.0 #13 (February 2, 2013)
 Cycle Action editor updates
 +Added instruction CONSOLE to run ReaConsole commands, see example and details http://forum.cockos.com/showpost.php?p=1115796&postcount=1179|here|
  Reminder: the syntax of ReaConsole commands is detailed http://www.standingwaterstudios.com/reaconsole.php|here|
-+Better error/warning messages
++More helpful messages
 +Improved toggle states for cycle actions using instructions IF and IF NOT
 
 ReaConsole updates
 +Create actions made of console commands directly in the Cycle Action editor, see above + example and details http://forum.cockos.com/showpost.php?p=1115796&postcount=1179|here|
  In other words, to create your own console actions, <b>you do not need to create/tweak a text file anymore</b> (i.e. reaconsole_customcommands.txt)
  => better action names, for example: a custom "Select bass tracks" instead of "SWS: Run console command: s*bass*"
- => much simpler configuration (no file edition/re-start)
+ => simpler configuration (no file edition/re-start)
  => benefit from other Cycle Actions' features: toggle state reporting, etc..
  => indirectly fixes little issues on OSX
- Note: although it is deprecated now, the reaconsole_customcommands.txt file still parsed for ascendant compatibility, of course!
+ Note: although it is deprecated now, the file reaconsole_customcommands.txt still parsed for ascendant compatibility
 +<b>New command 'x' to add track FX</b> by names, see examples and details http://forum.cockos.com/showpost.php?p=1115796&postcount=1179|here|
+ Note: the command will do nothing if the FX is already present
 +<b>New command '/' to send local OSC messages</b> (as if they were sent by a device on the network), see examples and details http://forum.cockos.com/showpost.php?p=1115796&postcount=1179|here|
  Longer console commands.. but this opens a bunch of doors: receives, sends, FX parameters, FX presets, etc..
 +Issue 484: the console window is now modeless, dockable, resizable, etc..

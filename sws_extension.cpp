@@ -62,14 +62,17 @@
 REAPER_PLUGIN_HINSTANCE g_hInst = NULL;
 HWND g_hwndParent = NULL;
 
+#ifdef ACTION_DEBUG
 void freeCmdFilesValue(WDL_String* p) {delete p;}
 static WDL_IntKeyedArray<WDL_String*> g_cmdFiles(freeCmdFilesValue);
+#endif
 static WDL_IntKeyedArray<COMMAND_T*> g_commands; // no valdispose (cmds can be allocated in different ways)
 
 int g_iFirstCommand = 0;
 int g_iLastCommand = 0;
 
-bool hookCommandProc(int command, int flag)
+
+bool hookCommandProc(int iCmd, int flag)
 {
 	static bool bReentrancyCheck = false;
 	if (bReentrancyCheck)
@@ -79,25 +82,22 @@ bool hookCommandProc(int command, int flag)
 	g_KeyUpUndoHandler=0;
 
 	// "Hack" to make actions will #s less than 1000 work with SendMessage (AHK)
-	if (command < 1000)
+	if (iCmd < 1000)
 	{
 		bReentrancyCheck = true;	
-		KBD_OnMainActionEx(command, 0, 0, 0, g_hwndParent, NULL);
+		KBD_OnMainActionEx(iCmd, 0, 0, 0, g_hwndParent, NULL);
 		bReentrancyCheck = false;
 		return true;
 	}
 
 	// Special case for checking recording
-	if (command == 1013 && !RecordInputCheck())
+	if (iCmd == 1013 && !RecordInputCheck())
 		return true;
 
 	// Ignore commands that don't have anything to do with us from this point forward
-	if (command < g_iFirstCommand || command > g_iLastCommand)
-		return false;
-
-	if (COMMAND_T* cmd = g_commands.Get(command, NULL))
+	if (COMMAND_T* cmd = SWSGetCommandByID(iCmd))
 	{
-		if (cmd->accel.accel.cmd && cmd->doCommand != SWS_NOOP)
+		if (cmd->accel.accel.cmd==iCmd && cmd->doCommand && cmd->doCommand!=SWS_NOOP)
 		{
 			bReentrancyCheck = true;
 			cmd->fakeToggle = !cmd->fakeToggle;
@@ -107,6 +107,29 @@ bool hookCommandProc(int command, int flag)
 		}
 	}
 	return false;
+}
+
+// Returns:
+// -1 = action does not belong to this extension, or does not toggle
+//  0 = action belongs to this extension and is currently set to "off"
+//  1 = action belongs to this extension and is currently set to "on"
+int toggleActionHook(int iCmd)
+{
+	static bool bReentrancyCheck = false;
+	if (bReentrancyCheck)
+		return -1;
+
+	if (COMMAND_T* cmd = SWSGetCommandByID(iCmd))
+	{
+		if (cmd->accel.accel.cmd==iCmd && cmd->getEnabled && cmd->doCommand!=SWS_NOOP)
+		{
+			bReentrancyCheck = true;
+			int state = cmd->getEnabled(cmd);
+			bReentrancyCheck = false;
+			return state;
+		}
+	}
+	return -1;
 }
 
 // 1) Get command ID from Reaper
@@ -144,7 +167,9 @@ int SWSRegisterCmd(COMMAND_T* pCommand, const char* cFile, int cmdId, bool local
 			g_iLastCommand = cmdId;
 
 		g_commands.Insert(cmdId, pCommand);
+#ifdef ACTION_DEBUG
 		g_cmdFiles.Insert(cmdId, new WDL_String(cFile));
+#endif
 	}
 	return pCommand->accel.accel.cmd;
 }
@@ -191,12 +216,15 @@ COMMAND_T* SWSUnregisterCmd(int id)
 		plugin_register("-gaccel", &ct->accel);
 		plugin_register("-command_id", &id);
 		g_commands.Delete(id);
+#ifdef ACTION_DEBUG
 		g_cmdFiles.Delete(id);
+#endif
 		return ct;
 	}
 	return NULL;
 }
 
+#ifdef ACTION_DEBUG
 void ActionsList(COMMAND_T*)
 {
 	// Output sws_actions.csv
@@ -223,10 +251,11 @@ void ActionsList(COMMAND_T*)
 		}
 	}
 }
+#endif
 
 int SWSGetCommandID(void (*cmdFunc)(COMMAND_T*), INT_PTR user, const char** pMenuText)
 {
-	for (int i = 0; i < g_commands.GetSize(); i++)
+	for (int i=0; i<g_commands.GetSize(); i++)
 	{
 		if (COMMAND_T* cmd = g_commands.Enumerate(i, NULL, NULL))
 		{
@@ -242,7 +271,7 @@ int SWSGetCommandID(void (*cmdFunc)(COMMAND_T*), INT_PTR user, const char** pMen
 }
 
 COMMAND_T* SWSGetCommandByID(int cmdId) {
-	if (cmdId >= g_iFirstCommand && cmdId <= g_iLastCommand)
+	if (cmdId >= g_iFirstCommand && cmdId <= g_iLastCommand) // true but not enough to ensure it is a sws action
 		return g_commands.Get(cmdId, NULL);
 	return NULL;
 }
@@ -284,27 +313,6 @@ HMENU SWSCreateMenuFromCommandTable(COMMAND_T pCommands[], HMENU hMenu, int* iIn
 	if (iIndex)
 		*iIndex = i;
 	return hMenu;
-}
-
-// returns:
-// -1 = action does not belong to this extension, or does not toggle
-//  0 = action belongs to this extension and is currently set to "off"
-//  1 = action belongs to this extension and is currently set to "on"
-int toggleActionHook(int iCmd)
-{
-	static bool bReentrancyCheck = false;
-	if (bReentrancyCheck)
-		return -1;
-
-	int state = -1;
-	if (iCmd >= g_iFirstCommand && iCmd <= g_iLastCommand)
-		if (COMMAND_T* ct = g_commands.Get(iCmd, NULL))
-		{
-			bReentrancyCheck = true;
-			state = ct->getEnabled ? ct->getEnabled(ct) : -1;
-			bReentrancyCheck = false;
-		}
-	return state;
 }
 
 // This function creates the extension menu (flag==0) and handles checking menu items (flag==1).
@@ -754,14 +762,19 @@ extern "C"
 
 		if (errcnt)
 		{
-			char msg[512]="";
-			_snprintf(msg, sizeof(msg),
-				// keep the following message on a single line (for the LangPack generator) 
-				__LOCALIZE_VERFMT("The version of SWS extension you have installed is incompatible with your version of REAPER.\nYou probably have a REAPER version less than v%s installed.\nPlease install the latest version of REAPER from www.reaper.fm.","sws_mbox"),
-				"4.26"); // <- update compatible version here
+			char txt[512]="";
+			// hacky "fix" for ReaMote that loads the extension
+			GetWindowText(rec->hwnd_main, txt, sizeof(txt));
+			if (_strnicmp("ReaMote", txt, 7))
+			{
+				_snprintf(txt, sizeof(txt),
+					// keep the message on a single line (for the LangPack generator) 
+					__LOCALIZE_VERFMT("The version of SWS extension you have installed is incompatible with your version of REAPER.\nYou probably have a REAPER version less than v%s installed.\nPlease install the latest version of REAPER from www.reaper.fm.","sws_mbox"),
+					"4.26"); // <- update compatible version here
 
-			//JFB: NULL parent so that the message is at least visible in taskbars (hidden since REAPER v4 and its "splash 2.0")
-			MessageBox(NULL, msg, __LOCALIZE("SWS - Version Incompatibility","sws_mbox"), MB_OK);
+				//JFB: NULL parent so that the message is at least visible in taskbars (hidden since REAPER v4 and its "splash 2.0")
+				MessageBox(NULL, txt, __LOCALIZE("SWS - Version Incompatibility","sws_mbox"), MB_OK);
+			}
 			ERR_RETURN("SWS version incompatibility\n")
 		}
 
@@ -813,9 +826,8 @@ extern "C"
 			ERR_RETURN("IX init error\n")
 		if (!BreederInit())
 			ERR_RETURN("Breeder init error\n")
-		if (!SNM_HasExtension())
-			if (!SNM_Init(rec)) // keep it as the last init (for cyle actions)
-				ERR_RETURN("S&M init error\n")
+		if (!SNM_Init(rec)) // keep it as the last init (for cyle actions)
+			ERR_RETURN("S&M init error\n")
 
 		if (!rec->Register("hookcustommenu", (void*)swsMenuHook))
 			ERR_RETURN("Menu hook error\n")

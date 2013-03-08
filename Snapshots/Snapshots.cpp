@@ -200,11 +200,11 @@ void ImportSnapshot()
 }
 
 // !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_101
-static SWS_LVColumn g_cols[] = { { 20, 0, "#" }, { 60, 1, "Name" }, { 60, 0, "Date" }, { 60, 0, "Time" } };
+static SWS_LVColumn g_cols[] = { { 20, 0, "#" }, { 60, 1, "Name" }, { 60, 0, "Date" }, { 60, 0, "Time" }, { 100, 1, "Notes" } };
 // !WANT_LOCALIZE_STRINGS_END
 
 SWS_SnapshotsView::SWS_SnapshotsView(HWND hwndList, HWND hwndEdit)
-:SWS_ListView(hwndList, hwndEdit, 4, g_cols, "Snapshots View State", true, "sws_DLG_101")
+:SWS_ListView(hwndList, hwndEdit, 5, g_cols, "Snapshots View State", true, "sws_DLG_101")
 {
 }
 
@@ -232,6 +232,9 @@ int SWS_SnapshotsView::OnItemSort(SWS_ListItem* lParam1, SWS_ListItem* lParam2)
 		else if (item1->m_time < item2->m_time)
 			iRet = -1;
 		break;
+	case 5: // Description
+		iRet = strcmp(item1->m_cNotes, item2->m_cNotes);
+		break;
 	}
 	if (m_iSortCol < 0)
 		return -iRet;
@@ -250,10 +253,15 @@ int SWS_SnapshotsView::OnNotify(WPARAM wParam, LPARAM lParam)
 
 void SWS_SnapshotsView::SetItemText(SWS_ListItem* item, int iCol, const char* str)
 {
-	if (iCol == 1)
+	Snapshot* ss = (Snapshot*)item;
+	switch (iCol)
 	{
-		Snapshot* ss = (Snapshot*)item;
+	case 1:
 		ss->SetName(str);
+		break;
+	case 4:
+		ss->SetNotes(str);
+		break;
 	}
 }
 
@@ -276,6 +284,12 @@ void SWS_SnapshotsView::GetItemText(SWS_ListItem* item, int iCol, char* str, int
 		break;
 	case 3:
 		ss->GetTimeString(str, iStrMax, false);
+		break;
+	case 4:
+		if (ss->m_cNotes)
+			lstrcpyn(str, ss->m_cNotes, iStrMax);
+		else
+			str[0] = 0;
 		break;
 	}
 }
@@ -306,7 +320,7 @@ void SWS_SnapshotsView::OnItemClk(SWS_ListItem* item, int iCol, int iKeyState)
 	// Save (ctrl click)
 	if (!(iKeyState & LVKF_SHIFT) && (iKeyState & LVKF_CONTROL) && !(iKeyState & LVKF_ALT))
 	{
-		g_ss.Get()->m_pCurSnapshot = g_ss.Get()->m_snapshots.Set(g_ss.Get()->m_snapshots.Find(ss), new Snapshot(ss->m_iSlot, g_iMask, g_bSelOnly_OnSave, ss->m_cName));
+		g_ss.Get()->m_pCurSnapshot = g_ss.Get()->m_snapshots.Set(g_ss.Get()->m_snapshots.Find(ss), new Snapshot(ss->m_iSlot, g_iMask, g_bSelOnly_OnSave, ss->m_cName, ss->m_cNotes));
 		delete ss;
 		Update();
 	}
@@ -318,6 +332,12 @@ void SWS_SnapshotsView::OnItemClk(SWS_ListItem* item, int iCol, int iKeyState)
 
 		int iSlot = ss->m_iSlot;
 		g_ss.Get()->m_snapshots.Delete(g_ss.Get()->m_snapshots.Find(ss), true);
+
+		//clean up gaps rather than search for them on insert
+		for (int i = 0; i < g_ss.Get()->m_snapshots.GetSize(); i++)
+			if (g_ss.Get()->m_snapshots.Get(i)->m_iSlot > iSlot)
+				g_ss.Get()->m_snapshots.Get(i)->m_iSlot--;
+
 		char undoStr[128]="";
 		_snprintf(undoStr, 128, __LOCALIZE_VERFMT("Delete snapshot %d","sws_DLG_101"), iSlot);
 		Undo_OnStateChangeEx(undoStr, UNDO_STATE_MISCCFG, -1);
@@ -428,6 +448,10 @@ void SWS_SnapshotsWnd::OnInitDlg()
 	m_resize.init_item(IDC_CURVIS, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_CUSTOM, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_SAVE, 1.0, 0.0, 1.0, 0.0);
+	m_resize.init_item(IDC_NEXT, 1.0, 0.0, 1.0, 0.0);
+	m_resize.init_item(IDC_PREVIOUS, 1.0, 0.0, 1.0, 0.0);
+	m_resize.init_item(IDC_SWAP_UP, 1.0, 0.0, 1.0, 0.0);
+	m_resize.init_item(IDC_SWAP_DOWN, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_SELECTEDONLY_SAVE, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_SELECTEDONLY_RECALL, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_SHOWSELONLY, 1.0, 0.0, 1.0, 0.0);
@@ -485,6 +509,69 @@ void SWS_SnapshotsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case IDC_SAVE:
 			NewSnapshot();
 			break;
+		case IDC_NEXT:
+		{
+			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->EnumSelected(NULL,1);
+			if (ss)
+			{
+				g_ss.Get()->m_pCurSnapshot = ss;
+				if (ss->UpdateReaper(g_bApplyFilterOnRecall ? g_iMask : ALL_MASK, g_bSelOnly_OnRecall, g_bHideNewOnRecall))
+					Update();
+			}
+			break;
+		}
+		case IDC_PREVIOUS:
+		{
+			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->EnumSelected(NULL,-1);
+			if (ss)
+			{
+				g_ss.Get()->m_pCurSnapshot = ss;
+				if (ss->UpdateReaper(g_bApplyFilterOnRecall ? g_iMask : ALL_MASK, g_bSelOnly_OnRecall, g_bHideNewOnRecall))
+					Update();
+			}
+			break;
+		}
+		case IDC_SWAP_UP:
+		{
+			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->EnumSelected(NULL);
+			if (ss)
+			{
+				if ((ss->m_iSlot > 0) ) //&& (m_pLists.Get(0)->GetSortColumn() == 1) //can either ignore the button here or ...
+				{
+					Snapshot* ss_swap = (Snapshot*)m_pLists.Get(0)->EnumSelected(NULL,-1);
+					if (ss_swap) 
+					{
+						m_pLists.Get(0)->SetSortColumn(1); //force the sort to slot...doesnt make sense with other sorts
+						int temp = ss->m_iSlot;
+						ss->m_iSlot = ss_swap->m_iSlot;
+						ss_swap->m_iSlot = temp;
+						Update();
+					}
+				}
+			}
+			break;
+		}
+		case IDC_SWAP_DOWN:
+		{
+			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->EnumSelected(NULL);
+			if (ss)
+			{
+				if (ss->m_iSlot < g_ss.Get()->m_snapshots.GetSize()) 
+				{
+					Snapshot* ss_swap = (Snapshot*)m_pLists.Get(0)->EnumSelected(NULL,1);
+					if (ss_swap) 
+					{
+						m_pLists.Get(0)->SetSortColumn(1); //force the sort to slot...doesnt make sense with other sorts
+						int temp = ss->m_iSlot;
+						ss->m_iSlot = ss_swap->m_iSlot;
+						ss_swap->m_iSlot = temp;
+						Update();
+					}
+				}
+			}
+			break;
+		}
+
 #ifdef _SNAP_TINY_BUTTONS
 		case BTNID_R:
 			g_bHideOptions=true;
@@ -508,7 +595,7 @@ void SWS_SnapshotsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->EnumSelected(NULL);
 			if (ss)
 			{
-				g_ss.Get()->m_pCurSnapshot = g_ss.Get()->m_snapshots.Set(g_ss.Get()->m_snapshots.Find(ss), new Snapshot(ss->m_iSlot, g_iMask, g_bSelOnly_OnSave, ss->m_cName));
+				g_ss.Get()->m_pCurSnapshot = g_ss.Get()->m_snapshots.Set(g_ss.Get()->m_snapshots.Find(ss), new Snapshot(ss->m_iSlot, g_iMask, g_bSelOnly_OnSave, ss->m_cName, ss->m_cNotes));
 				delete ss;
 				Update();
 			}
@@ -527,6 +614,12 @@ void SWS_SnapshotsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			{
 				char undoStr[128]="";
 				_snprintf(undoStr, 128, __LOCALIZE_VERFMT("Delete snapshot %d","sws_DLG_101"), ss->m_iSlot);
+
+				//clean up gaps rather than search for them on insert
+				for (int i = 0; i < g_ss.Get()->m_snapshots.GetSize(); i++)
+					if (g_ss.Get()->m_snapshots.Get(i)->m_iSlot > ss->m_iSlot)
+						g_ss.Get()->m_snapshots.Get(i)->m_iSlot--;
+
 				g_ss.Get()->m_snapshots.Delete(g_ss.Get()->m_snapshots.Find(ss), true);
 				g_ss.Get()->m_pCurSnapshot = NULL;
 				Undo_OnStateChangeEx(undoStr, UNDO_STATE_MISCCFG, -1);
@@ -772,6 +865,10 @@ void SWS_SnapshotsWnd::ShowControls(bool bShow)
 	ShowWindow(GetDlgItem(m_hwnd, IDC_CUSTOM), bShow);
 	ShowWindow(GetDlgItem(m_hwnd, IDC_FILTERGROUP), bShow);
 	ShowWindow(GetDlgItem(m_hwnd, IDC_SAVE), bShow);
+	ShowWindow(GetDlgItem(m_hwnd, IDC_PREVIOUS), bShow);
+	ShowWindow(GetDlgItem(m_hwnd, IDC_NEXT), bShow);
+	ShowWindow(GetDlgItem(m_hwnd, IDC_SWAP_UP), bShow);
+	ShowWindow(GetDlgItem(m_hwnd, IDC_SWAP_DOWN), bShow);
 	ShowWindow(GetDlgItem(m_hwnd, IDC_SELECTEDONLY_SAVE), bShow);
 	ShowWindow(GetDlgItem(m_hwnd, IDC_SELECTEDONLY_RECALL), bShow);
 	ShowWindow(GetDlgItem(m_hwnd, IDC_SHOWSELONLY), bShow);
@@ -812,13 +909,8 @@ void OpenSnapshotsDialog(COMMAND_T*)
 
 void NewSnapshot(int iMask, bool bSelOnly)
 {
-	// Find the first free "slot"
-	int i;
-	for (i = 0; i < g_ss.Get()->m_snapshots.GetSize(); i++)
-		if (g_ss.Get()->m_snapshots.Get(i)->m_iSlot != i+1)
-			break;
-
-	Snapshot* pNewSS = g_ss.Get()->m_snapshots.Insert(i, new Snapshot(i+1, iMask, bSelOnly, NULL));
+	//clean up the slots when deleting and there won't be gaps to fill in the iSlot numbering...just append new entries.  :)
+	Snapshot* pNewSS = g_ss.Get()->m_snapshots.Add(new Snapshot(g_ss.Get()->m_snapshots.GetSize() + 1, iMask, bSelOnly, NULL, NULL));
 	g_ss.Get()->m_pCurSnapshot = pNewSS;
 	if (g_bPromptOnNew)
 	{
@@ -866,12 +958,12 @@ void SaveSnapshot(int slot)
 				break;
 		char str[20];
 		sprintf(str, "%s %d", __LOCALIZE("Mix","sws_DLG_101"), slot);
-		g_ss.Get()->m_pCurSnapshot = g_ss.Get()->m_snapshots.Insert(i, new Snapshot(slot, g_iMask, g_bSelOnly_OnSave, str));
+		g_ss.Get()->m_pCurSnapshot = g_ss.Get()->m_snapshots.Insert(i, new Snapshot(slot, g_iMask, g_bSelOnly_OnSave, str, NULL));
 	}
 	else // Overwriting slot
 	{
 		Snapshot* oldSnapshot = g_ss.Get()->m_snapshots.Get(i);
-		g_ss.Get()->m_pCurSnapshot = g_ss.Get()->m_snapshots.Set(i, new Snapshot(oldSnapshot->m_iSlot, g_iMask, g_bSelOnly_OnSave, oldSnapshot->m_cName));
+		g_ss.Get()->m_pCurSnapshot = g_ss.Get()->m_snapshots.Set(i, new Snapshot(oldSnapshot->m_iSlot, g_iMask, g_bSelOnly_OnSave, oldSnapshot->m_cName, oldSnapshot->m_cNotes));
 		delete oldSnapshot;
 	}
 	g_pSSWnd->Update();
@@ -934,6 +1026,8 @@ void SelSnapshotTracks(COMMAND_T*)
 void SaveCurSnapshot(COMMAND_T*) { if (g_ss.Get()->m_pCurSnapshot) SaveSnapshot(g_ss.Get()->m_pCurSnapshot->m_iSlot); }
 void SaveSnapshot(COMMAND_T* ct) { SaveSnapshot((int)ct->user); }
 void GetCurSnapshot(COMMAND_T*)	 { if (g_ss.Get()->m_pCurSnapshot) GetSnapshot(g_ss.Get()->m_pCurSnapshot->m_iSlot, ALL_MASK, false); }
+void GetPreviousSnapshot(COMMAND_T*) { if ((g_ss.Get()->m_pCurSnapshot) && (g_ss.Get()->m_pCurSnapshot)->m_iSlot >= 0) GetSnapshot(((g_ss.Get()->m_pCurSnapshot->m_iSlot) - 1), ALL_MASK, false); }
+void GetNextSnapshot(COMMAND_T*)	 { if (g_ss.Get()->m_pCurSnapshot) GetSnapshot(((g_ss.Get()->m_pCurSnapshot->m_iSlot) + 1), ALL_MASK, false); }
 void GetSnapshot(COMMAND_T* ct)	 { GetSnapshot((int)ct->user, ALL_MASK, false); }
 void SetSnapType(COMMAND_T* ct)  { g_pSSWnd->SetFilterType((int)ct->user); UpdateSnapshotsDialog(); }
 void TogSnapParam(COMMAND_T* ct) { g_pSSWnd->SetFilterType(2); g_iMask ^= ct->user; UpdateSnapshotsDialog(); }
@@ -974,13 +1068,13 @@ void CopyCurSnapshot(COMMAND_T*)
 
 void CopySelSnapshot(COMMAND_T*)
 {
-	Snapshot ss(1, g_iMask, true, __LOCALIZE("unnamed","sws_DLG_101"));
+	Snapshot ss(1, g_iMask, true, __LOCALIZE("unnamed","sws_DLG_101"), NULL);
 	CopySnapshotToClipboard(&ss);
 }
 
 void CopyAllSnapshot(COMMAND_T*)
 {
-	Snapshot ss(1, g_iMask, false, __LOCALIZE("unnamed","sws_DLG_101"));
+	Snapshot ss(1, g_iMask, false, __LOCALIZE("unnamed","sws_DLG_101"), NULL);
 	CopySnapshotToClipboard(&ss);
 }
 
@@ -1034,6 +1128,8 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: New snapshot (selected track(s))" },			"SWSSNAPSHOT_NEWSEL",    NewSnapshot,		   "New snapshot (selected track(s))", 2 },
 	{ { DEFACCEL, "SWS: Save over current snapshot" },					"SWSSNAPSHOT_SAVE",	     SaveCurSnapshot,	   "Save over current snapshot", },
 	{ { DEFACCEL, "SWS: Recall current snapshot" },						"SWSSNAPSHOT_GET",	     GetCurSnapshot,       "Recall current snapshot", },
+	{ { DEFACCEL, "SWS: Recall previous snapshot" },					"SWSSNAPSHOT_GET_PREVIOUS",	 GetPreviousSnapshot,  "Recall previous snapshot", },
+	{ { DEFACCEL, "SWS: Recall next snapshot" },						"SWSSNAPSHOT_GET_NEXT",	     GetNextSnapshot,      "Recall next snapshot", },
 	{ { DEFACCEL, "SWS: Copy current snapshot" },						"SWSSNAPSHOT_COPY",	     CopyCurSnapshot,      "Copy current snapshot", },
 	{ { DEFACCEL, "SWS: Copy new snapshot (selected track(s))" },		"SWSSNAPSHOT_COPYSEL",   CopySelSnapshot,      "Copy new snapshot (selected track(s))", },
 	{ { DEFACCEL, "SWS: Copy new snapshot (all track(s))" },			"SWSSNAPSHOT_COPYALL",   CopyAllSnapshot,      "Copy new snapshot (all track(s))", },

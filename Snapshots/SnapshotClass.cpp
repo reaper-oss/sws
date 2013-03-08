@@ -649,13 +649,15 @@ bool TrackSnapshot::ProcessEnv(const char* chunk, char* line, int iLineMax, int*
 	return false;
 }
 
-Snapshot::Snapshot(int slot, int mask, bool bSelOnly, const char* name)
+Snapshot::Snapshot(int slot, int mask, bool bSelOnly, const char* name, const char* notes)
 {
 	m_iSlot = slot;
 	m_iMask = mask;
 	m_time = (int)time(NULL);
 	m_cName = NULL;
+	m_cNotes = NULL;
 	SetName(name);
+	SetNotes(notes);
 
 	SWS_CacheObjectState(true);
 	for (int i = 0; i <= GetNumTracks(); i++)
@@ -690,13 +692,13 @@ Snapshot::Snapshot(const char* chunk)
 		if (strcmp(lp.gettoken_str(0), "<SWSSNAPSHOT") == 0)
 		{
 			m_time = 0;
-			if (lp.getnumtokens() == 6) // Old-style time, convert
+			if (lp.getnumtokens() == 7) //potential here for confusion...previously saved SS's sans notes might not load
 			{
 		#ifdef _WIN32
 				FILETIME ft;
 				SYSTEMTIME st;
-				ft.dwHighDateTime = strtoul(lp.gettoken_str(4), NULL, 10);
-				ft.dwLowDateTime  = strtoul(lp.gettoken_str(5), NULL, 10);
+				ft.dwHighDateTime = strtoul(lp.gettoken_str(5), NULL, 10);
+				ft.dwLowDateTime  = strtoul(lp.gettoken_str(6), NULL, 10);
 				FileTimeToSystemTime(&ft, &st);
 				struct tm pt;
 				pt.tm_sec  = st.wSecond;
@@ -710,11 +712,12 @@ Snapshot::Snapshot(const char* chunk)
 		#endif
 			}
 			else
-				m_time = lp.gettoken_int(4);
+				m_time = lp.gettoken_int(5);
 
 			m_iSlot = lp.gettoken_int(2);
 			m_iMask = lp.gettoken_int(3);
 			SetName(lp.gettoken_str(1));
+			SetNotes(lp.gettoken_str(4));
 		}
 		else if (strcmp("TRACK", lp.gettoken_str(0)) == 0 || strcmp("<TRACK", lp.gettoken_str(0)) == 0)
 		{
@@ -790,6 +793,7 @@ Snapshot::Snapshot(const char* chunk)
 Snapshot::~Snapshot()
 {
 	delete [] m_cName;
+	delete [] m_cNotes;
 	m_tracks.Empty(true);
 }
 
@@ -945,6 +949,19 @@ void Snapshot::SetName(const char* name)
 	}
 }
 
+void Snapshot::SetNotes(const char* notes)
+{
+	delete [] m_cNotes;
+	if (notes)
+	{
+		m_cNotes = new char[strlen(notes)+1];
+		strcpy(m_cNotes, notes);
+	} else {
+		m_cNotes = new char[0];
+		strcpy(m_cNotes,"");
+	}
+}
+
 void Snapshot::AddSelTracks()
 {
 	for (int i = 0; i <= GetNumTracks(); i++)
@@ -1041,7 +1058,7 @@ char* Snapshot::GetTimeString(char* str, int iStrMax, bool bDate)
 // Get chunk for writing out
 void Snapshot::GetChunk(WDL_FastString* chunk)
 {
-	chunk->SetFormatted(chunk->GetLength()+100, "<SWSSNAPSHOT \"%s\" %d %d %d\n", m_cName, m_iSlot, m_iMask, m_time);
+	chunk->SetFormatted(chunk->GetLength()+100, "<SWSSNAPSHOT \"%s\" %d %d \"%s\" %d\n", m_cName, m_iSlot, m_iMask, m_cNotes, m_time);
 	for (int i = 0; i < m_tracks.GetSize(); i++)
 		m_tracks.Get(i)->GetChunk(chunk);
 	chunk->Append(">\n");
@@ -1061,6 +1078,9 @@ void Snapshot::GetDetails(WDL_FastString* details)
 	details->Append("\r\n");
 	char cSummary[100];
 	details->Append(Tooltip(cSummary, 100));
+	details->Append("\r\n");
+	details->Append("Notes: ");
+	details->Append(m_cNotes);
 	details->Append("\r\n");
 
 	for (int i = 0; i < m_tracks.GetSize(); i++)

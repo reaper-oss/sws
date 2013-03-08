@@ -46,6 +46,7 @@ public:
     int m_iNumParams;
 	int m_iCurParam;
     char m_cName[256];
+    char m_cNotes[256];
 };
 
 class TrackSnapshot
@@ -118,12 +119,13 @@ const int cSSCtrls[] = { IDC_VOL,  IDC_PAN,  IDC_MUTE,  IDC_SOLO,  IDC_SENDS,  I
 class Snapshot
 {
 public:
-    Snapshot(int slot, int mask, bool bSelOnly, const char* name);   // For capture
+    Snapshot(int slot, int mask, bool bSelOnly, const char* name, const char* desc);   // For capture
 	Snapshot(const char* chunk); // For project load
     ~Snapshot();
     bool UpdateReaper(int mask, bool bSelOnly, bool bHideNewVis);
     char* Tooltip(char* str, int maxLen);
     void SetName(const char* name);
+    void SetNotes(const char* notes);
 	void AddSelTracks();
 	void DelSelTracks();
 	void SelectTracks();
@@ -136,6 +138,7 @@ public:
 
 // TODO these should be private
 	char* m_cName;
+	char* m_cNotes;
     int m_iSlot;
     int m_iMask;
 	int m_time;

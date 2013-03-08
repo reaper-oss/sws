@@ -388,6 +388,11 @@
 #define IDC_BR_VER_OFF                  1298
 #define IDC_BR_VER_BETA                 1299
 #define IDC_BR_VER_DOWNLOAD             1300
+#define IDC_PREVIOUS					1301
+#define IDC_NEXT						1302
+#define IDC_SWAP_UP						1303
+#define IDC_SWAP_DOWN					1304
+
 
 // Next default values for new objects
 // 
@@ -395,7 +400,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        173
 #define _APS_NEXT_COMMAND_VALUE         40000
-#define _APS_NEXT_CONTROL_VALUE         1301
+#define _APS_NEXT_CONTROL_VALUE         1305
 #define _APS_NEXT_SYMED_VALUE           100
 #endif
 #endif

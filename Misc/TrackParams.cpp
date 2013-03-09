@@ -237,6 +237,22 @@ void MinimizeTracks(COMMAND_T* = NULL)
 	UpdateTimeline();
 }
 
+int IsMinimizeTracks(COMMAND_T* ct)
+{
+	int mins=0, seltrs=0;
+	for (int i=0; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+		{
+			seltrs++;
+			if (*(int*)GetSetMediaTrackInfo(tr, "I_HEIGHTOVERRIDE", NULL)==1)
+				mins++;
+		}
+	}
+	return seltrs && seltrs==mins;
+}
+
 void RecSrcOut(COMMAND_T* = NULL)
 {
 	// Set the rec source to output
@@ -548,7 +564,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Disable master FX" },									"SWS_DISMASTERFX",	DisableMasterFX,	},
 
 	// Size
-	{ { DEFACCEL, "SWS: Minimize selected track(s)" },							"SWS_MINTRACKS",	MinimizeTracks,		},
+	{ { DEFACCEL, "SWS: Minimize selected track(s)" },							"SWS_MINTRACKS",	MinimizeTracks,		NULL, 0, IsMinimizeTracks},
 
 	// Rec options
 	{ { DEFACCEL, "SWS: Set selected track(s) record output mode based on items" },		"SWS_SETRECSRCOUT",		RecSrcOut,		},

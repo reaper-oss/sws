@@ -16,6 +16,7 @@ Other:
 +ReaMote: fixed unexpected "Version Incompatibility" error message
 +"SWS: Minimize selected track(s)" now returns a toggle state:
  reports ON if the selected track (or all selected tracks) is (are) minimized
++ReaConcole: reduced minimum height and margins
 
 !v2.3.0 #13 (February 2, 2013)
 Cycle Action editor updates

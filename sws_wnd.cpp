@@ -760,6 +760,7 @@ bool SWS_ListView::IsSelected(int index)
 
 SWS_ListItem* SWS_ListView::EnumSelected(int* i, int iOffset)
 {
+/*JFB!!! commented r999 code, temp..
 	if (!m_hwndList)
 		return NULL;
 
@@ -785,6 +786,27 @@ SWS_ListItem* SWS_ListView::EnumSelected(int* i, int iOffset)
 			return (SWS_ListItem*)li.lParam;
 		}
 		(*i)++;
+	}
+	return NULL;
+*/
+
+	if (!m_hwndList)
+		return NULL;
+
+	int temp = 0;
+	if (!i)
+		i = &temp;
+	LVITEM li;
+	li.mask = LVIF_PARAM | LVIF_STATE;
+	li.stateMask = LVIS_SELECTED;
+	li.iSubItem = 0;
+
+	while (*i < ListView_GetItemCount(m_hwndList))
+	{
+		li.iItem = (*i)++;
+		ListView_GetItem(m_hwndList, &li);
+		if (li.state)
+			return (SWS_ListItem*)li.lParam;
 	}
 	return NULL;
 }

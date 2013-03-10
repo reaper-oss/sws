@@ -760,36 +760,6 @@ bool SWS_ListView::IsSelected(int index)
 
 SWS_ListItem* SWS_ListView::EnumSelected(int* i, int iOffset)
 {
-/*JFB!!! commented r999 code, temp..
-	if (!m_hwndList)
-		return NULL;
-
-	int temp = 0;
-	if (!i)
-		i = &temp;
-	LVITEM li;
-	li.mask = LVIF_PARAM | LVIF_STATE;
-	li.stateMask = LVIS_SELECTED;
-	li.iSubItem = 0;
-
-	while (*i < ListView_GetItemCount(m_hwndList))
-	{
-		li.iItem = *i;
-		ListView_GetItem(m_hwndList, &li);
-		if (li.state) 
-		{
-			if ((iOffset != 0) && (((*i) + iOffset) >= 0) && (((*i) + iOffset) < ListView_GetItemCount(m_hwndList)))  //sanitizing
-			{
-				li.iItem = (*i) + iOffset;  //this allows the selection of another item besides the one clicked.
-				ListView_GetItem(m_hwndList, &li);
-			}
-			return (SWS_ListItem*)li.lParam;
-		}
-		(*i)++;
-	}
-	return NULL;
-*/
-
 	if (!m_hwndList)
 		return NULL;
 
@@ -805,8 +775,15 @@ SWS_ListItem* SWS_ListView::EnumSelected(int* i, int iOffset)
 	{
 		li.iItem = (*i)++;
 		ListView_GetItem(m_hwndList, &li);
-		if (li.state)
+		if (li.state) 
+		{
+			if ((iOffset != 0) && (((*i - 1) + iOffset) >= 0) && (((*i - 1) + iOffset) < ListView_GetItemCount(m_hwndList)))  //sanitizing
+			{
+				li.iItem += iOffset;  //this allows the selection of another item besides the one clicked.
+				ListView_GetItem(m_hwndList, &li);
+			}
 			return (SWS_ListItem*)li.lParam;
+		}
 	}
 	return NULL;
 }

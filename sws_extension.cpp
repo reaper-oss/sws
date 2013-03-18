@@ -616,6 +616,7 @@ extern "C"
 		IMPAPI(GetTake);
 		IMPAPI(GetTCPFXParm);
 		IMPAPI(GetToggleCommandState);
+		*(void**)&GetToggleCommandState2 = rec->GetFunc("GetToggleCommandState2");
 		IMPAPI(GetTrack);
 		IMPAPI(GetTrackGUID);
 		IMPAPI(GetTrackEnvelope);
@@ -685,6 +686,7 @@ extern "C"
 		IMPAPI(screenset_register);
 		IMPAPI(screenset_registerNew);
 		IMPAPI(screenset_unregister);
+		*(void**)&SectionFromUniqueID = rec->GetFunc("SectionFromUniqueID");
 		IMPAPI(SelectProjectInstance);
 		IMPAPI(SendLocalOscMessage);
 		IMPAPI(SetCurrentBPM);

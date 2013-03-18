@@ -14,6 +14,7 @@ Snapshot improvements:
 Other:
 +Fixed disabled button in update checker in certain instances
 +ReaMote: fixed unexpected "Version Incompatibility" error message
++OSX 10.7+ x64: fixed list views being right aligned
 +"SWS: Minimize selected track(s)" now returns a toggle state:
  reports ON if the selected track (or all selected tracks) is (are) minimized
 +ReaConcole: reduced minimum height and margins
@@ -149,12 +150,12 @@ Lots of changes: merged a dedicated extension plugin. The fine details will be p
 +New "core" to ensure smooth/glitch-free config switches, new "All notes off" logic (now optional)
 +Added Preload feature: you can prepare an instrument/effect while playing another
  This can be done with a second controller (click the new "Learn" button) or multi-touch gesture (see below)
- Once a config is preloaded, you can switch/switch back between preloaded/current configs with new actions "SWS/S&M: Live Config n - Apply preloaded config (swap current/preload)"
+ Once a config is preloaded, you can switch/switch-back between the preloaded and the current config with new actions "SWS/S&M: Live Config n - Apply preloaded config (swap preload/current)"
  Preload comes in handy when switching FX chains, or Track Templates or with the new option "Offline all but active/preloaded tracks" (see below)
 +Added Monitoring windows, <b>demo http://stash.reaper.fm/14847/S%26M_LiveConfigMonitor.gif|here|</b>
  - Useful with controllers that do not provide visual feedback
  - Support 2 fingers scroll gesture over "Current" and "Preload" areas, e.g. switch or preload instruments/effects with a trackpad
- - Click on the "Preload" area to swap preloaded/current configs
+ - Click on the "Preload" area to swap the preloaded and the current config
  - Up to 4 Monitor Windows can be used simultaneously, i.e. one per Live Config/controller
 +Added options (per config):
  - "Offline all but active/preloaded tracks (RAM savings)"

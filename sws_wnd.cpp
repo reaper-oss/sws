@@ -165,7 +165,7 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				{
 #ifndef _WIN32
 					// override list view props for grid line theming
-					ListView_SetExtendedListViewStyleEx(m_pLists.Get(i)->GetHWND(), 
+					ListView_SetExtendedListViewStyleEx(m_pLists.Get(i)->GetHWND(),
 						LVS_EX_GRIDLINES|LVS_EX_HEADERDRAGDROP, LVS_EX_GRIDLINES|LVS_EX_HEADERDRAGDROP);
 #endif
 					SNM_ThemeListView(m_pLists.Get(i)); // initial theming, then ListView_HookThemeColorsMessage() does the job
@@ -1496,7 +1496,7 @@ int SWS_ListView::OnItemSort(SWS_ListItem* item1, SWS_ListItem* item2)
 void SWS_ListView::ShowColumns()
 {
 	LVCOLUMN col;
-	col.mask = LVCF_TEXT | LVCF_WIDTH;
+	col.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_FMT;
 
 	int iCol = 0;
 	for (int i = 0; i < m_iCols; i++)
@@ -1505,6 +1505,7 @@ void SWS_ListView::ShowColumns()
 		{
 			col.pszText = (char*)m_pCols[i].cLabel;
 			col.cx = m_pCols[i].iWidth;
+			col.fmt = LVCFMT_LEFT;
 			ListView_InsertColumn(m_hwndList, iCol, &col);
 			iCol++;
 		}

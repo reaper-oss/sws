@@ -507,6 +507,7 @@ extern "C"
 		IMPAPI(Audio_RegHardwareHook);
 		IMPAPI(CoolSB_GetScrollInfo);
 		IMPAPI(CoolSB_SetScrollInfo);
+		*(void**)&CountActionShortcuts = rec->GetFunc("CountActionShortcuts");
 		IMPAPI(CountMediaItems);
 		IMPAPI(CountSelectedMediaItems);
 		IMPAPI(CountSelectedTracks);
@@ -526,11 +527,13 @@ extern "C"
 		IMPAPI(CSurf_OnTrackSelection);
 		IMPAPI(CSurf_OnVolumeChange);
 		IMPAPI(CSurf_TrackFromID);
-		IMPAPI(CSurf_TrackToID);
+		IMPAPI(CSurf_TrackToID);		
+		*(void**)&DeleteActionShortcut = rec->GetFunc("DeleteActionShortcut");
 		IMPAPI(DeleteProjectMarker);
 		IMPAPI(DeleteTrack);
 		IMPAPI(DeleteTrackMediaItem);
 		IMPAPI(DestroyLocalOscHandler);
+		*(void**)&DoActionShortcutDialog = rec->GetFunc("DoActionShortcutDialog");
 		IMPAPI(Dock_UpdateDockID);
 		IMPAPI(DockIsChildOfDock);
 		IMPAPI(DockWindowActivate);
@@ -548,6 +551,7 @@ extern "C"
 		IMPAPI(format_timestr_pos);
 		IMPAPI(format_timestr_len);	
 		IMPAPI(FreeHeapPtr);
+		*(void**)&GetActionShortcutDesc = rec->GetFunc("GetActionShortcutDesc");
 		IMPAPI(GetActiveTake);
 		IMPAPI(GetAppVersion);
 		IMPAPI(GetColorThemeStruct);

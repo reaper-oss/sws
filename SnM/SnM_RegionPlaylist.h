@@ -93,7 +93,7 @@ class SNM_RegionPlaylistWnd : public SWS_DockWnd
 public:
 	SNM_RegionPlaylistWnd();
 	~SNM_RegionPlaylistWnd() {}
-	void GetMinSize(int* w, int* h) { *w=202; *h=175; }
+	void GetMinSize(int* w, int* h) { *w=202; *h=100; }
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 	void Update(int _flags = 0);
 	void UpdateMonitoring();
@@ -149,7 +149,7 @@ int RegionPlaylistInit();
 void RegionPlaylistExit();
 void OpenRegionPlaylist(COMMAND_T*);
 int IsRegionPlaylistDisplayed(COMMAND_T*);
-void ToggleRegionPlaylistMode(COMMAND_T*);
+void ToggleRegionPlaylistLock(COMMAND_T*);
 int IsRegionPlaylistMonitoring(COMMAND_T*);
 
 #endif

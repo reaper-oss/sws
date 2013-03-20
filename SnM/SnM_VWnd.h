@@ -169,9 +169,13 @@ class SNM_ToolbarButton : public WDL_VirtualIconButton {
 public:
 	SNM_ToolbarButton() : WDL_VirtualIconButton() {}
 	virtual const char *GetType() { return "SNM_ToolbarButton"; }
-	virtual void SetGrayed(bool grayed) { WDL_VirtualIconButton::SetGrayed(grayed); if (grayed) m_pressed=0; } // avoid stuck overlay when mousedown leads to grayed button
-	virtual void GetPositionPaintOverExtent(RECT *r) { *r=m_position; }
-	virtual void OnPaintOver(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect);
+	virtual char GetPressed() { return m_pressed; }
+	// bypass WDL_VirtualIconButton::SetGrayed() as grayed buttons look bad with some themes
+	// (e.g. button text not readable with the default v4 theme) 
+	virtual void SetGrayed(bool grayed) { 
+		SetEnabled(!grayed);
+		if (grayed) m_pressed=0; //JFB!!! avoid stuck overlay when mousedown grays the button
+	}
 };
 
 class SNM_Knob : public WDL_VirtualSlider {

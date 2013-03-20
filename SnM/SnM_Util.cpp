@@ -214,7 +214,7 @@ void GetShortResourcePath(const char* _resSubDir, const char* _fullFn, char* _sh
 // get a full resource path from a short filename
 // ex: EQ\JS\test.RfxChain -> C:\Documents and Settings\<user>\Application Data\REAPER\FXChains\EQ\JS\test.RfxChain
 // notes: 
-// - work with non existing files //JFB!!! the current code will fail with non existing files..
+// - work with non existing files //JFB!!! humm.. looks like the current code fails with non existing files
 // - no-op for non resource paths (c:\temp\test.RfxChain -> c:\temp\test.RfxChain)
 // - no-op for full resource paths 
 void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fullFn, int _fullFnSize)
@@ -249,27 +249,24 @@ void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fu
 // note: WDL's ProjectCreateFileRead() not used: seems horribly slow..
 bool LoadChunk(const char* _fn, WDL_FastString* _chunkOut, bool _trim, int _approxMaxlen)
 {
-	if (!_chunkOut)
-		return false;
-
-	_chunkOut->Set("");
-	if (_fn && *_fn)
+	if (_chunkOut && _fn && *_fn)
 	{
+		_chunkOut->Set("");
 		if (FILE* f = fopenUTF8(_fn, "r"))
 		{
-			char str[SNM_MAX_CHUNK_LINE_LENGTH];
-			while(fgets(str, SNM_MAX_CHUNK_LINE_LENGTH, f) && *str)
+			char line[SNM_MAX_CHUNK_LINE_LENGTH]="";
+			while(fgets(line, sizeof(line), f) && *line)
 			{
 				//JFB!!! useless with SNM_ChunkParserPatcher v2
 				if (_trim) 
 				{
-					char* p = str;
+					char* p = line;
 					while(*p && (*p == ' ' || *p == '\t')) p++;
 					if (*p != '\n' && *p != '\r') // the !*p case is managed in Append()
 						_chunkOut->Append(p);
 				}
 				else
-					_chunkOut->Append(str);
+					_chunkOut->Append(line);
 
 				if (_approxMaxlen && _chunkOut->GetLength() > _approxMaxlen)
 					break;
@@ -546,11 +543,11 @@ void SNM_UpgradeIniFiles()
 		// move cycle actions to a new dedicated file (+ make backup if it already exists)
 		WDL_FastString fn;
 		fn.SetFormatted(SNM_MAX_PATH, SNM_CYCLACTION_BAK_FILE, GetResourcePath());
-		if (FileOrDirExists(g_SNM_CyclactionIniFn.Get()))
-			MoveFile(g_SNM_CyclactionIniFn.Get(), fn.Get());
-		UpdatePrivateProfileSection("MAIN_CYCLACTIONS", "Main_Cyclactions", g_SNM_IniFn.Get(), g_SNM_CyclactionIniFn.Get());
-		UpdatePrivateProfileSection("ME_LIST_CYCLACTIONS", "ME_List_Cyclactions", g_SNM_IniFn.Get(), g_SNM_CyclactionIniFn.Get());
-		UpdatePrivateProfileSection("ME_PIANO_CYCLACTIONS", "ME_Piano_Cyclactions", g_SNM_IniFn.Get(), g_SNM_CyclactionIniFn.Get());
+		if (FileOrDirExists(g_SNM_CyclIniFn.Get()))
+			MoveFile(g_SNM_CyclIniFn.Get(), fn.Get());
+		UpdatePrivateProfileSection("MAIN_CYCLACTIONS", "Main_Cyclactions", g_SNM_IniFn.Get(), g_SNM_CyclIniFn.Get());
+		UpdatePrivateProfileSection("ME_LIST_CYCLACTIONS", "ME_List_Cyclactions", g_SNM_IniFn.Get(), g_SNM_CyclIniFn.Get());
+		UpdatePrivateProfileSection("ME_PIANO_CYCLACTIONS", "ME_Piano_Cyclactions", g_SNM_IniFn.Get(), g_SNM_CyclIniFn.Get());
 	}
 	if (g_SNM_IniVersion < 3) // < v2.1.0 #22
 	{
@@ -591,47 +588,6 @@ void SNM_UpgradeIniFiles()
 	}
 
 	g_SNM_IniVersion = SNM_INI_FILE_VERSION;
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-// Time/play helpers
-///////////////////////////////////////////////////////////////////////////////
-
-// note: the API's SnapToGrid() requires snap options to be enabled..
-int SNM_SnapToMeasure(double _pos)
-{
-	int meas;
-	if (TimeMap2_timeToBeats(NULL, _pos, &meas, NULL, NULL, NULL) > SNM_FUDGE_FACTOR) {
-		double measPosA = TimeMap2_beatsToTime(NULL, 0.0, &meas); meas++;
-		double measPosB = TimeMap2_beatsToTime(NULL, 0.0, &meas);
-		return ((_pos-measPosA) > (measPosB-_pos) ? meas : meas-1);
-	}
-	return meas;
-}
-
-void TranslatePos(double _pos, int* _h, int* _m, int* _s, int* _ms)
-{
-	if (_h) *_h = int(_pos/3600);
-	if (_m) *_m = int((_pos - 3600*int(_pos/3600)) / 60);
-	if (_s) *_s = int(_pos - 3600*int(_pos/3600) - 60*int((_pos-3600*int(_pos/3600))/60));
-	if (_ms) *_ms = int(1000*(_pos-int(_pos)) + 0.5); // rounding
-}
-
-double SeekPlay(double _pos, bool _moveView)
-{
-	double cursorpos = GetCursorPositionEx(NULL);
-	if (PreventUIRefresh) PreventUIRefresh(1);
-	SetEditCurPos2(NULL, _pos, _moveView, true);
-	if ((GetPlayStateEx(NULL)&1) != 1) OnPlayButton();
-	SetEditCurPos2(NULL, cursorpos, false, false);
-	if (PreventUIRefresh) PreventUIRefresh(-1);
-#ifdef _SNM_DEBUG
-	char dbg[256] = "";
-	_snprintfSafe(dbg, sizeof(dbg), "SeekPlay() - Pos: %f\n", _pos);
-	OutputDebugString(dbg);
-#endif
-	return cursorpos;
 }
 
 
@@ -744,15 +700,219 @@ void Replace02d(char* _str, char _replaceCh) {
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Action helpers
+// Time/play helpers
 ///////////////////////////////////////////////////////////////////////////////
 
-// corner-case note: "Custom: " can be removed after export/tweak-by-hand/re-import,
-// this is not managed and leads to native problems anyway..
-bool IsMacro(const char* _cmdName) {
-	const char* custom = __localizeFunc("Custom","actions",0);
-	int len = strlen(custom);
-	return (_cmdName && (int)strlen(_cmdName)>len && !strncmp(_cmdName, custom, len) && _cmdName[len] == ':');
+// note: the API's SnapToGrid() requires snap options to be enabled..
+int SNM_SnapToMeasure(double _pos)
+{
+	int meas;
+	if (TimeMap2_timeToBeats(NULL, _pos, &meas, NULL, NULL, NULL) > SNM_FUDGE_FACTOR) {
+		double measPosA = TimeMap2_beatsToTime(NULL, 0.0, &meas); meas++;
+		double measPosB = TimeMap2_beatsToTime(NULL, 0.0, &meas);
+		return ((_pos-measPosA) > (measPosB-_pos) ? meas : meas-1);
+	}
+	return meas;
+}
+
+void TranslatePos(double _pos, int* _h, int* _m, int* _s, int* _ms)
+{
+	if (_h) *_h = int(_pos/3600);
+	if (_m) *_m = int((_pos - 3600*int(_pos/3600)) / 60);
+	if (_s) *_s = int(_pos - 3600*int(_pos/3600) - 60*int((_pos-3600*int(_pos/3600))/60));
+	if (_ms) *_ms = int(1000*(_pos-int(_pos)) + 0.5); // rounding
+}
+
+double SeekPlay(double _pos, bool _moveView)
+{
+	double cursorpos = GetCursorPositionEx(NULL);
+	if (PreventUIRefresh) PreventUIRefresh(1);
+	SetEditCurPos2(NULL, _pos, _moveView, true);
+	if ((GetPlayStateEx(NULL)&1) != 1) OnPlayButton();
+	SetEditCurPos2(NULL, cursorpos, false, false);
+	if (PreventUIRefresh) PreventUIRefresh(-1);
+#ifdef _SNM_DEBUG
+	char dbg[256] = "";
+	_snprintfSafe(dbg, sizeof(dbg), "SeekPlay() - Pos: %f\n", _pos);
+	OutputDebugString(dbg);
+#endif
+	return cursorpos;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Action helpers
+// - API LIMITATION: most of the funcs here struggle to work but they do work
+// - Corner-case: "Custom: " can be removed tweaked by hand, this is not 
+//   managed and leads to native problems anyway
+///////////////////////////////////////////////////////////////////////////////
+
+// overrides the API's NamedCommandLookup() which can return an id although the 
+// related action is not registered yet, ex: at init time, when an action used in a mouse modifier)
+int SNM_NamedCommandLookup(const char* _custId, KbdSectionInfo* _section)
+{
+	if (_custId && *_custId && 
+		!_section) //JFB API LIMITATION..
+	{
+		if (int cmdId = NamedCommandLookup(_custId)) 
+			if (const char* desc = kbd_getTextFromCmd(cmdId, _section))
+				if (*desc)
+					return cmdId;
+	}
+	return 0;
+}
+
+// overrides the API's GetToggleCommandState() 
+// in order to skip the reentrance test for sws actions
+int SNM_GetToggleCommandState(int _cmdId, KbdSectionInfo* _section)
+{
+	if (_cmdId>0)
+	{
+		// SWS action => skip the reentrance test
+		if (!_section) // API LIMITATION: extensions like sws can only register actions in the main section ATM
+			if (COMMAND_T* cmd = SWSGetCommandByID(_cmdId))
+				if (cmd->accel.accel.cmd==_cmdId && cmd->doCommand!=SWS_NOOP)
+					return cmd->getEnabled ? cmd->getEnabled(cmd) : -1;
+
+		if (GetToggleCommandState2)
+			return GetToggleCommandState2(_section, _cmdId);
+		 //JFB!!! removeme > 4.33pre
+		else if (!_section)
+			return GetToggleCommandState(_cmdId);
+	}
+	return -1;
+}
+
+bool LoadKbIni(WDL_PtrList<WDL_FastString>* _out)
+{
+	char buf[SNM_MAX_PATH] = "";
+	if (_out && _snprintfStrict(buf, sizeof(buf), SNM_KB_INI_FILE, GetResourcePath()) > 0)
+	{
+		_out->Empty(true);
+		if (FILE* f = fopenUTF8(buf, "r"))
+		{
+			while(fgets(buf, sizeof(buf), f) && *buf)
+				if (!_strnicmp(buf,"ACT",3) || !_strnicmp(buf,"SRC",3))
+					_out->Add(new WDL_FastString(buf));
+			fclose(f);
+			return true;
+		}
+	}
+	return false;
+}
+
+// returns 1 for a macro, 2 for a script, 0 if not found
+// _customId: custom id (both formats are allowed: "bla" and "_bla")
+// _inMacroScripts: lazy init list, to optimize accesses to reaper-kb.ini
+// _outCmds: optionnal, if any it is up to the caller to unalloc items
+// note: no cache here (as the user can create new macros)
+int GetMacroOrScript(const char* _customId, int _sectionUniqueId, WDL_PtrList<WDL_FastString>* _inMacroScripts, WDL_PtrList<WDL_FastString>* _outCmds)
+{
+	if (!_customId || !_inMacroScripts)
+		return 0;
+
+	if (*_customId == '_')
+		_customId++; // custom ids in reaper-kb.ini do not start with '_'
+
+	// safe single lazy init of _inMacroScripts
+//JFB!!!! a bouger, comme les CAs
+	if (!_inMacroScripts->GetSize())
+	{
+		bool loadOk = LoadKbIni(_inMacroScripts);
+		_inMacroScripts->Add(new WDL_FastString);
+		if (!loadOk)
+			return 0;
+	}
+
+	if (_outCmds)
+		_outCmds->Empty(true);
+
+	int found = 0;
+	for (int i=0; i<_inMacroScripts->GetSize(); i++)
+	{
+		if (const char* cmd = _inMacroScripts->Get(i) ? _inMacroScripts->Get(i)->Get() : "")
+		{
+			LineParser lp(false);
+			if (!lp.parse(cmd) && 
+				lp.getnumtokens()>5 && // indirectly exlude key shortcuts, etc..
+				!_stricmp(lp.gettoken_str(3), _customId))
+			{
+				int success, iniSecId = lp.gettoken_int(2, &success);
+				if (success && iniSecId==_sectionUniqueId)
+				{
+					found = !_stricmp(lp.gettoken_str(0), "ACT") ? 1 : !_stricmp(lp.gettoken_str(0), "SRC") ? 2 : 0;
+					if (_outCmds && found)
+					{
+						for (int i=5; i<lp.getnumtokens(); i++)
+						{
+							WDL_FastString* cmd = new WDL_FastString;
+							const char* p = FindFirstRN(lp.gettoken_str(i)); // there are some "\r\n" sometimes
+							cmd->Set(lp.gettoken_str(i), p ? p-lp.gettoken_str(i) : 0);
+							_outCmds->Add(new WDL_FastString(cmd));
+						}
+					}
+					break;
+				}
+			}
+		}
+	}
+	return found;
+}
+
+// a bit hacky but we definitely need this..
+bool IsMacroOrScript(const char* _cmd, bool _cmdIsName)
+{
+	if (_cmd && *_cmd)
+	{
+		// _cmd is an action name?
+		if (_cmdIsName)
+		{
+			static const char* custom = __localizeFunc("Custom","actions",0);
+			static int customlen = strlen(custom);
+			return (!_strnicmp(_cmd, custom, customlen) && _cmd[customlen] == ':');
+		}
+		// _cmd is a custom id
+		else
+		{
+			int len=0;
+			if (*_cmd=='_') _cmd++;
+			while (*_cmd)
+			{
+				if ((*_cmd>='0' && *_cmd<='9') || 
+//					(*_cmd>='A' && *_cmd<='F') || 
+					(*_cmd>='a' && *_cmd<='f'))
+				{
+					_cmd++; len++;
+				}
+				else
+					return false;
+			}
+			return len==SNM_MACRO_CUSTID_LEN;
+		}
+	}
+	return false;
+}
+
+bool LoadConsoleCmds(WDL_PtrList<WDL_FastString>* _out)
+{
+	char buf[SNM_MAX_PATH] = "";
+	if (_out && _snprintfStrict(buf, sizeof(buf), SNM_CONSOLE_FILE, GetResourcePath()) > 0)
+	{
+		char* c;
+		_out->Empty(true);
+		if (FILE* f = fopenUTF8(buf, "r"))
+		{
+			while(fgets(buf, sizeof(buf), f))
+			{
+				if ((c = (char*)FindFirstRN(buf)) != NULL) *c = '\0';
+				if (*buf && *buf!='[' && *buf!='/')
+					_out->Add(new WDL_FastString(buf));
+			}
+			fclose(f);
+			return true;
+		}
+	}
+	return false;
 }
 
 bool GetSectionURL(bool _alr, const char* _section, char* _sectionURL, int _sectionURLSize)

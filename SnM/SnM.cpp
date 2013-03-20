@@ -35,7 +35,7 @@
 #endif
 
 
-void QuickTest(COMMAND_T* _ct) {}
+void Noop(COMMAND_T* _ct) {}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -45,7 +45,7 @@ void QuickTest(COMMAND_T* _ct) {}
 static COMMAND_T g_SNM_cmdTable[] = 
 {
 
-//	{ { DEFACCEL, "SWS/S&M: [Internal] QuickTest" }, "S&M_QUICKTEST", QuickTest, NULL, },
+//	{ { DEFACCEL, "SWS/S&M: [Internal] QuickTest" }, "S&M_QUICKTEST", Noop, NULL, },
 
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
@@ -156,15 +156,15 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Unbypass all take FX for selected items" }, "S&M_TAKEFX_UNBYPASS", UpdateAllFXsBypassSelItems, NULL, 0},
 
 	// Resources view
-	{ { DEFACCEL, "SWS/S&M: Open/close Resources window" }, "S&M_SHOW_RESOURCES_VIEW", OpenResourceView, NULL, -1, IsResourceViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open/close Resources window" }, "S&M_SHOW_RESOURCES_VIEW", OpenResources, NULL, -1, IsResourcesDisplayed},
 
 	// FX Chains (items & tracks) ---------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Open/close Resources window (FX chains)" }, "S&M_SHOWFXCHAINSLOTS", OpenResourceView, NULL, SNM_SLOT_FXC, IsResourceViewDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Clear FX chain slot..." }, "S&M_CLRFXCHAINSLOT", ResViewClearSlotPrompt, NULL, SNM_SLOT_FXC},
-	{ { DEFACCEL, "SWS/S&M: Delete all FX chain slots" }, "S&M_DEL_ALL_FXCHAINSLOT", ResViewDeleteAllSlots, NULL, SNM_SLOT_FXC},
-	{ { DEFACCEL, "SWS/S&M: Auto-save FX Chain slots for selected tracks" }, "S&M_SAVE_FXCHAIN_SLOT1", ResViewAutoSaveFXChain, NULL, FXC_AUTOSAVE_PREF_TRACK},
-	{ { DEFACCEL, "SWS/S&M: Auto-save FX Chain slots for selected items" }, "S&M_SAVE_FXCHAIN_SLOT2", ResViewAutoSaveFXChain, NULL, FXC_AUTOSAVE_PREF_ITEM},
-	{ { DEFACCEL, "SWS/S&M: Auto-save input FX Chain slots for selected tracks" }, "S&M_SAVE_FXCHAIN_SLOT3", ResViewAutoSaveFXChain, NULL, FXC_AUTOSAVE_PREF_INPUT_FX},
+	{ { DEFACCEL, "SWS/S&M: Open/close Resources window (FX chains)" }, "S&M_SHOWFXCHAINSLOTS", OpenResources, NULL, SNM_SLOT_FXC, IsResourcesDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Clear FX chain slot..." }, "S&M_CLRFXCHAINSLOT", ResourcesClearSlotPrompt, NULL, SNM_SLOT_FXC},
+	{ { DEFACCEL, "SWS/S&M: Delete all FX chain slots" }, "S&M_DEL_ALL_FXCHAINSLOT", ResourcesDeleteAllSlots, NULL, SNM_SLOT_FXC},
+	{ { DEFACCEL, "SWS/S&M: Auto-save FX Chain slots for selected tracks" }, "S&M_SAVE_FXCHAIN_SLOT1", ResourcesAutoSaveFXChain, NULL, FXC_AUTOSAVE_PREF_TRACK},
+	{ { DEFACCEL, "SWS/S&M: Auto-save FX Chain slots for selected items" }, "S&M_SAVE_FXCHAIN_SLOT2", ResourcesAutoSaveFXChain, NULL, FXC_AUTOSAVE_PREF_ITEM},
+	{ { DEFACCEL, "SWS/S&M: Auto-save input FX Chain slots for selected tracks" }, "S&M_SAVE_FXCHAIN_SLOT3", ResourcesAutoSaveFXChain, NULL, FXC_AUTOSAVE_PREF_INPUT_FX},
 	{ { DEFACCEL, "SWS/S&M: Paste (replace) FX chain to selected items, prompt for slot" }, "S&M_TAKEFXCHAINp1", LoadSetTakeFXChain, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Paste (replace) FX chain to selected items, all takes, prompt for slot" }, "S&M_TAKEFXCHAINp2", LoadSetAllTakesFXChain, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected items, prompt for slot" }, "S&M_PASTE_TAKEFXCHAINp1", LoadPasteTakeFXChain, NULL, -1},
@@ -201,20 +201,20 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected tracks, prompt for slot" }, "S&M_PASTE_TRACKFXCHAINp1", LoadPasteTrackFXChain, NULL, -1},
 
 	// Track templates --------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Open/close Resources window (track templates)" }, "S&M_SHOW_RESVIEW_TR_TEMPLATES", OpenResourceView, NULL, SNM_SLOT_TR, IsResourceViewDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Clear track template slot..." }, "S&M_CLR_TRTEMPLATE_SLOT", ResViewClearSlotPrompt, NULL, SNM_SLOT_TR},
-	{ { DEFACCEL, "SWS/S&M: Delete all track template slots" }, "S&M_DEL_ALL_TRTEMPLATE_SLOT", ResViewDeleteAllSlots, NULL, SNM_SLOT_TR},
-	{ { DEFACCEL, "SWS/S&M: Auto-save track template slots" }, "S&M_SAVE_TRTEMPLATE_SLOT1", ResViewAutoSaveTrTemplate, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Auto-save track template slots (with items, envelopes) " }, "S&M_SAVE_TRTEMPLATE_SLOT2", ResViewAutoSaveTrTemplate, NULL, 3},
+	{ { DEFACCEL, "SWS/S&M: Open/close Resources window (track templates)" }, "S&M_SHOW_RESVIEW_TR_TEMPLATES", OpenResources, NULL, SNM_SLOT_TR, IsResourcesDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Clear track template slot..." }, "S&M_CLR_TRTEMPLATE_SLOT", ResourcesClearSlotPrompt, NULL, SNM_SLOT_TR},
+	{ { DEFACCEL, "SWS/S&M: Delete all track template slots" }, "S&M_DEL_ALL_TRTEMPLATE_SLOT", ResourcesDeleteAllSlots, NULL, SNM_SLOT_TR},
+	{ { DEFACCEL, "SWS/S&M: Auto-save track template slots" }, "S&M_SAVE_TRTEMPLATE_SLOT1", ResourcesAutoSaveTrTemplate, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Auto-save track template slots (with items, envelopes) " }, "S&M_SAVE_TRTEMPLATE_SLOT2", ResourcesAutoSaveTrTemplate, NULL, 3},
 	{ { DEFACCEL, "SWS/S&M: Apply track template to selected tracks, prompt for slot" }, "S&M_APPLY_TRTEMPLATEp", LoadApplyTrackTemplateSlot, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Apply track template (+envelopes/items) to selected tracks, prompt for slot" }, "S&M_APPLY_TRTEMPLATE_ITEMSENVSp", LoadApplyTrackTemplateSlotWithItemsEnvs, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Import tracks from track template, prompt for slot" }, "S&M_ADD_TRTEMPLATEp", LoadImportTrackTemplateSlot, NULL, -1},
 
 	// Projects & project templates -------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Open/close Resources window (project templates)" }, "S&M_SHOW_RESVIEW_PRJ_TEMPLATES", OpenResourceView, NULL, SNM_SLOT_PRJ, IsResourceViewDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Clear project template slot..." }, "S&M_CLR_PRJTEMPLATE_SLOT", ResViewClearSlotPrompt, NULL, SNM_SLOT_PRJ},
-	{ { DEFACCEL, "SWS/S&M: Delete all project template slots" }, "S&M_DEL_ALL_PRJTEMPLATE_SLOT", ResViewDeleteAllSlots, NULL, SNM_SLOT_PRJ},
-	{ { DEFACCEL, "SWS/S&M: Auto-save project template slot" }, "S&M_SAVE_PRJTEMPLATE_SLOT", ResViewAutoSave, NULL, SNM_SLOT_PRJ},
+	{ { DEFACCEL, "SWS/S&M: Open/close Resources window (project templates)" }, "S&M_SHOW_RESVIEW_PRJ_TEMPLATES", OpenResources, NULL, SNM_SLOT_PRJ, IsResourcesDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Clear project template slot..." }, "S&M_CLR_PRJTEMPLATE_SLOT", ResourcesClearSlotPrompt, NULL, SNM_SLOT_PRJ},
+	{ { DEFACCEL, "SWS/S&M: Delete all project template slots" }, "S&M_DEL_ALL_PRJTEMPLATE_SLOT", ResourcesDeleteAllSlots, NULL, SNM_SLOT_PRJ},
+	{ { DEFACCEL, "SWS/S&M: Auto-save project template slot" }, "S&M_SAVE_PRJTEMPLATE_SLOT", ResourcesAutoSave, NULL, SNM_SLOT_PRJ},
 	{ { DEFACCEL, "SWS/S&M: Open/select project template, prompt for slot" }, "S&M_APPLY_PRJTEMPLATEp", LoadOrSelectProjectSlot, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Open/select project template (new tab), prompt for slot" }, "S&M_NEWTAB_PRJTEMPLATEp", LoadOrSelectProjectTabSlot, NULL, -1},
 
@@ -232,10 +232,10 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Clear project startup action" }, "S&M_CLR_PRJ_ACTION", ClearProjectStartupAction, NULL, },
 	
 	// Media file slots -------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Open/close Resources window (media files)" }, "S&M_SHOW_RESVIEW_MEDIA", OpenResourceView, NULL, SNM_SLOT_MEDIA, IsResourceViewDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Clear media file slot..." }, "S&M_CLR_MEDIA_SLOT", ResViewClearSlotPrompt, NULL, SNM_SLOT_MEDIA},
-	{ { DEFACCEL, "SWS/S&M: Delete all media file slots" }, "S&M_DEL_ALL_MEDIA_SLOT", ResViewDeleteAllSlots, NULL, SNM_SLOT_MEDIA},
-	{ { DEFACCEL, "SWS/S&M: Auto-save media file slots for selected items" }, "S&M_SAVE_MEDIA_SLOT", ResViewAutoSave, NULL, SNM_SLOT_MEDIA},
+	{ { DEFACCEL, "SWS/S&M: Open/close Resources window (media files)" }, "S&M_SHOW_RESVIEW_MEDIA", OpenResources, NULL, SNM_SLOT_MEDIA, IsResourcesDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Clear media file slot..." }, "S&M_CLR_MEDIA_SLOT", ResourcesClearSlotPrompt, NULL, SNM_SLOT_MEDIA},
+	{ { DEFACCEL, "SWS/S&M: Delete all media file slots" }, "S&M_DEL_ALL_MEDIA_SLOT", ResourcesDeleteAllSlots, NULL, SNM_SLOT_MEDIA},
+	{ { DEFACCEL, "SWS/S&M: Auto-save media file slots for selected items" }, "S&M_SAVE_MEDIA_SLOT", ResourcesAutoSave, NULL, SNM_SLOT_MEDIA},
 	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks, prompt for slot" }, "S&M_PLAYMEDIA_SELTRACKp", PlaySelTrackMediaSlot, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Loop media file in selected tracks, prompt for slot" }, "S&M_LOOPMEDIA_SELTRACKp", LoopSelTrackMediaSlot, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks (toggle), prompt for slot" }, "S&M_TGL_PLAYMEDIA_SELTRACKp", TogglePlaySelTrackMediaSlot, NULL, -1, SNM_GetFakeToggleState},
@@ -249,22 +249,22 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Add media file to selected items as takes, prompt for slot" }, "S&M_ADDMEDIA_SELITEMp", InsertMediaSlotTakes, NULL, -1},
 
 	// Image slots ------------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Open/close Resources window (images)" }, "S&M_SHOW_RESVIEW_IMAGE", OpenResourceView, NULL, SNM_SLOT_IMG, IsResourceViewDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Clear image slot..." }, "S&M_CLR_IMAGE_SLOT", ResViewClearSlotPrompt, NULL, SNM_SLOT_IMG},
-	{ { DEFACCEL, "SWS/S&M: Delete all image slots" }, "S&M_DEL_ALL_IMAGE_SLOT", ResViewDeleteAllSlots, NULL, SNM_SLOT_IMG},
+	{ { DEFACCEL, "SWS/S&M: Open/close Resources window (images)" }, "S&M_SHOW_RESVIEW_IMAGE", OpenResources, NULL, SNM_SLOT_IMG, IsResourcesDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Clear image slot..." }, "S&M_CLR_IMAGE_SLOT", ResourcesClearSlotPrompt, NULL, SNM_SLOT_IMG},
+	{ { DEFACCEL, "SWS/S&M: Delete all image slots" }, "S&M_DEL_ALL_IMAGE_SLOT", ResourcesDeleteAllSlots, NULL, SNM_SLOT_IMG},
 	{ { DEFACCEL, "SWS/S&M: Show next image slot" }, "S&M_SHOW_NEXT_IMG", ShowNextPreviousImageSlot, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Show previous image slot" }, "S&M_SHOW_PREV_IMG", ShowNextPreviousImageSlot, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Show image, prompt for slot" }, "S&M_SHOW_IMAGEp", ShowImageSlot, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Set track icon for selected tracks, prompt for slot" }, "S&M_SET_TRACK_ICONp", SetSelTrackIconSlot, NULL, -1},
 
-	{ { DEFACCEL, "SWS/S&M: Open/close image window" }, "S&M_OPEN_IMAGEVIEW", OpenImageView, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Clear image window" }, "S&M_CLR_IMAGEVIEW", ClearImageView, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Open/close image window" }, "S&M_OPEN_IMAGEVIEW", OpenImageWnd, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Clear image window" }, "S&M_CLR_IMAGEVIEW", ClearImageWnd, NULL, },
 
 	// Theme slots ------------------------------------------------------------
 #ifdef _WIN32
-	{ { DEFACCEL, "SWS/S&M: Open/close Resources window (themes)" }, "S&M_SHOW_RESVIEW_THEME", OpenResourceView, NULL, SNM_SLOT_THM, IsResourceViewDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Clear theme slot..." }, "S&M_CLR_THEME_SLOT", ResViewClearSlotPrompt, NULL, SNM_SLOT_THM},
-	{ { DEFACCEL, "SWS/S&M: Delete all theme slots" }, "S&M_DEL_ALL_THEME_SLOT", ResViewDeleteAllSlots, NULL, SNM_SLOT_THM},
+	{ { DEFACCEL, "SWS/S&M: Open/close Resources window (themes)" }, "S&M_SHOW_RESVIEW_THEME", OpenResources, NULL, SNM_SLOT_THM, IsResourcesDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Clear theme slot..." }, "S&M_CLR_THEME_SLOT", ResourcesClearSlotPrompt, NULL, SNM_SLOT_THM},
+	{ { DEFACCEL, "SWS/S&M: Delete all theme slots" }, "S&M_DEL_ALL_THEME_SLOT", ResourcesDeleteAllSlots, NULL, SNM_SLOT_THM},
 	{ { DEFACCEL, "SWS/S&M: Load theme, prompt for slot" }, "S&M_LOAD_THEMEp", LoadThemeSlot, NULL, -1},
 #endif
 
@@ -313,16 +313,16 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Delete active take and source file in selected items (no undo)" }, "S&M_DELTAKEANDFILE4", DeleteTakeAndMedia, NULL, 4},
 
 	// Notes/Subs/Help --------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Open/close Notes window" }, "S&M_SHOW_NOTES_VIEW", OpenNotesHelpView, NULL, -1, IsNotesHelpViewDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (project notes)" }, "S&M_SHOWNOTESHELP", OpenNotesHelpView, NULL, SNM_NOTES_PROJECT, IsNotesHelpViewDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (item notes)" }, "S&M_ITEMNOTES", OpenNotesHelpView, NULL, SNM_NOTES_ITEM, IsNotesHelpViewDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (track notes)" }, "S&M_TRACKNOTES", OpenNotesHelpView, NULL, SNM_NOTES_TRACK, IsNotesHelpViewDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (marker/region names)" }, "S&M_MARKERNAMES", OpenNotesHelpView, NULL, SNM_NOTES_REGION_NAME, IsNotesHelpViewDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (marker/region subtitles)" }, "S&M_MARKERSUBTITLES", OpenNotesHelpView, NULL, SNM_NOTES_REGION_SUBTITLES, IsNotesHelpViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open/close Notes window" }, "S&M_SHOW_NOTES_VIEW", OpenNotes, NULL, -1, IsNotesDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (project notes)" }, "S&M_SHOWNOTESHELP", OpenNotes, NULL, SNM_NOTES_PROJECT, IsNotesDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (item notes)" }, "S&M_ITEMNOTES", OpenNotes, NULL, SNM_NOTES_ITEM, IsNotesDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (track notes)" }, "S&M_TRACKNOTES", OpenNotes, NULL, SNM_NOTES_TRACK, IsNotesDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (marker/region names)" }, "S&M_MARKERNAMES", OpenNotes, NULL, SNM_NOTES_REGION_NAME, IsNotesDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (marker/region subtitles)" }, "S&M_MARKERSUBTITLES", OpenNotes, NULL, SNM_NOTES_REGION_SUBTITLES, IsNotesDisplayed},
 #ifdef _WIN32
-	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (action help)" }, "S&M_ACTIONHELP", OpenNotesHelpView, NULL, SNM_NOTES_ACTION_HELP, IsNotesHelpViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (action help)" }, "S&M_ACTIONHELP", OpenNotes, NULL, SNM_NOTES_ACTION_HELP, IsNotesDisplayed},
 #endif
-	{ { DEFACCEL, "SWS/S&M: Notes - Toggle lock" }, "S&M_ACTIONHELPTGLOCK", ToggleNotesHelpLock, NULL, NULL, IsNotesHelpLocked},
+	{ { DEFACCEL, "SWS/S&M: Notes - Toggle lock" }, "S&M_ACTIONHELPTGLOCK", ToggleNotesLock, NULL, NULL, IsNotesLocked},
 	{ { DEFACCEL, "SWS/S&M: Notes - Set action help file..." }, "S&M_ACTIONHELPPATH", SetActionHelpFilename, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Notes - Import subtitle file..." }, "S&M_IMPORT_SUBTITLE", ImportSubTitleFile, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Notes - Export subtitle file..." }, "S&M_EXPORT_SUBTITLE", ExportSubTitleFile, NULL, },
@@ -394,17 +394,17 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Unselect offscreen items" }, "S&M_UNSEL_OFFSCREEN_ITEMS", UnselectOffscreenItems, NULL, -1, HasOffscreenSelItems}, // -1: trick to share HasOffscreenSelItems() w/ above actions
 
 	// Find -------------------------------------------------------------------
-	{ { {FCONTROL | FVIRTKEY, 'F', 0 }, "SWS/S&M: Find" }, "S&M_SHOWFIND", OpenFindView, NULL, NULL, IsFindViewDisplayed},
+	{ { {FCONTROL | FVIRTKEY, 'F', 0 }, "SWS/S&M: Find" }, "S&M_SHOWFIND", OpenFind, NULL, NULL, IsFindDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Find next" }, "S&M_FIND_NEXT", FindNextPrev, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Find previous" }, "S&M_FIND_PREVIOUS", FindNextPrev, NULL, -1},
 
 	// Live Configs -----------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Open/close Live Configs window" }, "S&M_SHOWMIDILIVE", OpenLiveConfigView, NULL, NULL, IsLiveConfigViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open/close Live Configs window" }, "S&M_SHOWMIDILIVE", OpenLiveConfig, NULL, NULL, IsLiveConfigDisplayed},
 
 	// Cyclactions ---------------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Open/close Cycle Action editor" }, "S&M_CYCLEDITOR", OpenCyclactionView, NULL, 0, IsCyclactionViewDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Open/close Cycle Action editor (event list)" }, "S&M_CYCLEDITOR_ME_LIST", OpenCyclactionView, NULL, 1, IsCyclactionViewDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Open/close Cycle Action editor (piano roll)" }, "S&M_CYCLEDITOR_ME_PIANO", OpenCyclactionView, NULL, 2, IsCyclactionViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open/close Cycle Action editor" }, "S&M_CYCLEDITOR", OpenCyclaction, NULL, 0, IsCyclactionDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open/close Cycle Action editor (event list)" }, "S&M_CYCLEDITOR_ME_LIST", OpenCyclaction, NULL, 1, IsCyclactionDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open/close Cycle Action editor (piano roll)" }, "S&M_CYCLEDITOR_ME_PIANO", OpenCyclaction, NULL, 2, IsCyclactionDisplayed},
 
 	// REC inputs -------------------------------------------------------------
 	//JFB TODO: configurable dynamic actions *with max* (but ct->user needs to be 0-based first)
@@ -446,7 +446,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 	// Region playlist --------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Open/close Region Playlist window" }, "S&M_SHOW_RGN_PLAYLIST", OpenRegionPlaylist, NULL, NULL, IsRegionPlaylistDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Region Playlist - Toggle monitoring/edition mode" }, "S&M_TGL_RGN_PLAYLIST_MODE", ToggleRegionPlaylistMode, NULL, NULL, IsRegionPlaylistMonitoring},
+	{ { DEFACCEL, "SWS/S&M: Region Playlist - Toggle monitoring/edition mode" }, "S&M_TGL_RGN_PLAYLIST_MODE", ToggleRegionPlaylistLock, NULL, NULL, IsRegionPlaylistMonitoring},
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Play" }, "S&M_PLAY_RGN_PLAYLIST", PlaylistPlay, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Play previous region (smooth seek)" }, "S&M_PLAY_PREV_RGN_PLAYLIST", PlaylistSeekPrevNext, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Play next region (smooth seek)" }, "S&M_PLAY_NEXT_RGN_PLAYLIST", PlaylistSeekPrevNext, NULL, 1},
@@ -464,6 +464,8 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 	// Other, misc ------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Send all notes off to selected tracks" }, "S&M_CC123_SEL_TRACKS", SendAllNotesOff, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Increase metronome volume" }, "S&M_METRO_VOL_UP", ChangeMetronomeVolume, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Decrease metronome volume" }, "S&M_METRO_VOL_DOWN", ChangeMetronomeVolume, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Show theme helper (all tracks)" }, "S&M_THEME_HELPER_ALL", ShowThemeHelper, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Show theme helper (selected tracks)" }, "S&M_THEME_HELPER_SEL", ShowThemeHelper, NULL, 1},
 #ifdef _WIN32
@@ -568,7 +570,7 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Bypass all FX (except %02d) for selected tracks" }, "S&M_FXBYP_ALL_ON_EXCPT", BypassAllFXsExceptSelTracks, NULL, 8},
 	{ { DEFACCEL, "SWS/S&M: Unbypass all FX (except %02d) for selected tracks" }, "S&M_FXBYP_ALL_OFF_EXCPT", UnypassAllFXsExceptSelTracks, NULL, 0}, // default: none
 
-	{ { DEFACCEL, "SWS/S&M: Clear FX chain slot %02d" }, "S&M_CLRFXCHAINSLOT", ResViewClearFXChainSlot, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Clear FX chain slot %02d" }, "S&M_CLRFXCHAINSLOT", ResourcesClearFXChainSlot, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Paste (replace) FX chain to selected items, slot %02d" }, "S&M_TAKEFXCHAIN", LoadSetTakeFXChain, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected items, slot %02d" }, "S&M_PASTE_TAKEFXCHAIN", LoadPasteTakeFXChain, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Paste (replace) FX chain to selected items, all takes, slot %02d" }, "S&M_FXCHAIN_ALLTAKES", LoadSetAllTakesFXChain, NULL, 0}, // default: none
@@ -578,16 +580,16 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Paste (replace) input FX chain to selected tracks, slot %02d" }, "S&M_INFXCHAIN", LoadSetTrackInFXChain, NULL, 0}, // default: none
 	{ { DEFACCEL, "SWS/S&M: Paste input FX chain to selected tracks, slot %02d" }, "S&M_PASTE_INFXCHAIN", LoadPasteTrackInFXChain, NULL, 0}, // default: none
 
-	{ { DEFACCEL, "SWS/S&M: Clear track template slot %02d" }, "S&M_CLR_TRTEMPLATE_SLOT", ResViewClearTrTemplateSlot, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Clear track template slot %02d" }, "S&M_CLR_TRTEMPLATE_SLOT", ResourcesClearTrTemplateSlot, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Apply track template to selected tracks, slot %02d" }, "S&M_APPLY_TRTEMPLATE", LoadApplyTrackTemplateSlot, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Apply track template (+envelopes/items) to selected tracks, slot %02d" }, "S&M_APPLY_TRTEMPLATE_ITEMSENVS", LoadApplyTrackTemplateSlotWithItemsEnvs, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Import tracks from track template, slot %02d" }, "S&M_ADD_TRTEMPLATE", LoadImportTrackTemplateSlot, NULL, 4},
 
-	{ { DEFACCEL, "SWS/S&M: Clear project template slot %02d" }, "S&M_CLR_PRJTEMPLATE_SLOT", ResViewClearPrjTemplateSlot, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Clear project template slot %02d" }, "S&M_CLR_PRJTEMPLATE_SLOT", ResourcesClearPrjTemplateSlot, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Open/select project template, slot %02d" }, "S&M_APPLY_PRJTEMPLATE", LoadOrSelectProjectSlot, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Open/select project template (new tab), slot %02d" }, "S&M_NEWTAB_PRJTEMPLATE", LoadOrSelectProjectTabSlot, NULL, 4},
 
-	{ { DEFACCEL, "SWS/S&M: Clear media file slot %02d" }, "S&M_CLR_MEDIA_SLOT", ResViewClearMediaSlot, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Clear media file slot %02d" }, "S&M_CLR_MEDIA_SLOT", ResourcesClearMediaSlot, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks, slot %02d" }, "S&M_PLAYMEDIA_SELTRACK", PlaySelTrackMediaSlot, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Loop media file in selected tracks, slot %02d" }, "S&M_LOOPMEDIA_SELTRACK", LoopSelTrackMediaSlot, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks (sync with next measure), slot %02d" }, "S&M_PLAYMEDIA_SELTRACK_SYNC", SyncPlaySelTrackMediaSlot, NULL, 4},
@@ -601,12 +603,12 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Add media file to new track, slot %02d" }, "S&M_ADDMEDIA_NEWTRACK", InsertMediaSlotNewTr, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Add media file to selected items as takes, slot %02d" }, "S&M_ADDMEDIA_SELITEM", InsertMediaSlotTakes, NULL, 4},
 
-	{ { DEFACCEL, "SWS/S&M: Clear image slot %02d" }, "S&M_CLR_IMAGE_SLOT", ResViewClearImageSlot, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Clear image slot %02d" }, "S&M_CLR_IMAGE_SLOT", ResourcesClearImageSlot, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Show image, slot %02d" }, "S&M_SHOW_IMG", ShowImageSlot, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Set track icon for selected tracks, slot %02d" }, "S&M_SET_TRACK_ICON", SetSelTrackIconSlot, NULL, 4},
 
 #ifdef _WIN32
-	{ { DEFACCEL, "SWS/S&M: Clear theme slot %02d" }, "S&M_CLR_THEME_SLOT", ResViewClearThemeSlot, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Clear theme slot %02d" }, "S&M_CLR_THEME_SLOT", ResourcesClearThemeSlot, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Load theme, slot %02d" }, "S&M_LOAD_THEME", LoadThemeSlot, NULL, 4},
 #endif
 
@@ -628,7 +630,7 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Open/close monitoring window" }, "S&M_OPEN_LIVECFG_MONITOR", OpenLiveConfigMonitorWnd, STR(SNM_LIVECFG_NB_CONFIGS), SNM_LIVECFG_NB_CONFIGS, IsLiveConfigMonitorWndDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Apply next config" }, "S&M_NEXT_LIVE_CFG", NextLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), SNM_LIVECFG_NB_CONFIGS},
 	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Apply previous config" }, "S&M_PREVIOUS_LIVE_CFG", PreviousLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), SNM_LIVECFG_NB_CONFIGS},
-	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Apply preloaded config (swap current/preload)" }, "S&M_PRELOAD_LIVE_CFG", SwapCurrentPreloadLiveConfigs, STR(SNM_LIVECFG_NB_CONFIGS), SNM_LIVECFG_NB_CONFIGS},
+	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Apply preloaded config (swap preload/current)" }, "S&M_PRELOAD_LIVE_CFG", SwapCurrentPreloadLiveConfigs, STR(SNM_LIVECFG_NB_CONFIGS), SNM_LIVECFG_NB_CONFIGS},
 	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Enable" }, "S&M_LIVECFG_ON", EnableLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 0}, // default: none
 	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Disable" }, "S&M_LIVECFG_OFF", DisableLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 0}, // default: none
 	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Toggle enable" }, "S&M_LIVECFG_TGL", ToggleEnableLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), SNM_LIVECFG_NB_CONFIGS, IsLiveConfigEnabled},
@@ -649,8 +651,9 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 
 	{ { DEFACCEL, "SWS/S&M: Go to marker %02d (obeys smooth seek)" }, "S&M_GOTO_MARKER", GotoMarker, NULL, 0}, // default: none
 	{ { DEFACCEL, "SWS/S&M: Go to region %02d (obeys smooth seek)" }, "S&M_GOTO_REGION", GotoRegion, NULL, 0}, // default: none
+	{ { DEFACCEL, "SWS/S&M: Go to/select region %02d (obeys smooth seek)" }, "S&M_GOTO_SEL_REGION", GotoAnsSelectRegion, NULL, 10},
 
-	{ { DEFACCEL, "SWS/S&M: Dummy toggle %02d" }, "S&M_DUMMY_TGL", DummyToggle, NULL, 0, SNM_GetFakeToggleState}, // default: none
+	{ { DEFACCEL, "SWS/S&M: Dummy toggle %02d" }, "S&M_DUMMY_TGL", Noop, NULL, 0, SNM_GetFakeToggleState}, // default: none
 	{ { DEFACCEL, "SWS/S&M: Exclusive toggle %02d" }, "S&M_EXCL_TGL", ExclusiveToggle, NULL, 0, SNM_GetFakeToggleState}, // default: none
 
 //!WANT_LOCALIZE_1ST_STRING_END
@@ -709,18 +712,20 @@ int SNM_GetFakeToggleState(COMMAND_T* _ct) {
 	return (_ct && _ct->fakeToggle);
 }
 
-void DummyToggle(COMMAND_T* _ct) {} // nothing to do, already handled in hookCommandProc()
-
 void ExclusiveToggle(COMMAND_T* _ct)
 {
 	if (_ct && _ct->fakeToggle)
 		for (int i=0; i<SNM_MAX_DYNAMIC_ACTIONS; i++)
 			if (int cmd = SWSGetCommandID(ExclusiveToggle, i))
+			{
 				if (cmd != _ct->accel.accel.cmd) 
 					if (COMMAND_T* ct = SWSGetCommandByID(cmd)) {
 						ct->fakeToggle = false;
 						RefreshToolbar(cmd);
 					}
+			}
+			else
+				break;
 }
 
 
@@ -761,6 +766,19 @@ void RefreshToolbars()
 // "S&M Extension" action section
 ///////////////////////////////////////////////////////////////////////////////
 
+// keep this definition order!
+// (indexes used in the cycle action editor, for ex.)
+int g_SNM_SectionIds[] =
+{ 
+	0,				// Main
+	32061,			// ME event list section
+	32060,			// ME piano roll section
+	32062,			// MIDI inline editor
+	100,			// Main alt
+	32063,			// Media explorer
+	SNM_SECTION_ID	// S&M extension
+};
+
 static WDL_IntKeyedArray<MIDI_COMMAND_T*> g_SNM_Section_midiCmds;
 KbdCmd g_SNM_Section_kbdCmds[SNM_MAX_SECTION_ACTIONS];
 KbdKeyBindingInfo g_SNM_Section_defKeys[SNM_MAX_SECTION_ACTIONS];
@@ -791,7 +809,7 @@ bool SNM_OnMidiAction(int _cmd, int _val, int _valhw, int _relmode, HWND _hwnd)
 }
 
 /*JFB static*/ KbdSectionInfo g_SNM_Section = {
-  0x10000101, "S&M Extension",
+  SNM_SECTION_ID, "S&M Extension",
   g_SNM_Section_kbdCmds, 0,
   g_SNM_Section_defKeys, 0,
   SNM_OnMidiAction
@@ -918,15 +936,15 @@ void SNM_SaveDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
 ///////////////////////////////////////////////////////////////////////////////
 
 WDL_FastString g_SNM_IniFn;
-WDL_FastString g_SNM_CyclactionIniFn;
+WDL_FastString g_SNM_CyclIniFn;
 WDL_FastString g_SNM_DiffToolFn;
 int g_SNM_IniVersion = 0;
-int g_SNMbeta = 0;
+//int g_SNMbeta = 0;
 
 void IniFileInit()
 {
 	g_SNM_IniFn.SetFormatted(SNM_MAX_PATH, SNM_FORMATED_INI_FILE, GetResourcePath());
-	g_SNM_CyclactionIniFn.SetFormatted(SNM_MAX_PATH, SNM_CYCLACTION_INI_FILE, GetResourcePath());
+	g_SNM_CyclIniFn.SetFormatted(SNM_MAX_PATH, SNM_CYCLACTION_INI_FILE, GetResourcePath());
 
 	// move from old location if needed/possible
 	WDL_String fn; // no fast string here: the buffer gets mangeled..
@@ -1293,21 +1311,26 @@ void SNM_LocalOscCallback(void* _obj, const char* _msg, int _msglen)
 // - /track/1/fx/1/preset "My Preset"
 // - /track/1/fx/1,2/fxparam/1,1/value 0.25 0.5
 // notes: 
-// 1) I do not use the API's OscLocalMessageToHost() because 
-//    there is no way to manage osc messages with string args
-// 2) no global osc handle/lazy init here because calling 
-//    DestroyLocalOscHandler() in SNM_Exit() crashes (REAPER 4.32)
+// 1) API OscLocalMessageToHost() no used here because there is no way to
+//    manage osc messages with string args
+// 2) REAPER BUG? Using a global var for the handler + DestroyLocalOscHandler()
+//    in SNM_Exit() crashes REAPER  (v4.32)
 bool SNM_SendLocalOscMessage(const char* _oscMsg)
 {
 	if (!_oscMsg)
 		return false;
 
 	bool sent = false;
+	static void* oscHandler; //JFB static ATM, see above note
+	if (!oscHandler)
+	{
 #ifdef _SNM_MISC
-	if (void* oscHandler = CreateLocalOscHandler(NULL, SNM_LocalOscCallback))
+		oscHandler = CreateLocalOscHandler(NULL, SNM_LocalOscCallback);
 #else
-	if (void* oscHandler = CreateLocalOscHandler(NULL, NULL))
+		oscHandler = CreateLocalOscHandler(NULL, NULL);
 #endif
+	}
+	if (oscHandler)
 	{
 		LineParser lp(false);
 		if (!lp.parse(_oscMsg) && lp.getnumtokens()>0)
@@ -1342,7 +1365,7 @@ bool SNM_SendLocalOscMessage(const char* _oscMsg)
 			SendLocalOscMessage(oscHandler, pw.packetData(), pw.packetSize());
 			sent = true;
 		}
-		DestroyLocalOscHandler(oscHandler); // see notes above..
+//		DestroyLocalOscHandler(oscHandler); // see above note
 	}
 	return sent;
 }
@@ -1361,18 +1384,6 @@ static void SNM_Menuhook(const char* _menustr, HMENU _hMenu, int _flag) {
 }
 #endif
 
-bool SNM_HasExtension() 
-{
-	WDL_FastString fn;
-	fn.SetFormatted(SNM_MAX_PATH, SNM_EXTENSION_FILE,
-#ifdef _WIN32
-		GetExePath());
-#else
-		GetResourcePath());
-#endif
-	return FileOrDirExists(fn.Get());
-}
-
 int SNM_Init(reaper_plugin_info_t* _rec)
 {
 	if (!_rec)
@@ -1384,7 +1395,7 @@ int SNM_Init(reaper_plugin_info_t* _rec)
 	if (!plugin_register("hookcustommenu", (void*)SNM_Menuhook))
 		return 0;
 #endif
-	// actions must be registered before views
+	// actions must be registered before views and cycle actions
 	if (!SWSRegisterCommands(g_SNM_cmdTable) || 
 		!SNM_RegisterDynamicCommands(g_SNM_dynamicCmdTable, g_SNM_IniFn.Get()) ||
 		!SNM_SectionRegisterCommands(_rec, true))
@@ -1392,11 +1403,11 @@ int SNM_Init(reaper_plugin_info_t* _rec)
 
 	SNM_UIInit();
 	CueBussInit();
-	LiveConfigViewInit();
-	ResourceViewInit();
-	NotesHelpViewInit();
-	FindViewInit();
-	ImageViewInit();
+	LiveConfigInit();
+	ResourcesInit();
+	NotesInit();
+	FindInit();
+	ImageInit();
 	RegionPlaylistInit();
 	ReaProjectInit();
 	CyclactionInit(); // keep it as the last one!
@@ -1420,11 +1431,11 @@ int SNM_Init(reaper_plugin_info_t* _rec)
 
 void SNM_Exit()
 {
-	LiveConfigViewExit();
-	ResourceViewExit();
-	NotesHelpViewExit();
-	FindViewExit();
-	ImageViewExit();
+	LiveConfigExit();
+	ResourcesExit();
+	NotesExit();
+	FindExit();
+	ImageExit();
 	RegionPlaylistExit();
 	CyclactionExit();
 	SNM_UIExit();

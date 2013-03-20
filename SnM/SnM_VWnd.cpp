@@ -455,53 +455,6 @@ void SNM_TwoTinyButtons::SetPosition(const RECT* _r)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// SNM_ToolbarButton
-///////////////////////////////////////////////////////////////////////////////
-
-void SNM_ToolbarButton::OnPaintOver(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect)
-{
-	WDL_VirtualIconButton::OnPaintOver(drawbm, origin_x, origin_y, cliprect);
-
-	// paint text over (obeys the theme's "toolbar text" on/off colors)
-	if (m_iconCfg && m_iconCfg->olimage && m_forcetext)
-	{
-		bool isdown = !!(m_pressed&1);
-		ColorTheme* ct = SNM_GetColorTheme();
-		LICE_IFont *font = SNM_GetToolbarFont();
-		bool isVert=false;
-		if (font && m_textfontv && m_position.right-m_position.left < m_position.bottom - m_position.top)
-		{
-			isVert=true;
-			font = m_textfontv;
-		}
-
-		// draw text
-		if (font&&m_textlbl.Get()[0])
-		{
-			int fgc = m_forcetext_color ? m_forcetext_color :
-				(!ct ? LICE_RGBA_FROMNATIVE(GSC(COLOR_BTNTEXT),255) :
-					(isdown ? LICE_RGBA_FROMNATIVE(ct->toolbar_button_text_on,255) : LICE_RGBA_FROMNATIVE(ct->toolbar_button_text,255)));
-
-			//font->SetCombineMode(LICE_BLIT_MODE_COPY, alpha); // this affects the glyphs that get cached
-			font->SetBkMode(TRANSPARENT);
-			font->SetTextColor(fgc);
-
-			RECT r2=m_position;
-			r2.left += origin_x+m_margin_l;
-			r2.right += origin_x-m_margin_r;
-			r2.top += origin_y+m_margin_t;
-			r2.bottom += origin_y-m_margin_b;
-
-			int f = DT_SINGLELINE|DT_NOPREFIX;
-			if (isVert) f |= DT_CENTER | (m_textalign<0?DT_TOP:m_textalign>0?DT_BOTTOM:DT_VCENTER);
-			else f |= DT_VCENTER|(m_textalign<0?DT_LEFT:m_textalign>0?DT_RIGHT:DT_CENTER);
-			font->DrawText(drawbm,m_textlbl.Get(),-1,&r2,f);
-		}
-	}
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
 // SNM_ImageVWnd
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -731,17 +684,21 @@ void SNM_SkinToolbarButton(SNM_ToolbarButton* _btn, const char* _text)
 	IconTheme* it = SNM_GetIconTheme(true); // true: blank & overlay images are recent (v4)
 	if (it && it->toolbar_blank)
 	{
+/*JFB used to be:
 		skin.image = it->toolbar_blank;
 		skin.olimage = it->toolbar_overlay; // might be NULL!
 		WDL_VirtualIconButton_PreprocessSkinConfig(&skin);
 
-		//JFB!!! most stupid hack since WDL 65568bc (overlay = main image size)
-		for (int i=0; i<4; i++)
-			skin.image_ltrb_ol[i] = 0;
-
+		// most stupid hack since WDL 65568bc (overlay = main image size)
+		for (int i=0; i<4; i++) skin.image_ltrb_ol[i] = 0;
+*/
+		skin.image = it->toolbar_blank;
+		skin.olimage = NULL;
+		WDL_VirtualIconButton_PreprocessSkinConfig(&skin);
 		_btn->SetIcon(&skin);
 		_btn->SetForceBorder(false);
-		_btn->SetForceText(true); // do not force colors (done in SNM_ToolbarButton::OnPaintOver())
+		if (ColorTheme* ct = SNM_GetColorTheme())
+			_btn->SetForceText(true, !!(_btn->GetPressed()&1) ? LICE_RGBA_FROMNATIVE(ct->toolbar_button_text_on,255) : LICE_RGBA_FROMNATIVE(ct->toolbar_button_text,255));
 		_btn->SetTextLabel(_text, 0, SNM_GetToolbarFont());
 	}
 	else 

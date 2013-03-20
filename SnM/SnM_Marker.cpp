@@ -262,30 +262,50 @@ void FillMarkerRegionMenu(ReaProject* _proj, HMENU _menu, int _msgStart, int _fl
 		AddToMenu(_menu, __LOCALIZE("(No region!)","sws_menu"), 0, -1, false, MF_GRAYED);
 }
 
-bool GotoMarkerRegion(ReaProject* _proj, int _num, int _flags)
+bool GotoMarkerRegion(ReaProject* _proj, int _num, int _flags, bool _select = false)
 {
-	bool isrgn; double pos;
+	bool isrgn; double pos, end;
 	int x=0, n; 
-	while (x = EnumProjectMarkers3(_proj, x, &isrgn, &pos, NULL, NULL, &n, NULL))
-		if (n == _num && ((!isrgn && _flags&SNM_MARKER_MASK) || (isrgn && _flags&SNM_REGION_MASK))) {
+	while (x = EnumProjectMarkers3(_proj, x, &isrgn, &pos, &end, NULL, &n, NULL))
+		if (n == _num && ((!isrgn && _flags&SNM_MARKER_MASK) || (isrgn && _flags&SNM_REGION_MASK)))
+		{
+			if (PreventUIRefresh)
+				PreventUIRefresh(1);
+
+			if (_select && isrgn && (_flags&SNM_REGION_MASK))
+				GetSet_LoopTimeRange2(NULL, true, true, &pos, &end, false); // seek is managed below
+
 			int* opt = (int*)GetConfigVar("smoothseek"); // obeys smooth seek
 			SetEditCurPos2(_proj, pos, true, opt && *opt); // incl. undo point if enabled in prefs
+
+			if (PreventUIRefresh)
+				PreventUIRefresh(-1);
+
+			UpdateTimeline(); // ruler + arrange
+
 			return true;
 		}
 	return false;
 }
 
 void GotoMarker(COMMAND_T* _ct) {
-	GotoMarkerRegion(NULL, ((int)_ct->user)+1, SNM_MARKER_MASK);
+	if (GotoMarkerRegion(NULL, ((int)_ct->user)+1, SNM_MARKER_MASK))
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 
 void GotoRegion(COMMAND_T* _ct) {
-	GotoMarkerRegion(NULL, ((int)_ct->user)+1, SNM_REGION_MASK);
+	if (GotoMarkerRegion(NULL, ((int)_ct->user)+1, SNM_REGION_MASK))
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 
-void InsertMarker(COMMAND_T* _ct) {
+void GotoAnsSelectRegion(COMMAND_T* _ct) {
+	if (GotoMarkerRegion(NULL, ((int)_ct->user)+1, SNM_REGION_MASK, true))
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+}
+
+void InsertMarker(COMMAND_T* _ct)
+{
 	AddProjectMarker2(NULL, false, (int)_ct->user && (GetPlayStateEx(NULL)&1) ? GetPlayPositionEx(NULL) : GetCursorPositionEx(NULL), 0.0, "", -1, 0);
 	UpdateTimeline();
 	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_MISCCFG, -1);
 }
-

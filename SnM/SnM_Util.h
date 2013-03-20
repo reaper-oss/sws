@@ -62,10 +62,6 @@ void UpdatePrivateProfileSection(const char* _oldAppName, const char* _newAppNam
 void UpdatePrivateProfileString(const char* _appName, const char* _oldKey, const char* _newKey, const char* _iniFn, const char* _newIniFn = NULL);
 void SNM_UpgradeIniFiles();
 
-int SNM_SnapToMeasure(double _pos);
-void TranslatePos(double _pos, int* _h, int* _m = NULL, int* _s = NULL, int* _ms = NULL);
-double SeekPlay(double _pos, bool _moveView = false);
-
 int _snprintfSafe(char* _buf, size_t _n, const char* _fmt, ...);
 int _snprintfStrict(char* _buf, size_t _n, const char* _fmt, ...);
 bool GetStringWithRN(const char* _bufSrc, char* _buf, int _bufSize);
@@ -73,8 +69,18 @@ const char* FindFirstRN(const char* _str);
 char* ShortenStringToFirstRN(char* _str);
 void Replace02d(char* _str, char _replaceCh);
 
-bool IsMacro(const char* _actionName);
+int SNM_SnapToMeasure(double _pos);
+void TranslatePos(double _pos, int* _h, int* _m = NULL, int* _s = NULL, int* _ms = NULL);
+double SeekPlay(double _pos, bool _moveView = false);
+
+int SNM_NamedCommandLookup(const char* _custId, KbdSectionInfo* _section = NULL);
+int SNM_GetToggleCommandState(int _cmdId, KbdSectionInfo* _section = NULL);
+bool LoadKbIni(WDL_PtrList<WDL_FastString>* _out);
+int GetMacroOrScript(const char* _customId, int _sectionUniqueId, WDL_PtrList<WDL_FastString>* _inMacroScripts, WDL_PtrList<WDL_FastString>* _outCmds);
+bool IsMacroOrScript(const char* _cmd, bool _cmdIsName = true);
+bool LoadConsoleCmds(WDL_PtrList<WDL_FastString>* _out);
 bool GetSectionURL(bool _alr, const char* _section, char* _sectionURL, int _sectionURLSize);
+
 #ifdef _SNM_MISC
 WDL_UINT64 FNV64(WDL_UINT64 h, const unsigned char* data, int sz);
 bool FNV64(const char* _strIn, char* _strOut);

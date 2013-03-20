@@ -75,63 +75,38 @@ IconTheme* SNM_GetIconTheme(bool _checkForSize) {
 	return NULL;
 }
 
-LICE_CachedFont* SNM_GetThemeFont()
+// _type: 
+// 0=default font (non native rendering)
+// 1=default font (native rendering, optional)
+// 2=toolbar button font (native rendering, optional)
+LICE_CachedFont* SNM_GetFont(int _type)
 {
-	static LICE_CachedFont themeFont;
-	if (!themeFont.GetHFont()) // single lazy init..
+	static LICE_CachedFont themeFont[3];
+	if (!themeFont[_type].GetHFont())
 	{
 		LOGFONT lf = {
 			SNM_FONT_HEIGHT,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
 			OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SNM_FONT_NAME
 		};
-		themeFont.SetFromHFont(
+		themeFont[_type].SetFromHFont(
 			CreateFontIndirect(&lf),
-			LICE_FONT_FLAG_OWNS_HFONT | (g_SNMClearType?LICE_FONT_FLAG_FORCE_NATIVE:0));
+			LICE_FONT_FLAG_OWNS_HFONT | (!_type ? 0 : (g_SNMClearType?LICE_FONT_FLAG_FORCE_NATIVE:0)));
+		themeFont[_type].SetBkMode(TRANSPARENT);
 		// others props are set on demand (to support theme switches)
 	}
-	ColorTheme* ct = SNM_GetColorTheme();
-	themeFont.SetBkMode(TRANSPARENT);
-	themeFont.SetTextColor(ct ? LICE_RGBA_FROMNATIVE(ct->main_text,255) : LICE_RGBA(255,255,255,255));
-	return &themeFont;
+	if (ColorTheme* ct = SNM_GetColorTheme()) 
+		themeFont[_type].SetTextColor(LICE_RGBA_FROMNATIVE(_type==2?ct->toolbar_button_text:ct->main_text,255));
+	else
+		themeFont[_type].SetTextColor(LICE_RGBA(255,255,255,255));
+	return &themeFont[_type];
 }
 
-// non native version
-// note: cannot really factorize the code with SNM_GetThemeFont() due to the static font declaration
-LICE_CachedFont* SNM_GetFont()
-{
-	static LICE_CachedFont themeFont;
-	if (!themeFont.GetHFont()) // single lazy init..
-	{
-		LOGFONT lf = {
-			SNM_FONT_HEIGHT,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
-			OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SNM_FONT_NAME
-		};
-		themeFont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT);
-		// others props are set on demand (to support theme switches)
-	}
-	ColorTheme* ct = SNM_GetColorTheme();
-	themeFont.SetBkMode(TRANSPARENT);
-	themeFont.SetTextColor(ct ? LICE_RGBA_FROMNATIVE(ct->main_text,255) : LICE_RGBA(255,255,255,255));
-	return &themeFont;
+LICE_CachedFont* SNM_GetThemeFont() {
+	return SNM_GetFont(1);
 }
 
-// note: cannot really factorize the code with SNM_GetThemeFont() & SNM_GetFont() due to the static font declaration
-LICE_CachedFont* SNM_GetToolbarFont()
-{
-	static LICE_CachedFont themeFont;
-	if (!themeFont.GetHFont()) // single lazy init..
-	{
-		LOGFONT lf = {
-			SNM_FONT_HEIGHT,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
-			OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SNM_FONT_NAME
-		};
-		themeFont.SetFromHFont(CreateFontIndirect(&lf), LICE_FONT_FLAG_OWNS_HFONT | (g_SNMClearType?LICE_FONT_FLAG_FORCE_NATIVE:0));
-		// others props are set on demand (support theme switches)
-	}
-	ColorTheme* ct = SNM_GetColorTheme();
-	themeFont.SetBkMode(TRANSPARENT);
-	themeFont.SetTextColor(ct ? LICE_RGBA_FROMNATIVE(ct->toolbar_button_text,255) : LICE_RGBA(255,255,255,255));
-	return &themeFont;
+LICE_CachedFont* SNM_GetToolbarFont() {
+	return SNM_GetFont(2);
 }
 
 void SNM_GetThemeListColors(int* _bg, int* _txt, int* _grid)
@@ -261,7 +236,7 @@ WDL_DLGRET SNM_HookThemeColorsMessage(HWND _hwnd, UINT _uMsg, WPARAM _wParam, LP
 /* commented (custom implementations)
 			case WM_DRAWITEM:
 */
-				return SendMessage(GetMainHwnd(), _uMsg,_wParam,_lParam);
+				return SendMessage(GetMainHwnd(), _uMsg, _wParam, _lParam);
 		}
 	}
 	return 0;

@@ -99,7 +99,7 @@ bool SNM_GetSetSourceState(MediaItem* _item, int _takeIdx, WDL_FastString* _stat
 			// set
 			if (_setnewvalue)
 			{
-				// standard case: a source is there
+				// standard case: a source is defined
 				if (ptk.ReplaceSubChunk("SOURCE", 1, 0, _state->Get())) // no break keyword here: we're already at the end of the item..
 					ok = p.ReplaceTake(tkPos, tklen, ptk.GetChunk());
 				// replacing an empty take
@@ -218,7 +218,7 @@ int g_SNM_LastImgSlot = -1;
 
 void ShowImageSlot(int _slotType, const char* _title, int _slot) {
 	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot)) {
-		if (OpenImageView(fnStr->Get()))
+		if (OpenImageWnd(fnStr->Get()))
 			g_SNM_LastImgSlot = _slot;
 		delete fnStr;
 	}
@@ -262,6 +262,11 @@ void SetSelTrackIconSlot(COMMAND_T* _ct) {
 ///////////////////////////////////////////////////////////////////////////////
 // Misc actions / helpers
 ///////////////////////////////////////////////////////////////////////////////
+
+//increase/decrease the metronome volume
+void ChangeMetronomeVolume(COMMAND_T* _ct) {
+	KBD_OnMainActionEx(999, 0x40+(int)_ct->user, -1, 2, GetMainHwnd(), NULL);
+}
 
 void WinWaitForEvent(DWORD _event, DWORD _timeOut=500, DWORD _minReTrigger=500)
 {

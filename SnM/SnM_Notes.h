@@ -123,13 +123,13 @@ bool GetNotesChunkFromString(const char* _buf, WDL_FastString* _notes, const cha
 extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_pTrackNotes;
 
 void SetActionHelpFilename(COMMAND_T*);
-int NotesHelpViewInit();
-void NotesHelpViewExit();
+int NotesInit();
+void NotesExit();
 void ImportSubTitleFile(COMMAND_T*);
 void ExportSubTitleFile(COMMAND_T*);
-void OpenNotesHelpView(COMMAND_T*);
-int IsNotesHelpViewDisplayed(COMMAND_T*);
-void ToggleNotesHelpLock(COMMAND_T*);
-int IsNotesHelpLocked(COMMAND_T*);
+void OpenNotes(COMMAND_T*);
+int IsNotesDisplayed(COMMAND_T*);
+void ToggleNotesLock(COMMAND_T*);
+int IsNotesLocked(COMMAND_T*);
 
 #endif

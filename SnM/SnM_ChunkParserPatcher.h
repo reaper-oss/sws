@@ -521,7 +521,7 @@ const char* SNM_GetSetObjectState(void* _obj, WDL_FastString* _str)
 bool WriteChunkLine(WDL_FastString* _chunkLine, const char* _value, int _tokenPos, LineParser* _lp)
 {
 	bool updated = false;
-	if (strcmp(_lp->gettoken_str(_tokenPos), _value) != 0) //update *if* needed
+	if (strcmp(_lp->gettoken_str(_tokenPos), _value) != 0)
 	{
 		int numtokens = _lp->getnumtokens();
 		for (int i=0; i < numtokens; i++) 

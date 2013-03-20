@@ -101,10 +101,10 @@ class FileSlotList : public WDL_PtrList<PathSlotItem>
 	const char* GetFileExt() { return m_ext.Get(); }
 	bool IsValidFileExt(const char* _ext);
 	void GetFileFilter(char* _filter, size_t _filterSz);
-	bool HasNotepad()  { return (m_flags & MASK_TEXT) == MASK_TEXT; }
-	bool HasAutoSave() { return (m_flags & MASK_AUTOSAVE) == MASK_AUTOSAVE; }
-	bool HasDblClick() { return (m_flags & MASK_DBLCLIK) == MASK_DBLCLIK; }
-	bool HasAutoFill() { return (m_flags & MASK_AUTOFILL) == MASK_AUTOFILL; }
+	bool IsText()  { return (m_flags & MASK_TEXT) == MASK_TEXT; }
+	bool IsAutoSave() { return (m_flags & MASK_AUTOSAVE) == MASK_AUTOSAVE; }
+	bool IsDblClick() { return (m_flags & MASK_DBLCLIK) == MASK_DBLCLIK; }
+	bool IsAutoFill() { return (m_flags & MASK_AUTOFILL) == MASK_AUTOFILL; }
 	int GetFlags() { return m_flags; }
 	void SetFlags(int _flags) { m_flags=_flags; }
 	WDL_FastString m_lastBrowsedFn;
@@ -211,32 +211,32 @@ protected:
 	bool m_stretch;
 };
 
-int ResourceViewInit();
-void ResourceViewExit();
-void OpenResourceView(COMMAND_T*);
-int IsResourceViewDisplayed(COMMAND_T*);
-void ResViewDeleteAllSlots(COMMAND_T*);
-void ResViewClearSlotPrompt(COMMAND_T*);
-void ResViewClearFXChainSlot(COMMAND_T*);
-void ResViewClearTrTemplateSlot(COMMAND_T*);
-void ResViewClearPrjTemplateSlot(COMMAND_T*);
-void ResViewClearMediaSlot(COMMAND_T*);
-void ResViewClearImageSlot(COMMAND_T*);
+int ResourcesInit();
+void ResourcesExit();
+void OpenResources(COMMAND_T*);
+int IsResourcesDisplayed(COMMAND_T*);
+void ResourcesDeleteAllSlots(COMMAND_T*);
+void ResourcesClearSlotPrompt(COMMAND_T*);
+void ResourcesClearFXChainSlot(COMMAND_T*);
+void ResourcesClearTrTemplateSlot(COMMAND_T*);
+void ResourcesClearPrjTemplateSlot(COMMAND_T*);
+void ResourcesClearMediaSlot(COMMAND_T*);
+void ResourcesClearImageSlot(COMMAND_T*);
 #ifdef _WIN32
-void ResViewClearThemeSlot(COMMAND_T*);
+void ResourcesClearThemeSlot(COMMAND_T*);
 #endif
-void ResViewAutoSaveFXChain(COMMAND_T*);
-void ResViewAutoSaveTrTemplate(COMMAND_T*);
-void ResViewAutoSave(COMMAND_T*);
+void ResourcesAutoSaveFXChain(COMMAND_T*);
+void ResourcesAutoSaveTrTemplate(COMMAND_T*);
+void ResourcesAutoSave(COMMAND_T*);
 
 int SNM_SelectResourceBookmark(const char* _name);
 void SNM_TieResourceSlotActions(int _bookmarkId);
 
-int ImageViewInit();
-void ImageViewExit();
-void OpenImageView(COMMAND_T*);
-bool OpenImageView(const char* _fn);
-void ClearImageView(COMMAND_T*);
-bool IsImageViewDisplayed(COMMAND_T*);
+int ImageInit();
+void ImageExit();
+void OpenImageWnd(COMMAND_T*);
+bool OpenImageWnd(const char* _fn);
+void ClearImageWnd(COMMAND_T*);
+bool IsImageWndDisplayed(COMMAND_T*);
 
 #endif

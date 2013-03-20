@@ -31,10 +31,9 @@
 #define _SNM_H_
 
 
-// see eof for includes!
+// see eof for includes
 
 
-// compil flags
 //#define _SNM_DEBUG
 //#define _SNM_DYN_FONT_DEBUG
 //#define _SNM_MISC				// not released, deprecated, tests, etc..
@@ -54,6 +53,8 @@
 #define SNM_CYCLACTION_INI_FILE		"%s\\S&M_Cyclactions.ini"
 #define SNM_CYCLACTION_BAK_FILE		"%s\\S&M_Cyclactions.bak"
 #define SNM_CYCLACTION_EXPORT_FILE	"%s\\S&M_Cyclactions_export.ini"
+#define SNM_KB_INI_FILE				"%s\\reaper-kb.ini"
+#define SNM_CONSOLE_FILE			"%s\\reaconsole_customcommands.txt"
 #define SNM_EXTENSION_FILE			"%s\\Plugins\\reaper_snm.dll"
 #define SNM_FONT_NAME				"MS Shell Dlg"
 #define SNM_FONT_HEIGHT				14
@@ -69,6 +70,8 @@
 #define SNM_CYCLACTION_INI_FILE		"%s/S&M_Cyclactions.ini"
 #define SNM_CYCLACTION_BAK_FILE		"%s/S&M_Cyclactions.bak"
 #define SNM_CYCLACTION_EXPORT_FILE	"%s/S&M_Cyclactions_export.ini"
+#define SNM_KB_INI_FILE				"%s/reaper-kb.ini"
+#define SNM_CONSOLE_FILE			"%s/reaconsole_customcommands.txt"
 #define SNM_EXTENSION_FILE			"%s/UserPlugins/reaper_snm.dylib"
 #define SNM_FONT_NAME				"Lucida Grande"
 #ifndef __LP64__					//JFB!!! SWELL issue: wtf!? same font size, different look on x64!
@@ -89,7 +92,8 @@
 #define SNM_GUI_Y_MARGIN			5
 #define SNM_GUI_W_KNOB				26
 #define SNM_MAX_PATH				2048
-#define SNM_LIVECFG_NB_CONFIGS		4		//JFB do not commit a new value w/o my approval, plz thx!
+#define SNM_LIVECFG_NB_CONFIGS		4			//JFB do not commit a new value w/o my approval, plz thx!
+#define SNM_SECTION_ID				0x10000101	// "< 0x10000000 for cockos use only plzk thx"
 #define SNM_SECTION_1ST_CMD_ID		40000
 
 #define SNM_MAX_TRACK_GROUPS		32
@@ -100,6 +104,7 @@
 #define SNM_MAX_SECTION_NAME_LEN	64
 #define SNM_MAX_SECTION_ACTIONS		128
 #define SNM_MAX_ACTION_CUSTID_LEN	128
+#define SNM_MACRO_CUSTID_LEN		32     // REAPER v4.32
 #define SNM_MAX_ACTION_NAME_LEN		128
 #define SNM_MAX_MARKER_NAME_LEN		64     // + regions
 #define SNM_MAX_TRACK_NAME_LEN		128
@@ -143,7 +148,7 @@
 #define SNM_SCHEDJOB_PRJ_ACTION				SNM_SCHEDJOB_PLAYLIST_UPDATE + 1
 
 
-/*JFB replaced with a common SWS_CMD_SHORTNAME
+/*JFB replaced with a common SWS_CMD_SHORTNAME()
 #define SNM_CMD_SHORTNAME(_ct) (GetLocalizedActionName(_ct->id, _ct->accel.desc) + 9) // +9 to skip "SWS/S&M: "
 */
 
@@ -195,8 +200,7 @@ public:
 
 #define SNM_CSURFMAP(x) SWS_SectionLock lock(&m_csurfsMutex); for (int i=0; i<m_csurfs.GetSize(); i++) m_csurfs.Get(i)->x;
 
-class SNM_CSurfProxy : public IReaperControlSurface
-{
+class SNM_CSurfProxy : public IReaperControlSurface {
 public:
 	SNM_CSurfProxy() {}
 	~SNM_CSurfProxy() { RemoveAll(); }
@@ -258,7 +262,7 @@ typedef struct MIDI_COMMAND_T {
 	const char* menuText;
 	INT_PTR user;
 
-	//API LIMITATION: useless in other sections than the main one ATM, and we can only register MIDI_COMMAND_T in our own sections (i.e. not in the main one)
+//API LIMITATION: useless in other sections than the main one ATM, and we can only register MIDI_COMMAND_T in our own sections (i.e. not in the main one)
 #ifdef _SNM_MISC
 	int (*getEnabled)(MIDI_COMMAND_T*);
 	bool fakeToggle;
@@ -269,9 +273,10 @@ typedef struct MIDI_COMMAND_T {
 ///////////////////////////////////////////////////////////////////////////////
 
 extern KbdSectionInfo g_SNM_Section;
+extern int g_SNM_SectionIds[];
 extern bool g_SNM_PlayState, g_SNM_PauseState, g_SNM_RecState, g_SNM_ToolbarRefresh;
 extern int g_SNM_IniVersion, g_SNM_Beta, g_SNM_LastImgSlot;
-extern WDL_FastString g_SNM_IniFn, g_SNM_CyclactionIniFn, g_SNM_DiffToolFn;
+extern WDL_FastString g_SNM_IniFn, g_SNM_CyclIniFn, g_SNM_DiffToolFn;
 #ifdef _SNM_CSURF_PROXY
 extern SNM_CSurfProxy* g_SNM_CSurfProxy;
 #endif
@@ -284,7 +289,7 @@ int IsToolbarsAutoRefeshEnabled(COMMAND_T*);
 void RefreshToolbars();
 
 int SNM_GetFakeToggleState(COMMAND_T*);
-void DummyToggle(COMMAND_T*);
+void Noop(COMMAND_T*);
 void ExclusiveToggle(COMMAND_T*);
 
 int SNM_RegisterDynamicCommands(COMMAND_T* _pCommands);
@@ -308,7 +313,6 @@ int SNM_CSurfExtended(int _call, void* _parm1, void* _parm2, void* _parm3);
 // fake/local osc csurf
 bool SNM_SendLocalOscMessage(const char* _oscMsg);
 
-bool SNM_HasExtension();
 int SNM_Init(reaper_plugin_info_t* _rec);
 void SNM_Exit();
 
@@ -383,7 +387,7 @@ vezn/Q+t/AIQiCv/Q4iRxAAAAABJRU5ErkJggg==\n"
 #include "SnM_Chunk.h"
 #include "SnM_VWnd.h"
 #include "SnM_Resources.h"
-// from this point, order does not matter
+// from this point, order does not matter anymore
 #include "SnM_CueBuss.h"
 #include "SnM_Cyclactions.h"
 #include "SnM_Dlg.h"

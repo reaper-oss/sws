@@ -197,7 +197,7 @@ WDL_PtrList<FileSlotList> g_slots;
 int g_resViewType = -1;
 int g_tiedSlotActions[SNM_NUM_DEFAULT_SLOTS]; // slot actions of default type/idx are tied to type/value
 int g_dblClickPrefs[SNM_MAX_SLOT_TYPES]; // flags, loword: dbl-click type, hiword: dbl-click to (only for fx chains, atm)
-WDL_FastString g_filter; // see init + localization in ResourceViewInit()
+WDL_FastString g_filter; // see init + localization in ResourcesInit()
 int g_filterPref = 1; // bitmask: &1 = filter by name, &2 = filter by path, &4 = filter by comment
 WDL_PtrList<WDL_FastString> g_autoSaveDirs;
 WDL_PtrList<WDL_FastString> g_autoFillDirs;
@@ -815,7 +815,7 @@ void SNM_ResourceView::Perform()
 ///////////////////////////////////////////////////////////////////////////////
 
 SNM_ResourceWnd::SNM_ResourceWnd()
-	: SWS_DockWnd(IDD_SNM_RESOURCES, __LOCALIZE("Resources","sws_DLG_150"), "SnMResources", SWSGetCommandID(OpenResourceView))
+	: SWS_DockWnd(IDD_SNM_RESOURCES, __LOCALIZE("Resources","sws_DLG_150"), "SnMResources", SWSGetCommandID(OpenResources))
 {
 	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();
@@ -878,9 +878,9 @@ void SNM_ResourceWnd::OnInitDlg()
 	m_parentVwnd.AddChild(&m_btnOffsetTrTemplate);
 
 	// restores the text filter when docking/undocking + indirect call to Update() !
-	SetDlgItemText(GetHWND(), IDC_FILTER, g_filter.Get());
+	SetDlgItemText(m_hwnd, IDC_FILTER, g_filter.Get());
 
-/* Perfs: see above comment
+/* see above comment
 	Update();
 */
 }
@@ -995,26 +995,26 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case IDC_FILTER:
 			if (HIWORD(wParam)==EN_CHANGE)
 			{
-				char cFilter[128];
-				GetWindowText(GetDlgItem(m_hwnd, IDC_FILTER), cFilter, 128);
-				g_filter.Set(cFilter);
+				char filter[128]="";
+				GetWindowText(GetDlgItem(m_hwnd, IDC_FILTER), filter, sizeof(filter));
+				g_filter.Set(filter);
 				Update();
 			}
 #ifdef _WIN32
 			else if (HIWORD(wParam)==EN_SETFOCUS)
 			{
 				HWND hFilt = GetDlgItem(m_hwnd, IDC_FILTER);
-				char cFilter[128];
-				GetWindowText(hFilt, cFilter, 128);
-				if (!strcmp(cFilter, FILTER_DEFAULT_STR))
+				char filter[128]="";
+				GetWindowText(hFilt, filter, sizeof(filter));
+				if (!strcmp(filter, FILTER_DEFAULT_STR))
 					SetWindowText(hFilt, "");
 			}
 			else if (HIWORD(wParam)==EN_KILLFOCUS)
 			{
 				HWND hFilt = GetDlgItem(m_hwnd, IDC_FILTER);
-				char cFilter[128];
-				GetWindowText(hFilt, cFilter, 128);
-				if (*cFilter == '\0') 
+				char filter[128]="";
+				GetWindowText(hFilt, filter, sizeof(filter));
+				if (*filter == '\0') 
 					SetWindowText(hFilt, FILTER_DEFAULT_STR);
 			}
 #endif
@@ -1473,7 +1473,7 @@ void SNM_ResourceWnd::AutoFillContextMenu(HMENU _menu, bool _fillItem)
 	char autoPath[SNM_MAX_PATH] = "";
 	_snprintfSafe(autoPath, sizeof(autoPath), __LOCALIZE_VERFMT("[Current auto-fill path: %s]","sws_DLG_150"), *GetAutoFillDir() ? GetAutoFillDir() : __LOCALIZE("undefined","sws_DLG_150"));
 	AddToMenu(_menu, autoPath, 0, -1, false, MF_DISABLED); // different from MF_GRAYED
-	if (GetSlotList()->HasAutoSave())
+	if (GetSlotList()->IsAutoSave())
 		AddToMenu(_menu, __LOCALIZE("Sync auto-save and auto-fill paths","sws_DLG_150"), AUTOSAVE_SYNC_MSG, -1, false, g_syncAutoDirPrefs[g_resViewType] ? MFS_CHECKED : MFS_UNCHECKED);
 
 	if (_fillItem) {
@@ -1490,7 +1490,7 @@ void SNM_ResourceWnd::AutoFillContextMenu(HMENU _menu, bool _fillItem)
 	AddToMenu(_menu, __LOCALIZE("Set auto-fill directory to project path","sws_DLG_150"), AUTOFILL_PRJ_MSG, -1, false, !IsFiltered() ? MF_ENABLED : MF_GRAYED);
 }
 
-HMENU SNM_ResourceWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
+HMENU SNM_ResourceWnd::OnContextMenu(int _x, int _y, bool* _wantDefaultItems)
 {
 	HMENU hMenu = CreatePopupMenu();
 
@@ -1502,12 +1502,12 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 		switch (v->GetID())
 		{
 			case BTNID_AUTOFILL:
-				*wantDefaultItems = false;
+				*_wantDefaultItems = false;
 				AutoFillContextMenu(hMenu, false);
 				return hMenu;
 			case BTNID_AUTOSAVE:
-				if (GetSlotList()->HasAutoSave()) {
-					*wantDefaultItems = false;
+				if (GetSlotList()->IsAutoSave()) {
+					*_wantDefaultItems = false;
 					AutoSaveContextMenu(hMenu, false);
 					return hMenu;
 				}
@@ -1517,12 +1517,12 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 
 	// general context menu
 	int iCol;
-	PathSlotItem* pItem = (PathSlotItem*)m_pLists.Get(0)->GetHitItem(x, y, &iCol);
+	PathSlotItem* pItem = (PathSlotItem*)m_pLists.Get(0)->GetHitItem(_x, _y, &iCol);
 	UINT enabled = (pItem && !pItem->IsDefault()) ? MF_ENABLED : MF_GRAYED;
 	int typeForUser = GetTypeForUser();
 	if (pItem && iCol >= 0)
 	{
-		*wantDefaultItems = false;
+		*_wantDefaultItems = false;
 		switch(typeForUser)
 		{
 			case SNM_SLOT_FXC:
@@ -1597,15 +1597,13 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 		AddToMenu(hMenu, __LOCALIZE("Load slot/file...","sws_DLG_150"), LOAD_MSG);
 		AddToMenu(hMenu, __LOCALIZE("Delete files","sws_DLG_150"), DEL_FILES_MSG, -1, false, enabled);
 		AddToMenu(hMenu, __LOCALIZE("Rename file","sws_DLG_150"), RENAME_MSG, -1, false, enabled);
-		if (GetSlotList()->HasNotepad())
+		if (GetSlotList()->IsText())
 #ifndef _WIN32
 			AddToMenu(hMenu, __LOCALIZE("Display file...","sws_DLG_150"), EDIT_MSG, -1, false, enabled);
 #else
 		{
-			if (g_SNM_DiffToolFn.GetLength()) {
-				int x=0, nbsel=0; while(m_pLists.Get(0)->EnumSelected(&x)) nbsel++;
-				AddToMenu(hMenu, __LOCALIZE("Diff files...","sws_DLG_150"), DIFF_MSG, -1, false, nbsel==2 && enabled==MF_ENABLED ? MF_ENABLED:MF_GRAYED);
-			}
+			int x=0, nbsel=0; while(m_pLists.Get(0)->EnumSelected(&x)) nbsel++;
+			AddToMenu(hMenu, __LOCALIZE("Diff files...","sws_DLG_150"), DIFF_MSG, -1, false, nbsel==2 && enabled==MF_ENABLED && g_SNM_DiffToolFn.GetLength() ? MF_ENABLED:MF_GRAYED);
 			AddToMenu(hMenu, __LOCALIZE("Edit file...","sws_DLG_150"), EDIT_MSG, -1, false, enabled);
 		}	
 #endif
@@ -1620,7 +1618,7 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 		AutoFillContextMenu(hAutoFillSubMenu, true);
 
 		// auto-save
-		if (GetSlotList()->HasAutoSave())
+		if (GetSlotList()->IsAutoSave())
 		{
 			HMENU hAutoSaveSubMenu = CreatePopupMenu();
 			AddSubMenu(hMenu, hAutoSaveSubMenu, __LOCALIZE("Auto-save","sws_DLG_150"));
@@ -1829,7 +1827,7 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tool
 	if (SNM_AutoVWndPosition(DT_LEFT, &m_btnAutoFill, NULL, _r, &x0, _r->top, h, 0))
 	{
 		// "auto-save" button
-		m_btnAutoSave.SetGrayed(!GetSlotList()->HasAutoSave());
+		m_btnAutoSave.SetGrayed(!GetSlotList()->IsAutoSave());
 		SNM_SkinButton(&m_btnAutoSave, it ? &(it->toolbar_save) : NULL, __LOCALIZE("Auto-save","sws_DLG_150"));
 		if (SNM_AutoVWndPosition(DT_LEFT, &m_btnAutoSave, NULL, _r, &x0, _r->top, h))
 		{
@@ -1880,7 +1878,7 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tool
 	r.left = _r->left;
 
 	// "dbl-click to"
-	if (GetSlotList()->HasDblClick())
+	if (GetSlotList()->IsDblClick())
 	{
 		m_txtDblClickType.SetFont(font);
 		if (!SNM_AutoVWndPosition(DT_LEFT, &m_txtDblClickType, NULL, &r, &x0, y0, h, 5))
@@ -1941,7 +1939,7 @@ bool SNM_ResourceWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int 
 					g_slots.Get(typeForUser)->GetDesc(), 
 					*GetAutoFillDir() ? GetAutoFillDir() : __LOCALIZE("undefined","sws_DLG_150")) > 0);
 			case BTNID_AUTOSAVE:
-				if (g_slots.Get(g_resViewType)->HasAutoSave())
+				if (g_slots.Get(g_resViewType)->IsAutoSave())
 				{
 					switch (typeForUser)
 					{
@@ -2511,7 +2509,7 @@ void AddCustomTypesFromIniFile()
 	}
 }
 
-int ResourceViewInit()
+int ResourcesInit()
 {
 	// localization
 	g_filter.Set(FILTER_DEFAULT_STR);
@@ -2592,7 +2590,7 @@ int ResourceViewInit()
 		if (g_syncAutoDirPrefs[i]) // consistency check (e.g. after sws upgrade)
 			g_syncAutoDirPrefs[i] = (strcmp(savePath->Get(), fillPath->Get()) == 0);
 
-		if (g_slots.Get(i)->HasDblClick()) {
+		if (g_slots.Get(i)->IsDblClick()) {
 			if (_snprintfStrict(iniKey, sizeof(iniKey), "DblClick%s", iniSec) > 0)
 				g_dblClickPrefs[i] = GetPrivateProfileInt(RES_INI_SEC, iniKey, 0, g_SNM_IniFn.Get());
 			else
@@ -2631,7 +2629,7 @@ int ResourceViewInit()
 	return 1;
 }
 
-void ResourceViewExit()
+void ResourcesExit()
 {
 	WDL_FastString iniStr, escapedStr;
 	WDL_PtrList_DeleteOnDestroy<WDL_FastString> iniSections;
@@ -2664,7 +2662,7 @@ void ResourceViewExit()
 			makeEscapedConfigString(g_autoFillDirs.Get(i)->Get(), &escapedStr);
 			iniStr.AppendFormatted(SNM_MAX_PATH, "AutoFillDir%s=%s\n", iniSections.Get(i)->Get(), escapedStr.Get());
 		}
-		if (g_autoSaveDirs.Get(i)->GetLength() && g_slots.Get(i)->HasAutoSave()) {
+		if (g_autoSaveDirs.Get(i)->GetLength() && g_slots.Get(i)->IsAutoSave()) {
 			makeEscapedConfigString(g_autoSaveDirs.Get(i)->Get(), &escapedStr);
 			iniStr.AppendFormatted(SNM_MAX_PATH, "AutoSaveDir%s=%s\n", iniSections.Get(i)->Get(), escapedStr.Get());
 		}
@@ -2675,7 +2673,7 @@ void ResourceViewExit()
 			iniStr.AppendFormatted(256, "TiedActions%s=%d\n", iniSections.Get(i)->Get(), g_tiedSlotActions[i]);
 
 		// dbl-click pref
-		if (g_slots.Get(i)->HasDblClick())
+		if (g_slots.Get(i)->IsDblClick())
 			iniStr.AppendFormatted(256, "DblClick%s=%d\n", iniSections.Get(i)->Get(), g_dblClickPrefs[i]);
 
 		// specific options (saved here for the ini file ordering..)
@@ -2720,7 +2718,7 @@ void ResourceViewExit()
 	DELETE_NULL(g_pResourcesWnd);
 }
 
-void OpenResourceView(COMMAND_T* _ct)
+void OpenResources(COMMAND_T* _ct)
 {
 	if (g_pResourcesWnd) 
 	{
@@ -2733,11 +2731,11 @@ void OpenResourceView(COMMAND_T* _ct)
 	}
 }
 
-int IsResourceViewDisplayed(COMMAND_T* _ct) {
+int IsResourcesDisplayed(COMMAND_T* _ct) {
 	return (g_pResourcesWnd && g_pResourcesWnd->IsValidWindow());
 }
 
-void ResViewDeleteAllSlots(COMMAND_T* _ct)
+void ResourcesDeleteAllSlots(COMMAND_T* _ct)
 {
 	FileSlotList* fl = g_slots.Get(g_tiedSlotActions[(int)_ct->user]);
 	WDL_PtrList_DeleteOnDestroy<PathSlotItem> delItems; // keep (displayed!) pointers until the list view is updated
@@ -2749,51 +2747,51 @@ void ResViewDeleteAllSlots(COMMAND_T* _ct)
 		g_pResourcesWnd->Update();
 } // + delItems auto clean-up !
 
-void ResViewClearSlotPrompt(COMMAND_T* _ct) {
+void ResourcesClearSlotPrompt(COMMAND_T* _ct) {
 	g_slots.Get(g_tiedSlotActions[(int)_ct->user])->ClearSlotPrompt(_ct);
 }
 
-void ResViewClearFXChainSlot(COMMAND_T* _ct) {
+void ResourcesClearFXChainSlot(COMMAND_T* _ct) {
 	g_slots.Get(g_tiedSlotActions[SNM_SLOT_FXC])->ClearSlot((int)_ct->user);
 }
 
-void ResViewClearTrTemplateSlot(COMMAND_T* _ct) {
+void ResourcesClearTrTemplateSlot(COMMAND_T* _ct) {
 	g_slots.Get(g_tiedSlotActions[SNM_SLOT_TR])->ClearSlot((int)_ct->user);
 }
 
-void ResViewClearPrjTemplateSlot(COMMAND_T* _ct) {
+void ResourcesClearPrjTemplateSlot(COMMAND_T* _ct) {
 	g_slots.Get(g_tiedSlotActions[SNM_SLOT_PRJ])->ClearSlot((int)_ct->user);
 }
 
-void ResViewClearMediaSlot(COMMAND_T* _ct) {
+void ResourcesClearMediaSlot(COMMAND_T* _ct) {
 	//JFB TODO? stop sound?
 	g_slots.Get(g_tiedSlotActions[SNM_SLOT_MEDIA])->ClearSlot((int)_ct->user);
 }
 
-void ResViewClearImageSlot(COMMAND_T* _ct) {
+void ResourcesClearImageSlot(COMMAND_T* _ct) {
 	g_slots.Get(g_tiedSlotActions[SNM_SLOT_IMG])->ClearSlot((int)_ct->user);
 }
 
 #ifdef _WIN32
-void ResViewClearThemeSlot(COMMAND_T* _ct) {
+void ResourcesClearThemeSlot(COMMAND_T* _ct) {
 	g_slots.Get(g_tiedSlotActions[SNM_SLOT_THM])->ClearSlot((int)_ct->user);
 }
 #endif
 
 // specific auto-save for fx chains
-void ResViewAutoSaveFXChain(COMMAND_T* _ct) {
+void ResourcesAutoSaveFXChain(COMMAND_T* _ct) {
 	AutoSave(g_tiedSlotActions[SNM_SLOT_FXC], false, (int)_ct->user);
 }
 
 // specific auto-save for track templates
-void ResViewAutoSaveTrTemplate(COMMAND_T* _ct) {
+void ResourcesAutoSaveTrTemplate(COMMAND_T* _ct) {
 	AutoSave(g_tiedSlotActions[SNM_SLOT_TR], false, (int)_ct->user);
 }
 
 // auto-save for all other types..
-void ResViewAutoSave(COMMAND_T* _ct) {
+void ResourcesAutoSave(COMMAND_T* _ct) {
 	int type = (int)_ct->user;
-	if (g_slots.Get(type)->HasAutoSave()) {
+	if (g_slots.Get(type)->IsAutoSave()) {
 		AutoSave(g_tiedSlotActions[type], false, 0);
 	}
 }
@@ -2823,7 +2821,7 @@ void SNM_TieResourceSlotActions(int _bookmarkId) {
 SNM_ImageWnd* g_pImageWnd = NULL;
 
 SNM_ImageWnd::SNM_ImageWnd()
-	: SWS_DockWnd(IDD_SNM_IMAGE, __LOCALIZE("Image","sws_DLG_162"), "SnMImage", SWSGetCommandID(OpenImageView))
+	: SWS_DockWnd(IDD_SNM_IMAGE, __LOCALIZE("Image","sws_DLG_162"), "SnMImage", SWSGetCommandID(OpenImageWnd))
 {
 	m_stretch = false;
 
@@ -2889,7 +2887,7 @@ bool SNM_ImageWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bu
 	return false;
 }
 
-int ImageViewInit()
+int ImageInit()
 {
 	g_pImageWnd = new SNM_ImageWnd();
 	if (!g_pImageWnd)
@@ -2901,7 +2899,7 @@ int ImageViewInit()
 	return 1;
 }
 
-void ImageViewExit()
+void ImageExit()
 {
 	// save prefs
 	if (g_pImageWnd)
@@ -2909,14 +2907,14 @@ void ImageViewExit()
 	DELETE_NULL(g_pImageWnd);
 }
 
-void OpenImageView(COMMAND_T* _ct) {
+void OpenImageWnd(COMMAND_T* _ct) {
 	if (g_pImageWnd) {
 		g_pImageWnd->Show(true, true);
 		g_pImageWnd->RequestRedraw();
 	}
 }
 
-bool OpenImageView(const char* _fn)
+bool OpenImageWnd(const char* _fn)
 {
 	bool ok = false;
 	if (g_pImageWnd)
@@ -2930,13 +2928,13 @@ bool OpenImageView(const char* _fn)
 	return ok;
 }
 
-void ClearImageView(COMMAND_T*) {
+void ClearImageWnd(COMMAND_T*) {
 	if (g_pImageWnd) {
 		g_pImageWnd->SetImage(NULL);
 		g_pImageWnd->RequestRedraw();
 	}
 }
 
-bool IsImageViewDisplayed(COMMAND_T*){
+bool IsImageWndDisplayed(COMMAND_T*){
 	return (g_pImageWnd && g_pImageWnd->IsValidWindow());
 }

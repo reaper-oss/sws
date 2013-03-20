@@ -147,15 +147,10 @@ void InsertSilence(COMMAND_T* _ct)
 
 void OpenProjectPathInExplorerFinder(COMMAND_T*)
 {
-	char path[SNM_MAX_PATH] = "";
+	char path[SNM_MAX_PATH] = "bla";
 	GetProjectPath(path, sizeof(path));
 	if (*path)
-	{
-		if (char* p = strrchr(path, PATH_SLASH_CHAR)) {
-			*(p+1) = '\0'; // ShellExecute() is KO otherwise..
-			ShellExecute(NULL, "open", path, NULL, NULL, SW_SHOWNORMAL);
-		}
-	}
+		ShellExecute(NULL, "open", path, NULL, NULL, SW_SHOWNORMAL);
 }
 
 
@@ -353,7 +348,7 @@ void SetProjectStartupAction(COMMAND_T* _ct)
 	msg.Append(__LOCALIZE("please select an action, macro, or script in the Actions window and click OK.","sws_mbox"));
 	if (g_prjActions.Get()->GetLength())
 		if (int cmdId = NamedCommandLookup(g_prjActions.Get()->Get())) {
-			msg.Append("\n"); // for translators..
+			msg.Append("\n");
 			msg.AppendFormatted(256, __LOCALIZE_VERFMT("Note: this will override the current startup action '%s'","sws_mbox"), kbd_getTextFromCmd(cmdId, NULL));
 		}
 
@@ -365,10 +360,12 @@ void SetProjectStartupAction(COMMAND_T* _ct)
 		{
 			g_prjActions.Get()->Set(idstr);
 			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_MISCCFG, -1);
-
-			msg.SetFormatted(SNM_MAX_PATH, __LOCALIZE_VERFMT("'%s' is defined as startup action ","sws_mbox"), kbd_getTextFromCmd(NamedCommandLookup(idstr), NULL));
-			if (*prjFn) msg.AppendFormatted(SNM_MAX_PATH, __LOCALIZE_VERFMT("for %s","sws_mbox"), prjFn);
-			MessageBox(GetMainHwnd(), msg.Get(), SWS_CMD_SHORTNAME(_ct), MB_OK);
+			if (int cmdId = NamedCommandLookup(idstr))
+			{
+				msg.SetFormatted(SNM_MAX_PATH, __LOCALIZE_VERFMT("'%s' is defined as startup action ","sws_mbox"), kbd_getTextFromCmd(cmdId, NULL));
+				if (*prjFn) msg.AppendFormatted(SNM_MAX_PATH, __LOCALIZE_VERFMT("for %s","sws_mbox"), prjFn);
+				MessageBox(GetMainHwnd(), msg.Get(), SWS_CMD_SHORTNAME(_ct), MB_OK);
+			}
 		}
 	}
 }
@@ -376,15 +373,21 @@ void SetProjectStartupAction(COMMAND_T* _ct)
 void ClearProjectStartupAction(COMMAND_T* _ct)
 {
 	if (g_prjActions.Get()->GetLength())
-		if (int cmdId = NamedCommandLookup(g_prjActions.Get()->Get()))
+	{
+		int r=IDOK, cmdId=NamedCommandLookup(g_prjActions.Get()->Get());
+		if (cmdId)
 		{
 			WDL_FastString msg;
 			msg.AppendFormatted(256, __LOCALIZE_VERFMT("Are you sure you want to clear the current startup action '%s'?","sws_mbox"), kbd_getTextFromCmd(cmdId, NULL));
-			if (IDOK == MessageBox(GetMainHwnd(), msg.Get(), SWS_CMD_SHORTNAME(_ct), MB_OKCANCEL)) {
-				g_prjActions.Get()->Set("");
-				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_MISCCFG, -1);
-			}
+			r= MessageBox(GetMainHwnd(), msg.Get(), SWS_CMD_SHORTNAME(_ct), MB_OKCANCEL);
 		}
+
+		if (r==IDOK)
+		{
+			g_prjActions.Get()->Set("");
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_MISCCFG, -1);
+		}
+	}
 }
 
 static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
@@ -400,7 +403,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 			if (int cmdId = NamedCommandLookup(lp.gettoken_str(1)))
 			{
 //				Main_OnCommand(cmdId, 0);
-				AddOrReplaceScheduledJob(new ProjectActionJob(cmdId)); // ~0.5s delay + avoid multi-trigger
+				AddOrReplaceScheduledJob(new ProjectActionJob(cmdId)); // ~1s delay to avoid multi-triggers
 			}
 		return true;
 	}

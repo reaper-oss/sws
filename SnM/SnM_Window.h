@@ -47,7 +47,7 @@ void ShowThemeHelper(COMMAND_T*);
 HWND GetActionListBox(char* _currentSection, int _sectionSz);
 int GetSelectedAction(char* _section, int _secSize, int* _cmdId, char* _id, int _idSize, char* _desc = NULL, int _descSize = -1);
 bool GetSelectedAction(char* _idstrOut, int _idStrSz, const char* _expectedLocalizedSection);
-bool LearnAction(int _cmdId);
+void LearnAction(KbdSectionInfo* _section, int _cmdId);
 void DumpWikiActionList(COMMAND_T*);
 void DumpActionList(COMMAND_T*);
 

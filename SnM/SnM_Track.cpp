@@ -689,9 +689,8 @@ bool MakeSingleTrackTemplateChunk(WDL_FastString* _in, WDL_FastString* _out, boo
 		{
 			int* offsOpt = _obeyOffset ? (int*)GetConfigVar("templateditcursor") : NULL;
 
-			// remove receives from the template as we patch a single track
+			// remove receives from the template as we deal with a single track
 			// note: occurs with multiple tracks in a template file (w/ rcv between those tracks),
-			//       we remove them because track ids of the template won't match the project ones
 			SNM_TrackEnvParserPatcher pout(_out);
 			pout.RemoveLine("TRACK", "AUXRECV", 1, -1, "MIDIOUT");
 
@@ -1013,7 +1012,7 @@ void AppendTrackChunk(MediaTrack* _tr, WDL_FastString* _chunkOut, bool _delItems
 			p.RemoveEnvelopes();
 		if (_delItems)
 			p.RemoveSubChunk("ITEM", 2, -1);
-		_chunkOut->Append(p.GetChunk());
+		_chunkOut->Append(p.GetChunk()->Get());
 	}
 }
 
@@ -1106,7 +1105,7 @@ bool AutoSaveTrackSlots(int _slotType, const char* _dirPath, WDL_PtrList<PathSlo
 			if (MediaTrack* tr = CSurf_TrackFromID(i, false))
 				if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL)) {
 					if (char* trName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL))
-						lstrcpyn(name, trName, 256);
+						lstrcpyn(name, trName, sizeof(name));
 					break;
 				}
 

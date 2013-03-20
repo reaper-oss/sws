@@ -30,44 +30,57 @@
 #ifndef _SNM_CYCLACTION_H_
 #define _SNM_CYCLACTION_H_
 
-#define EMPTY_CYCLACTION		"no-op,65535"
-#define MAX_CYCLATION_LEN		4096
+
+#define CA_EMPTY		"no-op,65535"
+#define CA_MAX_LEN		SNM_MAX_CHUNK_LINE_LENGTH
+#define CA_VERSION		2
+#define CA_SEP_V1		',' // deprecated (needed for file upgrade)
+#define CA_SEP			'µ'
+#define CA_TGL1			'#' // CA reports a fake toggle state
+#define CA_TGL2			'$' // CA reports a real toggle state
+
+static const char CA_SEP_STR[] =  { CA_SEP,  '\0' };
+static const char CA_TGL1_STR[] = { CA_TGL1, '\0' };
+static const char CA_TGL2_STR[] = { CA_TGL2, '\0' };
+
 
 class Cyclaction
 {
 public:
 	// constructors assume their params are valid
-	Cyclaction(const char* _desc=EMPTY_CYCLACTION, bool _added=false) : m_desc(_desc), m_performState(0), m_added(_added), m_empty(false) {UpdateNameAndCmds();}
-	Cyclaction(Cyclaction* _a) : m_desc(_a->m_desc), m_performState(_a->m_performState), m_added(_a->m_added), m_empty(_a->IsEmpty()) {UpdateNameAndCmds();}
+	Cyclaction(const char* _desc=CA_EMPTY, bool _added=false) : m_desc(_desc), m_performState(0), m_fakeToggle(false), m_cmdId(0), m_added(_added) { UpdateNameAndCmds(); }
+	Cyclaction(Cyclaction* _a) : m_desc(_a->m_desc), m_performState(_a->m_performState), m_fakeToggle(_a->m_fakeToggle), m_cmdId(_a->m_cmdId), m_added(_a->m_added) { UpdateNameAndCmds(); }
 	~Cyclaction() {}
 	void Update(const char* _desc) { m_desc.Set(_desc); UpdateNameAndCmds(); }
-	bool IsEmpty() { return m_empty; }
-	bool IsToggle() {return *m_desc.Get() == '#';}
-	void SetToggle(bool _toggle);
+	int IsToggle() { return *m_desc.Get()==CA_TGL1 ? 1 : *m_desc.Get()==CA_TGL2 ? 2 : 0; }
+	void SetToggle(int _toggle);
+	bool IsEmpty() { return !_stricmp(m_desc.Get(), CA_EMPTY); }
 	const char* GetName() { return m_name.Get(); }
 	void SetName(const char* _name) { m_name.Set(_name); UpdateFromCmd(); }
+	int GetStepCount();
+	int GetStepIdx(int _performState = -1);
 	const char* GetStepName(int _performState = -1);
 	int GetCmdSize() { return m_cmds.GetSize(); }
-	int GetCurrentCmdIdx(WDL_FastString* _cyclePointName = NULL);
 	const char* GetCmd(int _i) { return m_cmds.Get(_i) ? m_cmds.Get(_i)->Get() : ""; }
 	void SetCmd(WDL_FastString* _cmd, const char* _newCmd);
 	WDL_FastString* AddCmd(const char* _cmd, int _pos = -1);
 	void InsertCmd(int _pos, WDL_FastString* _cmd) { m_cmds.Insert(_pos, _cmd); UpdateFromCmd(); }
-	void RemoveCmd(WDL_FastString* _cmd, bool _wantDelete=false) { m_cmds.Delete(m_cmds.Find(_cmd), _wantDelete); UpdateFromCmd(); }
+	void RemoveCmd(WDL_FastString* _cmd, bool _wantDelete=false);
+	void ReplaceCmd(WDL_FastString* _cmd, bool _wantDelete=false, WDL_PtrList<WDL_FastString>* _newCmds = NULL);
 	WDL_FastString* GetCmdString(int _i) { return m_cmds.Get(_i); }
 	int FindCmd(WDL_FastString* _cmd) { return m_cmds.Find(_cmd); }
 
 //JFB TODO? protected?
 	WDL_FastString m_desc; 
 	int m_performState;
-	bool m_added;
+	int m_cmdId; // should only be used only once the cycle action is registered
+	bool m_added, m_fakeToggle;
 
 private:
 	void UpdateNameAndCmds();
 	void UpdateFromCmd();
 	
 	WDL_FastString m_name;
-	bool m_empty;
 	WDL_PtrList_DeleteOnDestroy<WDL_FastString> m_cmds;
 };
 
@@ -130,10 +143,15 @@ protected:
 	void OnItemSelChanged(SWS_ListItem* item, int iState);
 };
 
-int RegisterCyclation(const char* _name, bool _toggle, int _type, int _cycleId, int _cmdId);
+int ExplodeCmd(int _section, const char* _cmdStr, WDL_PtrList<WDL_FastString>* _cmds, WDL_PtrList<WDL_FastString>* _macros, WDL_PtrList<WDL_FastString>* _consoles, int _flags);
+int ExplodeMacro(int _section, const char* _cmdStr, WDL_PtrList<WDL_FastString>* _cmds, WDL_PtrList<WDL_FastString>* _macros, WDL_PtrList<WDL_FastString>* _consoles, int _flags);
+int ExplodeCyclaction(int _section, const char* _cmdStr, WDL_PtrList<WDL_FastString>* _cmds, WDL_PtrList<WDL_FastString>* _macros, WDL_PtrList<WDL_FastString>* _consoles, int _flags, Cyclaction* _action = NULL);
+int ExplodeConsoleAction(int _section, const char* _cmdStr, WDL_PtrList<WDL_FastString>* _cmds, WDL_PtrList<WDL_FastString>* _macros, WDL_PtrList<WDL_FastString>* _consoles, int _flags);
+
+int RegisterCyclation(const char* _name, int _type, int _cycleId, int _cmdId);
 int CyclactionInit();
 void CyclactionExit();
-void OpenCyclactionView(COMMAND_T*);
-int IsCyclactionViewDisplayed(COMMAND_T*);
+void OpenCyclaction(COMMAND_T*);
+int IsCyclactionDisplayed(COMMAND_T*);
 
 #endif

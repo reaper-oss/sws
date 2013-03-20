@@ -1129,7 +1129,7 @@ bool SNM_RegionPlaylistWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut
 void SNM_RegionPlaylistWnd::ToggleLock()
 {
 	g_monitorMode = !g_monitorMode;
-	RefreshToolbar(SWSGetCommandID(ToggleRegionPlaylistMode));
+	RefreshToolbar(SWSGetCommandID(ToggleRegionPlaylistLock));
 	Update();
 }
 
@@ -1917,7 +1917,7 @@ int IsRegionPlaylistDisplayed(COMMAND_T*){
 	return (g_pRgnPlaylistWnd && g_pRgnPlaylistWnd->IsValidWindow());
 }
 
-void ToggleRegionPlaylistMode(COMMAND_T*) {
+void ToggleRegionPlaylistLock(COMMAND_T*) {
 	if (g_pRgnPlaylistWnd)
 		g_pRgnPlaylistWnd->ToggleLock();
 }

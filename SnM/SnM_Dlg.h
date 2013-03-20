@@ -39,8 +39,8 @@ void SNM_SetUIRefresh(COMMAND_T*);
 
 ColorTheme* SNM_GetColorTheme(bool _checkForSize = false);
 IconTheme* SNM_GetIconTheme(bool _checkForSize = false);
+LICE_CachedFont* SNM_GetFont(int _type = 0);
 LICE_CachedFont* SNM_GetThemeFont();
-LICE_CachedFont* SNM_GetFont();
 LICE_CachedFont* SNM_GetToolbarFont();
 void SNM_GetThemeListColors(int* _bg, int* _txt, int* _grid = NULL);
 void SNM_GetThemeEditColors(int* _bg, int* _txt);

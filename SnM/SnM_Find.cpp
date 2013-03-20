@@ -124,7 +124,7 @@ bool TrackNotesMatch(MediaTrack* _tr, const char* _searchStr)
 ///////////////////////////////////////////////////////////////////////////////
 
 SNM_FindWnd::SNM_FindWnd()
-	: SWS_DockWnd(IDD_SNM_FIND, "Find", "SnMFind", SWSGetCommandID(OpenFindView))
+	: SWS_DockWnd(IDD_SNM_FIND, "Find", "SnMFind", SWSGetCommandID(OpenFind))
 {
 	m_type = 0;
 	m_zoomSrollItems = false;
@@ -625,7 +625,7 @@ void SNM_FindWnd::UpdateNotFoundMsg(bool _found)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-int FindViewInit()
+int FindInit()
 {
 	g_pFindWnd = new SNM_FindWnd();
 	if (!g_pFindWnd)
@@ -633,18 +633,18 @@ int FindViewInit()
 	return 1;
 }
 
-void FindViewExit() {
+void FindExit() {
 	DELETE_NULL(g_pFindWnd);
 }
 
-void OpenFindView(COMMAND_T*) {
+void OpenFind(COMMAND_T*) {
 	if (g_pFindWnd) {
 		g_pFindWnd->Show(true, true);
 		SetFocus(GetDlgItem(g_pFindWnd->GetHWND(), IDC_EDIT));
 	}
 }
 
-int IsFindViewDisplayed(COMMAND_T*) {
+int IsFindDisplayed(COMMAND_T*) {
 	return (g_pFindWnd && g_pFindWnd->IsValidWindow());
 }
 

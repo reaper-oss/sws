@@ -35,7 +35,7 @@ class SNM_FindWnd : public SWS_DockWnd
 public:
 	SNM_FindWnd();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
-	void GetMinSize(int* w, int* h) { *w=297; *h=128; }
+	void GetMinSize(int* w, int* h) { *w=297; *h=100; }
 	bool Find(int _mode);
 	MediaItem* FindPrevNextItem(int _dir, MediaItem* _item);
 	bool FindMediaItem(int _dir, bool _allTakes, bool (*jobTake)(MediaItem_Take*,const char*), bool (*jobItem)(MediaItem*,const char*) = NULL);
@@ -58,10 +58,10 @@ protected:
 	bool m_zoomSrollItems;
 };
 
-int FindViewInit();
-void FindViewExit();
-void OpenFindView(COMMAND_T*);
-int IsFindViewDisplayed(COMMAND_T*);
+int FindInit();
+void FindExit();
+void OpenFind(COMMAND_T*);
+int IsFindDisplayed(COMMAND_T*);
 void FindNextPrev(COMMAND_T*);
 
 #endif

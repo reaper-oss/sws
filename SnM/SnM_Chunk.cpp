@@ -216,7 +216,7 @@ bool SNM_FXChainTakePatcher::NotifyEndElement(int _mode,
 	return update;
 }
 
-// _mode: -1 set active ALL takes FX chain, -2 set active take's FX chain, -3 copy active take's FX chain
+// _mode: -1 set all takes FX chain, -2 set active take's FX chain, -3 copy active take's FX chain
 bool SNM_FXChainTakePatcher::NotifyChunkLine(int _mode, 
 	LineParser* _lp, const char* _parsedLine, int _linePos,
 	int _parsedOccurence, WDL_PtrList<WDL_FastString>* _parsedParents, 

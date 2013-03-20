@@ -102,9 +102,9 @@ bool g_internalMkrRgnChange = false;
 
 SNM_NotesHelpWnd::SNM_NotesHelpWnd()
 #ifdef _WIN32
-	: SWS_DockWnd(IDD_SNM_NOTES, __LOCALIZE("Notes/Subtitles/Help","sws_DLG_152"), "SnMNotesHelp", SWSGetCommandID(OpenNotesHelpView))
+	: SWS_DockWnd(IDD_SNM_NOTES, __LOCALIZE("Notes/Subtitles/Help","sws_DLG_152"), "SnMNotesHelp", SWSGetCommandID(OpenNotes))
 #else
-	: SWS_DockWnd(IDD_SNM_NOTES, __LOCALIZE("Notes/Subtitles","sws_DLG_152"), "SnMNotesHelp", SWSGetCommandID(OpenNotesHelpView))
+	: SWS_DockWnd(IDD_SNM_NOTES, __LOCALIZE("Notes/Subtitles","sws_DLG_152"), "SnMNotesHelp", SWSGetCommandID(OpenNotes))
 #endif
 {
 	// must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
@@ -253,7 +253,7 @@ void SNM_NotesHelpWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				ToggleLock();
 			break;
 		case BTNID_ALR:
-			if (!HIWORD(wParam) && *g_lastActionCustId && !IsMacro(g_lastActionDesc))
+			if (!HIWORD(wParam) && *g_lastActionCustId && !IsMacroOrScript(g_lastActionDesc))
 			{
 				char link[256] = "";
 				char sectionURL[SNM_MAX_SECTION_NAME_LEN] = "";
@@ -322,6 +322,7 @@ int SNM_NotesHelpWnd::OnKey(MSG* _msg, int _iKeyState)
 			_msg->hwnd = m_hwnd; // redirect to main window
 			return 0;
 		}
+//JFB!!!!!!!
 		else if ((_msg->message == WM_KEYDOWN || _msg->message == WM_CHAR) &&
 				 _msg->wParam == VK_RETURN)
 		{
@@ -334,6 +335,23 @@ int SNM_NotesHelpWnd::OnKey(MSG* _msg, int _iKeyState)
 			SendMessage(_msg->hwnd, EM_SETSEL, 0, -1); // ctrl+A => select all
 			return 1;
 		}
+/*JFB!!!!!!
+		else if (_msg->message == WM_KEYDOWN || _msg->message == WM_CHAR)
+		{
+			if (_msg->wParam == 'A' && _iKeyState == LVKF_CONTROL)
+			{
+				SetFocus(_msg->hwnd); //JFB!!! works on OSX?? h instead of _msg->hwnd for console & find edit fields
+				SendMessage(_msg->hwnd, EM_SETSEL, 0, -1); // ctrl+A => select all
+				return 1;
+			}
+			else
+//			if (_msg->wParam == VK_RETURN)
+			{
+				_msg->hwnd = h;
+				return -1; // send the return key to the edit control
+			}
+		}
+*/
 	}
 	return 0; 
 }
@@ -524,7 +542,7 @@ bool SNM_NotesHelpWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int
 void SNM_NotesHelpWnd::ToggleLock()
 {
 	g_locked = !g_locked;
-	RefreshToolbar(SWSGetCommandID(ToggleNotesHelpLock));
+	RefreshToolbar(SWSGetCommandID(ToggleNotesLock));
 	if (g_notesViewType == SNM_NOTES_REGION_SUBTITLES || g_notesViewType == SNM_NOTES_REGION_NAME)
 		Update(true); // play vs edit cursor when unlocking
 	else
@@ -569,7 +587,7 @@ void SNM_NotesHelpWnd::SaveCurrentPrjNotes()
 
 void SNM_NotesHelpWnd::SaveCurrentHelp()
 {
-	if (*g_lastActionCustId && !IsMacro(g_lastActionDesc)) {
+	if (*g_lastActionCustId && !IsMacroOrScript(g_lastActionDesc)) {
 		GetDlgItemText(m_hwnd, IDC_EDIT, g_lastText, MAX_HELP_LENGTH);
 		SaveHelp(g_lastActionCustId, g_lastText);
 	}
@@ -722,7 +740,7 @@ int SNM_NotesHelpWnd::UpdateActionHelp()
 			g_lastActionListSel = iSel;
 			if (*g_lastActionCustId && *g_lastActionDesc)
 			{
-				if (IsMacro(g_lastActionDesc))
+				if (IsMacroOrScript(g_lastActionDesc))
 					SetText(g_lastActionCustId);
 				else
 				{
@@ -1322,7 +1340,7 @@ static project_config_extension_t g_projectconfig = {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-int NotesHelpViewInit()
+int NotesInit()
 {
 	lstrcpyn(g_lastImportSubFn, GetResourcePath(), sizeof(g_lastImportSubFn));
 	lstrcpyn(g_lastExportSubFn, GetResourcePath(), sizeof(g_lastExportSubFn));
@@ -1344,7 +1362,7 @@ int NotesHelpViewInit()
 	return 1;
 }
 
-void NotesHelpViewExit()
+void NotesExit()
 {
 	char tmp[4] = "";
 	if (_snprintfStrict(tmp, sizeof(tmp), "%d", g_notesViewType) > 0)
@@ -1360,7 +1378,7 @@ void NotesHelpViewExit()
 	DELETE_NULL(g_pNotesHelpWnd);
 }
 
-void OpenNotesHelpView(COMMAND_T* _ct)
+void OpenNotes(COMMAND_T* _ct)
 {
 	if (g_pNotesHelpWnd)
 	{
@@ -1376,15 +1394,15 @@ void OpenNotesHelpView(COMMAND_T* _ct)
 	}
 }
 
-int IsNotesHelpViewDisplayed(COMMAND_T* _ct) {
+int IsNotesDisplayed(COMMAND_T* _ct) {
 	return (g_pNotesHelpWnd && g_pNotesHelpWnd->IsValidWindow());
 }
 
-void ToggleNotesHelpLock(COMMAND_T*) {
+void ToggleNotesLock(COMMAND_T*) {
 	if (g_pNotesHelpWnd)
 		g_pNotesHelpWnd->ToggleLock();
 }
 
-int IsNotesHelpLocked(COMMAND_T*) {
+int IsNotesLocked(COMMAND_T*) {
 	return g_locked;
 }

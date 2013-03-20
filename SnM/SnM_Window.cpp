@@ -466,7 +466,7 @@ int GetSelectedAction(char* _section, int _secSize, int* _cmdId, char* _id, int 
 						SNM_ListView_GetItemText(hList, i, 4, _id, _idSize);  //JFB displaytodata? (ok: columns not re-orderable yet)
 						if (!*_id)
 						{
-							if (!IsMacro(actionName))
+							if (!IsMacroOrScript(actionName))
 								return (_snprintfStrict(_id, _idSize, "%d", (int)li.lParam)>0 ? i : -1);
 							else
 								return -2;
@@ -510,44 +510,94 @@ bool GetSelectedAction(char* _idstrOut, int _idStrSz, const char* _expectedLocal
 	return true;
 }
 
-// assumes the actions dlg is already opened with the right section!
-bool LearnAction(int _cmdId)
+//JFB!!! moveme > 4.33pre
+void LearnAction(KbdSectionInfo* _section, int _cmdId)
 {
-	if (HWND h = GetReaWindowByTitle(__localizeFunc("Actions", "DLG_274", 0)))
+	if (CountActionShortcuts && GetActionShortcutDesc && DeleteActionShortcut && DoActionShortcutDialog)
 	{
-		char oldFilter[128] = "";
-		GetWindowText(GetDlgItem(h, 0x52C), oldFilter, sizeof(oldFilter));
-		SendMessage(h, WM_COMMAND, 0xB, 0); // clr filter
-
-		if (HWND hList = (h ? GetDlgItem(h, 0x52B) : NULL))
+		int nbShortcuts = CountActionShortcuts(_section, _cmdId);
+		if (nbShortcuts)
 		{
-			SNM_ListView_SetItemState(hList, -1, 0, LVIS_SELECTED); // clr current sel
-
-			LVITEM li;
-			li.mask = LVIF_PARAM;
-			li.stateMask = LVIS_SELECTED;
-			li.iSubItem = 0;
-			bool found = false;
-			for (int i=0; i < SNM_ListView_GetItemCount(hList); i++)
+			char buf[128] = "";
+			WDL_FastString msg;
+			msg.SetFormatted(256, __LOCALIZE_VERFMT("'%s' is already bound to:","sws_mbox"), kbd_getTextFromCmd(_cmdId, _section));
+			msg.Append("\n");
+			for (int i=0; i<nbShortcuts; i++)
 			{
-				li.iItem = i;
-				SNM_ListView_GetItem(hList, &li);
-				if (_cmdId == (int)li.lParam) {
-					SNM_ListView_SetItemState(hList, i, LVIS_SELECTED, LVIS_SELECTED);
-					found = true;
+				if (GetActionShortcutDesc(_section, _cmdId, i, buf, sizeof(buf)) && *buf) 
+				{
+					msg.Append("   - ");
+					msg.Append(buf);
+					msg.Append("\n");
+				}
+				if (i>=4) // 4 max
+				{
+					msg.Append("   - ");
+					msg.Append(__LOCALIZE("etc...","sws_mbox"));
+					msg.Append("\n");
+					break;
 				}
 			}
 
-			// trigger the add (learn) button
-			if (found)
+			msg.Append("\n");
+			msg.Append(nbShortcuts>1 ? __LOCALIZE("Do you want to replace those bindings?","sws_mbox") : __LOCALIZE("Do you want to replace this binding?","sws_mbox"));
+			msg.Append("\n");
+			msg.Append(__LOCALIZE("Note: replying 'No' will add a new binding.","sws_mbox"));
+
+			switch (MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("S&M - Confirmation","sws_mbox"), MB_YESNOCANCEL))
 			{
-				SendMessage(h, WM_COMMAND, 0x8, 0);
-				SetWindowText(GetDlgItem(h, 0x52C), oldFilter); // restore filter
-//				SendMessage(h, WM_CLOSE, 0, 0);
+				case IDYES:
+					for (int i=nbShortcuts-1; i>=0; i--)
+						DeleteActionShortcut(_section, _cmdId, i);
+					nbShortcuts = CountActionShortcuts(_section, _cmdId);
+					break;
+				case IDNO: break;
+				default: return;
+			}
+		}
+		DoActionShortcutDialog(_section, _cmdId, nbShortcuts);
+	}
+	 //JFB!!! removeme > 4.33pre
+	else
+	{
+		HWND h = GetReaWindowByTitle(__localizeFunc("Actions", "DLG_274", 0));
+		if (!h)
+			ShowActionList(&g_SNM_Section, NULL);
+		if (h = GetReaWindowByTitle(__localizeFunc("Actions", "DLG_274", 0)))
+		{
+			char oldFilter[128] = "";
+			GetWindowText(GetDlgItem(h, 0x52C), oldFilter, sizeof(oldFilter));
+			SendMessage(h, WM_COMMAND, 0xB, 0); // clr filter
+
+			if (HWND hList = (h ? GetDlgItem(h, 0x52B) : NULL))
+			{
+				SNM_ListView_SetItemState(hList, -1, 0, LVIS_SELECTED); // clr current sel
+
+				LVITEM li;
+				li.mask = LVIF_PARAM;
+				li.stateMask = LVIS_SELECTED;
+				li.iSubItem = 0;
+				bool found = false;
+				for (int i=0; i < SNM_ListView_GetItemCount(hList); i++)
+				{
+					li.iItem = i;
+					SNM_ListView_GetItem(hList, &li);
+					if (_cmdId == (int)li.lParam) {
+						SNM_ListView_SetItemState(hList, i, LVIS_SELECTED, LVIS_SELECTED);
+						found = true;
+					}
+				}
+
+				// trigger the add (learn) button
+				if (found)
+				{
+					SendMessage(h, WM_COMMAND, 0x8, 0);
+					SetWindowText(GetDlgItem(h, 0x52C), oldFilter); // restore filter
+	//				SendMessage(h, WM_CLOSE, 0, 0);
+				}
 			}
 		}
 	}
-	return false;
 }
 
 // dump actions or the wiki ALR summary for the current section *as displayed* in the action dlg 
@@ -604,7 +654,7 @@ bool DumpActionList(int _type, const char* _title, const char* _lineFormat, cons
 				SNM_ListView_GetItemText(hList, i, 1, cmdName, SNM_MAX_ACTION_NAME_LEN);
 				SNM_ListView_GetItemText(hList, i, 4, custId, SNM_MAX_ACTION_CUSTID_LEN);
 
-				bool isMacro = IsMacro(cmdName);
+				bool isMacro = IsMacroOrScript(cmdName);
 				int isSws = IsSwsAction(cmdName);
 				bool isSwsMacro = !IsLocalizableAction(custId);
 				if (((_type==1||_type==3) && !isSws && !isMacro && !isSwsMacro) || 

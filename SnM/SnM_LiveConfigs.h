@@ -119,6 +119,7 @@ class SNM_LiveConfigMonitorWnd : public SWS_DockWnd {
 public:
 	SNM_LiveConfigMonitorWnd(int _cfgId);
 	void Update(int _whatFlags, int _commitFlags);
+	SNM_FiveMonitors* GetMonitors() { return &m_mons; }
 protected:
 	void OnInitDlg();
 	void OnDestroy();
@@ -170,10 +171,10 @@ public:
 };
 
 
-int LiveConfigViewInit();
-void LiveConfigViewExit();
-void OpenLiveConfigView(COMMAND_T*);
-int IsLiveConfigViewDisplayed(COMMAND_T*);
+int LiveConfigInit();
+void LiveConfigExit();
+void OpenLiveConfig(COMMAND_T*);
+int IsLiveConfigDisplayed(COMMAND_T*);
 
 void ApplyLiveConfig(int _cfgId, int _val, int _valhw, int _relmode, HWND _hwnd, bool _immediate = false);
 void PreloadLiveConfig(int _cfgId, int _val, int _valhw, int _relmode, HWND _hwnd, bool _immediate = false);

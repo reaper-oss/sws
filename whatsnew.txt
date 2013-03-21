@@ -1,4 +1,4 @@
-﻿Cycle Actions (CAs)
+Cycle Actions (CAs)
 +Improved timing when performing CAs
 +Issue 550: CAs can now contain <i>other</i> CAs, recursively
 +The character comma (,) can now be used in CONSOLE instructions
@@ -11,8 +11,8 @@
 +Editor: properly display MIDI action names (with REAPER >= v4.33pre16)
 +Editor: new menu items to cut/copy/paste commands (works accross CAs)
 +Editor: new menu item to explode CAs, custom actions (i.e. macros) and ReaConsole actions into individual actions
- This simplifies/helps to export/share such actions with other users (because <i>your</i> action IDs would not work for them, so before this version you had to
- share other files like .ReaperKeyMap, etc.. Now, thanks to the "explode" feature, you just have to export a file where all CAs are "exploded")
+ This simplifies/helps to export/share such actions with other users (before this version you had to share
+ other files like .ReaperKeyMap, etc.. Now, you just have to export a file where all CAs have been "exploded")
 +Editor tweaks: added CA text filter, more helpful messages (again), etc...
 +Fixed missing undo points for CONSOLE commands (when the option "Consolidate undo points" was disabled)
 +Removed tooltips updates for toolbar buttons (not sure anyone ever used this)
@@ -44,12 +44,13 @@ Other:
 +S&M project startup actions: tweaks to support theme switching on project load (details http://forum.cockos.com/showpost.php?p=1140973&postcount=18|here|)
 
 Fixes:
++OSX 10.7/S&M Notes window: fixed refresh issues, thanks chriscomfort!
++OSX 10.7+ x64: fixed list views being right aligned
 +All S&M windows: fixed button display for some themes (e.g. http://forum.cockos.com/showpost.php?p=1124199&postcount=169|Apollo theme|)
 +Fixed action "SWS/S&M: Open project path in explorer/finder"
  This action was opening the project's parent folder, not the project's folder
 +About box: fixed disabled button in update checker in certain instances
 +ReaMote: fixed unexpected "Version Incompatibility" error message
-+OSX 10.7+ x64: fixed list views being right aligned
 
 !v2.3.0 #13 (February 2, 2013)
 Cycle Action editor updates

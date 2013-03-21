@@ -157,15 +157,10 @@ public:
 	void Perform();
 };
 
-class LiveConfigsUndoJob : public SNM_ScheduledJob {
-public:
-	LiveConfigsUndoJob() : SNM_ScheduledJob(SNM_SCHEDJOB_LIVECFG_UNDO, SNM_SCHEDJOB_DEFAULT_DELAY) {}
-	void Perform();
-};
-
 class LiveConfigsUpdateFadeJob : public SNM_ScheduledJob {
 public:
-	LiveConfigsUpdateFadeJob(int _value) : SNM_ScheduledJob(SNM_SCHEDJOB_LIVECFG_FADE_UPDATE, SNM_SCHEDJOB_DEFAULT_DELAY), m_value(_value) {}
+	LiveConfigsUpdateFadeJob(int _value) 
+		: SNM_ScheduledJob(SNM_SCHEDJOB_LIVECFG_FADE_UPDATE, SNM_SCHEDJOB_DEFAULT_DELAY), m_value(_value) {}
 	void Perform();
 	int m_value;
 };

@@ -139,13 +139,14 @@
 #define SNM_SCHEDJOB_LIVECFG_PRELOAD		SNM_SCHEDJOB_LIVECFG_APPLY + SNM_LIVECFG_NB_CONFIGS
 #define SNM_SCHEDJOB_LIVECFG_UPDATE			SNM_SCHEDJOB_LIVECFG_PRELOAD + SNM_LIVECFG_NB_CONFIGS
 #define SNM_SCHEDJOB_LIVECFG_FADE_UPDATE	SNM_SCHEDJOB_LIVECFG_UPDATE + 1
-#define SNM_SCHEDJOB_LIVECFG_UNDO			SNM_SCHEDJOB_LIVECFG_FADE_UPDATE + 1
-#define SNM_SCHEDJOB_NOTEHLP_UPDATE			SNM_SCHEDJOB_LIVECFG_UNDO + 1
-#define SNM_SCHEDJOB_SEL_PRJ				SNM_SCHEDJOB_NOTEHLP_UPDATE + 1
+#define SNM_SCHEDJOB_UNDO					SNM_SCHEDJOB_LIVECFG_FADE_UPDATE + 1
+#define SNM_SCHEDJOB_NOTES_UPDATE			SNM_SCHEDJOB_UNDO + 1
+#define SNM_SCHEDJOB_SEL_PRJ				SNM_SCHEDJOB_NOTES_UPDATE + 1
 #define SNM_SCHEDJOB_TRIG_PRESET			SNM_SCHEDJOB_SEL_PRJ + 1
 #define SNM_SCHEDJOB_CYCLACTION				SNM_SCHEDJOB_TRIG_PRESET + 1
 #define SNM_SCHEDJOB_PLAYLIST_UPDATE		SNM_SCHEDJOB_CYCLACTION + 1
 #define SNM_SCHEDJOB_PRJ_ACTION				SNM_SCHEDJOB_PLAYLIST_UPDATE + 1
+#define SNM_SCHEDJOB_OSX_FIX				SNM_SCHEDJOB_PRJ_ACTION + 1
 
 
 /*JFB replaced with a common SWS_CMD_SHORTNAME()
@@ -167,6 +168,19 @@ public:
 	virtual void Perform() {}
 	int m_id, m_tick;
 	bool m_isPerforming;
+};
+
+// avoid undo points flooding
+// i.e. async undo, somehow => handle with care!
+class UndoJob : public SNM_ScheduledJob {
+public:
+	UndoJob(const char* _desc, int _flags, int _tr = -1) 
+		: SNM_ScheduledJob(SNM_SCHEDJOB_UNDO, SNM_SCHEDJOB_DEFAULT_DELAY), 
+		m_desc(_desc), m_flags(_flags), m_tr(_tr) {}
+	void Perform() { Undo_OnStateChangeEx2(NULL, m_desc, m_flags, m_tr); }
+private:
+	const char* m_desc;
+	int m_flags, m_tr;
 };
 
 class SNM_MidiActionJob : public SNM_ScheduledJob {

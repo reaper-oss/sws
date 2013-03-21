@@ -1015,25 +1015,25 @@ void AddOrReplaceScheduledJob(SNM_ScheduledJob* _job)
 			if (job->m_id == _job->m_id)
 			{
 				found = true;
-				if (!job->m_isPerforming)
-				{
-					g_jobs.Set(i, _job);
+		if (!job->m_isPerforming)
+		{
+			g_jobs.Set(i, _job);
 #ifdef _SNM_DEBUG
-					char dbg[256]="";
-					_snprintfSafe(dbg, sizeof(dbg), "AddOrReplaceScheduledJob() - Replaced SNM_ScheduledJob id: %d\n", _job->m_id);
-					OutputDebugString(dbg);
+			char dbg[256]="";
+			_snprintfSafe(dbg, sizeof(dbg), "AddOrReplaceScheduledJob() - Replaced SNM_ScheduledJob id: %d\n", _job->m_id);
+			OutputDebugString(dbg);
 #endif
-					DELETE_NULL(job);
-				}
-				else
-				{
+			DELETE_NULL(job);
+		}
+		else
+		{
 #ifdef _SNM_DEBUG
-					char dbg[256]="";
-					_snprintfSafe(dbg, sizeof(dbg), "AddOrReplaceScheduledJob() - Ignored SNM_ScheduledJob id: %d\n", _job->m_id);
-					OutputDebugString(dbg);
+			char dbg[256]="";
+			_snprintfSafe(dbg, sizeof(dbg), "AddOrReplaceScheduledJob() - Ignored SNM_ScheduledJob id: %d\n", _job->m_id);
+			OutputDebugString(dbg);
 #endif
-					DELETE_NULL(_job);
-				}
+			DELETE_NULL(_job);
+		}
 				break;
 			}
 
@@ -1311,10 +1311,10 @@ void SNM_LocalOscCallback(void* _obj, const char* _msg, int _msglen)
 // - /track/1/fx/1/preset "My Preset"
 // - /track/1/fx/1,2/fxparam/1,1/value 0.25 0.5
 // notes: 
-// 1) API OscLocalMessageToHost() no used here because there is no way to
-//    manage osc messages with string args
-// 2) REAPER BUG? Using a global var for the handler + DestroyLocalOscHandler()
-//    in SNM_Exit() crashes REAPER  (v4.32)
+// 1) API OscLocalMessageToHost() not used here because 
+//    there is no way to manage osc messages with string args
+// 2) REAPER BUG? Using a global var for the handler + calling 
+//    DestroyLocalOscHandler() in SNM_Exit() crashes REAPER (v4.32)
 bool SNM_SendLocalOscMessage(const char* _oscMsg)
 {
 	if (!_oscMsg)

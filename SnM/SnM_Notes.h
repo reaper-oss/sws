@@ -30,6 +30,9 @@
 #ifndef _SNM_NOTES_H_
 #define _SNM_NOTES_H_
 
+
+#define NOTES_UPDATE_FREQ		150
+
 enum
 {
   SNM_NOTES_PROJECT=0,
@@ -57,9 +60,18 @@ public:
 
 class NotesUpdateJob : public SNM_ScheduledJob {
 public:
-	NotesUpdateJob() : SNM_ScheduledJob(SNM_SCHEDJOB_NOTEHLP_UPDATE, 150) {}
+	NotesUpdateJob() : SNM_ScheduledJob(SNM_SCHEDJOB_NOTES_UPDATE, NOTES_UPDATE_FREQ) {}
 	void Perform();
 };
+
+// fix/workaround (a SWELL bug?)
+#ifndef _WIN32
+class OSXForceTxtChangeJob : public SNM_ScheduledJob {
+public:
+	OSXForceTxtChangeJob() : SNM_ScheduledJob(SNM_SCHEDJOB_OSX_FIX, 50) {} // ~fast enough to follow key strokes 
+	void Perform();
+};
+#endif
 
 class NotesMarkerRegionSubscriber : public SNM_MarkerRegionSubscriber {
 public:

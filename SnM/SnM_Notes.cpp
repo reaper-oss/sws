@@ -45,7 +45,6 @@
 #define MAX_HELP_LENGTH				4096 //JFB instead of MAX_INI_SECTION (too large)
 #define SET_ACTION_HELP_FILE_MSG	0xF001
 #define UPDATE_TIMER				1
-#define UPDATE_FREQ					150
 
 enum {
   BTNID_LOCK=2000, //JFB would be great to have _APS_NEXT_CONTROL_VALUE *always* defined
@@ -163,7 +162,7 @@ void SNM_NotesHelpWnd::OnInitDlg()
 /* see OnTimer()
 	RegisterToMarkerRegionUpdates(&m_mkrRgnSubscriber);
 */
-	SetTimer(m_hwnd, UPDATE_TIMER, UPDATE_FREQ, NULL);
+	SetTimer(m_hwnd, UPDATE_TIMER, NOTES_UPDATE_FREQ, NULL);
 }
 
 void SNM_NotesHelpWnd::OnDestroy() 
@@ -243,7 +242,7 @@ void SNM_NotesHelpWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 	{
 		case IDC_EDIT:
 			if (HIWORD(wParam)==EN_CHANGE)
-				SaveCurrentText(g_notesViewType); // + undo
+				SaveCurrentText(g_notesViewType); // include undo
 			break;
 		case SET_ACTION_HELP_FILE_MSG:
 			SetActionHelpFilename(NULL);
@@ -302,6 +301,14 @@ HMENU SNM_NotesHelpWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 	return NULL;
 }
 
+// fix/workaround (a SWELL bug?)
+#ifndef _WIN32
+void OSXForceTxtChangeJob::Perform() {
+	if (g_pNotesHelpWnd)
+		SendMessage(g_pNotesHelpWnd->GetHWND(), WM_COMMAND, MAKEWPARAM(IDC_EDIT, EN_CHANGE), 0);
+}
+#endif
+
 // returns: 
 // -1: catch and send to the control, 
 //  0: pass-thru to main window (then -666 in SWS_DockWnd::keyHandler())
@@ -322,36 +329,27 @@ int SNM_NotesHelpWnd::OnKey(MSG* _msg, int _iKeyState)
 			_msg->hwnd = m_hwnd; // redirect to main window
 			return 0;
 		}
-//JFB!!!!!!!
-		else if ((_msg->message == WM_KEYDOWN || _msg->message == WM_CHAR) &&
-				 _msg->wParam == VK_RETURN)
-		{
-			return -1; // send the return key to the edit control
-		}
-		else if ((_msg->message == WM_KEYDOWN || _msg->message == WM_CHAR) &&
-				 _msg->wParam == 'A' && _iKeyState == LVKF_CONTROL)
-		{
-			SetFocus(_msg->hwnd);
-			SendMessage(_msg->hwnd, EM_SETSEL, 0, -1); // ctrl+A => select all
-			return 1;
-		}
-/*JFB!!!!!!
 		else if (_msg->message == WM_KEYDOWN || _msg->message == WM_CHAR)
 		{
+			// ctrl+A => select all
 			if (_msg->wParam == 'A' && _iKeyState == LVKF_CONTROL)
 			{
-				SetFocus(_msg->hwnd); //JFB!!! works on OSX?? h instead of _msg->hwnd for console & find edit fields
-				SendMessage(_msg->hwnd, EM_SETSEL, 0, -1); // ctrl+A => select all
+				SetFocus(h);
+				SendMessage(h, EM_SETSEL, 0, -1);
 				return 1;
 			}
 			else
-//			if (_msg->wParam == VK_RETURN)
+#ifdef _WIN32
+			if (_msg->wParam == VK_RETURN)
+				return -1; // send the return key to the edit control
+#else
 			{
-				_msg->hwnd = h;
+				if (!IsDocked()) // fix/workaround (a SWELL bug?) : EN_CHANGE not sent when undocked
+					AddOrReplaceScheduledJob(new OSXForceTxtChangeJob());
 				return -1; // send the return key to the edit control
 			}
+#endif
 		}
-*/
 	}
 	return 0; 
 }
@@ -389,7 +387,7 @@ void SNM_NotesHelpWnd::OnResize()
 	if (g_notesViewType != g_prevNotesViewType)
 	{
 		if (g_notesViewType == SNM_NOTES_REGION_SUBTITLES || g_notesViewType == SNM_NOTES_ACTION_HELP)
-			m_resize.get_item(IDC_EDIT)->orig.bottom = m_resize.get_item(IDC_EDIT)->real_orig.bottom - 41; // 41 is tied to the current .rc!
+			m_resize.get_item(IDC_EDIT)->orig.bottom = m_resize.get_item(IDC_EDIT)->real_orig.bottom - 41; //JFB!!! 41 is tied to the current .rc!
 		else
 			m_resize.get_item(IDC_EDIT)->orig = m_resize.get_item(IDC_EDIT)->real_orig;
 		InvalidateRect(m_hwnd, NULL, 0);
@@ -639,7 +637,7 @@ void SNM_NotesHelpWnd::SaveCurrentMkrRgnNameOrNotes(bool _name)
 			{
 				ShortenStringToFirstRN(g_lastText);
 
-				// track marker/region name updates that will lead to reentrance notifs
+				// track marker/region name update => reentrant notif
 				// via SNM_MarkerRegionSubscriber.NotifyMarkerRegionUpdate()
 				g_internalMkrRgnChange = true;
 
@@ -678,7 +676,7 @@ void SNM_NotesHelpWnd::Update(bool _force)
 	if (bRecurseCheck)
 		return;
 
-	bRecurseCheck = true; 
+	bRecurseCheck = true;
 
 	// force refresh if needed
 	if (_force || g_notesViewType != g_prevNotesViewType)

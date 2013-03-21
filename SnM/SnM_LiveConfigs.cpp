@@ -1236,12 +1236,12 @@ INT_PTR SNM_LiveConfigsWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lPar
 				case KNBID_CC_DELAY:
 					lc->m_ccDelay = m_knobCC.GetSliderPosition();
 					m_vwndCC.SetValue(lc->m_ccDelay);
-					AddOrReplaceScheduledJob(new LiveConfigsUndoJob());
+					AddOrReplaceScheduledJob(new UndoJob(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG));
 					break;
 				case KNBID_FADE:
 					lc->m_fade = m_knobFade.GetSliderPosition();
 					m_vwndFade.SetValue(lc->m_fade);
-					AddOrReplaceScheduledJob(new LiveConfigsUndoJob());
+					AddOrReplaceScheduledJob(new UndoJob(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG));
 					AddOrReplaceScheduledJob(new LiveConfigsUpdateFadeJob(lc->m_fade));
 					break;
 			}
@@ -1684,11 +1684,6 @@ void LiveConfigsUpdateJob::Perform()
 	}
 }
 
-
-// avoid undo points flooding
-void LiveConfigsUndoJob::Perform() {
-	Undo_OnStateChangeEx2(NULL, SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
-}
 
 // moderate write access to reaper.ini
 void LiveConfigsUpdateFadeJob::Perform() {

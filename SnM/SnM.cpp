@@ -312,7 +312,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Delete active take and source file in selected items (prompt, no undo)" }, "S&M_DELTAKEANDFILE3", DeleteTakeAndMedia, NULL, 3},
 	{ { DEFACCEL, "SWS/S&M: Delete active take and source file in selected items (no undo)" }, "S&M_DELTAKEANDFILE4", DeleteTakeAndMedia, NULL, 4},
 
-	// Notes/Subs/Help --------------------------------------------------------
+	// Notes ------------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Open/close Notes window" }, "S&M_SHOW_NOTES_VIEW", OpenNotes, NULL, -1, IsNotesDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (project notes)" }, "S&M_SHOWNOTESHELP", OpenNotes, NULL, SNM_NOTES_PROJECT, IsNotesDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (item notes)" }, "S&M_ITEMNOTES", OpenNotes, NULL, SNM_NOTES_ITEM, IsNotesDisplayed},

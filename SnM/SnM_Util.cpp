@@ -116,7 +116,7 @@ bool FileOrDirExists(const char* _fn)
 		if (const char* p = strrchr(_fn, PATH_SLASH_CHAR)) // valid absolute path (2/2)?
 		{
 			WDL_FastString fn;
-			fn.Set(_fn, *(p+1)? 0 : p-_fn); // // bug fix for directories, skip last PATH_SLASH_CHAR if needed
+			fn.Set(_fn, *(p+1)? 0 : (int)(p-_fn)); // // bug fix for directories, skip last PATH_SLASH_CHAR if needed
 			struct stat s;
 #ifdef _WIN32
 			return (statUTF8(fn.Get(), &s) == 0);
@@ -847,7 +847,7 @@ int GetMacroOrScript(const char* _customId, int _sectionUniqueId, WDL_PtrList<WD
 						{
 							WDL_FastString* cmd = new WDL_FastString;
 							const char* p = FindFirstRN(lp.gettoken_str(i)); // there are some "\r\n" sometimes
-							cmd->Set(lp.gettoken_str(i), p ? p-lp.gettoken_str(i) : 0);
+							cmd->Set(lp.gettoken_str(i), p ? (int)(p-lp.gettoken_str(i)) : 0);
 							_outCmds->Add(new WDL_FastString(cmd));
 						}
 					}

@@ -1,4 +1,4 @@
-Cycle Actions (CAs)
+﻿Cycle Actions (CAs)
 +Improved timing when performing CAs
 +Issue 550: CAs can now contain <i>other</i> CAs, recursively
 +The character comma (,) can now be used in CONSOLE instructions
@@ -24,18 +24,11 @@ Live Configs
 +Monitoring windows: clicking in the "CURRENT" panel shows/hides the "PRELOAD" one, improved redraw
 +Fixed Cut command and corner-cases
 
-Snapshot improvements:
-+Added Previous and Next buttons for navigating snapshots 
- =>added associated actions for assigning hotkeys.
-+Added Move Up & Down buttons for re-ordering snapshots list.
- =>also added actions
-+Added Notes field
- =>Including details view, import, export, save, & load.
- =>Limited to 100 characters.
- =>Not completely backwards compatible with previously saved snapshots that have no notes
- -the date is junk and the timestamp ends up in the notes field
- -all other parameters load normally 
-+Changed the way snapshots are deleted so the sort column remains continuously numbered.
+Snapshot improvements: (Thanks for the contributions, Chris!)
++Added Previous and Next buttons for navigating snapshots and added associated actions
++Added Move Up & Down buttons for re-ordering snapshots list and added similar actions
++Added Notes field (limited to 100 characters)
++Changed the way snapshots are deleted so the sort column remains continuously numbered
 
 Added actions:
 +Issue 543: SWS/S&M: Go to/select region n (obeys smooth seek)

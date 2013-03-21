@@ -683,6 +683,7 @@ Snapshot::Snapshot(const char* chunk)
 	LineParser lp(false);
 	TrackSnapshot* ts = NULL;
 	m_cName = NULL;
+	m_cNotes = NULL;
 
 	while(GetChunkLine(chunk, line, 4096, &pos, false))
 	{
@@ -692,13 +693,13 @@ Snapshot::Snapshot(const char* chunk)
 		if (strcmp(lp.gettoken_str(0), "<SWSSNAPSHOT") == 0)
 		{
 			m_time = 0;
-			if (lp.getnumtokens() == 7) //potential here for confusion...previously saved SS's sans notes might not load
+			if (lp.getnumtokens() == 6 && isdigit(lp.gettoken_str(5)[0])) // Old-style time, convert
 			{
 		#ifdef _WIN32
 				FILETIME ft;
 				SYSTEMTIME st;
-				ft.dwHighDateTime = strtoul(lp.gettoken_str(5), NULL, 10);
-				ft.dwLowDateTime  = strtoul(lp.gettoken_str(6), NULL, 10);
+				ft.dwHighDateTime = strtoul(lp.gettoken_str(4), NULL, 10);
+				ft.dwLowDateTime  = strtoul(lp.gettoken_str(5), NULL, 10);
 				FileTimeToSystemTime(&ft, &st);
 				struct tm pt;
 				pt.tm_sec  = st.wSecond;
@@ -712,12 +713,15 @@ Snapshot::Snapshot(const char* chunk)
 		#endif
 			}
 			else
-				m_time = lp.gettoken_int(5);
+				m_time = lp.gettoken_int(4);
 
 			m_iSlot = lp.gettoken_int(2);
 			m_iMask = lp.gettoken_int(3);
 			SetName(lp.gettoken_str(1));
-			SetNotes(lp.gettoken_str(4));
+			if (!isdigit(lp.gettoken_str(5)[0])) // Don't set the notes to old-format time
+				SetNotes(lp.gettoken_str(5));
+			else
+				SetNotes("");
 		}
 		else if (strcmp("TRACK", lp.gettoken_str(0)) == 0 || strcmp("<TRACK", lp.gettoken_str(0)) == 0)
 		{
@@ -952,14 +956,10 @@ void Snapshot::SetName(const char* name)
 void Snapshot::SetNotes(const char* notes)
 {
 	delete [] m_cNotes;
-	if (notes)
-	{
-		m_cNotes = new char[strlen(notes)+1];
-		strcpy(m_cNotes, notes);
-	} else {
-		m_cNotes = new char[0];
-		strcpy(m_cNotes,"");
-	}
+	if (!notes)
+		notes = "";
+	m_cNotes = new char[strlen(notes)+1];
+	strcpy(m_cNotes, notes);
 }
 
 void Snapshot::AddSelTracks()
@@ -1058,7 +1058,9 @@ char* Snapshot::GetTimeString(char* str, int iStrMax, bool bDate)
 // Get chunk for writing out
 void Snapshot::GetChunk(WDL_FastString* chunk)
 {
-	chunk->SetFormatted(chunk->GetLength()+100, "<SWSSNAPSHOT \"%s\" %d %d \"%s\" %d\n", m_cName, m_iSlot, m_iMask, m_cNotes, m_time);
+	WDL_FastString notes;
+	makeEscapedConfigString(m_cNotes, &notes);
+	chunk->SetFormatted(chunk->GetLength()+100, "<SWSSNAPSHOT \"%s\" %d %d %d %s\n", m_cName, m_iSlot, m_iMask, m_time, notes.Get());
 	for (int i = 0; i < m_tracks.GetSize(); i++)
 		m_tracks.Get(i)->GetChunk(chunk);
 	chunk->Append(">\n");

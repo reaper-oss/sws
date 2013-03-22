@@ -877,7 +877,7 @@ void SNM_ResourceWnd::OnInitDlg()
 	m_btnOffsetTrTemplate.SetID(BTNID_OFFSET_TR_TEMPLATE);
 	m_parentVwnd.AddChild(&m_btnOffsetTrTemplate);
 
-	// restores the text filter when docking/undocking + indirect call to Update() !
+	// restores the text filter when docking/undocking + indirect call to Update()
 	SetDlgItemText(m_hwnd, IDC_FILTER, g_filter.Get());
 
 /* see above comment

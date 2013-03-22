@@ -110,11 +110,12 @@ bool g_undos = true; // consolidate undo points
 
 ///////////////////////////////////////////////////////////////////////////////
 // Explode functions with common properties:
+// IMPORTANT: those funcs must assume actions are *not* yet registered
 //
-// if _flags&2: return 1st found/valid toggle state (0 or 1)
-//              return -1 otherwise (no valid toggle state found)
-// otherwise:   in these cases, funcs must NOT assume actions are registered
-//              return -2=err (recursive), -1=err (other), 1/0=exploded or not
+// return values:
+// if _flags&2: 1st found/valid toggle state (0 or 1)
+//              -1 otherwise (no valid toggle state found)
+// otherwise:   -2=err (recursive), -1=err (other), 1/0=exploded or not
 //              
 // _flags: &1=perform
 //         &2=get 1st toggle state
@@ -143,8 +144,8 @@ bool CheckRecursive(const char* _cmdStr, WDL_PtrList<WDL_FastString>* _parentCmd
 
 // _cmdStr: custom id to explode, only the "underscore format" is supported here, e.g. "_bla"
 int ExplodeCmd(int _section, const char* _cmdStr,
-	WDL_PtrList<WDL_FastString>* _cmds, WDL_PtrList<WDL_FastString>* _macros, WDL_PtrList<WDL_FastString>* _consoles,
-	int _flags)
+	WDL_PtrList<WDL_FastString>* _cmds, WDL_PtrList<WDL_FastString>* _macros, 
+	WDL_PtrList<WDL_FastString>* _consoles, int _flags)
 {
 	if (_cmdStr && *_cmdStr)
 	{
@@ -183,14 +184,27 @@ int ExplodeCmd(int _section, const char* _cmdStr,
 // assumes _cmdStr is indeed a macro/script's custom id (and nothing else)
 // _cmdStr: custom id to explode, both formats are allowed: "bla" and "_bla"
 int ExplodeMacro(int _section, const char* _cmdStr,
-	WDL_PtrList<WDL_FastString>* _cmds, WDL_PtrList<WDL_FastString>* _macros, WDL_PtrList<WDL_FastString>* _consoles,
-	int _flags)
+	WDL_PtrList<WDL_FastString>* _cmds, WDL_PtrList<WDL_FastString>* _macros, 
+	WDL_PtrList<WDL_FastString>* _consoles, int _flags)
 {
 	if (_flags&2) return -1; // macros/scripts do not report toggle states
 
+	// safe single lazy init of _macros
+	bool loadOk = true;
+	if (!_macros->GetSize())
+	{
+		loadOk = LoadKbIni(_macros);
+		_macros->Add(new WDL_FastString);
+	}
+
+	if (!loadOk)
+		return -1;
+
 	WDL_PtrList_DeleteOnDestroy<WDL_FastString> subCmds;
 	int r = GetMacroOrScript(_cmdStr, g_SNM_SectionIds[_section], _macros, &subCmds); // incl. optimization for reaper-kb.ini accesses
-	if (r==1) // macro only!
+	if (r==0)
+		return -1;
+	else if (r==1) // macro only!
 	{
 		WDL_FastString* parentCmd = NULL;
 		if (_flags&8)
@@ -211,8 +225,10 @@ int ExplodeMacro(int _section, const char* _cmdStr,
 
 		return 1;
 	}
+
 	if (_cmds)
 		_cmds->Add(new WDL_FastString(_cmdStr));
+
 	return 0;
 }
 
@@ -220,34 +236,32 @@ int ExplodeMacro(int _section, const char* _cmdStr,
 // _cmdStr: custom id to explode, both formats are allowed: "bla" and "_bla"
 // _action: optional (tiny optimiz)
 int ExplodeCyclaction(int _section, const char* _cmdStr, 
-	WDL_PtrList<WDL_FastString>* _cmds, WDL_PtrList<WDL_FastString>* _macros, WDL_PtrList<WDL_FastString>* _consoles, 
-	int _flags, Cyclaction* _action)
+	WDL_PtrList<WDL_FastString>* _cmds, WDL_PtrList<WDL_FastString>* _macros, 
+	WDL_PtrList<WDL_FastString>* _consoles, int _flags, Cyclaction* _action)
 {
 	Cyclaction* action = _action;
+
+	// trick to avoid NamedCommandLookup() as this CA might not be registered yet
 	if (!action)
-	{
-		// little trick to avoid NamedCommandLookup() as this CA might not be registered yet
-		if (int id = atoi(_cmdStr + (*_cmdStr=='_' ? 1 : 0) + strlen(g_caCustomIds[_section]))) // ok because 1-based
+		if (int id = atoi((const char*)(_cmdStr + (*_cmdStr=='_'?1:0) + strlen(g_caCustomIds[_section])))) // ok because 1-based
 			action = g_cas[_section].Get(id-1); 
-	}
 
 	if (!action) // ignore action->m_cmdId: this CA might not be registered yet
 		return -1;
 
 	if (_flags&2)
-	{
 		switch(action->IsToggle())
 		{
 			case 1: return action->m_fakeToggle ? 1 : 0; 
 			case 2: /* real toggle state: requires explosion, see below */ break;
 			default: return -1;
 		}
-	}
 
 	WDL_FastString* parentCmd = NULL;
 	if (_flags&8)
 	{
-		if (!CheckRecursive(_cmdStr, _cmds)) return -2;
+		if (!CheckRecursive(_cmdStr, _cmds))
+			return -2;
 		parentCmd = new WDL_FastString(_cmdStr);
 		_cmds->Add(parentCmd);
 	}
@@ -258,8 +272,10 @@ int ExplodeCyclaction(int _section, const char* _cmdStr,
 		int r;
 		for (int i=0; i<action->GetCmdSize(); i++) {
 			r = ExplodeCmd(_section, action->GetCmd(i), _cmds, _macros, _consoles, _flags); // recursive call
-/*JFB!!!				if (_flags&2) { if (r>=0) return r; }
-			else */ if (r<0) return r;
+/* does not make sense here..
+			if (_flags&2) { if (r>=0) return r; } else
+*/
+			if (r<0) return r;
 		}
 	}
 	// add actions of the current cycle point
@@ -300,14 +316,14 @@ int ExplodeCyclaction(int _section, const char* _cmdStr,
 	if (_flags&8)
 		_cmds->Delete(_cmds->Find(parentCmd), true);
 
-	return _flags&2 ? -1 : 1;//JFB!!! bordel.. pas cohrent avec ExplodeConsoleAction() par ex.
+	return _flags&2 ? -1 : 1; //JFB!!!
 }
 
 // assumes _cmdStr is indeed a console action's custom id (and nothing else)
 // _cmdStr: custom id to explode, both formats are allowed: "bla" and "_bla"
 int ExplodeConsoleAction(int _section, const char* _cmdStr,
-	WDL_PtrList<WDL_FastString>* _cmds, WDL_PtrList<WDL_FastString>* _macros, WDL_PtrList<WDL_FastString>* _consoles,
-	int _flags)
+	WDL_PtrList<WDL_FastString>* _cmds, WDL_PtrList<WDL_FastString>* _macros, 
+	WDL_PtrList<WDL_FastString>* _consoles, int _flags)
 {
 	if (_flags&2) return -1; // console actions do not report toggle states (yet?)
 	if (_flags&8) return 1; // console actions cannot be recursive
@@ -319,27 +335,28 @@ int ExplodeConsoleAction(int _section, const char* _cmdStr,
 		_consoles->Add(new WDL_FastString);
 	}
 
-	if (loadOk)
-	{
-		// little trick to avoid NamedCommandLookup() as this action might not be registered yet
-		int id = atoi(_cmdStr + (*_cmdStr=='_' ? 1 : 0) + strlen("SWSCONSOLE_CUST")); // ok because 1-based
-		if (!id) return -2; else id--; // check + back to 0-based if ok
+	if (!loadOk)
+		return -1;
 
-		if (id<_consoles->GetSize())
-		{
-			if (_cmds)
-			{
-				WDL_FastString* explCmd = new WDL_FastString;
-				explCmd->SetFormatted(256, "%s %s", INSTRUC_CONSOLE, _consoles->Get(id)->Get());
-				_cmds->Add(explCmd);
-			}
-			return 1;
+	// little trick to avoid NamedCommandLookup() as this action might not be registered yet
+	int id = atoi(_cmdStr + (*_cmdStr=='_' ? 1 : 0) + strlen("SWSCONSOLE_CUST")); // ok because 1-based
+	if (!id) return -2; else id--; // check + back to 0-based if ok
+
+	if (id<_consoles->GetSize())
+	{
+		if (_cmds)
+	{
+			WDL_FastString* explCmd = new WDL_FastString;
+			explCmd->SetFormatted(256, "%s %s", INSTRUC_CONSOLE, _consoles->Get(id)->Get());
+			_cmds->Add(explCmd);
 		}
-		// else: fall through
+		return 1;
 	}
+	// else: fall through..
 
 	if (_cmds)
 		_cmds->Add(new WDL_FastString(_cmdStr));
+
 	return 0;
 }
 
@@ -532,9 +549,8 @@ int IsCyclactionEnabled(int _section, COMMAND_T* _ct)
 			// report a real state?
 			if (action->IsToggle()==2)
 			{
-				// no need to explode macros: they do not report any toggle state (v4.32)
 				// no recursion check, etc.. : such faulty cycle actions are not registered
-				int tgl = ExplodeCyclaction(_section, _ct->id, NULL, NULL, NULL, 0x2, action);//JFB!!! macros?
+				int tgl = ExplodeCyclaction(_section, _ct->id, NULL, NULL, NULL, 0x2, action);
 				if (tgl>=0)
 					return tgl;
 			}
@@ -663,9 +679,9 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_PtrList<WDL_F
 						return AppendErrMsg(_section, _a, _applyMsg, str.Get());
 					}
 
-					// must not use SNM_NamedCommandLookup() here
-					//JFB!!! bug with cross CAs?
-					if ((i+1)>=cmdSz || SNM_GetToggleCommandState(NamedCommandLookup(_a->GetCmd(i+1)))<0) {
+					// must not use SNM_NamedCommandLookup() here!
+					if ((i+1)>=cmdSz || SNM_GetToggleCommandState(NamedCommandLookup(_a->GetCmd(i+1)))<0) //JFB!!!
+					{
 						str.SetFormatted(256, __LOCALIZE_VERFMT("%s (or %s) must be followed by an action that reports a toggle state","sws_DLG_161"), INSTRUC_IF, INSTRUC_IFNOT);
 						return AppendErrMsg(_section, _a, _applyMsg, str.Get());
 					}
@@ -750,11 +766,16 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_PtrList<WDL_F
 
 				// recursive check
 				WDL_PtrList_DeleteOnDestroy<WDL_FastString> parentCmds;
-				if (ExplodeCmd(_section, cmd, &parentCmds, _macros, NULL, 0x8) < 0) //JFB!!! NULL!!
+				int err = ExplodeCmd(_section, cmd, &parentCmds, _macros, NULL, 0x8); // NULL: console commands can't be recursive
+				if (err==-1) {
+					str.SetFormatted(256, __LOCALIZE_VERFMT("command ID '%s' not found","sws_DLG_161"), cmd);
+					return AppendErrMsg(_section, _a, _applyMsg, str.Get());
+				}
+				else if (err==-2)
 					return AppendErrMsg(_section, _a, _applyMsg, __LOCALIZE("recursive cycle action (i.e. uses itself)","sws_DLG_161"));
 
 				// cmd ids check (only when applying, when loading pointed actions might not be registered yet)
-				if(_applyMsg && !NamedCommandLookup(cmd))
+				if(_applyMsg && !SNM_NamedCommandLookup(cmd))
 				{
 					str.SetFormatted(256, __LOCALIZE_VERFMT("command ID '%s' not found","sws_DLG_161"), cmd);
 					return AppendErrMsg(_section, _a, _applyMsg, str.Get());
@@ -1899,7 +1920,9 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				{
 					sel = true;
 					WDL_PtrList_DeleteOnDestroy<WDL_FastString> subCmds;
-					if (ExplodeCmd(g_editedSection, selcmd->Get(), &subCmds, &macros, &consoles, 0x4)>0) {
+					if (SNM_NamedCommandLookup(selcmd->Get()) && // actions must be registered for this command
+						ExplodeCmd(g_editedSection, selcmd->Get(), &subCmds, &macros, &consoles, 0x4)>0)
+					{
 						cmdsToDelete.Add(selcmd);
 						g_editedAction->ReplaceCmd(selcmd, false, &subCmds);
 					}

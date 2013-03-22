@@ -64,7 +64,7 @@ public:
 	void Perform();
 };
 
-// fix/workaround (a SWELL bug?)
+// OSX fix/workaround (SWELL bug?)
 #ifndef _WIN32
 class OSXForceTxtChangeJob : public SNM_ScheduledJob {
 public:

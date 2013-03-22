@@ -78,7 +78,6 @@ int SNM_GetToggleCommandState(int _cmdId, KbdSectionInfo* _section = NULL);
 bool LoadKbIni(WDL_PtrList<WDL_FastString>* _out);
 int GetMacroOrScript(const char* _customId, int _sectionUniqueId, WDL_PtrList<WDL_FastString>* _inMacroScripts, WDL_PtrList<WDL_FastString>* _outCmds);
 bool IsMacroOrScript(const char* _cmd, bool _cmdIsName = true);
-bool LoadConsoleCmds(WDL_PtrList<WDL_FastString>* _out);
 bool GetSectionURL(bool _alr, const char* _section, char* _sectionURL, int _sectionURLSize);
 
 #ifdef _SNM_MISC

@@ -540,7 +540,9 @@ void LearnAction(KbdSectionInfo* _section, int _cmdId)
 			}
 
 			msg.Append("\n");
-			msg.Append(nbShortcuts>1 ? __LOCALIZE("Do you want to replace those bindings?","sws_mbox") : __LOCALIZE("Do you want to replace this binding?","sws_mbox"));
+			msg.Append(nbShortcuts>1 ? 
+				__LOCALIZE("Do you want to replace those bindings?","sws_mbox") : 
+				__LOCALIZE("Do you want to replace this binding?","sws_mbox"));
 			msg.Append("\n");
 			msg.Append(__LOCALIZE("Note: replying 'No' will add a new binding.","sws_mbox"));
 
@@ -555,7 +557,7 @@ void LearnAction(KbdSectionInfo* _section, int _cmdId)
 				default: return;
 			}
 		}
-		DoActionShortcutDialog(GetMainHwnd(),_section, _cmdId, nbShortcuts);
+		DoActionShortcutDialog(GetMainHwnd(), _section, _cmdId, nbShortcuts);
 	}
 	 //JFB!!! removeme > 4.33pre
 	else

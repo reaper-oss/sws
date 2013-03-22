@@ -4,14 +4,13 @@ Cycle Actions (CAs)
 +The character comma (,) can now be used in CONSOLE instructions
 +Added instruction ELSE
 +Improved toggle states reporting
- - CAs can now either report fake toggle states (like it was in SWS < v2.3.0 #9) or real ones
-   This ensures transparent upgrades from older SWS/S&M extension versions
-   This toggle state is configurable in the column "Toggle" of the editor, see details http://stash.reaper.fm/15681/S%26M_CAToggleBullets.jpg|here|
+ - CAs can now either report fake toggle states (like it was before v2.3.0 #9) or real ones (i.e. toggle state of the first relevant "sub-action")
+   This ensures transparent upgrades from older versions. This toggle state is configurable in the column "Toggle" of the editor, see details http://stash.reaper.fm/15681/S%26M_CAToggleBullets.jpg|here|.
  - Better initialization for CAs that report real toggle states (i.e. <b>avoid to run some of them one time before they sync properly</b>)
-+Editor: properly display MIDI action names (with REAPER >= v4.33pre16)
++Editor: display MIDI action names (with REAPER >= v4.33pre16)
 +Editor: new menu items to cut/copy/paste commands (works accross CAs)
 +Editor: new menu item to explode CAs, custom actions (i.e. macros) and ReaConsole actions into individual actions
- This simplifies/helps to export/share such actions with other users (before this version you had to share
+ This simplifies/helps exporting/sharing such actions with other users (before this version you had to share
  other files like .ReaperKeyMap, etc.. Now, you just have to export a file where all CAs have been "exploded")
 +Editor tweaks: added CA text filter, more helpful messages (again), etc...
 +Fixed missing undo points for CONSOLE commands (when the option "Consolidate undo points" was disabled)
@@ -19,9 +18,9 @@ Cycle Actions (CAs)
  Note: when the option "Consolidate undo points" is enabled, steps like !blabla or !foo still provide distinct undo point names ("Undo foo", "Undo blabla")
 
 Live Configs
-+Ignore preload over the current track
-+Improved learn: prompt to replace current bindings or to add a new binding (with REAPER >= v4.33pre20)
-+Monitoring windows: clicking in the "CURRENT" panel shows/hides the "PRELOAD" one, improved redraw
++Ignore preload over the current/active track
++Improved action learn: prompt to replace current bindings or to add a new binding (with REAPER >= v4.33pre20)
++Monitoring windows: improved redraw + click the "CURRENT" panel to show/hide the "PRELOAD" one
 +Fixed Cut command and corner-cases
 
 Snapshot improvements: (Thanks for the contributions, Chris!)
@@ -32,7 +31,7 @@ Snapshot improvements: (Thanks for the contributions, Chris!)
 
 Added actions:
 +Issue 543: SWS/S&M: Go to/select region n (obeys smooth seek)
- where 'n' is in [1; 10], http://forum.cockos.com/showthread.php?p=984786#post984786|customizable in the S&M.ini file|, up to 99 actions/regions
+ where 'n' is in [1; 4], http://forum.cockos.com/showthread.php?p=984786#post984786|customizable in the S&M.ini file|, up to 99 actions/regions
 +Issue 307: actions to increase/decrease the metronome volume (by steps of ~ 0.15dB)
  SWS/S&M: Increase metronome volume
  SWS/S&M: Decrease metronome volume
@@ -44,7 +43,7 @@ Other:
 +S&M project startup actions: tweaks to support theme switching on project load (details http://forum.cockos.com/showpost.php?p=1140973&postcount=18|here|)
 
 Fixes:
-+OSX 10.7/S&M Notes window: fixed refresh issues, thanks chriscomfort!
++<b>OSX 10.7+ / S&M Notes window: fixed refresh issues, thanks chriscomfort!</b>
 +OSX 10.7+ x64: fixed list views being right aligned
 +All S&M windows: fixed button display for some themes (e.g. http://forum.cockos.com/showpost.php?p=1124199&postcount=169|Apollo theme|)
 +Fixed action "SWS/S&M: Open project path in explorer/finder"

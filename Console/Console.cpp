@@ -823,34 +823,18 @@ int ConsoleInit()
 	SWSRegisterCommands(g_commandTable);
 
 	// Add custom commands
-	char cBuf[256];
-	strncpy(cBuf, get_ini_file(), 256);
-	char* pC = strrchr(cBuf, PATH_SLASH_CHAR);
-	if (!pC)
-		return 0;
-	strcpy(pC+1, "reaconsole_customcommands.txt");
-	FILE* f = fopenUTF8(cBuf, "r");
-	if (f)
+	WDL_PtrList_DeleteOnDestroy<WDL_FastString> custCmds;
+	if (LoadConsoleCmds(&custCmds))
 	{
-		int i = 1;
-		while(fgets(cBuf, 256, f))
-		{
-			if ((pC = strchr(cBuf, '\n')) != NULL)
-				*pC = 0;
-			if ((pC = strchr(cBuf, '\r')) != NULL) // SWS Jan30 2011 - Fix files that were copied from PC to mac
-				*pC = 0;
-			if (strlen(cBuf) && cBuf[0] != '[' && cBuf[0] != '/')
-			{
-				char cID[BUFFER_SIZE];
-				char cDesc[BUFFER_SIZE];
-				_snprintf(cID, BUFFER_SIZE, "SWSCONSOLE_CUST%d", i++);
-				_snprintf(cDesc, BUFFER_SIZE, __LOCALIZE_VERFMT("SWS: Run console command: %s","sws_actions"), cBuf);
-				SWSRegisterCommandExt(RunConsoleCommand, cID, cDesc, (INT_PTR)_strdup(cBuf), false);
-			}
-		}
-		fclose(f);
+		char id[SNM_MAX_ACTION_CUSTID_LEN];
+		char desc[SNM_MAX_ACTION_NAME_LEN];
+		for (int i=0; i<custCmds.GetSize(); i++)
+			if (custCmds.Get(i) && custCmds.Get(i)->GetLength())
+				if (_snprintfStrict(id, sizeof(id), "SWSCONSOLE_CUST%d", i+1) > 0) {
+					_snprintfSafe(desc, sizeof(desc), __LOCALIZE_VERFMT("SWS: Run console command: %s","sws_actions"), custCmds.Get(i)->Get());
+					SWSRegisterCommandExt(RunConsoleCommand, id, desc, (INT_PTR)_strdup(custCmds.Get(i)->Get()), false);
+				}
 	}
-
 	g_pConsoleWnd = new ReaConsoleWnd();
 	if (!g_pConsoleWnd)
 		return 0;
@@ -860,6 +844,29 @@ int ConsoleInit()
 
 void ConsoleExit() {
 	DELETE_NULL(g_pConsoleWnd);
+}
+
+// _outCmds: it is up to the caller to unalloc items
+bool LoadConsoleCmds(WDL_PtrList<WDL_FastString>* _outCmds)
+{
+	char buf[SNM_MAX_PATH] = "";
+	if (_outCmds && _snprintfStrict(buf, sizeof(buf), SNM_CONSOLE_FILE, GetResourcePath()) > 0)
+	{
+		char* c;
+		_outCmds->Empty(true);
+		if (FILE* f = fopenUTF8(buf, "r"))
+		{
+			while(fgets(buf, sizeof(buf), f))
+			{
+				if ((c = (char*)FindFirstRN(buf)) != NULL) *c = '\0';
+				if (*buf && *buf!='[' && *buf!='/')
+					_outCmds->Add(new WDL_FastString(buf));
+			}
+			fclose(f);
+			return true;
+		}
+	}
+	return false;
 }
 
 

@@ -651,7 +651,7 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 
 	{ { DEFACCEL, "SWS/S&M: Go to marker %02d (obeys smooth seek)" }, "S&M_GOTO_MARKER", GotoMarker, NULL, 0}, // default: none
 	{ { DEFACCEL, "SWS/S&M: Go to region %02d (obeys smooth seek)" }, "S&M_GOTO_REGION", GotoRegion, NULL, 0}, // default: none
-	{ { DEFACCEL, "SWS/S&M: Go to/select region %02d (obeys smooth seek)" }, "S&M_GOTO_SEL_REGION", GotoAnsSelectRegion, NULL, 10},
+	{ { DEFACCEL, "SWS/S&M: Go to/select region %02d (obeys smooth seek)" }, "S&M_GOTO_SEL_REGION", GotoAnsSelectRegion, NULL, 4},
 
 	{ { DEFACCEL, "SWS/S&M: Dummy toggle %02d" }, "S&M_DUMMY_TGL", Noop, NULL, 0, SNM_GetFakeToggleState}, // default: none
 	{ { DEFACCEL, "SWS/S&M: Exclusive toggle %02d" }, "S&M_EXCL_TGL", ExclusiveToggle, NULL, 0, SNM_GetFakeToggleState}, // default: none

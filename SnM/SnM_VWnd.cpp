@@ -684,14 +684,6 @@ void SNM_SkinToolbarButton(SNM_ToolbarButton* _btn, const char* _text)
 	IconTheme* it = SNM_GetIconTheme(true); // true: blank & overlay images are recent (v4)
 	if (it && it->toolbar_blank)
 	{
-/*JFB used to be:
-		skin.image = it->toolbar_blank;
-		skin.olimage = it->toolbar_overlay; // might be NULL!
-		WDL_VirtualIconButton_PreprocessSkinConfig(&skin);
-
-		// most stupid hack since WDL 65568bc (overlay = main image size)
-		for (int i=0; i<4; i++) skin.image_ltrb_ol[i] = 0;
-*/
 		skin.image = it->toolbar_blank;
 		skin.olimage = NULL;
 		WDL_VirtualIconButton_PreprocessSkinConfig(&skin);

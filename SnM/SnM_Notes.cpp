@@ -297,7 +297,7 @@ HMENU SNM_NotesHelpWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 	return NULL;
 }
 
-// fix/workaround (a SWELL bug?)
+// OSX fix/workaround (SWELL bug?)
 #ifndef _WIN32
 void OSXForceTxtChangeJob::Perform() {
 	if (g_pNotesHelpWnd)
@@ -339,8 +339,11 @@ int SNM_NotesHelpWnd::OnKey(MSG* _msg, int _iKeyState)
 			if (_msg->wParam == VK_RETURN)
 				return -1; // send the return key to the edit control
 #else
+			//JFB!!! fix/workaround (SWELL bug?) : EN_CHANGE is not sent when undocked,
+			// the root cause seems to be the flags WS_VSCROLL and WS_HSCROLL of the .rc
+			// but we definitely need those!
 			{
-				if (!IsDocked()) // fix/workaround (a SWELL bug?) : EN_CHANGE not sent when undocked
+				if (!IsDocked())
 					AddOrReplaceScheduledJob(new OSXForceTxtChangeJob());
 				return -1; // send the return key to the edit control
 			}

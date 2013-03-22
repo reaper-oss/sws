@@ -214,7 +214,7 @@ void GetShortResourcePath(const char* _resSubDir, const char* _fullFn, char* _sh
 // get a full resource path from a short filename
 // ex: EQ\JS\test.RfxChain -> C:\Documents and Settings\<user>\Application Data\REAPER\FXChains\EQ\JS\test.RfxChain
 // notes: 
-// - work with non existing files //JFB!!! humm.. looks like the current code fails with non existing files
+// - work with non existing files //JFB!!! humm.. looks like it fails with non existing files?
 // - no-op for non resource paths (c:\temp\test.RfxChain -> c:\temp\test.RfxChain)
 // - no-op for full resource paths 
 void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fullFn, int _fullFnSize)
@@ -803,7 +803,7 @@ bool LoadKbIni(WDL_PtrList<WDL_FastString>* _out)
 
 // returns 1 for a macro, 2 for a script, 0 if not found
 // _customId: custom id (both formats are allowed: "bla" and "_bla")
-// _inMacroScripts: lazy init list, to optimize accesses to reaper-kb.ini
+// _inMacroScripts: to optimize accesses to reaper-kb.ini
 // _outCmds: optionnal, if any it is up to the caller to unalloc items
 // note: no cache here (as the user can create new macros)
 int GetMacroOrScript(const char* _customId, int _sectionUniqueId, WDL_PtrList<WDL_FastString>* _inMacroScripts, WDL_PtrList<WDL_FastString>* _outCmds)
@@ -813,16 +813,6 @@ int GetMacroOrScript(const char* _customId, int _sectionUniqueId, WDL_PtrList<WD
 
 	if (*_customId == '_')
 		_customId++; // custom ids in reaper-kb.ini do not start with '_'
-
-	// safe single lazy init of _inMacroScripts
-//JFB!!!! a bouger, comme les CAs
-	if (!_inMacroScripts->GetSize())
-	{
-		bool loadOk = LoadKbIni(_inMacroScripts);
-		_inMacroScripts->Add(new WDL_FastString);
-		if (!loadOk)
-			return 0;
-	}
 
 	if (_outCmds)
 		_outCmds->Empty(true);
@@ -859,7 +849,7 @@ int GetMacroOrScript(const char* _customId, int _sectionUniqueId, WDL_PtrList<WD
 	return found;
 }
 
-// a bit hacky but we definitely need this..
+// API LIMITATION: a bit hacky but we definitely need this..
 bool IsMacroOrScript(const char* _cmd, bool _cmdIsName)
 {
 	if (_cmd && *_cmd)
@@ -888,28 +878,6 @@ bool IsMacroOrScript(const char* _cmd, bool _cmdIsName)
 					return false;
 			}
 			return len==SNM_MACRO_CUSTID_LEN;
-		}
-	}
-	return false;
-}
-
-bool LoadConsoleCmds(WDL_PtrList<WDL_FastString>* _out)
-{
-	char buf[SNM_MAX_PATH] = "";
-	if (_out && _snprintfStrict(buf, sizeof(buf), SNM_CONSOLE_FILE, GetResourcePath()) > 0)
-	{
-		char* c;
-		_out->Empty(true);
-		if (FILE* f = fopenUTF8(buf, "r"))
-		{
-			while(fgets(buf, sizeof(buf), f))
-			{
-				if ((c = (char*)FindFirstRN(buf)) != NULL) *c = '\0';
-				if (*buf && *buf!='[' && *buf!='/')
-					_out->Add(new WDL_FastString(buf));
-			}
-			fclose(f);
-			return true;
 		}
 	}
 	return false;

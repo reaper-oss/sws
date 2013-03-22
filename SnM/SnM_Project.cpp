@@ -147,10 +147,9 @@ void InsertSilence(COMMAND_T* _ct)
 
 void OpenProjectPathInExplorerFinder(COMMAND_T*)
 {
-	char path[SNM_MAX_PATH] = "bla";
+	char path[SNM_MAX_PATH] = "";
 	GetProjectPath(path, sizeof(path));
-	if (*path)
-		ShellExecute(NULL, "open", path, NULL, NULL, SW_SHOWNORMAL);
+	if (*path) ShellExecute(NULL, "open", path, NULL, NULL, SW_SHOWNORMAL);
 }
 
 
@@ -375,15 +374,12 @@ void ClearProjectStartupAction(COMMAND_T* _ct)
 	if (g_prjActions.Get()->GetLength())
 	{
 		int r=IDOK, cmdId=NamedCommandLookup(g_prjActions.Get()->Get());
-		if (cmdId)
-		{
+		if (cmdId) {
 			WDL_FastString msg;
 			msg.AppendFormatted(256, __LOCALIZE_VERFMT("Are you sure you want to clear the current startup action '%s'?","sws_mbox"), kbd_getTextFromCmd(cmdId, NULL));
-			r= MessageBox(GetMainHwnd(), msg.Get(), SWS_CMD_SHORTNAME(_ct), MB_OKCANCEL);
+			r = MessageBox(GetMainHwnd(), msg.Get(), SWS_CMD_SHORTNAME(_ct), MB_OKCANCEL);
 		}
-
-		if (r==IDOK)
-		{
+		if (r==IDOK) {
 			g_prjActions.Get()->Set("");
 			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_MISCCFG, -1);
 		}
@@ -401,10 +397,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 		g_prjActions.Get()->Set(lp.gettoken_str(1));
 		if (!isUndo)
 			if (int cmdId = NamedCommandLookup(lp.gettoken_str(1)))
-			{
-//				Main_OnCommand(cmdId, 0);
 				AddOrReplaceScheduledJob(new ProjectActionJob(cmdId)); // ~1s delay to avoid multi-triggers
-			}
 		return true;
 	}
 	return false;

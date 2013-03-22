@@ -87,6 +87,7 @@ typedef struct {
 int ConsoleInit();
 void ConsoleExit();
 void RunConsoleCommand(const char* cmd);
+bool LoadConsoleCmds(WDL_PtrList<WDL_FastString>* _outCmds);
 
 class ReaConsoleWnd : public SWS_DockWnd
 {

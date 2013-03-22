@@ -118,13 +118,13 @@ enum {
 };
 
 
-SNM_LiveConfigsWnd* g_pLiveConfigsWnd = NULL; // edition window
+SNM_LiveConfigsWnd* g_pLiveConfigsWnd = NULL; // editor window
 SNM_LiveConfigMonitorWnd* g_monitorWnds[SNM_LIVECFG_NB_CONFIGS]; // monitoring windows
 SWSProjConfig<WDL_PtrList_DeleteOnDestroy<LiveConfig> > g_liveConfigs;
 WDL_PtrList_DeleteOnDestroy<LiveConfigItem> g_clipboardConfigs; // for cut/copy/paste
 int g_configId = 0; // the current *displayed/edited* config id
 
-// pref
+// prefs
 char g_lcBigFontName[64] = SNM_DYN_FONT_NAME;
 
 
@@ -2047,16 +2047,7 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 			SNM_GetSelectedTracks(NULL, &selTracks, true); // selection may have changed
 		}
 
-	// init preload vars
-	bool preloaded = false;
-	MediaTrack* preloadTr = NULL;
-	if (_apply)
-	{
-		preloaded = (lc->m_preloadMidiVal==_val);
-		if (LiveConfigItem* preloadCfg = lc->m_ccConfs.Get(lc->m_preloadMidiVal)) // can be <0
-			preloadTr = preloadCfg->m_track;
-	}
-
+	bool preloaded = (_apply && lc->m_preloadMidiVal>=0 && lc->m_preloadMidiVal==_val);
 	if (cfg->m_track)
 	{
 		// --------------------------------------------------------------------
@@ -2102,11 +2093,6 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 			}
 			else
 			{
-
-/*JFB!!!!!!!!!!!!!!!!!!!!!!
-				if (preloaded)
-					preloadTr = _lastCfg->m_track;
-*/
 				if (_lastCfg->m_track && _lastCfg->m_track != cfg->m_track && muteTracks.Find(_lastCfg->m_track) < 0)
 				{
 					if (!lc->m_inputTr || (lc->m_inputTr && _lastCfg->m_track != lc->m_inputTr))
@@ -2234,7 +2220,13 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 		if (_apply && lc->m_offlineOthers &&
 			(!lc->m_inputTr || (lc->m_inputTr && cfg->m_track!=lc->m_inputTr)))
 		{
-			// select tracks to be set offline (they were already muted above)
+			MediaTrack* preloadTr = NULL;
+			if (preloaded && _lastCfg)
+				preloadTr = _lastCfg->m_track; // because preload & current are swapped
+			else if (LiveConfigItem* preloadCfg = lc->m_ccConfs.Get(lc->m_preloadMidiVal)) // can be <0
+				preloadTr = preloadCfg->m_track;
+
+			// select tracks to be set offline (already muted above)
 			SNM_SetSelectedTrack(NULL, NULL, true, true);
 			for (int i=0; i<lc->m_ccConfs.GetSize(); i++)
 				if (LiveConfigItem* item = lc->m_ccConfs.Get(i))
@@ -2378,7 +2370,7 @@ void ApplyLiveConfigJob::Perform()
 	LiveConfigItem* cfg = lc->m_ccConfs.Get(m_absval);
 	if (cfg && lc->m_enable && 
 		m_absval!=lc->m_activeMidiVal &&
-		(!lc->m_ignoreEmpty || (lc->m_ignoreEmpty && !cfg->IsDefault(true)))) // ignore switches to empty configs
+		(!lc->m_ignoreEmpty || (lc->m_ignoreEmpty && !cfg->IsDefault(true)))) // ignore empty configs
 	{
 		LiveConfigItem* lastCfg = lc->m_ccConfs.Get(lc->m_activeMidiVal); // can be <0
 		if (!lastCfg || (lastCfg && !lastCfg->Equals(cfg, true)))
@@ -2460,14 +2452,11 @@ void PreloadLiveConfigJob::Perform()
 	LiveConfigItem* lastCfg = lc->m_ccConfs.Get(lc->m_activeMidiVal); // can be <0
 	if (cfg && lc->m_enable && 
 		m_absval!=lc->m_preloadMidiVal &&
-		(!lc->m_ignoreEmpty || (lc->m_ignoreEmpty && !cfg->IsDefault(true))) && // ignore empty configs preload
+		(!lc->m_ignoreEmpty || (lc->m_ignoreEmpty && !cfg->IsDefault(true))) && // ignore empty configs
 		(!lastCfg || (lastCfg && (!cfg->m_track || !lastCfg->m_track || cfg->m_track!=lastCfg->m_track)))) // ignore preload over the active track
 	{
 		LiveConfigItem* lastPreloadCfg = lc->m_ccConfs.Get(lc->m_preloadMidiVal); // can be <0
-		if (
-/*JFB no, e.g. activate action only
-			cfg->m_track && 
-*/
+		if (cfg->m_track && // ATM preload only makes sense for configs for which a track is defined
 /*JFB no, always obey!
 			lc->m_offlineOthers &&
 */

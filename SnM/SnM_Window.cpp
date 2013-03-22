@@ -555,7 +555,7 @@ void LearnAction(KbdSectionInfo* _section, int _cmdId)
 				default: return;
 			}
 		}
-		DoActionShortcutDialog(_section, _cmdId, nbShortcuts);
+		DoActionShortcutDialog(GetMainHwnd(),_section, _cmdId, nbShortcuts);
 	}
 	 //JFB!!! removeme > 4.33pre
 	else

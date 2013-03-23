@@ -60,6 +60,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Set tempo marker shape to square (preserve positions)" },					"BR_TEMPO_SHAPE_SQUARE",			TempoShapeSquare},
 	{ { DEFACCEL, "SWS/BR: Delete tempo marker (preserve overall tempo and positions if possible)" },	"BR_DELETE_TEMPO",					DeleteTempo},
 	
+	{ { DEFACCEL, "SWS/BR: Move closest tempo marker to edit cursor" },									"BR_MOVE_CLOSEST_TEMPO",			MoveTempo, NULL, 3},
 	{ { DEFACCEL, "SWS/BR: Move tempo marker forward" },												"SWS_BRMOVETEMPOFORWARD",			MoveTempo, NULL, 2},
 	{ { DEFACCEL, "SWS/BR: Move tempo marker back" },													"SWS_BRMOVETEMPOBACK",				MoveTempo, NULL, -2},
 	{ { DEFACCEL, "SWS/BR: Move tempo marker forward 0.1 ms" },											"SWS_BRMOVETEMPOFORWARD01",			MoveTempo, NULL, 1},

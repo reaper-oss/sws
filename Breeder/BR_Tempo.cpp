@@ -45,8 +45,41 @@ void MoveTempo (COMMAND_T* ct)
 	// Get tempo map
 	BR_TempoChunk tempoMap;
 
-	// Get selected points' ID and remove first tempo marker in the project
-	vector<int> points = tempoMap.GetSelected();
+	// Get selected points' ID / closest tempo marker
+	vector<int> points;
+	double cursor = GetCursorPositionEx(NULL);
+	if (ct->user == 3)
+	{
+		int count = CountTempoTimeSigMarkers(NULL) - 1;
+		for (int i = 0; i <= count; ++i)
+		{	
+			double cTime; tempoMap.GetPoint(i, &cTime, NULL, NULL);
+			if (cTime > cursor)
+			{
+				double pTime; tempoMap.GetPoint(i-1, &pTime, NULL, NULL);
+				
+				if (i == 1) // since first tempo marker cannot be moved, always move the second
+					points.push_back(i);
+				else if (cursor - pTime < cTime - cursor)
+					points.push_back(i-1);
+				else
+					points.push_back(i);
+				break;
+			}
+
+			// Edit cursor is at the tempo marker -  no need to move anything
+			if (cTime == cursor)
+				return;
+			
+			// Edit cursor is positioned after the last tempo point
+			else if (i == count)
+				points.push_back(i);
+		}
+	}
+	else
+		points = tempoMap.GetSelected();
+
+	// Remove first tempo marker in the project
 	if (points.size() != 0)
 		if (points[0] == 0)
 			points.erase (points.begin());
@@ -55,7 +88,12 @@ void MoveTempo (COMMAND_T* ct)
 
 	// Get amount of movement to be performed on the selected tempo points
 	double tDiff;
-	if (ct->user == 2 || ct->user == -2)
+	if (ct->user == 3)
+	{
+		double cTime; tempoMap.GetPoint(points[0], &cTime, NULL, NULL);
+		tDiff = cursor - cTime;
+	}
+	else if (ct->user == 2 || ct->user == -2)
 		tDiff = 1 / GetHZoomLevel() * (double)ct->user / 2;
 	else
 		tDiff = (double)ct->user/10000;
@@ -170,8 +208,15 @@ void MoveTempo (COMMAND_T* ct)
 			++skipped;
 	}
 	tempoMap.Commit();
+
+	// If moving closest tempo marker to edit cursor...
+	if (ct->user == 3)
+	{
+		points.push_back(0); // Makes sure user always gets notified if moving point is impossible (next IF checks the size of the vector)
+		SetEditCurPos2(NULL, cursor, false, false); // Keep cursor position (needed if timebase is beats)
+	}
 	Undo_EndBlock2 (NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL);
-	
+
 	// Warn user if some points weren't processed
 	static bool g_pointsNotProcessed = true;
 	if (points.size() > 1 && skipped != 0 && (g_pointsNotProcessed))

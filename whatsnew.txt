@@ -35,6 +35,7 @@ Added actions:
 +Issue 307: actions to increase/decrease the metronome volume (by steps of ~ 0.15dB)
  SWS/S&M: Increase metronome volume
  SWS/S&M: Decrease metronome volume
++SWS/BR: Move closest tempo marker to edit cursor
 
 Other:
 +"SWS: Minimize selected track(s)" now returns a toggle state:

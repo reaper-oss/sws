@@ -32,6 +32,7 @@
 
 #define STRICT
 #ifdef _WIN32
+#include <winsock2.h> // must be inculded before windows.h, see OscPkt/udp.h
 #include <windows.h>
 #include <windowsx.h>
 #include <process.h>

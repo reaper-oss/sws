@@ -242,5 +242,9 @@ private:
 };
 
 
+char* SWS_LoadDockWndStateBuf(const char* _id, int _len = -1);
+bool SWS_LoadDockWndState(const char* _id, SWS_DockWnd_State* _state = NULL);
+void SWS_SetDockWndState(const char* _stateBuf, SWS_DockWnd_State* _state);
+
 bool ListView_HookThemeColorsMessage(HWND hwndDlg, int uMsg, LPARAM lParam, int cstate[LISTVIEW_COLORHOOK_STATESIZE], int listID, int whichTheme, int wantGridForColumns);
 void DrawTooltipForPoint(LICE_IBitmap *bm, POINT mousePt, RECT *wndr, const char *text);

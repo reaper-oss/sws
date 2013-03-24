@@ -70,13 +70,8 @@ SWS_DockWnd::SWS_DockWnd(int iResource, const char* cWndTitle, const char* cId, 
 // setup yet.
 void SWS_DockWnd::Init()
 {
-	// Restore state
-	// First, get the # of bytes
 	int iLen = sizeof(SWS_DockWnd_State) + SaveView(NULL, 0);
-	char* cState = new char[iLen];
-	memset(cState, 0, iLen);
-	// Then load the state from the INI
-	GetPrivateProfileStruct(SWS_INI, m_id.Get(), cState, iLen, get_ini_file());
+	char* cState = SWS_LoadDockWndStateBuf(m_id.Get(), iLen);
 	LoadState(cState, iLen);
 	delete [] cState;
 }
@@ -569,7 +564,7 @@ int SWS_DockWnd::SaveState(char* cStateBuf, int iMaxLen)
 		else
 			m_state.whichdock = DockIsChildOfDock(m_hwnd, NULL);
 	}
-	if (!m_bUserClosed & SWS_IsWindow(m_hwnd))
+	if (!m_bUserClosed && SWS_IsWindow(m_hwnd))
 		m_state.state |= 1;
 	else
 		m_state.state &= ~1;
@@ -595,14 +590,7 @@ void SWS_DockWnd::LoadState(const char* cStateBuf, int iLen)
 	m_bLoadingState = true;
 
 	bool bDocked = IsDocked();
-	if (cStateBuf && iLen >= sizeof(SWS_DockWnd_State))
-	{
-		for (int i = 0; i < sizeof(SWS_DockWnd_State) / (int)sizeof(int); i++)
-			((int*)&m_state)[i] = REAPER_MAKELEINT(*((int*)cStateBuf+i));
-	}
-	else
-		m_state.state = 0;
-
+	SWS_SetDockWndState(cStateBuf, &m_state);
 	Dock_UpdateDockID((char*)m_id.Get(), m_state.whichdock);
 
 	if (m_state.state & 1)
@@ -635,6 +623,37 @@ void SWS_DockWnd::KillTooltip(bool doRefresh)
 	*m_tooltip='\0';
 	if (had && doRefresh)
 		InvalidateRect(m_hwnd,NULL,FALSE);
+}
+
+// it's up to the caller to unalloc the returned value
+char* SWS_LoadDockWndStateBuf(const char* _id, int _len)
+{
+	if (_len<=0) _len = sizeof(SWS_DockWnd_State);
+	char* state = new char[_len];
+	memset(state, 0, _len);
+	GetPrivateProfileStruct(SWS_INI, _id, state, _len, get_ini_file());
+	return state;
+}
+
+bool SWS_LoadDockWndState(const char* _id, SWS_DockWnd_State* _state)
+{
+	SWS_DockWnd_State* state = _state ? _state : (SWS_DockWnd_State*)malloc(sizeof(SWS_DockWnd_State));
+
+	char* stateBuf = SWS_LoadDockWndStateBuf(_id);
+	SWS_SetDockWndState(stateBuf, state);
+	delete [] stateBuf;
+
+	bool open = state->state&1;
+	if (!_state) free(state);
+	return open;
+}
+
+void SWS_SetDockWndState(const char* _stateBuf, SWS_DockWnd_State* _state)
+{
+	int len = sizeof(SWS_DockWnd_State);
+	memset(_state, 0, len);
+	for (int i=0; i < len / (int)sizeof(int); i++)
+		((int*)_state)[i] = REAPER_MAKELEINT(*((int*)_stateBuf+i));
 }
 
 

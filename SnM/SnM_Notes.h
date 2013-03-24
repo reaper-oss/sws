@@ -79,11 +79,11 @@ public:
 	void NotifyMarkerRegionUpdate(int _updateFlags);
 };
 
-class SNM_NotesHelpWnd : public SWS_DockWnd
+class SNM_NotesWnd : public SWS_DockWnd
 {
 public:
-	SNM_NotesHelpWnd();
-	~SNM_NotesHelpWnd();
+	SNM_NotesWnd();
+	~SNM_NotesWnd();
 
 	void SetType(int _type);
 	void SetText(const char* _str, bool _addRN = true);

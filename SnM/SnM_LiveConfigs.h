@@ -95,7 +95,7 @@ protected:
 	void OnInitDlg();
 	void OnDestroy();
 	INT_PTR OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
-	void AddFXSubMenu(HMENU _menu, MediaTrack* _tr, WDL_FastString* _curPresetConf);
+	void AddPresetSubMenu(HMENU _menu, MediaTrack* _tr, WDL_FastString* _curPresetConf);
 	void AddLearnMenu(HMENU _menu, bool _subItems);
 	void AddOptionsMenu(HMENU _menu, bool _subItems);
 	HMENU OnContextMenu(int x, int y, bool* wantDefaultItems);
@@ -174,6 +174,7 @@ int IsLiveConfigDisplayed(COMMAND_T*);
 void ApplyLiveConfig(int _cfgId, int _val, int _valhw, int _relmode, HWND _hwnd, bool _immediate = false);
 void PreloadLiveConfig(int _cfgId, int _val, int _valhw, int _relmode, HWND _hwnd, bool _immediate = false);
 
+void OpenLiveConfigMonitorWnd(int _idx);
 void OpenLiveConfigMonitorWnd(COMMAND_T*);
 int IsLiveConfigMonitorWndDisplayed(COMMAND_T*);
 

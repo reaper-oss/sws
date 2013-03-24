@@ -25,11 +25,14 @@
 /
 ******************************************************************************/
 
-
 #include "stdafx.h" 
 #include "SnM.h"
 #include "../reaper/localize.h"
 
+
+///////////////////////////////////////////////////////////////////////////////
+// Marker/region helpers
+///////////////////////////////////////////////////////////////////////////////
 
 // overrides the API's SetProjectMarker3() which cannot set an empty name ""
 // see http://code.google.com/p/sws-extension/issues/detail?id=476
@@ -111,6 +114,11 @@ int FindMarkerRegion(ReaProject* _proj, double _pos, int _flags, int* _idOut)
 	return idx;
 }
 
+
+///////////////////////////////////////////////////////////////////////////////
+// Marker/region "IDs"
+///////////////////////////////////////////////////////////////////////////////
+
 int MakeMarkerRegionId(int _num, bool _isrgn)
 {
 	// note: MSB is ignored so that the encoded number is always positive
@@ -180,6 +188,11 @@ int EnumMarkerRegionById(ReaProject* _proj, int _id, bool* _isrgn, double* _pos,
 	}
 	return 0;
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Marker/region descs, menus, etc..
+///////////////////////////////////////////////////////////////////////////////
 
 bool GetMarkerRegionDesc(const char* _name, bool _isrgn, int _num, double _pos, double _end, int _flags, bool _wantNum, bool _wantName, bool _wantTime, char* _descOut, int _outSz)
 {
@@ -261,6 +274,11 @@ void FillMarkerRegionMenu(ReaProject* _proj, HMENU _menu, int _msgStart, int _fl
 	if (!GetMenuItemCount(_menu))
 		AddToMenu(_menu, __LOCALIZE("(No region!)","sws_menu"), 0, -1, false, MF_GRAYED);
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Marker/region actions
+///////////////////////////////////////////////////////////////////////////////
 
 bool GotoMarkerRegion(ReaProject* _proj, int _num, int _flags, bool _select = false)
 {

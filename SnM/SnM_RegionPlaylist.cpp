@@ -1890,8 +1890,11 @@ int RegionPlaylistInit()
 	g_seekPlay = (GetPrivateProfileInt("RegionPlaylist", "SeekPlay", 1, g_SNM_IniFn.Get()) == 1);
 	GetPrivateProfileString("RegionPlaylist", "BigFontName", SNM_DYN_FONT_NAME, g_rgnplBigFontName, sizeof(g_rgnplBigFontName), g_SNM_IniFn.Get());
 
-	g_pRgnPlaylistWnd = new SNM_RegionPlaylistWnd();
-	if (!g_pRgnPlaylistWnd || !plugin_register("projectconfig", &g_projectconfig))
+	// instanciate the window, if needed
+	if (SWS_LoadDockWndState("SnMRgnPlaylist"))
+		g_pRgnPlaylistWnd = new SNM_RegionPlaylistWnd();
+
+	if (!plugin_register("projectconfig", &g_projectconfig))
 		return 0;
 	return 1;
 }
@@ -1908,7 +1911,10 @@ void RegionPlaylistExit()
 	DELETE_NULL(g_pRgnPlaylistWnd);
 }
 
-void OpenRegionPlaylist(COMMAND_T*) {
+void OpenRegionPlaylist(COMMAND_T*)
+{
+	if (!g_pRgnPlaylistWnd)
+		g_pRgnPlaylistWnd = new SNM_RegionPlaylistWnd();
 	if (g_pRgnPlaylistWnd)
 		g_pRgnPlaylistWnd->Show(true, true);
 }

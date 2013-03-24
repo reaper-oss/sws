@@ -247,14 +247,9 @@ void UpgradePresetConfV1toV2(MediaTrack* _tr, const char* _confV1, WDL_FastStrin
 				int success, fx = (int)floor(lp.gettoken_float(i, &success)) - 1; // float because token is like "1.3"
 				int preset = success ? GetPresetFromConfTokenV1(lp.gettoken_str(i)) - 1 : -1;
 
-				// avoid parsing as far as possible!
-				SNM_FXSummaryParser p(_tr);
-				WDL_PtrList<SNM_FXSummary>* summaries = (preset >= 0 ? p.GetSummaries() : NULL);
-				SNM_FXSummary* sum = summaries ? summaries->Get(fx) : NULL;
-
 				WDL_PtrList_DeleteOnDestroy<WDL_FastString> names;
-				int presetCount = (sum ? GetUserPresetNames(sum->m_type.Get(), sum->m_realName.Get(), &names) : 0);
-				if (presetCount && preset >=0 && preset < presetCount) {
+				int presetCount = preset>=0 ? GetUserPresetNames(_tr, fx, &names) : 0;
+				if (presetCount && preset>=0 && preset<presetCount) {
 					makeEscapedConfigString(names.Get(preset)->Get(), &escStr);
 					_confV2->AppendFormatted(256, "FX%d: %s", fx+1, escStr.Get());
 				}
@@ -1153,7 +1148,7 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			break;
 		}
 		case BTNID_MON:
-			if (g_monitorWnds[g_configId]) g_monitorWnds[g_configId]->Show(true, true);
+			OpenLiveConfigMonitorWnd(g_configId);
 			break;
 		case CMBID_INPUT_TRACK:
 			if (HIWORD(wParam)==CBN_SELCHANGE)
@@ -1248,7 +1243,7 @@ INT_PTR SNM_LiveConfigsWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lPar
 	return 0;
 }
 
-void SNM_LiveConfigsWnd::AddFXSubMenu(HMENU _menu, MediaTrack* _tr, WDL_FastString* _curPresetConf)
+void SNM_LiveConfigsWnd::AddPresetSubMenu(HMENU _menu, MediaTrack* _tr, WDL_FastString* _curPresetConf)
 {
 	m_lastPresetMsg.Empty(true);
 
@@ -1257,67 +1252,59 @@ void SNM_LiveConfigsWnd::AddFXSubMenu(HMENU _menu, MediaTrack* _tr, WDL_FastStri
 		AddToMenu(_menu, __LOCALIZE("(No FX on track)","sws_DLG_155"), 0, -1, false, MF_GRAYED);
 		return;
 	}
-
-	SNM_FXSummaryParser p(_tr);
-	WDL_PtrList<SNM_FXSummary>* summaries = p.GetSummaries();
-	if (summaries && fxCount == summaries->GetSize())
+	
+	char fxName[SNM_MAX_FX_NAME_LEN] = "";
+	int msgCpt = 0;
+	for(int fx=0; fx<fxCount; fx++) 
 	{
-		char fxName[SNM_MAX_FX_NAME_LEN] = "";
-		int msgCpt = 0;
-		for(int fx=0; fx<fxCount; fx++) 
+		if(TrackFX_GetFXName(_tr, fx, fxName, SNM_MAX_FX_NAME_LEN))
 		{
-			if(TrackFX_GetFXName(_tr, fx, fxName, SNM_MAX_FX_NAME_LEN))
+			HMENU fxSubMenu = CreatePopupMenu();
+			WDL_FastString str, curPresetName;
+			GetPresetConf(fx, _curPresetConf->Get(), &curPresetName);
+
+			// learn current preset
+			if ((SNM_LIVECFG_LEARN_PRESETS_START_MSG + fx) <= SNM_LIVECFG_LEARN_PRESETS_END_MSG)
 			{
-				HMENU fxSubMenu = CreatePopupMenu();
-				WDL_FastString str, curPresetName;
-				GetPresetConf(fx, _curPresetConf->Get(), &curPresetName);
+				char buf[SNM_MAX_PRESET_NAME_LEN] = "";
+				TrackFX_GetPreset(_tr, fx, buf, SNM_MAX_PRESET_NAME_LEN);
+				str.SetFormatted(256, __LOCALIZE_VERFMT("Learn current preset \"%s\"","sws_DLG_155"), *buf?buf:__LOCALIZE("undefined","sws_DLG_155"));
+				AddToMenu(fxSubMenu, str.Get(), SNM_LIVECFG_LEARN_PRESETS_START_MSG + fx, -1, false, *buf?0:MF_GRAYED);
+			}
 
-				// learn current preset
-				if ((SNM_LIVECFG_LEARN_PRESETS_START_MSG + fx) <= SNM_LIVECFG_LEARN_PRESETS_END_MSG)
-				{
-					char buf[SNM_MAX_PRESET_NAME_LEN] = "";
-					TrackFX_GetPreset(_tr, fx, buf, SNM_MAX_PRESET_NAME_LEN);
-					str.SetFormatted(256, __LOCALIZE_VERFMT("Learn current preset \"%s\"","sws_DLG_155"), *buf?buf:__LOCALIZE("undefined","sws_DLG_155"));
-					AddToMenu(fxSubMenu, str.Get(), SNM_LIVECFG_LEARN_PRESETS_START_MSG + fx, -1, false, *buf?0:MF_GRAYED);
-				}
+			if (GetMenuItemCount(fxSubMenu))
+				AddToMenu(fxSubMenu, SWS_SEPARATOR, 0);
 
-				if (GetMenuItemCount(fxSubMenu))
-					AddToMenu(fxSubMenu, SWS_SEPARATOR, 0);
+			// user preset list
+			WDL_PtrList_DeleteOnDestroy<WDL_FastString> names;
+			int presetCount = GetUserPresetNames(_tr, fx, &names);
 
-				// user preset list
-				WDL_PtrList_DeleteOnDestroy<WDL_FastString> names;
-				SNM_FXSummary* sum = summaries->Get(fx);
-				int usrPrstCount = (sum ? GetUserPresetNames(sum->m_type.Get(), sum->m_realName.Get(), &names) : 0);
+			str.SetFormatted(256, __LOCALIZE_VERFMT("[User presets (.rpl)%s]","sws_DLG_155"), presetCount?"":__LOCALIZE(": no .rpl file loaded","sws_DLG_155"));
+			AddToMenu(fxSubMenu, str.Get(), 0, -1, false, presetCount?MF_DISABLED:MF_GRAYED);
 
-				str.SetFormatted(256, __LOCALIZE_VERFMT("[User presets (.rpl)%s]","sws_DLG_155"), usrPrstCount?"":__LOCALIZE(": no .rpl file loaded","sws_DLG_155"));
-				AddToMenu(fxSubMenu, str.Get(), 0, -1, false, usrPrstCount?MF_DISABLED:MF_GRAYED);
-
-				for(int j=0; j < usrPrstCount && (SNM_LIVECFG_SET_PRESET_START_MSG + msgCpt) <= SNM_LIVECFG_SET_PRESET_END_MSG; j++)
-					if (names.Get(j)->GetLength()) {
-						AddToMenu(fxSubMenu, names.Get(j)->Get(), SNM_LIVECFG_SET_PRESET_START_MSG + msgCpt, -1, false, !strcmp(curPresetName.Get(), names.Get(j)->Get()) ? MFS_CHECKED : MFS_UNCHECKED);
-						m_lastPresetMsg.Add(new PresetMsg(fx, names.Get(j)->Get()));
-						msgCpt++;
-					}
-
-				if (GetMenuItemCount(fxSubMenu))
-					AddToMenu(fxSubMenu, SWS_SEPARATOR, 0);
-
-				// clear current fx preset
-				if ((SNM_LIVECFG_SET_PRESET_START_MSG + msgCpt) <= SNM_LIVECFG_SET_PRESET_END_MSG)
-				{
-					AddToMenu(fxSubMenu, __LOCALIZE("None","sws_DLG_155"), SNM_LIVECFG_SET_PRESET_START_MSG + msgCpt, -1, false, !curPresetName.GetLength() ? MFS_CHECKED : MFS_UNCHECKED);
-					m_lastPresetMsg.Add(new PresetMsg(fx, ""));
+			for(int j=0; j<presetCount && (SNM_LIVECFG_SET_PRESET_START_MSG + msgCpt) <= SNM_LIVECFG_SET_PRESET_END_MSG; j++)
+				if (names.Get(j)->GetLength()) {
+					AddToMenu(fxSubMenu, names.Get(j)->Get(), SNM_LIVECFG_SET_PRESET_START_MSG + msgCpt, -1, false, !strcmp(curPresetName.Get(), names.Get(j)->Get()) ? MFS_CHECKED : MFS_UNCHECKED);
+					m_lastPresetMsg.Add(new PresetMsg(fx, names.Get(j)->Get()));
 					msgCpt++;
 				}
 
-				// add fx sub menu
-				str.SetFormatted(512, "FX%d: %s", fx+1, fxName);
-				AddSubMenu(_menu, fxSubMenu, str.Get(), -1, GetMenuItemCount(fxSubMenu) ? MFS_ENABLED : MF_GRAYED);
+			if (GetMenuItemCount(fxSubMenu))
+				AddToMenu(fxSubMenu, SWS_SEPARATOR, 0);
+
+			// clear current fx preset
+			if ((SNM_LIVECFG_SET_PRESET_START_MSG + msgCpt) <= SNM_LIVECFG_SET_PRESET_END_MSG)
+			{
+				AddToMenu(fxSubMenu, __LOCALIZE("None","sws_DLG_155"), SNM_LIVECFG_SET_PRESET_START_MSG + msgCpt, -1, false, !curPresetName.GetLength() ? MFS_CHECKED : MFS_UNCHECKED);
+				m_lastPresetMsg.Add(new PresetMsg(fx, ""));
+				msgCpt++;
 			}
+
+			// add fx sub menu
+			str.SetFormatted(512, "FX%d: %s", fx+1, fxName);
+			AddSubMenu(_menu, fxSubMenu, str.Get(), -1, GetMenuItemCount(fxSubMenu) ? MFS_ENABLED : MF_GRAYED);
 		}
 	}
-	else
-		AddToMenu(_menu, __LOCALIZE("(Unknown FX on track)","sws_DLG_155"), 0, -1, false, MF_GRAYED);
 }
 
 void SNM_LiveConfigsWnd::AddLearnMenu(HMENU _menu, bool _subItems)
@@ -1451,8 +1438,10 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 					else if (item->m_fxChain.GetLength())
 						AddToMenu(hMenu, __LOCALIZE("(FX Chain overrides)","sws_DLG_155"), 0, -1, false, MFS_GRAYED);
 					else {
-						AddFXSubMenu(hMenu, item->m_track, &item->m_presets);
-						AddToMenu(hMenu, SWS_SEPARATOR, 0);
+						// just to be clear w/ the user
+						HMENU setPresetMenu = CreatePopupMenu();
+						AddPresetSubMenu(setPresetMenu, item->m_track, &item->m_presets);
+						AddSubMenu(hMenu, setPresetMenu, __LOCALIZE("Set preset","sws_DLG_155"));
 						AddToMenu(hMenu, __LOCALIZE("Clear FX presets","sws_DLG_155"), SNM_LIVECFG_CLEAR_PRESETS_MSG);
 					}
 				}
@@ -1874,15 +1863,20 @@ int LiveConfigInit()
 {
 	GetPrivateProfileString("LiveConfigs", "BigFontName", SNM_DYN_FONT_NAME, g_lcBigFontName, sizeof(g_lcBigFontName), g_SNM_IniFn.Get());
 
-	g_pLiveConfigsWnd = new SNM_LiveConfigsWnd();
-	if (!g_pLiveConfigsWnd || !plugin_register("projectconfig", &g_projectconfig))
+	// instanciate the editor, if needed
+	if (SWS_LoadDockWndState("SnMLiveConfigs"))
+		g_pLiveConfigsWnd = new SNM_LiveConfigsWnd();
+
+	// instanciate monitors, if needed
+	char id[64]="";
+	for (int i=0; i<SNM_LIVECFG_NB_CONFIGS; i++) {
+		_snprintfSafe(id, sizeof(id), "SnMLiveConfigMonitor%d", i+1);
+		g_monitorWnds[i] = SWS_LoadDockWndState(id) ? new SNM_LiveConfigMonitorWnd(i) : NULL;
+	}
+
+	if (!plugin_register("projectconfig", &g_projectconfig))
 		return 0;
 
-	for (int i=0; i<SNM_LIVECFG_NB_CONFIGS; i++) {
-		g_monitorWnds[i] = new SNM_LiveConfigMonitorWnd(i);
-		if (!g_monitorWnds[i])
-			return 0;
-	}
 	return 1;
 }
 
@@ -1892,7 +1886,10 @@ void LiveConfigExit()
 	DELETE_NULL(g_pLiveConfigsWnd);
 }
 
-void OpenLiveConfig(COMMAND_T*) {
+void OpenLiveConfig(COMMAND_T*)
+{
+	if (!g_pLiveConfigsWnd)
+		g_pLiveConfigsWnd = new SNM_LiveConfigsWnd();
 	if (g_pLiveConfigsWnd)
 		g_pLiveConfigsWnd->Show(true, true);
 }
@@ -2706,11 +2703,19 @@ bool SNM_LiveConfigMonitorWnd::OnMouseUp(int _xpos, int _ypos)
 	return true;
 }
 
-void OpenLiveConfigMonitorWnd(COMMAND_T* _ct)
+void OpenLiveConfigMonitorWnd(int _idx)
 {
-	int wndId = (int)_ct->user;
-	if (wndId>=0 && wndId<SNM_LIVECFG_NB_CONFIGS && g_monitorWnds[wndId])
-		g_monitorWnds[wndId]->Show(true, true);
+	if (_idx>=0 && _idx<SNM_LIVECFG_NB_CONFIGS)
+	{
+		if (!g_monitorWnds[_idx])
+			g_monitorWnds[_idx] = new SNM_LiveConfigMonitorWnd(_idx);
+		if (g_monitorWnds[_idx])
+			g_monitorWnds[_idx]->Show(true, true);
+	}
+}
+
+void OpenLiveConfigMonitorWnd(COMMAND_T* _ct) {
+	OpenLiveConfigMonitorWnd((int)_ct->user);
 }
 
 int IsLiveConfigMonitorWndDisplayed(COMMAND_T* _ct) {
@@ -2930,13 +2935,15 @@ int IsTinyFadesLiveConfigEnabled(COMMAND_T* _ct) {
 // gui refresh not needed (only in ctx menu)
 void UpdateTinyFadesLiveConfig(COMMAND_T* _ct, int _val)
 {
-	if (LiveConfig* lc = g_liveConfigs.Get()->Get((int)_ct->user)) {
+	if (LiveConfig* lc = g_liveConfigs.Get()->Get((int)_ct->user))
+	{
 		lc->m_fade = _val<0 ? (lc->m_fade>0 ? 0 : SNM_LIVECFG_DEF_FADE) : _val;
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_MISCCFG, -1);
 
 		LiveConfigsUpdateFadeJob* job = new LiveConfigsUpdateFadeJob(lc->m_fade);
 		job->Perform();	delete job;
-		if (g_pLiveConfigsWnd) g_pLiveConfigsWnd->Update();
+		if (g_pLiveConfigsWnd)
+			g_pLiveConfigsWnd->Update();
 		// RefreshToolbar()) not required..
 	}
 }

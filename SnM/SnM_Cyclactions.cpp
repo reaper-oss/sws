@@ -2388,9 +2388,9 @@ int CyclactionInit()
 	if (!plugin_register("projectconfig",&g_projectconfig))
 		return 0;
 
-	g_pCyclactionWnd = new SNM_CyclactionWnd();
-	if (!g_pCyclactionWnd)
-		return 0;
+	// instanciate the window, if needed
+	if (SWS_LoadDockWndState("SnMCyclaction"))
+		g_pCyclactionWnd = new SNM_CyclactionWnd();
 
 	g_editedSection = 0;
 	g_edited = false;
@@ -2405,6 +2405,8 @@ void CyclactionExit() {
 
 void OpenCyclaction(COMMAND_T* _ct)
 {
+	if (!g_pCyclactionWnd)
+		g_pCyclactionWnd = new SNM_CyclactionWnd();
 	if (g_pCyclactionWnd) {
 		g_pCyclactionWnd->Show((g_editedSection == (int)_ct->user) /* i.e toggle */, true);
 		g_pCyclactionWnd->SetType((int)_ct->user);

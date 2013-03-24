@@ -60,7 +60,7 @@ void UpdateAllFXsBypassSelItems(COMMAND_T*);
 void SelectTrackFX(COMMAND_T*);
 int GetSelectedTrackFX(MediaTrack* _tr);
 
-int GetUserPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL_FastString>* _presetNames);
+int GetUserPresetNames(MediaTrack* _tr, int _fx, WDL_PtrList<WDL_FastString>* _presetsOut);
 bool TriggerFXPreset(MediaTrack* _tr, int _fxId, int _presetId, int _dir);
 void NextPresetSelTracks(COMMAND_T*);
 void PrevPresetSelTracks(COMMAND_T*);

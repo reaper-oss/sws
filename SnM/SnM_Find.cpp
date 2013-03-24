@@ -627,9 +627,9 @@ void SNM_FindWnd::UpdateNotFoundMsg(bool _found)
 
 int FindInit()
 {
-	g_pFindWnd = new SNM_FindWnd();
-	if (!g_pFindWnd)
-		return 0;
+	// instanciate the window, if needed
+	if (SWS_LoadDockWndState("SnMFind"))
+		g_pFindWnd = new SNM_FindWnd();
 	return 1;
 }
 
@@ -637,7 +637,10 @@ void FindExit() {
 	DELETE_NULL(g_pFindWnd);
 }
 
-void OpenFind(COMMAND_T*) {
+void OpenFind(COMMAND_T*)
+{
+	if (!g_pFindWnd)
+		g_pFindWnd = new SNM_FindWnd();
 	if (g_pFindWnd) {
 		g_pFindWnd->Show(true, true);
 		SetFocus(GetDlgItem(g_pFindWnd->GetHWND(), IDC_EDIT));

@@ -2622,10 +2622,10 @@ int ResourcesInit()
 		}
 	}
 
-	// instanciate the view
-	g_pResourcesWnd = new SNM_ResourceWnd();
-	if (!g_pResourcesWnd)
-		return 0;
+	// instanciate the window, if needed
+	if (SWS_LoadDockWndState("SnMResources"))
+		g_pResourcesWnd = new SNM_ResourceWnd();
+
 	return 1;
 }
 
@@ -2720,6 +2720,8 @@ void ResourcesExit()
 
 void OpenResources(COMMAND_T* _ct)
 {
+	if (!g_pResourcesWnd)
+		g_pResourcesWnd = new SNM_ResourceWnd();
 	if (g_pResourcesWnd) 
 	{
 		int newType = (int)_ct->user; // -1 means toggle current type

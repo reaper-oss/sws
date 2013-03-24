@@ -412,8 +412,12 @@ int GetSelectedTrackFX(MediaTrack* _tr)
 // Track FX presets
 ///////////////////////////////////////////////////////////////////////////////
 
+// API LIMITATION: get can't get preset names (without activating them)
+// => parse ini files instead => limited to user presets
+//
 // _fxType: as defined in FX chunk ("VST", "AU", etc..)
 // _fxName: as defined in FX chunk ("foo.dll", etc..)
+// it is up to the caller to unalloc _presetNames
 int GetUserPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL_FastString>* _presetNames)
 {
 	int nbPresets = 0;
@@ -473,6 +477,21 @@ int GetUserPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL
 		}
 	}
 	return nbPresets;
+}
+
+// wrapper to ease cleanup some day, see API LIMITATION above
+// it is up to the caller to unalloc _presetNames
+int GetUserPresetNames(MediaTrack* _tr, int _fx, WDL_PtrList<WDL_FastString>* _presetsOut)
+{
+	if (_tr && _fx>=0 && _presetsOut)
+	{
+		//JFB!!! removeme if new APIs + remove SNM_FXSummary, SNM_FXSummaryParser, etc.. ?
+		SNM_FXSummaryParser p(_tr);
+		WDL_PtrList<SNM_FXSummary>* summaries = p.GetSummaries();
+		SNM_FXSummary* sum = summaries ? summaries->Get(_fx) : NULL;
+		return (sum ? GetUserPresetNames(sum->m_type.Get(), sum->m_realName.Get(), _presetsOut) : 0);
+	}
+	return 0;
 }
 
 

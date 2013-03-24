@@ -1252,17 +1252,17 @@ void SNM_CSurfRun()
 	}
 }
 
-extern SNM_NotesHelpWnd* g_pNotesHelpWnd;
+extern SNM_NotesWnd* g_pNotesWnd;
 extern SNM_LiveConfigsWnd* g_pLiveConfigsWnd;
 extern SNM_RegionPlaylistWnd* g_pRgnPlaylistWnd;
 
 void SNM_CSurfSetTrackTitle() {
-	if (g_pNotesHelpWnd) g_pNotesHelpWnd->CSurfSetTrackTitle();
+	if (g_pNotesWnd) g_pNotesWnd->CSurfSetTrackTitle();
 	if (g_pLiveConfigsWnd) g_pLiveConfigsWnd->CSurfSetTrackTitle();
 }
 
 void SNM_CSurfSetTrackListChange() {
-	if (g_pNotesHelpWnd) g_pNotesHelpWnd->CSurfSetTrackListChange();
+	if (g_pNotesWnd) g_pNotesWnd->CSurfSetTrackListChange();
 	if (g_pLiveConfigsWnd) g_pLiveConfigsWnd->CSurfSetTrackListChange();
 	if (g_pRgnPlaylistWnd) g_pRgnPlaylistWnd->CSurfSetTrackListChange();
 }

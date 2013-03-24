@@ -535,9 +535,10 @@ int IsCueBussDlgDisplayed(COMMAND_T* _ct) {
 }
 
 // pass-through to main window
-static int translateAccel(MSG* _msg, accelerator_register_t* _ctx) { return SNM_IsActiveWindow(g_cueBussHwnd) ? -666 : 0; }
-static accelerator_register_t g_ar = { translateAccel, TRUE, NULL };
+//static int translateAccel(MSG* _msg, accelerator_register_t* _ctx) { return SNM_IsActiveWindow(g_cueBussHwnd) ? -666 : 0; }
+//static accelerator_register_t g_ar = { translateAccel, TRUE, NULL };
 
 int CueBussInit() {
-	return plugin_register("accelerator", &g_ar);
+//	return plugin_register("accelerator", &g_ar);
+	return 1;
 }

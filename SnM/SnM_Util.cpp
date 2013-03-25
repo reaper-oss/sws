@@ -792,7 +792,7 @@ bool LoadKbIni(WDL_PtrList<WDL_FastString>* _out)
 		if (FILE* f = fopenUTF8(buf, "r"))
 		{
 			while(fgets(buf, sizeof(buf), f) && *buf)
-				if (!_strnicmp(buf,"ACT",3) || !_strnicmp(buf,"SRC",3))
+				if (!_strnicmp(buf,"ACT",3) || !_strnicmp(buf,"SCR",3))
 					_out->Add(new WDL_FastString(buf));
 			fclose(f);
 			return true;
@@ -824,13 +824,13 @@ int GetMacroOrScript(const char* _customId, int _sectionUniqueId, WDL_PtrList<WD
 		{
 			LineParser lp(false);
 			if (!lp.parse(cmd) && 
-				lp.getnumtokens()>5 && // indirectly exlude key shortcuts, etc..
+				lp.getnumtokens()>=5 && // indirectly exlude key shortcuts, etc..
 				!_stricmp(lp.gettoken_str(3), _customId))
 			{
 				int success, iniSecId = lp.gettoken_int(2, &success);
 				if (success && iniSecId==_sectionUniqueId)
 				{
-					found = !_stricmp(lp.gettoken_str(0), "ACT") ? 1 : !_stricmp(lp.gettoken_str(0), "SRC") ? 2 : 0;
+					found = !_stricmp(lp.gettoken_str(0), "ACT") ? 1 : !_stricmp(lp.gettoken_str(0), "SCR") ? 2 : 0;
 					if (_outCmds && found)
 					{
 						for (int i=5; i<lp.getnumtokens(); i++)

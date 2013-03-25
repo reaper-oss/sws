@@ -510,9 +510,13 @@ bool GetSelectedAction(char* _idstrOut, int _idStrSz, const char* _expectedLocal
 	return true;
 }
 
-//JFB!!! moveme > 4.33pre
 void LearnAction(KbdSectionInfo* _section, int _cmdId)
 {
+#ifdef _SNM_REAPER_BUG
+
+//JFB!!! REAPER BUG1: CountActionShortcuts() can return > 0 although there is no shortcut
+//JFB!!! REAPER BUG2: DoActionShortcutDialog() does not persist learned shortcut
+
 	if (CountActionShortcuts && GetActionShortcutDesc && DeleteActionShortcut && DoActionShortcutDialog)
 	{
 		int nbShortcuts = CountActionShortcuts(_section, _cmdId);
@@ -559,11 +563,14 @@ void LearnAction(KbdSectionInfo* _section, int _cmdId)
 		}
 		DoActionShortcutDialog(GetMainHwnd(), _section, _cmdId, nbShortcuts);
 	}
-	 //JFB!!! removeme > 4.33pre
+
+	//JFB!!! removeme > 4.33pre.. => well, no: see above keep the "legacy" code!
 	else
+#endif
 	{
-		HWND h = GetReaWindowByTitle(__localizeFunc("Actions", "DLG_274", 0));
-		if (!h)
+		HWND h;
+//		h = GetReaWindowByTitle(__localizeFunc("Actions", "DLG_274", 0));
+//		if (!h)
 			ShowActionList(&g_SNM_Section, NULL);
 		if (h = GetReaWindowByTitle(__localizeFunc("Actions", "DLG_274", 0)))
 		{

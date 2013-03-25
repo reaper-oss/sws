@@ -1256,7 +1256,7 @@ WDL_PtrList_DeleteOnDestroy<PausedPreview> g_pausedPreviews;
 SWS_Mutex g_playPreviewsMutex; // g_playPreviews + g_pausedItems mutex
 
 
-// thread callback! see SnMCSurfRun()
+// "thread" callback! see SnMCSurfRun()
 void StopTrackPreviewsRun()
 {
 	SWS_SectionLock lock(&g_playPreviewsMutex);
@@ -1272,7 +1272,7 @@ void StopTrackPreviewsRun()
 				prev->curpos > prev->src->GetLength())) // preview has been entirely played
 			{
 				// prepare all notes off, if needed (i.e. only for stopped MIDI files)
-				if (prev->src != g_cc123src && 
+				if (prev->src != g_cc123src &&
 					prev->volume < 0.5 && // stopped files only, no cc123 is sent when files end normally
 					!strncmp(prev->src->GetType(), "MIDI", 4) && 
 					(!cc123Trs || (cc123Trs && cc123Trs->Find(prev->preview_track) == -1)))
@@ -1295,20 +1295,6 @@ void StopTrackPreviewsRun()
 		SendAllNotesOff(cc123Trs);
 		delete cc123Trs;
 	}
-}
-
-bool TrackPreviewsHasAllNotesOff()
-{
-	SWS_SectionLock lock(&g_playPreviewsMutex);
-	bool hasCC123 = false;
-	for (int i=g_playPreviews.GetSize()-1; i >=0; i--)
-		if (preview_register_t* prev = g_playPreviews.Get(i))
-		{
-			TrackPreviewLockUnlockMutex(prev, true);
-			hasCC123 = (prev->src == g_cc123src);
-			TrackPreviewLockUnlockMutex(prev, false);
-		}
-	return hasCC123;
 }
 
 // from askjf.com:
@@ -1459,6 +1445,48 @@ void StopTrackPreviews(COMMAND_T* _ct) {
 ///////////////////////////////////////////////////////////////////////////////
 // Send CC123 on all channels (async.)
 ///////////////////////////////////////////////////////////////////////////////
+
+bool HasAllNotesOff()
+{
+	SWS_SectionLock lock(&g_playPreviewsMutex);
+	bool hasCC123 = false;
+	for (int i=g_playPreviews.GetSize()-1; !hasCC123 && i>=0; i--) // !hasCC123 to optimize mutexing etc
+		if (preview_register_t* prev = g_playPreviews.Get(i))
+		{
+			TrackPreviewLockUnlockMutex(prev, true);
+			hasCC123 |= (prev->src == g_cc123src);
+			TrackPreviewLockUnlockMutex(prev, false);
+		}
+	return hasCC123;
+	
+}
+
+void WaitForAllNotesOff()
+{
+	DWORD startWaitTime = GetTickCount();
+	DWORD stopTime = startWaitTime;
+	while (HasAllNotesOff() && (GetTickCount()-startWaitTime) < 1000) // timeout safety
+	{
+#ifdef _WIN32
+		// keep the UI updating
+		MSG msg;
+		while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
+			DispatchMessage(&msg);
+#endif
+		Sleep(1);
+
+		if ((GetTickCount() - stopTime) > SNM_CSURF_RUN_TICK_MS) {
+			stopTime = GetTickCount();
+			StopTrackPreviewsRun();
+		}
+	}
+	
+#ifdef _SNM_DEBUG
+	char dbg[256] = "";
+	_snprintfSafe(dbg, sizeof(dbg), "WaitForAllNotesOff() - Approx wait time: %d ms\n", GetTickCount() - startWaitTime);
+	OutputDebugString(dbg);
+#endif
+}
 
 bool SendAllNotesOff(MediaTrack* _tr)
 {

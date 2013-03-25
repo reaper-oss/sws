@@ -1958,28 +1958,6 @@ void WaitForTinyFade(DWORD* _muteTime)
 	}
 }
 
-void WaitForAllNotesOff()
-{
-	DWORD startWaitTime = GetTickCount();
-	while (TrackPreviewsHasAllNotesOff() && 
-		(GetTickCount() - startWaitTime) < 1000) // timeout safety
-	{
-#ifdef _WIN32
-		// keep the UI updating
-		MSG msg;
-		while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
-			DispatchMessage(&msg);
-#endif
-		Sleep(1);
-	}
-#ifdef _SNM_DEBUG
-	char dbg[256] = "";
-	_snprintfSafe(dbg, sizeof(dbg), "WaitForAllNotesOff() - Approx wait time: %d ms\n", GetTickCount() - startWaitTime);
-	OutputDebugString(dbg);
-#endif
-}
-
-
 // just to simplify ApplyPreloadLiveConfig()
 void MuteAndInitCC123(LiveConfig* _lc, MediaTrack* _tr, DWORD* _muteTime, WDL_PtrList<void>* _muteTracks, WDL_PtrList<void>* _cc123Tracks, WDL_PtrList<bool>* _muteStates, bool _always = false)
 {

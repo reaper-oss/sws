@@ -78,7 +78,6 @@ void SetMIDIInputChannel(COMMAND_T*);
 void RemapMIDIInputChannel(COMMAND_T*);
 
 void StopTrackPreviewsRun();
-bool TrackPreviewsHasAllNotesOff();
 bool SNM_PlayTrackPreview(MediaTrack* _tr, PCM_source* _src, bool _pause, bool _loop, double _msi);
 bool SNM_PlayTrackPreview(MediaTrack* _tr, const char* _fn, bool _pause, bool _loop, double _msi);
 void SNM_PlaySelTrackPreviews(const char* _fn, bool _pause, bool _loop, double _msi);
@@ -86,6 +85,7 @@ bool SNM_TogglePlaySelTrackPreviews(const char* _fn, bool _pause, bool _loop, do
 void StopTrackPreviews(bool _selTracksOnly);
 void StopTrackPreviews(COMMAND_T*);
 
+void WaitForAllNotesOff();
 bool SendAllNotesOff(MediaTrack* _tr);
 bool SendAllNotesOff(WDL_PtrList<void>* _trs);
 void SendAllNotesOff(COMMAND_T*);

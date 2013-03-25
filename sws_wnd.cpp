@@ -595,7 +595,7 @@ void SWS_DockWnd::LoadState(const char* cStateBuf, int iLen)
 
 	if (m_state.state & 1)
 	{
-		if (SWS_IsWindow(m_hwnd) && bDocked != ((m_state.state & 2) == 2) ||
+		if ((SWS_IsWindow(m_hwnd) && bDocked != ((m_state.state & 2) == 2)) ||
 			(bDocked && DockIsChildOfDock(m_hwnd, NULL) != m_state.whichdock))
 			// If the window's already open, but the dock state or docker # has changed,
 			// destroy and reopen.

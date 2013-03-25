@@ -97,6 +97,8 @@ int CompareVersion(BR_Version one, BR_Version two)
 
 void VersionCheck ()
 {
+	JNL::open_socketlib();
+	
 	// Get local version
 	BR_Version versionL;				
 	sscanf(SWS_VERSION_STR, "%d,%d,%d,%d", &versionL.maj, &versionL.min, &versionL.rev, &versionL.build);
@@ -252,6 +254,7 @@ void VersionCheck ()
 	}
 	g_searching = false;
 	g_startupDone = true;
+	JNL::close_socketlib();
 };
 
 DWORD WINAPI VersionCheckThread(void*)

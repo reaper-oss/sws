@@ -1,3 +1,6 @@
+Fixes:
++About box: fixed update checker connection issues in certain instances (win only)
+
 !v2.3.0 #14 (March 23, 2013)
 Cycle Actions (CAs)
 +Improved timing when performing CAs

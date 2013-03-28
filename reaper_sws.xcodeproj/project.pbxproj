@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		1FD9691D1661424E00DECB50 /* virtwnd-slider.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FD9691C1661424E00DECB50 /* virtwnd-slider.cpp */; };
+		1FE2BC0F16FF72FD008AC14F /* SnM_CSurf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FE2BC0D16FF72FD008AC14F /* SnM_CSurf.cpp */; };
+		1FE2BC1016FF72FD008AC14F /* SnM_CSurf.h in Headers */ = {isa = PBXBuildFile; fileRef = 1FE2BC0E16FF72FD008AC14F /* SnM_CSurf.h */; };
 		1FE350CA16A8A6D10032F465 /* SnM_CueBuss.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FE350C016A8A6D10032F465 /* SnM_CueBuss.cpp */; };
 		1FE350CB16A8A6D10032F465 /* SnM_CueBuss.h in Headers */ = {isa = PBXBuildFile; fileRef = 1FE350C116A8A6D10032F465 /* SnM_CueBuss.h */; };
 		1FE350CC16A8A6D10032F465 /* SnM_Find.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FE350C216A8A6D10032F465 /* SnM_Find.cpp */; };
@@ -343,6 +345,8 @@
 
 /* Begin PBXFileReference section */
 		1FD9691C1661424E00DECB50 /* virtwnd-slider.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "virtwnd-slider.cpp"; path = "../WDL/wingui/virtwnd-slider.cpp"; sourceTree = "<group>"; };
+		1FE2BC0D16FF72FD008AC14F /* SnM_CSurf.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_CSurf.cpp; path = SnM/SnM_CSurf.cpp; sourceTree = "<group>"; };
+		1FE2BC0E16FF72FD008AC14F /* SnM_CSurf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_CSurf.h; path = SnM/SnM_CSurf.h; sourceTree = "<group>"; };
 		1FE350C016A8A6D10032F465 /* SnM_CueBuss.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_CueBuss.cpp; path = SnM/SnM_CueBuss.cpp; sourceTree = "<group>"; };
 		1FE350C116A8A6D10032F465 /* SnM_CueBuss.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_CueBuss.h; path = SnM/SnM_CueBuss.h; sourceTree = "<group>"; };
 		1FE350C216A8A6D10032F465 /* SnM_Find.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Find.cpp; path = SnM/SnM_Find.cpp; sourceTree = "<group>"; };
@@ -1004,6 +1008,8 @@
 		22C769F410B0F03900774777 /* SnM */ = {
 			isa = PBXGroup;
 			children = (
+				1FE2BC0D16FF72FD008AC14F /* SnM_CSurf.cpp */,
+				1FE2BC0E16FF72FD008AC14F /* SnM_CSurf.h */,
 				22F7AAB415201D8A00CC1481 /* SnM.cpp */,
 				22F7AAB515201D8A00CC1481 /* SnM.h */,
 				22F7AA8D15201D8A00CC1481 /* SnM_Chunk.cpp */,
@@ -1335,6 +1341,7 @@
 				4D859DDA16AB133D00E34EAA /* jnetlib.h in Headers */,
 				4D859DDB16AB133D00E34EAA /* netinc.h in Headers */,
 				4D859DDD16AB133D00E34EAA /* util.h in Headers */,
+				1FE2BC1016FF72FD008AC14F /* SnM_CSurf.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1614,6 +1621,7 @@
 				4D859DD616AB133D00E34EAA /* connection.cpp in Sources */,
 				4D859DD816AB133D00E34EAA /* httpget.cpp in Sources */,
 				4D859DDC16AB133D00E34EAA /* util.cpp in Sources */,
+				1FE2BC0F16FF72FD008AC14F /* SnM_CSurf.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -95,8 +95,8 @@ public:
 	~SNM_RegionPlaylistWnd() {}
 	void GetMinSize(int* w, int* h) { *w=202; *h=100; }
 	void OnCommand(WPARAM wParam, LPARAM lParam);
-	void Update(int _flags = 0);
-	void UpdateMonitoring();
+	void Update(int _flags = 0, WDL_FastString* _curNum=NULL, WDL_FastString* _cur=NULL, WDL_FastString* _nextNum=NULL, WDL_FastString* _next=NULL);
+	void UpdateMonitoring(WDL_FastString* _curNum=NULL, WDL_FastString* _cur=NULL, WDL_FastString* _nextNum=NULL, WDL_FastString* _next=NULL);
 	void FillPlaylistCombo();
 	void CSurfSetTrackListChange();
 	void ToggleLock();

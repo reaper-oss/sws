@@ -29,7 +29,6 @@
 #include "SnM.h"
 #include "version.h"
 #include "../reaper/localize.h"
-#include "../OscPkt/oscpkt.h"
 #ifdef _SNM_HOST_AW
 #include "../Misc/Adam.h"
 #endif
@@ -535,11 +534,11 @@ static COMMAND_T g_SNM_cmdTable[] =
 // - items are not real commands but "meta" commands
 // - COMMAND_T.user is used to specify the default number of actions to create
 // - COMMAND_T.menuText is used to specify a custom max number of actions
-//   (NULL means max = 99, atm)
+//   (NULL means max, i.e. 99 ATM)
 // - a function doCommand(COMMAND_T*) or getEnabled(COMMAND_T*) will be 
 //   triggered with 0-based COMMAND_T.user
 // - action names are formatted strings, they *must* contain "%02d"
-//   (for better sort in the action list, 2 digits because max=99 atm)
+//   (for better sort in the action list, 2 digits because max=99 ATM)
 // - custom command ids are not formated strings, but final ids will end with 
 //   slot numbers (1-based for display reasons)
 // Example: 
@@ -1048,6 +1047,7 @@ void AddOrReplaceScheduledJob(SNM_ScheduledJob* _job)
 	}
 }
 
+
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_MidiActionJob
 ///////////////////////////////////////////////////////////////////////////////
@@ -1141,34 +1141,6 @@ int UpdateMarkerRegionCache()
 			}
 	return updateFlags;
 }
-
-
-///////////////////////////////////////////////////////////////////////////////
-// IReaperControlSurface "proxy"
-// note: it is up to the caller to unalloc things
-///////////////////////////////////////////////////////////////////////////////
-
-#ifdef _SNM_CSURF_PROXY
-
-SNM_CSurfProxy* g_SNM_CSurfProxy = NULL;
-
-bool SNM_RegisterCSurf(IReaperControlSurface* _csurf) {
-	if (g_SNM_CSurfProxy) {
-		g_SNM_CSurfProxy->Add(_csurf);
-		return true;
-	}
-	return false;
-}
-
-bool SNM_UnregisterCSurf(IReaperControlSurface* _csurf) {
-	if (g_SNM_CSurfProxy) {
-		g_SNM_CSurfProxy->Remove(_csurf);
-		return true;
-	}
-	return false;
-}
-
-#endif
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1287,91 +1259,6 @@ int SNM_CSurfExtended(int _call, void* _parm1, void* _parm2, void* _parm3) {
 	return 0; // return 0 if unsupported
 }
 
-
-///////////////////////////////////////////////////////////////////////////////
-// Fake/local OSC CSurf
-///////////////////////////////////////////////////////////////////////////////
-
-#ifdef _SNM_MISC
-void SNM_LocalOscCallback(void* _obj, const char* _msg, int _msglen) 
-{
-	if (_msg && _msglen)
-	{
-		oscpkt::PacketReader pr;
-		pr.init(_msg, _msglen);
-		oscpkt::Message* msg;
-		while (pr.isOk() && (msg = pr.popMessage()) != 0)
-			cout << "SNM_LocalOscCallback: " << msg << "\n";
-	}
-}
-#endif
-
-// _oscMsg is a human readable osc message, ex:
-// - /track/1/fx/1/preset MyPreset
-// - /track/1/fx/1/preset "My Preset"
-// - /track/1/fx/1,2/fxparam/1,1/value 0.25 0.5
-// notes: 
-// 1) API OscLocalMessageToHost() not used here because 
-//    there is no way to manage osc messages with string args
-// 2) REAPER BUG? Using a global var for the handler + calling 
-//    DestroyLocalOscHandler() in SNM_Exit() crashes REAPER (v4.32)
-bool SNM_SendLocalOscMessage(const char* _oscMsg)
-{
-	if (!_oscMsg)
-		return false;
-
-	bool sent = false;
-	static void* oscHandler; //JFB static ATM, see above note
-	if (!oscHandler)
-	{
-#ifdef _SNM_MISC
-		oscHandler = CreateLocalOscHandler(NULL, SNM_LocalOscCallback);
-#else
-		oscHandler = CreateLocalOscHandler(NULL, NULL);
-#endif
-	}
-	if (oscHandler)
-	{
-		LineParser lp(false);
-		if (!lp.parse(_oscMsg) && lp.getnumtokens()>0)
-		{
-			oscpkt::Message msg(lp.gettoken_str(0));
-			if (lp.getnumtokens()>1) // arguments(s)?
-			{
-				double d;
-				int success;
-				for (int i=1; i<lp.getnumtokens(); i++) // i=1!
-				{
-					d = lp.gettoken_float(i, &success);
-					if (success)
-						msg.pushFloat((float)d);
-					else
-					{
-						WDL_FastString arg(lp.gettoken_str(i));
-						// strip quotes, if needed
-						const char* p1 = arg.Get();
-						const char* p2 = p1 + arg.GetLength() - 1;
-						if ((*p1=='"' || *p1=='\'' || *p1=='`') && 
-							(*p2=='"' || *p2=='\'' || *p2=='`'))
-						{
-							arg.Set(p1+1, arg.GetLength()-2);
-						}
-						msg.pushStr(arg.Get());
-					}
-				}
-			}
-			oscpkt::PacketWriter pw;
-			pw.addMessage(msg);
-			SendLocalOscMessage(oscHandler, pw.packetData(), pw.packetSize());
-			sent = true;
-		}
-//		DestroyLocalOscHandler(oscHandler); // see above note
-	}
-	return sent;
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
 // S&M core stuff
 ///////////////////////////////////////////////////////////////////////////////
 

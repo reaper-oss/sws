@@ -40,6 +40,7 @@
 //#define _SNM_WDL				// if my wdl version is used
 #define _SNM_CSURF_PROXY
 #define _SNM_HOST_AW
+//#define _SNM_REAPER_BUG			// workaround some API bugs
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -101,6 +102,7 @@
 #define SNM_INI_EXT_LIST			"INI files (*.INI)\0*.INI\0All Files\0*.*\0"
 #define SNM_SUB_EXT_LIST			"SubRip subtitle files (*.SRT)\0*.SRT\0"
 #define SNM_TXT_EXT_LIST			"Text files (*.txt)\0*.txt\0All files (*.*)\0*.*\0"
+#define SNM_MAX_OSC_MSG_LEN			256
 #define SNM_MAX_SECTION_NAME_LEN	64
 #define SNM_MAX_SECTION_ACTIONS		128
 #define SNM_MAX_ACTION_CUSTID_LEN	128
@@ -210,65 +212,6 @@ public:
 	int m_int;
 };
 
-#ifdef _SNM_CSURF_PROXY
-
-#define SNM_CSURFMAP(x) SWS_SectionLock lock(&m_csurfsMutex); for (int i=0; i<m_csurfs.GetSize(); i++) m_csurfs.Get(i)->x;
-
-class SNM_CSurfProxy : public IReaperControlSurface {
-public:
-	SNM_CSurfProxy() {}
-	~SNM_CSurfProxy() { RemoveAll(); }
-	const char *GetTypeString() { return ""; }
-	const char *GetDescString() { return ""; }
-	const char *GetConfigString() { return ""; }
-	void Run() { SNM_CSURFMAP(Run()) }
-	void CloseNoReset() { SNM_CSURFMAP(CloseNoReset()) }
-	void SetTrackListChange() { SNM_CSURFMAP(SetTrackListChange()) }
-	void SetSurfaceVolume(MediaTrack *tr, double volume) { SNM_CSURFMAP(SetSurfaceVolume(tr, volume)) }
-	void SetSurfacePan(MediaTrack *tr, double pan) { SNM_CSURFMAP(SetSurfacePan(tr, pan)) }
-	void SetSurfaceMute(MediaTrack *tr, bool mute) { SNM_CSURFMAP(SetSurfaceMute(tr, mute)) }
-	void SetSurfaceSelected(MediaTrack *tr, bool sel) { SNM_CSURFMAP(SetSurfaceSelected(tr, sel)) }
-	void SetSurfaceSolo(MediaTrack *tr, bool solo) { SNM_CSURFMAP(SetSurfaceSolo(tr, solo)) }
-	void SetSurfaceRecArm(MediaTrack *tr, bool recarm) { SNM_CSURFMAP(SetSurfaceRecArm(tr, recarm)) }
-	void SetPlayState(bool play, bool pause, bool rec) { SNM_CSURFMAP(SetPlayState(play, pause, rec)) }
-	void SetRepeatState(bool rep) { SNM_CSURFMAP(SetRepeatState(rep)) }
-	void SetTrackTitle(MediaTrack *tr, const char *title) { SNM_CSURFMAP(SetTrackTitle(tr, title)) }
-	bool GetTouchState(MediaTrack *tr, int isPan) { SNM_CSURFMAP(GetTouchState(tr, isPan)) return false; }
-	void SetAutoMode(int mode) { SNM_CSURFMAP(SetAutoMode(mode)) }
-	void ResetCachedVolPanStates() { SNM_CSURFMAP(ResetCachedVolPanStates()) }
-	void OnTrackSelection(MediaTrack *tr) { SNM_CSURFMAP(OnTrackSelection(tr)) }
-	bool IsKeyDown(int key) { SNM_CSURFMAP(IsKeyDown(key)) return false; }
-	int Extended(int call, void *parm1, void *parm2, void *parm3) { 
-		SWS_SectionLock lock(&m_csurfsMutex);
-		int ret=0;
-		for (int i=0; i<m_csurfs.GetSize(); i++)
-			ret = m_csurfs.Get(i)->Extended(call, parm1, parm2, parm3) ? 1 : ret;
-		return ret;
-	}
-	void Add(IReaperControlSurface* csurf) {
-		SWS_SectionLock lock(&m_csurfsMutex);
-		if (m_csurfs.Find(csurf)<0)
-			m_csurfs.Add(csurf);
-	}
-	void Remove(IReaperControlSurface* csurf) {
-		SWS_SectionLock lock(&m_csurfsMutex);
-		m_csurfs.Delete(m_csurfs.Find(csurf), false);
-	}
-	void RemoveAll() {
-		SWS_SectionLock lock(&m_csurfsMutex);
-		for (int i=m_csurfs.GetSize(); i>=0; i--)
-			if (IReaperControlSurface* csurf = m_csurfs.Get(i)) {
-				csurf->Extended(SNM_CSURF_EXT_UNREGISTER, NULL, NULL, NULL);
-				m_csurfs.Delete(i, false);
-			}
-	}
-private:
-	WDL_PtrList<IReaperControlSurface> m_csurfs;
-	SWS_Mutex m_csurfsMutex;
-};
-
-#endif
-
 typedef struct MIDI_COMMAND_T {
 	gaccel_register_t accel;
 	const char* id;
@@ -291,9 +234,6 @@ extern int g_SNM_SectionIds[];
 extern bool g_SNM_PlayState, g_SNM_PauseState, g_SNM_RecState, g_SNM_ToolbarRefresh;
 extern int g_SNM_IniVersion, g_SNM_Beta, g_SNM_LastImgSlot;
 extern WDL_FastString g_SNM_IniFn, g_SNM_CyclIniFn, g_SNM_DiffToolFn;
-#ifdef _SNM_CSURF_PROXY
-extern SNM_CSurfProxy* g_SNM_CSurfProxy;
-#endif
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -313,19 +253,12 @@ void AddOrReplaceScheduledJob(SNM_ScheduledJob* _job);
 bool RegisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub);
 bool UnregisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub) ;
 
-// csurf proxy
-bool SNM_RegisterCSurf(IReaperControlSurface* _csurf);
-bool SNM_UnregisterCSurf(IReaperControlSurface* _csurf);
-
-// csurf callbacks
+// IReaperControlSurface callbacks
 void SNM_CSurfRun();
 void SNM_CSurfSetTrackTitle();
 void SNM_CSurfSetTrackListChange();
 void SNM_CSurfSetPlayState(bool _play, bool _pause, bool _rec);
 int SNM_CSurfExtended(int _call, void* _parm1, void* _parm2, void* _parm3);
-
-// fake/local osc csurf
-bool SNM_SendLocalOscMessage(const char* _oscMsg);
 
 int SNM_Init(reaper_plugin_info_t* _rec);
 void SNM_Exit();
@@ -402,6 +335,7 @@ vezn/Q+t/AIQiCv/Q4iRxAAAAABJRU5ErkJggg==\n"
 #include "SnM_VWnd.h"
 #include "SnM_Resources.h"
 // from this point, order does not matter anymore
+#include "SnM_CSurf.h"
 #include "SnM_CueBuss.h"
 #include "SnM_Cyclactions.h"
 #include "SnM_Dlg.h"

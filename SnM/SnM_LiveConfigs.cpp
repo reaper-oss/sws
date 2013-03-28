@@ -70,11 +70,13 @@
 #define SNM_LIVECFG_COPY_MSG					0xF023
 #define SNM_LIVECFG_PASTE_MSG					0xF024
 #define SNM_LIVECFG_CREATE_INPUT_MSG			0xF025
-#define SNM_LIVECFG_LEARN_PRESETS_START_MSG		0xF100 // 255 fx learn max -->
-#define SNM_LIVECFG_LEARN_PRESETS_END_MSG		0xF1FF // <--
-#define SNM_LIVECFG_SET_TRACK_START_MSG			0xF200 // 255 track max -->
-#define SNM_LIVECFG_SET_TRACK_END_MSG			0xF2FF // <--
-#define SNM_LIVECFG_SET_PRESET_START_MSG		0xF300 // 3327 preset max -->
+#define SNM_LIVECFG_OSC_START_MSG				0xF100 // 255 osc curfs max -->
+#define SNM_LIVECFG_OSC_END_MSG					0xF1FF // <--
+#define SNM_LIVECFG_LEARN_PRESETS_START_MSG		0xF200 // 255 fx learn max -->
+#define SNM_LIVECFG_LEARN_PRESETS_END_MSG		0xF2FF // <--
+#define SNM_LIVECFG_SET_TRACK_START_MSG			0xF300 // 255 track max -->
+#define SNM_LIVECFG_SET_TRACK_END_MSG			0xF3FF // <--
+#define SNM_LIVECFG_SET_PRESET_START_MSG		0xF400 // a bunch of presets -->
 #define SNM_LIVECFG_SET_PRESET_END_MSG			0xFFFF // <--
 
 #define SNM_LIVECFG_MAX_CC_DELAY				3000
@@ -85,10 +87,16 @@
 #define SNM_LIVECFG_MAX_PRESET_COUNT			(SNM_LIVECFG_SET_PRESET_END_MSG - SNM_LIVECFG_SET_PRESET_START_MSG)
 #define SNM_LIVECFG_UNDO_STR					__LOCALIZE("Live Configs edition", "sws_undo")
 
+#define SNM_LIVECFG_APPLY_OSC					"/snm/liveconfig%d/current/changed"
+#define SNM_LIVECFG_APPLYING_OSC				"/snm/liveconfig%d/current/changing"
+#define SNM_LIVECFG_PRELOAD_OSC					"/snm/liveconfig%d/preload/changed"
+#define SNM_LIVECFG_PRELOADING_OSC				"/snm/liveconfig%d/preload/changing"
+
+#define SNM_LIVECFG_ELLIPSIZE					24
+#define SNM_APPLY_PRELOAD_HWND					NULL
+
 #define SNM_APPLY_MASK							1
 #define SNM_PRELOAD_MASK						2
-
-#define SNM_APPLY_PRELOAD_HWND					NULL
 
 
 enum {
@@ -360,7 +368,7 @@ void LiveConfigItem::GetInfo(WDL_FastString* _info)
 		if (m_desc.GetLength())
 		{
 			_info->Set(m_desc.Get());
-			_info->Ellipsize(24, 24);
+			_info->Ellipsize(SNM_LIVECFG_ELLIPSIZE, SNM_LIVECFG_ELLIPSIZE);
 		}
 		else
 		{
@@ -370,7 +378,7 @@ void LiveConfigItem::GetInfo(WDL_FastString* _info)
 				if (name && *name) _info->Set(name);
 				else _info->SetFormatted(32, "[%d]", CSurf_TrackToID(m_track, false));
 			}
-			_info->Ellipsize(24, 24);
+			_info->Ellipsize(SNM_LIVECFG_ELLIPSIZE, SNM_LIVECFG_ELLIPSIZE);
 
 			WDL_FastString line2;
 			if (m_desc.GetLength()) line2.Append(m_desc.Get());
@@ -379,7 +387,7 @@ void LiveConfigItem::GetInfo(WDL_FastString* _info)
 			else if (m_presets.GetLength()) line2.Append(m_presets.Get());
 			else if (m_onAction.GetLength()) line2.Append(kbd_getTextFromCmd(NamedCommandLookup(m_onAction.Get()), NULL));
 			else if (m_offAction.GetLength()) line2.Append(kbd_getTextFromCmd(NamedCommandLookup(m_offAction.Get()), NULL));
-			line2.Ellipsize(24, 24);
+			line2.Ellipsize(SNM_LIVECFG_ELLIPSIZE, SNM_LIVECFG_ELLIPSIZE);
 
 			if (_info->GetLength()) _info->Append("\n");
 			_info->Append(line2.Get());
@@ -403,6 +411,7 @@ LiveConfig::LiveConfig()
 	m_ignoreEmpty = m_muteOthers = m_offlineOthers = 0;
 	m_inputTr = NULL;
 	m_activeMidiVal = m_preloadMidiVal = m_curMidiVal = m_curPreloadMidiVal = -1;
+	m_osc = NULL;
 	for (int j=0; j<128; j++)
 		m_ccConfs.Add(new LiveConfigItem(j, "", NULL, "", "", "", "", ""));
 }
@@ -720,7 +729,7 @@ void SNM_LiveConfigsWnd::FillComboInputTrack()
 		WDL_FastString ellips;
 		char* name = (char*)GetSetMediaTrackInfo(CSurf_TrackFromID(i,false), "P_NAME", NULL);
 		ellips.SetFormatted(SNM_MAX_TRACK_NAME_LEN, "[%d] \"%s\"", i, name?name:"");
-		ellips.Ellipsize(24, 24);
+		ellips.Ellipsize(SNM_LIVECFG_ELLIPSIZE, SNM_LIVECFG_ELLIPSIZE);
 		m_cbInputTr.AddItem(ellips.Get());
 	}
 
@@ -1216,6 +1225,21 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 					Undo_OnStateChangeEx2(NULL, SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
 				}
 			}
+			else if (LOWORD(wParam) >= SNM_LIVECFG_OSC_START_MSG && LOWORD(wParam) <= SNM_LIVECFG_OSC_END_MSG) 
+			{
+				DELETE_NULL(lc->m_osc);
+				WDL_PtrList_DeleteOnDestroy<SNM_OscCSurf> oscCSurfs;
+				LoadOscCSurfs(&oscCSurfs);
+				if (SNM_OscCSurf* osc = oscCSurfs.Get((int)LOWORD(wParam)-1 - SNM_LIVECFG_OSC_START_MSG))
+					lc->m_osc = new SNM_OscCSurf(osc);
+
+				UpdateMonitoring(
+					g_configId,
+					SNM_APPLY_MASK|SNM_PRELOAD_MASK,
+					SNM_APPLY_MASK|SNM_PRELOAD_MASK,
+					2); // osc only
+				Undo_OnStateChangeEx2(NULL, SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
+			}
 			else
 				Main_OnCommand((int)wParam, (int)lParam);
 			break;
@@ -1243,7 +1267,7 @@ INT_PTR SNM_LiveConfigsWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lPar
 	return 0;
 }
 
-void SNM_LiveConfigsWnd::AddPresetSubMenu(HMENU _menu, MediaTrack* _tr, WDL_FastString* _curPresetConf)
+void SNM_LiveConfigsWnd::AddPresetMenu(HMENU _menu, MediaTrack* _tr, WDL_FastString* _curPresetConf)
 {
 	m_lastPresetMsg.Empty(true);
 
@@ -1280,7 +1304,7 @@ void SNM_LiveConfigsWnd::AddPresetSubMenu(HMENU _menu, MediaTrack* _tr, WDL_Fast
 			int presetCount = GetUserPresetNames(_tr, fx, &names);
 
 			str.SetFormatted(256, __LOCALIZE_VERFMT("[User presets (.rpl)%s]","sws_DLG_155"), presetCount?"":__LOCALIZE(": no .rpl file loaded","sws_DLG_155"));
-			AddToMenu(fxSubMenu, str.Get(), 0, -1, false, presetCount?MF_DISABLED:MF_GRAYED);
+			AddToMenu(fxSubMenu, str.Get(), 0, -1, false, MF_GRAYED);
 
 			for(int j=0; j<presetCount && (SNM_LIVECFG_SET_PRESET_START_MSG + msgCpt) <= SNM_LIVECFG_SET_PRESET_END_MSG; j++)
 				if (names.Get(j)->GetLength()) {
@@ -1349,12 +1373,16 @@ void SNM_LiveConfigsWnd::AddOptionsMenu(HMENU _menu, bool _subItems)
 
 HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 {
+	LiveConfig* lc = g_liveConfigs.Get()->Get(g_configId);
+	if (!lc) return NULL;
+
 	HMENU hMenu = CreatePopupMenu();
 
 	// specific context menu for the option button
 	POINT p; GetCursorPos(&p);
 	ScreenToClient(m_hwnd, &p);
 	if (WDL_VWnd* v = m_parentVwnd.VirtWndFromPoint(p.x,p.y,1))
+	{
 		switch (v->GetID())
 		{
 			case BTNID_LEARN:
@@ -1367,15 +1395,12 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 				return hMenu;
 			case TXTID_INPUT_TRACK:
 			case CMBID_INPUT_TRACK:
-				if (LiveConfig* lc = g_liveConfigs.Get()->Get(g_configId))
-				{
-					*wantDefaultItems = false;
-					AddToMenu(hMenu, __LOCALIZE("Show FX chain...","sws_DLG_155"), SNM_LIVECFG_SHOW_FX_INPUT_MSG, -1, false, lc->m_inputTr ? MF_ENABLED : MF_GRAYED);
-					AddToMenu(hMenu, __LOCALIZE("Show routing window...","sws_DLG_155"), SNM_LIVECFG_SHOW_IO_INPUT_MSG, -1, false, lc->m_inputTr ? MF_ENABLED : MF_GRAYED);
-					return hMenu;
-				}
-				break;
+				*wantDefaultItems = false;
+				AddToMenu(hMenu, __LOCALIZE("Show FX chain...","sws_DLG_155"), SNM_LIVECFG_SHOW_FX_INPUT_MSG, -1, false, lc->m_inputTr ? MF_ENABLED : MF_GRAYED);
+				AddToMenu(hMenu, __LOCALIZE("Show routing window...","sws_DLG_155"), SNM_LIVECFG_SHOW_IO_INPUT_MSG, -1, false, lc->m_inputTr ? MF_ENABLED : MF_GRAYED);
+				return hMenu;
 		}
+	}
 
 	int iCol;
 	if (LiveConfigItem* item = (LiveConfigItem*)m_pLists.Get(0)->GetHitItem(x, y, &iCol))
@@ -1408,7 +1433,8 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 				AddToMenu(hMenu, __LOCALIZE("Show routing window...","sws_DLG_155"), SNM_LIVECFG_SHOW_IO_MSG, -1, false, item->m_track ? MF_ENABLED : MF_GRAYED);
 				break;
 			case COL_TRT:
-				if (item->m_track) {
+				if (item->m_track)
+				{
 					if (item->m_fxChain.GetLength())
 						AddToMenu(hMenu, __LOCALIZE("(FX Chain overrides)","sws_DLG_155"), 0, -1, false, MFS_GRAYED);
 					else {
@@ -1420,7 +1446,8 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 					AddToMenu(hMenu, __LOCALIZE("(No track)","sws_DLG_155"), 0, -1, false, MF_GRAYED);
 				break;
 			case COL_FXC:
-				if (item->m_track) {
+				if (item->m_track)
+				{
 					if (!item->m_trTemplate.GetLength()) {
 						AddToMenu(hMenu, __LOCALIZE("Load FX Chain...","sws_DLG_155"), SNM_LIVECFG_LOAD_FXCHAIN_MSG);
 						AddToMenu(hMenu, __LOCALIZE("Clear FX Chains","sws_DLG_155"), SNM_LIVECFG_CLEAR_FXCHAIN_MSG);
@@ -1437,10 +1464,10 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 						AddToMenu(hMenu, __LOCALIZE("(Track template overrides)","sws_DLG_155"), 0, -1, false, MFS_GRAYED);
 					else if (item->m_fxChain.GetLength())
 						AddToMenu(hMenu, __LOCALIZE("(FX Chain overrides)","sws_DLG_155"), 0, -1, false, MFS_GRAYED);
-					else {
-						// just to be clear w/ the user
+					else 
+					{
 						HMENU setPresetMenu = CreatePopupMenu();
-						AddPresetSubMenu(setPresetMenu, item->m_track, &item->m_presets);
+						AddPresetMenu(setPresetMenu, item->m_track, &item->m_presets); // just to be clear w/ the user
 						AddSubMenu(hMenu, setPresetMenu, __LOCALIZE("Set preset","sws_DLG_155"));
 						AddToMenu(hMenu, __LOCALIZE("Clear FX presets","sws_DLG_155"), SNM_LIVECFG_CLEAR_PRESETS_MSG);
 					}
@@ -1475,10 +1502,14 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 	// useful when the wnd is resized (buttons not visible..)
 	if (*wantDefaultItems)
 	{
+		char buf[64]="";
+		if (_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Live Config #%d:","sws_DLG_155"), g_configId+1)>0)
+			AddToMenu(hMenu, buf, 0, -1, false, MF_GRAYED);
 		AddToMenu(hMenu, __LOCALIZE("Create input track...","sws_DLG_155"), SNM_LIVECFG_CREATE_INPUT_MSG);
-		AddToMenu(hMenu, SWS_SEPARATOR, 0);
 		AddLearnMenu(hMenu, true);
 		AddOptionsMenu(hMenu, true);
+		AddOscCSurfMenu(hMenu, lc->m_osc, SNM_LIVECFG_OSC_START_MSG, SNM_LIVECFG_OSC_END_MSG);
+		AddToMenu(hMenu, SWS_SEPARATOR, 0);
 		AddToMenu(hMenu, __LOCALIZE("Online help...","sws_DLG_155"), SNM_LIVECFG_HELP_MSG);
 	}
 	return hMenu;
@@ -1725,8 +1756,21 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 				else
 					lc->m_fade = SNM_LIVECFG_DEF_FADE;
 			}
+			lc->m_osc = LoadOscCSurfs(NULL, lp.gettoken_str(13)); // NULL on err (e.g. "", token doesn't exist, etc.)
 
-			char linebuf[SNM_MAX_CHUNK_LINE_LENGTH];
+			if (isUndo)
+			{
+				lc->m_activeMidiVal = lp.gettoken_int(14, &success);
+				if (!success) lc->m_activeMidiVal = -1;
+				lc->m_curMidiVal = lp.gettoken_int(15, &success);
+				if (!success) lc->m_curMidiVal = -1;
+				lc->m_preloadMidiVal = lp.gettoken_int(16, &success);
+				if (!success) lc->m_preloadMidiVal = -1;
+				lc->m_curPreloadMidiVal = lp.gettoken_int(17, &success);
+				if (!success) lc->m_curPreloadMidiVal = -1;
+			}
+
+			char linebuf[SNM_MAX_CHUNK_LINE_LENGTH]="";
 			while(true)
 			{
 				if (!ctx->GetLine(linebuf,sizeof(linebuf)) && !lp.parse(linebuf))
@@ -1758,15 +1802,11 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 			// note: do not manage sends (restored via "normal" undos or via rpp file loading)
 			lc->SetInputTrack(inputTr, false);
 
-			// refresh monitoring window (well, it clears ATM)
-			//JFB TODO? refresh config infos on undo?
-			// (not done because the undo system should be disabled for live use)
-			if (g_monitorWnds[configId]) {
-				int nbrows = g_monitorWnds[configId]->GetMonitors()->GetRows();
-				g_monitorWnds[configId]->Update(
-					SNM_APPLY_MASK | (nbrows>1 ? SNM_PRELOAD_MASK : 0), 
-					SNM_APPLY_MASK | (nbrows>1 ? SNM_PRELOAD_MASK : 0));
-			}
+			// refresh monitoring window + osc feedback
+			UpdateMonitoring(
+				configId,
+				SNM_APPLY_MASK|SNM_PRELOAD_MASK,
+				SNM_APPLY_MASK|SNM_PRELOAD_MASK);
 		}
 
 		// refresh editor
@@ -1801,7 +1841,13 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 					else 
 						g = GUID_NULL;
 					guidToString(&g, strId);
-					ctx->AddLine("<S&M_MIDI_LIVE %d %d %d %d %s %d %d %d %d %d %d %d", 
+
+					if (lc->m_osc)
+						makeEscapedConfigString(lc->m_osc->m_name.Get(), &escStrs[0]);
+					else
+						escStrs[0].Set("\"\"");
+
+					ctx->AddLine("<S&M_MIDI_LIVE %d %d %d %d %s %d %d %d %d %d %d %d %s %d %d %d %d", 
 						i+1,
 						lc->m_enable,
 						SNM_LIVECFG_VERSION,
@@ -1813,7 +1859,12 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 						lc->m_ignoreEmpty,
 						lc->m_autoSends,
 						lc->m_ccDelay,
-						lc->m_fade);
+						lc->m_fade,
+						escStrs[0].Get(),
+						lc->m_activeMidiVal,
+						lc->m_curMidiVal,
+						lc->m_preloadMidiVal,
+						lc->m_curPreloadMidiVal);
 				}
 
 				if (item->m_track && CSurf_TrackToID(item->m_track, false) > 0) 
@@ -1822,7 +1873,6 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 					g = GUID_NULL;
 				guidToString(&g, strId);
 
-				// make sure strings containing " ' etc.. will be properly saved
 				makeEscapedConfigString(item->m_desc.Get(), &escStrs[0]);
 				makeEscapedConfigString(item->m_trTemplate.Get(), &escStrs[1]);
 				makeEscapedConfigString(item->m_fxChain.Get(), &escStrs[2]);
@@ -1936,10 +1986,6 @@ void WaitForTinyFade(DWORD* _muteTime)
 		int sleeps = 0;
 		while (int(GetTickCount()-*_muteTime) < fadelen && sleeps < 1000) // timeout safety ~ 1s
 		{
-/* KO of course
-			Main_OnCommand(2088, 0); // wait 0.1s before next action
-			Main_OnCommand(65535, 0); // no-op
-*/
 #ifdef _WIN32
 			// keep the UI updating
 			MSG msg;
@@ -1958,7 +2004,6 @@ void WaitForTinyFade(DWORD* _muteTime)
 	}
 }
 
-// just to simplify ApplyPreloadLiveConfig()
 void MuteAndInitCC123(LiveConfig* _lc, MediaTrack* _tr, DWORD* _muteTime, WDL_PtrList<void>* _muteTracks, WDL_PtrList<void>* _cc123Tracks, WDL_PtrList<bool>* _muteStates, bool _always = false)
 {
 	if (_always || _lc->m_fade>0 || _lc->m_cc123) // receives from the input track must be muted before sending all notes off
@@ -1970,7 +2015,6 @@ void MuteAndInitCC123(LiveConfig* _lc, MediaTrack* _tr, DWORD* _muteTime, WDL_Pt
 	}
 }
 
-// just to simplify ApplyPreloadLiveConfig()
 void MuteAndInitCC123AllConfigs(LiveConfig* _lc, DWORD* _muteTime, WDL_PtrList<void>* _muteTracks, WDL_PtrList<void>* _cc123Tracks, WDL_PtrList<bool>* _muteStates)
 {
 	for (int i=0; i<_lc->m_ccConfs.GetSize(); i++)
@@ -1982,7 +2026,6 @@ void MuteAndInitCC123AllConfigs(LiveConfig* _lc, DWORD* _muteTime, WDL_PtrList<v
 				MuteAndInitCC123(_lc, item->m_track, _muteTime, _muteTracks, _cc123Tracks, _muteStates);
 }
 
-// just to simplify ApplyPreloadLiveConfig()
 // note: no tiny fades for sends unfortunately (last check v4.31) => fade dest tracks instead
 void WaitForMuteAndSendCC123(LiveConfig* _lc, LiveConfigItem* _cfg, DWORD* _muteTime, WDL_PtrList<void>* _muteTracks, WDL_PtrList<void>* _cc123Tracks)
 {
@@ -1998,7 +2041,9 @@ void WaitForMuteAndSendCC123(LiveConfig* _lc, LiveConfigItem* _cfg, DWORD* _mute
 	}
 }
 
-// the meat! handle with care!
+// -----------------------------
+//  THE MEAT! HANDLE WITH CARE!
+// -----------------------------
 void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _lastCfg)
 {
 	LiveConfig* lc = g_liveConfigs.Get()->Get(_cfgId);
@@ -2318,15 +2363,11 @@ void ApplyLiveConfig(int _cfgId, int _val, int _valhw, int _relmode, HWND _hwnd,
 		if (ApplyLiveConfigJob* job = new ApplyLiveConfigJob(SNM_SCHEDJOB_LIVECFG_APPLY+_cfgId, lc->m_ccDelay, lc->m_curMidiVal, _val, _valhw, _relmode, _hwnd, _cfgId))
 		{
 			lc->m_curMidiVal = job->GetAbsoluteValue();
-			if (g_monitorWnds[_cfgId])
-				g_monitorWnds[_cfgId]->Update(SNM_APPLY_MASK, 0);
-
-			if (!_immediate && lc->m_ccDelay)
-			{
+			if (!_immediate && lc->m_ccDelay) {
+				UpdateMonitoring(_cfgId, SNM_APPLY_MASK, 0);
 				AddOrReplaceScheduledJob(job);
 			}
-			else 
-			{
+			else {
 				job->Perform();
 				delete job;
 			}
@@ -2339,6 +2380,8 @@ void ApplyLiveConfigJob::Perform()
 	LiveConfig* lc = g_liveConfigs.Get()->Get(m_cfgId);
 	if (!lc) return;
 
+	Undo_BeginBlock2(NULL);
+
 	// swap preload/current configs?
 	bool preloaded = (lc->m_preloadMidiVal>=0 && lc->m_preloadMidiVal==m_absval);
 
@@ -2350,7 +2393,6 @@ void ApplyLiveConfigJob::Perform()
 		LiveConfigItem* lastCfg = lc->m_ccConfs.Get(lc->m_activeMidiVal); // can be <0
 		if (!lastCfg || (lastCfg && !lastCfg->Equals(cfg, true)))
 		{
-			Undo_BeginBlock2(NULL);
 
 			if (PreventUIRefresh)
 				PreventUIRefresh(1);
@@ -2359,12 +2401,6 @@ void ApplyLiveConfigJob::Perform()
 
 			if (PreventUIRefresh)
 				PreventUIRefresh(-1);
-
-			{
-				char buf[SNM_MAX_ACTION_NAME_LEN]="";
-				_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Apply Live Config %d (OSC/CC %d)","sws_undo"), m_cfgId+1, m_absval);
-				Undo_EndBlock2(NULL, buf, UNDO_STATE_ALL);
-			}
 		} 
 
 		// done
@@ -2376,6 +2412,12 @@ void ApplyLiveConfigJob::Perform()
 			lc->m_activeMidiVal = m_absval;
 	}
 
+	{
+		char buf[SNM_MAX_ACTION_NAME_LEN]="";
+		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Apply Live Config %d (OSC/CC %d)","sws_undo"), m_cfgId+1, m_absval);
+		Undo_EndBlock2(NULL, buf, UNDO_STATE_ALL);
+	}
+
 	// update GUIs in any case, e.g. tweaking (gray cc value) to same value (=> black)
 	if (g_pLiveConfigsWnd) {
 		g_pLiveConfigsWnd->Update();
@@ -2383,10 +2425,10 @@ void ApplyLiveConfigJob::Perform()
 	}
 
 	// swap preload/current configs => update both preload & current panels
-	if (g_monitorWnds[m_cfgId])
-		g_monitorWnds[m_cfgId]->Update(
-			SNM_APPLY_MASK | (preloaded ? SNM_PRELOAD_MASK : 0), 
-			SNM_APPLY_MASK | (preloaded ? SNM_PRELOAD_MASK : 0));
+	UpdateMonitoring(
+		m_cfgId,
+		SNM_APPLY_MASK | (preloaded ? SNM_PRELOAD_MASK : 0), 
+		SNM_APPLY_MASK | (preloaded ? SNM_PRELOAD_MASK : 0));
 }
 
 
@@ -2402,15 +2444,11 @@ void PreloadLiveConfig(int _cfgId, int _val, int _valhw, int _relmode, HWND _hwn
 		if (PreloadLiveConfigJob* job = new PreloadLiveConfigJob(SNM_SCHEDJOB_LIVECFG_PRELOAD+_cfgId, lc->m_ccDelay, lc->m_curPreloadMidiVal, _val, _valhw, _relmode, _hwnd, _cfgId))
 		{
 			lc->m_curPreloadMidiVal = job->GetAbsoluteValue();
-			if (g_monitorWnds[_cfgId])
-				g_monitorWnds[_cfgId]->Update(SNM_PRELOAD_MASK, 0);
-
-			if (!_immediate && lc->m_ccDelay)
-			{
+			if (!_immediate && lc->m_ccDelay) {
+				UpdateMonitoring(_cfgId, SNM_PRELOAD_MASK, 0);
 				AddOrReplaceScheduledJob(job);
 			}
-			else
-			{
+			else {
 				job->Perform();
 				delete job;
 			}
@@ -2422,6 +2460,8 @@ void PreloadLiveConfigJob::Perform()
 {
 	LiveConfig* lc = g_liveConfigs.Get()->Get(m_cfgId);
 	if (!lc) return;
+
+	Undo_BeginBlock2(NULL);
 
 	LiveConfigItem* cfg = lc->m_ccConfs.Get(m_absval);
 	LiveConfigItem* lastCfg = lc->m_ccConfs.Get(lc->m_activeMidiVal); // can be <0
@@ -2439,8 +2479,6 @@ void PreloadLiveConfigJob::Perform()
 			(!lastCfg || (lastCfg && !lastCfg->Equals(cfg, true))) &&
 			(!lastPreloadCfg || (lastPreloadCfg && !lastPreloadCfg->Equals(cfg, true))))
 		{
-			Undo_BeginBlock2(NULL);
-
 			if (PreventUIRefresh)
 				PreventUIRefresh(1);
 
@@ -2448,25 +2486,118 @@ void PreloadLiveConfigJob::Perform()
 
 			if (PreventUIRefresh)
 				PreventUIRefresh(-1);
-
-			{
-				char buf[SNM_MAX_ACTION_NAME_LEN]="";
-				_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Preload Live Config %d (OSC/CC %d)","sws_undo"), m_cfgId+1, m_absval);
-				Undo_EndBlock2(NULL, buf, UNDO_STATE_ALL);
-			}
 		}
 
 		// done
 		lc->m_preloadMidiVal = m_absval;
 	}
 
-	// update GUIs in any case
+	{
+		char buf[SNM_MAX_ACTION_NAME_LEN]="";
+		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Preload Live Config %d (OSC/CC %d)","sws_undo"), m_cfgId+1, m_absval);
+		Undo_EndBlock2(NULL, buf, UNDO_STATE_ALL);
+	}
+
+	// update GUIs/OSC in any case
 	if (g_pLiveConfigsWnd) {
 		g_pLiveConfigsWnd->Update();
 //		g_pLiveConfigsWnd->SelectByCCValue(m_cfgId, lc->m_preloadMidiVal);
 	}
-	if (g_monitorWnds[m_cfgId])
-		g_monitorWnds[m_cfgId]->Update(SNM_PRELOAD_MASK, SNM_PRELOAD_MASK);
+	UpdateMonitoring(m_cfgId, SNM_PRELOAD_MASK, SNM_PRELOAD_MASK);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Monitor window update + OSC feedback
+///////////////////////////////////////////////////////////////////////////////
+
+// _flags: &1=ui update, &2=osc feedback
+// _val: -2=disabled, -1=no active/preload value, >=0 "normal" value 
+void UpdateMonitor(int _cfgId, int _idx, int _val, bool _changed, int _flags)
+{
+	LiveConfig* lc = g_liveConfigs.Get()->Get(_cfgId);
+	if (!lc) return;
+
+	bool done = false;
+	if (_val>=-1)
+	{
+		WDL_FastString info1, info2;
+		if (_val>=0)
+			info1.SetFormatted(SNM_LIVECFG_ELLIPSIZE, "%03d", _val);
+
+		if (LiveConfigItem* item = lc->m_ccConfs.Get(_val))
+			item->GetInfo(&info2);
+
+		if (_flags&1 && g_monitorWnds[_cfgId]) {
+			g_monitorWnds[_cfgId]->GetMonitors()->SetText(_idx, info1.Get(), 0, _changed ? 255 : 143);
+			g_monitorWnds[_cfgId]->GetMonitors()->SetText(_idx+1, info2.Get(), 0, _changed ? 255 : 143);
+			done = true;
+		}
+
+		if (_flags&2 && lc->m_osc)
+		{
+			if (info1.GetLength() && info2.GetLength()) info1.Append(" ");
+			info1.Append(&info2);
+
+			lc->m_osc->SendStr(_idx==1 ? 
+					(_changed ? SNM_LIVECFG_APPLY_OSC : SNM_LIVECFG_APPLYING_OSC) :
+					(_changed ? SNM_LIVECFG_PRELOAD_OSC : SNM_LIVECFG_PRELOADING_OSC),
+				info1.Get(),
+				_cfgId+1);
+			done = true;
+		}
+	}
+
+	if (!done)
+	{
+		if (_flags&1 && g_monitorWnds[_cfgId]) {
+			g_monitorWnds[_cfgId]->GetMonitors()->SetText(_idx, "---", SNM_COL_RED_MONITOR);
+			g_monitorWnds[_cfgId]->GetMonitors()->SetText(_idx+1, __LOCALIZE("<DISABLED>","sws_DLG_169"), SNM_COL_RED_MONITOR);
+		}
+
+		if (_flags&2 && lc->m_osc)
+		{
+			lc->m_osc->SendStr(
+				_idx==1?SNM_LIVECFG_APPLY_OSC:SNM_LIVECFG_PRELOAD_OSC,
+				__LOCALIZE("<DISABLED>","sws_DLG_169"),
+				_cfgId+1);
+		}
+	}
+}
+
+// _flags: &1=ui update, &2=osc feedback
+void UpdateMonitoring(int _cfgId, int _whatFlags, int _commitFlags, int _flags)
+{
+	LiveConfig* lc = g_liveConfigs.Get()->Get(_cfgId);
+	if (!lc || (!lc->m_osc && !g_monitorWnds[_cfgId]))
+		return;
+
+	if (lc->m_enable)
+	{
+		if (_whatFlags & SNM_APPLY_MASK)
+		{
+			bool changed = (_commitFlags & SNM_APPLY_MASK); // otherwise: changing
+			UpdateMonitor(_cfgId, 1, changed ? lc->m_activeMidiVal : lc->m_curMidiVal, changed, _flags);
+		}
+		if (_whatFlags & SNM_PRELOAD_MASK)
+		{
+			bool preloaded = (_commitFlags&SNM_PRELOAD_MASK) == SNM_PRELOAD_MASK; // otherwise: preloading (== to fix C4800)
+			UpdateMonitor(_cfgId, 3, preloaded ? lc->m_preloadMidiVal : lc->m_curPreloadMidiVal, preloaded, _flags);
+
+			// force display of the preload area
+			if ((preloaded ? lc->m_preloadMidiVal : lc->m_curPreloadMidiVal) >= 0 &&
+				_flags&1 && g_monitorWnds[_cfgId] &&
+				g_monitorWnds[_cfgId]->GetMonitors()->GetRows()<2)
+			{
+				g_monitorWnds[_cfgId]->GetMonitors()->SetRows(2);
+			}
+		}
+	}
+	else
+	{
+		UpdateMonitor(_cfgId, 1, -2, true, _flags); // -1 to force err display
+		UpdateMonitor(_cfgId, 3, -2, true, _flags); // -1 to force err display
+	}
 }
 
 
@@ -2526,65 +2657,16 @@ void SNM_LiveConfigMonitorWnd::OnInitDlg()
 		m_mons.SetFontName(g_lcBigFontName);
 		m_mons.SetText(0, buf, 0, 16);
 	}
-
-	Update(SNM_APPLY_MASK|SNM_PRELOAD_MASK, SNM_APPLY_MASK|SNM_PRELOAD_MASK);
+	
+	UpdateMonitoring(
+		m_cfgId,
+		SNM_APPLY_MASK|SNM_PRELOAD_MASK,
+		SNM_APPLY_MASK|SNM_PRELOAD_MASK,
+		1); // ui only
 }
 
 void SNM_LiveConfigMonitorWnd::OnDestroy() {
 	m_mons.RemoveAllChildren(false);
-}
-
-void SNM_LiveConfigMonitorWnd::Update(int _whatFlags, int _commitFlags)
-{
-	if (LiveConfig* lc = g_liveConfigs.Get()->Get(m_cfgId))
-	{
-		if (lc->m_enable)
-		{
-			char buf[64] = "";
-			WDL_FastString info;
-			if (_whatFlags & SNM_APPLY_MASK)
-			{
-				int val = (_commitFlags & SNM_APPLY_MASK ? lc->m_activeMidiVal : lc->m_curMidiVal);
-				if (val>=0) _snprintfSafe(buf, sizeof(buf), "%03d", val);
-				m_mons.SetText(1, buf, 0, _commitFlags & SNM_APPLY_MASK ? 255 : 143);
-				if (LiveConfigItem* item = lc->m_ccConfs.Get(val)) {
-					item->GetInfo(&info);
-					m_mons.SetText(2, info.Get(), 0, _commitFlags & SNM_APPLY_MASK ? 255 : 143);
-				}
-				else
-					m_mons.SetText(2, "");
-			}
-
-			if (_whatFlags & SNM_PRELOAD_MASK)
-			{
-				*buf = '\0';
-				int val = (_commitFlags & SNM_PRELOAD_MASK ? lc->m_preloadMidiVal : lc->m_curPreloadMidiVal);
-				if (val>=0) _snprintfSafe(buf, sizeof(buf), "%03d", val);
-				m_mons.SetText(3, buf, 0, _commitFlags & SNM_PRELOAD_MASK ? 255 : 143);
-				if (LiveConfigItem* item = lc->m_ccConfs.Get(val)) {
-					item->GetInfo(&info);
-					m_mons.SetText(4, info.Get(), 0, _commitFlags & SNM_PRELOAD_MASK ? 255 : 143);
-				}
-				else
-					m_mons.SetText(4, "");
-
-				// (force) display of the preload area
-				if (m_mons.GetRows()<2)
-					m_mons.SetRows(2);
-			}
-		}
-		else
-		{
-			m_mons.SetText(1, "---", SNM_COL_RED_MONITOR);
-			m_mons.SetText(2, __LOCALIZE("<DISABLED>","sws_DLG_169"), SNM_COL_RED_MONITOR);
-			m_mons.SetText(3, "---", SNM_COL_RED_MONITOR);
-			m_mons.SetText(4, __LOCALIZE("<DISABLED>","sws_DLG_169"), SNM_COL_RED_MONITOR);
-
-			// (force) hide the preload area
-//			if (m_mons.GetRows()>=2)
-//				m_mons.SetRows(1);
-		}
-	}
 }
 
 INT_PTR SNM_LiveConfigMonitorWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -2789,8 +2871,7 @@ void UpdateEnableLiveConfig(int _cfgId, int _val)
 
 		if (g_pLiveConfigsWnd && (g_configId == _cfgId))
 			g_pLiveConfigsWnd->Update();
-		if (g_monitorWnds[_cfgId])
-			g_monitorWnds[_cfgId]->Update(SNM_APPLY_MASK|SNM_PRELOAD_MASK, 0);
+		UpdateMonitoring(_cfgId, SNM_APPLY_MASK|SNM_PRELOAD_MASK, 0);
 
 		// RefreshToolbar()) not required..
 	}

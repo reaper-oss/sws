@@ -2479,6 +2479,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SnM\SnM_CSurf.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SnM\SnM_CSurf.h"
+				>
+			</File>
+			<File
 				RelativePath=".\SnM\SnM_CueBuss.cpp"
 				>
 			</File>

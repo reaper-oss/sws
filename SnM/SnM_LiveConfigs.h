@@ -59,13 +59,14 @@ public:
 class LiveConfig {
 public:
 	LiveConfig();
-	~LiveConfig() { m_ccConfs.Empty(true); }
+	~LiveConfig() { m_ccConfs.Empty(true); delete m_osc; }
 	int SetInputTrack(MediaTrack* _newInputTr, bool _updateSends);
 	bool IsLastConfiguredTrack(MediaTrack* _tr);
 	MediaTrack* m_inputTr;
 	WDL_PtrList<LiveConfigItem> m_ccConfs;
 	int m_version, m_ccDelay, m_fade, m_enable, m_muteOthers, m_selScroll, m_offlineOthers, m_cc123, m_ignoreEmpty, m_autoSends;
 	int m_activeMidiVal, m_curMidiVal, m_preloadMidiVal, m_curPreloadMidiVal;
+	SNM_OscCSurf* m_osc;
 };
 
 
@@ -95,7 +96,7 @@ protected:
 	void OnInitDlg();
 	void OnDestroy();
 	INT_PTR OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
-	void AddPresetSubMenu(HMENU _menu, MediaTrack* _tr, WDL_FastString* _curPresetConf);
+	void AddPresetMenu(HMENU _menu, MediaTrack* _tr, WDL_FastString* _curPresetConf);
 	void AddLearnMenu(HMENU _menu, bool _subItems);
 	void AddOptionsMenu(HMENU _menu, bool _subItems);
 	HMENU OnContextMenu(int x, int y, bool* wantDefaultItems);
@@ -114,11 +115,13 @@ protected:
 };
 
 
+void UpdateMonitoring(int _cfgId, int _whatFlags, int _commitFlags, int _flags = 3);
+
+
 // monitoring window (several instances)
 class SNM_LiveConfigMonitorWnd : public SWS_DockWnd {
 public:
 	SNM_LiveConfigMonitorWnd(int _cfgId);
-	void Update(int _whatFlags, int _commitFlags);
 	SNM_FiveMonitors* GetMonitors() { return &m_mons; }
 protected:
 	void OnInitDlg();

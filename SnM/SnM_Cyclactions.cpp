@@ -203,7 +203,9 @@ int ExplodeMacro(int _section, const char* _cmdStr,
 	WDL_PtrList_DeleteOnDestroy<WDL_FastString> subCmds;
 	int r = GetMacroOrScript(_cmdStr, g_SNM_SectionIds[_section], _macros, &subCmds); // incl. optimization for reaper-kb.ini accesses
 	if (r==0)
+	{
 		return -1;
+	}
 	else if (r==1) // macro only!
 	{
 		WDL_FastString* parentCmd = NULL;
@@ -345,7 +347,7 @@ int ExplodeConsoleAction(int _section, const char* _cmdStr,
 	if (id<_consoles->GetSize())
 	{
 		if (_cmds)
-	{
+		{
 			WDL_FastString* explCmd = new WDL_FastString;
 			explCmd->SetFormatted(256, "%s %s", INSTRUC_CONSOLE, _consoles->Get(id)->Get());
 			_cmds->Add(explCmd);
@@ -620,7 +622,7 @@ void AppendWarnMsg(int _section, Cyclaction* _a, WDL_FastString* _outWarnMsg, co
 	{
 		_outWarnMsg->AppendFormatted(256, __LOCALIZE_VERFMT("Warning: '%s', section '%s'","sws_DLG_161"), _a->GetName(), g_caSections[_section]);
 		_outWarnMsg->Append("\n");
-		_outWarnMsg->AppendFormatted(256, __LOCALIZE("This cycle action has been registered but it could be improved","sws_DLG_161"));
+		_outWarnMsg->Append(__LOCALIZE("This cycle action has been registered but it could be improved","sws_DLG_161"));
 		_outWarnMsg->Append("\n");
 		_outWarnMsg->Append(__LOCALIZE("Details:","sws_DLG_161"));
 		_outWarnMsg->Append(" ");

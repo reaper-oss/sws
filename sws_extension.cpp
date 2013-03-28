@@ -527,7 +527,7 @@ extern "C"
 		IMPAPI(CSurf_OnTrackSelection);
 		IMPAPI(CSurf_OnVolumeChange);
 		IMPAPI(CSurf_TrackFromID);
-		IMPAPI(CSurf_TrackToID);		
+		IMPAPI(CSurf_TrackToID);
 		*(void**)&DeleteActionShortcut = rec->GetFunc("DeleteActionShortcut");
 		IMPAPI(DeleteProjectMarker);
 		IMPAPI(DeleteTrack);
@@ -597,6 +597,7 @@ extern "C"
 		IMPAPI(GetPlayState);
 		IMPAPI(GetPlayStateEx);
 		IMPAPI(GetProjectPath);
+		*(void**)&GetProjectStateChangeCount = rec->GetFunc("GetProjectStateChangeCount");
 		IMPAPI(GetProjectTimeSignature2);
 		IMPAPI(GetResourcePath);
 		IMPAPI(GetSelectedMediaItem);
@@ -739,11 +740,13 @@ extern "C"
 		IMPAPI(TrackFX_GetParam);
 		IMPAPI(TrackFX_GetParamName);
 		IMPAPI(TrackFX_GetPreset);
+		*(void**)&TrackFX_GetPresetIndex = rec->GetFunc("TrackFX_GetPresetIndex");
 		IMPAPI(TrackFX_NavigatePresets);
 		IMPAPI(TrackFX_SetEnabled);
 		IMPAPI(TrackFX_SetOpen);
 		IMPAPI(TrackFX_SetParam);
 		IMPAPI(TrackFX_SetPreset);
+		*(void**)&TrackFX_SetPresetByIndex = rec->GetFunc("TrackFX_SetPresetByIndex");
 		IMPAPI(TrackFX_Show);
 		IMPAPI(TrackList_AdjustWindows);
 		IMPAPI(Undo_BeginBlock);

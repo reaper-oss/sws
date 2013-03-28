@@ -1432,7 +1432,7 @@ void SNM_ResourceWnd::AutoSaveContextMenu(HMENU _menu, bool _saveItem)
 	int typeForUser = GetTypeForUser();
 	char autoPath[SNM_MAX_PATH] = "";
 	_snprintfSafe(autoPath, sizeof(autoPath), __LOCALIZE_VERFMT("[Current auto-save path: %s]","sws_DLG_150"), *GetAutoSaveDir() ? GetAutoSaveDir() : __LOCALIZE("undefined","sws_DLG_150"));
-	AddToMenu(_menu, autoPath, 0, -1, false, MF_DISABLED); // different from MF_GRAYED
+	AddToMenu(_menu, autoPath, 0, -1, false, MF_GRAYED);
 	AddToMenu(_menu, __LOCALIZE("Sync auto-save and auto-fill paths","sws_DLG_150"), AUTOFILL_SYNC_MSG, -1, false, g_syncAutoDirPrefs[g_resViewType] ? MFS_CHECKED : MFS_UNCHECKED);
 
 	if (_saveItem) {
@@ -1472,7 +1472,7 @@ void SNM_ResourceWnd::AutoFillContextMenu(HMENU _menu, bool _fillItem)
 	int typeForUser = GetTypeForUser();
 	char autoPath[SNM_MAX_PATH] = "";
 	_snprintfSafe(autoPath, sizeof(autoPath), __LOCALIZE_VERFMT("[Current auto-fill path: %s]","sws_DLG_150"), *GetAutoFillDir() ? GetAutoFillDir() : __LOCALIZE("undefined","sws_DLG_150"));
-	AddToMenu(_menu, autoPath, 0, -1, false, MF_DISABLED); // different from MF_GRAYED
+	AddToMenu(_menu, autoPath, 0, -1, false, MF_GRAYED);
 	if (GetSlotList()->IsAutoSave())
 		AddToMenu(_menu, __LOCALIZE("Sync auto-save and auto-fill paths","sws_DLG_150"), AUTOSAVE_SYNC_MSG, -1, false, g_syncAutoDirPrefs[g_resViewType] ? MFS_CHECKED : MFS_UNCHECKED);
 
@@ -2612,11 +2612,11 @@ int ResourcesInit()
 		if (FileSlotList* list = g_slots.Get(i))
 		{
 			GetIniSectionName(i, iniSec, sizeof(iniSec));
-			GetPrivateProfileString(iniSec, "Max_slot", "0", maxSlotCount, 16, g_SNM_IniFn.Get()); 
+			GetPrivateProfileString(iniSec, "Max_slot", "0", maxSlotCount, sizeof(maxSlotCount), g_SNM_IniFn.Get()); 
 			list->EmptySafe(true);
-			int slotCount = atoi(maxSlotCount);
-			for (int j=0; j < slotCount; j++) {
-				ReadSlotIniFile(iniSec, j, path, sizeof(path), desc, 128);
+			int cnt = atoi(maxSlotCount);
+			for (int j=0; j<cnt; j++) {
+				ReadSlotIniFile(iniSec, j, path, sizeof(path), desc, sizeof(desc));
 				list->Add(new PathSlotItem(path, desc));
 			}
 		}

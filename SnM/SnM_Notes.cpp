@@ -339,9 +339,9 @@ int SNM_NotesWnd::OnKey(MSG* _msg, int _iKeyState)
 			if (_msg->wParam == VK_RETURN)
 				return -1; // send the return key to the edit control
 #else
-			//JFB!!! fix/workaround (SWELL bug?) : EN_CHANGE is not sent when undocked,
-			// the root cause seems to be the flags WS_VSCROLL and WS_HSCROLL of the .rc
-			// but we definitely need those!
+			//JFB!!! fix/workaround (SWELL bug?) : EN_CHANGE is not sent when the wnd is undocked,
+			// the root cause seems to be the flags WS_VSCROLL and WS_HSCROLL of the .rc file
+			// but we definitely need those..
 			{
 				if (!IsDocked())
 					AddOrReplaceScheduledJob(new OSXForceTxtChangeJob());

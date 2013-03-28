@@ -57,7 +57,7 @@ void ShowNextPreviousImageSlot(COMMAND_T*);
 void SetSelTrackIconSlot(int _slotType, const char* _title, int _slot);
 void SetSelTrackIconSlot(COMMAND_T*);
 
-// misc
+// misc actions
 void ChangeMetronomeVolume(COMMAND_T*);
 void SimulateMouseClick(COMMAND_T*);
 

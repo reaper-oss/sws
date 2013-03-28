@@ -60,7 +60,7 @@ bool g_SNMClearType =
 #ifdef _WIN32
 	false; // default value (value overrided by the s&m.ini one)
 #else
-	false; //JFB!!! disabled on OSX: font issue on x64 (ex: live config knobs)
+	false; //JFB!!! disabled on OSX: multi-line font issue on x64 (ex: live config knobs)
 #endif
 
 ColorTheme* SNM_GetColorTheme(bool _checkForSize) {

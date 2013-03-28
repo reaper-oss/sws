@@ -85,10 +85,12 @@ void SNM_DynSizedText::DrawLines(LICE_IBitmap* _drawbm, RECT* _r, int _fontHeigh
 	tr.top = _r->top + int((_r->bottom-_r->top)/2 - (_fontHeight*m_lines.GetSize())/2 + 0.5);
 	tr.left = _r->left;
 	tr.right = _r->right;
+
 	for (int i=0; i < m_lines.GetSize(); i++)
 	{
 		tr.bottom = tr.top+_fontHeight;
-		m_font.DrawText(_drawbm, m_lines.Get(i)->Get(), -1, &tr, m_align | (m_alpha<255?LICE_DT_USEFGALPHA:0)); // cleartype not supported w/ LICE_DT_USEFGALPHA
+		if (m_font.GetHFont() && m_lastFontH>0)
+			m_font.DrawText(_drawbm, m_lines.Get(i)->Get(), -1, &tr, m_align | (m_alpha<255 ? (LICE_DT_USEFGALPHA|LICE_DT_NEEDALPHA) : 0)); // cleartype not supported w/ LICE_DT_USEFGALPHA
 		tr.top = tr.bottom;
 	}
 }
@@ -216,7 +218,7 @@ void SNM_DynSizedText::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y,
 				)
 			{
 				m_font.SetFromHFont(NULL,LICE_FONT_FLAG_OWNS_HFONT);
-//				DeleteObject(lf);
+				DeleteObject(lf);
 				m_lastFontH--;
 #ifdef _SNM_DYN_FONT_DEBUG
 				dbgTries++;

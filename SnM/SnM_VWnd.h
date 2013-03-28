@@ -46,6 +46,7 @@ public:
 		m_wantBorder=false;
 		m_wantTitleLane=true;
 		m_align=m_titleAlign=DT_CENTER;
+		m_font.SetFromHFont(NULL,LICE_FONT_FLAG_OWNS_HFONT);
 	}
 	virtual const char *GetType() { return "SNM_DynSizedText"; }
 	virtual void OnPaint(LICE_IBitmap* _drawbm, int _origin_x, int _origin_y, RECT* _cliprect);

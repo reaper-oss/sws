@@ -27,6 +27,10 @@
 
 #include "stdafx.h"
 #include "SnM.h"
+#include "SnM_CueBuss.h"
+#include "SnM_Routing.h"
+#include "SnM_Track.h"
+#include "SnM_Util.h"
 #include "../reaper/localize.h"
 
 

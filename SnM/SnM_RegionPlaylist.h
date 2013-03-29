@@ -31,6 +31,7 @@
 #define _SNM_REGIONPLAYLIST_H_
 
 #include "SnM_Marker.h"
+#include "SnM_VWnd.h"
 
 
 class PlaylistMarkerRegionSubscriber : public SNM_MarkerRegionSubscriber {

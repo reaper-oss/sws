@@ -30,6 +30,8 @@
 #ifndef _SNM_CYCLACTION_H_
 #define _SNM_CYCLACTION_H_
 
+#include "SnM_VWnd.h"
+
 
 #define CA_EMPTY		"no-op,65535"
 #define CA_MAX_LEN		SNM_MAX_CHUNK_LINE_LENGTH

@@ -25,10 +25,16 @@
 /
 ******************************************************************************/
 
-//JFB intentionally not localized (better version in a drawer..)
+// intentionally not localized
+// (better find/replace version sleeping in a drawer..)
 
 #include "stdafx.h"
 #include "SnM.h"
+#include "SnM_Find.h"
+#include "SnM_Item.h"
+#include "SnM_Notes.h"
+#include "SnM_Track.h"
+#include "SnM_Util.h"
 #include "../Zoom.h"
 
 

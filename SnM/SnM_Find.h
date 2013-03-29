@@ -30,6 +30,9 @@
 #ifndef _SNM_FIND_H_
 #define _SNM_FIND_H_
 
+#include "SnM_VWnd.h"
+
+
 class SNM_FindWnd : public SWS_DockWnd
 {
 public:

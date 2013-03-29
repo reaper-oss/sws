@@ -30,6 +30,9 @@
 #ifndef _SNM_LIVECONFIGS_H_
 #define _SNM_LIVECONFIGS_H_
 
+#include "SnM_CSurf.h"
+#include "SnM_VWnd.h"
+
 
 class PresetMsg {
 public:

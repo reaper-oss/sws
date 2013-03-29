@@ -30,6 +30,9 @@
 #ifndef _SNM_NOTES_H_
 #define _SNM_NOTES_H_
 
+#include "SnM_Marker.h"
+#include "SnM_VWnd.h"
+
 
 #define NOTES_UPDATE_FREQ		150
 

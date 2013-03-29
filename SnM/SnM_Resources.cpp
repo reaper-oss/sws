@@ -27,6 +27,12 @@
 
 #include "stdafx.h"
 #include "SnM.h"
+#include "SnM_FXChain.h"
+#include "SnM_Item.h"
+#include "SnM_Misc.h"
+#include "SnM_Project.h"
+#include "SnM_Track.h"
+#include "SnM_Util.h"
 #include "../Prompt.h"
 #ifdef _WIN32
 #include "../DragDrop.h"

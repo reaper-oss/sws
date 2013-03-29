@@ -28,6 +28,10 @@
 
 #include "stdafx.h"
 #include "SnM.h"
+#include "SnM_Item.h"
+#include "SnM_Track.h"
+#include "SnM_Util.h"
+#include "SnM_Window.h"
 #include "../Misc/Context.h"
 #include "../reaper/localize.h"
 

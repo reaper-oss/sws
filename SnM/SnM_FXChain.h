@@ -30,6 +30,9 @@
 #ifndef _SNM_FXCHAIN_H_
 #define _SNM_FXCHAIN_H_
 
+#include "SnM_Resources.h"
+
+
 void MakeChunkTakeFX(WDL_FastString* _outTakeFX, const WDL_FastString* _inRfxChain);
 int CopyTakeFXChain(WDL_FastString* _fxChain, int _startSelItem=0);
 void PasteTakeFXChain(const char* _title, WDL_FastString* _chain, bool _activeOnly);

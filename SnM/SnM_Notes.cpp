@@ -38,6 +38,10 @@
 
 #include "stdafx.h"
 #include "SnM.h"
+#include "SnM_Notes.h"
+#include "SnM_Track.h"
+#include "SnM_Util.h"
+#include "SnM_Window.h"
 #include "../reaper/localize.h"
 
 
@@ -229,7 +233,7 @@ void SNM_NotesWnd::CSurfSetTrackTitle() {
 // this is our only notification of active project tab change, so update everything
 // (ScheduledJob because of multi-notifs)
 void SNM_NotesWnd::CSurfSetTrackListChange() {
-	AddOrReplaceScheduledJob(new NotesUpdateJob());
+	SNM_AddOrReplaceScheduledJob(new NotesUpdateJob());
 }
 
 void SNM_NotesWnd::OnCommand(WPARAM wParam, LPARAM lParam)
@@ -344,7 +348,7 @@ int SNM_NotesWnd::OnKey(MSG* _msg, int _iKeyState)
 			// but we definitely need those..
 			{
 				if (!IsDocked())
-					AddOrReplaceScheduledJob(new OSXForceTxtChangeJob());
+					SNM_AddOrReplaceScheduledJob(new OSXForceTxtChangeJob());
 				return -1; // send the return key to the edit control
 			}
 #endif
@@ -1026,13 +1030,13 @@ void NotesUpdateJob::Perform() {
 void NotesMarkerRegionSubscriber::NotifyMarkerRegionUpdate(int _updateFlags)
 {
 	if (g_notesViewType == SNM_NOTES_REGION_SUBTITLES)
-		AddOrReplaceScheduledJob(new NotesUpdateJob());
+		SNM_AddOrReplaceScheduledJob(new NotesUpdateJob());
 	else if (g_notesViewType == SNM_NOTES_REGION_NAME)
 	{
 		if (g_internalMkrRgnChange)
 			g_internalMkrRgnChange = false;
 		else
-			AddOrReplaceScheduledJob(new NotesUpdateJob());
+			SNM_AddOrReplaceScheduledJob(new NotesUpdateJob());
 	}
 }
 

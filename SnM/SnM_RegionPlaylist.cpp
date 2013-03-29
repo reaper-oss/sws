@@ -27,6 +27,11 @@
 
 #include "stdafx.h"
 #include "SnM.h"
+#include "SnM_CSurf.h"
+#include "SnM_Item.h"
+#include "SnM_Project.h"
+#include "SnM_RegionPlaylist.h"
+#include "SnM_Util.h"
 #include "../Prompt.h"
 #include "../reaper/localize.h"
 
@@ -583,7 +588,7 @@ void SNM_RegionPlaylistWnd::OnDestroy() {
 
 // ScheduledJob used because of multi-notifs
 void SNM_RegionPlaylistWnd::CSurfSetTrackListChange() {
-	AddOrReplaceScheduledJob(new PlaylistUpdateJob());
+	SNM_AddOrReplaceScheduledJob(new PlaylistUpdateJob());
 }
 
 // _flags: &1=fast update, normal/full update otherwise
@@ -1886,7 +1891,7 @@ void PlaylistUpdateJob::Perform() {
 // ScheduledJob used because of multi-notifs
 void PlaylistMarkerRegionSubscriber::NotifyMarkerRegionUpdate(int _updateFlags) {
 	PlaylistResync();
-	AddOrReplaceScheduledJob(new PlaylistUpdateJob());
+	SNM_AddOrReplaceScheduledJob(new PlaylistUpdateJob());
 }
 
 

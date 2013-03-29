@@ -27,6 +27,25 @@
 
 #include "stdafx.h"
 #include "SnM.h"
+#include "SnM_CSurf.h"
+#include "SnM_CueBuss.h"
+#include "SnM_Cyclactions.h"
+#include "SnM_Find.h"
+#include "SnM_FX.h"
+#include "SnM_FXChain.h"
+#include "SnM_Item.h"
+#include "SnM_LiveConfigs.h"
+#include "SnM_Marker.h"
+#include "SnM_ME.h"
+#include "SnM_Misc.h"
+#include "SnM_Notes.h"
+#include "SnM_Project.h"
+#include "SnM_RegionPlaylist.h"
+#include "SnM_Resources.h"
+#include "SnM_Routing.h"
+#include "SnM_Track.h"
+#include "SnM_Util.h"
+#include "SnM_Window.h"
 #include "version.h"
 #include "../reaper/localize.h"
 
@@ -909,7 +928,7 @@ int RegisterMySectionCommands(reaper_plugin_info_t* _rec, bool _localize)
 WDL_PtrList_DeleteOnDestroy<SNM_ScheduledJob> g_jobs;
 SWS_Mutex g_jobsMutex;
 
-void AddOrReplaceScheduledJob(SNM_ScheduledJob* _job) 
+void SNM_AddOrReplaceScheduledJob(SNM_ScheduledJob* _job) 
 {
 	SWS_SectionLock lock(&g_jobsMutex);
 	if (!_job) return;
@@ -926,7 +945,7 @@ void AddOrReplaceScheduledJob(SNM_ScheduledJob* _job)
 					g_jobs.Set(i, _job);
 #ifdef _SNM_DEBUG
 					char dbg[256]="";
-					_snprintfSafe(dbg, sizeof(dbg), "AddOrReplaceScheduledJob() - Replaced SNM_ScheduledJob id: %d\n", _job->m_id);
+					_snprintfSafe(dbg, sizeof(dbg), "SNM_AddOrReplaceScheduledJob() - Replaced SNM_ScheduledJob id: %d\n", _job->m_id);
 					OutputDebugString(dbg);
 #endif
 					DELETE_NULL(job);
@@ -935,7 +954,7 @@ void AddOrReplaceScheduledJob(SNM_ScheduledJob* _job)
 				{
 #ifdef _SNM_DEBUG
 					char dbg[256]="";
-					_snprintfSafe(dbg, sizeof(dbg), "AddOrReplaceScheduledJob() - Ignored SNM_ScheduledJob id: %d\n", _job->m_id);
+					_snprintfSafe(dbg, sizeof(dbg), "SNM_AddOrReplaceScheduledJob() - Ignored SNM_ScheduledJob id: %d\n", _job->m_id);
 					OutputDebugString(dbg);
 #endif
 					DELETE_NULL(_job);
@@ -950,7 +969,7 @@ void AddOrReplaceScheduledJob(SNM_ScheduledJob* _job)
 		g_jobs.Add(_job);
 #ifdef _SNM_DEBUG
 		char dbg[256]="";
-		_snprintfSafe(dbg, sizeof(dbg), "AddOrReplaceScheduledJob() - Added SNM_ScheduledJob id: %d\n", _job->m_id);
+		_snprintfSafe(dbg, sizeof(dbg), "SNM_AddOrReplaceScheduledJob() - Added SNM_ScheduledJob id: %d\n", _job->m_id);
 		OutputDebugString(dbg);
 #endif
 	}

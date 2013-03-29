@@ -30,6 +30,9 @@
 #ifndef _SNM_FX_H_
 #define _SNM_FX_H_
 
+#include "SnM.h"
+
+
 extern int g_buggyPlugSupport;
 
 int GetFXByGUID(MediaTrack* _tr, GUID* _g);

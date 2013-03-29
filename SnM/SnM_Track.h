@@ -31,6 +31,7 @@
 #define _SNM_TRACK_H_
 
 #include "SnM_Chunk.h" 
+#include "SnM_Resources.h"
 
 
 extern int g_SNMMediaFlags;

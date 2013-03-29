@@ -26,8 +26,13 @@
 ******************************************************************************/
 
 #include "stdafx.h"
-#include "SnM/SnM.h"
+#include "SnM/SnM_FX.h"
+#include "SnM/SnM_Marker.h"
+#include "SnM/SnM_Misc.h"
+#include "SnM/SnM_Routing.h"
+#include "SnM/SnM_Track.h"
 #include "Fingers/RprMidiTake.h"
+
 
 // Important: 
 // keep APIFUNC() and the 6 first fields of the struct "APIdef" as they are defined:

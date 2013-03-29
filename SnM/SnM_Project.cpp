@@ -27,6 +27,10 @@
 
 #include "stdafx.h"
 #include "SnM.h"
+#include "SnM_ChunkParserPatcher.h"
+#include "SnM_Project.h"
+#include "SnM_Util.h"
+#include "SnM_Window.h"
 #include "../Prompt.h"
 #include "../reaper/localize.h"
 
@@ -174,7 +178,7 @@ void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND
 	if (SelectProjectJob* job = new SelectProjectJob(SNM_SCHEDJOB_DEFAULT_DELAY, g_curPrjMidiVal, _val, _valhw, _relmode, _hwnd))
 	{
 		g_curPrjMidiVal = job->GetAbsoluteValue();
-		AddOrReplaceScheduledJob(job);
+		SNM_AddOrReplaceScheduledJob(job);
 	}
 }
 
@@ -397,7 +401,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 		g_prjActions.Get()->Set(lp.gettoken_str(1));
 		if (!isUndo)
 			if (int cmdId = NamedCommandLookup(lp.gettoken_str(1)))
-				AddOrReplaceScheduledJob(new ProjectActionJob(cmdId)); // ~1s delay to avoid multi-triggers
+				SNM_AddOrReplaceScheduledJob(new ProjectActionJob(cmdId)); // ~1s delay to avoid multi-triggers
 		return true;
 	}
 	return false;

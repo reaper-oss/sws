@@ -30,6 +30,9 @@
 #ifndef _SNM_PROJECT_H_
 #define _SNM_PROJECT_H_
 
+#include "SnM_Resources.h"
+
+
 double GetProjectLength(bool _items = true, bool _inclRgnsMkrs = false);
 
 bool InsertSilence(const char* _undoTitle, double _pos, double _len);

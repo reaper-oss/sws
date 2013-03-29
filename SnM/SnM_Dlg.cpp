@@ -27,6 +27,8 @@
 
 #include "stdafx.h"
 #include "SnM.h"
+#include "SnM_Dlg.h"
+#include "SnM_Util.h"
 #include "../reaper/localize.h"
 #include "../Prompt.h"
 

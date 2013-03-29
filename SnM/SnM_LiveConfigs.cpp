@@ -27,6 +27,12 @@
 
 #include "stdafx.h"
 #include "SnM.h"
+#include "SnM_FX.h"
+#include "SnM_LiveConfigs.h"
+#include "SnM_Routing.h"
+#include "SnM_Track.h"
+#include "SnM_Util.h"
+#include "SnM_Window.h"
 #include "../reaper/localize.h"
 #include "../Prompt.h"
 
@@ -712,7 +718,7 @@ void SNM_LiveConfigsWnd::OnDestroy()
 
 // ScheduledJob because of multi-notifs
 void SNM_LiveConfigsWnd::CSurfSetTrackListChange() {
-	AddOrReplaceScheduledJob(new LiveConfigsUpdateJob());
+	SNM_AddOrReplaceScheduledJob(new LiveConfigsUpdateJob());
 }
 
 void SNM_LiveConfigsWnd::CSurfSetTrackTitle() {
@@ -777,7 +783,7 @@ void SNM_LiveConfigsWnd::Update()
 	if (LiveConfig* lc = g_liveConfigs.Get()->Get(g_configId)) {
 		m_vwndCC.SetValue(lc->m_ccDelay);
 		m_vwndFade.SetValue(lc->m_fade);
-//		AddOrReplaceScheduledJob(new LiveConfigsUpdateFadeJob(lc->m_fade)); // so that it works for undo..
+//		SNM_AddOrReplaceScheduledJob(new LiveConfigsUpdateFadeJob(lc->m_fade)); // so that it works for undo..
 	}
 	m_parentVwnd.RequestRedraw(NULL);
 }
@@ -1255,13 +1261,13 @@ INT_PTR SNM_LiveConfigsWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lPar
 				case KNBID_CC_DELAY:
 					lc->m_ccDelay = m_knobCC.GetSliderPosition();
 					m_vwndCC.SetValue(lc->m_ccDelay);
-					AddOrReplaceScheduledJob(new UndoJob(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG));
+					SNM_AddOrReplaceScheduledJob(new UndoJob(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG));
 					break;
 				case KNBID_FADE:
 					lc->m_fade = m_knobFade.GetSliderPosition();
 					m_vwndFade.SetValue(lc->m_fade);
-					AddOrReplaceScheduledJob(new UndoJob(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG));
-					AddOrReplaceScheduledJob(new LiveConfigsUpdateFadeJob(lc->m_fade));
+					SNM_AddOrReplaceScheduledJob(new UndoJob(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG));
+					SNM_AddOrReplaceScheduledJob(new LiveConfigsUpdateFadeJob(lc->m_fade));
 					break;
 			}
 	return 0;
@@ -2365,7 +2371,7 @@ void ApplyLiveConfig(int _cfgId, int _val, int _valhw, int _relmode, HWND _hwnd,
 			lc->m_curMidiVal = job->GetAbsoluteValue();
 			if (!_immediate && lc->m_ccDelay) {
 				UpdateMonitoring(_cfgId, SNM_APPLY_MASK, 0);
-				AddOrReplaceScheduledJob(job);
+				SNM_AddOrReplaceScheduledJob(job);
 			}
 			else {
 				job->Perform();
@@ -2446,7 +2452,7 @@ void PreloadLiveConfig(int _cfgId, int _val, int _valhw, int _relmode, HWND _hwn
 			lc->m_curPreloadMidiVal = job->GetAbsoluteValue();
 			if (!_immediate && lc->m_ccDelay) {
 				UpdateMonitoring(_cfgId, SNM_PRELOAD_MASK, 0);
-				AddOrReplaceScheduledJob(job);
+				SNM_AddOrReplaceScheduledJob(job);
 			}
 			else {
 				job->Perform();

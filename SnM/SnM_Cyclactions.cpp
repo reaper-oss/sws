@@ -43,6 +43,10 @@
 
 #include "stdafx.h"
 #include "SnM.h"
+#include "SnM_ChunkParserPatcher.h" 
+#include "SnM_Cyclactions.h"
+#include "SnM_Util.h"
+#include "SnM_Window.h"
 #include "../reaper/localize.h"
 #include "../Console/Console.h"
 

@@ -27,6 +27,9 @@
 
 #include "stdafx.h"
 #include "SnM.h"
+#include "SnM_FX.h"
+#include "SnM_Track.h"
+#include "SnM_Util.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -566,7 +569,7 @@ void TriggerFXPreset(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HW
 	if (TriggerPresetJob* job = new TriggerPresetJob(SNM_SCHEDJOB_DEFAULT_DELAY, g_curPresetMidiVal, _val, _valhw, _relmode, _hwnd, (int)_ct->user))
 	{
 		g_curPresetMidiVal = job->GetAbsoluteValue();
-		AddOrReplaceScheduledJob(job);
+		SNM_AddOrReplaceScheduledJob(job);
 	}
 }
 

@@ -37,6 +37,8 @@
 #include "../reaper/localize.h"
 #include "../Freeze/Freeze.h"
 #include "../SnM/SnM.h"
+#include "../SnM/SnM_CSurf.h"
+#include "../SnM/SnM_Util.h"
 #include "Console.h"
 
 // Globals, g_foo

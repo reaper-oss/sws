@@ -29,6 +29,8 @@
 
 #include "stdafx.h" 
 #include "SnM.h"
+#include "SnM_FXChain.h"
+#include "SnM_Track.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////

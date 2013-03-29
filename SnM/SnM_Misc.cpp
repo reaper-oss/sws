@@ -27,6 +27,9 @@
 
 #include "stdafx.h"
 #include "SnM.h"
+#include "SnM_Item.h"
+#include "SnM_Track.h"
+#include "SnM_Util.h"
 #include "../reaper/localize.h"
 #include "../Prompt.h"
 #include "../../WDL/projectcontext.h"

@@ -31,12 +31,9 @@
 #define _SNM_H_
 
 
-// see eof for includes
-
-
-// ----------------------------------------------------------------------------
+///////////////////////////////////////////////////////////////////////////////
 // Activate/deactivate some features, traces, etc.
-// ----------------------------------------------------------------------------
+///////////////////////////////////////////////////////////////////////////////
 
 //#define _SNM_DEBUG
 //#define _SNM_DYN_FONT_DEBUG
@@ -46,10 +43,10 @@
 #define _SNM_HOST_AW
 
 
-// ----------------------------------------------------------------------------
+///////////////////////////////////////////////////////////////////////////////
 // Just to ease sustaining vs API/REAPER/WDL bugs and/or issues: 
 // #undef to activate the "expected code", #define to activate workarounds
-// ----------------------------------------------------------------------------
+///////////////////////////////////////////////////////////////////////////////
 
 #define _SNM_REAPER_BUG			//JFB!!! workaround some API/REAPER bugs
 								// Last test: REAPER v4.33pre23
@@ -66,9 +63,9 @@
 								// - issue 5: EN_SETFOCUS, EN_KILLFOCUS not yet supported
 
 
-// ----------------------------------------------------------------------------
+///////////////////////////////////////////////////////////////////////////////
 // Constants
-// ----------------------------------------------------------------------------
+///////////////////////////////////////////////////////////////////////////////
 
 #define SNM_INI_FILE_VERSION		7
 
@@ -177,18 +174,7 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////
-
-/*JFB replaced with a common SWS_CMD_SHORTNAME()
-#define SNM_CMD_SHORTNAME(_ct) (GetLocalizedActionName(_ct->id, _ct->accel.desc) + 9) // +9 to skip "SWS/S&M: "
-*/
-
-static void freecharptr(char* _p) { FREE_NULL(_p); }
-static void deleteintptr(int* _p) { DELETE_NULL(_p); }
-static void deletefaststrptr(WDL_FastString* _p) { DELETE_NULL(_p); }
-
-
-///////////////////////////////////////////////////////////////////////////////
-// scheduled jobs
+// Scheduled jobs
 ///////////////////////////////////////////////////////////////////////////////
 
 class SNM_ScheduledJob {
@@ -225,6 +211,44 @@ protected:
 	HWND m_hwnd;
 };
 
+void SNM_AddOrReplaceScheduledJob(SNM_ScheduledJob* _job);
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Common global funcs
+///////////////////////////////////////////////////////////////////////////////
+
+// fake action toggle states
+int SNM_GetFakeToggleState(COMMAND_T*);
+void Noop(COMMAND_T*);
+void ExclusiveToggle(COMMAND_T*);
+
+// action sections
+int SNM_GetActionSectionId(int _idx);
+KbdSectionInfo* SNM_GetMySection();
+
+// S&M core stuff
+int SNM_Init(reaper_plugin_info_t* _rec);
+void SNM_Exit();
+
+static void freecharptr(char* _p) { FREE_NULL(_p); }
+static void deleteintptr(int* _p) { DELETE_NULL(_p); }
+static void deletefaststrptr(WDL_FastString* _p) { DELETE_NULL(_p); }
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Misc globals vars, structs & classes
+///////////////////////////////////////////////////////////////////////////////
+
+/*JFB replaced with a common SWS_CMD_SHORTNAME()
+#define SNM_CMD_SHORTNAME(_ct) (GetLocalizedActionName(_ct->id, _ct->accel.desc) + 9) // +9 to skip "SWS/S&M: "
+*/
+
+// global/common S&M vars
+extern bool g_SNM_PlayState, g_SNM_PauseState, g_SNM_RecState, g_SNM_ToolbarRefresh;
+extern int g_SNM_IniVersion, g_SNM_Beta, g_SNM_LastImgSlot;
+extern WDL_FastString g_SNM_IniFn, g_SNM_CyclIniFn, g_SNM_DiffToolFn;
+
 class SNM_TrackInt {
 public:
 	SNM_TrackInt(MediaTrack* _tr, int _i) : m_tr(_tr), m_int(_i) {}
@@ -244,30 +268,8 @@ typedef struct MIDI_COMMAND_T {
 } MIDI_COMMAND_T;
 
 
-void AddOrReplaceScheduledJob(SNM_ScheduledJob* _job);
-
-
 ///////////////////////////////////////////////////////////////////////////////
-
-// fake action toggle states
-int SNM_GetFakeToggleState(COMMAND_T*);
-void Noop(COMMAND_T*);
-void ExclusiveToggle(COMMAND_T*);
-
-// action sections
-int SNM_GetActionSectionId(int _idx);
-KbdSectionInfo* SNM_GetMySection();
-
-// global/common S&M vars
-extern bool g_SNM_PlayState, g_SNM_PauseState, g_SNM_RecState, g_SNM_ToolbarRefresh;
-extern int g_SNM_IniVersion, g_SNM_Beta, g_SNM_LastImgSlot;
-extern WDL_FastString g_SNM_IniFn, g_SNM_CyclIniFn, g_SNM_DiffToolFn;
-
-// S&M core stuff
-int SNM_Init(reaper_plugin_info_t* _rec);
-void SNM_Exit();
-
-
+// Misc common data
 ///////////////////////////////////////////////////////////////////////////////
 
 // make sure the last MIDI event is a (dummy) CC123!
@@ -330,34 +332,6 @@ TcxV1oa7PxAHvm2t2LHpbDfuyLre8KLLhufkKbP2rfL8mwb/CxHXvQ==\n\
 z64F+VlLOQZ6Dua4dpaajpNwpPDxaQ9twrF7XSHyaDJROqMpYYyy1Q==\n\
 3iwJ0Fssw64SzlIi+8dZ/OISxbhGsZobtpoDrVUq5ZrAYwjPaYw7LQ==\n\
 vezn/Q+t/AIQiCv/Q4iRxAAAAABJRU5ErkJggg==\n"
-
-
-///////////////////////////////////////////////////////////////////////////////
-
-#include "SnM_ChunkParserPatcher.h" 
-#include "SnM_Chunk.h"
-#include "SnM_VWnd.h"
-#include "SnM_Resources.h"
-// from this point, order does not matter anymore
-#include "SnM_CSurf.h"
-#include "SnM_CueBuss.h"
-#include "SnM_Cyclactions.h"
-#include "SnM_Dlg.h"
-#include "SnM_Find.h"
-#include "SnM_FX.h"
-#include "SnM_FXChain.h"
-#include "SnM_Item.h"
-#include "SnM_LiveConfigs.h"
-#include "SnM_Marker.h"
-#include "SnM_ME.h"
-#include "SnM_Misc.h"
-#include "SnM_Notes.h"
-#include "SnM_Project.h"
-#include "SnM_RegionPlaylist.h"
-#include "SnM_Routing.h"
-#include "SnM_Track.h"
-#include "SnM_Util.h"
-#include "SnM_Window.h"
 
 
 #endif

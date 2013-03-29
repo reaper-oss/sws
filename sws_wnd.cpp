@@ -38,6 +38,7 @@
 
 #include "stdafx.h"
 #include "./SnM/SnM.h"
+#include "./SnM/SnM_Dlg.h"
 #include "./reaper/localize.h"
 #ifndef _WIN32
 #include "../WDL/swell/swell-dlggen.h"

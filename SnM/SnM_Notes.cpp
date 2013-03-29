@@ -671,11 +671,11 @@ void SNM_NotesWnd::SaveCurrentMkrRgnNameOrNotes(bool _name)
 
 void SNM_NotesWnd::Update(bool _force)
 {
-	static bool bRecurseCheck = false;
-	if (bRecurseCheck)
+	static bool sRecurseCheck = false;
+	if (sRecurseCheck)
 		return;
 
-	bRecurseCheck = true;
+	sRecurseCheck = true;
 
 	// force refresh if needed
 	if (_force || g_notesViewType != g_prevNotesViewType)
@@ -719,7 +719,7 @@ void SNM_NotesWnd::Update(bool _force)
 	if (_force || refreshType == REQUEST_REFRESH)
 		RefreshGUI();
 
-	bRecurseCheck = false;
+	sRecurseCheck = false;
 }
 
 int SNM_NotesWnd::UpdateActionHelp()
@@ -1330,7 +1330,7 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 	}
 }
 
-static project_config_extension_t g_projectconfig = {
+static project_config_extension_t s_projectconfig = {
 	ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL
 };
 
@@ -1357,7 +1357,7 @@ int NotesInit()
 	if (SWS_LoadDockWndState("SnMNotesHelp"))
 		g_pNotesWnd = new SNM_NotesWnd();
 
-	if (!plugin_register("projectconfig", &g_projectconfig))
+	if (!plugin_register("projectconfig", &s_projectconfig))
 		return 0;
 
 	return 1;

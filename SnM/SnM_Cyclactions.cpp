@@ -104,7 +104,7 @@ char g_caCustomIds[SNM_MAX_CYCLING_SECTIONS][SNM_MAX_ACTION_CUSTID_LEN] = {"S&M_
 char g_caIniSections[SNM_MAX_CYCLING_SECTIONS][32] = {"Main_Cyclactions", "ME_List_Cyclactions", "ME_Piano_Cyclactions"};
 char g_caSections[SNM_MAX_CYCLING_SECTIONS][SNM_MAX_SECTION_NAME_LEN]; // init + localization in CyclactionInit()
 
-static SNM_CyclactionWnd* g_pCyclactionWnd = NULL;
+SNM_CyclactionWnd* g_pCyclactionWnd = NULL;
 bool g_undos = true; // consolidate undo points
 
 
@@ -201,7 +201,7 @@ int ExplodeMacro(int _section, const char* _cmdStr,
 		return -1;
 
 	WDL_PtrList_DeleteOnDestroy<WDL_FastString> subCmds;
-	int r = GetMacroOrScript(_cmdStr, g_SNM_SectionIds[_section], _macros, &subCmds); // incl. optimization for reaper-kb.ini accesses
+	int r = GetMacroOrScript(_cmdStr, SNM_GetActionSectionId(_section), _macros, &subCmds); // incl. optimization for reaper-kb.ini accesses
 	if (r==0)
 	{
 		return -1;
@@ -798,7 +798,7 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_PtrList<WDL_F
 				if (!warned && // not already warned?
 					(strstr(cmd, "_CYCLACTION") ||
 					 strstr(cmd, "SWSCONSOLE_CUST") ||
-					 GetMacroOrScript(cmd, g_SNM_SectionIds[_section], _macros, NULL) == 1)) // macros only, brutal but works for all sections
+					 GetMacroOrScript(cmd, SNM_GetActionSectionId(_section), _macros, NULL) == 1)) // macros only, brutal but works for all sections
 				{
 					str.SetFormatted(256, __LOCALIZE_VERFMT("the command ID '%s' cannot be shared with other users","sws_DLG_161"), cmd);
 					str.Append("\n");
@@ -1029,7 +1029,7 @@ void Cyclaction::SetToggle(int _toggle)
 	}
 	else if (_toggle==1 || _toggle==2) {
 		if (IsToggle()) m_desc.DeleteSub(0,1);
-		m_desc.Insert(_toggle==1?CA_TGL1_STR:CA_TGL2_STR, 0, 1);
+		m_desc.Insert(_toggle==1 ? s_CA_TGL1_STR : s_CA_TGL2_STR, 0, 1);
 	}
 }
 
@@ -1078,12 +1078,12 @@ void Cyclaction::UpdateNameAndCmds()
 
 	char actionStr[CA_MAX_LEN] = "";
 	lstrcpyn(actionStr, m_desc.Get(), sizeof(actionStr));
-	char* tok = strtok(actionStr, CA_SEP_STR);
+	char* tok = strtok(actionStr, s_CA_SEP_STR);
 	if (tok)
 	{
 		// 1st token = cycle action name (#name = toggle action)
 		m_name.Set(*tok==CA_TGL1 || *tok==CA_TGL2 ? (const char*)tok+1 : tok);
-		while (tok = strtok(NULL, CA_SEP_STR))
+		while (tok = strtok(NULL, s_CA_SEP_STR))
 			m_cmds.Add(new WDL_FastString(tok));
 	}
 }
@@ -1093,10 +1093,10 @@ void Cyclaction::UpdateFromCmd()
 	WDL_FastString newDesc;
 	if (int tgl=IsToggle()) newDesc.SetFormatted(CA_MAX_LEN, "%c", tgl==1?CA_TGL1:CA_TGL2);
 	newDesc.Append(GetName());
-	newDesc.Append(CA_SEP_STR);
+	newDesc.Append(s_CA_SEP_STR);
 	for (int i=0; i < m_cmds.GetSize(); i++) {
 		newDesc.Append(m_cmds.Get(i)->Get());
-		newDesc.Append(CA_SEP_STR);
+		newDesc.Append(s_CA_SEP_STR);
 	}
 	m_desc.Set(&newDesc);
 }
@@ -1141,8 +1141,8 @@ void Cyclaction::UpdateFromCmd()
 // - dbl-click ids to perform cycle actions
 
 // !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_161
-static SWS_LVColumn g_casCols[] = { { 50, 0, "Id" }, { 260, 1, "Cycle action name" }, { 50, 2, "Toggle" } };
-static SWS_LVColumn g_commandsCols[] = { { 180, 1, "Command" }, { 180, 0, "Description" } };
+static SWS_LVColumn s_casCols[] = { { 50, 0, "Id" }, { 260, 1, "Cycle action name" }, { 50, 2, "Toggle" } };
+static SWS_LVColumn s_commandsCols[] = { { 180, 1, "Command" }, { 180, 0, "Description" } };
 // !WANT_LOCALIZE_STRINGS_END
 
 enum {
@@ -1165,9 +1165,9 @@ RECT g_origRectL = {0,0,0,0};
 RECT g_origRectR = {0,0,0,0};
 
 // fake list views' items (help items), init + localization in CyclactionInit()
-static Cyclaction g_DEFAULT_L;
-static WDL_FastString g_EMPTY_R;
-static WDL_FastString g_DEFAULT_R;
+static Cyclaction s_DEFAULT_L;
+static WDL_FastString s_EMPTY_R;
+static WDL_FastString s_DEFAULT_R;
 
 WDL_FastString g_caFilter; // init + localization in CyclactionInit()
 
@@ -1309,7 +1309,7 @@ void ResetSection(int _section)
 ////////////////////
 
 SNM_CyclactionsView::SNM_CyclactionsView(HWND hwndList, HWND hwndEdit)
-:SWS_ListView(hwndList, hwndEdit, COL_L_COUNT, g_casCols, "LCyclactionViewState", false, "sws_DLG_161") {}
+:SWS_ListView(hwndList, hwndEdit, COL_L_COUNT, s_casCols, "LCyclactionViewState", false, "sws_DLG_161") {}
 
 void SNM_CyclactionsView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax)
 {
@@ -1356,7 +1356,7 @@ void SNM_CyclactionsView::SetItemText(SWS_ListItem* _item, int _iCol, const char
 		}
 
 		Cyclaction* a = (Cyclaction*)_item;
-		if (a && a != &g_DEFAULT_L)
+		if (a && a != &s_DEFAULT_L)
 		{
 			WDL_FastString errMsg;
 			if (!CheckEditableCyclaction(_str, &errMsg) && strcmp(a->GetName(), _str)) {
@@ -1374,7 +1374,7 @@ void SNM_CyclactionsView::SetItemText(SWS_ListItem* _item, int _iCol, const char
 
 bool SNM_CyclactionsView::IsEditListItemAllowed(SWS_ListItem* _item, int _iCol) {
 	Cyclaction* a = (Cyclaction*)_item;
-	return (a != &g_DEFAULT_L);
+	return (a != &s_DEFAULT_L);
 }
 
 void SNM_CyclactionsView::GetItemList(SWS_ListItemList* pList)
@@ -1407,7 +1407,7 @@ void SNM_CyclactionsView::GetItemList(SWS_ListItemList* pList)
 		}
 	}
 	else
-		pList->Add((SWS_ListItem*)&g_DEFAULT_L);
+		pList->Add((SWS_ListItem*)&s_DEFAULT_L);
 }
 
 void SNM_CyclactionsView::OnItemSelChanged(SWS_ListItem* item, int iState)
@@ -1429,7 +1429,7 @@ void SNM_CyclactionsView::OnItemSelChanged(SWS_ListItem* item, int iState)
 void SNM_CyclactionsView::OnItemBtnClk(SWS_ListItem* item, int iCol, int iKeyState)
 {
 	Cyclaction* pItem = (Cyclaction*)item;
-	if (pItem && pItem != &g_DEFAULT_L && iCol == COL_L_TOGGLE)
+	if (pItem && pItem != &s_DEFAULT_L && iCol == COL_L_TOGGLE)
 	{
 		int tgl = pItem->IsToggle();
 		pItem->SetToggle(tgl<2?tgl+1:0);
@@ -1441,7 +1441,7 @@ void SNM_CyclactionsView::OnItemBtnClk(SWS_ListItem* item, int iCol, int iKeySta
 void SNM_CyclactionsView::OnItemDblClk(SWS_ListItem* item, int iCol)
 {
 	Cyclaction* pItem = (Cyclaction*)item;
-	if (pItem && pItem != &g_DEFAULT_L && iCol == COL_L_ID && g_pCyclactionWnd)
+	if (pItem && pItem != &s_DEFAULT_L && iCol == COL_L_ID && g_pCyclactionWnd)
 		g_pCyclactionWnd->OnCommand(RUN_CYCLACTION_MSG, 0);
 }
 
@@ -1451,7 +1451,7 @@ void SNM_CyclactionsView::OnItemDblClk(SWS_ListItem* item, int iCol)
 ////////////////////
 
 SNM_CommandsView::SNM_CommandsView(HWND hwndList, HWND hwndEdit)
-:SWS_ListView(hwndList, hwndEdit, COL_R_COUNT, g_commandsCols, "RCyclactionViewState", false, "sws_DLG_161", false)
+:SWS_ListView(hwndList, hwndEdit, COL_R_COUNT, s_commandsCols, "RCyclactionViewState", false, "sws_DLG_161", false)
 {
 //	SetWindowLongPtr(hwndList, GWL_STYLE, GetWindowLongPtr(hwndList, GWL_STYLE) | LVS_SINGLESEL);
 }
@@ -1467,7 +1467,7 @@ void SNM_CommandsView::GetItemText(SWS_ListItem* item, int iCol, char* str, int 
 				lstrcpyn(str, pItem->Get(), iStrMax);
 				break;
 			case COL_R_NAME:
-				if (pItem == &g_EMPTY_R || pItem == &g_DEFAULT_R)
+				if (pItem == &s_EMPTY_R || pItem == &s_DEFAULT_R)
 					return;
 				if (pItem->GetLength())
 				{
@@ -1495,7 +1495,7 @@ void SNM_CommandsView::GetItemText(SWS_ListItem* item, int iCol, char* str, int 
 						else if (SectionFromUniqueID)
 						{
 							if (int cmd = atoi(pItem->Get()))
-								lstrcpyn(str, kbd_getTextFromCmd(cmd, SectionFromUniqueID(g_SNM_SectionIds[g_editedSection])), iStrMax);
+								lstrcpyn(str, kbd_getTextFromCmd(cmd, SectionFromUniqueID(SNM_GetActionSectionId(g_editedSection))), iStrMax);
 							else
 								lstrcpyn(str, __LOCALIZE("Unknown","sws_DLG_161"), iStrMax); 
 						}
@@ -1513,13 +1513,13 @@ void SNM_CommandsView::SetItemText(SWS_ListItem* _item, int _iCol, const char* _
 		if (strchr(_str, CA_SEP)) 
 		{
 			WDL_FastString msg(__LOCALIZE("Commands cannot contain the character: ","sws_DLG_161"));
-			msg.Append(CA_SEP_STR);
+			msg.Append(s_CA_SEP_STR);
 			MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("S&M - Error","sws_DLG_161"), MB_OK);
 			return;
 		}
 
 		WDL_FastString* cmd = (WDL_FastString*)_item;
-		if (cmd && _str && cmd != &g_EMPTY_R && cmd != &g_DEFAULT_R && g_editedAction && strcmp(cmd->Get(), _str))
+		if (cmd && _str && cmd != &s_EMPTY_R && cmd != &s_DEFAULT_R && g_editedAction && strcmp(cmd->Get(), _str))
 		{
 			g_editedAction->SetCmd(cmd, _str);
 
@@ -1535,7 +1535,7 @@ void SNM_CommandsView::SetItemText(SWS_ListItem* _item, int _iCol, const char* _
 
 bool SNM_CommandsView::IsEditListItemAllowed(SWS_ListItem* _item, int _iCol) {
 	WDL_FastString* cmd = (WDL_FastString*)_item;
-	return (cmd && _iCol == COL_R_CMD && cmd != &g_EMPTY_R && cmd != &g_DEFAULT_R);
+	return (cmd && _iCol == COL_R_CMD && cmd != &s_EMPTY_R && cmd != &s_DEFAULT_R);
 }
 
 void SNM_CommandsView::GetItemList(SWS_ListItemList* pList)
@@ -1546,10 +1546,10 @@ void SNM_CommandsView::GetItemList(SWS_ListItemList* pList)
 			for (int i=0; i < nb; i++)
 				pList->Add((SWS_ListItem*)g_editedAction->GetCmdString(i));
 		else if (CountEditedActions())
-			pList->Add((SWS_ListItem*)&g_DEFAULT_R);
+			pList->Add((SWS_ListItem*)&s_DEFAULT_R);
 	}
 	else if (CountEditedActions())
-		pList->Add((SWS_ListItem*)&g_EMPTY_R);
+		pList->Add((SWS_ListItem*)&s_EMPTY_R);
 }
 
 // "disable" sort
@@ -2193,7 +2193,7 @@ HMENU SNM_CyclactionWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 		if (left)
 		{
 			AddToMenu(hMenu, __LOCALIZE("Add cycle action","sws_DLG_161"), ADD_CYCLACTION_MSG, -1, false, IsCAFiltered() ? MF_GRAYED : MF_ENABLED);
-			if (action && action != &g_DEFAULT_L)
+			if (action && action != &s_DEFAULT_L)
 			{
 				AddToMenu(hMenu, __LOCALIZE("Remove cycle actions","sws_DLG_161"), DEL_CYCLACTION_MSG); 
 				AddToMenu(hMenu, SWS_SEPARATOR, 0);
@@ -2201,7 +2201,7 @@ HMENU SNM_CyclactionWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 			}
 		}
 		// right
-		else if (g_editedAction && g_editedAction != &g_DEFAULT_L)
+		else if (g_editedAction && g_editedAction != &s_DEFAULT_L)
 		{
 			AddToMenu(hMenu, __LOCALIZE("Add/insert command","sws_DLG_161"), ADD_CMD_MSG);
 			AddToMenu(hMenu, __LOCALIZE("Add/insert step","sws_DLG_161"), ADD_STEP_CMD_MSG);
@@ -2212,7 +2212,7 @@ HMENU SNM_CyclactionWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 			AddToMenu(hMenu, __LOCALIZE("Add/insert selected action (in the Actions window)","sws_DLG_161"), LEARN_CMD_MSG);
 
 			AddToMenu(hMenu, SWS_SEPARATOR, 0);
-			if (cmd && cmd != &g_EMPTY_R && cmd != &g_DEFAULT_R)
+			if (cmd && cmd != &s_EMPTY_R && cmd != &s_DEFAULT_R)
 			{
 				AddToMenu(hMenu, __LOCALIZE("Explode into individual actions","sws_DLG_161"), EXPLODE_CMD_MSG);
 				AddToMenu(hMenu, SWS_SEPARATOR, 0);
@@ -2360,7 +2360,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 	}
 }
 
-static project_config_extension_t g_projectconfig = {
+static project_config_extension_t s_projectconfig = {
 	ProcessExtensionLine, SaveExtensionConfig, NULL, NULL
 };
 
@@ -2371,9 +2371,9 @@ int CyclactionInit()
 {
 	// localization
 	g_caFilter.Set(FILTER_DEFAULT_STR);
-	g_DEFAULT_L.Update(__LOCALIZE("Right click here to add cycle actions","sws_DLG_161"));
-	g_EMPTY_R.Set(__LOCALIZE("<- Select a cycle action","sws_DLG_161"));
-	g_DEFAULT_R.Set(__LOCALIZE("Right click here to add commands","sws_DLG_161"));
+	s_DEFAULT_L.Update(__LOCALIZE("Right click here to add cycle actions","sws_DLG_161"));
+	s_EMPTY_R.Set(__LOCALIZE("<- Select a cycle action","sws_DLG_161"));
+	s_DEFAULT_R.Set(__LOCALIZE("Right click here to add commands","sws_DLG_161"));
 	lstrcpyn(g_caSections[0], __localizeFunc("Main","accel_sec",0), SNM_MAX_SECTION_NAME_LEN);
 	lstrcpyn(g_caSections[1], __localizeFunc("MIDI Event List Editor","accel_sec",0), SNM_MAX_SECTION_NAME_LEN);
 	lstrcpyn(g_caSections[2], __localizeFunc("MIDI Editor","accel_sec",0), SNM_MAX_SECTION_NAME_LEN);
@@ -2387,7 +2387,7 @@ int CyclactionInit()
 	// load cycle actions
 	LoadCyclactions(false); // do not check cmd ids (may not have been registered yet)
 
-	if (!plugin_register("projectconfig",&g_projectconfig))
+	if (!plugin_register("projectconfig", &s_projectconfig))
 		return 0;
 
 	// instanciate the window, if needed

@@ -416,10 +416,10 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 	g_prjActions.Get()->Set("");
 }
 
-static project_config_extension_t g_projectconfig = {
+static project_config_extension_t s_projectconfig = {
 	ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL
 };
 
 int ReaProjectInit() {
-	return plugin_register("projectconfig", &g_projectconfig);
+	return plugin_register("projectconfig", &s_projectconfig);
 }

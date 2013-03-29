@@ -518,15 +518,15 @@ WDL_DLGRET CueBussDlgProc(HWND _hwnd, UINT _uMsg, WPARAM _wParam, LPARAM _lParam
 
 void OpenCueBussDlg(COMMAND_T* _ct)
 {
-	static HWND hwnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_SNM_CUEBUSS), GetMainHwnd(), CueBussDlgProc);
+	static HWND sHwnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_SNM_CUEBUSS), GetMainHwnd(), CueBussDlgProc);
 	if (g_cueBussHwnd) {
 		g_cueBussHwnd = NULL;
-		ShowWindow(hwnd, SW_HIDE);
+		ShowWindow(sHwnd, SW_HIDE);
 	}
 	else {
-		g_cueBussHwnd = hwnd;
-		ShowWindow(hwnd, SW_SHOW);
-		SetFocus(hwnd);
+		g_cueBussHwnd = sHwnd;
+		ShowWindow(sHwnd, SW_SHOW);
+		SetFocus(sHwnd);
 	}
 }
 
@@ -536,9 +536,9 @@ int IsCueBussDlgDisplayed(COMMAND_T* _ct) {
 
 // pass-through to main window
 //static int translateAccel(MSG* _msg, accelerator_register_t* _ctx) { return SNM_IsActiveWindow(g_cueBussHwnd) ? -666 : 0; }
-//static accelerator_register_t g_ar = { translateAccel, TRUE, NULL };
+//static accelerator_register_t s_ar = { translateAccel, TRUE, NULL };
 
 int CueBussInit() {
-//	return plugin_register("accelerator", &g_ar);
+//	return plugin_register("accelerator", &s_ar);
 	return 1;
 }

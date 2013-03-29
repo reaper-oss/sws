@@ -57,7 +57,7 @@ enum {
 	TYPE_MARKER_REGION
 };
 
-static SNM_FindWnd* g_pFindWnd = NULL;
+SNM_FindWnd* g_pFindWnd = NULL;
 char g_searchStr[MAX_SEARCH_STR_LEN] = "";
 bool g_notFound=false;
 

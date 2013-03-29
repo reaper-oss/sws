@@ -498,12 +498,12 @@ bool LiveConfig::IsLastConfiguredTrack(MediaTrack* _tr)
 ///////////////////////////////////////////////////////////////////////////////
 
 // !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_155
-static SWS_LVColumn g_liveCfgListCols[] = { 
+static SWS_LVColumn s_liveCfgListCols[] = { 
 	{95,2,"OSC/CC value"}, {150,1,"Comment"}, {150,2,"Track"}, {175,2,"Track template"}, {175,2,"FX Chain"}, {150,2,"FX presets"}, {150,0,"Activate action"}, {150,0,"Deactivate action"}};
 // !WANT_LOCALIZE_STRINGS_END
 
 SNM_LiveConfigView::SNM_LiveConfigView(HWND hwndList, HWND hwndEdit)
-:SWS_ListView(hwndList, hwndEdit, COL_COUNT, g_liveCfgListCols, "LiveConfigsViewState", false, "sws_DLG_155")
+:SWS_ListView(hwndList, hwndEdit, COL_COUNT, s_liveCfgListCols, "LiveConfigsViewState", false, "sws_DLG_155")
 {
 }
 
@@ -1135,10 +1135,10 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				UpdateEnableLiveConfig(g_configId, -1);
 			break;
 		case SNM_LIVECFG_LEARN_APPLY_MSG:
-			LearnAction(&g_SNM_Section, SNM_SECTION_1ST_CMD_ID + g_configId);
+			LearnAction(SNM_GetMySection(), SNM_SECTION_1ST_CMD_ID + g_configId);
 			break;
 		case SNM_LIVECFG_LEARN_PRELOAD_MSG:
-			LearnAction(&g_SNM_Section, SNM_SECTION_1ST_CMD_ID + SNM_LIVECFG_NB_CONFIGS + g_configId);
+			LearnAction(SNM_GetMySection(), SNM_SECTION_1ST_CMD_ID + SNM_LIVECFG_NB_CONFIGS + g_configId);
 			break;
 		case BTNID_LEARN:
 		{
@@ -1905,7 +1905,7 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 		g_liveConfigs.Get()->Add(new LiveConfig());
 }
 
-static project_config_extension_t g_projectconfig = {
+static project_config_extension_t s_projectconfig = {
 	ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL
 };
 
@@ -1924,7 +1924,7 @@ int LiveConfigInit()
 		g_monitorWnds[i] = SWS_LoadDockWndState(id) ? new SNM_LiveConfigMonitorWnd(i) : NULL;
 	}
 
-	if (!plugin_register("projectconfig", &g_projectconfig))
+	if (!plugin_register("projectconfig", &s_projectconfig))
 		return 0;
 
 	return 1;

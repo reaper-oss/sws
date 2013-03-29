@@ -82,24 +82,24 @@ IconTheme* SNM_GetIconTheme(bool _checkForSize) {
 // 2=toolbar button font (native rendering, optional)
 LICE_CachedFont* SNM_GetFont(int _type)
 {
-	static LICE_CachedFont themeFont[3];
-	if (!themeFont[_type].GetHFont())
+	static LICE_CachedFont sFonts[3];
+	if (!sFonts[_type].GetHFont())
 	{
 		LOGFONT lf = {
 			SNM_FONT_HEIGHT,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
 			OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SNM_FONT_NAME
 		};
-		themeFont[_type].SetFromHFont(
+		sFonts[_type].SetFromHFont(
 			CreateFontIndirect(&lf),
 			LICE_FONT_FLAG_OWNS_HFONT | (!_type ? 0 : (g_SNMClearType?LICE_FONT_FLAG_FORCE_NATIVE:0)));
-		themeFont[_type].SetBkMode(TRANSPARENT);
+		sFonts[_type].SetBkMode(TRANSPARENT);
 		// others props are set on demand (to support theme switches)
 	}
 	if (ColorTheme* ct = SNM_GetColorTheme()) 
-		themeFont[_type].SetTextColor(LICE_RGBA_FROMNATIVE(_type==2?ct->toolbar_button_text:ct->main_text,255));
+		sFonts[_type].SetTextColor(LICE_RGBA_FROMNATIVE(_type==2?ct->toolbar_button_text:ct->main_text,255));
 	else
-		themeFont[_type].SetTextColor(LICE_RGBA(255,255,255,255));
-	return &themeFont[_type];
+		sFonts[_type].SetTextColor(LICE_RGBA(255,255,255,255));
+	return &sFonts[_type];
 }
 
 LICE_CachedFont* SNM_GetThemeFont() {
@@ -163,16 +163,16 @@ void SNM_ThemeListView(SWS_ListView* _lv)
 // note that LICE_LoadPNGFromResource() is KO on OSX (it looks for REAPER's resources..)
 LICE_IBitmap* SNM_GetThemeLogo()
 {
-	static LICE_IBitmap* snmLogo;
-	if (!snmLogo)
+	static LICE_IBitmap* sLogo;
+	if (!sLogo)
 	{
 		// logo is loaded from memory (for OSX support)
 		if (WDL_HeapBuf* hb = TranscodeStr64ToHeapBuf(SNM_LOGO_PNG_FILE)) {
-			snmLogo = LICE_LoadPNGFromMemory(hb->Get(), hb->GetSize());
+			sLogo = LICE_LoadPNGFromMemory(hb->Get(), hb->GetSize());
 			delete hb;
 		}
 	}
-	return snmLogo;
+	return sLogo;
 }
 
 

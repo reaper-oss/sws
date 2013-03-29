@@ -31,6 +31,67 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// SNM_MarkerRegionSubscriber, see SNM_CSurfRun()
+///////////////////////////////////////////////////////////////////////////////
+
+WDL_PtrList<SNM_MarkerRegionSubscriber> g_mkrRgnSubscribers;
+SWS_Mutex g_mkrRgnSubscribersMutex;
+WDL_PtrList<MarkerRegion> g_mkrRgnCache;
+
+bool RegisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub) {
+	SWS_SectionLock lock(&g_mkrRgnSubscribersMutex);
+	if (_sub && g_mkrRgnSubscribers.Find(_sub) < 0)
+		return (g_mkrRgnSubscribers.Add(_sub) != NULL);
+	return false;
+}
+
+bool UnregisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub) {
+	SWS_SectionLock lock(&g_mkrRgnSubscribersMutex);
+	int idx = _sub ? g_mkrRgnSubscribers.Find(_sub) : -1;
+	if (idx >= 0) {
+		g_mkrRgnSubscribers.Delete(idx, false);
+		return true;
+	}
+	return false;
+}
+
+// returns an update mask: 0 if nothing changed, &SNM_MARKER_MASK: marker change, &SNM_REGION_MASK: region change
+int UpdateMarkerRegionCache()
+{
+	int updateFlags=0;
+	int i=0, x=0, num, col; double pos, rgnend; char* name; bool isRgn;
+
+	// added/updated markers/regions?
+	while (x = EnumProjectMarkers3(NULL, x, &isRgn, &pos, &rgnend, &name, &num, &col))
+	{
+		MarkerRegion* m = g_mkrRgnCache.Get(i);
+		if (!m || (m && !m->Compare(isRgn, pos, rgnend, name, num, col)))
+		{
+			if (m) g_mkrRgnCache.Delete(i, true);
+			g_mkrRgnCache.Insert(i, new MarkerRegion(isRgn, pos, rgnend, name, num, col));
+			updateFlags |= (isRgn ? SNM_REGION_MASK : SNM_MARKER_MASK);
+		}
+		i++;
+	}
+	// removed markers/regions?
+	for (int j=g_mkrRgnCache.GetSize()-1; j>=i; j--) {
+		if (MarkerRegion* m = g_mkrRgnCache.Get(j))
+			updateFlags |= (m->IsRegion() ? SNM_REGION_MASK : SNM_MARKER_MASK);
+		g_mkrRgnCache.Delete(j, true);
+	}
+	// project time mode update?
+	static int sPrevTimemode = *(int*)GetConfigVar("projtimemode");
+	if (updateFlags != (SNM_MARKER_MASK|SNM_REGION_MASK))
+		if (int* timemode = (int*)GetConfigVar("projtimemode"))
+			if (*timemode != sPrevTimemode) {
+				sPrevTimemode = *timemode;
+				return SNM_MARKER_MASK|SNM_REGION_MASK;
+			}
+	return updateFlags;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 // Marker/region helpers
 ///////////////////////////////////////////////////////////////////////////////
 

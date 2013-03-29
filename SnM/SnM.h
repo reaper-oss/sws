@@ -188,6 +188,8 @@ static void deletefaststrptr(WDL_FastString* _p) { DELETE_NULL(_p); }
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// scheduled jobs
+///////////////////////////////////////////////////////////////////////////////
 
 class SNM_ScheduledJob {
 public:
@@ -223,14 +225,6 @@ protected:
 	HWND m_hwnd;
 };
 
-class SNM_MarkerRegionSubscriber {
-public:
-	SNM_MarkerRegionSubscriber() {}
-	virtual ~SNM_MarkerRegionSubscriber() {}
-	// _updateFlags: &1 marker update, &2 region update
-	virtual void NotifyMarkerRegionUpdate(int _updateFlags) {}
-};
-
 class SNM_TrackInt {
 public:
 	SNM_TrackInt(MediaTrack* _tr, int _i) : m_tr(_tr), m_int(_i) {}
@@ -245,48 +239,31 @@ typedef struct MIDI_COMMAND_T {
 	void (*doCommand)(MIDI_COMMAND_T*,int,int,int,HWND);
 	const char* menuText;
 	INT_PTR user;
-
-//API LIMITATION: useless in other sections than the main one ATM, and we can only register MIDI_COMMAND_T in our own sections (i.e. not in the main one)
-#ifdef _SNM_MISC
 	int (*getEnabled)(MIDI_COMMAND_T*);
 	bool fakeToggle;
-#endif
 } MIDI_COMMAND_T;
 
 
-///////////////////////////////////////////////////////////////////////////////
-
-extern KbdSectionInfo g_SNM_Section;
-extern int g_SNM_SectionIds[];
-extern bool g_SNM_PlayState, g_SNM_PauseState, g_SNM_RecState, g_SNM_ToolbarRefresh;
-extern int g_SNM_IniVersion, g_SNM_Beta, g_SNM_LastImgSlot;
-extern WDL_FastString g_SNM_IniFn, g_SNM_CyclIniFn, g_SNM_DiffToolFn;
+void AddOrReplaceScheduledJob(SNM_ScheduledJob* _job);
 
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void EnableToolbarsAutoRefesh(COMMAND_T*);
-int IsToolbarsAutoRefeshEnabled(COMMAND_T*);
-void RefreshToolbars();
-
+// fake action toggle states
 int SNM_GetFakeToggleState(COMMAND_T*);
 void Noop(COMMAND_T*);
 void ExclusiveToggle(COMMAND_T*);
 
-int SNM_RegisterDynamicCommands(COMMAND_T* _pCommands);
+// action sections
+int SNM_GetActionSectionId(int _idx);
+KbdSectionInfo* SNM_GetMySection();
 
-void AddOrReplaceScheduledJob(SNM_ScheduledJob* _job);
+// global/common S&M vars
+extern bool g_SNM_PlayState, g_SNM_PauseState, g_SNM_RecState, g_SNM_ToolbarRefresh;
+extern int g_SNM_IniVersion, g_SNM_Beta, g_SNM_LastImgSlot;
+extern WDL_FastString g_SNM_IniFn, g_SNM_CyclIniFn, g_SNM_DiffToolFn;
 
-bool RegisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub);
-bool UnregisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub) ;
-
-//  IReaperControlSurface callbacks
-void SNM_CSurfRun();
-void SNM_CSurfSetTrackTitle();
-void SNM_CSurfSetTrackListChange();
-void SNM_CSurfSetPlayState(bool _play, bool _pause, bool _rec);
-int SNM_CSurfExtended(int _call, void* _parm1, void* _parm2, void* _parm3);
-
+// S&M core stuff
 int SNM_Init(reaper_plugin_info_t* _rec);
 void SNM_Exit();
 

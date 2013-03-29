@@ -569,7 +569,7 @@ void LearnAction(KbdSectionInfo* _section, int _cmdId)
 		HWND h;
 //		h = GetReaWindowByTitle(__localizeFunc("Actions", "DLG_274", 0));
 //		if (!h)
-			ShowActionList(&g_SNM_Section, NULL);
+			ShowActionList(SNM_GetMySection(), NULL);
 		if (h = GetReaWindowByTitle(__localizeFunc("Actions", "DLG_274", 0)))
 		{
 			char oldFilter[128] = "";

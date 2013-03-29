@@ -57,6 +57,11 @@ void ShowNextPreviousImageSlot(COMMAND_T*);
 void SetSelTrackIconSlot(int _slotType, const char* _title, int _slot);
 void SetSelTrackIconSlot(COMMAND_T*);
 
+// toolbar auto refresh
+void EnableToolbarsAutoRefesh(COMMAND_T*);
+int IsToolbarsAutoRefeshEnabled(COMMAND_T*);
+void RefreshToolbars();
+
 // misc actions
 void ChangeMetronomeVolume(COMMAND_T*);
 void SimulateMouseClick(COMMAND_T*);

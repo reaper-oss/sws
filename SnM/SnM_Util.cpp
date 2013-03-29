@@ -857,9 +857,9 @@ bool IsMacroOrScript(const char* _cmd, bool _cmdIsName)
 		// _cmd is an action name?
 		if (_cmdIsName)
 		{
-			static const char* custom = __localizeFunc("Custom","actions",0);
-			static int customlen = strlen(custom);
-			return (!_strnicmp(_cmd, custom, customlen) && _cmd[customlen] == ':');
+			static const char* sCustom = __localizeFunc("Custom","actions",0);
+			static int sCustomlen = strlen(sCustom);
+			return (!_strnicmp(_cmd, sCustom, sCustomlen) && _cmd[sCustomlen] == ':');
 		}
 		// _cmd is a custom id
 		else

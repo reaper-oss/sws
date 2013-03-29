@@ -179,7 +179,7 @@ enum {
   COL_COUNT
 };
 
-/*JFB static*/ SNM_ResourceWnd* g_pResourcesWnd = NULL;
+SNM_ResourceWnd* g_pResourcesWnd = NULL;
 
 // JFB important notes:
 // all global WDL_PtrList vars used to be WDL_PtrList_DeleteOnDestroy ones but
@@ -486,11 +486,11 @@ void FileSlotList::EditSlot(int _slot)
 ///////////////////////////////////////////////////////////////////////////////
 
 // !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_150
-static SWS_LVColumn g_resListCols[] = { {65,2,"Slot"}, {100,1,"Name"}, {250,2,"Path"}, {200,1,"Comment"} };
+static SWS_LVColumn s_resListCols[] = { {65,2,"Slot"}, {100,1,"Name"}, {250,2,"Path"}, {200,1,"Comment"} };
 // !WANT_LOCALIZE_STRINGS_END
 
 SNM_ResourceView::SNM_ResourceView(HWND hwndList, HWND hwndEdit)
-	: SWS_ListView(hwndList, hwndEdit, COL_COUNT, g_resListCols, "ResourcesViewState", false, "sws_DLG_150")
+	: SWS_ListView(hwndList, hwndEdit, COL_COUNT, s_resListCols, "ResourcesViewState", false, "sws_DLG_150")
 {
 }
 

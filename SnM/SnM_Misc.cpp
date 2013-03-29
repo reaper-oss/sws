@@ -30,6 +30,9 @@
 #include "../reaper/localize.h"
 #include "../Prompt.h"
 #include "../../WDL/projectcontext.h"
+#ifdef _SNM_HOST_AW
+#include "../Misc/Adam.h"
+#endif
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -260,6 +263,38 @@ void SetSelTrackIconSlot(COMMAND_T* _ct) {
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// Toolbars auto refresh option, see SNM_CSurfRun()
+///////////////////////////////////////////////////////////////////////////////
+
+bool g_SNM_ToolbarRefresh = false;
+
+void EnableToolbarsAutoRefesh(COMMAND_T* _ct) {
+	g_SNM_ToolbarRefresh = !g_SNM_ToolbarRefresh;
+}
+
+int IsToolbarsAutoRefeshEnabled(COMMAND_T* _ct) {
+	return g_SNM_ToolbarRefresh;
+}
+
+void RefreshToolbars()
+{
+	// offscreen item sel. buttons
+	for (int i=0; i<SNM_ITEM_SEL_COUNT; i++)
+		RefreshToolbar(SWSGetCommandID(ToggleOffscreenSelItems, i));
+	RefreshToolbar(SWSGetCommandID(UnselectOffscreenItems, -1));
+
+	// write automation button
+	RefreshToolbar(SWSGetCommandID(ToggleWriteEnvExists));
+
+#ifdef _SNM_HOST_AW
+	// host AW's grid toolbar buttons auto refresh and track timebase auto refresh
+	UpdateGridToolbar();
+	UpdateTrackTimebaseToolbar();
+#endif
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 // Misc actions / helpers
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -271,11 +306,11 @@ void ChangeMetronomeVolume(COMMAND_T* _ct) {
 void WinWaitForEvent(DWORD _event, DWORD _timeOut=500, DWORD _minReTrigger=500)
 {
 #ifdef _WIN32
-	static DWORD waitTime = 0;
-//	if ((GetTickCount() - waitTime) > _minReTrigger)
+	static DWORD sWaitTime = 0;
+//	if ((GetTickCount() - sWaitTime) > _minReTrigger)
 	{
-		waitTime = GetTickCount();
-		while((GetTickCount() - waitTime) < _timeOut) // for safety
+		sWaitTime = GetTickCount();
+		while((GetTickCount() - sWaitTime) < _timeOut) // for safety
 		{
 			MSG msg;
 			if(PeekMessage(&msg, NULL, NULL, NULL, PM_REMOVE))

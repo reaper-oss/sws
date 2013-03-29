@@ -29,9 +29,6 @@
 #include "SnM.h"
 #include "version.h"
 #include "../reaper/localize.h"
-#ifdef _SNM_HOST_AW
-#include "../Misc/Adam.h"
-#endif
 
 
 void Noop(COMMAND_T* _ct) {}
@@ -41,7 +38,7 @@ void Noop(COMMAND_T* _ct) {}
 // S&M actions (main section)
 ///////////////////////////////////////////////////////////////////////////////
 
-static COMMAND_T g_SNM_cmdTable[] = 
+static COMMAND_T s_cmdTable[] = 
 {
 
 //	{ { DEFACCEL, "SWS/S&M: [Internal] QuickTest" }, "S&M_QUICKTEST", Noop, NULL, },
@@ -549,7 +546,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 // custom ids will be "_DO_STUFF1" and "_DO_STUFF2", repectively.
 ///////////////////////////////////////////////////////////////////////////////
 
-static COMMAND_T g_SNM_dynamicCmdTable[] =
+static COMMAND_T s_dynCmdTable[] =
 {
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
@@ -674,7 +671,7 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 ///////////////////////////////////////////////////////////////////////////////
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:s&m_section_actions
-/*JFB static*/ MIDI_COMMAND_T g_SNM_Section_cmdTable[] = 
+static MIDI_COMMAND_T s_snmSection_cmdTable[] = 
 {
 	// keep these as first actions (the live configs' learn feature is tied to these cmd ids, staring with SNM_SNM_SECTION_1ST_CMD_ID)
 	{ { DEFACCEL, "SWS/S&M: Apply Live Config 1 (MIDI CC/OSC only)" }, "S&M_LIVECONFIG1", ApplyLiveConfig, NULL, 0},
@@ -699,178 +696,7 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 //!WANT_LOCALIZE_1ST_STRING_END
 
 
-///////////////////////////////////////////////////////////////////////////////
-// Fake toggle states: used to report toggle states in "best effort mode"
-// Example: when an action deals with several tracks, the overall toggle state
-// would be a mix of inconsistent toggle states. In this case, you can use
-// SNM_GetFakeToggleState() to reports a fake state. However, when the action
-// deals with a single track you can return a real toggle state instead.
-///////////////////////////////////////////////////////////////////////////////
-
-int SNM_GetFakeToggleState(COMMAND_T* _ct) {
-	return (_ct && _ct->fakeToggle);
-}
-
-void ExclusiveToggle(COMMAND_T* _ct)
-{
-	if (_ct && _ct->fakeToggle)
-		for (int i=0; i<SNM_MAX_DYNAMIC_ACTIONS; i++)
-			if (int cmd = SWSGetCommandID(ExclusiveToggle, i))
-			{
-				if (cmd != _ct->accel.accel.cmd) 
-					if (COMMAND_T* ct = SWSGetCommandByID(cmd)) {
-						ct->fakeToggle = false;
-						RefreshToolbar(cmd);
-					}
-			}
-			else
-				break;
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-// Toolbars auto refresh option, see SNM_CSurfRun()
-///////////////////////////////////////////////////////////////////////////////
-
-bool g_SNM_ToolbarRefresh = false;
-int g_toolbarsAutoRefreshFreq = SNM_DEF_TOOLBAR_RFRSH_FREQ;
-
-void EnableToolbarsAutoRefesh(COMMAND_T* _ct) {
-	g_SNM_ToolbarRefresh = !g_SNM_ToolbarRefresh;
-}
-
-int IsToolbarsAutoRefeshEnabled(COMMAND_T* _ct) {
-	return g_SNM_ToolbarRefresh;
-}
-
-void RefreshToolbars()
-{
-	// offscreen item sel. buttons
-	for (int i=0; i<SNM_ITEM_SEL_COUNT; i++)
-		RefreshToolbar(SWSGetCommandID(ToggleOffscreenSelItems, i));
-	RefreshToolbar(SWSGetCommandID(UnselectOffscreenItems, -1));
-
-	// write automation button
-	RefreshToolbar(SWSGetCommandID(ToggleWriteEnvExists));
-
-#ifdef _SNM_HOST_AW
-	// host AW's grid toolbar buttons auto refresh and track timebase auto refresh
-	UpdateGridToolbar();
-	UpdateTrackTimebaseToolbar();
-#endif
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-// "S&M Extension" action section
-///////////////////////////////////////////////////////////////////////////////
-
-// keep this definition order!
-// (indexes used in the cycle action editor, for ex.)
-int g_SNM_SectionIds[] =
-{ 
-	0,				// Main
-	32061,			// ME event list section
-	32060,			// ME piano roll section
-	32062,			// MIDI inline editor
-	100,			// Main alt
-	32063,			// Media explorer
-	SNM_SECTION_ID	// S&M extension
-};
-
-static WDL_IntKeyedArray<MIDI_COMMAND_T*> g_SNM_Section_midiCmds;
-KbdCmd g_SNM_Section_kbdCmds[SNM_MAX_SECTION_ACTIONS];
-KbdKeyBindingInfo g_SNM_Section_defKeys[SNM_MAX_SECTION_ACTIONS];
-int g_SNM_Section_minCmdId=0, g_SNM_Section_maxCmdId=0;
-static int g_SNM_Section_CmdIdGen = SNM_SECTION_1ST_CMD_ID;
-
-bool SNM_OnMidiAction(int _cmd, int _val, int _valhw, int _relmode, HWND _hwnd)
-{
-	static bool bReentrancyCheck = false;
-	if (bReentrancyCheck)
-		return false;
-
-	// ignore commands that don't have anything to do with us from this point forward
-	if (_cmd < g_SNM_Section_minCmdId || _cmd > g_SNM_Section_maxCmdId)
-		return false;
-	
-	if (MIDI_COMMAND_T* ct = g_SNM_Section_midiCmds.Get(_cmd, NULL))
-	{
-		bReentrancyCheck = true;
-#ifdef _SNM_MISC // see MIDI_COMMAND_T declaration
-		ct->fakeToggle = !ct->fakeToggle;
-#endif
-		ct->doCommand(ct, _val, _valhw, _relmode, _hwnd);
-		bReentrancyCheck = false;
-		return true;
-	}
-	return false;
-}
-
-/*JFB static*/ KbdSectionInfo g_SNM_Section = {
-  SNM_SECTION_ID, "S&M Extension",
-  g_SNM_Section_kbdCmds, 0,
-  g_SNM_Section_defKeys, 0,
-  SNM_OnMidiAction
-};
-
-int SNM_SectionRegisterCommands(reaper_plugin_info_t* _rec, bool _localize)
-{
-	if (!_rec)
-		return 0;
-
-	g_SNM_Section.name = __LOCALIZE("S&M Extension","sws_accel_sec");
-
-	// register commands in specific section
-	int i = 0;
-	while(g_SNM_Section_cmdTable[i].id != LAST_COMMAND)
-	{
-		MIDI_COMMAND_T* ct = &g_SNM_Section_cmdTable[i]; 
-		if (ct->doCommand)
-		{
-/* no more used (uses g_SNM_Section_CmdIdGen instead), see below
-			if (!(ct->accel.accel.cmd = plugin_register("command_id", (void*)ct->id)))
-				return 0;
-*/
-			ct->accel.accel.cmd = g_SNM_Section_CmdIdGen++;
-
-			if (!g_SNM_Section_minCmdId || g_SNM_Section_minCmdId > ct->accel.accel.cmd)
-				g_SNM_Section_minCmdId = ct->accel.accel.cmd;
-			if (ct->accel.accel.cmd > g_SNM_Section_maxCmdId)
-				g_SNM_Section_maxCmdId = ct->accel.accel.cmd;
-
-			g_SNM_Section_midiCmds.Insert(ct->accel.accel.cmd, ct);
-		}
-		i++;
-	}
-
-	int nbCmds = i;
-	if (nbCmds > SNM_MAX_SECTION_ACTIONS)
-		return 0;
-
-	// map MIDI_COMMAND_T[] to the section's KbdCmd[] & KbdKeyBindingInfo[]
-	for (i=0; i<nbCmds; i++)
-	{
-		MIDI_COMMAND_T* ct = &g_SNM_Section_cmdTable[i];
-		g_SNM_Section.action_list[i].text = GetLocalizedActionName(ct->accel.desc, 0, "s&m_section_actions");
-		g_SNM_Section.action_list[i].cmd = g_SNM_Section.def_keys[i].cmd = ct->accel.accel.cmd;
-		g_SNM_Section.def_keys[i].key = ct->accel.accel.key;
-		g_SNM_Section.def_keys[i].flags = ct->accel.accel.fVirt;
-	}
-	g_SNM_Section.action_list_cnt = g_SNM_Section.def_keys_cnt = nbCmds;
-
-	if (!(_rec->Register("accel_section",&g_SNM_Section)))
-		return 0;
-
-	return 1;
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-// "Dynamic" actions, see g_SNM_dynamicCmdTable's comments
-///////////////////////////////////////////////////////////////////////////////
-
-int SNM_RegisterDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
+int RegisterConfigurableCommands(COMMAND_T* _cmds, const char* _inifn)
 {
 	char actionName[SNM_MAX_ACTION_NAME_LEN]="", custId[SNM_MAX_ACTION_CUSTID_LEN]="";
 	int i=0;
@@ -931,6 +757,241 @@ void SNM_SaveDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// Fake toggle states: used to report toggle states in "best effort mode"
+// Example: when an action deals with several tracks, the overall toggle state
+// would be a mix of inconsistent toggle states. In this case, you can use
+// SNM_GetFakeToggleState() to reports a fake state. However, when the action
+// deals with a single track you can return a real toggle state instead.
+///////////////////////////////////////////////////////////////////////////////
+
+int SNM_GetFakeToggleState(COMMAND_T* _ct) {
+	return (_ct && _ct->fakeToggle);
+}
+
+void ExclusiveToggle(COMMAND_T* _ct)
+{
+	if (_ct && _ct->fakeToggle)
+		for (int i=0; i<SNM_MAX_DYNAMIC_ACTIONS; i++)
+			if (int cmd = SWSGetCommandID(ExclusiveToggle, i))
+			{
+				if (cmd != _ct->accel.accel.cmd) 
+					if (COMMAND_T* ct = SWSGetCommandByID(cmd)) {
+						ct->fakeToggle = false;
+						RefreshToolbar(cmd);
+					}
+			}
+			else
+				break;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Action sections' unique IDs
+///////////////////////////////////////////////////////////////////////////////
+
+// keep this definition order!
+// (indexes used in the cycle action editor, for ex.)
+int SNM_GetActionSectionId(int _idx)
+{
+	static int sSectionIds[] =
+	{ 
+		0,				// Main
+		32061,			// ME event list section
+		32060,			// ME piano roll section
+		32062,			// MIDI inline editor
+		100,			// Main alt
+		32063,			// Media explorer
+		SNM_SECTION_ID	// S&M extension
+	};
+	return sSectionIds[_idx];
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// "S&M Extension" section
+///////////////////////////////////////////////////////////////////////////////
+
+static WDL_IntKeyedArray<MIDI_COMMAND_T*> s_snmSectionCmds;
+static int s_snmSection_CmdIdGen = SNM_SECTION_1ST_CMD_ID, s_snmSectionMinCmdId=0, s_snmSectionMaxCmdId=0;
+KbdCmd g_snmSectionKbdCmds[SNM_MAX_SECTION_ACTIONS];
+KbdKeyBindingInfo g_snmSectionDefKeys[SNM_MAX_SECTION_ACTIONS];
+
+bool OnMidiAction(int _cmd, int _val, int _valhw, int _relmode, HWND _hwnd)
+{
+	static bool sReentrancyCheck = false;
+	if (sReentrancyCheck)
+		return false;
+
+	// ignore commands that don't have anything to do with us from this point forward
+	if (_cmd < s_snmSectionMinCmdId || _cmd > s_snmSectionMaxCmdId)
+		return false;
+	
+	if (MIDI_COMMAND_T* ct = s_snmSectionCmds.Get(_cmd, NULL))
+	{
+		sReentrancyCheck = true;
+#ifdef _SNM_MISC // see MIDI_COMMAND_T declaration
+		ct->fakeToggle = !ct->fakeToggle;
+#endif
+		ct->doCommand(ct, _val, _valhw, _relmode, _hwnd);
+		sReentrancyCheck = false;
+		return true;
+	}
+	return false;
+}
+
+static KbdSectionInfo s_snmSection = {
+  SNM_SECTION_ID, "S&M Extension",
+  g_snmSectionKbdCmds, 0,
+  g_snmSectionDefKeys, 0,
+  OnMidiAction
+};
+
+KbdSectionInfo* SNM_GetMySection() {
+	return &s_snmSection;
+}
+
+int RegisterMySectionCommands(reaper_plugin_info_t* _rec, bool _localize)
+{
+	if (!_rec)
+		return 0;
+
+	s_snmSection.name = __LOCALIZE("S&M Extension","sws_accel_sec");
+
+	// register commands in specific section
+	int i = 0;
+	while(s_snmSection_cmdTable[i].id != LAST_COMMAND)
+	{
+		MIDI_COMMAND_T* ct = &s_snmSection_cmdTable[i]; 
+		if (ct->doCommand)
+		{
+/* no more used (uses g_SNM_Section_CmdIdGen instead), see below
+			if (!(ct->accel.accel.cmd = plugin_register("command_id", (void*)ct->id)))
+				return 0;
+*/
+			ct->accel.accel.cmd = s_snmSection_CmdIdGen++;
+
+			if (!s_snmSectionMinCmdId || s_snmSectionMinCmdId > ct->accel.accel.cmd)
+				s_snmSectionMinCmdId = ct->accel.accel.cmd;
+			if (ct->accel.accel.cmd > s_snmSectionMaxCmdId)
+				s_snmSectionMaxCmdId = ct->accel.accel.cmd;
+
+			s_snmSectionCmds.Insert(ct->accel.accel.cmd, ct);
+		}
+		i++;
+	}
+
+	int nbCmds = i;
+	if (nbCmds > SNM_MAX_SECTION_ACTIONS)
+		return 0;
+
+	// map MIDI_COMMAND_T[] to the section's KbdCmd[] & KbdKeyBindingInfo[]
+	for (i=0; i<nbCmds; i++)
+	{
+		MIDI_COMMAND_T* ct = &s_snmSection_cmdTable[i];
+		s_snmSection.action_list[i].text = GetLocalizedActionName(ct->accel.desc, 0, "s&m_section_actions");
+		s_snmSection.action_list[i].cmd = s_snmSection.def_keys[i].cmd = ct->accel.accel.cmd;
+		s_snmSection.def_keys[i].key = ct->accel.accel.key;
+		s_snmSection.def_keys[i].flags = ct->accel.accel.fVirt;
+	}
+	s_snmSection.action_list_cnt = s_snmSection.def_keys_cnt = nbCmds;
+
+	if (!(_rec->Register("accel_section", &s_snmSection)))
+		return 0;
+
+	return 1;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// SNM_ScheduledJob, see SNM_CSurfRun()
+///////////////////////////////////////////////////////////////////////////////
+
+WDL_PtrList_DeleteOnDestroy<SNM_ScheduledJob> g_jobs;
+SWS_Mutex g_jobsMutex;
+
+void AddOrReplaceScheduledJob(SNM_ScheduledJob* _job) 
+{
+	SWS_SectionLock lock(&g_jobsMutex);
+	if (!_job) return;
+	bool found = false;
+	for (int i=0; i<g_jobs.GetSize(); i++)
+	{
+		if (SNM_ScheduledJob* job = g_jobs.Get(i))
+		{
+			if (job->m_id == _job->m_id)
+			{
+				found = true;
+				if (!job->m_isPerforming)
+				{
+					g_jobs.Set(i, _job);
+#ifdef _SNM_DEBUG
+					char dbg[256]="";
+					_snprintfSafe(dbg, sizeof(dbg), "AddOrReplaceScheduledJob() - Replaced SNM_ScheduledJob id: %d\n", _job->m_id);
+					OutputDebugString(dbg);
+#endif
+					DELETE_NULL(job);
+				}
+				else
+				{
+#ifdef _SNM_DEBUG
+					char dbg[256]="";
+					_snprintfSafe(dbg, sizeof(dbg), "AddOrReplaceScheduledJob() - Ignored SNM_ScheduledJob id: %d\n", _job->m_id);
+					OutputDebugString(dbg);
+#endif
+					DELETE_NULL(_job);
+				}
+				break;
+			}
+		}
+	}
+
+	if (!found)
+	{
+		g_jobs.Add(_job);
+#ifdef _SNM_DEBUG
+		char dbg[256]="";
+		_snprintfSafe(dbg, sizeof(dbg), "AddOrReplaceScheduledJob() - Added SNM_ScheduledJob id: %d\n", _job->m_id);
+		OutputDebugString(dbg);
+#endif
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// SNM_MidiActionJob
+///////////////////////////////////////////////////////////////////////////////
+
+// learn with midi pitch is not supported atm,
+// see http://forum.cockos.com/showthread.php?t=116377
+SNM_MidiActionJob::SNM_MidiActionJob(int _jobId, int _approxDelayMs, int _curCC, int _val, int _valhw, int _relmode, HWND _hwnd) 
+	: SNM_ScheduledJob(_jobId, _approxDelayMs),m_val(_val),m_valhw(_valhw),m_relmode(_relmode),m_hwnd(_hwnd)
+{
+	m_absval = 0; // very default init
+
+	// osc & pitch midi events
+	if (_valhw>=0)
+	{
+//		m_absval = BOUNDED(_valhw|_val<<7, 0, 16383); // for pitch
+		m_absval = _valhw||_val ? BOUNDED(16384-(_valhw|_val<<7), 0, 16383) : 0; // for osc
+	}
+	// cc midi events
+	else if (_valhw==-1 && _val>=0 && _val<128)
+	{
+		// absolute
+		if (!_relmode) 
+			m_absval = _val;
+		// relative, from http://forum.cockos.com/project.php?issueid=4576
+		else { 
+			if (_relmode==1)      { if (_val >= 0x40) _val|=~0x3f; } // sign extend if 0x40 set
+			else if (_relmode==2) { _val-=0x40; } // offset by 0x40
+			else if (_relmode==3) { if (_val&0x40) _val=-(_val&0x3f); } // 0x40 is sign bit
+			m_absval = BOUNDED(BOUNDED(_curCC,0,127)+_val, 0, 127);
+		}
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 // S&M.ini
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -939,6 +1000,7 @@ WDL_FastString g_SNM_CyclIniFn;
 WDL_FastString g_SNM_DiffToolFn;
 int g_SNM_IniVersion = 0;
 //int g_SNMbeta = 0;
+int g_toolbarsAutoRefreshFreq = SNM_DEF_TOOLBAR_RFRSH_FREQ;
 
 void IniFileInit()
 {
@@ -988,7 +1050,7 @@ void IniFileExit()
 	SaveIniSection("General", &iniSection, g_SNM_IniFn.Get());
 
 	// save dynamic actions
-	SNM_SaveDynamicCommands(g_SNM_dynamicCmdTable, g_SNM_IniFn.Get());
+	SNM_SaveDynamicCommands(s_dynCmdTable, g_SNM_IniFn.Get());
 
 #ifdef _WIN32
 	// force ini file's cache flush, see http://support.microsoft.com/kb/68827
@@ -998,272 +1060,6 @@ void IniFileExit()
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// SNM_ScheduledJob, see SNM_CSurfRun()
-///////////////////////////////////////////////////////////////////////////////
-
-WDL_PtrList_DeleteOnDestroy<SNM_ScheduledJob> g_jobs;
-SWS_Mutex g_jobsMutex;
-
-void AddOrReplaceScheduledJob(SNM_ScheduledJob* _job) 
-{
-	SWS_SectionLock lock(&g_jobsMutex);
-	if (!_job) return;
-	bool found = false;
-	for (int i=0; i<g_jobs.GetSize(); i++)
-		if (SNM_ScheduledJob* job = g_jobs.Get(i))
-			if (job->m_id == _job->m_id)
-			{
-				found = true;
-		if (!job->m_isPerforming)
-		{
-			g_jobs.Set(i, _job);
-#ifdef _SNM_DEBUG
-			char dbg[256]="";
-			_snprintfSafe(dbg, sizeof(dbg), "AddOrReplaceScheduledJob() - Replaced SNM_ScheduledJob id: %d\n", _job->m_id);
-			OutputDebugString(dbg);
-#endif
-			DELETE_NULL(job);
-		}
-		else
-		{
-#ifdef _SNM_DEBUG
-			char dbg[256]="";
-			_snprintfSafe(dbg, sizeof(dbg), "AddOrReplaceScheduledJob() - Ignored SNM_ScheduledJob id: %d\n", _job->m_id);
-			OutputDebugString(dbg);
-#endif
-			DELETE_NULL(_job);
-		}
-				break;
-			}
-
-	if (!found)
-	{
-		g_jobs.Add(_job);
-#ifdef _SNM_DEBUG
-		char dbg[256]="";
-		_snprintfSafe(dbg, sizeof(dbg), "AddOrReplaceScheduledJob() - Added SNM_ScheduledJob id: %d\n", _job->m_id);
-		OutputDebugString(dbg);
-#endif
-	}
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-// SNM_MidiActionJob
-///////////////////////////////////////////////////////////////////////////////
-
-// learn with midi pitch is not supported atm,
-// see http://forum.cockos.com/showthread.php?t=116377
-SNM_MidiActionJob::SNM_MidiActionJob(int _jobId, int _approxDelayMs, int _curCC, int _val, int _valhw, int _relmode, HWND _hwnd) 
-	: SNM_ScheduledJob(_jobId, _approxDelayMs),m_val(_val),m_valhw(_valhw),m_relmode(_relmode),m_hwnd(_hwnd)
-{
-	m_absval = 0; // very default init
-
-	// osc & pitch midi events
-	if (_valhw>=0)
-	{
-//		m_absval = BOUNDED(_valhw|_val<<7, 0, 16383); // for pitch
-		m_absval = _valhw||_val ? BOUNDED(16384-(_valhw|_val<<7), 0, 16383) : 0; // for osc
-	}
-	// cc midi events
-	else if (_valhw==-1 && _val>=0 && _val<128)
-	{
-		// absolute
-		if (!_relmode) 
-			m_absval = _val;
-		// relative, from http://forum.cockos.com/project.php?issueid=4576
-		else { 
-			if (_relmode==1)      { if (_val >= 0x40) _val|=~0x3f; } // sign extend if 0x40 set
-			else if (_relmode==2) { _val-=0x40; } // offset by 0x40
-			else if (_relmode==3) { if (_val&0x40) _val=-(_val&0x3f); } // 0x40 is sign bit
-			m_absval = BOUNDED(BOUNDED(_curCC,0,127)+_val, 0, 127);
-		}
-	}
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-// SNM_MarkerRegionSubscriber, see SNM_CSurfRun()
-///////////////////////////////////////////////////////////////////////////////
-
-WDL_PtrList<SNM_MarkerRegionSubscriber> g_mkrRgnSubscribers;
-SWS_Mutex g_mkrRgnSubscribersMutex;
-WDL_PtrList<MarkerRegion> g_mkrRgnCache;
-
-bool RegisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub) {
-	SWS_SectionLock lock(&g_mkrRgnSubscribersMutex);
-	if (_sub && g_mkrRgnSubscribers.Find(_sub) < 0)
-		return (g_mkrRgnSubscribers.Add(_sub) != NULL);
-	return false;
-}
-
-bool UnregisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub) {
-	SWS_SectionLock lock(&g_mkrRgnSubscribersMutex);
-	int idx = _sub ? g_mkrRgnSubscribers.Find(_sub) : -1;
-	if (idx >= 0) {
-		g_mkrRgnSubscribers.Delete(idx, false);
-		return true;
-	}
-	return false;
-}
-
-// returns an update mask: 0 if nothing changed, &SNM_MARKER_MASK: marker change, &SNM_REGION_MASK: region change
-int UpdateMarkerRegionCache()
-{
-	int updateFlags=0;
-	int i=0, x=0, num, col; double pos, rgnend; char* name; bool isRgn;
-
-	// added/updated markers/regions?
-	while (x = EnumProjectMarkers3(NULL, x, &isRgn, &pos, &rgnend, &name, &num, &col))
-	{
-		MarkerRegion* m = g_mkrRgnCache.Get(i);
-		if (!m || (m && !m->Compare(isRgn, pos, rgnend, name, num, col)))
-		{
-			if (m) g_mkrRgnCache.Delete(i, true);
-			g_mkrRgnCache.Insert(i, new MarkerRegion(isRgn, pos, rgnend, name, num, col));
-			updateFlags |= (isRgn ? SNM_REGION_MASK : SNM_MARKER_MASK);
-		}
-		i++;
-	}
-	// removed markers/regions?
-	for (int j=g_mkrRgnCache.GetSize()-1; j>=i; j--) {
-		if (MarkerRegion* m = g_mkrRgnCache.Get(j))
-			updateFlags |= (m->IsRegion() ? SNM_REGION_MASK : SNM_MARKER_MASK);
-		g_mkrRgnCache.Delete(j, true);
-	}
-	// project time mode update?
-	static int prevTimemode = *(int*)GetConfigVar("projtimemode");
-	if (updateFlags != (SNM_MARKER_MASK|SNM_REGION_MASK))
-		if (int* timemode = (int*)GetConfigVar("projtimemode"))
-			if (*timemode != prevTimemode) {
-				prevTimemode = *timemode;
-				return SNM_MARKER_MASK|SNM_REGION_MASK;
-			}
-	return updateFlags;
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-// IReaperControlSurface callbacks
-///////////////////////////////////////////////////////////////////////////////
-
-double g_toolbarMsCounter = 0.0;
-double g_itemSelToolbarMsCounter = 0.0;
-double g_markerRegionNotifyMsCounter = 0.0;
-
-// processing order is important here!
-void SNM_CSurfRun()
-{
-	// region playlist
-	PlaylistRun();
-
-	// stop playing track previews if needed
-	StopTrackPreviewsRun();
-
-	// perform scheduled jobs
-	{
-		SWS_SectionLock lock(&g_jobsMutex);
-		for (int i=g_jobs.GetSize()-1; i >=0; i--)
-		{
-			if (SNM_ScheduledJob* job = g_jobs.Get(i))
-			{
-				job->m_tick--;
-				if (job->m_tick <= 0)
-				{
-					if (!job->m_isPerforming)
-					{
-						job->m_isPerforming = true;
-						job->Perform();
-#ifdef _SNM_DEBUG
-						char dbg[256]="";
-						_snprintfSafe(dbg, sizeof(dbg), "SNM_CSurfRun() - Performed SNM_ScheduledJob id: %d\n", job->m_id);
-						OutputDebugString(dbg);
-#endif
-						g_jobs.Delete(i, false);
-						DELETE_NULL(job);
-					}
-					else
-					{
-#ifdef _SNM_DEBUG
-						char dbg[256]="";
-						_snprintfSafe(dbg, sizeof(dbg), "SNM_CSurfRun() - Ignored SNM_ScheduledJob id: %d\n", job->m_id);
-						OutputDebugString(dbg);
-#endif
-					}
-				}
-			}
-		}
-	}
-
-	// marker/region updates notifications
-	g_markerRegionNotifyMsCounter += SNM_CSURF_RUN_TICK_MS;
-	if (g_markerRegionNotifyMsCounter > 500.0)
-	{
-		g_markerRegionNotifyMsCounter = 0.0;
-
-		SWS_SectionLock lock(&g_mkrRgnSubscribersMutex);
-		if (int sz=g_mkrRgnSubscribers.GetSize())
-			if (int updateFlags = UpdateMarkerRegionCache())
-				for (int i=sz-1; i>=0; i--)
-					g_mkrRgnSubscribers.Get(i)->NotifyMarkerRegionUpdate(updateFlags);
-	}
-
-	// toolbars auto-refresh options
-	g_toolbarMsCounter += SNM_CSURF_RUN_TICK_MS;
-	g_itemSelToolbarMsCounter += SNM_CSURF_RUN_TICK_MS;
-
-	if (g_itemSelToolbarMsCounter > 1000) { // might be hungry => gentle hard-coded freq
-		g_itemSelToolbarMsCounter = 0.0;
-		if (g_SNM_ToolbarRefresh) 
-			OffscreenSelItemsPoll();
-	}
-	if (g_toolbarMsCounter > g_toolbarsAutoRefreshFreq) {
-		g_toolbarMsCounter = 0.0;
-		if (g_SNM_ToolbarRefresh) 
-			RefreshToolbars();
-	}
-}
-
-extern SNM_NotesWnd* g_pNotesWnd;
-extern SNM_LiveConfigsWnd* g_pLiveConfigsWnd;
-extern SNM_RegionPlaylistWnd* g_pRgnPlaylistWnd;
-
-void SNM_CSurfSetTrackTitle() {
-	if (g_pNotesWnd) g_pNotesWnd->CSurfSetTrackTitle();
-	if (g_pLiveConfigsWnd) g_pLiveConfigsWnd->CSurfSetTrackTitle();
-}
-
-void SNM_CSurfSetTrackListChange() {
-	if (g_pNotesWnd) g_pNotesWnd->CSurfSetTrackListChange();
-	if (g_pLiveConfigsWnd) g_pLiveConfigsWnd->CSurfSetTrackListChange();
-	if (g_pRgnPlaylistWnd) g_pRgnPlaylistWnd->CSurfSetTrackListChange();
-}
-
-bool g_lastPlayState=false, g_lastPauseState=false, g_lastRecState=false;
-
-void SNM_CSurfSetPlayState(bool _play, bool _pause, bool _rec)
-{
-	if (g_lastPlayState != _play)
-	{
-		if (g_lastPlayState && !_play)
-			PlaylistStopped(_pause);
-		g_lastPlayState = _play;
-	}
-	if (g_lastPauseState != _pause)
-	{
-		if (g_lastPlayState && !_pause)
-			PlaylistUnpaused();
-		g_lastPauseState = _pause;
-	}
-	if (g_lastRecState != _rec) {
-		g_lastRecState = _rec;
-	}
-}
-
-int SNM_CSurfExtended(int _call, void* _parm1, void* _parm2, void* _parm3) {
-	return 0; // return 0 if unsupported
-}
-
 // S&M core stuff
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1288,10 +1084,12 @@ int SNM_Init(reaper_plugin_info_t* _rec)
 		return 0;
 #endif
 	// actions must be registered before views and cycle actions
-	if (!SWSRegisterCommands(g_SNM_cmdTable) || 
-		!SNM_RegisterDynamicCommands(g_SNM_dynamicCmdTable, g_SNM_IniFn.Get()) ||
-		!SNM_SectionRegisterCommands(_rec, true))
+	if (!SWSRegisterCommands(s_cmdTable) || 
+		!RegisterConfigurableCommands(s_dynCmdTable, g_SNM_IniFn.Get()) ||
+		!RegisterMySectionCommands(_rec, true))
+	{
 		return 0;
+	}
 
 	SNM_UIInit();
 	CueBussInit();
@@ -1305,6 +1103,7 @@ int SNM_Init(reaper_plugin_info_t* _rec)
 	CyclactionInit(); // keep it as the last one!
 
 #ifdef _SNM_CSURF_PROXY
+	extern SNM_CSurfProxy* g_SNM_CSurfProxy;
 	g_SNM_CSurfProxy = new SNM_CSurfProxy();
 	if (!g_SNM_CSurfProxy || !_rec->Register("csurf_inst", g_SNM_CSurfProxy))
 		DELETE_NULL(g_SNM_CSurfProxy)
@@ -1334,9 +1133,9 @@ void SNM_Exit()
 	IniFileExit();
 
 #ifdef _SNM_CSURF_PROXY
+	extern SNM_CSurfProxy* g_SNM_CSurfProxy;
 	if (g_SNM_CSurfProxy)
 		g_SNM_CSurfProxy->RemoveAll();
 	DELETE_NULL(g_SNM_CSurfProxy);
 #endif
 }
-

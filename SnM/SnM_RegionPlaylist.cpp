@@ -251,11 +251,11 @@ enum {
 };
 
 // !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_165
-static SWS_LVColumn g_playlistCols[] = { {50,2,"#"}, {150,1,"Name"}, {70,1,"Loop count"}, {50,2,"Start"}, {50,2,"End"}, {50,2,"Length"} };
+static SWS_LVColumn s_playlistCols[] = { {50,2,"#"}, {150,1,"Name"}, {70,1,"Loop count"}, {50,2,"Start"}, {50,2,"End"}, {50,2,"Length"} };
 // !WANT_LOCALIZE_STRINGS_END
 
 SNM_PlaylistView::SNM_PlaylistView(HWND hwndList, HWND hwndEdit)
-	: SWS_ListView(hwndList, hwndEdit, COL_COUNT, g_playlistCols, "RgnPlaylistViewState", false, "sws_DLG_165", false)
+	: SWS_ListView(hwndList, hwndEdit, COL_COUNT, s_playlistCols, "RgnPlaylistViewState", false, "sws_DLG_165", false)
 {
 }
 
@@ -591,10 +591,10 @@ void SNM_RegionPlaylistWnd::Update(int _flags, WDL_FastString* _curNum, WDL_Fast
 {
 	MUTEX_PLAYLISTS;
 
-	static bool bRecurseCheck = false;
-	if (bRecurseCheck)
+	static bool sRecurseCheck = false;
+	if (sRecurseCheck)
 		return;
-	bRecurseCheck = true;
+	sRecurseCheck = true;
 
 	ShowWindow(GetDlgItem(m_hwnd, IDC_LIST), !g_monitorMode && g_pls.Get()->GetSize() ? SW_SHOW : SW_HIDE);
 
@@ -618,7 +618,7 @@ void SNM_RegionPlaylistWnd::Update(int _flags, WDL_FastString* _curNum, WDL_Fast
 			((SNM_PlaylistView*)m_pLists.Get(0))->Update(); // no playlist compacting
 	}
 
-	bRecurseCheck = false;
+	sRecurseCheck = false;
 }
 
 // just update monitoring VWnds
@@ -1298,10 +1298,10 @@ void PlaylistRun()
 {
 	MUTEX_PLAYLISTS;
 
-	static bool bRecurseCheck = false;
-	if (bRecurseCheck || g_playPlaylist<0)
+	static bool sRecurseCheck = false;
+	if (sRecurseCheck || g_playPlaylist<0)
 		return;
-	bRecurseCheck = true;
+	sRecurseCheck = true;
 
 	if (g_playPlaylist>=0)
 	{
@@ -1408,7 +1408,7 @@ void PlaylistRun()
 		}
 	}
 
-	bRecurseCheck = false;
+	sRecurseCheck = false;
 }
 
 // _itemId: callers must not use no hard coded value but GetNextValidItem() or GetPrevValidItem()
@@ -1964,7 +1964,7 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 	g_pls.Get()->m_editId=0;
 }
 
-static project_config_extension_t g_projectconfig = {
+static project_config_extension_t s_projectconfig = {
 	ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL
 };
 
@@ -1987,7 +1987,7 @@ int RegionPlaylistInit()
 	if (SWS_LoadDockWndState("SnMRgnPlaylist"))
 		g_pRgnPlaylistWnd = new SNM_RegionPlaylistWnd();
 
-	if (!plugin_register("projectconfig", &g_projectconfig))
+	if (!plugin_register("projectconfig", &s_projectconfig))
 		return 0;
 	return 1;
 }

@@ -39,9 +39,9 @@
 #define CA_TGL1			'#' // CA reports a fake toggle state
 #define CA_TGL2			'$' // CA reports a real toggle state
 
-static const char CA_SEP_STR[] =  { CA_SEP,  '\0' };
-static const char CA_TGL1_STR[] = { CA_TGL1, '\0' };
-static const char CA_TGL2_STR[] = { CA_TGL2, '\0' };
+static const char s_CA_SEP_STR[] =  { CA_SEP,  '\0' };
+static const char s_CA_TGL1_STR[] = { CA_TGL1, '\0' };
+static const char s_CA_TGL2_STR[] = { CA_TGL2, '\0' };
 
 
 class Cyclaction

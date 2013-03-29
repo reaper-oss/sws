@@ -144,24 +144,24 @@ void SNM_DynSizedText::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y,
 		LICE_FillRect(drawbm,r.left,r.top,r.right-r.left,laneHeight,col,1.0f,LICE_BLIT_MODE_OVERLAY);
 		LICE_FillRect(drawbm,r.left,r.top,r.right-r.left,laneHeight,col,1.0f,LICE_BLIT_MODE_OVERLAY);
 
-		static LICE_CachedFont font;
-		if (!font.GetHFont()) // single lazy init..
+		static LICE_CachedFont sFont;
+		if (!sFont.GetHFont()) // single lazy init..
 		{
 			LOGFONT lf = {
 				SNM_FONT_HEIGHT, 0,0,0,FW_BOLD,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
 				OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SNM_FONT_NAME
 			};
-			font.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT|LICE_FONT_FLAG_FORCE_NATIVE);
+			sFont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT|LICE_FONT_FLAG_FORCE_NATIVE);
 			// others props are set on demand (support theme switches)
 		}
-		font.SetBkMode(TRANSPARENT);
-		font.SetTextColor(LICE_RGBA_FROMNATIVE(WDL_STYLE_GetSysColor(COLOR_WINDOW), 255));
+		sFont.SetBkMode(TRANSPARENT);
+		sFont.SetTextColor(LICE_RGBA_FROMNATIVE(WDL_STYLE_GetSysColor(COLOR_WINDOW), 255));
 
 		{
 			RECT tr = {r.left,r.top,r.right,r.top+laneHeight};
 			char buf[64] = "";
 			_snprintfSafe(buf, sizeof(buf), " %s ", m_title.Get()); // trick for better display when left/right align
-			font.DrawText(drawbm, buf, -1, &tr, DT_SINGLELINE|DT_VCENTER|m_titleAlign);
+			sFont.DrawText(drawbm, buf, -1, &tr, DT_SINGLELINE|DT_VCENTER|m_titleAlign);
 		}
 
 		// resize draw rect: take band into account
@@ -682,14 +682,14 @@ void SNM_SkinButton(WDL_VirtualIconButton* _btn, WDL_VirtualIconButton_SkinConfi
 
 void SNM_SkinToolbarButton(SNM_ToolbarButton* _btn, const char* _text)
 {
-	static WDL_VirtualIconButton_SkinConfig skin;
+	static WDL_VirtualIconButton_SkinConfig sSkin;
 	IconTheme* it = SNM_GetIconTheme(true); // true: blank & overlay images are recent (v4)
 	if (it && it->toolbar_blank)
 	{
-		skin.image = it->toolbar_blank;
-		skin.olimage = NULL;
-		WDL_VirtualIconButton_PreprocessSkinConfig(&skin);
-		_btn->SetIcon(&skin);
+		sSkin.image = it->toolbar_blank;
+		sSkin.olimage = NULL;
+		WDL_VirtualIconButton_PreprocessSkinConfig(&sSkin);
+		_btn->SetIcon(&sSkin);
 		_btn->SetForceBorder(false);
 		if (ColorTheme* ct = SNM_GetColorTheme())
 			_btn->SetForceText(true, !!(_btn->GetPressed()&1) ? LICE_RGBA_FROMNATIVE(ct->toolbar_button_text_on,255) : LICE_RGBA_FROMNATIVE(ct->toolbar_button_text,255));

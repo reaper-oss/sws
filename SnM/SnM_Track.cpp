@@ -440,7 +440,7 @@ WDL_PtrList<MediaTrack>* GetChildTracks(MediaTrack* _tr)
 // Track envelopes
 ///////////////////////////////////////////////////////////////////////////////
 
-static const char g_trackEnvNames[][SNM_MAX_ENV_SUBCHUNK_NAME] =
+static const char s_trackEnvNames[][SNM_MAX_ENV_SUBCHUNK_NAME] =
 {
 	"PARMENV",
 	"PROGRAMENV",
@@ -500,8 +500,8 @@ void SelOnlyTrackWithSelEnv(COMMAND_T* _ct)
 bool LookupTrackEnvName(const char* _str, bool _allEnvs)
 {
 	int i = _allEnvs ? 0:2; 
-	while (*g_trackEnvNames[i]) {
-		if (!strcmp(_str, g_trackEnvNames[i]))
+	while (*s_trackEnvNames[i]) {
+		if (!strcmp(_str, s_trackEnvNames[i]))
 			return true;
 		i++;
 	}

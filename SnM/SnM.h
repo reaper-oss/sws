@@ -34,16 +34,41 @@
 // see eof for includes
 
 
+// ----------------------------------------------------------------------------
+// Activate/deactivate some features, traces, etc.
+// ----------------------------------------------------------------------------
+
 //#define _SNM_DEBUG
 //#define _SNM_DYN_FONT_DEBUG
 //#define _SNM_MISC				// not released, deprecated, tests, etc..
 //#define _SNM_WDL				// if my wdl version is used
 #define _SNM_CSURF_PROXY
 #define _SNM_HOST_AW
-//#define _SNM_REAPER_BUG			// workaround some API bugs
 
 
-///////////////////////////////////////////////////////////////////////////////
+// ----------------------------------------------------------------------------
+// Just to ease sustaining vs API/REAPER/WDL bugs and/or issues: 
+// #undef to activate the "expected code", #define to activate workarounds
+// ----------------------------------------------------------------------------
+
+#define _SNM_REAPER_BUG			//JFB!!! workaround some API/REAPER bugs
+								// Last test: REAPER v4.33pre23
+								// API bug 1: CountActionShortcuts() can return > 0 although there is no shortcut
+								// API bug 2: DoActionShortcutDialog() does not persist learned shortcut
+
+#ifdef __APPLE__
+  #define _SNM_SWELL_ISSUES		//JFB!!! workaround some SWELL issues
+#endif							// Last test: WDL d1d8d2 - Dec. 20 2012
+								// - issue 1: a same font does not look the same on 32-bit & 64-bit
+								// - issue 2: native font rendering won't draw multiple lines
+								// - issue 3: wrong DT_CALCRECT on x64
+								// - issue 4: missing some EN_CHANGE msg, see SnM_Notes.cpp
+								// - issue 5: EN_SETFOCUS, EN_KILLFOCUS not yet supported
+
+
+// ----------------------------------------------------------------------------
+// Constants
+// ----------------------------------------------------------------------------
 
 #define SNM_INI_FILE_VERSION		7
 
@@ -74,11 +99,11 @@
 #define SNM_KB_INI_FILE				"%s/reaper-kb.ini"
 #define SNM_CONSOLE_FILE			"%s/reaconsole_customcommands.txt"
 #define SNM_EXTENSION_FILE			"%s/UserPlugins/reaper_snm.dylib"
-#define SNM_FONT_NAME				"Lucida Grande"
-#ifndef __LP64__					//JFB!!! SWELL issue: wtf!? same font size, different look on x64!
-#define SNM_FONT_HEIGHT				10
+#define SNM_FONT_NAME				"Arial"
+#if defined(_SNM_SWELL_ISSUES) && defined(__LP64__)
+  #define SNM_FONT_HEIGHT			12 // SWELL issue: same font size, different look on x64!
 #else
-#define SNM_FONT_HEIGHT				11
+  #define SNM_FONT_HEIGHT			11
 #endif
 #define SNM_DYN_FONT_NAME			"Arial" // good default for UTF8
 #define SNM_1PIXEL_Y				(-1)
@@ -148,8 +173,10 @@
 #define SNM_SCHEDJOB_CYCLACTION				SNM_SCHEDJOB_TRIG_PRESET + 1
 #define SNM_SCHEDJOB_PLAYLIST_UPDATE		SNM_SCHEDJOB_CYCLACTION + 1
 #define SNM_SCHEDJOB_PRJ_ACTION				SNM_SCHEDJOB_PLAYLIST_UPDATE + 1
-#define SNM_SCHEDJOB_OSX_FIX				SNM_SCHEDJOB_PRJ_ACTION + 1
+#define SNM_SCHEDJOB_OSX_FIX				SNM_SCHEDJOB_PRJ_ACTION + 1	//JFB!!! removeme some day
 
+
+///////////////////////////////////////////////////////////////////////////////
 
 /*JFB replaced with a common SWS_CMD_SHORTNAME()
 #define SNM_CMD_SHORTNAME(_ct) (GetLocalizedActionName(_ct->id, _ct->accel.desc) + 9) // +9 to skip "SWS/S&M: "
@@ -253,7 +280,7 @@ void AddOrReplaceScheduledJob(SNM_ScheduledJob* _job);
 bool RegisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub);
 bool UnregisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub) ;
 
-// IReaperControlSurface callbacks
+//  IReaperControlSurface callbacks
 void SNM_CSurfRun();
 void SNM_CSurfSetTrackTitle();
 void SNM_CSurfSetTrackListChange();

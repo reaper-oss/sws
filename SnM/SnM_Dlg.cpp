@@ -55,12 +55,13 @@ void SNM_SetUIRefresh(COMMAND_T* _ct) {
 // Theming
 ///////////////////////////////////////////////////////////////////////////////
 
-// native font rendering: not configurable on osx, optional on win
+// native font rendering default value
+// note: not configurable on osx, optional on win (s&m.ini)
 bool g_SNMClearType =
 #ifdef _WIN32
-	false; // default value (value overrided by the s&m.ini one)
+	false;
 #else
-	false; //JFB!!! disabled on OSX: multi-line font issue on x64 (ex: live config knobs)
+	true;
 #endif
 
 ColorTheme* SNM_GetColorTheme(bool _checkForSize) {
@@ -159,21 +160,13 @@ void SNM_ThemeListView(SWS_ListView* _lv)
 	}
 }
 
+// note that LICE_LoadPNGFromResource() is KO on OSX (it looks for REAPER's resources..)
 LICE_IBitmap* SNM_GetThemeLogo()
 {
 	static LICE_IBitmap* snmLogo;
 	if (!snmLogo)
 	{
-/*JFB commented: load from resources KO for OSX (it looks for REAPER's resources..)
-#ifdef _WIN32
-		snmLogo = LICE_LoadPNGFromResource(g_hInst,IDB_SNM,NULL);
-#else
-		// SWS doesn't work, sorry. :( 
-		//snmLogo =  LICE_LoadPNGFromNamedResource("SnM.png",NULL);
-		snmLogo = NULL;
-#endif
-*/
-		// logo is now loaded from memory (for OSX support)
+		// logo is loaded from memory (for OSX support)
 		if (WDL_HeapBuf* hb = TranscodeStr64ToHeapBuf(SNM_LOGO_PNG_FILE)) {
 			snmLogo = LICE_LoadPNGFromMemory(hb->Get(), hb->GetSize());
 			delete hb;

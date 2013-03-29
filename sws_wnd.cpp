@@ -1918,10 +1918,10 @@ void DrawTooltipForPoint(LICE_IBitmap *bm, POINT mousePt, RECT *wndr, const char
       LOGFONT lf = {SNM_FONT_HEIGHT,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
         OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SNM_FONT_NAME
       };
-#ifdef _WIN32
+#ifndef _SNM_SWELL_ISSUES
      tmpfont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT|(g_SNMClearType?LICE_FONT_FLAG_FORCE_NATIVE:0));
 #else
-     tmpfont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT); //JFB!!! SWELL issue: LICE_FONT_FLAG_FORCE_NATIVE won't draw multiple lines
+     tmpfont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT); // SWELL issue: native font rendering won't draw multiple lines
 #endif
 //JFB <---
     }

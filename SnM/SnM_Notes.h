@@ -65,7 +65,7 @@ public:
 };
 
 // OSX fix/workaround (SWELL bug?)
-#ifndef _WIN32
+#ifdef _SNM_SWELL_ISSUES
 class OSXForceTxtChangeJob : public SNM_ScheduledJob {
 public:
 	OSXForceTxtChangeJob() : SNM_ScheduledJob(SNM_SCHEDJOB_OSX_FIX, 50) {} // ~fast enough to follow key strokes 

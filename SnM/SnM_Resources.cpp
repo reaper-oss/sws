@@ -143,7 +143,7 @@
 #endif
 
 // no default filter text on OSX (cannot catch EN_SETFOCUS/EN_KILLFOCUS)
-#ifdef _WIN32
+#ifndef _SNM_SWELL_ISSUES
 #define FILTER_DEFAULT_STR		__LOCALIZE("Filter","sws_DLG_150")
 #else
 #define FILTER_DEFAULT_STR		""
@@ -1000,7 +1000,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				g_filter.Set(filter);
 				Update();
 			}
-#ifdef _WIN32
+#ifndef _SNM_SWELL_ISSUES // EN_SETFOCUS, EN_KILLFOCUS not supported
 			else if (HIWORD(wParam)==EN_SETFOCUS)
 			{
 				HWND hFilt = GetDlgItem(m_hwnd, IDC_FILTER);

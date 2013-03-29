@@ -85,7 +85,7 @@ void SNM_DynSizedText::DrawLines(LICE_IBitmap* _drawbm, RECT* _r, int _fontHeigh
 	tr.top = _r->top + int((_r->bottom-_r->top)/2 - (_fontHeight*m_lines.GetSize())/2 + 0.5);
 	tr.left = _r->left;
 	tr.right = _r->right;
-
+	
 	for (int i=0; i < m_lines.GetSize(); i++)
 	{
 		tr.bottom = tr.top+_fontHeight;
@@ -644,10 +644,10 @@ void SNM_KnobCaption::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, 
 	r.bottom += origin_y;
 
 	if (LICE_CachedFont* font = 
-#ifdef _WIN32
-			SNM_GetThemeFont()
+#ifdef _SNM_SWELL_ISSUES
+			SNM_GetFont(0) // SWELL issue: native font rendering won't draw multiple lines
 #else
-			SNM_GetFont() //JFB!!! SWELL issue: LICE_FONT_FLAG_FORCE_NATIVE won't draw multiple lines
+			SNM_GetThemeFont() // i.e. SNM_GetFont(1)
 #endif
 		)
 	{
@@ -774,6 +774,9 @@ bool SNM_AutoVWndPosition(UINT _align, WDL_VWnd* _comp, WDL_VWnd* _tiedComp, con
 			{
 				RECT tr = {0,0,0,0};
 				cb->GetFont()->DrawText(NULL, cb->GetItem(i), -1, &tr, DT_CALCRECT);
+#if defined(_SNM_SWELL_ISSUES) && defined(__LP64__)
+				tr.bottom=tr.top+SNM_FONT_HEIGHT+1; // SWELL issue: wrong DT_CALCRECT result on x64
+#endif
 				if (tr.right > width)
 					width = tr.right;
 				height = tr.bottom;
@@ -799,6 +802,9 @@ bool SNM_AutoVWndPosition(UINT _align, WDL_VWnd* _comp, WDL_VWnd* _tiedComp, con
 			{
 				RECT tr = {0,0,0,0};
 				btn->GetFont()->DrawText(NULL, btn->GetTextLabel(), -1, &tr, DT_CALCRECT);
+#if defined(_SNM_SWELL_ISSUES) && defined(__LP64__)
+				tr.bottom=tr.top+SNM_FONT_HEIGHT+1; // SWELL issue: wrong DT_CALCRECT result on x64
+#endif
 				if (tr.bottom > height)
 					height = int(tr.bottom + tr.bottom/2 + 0.5);
 				if ((tr.right+int(height/2 + 0.5)) > width)
@@ -813,7 +819,7 @@ bool SNM_AutoVWndPosition(UINT _align, WDL_VWnd* _comp, WDL_VWnd* _tiedComp, con
 			}
 		}
 		else  if (!strcmp(_comp->GetType(), "SNM_KnobCaption")) {
-			width=int(SNM_GUI_W_KNOB*3.5);
+			width=int(SNM_GUI_W_KNOB*3.7);
 			height=SNM_GUI_W_KNOB;
 		}
 		else  if (!strcmp(_comp->GetType(), "SNM_TwoTinyButtons")) {

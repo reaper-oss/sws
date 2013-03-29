@@ -76,9 +76,9 @@ public:
 };
 #endif
 
-class NotesMarkerRegionSubscriber : public SNM_MarkerRegionSubscriber {
+class NotesMarkerRegionListener : public SNM_MarkerRegionListener {
 public:
-	NotesMarkerRegionSubscriber() : SNM_MarkerRegionSubscriber() {}
+	NotesMarkerRegionListener() : SNM_MarkerRegionListener() {}
 	void NotifyMarkerRegionUpdate(int _updateFlags);
 };
 
@@ -126,7 +126,7 @@ protected:
 	WDL_VirtualStaticText m_txtLabel;
 	SNM_DynSizedText m_bigNotes;
 
-	NotesMarkerRegionSubscriber m_mkrRgnSubscriber;
+	NotesMarkerRegionListener m_mkrRgnSubscriber;
 };
 
 
@@ -135,7 +135,9 @@ void SaveHelp(const char* _cmdName, const char* _help);
 bool GetStringFromNotesChunk(WDL_FastString* _notes, char* _buf, int _bufMaxSize);
 bool GetNotesChunkFromString(const char* _buf, WDL_FastString* _notes, const char* _startLine = NULL);
 
-extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_pTrackNotes;
+
+extern SNM_NotesWnd* g_SNM_NotesWnd;
+extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_SNM_TrackNotes;
 
 void SetActionHelpFilename(COMMAND_T*);
 int NotesInit();

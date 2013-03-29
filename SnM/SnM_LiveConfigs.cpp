@@ -132,7 +132,7 @@ enum {
 };
 
 
-SNM_LiveConfigsWnd* g_pLiveConfigsWnd = NULL; // editor window
+SNM_LiveConfigsWnd* g_SNM_LiveConfigsWnd = NULL; // editor window
 SNM_LiveConfigMonitorWnd* g_monitorWnds[SNM_LIVECFG_NB_CONFIGS]; // monitoring windows
 SWSProjConfig<WDL_PtrList_DeleteOnDestroy<LiveConfig> > g_liveConfigs;
 WDL_PtrList_DeleteOnDestroy<LiveConfigItem> g_clipboardConfigs; // for cut/copy/paste
@@ -480,8 +480,8 @@ int LiveConfig::SetInputTrack(MediaTrack* _newInputTr, bool _updateSends)
 	}
 	m_inputTr = _newInputTr;
 
-	if (g_pLiveConfigsWnd)
-		g_pLiveConfigsWnd->FillComboInputTrack();
+	if (g_SNM_LiveConfigsWnd)
+		g_SNM_LiveConfigsWnd->FillComboInputTrack();
 
 	return nbSends;
 }
@@ -620,16 +620,16 @@ void SNM_LiveConfigView::OnItemDblClk(SWS_ListItem* item, int iCol)
 		switch (iCol)
 		{
 			case COL_TRT:
-				if (g_pLiveConfigsWnd && pItem->m_track)
-					g_pLiveConfigsWnd->OnCommand(SNM_LIVECFG_LOAD_TRACK_TEMPLATE_MSG, 0);
+				if (g_SNM_LiveConfigsWnd && pItem->m_track)
+					g_SNM_LiveConfigsWnd->OnCommand(SNM_LIVECFG_LOAD_TRACK_TEMPLATE_MSG, 0);
 				break;
 			case COL_FXC:
-				if (g_pLiveConfigsWnd && pItem->m_track)
-					g_pLiveConfigsWnd->OnCommand(SNM_LIVECFG_LOAD_FXCHAIN_MSG, 0);
+				if (g_SNM_LiveConfigsWnd && pItem->m_track)
+					g_SNM_LiveConfigsWnd->OnCommand(SNM_LIVECFG_LOAD_FXCHAIN_MSG, 0);
 				break;
 			default:
-				if (g_pLiveConfigsWnd)
-					g_pLiveConfigsWnd->OnCommand(SNM_LIVECFG_APPLY_MSG, 0);
+				if (g_SNM_LiveConfigsWnd)
+					g_SNM_LiveConfigsWnd->OnCommand(SNM_LIVECFG_APPLY_MSG, 0);
 				break;
 		}
 	}
@@ -1704,9 +1704,9 @@ void LiveConfigsUpdateJob::Perform()
 		}
 	}
 
-	if (g_pLiveConfigsWnd) {
-		g_pLiveConfigsWnd->FillComboInputTrack();
-		g_pLiveConfigsWnd->Update();
+	if (g_SNM_LiveConfigsWnd) {
+		g_SNM_LiveConfigsWnd->FillComboInputTrack();
+		g_SNM_LiveConfigsWnd->Update();
 	}
 }
 
@@ -1816,8 +1816,8 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 		}
 
 		// refresh editor
-		if (g_pLiveConfigsWnd)
-			g_pLiveConfigsWnd->Update();
+		if (g_SNM_LiveConfigsWnd)
+			g_SNM_LiveConfigsWnd->Update();
 
 		return true;
 	}
@@ -1921,7 +1921,7 @@ int LiveConfigInit()
 
 	// instanciate the editor, if needed
 	if (SWS_LoadDockWndState("SnMLiveConfigs"))
-		g_pLiveConfigsWnd = new SNM_LiveConfigsWnd();
+		g_SNM_LiveConfigsWnd = new SNM_LiveConfigsWnd();
 
 	// instanciate monitors, if needed
 	char id[64]="";
@@ -1939,19 +1939,19 @@ int LiveConfigInit()
 void LiveConfigExit()
 {
 	WritePrivateProfileString("LiveConfigs", "BigFontName", g_lcBigFontName, g_SNM_IniFn.Get());
-	DELETE_NULL(g_pLiveConfigsWnd);
+	DELETE_NULL(g_SNM_LiveConfigsWnd);
 }
 
 void OpenLiveConfig(COMMAND_T*)
 {
-	if (!g_pLiveConfigsWnd)
-		g_pLiveConfigsWnd = new SNM_LiveConfigsWnd();
-	if (g_pLiveConfigsWnd)
-		g_pLiveConfigsWnd->Show(true, true);
+	if (!g_SNM_LiveConfigsWnd)
+		g_SNM_LiveConfigsWnd = new SNM_LiveConfigsWnd();
+	if (g_SNM_LiveConfigsWnd)
+		g_SNM_LiveConfigsWnd->Show(true, true);
 }
 
 int IsLiveConfigDisplayed(COMMAND_T*) {
-	return (g_pLiveConfigsWnd && g_pLiveConfigsWnd->IsValidWindow());
+	return (g_SNM_LiveConfigsWnd && g_SNM_LiveConfigsWnd->IsValidWindow());
 }
 
 
@@ -2425,9 +2425,9 @@ void ApplyLiveConfigJob::Perform()
 	}
 
 	// update GUIs in any case, e.g. tweaking (gray cc value) to same value (=> black)
-	if (g_pLiveConfigsWnd) {
-		g_pLiveConfigsWnd->Update();
-//		g_pLiveConfigsWnd->SelectByCCValue(m_cfgId, lc->m_activeMidiVal);
+	if (g_SNM_LiveConfigsWnd) {
+		g_SNM_LiveConfigsWnd->Update();
+//		g_SNM_LiveConfigsWnd->SelectByCCValue(m_cfgId, lc->m_activeMidiVal);
 	}
 
 	// swap preload/current configs => update both preload & current panels
@@ -2505,9 +2505,9 @@ void PreloadLiveConfigJob::Perform()
 	}
 
 	// update GUIs/OSC in any case
-	if (g_pLiveConfigsWnd) {
-		g_pLiveConfigsWnd->Update();
-//		g_pLiveConfigsWnd->SelectByCCValue(m_cfgId, lc->m_preloadMidiVal);
+	if (g_SNM_LiveConfigsWnd) {
+		g_SNM_LiveConfigsWnd->Update();
+//		g_SNM_LiveConfigsWnd->SelectByCCValue(m_cfgId, lc->m_preloadMidiVal);
 	}
 	UpdateMonitoring(m_cfgId, SNM_PRELOAD_MASK, SNM_PRELOAD_MASK);
 }
@@ -2875,8 +2875,8 @@ void UpdateEnableLiveConfig(int _cfgId, int _val)
 			lc->m_curMidiVal = lc->m_activeMidiVal = lc->m_curPreloadMidiVal = lc->m_preloadMidiVal = -1;
 		Undo_OnStateChangeEx2(NULL, SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
 
-		if (g_pLiveConfigsWnd && (g_configId == _cfgId))
-			g_pLiveConfigsWnd->Update();
+		if (g_SNM_LiveConfigsWnd && (g_configId == _cfgId))
+			g_SNM_LiveConfigsWnd->Update();
 		UpdateMonitoring(_cfgId, SNM_APPLY_MASK|SNM_PRELOAD_MASK, 0);
 
 		// RefreshToolbar()) not required..
@@ -3007,8 +3007,8 @@ void UpdateTinyFadesLiveConfig(COMMAND_T* _ct, int _val)
 
 		LiveConfigsUpdateFadeJob* job = new LiveConfigsUpdateFadeJob(lc->m_fade);
 		job->Perform();	delete job;
-		if (g_pLiveConfigsWnd)
-			g_pLiveConfigsWnd->Update();
+		if (g_SNM_LiveConfigsWnd)
+			g_SNM_LiveConfigsWnd->Update();
 		// RefreshToolbar()) not required..
 	}
 }

@@ -57,10 +57,15 @@ void ShowNextPreviousImageSlot(COMMAND_T*);
 void SetSelTrackIconSlot(int _slotType, const char* _title, int _slot);
 void SetSelTrackIconSlot(COMMAND_T*);
 
+extern int g_SNM_LastImgSlot;
+
 // toolbar auto refresh
 void EnableToolbarsAutoRefesh(COMMAND_T*);
 int IsToolbarsAutoRefeshEnabled(COMMAND_T*);
 void RefreshToolbars();
+
+extern bool g_SNM_ToolbarRefresh;
+extern int g_SNM_ToolbarRefreshFreq;
 
 // misc actions
 void ChangeMetronomeVolume(COMMAND_T*);

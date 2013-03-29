@@ -240,13 +240,16 @@ static void deletefaststrptr(WDL_FastString* _p) { DELETE_NULL(_p); }
 // Misc globals vars, structs & classes
 ///////////////////////////////////////////////////////////////////////////////
 
-/*JFB replaced with a common SWS_CMD_SHORTNAME()
+/* commented: replaced with a common SWS_CMD_SHORTNAME()
 #define SNM_CMD_SHORTNAME(_ct) (GetLocalizedActionName(_ct->id, _ct->accel.desc) + 9) // +9 to skip "SWS/S&M: "
 */
 
 // global/common S&M vars
-extern bool g_SNM_PlayState, g_SNM_PauseState, g_SNM_RecState, g_SNM_ToolbarRefresh;
-extern int g_SNM_IniVersion, g_SNM_Beta, g_SNM_LastImgSlot;
+extern SWS_Mutex g_SNM_JobsMutex;
+extern WDL_PtrList_DeleteOnDestroy<SNM_ScheduledJob> g_SNM_Jobs;
+
+extern int g_SNM_IniVersion;
+//extern int g_SNM_Beta;
 extern WDL_FastString g_SNM_IniFn, g_SNM_CyclIniFn, g_SNM_DiffToolFn;
 
 class SNM_TrackInt {

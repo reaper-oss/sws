@@ -87,7 +87,7 @@ enum {
 };
 
 
-SNM_RegionPlaylistWnd* g_pRgnPlaylistWnd = NULL;
+SNM_RegionPlaylistWnd* g_SNM_RgnPlaylistWnd = NULL;
 SWSProjConfig<SNM_Playlists> g_pls;
 SWS_Mutex g_plsMutex;
 SNM_OscCSurf* g_osc = NULL;
@@ -360,7 +360,7 @@ void SNM_PlaylistView::SetItemText(SWS_ListItem* item, int iCol, const char* str
 			{
 				bool isrgn; double pos, end; int num, col;
 				if (str && *str && EnumMarkerRegionById(NULL, pItem->m_rgnId, &isrgn, &pos, &end, NULL, &num, &col))
-					SNM_SetProjectMarker(NULL, num, isrgn, pos, end, str, col ? col | 0x1000000 : 0); // update notified back through PlaylistMarkerRegionSubscriber
+					SNM_SetProjectMarker(NULL, num, isrgn, pos, end, str, col ? col | 0x1000000 : 0); // update notified back through PlaylistMarkerRegionListener
 				break;
 			}
 		}
@@ -373,8 +373,8 @@ void SNM_PlaylistView::OnItemClk(SWS_ListItem* item, int iCol, int iKeyState) {
 }
 
 void SNM_PlaylistView::OnItemDblClk(SWS_ListItem* item, int iCol) {
-	if (g_pRgnPlaylistWnd)
-		g_pRgnPlaylistWnd->OnCommand(PERFORM_MSG, 0);
+	if (g_SNM_RgnPlaylistWnd)
+		g_SNM_RgnPlaylistWnd->OnCommand(PERFORM_MSG, 0);
 }
 
 // "disable" sort
@@ -1381,14 +1381,14 @@ void PlaylistRun()
 		}
 
 		g_lastRunPos = pos;
-		if (updated && (g_pRgnPlaylistWnd || g_osc))
+		if (updated && (g_SNM_RgnPlaylistWnd || g_osc))
 		{
 			// one call to GetMonitoringInfo() for both the wnd & osc
 			WDL_FastString cur, curNum, next, nextNum;
 			GetMonitoringInfo(&curNum, &cur, &nextNum, &next);
 
-			if (g_pRgnPlaylistWnd)
-				g_pRgnPlaylistWnd->Update(1, &curNum, &cur, &nextNum, &next); // 1: fast update flag
+			if (g_SNM_RgnPlaylistWnd)
+				g_SNM_RgnPlaylistWnd->Update(1, &curNum, &cur, &nextNum, &next); // 1: fast update flag
 
 			if (g_osc)
 			{
@@ -1423,7 +1423,7 @@ void PlaylistPlay(int _plId, int _itemId)
 
 	if (!g_pls.Get()->GetSize()) {
 		PlaylistStop();
-		MessageBox(g_pRgnPlaylistWnd?g_pRgnPlaylistWnd->GetHWND():GetMainHwnd(), __LOCALIZE("No playlist defined!\nUse the tiny button \"+\" to add one.","sws_DLG_165"), __LOCALIZE("S&M - Error","sws_DLG_165"),MB_OK);
+		MessageBox(g_SNM_RgnPlaylistWnd?g_SNM_RgnPlaylistWnd->GetHWND():GetMainHwnd(), __LOCALIZE("No playlist defined!\nUse the tiny button \"+\" to add one.","sws_DLG_165"), __LOCALIZE("S&M - Error","sws_DLG_165"),MB_OK);
 		return;
 	}
 
@@ -1433,7 +1433,7 @@ void PlaylistPlay(int _plId, int _itemId)
 		PlaylistStop();
 		char msg[128] = "";
 		_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Unknown playlist #%d!","sws_DLG_165"), _plId+1);
-		MessageBox(g_pRgnPlaylistWnd?g_pRgnPlaylistWnd->GetHWND():GetMainHwnd(), msg, __LOCALIZE("S&M - Error","sws_DLG_165"),MB_OK);
+		MessageBox(g_SNM_RgnPlaylistWnd?g_SNM_RgnPlaylistWnd->GetHWND():GetMainHwnd(), msg, __LOCALIZE("S&M - Error","sws_DLG_165"),MB_OK);
 		return;
 	}
 
@@ -1446,7 +1446,7 @@ void PlaylistPlay(int _plId, int _itemId)
 		{
 			char msg[256] = "";
 			_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("The playlist #%d might end unexpectedly!\nIt constains regions that start after the end of project (region %d at least).","sws_DLG_165"), _plId+1, num);
-			if (IDCANCEL == MessageBox(g_pRgnPlaylistWnd?g_pRgnPlaylistWnd->GetHWND():GetMainHwnd(), msg, __LOCALIZE("S&M - Warning","sws_DLG_165"), MB_OKCANCEL)) {
+			if (IDCANCEL == MessageBox(g_SNM_RgnPlaylistWnd?g_SNM_RgnPlaylistWnd->GetHWND():GetMainHwnd(), msg, __LOCALIZE("S&M - Warning","sws_DLG_165"), MB_OKCANCEL)) {
 				PlaylistStop();
 				return;
 			}
@@ -1457,7 +1457,7 @@ void PlaylistPlay(int _plId, int _itemId)
 		{
 			char msg[256] = "";
 			_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("The playlist #%d might not work as expected!\nIt contains nested markers/regions (inside region %d at least).","sws_DLG_165"), _plId+1, num);
-			if (IDCANCEL == MessageBox(g_pRgnPlaylistWnd?g_pRgnPlaylistWnd->GetHWND():GetMainHwnd(), msg, __LOCALIZE("S&M - Warning","sws_DLG_165"), MB_OKCANCEL)) {
+			if (IDCANCEL == MessageBox(g_SNM_RgnPlaylistWnd?g_SNM_RgnPlaylistWnd->GetHWND():GetMainHwnd(), msg, __LOCALIZE("S&M - Warning","sws_DLG_165"), MB_OKCANCEL)) {
 				PlaylistStop();
 				return;
 			}
@@ -1486,8 +1486,8 @@ void PlaylistPlay(int _plId, int _itemId)
 			if (SeekItem(_plId, _itemId, g_playPlaylist==_plId ? g_playCur : -1))
 			{
 				g_playPlaylist = _plId; // enables PlaylistRun()
-				if (g_pRgnPlaylistWnd)
-					g_pRgnPlaylistWnd->Update(); // for the play button, next/previous region actions, etc....
+				if (g_SNM_RgnPlaylistWnd)
+					g_SNM_RgnPlaylistWnd->Update(); // for the play button, next/previous region actions, etc....
 			}
 			else
 				PlaylistStopped(); // reset vars & native prefs
@@ -1498,7 +1498,7 @@ void PlaylistPlay(int _plId, int _itemId)
 	{
 		char msg[128] = "";
 		_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Playlist #%d: nothing to play!\n(empty playlist, empty project, removed regions, etc..)","sws_DLG_165"), _plId+1);
-		MessageBox(g_pRgnPlaylistWnd?g_pRgnPlaylistWnd->GetHWND():GetMainHwnd(), msg, __LOCALIZE("S&M - Error","sws_DLG_165"),MB_OK);
+		MessageBox(g_SNM_RgnPlaylistWnd?g_SNM_RgnPlaylistWnd->GetHWND():GetMainHwnd(), msg, __LOCALIZE("S&M - Error","sws_DLG_165"),MB_OK);
 	}
 }
 
@@ -1565,8 +1565,8 @@ void PlaylistStopped(bool _pause)
 			g_oldRepeatState = -1;
 		}
 
-		if (g_pRgnPlaylistWnd)
-			g_pRgnPlaylistWnd->Update();
+		if (g_SNM_RgnPlaylistWnd)
+			g_SNM_RgnPlaylistWnd->Update();
 	}
 }
 
@@ -1592,8 +1592,8 @@ void SetPlaylistRepeat(COMMAND_T* _ct)
 	}
 	RefreshToolbar(SWSGetCommandID(SetPlaylistRepeat, -1));
 	PlaylistResync();
-	if (g_pRgnPlaylistWnd)
-		g_pRgnPlaylistWnd->Update();
+	if (g_SNM_RgnPlaylistWnd)
+		g_SNM_RgnPlaylistWnd->Update();
 }
 
 int IsPlaylistRepeat(COMMAND_T*) {
@@ -1622,7 +1622,7 @@ void AppendPasteCropPlaylist(SNM_Playlist* _playlist, int _mode)
 	{
 		char msg[256] = "";
 		_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Paste/crop aborted: infinite loop (for region %d at least)!","sws_DLG_165"), rgnNum);
-		MessageBox(g_pRgnPlaylistWnd?g_pRgnPlaylistWnd->GetHWND():GetMainHwnd(), msg, __LOCALIZE("S&M - Error","sws_DLG_165"),MB_OK);
+		MessageBox(g_SNM_RgnPlaylistWnd?g_SNM_RgnPlaylistWnd->GetHWND():GetMainHwnd(), msg, __LOCALIZE("S&M - Error","sws_DLG_165"),MB_OK);
 		return;
 	}
 
@@ -1636,13 +1636,13 @@ void AppendPasteCropPlaylist(SNM_Playlist* _playlist, int _mode)
 		if (startPos<prjlen)
 		{
 			if (_playlist->IsInPlaylist(startPos, false, 0) >=0 ) {
-				MessageBox(g_pRgnPlaylistWnd?g_pRgnPlaylistWnd->GetHWND():GetMainHwnd(), 
+				MessageBox(g_SNM_RgnPlaylistWnd?g_SNM_RgnPlaylistWnd->GetHWND():GetMainHwnd(), 
 					__LOCALIZE("Aborted: pasting inside a region which is used in the playlist!","sws_DLG_165"),
 					__LOCALIZE("S&M - Error","sws_DLG_165"), MB_OK);
 				return;
 			}
 			if (IsInPlaylists(startPos) >=0 ) {
-				if (IDNO == MessageBox(g_pRgnPlaylistWnd?g_pRgnPlaylistWnd->GetHWND():GetMainHwnd(), 
+				if (IDNO == MessageBox(g_SNM_RgnPlaylistWnd?g_SNM_RgnPlaylistWnd->GetHWND():GetMainHwnd(), 
 					__LOCALIZE("Warning: pasting inside a region which is used in other playlists!\nThis region will be larger and those playlists will change, are you sure you want to continue?","sws_DLG_165"),
 					__LOCALIZE("S&M - Warning","sws_DLG_165"), MB_YESNO))
 					return;
@@ -1799,9 +1799,9 @@ void AppendPasteCropPlaylist(SNM_Playlist* _playlist, int _mode)
 
 		Undo_EndBlock2(NULL, __LOCALIZE("Crop project to playlist","sws_undo"), UNDO_STATE_ALL);
 
-		if (g_pRgnPlaylistWnd) {
-			g_pRgnPlaylistWnd->FillPlaylistCombo();
-			g_pRgnPlaylistWnd->Update();
+		if (g_SNM_RgnPlaylistWnd) {
+			g_SNM_RgnPlaylistWnd->FillPlaylistCombo();
+			g_SNM_RgnPlaylistWnd->Update();
 		}
 		return;
 	}
@@ -1865,9 +1865,9 @@ void AppendPasteCropPlaylist(SNM_Playlist* _playlist, int _mode)
 
 	Undo_EndBlock2(NULL, __LOCALIZE("Crop project to playlist","sws_undo"), UNDO_STATE_ALL);
 
-	if (g_pRgnPlaylistWnd) {
-		g_pRgnPlaylistWnd->FillPlaylistCombo();
-		g_pRgnPlaylistWnd->Update();
+	if (g_SNM_RgnPlaylistWnd) {
+		g_SNM_RgnPlaylistWnd->FillPlaylistCombo();
+		g_SNM_RgnPlaylistWnd->Update();
 	}
 }
 
@@ -1879,9 +1879,9 @@ void AppendPasteCropPlaylist(COMMAND_T* _ct) {
 ///////////////////////////////////////////////////////////////////////////////
 
 void PlaylistUpdateJob::Perform() {
-	if (g_pRgnPlaylistWnd) {
-		g_pRgnPlaylistWnd->FillPlaylistCombo();
-		g_pRgnPlaylistWnd->Update();
+	if (g_SNM_RgnPlaylistWnd) {
+		g_SNM_RgnPlaylistWnd->FillPlaylistCombo();
+		g_SNM_RgnPlaylistWnd->Update();
 	}
 }
 
@@ -1889,7 +1889,7 @@ void PlaylistUpdateJob::Perform() {
 ///////////////////////////////////////////////////////////////////////////////
 
 // ScheduledJob used because of multi-notifs
-void PlaylistMarkerRegionSubscriber::NotifyMarkerRegionUpdate(int _updateFlags) {
+void PlaylistMarkerRegionListener::NotifyMarkerRegionUpdate(int _updateFlags) {
 	PlaylistResync();
 	SNM_AddOrReplaceScheduledJob(new PlaylistUpdateJob());
 }
@@ -1925,9 +1925,9 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 				else
 					break;
 			}
-			if (g_pRgnPlaylistWnd) {
-				g_pRgnPlaylistWnd->FillPlaylistCombo();
-				g_pRgnPlaylistWnd->Update();
+			if (g_SNM_RgnPlaylistWnd) {
+				g_SNM_RgnPlaylistWnd->FillPlaylistCombo();
+				g_SNM_RgnPlaylistWnd->Update();
 			}
 			return true;
 		}
@@ -1990,7 +1990,7 @@ int RegionPlaylistInit()
 
 	// instanciate the window, if needed
 	if (SWS_LoadDockWndState("SnMRgnPlaylist"))
-		g_pRgnPlaylistWnd = new SNM_RegionPlaylistWnd();
+		g_SNM_RgnPlaylistWnd = new SNM_RegionPlaylistWnd();
 
 	if (!plugin_register("projectconfig", &s_projectconfig))
 		return 0;
@@ -2015,24 +2015,24 @@ void RegionPlaylistExit()
 		WritePrivateProfileString("RegionPlaylist", "OscFeedback", NULL, g_SNM_IniFn.Get());
 
 	DELETE_NULL(g_osc);
-	DELETE_NULL(g_pRgnPlaylistWnd);
+	DELETE_NULL(g_SNM_RgnPlaylistWnd);
 }
 
 void OpenRegionPlaylist(COMMAND_T*)
 {
-	if (!g_pRgnPlaylistWnd)
-		g_pRgnPlaylistWnd = new SNM_RegionPlaylistWnd();
-	if (g_pRgnPlaylistWnd)
-		g_pRgnPlaylistWnd->Show(true, true);
+	if (!g_SNM_RgnPlaylistWnd)
+		g_SNM_RgnPlaylistWnd = new SNM_RegionPlaylistWnd();
+	if (g_SNM_RgnPlaylistWnd)
+		g_SNM_RgnPlaylistWnd->Show(true, true);
 }
 
 int IsRegionPlaylistDisplayed(COMMAND_T*){
-	return (g_pRgnPlaylistWnd && g_pRgnPlaylistWnd->IsValidWindow());
+	return (g_SNM_RgnPlaylistWnd && g_SNM_RgnPlaylistWnd->IsValidWindow());
 }
 
 void ToggleRegionPlaylistLock(COMMAND_T*) {
-	if (g_pRgnPlaylistWnd)
-		g_pRgnPlaylistWnd->ToggleLock();
+	if (g_SNM_RgnPlaylistWnd)
+		g_SNM_RgnPlaylistWnd->ToggleLock();
 }
 
 int IsRegionPlaylistMonitoring(COMMAND_T*) {

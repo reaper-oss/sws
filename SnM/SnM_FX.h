@@ -33,7 +33,7 @@
 #include "SnM.h"
 
 
-extern int g_buggyPlugSupport;
+extern int g_SNM_SupportBuggyPlug;
 
 int GetFXByGUID(MediaTrack* _tr, GUID* _g);
 int IsFXBypassedSelTracks(COMMAND_T*);

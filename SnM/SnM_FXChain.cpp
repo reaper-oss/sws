@@ -36,7 +36,6 @@
 
 
 WDL_FastString g_fXChainClipboard;
-extern SNM_ResourceWnd* g_pResourcesWnd;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -171,7 +170,7 @@ void SetTakeFXChain(const char* _title, WDL_FastString* _chain, bool _activeOnly
 // _set=false: paste, _set=true: set
 void ApplyTakesFXChainSlot(int _slotType, const char* _title, int _slot, bool _activeOnly, bool _set)
 {
-	WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot);
+	WDL_FastString* fnStr = g_SNM_ResSlots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot);
 	if (fnStr && CountSelectedMediaItems(NULL))
 	{
 		WDL_FastString chain;
@@ -226,19 +225,19 @@ bool AutoSaveItemFXChainSlots(int _slotType, const char* _dirPath, WDL_PtrList<P
 }
 
 void LoadSetTakeFXChain(COMMAND_T* _ct) {
-	ApplyTakesFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, true);
+	ApplyTakesFXChainSlot(g_SNM_TiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, true);
 }
 
 void LoadPasteTakeFXChain(COMMAND_T* _ct) {
-	ApplyTakesFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, false);
+	ApplyTakesFXChainSlot(g_SNM_TiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, false);
 }
 
 void LoadSetAllTakesFXChain(COMMAND_T* _ct) {
-	ApplyTakesFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, true);
+	ApplyTakesFXChainSlot(g_SNM_TiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, true);
 }
 
 void LoadPasteAllTakesFXChain(COMMAND_T* _ct) {
-	ApplyTakesFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, false);
+	ApplyTakesFXChainSlot(g_SNM_TiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, false);
 }
 
 void CopyTakeFXChain(COMMAND_T* _ct) {
@@ -408,7 +407,7 @@ int CopyTrackFXChain(WDL_FastString* _fxChain, bool _inputFX, int _startTr)
 // _set=false => paste
 void ApplyTracksFXChainSlot(int _slotType, const char* _title, int _slot, bool _set, bool _inputFX)
 {
-	WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot);
+	WDL_FastString* fnStr = g_SNM_ResSlots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot);
 	if (fnStr && SNM_CountSelectedTracks(NULL, true))
 	{
 		WDL_FastString chain;
@@ -473,19 +472,19 @@ bool AutoSaveTrackFXChainSlots(int _slotType, const char* _dirPath, WDL_PtrList<
 }
 
 void LoadSetTrackFXChain(COMMAND_T* _ct) {
-	ApplyTracksFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, false);
+	ApplyTracksFXChainSlot(g_SNM_TiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, false);
 }
 
 void LoadPasteTrackFXChain(COMMAND_T* _ct) {
-	ApplyTracksFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, false);
+	ApplyTracksFXChainSlot(g_SNM_TiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, false);
 }
 
 void LoadSetTrackInFXChain(COMMAND_T* _ct) {
-	ApplyTracksFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, true);
+	ApplyTracksFXChainSlot(g_SNM_TiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, true);
 }
 
 void LoadPasteTrackInFXChain(COMMAND_T* _ct) {
-	ApplyTracksFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, true);
+	ApplyTracksFXChainSlot(g_SNM_TiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, true);
 }
 
 void ClearTrackFXChain(COMMAND_T* _ct) {
@@ -541,10 +540,10 @@ void SetTrackInputFXChain(COMMAND_T* _ct) {
 
 void CopyFXChainSlotToClipBoard(int _slot)
 {
-	if (_slot >= 0 && _slot < g_slots.Get(g_tiedSlotActions[SNM_SLOT_FXC])->GetSize()) 
+	if (_slot >= 0 && _slot < g_SNM_ResSlots.Get(g_SNM_TiedSlotActions[SNM_SLOT_FXC])->GetSize()) 
 	{
 		char fullPath[SNM_MAX_PATH] = "";
-		if (g_slots.Get(g_tiedSlotActions[SNM_SLOT_FXC])->GetFullPath(_slot, fullPath, sizeof(fullPath)))
+		if (g_SNM_ResSlots.Get(g_SNM_TiedSlotActions[SNM_SLOT_FXC])->GetFullPath(_slot, fullPath, sizeof(fullPath)))
 			LoadChunk(fullPath, &g_fXChainClipboard);
 	}
 }

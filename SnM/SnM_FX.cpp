@@ -171,7 +171,7 @@ void UnypassAllFXsExceptSelTracks(COMMAND_T* _ct) {
 // Track fx online/offline
 ///////////////////////////////////////////////////////////////////////////////
 
-int g_buggyPlugSupport = 0; // set by the user in S&M.ini
+int g_SNM_SupportBuggyPlug = 0; // set by the user in S&M.ini
 
 int IsFXOfflineSelTracks(COMMAND_T * _ct)
 {
@@ -216,7 +216,7 @@ bool PatchSelTracksFXOnline(const char * _undoMsg, int _mode, int _fxCmdId, cons
 
 				// close the GUI for buggy plugins (before chunk update)
 				// http://code.google.com/p/sws-extension/issues/detail?id=317
-				if (updt && g_buggyPlugSupport)
+				if (updt && g_SNM_SupportBuggyPlug)
 					TrackFX_SetOpen(tr, fxId, false);
 
 			} // => auto commit
@@ -285,7 +285,7 @@ bool PatchSelItemsFXState(const char * _undoMsg, int _mode, int _token, int _fxI
 				// close the GUI for buggy plugins
 				// http://code.google.com/p/sws-extension/issues/detail?id=317
 				// API LIMITATION: cannot restore shown FX here (contrary to track FX)
-				if (updt && g_buggyPlugSupport && _token == 2)
+				if (updt && g_SNM_SupportBuggyPlug && _token == 2)
 				{
 					p.ParsePatch(SNM_SETALL_CHUNK_CHAR_EXCEPT,2,"TAKEFX","FLOAT",255,0,(void*)"FLOATPOS"); // unfloat all
 					p.ParsePatch(SNM_SET_CHUNK_CHAR, 2, "TAKEFX", "SHOW",0,1,(void*)"0"); // no FX shown..

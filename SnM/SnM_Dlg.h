@@ -30,7 +30,7 @@
 #ifndef _SNM_DLG_H_
 #define _SNM_DLG_H_
 
-extern bool g_SNMClearType;
+extern bool g_SNM_ClearType;
 
 void SNM_UIInit();
 void SNM_UIExit();

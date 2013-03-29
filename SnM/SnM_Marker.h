@@ -34,17 +34,20 @@
 
 
 // register/unregister to marker/region changes
-class SNM_MarkerRegionSubscriber {
+class SNM_MarkerRegionListener {
 public:
-	SNM_MarkerRegionSubscriber() {}
-	virtual ~SNM_MarkerRegionSubscriber() {}
+	SNM_MarkerRegionListener() {}
+	virtual ~SNM_MarkerRegionListener() {}
 	// _updateFlags: &1 marker update, &2 region update
 	virtual void NotifyMarkerRegionUpdate(int _updateFlags) {}
 };
 
-bool RegisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub);
-bool UnregisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub) ;
+bool RegisterToMarkerRegionUpdates(SNM_MarkerRegionListener* _sub);
+bool UnregisterToMarkerRegionUpdates(SNM_MarkerRegionListener* _sub) ;
 int UpdateMarkerRegionCache();
+
+extern SWS_Mutex g_SNM_MkrRgnListenersMutex;
+extern WDL_PtrList<SNM_MarkerRegionListener> g_SNM_MkrRgnListeners;
 
 // helpers
 bool SNM_SetProjectMarker(ReaProject* _proj, int _num, bool _isrgn, double _pos, double _rgnend, const char* _name, int _color = 0);

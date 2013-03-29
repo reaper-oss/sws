@@ -112,11 +112,11 @@ bool TrackNotesMatch(MediaTrack* _tr, const char* _searchStr)
 	bool match = false;
 	if (_tr)
 	{
-		for (int i=0; i < g_pTrackNotes.Get()->GetSize(); i++)
+		for (int i=0; i < g_SNM_TrackNotes.Get()->GetSize(); i++)
 		{
-			if (g_pTrackNotes.Get()->Get(i)->m_tr == _tr)
+			if (g_SNM_TrackNotes.Get()->Get(i)->m_tr == _tr)
 			{
-				match = (stristr(g_pTrackNotes.Get()->Get(i)->m_notes.Get(), _searchStr) != NULL);
+				match = (stristr(g_SNM_TrackNotes.Get()->Get(i)->m_notes.Get(), _searchStr) != NULL);
 				break;
 			}
 		}

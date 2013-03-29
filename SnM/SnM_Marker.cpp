@@ -32,25 +32,25 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// SNM_MarkerRegionSubscriber, see SNM_CSurfRun()
+// SNM_MarkerRegionListener, see SNM_CSurfRun()
 ///////////////////////////////////////////////////////////////////////////////
 
-WDL_PtrList<SNM_MarkerRegionSubscriber> g_mkrRgnSubscribers;
-SWS_Mutex g_mkrRgnSubscribersMutex;
+WDL_PtrList<SNM_MarkerRegionListener> g_SNM_MkrRgnListeners;
+SWS_Mutex g_SNM_MkrRgnListenersMutex;
 WDL_PtrList<MarkerRegion> g_mkrRgnCache;
 
-bool RegisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub) {
-	SWS_SectionLock lock(&g_mkrRgnSubscribersMutex);
-	if (_sub && g_mkrRgnSubscribers.Find(_sub) < 0)
-		return (g_mkrRgnSubscribers.Add(_sub) != NULL);
+bool RegisterToMarkerRegionUpdates(SNM_MarkerRegionListener* _sub) {
+	SWS_SectionLock lock(&g_SNM_MkrRgnListenersMutex);
+	if (_sub && g_SNM_MkrRgnListeners.Find(_sub) < 0)
+		return (g_SNM_MkrRgnListeners.Add(_sub) != NULL);
 	return false;
 }
 
-bool UnregisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub) {
-	SWS_SectionLock lock(&g_mkrRgnSubscribersMutex);
-	int idx = _sub ? g_mkrRgnSubscribers.Find(_sub) : -1;
+bool UnregisterToMarkerRegionUpdates(SNM_MarkerRegionListener* _sub) {
+	SWS_SectionLock lock(&g_SNM_MkrRgnListenersMutex);
+	int idx = _sub ? g_SNM_MkrRgnListeners.Find(_sub) : -1;
 	if (idx >= 0) {
-		g_mkrRgnSubscribers.Delete(idx, false);
+		g_SNM_MkrRgnListeners.Delete(idx, false);
 		return true;
 	}
 	return false;

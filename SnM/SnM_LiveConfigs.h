@@ -172,6 +172,8 @@ public:
 };
 
 
+extern SNM_LiveConfigsWnd* g_SNM_LiveConfigsWnd;
+
 int LiveConfigInit();
 void LiveConfigExit();
 void OpenLiveConfig(COMMAND_T*);

@@ -34,7 +34,7 @@
 #include "SnM_Resources.h"
 
 
-extern int g_SNMMediaFlags;
+extern int g_SNM_MediaFlags;
 
 void CopyCutTrackGrouping(COMMAND_T*);
 void PasteTrackGrouping(COMMAND_T*);

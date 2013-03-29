@@ -116,12 +116,6 @@ protected:
 };
 
 
-extern WDL_PtrList<FileSlotList> g_slots;
-extern int g_tiedSlotActions[SNM_NUM_DEFAULT_SLOTS];
-extern int g_prjLoaderStartPref;
-extern int g_prjLoaderEndPref;
-
-
 class SNM_ResourceView : public SWS_ListView
 {
 public:
@@ -176,6 +170,13 @@ protected:
 	SNM_TinyPlusButton m_btnAdd;
 	SNM_TinyMinusButton m_btnDel;
 };
+
+
+extern SNM_ResourceWnd* g_SNM_ResourcesWnd;
+extern WDL_PtrList<FileSlotList> g_SNM_ResSlots;
+extern int g_SNM_TiedSlotActions[SNM_NUM_DEFAULT_SLOTS];
+extern int g_SNM_PrjLoaderStartPref;
+extern int g_SNM_PrjLoaderEndPref;
 
 
 void FlushCustomTypesIniFile();

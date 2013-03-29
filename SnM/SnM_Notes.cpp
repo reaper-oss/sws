@@ -67,8 +67,8 @@ enum {
 };
 
 
-SNM_NotesWnd* g_pNotesWnd = NULL;
-SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_pTrackNotes;
+SNM_NotesWnd* g_SNM_NotesWnd = NULL;
+SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_SNM_TrackNotes;
 SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_RegionSubtitle> > g_pRegionSubs; // for markers too..
 SWSProjConfig<WDL_FastString> g_prjNotes;
 
@@ -304,8 +304,8 @@ HMENU SNM_NotesWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 // OSX fix/workaround (SWELL bug?)
 #ifdef _SNM_SWELL_ISSUES
 void OSXForceTxtChangeJob::Perform() {
-	if (g_pNotesWnd)
-		SendMessage(g_pNotesWnd->GetHWND(), WM_COMMAND, MAKEWPARAM(IDC_EDIT, EN_CHANGE), 0);
+	if (g_SNM_NotesWnd)
+		SendMessage(g_SNM_NotesWnd->GetHWND(), WM_COMMAND, MAKEWPARAM(IDC_EDIT, EN_CHANGE), 0);
 }
 #endif
 
@@ -614,16 +614,16 @@ void SNM_NotesWnd::SaveCurrentTrackNotes()
 	{
 		GetDlgItemText(m_hwnd, IDC_EDIT, g_lastText, MAX_HELP_LENGTH);
 		bool found = false;
-		for (int i=0; i < g_pTrackNotes.Get()->GetSize(); i++) 
+		for (int i=0; i < g_SNM_TrackNotes.Get()->GetSize(); i++) 
 		{
-			if (g_pTrackNotes.Get()->Get(i)->m_tr == g_trNote) {
-				g_pTrackNotes.Get()->Get(i)->m_notes.Set(g_lastText); // CRLF removed only when saving the project..
+			if (g_SNM_TrackNotes.Get()->Get(i)->m_tr == g_trNote) {
+				g_SNM_TrackNotes.Get()->Get(i)->m_notes.Set(g_lastText); // CRLF removed only when saving the project..
 				found = true;
 				break;
 			}
 		}
 		if (!found)
-			g_pTrackNotes.Get()->Add(new SNM_TrackNotes(g_trNote, g_lastText));
+			g_SNM_TrackNotes.Get()->Add(new SNM_TrackNotes(g_trNote, g_lastText));
 		Undo_OnStateChangeEx2(NULL, __LOCALIZE("Edit track notes","sws_undo"), UNDO_STATE_MISCCFG, -1); //JFB TODO? -1 to replace?
 	}
 }
@@ -641,7 +641,7 @@ void SNM_NotesWnd::SaveCurrentMkrRgnNameOrNotes(bool _name)
 				ShortenStringToFirstRN(g_lastText);
 
 				// track marker/region name update => reentrant notif
-				// via SNM_MarkerRegionSubscriber.NotifyMarkerRegionUpdate()
+				// via SNM_MarkerRegionListener.NotifyMarkerRegionUpdate()
 				g_internalMkrRgnChange = true;
 
 				if (SNM_SetProjectMarker(NULL, num, isRgn, pos, end, g_lastText, color)) {
@@ -811,13 +811,13 @@ int SNM_NotesWnd::UpdateTrackNotes()
 		{
 			g_trNote = selTr;
 
-			for (int i=0; i < g_pTrackNotes.Get()->GetSize(); i++)
-				if (g_pTrackNotes.Get()->Get(i)->m_tr == g_trNote) {
-					SetText(g_pTrackNotes.Get()->Get(i)->m_notes.Get());
+			for (int i=0; i < g_SNM_TrackNotes.Get()->GetSize(); i++)
+				if (g_SNM_TrackNotes.Get()->Get(i)->m_tr == g_trNote) {
+					SetText(g_SNM_TrackNotes.Get()->Get(i)->m_notes.Get());
 					return REQUEST_REFRESH;
 				}
 
-			g_pTrackNotes.Get()->Add(new SNM_TrackNotes(g_trNote, ""));
+			g_SNM_TrackNotes.Get()->Add(new SNM_TrackNotes(g_trNote, ""));
 			SetText("");
 			refreshType = REQUEST_REFRESH;
 		} 
@@ -1017,17 +1017,17 @@ bool GetNotesChunkFromString(const char* _bufIn, WDL_FastString* _notesOut, cons
 ///////////////////////////////////////////////////////////////////////////////
 
 void NotesUpdateJob::Perform() {
-	if (g_pNotesWnd)
-		g_pNotesWnd->Update(true);
+	if (g_SNM_NotesWnd)
+		g_SNM_NotesWnd->Update(true);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// NotesMarkerRegionSubscriber
+// NotesMarkerRegionListener
 ///////////////////////////////////////////////////////////////////////////////
 
 // ScheduledJob because of multi-notifs during project switches (vs CSurfSetTrackListChange)
-void NotesMarkerRegionSubscriber::NotifyMarkerRegionUpdate(int _updateFlags)
+void NotesMarkerRegionListener::NotifyMarkerRegionUpdate(int _updateFlags)
 {
 	if (g_notesViewType == SNM_NOTES_REGION_SUBTITLES)
 		SNM_AddOrReplaceScheduledJob(new NotesUpdateJob());
@@ -1215,7 +1215,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 			ExtensionConfigToString(&notes, ctx);
 			char buf[MAX_HELP_LENGTH] = "";
 			if (GetStringFromNotesChunk(&notes, buf, MAX_HELP_LENGTH))
-				g_pTrackNotes.Get()->Add(new SNM_TrackNotes(tr, buf));
+				g_SNM_TrackNotes.Get()->Add(new SNM_TrackNotes(tr, buf));
 			return true;
 		}
 	}
@@ -1240,10 +1240,10 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 //JFB	if (!isUndo)
 	{
 		// delete unused tracks
-		for (int i=0; i < g_pTrackNotes.Get()->GetSize(); i++)
-			if (SNM_TrackNotes* tn = g_pTrackNotes.Get()->Get(i))
+		for (int i=0; i < g_SNM_TrackNotes.Get()->GetSize(); i++)
+			if (SNM_TrackNotes* tn = g_SNM_TrackNotes.Get()->Get(i))
 				if (!tn->m_tr || CSurf_TrackToID(tn->m_tr, false) < 0)
-					g_pTrackNotes.Get()->Delete(i--, true);
+					g_SNM_TrackNotes.Get()->Delete(i--, true);
 
 		// remove non-existant markers & regions
 		for (int i=0; i < g_pRegionSubs.Get()->GetSize(); i++)
@@ -1265,9 +1265,9 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 	}
 
 	// save track notes
-	for (int i=0; i < g_pTrackNotes.Get()->GetSize(); i++)
+	for (int i=0; i < g_SNM_TrackNotes.Get()->GetSize(); i++)
 	{
-		if (SNM_TrackNotes* tn = g_pTrackNotes.Get()->Get(i))
+		if (SNM_TrackNotes* tn = g_SNM_TrackNotes.Get()->Get(i))
 			if (tn->m_notes.GetLength())
 			{
 				GUID g;
@@ -1299,8 +1299,8 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 	g_prjNotes.Cleanup();
 	g_prjNotes.Get()->Set("");
 
-	g_pTrackNotes.Cleanup();
-	g_pTrackNotes.Get()->Empty(true);
+	g_SNM_TrackNotes.Cleanup();
+	g_SNM_TrackNotes.Get()->Empty(true);
 
 	g_pRegionSubs.Cleanup();
 	g_pRegionSubs.Get()->Empty(true);
@@ -1359,7 +1359,7 @@ int NotesInit()
 
 	// instanciate the window, if needed
 	if (SWS_LoadDockWndState("SnMNotesHelp"))
-		g_pNotesWnd = new SNM_NotesWnd();
+		g_SNM_NotesWnd = new SNM_NotesWnd();
 
 	if (!plugin_register("projectconfig", &s_projectconfig))
 		return 0;
@@ -1380,34 +1380,34 @@ void NotesExit()
 	makeEscapedConfigString(g_actionHelpFn, &escapedStr);
 	WritePrivateProfileString(NOTES_INI_SEC, "Action_help_file", escapedStr.Get(), g_SNM_IniFn.Get());
 
-	DELETE_NULL(g_pNotesWnd);
+	DELETE_NULL(g_SNM_NotesWnd);
 }
 
 void OpenNotes(COMMAND_T* _ct)
 {
-	if (!g_pNotesWnd)
-		g_pNotesWnd = new SNM_NotesWnd();
-	if (g_pNotesWnd)
+	if (!g_SNM_NotesWnd)
+		g_SNM_NotesWnd = new SNM_NotesWnd();
+	if (g_SNM_NotesWnd)
 	{
 		int newType = (int)_ct->user; // -1 means toggle current type
 		if (newType == -1)
 			newType = g_notesViewType;
 
-		g_pNotesWnd->Show(g_notesViewType == newType /* i.e toggle */, true);
-		g_pNotesWnd->SetType(newType);
+		g_SNM_NotesWnd->Show(g_notesViewType == newType /* i.e toggle */, true);
+		g_SNM_NotesWnd->SetType(newType);
 
 		if (!g_locked)
-			SetFocus(GetDlgItem(g_pNotesWnd->GetHWND(), IDC_EDIT));
+			SetFocus(GetDlgItem(g_SNM_NotesWnd->GetHWND(), IDC_EDIT));
 	}
 }
 
 int IsNotesDisplayed(COMMAND_T* _ct) {
-	return (g_pNotesWnd && g_pNotesWnd->IsValidWindow());
+	return (g_SNM_NotesWnd && g_SNM_NotesWnd->IsValidWindow());
 }
 
 void ToggleNotesLock(COMMAND_T*) {
-	if (g_pNotesWnd)
-		g_pNotesWnd->ToggleLock();
+	if (g_SNM_NotesWnd)
+		g_SNM_NotesWnd->ToggleLock();
 }
 
 int IsNotesLocked(COMMAND_T*) {

@@ -59,7 +59,7 @@ void SNM_SetUIRefresh(COMMAND_T* _ct) {
 
 // native font rendering default value
 // note: not configurable on osx, optional on win (s&m.ini)
-bool g_SNMClearType =
+bool g_SNM_ClearType =
 #ifdef _WIN32
 	false;
 #else
@@ -93,7 +93,7 @@ LICE_CachedFont* SNM_GetFont(int _type)
 		};
 		sFonts[_type].SetFromHFont(
 			CreateFontIndirect(&lf),
-			LICE_FONT_FLAG_OWNS_HFONT | (!_type ? 0 : (g_SNMClearType?LICE_FONT_FLAG_FORCE_NATIVE:0)));
+			LICE_FONT_FLAG_OWNS_HFONT | (!_type ? 0 : (g_SNM_ClearType?LICE_FONT_FLAG_FORCE_NATIVE:0)));
 		sFonts[_type].SetBkMode(TRANSPARENT);
 		// others props are set on demand (to support theme switches)
 	}

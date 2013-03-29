@@ -34,9 +34,9 @@
 #include "SnM_VWnd.h"
 
 
-class PlaylistMarkerRegionSubscriber : public SNM_MarkerRegionSubscriber {
+class PlaylistMarkerRegionListener : public SNM_MarkerRegionListener {
 public:
-	PlaylistMarkerRegionSubscriber() : SNM_MarkerRegionSubscriber() {}
+	PlaylistMarkerRegionListener() : SNM_MarkerRegionListener() {}
 	void NotifyMarkerRegionUpdate(int _updateFlags);
 };
 
@@ -110,7 +110,7 @@ protected:
 	void DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight = NULL);
 	bool GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOutSz);
 
-	PlaylistMarkerRegionSubscriber m_mkrRgnSubscriber;
+	PlaylistMarkerRegionListener m_mkrRgnSubscriber;
 
 	WDL_VirtualStaticText m_txtPlaylist;
 	WDL_VirtualComboBox m_cbPlaylist;
@@ -129,6 +129,8 @@ public:
 	PlaylistUpdateJob() : SNM_ScheduledJob(SNM_SCHEDJOB_PLAYLIST_UPDATE, 150) {}
 	void Perform();
 };
+
+extern SNM_RegionPlaylistWnd* g_SNM_RgnPlaylistWnd;
 
 int GetNextValidItem(int _playlistId, int _itemId, bool _startWith, bool _repeat);
 int GetPrevValidItem(int _playlistId, int _itemId, bool _startWith, bool _repeat);

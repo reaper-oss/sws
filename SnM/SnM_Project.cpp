@@ -189,7 +189,7 @@ void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND
 
 void LoadOrSelectProjectSlot(int _slotType, const char* _title, int _slot, bool _newTab)
 {
-	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot))
+	if (WDL_FastString* fnStr = g_SNM_ResSlots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot))
 	{
 		char fn[SNM_MAX_PATH] = "";
 		ReaProject* prj = NULL;
@@ -225,28 +225,27 @@ bool AutoSaveProjectSlot(int _slotType, const char* _dirPath, WDL_PtrList<PathSl
 }
 
 void LoadOrSelectProjectSlot(COMMAND_T* _ct) {
-	LoadOrSelectProjectSlot(g_tiedSlotActions[SNM_SLOT_PRJ], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false);
+	LoadOrSelectProjectSlot(g_SNM_TiedSlotActions[SNM_SLOT_PRJ], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false);
 }
 
 void LoadOrSelectProjectTabSlot(COMMAND_T* _ct) {
-	LoadOrSelectProjectSlot(g_tiedSlotActions[SNM_SLOT_PRJ], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true);
+	LoadOrSelectProjectSlot(g_SNM_TiedSlotActions[SNM_SLOT_PRJ], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 // Project loader/selecter actions
-// note: g_tiedSlotActions[] is ignored here, the opener/selecter only deals 
-//       with g_slots.Get(SNM_SLOT_PRJ): that feature is not available for 
+// note: g_SNM_TiedSlotActions[] is ignored here, the opener/selecter only deals 
+//       with g_SNM_ResSlots.Get(SNM_SLOT_PRJ): that feature is not available for 
 //       custom project slots
 ///////////////////////////////////////////////////////////////////////////////
 
-extern SNM_ResourceWnd* g_pResourcesWnd; // SNM_ResourceView.cpp
 int g_prjCurSlot = -1; // 0-based
 
 bool IsProjectLoaderConfValid() {
-	return (g_prjLoaderStartPref > 0 && 
-		g_prjLoaderEndPref > g_prjLoaderStartPref && 
-		g_prjLoaderEndPref <= g_slots.Get(SNM_SLOT_PRJ)->GetSize());
+	return (g_SNM_PrjLoaderStartPref > 0 && 
+		g_SNM_PrjLoaderEndPref > g_SNM_PrjLoaderStartPref && 
+		g_SNM_PrjLoaderEndPref <= g_SNM_ResSlots.Get(SNM_SLOT_PRJ)->GetSize());
 }
 
 void ProjectLoaderConf(COMMAND_T* _ct)
@@ -258,7 +257,7 @@ void ProjectLoaderConf(COMMAND_T* _ct)
 	question.Append(__LOCALIZE("End slot:","sws_mbox"));
 
 	char reply[64]="";
-	_snprintfSafe(reply, sizeof(reply), "%d,%d", g_prjLoaderStartPref, g_prjLoaderEndPref);
+	_snprintfSafe(reply, sizeof(reply), "%d,%d", g_SNM_PrjLoaderStartPref, g_SNM_PrjLoaderEndPref);
 
 	if (GetUserInputs(__LOCALIZE("S&M - Project loader/selecter","sws_mbox"), 2, question.Get(), reply, sizeof(reply)))
 	{
@@ -268,10 +267,10 @@ void ProjectLoaderConf(COMMAND_T* _ct)
 			{
 				start = atoi(reply);
 				end = atoi((char*)(p+1));
-				if (start > 0 && end > start && end <= g_slots.Get(SNM_SLOT_PRJ)->GetSize())
+				if (start > 0 && end > start && end <= g_SNM_ResSlots.Get(SNM_SLOT_PRJ)->GetSize())
 				{
-					g_prjLoaderStartPref = start;
-					g_prjLoaderEndPref = end;
+					g_SNM_PrjLoaderStartPref = start;
+					g_SNM_PrjLoaderEndPref = end;
 					ok = true;
 				}
 			}
@@ -280,8 +279,8 @@ void ProjectLoaderConf(COMMAND_T* _ct)
 		if (ok)
 		{
 			g_prjCurSlot = -1; // reset current prj
-			if (g_pResourcesWnd)
-				g_pResourcesWnd->Update();
+			if (g_SNM_ResourcesWnd)
+				g_SNM_ResourcesWnd->Update();
 		}
 		else
 			MessageBox(GetMainHwnd(), __LOCALIZE("Invalid start and/or end slot(s) !\nProbable cause: out of bounds, the Resources view is empty, etc...","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
@@ -295,7 +294,7 @@ void LoadOrSelectNextPreviousProject(COMMAND_T* _ct)
 	if (IsProjectLoaderConfValid())
 	{
 		int dir = (int)_ct->user; // -1 (previous) or +1 (next)
-		int cpt=0, slotCount = g_prjLoaderEndPref-g_prjLoaderStartPref+1;
+		int cpt=0, slotCount = g_SNM_PrjLoaderEndPref-g_SNM_PrjLoaderStartPref+1;
 
 		// (try to) find the current project in the slot range defined in the prefs
 		if (g_prjCurSlot < 0)
@@ -303,30 +302,30 @@ void LoadOrSelectNextPreviousProject(COMMAND_T* _ct)
 			char pCurPrj[SNM_MAX_PATH] = "";
 			EnumProjects(-1, pCurPrj, sizeof(pCurPrj));
 			if (pCurPrj && *pCurPrj)
-				for (int i=g_prjLoaderStartPref-1; g_prjCurSlot < 0 && i < g_prjLoaderEndPref-1; i++)
-					if (!g_slots.Get(SNM_SLOT_PRJ)->Get(i)->IsDefault() && strstr(pCurPrj, g_slots.Get(SNM_SLOT_PRJ)->Get(i)->m_shortPath.Get()))
+				for (int i=g_SNM_PrjLoaderStartPref-1; g_prjCurSlot < 0 && i < g_SNM_PrjLoaderEndPref-1; i++)
+					if (!g_SNM_ResSlots.Get(SNM_SLOT_PRJ)->Get(i)->IsDefault() && strstr(pCurPrj, g_SNM_ResSlots.Get(SNM_SLOT_PRJ)->Get(i)->m_shortPath.Get()))
 						g_prjCurSlot = i;
 		}
 
 		if (g_prjCurSlot < 0) // not found => default init
-			g_prjCurSlot = (dir > 0 ? g_prjLoaderStartPref-2 : g_prjLoaderEndPref);
+			g_prjCurSlot = (dir > 0 ? g_SNM_PrjLoaderStartPref-2 : g_SNM_PrjLoaderEndPref);
 
 		// the meat
 		do
 		{
-			if ((dir > 0 && (g_prjCurSlot+dir) > (g_prjLoaderEndPref-1)) ||	
-				(dir < 0 && (g_prjCurSlot+dir) < (g_prjLoaderStartPref-1)))
+			if ((dir > 0 && (g_prjCurSlot+dir) > (g_SNM_PrjLoaderEndPref-1)) ||	
+				(dir < 0 && (g_prjCurSlot+dir) < (g_SNM_PrjLoaderStartPref-1)))
 			{
-				g_prjCurSlot = (dir > 0 ? g_prjLoaderStartPref-1 : g_prjLoaderEndPref-1);
+				g_prjCurSlot = (dir > 0 ? g_SNM_PrjLoaderStartPref-1 : g_SNM_PrjLoaderEndPref-1);
 			}
 			else g_prjCurSlot += dir;
 		}
-		while (++cpt <= slotCount && g_slots.Get(SNM_SLOT_PRJ)->Get(g_prjCurSlot)->IsDefault());
+		while (++cpt <= slotCount && g_SNM_ResSlots.Get(SNM_SLOT_PRJ)->Get(g_prjCurSlot)->IsDefault());
 
 		// found one?
 		if (cpt <= slotCount) {
 			LoadOrSelectProjectSlot(SNM_SLOT_PRJ, "", g_prjCurSlot, false);
-			if (g_pResourcesWnd) g_pResourcesWnd->SelectBySlot(g_prjCurSlot);
+			if (g_SNM_ResourcesWnd) g_SNM_ResourcesWnd->SelectBySlot(g_prjCurSlot);
 		}
 		else g_prjCurSlot = -1;
 	}

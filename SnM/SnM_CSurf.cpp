@@ -59,13 +59,10 @@ void SNM_CSurfRun()
 
 	// perform scheduled jobs
 	{
-		extern SWS_Mutex g_jobsMutex;
-		extern WDL_PtrList_DeleteOnDestroy<SNM_ScheduledJob> g_jobs;
-
-		SWS_SectionLock lock(&g_jobsMutex);
-		for (int i=g_jobs.GetSize()-1; i >=0; i--)
+		SWS_SectionLock lock(&g_SNM_JobsMutex);
+		for (int i=g_SNM_Jobs.GetSize()-1; i >=0; i--)
 		{
-			if (SNM_ScheduledJob* job = g_jobs.Get(i))
+			if (SNM_ScheduledJob* job = g_SNM_Jobs.Get(i))
 			{
 				job->m_tick--;
 				if (job->m_tick <= 0)
@@ -79,7 +76,7 @@ void SNM_CSurfRun()
 						_snprintfSafe(dbg, sizeof(dbg), "SNM_CSurfRun() - Performed SNM_ScheduledJob id: %d\n", job->m_id);
 						OutputDebugString(dbg);
 #endif
-						g_jobs.Delete(i, false);
+						g_SNM_Jobs.Delete(i, false);
 						DELETE_NULL(job);
 					}
 					else
@@ -101,14 +98,11 @@ void SNM_CSurfRun()
 	{
 		g_markerRegionNotifyMsCounter = 0.0;
 		
-		extern SWS_Mutex g_mkrRgnSubscribersMutex;
-		extern WDL_PtrList<SNM_MarkerRegionSubscriber> g_mkrRgnSubscribers;
-
-		SWS_SectionLock lock(&g_mkrRgnSubscribersMutex);
-		if (int sz=g_mkrRgnSubscribers.GetSize())
+		SWS_SectionLock lock(&g_SNM_MkrRgnListenersMutex);
+		if (int sz=g_SNM_MkrRgnListeners.GetSize())
 			if (int updateFlags = UpdateMarkerRegionCache())
 				for (int i=sz-1; i>=0; i--)
-					g_mkrRgnSubscribers.Get(i)->NotifyMarkerRegionUpdate(updateFlags);
+					g_SNM_MkrRgnListeners.Get(i)->NotifyMarkerRegionUpdate(updateFlags);
 	}
 
 	// toolbars auto-refresh options
@@ -121,27 +115,22 @@ void SNM_CSurfRun()
 			OffscreenSelItemsPoll();
 	}
 
-	extern int g_toolbarsAutoRefreshFreq;
-	if (g_toolbarMsCounter > g_toolbarsAutoRefreshFreq) {
+	if (g_toolbarMsCounter > g_SNM_ToolbarRefreshFreq) {
 		g_toolbarMsCounter = 0.0;
 		if (g_SNM_ToolbarRefresh) 
 			RefreshToolbars();
 	}
 }
 
-extern SNM_NotesWnd* g_pNotesWnd;
-extern SNM_LiveConfigsWnd* g_pLiveConfigsWnd;
-extern SNM_RegionPlaylistWnd* g_pRgnPlaylistWnd;
-
 void SNM_CSurfSetTrackTitle() {
-	if (g_pNotesWnd) g_pNotesWnd->CSurfSetTrackTitle();
-	if (g_pLiveConfigsWnd) g_pLiveConfigsWnd->CSurfSetTrackTitle();
+	if (g_SNM_NotesWnd) g_SNM_NotesWnd->CSurfSetTrackTitle();
+	if (g_SNM_LiveConfigsWnd) g_SNM_LiveConfigsWnd->CSurfSetTrackTitle();
 }
 
 void SNM_CSurfSetTrackListChange() {
-	if (g_pNotesWnd) g_pNotesWnd->CSurfSetTrackListChange();
-	if (g_pLiveConfigsWnd) g_pLiveConfigsWnd->CSurfSetTrackListChange();
-	if (g_pRgnPlaylistWnd) g_pRgnPlaylistWnd->CSurfSetTrackListChange();
+	if (g_SNM_NotesWnd) g_SNM_NotesWnd->CSurfSetTrackListChange();
+	if (g_SNM_LiveConfigsWnd) g_SNM_LiveConfigsWnd->CSurfSetTrackListChange();
+	if (g_SNM_RgnPlaylistWnd) g_SNM_RgnPlaylistWnd->CSurfSetTrackListChange();
 }
 
 bool g_lastPlayState=false, g_lastPauseState=false, g_lastRecState=false;

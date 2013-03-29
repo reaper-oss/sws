@@ -197,7 +197,7 @@ bool SNM_SetDoubleConfigVar(const char* _varName, double _newVal) {
 #ifdef _WIN32
 void LoadThemeSlot(int _slotType, const char* _title, int _slot)
 {
-	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot))
+	if (WDL_FastString* fnStr = g_SNM_ResSlots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot))
 	{
 		char cmd[SNM_MAX_PATH]=""; 
 		if (_snprintfStrict(cmd, sizeof(cmd), "%s\\reaper.exe", GetExePath()) > 0)
@@ -211,7 +211,7 @@ void LoadThemeSlot(int _slotType, const char* _title, int _slot)
 }
 
 void LoadThemeSlot(COMMAND_T* _ct) {
-	LoadThemeSlot(g_tiedSlotActions[SNM_SLOT_THM], SWS_CMD_SHORTNAME(_ct), (int)_ct->user);
+	LoadThemeSlot(g_SNM_TiedSlotActions[SNM_SLOT_THM], SWS_CMD_SHORTNAME(_ct), (int)_ct->user);
 }
 #endif
 
@@ -223,7 +223,7 @@ void LoadThemeSlot(COMMAND_T* _ct) {
 int g_SNM_LastImgSlot = -1;
 
 void ShowImageSlot(int _slotType, const char* _title, int _slot) {
-	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot)) {
+	if (WDL_FastString* fnStr = g_SNM_ResSlots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot)) {
 		if (OpenImageWnd(fnStr->Get()))
 			g_SNM_LastImgSlot = _slot;
 		delete fnStr;
@@ -231,24 +231,24 @@ void ShowImageSlot(int _slotType, const char* _title, int _slot) {
 }
 
 void ShowImageSlot(COMMAND_T* _ct) {
-	ShowImageSlot(g_tiedSlotActions[SNM_SLOT_IMG], SWS_CMD_SHORTNAME(_ct), (int)_ct->user);
+	ShowImageSlot(g_SNM_TiedSlotActions[SNM_SLOT_IMG], SWS_CMD_SHORTNAME(_ct), (int)_ct->user);
 }
 
 void ShowNextPreviousImageSlot(COMMAND_T* _ct)
 {
-	int sz = g_slots.Get(g_tiedSlotActions[SNM_SLOT_IMG])->GetSize();
+	int sz = g_SNM_ResSlots.Get(g_SNM_TiedSlotActions[SNM_SLOT_IMG])->GetSize();
 	if (sz) {
 		g_SNM_LastImgSlot += (int)_ct->user;
 		if (g_SNM_LastImgSlot<0) g_SNM_LastImgSlot = sz-1;
 		else if (g_SNM_LastImgSlot>=sz) g_SNM_LastImgSlot = 0;
 	}
-	ShowImageSlot(g_tiedSlotActions[SNM_SLOT_IMG], SWS_CMD_SHORTNAME(_ct), sz ? g_SNM_LastImgSlot : -1); // -1: err msg (empty list)
+	ShowImageSlot(g_SNM_TiedSlotActions[SNM_SLOT_IMG], SWS_CMD_SHORTNAME(_ct), sz ? g_SNM_LastImgSlot : -1); // -1: err msg (empty list)
 }
 
 void SetSelTrackIconSlot(int _slotType, const char* _title, int _slot)
 {
 	bool updated = false;
-	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot))
+	if (WDL_FastString* fnStr = g_SNM_ResSlots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot))
 	{
 		for (int j=0; j <= GetNumTracks(); j++)
 			if (MediaTrack* tr = CSurf_TrackFromID(j, false))
@@ -261,7 +261,7 @@ void SetSelTrackIconSlot(int _slotType, const char* _title, int _slot)
 }
 
 void SetSelTrackIconSlot(COMMAND_T* _ct) {
-	SetSelTrackIconSlot(g_tiedSlotActions[SNM_SLOT_IMG], SWS_CMD_SHORTNAME(_ct), (int)_ct->user);
+	SetSelTrackIconSlot(g_SNM_TiedSlotActions[SNM_SLOT_IMG], SWS_CMD_SHORTNAME(_ct), (int)_ct->user);
 }
 
 
@@ -270,6 +270,7 @@ void SetSelTrackIconSlot(COMMAND_T* _ct) {
 ///////////////////////////////////////////////////////////////////////////////
 
 bool g_SNM_ToolbarRefresh = false;
+int g_SNM_ToolbarRefreshFreq = SNM_DEF_TOOLBAR_RFRSH_FREQ;
 
 void EnableToolbarsAutoRefesh(COMMAND_T* _ct) {
 	g_SNM_ToolbarRefresh = !g_SNM_ToolbarRefresh;

@@ -127,6 +127,8 @@ private:
 	SWS_Mutex m_csurfsMutex;
 };
 
+extern SNM_CSurfProxy* g_SNM_CSurfProxy;
+
 bool SNM_RegisterCSurf(IReaperControlSurface* _csurf);
 bool SNM_UnregisterCSurf(IReaperControlSurface* _csurf);
 

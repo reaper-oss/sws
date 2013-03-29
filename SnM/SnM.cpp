@@ -925,24 +925,24 @@ int RegisterMySectionCommands(reaper_plugin_info_t* _rec, bool _localize)
 // SNM_ScheduledJob, see SNM_CSurfRun()
 ///////////////////////////////////////////////////////////////////////////////
 
-WDL_PtrList_DeleteOnDestroy<SNM_ScheduledJob> g_jobs;
-SWS_Mutex g_jobsMutex;
+WDL_PtrList_DeleteOnDestroy<SNM_ScheduledJob> g_SNM_Jobs;
+SWS_Mutex g_SNM_JobsMutex;
 
 void SNM_AddOrReplaceScheduledJob(SNM_ScheduledJob* _job) 
 {
-	SWS_SectionLock lock(&g_jobsMutex);
+	SWS_SectionLock lock(&g_SNM_JobsMutex);
 	if (!_job) return;
 	bool found = false;
-	for (int i=0; i<g_jobs.GetSize(); i++)
+	for (int i=0; i<g_SNM_Jobs.GetSize(); i++)
 	{
-		if (SNM_ScheduledJob* job = g_jobs.Get(i))
+		if (SNM_ScheduledJob* job = g_SNM_Jobs.Get(i))
 		{
 			if (job->m_id == _job->m_id)
 			{
 				found = true;
 				if (!job->m_isPerforming)
 				{
-					g_jobs.Set(i, _job);
+					g_SNM_Jobs.Set(i, _job);
 #ifdef _SNM_DEBUG
 					char dbg[256]="";
 					_snprintfSafe(dbg, sizeof(dbg), "SNM_AddOrReplaceScheduledJob() - Replaced SNM_ScheduledJob id: %d\n", _job->m_id);
@@ -966,7 +966,7 @@ void SNM_AddOrReplaceScheduledJob(SNM_ScheduledJob* _job)
 
 	if (!found)
 	{
-		g_jobs.Add(_job);
+		g_SNM_Jobs.Add(_job);
 #ifdef _SNM_DEBUG
 		char dbg[256]="";
 		_snprintfSafe(dbg, sizeof(dbg), "SNM_AddOrReplaceScheduledJob() - Added SNM_ScheduledJob id: %d\n", _job->m_id);
@@ -1014,12 +1014,9 @@ SNM_MidiActionJob::SNM_MidiActionJob(int _jobId, int _approxDelayMs, int _curCC,
 // S&M.ini
 ///////////////////////////////////////////////////////////////////////////////
 
-WDL_FastString g_SNM_IniFn;
-WDL_FastString g_SNM_CyclIniFn;
-WDL_FastString g_SNM_DiffToolFn;
+WDL_FastString g_SNM_IniFn, g_SNM_CyclIniFn, g_SNM_DiffToolFn;
 int g_SNM_IniVersion = 0;
-//int g_SNMbeta = 0;
-int g_toolbarsAutoRefreshFreq = SNM_DEF_TOOLBAR_RFRSH_FREQ;
+//int g_SNM_Beta = 0;
 
 void IniFileInit()
 {
@@ -1036,12 +1033,12 @@ void IniFileInit()
 	SNM_UpgradeIniFiles();
 
 	// load general prefs
-	g_SNMMediaFlags |= (GetPrivateProfileInt("General", "MediaFileLockAudio", 0, g_SNM_IniFn.Get()) ? 1:0);
+	g_SNM_MediaFlags |= (GetPrivateProfileInt("General", "MediaFileLockAudio", 0, g_SNM_IniFn.Get()) ? 1:0);
 	g_SNM_ToolbarRefresh = (GetPrivateProfileInt("General", "ToolbarsAutoRefresh", 1, g_SNM_IniFn.Get()) == 1);
-	g_toolbarsAutoRefreshFreq = BOUNDED(GetPrivateProfileInt("General", "ToolbarsAutoRefreshFreq", SNM_DEF_TOOLBAR_RFRSH_FREQ, g_SNM_IniFn.Get()), 100, 5000);
-	g_buggyPlugSupport = GetPrivateProfileInt("General", "BuggyPlugsSupport", 0, g_SNM_IniFn.Get());
+	g_SNM_ToolbarRefreshFreq = BOUNDED(GetPrivateProfileInt("General", "ToolbarsAutoRefreshFreq", SNM_DEF_TOOLBAR_RFRSH_FREQ, g_SNM_IniFn.Get()), 100, 5000);
+	g_SNM_SupportBuggyPlug = GetPrivateProfileInt("General", "BuggyPlugsSupport", 0, g_SNM_IniFn.Get());
 #ifdef _WIN32
-	g_SNMClearType = (GetPrivateProfileInt("General", "ClearTypeFont", 0, g_SNM_IniFn.Get()) == 1);
+	g_SNM_ClearType = (GetPrivateProfileInt("General", "ClearTypeFont", 0, g_SNM_IniFn.Get()) == 1);
 	fn.SetLen(SNM_MAX_PATH);
 	GetPrivateProfileString("General", "DiffTool", "", fn.Get(), SNM_MAX_PATH, g_SNM_IniFn.Get());
 	g_SNM_DiffToolFn.Set(fn.Get());
@@ -1057,12 +1054,12 @@ void IniFileExit()
 	iniSection.AppendFormatted(128, "; SWS/S&M Extension v%d.%d.%d Build %d\n; ", SWS_VERSION); 
 	iniSection.Append(g_SNM_IniFn.Get()); 
 	iniSection.AppendFormatted(128, "\nIniFileUpgrade=%d\n", g_SNM_IniVersion); 
-	iniSection.AppendFormatted(128, "MediaFileLockAudio=%d\n", g_SNMMediaFlags&1 ? 1:0); 
+	iniSection.AppendFormatted(128, "MediaFileLockAudio=%d\n", g_SNM_MediaFlags&1 ? 1:0); 
 	iniSection.AppendFormatted(128, "ToolbarsAutoRefresh=%d\n", g_SNM_ToolbarRefresh ? 1:0); 
-	iniSection.AppendFormatted(128, "ToolbarsAutoRefreshFreq=%d ; in ms (min: 100, max: 5000)\n", g_toolbarsAutoRefreshFreq);
-	iniSection.AppendFormatted(128, "BuggyPlugsSupport=%d\n", g_buggyPlugSupport ? 1:0);
+	iniSection.AppendFormatted(128, "ToolbarsAutoRefreshFreq=%d ; in ms (min: 100, max: 5000)\n", g_SNM_ToolbarRefreshFreq);
+	iniSection.AppendFormatted(128, "BuggyPlugsSupport=%d\n", g_SNM_SupportBuggyPlug ? 1:0);
 #ifdef _WIN32
-	iniSection.AppendFormatted(128, "ClearTypeFont=%d\n", g_SNMClearType ? 1:0);
+	iniSection.AppendFormatted(128, "ClearTypeFont=%d\n", g_SNM_ClearType ? 1:0);
 	iniSection.AppendFormatted(SNM_MAX_PATH, "DiffTool=\"%s\"\n", g_SNM_DiffToolFn.Get());
 #endif
 //	iniSection.AppendFormatted(128, "Beta=%d\n", g_SNMbeta); 
@@ -1122,7 +1119,6 @@ int SNM_Init(reaper_plugin_info_t* _rec)
 	CyclactionInit(); // keep it as the last one!
 
 #ifdef _SNM_CSURF_PROXY
-	extern SNM_CSurfProxy* g_SNM_CSurfProxy;
 	g_SNM_CSurfProxy = new SNM_CSurfProxy();
 	if (!g_SNM_CSurfProxy || !_rec->Register("csurf_inst", g_SNM_CSurfProxy))
 		DELETE_NULL(g_SNM_CSurfProxy)
@@ -1152,7 +1148,6 @@ void SNM_Exit()
 	IniFileExit();
 
 #ifdef _SNM_CSURF_PROXY
-	extern SNM_CSurfProxy* g_SNM_CSurfProxy;
 	if (g_SNM_CSurfProxy)
 		g_SNM_CSurfProxy->RemoveAll();
 	DELETE_NULL(g_SNM_CSurfProxy);

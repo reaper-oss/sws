@@ -82,13 +82,13 @@ static bool g_bAIEnabled = false;
 static WDL_String g_ACIni;
 
 // Register to marker/region updates 
-class ACMarkerRegionSubscriber : public SNM_MarkerRegionSubscriber {
+class ACMarkerRegionListener : public SNM_MarkerRegionListener {
 public:
-	ACMarkerRegionSubscriber() : SNM_MarkerRegionSubscriber() {}
+	ACMarkerRegionListener() : SNM_MarkerRegionListener() {}
 	void NotifyMarkerRegionUpdate(int _updateFlags) { AutoColorMarkerRegion(false, _updateFlags); }
 };
 
-ACMarkerRegionSubscriber g_mkrRgnSubscriber;
+ACMarkerRegionListener g_mkrRgnSubscriber;
 
 // Optimized/custom version of RegisterToMarkerRegionUpdates()
 // (to avoid useless polling behind the scene)

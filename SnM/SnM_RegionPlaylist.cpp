@@ -1527,17 +1527,20 @@ void PlaylistSeekPrevNext(COMMAND_T* _ct)
 
 void PlaylistStop()
 {
-	if (g_playPlaylist>=0 || (GetPlayStateEx(NULL)&1) == 1) {
+	if (g_playPlaylist>=0 || (GetPlayStateEx(NULL)&1) == 1)
+	{
 		OnStopButton();
+/* commented: already done via SNM_CSurfSetPlayState() callback
 		PlaylistStopped();
+*/
 	}
 }
 
-void PlaylistStopped()
+void PlaylistStopped(bool _pause)
 {
 	MUTEX_PLAYLISTS;
 
-	if (g_playPlaylist>=0)
+	if (g_playPlaylist>=0 && !_pause)
 	{
 		g_playPlaylist = -1;
 
@@ -1560,6 +1563,10 @@ void PlaylistStopped()
 		if (g_pRgnPlaylistWnd)
 			g_pRgnPlaylistWnd->Update();
 	}
+}
+
+void PlaylistUnpaused() {
+	PlaylistResync();
 }
 
 // used when editing the playlist/regions while playing (required because we always look one region ahead)

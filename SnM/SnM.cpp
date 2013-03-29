@@ -1243,11 +1243,16 @@ bool g_lastPlayState=false, g_lastPauseState=false, g_lastRecState=false;
 
 void SNM_CSurfSetPlayState(bool _play, bool _pause, bool _rec)
 {
-	if (g_lastPlayState != _play) {
-		if (g_lastPlayState && !_play) PlaylistStopped();
+	if (g_lastPlayState != _play)
+	{
+		if (g_lastPlayState && !_play)
+			PlaylistStopped(_pause);
 		g_lastPlayState = _play;
 	}
-	if (g_lastPauseState != _pause) {
+	if (g_lastPauseState != _pause)
+	{
+		if (g_lastPlayState && !_pause)
+			PlaylistUnpaused();
 		g_lastPauseState = _pause;
 	}
 	if (g_lastRecState != _rec) {

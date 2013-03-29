@@ -14,6 +14,7 @@ Live Configs:
  Note: just fixed for the sake of it as it is recommended to disable undo points for live performances
 
 Region Playlist:
++Support pause (i.e. playlist re-synchronization when unpausing)
 +Added basic OSC feedback
  To bind an OSC device, etc.. see above: same as the Live Configs tool's OSC feedback
  The possible OSC messages (with string arguments) are:

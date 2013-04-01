@@ -42,15 +42,14 @@ extern int g_tempoShapeSplitMiddle;
 
 void MoveTempo (COMMAND_T* ct)
 {
-	// Get tempo map
+	// Get tempo map and selected points' ID / closest tempo marker
 	BR_TempoChunk tempoMap;
-
-	// Get selected points' ID / closest tempo marker
 	vector<int> points;
 	double cursor = GetCursorPositionEx(NULL);
+
 	if (ct->user == 3)
 	{
-		int count = CountTempoTimeSigMarkers(NULL) - 1;
+		int count = tempoMap.CountPoints()-1;
 		for (int i = 0; i <= count; ++i)
 		{	
 			double cTime; tempoMap.GetPoint(i, &cTime, NULL, NULL);
@@ -68,21 +67,17 @@ void MoveTempo (COMMAND_T* ct)
 			}
 
 			// Edit cursor is at the tempo marker -  no need to move anything
-			if (cTime == cursor)
+			else if (cTime == cursor)
 				return;
 			
 			// Edit cursor is positioned after the last tempo point
 			else if (i == count)
 				points.push_back(i);
-		}
+		}		
 	}
 	else
-		points = tempoMap.GetSelected();
+		points = *tempoMap.GetSelected();
 
-	// Remove first tempo marker in the project
-	if (points.size() != 0)
-		if (points[0] == 0)
-			points.erase (points.begin());
 	if (points.size() == 0)
 		return;
 
@@ -103,14 +98,18 @@ void MoveTempo (COMMAND_T* ct)
 	int skipped	= 0;
 	for (size_t i = 0; i < points.size(); ++i)
 	{
+		int id = points[i];
+		if (id == 0) // Skip first tempo point
+			continue;
+
 		// Get tempo points
 		double t1, t2, t3;
 		double b1, b2, b3, Nb1, Nb2;
 		bool s1, s2;
 
-		bool P1 = tempoMap.GetPoint(points[i]-1, &t1, &b1, &s1);
-		bool P2 = tempoMap.GetPoint(points[i],   &t2, &b2, &s2);
-		bool P3 = tempoMap.GetPoint(points[i]+1, &t3, &b3, NULL);
+		bool P1 = tempoMap.GetPoint(id-1, &t1, &b1, &s1);
+		bool P2 = tempoMap.GetPoint(id,   &t2, &b2, &s2);
+		bool P3 = tempoMap.GetPoint(id+1, &t3, &b3, NULL);
 
 		///// CALCULATE BPM VALUES /////
 		////////////////////////////////	
@@ -118,27 +117,15 @@ void MoveTempo (COMMAND_T* ct)
 		
 		// Current point
 		if (!s2)
-		{
-			double m2 = b2*(t3-t2) / 240;
-			Nb2 = 240*m2 / (t3-Nt2);
-		}					
+			Nb2 = b2*(t3-t2) / (t3-Nt2);
 		else
-		{
-			double m2 = (b2+b3)*(t3-t2) / 480;
-			Nb2 = 480*m2 / (t3-Nt2) - b3;
-		}
+			Nb2 = (b2+b3)*(t3-t2) / (t3-Nt2) - b3;
 
 		// Previous point
 		if (!s1)
-		{
-			double m1 = b1*(t2-t1) / 240;
-			Nb1 = 240*m1 / (Nt2-t1);
-		}
+			Nb1 = b1*(t2-t1) / (Nt2-t1);
 		else
-		{
-			double m1 = (b1+b2)*(t2-t1) / 480;
-			Nb1 = 480*m1 / (Nt2-t1) - Nb2;
-		}
+			Nb1 = (b1+b2)*(t2-t1) / (Nt2-t1) - Nb2;
 
 		// Fix for the last tempo point so it can pass IF statement
 		if (!P3) 
@@ -150,7 +137,7 @@ void MoveTempo (COMMAND_T* ct)
 		///// CHECK POINTS BEFORE PREVIOUS POINT /////
 		/////////////////////////////////////////////		
 		
-		int direction = -1, P0 = points[i] - 2;
+		int direction = -1, P0 = id - 2;
 		bool doP0 = true, possibleP0 = true; 
 		
 		// Go through points backwards, check their shape and if linear check new BPM
@@ -164,7 +151,7 @@ void MoveTempo (COMMAND_T* ct)
 			if (!s) 
 			{
 				direction *= -1;
-				if (P0 == points[i]-2)	// If first point behind previous is square
+				if (P0 == id-2)	// If first point behind previous is square
 					doP0 = false;		// there is no need to adjust anything
 				break;	
 			}		
@@ -189,7 +176,7 @@ void MoveTempo (COMMAND_T* ct)
 			// Points before previous (if needed)
 			if (doP0)
 			{	
-				for (int j = P0; j <= points[i] - 2 ; ++j)
+				for (int j = P0; j <= id - 2 ; ++j)
 				{
 					double t, b; bool s;
 					tempoMap.GetPoint(j, &t, &b, &s);
@@ -199,27 +186,29 @@ void MoveTempo (COMMAND_T* ct)
 			}
 
 			// Previous point
-			tempoMap.SetPoint(points[i]-1, t1, Nb1, s1);
+			tempoMap.SetPoint(id-1, t1, Nb1, s1);
 						
 			// Selected point
-			tempoMap.SetPoint(points[i], Nt2, Nb2, s2);			
+			tempoMap.SetPoint(id, Nt2, Nb2, s2);			
 		}		
 		else
 			++skipped;
 	}
+	if (PreventUIRefresh) // prevent jumpy cursor when moving closest tempo marker
+		PreventUIRefresh (1);	
+	
 	tempoMap.Commit();
-
-	// If moving closest tempo marker to edit cursor...
 	if (ct->user == 3)
-	{
-		points.push_back(0); // Makes sure user always gets notified if moving point is impossible (next IF checks the size of the vector)
-		SetEditCurPos2(NULL, cursor, false, false); // Keep cursor position (needed if timebase is beats)
-	}
+		SetEditCurPos2(NULL, cursor, false, false); // Keep cursor position when moving to closest tempo marker (needed if timebase is beats)
+
+	if (PreventUIRefresh)
+		PreventUIRefresh (-1);
+
 	Undo_EndBlock2 (NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL);
 
 	// Warn user if some points weren't processed
 	static bool g_pointsNotProcessed = true;
-	if (points.size() > 1 && skipped != 0 && (g_pointsNotProcessed))
+	if ((points.size() > 1 || ct->user == 3) && skipped != 0 && (g_pointsNotProcessed))
 	{
 		char buffer[512];
 		_snprintf(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
@@ -233,22 +222,19 @@ void DeleteTempo (COMMAND_T* ct)
 {
 	// Get tempo map
 	BR_TempoChunk tempoMap;
-	int offset = 0;
-
-	// Get selected points' ID and remove first tempo marker in the project
-	vector<int> points = tempoMap.GetSelected();
-	if (points.size() != 0)
-		if (points[0] == 0)
-			points.erase (points.begin());
-	if (points.size() == 0)
+	if (tempoMap.GetSelected()->size() == 0)
 		return;
+	int offset = 0;
 
 	// Loop through selected points and perform BPM calculations
 	Undo_BeginBlock2(NULL);
 	int skipped = 0;
-	for (size_t i = 0; i < points.size(); ++i)
+	for (size_t i = 0; i < tempoMap.GetSelected()->size(); ++i)
 	{
-		int id = points[i] + offset;
+		int id = (*tempoMap.GetSelected())[i] + offset;		
+		if (id == 0) // Skip first tempo points
+			continue;
+
 		// Get tempo points
 		double t1, t2, t3, t4;
 		double b1, b2, b3, b4;
@@ -257,7 +243,7 @@ void DeleteTempo (COMMAND_T* ct)
 	
 		bool P0 = tempoMap.GetPoint(id-2, NULL, NULL, &s0);
 		bool P1 = tempoMap.GetPoint(id-1, &t1, &b1, &s1);
-		bool P2 = tempoMap.GetPoint(id,     &t2, &b2, &s2);
+		bool P2 = tempoMap.GetPoint(id,   &t2, &b2, &s2);
 		bool P3 = tempoMap.GetPoint(id+1, &t3, &b3, &s3);
 		bool P4 = tempoMap.GetPoint(id+2, &t4, &b4, NULL);
 
@@ -410,10 +396,7 @@ void EditTempo (COMMAND_T* ct)
 {
 	// Get tempo map
 	BR_TempoChunk tempoMap;
-
-	// Get selected points' ID 
-	vector<int> points = tempoMap.GetSelected();
-	if (points.size() == 0)
+	if (tempoMap.GetSelected()->size() == 0)
 		return;
 
 	// Get values and type of operation to be performed
@@ -430,18 +413,19 @@ void EditTempo (COMMAND_T* ct)
 	// Loop through selected points and perform BPM calculations
 	Undo_BeginBlock2(NULL);
 	int skipped	= 0;
-	for (size_t i = 0; i < points.size(); ++i)
+	for (size_t i = 0; i < tempoMap.GetSelected()->size(); ++i)
 	{
 		// Get tempo points
+		int id = (*tempoMap.GetSelected())[i];
 		double t0, t1, t2, t3, t4;
 		double b0, b1, b2, b3, b4;
 		bool s0, s1, s2, s3;
-	
-		bool P0 = tempoMap.GetPoint(points[i]-2, &t0, &b0, &s0);
-		bool P1 = tempoMap.GetPoint(points[i]-1, &t1, &b1, &s1);
-		bool P2 = tempoMap.GetPoint(points[i],   &t2, &b2, &s2);
-		bool P3 = tempoMap.GetPoint(points[i]+1, &t3, &b3, &s3);
-		bool P4 = tempoMap.GetPoint(points[i]+2, &t4, &b4, NULL);
+		
+		bool P0 = tempoMap.GetPoint(id-2, &t0, &b0, &s0);
+		bool P1 = tempoMap.GetPoint(id-1, &t1, &b1, &s1);
+		bool P2 = tempoMap.GetPoint(id,   &t2, &b2, &s2);
+		bool P3 = tempoMap.GetPoint(id+1, &t3, &b3, &s3);
+		bool P4 = tempoMap.GetPoint(id+2, &t4, &b4, NULL);
 
 		// Calculate percentage of the selected point
 		double bDiff;
@@ -585,14 +569,14 @@ void EditTempo (COMMAND_T* ct)
 		{
 			// Previous point
 			if (P1)
-				tempoMap.SetPoint(points[i]-1, Nt1, b1, s1);
+				tempoMap.SetPoint(id-1, Nt1, b1, s1);
 
 			// Current point
-			tempoMap.SetPoint(points[i], t2, b2+bDiff, s2);
+			tempoMap.SetPoint(id, t2, b2+bDiff, s2);
 	
 			// Next point
 			if (P3)
-				tempoMap.SetPoint(points[i]+1, Nt3, b3, s3);
+				tempoMap.SetPoint(id+1, Nt3, b3, s3);
 		}
 		else
 			++skipped;
@@ -602,7 +586,7 @@ void EditTempo (COMMAND_T* ct)
 
 	// Warn user if some points weren't processed
 	static bool g_pointsNotProcessed = true;
-	if (points.size() > 1 && skipped != 0 && (g_pointsNotProcessed))
+	if (tempoMap.GetSelected()->size() > 1 && skipped != 0 && (g_pointsNotProcessed))
 	{
 		char buffer[512];
 		_snprintf(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
@@ -616,10 +600,7 @@ void EditTempoGradual(COMMAND_T* ct)
 {
 	// Get tempo map
 	BR_TempoChunk tempoMap;
-
-	// Get selected points' ID 
-	vector<int> points = tempoMap.GetSelected();
-	if (points.size() == 0)
+	if (tempoMap.GetSelected()->size() == 0)
 		return;
 
 	// Get values and type of operation to be performed
@@ -636,17 +617,18 @@ void EditTempoGradual(COMMAND_T* ct)
 	// Loop through selected points and perform BPM calculations
 	Undo_BeginBlock2(NULL);
 	int skipped	= 0;
-	for (size_t i = 0; i < points.size(); ++i)
+	for (size_t i = 0; i < tempoMap.GetSelected()->size(); ++i)
 	{
 		// Get tempo points
+		int id = (*tempoMap.GetSelected())[i];
 		double t0, t1, t2, t3;
 		double b0, b1, b2, b3;
 		bool s0, s1, s2;
-
-		bool P0 = tempoMap.GetPoint(points[i]-1, &t0, &b0, &s0);
-		bool P1 = tempoMap.GetPoint(points[i],   &t1, &b1, &s1); if (!s1){return;}
-		bool P2 = tempoMap.GetPoint(points[i]+1, &t2, &b2, &s2);
-		bool P3 = tempoMap.GetPoint(points[i]+2, &t3, &b3, NULL);
+		
+		bool P0 = tempoMap.GetPoint(id-1, &t0, &b0, &s0);
+		bool P1 = tempoMap.GetPoint(id,   &t1, &b1, &s1); if (!s1){return;}
+		bool P2 = tempoMap.GetPoint(id+1, &t2, &b2, &s2);
+		bool P3 = tempoMap.GetPoint(id+2, &t3, &b3, NULL);
 	
 		// Calculate percentage of the selected point
 		double bDiff;
@@ -739,11 +721,11 @@ void EditTempoGradual(COMMAND_T* ct)
 		if ((b1+bDiff)>=0.001 && (b1+bDiff)<=960 && b2>=0.001 && b2<=960 && (Nt1-t0)>=0.001 && (Nt2-Nt1)>=0.001 && (t3-Nt2)>=0.001)
 		{
 			// Current point
-			tempoMap.SetPoint(points[i], Nt1, b1+bDiff, s1);
+			tempoMap.SetPoint(id, Nt1, b1+bDiff, s1);
 	
 			// Next point
 			if (P2)
-				tempoMap.SetPoint(points[i]+1, Nt2, b2, s2);
+				tempoMap.SetPoint(id+1, Nt2, b2, s2);
 		}
 		else
 			++skipped;
@@ -753,7 +735,7 @@ void EditTempoGradual(COMMAND_T* ct)
 
 	// Warn user if some points weren't processed
 	static bool g_pointsNotProcessed = true;
-	if (points.size() > 1 && skipped != 0 && (g_pointsNotProcessed))
+	if (tempoMap.GetSelected()->size() > 1 && skipped != 0 && (g_pointsNotProcessed))
 	{
 		char buffer[512];
 		_snprintf(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
@@ -765,15 +747,11 @@ void EditTempoGradual(COMMAND_T* ct)
 
 void TempoShapeLinear (COMMAND_T* ct)
 {
-	// Get tempo map
-	BR_TempoChunk tempoMap;
-	int offset = 0;
-
-	// Get selected points' ID 
-	vector<int> points = tempoMap.GetSelected();
-	if (points.size() == 0)
+	// Get tempo map (with effCreate mode)
+	BR_TempoChunk tempoMap (true);
+	if (tempoMap.GetSelected()->size() == 0)
 		return;
-
+	
 	// Get splitting options
 	if (g_tempoShapeSplitRatio == -1 || g_tempoShapeSplitMiddle == -1)
 	{
@@ -782,29 +760,38 @@ void TempoShapeLinear (COMMAND_T* ct)
 		SetTempoShapeGlobalVariable (split, splitRatio, sizeof(splitRatio));
 	}
 
+	// Check if middle point is to be split
+	bool split = false;
+	if (g_tempoShapeSplitMiddle == 0)
+		split = false;
+	else if (g_tempoShapeSplitMiddle == 1)
+		if (g_tempoShapeSplitRatio != 0)
+			split = true;
+
 	// Loop through selected points and perform BPM calculations
 	Undo_BeginBlock2(NULL);
 	int skipped = 0;
-	for (size_t i = 0; i < points.size(); ++i)
+	int count = tempoMap.CountPoints()-1;
+	for (size_t i = 0; i < tempoMap.GetSelected()->size(); ++i)
 	{
-		int id = points[i]+offset;
-		
 		// Get tempo points
-		double t0, b0; bool s0;
+		int id = (*tempoMap.GetSelected())[i];
+		double t0, t1, b0, b1; 
+		bool s0;		
+		
 		tempoMap.GetPoint(id, &t0, &b0, &s0);
 		if (s0)
 			continue;
-		double t1, b1; bool s1;
-		bool P1 = tempoMap.GetPoint(id+1, &t1, &b1, &s1);
 
-		// Check if middle point is to be split
-		bool split = false;
-		if (g_tempoShapeSplitMiddle == 0)
-			split = false;
-		else if (g_tempoShapeSplitMiddle == 1)
-			if (g_tempoShapeSplitRatio != 0)
-				split = true;
-		
+		bool P1;
+		if (id < count)
+		{
+			P1 = true;
+			tempoMap.GetPoint(id+1, &t1, &b1, NULL);
+		}
+		else
+			P1 = false;
+
 		// Get middle point's position and BPM
 		double position, bpm = 120, measure = b0*(t1-t0) / 240;
 		if (P1)
@@ -822,10 +809,7 @@ void TempoShapeLinear (COMMAND_T* ct)
 			{	
 				// Check if value and position is legal, if not, skip
 				if (bpm>=0.001 && bpm<=960 && (position-t0)>=0.001 && (t1-position)>=0.001)
-				{
-					tempoMap.CreatePoint(id, position, bpm, true);
-					++offset;
-				}
+					tempoMap.CreatePoint(0, position, bpm, true);
 				else
 				{
 					++skipped;
@@ -846,8 +830,8 @@ void TempoShapeLinear (COMMAND_T* ct)
 				// Check if value and position is legal, if not, skip
 				if (bpm1>=0.001 && bpm1<=960 && bpm2>=0.001 && bpm2<=960 && (position1-t0)>=0.001 && (position2-position1)>=0.001 && (t1-position2)>=0.001)				
 				{
-					tempoMap.CreatePoint(id, position2, bpm2, true);++offset;
-					tempoMap.CreatePoint(id, position1, bpm1, true);++offset;					
+					tempoMap.CreatePoint(0, position1, bpm1, true);
+					tempoMap.CreatePoint(0, position2, bpm2, true);
 				}
 				else
 				{
@@ -855,7 +839,7 @@ void TempoShapeLinear (COMMAND_T* ct)
 					continue;
 				}
 			}
-		}		
+		}
 		// Change shape of the selected point
 		///////////////////////////////////////////////////////////////////////////
 		tempoMap.SetPoint(id, t0, b0, true);
@@ -877,13 +861,9 @@ void TempoShapeLinear (COMMAND_T* ct)
 
 void TempoShapeSquare (COMMAND_T* ct)
 {
-	// Get tempo map
-	BR_TempoChunk tempoMap;
-	int offset = 0;
-
-	// Get selected points' ID 
-	vector<int> points = tempoMap.GetSelected();
-	if (points.size() == 0)
+	// Get tempo map (with effCreate mode)
+	BR_TempoChunk tempoMap (true);
+	if (tempoMap.GetSelected()->size() == 0)
 		return;
 
 	// Get splitting options
@@ -894,21 +874,38 @@ void TempoShapeSquare (COMMAND_T* ct)
 		SetTempoShapeGlobalVariable (split, splitRatio, sizeof(splitRatio));
 	}
 
+	// Check if middle point is to be split
+	bool split = false;
+	if (g_tempoShapeSplitMiddle == 0)
+		split = false;
+	else if (g_tempoShapeSplitMiddle == 1)
+		if (g_tempoShapeSplitRatio != 0)
+			split = true;
+	
 	// Loop through selected points and perform BPM calculations
 	Undo_BeginBlock2(NULL);
 	int skipped = 0;
-	for (size_t i = 0; i < points.size(); ++i)
+	int count = tempoMap.CountPoints()-1;
+	for (size_t i = 0; i < tempoMap.GetSelected()->size(); ++i)
 	{
-		int id = points[i]+offset;
-		
 		// Get tempo points
-		double t1, b1; bool s1;
+		int id = (*tempoMap.GetSelected())[i];
+		double t0, t1, b0, b1, b2; 
+		bool s0, s1;
+				
 		tempoMap.GetPoint(id, &t1, &b1, &s1);
 		if (!s1)
 			continue;
-		double t0, b0, b2; bool s0;
-		bool P0 = tempoMap.GetPoint(id-1, &t0, &b0, &s0);
-		bool P2 = tempoMap.GetPoint(id+1, NULL, &b2, NULL);
+
+		bool P0 = tempoMap.GetPoint(id-1, &t0, &b0, &s0);		
+		bool P2;
+		if (id < count)
+		{
+			P2 = true;
+			tempoMap.GetPoint(id+1, NULL, &b2, NULL);
+		}
+		else
+			P2 = false;
 
 		// Get new bpm of selected point
 		double Nb1;
@@ -927,19 +924,10 @@ void TempoShapeSquare (COMMAND_T* ct)
 		///// SET NEW SHAPE /////
 		/////////////////////////
 
-		int j = 0;
 		// Create middle point(s) is needed
 		///////////////////////////////////////////////////////////////////////////////
 		if (P0 && P2 && s0 && Nb1 != b2)
 		{
-			// Check if middle point is to be split
-			bool split = false;
-			if (g_tempoShapeSplitMiddle == 0)
-				split = false;
-			else if (g_tempoShapeSplitMiddle == 1)
-				if (g_tempoShapeSplitRatio != 0)
-					split = true;
-
 			// Get middle point's position and BPM
 			double position, bpm = 120, measure = (b0+b1)*(t1-t0) / 480;
 			FindMiddlePoint(position, bpm, measure, b0, Nb1, t0, t1);
@@ -949,11 +937,7 @@ void TempoShapeSquare (COMMAND_T* ct)
 			if (!split)
 			{
 				if (bpm<= 960 && bpm>=0.001 && (position-t0)>=0.001 && (t1-position)>=0.001)
-				{
-					tempoMap.CreatePoint(id-1, position, bpm, true);
-					++offset;
-					j = 1;				
-				}
+					tempoMap.CreatePoint(0, position, bpm, true);
 				else
 				{
 					++skipped;
@@ -968,9 +952,8 @@ void TempoShapeSquare (COMMAND_T* ct)
 				SplitMiddlePoint (position1, position2, bpm1, bpm2, g_tempoShapeSplitRatio, measure, b0, bpm, Nb1, t0, position, t1);
 				if (bpm1>=0.001 && bpm1<=960 && bpm2>=0.001 && bpm2<=960 && (position1-t0)>=0.001 && (position2-position1)>=0.001 && (t1-position2)>=0.001)
 				{
-					tempoMap.CreatePoint(id-1, position1, bpm1, true);++offset;
-					tempoMap.CreatePoint(id  , position2, bpm2, true);++offset;	
-					j = 2;						
+					tempoMap.CreatePoint(0, position1, bpm1, true);
+					tempoMap.CreatePoint(0, position2, bpm2, true);					
 				}
 				else
 				{
@@ -981,8 +964,7 @@ void TempoShapeSquare (COMMAND_T* ct)
 		}
 		// Change shape of the selected point
 		///////////////////////////////////////////////////////////////////////////////
-		tempoMap.SetPoint(id+j, t1, Nb1, false);
-
+		tempoMap.SetPoint(id, t1, Nb1, false);
 	}
 	tempoMap.Commit();
 	Undo_EndBlock2 (NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL);
@@ -997,6 +979,72 @@ void TempoShapeSquare (COMMAND_T* ct)
 		if (userAnswer == 7)
 			g_pointsNotProcessed = false;	
 	}
+};
+
+void TempoAtGrid (COMMAND_T* ct)
+{
+	// Get tempo map (with effCreate mode) and grid
+	BR_TempoChunk tempoMap (true);
+	if (tempoMap.GetSelected()->size() == 0)
+		return;
+	double grid = *(double*)GetConfigVar("projgriddiv");
+	
+	// Loop through all points
+	Undo_BeginBlock2(NULL);
+	int count = tempoMap.CountPoints()-1;
+	double offset = 0;
+	for (int id = 0; id <= count; ++id)
+	{
+		// Get tempo point
+		double t0, b0; bool s0;		
+		tempoMap.GetPoint(id, &t0, &b0, &s0);
+		
+		// This part is really only relevant in certain cases involving grid division longer than measure's length
+		// If tempo point is at the start of the measure, grid diving starts again from we need to calculate the offset.
+		// Since it needs to transition until the next same situation, loop goes through all the points, and not just selected.
+		double beat; int measure;
+		GetTempoTimeSigMarker(NULL, id, NULL, &measure, &beat, NULL, NULL, NULL, NULL); 
+		if (beat <= 0.00000000001)
+			offset =  grid - fmod(TimeMap_timeToQN(t0), grid);
+		
+		// If point is selected, proceed
+		if (!tempoMap.GetSelection(id))
+			continue;
+		double t1, b1; tempoMap.GetPoint(id+1, &t1, &b1, NULL);
+
+		// If last tempo point is selected, fake second point as if it's at the end of project (markers and regions included)
+		if (id == count)
+		{
+			b1 = b0;
+			t1 = EndOfProject (true, true);
+		}
+
+		// If point is square, set "fake" bpm for second point (needed for TempoAtPosition)
+		if (!s0)
+			b1 = b0;
+
+		// Find first grid line and then loop through the rest creating tempo points
+		double pGridLn = t0, gridLn = TimeMap_timeToQN (t0);
+		gridLn = TimeMap_QNToTime(gridLn-offset - fmod(gridLn,grid)); // due to the offset it can be before tempo point
+		while (true)												  // but next while should correct that
+		{
+			// Search for the next grid line
+			while (gridLn <= pGridLn + 0.001)
+				gridLn = TimeMap_QNToTime(TimeMap_timeToQN (gridLn)+grid);
+			
+			// Create points until the next point
+			if (gridLn <= t1-0.001) 									// max grid division of 1/256 at max tempo of 960 creates a grid line 
+			{															// every 0.00097 s...so 0.001 is quite fine as a safety net to prevent 
+				double bpm = TempoAtPosition (b0, b1, t0, t1, gridLn);	// accidental creation of points around the end point of tempo transition
+				tempoMap.CreatePoint(0, gridLn, bpm, s0);
+			}
+			else
+				break;
+			pGridLn = gridLn;
+		}		
+	}
+	tempoMap.Commit();
+	Undo_EndBlock2 (NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL);
 };
 
 void ConvertMarkersToTempoDialog (COMMAND_T* = NULL)

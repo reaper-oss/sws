@@ -32,22 +32,28 @@
 //	- slower on small amount (<10) of points compared to Reaper's API (not really noticeable in real life unless tempo map is HUGE)
 //	- excels with a lot of points (you do not want to delete/create 1000 points using Reaper's API - and it is a possible scenario in real life)
 //	- selected points' ID is not updated when adding/deleting points (BR_Tempo.cpp handles it with offset value so no need to update vector every time)
-//  
-//	- TODO: add modes for alternate operation to gain efficiency (to escape expensive inserting and removing from vector)
-//			methods for handling time signatures (http://askjf.com/index.php?q=2212s) (not needed unless explicitly editing time signatures)
+//
+//	- When creating an object with effCreate set to true, creation of a lot of points will be faster. New points will always be written at the end of
+//	  the vector no matter the supplied ID. They will get sorted automatically by GetSetObjectState when committing changes. Member functions can still 
+//	  be used on those points with ID but in the order they were created.
 
 class BR_TempoChunk
 {
 public:
-	BR_TempoChunk();
+	BR_TempoChunk(bool effCreate = false);
 	~BR_TempoChunk();
-
 	void Commit();
+
 	bool GetPoint(int id, double* position, double* bpm, bool* linear);
 	bool SetPoint(int id, double position, double bpm, bool linear);
+	bool GetTimeSig(int id, bool* sig, int* num, int* den);
+	bool SetTimeSig(int id, bool sig, int num, int den);
+	bool GetSelection (int id);
+	bool SetSelection (int id, bool selected);
 	bool CreatePoint(int id, double position, double bpm, bool linear);
 	bool DeletePoint(int id);
-	vector<int> GetSelected() {return selectedPoints;};
+	int CountPoints();
+	const vector<int>* GetSelected() const;	
 
 private:
 	struct TempoPoint
@@ -60,12 +66,13 @@ private:
 		int partial;
 	};
 
-	TrackEnvelope* envelope;
-	WDL_FastString chunkStart;
-	WDL_FastString chunkEnd;
-	vector<TempoPoint> tempoPoints;
-	vector<int> selectedPoints;
-	int count;
+	TrackEnvelope* m_envelope;
+	WDL_FastString m_chunkStart;
+	WDL_FastString m_chunkEnd;
+	vector<TempoPoint> m_tempoPoints;
+	vector<int> m_selectedPoints;
+	int m_count;
+	bool m_effCreate;
 
 	struct Preferences
 	{
@@ -73,9 +80,7 @@ private:
 		double start_time;
 		double end_time;
 		RECT r;
-		bool altDelete;
-		bool altCreate;
-	}preferences;	
+	}m_preferences;
 };
 
 // Some additional functions used in BR_Tempo.cpp

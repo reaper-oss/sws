@@ -546,6 +546,33 @@ void ItemRandomCols(COMMAND_T* = NULL)
 	UpdateTimeline();
 }
 
+void TakeRandomCols(COMMAND_T* = NULL)
+{
+	COLORREF cr;
+	// All black check
+	if (AllBlack())
+		return;
+	for (int i = 1; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		for (int j = 0; j < GetTrackNumMediaItems(tr); j++)
+		{
+			MediaItem* mi = GetTrackMediaItem(tr, j);
+			if (*(bool*)GetSetMediaItemInfo(mi, "B_UISEL", NULL))
+			{
+				for (int h = 0; h < CountTakes(mi); h++)
+				{
+					while (!(cr = g_custColors[rand() % 16]));
+					cr |= 0x1000000;
+					GetSetMediaItemTakeInfo(GetTake(mi, h), "I_CUSTOMCOLOR", &cr);
+				}
+			}
+		}
+	}
+	Undo_OnStateChange(__LOCALIZE("Set takes in selected item(s) to random custom color(s)","sws_undo"));
+	UpdateTimeline();
+}
+
 void TrackCustomColor(int iCustColor)
 {
 	COLORREF cr;
@@ -833,6 +860,30 @@ void ItemGradient(COMMAND_T* = NULL)
 	UpdateTimeline();
 }
 
+void TakeGradient(COMMAND_T* = NULL)
+{
+	int tCurPos = 0;
+	for (int i = 1; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		for (int j = 0; j < GetTrackNumMediaItems(tr); j++)
+		{
+			MediaItem* mi = GetTrackMediaItem(tr, j);
+			if (*(bool*)GetSetMediaItemInfo(mi, "B_UISEL", NULL))
+			{
+				for (int h = 0; h < CountTakes(mi); h++)
+				{
+					COLORREF cr = CalcGradient(g_crGradStart, g_crGradEnd, (double)tCurPos++ / (CountTakes(mi)-1)) | 0x1000000;
+					GetSetMediaItemTakeInfo(GetTake(mi, h), "I_CUSTOMCOLOR", &cr);
+				}
+				tCurPos = 0;
+			}
+		}
+	}
+	Undo_OnStateChange(__LOCALIZE("Set takes in selected item(s) to color gradient","sws_undo"));
+	UpdateTimeline();
+}
+
 void ItemOrdColTrack(COMMAND_T* = NULL)
 {
 	UpdateCustomColors();
@@ -890,6 +941,31 @@ void ItemToTrackCol(COMMAND_T* = NULL)
 		}
 	}
 	Undo_OnStateChange(__LOCALIZE("Set selected item(s) to respective track color","sws_undo"));
+	UpdateTimeline();
+}
+
+void TakeOrderedCol(COMMAND_T* = NULL)
+{
+	UpdateCustomColors();
+	int tCurPos = 0;
+	for (int i = 1; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		for (int j = 0; j < GetTrackNumMediaItems(tr); j++)
+		{
+			MediaItem* mi = GetTrackMediaItem(tr, j);
+			if (*(bool*)GetSetMediaItemInfo(mi, "B_UISEL", NULL))
+			{
+				for (int h = 0; h < CountTakes(mi); h++)
+				{
+					COLORREF cr = g_custColors[tCurPos++ % 16] | 0x1000000;
+					GetSetMediaItemTakeInfo(GetTake(mi, h), "I_CUSTOMCOLOR", &cr);
+				}
+				tCurPos = 0;
+			}
+		}
+	}
+	Undo_OnStateChange(__LOCALIZE("Set takes in selected item(s) to ordered custom colors","sws_undo"));
 	UpdateTimeline();
 }
 
@@ -962,7 +1038,10 @@ static COMMAND_T g_commandTable[] =
 
 	{ { DEFACCEL, "SWS: Set selected track(s)/item(s) to one random color" },     "SWS_RANDOMCOLALL",		RandomColorAll,		NULL, },
 	{ { DEFACCEL, "SWS: Set selected track(s)/item(s) to custom color..." },      "SWS_CUSTOMCOLALL",		CustomColorAll,		NULL, },
-
+	
+	{ { DEFACCEL, "SWS: Set takes in selected item(s) to random custom color(s)"},"SWS_TAKESRANDCOLS",		TakeRandomCols,		NULL, },
+	{ { DEFACCEL, "SWS: Set takes in selected item(s) to color gradient"},		  "SWS_TAKEGRAD",			TakeGradient,		NULL, },
+	{ { DEFACCEL, "SWS: Set takes in selected item(s) to ordered custom colors"}, "SWS_TAKEORDCOL",			TakeOrderedCol,		NULL, },
 	{ { DEFACCEL, "SWS: Set selected take(s) to custom color 1" },                "SWS_TAKECUSTCOL1",		TakeCustCol,		NULL, 0 },
 	{ { DEFACCEL, "SWS: Set selected take(s) to custom color 2" },                "SWS_TAKECUSTCOL2",		TakeCustCol,		NULL, 1 },
 	{ { DEFACCEL, "SWS: Set selected take(s) to custom color 3" },                "SWS_TAKECUSTCOL3",		TakeCustCol,		NULL, 2 },

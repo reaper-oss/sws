@@ -59,6 +59,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Set tempo marker shape to linear (preserve positions)" },					"BR_TEMPO_SHAPE_LINEAR",			TempoShapeLinear},
 	{ { DEFACCEL, "SWS/BR: Set tempo marker shape to square (preserve positions)" },					"BR_TEMPO_SHAPE_SQUARE",			TempoShapeSquare},
 	{ { DEFACCEL, "SWS/BR: Delete tempo marker (preserve overall tempo and positions if possible)" },	"BR_DELETE_TEMPO",					DeleteTempo},
+	{ { DEFACCEL, "SWS/BR: Create tempo markers at grid after every selected tempo marker" },			"BR_TEMPO_GRID",					TempoAtGrid},
 	
 	{ { DEFACCEL, "SWS/BR: Move closest tempo marker to edit cursor" },									"BR_MOVE_CLOSEST_TEMPO",			MoveTempo, NULL, 3},
 	{ { DEFACCEL, "SWS/BR: Move tempo marker forward" },												"SWS_BRMOVETEMPOFORWARD",			MoveTempo, NULL, 2},

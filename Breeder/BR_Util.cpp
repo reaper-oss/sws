@@ -115,3 +115,32 @@ double AltAtof (char* tmp)
 	replace(tmp, tmp+strlen(tmp), ',', '.' );
 	return atof(tmp);
 };
+
+double EndOfProject (bool markers, bool regions)
+{
+	double projEnd = 0;
+	int tracks = GetNumTracks();
+	for (int i = 0; i < tracks; i++)
+	{
+		MediaTrack* track = GetTrack(0, i);
+		MediaItem* item = GetTrackMediaItem(track, GetTrackNumMediaItems(track) - 1);
+		double itemEnd = GetMediaItemInfo_Value(item, "D_POSITION") + GetMediaItemInfo_Value(item, "D_LENGTH");
+		if (itemEnd > projEnd)
+			projEnd = itemEnd;
+	}
+
+	if (markers || regions)
+	{
+		bool region; double start, end; int i = 0;
+		while (i = EnumProjectMarkers(i, &region, &start, &end, NULL, NULL))
+		{
+			if (regions)
+				if (region && end > projEnd)
+					projEnd = end;
+			if (markers)
+				if (!region && start > projEnd)
+					projEnd = start;
+		}
+	}
+	return projEnd;
+};

@@ -31,3 +31,4 @@ bool IsThisFraction (char* tmp, int tmpLen, double &convertedFraction);
 void CenterWindowInReaper (HWND hwnd, HWND zOrder, bool startUp);
 int GetFirstDigit (int number);
 double AltAtof (char* tmp);
+double EndOfProject (bool markers, bool regions);

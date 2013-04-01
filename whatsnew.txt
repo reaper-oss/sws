@@ -21,6 +21,12 @@ Region Playlist:
  - /snm/rgnplaylist/current - current region changed
  - /snm/rgnplaylist/next - next region changed
 
+Added actions:
++SWS: Set takes in selected item(s) to random custom color(s)
++SWS: Set takes in selected item(s) to color gradient
++SWS: Set takes in selected item(s) to ordered custom colors
++SWS/BR: Create tempo markers at grid after every selected tempo marker
+
 Fixes:
 +About box: fixed update checker connection issues in certain instances (Win only)
 +Cycle actions: fixed ReaScript support broken in v2.3.0 #14, thanks gofer!

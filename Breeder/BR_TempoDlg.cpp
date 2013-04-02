@@ -437,10 +437,10 @@ void SetRandomTempo (HWND hwnd, double min, double max, int unit, double minLimi
 				cBpm = newBpm;
 				
 				// Check if BPM is legal
-				if (cBpm < 0.001)
-					cBpm = 0.001;
-				else if (cBpm > 960)
-					cBpm = 960;
+				if (cBpm < MIN_BPM)
+					cBpm = MIN_BPM;
+				else if (cBpm > MAX_BPM)
+					cBpm = MAX_BPM;
 			}
 			
 			// Get new position but only if timebase is beats
@@ -832,7 +832,7 @@ void ConvertMarkersToTempo (int markers, int num, int den, int removeMarkers, in
 		double length = markerPositions[1] - markerPositions[0];
 		double measure = num / (den * (double)markers);
 		double bpm = 240*measure / length;
-		if (bpm > 960)
+		if (bpm > MAX_BPM)
 			++exceed;
 		SetTempoTimeSigMarker (NULL, -1, markerPositions[0], -1, -1, bpm, num, den, false);
 
@@ -841,7 +841,7 @@ void ConvertMarkersToTempo (int markers, int num, int den, int removeMarkers, in
 		{ 
 			length = markerPositions[i+1] - markerPositions[i];
 			bpm = 240*measure / length;
-			if (bpm > 960)
+			if (bpm > MAX_BPM)
 				++exceed;
 			SetTempoTimeSigMarker (NULL, -1, markerPositions[i], -1, -1, bpm, 0, 0, false);
 		}
@@ -887,7 +887,7 @@ void ConvertMarkersToTempo (int markers, int num, int den, int removeMarkers, in
 			if (split == 0)
 			{	
 				SetTempoTimeSigMarker (NULL, -1, position, -1, -1, bpm, 0, 0, true);
-				if (bpm > 960)
+				if (bpm > MAX_BPM)
 					++exceed;
 				measure /=2; // Used for checking at the end
 			}
@@ -899,7 +899,7 @@ void ConvertMarkersToTempo (int markers, int num, int den, int removeMarkers, in
 				
 				SetTempoTimeSigMarker (NULL, -1, position1, -1, -1, bpm1, 0, 0, true);
 				SetTempoTimeSigMarker (NULL, -1, position2, -1, -1, bpm2, 0, 0, true);
-				if (bpm1 > 960 || bpm2 > 960)
+				if (bpm1 > MAX_BPM || bpm2 > MAX_BPM)
 					++exceed;				
 				measure = measure*(1-splitRatio)/2; // Used for 
 				position = position2;				// checking 
@@ -918,7 +918,7 @@ void ConvertMarkersToTempo (int markers, int num, int den, int removeMarkers, in
 				SetTempoTimeSigMarker (NULL, -1, markerPositions[i], -1, -1, linearPoints[i], 0, 0, false);
 			else
 				SetTempoTimeSigMarker (NULL, -1, markerPositions[i], -1, -1, linearPoints[i], 0, 0, true);
-			if (linearPoints[i] > 960)
+			if (linearPoints[i] > MAX_BPM)
 				++exceed;			
 		}
 	}
@@ -1693,10 +1693,10 @@ void AdjustTempo (int mode, double bpm, int shape)
 					cBpm *= 1 + bpm/100;
 				
 				// Check if BPM is legal
-				if (cBpm < 0.001)
-					cBpm = 0.001;
-				else if (cBpm > 960)
-					cBpm = 960;		
+				if (cBpm < MIN_BPM)
+					cBpm = MIN_BPM;
+				else if (cBpm > MAX_BPM)
+					cBpm = MAX_BPM;		
 
 				// Set shape					
 				if (shape == 3)
@@ -1795,18 +1795,18 @@ void UpdateTargetBpm (HWND hwnd, int doFirst, int doCursor, int doLast)
 		}
 
 		// Check values
-		if (bpmFirstTar < 0.001)
-			bpmFirstTar = 0.001;
-		else if (bpmFirstTar > 960)
-			bpmFirstTar = 960;
-		if (bpmCursorTar < 0.001)
-			bpmCursorTar = 0.001;
-		else if (bpmCursorTar > 960)
-			bpmCursorTar = 960;
-		if (bpmLastTar < 0.001)
-			bpmLastTar = 0.001;
-		else if (bpmLastTar > 960)
-			bpmLastTar = 960;
+		if (bpmFirstTar < MIN_BPM)
+			bpmFirstTar = MIN_BPM;
+		else if (bpmFirstTar > MAX_BPM)
+			bpmFirstTar = MAX_BPM;
+		if (bpmCursorTar < MIN_BPM)
+			bpmCursorTar = MIN_BPM;
+		else if (bpmCursorTar > MAX_BPM)
+			bpmCursorTar = MAX_BPM;
+		if (bpmLastTar < MIN_BPM)
+			bpmLastTar = MIN_BPM;
+		else if (bpmLastTar > MAX_BPM)
+			bpmLastTar = MAX_BPM;
 		        
 		sprintf(eBpmFirstCur, "%.6g", bpmFirstTar);
 		sprintf(eBpmCursorCur, "%.6g", bpmCursorTar);

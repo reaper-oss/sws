@@ -27,6 +27,11 @@
 ******************************************************************************/
 #pragma once
 
+#define MIN_BPM			0.001
+#define MAX_BPM			960
+#define MIN_TEMPO_DIST	0.001
+#define MAX_GRID_DIV	0.00097
+
 bool IsThisFraction (char* tmp, int tmpLen, double &convertedFraction);
 void CenterWindowInReaper (HWND hwnd, HWND zOrder, bool startUp);
 int GetFirstDigit (int number);

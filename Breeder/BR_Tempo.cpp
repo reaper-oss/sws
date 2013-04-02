@@ -157,7 +157,7 @@ void MoveTempo (COMMAND_T* ct)
 			}		
 
 			// Otherwise check if new BPM is possible...
-			else if ((b - direction*(Nb1 - b1)) > 960 || (b - direction * (Nb1 - b1)) < 0.001)
+			else if ((b - direction*(Nb1 - b1)) > MAX_BPM || (b - direction * (Nb1 - b1)) < MIN_BPM)
 			{
 				possibleP0 = false;
 				break;
@@ -171,7 +171,7 @@ void MoveTempo (COMMAND_T* ct)
 		/////////////////////////////
 				
 		// IF statement acts as a safety net for illogical calculations.
-		if (Nb1 >= 0.001 && Nb1 <= 960 && Nb2 >= 0.001 && Nb2 <= 960 && (Nt2-t1) >= 0.001 && (t3 - Nt2) >= 0.001 && possibleP0)
+		if (Nb1 >= MIN_BPM && Nb1 <= MAX_BPM && Nb2 >= MIN_BPM && Nb2 <= MAX_BPM && (Nt2-t1) >= MIN_TEMPO_DIST && (t3 - Nt2) >= MIN_TEMPO_DIST && possibleP0)
 		{	
 			// Points before previous (if needed)
 			if (doP0)
@@ -358,7 +358,7 @@ void DeleteTempo (COMMAND_T* ct)
 			t4 = Nt3+1;
 
 		// IF statement acting as a safety net for illogical calculations
-		if (b1>=0.001 && b1<=960 && b2>=0.001 && b2<=960 && b3>=0.001 && b3<=960 && (Nt3-Nt1)>=0.001 && (t4-Nt3)>=0.001)
+		if (b1>=MIN_BPM && b1<=MAX_BPM && b2>=MIN_BPM && b2<=MAX_BPM && b3>=MIN_BPM && b3<=MAX_BPM && (Nt3-Nt1)>=MIN_TEMPO_DIST && (t4-Nt3)>=MIN_TEMPO_DIST)
 		{
 			// Set points
 			if (P3)
@@ -565,7 +565,7 @@ void EditTempo (COMMAND_T* ct)
 			t0 = Nt1-1;
 	
 		// IF statement acting as a safety net for illogical calculations
-		if (b1>=0.001 && b1<=960 && (b2+bDiff)>=0.001 && (b2+bDiff)<=960 && b3>=0.001 && b3<=960 && (Nt1-t0)>=0.001 && (t2-Nt1)>=0.001 && (Nt3-t2)>=0.001 &&(t4-Nt3)>=0.001)
+		if (b1>=MIN_BPM && b1<=MAX_BPM && (b2+bDiff)>=MIN_BPM && (b2+bDiff)<=MAX_BPM && b3>=MIN_BPM && b3<=MAX_BPM && (Nt1-t0)>=MIN_TEMPO_DIST && (t2-Nt1)>=MIN_TEMPO_DIST && (Nt3-t2)>=MIN_TEMPO_DIST &&(t4-Nt3)>=MIN_TEMPO_DIST)
 		{
 			// Previous point
 			if (P1)
@@ -718,7 +718,7 @@ void EditTempoGradual(COMMAND_T* ct)
 			t3 = Nt2+1;
 
 		// IF statement acting as a safety net for illogical calculations
-		if ((b1+bDiff)>=0.001 && (b1+bDiff)<=960 && b2>=0.001 && b2<=960 && (Nt1-t0)>=0.001 && (Nt2-Nt1)>=0.001 && (t3-Nt2)>=0.001)
+		if ((b1+bDiff)>=MIN_BPM && (b1+bDiff)<=MAX_BPM && b2>=MIN_BPM && b2<=MAX_BPM && (Nt1-t0)>=MIN_TEMPO_DIST && (Nt2-Nt1)>=MIN_TEMPO_DIST && (t3-Nt2)>=MIN_TEMPO_DIST)
 		{
 			// Current point
 			tempoMap.SetPoint(id, Nt1, b1+bDiff, s1);
@@ -808,7 +808,7 @@ void TempoShapeLinear (COMMAND_T* ct)
 			if (P1 && b0 != b1)
 			{	
 				// Check if value and position is legal, if not, skip
-				if (bpm>=0.001 && bpm<=960 && (position-t0)>=0.001 && (t1-position)>=0.001)
+				if (bpm>=MIN_BPM && bpm<=MAX_BPM && (position-t0)>=MIN_TEMPO_DIST && (t1-position)>=MIN_TEMPO_DIST)
 					tempoMap.CreatePoint(0, position, bpm, true);
 				else
 				{
@@ -828,7 +828,7 @@ void TempoShapeLinear (COMMAND_T* ct)
 				SplitMiddlePoint (position1, position2, bpm1, bpm2, g_tempoShapeSplitRatio, measure, b0, bpm, b1, t0, position, t1);
 				
 				// Check if value and position is legal, if not, skip
-				if (bpm1>=0.001 && bpm1<=960 && bpm2>=0.001 && bpm2<=960 && (position1-t0)>=0.001 && (position2-position1)>=0.001 && (t1-position2)>=0.001)				
+				if (bpm1>=MIN_BPM && bpm1<=MAX_BPM && bpm2>=MIN_BPM && bpm2<=MAX_BPM && (position1-t0)>=MIN_TEMPO_DIST && (position2-position1)>=MIN_TEMPO_DIST && (t1-position2)>=MIN_TEMPO_DIST)
 				{
 					tempoMap.CreatePoint(0, position1, bpm1, true);
 					tempoMap.CreatePoint(0, position2, bpm2, true);
@@ -915,7 +915,7 @@ void TempoShapeSquare (COMMAND_T* ct)
 			Nb1 = b1;
 
 		// Check if new bpm is legal, if not, skip
-		if(Nb1 < 0.001 || Nb1 > 960)
+		if(Nb1 < MIN_BPM || Nb1 > MAX_BPM)
 		{
 			++skipped;
 			continue;
@@ -936,7 +936,7 @@ void TempoShapeSquare (COMMAND_T* ct)
 			///////////////////////////////////////////////////////////////////////////
 			if (!split)
 			{
-				if (bpm<= 960 && bpm>=0.001 && (position-t0)>=0.001 && (t1-position)>=0.001)
+				if (bpm<= MAX_BPM && bpm>=MIN_BPM && (position-t0)>=MIN_TEMPO_DIST && (t1-position)>=MIN_TEMPO_DIST)
 					tempoMap.CreatePoint(0, position, bpm, true);
 				else
 				{
@@ -950,7 +950,8 @@ void TempoShapeSquare (COMMAND_T* ct)
 			{
 				double position1, position2, bpm1, bpm2;
 				SplitMiddlePoint (position1, position2, bpm1, bpm2, g_tempoShapeSplitRatio, measure, b0, bpm, Nb1, t0, position, t1);
-				if (bpm1>=0.001 && bpm1<=960 && bpm2>=0.001 && bpm2<=960 && (position1-t0)>=0.001 && (position2-position1)>=0.001 && (t1-position2)>=0.001)
+
+				if (bpm1>=MIN_BPM && bpm1<=MAX_BPM && bpm2>=MIN_BPM && bpm2<=MAX_BPM && (position1-t0)>=MIN_TEMPO_DIST && (position2-position1)>=MIN_TEMPO_DIST && (t1-position2)>=MIN_TEMPO_DIST)
 				{
 					tempoMap.CreatePoint(0, position1, bpm1, true);
 					tempoMap.CreatePoint(0, position2, bpm2, true);					
@@ -1029,13 +1030,13 @@ void TempoAtGrid (COMMAND_T* ct)
 		while (true)												  // but next while should correct that
 		{
 			// Search for the next grid line
-			while (gridLn <= pGridLn + 0.001)
-				gridLn = TimeMap_QNToTime(TimeMap_timeToQN (gridLn)+grid);
-			
+			while (gridLn < pGridLn + MAX_GRID_DIV)							// max grid division of 1/256 at max tempo of 960 creates a grid line
+				gridLn = TimeMap_QNToTime(TimeMap_timeToQN (gridLn)+grid);	// every 0.00097 s... so let it also be our safety net to prevent accidental
+																			// creation of multiple points around grid line and the end point of tempo transition
 			// Create points until the next point
-			if (gridLn <= t1-0.001) 									// max grid division of 1/256 at max tempo of 960 creates a grid line 
-			{															// every 0.00097 s...so 0.001 is quite fine as a safety net to prevent 
-				double bpm = TempoAtPosition (b0, b1, t0, t1, gridLn);	// accidental creation of points around the end point of tempo transition
+			if (gridLn <= t1 - MAX_GRID_DIV)
+			{															
+				double bpm = TempoAtPosition (b0, b1, t0, t1, gridLn);
 				tempoMap.CreatePoint(0, gridLn, bpm, s0);
 			}
 			else

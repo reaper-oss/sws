@@ -292,34 +292,39 @@ void CmdPitchUpMidi::doCommand(int flag)
 }
 
 void CmdSetItemNameMidi::doCommand(int flag)
-{
+{   
     RprItemCtrPtr ctr = RprItemCollec::getSelected();
 
-    if(!convertToInProjectMidi(ctr))
+    if (!convertToInProjectMidi(ctr))
+    {
         return;
+    }
 
-    for(int i = 0; i < ctr->size(); i++) {
-    if (!ctr->getAt(i).getActiveTake().isMIDI())
-        continue;
-        RprMidiTake midiItem(ctr->getAt(i).getActiveTake());
-        if(midiItem.countNotes() > 0) {
-            int pitch = midiItem.getNoteAt(0)->getPitch();
-            static const char* noteNames[] = { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
-            int nameIndex = pitch % 12;
-            char octave[3];
-            octave[0] = (pitch / 12) - 1 + '0';
-            octave[1] = 0;
-            if(octave[0] < '0') {
-                octave[0] = '-';
-                octave[1] = '1';
-                octave[2] = 0;
-            }
-            char name[5];
-            memset(name, 0, 4);
-            strcat(name, noteNames[nameIndex]);
-            strcat(name, octave);
-            ctr->getAt(i).getActiveTake().setName(name);
+    for (int i = 0; i < ctr->size(); i++) 
+    {
+        if (!ctr->getAt(i).getActiveTake().isMIDI())
+        {
+            continue;
         }
+
+        RprMidiTake midiItem(ctr->getAt(i).getActiveTake(), true);
+        if (midiItem.countNotes() > 0) 
+        {
+            int pitch = midiItem.getNoteAt(0)->getPitch();
+            static const char* noteNames[] = {"C", "C#", "D", "D#", 
+                "E", "F", "F#", "G", "G#", "A", "A#", "B"};
+            int nameIndex = pitch % 12;
+            
+            char octave[8];
+            ::_itoa(pitch / 12 - 1, octave, 10);
+
+            char noteName[8];
+            strcpy(noteName, noteNames[nameIndex]);
+            strcat(noteName, octave);
+
+            ctr->getAt(i).getActiveTake().setName(noteName);
+    }
+
     }
 }
 

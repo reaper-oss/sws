@@ -117,7 +117,7 @@ void AddMarkerAtNotes (COMMAND_T* ct)
 		double iEnd = GetMediaItemInfo_Value(item, "D_POSITION") + GetMediaItemInfo_Value(item, "D_LENGTH");
 
 		// Loop through notes in item
-		RprMidiTake midiItem(items->getAt(i).getActiveTake());
+		RprMidiTake midiItem(items->getAt(i).getActiveTake(), true);
 		for(int j = 0; j < midiItem.countNotes(); j++)
 		{
 			RprMidiNote *note = midiItem.getNoteAt(j);

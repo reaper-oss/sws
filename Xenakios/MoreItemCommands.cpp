@@ -853,8 +853,8 @@ void CycleItemsFadeShape(int whichfade, bool nextshape)
 				const char* cType = whichfade ? "C_FADEOUTSHAPE" : "C_FADEINSHAPE";
 				char cShape = *(char*)GetSetMediaItemInfo(CurItem,cType,NULL) + (nextshape ? 1 : -1);
 				if (cShape < 0)
-					cShape = 5;
-				else if (cShape > 5)
+					cShape = 6;
+				else if (cShape > 6)
 					cShape = 0;
 				GetSetMediaItemInfo(CurItem,cType,&cShape);
 			}
@@ -1136,7 +1136,7 @@ WDL_DLGRET TogItemsSelDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 		dlgSS.str("");
 		Applied=false;
 		g_vectogSelItems.clear();
-		XenGetProjectItems(g_vectogSelItems,true,false);
+		XenGetProjectItems(g_vectogSelItems,true,true);
 		dlgSS << g_itemseltogprob*100.0;
 		//sprintf(tbuf,"%.1f",g_itemseltogprob*100.0);
 		SetDlgItemText(hwnd,IDC_EDIT1,dlgSS.str().c_str());
@@ -1331,7 +1331,7 @@ void DoReplaceItemFileWithPrevRPPInFolder(COMMAND_T*)
 void DoReverseItemOrder(COMMAND_T* ct)
 {
 	vector<MediaItem*> theitems;
-	XenGetProjectItems(theitems,true,false);
+	XenGetProjectItems(theitems,true,true);
 	vector<double> origtimes;
 	int i;
 	for (i=0;i<(int)theitems.size();i++)
@@ -1359,7 +1359,7 @@ typedef struct t_itemorderstruct
 void DoShuffleItemOrder(COMMAND_T* ct)
 {
 	vector<MediaItem*> theitems;
-	XenGetProjectItems(theitems,true,false);
+	XenGetProjectItems(theitems,true,true);
 	vector<double> origtimes;
 	int i;
 	double prevtime=0.0;
@@ -1394,7 +1394,7 @@ void DoShuffleItemOrder(COMMAND_T* ct)
 void DoShuffleItemOrder2(COMMAND_T* ct)
 {
 	vector<MediaItem*> theitems;
-	XenGetProjectItems(theitems,true,false);
+	XenGetProjectItems(theitems,true,true);
 	if (theitems.size()>0)
 	{
 		vector<double> origtimes;
@@ -1440,7 +1440,7 @@ bool MySortItemsByTimeFunc (MediaItem* i,MediaItem* j)
 void DoCreateMarkersFromSelItems1(COMMAND_T* ct)
 {
 	vector<MediaItem*> theitems;
-	XenGetProjectItems(theitems,true,false);
+	XenGetProjectItems(theitems,true,true);
 	if (theitems.size()>0)
 	{
 		sort(theitems.begin(),theitems.end(),MySortItemsByTimeFunc);
@@ -1508,7 +1508,7 @@ void DoSelectItemUnderEditCursorOnSelTrack(COMMAND_T*)
 {
 	//XenGetProjectTracks(txs,true);
 	vector<MediaItem*> theitems;
-	XenGetProjectItems(theitems,false,false);
+	XenGetProjectItems(theitems,false,true);
 	Main_OnCommand(40289,0); // unselect all items
 	int i;
 	double curpos=GetCursorPosition();

@@ -37,3 +37,4 @@ void CenterWindowInReaper (HWND hwnd, HWND zOrder, bool startUp);
 int GetFirstDigit (int number);
 double AltAtof (char* tmp);
 double EndOfProject (bool markers, bool regions);
+void GetSelItemsInTrack (MediaTrack* track, vector<MediaItem*> &items);

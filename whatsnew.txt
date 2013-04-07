@@ -26,11 +26,37 @@ Added actions:
 +SWS: Set takes in selected item(s) to color gradient
 +SWS: Set takes in selected item(s) to ordered custom colors
 +SWS/BR: Create tempo markers at grid after every selected tempo marker
++Issue 180:
+ - SWS/BR: Create project markers from selected items (name by item's notes)
+ - SWS/BR: Create regions from selected items (name by item's notes)
 
 Fixes:
 +About box: fixed update checker connection issues in certain instances (Win only)
 +Cycle actions: fixed ReaScript support broken in v2.3.0 #14, thanks gofer!
 +OSX x64: fixed font rendering crash (when using alpha)
++Fixed crazy behavior (SWS stops working) when running these actions on empty items:
+ - SWS/BR: Create project markers from notes in selected MIDI items
+ - SWS/FNG: legato selected media items on same track (change rate)
+ - SWS/FNG: Time compress/stretch selected items
++Refresh arrange after running SWS/FNG: unselect items that do not start in time selection
++Prevent loss of item selection when running Xenakios/SWS: Remove muted items
++Small rename (for the sake of clarity) of 2 actions: Xenakios/SWS: Shuffle order of selected items
++Don't skip last fade shape when using Xenakios/SWS: Set next/previous fade in/out shape for items
++More consistent behavior for:
+ - Xenakios/SWS: Explode selected items to new tracks (keeping positions)
+ - Xenakios/SWS: Select takes in selected items, shuffled random 
+ - Xenakios/SWS: Select takes of selected items cyclically
++These actions now work with empty items (issue 281):
+ - SWS: Create regions from sel item(s) named with take
+ - Xenakios/SWS: Create markers from selected items (name by take source file name)
+ - Xenakios/SWS: Explode selected items to new tracks (keeping positions)
+ - Xenakios/SWS: Remove muted items
+ - Xenakios/SWS: Reverse order of selected items
+ - Xenakios/SWS: Shuffle order of selected items
+ - Xenakios/SWS: Shuffle order of selected items (2)
+ - Xenakios/SWS: Select items under edit cursor on selected tracks
+ - Xenakios/SWS: Time selection adaptive delete
+ - Xenakios/SWS: Toggle selected items selected randomly
 
 Other:
 +OSX: better font rendering

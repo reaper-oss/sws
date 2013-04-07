@@ -28,6 +28,7 @@
 #include "stdafx.h"
 #include "../reaper/localize.h"
 #include "Parameters.h"
+#include "../Breeder/BR_Util.h"
 
 using namespace std;
 
@@ -668,81 +669,21 @@ bool GenerateShuffledTakeRandomTable(int *IntTable,int numItems,int badFirstNumb
 
 void DoShuffleSelectTakesInItems(COMMAND_T* ct)
 {
-	MediaTrack* MunRaita;
-	MediaItem* CurItem;
-	int numItems, i, j;
-	bool ItemSelected=false;
-	int ValidNumTakesInItems=0;
-	int NumSelectedItemsFound=0;
-	int TestNumTakes=0;
-	bool ValidNumTakes=false;
-
-	for (i=0;i<GetNumTracks();i++)
+	for (int i = 0; i < CountSelectedMediaItems (NULL); ++i)
 	{
-		MunRaita = CSurf_TrackFromID(i+1,FALSE);
-		numItems=GetTrackNumMediaItems(MunRaita);
-		for (j=0;j<numItems;j++)
+		MediaItem* item = GetSelectedMediaItem(NULL, i);
+		int takes = CountTakes(item);		
+		if (takes > 1)
 		{
-			CurItem = GetTrackMediaItem(MunRaita,j);
-			//propertyName="D_";
-			ItemSelected=*(bool*)GetSetMediaItemInfo(CurItem,"B_UISEL",NULL);
-			if (ItemSelected==TRUE)
-			{
-				if (NumSelectedItemsFound==0) 
-				{
-					ValidNumTakesInItems=GetMediaItemNumTakes(CurItem);
-				}
-				if (NumSelectedItemsFound>0)
-				{
-					TestNumTakes = GetMediaItemNumTakes(CurItem);
-					if (TestNumTakes != ValidNumTakesInItems)
-					{
-						ValidNumTakes = false;
-						break;
-					}
-					else
-						ValidNumTakes = true;
-				}
-				NumSelectedItemsFound++;
-			}
+			int id = *(int*)GetSetMediaItemInfo(item,"I_CURTAKE",NULL);
+			int newId = id;			
+			while (id == newId)
+				newId = rand() % takes; 
+			GetSetMediaItemInfo(item,"I_CURTAKE",&newId);
 		}
 	}
-	int TakeToChoose=0;
-	if (ValidNumTakes)
-	{
-		TakeIndexes=new int[1024];
-		GenerateShuffledTakeRandomTable(TakeIndexes,(ValidNumTakesInItems-0),-1);
-		int ShuffledTakesGenerated=0;
-		for (i=0;i<GetNumTracks();i++)
-		{
-			MunRaita = CSurf_TrackFromID(i+1,FALSE);
-			numItems=GetTrackNumMediaItems(MunRaita);
-			for (j=0;j<numItems;j++)
-			{
-				CurItem = GetTrackMediaItem(MunRaita,j);
-				ItemSelected=*(bool*)GetSetMediaItemInfo(CurItem,"B_UISEL",NULL);
-				if (ItemSelected==TRUE)
-				{
-					// set the take etc
-					TakeToChoose=TakeIndexes[ShuffledTakesGenerated];
-					if (GetMediaItemNumTakes(CurItem)>0)
-					{
-						GetSetMediaItemInfo(CurItem,"I_CURTAKE",&TakeToChoose);
-						ShuffledTakesGenerated++;
-						if (ShuffledTakesGenerated==ValidNumTakesInItems)
-						{
-							GenerateShuffledTakeRandomTable(TakeIndexes,ValidNumTakesInItems,TakeToChoose);
-							ShuffledTakesGenerated=0;
-						}
-					}
-				}
-			}
-		}
-		delete[] TakeIndexes;
-		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_ITEMS,-1);
-		UpdateTimeline();
-	}
-	
+	UpdateArrange();
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_ITEMS,-1);
 }
 
 void DoMoveItemsToEditCursor(COMMAND_T* ct)
@@ -1198,36 +1139,39 @@ void DoReposItemsDlg(COMMAND_T*)
 
 void DoSpeadSelItemsOverNewTx(COMMAND_T* ct)
 {
-	vector<MediaItem*> TheItems;
-	XenGetProjectItems(TheItems,true,false);
-	if (TheItems.size()>1)
+	if (CountSelectedMediaItems(NULL) > 1)
 	{
-		MediaTrack* OriginTrack=(MediaTrack*)GetSetMediaItemInfo(TheItems[0],"P_TRACK",NULL);
-		int OriginTrackID=CSurf_TrackToID(OriginTrack,false);
-		int newDep=1;
-		GetSetMediaTrackInfo(OriginTrack,"I_FOLDERDEPTH",&newDep);
-		int i;
-		// we make new tracks first to not make reaper or ourselves confused
-		for (i=0;i<(int)TheItems.size();i++)
-			InsertTrackAtIndex(OriginTrackID+i+1,true);
-
-		// then we "drop" the items
-		OriginTrack=(MediaTrack*)GetSetMediaItemInfo(TheItems[0],"P_TRACK",NULL);
-		OriginTrackID=CSurf_TrackToID(OriginTrack,false);
-		
-		MediaTrack* DestTrack=0;
-		for (i=0;i<(int)TheItems.size();i++)
+		for (int i = 0; i < CountTracks(NULL) ; ++i)
 		{
-			int NewTrackIndex=OriginTrackID+i+1;
-			DestTrack=CSurf_TrackFromID(NewTrackIndex,false);
-			if (DestTrack)
-				MoveMediaItemToTrack(TheItems[i],DestTrack);
+			MediaTrack* track = GetTrack(NULL, i);
+			int id = CSurf_TrackToID(track, false);
+			int depth = *(int*)GetSetMediaTrackInfo(track, "I_FOLDERDEPTH", NULL);
+	
+			vector<MediaItem*> items;
+			GetSelItemsInTrack (track, items);
+	
+			bool found = false;
+			for (int j =0; j < items.size() ; ++j)
+			{
+				if (*(bool*)GetSetMediaItemInfo(items[j], "B_UISEL", NULL))
+				{
+					found = true;
+					InsertTrackAtIndex(id,true); ++id;
+					MoveMediaItemToTrack(items[j], CSurf_TrackFromID(id, false));
+					++i; // needed for the first FOR loop since new tracks are getting added
+				}
+			}
+			if (found && depth != 1) // make children out of newly created tracks
+			{
+				depth -= 1;
+				GetSetMediaTrackInfo(CSurf_TrackFromID(id, false),"I_FOLDERDEPTH",&depth);
+				depth = 1;
+				GetSetMediaTrackInfo(track,"I_FOLDERDEPTH",&depth);
+			}	
 		}
-		newDep=-1;
-		GetSetMediaTrackInfo(DestTrack,"I_FOLDERDEPTH",&newDep);
 		TrackList_AdjustWindows(false);
+		UpdateArrange();
 		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_ALL,-1);
-
 	}
 	else
 		MessageBox(g_hwndParent, __LOCALIZE("No or only one item selected!","sws_mbox"), __LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
@@ -1372,7 +1316,7 @@ void DoTimeSelAdaptDelete(COMMAND_T*)
 {
 	vector<MediaItem*> SelItems;
 	vector<MediaItem*> ItemsInTimeSel;
-	XenGetProjectItems(SelItems,true,false);
+	XenGetProjectItems(SelItems,true,true);
 	double OldTimeSelLeft=0.0;
 	double OldTimeSelRight=0.0;
 	GetSet_LoopTimeRange(false,false,&OldTimeSelLeft,&OldTimeSelRight,false);
@@ -1414,20 +1358,15 @@ void DoTimeSelAdaptDelete(COMMAND_T*)
 void DoDeleteMutedItems(COMMAND_T* ct)
 {
 	Undo_BeginBlock();
-	Main_OnCommand(40289,0); // unselect all items
 	vector<MediaItem*> pitems;
-	XenGetProjectItems(pitems,false,false);
+	XenGetProjectItems(pitems,false,true);
 	int i;
 	for (i=0;i<(int)pitems.size();i++)
 	{
 		bool muted=*(bool*)GetSetMediaItemInfo(pitems[i],"B_MUTE",0);
 		if (muted)
-		{
-			bool uisel=true;
-			GetSetMediaItemInfo(pitems[i],"B_UISEL",&uisel);
-		}
+			DeleteTrackMediaItem (GetMediaItem_Track(pitems[i]), pitems[i]);
 	}
-	Main_OnCommand(40006,0);
-	Undo_EndBlock(SWS_CMD_SHORTNAME(ct),0);
+	Undo_EndBlock(SWS_CMD_SHORTNAME(ct),UNDO_STATE_ITEMS);
 	UpdateTimeline();
 }

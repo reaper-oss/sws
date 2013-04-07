@@ -172,6 +172,13 @@ void RegionsFromItems(COMMAND_T* ct)
 			AddProjectMarker(NULL, true, dStart, dEnd, cName, -1);
 			bUndo = true;
 		}
+		else if (!CountTakes(items.Get()[i]))  /* In case of an empty item there is no take so process item instead */
+		{
+			double dStart = *(double*)GetSetMediaItemInfo(items.Get()[i], "D_POSITION", NULL);
+			double dEnd = *(double*)GetSetMediaItemInfo(items.Get()[i], "D_LENGTH", NULL) + dStart;
+			AddProjectMarker(NULL, true, dStart, dEnd, NULL, -1);
+			bUndo = true;
+		}
 	}
 	if (bUndo)
 	{

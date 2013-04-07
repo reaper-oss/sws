@@ -39,16 +39,17 @@ static COMMAND_T g_commandTable[] =
 	///////////////////////////////////////////////////////////////////////
 	{ { DEFACCEL, "SWS/BR: Move edit cursor to next envelope point" },									"SWS_BRMOVEEDITTONEXTENV",			CursorToEnv, NULL, 1},
 	{ { DEFACCEL, "SWS/BR: Move edit cursor to next envelope point and select it" },					"SWS_BRMOVEEDITSELNEXTENV",			CursorToEnv, NULL, 2},
-	{ { DEFACCEL, "SWS/BR: Move edit cursor to next envelope point and add to selection" },				"SWS_BRMOVEEDITTONEXTENVADDSELL",	CursorToEnv, NULL, 3},
-	
+	{ { DEFACCEL, "SWS/BR: Move edit cursor to next envelope point and add to selection" },				"SWS_BRMOVEEDITTONEXTENVADDSELL",	CursorToEnv, NULL, 3},	
 	{ { DEFACCEL, "SWS/BR: Move edit cursor to previous envelope point" },								"SWS_BRMOVEEDITTOPREVENV",			CursorToEnv, NULL, -1},
 	{ { DEFACCEL, "SWS/BR: Move edit cursor to previous envelope point and select it" },				"SWS_BRMOVEEDITSELPREVENV",			CursorToEnv, NULL, -2},
 	{ { DEFACCEL, "SWS/BR: Move edit cursor to previous envelope point and add to selection" },			"SWS_BRMOVEEDITTOPREVENVADDSELL",	CursorToEnv, NULL, -3},
 	
 	{ { DEFACCEL, "SWS/BR: Split selected items at tempo markers" },									"SWS_BRSPLITSELECTEDTEMPO",			SplitItemAtTempo},
-	{ { DEFACCEL, "SWS/BR: Create project markers from selected tempo markers" },						"BR_TEMPO_TO_MARKERS",				AddMarkerAtTempo},
-	{ { DEFACCEL, "SWS/BR: Create project markers from notes in selected MIDI items" },					"BR_MIDI_NOTES_TO_MARKERS",			AddMarkerAtNotes},
-	
+	{ { DEFACCEL, "SWS/BR: Create project markers from selected tempo markers" },						"BR_TEMPO_TO_MARKERS",				MarkersAtTempo},
+	{ { DEFACCEL, "SWS/BR: Create project markers from notes in selected MIDI items" },					"BR_MIDI_NOTES_TO_MARKERS",			MarkersAtNotes},
+
+	{ { DEFACCEL, "SWS/BR: Create project markers from selected items (name by item's notes)" },		"BR_ITEMS_TO_MARKERS_NOTES",		MarkersRegionsAtItemsNameByNotes, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Create regions from selected items (name by item's notes)" },				"BR_ITEMS_TO_REGIONS_NOTES",		MarkersRegionsAtItemsNameByNotes, NULL, 1},
 	// Tempo
 	///////////////////////////////////////////////////////////////////////
 	{ { DEFACCEL, "SWS/BR: Convert project markers to tempo markers..." },								"SWS_BRCONVERTMARKERSTOTEMPO",		ConvertMarkersToTempoDialog, NULL, 0, IsConvertMarkersToTempoVisible},

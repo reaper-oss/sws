@@ -204,7 +204,7 @@ void CmdLegatoItemLengths(int flag, void *data)
                 break;
             }
         }
-        if(!doRate) {
+        if(!doRate || ctr->getAt(i).takeCount() == 0) { /* In case of an empty item always change length, not rate */
             ctr->getAt(i).setLength(len);
         } else {
             RprTake take = ctr->getAt(i).getActiveTake();
@@ -332,12 +332,16 @@ void CmdIncreaseItemRate::doCommand(int flag)
 {
     RprItemCtrPtr ctr = RprItemCollec::getSelected();
     for(int i = 0; i < ctr->size(); i++) {
-        double playRate = ctr->getAt(i).getActiveTake().getPlayRate();
-        playRate *= m_amt;
-        if(playRate <= 0.1)
-            continue;
-        ctr->getAt(i).setLength(ctr->getAt(i).getLength() / m_amt);
-        ctr->getAt(i).getActiveTake().setPlayRate(playRate);
+    	if (ctr->getAt(i).takeCount() > 0) {
+    		double playRate = ctr->getAt(i).getActiveTake().getPlayRate();
+    		playRate *= m_amt;
+    		if(playRate <= 0.1)
+    			continue;
+    		ctr->getAt(i).setLength(ctr->getAt(i).getLength() / m_amt);
+    		ctr->getAt(i).getActiveTake().setPlayRate(playRate);
+    	}
+    	else /* In case of an empty item always change length, not rate */
+    		ctr->getAt(i).setLength(ctr->getAt(i).getLength()/m_amt);
     }
 }
 
@@ -385,4 +389,5 @@ void CmdDeselectIfNotStartInTimeSelection(int flag, void *data)
         if( ctr->getAt(i).getPosition() < startLoop || ctr->getAt(i).getPosition() > endLoop)
             ctr->getAt(i).setSelected(false);
     }
+	UpdateArrange();
 }

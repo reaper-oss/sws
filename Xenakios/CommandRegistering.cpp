@@ -305,8 +305,8 @@ COMMAND_T g_XenCommandTable[] =
 	{ { DEFACCEL, "Xenakios/SWS: Switch item source file to previous RPP in folder" }, "XENAKIOS_SISFTPREVRPPIF", DoReplaceItemFileWithPrevRPPInFolder,	NULL, },
 
 	{ { DEFACCEL, "Xenakios/SWS: Reverse order of selected items" }, "XENAKIOS_REVORDSELITEMS", DoReverseItemOrder, NULL, },
-	{ { DEFACCEL, "Xenakios/SWS: Shuffle order of selected items" }, "XENAKIOS_SHFORDSELITEMS", DoShuffleItemOrder, NULL, },
-	{ { DEFACCEL, "Xenakios/SWS: Shuffle order of selected items (2)" }, "XENAKIOS_SHFORDSELITEMS2", DoShuffleItemOrder2, NULL, },
+	{ { DEFACCEL, "Xenakios/SWS: Shuffle order of selected items (keep relative positions)" }, "XENAKIOS_SHFORDSELITEMS", DoShuffleItemOrder, NULL, },
+	{ { DEFACCEL, "Xenakios/SWS: Shuffle order of selected items" }, "XENAKIOS_SHFORDSELITEMS2", DoShuffleItemOrder2, NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Create markers from selected items (name by take source file name)" }, "XENAKIOS_CRTMARKERSFROMITEMS1", DoCreateMarkersFromSelItems1, NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Rename take source files..." }, "XENAKIOS_RENMTAKESOURCEFLS", DoRenameSourceFileDialog666, NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Rename takes and source files..." }, "XENAKIOS_RENMTAKEANDSOURCE", DoRenameTakeAndSourceFileDialog, NULL, },

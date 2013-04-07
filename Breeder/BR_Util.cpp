@@ -144,3 +144,10 @@ double EndOfProject (bool markers, bool regions)
 	}
 	return projEnd;
 };
+
+void GetSelItemsInTrack (MediaTrack* track, vector<MediaItem*> &items)
+{
+	for (int i = 0; i < CountTrackMediaItems(track) ; ++i)
+		if (*(bool*)GetSetMediaItemInfo(GetTrackMediaItem(track, i), "B_UISEL", NULL))
+			items.push_back(GetTrackMediaItem(track, i));
+}

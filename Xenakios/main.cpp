@@ -188,36 +188,18 @@ void DoInsRndFileRndOffsetAtTimeSel(COMMAND_T*)
 
 void DoRoundRobinSelectTakes(COMMAND_T* ct)
 {
-	MediaTrack* CurTrack;
-	MediaItem* CurItem;
-	bool ItemSelected;
-	int numItems;
-	int numTakes;
-	int TakeToSelect = 0;
-	int trackID;
-	int itemID;
-	for (trackID=0;trackID<GetNumTracks();trackID++)
+	for (int i = 0; i < CountSelectedMediaItems (NULL); ++i)
 	{
-		CurTrack=CSurf_TrackFromID(trackID+1,FALSE);
-		numItems=GetTrackNumMediaItems(CurTrack);
-		for (itemID=0;itemID<numItems;itemID++)
-		{
-			CurItem = GetTrackMediaItem(CurTrack,itemID);
-			ItemSelected=*(bool*)GetSetMediaItemInfo(CurItem,"B_UISEL",NULL);
-			if (ItemSelected)
-			{
-				numTakes=GetMediaItemNumTakes(CurItem);
-				if (numTakes>0)
-				{	
-					if (TakeToSelect>(numTakes-1)) TakeToSelect=0;
-					GetSetMediaItemInfo(CurItem,"I_CURTAKE",&TakeToSelect);
-					TakeToSelect++;
-				}
-			}
-		}
+		MediaItem* item = GetSelectedMediaItem(NULL, i);
+		int takeId = *(int*)GetSetMediaItemInfo(item,"I_CURTAKE",NULL);
+		
+		++takeId; 
+		if (takeId > CountTakes(item)-1)
+			takeId = 0;
+		GetSetMediaItemInfo(item,"I_CURTAKE",&takeId);
 	}
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);
-	UpdateTimeline();
+	UpdateArrange();
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_ITEMS,-1);
 }
 
 

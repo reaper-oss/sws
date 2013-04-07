@@ -60,7 +60,7 @@ void SplitItemAtTempo (COMMAND_T* ct)
 	UpdateArrange();
 };
 
-void AddMarkerAtTempo (COMMAND_T* ct)
+void MarkersAtTempo (COMMAND_T* ct)
 {
 	if (CountTempoTimeSigMarkers(NULL) == 0)
 		return;
@@ -90,7 +90,7 @@ void AddMarkerAtTempo (COMMAND_T* ct)
 	FreeHeapPtr(envState);
 };
 
-void AddMarkerAtNotes (COMMAND_T* ct)
+void MarkersAtNotes (COMMAND_T* ct)
 {
 	RprItemCtrPtr items = RprItemCollec::getSelected();
 	if (items->size() == 0)
@@ -108,19 +108,20 @@ void AddMarkerAtNotes (COMMAND_T* ct)
 
 	// Loop through items and create markers
 	for(int i = 0; i < items->size(); i++)
-	{
-		if(items->getAt(i).getActiveTake().isFile())
+	{	
+		RprTake take = items->getAt(i).getActiveTake();
+		if(take.isFile() || !take.isMIDI() )
 			continue;
-		
+
 		// Get end of item  (to avoid creating markers when item is trimmed)
 		MediaItem* item = items->getAt(i).toReaper();
 		double iEnd = GetMediaItemInfo_Value(item, "D_POSITION") + GetMediaItemInfo_Value(item, "D_LENGTH");
 
-		// Loop through notes in item
-		RprMidiTake midiItem(items->getAt(i).getActiveTake(), true);
-		for(int j = 0; j < midiItem.countNotes(); j++)
+		// Loop through notes in active take
+		RprMidiTake midiTake(take, true);
+		for(int j = 0; j < midiTake.countNotes(); j++)
 		{
-			RprMidiNote *note = midiItem.getNoteAt(j);
+			RprMidiNote *note = midiTake.getNoteAt(j);
 			double position = note->getPosition();
 			if (position >= iEnd)
 				break;
@@ -138,6 +139,37 @@ void AddMarkerAtNotes (COMMAND_T* ct)
 		PreventUIRefresh (-1);	
 	UpdateArrange();
 };
+
+void MarkersRegionsAtItemsNameByNotes (COMMAND_T* ct)
+{
+	if (CountSelectedMediaItems(NULL) < 1)
+		return;
+
+	Undo_BeginBlock2(NULL);
+	if (PreventUIRefresh)
+		PreventUIRefresh (1);	
+
+	for (int i = 0; i < CountSelectedMediaItems(NULL); ++i)
+	{
+		MediaItem* item =  GetSelectedMediaItem(NULL, i);
+		double iStart = *(double*)GetSetMediaItemInfo(item, "D_POSITION", NULL);
+		double iEnd = iStart + *(double*)GetSetMediaItemInfo(item, "D_LENGTH", NULL);
+		char* pNotes = (char*)GetSetMediaItemInfo(item, "P_NOTES", NULL);
+
+		// Replace all newlines with spaces so it looks nicer
+		string notes (pNotes, strlen(pNotes)+1);
+		replace(notes.begin(), notes.end(), '\n', ' ');	
+
+		if (ct->user == 0)	// Markers
+			AddProjectMarker(NULL, false, iStart, 0, notes.c_str(), -1);
+		else				// Regions
+			AddProjectMarker(NULL, true, iStart, iEnd, notes.c_str(), -1);
+	}
+
+	if (PreventUIRefresh)
+		PreventUIRefresh (-1);	
+	Undo_EndBlock2 (NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL);
+}
 
 void CursorToEnv (COMMAND_T* ct)
 {

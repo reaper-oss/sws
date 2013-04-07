@@ -990,29 +990,19 @@ void TempoAtGrid (COMMAND_T* ct)
 		return;
 	double grid = *(double*)GetConfigVar("projgriddiv");
 	
-	// Loop through all points
+	// Loop through selected points
 	Undo_BeginBlock2(NULL);
 	int count = tempoMap.CountPoints()-1;
-	double offset = 0;
-	for (int id = 0; id <= count; ++id)
-	{
-		// Get tempo point
-		double t0, b0; bool s0;		
-		tempoMap.GetPoint(id, &t0, &b0, &s0);
-		
-		// This part is really only relevant in certain cases involving grid division longer than measure's length
-		// If tempo point is at the start of the measure, grid diving starts again from we need to calculate the offset.
-		// Since it needs to transition until the next same situation, loop goes through all the points, and not just selected.
-		double beat; int measure;
-		GetTempoTimeSigMarker(NULL, id, NULL, &measure, &beat, NULL, NULL, NULL, NULL); 
-		if (beat <= 0.00000000001)
-			offset =  grid - fmod(TimeMap_timeToQN(t0), grid);
-		
-		// If point is selected, proceed
-		if (!tempoMap.GetSelection(id))
-			continue;
-		double t1, b1; tempoMap.GetPoint(id+1, &t1, &b1, NULL);
+	for (int i = 0; i < tempoMap.GetSelected()->size(); ++i)
+	{		
+		// Get tempo points
+		int id = (*tempoMap.GetSelected())[i];
+		double t0, t1, b0, b1;
+		bool s0;	
 
+		tempoMap.GetPoint(id, &t0, &b0, &s0);
+		tempoMap.GetPoint(id+1, &t1, &b1, NULL);
+		
 		// If last tempo point is selected, fake second point as if it's at the end of project (markers and regions included)
 		if (id == count)
 		{
@@ -1024,23 +1014,27 @@ void TempoAtGrid (COMMAND_T* ct)
 		if (!s0)
 			b1 = b0;
 
+		// This part is really only relevant in certain cases involving grid division longer than measure's length
+		// Grid diving starts again from the start of the measure in which tempo marker is so we need to calculate 
+		// the offset between where grid line really is and where it would be if we just divided QN with grid spacing.
+		double beat; int measure; GetTempoTimeSigMarker(NULL, id, NULL, &measure, &beat, NULL, NULL, NULL, NULL); 
+		double offset =  grid - fmod(TimeMap_timeToQN(TimeMap2_beatsToTime(0, 0, &measure)), grid);
+		
 		// Find first grid line and then loop through the rest creating tempo points
 		double pGridLn = t0, gridLn = TimeMap_timeToQN (t0);
-		gridLn = TimeMap_QNToTime(gridLn-offset - fmod(gridLn,grid)); // due to the offset it can be before tempo point
-		while (true)												  // but next while should correct that
+		gridLn = TimeMap_QNToTime(gridLn-offset - fmod(gridLn,grid));		// it can be before tempo point but next while should correct that
+		while (true)
 		{
-			// Search for the next grid line
-			while (gridLn < pGridLn + MAX_GRID_DIV)							// max grid division of 1/256 at max tempo of 960 creates a grid line
-				gridLn = TimeMap_QNToTime(TimeMap_timeToQN (gridLn)+grid);	// every 0.00097 s... so let it also be our safety net to prevent accidental
-																			// creation of multiple points around grid line and the end point of tempo transition
+			// Search for the next grid line								// max grid division of 1/256 at max tempo of 960 creates a grid line
+			while (gridLn < pGridLn + MAX_GRID_DIV)							// every 0.00097 s... so let it also be our safety net to prevent accidental
+				gridLn = TimeMap_QNToTime(TimeMap_timeToQN (gridLn)+grid);	// creation of multiple points around grid line and the end point of tempo transition
+																			
 			// Create points until the next point
-			if (gridLn <= t1 - MAX_GRID_DIV)
-			{															
-				double bpm = TempoAtPosition (b0, b1, t0, t1, gridLn);
-				tempoMap.CreatePoint(0, gridLn, bpm, s0);
-			}
+			if (gridLn < t1 - MAX_GRID_DIV)
+				tempoMap.CreatePoint(0, gridLn, TempoAtPosition (b0, b1, t0, t1, gridLn), s0);
 			else
 				break;
+
 			pGridLn = gridLn;
 		}		
 	}

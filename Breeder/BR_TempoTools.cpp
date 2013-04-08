@@ -181,7 +181,7 @@ bool BR_TempoChunk::GetTimeSig(int id, bool* sig, int* num, int* den)
 		
 		if (num != NULL || den != NULL)
 		{
-			__int32 effSig = 0;
+			int effSig = 0;
 			for (;id >= 0; --id)
 			{
 				if (m_tempoPoints[id].sig != 0)
@@ -215,7 +215,7 @@ bool BR_TempoChunk::SetTimeSig(int id, bool sig, int num, int den)
 		return false;
 	else
 	{
-		_int32 effSig;
+		int effSig;
 		if (sig)
 		{
 			// Unlike native method, this function will fail when illegal num/den are requested

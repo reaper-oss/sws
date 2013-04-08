@@ -118,7 +118,8 @@ public:
 */
 struct UdpSocket {
   std::string error_message;
-  int handle;           /* the file descriptor for the socket */
+  // TRP changed handle datatype to SOCKET to match WinSock
+  SOCKET handle;           /* the file descriptor for the socket */
   SockAddr local_addr   /* initialised only for bound sockets */;
   SockAddr remote_addr; /* initialised for connected sockets. Also updated for bound sockets after each datagram received */
 
@@ -166,7 +167,7 @@ struct UdpSocket {
 #endif
     return s;
   }
-  int  socketHandle() const { return handle; }
+  SOCKET socketHandle() const { return handle; }
   std::string localHostName() const { 
     /* this stuff is not very nice but this is what liblo does in order to
        find out a sensible name for the local host */
@@ -228,7 +229,7 @@ struct UdpSocket {
       FD_ZERO(&readset);
       FD_SET(handle, &readset);
       //int ret = select( handle+1, &readset, 0, 0, &tv );
-      int ret = select( handle+1, &readset, 0, 0, &tv );
+      int ret = select( (int)handle+1, &readset, 0, 0, &tv );
       if (ret <= 0) { // error, or timeout
         return false;
       }

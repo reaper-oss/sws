@@ -993,7 +993,7 @@ void TempoAtGrid (COMMAND_T* ct)
 	// Loop through selected points
 	Undo_BeginBlock2(NULL);
 	int count = tempoMap.CountPoints()-1;
-	for (int i = 0; i < tempoMap.GetSelected()->size(); ++i)
+	for (int i = 0; i < (int)tempoMap.GetSelected()->size(); ++i)
 	{		
 		// Get tempo points
 		int id = (*tempoMap.GetSelected())[i];

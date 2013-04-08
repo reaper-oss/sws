@@ -41,8 +41,8 @@ if errorlevel 1 goto error
 
 rem ======CREATE WEBSITE WHATSNEW ================================================
 \bin\MakeWhatsNew ..\whatsnew.txt temp\new2.dat
-type www\new1.dat > output\new.html
-type temp\new2.dat >> output\new.html
+type www\new1.dat > output\whatsnew.html
+type temp\new2.dat >> output\whatsnew.html
 
 rem ======UPLOAD==================================================================
 echo.

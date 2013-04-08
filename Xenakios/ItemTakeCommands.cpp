@@ -1151,7 +1151,7 @@ void DoSpeadSelItemsOverNewTx(COMMAND_T* ct)
 			GetSelItemsInTrack (track, items);
 	
 			bool found = false;
-			for (int j =0; j < items.size() ; ++j)
+			for (int j =0; j < (int)items.size() ; ++j)
 			{
 				if (*(bool*)GetSetMediaItemInfo(items[j], "B_UISEL", NULL))
 				{

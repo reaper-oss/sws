@@ -653,10 +653,13 @@ bool SWS_LoadDockWndState(const char* _id, SWS_DockWnd_State* _state)
 
 void SWS_SetDockWndState(const char* _stateBuf, SWS_DockWnd_State* _state)
 {
-	int len = sizeof(SWS_DockWnd_State);
-	memset(_state, 0, len);
-	for (int i=0; i < len / (int)sizeof(int); i++)
-		((int*)_state)[i] = REAPER_MAKELEINT(*((int*)_stateBuf+i));
+	if (_stateBuf && *_stateBuf && _state)
+	{
+		int len = sizeof(SWS_DockWnd_State);
+		memset(_state, 0, len);
+		for (int i=0; i < len / (int)sizeof(int); i++)
+			((int*)_state)[i] = REAPER_MAKELEINT(*((int*)_stateBuf+i));
+	}
 }
 
 

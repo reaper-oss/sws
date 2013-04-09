@@ -259,13 +259,18 @@ bool LoadChunk(const char* _fn, WDL_FastString* _chunkOut, bool _trim, int _appr
 			char line[SNM_MAX_CHUNK_LINE_LENGTH]="";
 			while(fgets(line, sizeof(line), f) && *line)
 			{
-				//JFB!!! useless with SNM_ChunkParserPatcher v2
-				if (_trim) 
+				if (_trim) //JFB!!! useless with SNM_ChunkParserPatcher v2, TBC: "\r\n"
 				{
 					char* p = line;
 					while(*p && (*p == ' ' || *p == '\t')) p++;
-					if (*p != '\n' && *p != '\r') // the !*p case is managed in Append()
-						_chunkOut->Append(p);
+					if (*p && *p!='\n' && *p!='\r')
+					{
+						// "\r\n" -> "\n"
+						if (const char* eol = FindFirstRN(p)) {
+							_chunkOut->Append(p, (int)(eol-p));
+							_chunkOut->Append("\n");
+						}
+					}
 				}
 				else
 					_chunkOut->Append(line);

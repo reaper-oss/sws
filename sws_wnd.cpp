@@ -591,7 +591,7 @@ void SWS_DockWnd::LoadState(const char* cStateBuf, int iLen)
 	m_bLoadingState = true;
 
 	bool bDocked = IsDocked();
-	SWS_SetDockWndState(cStateBuf, &m_state);
+	SWS_SetDockWndState(cStateBuf, &m_state, iLen);
 	Dock_UpdateDockID((char*)m_id.Get(), m_state.whichdock);
 
 	if (m_state.state & 1)
@@ -638,12 +638,13 @@ char* SWS_LoadDockWndStateBuf(const char* _id, int _len)
 	return state;
 }
 
-bool SWS_LoadDockWndState(const char* _id, SWS_DockWnd_State* _state)
+bool SWS_LoadDockWndState(const char* _id, SWS_DockWnd_State* _state, int _len)
 {
 	SWS_DockWnd_State* state = _state ? _state : (SWS_DockWnd_State*)malloc(sizeof(SWS_DockWnd_State));
+	int len = _len>0 ? _len : sizeof(SWS_DockWnd_State);
 
-	char* stateBuf = SWS_LoadDockWndStateBuf(_id);
-	SWS_SetDockWndState(stateBuf, state);
+	char* stateBuf = SWS_LoadDockWndStateBuf(_id, len);
+	SWS_SetDockWndState(stateBuf, state, len);
 	delete [] stateBuf;
 
 	bool open = state->state&1;
@@ -651,14 +652,17 @@ bool SWS_LoadDockWndState(const char* _id, SWS_DockWnd_State* _state)
 	return open;
 }
 
-void SWS_SetDockWndState(const char* _stateBuf, SWS_DockWnd_State* _state)
+void SWS_SetDockWndState(const char* _stateBuf, SWS_DockWnd_State* _state, int _len)
 {
-	if (_stateBuf && *_stateBuf && _state)
+	if (_state)
 	{
-		int len = sizeof(SWS_DockWnd_State);
-		memset(_state, 0, len);
-		for (int i=0; i < len / (int)sizeof(int); i++)
-			((int*)_state)[i] = REAPER_MAKELEINT(*((int*)_stateBuf+i));
+		if (_stateBuf && *_stateBuf && _len>=sizeof(SWS_DockWnd_State))
+		{
+			for (int i=0; i < _len / (int)sizeof(int); i++)
+				((int*)_state)[i] = REAPER_MAKELEINT(*((int*)_stateBuf+i));
+		}
+		else
+			_state->state = 0;
 	}
 }
 

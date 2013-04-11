@@ -678,9 +678,10 @@ bool SetTrackIcon(MediaTrack* _tr, const char* _fn)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Track templates
+// Loading/applying track templates
 ///////////////////////////////////////////////////////////////////////////////
 
+//JFB TODO? offset with beat info instead of time?
 bool MakeSingleTrackTemplateChunk(WDL_FastString* _in, WDL_FastString* _out, bool _delItems, bool _delEnvs, int _tmpltIdx, bool _obeyOffset)
 {
 	if (_in && _in->GetLength() && _out && _in!=_out)
@@ -694,7 +695,7 @@ bool MakeSingleTrackTemplateChunk(WDL_FastString* _in, WDL_FastString* _out, boo
 			int* offsOpt = _obeyOffset ? (int*)GetConfigVar("templateditcursor") : NULL;
 
 			// remove receives from the template as we deal with a single track
-			// note: occurs with multiple tracks in a template file (w/ rcv between those tracks),
+			// note: possible with multiple tracks in a same template file (w/ routings between those tracks)
 			SNM_TrackEnvParserPatcher pout(_out);
 			pout.RemoveLine("TRACK", "AUXRECV", 1, -1, "MIDIOUT");
 
@@ -894,6 +895,163 @@ bool ApplyTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmplt, bool _itemsFrom
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// Save track templates
+///////////////////////////////////////////////////////////////////////////////
+
+// appends _tr's state to _chunkOut
+//JFB TODO: save envs with beat position info (like it is done for items)
+void SaveSingleTrackTemplateChunk(MediaTrack* _tr, WDL_FastString* _chunkOut, bool _delItems, bool _delEnvs)
+{
+	if (_tr && _chunkOut)
+	{
+		SNM_TrackEnvParserPatcher p(_tr, false); // no auto-commit!
+		if (_delEnvs)
+			p.RemoveEnvelopes();
+
+		// systematically remove items whatever is _delItems, then
+		// replace them with items + optional beat pos info, if !_delItems (i.e. mimic native templates)
+		p.RemoveSubChunk("ITEM", 2, -1);
+
+		_chunkOut->Append(p.GetChunk()->Get());
+
+		if (!_delItems)
+		{
+			double d;
+			WDL_FastString beatInfo;
+			for (int i=0; i<GetTrackNumMediaItems(_tr); i++)
+			{
+				if (MediaItem* item = GetTrackMediaItem(_tr, i))
+				{
+					SNM_ChunkParserPatcher pitem(item, false); // no auto-commit!
+					int posChunk = pitem.GetLinePos(1, "ITEM", "POSITION", 1, 0); // look for the *next* line
+					if (--posChunk>=0) { // --posChunk to zap "\n"
+						TimeMap2_timeToBeats(NULL, *(double*)GetSetMediaItemInfo(item, "D_POSITION", NULL), NULL, NULL, &d, NULL);
+						beatInfo.SetFormatted(32, " %.14f", d);
+						pitem.GetChunk()->Insert(beatInfo.Get(), posChunk);
+					}
+					posChunk = pitem.GetLinePos(1, "ITEM", "SNAPOFFS", 1, 0);
+					if (--posChunk>=0) {
+						TimeMap2_timeToBeats(NULL, *(double*)GetSetMediaItemInfo(item, "D_SNAPOFFSET", NULL), NULL, NULL, &d, NULL);
+						beatInfo.SetFormatted(32, " %.14f", d);
+						pitem.GetChunk()->Insert(beatInfo.Get(), posChunk);
+					}
+					posChunk = pitem.GetLinePos(1, "ITEM", "LENGTH", 1, 0);
+					if (--posChunk>=0) {
+						TimeMap2_timeToBeats(NULL, *(double*)GetSetMediaItemInfo(item, "D_LENGTH", NULL), NULL, NULL, &d, NULL);
+						beatInfo.SetFormatted(32, " %.14f", d);
+						pitem.GetChunk()->Insert(beatInfo.Get(), posChunk);
+					}
+					_chunkOut->Insert(pitem.GetChunk(), _chunkOut->GetLength()-2); // -2: before ">\n"
+				}
+			}
+		}
+	}
+}
+
+
+// supports folders, multi-selection and routings between tracks too
+void SaveSelTrackTemplates(bool _delItems, bool _delEnvs, WDL_FastString* _chunkOut)
+{
+	if (!_chunkOut)
+		return;
+
+	WDL_PtrList<MediaTrack> tracks;
+
+	// append selected track chunks (+ folders) -------------------------------
+	for (int i=0; i <= GetNumTracks(); i++) // incl. master
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+		{
+			SaveSingleTrackTemplateChunk(tr, _chunkOut, _delItems, _delEnvs);
+			tracks.Add(tr);
+
+			// folder: save child templates
+			WDL_PtrList<MediaTrack>* childTracks = GetChildTracks(tr);
+			if (childTracks)
+			{
+				for (int j=0; j < childTracks->GetSize(); j++) {
+					SaveSingleTrackTemplateChunk(childTracks->Get(j), _chunkOut, _delItems, _delEnvs);
+					tracks.Add(childTracks->Get(j));
+				}
+				i += childTracks->GetSize(); // skip children
+				delete childTracks;
+			}
+		}
+	}
+
+	// update receives ids ----------------------------------------------------
+	// no break keyword used here: multiple tracks in the template
+	SNM_ChunkParserPatcher p(_chunkOut);
+	WDL_FastString line;
+	int occurence = 0;
+	int pos = p.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "TRACK", "AUXRECV", occurence, 1, &line); 
+	while (pos > 0)
+	{
+		pos--; // see SNM_ChunkParserPatcher
+
+		bool replaced = false;
+		line.SetLen(line.GetLength()-1); // remove trailing '\n'
+		LineParser lp(false);
+		if (!lp.parse(line.Get()) && lp.getnumtokens() > 1)
+		{
+			int success, curId = lp.gettoken_int(1, &success);
+			if (success)
+			{
+				MediaTrack* tr = CSurf_TrackFromID(curId+1, false);
+				int newId = tracks.Find(tr);
+				if (newId >= 0)
+				{
+					const char* p3rdTokenToEol = strchr(line.Get(), ' ');
+					if (p3rdTokenToEol) p3rdTokenToEol = strchr((char*)(p3rdTokenToEol+1), ' ');
+					if (p3rdTokenToEol)
+					{
+						WDL_FastString newRcv;
+						newRcv.SetFormatted(SNM_MAX_CHUNK_LINE_LENGTH, "AUXRECV %d%s\n", newId, p3rdTokenToEol);
+						replaced = p.ReplaceLine(pos, newRcv.Get());
+						if (replaced)
+							occurence++;
+					}
+				}
+			}
+		}
+
+		if (!replaced)
+			replaced = p.ReplaceLine(pos, "");
+		if (!replaced) // skip, just in case..
+			occurence++;
+
+		line.Set("");
+		pos = p.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "TRACK", "AUXRECV", occurence, 1, &line);
+	}
+}
+
+bool AutoSaveTrackSlots(int _slotType, const char* _dirPath, WDL_PtrList<PathSlotItem>* _owSlots, bool _delItems, bool _delEnvs)
+{
+	int owIdx = 0;
+	WDL_FastString fullChunk;
+	SaveSelTrackTemplates(_delItems, _delEnvs, &fullChunk);
+	if (fullChunk.GetLength())
+	{
+		// get the 1st valid name
+		int i; char name[256] = "";
+		for (i=0; i <= GetNumTracks(); i++) // incl. master
+			if (MediaTrack* tr = CSurf_TrackFromID(i, false))
+				if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL)) {
+					if (char* trName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL))
+						lstrcpyn(name, trName, sizeof(name));
+					break;
+				}
+
+		return AutoSaveSlot(_slotType, _dirPath, 
+			!i ? __LOCALIZE("Master","sws_DLG_150") : (!*name ? __LOCALIZE("Untitled","sws_DLG_150") : name),
+			"RTrackTemplate", _owSlots, &owIdx, AutoSaveChunkSlot, &fullChunk);
+	}
+	return false;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 // Track templates slots (Resources view)
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -905,12 +1063,15 @@ void ImportTrackTemplateSlot(int _slotType, const char* _title, int _slot)
 	}
 }
 
+// supports multi-selection & multiple tracks in the template file
+// - when there are more selected tracks than tracks present in the file => cycle to 1st track in file
+// - restoring routings do not make sense when "applying" though (track selection won't probably match),
+//   it only makes sense when "importing"
 void ApplyTrackTemplateSlot(int _slotType, const char* _title, int _slot, bool _itemsFromTmplt, bool _envsFromTmplt)
 {
 	bool updated = false;
 	if (WDL_FastString* fnStr = g_SNM_ResSlots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot))
 	{
-		// patch selected tracks with 1st track found in template
 		WDL_FastString tmpltFile;
 		if (SNM_CountSelectedTracks(NULL, true) && LoadChunk(fnStr->Get(), &tmpltFile) && tmpltFile.GetLength())
 		{
@@ -925,8 +1086,11 @@ void ApplyTrackTemplateSlot(int _slotType, const char* _title, int _slot, bool _
 						{
 							tmplt = new WDL_FastString;
 							if (tmpltIdx<tmpltIdxMax && MakeSingleTrackTemplateChunk(&tmpltFile, tmplt, !_itemsFromTmplt, !_envsFromTmplt, tmpltIdx))
+							{
 								tmplts.Add(tmplt);
-							else {
+							}
+							else
+							{
 								delete tmplt;
 								if (tmplts.Get(0)) { // cycle?
 									tmplt = tmplts.Get(0);
@@ -1002,122 +1166,6 @@ void ReplacePasteItemsTrackTemplateSlot(int _slotType, const char* _title, int _
 	}
 	if (updated && _title)
 		Undo_OnStateChangeEx2(NULL, _title, UNDO_STATE_ALL, -1);
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-
-void AppendTrackChunk(MediaTrack* _tr, WDL_FastString* _chunkOut, bool _delItems, bool _delEnvs)
-{
-	if (_tr && _chunkOut)
-	{
-		SNM_TrackEnvParserPatcher p(_tr, false); // no auto-commit!
-		if (_delEnvs)
-			p.RemoveEnvelopes();
-		if (_delItems)
-			p.RemoveSubChunk("ITEM", 2, -1);
-		_chunkOut->Append(p.GetChunk()->Get());
-	}
-}
-
-void SaveSelTrackTemplates(bool _delItems, bool _delEnvs, WDL_FastString* _chunkOut)
-{
-	if (!_chunkOut)
-		return;
-
-	WDL_PtrList<MediaTrack> tracks;
-
-	// append selected track chunks (+ folders) -------------------------------
-	for (int i=0; i <= GetNumTracks(); i++) // incl. master
-	{
-		MediaTrack* tr = CSurf_TrackFromID(i, false);
-		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
-		{
-			AppendTrackChunk(tr, _chunkOut, _delItems, _delEnvs);
-			tracks.Add(tr);
-
-			// folder: save child templates
-			WDL_PtrList<MediaTrack>* childTracks = GetChildTracks(tr);
-			if (childTracks)
-			{
-				for (int j=0; j < childTracks->GetSize(); j++) {
-					AppendTrackChunk(childTracks->Get(j), _chunkOut, _delItems, _delEnvs);
-					tracks.Add(childTracks->Get(j));
-				}
-				i += childTracks->GetSize(); // skip children
-				delete childTracks;
-			}
-		}
-	}
-
-	// update receives ids ----------------------------------------------------
-	// note: no break keyword used here, multiple tracks in the template chunk..
-	SNM_ChunkParserPatcher p(_chunkOut);
-	WDL_FastString line;
-	int occurence = 0;
-	int pos = p.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "TRACK", "AUXRECV", occurence, 1, &line); 
-	while (pos > 0)
-	{
-		pos--; // see SNM_ChunkParserPatcher
-
-		bool replaced = false;
-		line.SetLen(line.GetLength()-1); // remove trailing '\n'
-		LineParser lp(false);
-		if (!lp.parse(line.Get()) && lp.getnumtokens() > 1)
-		{
-			int success, curId = lp.gettoken_int(1, &success);
-			if (success)
-			{
-				MediaTrack* tr = CSurf_TrackFromID(curId+1, false);
-				int newId = tracks.Find(tr);
-				if (newId >= 0)
-				{
-					const char* p3rdTokenToEol = strchr(line.Get(), ' ');
-					if (p3rdTokenToEol) p3rdTokenToEol = strchr((char*)(p3rdTokenToEol+1), ' ');
-					if (p3rdTokenToEol)
-					{
-						WDL_FastString newRcv;
-						newRcv.SetFormatted(SNM_MAX_CHUNK_LINE_LENGTH, "AUXRECV %d%s\n", newId, p3rdTokenToEol);
-						replaced = p.ReplaceLine(pos, newRcv.Get());
-						if (replaced)
-							occurence++;
-					}
-				}
-			}
-		}
-
-		if (!replaced)
-			replaced = p.ReplaceLine(pos, "");
-		if (!replaced) // skip, just in case..
-			occurence++;
-
-		line.Set("");
-		pos = p.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "TRACK", "AUXRECV", occurence, 1, &line);
-	}
-}
-
-bool AutoSaveTrackSlots(int _slotType, const char* _dirPath, WDL_PtrList<PathSlotItem>* _owSlots, bool _delItems, bool _delEnvs)
-{
-	int owIdx = 0;
-	WDL_FastString fullChunk;
-	SaveSelTrackTemplates(_delItems, _delEnvs, &fullChunk);
-	if (fullChunk.GetLength())
-	{
-		// get the 1st valid name
-		int i; char name[256] = "";
-		for (i=0; i <= GetNumTracks(); i++) // incl. master
-			if (MediaTrack* tr = CSurf_TrackFromID(i, false))
-				if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL)) {
-					if (char* trName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL))
-						lstrcpyn(name, trName, sizeof(name));
-					break;
-				}
-
-		return AutoSaveSlot(_slotType, _dirPath, 
-			!i ? __LOCALIZE("Master","sws_DLG_150") : (!*name ? __LOCALIZE("Untitled","sws_DLG_150") : name),
-			"RTrackTemplate", _owSlots, &owIdx, AutoSaveChunkSlot, &fullChunk);
-	}
-	return false;
 }
 
 
@@ -1232,6 +1280,8 @@ void DeleteTrackPreview(void* _prev)
 	}
 }
 
+// such locks should be avoided as far as possible
+// => the related pref is intentionally burried in S&M.ini (for very specific use-cases)
 void TrackPreviewLockUnlockTracks(bool _lock) {
 	if (g_SNM_MediaFlags&1) {
 		if (_lock) MainThread_LockTracks();

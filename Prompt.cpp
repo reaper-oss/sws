@@ -37,7 +37,9 @@ static const char* g_cTitle;
 static char* g_cString;
 static int g_iMax;
 static bool g_bOK = false;
+static bool g_bOption = false;
 static bool g_bAtMouse = false;
+static const char* g_cOption;
 static HWND g_hwndModelessInfo = NULL;
 
 INT_PTR WINAPI doPromptDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -50,8 +52,12 @@ INT_PTR WINAPI doPromptDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 		case WM_INITDIALOG:
 		{
 			SetWindowText(hwndDlg, g_cTitle);
-			HWND hEdit = GetDlgItem(hwndDlg, IDC_EDIT);
-			SetWindowText(hEdit, g_cString);
+			HWND h = GetDlgItem(hwndDlg, IDC_EDIT);
+			SetWindowText(h, g_cString);
+			if (g_cOption) {
+				h = GetDlgItem(hwndDlg, IDC_CHECK1);
+				SetWindowText(h, g_cOption);
+			}
 			if (g_bAtMouse)
 				SetWindowPosAtMouse(hwndDlg);
 			else
@@ -61,6 +67,9 @@ INT_PTR WINAPI doPromptDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 		case WM_COMMAND:
 			switch (LOWORD(wParam))
 			{
+				case IDC_CHECK1:
+					g_bOption = (IsDlgButtonChecked(hwndDlg, IDC_CHECK1) == 1);
+					break;
 				case IDOK:
 					GetDlgItemText(hwndDlg, IDC_EDIT, g_cString, g_iMax);
 					g_bOK = true;
@@ -126,16 +135,17 @@ INT_PTR WINAPI doInfoDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 	return 0;
 }
 
-
-bool PromptUserForString(HWND hParent, const char* cTitle, char* cString, int iMaxChars, bool bAtMouse)
+// return 0 on cancel, 1 if OK (but option not ticked or no option), 2 if OK + option ticked
+int PromptUserForString(HWND hParent, const char* cTitle, char* cString, int iMaxChars, bool bAtMouse, const char* cOption)
 {
 	g_cTitle = cTitle;
 	g_cString = cString;
 	g_iMax = iMaxChars;
 	g_bOK = false;
 	g_bAtMouse = bAtMouse;
-	DialogBox(g_hInst, MAKEINTRESOURCE(IDD_PROMPT), hParent, doPromptDialog);
-	return g_bOK;
+	g_cOption = cOption;
+	DialogBox(g_hInst, MAKEINTRESOURCE(cOption ? IDD_PROMPT_OPTION : IDD_PROMPT), hParent, doPromptDialog);
+	return g_bOK ? (cOption ? (g_bOption?2:1) : 1) : 0;
 }
 
 void DisplayInfoBox(HWND hParent, const char* cTitle, const char* cInfo, bool bAtMouse, bool bModal)

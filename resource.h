@@ -79,6 +79,7 @@
 #define IDD_BR_TEMPO_SHAPE_OPTIONS      170
 #define IDD_BR_RANDOMIZE_TEMPO          171
 #define IDD_BR_VERSION                  172
+#define IDD_PROMPT_OPTION               173
 #define IDB_UP                          500
 #define IDB_DOWN                        501
 #define IDC_BUTTON1                     1000
@@ -398,7 +399,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        173
+#define _APS_NEXT_RESOURCE_VALUE        174
 #define _APS_NEXT_COMMAND_VALUE         40000
 #define _APS_NEXT_CONTROL_VALUE         1305
 #define _APS_NEXT_SYMED_VALUE           100

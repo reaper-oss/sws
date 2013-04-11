@@ -63,6 +63,7 @@
 // Globals
 REAPER_PLUGIN_HINSTANCE g_hInst = NULL;
 HWND g_hwndParent = NULL;
+reaper_plugin_info_t* g_rec = NULL;
 
 #ifdef ACTION_DEBUG
 void freeCmdFilesValue(WDL_String* p) {delete p;}
@@ -473,6 +474,7 @@ extern "C"
 	{
 		if (!rec)
 		{
+			g_rec = NULL;
 			SnapshotsExit();
 			TrackListExit();
 			MarkerListExit();
@@ -770,6 +772,7 @@ extern "C"
 
 		g_hInst = hInstance;
 		g_hwndParent = GetMainHwnd();
+		g_rec = rec;
 
 		if (errcnt)
 		{

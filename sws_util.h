@@ -146,6 +146,7 @@ public:
 
 extern REAPER_PLUGIN_HINSTANCE g_hInst;
 extern HWND g_hwndParent;
+extern reaper_plugin_info_t* g_rec;
 extern double g_d0;
 extern int g_i0;
 extern int g_i1;

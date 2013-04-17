@@ -471,9 +471,6 @@ void FileSlotList::EditSlot(int _slot)
 		char fullPath[SNM_MAX_PATH] = "";
 		if (GetFullPath(_slot, fullPath, sizeof(fullPath)) && FileOrDirExistsErrMsg(fullPath))
 		{
-#ifdef _WIN32
-			WinSpawnNotepad(fullPath);
-#else
 			WDL_FastString chain;
 			if (LoadChunk(fullPath, &chain, false))
 			{
@@ -481,7 +478,6 @@ void FileSlotList::EditSlot(int _slot)
 				_snprintfSafe(title, sizeof(title), __LOCALIZE_VERFMT("S&M - %s (slot %d)","sws_DLG_150"), m_desc.Get(), _slot+1);
 				SNM_ShowMsg(chain.Get(), title);
 			}
-#endif
 		}
 	}
 }

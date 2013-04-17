@@ -63,7 +63,6 @@
 // Globals
 REAPER_PLUGIN_HINSTANCE g_hInst = NULL;
 HWND g_hwndParent = NULL;
-reaper_plugin_info_t* g_rec = NULL;
 
 #ifdef ACTION_DEBUG
 void freeCmdFilesValue(WDL_String* p) {delete p;}
@@ -474,7 +473,6 @@ extern "C"
 	{
 		if (!rec)
 		{
-			g_rec = NULL;
 			SnapshotsExit();
 			TrackListExit();
 			MarkerListExit();
@@ -601,7 +599,9 @@ extern "C"
 		IMPAPI(GetPlayState);
 		IMPAPI(GetPlayStateEx);
 		IMPAPI(GetProjectPath);
+/*JFB commented: err in debug output "plugin_getapi fail:GetProjectStateChangeCount" (last check: v4.33rc1)
 		*(void**)&GetProjectStateChangeCount = rec->GetFunc("GetProjectStateChangeCount");
+*/
 		IMPAPI(GetProjectTimeSignature2);
 		IMPAPI(GetResourcePath);
 		IMPAPI(GetSelectedMediaItem);
@@ -772,7 +772,6 @@ extern "C"
 
 		g_hInst = hInstance;
 		g_hwndParent = GetMainHwnd();
-		g_rec = rec;
 
 		if (errcnt)
 		{

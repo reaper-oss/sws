@@ -146,7 +146,6 @@ public:
 
 extern REAPER_PLUGIN_HINSTANCE g_hInst;
 extern HWND g_hwndParent;
-extern reaper_plugin_info_t* g_rec;
 extern double g_d0;
 extern int g_i0;
 extern int g_i1;
@@ -250,7 +249,6 @@ void SWS_GetSelectedTracks(WDL_TypedBuf<MediaTrack*>* buf, bool bMaster = false)
 void SWS_GetSelectedMediaItems(WDL_TypedBuf<MediaItem*>* buf);
 void SWS_GetSelectedMediaItemsOnTrack(WDL_TypedBuf<MediaItem*>* buf, MediaTrack* tr);
 int SWS_GetModifiers();
-void WinSpawnNotepad(const char* pFilename);
 void makeEscapedConfigString(const char *in, WDL_FastString *out); //JFB: temp (WDL's ProjectContext does not use WDL_FastString yet)
 bool SWS_IsWindow(HWND hwnd);
 

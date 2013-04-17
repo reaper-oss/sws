@@ -459,21 +459,6 @@ MODIFIER g_modifiers[NUM_MODIFIERS] =
 	{ 7, "Ctrl + Alt + Shift" }
 };
 
-void WinSpawnNotepad(const char* pFilename)
-{
-#ifdef _WIN32
-	if (pFilename)
-	{
-		char cNotepad[1024];
-		char* cWindir = getenv("windir");
-		if (!cWindir)
-			return;
-		_snprintf(cNotepad, 1024, "%s\\notepad.exe", cWindir);
-		_spawnl(_P_NOWAIT, cNotepad, cNotepad, pFilename, NULL);
-	}
-#endif
-}
-
 //JFB: temp function (until WDL's ProjectContext does not use WDL_FastString)
 void makeEscapedConfigString(const char *in, WDL_FastString *out)
 {

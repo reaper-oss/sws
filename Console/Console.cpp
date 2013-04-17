@@ -739,13 +739,18 @@ void EditCustomCommands(COMMAND_T*)
 {
 #ifdef _WIN32
 	// Open the custom commands file in notepad
-	char cArg[256];
-	strncpy(cArg, get_ini_file(), 256);
+	char cArg[256], cNotepad[1024];
+	strncpy(cArg, get_ini_file(), sizeof(cArg));
 	char* pC = strrchr(cArg, PATH_SLASH_CHAR);
 	if (!pC)
 		return;
 	strcpy(pC+1, "reaconsole_customcommands.txt");
-	WinSpawnNotepad(cArg);
+
+	char* cWindir = getenv("windir");
+	if (!cWindir)
+		return;
+	_snprintf(cNotepad, sizeof(cNotepad), "%s\\notepad.exe", cWindir);
+	_spawnl(_P_NOWAIT, cNotepad, cNotepad, cArg, NULL);
 #endif
 }
 

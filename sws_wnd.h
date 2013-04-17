@@ -181,6 +181,7 @@ public:
 	HWND GetHWND() { return m_hwnd; }
 	WDL_VWnd* GetParentVWnd() { return &m_parentVwnd; }
 	WDL_VWnd_Painter* GetVWndPainter() { return &m_vwnd_painter; }
+	SWS_ListView* GetListView(int i = 0) { return m_pLists.Get(i); }
 	virtual void OnCommand(WPARAM wParam, LPARAM lParam) {}
 
 	static const int DOCK_MSG = 0xFF0000;

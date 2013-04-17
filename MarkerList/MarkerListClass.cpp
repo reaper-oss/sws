@@ -289,6 +289,12 @@ char* MarkerList::GetFormattedList(const char* format) // Must delete [] returne
 					s += strlen(s)-3;
 					s[0] = 0;
 					break;
+				case 'T':
+					format_timestr_pos(m_items.Get(i)->GetPos(), s, (int)(iLen-(s-str)), 5);
+					s += strlen(s);
+					// Change the final : to a .
+					s[-3] = '.';
+					break;
 				case 's':
 					format_timestr_pos(m_items.Get(i)->GetPos(), s, (int)(iLen-(s-str)), 4);
 					s += strlen(s);

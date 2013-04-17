@@ -144,6 +144,7 @@ int PromptUserForString(HWND hParent, const char* cTitle, char* cString, int iMa
 	g_bOK = false;
 	g_bAtMouse = bAtMouse;
 	g_cOption = cOption;
+	g_bOption = false;
 	DialogBox(g_hInst, MAKEINTRESOURCE(cOption ? IDD_PROMPT_OPTION : IDD_PROMPT), hParent, doPromptDialog);
 	return g_bOK ? (cOption ? (g_bOption?2:1) : 1) : 0;
 }

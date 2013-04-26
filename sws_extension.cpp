@@ -509,7 +509,7 @@ extern "C"
 		IMPAPI(Audio_RegHardwareHook);
 		IMPAPI(CoolSB_GetScrollInfo);
 		IMPAPI(CoolSB_SetScrollInfo);
-		*(void**)&CountActionShortcuts = rec->GetFunc("CountActionShortcuts");
+		IMPAPI(CountActionShortcuts);
 		IMPAPI(CountMediaItems);
 		IMPAPI(CountSelectedMediaItems);
 		IMPAPI(CountSelectedTracks);
@@ -528,14 +528,15 @@ extern "C"
 		IMPAPI(CSurf_OnSelectedChange);
 		IMPAPI(CSurf_OnTrackSelection);
 		IMPAPI(CSurf_OnVolumeChange);
+		IMPAPI(CSurf_OnWidthChange);
 		IMPAPI(CSurf_TrackFromID);
 		IMPAPI(CSurf_TrackToID);
-		*(void**)&DeleteActionShortcut = rec->GetFunc("DeleteActionShortcut");
+		IMPAPI(DeleteActionShortcut);
 		IMPAPI(DeleteProjectMarker);
 		IMPAPI(DeleteTrack);
 		IMPAPI(DeleteTrackMediaItem);
 		IMPAPI(DestroyLocalOscHandler);
-		*(void**)&DoActionShortcutDialog = rec->GetFunc("DoActionShortcutDialog");
+		IMPAPI(DoActionShortcutDialog);
 		IMPAPI(Dock_UpdateDockID);
 		IMPAPI(DockIsChildOfDock);
 		IMPAPI(DockWindowActivate);
@@ -553,7 +554,7 @@ extern "C"
 		IMPAPI(format_timestr_pos);
 		IMPAPI(format_timestr_len);	
 		IMPAPI(FreeHeapPtr);
-		*(void**)&GetActionShortcutDesc = rec->GetFunc("GetActionShortcutDesc");
+		IMPAPI(GetActionShortcutDesc);
 		IMPAPI(GetActiveTake);
 		IMPAPI(GetAppVersion);
 		IMPAPI(GetColorThemeStruct);
@@ -599,8 +600,8 @@ extern "C"
 		IMPAPI(GetPlayState);
 		IMPAPI(GetPlayStateEx);
 		IMPAPI(GetProjectPath);
-/*JFB commented: err in debug output "plugin_getapi fail:GetProjectStateChangeCount" (last check: v4.33rc1)
-		*(void**)&GetProjectStateChangeCount = rec->GetFunc("GetProjectStateChangeCount");
+/*JFB commented: err in debug output "plugin_getapi fail:GetProjectStateChangeCount" - last check: v4.33rc1
+		IMPAPI(GetProjectStateChangeCount);
 */
 		IMPAPI(GetProjectTimeSignature2);
 		IMPAPI(GetResourcePath);
@@ -625,7 +626,7 @@ extern "C"
 		IMPAPI(GetTake);
 		IMPAPI(GetTCPFXParm);
 		IMPAPI(GetToggleCommandState);
-		*(void**)&GetToggleCommandState2 = rec->GetFunc("GetToggleCommandState2");
+		IMPAPI(GetToggleCommandState2);
 		IMPAPI(GetTrack);
 		IMPAPI(GetTrackGUID);
 		IMPAPI(GetTrackEnvelope);
@@ -683,8 +684,9 @@ extern "C"
 		IMPAPI(PlayTrackPreview);
 		IMPAPI(PlayTrackPreview2Ex);
 		IMPAPI(plugin_getFilterList);
+		IMPAPI(plugin_getImportableProjectFilterList);
 		IMPAPI(plugin_register);
-		*(void**)&PreventUIRefresh = rec->GetFunc("PreventUIRefresh");
+		IMPAPI(PreventUIRefresh);
 		IMPAPI(projectconfig_var_addr);
 		IMPAPI(projectconfig_var_getoffs);
 		IMPAPI(RefreshToolbar);
@@ -695,7 +697,7 @@ extern "C"
 		IMPAPI(screenset_register);
 		IMPAPI(screenset_registerNew);
 		IMPAPI(screenset_unregister);
-		*(void**)&SectionFromUniqueID = rec->GetFunc("SectionFromUniqueID");
+		IMPAPI(SectionFromUniqueID);
 		IMPAPI(SelectProjectInstance);
 		IMPAPI(SendLocalOscMessage);
 		IMPAPI(SetCurrentBPM);
@@ -744,13 +746,13 @@ extern "C"
 		IMPAPI(TrackFX_GetParam);
 		IMPAPI(TrackFX_GetParamName);
 		IMPAPI(TrackFX_GetPreset);
-		*(void**)&TrackFX_GetPresetIndex = rec->GetFunc("TrackFX_GetPresetIndex");
+		IMPAPI(TrackFX_GetPresetIndex);
 		IMPAPI(TrackFX_NavigatePresets);
 		IMPAPI(TrackFX_SetEnabled);
 		IMPAPI(TrackFX_SetOpen);
 		IMPAPI(TrackFX_SetParam);
 		IMPAPI(TrackFX_SetPreset);
-		*(void**)&TrackFX_SetPresetByIndex = rec->GetFunc("TrackFX_SetPresetByIndex");
+		IMPAPI(TrackFX_SetPresetByIndex);
 		IMPAPI(TrackFX_Show);
 		IMPAPI(TrackList_AdjustWindows);
 		IMPAPI(Undo_BeginBlock);
@@ -783,7 +785,7 @@ extern "C"
 				_snprintf(txt, sizeof(txt),
 					// keep the message on a single line (for the LangPack generator) 
 					__LOCALIZE_VERFMT("The version of SWS extension you have installed is incompatible with your version of REAPER.\nYou probably have a REAPER version less than v%s installed.\nPlease install the latest version of REAPER from www.reaper.fm.","sws_mbox"),
-					"4.26"); // <- update compatible version here
+					"4.33"); // <- update compatible version here
 
 				//JFB: NULL parent so that the message is at least visible in taskbars (hidden since REAPER v4 and its "splash 2.0")
 				MessageBox(NULL, txt, __LOCALIZE("SWS - Version Incompatibility","sws_mbox"), MB_OK);

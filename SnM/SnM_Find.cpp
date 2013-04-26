@@ -30,6 +30,7 @@
 
 #include "stdafx.h"
 #include "SnM.h"
+#include "SnM_Dlg.h"
 #include "SnM_Find.h"
 #include "SnM_Item.h"
 #include "SnM_Notes.h"

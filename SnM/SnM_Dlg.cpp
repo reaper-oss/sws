@@ -33,6 +33,10 @@
 #include "../Prompt.h"
 
 
+///////////////////////////////////////////////////////////////////////////////
+// General S&M UI helpers
+///////////////////////////////////////////////////////////////////////////////
+
 void SNM_UIInit() {}
 
 void SNM_UIExit() {
@@ -40,16 +44,11 @@ void SNM_UIExit() {
 		DELETE_NULL(logo);
 }
 
-void SNM_UIRefresh(COMMAND_T* _ct) 
+void SNM_UIRefresh(COMMAND_T* _ct)
 {
 	UpdateTimeline(); // ruler+arrange
 	TrackList_AdjustWindows(false);
 	DockWindowRefresh();
-}
-
-void SNM_SetUIRefresh(COMMAND_T* _ct) {
-	if (PreventUIRefresh)
-		PreventUIRefresh((int)_ct->user);
 }
 
 

@@ -27,6 +27,7 @@
 
 #include "stdafx.h"
 #include "SnM.h"
+#include "SnM_Chunk.h"
 #include "SnM_FX.h"
 #include "SnM_Track.h"
 #include "SnM_Util.h"
@@ -488,7 +489,7 @@ int GetUserPresetNames(MediaTrack* _tr, int _fx, WDL_PtrList<WDL_FastString>* _p
 {
 	if (_tr && _fx>=0 && _presetsOut)
 	{
-		//JFB!!! removeme if new APIs + remove SNM_FXSummary, SNM_FXSummaryParser, etc.. ?
+		//JFB!! removeme some day (+remove SNM_FXSummary, SNM_FXSummaryParser, etc..) if new APIs
 		SNM_FXSummaryParser p(_tr);
 		WDL_PtrList<SNM_FXSummary>* summaries = p.GetSummaries();
 		SNM_FXSummary* sum = summaries ? summaries->Get(_fx) : NULL;

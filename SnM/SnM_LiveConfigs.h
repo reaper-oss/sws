@@ -159,7 +159,7 @@ public:
 
 class LiveConfigsUpdateJob : public SNM_ScheduledJob {
 public:
-	LiveConfigsUpdateJob() : SNM_ScheduledJob(SNM_SCHEDJOB_LIVECFG_UPDATE, 150) {}
+	LiveConfigsUpdateJob() : SNM_ScheduledJob(SNM_SCHEDJOB_LIVECFG_UPDATE, SNM_SCHEDJOB_SLOW_DELAY) {}
 	void Perform();
 };
 

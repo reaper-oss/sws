@@ -30,20 +30,16 @@
 #ifndef _SNM_PROJECT_H_
 #define _SNM_PROJECT_H_
 
-#include "SnM_Resources.h"
 
-
+void TieFileToProject(const char* _fn, ReaProject* _prj = NULL, bool _tie = true);
+void UntieFileFromProject(const char* _fn, ReaProject* _prj = NULL);
 double GetProjectLength(bool _items = true, bool _inclRgnsMkrs = false);
-
 bool InsertSilence(const char* _undoTitle, double _pos, double _len);
-void InsertSilence(COMMAND_T*);
-
-void OpenProjectPathInExplorerFinder(COMMAND_T* _ct = NULL);
 
 void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
 
 void LoadOrSelectProjectSlot(int _slotType, const char* _title, int _slot, bool _newTab);
-bool AutoSaveProjectSlot(int _slotType, const char* _dirPath, WDL_PtrList<PathSlotItem>* _owSlots, bool _saveCurPrj);
+bool AutoSaveProjectSlot(int _slotType, const char* _dirPath, WDL_PtrList<void>* _owSlots, bool _saveCurPrj);
 void LoadOrSelectProjectSlot(COMMAND_T*);
 void LoadOrSelectProjectTabSlot(COMMAND_T*);
 
@@ -61,6 +57,9 @@ public:
 void SetProjectStartupAction(COMMAND_T*);
 void ClearProjectStartupAction(COMMAND_T*);
 int ReaProjectInit();
+
+void InsertSilence(COMMAND_T*);
+void OpenProjectPathInExplorerFinder(COMMAND_T* _ct = NULL);
 
 #endif
 

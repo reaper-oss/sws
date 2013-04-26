@@ -30,6 +30,7 @@
 #include "SnM_CSurf.h"
 #include "SnM_CueBuss.h"
 #include "SnM_Cyclactions.h"
+#include "SnM_Dlg.h"
 #include "SnM_Find.h"
 #include "SnM_FX.h"
 #include "SnM_FXChain.h"
@@ -50,6 +51,7 @@
 #include "../reaper/localize.h"
 
 
+void ExclusiveToggle(COMMAND_T*);
 void Noop(COMMAND_T* _ct) {}
 
 
@@ -276,12 +278,10 @@ static COMMAND_T s_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Clear image window" }, "S&M_CLR_IMAGEVIEW", ClearImageWnd, NULL, },
 
 	// Theme slots ------------------------------------------------------------
-#ifdef _WIN32
 	{ { DEFACCEL, "SWS/S&M: Open/close Resources window (themes)" }, "S&M_SHOW_RESVIEW_THEME", OpenResources, NULL, SNM_SLOT_THM, IsResourcesDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Clear theme slot..." }, "S&M_CLR_THEME_SLOT", ResourcesClearSlotPrompt, NULL, SNM_SLOT_THM},
 	{ { DEFACCEL, "SWS/S&M: Delete all theme slots" }, "S&M_DEL_ALL_THEME_SLOT", ResourcesDeleteAllSlots, NULL, SNM_SLOT_THM},
 	{ { DEFACCEL, "SWS/S&M: Load theme, prompt for slot" }, "S&M_LOAD_THEMEp", LoadThemeSlot, NULL, -1},
-#endif
 
 	// FX presets -------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Trigger next preset for selected FX of selected tracks" }, "S&M_NEXT_SELFX_PRESET", NextPresetSelTracks, NULL, -1},
@@ -409,7 +409,8 @@ static COMMAND_T s_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Unselect offscreen items" }, "S&M_UNSEL_OFFSCREEN_ITEMS", UnselectOffscreenItems, NULL, -1, HasOffscreenSelItems}, // -1: trick to share HasOffscreenSelItems() w/ above actions
 
 	// Find -------------------------------------------------------------------
-	{ { {FCONTROL | FVIRTKEY, 'F', 0 }, "SWS/S&M: Find" }, "S&M_SHOWFIND", OpenFind, NULL, NULL, IsFindDisplayed},
+	//JFB removed default shortcut ctrl+F: more future proof..
+	{ {/*{FCONTROL|FVIRTKEY,'F',0}*/ DEFACCEL, "SWS/S&M: Find" }, "S&M_SHOWFIND", OpenFind, NULL, NULL, IsFindDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Find next" }, "S&M_FIND_NEXT", FindNextPrev, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Find previous" }, "S&M_FIND_PREVIOUS", FindNextPrev, NULL, -1},
 
@@ -532,10 +533,6 @@ static COMMAND_T s_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Toggle show take pan envelope" }, "S&M_TAKEENV8", ShowHideTakePanEnvelope, NULL, -1, SNM_GetFakeToggleState},
 	{ { DEFACCEL, "SWS/S&M: Toggle show take mute envelope" }, "S&M_TAKEENV9", ShowHideTakeMuteEnvelope, NULL, -1, SNM_GetFakeToggleState},
 
-	// macros seem to use this already (?)
-	{ { DEFACCEL, "SWS/S&M: UI refresh" }, "S&M_UIREFRESH", SNM_UIRefresh, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Disable UI refresh" }, "S&M_UIREFRESH_OFF", SNM_SetUIRefresh, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Enable UI refresh" }, "S&M_UIREFRESH_ON", SNM_SetUIRefresh, NULL, -1},
 #endif
 
 	{ {}, LAST_COMMAND, } // denote end of table
@@ -622,10 +619,8 @@ static COMMAND_T s_dynCmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Show image, slot %02d" }, "S&M_SHOW_IMG", ShowImageSlot, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Set track icon for selected tracks, slot %02d" }, "S&M_SET_TRACK_ICON", SetSelTrackIconSlot, NULL, 4},
 
-#ifdef _WIN32
 	{ { DEFACCEL, "SWS/S&M: Clear theme slot %02d" }, "S&M_CLR_THEME_SLOT", ResourcesClearThemeSlot, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Load theme, slot %02d" }, "S&M_LOAD_THEME", LoadThemeSlot, NULL, 4},
-#endif
 
 	{ { DEFACCEL, "SWS/S&M: Trigger next preset for FX %02d of selected tracks" }, "S&M_NEXT_PRESET_FX", NextPresetSelTracks, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Trigger previous preset for FX %02d of selected tracks" }, "S&M_PREVIOUS_PRESET_FX", PrevPresetSelTracks, NULL, 4},
@@ -729,7 +724,7 @@ int RegisterConfigurableCommands(COMMAND_T* _cmds, const char* _inifn)
 			if (_snprintfStrict(actionName, sizeof(actionName), GetLocalizedActionName(ct->accel.desc, LOCALIZE_FLAG_VERIFY_FMTS), j+1) > 0 &&
 				_snprintfStrict(custId, sizeof(custId), "%s%d", ct->id, j+1) > 0)
 			{
-				if (SWSCreateRegisterDynamicCmd(0, ct->doCommand, ct->getEnabled, custId, actionName, j, __FILE__, false)) // already localized 
+				if (SWSCreateRegisterDynamicCmd(0, ct->doCommand, ct->getEnabled, custId, actionName, j, __FILE__, false)) // already localized
 					ct->user = nb; // patch the real number of instances
 				else
 					return 0;
@@ -743,6 +738,7 @@ int RegisterConfigurableCommands(COMMAND_T* _cmds, const char* _inifn)
 
 void SNM_SaveDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
 {
+	// no localization here, intentional..
 	WDL_FastString iniSection, str;
 	iniSection.Set("; Set the number of actions you want below. Quit REAPER first!\n");
 	iniSection.AppendFormatted(256, 
@@ -801,28 +797,6 @@ void ExclusiveToggle(COMMAND_T* _ct)
 			}
 			else
 				break;
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-// Action sections' unique IDs
-///////////////////////////////////////////////////////////////////////////////
-
-// keep this definition order!
-// (indexes used in the cycle action editor, for ex.)
-int SNM_GetActionSectionId(int _idx)
-{
-	static int sSectionIds[] =
-	{ 
-		0,				// Main
-		32061,			// ME event list section
-		32060,			// ME piano roll section
-		32062,			// MIDI inline editor
-		100,			// Main alt
-		32063,			// Media explorer
-		SNM_SECTION_ID	// S&M extension
-	};
-	return sSectionIds[_idx];
 }
 
 

@@ -29,6 +29,7 @@
 #include "SnM.h"
 #include "SnM_ChunkParserPatcher.h"
 #include "SnM_Project.h"
+#include "SnM_Resources.h"
 #include "SnM_Util.h"
 #include "SnM_Window.h"
 #include "../Prompt.h"
@@ -38,6 +39,27 @@
 ///////////////////////////////////////////////////////////////////////////////
 // General project helpers
 ///////////////////////////////////////////////////////////////////////////////
+
+void TieFileToProject(const char* _fn, ReaProject* _prj, bool _tie)
+{
+	if (_fn && *_fn)
+	{
+		if (ReaProject* prj = _prj ? _prj : Enum_Projects(-1, NULL, 0))
+		{
+			void *p[2] = { (void*)_fn, (void*)prj };
+			plugin_register(_tie ? "file_in_project_ex" : "-file_in_project_ex", p);
+#ifdef _SNM_DEBUG
+			char dbg[256]="";
+			_snprintfSafe(dbg, sizeof(dbg), "TieFileToProject() - ReaProject: %p, %s %s\n", prj, _tie ? "Added" : "Removed", _fn);
+			OutputDebugString(dbg);
+#endif
+		}
+	}
+}
+
+void UntieFileFromProject(const char* _fn, ReaProject* _prj) {
+	TieFileToProject(_fn, _prj, false);
+}
 
 double GetProjectLength(bool _items, bool _inclRgnsMkrs)
 {
@@ -74,8 +96,7 @@ bool InsertSilence(const char* _undoTitle, double _pos, double _len)
 		if (_undoTitle)
 			Undo_BeginBlock2(NULL);
 
-		if (PreventUIRefresh)
-			PreventUIRefresh(1);
+		PreventUIRefresh(1);
 
 		double timeSel1, timeSel2, d=_pos+_len;
 		GetSet_LoopTimeRange2(NULL, false, false, &timeSel1, &timeSel2, false);
@@ -87,8 +108,7 @@ bool InsertSilence(const char* _undoTitle, double _pos, double _len)
 		if (_pos<timeSel2) timeSel2+=_len;
 		GetSet_LoopTimeRange2(NULL, true, false, &timeSel1, &timeSel2, false);
 
-		if (PreventUIRefresh)
-			PreventUIRefresh(-1);
+		PreventUIRefresh(-1);
 
 		UpdateTimeline(); // ruler + arrange
 
@@ -97,63 +117,6 @@ bool InsertSilence(const char* _undoTitle, double _pos, double _len)
 		return true;
 	}
 	return false;
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-
-char g_lastSilenceVal[3][64] = {"10.0", "1.0", "512"};
-
-void InsertSilence(COMMAND_T* _ct)
-{
-	char val[64]="";
-	lstrcpyn(val, g_lastSilenceVal[(int)_ct->user], sizeof(val));
-
-	if (PromptUserForString(GetMainHwnd(), SWS_CMD_SHORTNAME(_ct), val, sizeof(val)) && *val)
-	{
-		double pos = GetCursorPositionEx(NULL), len = 0.0;
-		switch ((int)_ct->user)
-		{
-			case 0: // s
-				len = parse_timestr_len(val, pos, 3);
-				break;
-			case 1: // meas.beat
-/*no! would not take get tempo markers into account since 'val' is not inserted yet
-				len = parse_timestr_len(val, pos, 2);
-				break;
-*/
-				if (char* p = strchr(val, '.'))
-				{
-					*p = '\0';
-					int in_meas = atoi(val);
-					double in_beats = p[1] ? atof(p+1) : 0.0;
-
-					double bpm; int num, den;
-					TimeMap_GetTimeSigAtTime(NULL, pos, &num, &den, &bpm);
-					len = in_beats*(60.0/bpm) + in_meas*((240.0*num/den)/bpm);
-
-					*p = '.'; // restore val (used below)
-				}
-				break;
-			case 2: // smp
-				len = parse_timestr_len(val, pos, 4);
-				break;
-		}
-
-		if (len>0.0) {
-			lstrcpyn(g_lastSilenceVal[(int)_ct->user], val, sizeof(val));
-			InsertSilence(SWS_CMD_SHORTNAME(_ct), pos, len); // includes undo point
-		}
-		else
-			MessageBox(GetMainHwnd(), __LOCALIZE("Invalid input!","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
-	}
-}
-
-void OpenProjectPathInExplorerFinder(COMMAND_T*)
-{
-	char path[SNM_MAX_PATH] = "";
-	GetProjectPath(path, sizeof(path));
-	if (*path) ShellExecute(NULL, "open", path, NULL, NULL, SW_SHOWNORMAL);
 }
 
 
@@ -189,7 +152,7 @@ void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND
 
 void LoadOrSelectProjectSlot(int _slotType, const char* _title, int _slot, bool _newTab)
 {
-	if (WDL_FastString* fnStr = g_SNM_ResSlots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot))
+	if (WDL_FastString* fnStr = GetOrPromptOrBrowseSlot(_slotType, &_slot))
 	{
 		char fn[SNM_MAX_PATH] = "";
 		ReaProject* prj = NULL;
@@ -205,7 +168,7 @@ void LoadOrSelectProjectSlot(int _slotType, const char* _title, int _slot, bool 
 		{
 			if (_newTab)
 				Main_OnCommand(40859,0);
-			Main_openProject((char*)fnStr->Get());
+			Main_openProject((char*)fnStr->Get()); // already includes an undo point (_title unused)
 /* API LIMITATION: would be great to set the project as "not saved" here (like native project templates)
 	See http://code.google.com/p/sws-extension/issues/detail?id=321
 */
@@ -214,14 +177,14 @@ void LoadOrSelectProjectSlot(int _slotType, const char* _title, int _slot, bool 
 	}
 }
 
-bool AutoSaveProjectSlot(int _slotType, const char* _dirPath, WDL_PtrList<PathSlotItem>* _owSlots, bool _saveCurPrj)
+bool AutoSaveProjectSlot(int _slotType, const char* _dirPath, WDL_PtrList<void>* _owSlots, bool _saveCurPrj)
 {
 	int owIdx = 0;
 	if (_saveCurPrj)
 		Main_OnCommand(40026,0);
 	char prjFn[SNM_MAX_PATH] = "";
 	EnumProjects(-1, prjFn, sizeof(prjFn));
-	return AutoSaveSlot(_slotType, _dirPath, prjFn, "RPP", _owSlots, &owIdx);
+	return AutoSaveSlot(_slotType, _dirPath, prjFn, "RPP", (WDL_PtrList<PathSlotItem>*)_owSlots, &owIdx);
 }
 
 void LoadOrSelectProjectSlot(COMMAND_T* _ct) {
@@ -242,7 +205,8 @@ void LoadOrSelectProjectTabSlot(COMMAND_T* _ct) {
 
 int g_prjCurSlot = -1; // 0-based
 
-bool IsProjectLoaderConfValid() {
+bool IsProjectLoaderConfValid()
+{
 	return (g_SNM_PrjLoaderStartPref > 0 && 
 		g_SNM_PrjLoaderEndPref > g_SNM_PrjLoaderStartPref && 
 		g_SNM_PrjLoaderEndPref <= g_SNM_ResSlots.Get(SNM_SLOT_PRJ)->GetSize());
@@ -358,7 +322,7 @@ void SetProjectStartupAction(COMMAND_T* _ct)
 	if (IDOK == MessageBox(GetMainHwnd(), msg.Get(), SWS_CMD_SHORTNAME(_ct), MB_OKCANCEL))
 	{
 		char idstr[SNM_MAX_ACTION_CUSTID_LEN] = "";
-		if (GetSelectedAction(idstr, SNM_MAX_ACTION_CUSTID_LEN, __localizeFunc("Main","accel_sec",0)))
+		if (GetSelectedAction(idstr, SNM_MAX_ACTION_CUSTID_LEN))
 		{
 			g_prjActions.Get()->Set(idstr);
 			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_MISCCFG, -1);
@@ -398,9 +362,15 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 	if (!strcmp(lp.gettoken_str(0), "S&M_PROJACTION"))
 	{
 		g_prjActions.Get()->Set(lp.gettoken_str(1));
-		if (!isUndo)
+
+		if (!isUndo && Enum_Projects(-1,NULL,0) == GetCurrentProjectInLoadSave())
+		{
 			if (int cmdId = NamedCommandLookup(lp.gettoken_str(1)))
-				SNM_AddOrReplaceScheduledJob(new ProjectActionJob(cmdId)); // ~1s delay to avoid multi-triggers
+			{
+				// ~1s delay to avoid multi-triggers + reentrance test (for sws actions)
+				SNM_AddOrReplaceScheduledJob(new ProjectActionJob(cmdId));
+			}
+		}
 		return true;
 	}
 	return false;
@@ -425,4 +395,63 @@ static project_config_extension_t s_projectconfig = {
 
 int ReaProjectInit() {
 	return plugin_register("projectconfig", &s_projectconfig);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Misc project actions
+///////////////////////////////////////////////////////////////////////////////
+
+char g_lastSilenceVal[3][64] = {"10.0", "1.0", "512"};
+
+void InsertSilence(COMMAND_T* _ct)
+{
+	char val[64]="";
+	lstrcpyn(val, g_lastSilenceVal[(int)_ct->user], sizeof(val));
+
+	if (PromptUserForString(GetMainHwnd(), SWS_CMD_SHORTNAME(_ct), val, sizeof(val)) && *val)
+	{
+		double pos = GetCursorPositionEx(NULL), len = 0.0;
+		switch ((int)_ct->user)
+		{
+			case 0: // s
+				len = parse_timestr_len(val, pos, 3);
+				break;
+			case 1: // meas.beat
+/*no! would not take get tempo markers into account since 'val' is not inserted yet
+				len = parse_timestr_len(val, pos, 2);
+				break;
+*/
+				if (char* p = strchr(val, '.'))
+				{
+					*p = '\0';
+					int in_meas = atoi(val);
+					double in_beats = p[1] ? atof(p+1) : 0.0;
+
+					double bpm; int num, den;
+					TimeMap_GetTimeSigAtTime(NULL, pos, &num, &den, &bpm);
+					len = in_beats*(60.0/bpm) + in_meas*((240.0*num/den)/bpm);
+
+					*p = '.'; // restore val (used below)
+				}
+				break;
+			case 2: // smp
+				len = parse_timestr_len(val, pos, 4);
+				break;
+		}
+
+		if (len>0.0) {
+			lstrcpyn(g_lastSilenceVal[(int)_ct->user], val, sizeof(val));
+			InsertSilence(SWS_CMD_SHORTNAME(_ct), pos, len); // includes undo point
+		}
+		else
+			MessageBox(GetMainHwnd(), __LOCALIZE("Invalid input!","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
+	}
+}
+
+void OpenProjectPathInExplorerFinder(COMMAND_T*)
+{
+	char path[SNM_MAX_PATH] = "";
+	GetProjectPath(path, sizeof(path));
+	if (*path) ShellExecute(NULL, "open", path, NULL, NULL, SW_SHOWNORMAL);
 }

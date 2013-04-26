@@ -35,7 +35,6 @@ extern bool g_SNM_ClearType;
 void SNM_UIInit();
 void SNM_UIExit();
 void SNM_UIRefresh(COMMAND_T*);
-void SNM_SetUIRefresh(COMMAND_T*);
 
 ColorTheme* SNM_GetColorTheme(bool _checkForSize = false);
 IconTheme* SNM_GetIconTheme(bool _checkForSize = false);

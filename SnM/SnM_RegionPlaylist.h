@@ -126,7 +126,7 @@ protected:
 
 class PlaylistUpdateJob : public SNM_ScheduledJob {
 public:
-	PlaylistUpdateJob() : SNM_ScheduledJob(SNM_SCHEDJOB_PLAYLIST_UPDATE, 150) {}
+	PlaylistUpdateJob() : SNM_ScheduledJob(SNM_SCHEDJOB_PLAYLIST_UPDATE, SNM_SCHEDJOB_SLOW_DELAY) {}
 	void Perform();
 };
 

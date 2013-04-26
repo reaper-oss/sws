@@ -33,6 +33,7 @@
 #include "SnM_Misc.h"
 #include "SnM_Notes.h"
 #include "SnM_RegionPlaylist.h"
+#include "SnM_Resources.h"
 #include "SnM_Track.h"
 #include "SnM_Util.h"
 #include "../reaper/localize.h"
@@ -48,7 +49,7 @@ double g_toolbarMsCounter = 0.0;
 double g_itemSelToolbarMsCounter = 0.0;
 double g_markerRegionNotifyMsCounter = 0.0;
 
-// processing order is important here!
+// processing order is important here, no recursion check!
 void SNM_CSurfRun()
 {
 	// region playlist
@@ -131,6 +132,7 @@ void SNM_CSurfSetTrackListChange() {
 	if (g_SNM_NotesWnd) g_SNM_NotesWnd->CSurfSetTrackListChange();
 	if (g_SNM_LiveConfigsWnd) g_SNM_LiveConfigsWnd->CSurfSetTrackListChange();
 	if (g_SNM_RgnPlaylistWnd) g_SNM_RgnPlaylistWnd->CSurfSetTrackListChange();
+	ResourcesTrackListChange();
 }
 
 bool g_lastPlayState=false, g_lastPauseState=false, g_lastRecState=false;
@@ -154,7 +156,13 @@ void SNM_CSurfSetPlayState(bool _play, bool _pause, bool _rec)
 	}
 }
 
-int SNM_CSurfExtended(int _call, void* _parm1, void* _parm2, void* _parm3) {
+int SNM_CSurfExtended(int _call, void* _parm1, void* _parm2, void* _parm3)
+{
+#ifdef _SNM_DEBUG
+	char dbg[256] = "";
+	_snprintfSafe(dbg, sizeof(dbg), "SNM_CSurfExtended() - Call %d, prm1: %p, prm2: %p prm3: %p\n", _call, _parm1, _parm2, _parm3);
+	OutputDebugString(dbg);
+#endif
 	return 0; // return 0 if unsupported
 }
 

@@ -39,8 +39,8 @@
 //#define _SNM_DYN_FONT_DEBUG
 //#define _SNM_MISC				// not released, deprecated, tests, etc..
 //#define _SNM_WDL				// if my wdl version is used
-#define _SNM_CSURF_PROXY
-#define _SNM_HOST_AW
+#define _SNM_HOST_AW			// hosts some of Adam's stuff
+//#define _SNM_CSURF_PROXY
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -48,13 +48,15 @@
 // #undef to activate the "expected code", #define to activate workarounds
 ///////////////////////////////////////////////////////////////////////////////
 
-#define _SNM_REAPER_BUG			//JFB!!! workaround some API/REAPER bugs
-								// Last test: REAPER v4.33pre23
+#define _SNM_REAPER_BUG			// workaround some API/REAPER bugs
+								// Last test: REAPER v4.34rc1
 								// API bug 1: CountActionShortcuts() can return > 0 although there is no shortcut
-								// API bug 2: DoActionShortcutDialog() does not persist learned shortcut
+								// API bug 2: DoActionShortcutDialog() does not persist *all* learned shortcuts
+								//            note: a fix announced in v4.33pre29 but still buggy
+								// API bug 3: GetToggleCommandState2() does not work
 
 #ifdef __APPLE__
-  #define _SNM_SWELL_ISSUES		//JFB!!! workaround some SWELL issues
+  #define _SNM_SWELL_ISSUES		// workaround some SWELL issues
 #endif							// Last test: WDL d1d8d2 - Dec. 20 2012
 								// - issue 1: a same font does not look the same on 32-bit & 64-bit
 								// - issue 2: native font rendering won't draw multiple lines
@@ -78,7 +80,7 @@
 #define SNM_CYCLACTION_EXPORT_FILE	"%s\\S&M_Cyclactions_export.ini"
 #define SNM_KB_INI_FILE				"%s\\reaper-kb.ini"
 #define SNM_CONSOLE_FILE			"%s\\reaconsole_customcommands.txt"
-#define SNM_EXTENSION_FILE			"%s\\Plugins\\reaper_snm.dll"
+#define SNM_REAPER_EXE_FILE			"%s\\reaper.exe"
 #define SNM_FONT_NAME				"MS Shell Dlg"
 #define SNM_FONT_HEIGHT				14
 #define SNM_DYN_FONT_NAME			"Arial" // good default for UTF8
@@ -95,7 +97,11 @@
 #define SNM_CYCLACTION_EXPORT_FILE	"%s/S&M_Cyclactions_export.ini"
 #define SNM_KB_INI_FILE				"%s/reaper-kb.ini"
 #define SNM_CONSOLE_FILE			"%s/reaconsole_customcommands.txt"
-#define SNM_EXTENSION_FILE			"%s/UserPlugins/reaper_snm.dylib"
+#ifdef __LP64__
+#define SNM_REAPER_EXE_FILE			"%s/REAPER64.app"
+#else
+#define SNM_REAPER_EXE_FILE			"%s/REAPER.app"
+#endif
 #define SNM_FONT_NAME				"Arial"
 #if defined(_SNM_SWELL_ISSUES) && defined(__LP64__)
   #define SNM_FONT_HEIGHT			12 // SWELL issue: same font size, different look on x64!
@@ -111,16 +117,19 @@
 
 #define SNM_GUI_X_MARGIN			6
 #define SNM_GUI_X_MARGIN_OLD		8
-#define SNM_GUI_X_MARGIN_LOGO		SNM_GUI_X_MARGIN-4
-#define SNM_GUI_Y_MARGIN			5
+#define SNM_GUI_X_MARGIN_LOGO		SNM_GUI_X_MARGIN
+#define SNM_GUI_Y_MARGIN			SNM_GUI_X_MARGIN
+#define SNM_GUI_Y_MARGIN_LOGO		10
 #define SNM_GUI_W_KNOB				26
 #define SNM_MAX_PATH				2048
 #define SNM_LIVECFG_NB_CONFIGS		4			//JFB do not commit a new value w/o my approval, plz thx!
+#define SNM_NUM_NATIVE_SECTIONS		6			// REAPER v4.32, keep SNM_GetActionSectionId() in sync
 #define SNM_SECTION_ID				0x10000101	// "< 0x10000000 for cockos use only plzk thx"
 #define SNM_SECTION_1ST_CMD_ID		40000
 
 #define SNM_MAX_TRACK_GROUPS		32
 #define SNM_MAX_CUE_BUSS_CONFS		8
+#define SNM_REAPER_IMG_EXTS			"png,pcx,jpg,jpeg,jfif,ico,bmp" // img exts supported by REAPER (v4.32), can't get those at runtime yet
 #define SNM_INI_EXT_LIST			"INI files (*.INI)\0*.INI\0All Files\0*.*\0"
 #define SNM_SUB_EXT_LIST			"SubRip subtitle files (*.SRT)\0*.SRT\0"
 #define SNM_TXT_EXT_LIST			"Text files (*.txt)\0*.txt\0All files (*.*)\0*.*\0"
@@ -146,9 +155,10 @@
 #define MAX_CC_LANE_ID				133
 #define MAX_CC_LANES_LEN			4096
 #define SNM_3D_COLORS_DELTA			25
-#define SNM_CSURF_RUN_TICK_MS		27.0   // 1 tick = 27ms or so (average I monitored)
+#define SNM_CSURF_RUN_TICK_MS		27.0   // 1 tick ~= 27ms (average I monitored)
 #define SNM_DEF_TOOLBAR_RFRSH_FREQ	300    // default frequency in ms for the "auto-refresh toolbars" option 
 #define SNM_SCHEDJOB_DEFAULT_DELAY	250
+#define SNM_SCHEDJOB_SLOW_DELAY		500    // for non urgent stuff, e.g. UI update
 #define SNM_FUDGE_FACTOR			0.0000000001
 #define SNM_CSURF_EXT_UNREGISTER	0x00016666
 
@@ -167,10 +177,10 @@
 #define SNM_SCHEDJOB_NOTES_UPDATE			SNM_SCHEDJOB_UNDO + 1
 #define SNM_SCHEDJOB_SEL_PRJ				SNM_SCHEDJOB_NOTES_UPDATE + 1
 #define SNM_SCHEDJOB_TRIG_PRESET			SNM_SCHEDJOB_SEL_PRJ + 1
-#define SNM_SCHEDJOB_CYCLACTION				SNM_SCHEDJOB_TRIG_PRESET + 1
-#define SNM_SCHEDJOB_PLAYLIST_UPDATE		SNM_SCHEDJOB_CYCLACTION + 1
+#define SNM_SCHEDJOB_RES_ATTACH				SNM_SCHEDJOB_TRIG_PRESET + 1
+#define SNM_SCHEDJOB_PLAYLIST_UPDATE		SNM_SCHEDJOB_RES_ATTACH + 1
 #define SNM_SCHEDJOB_PRJ_ACTION				SNM_SCHEDJOB_PLAYLIST_UPDATE + 1
-#define SNM_SCHEDJOB_OSX_FIX				SNM_SCHEDJOB_PRJ_ACTION + 1	//JFB!!! removeme some day
+#define SNM_SCHEDJOB_OSX_FIX				SNM_SCHEDJOB_PRJ_ACTION + 1	//JFB!! removeme some day
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -220,12 +230,6 @@ void SNM_AddOrReplaceScheduledJob(SNM_ScheduledJob* _job);
 
 // fake action toggle states
 int SNM_GetFakeToggleState(COMMAND_T*);
-void Noop(COMMAND_T*);
-void ExclusiveToggle(COMMAND_T*);
-
-// action sections
-int SNM_GetActionSectionId(int _idx);
-KbdSectionInfo* SNM_GetMySection();
 
 // S&M core stuff
 int SNM_Init(reaper_plugin_info_t* _rec);
@@ -266,8 +270,10 @@ typedef struct MIDI_COMMAND_T {
 	void (*doCommand)(MIDI_COMMAND_T*,int,int,int,HWND);
 	const char* menuText;
 	INT_PTR user;
+#ifdef _SNM_MISC
 	int (*getEnabled)(MIDI_COMMAND_T*);
 	bool fakeToggle;
+#endif
 } MIDI_COMMAND_T;
 
 

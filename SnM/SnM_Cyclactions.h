@@ -33,11 +33,12 @@
 #include "SnM_VWnd.h"
 
 
-#define CA_EMPTY		"no-op,65535"
+#define CA_VERSION		3
 #define CA_MAX_LEN		SNM_MAX_CHUNK_LINE_LENGTH
-#define CA_VERSION		2
-#define CA_SEP_V1		',' // deprecated (needed for file upgrade)
-#define CA_SEP			'µ'
+#define CA_SEP_V1		',' // deprecated: no console cmd support
+#define CA_SEP_V2		'µ' // deprecated: UTF8 warning on OSX
+#define CA_SEP			'|'
+#define CA_EMPTY		"no-op|65535" // use the above CA_SEP separator!
 #define CA_TGL1			'#' // CA reports a fake toggle state
 #define CA_TGL2			'$' // CA reports a real toggle state
 
@@ -101,9 +102,11 @@ protected:
 	void OnDestroy();
 	void OnResize();
 	HMENU OnContextMenu(int x, int y, bool* wantDefaultItems);
-	void AddImportExportMenu(HMENU _menu);
+	void AddImportExportMenu(HMENU _menu, bool _wantReset);
+	void AddResetMenu(HMENU _menu);
 	int OnKey(MSG* msg, int iKeyState);
 	void DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight = NULL);
+	virtual void GetMinSize(int* w, int* h) { *w=180; *h=125; }
 
 	WDL_VirtualComboBox m_cbSection;
 	WDL_VirtualIconButton m_btnUndo;
@@ -145,6 +148,8 @@ protected:
 	void OnItemSelChanged(SWS_ListItem* item, int iState);
 };
 
+
+Cyclaction* GetCyclactionFromCustomId(int _section, const char* _cmdStr);
 int ExplodeCmd(int _section, const char* _cmdStr, WDL_PtrList<WDL_FastString>* _cmds, WDL_PtrList<WDL_FastString>* _macros, WDL_PtrList<WDL_FastString>* _consoles, int _flags);
 int ExplodeMacro(int _section, const char* _cmdStr, WDL_PtrList<WDL_FastString>* _cmds, WDL_PtrList<WDL_FastString>* _macros, WDL_PtrList<WDL_FastString>* _consoles, int _flags);
 int ExplodeCyclaction(int _section, const char* _cmdStr, WDL_PtrList<WDL_FastString>* _cmds, WDL_PtrList<WDL_FastString>* _macros, WDL_PtrList<WDL_FastString>* _consoles, int _flags, Cyclaction* _action = NULL);

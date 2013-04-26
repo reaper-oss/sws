@@ -30,8 +30,6 @@
 #ifndef _SNM_VWND_H_
 #define _SNM_VWND_H_
 
-#include "SnM_Dlg.h"
-
 #define SNM_DEF_VWND_X_STEP			12
 
 
@@ -108,7 +106,7 @@ protected:
 //JFB TODO: hyperlink
 class SNM_Logo : public SNM_ImageVWnd {
 public:
-	SNM_Logo() : SNM_ImageVWnd(SNM_GetThemeLogo()) {}
+	SNM_Logo();
 	virtual const char *GetType() { return "SNM_Logo"; }
 	virtual bool GetToolTipString(int xpos, int ypos, char* bufOut, int bufOutSz) { lstrcpyn(bufOut, "Strong & Mighty", bufOutSz); return true; }
 };
@@ -175,7 +173,7 @@ public:
 	// (e.g. button text not readable with the default v4 theme) 
 	virtual void SetGrayed(bool grayed) { 
 		SetEnabled(!grayed);
-		if (grayed) m_pressed=0; //JFB!!! avoid stuck overlay when mousedown grays the button
+		if (grayed) m_pressed=0; //JFB!! avoid stuck overlay when mousedown grays the button
 	}
 };
 

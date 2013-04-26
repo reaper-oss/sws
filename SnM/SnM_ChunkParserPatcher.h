@@ -1,26 +1,31 @@
 /******************************************************************************
-** SnM_ChunkParserPatcher.h - v1.32
-** Copyright (C) 2008-2013, Jeffos
-**
-**    This software is provided 'as-is', without any express or implied
-**    warranty. In no event will the authors be held liable for any damages
-**    arising from the use of this software.
-**
-**    Permission is granted to anyone to use this software for any purpose,
-**    including commercial applications, and to alter it and redistribute it
-**    freely, subject to the following restrictions:
-**
-**    1. The origin of this software must not be misrepresented; you must not
-**       claim that you wrote the original software. If you use this software
-**       in a product, an acknowledgment in the product and its documentation 
-**       is required.
-**    2. Altered source versions must be plainly marked as such, and must not be
-**       misrepresented as being the original software.
-**    3. This notice may not be removed or altered from any source distribution.
-**
+/ SnM_ChunkParserPatcher.h - v1.32
+/ Copyright (c) 2008-2013 Jeffos
+/
+/ Permission is hereby granted, free of charge, to any person obtaining a copy
+/ of this software and associated documentation files (the "Software"), to deal
+/ in the Software without restriction, including without limitation the rights to
+/ use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+/ of the Software, and to permit persons to whom the Software is furnished to
+/ do so, subject to the following conditions:
+/ 
+/ The above copyright notice and this permission notice shall be included in all
+/ copies or substantial portions of the Software.
+/ 
+/ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+/ EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+/ OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+/ NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+/ HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+/ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+/ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+/ OTHER DEALINGS IN THE SOFTWARE.
+/
 ******************************************************************************/
 
-// Here are some tools to parse and alter RPP chunks and sub-chunks. 
+
+// Some fast tools to parse and alter RPP state chunks and sub-chunks. 
+//
 // SNM_ChunkParserPatcher is a class that can be used either as a SAX-ish 
 // parser (inheritance) or as a direct getter or altering tool, see ParsePatch() 
 // and Parse().
@@ -38,7 +43,7 @@
 // 
 // Important: 
 // - Chunks can be HUGE!
-// - The code assumes RPP chunks are consistent
+// - The code assumes RPP chunks are consistent, left trimmed, with Unix EOL
 //
 // Changelog:
 // v1.3x
@@ -560,6 +565,7 @@ bool WriteChunkLine(WDL_FastString* _chunkLine, const char* _value, int _tokenPo
 // is triggered depending on Parse() or ParsePatch() parameters/criteria 
 // => for optimization: the more criteria, the less calls!
 ///////////////////////////////////////////////////////////////////////////////
+
 virtual void NotifyStartChunk(int _mode) {}
 
 virtual void NotifyEndChunk(int _mode) {}
@@ -617,10 +623,9 @@ void IsMatchingParsedLine(bool* _tolerantMatch, bool* _strictMatch,
 // Globaly, the func is tolerant; the less parameters provided, the more parsed
 // lines will be notified to inherited instances (through NotifyChunkLine()) or, 
 // when it's used direcly, the more lines will be read/altered.
-// Examples: parse all lines, is the n-th FX bypassed under parent 'FXCHAIN'? etc..
-// Note: sometimes there are dependencies between parameters (most of the time with
-//       _mode), must return -1 if it's not respected.
-// This function assumes the chunk is valid and left trimmed.
+// Examples: parse all lines, is the FX n bypassed under parent 'FXCHAIN'? etc..
+// Note: sometimes there are dependencies between parameters (most of the time 
+//       with _mode), must return -1 if it's not respected.
 // Parameters: see below. 
 // Return values:
 //   Always return -1 on error/bad usage,

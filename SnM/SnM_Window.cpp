@@ -27,6 +27,7 @@
 
 #include "stdafx.h"
 #include "SnM.h"
+#include "SnM_Dlg.h"
 #include "SnM_FX.h"
 #include "SnM_Track.h"
 #include "SnM_Util.h"
@@ -488,29 +489,33 @@ int GetSelectedAction(char* _section, int _secSize, int* _cmdId, char* _id, int 
 	return -1;
 }
 
-bool GetSelectedAction(char* _idstrOut, int _idStrSz, const char* _expectedLocalizedSection)
+bool GetSelectedAction(char* _idstrOut, int _idStrSz, KbdSectionInfo* _expectedSection)
 {
+	if (!_expectedSection)
+		_expectedSection = SNM_GetActionSection(0);
+
 	char section[SNM_MAX_SECTION_NAME_LEN] = "";
 	int actionId, selItem = GetSelectedAction(section, SNM_MAX_SECTION_NAME_LEN, &actionId, _idstrOut, _idStrSz);
-	if (selItem>=0 && strcmp(section, _expectedLocalizedSection))
+	if (selItem>=0 && strcmp(section, __localizeFunc(_expectedSection->name,"accel_sec",0)))
 		selItem = -4;
 	switch (selItem)
 	{
 		case -4: {
 			char msg[256]="";
-			_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Section \"%s\" is not selected in the Actions window!","sws_mbox"), _expectedLocalizedSection);
-			MessageBox(GetMainHwnd(), msg, __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
+			_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("The section \"%s\" is not selected in the Actions window!\nDo you want to select it?","sws_mbox"), __localizeFunc(_expectedSection->name,"accel_sec",0));
+			if (IDYES == MessageBox(GetMainHwnd(), msg, __LOCALIZE("S&M - Error","sws_mbox"), MB_YESNO))
+				ShowActionList(_expectedSection, NULL);
 			return false;
 		}
 		case -3:
 			MessageBox(GetMainHwnd(), __LOCALIZE("There is no selected action, macro, or script in the Actions window!","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
 			return false;
 		case -2:
-			MessageBox(GetMainHwnd(), __LOCALIZE("Action IDs are not displayed in the Actions window!\nRight-click on the table header > Show action IDs.","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
+			MessageBox(GetMainHwnd(), __LOCALIZE("Action IDs are not displayed in the Actions window!\nTip: right-click on the table header > Show action IDs.","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
 			return false;
 		case -1:
 			if (IDYES == MessageBox(GetMainHwnd(), __LOCALIZE("Actions window not opened!\nDo you want to open it?","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_YESNO))
-				ShowActionList(NULL, NULL);
+				ShowActionList(_expectedSection, NULL);
 			return false;
 	}
 	return true;
@@ -518,97 +523,101 @@ bool GetSelectedAction(char* _idstrOut, int _idStrSz, const char* _expectedLocal
 
 void LearnAction(KbdSectionInfo* _section, int _cmdId)
 {
-#ifndef _SNM_REAPER_BUG
-	if (CountActionShortcuts && GetActionShortcutDesc && DeleteActionShortcut && DoActionShortcutDialog)
+#ifndef _SNM_REAPER_BUG // see _SNM_REAPER_BUG declaration
+
+	int nbShortcuts=0;
+	if (int cnt = CountActionShortcuts(_section, _cmdId))
 	{
-		int nbShortcuts = CountActionShortcuts(_section, _cmdId);
-		if (nbShortcuts)
+		char buf[128] = "";
+		WDL_FastString msg;
+		for (int i=0; i<cnt; i++)
 		{
-			char buf[128] = "";
-			WDL_FastString msg;
-			msg.SetFormatted(256, __LOCALIZE_VERFMT("'%s' is already bound to:","sws_mbox"), kbd_getTextFromCmd(_cmdId, _section));
-			msg.Append("\n");
-			for (int i=0; i<nbShortcuts; i++)
+			if (GetActionShortcutDesc(_section, _cmdId, i, buf, sizeof(buf)) && *buf) 
 			{
-				if (GetActionShortcutDesc(_section, _cmdId, i, buf, sizeof(buf)) && *buf) 
-				{
-					msg.Append("   - ");
-					msg.Append(buf);
+				nbShortcuts++;
+				if (nbShortcuts==1) {
+					msg.SetFormatted(256, __LOCALIZE_VERFMT("'%s' is already bound to:","sws_mbox"), kbd_getTextFromCmd(_cmdId, _section));
 					msg.Append("\n");
 				}
-				if (i>=4) // 4 max
-				{
-					msg.Append("   - ");
-					msg.Append(__LOCALIZE("etc...","sws_mbox"));
-					msg.Append("\n");
-					break;
-				}
+				msg.Append("   - ");
+				msg.Append(buf);
+				msg.Append("\n");
 			}
 
+			if (nbShortcuts>=4) // 4 max
+			{
+				msg.Append("   - ");
+				msg.Append(__LOCALIZE("etc...","sws_mbox"));
+				msg.Append("\n");
+				break;
+			}
+		}
+
+		if (msg.GetLength())
+		{
 			msg.Append("\n");
 			msg.Append(nbShortcuts>1 ? 
 				__LOCALIZE("Do you want to replace those bindings?","sws_mbox") : 
 				__LOCALIZE("Do you want to replace this binding?","sws_mbox"));
-			msg.Append("\n");
-			msg.Append(__LOCALIZE("Note: replying 'No' will add a new binding.","sws_mbox"));
+			msg.Append("\n\n");
+			msg.Append(__LOCALIZE("Note: replying \"No\" will add a new binding.","sws_mbox"));
 
 			switch (MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("S&M - Confirmation","sws_mbox"), MB_YESNOCANCEL))
 			{
 				case IDYES:
-					for (int i=nbShortcuts-1; i>=0; i--)
+					for (int i=cnt-1; i>=0; i--)
 						DeleteActionShortcut(_section, _cmdId, i);
-					nbShortcuts = CountActionShortcuts(_section, _cmdId);
+					nbShortcuts = 0;
 					break;
 				case IDNO: break;
 				default: return;
 			}
 		}
-		DoActionShortcutDialog(GetMainHwnd(), _section, _cmdId, nbShortcuts);
 	}
 
-	//JFB!!! removeme some day
-	else
-#endif
+	DoActionShortcutDialog(GetMainHwnd(), _section, _cmdId, nbShortcuts);
+
+#else //JFB!! removeme some day
+
+	HWND h;
+//	h = GetReaWindowByTitle(__localizeFunc("Actions", "DLG_274", 0));
+//	if (!h)
+		ShowActionList(_section, NULL);
+	if (h = GetReaWindowByTitle(__localizeFunc("Actions", "DLG_274", 0)))
 	{
-		HWND h;
-//		h = GetReaWindowByTitle(__localizeFunc("Actions", "DLG_274", 0));
-//		if (!h)
-			ShowActionList(SNM_GetMySection(), NULL);
-		if (h = GetReaWindowByTitle(__localizeFunc("Actions", "DLG_274", 0)))
+		char oldFilter[128] = "";
+		GetWindowText(GetDlgItem(h, 0x52C), oldFilter, sizeof(oldFilter));
+		SendMessage(h, WM_COMMAND, 0xB, 0); // clr filter
+
+		if (HWND hList = (h ? GetDlgItem(h, 0x52B) : NULL))
 		{
-			char oldFilter[128] = "";
-			GetWindowText(GetDlgItem(h, 0x52C), oldFilter, sizeof(oldFilter));
-			SendMessage(h, WM_COMMAND, 0xB, 0); // clr filter
+			SNM_ListView_SetItemState(hList, -1, 0, LVIS_SELECTED); // clr current sel
 
-			if (HWND hList = (h ? GetDlgItem(h, 0x52B) : NULL))
+			LVITEM li;
+			li.mask = LVIF_PARAM;
+			li.stateMask = LVIS_SELECTED;
+			li.iSubItem = 0;
+			bool found = false;
+			for (int i=0; i < SNM_ListView_GetItemCount(hList); i++)
 			{
-				SNM_ListView_SetItemState(hList, -1, 0, LVIS_SELECTED); // clr current sel
-
-				LVITEM li;
-				li.mask = LVIF_PARAM;
-				li.stateMask = LVIS_SELECTED;
-				li.iSubItem = 0;
-				bool found = false;
-				for (int i=0; i < SNM_ListView_GetItemCount(hList); i++)
-				{
-					li.iItem = i;
-					SNM_ListView_GetItem(hList, &li);
-					if (_cmdId == (int)li.lParam) {
-						SNM_ListView_SetItemState(hList, i, LVIS_SELECTED, LVIS_SELECTED);
-						found = true;
-					}
+				li.iItem = i;
+				SNM_ListView_GetItem(hList, &li);
+				if (_cmdId == (int)li.lParam) {
+					SNM_ListView_SetItemState(hList, i, LVIS_SELECTED, LVIS_SELECTED);
+					found = true;
 				}
+			}
 
-				// trigger the add (learn) button
-				if (found)
-				{
-					SendMessage(h, WM_COMMAND, 0x8, 0);
-					SetWindowText(GetDlgItem(h, 0x52C), oldFilter); // restore filter
-	//				SendMessage(h, WM_CLOSE, 0, 0);
-				}
+			// trigger the add (learn) button
+			if (found)
+			{
+				SendMessage(h, WM_COMMAND, 0x8, 0);
+				SetWindowText(GetDlgItem(h, 0x52C), oldFilter); // restore filter
+//					SendMessage(h, WM_CLOSE, 0, 0);
 			}
 		}
 	}
+#endif
 }
 
 // dump actions or the wiki ALR summary for the current section *as displayed* in the action dlg 

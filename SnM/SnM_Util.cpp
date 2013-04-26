@@ -216,7 +216,7 @@ void GetShortResourcePath(const char* _resSubDir, const char* _fullFn, char* _sh
 // get a full resource path from a short filename
 // ex: EQ\JS\test.RfxChain -> C:\Documents and Settings\<user>\Application Data\REAPER\FXChains\EQ\JS\test.RfxChain
 // notes: 
-// - work with non existing files //JFB!!! humm.. looks like it fails with non existing files?
+// - work with non existing files //JFB!! humm.. looks like it fails with non existing files?
 // - no-op for non resource paths (c:\temp\test.RfxChain -> c:\temp\test.RfxChain)
 // - no-op for full resource paths 
 void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fullFn, int _fullFnSize)
@@ -259,7 +259,7 @@ bool LoadChunk(const char* _fn, WDL_FastString* _chunkOut, bool _trim, int _appr
 			char line[SNM_MAX_CHUNK_LINE_LENGTH]="";
 			while(fgets(line, sizeof(line), f) && *line)
 			{
-				if (_trim) //JFB!!! useless with SNM_ChunkParserPatcher v2, TBC: "\r\n"
+				if (_trim) //JFB!! useless with SNM_ChunkParserPatcher v2, TBC: v2 supports "\r\n"?
 				{
 					char* p = line;
 					while(*p && (*p == ' ' || *p == '\t')) p++;
@@ -405,15 +405,14 @@ bool GenerateFilename(const char* _dir, const char* _name, const char* _ext, cha
 	return false;
 }
 
-// fills a list of filenames for the desired extension
-// if _ext == NULL or '\0', look for media files
-// note: it is up to the caller to free _files (WDL_PtrList_DeleteOnDestroy)
-void ScanFiles(WDL_PtrList<WDL_String>* _files, const char* _initDir, const char* _ext, bool _subdirs)
+// fills a list of filenames matching extensions defined in _filterList
+// _filterList: file extensions without null separators, ex: "*.ext1 *.ext2" ("*" == all files)
+// note: it is up to the caller to free _files (use WDL_PtrList_DeleteOnDestroy)
+void ScanFiles(WDL_PtrList<WDL_String>* _files, const char* _initDir, const char* _filterList, bool _subdirs)
 {
 	WDL_DirScan ds;
 	if (_files && _initDir && !ds.First(_initDir))
 	{
-		bool lookForMedias = (!_ext || !*_ext);
 		do 
 		{
 			if (!strcmp(ds.GetCurrentFN(), ".") || !strcmp(ds.GetCurrentFN(), "..")) 
@@ -424,16 +423,26 @@ void ScanFiles(WDL_PtrList<WDL_String>* _files, const char* _initDir, const char
 
 			if (ds.GetCurrentIsDirectory())
 			{
-				if (_subdirs) ScanFiles(_files, foundFn->Get(), _ext, true);
-				delete foundFn;
+				if (_subdirs)
+					ScanFiles(_files, foundFn->Get(), _filterList, true);
+				delete
+					foundFn;
 			}
 			else
 			{
-				const char* ext = GetFileExtension(foundFn->Get());
-				if ((lookForMedias && IsMediaExtension(ext, false)) || (!lookForMedias && !_stricmp(ext, _ext)))
+				if (!strcmp("*", _filterList))
+				{
 					_files->Add(foundFn);
+				}
 				else
-					delete foundFn;
+				{
+					WDL_FastString ext;
+					ext.SetFormatted(16, "*.%s", GetFileExtension(foundFn->Get()));
+					if (stristr(_filterList, ext.Get()))
+						_files->Add(foundFn);
+					else
+						delete foundFn;
+				}
 			}
 		}
 		while(!ds.Next());
@@ -705,6 +714,18 @@ void Replace02d(char* _str, char _replaceCh) {
 		}
 }
 
+// _outItems: it's up to the caller to unalloc things
+void SplitStrings(const char* _list, WDL_PtrList<WDL_FastString>* _outItems, const char* _sep)
+{
+	char tmp[512]="";
+	lstrcpyn(tmp, _list, sizeof(tmp));
+	char* tok = strtok(tmp, _sep);
+	while (tok) {
+		_outItems->Add(new WDL_FastString(tok));
+		tok = strtok(NULL, _sep);
+	}
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Time/play helpers
@@ -733,11 +754,11 @@ void TranslatePos(double _pos, int* _h, int* _m, int* _s, int* _ms)
 double SeekPlay(double _pos, bool _moveView)
 {
 	double cursorpos = GetCursorPositionEx(NULL);
-	if (PreventUIRefresh) PreventUIRefresh(1);
+	PreventUIRefresh(1);
 	SetEditCurPos2(NULL, _pos, _moveView, true);
 	if ((GetPlayStateEx(NULL)&1) != 1) OnPlayButton();
 	SetEditCurPos2(NULL, cursorpos, false, false);
-	if (PreventUIRefresh) PreventUIRefresh(-1);
+	PreventUIRefresh(-1);
 #ifdef _SNM_DEBUG
 	char dbg[256] = "";
 	_snprintfSafe(dbg, sizeof(dbg), "SeekPlay() - Pos: %f\n", _pos);
@@ -749,45 +770,90 @@ double SeekPlay(double _pos, bool _moveView)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Action helpers
-// - API LIMITATION: most of the funcs here struggle to work but they do work
-// - Corner-case: "Custom: " can be removed tweaked by hand, this is not 
-//   managed and leads to native problems anyway
 ///////////////////////////////////////////////////////////////////////////////
 
-// overrides the API's NamedCommandLookup() which can return an id although the 
-// related action is not registered yet, ex: at init time, when an action used in a mouse modifier)
-int SNM_NamedCommandLookup(const char* _custId, KbdSectionInfo* _section)
+// returns -1 on error
+int SNM_GetActionSectionId(int _idx)
 {
-	if (_custId && *_custId && 
-		!_section) //JFB API LIMITATION..
-	{
-		if (int cmdId = NamedCommandLookup(_custId)) 
-			if (const char* desc = kbd_getTextFromCmd(cmdId, _section))
-				if (*desc)
-					return cmdId;
-	}
-	return 0;
+	// keep this definition order (indexes used in the cycle action editor, for ex.)
+	static int sSectionIds[] =
+	{ 
+		0,				// Main
+		32061,			// ME event list section
+		32060,			// ME piano roll section
+		32062,			// MIDI inline editor
+		100,			// Main alt
+		32063,			// Media explorer
+		SNM_SECTION_ID	// S&M extension
+	};
+	return _idx < (SNM_NUM_NATIVE_SECTIONS+1) ? sSectionIds[_idx] : -1; // SNM_NUM_NATIVE_SECTIONS+1 for the S&M extension
 }
 
-// overrides the API's GetToggleCommandState() 
-// in order to skip the reentrance test for sws actions
-int SNM_GetToggleCommandState(int _cmdId, KbdSectionInfo* _section)
+// returns -1 on error
+int SNM_GetActionSectionId(KbdSectionInfo* _sec)
 {
-	if (_cmdId>0)
-	{
-		// SWS action => skip the reentrance test
-		if (!_section) // API LIMITATION: extensions like sws can only register actions in the main section ATM
-			if (COMMAND_T* cmd = SWSGetCommandByID(_cmdId))
-				if (cmd->accel.accel.cmd==_cmdId && cmd->doCommand!=SWS_NOOP)
-					return cmd->getEnabled ? cmd->getEnabled(cmd) : -1;
+	if (!_sec) return 0;
+	int idx=0, id=SNM_GetActionSectionId(0);
+	while (id != -1 && SectionFromUniqueID(id) != _sec)
+		id = SNM_GetActionSectionId(++idx);
+	return id;
+}
 
-		if (GetToggleCommandState2)
-			return GetToggleCommandState2(_section, _cmdId);
-		 //JFB!!! removeme > 4.33pre
-		else if (!_section)
-			return GetToggleCommandState(_cmdId);
+// returns NULL on error (must not be considered as the "Main" section here!)
+KbdSectionInfo* SNM_GetActionSection(int _idx) {
+	int id = SNM_GetActionSectionId(_idx);
+	return id!=-1 ? SectionFromUniqueID(id) : NULL;
+}
+
+// overrides the API's NamedCommandLookup to take all a action sections into account
+// _hardCheck: if true, do more tests on the returned command id because the API's NamedCommandLookup
+//             can return an id although the related action is not registered yet, ex: at init time, 
+//             when an action is attached to a mouse modifier
+// note: calling this func with default param values like SNM_NamedCommandLookup("_bla") 
+//       is the same as the native NamedCommandLookup("_bla")
+int SNM_NamedCommandLookup(const char* _custId, KbdSectionInfo* _section, bool _hardCheck)
+{
+	int cmdId = 0;
+	if (_custId && *_custId)
+	{
+		if (!_section || _section==SNM_GetActionSection(0))
+		{
+			cmdId = NamedCommandLookup(_custId);
+		}
+		else
+		{
+			//JFB cool finding - REAPER v4.34rc1
+			// other sections: for macros/scripts (which are the only non-native thing that 
+			// can be registered in those sections ATM), it turns out NamedCommandLookup() works
+			// (probably relies on the unicity of macros'/scripts' custom ids: generated hash)
+			// 3rd party sections are ok too because they can't use custom ids yet
+			if (*_custId == '_')
+			{
+				cmdId = NamedCommandLookup(_custId);
+			}
+			else
+			{
+				if (cmdId = atoi(_custId)) // <-- not enough, e.g. "-666" would match
+				{
+					bool found = false;
+					for (int i=0; i<_section->action_list_cnt; i++) {
+						if (_section->action_list[i].cmd == cmdId) {
+							found = true;
+							break;
+						}
+					}
+					if (!found)
+						cmdId = 0;
+				}
+			}
+		}
 	}
-	return -1;
+
+	if (_hardCheck && cmdId)
+		if (const char* desc = kbd_getTextFromCmd(cmdId, _section))
+			if (!desc || !*desc)
+				cmdId = 0;
+	return cmdId;
 }
 
 bool LoadKbIni(WDL_PtrList<WDL_FastString>* _out)
@@ -809,17 +875,17 @@ bool LoadKbIni(WDL_PtrList<WDL_FastString>* _out)
 }
 
 // returns 1 for a macro, 2 for a script, 0 if not found
-// _customId: custom id (both formats are allowed: "bla" and "_bla")
-// _inMacroScripts: to optimize accesses to reaper-kb.ini
+// _custId: custom id (both formats are allowed: "bla" and "_bla")
+// _inMacroScripts: to optimize accesses to reaper-kb.ini, required
 // _outCmds: optionnal, if any it is up to the caller to unalloc items
 // note: no cache here (as the user can create new macros)
-int GetMacroOrScript(const char* _customId, int _sectionUniqueId, WDL_PtrList<WDL_FastString>* _inMacroScripts, WDL_PtrList<WDL_FastString>* _outCmds)
+int GetMacroOrScript(const char* _custId, int _sectionUniqueId, WDL_PtrList<WDL_FastString>* _inMacroScripts, WDL_PtrList<WDL_FastString>* _outCmds, WDL_FastString* _outName)
 {
-	if (!_customId || !_inMacroScripts)
+	if (!_custId || !_inMacroScripts)
 		return 0;
 
-	if (*_customId == '_')
-		_customId++; // custom ids in reaper-kb.ini do not start with '_'
+	if (*_custId == '_')
+		_custId++; // custom ids in reaper-kb.ini do not start with '_'
 
 	if (_outCmds)
 		_outCmds->Empty(true);
@@ -832,20 +898,25 @@ int GetMacroOrScript(const char* _customId, int _sectionUniqueId, WDL_PtrList<WD
 			LineParser lp(false);
 			if (!lp.parse(cmd) && 
 				lp.getnumtokens()>=5 && // indirectly exlude key shortcuts, etc..
-				!_stricmp(lp.gettoken_str(3), _customId))
+				!_stricmp(lp.gettoken_str(3), _custId))
 			{
 				int success, iniSecId = lp.gettoken_int(2, &success);
 				if (success && iniSecId==_sectionUniqueId)
 				{
 					found = !_stricmp(lp.gettoken_str(0), "ACT") ? 1 : !_stricmp(lp.gettoken_str(0), "SCR") ? 2 : 0;
-					if (_outCmds && found)
+					if (found)
 					{
-						for (int i=5; i<lp.getnumtokens(); i++)
+						if (_outName)
+							_outName->Set(lp.gettoken_str(4));
+						if (_outCmds)
 						{
-							WDL_FastString* cmd = new WDL_FastString;
-							const char* p = FindFirstRN(lp.gettoken_str(i)); // there are some "\r\n" sometimes
-							cmd->Set(lp.gettoken_str(i), p ? (int)(p-lp.gettoken_str(i)) : 0);
-							_outCmds->Add(new WDL_FastString(cmd));
+							for (int i=5; i<lp.getnumtokens(); i++)
+							{
+								WDL_FastString* cmd = new WDL_FastString;
+								const char* p = FindFirstRN(lp.gettoken_str(i)); // there are some "\r\n" sometimes
+								cmd->Set(lp.gettoken_str(i), p ? (int)(p-lp.gettoken_str(i)) : 0);
+								_outCmds->Add(new WDL_FastString(cmd));
+							}
 						}
 					}
 					break;
@@ -856,7 +927,9 @@ int GetMacroOrScript(const char* _customId, int _sectionUniqueId, WDL_PtrList<WD
 	return found;
 }
 
-// API LIMITATION: a bit hacky but we definitely need this..
+// test if an action name (or a custom id) is a macro/script one
+// *not* based on NamedCommandLookup() so that it works even if _cmd is not registered yet
+// note: a bit hacky but we definitely need this..
 bool IsMacroOrScript(const char* _cmd, bool _cmdIsName)
 {
 	if (_cmd && *_cmd)
@@ -868,7 +941,7 @@ bool IsMacroOrScript(const char* _cmd, bool _cmdIsName)
 			static int sCustomlen = strlen(sCustom);
 			return (!_strnicmp(_cmd, sCustom, sCustomlen) && _cmd[sCustomlen] == ':');
 		}
-		// _cmd is a custom id
+		// _cmd is a custom id (both formats are allowed: "bla" and "_bla")
 		else
 		{
 			int len=0;

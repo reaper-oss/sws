@@ -38,6 +38,9 @@
 
 #include "stdafx.h"
 #include "SnM.h"
+#include "SnM_ChunkParserPatcher.h"
+#include "SnM_Dlg.h"
+#include "SnM_Marker.h"
 #include "SnM_Notes.h"
 #include "SnM_Track.h"
 #include "SnM_Util.h"
@@ -390,7 +393,7 @@ void SNM_NotesWnd::OnResize()
 	if (g_notesViewType != g_prevNotesViewType)
 	{
 		if (g_notesViewType == SNM_NOTES_REGION_SUBTITLES || g_notesViewType == SNM_NOTES_ACTION_HELP)
-			m_resize.get_item(IDC_EDIT)->orig.bottom = m_resize.get_item(IDC_EDIT)->real_orig.bottom - 41; //JFB!!! 41 is tied to the current .rc!
+			m_resize.get_item(IDC_EDIT)->orig.bottom = m_resize.get_item(IDC_EDIT)->real_orig.bottom - 41; //JFB!! 41 is tied to the current .rc!
 		else
 			m_resize.get_item(IDC_EDIT)->orig = m_resize.get_item(IDC_EDIT)->real_orig;
 		InvalidateRect(m_hwnd, NULL, 0);
@@ -1236,7 +1239,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 
 static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
 {
-	// cleanup: just saves some RAM (as these things won't be saved below anyway)
+	// cleanup (won't be saved below anyway)
 //JFB	if (!isUndo)
 	{
 		// delete unused tracks
@@ -1252,15 +1255,15 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 					g_pRegionSubs.Get()->Delete(i--, true);
 	}
 
-	char startLine[SNM_MAX_CHUNK_LINE_LENGTH] = "";
+	char line[SNM_MAX_CHUNK_LINE_LENGTH] = "";
 	char strId[128] = "";
 	WDL_FastString formatedNotes;
 
 	// save project notes
 	if (g_prjNotes.Get()->GetLength())
 	{
-		strcpy(startLine, "<S&M_PROJNOTES\n|");
-		if (GetNotesChunkFromString(g_prjNotes.Get()->Get(), &formatedNotes, startLine))
+		strcpy(line, "<S&M_PROJNOTES\n|");
+		if (GetNotesChunkFromString(g_prjNotes.Get()->Get(), &formatedNotes, line))
 			StringToExtensionConfig(&formatedNotes, ctx);
 	}
 
@@ -1278,8 +1281,8 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 					else
 						g = GUID_NULL;
 					guidToString(&g, strId);
-					if (_snprintfStrict(startLine, sizeof(startLine), "<S&M_TRACKNOTES %s\n|", strId) > 0)
-						if (GetNotesChunkFromString(tn->m_notes.Get(), &formatedNotes, startLine))
+					if (_snprintfStrict(line, sizeof(line), "<S&M_TRACKNOTES %s\n|", strId) > 0)
+						if (GetNotesChunkFromString(tn->m_notes.Get(), &formatedNotes, line))
 							StringToExtensionConfig(&formatedNotes, ctx);
 				}
 			}
@@ -1289,8 +1292,8 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 	for (int i=0; i < g_pRegionSubs.Get()->GetSize(); i++)
 		if (SNM_RegionSubtitle* sub = g_pRegionSubs.Get()->Get(i))
 			if (sub->m_notes.GetLength() && GetMarkerRegionIndexFromId(NULL, sub->m_id) >= 0)
-				if (_snprintfStrict(startLine, sizeof(startLine), "<S&M_SUBTITLE %d\n|", sub->m_id) > 0)
-					if (GetNotesChunkFromString(sub->m_notes.Get(), &formatedNotes, startLine))
+				if (_snprintfStrict(line, sizeof(line), "<S&M_SUBTITLE %d\n|", sub->m_id) > 0)
+					if (GetNotesChunkFromString(sub->m_notes.Get(), &formatedNotes, line))
 						StringToExtensionConfig(&formatedNotes, ctx);
 }
 

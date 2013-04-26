@@ -25,11 +25,12 @@
 /
 ******************************************************************************/
 
-
 #include "stdafx.h"
 #include "SnM.h"
+#include "SnM_Chunk.h"
 #include "SnM_Item.h"
 #include "SnM_Misc.h"
+#include "SnM_Resources.h"
 #include "SnM_Track.h"
 #include "SnM_Util.h"
 #include "SnM_Window.h"
@@ -324,43 +325,40 @@ bool SplitSelectItemsInInterval(MediaTrack* _tr, double _pos1, double _pos2, WDL
 {
 	bool updated = false;
 
-	if (PreventUIRefresh)
-		PreventUIRefresh(1);
-
-	if (_tr)
-		for (int j=0; j < GetTrackNumMediaItems(_tr); j++) // new items might be created during the loop!
-			if (MediaItem* item = GetTrackMediaItem(_tr, j))
-			{
-				if (MediaItem* newItem = SplitMediaItem(item, _pos1)) {
-					updated=true;
-					if (_newItemsOut)
-						_newItemsOut->Add(newItem);
-				}
-				if (MediaItem* newItem = SplitMediaItem(item, _pos2)) {
-					updated=true;
-					if (_newItemsOut)
-						_newItemsOut->Add(newItem);
-				}
-
-				double pos = *(double*)GetSetMediaItemInfo(item,"D_POSITION",NULL);
-				double end = pos + *(double*)GetSetMediaItemInfo(item,"D_LENGTH",NULL);
-				bool sel = *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL);
-				if ((pos+SNM_FUDGE_FACTOR) >= _pos1 && (end-SNM_FUDGE_FACTOR) <= _pos2) 
-				{
-					if (!sel) {
-						updated = true;
-						GetSetMediaItemInfo(item,"B_UISEL",&g_bTrue);
-					}
-				}
-				else if (sel) {
-					updated = true;
-					GetSetMediaItemInfo(item,"B_UISEL",&g_bFalse);
-				}
+	PreventUIRefresh(1);
+	// new items might be created during the loop!
+	for (int j=0; _tr && j < GetTrackNumMediaItems(_tr); j++)
+	{
+		if (MediaItem* item = GetTrackMediaItem(_tr, j))
+		{
+			if (MediaItem* newItem = SplitMediaItem(item, _pos1)) {
+				updated=true;
+				if (_newItemsOut)
+					_newItemsOut->Add(newItem);
+			}
+			if (MediaItem* newItem = SplitMediaItem(item, _pos2)) {
+				updated=true;
+				if (_newItemsOut)
+					_newItemsOut->Add(newItem);
 			}
 
-	if (PreventUIRefresh)
-		PreventUIRefresh(-1);
-
+			double pos = *(double*)GetSetMediaItemInfo(item,"D_POSITION",NULL);
+			double end = pos + *(double*)GetSetMediaItemInfo(item,"D_LENGTH",NULL);
+			bool sel = *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL);
+			if ((pos+SNM_FUDGE_FACTOR) >= _pos1 && (end-SNM_FUDGE_FACTOR) <= _pos2) 
+			{
+				if (!sel) {
+					updated = true;
+					GetSetMediaItemInfo(item,"B_UISEL",&g_bTrue);
+				}
+			}
+			else if (sel) {
+				updated = true;
+				GetSetMediaItemInfo(item,"B_UISEL",&g_bFalse);
+			}
+		}
+	}
+	PreventUIRefresh(-1);
 	return updated;
 }
 
@@ -454,7 +452,7 @@ void PasteTake(COMMAND_T* _ct)
 // Take lanes: clear take, activate lanes, ...
 ///////////////////////////////////////////////////////////////////////////////
 
-//JFB!!! TODO: replace Padre's MidiItemProcessor which has bugs, see MidiItemProcessor::getMidiEventsList()
+//JFB!! TODO: replace Padre's MidiItemProcessor which has bugs, see MidiItemProcessor::getMidiEventsList()
 bool IsEmptyMidi(MediaItem_Take* _take)
 {
 	bool emptyMidi = false;
@@ -1317,7 +1315,7 @@ bool ToggleOffscreenSelItems(int _dir)
 
 		if (l1 && l2) 
 		{
-			if (PreventUIRefresh) PreventUIRefresh(1);
+			PreventUIRefresh(1);
 			l2->Empty(false);
 			for (int j=0; j < l1->GetSize(); j++)
 			{
@@ -1326,7 +1324,7 @@ bool ToggleOffscreenSelItems(int _dir)
 				updated = true;
 			}
 			l1->Empty(false);
-			if (PreventUIRefresh) PreventUIRefresh(-1);
+			PreventUIRefresh(-1);
 
 			// in case auto-refresh toolbar option is off..
 			RefreshToolbar(SWSGetCommandID(ToggleOffscreenSelItems, i));
@@ -1385,8 +1383,7 @@ void ScrollToSelItem(MediaItem* _item)
 {
 	if (_item)
 	{
-		if (PreventUIRefresh) 
-			PreventUIRefresh(1);
+		PreventUIRefresh(1);
 
 		// horizontal scroll to selected item
 		double curPos = GetCursorPositionEx(NULL);
@@ -1397,8 +1394,7 @@ void ScrollToSelItem(MediaItem* _item)
 		if (MediaTrack* tr = GetMediaItem_Track(_item))
 			ScrollTrack(tr, true, false);
 
-		if (PreventUIRefresh) 
-			PreventUIRefresh(-1);
+		PreventUIRefresh(-1);
 
 		UpdateTimeline();
 	}
@@ -1472,8 +1468,9 @@ void OpenMediaPathInExplorerFinder(COMMAND_T*)
 // note: no slot "pause" actions, does not make sense
 ///////////////////////////////////////////////////////////////////////////////
 
+// _title unused (no undo point here)
 void PlaySelTrackMediaSlot(int _slotType, const char* _title, int _slot, bool _pause, bool _loop, double _msi) {
-	if (WDL_FastString* fnStr = g_SNM_ResSlots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot)) {
+	if (WDL_FastString* fnStr = GetOrPromptOrBrowseSlot(_slotType, &_slot)) {
 		SNM_PlaySelTrackPreviews(fnStr->Get(), _pause, _loop, _msi);
 		delete fnStr;
 	}
@@ -1495,10 +1492,11 @@ void SyncLoopSelTrackMediaSlot(COMMAND_T* _ct) {
 	PlaySelTrackMediaSlot(g_SNM_TiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, true, 1.0);
 }
 
+// _title unused (no undo point here)
 bool TogglePlaySelTrackMediaSlot(int _slotType, const char* _title, int _slot, bool _pause, bool _loop, double _msi)
 {
 	bool done = false;
-	if (WDL_FastString* fnStr = g_SNM_ResSlots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot)) {
+	if (WDL_FastString* fnStr = GetOrPromptOrBrowseSlot(_slotType, &_slot)) {
 		done = SNM_TogglePlaySelTrackPreviews(fnStr->Get(), _pause, _loop, _msi);
 		delete fnStr;
 	}
@@ -1547,8 +1545,8 @@ void SyncToggleLoopPauseSelTrackMediaSlot(COMMAND_T* _ct) {
 
 // _insertMode: 0=add to current track, 1=add new track, 3=add to selected items as takes, &4=stretch/loop to fit time sel, &8=try to match tempo 1x, &16=try to match tempo 0.5x, &32=try to match tempo 2x
 void InsertMediaSlot(int _slotType, const char* _title, int _slot, int _insertMode) {
-	if (WDL_FastString* fnStr = g_SNM_ResSlots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot)) {
-		InsertMedia((char*)fnStr->Get(), _insertMode); //JFB includes undo point => _title not used..
+	if (WDL_FastString* fnStr = GetOrPromptOrBrowseSlot(_slotType, &_slot)) {
+		InsertMedia((char*)fnStr->Get(), _insertMode);  // already includes an undo point (_title unused)
 		delete fnStr;
 	}
 }
@@ -1570,7 +1568,7 @@ bool AutoSaveMidiSlot(const void* _obj, const char* _fn) {
 	return true;
 }
 
-bool AutoSaveMediaSlots(int _slotType, const char* _dirPath, WDL_PtrList<PathSlotItem>* _owSlots)
+bool AutoSaveMediaSlots(int _slotType, const char* _dirPath, WDL_PtrList<void>* _owSlots)
 {
 	bool saved = false;
 	int owIdx = 0;
@@ -1583,9 +1581,9 @@ bool AutoSaveMediaSlots(int _slotType, const char* _dirPath, WDL_PtrList<PathSlo
 							if (PCM_source* src = (PCM_source*)GetSetMediaItemTakeInfo(tk, "P_SOURCE", NULL))
 								if (src->GetFileName()) {
 									if(*src->GetFileName()) // ext file
-										saved |= AutoSaveSlot(_slotType, _dirPath, src->GetFileName(), GetFileExtension(src->GetFileName()), _owSlots, &owIdx);
+										saved |= AutoSaveSlot(_slotType, _dirPath, src->GetFileName(), GetFileExtension(src->GetFileName()), (WDL_PtrList<PathSlotItem>*)_owSlots, &owIdx);
 									else // in-project midi
-										saved |= AutoSaveSlot(_slotType, _dirPath, (const char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL), "mid", _owSlots, &owIdx, AutoSaveMidiSlot, src);
+										saved |= AutoSaveSlot(_slotType, _dirPath, (const char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL), "mid", (WDL_PtrList<PathSlotItem>*)_owSlots, &owIdx, AutoSaveMidiSlot, src);
 								}
 	return saved;
 }

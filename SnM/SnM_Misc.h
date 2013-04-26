@@ -47,10 +47,8 @@ double SNM_GetDoubleConfigVar(const char* _varName, double _errVal);
 bool SNM_SetDoubleConfigVar(const char* _varName, double _newVal);
 
 // exotic resources slots
-#ifdef _WIN32
 void LoadThemeSlot(int _slotType, const char* _title, int _slot);
 void LoadThemeSlot(COMMAND_T*);
-#endif
 void ShowImageSlot(int _slotType, const char* _title, int _slot);
 void ShowImageSlot(COMMAND_T*);
 void ShowNextPreviousImageSlot(COMMAND_T*);

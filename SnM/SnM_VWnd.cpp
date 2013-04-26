@@ -27,6 +27,7 @@
 
 #include "stdafx.h"
 #include "SnM.h"
+#include "SnM_Dlg.h"
 #include "SnM_Util.h"
 #include "SnM_VWnd.h"
 
@@ -497,6 +498,14 @@ void SNM_ImageVWnd::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RE
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// SNM_Logo
+///////////////////////////////////////////////////////////////////////////////
+
+// just avoids some include in .h..
+SNM_Logo::SNM_Logo() : SNM_ImageVWnd(SNM_GetThemeLogo()) {}
+
+
+///////////////////////////////////////////////////////////////////////////////
 // SNM_TinyButton
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -721,8 +730,8 @@ bool SNM_AddLogo(LICE_IBitmap* _bm, const RECT* _r, int _x, int _h)
 			}
 		}
 		// bottom right display
-		else if (((_r->right-_r->left)-SNM_GUI_X_MARGIN_LOGO) > logo->getWidth() && (_r->bottom-_r->top-SNM_GUI_Y_MARGIN) > logo->getHeight()) {
-			LICE_Blit(_bm,logo,_r->right-(logo->getWidth()+SNM_GUI_X_MARGIN_LOGO),_r->bottom-_r->top-logo->getHeight()-SNM_GUI_Y_MARGIN,NULL,0.125f,LICE_BLIT_MODE_ADD|LICE_BLIT_USE_ALPHA);
+		else if (((_r->right-_r->left)-SNM_GUI_X_MARGIN_LOGO) > logo->getWidth() && (_r->bottom-_r->top-SNM_GUI_Y_MARGIN_LOGO) > logo->getHeight()) {
+			LICE_Blit(_bm,logo,_r->right-(logo->getWidth()+SNM_GUI_X_MARGIN_LOGO),_r->bottom-_r->top-logo->getHeight()-SNM_GUI_Y_MARGIN_LOGO,NULL,0.125f,LICE_BLIT_MODE_ADD|LICE_BLIT_USE_ALPHA);
 			return true;
 		}
 	}

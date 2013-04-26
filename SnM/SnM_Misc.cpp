@@ -27,7 +27,10 @@
 
 #include "stdafx.h"
 #include "SnM.h"
+#include "SnM_Chunk.h"
 #include "SnM_Item.h"
+#include "SnM_Misc.h"
+#include "SnM_Resources.h"
 #include "SnM_Track.h"
 #include "SnM_Util.h"
 #include "../reaper/localize.h"
@@ -194,17 +197,22 @@ bool SNM_SetDoubleConfigVar(const char* _varName, double _newVal) {
 // Theme slots (Resources view)
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef _WIN32
+// _title unused (no undo point here)
 void LoadThemeSlot(int _slotType, const char* _title, int _slot)
 {
-	if (WDL_FastString* fnStr = g_SNM_ResSlots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot))
+	if (WDL_FastString* fnStr = GetOrPromptOrBrowseSlot(_slotType, &_slot))
 	{
 		char cmd[SNM_MAX_PATH]=""; 
-		if (_snprintfStrict(cmd, sizeof(cmd), "%s\\reaper.exe", GetExePath()) > 0)
+		if (_snprintfStrict(cmd, sizeof(cmd), SNM_REAPER_EXE_FILE, GetExePath()) > 0)
 		{
-			WDL_FastString prmStr;
-			prmStr.SetFormatted(SNM_MAX_PATH, " \"%s\"", fnStr->Get());
-			_spawnl(_P_NOWAIT, cmd, prmStr.Get(), NULL);
+			WDL_FastString str;
+#ifdef _WIN32
+			str.SetFormatted(SNM_MAX_PATH, " \"%s\"", fnStr->Get());
+			_spawnl(_P_NOWAIT, cmd, str.Get(), NULL);
+#else
+			str.SetFormatted(SNM_MAX_PATH, "open -a \"%s\" \"%s\"", cmd, fnStr->Get());
+			system(str.Get());
+#endif
 			delete fnStr;
 		}
 	}
@@ -213,7 +221,6 @@ void LoadThemeSlot(int _slotType, const char* _title, int _slot)
 void LoadThemeSlot(COMMAND_T* _ct) {
 	LoadThemeSlot(g_SNM_TiedSlotActions[SNM_SLOT_THM], SWS_CMD_SHORTNAME(_ct), (int)_ct->user);
 }
-#endif
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -222,10 +229,24 @@ void LoadThemeSlot(COMMAND_T* _ct) {
 
 int g_SNM_LastImgSlot = -1;
 
-void ShowImageSlot(int _slotType, const char* _title, int _slot) {
-	if (WDL_FastString* fnStr = g_SNM_ResSlots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot)) {
-		if (OpenImageWnd(fnStr->Get()))
-			g_SNM_LastImgSlot = _slot;
+// _title unused (no undo point here)
+void ShowImageSlot(int _slotType, const char* _title, int _slot)
+{
+	if (WDL_FastString* fnStr = GetOrPromptOrBrowseSlot(_slotType, &_slot))
+	{
+		if (!_stricmp("png", GetFileExtension(fnStr->Get())))
+		{
+			if (OpenImageWnd(fnStr->Get()))
+				g_SNM_LastImgSlot = _slot;
+		}
+		else
+		{
+			WDL_FastString msg;
+			msg.SetFormatted(256, __LOCALIZE_VERFMT("Cannot load %s","sws_mbox"), fnStr->Get());
+			msg.Append("\n");
+			msg.Append(__LOCALIZE("Only PNG files are supported at the moment, sorry.","sws_mbox")); //JFB!!
+			MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
+		}
 		delete fnStr;
 	}
 }
@@ -248,7 +269,7 @@ void ShowNextPreviousImageSlot(COMMAND_T* _ct)
 void SetSelTrackIconSlot(int _slotType, const char* _title, int _slot)
 {
 	bool updated = false;
-	if (WDL_FastString* fnStr = g_SNM_ResSlots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot))
+	if (WDL_FastString* fnStr = GetOrPromptOrBrowseSlot(_slotType, &_slot))
 	{
 		for (int j=0; j <= GetNumTracks(); j++)
 			if (MediaTrack* tr = CSurf_TrackFromID(j, false))

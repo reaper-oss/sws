@@ -33,8 +33,8 @@
 #include "SnM_Marker.h"
 #include "SnM_VWnd.h"
 
-
 #define NOTES_UPDATE_FREQ		150
+
 
 enum
 {
@@ -45,7 +45,6 @@ enum
   SNM_NOTES_REGION_SUBTITLES,
   SNM_NOTES_ACTION_HELP // must remain the last item: no OSX support yet 
 };
-
 
 class SNM_TrackNotes {
 public:
@@ -63,7 +62,7 @@ public:
 
 class NotesUpdateJob : public SNM_ScheduledJob {
 public:
-	NotesUpdateJob() : SNM_ScheduledJob(SNM_SCHEDJOB_NOTES_UPDATE, NOTES_UPDATE_FREQ) {}
+	NotesUpdateJob() : SNM_ScheduledJob(SNM_SCHEDJOB_NOTES_UPDATE, SNM_SCHEDJOB_SLOW_DELAY) {}
 	void Perform();
 };
 
@@ -134,7 +133,6 @@ void LoadHelp(const char* _cmdName, char* _buf, int _bufSize);
 void SaveHelp(const char* _cmdName, const char* _help);
 bool GetStringFromNotesChunk(WDL_FastString* _notes, char* _buf, int _bufMaxSize);
 bool GetNotesChunkFromString(const char* _buf, WDL_FastString* _notes, const char* _startLine = NULL);
-
 
 extern SNM_NotesWnd* g_SNM_NotesWnd;
 extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_SNM_TrackNotes;

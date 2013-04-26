@@ -114,10 +114,10 @@ bool SNM_SetProjectMarker(ReaProject* _proj, int _num, bool _isrgn, double _pos,
 		}
 
 		bool ok = false;
-		if (PreventUIRefresh) PreventUIRefresh(1);
+		PreventUIRefresh(1);
 		if (DeleteProjectMarker(_proj, _num, _isrgn))
 			ok = (AddProjectMarker2(_proj, _isrgn, _pos, _rgnend, _name, _num, color) == _num);
-		if (PreventUIRefresh) PreventUIRefresh(-1);
+		PreventUIRefresh(-1);
 		UpdateTimeline();
 		return ok;
 	}
@@ -202,7 +202,7 @@ int GetMarkerRegionIdFromIndex(ReaProject* _proj, int _idx)
 	return -1;
 }
 
-//JFB!!! removeme (->EnumMarkerRegionById())
+//JFB!! removeme (->EnumMarkerRegionById())
 int GetMarkerRegionIndexFromId(ReaProject* _proj, int _id) 
 {
 	if (_id > 0)
@@ -349,8 +349,7 @@ bool GotoMarkerRegion(ReaProject* _proj, int _num, int _flags, bool _select = fa
 	while (x = EnumProjectMarkers3(_proj, x, &isrgn, &pos, &end, NULL, &n, NULL))
 		if (n == _num && ((!isrgn && _flags&SNM_MARKER_MASK) || (isrgn && _flags&SNM_REGION_MASK)))
 		{
-			if (PreventUIRefresh)
-				PreventUIRefresh(1);
+			PreventUIRefresh(1);
 
 			if (_select && isrgn && (_flags&SNM_REGION_MASK))
 				GetSet_LoopTimeRange2(NULL, true, true, &pos, &end, false); // seek is managed below
@@ -358,11 +357,8 @@ bool GotoMarkerRegion(ReaProject* _proj, int _num, int _flags, bool _select = fa
 			int* opt = (int*)GetConfigVar("smoothseek"); // obeys smooth seek
 			SetEditCurPos2(_proj, pos, true, opt && *opt); // incl. undo point if enabled in prefs
 
-			if (PreventUIRefresh)
-				PreventUIRefresh(-1);
-
+			PreventUIRefresh(-1);
 			UpdateTimeline(); // ruler + arrange
-
 			return true;
 		}
 	return false;

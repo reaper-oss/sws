@@ -39,14 +39,8 @@ enum {
   SNM_SLOT_PRJ,
   SNM_SLOT_MEDIA,
   SNM_SLOT_IMG,
-  
-  //////////////////////////////////////
-  // -> add new resource types here..
-  //////////////////////////////////////
-
-#ifdef _WIN32
   SNM_SLOT_THM,
-#endif
+  // -> add new resource types here..
   SNM_NUM_DEFAULT_SLOTS
 };
 
@@ -62,57 +56,53 @@ enum {
 class PathSlotItem {
 public:
 	PathSlotItem(const char* _shortPath="", const char* _comment="") : m_shortPath(_shortPath), m_comment(_comment) {}
-	bool IsDefault() {return (!m_shortPath.GetLength());}
-	void Clear() {m_shortPath.Set(""); m_comment.Set("");}
+	bool IsDefault() { return (!m_shortPath.GetLength()); }
+	void Clear() { m_shortPath.Set(""); m_comment.Set(""); }
 	WDL_FastString m_shortPath, m_comment;
 };
 
 
 // masks for FileSlotList.m_flags
 enum {
-  MASK_DBLCLIK=1,
-  MASK_TEXT=2,
-  MASK_AUTOSAVE=4,
-  MASK_AUTOFILL=8
+  SNM_RES_MASK_DBLCLIK=1,
+  SNM_RES_MASK_TEXT=2,
+  SNM_RES_MASK_AUTOSAVE=4,
+  SNM_RES_MASK_AUTOFILL=8
 };
 
 class FileSlotList : public WDL_PtrList<PathSlotItem>
 {
   public:
-	FileSlotList(const char* _resDir, const char* _desc, const char* _ext, int _flags)
-		: m_resDir(_resDir),m_desc(_desc),m_ext(_ext),m_flags(_flags),
-		WDL_PtrList<PathSlotItem>() {}
-	~FileSlotList() {}
+	FileSlotList(const char* _resDir, const char* _desc, const char* _ext, int _flags);
+	~FileSlotList() { m_exts.Empty(true); }
 
+	int GetNonEmptySize() { int cnt=0; for(int i=0; i<GetSize(); i++) if (!Get(i)->IsDefault()) cnt++; return cnt; }  
 	PathSlotItem* AddSlot(const char* _path="", const char* _desc="");
 	PathSlotItem* InsertSlot(int _slot, const char* _path="", const char* _desc="");
-	int FindByResFulltPath(const char* _resFullPath);
+	int FindByPath(const char* _fullPath);
 	bool GetFullPath(int _slot, char* _fullFn, int _fullFnSz);
 	bool SetFromFullPath(int _slot, const char* _fullPath);
-	bool GetOrBrowseSlot(int _slot, char* _fn, int _fnSz, bool _errMsg=false);
-	WDL_FastString* GetOrPromptOrBrowseSlot(const char* _title, int* _slot);
-	bool BrowseSlot(int _slot, char* _fn=NULL, int _fnSz=0);
+	bool ClearSlot(int _slot);
 	void EditSlot(int _slot);
-	void ClearSlot(int _slot, bool _guiUpdate=true);
-	void ClearSlotPrompt(COMMAND_T* _ct);
 	const char* GetResourceDir() {  return m_resDir.Get(); }
 	const char* GetDesc() { return m_desc.Get(); }
 	void SetDesc(const char* _desc) { m_desc.Set(_desc); }
-	const char* GetFileExt() { return m_ext.Get(); }
+	const char* GetFileExtStr() { return m_ext.Get(); }
 	bool IsValidFileExt(const char* _ext);
-	void GetFileFilter(char* _filter, size_t _filterSz);
-	bool IsText()  { return (m_flags & MASK_TEXT) == MASK_TEXT; }
-	bool IsAutoSave() { return (m_flags & MASK_AUTOSAVE) == MASK_AUTOSAVE; }
-	bool IsDblClick() { return (m_flags & MASK_DBLCLIK) == MASK_DBLCLIK; }
-	bool IsAutoFill() { return (m_flags & MASK_AUTOFILL) == MASK_AUTOFILL; }
+	void GetFileFilter(char* _filter, size_t _filterSz, bool _dblNull = true);
+	bool IsText()  { return (m_flags & SNM_RES_MASK_TEXT) == SNM_RES_MASK_TEXT; }
+	bool IsAutoSave() { return (m_flags & SNM_RES_MASK_AUTOSAVE) == SNM_RES_MASK_AUTOSAVE; }
+	bool IsDblClick() { return (m_flags & SNM_RES_MASK_DBLCLIK) == SNM_RES_MASK_DBLCLIK; }
+	bool IsAutoFill() { return (m_flags & SNM_RES_MASK_AUTOFILL) == SNM_RES_MASK_AUTOFILL; }
 	int GetFlags() { return m_flags; }
 	void SetFlags(int _flags) { m_flags=_flags; }
-	WDL_FastString m_lastBrowsedFn;
 protected:
-	WDL_FastString m_resDir;	// resource sub-directory name and S&M.ini section/key names
-	WDL_FastString m_desc;		// used in user messages, etc..
-	WDL_FastString m_ext;		// file extension w/o '.' (ex: "rfxchain"), "" means all supported media file extensions
-	int m_flags;
+	WDL_FastString m_resDir;			// resource sub-directory name + S&M.ini section/key names
+	WDL_FastString m_desc;				// used in user messages, etc..
+	WDL_FastString m_ext;				// file extensions w/o '.' (ex: "rfxchain"), "" means all supported media file extensions
+	int m_flags;						// see bitmask definition above
+private:
+	WDL_PtrList<WDL_FastString> m_exts;	// split file extensions
 };
 
 
@@ -143,32 +133,37 @@ public:
 	void SelectBySlot(int _slot1, int _slot2 = -1, bool _selectOnly = true);
 	void GetSelectedSlots(WDL_PtrList<PathSlotItem>* _selSlots, WDL_PtrList<PathSlotItem>* _selEmptySlots = NULL);
 	void FillTypeCombo();
-	void ClearDeleteSlots(int _mode, bool _update);
 protected:
 	void OnInitDlg();
 	void OnDestroy();
-	void AutoSaveContextMenu(HMENU _menu, bool _saveItems);
-	void AutoFillContextMenu(HMENU _menu, bool _fillItems);
+	HMENU AutoSaveContextMenu(HMENU _menu, bool _saveItems);
+	HMENU AutoFillContextMenu(HMENU _menu, bool _fillItems);
+	HMENU BookmarkContextMenu(HMENU _menu);
 	HMENU OnContextMenu(int x, int y, bool* wantDefaultItems);
 	int OnKey(MSG* msg, int iKeyState);
 	int GetValidDroppedFilesCount(HDROP _h);
 	void OnDroppedFiles(HDROP _h);
 	void DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight = NULL);
 	bool GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOutSz);
+	virtual void GetMinSize(int* w, int* h) { *w=190; *h=MIN_DOCKWND_HEIGHT; }
 
 	void FillDblClickCombos();
-	void AddSlot(bool _update);
-	void InsertAtSelectedSlot(bool _update);
+	void AddSlot();
+	void InsertAtSelectedSlot();
 
 	WDL_VirtualComboBox m_cbType, m_cbDblClickType, m_cbDblClickTo;
 	WDL_VirtualIconButton m_btnAutoFill, m_btnAutoSave, m_btnOffsetTrTemplate;
-#ifdef _SNM_MISC // moved to context menu
-	WDL_VirtualIconButton m_btnTiedActions;
-#endif
-	WDL_VirtualStaticText m_txtSlotsType, m_txtDblClickType, m_txtDblClickTo;
+	WDL_VirtualStaticText m_txtDblClickType, m_txtDblClickTo, m_txtTiedPrj;
 	SNM_TwoTinyButtons m_btnsAddDel;
 	SNM_TinyPlusButton m_btnAdd;
 	SNM_TinyMinusButton m_btnDel;
+};
+
+
+class ResourcesAttachJob : public SNM_ScheduledJob {
+public:
+	ResourcesAttachJob() : SNM_ScheduledJob(SNM_SCHEDJOB_RES_ATTACH, SNM_SCHEDJOB_SLOW_DELAY) {}
+	void Perform();
 };
 
 
@@ -179,7 +174,6 @@ extern int g_SNM_PrjLoaderStartPref;
 extern int g_SNM_PrjLoaderEndPref;
 
 
-void FlushCustomTypesIniFile();
 bool AutoSaveChunkSlot(const void* _obj, const char* _fn);
 bool AutoSaveSlot(int _slotType, const char* _dirPath,
 				const char* _name, const char* _ext,
@@ -188,6 +182,11 @@ bool AutoSaveSlot(int _slotType, const char* _dirPath,
 void AutoSave(int _type, bool _promptOverwrite, int _flags = 0);
 void AutoFill(int _type);
 
+bool BrowseSlot(int _type, int _slot, bool _tieUntiePrj, char* _fn = NULL, int _fnSz = 0, bool* _updatedList = NULL);
+WDL_FastString* GetOrPromptOrBrowseSlot(int _type, int* _slot);
+void ClearDeleteSlotsFiles(int _type, int _mode);
+
+int AddCustomBookmark(char* _definition);
 void NewBookmark(int _type, bool _copyCurrent);
 void DeleteBookmark(int _bookmarkType);
 void RenameBookmark(int _bookmarkType);
@@ -214,18 +213,21 @@ protected:
 
 int ResourcesInit();
 void ResourcesExit();
+void ResourcesTrackListChange();
+
 void OpenResources(COMMAND_T*);
 int IsResourcesDisplayed(COMMAND_T*);
+
 void ResourcesDeleteAllSlots(COMMAND_T*);
+
 void ResourcesClearSlotPrompt(COMMAND_T*);
 void ResourcesClearFXChainSlot(COMMAND_T*);
 void ResourcesClearTrTemplateSlot(COMMAND_T*);
 void ResourcesClearPrjTemplateSlot(COMMAND_T*);
 void ResourcesClearMediaSlot(COMMAND_T*);
 void ResourcesClearImageSlot(COMMAND_T*);
-#ifdef _WIN32
 void ResourcesClearThemeSlot(COMMAND_T*);
-#endif
+
 void ResourcesAutoSaveFXChain(COMMAND_T*);
 void ResourcesAutoSaveTrTemplate(COMMAND_T*);
 void ResourcesAutoSave(COMMAND_T*);

@@ -28,6 +28,7 @@
 #include "stdafx.h"
 #include "SnM.h"
 #include "SnM_CSurf.h"
+#include "SnM_Dlg.h"
 #include "SnM_Item.h"
 #include "SnM_Project.h"
 #include "SnM_RegionPlaylist.h"
@@ -1650,9 +1651,7 @@ void AppendPasteCropPlaylist(SNM_Playlist* _playlist, int _mode)
 
 			updated = true;
 			Undo_BeginBlock2(NULL);
-			if (PreventUIRefresh)
-				PreventUIRefresh(1);
-
+			PreventUIRefresh(1);
 			InsertSilence(NULL, startPos, _playlist->GetLength());
 		}
 	}
@@ -1682,11 +1681,11 @@ void AppendPasteCropPlaylist(SNM_Playlist* _playlist, int _mode)
 				WDL_PtrList<void> itemsToKeep;
 				if (GetItemsInInterval(&itemsToKeep, rgnpos, rgnend, false))
 				{
-					if (!updated) { // to do once (for undo stability)
+					if (!updated) // to do once (for undo stability)
+					{
 						updated = true;
 						Undo_BeginBlock2(NULL);
-						if (PreventUIRefresh)
-							PreventUIRefresh(1);
+						PreventUIRefresh(1);
 					}
 
 					// store regions
@@ -1737,8 +1736,7 @@ void AppendPasteCropPlaylist(SNM_Playlist* _playlist, int _mode)
 	// nothing done..
 	if (!updated)
 	{
-		if (PreventUIRefresh)
-			PreventUIRefresh(-1);
+		PreventUIRefresh(-1);
 		return;
 	}
 
@@ -1749,11 +1747,8 @@ void AppendPasteCropPlaylist(SNM_Playlist* _playlist, int _mode)
 //		Main_OnCommand(40289, 0); // unselect all items
 		SetEditCurPos2(NULL, endPos, true, false);
 
-		if (PreventUIRefresh)
-			PreventUIRefresh(-1);
-
+		PreventUIRefresh(-1);
 		UpdateTimeline(); // ruler+arrange
-
 		Undo_EndBlock2(NULL, _mode==2 ? __LOCALIZE("Append playlist to project","sws_undo") : __LOCALIZE("Paste playlist at edit cursor","sws_undo"), UNDO_STATE_ALL);
 		return;
 	}
@@ -1793,10 +1788,8 @@ void AppendPasteCropPlaylist(SNM_Playlist* _playlist, int _mode)
 		GetSet_LoopTimeRange(true, false, &g_d0, &g_d0, false);
 		SetEditCurPos2(NULL, 0.0, true, false);
 
-		if (PreventUIRefresh)
-			PreventUIRefresh(-1);
+		PreventUIRefresh(-1);
 		UpdateTimeline();
-
 		Undo_EndBlock2(NULL, __LOCALIZE("Crop project to playlist","sws_undo"), UNDO_STATE_ALL);
 
 		if (g_SNM_RgnPlaylistWnd) {
@@ -1822,8 +1815,7 @@ void AppendPasteCropPlaylist(SNM_Playlist* _playlist, int _mode)
 	Main_OnCommand(40296, 0); // select all tracks
 	Main_OnCommand(40210, 0); // copy tracks
 
-	if (PreventUIRefresh)
-		PreventUIRefresh(-1);
+	PreventUIRefresh(-1);
 
 	// trick!
 	Undo_EndBlock2(NULL, __LOCALIZE("Crop project to playlist","sws_undo"), UNDO_STATE_ALL);
@@ -1838,8 +1830,7 @@ void AppendPasteCropPlaylist(SNM_Playlist* _playlist, int _mode)
 
 	Undo_BeginBlock2(NULL);
 
-	if (PreventUIRefresh)
-		PreventUIRefresh(1);
+	PreventUIRefresh(1);
 
 	Main_OnCommand(40058, 0); // paste item/tracks
 	Main_OnCommand(40297, 0); // unselect all tracks
@@ -1859,8 +1850,7 @@ void AppendPasteCropPlaylist(SNM_Playlist* _playlist, int _mode)
 	g_pls.Get()->Add(dupPlaylist);
 	g_pls.Get()->m_editId = 0;
 
-	if (PreventUIRefresh)
-		PreventUIRefresh(-1);
+	PreventUIRefresh(-1);
 	SNM_UIRefresh(NULL);
 
 	Undo_EndBlock2(NULL, __LOCALIZE("Crop project to playlist","sws_undo"), UNDO_STATE_ALL);

@@ -27,9 +27,12 @@
 
 #include "stdafx.h"
 #include "SnM.h"
+#include "SnM_Chunk.h"
+#include "SnM_Dlg.h"
 #include "SnM_FX.h"
 #include "SnM_FXChain.h"
 #include "SnM_Item.h"
+#include "SnM_Resources.h"
 #include "SnM_Track.h"
 #include "SnM_Util.h"
 #include "../reaper/localize.h"
@@ -170,7 +173,7 @@ void SetTakeFXChain(const char* _title, WDL_FastString* _chain, bool _activeOnly
 // _set=false: paste, _set=true: set
 void ApplyTakesFXChainSlot(int _slotType, const char* _title, int _slot, bool _activeOnly, bool _set)
 {
-	WDL_FastString* fnStr = g_SNM_ResSlots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot);
+	WDL_FastString* fnStr = GetOrPromptOrBrowseSlot(_slotType, &_slot);
 	if (fnStr && CountSelectedMediaItems(NULL))
 	{
 		WDL_FastString chain;
@@ -189,7 +192,7 @@ void ApplyTakesFXChainSlot(int _slotType, const char* _title, int _slot, bool _a
 	}
 }
 
-bool AutoSaveItemFXChainSlots(int _slotType, const char* _dirPath, WDL_PtrList<PathSlotItem>* _owSlots, bool _nameFromFx)
+bool AutoSaveItemFXChainSlots(int _slotType, const char* _dirPath, WDL_PtrList<void>* _owSlots, bool _nameFromFx)
 {
 	bool saved = false;
 	int owIdx = 0;
@@ -217,7 +220,7 @@ bool AutoSaveItemFXChainSlots(int _slotType, const char* _dirPath, WDL_PtrList<P
 
 				saved |= AutoSaveSlot(_slotType, _dirPath, 
 					!*name ? __LOCALIZE("Untitled","sws_DLG_150") : name, 
-					"RfxChain", _owSlots, &owIdx, AutoSaveChunkSlot, &fxChain);
+					"RfxChain", (WDL_PtrList<PathSlotItem>*)_owSlots, &owIdx, AutoSaveChunkSlot, &fxChain);
 			}
 		}
 	}
@@ -407,7 +410,7 @@ int CopyTrackFXChain(WDL_FastString* _fxChain, bool _inputFX, int _startTr)
 // _set=false => paste
 void ApplyTracksFXChainSlot(int _slotType, const char* _title, int _slot, bool _set, bool _inputFX)
 {
-	WDL_FastString* fnStr = g_SNM_ResSlots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot);
+	WDL_FastString* fnStr = GetOrPromptOrBrowseSlot(_slotType, &_slot);
 	if (fnStr && SNM_CountSelectedTracks(NULL, true))
 	{
 		WDL_FastString chain;
@@ -426,7 +429,7 @@ void ApplyTracksFXChainSlot(int _slotType, const char* _title, int _slot, bool _
 	}
 }
 
-bool AutoSaveTrackFXChainSlots(int _slotType, const char* _dirPath, WDL_PtrList<PathSlotItem>* _owSlots, bool _nameFromFx, bool _inputFX)
+bool AutoSaveTrackFXChainSlots(int _slotType, const char* _dirPath, WDL_PtrList<void>* _owSlots, bool _nameFromFx, bool _inputFX)
 {
 	bool saved = false;
 	int owIdx = 0;
@@ -464,7 +467,7 @@ bool AutoSaveTrackFXChainSlots(int _slotType, const char* _dirPath, WDL_PtrList<
 
 				saved |= AutoSaveSlot(_slotType, _dirPath, 
 					!i ? __LOCALIZE("Master","sws_DLG_150") : (!*name ? __LOCALIZE("Untitled","sws_DLG_150") : name), 
-					"RfxChain", _owSlots, &owIdx, AutoSaveChunkSlot, &fxChain);
+					"RfxChain", (WDL_PtrList<PathSlotItem>*)_owSlots, &owIdx, AutoSaveChunkSlot, &fxChain);
 			}
 		}
 	}
@@ -537,16 +540,6 @@ void SetTrackInputFXChain(COMMAND_T* _ct) {
 ///////////////////////////////////////////////////////////////////////////////
 // Common to take & track FX chain
 ///////////////////////////////////////////////////////////////////////////////
-
-void CopyFXChainSlotToClipBoard(int _slot)
-{
-	if (_slot >= 0 && _slot < g_SNM_ResSlots.Get(g_SNM_TiedSlotActions[SNM_SLOT_FXC])->GetSize()) 
-	{
-		char fullPath[SNM_MAX_PATH] = "";
-		if (g_SNM_ResSlots.Get(g_SNM_TiedSlotActions[SNM_SLOT_FXC])->GetFullPath(_slot, fullPath, sizeof(fullPath)))
-			LoadChunk(fullPath, &g_fXChainClipboard);
-	}
-}
 
 void SmartCopyFXChain(COMMAND_T* _ct) {
 	if (GetCursorContext() == 1 && CountSelectedMediaItems(NULL)) CopyTakeFXChain(&g_fXChainClipboard);

@@ -29,12 +29,8 @@
 // - API LIMITATION: cannot register actions in MIDI sections (yet?), 
 //   that is why  cycle actions are registered in the main section 
 //   although they perform actions of other sections
-//   => BUG: unable to perform macros & scripts in ME sections ATM
-// - Macros & Cycle Actions are "exploded" in order to bypass recursive checks
-//   of sws_extension.cpp (in hookCommandProc() and toggleActionHook())
-//   without any async call (like it used to be before v2.3.0 #14)
-//   One drawback is that some very specific actions (e.g. wait actions or 
-//   "only valid within custom actions" ones) won't work
+// - See of sws_extension.cpp / hookCommandProc() and toggleActionHook():
+//   recursive checks MUST be bypassed for cycle actions
 // TODO:
 // - register cycle action in proper sections (when it will be possible)
 // - storage: use native macro format?
@@ -45,10 +41,59 @@
 #include "SnM.h"
 #include "SnM_ChunkParserPatcher.h" 
 #include "SnM_Cyclactions.h"
+#include "SnM_Dlg.h"
 #include "SnM_Util.h"
 #include "SnM_Window.h"
 #include "../reaper/localize.h"
 #include "../Console/Console.h"
+#include "../IX/IX.h"
+
+
+// no exit issue vs "DeleteOnDestroy" here: cycle actions are saved on the fly
+WDL_PtrList_DeleteOnDestroy<Cyclaction> g_cas[SNM_MAX_CYCLING_SECTIONS]; 
+
+char g_caCustomIds[SNM_MAX_CYCLING_SECTIONS][SNM_MAX_ACTION_CUSTID_LEN] = {
+	"S&M_CYCLACTION_", 
+	"S&M_ME_LIST_CYCLACTION", 
+	"S&M_ME_PIANO_CYCLACTION"
+};
+char g_caIniSections[SNM_MAX_CYCLING_SECTIONS][32] = {
+	"Main_Cyclactions", 
+	"ME_List_Cyclactions", 
+	"ME_Piano_Cyclactions"
+};
+
+// init + localization done in CyclactionInit()
+char g_caSectionNames[SNM_MAX_CYCLING_SECTIONS][SNM_MAX_SECTION_NAME_LEN];
+
+SNM_CyclactionWnd* g_pCyclactionWnd = NULL;
+bool g_undos = true; // consolidate undo points
+
+
+///////////////////////////////////////////////////////////////////////////////
+// CA helpers
+///////////////////////////////////////////////////////////////////////////////
+
+// this func works for CAs that are not registered yet
+// (i.e. does not use NamedCommandLookup())
+Cyclaction* GetCyclactionFromCustomId(int _section, const char* _cmdStr)
+{
+	 // atoi() ok because custom ids are 1-based
+	if (_cmdStr && *_cmdStr)
+		if (int id = atoi((const char*)(_cmdStr + (*_cmdStr=='_'?1:0) + strlen(g_caCustomIds[_section]))))
+			return g_cas[_section].Get(id-1);
+	return NULL;
+}
+
+bool CheckRecursiveCmd(const char* _cmdStr, WDL_PtrList<WDL_FastString>* _parentCmds)
+{
+	if (_parentCmds && _cmdStr)
+		for (int i=0; i<_parentCmds->GetSize(); i++)
+			if (WDL_FastString* cmd = _parentCmds->Get(i))
+				if (!strcmp(cmd->Get(), _cmdStr))
+					return false;
+	return true;
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -63,6 +108,7 @@ enum {
   IDX_INSTRUC_LOOP,
   IDX_INSTRUC_ENDLOOP,
   IDX_INSTRUC_CONSOLE,
+  IDX_INSTRUC_LABEL,
   NB_INSTRUCTIONS
 };
 
@@ -76,11 +122,12 @@ enum {
 #define INSTRUC_LOOP	"LOOP"
 #define INSTRUC_ENDLOOP	"ENDLOOP"
 #define INSTRUC_CONSOLE	"CONSOLE"
+#define INSTRUC_LABEL	"LABEL"
 
-const char g_instrucs[][16] = { INSTRUC_IFNOT, INSTRUC_IF, INSTRUC_ELSE, INSTRUC_ENDIF, INSTRUC_LOOP, INSTRUC_ENDLOOP, INSTRUC_CONSOLE };
+const char g_instrucs[][16] = { INSTRUC_IFNOT, INSTRUC_IF, INSTRUC_ELSE, INSTRUC_ENDIF, INSTRUC_LOOP, INSTRUC_ENDLOOP, INSTRUC_CONSOLE, INSTRUC_LABEL };
 
 //!WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_161
-const char g_instrucInfos[][64] = { "If not --->", "If --->", "<--- else --->", "<---", "Loop --->", "<---", "ReaConsole command" };
+const char g_instrucInfos[][64] = { "If not --->", "If --->", "<--- else --->", "<---", "Loop --->", "<---", "ReaConsole command", "Label Processor command" };
 //!WANT_LOCALIZE_STRINGS_END
 
 
@@ -94,59 +141,34 @@ int IsInstruction(const char* _cmd)
 }
 
 int IsInstructionWithParam(int _id) {
-	return _id==IDX_INSTRUC_LOOP || _id==IDX_INSTRUC_CONSOLE;
+	return _id==IDX_INSTRUC_LOOP || _id==IDX_INSTRUC_CONSOLE || _id==IDX_INSTRUC_LABEL;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// The meat
-///////////////////////////////////////////////////////////////////////////////
-
-// [0]=main section, [1]=ME event list section, [2]=ME piano roll section
-WDL_PtrList_DeleteOnDestroy<Cyclaction> g_cas[SNM_MAX_CYCLING_SECTIONS]; // no DeleteOnDestroy issue here: cycle actions are saved on the fly
-char g_caCustomIds[SNM_MAX_CYCLING_SECTIONS][SNM_MAX_ACTION_CUSTID_LEN] = {"S&M_CYCLACTION_", "S&M_ME_LIST_CYCLACTION", "S&M_ME_PIANO_CYCLACTION"};
-char g_caIniSections[SNM_MAX_CYCLING_SECTIONS][32] = {"Main_Cyclactions", "ME_List_Cyclactions", "ME_Piano_Cyclactions"};
-char g_caSections[SNM_MAX_CYCLING_SECTIONS][SNM_MAX_SECTION_NAME_LEN]; // init + localization in CyclactionInit()
-
-SNM_CyclactionWnd* g_pCyclactionWnd = NULL;
-bool g_undos = true; // consolidate undo points
-
-
-///////////////////////////////////////////////////////////////////////////////
-// Explode functions with common properties:
-// IMPORTANT: those funcs must assume actions are *not* yet registered
+// Explode _cmdStr into "atomic" actions
 //
-// return values:
-// if _flags&2: 1st found/valid toggle state (0 or 1)
-//              -1 otherwise (no valid toggle state found)
-// otherwise:   -2=err (recursive), -1=err (other), 1/0=exploded or not
-//              
+// IMPORTANT: THOSE FUNCS MUST ASSUME ACTIONS ARE *NOT* YET REGISTERED
+//
 // _flags: &1=perform
 //         &2=get 1st toggle state
-//         &4=explode all CAs' steps (current step only otherwise)
-//         &8=recursion check 
+//         &8=explode all CAs' steps (current step only otherwise)
 // _cmdStr: custom id to explode
 // _cmds: if _flags&8 (recusion check): internal list of parent commands
 //        otherwise: output list of exploded commands
 //        in any case, it is up to the caller to unalloc items
-// _macros: to optimize accesses to reaper-kb.ini
+// _macros: to optimize accesses to reaper-kb.ini, 
+//          if NULL, macros won't be exploded, no file access
 // _consoles: to optimize accesses to reaconsole_customcommands.txt
 //
-// reminder: on load/init macros, etc. are not yet registered!
+// return values:
+// if _flags&2: 1st found/valid toggle state (0 or 1)
+//              -1 otherwise (no valid toggle state found)
+// otherwise:   -2=recursion err, -1=other err, 1/0=exploded or not
 //
+// reminder: on load/init macros, etc. are not yet registered!
 ///////////////////////////////////////////////////////////////////////////////
 
-bool CheckRecursive(const char* _cmdStr, WDL_PtrList<WDL_FastString>* _parentCmds)
-{
-	if (_parentCmds && _cmdStr && *_cmdStr=='_')
-		for (int i=0; i<_parentCmds->GetSize(); i++)
-			if (WDL_FastString* cmd = _parentCmds->Get(i))
-				if (!strcmp(cmd->Get(), _cmdStr))
-					return false;
-	return true;
-}
-
-// _cmdStr: custom id to explode, only the "underscore format" is supported here, e.g. "_bla"
 int ExplodeCmd(int _section, const char* _cmdStr,
 	WDL_PtrList<WDL_FastString>* _cmds, WDL_PtrList<WDL_FastString>* _macros, 
 	WDL_PtrList<WDL_FastString>* _consoles, int _flags)
@@ -164,29 +186,29 @@ int ExplodeCmd(int _section, const char* _cmdStr,
 				else if (IsMacroOrScript(_cmdStr, false))
 					return ExplodeMacro(_section, _cmdStr, _cmds, _macros, _consoles, _flags);
 			}
-			// can only be a macro/script at this point
-			// (as no extension can register actions in other sections than the main one)
+			// tiny optimiz: can only be a macro/script at this point
+			// (as no extension can register actions in these sections ATM)
 			else
 				return ExplodeMacro(_section, _cmdStr, _cmds, _macros, _consoles, _flags);
 		}
 
-		// default case (native or 3rd party actions, instructions, etc..)
+		// default case: only native/3rd part actions or instructions
 		if (_flags&2)
 		{
-			if (int i = NamedCommandLookup(_cmdStr)) {
-				i = SNM_GetToggleCommandState(i);
-				if (i>=0) return i;
-			}
+			if (KbdSectionInfo* kbdSec = SNM_GetActionSection(_section))
+				if (int i = SNM_NamedCommandLookup(_cmdStr, kbdSec)) {
+					i = GetToggleCommandState2(kbdSec, i);
+					if (i>=0) return i;
+				}
 			return -1;
 		}
-		else if (_cmds)
+
+		if (_cmds)
 			_cmds->Add(new WDL_FastString(_cmdStr));
 	}
 	return 0;
 }
 
-// assumes _cmdStr is indeed a macro/script's custom id (and nothing else)
-// _cmdStr: custom id to explode, both formats are allowed: "bla" and "_bla"
 int ExplodeMacro(int _section, const char* _cmdStr,
 	WDL_PtrList<WDL_FastString>* _cmds, WDL_PtrList<WDL_FastString>* _macros, 
 	WDL_PtrList<WDL_FastString>* _consoles, int _flags)
@@ -194,175 +216,153 @@ int ExplodeMacro(int _section, const char* _cmdStr,
 	if (_flags&2) return -1; // macros/scripts do not report toggle states
 
 	// safe single lazy init of _macros
-	bool loadOk = true;
-	if (!_macros->GetSize())
+	if (_macros) // want macro explosion?
 	{
-		loadOk = LoadKbIni(_macros);
-		_macros->Add(new WDL_FastString);
-	}
+		bool loadOk = true;
+		if (!_macros->GetSize()) {
+			loadOk = LoadKbIni(_macros);
+			_macros->Add(new WDL_FastString);
+		}
+		if (!loadOk) return -1;
 
-	if (!loadOk)
-		return -1;
-
-	WDL_PtrList_DeleteOnDestroy<WDL_FastString> subCmds;
-	int r = GetMacroOrScript(_cmdStr, SNM_GetActionSectionId(_section), _macros, &subCmds); // incl. optimization for reaper-kb.ini accesses
-	if (r==0)
-	{
-		return -1;
-	}
-	else if (r==1) // macro only!
-	{
-		WDL_FastString* parentCmd = NULL;
-		if (_flags&8)
+		WDL_PtrList_DeleteOnDestroy<WDL_FastString> subCmds;
+		int r = GetMacroOrScript(_cmdStr, SNM_GetActionSectionId(_section), _macros, &subCmds);
+		if (r==0)
 		{
-			if (!CheckRecursive(_cmdStr, _cmds)) return -2;
-			parentCmd = new WDL_FastString(_cmdStr);
-			_cmds->Add(parentCmd);
+			return -1;
 		}
-
-		for (int i=0; i<subCmds.GetSize(); i++) {
-			r = ExplodeCmd(_section, subCmds.Get(i)->Get(), _cmds, _macros, _consoles, _flags);
-			if (r<0) return r;
+		else if (r==1) // macro only!
+		{
+			WDL_FastString* parentCmd = NULL;
+			if (_cmds) {
+				if (!CheckRecursiveCmd(_cmdStr, _cmds)) return -2;
+				parentCmd = _cmds->Add(new WDL_FastString(_cmdStr));
+			}
+			for (int i=0; i<subCmds.GetSize(); i++) {
+				r = ExplodeCmd(_section, subCmds.Get(i)->Get(), _cmds, _macros, _consoles, _flags);
+				if (r<0) return r;
+			}
+			// it's a recursion check, not a dup check => remove the parent cmd
+			if (_cmds)
+				_cmds->Delete(_cmds->Find(parentCmd), true);
+			return 1;
 		}
-
-		// it's a recursion check, not a dup check => remove the parent cmd
-		if (_flags&8)
-			_cmds->Delete(_cmds->Find(parentCmd), true);
-
-		return 1;
+		// ... else: it's a script => fall through
 	}
 
 	if (_cmds)
 		_cmds->Add(new WDL_FastString(_cmdStr));
-
 	return 0;
 }
 
-// assumes _cmdStr is indeed a cycle action's custom id (and nothing else)
-// _cmdStr: custom id to explode, both formats are allowed: "bla" and "_bla"
 // _action: optional (tiny optimiz)
 int ExplodeCyclaction(int _section, const char* _cmdStr, 
 	WDL_PtrList<WDL_FastString>* _cmds, WDL_PtrList<WDL_FastString>* _macros, 
 	WDL_PtrList<WDL_FastString>* _consoles, int _flags, Cyclaction* _action)
 {
 	Cyclaction* action = _action;
+	if (!action) action = GetCyclactionFromCustomId(_section, _cmdStr); 
+	if (!action) return -1;
 
-	// trick to avoid NamedCommandLookup() as this CA might not be registered yet
-	if (!action)
-		if (int id = atoi((const char*)(_cmdStr + (*_cmdStr=='_'?1:0) + strlen(g_caCustomIds[_section])))) // ok because 1-based
-			action = g_cas[_section].Get(id-1); 
-
-	if (!action) // ignore action->m_cmdId: this CA might not be registered yet
-		return -1;
-
-	if (_flags&2)
-		switch(action->IsToggle())
-		{
+	if (_flags&2) 
+		switch(action->IsToggle()) {
 			case 1: return action->m_fakeToggle ? 1 : 0; 
-			case 2: /* real toggle state: requires explosion, see below */ break;
+			case 2: break; // real toggle state: requires explosion, see below..
 			default: return -1;
 		}
 
 	WDL_FastString* parentCmd = NULL;
-	if (_flags&8)
-	{
-		if (!CheckRecursive(_cmdStr, _cmds))
-			return -2;
-		parentCmd = new WDL_FastString(_cmdStr);
-		_cmds->Add(parentCmd);
+	if (_cmds) {
+		if (!CheckRecursiveCmd(_cmdStr, _cmds)) return -2;
+		parentCmd = _cmds->Add(new WDL_FastString(_cmdStr));
 	}
 
-	// add actions of all cycle points
-	if ((_flags&4) || (_flags&8))
-	{
-		int r;
-		for (int i=0; i<action->GetCmdSize(); i++) {
-			r = ExplodeCmd(_section, action->GetCmd(i), _cmds, _macros, _consoles, _flags); // recursive call
-/* does not make sense here..
-			if (_flags&2) { if (r>=0) return r; } else
-*/
-			if (r<0) return r;
-		}
-	}
-	// add actions of the current cycle point
-	else
-	{
-		int startIdx = action->GetStepIdx();
-		if (startIdx<0)
-			return -1;
+	// add actions of all cycle points or only actions of the current cycle point
+	int startIdx = (_flags&8) ? 0 : action->GetStepIdx();
+	if (startIdx<0) return -1;
 
-		bool done = false;
-		for (int i=startIdx; !done && i<action->GetCmdSize(); i++)
+	bool done=false;
+	for (int i=startIdx; !done && i<action->GetCmdSize(); i++)
+	{
+		const char* cmd = action->GetCmd(i);
+
+		// break on end of list
+		if (i == (action->GetCmdSize()-1))
 		{
-			const char* cmd = action->GetCmd(i);
+			if (_flags&1) { action->m_performState = 0; action->m_fakeToggle = !action->m_fakeToggle; }
+			done = (_flags&8)!=8;
+		}
+		// break on next step
+		else if (*cmd == '!')
+		{
+			if (_flags&1) { action->m_performState++; action->m_fakeToggle = !action->m_fakeToggle; }
+			done = (_flags&8)!=8;
+		}
 
-			// break on end of list
-			if (i == (action->GetCmdSize()-1))
-			{
-				if (_flags&1) { action->m_performState = 0; action->m_fakeToggle = !action->m_fakeToggle; }
-				done = true;
-			}
-			// break on next step
-			else if (*cmd == '!')
-			{
-				if (_flags&1) { action->m_performState++; action->m_fakeToggle = !action->m_fakeToggle; }
-				done = true;
-			}
-
-			// add/explode sub actions
-			if (*cmd != '!' && *cmd) {
-				int r = ExplodeCmd(_section, cmd, _cmds, _macros, _consoles, _flags); // recursive call
-				if (_flags&2) { if (r>=0) return r; }
-				else if (r<0) return r;
-			}
+		// add/explode sub actions
+		if (*cmd && *cmd != '!') {
+			int r = ExplodeCmd(_section, cmd, _cmds, _macros, _consoles, _flags); // recursive call
+			if (_flags&2) { if (r>=0) return r; }
+			else if (r<0) return r;
 		}
 	}
 
 	// it's a recursion check, not a dup check => remove the parent cmd
-	if (_flags&8)
+	if (_cmds)
 		_cmds->Delete(_cmds->Find(parentCmd), true);
 
-	return _flags&2 ? -1 : 1; //JFB!!!
+#ifdef _SNM_DEBUG
+	if (_cmds)
+	{
+		OutputDebugString("ExplodeCyclaction: ");
+		OutputDebugString(_cmdStr);
+		OutputDebugString(" -> ");
+		for (int i=0; i<_cmds->GetSize(); i++) {
+			OutputDebugString(_cmds->Get(i)->Get());
+			OutputDebugString(" ");
+		}
+		OutputDebugString("\n");
+	}
+#endif
+
+	return _flags&2 ? -1 : 1;
 }
 
-// assumes _cmdStr is indeed a console action's custom id (and nothing else)
-// _cmdStr: custom id to explode, both formats are allowed: "bla" and "_bla"
 int ExplodeConsoleAction(int _section, const char* _cmdStr,
 	WDL_PtrList<WDL_FastString>* _cmds, WDL_PtrList<WDL_FastString>* _macros, 
 	WDL_PtrList<WDL_FastString>* _consoles, int _flags)
 {
 	if (_flags&2) return -1; // console actions do not report toggle states (yet?)
-	if (_flags&8) return 1; // console actions cannot be recursive
 
 	// safe single lazy init of _consoleCmds
-	bool loadOk = true;
-	if (!_consoles->GetSize()) {
-		loadOk = LoadConsoleCmds(_consoles);
-		_consoles->Add(new WDL_FastString);
-	}
-
-	if (!loadOk)
-		return -1;
-
-	// little trick to avoid NamedCommandLookup() as this action might not be registered yet
-	int id = atoi(_cmdStr + (*_cmdStr=='_' ? 1 : 0) + strlen("SWSCONSOLE_CUST")); // ok because 1-based
-	if (!id) return -2; else id--; // check + back to 0-based if ok
-
-	if (id<_consoles->GetSize())
+	if (_consoles) // console cmd explosion required?
 	{
-		if (_cmds)
-		{
-			WDL_FastString* explCmd = new WDL_FastString;
-			explCmd->SetFormatted(256, "%s %s", INSTRUC_CONSOLE, _consoles->Get(id)->Get());
-			_cmds->Add(explCmd);
+		bool loadOk = true;
+		if (!_consoles->GetSize()) {
+			loadOk = LoadConsoleCmds(_consoles);
+			_consoles->Add(new WDL_FastString);
 		}
-		return 1;
+		if (!loadOk) return -1;
+
+		// little trick to avoid NamedCommandLookup() as this action might not be registered yet
+		int id = atoi(_cmdStr + (*_cmdStr=='_' ? 1 : 0) + strlen("SWSCONSOLE_CUST")); // ok because 1-based
+		if (!id) return -1; else id--; // check + back to 0-base
+		if (id<_consoles->GetSize())
+		{
+			if (_cmds)
+			{
+				WDL_FastString* explCmd = new WDL_FastString;
+				explCmd->SetFormatted(256, "%s %s", INSTRUC_CONSOLE, _consoles->Get(id)->Get());
+				_cmds->Add(explCmd);
+			}
+			return 1;
+		}
+		else
+			return -1;
 	}
-	// else: fall through..
 
 	if (_cmds)
 		_cmds->Add(new WDL_FastString(_cmdStr));
-
 	return 0;
 }
 
@@ -371,7 +371,7 @@ int ExplodeConsoleAction(int _section, const char* _cmdStr,
 // Perform cycle actions
 ///////////////////////////////////////////////////////////////////////////////
 
-// assumes _cmdStr is valid
+// assumes _cmdStr is valid and has been "exploded", if it is a CA
 int PerformSingleCommand(int _section, const char* _cmdStr)
 {
 #ifdef _SNM_DEBUG
@@ -380,58 +380,77 @@ int PerformSingleCommand(int _section, const char* _cmdStr)
 #endif
 	if (_cmdStr && *_cmdStr)
 	{
-		// custom console command? (any section)
-		if (!_strnicmp(INSTRUC_CONSOLE, _cmdStr, strlen(INSTRUC_CONSOLE)))
+		KbdSectionInfo* kbdSec = SNM_GetActionSection(_section);
+		if (!kbdSec)
+			return 0;
+
+		// SNM_NamedCommandLookup hard check: the command MUST be registered
+		if (int cmdId = SNM_NamedCommandLookup(_cmdStr, kbdSec, true))
+		{
+			// main section?
+			if (!_section)
+				return KBD_OnMainActionEx(cmdId, 0, 0, 0, GetMainHwnd(), NULL);
+			// ME sections
+			else if (_section==1 || _section==2)
+				return MIDIEditor_LastFocused_OnCommand(cmdId, _section==1);
+			// other sections
+			else
+			{
+				//JFB: TODO?
+			}
+		}
+		// custom console command?
+		// note: authorized in any section
+		else if (!_strnicmp(INSTRUC_CONSOLE, _cmdStr, strlen(INSTRUC_CONSOLE)))
 		{
 			RunConsoleCommand(_cmdStr+strlen(INSTRUC_CONSOLE)+1); // +1 for the space char in "CONSOLE cmd"
 			if (!g_undos)
 			{
-				char undo[256];
-				_snprintf(undo, sizeof(undo), __LOCALIZE("ReaConsole custom command %s","sws_undo"), _cmdStr+strlen(INSTRUC_CONSOLE)+1);
+				char undo[128];
+				_snprintfSafe(undo, sizeof(undo), __LOCALIZE("ReaConsole command '%s'","sws_undo"), _cmdStr+strlen(INSTRUC_CONSOLE)+1);
 				Undo_OnStateChangeEx2(NULL, undo, UNDO_STATE_ALL, -1);
 			}
 			return 1;
 		}
-		// main section
-		else if (!_section)
+		// label processor command
+		else if (!_strnicmp(INSTRUC_LABEL, _cmdStr, strlen(INSTRUC_LABEL)))
 		{
-			if (int cmdId = NamedCommandLookup(_cmdStr))
+			WDL_FastString str(_cmdStr+strlen(INSTRUC_LABEL)+1); // +1 for the space char in "LABEL cmd"
+			RunLabelCommand(&str);
+			if (!g_undos)
 			{
-				// SWS action => skip the reentrance test of hookCommandProc()
-				if (COMMAND_T* cmd = SWSGetCommandByID(cmdId))
-					if (cmd->accel.accel.cmd==cmdId && cmd->doCommand && cmd->doCommand!=SWS_NOOP)
-					{
-						cmd->fakeToggle = !cmd->fakeToggle;
-						cmd->doCommand(cmd);
-						return 1;
-					}
-				return KBD_OnMainActionEx(cmdId, 0, 0, 0, GetMainHwnd(), NULL);
+				char undo[128];
+				_snprintfSafe(undo, sizeof(undo), __LOCALIZE("Label Processor command '%s'","sws_undo"), _cmdStr+strlen(INSTRUC_LABEL)+1);
+				Undo_OnStateChangeEx2(NULL, undo, UNDO_STATE_ALL, -1);
 			}
+			return 1;
 		}
-		// both ME sections
-		//JFB!!! API LIMITATION => BUG: unable to perform macros and scripts in ME sections => use atoi() in the meantime
-		else if (int cmd = atoi(_cmdStr))
-			return MIDIEditor_LastFocused_OnCommand(cmd, _section==1);
 	}
 	return 0;
 }
 
-// assumes the cycle action is valid (not registered otherwise, see CheckRegisterableCyclaction())
+// assumes the cycle action is valid, instructions are valid, etc..
+// (faulty CAs are not registered at this point, see CheckRegisterableCyclaction())
 void RunCycleAction(int _section, COMMAND_T* _ct)
 {
 	Cyclaction* action = _ct ? g_cas[_section].Get((int)_ct->user-1) : NULL; // cycle action id is 1-based (for user display)
 	if (!action || !action->m_cmdId) // registered actions only
 		return;
 
-	WDL_PtrList_DeleteOnDestroy<WDL_FastString> macros, consoles;
+	KbdSectionInfo* kbdSec = SNM_GetActionSection(_section);
+	if (!kbdSec) 
+		return;
+
 	for (;;)
 	{
 		// store step or action name *before* m_performState update
 		const char* undoStr = action->GetStepName();
 
-		// no recursion check: such faulty cycle actions are not registered
+		// no need to explode macros and custom console commands here: 
+		// they are triggered via their custom ids (faster + handles scripts +
+		// corner cases like special macros with "Wait n s", etc..)
 		WDL_PtrList_DeleteOnDestroy<WDL_FastString> subCmds;
-		if (ExplodeCyclaction(_section, _ct->id, &subCmds, &macros, &consoles, 0x1, action)>0)
+		if (ExplodeCyclaction(_section, _ct->id, &subCmds, NULL, NULL, 0x1, action) > 0)
 		{
 			int loopCnt = -1;
 			WDL_PtrList<WDL_FastString> allCmds, loopCmds;
@@ -443,19 +462,33 @@ void RunCycleAction(int _section, COMMAND_T* _ct)
 					if ((i+1)<subCmds.GetSize())
 					{
 						bool isIF = (_stricmp(INSTRUC_IFNOT, cmdStr) != 0);
-						cmdStr = subCmds.Get(++i) ? subCmds.Get(i)->Get() : ""; //++i ! => zap IF in any case
+						cmdStr = subCmds.Get(++i) ? subCmds.Get(i)->Get() : ""; //++i ! => zap next command
 
-						// API LIMITATION: NamedCommandLookup() & GetToggleCommandState() are only available for the main section ATM
-						if (!_section)
+						int tgl = GetToggleCommandState2(kbdSec, SNM_NamedCommandLookup(cmdStr, kbdSec));
+#ifdef _SNM_DEBUG
+						char dbg[32];
+						OutputDebugString("RunCycleAction: toggle state of ");
+						OutputDebugString(cmdStr);
+						_snprintfSafe(dbg, sizeof(dbg), "= %d\n", tgl);
+						OutputDebugString(dbg);
+#endif
+						if (tgl>=0)
 						{
-							int tgl = SNM_GetToggleCommandState(NamedCommandLookup(cmdStr));
-							if (tgl>=0 && (isIF ? tgl==0 : tgl==1))
+							if (isIF ? tgl==0 : tgl==1)
 							{
 								// zap commands until next ELSE or ENDIF
 								while (++i<subCmds.GetSize())
 									if (subCmds.Get(i) && (!_stricmp(INSTRUC_ELSE, subCmds.Get(i)->Get()) || !_stricmp(INSTRUC_ENDIF, subCmds.Get(i)->Get())))
 										break;
 							}
+						}
+						// REPAER BUG: GetToggleCommandState2 does not work for ME sections
+						else
+						{
+							// zap commands until next ENDIF
+							while (++i<subCmds.GetSize())
+								if (subCmds.Get(i) && !_stricmp(INSTRUC_ENDIF, subCmds.Get(i)->Get()))
+									break;
 						}
 					}
 					continue; // zap 
@@ -528,7 +561,7 @@ void RunCycleAction(int _section, COMMAND_T* _ct)
 			// (try to) switch to the next action step if nothing has been performed
 			// this avoid to have to run some CAs once before they sync properly
 			// note: m_performState is already updated via ExplodeCyclaction()
-			else // if (action->IsToggle()==2)
+			else //JFB!!! if (action->IsToggle()==2)
 			{
 				// cycled back to the 1st step?
 				if (!action->m_performState)
@@ -596,26 +629,24 @@ bool CheckEditableCyclaction(const char* _actionStr, WDL_FastString* _errMsg, bo
 
 bool AppendErrMsg(int _section, Cyclaction* _a, WDL_FastString* _outErrMsg, const char* _msg = NULL)
 {
-	if (_a)
+	if (_outErrMsg)
 	{
-		if (_outErrMsg)
+		WDL_FastString errMsg;
+		errMsg.AppendFormatted(256, 
+			__LOCALIZE_VERFMT("ERROR: '%s', section '%s'","sws_DLG_161"), 
+			_a ? _a->GetName() : __LOCALIZE("invalid cycle action","sws_DLG_161"), 
+			g_caSectionNames[_section]);
+		errMsg.Append("\n");
+		errMsg.Append(__LOCALIZE("This cycle action was not registered","sws_DLG_161"));
+		errMsg.Append("\n");
+		if (_msg && *_msg)
 		{
-			_outErrMsg->AppendFormatted(256, __LOCALIZE_VERFMT("ERROR: '%s', section '%s'","sws_DLG_161"), _a->GetName(), g_caSections[_section]);
-			_outErrMsg->Append("\n");
-			_outErrMsg->Append(__LOCALIZE("This cycle action was not registered","sws_DLG_161"));
-			_outErrMsg->Append("\n");
-			if (_msg && *_msg)
-			{
-				_outErrMsg->Append(__LOCALIZE("Details:","sws_DLG_161"));
-				_outErrMsg->Append(" ");
-				_outErrMsg->Append(_msg);
-				_outErrMsg->Append("\n\n");
-			}
+			errMsg.Append(__LOCALIZE("Details:","sws_DLG_161"));
+			errMsg.Append(" ");
+			errMsg.Append(_msg);
+			errMsg.Append("\n\n");
 		}
-	}
-	else if (_outErrMsg) {
-		_outErrMsg->AppendFormatted(256, __LOCALIZE_VERFMT("ERROR: invalid cycle action in section '%s'","sws_DLG_161"), g_caSections[_section]);
-		_outErrMsg->Append("\n\n");
+		_outErrMsg->Insert(&errMsg, 0); // so that errors are on top, warnings at bottom
 	}
 	return false; // for facility
 }
@@ -624,7 +655,7 @@ void AppendWarnMsg(int _section, Cyclaction* _a, WDL_FastString* _outWarnMsg, co
 {
 	if (_a && _outWarnMsg)
 	{
-		_outWarnMsg->AppendFormatted(256, __LOCALIZE_VERFMT("Warning: '%s', section '%s'","sws_DLG_161"), _a->GetName(), g_caSections[_section]);
+		_outWarnMsg->AppendFormatted(256, __LOCALIZE_VERFMT("Warning: '%s', section '%s'","sws_DLG_161"), _a->GetName(), g_caSectionNames[_section]);
 		_outWarnMsg->Append("\n");
 		_outWarnMsg->Append(__LOCALIZE("This cycle action has been registered but it could be improved","sws_DLG_161"));
 		_outWarnMsg->Append("\n");
@@ -636,9 +667,11 @@ void AppendWarnMsg(int _section, Cyclaction* _a, WDL_FastString* _outWarnMsg, co
 }
 
 // _macros: just to optimize potential accesses to reaper-kb.ini
-bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_PtrList<WDL_FastString>* _macros, WDL_FastString* _applyMsg = NULL)
+// _applyMsg: non NULL only when the user is applying (i.e. NULL during init)
+bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_PtrList<WDL_FastString>* _macros, WDL_PtrList<WDL_FastString>* _consoles, WDL_FastString* _applyMsg = NULL)
 {
-	if (_a)
+	KbdSectionInfo* kbdSec = SNM_GetActionSection(_section);
+	if (kbdSec && _a)
 	{
 		WDL_FastString str;
 		bool warned = false;
@@ -659,19 +692,27 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_PtrList<WDL_F
 				else if (_a->GetCmd(i+1)[0] == '!') // no bound issue here: checked above
 					return AppendErrMsg(_section, _a, _applyMsg, __LOCALIZE("duplicated steps '!'","sws_DLG_161"));
 			}
-			else if (!strcmp(cmd, "65535"))
+			else if (!strcmp(_a->m_desc.Get(), CA_EMPTY))
 			{
 				noop++;
 			}
+			//else if (!strcmp(cmd, "65535"))
+			//{
+			//	noop++;
+			//}
 			else if (IsInstruction(cmd)>=0)
 			{
 				if (!_strnicmp(INSTRUC_CONSOLE, cmd, strlen(INSTRUC_CONSOLE)))
 				{
-/* no! console commands are valid commands
-					instructions++;
-*/
 					if (cmd[strlen(INSTRUC_CONSOLE)] != ' ' || strlen((char*)cmd+strlen(INSTRUC_CONSOLE)+1)<2) {
 						str.SetFormatted(256, __LOCALIZE_VERFMT("%s must be followed by a valid ReaConsole command\nSee http://www.standingwaterstudios.com/reaconsole.php","sws_DLG_161"), INSTRUC_CONSOLE);
+						return AppendErrMsg(_section, _a, _applyMsg, str.Get());
+					}
+				}
+				else if (!_strnicmp(INSTRUC_LABEL, cmd, strlen(INSTRUC_LABEL)))
+				{
+					if (cmd[strlen(INSTRUC_LABEL)] != ' ' || strlen((char*)cmd+strlen(INSTRUC_LABEL)+1)<2) {
+						str.SetFormatted(256, __LOCALIZE_VERFMT("%s must be followed by a valid Label Processor command\nSee Main menu > Extensions > Label Processor","sws_DLG_161"), INSTRUC_LABEL);
 						return AppendErrMsg(_section, _a, _applyMsg, str.Get());
 					}
 				}
@@ -679,14 +720,37 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_PtrList<WDL_F
 				{
 					instructions++;
 
-					// API LIMITATION: GetToggleCommandState() is only available for the main section ATM
-					if (_section) {
-						str.SetFormatted(256, __LOCALIZE_VERFMT("%s (or %s) is only supported in the section '%s'","sws_DLG_161"), INSTRUC_IF, INSTRUC_IFNOT, g_caSections[0]); // g_caSections is localized
-						return AppendErrMsg(_section, _a, _applyMsg, str.Get());
+					bool tglOk = false;
+					const char* nextCmd = "";
+					if ((i+1)<cmdSz)
+					{
+						nextCmd = _a->GetCmd(i+1);
+						if (strstr(nextCmd, "_CYCLACTION")) {
+							if (Cyclaction* nextAction = GetCyclactionFromCustomId(_section, nextCmd))
+								tglOk = (nextAction->IsToggle() >= 0);
+						}
+						else if (IsMacroOrScript(nextCmd, false) || strstr(nextCmd, "_SWSCONSOLE_CUST")) {
+							// script, macros & console cmds do not report any toggle state
+						}
+
+						//JFB either an "atomic" SWS or a native action at this point -> both action are registered, even at init
+						//BUT, for other 3rd part extensions, during init: dunno.. so, check if the user is applying
+						else if (_applyMsg)
+						{
+							// no SNM_NamedCommandLookup hard check here: custom ids might be known even if not registered yet
+							// (e.g. unregister/re-register CAs when applying..)
+							if (!_section)
+								tglOk = (GetToggleCommandState2(kbdSec, SNM_NamedCommandLookup(nextCmd, kbdSec)) >= 0);
+							// for other sections the toggle state can depend on focused wnds => in doubt, we authorize everything
+							// note: but nextCmd will be checked in next iteration
+							else
+								tglOk = true;
+						}
+						else
+							tglOk = true; // at init time: can't say..
 					}
 
-					// must not use SNM_NamedCommandLookup() here!
-					if ((i+1)>=cmdSz || SNM_GetToggleCommandState(NamedCommandLookup(_a->GetCmd(i+1)))<0) //JFB!!!
+					if (!tglOk)
 					{
 						str.SetFormatted(256, __LOCALIZE_VERFMT("%s (or %s) must be followed by an action that reports a toggle state","sws_DLG_161"), INSTRUC_IF, INSTRUC_IFNOT);
 						return AppendErrMsg(_section, _a, _applyMsg, str.Get());
@@ -764,35 +828,31 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_PtrList<WDL_F
 			}
 
 			// only actions, macros & scripts at this point 
-			else if (!_section) // main section?
+			else
 			{
 				// sws check
-				if (SWSGetCommandByID(atoi(cmd)))
-					return AppendErrMsg(_section, _a, _applyMsg, __LOCALIZE("for SWS/S&M actions, you must use custom ids (e.g. _SWS_ABOUT), not command ids (e.g. 47145)","sws_DLG_161"));
+				if (!_section && SWSGetCommandByID(atoi(cmd))) // API LIMITATION: extension action actions can only belong to the main section ATM
+					return AppendErrMsg(_section, _a, _applyMsg, __LOCALIZE("for SWS/S&M actions, you must use custom IDs (e.g. _SWS_ABOUT), not command IDs (e.g. 47145)","sws_DLG_161"));
 
-				// recursive check
+				// explode everything and do more checks: validity, non recursive, etc...
 				WDL_PtrList_DeleteOnDestroy<WDL_FastString> parentCmds;
-				int err = ExplodeCmd(_section, cmd, &parentCmds, _macros, NULL, 0x8); // NULL: console commands can't be recursive
-				if (err==-1) {
-					str.SetFormatted(256, __LOCALIZE_VERFMT("command ID '%s' not found","sws_DLG_161"), cmd);
-					return AppendErrMsg(_section, _a, _applyMsg, str.Get());
+				switch (ExplodeCmd(_section, cmd, &parentCmds, _macros, _consoles, 0x8)) {
+					case -1:
+						str.SetFormatted(256, __LOCALIZE_VERFMT("command ID '%s' not found or invalid","sws_DLG_161"), cmd);
+						return AppendErrMsg(_section, _a, _applyMsg, str.Get());
+					case -2:
+						return AppendErrMsg(_section, _a, _applyMsg, __LOCALIZE("recursive action (i.e. uses itself)","sws_DLG_161"));
 				}
-				else if (err==-2)
-					return AppendErrMsg(_section, _a, _applyMsg, __LOCALIZE("recursive cycle action (i.e. uses itself)","sws_DLG_161"));
-
-				// cmd ids check (only when applying, when loading pointed actions might not be registered yet)
-				if(_applyMsg && !SNM_NamedCommandLookup(cmd))
+	
+				// check cmd ids only when the user applies changes: at init time all actions might not be registered yet
+				// no SNM_NamedCommandLookup hard check here: custom ids might be known even if not registered yet
+				// (e.g. unregister/re-register CAs when applying..)
+				if(_applyMsg && !SNM_NamedCommandLookup(cmd, kbdSec))
 				{
 					str.SetFormatted(256, __LOCALIZE_VERFMT("command ID '%s' not found","sws_DLG_161"), cmd);
 					return AppendErrMsg(_section, _a, _applyMsg, str.Get());
 				}
 			}
-
-			else // other sections
-			{
-				// API LIMITATION..
-			}
-
 
 			///////////////////////////////////////////////////////////////////
 			// warnings?
@@ -806,7 +866,7 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_PtrList<WDL_F
 				{
 					str.SetFormatted(256, __LOCALIZE_VERFMT("the command ID '%s' cannot be shared with other users","sws_DLG_161"), cmd);
 					str.Append("\n");
-					str.AppendFormatted(256, __LOCALIZE_VERFMT("Tip: right-click custom or cycle actions > '%s'","sws_DLG_161"), __LOCALIZE("Explode into individual actions","sws_DLG_161"));
+					str.AppendFormatted(256, __LOCALIZE_VERFMT("Tip: right-click this command > '%s'","sws_DLG_161"), __LOCALIZE("Explode into individual actions","sws_DLG_161"));
 					AppendWarnMsg(_section, _a, _applyMsg, str.Get());
 
 					// don't return false here, just a warning
@@ -875,7 +935,7 @@ void LoadCyclactions(bool _applyMsg, WDL_PtrList_DeleteOnDestroy<Cyclaction>* _c
 {
 	WDL_FastString msg;
 	char buf[32] = "", actionBuf[CA_MAX_LEN] = "";
-	WDL_PtrList_DeleteOnDestroy<WDL_FastString> macros;
+	WDL_PtrList_DeleteOnDestroy<WDL_FastString> macros, consoles;
 	for (int sec=0; sec<SNM_MAX_CYCLING_SECTIONS; sec++)
 	{
 		if (_section == sec || _section == -1)
@@ -885,16 +945,16 @@ void LoadCyclactions(bool _applyMsg, WDL_PtrList_DeleteOnDestroy<Cyclaction>* _c
 
 			int nb = GetPrivateProfileInt(g_caIniSections[sec], "Nb_Actions", 0, _iniFn ? _iniFn : g_SNM_CyclIniFn.Get());
 			int ver = GetPrivateProfileInt(g_caIniSections[sec], "Version", 1, _iniFn ? _iniFn : g_SNM_CyclIniFn.Get());
-			for (int j=0; j<nb; j++) 
+			for (int j=0; j<nb; j++)
 			{
 				if (_snprintfStrict(buf, sizeof(buf), "Action%d", j+1) > 0)
 				{
 					GetPrivateProfileString(g_caIniSections[sec], buf, CA_EMPTY, actionBuf, sizeof(actionBuf), _iniFn ? _iniFn : g_SNM_CyclIniFn.Get());
 					
 					// upgrade?
-					if (*actionBuf && ver<2) {
+					if (*actionBuf && ver<CA_VERSION) {
 						int i=-1;
-						while (actionBuf[++i]) { if (actionBuf[i]==CA_SEP_V1) actionBuf[i]=CA_SEP; }
+						while (actionBuf[++i]) { if (actionBuf[i]==CA_SEP_V1 || actionBuf[i]==CA_SEP_V2) actionBuf[i]=CA_SEP; }
 					}
 
 					// import into _cyclactions
@@ -920,7 +980,7 @@ void LoadCyclactions(bool _applyMsg, WDL_PtrList_DeleteOnDestroy<Cyclaction>* _c
 			{
 				for (int j=0; j<g_cas[sec].GetSize(); j++)
 					if (Cyclaction* a = g_cas[sec].Get(j))
-						if (CheckRegisterableCyclaction(sec, a, &macros, _applyMsg ? &msg : NULL))
+						if (CheckRegisterableCyclaction(sec, a, &macros, &consoles, _applyMsg ? &msg : NULL))
 							a->m_cmdId = RegisterCyclation(a->GetName(), sec, j+1, 0);
 			}
 		}
@@ -1484,25 +1544,17 @@ void SNM_CommandsView::GetItemText(SWS_ListItem* item, int iCol, char* str, int 
 						lstrcpyn(str, g_instrucInfos[instIdx], iStrMax);
 						return;
 					}
-					// API LIMITATION: NamedCommandLookup() works only for the main section ATM
 					if (g_editedAction)
 					{
-						 //JFB!!! removeme > 4.33pre
-						if (!g_editedSection)
+						// won't cross for CAs that are not yet registered, that's probably better anyway
+						if (KbdSectionInfo* kbdSec = SNM_GetActionSection(g_editedSection))
 						{
-							// note: other consistency checks at apply time..
-							if (int cmd = SNM_NamedCommandLookup(pItem->Get())) // see SNM_NamedCommandLookup()
-								lstrcpyn(str, kbd_getTextFromCmd(cmd, NULL), iStrMax);
-							else
-								lstrcpyn(str, __LOCALIZE("Unknown","sws_DLG_161"), iStrMax); 
+							if (int cmdId = SNM_NamedCommandLookup(pItem->Get(), kbdSec)) {
+								lstrcpyn(str, kbd_getTextFromCmd(cmdId, kbdSec), iStrMax);
+								if (*str) return;
+							}
 						}
-						else if (SectionFromUniqueID)
-						{
-							if (int cmd = atoi(pItem->Get()))
-								lstrcpyn(str, kbd_getTextFromCmd(cmd, SectionFromUniqueID(SNM_GetActionSectionId(g_editedSection))), iStrMax);
-							else
-								lstrcpyn(str, __LOCALIZE("Unknown","sws_DLG_161"), iStrMax); 
-						}
+						lstrcpyn(str, __LOCALIZE("Unknown","sws_DLG_161"), iStrMax); 
 					}
 				}
 				break;
@@ -1675,7 +1727,7 @@ void SNM_CyclactionWnd::OnInitDlg()
 
 	m_cbSection.SetID(CMBID_SECTION);
 	for (int i=0; i < SNM_MAX_CYCLING_SECTIONS; i++)
-		m_cbSection.AddItem(g_caSections[i]);
+		m_cbSection.AddItem(g_caSectionNames[i]);
 	m_cbSection.SetCurSel(g_editedSection);
 	m_parentVwnd.AddChild(&m_cbSection);
 
@@ -1878,7 +1930,7 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case LEARN_CMD_MSG:
 		{
 			char idstr[SNM_MAX_ACTION_CUSTID_LEN] = "";
-			if (GetSelectedAction(idstr, SNM_MAX_ACTION_CUSTID_LEN, g_caSections[g_editedSection]))
+			if (GetSelectedAction(idstr, SNM_MAX_ACTION_CUSTID_LEN, SNM_GetActionSection(g_editedSection)))
 				AddOrInsertCommand(idstr, 1);
 			break;
 		}
@@ -1918,16 +1970,24 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case EXPLODE_CMD_MSG:
 			if (g_editedAction)
 			{
-				// keep pointers (may be used in a listview, delete once updated)
+				KbdSectionInfo* kbdSec = SNM_GetActionSection(g_editedSection);
+				if (!kbdSec)
+					break;
+
 				int x=0;
 				bool sel = false;
-				WDL_PtrList_DeleteOnDestroy<WDL_FastString> cmdsToDelete, macros, consoles;
+
+				// to keep pointers (may be used in a listview, delete once updated)
+				WDL_PtrList_DeleteOnDestroy<WDL_FastString> cmdsToDelete;
+				WDL_PtrList_DeleteOnDestroy<WDL_FastString> macros, consoles;
 				while(WDL_FastString* selcmd = (WDL_FastString*)g_lvR->EnumSelected(&x))
 				{
 					sel = true;
 					WDL_PtrList_DeleteOnDestroy<WDL_FastString> subCmds;
-					if (SNM_NamedCommandLookup(selcmd->Get()) && // actions must be registered for this command
-						ExplodeCmd(g_editedSection, selcmd->Get(), &subCmds, &macros, &consoles, 0x4)>0)
+
+					// commands to explode must be registered => SNM_NamedCommandLookup() hard check here!
+					if (SNM_NamedCommandLookup(selcmd->Get(), kbdSec, true) && 
+						ExplodeCmd(g_editedSection, selcmd->Get(), &subCmds, &macros, &consoles, 0) > 0) // >0 means "something done"
 					{
 						cmdsToDelete.Add(selcmd);
 						g_editedAction->ReplaceCmd(selcmd, false, &subCmds);
@@ -2044,7 +2104,7 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			break;
 		case BTNID_ACTIONLIST:
 			AllEditListItemEnd(false);
-			Main_OnCommand(40605, 0);
+			ShowActionList(SNM_GetActionSection(g_editedSection), NULL);
 			break;
 		case BTNID_R:
 			if (g_lvState<1) {
@@ -2063,7 +2123,15 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			{
 				int id = LOWORD(wParam)-ADD_INSTRUC_MSG;
 				WDL_FastString cmd(g_instrucs[id]);
-				if (IsInstructionWithParam(id)) cmd.Append(" ");
+				if (IsInstructionWithParam(id))
+					cmd.Append(" ");
+
+				// auto-add ENLOOP or ENDIF if needed
+				if (!_stricmp(INSTRUC_IFNOT, g_instrucs[id]) || !_stricmp(INSTRUC_IF, g_instrucs[id]))
+					AddOrInsertCommand(INSTRUC_ENDIF, 1);
+				else if (!_stricmp(INSTRUC_LOOP, g_instrucs[id]))
+					AddOrInsertCommand(INSTRUC_ENDLOOP, 1);
+
 				AddOrInsertCommand(cmd.Get(), IsInstructionWithParam(id) ? 3 : 1); // cmds with params: edit cell
 				break;
 			}
@@ -2077,7 +2145,7 @@ void SNM_CyclactionWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _to
 {
 	LICE_CachedFont* font = SNM_GetThemeFont();
 
-	// 1st row of controls
+	// 1st row of controls, left
 	int x0 = _r->left + SNM_GUI_X_MARGIN_OLD;
 	int h = SNM_GUI_TOP_H;
 	if (_tooltipHeight)
@@ -2090,19 +2158,18 @@ void SNM_CyclactionWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _to
 	ScreenToClient(m_hwnd, ((LPPOINT)&r)+1);
 	x0 = r.right + SNM_GUI_X_MARGIN_OLD;
 
-	m_txtSection.SetFont(font);
-	if (SNM_AutoVWndPosition(DT_LEFT, &m_txtSection, NULL, _r, &x0, _r->top, h, 5)) {
-		m_cbSection.SetFont(font);
-		if (SNM_AutoVWndPosition(DT_LEFT, &m_cbSection, &m_txtSection, _r, &x0, _r->top, h))
-		{
-/*no! remains a GUI-only info until applied..
-			m_btnUndo.SetCheckState(g_undos);
-*/
-			m_btnUndo.SetTextLabel(__LOCALIZE("Consolidate undo points","sws_DLG_161"), -1, font);
-			if (SNM_AutoVWndPosition(DT_LEFT, &m_btnUndo, NULL, _r, &x0, _r->top, h))
-				SNM_AddLogo(_bm, _r, x0, h);
-		}
+	m_btnUndo.SetTextLabel(__LOCALIZE("Consolidate undo points","sws_DLG_161"), -1, font);
+	SNM_AutoVWndPosition(DT_LEFT, &m_btnUndo, NULL, _r, &x0, _r->top, h, 4);
+
+	// right
+	RECT r2 = *_r; r2.left = x0; // tweak to auto-hide the logo when needed
+	x0 = _r->right-10; //JFB!! 10 is tied to the current .rc!
+	m_cbSection.SetFont(font);
+	if (SNM_AutoVWndPosition(DT_RIGHT, &m_cbSection, NULL, &r2, &x0, _r->top, h, 4)) {
+		m_txtSection.SetFont(font);
+		SNM_AutoVWndPosition(DT_RIGHT, &m_txtSection, &m_cbSection, &r2, &x0, _r->top, h, 0);
 	}
+
 
 	// 2nd row of controls
 	x0 = _r->left + SNM_GUI_X_MARGIN_OLD;
@@ -2117,13 +2184,14 @@ void SNM_CyclactionWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _to
 		if (SNM_AutoVWndPosition(DT_LEFT, &m_btnCancel, NULL, _r, &x0, y0, h, 4))
 		{
 			SNM_SkinToolbarButton(&m_btnImpExp, __LOCALIZE("Import/export","sws_DLG_161"));
-			if (SNM_AutoVWndPosition(DT_LEFT, &m_btnImpExp, NULL, _r, &x0, y0, h, 4))
-			{
+			if (SNM_AutoVWndPosition(DT_LEFT, &m_btnImpExp, NULL, _r, &x0, y0, h, 4)) {
 				SNM_SkinToolbarButton(&m_btnActionList, __LOCALIZE("Action list...","sws_DLG_161"));
 				SNM_AutoVWndPosition(DT_LEFT, &m_btnActionList, NULL, _r, &x0, y0, h, 4);
 			}
 		}
 	}
+	r2 = *_r; r2.left = x0; // tweak to auto-hide the logo when needed
+	SNM_AddLogo(_bm, &r2);
 
 	// tiny left/right buttons
 	if (IsWindowVisible(GetDlgItem(m_hwnd, IDC_LIST1))) // left list view is displayed: add tiny buttons on its right
@@ -2150,17 +2218,29 @@ void SNM_CyclactionWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _to
 	m_tinyLRbtns.SetVisible(true);
 }
 
-void SNM_CyclactionWnd::AddImportExportMenu(HMENU _menu)
+void SNM_CyclactionWnd::AddImportExportMenu(HMENU _menu, bool _wantReset)
 {
 	char buf[128] = "";
-	_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Import in section '%s'...","sws_DLG_161"), g_caSections[g_editedSection]);
+	_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Import in section '%s'...","sws_DLG_161"), g_caSectionNames[g_editedSection]);
 	AddToMenu(_menu, buf, IMPORT_CUR_SECTION_MSG, -1, false, IsCAFiltered() ? MF_GRAYED : MF_ENABLED);
 	AddToMenu(_menu, __LOCALIZE("Import all sections...","sws_DLG_161"), IMPORT_ALL_SECTIONS_MSG, -1, false, IsCAFiltered() ? MF_GRAYED : MF_ENABLED);
 	AddToMenu(_menu, SWS_SEPARATOR, 0);
 	AddToMenu(_menu, __LOCALIZE("Export selected cycle actions...","sws_DLG_161"), EXPORT_SEL_MSG);
-	_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Export section '%s'...","sws_DLG_161"), g_caSections[g_editedSection]);
+	_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Export section '%s'...","sws_DLG_161"), g_caSectionNames[g_editedSection]);
 	AddToMenu(_menu, buf, EXPORT_CUR_SECTION_MSG);
 	AddToMenu(_menu, __LOCALIZE("Export all sections...","sws_DLG_161"), EXPORT_ALL_SECTIONS_MSG);
+	if (_wantReset) {
+		AddToMenu(_menu, SWS_SEPARATOR, 0);
+		AddResetMenu(_menu);
+	}
+}
+
+void SNM_CyclactionWnd::AddResetMenu(HMENU _menu)
+{
+	char buf[128] = "";
+	_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Reset section '%s'...","sws_DLG_161"), g_caSectionNames[g_editedSection]);
+	AddToMenu(_menu, buf, RESET_CUR_SECTION_MSG);
+	AddToMenu(_menu, __LOCALIZE("Reset all sections","sws_DLG_161"), RESET_ALL_SECTIONS_MSG);
 }
 
 HMENU SNM_CyclactionWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
@@ -2175,7 +2255,7 @@ HMENU SNM_CyclactionWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 	if (WDL_VWnd* v = m_parentVwnd.VirtWndFromPoint(p.x,p.y,1))
 		if (v->GetID() == BTNID_IMPEXP) {
 			*wantDefaultItems = false;
-			AddImportExportMenu(hMenu);
+			AddImportExportMenu(hMenu, true);
 			return hMenu;
 		}
 
@@ -2207,29 +2287,32 @@ HMENU SNM_CyclactionWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 		// right
 		else if (g_editedAction && g_editedAction != &s_DEFAULT_L)
 		{
-			AddToMenu(hMenu, __LOCALIZE("Add/insert command","sws_DLG_161"), ADD_CMD_MSG);
-			AddToMenu(hMenu, __LOCALIZE("Add/insert step","sws_DLG_161"), ADD_STEP_CMD_MSG);
+			AddToMenu(hMenu, cmd ? __LOCALIZE("Insert selected action (in the Actions window)","sws_DLG_161") : __LOCALIZE("Add selected action (in the Actions window)","sws_DLG_161"), LEARN_CMD_MSG);
+			AddToMenu(hMenu, SWS_SEPARATOR, 0);
+			AddToMenu(hMenu, cmd ? __LOCALIZE("Insert free command","sws_DLG_161") : __LOCALIZE("Add free command","sws_DLG_161"), ADD_CMD_MSG);
 			HMENU hInstructionSubMenu = CreatePopupMenu();
-			AddSubMenu(hMenu, hInstructionSubMenu, __LOCALIZE("Add/insert instruction","sws_DLG_161"));
+			AddSubMenu(hMenu, hInstructionSubMenu, cmd ? __LOCALIZE("Insert instruction","sws_DLG_161") : __LOCALIZE("Add instruction","sws_DLG_161"));
 			for (int i=0; i<NB_INSTRUCTIONS; i++)
 				AddToMenu(hInstructionSubMenu, g_instrucs[i], ADD_INSTRUC_MSG+i);
-			AddToMenu(hMenu, __LOCALIZE("Add/insert selected action (in the Actions window)","sws_DLG_161"), LEARN_CMD_MSG);
+			AddToMenu(hMenu, cmd ? __LOCALIZE("Insert step","sws_DLG_161") : __LOCALIZE("Add step","sws_DLG_161"), ADD_STEP_CMD_MSG);
 
 			AddToMenu(hMenu, SWS_SEPARATOR, 0);
 			if (cmd && cmd != &s_EMPTY_R && cmd != &s_DEFAULT_R)
 			{
-				AddToMenu(hMenu, __LOCALIZE("Explode into individual actions","sws_DLG_161"), EXPLODE_CMD_MSG);
-				AddToMenu(hMenu, SWS_SEPARATOR, 0);
 				AddToMenu(hMenu, __LOCALIZE("Delete","sws_DLG_161"), DEL_CMD_MSG);
 				AddToMenu(hMenu, SWS_SEPARATOR, 0);
 				AddToMenu(hMenu, __LOCALIZE("Copy","sws_DLG_155"), COPY_CMD_MSG);
 				AddToMenu(hMenu, __LOCALIZE("Cut","sws_DLG_155"), CUT_CMD_MSG);
 			}
 			AddToMenu(hMenu, __LOCALIZE("Paste","sws_DLG_155"), PASTE_CMD_MSG, -1, false, g_clipboardCmds.GetSize() ? MF_ENABLED : MF_GRAYED);
+			if (cmd && cmd != &s_EMPTY_R && cmd != &s_DEFAULT_R)
+			{
+				AddToMenu(hMenu, SWS_SEPARATOR, 0);
+				AddToMenu(hMenu, __LOCALIZE("Explode into individual actions","sws_DLG_161"), EXPLODE_CMD_MSG);
+			}
 		}
 	}
-
-	if (!right)
+	else
 	{
 		if (GetMenuItemCount(hMenu))
 			AddToMenu(hMenu, SWS_SEPARATOR, 0);
@@ -2237,13 +2320,9 @@ HMENU SNM_CyclactionWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 		char buf[128] = "";
 		HMENU hImpExpSubMenu = CreatePopupMenu();
 		AddSubMenu(hMenu, hImpExpSubMenu, __LOCALIZE("Import/export...","sws_DLG_161"));
-		AddImportExportMenu(hImpExpSubMenu);
-
-		HMENU hResetSubMenu = CreatePopupMenu();
-		AddSubMenu(hMenu, hResetSubMenu, __LOCALIZE("Reset","sws_DLG_161"));
-		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Reset section '%s'...","sws_DLG_161"), g_caSections[g_editedSection]);
-		AddToMenu(hResetSubMenu, buf, RESET_CUR_SECTION_MSG);
-		AddToMenu(hResetSubMenu, __LOCALIZE("Reset all sections","sws_DLG_161"), RESET_ALL_SECTIONS_MSG);
+		AddImportExportMenu(hImpExpSubMenu, false);
+		AddToMenu(hMenu, SWS_SEPARATOR, 0);
+		AddResetMenu(hMenu);
 	}
 	return hMenu;
 }
@@ -2309,10 +2388,10 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 	// load cycle actions' states
 	if (!strcmp(lp.gettoken_str(0), "<S&M_CYCLACTIONS"))
 	{
-		char linebuf[SNM_MAX_CHUNK_LINE_LENGTH] = "";
+		char line[SNM_MAX_CHUNK_LINE_LENGTH] = "";
 		while(true)
 		{
-			if (!ctx->GetLine(linebuf,sizeof(linebuf)) && !lp.parse(linebuf))
+			if (!ctx->GetLine(line, sizeof(line)) && !lp.parse(line))
 			{
 				if (lp.getnumtokens()>0 && lp.gettoken_str(0)[0] == '>')
 					break;
@@ -2326,6 +2405,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 					if (success)
 					{
 						if (Cyclaction* a = g_cas[sec].Get(cycleId))
+						{
 							if (a->m_cmdId && 
 								(a->m_performState != state || // not enough (e.g. cycle actions w/o steps)
 								a->m_fakeToggle != (fakeTgl?true:false))) // C4805
@@ -2334,6 +2414,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 								a->m_fakeToggle = !a->m_fakeToggle;
 								RefreshToolbar(a->m_cmdId);
 							}
+						}
 					}
 				}
 			}
@@ -2357,8 +2438,8 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 			if (Cyclaction* a = g_cas[i].Get(j))
 				if (!a->IsEmpty())
 					confStr.AppendFormatted(SNM_MAX_CHUNK_LINE_LENGTH,"%d %d %d %d\n", i, j, a->m_performState, a->m_fakeToggle);
-	if (confStr.GetLength() > iHeaderLen)
-	{
+
+	if (confStr.GetLength() > iHeaderLen) {
 		confStr.Append(">\n");
 		StringToExtensionConfig(&confStr, ctx);
 	}
@@ -2378,9 +2459,9 @@ int CyclactionInit()
 	s_DEFAULT_L.Update(__LOCALIZE("Right click here to add cycle actions","sws_DLG_161"));
 	s_EMPTY_R.Set(__LOCALIZE("<- Select a cycle action","sws_DLG_161"));
 	s_DEFAULT_R.Set(__LOCALIZE("Right click here to add commands","sws_DLG_161"));
-	lstrcpyn(g_caSections[0], __localizeFunc("Main","accel_sec",0), SNM_MAX_SECTION_NAME_LEN);
-	lstrcpyn(g_caSections[1], __localizeFunc("MIDI Event List Editor","accel_sec",0), SNM_MAX_SECTION_NAME_LEN);
-	lstrcpyn(g_caSections[2], __localizeFunc("MIDI Editor","accel_sec",0), SNM_MAX_SECTION_NAME_LEN);
+	lstrcpyn(g_caSectionNames[0], __localizeFunc("Main","accel_sec",0), SNM_MAX_SECTION_NAME_LEN);
+	lstrcpyn(g_caSectionNames[1], __localizeFunc("MIDI Event List Editor","accel_sec",0), SNM_MAX_SECTION_NAME_LEN);
+	lstrcpyn(g_caSectionNames[2], __localizeFunc("MIDI Editor","accel_sec",0), SNM_MAX_SECTION_NAME_LEN);
 
 	_snprintfSafe(g_lastExportFn, sizeof(g_lastExportFn), SNM_CYCLACTION_EXPORT_FILE, GetResourcePath());
 	_snprintfSafe(g_lastImportFn, sizeof(g_lastImportFn), SNM_CYCLACTION_EXPORT_FILE, GetResourcePath());

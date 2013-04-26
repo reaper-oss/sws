@@ -29,7 +29,9 @@
 
 #include "stdafx.h" 
 #include "SnM.h"
+#include "SnM_Chunk.h"
 #include "SnM_FXChain.h"
+#include "SnM_Routing.h"
 #include "SnM_Track.h"
 
 
@@ -98,20 +100,21 @@ bool SNM_SendPatcher::NotifyChunkLine(int _mode,
 		// add "detailed" receive
 		case -3:
 		{
+			SNM_SndRcv* mSndRcv = (SNM_SndRcv*)m_sndRcv;
 			_newChunk->AppendFormatted(
 				SNM_MAX_CHUNK_LINE_LENGTH,
 				"AUXRECV %d %d %.14f %.14f %d %d %d %d %d %.14f %d %d\n%s\n", 
 				m_srcId-1, 
 				m_sendType, 
-				m_sndRcv->m_vol, 
-				m_sndRcv->m_pan,
-				m_sndRcv->m_mute,
-				m_sndRcv->m_mono,
-				m_sndRcv->m_phase,
-				m_sndRcv->m_srcChan,
-				m_sndRcv->m_destChan,
-				m_sndRcv->m_panl,
-				m_sndRcv->m_midi,
+				mSndRcv->m_vol, 
+				mSndRcv->m_pan,
+				mSndRcv->m_mute,
+				mSndRcv->m_mono,
+				mSndRcv->m_phase,
+				mSndRcv->m_srcChan,
+				mSndRcv->m_destChan,
+				mSndRcv->m_panl,
+				mSndRcv->m_midi,
 				-1, // API LIMITATION: cannot get snd/rcv automation
 				_parsedLine);
 			update = true;
@@ -134,12 +137,12 @@ int SNM_SendPatcher::AddReceive(MediaTrack* _srcTr, int _sendType, char* _vol, c
 	return ParsePatch(-1, 1, "TRACK", "MIDIOUT");
 }
 
-bool SNM_SendPatcher::AddReceive(MediaTrack* _srcTr, SNM_SndRcv* _io)
+bool SNM_SendPatcher::AddReceive(MediaTrack* _srcTr, void* _io)
 {
 	m_srcId = _srcTr ? CSurf_TrackToID(_srcTr, false) : -1;
 	if (!_io || m_srcId <= 0)
 		return false; 
-	m_sendType = _io->m_mode;
+	m_sendType = ((SNM_SndRcv*)_io)->m_mode;
 	m_vol = NULL;
 	m_pan = NULL;
 	m_sndRcv = _io;

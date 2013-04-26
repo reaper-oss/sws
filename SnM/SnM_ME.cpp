@@ -29,6 +29,7 @@
 #include "SnM.h"
 #include "SnM_Chunk.h"
 #include "SnM_Item.h"
+#include "SnM_ME.h"
 #include "SnM_Util.h"
 
 

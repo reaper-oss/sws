@@ -27,6 +27,8 @@
 
 #include "stdafx.h"
 #include "SnM.h"
+#include "SnM_Chunk.h"
+#include "SnM_Resources.h"
 #include "SnM_Routing.h"
 #include "SnM_Track.h"
 #include "SnM_Util.h"
@@ -668,7 +670,7 @@ bool SetTrackIcon(MediaTrack* _tr, const char* _fn)
 		if (_snprintfStrict(pIconLine, sizeof(pIconLine), "TRACKIMGFN \"%s\"\n", _fn) > 0)
 		{
 			if (iconChunkPos > 0)
-				updated |= p.ReplaceLine(--iconChunkPos, pIconLine); //JFB!!! to update with SNM_ChunkParserPatcher v2
+				updated |= p.ReplaceLine(--iconChunkPos, pIconLine); //JFB!! to update with SNM_ChunkParserPatcher v2
 			else 
 				updated |= p.InsertAfterBefore(0, pIconLine, "TRACK", "FX", 1, 0, "TRACKID");
 		}
@@ -726,8 +728,8 @@ bool GetItemsSubChunk(WDL_FastString* _in, WDL_FastString* _out, int _tmpltIdx)
 		SNM_ChunkParserPatcher p(_in);
 		if (p.GetSubChunk("TRACK", 1, _tmpltIdx, _out) >= 0)
 		{
-//JFB!!! to update with SNM_ChunkParserPatcher v2
-//		 ex: return (p->GetSubChunk("ITEM", 2, -1, _outSubChunk) >= 0); // -1 to get all items in one go
+//JFB!! to update with SNM_ChunkParserPatcher v2
+//		ex: return (p->GetSubChunk("ITEM", 2, -1, _outSubChunk) >= 0); // -1 to get all items in one go
 			SNM_ChunkParserPatcher pout(_out);
 			int posItems = pout.GetSubChunk("ITEM", 2, 0); // no breakKeyword possible here: chunk ends with items
 			if (posItems >= 0) {
@@ -782,7 +784,7 @@ bool ApplyTrackTemplatePrimitive(MediaTrack* _tr, WDL_FastString* _tmplt, bool _
 		// add current track items, if any
 		if (!_itemsFromTmplt) 
 		{
-/*JFB!!! works with SNM_ChunkParserPatcher v2
+/*JFB!! works with SNM_ChunkParserPatcher v2
 			WDL_FastString curItems;
 			if (p->GetSubChunk("ITEM", 2, -1, &curItems) >= 0) // -1 to get all items in one go
 				newChunk.Insert(&curItems, newChunk.GetLength()-2); // -2: ">\n", 
@@ -793,7 +795,7 @@ bool ApplyTrackTemplatePrimitive(MediaTrack* _tr, WDL_FastString* _tmplt, bool _
 				tmplt.Insert((char*)(p->GetChunk()->Get()+posItems), tmplt.GetLength()-2, p->GetChunk()->GetLength()-posItems-2); // -2: ">\n"
 		}
 		// safety: force items removal for master track
-		//JFB REAPER bug: it would add items to the master (!)
+		//JFB REAPER BUG: test required, items would be added to the master (!)
 		else if (_tr == GetMasterTrack(NULL))
 		{
 			SNM_ChunkParserPatcher ptmplt(&tmplt);
@@ -829,12 +831,12 @@ bool ApplyTrackTemplatePrimitive(MediaTrack* _tr, WDL_FastString* _tmplt, bool _
 // _p: optional (to factorize chunk updates)
 // note: assumes _tmplt contains a single track (with items/envs already removed when _itemsFromTmplt/_envsFromTmplt are false)
 //       i.e. use MakeSingleTrackTemplateChunk() first!
-bool ApplyTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmplt, bool _itemsFromTmplt, bool _envsFromTmplt, SNM_SendPatcher* _p)
+bool ApplyTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmplt, bool _itemsFromTmplt, bool _envsFromTmplt, void* _p)
 {
 	bool updated = false;
 	if (_tr && _tmplt && _tmplt->GetLength())
 	{
-		SNM_SendPatcher* p = (_p ? _p : new SNM_SendPatcher(_tr));
+		SNM_SendPatcher* p = (_p ? (SNM_SendPatcher*)_p : new SNM_SendPatcher(_tr));
 
 		// store receives, folder and compact states
 		WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> > rcvs;
@@ -862,7 +864,7 @@ bool ApplyTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmplt, bool _itemsFrom
 				p->ReplaceLine("TRACK", "BUSCOMP", 1, 0, compbusLine.Get(), "SHOWINMIX");
 		}
 
-/*JFB!!! works with SNM_ChunkParserPatcher v2 + "SNM_SendPatcher" to remove
+/*JFB!! works with SNM_ChunkParserPatcher v2 + "SNM_SendPatcher" to remove
 
 		// store current receives, folder and compact states
 		// done through the chunk because the API is incomplete for folder states (tcp only)
@@ -1026,7 +1028,7 @@ void SaveSelTrackTemplates(bool _delItems, bool _delEnvs, WDL_FastString* _chunk
 	}
 }
 
-bool AutoSaveTrackSlots(int _slotType, const char* _dirPath, WDL_PtrList<PathSlotItem>* _owSlots, bool _delItems, bool _delEnvs)
+bool AutoSaveTrackSlots(int _slotType, const char* _dirPath, WDL_PtrList<void>* _owSlots, bool _delItems, bool _delEnvs)
 {
 	int owIdx = 0;
 	WDL_FastString fullChunk;
@@ -1045,7 +1047,7 @@ bool AutoSaveTrackSlots(int _slotType, const char* _dirPath, WDL_PtrList<PathSlo
 
 		return AutoSaveSlot(_slotType, _dirPath, 
 			!i ? __LOCALIZE("Master","sws_DLG_150") : (!*name ? __LOCALIZE("Untitled","sws_DLG_150") : name),
-			"RTrackTemplate", _owSlots, &owIdx, AutoSaveChunkSlot, &fullChunk);
+			"RTrackTemplate", (WDL_PtrList<PathSlotItem>*)_owSlots, &owIdx, AutoSaveChunkSlot, &fullChunk);
 	}
 	return false;
 }
@@ -1057,8 +1059,8 @@ bool AutoSaveTrackSlots(int _slotType, const char* _dirPath, WDL_PtrList<PathSlo
 
 void ImportTrackTemplateSlot(int _slotType, const char* _title, int _slot)
 {
-	if (WDL_FastString* fnStr = g_SNM_ResSlots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot)) {
-		Main_openProject((char*)fnStr->Get()); // already includes an undo point
+	if (WDL_FastString* fnStr = GetOrPromptOrBrowseSlot(_slotType, &_slot)) {
+		Main_openProject((char*)fnStr->Get()); // already includes an undo point (_title unused)
 		delete fnStr;
 	}
 }
@@ -1070,7 +1072,7 @@ void ImportTrackTemplateSlot(int _slotType, const char* _title, int _slot)
 void ApplyTrackTemplateSlot(int _slotType, const char* _title, int _slot, bool _itemsFromTmplt, bool _envsFromTmplt)
 {
 	bool updated = false;
-	if (WDL_FastString* fnStr = g_SNM_ResSlots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot))
+	if (WDL_FastString* fnStr = GetOrPromptOrBrowseSlot(_slotType, &_slot))
 	{
 		WDL_FastString tmpltFile;
 		if (SNM_CountSelectedTracks(NULL, true) && LoadChunk(fnStr->Get(), &tmpltFile) && tmpltFile.GetLength())
@@ -1128,7 +1130,7 @@ void LoadImportTrackTemplateSlot(COMMAND_T* _ct) {
 void ReplacePasteItemsTrackTemplateSlot(int _slotType, const char* _title, int _slot, bool _paste)
 {
 	bool updated = false;
-	if (WDL_FastString* fnStr = g_SNM_ResSlots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot))
+	if (WDL_FastString* fnStr = GetOrPromptOrBrowseSlot(_slotType, &_slot))
 	{
 		WDL_FastString tmpltFile;
 		if (CountSelectedTracks(NULL) && LoadChunk(fnStr->Get(), &tmpltFile) && tmpltFile.GetLength())
@@ -1297,7 +1299,8 @@ class PausedPreview
 public:
 	PausedPreview(const char* _fn, MediaTrack* _tr, double _pos)
 		: m_fn(_fn),m_tr(_tr),m_pos(_pos) {}
-	bool IsMatching(preview_register_t* _prev) {
+	bool IsMatching(preview_register_t* _prev)
+	{
 		return (_prev && _prev->preview_track == m_tr && 
 			_prev->src && _prev->src->GetFileName() &&
 			!strcmp(_prev->src->GetFileName(), m_fn.Get()));
@@ -1317,6 +1320,7 @@ void StopTrackPreviewsRun()
 
 	WDL_PtrList<void>* cc123Trs = NULL;
 	for (int i=g_playPreviews.GetSize()-1; i >=0; i--)
+	{
 		if (preview_register_t* prev = g_playPreviews.Get(i))
 		{
 			TrackPreviewLockUnlockMutex(prev, true);
@@ -1343,6 +1347,7 @@ void StopTrackPreviewsRun()
 			else
 				TrackPreviewLockUnlockMutex(prev, false);
 		}
+	}
 
 	// send all notes off, if needed
 	if (cc123Trs) {
@@ -1357,9 +1362,11 @@ void StopTrackPreviewsRun()
 // MSI is the measure start interval, which if set to n greater than 0, means start synchronized to playback synchronized to a multiple of n measures
 bool SNM_PlayTrackPreview(MediaTrack* _tr, PCM_source* _src, bool _pause, bool _loop, double _msi)
 {
-	SWS_SectionLock lock(&g_playPreviewsMutex);
+	bool ok = false;
 	if (_src)
 	{
+		SWS_SectionLock lock(&g_playPreviewsMutex);
+
 		preview_register_t* prev = new preview_register_t;
 		memset(prev, 0, sizeof(preview_register_t));
 		TrackPreviewInitDeleteMutex(prev, true);
@@ -1371,9 +1378,11 @@ bool SNM_PlayTrackPreview(MediaTrack* _tr, PCM_source* _src, bool _pause, bool _
 		prev->preview_track = _tr;
 
 		// update start position for paused items
+		// note: no need to mutex "prev" here as it is not started yet
 		if (_pause)
 			for (int i=g_pausedPreviews.GetSize()-1; i>=0; i--)
-				if (g_pausedPreviews.Get(i)->IsMatching(prev)) {
+				if (g_pausedPreviews.Get(i)->IsMatching(prev))
+				{
 					prev->curpos = g_pausedPreviews.Get(i)->m_pos;
 					g_pausedPreviews.Delete(i, true);
 //					break;
@@ -1381,9 +1390,9 @@ bool SNM_PlayTrackPreview(MediaTrack* _tr, PCM_source* _src, bool _pause, bool _
 
 		// go!
 		g_playPreviews.Add(prev);
-		return (PlayTrackPreview2Ex(NULL, prev, _msi>0.0 ? 1:0, _msi>0.0? _msi:0.0) != 0);
+		ok = (PlayTrackPreview2Ex(NULL, prev, _msi>0.0 ? 1:0, _msi>0.0? _msi:0.0) != 0);
 	}
-	return false;
+	return ok;
 }
 
 // primitive func: _fn must be a valid/existing file
@@ -1512,15 +1521,17 @@ bool HasAllNotesOff()
 			TrackPreviewLockUnlockMutex(prev, false);
 		}
 	return hasCC123;
-	
 }
 
 void WaitForAllNotesOff()
 {
 	DWORD startWaitTime = GetTickCount();
-	DWORD stopTime = startWaitTime;
-	while (HasAllNotesOff() && (GetTickCount()-startWaitTime) < 1000) // timeout safety
+	DWORD pollTime = startWaitTime;
+	while (HasAllNotesOff()) // timeout safety
 	{
+		// timeout safety ~1s
+		if ((GetTickCount()-startWaitTime) > 1000)
+			break;
 #ifdef _WIN32
 		// keep the UI updating
 		MSG msg;
@@ -1529,8 +1540,8 @@ void WaitForAllNotesOff()
 #endif
 		Sleep(1);
 
-		if ((GetTickCount() - stopTime) > SNM_CSURF_RUN_TICK_MS) {
-			stopTime = GetTickCount();
+		if ((GetTickCount() - pollTime) > SNM_CSURF_RUN_TICK_MS) {
+			pollTime = GetTickCount();
 			StopTrackPreviewsRun();
 		}
 	}
@@ -1659,7 +1670,7 @@ void ScrollSelTrack(bool _tcp, bool _mcp)
 	MediaTrack* tr = SNM_GetSelectedTrack(NULL, 0, true);
 	if (tr && (_tcp || _mcp)) {
 		if (_tcp) Main_OnCommand(40913,0); // scroll to selected tracks
-		if (_mcp) SetMixerScroll(tr); //JFB REAPER bug, last check v4.20: SetMixerScroll() has no effect with most right tracks..
+		if (_mcp) SetMixerScroll(tr); //JFB REAPER BUG: SetMixerScroll() has no effect with most right tracks (last check v4.20)
 	}
 }
 
@@ -1673,13 +1684,13 @@ void ScrollTrack(MediaTrack* _tr, bool _tcp, bool _mcp)
 {
 	if (_tr)
 	{
-		if (PreventUIRefresh) PreventUIRefresh(1);
+		PreventUIRefresh(1);
 		WDL_PtrList<MediaTrack> selTrs;
 		SNM_GetSelectedTracks(NULL, &selTrs, true);
 		SNM_SetSelectedTrack(NULL, _tr, true, true);
 		ScrollSelTrack(true, false);
 		SNM_SetSelectedTracks(NULL, &selTrs, true);
-		if (PreventUIRefresh) PreventUIRefresh(-1);
+		PreventUIRefresh(-1);
 	}
 }
 
@@ -1688,13 +1699,13 @@ void ShowTrackRoutingWindow(MediaTrack* _tr)
 {
 	if (_tr)
 	{
-		if (PreventUIRefresh) PreventUIRefresh(1);
+		PreventUIRefresh(1);
 		WDL_PtrList<MediaTrack> selTrs;
 		SNM_GetSelectedTracks(NULL, &selTrs, true);
 		SNM_SetSelectedTrack(NULL, _tr, true, true);
 		Main_OnCommand(40293, 0);
 		SNM_SetSelectedTracks(NULL, &selTrs, true);
-		if (PreventUIRefresh) PreventUIRefresh(-1);
+		PreventUIRefresh(-1);
 	}
 }
 

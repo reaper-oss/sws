@@ -53,7 +53,7 @@ bool TranscodeFileToFile64(const char* _outFn, const char* _inFn);
 #endif
 WDL_HeapBuf* TranscodeStr64ToHeapBuf(const char* _str64);
 bool GenerateFilename(const char* _dir, const char* _name, const char* _ext, char* _updatedFn, int _updatedSz);
-void ScanFiles(WDL_PtrList<WDL_String>* _files, const char* _initDir, const char* _ext, bool _subdirs);
+void ScanFiles(WDL_PtrList<WDL_String>* _files, const char* _initDir, const char* _filterList, bool _subdirs);
 void StringToExtensionConfig(WDL_FastString* _str, ProjectStateContext* _ctx);
 void ExtensionConfigToString(WDL_FastString* _str, ProjectStateContext* _ctx);
 
@@ -68,15 +68,19 @@ bool GetStringWithRN(const char* _bufSrc, char* _buf, int _bufSize);
 const char* FindFirstRN(const char* _str);
 char* ShortenStringToFirstRN(char* _str);
 void Replace02d(char* _str, char _replaceCh);
+void SplitStrings(const char* _list, WDL_PtrList<WDL_FastString>* _outItems, const char* _sep = ",");
 
 int SNM_SnapToMeasure(double _pos);
 void TranslatePos(double _pos, int* _h, int* _m = NULL, int* _s = NULL, int* _ms = NULL);
 double SeekPlay(double _pos, bool _moveView = false);
 
-int SNM_NamedCommandLookup(const char* _custId, KbdSectionInfo* _section = NULL);
-int SNM_GetToggleCommandState(int _cmdId, KbdSectionInfo* _section = NULL);
+int SNM_GetActionSectionId(int _idx);
+int SNM_GetActionSectionId(KbdSectionInfo* _sec);
+KbdSectionInfo* SNM_GetActionSection(int _idx);
+KbdSectionInfo* SNM_GetMySection();
+int SNM_NamedCommandLookup(const char* _custId, KbdSectionInfo* _section = NULL, bool _hardCheck = false);
 bool LoadKbIni(WDL_PtrList<WDL_FastString>* _out);
-int GetMacroOrScript(const char* _customId, int _sectionUniqueId, WDL_PtrList<WDL_FastString>* _inMacroScripts, WDL_PtrList<WDL_FastString>* _outCmds);
+int GetMacroOrScript(const char* _customId, int _sectionUniqueId, WDL_PtrList<WDL_FastString>* _inMacroScripts, WDL_PtrList<WDL_FastString>* _outCmds, WDL_FastString* _outName = NULL);
 bool IsMacroOrScript(const char* _cmd, bool _cmdIsName = true);
 bool GetSectionURL(bool _alr, const char* _section, char* _sectionURL, int _sectionURLSize);
 

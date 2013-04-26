@@ -661,7 +661,7 @@ int MarkerListEnabled(COMMAND_T*)
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] = 
 {
-	{ { { FSHIFT | FCONTROL | FVIRTKEY, 'M', 0 }, "SWS: Open marker list" },			"SWSMARKERLIST1",  OpenMarkerList,    "SWS MarkerList", 0, MarkerListEnabled },
+	{ { DEFACCEL, "SWS: Open marker list" },							"SWSMARKERLIST1",  OpenMarkerList,    "SWS MarkerList", 0, MarkerListEnabled },
 	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
 	{ { DEFACCEL, "SWS: Load marker set" },								"SWSMARKERLIST2",  LoadMarkerList,    "Load marker set...",   },
 	{ { DEFACCEL, "SWS: Save marker set" },								"SWSMARKERLIST3",  SaveMarkerList,    "Save marker set...",   },

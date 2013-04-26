@@ -101,7 +101,7 @@ bool hookCommandProc(int iCmd, int flag)
 	{
 		if (cmd->accel.accel.cmd==iCmd && cmd->doCommand && cmd->doCommand!=SWS_NOOP)
 		{
-			bReentrancyCheck = true;
+			if (!strstr(cmd->id, "_CYCLACTION")) bReentrancyCheck = true;
 			cmd->fakeToggle = !cmd->fakeToggle;
 			cmd->doCommand(cmd);
 			bReentrancyCheck = false;
@@ -125,7 +125,7 @@ int toggleActionHook(int iCmd)
 	{
 		if (cmd->accel.accel.cmd==iCmd && cmd->getEnabled && cmd->doCommand!=SWS_NOOP)
 		{
-			bReentrancyCheck = true;
+			if (!strstr(cmd->id, "_CYCLACTION")) bReentrancyCheck = true;
 			int state = cmd->getEnabled(cmd);
 			bReentrancyCheck = false;
 			return state;

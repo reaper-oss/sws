@@ -29,6 +29,7 @@
 int IXInit();
 
 extern int LabelInit();
+extern void RunLabelCommand(WDL_FastString* cmd, const char* undoName = NULL);
 extern int PlaylistImportInit();
 
 extern string ParseFileExtension( string path ); // Autorender.cpp

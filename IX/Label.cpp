@@ -211,8 +211,15 @@ void LabelProcessor(COMMAND_T* ct)
 
 	WritePrivateProfileString(SWS_INI, IX_LABELPROC_TEXT_KEY, format.Get(), get_ini_file());
 	WritePrivateProfileString(SWS_INI, IX_LABELPROC_ALLTAKES_KEY, bAllTakes ? "1" : "0", get_ini_file());
+	RunLabelCommand(&format, SWS_CMD_SHORTNAME(ct));
+}
 
-	Undo_BeginBlock2(NULL);
+void RunLabelCommand(WDL_FastString* cmd, const char* undoName)
+{
+	if (undoName)
+		Undo_BeginBlock2(NULL);
+
+	char buf[512];
 	int itemCount = 0;
 	int numSel = CountSelectedMediaItems(NULL);
 	for (int iTrack = 1; iTrack <= GetNumTracks(); iTrack++)
@@ -245,7 +252,7 @@ void LabelProcessor(COMMAND_T* ct)
 
 				WDL_FastString str;
 
-				const char *c = format.Get();
+				const char *c = cmd->Get();
 				const char *end = strchr(c, 0);
 
 				while(c < end)
@@ -431,7 +438,9 @@ void LabelProcessor(COMMAND_T* ct)
 			++itemCount;
 		}
 	}
-	Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS);
+
+	if (undoName)
+		Undo_EndBlock2(NULL, undoName, UNDO_STATE_ITEMS);
 
 	UpdateTimeline();
 }

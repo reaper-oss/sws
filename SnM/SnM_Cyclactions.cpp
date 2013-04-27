@@ -629,14 +629,14 @@ bool AppendErrMsg(int _section, Cyclaction* _a, WDL_FastString* _outErrMsg, cons
 			SNM_GetActionSectionName(_section));
 		errMsg.Append("\n");
 		errMsg.Append(__LOCALIZE("This cycle action was not registered","sws_DLG_161"));
-		errMsg.Append("\n");
 		if (_msg && *_msg)
 		{
+			errMsg.Append("\n");
 			errMsg.Append(__LOCALIZE("Details:","sws_DLG_161"));
 			errMsg.Append(" ");
 			errMsg.Append(_msg);
-			errMsg.Append("\n\n");
 		}
+		errMsg.Append("\n\n");
 		_outErrMsg->Insert(&errMsg, 0); // so that errors are on top, warnings at bottom
 	}
 	return false; // for facility
@@ -662,11 +662,11 @@ void AppendWarnMsg(int _section, Cyclaction* _a, WDL_FastString* _outWarnMsg, co
 bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_PtrList<WDL_FastString>* _macros, WDL_PtrList<WDL_FastString>* _consoles, WDL_FastString* _applyMsg = NULL)
 {
 	KbdSectionInfo* kbdSec = SNM_GetActionSection(_section);
-	if (kbdSec && _a)
+	if (kbdSec && _a && !_a->IsEmpty())
 	{
 		WDL_FastString str;
 		bool warned = false;
-		int steps=0, noop=0, instructions=0, cmdSz=_a->GetCmdSize();
+		int steps=0, instructions=0, cmdSz=_a->GetCmdSize();
 		for (int i=0; i<cmdSz; i++)
 		{
 			const char* cmd = _a->GetCmd(i);
@@ -683,14 +683,6 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_PtrList<WDL_F
 				else if (_a->GetCmd(i+1)[0] == '!') // no bound issue here: checked above
 					return AppendErrMsg(_section, _a, _applyMsg, __LOCALIZE("duplicated steps '!'","sws_DLG_161"));
 			}
-			else if (!strcmp(_a->m_desc.Get(), CA_EMPTY))
-			{
-				noop++;
-			}
-			//else if (!strcmp(cmd, "65535"))
-			//{
-			//	noop++;
-			//}
 			else if (IsInstruction(cmd)>=0)
 			{
 				if (!_strnicmp(INSTRUC_CONSOLE, cmd, strlen(INSTRUC_CONSOLE)))
@@ -867,12 +859,11 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_PtrList<WDL_F
 
 		} // for()
 
-		if ((steps+noop+instructions) == cmdSz && !_a->IsEmpty())
-			return AppendErrMsg(_section, _a, _applyMsg, __LOCALIZE("no valid command id (or custom id) found","sws_DLG_161"));
+		if ((steps+instructions) == cmdSz)
+			return AppendErrMsg(_section, _a, _applyMsg, __LOCALIZE("no valid command found","sws_DLG_161"));
 	}
 	else
 		return AppendErrMsg(_section, NULL, _applyMsg);
-
 	return true;
 }
 
@@ -953,7 +944,7 @@ void LoadCyclactions(bool _applyMsg, WDL_PtrList_DeleteOnDestroy<Cyclaction>* _c
 					// (registered later, in a 2nd pass, because of possible cross-references)
 					else
 					{
-						if (CheckEditableCyclaction(actionBuf, _applyMsg ? &msg : NULL, true))
+						if (CheckEditableCyclaction(actionBuf, _applyMsg ? &msg : NULL, false))
 							g_cas[sec].Add(new Cyclaction(actionBuf));
 						else
 							g_cas[sec].Add(new Cyclaction(CA_EMPTY)); // failed => adds a no-op cycle action in order to preserve cycle action ids
@@ -966,8 +957,9 @@ void LoadCyclactions(bool _applyMsg, WDL_PtrList_DeleteOnDestroy<Cyclaction>* _c
 			{
 				for (int j=0; j<g_cas[sec].GetSize(); j++)
 					if (Cyclaction* a = g_cas[sec].Get(j))
-						if (CheckRegisterableCyclaction(sec, a, &macros, &consoles, _applyMsg ? &msg : NULL))
-							a->m_cmdId = RegisterCyclation(a->GetName(), sec, j+1, 0);
+						if (!a->IsEmpty()) // tested here to avoid lots of dummy err msgs when applying
+							if (CheckRegisterableCyclaction(sec, a, &macros, &consoles, _applyMsg ? &msg : NULL))
+								a->m_cmdId = RegisterCyclation(a->GetName(), sec, j+1, 0);
 			}
 		}
 	}

@@ -57,7 +57,7 @@ public:
 	void Update(const char* _desc) { m_desc.Set(_desc); UpdateNameAndCmds(); }
 	int IsToggle() { return *m_desc.Get()==CA_TGL1 ? 1 : *m_desc.Get()==CA_TGL2 ? 2 : 0; }
 	void SetToggle(int _toggle);
-	bool IsEmpty() { return !_stricmp(m_desc.Get(), CA_EMPTY); }
+	bool IsEmpty() { return !strcmp(m_desc.Get(), CA_EMPTY); }
 	const char* GetName() { return m_name.Get(); }
 	void SetName(const char* _name) { m_name.Set(_name); UpdateFromCmd(); }
 	int GetStepCount();

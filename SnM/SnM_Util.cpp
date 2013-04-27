@@ -772,39 +772,6 @@ double SeekPlay(double _pos, bool _moveView)
 // Action helpers
 ///////////////////////////////////////////////////////////////////////////////
 
-// returns -1 on error
-int SNM_GetActionSectionId(int _idx)
-{
-	// keep this definition order (indexes used in the cycle action editor, for ex.)
-	static int sSectionIds[] =
-	{ 
-		0,				// Main
-		32061,			// ME event list section
-		32060,			// ME piano roll section
-		32062,			// MIDI inline editor
-		100,			// Main alt
-		32063,			// Media explorer
-		SNM_SECTION_ID	// S&M extension
-	};
-	return _idx < (SNM_NUM_NATIVE_SECTIONS+1) ? sSectionIds[_idx] : -1; // SNM_NUM_NATIVE_SECTIONS+1 for the S&M extension
-}
-
-// returns -1 on error
-int SNM_GetActionSectionId(KbdSectionInfo* _sec)
-{
-	if (!_sec) return 0;
-	int idx=0, id=SNM_GetActionSectionId(0);
-	while (id != -1 && SectionFromUniqueID(id) != _sec)
-		id = SNM_GetActionSectionId(++idx);
-	return id;
-}
-
-// returns NULL on error (must not be considered as the "Main" section here!)
-KbdSectionInfo* SNM_GetActionSection(int _idx) {
-	int id = SNM_GetActionSectionId(_idx);
-	return id!=-1 ? SectionFromUniqueID(id) : NULL;
-}
-
 // overrides the API's NamedCommandLookup to take all a action sections into account
 // _hardCheck: if true, do more tests on the returned command id because the API's NamedCommandLookup
 //             can return an id although the related action is not registered yet, ex: at init time, 
@@ -961,6 +928,51 @@ bool IsMacroOrScript(const char* _cmd, bool _cmdIsName)
 		}
 	}
 	return false;
+}
+
+
+static SECTION_INFO_T s_sectionInfos[] = {
+	{0,		"S&M_CYCLACTION_", "Main_Cyclactions"},
+	{100,	"S&M_MAIN_ALT_CYCLACTION",	"MainAlt_Cyclactions"},
+	{32063,	"S&M_MEDIAEX_CYCLACTION",	"MediaEx_Cyclactions"},
+	{32060,	"S&M_ME_PIANO_CYCLACTION",	"ME_Piano_Cyclactions"},
+	{32061,	"S&M_ME_LIST_CYCLACTION",	"ME_List_Cyclactions"},
+	{32062,	"S&M_ME_INLINE_CYCLACTION", "ME_Inline_Cyclactions"},
+	{SNM_SECTION_ID, "", ""}
+};
+
+int SNM_GetActionSectionUniqueId(int _sectionIdx) {
+	return _sectionIdx>=0 && _sectionIdx<SNM_NUM_MANAGED_SECTIONS ? s_sectionInfos[_sectionIdx].unique_id : -1;
+}
+
+const char* SNM_GetCACustomId(int _sectionIdx) {
+	return _sectionIdx>=0 && _sectionIdx<SNM_NUM_MANAGED_SECTIONS ? s_sectionInfos[_sectionIdx].ca_cust_id : "";
+}
+
+const char* SNM_GetCAIni(int _sectionIdx) {
+	return _sectionIdx>=0 && _sectionIdx<SNM_NUM_MANAGED_SECTIONS ? s_sectionInfos[_sectionIdx].ca_ini_sec : "";
+}
+
+const char* SNM_GetActionSectionName(int _sectionIdx)
+{
+	if (KbdSectionInfo* sec = SNM_GetActionSection(_sectionIdx))
+		return __localizeFunc(sec->name,"accel_sec",0);
+	return "";
+}
+
+int SNM_GetActionSectionIndex(const char* _localizedName)
+{
+	for (int idx=0; idx<SNM_NUM_MANAGED_SECTIONS; idx++)
+		if (KbdSectionInfo* sec = SNM_GetActionSection(idx))
+			if (!_stricmp(_localizedName, __localizeFunc(sec->name,"accel_sec",0)))
+				return idx;
+	return -1;
+}
+
+// returns NULL on error (must not be considered as the "Main" section here!)
+KbdSectionInfo* SNM_GetActionSection(int _idx) {
+	int id = SNM_GetActionSectionUniqueId(_idx);
+	return id>=0 ? SectionFromUniqueID(id) : NULL;
 }
 
 bool GetSectionURL(bool _alr, const char* _section, char* _sectionURL, int _sectionURLSize)

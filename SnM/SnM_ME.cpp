@@ -52,8 +52,8 @@ void MECreateCCLane(COMMAND_T* _ct)
 				SNM_ChunkParserPatcher ptk(&takeChunk, false);
 
 				// check current lanes
-				bool lanes[MAX_CC_LANE_ID+1];
-				int i=0; while(i <= MAX_CC_LANE_ID) lanes[i++]=false;
+				bool lanes[SNM_MAX_CC_LANE_ID+1];
+				int i=0; while(i <= SNM_MAX_CC_LANE_ID) lanes[i++]=false;
 				char lastLaneId[4] = ""; //max in v3.6: "133"
 				int tkFirstPos = 0, laneCpt = 0;
 				int pos = ptk.Parse(SNM_GET_CHUNK_CHAR, 1, "SOURCE", "VELLANE", laneCpt, 1, lastLaneId);
@@ -68,7 +68,7 @@ void MECreateCCLane(COMMAND_T* _ct)
 				{
 					tkFirstPos--; // see SNM_ChunkParserPatcher
 					// find the first unused index
-					i=1; while(lanes[i] && i <= MAX_CC_LANE_ID) i++;
+					i=1; while(lanes[i] && i <= SNM_MAX_CC_LANE_ID) i++;
 					char newLane[SNM_MAX_CHUNK_LINE_LENGTH] = "";
 					if (_snprintfStrict(newLane, sizeof(newLane), "VELLANE %d 50 0\n", i) > 0)
 						ptk.GetChunk()->Insert(newLane, tkFirstPos);
@@ -133,13 +133,13 @@ void MESetCCLanes(COMMAND_T* _ct)
 	if (tk)
 	{
 		// recall lanes
-		char laneSlot[MAX_CC_LANES_LEN], slot[32] = "";
+		char laneSlot[SNM_MAX_CC_LANES_LEN], slot[32] = "";
 		if (_snprintfStrict(slot, sizeof(slot), "cc_lanes_slot%d", (int)_ct->user + 1) > 0)
 		{
-			GetPrivateProfileString("MidiEditor", slot, "", laneSlot, MAX_CC_LANES_LEN, g_SNM_IniFn.Get());
+			GetPrivateProfileString("MidiEditor", slot, "", laneSlot, SNM_MAX_CC_LANES_LEN, g_SNM_IniFn.Get());
 
 			int i=0; 
-			while (laneSlot[i] && i < (MAX_CC_LANES_LEN-2)) // -2: see string termination
+			while (laneSlot[i] && i < (SNM_MAX_CC_LANES_LEN-2)) // -2: see string termination
 			{
 				if (laneSlot[i] == '|')
 					laneSlot[i] = '\n';
@@ -184,13 +184,13 @@ void MESaveCCLanes(COMMAND_T* _ct)
 				{
 					firstPos--; // see SNM_ChunkParserPatcher
 
-					char laneSlot[MAX_CC_LANES_LEN] = "";
+					char laneSlot[SNM_MAX_CC_LANES_LEN] = "";
 					int eolLastPos = lastPos;
 					const char* pp = ptk.GetChunk()->Get(); //ok 'cause read only
 					while (pp[eolLastPos] && pp[eolLastPos] != '\n') eolLastPos++;
 
 					int i = firstPos, j=0;
-					while (pp[i] && i<eolLastPos && j < (MAX_CC_LANES_LEN-1) ) { //-1 see string termination
+					while (pp[i] && i<eolLastPos && j < (SNM_MAX_CC_LANES_LEN-1) ) { //-1 see string termination
 						if (pp[i] != '\n') laneSlot[j++] = pp[i];
 						else laneSlot[j++] = '|';
 						i++;

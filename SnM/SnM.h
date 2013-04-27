@@ -115,56 +115,48 @@
 #define SNM_COL_RED_MONITOR			0xBE0000
 #endif
 
+#define SNM_LIVECFG_NB_CONFIGS		4			//JFB do not commit a new value, contact me plz thx!
+#define SNM_CSURF_RUN_TICK_MS		27.0   // 1 tick ~= 27ms (average I monitored)
+#define SNM_DEF_TOOLBAR_RFRSH_FREQ	300    // default frequency in ms for the "auto-refresh toolbars" option 
+#define SNM_FUDGE_FACTOR			0.0000000001
+#define SNM_CSURF_EXT_UNREGISTER	0x00016666
+#define SNM_REAPER_IMG_EXTS			"png,pcx,jpg,jpeg,jfif,ico,bmp" // img exts supported by REAPER (v4.32), can't get those at runtime yet
+#define SNM_INI_EXT_LIST			"INI files (*.INI)\0*.INI\0All Files\0*.*\0"
+#define SNM_SUB_EXT_LIST			"SubRip subtitle files (*.SRT)\0*.SRT\0"
+#define SNM_TXT_EXT_LIST			"Text files (*.txt)\0*.txt\0All files (*.*)\0*.*\0"
+
+#define SNM_MARKER_MASK				1
+#define SNM_REGION_MASK				2
+
 #define SNM_GUI_X_MARGIN			6
 #define SNM_GUI_X_MARGIN_OLD		8
 #define SNM_GUI_X_MARGIN_LOGO		SNM_GUI_X_MARGIN
 #define SNM_GUI_Y_MARGIN			SNM_GUI_X_MARGIN
 #define SNM_GUI_Y_MARGIN_LOGO		10
 #define SNM_GUI_W_KNOB				26
-#define SNM_MAX_PATH				2048
-#define SNM_LIVECFG_NB_CONFIGS		4			//JFB do not commit a new value w/o my approval, plz thx!
-#define SNM_NUM_NATIVE_SECTIONS		6			// REAPER v4.32, keep SNM_GetActionSectionId() in sync
-#define SNM_SECTION_ID				0x10000101	// "< 0x10000000 for cockos use only plzk thx"
-#define SNM_SECTION_1ST_CMD_ID		40000
+#define SNM_3D_COLORS_DELTA			25
 
+#define SNM_MAX_PATH				2048
+#define SNM_MAX_HW_OUTS				8
+#define SNM_MAX_CC_LANE_ID			133
+#define SNM_MAX_CC_LANES_LEN		4096
 #define SNM_MAX_TRACK_GROUPS		32
 #define SNM_MAX_CUE_BUSS_CONFS		8
-#define SNM_REAPER_IMG_EXTS			"png,pcx,jpg,jpeg,jfif,ico,bmp" // img exts supported by REAPER (v4.32), can't get those at runtime yet
-#define SNM_INI_EXT_LIST			"INI files (*.INI)\0*.INI\0All Files\0*.*\0"
-#define SNM_SUB_EXT_LIST			"SubRip subtitle files (*.SRT)\0*.SRT\0"
-#define SNM_TXT_EXT_LIST			"Text files (*.txt)\0*.txt\0All files (*.*)\0*.*\0"
+//#define SNM_MAX_TAKES				1024
+#define SNM_MAX_FX					128
+#define SNM_MAX_PRESETS				0xFFFF
+#define SNM_MAX_INI_SECTION			0xFFFF // definitive limit for WritePrivateProfileSection
+
 #define SNM_MAX_OSC_MSG_LEN			256
 #define SNM_MAX_SECTION_NAME_LEN	64
 #define SNM_MAX_SECTION_ACTIONS		128
 #define SNM_MAX_ACTION_CUSTID_LEN	128
-#define SNM_MACRO_CUSTID_LEN		32     // REAPER v4.32
 #define SNM_MAX_ACTION_NAME_LEN		128
+#define SNM_MAX_ENV_CHUNKNAME_LEN	32
 #define SNM_MAX_MARKER_NAME_LEN		64     // + regions
 #define SNM_MAX_TRACK_NAME_LEN		128
-#define SNM_MAX_HW_OUTS				8
-//#define SNM_MAX_TAKES				1024
-#define SNM_MAX_FX					128
-#define SNM_MAX_PRESETS				0xFFFF
 #define SNM_MAX_PRESET_NAME_LEN		128
 #define SNM_MAX_FX_NAME_LEN			128
-#define SNM_MAX_INI_SECTION			0xFFFF // definitive limit for WritePrivateProfileSection
-#define SNM_MAX_DYNAMIC_ACTIONS		99     // if > 99 the display of action names should be updated
-#define SNM_MAX_CYCLING_ACTIONS		8
-#define SNM_MAX_CYCLING_SECTIONS	3
-#define SNM_MAX_ENV_SUBCHUNK_NAME	32
-#define MAX_CC_LANE_ID				133
-#define MAX_CC_LANES_LEN			4096
-#define SNM_3D_COLORS_DELTA			25
-#define SNM_CSURF_RUN_TICK_MS		27.0   // 1 tick ~= 27ms (average I monitored)
-#define SNM_DEF_TOOLBAR_RFRSH_FREQ	300    // default frequency in ms for the "auto-refresh toolbars" option 
-#define SNM_SCHEDJOB_DEFAULT_DELAY	250
-#define SNM_SCHEDJOB_SLOW_DELAY		500    // for non urgent stuff, e.g. UI update
-#define SNM_FUDGE_FACTOR			0.0000000001
-#define SNM_CSURF_EXT_UNREGISTER	0x00016666
-
-// various bitmask flags
-#define SNM_MARKER_MASK				1
-#define SNM_REGION_MASK				2
 
 // scheduled job ids
 // [0 .. SNM_LIVECFG_NB_CONFIGS-1] are reserved for "apply live config" actions
@@ -181,6 +173,28 @@
 #define SNM_SCHEDJOB_PLAYLIST_UPDATE		SNM_SCHEDJOB_RES_ATTACH + 1
 #define SNM_SCHEDJOB_PRJ_ACTION				SNM_SCHEDJOB_PLAYLIST_UPDATE + 1
 #define SNM_SCHEDJOB_OSX_FIX				SNM_SCHEDJOB_PRJ_ACTION + 1	//JFB!! removeme some day
+
+#define SNM_SCHEDJOB_DEFAULT_DELAY	250
+#define SNM_SCHEDJOB_SLOW_DELAY		500    // for non urgent stuff, e.g. UI update
+
+// action system
+enum {
+  SNM_SEC_IDX_MAIN=0,
+  SNM_SEC_IDX_MAIN_ALT,
+  SNM_SEC_IDX_EPXLORER,
+  SNM_SEC_IDX_ME,
+  SNM_SEC_IDX_ME_EL,
+  SNM_SEC_IDX_ME_INLINE,
+  SNM_SEC_IDX_SNM,
+  SNM_NUM_MANAGED_SECTIONS
+};
+
+#define SNM_SECTION_ID				0x10000101		// "< 0x10000000 for cockos use only plzk thx"
+#define SNM_SECTION_1ST_CMD_ID		40000
+#define SNM_MACRO_CUSTID_LEN		32				// REAPER v4.32
+#define SNM_NUM_NATIVE_SECTIONS		SNM_SEC_IDX_SNM	// ==6 in REAPER v4.32, keep SNM_GetActionSectionUniqueId() in sync
+#define SNM_MAX_CYCLING_SECTIONS	SNM_NUM_NATIVE_SECTIONS
+#define SNM_MAX_DYNAMIC_ACTIONS		99				// if > 99, the "dynamic action" code must be updated
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -275,6 +289,12 @@ typedef struct MIDI_COMMAND_T {
 	bool fakeToggle;
 #endif
 } MIDI_COMMAND_T;
+
+typedef struct SECTION_INFO_T {
+	int unique_id;
+	const char* ca_cust_id;
+	const char* ca_ini_sec;
+} SECTION_INFO_T;
 
 
 ///////////////////////////////////////////////////////////////////////////////

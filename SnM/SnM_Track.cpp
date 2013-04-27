@@ -445,7 +445,7 @@ WDL_PtrList<MediaTrack>* GetChildTracks(MediaTrack* _tr)
 // Track envelopes
 ///////////////////////////////////////////////////////////////////////////////
 
-static const char s_trackEnvNames[][SNM_MAX_ENV_SUBCHUNK_NAME] =
+static const char s_trackEnvNames[][SNM_MAX_ENV_CHUNKNAME_LEN] =
 {
 	"PARMENV",
 	"PROGRAMENV",

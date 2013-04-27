@@ -74,8 +74,11 @@ int SNM_SnapToMeasure(double _pos);
 void TranslatePos(double _pos, int* _h, int* _m = NULL, int* _s = NULL, int* _ms = NULL);
 double SeekPlay(double _pos, bool _moveView = false);
 
-int SNM_GetActionSectionId(int _idx);
-int SNM_GetActionSectionId(KbdSectionInfo* _sec);
+int SNM_GetActionSectionUniqueId(int _idx);
+const char* SNM_GetCACustomId(int _sectionIdx);
+const char* SNM_GetCAIni(int _sectionIdx);
+const char* SNM_GetActionSectionName(int _idx);
+int SNM_GetActionSectionIndex(const char* _localizedName);
 KbdSectionInfo* SNM_GetActionSection(int _idx);
 KbdSectionInfo* SNM_GetMySection();
 int SNM_NamedCommandLookup(const char* _custId, KbdSectionInfo* _section = NULL, bool _hardCheck = false);

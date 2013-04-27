@@ -724,7 +724,7 @@ int RegisterConfigurableCommands(COMMAND_T* _cmds, const char* _inifn)
 			if (_snprintfStrict(actionName, sizeof(actionName), GetLocalizedActionName(ct->accel.desc, LOCALIZE_FLAG_VERIFY_FMTS), j+1) > 0 &&
 				_snprintfStrict(custId, sizeof(custId), "%s%d", ct->id, j+1) > 0)
 			{
-				if (SWSCreateRegisterDynamicCmd(0, ct->doCommand, ct->getEnabled, custId, actionName, j, __FILE__, false)) // already localized
+				if (SWSCreateRegisterDynamicCmd(0, ct->doCommand, ct->getEnabled, custId, actionName, ct->menuText, j, __FILE__, false)) // already localized
 					ct->user = nb; // patch the real number of instances
 				else
 					return 0;

@@ -492,11 +492,11 @@ int GetSelectedAction(char* _section, int _secSize, int* _cmdId, char* _id, int 
 bool GetSelectedAction(char* _idstrOut, int _idStrSz, KbdSectionInfo* _expectedSection)
 {
 	if (!_expectedSection)
-		_expectedSection = SNM_GetActionSection(0);
+		_expectedSection = SNM_GetActionSection(SNM_SEC_IDX_MAIN);
 
 	char section[SNM_MAX_SECTION_NAME_LEN] = "";
 	int actionId, selItem = GetSelectedAction(section, SNM_MAX_SECTION_NAME_LEN, &actionId, _idstrOut, _idStrSz);
-	if (selItem>=0 && strcmp(section, __localizeFunc(_expectedSection->name,"accel_sec",0)))
+	if (selItem!=-1 && strcmp(section, __localizeFunc(_expectedSection->name,"accel_sec",0))) // err -1 has the priority
 		selItem = -4;
 	switch (selItem)
 	{
@@ -508,7 +508,7 @@ bool GetSelectedAction(char* _idstrOut, int _idStrSz, KbdSectionInfo* _expectedS
 			return false;
 		}
 		case -3:
-			MessageBox(GetMainHwnd(), __LOCALIZE("There is no selected action, macro, or script in the Actions window!","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
+			MessageBox(GetMainHwnd(), __LOCALIZE("There is no selected action in the Actions window!","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
 			return false;
 		case -2:
 			MessageBox(GetMainHwnd(), __LOCALIZE("Action IDs are not displayed in the Actions window!\nTip: right-click on the table header > Show action IDs.","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);

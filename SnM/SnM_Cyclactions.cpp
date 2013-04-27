@@ -26,14 +26,16 @@
 ******************************************************************************/
 
 //JFB
-// - API LIMITATION: cannot register actions in MIDI sections (yet?), 
-//   that is why  cycle actions are registered in the main section 
-//   although they perform actions of other sections
-// - See of sws_extension.cpp / hookCommandProc() and toggleActionHook():
-//   recursive checks MUST be bypassed for cycle actions
-//   => a SWS action called in a CA will be performed, but others SWS actions 
-//      calling SWS actions will always be no-op, so as expected, 
-//      CA -> SWS -> SWS will fail
+// - API LIMITATION: cannot register actions in MIDI sections (yet?), that
+//   is why cycle actions are registered in the main section although they 
+//   perform actions of other sections
+// - See of sws_extension.cpp / hookCommandProc() and toggleActionHook(): the
+//   the recursivity test must be bypassed there for cycle actions, things are 
+//   tested here instead (e.g. recursive macros and CAs or a mix of both), see
+//   CheckRegisterableCyclaction().
+//   Also, a SWS action called in a CA will be performed, but others SWS actions 
+//   called from SWS actions will always be no-op, so for ex., CA -> SWS -> SWS 
+//   will fail as expected
 // TODO:
 // - register cycle action in proper sections (when it will be possible)
 // - storage: use native macro format?
@@ -378,10 +380,12 @@ int PerformSingleCommand(int _section, const char* _cmdStr)
 				case SNM_SEC_IDX_ME_EL:
 					return MIDIEditor_LastFocused_OnCommand(cmdId, _section==SNM_SEC_IDX_ME_EL);
 				case SNM_SEC_IDX_EPXLORER:
+#ifdef _WIN32
 					if (HWND h = FindWindow("REAPERMediaExplorerMainwnd", NULL)) {
 						SendMessage(h, WM_COMMAND, cmdId, 0);
 						return 1;
 					}
+#endif
 					break;
 				default:
 					kbdSec->onAction(cmdId, 0, 0, 0, GetMainHwnd());
@@ -1168,6 +1172,7 @@ void Cyclaction::UpdateFromCmd()
 #define EXPORT_ALL_SECTIONS_MSG			0xF034
 #define RESET_CUR_SECTION_MSG			0xF040
 #define RESET_ALL_SECTIONS_MSG			0xF041
+#define LEARN_CYCLACTION_MSG			0xF042
 
 // no default filter text on OSX (cannot catch EN_SETFOCUS/EN_KILLFOCUS)
 #ifndef _SNM_SWELL_ISSUES
@@ -1821,6 +1826,9 @@ void AddOrInsertCommand(const char* _cmd, int _flags = 0)
 
 void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 {
+	KbdSectionInfo* kbdSec = SNM_GetActionSection(g_editedSection);
+	if (!kbdSec) return;
+
 	int x=0;
 	Cyclaction* action = (Cyclaction*)g_lvL->EnumSelected(&x);
 	switch (LOWORD(wParam))
@@ -1881,6 +1889,7 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			break;
 		}
 		case RUN_CYCLACTION_MSG:
+		case LEARN_CYCLACTION_MSG:
 			if (action)
 			{
 				int cycleId = g_editedActions[g_editedSection].Find(action);
@@ -1891,11 +1900,18 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 
 					// API LIMITATION reminder: although they can target the ME, all cycle actions belong to the main section ATM 
 					if (int id = NamedCommandLookup(custId))
-						Main_OnCommand(id, 0);
+					{
+						if (LOWORD(wParam) == RUN_CYCLACTION_MSG)
+							Main_OnCommand(id, 0);
+						else
+							LearnAction(kbdSec, id);
+					}
 					else
+					{
 						MessageBox(m_hwnd,
 							__LOCALIZE("This action is not registered yet!","sws_DLG_161"),
 							__LOCALIZE("S&M - Error","sws_DLG_161"), MB_OK);
+					}
 				}
 			}
 			break;
@@ -1908,7 +1924,7 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case LEARN_CMD_MSG:
 		{
 			char idstr[SNM_MAX_ACTION_CUSTID_LEN] = "";
-			if (GetSelectedAction(idstr, SNM_MAX_ACTION_CUSTID_LEN, SNM_GetActionSection(g_editedSection)))
+			if (GetSelectedAction(idstr, SNM_MAX_ACTION_CUSTID_LEN, kbdSec))
 				AddOrInsertCommand(idstr, 1);
 			break;
 		}
@@ -1948,10 +1964,6 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case EXPLODE_CMD_MSG:
 			if (g_editedAction)
 			{
-				KbdSectionInfo* kbdSec = SNM_GetActionSection(g_editedSection);
-				if (!kbdSec)
-					break;
-
 				int x=0;
 				bool sel = false;
 
@@ -2049,7 +2061,7 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			for (int sec=0; sec < SNM_MAX_CYCLING_SECTIONS; sec++)
 				ResetSection(sec);
 			break;
-/*JFB
+/*JFB!! doc not up to date
 		case IDC_HELPTEXT:
 			ShellExecute(m_hwnd, "open", "http://wiki.cockos.com/wiki/index.php/ALR_Main_S%26M_CREATE_CYCLACTION" , NULL, NULL, SW_SHOWNORMAL);
 			break;
@@ -2081,7 +2093,7 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			break;
 		case BTNID_ACTIONLIST:
 			AllEditListItemEnd(false);
-			ShowActionList(SNM_GetActionSection(g_editedSection), NULL);
+			ShowActionList(kbdSec, NULL);
 			break;
 		case BTNID_R:
 			if (g_lvState<1) {
@@ -2259,6 +2271,7 @@ HMENU SNM_CyclactionWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 				AddToMenu(hMenu, __LOCALIZE("Remove cycle actions","sws_DLG_161"), DEL_CYCLACTION_MSG); 
 				AddToMenu(hMenu, SWS_SEPARATOR, 0);
 				AddToMenu(hMenu, __LOCALIZE("Run","sws_DLG_161"), RUN_CYCLACTION_MSG, -1, false, action->m_added ? MF_GRAYED : MF_ENABLED); 
+				AddToMenu(hMenu, __LOCALIZE("Learn or add shortcut...","sws_DLG_161"), LEARN_CYCLACTION_MSG, -1, false, action->m_added ? MF_GRAYED : MF_ENABLED); 
 			}
 		}
 		// right
@@ -2266,7 +2279,7 @@ HMENU SNM_CyclactionWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 		{
 			AddToMenu(hMenu, cmd ? __LOCALIZE("Insert selected action (in the Actions window)","sws_DLG_161") : __LOCALIZE("Add selected action (in the Actions window)","sws_DLG_161"), LEARN_CMD_MSG);
 			AddToMenu(hMenu, SWS_SEPARATOR, 0);
-			AddToMenu(hMenu, cmd ? __LOCALIZE("Insert free command","sws_DLG_161") : __LOCALIZE("Add free command","sws_DLG_161"), ADD_CMD_MSG);
+			AddToMenu(hMenu, cmd ? __LOCALIZE("Insert","sws_DLG_161") : __LOCALIZE("Add","sws_DLG_161"), ADD_CMD_MSG);
 			HMENU hInstructionSubMenu = CreatePopupMenu();
 			AddSubMenu(hMenu, hInstructionSubMenu, cmd ? __LOCALIZE("Insert instruction","sws_DLG_161") : __LOCALIZE("Add instruction","sws_DLG_161"));
 			for (int i=0; i<NB_INSTRUCTIONS; i++)

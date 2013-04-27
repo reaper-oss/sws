@@ -990,7 +990,7 @@ SNM_MidiActionJob::SNM_MidiActionJob(int _jobId, int _approxDelayMs, int _curCC,
 
 WDL_FastString g_SNM_IniFn, g_SNM_CyclIniFn, g_SNM_DiffToolFn;
 int g_SNM_IniVersion = 0;
-//int g_SNM_Beta = 0;
+int g_SNM_Beta = 0;
 
 void IniFileInit()
 {
@@ -1017,7 +1017,7 @@ void IniFileInit()
 	GetPrivateProfileString("General", "DiffTool", "", fn.Get(), SNM_MAX_PATH, g_SNM_IniFn.Get());
 	g_SNM_DiffToolFn.Set(fn.Get());
 #endif
-//	g_SNMbeta = GetPrivateProfileInt("General", "Beta", 0, g_SNM_IniFn.Get());
+	g_SNM_Beta = GetPrivateProfileInt("General", "Beta", 0, g_SNM_IniFn.Get());
 }
 
 void IniFileExit()
@@ -1036,7 +1036,7 @@ void IniFileExit()
 	iniSection.AppendFormatted(128, "ClearTypeFont=%d\n", g_SNM_ClearType ? 1:0);
 	iniSection.AppendFormatted(SNM_MAX_PATH, "DiffTool=\"%s\"\n", g_SNM_DiffToolFn.Get());
 #endif
-//	iniSection.AppendFormatted(128, "Beta=%d\n", g_SNMbeta); 
+	iniSection.AppendFormatted(128, "Beta=%d\n", g_SNM_Beta); 
 	SaveIniSection("General", &iniSection, g_SNM_IniFn.Get());
 
 	// save dynamic actions

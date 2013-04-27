@@ -177,25 +177,6 @@
 #define SNM_SCHEDJOB_DEFAULT_DELAY	250
 #define SNM_SCHEDJOB_SLOW_DELAY		500    // for non urgent stuff, e.g. UI update
 
-// action system
-enum {
-  SNM_SEC_IDX_MAIN=0,
-  SNM_SEC_IDX_MAIN_ALT,
-  SNM_SEC_IDX_EPXLORER,
-  SNM_SEC_IDX_ME,
-  SNM_SEC_IDX_ME_EL,
-  SNM_SEC_IDX_ME_INLINE,
-  SNM_SEC_IDX_SNM,
-  SNM_NUM_MANAGED_SECTIONS
-};
-
-#define SNM_SECTION_ID				0x10000101		// "< 0x10000000 for cockos use only plzk thx"
-#define SNM_SECTION_1ST_CMD_ID		40000
-#define SNM_MACRO_CUSTID_LEN		32				// REAPER v4.32
-#define SNM_NUM_NATIVE_SECTIONS		SNM_SEC_IDX_SNM	// ==6 in REAPER v4.32, keep SNM_GetActionSectionUniqueId() in sync
-#define SNM_MAX_CYCLING_SECTIONS	SNM_NUM_NATIVE_SECTIONS
-#define SNM_MAX_DYNAMIC_ACTIONS		99				// if > 99, the "dynamic action" code must be updated
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // Scheduled jobs
@@ -267,7 +248,7 @@ extern SWS_Mutex g_SNM_JobsMutex;
 extern WDL_PtrList_DeleteOnDestroy<SNM_ScheduledJob> g_SNM_Jobs;
 
 extern int g_SNM_IniVersion;
-//extern int g_SNM_Beta;
+extern int g_SNM_Beta;
 extern WDL_FastString g_SNM_IniFn, g_SNM_CyclIniFn, g_SNM_DiffToolFn;
 
 class SNM_TrackInt {
@@ -295,6 +276,42 @@ typedef struct SECTION_INFO_T {
 	const char* ca_cust_id;
 	const char* ca_ini_sec;
 } SECTION_INFO_T;
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Actions & sections (as of REAPER v4.32)
+///////////////////////////////////////////////////////////////////////////////
+
+#define SNM_SECTION_ID				0x10000101		// "< 0x10000000 for cockos use only plzk thx"
+#define SNM_SECTION_1ST_CMD_ID		40000
+
+// section indexes, order does not matter here 
+// important: keep s_sectionInfos in sync!
+enum {
+  SNM_SEC_IDX_MAIN=0,
+  SNM_SEC_IDX_MAIN_ALT,
+  SNM_SEC_IDX_EPXLORER,
+  SNM_SEC_IDX_ME,
+  SNM_SEC_IDX_ME_EL,
+  SNM_SEC_IDX_ME_INLINE,
+  SNM_SEC_IDX_SNM,
+  SNM_NUM_MANAGED_SECTIONS
+};
+
+static SECTION_INFO_T s_sectionInfos[] = {
+	{0,		"S&M_CYCLACTION_",			"Main_Cyclactions"},
+	{100,	"S&M_MAIN_ALT_CYCLACTION",	"MainAlt_Cyclactions"},
+	{32063,	"S&M_MEDIAEX_CYCLACTION",	"MediaEx_Cyclactions"},
+	{32060,	"S&M_ME_PIANO_CYCLACTION",	"ME_Piano_Cyclactions"},
+	{32061,	"S&M_ME_LIST_CYCLACTION",	"ME_List_Cyclactions"},
+	{32062,	"S&M_ME_INLINE_CYCLACTION", "ME_Inline_Cyclactions"},
+	{SNM_SECTION_ID, "", ""}
+};
+
+#define SNM_MACRO_CUSTID_LEN		32
+#define SNM_NUM_NATIVE_SECTIONS		SNM_SEC_IDX_SNM
+#define SNM_MAX_CYCLING_SECTIONS	SNM_NUM_NATIVE_SECTIONS
+#define SNM_MAX_DYNAMIC_ACTIONS		99 // if > 99, the "dynamic action" code must be updated
 
 
 ///////////////////////////////////////////////////////////////////////////////

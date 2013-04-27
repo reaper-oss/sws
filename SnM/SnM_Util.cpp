@@ -930,17 +930,6 @@ bool IsMacroOrScript(const char* _cmd, bool _cmdIsName)
 	return false;
 }
 
-
-static SECTION_INFO_T s_sectionInfos[] = {
-	{0,		"S&M_CYCLACTION_", "Main_Cyclactions"},
-	{100,	"S&M_MAIN_ALT_CYCLACTION",	"MainAlt_Cyclactions"},
-	{32063,	"S&M_MEDIAEX_CYCLACTION",	"MediaEx_Cyclactions"},
-	{32060,	"S&M_ME_PIANO_CYCLACTION",	"ME_Piano_Cyclactions"},
-	{32061,	"S&M_ME_LIST_CYCLACTION",	"ME_List_Cyclactions"},
-	{32062,	"S&M_ME_INLINE_CYCLACTION", "ME_Inline_Cyclactions"},
-	{SNM_SECTION_ID, "", ""}
-};
-
 int SNM_GetActionSectionUniqueId(int _sectionIdx) {
 	return _sectionIdx>=0 && _sectionIdx<SNM_NUM_MANAGED_SECTIONS ? s_sectionInfos[_sectionIdx].unique_id : -1;
 }

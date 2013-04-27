@@ -523,8 +523,9 @@ bool GetSelectedAction(char* _idstrOut, int _idStrSz, KbdSectionInfo* _expectedS
 
 void LearnAction(KbdSectionInfo* _section, int _cmdId)
 {
-#ifndef _SNM_REAPER_BUG // see _SNM_REAPER_BUG declaration
-
+//#ifndef _SNM_REAPER_BUG // see _SNM_REAPER_BUG declaration
+if (g_SNM_Beta)
+{
 	int nbShortcuts=0;
 	if (int cnt = CountActionShortcuts(_section, _cmdId))
 	{
@@ -576,9 +577,10 @@ void LearnAction(KbdSectionInfo* _section, int _cmdId)
 	}
 
 	DoActionShortcutDialog(GetMainHwnd(), _section, _cmdId, nbShortcuts);
-
-#else //JFB!! removeme some day
-
+}
+//#else //JFB!! removeme some day
+else
+{
 	HWND h;
 //	h = GetReaWindowByTitle(__localizeFunc("Actions", "DLG_274", 0));
 //	if (!h)
@@ -617,7 +619,8 @@ void LearnAction(KbdSectionInfo* _section, int _cmdId)
 			}
 		}
 	}
-#endif
+//#endif
+}
 }
 
 // dump actions or the wiki ALR summary for the current section *as displayed* in the action dlg 

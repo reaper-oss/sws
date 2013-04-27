@@ -1679,7 +1679,7 @@ void ScrollSelTrack(COMMAND_T* _ct) {
 	ScrollSelTrack((flags&1)==1, (flags&2)==2); // == for warning C4800
 }
 
-//JFB change/restore sel programatically => not cool for controle surfaces
+//JFB change/restore sel programatically => not cool for control surfaces
 void ScrollTrack(MediaTrack* _tr, bool _tcp, bool _mcp)
 {
 	if (_tr)
@@ -1694,7 +1694,7 @@ void ScrollTrack(MediaTrack* _tr, bool _tcp, bool _mcp)
 	}
 }
 
-//JFB change/restore sel programatically => not cool for controle surfaces
+//JFB change/restore sel programatically => not cool for control surfaces
 void ShowTrackRoutingWindow(MediaTrack* _tr)
 {
 	if (_tr)

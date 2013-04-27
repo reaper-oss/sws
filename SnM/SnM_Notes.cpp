@@ -1240,7 +1240,9 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
 {
 	// cleanup (won't be saved below anyway)
-//JFB	if (!isUndo)
+/*JFB!!! pourquoi virer ce test? cleanup utile?
+	if (!isUndo)
+*/
 	{
 		// delete unused tracks
 		for (int i=0; i < g_SNM_TrackNotes.Get()->GetSize(); i++)

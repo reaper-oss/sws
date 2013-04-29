@@ -323,28 +323,47 @@ char* GetHashString(const char* in, char* out)
 	return out;
 }
 
+// overrides the native GetTrackGUID(): returns a special GUID for the master track
+// (useful for persistence as no GUID is stored in RPP files for the master..)
+// note: TrackToGuid(NULL) will return also NULL, contrary to GetTrackGUID(NULL)
+const GUID* TrackToGuid(MediaTrack* tr)
+{
+	if (tr)
+	{
+		if (tr == GetMasterTrack(NULL))
+			return &GUID_NULL;
+		else
+			return GetTrackGUID(tr);
+	}
+	return NULL;
+}
+
 MediaTrack* GuidToTrack(const GUID* guid)
 {
-	for (int i = 0; i <= GetNumTracks(); i++)
-	{
-		MediaTrack* tr = CSurf_TrackFromID(i, false);
-		if (TrackMatchesGuid(tr, guid))
-			return tr;
-	}
+	if (guid)
+		for (int i=0; i<=GetNumTracks(); i++)
+			if (MediaTrack* tr = CSurf_TrackFromID(i, false))
+				if (TrackMatchesGuid(tr, guid))
+					return tr;
 	return NULL;
 }
 
 bool GuidsEqual(const GUID* g1, const GUID* g2)
 {
-	return memcmp(g1, g2, sizeof(GUID)) == 0;
+	return g1 && g2 && !memcmp(g1, g2, sizeof(GUID));
 }
 
 bool TrackMatchesGuid(MediaTrack* tr, const GUID* g)
 {
-	if (CSurf_TrackToID(tr, false) == 0)
-		return GuidsEqual(g, &GUID_NULL);
-	GUID* gTr = (GUID*)GetSetMediaTrackInfo(tr, "GUID", NULL);
-	return gTr && GuidsEqual(gTr, g);
+	if (tr && g)
+	{
+		if (GuidsEqual(GetTrackGUID(tr), g))
+			return true;
+		// 2nd try for the master
+		if (tr == GetMasterTrack(NULL))
+			return GuidsEqual(g, &GUID_NULL);
+	}
+	return false;
 }
 
 const char* stristr(const char* str1, const char* str2)

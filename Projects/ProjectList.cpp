@@ -89,7 +89,7 @@ void SWS_ProjectListView::GetItemList(SWS_ListItemList* pList)
 {
 	ReaProject* proj;
 	int i = 0;
-	while((proj = Enum_Projects(i++, NULL, 0)))
+	while((proj = EnumProjects(i++, NULL, 0)))
 		pList->Add((SWS_ListItem*)proj);
 }
 

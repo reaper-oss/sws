@@ -61,7 +61,7 @@ void TieFileToProject(const char* _fn, ReaProject* _prj, bool _tie)
 {
 	if (_fn && *_fn)
 	{
-		if (ReaProject* prj = _prj ? _prj : Enum_Projects(-1, NULL, 0))
+		if (ReaProject* prj = _prj ? _prj : EnumProjects(-1, NULL, 0))
 		{
 			void *p[2] = { (void*)_fn, (void*)prj };
 			plugin_register(_tie ? "file_in_project_ex" : "-file_in_project_ex", p);
@@ -149,7 +149,7 @@ public:
 	SelectProjectJob(int _approxDelayMs, int _curval, int _val, int _valhw, int _relmode, HWND _hwnd) 
 		: SNM_MidiActionJob(SNM_SCHEDJOB_SEL_PRJ,_approxDelayMs,_curval,_val,_valhw,_relmode,_hwnd) {}
 	void Perform() {
-		if (ReaProject* proj = Enum_Projects(m_absval, NULL, 0)) // project number is 0-based
+		if (ReaProject* proj = EnumProjects(m_absval, NULL, 0)) // project number is 0-based
 			SelectProjectInstance(proj);
 	}
 };
@@ -175,7 +175,7 @@ void LoadOrSelectProjectSlot(int _slotType, const char* _title, int _slot, bool 
 		ReaProject* prj = NULL;
 		int i=0;
 		bool found = false;
-		while (!found && (prj = Enum_Projects(i++, fn, sizeof(fn))))
+		while (!found && (prj = EnumProjects(i++, fn, sizeof(fn))))
 			if (!strcmp(fnStr->Get(), fn))
 				found = true;
 

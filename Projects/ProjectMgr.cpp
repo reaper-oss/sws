@@ -96,9 +96,9 @@ void OpenProjectsFromList(COMMAND_T*)
 			int i = 0;
 
 			int iProjects = -1;
-			while (Enum_Projects(++iProjects, NULL, 0)); // Count projects
+			while (EnumProjects(++iProjects, NULL, 0)); // Count projects
 			char cName[10];
-			Enum_Projects(-1, cName, 10);
+			EnumProjects(-1, cName, 10);
 
 			if (iProjects != 1 || cName[0] != 0 || GetNumTracks() != 0)
 			{
@@ -170,7 +170,7 @@ void OpenRelatedProject(COMMAND_T* pCmd)
 	// See if it's already opened
 	char cOpenedProj[256];
 	int i = 0;
-	while ((pProj = Enum_Projects(i++, cOpenedProj, 256)))
+	while ((pProj = EnumProjects(i++, cOpenedProj, 256)))
 	{
 		if (_stricmp(cOpenedProj, pStr->Get()) == 0)
 		{
@@ -186,7 +186,7 @@ void OpenRelatedProject(COMMAND_T* pCmd)
 	int* pNewProjOpts = (int*)get_config_var("newprojdo", &sztmp);
 	iNewProjOpts = *pNewProjOpts;
 	*pNewProjOpts = 0;
-	pProj = Enum_Projects(-1, NULL, 0);
+	pProj = EnumProjects(-1, NULL, 0);
 	Main_OnCommand(40859, 0); // 40859: New project tab
 	Main_openProject(pStr->Get());
 	EnumProjects(-1, cOpenedProj, 256);
@@ -281,12 +281,12 @@ void LastProjectTab(COMMAND_T*)
 {
 	int iNumProjects = 0;
 	while (EnumProjects(++iNumProjects, NULL, 0));
-	SelectProjectInstance(Enum_Projects(iNumProjects-1, NULL, 0));
+	SelectProjectInstance(EnumProjects(iNumProjects-1, NULL, 0));
 }
 
 void OpenProjectTab(COMMAND_T* ctx)
 {
-	ReaProject* proj = Enum_Projects((int)ctx->user, NULL, 0);
+	ReaProject* proj = EnumProjects((int)ctx->user, NULL, 0);
 	if (proj)
 		SelectProjectInstance(proj);
 }
@@ -296,7 +296,7 @@ void UpdateOpenProjectTabActions()
 	// Add more actions for project tabs if > 10
 	static int iActions = 10;
 	int iProjs = iActions-1;
-	while (Enum_Projects(++iProjs, NULL, 0));
+	while (EnumProjects(++iProjs, NULL, 0));
 	if (iProjs > iActions)
 		for (; iActions < iProjs; iActions++)
 		{

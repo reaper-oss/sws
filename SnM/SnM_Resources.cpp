@@ -306,7 +306,7 @@ void TieResFileToProject(const char* _fn, int _bookmarkType, bool _checkDup = fa
 			{
 				int i=0;
 				char path[SNM_MAX_PATH] = "";
-				while (ReaProject* prj = Enum_Projects(i++, path, sizeof(path)))
+				while (ReaProject* prj = EnumProjects(i++, path, sizeof(path)))
 				{
 					if (!_stricmp(g_tiedProjects.Get(_bookmarkType)->Get(), path))
 					{
@@ -1332,7 +1332,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case UNTIE_PROJECT_MSG:
 		{
 			char path[SNM_MAX_PATH]="";
-			ReaProject* prj = Enum_Projects(-1, path, sizeof(path));
+			ReaProject* prj = EnumProjects(-1, path, sizeof(path));
 			UntieAllResFileFromProject(prj, path, g_resType);
 			g_tiedProjects.Get(g_resType)->Set("");
 			m_parentVwnd.RequestRedraw(NULL);
@@ -1341,7 +1341,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case TIE_PROJECT_MSG:
 		{
 			char path[SNM_MAX_PATH]="";
-			ReaProject* prj = Enum_Projects(-1, path, sizeof(path));
+			ReaProject* prj = EnumProjects(-1, path, sizeof(path));
 			UntieAllResFileFromProject(prj, path, g_resType);
 			g_tiedProjects.Get(g_resType)->Set(path);
 			TieAllResFileToProject(prj, path, g_resType);
@@ -2389,7 +2389,7 @@ void AutoSave(int _type, bool _promptOverwrite, int _flags)
 	// the meat -------------------------------------------------------------->
 	// untie all files, save, tie all: brutal but safe
 	char prjPath[SNM_MAX_PATH]="";
-	ReaProject* prj = Enum_Projects(-1, prjPath, sizeof(prjPath));
+	ReaProject* prj = EnumProjects(-1, prjPath, sizeof(prjPath));
 
 	UntieAllResFileFromProject(prj, prjPath, _type);
 
@@ -3265,7 +3265,7 @@ void ResourcesExit()
 void ResourcesAttachJob::Perform()
 {
 	char newProjectFn[SNM_MAX_PATH]="";
-	if (ReaProject* newProject = Enum_Projects(-1, newProjectFn, sizeof(newProjectFn)))
+	if (ReaProject* newProject = EnumProjects(-1, newProjectFn, sizeof(newProjectFn)))
 	{
 		// do the job only if needed (track project switches)
 		if (_stricmp(g_curProjectFn, newProjectFn))

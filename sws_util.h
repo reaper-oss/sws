@@ -30,9 +30,6 @@
 #define IMPAPI(x)				if (!((*((void **)&(x)) = (void *)rec->GetFunc(#x)))) errcnt++;
 #define IMPVAR(x,nm)			if (!((*(void **)&(x)) = get_config_var(nm,&sztmp)) || sztmp != sizeof(*x)) errcnt++;
 
-// Use this macro to include the ReaProject* cast.  Try to get cockos to fix in the gen header
-#define Enum_Projects(idx, name, namelen) ((ReaProject*)EnumProjects(idx, name, namelen))
-
 #define BUFFER_SIZE				2048
 #define SWS_THEMING				true
 #define SWS_INI					"SWS"
@@ -109,7 +106,7 @@ public:
 	{
 		ReaProject* pProj = (ReaProject*)GetCurrentProjectInLoadSave();
 		if (!pProj) // If not in a project load/save context, above returns NULL
-			pProj = Enum_Projects(-1, NULL, 0);
+			pProj = EnumProjects(-1, NULL, 0);
 		int i = m_projects.Find(pProj);
 		if (i >= 0)
 			return m_data.Get(i);
@@ -131,7 +128,7 @@ public:
 			{
 				int j = 0;
 				ReaProject* pProj;
-				while ((pProj = Enum_Projects(j++, NULL, 0)))
+				while ((pProj = EnumProjects(j++, NULL, 0)))
 					if (m_projects.Get(i) == pProj)
 						break;
 				if (!pProj)

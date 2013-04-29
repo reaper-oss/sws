@@ -89,7 +89,7 @@ public:
 	}
 	void UpdateToCurrentEnvelope()
 	{
-		ReaProject *pproj=Enum_Projects(-1,0,0);
+		ReaProject *pproj=EnumProjects(-1,0,0);
 		if (pproj)
 		{
 			void *pcurenv= GetSelectedTrackEnvelope(pproj);
@@ -124,7 +124,7 @@ public:
 		GenerateNewState();
 		if (m_newstateExists)
 		{
-			void *pcurenv= GetSelectedTrackEnvelope(Enum_Projects(-1,0,0));
+			void *pcurenv= GetSelectedTrackEnvelope(EnumProjects(-1,0,0));
 			if (pcurenv)
 			{
 				WDL_FastString str; // Prob should convert m_newenvstate to use WDL_FastString

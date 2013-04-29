@@ -287,7 +287,7 @@ void* GetConfigVar(const char* cVar)
 	int sztmp;
 	int iOffset = projectconfig_var_getoffs(cVar, &sztmp);
 	if (iOffset)
-		return projectconfig_var_addr(Enum_Projects(-1, NULL, 0), iOffset);
+		return projectconfig_var_addr(EnumProjects(-1, NULL, 0), iOffset);
 	else
 		return get_config_var(cVar, &sztmp);
 }

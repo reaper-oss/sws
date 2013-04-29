@@ -115,10 +115,12 @@
 // theme file cmds
 #define THM_LOAD_MSG				0xF080 
 // (newer) common cmds
-#define COPY_BOOKMARK_MSG			0xF090
-#define DEL_BOOKMARK_MSG			0xF091
-#define REN_BOOKMARK_MSG			0xF092
-#define NEW_BOOKMARK_START_MSG		0xF093 // leave some room here -->
+#define LOAD_TIED_PRJ_MSG			0xF090
+#define LOAD_TIED_TAB_MSG			0xF091
+#define COPY_BOOKMARK_MSG			0xF092
+#define DEL_BOOKMARK_MSG			0xF093
+#define REN_BOOKMARK_MSG			0xF094
+#define NEW_BOOKMARK_START_MSG		0xF095 // leave some room here -->
 #define NEW_BOOKMARK_END_MSG		0xF0BF // <--
 
 
@@ -1326,6 +1328,11 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 
 		// new bookmark cmds are in an interval of cmds: see "default" case below..
 
+		case LOAD_TIED_PRJ_MSG:
+		case LOAD_TIED_TAB_MSG:
+			if (g_tiedProjects.Get(g_resType)->GetLength())
+				LoadOrSelectProject(g_tiedProjects.Get(g_resType)->Get(), LOWORD(wParam)==LOAD_TIED_TAB_MSG);
+			break;
 		case TIE_ACTIONS_MSG:
 			g_SNM_TiedSlotActions[GetTypeForUser()] = g_resType;
 			break;
@@ -1721,6 +1728,11 @@ HMENU SNM_ResourceWnd::OnContextMenu(int _x, int _y, bool* _wantDefaultItems)
 			case CMBID_TYPE:
 				*_wantDefaultItems = false;
 				return BookmarkContextMenu(hMenu);
+			case TXTID_TIED_PRJ:
+				*_wantDefaultItems = false;
+				AddToMenu(hMenu, PRJ_SELECT_LOAD_STR, LOAD_TIED_PRJ_MSG);
+				AddToMenu(hMenu, PRJ_SELECT_LOAD_TAB_STR, LOAD_TIED_TAB_MSG);
+				return hMenu;
 		}
 	}
 
@@ -3289,8 +3301,13 @@ void ResourcesAttachJob::Perform()
 
 // this is our only notification of active project tab change, so attach/detach everything
 // ScheduledJob used because of multi-notifs
-void ResourcesTrackListChange() {
+void ResourcesTrackListChange()
+{
+/*JFB!!! fix when closing project tabs
 	SNM_AddOrReplaceScheduledJob(new ResourcesAttachJob());
+*/
+	ResourcesAttachJob job;
+	job.Perform();
 }
 
 

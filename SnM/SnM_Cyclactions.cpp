@@ -468,10 +468,12 @@ void RunCycleAction(int _section, COMMAND_T* _ct)
 
 						int tgl = GetToggleCommandState2(kbdSec, SNM_NamedCommandLookup(cmdStr, kbdSec));
 #ifdef _SNM_DEBUG
-						char dbg[32];
+						char dbg[128];
 						OutputDebugString("RunCycleAction: toggle state of ");
 						OutputDebugString(cmdStr);
-						_snprintfSafe(dbg, sizeof(dbg), "= %d\n", tgl);
+						OutputDebugString(", section ");
+						OutputDebugString(kbdSec->name);
+						_snprintfSafe(dbg, sizeof(dbg), " = %d\n", tgl);
 						OutputDebugString(dbg);
 #endif
 						if (tgl>=0)
@@ -537,13 +539,10 @@ void RunCycleAction(int _section, COMMAND_T* _ct)
 			if (allCmds.GetSize())
 			{
 #ifdef _SNM_DEBUG
-				char dbg[128];
-				OutputDebugString("RunCycleAction: toggle state of ");
-				OutputDebugString(cmdStr);
-				OutputDebugString(", section ");
-				OutputDebugString(kbdSec->name);
-				_snprintfSafe(dbg, sizeof(dbg), " = %d\n", tgl);
-				OutputDebugString(dbg);
+				OutputDebugString("RunCycleAction: ");
+				OutputDebugString(undoStr);
+				OutputDebugString(" ---------->");
+				OutputDebugString("\n");
 #endif
 				if (g_undos)
 					Undo_BeginBlock2(NULL);

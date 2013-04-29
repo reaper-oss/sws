@@ -21,7 +21,8 @@ Resources window and related "slot actions"
  Use-case example: Comping, http://forum.cockos.com/showthread.php?t=121131|"Revolver tracks"|
  - Added Context menu > Bookmark > "Attach files to X.RPP" and "Detach files from Y.RPP"
  - Added option "Attach files and paths to this project" when creating new bookmarks
-+<b>Added custom bookmarks</b>: Context menu > Bookmark > New bookmark > Custom...
+ - Added tied project name, right-click to select/load/load in new tab
+ +<b>Added custom bookmarks</b>: Context menu > Bookmark > New bookmark > Custom...
  The definition format is: resource_directory_name,description,file_extensions (no spaces around commas)
  - Example1: Configurations,ReaConfig,ReaperConfigZip => Bank of configs example: auto-fill, then double-click slots to switch ReaConfigs (or, on Win, drag-drop slots to the arrange) 
  - Example2: Docs,Document,txt,rtf,pdf => Multiple file extensions example
@@ -36,7 +37,7 @@ Resources window and related "slot actions"
 +Various tweaks, tiny fixes (localization, media file filters, etc..)
 
 Fixes:
-+Notes window: undo remove tracks now also restore tracks notes
++Notes window: undoing "remove tracks" now also restore tracks notes
 +Removed default shortcut Ctrl+Shift+M ("SWS: Open marker list"): conflict with the default/native shortcut for "View: show track manager window"
 +Removed default shortcut Ctrl+F (for "SWS/S&M: Find"): no known conflict but more future-proof..
 

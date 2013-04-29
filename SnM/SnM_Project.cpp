@@ -167,29 +167,35 @@ void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND
 // Project template slots (Resources view)
 ///////////////////////////////////////////////////////////////////////////////
 
+void LoadOrSelectProject(const char* _fn, bool _newTab)
+{
+	if (!_fn)
+		return;
+
+	int i=0;
+	bool found = false;
+	ReaProject* prj = NULL;
+	char fn[SNM_MAX_PATH] = "";
+	while (!found && (prj = EnumProjects(i++, fn, sizeof(fn))))
+		if (!_stricmp(_fn, fn))
+			found = true;
+
+	if (found)
+	{
+		SelectProjectInstance(prj);
+	}
+	else
+	{
+		if (_newTab)
+			Main_OnCommand(40859,0);
+		Main_openProject((char*)_fn); // already includes an undo point (_title unused)
+	}
+}
+
 void LoadOrSelectProjectSlot(int _slotType, const char* _title, int _slot, bool _newTab)
 {
-	if (WDL_FastString* fnStr = GetOrPromptOrBrowseSlot(_slotType, &_slot))
-	{
-		char fn[SNM_MAX_PATH] = "";
-		ReaProject* prj = NULL;
-		int i=0;
-		bool found = false;
-		while (!found && (prj = EnumProjects(i++, fn, sizeof(fn))))
-			if (!strcmp(fnStr->Get(), fn))
-				found = true;
-
-		if (found)
-			SelectProjectInstance(prj);
-		else
-		{
-			if (_newTab)
-				Main_OnCommand(40859,0);
-			Main_openProject((char*)fnStr->Get()); // already includes an undo point (_title unused)
-/* API LIMITATION: would be great to set the project as "not saved" here (like native project templates)
-	See http://code.google.com/p/sws-extension/issues/detail?id=321
-*/
-		}
+	if (WDL_FastString* fnStr = GetOrPromptOrBrowseSlot(_slotType, &_slot)) {
+		LoadOrSelectProject(fnStr->Get(), _newTab);
 		delete fnStr;
 	}
 }

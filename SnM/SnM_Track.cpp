@@ -38,6 +38,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 // Track helpers (with ReaProject* parameter)
+// Note: primitive funcs, no undo points
 ///////////////////////////////////////////////////////////////////////////////
 
 // get a track from a project by track count (1-based, 0 for master)
@@ -54,12 +55,6 @@ int SNM_GetTrackId(ReaProject* _proj, MediaTrack* _tr)
 			return i;
 	return -1;
 }
-
-
-///////////////////////////////////////////////////////////////////////////////
-// Track selection (with ReaProject* parameter)
-// Note: primitive funcs, no undo points
-///////////////////////////////////////////////////////////////////////////////
 
 // take the master into account (contrary to CountSelectedTracks())
 int SNM_CountSelectedTracks(ReaProject* _proj, bool _master)

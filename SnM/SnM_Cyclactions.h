@@ -51,13 +51,14 @@ class Cyclaction
 {
 public:
 	// constructors assume their params are valid
-	Cyclaction(const char* _desc=CA_EMPTY, bool _added=false) : m_desc(_desc), m_performState(0), m_fakeToggle(false), m_cmdId(0), m_added(_added) { UpdateNameAndCmds(); }
-	Cyclaction(Cyclaction* _a) : m_desc(_a->m_desc), m_performState(_a->m_performState), m_fakeToggle(_a->m_fakeToggle), m_cmdId(_a->m_cmdId), m_added(_a->m_added) { UpdateNameAndCmds(); }
+	Cyclaction(const char* _def=CA_EMPTY, bool _added=false) : m_def(_def), m_performState(0), m_fakeToggle(false), m_cmdId(0), m_added(_added) { UpdateNameAndCmds(); }
+	Cyclaction(Cyclaction* _a) : m_def(_a->m_def), m_performState(_a->m_performState), m_fakeToggle(_a->m_fakeToggle), m_cmdId(_a->m_cmdId), m_added(_a->m_added) { UpdateNameAndCmds(); }
 	~Cyclaction() {}
-	void Update(const char* _desc) { m_desc.Set(_desc); UpdateNameAndCmds(); }
-	int IsToggle() { return *m_desc.Get()==CA_TGL1 ? 1 : *m_desc.Get()==CA_TGL2 ? 2 : 0; }
+	const char* GetDefinition() { return m_def.Get(); }
+	void Update(const char* _def) { m_def.Set(_def); UpdateNameAndCmds(); }
+	int IsToggle() { return *m_def.Get()==CA_TGL1 ? 1 : *m_def.Get()==CA_TGL2 ? 2 : 0; }
 	void SetToggle(int _toggle);
-	bool IsEmpty() { return !strcmp(m_desc.Get(), CA_EMPTY); }
+	bool IsEmpty() { return !strcmp(m_def.Get(), CA_EMPTY); }
 	const char* GetName() { return m_name.Get(); }
 	void SetName(const char* _name) { m_name.Set(_name); UpdateFromCmd(); }
 	int GetStepCount();
@@ -73,8 +74,6 @@ public:
 	WDL_FastString* GetCmdString(int _i) { return m_cmds.Get(_i); }
 	int FindCmd(WDL_FastString* _cmd) { return m_cmds.Find(_cmd); }
 
-//JFB TODO? protected?
-	WDL_FastString m_desc; 
 	int m_performState;
 	int m_cmdId; // should only be used only once the cycle action is registered
 	bool m_added, m_fakeToggle;
@@ -82,7 +81,8 @@ public:
 private:
 	void UpdateNameAndCmds();
 	void UpdateFromCmd();
-	
+
+	WDL_FastString m_def;
 	WDL_FastString m_name;
 	WDL_PtrList_DeleteOnDestroy<WDL_FastString> m_cmds;
 };

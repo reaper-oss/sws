@@ -956,6 +956,7 @@ void SNM_AddOrReplaceScheduledJob(SNM_ScheduledJob* _job)
 
 // learn with midi pitch is not supported atm,
 // see http://forum.cockos.com/showthread.php?t=116377
+// and http://forum.cockos.com/project.php?issueid=4576
 SNM_MidiActionJob::SNM_MidiActionJob(int _jobId, int _approxDelayMs, int _curCC, int _val, int _valhw, int _relmode, HWND _hwnd) 
 	: SNM_ScheduledJob(_jobId, _approxDelayMs),m_val(_val),m_valhw(_valhw),m_relmode(_relmode),m_hwnd(_hwnd)
 {
@@ -970,16 +971,17 @@ SNM_MidiActionJob::SNM_MidiActionJob(int _jobId, int _approxDelayMs, int _curCC,
 	// cc midi events
 	else if (_valhw==-1 && _val>=0 && _val<128)
 	{
-		// absolute
-		if (!_relmode) 
-			m_absval = _val;
-		// relative, from http://forum.cockos.com/project.php?issueid=4576
-		else { 
-			if (_relmode==1)      { if (_val >= 0x40) _val|=~0x3f; } // sign extend if 0x40 set
-			else if (_relmode==2) { _val-=0x40; } // offset by 0x40
-			else if (_relmode==3) { if (_val&0x40) _val=-(_val&0x3f); } // 0x40 is sign bit
-			m_absval = BOUNDED(BOUNDED(_curCC,0,127)+_val, 0, 127);
+		switch (_relmode)
+		{
+			// absolute
+			case 0: m_absval = _val;					return; // !!
+			// relative
+			case 1: if (_val >= 0x40) _val|=~0x3f;		break;  // sign extend if 0x40 set
+			case 2: _val-=0x40;							break;  // offset by 0x40
+			case 3: if (_val&0x40) _val=-(_val&0x3f);	break;  // 0x40 is sign bit
 		}
+		// relative modes, again
+		m_absval = BOUNDED(BOUNDED(_curCC,0,127)+_val, 0, 127);
 	}
 }
 

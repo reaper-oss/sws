@@ -42,6 +42,7 @@
 #include "SnM_Dlg.h"
 #include "SnM_Marker.h"
 #include "SnM_Notes.h"
+#include "SnM_Project.h"
 #include "SnM_Track.h"
 #include "SnM_Util.h"
 #include "SnM_Window.h"
@@ -619,14 +620,14 @@ void SNM_NotesWnd::SaveCurrentTrackNotes()
 		bool found = false;
 		for (int i=0; i < g_SNM_TrackNotes.Get()->GetSize(); i++) 
 		{
-			if (g_SNM_TrackNotes.Get()->Get(i)->m_tr == g_trNote) {
+			if (g_SNM_TrackNotes.Get()->Get(i)->GetTrack() == g_trNote) {
 				g_SNM_TrackNotes.Get()->Get(i)->m_notes.Set(g_lastText); // CRLF removed only when saving the project..
 				found = true;
 				break;
 			}
 		}
 		if (!found)
-			g_SNM_TrackNotes.Get()->Add(new SNM_TrackNotes(g_trNote, g_lastText));
+			g_SNM_TrackNotes.Get()->Add(new SNM_TrackNotes(TrackToGuid(g_trNote), g_lastText));
 		Undo_OnStateChangeEx2(NULL, __LOCALIZE("Edit track notes","sws_undo"), UNDO_STATE_MISCCFG, -1); //JFB TODO? -1 to replace?
 	}
 }
@@ -815,12 +816,12 @@ int SNM_NotesWnd::UpdateTrackNotes()
 			g_trNote = selTr;
 
 			for (int i=0; i < g_SNM_TrackNotes.Get()->GetSize(); i++)
-				if (g_SNM_TrackNotes.Get()->Get(i)->m_tr == g_trNote) {
+				if (g_SNM_TrackNotes.Get()->Get(i)->GetTrack() == g_trNote) {
 					SetText(g_SNM_TrackNotes.Get()->Get(i)->m_notes.Get());
 					return REQUEST_REFRESH;
 				}
 
-			g_SNM_TrackNotes.Get()->Add(new SNM_TrackNotes(g_trNote, ""));
+			g_SNM_TrackNotes.Get()->Add(new SNM_TrackNotes(TrackToGuid(g_trNote), ""));
 			SetText("");
 			refreshType = REQUEST_REFRESH;
 		} 
@@ -1211,16 +1212,12 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 	{
 		GUID g;
 		stringToGuid(lp.gettoken_str(1), &g);
-		MediaTrack* tr = GuidToTrack(&g);
-		if (tr)
-		{
-			WDL_FastString notes;
-			ExtensionConfigToString(&notes, ctx);
-			char buf[MAX_HELP_LENGTH] = "";
-			if (GetStringFromNotesChunk(&notes, buf, MAX_HELP_LENGTH))
-				g_SNM_TrackNotes.Get()->Add(new SNM_TrackNotes(tr, buf));
-			return true;
-		}
+		WDL_FastString notes;
+		ExtensionConfigToString(&notes, ctx);
+		char buf[MAX_HELP_LENGTH] = "";
+		if (GetStringFromNotesChunk(&notes, buf, MAX_HELP_LENGTH))
+			g_SNM_TrackNotes.Get()->Add(new SNM_TrackNotes(&g, buf));
+		return true;
 	}
 	else if (!strcmp(lp.gettoken_str(0), "<S&M_SUBTITLE"))
 	{
@@ -1239,24 +1236,6 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 
 static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
 {
-	// cleanup (won't be saved below anyway)
-/*JFB!!! pourquoi virer ce test? cleanup utile?
-	if (!isUndo)
-*/
-	{
-		// delete unused tracks
-		for (int i=0; i < g_SNM_TrackNotes.Get()->GetSize(); i++)
-			if (SNM_TrackNotes* tn = g_SNM_TrackNotes.Get()->Get(i))
-				if (!tn->m_tr || CSurf_TrackToID(tn->m_tr, false) < 0)
-					g_SNM_TrackNotes.Get()->Delete(i--, true);
-
-		// remove non-existant markers & regions
-		for (int i=0; i < g_pRegionSubs.Get()->GetSize(); i++)
-			if (SNM_RegionSubtitle* sub = g_pRegionSubs.Get()->Get(i))
-				if (GetMarkerRegionIndexFromId(NULL, sub->m_id) < 0)
-					g_pRegionSubs.Get()->Delete(i--, true);
-	}
-
 	char line[SNM_MAX_CHUNK_LINE_LENGTH] = "";
 	char strId[128] = "";
 	WDL_FastString formatedNotes;
@@ -1270,33 +1249,36 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 	}
 
 	// save track notes
-	for (int i=0; i < g_SNM_TrackNotes.Get()->GetSize(); i++)
+	for (int i=0; i<g_SNM_TrackNotes.Get()->GetSize(); i++)
 	{
 		if (SNM_TrackNotes* tn = g_SNM_TrackNotes.Get()->Get(i))
-			if (tn->m_notes.GetLength())
+		{
+			MediaTrack* tr = tn->GetTrack();
+			if (tn->m_notes.GetLength() &&
+				tr && CSurf_TrackToID(tr, false) >= 0) // valid track?
 			{
-				GUID g;
-				if (tn->m_tr && CSurf_TrackToID(tn->m_tr, false) >= 0)
-				{
-					if (tn->m_tr != GetMasterTrack(NULL))
-						g = *(GUID*)GetSetMediaTrackInfo(tn->m_tr, "GUID", NULL);
-					else
-						g = GUID_NULL;
-					guidToString(&g, strId);
-					if (_snprintfStrict(line, sizeof(line), "<S&M_TRACKNOTES %s\n|", strId) > 0)
-						if (GetNotesChunkFromString(tn->m_notes.Get(), &formatedNotes, line))
-							StringToExtensionConfig(&formatedNotes, ctx);
-				}
+				guidToString((GUID*)tn->GetGUID(), strId);
+				if (_snprintfStrict(line, sizeof(line), "<S&M_TRACKNOTES %s\n|", strId) > 0)
+					if (GetNotesChunkFromString(tn->m_notes.Get(), &formatedNotes, line))
+						StringToExtensionConfig(&formatedNotes, ctx);
 			}
+			else
+				g_SNM_TrackNotes.Get()->Delete(i--, true);
+		}
 	}
 
 	// save region/marker subs
-	for (int i=0; i < g_pRegionSubs.Get()->GetSize(); i++)
+	for (int i=0; i<g_pRegionSubs.Get()->GetSize(); i++)
 		if (SNM_RegionSubtitle* sub = g_pRegionSubs.Get()->Get(i))
-			if (sub->m_notes.GetLength() && GetMarkerRegionIndexFromId(NULL, sub->m_id) >= 0)
+			if (sub->m_notes.GetLength() && 
+				GetMarkerRegionIndexFromId(NULL, sub->m_id) >= 0) // valid mkr/rgn?
+			{
 				if (_snprintfStrict(line, sizeof(line), "<S&M_SUBTITLE %d\n|", sub->m_id) > 0)
 					if (GetNotesChunkFromString(sub->m_notes.Get(), &formatedNotes, line))
 						StringToExtensionConfig(&formatedNotes, ctx);
+			}
+			else
+				g_pRegionSubs.Get()->Delete(i--, true);
 }
 
 static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t *reg)
@@ -1314,11 +1296,7 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 	if (!isUndo)
 	{
 		char buf[SNM_MAX_PATH] = "";
-		EnumProjects(-1, buf, sizeof(buf));
-
-		// SWS - It's possible at this point that we're not reading an RPP file (eg during import), check to be sure!
-		// If so, just ignore the possibility that there might be project notes.
-		if (strlen(buf) > 3 && _stricmp(buf+strlen(buf)-3, "RPP") == 0)
+		if (IsActiveProjectInLoadSave(buf, sizeof(buf), true))
 		{
 			WDL_FastString startOfrpp;
 

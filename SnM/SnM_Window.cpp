@@ -72,7 +72,8 @@ BOOL CALLBACK EnumReaWindows(HWND _hwnd, LPARAM _lParam)
 	HWND hCurrent, hNew;
 	hCurrent = _hwnd;
 	hNew = hCurrent;
-	while (hNew != NULL) {
+	while (hNew != NULL)
+	{
 		hNew = GetParent(hCurrent);
 		if (hNew != NULL)
 			hCurrent = hNew;
@@ -81,7 +82,9 @@ BOOL CALLBACK EnumReaWindows(HWND _hwnd, LPARAM _lParam)
 	{
 		char buf[256];
 		GetClassName(_hwnd, buf, sizeof(buf));
-		if (!strcmp(buf, "#32770"))
+		if (!strcmp(buf, "#32770") ||
+		!strcmp(buf, "REAPERMediaExplorerMainwnd") ||
+		!strcmp(buf, "REAPERmidieditorwnd"))
 		{
 			WDL_PtrList<HWND__>* hwnds = (WDL_PtrList<HWND__>*)_lParam;
 			if (hwnds && hwnds->Find(_hwnd) == -1)
@@ -95,7 +98,9 @@ static BOOL CALLBACK EnumReaChildWindows(HWND _hwnd, LPARAM _lParam)
 {
 	char buf[256];
 	GetClassName(_hwnd, buf, sizeof(buf));
-	if(strcmp(buf, "#32770") == 0)
+	if (!strcmp(buf, "#32770") ||
+		!strcmp(buf, "REAPERMediaExplorerMainwnd") ||
+		!strcmp(buf, "REAPERmidieditorwnd"))
 	{
 		WDL_PtrList<HWND__>* hwnds = (WDL_PtrList<HWND__>*)_lParam;
 		if (hwnds && hwnds->Find(_hwnd) == -1)

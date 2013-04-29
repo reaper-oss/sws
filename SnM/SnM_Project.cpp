@@ -40,6 +40,23 @@
 // General project helpers
 ///////////////////////////////////////////////////////////////////////////////
 
+bool IsActiveProjectInLoadSave(char* _projfn, int _projfnSz, bool _ensureRPP)
+{
+	bool ok = (GetCurrentProjectInLoadSave() == EnumProjects(-1, _projfn, _projfnSz));
+	if (_ensureRPP)
+	{
+		if (!_projfn || !_projfnSz)
+		{
+			char buf[SNM_MAX_PATH] = "";
+			EnumProjects(-1, buf, sizeof(buf));
+			ok = (strlen(buf)>3 && !_stricmp(buf+strlen(buf)-3, "RPP"));		
+		}
+		else
+			ok = (strlen(_projfn)>3 && !_stricmp(_projfn+strlen(_projfn)-3, "RPP"));
+	}
+	return ok;
+}
+
 void TieFileToProject(const char* _fn, ReaProject* _prj, bool _tie)
 {
 	if (_fn && *_fn)
@@ -363,7 +380,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 	{
 		g_prjActions.Get()->Set(lp.gettoken_str(1));
 
-		if (!isUndo && Enum_Projects(-1,NULL,0) == GetCurrentProjectInLoadSave())
+		if (!isUndo && IsActiveProjectInLoadSave())
 		{
 			if (int cmdId = NamedCommandLookup(lp.gettoken_str(1)))
 			{

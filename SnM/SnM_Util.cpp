@@ -783,7 +783,7 @@ int SNM_NamedCommandLookup(const char* _custId, KbdSectionInfo* _section, bool _
 	int cmdId = 0;
 	if (_custId && *_custId)
 	{
-		if (!_section || _section==SNM_GetActionSection(0))
+		if (!_section || _section==SNM_GetActionSection(SNM_SEC_IDX_MAIN))
 		{
 			cmdId = NamedCommandLookup(_custId);
 		}
@@ -931,15 +931,23 @@ bool IsMacroOrScript(const char* _cmd, bool _cmdIsName)
 }
 
 int SNM_GetActionSectionUniqueId(int _sectionIdx) {
-	return _sectionIdx>=0 && _sectionIdx<SNM_NUM_MANAGED_SECTIONS ? s_sectionInfos[_sectionIdx].unique_id : -1;
+	return _sectionIdx>=0 && _sectionIdx<SNM_NUM_MANAGED_SECTIONS ? s_SNM_sectionInfos[_sectionIdx].unique_id : -1;
 }
 
 const char* SNM_GetCACustomId(int _sectionIdx) {
-	return _sectionIdx>=0 && _sectionIdx<SNM_NUM_MANAGED_SECTIONS ? s_sectionInfos[_sectionIdx].ca_cust_id : "";
+	return _sectionIdx>=0 && _sectionIdx<SNM_MAX_CYCLING_SECTIONS ? s_SNM_sectionInfos[_sectionIdx].ca_cust_id : "";
+}
+
+int SNM_GetCASecFromCustId(const char* _custId)
+{
+	for (int idx=0; idx<SNM_MAX_CYCLING_SECTIONS; idx++)
+		if (strstr(_custId, s_SNM_sectionInfos[idx].ca_cust_id))
+			return idx;
+	return -1;
 }
 
 const char* SNM_GetCAIni(int _sectionIdx) {
-	return _sectionIdx>=0 && _sectionIdx<SNM_NUM_MANAGED_SECTIONS ? s_sectionInfos[_sectionIdx].ca_ini_sec : "";
+	return _sectionIdx>=0 && _sectionIdx<SNM_MAX_CYCLING_SECTIONS ? s_SNM_sectionInfos[_sectionIdx].ca_ini_sec : "";
 }
 
 const char* SNM_GetActionSectionName(int _sectionIdx)

@@ -3010,7 +3010,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 {
 	char path[SNM_MAX_PATH]="";
 	if (!isUndo && // saving?
-		Enum_Projects(-1, path, sizeof(path)) == GetCurrentProjectInLoadSave() && // saving current project?
+		IsActiveProjectInLoadSave(path, sizeof(path)) && // saving current project?
 		_stricmp(path, g_curProjectFn)) // saving current project as new_name.rpp?
 	{
 //JFB!!! TODO: auto-export if tied (+ msg?)

@@ -298,7 +298,7 @@ enum {
   SNM_NUM_MANAGED_SECTIONS
 };
 
-static SECTION_INFO_T s_sectionInfos[] = {
+static SECTION_INFO_T s_SNM_sectionInfos[] = {
 	{0,		"S&M_CYCLACTION_",			"Main_Cyclactions"},
 	{100,	"S&M_MAIN_ALT_CYCLACTION",	"MainAlt_Cyclactions"},
 	{32063,	"S&M_MEDIAEX_CYCLACTION",	"MediaEx_Cyclactions"},

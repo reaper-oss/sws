@@ -48,16 +48,23 @@ enum
 
 class SNM_TrackNotes {
 public:
-	SNM_TrackNotes(MediaTrack* _tr, const char* _notes)
-		: m_tr(_tr),m_notes(_notes ? _notes : "") {}
-	MediaTrack* m_tr; WDL_FastString m_notes;
+	SNM_TrackNotes(const GUID* _guid, const char* _notes) {
+		if (_guid) memcpy(&m_guid, _guid, sizeof(GUID));
+		else genGuid(&m_guid); // just in case
+		m_notes.Set(_notes ? _notes : "");
+	}
+	MediaTrack* GetTrack() { return GuidToTrack(&m_guid); }
+	const GUID* GetGUID() { return &m_guid; }
+	GUID m_guid;
+	WDL_FastString m_notes;
 };
 
 class SNM_RegionSubtitle {
 public:
 	SNM_RegionSubtitle(int _id, const char* _notes) 
 		: m_id(_id),m_notes(_notes ? _notes : "") {}
-	int m_id; WDL_FastString m_notes;
+	int m_id;
+	WDL_FastString m_notes;
 };
 
 class NotesUpdateJob : public SNM_ScheduledJob {

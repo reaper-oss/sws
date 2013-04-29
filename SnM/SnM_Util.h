@@ -76,6 +76,7 @@ double SeekPlay(double _pos, bool _moveView = false);
 
 int SNM_GetActionSectionUniqueId(int _idx);
 const char* SNM_GetCACustomId(int _sectionIdx);
+int SNM_GetCASecFromCustId(const char* _custId);
 const char* SNM_GetCAIni(int _sectionIdx);
 const char* SNM_GetActionSectionName(int _idx);
 int SNM_GetActionSectionIndex(const char* _localizedName);

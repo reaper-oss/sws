@@ -610,7 +610,7 @@ void SWS_DockWnd::LoadState(const char* cStateBuf, int iLen)
 		GetWindowRect(m_hwnd, &r);
 
 		// TRP 4/29/13 - Also set wnd pos/size if it's changed.
-		if (memcmp(&r, &m_state.r, sizeof(RECT)) != 0)
+		if (!bDocked && memcmp(&r, &m_state.r, sizeof(RECT)) != 0)
 			SetWindowPos(m_hwnd, NULL, m_state.r.left, m_state.r.top, m_state.r.right-m_state.r.left, m_state.r.bottom-m_state.r.top, SWP_NOZORDER);
 	}
 	else if (SWS_IsWindow(m_hwnd))

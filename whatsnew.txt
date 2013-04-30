@@ -1,4 +1,4 @@
-<b>REAPER v4.33+ is required!</b>
+﻿<b>REAPER v4.33+ is required!</b>
 New API functions were introduced in this version, they enable various improvements in the SWS/S&M Extension. Thank you Cockos!
 
 Cycle Action (CA)
@@ -39,7 +39,8 @@ Resources window and related "slot actions"
 Fixes:
 +Notes window: undoing "remove tracks" now also restore tracks notes
 +Removed default shortcut Ctrl+Shift+M ("SWS: Open marker list"): conflict with the default/native shortcut for "View: show track manager window"
-+Removed default shortcut Ctrl+F (for "SWS/S&M: Find"): no known conflict but more future-proof..
++Removed default shortcut Ctrl+F (for "SWS/S&M: Find"): no known conflict but more future-proof.
++Screenset load now sets size/position of undocked SWS windows as reported http://forum.cockos.com/showpost.php?p=1158117&postcount=1248|here|.
 
 !v2.3.0 #16 (April 18, 2013)
 Added H:M:S.F to marker list export format

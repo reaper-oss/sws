@@ -1,4 +1,5 @@
-﻿<b>REAPER v4.33+ is required!</b>
+!v2.3.0 #17 (April 30, 2013)
+<b>REAPER v4.33+ is required!</b>
 New API functions were introduced in this version, they enable various improvements in the SWS/S&M Extension. Thank you Cockos!
 
 Cycle Action (CA)
@@ -6,13 +7,13 @@ Cycle Action (CA)
 +Support macros & scripts in all sections
 +Improved the timing of Cycle Actions (again!)
 +Support special macros using actions like "No-op", "Wait n seconds before next action", etc..
-+<i>This line would have been cool too but an API bug (?) prevents it to end well: beta flag :)</i>
++<i>This line would have been cool too but an API bug (?) prevents it to end well: beta flag</i>
 +Editor: various usability improvements, incl. a bit of issue 565
-+Editor / Issue 562: added instruction LABEL to run Label Processor commands (and make your own Label Processor actions)
++Editor / Issue 562: added instruction LABEL to run Label Processor commands (and make your own "Label Processor actions")
  Example: LABEL /Lmy_suffix
- Reminder: the syntax of Label commands is described in Main menu > Extensions > Label Processor
+ Reminder: the syntax is described in Main menu > Extensions > Label Processor
 +Editor: fixed paranoid test that was preventing some valid CAs to be registered, thanks Big Bob!
-+Editor: fixed possible CAs "no-op" in the Action list
++Editor: fixed possible "no-op" CAs in the Action list
 
 Resources window and related "slot actions"
 +<b>Issue 560: added commands and options to attach/detach resource files to/from projects</b>
@@ -21,8 +22,8 @@ Resources window and related "slot actions"
  Use-case example: Comping, http://forum.cockos.com/showthread.php?t=121131|"Revolver tracks"|
  - Added Context menu > Bookmark > "Attach files to X.RPP" and "Detach files from Y.RPP"
  - Added option "Attach files and paths to this project" when creating new bookmarks
- - Added tied project name, right-click to select/load/load in new tab
- +<b>Added custom bookmarks</b>: Context menu > Bookmark > New bookmark > Custom...
+ - Added label for the attached project name (if any), right-click to load/select the said project
++<b>Added custom bookmarks</b>: Context menu > Bookmark > New bookmark > Custom...
  The definition format is: resource_directory_name,description,file_extensions (no spaces around commas)
  - Example1: Configurations,ReaConfig,ReaperConfigZip => Bank of configs example: auto-fill, then double-click slots to switch ReaConfigs (or, on Win, drag-drop slots to the arrange) 
  - Example2: Docs,Document,txt,rtf,pdf => Multiple file extensions example
@@ -37,7 +38,7 @@ Resources window and related "slot actions"
 +Various tweaks, tiny fixes (localization, media file filters, etc..)
 
 Fixes:
-+Notes window: undoing "remove tracks" now also restore tracks notes
++Notes window: undoing "remove tracks" now also restores tracks notes
 +Removed default shortcut Ctrl+Shift+M ("SWS: Open marker list"): conflict with the default/native shortcut for "View: show track manager window"
 +Removed default shortcut Ctrl+F (for "SWS/S&M: Find"): no known conflict but more future-proof.
 +Screenset load now sets size/position of undocked SWS windows as reported http://forum.cockos.com/showpost.php?p=1158117&postcount=1248|here|.

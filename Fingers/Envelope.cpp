@@ -111,10 +111,16 @@ nParamIndex(0)
         dParamMin = 0.0;
     }
 
-    if (m_szTitle.find("PANENV") != std::string::npos)
+    if (m_szTitle.find("PANENV") != std::string::npos || m_szTitle.find("WIDTHENV") != std::string::npos )
     {
         dParamMax = 1.0;
         dParamMin = -1.0;
+    }
+    
+	if (m_szTitle.find("PLAYSPEEDENV") != std::string::npos)
+    {
+        dParamMax = 4.0;
+        dParamMin = 0.1;
     }
 
     if (m_szTitle == "MUTEENV")

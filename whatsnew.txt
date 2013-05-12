@@ -1,3 +1,6 @@
+Fixes:
+ + SWS/FNG: Compress/Expand amplitude of selected envelope points around midpoint (inconsistent behavior for playrate and width envelopes)
+
 !v2.3.0 #17 (April 30, 2013)
 <b>REAPER v4.33+ is required!</b>
 New API functions were introduced in this version, they enable various improvements in the SWS/S&M Extension. Thank you Cockos!

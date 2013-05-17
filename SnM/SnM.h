@@ -58,11 +58,9 @@
 #ifdef __APPLE__
   #define _SNM_SWELL_ISSUES		// workaround some SWELL issues
 #endif							// Last test: WDL d1d8d2 - Dec. 20 2012
-								// - issue 1: a same font does not look the same on 32-bit & 64-bit
-								// - issue 2: native font rendering won't draw multiple lines
-								// - issue 3: wrong DT_CALCRECT on x64
-								// - issue 4: missing some EN_CHANGE msg, see SnM_Notes.cpp
-								// - issue 5: EN_SETFOCUS, EN_KILLFOCUS not yet supported
+								// - issue 1: native font rendering won't draw multiple lines
+								// - issue 2: missing some EN_CHANGE msg, see SnM_Notes.cpp
+								// - issue 3: EN_SETFOCUS, EN_KILLFOCUS not yet supported
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -72,6 +70,7 @@
 #define SNM_INI_FILE_VERSION		7
 
 #ifdef _WIN32
+
 #define SNM_FORMATED_INI_FILE		"%s\\S&M.ini"
 #define SNM_OLD_FORMATED_INI_FILE	"%s\\Plugins\\S&M.ini"
 #define SNM_ACTION_HELP_INI_FILE	"%s\\S&M_Action_help_en.ini"
@@ -88,7 +87,9 @@
 #define SNM_GUI_TOP_H				36
 #define SNM_GUI_BOT_H				41
 #define SNM_COL_RED_MONITOR			0x0000BE
+
 #else
+
 #define SNM_FORMATED_INI_FILE		"%s/S&M.ini"
 #define SNM_OLD_FORMATED_INI_FILE	"%s/Plugins/S&M.ini"
 #define SNM_ACTION_HELP_INI_FILE	"%s/S&M_Action_help_en.ini"
@@ -102,17 +103,14 @@
 #else
 #define SNM_REAPER_EXE_FILE			"%s/REAPER.app"
 #endif
-#define SNM_FONT_NAME				"Arial"
-#if defined(_SNM_SWELL_ISSUES) && defined(__LP64__)
-  #define SNM_FONT_HEIGHT			12 // SWELL issue: same font size, different look on x64!
-#else
-  #define SNM_FONT_HEIGHT			11
-#endif
+#define SNM_FONT_NAME				"Lucia grande"
+#define SNM_FONT_HEIGHT				10
 #define SNM_DYN_FONT_NAME			"Arial" // good default for UTF8
 #define SNM_1PIXEL_Y				(-1)
 #define SNM_GUI_TOP_H				37
 #define SNM_GUI_BOT_H				43
 #define SNM_COL_RED_MONITOR			0xBE0000
+
 #endif
 
 #define SNM_LIVECFG_NB_CONFIGS		4			//JFB do not commit a new value, contact me plz thx!

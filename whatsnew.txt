@@ -1,5 +1,6 @@
 Fixes:
- + SWS/FNG: Compress/Expand amplitude of selected envelope points around midpoint (inconsistent behavior for playrate and width envelopes)
++SWS/FNG: Compress/Expand amplitude of selected envelope points around midpoint (inconsistent behavior for playrate and width envelopes)
++OSX: better fonts in S&M windows
 
 !v2.3.0 #17 (April 30, 2013)
 <b>REAPER v4.33+ is required!</b>
@@ -16,13 +17,13 @@ Cycle Action (CA)
  Example: LABEL /Lmy_suffix
  Reminder: the syntax is described in Main menu > Extensions > Label Processor
 +Editor: fixed paranoid test that was preventing some valid CAs to be registered, thanks Big Bob!
-+Editor: fixed possible "no-op" CAs in the Action list
++Fixed possible "no-op" CAs in the Action list
 
 Resources window and related "slot actions"
 +<b>Issue 560: added commands and options to attach/detach resource files to/from projects</b>
  When saving your work to another directory (using save as / copy media), all files that have been attached to the project in the S&M Resources window will be backed up too
  When a bookmark is attached to a project, any file/slot that will be added to (or removed from) this bookmark will be automatically attached to (or detached from) the project
- Use-case example: Comping, http://forum.cockos.com/showthread.php?t=121131|"Revolver tracks"|
+ Use-case examples: Comping, http://forum.cockos.com/showthread.php?t=121131|"Revolver tracks"|
  - Added Context menu > Bookmark > "Attach files to X.RPP" and "Detach files from Y.RPP"
  - Added option "Attach files and paths to this project" when creating new bookmarks
  - Added label for the attached project name (if any), right-click to load/select the said project
@@ -73,9 +74,9 @@ Live Configs:
 
 Region Playlist:
 +Support main transport pause
- Before this version the Region Playlist was stopped on pause, now it just plays again when "un-pausing" (as as expected)
+ Before this version the playlist was stopped on pause, now it just plays again when "un-pausing", as expected
 +Added basic OSC feedback
- To bind an OSC device, etc.. see above: same as the Live Configs tool's OSC feedback
+ To bind an OSC device, etc.. see above: same as the Live Configs' OSC feedback
  The possible OSC messages (with string arguments) are:
  - /snm/rgnplaylist/current - current region changed
  - /snm/rgnplaylist/next - next region changed
@@ -128,13 +129,13 @@ Cycle Actions (CAs)
 +Added instruction ELSE
 +Improved toggle states reporting
  - CAs can now either report fake toggle states (like it was before v2.3.0 #9) or real ones (i.e. toggle state of the first relevant "sub-action")
-   This ensures transparent upgrades from older versions. This toggle state is configurable in the column "Toggle" of the editor, see details http://stash.reaper.fm/15681/S%26M_CAToggleBullets.jpg|here|.
+   This ensures transparent upgrades from older versions. This toggle state is configurable in the column "Toggle" of the editor, <b>see details http://forum.cockos.com/showpost.php?p=1090262&postcount=1136|here|</b>
  - Better initialization for CAs that report real toggle states (i.e. <b>avoid to run some of them one time before they sync properly</b>)
 +Editor: display MIDI action names (with REAPER >= v4.33pre16)
 +Editor: new menu items to cut/copy/paste commands (works across CAs)
 +Editor: new menu item to explode CAs, custom actions (i.e. macros) and ReaConsole actions into individual actions
- This simplifies/helps exporting/sharing such actions with other users (before this version you had to share
- other files like .ReaperKeyMap, etc.. Now, you just have to export a file where all CAs have been "exploded")
+ <b>This helps sharing Cycle Actions with other users, see important remarks http://forum.cockos.com/showpost.php?p=1170459&postcount=1267|here|</b>
+ (before this version you probably had to share other files, now you just have to export a single file where all CAs have been "exploded")
 +Editor tweaks: added CA text filter, more helpful messages (again), etc...
 +Fixed missing undo points for CONSOLE commands (when the option "Consolidate undo points" was disabled)
 +Removed tooltips updates for toolbar buttons (not sure anyone ever used this)

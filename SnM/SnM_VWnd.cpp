@@ -364,7 +364,7 @@ void SNM_FiveMonitors::SetPosition(const RECT* _r)
 			m_children->Get(4)->SetPosition(&r);
 		}
 	}
-	// displays the 2 most important monitors otherwise
+	// 2 monitors otherwise
 	else
 	{
 		RECT r0 = {0,0,0,0};
@@ -785,14 +785,15 @@ bool SNM_AutoVWndPosition(UINT _align, WDL_VWnd* _comp, WDL_VWnd* _tiedComp, con
 			{
 				RECT tr = {0,0,0,0};
 				cb->GetFont()->DrawText(NULL, cb->GetItem(i), -1, &tr, DT_CALCRECT);
-#if defined(_SNM_SWELL_ISSUES) && defined(__LP64__)
-				tr.bottom=tr.top+SNM_FONT_HEIGHT+1; // SWELL issue: wrong DT_CALCRECT result on x64
-#endif
 				if (tr.right > width)
 					width = tr.right;
-				height = tr.bottom;
+				if (tr.bottom > height)
+					height = tr.bottom;
 			}
 			height = height + int(height/2 + 0.5);
+#ifdef __APPLE__
+			height -= 2;
+#endif
 			width += 2*height; // 2*height for the arrow zone (square)
 		}
 		else if (!strcmp(_comp->GetType(), "vwnd_iconbutton") || !strcmp(_comp->GetType(), "SNM_ToolbarButton"))
@@ -813,9 +814,6 @@ bool SNM_AutoVWndPosition(UINT _align, WDL_VWnd* _comp, WDL_VWnd* _tiedComp, con
 			{
 				RECT tr = {0,0,0,0};
 				btn->GetFont()->DrawText(NULL, btn->GetTextLabel(), -1, &tr, DT_CALCRECT);
-#if defined(_SNM_SWELL_ISSUES) && defined(__LP64__)
-				tr.bottom=tr.top+SNM_FONT_HEIGHT+1; // SWELL issue: wrong DT_CALCRECT result on x64
-#endif
 				if (tr.bottom > height)
 					height = int(tr.bottom + tr.bottom/2 + 0.5);
 				if ((tr.right+int(height/2 + 0.5)) > width)

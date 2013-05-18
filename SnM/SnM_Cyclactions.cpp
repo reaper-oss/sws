@@ -1717,7 +1717,7 @@ void SNM_CyclactionWnd::Update(bool _updateListViews)
 {
 	if (_updateListViews)
 		for (int i=0; i < m_pLists.GetSize(); i++)
-			m_pLists.Get(i)->Update();
+			GetListView(i)->Update();
 	m_parentVwnd.RequestRedraw(NULL);
 }
 
@@ -2374,8 +2374,8 @@ int SNM_CyclactionWnd::OnKey(MSG* _msg, int _iKeyState)
 			{
 				case VK_F2:	{
 					int x=0;
-					if (SWS_ListItem* item = m_pLists.Get(focusedList)->EnumSelected(&x)) {
-						m_pLists.Get(focusedList)->EditListItem(item, !focusedList ? COL_L_NAME : COL_R_CMD);
+					if (SWS_ListItem* item = GetListView(focusedList)->EnumSelected(&x)) {
+						GetListView(focusedList)->EditListItem(item, !focusedList ? COL_L_NAME : COL_R_CMD);
 						return 1;
 					}
 					break;

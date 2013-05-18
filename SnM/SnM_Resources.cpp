@@ -1052,7 +1052,7 @@ int SNM_ResourceWnd::SetType(const char* _name)
 void SNM_ResourceWnd::Update()
 {
 	if (m_pLists.GetSize())
-		m_pLists.Get(0)->Update();
+		GetListView()->Update();
 	m_parentVwnd.RequestRedraw(NULL);
 }
 
@@ -1126,7 +1126,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		return;
 
 	int x=0;
-	PathSlotItem* item = (PathSlotItem*)m_pLists.Get(0)->EnumSelected(&x);
+	PathSlotItem* item = (PathSlotItem*)GetListView()->EnumSelected(&x);
 	int slot = fl->Find(item);
 
 	switch(LOWORD(wParam))
@@ -1186,7 +1186,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 #ifdef _WIN32
 		case DIFF_MSG:
 		{
-			PathSlotItem* item2 = (PathSlotItem*)m_pLists.Get(0)->EnumSelected(&x);
+			PathSlotItem* item2 = (PathSlotItem*)GetListView()->EnumSelected(&x);
 			if (item && item2 && g_SNM_DiffToolFn.GetLength())
 			{
 				char fn1[SNM_MAX_PATH]="", fn2[SNM_MAX_PATH]="";
@@ -1325,7 +1325,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			{
 				char fullPath[SNM_MAX_PATH] = "";
 				if (fl->GetFullPath(slot, fullPath, sizeof(fullPath)) && FileOrDirExistsErrMsg(fullPath))
-					m_pLists.Get(0)->EditListItem((SWS_ListItem*)item, COL_NAME);
+					GetListView()->EditListItem((SWS_ListItem*)item, COL_NAME);
 			}
 			break;
 		case REN_BOOKMARK_MSG:
@@ -1462,7 +1462,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				slot = fl->Find(item);
 				if (slot>=0)
 					LoadOrSelectProjectSlot(g_resType, PRJ_SELECT_LOAD_TAB_STR, slot, true);
-				item = (PathSlotItem*)m_pLists.Get(0)->EnumSelected(&x);
+				item = (PathSlotItem*)GetListView()->EnumSelected(&x);
 			}
 			Update();
 			break;
@@ -1508,7 +1508,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				slot = fl->Find(item)+1;
 				if (slot>max) max = slot;
 				if (slot<min) min = slot;
-				item = (PathSlotItem*)m_pLists.Get(0)->EnumSelected(&x);
+				item = (PathSlotItem*)GetListView()->EnumSelected(&x);
 			}
 			if (max>min)
 			{
@@ -1531,7 +1531,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				slot = fl->Find(item);
 				if (slot>=0)
 					TogglePlaySelTrackMediaSlot(g_resType, MED_PLAYLOOP_STR, slot, false, LOWORD(wParam)==MED_LOOP_MSG);
-				item = (PathSlotItem*)m_pLists.Get(0)->EnumSelected(&x);
+				item = (PathSlotItem*)GetListView()->EnumSelected(&x);
 			}
 			Update();
 			break;
@@ -1543,7 +1543,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				slot = fl->Find(item);
 				if (slot>=0)
 					InsertMediaSlot(g_resType, MED_ADD_STR, slot, LOWORD(wParam)==MED_ADD_CURTR_MSG ? 0 : LOWORD(wParam)==MED_ADD_NEWTR_MSG ? 1 : 3);
-				item = (PathSlotItem*)m_pLists.Get(0)->EnumSelected(&x);
+				item = (PathSlotItem*)GetListView()->EnumSelected(&x);
 			}
 			Update();
 			break;
@@ -1570,7 +1570,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			{
 				// stop cell editing (changing the list content would be ignored otherwise,
 				// leading to unsynchronized dropdown box vs list view)
-				m_pLists.Get(0)->EditListItemEnd(false);
+				GetListView()->EditListItemEnd(false);
 				SetType(m_cbType.GetCurSel());
 			}
 			break;
@@ -1758,7 +1758,7 @@ HMENU SNM_ResourceWnd::OnContextMenu(int _x, int _y, bool* _wantDefaultItems)
 
 	// general context menu
 	int iCol;
-	PathSlotItem* pItem = (PathSlotItem*)m_pLists.Get(0)->GetHitItem(_x, _y, &iCol);
+	PathSlotItem* pItem = (PathSlotItem*)GetListView()->GetHitItem(_x, _y, &iCol);
 	UINT enabled = (pItem && !pItem->IsDefault()) ? MF_ENABLED : MF_GRAYED;
 	int typeForUser = GetTypeForUser();
 	if (pItem && iCol >= 0)
@@ -1790,7 +1790,7 @@ HMENU SNM_ResourceWnd::OnContextMenu(int _x, int _y, bool* _wantDefaultItems)
 				if (g_resType == typeForUser)  // no GetTypeForUser() here: only one loader/selecter config atm..
 				{
 					AddToMenu(hMenu, SWS_SEPARATOR, 0);
-					int x=0, nbsel=0; while(m_pLists.Get(0)->EnumSelected(&x)) nbsel++;
+					int x=0, nbsel=0; while(GetListView()->EnumSelected(&x)) nbsel++;
 					AddToMenu(hMenu, __LOCALIZE("Project loader/selecter configuration...","sws_DLG_150"), SWSGetCommandID(ProjectLoaderConf));
 					AddToMenu(hMenu, __LOCALIZE("Set project loader/selecter from selection","sws_DLG_150"), PRJ_LOADER_SET_MSG, -1, false, nbsel>1 ? MF_ENABLED : MF_GRAYED);
 					AddToMenu(hMenu, __LOCALIZE("Clear project loader/selecter configuration","sws_DLG_150"), PRJ_LOADER_CLEAR_MSG, -1, false, IsProjectLoaderConfValid() ? MF_ENABLED : MF_GRAYED);
@@ -1835,7 +1835,7 @@ HMENU SNM_ResourceWnd::OnContextMenu(int _x, int _y, bool* _wantDefaultItems)
 		if (fl->IsText())
 		{
 #ifdef _WIN32
-			int x=0, nbsel=0; while(m_pLists.Get(0)->EnumSelected(&x)) nbsel++;
+			int x=0, nbsel=0; while(GetListView()->EnumSelected(&x)) nbsel++;
 			AddToMenu(hMenu, __LOCALIZE("Diff files...","sws_DLG_150"), DIFF_MSG, -1, false, nbsel==2 && enabled==MF_ENABLED && g_SNM_DiffToolFn.GetLength() ? MF_ENABLED:MF_GRAYED);
 #endif
 			AddToMenu(hMenu, __LOCALIZE("Edit file...","sws_DLG_150"), EDIT_MSG, -1, false, enabled);
@@ -1893,7 +1893,7 @@ int SNM_ResourceWnd::OnKey(MSG* _msg, int _iKeyState)
 					InsertAtSelectedSlot();
 					return 1;
 				case VK_RETURN:
-					((SNM_ResourceView*)m_pLists.Get(0))->Perform();
+					((SNM_ResourceView*)GetListView())->Perform();
 					return 1;
 			}
 		}
@@ -1948,7 +1948,7 @@ void SNM_ResourceWnd::OnDroppedFiles(HDROP _h)
 	pt.x += r.left;
 	pt.y += r.top;
 
-	PathSlotItem* pItem = (PathSlotItem*)m_pLists.Get(0)->GetHitItem(pt.x, pt.y, NULL);
+	PathSlotItem* pItem = (PathSlotItem*)GetListView()->GetHitItem(pt.x, pt.y, NULL);
 	int dropSlot = fl->Find(pItem);
 
 	// internal drag-drop?
@@ -2202,7 +2202,7 @@ bool SNM_ResourceWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int 
 
 void SNM_ResourceWnd::ClearListSelection()
 {
-	SWS_ListView* lv = m_pLists.Get(0);
+	SWS_ListView* lv = GetListView();
 	HWND hList = lv ? lv->GetHWND() : NULL;
 	if (hList) // can be called when the view is closed!
 		ListView_SetItemState(hList, -1, 0, LVIS_SELECTED);
@@ -2212,7 +2212,7 @@ void SNM_ResourceWnd::ClearListSelection()
 // or a single slot (when _slot2 < 0)
 void SNM_ResourceWnd::SelectBySlot(int _slot1, int _slot2, bool _selectOnly)
 {
-	SWS_ListView* lv = m_pLists.Get(0);
+	SWS_ListView* lv = GetListView();
 	HWND hList = lv ? lv->GetHWND() : NULL;
 	if (lv && hList) // can be called when the view is closed!
 	{
@@ -2254,7 +2254,7 @@ void SNM_ResourceWnd::SelectBySlot(int _slot1, int _slot2, bool _selectOnly)
 void SNM_ResourceWnd::GetSelectedSlots(WDL_PtrList<PathSlotItem>* _selSlots, WDL_PtrList<PathSlotItem>* _selEmptySlots)
 {
 	int x=0;
-	while (PathSlotItem* pItem = (PathSlotItem*)m_pLists.Get(0)->EnumSelected(&x))
+	while (PathSlotItem* pItem = (PathSlotItem*)GetListView()->EnumSelected(&x))
 	{
 		if (_selEmptySlots && pItem->IsDefault())
 			_selEmptySlots->Add(pItem);
@@ -2280,7 +2280,7 @@ void SNM_ResourceWnd::InsertAtSelectedSlot()
 	FileSlotList* fl = g_SNM_ResSlots.Get(g_resType);
 	if (fl && fl->GetSize())
 	{
-		if (PathSlotItem* item = (PathSlotItem*)m_pLists.Get(0)->EnumSelected(NULL))
+		if (PathSlotItem* item = (PathSlotItem*)GetListView()->EnumSelected(NULL))
 		{
 			int slot = fl->Find(item);
 			if (slot>=0 && fl->InsertSlot(slot) != NULL)

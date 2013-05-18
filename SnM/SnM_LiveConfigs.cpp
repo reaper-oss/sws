@@ -752,7 +752,7 @@ bool SNM_LiveConfigsWnd::SelectByCCValue(int _configId, int _cc, bool _selectOnl
 {
 	if (_configId == g_configId)
 	{
-		SWS_ListView* lv = m_pLists.Get(0);
+		SWS_ListView* lv = GetListView();
 		HWND hList = lv ? lv->GetHWND() : NULL;
 		if (lv && hList) // this can be called when the view is closed!
 		{
@@ -777,7 +777,7 @@ bool SNM_LiveConfigsWnd::SelectByCCValue(int _configId, int _cc, bool _selectOnl
 void SNM_LiveConfigsWnd::Update()
 {
 	if (m_pLists.GetSize())
-		m_pLists.Get(0)->Update();
+		GetListView()->Update();
 	if (LiveConfig* lc = g_liveConfigs.Get()->Get(g_configId)) {
 		m_vwndCC.SetValue(lc->m_ccDelay);
 		m_vwndFade.SetValue(lc->m_fade);
@@ -793,7 +793,7 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		return;
 
 	int x=0;
-	LiveConfigItem* item = (LiveConfigItem*)m_pLists.Get(0)->EnumSelected(&x);
+	LiveConfigItem* item = (LiveConfigItem*)GetListView()->EnumSelected(&x);
 
 	switch (LOWORD(wParam))
 	{
@@ -896,7 +896,7 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case PASTE_MSG:
 			if (item)
 			{
-				int sortCol = m_pLists.Get(0)->GetSortColumn();
+				int sortCol = GetListView()->GetSortColumn();
 				if (sortCol && sortCol!=1) {
 					//JFB lazy here.. better than confusing the user..
 					MessageBox(GetHWND(), __LOCALIZE("The list view must be sorted by ascending OSC/CC values!","sws_DLG_155"), __LOCALIZE("S&M - Error","sws_DLG_155"), MB_OK);
@@ -928,7 +928,7 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				int x2 = x;
 				while (item2) {
 					g_clipboardConfigs.Add(new LiveConfigItem(item2));
-					item2 = (LiveConfigItem*)m_pLists.Get(0)->EnumSelected(&x2);
+					item2 = (LiveConfigItem*)GetListView()->EnumSelected(&x2);
 				}
 				if (LOWORD(wParam) != CUT_MSG) // cut => fall through
 					break;
@@ -944,7 +944,7 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 					SNM_RemoveReceivesFrom(item->m_track, lc->m_inputTr);
 				item->Clear();
 				updt = true;
-				item = (LiveConfigItem*)m_pLists.Get(0)->EnumSelected(&x);
+				item = (LiveConfigItem*)GetListView()->EnumSelected(&x);
 			}
 			if (updt) {
 				Update();
@@ -953,7 +953,7 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			break;
 		}
 		case EDIT_DESC_MSG:
-			if (item) m_pLists.Get(0)->EditListItem((SWS_ListItem*)item, COL_COMMENT);
+			if (item) GetListView()->EditListItem((SWS_ListItem*)item, COL_COMMENT);
 			break;
 		case CLEAR_DESC_MSG:
 		{
@@ -961,7 +961,7 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			while (item) {
 				item->m_desc.Set("");
 				updt = true;
-				item = (LiveConfigItem*)m_pLists.Get(0)->EnumSelected(&x);
+				item = (LiveConfigItem*)GetListView()->EnumSelected(&x);
 			}
 			if (updt) {
 				Update();
@@ -990,7 +990,7 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 						item->m_fxChain.Set("");
 						item->m_presets.Set("");
 						updt = true;
-						item = (LiveConfigItem*)m_pLists.Get(0)->EnumSelected(&x);
+						item = (LiveConfigItem*)GetListView()->EnumSelected(&x);
 					}
 				}
 			}
@@ -1006,7 +1006,7 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			while (item) {
 				item->m_trTemplate.Set("");
 				updt = true;
-				item = (LiveConfigItem*)m_pLists.Get(0)->EnumSelected(&x);
+				item = (LiveConfigItem*)GetListView()->EnumSelected(&x);
 			}
 			if (updt) {
 				Update();
@@ -1027,7 +1027,7 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 						item->m_trTemplate.Set("");
 						item->m_presets.Set("");
 						updt = true;
-						item = (LiveConfigItem*)m_pLists.Get(0)->EnumSelected(&x);
+						item = (LiveConfigItem*)GetListView()->EnumSelected(&x);
 					}
 				}
 			}
@@ -1044,7 +1044,7 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			{
 				item->m_fxChain.Set("");
 				updt = true;
-				item = (LiveConfigItem*)m_pLists.Get(0)->EnumSelected(&x);
+				item = (LiveConfigItem*)GetListView()->EnumSelected(&x);
 			}
 			if (updt) {
 				Update();
@@ -1055,7 +1055,7 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case EDIT_ON_ACTION_MSG:
 		case EDIT_OFF_ACTION_MSG:
 			if (item) 
-				m_pLists.Get(0)->EditListItem((SWS_ListItem*)item, LOWORD(wParam)==EDIT_ON_ACTION_MSG ? COL_ACTION_ON : COL_ACTION_OFF);
+				GetListView()->EditListItem((SWS_ListItem*)item, LOWORD(wParam)==EDIT_ON_ACTION_MSG ? COL_ACTION_ON : COL_ACTION_OFF);
 			break;
 		case LEARN_ON_ACTION_MSG:
 		case LEARN_OFF_ACTION_MSG:
@@ -1071,7 +1071,7 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 					else
 						item->m_offAction.Set(idstr);
 					updt = true;
-					item = (LiveConfigItem*)m_pLists.Get(0)->EnumSelected(&x);
+					item = (LiveConfigItem*)GetListView()->EnumSelected(&x);
 				}
 				if (updt) {
 					Update();
@@ -1091,7 +1091,7 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				else
 					item->m_offAction.Set("");
 				updt = true;
-				item = (LiveConfigItem*)m_pLists.Get(0)->EnumSelected(&x);
+				item = (LiveConfigItem*)GetListView()->EnumSelected(&x);
 			}
 			if (updt) {
 				Update();
@@ -1109,7 +1109,7 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				if (item->m_track) item->Clear(true);
 				else item->m_track = NULL;
 				updt = true;
-				item = (LiveConfigItem*)m_pLists.Get(0)->EnumSelected(&x);
+				item = (LiveConfigItem*)GetListView()->EnumSelected(&x);
 			}
 			if (updt) {
 				Update();
@@ -1124,7 +1124,7 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			{
 				item->m_presets.Set("");
 				updt = true;
-				item = (LiveConfigItem*)m_pLists.Get(0)->EnumSelected(&x);
+				item = (LiveConfigItem*)GetListView()->EnumSelected(&x);
 			}
 			if (updt) {
 				Update();
@@ -1172,7 +1172,7 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			if (HIWORD(wParam)==CBN_SELCHANGE)
 			{
 				// stop cell editing (changing the list content would be ignored otherwise => dropdown box & list box unsynchronized)
-				m_pLists.Get(0)->EditListItemEnd(false);
+				GetListView()->EditListItemEnd(false);
 				g_configId = m_cbConfig.GetCurSel();
 				FillComboInputTrack();
 				Update();
@@ -1194,7 +1194,7 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 					if (lc->m_autoSends && item->m_track && lc->m_inputTr && !HasReceives(lc->m_inputTr, item->m_track))
 						SNM_AddReceive(lc->m_inputTr, item->m_track, -1);
 					updt = true;
-					item = (LiveConfigItem*)m_pLists.Get(0)->EnumSelected(&x);
+					item = (LiveConfigItem*)GetListView()->EnumSelected(&x);
 				}
 				if (updt) {
 					Update();
@@ -1405,7 +1405,7 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 	}
 
 	int iCol;
-	if (LiveConfigItem* item = (LiveConfigItem*)m_pLists.Get(0)->GetHitItem(x, y, &iCol))
+	if (LiveConfigItem* item = (LiveConfigItem*)GetListView()->GetHitItem(x, y, &iCol))
 	{
 		*wantDefaultItems = (iCol < 0);
 		switch(iCol)
@@ -1632,7 +1632,7 @@ bool SNM_LiveConfigsWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, i
 
 bool SNM_LiveConfigsWnd::Insert(int _dir)
 {
-	int sortCol = m_pLists.Get(0)->GetSortColumn();
+	int sortCol = GetListView()->GetSortColumn();
 	if (sortCol && sortCol!=1) {
 		//JFB lazy here.. better than confusing the user..
 		MessageBox(GetHWND(), __LOCALIZE("The list view must be sorted by ascending OSC/CC values!","sws_DLG_155"), __LOCALIZE("S&M - Error","sws_DLG_155"), MB_OK);
@@ -1643,7 +1643,7 @@ bool SNM_LiveConfigsWnd::Insert(int _dir)
 		if (WDL_PtrList<LiveConfigItem>* ccConfs = &lc->m_ccConfs)
 		{
 			int pos=0;
-			if (LiveConfigItem* item = (LiveConfigItem*)m_pLists.Get(0)->EnumSelected(&pos))
+			if (LiveConfigItem* item = (LiveConfigItem*)GetListView()->EnumSelected(&pos))
 			{
 				if (_dir>0)
 				{

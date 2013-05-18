@@ -124,14 +124,14 @@ void SNM_CSurfRun()
 }
 
 void SNM_CSurfSetTrackTitle() {
-	if (g_SNM_NotesWnd) g_SNM_NotesWnd->CSurfSetTrackTitle();
-	if (g_SNM_LiveConfigsWnd) g_SNM_LiveConfigsWnd->CSurfSetTrackTitle();
+	NotesSetTrackTitle();
+	LiveConfigsSetTrackTitle();
 }
 
 void SNM_CSurfSetTrackListChange() {
-	if (g_SNM_NotesWnd) g_SNM_NotesWnd->CSurfSetTrackListChange();
-	if (g_SNM_LiveConfigsWnd) g_SNM_LiveConfigsWnd->CSurfSetTrackListChange();
-	if (g_SNM_RgnPlaylistWnd) g_SNM_RgnPlaylistWnd->CSurfSetTrackListChange();
+	NotesSetTrackListChange();
+	LiveConfigsTrackListChange();
+	RegionPlaylistSetTrackListChange();
 	ResourcesTrackListChange();
 }
 

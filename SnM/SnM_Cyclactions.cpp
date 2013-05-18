@@ -53,10 +53,12 @@
 #include "../Console/Console.h"
 #include "../IX/IX.h"
 
+#define CA_WND_ID	"SnMCyclaction"
+
 
 // no exit issue vs "DeleteOnDestroy" here: cycle actions are saved on the fly
 WDL_PtrList_DeleteOnDestroy<Cyclaction> g_cas[SNM_MAX_CYCLING_SECTIONS]; 
-SNM_CyclactionWnd* g_pCyclactionWnd = NULL;
+SNM_WindowManager<SNM_CyclactionWnd> g_caWndMgr(CA_WND_ID);
 bool g_undos = true; // consolidate undo points
 
 
@@ -225,8 +227,10 @@ int ExplodeMacro(int _section, const char* _cmdStr,
 		{
 			int parentIdx = -1;
 			WDL_FastString* parentCmd = NULL;
-			if (_cmds) {
-				if (!CheckRecursiveCmd(_cmdStr, _cmds)) return -2;
+			if (_cmds)
+			{
+				if (!CheckRecursiveCmd(_cmdStr, _cmds))
+					return -2;
 				parentIdx = _cmds->GetSize();
 				parentCmd = _cmds->Add(new WDL_FastString(_cmdStr));
 			}
@@ -253,6 +257,9 @@ int ExplodeCyclaction(int _section, const char* _cmdStr,
 	WDL_PtrList<WDL_FastString>* _consoles, int _flags, Cyclaction* _action)
 {
 	// check "cross-section CA"
+	// note: it would be easy to authorize "cross-section CA" with:
+	//	_section = SNM_GetCASecFromCustId(_cmdStr);
+	// .. but this would lead to a general design issue vs REAPER: explode, etc..
 	if (_section != SNM_GetCASecFromCustId(_cmdStr))
 		return -3;
 
@@ -269,8 +276,10 @@ int ExplodeCyclaction(int _section, const char* _cmdStr,
 
 	int parentIdx = -1;
 	WDL_FastString* parentCmd = NULL;
-	if (_cmds) {
-		if (!CheckRecursiveCmd(_cmdStr, _cmds)) return -2;
+	if (_cmds)
+	{
+		if (!CheckRecursiveCmd(_cmdStr, _cmds))
+			return -2;
 		parentIdx = _cmds->GetSize();
 		parentCmd = _cmds->Add(new WDL_FastString(_cmdStr));
 	}
@@ -324,6 +333,8 @@ int ExplodeCyclaction(int _section, const char* _cmdStr,
 	}
 #endif
 
+	// CA must always be exploded!
+	// (they can't be recursive, see remarks on top of file)
 	return _flags&2 ? -1 : 1;
 }
 
@@ -331,7 +342,7 @@ int ExplodeConsoleAction(int _section, const char* _cmdStr,
 	WDL_PtrList<WDL_FastString>* _cmds, WDL_PtrList<WDL_FastString>* _macros, 
 	WDL_PtrList<WDL_FastString>* _consoles, int _flags)
 {
-	if (_flags&2) return -1; // console actions do not report toggle states (yet?)
+	if (_flags&2) return -1; // console actions do not report toggle states (yet)
 
 	// safe single lazy init of _consoleCmds
 	if (_consoles) // console cmd explosion required?
@@ -839,7 +850,8 @@ if (!g_SNM_Beta)
 
 				// explode everything and do more checks: validity, non recursive, etc...
 				WDL_PtrList_DeleteOnDestroy<WDL_FastString> parentCmds;
-				switch (ExplodeCmd(_section, cmd, &parentCmds, _macros, _consoles, 0x8)) {
+				switch (ExplodeCmd(_section, cmd, &parentCmds, _macros, _consoles, 0x8))
+				{
 					case -1:
 						str.SetFormatted(256, __LOCALIZE_VERFMT("command ID '%s' not found or invalid","sws_DLG_161"), cmd);
 						return AppendErrMsg(_section, _a, _applyMsg, str.Get());
@@ -848,7 +860,7 @@ if (!g_SNM_Beta)
 					case -3:
 						return AppendErrMsg(_section, _a, _applyMsg, __LOCALIZE("cross-section cycle action","sws_DLG_161"));
 				}
-	
+
 				// check cmd ids only when the user applies changes: at init time all actions might not be registered yet
 				// no SNM_NamedCommandLookup hard check here: custom ids might be known even if not registered yet
 				// (e.g. unregister/re-register CAs when applying..)
@@ -987,7 +999,7 @@ void LoadCyclactions(bool _applyMsg, WDL_PtrList_DeleteOnDestroy<Cyclaction>* _c
 	}
 
 	if (_applyMsg && msg.GetLength())
-		SNM_ShowMsg(msg.Get(), __LOCALIZE("S&M - Warning","sws_DLG_161"), g_pCyclactionWnd?g_pCyclactionWnd->GetHWND():GetMainHwnd());
+		SNM_ShowMsg(msg.Get(), __LOCALIZE("S&M - Warning","sws_DLG_161"), g_caWndMgr.GetMsgHWND());
 }
 
 // _cyclactions: NULL to update main model
@@ -1266,8 +1278,8 @@ int CountEditedActions() {
 
 void UpdateEditedStatus(bool _edited) {
 	g_edited = _edited;
-	if (g_pCyclactionWnd)
-		g_pCyclactionWnd->Update(false);
+	if (SNM_CyclactionWnd* w = g_caWndMgr.Get())
+		w->Update(false);
 }
 
 void UpdateListViews() {
@@ -1304,7 +1316,9 @@ void EditModelInit()
 void Apply()
 {
 	// save the consolidate undo points pref
-	g_undos = (g_pCyclactionWnd && g_pCyclactionWnd->IsConsolidatedUndo());
+	g_undos = false;
+	if (SNM_CyclactionWnd* w = g_caWndMgr.Get())
+		g_undos = w->IsConsolidatedUndo();
 	WritePrivateProfileString("Cyclactions", "Undos", g_undos ? "1" : "0", g_SNM_IniFn.Get()); // in main S&M.ini file (local property)
 
 	// save/register cycle actions
@@ -1335,7 +1349,7 @@ void Cancel(bool _checkSave)
 
 	// not used ATM: _checkSave is always false
 	if (_checkSave && g_edited && 
-			IDYES == MessageBox(g_pCyclactionWnd?g_pCyclactionWnd->GetHWND():GetMainHwnd(),
+			IDYES == MessageBox(g_caWndMgr.GetMsgHWND(),
 				__LOCALIZE("Save cycle actions before quitting editor ?","sws_DLG_161"),
 				__LOCALIZE("S&M - Confirmation","sws_DLG_161"), MB_YESNO))
 	{
@@ -1421,7 +1435,7 @@ void SNM_CyclactionsView::SetItemText(SWS_ListItem* _item, int _iCol, const char
 		{
 			WDL_FastString msg(__LOCALIZE("Cycle action names cannot contain any of the following characters:","sws_DLG_161"));
 			msg.AppendFormatted(256, "%c %c %c \" ' ` ", CA_TGL1, CA_TGL2, CA_SEP);
-			MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("S&M - Error","sws_DLG_161"), MB_OK);
+			MessageBox(g_caWndMgr.GetMsgHWND(), msg.Get(), __LOCALIZE("S&M - Error","sws_DLG_161"), MB_OK);
 			return;
 		}
 
@@ -1431,7 +1445,7 @@ void SNM_CyclactionsView::SetItemText(SWS_ListItem* _item, int _iCol, const char
 			WDL_FastString errMsg;
 			if (!CheckEditableCyclaction(_str, &errMsg) && strcmp(a->GetName(), _str)) {
 				if (errMsg.GetLength())
-					MessageBox(g_pCyclactionWnd?g_pCyclactionWnd->GetHWND():GetMainHwnd(), errMsg.Get(), __LOCALIZE("S&M - Error","sws_DLG_161"), MB_OK);
+					MessageBox(g_caWndMgr.GetMsgHWND(), errMsg.Get(), __LOCALIZE("S&M - Error","sws_DLG_161"), MB_OK);
 			}
 			else {
 				a->SetName(_str);
@@ -1511,8 +1525,9 @@ void SNM_CyclactionsView::OnItemBtnClk(SWS_ListItem* item, int iCol, int iKeySta
 void SNM_CyclactionsView::OnItemDblClk(SWS_ListItem* item, int iCol)
 {
 	Cyclaction* pItem = (Cyclaction*)item;
-	if (pItem && pItem != &s_DEFAULT_L && iCol == COL_L_ID && g_pCyclactionWnd)
-		g_pCyclactionWnd->OnCommand(RUN_CYCLACTION_MSG, 0);
+	if (pItem && pItem != &s_DEFAULT_L && iCol == COL_L_ID)
+		if (SNM_CyclactionWnd* w = g_caWndMgr.Get())
+			w->OnCommand(RUN_CYCLACTION_MSG, 0);
 }
 
 
@@ -1692,7 +1707,7 @@ enum
 };
 
 SNM_CyclactionWnd::SNM_CyclactionWnd()
-	: SWS_DockWnd(IDD_SNM_CYCLACTION, __LOCALIZE("Cycle Action editor","sws_DLG_161"), "SnMCyclaction", SWSGetCommandID(OpenCyclaction))
+	: SWS_DockWnd(IDD_SNM_CYCLACTION, __LOCALIZE("Cycle Action editor","sws_DLG_161"), CA_WND_ID, SWSGetCommandID(OpenCyclaction))
 {
 	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();
@@ -1837,9 +1852,9 @@ void AddOrInsertCommand(const char* _cmd, int _flags = 0)
 		if (_flags&2)
 		{
 			g_lvR->EditListItem((SWS_ListItem*)newCmd, COL_R_CMD);
-			if (g_pCyclactionWnd)
+			if (SNM_CyclactionWnd* w = g_caWndMgr.Get())
 			{
-				HWND h = GetDlgItem(g_pCyclactionWnd->GetHWND(), IDC_EDIT);  
+				HWND h = GetDlgItem(w->GetHWND(), IDC_EDIT);
 				SetFocus(h);
 				SendMessage(h, EM_SETSEL, strlen(_cmd), strlen(_cmd)+1); // move cursor to the end
 			}
@@ -2012,7 +2027,7 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				}
 				else if (sel)
 					MessageBox(
-						g_pCyclactionWnd?g_pCyclactionWnd->GetHWND():GetMainHwnd(),
+						g_caWndMgr.GetMsgHWND(),
 						__LOCALIZE("Selected commands cannot be exploded!\nProbable cause: not a macro, not a cycle action, unknown command, etc..","sws_DLG_161"),
 						__LOCALIZE("S&M - Error","sws_DLG_161"),
 						MB_OK);
@@ -2336,7 +2351,7 @@ if (g_SNM_Beta)
 
 		char buf[128] = "";
 		HMENU hImpExpSubMenu = CreatePopupMenu();
-		AddSubMenu(hMenu, hImpExpSubMenu, __LOCALIZE("Import/export...","sws_DLG_161"));
+		AddSubMenu(hMenu, hImpExpSubMenu, __LOCALIZE("Import/export","sws_DLG_161"));
 		AddImportExportMenu(hImpExpSubMenu, false);
 		AddToMenu(hMenu, SWS_SEPARATOR, 0);
 		AddResetMenu(hMenu);
@@ -2489,9 +2504,8 @@ int CyclactionInit()
 	if (!plugin_register("projectconfig", &s_projectconfig))
 		return 0;
 
-	// instanciate the window, if needed
-	if (SWS_LoadDockWndState("SnMCyclaction"))
-		g_pCyclactionWnd = new SNM_CyclactionWnd();
+	// instanciate the window if needed, can be NULL
+	g_caWndMgr.CreateFromIni();
 
 	g_editedSection = 0;
 	g_edited = false;
@@ -2501,20 +2515,21 @@ int CyclactionInit()
 }
 
 void CyclactionExit() {
-	DELETE_NULL(g_pCyclactionWnd);
+	g_caWndMgr.Delete();
 }
 
 void OpenCyclaction(COMMAND_T* _ct)
 {
-	if (!g_pCyclactionWnd)
-		g_pCyclactionWnd = new SNM_CyclactionWnd();
-	if (g_pCyclactionWnd) {
-		g_pCyclactionWnd->Show((g_editedSection == (int)_ct->user) /* i.e toggle */, true);
-		g_pCyclactionWnd->SetType((int)_ct->user);
+	if (SNM_CyclactionWnd* w = g_caWndMgr.CreateIfNeeded()) {
+		w->Show((g_editedSection == (int)_ct->user) /* i.e toggle */, true);
+		w->SetType((int)_ct->user);
 	}
 }
 
-int IsCyclactionDisplayed(COMMAND_T*){
-	return (g_pCyclactionWnd && g_pCyclactionWnd->IsValidWindow());
+int IsCyclactionDisplayed(COMMAND_T*)
+{
+	if (SNM_CyclactionWnd* w = g_caWndMgr.Get())
+		return w->IsValidWindow();
+	return 0;
 }
 

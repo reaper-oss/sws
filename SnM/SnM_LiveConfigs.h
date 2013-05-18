@@ -91,8 +91,6 @@ public:
 	SNM_LiveConfigsWnd();
 	void Update();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
-	void CSurfSetTrackTitle();
-	void CSurfSetTrackListChange();
 	void FillComboInputTrack();
 	bool SelectByCCValue(int _configId, int _cc, bool _selectOnly = true);
 protected:
@@ -124,7 +122,7 @@ void UpdateMonitoring(int _cfgId, int _whatFlags, int _commitFlags, int _flags =
 // monitoring window (several instances)
 class SNM_LiveConfigMonitorWnd : public SWS_DockWnd {
 public:
-	SNM_LiveConfigMonitorWnd(int _cfgId);
+	SNM_LiveConfigMonitorWnd(int _cfgId = -1); // default constructor/param value not used, just to compil SNM_WindowInstManager..
 	SNM_FiveMonitors* GetMonitors() { return &m_mons; }
 protected:
 	void OnInitDlg();
@@ -172,7 +170,9 @@ public:
 };
 
 
-extern SNM_LiveConfigsWnd* g_SNM_LiveConfigsWnd;
+// ScheduledJob because of multi-notifs
+void LiveConfigsSetTrackTitle();
+void LiveConfigsTrackListChange();
 
 int LiveConfigInit();
 void LiveConfigExit();

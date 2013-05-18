@@ -37,6 +37,7 @@
 #include "../reaper/localize.h"
 
 
+#define RGNPL_WND_ID			"SnMRgnPlaylist"
 #define MUTEX_PLAYLISTS			SWS_SectionLock lock(&g_plsMutex) // for quick un-mutexing
 #define UNDO_PLAYLIST_STR		__LOCALIZE("Region Playlist edition", "sws_undo")
 
@@ -88,7 +89,7 @@ enum {
 };
 
 
-SNM_RegionPlaylistWnd* g_SNM_RgnPlaylistWnd = NULL;
+SNM_WindowManager<SNM_RegionPlaylistWnd> g_rgnplWndMgr(RGNPL_WND_ID);
 SWSProjConfig<SNM_Playlists> g_pls;
 SWS_Mutex g_plsMutex;
 SNM_OscCSurf* g_osc = NULL;
@@ -374,8 +375,8 @@ void SNM_PlaylistView::OnItemClk(SWS_ListItem* item, int iCol, int iKeyState) {
 }
 
 void SNM_PlaylistView::OnItemDblClk(SWS_ListItem* item, int iCol) {
-	if (g_SNM_RgnPlaylistWnd)
-		g_SNM_RgnPlaylistWnd->OnCommand(PERFORM_MSG, 0);
+	if (SNM_RegionPlaylistWnd* w = g_rgnplWndMgr.Get())
+		w->OnCommand(PERFORM_MSG, 0);
 }
 
 // "disable" sort
@@ -521,7 +522,7 @@ void GetMonitoringInfo(WDL_FastString* _curNum, WDL_FastString* _cur,
 ///////////////////////////////////////////////////////////////////////////////
 
 SNM_RegionPlaylistWnd::SNM_RegionPlaylistWnd()
-	: SWS_DockWnd(IDD_SNM_RGNPLAYLIST, __LOCALIZE("Region Playlist","sws_DLG_165"), "SnMRgnPlaylist", SWSGetCommandID(OpenRegionPlaylist))
+	: SWS_DockWnd(IDD_SNM_RGNPLAYLIST, __LOCALIZE("Region Playlist","sws_DLG_165"), RGNPL_WND_ID, SWSGetCommandID(OpenRegionPlaylist))
 {
 	// must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();
@@ -585,11 +586,6 @@ void SNM_RegionPlaylistWnd::OnDestroy() {
 	m_cbPlaylist.Empty();
 	m_mons.RemoveAllChildren(false);
 	m_btnsAddDel.RemoveAllChildren(false);
-}
-
-// ScheduledJob used because of multi-notifs
-void SNM_RegionPlaylistWnd::CSurfSetTrackListChange() {
-	SNM_AddOrReplaceScheduledJob(new PlaylistUpdateJob());
 }
 
 // _flags: &1=fast update, normal/full update otherwise
@@ -1382,14 +1378,14 @@ void PlaylistRun()
 		}
 
 		g_lastRunPos = pos;
-		if (updated && (g_SNM_RgnPlaylistWnd || g_osc))
+		if (updated && (g_osc || g_rgnplWndMgr.Get()))
 		{
 			// one call to GetMonitoringInfo() for both the wnd & osc
 			WDL_FastString cur, curNum, next, nextNum;
 			GetMonitoringInfo(&curNum, &cur, &nextNum, &next);
 
-			if (g_SNM_RgnPlaylistWnd)
-				g_SNM_RgnPlaylistWnd->Update(1, &curNum, &cur, &nextNum, &next); // 1: fast update flag
+			if (SNM_RegionPlaylistWnd* w = g_rgnplWndMgr.Get())
+				w->Update(1, &curNum, &cur, &nextNum, &next); // 1: fast update flag
 
 			if (g_osc)
 			{
@@ -1424,7 +1420,7 @@ void PlaylistPlay(int _plId, int _itemId)
 
 	if (!g_pls.Get()->GetSize()) {
 		PlaylistStop();
-		MessageBox(g_SNM_RgnPlaylistWnd?g_SNM_RgnPlaylistWnd->GetHWND():GetMainHwnd(), __LOCALIZE("No playlist defined!\nUse the tiny button \"+\" to add one.","sws_DLG_165"), __LOCALIZE("S&M - Error","sws_DLG_165"),MB_OK);
+		MessageBox(g_rgnplWndMgr.GetMsgHWND(), __LOCALIZE("No playlist defined!\nUse the tiny button \"+\" to add one.","sws_DLG_165"), __LOCALIZE("S&M - Error","sws_DLG_165"),MB_OK);
 		return;
 	}
 
@@ -1434,7 +1430,7 @@ void PlaylistPlay(int _plId, int _itemId)
 		PlaylistStop();
 		char msg[128] = "";
 		_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Unknown playlist #%d!","sws_DLG_165"), _plId+1);
-		MessageBox(g_SNM_RgnPlaylistWnd?g_SNM_RgnPlaylistWnd->GetHWND():GetMainHwnd(), msg, __LOCALIZE("S&M - Error","sws_DLG_165"),MB_OK);
+		MessageBox(g_rgnplWndMgr.GetMsgHWND(), msg, __LOCALIZE("S&M - Error","sws_DLG_165"),MB_OK);
 		return;
 	}
 
@@ -1447,7 +1443,7 @@ void PlaylistPlay(int _plId, int _itemId)
 		{
 			char msg[256] = "";
 			_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("The playlist #%d might end unexpectedly!\nIt constains regions that start after the end of project (region %d at least).","sws_DLG_165"), _plId+1, num);
-			if (IDCANCEL == MessageBox(g_SNM_RgnPlaylistWnd?g_SNM_RgnPlaylistWnd->GetHWND():GetMainHwnd(), msg, __LOCALIZE("S&M - Warning","sws_DLG_165"), MB_OKCANCEL)) {
+			if (IDCANCEL == MessageBox(g_rgnplWndMgr.GetMsgHWND(), msg, __LOCALIZE("S&M - Warning","sws_DLG_165"), MB_OKCANCEL)) {
 				PlaylistStop();
 				return;
 			}
@@ -1458,7 +1454,7 @@ void PlaylistPlay(int _plId, int _itemId)
 		{
 			char msg[256] = "";
 			_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("The playlist #%d might not work as expected!\nIt contains nested markers/regions (inside region %d at least).","sws_DLG_165"), _plId+1, num);
-			if (IDCANCEL == MessageBox(g_SNM_RgnPlaylistWnd?g_SNM_RgnPlaylistWnd->GetHWND():GetMainHwnd(), msg, __LOCALIZE("S&M - Warning","sws_DLG_165"), MB_OKCANCEL)) {
+			if (IDCANCEL == MessageBox(g_rgnplWndMgr.GetMsgHWND(), msg, __LOCALIZE("S&M - Warning","sws_DLG_165"), MB_OKCANCEL)) {
 				PlaylistStop();
 				return;
 			}
@@ -1487,8 +1483,8 @@ void PlaylistPlay(int _plId, int _itemId)
 			if (SeekItem(_plId, _itemId, g_playPlaylist==_plId ? g_playCur : -1))
 			{
 				g_playPlaylist = _plId; // enables PlaylistRun()
-				if (g_SNM_RgnPlaylistWnd)
-					g_SNM_RgnPlaylistWnd->Update(); // for the play button, next/previous region actions, etc....
+				if (SNM_RegionPlaylistWnd* w = g_rgnplWndMgr.Get())
+					w->Update(); // for the play button, next/previous region actions, etc....
 			}
 			else
 				PlaylistStopped(); // reset vars & native prefs
@@ -1499,7 +1495,7 @@ void PlaylistPlay(int _plId, int _itemId)
 	{
 		char msg[128] = "";
 		_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Playlist #%d: nothing to play!\n(empty playlist, empty project, removed regions, etc..)","sws_DLG_165"), _plId+1);
-		MessageBox(g_SNM_RgnPlaylistWnd?g_SNM_RgnPlaylistWnd->GetHWND():GetMainHwnd(), msg, __LOCALIZE("S&M - Error","sws_DLG_165"),MB_OK);
+		MessageBox(g_rgnplWndMgr.GetMsgHWND(), msg, __LOCALIZE("S&M - Error","sws_DLG_165"),MB_OK);
 	}
 }
 
@@ -1566,8 +1562,8 @@ void PlaylistStopped(bool _pause)
 			g_oldRepeatState = -1;
 		}
 
-		if (g_SNM_RgnPlaylistWnd)
-			g_SNM_RgnPlaylistWnd->Update();
+		if (SNM_RegionPlaylistWnd* w = g_rgnplWndMgr.Get())
+			w->Update();
 	}
 }
 
@@ -1593,8 +1589,8 @@ void SetPlaylistRepeat(COMMAND_T* _ct)
 	}
 	RefreshToolbar(SWSGetCommandID(SetPlaylistRepeat, -1));
 	PlaylistResync();
-	if (g_SNM_RgnPlaylistWnd)
-		g_SNM_RgnPlaylistWnd->Update();
+	if (SNM_RegionPlaylistWnd* w = g_rgnplWndMgr.Get())
+		w->Update();
 }
 
 int IsPlaylistRepeat(COMMAND_T*) {
@@ -1623,7 +1619,7 @@ void AppendPasteCropPlaylist(SNM_Playlist* _playlist, int _mode)
 	{
 		char msg[256] = "";
 		_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Paste/crop aborted: infinite loop (for region %d at least)!","sws_DLG_165"), rgnNum);
-		MessageBox(g_SNM_RgnPlaylistWnd?g_SNM_RgnPlaylistWnd->GetHWND():GetMainHwnd(), msg, __LOCALIZE("S&M - Error","sws_DLG_165"),MB_OK);
+		MessageBox(g_rgnplWndMgr.GetMsgHWND(), msg, __LOCALIZE("S&M - Error","sws_DLG_165"),MB_OK);
 		return;
 	}
 
@@ -1637,13 +1633,13 @@ void AppendPasteCropPlaylist(SNM_Playlist* _playlist, int _mode)
 		if (startPos<prjlen)
 		{
 			if (_playlist->IsInPlaylist(startPos, false, 0) >=0 ) {
-				MessageBox(g_SNM_RgnPlaylistWnd?g_SNM_RgnPlaylistWnd->GetHWND():GetMainHwnd(), 
+				MessageBox(g_rgnplWndMgr.GetMsgHWND(), 
 					__LOCALIZE("Aborted: pasting inside a region which is used in the playlist!","sws_DLG_165"),
 					__LOCALIZE("S&M - Error","sws_DLG_165"), MB_OK);
 				return;
 			}
 			if (IsInPlaylists(startPos) >=0 ) {
-				if (IDNO == MessageBox(g_SNM_RgnPlaylistWnd?g_SNM_RgnPlaylistWnd->GetHWND():GetMainHwnd(), 
+				if (IDNO == MessageBox(g_rgnplWndMgr.GetMsgHWND(), 
 					__LOCALIZE("Warning: pasting inside a region which is used in other playlists!\nThis region will be larger and those playlists will change, are you sure you want to continue?","sws_DLG_165"),
 					__LOCALIZE("S&M - Warning","sws_DLG_165"), MB_YESNO))
 					return;
@@ -1792,9 +1788,9 @@ void AppendPasteCropPlaylist(SNM_Playlist* _playlist, int _mode)
 		UpdateTimeline();
 		Undo_EndBlock2(NULL, __LOCALIZE("Crop project to playlist","sws_undo"), UNDO_STATE_ALL);
 
-		if (g_SNM_RgnPlaylistWnd) {
-			g_SNM_RgnPlaylistWnd->FillPlaylistCombo();
-			g_SNM_RgnPlaylistWnd->Update();
+		if (SNM_RegionPlaylistWnd* w = g_rgnplWndMgr.Get()) {
+			w->FillPlaylistCombo();
+			w->Update();
 		}
 		return;
 	}
@@ -1855,9 +1851,9 @@ void AppendPasteCropPlaylist(SNM_Playlist* _playlist, int _mode)
 
 	Undo_EndBlock2(NULL, __LOCALIZE("Crop project to playlist","sws_undo"), UNDO_STATE_ALL);
 
-	if (g_SNM_RgnPlaylistWnd) {
-		g_SNM_RgnPlaylistWnd->FillPlaylistCombo();
-		g_SNM_RgnPlaylistWnd->Update();
+	if (SNM_RegionPlaylistWnd* w = g_rgnplWndMgr.Get()) {
+		w->FillPlaylistCombo();
+		w->Update();
 	}
 }
 
@@ -1869,9 +1865,9 @@ void AppendPasteCropPlaylist(COMMAND_T* _ct) {
 ///////////////////////////////////////////////////////////////////////////////
 
 void PlaylistUpdateJob::Perform() {
-	if (g_SNM_RgnPlaylistWnd) {
-		g_SNM_RgnPlaylistWnd->FillPlaylistCombo();
-		g_SNM_RgnPlaylistWnd->Update();
+	if (SNM_RegionPlaylistWnd* w = g_rgnplWndMgr.Get()) {
+		w->FillPlaylistCombo();
+		w->Update();
 	}
 }
 
@@ -1915,9 +1911,9 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 				else
 					break;
 			}
-			if (g_SNM_RgnPlaylistWnd) {
-				g_SNM_RgnPlaylistWnd->FillPlaylistCombo();
-				g_SNM_RgnPlaylistWnd->Update();
+			if (SNM_RegionPlaylistWnd* w = g_rgnplWndMgr.Get()) {
+				w->FillPlaylistCombo();
+				w->Update();
 			}
 			return true;
 		}
@@ -1966,6 +1962,14 @@ static project_config_extension_t s_projectconfig = {
 
 ///////////////////////////////////////////////////////////////////////////////
 
+// ScheduledJob used because of multi-notifs
+void RegionPlaylistSetTrackListChange() {
+	SNM_AddOrReplaceScheduledJob(new PlaylistUpdateJob());
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+
 int RegionPlaylistInit()
 {
 	// load prefs
@@ -1978,12 +1982,12 @@ int RegionPlaylistInit()
 	GetPrivateProfileString("RegionPlaylist", "OscFeedback", "", buf, sizeof(buf), g_SNM_IniFn.Get());
 	g_osc = LoadOscCSurfs(NULL, buf); // NULL on err (e.g. "", token doesn't exist, etc.)
 
-	// instanciate the window, if needed
-	if (SWS_LoadDockWndState("SnMRgnPlaylist"))
-		g_SNM_RgnPlaylistWnd = new SNM_RegionPlaylistWnd();
+	// instanciate the window if needed, can be NULL
+	g_rgnplWndMgr.CreateFromIni();
 
 	if (!plugin_register("projectconfig", &s_projectconfig))
 		return 0;
+
 	return 1;
 }
 
@@ -2005,24 +2009,24 @@ void RegionPlaylistExit()
 		WritePrivateProfileString("RegionPlaylist", "OscFeedback", NULL, g_SNM_IniFn.Get());
 
 	DELETE_NULL(g_osc);
-	DELETE_NULL(g_SNM_RgnPlaylistWnd);
+	g_rgnplWndMgr.Delete();
 }
 
 void OpenRegionPlaylist(COMMAND_T*)
 {
-	if (!g_SNM_RgnPlaylistWnd)
-		g_SNM_RgnPlaylistWnd = new SNM_RegionPlaylistWnd();
-	if (g_SNM_RgnPlaylistWnd)
-		g_SNM_RgnPlaylistWnd->Show(true, true);
+	if (SNM_RegionPlaylistWnd* w = g_rgnplWndMgr.CreateIfNeeded())
+		w->Show(true, true);
 }
 
 int IsRegionPlaylistDisplayed(COMMAND_T*){
-	return (g_SNM_RgnPlaylistWnd && g_SNM_RgnPlaylistWnd->IsValidWindow());
+	if (SNM_RegionPlaylistWnd* w = g_rgnplWndMgr.Get())
+		return w->IsValidWindow();
+	return 0;
 }
 
 void ToggleRegionPlaylistLock(COMMAND_T*) {
-	if (g_SNM_RgnPlaylistWnd)
-		g_SNM_RgnPlaylistWnd->ToggleLock();
+	if (SNM_RegionPlaylistWnd* w = g_rgnplWndMgr.Get())
+		w->ToggleLock();
 }
 
 int IsRegionPlaylistMonitoring(COMMAND_T*) {

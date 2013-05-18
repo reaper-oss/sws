@@ -184,10 +184,11 @@ public:
 	SWS_ListView* GetListView(int i = 0) { return m_pLists.Get(i); }
 	virtual void OnCommand(WPARAM wParam, LPARAM lParam) {}
 
+	static LRESULT screensetCallback(int action, char *id, void *param, void *actionParm, int actionParmSize);
+
 	static const int DOCK_MSG = 0xFF0000;
 
 protected:
-	static LRESULT screensetCallback(int action, char *id, void *param, void *actionParm, int actionParmSize);
 
 	virtual INT_PTR WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	void Init(); // call from derived constructor!!
@@ -244,7 +245,7 @@ private:
 
 
 char* SWS_LoadDockWndStateBuf(const char* _id, int _len = -1);
-bool SWS_LoadDockWndState(const char* _id, SWS_DockWnd_State* _state = NULL, int _len = -1);
+bool SWS_IsDockWndOpen(const char* _id, const char* _stateBuf = NULL);
 void SWS_SetDockWndState(const char* _stateBuf, SWS_DockWnd_State* _state, int _len);
 
 bool ListView_HookThemeColorsMessage(HWND hwndDlg, int uMsg, LPARAM lParam, int cstate[LISTVIEW_COLORHOOK_STATESIZE], int listID, int whichTheme, int wantGridForColumns);

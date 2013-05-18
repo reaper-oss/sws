@@ -97,8 +97,6 @@ public:
 	void SetType(int _type);
 	void SetText(const char* _str, bool _addRN = true);
 	void RefreshGUI();
-	void CSurfSetTrackTitle();
-	void CSurfSetTrackListChange();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 	void ToggleLock();
 
@@ -138,13 +136,17 @@ protected:
 
 void LoadHelp(const char* _cmdName, char* _buf, int _bufSize);
 void SaveHelp(const char* _cmdName, const char* _help);
+void SetActionHelpFilename(COMMAND_T*);
 bool GetStringFromNotesChunk(WDL_FastString* _notes, char* _buf, int _bufMaxSize);
 bool GetNotesChunkFromString(const char* _buf, WDL_FastString* _notes, const char* _startLine = NULL);
 
-extern SNM_NotesWnd* g_SNM_NotesWnd;
+
 extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_SNM_TrackNotes;
 
-void SetActionHelpFilename(COMMAND_T*);
+
+void NotesSetTrackTitle();
+void NotesSetTrackListChange();
+
 int NotesInit();
 void NotesExit();
 void ImportSubTitleFile(COMMAND_T*);

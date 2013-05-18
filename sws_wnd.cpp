@@ -55,7 +55,10 @@ SWS_DockWnd::SWS_DockWnd(int iResource, const char* cWndTitle, const char* cId, 
 :m_hwnd(NULL), m_iResource(iResource), m_wndTitle(cWndTitle), m_id(cId), m_bUserClosed(false), m_iCmdID(iCmdID), m_bLoadingState(false)
 {
 	if (cId && *cId) // e.g. default constructor
+	{
+		screenset_unregister((char*)cId);
 		screenset_registerNew((char*)cId, screensetCallback, this);
+	}
 
 	memset(&m_state, 0, sizeof(SWS_DockWnd_State));
 	*m_tooltip = '\0';
@@ -484,29 +487,31 @@ void SWS_DockWnd::ToggleDocking()
 // screenset support
 LRESULT SWS_DockWnd::screensetCallback(int action, char *id, void *param, void *actionParm, int actionParmSize)
 {
-	SWS_DockWnd* pObj = (SWS_DockWnd*)param;
-	switch(action)
+	if (SWS_DockWnd* pObj = (SWS_DockWnd*)param)
 	{
-	case SCREENSET_ACTION_GETHWND:
-		return (LRESULT)pObj->m_hwnd;
-	case SCREENSET_ACTION_IS_DOCKED:
-		return (LRESULT)pObj->IsDocked();
-	case SCREENSET_ACTION_CLOSE:
-		if (SWS_IsWindow(pObj->m_hwnd))
+		switch(action)
 		{
-			pObj->m_bUserClosed = true;
-			DestroyWindow(pObj->m_hwnd);
+			case SCREENSET_ACTION_GETHWND:
+				return (LRESULT)pObj->m_hwnd;
+			case SCREENSET_ACTION_IS_DOCKED:
+				return (LRESULT)pObj->IsDocked();
+			case SCREENSET_ACTION_CLOSE:
+				if (SWS_IsWindow(pObj->m_hwnd))
+				{
+					pObj->m_bUserClosed = true;
+					DestroyWindow(pObj->m_hwnd);
+				}
+				break;
+			case SCREENSET_ACTION_SWITCH_DOCK:
+				if (SWS_IsWindow(pObj->m_hwnd))
+					pObj->ToggleDocking();
+				break;
+			case SCREENSET_ACTION_LOAD_STATE:
+				pObj->LoadState((char*)actionParm, actionParmSize);
+				break;
+			case SCREENSET_ACTION_SAVE_STATE:
+				return pObj->SaveState((char*)actionParm, actionParmSize);
 		}
-		break;
-	case SCREENSET_ACTION_SWITCH_DOCK:
-		if (SWS_IsWindow(pObj->m_hwnd))
-			pObj->ToggleDocking();
-		break;
-	case SCREENSET_ACTION_LOAD_STATE:
-		pObj->LoadState((char*)actionParm, actionParmSize);
-		break;
-	case SCREENSET_ACTION_SAVE_STATE:
-		return pObj->SaveState((char*)actionParm, actionParmSize);
 	}
 	return 0;
 }
@@ -645,25 +650,28 @@ char* SWS_LoadDockWndStateBuf(const char* _id, int _len)
 	return state;
 }
 
-bool SWS_LoadDockWndState(const char* _id, SWS_DockWnd_State* _state, int _len)
+// if _stateBuf==NULL, read state from ini file
+bool SWS_IsDockWndOpen(const char* _id, const char* _stateBuf)
 {
-	SWS_DockWnd_State* state = _state ? _state : (SWS_DockWnd_State*)malloc(sizeof(SWS_DockWnd_State));
-	int len = _len>0 ? _len : sizeof(SWS_DockWnd_State);
-
-	char* stateBuf = SWS_LoadDockWndStateBuf(_id, len);
-	SWS_SetDockWndState(stateBuf, state, len);
-	delete [] stateBuf;
-
-	bool open = state->state&1;
-	if (!_state) free(state);
-	return open;
+	SWS_DockWnd_State state;
+	if (_stateBuf)
+	{
+		SWS_SetDockWndState(_stateBuf, &state, sizeof(SWS_DockWnd_State));
+	}
+	else
+	{
+		char* stateBuf = SWS_LoadDockWndStateBuf(_id);
+		SWS_SetDockWndState(stateBuf, &state, sizeof(SWS_DockWnd_State));
+		delete [] stateBuf;
+	}
+	return state.state&1;
 }
 
 void SWS_SetDockWndState(const char* _stateBuf, SWS_DockWnd_State* _state, int _len)
 {
 	if (_state)
 	{
-		if (_stateBuf && *_stateBuf && _len>=sizeof(SWS_DockWnd_State))
+		if (_stateBuf && _len>=sizeof(SWS_DockWnd_State))
 		{
 			for (int i=0; i < _len / (int)sizeof(int); i++)
 				((int*)_state)[i] = REAPER_MAKELEINT(*((int*)_stateBuf+i));

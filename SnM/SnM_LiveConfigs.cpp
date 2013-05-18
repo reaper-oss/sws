@@ -39,6 +39,8 @@
 #include "../Prompt.h"
 
 
+#define LIVECFG_WND_ID				"SnMLiveConfigs"
+#define LIVECFG_MON_WND_ID			"SnMLiveConfigMonitor%d"
 #define LIVECFG_VERSION				2
 
 //#define UNUSED					0xF001 
@@ -134,14 +136,8 @@ enum {
 };
 
 
-SNM_LiveConfigsWnd* g_SNM_LiveConfigsWnd = NULL; // editor window
-
-/*JFB!!! TODO: more debug
- the nb of default NULL values depend on SNM_LIVECFG_NB_CONFIGS 
- => normally set in LiveConfigInit() but I had to hard-code them to fix a crash! 
- repro: CA "Show Live Config monitors"
-*/
-SNM_LiveConfigMonitorWnd* g_monitorWnds[SNM_LIVECFG_NB_CONFIGS] = { NULL, NULL, NULL, NULL }; // monitoring windows
+SNM_WindowManager<SNM_LiveConfigsWnd> g_lcWndMgr(LIVECFG_WND_ID);
+SNM_MultiWindowManager<SNM_LiveConfigMonitorWnd> g_monWndsMgr(LIVECFG_MON_WND_ID);
 
 SWSProjConfig<WDL_PtrList_DeleteOnDestroy<LiveConfig> > g_liveConfigs;
 WDL_PtrList_DeleteOnDestroy<LiveConfigItem> g_clipboardConfigs; // for cut/copy/paste
@@ -489,8 +485,8 @@ int LiveConfig::SetInputTrack(MediaTrack* _newInputTr, bool _updateSends)
 	}
 	m_inputTr = _newInputTr;
 
-	if (g_SNM_LiveConfigsWnd)
-		g_SNM_LiveConfigsWnd->FillComboInputTrack();
+	if (SNM_LiveConfigsWnd* w = g_lcWndMgr.Get())
+		w->FillComboInputTrack();
 
 	return nbSends;
 }
@@ -626,20 +622,23 @@ void SNM_LiveConfigView::OnItemDblClk(SWS_ListItem* item, int iCol)
 {
 	if (LiveConfigItem* pItem = (LiveConfigItem*)item)
 	{
-		switch (iCol)
+		if (SNM_LiveConfigsWnd* w = g_lcWndMgr.Get())
 		{
-			case COL_TRT:
-				if (g_SNM_LiveConfigsWnd && pItem->m_track)
-					g_SNM_LiveConfigsWnd->OnCommand(LOAD_TRACK_TEMPLATE_MSG, 0);
-				break;
-			case COL_FXC:
-				if (g_SNM_LiveConfigsWnd && pItem->m_track)
-					g_SNM_LiveConfigsWnd->OnCommand(LOAD_FXCHAIN_MSG, 0);
-				break;
-			default:
-				if (g_SNM_LiveConfigsWnd)
-					g_SNM_LiveConfigsWnd->OnCommand(APPLY_MSG, 0);
-				break;
+			switch (iCol)
+			{
+				case COL_TRT:
+					if (pItem->m_track)
+						w->OnCommand(LOAD_TRACK_TEMPLATE_MSG, 0);
+					break;
+				case COL_FXC:
+					if (pItem->m_track)
+						w->OnCommand(LOAD_FXCHAIN_MSG, 0);
+					break;
+				default:
+					if (w)
+						w->OnCommand(APPLY_MSG, 0);
+					break;
+			}
 		}
 	}
 }
@@ -650,7 +649,7 @@ void SNM_LiveConfigView::OnItemDblClk(SWS_ListItem* item, int iCol)
 ///////////////////////////////////////////////////////////////////////////////
 
 SNM_LiveConfigsWnd::SNM_LiveConfigsWnd()
-	: SWS_DockWnd(IDD_SNM_LIVE_CONFIGS, __LOCALIZE("Live Configs","sws_DLG_155"), "SnMLiveConfigs", SWSGetCommandID(OpenLiveConfig))
+	: SWS_DockWnd(IDD_SNM_LIVE_CONFIGS, __LOCALIZE("Live Configs","sws_DLG_155"), LIVECFG_WND_ID, SWSGetCommandID(OpenLiveConfig))
 {
 	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();
@@ -723,16 +722,6 @@ void SNM_LiveConfigsWnd::OnDestroy()
 	m_cbInputTr.Empty();
 	m_vwndCC.RemoveAllChildren(false);
 	m_vwndFade.RemoveAllChildren(false);
-}
-
-// ScheduledJob because of multi-notifs
-void SNM_LiveConfigsWnd::CSurfSetTrackListChange() {
-	SNM_AddOrReplaceScheduledJob(new LiveConfigsUpdateJob());
-}
-
-void SNM_LiveConfigsWnd::CSurfSetTrackTitle() {
-	FillComboInputTrack();
-	Update();
 }
 
 void SNM_LiveConfigsWnd::FillComboInputTrack()
@@ -1713,9 +1702,9 @@ void LiveConfigsUpdateJob::Perform()
 		}
 	}
 
-	if (g_SNM_LiveConfigsWnd) {
-		g_SNM_LiveConfigsWnd->FillComboInputTrack();
-		g_SNM_LiveConfigsWnd->Update();
+	if (SNM_LiveConfigsWnd* w = g_lcWndMgr.Get()) {
+		w->FillComboInputTrack();
+		w->Update();
 	}
 }
 
@@ -1825,8 +1814,8 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 		}
 
 		// refresh editor
-		if (g_SNM_LiveConfigsWnd)
-			g_SNM_LiveConfigsWnd->Update();
+		if (SNM_LiveConfigsWnd* w = g_lcWndMgr.Get())
+			w->Update();
 
 		return true;
 	}
@@ -1924,20 +1913,34 @@ static project_config_extension_t s_projectconfig = {
 	ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL
 };
 
+
+///////////////////////////////////////////////////////////////////////////////
+
+void LiveConfigsSetTrackTitle() {
+	if (SNM_LiveConfigsWnd* w = g_lcWndMgr.Get()) {
+		w->FillComboInputTrack();
+		w->Update();
+	}
+}
+
+// ScheduledJob because of multi-notifs
+void LiveConfigsTrackListChange() {
+	SNM_AddOrReplaceScheduledJob(new LiveConfigsUpdateJob());
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+
 int LiveConfigInit()
 {
 	GetPrivateProfileString("LiveConfigs", "BigFontName", SNM_DYN_FONT_NAME, g_lcBigFontName, sizeof(g_lcBigFontName), g_SNM_IniFn.Get());
 
-	// instanciate the editor, if needed
-	if (SWS_LoadDockWndState("SnMLiveConfigs"))
-		g_SNM_LiveConfigsWnd = new SNM_LiveConfigsWnd();
+	// instanciate the editor if needed, can be NULL
+	g_lcWndMgr.CreateFromIni();
 
 	// instanciate monitors, if needed
-	char id[64]="";
-	for (int i=0; i<SNM_LIVECFG_NB_CONFIGS; i++) {
-		_snprintfSafe(id, sizeof(id), "SnMLiveConfigMonitor%d", i+1);
-		g_monitorWnds[i] = SWS_LoadDockWndState(id) ? new SNM_LiveConfigMonitorWnd(i) : NULL;
-	}
+	for (int i=0; i<SNM_LIVECFG_NB_CONFIGS; i++)
+		g_monWndsMgr.CreateFromIni(i);
 
 	if (!plugin_register("projectconfig", &s_projectconfig))
 		return 0;
@@ -1948,24 +1951,21 @@ int LiveConfigInit()
 void LiveConfigExit()
 {
 	WritePrivateProfileString("LiveConfigs", "BigFontName", g_lcBigFontName, g_SNM_IniFn.Get());
-	DELETE_NULL(g_SNM_LiveConfigsWnd);
 
-	for (int i=0; i<SNM_LIVECFG_NB_CONFIGS; i++) {
-		delete g_monitorWnds[i];
-		g_monitorWnds[i] = NULL;
-	}
+	g_lcWndMgr.Delete();
+	g_monWndsMgr.DeleteAll();
 }
 
 void OpenLiveConfig(COMMAND_T*)
 {
-	if (!g_SNM_LiveConfigsWnd)
-		g_SNM_LiveConfigsWnd = new SNM_LiveConfigsWnd();
-	if (g_SNM_LiveConfigsWnd)
-		g_SNM_LiveConfigsWnd->Show(true, true);
+	if (SNM_LiveConfigsWnd* w = g_lcWndMgr.CreateIfNeeded())
+		w->Show(true, true);
 }
 
 int IsLiveConfigDisplayed(COMMAND_T*) {
-	return (g_SNM_LiveConfigsWnd && g_SNM_LiveConfigsWnd->IsValidWindow());
+	if (SNM_LiveConfigsWnd* w = g_lcWndMgr.Get())
+		return w->IsValidWindow();
+	return 0;
 }
 
 
@@ -2199,7 +2199,7 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 				GetFullResourcePath("TrackTemplates", cfg->m_trTemplate.Get(), fn, sizeof(fn));
 				if (LoadChunk(fn, &tmplt) && tmplt.GetLength())
 				{
-					SNM_SendPatcher p(cfg->m_track);  // auto-commit on destroy
+					SNM_SendPatcher p(cfg->m_track); // auto-commit on destroy
 					
 					WDL_FastString chunk; MakeSingleTrackTemplateChunk(&tmplt, &chunk, true, true, false);
 					if (ApplyTrackTemplate(cfg->m_track, &chunk, false, false, &p))
@@ -2436,9 +2436,9 @@ void ApplyLiveConfigJob::Perform()
 	}
 
 	// update GUIs in any case, e.g. tweaking (gray cc value) to same value (=> black)
-	if (g_SNM_LiveConfigsWnd) {
-		g_SNM_LiveConfigsWnd->Update();
-//		g_SNM_LiveConfigsWnd->SelectByCCValue(m_cfgId, lc->m_activeMidiVal);
+	if (SNM_LiveConfigsWnd* w = g_lcWndMgr.Get()) {
+		w->Update();
+//		w->SelectByCCValue(m_cfgId, lc->m_activeMidiVal);
 	}
 
 	// swap preload/current configs => update both preload & current panels
@@ -2512,9 +2512,9 @@ void PreloadLiveConfigJob::Perform()
 	}
 
 	// update GUIs/OSC in any case
-	if (g_SNM_LiveConfigsWnd) {
-		g_SNM_LiveConfigsWnd->Update();
-//		g_SNM_LiveConfigsWnd->SelectByCCValue(m_cfgId, lc->m_preloadMidiVal);
+	if (SNM_LiveConfigsWnd* w = g_lcWndMgr.Get()) {
+		w->Update();
+//		w->SelectByCCValue(m_cfgId, lc->m_preloadMidiVal);
 	}
 	UpdateMonitoring(m_cfgId, PRELOAD_MASK, PRELOAD_MASK);
 }
@@ -2541,10 +2541,14 @@ void UpdateMonitor(int _cfgId, int _idx, int _val, bool _changed, int _flags)
 		if (LiveConfigItem* item = lc->m_ccConfs.Get(_val))
 			item->GetInfo(&info2);
 
-		if (_flags&1 && g_monitorWnds[_cfgId]) {
-			g_monitorWnds[_cfgId]->GetMonitors()->SetText(_idx, info1.Get(), 0, _changed ? 255 : 143);
-			g_monitorWnds[_cfgId]->GetMonitors()->SetText(_idx+1, info2.Get(), 0, _changed ? 255 : 143);
-			done = true;
+		if (_flags&1)
+		{
+			if (SNM_LiveConfigMonitorWnd* w = g_monWndsMgr.Get(_cfgId))
+			{
+				w->GetMonitors()->SetText(_idx, info1.Get(), 0, _changed ? 255 : 143);
+				w->GetMonitors()->SetText(_idx+1, info2.Get(), 0, _changed ? 255 : 143);
+				done = true;
+			}
 		}
 
 		if (_flags&2 && lc->m_osc)
@@ -2563,9 +2567,13 @@ void UpdateMonitor(int _cfgId, int _idx, int _val, bool _changed, int _flags)
 
 	if (!done)
 	{
-		if (_flags&1 && g_monitorWnds[_cfgId]) {
-			g_monitorWnds[_cfgId]->GetMonitors()->SetText(_idx, "---", SNM_COL_RED_MONITOR);
-			g_monitorWnds[_cfgId]->GetMonitors()->SetText(_idx+1, __LOCALIZE("<DISABLED>","sws_DLG_169"), SNM_COL_RED_MONITOR);
+		if (_flags&1)
+		{
+			if (SNM_LiveConfigMonitorWnd* w = g_monWndsMgr.Get(_cfgId))
+			{
+				w->GetMonitors()->SetText(_idx, "---", SNM_COL_RED_MONITOR);
+				w->GetMonitors()->SetText(_idx+1, __LOCALIZE("<DISABLED>","sws_DLG_169"), SNM_COL_RED_MONITOR);
+			}
 		}
 
 		if (_flags&2 && lc->m_osc)
@@ -2582,7 +2590,8 @@ void UpdateMonitor(int _cfgId, int _idx, int _val, bool _changed, int _flags)
 void UpdateMonitoring(int _cfgId, int _whatFlags, int _commitFlags, int _flags)
 {
 	LiveConfig* lc = g_liveConfigs.Get()->Get(_cfgId);
-	if (!lc || (!lc->m_osc && !g_monitorWnds[_cfgId]))
+	SNM_LiveConfigMonitorWnd* monWnd = g_monWndsMgr.Get(_cfgId);
+	if (!lc || (!lc->m_osc && !monWnd))
 		return;
 
 	if (lc->m_enable)
@@ -2599,10 +2608,9 @@ void UpdateMonitoring(int _cfgId, int _whatFlags, int _commitFlags, int _flags)
 
 			// force display of the preload area
 			if ((preloaded ? lc->m_preloadMidiVal : lc->m_curPreloadMidiVal) >= 0 &&
-				_flags&1 && g_monitorWnds[_cfgId] &&
-				g_monitorWnds[_cfgId]->GetMonitors()->GetRows()<2)
+				_flags&1 && monWnd && monWnd->GetMonitors()->GetRows()<2)
 			{
-				g_monitorWnds[_cfgId]->GetMonitors()->SetRows(2);
+				monWnd->GetMonitors()->SetRows(2);
 			}
 		}
 	}
@@ -2632,19 +2640,18 @@ SNM_LiveConfigMonitorWnd::SNM_LiveConfigMonitorWnd(int _cfgId)
 {
 	m_cfgId = _cfgId;
 
-	char title[64]="", dockName[64]="";
-	_snprintfSafe(title, sizeof(title), __LOCALIZE_VERFMT("Live Config #%d Monitor","sws_DLG_169"), _cfgId+1);
-	_snprintfSafe(dockName, sizeof(dockName), "SnMLiveConfigMonitor%d", _cfgId+1);
+	char title[64]="", dockId[64]="";
+	_snprintfSafe(title, sizeof(title), __LOCALIZE_VERFMT("Live Config #%d Monitor","sws_DLG_169"), m_cfgId+1);
+	_snprintfSafe(dockId, sizeof(dockId), LIVECFG_MON_WND_ID, m_cfgId+1);
 
-	// see SWS_DockWnd()
-	m_hwnd=NULL;
+	// see SWS_DockWnd(): default init for other member vars
 	m_iResource=IDD_SNM_LIVE_CONFIG_MON;
 	m_wndTitle.Set(title);
-	m_id.Set(dockName);
-	m_bUserClosed = false;
-	m_iCmdID = SWSGetCommandID(OpenLiveConfigMonitorWnd, (INT_PTR)_cfgId);
-	m_bLoadingState = false;
-	screenset_registerNew((char*)dockName, screensetCallback, this);
+	m_id.Set(dockId);
+	m_iCmdID = SWSGetCommandID(OpenLiveConfigMonitorWnd, (INT_PTR)m_cfgId);
+
+	screenset_unregister((char*)dockId);
+	screenset_registerNew((char*)dockId, screensetCallback, this);
 
 	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();
@@ -2779,21 +2786,21 @@ bool SNM_LiveConfigMonitorWnd::OnMouseUp(int _xpos, int _ypos)
 void OpenLiveConfigMonitorWnd(int _idx)
 {
 	if (_idx>=0 && _idx<SNM_LIVECFG_NB_CONFIGS)
-	{
-		if (!g_monitorWnds[_idx])
-			g_monitorWnds[_idx] = new SNM_LiveConfigMonitorWnd(_idx);
-		if (g_monitorWnds[_idx])
-			g_monitorWnds[_idx]->Show(true, true);
-	}
+		if (SNM_LiveConfigMonitorWnd* w = g_monWndsMgr.CreateIfNeeded(_idx))
+			w->Show(true, true);
 }
 
 void OpenLiveConfigMonitorWnd(COMMAND_T* _ct) {
 	OpenLiveConfigMonitorWnd((int)_ct->user);
 }
 
-int IsLiveConfigMonitorWndDisplayed(COMMAND_T* _ct) {
+int IsLiveConfigMonitorWndDisplayed(COMMAND_T* _ct)
+{
 	int wndId = (int)_ct->user;
-	return (wndId>=0 && wndId<SNM_LIVECFG_NB_CONFIGS && g_monitorWnds[wndId] && g_monitorWnds[wndId]->IsValidWindow());
+	if (wndId>=0 && wndId<SNM_LIVECFG_NB_CONFIGS)
+		if (SNM_LiveConfigMonitorWnd* w = g_monWndsMgr.Get(wndId))
+			return w->IsValidWindow();
+	return 0;
 }
 
 
@@ -2882,8 +2889,9 @@ void UpdateEnableLiveConfig(int _cfgId, int _val)
 			lc->m_curMidiVal = lc->m_activeMidiVal = lc->m_curPreloadMidiVal = lc->m_preloadMidiVal = -1;
 		Undo_OnStateChangeEx2(NULL, UNDO_STR, UNDO_STATE_MISCCFG, -1);
 
-		if (g_SNM_LiveConfigsWnd && (g_configId == _cfgId))
-			g_SNM_LiveConfigsWnd->Update();
+		if (g_configId == _cfgId)
+			if (SNM_LiveConfigsWnd* w = g_lcWndMgr.Get())
+				w->Update();
 		UpdateMonitoring(_cfgId, APPLY_MASK|PRELOAD_MASK, 0);
 
 		// RefreshToolbar()) not required..
@@ -3014,8 +3022,9 @@ void UpdateTinyFadesLiveConfig(COMMAND_T* _ct, int _val)
 
 		LiveConfigsUpdateFadeJob job(lc->m_fade);
 		job.Perform();
-		if (g_SNM_LiveConfigsWnd)
-			g_SNM_LiveConfigsWnd->Update();
+
+		if (SNM_LiveConfigsWnd* w = g_lcWndMgr.Get())
+			w->Update();
 		// RefreshToolbar()) not required..
 	}
 }

@@ -167,7 +167,6 @@ public:
 };
 
 
-extern SNM_ResourceWnd* g_SNM_ResourcesWnd;
 extern WDL_PtrList<FileSlotList> g_SNM_ResSlots;
 extern int g_SNM_TiedSlotActions[SNM_NUM_DEFAULT_SLOTS];
 extern int g_SNM_PrjLoaderStartPref;
@@ -184,12 +183,39 @@ void AutoFill(int _type);
 
 bool BrowseSlot(int _type, int _slot, bool _tieUntiePrj, char* _fn = NULL, int _fnSz = 0, bool* _updatedList = NULL);
 WDL_FastString* GetOrPromptOrBrowseSlot(int _type, int* _slot);
+
 void ClearDeleteSlotsFiles(int _type, int _mode);
 
 int AddCustomBookmark(char* _definition);
 void NewBookmark(int _type, bool _copyCurrent);
 void DeleteBookmark(int _bookmarkType);
 void RenameBookmark(int _bookmarkType);
+
+void ResourcesTrackListChange();
+void ResourcesUpdate();
+void ResourcesSelectBySlot(int _slot1, int _slot2 = -1, bool _selectOnly = true);
+
+int ResourcesInit();
+void ResourcesExit();
+void OpenResources(COMMAND_T*);
+int IsResourcesDisplayed(COMMAND_T*);
+
+void ResourcesDeleteAllSlots(COMMAND_T*);
+
+void ResourcesClearSlotPrompt(COMMAND_T*);
+void ResourcesClearFXChainSlot(COMMAND_T*);
+void ResourcesClearTrTemplateSlot(COMMAND_T*);
+void ResourcesClearPrjTemplateSlot(COMMAND_T*);
+void ResourcesClearMediaSlot(COMMAND_T*);
+void ResourcesClearImageSlot(COMMAND_T*);
+void ResourcesClearThemeSlot(COMMAND_T*);
+
+void ResourcesAutoSaveFXChain(COMMAND_T*);
+void ResourcesAutoSaveTrTemplate(COMMAND_T*);
+void ResourcesAutoSave(COMMAND_T*);
+
+int SNM_SelectResourceBookmark(const char* _name);
+void SNM_TieResourceSlotActions(int _bookmarkId);
 
 
 class SNM_ImageWnd : public SWS_DockWnd
@@ -211,35 +237,12 @@ protected:
 	bool m_stretch;
 };
 
-int ResourcesInit();
-void ResourcesExit();
-void ResourcesTrackListChange();
-
-void OpenResources(COMMAND_T*);
-int IsResourcesDisplayed(COMMAND_T*);
-
-void ResourcesDeleteAllSlots(COMMAND_T*);
-
-void ResourcesClearSlotPrompt(COMMAND_T*);
-void ResourcesClearFXChainSlot(COMMAND_T*);
-void ResourcesClearTrTemplateSlot(COMMAND_T*);
-void ResourcesClearPrjTemplateSlot(COMMAND_T*);
-void ResourcesClearMediaSlot(COMMAND_T*);
-void ResourcesClearImageSlot(COMMAND_T*);
-void ResourcesClearThemeSlot(COMMAND_T*);
-
-void ResourcesAutoSaveFXChain(COMMAND_T*);
-void ResourcesAutoSaveTrTemplate(COMMAND_T*);
-void ResourcesAutoSave(COMMAND_T*);
-
-int SNM_SelectResourceBookmark(const char* _name);
-void SNM_TieResourceSlotActions(int _bookmarkId);
 
 int ImageInit();
 void ImageExit();
 void OpenImageWnd(COMMAND_T*);
 bool OpenImageWnd(const char* _fn);
 void ClearImageWnd(COMMAND_T*);
-bool IsImageWndDisplayed(COMMAND_T*);
+int IsImageWndDisplayed(COMMAND_T*);
 
 #endif

@@ -889,7 +889,7 @@ void RemoveAllEmptyTakes(COMMAND_T* _ct) {
 bool DeleteTakeAndMedia(int _mode)
 {
 	bool deleteFileOK = true;
-	WDL_StringKeyedArray<int> removeFiles;
+	WDL_StringKeyedArray<int> removeFiles(false);
 	for (int i=1; i <= GetNumTracks(); i++) // skip master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);

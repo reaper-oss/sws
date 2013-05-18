@@ -254,7 +254,7 @@ void ProjectLoaderConf(COMMAND_T* _ct)
 			{
 				start = atoi(reply);
 				end = atoi((char*)(p+1));
-				if (start > 0 && end > start && end <= g_SNM_ResSlots.Get(SNM_SLOT_PRJ)->GetSize())
+				if (start>0 && end>start && end<=g_SNM_ResSlots.Get(SNM_SLOT_PRJ)->GetSize())
 				{
 					g_SNM_PrjLoaderStartPref = start;
 					g_SNM_PrjLoaderEndPref = end;
@@ -266,11 +266,13 @@ void ProjectLoaderConf(COMMAND_T* _ct)
 		if (ok)
 		{
 			g_prjCurSlot = -1; // reset current prj
-			if (g_SNM_ResourcesWnd)
-				g_SNM_ResourcesWnd->Update();
+			ResourcesUpdate();
 		}
 		else
-			MessageBox(GetMainHwnd(), __LOCALIZE("Invalid start and/or end slot(s) !\nProbable cause: out of bounds, the Resources view is empty, etc...","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
+			MessageBox(GetMainHwnd(),
+			__LOCALIZE("Invalid start and/or end slot(s) !\nProbable cause: out of bounds, the Resources view is empty, etc...","sws_mbox"),
+			__LOCALIZE("S&M - Error","sws_mbox"),
+			MB_OK);
 	}
 }
 
@@ -310,11 +312,13 @@ void LoadOrSelectNextPreviousProject(COMMAND_T* _ct)
 		while (++cpt <= slotCount && g_SNM_ResSlots.Get(SNM_SLOT_PRJ)->Get(g_prjCurSlot)->IsDefault());
 
 		// found one?
-		if (cpt <= slotCount) {
+		if (cpt <= slotCount)
+		{
 			LoadOrSelectProjectSlot(SNM_SLOT_PRJ, "", g_prjCurSlot, false);
-			if (g_SNM_ResourcesWnd) g_SNM_ResourcesWnd->SelectBySlot(g_prjCurSlot);
+			ResourcesSelectBySlot(g_prjCurSlot);
 		}
-		else g_prjCurSlot = -1;
+		else
+			g_prjCurSlot = -1;
 	}
 }
 

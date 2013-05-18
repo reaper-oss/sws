@@ -39,6 +39,7 @@
 #include "../Zoom.h"
 
 
+#define FIND_WND_ID				"SnMFind"
 #define FIND_INI_SEC			"Find"
 #define MAX_SEARCH_STR_LEN		128
 
@@ -64,7 +65,7 @@ enum {
 	TYPE_MARKER_REGION
 };
 
-SNM_FindWnd* g_pFindWnd = NULL;
+SNM_WindowManager<SNM_FindWnd> g_findWndMgr(FIND_WND_ID);
 char g_searchStr[MAX_SEARCH_STR_LEN] = "";
 bool g_notFound=false;
 
@@ -131,7 +132,7 @@ bool TrackNotesMatch(MediaTrack* _tr, const char* _searchStr)
 ///////////////////////////////////////////////////////////////////////////////
 
 SNM_FindWnd::SNM_FindWnd()
-	: SWS_DockWnd(IDD_SNM_FIND, "Find", "SnMFind", SWSGetCommandID(OpenFind))
+	: SWS_DockWnd(IDD_SNM_FIND, "Find", FIND_WND_ID, SWSGetCommandID(OpenFind))
 {
 	m_type = 0;
 	m_zoomSrollItems = false;
@@ -319,7 +320,6 @@ void SNM_FindWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipH
 
 	if (drawLogo)
 		SNM_AddLogo(_bm, _r, x0, h);
-//		SNM_AddLogo2(&m_logo, _r, x0, h);
 
 	// 2nd row of controls
 	h = 45;
@@ -634,31 +634,31 @@ void SNM_FindWnd::UpdateNotFoundMsg(bool _found)
 
 int FindInit()
 {
-	// instanciate the window, if needed
-	if (SWS_LoadDockWndState("SnMFind"))
-		g_pFindWnd = new SNM_FindWnd();
+	// instanciate the window if needed, can be NULL
+	g_findWndMgr.CreateFromIni();
 	return 1;
 }
 
 void FindExit() {
-	DELETE_NULL(g_pFindWnd);
+	g_findWndMgr.Delete();
 }
 
 void OpenFind(COMMAND_T*)
 {
-	if (!g_pFindWnd)
-		g_pFindWnd = new SNM_FindWnd();
-	if (g_pFindWnd) {
-		g_pFindWnd->Show(true, true);
-		SetFocus(GetDlgItem(g_pFindWnd->GetHWND(), IDC_EDIT));
+	if (SNM_FindWnd* w = g_findWndMgr.CreateIfNeeded()) {
+		w->Show(true, true);
+		SetFocus(GetDlgItem(w->GetHWND(), IDC_EDIT));
 	}
 }
 
-int IsFindDisplayed(COMMAND_T*) {
-	return (g_pFindWnd && g_pFindWnd->IsValidWindow());
+int IsFindDisplayed(COMMAND_T*)
+{
+	if (SNM_FindWnd* w = g_findWndMgr.Get())
+		return w->IsValidWindow();
+	return 0;
 }
 
 void FindNextPrev(COMMAND_T* _ct) {
-	if (g_pFindWnd)
-		g_pFindWnd->Find((int)_ct->user); 
+	if (SNM_FindWnd* w = g_findWndMgr.Get())
+		w->Find((int)_ct->user); 
 }

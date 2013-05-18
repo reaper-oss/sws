@@ -42,6 +42,8 @@
 #include "../reaper/localize.h"
 
 
+#define RES_WND_ID					"SnMResources"
+#define IMG_WND_ID					"SnMImage"
 #define RES_INI_SEC					"Resources"
 
 // common cmds
@@ -116,7 +118,7 @@
 #define THM_LOAD_MSG				0xF080 
 // (newer) common cmds
 #define LOAD_TIED_PRJ_MSG			0xF090
-#define LOAD_TIED_TAB_MSG			0xF091
+#define LOAD_TIED_PRJ_TAB_MSG		0xF091
 #define COPY_BOOKMARK_MSG			0xF092
 #define DEL_BOOKMARK_MSG			0xF093
 #define REN_BOOKMARK_MSG			0xF094
@@ -182,7 +184,8 @@ enum {
   COL_COUNT
 };
 
-SNM_ResourceWnd* g_SNM_ResourcesWnd = NULL;
+
+SNM_WindowManager<SNM_ResourceWnd> g_resWndMgr(RES_WND_ID);
 
 // JFB important notes:
 // all global WDL_PtrList vars used to be WDL_PtrList_DeleteOnDestroy ones but
@@ -578,7 +581,20 @@ void FileSlotList::EditSlot(int _slot)
 	{
 		char fullPath[SNM_MAX_PATH] = "";
 		if (GetFullPath(_slot, fullPath, sizeof(fullPath)) && FileOrDirExistsErrMsg(fullPath))
-			ShellExecute(GetMainHwnd(), "open", fullPath, NULL, NULL, SW_SHOWNORMAL);
+		{
+			if (IsText())
+			{
+				WDL_FastString txt;
+				if (LoadChunk(fullPath, &txt, false))
+				{
+					char title[128] = "";
+					_snprintfSafe(title, sizeof(title), __LOCALIZE_VERFMT("S&M - %s (slot %d)","sws_DLG_150"), m_desc.Get(), _slot+1);
+					SNM_ShowMsg(txt.Get(), title);
+				}
+			}
+			else
+				ShellExecute(GetMainHwnd(), "open", fullPath, NULL, NULL, SW_SHOWNORMAL);
+		}
 	}
 }
 
@@ -687,7 +703,7 @@ void SNM_ResourceView::SetItemText(SWS_ListItem* item, int iCol, const char* str
 						{
 							char msg[SNM_MAX_PATH]="";
 							_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("File already exists. Overwrite ?\n%s","sws_mbox"), newFn);
-							int res = MessageBox(g_SNM_ResourcesWnd?g_SNM_ResourcesWnd->GetHWND():GetMainHwnd(), msg, __LOCALIZE("S&M - Warning","sws_DLG_150"), MB_YESNO);
+							int res = MessageBox(g_resWndMgr.GetMsgHWND(), msg, __LOCALIZE("S&M - Warning","sws_DLG_150"), MB_YESNO);
 							if (res == IDYES)
 							{
 								if (SNM_DeleteFile(newFn, false))
@@ -938,7 +954,7 @@ void SNM_ResourceView::Perform()
 ///////////////////////////////////////////////////////////////////////////////
 
 SNM_ResourceWnd::SNM_ResourceWnd()
-	: SWS_DockWnd(IDD_SNM_RESOURCES, __LOCALIZE("Resources","sws_DLG_150"), "SnMResources", SWSGetCommandID(OpenResources))
+	: SWS_DockWnd(IDD_SNM_RESOURCES, __LOCALIZE("Resources","sws_DLG_150"), RES_WND_ID, SWSGetCommandID(OpenResources))
 {
 	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();
@@ -1329,9 +1345,9 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		// new bookmark cmds are in an interval of cmds: see "default" case below..
 
 		case LOAD_TIED_PRJ_MSG:
-		case LOAD_TIED_TAB_MSG:
+		case LOAD_TIED_PRJ_TAB_MSG:
 			if (g_tiedProjects.Get(g_resType)->GetLength())
-				LoadOrSelectProject(g_tiedProjects.Get(g_resType)->Get(), LOWORD(wParam)==LOAD_TIED_TAB_MSG);
+				LoadOrSelectProject(g_tiedProjects.Get(g_resType)->Get(), LOWORD(wParam)==LOAD_TIED_PRJ_TAB_MSG);
 			break;
 		case TIE_ACTIONS_MSG:
 			g_SNM_TiedSlotActions[GetTypeForUser()] = g_resType;
@@ -1729,10 +1745,14 @@ HMENU SNM_ResourceWnd::OnContextMenu(int _x, int _y, bool* _wantDefaultItems)
 				*_wantDefaultItems = false;
 				return BookmarkContextMenu(hMenu);
 			case TXTID_TIED_PRJ:
-				*_wantDefaultItems = false;
-				AddToMenu(hMenu, PRJ_SELECT_LOAD_STR, LOAD_TIED_PRJ_MSG);
-				AddToMenu(hMenu, PRJ_SELECT_LOAD_TAB_STR, LOAD_TIED_TAB_MSG);
-				return hMenu;
+				if (g_tiedProjects.Get(g_resType)->GetLength())
+				{
+					*_wantDefaultItems = false;
+					AddToMenu(hMenu, PRJ_SELECT_LOAD_STR, LOAD_TIED_PRJ_MSG);
+					AddToMenu(hMenu, PRJ_SELECT_LOAD_TAB_STR, LOAD_TIED_PRJ_TAB_MSG);
+					return hMenu;
+				}
+				break;
 		}
 	}
 
@@ -2286,7 +2306,7 @@ bool CheckSetAutoDirectory(const char* _title, int _type, bool _autoSave)
 	{
 		char buf[SNM_MAX_PATH] = "";
 		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("%s directory not found!\n%s%sDo you want to define one ?","sws_DLG_150"), _title, dir->Get(), dir->GetLength()?"\n":"");
-		if (IDYES == MessageBox(g_SNM_ResourcesWnd?g_SNM_ResourcesWnd->GetHWND():GetMainHwnd(), buf, __LOCALIZE("S&M - Warning","sws_DLG_150"), MB_YESNO)) {
+		if (IDYES == MessageBox(g_resWndMgr.GetMsgHWND(), buf, __LOCALIZE("S&M - Warning","sws_DLG_150"), MB_YESNO)) {
 			if (BrowseForDirectory(_autoSave ? __LOCALIZE("Set auto-save directory","sws_DLG_150") : __LOCALIZE("Set auto-fill directory","sws_DLG_150"), GetResourcePath(), buf, sizeof(buf))) {
 				if (_autoSave) SetAutoSaveDir(buf, _type);
 				else SetAutoFillDir(buf, _type);
@@ -2371,17 +2391,18 @@ bool AutoSaveSlot(int _type, const char* _dirPath,
 //    - n/a otherwise
 void AutoSave(int _type, bool _promptOverwrite, int _flags)
 {
+	SNM_ResourceWnd* resWnd = g_resWndMgr.Get();
 	WDL_PtrList<PathSlotItem> owSlots; // slots to overwrite
 	WDL_PtrList<PathSlotItem> selFilledSlots;
 
 	// overwrite non empty slots?
 	int ow = IDNO;
-	if (g_SNM_ResourcesWnd)
-		g_SNM_ResourcesWnd->GetSelectedSlots(&selFilledSlots, &owSlots); // &owSlots: empty slots are systematically overwritten
+	if (resWnd)
+		resWnd->GetSelectedSlots(&selFilledSlots, &owSlots); // &owSlots: empty slots are systematically overwritten
 
 	if (selFilledSlots.GetSize() && _promptOverwrite)
 	{
-		ow = MessageBox(g_SNM_ResourcesWnd?g_SNM_ResourcesWnd->GetHWND():GetMainHwnd(),
+		ow = MessageBox(g_resWndMgr.GetMsgHWND(),
 				__LOCALIZE("Some selected slots are already filled, do you want to overwrite them?\n\nReplying \"Yes\" will overwite filled slots/files.\nReplying \"No\" will add new slots/files.","sws_DLG_150"),
 				__LOCALIZE("S&M - Confirmation","sws_DLG_150"),
 				MB_YESNOCANCEL);
@@ -2438,14 +2459,14 @@ void AutoSave(int _type, bool _promptOverwrite, int _flags)
 
 	if (saved)
 	{
-		if (g_SNM_ResourcesWnd && g_resType==_type)
+		if (resWnd && g_resType==_type)
 		{
-			g_SNM_ResourcesWnd->Update();
+			resWnd->Update();
 
 			// sel new slots
 			bool first = true;
 			if (oldSz != g_SNM_ResSlots.Get(_type)->GetSize()) {
-				g_SNM_ResourcesWnd->SelectBySlot(oldSz, g_SNM_ResSlots.Get(_type)->GetSize(), first);
+				resWnd->SelectBySlot(oldSz, g_SNM_ResSlots.Get(_type)->GetSize(), first);
 				first = false;
 			}
 			// sel overwriten slots
@@ -2453,7 +2474,7 @@ void AutoSave(int _type, bool _promptOverwrite, int _flags)
 			{
 				int slot = g_SNM_ResSlots.Get(_type)->Find(owSlots.Get(i));
 				if (slot >= 0) {
-					g_SNM_ResourcesWnd->SelectBySlot(slot, slot, first);
+					resWnd->SelectBySlot(slot, slot, first);
 					first = false;
 				}
 			}
@@ -2463,7 +2484,7 @@ void AutoSave(int _type, bool _promptOverwrite, int _flags)
 	{
 		char msg[SNM_MAX_PATH];
 		_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Auto-save failed!\n%s","sws_DLG_150"), AUTOSAVE_ERR_STR);
-		MessageBox(g_SNM_ResourcesWnd?g_SNM_ResourcesWnd->GetHWND():GetMainHwnd(), msg, __LOCALIZE("S&M - Error","sws_DLG_150"), MB_OK);
+		MessageBox(g_resWndMgr.GetMsgHWND(), msg, __LOCALIZE("S&M - Error","sws_DLG_150"), MB_OK);
 	}
 }
 
@@ -2493,10 +2514,11 @@ void AutoFill(int _type)
 
 	if (startSlot != fl->GetSize())
 	{
-		if (g_SNM_ResourcesWnd && g_resType==_type) {
-			g_SNM_ResourcesWnd->Update();
-			g_SNM_ResourcesWnd->SelectBySlot(startSlot, g_SNM_ResSlots.Get(_type)->GetSize());
-		}
+		if (g_resType==_type)
+			if (SNM_ResourceWnd* w = g_resWndMgr.Get()) {
+				w->Update();
+				w->SelectBySlot(startSlot, g_SNM_ResSlots.Get(_type)->GetSize());
+			}
 	}
 	else
 	{
@@ -2504,7 +2526,7 @@ void AutoFill(int _type)
 		char msg[SNM_MAX_PATH]="";
 		if (path && *path) _snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("No slot added from: %s\n%s","sws_DLG_150"), path, AUTOFILL_ERR_STR);
 		else _snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("No slot added!\n%s","sws_DLG_150"), AUTOFILL_ERR_STR);
-		MessageBox(g_SNM_ResourcesWnd?g_SNM_ResourcesWnd->GetHWND():GetMainHwnd(), msg, __LOCALIZE("S&M - Warning","sws_DLG_150"), MB_OK);
+		MessageBox(g_resWndMgr.GetMsgHWND(), msg, __LOCALIZE("S&M - Warning","sws_DLG_150"), MB_OK);
 	}
 }
 
@@ -2618,8 +2640,9 @@ WDL_FastString* GetOrPromptOrBrowseSlot(int _type, int* _slot)
 		}
 	}
 
-	if (uiUpdate && g_SNM_ResourcesWnd && g_resType==_type)
-		g_SNM_ResourcesWnd->Update();
+	if (uiUpdate && g_resType==_type)
+		if (SNM_ResourceWnd* w = g_resWndMgr.Get())
+			w->Update();
 
 	if (!fnStr)
 		*_slot = -1;
@@ -2637,8 +2660,9 @@ void ClearSlot(int _type, int _slot)
 		if (fl->ClearSlot(_slot))
 		{
 			UntieResFileFromProject(untiePath, _type);
-			if (g_SNM_ResourcesWnd && g_resType==_type)
-				g_SNM_ResourcesWnd->Update();
+			if (g_resType==_type)
+				if (SNM_ResourceWnd* w = g_resWndMgr.Get())
+					w->Update();
 		}
 	}
 }
@@ -2653,16 +2677,17 @@ void ClearDeleteSlotsFiles(int _type, int _mode)
 	if (!fl)
 		return;
 
+	SNM_ResourceWnd* resWnd = g_resWndMgr.Get();
 	int oldSz = fl->GetSize();
 
 	WDL_PtrList<int> slots;
 	while (slots.GetSize() != fl->GetSize())
 		slots.Add(_mode&8 ? &g_i1 : &g_i0);
 
-	int x=0;
-	if (g_SNM_ResourcesWnd && (_mode&1 || _mode&2))
+	if (resWnd && (_mode&1 || _mode&2))
 	{
-		SWS_ListView* lv = g_SNM_ResourcesWnd->GetListView();
+		int x=0;
+		SWS_ListView* lv = resWnd->GetListView();
 		while(PathSlotItem* item = (PathSlotItem*)lv->EnumSelected(&x))
 		{
 			int slot = fl->Find(item);
@@ -2699,8 +2724,8 @@ void ClearDeleteSlotsFiles(int _type, int _mode)
 		}
 	}
 
-	if (g_SNM_ResourcesWnd && g_resType==_type)
-		g_SNM_ResourcesWnd->Update();
+	if (resWnd && g_resType==_type)
+		resWnd->Update();
 
 } // + delItems auto clean-up !
 
@@ -2833,7 +2858,7 @@ void NewBookmark(int _type, bool _copyCurrent)
 			_snprintfSafe(input, sizeof(input), __LOCALIZE_VERFMT("My %s slots","sws_DLG_150"), g_SNM_ResSlots.Get(GetTypeForUser(_type))->GetDesc());
 
 		if (int saveOption = PromptUserForString(
-				g_SNM_ResourcesWnd?g_SNM_ResourcesWnd->GetHWND():GetMainHwnd(),
+				g_resWndMgr.GetMsgHWND(),
 				_copyCurrent ? __LOCALIZE("S&M - Copy bookmark","sws_DLG_150") : __LOCALIZE("S&M - Add bookmark","sws_DLG_150"),
 				input, sizeof(input),
 				true,
@@ -2852,7 +2877,7 @@ void NewBookmark(int _type, bool _copyCurrent)
 					msg.Append(__LOCALIZE("Expected format: resource_directory_name,description,file_extensions","sws_DLG_150"));
 					msg.Append("\n");
 					msg.Append(__LOCALIZE("Example: Docs,Document,txt,rtf,pdf","sws_DLG_150"));
-					MessageBox(g_SNM_ResourcesWnd?g_SNM_ResourcesWnd->GetHWND():GetMainHwnd(), msg.Get(), __LOCALIZE("S&M - Error","sws_DLG_150"), MB_OK);
+					MessageBox(g_resWndMgr.GetMsgHWND(), msg.Get(), __LOCALIZE("S&M - Error","sws_DLG_150"), MB_OK);
 					return;
 				}
 			}
@@ -2864,7 +2889,7 @@ void NewBookmark(int _type, bool _copyCurrent)
 					WDL_FastString msg(__LOCALIZE("Invalid bookmark name!","sws_DLG_150"));
 					msg.Append("\n");
 					msg.Append(__LOCALIZE("Note: bookmark names cannot contain the character ,","sws_DLG_150"));
-					MessageBox(g_SNM_ResourcesWnd?g_SNM_ResourcesWnd->GetHWND():GetMainHwnd(), msg.Get(), __LOCALIZE("S&M - Error","sws_DLG_150"), MB_OK);
+					MessageBox(g_resWndMgr.GetMsgHWND(), msg.Get(), __LOCALIZE("S&M - Error","sws_DLG_150"), MB_OK);
 					return;
 				}
 
@@ -2949,14 +2974,14 @@ void NewBookmark(int _type, bool _copyCurrent)
 							g_SNM_ResSlots.Get(newType)->AddSlot(slotItem->m_shortPath.Get(), slotItem->m_comment.Get());
 			}
 
-			if (g_SNM_ResourcesWnd) {
-				g_SNM_ResourcesWnd->FillTypeCombo();
-				g_SNM_ResourcesWnd->SetType(newType); // incl. UI update
+			if (SNM_ResourceWnd* w = g_resWndMgr.Get()) {
+				w->FillTypeCombo();
+				w->SetType(newType); // incl. UI update
 			}
 		}
 	}
 	else
-		MessageBox(g_SNM_ResourcesWnd?g_SNM_ResourcesWnd->GetHWND():GetMainHwnd(), __LOCALIZE("Too many resource types!","sws_DLG_150"), __LOCALIZE("S&M - Error","sws_DLG_150"), MB_OK);
+		MessageBox(g_resWndMgr.GetMsgHWND(), __LOCALIZE("Too many resource types!","sws_DLG_150"), __LOCALIZE("S&M - Error","sws_DLG_150"), MB_OK);
 }
 
 void DeleteBookmark(int _bookmarkType)
@@ -2968,7 +2993,7 @@ void DeleteBookmark(int _bookmarkType)
 		{
 			char title[128] = "";
 			_snprintfSafe(title, sizeof(title), __LOCALIZE_VERFMT("S&M - Delete bookmark \"%s\"","sws_DLG_150"), g_SNM_ResSlots.Get(_bookmarkType)->GetDesc());
-			reply = MessageBox(g_SNM_ResourcesWnd?g_SNM_ResourcesWnd->GetHWND():GetMainHwnd(), __LOCALIZE("Delete all resource files too?","sws_DLG_150"), title, MB_YESNOCANCEL);
+			reply = MessageBox(g_resWndMgr.GetMsgHWND(), __LOCALIZE("Delete all resource files too?","sws_DLG_150"), title, MB_YESNOCANCEL);
 		}
 		if (reply != IDCANCEL)
 		{
@@ -2988,9 +3013,9 @@ void DeleteBookmark(int _bookmarkType)
 			g_syncAutoDirPrefs[oldType] = true;
 			g_SNM_ResSlots.Delete(oldType, true);
 
-			if (g_SNM_ResourcesWnd) {
-				g_SNM_ResourcesWnd->FillTypeCombo();
-				g_SNM_ResourcesWnd->SetType(oldType-1); // + GUI update
+			if (SNM_ResourceWnd* w = g_resWndMgr.Get()) {
+				w->FillTypeCombo();
+				w->SetType(oldType-1); // + GUI update
 			}
 		}
 	}
@@ -3002,12 +3027,12 @@ void RenameBookmark(int _bookmarkType)
 	{
 		char newName[64] = "";
 		lstrcpyn(newName, g_SNM_ResSlots.Get(_bookmarkType)->GetDesc(), sizeof(newName));
-		if (PromptUserForString(g_SNM_ResourcesWnd?g_SNM_ResourcesWnd->GetHWND():GetMainHwnd(), __LOCALIZE("S&M - Rename bookmark","sws_DLG_150"), newName, sizeof(newName), true) && *newName)
+		if (PromptUserForString(g_resWndMgr.GetMsgHWND(), __LOCALIZE("S&M - Rename bookmark","sws_DLG_150"), newName, sizeof(newName), true) && *newName)
 		{
 			g_SNM_ResSlots.Get(_bookmarkType)->SetDesc(newName);
-			if (g_SNM_ResourcesWnd) {
-				g_SNM_ResourcesWnd->FillTypeCombo();
-				g_SNM_ResourcesWnd->Update();
+			if (SNM_ResourceWnd* w = g_resWndMgr.Get()) {
+				w->FillTypeCombo();
+				w->Update();
 			}
 		}
 	}
@@ -3025,7 +3050,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 		IsActiveProjectInLoadSave(path, sizeof(path)) && // saving current project?
 		_stricmp(path, g_curProjectFn)) // saving current project as new_name.rpp?
 	{
-//JFB!!! TODO: auto-export if tied (+ msg?)
+//JFB!!! TODO? auto-export if tied? (+ msg?)
 		SNM_AddOrReplaceScheduledJob(new ResourcesAttachJob());
 	}
 }
@@ -3033,6 +3058,59 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 static project_config_extension_t s_projectconfig = {
 	NULL, SaveExtensionConfig, NULL, NULL
 };
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+// detect project switches (incl. save as new_name.RPP) and detach/re-attach everything
+void ResourcesAttachJob::Perform()
+{
+	char newProjectFn[SNM_MAX_PATH]="";
+	if (ReaProject* newProject = EnumProjects(-1, newProjectFn, sizeof(newProjectFn)))
+	{
+		// do the job only if needed (track project switches)
+		if (_stricmp(g_curProjectFn, newProjectFn))
+		{
+			// detach all files of all bookmarks from previous active project, if any
+			UntieAllResFileFromProject(g_curProject, g_curProjectFn);
+
+			// attach files to new active project
+			TieAllResFileToProject(newProject, newProjectFn);
+
+			// set new current project
+			g_curProject = newProject;
+			lstrcpyn(g_curProjectFn, newProjectFn, sizeof(g_curProjectFn));
+
+			// UI update (tied project display + alpha/plain text)
+			if (g_resType>=SNM_NUM_DEFAULT_SLOTS)
+				if (SNM_ResourceWnd* w = g_resWndMgr.Get())
+					w->GetParentVWnd()->RequestRedraw(NULL);
+		}
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+// this is our only notification of active project tab change, so attach/detach everything
+// ScheduledJob used because of multi-notifs
+void ResourcesTrackListChange()
+{
+/*no! replaced with code below fixes a potential hang when closing project tabs
+	SNM_AddOrReplaceScheduledJob(new ResourcesAttachJob());
+*/
+	ResourcesAttachJob job;
+	job.Perform();
+}
+
+void ResourcesUpdate() {
+	if (SNM_ResourceWnd* w = g_resWndMgr.Get())
+		w->Update();
+}
+void ResourcesSelectBySlot(int _slot1, int _slot2, bool _selectOnly) {
+	if (SNM_ResourceWnd* w = g_resWndMgr.Get())
+		w->SelectBySlot(_slot1, _slot2, _selectOnly);
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3157,9 +3235,8 @@ int ResourcesInit()
 		}
 	}
 
-	// instanciate the window, if needed
-	if (SWS_LoadDockWndState("SnMResources"))
-		g_SNM_ResourcesWnd = new SNM_ResourceWnd();
+	// instanciate the window if needed, can be NULL
+	g_resWndMgr.CreateFromIni();
 
 	if (!plugin_register("projectconfig", &s_projectconfig))
 		return 0;
@@ -3270,44 +3347,7 @@ void ResourcesExit()
 		SaveIniSection(iniSections.Get(i)->Get(), &iniStr, g_SNM_IniFn.Get());
 	}
 
-	DELETE_NULL(g_SNM_ResourcesWnd);
-}
-
-// detect project switches (incl. save as new_name.RPP) and detach/re-attach everything
-void ResourcesAttachJob::Perform()
-{
-	char newProjectFn[SNM_MAX_PATH]="";
-	if (ReaProject* newProject = EnumProjects(-1, newProjectFn, sizeof(newProjectFn)))
-	{
-		// do the job only if needed (track project switches)
-		if (_stricmp(g_curProjectFn, newProjectFn))
-		{
-			// detach all files of all bookmarks from previous active project, if any
-			UntieAllResFileFromProject(g_curProject, g_curProjectFn);
-
-			// attach files to new active project
-			TieAllResFileToProject(newProject, newProjectFn);
-
-			// set new current project
-			g_curProject = newProject;
-			lstrcpyn(g_curProjectFn, newProjectFn, sizeof(g_curProjectFn));
-
-			// UI update (tied project display + alpha/plain text)
-			if (g_SNM_ResourcesWnd && g_resType>=SNM_NUM_DEFAULT_SLOTS)
-				g_SNM_ResourcesWnd->GetParentVWnd()->RequestRedraw(NULL);
-		}
-	}
-}
-
-// this is our only notification of active project tab change, so attach/detach everything
-// ScheduledJob used because of multi-notifs
-void ResourcesTrackListChange()
-{
-/*JFB!!! fix when closing project tabs
-	SNM_AddOrReplaceScheduledJob(new ResourcesAttachJob());
-*/
-	ResourcesAttachJob job;
-	job.Perform();
+	g_resWndMgr.Delete();
 }
 
 
@@ -3317,21 +3357,21 @@ void ResourcesTrackListChange()
 
 void OpenResources(COMMAND_T* _ct)
 {
-	if (!g_SNM_ResourcesWnd)
-		g_SNM_ResourcesWnd = new SNM_ResourceWnd();
-	if (g_SNM_ResourcesWnd) 
+	if (SNM_ResourceWnd* w = g_resWndMgr.CreateIfNeeded()) 
 	{
 		int newType = (int)_ct->user; // -1 means toggle current type
 		if (newType == -1)
 			newType = g_resType;
-		g_SNM_ResourcesWnd->Show((g_resType == newType) /* i.e toggle */, true);
-		g_SNM_ResourcesWnd->SetType(newType);
-//		SetFocus(GetDlgItem(g_SNM_ResourcesWnd->GetHWND(), IDC_FILTER));
+		w->Show(g_resType == newType /* i.e toggle */, true);
+		w->SetType(newType);
+//		SetFocus(GetDlgItem(w->GetHWND(), IDC_FILTER));
 	}
 }
 
 int IsResourcesDisplayed(COMMAND_T* _ct) {
-	return (g_SNM_ResourcesWnd && g_SNM_ResourcesWnd->IsValidWindow());
+	if (SNM_ResourceWnd* w = g_resWndMgr.Get())
+		return w->IsValidWindow();
+	return 0;
 }
 
 void ResourcesDeleteAllSlots(COMMAND_T* _ct) {
@@ -3406,8 +3446,11 @@ void ResourcesAutoSave(COMMAND_T* _ct)
 // ReaScript export
 ///////////////////////////////////////////////////////////////////////////////
 
-int SNM_SelectResourceBookmark(const char* _name) {
-		return g_SNM_ResourcesWnd ? g_SNM_ResourcesWnd->SetType(_name) : -1;
+int SNM_SelectResourceBookmark(const char* _name)
+{
+	if (SNM_ResourceWnd* w = g_resWndMgr.Get())
+		return w->SetType(_name);
+	return -1;
 }
 
 void SNM_TieResourceSlotActions(int _bookmarkId) {
@@ -3423,11 +3466,12 @@ void SNM_TieResourceSlotActions(int _bookmarkId) {
 
 #define IMGID	2000 //JFB would be great to have _APS_NEXT_CONTROL_VALUE *always* defined
 
-SNM_ImageWnd* g_pImageWnd = NULL;
+SNM_WindowManager<SNM_ImageWnd> g_imgWndMgr(IMG_WND_ID);
+
 bool g_stretchPref = false;
 
 SNM_ImageWnd::SNM_ImageWnd()
-	: SWS_DockWnd(IDD_SNM_IMAGE, __LOCALIZE("Image","sws_DLG_162"), "SnMImage", SWSGetCommandID(OpenImageWnd))
+	: SWS_DockWnd(IDD_SNM_IMAGE, __LOCALIZE("Image","sws_DLG_162"), IMG_WND_ID, SWSGetCommandID(OpenImageWnd))
 {
 	m_stretch = g_stretchPref;
 
@@ -3498,58 +3542,60 @@ int ImageInit()
 	// load prefs
 	g_stretchPref = (GetPrivateProfileInt("ImageView", "Stretch", 0, g_SNM_IniFn.Get()) == 1);
 
-	// instanciate the window, if needed
-	if (SWS_LoadDockWndState("SnMImage"))
-		g_pImageWnd = new SNM_ImageWnd();
+	// instanciate the window if needed, can be NULL
+	g_imgWndMgr.CreateFromIni();
+
 	return 1;
 }
 
 void ImageExit()
 {
 	// save prefs
-	if (g_pImageWnd)
-		WritePrivateProfileString("ImageView", "Stretch", g_pImageWnd->IsStretched()?"1":"0", g_SNM_IniFn.Get()); 
-	DELETE_NULL(g_pImageWnd);
+	if (SNM_ImageWnd* w = g_imgWndMgr.Get())
+		WritePrivateProfileString("ImageView", "Stretch", w->IsStretched()?"1":"0", g_SNM_IniFn.Get()); 
+
+	g_imgWndMgr.Delete();
 }
 
 void OpenImageWnd(COMMAND_T* _ct)
 {
-	if (!g_pImageWnd) {
-		g_pImageWnd = new SNM_ImageWnd();
-		g_pImageWnd->SetStretch(g_stretchPref);
-	}
-
-	if (g_pImageWnd) {
-		g_pImageWnd->Show(true, true);
-		g_pImageWnd->RequestRedraw();
+	bool isNew;
+	if (SNM_ImageWnd* w = g_imgWndMgr.CreateIfNeeded(&isNew))
+	{
+		if (isNew)
+			w->SetStretch(g_stretchPref);
+		w->Show(true, true);
+		w->RequestRedraw();
 	}
 }
 
 bool OpenImageWnd(const char* _fn)
 {
-	bool ok = false;
-	if (!g_pImageWnd) {
-		g_pImageWnd = new SNM_ImageWnd();
-		g_pImageWnd->SetStretch(g_stretchPref);
-	}
-	if (g_pImageWnd)
+	bool isNew, ok = false;
+	if (SNM_ImageWnd* w = g_imgWndMgr.CreateIfNeeded(&isNew))
 	{
+		if (isNew)
+			w->SetStretch(g_stretchPref);
+
 		ok = true;
-		WDL_FastString prevFn(g_pImageWnd->GetFilename());
-		g_pImageWnd->SetImage(_fn && *_fn ? _fn : NULL); // NULL clears the current image
-		g_pImageWnd->Show(!strcmp(prevFn.Get(), _fn) /* i.e toggle */, true);
-		g_pImageWnd->RequestRedraw();
+		WDL_FastString prevFn(w->GetFilename());
+		w->SetImage(_fn && *_fn ? _fn : NULL); // NULL clears the current image
+		w->Show(!strcmp(prevFn.Get(), _fn) /* i.e toggle */, true);
+		w->RequestRedraw();
 	}
 	return ok;
 }
 
 void ClearImageWnd(COMMAND_T*) {
-	if (g_pImageWnd) {
-		g_pImageWnd->SetImage(NULL);
-		g_pImageWnd->RequestRedraw();
+	if (SNM_ImageWnd* w = g_imgWndMgr.Get()) {
+		w->SetImage(NULL);
+		w->RequestRedraw();
 	}
 }
 
-bool IsImageWndDisplayed(COMMAND_T*){
-	return (g_pImageWnd && g_pImageWnd->IsValidWindow());
+int IsImageWndDisplayed(COMMAND_T*)
+{
+	if (SNM_ImageWnd* w = g_imgWndMgr.Get())
+		return w->IsValidWindow();
+	return 0;
 }

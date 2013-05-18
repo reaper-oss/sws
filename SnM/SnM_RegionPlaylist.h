@@ -99,7 +99,6 @@ public:
 	void Update(int _flags = 0, WDL_FastString* _curNum=NULL, WDL_FastString* _cur=NULL, WDL_FastString* _nextNum=NULL, WDL_FastString* _next=NULL);
 	void UpdateMonitoring(WDL_FastString* _curNum=NULL, WDL_FastString* _cur=NULL, WDL_FastString* _nextNum=NULL, WDL_FastString* _next=NULL);
 	void FillPlaylistCombo();
-	void CSurfSetTrackListChange();
 	void ToggleLock();
 protected:
 	void OnInitDlg();
@@ -130,8 +129,6 @@ public:
 	void Perform();
 };
 
-extern SNM_RegionPlaylistWnd* g_SNM_RgnPlaylistWnd;
-
 int GetNextValidItem(int _playlistId, int _itemId, bool _startWith, bool _repeat);
 int GetPrevValidItem(int _playlistId, int _itemId, bool _startWith, bool _repeat);
 bool SeekItem(int _plId, int _nextItemId, int _curItemId);
@@ -148,6 +145,8 @@ int IsPlaylistRepeat(COMMAND_T*);
 
 void AppendPasteCropPlaylist(SNM_Playlist* _playlist, int _mode);
 void AppendPasteCropPlaylist(COMMAND_T*);
+
+void RegionPlaylistSetTrackListChange();
 
 int RegionPlaylistInit();
 void RegionPlaylistExit();

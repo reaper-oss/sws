@@ -49,6 +49,7 @@
 #include "../reaper/localize.h"
 
 
+#define NOTES_WND_ID				"SnMNotesHelp"
 #define NOTES_INI_SEC				"Notes"
 #define MAX_HELP_LENGTH				4096 //JFB instead of MAX_INI_SECTION (too large)
 #define SET_ACTION_HELP_FILE_MSG	0xF001
@@ -71,7 +72,8 @@ enum {
 };
 
 
-SNM_NotesWnd* g_SNM_NotesWnd = NULL;
+SNM_WindowManager<SNM_NotesWnd> g_notesWndMgr(NOTES_WND_ID);
+
 SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_SNM_TrackNotes;
 SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_RegionSubtitle> > g_pRegionSubs; // for markers too..
 SWSProjConfig<WDL_FastString> g_prjNotes;
@@ -108,7 +110,7 @@ bool g_internalMkrRgnChange = false;
 ///////////////////////////////////////////////////////////////////////////////
 
 SNM_NotesWnd::SNM_NotesWnd()
-	: SWS_DockWnd(IDD_SNM_NOTES, __LOCALIZE("Notes","sws_DLG_152"), "SnMNotesHelp", SWSGetCommandID(OpenNotes))
+	: SWS_DockWnd(IDD_SNM_NOTES, __LOCALIZE("Notes","sws_DLG_152"), NOTES_WND_ID, SWSGetCommandID(OpenNotes))
 {
 	// must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();
@@ -227,17 +229,6 @@ void SNM_NotesWnd::RefreshGUI()
 	}
 	ShowWindow(GetDlgItem(m_hwnd, IDC_EDIT), bHide || g_locked ? SW_HIDE : SW_SHOW);
 	m_parentVwnd.RequestRedraw(NULL); // the meat!
-}
-
-void SNM_NotesWnd::CSurfSetTrackTitle() {
-	if (g_notesViewType == SNM_NOTES_TRACK)
-		RefreshGUI();
-}
-
-// this is our only notification of active project tab change, so update everything
-// (ScheduledJob because of multi-notifs)
-void SNM_NotesWnd::CSurfSetTrackListChange() {
-	SNM_AddOrReplaceScheduledJob(new NotesUpdateJob());
 }
 
 void SNM_NotesWnd::OnCommand(WPARAM wParam, LPARAM lParam)
@@ -1021,8 +1012,8 @@ bool GetNotesChunkFromString(const char* _bufIn, WDL_FastString* _notesOut, cons
 ///////////////////////////////////////////////////////////////////////////////
 
 void NotesUpdateJob::Perform() {
-	if (g_SNM_NotesWnd)
-		g_SNM_NotesWnd->Update(true);
+	if (SNM_NotesWnd* w = g_notesWndMgr.Get())
+		w->Update(true);
 }
 
 
@@ -1324,6 +1315,22 @@ static project_config_extension_t s_projectconfig = {
 
 ///////////////////////////////////////////////////////////////////////////////
 
+void NotesSetTrackTitle()
+{
+	if (g_notesViewType == SNM_NOTES_TRACK)
+		if (SNM_NotesWnd* w = g_notesWndMgr.Get())
+			w->RefreshGUI();
+}
+
+// this is our only notification of active project tab change, so update everything
+// (ScheduledJob because of multi-notifs)
+void NotesSetTrackListChange() {
+	SNM_AddOrReplaceScheduledJob(new NotesUpdateJob());
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+
 int NotesInit()
 {
 	lstrcpyn(g_lastImportSubFn, GetResourcePath(), sizeof(g_lastImportSubFn));
@@ -1340,9 +1347,8 @@ int NotesInit()
 		*defaultHelpFn = '\0';
 	GetPrivateProfileString(NOTES_INI_SEC, "Action_help_file", defaultHelpFn, g_actionHelpFn, sizeof(g_actionHelpFn), g_SNM_IniFn.Get());
 
-	// instanciate the window, if needed
-	if (SWS_LoadDockWndState("SnMNotesHelp"))
-		g_SNM_NotesWnd = new SNM_NotesWnd();
+	// instanciate the window if needed, can be NULL
+	g_notesWndMgr.CreateFromIni();
 
 	if (!plugin_register("projectconfig", &s_projectconfig))
 		return 0;
@@ -1363,34 +1369,35 @@ void NotesExit()
 	makeEscapedConfigString(g_actionHelpFn, &escapedStr);
 	WritePrivateProfileString(NOTES_INI_SEC, "Action_help_file", escapedStr.Get(), g_SNM_IniFn.Get());
 
-	DELETE_NULL(g_SNM_NotesWnd);
+	g_notesWndMgr.Delete();
 }
 
 void OpenNotes(COMMAND_T* _ct)
 {
-	if (!g_SNM_NotesWnd)
-		g_SNM_NotesWnd = new SNM_NotesWnd();
-	if (g_SNM_NotesWnd)
+	if (SNM_NotesWnd* w = g_notesWndMgr.CreateIfNeeded())
 	{
 		int newType = (int)_ct->user; // -1 means toggle current type
 		if (newType == -1)
 			newType = g_notesViewType;
 
-		g_SNM_NotesWnd->Show(g_notesViewType == newType /* i.e toggle */, true);
-		g_SNM_NotesWnd->SetType(newType);
+		w->Show(g_notesViewType == newType /* i.e toggle */, true);
+		w->SetType(newType);
 
 		if (!g_locked)
-			SetFocus(GetDlgItem(g_SNM_NotesWnd->GetHWND(), IDC_EDIT));
+			SetFocus(GetDlgItem(w->GetHWND(), IDC_EDIT));
 	}
 }
 
-int IsNotesDisplayed(COMMAND_T* _ct) {
-	return (g_SNM_NotesWnd && g_SNM_NotesWnd->IsValidWindow());
+int IsNotesDisplayed(COMMAND_T* _ct)
+{
+	if (SNM_NotesWnd* w = g_notesWndMgr.Get())
+		return w->IsValidWindow();
+	return 0;
 }
 
 void ToggleNotesLock(COMMAND_T*) {
-	if (g_SNM_NotesWnd)
-		g_SNM_NotesWnd->ToggleLock();
+	if (SNM_NotesWnd* w = g_notesWndMgr.Get())
+		w->ToggleLock();
 }
 
 int IsNotesLocked(COMMAND_T*) {

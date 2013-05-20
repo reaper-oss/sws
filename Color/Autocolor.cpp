@@ -1024,16 +1024,18 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 	if (g_pACTracks.Get()->GetSize())
 	{
 		ctx->AddLine("<SWSAUTOCOLOR");
-		char str[128];
+		char str[SNM_MAX_CHUNK_LINE_LENGTH];
 		for (int i = 0; i < g_pACTracks.Get()->GetSize(); i++)
 		{
-			SWS_RuleTrack* rt = g_pACTracks.Get()->Get(i);
-			GUID g = GUID_NULL;
-			if (CSurf_TrackToID(rt->m_pTr, false))
-				g = *(GUID*)GetSetMediaTrackInfo(rt->m_pTr, "GUID", NULL);
-			guidToString(&g, str);
-			sprintf(str+strlen(str), " %d \"%s\"", rt->m_col, rt->m_icon.Get());
-			ctx->AddLine("%s",str);
+			if (SWS_RuleTrack* rt = g_pACTracks.Get()->Get(i))
+			{
+				GUID g = GUID_NULL;
+				if (CSurf_TrackToID(rt->m_pTr, false))
+					g = *(GUID*)GetSetMediaTrackInfo(rt->m_pTr, "GUID", NULL);
+				guidToString(&g, str);
+				if (_snprintfStrict(str+strlen(str), sizeof(str), " %d \"%s\"", rt->m_col, rt->m_icon.Get()) > 0)
+					ctx->AddLine("%s", str);
+			}
 		}
 		ctx->AddLine(">");
 	}

@@ -2,6 +2,7 @@ Fixes:
 +SWS/FNG: Compress/Expand amplitude of selected envelope points around midpoint (inconsistent behavior for playrate and width envelopes)
 +OSX: better fonts in S&M windows
 +Screenset fixes as reported http://forum.cockos.com/showpost.php?p=1172448&postcount=1283|here|
++Issue 576: fixed auto-icon crash
 
 !v2.3.0 #17 (April 30, 2013)
 <b>REAPER v4.33+ is required!</b>

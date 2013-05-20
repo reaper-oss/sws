@@ -1033,8 +1033,8 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 				if (CSurf_TrackToID(rt->m_pTr, false))
 					g = *(GUID*)GetSetMediaTrackInfo(rt->m_pTr, "GUID", NULL);
 				guidToString(&g, str);
-				if (_snprintfStrict(str+strlen(str), sizeof(str), " %d \"%s\"", rt->m_col, rt->m_icon.Get()) > 0)
-					ctx->AddLine("%s", str);
+				sprintf(str+strlen(str), " %d \"%s\"", rt->m_col, rt->m_icon.Get());
+				ctx->AddLine("%s", str);
 			}
 		}
 		ctx->AddLine(">");

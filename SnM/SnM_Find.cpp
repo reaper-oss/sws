@@ -150,14 +150,19 @@ void SNM_FindWnd::OnInitDlg()
 	m_type = GetPrivateProfileInt(FIND_INI_SEC, "Type", 0, g_SNM_IniFn.Get());
 	m_zoomSrollItems = (GetPrivateProfileInt(FIND_INI_SEC, "ZoomScrollToFoundItems", 0, g_SNM_IniFn.Get()) == 1);
 
+
+	LICE_CachedFont* font = SNM_GetThemeFont();
+
 	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
 	m_parentVwnd.SetRealParent(m_hwnd);
 	
 	m_txtScope.SetID(TXTID_SCOPE);
+	m_txtScope.SetFont(font);
 	m_txtScope.SetText("Find in:");
 	m_parentVwnd.AddChild(&m_txtScope);
 
 	m_btnEnableZommScroll.SetID(BTNID_ZOOM_SCROLL_EN);
+	m_btnEnableZommScroll.SetTextLabel("Zoom/Scroll", -1, font);
 	m_btnEnableZommScroll.SetCheckState(m_zoomSrollItems);
 	m_parentVwnd.AddChild(&m_btnEnableZommScroll);
 
@@ -171,6 +176,7 @@ void SNM_FindWnd::OnInitDlg()
 	m_parentVwnd.AddChild(&m_btnNext);
 
 	m_cbType.SetID(CMBID_TYPE);
+	m_cbType.SetFont(font);
 	m_cbType.AddItem("Item names");
 	m_cbType.AddItem("Item names (all takes)");
 	m_cbType.AddItem("Media filenames");
@@ -183,11 +189,10 @@ void SNM_FindWnd::OnInitDlg()
 	m_parentVwnd.AddChild(&m_cbType);
 
 	m_txtResult.SetID(TXTID_RESULT);
+	m_txtResult.SetFont(font);
 	m_txtResult.SetColors(LICE_RGBA(170,0,0,255));
 	m_parentVwnd.AddChild(&m_txtResult);
 
-//	m_logo.SetID(LOGOID);
-//	m_parentVwnd.AddChild(&m_logo);
 
 	g_notFound = false;
 //	*g_searchStr = 0;
@@ -285,8 +290,6 @@ int SNM_FindWnd::OnKey(MSG* _msg, int _iKeyState)
 
 void SNM_FindWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight)
 {
-	LICE_CachedFont* font = SNM_GetThemeFont();
-
 	// 1st row of controls
 	int x0 = _r->left + SNM_GUI_X_MARGIN_OLD;
 	int h = SNM_GUI_TOP_H;
@@ -294,11 +297,9 @@ void SNM_FindWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipH
 		*_tooltipHeight = h;
 	bool drawLogo = false;
 
-	m_txtScope.SetFont(font);
 	if (!SNM_AutoVWndPosition(DT_LEFT, &m_txtScope, NULL, _r, &x0, _r->top, h, 5))
 		return;
 
-	m_cbType.SetFont(font);
 	if (SNM_AutoVWndPosition(DT_LEFT, &m_cbType, &m_txtScope, _r, &x0, _r->top, h))
 	{
 		switch (m_type)
@@ -309,7 +310,6 @@ void SNM_FindWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipH
 			case TYPE_ITEM_FILENAME_ALL_TAKES:
 			case TYPE_ITEM_NOTES:
 				m_btnEnableZommScroll.SetCheckState(m_zoomSrollItems);
-				m_btnEnableZommScroll.SetTextLabel("Zoom/Scroll", -1, font);
 				drawLogo = SNM_AutoVWndPosition(DT_LEFT, &m_btnEnableZommScroll, NULL, _r, &x0, _r->top, h);
 				break;
 			default:
@@ -340,7 +340,6 @@ void SNM_FindWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipH
 		}
 	}
 
-	m_txtResult.SetFont(font);
 	m_txtResult.SetText(g_notFound ? "Not found!" : "");
 	SNM_AutoVWndPosition(DT_LEFT, &m_txtResult, NULL, _r, &x0, y0, h);
 }

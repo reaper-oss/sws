@@ -55,7 +55,6 @@ protected:
 	WDL_VirtualIconButton m_btnEnableZommScroll;
 	WDL_VirtualStaticText m_txtScope, m_txtResult;
 	SNM_ToolbarButton m_btnFind, m_btnPrev, m_btnNext;
-//	SNM_Logo m_logo;
 
 	int m_type;
 	bool m_zoomSrollItems;

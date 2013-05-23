@@ -125,6 +125,8 @@ void SNM_NotesWnd::OnInitDlg()
 	m_resize.init_item(IDC_EDIT, 0.0, 0.0, 1.0, 1.0);
 	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_EDIT), GWLP_USERDATA, 0xdeadf00b);
 
+	LICE_CachedFont* font = SNM_GetThemeFont();
+
 	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
 	m_parentVwnd.SetRealParent(m_hwnd);
 
@@ -132,6 +134,7 @@ void SNM_NotesWnd::OnInitDlg()
 	m_parentVwnd.AddChild(&m_btnLock);
 
 	m_cbType.SetID(CMBID_TYPE);
+	m_cbType.SetFont(font);
 	m_cbType.AddItem(__LOCALIZE("Project notes","sws_DLG_152"));
 	m_cbType.AddItem(__LOCALIZE("Item notes","sws_DLG_152"));
 	m_cbType.AddItem(__LOCALIZE("Track notes","sws_DLG_152"));
@@ -144,6 +147,7 @@ void SNM_NotesWnd::OnInitDlg()
 	// ...the selected item is set through SetType() below
 
 	m_txtLabel.SetID(TXTID_LABEL);
+	m_txtLabel.SetFont(font);
 	m_parentVwnd.AddChild(&m_txtLabel);
 
 	m_btnAlr.SetID(BTNID_ALR);
@@ -299,8 +303,8 @@ HMENU SNM_NotesWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 // OSX fix/workaround (SWELL bug?)
 #ifdef _SNM_SWELL_ISSUES
 void OSXForceTxtChangeJob::Perform() {
-	if (g_SNM_NotesWnd)
-		SendMessage(g_SNM_NotesWnd->GetHWND(), WM_COMMAND, MAKEWPARAM(IDC_EDIT, EN_CHANGE), 0);
+	if (SNM_NotesWnd* w = g_notesWndMgr.Get())
+		SendMessage(w->GetHWND(), WM_COMMAND, MAKEWPARAM(IDC_EDIT, EN_CHANGE), 0);
 }
 #endif
 
@@ -424,7 +428,6 @@ void SNM_NotesWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltip
 
 	// 1st row of controls
 
-	LICE_CachedFont* font = SNM_GetThemeFont();
 	IconTheme* it = SNM_GetIconTheme();
 	int x0=_r->left+SNM_GUI_X_MARGIN;
 
@@ -433,7 +436,6 @@ void SNM_NotesWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltip
 	if (SNM_AutoVWndPosition(DT_LEFT, &m_btnLock, NULL, _r, &x0, _r->top, h))
 	{
 		// notes type
-		m_cbType.SetFont(font);
 		if (SNM_AutoVWndPosition(DT_LEFT, &m_cbType, NULL, _r, &x0, _r->top, h))
 		{
 			// label
@@ -478,7 +480,6 @@ void SNM_NotesWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltip
 					break;
 			}
 
-			m_txtLabel.SetFont(font);
 			m_txtLabel.SetText(str);
 			if (SNM_AutoVWndPosition(DT_LEFT, &m_txtLabel, NULL, _r, &x0, _r->top, h))
 				SNM_AddLogo(_bm, _r, x0, h);
@@ -1025,13 +1026,25 @@ void NotesUpdateJob::Perform() {
 void NotesMarkerRegionListener::NotifyMarkerRegionUpdate(int _updateFlags)
 {
 	if (g_notesViewType == SNM_NOTES_REGION_SUBTITLES)
+	{
+#ifdef _SNM_NO_ASYNC_UPDT
+		NotesUpdateJob job; job.Perform();
+#else
 		SNM_AddOrReplaceScheduledJob(new NotesUpdateJob());
+#endif
+	}
 	else if (g_notesViewType == SNM_NOTES_REGION_NAME)
 	{
 		if (g_internalMkrRgnChange)
 			g_internalMkrRgnChange = false;
 		else
+		{
+#ifdef _SNM_NO_ASYNC_UPDT
+			NotesUpdateJob job; job.Perform();
+#else
 			SNM_AddOrReplaceScheduledJob(new NotesUpdateJob());
+#endif
+		}
 	}
 }
 
@@ -1324,8 +1337,13 @@ void NotesSetTrackTitle()
 
 // this is our only notification of active project tab change, so update everything
 // (ScheduledJob because of multi-notifs)
-void NotesSetTrackListChange() {
+void NotesSetTrackListChange()
+{
+#ifdef _SNM_NO_ASYNC_UPDT
+	NotesUpdateJob job; job.Perform();
+#else
 	SNM_AddOrReplaceScheduledJob(new NotesUpdateJob());
+#endif
 }
 
 

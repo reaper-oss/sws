@@ -970,10 +970,14 @@ void SNM_ResourceWnd::OnInitDlg()
 
 	m_pLists.Add(new SNM_ResourceView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
 
+
+	LICE_CachedFont* font = SNM_GetThemeFont();
+
 	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
 	m_parentVwnd.SetRealParent(m_hwnd);
 
 	m_cbType.SetID(CMBID_TYPE);
+	m_cbType.SetFont(font);
 	FillTypeCombo();
 	m_parentVwnd.AddChild(&m_cbType);
 
@@ -982,8 +986,11 @@ void SNM_ResourceWnd::OnInitDlg()
 	m_parentVwnd.AddChild(&m_txtTiedPrj);
 
 	m_cbDblClickType.SetID(CMBID_DBLCLICK_TYPE);
+	m_cbDblClickType.SetFont(font);
 	m_parentVwnd.AddChild(&m_cbDblClickType);
+
 	m_cbDblClickTo.SetID(CMBID_DBLCLICK_TO);
+	m_cbDblClickTo.SetFont(font);
 	m_parentVwnd.AddChild(&m_cbDblClickTo);
 	FillDblClickCombos();
 
@@ -994,6 +1001,7 @@ void SNM_ResourceWnd::OnInitDlg()
 	m_parentVwnd.AddChild(&m_btnAutoSave);
 
 	m_txtDblClickType.SetID(TXTID_DBL_TYPE);
+	m_txtDblClickType.SetFont(font);
 	m_txtDblClickType.SetText(__LOCALIZE("Dbl-click to:","sws_DLG_150"));
 	m_parentVwnd.AddChild(&m_txtDblClickType);
 
@@ -1005,10 +1013,12 @@ void SNM_ResourceWnd::OnInitDlg()
 	m_parentVwnd.AddChild(&m_btnsAddDel);
 
 	m_txtDblClickTo.SetID(TXTID_DBL_TO);
+	m_txtDblClickTo.SetFont(font);
 	m_txtDblClickTo.SetText(__LOCALIZE("To sel.:","sws_DLG_150"));
 	m_parentVwnd.AddChild(&m_txtDblClickTo);
 
 	m_btnOffsetTrTemplate.SetID(BTNID_OFFSET_TR_TEMPLATE);
+	m_btnOffsetTrTemplate.SetFont(font);
 	m_parentVwnd.AddChild(&m_btnOffsetTrTemplate);
 
 	// restores the text filter when docking/undocking + indirect call to Update()
@@ -1122,7 +1132,7 @@ void SNM_ResourceWnd::FillDblClickCombos()
 void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 {
 	FileSlotList* fl = g_SNM_ResSlots.Get(g_resType);
-	if (!fl)
+	if (!fl || !m_pLists.GetSize())
 		return;
 
 	int x=0;
@@ -1695,8 +1705,7 @@ HMENU SNM_ResourceWnd::BookmarkContextMenu(HMENU _menu)
 		AddToMenu(_menu, SWS_SEPARATOR, 0);
 		
 		// ensure g_curProjectFn is up to date, job performed immediately JFB!! really needed?
-		ResourcesAttachJob job;
-		job.Perform();
+		ResourcesAttachJob job; job.Perform();
 
 		bool curPrjTied = (g_tiedProjects.Get(g_resType)->GetLength() && !_stricmp(g_tiedProjects.Get(g_resType)->Get(), g_curProjectFn));
 		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Attach bookmark files to %s","sws_DLG_150"), *g_curProjectFn ? GetFileRelativePath(g_curProjectFn) : __LOCALIZE("(unsaved project?)","sws_DLG_150"));
@@ -2043,7 +2052,6 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tool
 	if (_tooltipHeight)
 		*_tooltipHeight = h;
 
-	LICE_CachedFont* font = SNM_GetThemeFont();
 	IconTheme* it = SNM_GetIconTheme();
 	int typeForUser = GetTypeForUser();
 
@@ -2057,7 +2065,6 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tool
 		if (SNM_AutoVWndPosition(DT_LEFT, &m_btnAutoSave, NULL, _r, &x0, _r->top, h))
 		{
 			// type dropdown
-			m_cbType.SetFont(font);
 			if (SNM_AutoVWndPosition(DT_LEFT, &m_cbType, NULL, _r, &x0, _r->top, h, 4))
 			{
 				// add/del bookmark buttons
@@ -2102,10 +2109,8 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tool
 	// "dbl-click to"
 	if (fl->IsDblClick())
 	{
-		m_txtDblClickType.SetFont(font);
 		if (!SNM_AutoVWndPosition(DT_LEFT, &m_txtDblClickType, NULL, &r, &x0, y0, h, 5))
 			return;
-		m_cbDblClickType.SetFont(font);
 		if (!SNM_AutoVWndPosition(DT_LEFT, &m_cbDblClickType, &m_txtDblClickType, &r, &x0, y0, h))
 			return;
 
@@ -2113,10 +2118,8 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tool
 		{
 			// "to selected" (fx chain only)
 			case SNM_SLOT_FXC:
-				m_txtDblClickTo.SetFont(font);
 				if (!SNM_AutoVWndPosition(DT_LEFT, &m_txtDblClickTo, NULL, &r, &x0, y0, h, 5))
 					return;
-				m_cbDblClickTo.SetFont(font);
 				if (!SNM_AutoVWndPosition(DT_LEFT, &m_cbDblClickTo, &m_txtDblClickTo, &r, &x0, y0, h))
 					return;
 				break;
@@ -2133,10 +2136,10 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tool
 							break;
 						case 3: // paste template items
 						case 4: // paste (replace) template items
-							m_btnOffsetTrTemplate.SetTextLabel(__LOCALIZE("Offset template items by edit cursor","sws_DLG_150"), -1, font);
+							m_btnOffsetTrTemplate.SetTextLabel(__LOCALIZE("Offset template items by edit cursor","sws_DLG_150"));
 							break;
 						default: // other dbl-click prefs
-							m_btnOffsetTrTemplate.SetTextLabel(__LOCALIZE("Offset template items/envs by edit cursor","sws_DLG_150"), -1, font);
+							m_btnOffsetTrTemplate.SetTextLabel(__LOCALIZE("Offset template items/envs by edit cursor","sws_DLG_150"));
 							break;
 					}
 					if (showOffsOption)
@@ -2253,13 +2256,16 @@ void SNM_ResourceWnd::SelectBySlot(int _slot1, int _slot2, bool _selectOnly)
 // gets selected slots and returns the number of non empty slots among them
 void SNM_ResourceWnd::GetSelectedSlots(WDL_PtrList<PathSlotItem>* _selSlots, WDL_PtrList<PathSlotItem>* _selEmptySlots)
 {
-	int x=0;
-	while (PathSlotItem* pItem = (PathSlotItem*)GetListView()->EnumSelected(&x))
+	if (m_pLists.GetSize())
 	{
-		if (_selEmptySlots && pItem->IsDefault())
-			_selEmptySlots->Add(pItem);
-		else
-			_selSlots->Add(pItem);
+		int x=0;
+		while (PathSlotItem* pItem = (PathSlotItem*)GetListView()->EnumSelected(&x))
+		{
+			if (_selEmptySlots && pItem->IsDefault())
+				_selEmptySlots->Add(pItem);
+			else
+				_selSlots->Add(pItem);
+		}
 	}
 }
 
@@ -2278,7 +2284,7 @@ void SNM_ResourceWnd::AddSlot()
 void SNM_ResourceWnd::InsertAtSelectedSlot()
 {
 	FileSlotList* fl = g_SNM_ResSlots.Get(g_resType);
-	if (fl && fl->GetSize())
+	if (fl && fl->GetSize() && m_pLists.GetSize())
 	{
 		if (PathSlotItem* item = (PathSlotItem*)GetListView()->EnumSelected(NULL))
 		{
@@ -2687,12 +2693,14 @@ void ClearDeleteSlotsFiles(int _type, int _mode)
 	if (resWnd && (_mode&1 || _mode&2))
 	{
 		int x=0;
-		SWS_ListView* lv = resWnd->GetListView();
-		while(PathSlotItem* item = (PathSlotItem*)lv->EnumSelected(&x))
+		if (SWS_ListView* lv = resWnd->GetListView())
 		{
-			int slot = fl->Find(item);
-			slots.Delete(slot);
-			slots.Insert(slot, &g_i1);
+			while(PathSlotItem* item = (PathSlotItem*)lv->EnumSelected(&x))
+			{
+				int slot = fl->Find(item);
+				slots.Delete(slot);
+				slots.Insert(slot, &g_i1);
+			}
 		}
 	}
 
@@ -3050,8 +3058,12 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 		IsActiveProjectInLoadSave(path, sizeof(path)) && // saving current project?
 		_stricmp(path, g_curProjectFn)) // saving current project as new_name.rpp?
 	{
-//JFB!!! TODO? auto-export if tied? (+ msg?)
+//JFB! TODO? auto-export if tied? (+ msg?)
+#ifdef _SNM_NO_ASYNC_UPDT
+		ResourcesAttachJob job; job.Perform();
+#else
 		SNM_AddOrReplaceScheduledJob(new ResourcesAttachJob());
+#endif
 	}
 }
 

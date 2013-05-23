@@ -44,7 +44,7 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Just to ease sustaining vs API/REAPER/WDL bugs and/or issues: 
+// Just to ease sustaining vs S&M/API/REAPER/WDL bugs and/or issues: 
 // #undef to activate the "expected code", #define to activate workarounds
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -61,6 +61,8 @@
 								// - issue 1: native font rendering won't draw multiple lines
 								// - issue 2: missing some EN_CHANGE msg, see SnM_Notes.cpp
 								// - issue 3: EN_SETFOCUS, EN_KILLFOCUS not yet supported
+
+#define _SNM_NO_ASYNC_UPDT		// no async UI updates
 
 
 ///////////////////////////////////////////////////////////////////////////////

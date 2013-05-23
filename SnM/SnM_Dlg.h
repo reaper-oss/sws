@@ -44,7 +44,7 @@ void SNM_UIRefresh(COMMAND_T*);
 // Also avoids to touch the main SWS screenset code
 // The trick is:
 // => temp screenset registration - w/o instanciation, contrary to SWS wnds
-// => the callback, instanciate the wnd if needed
+// => the temp callback instanciates the wnd if needed
 // => temp callback is replaced w/ the main SWS callback, see SWS_DockWnd
 //    constructor and SWS_DockWnd::screensetCallback()
 // Note: codeed in .h just because of template <class T> hassle..
@@ -126,20 +126,25 @@ private:
 };
 
 
-// should not be used directly, see SNM_MultiWindowManager
+// this class should not be used directly, see SNM_MultiWindowManager
+// remark: some "SNM_WindowManager<T>::" are required for things to compile on OSX (useless on Win)
 template<class T> class SNM_WindowInstManager : public SNM_WindowManager<T>
 {
 public:
-	// _id is as formatted string (%d style)
-	SNM_WindowInstManager(const char* _wndId, int _idx) : SNM_WindowManager(""), m_idx(_idx) {
-		m_id.SetFormatted(64, _wndId, _idx+1);
+	// _id is a formatted string (%d)
+	SNM_WindowInstManager(const char* _wndId, int _idx) : SNM_WindowManager<T>(""), m_idx(_idx) {
+		SNM_WindowManager<T>::m_id.SetFormatted(64, _wndId, _idx+1);
 	}
-	virtual ~SNM_WindowInstManager() { Delete(false); }
+	virtual ~SNM_WindowInstManager() {
+		SNM_WindowManager<T>::Delete(false);
+	}
 protected:
 	virtual T* Create() { return new T(m_idx); }
 private:
 	int m_idx;
 };
+
+
 
 // helper to manage multiple windows instances, a bit like a single S&M dockable window
 template<class T> class SNM_MultiWindowManager

@@ -533,6 +533,8 @@ void SNM_RegionPlaylistWnd::OnInitDlg()
 	m_resize.init_item(IDC_LIST, 0.0, 0.0, 1.0, 1.0);
 	m_pLists.Add(new SNM_PlaylistView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
 
+	LICE_CachedFont* font = SNM_GetThemeFont();
+
 	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
 	m_parentVwnd.SetRealParent(m_hwnd);
 	
@@ -547,9 +549,11 @@ void SNM_RegionPlaylistWnd::OnInitDlg()
 	m_parentVwnd.AddChild(&m_btnRepeat);
 
 	m_txtPlaylist.SetID(TXTID_PLAYLIST);
+	m_txtPlaylist.SetFont(font);
 	m_parentVwnd.AddChild(&m_txtPlaylist);
 
 	m_cbPlaylist.SetID(CMBID_PLAYLIST);
+	m_cbPlaylist.SetFont(font);
 	FillPlaylistCombo();
 	m_parentVwnd.AddChild(&m_cbPlaylist);
 
@@ -940,7 +944,6 @@ void SNM_RegionPlaylistWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int*
 {
 	MUTEX_PLAYLISTS;
 
-	LICE_CachedFont* font = SNM_GetThemeFont();
 	IconTheme* it = SNM_GetIconTheme();
 	int x0=_r->left+SNM_GUI_X_MARGIN, h=SNM_GUI_TOP_H;
 	if (_tooltipHeight)
@@ -991,11 +994,9 @@ void SNM_RegionPlaylistWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int*
 					// *** edition ***
 					else
 					{
-						m_txtPlaylist.SetFont(font);
 						m_txtPlaylist.SetText(hasPlaylists ? __LOCALIZE("Playlist #","sws_DLG_165") : __LOCALIZE("Playlist: None","sws_DLG_165"));
 						if (SNM_AutoVWndPosition(DT_LEFT, &m_txtPlaylist, NULL, _r, &x0, _r->top, h, hasPlaylists?4:SNM_DEF_VWND_X_STEP))
 						{
-							m_cbPlaylist.SetFont(font);
 							if (!hasPlaylists || (hasPlaylists && SNM_AutoVWndPosition(DT_LEFT, &m_cbPlaylist, &m_txtPlaylist, _r, &x0, _r->top, h, 4)))
 							{
 								m_btnDel.SetEnabled(hasPlaylists);
@@ -1875,9 +1876,14 @@ void PlaylistUpdateJob::Perform() {
 ///////////////////////////////////////////////////////////////////////////////
 
 // ScheduledJob used because of multi-notifs
-void PlaylistMarkerRegionListener::NotifyMarkerRegionUpdate(int _updateFlags) {
+void PlaylistMarkerRegionListener::NotifyMarkerRegionUpdate(int _updateFlags)
+{
 	PlaylistResync();
+#ifdef _SNM_NO_ASYNC_UPDT
+	PlaylistUpdateJob job; job.Perform();
+#else
 	SNM_AddOrReplaceScheduledJob(new PlaylistUpdateJob());
+#endif
 }
 
 
@@ -1963,8 +1969,13 @@ static project_config_extension_t s_projectconfig = {
 ///////////////////////////////////////////////////////////////////////////////
 
 // ScheduledJob used because of multi-notifs
-void RegionPlaylistSetTrackListChange() {
+void RegionPlaylistSetTrackListChange()
+{
+#ifdef _SNM_NO_ASYNC_UPDT
+	PlaylistUpdateJob job; job.Perform();
+#else
 	SNM_AddOrReplaceScheduledJob(new PlaylistUpdateJob());
+#endif
 }
 
 

@@ -1739,10 +1739,14 @@ void SNM_CyclactionWnd::OnInitDlg()
 	g_origRectR = m_resize.get_item(IDC_LIST2)->real_orig;
 	g_lvState = g_lvLastState = 0; // resync those vars: both list views are displayed (g_lvState not persisted yet..)
 
+
+	LICE_CachedFont* font = SNM_GetThemeFont();
+
 	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
 	m_parentVwnd.SetRealParent(m_hwnd);
 
 	m_txtSection.SetID(TXTID_SECTION);
+	m_txtSection.SetFont(font);
 	m_txtSection.SetText(__LOCALIZE("Section:","sws_DLG_161"));
 	m_parentVwnd.AddChild(&m_txtSection);
 
@@ -1750,10 +1754,12 @@ void SNM_CyclactionWnd::OnInitDlg()
 	for (int i=0; i < SNM_MAX_CYCLING_SECTIONS; i++)
 		m_cbSection.AddItem(SNM_GetActionSectionName(i));
 	m_cbSection.SetCurSel(g_editedSection);
+	m_cbSection.SetFont(font);
 	m_parentVwnd.AddChild(&m_cbSection);
 
 	m_btnUndo.SetID(BTNID_UNDO);
 	m_btnUndo.SetCheckState(g_undos);
+	m_btnUndo.SetTextLabel(__LOCALIZE("Consolidate undo points","sws_DLG_161"), -1, font);
 	m_parentVwnd.AddChild(&m_btnUndo);
 
 	m_btnApply.SetID(BTNID_APPLY);
@@ -2170,8 +2176,6 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 
 void SNM_CyclactionWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight)
 {
-	LICE_CachedFont* font = SNM_GetThemeFont();
-
 	// 1st row of controls, left
 	int x0 = _r->left + SNM_GUI_X_MARGIN_OLD;
 	int h = SNM_GUI_TOP_H;
@@ -2185,17 +2189,13 @@ void SNM_CyclactionWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _to
 	ScreenToClient(m_hwnd, ((LPPOINT)&r)+1);
 	x0 = r.right + SNM_GUI_X_MARGIN_OLD;
 
-	m_btnUndo.SetTextLabel(__LOCALIZE("Consolidate undo points","sws_DLG_161"), -1, font);
 	SNM_AutoVWndPosition(DT_LEFT, &m_btnUndo, NULL, _r, &x0, _r->top, h, 4);
 
 	// right
 	RECT r2 = *_r; r2.left = x0; // tweak to auto-hide the logo when needed
 	x0 = _r->right-10; //JFB!! 10 is tied to the current .rc!
-	m_cbSection.SetFont(font);
-	if (SNM_AutoVWndPosition(DT_RIGHT, &m_cbSection, NULL, &r2, &x0, _r->top, h, 4)) {
-		m_txtSection.SetFont(font);
+	if (SNM_AutoVWndPosition(DT_RIGHT, &m_cbSection, NULL, &r2, &x0, _r->top, h, 4))
 		SNM_AutoVWndPosition(DT_RIGHT, &m_txtSection, &m_cbSection, &r2, &x0, _r->top, h, 0);
-	}
 
 
 	// 2nd row of controls
@@ -2319,28 +2319,30 @@ if (g_SNM_Beta)
 		// right
 		else if (g_editedAction && g_editedAction != &s_DEFAULT_L)
 		{
-			AddToMenu(hMenu, cmd ? __LOCALIZE("Insert selected action (in the Actions window)","sws_DLG_161") : __LOCALIZE("Add selected action (in the Actions window)","sws_DLG_161"), LEARN_CMD_MSG);
-			AddToMenu(hMenu, SWS_SEPARATOR, 0);
-			AddToMenu(hMenu, cmd ? __LOCALIZE("Insert","sws_DLG_161") : __LOCALIZE("Add","sws_DLG_161"), ADD_CMD_MSG);
-			HMENU hInstructionSubMenu = CreatePopupMenu();
-			AddSubMenu(hMenu, hInstructionSubMenu, cmd ? __LOCALIZE("Insert instruction","sws_DLG_161") : __LOCALIZE("Add instruction","sws_DLG_161"));
-			for (int i=0; i<NB_INSTRUCTIONS; i++)
-				AddToMenu(hInstructionSubMenu, g_instrucs[i], ADD_INSTRUC_MSG+i);
-			AddToMenu(hMenu, cmd ? __LOCALIZE("Insert step","sws_DLG_161") : __LOCALIZE("Add step","sws_DLG_161"), ADD_STEP_CMD_MSG);
-
-			AddToMenu(hMenu, SWS_SEPARATOR, 0);
-			if (cmd && cmd != &s_EMPTY_R && cmd != &s_DEFAULT_R)
+			if (cmd != &s_EMPTY_R && cmd != &s_DEFAULT_R)
 			{
-				AddToMenu(hMenu, __LOCALIZE("Delete","sws_DLG_161"), DEL_CMD_MSG);
+				AddToMenu(hMenu, cmd ? __LOCALIZE("Insert selected action (in the Actions window)","sws_DLG_161") : __LOCALIZE("Add selected action (in the Actions window)","sws_DLG_161"), LEARN_CMD_MSG);
 				AddToMenu(hMenu, SWS_SEPARATOR, 0);
-				AddToMenu(hMenu, __LOCALIZE("Copy","sws_DLG_155"), COPY_CMD_MSG);
-				AddToMenu(hMenu, __LOCALIZE("Cut","sws_DLG_155"), CUT_CMD_MSG);
-			}
-			AddToMenu(hMenu, __LOCALIZE("Paste","sws_DLG_155"), PASTE_CMD_MSG, -1, false, g_clipboardCmds.GetSize() ? MF_ENABLED : MF_GRAYED);
-			if (cmd && cmd != &s_EMPTY_R && cmd != &s_DEFAULT_R)
-			{
+				AddToMenu(hMenu, cmd ? __LOCALIZE("Insert","sws_DLG_161") : __LOCALIZE("Add","sws_DLG_161"), ADD_CMD_MSG);
+				HMENU hInstructionSubMenu = CreatePopupMenu();
+				AddSubMenu(hMenu, hInstructionSubMenu, cmd ? __LOCALIZE("Insert instruction","sws_DLG_161") : __LOCALIZE("Add instruction","sws_DLG_161"));
+				for (int i=0; i<NB_INSTRUCTIONS; i++)
+					AddToMenu(hInstructionSubMenu, g_instrucs[i], ADD_INSTRUC_MSG+i);
+				AddToMenu(hMenu, cmd ? __LOCALIZE("Insert step","sws_DLG_161") : __LOCALIZE("Add step","sws_DLG_161"), ADD_STEP_CMD_MSG);
 				AddToMenu(hMenu, SWS_SEPARATOR, 0);
-				AddToMenu(hMenu, __LOCALIZE("Explode into individual actions","sws_DLG_161"), EXPLODE_CMD_MSG);
+				if (cmd)
+				{
+					AddToMenu(hMenu, __LOCALIZE("Delete","sws_DLG_161"), DEL_CMD_MSG);
+					AddToMenu(hMenu, SWS_SEPARATOR, 0);
+					AddToMenu(hMenu, __LOCALIZE("Copy","sws_DLG_155"), COPY_CMD_MSG);
+					AddToMenu(hMenu, __LOCALIZE("Cut","sws_DLG_155"), CUT_CMD_MSG);
+				}
+				AddToMenu(hMenu, __LOCALIZE("Paste","sws_DLG_155"), PASTE_CMD_MSG, -1, false, g_clipboardCmds.GetSize() ? MF_ENABLED : MF_GRAYED);
+				if (cmd)
+				{
+					AddToMenu(hMenu, SWS_SEPARATOR, 0);
+					AddToMenu(hMenu, __LOCALIZE("Explode into individual actions","sws_DLG_161"), EXPLODE_CMD_MSG);
+				}
 			}
 		}
 	}
@@ -2374,9 +2376,11 @@ int SNM_CyclactionWnd::OnKey(MSG* _msg, int _iKeyState)
 			{
 				case VK_F2:	{
 					int x=0;
-					if (SWS_ListItem* item = GetListView(focusedList)->EnumSelected(&x)) {
-						GetListView(focusedList)->EditListItem(item, !focusedList ? COL_L_NAME : COL_R_CMD);
-						return 1;
+					if (focusedList<m_pLists.GetSize()) {
+						if (SWS_ListItem* item = GetListView(focusedList)->EnumSelected(&x)) {
+							GetListView(focusedList)->EditListItem(item, !focusedList ? COL_L_NAME : COL_R_CMD);
+							return 1;
+						}
 					}
 					break;
 				}

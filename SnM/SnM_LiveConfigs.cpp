@@ -660,14 +660,19 @@ void SNM_LiveConfigsWnd::OnInitDlg()
 	m_resize.init_item(IDC_LIST, 0.0, 0.0, 1.0, 1.0);
 	m_pLists.Add(new SNM_LiveConfigView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
 
+
+	LICE_CachedFont* font = SNM_GetThemeFont();
+
 	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
 	m_parentVwnd.SetRealParent(m_hwnd);
 
 	m_btnEnable.SetID(BTNID_ENABLE);
+	m_btnEnable.SetFont(font);
 	m_btnEnable.SetTextLabel(__LOCALIZE("Config #","sws_DLG_155"));
 	m_parentVwnd.AddChild(&m_btnEnable);
 
 	m_cbConfig.SetID(CMBID_CONFIG);
+	m_cbConfig.SetFont(font);
 	char cfg[4] = "";
 	for (int i=0; i<SNM_LIVECFG_NB_CONFIGS; i++) {
 		_snprintfSafe(cfg, sizeof(cfg), "%d", i+1);
@@ -677,10 +682,12 @@ void SNM_LiveConfigsWnd::OnInitDlg()
 	m_parentVwnd.AddChild(&m_cbConfig);
 
 	m_txtInputTr.SetID(TXTID_INPUT_TRACK);
+	m_txtInputTr.SetFont(font);
 	m_txtInputTr.SetText(__LOCALIZE("Input track:","sws_DLG_155"));
 	m_parentVwnd.AddChild(&m_txtInputTr);
 
 	m_cbInputTr.SetID(CMBID_INPUT_TRACK);
+	m_cbInputTr.SetFont(font);
 	FillComboInputTrack();
 	m_parentVwnd.AddChild(&m_cbInputTr);
 
@@ -789,7 +796,7 @@ void SNM_LiveConfigsWnd::Update()
 void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 {
 	LiveConfig* lc = g_liveConfigs.Get()->Get(g_configId);
-	if (!lc)
+	if (!lc || !m_pLists.GetSize())
 		return;
 
 	int x=0;
@@ -1555,19 +1562,13 @@ void SNM_LiveConfigsWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _t
 	if (_tooltipHeight)
 		*_tooltipHeight = h;
 	
-	LICE_CachedFont* font = SNM_GetThemeFont();
-
 	m_btnEnable.SetCheckState(lc->m_enable);
-	m_btnEnable.SetFont(font);
 	if (SNM_AutoVWndPosition(DT_LEFT, &m_btnEnable, NULL, _r, &x0, _r->top, h, 4))
 	{
-		m_cbConfig.SetFont(font);
 		if (SNM_AutoVWndPosition(DT_LEFT, &m_cbConfig, &m_btnEnable, _r, &x0, _r->top, h))
 		{
-			m_txtInputTr.SetFont(font);
 			if (SNM_AutoVWndPosition(DT_LEFT, &m_txtInputTr, NULL, _r, &x0, _r->top, h, 4))
 			{
-				m_cbInputTr.SetFont(font);
 				if (SNM_AutoVWndPosition(DT_LEFT, &m_cbInputTr, &m_txtInputTr, _r, &x0, _r->top, h, 4))
 				{
 					ColorTheme* ct = SNM_GetColorTheme();
@@ -1632,6 +1633,8 @@ bool SNM_LiveConfigsWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, i
 
 bool SNM_LiveConfigsWnd::Insert(int _dir)
 {
+	if (!m_pLists.GetSize())
+		return false;
 	int sortCol = GetListView()->GetSortColumn();
 	if (sortCol && sortCol!=1) {
 		//JFB lazy here.. better than confusing the user..
@@ -1924,8 +1927,13 @@ void LiveConfigsSetTrackTitle() {
 }
 
 // ScheduledJob because of multi-notifs
-void LiveConfigsTrackListChange() {
+void LiveConfigsTrackListChange()
+{
+#ifdef _SNM_NO_ASYNC_UPDT
+	LiveConfigsUpdateJob job; job.Perform();
+#else
 	SNM_AddOrReplaceScheduledJob(new LiveConfigsUpdateJob());
+#endif
 }
 
 

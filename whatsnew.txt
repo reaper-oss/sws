@@ -7,6 +7,7 @@ Fixes:
 +Resources/Windows OS: fixed "Edit file..."
 +Issue 576: fixed auto-icon crash
 +Issue 581/OSX fix: the action "SWS/S&M: Set project startup action" now prompts for a command ID or an identifier string
+ (to copy those, right-click in the Actions window > Copy selected action cmdID/identifier string)
 
 !v2.3.0 #17 (April 30, 2013)
 <b>REAPER v4.33+ is required!</b>

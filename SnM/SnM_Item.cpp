@@ -1437,24 +1437,16 @@ void OpenMediaPathInExplorerFinder(COMMAND_T*)
 	if (!CountSelectedMediaItems(NULL))
 		return;
 
-	char path[SNM_MAX_PATH] = "";
 	for (int i=1; i <= GetNumTracks(); i++) // skip master
 		if (MediaTrack* tr = CSurf_TrackFromID(i, false))
 			for (int j=0; j < GetTrackNumMediaItems(tr); j++)
 				if (MediaItem* item = GetTrackMediaItem(tr,j))
 					if (*(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
 						if (MediaItem_Take* tk = GetActiveTake(item))
-							if (PCM_source* pcm = (PCM_source*)GetSetMediaItemTakeInfo(tk, "P_SOURCE", NULL))
-								if (FileOrDirExists(pcm->GetFileName()))
-								{
-									lstrcpyn(path, pcm->GetFileName(), sizeof(path));
-									if (char* p = strrchr(path, PATH_SLASH_CHAR))
-									{
-										*(p+1) = '\0'; // ShellExecute() is KO otherwise..
-										ShellExecute(NULL, "open", path, NULL, NULL, SW_SHOWNORMAL);
-										return;
-									}
-								}
+							if (PCM_source* pcm = (PCM_source*)GetSetMediaItemTakeInfo(tk, "P_SOURCE", NULL)) {
+								OpenSelectInExplorerFinder(pcm->GetFileName());
+								return;
+							}
 	// if we are here, it means the above failed
 	MessageBox(GetMainHwnd(), 
 		__LOCALIZE("Cannot show path in explorer/finder!\nProbable cause: empty source, in-project MIDI source, etc...","sws_mbox"), 

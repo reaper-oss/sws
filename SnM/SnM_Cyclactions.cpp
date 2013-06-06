@@ -846,14 +846,14 @@ if (!g_SNM_Beta)
 			{
 				// sws check
 				if (!_section && SWSGetCommandByID(atoi(cmd))) // API LIMITATION: extension action actions can only belong to the main section ATM
-					return AppendErrMsg(_section, _a, _applyMsg, __LOCALIZE("for SWS/S&M actions, you must use custom IDs (e.g. _SWS_ABOUT), not command IDs (e.g. 47145)","sws_DLG_161"));
+					return AppendErrMsg(_section, _a, _applyMsg, __LOCALIZE("for SWS/S&M actions, you must use identifier strings (e.g. _SWS_ABOUT), not command IDs (e.g. 47145)","sws_DLG_161"));
 
 				// explode everything and do more checks: validity, non recursive, etc...
 				WDL_PtrList_DeleteOnDestroy<WDL_FastString> parentCmds;
 				switch (ExplodeCmd(_section, cmd, &parentCmds, _macros, _consoles, 0x8))
 				{
 					case -1:
-						str.SetFormatted(256, __LOCALIZE_VERFMT("command ID '%s' not found or invalid","sws_DLG_161"), cmd);
+						str.SetFormatted(256, __LOCALIZE_VERFMT("unknown command ID or identifier string '%s'","sws_DLG_161"), cmd);
 						return AppendErrMsg(_section, _a, _applyMsg, str.Get());
 					case -2:
 						return AppendErrMsg(_section, _a, _applyMsg, __LOCALIZE("recursive action (i.e. uses itself)","sws_DLG_161"));
@@ -866,7 +866,7 @@ if (!g_SNM_Beta)
 				// (e.g. unregister/re-register CAs when applying..)
 				if(_applyMsg && !SNM_NamedCommandLookup(cmd, kbdSec))
 				{
-					str.SetFormatted(256, __LOCALIZE_VERFMT("command ID '%s' not found","sws_DLG_161"), cmd);
+					str.SetFormatted(256, __LOCALIZE_VERFMT("unknown command ID or identifier string '%s'","sws_DLG_161"), cmd);
 					return AppendErrMsg(_section, _a, _applyMsg, str.Get());
 				}
 			}
@@ -881,7 +881,7 @@ if (!g_SNM_Beta)
 					 strstr(cmd, "SWSCONSOLE_CUST") ||
 					 GetMacroOrScript(cmd, kbdSec->uniqueID, _macros, NULL) == 1)) // macros only, brutal but works for all sections
 				{
-					str.SetFormatted(256, __LOCALIZE_VERFMT("the command ID '%s' cannot be shared with other users","sws_DLG_161"), cmd);
+					str.SetFormatted(256, __LOCALIZE_VERFMT("the identifier string '%s' cannot be shared with other users","sws_DLG_161"), cmd);
 					str.Append("\n");
 					str.AppendFormatted(256, __LOCALIZE_VERFMT("Tip: right-click this command > '%s'","sws_DLG_161"), __LOCALIZE("Explode into individual actions","sws_DLG_161"));
 					AppendWarnMsg(_section, _a, _applyMsg, str.Get());

@@ -61,7 +61,7 @@ void ClearProjectStartupAction(COMMAND_T*);
 int ReaProjectInit();
 
 void InsertSilence(COMMAND_T*);
-void OpenProjectPathInExplorerFinder(COMMAND_T* _ct = NULL);
+void OpenProjectPathInExplorerFinder(COMMAND_T*);
 
 #endif
 

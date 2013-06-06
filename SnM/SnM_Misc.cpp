@@ -213,8 +213,8 @@ void LoadThemeSlot(int _slotType, const char* _title, int _slot)
 			str.SetFormatted(SNM_MAX_PATH, "open -a \"%s\" \"%s\"", cmd, fnStr->Get());
 			system(str.Get());
 #endif
-			delete fnStr;
 		}
+		delete fnStr;
 	}
 }
 

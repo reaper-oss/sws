@@ -218,7 +218,7 @@ bool GetDefaultGroupFlags(WDL_FastString* _line, int _group)
 	{
 		double grpMask = pow(2.0, _group*1.0);
 		char grpDefault[SNM_MAX_CHUNK_LINE_LENGTH] = "";
-		GetPrivateProfileString("REAPER", "tgrpdef", "", grpDefault, SNM_MAX_CHUNK_LINE_LENGTH, get_ini_file());
+		GetPrivateProfileString("REAPER", "tgrpdef", "", grpDefault, sizeof(grpDefault), get_ini_file());
 		WDL_FastString defFlags(grpDefault);
 		while (defFlags.GetLength() < 64) { // complete the line (64 is more than needed: future-proof)
 			if (defFlags.Get()[defFlags.GetLength()-1] != ' ') defFlags.Append(" ");

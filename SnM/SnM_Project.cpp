@@ -331,34 +331,34 @@ SWSProjConfig<WDL_FastString> g_prjActions;
 
 void SetProjectStartupAction(COMMAND_T* _ct)
 {
-	char prjFn[SNM_MAX_PATH] = "";
-	EnumProjects(-1, prjFn, sizeof(prjFn));
-
-	WDL_FastString msg;
-	msg.SetFormatted(SNM_MAX_PATH, __LOCALIZE("To define a startup action (launched on project load) ","sws_mbox"), prjFn);
-	if (*prjFn) msg.AppendFormatted(SNM_MAX_PATH, __LOCALIZE_VERFMT("for %s","sws_mbox"), prjFn);
-	msg.Append("\n");
-	msg.Append(__LOCALIZE("please select an action, macro, or script in the Actions window and click OK.","sws_mbox"));
-	if (g_prjActions.Get()->GetLength())
-		if (int cmdId = NamedCommandLookup(g_prjActions.Get()->Get())) {
-			msg.Append("\n");
-			msg.AppendFormatted(256, __LOCALIZE_VERFMT("Note: this will override the current startup action '%s'","sws_mbox"), kbd_getTextFromCmd(cmdId, NULL));
-		}
-
-	ShowActionList(NULL, NULL);
-	if (IDOK == MessageBox(GetMainHwnd(), msg.Get(), SWS_CMD_SHORTNAME(_ct), MB_OKCANCEL))
+	char idstr[SNM_MAX_ACTION_CUSTID_LEN];
+	lstrcpyn(idstr, __LOCALIZE("Paste command ID or identifier string here","sws_mbox"), sizeof(idstr));
+	if (PromptUserForString(GetMainHwnd(), SWS_CMD_SHORTNAME(_ct), idstr, sizeof(idstr), true))
 	{
-		char idstr[SNM_MAX_ACTION_CUSTID_LEN] = "";
-		if (GetSelectedAction(idstr, SNM_MAX_ACTION_CUSTID_LEN))
+		WDL_FastString msg;
+		if (int cmdId = NamedCommandLookup(idstr))
 		{
 			g_prjActions.Get()->Set(idstr);
 			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_MISCCFG, -1);
-			if (int cmdId = NamedCommandLookup(idstr))
-			{
-				msg.SetFormatted(SNM_MAX_PATH, __LOCALIZE_VERFMT("'%s' is defined as startup action ","sws_mbox"), kbd_getTextFromCmd(cmdId, NULL));
-				if (*prjFn) msg.AppendFormatted(SNM_MAX_PATH, __LOCALIZE_VERFMT("for %s","sws_mbox"), prjFn);
-				MessageBox(GetMainHwnd(), msg.Get(), SWS_CMD_SHORTNAME(_ct), MB_OK);
+
+			msg.SetFormatted(SNM_MAX_PATH, __LOCALIZE_VERFMT("'%s' is defined as startup action","sws_mbox"), kbd_getTextFromCmd(cmdId, NULL));
+
+			char prjFn[SNM_MAX_PATH] = "";
+			EnumProjects(-1, prjFn, sizeof(prjFn));
+			if (*prjFn) {
+				msg.Append("\n");
+				msg.AppendFormatted(SNM_MAX_PATH, __LOCALIZE_VERFMT("for %s","sws_mbox"), prjFn);
 			}
+			MessageBox(GetMainHwnd(), msg.Get(), SWS_CMD_SHORTNAME(_ct), MB_OK);
+		}
+		else
+		{
+			msg.SetFormatted(SNM_MAX_PATH, __LOCALIZE_VERFMT("%s failed!","sws_mbox"), SWS_CMD_SHORTNAME(_ct));
+			msg.Append("\n");
+			msg.Append(__LOCALIZE("Unknown command ID or identifier string:","sws_mbox"));
+			msg.Append("\n");
+			msg.Append(idstr);
+			MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("S&M - Error","sws_DLG_161"), MB_OK);
 		}
 	}
 }
@@ -370,7 +370,7 @@ void ClearProjectStartupAction(COMMAND_T* _ct)
 		int r=IDOK, cmdId=NamedCommandLookup(g_prjActions.Get()->Get());
 		if (cmdId) {
 			WDL_FastString msg;
-			msg.AppendFormatted(256, __LOCALIZE_VERFMT("Are you sure you want to clear the current startup action '%s'?","sws_mbox"), kbd_getTextFromCmd(cmdId, NULL));
+			msg.AppendFormatted(256, __LOCALIZE_VERFMT("Are you sure you want to clear the startup action '%s'?","sws_mbox"), kbd_getTextFromCmd(cmdId, NULL));
 			r = MessageBox(GetMainHwnd(), msg.Get(), SWS_CMD_SHORTNAME(_ct), MB_OKCANCEL);
 		}
 		if (r==IDOK) {
@@ -479,6 +479,12 @@ void InsertSilence(COMMAND_T* _ct)
 void OpenProjectPathInExplorerFinder(COMMAND_T*)
 {
 	char path[SNM_MAX_PATH] = "";
+
 	GetProjectPath(path, sizeof(path));
-	if (*path) ShellExecute(NULL, "open", path, NULL, NULL, SW_SHOWNORMAL);
+	if (*path)
+		ShellExecute(NULL, "open", path, NULL, NULL, SW_SHOWNORMAL);
+
+//	if (EnumProjects(-1, path, sizeof(path)) && *path)
+//		OpenSelectInExplorerFinder(path);
 }
+

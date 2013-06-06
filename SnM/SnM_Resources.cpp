@@ -575,29 +575,6 @@ bool FileSlotList::ClearSlot(int _slot)
 	return false;
 }
 
-void FileSlotList::EditSlot(int _slot)
-{
-	if (_slot>=0 && _slot<GetSize())
-	{
-		char fullPath[SNM_MAX_PATH] = "";
-		if (GetFullPath(_slot, fullPath, sizeof(fullPath)) && FileOrDirExistsErrMsg(fullPath))
-		{
-			if (IsText())
-			{
-				WDL_FastString txt;
-				if (LoadChunk(fullPath, &txt, false))
-				{
-					char title[128] = "";
-					_snprintfSafe(title, sizeof(title), __LOCALIZE_VERFMT("S&M - %s (slot %d)","sws_DLG_150"), m_desc.Get(), _slot+1);
-					SNM_ShowMsg(txt.Get(), title);
-				}
-			}
-			else
-				ShellExecute(GetMainHwnd(), "open", fullPath, NULL, NULL, SW_SHOWNORMAL);
-		}
-	}
-}
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_ResourceView
@@ -1190,8 +1167,29 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				Update();
 			break;
 		case EDIT_MSG:
-			if (item)
-				fl->EditSlot(slot);
+			if (item && slot>=0 && slot<fl->GetSize())
+			{
+				char fullPath[SNM_MAX_PATH] = "";
+				if (fl->GetFullPath(slot, fullPath, sizeof(fullPath)) && FileOrDirExistsErrMsg(fullPath))
+				{
+					if (fl->IsText())
+					{
+#ifdef _WIN32
+						ShellExecute(NULL,"","notepad",fullPath,NULL,SW_SHOWNORMAL);
+#else
+						WDL_FastString txt;
+						if (LoadChunk(fullPath, &txt, false))
+						{
+							char title[128] = "";
+							_snprintfSafe(title, sizeof(title), __LOCALIZE_VERFMT("S&M - %s (slot %d)","sws_DLG_150"), fl->GetDesc(), slot+1);
+							SNM_ShowMsg(txt.Get(), title);
+						}
+#endif
+					}
+//					else
+//						ShellExecute(GetMainHwnd(), "open", fullPath, NULL, NULL, SW_SHOWNORMAL);
+				}
+			}
 			break;
 #ifdef _WIN32
 		case DIFF_MSG:
@@ -1216,10 +1214,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		{
 			char fullPath[SNM_MAX_PATH] = "";
 			if (fl->GetFullPath(slot, fullPath, sizeof(fullPath)))
-				if (char* p = strrchr(fullPath, PATH_SLASH_CHAR)) {
-					*(p+1) = '\0'; // ShellExecute() is KO otherwie..
-					ShellExecute(NULL, "open", fullPath, NULL, NULL, SW_SHOWNORMAL);
-				}
+				OpenSelectInExplorerFinder(fullPath);
 			break;
 		}
 		case EXPLORE_FILLDIR_MSG:
@@ -1616,7 +1611,7 @@ HMENU SNM_ResourceWnd::AutoSaveContextMenu(HMENU _menu, bool _saveItem)
 	char autoPath[SNM_MAX_PATH] = "";
 	_snprintfSafe(autoPath, sizeof(autoPath), __LOCALIZE_VERFMT("[Current auto-save path: %s]","sws_DLG_150"), *GetAutoSaveDir() ? GetAutoSaveDir() : __LOCALIZE("undefined","sws_DLG_150"));
 	AddToMenu(_menu, autoPath, 0, -1, false, MF_GRAYED);
-	AddToMenu(_menu, __LOCALIZE("Show path in explorer/finder...","sws_DLG_150"), EXPLORE_SAVEDIR_MSG, -1, false, *GetAutoSaveDir() ? MF_ENABLED : MF_GRAYED);
+	AddToMenu(_menu, __LOCALIZE("Show auto-save path in explorer/finder...","sws_DLG_150"), EXPLORE_SAVEDIR_MSG, -1, false, *GetAutoSaveDir() ? MF_ENABLED : MF_GRAYED);
 
 	AddToMenu(_menu, __LOCALIZE("Sync auto-save and auto-fill paths","sws_DLG_150"), AUTOFILL_SYNC_MSG, -1, false, g_syncAutoDirPrefs[g_resType] ? MFS_CHECKED : MFS_UNCHECKED);
 
@@ -1660,7 +1655,7 @@ HMENU SNM_ResourceWnd::AutoFillContextMenu(HMENU _menu, bool _fillItem)
 	char autoPath[SNM_MAX_PATH] = "";
 	_snprintfSafe(autoPath, sizeof(autoPath), __LOCALIZE_VERFMT("[Current auto-fill path: %s]","sws_DLG_150"), *GetAutoFillDir() ? GetAutoFillDir() : __LOCALIZE("undefined","sws_DLG_150"));
 	AddToMenu(_menu, autoPath, 0, -1, false, MF_GRAYED);
-	AddToMenu(_menu, __LOCALIZE("Show path in explorer/finder...","sws_DLG_150"), EXPLORE_FILLDIR_MSG, -1, false, *GetAutoFillDir() ? MF_ENABLED : MF_GRAYED);
+	AddToMenu(_menu, __LOCALIZE("Show auto-fill path in explorer/finder...","sws_DLG_150"), EXPLORE_FILLDIR_MSG, -1, false, *GetAutoFillDir() ? MF_ENABLED : MF_GRAYED);
 
 	if (g_SNM_ResSlots.Get(g_resType)->IsAutoSave())
 		AddToMenu(_menu, __LOCALIZE("Sync auto-save and auto-fill paths","sws_DLG_150"), AUTOSAVE_SYNC_MSG, -1, false, g_syncAutoDirPrefs[g_resType] ? MFS_CHECKED : MFS_UNCHECKED);
@@ -1705,7 +1700,8 @@ HMENU SNM_ResourceWnd::BookmarkContextMenu(HMENU _menu)
 		AddToMenu(_menu, SWS_SEPARATOR, 0);
 		
 		// ensure g_curProjectFn is up to date, job performed immediately JFB!! really needed?
-		ResourcesAttachJob job; job.Perform();
+		ResourcesAttachJob job;
+		job.Perform();
 
 		bool curPrjTied = (g_tiedProjects.Get(g_resType)->GetLength() && !_stricmp(g_tiedProjects.Get(g_resType)->Get(), g_curProjectFn));
 		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Attach bookmark files to %s","sws_DLG_150"), *g_curProjectFn ? GetFileRelativePath(g_curProjectFn) : __LOCALIZE("(unsaved project?)","sws_DLG_150"));

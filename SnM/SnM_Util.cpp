@@ -171,6 +171,25 @@ bool SNM_CopyFile(const char* _destFn, const char* _srcFn)
 	return ok;
 }
 
+void OpenSelectInExplorerFinder(const char* _fn)
+{
+	if (FileOrDirExists(_fn))
+	{
+#ifdef _WIN32
+		WDL_FastString cmd("/select,");
+		cmd.Append(_fn);
+		ShellExecute(NULL,"","explorer",cmd.Get(),NULL,SW_SHOWNORMAL);
+#else
+		char path[SNM_MAX_PATH] = "";
+		lstrcpyn(path, _fn, sizeof(path));
+		if (char* p = strrchr(path, PATH_SLASH_CHAR)) {
+			*(p+1) = '\0'; // ShellExecute() is KO otherwise..
+			ShellExecute(NULL, "", path, NULL, NULL, SW_SHOWNORMAL);
+		}
+#endif
+	}
+}
+
 // browse + return short resource filename (if possible and if _wantFullPath == false)
 // returns false if cancelled
 bool BrowseResourcePath(const char* _title, const char* _resSubDir, const char* _fileFilters, char* _fn, int _fnSize, bool _wantFullPath)
@@ -792,7 +811,7 @@ int SNM_NamedCommandLookup(const char* _custId, KbdSectionInfo* _section, bool _
 			//JFB cool finding - REAPER v4.34rc1
 			// other sections: for macros/scripts (which are the only non-native thing that 
 			// can be registered in those sections ATM), it turns out NamedCommandLookup() works
-			// (probably relies on the unicity of macros'/scripts' custom ids: generated hash)
+			// (probably relies on the unicity custom ids..)
 			// 3rd party sections are ok too because they can't use custom ids yet
 			if (*_custId == '_')
 			{

@@ -41,6 +41,7 @@ bool FileOrDirExists(const char* _fn);
 bool FileOrDirExistsErrMsg(const char* _fn, bool _errMsg=true);
 bool SNM_DeleteFile(const char* _filename, bool _recycleBin);
 bool SNM_CopyFile(const char* _destFn, const char* _srcFn);
+void OpenSelectInExplorerFinder(const char* _fn);
 bool BrowseResourcePath(const char* _title, const char* _dir, const char* _fileFilters, char* _fn, int _fnSize, bool _wantFullPath = false);
 void GetShortResourcePath(const char* _resSubDir, const char* _fullFn, char* _shortFn, int _shortFnSize);
 void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fullFn, int _fullFnSize);

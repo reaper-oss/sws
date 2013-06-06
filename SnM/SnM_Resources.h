@@ -83,7 +83,6 @@ class FileSlotList : public WDL_PtrList<PathSlotItem>
 	bool GetFullPath(int _slot, char* _fullFn, int _fullFnSz);
 	bool SetFromFullPath(int _slot, const char* _fullPath);
 	bool ClearSlot(int _slot);
-	void EditSlot(int _slot);
 	const char* GetResourceDir() {  return m_resDir.Get(); }
 	const char* GetDesc() { return m_desc.Get(); }
 	void SetDesc(const char* _desc) { m_desc.Set(_desc); }

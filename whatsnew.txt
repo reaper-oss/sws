@@ -1,3 +1,4 @@
+!v2.3.0 #18 (June 9, 2013)
 +Issue 517/Windows OS: S&M actions and commands that open the Windows explorer now also select files (when applicable)
 
 Fixes:

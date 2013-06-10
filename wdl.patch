@@ -43,14 +43,14 @@
        const char *val = cursec->Get(keyname);
        if (val)
        {
--        lstrcpyn(ret,val,retsize);
+-        lstrcpyn_safe(ret,val,retsize);
 +        lstrcpyn_trimmed(ret,val,retsize);
          return strlen(ret);
        }
      }
    }
  //  printf("def %s %s %s %s\n",appname,keyname,def,fn);
--  lstrcpyn(ret,def?def:"",retsize);
+-  lstrcpyn_safe(ret,def?def:"",retsize);
 +  lstrcpyn_trimmed(ret,def?def:"",retsize);
    return strlen(ret);
  }

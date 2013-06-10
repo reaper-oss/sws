@@ -1675,7 +1675,7 @@
 				OTHER_LDFLAGS = "-ltag";
 				PREBINDING = NO;
 				SDKROOT = macosx10.5;
-        MACOSX_DEPLOYMENT_TARGET = 10.4;
+				MACOSX_DEPLOYMENT_TARGET = 10.4;
 				SHARED_PRECOMPS_DIR = "~/Dev/sws-extension/build/PrecompiledHeaders";
 				SYMROOT = "~/Dev/sws-extension";
 			};
@@ -1703,7 +1703,7 @@
 				OTHER_LDFLAGS = "-ltag";
 				PREBINDING = NO;
 				SDKROOT = macosx10.5;
-        MACOSX_DEPLOYMENT_TARGET = 10.4;
+				MACOSX_DEPLOYMENT_TARGET = 10.4;
 				SHARED_PRECOMPS_DIR = "~/Dev/sws-extension/build/PrecompiledHeaders";
 				SYMROOT = "~/Dev/sws-extension";
 			};
@@ -1727,7 +1727,6 @@
 				OTHER_LDFLAGS = "-ltag";
 				PREBINDING = NO;
 				SDKROOT = macosx10.5;
-        MACOSX_DEPLOYMENT_TARGET = 10.4;
 				SHARED_PRECOMPS_DIR = "~/Dev/sws-extension/build/PrecompiledHeaders";
 				SYMROOT = "~/Dev/sws-extension64";
 			};

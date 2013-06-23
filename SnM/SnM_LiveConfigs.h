@@ -122,7 +122,7 @@ void UpdateMonitoring(int _cfgId, int _whatFlags, int _commitFlags, int _flags =
 // monitoring window (several instances)
 class SNM_LiveConfigMonitorWnd : public SWS_DockWnd {
 public:
-	SNM_LiveConfigMonitorWnd(int _cfgId = -1); // default constructor/param value not used, just to compil SNM_WindowInstManager..
+	SNM_LiveConfigMonitorWnd(int _cfgId = -1); // default constructor not used, just to compil SNM_DynWindowManager..
 	SNM_FiveMonitors* GetMonitors() { return &m_mons; }
 protected:
 	void OnInitDlg();

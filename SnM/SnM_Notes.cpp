@@ -109,9 +109,12 @@ bool g_internalMkrRgnChange = false;
 // SNM_NotesWnd
 ///////////////////////////////////////////////////////////////////////////////
 
+// S&M windows lazy init: below's "" prevents registering the SWS' screenset callback
+// (use the S&M one instead - already registered via SNM_WindowManager::Init())
 SNM_NotesWnd::SNM_NotesWnd()
-	: SWS_DockWnd(IDD_SNM_NOTES, __LOCALIZE("Notes","sws_DLG_152"), NOTES_WND_ID, SWSGetCommandID(OpenNotes))
+	: SWS_DockWnd(IDD_SNM_NOTES, __LOCALIZE("Notes","sws_DLG_152"), "", SWSGetCommandID(OpenNotes))
 {
+	m_id.Set(NOTES_WND_ID);
 	// must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();
 }
@@ -1366,7 +1369,7 @@ int NotesInit()
 	GetPrivateProfileString(NOTES_INI_SEC, "Action_help_file", defaultHelpFn, g_actionHelpFn, sizeof(g_actionHelpFn), g_SNM_IniFn.Get());
 
 	// instanciate the window if needed, can be NULL
-	g_notesWndMgr.CreateFromIni();
+	g_notesWndMgr.Init();
 
 	if (!plugin_register("projectconfig", &s_projectconfig))
 		return 0;
@@ -1392,7 +1395,7 @@ void NotesExit()
 
 void OpenNotes(COMMAND_T* _ct)
 {
-	if (SNM_NotesWnd* w = g_notesWndMgr.CreateIfNeeded())
+	if (SNM_NotesWnd* w = g_notesWndMgr.Create())
 	{
 		int newType = (int)_ct->user; // -1 means toggle current type
 		if (newType == -1)

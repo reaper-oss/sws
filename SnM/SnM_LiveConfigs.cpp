@@ -648,9 +648,12 @@ void SNM_LiveConfigView::OnItemDblClk(SWS_ListItem* item, int iCol)
 // SNM_LiveConfigsWnd
 ///////////////////////////////////////////////////////////////////////////////
 
+// S&M windows lazy init: below's "" prevents registering the SWS' screenset callback
+// (use the S&M one instead - already registered via SNM_WindowManager::Init())
 SNM_LiveConfigsWnd::SNM_LiveConfigsWnd()
-	: SWS_DockWnd(IDD_SNM_LIVE_CONFIGS, __LOCALIZE("Live Configs","sws_DLG_155"), LIVECFG_WND_ID, SWSGetCommandID(OpenLiveConfig))
+	: SWS_DockWnd(IDD_SNM_LIVE_CONFIGS, __LOCALIZE("Live Configs","sws_DLG_155"), "", SWSGetCommandID(OpenLiveConfig))
 {
+	m_id.Set(LIVECFG_WND_ID);
 	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();
 }
@@ -1944,11 +1947,11 @@ int LiveConfigInit()
 	GetPrivateProfileString("LiveConfigs", "BigFontName", SNM_DYN_FONT_NAME, g_lcBigFontName, sizeof(g_lcBigFontName), g_SNM_IniFn.Get());
 
 	// instanciate the editor if needed, can be NULL
-	g_lcWndMgr.CreateFromIni();
+	g_lcWndMgr.Init();
 
 	// instanciate monitors, if needed
 	for (int i=0; i<SNM_LIVECFG_NB_CONFIGS; i++)
-		g_monWndsMgr.CreateFromIni(i);
+		g_monWndsMgr.Init(i);
 
 	if (!plugin_register("projectconfig", &s_projectconfig))
 		return 0;
@@ -1966,7 +1969,7 @@ void LiveConfigExit()
 
 void OpenLiveConfig(COMMAND_T*)
 {
-	if (SNM_LiveConfigsWnd* w = g_lcWndMgr.CreateIfNeeded())
+	if (SNM_LiveConfigsWnd* w = g_lcWndMgr.Create())
 		w->Show(true, true);
 }
 
@@ -2658,8 +2661,7 @@ SNM_LiveConfigMonitorWnd::SNM_LiveConfigMonitorWnd(int _cfgId)
 	m_id.Set(dockId);
 	m_iCmdID = SWSGetCommandID(OpenLiveConfigMonitorWnd, (INT_PTR)m_cfgId);
 
-	screenset_unregister((char*)dockId);
-	screenset_registerNew((char*)dockId, screensetCallback, this);
+	// screensets: already registered via SNM_WindowManager::Init()
 
 	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();
@@ -2794,7 +2796,7 @@ bool SNM_LiveConfigMonitorWnd::OnMouseUp(int _xpos, int _ypos)
 void OpenLiveConfigMonitorWnd(int _idx)
 {
 	if (_idx>=0 && _idx<SNM_LIVECFG_NB_CONFIGS)
-		if (SNM_LiveConfigMonitorWnd* w = g_monWndsMgr.CreateIfNeeded(_idx))
+		if (SNM_LiveConfigMonitorWnd* w = g_monWndsMgr.Create(_idx))
 			w->Show(true, true);
 }
 

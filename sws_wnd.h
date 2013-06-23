@@ -175,13 +175,18 @@ public:
 	SWS_DockWnd(int iResource=0, const char* cWndTitle="", const char* cId="", int iCmdID=0);
 	virtual ~SWS_DockWnd();
 
-	void Show(bool bToggle, bool bActivate);
 	virtual bool IsActive(bool bWantEdit = false);
+	bool IsDocked() { return (m_state.state & 2) == 2; }
 	bool IsValidWindow() { return SWS_IsWindow(m_hwnd) ? true : false; }
 	HWND GetHWND() { return m_hwnd; }
 	WDL_VWnd* GetParentVWnd() { return &m_parentVwnd; }
 	WDL_VWnd_Painter* GetVWndPainter() { return &m_vwnd_painter; }
 	SWS_ListView* GetListView(int i = 0) { return m_pLists.Get(i); }
+
+	void Show(bool bToggle, bool bActivate);
+	void ToggleDocking();
+	int SaveState(char* cStateBuf, int iMaxLen);
+	void LoadState(const char* cStateBuf, int iLen);
 	virtual void OnCommand(WPARAM wParam, LPARAM lParam) {}
 
 	static LRESULT screensetCallback(int action, char *id, void *param, void *actionParm, int actionParmSize);
@@ -192,8 +197,6 @@ protected:
 
 	virtual INT_PTR WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	void Init(); // call from derived constructor!!
-	bool IsDocked() { return (m_state.state & 2) == 2; }
-	void ToggleDocking();
 	virtual void GetMinSize(int* w, int* h) { *w=MIN_DOCKWND_WIDTH; *h=MIN_DOCKWND_HEIGHT; }
 
 	virtual void OnInitDlg() {}
@@ -228,7 +231,7 @@ protected:
 	accelerator_register_t m_ar;
 	SWS_DockWnd_State m_state;
 	bool m_bUserClosed;
-	bool m_bLoadingState;
+	bool m_bSaveStateOnDestroy;
 	WDL_WndSizer m_resize;
 	WDL_PtrList<SWS_ListView> m_pLists;
 	WDL_VWnd_Painter m_vwnd_painter;
@@ -239,14 +242,12 @@ protected:
 private:
 	static INT_PTR WINAPI sWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	static int keyHandler(MSG *msg, accelerator_register_t *ctx);
-	int SaveState(char* cStateBuf, int iMaxLen);
-	void LoadState(const char* cStateBuf, int iLen);
 };
 
 
 char* SWS_LoadDockWndStateBuf(const char* _id, int _len = -1);
-bool SWS_IsDockWndOpen(const char* _id, const char* _stateBuf = NULL);
-void SWS_SetDockWndState(const char* _stateBuf, SWS_DockWnd_State* _state, int _len);
+int SWS_GetDockWndState(const char* _id, const char* _stateBuf = NULL);
+void SWS_SetDockWndState(const char* _stateBuf, int _len, SWS_DockWnd_State* _stateOut);
 
 bool ListView_HookThemeColorsMessage(HWND hwndDlg, int uMsg, LPARAM lParam, int cstate[LISTVIEW_COLORHOOK_STATESIZE], int listID, int whichTheme, int wantGridForColumns);
 void DrawTooltipForPoint(LICE_IBitmap *bm, POINT mousePt, RECT *wndr, const char *text);

@@ -930,9 +930,12 @@ void SNM_ResourceView::Perform()
 // SNM_ResourceWnd
 ///////////////////////////////////////////////////////////////////////////////
 
+// S&M windows lazy init: below's "" prevents registering the SWS' screenset callback
+// (use the S&M one instead - already registered via SNM_WindowManager::Init())
 SNM_ResourceWnd::SNM_ResourceWnd()
-	: SWS_DockWnd(IDD_SNM_RESOURCES, __LOCALIZE("Resources","sws_DLG_150"), RES_WND_ID, SWSGetCommandID(OpenResources))
+	: SWS_DockWnd(IDD_SNM_RESOURCES, __LOCALIZE("Resources","sws_DLG_150"), "", SWSGetCommandID(OpenResources))
 {
+	m_id.Set(RES_WND_ID);
 	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();
 }
@@ -3056,7 +3059,8 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 	{
 //JFB! TODO? auto-export if tied? (+ msg?)
 #ifdef _SNM_NO_ASYNC_UPDT
-		ResourcesAttachJob job; job.Perform();
+		ResourcesAttachJob job;
+		job.Perform();
 #else
 		SNM_AddOrReplaceScheduledJob(new ResourcesAttachJob());
 #endif
@@ -3244,7 +3248,7 @@ int ResourcesInit()
 	}
 
 	// instanciate the window if needed, can be NULL
-	g_resWndMgr.CreateFromIni();
+	g_resWndMgr.Init();
 
 	if (!plugin_register("projectconfig", &s_projectconfig))
 		return 0;
@@ -3365,7 +3369,7 @@ void ResourcesExit()
 
 void OpenResources(COMMAND_T* _ct)
 {
-	if (SNM_ResourceWnd* w = g_resWndMgr.CreateIfNeeded()) 
+	if (SNM_ResourceWnd* w = g_resWndMgr.Create()) 
 	{
 		int newType = (int)_ct->user; // -1 means toggle current type
 		if (newType == -1)
@@ -3478,9 +3482,12 @@ SNM_WindowManager<SNM_ImageWnd> g_imgWndMgr(IMG_WND_ID);
 
 bool g_stretchPref = false;
 
+// S&M windows lazy init: below's "" prevents registering the SWS' screenset callback
+// (use the S&M one instead - already registered via SNM_WindowManager::Init())
 SNM_ImageWnd::SNM_ImageWnd()
-	: SWS_DockWnd(IDD_SNM_IMAGE, __LOCALIZE("Image","sws_DLG_162"), IMG_WND_ID, SWSGetCommandID(OpenImageWnd))
+	: SWS_DockWnd(IDD_SNM_IMAGE, __LOCALIZE("Image","sws_DLG_162"), "", SWSGetCommandID(OpenImageWnd))
 {
+	m_id.Set(IMG_WND_ID);
 	m_stretch = g_stretchPref;
 
 	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
@@ -3551,7 +3558,7 @@ int ImageInit()
 	g_stretchPref = (GetPrivateProfileInt("ImageView", "Stretch", 0, g_SNM_IniFn.Get()) == 1);
 
 	// instanciate the window if needed, can be NULL
-	g_imgWndMgr.CreateFromIni();
+	g_imgWndMgr.Init();
 
 	return 1;
 }
@@ -3568,7 +3575,7 @@ void ImageExit()
 void OpenImageWnd(COMMAND_T* _ct)
 {
 	bool isNew;
-	if (SNM_ImageWnd* w = g_imgWndMgr.CreateIfNeeded(&isNew))
+	if (SNM_ImageWnd* w = g_imgWndMgr.Create(&isNew))
 	{
 		if (isNew)
 			w->SetStretch(g_stretchPref);
@@ -3580,7 +3587,7 @@ void OpenImageWnd(COMMAND_T* _ct)
 bool OpenImageWnd(const char* _fn)
 {
 	bool isNew, ok = false;
-	if (SNM_ImageWnd* w = g_imgWndMgr.CreateIfNeeded(&isNew))
+	if (SNM_ImageWnd* w = g_imgWndMgr.Create(&isNew))
 	{
 		if (isNew)
 			w->SetStretch(g_stretchPref);

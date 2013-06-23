@@ -1706,9 +1706,13 @@ enum
   BTNID_R
 };
 
+// S&M windows lazy init: below's "" prevents registering the SWS' screenset callback
+// (use the S&M one instead - already registered via SNM_WindowManager::Init())
 SNM_CyclactionWnd::SNM_CyclactionWnd()
-	: SWS_DockWnd(IDD_SNM_CYCLACTION, __LOCALIZE("Cycle Action editor","sws_DLG_161"), CA_WND_ID, SWSGetCommandID(OpenCyclaction))
+	: SWS_DockWnd(IDD_SNM_CYCLACTION, __LOCALIZE("Cycle Action editor","sws_DLG_161"), "", SWSGetCommandID(OpenCyclaction))
 {
+	m_id.Set(CA_WND_ID);
+
 	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();
 }
@@ -2509,7 +2513,7 @@ int CyclactionInit()
 		return 0;
 
 	// instanciate the window if needed, can be NULL
-	g_caWndMgr.CreateFromIni();
+	g_caWndMgr.Init();
 
 	g_editedSection = 0;
 	g_edited = false;
@@ -2524,7 +2528,7 @@ void CyclactionExit() {
 
 void OpenCyclaction(COMMAND_T* _ct)
 {
-	if (SNM_CyclactionWnd* w = g_caWndMgr.CreateIfNeeded()) {
+	if (SNM_CyclactionWnd* w = g_caWndMgr.Create()) {
 		w->Show((g_editedSection == (int)_ct->user) /* i.e toggle */, true);
 		w->SetType((int)_ct->user);
 	}

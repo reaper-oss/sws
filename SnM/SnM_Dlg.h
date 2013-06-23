@@ -38,108 +38,154 @@ void SNM_UIRefresh(COMMAND_T*);
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// S&M window "manager": ensure safe lazy init of dockable windows
-// Also overrides the default SWS screenset mgmt due to a slight design conflict
-// (for lazy init, screensets should be managed outside SWS_DockWnd).
-// Also avoids to touch the main SWS screenset code
-// The trick is:
-// => temp screenset registration - w/o instanciation, contrary to SWS wnds
-// => the temp callback instanciates the wnd if needed
-// => temp callback is replaced w/ the main SWS callback, see SWS_DockWnd
-//    constructor and SWS_DockWnd::screensetCallback()
-// Note: codeed in .h just because of template <class T> hassle..
+// S&M window manager: ensure safe lazy init of dockable windows, it also
+// overrides the default SWS screenset mgmt (slight design conflict: for lazy 
+// init, screensets should be managed outside SWS_DockWnd).
+// Note: everything in the .h just because of <class T> hassle..
 ///////////////////////////////////////////////////////////////////////////////
 
-// code in .h just because of the (template) hassle..
 template<class T> class SNM_WindowManager
 {
 public:
 	SNM_WindowManager(const char* _id) : m_id(_id), m_wnd(NULL) {}
-	virtual ~SNM_WindowManager() { Delete(false); }
+	virtual ~SNM_WindowManager() { Delete(); }
 	virtual T* Get() { return m_wnd; }
-	virtual T* CreateFromIni() { return LazyInit(); }
-	virtual T* CreateIfNeeded(bool* _isNew = NULL)
+
+	virtual T* Init()
+	{ 
+#ifdef _SNM_SCREENSET_DEBUG
+		char dbg[256]="";
+		_snprintfSafe(dbg, sizeof(dbg), "SNM_WindowManager::Init() - Register: %s\n", m_id.Get());
+		OutputDebugString(dbg);
+#endif
+		screenset_registerNew((char*)m_id.Get(), SNM_ScreensetCallback, this);
+		return GetWithLazyInit();
+	}
+
+	virtual T* Create(bool* _isNew = NULL)
 	{
+#ifdef _SNM_SCREENSET_DEBUG
+		char dbg[256]="";
+		_snprintfSafe(dbg, sizeof(dbg), "SNM_WindowManager::Create() >>>>>>>>>>>>>>>>> %s\n", m_id.Get());
+		OutputDebugString(dbg);
+#endif
+
 		if (_isNew)
 			*_isNew = false;
+
 		if (!m_wnd)
 		{
-			m_wnd = Create();
+			m_wnd = new T;
 			if (_isNew)
 				*_isNew = (m_wnd!=NULL);
 		}
 		return m_wnd;
 	}
-	virtual void Delete(bool _register = false)
+
+	virtual void Delete()
 	{
 		if (m_wnd)
 		{
-			DELETE_NULL(m_wnd); // incl. screenset unregister
-			if (_register) {
-				screenset_unregister((char*)m_id.Get()); // just in case..
-				screenset_registerNew((char*)m_id.Get(), ScreensetCallback, this);
-			}
+			DELETE_NULL(m_wnd);
+			// ^^ the above unregisters screenset callbacks
+			screenset_registerNew((char*)m_id.Get(), SNM_ScreensetCallback, this);
 		}
 	}
+
 	virtual HWND GetMsgHWND() {
 		return m_wnd ? m_wnd->GetHWND() : GetMainHwnd();
 	}
 
 protected:
-	// wnd instantiation => temp screenset callback is replaced w/ the main SWS callback
-	virtual T* Create() { return new T; }
-
 	WDL_FastString m_id;
 	T* m_wnd;
 
 private:
 	// the trick
-	static LRESULT ScreensetCallback(int _action, char* _id, void* _param, void* _actionParm, int _actionParmSize)
+	static LRESULT SNM_ScreensetCallback(int _action, char* _id, void* _param, void* _actionParm, int _actionParmSize)
 	{
-		if (_actionParm && _actionParmSize>0)
-			if (SNM_WindowManager* wc = (SNM_WindowManager*)_param)
-				if (_action==SCREENSET_ACTION_LOAD_STATE && *(const char*)_actionParm && !strcmp(_id, wc->m_id.Get()))
-					// wnd lazy init that unregister this callback & re-register SWS_DockWnd::screensetCallback()
-					if (T* wnd = wc->LazyInit((const char*)_actionParm))
-						return wnd->screensetCallback(_action, _id, wnd, _actionParm, _actionParmSize);
+
+#ifdef _SNM_SCREENSET_DEBUG
+		char dbg[256]="";
+		int state = SWS_GetDockWndState(_id, (const char*)_actionParm);
+		bool isOpen = (state & 1) == 1;
+		bool isDocked = (state & 2) == 2;
+		_snprintfSafe(dbg, sizeof(dbg), "SNM_ScreensetCallback() - _id: %s, _action: %d, _param: %p, _actionParm: %p, _actionParmSize: %d, OPEN: %s - DOCKED: %s\n", 
+			_id, _action, _param, _actionParm, _actionParmSize, isOpen ? "YES" : "NO", isDocked ? "YES" : "NO");
+		OutputDebugString(dbg);
+#endif
+
+		if (SNM_WindowManager* wc = (SNM_WindowManager*)_param)
+		{
+			SWS_DockWnd* wnd = (SWS_DockWnd*)wc->Get();
+			switch(_action)
+			{
+				case SCREENSET_ACTION_GETHWND:
+					return wnd ? (LRESULT)wnd->GetHWND() : NULL;
+				case SCREENSET_ACTION_IS_DOCKED:
+					return wnd ? (LRESULT)wnd->IsDocked() : 0;
+				case SCREENSET_ACTION_SWITCH_DOCK:
+					if (wnd && SWS_IsWindow(wnd->GetHWND()))
+						wnd->ToggleDocking();
+					return 0;
+				// from the SDK: "load state from actionParm (of actionParmSize). if both are NULL, hide"
+				case SCREENSET_ACTION_LOAD_STATE:
+					if (_actionParm && _actionParmSize)
+						wnd = (SWS_DockWnd*)wc->GetWithLazyInit((const char*)_actionParm);
+					if (wnd)
+						wnd->LoadState((char*)_actionParm, _actionParmSize);
+					return 0;
+				case SCREENSET_ACTION_SAVE_STATE:
+					wnd = (SWS_DockWnd*)wc->Create(); // worst case: wnd does not exist yet, create & save its ini file's state
+					return wnd ? wnd->SaveState((char*)_actionParm, _actionParmSize) : 0;
+			}
+		}
 		return 0;
 	}
 
-	// window lazy init
-	// _stateBuf=="__SnMWndIniState__" at init time only (read state from ini file), filled by ScreensetCallback otherwise
-	T* LazyInit(const char* _stateBuf = "__SnMWndIniState__")
+	// _actionParm==NULL => read state from ini file
+	T* GetWithLazyInit(const char* _actionParm = NULL)
 	{
-		if (!m_wnd && _stateBuf && *_stateBuf)
-		{
-			bool init = !strcmp(_stateBuf, "__SnMWndIniState__");
-			if (SWS_IsDockWndOpen(m_id.Get(), init ? NULL : _stateBuf)) {
-				m_wnd = Create();
-			}
-			// do not create the wnd yet but register to its screenset updates
-			if (!m_wnd && init) {
-				screenset_unregister((char*)m_id.Get()); // just in case..
-				screenset_registerNew((char*)m_id.Get(), ScreensetCallback, this);
-			}
-		}
+		if (!m_wnd && (SWS_GetDockWndState(m_id.Get(), _actionParm) & 1)) 
+			m_wnd = Create();
 		return m_wnd;
 	}
 };
 
 
 // this class should not be used directly, see SNM_MultiWindowManager
-// remark: some "SNM_WindowManager<T>::" are required for things to compile on OSX (useless on Win)
-template<class T> class SNM_WindowInstManager : public SNM_WindowManager<T>
+// remark: the syntax "SNM_WindowManager<T>::bla" is required to compil things on OSX..
+template<class T> class SNM_DynWindowManager : public SNM_WindowManager<T>
 {
 public:
-	// _id is a formatted string (%d)
-	SNM_WindowInstManager(const char* _wndId, int _idx) : SNM_WindowManager<T>(""), m_idx(_idx) {
+	// _wndId is a formatted string (%d)
+	SNM_DynWindowManager(const char* _wndId, int _idx) : SNM_WindowManager<T>(""), m_idx(_idx) {
 		SNM_WindowManager<T>::m_id.SetFormatted(64, _wndId, _idx+1);
 	}
-	virtual ~SNM_WindowInstManager() {
-		SNM_WindowManager<T>::Delete(false);
+
+	virtual ~SNM_DynWindowManager() {
+		SNM_WindowManager<T>::Delete();
 	}
-protected:
-	virtual T* Create() { return new T(m_idx); }
+
+	virtual T* Create(bool* _isNew = NULL)
+	{
+#ifdef _SNM_SCREENSET_DEBUG
+		char dbg[256]="";
+		_snprintfSafe(dbg, sizeof(dbg), "SNM_DynWindowManager::Create() >>>>>>>>>>>>>>>>> %s\n", SNM_WindowManager<T>::m_id.Get());
+		OutputDebugString(dbg);
+#endif
+		if (_isNew)
+			*_isNew = false;
+
+		if (!SNM_WindowManager<T>::m_wnd)
+		{
+			SNM_WindowManager<T>::m_wnd = new T(m_idx);
+			if (_isNew)
+				*_isNew = (SNM_WindowManager<T>::m_wnd!=NULL);
+		}
+		return SNM_WindowManager<T>::m_wnd;
+	}
+
 private:
 	int m_idx;
 };
@@ -152,46 +198,46 @@ template<class T> class SNM_MultiWindowManager
 public:
 	// _id is as formatted string (%d style)
 	SNM_MultiWindowManager(const char* _id) : m_id(_id) {}
-	virtual ~SNM_MultiWindowManager() { DeleteAll(false); }
+	virtual ~SNM_MultiWindowManager() { DeleteAll(); }
 	virtual T* Get(int _idx) {
-		if (SNM_WindowInstManager<T>* mgr = m_mgrs.Get(_idx, NULL)) return mgr->Get();
+		if (SNM_DynWindowManager<T>* mgr = m_mgrs.Get(_idx, NULL)) return mgr->Get();
 		return NULL;
 	}
-	virtual T* CreateFromIni(int _idx)
+	virtual T* Init(int _idx)
 	{
-		SNM_WindowInstManager<T>* mgr = m_mgrs.Get(_idx, NULL);
+		SNM_DynWindowManager<T>* mgr = m_mgrs.Get(_idx, NULL);
 		if (!mgr) {
-			mgr = new SNM_WindowInstManager<T>(m_id.Get(), _idx);
+			mgr = new SNM_DynWindowManager<T>(m_id.Get(), _idx);
 			if (mgr) m_mgrs.Insert(_idx, mgr);
 		}
-		return mgr ? mgr->CreateFromIni() : NULL;
+		return mgr ? mgr->Init() : NULL;
 	}
-	virtual T* CreateIfNeeded(int _idx, bool* _isNew = NULL)
+	virtual T* Create(int _idx, bool* _isNew = NULL)
 	{
-		SNM_WindowInstManager<T>* mgr = m_mgrs.Get(_idx, NULL);
+		SNM_DynWindowManager<T>* mgr = m_mgrs.Get(_idx, NULL);
 		if (!mgr) {
-			mgr = new SNM_WindowInstManager<T>(m_id.Get(), _idx);
+			mgr = new SNM_DynWindowManager<T>(m_id.Get(), _idx);
 			if (mgr) m_mgrs.Insert(_idx, mgr);
 		}
-		return mgr ? mgr->CreateIfNeeded(_isNew) : NULL;
+		return mgr ? mgr->Create(_isNew) : NULL;
 	}
-	virtual void DeleteAll(bool _register = false)
+	virtual void DeleteAll()
 	{
 		for (int i=m_mgrs.GetSize()-1; i>=0; i--) 
 		{
-			if (SNM_WindowInstManager<T>* mgr = m_mgrs.Enumerate(i, NULL, NULL))
-				mgr->Delete(_register);
+			if (SNM_DynWindowManager<T>* mgr = m_mgrs.Enumerate(i, NULL, NULL))
+				mgr->Delete();
 			m_mgrs.DeleteByIndex(i);
 		}
 	}
 	virtual HWND GetMsgHWND(int _idx) {
-		if (SNM_WindowInstManager<T>* mgr = m_mgrs.Get(_idx, NULL))
+		if (SNM_DynWindowManager<T>* mgr = m_mgrs.Get(_idx, NULL))
 			return mgr->GetMsgHWND();
 		return GetMainHwnd();
 	}
 
 protected:
-	WDL_IntKeyedArray<SNM_WindowInstManager<T>* > m_mgrs; // no valdispose() provided, intentional
+	WDL_IntKeyedArray<SNM_DynWindowManager<T>* > m_mgrs; // no valdispose(), intentional
 	WDL_FastString m_id;
 };
 

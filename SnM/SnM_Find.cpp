@@ -51,7 +51,6 @@ enum {
   BTNID_ZOOM_SCROLL_EN,
   CMBID_TYPE,
   TXTID_RESULT
-//  ,LOGOID
 };
 
 enum {
@@ -131,9 +130,12 @@ bool TrackNotesMatch(MediaTrack* _tr, const char* _searchStr)
 // SNM_FindWnd
 ///////////////////////////////////////////////////////////////////////////////
 
+// S&M windows lazy init: below's "" prevents registering the SWS' screenset callback
+// (use the S&M one instead - already registered via SNM_WindowManager::Init())
 SNM_FindWnd::SNM_FindWnd()
-	: SWS_DockWnd(IDD_SNM_FIND, "Find", FIND_WND_ID, SWSGetCommandID(OpenFind))
+	: SWS_DockWnd(IDD_SNM_FIND, "Find", "", SWSGetCommandID(OpenFind))
 {
+	m_id.Set(FIND_WND_ID);
 	m_type = 0;
 	m_zoomSrollItems = false;
 
@@ -634,7 +636,7 @@ void SNM_FindWnd::UpdateNotFoundMsg(bool _found)
 int FindInit()
 {
 	// instanciate the window if needed, can be NULL
-	g_findWndMgr.CreateFromIni();
+	g_findWndMgr.Init();
 	return 1;
 }
 
@@ -644,7 +646,7 @@ void FindExit() {
 
 void OpenFind(COMMAND_T*)
 {
-	if (SNM_FindWnd* w = g_findWndMgr.CreateIfNeeded()) {
+	if (SNM_FindWnd* w = g_findWndMgr.Create()) {
 		w->Show(true, true);
 		SetFocus(GetDlgItem(w->GetHWND(), IDC_EDIT));
 	}

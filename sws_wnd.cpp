@@ -52,7 +52,7 @@
 
 
 SWS_DockWnd::SWS_DockWnd(int iResource, const char* cWndTitle, const char* cId, int iCmdID)
-:m_hwnd(NULL), m_iResource(iResource), m_wndTitle(cWndTitle), m_id(cId), m_bUserClosed(false), m_iCmdID(iCmdID), m_bLoadingState(false)
+:m_hwnd(NULL), m_iResource(iResource), m_wndTitle(cWndTitle), m_id(cId), m_bUserClosed(false), m_iCmdID(iCmdID), m_bSaveStateOnDestroy(true)
 {
 	if (cId && *cId) // e.g. default constructor
 	{
@@ -62,7 +62,6 @@ SWS_DockWnd::SWS_DockWnd(int iResource, const char* cWndTitle, const char* cId, 
 
 	memset(&m_state, 0, sizeof(SWS_DockWnd_State));
 	*m_tooltip = '\0';
-
 	m_ar.translateAccel = keyHandler;
 	m_ar.isLocal = true;
 	m_ar.user = this;
@@ -338,11 +337,16 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			for (int i=0; i < m_pLists.GetSize(); i++)
 				m_pLists.Get(i)->OnDestroy();
 
-			char cState[256];
-			int iLen = SaveState(cState, 256);
-			WritePrivateProfileStruct(SWS_INI, m_id.Get(), cState, iLen, get_ini_file());
+			if (m_bSaveStateOnDestroy)
+			{
+				char cState[4096]=""; // SDK: "will usually be 4k or greater"
+				int iLen = SaveState(cState, sizeof(cState));
+				if (iLen>0)
+					WritePrivateProfileStruct(SWS_INI, m_id.Get(), cState, iLen, get_ini_file());
+			}
 			m_bUserClosed = false;
-			
+			m_bSaveStateOnDestroy = true;
+
 			DockWindowRemove(m_hwnd); // Always safe to call even if the window isn't docked
 		}
 #ifdef _WIN32
@@ -479,7 +483,9 @@ void SWS_DockWnd::ToggleDocking()
 	if (!IsDocked())
 		GetWindowRect(m_hwnd, &m_state.r);
 
+	m_bSaveStateOnDestroy = false;
 	DestroyWindow(m_hwnd);
+
 	m_state.state ^= 2;
 	Show(false, true);
 }
@@ -495,13 +501,6 @@ LRESULT SWS_DockWnd::screensetCallback(int action, char *id, void *param, void *
 				return (LRESULT)pObj->m_hwnd;
 			case SCREENSET_ACTION_IS_DOCKED:
 				return (LRESULT)pObj->IsDocked();
-			case SCREENSET_ACTION_CLOSE:
-				if (SWS_IsWindow(pObj->m_hwnd))
-				{
-					pObj->m_bUserClosed = true;
-					DestroyWindow(pObj->m_hwnd);
-				}
-				break;
 			case SCREENSET_ACTION_SWITCH_DOCK:
 				if (SWS_IsWindow(pObj->m_hwnd))
 					pObj->ToggleDocking();
@@ -559,10 +558,6 @@ int SWS_DockWnd::keyHandler(MSG* msg, accelerator_register_t* ctx)
 // as well as any derived class view information from the function SaveView
 int SWS_DockWnd::SaveState(char* cStateBuf, int iMaxLen)
 {
-	if (m_bLoadingState)
-		return 0;
-
-	int iLen = sizeof(SWS_DockWnd_State);
 	if (SWS_IsWindow(m_hwnd))
 	{
 		if (!IsDocked())
@@ -570,11 +565,13 @@ int SWS_DockWnd::SaveState(char* cStateBuf, int iMaxLen)
 		else
 			m_state.whichdock = DockIsChildOfDock(m_hwnd, NULL);
 	}
+
 	if (!m_bUserClosed && SWS_IsWindow(m_hwnd))
 		m_state.state |= 1;
 	else
 		m_state.state &= ~1;
 
+	int iLen = sizeof(SWS_DockWnd_State);
 	if (cStateBuf)
 	{
 		memcpy(cStateBuf, &m_state, iLen);
@@ -591,12 +588,25 @@ int SWS_DockWnd::SaveState(char* cStateBuf, int iMaxLen)
 
 // *Local* function to restore view state.  This is the window size, position & dock state.
 // Also calls the derived class method LoadView.
+// if both _stateBuf and _len are NULL, hide (see SDK)
 void SWS_DockWnd::LoadState(const char* cStateBuf, int iLen)
 {
-	m_bLoadingState = true;
-
 	bool bDocked = IsDocked();
-	SWS_SetDockWndState(cStateBuf, &m_state, iLen);
+
+	if (cStateBuf && iLen>=sizeof(SWS_DockWnd_State))
+		SWS_SetDockWndState(cStateBuf, iLen, &m_state);
+	else
+		m_state.state &= ~1;
+
+	if (iLen > sizeof(SWS_DockWnd_State))
+	{
+		int iViewLen = iLen - sizeof(SWS_DockWnd_State);
+		char* pTemp = new char[iViewLen];
+		memcpy(pTemp, cStateBuf + sizeof(SWS_DockWnd_State), iViewLen);
+		LoadView(pTemp, iViewLen);
+		delete [] pTemp;
+	}
+
 	Dock_UpdateDockID((char*)m_id.Get(), m_state.whichdock);
 
 	if (m_state.state & 1)
@@ -607,6 +617,7 @@ void SWS_DockWnd::LoadState(const char* cStateBuf, int iLen)
 		{
 			// If the window's already open, but the dock state or docker # has changed,
 			// destroy and reopen.
+			m_bSaveStateOnDestroy = false;
 			DestroyWindow(m_hwnd);
 		}
 		Show(false, false);
@@ -619,16 +630,10 @@ void SWS_DockWnd::LoadState(const char* cStateBuf, int iLen)
 			SetWindowPos(m_hwnd, NULL, m_state.r.left, m_state.r.top, m_state.r.right-m_state.r.left, m_state.r.bottom-m_state.r.top, SWP_NOZORDER);
 	}
 	else if (SWS_IsWindow(m_hwnd))
-		DestroyWindow(m_hwnd);
-
-	if (iLen > sizeof(SWS_DockWnd_State))
 	{
-		int iViewLen = iLen - sizeof(SWS_DockWnd_State);
-		char* cTemp = new char[iViewLen];
-		memcpy(cTemp, cStateBuf + sizeof(SWS_DockWnd_State), iViewLen);
-		LoadView(cTemp, iViewLen);
+		m_bUserClosed = true;
+		DestroyWindow(m_hwnd);
 	}
-	m_bLoadingState = false;
 }
 
 void SWS_DockWnd::KillTooltip(bool doRefresh)
@@ -651,34 +656,28 @@ char* SWS_LoadDockWndStateBuf(const char* _id, int _len)
 }
 
 // if _stateBuf==NULL, read state from ini file
-bool SWS_IsDockWndOpen(const char* _id, const char* _stateBuf)
+int SWS_GetDockWndState(const char* _id, const char* _stateBuf)
 {
 	SWS_DockWnd_State state;
+	memset(&state, 0, sizeof(SWS_DockWnd_State));
 	if (_stateBuf)
 	{
-		SWS_SetDockWndState(_stateBuf, &state, sizeof(SWS_DockWnd_State));
+		SWS_SetDockWndState(_stateBuf, sizeof(SWS_DockWnd_State), &state);
 	}
 	else
 	{
 		char* stateBuf = SWS_LoadDockWndStateBuf(_id);
-		SWS_SetDockWndState(stateBuf, &state, sizeof(SWS_DockWnd_State));
+		SWS_SetDockWndState(stateBuf, sizeof(SWS_DockWnd_State), &state);
 		delete [] stateBuf;
 	}
-	return state.state&1;
+	return state.state;
 }
 
-void SWS_SetDockWndState(const char* _stateBuf, SWS_DockWnd_State* _state, int _len)
+void SWS_SetDockWndState(const char* _stateBuf, int _len, SWS_DockWnd_State* _state)
 {
-	if (_state)
-	{
-		if (_stateBuf && _len>=sizeof(SWS_DockWnd_State))
-		{
-			for (int i=0; i < _len / (int)sizeof(int); i++)
-				((int*)_state)[i] = REAPER_MAKELEINT(*((int*)_stateBuf+i));
-		}
-		else
-			_state->state = 0;
-	}
+	if (_state && _stateBuf && _len>=sizeof(SWS_DockWnd_State))
+		for (int i=0; i < _len / (int)sizeof(int); i++)
+			((int*)_state)[i] = REAPER_MAKELEINT(*((int*)_stateBuf+i));
 }
 
 

@@ -521,9 +521,12 @@ void GetMonitoringInfo(WDL_FastString* _curNum, WDL_FastString* _cur,
 // SNM_RegionPlaylistWnd
 ///////////////////////////////////////////////////////////////////////////////
 
+// S&M windows lazy init: below's "" prevents registering the SWS' screenset callback
+// (use the S&M one instead - already registered via SNM_WindowManager::Init())
 SNM_RegionPlaylistWnd::SNM_RegionPlaylistWnd()
-	: SWS_DockWnd(IDD_SNM_RGNPLAYLIST, __LOCALIZE("Region Playlist","sws_DLG_165"), RGNPL_WND_ID, SWSGetCommandID(OpenRegionPlaylist))
+	: SWS_DockWnd(IDD_SNM_RGNPLAYLIST, __LOCALIZE("Region Playlist","sws_DLG_165"), "", SWSGetCommandID(OpenRegionPlaylist))
 {
+	m_id.Set(RGNPL_WND_ID);
 	// must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();
 }
@@ -1994,7 +1997,7 @@ int RegionPlaylistInit()
 	g_osc = LoadOscCSurfs(NULL, buf); // NULL on err (e.g. "", token doesn't exist, etc.)
 
 	// instanciate the window if needed, can be NULL
-	g_rgnplWndMgr.CreateFromIni();
+	g_rgnplWndMgr.Init();
 
 	if (!plugin_register("projectconfig", &s_projectconfig))
 		return 0;
@@ -2025,7 +2028,7 @@ void RegionPlaylistExit()
 
 void OpenRegionPlaylist(COMMAND_T*)
 {
-	if (SNM_RegionPlaylistWnd* w = g_rgnplWndMgr.CreateIfNeeded())
+	if (SNM_RegionPlaylistWnd* w = g_rgnplWndMgr.Create())
 		w->Show(true, true);
 }
 

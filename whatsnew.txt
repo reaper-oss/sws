@@ -1,18 +1,21 @@
+More screenset fixes (including http://code.google.com/p/sws-extension/source/detail?r=1077|these issues|)
+
 !v2.3.0 #18 (June 9, 2013)
-+Issue 517/Windows OS: S&M actions and commands that open the Windows explorer now also select files (when applicable)
+Issue 517 / Windows OS: S&M actions and commands that open the explorer now also select files (when applicable)
+OS X: better fonts in S&M windows (again!)
 
 Fixes:
 +SWS/FNG: Compress/Expand amplitude of selected envelope points around midpoint (inconsistent behavior for playrate and width envelopes)
-+OSX: better fonts in S&M windows
-+Screenset fixes as reported http://forum.cockos.com/showpost.php?p=1172448&postcount=1283|here|
++More screenset fixes as reported http://forum.cockos.com/showpost.php?p=1172448&postcount=1283|here|
 +Resources/Windows OS: fixed "Edit file..."
 +Issue 576: fixed auto-icon crash
-+Issue 581/OSX fix: the action "SWS/S&M: Set project startup action" now prompts for a command ID or an identifier string
- (to copy those, right-click in the Actions window > Copy selected action cmdID/identifier string)
++Issue 581 and OS X support: the action "SWS/S&M: Set project startup action" now prompts for a command ID or an identifier string
+ (to copy such IDs, right-click an action in the Actions window > Copy selected action cmdID/identifier string)
 
 !v2.3.0 #17 (April 30, 2013)
 <b>REAPER v4.33+ is required!</b>
-New API functions were introduced in this version, they enable various improvements in the SWS/S&M Extension. Thank you Cockos!
+New API functions were introduced in this version, they enable various improvements in the SWS/S&M Extension.
+Thank you Cockos!
 
 Cycle Action (CA)
 +Cycle Actions for all sections (Media Explorer, Inline MIDI Editor, etc..)
@@ -40,7 +43,7 @@ Resources window and related "slot actions"
  - Example1: Configurations,ReaConfig,ReaperConfigZip => Bank of configs example: auto-fill, then double-click slots to switch ReaConfigs (or, on Win, drag-drop slots to the arrange) 
  - Example2: Docs,Document,txt,rtf,pdf => Multiple file extensions example
  - Example3: Misc,Any file,* => Can be useful to attach any type of file to a project, for example
-+<b>Theme bookmarks and related slots actions: OSX port + now support both .ReaperthemeZip and .ReaperTheme files</b>
++<b>Theme bookmarks and related slots actions: OS X port + now support both .ReaperthemeZip and .ReaperTheme files</b>
  For Mac users, an interesting new action is "SWS/S&M: Load theme, slot n" - where 'n' is in [1; 4], http://forum.cockos.com/showthread.php?p=984786#post984786|customizable in the S&M.ini file|: up to 99 themes
 +Image bookmarks and related slots actions now support the same image formats than REAPER: PNG, JPG, BMP, etc..
  Note: Image bookmarks were limited to PNG files before this version (only the action "SWS/S&M: Show image, slot n" is still limited to PNG)
@@ -52,16 +55,16 @@ Resources window and related "slot actions"
 Fixes:
 +Notes window: undoing "remove tracks" now also restores tracks notes
 +Removed default shortcut Ctrl+Shift+M ("SWS: Open marker list"): conflict with the default/native shortcut for "View: show track manager window"
-+Removed default shortcut Ctrl+F (for "SWS/S&M: Find"): no known conflict but more future-proof.
-+Screenset load now sets size/position of undocked SWS windows as reported http://forum.cockos.com/showpost.php?p=1158117&postcount=1248|here|.
++Removed default shortcut Ctrl+F (for "SWS/S&M: Find"): no known conflict but more future-proof
++Screenset load now sets size/position of undocked SWS windows as reported http://forum.cockos.com/showpost.php?p=1158117&postcount=1248|here|
 
 !v2.3.0 #16 (April 18, 2013)
 Added H:M:S.F to marker list export format
 
 Fixes:
 +Fixed screensets broken in v2.3.0 #15
-+OSX now support all track template files, thanks mustgroove!
- This fixes this http://forum.cockos.com/showpost.php?p=1157294&postcount=31|Resources window issue| (and probably other things on OSX)
++OS X now supports all track template files, thanks mustgroove!
+ This fixes this http://forum.cockos.com/showpost.php?p=1157294&postcount=31|Resources window issue| (and probably other things on OS X)
 +Issue 552: auto-saved track templates now sync to tempo (i.e. added beat information in auto-saved templates)
 
 !v2.3.0 #15 (April 8, 2013)
@@ -101,7 +104,7 @@ Added actions:
 Fixes:
 +About box: fixed update checker connection issues in certain instances (Win only)
 +Cycle actions: fixed ReaScript support broken in v2.3.0 #14, thanks gofer!
-+OSX x64: fixed font rendering crash (when using alpha)
++OS X x64: fixed font rendering crash (when using alpha)
 +Fixed crazy behavior (SWS stops working) when running these actions on empty items:
  - SWS/BR: Create project markers from notes in selected MIDI items
  - SWS/FNG: legato selected media items on same track (change rate)
@@ -127,7 +130,7 @@ Fixes:
  - Xenakios/SWS: Toggle selected items selected randomly
 
 Other:
-+OSX: better font rendering
++OS X: better font rendering
 
 !v2.3.0 #14 (March 23, 2013)
 Cycle Actions (CAs)
@@ -176,8 +179,8 @@ Other:
 +S&M project startup actions: tweaks to support theme switching on project load (details http://forum.cockos.com/showpost.php?p=1140973&postcount=18|here|)
 
 Fixes:
-+<b>OSX 10.7+ / S&M Notes window: fixed refresh issues, thanks chriscomfort!</b>
-+OSX 10.7+ x64: fixed list views being right aligned
++<b>S&M Notes window / OS X 10.7+: fixed refresh issues, thanks chriscomfort!</b>
++OS X 10.7+ x64: fixed list views being right aligned
 +All S&M windows: fixed button display for some themes (e.g. http://forum.cockos.com/showpost.php?p=1124199&postcount=169|Apollo theme|)
 +Fixed action "SWS/S&M: Open project path in explorer/finder"
  This action was opening the project's parent folder, not the project's folder
@@ -191,7 +194,7 @@ ReaConsole updates
  => better action names, for example: a custom "Select bass tracks" instead of "SWS: Run console command: s*bass*"
  => simpler configuration (no file edition/re-start)
  => benefit from other Cycle Actions' features: toggle state reporting, etc..
- => indirectly fixes little issues on OSX
+ => indirectly fixes little issues on OS X
  Note: although it is deprecated now, the file reaconsole_customcommands.txt still parsed for ascendant compatibility
 +<b>New command 'x' to add track FX</b> by names, see examples and details http://forum.cockos.com/showpost.php?p=1115796&postcount=1179|here|
  Note: the command will do nothing if the FX is already present
@@ -200,7 +203,7 @@ ReaConsole updates
 +Issue 484: the console window is now modeless, dockable, resizable, etc..
  => Inverted key shortcuts:
  - The ENTER key runs a command but keeps the console window open
- - CTRL+ENTER (CMD+ENTER on OSX) will close the console window after running a command
+ - CTRL+ENTER (CMD+ENTER on OS X) will close the console window after running a command
 +Fixed a few console commands' undo points that were ignored
 
 Cycle Action editor updates
@@ -210,8 +213,8 @@ Cycle Action editor updates
 +More helpful messages
 +Improved toggle states for cycle actions using instructions IF and IF NOT
 
-Ported more features to OSX:
-+<b>Theme helpers for OSX</b> (actions referenced in the http://www.houseofwhitetie.com/reaper/walter_themers_guide.pdf|WALTER user manual|):
+Ported more features to OS X:
++<b>Theme helpers for OS X</b> (actions referenced in the http://www.houseofwhitetie.com/reaper/walter_themers_guide.pdf|WALTER user manual|):
  - SWS/S&M: Show theme helper (all tracks)
  - SWS/S&M: Show theme helper (selected tracks)
 +More toolbar auto-refresh actions:
@@ -397,21 +400,21 @@ Added actions
 +Issue 535:
  - SWS: Select unmuted items
  - SWS: Select unmuted items on selected tracks
-+New on OSX (were already there on Windows OS):
++New on OS X (were already there on Windows OS):
  - SWS/S&M: Dump action list (w/o SWS extension)
  - SWS/S&M: Dump action list (SWS extension only)
  - SWS/S&M: Dump action list (custom actions only)
 
 All list views:
 +Obey to HOME, END, PAGE UP and PAGE DOWN keys
-+OSX: obey to CMD-A like on Windows OS (select all)
++OS X: obey to CMD-A like on Windows OS (select all)
 +Windows OS: fixed a themed grid line glitch
 
 Other:
 +Fixed possible Auto color/icon crash when exiting REAPER
 +Fixed possible crash with FX selection actions
-+OSX: directory browsers allow directory creation (issue 511)
-+OSX: fixed single line tooltips
++OS X: directory browsers allow directory creation (issue 511)
++OS X: fixed single line tooltips
 +The action "SWS/S&M: Insert silence (measures.beats)" now supports tempo/time signature markers
 +Offline FX actions now fully unload VST plugins
 +Localization: sorted menus like default English menus
@@ -464,7 +467,7 @@ Other
 +Cycle action editor: double-click in the "Id" column (or pressing the RETURN key) runs the selected cycle action
 +Issue 488/Image window: display image filenames/slot numbers in tooltips
 +Issue 525: the master track obeys the action "SWS: Minimize selected tracks"
-+OSX/S&M windows: better fonts
++OS X / S&M windows: better fonts
 
 Fixes
 +Issue 519: fixed "SWS: Hide docker" and "SWS: Show docker" (broken since REAPER v4 and multi-dockers)
@@ -563,7 +566,7 @@ Other
 +Cycle action editor: added button "Import/export..."
 +Issue 516/Resources: auto-save actions now overwrite empty selected slots
 +Issue 515/Find window: RETURN key = find next (reminder: F3/Shift-F3 = find next/previous)
-+GUI tweaks: smaller fonts on OSX, preserve XP style for list views on Windows OS, etc..
++GUI tweaks: smaller fonts on OS X, preserve XP style for list views on Windows OS, etc..
 
 Fixes
 +Issue 459: fixed possible crash when applying grooves
@@ -588,7 +591,7 @@ Remarks:
 
 Convert project Markers dialog is now toggleable and has a state
 Issue 504: (re-)added horizontal scrollbar in the Notes window
-Issue 512: improved http://stash.reaper.fm/13968/sws_dmg.jpg|OSX install disk| (added a script that does all the job, just double-click on it!)
+Issue 512: improved http://stash.reaper.fm/13968/sws_dmg.jpg|OS X install disk| (added a script that does all the job, just double-click on it!)
 
 Added "What's new?" (via HTML file generation)
 +Added a button "What's new?" in the About box
@@ -612,10 +615,10 @@ A big welcome to our latest developer, Breeder!  He added actions:
 External MIDI file support + MIDI source offset support (action "SWS/S&M: Takes - Remove empty MIDI takes/items among selected items", etc..)
 Improved "All notes off" handling (Live Configs tool + "All notes off" actions)
 Fixed/improved "Xenakios/SWS: Create markers from selected items" (bug reported http://forum.cockos.com/showpost.php?p=1022691&postcount=961|here|)
-OSX/Resources window: better text filter behavior
+OS X / Resources window: better text filter behavior
 
 !v2.3.0 #3 (August 22, 2012)
-Issue 498: OSX - Fixed docked SWS window close issues
+Issue 498: OS X - Fixed docked SWS window close issues
 
 !v2.3.0 #2 (July 28, 2012)
 Fixed theming issues on Windows XP/7 (reported http://forum.cockos.com/showpost.php?p=1003969&postcount=918|here|)
@@ -631,7 +634,7 @@ Label processor:
 +Added take count (/K) and take number (/k)
 
 Windows OS: fixed possible stuck tooltips and buttons stuck on hover state
-Fix for OSX ini files
+Fix for OS X ini files
 
 !v2.2.0 #16 (July 9, 2012)
 Full localization for "Fill gaps", "Snapshots merge" and "ReaConsole" tools
@@ -649,13 +652,13 @@ The following windows are now themed:
 +ProjectList
 +Groove Tool
 
-OSX / Live Configs
+OS X / Live Configs
 +Browse FX user presets like on Windows OS
 +Support for AU user presets
 
 List views
-+OSX: themed grid lines (almost like on Windows OS)
-+OSX: column reordering (drag-drop column headers like on Windows OS)
++OS X: themed grid lines (almost like on Windows OS)
++OS X: column reordering (drag-drop column headers like on Windows OS)
 +Little fixes
 
 Localization for item/track color and snapshot context menus (thanks neilerua!)
@@ -698,8 +701,8 @@ Note: a new SWS template LangPack will be released with the next official SWS ve
 !v2.2.0 #12 (June 3, 2012)
 Issue 476: Fix deleting of descriptions in MarkerList, Notes window too
 Notes window: now can select all text with Ctrl-A (Windows only)
-OSX: fixed macro learn (Cycle Action editor and Live Configs)
-OSX: list view selections behave like on Windows OS
+OS X: fixed macro learn (Cycle Action editor and Live Configs)
+OS X: list view selections behave like on Windows OS
 Fixed a few localized strings that were ignored
 
 !v2.2.0 #11 (May 31, 2012)

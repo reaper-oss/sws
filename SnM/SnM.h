@@ -36,6 +36,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 //#define _SNM_DEBUG
+//#define _SNM_SCREENSET_DEBUG
 //#define _SNM_DYN_FONT_DEBUG
 //#define _SNM_MISC				// not released, deprecated, tests, etc..
 //#define _SNM_WDL				// if my wdl version is used

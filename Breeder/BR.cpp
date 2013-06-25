@@ -43,6 +43,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Move edit cursor to previous envelope point" },								"SWS_BRMOVEEDITTOPREVENV",			CursorToEnv, NULL, -1},
 	{ { DEFACCEL, "SWS/BR: Move edit cursor to previous envelope point and select it" },				"SWS_BRMOVEEDITSELPREVENV",			CursorToEnv, NULL, -2},
 	{ { DEFACCEL, "SWS/BR: Move edit cursor to previous envelope point and add to selection" },			"SWS_BRMOVEEDITTOPREVENVADDSELL",	CursorToEnv, NULL, -3},
+	{ { DEFACCEL, "SWS/BR: Hide all but active track envelope" },										"BR_ENV_HIDE_ALL_BUT_ACTIVE",		ShowActiveEnvOnly},
 	
 	{ { DEFACCEL, "SWS/BR: Split selected items at tempo markers" },									"SWS_BRSPLITSELECTEDTEMPO",			SplitItemAtTempo},
 	{ { DEFACCEL, "SWS/BR: Create project markers from selected tempo markers" },						"BR_TEMPO_TO_MARKERS",				MarkersAtTempo},
@@ -50,6 +51,7 @@ static COMMAND_T g_commandTable[] =
 
 	{ { DEFACCEL, "SWS/BR: Create project markers from selected items (name by item's notes)" },		"BR_ITEMS_TO_MARKERS_NOTES",		MarkersRegionsAtItemsNameByNotes, NULL, 0},
 	{ { DEFACCEL, "SWS/BR: Create regions from selected items (name by item's notes)" },				"BR_ITEMS_TO_REGIONS_NOTES",		MarkersRegionsAtItemsNameByNotes, NULL, 1},
+	
 	// Tempo
 	///////////////////////////////////////////////////////////////////////
 	{ { DEFACCEL, "SWS/BR: Convert project markers to tempo markers..." },								"SWS_BRCONVERTMARKERSTOTEMPO",		ConvertMarkersToTempoDialog, NULL, 0, IsConvertMarkersToTempoVisible},

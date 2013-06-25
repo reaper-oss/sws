@@ -391,3 +391,24 @@ void CursorToEnv (COMMAND_T* ct)
 	}
 	FreeHeapPtr(envState);	
 };
+
+void ShowActiveEnvOnly (COMMAND_T* ct)
+{
+	TrackEnvelope* envelope = GetSelectedTrackEnvelope(NULL);
+	if (!envelope)
+		return;
+	
+	PreventUIRefresh(1);
+	Undo_BeginBlock2(NULL);
+
+	// Get active envelope (with VIS already set) and hide all envs
+	char* envState = GetSetObjectState(envelope, "");
+	Main_OnCommand(41150, 0);
+	
+	// Set back active envelope
+	GetSetObjectState(envelope, envState);
+	FreeHeapPtr(envState);
+
+	Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL);
+	PreventUIRefresh(-1);
+};

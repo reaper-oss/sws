@@ -32,3 +32,4 @@ void MarkersAtTempo (COMMAND_T*);
 void MarkersAtNotes (COMMAND_T*);
 void MarkersRegionsAtItemsNameByNotes (COMMAND_T* ct);
 void CursorToEnv (COMMAND_T*);
+void ShowActiveEnvOnly (COMMAND_T*);

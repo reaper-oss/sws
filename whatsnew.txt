@@ -1,4 +1,8 @@
-More screenset fixes (including http://code.google.com/p/sws-extension/source/detail?r=1077|these issues|)
+Fixes:
++More screenset fixes (including http://code.google.com/p/sws-extension/source/detail?r=1077|these issues|)
+
+Added actions:
++SWS/BR: Hide all but active track envelope
 
 !v2.3.0 #18 (June 9, 2013)
 Issue 517 / Windows OS: S&M actions and commands that open the explorer now also select files (when applicable)

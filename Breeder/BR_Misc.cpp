@@ -401,11 +401,25 @@ void ShowActiveEnvOnly (COMMAND_T* ct)
 	PreventUIRefresh(1);
 	Undo_BeginBlock2(NULL);
 
-	// Get active envelope (with VIS already set) and hide all envs
+	// Get active envelope (with VIS already set)
 	char* envState = GetSetObjectState(envelope, "");
+	
+	// If envelope has only one point this will not work, so create artificial chunk that will have more than one point
+	double start, end;
+	GetSet_LoopTimeRange(false, false, &start, &end, false);
+	end += 10;
+	GetSet_LoopTimeRange(true, false, &start, &end, false);
+	Main_OnCommand(40726,0); // insert 4 points at time selection
+	end -= 10;
+	GetSet_LoopTimeRange(true, false, &start, &end, false);
+	char* envStateDummy = GetSetObjectState(envelope, "");
+
+	// Hide all envelopes
 	Main_OnCommand(41150, 0);
 	
 	// Set back active envelope
+	GetSetObjectState(envStateDummy, envState);
+	FreeHeapPtr(envStateDummy);
 	GetSetObjectState(envelope, envState);
 	FreeHeapPtr(envState);
 

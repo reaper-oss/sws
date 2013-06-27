@@ -57,7 +57,7 @@
 
 
 // no exit issue vs "DeleteOnDestroy" here: cycle actions are saved on the fly
-WDL_PtrList_DeleteOnDestroy<Cyclaction> g_cas[SNM_MAX_CYCLING_SECTIONS]; 
+WDL_PtrList_DeleteOnDestroy<Cyclaction> g_cas[SNM_MAX_CA_SECTIONS]; 
 SNM_WindowManager<SNM_CyclactionWnd> g_caWndMgr(CA_WND_ID);
 bool g_undos = true; // consolidate undo points
 
@@ -66,13 +66,29 @@ bool g_undos = true; // consolidate undo points
 // CA helpers
 ///////////////////////////////////////////////////////////////////////////////
 
+const char* GetCACustomId(int _sectionIdx) {
+	return _sectionIdx>=0 && _sectionIdx<SNM_MAX_CA_SECTIONS ? s_SNM_sectionInfos[_sectionIdx].ca_cust_id : "";
+}
+
+int GetCASectionFromCustId(const char* _custId)
+{
+	for (int idx=0; idx<SNM_MAX_CA_SECTIONS; idx++)
+		if (strstr(_custId, s_SNM_sectionInfos[idx].ca_cust_id))
+			return idx;
+	return -1;
+}
+
+const char* GetCAIniSection(int _sectionIdx) {
+	return _sectionIdx>=0 && _sectionIdx<SNM_MAX_CA_SECTIONS ? s_SNM_sectionInfos[_sectionIdx].ca_ini_sec : "";
+}
+
 // this func works for CAs that are not registered yet
 // (i.e. does not use NamedCommandLookup())
-Cyclaction* GetCyclactionFromCustomId(int _section, const char* _cmdStr)
+Cyclaction* GetCAFromCustomId(int _section, const char* _cmdStr)
 {
 	 // atoi() ok because custom ids are 1-based
 	if (_cmdStr && *_cmdStr)
-		if (int id = atoi((const char*)(_cmdStr + (*_cmdStr=='_'?1:0) + strlen(SNM_GetCACustomId(_section)))))
+		if (int id = atoi((const char*)(_cmdStr + (*_cmdStr=='_'?1:0) + strlen(GetCACustomId(_section)))))
 			return g_cas[_section].Get(id-1);
 	return NULL;
 }
@@ -258,13 +274,13 @@ int ExplodeCyclaction(int _section, const char* _cmdStr,
 {
 	// check "cross-section CA"
 	// note: it would be easy to authorize "cross-section CA" with:
-	//	_section = SNM_GetCASecFromCustId(_cmdStr);
+	//	_section = GetCASectionFromCustId(_cmdStr);
 	// .. but this would lead to a general design issue vs REAPER: explode, etc..
-	if (_section != SNM_GetCASecFromCustId(_cmdStr))
+	if (_section != GetCASectionFromCustId(_cmdStr))
 		return -3;
 
 	Cyclaction* action = _action;
-	if (!action) action = GetCyclactionFromCustomId(_section, _cmdStr); 
+	if (!action) action = GetCAFromCustomId(_section, _cmdStr); 
 	if (!action) return -1;
 
 	if (_flags&2) 
@@ -443,7 +459,7 @@ int PerformSingleCommand(int _section, const char* _cmdStr)
 // (faulty CAs are not registered at this point, see CheckRegisterableCyclaction())
 void RunCycleAction(int _section, COMMAND_T* _ct)
 {
-	if (!_ct || _section<0 || _section>=SNM_MAX_CYCLING_SECTIONS) // possible via RunCyclaction(COMMAND_T*)
+	if (!_ct || _section<0 || _section>=SNM_MAX_CA_SECTIONS) // possible via RunCyclaction(COMMAND_T*)
 		return;
 
 	Cyclaction* action = _ct ? g_cas[_section].Get((int)_ct->user-1) : NULL; // cycle action id is 1-based (for user display)
@@ -497,10 +513,9 @@ void RunCycleAction(int _section, COMMAND_T* _ct)
 										break;
 							}
 						}
-						// REPAER BUG: GetToggleCommandState2 does not work for ME sections
+						// zap commands until next ENDIF
 						else
 						{
-							// zap commands until next ENDIF
 							while (++i<subCmds.GetSize())
 								if (subCmds.Get(i) && !_stricmp(INSTRUC_ENDIF, subCmds.Get(i)->Get()))
 									break;
@@ -595,7 +610,7 @@ void RunCyclaction(COMMAND_T* _ct) {
 // API LIMITATION: although they can target the ME, all cycle actions belong to the main section ATM
 int IsCyclactionEnabled(int _section, COMMAND_T* _ct)
 {
-	if (!_ct || _section<0 || _section>=SNM_MAX_CYCLING_SECTIONS) // possible via IsCyclactionEnabled(COMMAND_T*)
+	if (!_ct || _section<0 || _section>=SNM_MAX_CA_SECTIONS) // possible via IsCyclactionEnabled(COMMAND_T*)
 		return -1;
 
 	Cyclaction* action = g_cas[_section].Get((int)_ct->user-1); // id is 1-based
@@ -726,21 +741,20 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_PtrList<WDL_F
 				else if (!_stricmp(INSTRUC_IFNOT, cmd) || !_stricmp(INSTRUC_IF, cmd))
 				{
 					instructions++;
-if (!g_SNM_Beta)
-{
+#ifdef _SNM_REAPER_BUG
 					// REAPER: GetToggleCommandState2() KO in other sections than main
 					if (_section) {
 						str.SetFormatted(256, __LOCALIZE_VERFMT("%s (or %s) is only supported in the section '%s'","sws_DLG_161"), INSTRUC_IF, INSTRUC_IFNOT, SNM_GetActionSectionName(_section));
 						return AppendErrMsg(_section, _a, _applyMsg, str.Get());
 					}
-}
+#endif
 					bool tglOk = false;
 					const char* nextCmd = "";
 					if ((i+1)<cmdSz)
 					{
 						nextCmd = _a->GetCmd(i+1);
 						if (strstr(nextCmd, "_CYCLACTION")) {
-							if (Cyclaction* nextAction = GetCyclactionFromCustomId(_section, nextCmd))
+							if (Cyclaction* nextAction = GetCAFromCustomId(_section, nextCmd))
 								tglOk = (nextAction->IsToggle() >= 0);
 						}
 						else if (IsMacroOrScript(nextCmd, false) || strstr(nextCmd, "_SWSCONSOLE_CUST")) {
@@ -911,7 +925,7 @@ if (!g_SNM_Beta)
 int RegisterCyclation(const char* _name, int _section, int _cycleId, int _cmdId)
 {
 	char custId[SNM_MAX_ACTION_CUSTID_LEN]="";
-	if (_snprintfStrict(custId, sizeof(custId), "%s%d", SNM_GetCACustomId(_section), _cycleId) > 0)
+	if (_snprintfStrict(custId, sizeof(custId), "%s%d", GetCACustomId(_section), _cycleId) > 0)
 	{
 		return SWSCreateRegisterDynamicCmd(
 			_cmdId,
@@ -947,20 +961,20 @@ void LoadCyclactions(bool _applyMsg, WDL_PtrList_DeleteOnDestroy<Cyclaction>* _c
 	WDL_FastString msg;
 	char buf[32] = "", actionBuf[CA_MAX_LEN] = "";
 	WDL_PtrList_DeleteOnDestroy<WDL_FastString> macros, consoles;
-	for (int sec=0; sec<SNM_MAX_CYCLING_SECTIONS; sec++)
+	for (int sec=0; sec<SNM_MAX_CA_SECTIONS; sec++)
 	{
 		if (_section == sec || _section == -1)
 		{
 			if (!_cyclactions)
 				FlushCyclactions(sec);
 
-			int nb = GetPrivateProfileInt(SNM_GetCAIni(sec), "Nb_Actions", 0, _iniFn ? _iniFn : g_SNM_CyclIniFn.Get());
-			int ver = GetPrivateProfileInt(SNM_GetCAIni(sec), "Version", 1, _iniFn ? _iniFn : g_SNM_CyclIniFn.Get());
+			int nb = GetPrivateProfileInt(GetCAIniSection(sec), "Nb_Actions", 0, _iniFn ? _iniFn : g_SNM_CyclIniFn.Get());
+			int ver = GetPrivateProfileInt(GetCAIniSection(sec), "Version", 1, _iniFn ? _iniFn : g_SNM_CyclIniFn.Get());
 			for (int j=0; j<nb; j++)
 			{
 				if (_snprintfStrict(buf, sizeof(buf), "Action%d", j+1) > 0)
 				{
-					GetPrivateProfileString(SNM_GetCAIni(sec), buf, CA_EMPTY, actionBuf, sizeof(actionBuf), _iniFn ? _iniFn : g_SNM_CyclIniFn.Get());
+					GetPrivateProfileString(GetCAIniSection(sec), buf, CA_EMPTY, actionBuf, sizeof(actionBuf), _iniFn ? _iniFn : g_SNM_CyclIniFn.Get());
 					
 					// upgrade?
 					if (*actionBuf && ver<CA_VERSION) {
@@ -1011,7 +1025,7 @@ void SaveCyclactions(WDL_PtrList_DeleteOnDestroy<Cyclaction>* _cyclactions = NUL
 	if (!_cyclactions)
 		_cyclactions = g_cas;
 
-	for (int sec=0; sec < SNM_MAX_CYCLING_SECTIONS; sec++)
+	for (int sec=0; sec < SNM_MAX_CA_SECTIONS; sec++)
 	{
 		if (_section == sec || _section == -1)
 		{
@@ -1057,7 +1071,7 @@ void SaveCyclactions(WDL_PtrList_DeleteOnDestroy<Cyclaction>* _cyclactions = NUL
 			// "Nb_Actions" is a bad name now: it is a max id (kept for ascendant comp.)
 			iniSection.AppendFormatted(32, "Nb_Actions=%d\n", maxId);
 			iniSection.AppendFormatted(32, "Version=%d\n", CA_VERSION);
-			SaveIniSection(SNM_GetCAIni(sec), &iniSection, _iniFn ? _iniFn : g_SNM_CyclIniFn.Get());
+			SaveIniSection(GetCAIniSection(sec), &iniSection, _iniFn ? _iniFn : g_SNM_CyclIniFn.Get());
 		}
 	}
 }
@@ -1245,6 +1259,7 @@ SNM_CyclactionsView* g_lvL = NULL;
 SNM_CommandsView* g_lvR = NULL;
 RECT g_origRectL = {0,0,0,0};
 RECT g_origRectR = {0,0,0,0};
+int g_lvLastState = 0, g_lvState = 0; // 0=display both list views, 1=left only, -1=right only
 
 // fake list views' items (help items), init + localization in CyclactionInit()
 static Cyclaction s_DEFAULT_L;
@@ -1253,15 +1268,13 @@ static WDL_FastString s_DEFAULT_R;
 
 WDL_FastString g_caFilter; // init + localization in CyclactionInit()
 
-WDL_PtrList_DeleteOnDestroy<Cyclaction> g_editedActions[SNM_MAX_CYCLING_SECTIONS];
+WDL_PtrList_DeleteOnDestroy<Cyclaction> g_editedActions[SNM_MAX_CA_SECTIONS];
 WDL_PtrList_DeleteOnDestroy<WDL_FastString> g_clipboardCmds;
 Cyclaction* g_editedAction = NULL;
 int g_editedSection = 0; // main section action, 1 = ME event list section action, 2 = ME piano roll section action
 bool g_edited = false;
 char g_lastExportFn[SNM_MAX_PATH] = "";
 char g_lastImportFn[SNM_MAX_PATH] = "";
-
-int g_lvLastState = 0, g_lvState = 0; // 0=display both list views, 1=left only, -1=right only
 
 
 bool IsCAFiltered() {
@@ -1304,7 +1317,7 @@ void EditModelInit()
 		actionsToDelete.Add(g_editedActions[g_editedSection].Get(i));
 
 	// model init (we display/edit copies for apply/cancel)
-	for (int sec=0; sec < SNM_MAX_CYCLING_SECTIONS; sec++) {
+	for (int sec=0; sec < SNM_MAX_CA_SECTIONS; sec++) {
 		g_editedActions[sec].EmptySafe(g_editedSection != sec); // keep current (displayed!) pointers
 		for (int i=0; i < g_cas[sec].GetSize(); i++)
 			g_editedActions[sec].Add(new Cyclaction(g_cas[sec].Get(i)));
@@ -1405,9 +1418,14 @@ void SNM_CyclactionsView::GetItemText(SWS_ListItem* item, int iCol, char* str, i
 			case COL_L_ID:
 				if (!a->m_added)
 				{
-					int id = g_editedActions[g_editedSection].Find(a);
-					if (id >= 0)
-						_snprintfSafe(str, iStrMax, "%5.d", id+1);
+					int cycleId = g_editedActions[g_editedSection].Find(a);
+					if (cycleId >= 0)
+					{
+						if (a->m_cmdId)
+							_snprintfSafe(str, iStrMax, "%3.d", cycleId+1);
+						else
+							_snprintfSafe(str, iStrMax, "(%d)", cycleId+1);
+					}
 				}
 				else
 					lstrcpyn(str, "*", iStrMax);
@@ -1709,7 +1727,7 @@ enum
 // S&M windows lazy init: below's "" prevents registering the SWS' screenset callback
 // (use the S&M one instead - already registered via SNM_WindowManager::Init())
 SNM_CyclactionWnd::SNM_CyclactionWnd()
-	: SWS_DockWnd(IDD_SNM_CYCLACTION, __LOCALIZE("Cycle Action editor","sws_DLG_161"), "", SWSGetCommandID(OpenCyclaction))
+	: SWS_DockWnd(IDD_SNM_CYCLACTION, __LOCALIZE("Cycle Actions","sws_DLG_161"), "", SWSGetCommandID(OpenCyclaction))
 {
 	m_id.Set(CA_WND_ID);
 
@@ -1755,7 +1773,7 @@ void SNM_CyclactionWnd::OnInitDlg()
 	m_parentVwnd.AddChild(&m_txtSection);
 
 	m_cbSection.SetID(CMBID_SECTION);
-	for (int i=0; i < SNM_MAX_CYCLING_SECTIONS; i++)
+	for (int i=0; i < SNM_MAX_CA_SECTIONS; i++)
 		m_cbSection.AddItem(SNM_GetActionSectionName(i));
 	m_cbSection.SetCurSel(g_editedSection);
 	m_cbSection.SetFont(font);
@@ -1940,26 +1958,18 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case LEARN_CYCLACTION_MSG:
 			if (action)
 			{
-				int cycleId = g_editedActions[g_editedSection].Find(action);
-				if (cycleId >= 0)
+				if (action->m_cmdId)
 				{
-					char custId[SNM_MAX_ACTION_CUSTID_LEN] = "";
-					_snprintfSafe(custId, sizeof(custId), "_%s%d", SNM_GetCACustomId(g_editedSection), cycleId+1);
-
-					// API LIMITATION reminder: although they can target the ME, all cycle actions belong to the main section ATM 
-					if (int id = SNM_NamedCommandLookup(custId, NULL, true))
-					{
-						if (LOWORD(wParam) == RUN_CYCLACTION_MSG)
-							Main_OnCommand(id, 0);
-						else
-							LearnAction(kbdSec, id);
-					}
-					else
-					{
-						MessageBox(m_hwnd,
-							__LOCALIZE("This action is not registered yet!","sws_DLG_161"),
-							__LOCALIZE("S&M - Error","sws_DLG_161"), MB_OK);
-					}
+					if (LOWORD(wParam) == RUN_CYCLACTION_MSG)
+						Main_OnCommand(action->m_cmdId, 0);
+					else if (LearnAction(kbdSec, action->m_cmdId) && g_lvL)
+						g_lvL->Update();
+				}
+				else
+				{
+					MessageBox(m_hwnd,
+						__LOCALIZE("This action is not registered yet!","sws_DLG_161"),
+						__LOCALIZE("S&M - Error","sws_DLG_161"), MB_OK);
 				}
 			}
 			break;
@@ -2067,7 +2077,7 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			break;
 		case EXPORT_SEL_MSG:
 		{
-			int x=0; WDL_PtrList_DeleteOnDestroy<Cyclaction> actions[SNM_MAX_CYCLING_SECTIONS];
+			int x=0; WDL_PtrList_DeleteOnDestroy<Cyclaction> actions[SNM_MAX_CA_SECTIONS];
 			while(Cyclaction* a = (Cyclaction*)g_lvL->EnumSelected(&x))
 				actions[g_editedSection].Add(new Cyclaction(a));
 			if (actions[g_editedSection].GetSize()) {
@@ -2081,7 +2091,7 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		}
 		case EXPORT_CUR_SECTION_MSG:
 		{
-			WDL_PtrList_DeleteOnDestroy<Cyclaction> actions[SNM_MAX_CYCLING_SECTIONS];
+			WDL_PtrList_DeleteOnDestroy<Cyclaction> actions[SNM_MAX_CA_SECTIONS];
 			for (int i=0; i < g_editedActions[g_editedSection].GetSize(); i++)
 				actions[g_editedSection].Add(new Cyclaction(g_editedActions[g_editedSection].Get(i)));
 			if (actions[g_editedSection].GetSize()) {
@@ -2106,7 +2116,7 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			ResetSection(g_editedSection);
 			break;
 		case RESET_ALL_SECTIONS_MSG:
-			for (int sec=0; sec < SNM_MAX_CYCLING_SECTIONS; sec++)
+			for (int sec=0; sec < SNM_MAX_CA_SECTIONS; sec++)
 				ResetSection(sec);
 			break;
 /*JFB!! doc not up to date
@@ -2312,12 +2322,10 @@ HMENU SNM_CyclactionWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 			{
 				AddToMenu(hMenu, __LOCALIZE("Remove cycle actions","sws_DLG_161"), DEL_CYCLACTION_MSG); 
 				AddToMenu(hMenu, SWS_SEPARATOR, 0);
-				AddToMenu(hMenu, __LOCALIZE("Run","sws_DLG_161"), RUN_CYCLACTION_MSG, -1, false, action->m_added ? MF_GRAYED : MF_ENABLED); 
-if (g_SNM_Beta)
-{
-				AddToMenu(hMenu, SWS_SEPARATOR, 0);
-				AddToMenu(hMenu, __LOCALIZE("Learn or add shortcut...","sws_DLG_161"), LEARN_CYCLACTION_MSG, -1, false, action->m_added ? MF_GRAYED : MF_ENABLED); 
-}
+				AddToMenu(hMenu, __LOCALIZE("Run","sws_DLG_161"), RUN_CYCLACTION_MSG, -1, false, action->m_cmdId ? MF_ENABLED : MF_GRAYED); 
+/* commented: this is a job for REAPER's action list
+				AddToMenu(hMenu, __LOCALIZE("Add shortcut...","sws_DLG_161"), LEARN_CYCLACTION_MSG, -1, false, action->m_cmdId ? MF_ENABLED : MF_GRAYED); 
+*/
 			}
 		}
 		// right
@@ -2473,7 +2481,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 
 	WDL_FastString confStr("<S&M_CYCLACTIONS\n");
 	int iHeaderLen = confStr.GetLength();
-	for (int i=0; i < SNM_MAX_CYCLING_SECTIONS; i++)
+	for (int i=0; i < SNM_MAX_CA_SECTIONS; i++)
 		for (int j=0; j < g_cas[i].GetSize(); j++)
 			if (Cyclaction* a = g_cas[i].Get(j))
 				if (!a->IsEmpty())

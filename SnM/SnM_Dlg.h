@@ -38,12 +38,13 @@ void SNM_UIRefresh(COMMAND_T*);
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// S&M window manager: ensure safe lazy init of dockable windows, it also
-// overrides the default SWS screenset mgmt (slight design conflict: for lazy 
-// init, screensets should be managed outside SWS_DockWnd).
-// Note: everything in the .h just because of <class T> hassle..
+// S&M window manager: ensure lazy init of dockable windows, it also overrides
+// the default SWS screenset mgmt (slight design conflict: for lazy init,
+// screensets should be managed outside SWS_DockWnd).
+// Note: everything is in the .h because of the <class T> inheritance hassle..
 ///////////////////////////////////////////////////////////////////////////////
 
+// for single instance wnds
 template<class T> class SNM_WindowManager
 {
 public:
@@ -62,19 +63,19 @@ public:
 		return GetWithLazyInit();
 	}
 
+	// creates the wnd *if needed*
 	virtual T* Create(bool* _isNew = NULL)
 	{
-#ifdef _SNM_SCREENSET_DEBUG
-		char dbg[256]="";
-		_snprintfSafe(dbg, sizeof(dbg), "SNM_WindowManager::Create() >>>>>>>>>>>>>>>>> %s\n", m_id.Get());
-		OutputDebugString(dbg);
-#endif
-
 		if (_isNew)
 			*_isNew = false;
 
 		if (!m_wnd)
 		{
+#ifdef _SNM_SCREENSET_DEBUG
+			char dbg[256]="";
+			_snprintfSafe(dbg, sizeof(dbg), "SNM_WindowManager::Create() >>>>>>>>>>>>>>>>> %s\n", m_id.Get());
+			OutputDebugString(dbg);
+#endif
 			m_wnd = new T;
 			if (_isNew)
 				*_isNew = (m_wnd!=NULL);
@@ -86,8 +87,7 @@ public:
 	{
 		if (m_wnd)
 		{
-			DELETE_NULL(m_wnd);
-			// ^^ the above unregisters screenset callbacks
+			DELETE_NULL(m_wnd); // also unregisters screenset callbacks..
 			screenset_registerNew((char*)m_id.Get(), SNM_ScreensetCallback, this);
 		}
 	}
@@ -104,17 +104,13 @@ private:
 	// the trick
 	static LRESULT SNM_ScreensetCallback(int _action, char* _id, void* _param, void* _actionParm, int _actionParmSize)
 	{
-
 #ifdef _SNM_SCREENSET_DEBUG
 		char dbg[256]="";
-		int state = SWS_GetDockWndState(_id, (const char*)_actionParm);
-		bool isOpen = (state & 1) == 1;
-		bool isDocked = (state & 2) == 2;
-		_snprintfSafe(dbg, sizeof(dbg), "SNM_ScreensetCallback() - _id: %s, _action: %d, _param: %p, _actionParm: %p, _actionParmSize: %d, OPEN: %s - DOCKED: %s\n", 
-			_id, _action, _param, _actionParm, _actionParmSize, isOpen ? "YES" : "NO", isDocked ? "YES" : "NO");
+		_snprintfSafe(dbg, sizeof(dbg), 
+			"SNM_ScreensetCallback() - _id: %s, _action: %d, _param: %p, _actionParm: %p, _actionParmSize: %d\n", 
+			_id, _action, _param, _actionParm, _actionParmSize);
 		OutputDebugString(dbg);
 #endif
-
 		if (SNM_WindowManager* wc = (SNM_WindowManager*)_param)
 		{
 			SWS_DockWnd* wnd = (SWS_DockWnd*)wc->Get();
@@ -135,8 +131,10 @@ private:
 					if (wnd)
 						wnd->LoadState((char*)_actionParm, _actionParmSize);
 					return 0;
+				// if the wnd does not exist yet,
+				// create it & save its state (== current reaper.ini's state)
 				case SCREENSET_ACTION_SAVE_STATE:
-					wnd = (SWS_DockWnd*)wc->Create(); // worst case: wnd does not exist yet, create & save its ini file's state
+					wnd = (SWS_DockWnd*)wc->Create();
 					return wnd ? wnd->SaveState((char*)_actionParm, _actionParmSize) : 0;
 			}
 		}
@@ -167,18 +165,19 @@ public:
 		SNM_WindowManager<T>::Delete();
 	}
 
+	// creates the wnd *if needed*
 	virtual T* Create(bool* _isNew = NULL)
 	{
-#ifdef _SNM_SCREENSET_DEBUG
-		char dbg[256]="";
-		_snprintfSafe(dbg, sizeof(dbg), "SNM_DynWindowManager::Create() >>>>>>>>>>>>>>>>> %s\n", SNM_WindowManager<T>::m_id.Get());
-		OutputDebugString(dbg);
-#endif
 		if (_isNew)
 			*_isNew = false;
 
 		if (!SNM_WindowManager<T>::m_wnd)
 		{
+#ifdef _SNM_SCREENSET_DEBUG
+			char dbg[256]="";
+			_snprintfSafe(dbg, sizeof(dbg), "SNM_DynWindowManager::Create() >>>>>>>>>>>>>>>>> %s\n", SNM_WindowManager<T>::m_id.Get());
+			OutputDebugString(dbg);
+#endif
 			SNM_WindowManager<T>::m_wnd = new T(m_idx);
 			if (_isNew)
 				*_isNew = (SNM_WindowManager<T>::m_wnd!=NULL);
@@ -191,8 +190,7 @@ private:
 };
 
 
-
-// helper to manage multiple windows instances, a bit like a single S&M dockable window
+// for multiple instance wnds
 template<class T> class SNM_MultiWindowManager
 {
 public:
@@ -212,6 +210,7 @@ public:
 		}
 		return mgr ? mgr->Init() : NULL;
 	}
+	// creates the wnd *if needed*
 	virtual T* Create(int _idx, bool* _isNew = NULL)
 	{
 		SNM_DynWindowManager<T>* mgr = m_mgrs.Get(_idx, NULL);

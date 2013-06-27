@@ -75,8 +75,9 @@ public:
 	int FindCmd(WDL_FastString* _cmd) { return m_cmds.Find(_cmd); }
 
 	int m_performState;
-	int m_cmdId; // should only be used only once the cycle action is registered
-	bool m_added, m_fakeToggle;
+	bool m_added; // CA added by the user, not yet registered
+	int m_cmdId;  // valid once the CA is registered (m_added can be false though, e.g. invalid CA)
+	bool m_fakeToggle;
 
 private:
 	void UpdateNameAndCmds();
@@ -106,7 +107,7 @@ protected:
 	void AddResetMenu(HMENU _menu);
 	int OnKey(MSG* msg, int iKeyState);
 	void DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight = NULL);
-	virtual void GetMinSize(int* w, int* h) { *w=180; *h=125; }
+	virtual void GetMinSize(int* _w, int* _h) { *_w=180; *_h=140; }
 
 	WDL_VirtualComboBox m_cbSection;
 	WDL_VirtualIconButton m_btnUndo;

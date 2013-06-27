@@ -1883,7 +1883,8 @@ void PlaylistMarkerRegionListener::NotifyMarkerRegionUpdate(int _updateFlags)
 {
 	PlaylistResync();
 #ifdef _SNM_NO_ASYNC_UPDT
-	PlaylistUpdateJob job; job.Perform();
+	PlaylistUpdateJob job;
+	job.Perform();
 #else
 	SNM_AddOrReplaceScheduledJob(new PlaylistUpdateJob());
 #endif
@@ -1975,7 +1976,8 @@ static project_config_extension_t s_projectconfig = {
 void RegionPlaylistSetTrackListChange()
 {
 #ifdef _SNM_NO_ASYNC_UPDT
-	PlaylistUpdateJob job; job.Perform();
+	PlaylistUpdateJob job;
+	job.Perform();
 #else
 	SNM_AddOrReplaceScheduledJob(new PlaylistUpdateJob());
 #endif

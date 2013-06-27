@@ -76,9 +76,6 @@ void TranslatePos(double _pos, int* _h, int* _m = NULL, int* _s = NULL, int* _ms
 double SeekPlay(double _pos, bool _moveView = false);
 
 int SNM_GetActionSectionUniqueId(int _idx);
-const char* SNM_GetCACustomId(int _sectionIdx);
-int SNM_GetCASecFromCustId(const char* _custId);
-const char* SNM_GetCAIni(int _sectionIdx);
 const char* SNM_GetActionSectionName(int _idx);
 int SNM_GetActionSectionIndex(const char* _localizedName);
 KbdSectionInfo* SNM_GetActionSection(int _idx);
@@ -87,6 +84,7 @@ int SNM_NamedCommandLookup(const char* _custId, KbdSectionInfo* _section = NULL,
 bool LoadKbIni(WDL_PtrList<WDL_FastString>* _out);
 int GetMacroOrScript(const char* _customId, int _sectionUniqueId, WDL_PtrList<WDL_FastString>* _inMacroScripts, WDL_PtrList<WDL_FastString>* _outCmds, WDL_FastString* _outName = NULL);
 bool IsMacroOrScript(const char* _cmd, bool _cmdIsName = true);
+bool LearnAction(KbdSectionInfo* _section, int _cmdId);
 bool GetSectionURL(bool _alr, const char* _section, char* _sectionURL, int _sectionURLSize);
 
 #ifdef _SNM_MISC

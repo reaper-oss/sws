@@ -45,23 +45,20 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Just to ease sustaining vs S&M/API/REAPER/WDL bugs and/or issues: 
+// Just to ease sustaining vs S&M/API/REAPER/WDL issues: 
 // #undef to activate the "expected code", #define to activate workarounds
 ///////////////////////////////////////////////////////////////////////////////
 
-#define _SNM_REAPER_BUG			// workaround some API/REAPER bugs
-								// Last test: REAPER v4.34rc1
-								// API bug 1: CountActionShortcuts() can return > 0 although there is no shortcut
-								// API bug 2: DoActionShortcutDialog() does not persist *all* learned shortcuts
-								//            note: a fix announced in v4.33pre29 but still buggy
-								// API bug 3: GetToggleCommandState2() does not work
+#define _SNM_REAPER_BUG			// workaround API/REAPER bugs
+								// Last test: REAPER v4.5rc11
+								// - GetToggleCommandState2() only works for the main section
 
 #ifdef __APPLE__
   #define _SNM_SWELL_ISSUES		// workaround some SWELL issues
 #endif							// Last test: WDL d1d8d2 - Dec. 20 2012
-								// - issue 1: native font rendering won't draw multiple lines
-								// - issue 2: missing some EN_CHANGE msg, see SnM_Notes.cpp
-								// - issue 3: EN_SETFOCUS, EN_KILLFOCUS not yet supported
+								// - native font rendering won't draw multiple lines
+								// - missing some EN_CHANGE msg, see SnM_Notes.cpp
+								// - EN_SETFOCUS, EN_KILLFOCUS not yet supported
 
 #define _SNM_NO_ASYNC_UPDT		// no async UI updates
 
@@ -150,7 +147,6 @@
 
 #define SNM_MAX_OSC_MSG_LEN			256
 #define SNM_MAX_SECTION_NAME_LEN	64
-#define SNM_MAX_SECTION_ACTIONS		128
 #define SNM_MAX_ACTION_CUSTID_LEN	128
 #define SNM_MAX_ACTION_NAME_LEN		128
 #define SNM_MAX_ENV_CHUNKNAME_LEN	32
@@ -175,8 +171,8 @@
 #define SNM_SCHEDJOB_PRJ_ACTION				SNM_SCHEDJOB_PLAYLIST_UPDATE + 1
 #define SNM_SCHEDJOB_OSX_FIX				SNM_SCHEDJOB_PRJ_ACTION + 1	//JFB!! removeme some day
 
-#define SNM_SCHEDJOB_DEFAULT_DELAY	250
-#define SNM_SCHEDJOB_SLOW_DELAY		500    // for non urgent stuff, e.g. UI update
+#define SNM_SCHEDJOB_DEFAULT_DELAY			250
+#define SNM_SCHEDJOB_SLOW_DELAY				500    // for non urgent stuff, e.g. UI update
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -225,7 +221,7 @@ void SNM_AddOrReplaceScheduledJob(SNM_ScheduledJob* _job);
 ///////////////////////////////////////////////////////////////////////////////
 
 // fake action toggle states
-int SNM_GetFakeToggleState(COMMAND_T*);
+int GetFakeToggleState(COMMAND_T*);
 
 // S&M core stuff
 int SNM_Init(reaper_plugin_info_t* _rec);
@@ -252,6 +248,7 @@ extern int g_SNM_IniVersion;
 extern int g_SNM_Beta;
 extern WDL_FastString g_SNM_IniFn, g_SNM_CyclIniFn, g_SNM_DiffToolFn;
 
+
 class SNM_TrackInt {
 public:
 	SNM_TrackInt(MediaTrack* _tr, int _i) : m_tr(_tr), m_int(_i) {}
@@ -271,6 +268,16 @@ typedef struct MIDI_COMMAND_T {
 	bool fakeToggle;
 #endif
 } MIDI_COMMAND_T;
+
+// unsigned chars are enough ATM..
+typedef struct DYN_COMMAND_T {
+	const char* desc;
+	const char* id;
+	void (*doCommand)(COMMAND_T*);
+	unsigned char count;
+	unsigned char max;
+	int (*getEnabled)(COMMAND_T*);
+} DYN_COMMAND_T;
 
 typedef struct SECTION_INFO_T {
 	int unique_id;
@@ -311,8 +318,8 @@ static SECTION_INFO_T s_SNM_sectionInfos[] = {
 
 #define SNM_MACRO_CUSTID_LEN		32
 #define SNM_NUM_NATIVE_SECTIONS		SNM_SEC_IDX_SNM
-#define SNM_MAX_CYCLING_SECTIONS	SNM_NUM_NATIVE_SECTIONS
-#define SNM_MAX_DYNAMIC_ACTIONS		99 // if > 99, the "dynamic action" code must be updated
+#define SNM_MAX_CA_SECTIONS			SNM_NUM_NATIVE_SECTIONS
+#define SNM_MAX_DYN_ACTIONS			99 // if > 99, the "dynamic actions" code must be updated
 
 
 ///////////////////////////////////////////////////////////////////////////////

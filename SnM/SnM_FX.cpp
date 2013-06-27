@@ -69,7 +69,7 @@ int IsFXBypassedSelTracks(COMMAND_T* _ct)
 	// several selected tracks: possible mix of different states 
 	// => return a fake toggle state (best effort)
 	else if (selTrCount)
-		return SNM_GetFakeToggleState(_ct);
+		return GetFakeToggleState(_ct);
 	return false;
 }
 
@@ -195,7 +195,7 @@ int IsFXOfflineSelTracks(COMMAND_T * _ct)
 	// several selected tracks: possible mix of different states 
 	// => return a fake toggle state (best effort)
 	else if (selTrCount)
-		return SNM_GetFakeToggleState(_ct);
+		return GetFakeToggleState(_ct);
 	return false;
 }
 

@@ -38,7 +38,7 @@ class SNM_FindWnd : public SWS_DockWnd
 public:
 	SNM_FindWnd();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
-	void GetMinSize(int* w, int* h) { *w=297; *h=100; }
+	void GetMinSize(int* _w, int* _h) { *_w=297; *_h=100; }
 	bool Find(int _mode);
 	MediaItem* FindPrevNextItem(int _dir, MediaItem* _item);
 	bool FindMediaItem(int _dir, bool _allTakes, bool (*jobTake)(MediaItem_Take*,const char*), bool (*jobItem)(MediaItem*,const char*) = NULL);

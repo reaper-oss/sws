@@ -54,7 +54,7 @@ public:
 	bool Equals(LiveConfigItem* _item, bool _ignoreComment);
 	void GetInfo(WDL_FastString* _info);
 	int m_cc;
-	MediaTrack* m_track;
+	MediaTrack* m_track; //JFB!! TODO: GUID instead (to handle track deletion + undo, etc)
 	WDL_FastString m_desc, m_trTemplate, m_fxChain, m_presets, m_onAction, m_offAction;
 };
 
@@ -65,7 +65,7 @@ public:
 	~LiveConfig() { m_ccConfs.Empty(true); delete m_osc; }
 	int SetInputTrack(MediaTrack* _newInputTr, bool _updateSends);
 	bool IsLastConfiguredTrack(MediaTrack* _tr);
-	MediaTrack* m_inputTr;
+	MediaTrack* m_inputTr;  //JFB!! TODO: GUID instead (to handle track deletion + undo, etc)
 	WDL_PtrList<LiveConfigItem> m_ccConfs;
 	int m_version, m_ccDelay, m_fade, m_enable, m_muteOthers, m_selScroll, m_offlineOthers, m_cc123, m_ignoreEmpty, m_autoSends;
 	int m_activeMidiVal, m_curMidiVal, m_preloadMidiVal, m_curPreloadMidiVal;
@@ -91,6 +91,7 @@ public:
 	SNM_LiveConfigsWnd();
 	void Update();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
+	void GetMinSize(int* _w, int* _h) { *_w=156; *_h=140; }
 	void FillComboInputTrack();
 	bool SelectByCCValue(int _configId, int _cc, bool _selectOnly = true);
 protected:

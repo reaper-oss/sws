@@ -913,7 +913,7 @@ int GetMacroOrScript(const char* _custId, int _sectionUniqueId, WDL_PtrList<WDL_
 	return found;
 }
 
-// test if an action name (or a custom id) is a macro/script one
+// test if an action name or a custom id is a macro/script one
 // *not* based on NamedCommandLookup() so that it works even if _cmd is not registered yet
 // note: a bit hacky but we definitely need this..
 bool IsMacroOrScript(const char* _cmd, bool _cmdIsName)
@@ -953,22 +953,6 @@ int SNM_GetActionSectionUniqueId(int _sectionIdx) {
 	return _sectionIdx>=0 && _sectionIdx<SNM_NUM_MANAGED_SECTIONS ? s_SNM_sectionInfos[_sectionIdx].unique_id : -1;
 }
 
-const char* SNM_GetCACustomId(int _sectionIdx) {
-	return _sectionIdx>=0 && _sectionIdx<SNM_MAX_CYCLING_SECTIONS ? s_SNM_sectionInfos[_sectionIdx].ca_cust_id : "";
-}
-
-int SNM_GetCASecFromCustId(const char* _custId)
-{
-	for (int idx=0; idx<SNM_MAX_CYCLING_SECTIONS; idx++)
-		if (strstr(_custId, s_SNM_sectionInfos[idx].ca_cust_id))
-			return idx;
-	return -1;
-}
-
-const char* SNM_GetCAIni(int _sectionIdx) {
-	return _sectionIdx>=0 && _sectionIdx<SNM_MAX_CYCLING_SECTIONS ? s_SNM_sectionInfos[_sectionIdx].ca_ini_sec : "";
-}
-
 const char* SNM_GetActionSectionName(int _sectionIdx)
 {
 	if (KbdSectionInfo* sec = SNM_GetActionSection(_sectionIdx))
@@ -989,6 +973,52 @@ int SNM_GetActionSectionIndex(const char* _localizedName)
 KbdSectionInfo* SNM_GetActionSection(int _idx) {
 	int id = SNM_GetActionSectionUniqueId(_idx);
 	return id>=0 ? SectionFromUniqueID(id) : NULL;
+}
+
+bool LearnAction(KbdSectionInfo* _section, int _cmdId)
+{
+	if (!_section)
+		_section = SNM_GetActionSection(SNM_SEC_IDX_MAIN);
+
+	int nbShortcuts = CountActionShortcuts(_section, _cmdId);
+	if (nbShortcuts>0)
+	{
+		char buf[128] = "";
+		WDL_FastString shortcuts;
+		for (int i=0; i<nbShortcuts; i++)
+		{
+			if (GetActionShortcutDesc(_section, _cmdId, i, buf, sizeof(buf)) && *buf)
+			{
+				if (shortcuts.GetLength())
+					shortcuts.Append(",");
+				shortcuts.Append(" ");
+				shortcuts.Append(buf);
+			}
+		}
+		shortcuts.Ellipsize(32, 32);
+
+		WDL_FastString msg;
+		msg.SetFormatted(256, __LOCALIZE_VERFMT("The action \"%s\" is already bound to:","sws_mbox"), kbd_getTextFromCmd(_cmdId, _section));
+		msg.Append(shortcuts.GetLength() ? shortcuts.Get() : __LOCALIZE("<unknown bindings>","sws_mbox"));
+		msg.Append(".\n");
+		msg.Append(nbShortcuts>1 || !shortcuts.GetLength() ?
+			__LOCALIZE("Do you want to replace those bindings?","sws_mbox") : 
+			__LOCALIZE("Do you want to replace this binding?","sws_mbox"));
+		msg.Append("\n");
+		msg.Append(__LOCALIZE("Note: replying \"No\" will add a new binding.","sws_mbox"));
+
+		switch (MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("S&M - Confirmation","sws_mbox"), MB_YESNOCANCEL))
+		{
+			case IDYES:
+				while (DeleteActionShortcut(_section, _cmdId, --nbShortcuts));
+				break;
+			case IDNO:
+				break;
+			default:
+				return false;
+		}
+	}
+	return DoActionShortcutDialog(GetMainHwnd(), _section, _cmdId, nbShortcuts);
 }
 
 bool GetSectionURL(bool _alr, const char* _section, char* _sectionURL, int _sectionURLSize)

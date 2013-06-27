@@ -1031,7 +1031,8 @@ void NotesMarkerRegionListener::NotifyMarkerRegionUpdate(int _updateFlags)
 	if (g_notesViewType == SNM_NOTES_REGION_SUBTITLES)
 	{
 #ifdef _SNM_NO_ASYNC_UPDT
-		NotesUpdateJob job; job.Perform();
+		NotesUpdateJob job;
+		job.Perform();
 #else
 		SNM_AddOrReplaceScheduledJob(new NotesUpdateJob());
 #endif
@@ -1043,7 +1044,8 @@ void NotesMarkerRegionListener::NotifyMarkerRegionUpdate(int _updateFlags)
 		else
 		{
 #ifdef _SNM_NO_ASYNC_UPDT
-			NotesUpdateJob job; job.Perform();
+			NotesUpdateJob job;
+			job.Perform();
 #else
 			SNM_AddOrReplaceScheduledJob(new NotesUpdateJob());
 #endif
@@ -1343,7 +1345,8 @@ void NotesSetTrackTitle()
 void NotesSetTrackListChange()
 {
 #ifdef _SNM_NO_ASYNC_UPDT
-	NotesUpdateJob job; job.Perform();
+	NotesUpdateJob job;
+	job.Perform();
 #else
 	SNM_AddOrReplaceScheduledJob(new NotesUpdateJob());
 #endif

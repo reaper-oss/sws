@@ -31,7 +31,6 @@
 #include "SnM_Project.h"
 #include "SnM_Resources.h"
 #include "SnM_Util.h"
-#include "SnM_Window.h"
 #include "../Prompt.h"
 #include "../reaper/localize.h"
 

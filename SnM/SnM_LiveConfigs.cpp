@@ -1933,7 +1933,8 @@ void LiveConfigsSetTrackTitle() {
 void LiveConfigsTrackListChange()
 {
 #ifdef _SNM_NO_ASYNC_UPDT
-	LiveConfigsUpdateJob job; job.Perform();
+	LiveConfigsUpdateJob job;
+	job.Perform();
 #else
 	SNM_AddOrReplaceScheduledJob(new LiveConfigsUpdateJob());
 #endif

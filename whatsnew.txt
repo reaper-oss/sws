@@ -1,3 +1,4 @@
+!v2.3.0 #19 (June 27, 2013)
 Fixes:
 +Issue 585 / OS X: fixed font redering crashes
 +More screenset fixes (including http://code.google.com/p/sws-extension/source/detail?r=1077|these issues|)

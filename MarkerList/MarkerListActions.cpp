@@ -98,11 +98,10 @@ void DeleteAllMarkers()
 }
 
 // Command version with undo point and wnd update
-void DeleteAllMarkers(COMMAND_T*)
+void DeleteAllMarkers(COMMAND_T* ct)
 {
-	Undo_BeginBlock();
 	DeleteAllMarkers();
-	Undo_EndBlock(__LOCALIZE("Delete all markers","sws_undo"), UNDO_STATE_MISCCFG);
+	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 	g_pMarkerList->Update();
 }
 
@@ -123,15 +122,14 @@ void DeleteAllRegions()
 }
 
 // Command version with undo point and wnd update
-void DeleteAllRegions(COMMAND_T*)
+void DeleteAllRegions(COMMAND_T* ct)
 {
-	Undo_BeginBlock();
 	DeleteAllRegions();
-	Undo_EndBlock(__LOCALIZE("Delete all regions","sws_undo"), UNDO_STATE_MISCCFG);
+	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 	g_pMarkerList->Update();
 }
 
-void RenumberIds(COMMAND_T*)
+void RenumberIds(COMMAND_T* ct)
 {
 	MarkerList ml(NULL, true);
 	DeleteAllMarkers();
@@ -147,9 +145,10 @@ void RenumberIds(COMMAND_T*)
 	}
 	g_pMarkerList->Update();
 	UpdateTimeline();
+	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 }
 
-void RenumberRegions(COMMAND_T*)
+void RenumberRegions(COMMAND_T* ct)
 {
 	MarkerList ml(NULL, true);
 	DeleteAllRegions();
@@ -165,6 +164,7 @@ void RenumberRegions(COMMAND_T*)
 	}
 	g_pMarkerList->Update();
 	UpdateTimeline();
+	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 }
 
 void SelNextRegion(COMMAND_T*)
@@ -289,7 +289,7 @@ void SelPrevMarkerOrRegion(COMMAND_T*)
 	}
 }
 
-void MarkersToRegions(COMMAND_T*)
+void MarkersToRegions(COMMAND_T* ct)
 {
 	MarkerList ml(NULL, true);
 
@@ -325,8 +325,6 @@ void MarkersToRegions(COMMAND_T*)
 				pNext = markers.Get(n++);
 			}
 			while(pNext && pNext->IsRegion());
-
-			MarkerItem *pm = markers.Get(i);
 
 			double pos = pm->GetPos();
 			double end = pNext ? pNext->GetPos() : projEnd;

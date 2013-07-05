@@ -415,23 +415,47 @@ void LiveConfigItem::GetInfo(WDL_FastString* _info)
 
 LiveConfig::LiveConfig()
 { 
-	m_version = 0;
+	m_version = LIVECFG_VERSION;
 	m_ccDelay = DEF_CC_DELAY;
 	m_fade = DEF_FADE;
 	m_enable = m_cc123 = m_autoSends = m_selScroll = 1;
 	m_ignoreEmpty = m_muteOthers = m_offlineOthers = 0;
-	m_inputTr = NULL;
+	memcpy(&m_inputTr, &GUID_NULL, sizeof(GUID));
 	m_activeMidiVal = m_preloadMidiVal = m_curMidiVal = m_curPreloadMidiVal = -1;
 	m_osc = NULL;
-	for (int j=0; j<128; j++)
+	for (int j=0; j<SNM_LIVECFG_NB_ROWS; j++)
 		m_ccConfs.Add(new LiveConfigItem(j, "", NULL, "", "", "", "", ""));
 }
 
-// undo points must be crated by callers, if needed
+bool LiveConfig::IsDefault(bool _ignoreComment)
+{
+	LiveConfig temp; // trick: no code update when changing default values
+	bool isDefault = 
+		m_version==temp.m_version && m_ccDelay==temp.m_ccDelay &&
+		m_fade==temp.m_fade && m_enable==temp.m_enable && 
+		m_cc123==temp.m_cc123 && m_autoSends==temp.m_autoSends &&
+		m_selScroll==temp.m_selScroll && m_ignoreEmpty==temp.m_ignoreEmpty &&
+		m_muteOthers==temp.m_muteOthers && m_offlineOthers==temp.m_offlineOthers &&
+		GuidsEqual(&m_inputTr, temp.GetInputTrackGUID()) &&
+/* those ones can be ignored (for undo only)
+		m_activeMidiVal==temp.m_activeMidiVal && m_preloadMidiVal==temp.m_preloadMidiVal &&
+		m_curMidiVal==temp.m_curMidiVal && m_curPreloadMidiVal==temp.m_curPreloadMidiVal &&
+*/
+		m_osc==temp.m_osc;
+
+	for (int j=0; isDefault && j<m_ccConfs.GetSize(); j++)
+		if (LiveConfigItem* item = m_ccConfs.Get(j))
+			isDefault &= item->IsDefault(_ignoreComment);
+
+	return isDefault;
+}
+
+// undo point and more UI refresh is up to the caller
 int LiveConfig::SetInputTrack(MediaTrack* _newInputTr, bool _updateSends)
 {
 	int nbSends = 0;
-	if (_updateSends)
+	MediaTrack* inputTr = GetInputTrack();
+	if (_updateSends && inputTr != _newInputTr)
 	{
 		WDL_PtrList<void> doneTrs;
 
@@ -439,8 +463,7 @@ int LiveConfig::SetInputTrack(MediaTrack* _newInputTr, bool _updateSends)
 		WDL_PtrList_DeleteOnDestroy<SNM_ChunkParserPatcher> ps;
 
 		// remove sends of the current input track
-		if (m_inputTr && CSurf_TrackToID(m_inputTr, false) > 0 && 
-			m_inputTr != _newInputTr) // do not re-create sends (i.e. do not scratch the user's send tweaks!)
+		if (inputTr && CSurf_TrackToID(inputTr, false) > 0)
 		{
 			for (int i=0; i < m_ccConfs.GetSize(); i++)
 				if (LiveConfigItem* cfg = m_ccConfs.Get(i))
@@ -452,20 +475,19 @@ int LiveConfig::SetInputTrack(MediaTrack* _newInputTr, bool _updateSends)
 							p = new SNM_SendPatcher(cfg->m_track); 
 							ps.Add(p);
 						}
-						p->RemoveReceivesFrom(m_inputTr);
+						p->RemoveReceivesFrom(inputTr);
 					}
 		}
 
 		// add sends to the new input track
-		if (_newInputTr && CSurf_TrackToID(_newInputTr, false) > 0 &&
-			m_inputTr != _newInputTr) // do not re-create sends (i.e. do not scratch users' tweaks)
+		if (_newInputTr && CSurf_TrackToID(_newInputTr, false) > 0)
 		{
 			doneTrs.Empty(false);
 			for (int i=0; i < m_ccConfs.GetSize(); i++)
 				if (LiveConfigItem* cfg = m_ccConfs.Get(i))
 					if (cfg->m_track &&
 						cfg->m_track != _newInputTr && 
-						cfg->m_track != m_inputTr && // exclude the "old" input track 
+						cfg->m_track != inputTr && // exclude the previous input track 
 						doneTrs.Find(cfg->m_track)<0 && // have to check this (HasReceives() is not aware of chunk updates that are occuring)
 						!HasReceives(_newInputTr, cfg->m_track))
 					{
@@ -482,12 +504,9 @@ int LiveConfig::SetInputTrack(MediaTrack* _newInputTr, bool _updateSends)
 							nbSends++;
 					}
 		}
+		RefreshRoutingsUI();
 	}
-	m_inputTr = _newInputTr;
-
-	if (SNM_LiveConfigsWnd* w = g_lcWndMgr.Get())
-		w->FillComboInputTrack();
-
+	memcpy(&m_inputTr, _newInputTr ? GetTrackGUID(_newInputTr) : &GUID_NULL, sizeof(GUID));
 	return nbSends;
 }
 
@@ -691,7 +710,6 @@ void SNM_LiveConfigsWnd::OnInitDlg()
 
 	m_cbInputTr.SetID(CMBID_INPUT_TRACK);
 	m_cbInputTr.SetFont(font);
-	FillComboInputTrack();
 	m_parentVwnd.AddChild(&m_cbInputTr);
 
 	m_btnLearn.SetID(BTNID_LEARN);
@@ -708,7 +726,7 @@ void SNM_LiveConfigsWnd::OnInitDlg()
 	m_vwndCC.AddChild(&m_knobCC);
 
 	m_vwndCC.SetID(WNDID_CC_DELAY);
-	m_vwndCC.SetTitle(__LOCALIZE("Switch delay:","sws_DLG_155"));
+	m_vwndCC.SetTitle(__LOCALIZE("Smoothing:","sws_DLG_155"));
 	m_vwndCC.SetSuffix(__LOCALIZE("ms","sws_DLG_155"));
 	m_vwndCC.SetZeroText(__LOCALIZE("immediate","sws_DLG_155"));
 	m_parentVwnd.AddChild(&m_vwndCC);
@@ -749,11 +767,12 @@ void SNM_LiveConfigsWnd::FillComboInputTrack()
 
 	int sel=0;
 	if (LiveConfig* lc = g_liveConfigs.Get()->Get(g_configId))
-		for (int i=1; i <= GetNumTracks(); i++) // excl. master
-			if (lc->m_inputTr == CSurf_TrackFromID(i,false)) {
-				sel = i;
-				break;
-			}
+		if (MediaTrack* inputTr = lc->GetInputTrack())
+			for (int i=1; i <= GetNumTracks(); i++) // excl. master
+				if (inputTr == CSurf_TrackFromID(i, false)) {
+					sel = i;
+					break;
+				}
 	m_cbInputTr.SetCurSel(sel);
 }
 
@@ -786,12 +805,14 @@ bool SNM_LiveConfigsWnd::SelectByCCValue(int _configId, int _cc, bool _selectOnl
 
 void SNM_LiveConfigsWnd::Update()
 {
+	FillComboInputTrack();
+
 	if (m_pLists.GetSize())
 		GetListView()->Update();
+
 	if (LiveConfig* lc = g_liveConfigs.Get()->Get(g_configId)) {
 		m_vwndCC.SetValue(lc->m_ccDelay);
 		m_vwndFade.SetValue(lc->m_fade);
-//		SNM_AddOrReplaceScheduledJob(new LiveConfigsUpdateFadeJob(lc->m_fade)); // so that it works for undo..
 	}
 	m_parentVwnd.RequestRedraw(NULL);
 }
@@ -803,8 +824,8 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		return;
 
 	int x=0;
+	MediaTrack* inputTr = lc->GetInputTrack();
 	LiveConfigItem* item = (LiveConfigItem*)GetListView()->EnumSelected(&x);
-
 	switch (LOWORD(wParam))
 	{
 		case HELP_MSG:
@@ -815,10 +836,13 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			char trName[SNM_MAX_TRACK_NAME_LEN] = "";
 			if (PromptUserForString(GetMainHwnd(), __LOCALIZE("S&M - Create input track","sws_DLG_155"), trName, sizeof(trName), true))
 			{
-				PreventUIRefresh(1);
+				// no Undo_OnStateChangeEx2() here, rec arm below creates an undo point
+				Undo_BeginBlock2(NULL); 
 
 				InsertTrackAtIndex(GetNumTracks(), false);
-				MediaTrack* inputTr = CSurf_TrackFromID(GetNumTracks(), false);
+				TrackList_AdjustWindows(false);
+
+				inputTr = CSurf_TrackFromID(GetNumTracks(), false);
 				if (inputTr)
 				{
 					GetSetMediaTrackInfo(inputTr, "P_NAME", trName);
@@ -830,36 +854,37 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				}
 
 				int nbSends = lc->SetInputTrack(inputTr, true); // always obey (ignore lc->m_autoSends)
-				Undo_OnStateChangeEx2(NULL, UNDO_STR, UNDO_STATE_ALL, -1); // UNDO_STATE_ALL: possible routing updates above
+				Undo_EndBlock2(NULL, UNDO_STR, UNDO_STATE_ALL);
 
-				PreventUIRefresh(-1);
-//				TrackList_AdjustWindows(false);
-				RefreshRoutingsUI();
+				Update();
 
 				char msg[256] = "";
 				if (nbSends > 0) 
-					_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Created track \"%s\" (%d sends, record armed, monitoring enabled, no master sends).\nPlease select a MIDI or audio input!","sws_DLG_155"), trName, nbSends);
+					_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Created track \"%s\" (%d sends, record armed, monitoring enabled, no master sends).\nPlease select a MIDI or audio input for this new track.","sws_DLG_155"), trName, nbSends);
 				else
-					_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Created track \"%s\" (record armed, monitoring enabled, no master sends).\nPlease select a MIDI or audio input!","sws_DLG_155"), trName);
+					_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Created track \"%s\" (record armed, monitoring enabled, no master sends).\nPlease select a MIDI or audio input for this new track.","sws_DLG_155"), trName);
 				MessageBox(GetHWND(), msg, __LOCALIZE("S&M - Create input track","sws_DLG_155"), MB_OK);
 			}
 			break;
 		}
 		case SHOW_FX_MSG:
-			if (item && item->m_track) TrackFX_Show(item->m_track, 0, 1); // no undo
+			if (item && item->m_track)
+				TrackFX_Show(item->m_track, 0, 1);
 			break;
 		case SHOW_IO_MSG:
-			if (item && item->m_track) ShowTrackRoutingWindow(item->m_track);
+			if (item && item->m_track)
+				ShowTrackRoutingWindow(item->m_track);
 			break;
 		case SHOW_FX_INPUT_MSG:
-			if (lc->m_inputTr) TrackFX_Show(lc->m_inputTr, 0, 1); // no undo
+			if (inputTr)
+				TrackFX_Show(inputTr, 0, 1);
 			break;
 		case SHOW_IO_INPUT_MSG:
-			if (lc->m_inputTr) ShowTrackRoutingWindow(lc->m_inputTr);
+			if (inputTr)
+				ShowTrackRoutingWindow(inputTr);
 			break;
 		
 		case MUTE_OTHERS_MSG:
-			// check native pref
 			if (!lc->m_muteOthers) // about to activate?
 				if (int* dontProcessMutedTrs = (int*)GetConfigVar("norunmute"))
 					if (!*dontProcessMutedTrs)
@@ -869,8 +894,10 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 							__LOCALIZE("The preference \"Do not process muted tracks\" is disabled.\nDo you want to enable it for CPU savings?","sws_DLG_155"),
 							__LOCALIZE("S&M - Question","sws_DLG_155"),
 							MB_YESNOCANCEL);
-						if (r==IDYES) *dontProcessMutedTrs = 1;
-						else if (r==IDCANCEL) break;
+						if (r==IDYES)
+							*dontProcessMutedTrs = 1;
+						else if (r==IDCANCEL)
+							break;
 					}
 			lc->m_muteOthers = !lc->m_muteOthers;
 			Undo_OnStateChangeEx2(NULL, UNDO_STR, UNDO_STATE_MISCCFG, -1);
@@ -950,8 +977,8 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			bool updt = false;
 			while (item)
 			{
-				if (lc->m_autoSends && item->m_track && lc->m_inputTr && lc->IsLastConfiguredTrack(item->m_track))
-					SNM_RemoveReceivesFrom(item->m_track, lc->m_inputTr);
+				if (lc->m_autoSends && item->m_track && inputTr && lc->IsLastConfiguredTrack(item->m_track))
+					SNM_RemoveReceivesFrom(item->m_track, inputTr);
 				item->Clear();
 				updt = true;
 				item = (LiveConfigItem*)GetListView()->EnumSelected(&x);
@@ -981,10 +1008,12 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		}
 
 		case APPLY_MSG:
-			if (item) ApplyLiveConfig(g_configId, item->m_cc, -1, 0, APPLY_PRELOAD_HWND, true); // immediate
+			if (item)
+				ApplyLiveConfig(g_configId, item->m_cc, -1, 0, APPLY_PRELOAD_HWND, true); // immediate
 			break;
 		case PRELOAD_MSG:
-			if (item) PreloadLiveConfig(g_configId, item->m_cc, -1, 0, APPLY_PRELOAD_HWND, true); // immediate
+			if (item)
+				PreloadLiveConfig(g_configId, item->m_cc, -1, 0, APPLY_PRELOAD_HWND, true); // immediate
 			break;
 
 		case LOAD_TRACK_TEMPLATE_MSG:
@@ -1114,8 +1143,8 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			bool updt = false;
 			while (item)
 			{
-				if (lc->m_autoSends && item->m_track && lc->m_inputTr && lc->IsLastConfiguredTrack(item->m_track))
-					SNM_RemoveReceivesFrom(item->m_track, lc->m_inputTr);
+				if (lc->m_autoSends && item->m_track && inputTr && lc->IsLastConfiguredTrack(item->m_track))
+					SNM_RemoveReceivesFrom(item->m_track, inputTr);
 				if (item->m_track) item->Clear(true);
 				else item->m_track = NULL;
 				updt = true;
@@ -1176,6 +1205,7 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			{
 				lc->SetInputTrack(m_cbInputTr.GetCurSel() ? CSurf_TrackFromID(m_cbInputTr.GetCurSel(), false) : NULL, lc->m_autoSends==1);
 				Undo_OnStateChangeEx2(NULL, UNDO_STR, UNDO_STATE_ALL, -1); // UNDO_STATE_ALL: SetInputTrack() might update the project
+				Update();
 			}
 			break;
 		case CMBID_CONFIG:
@@ -1184,7 +1214,6 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				// stop cell editing (changing the list content would be ignored otherwise => dropdown box & list box unsynchronized)
 				GetListView()->EditListItemEnd(false);
 				g_configId = m_cbConfig.GetCurSel();
-				FillComboInputTrack();
 				Update();
 			}
 			break;
@@ -1201,8 +1230,8 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 						item->m_trTemplate.Set("");
 					}
 					item->m_presets.Set("");
-					if (lc->m_autoSends && item->m_track && lc->m_inputTr && !HasReceives(lc->m_inputTr, item->m_track))
-						SNM_AddReceive(lc->m_inputTr, item->m_track, -1);
+					if (lc->m_autoSends && item->m_track && inputTr && !HasReceives(inputTr, item->m_track))
+						SNM_AddReceive(inputTr, item->m_track, -1);
 					updt = true;
 					item = (LiveConfigItem*)GetListView()->EnumSelected(&x);
 				}
@@ -1352,9 +1381,9 @@ void SNM_LiveConfigsWnd::AddLearnMenu(HMENU _menu, bool _subItems)
 		if (_subItems) hOptMenu = CreatePopupMenu();
 		else hOptMenu = _menu;
 
-		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Apply Live Config %d (MIDI CC/OSC only)","sws_DLG_155"), g_configId+1);
+		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Apply Live Config %d (MIDI CC/OSC only)","s&m_section_actions"), g_configId+1);
 		AddToMenu(hOptMenu, buf, LEARN_APPLY_MSG);
-		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Preload Live Config %d (MIDI CC/OSC only)","sws_DLG_155"), g_configId+1);
+		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Preload Live Config %d (MIDI CC/OSC only)","s&m_section_actions"), g_configId+1);
 		AddToMenu(hOptMenu, buf, LEARN_PRELOAD_MSG);
 		if (_subItems && GetMenuItemCount(hOptMenu))
 			AddSubMenu(_menu, hOptMenu, __LOCALIZE("Learn","sws_DLG_155"));
@@ -1387,6 +1416,7 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 {
 	LiveConfig* lc = g_liveConfigs.Get()->Get(g_configId);
 	if (!lc) return NULL;
+	MediaTrack* inputTr = lc->GetInputTrack();
 
 	HMENU hMenu = CreatePopupMenu();
 
@@ -1408,8 +1438,10 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 			case TXTID_INPUT_TRACK:
 			case CMBID_INPUT_TRACK:
 				*wantDefaultItems = false;
-				AddToMenu(hMenu, __LOCALIZE("Show FX chain...","sws_DLG_155"), SHOW_FX_INPUT_MSG, -1, false, lc->m_inputTr ? MF_ENABLED : MF_GRAYED);
-				AddToMenu(hMenu, __LOCALIZE("Show routing window...","sws_DLG_155"), SHOW_IO_INPUT_MSG, -1, false, lc->m_inputTr ? MF_ENABLED : MF_GRAYED);
+				AddToMenu(hMenu, __LOCALIZE("Create input track...","sws_DLG_155"), CREATE_INPUT_MSG);
+				AddToMenu(hMenu, SWS_SEPARATOR, 0);
+				AddToMenu(hMenu, __LOCALIZE("Show FX chain...","sws_DLG_155"), SHOW_FX_INPUT_MSG, -1, false, inputTr ? MF_ENABLED : MF_GRAYED);
+				AddToMenu(hMenu, __LOCALIZE("Show routing window...","sws_DLG_155"), SHOW_IO_INPUT_MSG, -1, false, inputTr ? MF_ENABLED : MF_GRAYED);
 				return hMenu;
 		}
 	}
@@ -1622,7 +1654,7 @@ bool SNM_LiveConfigsWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, i
 			case WNDID_CC_DELAY:
 			case KNBID_CC_DELAY:
 				// keep messages on a single line (for the langpack generator)
-				lstrcpyn(_bufOut, __LOCALIZE("Optional delay when applying/preloading configs\nPrevents to be stuck when receiving CC/OSC: only the last stable value is processed, not all values in between","sws_DLG_155"), _bufOutSz);
+				lstrcpyn(_bufOut, __LOCALIZE("Optional delay before applying/preloading configs when receiving MIDI/OSC from a controller\nPrevents to be stuck: only the last stable value is processed, not all values in between","sws_DLG_155"), _bufOutSz);
 				return true;
 			case WNDID_FADE:
 			case KNBID_FADE:
@@ -1686,32 +1718,8 @@ bool SNM_LiveConfigsWnd::Insert(int _dir)
 
 void LiveConfigsUpdateJob::Perform()
 {
-	// check consistency of all live configs
-	for (int i=0; i<g_liveConfigs.Get()->GetSize(); i++)
-	{
-		if (LiveConfig* lc = g_liveConfigs.Get()->Get(i))
-		{
-			bool sndUpdate = false;
-			MediaTrack* inputTr = lc->m_inputTr;
-			for (int j=0; j<lc->m_ccConfs.GetSize(); j++)
-				if (LiveConfigItem* item = lc->m_ccConfs.Get(j))
-					if (item->m_track && CSurf_TrackToID(item->m_track, false) <= 0) {
-						item->Clear(true);
-						sndUpdate = true;
-					}
-			if (lc->m_inputTr && CSurf_TrackToID(lc->m_inputTr, false) <= 0) {
-				inputTr = NULL;
-				sndUpdate = true;
-			}
-			if (sndUpdate)
-				lc->SetInputTrack(inputTr, lc->m_autoSends==1);
-		}
-	}
-
-	if (SNM_LiveConfigsWnd* w = g_lcWndMgr.Get()) {
-		w->FillComboInputTrack();
+	if (SNM_LiveConfigsWnd* w = g_lcWndMgr.Get())
 		w->Update();
-	}
 }
 
 
@@ -1745,8 +1753,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 			lc->m_version = lp.gettoken_int(3);
 			lc->m_muteOthers = lp.gettoken_int(4);
 			stringToGuid(lp.gettoken_str(5), &g);
-			// do not set lc->m_inputTr right now but via SetInputTrack(), see below
-			MediaTrack* inputTr = GuidsEqual(&g, &GUID_NULL) ? NULL : GuidToTrack(&g); // GUID_NULL would affect the master track otherwise!
+			lc->SetInputTrackGUID(&g);
 			lc->m_selScroll = lp.gettoken_int(6, &success);
 			if (!success) lc->m_selScroll = 1;
 			lc->m_offlineOthers = lp.gettoken_int(7, &success);
@@ -1800,17 +1807,15 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 						item->m_offAction.Set(lp.gettoken_str(7));
 						
 						// upgrade if needed
-						if (lc->m_version < 2) // not < SNM_LIVECFG_VERSION!
+						if (lc->m_version < 2) { // "2", not < LIVECFG_VERSION!
 							UpgradePresetConfV1toV2(item->m_track, lp.gettoken_str(5), &item->m_presets);
+							lc->m_version = LIVECFG_VERSION;
+						}
 					}
 				}
 				else
 					break;
 			}
-
-			// once the config as been filled..
-			// note: do not manage sends (restored via "normal" undos or via rpp file loading)
-			lc->SetInputTrack(inputTr, false);
 
 			// refresh monitoring window + osc feedback
 			UpdateMonitoring(
@@ -1833,77 +1838,73 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 	GUID g; 
 	char strId[128] = "";
 	WDL_FastString escStrs[6];
-	bool firstCfg = true; // will avoid useless data in RPP files
-	for (int i=0; i < g_liveConfigs.Get()->GetSize(); i++)
+	for (int i=0; i<g_liveConfigs.Get()->GetSize(); i++)
 	{
 		LiveConfig* lc = g_liveConfigs.Get()->Get(i);
-		for (int j=0; lc && j < lc->m_ccConfs.GetSize(); j++)
+		if (lc && !lc->IsDefault(false)) // avoid useless data in RPP files
 		{
-			LiveConfigItem* item = lc->m_ccConfs.Get(j);
-			if (item && !item->IsDefault(false))
-			{
-				if (firstCfg)
-				{
-					firstCfg = false;
+			// valid input track?
+			MediaTrack* inputTr = lc->GetInputTrack();
+			if (inputTr && CSurf_TrackToID(inputTr, false) >= 1) // excl. master
+				guidToString(lc->GetInputTrackGUID(), strId);
+			else
+				guidToString((GUID*)&GUID_NULL, strId);
 
-					if (lc->m_inputTr && CSurf_TrackToID(lc->m_inputTr, false) > 0) 
-						g = *(GUID*)GetSetMediaTrackInfo(lc->m_inputTr, "GUID", NULL);
+			if (lc->m_osc)
+				makeEscapedConfigString(lc->m_osc->m_name.Get(), &escStrs[0]);
+			else
+				escStrs[0].Set("\"\"");
+
+			ctx->AddLine("<S&M_MIDI_LIVE %d %d %d %d %s %d %d %d %d %d %d %d %s %d %d %d %d", 
+				i+1,
+				lc->m_enable,
+				LIVECFG_VERSION,
+				lc->m_muteOthers,
+				strId,
+				lc->m_selScroll,
+				lc->m_offlineOthers,
+				lc->m_cc123,
+				lc->m_ignoreEmpty,
+				lc->m_autoSends,
+				lc->m_ccDelay,
+				lc->m_fade,
+				escStrs[0].Get(),
+				lc->m_activeMidiVal,
+				lc->m_curMidiVal,
+				lc->m_preloadMidiVal,
+				lc->m_curPreloadMidiVal);
+
+			for (int j=0; j<lc->m_ccConfs.GetSize(); j++)
+			{
+				LiveConfigItem* item = lc->m_ccConfs.Get(j);
+				if (item && !item->IsDefault(false)) // avoid useless data in RPP files
+				{
+					if (item->m_track && CSurf_TrackToID(item->m_track, false) > 0) 
+						g = *(GUID*)GetSetMediaTrackInfo(item->m_track, "GUID", NULL);
 					else 
 						g = GUID_NULL;
 					guidToString(&g, strId);
 
-					if (lc->m_osc)
-						makeEscapedConfigString(lc->m_osc->m_name.Get(), &escStrs[0]);
-					else
-						escStrs[0].Set("\"\"");
+					makeEscapedConfigString(item->m_desc.Get(), &escStrs[0]);
+					makeEscapedConfigString(item->m_trTemplate.Get(), &escStrs[1]);
+					makeEscapedConfigString(item->m_fxChain.Get(), &escStrs[2]);
+					makeEscapedConfigString(item->m_presets.Get(), &escStrs[3]);
+					makeEscapedConfigString(item->m_onAction.Get(), &escStrs[4]);
+					makeEscapedConfigString(item->m_offAction.Get(), &escStrs[5]);
 
-					ctx->AddLine("<S&M_MIDI_LIVE %d %d %d %d %s %d %d %d %d %d %d %d %s %d %d %d %d", 
-						i+1,
-						lc->m_enable,
-						LIVECFG_VERSION,
-						lc->m_muteOthers,
-						strId,
-						lc->m_selScroll,
-						lc->m_offlineOthers,
-						lc->m_cc123,
-						lc->m_ignoreEmpty,
-						lc->m_autoSends,
-						lc->m_ccDelay,
-						lc->m_fade,
-						escStrs[0].Get(),
-						lc->m_activeMidiVal,
-						lc->m_curMidiVal,
-						lc->m_preloadMidiVal,
-						lc->m_curPreloadMidiVal);
+					ctx->AddLine("%d %s %s %s %s %s %s %s", 
+						item->m_cc, 
+						escStrs[0].Get(), 
+						strId, 
+						escStrs[1].Get(),
+						escStrs[2].Get(), 
+						escStrs[3].Get(), 
+						escStrs[4].Get(), 
+						escStrs[5].Get());
 				}
-
-				if (item->m_track && CSurf_TrackToID(item->m_track, false) > 0) 
-					g = *(GUID*)GetSetMediaTrackInfo(item->m_track, "GUID", NULL);
-				else 
-					g = GUID_NULL;
-				guidToString(&g, strId);
-
-				makeEscapedConfigString(item->m_desc.Get(), &escStrs[0]);
-				makeEscapedConfigString(item->m_trTemplate.Get(), &escStrs[1]);
-				makeEscapedConfigString(item->m_fxChain.Get(), &escStrs[2]);
-				makeEscapedConfigString(item->m_presets.Get(), &escStrs[3]);
-				makeEscapedConfigString(item->m_onAction.Get(), &escStrs[4]);
-				makeEscapedConfigString(item->m_offAction.Get(), &escStrs[5]);
-
-				ctx->AddLine("%d %s %s %s %s %s %s %s", 
-					item->m_cc, 
-					escStrs[0].Get(), 
-					strId, 
-					escStrs[1].Get(),
-					escStrs[2].Get(), 
-					escStrs[3].Get(), 
-					escStrs[4].Get(), 
-					escStrs[5].Get());
 			}
-		}
-		if (!firstCfg)
 			ctx->AddLine(">");
-		firstCfg = true;
+		}
 	}
 }
 
@@ -1922,16 +1923,32 @@ static project_config_extension_t s_projectconfig = {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void LiveConfigsSetTrackTitle() {
-	if (SNM_LiveConfigsWnd* w = g_lcWndMgr.Get()) {
-		w->FillComboInputTrack();
-		w->Update();
-	}
+void LiveConfigsSetTrackTitle()
+{
+#ifdef _SNM_NO_ASYNC_UPDT
+	LiveConfigsUpdateJob job;
+	job.Perform();
+#else
+	SNM_AddOrReplaceScheduledJob(new LiveConfigsUpdateJob());
+#endif
 }
 
 // ScheduledJob because of multi-notifs
 void LiveConfigsTrackListChange()
 {
+	// check consistency of all live configs
+	for (int i=0; i<g_liveConfigs.Get()->GetSize(); i++)
+	{
+		if (LiveConfig* lc = g_liveConfigs.Get()->Get(i))
+		{
+			for (int j=0; j<lc->m_ccConfs.GetSize(); j++)
+				if (LiveConfigItem* item = lc->m_ccConfs.Get(j))
+					if (item->m_track && CSurf_TrackToID(item->m_track, false) <= 0)
+						item->Clear(true);
+
+			lc->SetInputTrack(lc->GetInputTrack(), lc->m_autoSends==1); // lc->GetInputTrack() can be NULL when deleted, etc..
+		}
+	}
 #ifdef _SNM_NO_ASYNC_UPDT
 	LiveConfigsUpdateJob job;
 	job.Perform();
@@ -2065,9 +2082,10 @@ void WaitForMuteAndSendCC123(LiveConfig* _lc, LiveConfigItem* _cfg, DWORD* _mute
 {
 	WaitForTinyFade(_muteTime); // no-op if muteTime==0
 
-	if (!_lc->m_inputTr || (_lc->m_inputTr && (_cfg->m_track != _lc->m_inputTr)))
+	MediaTrack* inputTr = _lc->GetInputTrack();
+	if (!inputTr || (inputTr && (_cfg->m_track != inputTr)))
 		for (int i=0; i<_muteTracks->GetSize(); i++)
-			MuteSends(_lc->m_inputTr, (MediaTrack*)_muteTracks->Get(i), true);
+			MuteSends(inputTr, (MediaTrack*)_muteTracks->Get(i), true);
 
 	if (_lc->m_cc123 && SendAllNotesOff(_cc123Tracks)) {
 		WaitForAllNotesOff();
@@ -2090,7 +2108,6 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 	WDL_PtrList<MediaTrack> selTracks;
 	SNM_GetSelectedTracks(NULL, &selTracks, true);
 
-
 	// run desactivate action of the previous config *when it has no track*
 	// we ensure that no track is selected when performing the action
 	if (_apply && _lastCfg && !_lastCfg->m_track && _lastCfg->m_offAction.GetLength())
@@ -2104,6 +2121,8 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 	bool preloaded = (_apply && lc->m_preloadMidiVal>=0 && lc->m_preloadMidiVal==_val);
 	if (cfg->m_track)
 	{
+		MediaTrack* inputTr = lc->GetInputTrack();
+
 		// --------------------------------------------------------------------
 		// mute (according to user options)
 
@@ -2116,7 +2135,7 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 		{
 			// mute things before reconfiguration (in order to trigger tiny fades, optional)
 			// note: no preload on input track
-			if (!lc->m_inputTr || (lc->m_inputTr && cfg->m_track != lc->m_inputTr))
+			if (!inputTr || (inputTr && cfg->m_track != inputTr))
 				MuteAndInitCC123(lc, cfg->m_track, &muteTime, &muteTracks, &cc123Tracks, &muteStates); 
 		}
 
@@ -2134,7 +2153,7 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 					if (LiveConfigItem* item = lc->m_ccConfs.Get(i))
 						if (item->m_track && 
 							item->m_track != cfg->m_track && 
-							(!lc->m_inputTr || (lc->m_inputTr && item->m_track != lc->m_inputTr)) &&
+							(!inputTr || (inputTr && item->m_track != inputTr)) &&
 							muteTracks.Find(item->m_track) < 0)
 						{
 							MuteAndInitCC123(lc, item->m_track, &muteTime, &muteTracks, &cc123Tracks, &muteStates); 
@@ -2149,22 +2168,22 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 			{
 				if (_lastCfg->m_track && _lastCfg->m_track != cfg->m_track && muteTracks.Find(_lastCfg->m_track) < 0)
 				{
-					if (!lc->m_inputTr || (lc->m_inputTr && _lastCfg->m_track != lc->m_inputTr))
+					if (!inputTr || (inputTr && _lastCfg->m_track != inputTr))
 						MuteAndInitCC123(lc, _lastCfg->m_track, &muteTime, &muteTracks, &cc123Tracks, &muteStates);
-					else if (lc->m_inputTr && _lastCfg->m_track == lc->m_inputTr) // corner case fix
+					else if (inputTr && _lastCfg->m_track == inputTr) // corner case fix
 						MuteAndInitCC123AllConfigs(lc, &muteTime, &muteTracks, &cc123Tracks, &muteStates);
 				}
 			}
 
 			// end with mute states that will not be restored
 			if (lc->m_muteOthers &&
-				(!lc->m_inputTr || (lc->m_inputTr && cfg->m_track != lc->m_inputTr)))
+				(!inputTr || (inputTr && cfg->m_track != inputTr)))
 			{
 				for (int i=0; i<lc->m_ccConfs.GetSize(); i++)
 					if (LiveConfigItem* item = lc->m_ccConfs.Get(i))
 						if (item->m_track && 
 							item->m_track != cfg->m_track && 
-							(!lc->m_inputTr || (lc->m_inputTr && item->m_track != lc->m_inputTr)))
+							(!inputTr || (inputTr && item->m_track != inputTr)))
 						{
 							TimedMuteIfNeeded(item->m_track, &muteTime, -1); // -1 => always obey
 							int idx = muteTracks.Find(item->m_track);
@@ -2251,7 +2270,7 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 		// make sure fx are online for the activated/preloaded track
 		// note: done here because fx may have been set offline just above
 		if ((!_apply ||	(_apply && lc->m_offlineOthers)) && 
-			(!lc->m_inputTr || (lc->m_inputTr && cfg->m_track!=lc->m_inputTr)))
+			(!inputTr || (inputTr && cfg->m_track!=inputTr)))
 		{
 			if (!preloaded && TrackFX_GetCount(cfg->m_track))
 			{
@@ -2272,7 +2291,7 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 
 		// offline others but active/preloaded tracks
 		if (_apply && lc->m_offlineOthers &&
-			(!lc->m_inputTr || (lc->m_inputTr && cfg->m_track!=lc->m_inputTr)))
+			(!inputTr || (inputTr && cfg->m_track!=inputTr)))
 		{
 			MediaTrack* preloadTr = NULL;
 			if (preloaded && _lastCfg)
@@ -2286,7 +2305,7 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 				if (LiveConfigItem* item = lc->m_ccConfs.Get(i))
 					if (item->m_track && 
 						item->m_track != cfg->m_track && // excl. the activated track
-						(!lc->m_inputTr || (lc->m_inputTr && item->m_track != lc->m_inputTr)) && // excl. the input track
+						(!inputTr || (inputTr && item->m_track != inputTr)) && // excl. the input track
 						(!preloadTr || (preloadTr && preloadTr != item->m_track))) // excl. the preloaded track
 					{
 						GetSetMediaTrackInfo(item->m_track, "I_SELECTED", &g_i1);
@@ -2334,31 +2353,31 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 		else
 		{
 			// unmute all sends from the input track except those sending to the new active track
-			if (lc->m_inputTr && lc->m_inputTr!=cfg->m_track)
+			if (inputTr && inputTr!=cfg->m_track)
 			{
 				int sndIdx=0;
-				MediaTrack* destTr = (MediaTrack*)GetSetTrackSendInfo(lc->m_inputTr, 0, sndIdx, "P_DESTTRACK", NULL);
+				MediaTrack* destTr = (MediaTrack*)GetSetTrackSendInfo(inputTr, 0, sndIdx, "P_DESTTRACK", NULL);
 				while(destTr)
 				{
 					bool mute = (destTr!=cfg->m_track);
-					if (*(bool*)GetSetTrackSendInfo(lc->m_inputTr, 0, sndIdx, "B_MUTE", NULL) != mute)
-						GetSetTrackSendInfo(lc->m_inputTr, 0, sndIdx, "B_MUTE", &mute);
-					destTr = (MediaTrack*)GetSetTrackSendInfo(lc->m_inputTr, 0, ++sndIdx, "P_DESTTRACK", NULL);
+					if (*(bool*)GetSetTrackSendInfo(inputTr, 0, sndIdx, "B_MUTE", NULL) != mute)
+						GetSetTrackSendInfo(inputTr, 0, sndIdx, "B_MUTE", &mute);
+					destTr = (MediaTrack*)GetSetTrackSendInfo(inputTr, 0, ++sndIdx, "P_DESTTRACK", NULL);
 				}
 			}
 
 			// restore mute states, if needed
 			for (int i=0; i < muteTracks.GetSize(); i++)
 				if (MediaTrack* tr = (MediaTrack*)muteTracks.Get(i))
-					if (tr != cfg->m_track && tr != lc->m_inputTr)
+					if (tr != cfg->m_track && tr != inputTr)
 						if (bool* mute = muteStates.Get(i))
 							if (*(bool*)GetSetMediaTrackInfo(tr, "B_MUTE", NULL) != *mute)
 								GetSetMediaTrackInfo(tr, "B_MUTE", mute);
 
 			// unmute the input track , whatever is lc->m_muteOthers
-			if (lc->m_inputTr)
-				if (*(bool*)GetSetMediaTrackInfo(lc->m_inputTr, "B_MUTE", NULL))
-					GetSetMediaTrackInfo(lc->m_inputTr, "B_MUTE", &g_bFalse);
+			if (inputTr)
+				if (*(bool*)GetSetMediaTrackInfo(inputTr, "B_MUTE", NULL))
+					GetSetMediaTrackInfo(inputTr, "B_MUTE", &g_bFalse);
 
 			// unmute the config track, whatever is lc->m_muteOthers
 			if (*(bool*)GetSetMediaTrackInfo(cfg->m_track, "B_MUTE", NULL))
@@ -2492,6 +2511,7 @@ void PreloadLiveConfigJob::Perform()
 
 	Undo_BeginBlock2(NULL);
 
+	MediaTrack* inputTr = lc->GetInputTrack();
 	LiveConfigItem* cfg = lc->m_ccConfs.Get(m_absval);
 	LiveConfigItem* lastCfg = lc->m_ccConfs.Get(lc->m_activeMidiVal); // can be <0
 	if (cfg && lc->m_enable && 
@@ -2504,7 +2524,7 @@ void PreloadLiveConfigJob::Perform()
 /*JFB no, always obey!
 			lc->m_offlineOthers &&
 */
-			(!lc->m_inputTr || (lc->m_inputTr && cfg->m_track!=lc->m_inputTr)) && // no preload for the input track
+			(!inputTr || (inputTr && cfg->m_track!=inputTr)) && // no preload for the input track
 			(!lastCfg || (lastCfg && !lastCfg->Equals(cfg, true))) &&
 			(!lastPreloadCfg || (lastPreloadCfg && !lastPreloadCfg->Equals(cfg, true))))
 		{
@@ -2714,8 +2734,10 @@ INT_PTR SNM_LiveConfigMonitorWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARA
 				OutputDebugString(dbg);
 #endif
 				val = lc->m_curMidiVal + (val>0 ? -1 : val<0 ? 1 : 0);
-				if (val>127) val-=128;
-				else if (val<0) val=128+val;
+				if (val >= SNM_LIVECFG_NB_ROWS)
+					val -= SNM_LIVECFG_NB_ROWS;
+				else if (val<0)
+					val = SNM_LIVECFG_NB_ROWS + val;
 
 				if (WDL_VWnd* mon0 = m_parentVwnd.GetChildByID(TXTID_MON0))
 				{
@@ -2735,8 +2757,10 @@ INT_PTR SNM_LiveConfigMonitorWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARA
 							case TXTID_MON4:
 								val = (short)HIWORD(wParam);
 								val = lc->m_curPreloadMidiVal + (val>0 ? -1 : val<0 ? 1 : 0);
-								if (val>127) val-=128;
-								else if (val<0) val=128+val;
+								if (val >= SNM_LIVECFG_NB_ROWS) 
+									val -= SNM_LIVECFG_NB_ROWS;
+								else if (val<0)
+									val = SNM_LIVECFG_NB_ROWS + val;
 								PreloadLiveConfig(m_cfgId, val, -1, 0, APPLY_PRELOAD_HWND);
 								break;
 						}

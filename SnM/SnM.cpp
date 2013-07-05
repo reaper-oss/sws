@@ -790,7 +790,7 @@ bool OnMidiAction(int _cmd, int _val, int _valhw, int _relmode, HWND _hwnd)
 	return false;
 }
 
-// default key bindings are not fully managed (not used)
+// default key bindings are not used yet
 KbdSectionInfo* SNM_GetMySection()
 {
 
@@ -923,13 +923,14 @@ SNM_MidiActionJob::SNM_MidiActionJob(int _jobId, int _approxDelayMs, int _curCC,
 		m_absval = _valhw||_val ? BOUNDED(16384-(_valhw|_val<<7), 0, 16383) : 0; // for osc
 	}
 	// cc midi events
-	else if (_valhw==-1 && _val>=0 && _val<128)
+	else if (_valhw==-1) // && _val>=0 && _val<128)
 	{
 		switch (_relmode)
 		{
-			// absolute
+			// absolute mode
 			case 0: m_absval = _val;					return; // !!
-			// relative
+
+			// relative modes
 			case 1: if (_val >= 0x40) _val|=~0x3f;		break;  // sign extend if 0x40 set
 			case 2: _val-=0x40;							break;  // offset by 0x40
 			case 3: if (_val&0x40) _val=-(_val&0x3f);	break;  // 0x40 is sign bit

@@ -63,13 +63,23 @@ class LiveConfig {
 public:
 	LiveConfig();
 	~LiveConfig() { m_ccConfs.Empty(true); delete m_osc; }
-	int SetInputTrack(MediaTrack* _newInputTr, bool _updateSends);
+
+	bool IsDefault(bool _ignoreComment);
 	bool IsLastConfiguredTrack(MediaTrack* _tr);
-	MediaTrack* m_inputTr;  //JFB!! TODO: GUID instead (to handle track deletion + undo, etc)
+
+	// GUID_NULL means "no track" here not "the master track", see GuidToTrack()
+	MediaTrack* GetInputTrack() { return !GuidsEqual(&m_inputTr, &GUID_NULL) ? GuidToTrack(&m_inputTr) : NULL; }
+	int SetInputTrack(MediaTrack* _newInputTr, bool _updateSends);
+	GUID* GetInputTrackGUID() { return &m_inputTr; }
+	void SetInputTrackGUID(GUID* _g) { memcpy(&m_inputTr, _g, sizeof(GUID)); }
+
 	WDL_PtrList<LiveConfigItem> m_ccConfs;
 	int m_version, m_ccDelay, m_fade, m_enable, m_muteOthers, m_selScroll, m_offlineOthers, m_cc123, m_ignoreEmpty, m_autoSends;
 	int m_activeMidiVal, m_curMidiVal, m_preloadMidiVal, m_curPreloadMidiVal;
 	SNM_OscCSurf* m_osc;
+
+private:
+	GUID m_inputTr; // GUID rather than MediaTrack* (to handle track deletion + undo, etc)
 };
 
 
@@ -171,7 +181,6 @@ public:
 };
 
 
-// ScheduledJob because of multi-notifs
 void LiveConfigsSetTrackTitle();
 void LiveConfigsTrackListChange();
 
@@ -187,7 +196,6 @@ void OpenLiveConfigMonitorWnd(int _idx);
 void OpenLiveConfigMonitorWnd(COMMAND_T*);
 int IsLiveConfigMonitorWndDisplayed(COMMAND_T*);
 
-// actions
 void ApplyLiveConfig(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
 void PreloadLiveConfig(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
 
@@ -211,14 +219,14 @@ void EnableOfflineOthersLiveConfig(COMMAND_T*);
 void DisableOfflineOthersLiveConfig(COMMAND_T*);
 void ToggleOfflineOthersLiveConfig(COMMAND_T*);
 
-int IsAllNotesOffLiveConfigEnabled(COMMAND_T* _ct);
-void EnableAllNotesOffLiveConfig(COMMAND_T* _ct);
-void DisableAllNotesOffLiveConfig(COMMAND_T* _ct);
-void ToggleAllNotesOffLiveConfig(COMMAND_T* _ct);
+int IsAllNotesOffLiveConfigEnabled(COMMAND_T*);
+void EnableAllNotesOffLiveConfig(COMMAND_T*);
+void DisableAllNotesOffLiveConfig(COMMAND_T*);
+void ToggleAllNotesOffLiveConfig(COMMAND_T*);
 
-int IsTinyFadesLiveConfigEnabled(COMMAND_T* _ct);
-void EnableTinyFadesLiveConfig(COMMAND_T* _ct);
-void DisableTinyFadesLiveConfig(COMMAND_T* _ct);
-void ToggleTinyFadesLiveConfig(COMMAND_T* _ct);
+int IsTinyFadesLiveConfigEnabled(COMMAND_T*);
+void EnableTinyFadesLiveConfig(COMMAND_T*);
+void DisableTinyFadesLiveConfig(COMMAND_T*);
+void ToggleTinyFadesLiveConfig(COMMAND_T*);
 
 #endif

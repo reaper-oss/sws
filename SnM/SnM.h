@@ -42,6 +42,8 @@
 //#define _SNM_WDL				// if my wdl version is used
 #define _SNM_HOST_AW			// hosts some of Adam's stuff
 //#define _SNM_CSURF_PROXY
+//#define _SNM_OVERLAYS			// looks bad with some themes ATM
+
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -50,17 +52,18 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #define _SNM_REAPER_BUG			// workaround API/REAPER bugs
-								// Last test: REAPER v4.5rc11
+								// last test: REAPER v4.5rc11
 								// - GetToggleCommandState2() only works for the main section
 
 #ifdef __APPLE__
   #define _SNM_SWELL_ISSUES		// workaround some SWELL issues
-#endif							// Last test: WDL d1d8d2 - Dec. 20 2012
+#endif							// last test: WDL d1d8d2 - Dec. 20 2012
 								// - native font rendering won't draw multiple lines
 								// - missing some EN_CHANGE msg, see SnM_Notes.cpp
 								// - EN_SETFOCUS, EN_KILLFOCUS not yet supported
 
-#define _SNM_NO_ASYNC_UPDT		// no async UI updates
+#define _SNM_NO_ASYNC_UPDT		// disable async UI updates 
+								// (seems ok on Win, unstable on OSX)
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -113,9 +116,10 @@
 
 #endif
 
-#define SNM_LIVECFG_NB_CONFIGS		4			//JFB do not commit a new value, contact me plz thx!
-#define SNM_CSURF_RUN_TICK_MS		27.0   // 1 tick ~= 27ms (average I monitored)
-#define SNM_DEF_TOOLBAR_RFRSH_FREQ	300    // default frequency in ms for the "auto-refresh toolbars" option 
+#define SNM_LIVECFG_NB_CONFIGS		4		//JFB do not change this value, contact me plz thx!
+#define SNM_LIVECFG_NB_ROWS			128		//JFB do not change this value, contact me plz thx!
+#define SNM_CSURF_RUN_TICK_MS		27.0	// monitored average, 1 tick ~= 27ms
+#define SNM_DEF_TOOLBAR_RFRSH_FREQ	300		// default frequency in ms for the "auto-refresh toolbars" option 
 #define SNM_FUDGE_FACTOR			0.0000000001
 #define SNM_CSURF_EXT_UNREGISTER	0x00016666
 #define SNM_REAPER_IMG_EXTS			"png,pcx,jpg,jpeg,jfif,ico,bmp" // img exts supported by REAPER (v4.32), can't get those at runtime yet
@@ -145,15 +149,16 @@
 #define SNM_MAX_PRESETS				0xFFFF
 #define SNM_MAX_INI_SECTION			0xFFFF // definitive limit for WritePrivateProfileSection
 
-#define SNM_MAX_OSC_MSG_LEN			256
-#define SNM_MAX_SECTION_NAME_LEN	64
 #define SNM_MAX_ACTION_CUSTID_LEN	128
+#define SNM_MAX_MACRO_CUSTID_LEN	32
 #define SNM_MAX_ACTION_NAME_LEN		128
+#define SNM_MAX_DYN_ACTIONS			99     // if > 99, the "dynamic actions" code must be updated
 #define SNM_MAX_ENV_CHUNKNAME_LEN	32
 #define SNM_MAX_MARKER_NAME_LEN		64     // + regions
 #define SNM_MAX_TRACK_NAME_LEN		128
 #define SNM_MAX_PRESET_NAME_LEN		128
 #define SNM_MAX_FX_NAME_LEN			128
+#define SNM_MAX_OSC_MSG_LEN			256
 
 // scheduled job ids
 // [0 .. SNM_LIVECFG_NB_CONFIGS-1] are reserved for "apply live config" actions
@@ -172,7 +177,7 @@
 #define SNM_SCHEDJOB_OSX_FIX				SNM_SCHEDJOB_PRJ_ACTION + 1	//JFB!! removeme some day
 
 #define SNM_SCHEDJOB_DEFAULT_DELAY			250
-#define SNM_SCHEDJOB_SLOW_DELAY				500    // for non urgent stuff, e.g. UI update
+#define SNM_SCHEDJOB_SLOW_DELAY				500
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -189,8 +194,7 @@ public:
 	bool m_isPerforming;
 };
 
-// avoid undo points flooding
-// i.e. async undo, somehow => handle with care!
+// avoid undo points flooding (i.e. async undo, handle with care!)
 class UndoJob : public SNM_ScheduledJob {
 public:
 	UndoJob(const char* _desc, int _flags, int _tr = -1) 
@@ -217,13 +221,11 @@ void SNM_AddOrReplaceScheduledJob(SNM_ScheduledJob* _job);
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Common global funcs
+// Common funcs
 ///////////////////////////////////////////////////////////////////////////////
 
-// fake action toggle states
 int GetFakeToggleState(COMMAND_T*);
 
-// S&M core stuff
 int SNM_Init(reaper_plugin_info_t* _rec);
 void SNM_Exit();
 
@@ -233,7 +235,7 @@ static void deletefaststrptr(WDL_FastString* _p) { DELETE_NULL(_p); }
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Misc globals vars, structs & classes
+// Misc extern vars, structs & classes
 ///////////////////////////////////////////////////////////////////////////////
 
 /* commented: replaced with a common SWS_CMD_SHORTNAME()
@@ -287,14 +289,13 @@ typedef struct SECTION_INFO_T {
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Actions & sections (as of REAPER v4.32)
+// Action sections
 ///////////////////////////////////////////////////////////////////////////////
 
-#define SNM_SECTION_ID				0x10000101		// "< 0x10000000 for cockos use only plzk thx"
+#define SNM_SECTION_ID				0x10000101 // "< 0x10000000 for cockos use only plzk thx"
 #define SNM_SECTION_1ST_CMD_ID		40000
 
-// section indexes, order does not matter here 
-// important: keep s_sectionInfos in sync!
+// section indexes
 enum {
   SNM_SEC_IDX_MAIN=0,
   SNM_SEC_IDX_MAIN_ALT,
@@ -306,6 +307,7 @@ enum {
   SNM_NUM_MANAGED_SECTIONS
 };
 
+// various properties indexed with the above enum: keep both in sync!
 static SECTION_INFO_T s_SNM_sectionInfos[] = {
 	{0,		"S&M_CYCLACTION_",			"Main_Cyclactions"},
 	{100,	"S&M_MAIN_ALT_CYCLACTION",	"MainAlt_Cyclactions"},
@@ -316,10 +318,9 @@ static SECTION_INFO_T s_SNM_sectionInfos[] = {
 	{SNM_SECTION_ID, "", ""}
 };
 
-#define SNM_MACRO_CUSTID_LEN		32
 #define SNM_NUM_NATIVE_SECTIONS		SNM_SEC_IDX_SNM
 #define SNM_MAX_CA_SECTIONS			SNM_NUM_NATIVE_SECTIONS
-#define SNM_MAX_DYN_ACTIONS			99 // if > 99, the "dynamic actions" code must be updated
+#define SNM_MAX_SECTION_NAME_LEN	64
 
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -169,12 +169,7 @@ public:
 	SNM_ToolbarButton() : WDL_VirtualIconButton() {}
 	virtual const char *GetType() { return "SNM_ToolbarButton"; }
 	virtual char GetPressed() { return m_pressed; }
-	// bypass WDL_VirtualIconButton::SetGrayed() as grayed buttons look bad with some themes
-	// (e.g. button text not readable with the default v4 theme) 
-	virtual void SetGrayed(bool grayed) { 
-		SetEnabled(!grayed);
-		if (grayed) m_pressed=0; //JFB!! avoid stuck overlay when mousedown grays the button
-	}
+	virtual void SetGrayed(bool _grayed);
 };
 
 class SNM_Knob : public WDL_VirtualSlider {

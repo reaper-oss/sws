@@ -114,7 +114,7 @@ bool SNM_DynSizedText::HasTitleLane() {
 	return (m_visible && m_title.GetLength() && (m_position.bottom-m_position.top) > 4*GetTitleLaneHeight());
 }
 
-// note: with big, BIG fonts LICE_FONT_FLAG_FORCE_NATIVE seems ignored..
+//JFB!? with big fonts LICE_FONT_FLAG_FORCE_NATIVE seems ignored..
 void SNM_DynSizedText::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect)
 {
 	SWS_SectionLock lock(&m_mutex);
@@ -460,6 +460,25 @@ void SNM_TwoTinyButtons::SetPosition(const RECT* _r)
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// SNM_ToolbarButton
+///////////////////////////////////////////////////////////////////////////////
+
+// overrides WDL_VirtualIconButton::SetGrayed() which paints grayed stuff with 0.25f alpha
+// => look bad with some themes, e.g. not readable with the default v4 theme
+// => overrides to use 0.45f instead
+void SNM_ToolbarButton::SetGrayed(bool _grayed)
+{ 
+	SetEnabled(!_grayed);
+	m_alpha = _grayed ? 0.45f : 1.0f;
+#ifdef _SNM_OVERLAYS
+	// prevent stuck overlay when graying the button
+	if (_grayed)
+		m_pressed=0;
+#endif
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 // SNM_ImageVWnd
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -501,7 +520,7 @@ void SNM_ImageVWnd::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RE
 // SNM_Logo
 ///////////////////////////////////////////////////////////////////////////////
 
-// just avoids some include in .h..
+// just avoids some include in the .h
 SNM_Logo::SNM_Logo() : SNM_ImageVWnd(SNM_GetThemeLogo()) {}
 
 
@@ -698,8 +717,19 @@ void SNM_SkinToolbarButton(SNM_ToolbarButton* _btn, const char* _text)
 	if (it && it->toolbar_blank)
 	{
 		sSkin.image = it->toolbar_blank;
+#ifdef _SNM_OVERLAYS
+		// looks bad with some themes (e.g. brawn bespoke) + requires the hack below..
+		sSkin.olimage = it->toolbar_overlay;
+#else
 		sSkin.olimage = NULL;
+#endif
 		WDL_VirtualIconButton_PreprocessSkinConfig(&sSkin);
+#ifdef _SNM_OVERLAYS
+		// hack
+		for (int i=0; i<4; i++)
+			sSkin.image_ltrb_ol[i] = 0;
+#endif
+
 		_btn->SetIcon(&sSkin);
 		_btn->SetForceBorder(false);
 		if (ColorTheme* ct = SNM_GetColorTheme())
@@ -757,12 +787,13 @@ bool SNM_HasLeftVWnd(WDL_VWnd* _comp, int _left, int _top, int _bottom)
 // auto position a WDL_VWnd instance
 // assumes all components are hidden by default, see WM_PAINT in sws_wnd.cpp
 // _align: only DT_LEFT and DT_RIGHT are supported atm
-//         note: right aligned comps have lower priority (i.e. hidden if a left aligned comp is already there)
-// _x:     in/out param that gets modified (for the next component to be displayed)
+//         note: right aligned comps have lower priority
+//         (i.e. hidden if a left aligned comp is already there)
+// _x:     in/out param, modified for the next component to be displayed
 // _h:     height of the destination panel
 // returns false if hidden
 // TODO? WDL_VWnd inheritance rather than checking for inherited types
-//       e.g. adding some kind of getPreferedWidthHeight(int* _width, int* _height)
+//       e.g. adding some kind of getPreferedWidthHeight(int* _width, int* _height)?
 bool SNM_AutoVWndPosition(UINT _align, WDL_VWnd* _comp, WDL_VWnd* _tiedComp, const RECT* _r, int* _x, int _y, int _h, int _xRoom)
 {
 	if (_comp && _h && abs(_r->bottom-_r->top) >= _h)

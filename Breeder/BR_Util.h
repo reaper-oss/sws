@@ -27,14 +27,15 @@
 ******************************************************************************/
 #pragma once
 
-#define MIN_BPM			0.001
-#define MAX_BPM			960
-#define MIN_TEMPO_DIST	0.001
-#define MAX_GRID_DIV	0.00097
+#define SKIP(x,y) {x+=y; continue;}
 
-bool IsThisFraction (char* tmp, int tmpLen, double &convertedFraction);
-void CenterWindowInReaper (HWND hwnd, HWND zOrder, bool startUp);
-int GetFirstDigit (int number);
-double AltAtof (char* tmp);
+bool IsThisFraction (char* str, double &convertedFraction);
+int GetFirstDigit (int val);
+int ClearBit (int val, int pos);
+int SetBit (int val, int pos);
+double AltAtof (char* str);
 double EndOfProject (bool markers, bool regions);
+void CenterWindowInReaper (HWND hwnd, HWND zOrder, bool startUp);
 void GetSelItemsInTrack (MediaTrack* track, vector<MediaItem*> &items);
+void ReplaceAll (string& str, string oldStr, string newStr);
+void CommandTimer (COMMAND_T* ct);

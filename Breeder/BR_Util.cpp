@@ -28,92 +28,52 @@
 #include "stdafx.h"
 #include "BR_Util.h"
 
-bool IsThisFraction (char* tmp, int tmpLen, double &convertedFraction)
+bool IsThisFraction (char* str, double &convertedFraction)
 {
-	replace(tmp, tmp+strlen(tmp), ',', '.' );
-	char* buf = strstr(tmp,"/");
+	replace(str, str+strlen(str), ',', '.' );
+	char* buf = strstr(str,"/");
 
-	if(!buf)
+	if (!buf)
 	{	
-		convertedFraction = atof(tmp);
-		_snprintf(tmp, tmpLen, "%g", convertedFraction);
+		convertedFraction = atof(str);
+		_snprintf(str, strlen(str)+1, "%g", convertedFraction);
 		return false;
 	}
 	else
 	{
-		double num = atof(tmp);
-		double den = atof(buf+1);
-		_snprintf(tmp, tmpLen, "%g/%g", num, den);
+		int num = atoi(str);
+		int den = atoi(buf+1);
+		_snprintf(str, strlen(str)+1, "%d/%d", num, den);
 		if (den != 0)
-			convertedFraction = num/den;			
+			convertedFraction = (double)num/(double)den;			
 		else
 			convertedFraction = 0;
 		return true;
 	}
 };
 
-void CenterWindowInReaper (HWND hwnd, HWND zOrder, bool startUp)
+int GetFirstDigit (int val)
 {
-	int x = 0, y = 0;
-	RECT r; GetWindowRect(hwnd, &r);
-
-	// On startup GetWindowRect could provide the wrong data so we read the .ini instead
-	if (startUp)
-	{
-		// Not maximized
-		if (GetPrivateProfileInt("Reaper", "wnd_state", 1, get_ini_file()) == 0)
-		{
-			int wnd_x = GetPrivateProfileInt("Reaper", "wnd_x", 1, get_ini_file());
-			int wnd_y = GetPrivateProfileInt("Reaper", "wnd_y", 1, get_ini_file());
-			int wnd_w = GetPrivateProfileInt("Reaper", "wnd_w", 1, get_ini_file());
-			int wnd_h = GetPrivateProfileInt("Reaper", "wnd_h", 1, get_ini_file());
-			x = wnd_x + (wnd_w - r.right  + r.left)/2;
-			y = wnd_y + (wnd_h - r.bottom + r.top)/2;
-		}
-		// Maximized (won't work with multiple displays if reaper is not maximized in primary display...heh)
-		else
-		{
-			int wnd_w = GetSystemMetrics(SM_CXSCREEN);
-			int wnd_h = GetSystemMetrics(SM_CYSCREEN);
-			x = (wnd_w - r.right  + r.left)/2;
-			y = (wnd_h - r.bottom + r.top)/2;
-		}
-	}
-	else
-	{
-		RECT r1; GetWindowRect(g_hwndParent, &r1);
-		x = r1.left + (r1.right  - r1.left - r.right  + r.left)/2;
-		y = r1.top +  (r1.bottom - r1.top  - r.bottom + r.top)/2;
-	}
-
-	// Ensure coordinates are not offscreen (probably should add cocoa version for ifdef part)
-	if (x < 0 || y < 0)
-	{
-		x = 0;
-		y = 0;
-	}
-#ifdef _WIN32
-	if (x > GetSystemMetrics(SM_CXVIRTUALSCREEN) || y > GetSystemMetrics(SM_CYVIRTUALSCREEN))
-	{
-		x = 0;
-		y = 0;
-	}
-#endif
-	SetWindowPos(hwnd, zOrder, x, y, 0, 0, SWP_NOSIZE);
+	val = abs(val);
+	while (val >= 10)
+		val /= 10;
+	return val;
 };
 
-int GetFirstDigit (int number)
+int ClearBit (int val, int pos)
 {
-	number = abs(number);
-	while (number >= 10)
-		number /= 10;
-	return number;
+	return val & ~(1 << pos);
 };
 
-double AltAtof (char* tmp)
+int SetBit (int val, int pos)
 {
-	replace(tmp, tmp+strlen(tmp), ',', '.' );
-	return atof(tmp);
+	return val | 1 << pos;
+};
+
+double AltAtof (char* str)
+{
+	replace(str, str+strlen(str), ',', '.' );
+	return atof(str);
 };
 
 double EndOfProject (bool markers, bool regions)
@@ -145,9 +105,102 @@ double EndOfProject (bool markers, bool regions)
 	return projEnd;
 };
 
+void CenterWindowInReaper (HWND hwnd, HWND zOrder, bool startUp)
+{
+	RECT r; GetWindowRect(hwnd, &r);
+	int width = r.right-r.left;
+	int height = r.bottom-r.top; 
+
+	// On startup GetWindowRect could provide the wrong data so we read the .ini instead
+	if (startUp)
+	{
+		// Not maximized
+		if (GetPrivateProfileInt("Reaper", "wnd_state", 1, get_ini_file()) == 0)
+		{
+			int wnd_x = GetPrivateProfileInt("Reaper", "wnd_x", 1, get_ini_file());
+			int wnd_y = GetPrivateProfileInt("Reaper", "wnd_y", 1, get_ini_file());
+			int wnd_w = GetPrivateProfileInt("Reaper", "wnd_w", 1, get_ini_file());
+			int wnd_h = GetPrivateProfileInt("Reaper", "wnd_h", 1, get_ini_file());
+			r.left = wnd_x + (wnd_w - r.right  + r.left)/2;
+			r.top = wnd_y + (wnd_h - r.bottom + r.top)/2;
+		}
+		// Maximized (won't work with multiple displays if reaper is not maximized in primary display...heh)
+		else
+		{
+			int wnd_w = GetSystemMetrics(SM_CXSCREEN);
+			int wnd_h = GetSystemMetrics(SM_CYSCREEN);
+			r.left = (wnd_w - r.right  + r.left)/2;
+			r.top = (wnd_h - r.bottom + r.top)/2;
+		}
+	}
+	else
+	{
+		RECT r1; GetWindowRect(g_hwndParent, &r1);
+		r.left = r1.left + (r1.right  - r1.left - r.right  + r.left)/2;
+		r.top = r1.top +  (r1.bottom - r1.top  - r.bottom + r.top)/2;
+	}
+
+	#ifdef _WIN32
+	if (r.left < 0 || r.top < 0 || r.left+width > GetSystemMetrics(SM_CXVIRTUALSCREEN) || r.top+height > GetSystemMetrics(SM_CYVIRTUALSCREEN))
+	{
+		r.left = 0;
+		r.top = 0;
+	}
+	#else
+		EnsureNotCompletelyOffscreen(&r); // not really working with multiple monitors (treats as offscreen if not on the default monitor)
+	#endif
+	SetWindowPos(hwnd, zOrder, r.left, r.top, 0, 0, SWP_NOSIZE);
+};
+
 void GetSelItemsInTrack (MediaTrack* track, vector<MediaItem*> &items)
 {
 	for (int i = 0; i < CountTrackMediaItems(track) ; ++i)
 		if (*(bool*)GetSetMediaItemInfo(GetTrackMediaItem(track, i), "B_UISEL", NULL))
 			items.push_back(GetTrackMediaItem(track, i));
-}
+};
+
+void ReplaceAll (string &str, string oldStr, string newStr)
+{
+	if (oldStr.empty())
+		return;
+	
+	size_t pos = 0, oldLen = oldStr.length(), newLen = newStr.length();
+	while ((pos = str.find(oldStr, pos)) != std::string::npos) 
+	{
+		str.replace(pos, oldLen, newStr);
+		pos += newLen;
+	}
+};
+
+void CommandTimer (COMMAND_T* ct)
+{
+	// Start timer
+	#ifdef WIN32
+		LARGE_INTEGER ticks, start, end;
+		QueryPerformanceFrequency(&ticks);
+		QueryPerformanceCounter(&start);
+	#else
+		timeval start, end;
+		gettimeofday(&start, NULL);
+	#endif
+
+	// Run command
+	ct->doCommand(ct);
+
+	// Stop timer
+	#ifdef WIN32
+		QueryPerformanceCounter(&end);
+		int msTime = (int)((double)(end.QuadPart - start.QuadPart) * 1000 / (double)ticks.QuadPart + 0.5);
+	#else
+		gettimeofday(&end, NULL);
+		int msTime = (int)((double)(end.tv_sec - start.tv_sec) * 1000 + (double)(end.tv_usec - start.tv_usec) / 1000 + 0.5);
+	#endif
+
+	// Print result to console
+	int cmd = ct->accel.accel.cmd;
+	const char* name = kbd_getTextFromCmd(cmd, SectionFromUniqueID(cmd));	
+	
+	WDL_FastString string;
+	string.AppendFormatted(256, "%d ms to execute: %s\n", msTime, name);
+	ShowConsoleMsg(string.Get());
+};

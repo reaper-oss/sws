@@ -33,15 +33,11 @@ struct BR_Version
 	int min;		// minor
 	int rev;		// revision
 	int build;		// build
-	BR_Version()
-	{
-		maj = min = rev = build = 0;
-	}
+	BR_Version () {maj = min = rev = build = 0;}
 };
 
-void VersionCheckInit();
-void VersionCheckAction(COMMAND_T*);
-void GetStartupSearchOptions(HWND hwnd, int &official, int &beta);
-void SetStartupSearchOptions(int official, int beta);
-
-
+void VersionCheckInit ();
+void VersionCheckAction (COMMAND_T*);
+void VersionCheckDialog (HWND hwnd);
+void GetStartupSearchOptions (bool* official, bool* beta, unsigned int* lastTime);
+void SetStartupSearchOptions (bool official, bool beta, unsigned int lastTime);

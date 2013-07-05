@@ -74,7 +74,7 @@
 #define IDD_SNM_RGNPLAYLIST             165
 #define IDD_BR_MARKERS_TO_TEMPO         166
 #define IDD_BR_SELECT_ADJUST_TEMPO      167
-#define IDD_BR_DESELECT_TEMPO           168
+#define IDD_BR_UNSELECT_TEMPO           168
 #define IDD_SNM_LIVE_CONFIG_MON         169
 #define IDD_BR_TEMPO_SHAPE_OPTIONS      170
 #define IDD_BR_RANDOMIZE_TEMPO          171
@@ -337,7 +337,7 @@
 #define IDC_BR_SEL_BPM_START            1246
 #define IDC_BR_ADJ_BPM_VAL              1247
 #define IDC_BR_SEL_SHAPE                1248
-#define IDC_BR_SEL_TYPE_DEF             1249
+#define IDC_BR_SEL_TYPE                 1249
 #define IDC_BR_SEL_GROUP                1250
 #define IDC_BR_ADJ_GROUP                1251
 #define IDC_BR_ADJ_BPM_TAR_1            1252
@@ -361,10 +361,10 @@
 #define IDC_BR_ADJ_BPM_VAL_ENB          1270
 #define IDC_BR_ADJ_BPM_PERC_ENB         1271
 #define IDC_BR_SEL_INVERT_PREF          1272
-#define IDC_BR_SEL_DESELECT             1273
-#define IDC_BR_SEL_DESELECT_NTH         1274
-#define IDC_BR_DESEL_NTH_TEMPO          1275
-#define IDC_BR_DESEL_CRITERIA           1276
+#define IDC_BR_SEL_UNSELECT             1273
+#define IDC_BR_SEL_UNSELECT_NTH         1274
+#define IDC_BR_UNSEL_NTH_TEMPO          1275
+#define IDC_BR_UNSEL_CRITERIA           1276
 #define IDC_BR_CON_GRADUAL              1277
 #define IDC_BR_CON_SPLIT_RATIO          1278
 #define IDC_BR_CON_SPLIT                1279
@@ -389,11 +389,10 @@
 #define IDC_BR_VER_OFF                  1298
 #define IDC_BR_VER_BETA                 1299
 #define IDC_BR_VER_DOWNLOAD             1300
-#define IDC_PREVIOUS					1301
-#define IDC_NEXT						1302
-#define IDC_SWAP_UP						1303
-#define IDC_SWAP_DOWN					1304
-
+#define IDC_PREVIOUS                    1301
+#define IDC_NEXT                        1302
+#define IDC_SWAP_UP                     1303
+#define IDC_SWAP_DOWN                   1304
 
 // Next default values for new objects
 // 

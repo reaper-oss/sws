@@ -27,39 +27,34 @@
 ******************************************************************************/
 #pragma once
 
-WDL_DLGRET TempoShapeOptionsProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-void SetTempoShapeGlobalVariable (int split, char* splitRatio, int ratioLen);
-void LoadOptionsTempoShape (int &split, char* splitRatio, int ratioLen);
-void SaveOptionsTempoShape (HWND hwnd);
-int IsTempoShapeOptionsVisible (COMMAND_T*);
-
-WDL_DLGRET RandomizeTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-void GetDeleteCurrentTempo(bool get);
-void SetRandomTempo (HWND hwnd, double min, double max, int unit, double minLimit, double maxLimit, int unitLimit, int limit);
-void SetOldTempo ();
-void LoadOptionsRandomizeTempo (double &min, double &max, int &unit, double &minLimit, double &maxLimit, int &unitLimit, int &limit);
-void SaveOptionsRandomizeTempo (HWND hwnd);
-
 WDL_DLGRET ConvertMarkersToTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-void ConvertMarkersToTempo (int markers, int num, int den, int removeMarkers, int timeSel, int gradualTempo, int split, double splitRatio);
+void ConvertMarkersToTempo (int markers, int num, int den, bool removeMarkers, bool timeSel, bool gradualTempo, bool split, double splitRatio);
 void ShowGradualOptions (bool show, HWND hwnd);
-void LoadOptionsConversion (int &markers, int &num, int &den, int &removeMarkers, int &timeSel, int &gradual, int &split, char* splitRatio, int ratioLen);
+void LoadOptionsConversion (int &markers, int &num, int &den, int &removeMarkers, int &timeSel, int &gradual, int &split, char* splitRatio);
 void SaveOptionsConversion (HWND hwnd);
-int IsConvertMarkersToTempoVisible (COMMAND_T*);
 
 WDL_DLGRET SelectAdjustTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 void SelectTempo (int mode, int Nth, int timeSel, int bpm, double bpmStart, double bpmEnd, int shape, int sig, int num, int den, int type);
 void AdjustTempo (int mode, double bpm, int shape);
 void UpdateTargetBpm (HWND hwnd, int doFirst, int doCursor, int doLast);
-void UpdateCurrentBpm (HWND hwnd, const vector<int>& selectedPoints);
+void UpdateCurrentBpm (HWND hwnd, const vector<int> &selectedPoints);
 void UpdateSelectionFields (HWND hwnd);
-void SelectTempoCase (HWND hwnd, int operationType, int deselectNth);
+void SelectTempoCase (HWND hwnd, int operationType, int unselectNth);
 void AdjustTempoCase (HWND hwnd);
-void CallDeselTempoDialog(bool show, HWND parentHandle);
+void UnselectNthDialog(bool show, HWND parentHandle);
 void LoadOptionsSelAdj (double &bpmStart, double &bpmEnd, int &num, int &den, int &bpmEnb, int &sigEnb, int &timeSel, int &shape, int &type, int &selPref, int &invertPref, int &adjustType, int &adjustShape);
 void SaveOptionsSelAdj (HWND hwnd);
-int IsSelectAdjustTempoVisible (COMMAND_T*);
+WDL_DLGRET UnselectNthProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+void LoadOptionsUnselectNth (int &Nth, int &criteria);
+void SaveOptionsUnselectNth (HWND hwnd);
 
-WDL_DLGRET DeselectNthProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-void LoadOptionsDeselectNth (int &Nth, int &criteria);
-void SaveOptionsDeselectNth (HWND hwnd);
+WDL_DLGRET TempoShapeOptionsProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+void SetTempoShapeGlobalVariable (int split, char* splitRatio);
+void LoadOptionsTempoShape (int &split, char* splitRatio);
+void SaveOptionsTempoShape (HWND hwnd);
+
+WDL_DLGRET RandomizeTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+void SetRandomTempo (HWND hwnd, char* oldTempo, double min, double max, int unit, double minLimit, double maxLimit, int unitLimit, int limit);
+void SetPreRandTempo (char* oldTempo);
+void LoadOptionsRandomizeTempo (double &min, double &max, int &unit, double &minLimit, double &maxLimit, int &unitLimit, int &limit);
+void SaveOptionsRandomizeTempo (HWND hwnd);

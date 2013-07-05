@@ -1,3 +1,17 @@
+Added actions:
++SWS/BR: Hide all but active envelope for selected tracks
++SWS/BR: Enable "Ignore project tempo" for selected MIDI items (use tempo at item's start)
++SWS/BR: Disable "Ignore project tempo" for selected MIDI items	
+
+Fixes:
++Prevent creating redundant undo points in SWS/BR: Randomize selected tempo markers...
++SWS/BR windows always refresh toolbar buttons properly
++SWS/BR: Increase/decrease tempo marker:
+ - fixed unresponsiveness in certain corner-cases involving square points
+ - fixed behavior for consequential selections
++SWS/BR: Alter slope of gradual tempo marker:
+ - fixed behavior for consequential selections
+
 !v2.3.0 #19 (June 27, 2013)
 Fixes:
 +Issue 585 / OS X: fixed font redering crashes

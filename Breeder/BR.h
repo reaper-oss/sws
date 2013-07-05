@@ -27,4 +27,5 @@
 ******************************************************************************/
 #pragma once
 
-int BreederInit();
+int BreederInit ();
+void CommandTimer (COMMAND_T* ct);

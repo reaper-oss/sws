@@ -1234,15 +1234,15 @@ BEGIN
     LTEXT           "Shape:",IDC_STATIC,28,75,49,8
     COMBOBOX        IDC_BR_SEL_SHAPE,81,75,91,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT           "Type:",IDC_STATIC,28,93,49,8
-    COMBOBOX        IDC_BR_SEL_TYPE_DEF,81,93,91,31,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_BR_SEL_TYPE,81,93,91,31,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     CONTROL         " Add to current selection",IDC_BR_SEL_ADD,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,127,92,9
     CONTROL         " Inverting obeys criteria",IDC_BR_SEL_INVERT_PREF,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,143,91,9
     PUSHBUTTON      "Clear",IDC_BR_SEL_CLEAR,13,156,45,14
     PUSHBUTTON      "Invert",IDC_BR_SEL_INVERT,61,156,43,14
     PUSHBUTTON      "Select",IDC_BR_SEL_SELECT,107,124,66,14
-    PUSHBUTTON      "Deselect",IDC_BR_SEL_DESELECT,107,140,66,14
-    PUSHBUTTON      "Deselect every...",IDC_BR_SEL_DESELECT_NTH,107,156,66,14
+    PUSHBUTTON      "Unselect",IDC_BR_SEL_UNSELECT,107,140,66,14
+    PUSHBUTTON      "Unselect every...",IDC_BR_SEL_UNSELECT_NTH,107,156,66,14
     GROUPBOX        "Adjust tempo markers",IDC_BR_ADJ_GROUP,190,7,182,171
     LTEXT           "First tempo marker:",IDC_STATIC,197,31,64,8
     LTEXT           "Current",IDC_STATIC,265,20,26,8
@@ -1270,17 +1270,17 @@ BEGIN
     DEFPUSHBUTTON   "Apply",IDC_BR_ADJ_APPLY,293,156,72,14
 END
 
-IDD_BR_DESELECT_TEMPO DIALOGEX 0, 0, 219, 44
+IDD_BR_UNSELECT_TEMPO DIALOGEX 0, 0, 219, 44
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "SWS Deselect tempo markers..."
+CAPTION "SWS Unselect tempo markers..."
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    LTEXT           "Deselect every",IDC_STATIC,7,9,49,8
-    COMBOBOX        IDC_BR_DESEL_NTH_TEMPO,58,7,45,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Unselect every",IDC_STATIC,7,9,49,8
+    COMBOBOX        IDC_BR_UNSEL_NTH_TEMPO,58,7,45,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT           "selected marker",IDC_STATIC,107,9,52,8
-    CONTROL         "Process only if within criteria",IDC_BR_DESEL_CRITERIA,
+    CONTROL         "Process only if within criteria",IDC_BR_UNSEL_CRITERIA,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,25,136,10
-    PUSHBUTTON      "Deselect",IDOK,162,7,50,14
+    PUSHBUTTON      "Unselect",IDOK,162,7,50,14
     PUSHBUTTON      "Close",IDCANCEL,162,24,50,14
 END
 
@@ -1805,7 +1805,7 @@ BEGIN
         BOTTOMMARGIN, 176
     END
 
-    IDD_BR_DESELECT_TEMPO, DIALOG
+    IDD_BR_UNSELECT_TEMPO, DIALOG
     BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 212
@@ -1895,8 +1895,7 @@ IDC_ZOOMDRAG            CURSOR                  "zoomdrag.cur"
 // Generated from the TEXTINCLUDE 3 resource.
 //
 #include "version.h"
-#include "version.rc2"
-
+#include "version.rc2"
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

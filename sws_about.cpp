@@ -95,9 +95,9 @@ INT_PTR WINAPI doAbout(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 #ifndef _WIN32
 		SetDlgItemText(hwndDlg, IDC_LATESTVER, "http://www.standingwaterstudios.com/reaper/sws_osx.dmg");
 #endif
-		int official, beta; GetStartupSearchOptions(hwndDlg, official, beta);
-		CheckDlgButton(hwndDlg, IDC_CHECK1, !!official);
-		CheckDlgButton(hwndDlg, IDC_CHECK2, !!beta);
+		bool official, beta; GetStartupSearchOptions(&official, &beta, NULL);
+		CheckDlgButton(hwndDlg, IDC_CHECK1, official);
+		CheckDlgButton(hwndDlg, IDC_CHECK2, beta);
 	}
 	else if (uMsg == WM_DRAWITEM)
 	{
@@ -131,10 +131,10 @@ INT_PTR WINAPI doAbout(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		else if (wParam == IDC_LICENSE)
 			DisplayInfoBox(hwndDlg, __LOCALIZE("SWS/S&M Extension - License","sws_DLG_109"), LICENSE_TEXT);
 		else if (wParam == IDC_UPDATE)
-			VersionCheckAction(NULL);
+			VersionCheckDialog(hwndDlg);
 		else if (wParam == IDCANCEL)
 		{
-			SetStartupSearchOptions(IsDlgButtonChecked(hwndDlg, IDC_CHECK1), IsDlgButtonChecked(hwndDlg, IDC_CHECK2));
+			SetStartupSearchOptions(!!IsDlgButtonChecked(hwndDlg, IDC_CHECK1), !!IsDlgButtonChecked(hwndDlg, IDC_CHECK2), 0);
 			EndDialog(hwndDlg, 0);
 		}
 	}

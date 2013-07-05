@@ -29,7 +29,9 @@
 
 void SplitItemAtTempo (COMMAND_T*);
 void MarkersAtTempo (COMMAND_T*);
+void MidiProjectTempo (COMMAND_T*);
 void MarkersAtNotes (COMMAND_T*);
-void MarkersRegionsAtItemsNameByNotes (COMMAND_T* ct);
-void CursorToEnv (COMMAND_T*);
+void MarkersRegionsAtItems (COMMAND_T*);
+void CursorToEnv1 (COMMAND_T*);
+void CursorToEnv2 (COMMAND_T*);
 void ShowActiveEnvOnly (COMMAND_T*);

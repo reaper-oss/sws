@@ -3567,6 +3567,14 @@
 			>
 	    </File>
 	    <File
+			RelativePath=".\Breeder\BR_EnvTools.cpp"
+			>
+	    </File>
+	    <File
+			RelativePath=".\Breeder\BR_EnvTools.h"
+			>
+	    </File>
+	    <File
 			RelativePath=".\Breeder\BR_Misc.cpp"
 			>
 	    </File>
@@ -3588,14 +3596,6 @@
 	    </File>
 	    <File
 			RelativePath=".\Breeder\BR_TempoDlg.h"
-			>
-	    </File>
-	    <File
-			RelativePath=".\Breeder\BR_TempoTools.cpp"
-			>
-	    </File>
-	    <File
-			RelativePath=".\Breeder\BR_TempoTools.h"
 			>
 	    </File>
 	    <File

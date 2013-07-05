@@ -275,14 +275,14 @@
 		3879391216202B1E000948B5 /* TimeMap.h in Headers */ = {isa = PBXBuildFile; fileRef = 387938E416202B1E000948B5 /* TimeMap.h */; };
 		389293241601487C00F16794 /* MakeWhatsNew.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 389293231601487C00F16794 /* MakeWhatsNew.cpp */; };
 		38B8AD451601269E001F3F3C /* ReaScript.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38B8AD431601269E001F3F3C /* ReaScript.cpp */; };
+		4D92ED8A17863C5C00521375 /* BR_EnvTools.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D92ED8817863C5C00521375 /* BR_EnvTools.cpp */; };
+		4D92ED8B17863C5C00521375 /* BR_EnvTools.h in Headers */ = {isa = PBXBuildFile; fileRef = 4D92ED8917863C5C00521375 /* BR_EnvTools.h */; };
 		4D859DBB16AB128700E34EAA /* BR_Misc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D859DAD16AB128700E34EAA /* BR_Misc.cpp */; };
 		4D859DBC16AB128700E34EAA /* BR_Misc.h in Headers */ = {isa = PBXBuildFile; fileRef = 4D859DAE16AB128700E34EAA /* BR_Misc.h */; };
 		4D859DBD16AB128700E34EAA /* BR_Tempo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D859DAF16AB128700E34EAA /* BR_Tempo.cpp */; };
 		4D859DBE16AB128700E34EAA /* BR_Tempo.h in Headers */ = {isa = PBXBuildFile; fileRef = 4D859DB016AB128700E34EAA /* BR_Tempo.h */; };
 		4D859DBF16AB128700E34EAA /* BR_TempoDlg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D859DB116AB128700E34EAA /* BR_TempoDlg.cpp */; };
 		4D859DC016AB128700E34EAA /* BR_TempoDlg.h in Headers */ = {isa = PBXBuildFile; fileRef = 4D859DB216AB128700E34EAA /* BR_TempoDlg.h */; };
-		4D859DC116AB128700E34EAA /* BR_TempoTools.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D859DB316AB128700E34EAA /* BR_TempoTools.cpp */; };
-		4D859DC216AB128700E34EAA /* BR_TempoTools.h in Headers */ = {isa = PBXBuildFile; fileRef = 4D859DB416AB128700E34EAA /* BR_TempoTools.h */; };
 		4D859DC316AB128700E34EAA /* BR_Update.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D859DB516AB128700E34EAA /* BR_Update.cpp */; };
 		4D859DC416AB128700E34EAA /* BR_Update.h in Headers */ = {isa = PBXBuildFile; fileRef = 4D859DB616AB128700E34EAA /* BR_Update.h */; };
 		4D859DC516AB128700E34EAA /* BR_Util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D859DB716AB128700E34EAA /* BR_Util.cpp */; };
@@ -596,14 +596,14 @@
 		387938E416202B1E000948B5 /* TimeMap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TimeMap.h; path = Fingers/TimeMap.h; sourceTree = "<group>"; };
 		389293231601487C00F16794 /* MakeWhatsNew.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MakeWhatsNew.cpp; path = BuildUtils/MakeWhatsNew.cpp; sourceTree = "<group>"; };
 		38B8AD431601269E001F3F3C /* ReaScript.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ReaScript.cpp; sourceTree = "<group>"; };
+		4D92ED8817863C5C00521375 /* BR_EnvTools.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BR_EnvTools.cpp; path = Breeder/BR_EnvTools.cpp; sourceTree = "<group>"; };
+		4D92ED8917863C5C00521375 /* BR_EnvTools.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BR_EnvTools.h; path = Breeder/BR_EnvTools.h; sourceTree = "<group>"; };
 		4D859DAD16AB128700E34EAA /* BR_Misc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BR_Misc.cpp; path = Breeder/BR_Misc.cpp; sourceTree = "<group>"; };
 		4D859DAE16AB128700E34EAA /* BR_Misc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BR_Misc.h; path = Breeder/BR_Misc.h; sourceTree = "<group>"; };
 		4D859DAF16AB128700E34EAA /* BR_Tempo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BR_Tempo.cpp; path = Breeder/BR_Tempo.cpp; sourceTree = "<group>"; };
 		4D859DB016AB128700E34EAA /* BR_Tempo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BR_Tempo.h; path = Breeder/BR_Tempo.h; sourceTree = "<group>"; };
 		4D859DB116AB128700E34EAA /* BR_TempoDlg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BR_TempoDlg.cpp; path = Breeder/BR_TempoDlg.cpp; sourceTree = "<group>"; };
 		4D859DB216AB128700E34EAA /* BR_TempoDlg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BR_TempoDlg.h; path = Breeder/BR_TempoDlg.h; sourceTree = "<group>"; };
-		4D859DB316AB128700E34EAA /* BR_TempoTools.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BR_TempoTools.cpp; path = Breeder/BR_TempoTools.cpp; sourceTree = "<group>"; };
-		4D859DB416AB128700E34EAA /* BR_TempoTools.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BR_TempoTools.h; path = Breeder/BR_TempoTools.h; sourceTree = "<group>"; };
 		4D859DB516AB128700E34EAA /* BR_Update.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BR_Update.cpp; path = Breeder/BR_Update.cpp; sourceTree = "<group>"; };
 		4D859DB616AB128700E34EAA /* BR_Update.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BR_Update.h; path = Breeder/BR_Update.h; sourceTree = "<group>"; };
 		4D859DB716AB128700E34EAA /* BR_Util.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BR_Util.cpp; path = Breeder/BR_Util.cpp; sourceTree = "<group>"; };
@@ -1126,14 +1126,14 @@
 		4D859DAC16AB127100E34EAA /* Breeder */ = {
 			isa = PBXGroup;
 			children = (
+				4D92ED8817863C5C00521375 /* BR_EnvTools.cpp */,
+				4D92ED8917863C5C00521375 /* BR_EnvTools.h */,
 				4D859DAD16AB128700E34EAA /* BR_Misc.cpp */,
 				4D859DAE16AB128700E34EAA /* BR_Misc.h */,
 				4D859DAF16AB128700E34EAA /* BR_Tempo.cpp */,
 				4D859DB016AB128700E34EAA /* BR_Tempo.h */,
 				4D859DB116AB128700E34EAA /* BR_TempoDlg.cpp */,
 				4D859DB216AB128700E34EAA /* BR_TempoDlg.h */,
-				4D859DB316AB128700E34EAA /* BR_TempoTools.cpp */,
-				4D859DB416AB128700E34EAA /* BR_TempoTools.h */,
 				4D859DB516AB128700E34EAA /* BR_Update.cpp */,
 				4D859DB616AB128700E34EAA /* BR_Update.h */,
 				4D859DB716AB128700E34EAA /* BR_Util.cpp */,
@@ -1331,7 +1331,6 @@
 				4D859DBC16AB128700E34EAA /* BR_Misc.h in Headers */,
 				4D859DBE16AB128700E34EAA /* BR_Tempo.h in Headers */,
 				4D859DC016AB128700E34EAA /* BR_TempoDlg.h in Headers */,
-				4D859DC216AB128700E34EAA /* BR_TempoTools.h in Headers */,
 				4D859DC416AB128700E34EAA /* BR_Update.h in Headers */,
 				4D859DC616AB128700E34EAA /* BR_Util.h in Headers */,
 				4D859DC816AB128700E34EAA /* BR.h in Headers */,
@@ -1342,6 +1341,7 @@
 				4D859DDB16AB133D00E34EAA /* netinc.h in Headers */,
 				4D859DDD16AB133D00E34EAA /* util.h in Headers */,
 				1FE2BC1016FF72FD008AC14F /* SnM_CSurf.h in Headers */,
+				4D92ED8B17863C5C00521375 /* BR_EnvTools.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1613,7 +1613,6 @@
 				4D859DBB16AB128700E34EAA /* BR_Misc.cpp in Sources */,
 				4D859DBD16AB128700E34EAA /* BR_Tempo.cpp in Sources */,
 				4D859DBF16AB128700E34EAA /* BR_TempoDlg.cpp in Sources */,
-				4D859DC116AB128700E34EAA /* BR_TempoTools.cpp in Sources */,
 				4D859DC316AB128700E34EAA /* BR_Update.cpp in Sources */,
 				4D859DC516AB128700E34EAA /* BR_Util.cpp in Sources */,
 				4D859DC716AB128700E34EAA /* BR.cpp in Sources */,
@@ -1622,6 +1621,7 @@
 				4D859DD816AB133D00E34EAA /* httpget.cpp in Sources */,
 				4D859DDC16AB133D00E34EAA /* util.cpp in Sources */,
 				1FE2BC0F16FF72FD008AC14F /* SnM_CSurf.cpp in Sources */,
+				4D92ED8A17863C5C00521375 /* BR_EnvTools.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

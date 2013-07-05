@@ -103,7 +103,11 @@ bool hookCommandProc(int iCmd, int flag)
 		{
 			if (!strstr(cmd->id, "_CYCLACTION")) bReentrancyCheck = true;
 			cmd->fakeToggle = !cmd->fakeToggle;
+#ifndef DEBUG_PERFORMANCE_TIME
 			cmd->doCommand(cmd);
+#else
+			CommandTimer(cmd);
+#endif
 			bReentrancyCheck = false;
 			return true;
 		}

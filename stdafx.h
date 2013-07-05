@@ -42,6 +42,7 @@
 #include <commctrl.h>
 #else
 #include "../WDL/swell/swell.h"
+#include <sys/time.h>
 #endif
 #include <stdio.h>
 #include <math.h>

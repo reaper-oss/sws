@@ -49,7 +49,7 @@ double g_toolbarMsCounter = 0.0;
 double g_itemSelToolbarMsCounter = 0.0;
 double g_markerRegionNotifyMsCounter = 0.0;
 
-// processing order is important here, no recursion check!
+// processing order is important here
 void SNM_CSurfRun()
 {
 	// region playlist
@@ -247,9 +247,9 @@ bool SNM_OscCSurf::Equals(SNM_OscCSurf* _osc)
 		!strcmp(m_layout.Get(), _osc->m_layout.Get());
 }
 
-// both param are normally exclusive: eihter "get all csurfs", or "get csurf by name"
 // _out: instanciate all SNM_OscCSurf's from ini file
 // _name: if != NULL, return the first osc csurf matching _name
+// ^^ exclusive params: "get all csurfs" or "get csurf by name"
 // it is up to the caller to unalloc the returned value and/or _out
 SNM_OscCSurf* LoadOscCSurfs(WDL_PtrList<SNM_OscCSurf>* _out, const char* _name)
 {

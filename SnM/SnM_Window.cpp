@@ -527,7 +527,7 @@ bool GetSelectedAction(char* _idstrOut, int _idStrSz, KbdSectionInfo* _expectedS
 }
 
 
-//JFB!!!TODO: new APIs..
+//JFB!!!TODO: cleanup thanks to new APIs..
 // dump actions or the wiki ALR summary for the current section *as displayed* in the action dlg 
 // API LIMITATION: the action dlg is hacked because only the main section could be dumped othewise..
 // See http://forum.cockos.com/showthread.php?t=61929 and http://wiki.cockos.com/wiki/index.php/Action_List_Reference

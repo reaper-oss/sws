@@ -184,17 +184,16 @@ protected:
 
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_TakeParserPatcher
-// JFB TODO? 
-//  maintain m_activeTakeIdx when updating takes + 
-//  GetSetMediaItemInfo((MediaItem*)m_object, "I_CURTAKE", &m_activeTakeIdx)
-//  on commit ? ATM, REAPER manages the active take, seems ok so far..
+// JFB TODO? maintain m_activeTakeIdx when updating takes and call 
+// GetSetMediaItemInfo(m_object, "I_CURTAKE", &m_activeTakeIdx) on commit ? 
+// Note: let REAPER manages the active take ATM, seems ok..
 ///////////////////////////////////////////////////////////////////////////////
 
 class SNM_TakeParserPatcher : public SNM_ChunkParserPatcher
 {
 public:
 	SNM_TakeParserPatcher(MediaItem* _item, int _countTakes = -1) : SNM_ChunkParserPatcher(_item) {
-		m_currentTakeCount = _countTakes; // if < 0: lazy init through CountTakesInChunk()
+		m_currentTakeCount = _countTakes; // lazy init through CountTakesInChunk() if < 0
 		m_fakeTake = false;
 	}
 	// call to Commit(): when a constructor or destructor calls a virtual 
@@ -215,13 +214,12 @@ public:
 	bool RemoveTake(int _takeIdx, WDL_FastString* _removedChunk = NULL, int* _removedStartPos = NULL);
 	bool ReplaceTake(int _startTakePos, int _takeLength, WDL_FastString* _newTakeChunk);
 protected:
-	int m_currentTakeCount; // nb of takes in the *chunk* (may be different than REAPER's ones)
-//	int m_activeTakeIdx;    // active take in the *chunk* (may be different than REAPER's ones)
+	int m_currentTakeCount; // nb of takes *in the chunk* (may be different than REAPER's ones)
+//	int m_activeTakeIdx;    // active take *in the chunk* (may be different than REAPER's ones)
 private:
 	// check that _pLine is indeed the 1st line of a new take in an item chunk
-	// remarks:
-	// _pLine *MUST* start with "\nTAKE" (see private usages)
-	// also, we assume we're processing a valid chunk here (i.e. doesn't end with "\nTAKE")
+	// remarks: _pLine must start with "\nTAKE", also we assume we're processing
+	//          a valid chunk here (i.e. doesn't end with "\nTAKE")
 	bool IsValidTakeChunkLine(const char* _pLine) {return (_pLine[5] && (_pLine[5] == '\n' || _pLine[5] == ' '));}
 	bool m_fakeTake;
 };

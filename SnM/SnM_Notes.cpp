@@ -917,11 +917,11 @@ void LoadHelp(const char* _cmdName, char* _buf, int _bufSize)
 	}
 }
 
-// adds '|' at start of lines
-// (allows empty lines which would be scratched by GetPrivateProfileSection() otherwise)
+// adds '|' at start of lines, empty lines would be
+// scratched by GetPrivateProfileSection() otherwise
 void SaveHelp(const char* _cmdName, const char* _help)
 {
-	if (_cmdName && *_cmdName && _help) 
+	if (_cmdName && *_cmdName && _help)
 	{
 		char buf[MAX_HELP_LENGTH] = "";
 //		memset(buf, 0, MAX_HELP_LENGTH);
@@ -957,9 +957,9 @@ void SetActionHelpFilename(COMMAND_T*) {
 
 
 ///////////////////////////////////////////////////////////////////////////////
-
-// encode/decode notes (to/from RPP chunks)
-// note: WDL's cfg_encode_textblock() & cfg_decode_textblock() will not help here..
+// Encode/decode notes (to/from RPP format)
+// WDL's cfg_encode_textblock() & cfg_decode_textblock() would not help here..
+///////////////////////////////////////////////////////////////////////////////
 
 bool GetStringFromNotesChunk(WDL_FastString* _notesIn, char* _bufOut, int _bufOutSz)
 {
@@ -1212,20 +1212,25 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 	{
 		WDL_FastString notes;
 		ExtensionConfigToString(&notes, ctx);
+
 		char buf[MAX_HELP_LENGTH] = "";
 		GetStringFromNotesChunk(&notes, buf, MAX_HELP_LENGTH);
+
 		g_prjNotes.Get()->Set(buf);
 		return true;
 	}
 	else if (!strcmp(lp.gettoken_str(0), "<S&M_TRACKNOTES"))
 	{
-		GUID g;
-		stringToGuid(lp.gettoken_str(1), &g);
 		WDL_FastString notes;
 		ExtensionConfigToString(&notes, ctx);
+
 		char buf[MAX_HELP_LENGTH] = "";
 		if (GetStringFromNotesChunk(&notes, buf, MAX_HELP_LENGTH))
+		{
+			GUID g;
+			stringToGuid(lp.gettoken_str(1), &g);
 			g_SNM_TrackNotes.Get()->Add(new SNM_TrackNotes(&g, buf));
+		}
 		return true;
 	}
 	else if (!strcmp(lp.gettoken_str(0), "<S&M_SUBTITLE"))
@@ -1234,6 +1239,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 		{
 			WDL_FastString notes;
 			ExtensionConfigToString(&notes, ctx);
+
 			char buf[MAX_HELP_LENGTH] = "";
 			if (GetStringFromNotesChunk(&notes, buf, MAX_HELP_LENGTH))
 				g_pRegionSubs.Get()->Add(new SNM_RegionSubtitle(lp.gettoken_int(1), buf));

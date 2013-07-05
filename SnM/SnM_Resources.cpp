@@ -2403,12 +2403,12 @@ void AutoSave(int _type, bool _promptOverwrite, int _flags)
 	// overwrite non empty slots?
 	int ow = IDNO;
 	if (resWnd)
-		resWnd->GetSelectedSlots(&selFilledSlots, &owSlots); // &owSlots: empty slots are systematically overwritten
+		resWnd->GetSelectedSlots(&selFilledSlots, &owSlots); // &owSlots: empty slots are always overwritten
 
 	if (selFilledSlots.GetSize() && _promptOverwrite)
 	{
 		ow = MessageBox(g_resWndMgr.GetMsgHWND(),
-				__LOCALIZE("Some selected slots are already filled, do you want to overwrite them?\n\nReplying \"Yes\" will overwite filled slots/files.\nReplying \"No\" will add new slots/files.","sws_DLG_150"),
+				__LOCALIZE("Some selected slots are already filled, do you want to overwrite them?\nIf you select No, new slots/files will be added.","sws_DLG_150"),
 				__LOCALIZE("S&M - Confirmation","sws_DLG_150"),
 				MB_YESNOCANCEL);
 	}

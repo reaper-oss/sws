@@ -3,6 +3,11 @@ Added actions:
 +SWS/BR: Enable "Ignore project tempo" for selected MIDI items (use tempo at item's start)
 +SWS/BR: Disable "Ignore project tempo" for selected MIDI items	
 
+Other:
++Cycle Action editor: improved context menu (http://forum.cockos.com/showpost.php?p=1205514&postcount=5|as discussed here|)
++Cycle Action editor: make it obvious when the Apply button is being disabled
++Live Config editor: various undo improvements
+
 Fixes:
 +Prevent creating redundant undo points in SWS/BR: Randomize selected tempo markers...
 +SWS/BR windows always refresh toolbar buttons properly
@@ -14,20 +19,20 @@ Fixes:
 
 !v2.3.0 #19 (June 27, 2013)
 Fixes:
-+Issue 585 / OS X: fixed font redering crashes
++Issue 585 / OS X: fixed font rendering crashes, thank YOU Justin!
 +More screenset fixes (including http://code.google.com/p/sws-extension/source/detail?r=1077|these issues|)
 
 Added actions:
-+SWS/BR: Hide all but active track envelope
++SWS/BR: Hide all but active track envelope (issue 456)
 
 Other:
-+Renamed a bunch of S&M "slot actions" to make it clear they are attached to the Resources window
- For ex.: the action <i>SWS/S&M: Import tracks from track template, prompt for slot</i> has been renamed into <i>SWS/S&M: <b>Resources - </b>Import tracks from track template, prompt for slot</i>
++<b>Renamed a bunch of S&M "slot actions" to make it clear they are attached to the Resources window</b>
+ For ex.: <i>SWS/S&M: Import tracks from track template, slot 3</i> has been renamed into <i>SWS/S&M: <b>Resources - </b>Import tracks from track template, slot 3</i>
 +Cycle Action editor: display unregistered cycle actions as such (IDs in parenthesis)
 +Actions that renumber marker/region IDs now create undo points
 
 !v2.3.0 #18 (June 9, 2013)
-Issue 517 / Windows OS: S&M actions and commands that open the explorer now also select files (when applicable)
+Issue 517 / Windows OS: S&M actions and commands that open the Explorer now also select files (when applicable)
 OS X: better fonts in S&M windows (again!)
 
 Fixes:
@@ -48,7 +53,6 @@ Cycle Action (CA)
 +Support macros & scripts in all sections
 +Improved the timing of Cycle Actions (again!)
 +Support special macros using actions like "No-op", "Wait n seconds before next action", etc..
-+<i>This line would have been cool too but an API bug (?) prevents it to end well: beta flag</i>
 +Editor: various usability improvements, incl. a bit of issue 565
 +Editor / Issue 562: added instruction LABEL to run Label Processor commands (and make your own "Label Processor actions")
  Example: LABEL /Lmy_suffix
@@ -79,7 +83,7 @@ Resources window and related "slot actions"
 +Various tweaks, tiny fixes (localization, media file filters, etc..)
 
 Fixes:
-+Notes window: undoing "remove tracks" now also restores tracks notes
++Notes window: undoing "remove tracks" now restores tracks notes, if any
 +Removed default shortcut Ctrl+Shift+M ("SWS: Open marker list"): conflict with the default/native shortcut for "View: show track manager window"
 +Removed default shortcut Ctrl+F (for "SWS/S&M: Find"): no known conflict but more future-proof
 +Screenset load now sets size/position of undocked SWS windows as reported http://forum.cockos.com/showpost.php?p=1158117&postcount=1248|here|

@@ -69,7 +69,7 @@ typedef struct APIdef
 
 APIdef g_apidefs[] =
 {
-	{ APIFUNC(SNM_CreateFastString), "WDL_FastString*", "const char*", "str", "[S&M] Instanciates a new \"fast string\" (i.e. WDL_FastString). Once the job done, you MUST delete this string, see SNM_DeleteFastString.", },
+	{ APIFUNC(SNM_CreateFastString), "WDL_FastString*", "const char*", "str", "[S&M] Instanciates a new \"fast string\". You must delete this string, see SNM_DeleteFastString.", },
 	{ APIFUNC(SNM_DeleteFastString), "void", "WDL_FastString*", "str", "[S&M] Deletes a \"fast string\" instance.", },
 	{ APIFUNC(SNM_GetFastString), "const char*", "WDL_FastString*", "str", "[S&M] Gets the \"fast string\" content.", },
 	{ APIFUNC(SNM_GetFastStringLength), "int", "WDL_FastString*", "str", "[S&M] Gets the \"fast string\" length.", },

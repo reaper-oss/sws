@@ -130,7 +130,8 @@ bool FileOrDirExists(const char* _fn)
 	return false;
 }
 
-// see above remark..
+// FileOrDirExists() and FileOrDirExistsErrMsg() are not merged so
+// that it does not to impact other project members' code...
 bool FileOrDirExistsErrMsg(const char* _fn, bool _errMsg)
 {
 	bool exists = FileOrDirExists(_fn);
@@ -139,7 +140,7 @@ bool FileOrDirExistsErrMsg(const char* _fn, bool _errMsg)
 		char buf[SNM_MAX_PATH] = "";
 		lstrcpyn(buf, __LOCALIZE("Empty filename!","sws_mbox"), sizeof(buf));
 		if (_fn && *_fn)
-			_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("File or directory not found: %s","sws_mbox"), _fn);
+			_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("File or directory not found:\n%s","sws_mbox"), _fn);
 		MessageBox(GetMainHwnd(), buf, __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
 	}
 	return exists;
@@ -171,9 +172,9 @@ bool SNM_CopyFile(const char* _destFn, const char* _srcFn)
 	return ok;
 }
 
-void OpenSelectInExplorerFinder(const char* _fn)
+void OpenSelectInExplorerFinder(const char* _fn, bool _errMsg)
 {
-	if (FileOrDirExists(_fn))
+	if (FileOrDirExistsErrMsg(_fn, _errMsg))
 	{
 #ifdef _WIN32
 		WDL_FastString cmd("/select,");
@@ -266,8 +267,8 @@ void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fu
 }
 
 // _trim: if true, remove empty lines + left trim
-// _approxMaxlen: 0=full file, n=truncate arround n bytes (well, a bit more)
-// note: WDL's ProjectCreateFileRead() not used: seems horribly slow..
+// _approxMaxlen: if >0, truncate arround _approxMaxlen bytes
+// note: WDL's ProjectCreateFileRead() seems very slow..
 bool LoadChunk(const char* _fn, WDL_FastString* _chunkOut, bool _trim, int _approxMaxlen)
 {
 	if (_chunkOut && _fn && *_fn)
@@ -304,7 +305,7 @@ bool LoadChunk(const char* _fn, WDL_FastString* _chunkOut, bool _trim, int _appr
 	return false;
 }
 
-// note: WDL's ProjectCreateFileWrite() not used: seems horribly slow..
+// note: WDL's ProjectCreateFileWrite() seems very slow..
 bool SaveChunk(const char* _fn, WDL_FastString* _chunk, bool _indent)
 {
 	if (_fn && *_fn && _chunk)
@@ -631,7 +632,6 @@ void SNM_UpgradeIniFiles()
 ///////////////////////////////////////////////////////////////////////////////
 
 // a _snprintf that ensures the string is always null terminated (but truncated if needed)
-// also see _snprintfStrict()
 // note: WDL_snprintf's return value cannot be trusted, see wdlcstring.h
 //       (using it could break other sws members' code)
 int _snprintfSafe(char* _buf, size_t _n, const char* _fmt, ...)
@@ -657,7 +657,6 @@ int _snprintfSafe(char* _buf, size_t _n, const char* _fmt, ...)
 
 // a _snprintf that returns >=0 when the string is null terminated and not truncated
 // => callers must check the returned value 
-// also see _snprintfSafe()
 // note: WDL_snprintf's return value cannot be trusted, see wdlcstring.h
 //       (using it could break other sws members' code)
 int _snprintfStrict(char* _buf, size_t _n, const char* _fmt, ...)
@@ -791,10 +790,11 @@ double SeekPlay(double _pos, bool _moveView)
 // Action helpers
 ///////////////////////////////////////////////////////////////////////////////
 
-// overrides the API's NamedCommandLookup to take all a action sections into account
-// _hardCheck: if true, do more tests on the returned command id because the API's NamedCommandLookup
-//             can return an id although the related action is not registered yet, ex: at init time, 
-//             when an action is attached to a mouse modifier
+// overrides the API's NamedCommandLookup: works for all action sections
+// _hardCheck: if true, do more tests on the returned command id because the 
+//             API's NamedCommandLookup can return an id although the related 
+//             action is not registered yet, ex: at init time, when an action
+//             is attached to a mouse modifier
 // note: calling this func with default param values like SNM_NamedCommandLookup("_bla") 
 //       is the same as the native NamedCommandLookup("_bla")
 int SNM_NamedCommandLookup(const char* _custId, KbdSectionInfo* _section, bool _hardCheck)
@@ -802,24 +802,24 @@ int SNM_NamedCommandLookup(const char* _custId, KbdSectionInfo* _section, bool _
 	int cmdId = 0;
 	if (_custId && *_custId)
 	{
+		// main section?
 		if (!_section || _section==SNM_GetActionSection(SNM_SEC_IDX_MAIN))
 		{
 			cmdId = NamedCommandLookup(_custId);
 		}
 		else
 		{
-			//JFB cool finding - REAPER v4.34rc1
-			// other sections: for macros/scripts (which are the only non-native thing that 
-			// can be registered in those sections ATM), it turns out NamedCommandLookup() works
-			// (probably relies on the unicity custom ids..)
-			// 3rd party sections are ok too because they can't use custom ids yet
+			//JFB! cool finding for other sections (REAPER v4.34rc1):
+			// for macros/scripts (which are the only non-native things that can be registered
+			// in those sections ATM), it turns out NamedCommandLookup() works (!)
+			// 3rd party sections are ok too because they can't register custom ids in there yet
 			if (*_custId == '_')
 			{
 				cmdId = NamedCommandLookup(_custId);
 			}
 			else
 			{
-				if (cmdId = atoi(_custId)) // <-- not enough, e.g. "-666" would match
+				if (cmdId = atoi(_custId)) // not enough, e.g. "-666" would match
 				{
 					bool found = false;
 					for (int i=0; i<_section->action_list_cnt; i++) {
@@ -943,7 +943,7 @@ bool IsMacroOrScript(const char* _cmd, bool _cmdIsName)
 				else
 					return false;
 			}
-			return len==SNM_MACRO_CUSTID_LEN;
+			return len==SNM_MAX_MACRO_CUSTID_LEN;
 		}
 	}
 	return false;
@@ -1005,7 +1005,7 @@ bool LearnAction(KbdSectionInfo* _section, int _cmdId)
 			__LOCALIZE("Do you want to replace those bindings?","sws_mbox") : 
 			__LOCALIZE("Do you want to replace this binding?","sws_mbox"));
 		msg.Append("\n");
-		msg.Append(__LOCALIZE("Note: replying \"No\" will add a new binding.","sws_mbox"));
+		msg.Append(__LOCALIZE("If you select No, a new binding will be added.","sws_mbox"));
 
 		switch (MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("S&M - Confirmation","sws_mbox"), MB_YESNOCANCEL))
 		{

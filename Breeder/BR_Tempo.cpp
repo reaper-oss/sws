@@ -406,6 +406,7 @@ void DeleteTempo (COMMAND_T* ct)
 					
 		// Delete point
 		tempoMap.DeletePoint(id);			
+		--offset;		
 	}
 	
 	// Commit changes

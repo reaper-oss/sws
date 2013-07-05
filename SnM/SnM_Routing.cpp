@@ -38,11 +38,10 @@
 // General routing helpers
 ///////////////////////////////////////////////////////////////////////////////
 
-//JFB REAPER bug: tcp/mcp refresh is buggy, see http://forum.cockos.com/project.php?issueid=2642
-// (for easy replacement the day we can manage that..)
-void RefreshRoutingsUI() {
-	TrackList_AdjustWindows(true);
-}
+//REAPER BUG: tcp/mcp refresh is buggy,
+// see http://forum.cockos.com/project.php?issueid=2642
+// (just to ease replacement the day we can manage that..)
+void RefreshRoutingsUI() {}
 
 
 ///////////////////////////////////////////////////////////////////////////////

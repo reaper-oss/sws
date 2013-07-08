@@ -180,7 +180,7 @@ LICE_IBitmap* SNM_GetThemeLogo()
 #ifdef _WIN32
 
 // calling RemoveXPStyle() straight in there would crash!
-static BOOL CALLBACK EnumRemoveXPStyles(HWND _hwnd, LPARAM _childHwnds)
+static BOOL CALLBACK EnumRemoveXPStyles(HWND _hwnd, LPARAM _unused)
 {
 	int i=0;
 
@@ -195,7 +195,7 @@ static BOOL CALLBACK EnumRemoveXPStyles(HWND _hwnd, LPARAM _childHwnds)
 			(style & BS_AUTORADIOBUTTON) == BS_AUTORADIOBUTTON ||
 			(style & BS_GROUPBOX) == BS_GROUPBOX)
 		{
-			((WDL_PtrList<HWND__>*)_childHwnds)->Add(_hwnd);
+			RemoveXPStyle(_hwnd, 1);
 		}
 	}
 	return TRUE;
@@ -211,14 +211,9 @@ WDL_DLGRET SNM_HookThemeColorsMessage(HWND _hwnd, UINT _uMsg, WPARAM _wParam, LP
 		{
 #ifdef _WIN32
 			case WM_INITDIALOG :
-			{
 				// remove XP style on some child ctrls (cannot be themed otherwise)
-				WDL_PtrList<HWND__> childHwnds;
 				EnumChildWindows(_hwnd, EnumRemoveXPStyles, (LPARAM)&childHwnds);
-				for (int i=0; i<childHwnds.GetSize(); i++)
-					RemoveXPStyle(childHwnds.Get(i), 1);
 				return 0;
-			}
 #endif
 			case WM_CTLCOLOREDIT:
 				if (!_wantColorEdit) return 0;

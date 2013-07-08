@@ -29,13 +29,20 @@
 // the file directly, and needing to remodify with each rebuild of the file,
 // fix some things here.
 
-extern void (WINAPI *AttachWindowTopmostButton)(HWND hwnd); // v4 only
-extern void (WINAPI *AttachWindowResizeGrip)(HWND hwnd); // v4 only
-extern void (WINAPI *RemoveXPStyle)(HWND hwnd, int rm);
-extern BOOL (WINAPI *CoolSB_GetScrollInfo)(HWND hwnd, int nBar, LPSCROLLINFO lpsi);
-extern int (WINAPI *CoolSB_SetScrollInfo)(HWND hwnd, int nBar, LPSCROLLINFO lpsi, BOOL fRedraw);
-extern void (WINAPI *MainThread_LockTracks)();
-extern void (WINAPI *MainThread_UnlockTracks)();
+#ifdef REAPERAPI_DECL
+#define REAPER_EXTRA_API_DECL
+#else
+#define REAPER_EXTRA_API_DECL extern
+#endif
+
+// Not included in reaper_plugin_functions.h, so include here:
+REAPER_EXTRA_API_DECL void (*AttachWindowTopmostButton)(HWND hwnd); // v4 only
+REAPER_EXTRA_API_DECL void (*AttachWindowResizeGrip)(HWND hwnd); // v4 only
+REAPER_EXTRA_API_DECL BOOL (*RemoveXPStyle)(HWND hwnd, int rm);
+REAPER_EXTRA_API_DECL BOOL (WINAPI *CoolSB_GetScrollInfo)(HWND hwnd, int nBar, LPSCROLLINFO lpsi);
+REAPER_EXTRA_API_DECL int (WINAPI *CoolSB_SetScrollInfo)(HWND hwnd, int nBar, LPSCROLLINFO lpsi, BOOL fRedraw);
+REAPER_EXTRA_API_DECL void (*MainThread_LockTracks)();
+REAPER_EXTRA_API_DECL void (*MainThread_UnlockTracks)();
 
 // Avoid VWnd collisions!
 #define WDL_VirtualWnd_ScaledBlitBG WDL_VirtualWnd_ScaledBlitBG_fptr

@@ -1049,16 +1049,6 @@ int SNM_Init(reaper_plugin_info_t* _rec)
 	ReaProjectInit();
 	CyclactionInit(); // keep it as the last one!
 
-#ifdef _SNM_CSURF_PROXY
-	g_SNM_CSurfProxy = new SNM_CSurfProxy();
-	if (!g_SNM_CSurfProxy || !_rec->Register("csurf_inst", g_SNM_CSurfProxy))
-		DELETE_NULL(g_SNM_CSurfProxy)
-	else {
-		_rec->Register("API_SNM_UnregisterCSurf", (void*)SNM_UnregisterCSurf);
-		_rec->Register("API_SNM_RegisterCSurf", (void*)SNM_RegisterCSurf);
-	}
-#endif
-
 	// init exlusive toggle actions
 	if (COMMAND_T* ct = SWSGetCommandByID(SWSGetCommandID(ExclusiveToggle, 0)))
 		ct->fakeToggle = true;
@@ -1077,10 +1067,4 @@ void SNM_Exit()
 	CyclactionExit();
 	SNM_UIExit();
 	IniFileExit();
-
-#ifdef _SNM_CSURF_PROXY
-	if (g_SNM_CSurfProxy)
-		g_SNM_CSurfProxy->RemoveAll();
-	DELETE_NULL(g_SNM_CSurfProxy);
-#endif
 }

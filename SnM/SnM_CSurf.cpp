@@ -160,7 +160,7 @@ int SNM_CSurfExtended(int _call, void* _parm1, void* _parm2, void* _parm3)
 {
 #ifdef _SNM_DEBUG
 	char dbg[256] = "";
-	_snprintfSafe(dbg, sizeof(dbg), "SNM_CSurfExtended() - Call %d, prm1: %p, prm2: %p prm3: %p\n", _call, _parm1, _parm2, _parm3);
+	_snprintfSafe(dbg, sizeof(dbg), "SNM_CSurfExtended() - Call: %d, prm1: %p, prm2: %p prm3: %p\n", _call, _parm1, _parm2, _parm3);
 	OutputDebugString(dbg);
 #endif
 	return 0; // return 0 if unsupported
@@ -400,32 +400,3 @@ bool SNM_SendLocalOscMessage(const char* _oscMsg)
 	}
 	return sent;
 }
-
-
-///////////////////////////////////////////////////////////////////////////////
-// IReaperControlSurface "proxy"
-// note: it is up to the caller to unalloc things
-///////////////////////////////////////////////////////////////////////////////
-
-#ifdef _SNM_CSURF_PROXY
-
-SNM_CSurfProxy* g_SNM_CSurfProxy = NULL;
-
-bool SNM_RegisterCSurf(IReaperControlSurface* _csurf) {
-	if (g_SNM_CSurfProxy) {
-		g_SNM_CSurfProxy->Add(_csurf);
-		return true;
-	}
-	return false;
-}
-
-bool SNM_UnregisterCSurf(IReaperControlSurface* _csurf) {
-	if (g_SNM_CSurfProxy) {
-		g_SNM_CSurfProxy->Remove(_csurf);
-		return true;
-	}
-	return false;
-}
-
-#endif
-

@@ -41,7 +41,6 @@
 //#define _SNM_MISC				// not released, deprecated, tests, etc..
 //#define _SNM_WDL				// if my wdl version is used
 #define _SNM_HOST_AW			// hosts some of Adam's stuff
-//#define _SNM_CSURF_PROXY
 //#define _SNM_OVERLAYS			// looks bad with some themes ATM
 
 

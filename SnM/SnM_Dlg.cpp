@@ -179,11 +179,8 @@ LICE_IBitmap* SNM_GetThemeLogo()
 
 #ifdef _WIN32
 
-// calling RemoveXPStyle() straight in there would crash!
 static BOOL CALLBACK EnumRemoveXPStyles(HWND _hwnd, LPARAM _unused)
 {
-	int i=0;
-
 	// do not deal with list views & list boxes
 	char className[64] = "";
 	if (GetClassName(_hwnd, className, sizeof(className)) && 
@@ -212,7 +209,7 @@ WDL_DLGRET SNM_HookThemeColorsMessage(HWND _hwnd, UINT _uMsg, WPARAM _wParam, LP
 #ifdef _WIN32
 			case WM_INITDIALOG :
 				// remove XP style on some child ctrls (cannot be themed otherwise)
-				EnumChildWindows(_hwnd, EnumRemoveXPStyles, (LPARAM)&childHwnds);
+				EnumChildWindows(_hwnd, EnumRemoveXPStyles, 0);
 				return 0;
 #endif
 			case WM_CTLCOLOREDIT:

@@ -495,13 +495,15 @@ bool MergeSnapshots(Snapshot* ss)
 			}
 		}
 
+		// Per Issue 577, prefer (none) over just picking random tracks. (OK, not random, in order)
+		//  I agree, not sure what I was thinking when I wrote the below. TRP 7/9/13
 		// Fill in blanks with whatever tracks exist
-		for (int i = 0; projTracks.GetSize() && i < g_mergeItems.GetSize(); i++)
-			if (!g_mergeItems.Get(i)->m_destTr)
-			{
-				g_mergeItems.Get(i)->m_destTr = (MediaTrack*)projTracks.Get(0);
-				projTracks.Delete(0);
-			}
+		//for (int i = 0; projTracks.GetSize() && i < g_mergeItems.GetSize(); i++)
+		//	if (!g_mergeItems.Get(i)->m_destTr)
+		//	{
+		//		g_mergeItems.Get(i)->m_destTr = (MediaTrack*)projTracks.Get(0);
+		//		projTracks.Delete(0);
+		//	}
 	}
 
 	DialogBox(g_hInst, MAKEINTRESOURCE(IDD_SSMERGE), g_hwndParent, mergeWndProc);

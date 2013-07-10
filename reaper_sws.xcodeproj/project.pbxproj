@@ -275,8 +275,6 @@
 		3879391216202B1E000948B5 /* TimeMap.h in Headers */ = {isa = PBXBuildFile; fileRef = 387938E416202B1E000948B5 /* TimeMap.h */; };
 		389293241601487C00F16794 /* MakeWhatsNew.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 389293231601487C00F16794 /* MakeWhatsNew.cpp */; };
 		38B8AD451601269E001F3F3C /* ReaScript.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38B8AD431601269E001F3F3C /* ReaScript.cpp */; };
-		4D92ED8A17863C5C00521375 /* BR_EnvTools.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D92ED8817863C5C00521375 /* BR_EnvTools.cpp */; };
-		4D92ED8B17863C5C00521375 /* BR_EnvTools.h in Headers */ = {isa = PBXBuildFile; fileRef = 4D92ED8917863C5C00521375 /* BR_EnvTools.h */; };
 		4D859DBB16AB128700E34EAA /* BR_Misc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D859DAD16AB128700E34EAA /* BR_Misc.cpp */; };
 		4D859DBC16AB128700E34EAA /* BR_Misc.h in Headers */ = {isa = PBXBuildFile; fileRef = 4D859DAE16AB128700E34EAA /* BR_Misc.h */; };
 		4D859DBD16AB128700E34EAA /* BR_Tempo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D859DAF16AB128700E34EAA /* BR_Tempo.cpp */; };
@@ -299,6 +297,8 @@
 		4D859DDB16AB133D00E34EAA /* netinc.h in Headers */ = {isa = PBXBuildFile; fileRef = 4D859DD116AB133D00E34EAA /* netinc.h */; };
 		4D859DDC16AB133D00E34EAA /* util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D859DD216AB133D00E34EAA /* util.cpp */; };
 		4D859DDD16AB133D00E34EAA /* util.h in Headers */ = {isa = PBXBuildFile; fileRef = 4D859DD316AB133D00E34EAA /* util.h */; };
+		4D92ED8A17863C5C00521375 /* BR_EnvTools.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D92ED8817863C5C00521375 /* BR_EnvTools.cpp */; };
+		4D92ED8B17863C5C00521375 /* BR_EnvTools.h in Headers */ = {isa = PBXBuildFile; fileRef = 4D92ED8917863C5C00521375 /* BR_EnvTools.h */; };
 		5A0280AF14216AE300EC8CD1 /* icontheme.h in Headers */ = {isa = PBXBuildFile; fileRef = 5A0280AD14216AE300EC8CD1 /* icontheme.h */; };
 		5A0280B014216AE300EC8CD1 /* sws_rpf_wrapper.h in Headers */ = {isa = PBXBuildFile; fileRef = 5A0280AE14216AE300EC8CD1 /* sws_rpf_wrapper.h */; };
 		980764230F5B23180091104D /* wndsize.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 980764220F5B23180091104D /* wndsize.cpp */; };
@@ -596,8 +596,6 @@
 		387938E416202B1E000948B5 /* TimeMap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TimeMap.h; path = Fingers/TimeMap.h; sourceTree = "<group>"; };
 		389293231601487C00F16794 /* MakeWhatsNew.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MakeWhatsNew.cpp; path = BuildUtils/MakeWhatsNew.cpp; sourceTree = "<group>"; };
 		38B8AD431601269E001F3F3C /* ReaScript.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ReaScript.cpp; sourceTree = "<group>"; };
-		4D92ED8817863C5C00521375 /* BR_EnvTools.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BR_EnvTools.cpp; path = Breeder/BR_EnvTools.cpp; sourceTree = "<group>"; };
-		4D92ED8917863C5C00521375 /* BR_EnvTools.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BR_EnvTools.h; path = Breeder/BR_EnvTools.h; sourceTree = "<group>"; };
 		4D859DAD16AB128700E34EAA /* BR_Misc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BR_Misc.cpp; path = Breeder/BR_Misc.cpp; sourceTree = "<group>"; };
 		4D859DAE16AB128700E34EAA /* BR_Misc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BR_Misc.h; path = Breeder/BR_Misc.h; sourceTree = "<group>"; };
 		4D859DAF16AB128700E34EAA /* BR_Tempo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BR_Tempo.cpp; path = Breeder/BR_Tempo.cpp; sourceTree = "<group>"; };
@@ -620,6 +618,8 @@
 		4D859DD116AB133D00E34EAA /* netinc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = netinc.h; path = ../WDL/jnetlib/netinc.h; sourceTree = SOURCE_ROOT; };
 		4D859DD216AB133D00E34EAA /* util.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = util.cpp; path = ../WDL/jnetlib/util.cpp; sourceTree = SOURCE_ROOT; };
 		4D859DD316AB133D00E34EAA /* util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = util.h; path = ../WDL/jnetlib/util.h; sourceTree = SOURCE_ROOT; };
+		4D92ED8817863C5C00521375 /* BR_EnvTools.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BR_EnvTools.cpp; path = Breeder/BR_EnvTools.cpp; sourceTree = "<group>"; };
+		4D92ED8917863C5C00521375 /* BR_EnvTools.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BR_EnvTools.h; path = Breeder/BR_EnvTools.h; sourceTree = "<group>"; };
 		5A0280AD14216AE300EC8CD1 /* icontheme.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = icontheme.h; path = reaper/icontheme.h; sourceTree = "<group>"; };
 		5A0280AE14216AE300EC8CD1 /* sws_rpf_wrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sws_rpf_wrapper.h; path = reaper/sws_rpf_wrapper.h; sourceTree = "<group>"; };
 		5A2C98F412973A41005ACC49 /* sws_extension.rc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sws_extension.rc; sourceTree = "<group>"; };
@@ -1427,7 +1427,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "../WDL/swell/mac_resgen.php sws_extension.rc";
+			shellScript = "php ../WDL/swell/mac_resgen.php sws_extension.rc";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -1670,12 +1670,12 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/lib";
+				MACOSX_DEPLOYMENT_TARGET = 10.4;
 				OBJROOT = "$(SYMROOT)";
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "-ltag";
 				PREBINDING = NO;
 				SDKROOT = macosx10.5;
-				MACOSX_DEPLOYMENT_TARGET = 10.4;
 				SHARED_PRECOMPS_DIR = "~/Dev/sws-extension/build/PrecompiledHeaders";
 				SYMROOT = "~/Dev/sws-extension";
 			};
@@ -1698,12 +1698,12 @@
 				GCC_WARN_UNUSED_FUNCTION = NO;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/lib";
+				MACOSX_DEPLOYMENT_TARGET = 10.4;
 				OBJROOT = "$(SYMROOT)";
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ltag";
 				PREBINDING = NO;
 				SDKROOT = macosx10.5;
-				MACOSX_DEPLOYMENT_TARGET = 10.4;
 				SHARED_PRECOMPS_DIR = "~/Dev/sws-extension/build/PrecompiledHeaders";
 				SYMROOT = "~/Dev/sws-extension";
 			};

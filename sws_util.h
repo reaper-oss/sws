@@ -188,7 +188,6 @@ void ListView_RedrawItemsCast(HWND h, int startitem, int enditem);
 bool ListView_SetItemStateCast(HWND h, int ipos, int state, int statemask);
 BOOL IsWindowEnabled(HWND hwnd);
 int GetMenuString(HMENU hMenu, UINT uIDItem, char* lpString, int nMaxCount, UINT uFlag);
-#define min(a,b) (((a) < (b)) ? (a) : (b))
 #endif
 
 // Command/action handling, sws_extension.cpp

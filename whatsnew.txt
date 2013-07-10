@@ -1,3 +1,4 @@
+!v2.3.0 #20 (July 9, 2013)
 Added actions:
 +SWS/BR: Hide all but active envelope for selected tracks
 +SWS/BR: Enable "Ignore project tempo" for selected MIDI items (use tempo at item's start)
@@ -7,6 +8,7 @@ Other:
 +Cycle Action editor: improved context menu (http://forum.cockos.com/showpost.php?p=1205514&postcount=5|as discussed here|)
 +Cycle Action editor: make it obvious when the Apply button is being disabled
 +Live Config editor: various undo improvements
++Issue 577: Snapshot paste defaults to (none) for the destination track when non matching track is found
 
 Fixes:
 +Prevent creating redundant undo points in SWS/BR: Randomize selected tempo markers...
@@ -16,6 +18,8 @@ Fixes:
  - fixed behavior for consequential selections
 +SWS/BR: Alter slope of gradual tempo marker:
  - fixed behavior for consequential selections
+
+Enabled more code optimizations on Windows builds to increase action speed in some cases, especially with x64.
 
 !v2.3.0 #19 (June 27, 2013)
 Fixes:

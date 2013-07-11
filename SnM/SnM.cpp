@@ -765,7 +765,8 @@ void ExclusiveToggle(COMMAND_T* _ct)
 // "S&M Extension" section
 ///////////////////////////////////////////////////////////////////////////////
 
-static WDL_IntKeyedArray<MIDI_COMMAND_T*> s_mySectionCmds; //JFB that useful?
+//JFB very few actions in this section => really useful?
+static WDL_IntKeyedArray<MIDI_COMMAND_T*> s_mySectionCmds;
 
 bool OnMidiAction(int _cmd, int _val, int _valhw, int _relmode, HWND _hwnd)
 {
@@ -1012,7 +1013,7 @@ void IniFileExit()
 
 #ifdef _SNM_MISC
 static void SNM_Menuhook(const char* _menustr, HMENU _hMenu, int _flag) {
-	if (!strcmp(_menustr, "Main extensions") && !_flag) SWSCreateMenuFromCommandTable(g_SNM_cmdTable, _hMenu);
+	if (!strcmp(_menustr, "Main extensions") && !_flag) SWSCreateMenuFromCommandTable(s_cmdTable, _hMenu);
 	//else if (!strcmp(_menustr, "Media item context") && !_flag) {}
 	//else if (!strcmp(_menustr, "Track control panel context") && !_flag) {}
 	//else if (_flag == 1) {}

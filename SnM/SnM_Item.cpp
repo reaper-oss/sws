@@ -43,14 +43,16 @@
 // note: primitive funcs (no undo)
 ///////////////////////////////////////////////////////////////////////////////
 
-char* GetName(MediaItem* _item) {
+char* GetName(MediaItem* _item)
+{
 	MediaItem_Take* tk = _item ? GetActiveTake(_item) : NULL;
 	char* takeName = tk ? (char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL) : NULL;
 	return takeName;
 }
 
 // returns -1 if not found
-int GetTakeIndex(MediaItem* _item, MediaItem_Take* _take) {
+int GetTakeIndex(MediaItem* _item, MediaItem_Take* _take)
+{
 	if (_item)
 		for (int i=0; i < CountTakes(_item); i++)
 			if (_take == GetTake(_item, i)) // note: NULL take is an empty take since v4
@@ -66,12 +68,15 @@ bool DeleteMediaItemIfNeeded(MediaItem* _item)
 	if (tr && _item)
 	{
 		int countTk = CountTakes(_item);
-		if (!countTk) {
+		if (!countTk)
+		{
 			deleted = true;
 		}
-		else {
+		else
+		{
 			int i=0, countEmptyTk=0; 
-			while(i < countTk && !GetMediaItemTake(_item, i++)) countEmptyTk++;
+			while(i < countTk && !GetMediaItemTake(_item, i++))
+				countEmptyTk++;
 			deleted = (countTk == countEmptyTk);
 		}
 		if (deleted)
@@ -311,8 +316,10 @@ void SplitSelectedItems(COMMAND_T* _ct) {
 }
 #endif
 
-void GoferSplitSelectedItems(COMMAND_T* _ct) {
-	if (CountSelectedMediaItems(NULL)) {
+void GoferSplitSelectedItems(COMMAND_T* _ct)
+{
+	if (CountSelectedMediaItems(NULL))
+	{
 		Undo_BeginBlock2(NULL);
 		Main_OnCommand(40513, 0); // move edit cursor to mouse cursor (obey snapping)
 		Main_OnCommand(40757, 0); // split at edit cursor (no selection change)
@@ -380,10 +387,12 @@ bool SplitSelectItemsInInterval(const char* _undoTitle, double _pos1, double _po
 	return updated;
 }
 
-void SplitSelectAllItemsInRegion(COMMAND_T* _ct) {
+void SplitSelectAllItemsInRegion(COMMAND_T* _ct)
+{
 	double cursorPos = GetCursorPositionEx(NULL);
 	int x=0, lastx=0; double dPos, dEnd; bool isRgn;
-	while (x = EnumProjectMarkers2(NULL, x, &isRgn, &dPos, &dEnd, NULL, NULL)) {
+	while (x = EnumProjectMarkers2(NULL, x, &isRgn, &dPos, &dEnd, NULL, NULL))
+	{
 		if (isRgn && cursorPos >= dPos && cursorPos <= dEnd) {
 			SplitSelectItemsInInterval(SWS_CMD_SHORTNAME(_ct), dPos, dEnd);
 			return;
@@ -1515,23 +1524,19 @@ void ToggleLoopPauseSelTrackMediaSlot(COMMAND_T* _ct) {
 // with sync
 #ifdef _SNM_MISC
 void SyncTogglePlaySelTrackMediaSlot(COMMAND_T* _ct) {
-	if (TogglePlaySelTrackMediaSlot(g_SNM_TiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, false, 1.0))
-		FakeToggle(_ct);
+	TogglePlaySelTrackMediaSlot(g_SNM_TiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, false, 1.0);
 }
 
 void SyncToggleLoopSelTrackMediaSlot(COMMAND_T* _ct) {
-	if (TogglePlaySelTrackMediaSlot(g_SNM_TiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, true, 1.0))
-		FakeToggle(_ct);
+	TogglePlaySelTrackMediaSlot(g_SNM_TiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, true, 1.0);
 }
 
 void SyncTogglePauseSelTrackMediaSlot(COMMAND_T* _ct) {
-	if (TogglePlaySelTrackMediaSlot(g_SNM_TiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, false, 1.0))
-		FakeToggle(_ct);
+	TogglePlaySelTrackMediaSlot(g_SNM_TiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, false, 1.0);
 }
 
 void SyncToggleLoopPauseSelTrackMediaSlot(COMMAND_T* _ct) {
-	if (TogglePlaySelTrackMediaSlot(g_SNM_TiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, true, 1.0))
-		FakeToggle(_ct);
+	TogglePlaySelTrackMediaSlot(g_SNM_TiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, true, 1.0);
 }
 #endif
 
@@ -1571,7 +1576,8 @@ bool AutoSaveMediaSlots(int _slotType, const char* _dirPath, WDL_PtrList<void>* 
 					if (*(bool*)GetSetMediaItemInfo(item, "B_UISEL", NULL))
 						if (MediaItem_Take* tk = GetActiveTake(item))
 							if (PCM_source* src = (PCM_source*)GetSetMediaItemTakeInfo(tk, "P_SOURCE", NULL))
-								if (src->GetFileName()) {
+								if (src->GetFileName())
+								{
 									if(*src->GetFileName()) // ext file
 										saved |= AutoSaveSlot(_slotType, _dirPath, src->GetFileName(), GetFileExtension(src->GetFileName()), (WDL_PtrList<PathSlotItem>*)_owSlots, &owIdx);
 									else // in-project midi

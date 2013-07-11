@@ -3479,8 +3479,9 @@ void SNM_TieResourceSlotActions(int _bookmarkId) {
 #define IMGID	2000 //JFB would be great to have _APS_NEXT_CONTROL_VALUE *always* defined
 
 SNM_WindowManager<SNM_ImageWnd> g_imgWndMgr(IMG_WND_ID);
-
 bool g_stretchPref = false;
+char g_lastImgFnPref[SNM_MAX_PATH] =  "";
+
 
 // S&M windows lazy init: below's "" prevents registering the SWS' screenset callback
 // (use the S&M one instead - already registered via SNM_WindowManager::Init())
@@ -3489,6 +3490,7 @@ SNM_ImageWnd::SNM_ImageWnd()
 {
 	m_id.Set(IMG_WND_ID);
 	m_stretch = g_stretchPref;
+	m_img.SetImage(g_lastImgFnPref);
 
 	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();
@@ -3556,6 +3558,7 @@ int ImageInit()
 {
 	// load prefs
 	g_stretchPref = (GetPrivateProfileInt("ImageView", "Stretch", 0, g_SNM_IniFn.Get()) == 1);
+	GetPrivateProfileString("ImageView", "LastImage", "", g_lastImgFnPref, sizeof(g_lastImgFnPref), g_SNM_IniFn.Get());
 
 	// instanciate the window if needed, can be NULL
 	g_imgWndMgr.Init();
@@ -3567,7 +3570,19 @@ void ImageExit()
 {
 	// save prefs
 	if (SNM_ImageWnd* w = g_imgWndMgr.Get())
+	{
 		WritePrivateProfileString("ImageView", "Stretch", w->IsStretched()?"1":"0", g_SNM_IniFn.Get()); 
+
+		const char* fn = w->GetFilename();
+		if (*fn)
+		{
+			WDL_FastString str;
+			makeEscapedConfigString(fn, &str);
+			WritePrivateProfileString("ImageView", "LastImage", str.Get(), g_SNM_IniFn.Get());
+		}
+		else
+			WritePrivateProfileString("ImageView", "LastImage", NULL, g_SNM_IniFn.Get());
+	}
 
 	g_imgWndMgr.Delete();
 }
@@ -3577,8 +3592,10 @@ void OpenImageWnd(COMMAND_T* _ct)
 	bool isNew;
 	if (SNM_ImageWnd* w = g_imgWndMgr.Create(&isNew))
 	{
-		if (isNew)
+		if (isNew) {
 			w->SetStretch(g_stretchPref);
+			w->SetImage(g_lastImgFnPref);
+		}
 		w->Show(true, true);
 		w->RequestRedraw();
 	}
@@ -3589,9 +3606,10 @@ bool OpenImageWnd(const char* _fn)
 	bool isNew, ok = false;
 	if (SNM_ImageWnd* w = g_imgWndMgr.Create(&isNew))
 	{
-		if (isNew)
+		if (isNew) {
 			w->SetStretch(g_stretchPref);
-
+			w->SetImage(g_lastImgFnPref);
+		}
 		ok = true;
 		WDL_FastString prevFn(w->GetFilename());
 		w->SetImage(_fn && *_fn ? _fn : NULL); // NULL clears the current image

@@ -1,3 +1,7 @@
+Fixes:
++Screenset fixes as reported http://forum.cockos.com/showpost.php?p=1209144&postcount=1329|here|
++Image window: restore last displayed image on startup
+
 !v2.3.0 #20 (July 9, 2013)
 Added actions:
 +SWS/BR: Hide all but active envelope for selected tracks
@@ -223,7 +227,7 @@ Fixes:
 
 !v2.3.0 #13 (February 2, 2013)
 ReaConsole updates
-+Create actions made of console commands directly in the Cycle Action editor, see above + example and details http://forum.cockos.com/showpost.php?p=1115796&postcount=1179|here|
++Create actions made of console commands directly in the Cycle Action editor, see below + example and details http://forum.cockos.com/showpost.php?p=1115796&postcount=1179|here|
  In other words, to create your own console actions, <b>you do not need to create/tweak a text file anymore</b> (i.e. reaconsole_customcommands.txt)
  => better action names, for example: a custom "Select bass tracks" instead of "SWS: Run console command: s*bass*"
  => simpler configuration (no file edition/re-start)

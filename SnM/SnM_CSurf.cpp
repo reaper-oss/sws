@@ -249,7 +249,7 @@ bool SNM_OscCSurf::Equals(SNM_OscCSurf* _osc)
 
 // _out: instanciate all SNM_OscCSurf's from ini file
 // _name: if != NULL, return the first osc csurf matching _name
-// ^^ exclusive params: "get all csurfs" or "get csurf by name"
+// ^^ _out & _name are exclusive: "get all csurfs" or "get csurf by name"
 // it is up to the caller to unalloc the returned value and/or _out
 SNM_OscCSurf* LoadOscCSurfs(WDL_PtrList<SNM_OscCSurf>* _out, const char* _name)
 {
@@ -314,7 +314,6 @@ void AddOscCSurfMenu(HMENU _menu, SNM_OscCSurf* _activeOsc, int _startMsg, int _
 	}
 	else
 		AddToMenu(hOscMenu, __LOCALIZE("(No OSC device found)","sws_DLG_155"), -1, -1, false, MF_GRAYED);
-
 }
 
 
@@ -342,10 +341,11 @@ void SNM_LocalOscCallback(void* _obj, const char* _msg, int _msglen)
 // - /track/1/fx/1/preset "My Preset"
 // - /track/1/fx/1,2/fxparam/1,1/value 0.25 0.5
 // notes: 
-// 1) API OscLocalMessageToHost() not used here because 
+// 1) OscLocalMessageToHost() is not used here because 
 //    there is no way to manage osc messages with string args
 // 2) REAPER BUG? Using a global var for the handler + calling 
 //    DestroyLocalOscHandler() in SNM_Exit() crashes REAPER (v4.32)
+// 3) callbacks do not work yet (native issue, see below)
 bool SNM_SendLocalOscMessage(const char* _oscMsg)
 {
 	if (!_oscMsg)
@@ -356,6 +356,8 @@ bool SNM_SendLocalOscMessage(const char* _oscMsg)
 	if (!sOscHandler)
 	{
 #ifdef _SNM_MISC
+		// REAPER BUG (v4.5rc13): does not work, see
+		// http://forum.cockos.com/showthread.php?t=116377
 		sOscHandler = CreateLocalOscHandler(NULL, SNM_LocalOscCallback);
 #else
 		sOscHandler = CreateLocalOscHandler(NULL, NULL);

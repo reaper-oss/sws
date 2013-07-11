@@ -198,7 +198,7 @@ void CommandTimer (COMMAND_T* ct)
 
 	// Print result to console
 	int cmd = ct->accel.accel.cmd;
-	const char* name = kbd_getTextFromCmd(cmd, SectionFromUniqueID(cmd));	
+	const char* name = kbd_getTextFromCmd(cmd, NULL);	
 	
 	WDL_FastString string;
 	string.AppendFormatted(256, "%d ms to execute: %s\n", msTime, name);

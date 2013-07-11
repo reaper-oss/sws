@@ -560,9 +560,8 @@ int SWS_DockWnd::SaveState(char* cStateBuf, int iMaxLen)
 {
 	if (SWS_IsWindow(m_hwnd))
 	{
-		if (!IsDocked())
-			GetWindowRect(m_hwnd, &m_state.r);
-		else
+		GetWindowRect(m_hwnd, &m_state.r);
+		if (IsDocked())
 			m_state.whichdock = DockIsChildOfDock(m_hwnd, NULL);
 	}
 

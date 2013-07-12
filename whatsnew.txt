@@ -1,6 +1,8 @@
+!v2.3.0 #21 (July 11, 2013)
 Fixes:
 +Screenset fixes as reported http://forum.cockos.com/showpost.php?p=1209144&postcount=1329|here|
 +Image window: restore last displayed image on startup
++Issue 507: Fix OSX ReaConsole character highlighting
 
 !v2.3.0 #20 (July 9, 2013)
 Added actions:

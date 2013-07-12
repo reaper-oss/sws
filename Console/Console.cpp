@@ -946,16 +946,20 @@ void ReaConsoleWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			_snprintf(cUndo, sizeof(cUndo), __LOCALIZE("ReaConsole command %s","sws_undo"), m_strCmd);
 			Undo_OnStateChangeEx(cUndo, UNDO_STATE_ALL, -1); // UNDO_STATE_TRACKCFG is not enough (marker, osc, ..)
 
-			HWND h = GetDlgItem(m_hwnd, IDC_COMMAND);
-			SetFocus(h);
-			SendMessage(h, EM_SETSEL, 0, -1);
-
 			// close the window if ctrl-enter was pressed
 			if (GetAsyncKeyState(VK_CONTROL) & 0x8000)
 			{
 				m_bUserClosed = true;
 				DestroyWindow(m_hwnd);
 			}
+			else
+			{
+				// Select all the text so the next typed clears the box
+				HWND h = GetDlgItem(m_hwnd, IDC_COMMAND);
+				SetFocus(h);
+				SendMessage(h, EM_SETSEL, 0, -1);
+			}
+
 			break;
 		}
 		default:
@@ -975,7 +979,7 @@ void ReaConsoleWnd::ShowConsole()
 	// Move the cursor to the end 
 	HWND h = GetDlgItem(m_hwnd, IDC_COMMAND);  
 	SetFocus(h);
-	SendMessage(h, EM_SETSEL, 1, 2);
+	SendMessage(h, EM_SETSEL, 1, 1);
 
 	m_cmd = Tokenize(m_strCmd, &m_pTrackId, &m_pArgs);
 	ParseTrackId(m_pTrackId);

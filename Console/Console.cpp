@@ -810,7 +810,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL,   "SWS: Open console with 'l' to set track(s) # channels" },"SWSCONSOLECHAN", ConsoleCommand,  NULL,   'l' },
 	{ { DEFACCEL,   "SWS: Open console with '!' to add action marker" },	"SWSCONSOLEMARKER", ConsoleCommand,  NULL,   '!' },
 	{ { DEFACCEL,   "SWS/S&M: Open console with 'x' to add track FX" },		"S&M_CONSOLE_ADDFX",  ConsoleCommand,  NULL, 'x' },
-	{ { DEFACCEL,   "SWS/S&M: Open console with '/' to send a local OSC message track FX" }, "S&M_CONSOLE_OSC",  ConsoleCommand,  NULL, '/' },
+	{ { DEFACCEL,   "SWS/S&M: Open console with '/' to send a local OSC message" }, "S&M_CONSOLE_OSC",  ConsoleCommand,  NULL, '/' },
 #ifdef _WIN32
 	{ { DEFACCEL,   "SWS: [Deprecated, use the Cycle Action editor instead] Edit console custom commands (restart needed after save)" }, "SWSCONSOLEEDITCUST",  EditCustomCommands,  NULL, },
 #endif

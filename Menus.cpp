@@ -256,7 +256,7 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 	AddToMenu(hMenu, __LOCALIZE("Cue Buss generator", "sws_ext_menu"), NamedCommandLookup("_S&M_SENDS4"));
 	AddToMenu(hMenu, __LOCALIZE("Cycle Action editor...", "sws_ext_menu"), NamedCommandLookup("_S&M_CYCLEDITOR"));
 	AddToMenu(hMenu, __LOCALIZE("Envelope processor...", "sws_ext_menu"), NamedCommandLookup("_PADRE_ENVPROC"));
-	AddToMenu(hMenu, __LOCALIZE("Fill gaps...", "sws_ext_menu"), NamedCommandLookup("_SWS_AWFILLGAPSADV"));
+//	AddToMenu(hMenu, __LOCALIZE("Fill gaps...", "sws_ext_menu"), NamedCommandLookup("_SWS_AWFILLGAPSADV"));
 	AddToMenu(hMenu, __LOCALIZE("Find", "sws_ext_menu"), NamedCommandLookup("_S&M_SHOWFIND"));
 	AddToMenu(hMenu, __LOCALIZE("Groove tool...", "sws_ext_menu"), NamedCommandLookup("_FNG_GROOVE_TOOL"));
 	AddToMenu(hMenu, __LOCALIZE("Label processor...", "sws_ext_menu"), NamedCommandLookup("_IX_LABEL_PROC"));

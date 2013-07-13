@@ -1,3 +1,5 @@
+Fixed screenset saving
+
 !v2.3.0 #21 (July 11, 2013)
 Fixes:
 +Screenset fixes as reported http://forum.cockos.com/showpost.php?p=1209144&postcount=1329|here|
@@ -240,10 +242,10 @@ ReaConsole updates
  Note: the command will do nothing if the FX is already present
 +<b>New command '/' to send local OSC messages</b> (as if they were sent by a device on the network), see examples and details http://forum.cockos.com/showpost.php?p=1115796&postcount=1179|here|
  Longer console commands.. but this opens a bunch of doors: receives, sends, FX parameters, FX presets, etc..
-+Issue 484: the console window is now modeless, dockable, resizable, etc..
- => Inverted key shortcuts:
- - The ENTER key runs a command but keeps the console window open
- - CTRL+ENTER (CMD+ENTER on OS X) will close the console window after running a command
++Issue 484: the ReaConsole window is now modeless, dockable, resizable, etc..
+ <b>=> key shortcuts swap!</b>
+ - The ENTER key runs a command and now keeps the Console window open
+ - CTRL+ENTER (CMD+ENTER on OS X) will now close the Console window after running a command
 +Fixed a few console commands' undo points that were ignored
 
 Cycle Action editor updates
@@ -1464,7 +1466,8 @@ Beware! following actions are now configurable but their custom ids have changed
  => if used in toolbars, macros, etc.. an update is needed (sorry about that!)
 
 !v2.0.0 #29 (June 30, 2011)
-Added "Cycle action editor" (main menu > extensions > cycle action editor):
+<b>Added "Cycle action editor"</b> (Main menu > Extensions > Cycle Action editor):
++<b>A step-by-step example showing how to create a Cycle Action is available http://forum.cockos.com/showthread.php?t=84978|here|</b> (thanks Mercado_Negro!)
 +Unlimited number of cycle actions
 +Unlimited number of commands per cycle action
 +Import/export features

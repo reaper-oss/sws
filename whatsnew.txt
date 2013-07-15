@@ -1,3 +1,4 @@
+!v2.3.0 #22 (July 15, 2013)
 Fixed screenset saving
 
 !v2.3.0 #21 (July 11, 2013)

@@ -137,6 +137,7 @@ protected:
 	void OnDestroy();
 	HMENU AutoSaveContextMenu(HMENU _menu, bool _saveItems);
 	HMENU AutoFillContextMenu(HMENU _menu, bool _fillItems);
+	HMENU AttachPrjContextMenu(HMENU _menu, bool _openSelPrj);
 	HMENU BookmarkContextMenu(HMENU _menu);
 	HMENU OnContextMenu(int x, int y, bool* wantDefaultItems);
 	int OnKey(MSG* msg, int iKeyState);

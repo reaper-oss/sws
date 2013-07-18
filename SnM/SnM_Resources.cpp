@@ -25,6 +25,10 @@
 /
 ******************************************************************************/
 
+//JFB
+// TODO: turn the option "Attach bookmark to this project" into "In-project bookmark"
+//       requires some API updates first though : http://askjf.com/index.php?q=2465s
+
 #include "stdafx.h"
 #include "SnM.h"
 #include "SnM_Dlg.h"
@@ -142,6 +146,8 @@
 #define TRT_PASTE_ITEMS_STR			__LOCALIZE("Paste template items to selected tracks","sws_DLG_150")
 #define PRJ_SELECT_LOAD_STR			__LOCALIZE("Open/select project","sws_DLG_150")
 #define PRJ_SELECT_LOAD_TAB_STR		__LOCALIZE("Open/select project (new tab)","sws_DLG_150")
+#define TIED_PRJ_SELECT_LOAD_STR	__LOCALIZE_VERFMT("Open/select attached project %s","sws_DLG_150")
+#define TIED_PRJ_SELECT_LOADTAB_STR	__LOCALIZE_VERFMT("Open/select attached project %s (new tab)","sws_DLG_150")
 #define MED_PLAY_STR				__LOCALIZE("Play media file in selected tracks (toggle)","sws_DLG_150")
 #define MED_LOOP_STR				__LOCALIZE("Loop media file in selected tracks (toggle)","sws_DLG_150")
 #define MED_PLAYLOOP_STR			__LOCALIZE("Play/loop media file","sws_DLG_150")
@@ -188,11 +194,10 @@ enum {
 SNM_WindowManager<SNM_ResourceWnd> g_resWndMgr(RES_WND_ID);
 
 // JFB important notes:
-// all global WDL_PtrList vars used to be WDL_PtrList_DeleteOnDestroy ones but
+// all WDL_PtrList global vars used to be WDL_PtrList_DeleteOnDestroy ones but
 // something weird could occur when REAPER unloads the extension: hang or crash 
 // (e.g. issues 292 & 380) on Windows 7 while saving ini files (those lists were 
 // already unallocated..)
-// slots lists are allocated on the heap for the same reason..
 // anyway, no prob here because application exit will destroy the entire runtime 
 // context regardless.
 
@@ -1678,6 +1683,41 @@ HMENU SNM_ResourceWnd::AutoFillContextMenu(HMENU _menu, bool _fillItem)
 	return _menu;
 }
 
+HMENU SNM_ResourceWnd::AttachPrjContextMenu(HMENU _menu, bool _openSelPrj)
+{
+	// bookmark, custom type?
+	if (g_resType>=SNM_NUM_DEFAULT_SLOTS) //no! && g_tiedProjects.Get(g_resType)->GetLength())
+	{
+		char buf[128] = "";
+		bool curPrjTied = (g_tiedProjects.Get(g_resType)->GetLength() && !_stricmp(g_tiedProjects.Get(g_resType)->Get(), g_curProjectFn));
+
+		// tied prj but not open?
+		if (_openSelPrj && g_tiedProjects.Get(g_resType)->GetLength() && !curPrjTied)
+		{
+			if (GetMenuItemCount(_menu))
+				AddToMenu(_menu, SWS_SEPARATOR, 0);
+			_snprintfSafe(buf, sizeof(buf), TIED_PRJ_SELECT_LOAD_STR, *g_curProjectFn ? GetFileRelativePath(g_curProjectFn) : __LOCALIZE("(unsaved project?)","sws_DLG_150"));
+			AddToMenu(_menu, buf, LOAD_TIED_PRJ_MSG);
+			_snprintfSafe(buf, sizeof(buf), TIED_PRJ_SELECT_LOADTAB_STR, *g_curProjectFn ? GetFileRelativePath(g_curProjectFn) : __LOCALIZE("(unsaved project?)","sws_DLG_150"));
+			AddToMenu(_menu, buf, LOAD_TIED_PRJ_TAB_MSG);
+		}
+
+		if (GetMenuItemCount(_menu))
+			AddToMenu(_menu, SWS_SEPARATOR, 0);
+
+		// ensure g_curProjectFn is up to date, job performed immediately
+		ResourcesAttachJob job;
+		job.Perform();
+
+		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Attach bookmark to %s","sws_DLG_150"), *g_curProjectFn ? GetFileRelativePath(g_curProjectFn) : __LOCALIZE("(unsaved project?)","sws_DLG_150"));
+		AddToMenu(_menu, buf, TIE_PROJECT_MSG, -1, false, *g_curProjectFn && !curPrjTied ? MF_ENABLED : MF_GRAYED);
+
+		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Detach bookmark from %s","sws_DLG_150"), GetFileRelativePath(g_tiedProjects.Get(g_resType)->Get()));
+		AddToMenu(_menu, g_tiedProjects.Get(g_resType)->GetLength() ? buf : __LOCALIZE("Detach bookmark files","sws_DLG_150"), UNTIE_PROJECT_MSG, -1, false, g_tiedProjects.Get(g_resType)->GetLength() ? MF_ENABLED : MF_GRAYED);
+	}
+	return _menu;
+}
+
 HMENU SNM_ResourceWnd::BookmarkContextMenu(HMENU _menu)
 {
 	int typeForUser = GetTypeForUser();
@@ -1696,23 +1736,7 @@ HMENU SNM_ResourceWnd::BookmarkContextMenu(HMENU _menu)
 	AddToMenu(_menu, __LOCALIZE("Rename bookmark...","sws_DLG_150"), REN_BOOKMARK_MSG, -1, false, g_resType >= SNM_NUM_DEFAULT_SLOTS ? MF_ENABLED : MF_GRAYED);
 	AddToMenu(_menu, __LOCALIZE("Delete bookmark","sws_DLG_150"), DEL_BOOKMARK_MSG, -1, false, g_resType >= SNM_NUM_DEFAULT_SLOTS ? MF_ENABLED : MF_GRAYED);
 
-	// bookmark, custom type?
-	if (g_resType>=SNM_NUM_DEFAULT_SLOTS) //no! && g_tiedProjects.Get(g_resType)->GetLength())
-	{
-		char buf[128] = "";
-		AddToMenu(_menu, SWS_SEPARATOR, 0);
-		
-		// ensure g_curProjectFn is up to date, job performed immediately JFB!! really needed?
-		ResourcesAttachJob job;
-		job.Perform();
-
-		bool curPrjTied = (g_tiedProjects.Get(g_resType)->GetLength() && !_stricmp(g_tiedProjects.Get(g_resType)->Get(), g_curProjectFn));
-		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Attach bookmark files to %s","sws_DLG_150"), *g_curProjectFn ? GetFileRelativePath(g_curProjectFn) : __LOCALIZE("(unsaved project?)","sws_DLG_150"));
-		AddToMenu(_menu, buf, TIE_PROJECT_MSG, -1, false, *g_curProjectFn && !curPrjTied ? MF_ENABLED : MF_GRAYED);
-
-		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Detach bookmark files from %s","sws_DLG_150"), GetFileRelativePath(g_tiedProjects.Get(g_resType)->Get()));
-		AddToMenu(_menu, g_tiedProjects.Get(g_resType)->GetLength() ? buf : __LOCALIZE("Detach bookmark files","sws_DLG_150"), UNTIE_PROJECT_MSG, -1, false, g_tiedProjects.Get(g_resType)->GetLength() ? MF_ENABLED : MF_GRAYED);
-	}
+	AttachPrjContextMenu(_menu, false);
 
 	if (IsMultiType())
 	{
@@ -1756,8 +1780,7 @@ HMENU SNM_ResourceWnd::OnContextMenu(int _x, int _y, bool* _wantDefaultItems)
 				if (g_tiedProjects.Get(g_resType)->GetLength())
 				{
 					*_wantDefaultItems = false;
-					AddToMenu(hMenu, PRJ_SELECT_LOAD_STR, LOAD_TIED_PRJ_MSG);
-					AddToMenu(hMenu, PRJ_SELECT_LOAD_TAB_STR, LOAD_TIED_PRJ_TAB_MSG);
+					AttachPrjContextMenu(hMenu, true);
 					return hMenu;
 				}
 				break;
@@ -2869,7 +2892,7 @@ void NewBookmark(int _type, bool _copyCurrent)
 				_copyCurrent ? __LOCALIZE("S&M - Copy bookmark","sws_DLG_150") : __LOCALIZE("S&M - Add bookmark","sws_DLG_150"),
 				input, sizeof(input),
 				true,
-				_copyCurrent ? NULL : __LOCALIZE("Attach files and paths to this project","sws_DLG_150")))
+				_copyCurrent ? NULL : __LOCALIZE("Attach bookmark to this project","sws_DLG_150")))
 		{
 			// 1) add a new slot list + new items to auto-fill, auto-save and attached project lists
 			int newType = g_SNM_ResSlots.GetSize();
@@ -3049,7 +3072,7 @@ void RenameBookmark(int _bookmarkType)
 ///////////////////////////////////////////////////////////////////////////////
 
 // just to be notified of "save as"
-// note: project loading/switches are notified via ResourcesTrackListChange()
+// note: project load/switch are notified via ResourcesTrackListChange()
 static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
 {
 	char path[SNM_MAX_PATH]="";

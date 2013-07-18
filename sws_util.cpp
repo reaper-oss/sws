@@ -285,11 +285,19 @@ void SetTrackVis(MediaTrack* tr, int vis) // &1 == mcp, &2 == tcp
 void* GetConfigVar(const char* cVar)
 {
 	int sztmp;
-	int iOffset = projectconfig_var_getoffs(cVar, &sztmp);
-	if (iOffset)
-		return projectconfig_var_addr(EnumProjects(-1, NULL, 0), iOffset);
+	void* p = NULL;
+	if (int iOffset = projectconfig_var_getoffs(cVar, &sztmp))
+	{
+		p = projectconfig_var_addr(EnumProjects(-1, NULL, 0), iOffset);
+	}
+	else if (p = get_config_var(cVar, &sztmp))
+	{
+	}
 	else
-		return get_config_var(cVar, &sztmp);
+	{
+		p = get_midi_config_var(cVar, &sztmp);
+	}
+	return p;
 }
 
 HWND GetTrackWnd()

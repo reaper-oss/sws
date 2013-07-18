@@ -594,6 +594,7 @@ extern "C"
 		IMPAPI(GetMediaSourceFileName);
 		IMPAPI(GetMediaSourceType);
 		IMPAPI(GetMediaTrackInfo_Value);
+		IMPAPI(get_midi_config_var);
 		IMPAPI(GetNumTracks);
 		IMPAPI(GetOutputChannelName);
 		IMPAPI(GetPeakFileName);

@@ -893,18 +893,46 @@ RprMidiTake::~RprMidiTake()
     removeDuplicates(mCCs);
     removeOverlaps(mNotes);
     midiEvents.reserve(mNotes.size() * 2 + mOtherEvents.size());
+
+    RprMidiEvent* allNotesOffEvent = NULL;
+    if (!mCCs[0x7b].empty())
+    {
+        allNotesOffEvent = (*mCCs[0x7b].begin())->mCC;
+    }
+
     for(std::vector<RprMidiNote *>::const_iterator i = mNotes.begin();
         i != mNotes.end(); ++i)
     {
+        RprMidiNote* note = *i;
+        if (allNotesOffEvent)
+        {
+            if (note->getItemPosition() >= allNotesOffEvent->getOffset())
+            {
+                continue;
+            }
+
+            if (note->getItemPosition() + note->getItemLength() > allNotesOffEvent->getOffset())
+            {
+                note->setItemLength(allNotesOffEvent->getOffset() - note->getItemPosition()); 
+            }
+        }
         midiEvents.push_back((*i)->mNoteOn);
         midiEvents.push_back((*i)->mNoteOff);
     }
 
     for(int j = 0; j < 128; j++)
     {
+        // ignore all-notes-off event, handle this separately below
+        if (j == 0x7b)
+        {
+            continue;
+        }
+
         for(std::vector<RprMidiCC *>::const_iterator i = mCCs[j].begin();
             i != mCCs[j].end(); ++i)
         {
+            RprMidiCC *cc = *i;
+
             midiEvents.push_back((*i)->mCC);
         }
     }
@@ -916,6 +944,11 @@ RprMidiTake::~RprMidiTake()
     }
 
     std::sort(midiEvents.begin(), midiEvents.end(), sortMidiBase);
+
+    if (allNotesOffEvent)
+    {
+        midiEvents.push_back(allNotesOffEvent);
+    }
 
     int firstEventOffset = 0;
     if (!midiEvents.empty())

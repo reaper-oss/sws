@@ -1,3 +1,5 @@
++Truncate or delete midi notes which go past the all-notes-off event
+
 !v2.3.0 #22 (July 15, 2013)
 Fixed screenset saving
 

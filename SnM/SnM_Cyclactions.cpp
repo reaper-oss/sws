@@ -1417,7 +1417,7 @@ void SNM_CyclactionsView::GetItemText(SWS_ListItem* item, int iCol, char* str, i
 					if (cycleId >= 0)
 					{
 						if (a->m_cmdId)
-							_snprintfSafe(str, iStrMax, "%3.d", cycleId+1);
+							_snprintfSafe(str, iStrMax, "%5.d", cycleId+1);
 						else
 							_snprintfSafe(str, iStrMax, "(%d)", cycleId+1);
 					}
@@ -2043,7 +2043,7 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				else if (sel)
 					MessageBox(
 						g_caWndMgr.GetMsgHWND(),
-						__LOCALIZE("Selected commands cannot be exploded!\nProbable cause: not a macro, not a cycle action, unknown command, etc..","sws_DLG_161"),
+						__LOCALIZE("Selected commands cannot be exploded!\nProbable cause: not a macro, not a cycle action, unknown or recursive command, etc..","sws_DLG_161"),
 						__LOCALIZE("S&M - Error","sws_DLG_161"),
 						MB_OK);
 			} // + cmdsToDelete auto clean-up

@@ -172,6 +172,8 @@ bool SNM_CopyFile(const char* _destFn, const char* _srcFn)
 	return ok;
 }
 
+// for files only, directories can be browsed with:
+// ShellExecute(NULL, "open", path, NULL, NULL, SW_SHOWNORMAL);
 void OpenSelectInExplorerFinder(const char* _fn, bool _errMsg)
 {
 	if (FileOrDirExistsErrMsg(_fn, _errMsg))
@@ -179,7 +181,7 @@ void OpenSelectInExplorerFinder(const char* _fn, bool _errMsg)
 #ifdef _WIN32
 		WDL_FastString cmd("/select,");
 		cmd.Append(_fn);
-		ShellExecute(NULL,"","explorer",cmd.Get(),NULL,SW_SHOWNORMAL);
+		ShellExecute(NULL, "", "explorer", cmd.Get(), NULL, SW_SHOWNORMAL);
 #else
 		char path[SNM_MAX_PATH] = "";
 		lstrcpyn(path, _fn, sizeof(path));

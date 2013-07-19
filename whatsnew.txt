@@ -1,3 +1,10 @@
+Fixes:
++Make theme actions work http://forum.cockos.com/showthread.php?p=1213324#post1213324|whatever are user preferences|, thanks Breeder!
+
+Resources window:
++Improved context menus (right-click the bookmark dropdown box, the attached project label, etc..)
++OS X: Context menu > "Edit file..." opens files with the default text editor (like on Windows OS)
+
 ReaScript function export:
 +Truncate or delete midi notes which go past the all-notes-off event
 +ConfigVar functions now cover global MIDI preferences too (in case it works on REAPER's end someday)

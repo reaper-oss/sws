@@ -1183,19 +1183,13 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 					if (fl->IsText())
 					{
 #ifdef _WIN32
-						ShellExecute(NULL,"","notepad",fullPath,NULL,SW_SHOWNORMAL);
+						ShellExecute(GetMainHwnd(), "", "notepad", fullPath, NULL, SW_SHOWNORMAL);
 #else
-						WDL_FastString txt;
-						if (LoadChunk(fullPath, &txt, false))
-						{
-							char title[128] = "";
-							_snprintfSafe(title, sizeof(title), __LOCALIZE_VERFMT("S&M - %s (slot %d)","sws_DLG_150"), fl->GetDesc(), slot+1);
-							SNM_ShowMsg(txt.Get(), title);
-						}
+						WDL_FastString syscmd;
+						syscmd.SetFormatted(SNM_MAX_PATH, "open -t \"%s\"", fullPath);
+						system(syscmd.Get());
 #endif
 					}
-//					else
-//						ShellExecute(GetMainHwnd(), "open", fullPath, NULL, NULL, SW_SHOWNORMAL);
 				}
 			}
 			break;
@@ -1212,7 +1206,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				{
 					WDL_FastString prmStr;
 					prmStr.SetFormatted(sizeof(fn1)*3, " \"%s\" \"%s\"", fn1, fn2);
-					_spawnl(_P_NOWAIT, g_SNM_DiffToolFn.Get(), prmStr.Get(), NULL);
+					ShellExecute(GetMainHwnd(), "open", g_SNM_DiffToolFn.Get(), prmStr.Get(), NULL, SW_SHOWNORMAL);
 				}
 			}
 			break;

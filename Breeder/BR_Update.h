@@ -11,10 +11,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -34,6 +34,36 @@ struct BR_Version
 	int rev;		// revision
 	int build;		// build
 	BR_Version () {maj = min = rev = build = 0;}
+};
+
+class BR_SearchObject
+{
+public:
+	BR_SearchObject (bool startup = false);
+	~BR_SearchObject ();
+	int GetStatus (BR_Version* official, BR_Version* beta);
+	double GetProgress ();
+	bool GetKillFlag ();
+	bool IsStartup ();
+	void RestartSearch ();
+private:
+	static DWORD WINAPI StartSearch (void* searchObject);
+	void EndSearch ();
+	int CompareVersion (BR_Version one, BR_Version two);
+	void SetStatus (BR_Version official, BR_Version beta, int status);
+	void SetProgress (double progress);
+	void SetKillFlag (bool killFlag);
+	void SetProcess (HANDLE process);
+	HANDLE GetProcess ();
+
+	const bool m_startup;
+	BR_Version m_official;
+	BR_Version m_beta;
+	int m_status;
+	double m_progress;
+	SWS_Mutex m_mutex;
+	static bool m_killFlag;
+	static HANDLE m_hProcess;
 };
 
 void VersionCheckInit ();

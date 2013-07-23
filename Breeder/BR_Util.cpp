@@ -11,10 +11,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -34,7 +34,7 @@ bool IsThisFraction (char* str, double &convertedFraction)
 	char* buf = strstr(str,"/");
 
 	if (!buf)
-	{	
+	{
 		convertedFraction = atof(str);
 		_snprintf(str, strlen(str)+1, "%g", convertedFraction);
 		return false;
@@ -45,7 +45,7 @@ bool IsThisFraction (char* str, double &convertedFraction)
 		int den = atoi(buf+1);
 		_snprintf(str, strlen(str)+1, "%d/%d", num, den);
 		if (den != 0)
-			convertedFraction = (double)num/(double)den;			
+			convertedFraction = (double)num/(double)den;
 		else
 			convertedFraction = 0;
 		return true;
@@ -109,7 +109,7 @@ void CenterWindowInReaper (HWND hwnd, HWND zOrder, bool startUp)
 {
 	RECT r; GetWindowRect(hwnd, &r);
 	int width = r.right-r.left;
-	int height = r.bottom-r.top; 
+	int height = r.bottom-r.top;
 
 	// On startup GetWindowRect could provide the wrong data so we read the .ini instead
 	if (startUp)
@@ -140,15 +140,9 @@ void CenterWindowInReaper (HWND hwnd, HWND zOrder, bool startUp)
 		r.top = r1.top +  (r1.bottom - r1.top  - r.bottom + r.top)/2;
 	}
 
-	#ifdef _WIN32
-	if (r.left < 0 || r.top < 0 || r.left+width > GetSystemMetrics(SM_CXVIRTUALSCREEN) || r.top+height > GetSystemMetrics(SM_CYVIRTUALSCREEN))
-	{
-		r.left = 0;
-		r.top = 0;
-	}
-	#else
-		EnsureNotCompletelyOffscreen(&r); // not really working with multiple monitors (treats as offscreen if not on the default monitor)
-	#endif
+	r.right = r.left + width;
+	r.bottom = r.top + height;
+	EnsureNotCompletelyOffscreen(&r);
 	SetWindowPos(hwnd, zOrder, r.left, r.top, 0, 0, SWP_NOSIZE);
 };
 
@@ -163,9 +157,9 @@ void ReplaceAll (string &str, string oldStr, string newStr)
 {
 	if (oldStr.empty())
 		return;
-	
+
 	size_t pos = 0, oldLen = oldStr.length(), newLen = newStr.length();
-	while ((pos = str.find(oldStr, pos)) != std::string::npos) 
+	while ((pos = str.find(oldStr, pos)) != std::string::npos)
 	{
 		str.replace(pos, oldLen, newStr);
 		pos += newLen;
@@ -198,8 +192,8 @@ void CommandTimer (COMMAND_T* ct)
 
 	// Print result to console
 	int cmd = ct->accel.accel.cmd;
-	const char* name = kbd_getTextFromCmd(cmd, NULL);	
-	
+	const char* name = kbd_getTextFromCmd(cmd, NULL);
+
 	WDL_FastString string;
 	string.AppendFormatted(256, "%d ms to execute: %s\n", msTime, name);
 	ShowConsoleMsg(string.Get());

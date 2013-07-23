@@ -1,3 +1,4 @@
+!v2.3.0 #23 (July 22, 2013)
 Fixes:
 +Make theme actions work http://forum.cockos.com/showthread.php?p=1213324#post1213324|whatever are user preferences|, thanks Breeder!
 

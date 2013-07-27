@@ -32,7 +32,7 @@
 
 bool SNM_IsActiveWindow(HWND _h);
 bool IsChildOf(HWND _hChild, const char* _title);
-HWND GetReaWindowByTitle(const char* _title);
+HWND GetReaHwndByTitle(const char* _title);
 void GetVisibleTCPTracks(WDL_PtrList<void>* _trList);
 
 void FocusMainWindow(COMMAND_T*);

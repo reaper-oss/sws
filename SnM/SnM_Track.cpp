@@ -1042,7 +1042,7 @@ bool AutoSaveTrackSlots(int _slotType, const char* _dirPath, WDL_PtrList<void>* 
 
 		return AutoSaveSlot(_slotType, _dirPath, 
 			!i ? __LOCALIZE("Master","sws_DLG_150") : (!*name ? __LOCALIZE("Untitled","sws_DLG_150") : name),
-			"RTrackTemplate", (WDL_PtrList<PathSlotItem>*)_owSlots, &owIdx, AutoSaveChunkSlot, &fullChunk);
+			"RTrackTemplate", (WDL_PtrList<ResourceItem>*)_owSlots, &owIdx, AutoSaveChunkSlot, &fullChunk);
 	}
 	return false;
 }

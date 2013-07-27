@@ -70,41 +70,41 @@ const char* GetFilenameWithExt(const char* _fullFn)
 }
 
 // check the most retrictive OS forbidden chars (so that filenames are crossplatform)
-void Filenamize(char* _fnInOut, int _fnInOutSz)
+bool Filenamize(char* _fnInOut, bool _checkOnly)
 {
-	if (_fnInOut)
+	if (_fnInOut && *_fnInOut)
 	{
-		int i=0, j=0;
-		while (_fnInOut[i] && i < _fnInOutSz)
+		int i=-1, j=0;
+		while (_fnInOut[++i])
 		{
 			if (_fnInOut[i] != ':' && _fnInOut[i] != '/' && _fnInOut[i] != '\\' &&
 				_fnInOut[i] != '*' && _fnInOut[i] != '?' && _fnInOut[i] != '\"' &&
 				_fnInOut[i] != '>' && _fnInOut[i] != '<' && _fnInOut[i] != '\'' && 
-				_fnInOut[i] != '|' && _fnInOut[i] != '^' /* ^ is forbidden on FAT */)
-				_fnInOut[j++] = _fnInOut[i];
-			i++;
+				_fnInOut[i] != '|' && _fnInOut[i] != '^') // ^ is forbidden on FAT
+			{
+				if (!_checkOnly)
+					_fnInOut[j] = _fnInOut[i];
+				j++;
+			}
+			else if (_checkOnly)
+				return false;
 		}
-		if (j>=_fnInOutSz)
-			j = _fnInOutSz-1;
-		_fnInOut[j] = '\0';
+		if (!_checkOnly)
+			_fnInOut[j] = '\0';
+		return i==j;
 	}
+	return false;
 }
 
-// check the most retrictive OS forbidden chars (so that filenames are crossplatform)
 bool IsValidFilenameErrMsg(const char* _fn, bool _errMsg)
 {
-	bool ko = (!_fn || !*_fn
-		|| strchr(_fn, ':') || strchr(_fn, '/') || strchr(_fn, '\\')
-		|| strchr(_fn, '*') || strchr(_fn, '?') || strchr(_fn, '\"')
-		|| strchr(_fn, '>') || strchr(_fn, '<') || strchr(_fn, '\'')
-		|| strchr(_fn, '|') || strchr(_fn, '^'));
-
+	bool ko = !Filenamize((char*)_fn, true);
 	if (ko && _errMsg)
 	{
 		char buf[SNM_MAX_PATH] = "";
 		lstrcpyn(buf, __LOCALIZE("Empty filename!","sws_mbox"), sizeof(buf));
 		if (_fn && *_fn)
-			_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Invalid filename: %s\nFilenames cannot contain any of the following characters: / \\ * ? \" < > ' | :","sws_mbox"), _fn);
+			_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Invalid filename: %s\nFilenames cannot contain any of the following characters: / \\ * ? \" < > ' | ^ :","sws_mbox"), _fn);
 		MessageBox(GetMainHwnd(), buf, __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
 	}
 	return !ko;
@@ -185,9 +185,10 @@ void OpenSelectInExplorerFinder(const char* _fn, bool _errMsg)
 #else
 		char path[SNM_MAX_PATH] = "";
 		lstrcpyn(path, _fn, sizeof(path));
-		if (char* p = strrchr(path, PATH_SLASH_CHAR)) {
+		if (char* p = strrchr(path, PATH_SLASH_CHAR)) // assumes _fn is a file!
+		{
 			*(p+1) = '\0'; // ShellExecute() is KO otherwise..
-			ShellExecute(NULL, "", path, NULL, NULL, SW_SHOWNORMAL);
+			ShellExecute(NULL, "open", path, NULL, NULL, SW_SHOWNORMAL);
 		}
 #endif
 	}

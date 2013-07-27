@@ -33,10 +33,10 @@
 #include "SnM_VWnd.h"
 
 
-class SNM_FindWnd : public SWS_DockWnd
+class FindWnd : public SWS_DockWnd
 {
 public:
-	SNM_FindWnd();
+	FindWnd();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 	void GetMinSize(int* _w, int* _h) { *_w=297; *_h=100; }
 	bool Find(int _mode);

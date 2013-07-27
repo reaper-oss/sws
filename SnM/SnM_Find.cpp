@@ -64,7 +64,7 @@ enum {
 	TYPE_MARKER_REGION
 };
 
-SNM_WindowManager<SNM_FindWnd> g_findWndMgr(FIND_WND_ID);
+SNM_WindowManager<FindWnd> g_findWndMgr(FIND_WND_ID);
 char g_searchStr[MAX_SEARCH_STR_LEN] = "";
 bool g_notFound=false;
 
@@ -127,12 +127,12 @@ bool TrackNotesMatch(MediaTrack* _tr, const char* _searchStr)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// SNM_FindWnd
+// FindWnd
 ///////////////////////////////////////////////////////////////////////////////
 
 // S&M windows lazy init: below's "" prevents registering the SWS' screenset callback
 // (use the S&M one instead - already registered via SNM_WindowManager::Init())
-SNM_FindWnd::SNM_FindWnd()
+FindWnd::FindWnd()
 	: SWS_DockWnd(IDD_SNM_FIND, "Find", "", SWSGetCommandID(OpenFind))
 {
 	m_id.Set(FIND_WND_ID);
@@ -143,7 +143,7 @@ SNM_FindWnd::SNM_FindWnd()
 	Init();
 }
 
-void SNM_FindWnd::OnInitDlg()
+void FindWnd::OnInitDlg()
 {
 	m_resize.init_item(IDC_EDIT, 0.0, 0.0, 1.0, 0.0);
 	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_EDIT), GWLP_USERDATA, 0xdeadf00b);
@@ -203,7 +203,7 @@ void SNM_FindWnd::OnInitDlg()
 	m_parentVwnd.RequestRedraw(NULL);
 }
 
-void SNM_FindWnd::OnDestroy() 
+void FindWnd::OnDestroy() 
 {
 	// save prefs
 	char type[4] = "";
@@ -216,7 +216,7 @@ void SNM_FindWnd::OnDestroy()
 //	*g_searchStr = 0;
 }
 
-void SNM_FindWnd::OnCommand(WPARAM wParam, LPARAM lParam)
+void FindWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 {
 	switch(LOWORD(wParam))
 	{
@@ -252,7 +252,7 @@ void SNM_FindWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 	}
 }
 
-int SNM_FindWnd::OnKey(MSG* _msg, int _iKeyState) 
+int FindWnd::OnKey(MSG* _msg, int _iKeyState) 
 {
 	HWND h = GetDlgItem(m_hwnd, IDC_EDIT);
 /*JFB not needed: IDC_EDIT is the single control of this window..
@@ -290,7 +290,7 @@ int SNM_FindWnd::OnKey(MSG* _msg, int _iKeyState)
 	return 0; // pass-thru
 }
 
-void SNM_FindWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight)
+void FindWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight)
 {
 	// 1st row of controls
 	int x0 = _r->left + SNM_GUI_X_MARGIN_OLD;
@@ -349,7 +349,7 @@ void SNM_FindWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipH
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool SNM_FindWnd::Find(int _mode)
+bool FindWnd::Find(int _mode)
 {
 	bool update = false;
 	switch(m_type)
@@ -381,7 +381,7 @@ bool SNM_FindWnd::Find(int _mode)
 	return update;
 }
 
-MediaItem* SNM_FindWnd::FindPrevNextItem(int _dir, MediaItem* _item)
+MediaItem* FindWnd::FindPrevNextItem(int _dir, MediaItem* _item)
 {
 	if (!_dir)
 		return NULL;
@@ -415,7 +415,7 @@ MediaItem* SNM_FindWnd::FindPrevNextItem(int _dir, MediaItem* _item)
 }
 
 // param _allTakes only makes sense if jobTake() is used
-bool SNM_FindWnd::FindMediaItem(int _dir, bool _allTakes, bool (*jobTake)(MediaItem_Take*,const char*), bool (*jobItem)(MediaItem*,const char*))
+bool FindWnd::FindMediaItem(int _dir, bool _allTakes, bool (*jobTake)(MediaItem_Take*,const char*), bool (*jobItem)(MediaItem*,const char*))
 {
 	bool update = false, found = false, sel = true;
 	if (g_searchStr && *g_searchStr)
@@ -519,7 +519,7 @@ bool SNM_FindWnd::FindMediaItem(int _dir, bool _allTakes, bool (*jobTake)(MediaI
 	return update;
 }
 
-bool SNM_FindWnd::FindTrack(int _dir, bool (*job)(MediaTrack*,const char*))
+bool FindWnd::FindTrack(int _dir, bool (*job)(MediaTrack*,const char*))
 {
 	bool update = false, found = false;
 	if (g_searchStr && *g_searchStr)
@@ -585,7 +585,7 @@ bool SNM_FindWnd::FindTrack(int _dir, bool (*job)(MediaTrack*,const char*))
 	return update;
 }
 
-bool SNM_FindWnd::FindMarkerRegion(int _dir)
+bool FindWnd::FindMarkerRegion(int _dir)
 {
 	if (!_dir)
 		return false;
@@ -624,7 +624,7 @@ bool SNM_FindWnd::FindMarkerRegion(int _dir)
 	return update;
 }
 
-void SNM_FindWnd::UpdateNotFoundMsg(bool _found)
+void FindWnd::UpdateNotFoundMsg(bool _found)
 {
 	g_notFound = !_found;
 	m_parentVwnd.RequestRedraw(NULL);
@@ -646,7 +646,7 @@ void FindExit() {
 
 void OpenFind(COMMAND_T*)
 {
-	if (SNM_FindWnd* w = g_findWndMgr.Create()) {
+	if (FindWnd* w = g_findWndMgr.Create()) {
 		w->Show(true, true);
 		SetFocus(GetDlgItem(w->GetHWND(), IDC_EDIT));
 	}
@@ -654,12 +654,12 @@ void OpenFind(COMMAND_T*)
 
 int IsFindDisplayed(COMMAND_T*)
 {
-	if (SNM_FindWnd* w = g_findWndMgr.Get())
+	if (FindWnd* w = g_findWndMgr.Get())
 		return w->IsValidWindow();
 	return 0;
 }
 
 void FindNextPrev(COMMAND_T* _ct) {
-	if (SNM_FindWnd* w = g_findWndMgr.Get())
+	if (FindWnd* w = g_findWndMgr.Get())
 		w->Find((int)_ct->user); 
 }

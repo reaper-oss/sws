@@ -136,8 +136,8 @@ enum {
 };
 
 
-SNM_WindowManager<SNM_LiveConfigsWnd> g_lcWndMgr(LIVECFG_WND_ID);
-SNM_MultiWindowManager<SNM_LiveConfigMonitorWnd> g_monWndsMgr(LIVECFG_MON_WND_ID);
+SNM_WindowManager<LiveConfigsWnd> g_lcWndMgr(LIVECFG_WND_ID);
+SNM_MultiWindowManager<LiveConfigMonitorWnd> g_monWndsMgr(LIVECFG_MON_WND_ID);
 
 SWSProjConfig<WDL_PtrList_DeleteOnDestroy<LiveConfig> > g_liveConfigs;
 WDL_PtrList_DeleteOnDestroy<LiveConfigItem> g_clipboardConfigs; // for cut/copy/paste
@@ -524,20 +524,20 @@ bool LiveConfig::IsLastConfiguredTrack(MediaTrack* _tr)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// SNM_LiveConfigView
+// LiveConfigView
 ///////////////////////////////////////////////////////////////////////////////
 
 // !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_155
 static SWS_LVColumn s_liveCfgListCols[] = { 
-	{95,2,"OSC/CC value"}, {150,1,"Comment"}, {150,2,"Track"}, {175,2,"Track template"}, {175,2,"FX Chain"}, {150,2,"FX presets"}, {150,0,"Activate action"}, {150,0,"Deactivate action"}};
+	{95,2,"OSC/CC value"}, {150,1,"Comment"}, {150,2,"Track"}, {175,2,"Track template"}, {175,2,"FX Chain"}, {150,2,"FX presets"}, {150,1,"Activate action"}, {150,1,"Deactivate action"}};
 // !WANT_LOCALIZE_STRINGS_END
 
-SNM_LiveConfigView::SNM_LiveConfigView(HWND hwndList, HWND hwndEdit)
-:SWS_ListView(hwndList, hwndEdit, COL_COUNT, s_liveCfgListCols, "LiveConfigsViewState", false, "sws_DLG_155")
+LiveConfigView::LiveConfigView(HWND hwndList, HWND hwndEdit)
+:SWS_ListView(hwndList, hwndEdit, COL_COUNT, s_liveCfgListCols, "LiveConfigsViewState", true, "sws_DLG_155")
 {
 }
 
-void SNM_LiveConfigView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax)
+void LiveConfigView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax)
 {
 	if (str) *str = '\0';
 	if (LiveConfigItem* pItem = (LiveConfigItem*)item)
@@ -570,11 +570,15 @@ void SNM_LiveConfigView::GetItemText(SWS_ListItem* item, int iCol, char* str, in
 				lstrcpyn(str, pItem->m_presets.Get(), iStrMax);
 				break;
 			case COL_ACTION_ON:
-			case COL_ACTION_OFF: {
+			case COL_ACTION_OFF:
+			{
 				const char* custId = (iCol==COL_ACTION_ON ? pItem->m_onAction.Get() : pItem->m_offAction.Get());
-				if (*custId) {
+				if (*custId)
+				{
+					// do not use m_iEditingItem here: it's set to -1 after the actual update, contrary to m_iEditingCol
+					// => display IDs when editing a cell, action names otherwise
 					int cmd = NamedCommandLookup(custId);
-					lstrcpyn(str, cmd>0 ? kbd_getTextFromCmd(cmd, NULL) : custId, iStrMax);
+					lstrcpyn(str, m_iEditingCol<0 && cmd>0 ? kbd_getTextFromCmd(cmd, NULL) : custId, iStrMax);
 				}
 				break;
 			}
@@ -582,7 +586,7 @@ void SNM_LiveConfigView::GetItemText(SWS_ListItem* item, int iCol, char* str, in
 	}
 }
 
-void SNM_LiveConfigView::SetItemText(SWS_ListItem* _item, int _iCol, const char* _str)
+void LiveConfigView::SetItemText(SWS_ListItem* _item, int _iCol, const char* _str)
 {
 	if (LiveConfigItem* pItem = (LiveConfigItem*)_item)
 	{
@@ -595,24 +599,27 @@ void SNM_LiveConfigView::SetItemText(SWS_ListItem* _item, int _iCol, const char*
 				Update();
 				Undo_OnStateChangeEx2(NULL, UNDO_STR, UNDO_STATE_MISCCFG, -1);
 				break;
-#ifdef _SNM_MISC // can't edit these by hand anymore..
 			case COL_ACTION_ON:
 			case COL_ACTION_OFF:
-				if (*_str && !NamedCommandLookup(_str)) {
-					MessageBox(GetParent(m_hwndList), __LOCALIZE("Error: this action ID (or custom ID) does not exist!","sws_DLG_155"), __LOCALIZE("S&M - Error","sws_DLG_155"), MB_OK);
+				if (!*_str || !NamedCommandLookup(_str))
+				{
+					WDL_FastString msg;
+					msg.SetFormatted(256, __LOCALIZE_VERFMT("Unknown command ID or identifier string: '%s'","sws_DLG_155"), _str);
+					MessageBox(GetParent(m_hwndList), msg.Get(), __LOCALIZE("S&M - Error","sws_DLG_155"), MB_OK);
 					return;
 				}
-				if (_iCol == COL_ACTION_ON) pItem->m_onAction.Set(_str);
-				else pItem->m_offAction.Set(_str);
+				if (_iCol == COL_ACTION_ON)
+					pItem->m_onAction.Set(_str);
+				else
+					pItem->m_offAction.Set(_str);
 				Update();
 				Undo_OnStateChangeEx2(NULL, UNDO_STR, UNDO_STATE_MISCCFG, -1);
 				break;
-#endif
 		}
 	}
 }
 
-void SNM_LiveConfigView::GetItemList(SWS_ListItemList* pList)
+void LiveConfigView::GetItemList(SWS_ListItemList* pList)
 {
 	if (LiveConfig* lc = g_liveConfigs.Get()->Get(g_configId))
 		if (WDL_PtrList<LiveConfigItem>* ccConfs = &lc->m_ccConfs)
@@ -621,7 +628,7 @@ void SNM_LiveConfigView::GetItemList(SWS_ListItemList* pList)
 }
 
 // gotcha! several calls for one selection change (eg. 3 unselected rows + 1 new selection)
-void SNM_LiveConfigView::OnItemSelChanged(SWS_ListItem* item, int iState)
+void LiveConfigView::OnItemSelChanged(SWS_ListItem* item, int iState)
 {
 	LiveConfig* lc = g_liveConfigs.Get()->Get(g_configId);
 	if (lc && lc->m_selScroll)
@@ -637,11 +644,11 @@ void SNM_LiveConfigView::OnItemSelChanged(SWS_ListItem* item, int iState)
 	}
 }
 
-void SNM_LiveConfigView::OnItemDblClk(SWS_ListItem* item, int iCol)
+void LiveConfigView::OnItemDblClk(SWS_ListItem* item, int iCol)
 {
 	if (LiveConfigItem* pItem = (LiveConfigItem*)item)
 	{
-		if (SNM_LiveConfigsWnd* w = g_lcWndMgr.Get())
+		if (LiveConfigsWnd* w = g_lcWndMgr.Get())
 		{
 			switch (iCol)
 			{
@@ -664,12 +671,12 @@ void SNM_LiveConfigView::OnItemDblClk(SWS_ListItem* item, int iCol)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// SNM_LiveConfigsWnd
+// LiveConfigsWnd
 ///////////////////////////////////////////////////////////////////////////////
 
 // S&M windows lazy init: below's "" prevents registering the SWS' screenset callback
 // (use the S&M one instead - already registered via SNM_WindowManager::Init())
-SNM_LiveConfigsWnd::SNM_LiveConfigsWnd()
+LiveConfigsWnd::LiveConfigsWnd()
 	: SWS_DockWnd(IDD_SNM_LIVE_CONFIGS, __LOCALIZE("Live Configs","sws_DLG_155"), "", SWSGetCommandID(OpenLiveConfig))
 {
 	m_id.Set(LIVECFG_WND_ID);
@@ -677,10 +684,10 @@ SNM_LiveConfigsWnd::SNM_LiveConfigsWnd()
 	Init();
 }
 
-void SNM_LiveConfigsWnd::OnInitDlg()
+void LiveConfigsWnd::OnInitDlg()
 {
 	m_resize.init_item(IDC_LIST, 0.0, 0.0, 1.0, 1.0);
-	m_pLists.Add(new SNM_LiveConfigView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
+	m_pLists.Add(new LiveConfigView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
 
 
 	LICE_CachedFont* font = SNM_GetThemeFont();
@@ -744,7 +751,7 @@ void SNM_LiveConfigsWnd::OnInitDlg()
 	Update();
 }
 
-void SNM_LiveConfigsWnd::OnDestroy() 
+void LiveConfigsWnd::OnDestroy() 
 {
 	m_cbConfig.Empty();
 	m_cbInputTr.Empty();
@@ -752,7 +759,7 @@ void SNM_LiveConfigsWnd::OnDestroy()
 	m_vwndFade.RemoveAllChildren(false);
 }
 
-void SNM_LiveConfigsWnd::FillComboInputTrack()
+void LiveConfigsWnd::FillComboInputTrack()
 {
 	m_cbInputTr.Empty();
 	m_cbInputTr.AddItem(__LOCALIZE("None","sws_DLG_155"));
@@ -777,7 +784,7 @@ void SNM_LiveConfigsWnd::FillComboInputTrack()
 }
 
 // "by cc" in order to support sort
-bool SNM_LiveConfigsWnd::SelectByCCValue(int _configId, int _cc, bool _selectOnly)
+bool LiveConfigsWnd::SelectByCCValue(int _configId, int _cc, bool _selectOnly)
 {
 	if (_configId == g_configId)
 	{
@@ -803,7 +810,7 @@ bool SNM_LiveConfigsWnd::SelectByCCValue(int _configId, int _cc, bool _selectOnl
 	return false;
 }
 
-void SNM_LiveConfigsWnd::Update()
+void LiveConfigsWnd::Update()
 {
 	FillComboInputTrack();
 
@@ -817,7 +824,7 @@ void SNM_LiveConfigsWnd::Update()
 	m_parentVwnd.RequestRedraw(NULL);
 }
 
-void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
+void LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 {
 	LiveConfig* lc = g_liveConfigs.Get()->Get(g_configId);
 	if (!lc || !m_pLists.GetSize())
@@ -934,7 +941,8 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			if (item)
 			{
 				int sortCol = GetListView()->GetSortColumn();
-				if (sortCol && sortCol!=1) {
+				if (sortCol && sortCol!=1)
+				{
 					//JFB lazy here.. better than confusing the user..
 					MessageBox(GetHWND(), __LOCALIZE("The list view must be sorted by ascending OSC/CC values!","sws_DLG_155"), __LOCALIZE("S&M - Error","sws_DLG_155"), MB_OK);
 					break;
@@ -942,6 +950,7 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				bool updt = false, firstSel = true;
 				int destIdx = lc->m_ccConfs.Find(item);
 				if (destIdx>=0)
+				{
 					for (int i=0; i<g_clipboardConfigs.GetSize() && (destIdx+i)<lc->m_ccConfs.GetSize(); i++)
 						if (item = lc->m_ccConfs.Get(destIdx+i))
 							if (LiveConfigItem* pasteItem = g_clipboardConfigs.Get(i))
@@ -950,7 +959,9 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 								updt = true;
 								if (SelectByCCValue(g_configId, item->m_cc, firstSel)) firstSel = false;
 							}
-				if (updt) {
+				}
+				if (updt)
+				{
 					Update(); // preserve list view selection
 					Undo_OnStateChangeEx2(NULL, UNDO_STR, UNDO_STATE_ALL, -1); // UNDO_STATE_ALL: possible routing updates above
 				}
@@ -961,7 +972,7 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			if (item)
 			{
 				g_clipboardConfigs.Empty(true);
-				LiveConfigItem* item2 = item; // let "item" as it is (code fall through below..)
+				LiveConfigItem* item2 = item; // let "item" as it is: code fall through below..
 				int x2 = x;
 				while (item2) {
 					g_clipboardConfigs.Add(new LiveConfigItem(item2));
@@ -1287,7 +1298,7 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 	}
 }
 
-INT_PTR SNM_LiveConfigsWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR LiveConfigsWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	if (uMsg==WM_VSCROLL)
 		if (LiveConfig* lc = g_liveConfigs.Get()->Get(g_configId))
@@ -1308,7 +1319,7 @@ INT_PTR SNM_LiveConfigsWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lPar
 	return 0;
 }
 
-void SNM_LiveConfigsWnd::AddPresetMenu(HMENU _menu, MediaTrack* _tr, WDL_FastString* _curPresetConf)
+void LiveConfigsWnd::AddPresetMenu(HMENU _menu, MediaTrack* _tr, WDL_FastString* _curPresetConf)
 {
 	m_lastPresetMsg.Empty(true);
 
@@ -1329,6 +1340,8 @@ void SNM_LiveConfigsWnd::AddPresetMenu(HMENU _menu, MediaTrack* _tr, WDL_FastStr
 			GetPresetConf(fx, _curPresetConf->Get(), &curPresetName);
 
 			// learn current preset
+			str.Set(__LOCALIZE("[All presets (.fxp, .rpl, etc..)]","sws_DLG_155"));
+			AddToMenu(fxSubMenu, str.Get(), 0, -1, false, MF_GRAYED);
 			if ((LEARN_PRESETS_START_MSG + fx) <= LEARN_PRESETS_END_MSG)
 			{
 				char buf[SNM_MAX_PRESET_NAME_LEN] = "";
@@ -1372,7 +1385,7 @@ void SNM_LiveConfigsWnd::AddPresetMenu(HMENU _menu, MediaTrack* _tr, WDL_FastStr
 	}
 }
 
-void SNM_LiveConfigsWnd::AddLearnMenu(HMENU _menu, bool _subItems)
+void LiveConfigsWnd::AddLearnMenu(HMENU _menu, bool _subItems)
 {
 	if (g_liveConfigs.Get()->Get(g_configId))
 	{
@@ -1390,7 +1403,7 @@ void SNM_LiveConfigsWnd::AddLearnMenu(HMENU _menu, bool _subItems)
 	}
 }
 
-void SNM_LiveConfigsWnd::AddOptionsMenu(HMENU _menu, bool _subItems)
+void LiveConfigsWnd::AddOptionsMenu(HMENU _menu, bool _subItems)
 {
 	if (LiveConfig* lc = g_liveConfigs.Get()->Get(g_configId))
 	{
@@ -1412,7 +1425,7 @@ void SNM_LiveConfigsWnd::AddOptionsMenu(HMENU _menu, bool _subItems)
 	}
 }
 
-HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
+HMENU LiveConfigsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 {
 	LiveConfig* lc = g_liveConfigs.Get()->Get(g_configId);
 	if (!lc) return NULL;
@@ -1447,6 +1460,7 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 	}
 
 	int iCol;
+	bool grayed = false;
 	if (LiveConfigItem* item = (LiveConfigItem*)GetListView()->GetHitItem(x, y, &iCol))
 	{
 		*wantDefaultItems = (iCol < 0);
@@ -1457,16 +1471,21 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 				AddToMenu(hMenu, __LOCALIZE("Clear comments","sws_DLG_155"), CLEAR_DESC_MSG);
 				break;
 			case COL_TR:
-				if (GetNumTracks() > 0)
 				{
+					int trackCnt = GetNumTracks();
 					HMENU hTracksMenu = CreatePopupMenu();
-					for (int i=1; i <= GetNumTracks(); i++)
+					if (trackCnt)
 					{
-						char str[SNM_MAX_TRACK_NAME_LEN] = "";
-						char* name = (char*)GetSetMediaTrackInfo(CSurf_TrackFromID(i,false), "P_NAME", NULL);
-						_snprintfSafe(str, sizeof(str), "[%d] \"%s\"", i, name?name:"");
-						AddToMenu(hTracksMenu, str, SET_TRACK_START_MSG + i);
+						char trName[SNM_MAX_TRACK_NAME_LEN] = "";
+						for (int i=1; i<=trackCnt; i++)
+						{
+							char* name = (char*)GetSetMediaTrackInfo(CSurf_TrackFromID(i,false), "P_NAME", NULL);
+							_snprintfSafe(trName, sizeof(trName), "[%d] \"%s\"", i, name?name:"");
+							AddToMenu(hTracksMenu, trName, SET_TRACK_START_MSG + i);
+						}
 					}
+					else
+						AddToMenu(hTracksMenu, __LOCALIZE("[No track found in project!]","sws_DLG_155"), 0, -1, false, MF_GRAYED);
 					AddSubMenu(hMenu, hTracksMenu, __LOCALIZE("Set tracks","sws_DLG_155"));
 				}
 				AddToMenu(hMenu, __LOCALIZE("Clear tracks","sws_DLG_155"), CLEAR_TRACK_MSG);
@@ -1477,47 +1496,56 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 				AddToMenu(hMenu, __LOCALIZE("Show routing window...","sws_DLG_155"), SHOW_IO_MSG, -1, false, item->m_track ? MF_ENABLED : MF_GRAYED);
 				break;
 			case COL_TRT:
-				if (item->m_track)
-				{
-					if (item->m_fxChain.GetLength())
-						AddToMenu(hMenu, __LOCALIZE("(FX Chain overrides)","sws_DLG_155"), 0, -1, false, MFS_GRAYED);
-					else {
-						AddToMenu(hMenu, __LOCALIZE("Load track template...","sws_DLG_155"), LOAD_TRACK_TEMPLATE_MSG);
-						AddToMenu(hMenu, __LOCALIZE("Clear track templates","sws_DLG_155"), CLEAR_TRACK_TEMPLATE_MSG);
-					}
+				if (!item->m_track) {
+					AddToMenu(hMenu, __LOCALIZE("[Define a track first!]","sws_DLG_155"), 0, -1, false, MF_GRAYED);
+					grayed = true;
 				}
-				else
-					AddToMenu(hMenu, __LOCALIZE("(No track)","sws_DLG_155"), 0, -1, false, MF_GRAYED);
+				else if (item->m_fxChain.GetLength()) {
+					AddToMenu(hMenu, __LOCALIZE("[FX Chain overrides!]","sws_DLG_155"), 0, -1, false, MFS_GRAYED);
+					grayed = true;
+				}
+				else if (item->m_presets.GetLength()) {
+					AddToMenu(hMenu, __LOCALIZE("[FX preset overrides!]","sws_DLG_155"), 0, -1, false, MFS_GRAYED);
+					grayed = true;
+				}
+				AddToMenu(hMenu, __LOCALIZE("Load track template...","sws_DLG_155"), LOAD_TRACK_TEMPLATE_MSG, -1, false, grayed ? MF_GRAYED : MFS_UNCHECKED);
+				AddToMenu(hMenu, __LOCALIZE("Clear track templates","sws_DLG_155"), CLEAR_TRACK_TEMPLATE_MSG, -1, false, grayed ? MF_GRAYED : MFS_UNCHECKED);
 				break;
 			case COL_FXC:
-				if (item->m_track)
-				{
-					if (!item->m_trTemplate.GetLength()) {
-						AddToMenu(hMenu, __LOCALIZE("Load FX Chain...","sws_DLG_155"), LOAD_FXCHAIN_MSG);
-						AddToMenu(hMenu, __LOCALIZE("Clear FX Chains","sws_DLG_155"), CLEAR_FXCHAIN_MSG);
-					}
-					else AddToMenu(hMenu, __LOCALIZE("(Track template overrides)","sws_DLG_155"), 0, -1, false, MF_GRAYED);
+				if (!item->m_track) {
+					AddToMenu(hMenu, __LOCALIZE("[Define a track first!]","sws_DLG_155"), 0, -1, false, MF_GRAYED);
+					grayed = true;
 				}
-				else
-					AddToMenu(hMenu, __LOCALIZE("(No track)","sws_DLG_155"), 0, -1, false, MF_GRAYED);
+				else if (item->m_trTemplate.GetLength()) {
+					AddToMenu(hMenu, __LOCALIZE("[Track template overrides!]","sws_DLG_155"), 0, -1, false, MFS_GRAYED);
+					grayed = true;
+				}
+				else if (item->m_presets.GetLength()) {
+					AddToMenu(hMenu, __LOCALIZE("[FX preset overrides!]","sws_DLG_155"), 0, -1, false, MFS_GRAYED);
+					grayed = true;
+				}
+				AddToMenu(hMenu, __LOCALIZE("Load FX Chain...","sws_DLG_155"), LOAD_FXCHAIN_MSG, -1, false, grayed ? MF_GRAYED : MFS_UNCHECKED);
+				AddToMenu(hMenu, __LOCALIZE("Clear FX Chains","sws_DLG_155"), CLEAR_FXCHAIN_MSG, -1, false, grayed ? MF_GRAYED : MFS_UNCHECKED);
 				break;
 			case COL_PRESET:
-				if (item->m_track)
-				{
-					if (item->m_trTemplate.GetLength() && !item->m_fxChain.GetLength())
-						AddToMenu(hMenu, __LOCALIZE("(Track template overrides)","sws_DLG_155"), 0, -1, false, MFS_GRAYED);
-					else if (item->m_fxChain.GetLength())
-						AddToMenu(hMenu, __LOCALIZE("(FX Chain overrides)","sws_DLG_155"), 0, -1, false, MFS_GRAYED);
-					else 
-					{
-						HMENU setPresetMenu = CreatePopupMenu();
-						AddPresetMenu(setPresetMenu, item->m_track, &item->m_presets); // just to be clear w/ the user
-						AddSubMenu(hMenu, setPresetMenu, __LOCALIZE("Set preset","sws_DLG_155"));
-						AddToMenu(hMenu, __LOCALIZE("Clear FX presets","sws_DLG_155"), CLEAR_PRESETS_MSG);
-					}
+				if (!item->m_track) {
+					AddToMenu(hMenu, __LOCALIZE("[Define a track first!]","sws_DLG_155"), 0, -1, false, MF_GRAYED);
+					grayed = true;
 				}
-				else
-					AddToMenu(hMenu, __LOCALIZE("(No track)","sws_DLG_155"), 0, -1, false, MFS_GRAYED);
+				else if (item->m_trTemplate.GetLength()) {
+					AddToMenu(hMenu, __LOCALIZE("[Track template overrides!]","sws_DLG_155"), 0, -1, false, MFS_GRAYED);
+					grayed = true;
+				}
+				else if (item->m_fxChain.GetLength()) {
+					AddToMenu(hMenu, __LOCALIZE("[FX Chain overrides!]","sws_DLG_155"), 0, -1, false, MFS_GRAYED);
+					grayed = true;
+				}
+				{
+					HMENU setPresetMenu = CreatePopupMenu();
+					AddPresetMenu(setPresetMenu, item->m_track, &item->m_presets);
+					AddSubMenu(hMenu, setPresetMenu, __LOCALIZE("Set preset","sws_DLG_155"), -1, grayed ? MF_GRAYED : MFS_UNCHECKED);
+				}
+				AddToMenu(hMenu, __LOCALIZE("Clear FX presets","sws_DLG_155"), CLEAR_PRESETS_MSG, -1, grayed ? MF_GRAYED : MFS_UNCHECKED);
 				break;
 			case COL_ACTION_ON:
 				AddToMenu(hMenu, __LOCALIZE("Set selected action (in the Actions window)","sws_DLG_155"), LEARN_ON_ACTION_MSG);
@@ -1547,8 +1575,8 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 	if (*wantDefaultItems)
 	{
 		char buf[64]="";
-		if (_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Live Config #%d:","sws_DLG_155"), g_configId+1)>0)
-			AddToMenu(hMenu, buf, 0, -1, false, MF_GRAYED);
+		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("[Live Config #%d]","sws_DLG_155"), g_configId+1);
+		AddToMenu(hMenu, buf, 0, -1, false, MF_GRAYED);
 		AddToMenu(hMenu, __LOCALIZE("Create input track...","sws_DLG_155"), CREATE_INPUT_MSG);
 		AddLearnMenu(hMenu, true);
 		AddOptionsMenu(hMenu, true);
@@ -1561,7 +1589,7 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 	return hMenu;
 }
 
-int SNM_LiveConfigsWnd::OnKey(MSG* _msg, int _iKeyState) 
+int LiveConfigsWnd::OnKey(MSG* _msg, int _iKeyState) 
 {
 	if (_msg->message == WM_KEYDOWN)
 	{
@@ -1587,7 +1615,7 @@ int SNM_LiveConfigsWnd::OnKey(MSG* _msg, int _iKeyState)
 	return 0;
 }
 
-void SNM_LiveConfigsWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight)
+void LiveConfigsWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight)
 {
 	LiveConfig* lc = g_liveConfigs.Get()->Get(g_configId);
 	if (!lc)
@@ -1604,14 +1632,16 @@ void SNM_LiveConfigsWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _t
 		{
 			if (SNM_AutoVWndPosition(DT_LEFT, &m_txtInputTr, NULL, _r, &x0, _r->top, h, 4))
 			{
-				if (SNM_AutoVWndPosition(DT_LEFT, &m_cbInputTr, &m_txtInputTr, _r, &x0, _r->top, h, 4))
+				if (SNM_AutoVWndPosition(DT_LEFT, &m_cbInputTr, &m_txtInputTr, _r, &x0, _r->top, h))
 				{
 					ColorTheme* ct = SNM_GetColorTheme();
 					LICE_pixel col = ct ? LICE_RGBA_FROMNATIVE(ct->main_text,255) : LICE_RGBA(255,255,255,255);
 					m_knobCC.SetFGColors(col, col);
-					if (SNM_AutoVWndPosition(DT_LEFT, &m_vwndCC, NULL, _r, &x0, _r->top, h, 0))
+					SNM_SkinKnob(&m_knobCC);
+					if (SNM_AutoVWndPosition(DT_LEFT, &m_vwndCC, NULL, _r, &x0, _r->top, h))
 					{
 						m_knobFade.SetFGColors(col, col);
+						SNM_SkinKnob(&m_knobFade);
 						if (SNM_AutoVWndPosition(DT_LEFT, &m_vwndFade, NULL, _r, &x0, _r->top, h))
 							SNM_AddLogo(_bm, _r, x0, h);
 					}
@@ -1637,7 +1667,7 @@ void SNM_LiveConfigsWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _t
 		return;
 }
 
-bool SNM_LiveConfigsWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOutSz)
+bool LiveConfigsWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOutSz)
 {
 	if (WDL_VWnd* v = m_parentVwnd.VirtWndFromPoint(_xpos,_ypos,1))
 	{
@@ -1666,12 +1696,13 @@ bool SNM_LiveConfigsWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, i
 	return false;
 }
 
-bool SNM_LiveConfigsWnd::Insert(int _dir)
+bool LiveConfigsWnd::Insert(int _dir)
 {
 	if (!m_pLists.GetSize())
 		return false;
 	int sortCol = GetListView()->GetSortColumn();
-	if (sortCol && sortCol!=1) {
+	if (sortCol && sortCol!=1)
+	{
 		//JFB lazy here.. better than confusing the user..
 		MessageBox(GetHWND(), __LOCALIZE("The list view must be sorted by ascending OSC/CC values!","sws_DLG_155"), __LOCALIZE("S&M - Error","sws_DLG_155"), MB_OK);
 		return false;
@@ -1716,15 +1747,15 @@ bool SNM_LiveConfigsWnd::Insert(int _dir)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void LiveConfigsUpdateJob::Perform()
-{
-	if (SNM_LiveConfigsWnd* w = g_lcWndMgr.Get())
+void LiveConfigsUpdateJob::Perform() {
+	if (LiveConfigsWnd* w = g_lcWndMgr.Get())
 		w->Update();
 }
 
 
 // moderate write access to reaper.ini
-void LiveConfigsUpdateFadeJob::Perform() {
+void LiveConfigsUpdateFadeJob::Perform()
+{
 	if (m_value>0) // let the user pref as it is otherwise
 		if (int* fadeLenPref = (int*)GetConfigVar("mutefadems10"))
 			*fadeLenPref = m_value * 10;
@@ -1767,7 +1798,8 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 			lc->m_ccDelay = lp.gettoken_int(11, &success);
 			if (!success) lc->m_ccDelay = DEF_CC_DELAY;
 			lc->m_fade = lp.gettoken_int(12, &success);
-			if (!success) {
+			if (!success)
+			{
 				if (int* fadeLenPref = (int*)GetConfigVar("mutefadems10"))
 					lc->m_fade = int(*fadeLenPref/10 + 0.5);
 				else
@@ -1825,7 +1857,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 		}
 
 		// refresh editor
-		if (SNM_LiveConfigsWnd* w = g_lcWndMgr.Get())
+		if (LiveConfigsWnd* w = g_lcWndMgr.Get())
 			w->Update();
 
 		return true;
@@ -1987,12 +2019,12 @@ void LiveConfigExit()
 
 void OpenLiveConfig(COMMAND_T*)
 {
-	if (SNM_LiveConfigsWnd* w = g_lcWndMgr.Create())
+	if (LiveConfigsWnd* w = g_lcWndMgr.Create())
 		w->Show(true, true);
 }
 
 int IsLiveConfigDisplayed(COMMAND_T*) {
-	if (SNM_LiveConfigsWnd* w = g_lcWndMgr.Get())
+	if (LiveConfigsWnd* w = g_lcWndMgr.Get())
 		return w->IsValidWindow();
 	return 0;
 }
@@ -2093,9 +2125,7 @@ void WaitForMuteAndSendCC123(LiveConfig* _lc, LiveConfigItem* _cfg, DWORD* _mute
 	}
 }
 
-// -----------------------------
 //  THE MEAT! HANDLE WITH CARE!
-// -----------------------------
 void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _lastCfg)
 {
 	LiveConfig* lc = g_liveConfigs.Get()->Get(_cfgId);
@@ -2124,7 +2154,8 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 		MediaTrack* inputTr = lc->GetInputTrack();
 
 		// --------------------------------------------------------------------
-		// mute (according to user options)
+		// 1) mute things a) to trigger tiny fades b) according to options
+		// --------------------------------------------------------------------
 
 		DWORD muteTime=0;
 		WDL_PtrList<void> muteTracks, cc123Tracks;
@@ -2140,11 +2171,11 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 		}
 
 		// applying?
-		// note: kinda repeating code patterns here, but it is for better for lisibilty
-		// (maintaining all possible option combinaitions in a single loop was a nightmare..)
+		// kinda repeating code patterns here, but maintaining all
+		// possible combinaitions in a single loop was a nightmare..
 		else 
 		{	
-			// mute things before reconfiguration (in order to trigger tiny fades), optional
+			// mute things before reconfiguration
 			MuteAndInitCC123(lc, cfg->m_track, &muteTime, &muteTracks, &cc123Tracks, &muteStates); 
 
 			// mute (and later unmute) tracks to be set offline - optional
@@ -2175,9 +2206,8 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 				}
 			}
 
-			// end with mute states that will not be restored
-			if (lc->m_muteOthers &&
-				(!inputTr || (inputTr && cfg->m_track != inputTr)))
+			// end with mute states that will not be restored (user option)
+			if (lc->m_muteOthers && (!inputTr || (inputTr && cfg->m_track != inputTr)))
 			{
 				for (int i=0; i<lc->m_ccConfs.GetSize(); i++)
 					if (LiveConfigItem* item = lc->m_ccConfs.Get(i))
@@ -2203,11 +2233,11 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 		}
 
 		// --------------------------------------------------------------------
-		// reconfiguration
+		// 2) reconfiguration
+		// --------------------------------------------------------------------
 
-		// run desactivate action of the previous config *when it has a track*
-		// we ensure that the only selected track when performing the action is the deactivated track,
-		// the track can also be muted depending on user options
+		// run desactivate action of the deactivated config if it has a track
+		// when performing the action, we ensure that the only selected track is the deactivated track
 		if (_apply && _lastCfg && _lastCfg->m_track && _lastCfg->m_offAction.GetLength())
 			if (int cmd = NamedCommandLookup(_lastCfg->m_offAction.Get()))
 			{
@@ -2219,11 +2249,11 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 			}
 
 
-		// reconfiguration via state chunk updates
+		// reconfiguration via state updates
 		if (!preloaded)
 		{
 			// apply tr template (preserves routings, folder states, etc..)
-			// if the patched track has sends, these will be glitch free too: me mute this track (source track)
+			// if the altered track has sends, it'll be glitch free too as me mute this source track
 			if (cfg->m_trTemplate.GetLength()) 
 			{
 				WDL_FastString tmplt; char fn[SNM_MAX_PATH] = "";
@@ -2261,14 +2291,13 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 					if (p.SetFXChain(&chunk))
 						WaitForMuteAndSendCC123(lc, cfg, &muteTime, &muteTracks, &cc123Tracks);
 				}
-
 			} // auto-commit
 
 		} // if (!preloaded)
 
 
 		// make sure fx are online for the activated/preloaded track
-		// note: done here because fx may have been set offline just above
+		// done here because fx may have been set offline via state loading above
 		if ((!_apply ||	(_apply && lc->m_offlineOthers)) && 
 			(!inputTr || (inputTr && cfg->m_track!=inputTr)))
 		{
@@ -2278,7 +2307,7 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 				p.SetWantsMinimalState(true); // ok 'cause read-only
 				
 				 // some fx offline on the activated track? 
-				// (macro-ish but better than using a SNM_ChunkParserPatcher)
+				// macro-ish but better than pushing a new state
 				char zero[2] = "0";
 				if (!p.Parse(SNM_GETALL_CHUNK_CHAR_EXCEPT, 2, "FXCHAIN", "BYPASS", 0xFFFF, 2, zero))
 				{
@@ -2290,8 +2319,7 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 		}
 
 		// offline others but active/preloaded tracks
-		if (_apply && lc->m_offlineOthers &&
-			(!inputTr || (inputTr && cfg->m_track!=inputTr)))
+		if (_apply && lc->m_offlineOthers && (!inputTr || (inputTr && cfg->m_track!=inputTr)))
 		{
 			MediaTrack* preloadTr = NULL;
 			if (preloaded && _lastCfg)
@@ -2314,14 +2342,14 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 			WaitForMuteAndSendCC123(lc, cfg, &muteTime, &muteTracks, &cc123Tracks);
 
 			// set all fx offline for sel tracks, no-op if already offline
-			// (macro-ish but better than using a SNM_ChunkParserPatcher for each track..)
+			// macro-ish but better than using a SNM_ChunkParserPatcher for each track..
 			Main_OnCommand(40535, 0);
 			Main_OnCommand(41204, 0); // fully unload unloaded VSTs
 		}
 
 
 		// track reconfiguration: fx presets
-		// note: exclusive w/ template & fx chain but done here because fx may have been set online just above
+		// note: exclusive vs template/fx chain but done here because fx may have been set online just above
 		if (!preloaded && cfg->m_presets.GetLength())
 		{
 			WaitForMuteAndSendCC123(lc, cfg, &muteTime, &muteTracks, &cc123Tracks);
@@ -2329,8 +2357,7 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 		}
 
 		// perform activate action
-		if (_apply &&
-			cfg->m_onAction.GetLength())
+		if (_apply && cfg->m_onAction.GetLength())
 			if (int cmd = NamedCommandLookup(cfg->m_onAction.Get()))
 			{
 				WaitForMuteAndSendCC123(lc, cfg, &muteTime, &muteTracks, &cc123Tracks);
@@ -2341,7 +2368,8 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 
 
 		// --------------------------------------------------------------------
-		// unmute things
+		// 3) unmute things
+		// --------------------------------------------------------------------
 
 		WaitForMuteAndSendCC123(lc, cfg, &muteTime, &muteTracks, &cc123Tracks);
 
@@ -2374,7 +2402,7 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 							if (*(bool*)GetSetMediaTrackInfo(tr, "B_MUTE", NULL) != *mute)
 								GetSetMediaTrackInfo(tr, "B_MUTE", mute);
 
-			// unmute the input track , whatever is lc->m_muteOthers
+			// unmute the input track, whatever is lc->m_muteOthers
 			if (inputTr)
 				if (*(bool*)GetSetMediaTrackInfo(inputTr, "B_MUTE", NULL))
 					GetSetMediaTrackInfo(inputTr, "B_MUTE", &g_bFalse);
@@ -2467,7 +2495,7 @@ void ApplyLiveConfigJob::Perform()
 	}
 
 	// update GUIs in any case, e.g. tweaking (gray cc value) to same value (=> black)
-	if (SNM_LiveConfigsWnd* w = g_lcWndMgr.Get()) {
+	if (LiveConfigsWnd* w = g_lcWndMgr.Get()) {
 		w->Update();
 //		w->SelectByCCValue(m_cfgId, lc->m_activeMidiVal);
 	}
@@ -2544,7 +2572,7 @@ void PreloadLiveConfigJob::Perform()
 	}
 
 	// update GUIs/OSC in any case
-	if (SNM_LiveConfigsWnd* w = g_lcWndMgr.Get()) {
+	if (LiveConfigsWnd* w = g_lcWndMgr.Get()) {
 		w->Update();
 //		w->SelectByCCValue(m_cfgId, lc->m_preloadMidiVal);
 	}
@@ -2575,7 +2603,7 @@ void UpdateMonitor(int _cfgId, int _idx, int _val, bool _changed, int _flags)
 
 		if (_flags&1)
 		{
-			if (SNM_LiveConfigMonitorWnd* w = g_monWndsMgr.Get(_cfgId))
+			if (LiveConfigMonitorWnd* w = g_monWndsMgr.Get(_cfgId))
 			{
 				w->GetMonitors()->SetText(_idx, info1.Get(), 0, _changed ? 255 : 143);
 				w->GetMonitors()->SetText(_idx+1, info2.Get(), 0, _changed ? 255 : 143);
@@ -2601,7 +2629,7 @@ void UpdateMonitor(int _cfgId, int _idx, int _val, bool _changed, int _flags)
 	{
 		if (_flags&1)
 		{
-			if (SNM_LiveConfigMonitorWnd* w = g_monWndsMgr.Get(_cfgId))
+			if (LiveConfigMonitorWnd* w = g_monWndsMgr.Get(_cfgId))
 			{
 				w->GetMonitors()->SetText(_idx, "---", SNM_COL_RED_MONITOR);
 				w->GetMonitors()->SetText(_idx+1, __LOCALIZE("<DISABLED>","sws_DLG_169"), SNM_COL_RED_MONITOR);
@@ -2622,7 +2650,7 @@ void UpdateMonitor(int _cfgId, int _idx, int _val, bool _changed, int _flags)
 void UpdateMonitoring(int _cfgId, int _whatFlags, int _commitFlags, int _flags)
 {
 	LiveConfig* lc = g_liveConfigs.Get()->Get(_cfgId);
-	SNM_LiveConfigMonitorWnd* monWnd = g_monWndsMgr.Get(_cfgId);
+	LiveConfigMonitorWnd* monWnd = g_monWndsMgr.Get(_cfgId);
 	if (!lc || (!lc->m_osc && !monWnd))
 		return;
 
@@ -2655,7 +2683,7 @@ void UpdateMonitoring(int _cfgId, int _whatFlags, int _commitFlags, int _flags)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// SNM_LiveConfigMonitorWnd (several instances!)
+// LiveConfigMonitorWnd (multiple instances!)
 ///////////////////////////////////////////////////////////////////////////////
 
 enum {
@@ -2667,7 +2695,7 @@ enum {
   TXTID_MON4
 };
 
-SNM_LiveConfigMonitorWnd::SNM_LiveConfigMonitorWnd(int _cfgId)
+LiveConfigMonitorWnd::LiveConfigMonitorWnd(int _cfgId)
 	: SWS_DockWnd() // must use the default constructor to create multiple instances
 {
 	m_cfgId = _cfgId;
@@ -2688,7 +2716,7 @@ SNM_LiveConfigMonitorWnd::SNM_LiveConfigMonitorWnd(int _cfgId)
 	Init();
 }
 
-void SNM_LiveConfigMonitorWnd::OnInitDlg()
+void LiveConfigMonitorWnd::OnInitDlg()
 {
 	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
 	m_parentVwnd.SetRealParent(m_hwnd);
@@ -2716,11 +2744,11 @@ void SNM_LiveConfigMonitorWnd::OnInitDlg()
 		1); // ui only
 }
 
-void SNM_LiveConfigMonitorWnd::OnDestroy() {
+void LiveConfigMonitorWnd::OnDestroy() {
 	m_mons.RemoveAllChildren(false);
 }
 
-INT_PTR SNM_LiveConfigMonitorWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR LiveConfigMonitorWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{
@@ -2774,7 +2802,7 @@ INT_PTR SNM_LiveConfigMonitorWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARA
 	return 0;
 }
 
-void SNM_LiveConfigMonitorWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight)
+void LiveConfigMonitorWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight)
 {
 	m_mons.SetPosition(_r);
 	m_mons.SetVisible(true);
@@ -2782,14 +2810,14 @@ void SNM_LiveConfigMonitorWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, i
 }
 
 // handle mouse up/down events at window level (rather than inheriting VWnds)
-int SNM_LiveConfigMonitorWnd::OnMouseDown(int _xpos, int _ypos)
+int LiveConfigMonitorWnd::OnMouseDown(int _xpos, int _ypos)
 {
 	if (m_parentVwnd.VirtWndFromPoint(_xpos,_ypos,1) != NULL)
 		return 1;
 	return 0;
 }
 
-bool SNM_LiveConfigMonitorWnd::OnMouseUp(int _xpos, int _ypos)
+bool LiveConfigMonitorWnd::OnMouseUp(int _xpos, int _ypos)
 {
 	if (LiveConfig* lc = g_liveConfigs.Get()->Get(m_cfgId))
 	{
@@ -2821,7 +2849,7 @@ bool SNM_LiveConfigMonitorWnd::OnMouseUp(int _xpos, int _ypos)
 void OpenLiveConfigMonitorWnd(int _idx)
 {
 	if (_idx>=0 && _idx<SNM_LIVECFG_NB_CONFIGS)
-		if (SNM_LiveConfigMonitorWnd* w = g_monWndsMgr.Create(_idx))
+		if (LiveConfigMonitorWnd* w = g_monWndsMgr.Create(_idx))
 			w->Show(true, true);
 }
 
@@ -2833,7 +2861,7 @@ int IsLiveConfigMonitorWndDisplayed(COMMAND_T* _ct)
 {
 	int wndId = (int)_ct->user;
 	if (wndId>=0 && wndId<SNM_LIVECFG_NB_CONFIGS)
-		if (SNM_LiveConfigMonitorWnd* w = g_monWndsMgr.Get(wndId))
+		if (LiveConfigMonitorWnd* w = g_monWndsMgr.Get(wndId))
 			return w->IsValidWindow();
 	return 0;
 }
@@ -2925,7 +2953,7 @@ void UpdateEnableLiveConfig(int _cfgId, int _val)
 		Undo_OnStateChangeEx2(NULL, UNDO_STR, UNDO_STATE_MISCCFG, -1);
 
 		if (g_configId == _cfgId)
-			if (SNM_LiveConfigsWnd* w = g_lcWndMgr.Get())
+			if (LiveConfigsWnd* w = g_lcWndMgr.Get())
 				w->Update();
 		UpdateMonitoring(_cfgId, APPLY_MASK|PRELOAD_MASK, 0);
 
@@ -3058,7 +3086,7 @@ void UpdateTinyFadesLiveConfig(COMMAND_T* _ct, int _val)
 		LiveConfigsUpdateFadeJob job(lc->m_fade);
 		job.Perform();
 
-		if (SNM_LiveConfigsWnd* w = g_lcWndMgr.Get())
+		if (LiveConfigsWnd* w = g_lcWndMgr.Get())
 			w->Update();
 		// RefreshToolbar()) not required..
 	}

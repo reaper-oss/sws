@@ -89,10 +89,10 @@ private:
 };
 
 
-class SNM_CyclactionWnd : public SWS_DockWnd
+class CyclactionWnd : public SWS_DockWnd
 {
 public:
-	SNM_CyclactionWnd();
+	CyclactionWnd();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 	void Update(bool _updateListViews=true);
 	void UpdateSection(int _newSection);
@@ -119,10 +119,10 @@ protected:
 };
 
 
-class SNM_CyclactionsView : public SWS_ListView
+class CyclactionsView : public SWS_ListView
 {
 public:
-	SNM_CyclactionsView(HWND hwndList, HWND hwndEdit);
+	CyclactionsView(HWND hwndList, HWND hwndEdit);
 protected:
 	void GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax);
 	void SetItemText(SWS_ListItem* item, int iCol, const char* str);
@@ -134,10 +134,10 @@ protected:
 };
 
 
-class SNM_CommandsView : public SWS_ListView
+class CommandsView : public SWS_ListView
 {
 public:
-	SNM_CommandsView(HWND hwndList, HWND hwndEdit);
+	CommandsView(HWND hwndList, HWND hwndEdit);
 	void OnDrag();
 protected:
 	void GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax);

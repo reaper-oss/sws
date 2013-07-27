@@ -220,7 +220,7 @@ bool AutoSaveItemFXChainSlots(int _slotType, const char* _dirPath, WDL_PtrList<v
 
 				saved |= AutoSaveSlot(_slotType, _dirPath, 
 					!*name ? __LOCALIZE("Untitled","sws_DLG_150") : name, 
-					"RfxChain", (WDL_PtrList<PathSlotItem>*)_owSlots, &owIdx, AutoSaveChunkSlot, &fxChain);
+					"RfxChain", (WDL_PtrList<ResourceItem>*)_owSlots, &owIdx, AutoSaveChunkSlot, &fxChain);
 			}
 		}
 	}
@@ -467,7 +467,7 @@ bool AutoSaveTrackFXChainSlots(int _slotType, const char* _dirPath, WDL_PtrList<
 
 				saved |= AutoSaveSlot(_slotType, _dirPath, 
 					!i ? __LOCALIZE("Master","sws_DLG_150") : (!*name ? __LOCALIZE("Untitled","sws_DLG_150") : name), 
-					"RfxChain", (WDL_PtrList<PathSlotItem>*)_owSlots, &owIdx, AutoSaveChunkSlot, &fxChain);
+					"RfxChain", (WDL_PtrList<ResourceItem>*)_owSlots, &owIdx, AutoSaveChunkSlot, &fxChain);
 			}
 		}
 	}

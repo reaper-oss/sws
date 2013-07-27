@@ -89,8 +89,8 @@ enum {
 };
 
 
-SNM_WindowManager<SNM_RegionPlaylistWnd> g_rgnplWndMgr(RGNPL_WND_ID);
-SWSProjConfig<SNM_Playlists> g_pls;
+SNM_WindowManager<RegionPlaylistWnd> g_rgnplWndMgr(RGNPL_WND_ID);
+SWSProjConfig<RegionPlaylists> g_pls;
 SWS_Mutex g_plsMutex;
 SNM_OscCSurf* g_osc = NULL;
 
@@ -117,7 +117,7 @@ int g_oldStopprojlenPref = -1;
 int g_oldRepeatState = -1;
 
 
-SNM_Playlist* GetPlaylist(int _plId = -1) //-1 for the current (i.e. edited) playlist
+RegionPlaylist* GetPlaylist(int _plId = -1) //-1 for the current (i.e. edited) playlist
 {
 	MUTEX_PLAYLISTS;
 	if (_plId < 0) _plId = g_pls.Get()->m_editId;
@@ -126,66 +126,66 @@ SNM_Playlist* GetPlaylist(int _plId = -1) //-1 for the current (i.e. edited) pla
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// SNM_Playlist
+// RegionPlaylist
 ///////////////////////////////////////////////////////////////////////////////
 
-SNM_Playlist::SNM_Playlist(SNM_Playlist* _pl, const char* _name)
-	: m_name(_name), WDL_PtrList<SNM_PlaylistItem>()
+RegionPlaylist::RegionPlaylist(RegionPlaylist* _pl, const char* _name)
+	: m_name(_name), WDL_PtrList<RgnPlaylistItem>()
 {
 	if (_pl)
 	{
 		for (int i=0; i<_pl->GetSize(); i++)
-			Add(new SNM_PlaylistItem(_pl->Get(i)->m_rgnId, _pl->Get(i)->m_cnt));
+			Add(new RgnPlaylistItem(_pl->Get(i)->m_rgnId, _pl->Get(i)->m_cnt));
 		if (!_name)
 			m_name.Set(_pl->m_name.Get());
 	}
 }
 
-bool SNM_Playlist::IsValidIem(int _i)
+bool RegionPlaylist::IsValidIem(int _i)
 {
-	if (SNM_PlaylistItem* item = Get(_i))
+	if (RgnPlaylistItem* item = Get(_i))
 		return item->IsValidIem();
 	return false;
 }
 
 // return the first found playlist idx for _pos
-int SNM_Playlist::IsInPlaylist(double _pos, bool _repeat, int _startWith)
+int RegionPlaylist::IsInPlaylist(double _pos, bool _repeat, int _startWith)
 {
 	double rgnpos, rgnend;
 	for (int i=_startWith; i<GetSize(); i++)
-		if (SNM_PlaylistItem* plItem = Get(i))
+		if (RgnPlaylistItem* plItem = Get(i))
 			if (plItem->m_rgnId>0 && plItem->m_cnt!=0 && EnumMarkerRegionById(NULL, plItem->m_rgnId, NULL, &rgnpos, &rgnend, NULL, NULL, NULL))
 				if (_pos >= rgnpos && _pos <= rgnend)
 					return i;
 	// 2nd try
 	if (_repeat)
 		for (int i=0; i<_startWith; i++)
-			if (SNM_PlaylistItem* plItem = Get(i))
+			if (RgnPlaylistItem* plItem = Get(i))
 				if (plItem->m_rgnId>0 && plItem->m_cnt!=0 && EnumMarkerRegionById(NULL, plItem->m_rgnId, NULL, &rgnpos, &rgnend, NULL, NULL, NULL))
 					if (_pos >= rgnpos && _pos <= rgnend)
 						return i;
 	return -1;
 }
 
-int SNM_Playlist::IsInfinite()
+int RegionPlaylist::IsInfinite()
 {
 	int num;
 	for (int i=0; i<GetSize(); i++)
-		if (SNM_PlaylistItem* plItem = Get(i))
+		if (RgnPlaylistItem* plItem = Get(i))
 			if (plItem->m_rgnId>0 && plItem->m_cnt<0 && EnumMarkerRegionById(NULL, plItem->m_rgnId, NULL, NULL, NULL, NULL, &num, NULL))
 				return num;
 	return -1;
 }
 
 // returns playlist length is seconds, with a negative value if it contains infinite loops
-double SNM_Playlist::GetLength()
+double RegionPlaylist::GetLength()
 {
 	bool infinite = false;
 	double length=0.0;
 	for (int i=0; i<GetSize(); i++)
 	{
 		double rgnpos, rgnend;
-		if (SNM_PlaylistItem* plItem = Get(i))
+		if (RgnPlaylistItem* plItem = Get(i))
 		{
 			if (plItem->m_rgnId>0 && plItem->m_cnt!=0 && EnumMarkerRegionById(NULL, plItem->m_rgnId, NULL, &rgnpos, &rgnend, NULL, NULL, NULL)) {
 				infinite |= plItem->m_cnt<0;
@@ -197,11 +197,11 @@ double SNM_Playlist::GetLength()
 }
 
 // get the 1st marker/region num which has nested marker/region
-int SNM_Playlist::GetNestedMarkerRegion()
+int RegionPlaylist::GetNestedMarkerRegion()
 {
 	for (int i=0; i<GetSize(); i++)
 	{
-		if (SNM_PlaylistItem* plItem = Get(i))
+		if (RgnPlaylistItem* plItem = Get(i))
 		{
 			double rgnpos, rgnend;
 			int num, rgnidx = EnumMarkerRegionById(NULL, plItem->m_rgnId, NULL, &rgnpos, &rgnend, NULL, &num, NULL);
@@ -230,10 +230,10 @@ int SNM_Playlist::GetNestedMarkerRegion()
 }
 
 // get the 1st marker/region num which has a marker/region > _pos
-int SNM_Playlist::GetGreaterMarkerRegion(double _pos)
+int RegionPlaylist::GetGreaterMarkerRegion(double _pos)
 {
 	for (int i=0; i<GetSize(); i++)
-		if (SNM_PlaylistItem* plItem = Get(i))
+		if (RgnPlaylistItem* plItem = Get(i))
 		{
 			double rgnpos; int num;
 			if (EnumMarkerRegionById(NULL, plItem->m_rgnId, NULL, &rgnpos, NULL, NULL, &num, NULL) && rgnpos>_pos)
@@ -244,7 +244,7 @@ int SNM_Playlist::GetGreaterMarkerRegion(double _pos)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// SNM_PlaylistView
+// RegionPlaylistView
 ///////////////////////////////////////////////////////////////////////////////
 
 enum {
@@ -261,24 +261,24 @@ enum {
 static SWS_LVColumn s_playlistCols[] = { {50,2,"#"}, {150,1,"Name"}, {70,1,"Loop count"}, {50,2,"Start"}, {50,2,"End"}, {50,2,"Length"} };
 // !WANT_LOCALIZE_STRINGS_END
 
-SNM_PlaylistView::SNM_PlaylistView(HWND hwndList, HWND hwndEdit)
+RegionPlaylistView::RegionPlaylistView(HWND hwndList, HWND hwndEdit)
 	: SWS_ListView(hwndList, hwndEdit, COL_COUNT, s_playlistCols, "RgnPlaylistViewState", false, "sws_DLG_165", false)
 {
 }
 
-void SNM_PlaylistView::Update()
+void RegionPlaylistView::Update()
 {
 	MUTEX_PLAYLISTS;
 	SWS_ListView::Update();
 }
 
 // "compact" the playlist (e.g. 2 consecutive regions "3" are merged into one, its counter is incremented)
-void SNM_PlaylistView::UpdateCompact()
+void RegionPlaylistView::UpdateCompact()
 {
 	MUTEX_PLAYLISTS;
-	if (SNM_Playlist* pl = GetPlaylist())
+	if (RegionPlaylist* pl = GetPlaylist())
 		for (int i=pl->GetSize()-1; i>=0 ; i--)
-			if (SNM_PlaylistItem* item = pl->Get(i))
+			if (RgnPlaylistItem* item = pl->Get(i))
 				if ((i-1)>=0 && pl->Get(i-1) && item->m_rgnId == pl->Get(i-1)->m_rgnId)
 				{
 					bool infinite = (pl->Get(i-1)->m_cnt<0 || item->m_cnt<0);
@@ -290,16 +290,16 @@ void SNM_PlaylistView::UpdateCompact()
 	Update();
 }
 
-void SNM_PlaylistView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax)
+void RegionPlaylistView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax)
 {
 	MUTEX_PLAYLISTS;
 	if (str) *str = '\0';
-	if (SNM_PlaylistItem* pItem = (SNM_PlaylistItem*)item)
+	if (RgnPlaylistItem* pItem = (RgnPlaylistItem*)item)
 	{
 		switch (iCol)
 		{
 			case COL_RGN: {
-				SNM_Playlist* curpl = GetPlaylist();
+				RegionPlaylist* curpl = GetPlaylist();
 				_snprintfSafe(str, iStrMax, "%s %d", 
 					curpl && g_playPlaylist>=0 && curpl==GetPlaylist(g_playPlaylist) ? // current playlist being played?
 					(!g_unsync && curpl->Get(g_playCur)==pItem ? UTF8_BULLET : (curpl->Get(g_playNext)==pItem ? UTF8_CIRCLE : " ")) : " ", GetMarkerRegionNumFromId(pItem->m_rgnId));
@@ -337,19 +337,19 @@ void SNM_PlaylistView::GetItemText(SWS_ListItem* item, int iCol, char* str, int 
 	}
 }
 
-void SNM_PlaylistView::GetItemList(SWS_ListItemList* pList)
+void RegionPlaylistView::GetItemList(SWS_ListItemList* pList)
 {
 	MUTEX_PLAYLISTS;
-	if (SNM_Playlist* pl = GetPlaylist())
+	if (RegionPlaylist* pl = GetPlaylist())
 		for (int i=0; i < pl->GetSize(); i++)
 			if (SWS_ListItem* item = (SWS_ListItem*)pl->Get(i))
 				pList->Add(item);
 }
 
-void SNM_PlaylistView::SetItemText(SWS_ListItem* item, int iCol, const char* str)
+void RegionPlaylistView::SetItemText(SWS_ListItem* item, int iCol, const char* str)
 {
 	MUTEX_PLAYLISTS;
-	if (SNM_PlaylistItem* pItem = (SNM_PlaylistItem*)item)
+	if (RgnPlaylistItem* pItem = (RgnPlaylistItem*)item)
 	{
 		switch (iCol)
 		{
@@ -369,22 +369,22 @@ void SNM_PlaylistView::SetItemText(SWS_ListItem* item, int iCol, const char* str
 	}
 }
 
-void SNM_PlaylistView::OnItemClk(SWS_ListItem* item, int iCol, int iKeyState) {
-	if (SNM_PlaylistItem* pItem = (SNM_PlaylistItem*)item)
+void RegionPlaylistView::OnItemClk(SWS_ListItem* item, int iCol, int iKeyState) {
+	if (RgnPlaylistItem* pItem = (RgnPlaylistItem*)item)
 		SetEditCurPos2(NULL, pItem->GetPos(), g_scrollView, false);
 }
 
-void SNM_PlaylistView::OnItemDblClk(SWS_ListItem* item, int iCol) {
-	if (SNM_RegionPlaylistWnd* w = g_rgnplWndMgr.Get())
+void RegionPlaylistView::OnItemDblClk(SWS_ListItem* item, int iCol) {
+	if (RegionPlaylistWnd* w = g_rgnplWndMgr.Get())
 		w->OnCommand(PERFORM_MSG, 0);
 }
 
 // "disable" sort
-int SNM_PlaylistView::OnItemSort(SWS_ListItem* _item1, SWS_ListItem* _item2) 
+int RegionPlaylistView::OnItemSort(SWS_ListItem* _item1, SWS_ListItem* _item2) 
 {
 	MUTEX_PLAYLISTS;
 	int i1=-1, i2=-1;
-	if (SNM_Playlist* pl = GetPlaylist())
+	if (RegionPlaylist* pl = GetPlaylist())
 	{
 		for (int i=0; (i1<0 && i2<0) || i<pl->GetSize(); i++)
 		{
@@ -400,22 +400,22 @@ int SNM_PlaylistView::OnItemSort(SWS_ListItem* _item1, SWS_ListItem* _item2)
 	return 0;
 }
 
-void SNM_PlaylistView::OnBeginDrag(SWS_ListItem* item) {
+void RegionPlaylistView::OnBeginDrag(SWS_ListItem* item) {
 	SetCapture(GetParent(m_hwndList));
 }
 
-void SNM_PlaylistView::OnDrag()
+void RegionPlaylistView::OnDrag()
 {
 	MUTEX_PLAYLISTS;
-	SNM_Playlist* pl  = GetPlaylist();
+	RegionPlaylist* pl  = GetPlaylist();
 	if (!pl) return;
 
 	POINT p; GetCursorPos(&p);
-	if (SNM_PlaylistItem* hitItem = (SNM_PlaylistItem*)GetHitItem(p.x, p.y, NULL))
+	if (RgnPlaylistItem* hitItem = (RgnPlaylistItem*)GetHitItem(p.x, p.y, NULL))
 	{
 		int iNewPriority = pl->Find(hitItem);
 		int x=0, iSelPriority;
-		while(SNM_PlaylistItem* selItem = (SNM_PlaylistItem*)EnumSelected(&x))
+		while(RgnPlaylistItem* selItem = (RgnPlaylistItem*)EnumSelected(&x))
 		{
 			iSelPriority = pl->Find(selItem);
 			if (iNewPriority == iSelPriority) return;
@@ -436,7 +436,7 @@ void SNM_PlaylistView::OnDrag()
 	}
 }
 
-void SNM_PlaylistView::OnEndDrag()
+void RegionPlaylistView::OnEndDrag()
 {
 	MUTEX_PLAYLISTS;
 	UpdateCompact();
@@ -457,7 +457,7 @@ void GetMonitoringInfo(WDL_FastString* _curNum, WDL_FastString* _cur,
 {
 	if (g_playPlaylist>=0 && _curNum && _cur && _nextNum && _next)
 	{
-		if (SNM_Playlist* curpl = GetPlaylist(g_playPlaylist))
+		if (RegionPlaylist* curpl = GetPlaylist(g_playPlaylist))
 		{
 			// current playlist item
 			if (g_unsync)
@@ -465,7 +465,7 @@ void GetMonitoringInfo(WDL_FastString* _curNum, WDL_FastString* _cur,
 				_curNum->Set("!");
 				_cur->Set(__LOCALIZE("(sync!)","sws_DLG_165"));
 			}
-			else if (SNM_PlaylistItem* curItem = curpl->Get(g_playCur))
+			else if (RgnPlaylistItem* curItem = curpl->Get(g_playCur))
 			{
 				char buf[64]="";
 				EnumMarkerRegionDescById(NULL, curItem->m_rgnId, buf, sizeof(buf), SNM_REGION_MASK, false, true, false);
@@ -505,7 +505,7 @@ void GetMonitoringInfo(WDL_FastString* _curNum, WDL_FastString* _cur,
 					_next->Set(UTF8_INFINITY);
 				}
 			}
-			else if (SNM_PlaylistItem* nextItem = curpl->Get(g_playNext))
+			else if (RgnPlaylistItem* nextItem = curpl->Get(g_playNext))
 			{
 				char buf[64]="";
 				EnumMarkerRegionDescById(NULL, nextItem->m_rgnId, buf, sizeof(buf), SNM_REGION_MASK, false, true, false);
@@ -518,12 +518,12 @@ void GetMonitoringInfo(WDL_FastString* _curNum, WDL_FastString* _cur,
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// SNM_RegionPlaylistWnd
+// RegionPlaylistWnd
 ///////////////////////////////////////////////////////////////////////////////
 
 // S&M windows lazy init: below's "" prevents registering the SWS' screenset callback
 // (use the S&M one instead - already registered via SNM_WindowManager::Init())
-SNM_RegionPlaylistWnd::SNM_RegionPlaylistWnd()
+RegionPlaylistWnd::RegionPlaylistWnd()
 	: SWS_DockWnd(IDD_SNM_RGNPLAYLIST, __LOCALIZE("Region Playlist","sws_DLG_165"), "", SWSGetCommandID(OpenRegionPlaylist))
 {
 	m_id.Set(RGNPL_WND_ID);
@@ -531,10 +531,10 @@ SNM_RegionPlaylistWnd::SNM_RegionPlaylistWnd()
 	Init();
 }
 
-void SNM_RegionPlaylistWnd::OnInitDlg()
+void RegionPlaylistWnd::OnInitDlg()
 {
 	m_resize.init_item(IDC_LIST, 0.0, 0.0, 1.0, 1.0);
-	m_pLists.Add(new SNM_PlaylistView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
+	m_pLists.Add(new RegionPlaylistView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
 
 	LICE_CachedFont* font = SNM_GetThemeFont();
 
@@ -588,7 +588,7 @@ void SNM_RegionPlaylistWnd::OnInitDlg()
 	RegisterToMarkerRegionUpdates(&m_mkrRgnSubscriber);
 }
 
-void SNM_RegionPlaylistWnd::OnDestroy() {
+void RegionPlaylistWnd::OnDestroy() {
 	UnregisterToMarkerRegionUpdates(&m_mkrRgnSubscriber);
 	m_cbPlaylist.Empty();
 	m_mons.RemoveAllChildren(false);
@@ -596,7 +596,7 @@ void SNM_RegionPlaylistWnd::OnDestroy() {
 }
 
 // _flags: &1=fast update, normal/full update otherwise
-void SNM_RegionPlaylistWnd::Update(int _flags, WDL_FastString* _curNum, WDL_FastString* _cur, WDL_FastString* _nextNum, WDL_FastString* _next)
+void RegionPlaylistWnd::Update(int _flags, WDL_FastString* _curNum, WDL_FastString* _cur, WDL_FastString* _nextNum, WDL_FastString* _next)
 {
 	MUTEX_PLAYLISTS;
 
@@ -611,7 +611,7 @@ void SNM_RegionPlaylistWnd::Update(int _flags, WDL_FastString* _curNum, WDL_Fast
 	if (!_flags)
 	{
 		if (m_pLists.GetSize())
-			((SNM_PlaylistView*)GetListView())->UpdateCompact();
+			((RegionPlaylistView*)GetListView())->UpdateCompact();
 
 		UpdateMonitoring(_curNum, _cur, _nextNum, _next);
 		m_parentVwnd.RequestRedraw(NULL);
@@ -624,7 +624,7 @@ void SNM_RegionPlaylistWnd::Update(int _flags, WDL_FastString* _curNum, WDL_Fast
 			UpdateMonitoring(_curNum, _cur, _nextNum, _next);
 		// edition mode
 		else if (g_pls.Get()->m_editId == g_playPlaylist && m_pLists.GetSize()) // is it the displayed playlist?
-			((SNM_PlaylistView*)GetListView())->Update(); // no playlist compacting
+			((RegionPlaylistView*)GetListView())->Update(); // no playlist compacting
 	}
 
 	sRecurseCheck = false;
@@ -633,11 +633,11 @@ void SNM_RegionPlaylistWnd::Update(int _flags, WDL_FastString* _curNum, WDL_Fast
 // just update monitoring VWnds
 // params: optional, for optimization while playing: monitor wnds + osc in one go, see PlaylistRun()
 //         they should be ALL valid or ALL null, although a mix is managed..
-void SNM_RegionPlaylistWnd::UpdateMonitoring(WDL_FastString* _curNum, WDL_FastString* _cur, WDL_FastString* _nextNum, WDL_FastString* _next)
+void RegionPlaylistWnd::UpdateMonitoring(WDL_FastString* _curNum, WDL_FastString* _cur, WDL_FastString* _nextNum, WDL_FastString* _next)
 {
 	WDL_FastString pl;
 	if (g_playPlaylist>=0)
-		if (SNM_Playlist* curpl = GetPlaylist(g_playPlaylist))
+		if (RegionPlaylist* curpl = GetPlaylist(g_playPlaylist))
 			pl.SetFormatted(128, "#%d \"%s\"", g_playPlaylist+1, curpl->m_name.Get());
 	m_monPl.SetText(g_playPlaylist>=0 ? pl.Get() : __LOCALIZE("(stopped)","sws_DLG_165"));
 
@@ -666,7 +666,7 @@ void SNM_RegionPlaylistWnd::UpdateMonitoring(WDL_FastString* _curNum, WDL_FastSt
 
 }
 
-void SNM_RegionPlaylistWnd::FillPlaylistCombo()
+void RegionPlaylistWnd::FillPlaylistCombo()
 {
 	MUTEX_PLAYLISTS;
 	m_cbPlaylist.Empty();
@@ -679,7 +679,7 @@ void SNM_RegionPlaylistWnd::FillPlaylistCombo()
 	m_cbPlaylist.SetCurSel(g_pls.Get()->m_editId);
 }
 
-void SNM_RegionPlaylistWnd::OnCommand(WPARAM wParam, LPARAM lParam)
+void RegionPlaylistWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 {
 	MUTEX_PLAYLISTS;
 	switch(LOWORD(wParam))
@@ -707,7 +707,7 @@ void SNM_RegionPlaylistWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			lstrcpyn(name, __LOCALIZE("Untitled","sws_DLG_165"), 64);
 			if (PromptUserForString(m_hwnd, __LOCALIZE("S&M - Add playlist","sws_DLG_165"), name, 64, true) && *name)
 			{
-				if (g_pls.Get()->Add(new SNM_Playlist(LOWORD(wParam)==COPY_PLAYLIST_MSG ? GetPlaylist() : NULL, name)))
+				if (g_pls.Get()->Add(new RegionPlaylist(LOWORD(wParam)==COPY_PLAYLIST_MSG ? GetPlaylist() : NULL, name)))
 				{
 					g_pls.Get()->m_editId = g_pls.Get()->GetSize()-1;
 					FillPlaylistCombo();
@@ -721,7 +721,7 @@ void SNM_RegionPlaylistWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case BTNID_DEL_PLAYLIST:
 			if (GetPlaylist() && g_pls.Get()->GetSize() > 0)
 			{
-				WDL_PtrList_DeleteOnDestroy<SNM_Playlist> delItems;
+				WDL_PtrList_DeleteOnDestroy<RegionPlaylist> delItems;
 				int reply = IDYES;
 				if (GetPlaylist()->GetSize()) // do not ask if empty
 				{
@@ -789,8 +789,8 @@ void SNM_RegionPlaylistWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case DELETE_MSG:
 		{
 			int x=0, slot; bool updt = false;
-			WDL_PtrList_DeleteOnDestroy<SNM_PlaylistItem> delItems;
-			while(SNM_PlaylistItem* item = (SNM_PlaylistItem*)GetListView()->EnumSelected(&x))
+			WDL_PtrList_DeleteOnDestroy<RgnPlaylistItem> delItems;
+			while(RgnPlaylistItem* item = (RgnPlaylistItem*)GetListView()->EnumSelected(&x))
 			{
 				slot = GetPlaylist()->Find(item);
 				if (slot>=0)
@@ -811,7 +811,7 @@ void SNM_RegionPlaylistWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case TGL_INFINITE_LOOP_MSG:
 		{
 			int x=0; bool updt = false;
-			while(SNM_PlaylistItem* item = (SNM_PlaylistItem*)GetListView()->EnumSelected(&x)) {
+			while(RgnPlaylistItem* item = (RgnPlaylistItem*)GetListView()->EnumSelected(&x)) {
 				item->m_cnt *= (-1);
 				updt = true;
 			}
@@ -832,10 +832,10 @@ void SNM_RegionPlaylistWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case APPEND_SEL_RGN_MSG:
 		case PASTE_SEL_RGN_MSG:
 		{
-			SNM_Playlist p("temp");
+			RegionPlaylist p("temp");
 			int x=0;
-			while(SNM_PlaylistItem* item = (SNM_PlaylistItem*)GetListView()->EnumSelected(&x))
-				p.Add(new SNM_PlaylistItem(item->m_rgnId, item->m_cnt));
+			while(RgnPlaylistItem* item = (RgnPlaylistItem*)GetListView()->EnumSelected(&x))
+				p.Add(new RgnPlaylistItem(item->m_rgnId, item->m_cnt));
 			AppendPasteCropPlaylist(&p, LOWORD(wParam)==PASTE_SEL_RGN_MSG ? 3:2);
 			break;
 		}
@@ -843,7 +843,7 @@ void SNM_RegionPlaylistWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			if (GetPlaylist())
 			{
 				int x=0;
-				if (SNM_PlaylistItem* pItem = (SNM_PlaylistItem*)GetListView()->EnumSelected(&x))
+				if (RgnPlaylistItem* pItem = (RgnPlaylistItem*)GetListView()->EnumSelected(&x))
 					PlaylistPlay(g_pls.Get()->m_editId, GetPlaylist()->Find(pItem));
 			}
 			break;
@@ -853,7 +853,7 @@ void SNM_RegionPlaylistWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			while (y = EnumProjectMarkers2(NULL, x, &isRgn, NULL, NULL, NULL, &num))
 			{
 				if (isRgn) {
-					SNM_PlaylistItem* newItem = new SNM_PlaylistItem(MakeMarkerRegionId(num, isRgn));
+					RgnPlaylistItem* newItem = new RgnPlaylistItem(MakeMarkerRegionId(num, isRgn));
 					updt |= (GetPlaylist() && GetPlaylist()->Add(newItem) != NULL);
 				}
 				x=y;
@@ -871,12 +871,12 @@ void SNM_RegionPlaylistWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		default:
 			if (LOWORD(wParam) >= INSERT_REGION_START_MSG && LOWORD(wParam) <= INSERT_REGION_END_MSG)
 			{
-				SNM_Playlist* pl = GetPlaylist();
+				RegionPlaylist* pl = GetPlaylist();
 				if (!pl) break;
-				SNM_PlaylistItem* newItem = new SNM_PlaylistItem(GetMarkerRegionIdFromIndex(NULL, LOWORD(wParam)-INSERT_REGION_START_MSG));
+				RgnPlaylistItem* newItem = new RgnPlaylistItem(GetMarkerRegionIdFromIndex(NULL, LOWORD(wParam)-INSERT_REGION_START_MSG));
 				if (pl->GetSize())
 				{
-					if (SNM_PlaylistItem* item = (SNM_PlaylistItem*)GetListView()->EnumSelected(NULL))
+					if (RgnPlaylistItem* item = (RgnPlaylistItem*)GetListView()->EnumSelected(NULL))
 					{
 						int slot = pl->Find(item);
 						if (slot >= 0 && pl->Insert(slot, newItem))
@@ -900,7 +900,7 @@ void SNM_RegionPlaylistWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			}
 			else if (LOWORD(wParam) >= ADD_REGION_START_MSG && LOWORD(wParam) <= ADD_REGION_END_MSG)
 			{
-				SNM_PlaylistItem* newItem = new SNM_PlaylistItem(GetMarkerRegionIdFromIndex(NULL, LOWORD(wParam)-ADD_REGION_START_MSG));
+				RgnPlaylistItem* newItem = new RgnPlaylistItem(GetMarkerRegionIdFromIndex(NULL, LOWORD(wParam)-ADD_REGION_START_MSG));
 				if (GetPlaylist() && GetPlaylist()->Add(newItem))
 				{
 					Undo_OnStateChangeEx2(NULL, UNDO_PLAYLIST_STR, UNDO_STATE_MISCCFG, -1); 
@@ -923,7 +923,7 @@ void SNM_RegionPlaylistWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 	}
 }
 
-int SNM_RegionPlaylistWnd::OnKey(MSG* _msg, int _iKeyState) 
+int RegionPlaylistWnd::OnKey(MSG* _msg, int _iKeyState) 
 {
 	if (_msg->message == WM_KEYDOWN && !_iKeyState)
 	{
@@ -943,7 +943,7 @@ int SNM_RegionPlaylistWnd::OnKey(MSG* _msg, int _iKeyState)
 // play/stop/pause buttons are right aligned when _RGNPL_TRANSPORT_RIGHT is defined
 #define _RGNPL_TRANSPORT_RIGHT
 
-void SNM_RegionPlaylistWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight)
+void RegionPlaylistWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight)
 {
 	MUTEX_PLAYLISTS;
 
@@ -953,7 +953,7 @@ void SNM_RegionPlaylistWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int*
 		*_tooltipHeight = h;
 	
 	bool hasPlaylists = (g_pls.Get()->GetSize()>0);
-	SNM_Playlist* pl = GetPlaylist();
+	RegionPlaylist* pl = GetPlaylist();
 
 	SNM_SkinButton(&m_btnLock, it ? &it->toolbar_lock[!g_monitorMode] : NULL, g_monitorMode ? __LOCALIZE("Edition mode","sws_DLG_165") : __LOCALIZE("Monitoring mode","sws_DLG_165"));
 	if (SNM_AutoVWndPosition(DT_LEFT, &m_btnLock, NULL, _r, &x0, _r->top, h))
@@ -1047,7 +1047,7 @@ void SNM_RegionPlaylistWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int*
 #endif
 }
 
-void SNM_RegionPlaylistWnd::AddPasteContextMenu(HMENU _menu)
+void RegionPlaylistWnd::AddPasteContextMenu(HMENU _menu)
 {
 	if (GetMenuItemCount(_menu))
 		AddToMenu(_menu, SWS_SEPARATOR, 0);
@@ -1062,7 +1062,7 @@ void SNM_RegionPlaylistWnd::AddPasteContextMenu(HMENU _menu)
 	AddToMenu(_menu, __LOCALIZE("Paste selected regions at edit cursor","sws_DLG_165"), PASTE_SEL_RGN_MSG, -1, false, hasSel ? 0 : MF_GRAYED);
 }
 
-HMENU SNM_RegionPlaylistWnd::OnContextMenu(int _x, int _y, bool* _wantDefaultItems)
+HMENU RegionPlaylistWnd::OnContextMenu(int _x, int _y, bool* _wantDefaultItems)
 {
 	MUTEX_PLAYLISTS;
 
@@ -1139,7 +1139,7 @@ HMENU SNM_RegionPlaylistWnd::OnContextMenu(int _x, int _y, bool* _wantDefaultIte
 	return hMenu;
 }
 
-bool SNM_RegionPlaylistWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOutSz)
+bool RegionPlaylistWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOutSz)
 {
 	if (WDL_VWnd* v = m_parentVwnd.VirtWndFromPoint(_xpos,_ypos,1))
 	{
@@ -1159,7 +1159,7 @@ bool SNM_RegionPlaylistWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut
 				lstrcpyn(_bufOut, __LOCALIZE("Repeat playlist","sws_DLG_165"), _bufOutSz);
 				return true;
 			case CMBID_PLAYLIST:
-				if (SNM_Playlist* pl = GetPlaylist())
+				if (RegionPlaylist* pl = GetPlaylist())
 				{
 					double len = pl->GetLength();
 					char timeStr[64]="";
@@ -1185,7 +1185,7 @@ bool SNM_RegionPlaylistWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut
 	return false;
 }
 
-void SNM_RegionPlaylistWnd::ToggleLock()
+void RegionPlaylistWnd::ToggleLock()
 {
 	g_monitorMode = !g_monitorMode;
 	RefreshToolbar(SWSGetCommandID(ToggleRegionPlaylistLock));
@@ -1199,7 +1199,7 @@ int IsInPlaylists(double _pos)
 {
 	MUTEX_PLAYLISTS;
 	for (int i=0; i < g_pls.Get()->GetSize(); i++)
-		if (SNM_Playlist* pl = g_pls.Get()->Get(i))
+		if (RegionPlaylist* pl = g_pls.Get()->Get(i))
 			if (pl->IsInPlaylist(_pos, false, 0) >= 0)
 				return i;
 	return -1;
@@ -1216,7 +1216,7 @@ int GetNextValidItem(int _plId, int _itemId, bool _startWith, bool _repeat)
 	MUTEX_PLAYLISTS;
 	if (_plId>=0 && _itemId>=0)
 	{
-		if (SNM_Playlist* pl = GetPlaylist(_plId))
+		if (RegionPlaylist* pl = GetPlaylist(_plId))
 		{
 			for (int i=_itemId+(_startWith?0:1); i<pl->GetSize(); i++)
 				if (pl->IsValidIem(i))
@@ -1239,7 +1239,7 @@ int GetPrevValidItem(int _plId, int _itemId, bool _startWith, bool _repeat)
 	MUTEX_PLAYLISTS;
 	if (_plId>=0 && _itemId>=0)
 	{
-		if (SNM_Playlist* pl = GetPlaylist(_plId))
+		if (RegionPlaylist* pl = GetPlaylist(_plId))
 		{
 			for (int i=_itemId-(_startWith?0:1); i>=0; i--)
 				if (pl->IsValidIem(i))
@@ -1259,7 +1259,7 @@ int GetPrevValidItem(int _plId, int _itemId, bool _startWith, bool _repeat)
 bool SeekItem(int _plId, int _nextItemId, int _curItemId)
 {
 	MUTEX_PLAYLISTS;
-	if (SNM_Playlist* pl = g_pls.Get()->Get(_plId))
+	if (RegionPlaylist* pl = g_pls.Get()->Get(_plId))
 	{
 		// trick to stop the playlist in sync: smooth seek to the end of the project (!)
 		if (_nextItemId<0)
@@ -1276,7 +1276,7 @@ bool SeekItem(int _plId, int _nextItemId, int _curItemId)
 			SeekPlay(g_nextRgnPos);
 			return true;
 		}
-		else if (SNM_PlaylistItem* next = pl->Get(_nextItemId))
+		else if (RgnPlaylistItem* next = pl->Get(_nextItemId))
 		{
 			double a, b;
 			if (EnumMarkerRegionById(NULL, next->m_rgnId, NULL, &a, &b, NULL, NULL, NULL))
@@ -1349,9 +1349,9 @@ void PlaylistRun()
 					// ex: 1 item in the playlist + repeat on, or repeat on + last region == first region,
 					//     or playlist = region3, then unknown region (e.g. deleted) and region3 again, or etc..
 					if (nextId>=0)
-						if (SNM_Playlist* pl = GetPlaylist(g_playPlaylist))
-							if (SNM_PlaylistItem* next = pl->Get(nextId)) 
-								if (SNM_PlaylistItem* cur = pl->Get(g_playCur)) 
+						if (RegionPlaylist* pl = GetPlaylist(g_playPlaylist))
+							if (RgnPlaylistItem* next = pl->Get(nextId)) 
+								if (RgnPlaylistItem* cur = pl->Get(g_playCur)) 
 									g_plLoop = (cur->m_rgnId==next->m_rgnId); // valid regions at this point
 
 					if (!SeekItem(g_playPlaylist, nextId, g_playCur))
@@ -1374,7 +1374,7 @@ void PlaylistRun()
 			{
 				updated = g_unsync = true;
 				int spareItemId = -1;
-				if (SNM_Playlist* pl = g_pls.Get()->Get(g_playPlaylist))
+				if (RegionPlaylist* pl = g_pls.Get()->Get(g_playPlaylist))
 					spareItemId = pl->IsInPlaylist(pos, g_repeatPlaylist, g_playCur>=0?g_playCur:0);
 				if (spareItemId<0 || !SeekItem(g_playPlaylist, spareItemId, -1))
 					SeekPlay(g_nextRgnPos);	// try to resync the expected region, best effort
@@ -1388,7 +1388,7 @@ void PlaylistRun()
 			WDL_FastString cur, curNum, next, nextNum;
 			GetMonitoringInfo(&curNum, &cur, &nextNum, &next);
 
-			if (SNM_RegionPlaylistWnd* w = g_rgnplWndMgr.Get())
+			if (RegionPlaylistWnd* w = g_rgnplWndMgr.Get())
 				w->Update(1, &curNum, &cur, &nextNum, &next); // 1: fast update flag
 
 			if (g_osc)
@@ -1428,7 +1428,7 @@ void PlaylistPlay(int _plId, int _itemId)
 		return;
 	}
 
-	SNM_Playlist* pl = GetPlaylist(_plId);
+	RegionPlaylist* pl = GetPlaylist(_plId);
 	if (!pl) // e.g. when called via actions
 	{
 		PlaylistStop();
@@ -1487,7 +1487,7 @@ void PlaylistPlay(int _plId, int _itemId)
 			if (SeekItem(_plId, _itemId, g_playPlaylist==_plId ? g_playCur : -1))
 			{
 				g_playPlaylist = _plId; // enables PlaylistRun()
-				if (SNM_RegionPlaylistWnd* w = g_rgnplWndMgr.Get())
+				if (RegionPlaylistWnd* w = g_rgnplWndMgr.Get())
 					w->Update(); // for the play button, next/previous region actions, etc....
 			}
 			else
@@ -1566,7 +1566,7 @@ void PlaylistStopped(bool _pause)
 			g_oldRepeatState = -1;
 		}
 
-		if (SNM_RegionPlaylistWnd* w = g_rgnplWndMgr.Get())
+		if (RegionPlaylistWnd* w = g_rgnplWndMgr.Get())
 			w->Update();
 	}
 }
@@ -1578,8 +1578,8 @@ void PlaylistUnpaused() {
 // used when editing the playlist/regions while playing (required because we always look one region ahead)
 void PlaylistResync()
 {
-	if (SNM_Playlist* pl = GetPlaylist(g_playPlaylist))
-		if (SNM_PlaylistItem* item = pl->Get(g_playCur))
+	if (RegionPlaylist* pl = GetPlaylist(g_playPlaylist))
+		if (RgnPlaylistItem* item = pl->Get(g_playCur))
 			SeekItem(g_playPlaylist, GetNextValidItem(g_playPlaylist, g_playCur, item->m_cnt<0 || item->m_cnt>1, g_repeatPlaylist), g_playCur);
 }
 
@@ -1593,7 +1593,7 @@ void SetPlaylistRepeat(COMMAND_T* _ct)
 	}
 	RefreshToolbar(SWSGetCommandID(SetPlaylistRepeat, -1));
 	PlaylistResync();
-	if (SNM_RegionPlaylistWnd* w = g_rgnplWndMgr.Get())
+	if (RegionPlaylistWnd* w = g_rgnplWndMgr.Get())
 		w->Update();
 }
 
@@ -1611,7 +1611,7 @@ int IsPlaylistRepeat(COMMAND_T*) {
 // _mode: 0=crop current project, 1=crop to new project tab, 2=append to current project, 3=paste at cursor position
 // note: moves/copies env points too, makes polled items, etc.. according to user prefs
 //JFB TODO? crop => markers removed
-void AppendPasteCropPlaylist(SNM_Playlist* _playlist, int _mode)
+void AppendPasteCropPlaylist(RegionPlaylist* _playlist, int _mode)
 {
 	MUTEX_PLAYLISTS;
 
@@ -1673,7 +1673,7 @@ void AppendPasteCropPlaylist(SNM_Playlist* _playlist, int _mode)
 	WDL_PtrList_DeleteOnDestroy<MarkerRegion> rgns;
 	for (int i=0; i<_playlist->GetSize(); i++)
 	{
-		if (SNM_PlaylistItem* plItem = _playlist->Get(i))
+		if (RgnPlaylistItem* plItem = _playlist->Get(i))
 		{
 			int rgnnum, rgncol=0; double rgnpos, rgnend; char* rgnname;
 			if (EnumMarkerRegionById(NULL, plItem->m_rgnId, NULL, &rgnpos, &rgnend, &rgnname, &rgnnum, &rgncol))
@@ -1757,7 +1757,7 @@ void AppendPasteCropPlaylist(SNM_Playlist* _playlist, int _mode)
 	// crop current project
 
 	// dup the playlist (needed when cropping to new project tab)
-	SNM_Playlist* dupPlaylist = _mode==1 ? new SNM_Playlist(_playlist) : NULL;
+	RegionPlaylist* dupPlaylist = _mode==1 ? new RegionPlaylist(_playlist) : NULL;
 
 	// crop current project
 	GetSet_LoopTimeRange(true, false, &startPos, &endPos, false);
@@ -1770,7 +1770,7 @@ void AppendPasteCropPlaylist(SNM_Playlist* _playlist, int _mode)
 
 	// cleanup playlists (some other regions may have been removed)
 	for (int i=g_pls.Get()->GetSize()-1; i>=0; i--)
-		if (SNM_Playlist* pl = g_pls.Get()->Get(i))
+		if (RegionPlaylist* pl = g_pls.Get()->Get(i))
 			if (pl != _playlist)
 				for (int j=0; j<pl->GetSize(); j++)
 					if (pl->Get(j) && GetMarkerRegionIndexFromId(NULL, pl->Get(j)->m_rgnId) < 0) {
@@ -1792,7 +1792,7 @@ void AppendPasteCropPlaylist(SNM_Playlist* _playlist, int _mode)
 		UpdateTimeline();
 		Undo_EndBlock2(NULL, __LOCALIZE("Crop project to playlist","sws_undo"), UNDO_STATE_ALL);
 
-		if (SNM_RegionPlaylistWnd* w = g_rgnplWndMgr.Get()) {
+		if (RegionPlaylistWnd* w = g_rgnplWndMgr.Get()) {
 			w->FillPlaylistCombo();
 			w->Update();
 		}
@@ -1855,7 +1855,7 @@ void AppendPasteCropPlaylist(SNM_Playlist* _playlist, int _mode)
 
 	Undo_EndBlock2(NULL, __LOCALIZE("Crop project to playlist","sws_undo"), UNDO_STATE_ALL);
 
-	if (SNM_RegionPlaylistWnd* w = g_rgnplWndMgr.Get()) {
+	if (RegionPlaylistWnd* w = g_rgnplWndMgr.Get()) {
 		w->FillPlaylistCombo();
 		w->Update();
 	}
@@ -1869,7 +1869,7 @@ void AppendPasteCropPlaylist(COMMAND_T* _ct) {
 ///////////////////////////////////////////////////////////////////////////////
 
 void PlaylistUpdateJob::Perform() {
-	if (SNM_RegionPlaylistWnd* w = g_rgnplWndMgr.Get()) {
+	if (RegionPlaylistWnd* w = g_rgnplWndMgr.Get()) {
 		w->FillPlaylistCombo();
 		w->Update();
 	}
@@ -1902,7 +1902,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 	if (!strcmp(lp.gettoken_str(0), "<S&M_RGN_PLAYLIST"))
 	{
 		MUTEX_PLAYLISTS;
-		if (SNM_Playlist* playlist = g_pls.Get()->Add(new SNM_Playlist(lp.gettoken_str(1))))
+		if (RegionPlaylist* playlist = g_pls.Get()->Add(new RegionPlaylist(lp.gettoken_str(1))))
 		{
 			int success;
 			if (lp.gettoken_int(2, &success) && success)
@@ -1916,12 +1916,12 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 					if (lp.getnumtokens() && lp.gettoken_str(0)[0] == '>')
 						break;
 					else if (lp.getnumtokens() == 2)
-						playlist->Add(new SNM_PlaylistItem(lp.gettoken_int(0), lp.gettoken_int(1)));
+						playlist->Add(new RgnPlaylistItem(lp.gettoken_int(0), lp.gettoken_int(1)));
 				}
 				else
 					break;
 			}
-			if (SNM_RegionPlaylistWnd* w = g_rgnplWndMgr.Get()) {
+			if (RegionPlaylistWnd* w = g_rgnplWndMgr.Get()) {
 				w->FillPlaylistCombo();
 				w->Update();
 			}
@@ -1946,7 +1946,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 		int iHeaderLen = confStr.GetLength();
 
 		for (int i=0; i < GetPlaylist(j)->GetSize(); i++)
-			if (SNM_PlaylistItem* item = GetPlaylist(j)->Get(i))
+			if (RgnPlaylistItem* item = GetPlaylist(j)->Get(i))
 				confStr.AppendFormatted(128,"%d %d\n", item->m_rgnId, item->m_cnt);
 
 		// ignore empty playlists when saving but always take them into account for undo
@@ -2030,18 +2030,18 @@ void RegionPlaylistExit()
 
 void OpenRegionPlaylist(COMMAND_T*)
 {
-	if (SNM_RegionPlaylistWnd* w = g_rgnplWndMgr.Create())
+	if (RegionPlaylistWnd* w = g_rgnplWndMgr.Create())
 		w->Show(true, true);
 }
 
 int IsRegionPlaylistDisplayed(COMMAND_T*){
-	if (SNM_RegionPlaylistWnd* w = g_rgnplWndMgr.Get())
+	if (RegionPlaylistWnd* w = g_rgnplWndMgr.Get())
 		return w->IsValidWindow();
 	return 0;
 }
 
 void ToggleRegionPlaylistLock(COMMAND_T*) {
-	if (SNM_RegionPlaylistWnd* w = g_rgnplWndMgr.Get())
+	if (RegionPlaylistWnd* w = g_rgnplWndMgr.Get())
 		w->ToggleLock();
 }
 

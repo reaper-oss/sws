@@ -175,7 +175,7 @@ public:
 class SNM_Knob : public WDL_VirtualSlider {
 public:
 	SNM_Knob() : WDL_VirtualSlider(), m_factor(1.0) {
-		SetKnobBias(1); // force knob
+		SetKnobBias(1, 3); // 1: force knob
 		SetScrollMessage(WM_VSCROLL);
 	}
 	virtual const char *GetType() { return "SNM_Knob"; }
@@ -190,12 +190,14 @@ class SNM_KnobCaption : public WDL_VWnd {
 public:
 	SNM_KnobCaption() : WDL_VWnd(), m_value(-666) {}
 	virtual void SetPosition(const RECT* _r);
+	void DrawText(LICE_IBitmap* _drawbm, RECT* _rect, UINT _dtFlags);
 	virtual void OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect);
 	virtual const char *GetType() { return "SNM_KnobCaption"; }
 	virtual void SetTitle(const char* _txt) { m_title.Set(_txt); }
 	virtual void SetSuffix(const char* _txt) { m_suffix.Set(_txt); }
 	virtual void SetZeroText(const char* _txt) { m_zeroTxt.Set(_txt); }
 	virtual void SetValue(int _value);
+	virtual LICE_CachedFont* GetFont();
 protected:
 	int m_value;
 	WDL_FastString m_title, m_suffix, m_zeroTxt;
@@ -204,6 +206,7 @@ protected:
 // helpers
 void SNM_SkinButton(WDL_VirtualIconButton* _btn, WDL_VirtualIconButton_SkinConfig* _skin, const char* _text);
 void SNM_SkinToolbarButton(SNM_ToolbarButton* _btn, const char* _text);
+void SNM_SkinKnob(SNM_Knob* _knob);
 bool SNM_AddLogo(LICE_IBitmap* _bm, const RECT* _r, int _x = -1, int _h = -1);
 bool SNM_AutoVWndPosition(UINT _align, WDL_VWnd* _comp, WDL_VWnd* _tiedComp, const RECT* _r, int* _x, int _y, int _h, int _xRoom = SNM_DEF_VWND_X_STEP);
 

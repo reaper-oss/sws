@@ -83,9 +83,9 @@ private:
 };
 
 
-class SNM_LiveConfigView : public SWS_ListView {
+class LiveConfigView : public SWS_ListView {
 public:
-	SNM_LiveConfigView(HWND hwndList, HWND hwndEdit);
+	LiveConfigView(HWND hwndList, HWND hwndEdit);
 protected:
 	void GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax);
 	void SetItemText(SWS_ListItem* item, int iCol, const char* str);
@@ -96,9 +96,9 @@ protected:
 
 
 // edition window
-class SNM_LiveConfigsWnd : public SWS_DockWnd {
+class LiveConfigsWnd : public SWS_DockWnd {
 public:
-	SNM_LiveConfigsWnd();
+	LiveConfigsWnd();
 	void Update();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 	void GetMinSize(int* _w, int* _h) { *_w=156; *_h=140; }
@@ -131,9 +131,9 @@ void UpdateMonitoring(int _cfgId, int _whatFlags, int _commitFlags, int _flags =
 
 
 // monitoring window (several instances)
-class SNM_LiveConfigMonitorWnd : public SWS_DockWnd {
+class LiveConfigMonitorWnd : public SWS_DockWnd {
 public:
-	SNM_LiveConfigMonitorWnd(int _cfgId = -1); // default constructor not used, just to compil SNM_DynWindowManager..
+	LiveConfigMonitorWnd(int _cfgId = -1); // default constructor not used, just to compil SNM_DynWindowManager..
 	SNM_FiveMonitors* GetMonitors() { return &m_mons; }
 protected:
 	void OnInitDlg();

@@ -1579,9 +1579,9 @@ bool AutoSaveMediaSlots(int _slotType, const char* _dirPath, WDL_PtrList<void>* 
 								if (src->GetFileName())
 								{
 									if(*src->GetFileName()) // ext file
-										saved |= AutoSaveSlot(_slotType, _dirPath, src->GetFileName(), GetFileExtension(src->GetFileName()), (WDL_PtrList<PathSlotItem>*)_owSlots, &owIdx);
+										saved |= AutoSaveSlot(_slotType, _dirPath, src->GetFileName(), GetFileExtension(src->GetFileName()), (WDL_PtrList<ResourceItem>*)_owSlots, &owIdx);
 									else // in-project midi
-										saved |= AutoSaveSlot(_slotType, _dirPath, (const char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL), "mid", (WDL_PtrList<PathSlotItem>*)_owSlots, &owIdx, AutoSaveMidiSlot, src);
+										saved |= AutoSaveSlot(_slotType, _dirPath, (const char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL), "mid", (WDL_PtrList<ResourceItem>*)_owSlots, &owIdx, AutoSaveMidiSlot, src);
 								}
 	return saved;
 }

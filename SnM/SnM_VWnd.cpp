@@ -645,7 +645,9 @@ void SNM_KnobCaption::SetPosition(const RECT* _r)
 		{
 			// fixed knob size atm..
 			RECT r = {0,0,0,0};
-			r.right = r.bottom = SNM_GUI_W_KNOB;
+			r.top = int(0.5 + (m_position.bottom-m_position.top)/2 - SNM_GUI_W_H_KNOB/2); // valign
+			r.right = SNM_GUI_W_H_KNOB;
+			r.bottom = r.top + SNM_GUI_W_H_KNOB;
 			knob->SetPosition(&r);
 		}
 	}
@@ -663,7 +665,31 @@ void SNM_KnobCaption::SetValue(int _value)
 	}
 }
 
-void SNM_KnobCaption::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect)
+LICE_CachedFont* SNM_KnobCaption::GetFont()
+{
+	return
+#ifdef _SNM_SWELL_ISSUES
+		SNM_GetFont(0); // SWELL issue: native font rendering won't draw multiple lines
+#else
+		SNM_GetThemeFont(); // i.e. SNM_GetFont(1)
+#endif
+}
+
+// just to make both DT_VCENTER & DT_CALCRECT calls possible..
+void SNM_KnobCaption::DrawText(LICE_IBitmap* _drawbm, RECT* _rect, UINT _dtFlags)
+{
+	if (LICE_CachedFont* font = GetFont())
+	{
+		char buf[64] = "";
+		if (m_value || !m_zeroTxt.GetLength())
+			_snprintfSafe(buf, sizeof(buf), "%s\n%d %s", m_title.Get(), m_value, m_suffix.Get());
+		else
+			_snprintfSafe(buf, sizeof(buf), "%s\n%s", m_title.Get(), m_zeroTxt.Get());
+		font->DrawText(_drawbm, buf, -1, _rect, _dtFlags);
+	}
+}
+
+void SNM_KnobCaption::OnPaint(LICE_IBitmap* drawbm, int origin_x, int origin_y, RECT* cliprect)
 {
 	WDL_VWnd::OnPaint(drawbm, origin_x, origin_y, cliprect);
 
@@ -673,23 +699,8 @@ void SNM_KnobCaption::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, 
 	r.top += origin_y;
 	r.bottom += origin_y;
 
-	if (LICE_CachedFont* font = 
-#ifdef _SNM_SWELL_ISSUES
-			SNM_GetFont(0) // SWELL issue: native font rendering won't draw multiple lines
-#else
-			SNM_GetThemeFont() // i.e. SNM_GetFont(1)
-#endif
-		)
-	{
-		char buf[64] = "";
-		if (m_value || !m_zeroTxt.GetLength())
-			_snprintfSafe(buf, sizeof(buf), "%s\n%d %s", m_title.Get(), m_value, m_suffix.Get());
-		else
-			_snprintfSafe(buf, sizeof(buf), "%s\n%s", m_title.Get(), m_zeroTxt.Get());
-
-		RECT tr = {r.left+SNM_GUI_W_KNOB,r.top,r.right,r.bottom};
-		font->DrawText(drawbm, buf, -1, &tr, DT_VCENTER);
-	}
+	RECT tr = {r.left+SNM_GUI_W_H_KNOB+2, r.top, r.right, r.bottom}; // +2: room w/ knob
+	DrawText(drawbm, &tr, DT_VCENTER);
 }
 
 
@@ -699,11 +710,13 @@ void SNM_KnobCaption::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, 
 
 void SNM_SkinButton(WDL_VirtualIconButton* _btn, WDL_VirtualIconButton_SkinConfig* _skin, const char* _text)
 {
-	if (_skin && _skin->image) {
+	if (_skin && _skin->image)
+	{
 		_btn->SetIcon(_skin);
 		_btn->SetForceBorder(false);
 	}
-	else {
+	else
+	{
 		_btn->SetIcon(NULL);
 		_btn->SetTextLabel(_text, 0, SNM_GetThemeFont());
 		_btn->SetForceBorder(true);
@@ -742,6 +755,19 @@ void SNM_SkinToolbarButton(SNM_ToolbarButton* _btn, const char* _text)
 		_btn->SetTextLabel(_text, 0, SNM_GetThemeFont());
 		_btn->SetForceBorder(true);
 	}
+}
+
+void SNM_SkinKnob(SNM_Knob* _knob)
+{
+	static WDL_VirtualSlider_SkinConfig sSkin;
+	IconTheme* it = SNM_GetIconTheme(true); // true: knobs are recent (v4)
+	if (it && it->knob.bgimage)
+	{
+		WDL_VirtualSlider_PreprocessSkinConfig(&sSkin);
+		_knob->SetSkinImageInfo(&sSkin, &it->knob, &it->knob_sm);
+	}
+	else 
+		_knob->SetSkinImageInfo(NULL); // important: would crash when switching theme..
 }
 
 bool SNM_AddLogo(LICE_IBitmap* _bm, const RECT* _r, int _x, int _h)
@@ -858,16 +884,20 @@ bool SNM_AutoVWndPosition(UINT _align, WDL_VWnd* _comp, WDL_VWnd* _tiedComp, con
 				}
 			}
 		}
-		else  if (!strcmp(_comp->GetType(), "SNM_KnobCaption")) {
-			width=int(SNM_GUI_W_KNOB*3.7);
-			height=SNM_GUI_W_KNOB;
+		else  if (!strcmp(_comp->GetType(), "SNM_KnobCaption"))
+		{
+			SNM_KnobCaption* knobCap = (SNM_KnobCaption*)_comp;
+			RECT tr = {0,0,0,0};
+			knobCap->DrawText(NULL, &tr, DT_CALCRECT);
+			width = SNM_GUI_W_H_KNOB + 2 + tr.right; // +2 room between knob & caption, see SNM_KnobCaption::OnPaint()
+			height=tr.bottom*2; // 2 lines of text
 		}
 		else  if (!strcmp(_comp->GetType(), "SNM_TwoTinyButtons")) {
 			width=9;
 			height=9*2+1;
 		}
 		else if (!strcmp(_comp->GetType(), "SNM_Knob"))
-			width=height=SNM_GUI_W_KNOB;
+			width=height=SNM_GUI_W_H_KNOB;
 
 
 		// *** set position/visibility ***

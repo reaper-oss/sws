@@ -89,6 +89,7 @@ bool RemoveReceives(WDL_PtrList<MediaTrack>* _trs, WDL_PtrList<SNM_ChunkParserPa
 void RemoveReceives(COMMAND_T*);
 void RemoveRoutings(COMMAND_T*);
 
+// reascript export
 bool SNM_AddReceive(MediaTrack* _srcTr, MediaTrack* _destTr, int _type);
 bool SNM_RemoveReceive(MediaTrack* _tr, int _rcvIdx);
 bool SNM_RemoveReceivesFrom(MediaTrack* _tr, MediaTrack* _srcTr);

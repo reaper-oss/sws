@@ -206,14 +206,14 @@ void LoadThemeSlot(int _slotType, const char* _title, int _slot)
 		if (_snprintfStrict(cmd, sizeof(cmd), SNM_REAPER_EXE_FILE, GetExePath()) > 0)
 		{
 			WDL_FastString syscmd;
-			// on Win, force -nonewinst not to spawn a new instance (i.e. ignore "new instance" prefs)
-			// note: can't access those prefs via GetConfigVar("multinst"): ==NULL! not exposed? REAPER bug?
+			// on Win, force -nonewinst not to spawn a new instance (i.e. ignore multi instance prefs)
+			// note: can't access those prefs via GetConfigVar("multinst"), not exposed?
 #ifdef _WIN32
 			syscmd.SetFormatted(SNM_MAX_PATH, "\"%s\" -nonewinst -ignoreerrors", fnStr->Get());
-			ShellExecute(GetMainHwnd(), "", cmd, syscmd.Get(), NULL, SW_SHOWNORMAL);
+			ShellExecute(GetMainHwnd(), "open", cmd, syscmd.Get(), NULL, SW_SHOWNORMAL);
 #else
 			syscmd.SetFormatted(SNM_MAX_PATH, "open -a \"%s\" \"%s\"", cmd, fnStr->Get());
-/*JFB useless: no native "new instance" prefs like on Win but this would work if so (--args requires OSX >= 10.6 though)
+/*JFB useless on OSX: no multi instance prefs like on Win but this would work if so (--args requires OSX >= 10.6 though)
 			syscmd.SetFormatted(SNM_MAX_PATH, "open -a '%s' '%s' --args -nonewinst -ignoreerrors", cmd, fnStr->Get());
 */
 			system(syscmd.Get());

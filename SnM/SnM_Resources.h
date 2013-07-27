@@ -53,16 +53,16 @@ enum {
 };
 
 
-class PathSlotItem {
+class ResourceItem {
 public:
-	PathSlotItem(const char* _shortPath="", const char* _comment="") : m_shortPath(_shortPath), m_comment(_comment) {}
+	ResourceItem(const char* _shortPath="", const char* _comment="") : m_shortPath(_shortPath), m_comment(_comment) {}
 	bool IsDefault() { return (!m_shortPath.GetLength()); }
 	void Clear() { m_shortPath.Set(""); m_comment.Set(""); }
 	WDL_FastString m_shortPath, m_comment;
 };
 
 
-// masks for FileSlotList.m_flags
+// masks for ResourceList.m_flags
 enum {
   SNM_RES_MASK_DBLCLIK=1,
   SNM_RES_MASK_TEXT=2,
@@ -70,15 +70,15 @@ enum {
   SNM_RES_MASK_AUTOFILL=8
 };
 
-class FileSlotList : public WDL_PtrList<PathSlotItem>
+class ResourceList : public WDL_PtrList<ResourceItem>
 {
   public:
-	FileSlotList(const char* _resDir, const char* _desc, const char* _ext, int _flags);
-	~FileSlotList() { m_exts.Empty(true); }
+	ResourceList(const char* _resDir, const char* _desc, const char* _ext, int _flags);
+	~ResourceList() { m_exts.Empty(true); }
 
 	int GetNonEmptySize() { int cnt=0; for(int i=0; i<GetSize(); i++) if (!Get(i)->IsDefault()) cnt++; return cnt; }  
-	PathSlotItem* AddSlot(const char* _path="", const char* _desc="");
-	PathSlotItem* InsertSlot(int _slot, const char* _path="", const char* _desc="");
+	ResourceItem* AddSlot(const char* _path="", const char* _desc="");
+	ResourceItem* InsertSlot(int _slot, const char* _path="", const char* _desc="");
 	int FindByPath(const char* _fullPath);
 	bool GetFullPath(int _slot, char* _fullFn, int _fullFnSz);
 	bool SetFromFullPath(int _slot, const char* _fullPath);
@@ -105,10 +105,10 @@ private:
 };
 
 
-class SNM_ResourceView : public SWS_ListView
+class ResourcesView : public SWS_ListView
 {
 public:
-	SNM_ResourceView(HWND hwndList, HWND hwndEdit);
+	ResourcesView(HWND hwndList, HWND hwndEdit);
 	void Perform();
 protected:
 	void GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax);
@@ -120,17 +120,17 @@ protected:
 };
 
 
-class SNM_ResourceWnd : public SWS_DockWnd
+class ResourcesWnd : public SWS_DockWnd
 {
 public:
-	SNM_ResourceWnd();
+	ResourcesWnd();
 	void SetType(int _type);
 	int SetType(const char* _name);
 	void Update();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 	void ClearListSelection();
 	void SelectBySlot(int _slot1, int _slot2 = -1, bool _selectOnly = true);
-	void GetSelectedSlots(WDL_PtrList<PathSlotItem>* _selSlots, WDL_PtrList<PathSlotItem>* _selEmptySlots = NULL);
+	void GetSelectedSlots(WDL_PtrList<ResourceItem>* _selSlots, WDL_PtrList<ResourceItem>* _selEmptySlots = NULL);
 	void FillTypeCombo();
 protected:
 	void OnInitDlg();
@@ -167,7 +167,7 @@ public:
 };
 
 
-extern WDL_PtrList<FileSlotList> g_SNM_ResSlots;
+extern WDL_PtrList<ResourceList> g_SNM_ResSlots;
 extern int g_SNM_TiedSlotActions[SNM_NUM_DEFAULT_SLOTS];
 extern int g_SNM_PrjLoaderStartPref;
 extern int g_SNM_PrjLoaderEndPref;
@@ -176,7 +176,7 @@ extern int g_SNM_PrjLoaderEndPref;
 bool AutoSaveChunkSlot(const void* _obj, const char* _fn);
 bool AutoSaveSlot(int _slotType, const char* _dirPath,
 				const char* _name, const char* _ext,
-				WDL_PtrList<PathSlotItem>* _owSlots, int* _owIdx,
+				WDL_PtrList<ResourceItem>* _owSlots, int* _owIdx,
 				bool (*SaveSlot)(const void*, const char*)=NULL, const void* _obj=NULL);
 void AutoSave(int _type, bool _promptOverwrite, int _flags = 0);
 void AutoFill(int _type);
@@ -214,14 +214,15 @@ void ResourcesAutoSaveFXChain(COMMAND_T*);
 void ResourcesAutoSaveTrTemplate(COMMAND_T*);
 void ResourcesAutoSave(COMMAND_T*);
 
+// reascript export
 int SNM_SelectResourceBookmark(const char* _name);
 void SNM_TieResourceSlotActions(int _bookmarkId);
 
 
-class SNM_ImageWnd : public SWS_DockWnd
+class ImageWnd : public SWS_DockWnd
 {
 public:
-	SNM_ImageWnd();
+	ImageWnd();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 	void SetImage(const char* _fn) { m_img.SetImage(_fn); }
 	void SetStretch(bool _stretch) { m_stretch = _stretch; }

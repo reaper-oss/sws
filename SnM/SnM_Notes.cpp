@@ -72,7 +72,7 @@ enum {
 };
 
 
-SNM_WindowManager<SNM_NotesWnd> g_notesWndMgr(NOTES_WND_ID);
+SNM_WindowManager<NotesWnd> g_notesWndMgr(NOTES_WND_ID);
 
 SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_SNM_TrackNotes;
 SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_RegionSubtitle> > g_pRegionSubs; // for markers too..
@@ -106,12 +106,12 @@ bool g_internalMkrRgnChange = false;
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// SNM_NotesWnd
+// NotesWnd
 ///////////////////////////////////////////////////////////////////////////////
 
 // S&M windows lazy init: below's "" prevents registering the SWS' screenset callback
 // (use the S&M one instead - already registered via SNM_WindowManager::Init())
-SNM_NotesWnd::SNM_NotesWnd()
+NotesWnd::NotesWnd()
 	: SWS_DockWnd(IDD_SNM_NOTES, __LOCALIZE("Notes","sws_DLG_152"), "", SWSGetCommandID(OpenNotes))
 {
 	m_id.Set(NOTES_WND_ID);
@@ -119,11 +119,11 @@ SNM_NotesWnd::SNM_NotesWnd()
 	Init();
 }
 
-SNM_NotesWnd::~SNM_NotesWnd()
+NotesWnd::~NotesWnd()
 {
 }
 
-void SNM_NotesWnd::OnInitDlg()
+void NotesWnd::OnInitDlg()
 {
 	m_resize.init_item(IDC_EDIT, 0.0, 0.0, 1.0, 1.0);
 	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_EDIT), GWLP_USERDATA, 0xdeadf00b);
@@ -178,7 +178,7 @@ void SNM_NotesWnd::OnInitDlg()
 	SetTimer(m_hwnd, UPDATE_TIMER, NOTES_UPDATE_FREQ, NULL);
 }
 
-void SNM_NotesWnd::OnDestroy() 
+void NotesWnd::OnDestroy() 
 {
 	KillTimer(m_hwnd, UPDATE_TIMER);
 /* see OnTimer()
@@ -189,7 +189,7 @@ void SNM_NotesWnd::OnDestroy()
 }
 
 // note: no diff with current type, init would fail otherwise
-void SNM_NotesWnd::SetType(int _type)
+void NotesWnd::SetType(int _type)
 {
 	g_notesViewType = _type;
 	m_cbType.SetCurSel(g_notesViewType);
@@ -200,7 +200,7 @@ void SNM_NotesWnd::SetType(int _type)
 	Update();
 }
 
-void SNM_NotesWnd::SetText(const char* _str, bool _addRN) {
+void NotesWnd::SetText(const char* _str, bool _addRN) {
 	if (_str) {
 		if (_addRN) GetStringWithRN(_str, g_lastText, MAX_HELP_LENGTH);
 		else lstrcpyn(g_lastText, _str, MAX_HELP_LENGTH);
@@ -208,7 +208,7 @@ void SNM_NotesWnd::SetText(const char* _str, bool _addRN) {
 	}
 }
 
-void SNM_NotesWnd::RefreshGUI() 
+void NotesWnd::RefreshGUI() 
 {
 	bool bHide = true;
 	switch(g_notesViewType)
@@ -238,7 +238,7 @@ void SNM_NotesWnd::RefreshGUI()
 	m_parentVwnd.RequestRedraw(NULL); // the meat!
 }
 
-void SNM_NotesWnd::OnCommand(WPARAM wParam, LPARAM lParam)
+void NotesWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 {
 	switch (LOWORD(wParam))
 	{
@@ -288,11 +288,11 @@ void SNM_NotesWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 }
 
 // bWantEdit ignored: no list view in there
-bool SNM_NotesWnd::IsActive(bool bWantEdit) {
+bool NotesWnd::IsActive(bool bWantEdit) {
 	return (IsValidWindow() && (GetForegroundWindow() == m_hwnd || GetFocus() == GetDlgItem(m_hwnd, IDC_EDIT)));
 }
 
-HMENU SNM_NotesWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
+HMENU NotesWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 {
 	if (g_notesViewType == SNM_NOTES_ACTION_HELP)
 	{
@@ -306,7 +306,7 @@ HMENU SNM_NotesWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 // OSX fix/workaround (SWELL bug?)
 #ifdef _SNM_SWELL_ISSUES
 void OSXForceTxtChangeJob::Perform() {
-	if (SNM_NotesWnd* w = g_notesWndMgr.Get())
+	if (NotesWnd* w = g_notesWndMgr.Get())
 		SendMessage(w->GetHWND(), WM_COMMAND, MAKEWPARAM(IDC_EDIT, EN_CHANGE), 0);
 }
 #endif
@@ -315,7 +315,7 @@ void OSXForceTxtChangeJob::Perform() {
 // -1: catch and send to the control, 
 //  0: pass-thru to main window (then -666 in SWS_DockWnd::keyHandler())
 //  1: eat
-int SNM_NotesWnd::OnKey(MSG* _msg, int _iKeyState)
+int NotesWnd::OnKey(MSG* _msg, int _iKeyState)
 {
 	HWND h = GetDlgItem(m_hwnd, IDC_EDIT);
 /*JFB not needed: IDC_EDIT is the single control of this window..
@@ -359,7 +359,7 @@ int SNM_NotesWnd::OnKey(MSG* _msg, int _iKeyState)
 	return 0; 
 }
 
-void SNM_NotesWnd::OnTimer(WPARAM wParam)
+void NotesWnd::OnTimer(WPARAM wParam)
 {
 	if (wParam == UPDATE_TIMER)
 	{
@@ -387,7 +387,7 @@ void SNM_NotesWnd::OnTimer(WPARAM wParam)
 	}
 }
 
-void SNM_NotesWnd::OnResize()
+void NotesWnd::OnResize()
 {
 	if (g_notesViewType != g_prevNotesViewType)
 	{
@@ -399,7 +399,7 @@ void SNM_NotesWnd::OnResize()
 	}
 }
 
-void SNM_NotesWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight)
+void NotesWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight)
 {
 	int h=SNM_GUI_TOP_H;
 	if (_tooltipHeight)
@@ -522,7 +522,7 @@ void SNM_NotesWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltip
 	}
 }
 
-bool SNM_NotesWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOutSz)
+bool NotesWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOutSz)
 {
 	if (WDL_VWnd* v = m_parentVwnd.VirtWndFromPoint(_xpos,_ypos,1))
 	{
@@ -539,7 +539,7 @@ bool SNM_NotesWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bu
 	return false;
 }
 
-void SNM_NotesWnd::ToggleLock()
+void NotesWnd::ToggleLock()
 {
 	g_locked = !g_locked;
 	RefreshToolbar(SWSGetCommandID(ToggleNotesLock));
@@ -555,7 +555,7 @@ void SNM_NotesWnd::ToggleLock()
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void SNM_NotesWnd::SaveCurrentText(int _type) 
+void NotesWnd::SaveCurrentText(int _type) 
 {
 	switch(_type) 
 	{
@@ -578,14 +578,14 @@ void SNM_NotesWnd::SaveCurrentText(int _type)
 	}
 }
 
-void SNM_NotesWnd::SaveCurrentPrjNotes()
+void NotesWnd::SaveCurrentPrjNotes()
 {
 	GetDlgItemText(m_hwnd, IDC_EDIT, g_lastText, MAX_HELP_LENGTH);
 	g_prjNotes.Get()->Set(g_lastText); // CRLF removed only when saving the project..
 	Undo_OnStateChangeEx2(NULL, __LOCALIZE("Edit project notes","sws_undo"), UNDO_STATE_MISCCFG, -1);
 }
 
-void SNM_NotesWnd::SaveCurrentHelp()
+void NotesWnd::SaveCurrentHelp()
 {
 	if (*g_lastActionCustId && !IsMacroOrScript(g_lastActionDesc)) {
 		GetDlgItemText(m_hwnd, IDC_EDIT, g_lastText, MAX_HELP_LENGTH);
@@ -593,7 +593,7 @@ void SNM_NotesWnd::SaveCurrentHelp()
 	}
 }
 
-void SNM_NotesWnd::SaveCurrentItemNotes()
+void NotesWnd::SaveCurrentItemNotes()
 {
 	if (g_mediaItemNote && GetMediaItem_Track(g_mediaItemNote))
 	{
@@ -607,7 +607,7 @@ void SNM_NotesWnd::SaveCurrentItemNotes()
 	}
 }
 
-void SNM_NotesWnd::SaveCurrentTrackNotes()
+void NotesWnd::SaveCurrentTrackNotes()
 {
 	if (g_trNote && CSurf_TrackToID(g_trNote, false) >= 0)
 	{
@@ -627,7 +627,7 @@ void SNM_NotesWnd::SaveCurrentTrackNotes()
 	}
 }
 
-void SNM_NotesWnd::SaveCurrentMkrRgnNameOrNotes(bool _name)
+void NotesWnd::SaveCurrentMkrRgnNameOrNotes(bool _name)
 {
 	if (g_lastMarkerRegionId > 0)
 	{
@@ -672,7 +672,7 @@ void SNM_NotesWnd::SaveCurrentMkrRgnNameOrNotes(bool _name)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void SNM_NotesWnd::Update(bool _force)
+void NotesWnd::Update(bool _force)
 {
 	static bool sRecurseCheck = false;
 	if (sRecurseCheck)
@@ -725,7 +725,7 @@ void SNM_NotesWnd::Update(bool _force)
 	sRecurseCheck = false;
 }
 
-int SNM_NotesWnd::UpdateActionHelp()
+int NotesWnd::UpdateActionHelp()
 {
 	int refreshType = NO_REFRESH;
 	int iSel = GetSelectedAction(
@@ -765,7 +765,7 @@ int SNM_NotesWnd::UpdateActionHelp()
 	return refreshType;
 }
 
-int SNM_NotesWnd::UpdateItemNotes()
+int NotesWnd::UpdateItemNotes()
 {
 	int refreshType = NO_REFRESH;
 	if (MediaItem* selItem = GetSelectedMediaItem(NULL, 0))
@@ -793,7 +793,7 @@ int SNM_NotesWnd::UpdateItemNotes()
 		MediaItem_Take* tk = GetActiveTake(g_mediaItemNote);
 		char* tkName = tk ? (char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL) : NULL;
 		_snprintfSafe(name, sizeof(name), "%s \"%s\"", __localizeFunc("Notes for", "notes", 0), tkName ? tkName : __localizeFunc("Empty Item", "common", 0));
-		if (HWND w = GetReaWindowByTitle(name))
+		if (HWND w = GetReaHwndByTitle(name))
 			g_mediaItemNote = NULL; // will force refresh
 	}
 #endif
@@ -801,7 +801,7 @@ int SNM_NotesWnd::UpdateItemNotes()
 	return refreshType;
 }
 
-int SNM_NotesWnd::UpdateTrackNotes()
+int NotesWnd::UpdateTrackNotes()
 {
 	int refreshType = NO_REFRESH;
 	if (MediaTrack* selTr = SNM_GetSelectedTrack(NULL, 0, true))
@@ -830,7 +830,7 @@ int SNM_NotesWnd::UpdateTrackNotes()
 	return refreshType;
 }
 
-int SNM_NotesWnd::UpdateMkrRgnNameOrNotes(bool _name)
+int NotesWnd::UpdateMkrRgnNameOrNotes(bool _name)
 {
 	int refreshType = NO_REFRESH;
 
@@ -1016,7 +1016,7 @@ bool GetNotesChunkFromString(const char* _bufIn, WDL_FastString* _notesOut, cons
 ///////////////////////////////////////////////////////////////////////////////
 
 void NotesUpdateJob::Perform() {
-	if (SNM_NotesWnd* w = g_notesWndMgr.Get())
+	if (NotesWnd* w = g_notesWndMgr.Get())
 		w->Update(true);
 }
 
@@ -1342,7 +1342,7 @@ static project_config_extension_t s_projectconfig = {
 void NotesSetTrackTitle()
 {
 	if (g_notesViewType == SNM_NOTES_TRACK)
-		if (SNM_NotesWnd* w = g_notesWndMgr.Get())
+		if (NotesWnd* w = g_notesWndMgr.Get())
 			w->RefreshGUI();
 }
 
@@ -1404,7 +1404,7 @@ void NotesExit()
 
 void OpenNotes(COMMAND_T* _ct)
 {
-	if (SNM_NotesWnd* w = g_notesWndMgr.Create())
+	if (NotesWnd* w = g_notesWndMgr.Create())
 	{
 		int newType = (int)_ct->user; // -1 means toggle current type
 		if (newType == -1)
@@ -1420,13 +1420,13 @@ void OpenNotes(COMMAND_T* _ct)
 
 int IsNotesDisplayed(COMMAND_T* _ct)
 {
-	if (SNM_NotesWnd* w = g_notesWndMgr.Get())
+	if (NotesWnd* w = g_notesWndMgr.Get())
 		return w->IsValidWindow();
 	return 0;
 }
 
 void ToggleNotesLock(COMMAND_T*) {
-	if (SNM_NotesWnd* w = g_notesWndMgr.Get())
+	if (NotesWnd* w = g_notesWndMgr.Get())
 		w->ToggleLock();
 }
 

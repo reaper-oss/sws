@@ -57,7 +57,7 @@
 
 // no exit issue vs "DeleteOnDestroy" here: CAs are saved on the fly
 WDL_PtrList_DeleteOnDestroy<Cyclaction> g_cas[SNM_MAX_CA_SECTIONS]; 
-SNM_WindowManager<SNM_CyclactionWnd> g_caWndMgr(CA_WND_ID);
+SNM_WindowManager<CyclactionWnd> g_caWndMgr(CA_WND_ID);
 bool g_undos = true; // consolidate undo points
 
 
@@ -412,7 +412,7 @@ int PerformSingleCommand(int _section, const char* _cmdStr)
 				case SNM_SEC_IDX_ME_EL:
 					return MIDIEditor_LastFocused_OnCommand(cmdId, _section==SNM_SEC_IDX_ME_EL);
 				case SNM_SEC_IDX_EPXLORER:
-					if (HWND h = GetReaWindowByTitle(__localizeFunc("Media Explorer", "explorer", 0))) {
+					if (HWND h = GetReaHwndByTitle(__localizeFunc("Media Explorer", "explorer", 0))) {
 						SendMessage(h, WM_COMMAND, cmdId, 0);
 						return 1;
 					}
@@ -1250,8 +1250,8 @@ enum {
 };
 
 // for cross-calls between list views
-SNM_CyclactionsView* g_lvL = NULL;
-SNM_CommandsView* g_lvR = NULL;
+CyclactionsView* g_lvL = NULL;
+CommandsView* g_lvR = NULL;
 RECT g_origRectL = {0,0,0,0};
 RECT g_origRectR = {0,0,0,0};
 int g_lvLastState = 0, g_lvState = 0; // 0=display both list views, 1=left only, -1=right only
@@ -1286,7 +1286,7 @@ int CountEditedActions() {
 
 void UpdateEditedStatus(bool _edited) {
 	g_edited = _edited;
-	if (SNM_CyclactionWnd* w = g_caWndMgr.Get())
+	if (CyclactionWnd* w = g_caWndMgr.Get())
 		w->Update(false);
 }
 
@@ -1325,7 +1325,7 @@ void Apply()
 {
 	// save the consolidate undo points pref
 	g_undos = false;
-	if (SNM_CyclactionWnd* w = g_caWndMgr.Get())
+	if (CyclactionWnd* w = g_caWndMgr.Get())
 		g_undos = w->IsConsolidatedUndo();
 	WritePrivateProfileString("Cyclactions", "Undos", g_undos ? "1" : "0", g_SNM_IniFn.Get()); // in main S&M.ini file (local property)
 
@@ -1400,10 +1400,10 @@ void ResetSection(int _section)
 // Left list view
 ////////////////////
 
-SNM_CyclactionsView::SNM_CyclactionsView(HWND hwndList, HWND hwndEdit)
+CyclactionsView::CyclactionsView(HWND hwndList, HWND hwndEdit)
 :SWS_ListView(hwndList, hwndEdit, COL_L_COUNT, s_casCols, "LCyclactionViewState", false, "sws_DLG_161") {}
 
-void SNM_CyclactionsView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax)
+void CyclactionsView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax)
 {
 	if (str) *str = '\0';
 	if (Cyclaction* a = (Cyclaction*)item)
@@ -1439,7 +1439,7 @@ void SNM_CyclactionsView::GetItemText(SWS_ListItem* item, int iCol, char* str, i
 }
 
 //JFB cancel cell editing on error would be great.. SWS_ListView mod?
-void SNM_CyclactionsView::SetItemText(SWS_ListItem* _item, int _iCol, const char* _str)
+void CyclactionsView::SetItemText(SWS_ListItem* _item, int _iCol, const char* _str)
 {
 	if (_iCol == COL_L_NAME)
 	{
@@ -1469,12 +1469,12 @@ void SNM_CyclactionsView::SetItemText(SWS_ListItem* _item, int _iCol, const char
 	}
 }
 
-bool SNM_CyclactionsView::IsEditListItemAllowed(SWS_ListItem* _item, int _iCol) {
+bool CyclactionsView::IsEditListItemAllowed(SWS_ListItem* _item, int _iCol) {
 	Cyclaction* a = (Cyclaction*)_item;
 	return (a != &s_DEFAULT_L);
 }
 
-void SNM_CyclactionsView::GetItemList(SWS_ListItemList* pList)
+void CyclactionsView::GetItemList(SWS_ListItemList* pList)
 {
 	if (CountEditedActions())
 	{
@@ -1507,7 +1507,7 @@ void SNM_CyclactionsView::GetItemList(SWS_ListItemList* pList)
 		pList->Add((SWS_ListItem*)&s_DEFAULT_L);
 }
 
-void SNM_CyclactionsView::OnItemSelChanged(SWS_ListItem* item, int iState)
+void CyclactionsView::OnItemSelChanged(SWS_ListItem* item, int iState)
 {
 	AllEditListItemEnd(true);
 
@@ -1523,7 +1523,7 @@ void SNM_CyclactionsView::OnItemSelChanged(SWS_ListItem* item, int iState)
 	g_lvR->Update();
 }
 
-void SNM_CyclactionsView::OnItemBtnClk(SWS_ListItem* item, int iCol, int iKeyState)
+void CyclactionsView::OnItemBtnClk(SWS_ListItem* item, int iCol, int iKeyState)
 {
 	Cyclaction* pItem = (Cyclaction*)item;
 	if (pItem && pItem != &s_DEFAULT_L && iCol == COL_L_TOGGLE)
@@ -1535,11 +1535,11 @@ void SNM_CyclactionsView::OnItemBtnClk(SWS_ListItem* item, int iCol, int iKeySta
 	}
 }
 
-void SNM_CyclactionsView::OnItemDblClk(SWS_ListItem* item, int iCol)
+void CyclactionsView::OnItemDblClk(SWS_ListItem* item, int iCol)
 {
 	Cyclaction* pItem = (Cyclaction*)item;
 	if (pItem && pItem != &s_DEFAULT_L && iCol == COL_L_ID)
-		if (SNM_CyclactionWnd* w = g_caWndMgr.Get())
+		if (CyclactionWnd* w = g_caWndMgr.Get())
 			w->OnCommand(RUN_CYCLACTION_MSG, 0);
 }
 
@@ -1548,13 +1548,13 @@ void SNM_CyclactionsView::OnItemDblClk(SWS_ListItem* item, int iCol)
 // Right list view
 ////////////////////
 
-SNM_CommandsView::SNM_CommandsView(HWND hwndList, HWND hwndEdit)
+CommandsView::CommandsView(HWND hwndList, HWND hwndEdit)
 :SWS_ListView(hwndList, hwndEdit, COL_R_COUNT, s_commandsCols, "RCyclactionViewState", false, "sws_DLG_161", false)
 {
 //	SetWindowLongPtr(hwndList, GWL_STYLE, GetWindowLongPtr(hwndList, GWL_STYLE) | LVS_SINGLESEL);
 }
 
-void SNM_CommandsView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax)
+void CommandsView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax)
 {
 	if (str) *str = '\0';
 	if (WDL_FastString* pItem = (WDL_FastString*)item)
@@ -1596,7 +1596,7 @@ void SNM_CommandsView::GetItemText(SWS_ListItem* item, int iCol, char* str, int 
 	}
 }
 
-void SNM_CommandsView::SetItemText(SWS_ListItem* _item, int _iCol, const char* _str)
+void CommandsView::SetItemText(SWS_ListItem* _item, int _iCol, const char* _str)
 {
 	if (_iCol == COL_R_CMD)
 	{
@@ -1623,12 +1623,12 @@ void SNM_CommandsView::SetItemText(SWS_ListItem* _item, int _iCol, const char* _
 	}
 }
 
-bool SNM_CommandsView::IsEditListItemAllowed(SWS_ListItem* _item, int _iCol) {
+bool CommandsView::IsEditListItemAllowed(SWS_ListItem* _item, int _iCol) {
 	WDL_FastString* cmd = (WDL_FastString*)_item;
 	return (cmd && _iCol == COL_R_CMD && cmd != &s_EMPTY_R && cmd != &s_DEFAULT_R);
 }
 
-void SNM_CommandsView::GetItemList(SWS_ListItemList* pList)
+void CommandsView::GetItemList(SWS_ListItemList* pList)
 {
 	if (g_editedAction)
 	{
@@ -1643,7 +1643,7 @@ void SNM_CommandsView::GetItemList(SWS_ListItemList* pList)
 }
 
 // "disable" sort
-int SNM_CommandsView::OnItemSort(SWS_ListItem* _item1, SWS_ListItem* _item2) 
+int CommandsView::OnItemSort(SWS_ListItem* _item1, SWS_ListItem* _item2) 
 {
 	if (g_editedAction)
 	{
@@ -1658,12 +1658,12 @@ int SNM_CommandsView::OnItemSort(SWS_ListItem* _item1, SWS_ListItem* _item2)
 	return 0;
 }
 
-void SNM_CommandsView::OnBeginDrag(SWS_ListItem* item) {
+void CommandsView::OnBeginDrag(SWS_ListItem* item) {
 	AllEditListItemEnd(true);
 	SetCapture(GetParent(m_hwndList));
 }
 
-void SNM_CommandsView::OnDrag()
+void CommandsView::OnDrag()
 {
 	if (g_editedAction)
 	{
@@ -1696,13 +1696,13 @@ void SNM_CommandsView::OnDrag()
 	}
 }
 
-void SNM_CommandsView::OnItemSelChanged(SWS_ListItem* item, int iState) {
+void CommandsView::OnItemSelChanged(SWS_ListItem* item, int iState) {
 	AllEditListItemEnd(true);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// SNM_CyclactionWnd
+// CyclactionWnd
 ///////////////////////////////////////////////////////////////////////////////
 
 enum
@@ -1721,7 +1721,7 @@ enum
 
 // S&M windows lazy init: below's "" prevents registering the SWS' screenset callback
 // (use the S&M one instead - already registered via SNM_WindowManager::Init())
-SNM_CyclactionWnd::SNM_CyclactionWnd()
+CyclactionWnd::CyclactionWnd()
 	: SWS_DockWnd(IDD_SNM_CYCLACTION, __LOCALIZE("Cycle Actions","sws_DLG_161"), "", SWSGetCommandID(OpenCyclaction))
 {
 	m_id.Set(CA_WND_ID);
@@ -1730,7 +1730,7 @@ SNM_CyclactionWnd::SNM_CyclactionWnd()
 	Init();
 }
 
-void SNM_CyclactionWnd::Update(bool _updateListViews)
+void CyclactionWnd::Update(bool _updateListViews)
 {
 	if (_updateListViews)
 		for (int i=0; i < m_pLists.GetSize(); i++)
@@ -1738,12 +1738,12 @@ void SNM_CyclactionWnd::Update(bool _updateListViews)
 	m_parentVwnd.RequestRedraw(NULL);
 }
 
-void SNM_CyclactionWnd::OnInitDlg()
+void CyclactionWnd::OnInitDlg()
 {
-	g_lvL = new SNM_CyclactionsView(GetDlgItem(m_hwnd, IDC_LIST1), GetDlgItem(m_hwnd, IDC_EDIT));
+	g_lvL = new CyclactionsView(GetDlgItem(m_hwnd, IDC_LIST1), GetDlgItem(m_hwnd, IDC_EDIT));
 	m_pLists.Add(g_lvL);
 
-	g_lvR = new SNM_CommandsView(GetDlgItem(m_hwnd, IDC_LIST2), GetDlgItem(m_hwnd, IDC_EDIT));
+	g_lvR = new CommandsView(GetDlgItem(m_hwnd, IDC_LIST2), GetDlgItem(m_hwnd, IDC_EDIT));
 	m_pLists.Add(g_lvR);
 
 	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_FILTER), GWLP_USERDATA, 0xdeadf00b);
@@ -1806,7 +1806,7 @@ void SNM_CyclactionWnd::OnInitDlg()
 */
 }
 
-void SNM_CyclactionWnd::OnDestroy() 
+void CyclactionWnd::OnDestroy() 
 {
 /*no! would be triggered on dock/undock..
 	Cancel(true);
@@ -1815,7 +1815,7 @@ void SNM_CyclactionWnd::OnDestroy()
 	m_tinyLRbtns.RemoveAllChildren(false);
 }
 
-void SNM_CyclactionWnd::OnResize() 
+void CyclactionWnd::OnResize() 
 {
 	if (g_lvState != g_lvLastState)
 	{
@@ -1875,7 +1875,7 @@ void AddOrInsertCommand(const char* _cmd, int _flags = 0)
 		if (_flags&2)
 		{
 			g_lvR->EditListItem((SWS_ListItem*)newCmd, COL_R_CMD);
-			if (SNM_CyclactionWnd* w = g_caWndMgr.Get())
+			if (CyclactionWnd* w = g_caWndMgr.Get())
 			{
 				HWND h = GetDlgItem(w->GetHWND(), IDC_EDIT);
 				SetFocus(h);
@@ -1885,7 +1885,7 @@ void AddOrInsertCommand(const char* _cmd, int _flags = 0)
 	}
 }
 
-void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
+void CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 {
 	KbdSectionInfo* kbdSec = SNM_GetActionSection(g_editedSection);
 	if (!kbdSec) return;
@@ -2183,7 +2183,7 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 	}
 }
 
-void SNM_CyclactionWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight)
+void CyclactionWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight)
 {
 	// 1st row of controls, left
 	int x0 = _r->left + SNM_GUI_X_MARGIN_OLD;
@@ -2254,7 +2254,7 @@ void SNM_CyclactionWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _to
 	m_tinyLRbtns.SetVisible(true);
 }
 
-void SNM_CyclactionWnd::AddImportExportMenu(HMENU _menu, bool _wantReset)
+void CyclactionWnd::AddImportExportMenu(HMENU _menu, bool _wantReset)
 {
 	char buf[128] = "";
 	_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Import in section '%s'...","sws_DLG_161"), SNM_GetActionSectionName(g_editedSection));
@@ -2271,7 +2271,7 @@ void SNM_CyclactionWnd::AddImportExportMenu(HMENU _menu, bool _wantReset)
 	}
 }
 
-void SNM_CyclactionWnd::AddResetMenu(HMENU _menu)
+void CyclactionWnd::AddResetMenu(HMENU _menu)
 {
 	char buf[128] = "";
 	_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Reset section '%s'...","sws_DLG_161"), SNM_GetActionSectionName(g_editedSection));
@@ -2279,7 +2279,7 @@ void SNM_CyclactionWnd::AddResetMenu(HMENU _menu)
 	AddToMenu(_menu, __LOCALIZE("Reset all sections","sws_DLG_161"), RESET_ALL_SECTIONS_MSG);
 }
 
-HMENU SNM_CyclactionWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
+HMENU CyclactionWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 {
 	HMENU hMenu = CreatePopupMenu();
 
@@ -2365,45 +2365,61 @@ HMENU SNM_CyclactionWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 	return hMenu;
 }
 
-int SNM_CyclactionWnd::OnKey(MSG* _msg, int _iKeyState) 
+int CyclactionWnd::OnKey(MSG* _msg, int _iKeyState) 
 {
-	if (_msg->message == WM_KEYDOWN && !_iKeyState)
+	if (_msg->message == WM_KEYDOWN)
 	{
 		if (HWND h = GetFocus())
 		{
 			int focusedList = -1;
-			if (h == g_lvL->GetHWND() && IsWindowVisible(g_lvL->GetHWND())) focusedList = 0;
-			else if (h == g_lvR->GetHWND() && IsWindowVisible(g_lvR->GetHWND())) focusedList = 1;
-			else return 0;
+			if (h == g_lvL->GetHWND() && IsWindowVisible(g_lvL->GetHWND()))
+				focusedList = 0;
+			else if (h == g_lvR->GetHWND() && IsWindowVisible(g_lvR->GetHWND()))
+				focusedList = 1;
+			else
+				return 0;
 
-			switch(_msg->wParam)
+			if (!_iKeyState)
 			{
-				case VK_F2:	{
-					int x=0;
-					if (focusedList<m_pLists.GetSize()) {
-						if (SWS_ListItem* item = GetListView(focusedList)->EnumSelected(&x)) {
-							GetListView(focusedList)->EditListItem(item, !focusedList ? COL_L_NAME : COL_R_CMD);
+				switch(_msg->wParam)
+				{
+					case VK_F2:
+					{
+						int x=0;
+						if (focusedList<m_pLists.GetSize())
+						{
+							if (SWS_ListItem* item = GetListView(focusedList)->EnumSelected(&x)) {
+								GetListView(focusedList)->EditListItem(item, !focusedList ? COL_L_NAME : COL_R_CMD);
+								return 1;
+							}
+						}
+						break;
+					}
+					case VK_DELETE:
+						OnCommand(!focusedList ? DEL_CYCLACTION_MSG : DEL_CMD_MSG, 0);
+						return 1;
+					case VK_RETURN:
+						if (!focusedList) {
+							OnCommand(RUN_CYCLACTION_MSG, 0);
 							return 1;
 						}
-					}
-					break;
+						break;
 				}
-				case VK_DELETE:
-					OnCommand(!focusedList ? DEL_CYCLACTION_MSG : DEL_CMD_MSG, 0);
-					return 1;
-				case VK_RETURN:
-					if (!focusedList) {
-						OnCommand(RUN_CYCLACTION_MSG, 0);
-						return 1;
-					}
-					break;
+			}
+			else if (_iKeyState==LVKF_CONTROL && focusedList)
+			{
+				switch(_msg->wParam) {
+					case 'X': OnCommand(CUT_CMD_MSG, 0);	return 1;
+					case 'C': OnCommand(COPY_CMD_MSG, 0);	return 1;
+					case 'V': OnCommand(PASTE_CMD_MSG, 0);	return 1;
+				}
 			}
 		}
 	}
 	return 0;
 }
 
-void SNM_CyclactionWnd::UpdateSection(int _newSection)
+void CyclactionWnd::UpdateSection(int _newSection)
 {
 	if (_newSection != g_editedSection)
 	{
@@ -2528,7 +2544,7 @@ void CyclactionExit() {
 
 void OpenCyclaction(COMMAND_T* _ct)
 {
-	if (SNM_CyclactionWnd* w = g_caWndMgr.Create()) {
+	if (CyclactionWnd* w = g_caWndMgr.Create()) {
 		w->Show((g_editedSection == (int)_ct->user) /* i.e toggle */, true);
 		w->SetType((int)_ct->user);
 	}
@@ -2536,7 +2552,7 @@ void OpenCyclaction(COMMAND_T* _ct)
 
 int IsCyclactionDisplayed(COMMAND_T*)
 {
-	if (SNM_CyclactionWnd* w = g_caWndMgr.Get())
+	if (CyclactionWnd* w = g_caWndMgr.Get())
 		return w->IsValidWindow();
 	return 0;
 }

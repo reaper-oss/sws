@@ -35,7 +35,7 @@ const char* GetFileRelativePath(const char* _fn);
 const char* GetFileExtension(const char* _fn);
 void GetFilenameNoExt(const char* _fullFn, char* _fn, int _fnSz);
 const char* GetFilenameWithExt(const char* _fullFn);
-void Filenamize(char* _fnInOut, int _fnInOutSz);
+bool Filenamize(char* _fnInOut, bool _checkOnly = false);
 bool IsValidFilenameErrMsg(const char* _fn, bool _errMsg);
 bool FileOrDirExists(const char* _fn);
 bool FileOrDirExistsErrMsg(const char* _fn, bool _errMsg = true);

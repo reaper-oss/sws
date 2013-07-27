@@ -206,7 +206,7 @@ bool AutoSaveProjectSlot(int _slotType, const char* _dirPath, WDL_PtrList<void>*
 		Main_OnCommand(40026,0);
 	char prjFn[SNM_MAX_PATH] = "";
 	EnumProjects(-1, prjFn, sizeof(prjFn));
-	return AutoSaveSlot(_slotType, _dirPath, prjFn, "RPP", (WDL_PtrList<PathSlotItem>*)_owSlots, &owIdx);
+	return AutoSaveSlot(_slotType, _dirPath, prjFn, "RPP", (WDL_PtrList<ResourceItem>*)_owSlots, &owIdx);
 }
 
 void LoadOrSelectProjectSlot(COMMAND_T* _ct) {

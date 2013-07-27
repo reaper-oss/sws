@@ -41,19 +41,19 @@ public:
 };
 
 // no other attributes (like a comment) because of the "auto-compacting" feature..
-class SNM_PlaylistItem {
+class RgnPlaylistItem {
 public:
-	SNM_PlaylistItem(int _rgnId=-1, int _cnt=1) : m_rgnId(_rgnId),m_cnt(_cnt) {}
+	RgnPlaylistItem(int _rgnId=-1, int _cnt=1) : m_rgnId(_rgnId),m_cnt(_cnt) {}
 	bool IsValidIem() { return (m_rgnId>0 && m_cnt!=0 && GetMarkerRegionIndexFromId(NULL, m_rgnId)>=0); }
 	double GetPos() { if (m_rgnId>0) { double pos; if (EnumMarkerRegionById(NULL, m_rgnId, NULL, &pos, NULL, NULL, NULL, NULL)) return pos; } return 0.0; }
 	int m_rgnId, m_cnt;
 };
 
-class SNM_Playlist : public WDL_PtrList<SNM_PlaylistItem> {
+class RegionPlaylist : public WDL_PtrList<RgnPlaylistItem> {
 public:
-	SNM_Playlist(SNM_Playlist* _pl = NULL, const char* _name = NULL);
-	SNM_Playlist(const char* _name) : m_name(_name), WDL_PtrList<SNM_PlaylistItem>() {}
-	~SNM_Playlist() {}
+	RegionPlaylist(RegionPlaylist* _pl = NULL, const char* _name = NULL);
+	RegionPlaylist(const char* _name) : m_name(_name), WDL_PtrList<RgnPlaylistItem>() {}
+	~RegionPlaylist() {}
 	bool IsValidIem(int _i);
 	int IsInPlaylist(double _pos, bool _repeat, int _startWith);
 	int IsInfinite();
@@ -63,17 +63,17 @@ public:
 	WDL_FastString m_name;
 };
 
-class SNM_Playlists : public WDL_PtrList<SNM_Playlist>
+class RegionPlaylists : public WDL_PtrList<RegionPlaylist>
 {
 public:
-	SNM_Playlists() : m_editId(0), WDL_PtrList<SNM_Playlist>() {}
-	~SNM_Playlists() {}
+	RegionPlaylists() : m_editId(0), WDL_PtrList<RegionPlaylist>() {}
+	~RegionPlaylists() {}
 	int m_editId; // edited playlist id
 };
 
-class SNM_PlaylistView : public SWS_ListView {
+class RegionPlaylistView : public SWS_ListView {
 public:
-	SNM_PlaylistView(HWND hwndList, HWND hwndEdit);
+	RegionPlaylistView(HWND hwndList, HWND hwndEdit);
 	void Update();
 	void UpdateCompact();
 protected:
@@ -86,14 +86,14 @@ protected:
 	void OnBeginDrag(SWS_ListItem* item);
 	void OnDrag();
 	void OnEndDrag();
-	WDL_PtrList<SNM_PlaylistItem> m_draggedItems;
+	WDL_PtrList<RgnPlaylistItem> m_draggedItems;
 };
 
-class SNM_RegionPlaylistWnd : public SWS_DockWnd
+class RegionPlaylistWnd : public SWS_DockWnd
 {
 public:
-	SNM_RegionPlaylistWnd();
-	~SNM_RegionPlaylistWnd() {}
+	RegionPlaylistWnd();
+	~RegionPlaylistWnd() {}
 	void GetMinSize(int* _w, int* _h) { *_w=202; *_h=100; }
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 	void Update(int _flags = 0, WDL_FastString* _curNum=NULL, WDL_FastString* _cur=NULL, WDL_FastString* _nextNum=NULL, WDL_FastString* _next=NULL);
@@ -143,7 +143,7 @@ void PlaylistResync();
 void SetPlaylistRepeat(COMMAND_T*);
 int IsPlaylistRepeat(COMMAND_T*);
 
-void AppendPasteCropPlaylist(SNM_Playlist* _playlist, int _mode);
+void AppendPasteCropPlaylist(RegionPlaylist* _playlist, int _mode);
 void AppendPasteCropPlaylist(COMMAND_T*);
 
 void RegionPlaylistSetTrackListChange();

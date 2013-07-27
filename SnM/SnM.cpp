@@ -947,8 +947,7 @@ SNM_MidiActionJob::SNM_MidiActionJob(int _jobId, int _approxDelayMs, int _curCC,
 ///////////////////////////////////////////////////////////////////////////////
 
 WDL_FastString g_SNM_IniFn, g_SNM_CyclIniFn, g_SNM_DiffToolFn;
-int g_SNM_IniVersion = 0;
-int g_SNM_Beta = 0;
+int g_SNM_IniVersion=0, g_SNM_Beta=0;
 
 void IniFileInit()
 {
@@ -1031,6 +1030,7 @@ int SNM_Init(reaper_plugin_info_t* _rec)
 	if (!plugin_register("hookcustommenu", (void*)SNM_Menuhook))
 		return 0;
 #endif
+
 	// actions must be registered before views and cycle actions
 	if (!SWSRegisterCommands(s_cmdTable) || 
 		!RegisterDynamicActions(s_dynCmdTable, g_SNM_IniFn.Get()) ||
@@ -1038,6 +1038,9 @@ int SNM_Init(reaper_plugin_info_t* _rec)
 	{
 		return 0;
 	}
+	// init exlusive toggle actions
+	if (COMMAND_T* ct = SWSGetCommandByID(SWSGetCommandID(ExclusiveToggle, 0)))
+		ct->fakeToggle = true;
 
 	SNM_UIInit();
 	CueBussInit();
@@ -1049,10 +1052,6 @@ int SNM_Init(reaper_plugin_info_t* _rec)
 	RegionPlaylistInit();
 	ReaProjectInit();
 	CyclactionInit(); // keep it as the last one!
-
-	// init exlusive toggle actions
-	if (COMMAND_T* ct = SWSGetCommandByID(SWSGetCommandID(ExclusiveToggle, 0)))
-		ct->fakeToggle = true;
 
 	return 1;
 }

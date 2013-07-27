@@ -63,8 +63,6 @@ bool IsChildOf(HWND _hChild, const char* _title)
 	return false;
 }
 
-
-/////////////////////////////////////// WIN ///////////////////////////////////
 #ifdef _WIN32
 
 BOOL CALLBACK EnumReaWindows(HWND _hwnd, LPARAM _lParam)
@@ -128,7 +126,7 @@ HWND GetReaChildWindowByTitle(HWND _parent, const char* _title)
 }
 
 // note: _title must be localized
-HWND GetReaWindowByTitle(const char* _title)
+HWND GetReaHwndByTitle(const char* _title)
 {
 	// docked in main window?
 	HWND w = GetReaChildWindowByTitle(GetMainHwnd(), _title);
@@ -163,11 +161,10 @@ HWND GetReaWindowByTitle(const char* _title)
 	return NULL;
 }
 
-/////////////////////////////////////// OSX ///////////////////////////////////
 #else
 
 // note: _title and _dockerName must be localized
-HWND GetReaWindowByTitleInFloatingDocker(const char* _title, const char* _dockerName)
+HWND GetReaHwndByTitleInFloatingDocker(const char* _title, const char* _dockerName)
 {
 	HWND hdock = FindWindowEx(NULL, NULL, NULL, _dockerName);
 	while(hdock)
@@ -184,7 +181,7 @@ HWND GetReaWindowByTitleInFloatingDocker(const char* _title, const char* _docker
 
 // note: _title must be localized
 // note: almost works on win + osx (since wdl 7cf02d) but utf8 issue on win
-HWND GetReaWindowByTitle(const char* _title)
+HWND GetReaHwndByTitle(const char* _title)
 {
 	// in a floating window?
 	HWND w = FindWindowEx(NULL, NULL, NULL, _title);
@@ -197,13 +194,13 @@ HWND GetReaWindowByTitle(const char* _title)
 		hdock = FindWindowEx(GetMainHwnd(), hdock, NULL, "REAPER_dock");
 	}
 	// in a floating docker (w/ other hwnds)?
-	if (w = GetReaWindowByTitleInFloatingDocker(_title, __localizeFunc("Docker", "docker", 0)))
+	if (w = GetReaHwndByTitleInFloatingDocker(_title, __localizeFunc("Docker", "docker", 0)))
 		return w;
 	// in a floating docker (w/o other hwnds)?
 	{
 		char dockerName[256]="";
 		if (_snprintfStrict(dockerName, sizeof(dockerName), "%s%s", _title, __localizeFunc(" (docked)", "docker", 0)) > 0)
-			if (w = GetReaWindowByTitleInFloatingDocker(_title, dockerName))
+			if (w = GetReaHwndByTitleInFloatingDocker(_title, dockerName))
 				return w;
 	}
 	return NULL;
@@ -237,14 +234,13 @@ void GetVisibleTCPTracks(WDL_PtrList<void>* _trList)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Global focus actions
+// Global focus actions (mostly Win-only)
 ///////////////////////////////////////////////////////////////////////////////
 
 void FocusMainWindow(COMMAND_T* _ct) {
 	SetForegroundWindow(GetMainHwnd());
 }
 
-/////////////////////////////////////// WIN ///////////////////////////////////
 #ifdef _WIN32
 
 void CycleFocusWnd(COMMAND_T * _ct)
@@ -393,11 +389,11 @@ void ShowThemeHelper(COMMAND_T* _ct)
 	if ((int)_ct->user != 1 && report.GetLength())
 		report.Append("\n");
 
-	HWND w = GetReaWindowByTitle(__localizeFunc("Mixer Master", "mixer", 0));
+	HWND w = GetReaHwndByTitle(__localizeFunc("Mixer Master", "mixer", 0));
 	if (w && IsWindowVisible(w)) 
 		ShowThemeHelper(&report, w, true, (int)_ct->user == 1);
 
-	w = GetReaWindowByTitle(__localizeFunc("Mixer", "DLG_151", 0));
+	w = GetReaHwndByTitle(__localizeFunc("Mixer", "DLG_151", 0));
 	if (w && IsWindowVisible(w)) 
 		ShowThemeHelper(&report, w, true, (int)_ct->user == 1);
 
@@ -406,12 +402,15 @@ void ShowThemeHelper(COMMAND_T* _ct)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Action list actions/helpers
+// Action list hacks
+// Everything here could be cleaned up thanks to schwa's suggestion here:
+// http://forum.cockos.com/showpost.php?p=1144769&postcount=7
+// .. unfortunately, it remained a suggestion, my fault?
 ///////////////////////////////////////////////////////////////////////////////
 
 HWND GetActionListBox(char* _currentSection, int _sectionSz)
 {
-	HWND actionsWnd = GetReaWindowByTitle(__localizeFunc("Actions", "DLG_274", 0));
+	HWND actionsWnd = GetReaHwndByTitle(__localizeFunc("Actions", "DLG_274", 0));
 	if (actionsWnd && _currentSection)
 		if (HWND cbSection = GetDlgItem(actionsWnd, 0x525))
 			GetWindowText(cbSection, _currentSection, _sectionSz);
@@ -526,16 +525,15 @@ bool GetSelectedAction(char* _idstrOut, int _idStrSz, KbdSectionInfo* _expectedS
 	return true;
 }
 
-
-//JFB!!!TODO: cleanup thanks to new APIs..
-// dump actions or the wiki ALR summary for the current section *as displayed* in the action dlg 
+//JFB!!! TODO: cleanup thanks to new APIs, e.g. SectionFromUniqueID()
+// dump actions or the wiki ALR summary for the current section *as displayed* in the action dlg
 // API LIMITATION: the action dlg is hacked because only the main section could be dumped othewise..
 // See http://forum.cockos.com/showthread.php?t=61929 and http://wiki.cockos.com/wiki/index.php/Action_List_Reference
 // _type: 1 & 2 for ALR wiki (1=native actions, 2=SWS)
 // _type: 3, 4 & 5 for basic dump (3=native actions, 4=SWS, 5=user macros)
 bool DumpActionList(int _type, const char* _title, const char* _lineFormat, const char* _heading, const char* _ending)
 {
-	// keep the help text on a signle line (for the gen langpack tool..)
+	// keep the help text on a signle line (for the langpack gen tool..)
 	const char* help = __LOCALIZE("Note: this action needs the action window to be opened (with the section you want to dump).\nIt obeys the action list filter, so to get the full list you need a clear filter.\nExample: to dump a MIDI editor action list the easiest way is to assign a keyboard shortcut or\ntoolbar button, open the MIDI editor section of the action list and fire the shortcut/dump action.","sws_mbox");
 	char currentSection[SNM_MAX_SECTION_NAME_LEN] = "";
 	HWND hList = GetActionListBox(currentSection, SNM_MAX_SECTION_NAME_LEN);
@@ -654,7 +652,7 @@ void DumpActionList(COMMAND_T* _ct)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Track FX chain windows: show/hide
-// note: Cockos' TrackFX_GetChainVisible() and GetSelectedTrackFX() are not the
+// note: Cockos' TrackFX_GetChainVisible() and my GetSelectedTrackFX() are not
 // exactly the same. Here, TrackFX_GetChainVisible() is used to get a selected 
 // FX in a -visible- chain, GetSelectedTrackFX() will always return one.
 ///////////////////////////////////////////////////////////////////////////////

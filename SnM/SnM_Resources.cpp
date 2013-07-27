@@ -191,7 +191,7 @@ enum {
 };
 
 
-SNM_WindowManager<SNM_ResourceWnd> g_resWndMgr(RES_WND_ID);
+SNM_WindowManager<ResourcesWnd> g_resWndMgr(RES_WND_ID);
 
 // JFB important notes:
 // all WDL_PtrList global vars used to be WDL_PtrList_DeleteOnDestroy ones but
@@ -201,8 +201,8 @@ SNM_WindowManager<SNM_ResourceWnd> g_resWndMgr(RES_WND_ID);
 // anyway, no prob here because application exit will destroy the entire runtime 
 // context regardless.
 
-WDL_PtrList<PathSlotItem> g_dragPathSlotItems; 
-WDL_PtrList<FileSlotList> g_SNM_ResSlots;
+WDL_PtrList<ResourceItem> g_dragResourceItems; 
+WDL_PtrList<ResourceList> g_SNM_ResSlots;
 
 // prefs
 int g_resType = -1; // current type (user selection)
@@ -311,7 +311,7 @@ void TieResFileToProject(const char* _fn, int _bookmarkType, bool _checkDup = fa
 		return;
 
 	if (_bookmarkType>=SNM_NUM_DEFAULT_SLOTS && g_tiedProjects.Get(_bookmarkType)->GetLength())
-		if (FileSlotList* fl = g_SNM_ResSlots.Get(_bookmarkType))
+		if (ResourceList* fl = g_SNM_ResSlots.Get(_bookmarkType))
 			if (!_checkDup || (_checkDup && fl->FindByPath(_fn)<0))
 			{
 				int i=0;
@@ -335,7 +335,7 @@ void UntieResFileFromProject(const char* _fn, int _bookmarkType, bool _checkDup 
 		return;
 
 	if (_bookmarkType>=SNM_NUM_DEFAULT_SLOTS && g_tiedProjects.Get(_bookmarkType)->GetLength())
-		if (FileSlotList* fl = g_SNM_ResSlots.Get(_bookmarkType))
+		if (ResourceList* fl = g_SNM_ResSlots.Get(_bookmarkType))
 			if (!_checkDup || (_checkDup && fl->FindByPath(_fn)<0))
 				TieResFileToProject(_fn, _bookmarkType, false, false);
 }
@@ -372,11 +372,11 @@ void UntieAllResFileFromProject(ReaProject* _prj, const char* _prjPath, int _typ
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// FileSlotList
+// ResourceList
 ///////////////////////////////////////////////////////////////////////////////
 
-FileSlotList::FileSlotList(const char* _resDir, const char* _desc, const char* _ext, int _flags)
-	: m_desc(_desc), m_ext(_ext), m_flags(_flags), WDL_PtrList<PathSlotItem>()
+ResourceList::ResourceList(const char* _resDir, const char* _desc, const char* _ext, int _flags)
+	: m_desc(_desc), m_ext(_ext), m_flags(_flags), WDL_PtrList<ResourceItem>()
 {
 	char tmp[512]="";
 
@@ -422,27 +422,27 @@ FileSlotList::FileSlotList(const char* _resDir, const char* _desc, const char* _
 }
 
 // _path: short resource path or full path
-PathSlotItem* FileSlotList::AddSlot(const char* _path, const char* _desc)
+ResourceItem* ResourceList::AddSlot(const char* _path, const char* _desc)
 {
 	char shortPath[SNM_MAX_PATH] = "";
 	GetShortResourcePath(m_resDir.Get(), _path, shortPath, sizeof(shortPath));
-	return Add(new PathSlotItem(shortPath, _desc));
+	return Add(new ResourceItem(shortPath, _desc));
 }
 
 // _path: short resource path or full path
-PathSlotItem* FileSlotList::InsertSlot(int _slot, const char* _path, const char* _desc)
+ResourceItem* ResourceList::InsertSlot(int _slot, const char* _path, const char* _desc)
 {
-	PathSlotItem* item = NULL;
+	ResourceItem* item = NULL;
 	char shortPath[SNM_MAX_PATH] = "";
 	GetShortResourcePath(m_resDir.Get(), _path, shortPath, sizeof(shortPath));
 	if (_slot >=0 && _slot < GetSize())
-		item = Insert(_slot, new PathSlotItem(shortPath, _desc));
+		item = Insert(_slot, new ResourceItem(shortPath, _desc));
 	else
-		item = Add(new PathSlotItem(shortPath, _desc));
+		item = Add(new ResourceItem(shortPath, _desc));
 	return item;
 }
 
-int FileSlotList::FindByPath(const char* _fullPath)
+int ResourceList::FindByPath(const char* _fullPath)
 {
 	char fullpath[SNM_MAX_PATH];
 	if (_fullPath)
@@ -453,18 +453,18 @@ int FileSlotList::FindByPath(const char* _fullPath)
 	return -1;
 }
 
-bool FileSlotList::GetFullPath(int _slot, char* _fullFn, int _fullFnSz)
+bool ResourceList::GetFullPath(int _slot, char* _fullFn, int _fullFnSz)
 {
-	if (PathSlotItem* item = Get(_slot)) {
+	if (ResourceItem* item = Get(_slot)) {
 		GetFullResourcePath(m_resDir.Get(), item->m_shortPath.Get(), _fullFn, _fullFnSz);
 		return true;
 	}
 	return false;
 }
 
-bool FileSlotList::SetFromFullPath(int _slot, const char* _fullPath)
+bool ResourceList::SetFromFullPath(int _slot, const char* _fullPath)
 {
-	if (PathSlotItem* item = Get(_slot))
+	if (ResourceItem* item = Get(_slot))
 	{
 		char shortPath[SNM_MAX_PATH] = "";
 		GetShortResourcePath(m_resDir.Get(), _fullPath, shortPath, sizeof(shortPath));
@@ -474,7 +474,7 @@ bool FileSlotList::SetFromFullPath(int _slot, const char* _fullPath)
 	return false;
 }
 
-bool FileSlotList::IsValidFileExt(const char* _ext)
+bool ResourceList::IsValidFileExt(const char* _ext)
 {
 	if (_ext && *_ext && m_exts.GetSize())
 	{
@@ -496,7 +496,7 @@ bool FileSlotList::IsValidFileExt(const char* _ext)
 	return false;
 }
 
-void FileSlotList::GetFileFilter(char* _filter, size_t _filterSz, bool _dblNull)
+void ResourceList::GetFileFilter(char* _filter, size_t _filterSz, bool _dblNull)
 {
 	if (_filter)
 	{
@@ -571,7 +571,7 @@ void FileSlotList::GetFileFilter(char* _filter, size_t _filterSz, bool _dblNull)
 	}
 }
 
-bool FileSlotList::ClearSlot(int _slot)
+bool ResourceList::ClearSlot(int _slot)
 {
 	if (_slot>=0 && _slot<GetSize()) {
 		Get(_slot)->Clear();
@@ -582,28 +582,28 @@ bool FileSlotList::ClearSlot(int _slot)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// SNM_ResourceView
+// ResourcesView
 ///////////////////////////////////////////////////////////////////////////////
 
 // !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_150
 static SWS_LVColumn s_resListCols[] = { {65,2,"Slot"}, {100,1,"Name"}, {250,2,"Path"}, {200,1,"Comment"} };
 // !WANT_LOCALIZE_STRINGS_END
 
-SNM_ResourceView::SNM_ResourceView(HWND hwndList, HWND hwndEdit)
+ResourcesView::ResourcesView(HWND hwndList, HWND hwndEdit)
 	: SWS_ListView(hwndList, hwndEdit, COL_COUNT, s_resListCols, "ResourcesViewState", false, "sws_DLG_150")
 {
 }
 
-void SNM_ResourceView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax)
+void ResourcesView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax)
 {
 	if (str) *str = '\0';
-	if (PathSlotItem* pItem = (PathSlotItem*)item)
+	if (ResourceItem* pItem = (ResourceItem*)item)
 	{
 		switch (iCol)
 		{
 			case COL_SLOT:
 			{
-				FileSlotList* fl = g_SNM_ResSlots.Get(g_resType);
+				ResourceList* fl = g_SNM_ResSlots.Get(g_resType);
 				int slot = fl ? fl->Find(pItem) : -1;
 				if (slot >= 0)
 				{
@@ -630,13 +630,13 @@ void SNM_ResourceView::GetItemText(SWS_ListItem* item, int iCol, char* str, int 
 	}
 }
 
-bool SNM_ResourceView::IsEditListItemAllowed(SWS_ListItem* item, int iCol)
+bool ResourcesView::IsEditListItemAllowed(SWS_ListItem* item, int iCol)
 {
-	if (PathSlotItem* pItem = (PathSlotItem*)item)
+	if (ResourceItem* pItem = (ResourceItem*)item)
 	{
 		if (!pItem->IsDefault())
 		{
-			FileSlotList* fl = g_SNM_ResSlots.Get(g_resType);
+			ResourceList* fl = g_SNM_ResSlots.Get(g_resType);
 			int slot = fl ? fl->Find(pItem) : -1;
 			if (slot>=0)
 			{
@@ -654,10 +654,10 @@ bool SNM_ResourceView::IsEditListItemAllowed(SWS_ListItem* item, int iCol)
 	return false;
 }
 
-void SNM_ResourceView::SetItemText(SWS_ListItem* item, int iCol, const char* str)
+void ResourcesView::SetItemText(SWS_ListItem* item, int iCol, const char* str)
 {
-	PathSlotItem* pItem = (PathSlotItem*)item;
-	FileSlotList* fl = g_SNM_ResSlots.Get(g_resType);
+	ResourceItem* pItem = (ResourceItem*)item;
+	ResourceList* fl = g_SNM_ResSlots.Get(g_resType);
 	int slot = fl ? fl->Find(pItem) : -1;
 	if (pItem && slot>=0)
 	{
@@ -718,13 +718,13 @@ void SNM_ResourceView::SetItemText(SWS_ListItem* item, int iCol, const char* str
 	}
 }
 
-void SNM_ResourceView::OnItemDblClk(SWS_ListItem* item, int iCol) {
+void ResourcesView::OnItemDblClk(SWS_ListItem* item, int iCol) {
 	Perform();
 }
 
-void SNM_ResourceView::GetItemList(SWS_ListItemList* pList)
+void ResourcesView::GetItemList(SWS_ListItemList* pList)
 {
-	FileSlotList* fl = g_SNM_ResSlots.Get(g_resType);
+	ResourceList* fl = g_SNM_ResSlots.Get(g_resType);
 	if (!fl)
 		return;
 
@@ -736,7 +736,7 @@ void SNM_ResourceView::GetItemList(SWS_ListItemList* pList)
 		{
 			for (int i=0; i < fl->GetSize(); i++)
 			{
-				if (PathSlotItem* item = fl->Get(i))
+				if (ResourceItem* item = fl->Get(i))
 				{
 					bool match = false;
 					for (int j=0; !match && j < lp.getnumtokens(); j++)
@@ -770,19 +770,19 @@ void SNM_ResourceView::GetItemList(SWS_ListItemList* pList)
 	}
 }
 
-void SNM_ResourceView::OnBeginDrag(SWS_ListItem* _item)
+void ResourcesView::OnBeginDrag(SWS_ListItem* _item)
 {
 #ifdef _WIN32
-	FileSlotList* fl = g_SNM_ResSlots.Get(g_resType);
+	ResourceList* fl = g_SNM_ResSlots.Get(g_resType);
 	if (!fl)
 		return;
 
-	g_dragPathSlotItems.Empty(false);
+	g_dragResourceItems.Empty(false);
 
 	// store dragged items (for internal drag-drop) + full paths + get the amount of memory needed
 	int iMemNeeded = 0, x=0;
 	WDL_PtrList_DeleteOnDestroy<WDL_FastString> fullPaths;
-	while (PathSlotItem* pItem = (PathSlotItem*)EnumSelected(&x))
+	while (ResourceItem* pItem = (ResourceItem*)EnumSelected(&x))
 	{
 		int slot = fl->Find(pItem);
 		char fullPath[SNM_MAX_PATH] = "";
@@ -791,7 +791,7 @@ void SNM_ResourceView::OnBeginDrag(SWS_ListItem* _item)
 			bool empty = (pItem->IsDefault() || *fullPath == '\0');
 			iMemNeeded += (int)((empty ? strlen(DRAGDROP_EMPTY_SLOT) : strlen(fullPath)) + 1);
 			fullPaths.Add(new WDL_FastString(empty ? DRAGDROP_EMPTY_SLOT : fullPath));
-			g_dragPathSlotItems.Add(pItem);
+			g_dragResourceItems.Add(pItem);
 		}
 	}
 	if (!iMemNeeded)
@@ -832,10 +832,10 @@ void SNM_ResourceView::OnBeginDrag(SWS_ListItem* _item)
 #endif
 }
 
-void SNM_ResourceView::Perform()
+void ResourcesView::Perform()
 {
 	int x=0;
-	PathSlotItem* pItem = (PathSlotItem*)EnumSelected(&x);
+	ResourceItem* pItem = (ResourceItem*)EnumSelected(&x);
 	int slot = g_SNM_ResSlots.Get(g_resType)->Find(pItem);
 	if (pItem && slot >= 0) 
 	{
@@ -918,7 +918,10 @@ void SNM_ResourceView::Perform()
 				break;
 			default:
 				// works on OSX too
-				if (WDL_FastString* fnStr = GetOrPromptOrBrowseSlot(g_resType, &slot)) {
+				if (WDL_FastString* fnStr = GetOrPromptOrBrowseSlot(g_resType, &slot)) 
+				{
+					fnStr->Insert("\"", 0);
+					fnStr->Append("\"");
 					ShellExecute(GetMainHwnd(), "open", fnStr->Get(), NULL, NULL, SW_SHOWNORMAL);
 					delete fnStr;
 				}
@@ -932,12 +935,12 @@ void SNM_ResourceView::Perform()
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// SNM_ResourceWnd
+// ResourcesWnd
 ///////////////////////////////////////////////////////////////////////////////
 
 // S&M windows lazy init: below's "" prevents registering the SWS' screenset callback
 // (use the S&M one instead - already registered via SNM_WindowManager::Init())
-SNM_ResourceWnd::SNM_ResourceWnd()
+ResourcesWnd::ResourcesWnd()
 	: SWS_DockWnd(IDD_SNM_RESOURCES, __LOCALIZE("Resources","sws_DLG_150"), "", SWSGetCommandID(OpenResources))
 {
 	m_id.Set(RES_WND_ID);
@@ -945,7 +948,7 @@ SNM_ResourceWnd::SNM_ResourceWnd()
 	Init();
 }
 
-void SNM_ResourceWnd::OnInitDlg()
+void ResourcesWnd::OnInitDlg()
 {
 	m_resize.init_item(IDC_LIST, 0.0, 0.0, 1.0, 1.0);
 	m_resize.init_item(IDC_FILTER, 1.0, 1.0, 1.0, 1.0);
@@ -953,7 +956,7 @@ void SNM_ResourceWnd::OnInitDlg()
 	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_FILTER), GWLP_USERDATA, 0xdeadf00b);
 	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_EDIT), GWLP_USERDATA, 0xdeadf00b);
 
-	m_pLists.Add(new SNM_ResourceView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
+	m_pLists.Add(new ResourcesView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
 
 
 	LICE_CachedFont* font = SNM_GetThemeFont();
@@ -1014,7 +1017,7 @@ void SNM_ResourceWnd::OnInitDlg()
 */
 }
 
-void SNM_ResourceWnd::OnDestroy() 
+void ResourcesWnd::OnDestroy() 
 {
 	m_cbType.Empty();
 	m_cbDblClickType.Empty();
@@ -1022,7 +1025,7 @@ void SNM_ResourceWnd::OnDestroy()
 	m_btnsAddDel.RemoveAllChildren(false);
 }
 
-void SNM_ResourceWnd::SetType(int _type)
+void ResourcesWnd::SetType(int _type)
 {
 	int prevType = g_resType;
 	g_resType = _type;
@@ -1033,7 +1036,7 @@ void SNM_ResourceWnd::SetType(int _type)
 	}
 }
 
-int SNM_ResourceWnd::SetType(const char* _name)
+int ResourcesWnd::SetType(const char* _name)
 {
 	if (_name)
 		for (int i=0; i<m_cbType.GetCount(); i++)
@@ -1044,14 +1047,14 @@ int SNM_ResourceWnd::SetType(const char* _name)
 	return -1;
 }
 
-void SNM_ResourceWnd::Update()
+void ResourcesWnd::Update()
 {
 	if (m_pLists.GetSize())
 		GetListView()->Update();
 	m_parentVwnd.RequestRedraw(NULL);
 }
 
-void SNM_ResourceWnd::FillTypeCombo()
+void ResourcesWnd::FillTypeCombo()
 {
 	m_cbType.Empty();
 	for (int i=0; i < g_SNM_ResSlots.GetSize(); i++)
@@ -1063,7 +1066,7 @@ void SNM_ResourceWnd::FillTypeCombo()
 	m_cbType.SetCurSel((g_resType>0 && g_resType<g_SNM_ResSlots.GetSize()) ? g_resType : SNM_SLOT_FXC);
 }
 
-void SNM_ResourceWnd::FillDblClickCombos()
+void ResourcesWnd::FillDblClickCombos()
 {
 	int typeForUser = GetTypeForUser();
 	m_cbDblClickType.Empty();
@@ -1114,14 +1117,14 @@ void SNM_ResourceWnd::FillDblClickCombos()
 	m_cbDblClickTo.SetCurSel(HIWORD(g_dblClickPrefs[g_resType]));
 }
 
-void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
+void ResourcesWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 {
-	FileSlotList* fl = g_SNM_ResSlots.Get(g_resType);
+	ResourceList* fl = g_SNM_ResSlots.Get(g_resType);
 	if (!fl || !m_pLists.GetSize())
 		return;
 
 	int x=0;
-	PathSlotItem* item = (PathSlotItem*)GetListView()->EnumSelected(&x);
+	ResourceItem* item = (ResourceItem*)GetListView()->EnumSelected(&x);
 	int slot = fl->Find(item);
 
 	switch(LOWORD(wParam))
@@ -1182,10 +1185,13 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				{
 					if (fl->IsText())
 					{
-#ifdef _WIN32
-						ShellExecute(GetMainHwnd(), "", "notepad", fullPath, NULL, SW_SHOWNORMAL);
-#else
 						WDL_FastString syscmd;
+#ifdef _WIN32
+						// do not use ShellExecute's "edit" mode here as some file would be opened in
+						// REAPER instead of the default text editor (e.g. .RTrackTemplate files)
+						syscmd.SetFormatted(SNM_MAX_PATH, "\"%s\"", fullPath);
+						ShellExecute(GetMainHwnd(), "open", "notepad", syscmd.Get(), NULL, SW_SHOWNORMAL);
+#else
 						syscmd.SetFormatted(SNM_MAX_PATH, "open -t \"%s\"", fullPath);
 						system(syscmd.Get());
 #endif
@@ -1196,7 +1202,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 #ifdef _WIN32
 		case DIFF_MSG:
 		{
-			PathSlotItem* item2 = (PathSlotItem*)GetListView()->EnumSelected(&x);
+			ResourceItem* item2 = (ResourceItem*)GetListView()->EnumSelected(&x);
 			if (item && item2 && g_SNM_DiffToolFn.GetLength())
 			{
 				char fn1[SNM_MAX_PATH]="", fn2[SNM_MAX_PATH]="";
@@ -1469,7 +1475,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				slot = fl->Find(item);
 				if (slot>=0)
 					LoadOrSelectProjectSlot(g_resType, PRJ_SELECT_LOAD_TAB_STR, slot, true);
-				item = (PathSlotItem*)GetListView()->EnumSelected(&x);
+				item = (ResourceItem*)GetListView()->EnumSelected(&x);
 			}
 			Update();
 			break;
@@ -1515,7 +1521,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				slot = fl->Find(item)+1;
 				if (slot>max) max = slot;
 				if (slot<min) min = slot;
-				item = (PathSlotItem*)GetListView()->EnumSelected(&x);
+				item = (ResourceItem*)GetListView()->EnumSelected(&x);
 			}
 			if (max>min)
 			{
@@ -1538,7 +1544,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				slot = fl->Find(item);
 				if (slot>=0)
 					TogglePlaySelTrackMediaSlot(g_resType, MED_PLAYLOOP_STR, slot, false, LOWORD(wParam)==MED_LOOP_MSG);
-				item = (PathSlotItem*)GetListView()->EnumSelected(&x);
+				item = (ResourceItem*)GetListView()->EnumSelected(&x);
 			}
 			Update();
 			break;
@@ -1550,7 +1556,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				slot = fl->Find(item);
 				if (slot>=0)
 					InsertMediaSlot(g_resType, MED_ADD_STR, slot, LOWORD(wParam)==MED_ADD_CURTR_MSG ? 0 : LOWORD(wParam)==MED_ADD_NEWTR_MSG ? 1 : 3);
-				item = (PathSlotItem*)GetListView()->EnumSelected(&x);
+				item = (ResourceItem*)GetListView()->EnumSelected(&x);
 			}
 			Update();
 			break;
@@ -1607,7 +1613,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 	}
 }
 
-HMENU SNM_ResourceWnd::AutoSaveContextMenu(HMENU _menu, bool _saveItem)
+HMENU ResourcesWnd::AutoSaveContextMenu(HMENU _menu, bool _saveItem)
 {
 	int typeForUser = GetTypeForUser();
 	char autoPath[SNM_MAX_PATH] = "";
@@ -1651,7 +1657,7 @@ HMENU SNM_ResourceWnd::AutoSaveContextMenu(HMENU _menu, bool _saveItem)
 	return _menu;
 }
 
-HMENU SNM_ResourceWnd::AutoFillContextMenu(HMENU _menu, bool _fillItem)
+HMENU ResourcesWnd::AutoFillContextMenu(HMENU _menu, bool _fillItem)
 {
 	int typeForUser = GetTypeForUser();
 	char autoPath[SNM_MAX_PATH] = "";
@@ -1677,7 +1683,7 @@ HMENU SNM_ResourceWnd::AutoFillContextMenu(HMENU _menu, bool _fillItem)
 	return _menu;
 }
 
-HMENU SNM_ResourceWnd::AttachPrjContextMenu(HMENU _menu, bool _openSelPrj)
+HMENU ResourcesWnd::AttachPrjContextMenu(HMENU _menu, bool _openSelPrj)
 {
 	// bookmark, custom type?
 	if (g_resType>=SNM_NUM_DEFAULT_SLOTS) //no! && g_tiedProjects.Get(g_resType)->GetLength())
@@ -1712,7 +1718,7 @@ HMENU SNM_ResourceWnd::AttachPrjContextMenu(HMENU _menu, bool _openSelPrj)
 	return _menu;
 }
 
-HMENU SNM_ResourceWnd::BookmarkContextMenu(HMENU _menu)
+HMENU ResourcesWnd::BookmarkContextMenu(HMENU _menu)
 {
 	int typeForUser = GetTypeForUser();
 
@@ -1743,9 +1749,9 @@ HMENU SNM_ResourceWnd::BookmarkContextMenu(HMENU _menu)
 }
 
 
-HMENU SNM_ResourceWnd::OnContextMenu(int _x, int _y, bool* _wantDefaultItems)
+HMENU ResourcesWnd::OnContextMenu(int _x, int _y, bool* _wantDefaultItems)
 {
-	FileSlotList* fl = g_SNM_ResSlots.Get(g_resType);
+	ResourceList* fl = g_SNM_ResSlots.Get(g_resType);
 	if (!fl)
 		return NULL;
 
@@ -1783,7 +1789,7 @@ HMENU SNM_ResourceWnd::OnContextMenu(int _x, int _y, bool* _wantDefaultItems)
 
 	// general context menu
 	int iCol;
-	PathSlotItem* pItem = (PathSlotItem*)GetListView()->GetHitItem(_x, _y, &iCol);
+	ResourceItem* pItem = (ResourceItem*)GetListView()->GetHitItem(_x, _y, &iCol);
 	UINT enabled = (pItem && !pItem->IsDefault()) ? MF_ENABLED : MF_GRAYED;
 	int typeForUser = GetTypeForUser();
 	if (pItem && iCol >= 0)
@@ -1900,7 +1906,7 @@ HMENU SNM_ResourceWnd::OnContextMenu(int _x, int _y, bool* _wantDefaultItems)
 	return hMenu;
 }
 
-int SNM_ResourceWnd::OnKey(MSG* _msg, int _iKeyState) 
+int ResourcesWnd::OnKey(MSG* _msg, int _iKeyState) 
 {
 	if (_msg->message == WM_KEYDOWN)
 	{
@@ -1918,7 +1924,7 @@ int SNM_ResourceWnd::OnKey(MSG* _msg, int _iKeyState)
 					InsertAtSelectedSlot();
 					return 1;
 				case VK_RETURN:
-					((SNM_ResourceView*)GetListView())->Perform();
+					((ResourcesView*)GetListView())->Perform();
 					return 1;
 			}
 		}
@@ -1941,7 +1947,7 @@ int SNM_ResourceWnd::OnKey(MSG* _msg, int _iKeyState)
 	return 0;
 }
 
-int SNM_ResourceWnd::GetValidDroppedFilesCount(HDROP _h)
+int ResourcesWnd::GetValidDroppedFilesCount(HDROP _h)
 {
 	int validCnt=0;
 	int iFiles = DragQueryFile(_h, 0xFFFFFFFF, NULL, 0);
@@ -1955,9 +1961,9 @@ int SNM_ResourceWnd::GetValidDroppedFilesCount(HDROP _h)
 	return validCnt;
 }
 
-void SNM_ResourceWnd::OnDroppedFiles(HDROP _h)
+void ResourcesWnd::OnDroppedFiles(HDROP _h)
 {
-	FileSlotList* fl = g_SNM_ResSlots.Get(g_resType);
+	ResourceList* fl = g_SNM_ResSlots.Get(g_resType);
 	if (!fl)
 		return;
 
@@ -1973,13 +1979,13 @@ void SNM_ResourceWnd::OnDroppedFiles(HDROP _h)
 	pt.x += r.left;
 	pt.y += r.top;
 
-	PathSlotItem* pItem = (PathSlotItem*)GetListView()->GetHitItem(pt.x, pt.y, NULL);
+	ResourceItem* pItem = (ResourceItem*)GetListView()->GetHitItem(pt.x, pt.y, NULL);
 	int dropSlot = fl->Find(pItem);
 
 	// internal drag-drop?
-	if (g_dragPathSlotItems.GetSize())
+	if (g_dragResourceItems.GetSize())
 	{
-		int srcSlot = fl->Find(g_dragPathSlotItems.Get(0));
+		int srcSlot = fl->Find(g_dragResourceItems.Get(0));
 		// drag-drop slot to the bottom
 		if (srcSlot >= 0 && srcSlot < dropSlot)
 			dropSlot++; // drag-drop will be more "natural"
@@ -1990,7 +1996,7 @@ void SNM_ResourceWnd::OnDroppedFiles(HDROP _h)
 	{
 		dropSlot = fl->GetSize();
 		for (int i=0; i < iValidFiles; i++)
-			fl->Add(new PathSlotItem());
+			fl->Add(new ResourceItem());
 	}
 	// drop on a slot => insert slots at drop point
 	else 
@@ -2011,12 +2017,12 @@ void SNM_ResourceWnd::OnDroppedFiles(HDROP _h)
 		DragQueryFile(_h, i, fn, sizeof(fn));
 
 		// internal drag-drop?
-		if (g_dragPathSlotItems.GetSize())
+		if (g_dragResourceItems.GetSize())
 		{
-			if (PathSlotItem* item = fl->Get(slot))
+			if (ResourceItem* item = fl->Get(slot))
 			{
-				item->m_shortPath.Set(g_dragPathSlotItems.Get(i)->m_shortPath.Get());
-				item->m_comment.Set(g_dragPathSlotItems.Get(i)->m_comment.Get());
+				item->m_shortPath.Set(g_dragResourceItems.Get(i)->m_shortPath.Get());
+				item->m_comment.Set(g_dragResourceItems.Get(i)->m_comment.Get());
 				dropped++;
 				pItem = fl->Get(slot+1); 
 			}
@@ -2036,9 +2042,9 @@ void SNM_ResourceWnd::OnDroppedFiles(HDROP _h)
 	if (dropped)
 	{
 		// internal drag-drop: move (=> delete previous slots)
-		for (int i=0; i < g_dragPathSlotItems.GetSize(); i++)
+		for (int i=0; i < g_dragResourceItems.GetSize(); i++)
 			for (int j=fl->GetSize()-1; j >= 0; j--)
-				if (fl->Get(j) == g_dragPathSlotItems.Get(i))
+				if (fl->Get(j) == g_dragResourceItems.Get(i))
 				{
 					if (j < dropSlot)
 						dropSlot--;
@@ -2052,13 +2058,13 @@ void SNM_ResourceWnd::OnDroppedFiles(HDROP _h)
 			SelectBySlot(dropSlot);
 	}
 
-	g_dragPathSlotItems.Empty(false);
+	g_dragResourceItems.Empty(false);
 	DragFinish(_h);
 }
 
-void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight)
+void ResourcesWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight)
 {
-	FileSlotList* fl = g_SNM_ResSlots.Get(g_resType);
+	ResourceList* fl = g_SNM_ResSlots.Get(g_resType);
 	if (!fl)
 		return;
 
@@ -2170,7 +2176,7 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tool
 	}
 }
 
-bool SNM_ResourceWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOutSz)
+bool ResourcesWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOutSz)
 {
 	if (WDL_VWnd* v = m_parentVwnd.VirtWndFromPoint(_xpos,_ypos,1))
 	{
@@ -2219,7 +2225,7 @@ bool SNM_ResourceWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int 
 	return false;
 }
 
-void SNM_ResourceWnd::ClearListSelection()
+void ResourcesWnd::ClearListSelection()
 {
 	SWS_ListView* lv = GetListView();
 	HWND hList = lv ? lv->GetHWND() : NULL;
@@ -2229,7 +2235,7 @@ void SNM_ResourceWnd::ClearListSelection()
 
 // select a range of slots (contiguous, when the list view is not sorted) 
 // or a single slot (when _slot2 < 0)
-void SNM_ResourceWnd::SelectBySlot(int _slot1, int _slot2, bool _selectOnly)
+void ResourcesWnd::SelectBySlot(int _slot1, int _slot2, bool _selectOnly)
 {
 	SWS_ListView* lv = GetListView();
 	HWND hList = lv ? lv->GetHWND() : NULL;
@@ -2253,7 +2259,7 @@ void SNM_ResourceWnd::SelectBySlot(int _slot1, int _slot2, bool _selectOnly)
 		int firstSel = -1;
 		for (int i=0; i < lv->GetListItemCount(); i++)
 		{
-			PathSlotItem* item = (PathSlotItem*)lv->GetListItem(i);
+			ResourceItem* item = (ResourceItem*)lv->GetListItem(i);
 			int slot = g_SNM_ResSlots.Get(g_resType)->Find(item);
 			if (item && slot >= _slot1 && slot <= slot2) 
 			{
@@ -2270,12 +2276,12 @@ void SNM_ResourceWnd::SelectBySlot(int _slot1, int _slot2, bool _selectOnly)
 }
 
 // gets selected slots and returns the number of non empty slots among them
-void SNM_ResourceWnd::GetSelectedSlots(WDL_PtrList<PathSlotItem>* _selSlots, WDL_PtrList<PathSlotItem>* _selEmptySlots)
+void ResourcesWnd::GetSelectedSlots(WDL_PtrList<ResourceItem>* _selSlots, WDL_PtrList<ResourceItem>* _selEmptySlots)
 {
 	if (m_pLists.GetSize())
 	{
 		int x=0;
-		while (PathSlotItem* pItem = (PathSlotItem*)GetListView()->EnumSelected(&x))
+		while (ResourceItem* pItem = (ResourceItem*)GetListView()->EnumSelected(&x))
 		{
 			if (_selEmptySlots && pItem->IsDefault())
 				_selEmptySlots->Add(pItem);
@@ -2285,24 +2291,24 @@ void SNM_ResourceWnd::GetSelectedSlots(WDL_PtrList<PathSlotItem>* _selSlots, WDL
 	}
 }
 
-void SNM_ResourceWnd::AddSlot()
+void ResourcesWnd::AddSlot()
 {
-	if (FileSlotList* fl = g_SNM_ResSlots.Get(g_resType))
+	if (ResourceList* fl = g_SNM_ResSlots.Get(g_resType))
 	{
 		int idx = fl->GetSize();
-		if (fl->Add(new PathSlotItem())) {
+		if (fl->Add(new ResourceItem())) {
 			Update();
 			SelectBySlot(idx);
 		}
 	}
 }
 
-void SNM_ResourceWnd::InsertAtSelectedSlot()
+void ResourcesWnd::InsertAtSelectedSlot()
 {
-	FileSlotList* fl = g_SNM_ResSlots.Get(g_resType);
+	ResourceList* fl = g_SNM_ResSlots.Get(g_resType);
 	if (fl && fl->GetSize() && m_pLists.GetSize())
 	{
-		if (PathSlotItem* item = (PathSlotItem*)GetListView()->EnumSelected(NULL))
+		if (ResourceItem* item = (ResourceItem*)GetListView()->EnumSelected(NULL))
 		{
 			int slot = fl->Find(item);
 			if (slot>=0 && fl->InsertSlot(slot) != NULL)
@@ -2350,7 +2356,7 @@ bool AutoSaveChunkSlot(const void* _obj, const char* _fn) {
 // note: just a helper func for AutoSaveTrackSlots(), AutoSaveMediaSlot(), etc..
 bool AutoSaveSlot(int _type, const char* _dirPath, 
 				  const char* _name, const char* _ext,
-				  WDL_PtrList<PathSlotItem>* _owSlots, int* _owIdx, 
+				  WDL_PtrList<ResourceItem>* _owSlots, int* _owIdx, 
 				  bool (*SaveSlot)(const void*, const char*), const void* _obj) // see AutoSaveChunkSlot() example
 {
 	bool saved = false;
@@ -2387,7 +2393,7 @@ bool AutoSaveSlot(int _type, const char* _dirPath,
 	{
 		char fnNoExt[SNM_MAX_PATH] = "";
 		GetFilenameNoExt(_name, fnNoExt, sizeof(fnNoExt));
-		Filenamize(fnNoExt, sizeof(fnNoExt));
+		Filenamize(fnNoExt);
 		if (GenerateFilename(_dirPath, fnNoExt, _ext, fn, sizeof(fn)) && (SaveSlot ? SaveSlot(_obj, fn) : SNM_CopyFile(fn, _name)))
 		{
 			saved = true;
@@ -2413,9 +2419,9 @@ bool AutoSaveSlot(int _type, const char* _dirPath,
 //    - n/a otherwise
 void AutoSave(int _type, bool _promptOverwrite, int _flags)
 {
-	SNM_ResourceWnd* resWnd = g_resWndMgr.Get();
-	WDL_PtrList<PathSlotItem> owSlots; // slots to overwrite
-	WDL_PtrList<PathSlotItem> selFilledSlots;
+	ResourcesWnd* resWnd = g_resWndMgr.Get();
+	WDL_PtrList<ResourceItem> owSlots; // slots to overwrite
+	WDL_PtrList<ResourceItem> selFilledSlots;
 
 	// overwrite non empty slots?
 	int ow = IDNO;
@@ -2513,7 +2519,7 @@ void AutoSave(int _type, bool _promptOverwrite, int _flags)
 // recursive from auto-fill path
 void AutoFill(int _type)
 {
-	FileSlotList* fl = g_SNM_ResSlots.Get(_type);
+	ResourceList* fl = g_SNM_ResSlots.Get(_type);
 	if (!fl)
 		return;
 
@@ -2537,7 +2543,7 @@ void AutoFill(int _type)
 	if (startSlot != fl->GetSize())
 	{
 		if (g_resType==_type)
-			if (SNM_ResourceWnd* w = g_resWndMgr.Get()) {
+			if (ResourcesWnd* w = g_resWndMgr.Get()) {
 				w->Update();
 				w->SelectBySlot(startSlot, g_SNM_ResSlots.Get(_type)->GetSize());
 			}
@@ -2563,7 +2569,7 @@ WDL_FastString g_lastBrowsedFn;
 bool BrowseSlot(int _type, int _slot, bool _tieUntiePrj, char* _fn, int _fnSz, bool* _updatedList)
 {
 	bool ok = false;
-	if (FileSlotList* fl = g_SNM_ResSlots.Get(_type))
+	if (ResourceList* fl = g_SNM_ResSlots.Get(_type))
 	{
 		if (_slot>=0 && _slot<fl->GetSize())
 		{
@@ -2611,7 +2617,7 @@ bool BrowseSlot(int _type, int _slot, bool _tieUntiePrj, char* _fn, int _fnSz, b
 // _slot: in/out param, prompt for slot if -1
 WDL_FastString* GetOrPromptOrBrowseSlot(int _type, int* _slot)
 {
-	FileSlotList* fl = g_SNM_ResSlots.Get(_type);
+	ResourceList* fl = g_SNM_ResSlots.Get(_type);
 	if (!fl)
 		return NULL;
 
@@ -2641,7 +2647,7 @@ WDL_FastString* GetOrPromptOrBrowseSlot(int _type, int* _slot)
 	// adds the needed number of slots (macro friendly)
 	bool uiUpdate = (*_slot >= fl->GetSize());
 	while (*_slot >= fl->GetSize())
-		fl->Add(new PathSlotItem());
+		fl->Add(new ResourceItem());
 
 	// get filename or browse if the slot is empty (macro friendly)
 	char fn[SNM_MAX_PATH]="";
@@ -2663,7 +2669,7 @@ WDL_FastString* GetOrPromptOrBrowseSlot(int _type, int* _slot)
 	}
 
 	if (uiUpdate && g_resType==_type)
-		if (SNM_ResourceWnd* w = g_resWndMgr.Get())
+		if (ResourcesWnd* w = g_resWndMgr.Get())
 			w->Update();
 
 	if (!fnStr)
@@ -2673,7 +2679,7 @@ WDL_FastString* GetOrPromptOrBrowseSlot(int _type, int* _slot)
 
 void ClearSlot(int _type, int _slot)
 {
-	if (FileSlotList* fl = g_SNM_ResSlots.Get(_type))
+	if (ResourceList* fl = g_SNM_ResSlots.Get(_type))
 	{
 		char untiePath[SNM_MAX_PATH] = "";
 		if (_type>=SNM_NUM_DEFAULT_SLOTS && g_tiedProjects.Get(_type)->GetLength()) // avoid useless job
@@ -2683,7 +2689,7 @@ void ClearSlot(int _type, int _slot)
 		{
 			UntieResFileFromProject(untiePath, _type);
 			if (g_resType==_type)
-				if (SNM_ResourceWnd* w = g_resWndMgr.Get())
+				if (ResourcesWnd* w = g_resWndMgr.Get())
 					w->Update();
 		}
 	}
@@ -2695,11 +2701,11 @@ void ClearSlot(int _type, int _slot)
 // _mode&8 = delete all slots (exclusive with _mode&1 and _mode&2)
 void ClearDeleteSlotsFiles(int _type, int _mode)
 {
-	FileSlotList* fl = g_SNM_ResSlots.Get(_type);
+	ResourceList* fl = g_SNM_ResSlots.Get(_type);
 	if (!fl)
 		return;
 
-	SNM_ResourceWnd* resWnd = g_resWndMgr.Get();
+	ResourcesWnd* resWnd = g_resWndMgr.Get();
 	int oldSz = fl->GetSize();
 
 	WDL_PtrList<int> slots;
@@ -2711,7 +2717,7 @@ void ClearDeleteSlotsFiles(int _type, int _mode)
 		int x=0;
 		if (SWS_ListView* lv = resWnd->GetListView())
 		{
-			while(PathSlotItem* item = (PathSlotItem*)lv->EnumSelected(&x))
+			while(ResourceItem* item = (ResourceItem*)lv->EnumSelected(&x))
 			{
 				int slot = fl->Find(item);
 				slots.Delete(slot);
@@ -2721,12 +2727,12 @@ void ClearDeleteSlotsFiles(int _type, int _mode)
 	}
 
 	char fullPath[SNM_MAX_PATH] = "";
-	WDL_PtrList_DeleteOnDestroy<PathSlotItem> delItems; // DeleteOnDestroy: keep pointers until updated
+	WDL_PtrList_DeleteOnDestroy<ResourceItem> delItems; // DeleteOnDestroy: keep pointers until updated
 	for (int slot=slots.GetSize()-1; slot >=0 ; slot--)
 	{
 		if (*slots.Get(slot)) // avoids new Find(item) calls
 		{
-			if (PathSlotItem* item = fl->Get(slot))
+			if (ResourceItem* item = fl->Get(slot))
 			{
 				if (_mode&4 || (_type>=SNM_NUM_DEFAULT_SLOTS && g_tiedProjects.Get(_type)->GetLength())) // avoid useless job
 					fl->GetFullPath(slot, fullPath, sizeof(fullPath));
@@ -2839,7 +2845,7 @@ int AddCustomBookmark(char* _definition)
 				{
 					tokenStrs[1].Set(tok);
 
-					FileSlotList* fl = new FileSlotList(
+					ResourceList* fl = new ResourceList(
 						tokenStrs[0].Get(), 
 						tokenStrs[1].Get(), 
 						(const char*)(tok+strlen(tok)+1), // add extensions as defined
@@ -2883,7 +2889,7 @@ void NewBookmark(int _type, bool _copyCurrent)
 
 		if (int saveOption = PromptUserForString(
 				g_resWndMgr.GetMsgHWND(),
-				_copyCurrent ? __LOCALIZE("S&M - Copy bookmark","sws_DLG_150") : __LOCALIZE("S&M - Add bookmark","sws_DLG_150"),
+				_copyCurrent ? __LOCALIZE("S&M - Copy bookmark","sws_DLG_150") : _type<0 ? __LOCALIZE("S&M - Add custom bookmark","sws_DLG_150") : __LOCALIZE("S&M - Add bookmark","sws_DLG_150"),
 				input, sizeof(input),
 				true,
 				_copyCurrent ? NULL : __LOCALIZE("Attach bookmark to this project","sws_DLG_150")))
@@ -2917,7 +2923,7 @@ void NewBookmark(int _type, bool _copyCurrent)
 					return;
 				}
 
-				g_SNM_ResSlots.Add(new FileSlotList(
+				g_SNM_ResSlots.Add(new ResourceList(
 					g_SNM_ResSlots.Get(_type)->GetResourceDir(), 
 					input, 
 					g_SNM_ResSlots.Get(_type)->GetFileExtStr(), 
@@ -2992,13 +2998,13 @@ void NewBookmark(int _type, bool _copyCurrent)
 			// 4) copy slots if needed
 			if (_copyCurrent)
 			{
-				if (FileSlotList* flCur = g_SNM_ResSlots.Get(g_resType))
+				if (ResourceList* flCur = g_SNM_ResSlots.Get(g_resType))
 					for (int i=0; i<flCur->GetSize(); i++)
-						if (PathSlotItem* slotItem = flCur->Get(i))
+						if (ResourceItem* slotItem = flCur->Get(i))
 							g_SNM_ResSlots.Get(newType)->AddSlot(slotItem->m_shortPath.Get(), slotItem->m_comment.Get());
 			}
 
-			if (SNM_ResourceWnd* w = g_resWndMgr.Get()) {
+			if (ResourcesWnd* w = g_resWndMgr.Get()) {
 				w->FillTypeCombo();
 				w->SetType(newType); // incl. UI update
 			}
@@ -3037,7 +3043,7 @@ void DeleteBookmark(int _bookmarkType)
 			g_syncAutoDirPrefs[oldType] = true;
 			g_SNM_ResSlots.Delete(oldType, true);
 
-			if (SNM_ResourceWnd* w = g_resWndMgr.Get()) {
+			if (ResourcesWnd* w = g_resWndMgr.Get()) {
 				w->FillTypeCombo();
 				w->SetType(oldType-1); // + GUI update
 			}
@@ -3054,7 +3060,7 @@ void RenameBookmark(int _bookmarkType)
 		if (PromptUserForString(g_resWndMgr.GetMsgHWND(), __LOCALIZE("S&M - Rename bookmark","sws_DLG_150"), newName, sizeof(newName), true) && *newName)
 		{
 			g_SNM_ResSlots.Get(_bookmarkType)->SetDesc(newName);
-			if (SNM_ResourceWnd* w = g_resWndMgr.Get()) {
+			if (ResourcesWnd* w = g_resWndMgr.Get()) {
 				w->FillTypeCombo();
 				w->Update();
 			}
@@ -3112,7 +3118,7 @@ void ResourcesAttachJob::Perform()
 
 			// UI update (tied project display + alpha/plain text)
 			if (g_resType>=SNM_NUM_DEFAULT_SLOTS)
-				if (SNM_ResourceWnd* w = g_resWndMgr.Get())
+				if (ResourcesWnd* w = g_resWndMgr.Get())
 					w->GetParentVWnd()->RequestRedraw(NULL);
 		}
 	}
@@ -3133,11 +3139,11 @@ void ResourcesTrackListChange()
 }
 
 void ResourcesUpdate() {
-	if (SNM_ResourceWnd* w = g_resWndMgr.Get())
+	if (ResourcesWnd* w = g_resWndMgr.Get())
 		w->Update();
 }
 void ResourcesSelectBySlot(int _slot1, int _slot2, bool _selectOnly) {
-	if (SNM_ResourceWnd* w = g_resWndMgr.Get())
+	if (ResourcesWnd* w = g_resWndMgr.Get())
 		w->SelectBySlot(_slot1, _slot2, _selectOnly);
 }
 
@@ -3152,15 +3158,15 @@ int ResourcesInit()
 	g_SNM_ResSlots.Empty(true);
 
 	// cross-platform resource definition (path separators are replaced if needed)
-	g_SNM_ResSlots.Add(new FileSlotList("FXChains",			__LOCALIZE("FX chain","sws_DLG_150"),		"RfxChain",							SNM_RES_MASK_AUTOFILL|SNM_RES_MASK_AUTOSAVE|SNM_RES_MASK_DBLCLIK|SNM_RES_MASK_TEXT));
-	g_SNM_ResSlots.Add(new FileSlotList("TrackTemplates",	__LOCALIZE("track template","sws_DLG_150"),	"RTrackTemplate",					SNM_RES_MASK_AUTOFILL|SNM_RES_MASK_AUTOSAVE|SNM_RES_MASK_DBLCLIK|SNM_RES_MASK_TEXT));
+	g_SNM_ResSlots.Add(new ResourceList("FXChains",			__LOCALIZE("FX chain","sws_DLG_150"),		"RfxChain",							SNM_RES_MASK_AUTOFILL|SNM_RES_MASK_AUTOSAVE|SNM_RES_MASK_DBLCLIK|SNM_RES_MASK_TEXT));
+	g_SNM_ResSlots.Add(new ResourceList("TrackTemplates",	__LOCALIZE("track template","sws_DLG_150"),	"RTrackTemplate",					SNM_RES_MASK_AUTOFILL|SNM_RES_MASK_AUTOSAVE|SNM_RES_MASK_DBLCLIK|SNM_RES_MASK_TEXT));
 	// RPP* is a keyword (get supported project extensions at runtime)
-	g_SNM_ResSlots.Add(new FileSlotList("ProjectTemplates",	__LOCALIZE("project","sws_DLG_150"),		"RPP*",								SNM_RES_MASK_AUTOFILL|SNM_RES_MASK_AUTOSAVE|SNM_RES_MASK_DBLCLIK|SNM_RES_MASK_TEXT));
+	g_SNM_ResSlots.Add(new ResourceList("ProjectTemplates",	__LOCALIZE("project","sws_DLG_150"),		"RPP*",								SNM_RES_MASK_AUTOFILL|SNM_RES_MASK_AUTOSAVE|SNM_RES_MASK_DBLCLIK|SNM_RES_MASK_TEXT));
 	// WAV* is a keyword (get supported media extensions at runtime)
-	g_SNM_ResSlots.Add(new FileSlotList("MediaFiles",		__LOCALIZE("media file","sws_DLG_150"),		"WAV*",								SNM_RES_MASK_AUTOFILL|SNM_RES_MASK_AUTOSAVE|SNM_RES_MASK_DBLCLIK));
+	g_SNM_ResSlots.Add(new ResourceList("MediaFiles",		__LOCALIZE("media file","sws_DLG_150"),		"WAV*",								SNM_RES_MASK_AUTOFILL|SNM_RES_MASK_AUTOSAVE|SNM_RES_MASK_DBLCLIK));
 	// PNG* is a keyword (but we can't get image extensions at runtime, keyword replaced with SNM_REAPER_IMG_EXTS) 
-	g_SNM_ResSlots.Add(new FileSlotList("Data/track_icons",	__LOCALIZE("image","sws_DLG_150"),			"PNG*",								SNM_RES_MASK_AUTOFILL|SNM_RES_MASK_DBLCLIK));
-	g_SNM_ResSlots.Add(new FileSlotList("ColorThemes",		__LOCALIZE("theme","sws_DLG_150"),			"ReaperthemeZip,ReaperTheme",		SNM_RES_MASK_AUTOFILL|SNM_RES_MASK_DBLCLIK));
+	g_SNM_ResSlots.Add(new ResourceList("Data/track_icons",	__LOCALIZE("image","sws_DLG_150"),			"PNG*",								SNM_RES_MASK_AUTOFILL|SNM_RES_MASK_DBLCLIK));
+	g_SNM_ResSlots.Add(new ResourceList("ColorThemes",		__LOCALIZE("theme","sws_DLG_150"),			"ReaperthemeZip,ReaperTheme",		SNM_RES_MASK_AUTOFILL|SNM_RES_MASK_DBLCLIK));
 
 	// -> add new resource types here + related enum on top of the .h
 
@@ -3249,7 +3255,7 @@ int ResourcesInit()
 	char desc[128]="", maxSlotCount[16]="";
 	for (int i=0; i < g_SNM_ResSlots.GetSize(); i++)
 	{
-		if (FileSlotList* list = g_SNM_ResSlots.Get(i))
+		if (ResourceList* list = g_SNM_ResSlots.Get(i))
 		{
 			GetIniSectionName(i, iniSec, sizeof(iniSec));
 			
@@ -3259,7 +3265,7 @@ int ResourcesInit()
 			int cnt = atoi(maxSlotCount);
 			for (int j=0; j<cnt; j++) {
 				ReadSlotIniFile(iniSec, j, path, sizeof(path), desc, sizeof(desc));
-				list->Add(new PathSlotItem(path, desc));
+				list->Add(new ResourceItem(path, desc));
 			}
 		}
 	}
@@ -3361,7 +3367,7 @@ void ResourcesExit()
 	{
 		iniStr.SetFormatted(256, "Max_slot=%d\n", g_SNM_ResSlots.Get(i)->GetSize());
 		for (int j=0; j < g_SNM_ResSlots.Get(i)->GetSize(); j++) {
-			if (PathSlotItem* item = g_SNM_ResSlots.Get(i)->Get(j)) {
+			if (ResourceItem* item = g_SNM_ResSlots.Get(i)->Get(j)) {
 				if (item->m_shortPath.GetLength()) {
 					makeEscapedConfigString(item->m_shortPath.Get(), &escapedStr);
 					iniStr.AppendFormatted(SNM_MAX_PATH, "Slot%d=%s\n", j+1, escapedStr.Get());
@@ -3386,7 +3392,7 @@ void ResourcesExit()
 
 void OpenResources(COMMAND_T* _ct)
 {
-	if (SNM_ResourceWnd* w = g_resWndMgr.Create()) 
+	if (ResourcesWnd* w = g_resWndMgr.Create()) 
 	{
 		int newType = (int)_ct->user; // -1 means toggle current type
 		if (newType == -1)
@@ -3398,7 +3404,7 @@ void OpenResources(COMMAND_T* _ct)
 }
 
 int IsResourcesDisplayed(COMMAND_T* _ct) {
-	if (SNM_ResourceWnd* w = g_resWndMgr.Get())
+	if (ResourcesWnd* w = g_resWndMgr.Get())
 		return w->IsValidWindow();
 	return 0;
 }
@@ -3411,7 +3417,7 @@ void ResourcesClearSlotPrompt(COMMAND_T* _ct)
 {
 	int type = (int)_ct->user;
 	if (type>=0 && type<SNM_NUM_DEFAULT_SLOTS)
-		if (FileSlotList* fl = g_SNM_ResSlots.Get(g_SNM_TiedSlotActions[type]))
+		if (ResourceList* fl = g_SNM_ResSlots.Get(g_SNM_TiedSlotActions[type]))
 		{
 			if (!fl->GetSize())
 			{
@@ -3477,7 +3483,7 @@ void ResourcesAutoSave(COMMAND_T* _ct)
 
 int SNM_SelectResourceBookmark(const char* _name)
 {
-	if (SNM_ResourceWnd* w = g_resWndMgr.Get())
+	if (ResourcesWnd* w = g_resWndMgr.Get())
 		return w->SetType(_name);
 	return -1;
 }
@@ -3490,19 +3496,19 @@ void SNM_TieResourceSlotActions(int _bookmarkId) {
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// SNM_ImageWnd
+// ImageWnd
 ///////////////////////////////////////////////////////////////////////////////
 
 #define IMGID	2000 //JFB would be great to have _APS_NEXT_CONTROL_VALUE *always* defined
 
-SNM_WindowManager<SNM_ImageWnd> g_imgWndMgr(IMG_WND_ID);
+SNM_WindowManager<ImageWnd> g_imgWndMgr(IMG_WND_ID);
 bool g_stretchPref = false;
 char g_lastImgFnPref[SNM_MAX_PATH] =  "";
 
 
 // S&M windows lazy init: below's "" prevents registering the SWS' screenset callback
 // (use the S&M one instead - already registered via SNM_WindowManager::Init())
-SNM_ImageWnd::SNM_ImageWnd()
+ImageWnd::ImageWnd()
 	: SWS_DockWnd(IDD_SNM_IMAGE, __LOCALIZE("Image","sws_DLG_162"), "", SWSGetCommandID(OpenImageWnd))
 {
 	m_id.Set(IMG_WND_ID);
@@ -3513,7 +3519,7 @@ SNM_ImageWnd::SNM_ImageWnd()
 	Init();
 }
 
-void SNM_ImageWnd::OnInitDlg()
+void ImageWnd::OnInitDlg()
 {
 	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
 	m_parentVwnd.SetRealParent(m_hwnd);
@@ -3523,7 +3529,7 @@ void SNM_ImageWnd::OnInitDlg()
 	RequestRedraw();
 }
 
-void SNM_ImageWnd::OnCommand(WPARAM wParam, LPARAM lParam)
+void ImageWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 {
 	switch(LOWORD(wParam))
 	{
@@ -3537,14 +3543,14 @@ void SNM_ImageWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 	}
 }
 
-HMENU SNM_ImageWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
+HMENU ImageWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 {
 	HMENU hMenu = CreatePopupMenu();
 	AddToMenu(hMenu, __LOCALIZE("Stretch to fit","sws_DLG_162"), 0xF001, -1, false, m_stretch?MFS_CHECKED:MFS_UNCHECKED);
 	return hMenu;
 }
 
-void SNM_ImageWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight)
+void ImageWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight)
 {
 	int x0=_r->left+10, h=35;
 	if (_tooltipHeight)
@@ -3563,7 +3569,7 @@ void SNM_ImageWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltip
 		m_img.SetPosition(_r);
 }
 
-bool SNM_ImageWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOutSz)
+bool ImageWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOutSz)
 {
 	if (WDL_VWnd* v = m_parentVwnd.VirtWndFromPoint(_xpos,_ypos,1))
 		if (v->GetID()==IMGID && g_SNM_LastImgSlot>=0 && *GetFilename())
@@ -3586,7 +3592,7 @@ int ImageInit()
 void ImageExit()
 {
 	// save prefs
-	if (SNM_ImageWnd* w = g_imgWndMgr.Get())
+	if (ImageWnd* w = g_imgWndMgr.Get())
 	{
 		WritePrivateProfileString("ImageView", "Stretch", w->IsStretched()?"1":"0", g_SNM_IniFn.Get()); 
 
@@ -3607,7 +3613,7 @@ void ImageExit()
 void OpenImageWnd(COMMAND_T* _ct)
 {
 	bool isNew;
-	if (SNM_ImageWnd* w = g_imgWndMgr.Create(&isNew))
+	if (ImageWnd* w = g_imgWndMgr.Create(&isNew))
 	{
 		if (isNew) {
 			w->SetStretch(g_stretchPref);
@@ -3621,7 +3627,7 @@ void OpenImageWnd(COMMAND_T* _ct)
 bool OpenImageWnd(const char* _fn)
 {
 	bool isNew, ok = false;
-	if (SNM_ImageWnd* w = g_imgWndMgr.Create(&isNew))
+	if (ImageWnd* w = g_imgWndMgr.Create(&isNew))
 	{
 		if (isNew) {
 			w->SetStretch(g_stretchPref);
@@ -3637,7 +3643,7 @@ bool OpenImageWnd(const char* _fn)
 }
 
 void ClearImageWnd(COMMAND_T*) {
-	if (SNM_ImageWnd* w = g_imgWndMgr.Get()) {
+	if (ImageWnd* w = g_imgWndMgr.Get()) {
 		w->SetImage(NULL);
 		w->RequestRedraw();
 	}
@@ -3645,7 +3651,7 @@ void ClearImageWnd(COMMAND_T*) {
 
 int IsImageWndDisplayed(COMMAND_T*)
 {
-	if (SNM_ImageWnd* w = g_imgWndMgr.Get())
+	if (ImageWnd* w = g_imgWndMgr.Get())
 		return w->IsValidWindow();
 	return 0;
 }

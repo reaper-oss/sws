@@ -49,7 +49,6 @@ int UpdateMarkerRegionCache();
 extern SWS_Mutex g_SNM_MkrRgnListenersMutex;
 extern WDL_PtrList<SNM_MarkerRegionListener> g_SNM_MkrRgnListeners;
 
-// helpers
 bool SNM_SetProjectMarker(ReaProject* _proj, int _num, bool _isrgn, double _pos, double _rgnend, const char* _name, int _color = 0);
 bool SNM_GetProjectMarkerName(ReaProject* _proj, int _num, bool _isrgn, WDL_FastString* _name);
 int FindMarkerRegion(ReaProject* _proj, double _pos, int _flags, int* _idOut = NULL);
@@ -63,7 +62,6 @@ int EnumMarkerRegionDescById(ReaProject* _proj, int _id, char* _descOut, int _ou
 int EnumMarkerRegionDesc(ReaProject* _proj, int _idx, char* _descOut, int _outSz, int _flags, bool _wantNum, bool _wantName, bool _wantTime = true);
 void FillMarkerRegionMenu(ReaProject* _proj, HMENU _menu, int _msgStart, int _flags, UINT _uiState = 0);
 
-// actions
 void GotoMarker(COMMAND_T*);
 void GotoRegion(COMMAND_T*);
 void GotoAnsSelectRegion(COMMAND_T*);

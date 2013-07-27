@@ -1,3 +1,10 @@
+Cycle Action editor: copy/paste commands with Ctrl-C, Ctrl-V, Ctrl-X (on OS X: CMD-C, etc..)
+
+Live Configs window tweaks:
++More guiding context menus
++Allow cell edition in the columns "Activate action" and "Deactivate actions"
++Skinned knobs (if available in the current theme)
+
 !v2.3.0 #23 (July 22, 2013)
 Fixes:
 +Make theme actions work http://forum.cockos.com/showthread.php?p=1213324#post1213324|whatever are user preferences|, thanks Breeder!
@@ -65,7 +72,7 @@ Fixes:
 +More screenset fixes as reported http://forum.cockos.com/showpost.php?p=1172448&postcount=1283|here|
 +Resources/Windows OS: fixed "Edit file..."
 +Issue 576: fixed auto-icon crash
-+Issue 581 and OS X support: the action "SWS/S&M: Set project startup action" now prompts for a command ID or an identifier string
++Issue 581 / OS X port: the action "SWS/S&M: Set project startup action" now prompts for a command ID or an identifier string
  (to copy such IDs, right-click an action in the Actions window > Copy selected action cmdID/identifier string)
 
 !v2.3.0 #17 (April 30, 2013)
@@ -144,8 +151,8 @@ Region Playlist:
 +Added basic OSC feedback
  To bind an OSC device, etc.. see above: same as the Live Configs' OSC feedback
  The possible OSC messages (with string arguments) are:
- - /snm/rgnplaylist/current - current region changed
- - /snm/rgnplaylist/next - next region changed
+ - /snm/rgnplaylist/current - current region
+ - /snm/rgnplaylist/next - next region
 
 Added actions:
 +SWS: Set takes in selected item(s) to random custom color(s)
@@ -204,8 +211,8 @@ Cycle Actions (CAs)
  (before this version you probably had to share other files, now you just have to export a single file where all CAs have been "exploded")
 +Editor tweaks: added CA text filter, more helpful messages (again), etc...
 +Fixed missing undo points for CONSOLE commands (when the option "Consolidate undo points" was disabled)
-+Removed tooltips updates for toolbar buttons (not sure anyone ever used this)
- Note: when the option "Consolidate undo points" is enabled, steps like !blabla or !foo still provide distinct undo point names ("Undo foo", "Undo blabla")
++Removed "cycling tooltips" (when CAs were attached to toolbar buttons, the reason why is detailed http://forum.cockos.com/showpost.php?p=1212048&postcount=1331|here|)
+ Note: when the opetion "Consolidate undo points" is enabled, steps like !bla or !foo still provide distinct undo point names though ("Undo foo", "Undo bla")
 
 Live Configs
 +Ignore preload over the current/active track

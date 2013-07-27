@@ -687,7 +687,7 @@ void SWS_SetDockWndState(const char* _stateBuf, int _len, SWS_DockWnd_State* _st
 ///////////////////////////////////////////////////////////////////////////////
 
 SWS_ListView::SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn* pCols, const char* cINIKey, bool bTooltips, const char* cLocalizeSection, bool bDrawArrow)
-:m_hwndList(hwndList), m_hwndEdit(hwndEdit), m_hwndTooltip(NULL), m_iSortCol(1), m_iEditingItem(-1), m_iEditingCol(0),
+:m_hwndList(hwndList), m_hwndEdit(hwndEdit), m_hwndTooltip(NULL), m_iSortCol(1), m_iEditingItem(-1), m_iEditingCol(-1),
   m_iCols(iCols), m_pCols(NULL), m_pDefaultCols(NULL), m_bDisableUpdates(false), m_cINIKey(cINIKey), m_cLocalizeSection(cLocalizeSection),m_bDrawArrow(bDrawArrow),
 #ifndef _WIN32
   m_pClickedItem(NULL)
@@ -1476,16 +1476,22 @@ bool SWS_ListView::EditListItemEnd(bool bSave, bool bResort)
 		KillTimer(GetParent(m_hwndList), CELL_EDIT_TIMER);
 		if (bSave)
 		{
+			// reset the edited column right now, reset the edited item after the update:
+			// useful to distinguish cell edition before (m_iEditingCol<0) or after (m_iEditingItem<0) the actual update
+			// use-case: display "X" when editing a cell, "Y" otherwise (i.e. render "X" as "Y")
+			int editedCol = m_iEditingCol;
+			m_iEditingCol = -1;
+
 			char newStr[100];
 			char curStr[100];
 			GetWindowText(m_hwndEdit, newStr, 100);
 			SWS_ListItem* item = GetListItem(m_iEditingItem);
-			GetItemText(item, m_iEditingCol, curStr, 100);
+			GetItemText(item, editedCol, curStr, 100);
 			if (strcmp(curStr, newStr))
 			{
-				SetItemText(item, m_iEditingCol, newStr);
-				GetItemText(item, m_iEditingCol, newStr, 100);
-				ListView_SetItemText(m_hwndList, m_iEditingItem, DataToDisplayCol(m_iEditingCol), newStr);
+				SetItemText(item, editedCol, newStr);
+				GetItemText(item, editedCol, newStr, 100);
+				ListView_SetItemText(m_hwndList, m_iEditingItem, DataToDisplayCol(editedCol), newStr);
 				updated = true;
 			}
 			if (bResort)

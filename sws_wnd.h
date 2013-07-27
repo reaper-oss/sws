@@ -131,6 +131,7 @@ protected:
 	bool m_bDisableUpdates;
 	int m_iSortCol; // 1 based col index, negative for desc sort
 	int m_iEditingItem;
+	int m_iEditingCol;
 	const int m_iCols;
 	SWS_LVColumn* m_pCols;
 	bool m_bDrawArrow;
@@ -154,7 +155,6 @@ private:
 #endif
 	WDL_TypedBuf<int> m_pSavedSel;
 	HWND m_hwndEdit;
-	int m_iEditingCol;
 	SWS_LVColumn* m_pDefaultCols;
 	const char* m_cINIKey;
 };

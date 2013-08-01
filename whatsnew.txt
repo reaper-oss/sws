@@ -1,13 +1,27 @@
+Fixed some actions learned with <b>relative</b> MIDI CC events, those actions belong to the section "S&M extension":
++SWS/S&M: Select project (MIDI CC/OSC only)
++SWS/S&M: Trigger preset for FX n of selected track (MIDI CC/OSC only) - where 'n' is in [1; 8]
+ Trigger preset actions from FX4 to FX8 are new actions by the way!
++SWS/S&M: Trigger preset for selected FX of selected track (MIDI CC/OSC only)
+
+Live Configs:
++Allow switches to "comments-only" configs (e.g. OSC feedback with random/custom strings)
++Added actions (where 'n' is in [1; 4], http://forum.cockos.com/showthread.php?p=984786#post984786|customizable in the S&M.ini file|):
+ - SWS/S&M: Live Config n - Preload next config
+ - SWS/S&M: Live Config n - Preload previous config
+ Note: useful to preload configs with -/+ controllers (like pedals), there already are similar actions to switch to the next/previous config
++Monitor windows:
+ - Mouse wheel/trackpad gesture now cycles back to the first/last config
+ - Mouse wheel/trackpad gesture now obeys the option "Ignore switches to empty configs"
++Editor window tweaks:
+ - More guiding context menus
+ - Allow cell edition in the columns "Activate action" and "Deactivate action"
+ - Skinned knobs (if knob images are available in the current theme)
+
 Cycle Action editor: copy/paste commands with Ctrl-C, Ctrl-V, Ctrl-X (on OS X: CMD-C, etc..)
 
-Live Configs window tweaks:
-+More guiding context menus
-+Allow cell edition in the columns "Activate action" and "Deactivate actions"
-+Skinned knobs (if available in the current theme)
-
 !v2.3.0 #23 (July 22, 2013)
-Fixes:
-+Make theme actions work http://forum.cockos.com/showthread.php?p=1213324#post1213324|whatever are user preferences|, thanks Breeder!
+Fixed theme loading actions http://forum.cockos.com/showthread.php?p=1213324#post1213324|vs some user preferences|, thanks Breeder!
 
 Resources window:
 +Improved context menus (right-click the bookmark dropdown box, the attached project label, etc..)
@@ -394,7 +408,7 @@ Lots of changes: merged a dedicated extension plugin. The fine details will be p
    Other tracks that are not part of the config will remain as they are, of course. This option works without preload too (switches will be slower though).
    Note: handle with care! Do not use <del>this option with</del> buggy instruments/effects!
  - "Ignore switches to empty configs"
-   Especially useful for -/+ pedal controllers and related "Apply next/previous config" actions: switch to the next/previous valid config whatever is the gap (of empty configs) in between
+   Especially useful for -/+ controllers (like pedals) and "Apply next/previous config" actions (switch to the next/previous valid config whatever is the gap of empty configs in between)
  - "Send all notes off when switching configs"
  - "Select/scroll to track on list view click"
 +Added "Tiny fades" knob
@@ -967,7 +981,7 @@ Issue 256: Fixed "SWS: Toggle auto add envelopes when tweaking in write mode" al
 Live Configs:
 +Added "Learn from Actions window" (in the context menu of columns "Activate action" and "Deactivate action") - Windows OS only
 +GUI fixes and tweaks: fixed FX 1st preset display, "Edit" menu items, support for INSERT and F2 keys, etc..
-Added actions (useful to switch configs without MIDI CC controller, e.g. plus/minus pedals sending MIDI note messages)
+Added actions (useful to switch configs without MIDI CC controller, e.g. -/+ controllers (like pedals) sending MIDI note messages)
 +SWS/S&M: Live Config #n - Next (where 'n' is in [1; 8])
 +SWS/S&M: Live Config #n - Previous (where 'n' is in [1; 8])
 
@@ -1144,7 +1158,7 @@ Live Configs:
 Resources window:
 +Track templates: new double click option, better context menu item names, etc..
 +Fixed possible crash when removing a custom resource type from the S&M.ini file
-+<b>Limited "spam" in the action list: all slot actions now only have 4 instances by default</b> (customizable at the end of the S&M.ini file, up to 99 slots per action)
++<b>Limited "spam" in the action list: all slot actions now only have 4 instances by default</b> (http://forum.cockos.com/showthread.php?p=984786#post984786|customizable in the S&M.ini file|, up to 99 slots per action)
  Note: your current numbers of slot actions are preserved, of course!
 
 Notes/help: do not update region/marker names when playing and editing (but only when the view is locked)
@@ -1207,7 +1221,7 @@ In the list view the double-click can be customized to:
 +Add media file to current track, to new track or to selected items as takes
 Added slot actions for media files:
 +SWS/S&M: Open Resources window (Media files)
-+SWS/S&M: Add media file to current track, slot n  - where 'n' is in [1; 4], customizable in the S&M.ini file (up to 99 slots)
++SWS/S&M: Add media file to current track, slot n  - where 'n' is in [1; 4], http://forum.cockos.com/showthread.php?p=984786#post984786|customizable in the S&M.ini file| (up to 99 slots)
 +SWS/S&M: Add media file to new track, slot n  - where 'n' is in [1; 4], customizable
 +SWS/S&M: Add media file to selected items as takes, slot n - where 'n' is in [1; 4], customizable
 +SWS/S&M: Play media file in selected tracks, slot n - where 'n' is in [1; 8], customizable
@@ -1246,7 +1260,7 @@ S&M.ini file: better presentation of configurable slot actions
 
 !v2.1.0 #17 (November 2, 2011)
 Added media file slot actions (details in issue 386):
-+SWS/S&M: Play media file in selected tracks, slot n - where 'n' is in [1; 8], customizable in the S&M.ini file (up to 99 slots). Supports any media file (.mid, .wav, etc..).
++SWS/S&M: Play media file in selected tracks, slot n - where 'n' is in [1; 8], http://forum.cockos.com/showthread.php?p=984786#post984786|customizable in the S&M.ini file| (up to 99 slots). Supports any media file (.mid, .wav, etc..).
 +SWS/S&M: Clear media file slot...
 
 Cycle action editor:
@@ -1292,7 +1306,7 @@ Fixed autogrouping broken in 2.1.0 #15
 Added actions:
 +SWS/AW: Toggle auto group newly recorded items
 +SWS/S&M: Set selected tracks to first unused group (default flags)
-+SWS/S&M: Set selected tracks to group n (default flags) - where n is in [1; 8], customizable in the S&M.ini file (up to 32 groups)
++SWS/S&M: Set selected tracks to group n (default flags) - where 'n' is in [1; 8], http://forum.cockos.com/showthread.php?p=984786#post984786|customizable in the S&M.ini file| (up to 32 groups)
 +SWS/S&M: Remove track grouping for selected tracks
 
 Cue Buss Generator & Live Configs: track templates improvements (same as issue 376)
@@ -1454,7 +1468,7 @@ Fixed cycle actions window context menu on OS X
 Fixed "stuck" cycle actions window on OS X
 
 !v2.0.0 #31 (July 31, 2011)
-Added configurable slot actions (no slot by default, customizable in the S&M.ini file):
+Added configurable slot actions (hidden by default, http://forum.cockos.com/showthread.php?p=984786#post984786|customizable in the S&M.ini file|):
 +SWS/S&M: Apply input FX chain to selected tracks, slot n
 +SWS/S&M: Paste input FX chain to selected tracks, slot n
 

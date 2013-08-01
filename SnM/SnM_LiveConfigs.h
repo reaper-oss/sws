@@ -148,20 +148,34 @@ protected:
 };
 
 
-class ApplyLiveConfigJob : public SNM_MidiActionJob {
+class ApplyLiveConfigJob : public SNM_MidiOscActionJob {
 public:
-	ApplyLiveConfigJob(int _jobId, int _approxDelayMs, int _curval, int _val, int _valhw, int _relmode, HWND _hwnd, int _cfgId) 
-		: SNM_MidiActionJob(_jobId,_approxDelayMs,_curval,_val,_valhw,_relmode,_hwnd), m_cfgId(_cfgId) {}
+	ApplyLiveConfigJob(int _jobId, int _approxDelayMs, int _curval, int _val, int _valhw, int _relmode, int _cfgId) 
+		: SNM_MidiOscActionJob(_jobId,_approxDelayMs,_curval,_val,_valhw,_relmode,NULL), m_cfgId(_cfgId) {}
 	void Perform();
+	
+	// overrides SNM_MidiOscActionJob::GetValue() in order to clamp
+	// to SNM_LIVECFG_NB_ROWS (the received value can be greater)
+	virtual int GetValue()
+	{
+		return BOUNDED(m_absval, 0, SNM_LIVECFG_NB_ROWS-1);
+	}
 	int m_cfgId;
 };
 
 
-class PreloadLiveConfigJob : public SNM_MidiActionJob {
+class PreloadLiveConfigJob : public SNM_MidiOscActionJob {
 public:
-	PreloadLiveConfigJob(int _jobId, int _approxDelayMs, int _curval, int _val, int _valhw, int _relmode, HWND _hwnd, int _cfgId) 
-		: SNM_MidiActionJob(_jobId,_approxDelayMs,_curval,_val,_valhw,_relmode,_hwnd), m_cfgId(_cfgId)  {}
+	PreloadLiveConfigJob(int _jobId, int _approxDelayMs, int _curval, int _val, int _valhw, int _relmode, int _cfgId) 
+		: SNM_MidiOscActionJob(_jobId,_approxDelayMs,_curval,_val,_valhw,_relmode,NULL), m_cfgId(_cfgId)  {}
 	void Perform();
+
+	// overrides SNM_MidiOscActionJob::GetValue() in order to clamp
+	// to SNM_LIVECFG_NB_ROWS (the received value can be greater)
+	virtual int GetValue()
+	{
+		return BOUNDED(m_absval, 0, SNM_LIVECFG_NB_ROWS-1);
+	}
 	int m_cfgId;
 };
 
@@ -189,8 +203,8 @@ void LiveConfigExit();
 void OpenLiveConfig(COMMAND_T*);
 int IsLiveConfigDisplayed(COMMAND_T*);
 
-void ApplyLiveConfig(int _cfgId, int _val, int _valhw, int _relmode, HWND _hwnd, bool _immediate = false);
-void PreloadLiveConfig(int _cfgId, int _val, int _valhw, int _relmode, HWND _hwnd, bool _immediate = false);
+void ApplyLiveConfig(int _cfgId, int _val, bool _immediate, int _valhw = -1, int _relmode = 0);
+void PreloadLiveConfig(int _cfgId, int _val, bool _immediate, int _valhw = -1, int _relmode = 0);
 
 void OpenLiveConfigMonitorWnd(int _idx);
 void OpenLiveConfigMonitorWnd(COMMAND_T*);
@@ -199,9 +213,13 @@ int IsLiveConfigMonitorWndDisplayed(COMMAND_T*);
 void ApplyLiveConfig(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
 void PreloadLiveConfig(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
 
-void NextLiveConfig(COMMAND_T*);
-void PreviousLiveConfig(COMMAND_T*);
 void SwapCurrentPreloadLiveConfigs(COMMAND_T*);
+
+void ApplyNextLiveConfig(COMMAND_T*);
+void ApplyPreviousLiveConfig(COMMAND_T*);
+void PreloadNextLiveConfig(COMMAND_T*);
+void PreloadPreviousLiveConfig(COMMAND_T*);
+bool NextPreviousLiveConfig(int _cfgId, bool _preload, int _step);
 
 int IsLiveConfigEnabled(COMMAND_T*);
 void UpdateEnableLiveConfig(int _cfgId, int _val);

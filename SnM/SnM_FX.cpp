@@ -413,11 +413,11 @@ int GetSelectedTrackFX(MediaTrack* _tr)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Track FX presets
+// FX presets helpers
 ///////////////////////////////////////////////////////////////////////////////
 
 // API LIMITATION: get can't get preset names (without activating them)
-// => parse ini files instead => limited to user presets
+// => parse ini files instead => limited to user presets (.rpl) ATM
 //
 // _fxType: as defined in FX chunk ("VST", "AU", etc..)
 // _fxName: as defined in FX chunk ("foo.dll", etc..)
@@ -498,7 +498,34 @@ int GetUserPresetNames(MediaTrack* _tr, int _fx, WDL_PtrList<WDL_FastString>* _p
 	return 0;
 }
 
+// only deals with the *first* selected track..
+// _presetIdx: NULL to get, pointer to value to be set otherwise
+int GetSetFXPresetSelTrack(int _fxId, int* _presetIdx)
+{
+	for (int i=0; i <= GetNumTracks(); i++) // incl. master
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+		{
+			int fxId = _fxId;
+			if (fxId == -1)
+				fxId = GetSelectedTrackFX(tr);
+			if (fxId >= 0)
+			{
+				if (!_presetIdx)
+					return TrackFX_GetPresetIndex(tr, fxId, NULL);
+				else
+					return TrackFX_SetPresetByIndex(tr, fxId, *_presetIdx) ? 1 : 0;
+				return -1;
+			}
+		}
+	}
+	return -1;
+}
 
+
+///////////////////////////////////////////////////////////////////////////////
+// Switch FX presets
 ///////////////////////////////////////////////////////////////////////////////
 
 // _presetId: only taken into account when _dir == 0, see below
@@ -511,10 +538,8 @@ bool TriggerFXPreset(MediaTrack* _tr, int _fxId, int _presetId, int _dir)
 	{
 		if (_dir)
 			return TrackFX_NavigatePresets(_tr, _fxId, _dir);
-		else if (_presetId) {
-			TrackFX_SetPreset(_tr, _fxId, "");
-			return TrackFX_NavigatePresets(_tr, _fxId, _presetId);
-		}
+		else if (_presetId)
+			return TrackFX_SetPresetByIndex(_tr, _fxId, _presetId);
 	}
 	return false;
 }
@@ -551,25 +576,33 @@ void NextPrevPresetLastTouchedFX(COMMAND_T* _ct) {
 }
 
 
-///////////////////////////////////////////////////////////////////////////////
-// Trigger preset through MIDI CC action
-///////////////////////////////////////////////////////////////////////////////
+// Switch FX presets through MIDI CC/OSC actions
 
 int g_curPresetMidiVal = -1;
 
-class TriggerPresetJob : public SNM_MidiActionJob {
+class TriggerPresetJob : public SNM_MidiOscActionJob {
 public:
 	TriggerPresetJob(int _approxDelayMs, int _curval, int _val, int _valhw, int _relmode, HWND _hwnd, int _fxId) 
-		: SNM_MidiActionJob(SNM_SCHEDJOB_TRIG_PRESET,_approxDelayMs,_curval,_val,_valhw,_relmode,_hwnd), m_fxId(_fxId) {}
-	void Perform() {TriggerFXPresetSelTracks(m_fxId, m_absval, 0);}
+		: SNM_MidiOscActionJob(SNM_SCHEDJOB_TRIG_PRESET,_approxDelayMs,_curval,_val,_valhw,_relmode,_hwnd), m_fxId(_fxId) {}
+	void Perform() { 
+		TriggerFXPresetSelTracks(m_fxId, GetValue(), 0);
+		g_curPresetMidiVal = -1;
+	}
 	int m_fxId;
 };
 
 void TriggerFXPreset(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd) 
 {
-	if (TriggerPresetJob* job = new TriggerPresetJob(SNM_SCHEDJOB_DEFAULT_DELAY, g_curPresetMidiVal, _val, _valhw, _relmode, _hwnd, (int)_ct->user))
+	// re-sync the current value
+	if (g_curPresetMidiVal<0)
+		g_curPresetMidiVal = GetSetFXPresetSelTrack((int)_ct->user, NULL);
+	if (g_curPresetMidiVal<0)
+		g_curPresetMidiVal = 0;
+
+	if (TriggerPresetJob* job = 
+			new TriggerPresetJob(SNM_SCHEDJOB_DEFAULT_DELAY, g_curPresetMidiVal, _val, _valhw, _relmode, _hwnd, (int)_ct->user))
 	{
-		g_curPresetMidiVal = job->GetAbsoluteValue();
+		g_curPresetMidiVal = job->GetValue();
 		SNM_AddOrReplaceScheduledJob(job);
 	}
 }

@@ -1003,7 +1003,7 @@ bool LearnAction(KbdSectionInfo* _section, int _cmdId)
 		WDL_FastString msg;
 		msg.SetFormatted(256, __LOCALIZE_VERFMT("The action \"%s\" is already bound to:","sws_mbox"), kbd_getTextFromCmd(_cmdId, _section));
 		msg.Append(shortcuts.GetLength() ? shortcuts.Get() : __LOCALIZE("<unknown bindings>","sws_mbox"));
-		msg.Append(".\n");
+		msg.Append("\n");
 		msg.Append(nbShortcuts>1 || !shortcuts.GetLength() ?
 			__LOCALIZE("Do you want to replace those bindings?","sws_mbox") : 
 			__LOCALIZE("Do you want to replace this binding?","sws_mbox"));

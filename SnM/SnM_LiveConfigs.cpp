@@ -103,7 +103,6 @@
 #define PRELOADING_OSC				"/snm/liveconfig%d/preload/changing"
 
 #define ELLIPSIZE					24
-#define APPLY_PRELOAD_HWND			NULL
 
 #define APPLY_MASK					1
 #define PRELOAD_MASK				2
@@ -374,7 +373,7 @@ void LiveConfigItem::GetInfo(WDL_FastString* _info)
 	if (!_info) return;
 
 	_info->Set("");
-	if (!IsDefault(true))
+	if (!IsDefault(false)) // false: "comments-only" configs can be useful (osc feedback)
 	{
 		if (m_desc.GetLength())
 		{
@@ -1020,11 +1019,11 @@ void LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 
 		case APPLY_MSG:
 			if (item)
-				ApplyLiveConfig(g_configId, item->m_cc, -1, 0, APPLY_PRELOAD_HWND, true); // immediate
+				ApplyLiveConfig(g_configId, item->m_cc, true); // immediate
 			break;
 		case PRELOAD_MSG:
 			if (item)
-				PreloadLiveConfig(g_configId, item->m_cc, -1, 0, APPLY_PRELOAD_HWND, true); // immediate
+				PreloadLiveConfig(g_configId, item->m_cc, true); // immediate
 			break;
 
 		case LOAD_TRACK_TEMPLATE_MSG:
@@ -2436,14 +2435,15 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 // Apply configs
 ///////////////////////////////////////////////////////////////////////////////
 
-void ApplyLiveConfig(int _cfgId, int _val, int _valhw, int _relmode, HWND _hwnd, bool _immediate)
+void ApplyLiveConfig(int _cfgId, int _val, bool _immediate, int _valhw, int _relmode)
 {
 	LiveConfig* lc = g_liveConfigs.Get()->Get(_cfgId);
 	if (lc && lc->m_enable) 
 	{
-		if (ApplyLiveConfigJob* job = new ApplyLiveConfigJob(SNM_SCHEDJOB_LIVECFG_APPLY+_cfgId, lc->m_ccDelay, lc->m_curMidiVal, _val, _valhw, _relmode, _hwnd, _cfgId))
+		if (ApplyLiveConfigJob* job = 
+			new ApplyLiveConfigJob(SNM_SCHEDJOB_LIVECFG_APPLY+_cfgId, lc->m_ccDelay, lc->m_curMidiVal, _val, _valhw, _relmode, _cfgId))
 		{
-			lc->m_curMidiVal = job->GetAbsoluteValue();
+			lc->m_curMidiVal = job->GetValue();
 			if (!_immediate && lc->m_ccDelay) {
 				UpdateMonitoring(_cfgId, APPLY_MASK, 0);
 				SNM_AddOrReplaceScheduledJob(job);
@@ -2464,33 +2464,34 @@ void ApplyLiveConfigJob::Perform()
 	Undo_BeginBlock2(NULL);
 
 	// swap preload/current configs?
-	bool preloaded = (lc->m_preloadMidiVal>=0 && lc->m_preloadMidiVal==m_absval);
+	int absval = GetValue();
+	bool preloaded = (lc->m_preloadMidiVal>=0 && lc->m_preloadMidiVal==absval);
 
-	LiveConfigItem* cfg = lc->m_ccConfs.Get(m_absval);
+	LiveConfigItem* cfg = lc->m_ccConfs.Get(absval);
 	if (cfg && lc->m_enable && 
-		m_absval!=lc->m_activeMidiVal &&
+		absval!=lc->m_activeMidiVal &&
 		(!lc->m_ignoreEmpty || (lc->m_ignoreEmpty && !cfg->IsDefault(true)))) // ignore empty configs
 	{
 		LiveConfigItem* lastCfg = lc->m_ccConfs.Get(lc->m_activeMidiVal); // can be <0
 		if (!lastCfg || (lastCfg && !lastCfg->Equals(cfg, true)))
 		{
 			PreventUIRefresh(1);
-			ApplyPreloadLiveConfig(true, m_cfgId, m_absval, lastCfg);
+			ApplyPreloadLiveConfig(true, m_cfgId, absval, lastCfg);
 			PreventUIRefresh(-1);
 		} 
 
 		// done
 		if (preloaded) {
 			lc->m_preloadMidiVal = lc->m_curPreloadMidiVal = lc->m_activeMidiVal;
-			lc->m_activeMidiVal = lc->m_curMidiVal = m_absval;
+			lc->m_activeMidiVal = lc->m_curMidiVal = absval;
 		}
 		else
-			lc->m_activeMidiVal = m_absval;
+			lc->m_activeMidiVal = absval;
 	}
 
 	{
 		char buf[SNM_MAX_ACTION_NAME_LEN]="";
-		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Apply Live Config %d (OSC/CC %d)","sws_undo"), m_cfgId+1, m_absval);
+		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Apply Live Config %d (OSC/CC %d)","sws_undo"), m_cfgId+1, absval);
 		Undo_EndBlock2(NULL, buf, UNDO_STATE_ALL);
 	}
 
@@ -2512,14 +2513,15 @@ void ApplyLiveConfigJob::Perform()
 // Preload configs
 ///////////////////////////////////////////////////////////////////////////////
 
-void PreloadLiveConfig(int _cfgId, int _val, int _valhw, int _relmode, HWND _hwnd, bool _immediate)
+void PreloadLiveConfig(int _cfgId, int _val, bool _immediate, int _valhw, int _relmode)
 {
 	LiveConfig* lc = g_liveConfigs.Get()->Get(_cfgId);
 	if (lc && lc->m_enable)
 	{
-		if (PreloadLiveConfigJob* job = new PreloadLiveConfigJob(SNM_SCHEDJOB_LIVECFG_PRELOAD+_cfgId, lc->m_ccDelay, lc->m_curPreloadMidiVal, _val, _valhw, _relmode, _hwnd, _cfgId))
+		if (PreloadLiveConfigJob* job = 
+			new PreloadLiveConfigJob(SNM_SCHEDJOB_LIVECFG_PRELOAD+_cfgId, lc->m_ccDelay, lc->m_curPreloadMidiVal, _val, _valhw, _relmode, _cfgId))
 		{
-			lc->m_curPreloadMidiVal = job->GetAbsoluteValue();
+			lc->m_curPreloadMidiVal = job->GetValue();
 			if (!_immediate && lc->m_ccDelay) {
 				UpdateMonitoring(_cfgId, PRELOAD_MASK, 0);
 				SNM_AddOrReplaceScheduledJob(job);
@@ -2539,11 +2541,12 @@ void PreloadLiveConfigJob::Perform()
 
 	Undo_BeginBlock2(NULL);
 
+	int absval = GetValue();
 	MediaTrack* inputTr = lc->GetInputTrack();
-	LiveConfigItem* cfg = lc->m_ccConfs.Get(m_absval);
+	LiveConfigItem* cfg = lc->m_ccConfs.Get(absval);
 	LiveConfigItem* lastCfg = lc->m_ccConfs.Get(lc->m_activeMidiVal); // can be <0
 	if (cfg && lc->m_enable && 
-		m_absval!=lc->m_preloadMidiVal &&
+		absval!=lc->m_preloadMidiVal &&
 		(!lc->m_ignoreEmpty || (lc->m_ignoreEmpty && !cfg->IsDefault(true))) && // ignore empty configs
 		(!lastCfg || (lastCfg && (!cfg->m_track || !lastCfg->m_track || cfg->m_track!=lastCfg->m_track)))) // ignore preload over the active track
 	{
@@ -2557,17 +2560,17 @@ void PreloadLiveConfigJob::Perform()
 			(!lastPreloadCfg || (lastPreloadCfg && !lastPreloadCfg->Equals(cfg, true))))
 		{
 			PreventUIRefresh(1);
-			ApplyPreloadLiveConfig(false, m_cfgId, m_absval, lastCfg);
+			ApplyPreloadLiveConfig(false, m_cfgId, absval, lastCfg);
 			PreventUIRefresh(-1);
 		}
 
 		// done
-		lc->m_preloadMidiVal = m_absval;
+		lc->m_preloadMidiVal = absval;
 	}
 
 	{
 		char buf[SNM_MAX_ACTION_NAME_LEN]="";
-		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Preload Live Config %d (OSC/CC %d)","sws_undo"), m_cfgId+1, m_absval);
+		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Preload Live Config %d (OSC/CC %d)","sws_undo"), m_cfgId+1, absval);
 		Undo_EndBlock2(NULL, buf, UNDO_STATE_ALL);
 	}
 
@@ -2613,7 +2616,8 @@ void UpdateMonitor(int _cfgId, int _idx, int _val, bool _changed, int _flags)
 
 		if (_flags&2 && lc->m_osc)
 		{
-			if (info1.GetLength() && info2.GetLength()) info1.Append(" ");
+			if (info1.GetLength() && info2.GetLength())
+				info1.Append(" ");
 			info1.Append(&info2);
 
 			lc->m_osc->SendStr(_idx==1 ? 
@@ -2761,12 +2765,6 @@ INT_PTR LiveConfigMonitorWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lP
 				_snprintfSafe(dbg, sizeof(dbg), "WM_MOUSEWHEEL - val: %d\n", val);
 				OutputDebugString(dbg);
 #endif
-				val = lc->m_curMidiVal + (val>0 ? -1 : val<0 ? 1 : 0);
-				if (val >= SNM_LIVECFG_NB_ROWS)
-					val -= SNM_LIVECFG_NB_ROWS;
-				else if (val<0)
-					val = SNM_LIVECFG_NB_ROWS + val;
-
 				if (WDL_VWnd* mon0 = m_parentVwnd.GetChildByID(TXTID_MON0))
 				{
 					bool vis = mon0->IsVisible();
@@ -2775,27 +2773,23 @@ INT_PTR LiveConfigMonitorWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lP
 					POINT p; GetCursorPos(&p);
 					ScreenToClient(m_hwnd, &p);
 					if (WDL_VWnd* v = m_parentVwnd.VirtWndFromPoint(p.x,p.y,1))
+					{
 						switch (v->GetID())
 						{
 							case TXTID_MON1:
 							case TXTID_MON2:
-								ApplyLiveConfig(m_cfgId, val, -1, 0, APPLY_PRELOAD_HWND);
+								if (val>0) NextPreviousLiveConfig(m_cfgId, false, -1);
+								else NextPreviousLiveConfig(m_cfgId, false, 1);
 								break;
 							case TXTID_MON3:
 							case TXTID_MON4:
-								val = (short)HIWORD(wParam);
-								val = lc->m_curPreloadMidiVal + (val>0 ? -1 : val<0 ? 1 : 0);
-								if (val >= SNM_LIVECFG_NB_ROWS) 
-									val -= SNM_LIVECFG_NB_ROWS;
-								else if (val<0)
-									val = SNM_LIVECFG_NB_ROWS + val;
-								PreloadLiveConfig(m_cfgId, val, -1, 0, APPLY_PRELOAD_HWND);
+								if (val>0) NextPreviousLiveConfig(m_cfgId, true, -1);
+								else NextPreviousLiveConfig(m_cfgId, true, 1);
 								break;
 						}
+					}
 					mon0->SetVisible(vis);
 				}
-				else
-					ApplyLiveConfig(m_cfgId, val, -1, 0, APPLY_PRELOAD_HWND);
 			}
 			return -1;
 	}
@@ -2837,7 +2831,7 @@ bool LiveConfigMonitorWnd::OnMouseUp(int _xpos, int _ypos)
 					case TXTID_MON3:
 					case TXTID_MON4:
 						if (lc->m_preloadMidiVal>=0)
-							ApplyLiveConfig(m_cfgId, lc->m_preloadMidiVal, -1, 0, APPLY_PRELOAD_HWND, true); // immediate
+							ApplyLiveConfig(m_cfgId, lc->m_preloadMidiVal, true); // immediate
 						break;
 				}
 			mon0->SetVisible(vis);
@@ -2872,66 +2866,84 @@ int IsLiveConfigMonitorWndDisplayed(COMMAND_T* _ct)
 ///////////////////////////////////////////////////////////////////////////////
 
 void ApplyLiveConfig(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd) {
-	ApplyLiveConfig((int)_ct->user, _val, _valhw, _relmode, _hwnd);
+	ApplyLiveConfig((int)_ct->user, _val, false, _valhw, _relmode);
 }
 
 void PreloadLiveConfig(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd) {
-	PreloadLiveConfig((int)_ct->user, _val, _valhw, _relmode, _hwnd);
-}
-
-/////
-
-void NextLiveConfig(COMMAND_T* _ct)
-{
-	int cfgId = (int)_ct->user;
-	if (LiveConfig* lc = g_liveConfigs.Get()->Get(cfgId))
-	{
-		int i = lc->m_curMidiVal; // and not m_activeMidiVal, cc "smoothing" should apply here too!
-		while (++i < lc->m_ccConfs.GetSize())
-			if (LiveConfigItem* item = lc->m_ccConfs.Get(i))
-				if (!lc->m_ignoreEmpty || (lc->m_ignoreEmpty && !item->IsDefault(true))) {
-					ApplyLiveConfig(cfgId, i, -1, 0, APPLY_PRELOAD_HWND);
-					return;
-				}
-		// 2nd try (cycle)
-		i = -1;
-		while (++i < lc->m_curMidiVal)
-			if (LiveConfigItem* item = lc->m_ccConfs.Get(i))
-				if (!lc->m_ignoreEmpty || (lc->m_ignoreEmpty && !item->IsDefault(true))) {
-					ApplyLiveConfig(cfgId, i, -1, 0, APPLY_PRELOAD_HWND);
-					return;
-				}
-	}
-}
-
-void PreviousLiveConfig(COMMAND_T* _ct)
-{
-	int cfgId = (int)_ct->user;
-	if (LiveConfig* lc = g_liveConfigs.Get()->Get(cfgId))
-	{
-		int i = lc->m_curMidiVal; // and not m_activeMidiVal, cc "smoothing" should apply here too!
-		while (--i >= 0)
-			if (LiveConfigItem* item = lc->m_ccConfs.Get(i))
-				if (!lc->m_ignoreEmpty || (lc->m_ignoreEmpty && !item->IsDefault(true))) {
-					ApplyLiveConfig(cfgId, i, -1, 0, APPLY_PRELOAD_HWND);
-					return;
-				}
-		// 2nd try (cycle)
-		i = lc->m_ccConfs.GetSize();
-		while (--i > lc->m_curMidiVal)
-			if (LiveConfigItem* item = lc->m_ccConfs.Get(i))
-				if (!lc->m_ignoreEmpty || (lc->m_ignoreEmpty && !item->IsDefault(true))) {
-					ApplyLiveConfig(cfgId, i, -1, 0, APPLY_PRELOAD_HWND);
-					return;
-				}
-	}
+	PreloadLiveConfig((int)_ct->user, _val, false, _valhw, _relmode);
 }
 
 void SwapCurrentPreloadLiveConfigs(COMMAND_T* _ct)
 {
 	int cfgId = (int)_ct->user;
 	if (LiveConfig* lc = g_liveConfigs.Get()->Get(cfgId))
-		ApplyLiveConfig(cfgId, lc->m_preloadMidiVal, -1, 0, APPLY_PRELOAD_HWND, true); // immediate
+		ApplyLiveConfig(cfgId, lc->m_preloadMidiVal, true); // immediate
+}
+
+void ApplyNextLiveConfig(COMMAND_T* _ct) {
+	NextPreviousLiveConfig((int)_ct->user, false, 1);
+}
+
+void ApplyPreviousLiveConfig(COMMAND_T* _ct) {
+	NextPreviousLiveConfig((int)_ct->user, false, -1);
+}
+
+void PreloadNextLiveConfig(COMMAND_T* _ct) {
+	NextPreviousLiveConfig((int)_ct->user, true, 1);
+}
+
+void PreloadPreviousLiveConfig(COMMAND_T* _ct) {
+	NextPreviousLiveConfig((int)_ct->user, true, -1);
+}
+
+// not based on m_activeMidiVal: cc "smoothing" must apply here too!
+// init cases lc->m_curMidiVal==-1 or lc->m_curPreloadMidiVal==-1 are properly manged
+bool NextPreviousLiveConfig(int _cfgId, bool _preload, int _step)
+{
+	if (LiveConfig* lc = g_liveConfigs.Get()->Get(_cfgId))
+	{
+		// 1st try
+		int startMidiVal = (_preload ? lc->m_curPreloadMidiVal : lc->m_curMidiVal);
+		if (startMidiVal<0)
+			startMidiVal = _step>0 ? -1 : lc->m_ccConfs.GetSize();
+
+		int i = startMidiVal + _step;
+		while (_step>0 ? i<lc->m_ccConfs.GetSize() : i>=0)
+		{
+			if (LiveConfigItem* item = lc->m_ccConfs.Get(i))
+			{
+				// IsDefault(false): "comments-only" configs can be useful (osc feedback)
+				if (!lc->m_ignoreEmpty || (lc->m_ignoreEmpty && !item->IsDefault(false)))
+				{
+					if (_preload) PreloadLiveConfig(_cfgId, i, false);
+					else ApplyLiveConfig(_cfgId, i, false);
+					return true;
+				}
+			}
+			i += _step;
+		}
+
+		// 2nd try: cycle up/down
+		startMidiVal = (_preload ? lc->m_curPreloadMidiVal : lc->m_curMidiVal);
+		if (startMidiVal<0)
+			startMidiVal = _step>0 ? 0 : lc->m_ccConfs.GetSize()-1;
+
+		i = _step>0 ? -1 + _step : lc->m_ccConfs.GetSize() + _step;
+		while (_step>0 ? i < startMidiVal : i > startMidiVal)
+		{
+			if (LiveConfigItem* item = lc->m_ccConfs.Get(i))
+			{
+				if (!lc->m_ignoreEmpty || (lc->m_ignoreEmpty && !item->IsDefault(false)))
+				{
+					if (_preload) PreloadLiveConfig(_cfgId, i, false);
+					else ApplyLiveConfig(_cfgId, i, false);
+					return true;
+				}
+			}
+			i += _step;
+		}
+	}
+	return false;
 }
 
 /////

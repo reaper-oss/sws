@@ -137,26 +137,45 @@ bool InsertSilence(const char* _undoTitle, double _pos, double _len)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Select project ("MIDI CC absolute only" actions)
+// Select project via MIDI CC/OSC action
 ///////////////////////////////////////////////////////////////////////////////
 
 int g_curPrjMidiVal = -1;
 
-class SelectProjectJob : public SNM_MidiActionJob
+class SelectProjectJob : public SNM_MidiOscActionJob
 {
 public:
 	SelectProjectJob(int _approxDelayMs, int _curval, int _val, int _valhw, int _relmode, HWND _hwnd) 
-		: SNM_MidiActionJob(SNM_SCHEDJOB_SEL_PRJ,_approxDelayMs,_curval,_val,_valhw,_relmode,_hwnd) {}
-	void Perform() {
-		if (ReaProject* proj = EnumProjects(m_absval, NULL, 0)) // project number is 0-based
+		: SNM_MidiOscActionJob(SNM_SCHEDJOB_SEL_PRJ,_approxDelayMs,_curval,_val,_valhw,_relmode,_hwnd) {}
+	void Perform()
+	{
+		if (ReaProject* proj = EnumProjects(GetValue(), NULL, 0)) // project number is 0-based
 			SelectProjectInstance(proj);
+		g_curPrjMidiVal = -1;
 	}
 };
 
-void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd) {
+void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd)
+{
+	// re-sync the current value
+	if (g_curPrjMidiVal<0)
+	{
+		int i=-1, curIdx=-1; 
+		ReaProject *prj, *curProj = EnumProjects(-1, NULL, 0);
+		while (prj = EnumProjects(++i, NULL, 0)) {
+			if (prj == curProj) {
+				curIdx = i;
+				break;
+			}
+		}
+		g_curPrjMidiVal = curIdx;
+	}
+	if (g_curPrjMidiVal<0)
+		g_curPrjMidiVal = 0;
+
 	if (SelectProjectJob* job = new SelectProjectJob(SNM_SCHEDJOB_DEFAULT_DELAY, g_curPrjMidiVal, _val, _valhw, _relmode, _hwnd))
 	{
-		g_curPrjMidiVal = job->GetAbsoluteValue();
+		g_curPrjMidiVal = job->GetValue();
 		SNM_AddOrReplaceScheduledJob(job);
 	}
 }

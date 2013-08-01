@@ -629,8 +629,10 @@ static DYN_COMMAND_T s_dynCmdTable[] =
 	{ "SWS/S&M: Set selected tracks to group %02d (default flags)", "S&M_SET_TRACK_GROUP", SetTrackGroup, 8, SNM_MAX_TRACK_GROUPS, NULL}, // not all the 32 groups by default!
 
 	{ "SWS/S&M: Live Config %02d - Open/close monitoring window", "S&M_OPEN_LIVECFG_MONITOR", OpenLiveConfigMonitorWnd, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, IsLiveConfigMonitorWndDisplayed},
-	{ "SWS/S&M: Live Config %02d - Apply next config", "S&M_NEXT_LIVE_CFG", NextLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL},
-	{ "SWS/S&M: Live Config %02d - Apply previous config", "S&M_PREVIOUS_LIVE_CFG", PreviousLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL},
+	{ "SWS/S&M: Live Config %02d - Apply next config", "S&M_NEXT_LIVE_CFG", ApplyNextLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL},
+	{ "SWS/S&M: Live Config %02d - Apply previous config", "S&M_PREVIOUS_LIVE_CFG", ApplyPreviousLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL},
+	{ "SWS/S&M: Live Config %02d - Preload next config", "S&M_PRELOAD_NEXT_LIVE_CFG", PreloadNextLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL},
+	{ "SWS/S&M: Live Config %02d - Preload previous config", "S&M_PRELOAD_PREVIOUS_LIVE_CFG", PreloadPreviousLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL},
 	{ "SWS/S&M: Live Config %02d - Apply preloaded config (swap preload/current)", "S&M_PRELOAD_LIVE_CFG", SwapCurrentPreloadLiveConfigs, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL},
 	{ "SWS/S&M: Live Config %02d - Enable", "S&M_LIVECFG_ON", EnableLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
 	{ "SWS/S&M: Live Config %02d - Disable", "S&M_LIVECFG_OFF", DisableLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
@@ -799,7 +801,7 @@ KbdSectionInfo* SNM_GetMySection()
 
 	static MIDI_COMMAND_T sCmdTable[] = 
 	{
-		// keep these as first actions (live configs stuff ' assumes  SNM_SNM_SECTION_1ST_CMD_ID)
+		// keep these first actions here, in this order!
 		{ { DEFACCEL, "SWS/S&M: Apply Live Config 1 (MIDI CC/OSC only)" }, "S&M_LIVECONFIG1", ApplyLiveConfig, NULL, 0},
 		{ { DEFACCEL, "SWS/S&M: Apply Live Config 2 (MIDI CC/OSC only)" }, "S&M_LIVECONFIG2", ApplyLiveConfig, NULL, 1},
 		{ { DEFACCEL, "SWS/S&M: Apply Live Config 3 (MIDI CC/OSC only)" }, "S&M_LIVECONFIG3", ApplyLiveConfig, NULL, 2},
@@ -809,14 +811,17 @@ KbdSectionInfo* SNM_GetMySection()
 		{ { DEFACCEL, "SWS/S&M: Preload Live Config 3 (MIDI CC/OSC only)" }, "S&M_PRE_LIVECONFIG3", PreloadLiveConfig, NULL, 2},
 		{ { DEFACCEL, "SWS/S&M: Preload Live Config 4 (MIDI CC/OSC only)" }, "S&M_PRE_LIVECONFIG4", PreloadLiveConfig, NULL, 3},
 
-		// fom this point, order does not matter anymore..
+		// fom this point, order does not matter anymore: greater than SNM_SNM_SECTION_1ST_CMD_ID + 2*SNM_LIVECFG_NB_CONFIGS
 		{ { DEFACCEL, "SWS/S&M: Select project (MIDI CC/OSC only)" }, "S&M_SELECT_PROJECT", SelectProject, NULL, 0},
-
-		{ { DEFACCEL, "SWS/S&M: Trigger preset for selected FX of selected tracks (MIDI CC/OSC only)" }, "S&M_SELFX_PRESET", TriggerFXPreset, NULL, -1},
-		{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 1 of selected tracks (MIDI CC/OSC only)" }, "S&M_PRESET_FX1", TriggerFXPreset, NULL, 0},
-		{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 2 of selected tracks (MIDI CC/OSC only)" }, "S&M_PRESET_FX2", TriggerFXPreset, NULL, 1},
-		{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 3 of selected tracks (MIDI CC/OSC only)" }, "S&M_PRESET_FX3", TriggerFXPreset, NULL, 2},
-		{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 4 of selected tracks (MIDI CC/OSC only)" }, "S&M_PRESET_FX4", TriggerFXPreset, NULL, 3}
+		{ { DEFACCEL, "SWS/S&M: Trigger preset for selected FX of selected track (MIDI CC/OSC only)" }, "S&M_SELFX_PRESET", TriggerFXPreset, NULL, -1},
+		{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 1 of selected track (MIDI CC/OSC only)" }, "S&M_PRESET_FX1", TriggerFXPreset, NULL, 0},
+		{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 2 of selected track (MIDI CC/OSC only)" }, "S&M_PRESET_FX2", TriggerFXPreset, NULL, 1},
+		{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 3 of selected track (MIDI CC/OSC only)" }, "S&M_PRESET_FX3", TriggerFXPreset, NULL, 2},
+		{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 4 of selected track (MIDI CC/OSC only)" }, "S&M_PRESET_FX4", TriggerFXPreset, NULL, 3},
+		{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 5 of selected track (MIDI CC/OSC only)" }, "S&M_PRESET_FX5", TriggerFXPreset, NULL, 4},
+		{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 6 of selected track (MIDI CC/OSC only)" }, "S&M_PRESET_FX6", TriggerFXPreset, NULL, 5},
+		{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 7 of selected track (MIDI CC/OSC only)" }, "S&M_PRESET_FX7", TriggerFXPreset, NULL, 6},
+		{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 8 of selected track (MIDI CC/OSC only)" }, "S&M_PRESET_FX8", TriggerFXPreset, NULL, 7}
 	};
 
 //!WANT_LOCALIZE_1ST_STRING_END
@@ -906,22 +911,25 @@ void SNM_AddOrReplaceScheduledJob(SNM_ScheduledJob* _job)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// SNM_MidiActionJob
+// SNM_MidiOscActionJob
 ///////////////////////////////////////////////////////////////////////////////
 
-// learn with midi pitch is not supported atm,
-// see http://forum.cockos.com/showthread.php?t=116377
+// learn with midi pitch is not supported atm, see
+// http://forum.cockos.com/showthread.php?t=116377
 // and http://forum.cockos.com/project.php?issueid=4576
-SNM_MidiActionJob::SNM_MidiActionJob(int _jobId, int _approxDelayMs, int _curCC, int _val, int _valhw, int _relmode, HWND _hwnd) 
+// OSC on REAPER end = 
+//        int ival=(int)(*arg*16383.0);
+//        int ret=sec->onAction(cmd, (ival>>7)&0x7F, ival&0x7F, 0, 0);
+SNM_MidiOscActionJob::SNM_MidiOscActionJob(int _jobId, int _approxDelayMs, int _curCC, int _val, int _valhw, int _relmode, HWND _hwnd) 
 	: SNM_ScheduledJob(_jobId, _approxDelayMs),m_val(_val),m_valhw(_valhw),m_relmode(_relmode),m_hwnd(_hwnd)
 {
-	m_absval = 0; // very default init
+	// very default init
+	m_absval = 0;
 
-	// osc & pitch midi events
+	// osc & pitch midi events (14-bit resolution)
 	if (_valhw>=0)
 	{
-//		m_absval = BOUNDED(_valhw|_val<<7, 0, 16383); // for pitch
-		m_absval = _valhw||_val ? BOUNDED(16384-(_valhw|_val<<7), 0, 16383) : 0; // for osc
+		m_absval = _valhw||_val ? BOUNDED(16384-(_valhw|_val<<7), 0, 16383) : 0;
 	}
 	// cc midi events
 	else if (_valhw==-1) // && _val>=0 && _val<128)
@@ -929,7 +937,9 @@ SNM_MidiActionJob::SNM_MidiActionJob(int _jobId, int _approxDelayMs, int _curCC,
 		switch (_relmode)
 		{
 			// absolute mode
-			case 0: m_absval = _val;					return; // !!
+			case 0:
+				m_absval = _val;
+				return; // !!
 
 			// relative modes
 			case 1: if (_val >= 0x40) _val|=~0x3f;		break;  // sign extend if 0x40 set
@@ -937,7 +947,7 @@ SNM_MidiActionJob::SNM_MidiActionJob(int _jobId, int _approxDelayMs, int _curCC,
 			case 3: if (_val&0x40) _val=-(_val&0x3f);	break;  // 0x40 is sign bit
 		}
 		// relative modes, again
-		m_absval = BOUNDED(BOUNDED(_curCC,0,127)+_val, 0, 127);
+		m_absval = BOUNDED(_curCC+_val, 0, 127);
 	}
 }
 

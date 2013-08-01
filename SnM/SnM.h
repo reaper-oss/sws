@@ -44,7 +44,6 @@
 //#define _SNM_OVERLAYS			// looks bad with some themes ATM
 
 
-
 ///////////////////////////////////////////////////////////////////////////////
 // Just to ease sustaining vs S&M/API/REAPER/WDL issues: 
 // #undef to activate the "expected code", #define to activate workarounds
@@ -58,8 +57,8 @@
   #define _SNM_SWELL_ISSUES		// workaround some SWELL issues
 #endif							// last test: WDL d1d8d2 - Dec. 20 2012
 								// - native font rendering won't draw multiple lines
-								// - missing some EN_CHANGE msg, see SnM_Notes.cpp
-								// - EN_SETFOCUS, EN_KILLFOCUS not yet supported
+								// - missing EN_CHANGE msg, see SnM_Notes.cpp
+								// - EN_SETFOCUS, EN_KILLFOCUS not supported yet
 
 #define _SNM_NO_ASYNC_UPDT		// disable async UI updates 
 								// (seems ok on Win, unstable on OSX)
@@ -205,15 +204,16 @@ private:
 	int m_flags, m_tr;
 };
 
-class SNM_MidiActionJob : public SNM_ScheduledJob {
+class SNM_MidiOscActionJob : public SNM_ScheduledJob
+{
 public:
-	SNM_MidiActionJob(int _jobId, int _approxDelayMs, int _curCC, int _val, int _valhw, int _relmode, HWND _hwnd); 
+	SNM_MidiOscActionJob(int _jobId, int _approxDelayMs, int _curCC, int _val, int _valhw, int _relmode, HWND _hwnd); 
 	virtual void Perform() {}
-	virtual int GetAbsoluteValue() { return m_absval; }
+	virtual int GetValue() { return m_absval; }
 protected:
 	int m_val, m_valhw, m_relmode; // values from the controller
-	int m_absval; // internal absolute value (deduced from the above)
 	HWND m_hwnd;
+	int m_absval;
 };
 
 void SNM_AddOrReplaceScheduledJob(SNM_ScheduledJob* _job);

@@ -64,6 +64,7 @@ void SelectTrackFX(COMMAND_T*);
 int GetSelectedTrackFX(MediaTrack* _tr);
 
 int GetUserPresetNames(MediaTrack* _tr, int _fx, WDL_PtrList<WDL_FastString>* _presetsOut);
+int GetSetFXPresetSelTrack(int _fxId, int* _presetIdx);
 bool TriggerFXPreset(MediaTrack* _tr, int _fxId, int _presetId, int _dir);
 void NextPresetSelTracks(COMMAND_T*);
 void PrevPresetSelTracks(COMMAND_T*);

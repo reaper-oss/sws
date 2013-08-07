@@ -26,5 +26,5 @@
 / Auto build # increment code from MS Knowledge base article 237870
 ******************************************************************************/
 
-#define SWS_VERSION			2,3,0,23
-#define SWS_VERSION_STR		"2, 3, 0, 23\0"
+#define SWS_VERSION			2,4,0,1
+#define SWS_VERSION_STR		"2, 4, 0, 1\0"

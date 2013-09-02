@@ -1,3 +1,9 @@
+ReaScript:
++Added function BR_SetTakeSourceFromFile()
+
+Update checker:
++Wait for startup project to load completely before displaying startup dialog
+
 !v2.4.0 #1 (August 6, 2013)
 Fixed some actions learned with <b>relative</b> MIDI CC events, those actions belong to the section "S&M extension":
 +SWS/S&M: Select project (MIDI CC/OSC only)

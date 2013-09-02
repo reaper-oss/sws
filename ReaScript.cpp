@@ -33,6 +33,7 @@
 #include "SnM/SnM_Routing.h"
 #include "SnM/SnM_Track.h"
 #include "Fingers/RprMidiTake.h"
+#include "Breeder/BR_Util.h"
 
 
 // Important: 
@@ -100,6 +101,8 @@ APIdef g_apidefs[] =
 	{ APIFUNC(FNG_GetMidiNoteIntProperty), "int", "RprMidiNote*,const char*", "midiNote,property", "[FNG] Get MIDI note property", },
 	{ APIFUNC(FNG_SetMidiNoteIntProperty), "void", "RprMidiNote*,const char*,int", "midiNote,property,value", "[FNG] Set MIDI note property", },
 	{ APIFUNC(FNG_AddMidiNote), "RprMidiNote*", "RprMidiTake*", "midiTake", "[FNG] Add MIDI note to MIDI take", },
+	
+	{ APIFUNC(BR_SetTakeSourceFromFile), "bool", "MediaItem_Take*,char*,bool", "take,filename,inProjectData", "[BR] Set new take source from file. To import MIDI file as in-project source data pass inProjectData=true. Returns false if failed.\nNote: To set source from existing take, see SNM_GetSetSourceState2", },
 
 	{ NULL, } // denote end of table
 };

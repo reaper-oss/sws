@@ -1056,6 +1056,25 @@ typedef struct
 // JFB <-----------------------------------------------------------------------
 
 
+// --------------------------------------------------------------------------->
+// Registering a timer (direct quote from Justin):
+//
+//  As far as getting notification that everything has finished loading...
+//  I'm not sure that the SaveExtensionConfig method will be reliable in the
+//  current version, or in the future. A good way to do this might be to run
+//  everything from a registered timer, where you do:
+//
+//  void myTimer() {
+//  }
+//
+//  rec->Register("timer",(void*)myTimer);
+//
+//
+//  This timer will only run after initialization has begun (as far as I
+//  remember, might need to test that)...
+// <-----------------------------------------------------------------------
+
+
 
 #ifndef UNDO_STATE_ALL
 #define UNDO_STATE_ALL 0xFFFFFFFF

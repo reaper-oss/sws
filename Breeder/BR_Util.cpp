@@ -105,43 +105,20 @@ double EndOfProject (bool markers, bool regions)
 	return projEnd;
 };
 
-void CenterWindowInReaper (HWND hwnd, HWND zOrder, bool startUp)
+void CenterDialog (HWND hwnd, HWND target, HWND zOrder)
 {
 	RECT r; GetWindowRect(hwnd, &r);
-	int width = r.right-r.left;
-	int height = r.bottom-r.top;
+	RECT r1; GetWindowRect(target, &r1);
+	int hwndW = r.right - r.left;
+	int hwndH = r.bottom - r.top;
+	int targW = r1.right - r1.left;	
+	int targH = r1.bottom - r1.top;
 
-	// On startup GetWindowRect could provide the wrong data so we read the .ini instead
-	if (startUp)
-	{
-		// Not maximized
-		if (GetPrivateProfileInt("Reaper", "wnd_state", 1, get_ini_file()) == 0)
-		{
-			int wnd_x = GetPrivateProfileInt("Reaper", "wnd_x", 1, get_ini_file());
-			int wnd_y = GetPrivateProfileInt("Reaper", "wnd_y", 1, get_ini_file());
-			int wnd_w = GetPrivateProfileInt("Reaper", "wnd_w", 1, get_ini_file());
-			int wnd_h = GetPrivateProfileInt("Reaper", "wnd_h", 1, get_ini_file());
-			r.left = wnd_x + (wnd_w - r.right  + r.left)/2;
-			r.top = wnd_y + (wnd_h - r.bottom + r.top)/2;
-		}
-		// Maximized (won't work with multiple displays if reaper is not maximized in primary display...heh)
-		else
-		{
-			int wnd_w = GetSystemMetrics(SM_CXSCREEN);
-			int wnd_h = GetSystemMetrics(SM_CYSCREEN);
-			r.left = (wnd_w - r.right  + r.left)/2;
-			r.top = (wnd_h - r.bottom + r.top)/2;
-		}
-	}
-	else
-	{
-		RECT r1; GetWindowRect(g_hwndParent, &r1);
-		r.left = r1.left + (r1.right  - r1.left - r.right  + r.left)/2;
-		r.top = r1.top +  (r1.bottom - r1.top  - r.bottom + r.top)/2;
-	}
+	r.left = r1.left + (targW-hwndW)/2;
+	r.top = r1.top + (targH-hwndH)/2;
+	r.right = r.left + hwndW;
+	r.bottom = r.top + hwndH;
 
-	r.right = r.left + width;
-	r.bottom = r.top + height;
 	EnsureNotCompletelyOffscreen(&r);
 	SetWindowPos(hwnd, zOrder, r.left, r.top, 0, 0, SWP_NOSIZE);
 };
@@ -197,4 +174,19 @@ void CommandTimer (COMMAND_T* ct)
 	WDL_FastString string;
 	string.AppendFormatted(256, "%d ms to execute: %s\n", msTime, name);
 	ShowConsoleMsg(string.Get());
+};
+
+bool BR_SetTakeSourceFromFile(MediaItem_Take* take, char* filename, bool inProjectData)
+{
+	if (take && file_exists(filename))
+	{
+		if (PCM_source* oldSource = (PCM_source*)GetSetMediaItemTakeInfo(take,"P_SOURCE",NULL))
+		{
+			PCM_source* newSource = PCM_Source_CreateFromFileEx(filename, !inProjectData);
+			GetSetMediaItemTakeInfo(take,"P_SOURCE", newSource);
+			delete oldSource;
+			return true;
+		}
+	}
+	return false;
 };

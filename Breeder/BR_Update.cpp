@@ -121,15 +121,21 @@ WDL_DLGRET DialogProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		return r;
 
 	static BR_SearchObject* searchObject = NULL;
-
+#ifndef _WIN32
+	static bool positionSet;
+#endif
 	switch(uMsg)
 	{
 		case WM_INITDIALOG:
 		{
 			searchObject = (BR_SearchObject*)lParam;
-			CenterWindowInReaper(hwnd, HWND_TOPMOST, false);
 			SetVersionMessage(hwnd, searchObject);
 			SetTimer(hwnd, 1, 100, NULL);
+#ifdef _WIN32
+			CenterDialog(hwnd, GetParent(hwnd), HWND_TOPMOST);
+#else
+			positionSet = false;
+#endif
 		}
 		break;
 #ifndef _WIN32
@@ -137,8 +143,9 @@ WDL_DLGRET DialogProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			// SetWindowPos doesn't seem to work in WM_INITDIALOG on OSX
 			// when creating a dialog with DialogBox so call here
-			if (LOWORD(wParam) == WA_ACTIVE)
-				CenterWindowInReaper(hwnd, HWND_TOPMOST, false);
+			if (!positionSet)
+				CenterDialog(hwnd, GetParent(hwnd), HWND_TOPMOST);
+			positionSet = true;
 		}
 		break;
 #endif
@@ -192,20 +199,12 @@ WDL_DLGRET DialogProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		case WM_TIMER:
 		{
-			if (searchObject->IsStartup())
-			{
-				if (searchObject->GetKillFlag()) // make sure dialog gets closed if new search started
-					EndDialog(hwnd, 0);
-			}
-			else
-			{
-				SendMessage(GetDlgItem(hwnd, IDC_BR_VER_PROGRESS), PBM_SETPOS, (int)(searchObject->GetProgress() * 100.0), 0);
+			SendMessage(GetDlgItem(hwnd, IDC_BR_VER_PROGRESS), PBM_SETPOS, (int)(searchObject->GetProgress() * 100.0), 0);
 
-				if (searchObject->GetStatus(NULL, NULL) != SEARCH_INITIATED)
-				{
-					SetVersionMessage(hwnd, searchObject);
-					KillTimer(hwnd, 1);
-				}
+			if (searchObject->GetStatus(NULL, NULL) != SEARCH_INITIATED)
+			{
+				SetVersionMessage(hwnd, searchObject);
+				KillTimer(hwnd, 1);
 			}
 		}
 		break;
@@ -225,9 +224,6 @@ WDL_DLGRET DialogProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 /*
  To start search, simply create the object and use GetStatus to query results from
  the search thread.
- Note that when startup is true, search thread displays GUI if update is found and then
- deletes the object (so when doing startup search the object needs to get allocated on
- the heap or bad things will happen! Bad practice? Probably...but is simple and works)
 */
 BR_SearchObject::BR_SearchObject (bool startup /*= false*/) : m_startup(startup), m_status(SEARCH_INITIATED), m_progress(0)
 {
@@ -353,40 +349,29 @@ DWORD WINAPI BR_SearchObject::StartSearch (void* searchObject)
 	// Make progress bar 100% when done searching
 	_this->SetProgress(1);
 
-	// Save remote version status
-	if (!_this->GetKillFlag())
-	{
-		// When both versions are available and are identical, ignore beta
-		if (statusO == 1 && statusB == 1)
-			if (!_this->CompareVersion(versionO, versionB))
-				statusB = 0;
-
-		int status;
-		if (statusO == -1 && statusB == -1)
-			status = NO_CONNECTION;
-		else if (statusO == 1 && statusB == 1)
-			status = BOTH_AVAILABLE;
-		else if (statusO == 1)
-			status = OFFICIAL_AVAILABLE;
-		else if (statusB == 1)
-			status = BETA_AVAILABLE;
-		else
-			status = UP_TO_DATE;
-
-		_this->SetStatus(versionO, versionB, status);
-	}
-
-	// Create modal (to prevent thread from finishing and ending dialog) dialog but only when doing startup search and update is found
-	// It has no parent so it's visible in the taskbar and does not stop user in interacting with Reaper (not true on OSX)
+	// Give some breathing space to hwndDlg (i.e. SNM startup action may load screenset that repositions Reaper...)
 	if (_this->IsStartup() && !_this->GetKillFlag())
-	{
-		Sleep (1500); // give some breathing space to hwndDlg (i.e. SNM startup action may load screenset that repositions Reaper...)
-		int status = _this->GetStatus(NULL, NULL);
-		if (status == OFFICIAL_AVAILABLE || status == BETA_AVAILABLE || status == BOTH_AVAILABLE)
-			DialogBoxParam(g_hInst, MAKEINTRESOURCE(IDD_BR_VERSION), NULL, DialogProc, (LPARAM)_this);
+		Sleep(1500);
 
-		delete _this; // when doing startup search, searchObject deletes itself
-	}
+	// When both versions are available and are identical, ignore beta
+	if (statusO == 1 && statusB == 1)
+		if (!_this->CompareVersion(versionO, versionB))
+			statusB = 0;
+
+	// Save status
+	int status;
+	if (statusO == -1 && statusB == -1)
+		status = NO_CONNECTION;
+	else if (statusO == 1 && statusB == 1)
+		status = BOTH_AVAILABLE;
+	else if (statusO == 1)
+		status = OFFICIAL_AVAILABLE;
+	else if (statusB == 1)
+		status = BETA_AVAILABLE;
+	else
+		status = UP_TO_DATE;
+	_this->SetStatus(versionO, versionB, status);
+
 
 	JNL::close_socketlib();
 	return 0;
@@ -396,13 +381,9 @@ void BR_SearchObject::EndSearch ()
 {
 	if (this->GetProcess() != NULL)
 	{
-		// when doing startup search object destroys itself at the end of the thread so no need to wait for it to finish
-		if (!m_startup)
-		{
-			this->SetKillFlag(true);
-			WaitForSingleObject(this->GetProcess(), INFINITE);
-			this->SetKillFlag(false);
-		}
+		this->SetKillFlag(true);
+		WaitForSingleObject(this->GetProcess(), INFINITE);
+		this->SetKillFlag(false);
 
 		CloseHandle(this->GetProcess());
 		this->SetProcess(NULL);
@@ -411,8 +392,8 @@ void BR_SearchObject::EndSearch ()
 
 void BR_SearchObject::RestartSearch ()
 {
-	this->EndSearch();
 	BR_Version version;
+	this->EndSearch();
 	this->SetProgress(0);
 	this->SetStatus(version, version, SEARCH_INITIATED);
 	this->SetProcess(CreateThread(NULL, 0, this->StartSearch, (void*)this, 0, NULL));
@@ -471,8 +452,8 @@ void BR_SearchObject::SetProgress (double progress)	{ m_progress = progress; }
 double BR_SearchObject::GetProgress ()				{ return m_progress; }
 bool BR_SearchObject::IsStartup ()					{ return m_startup; }
 
-HANDLE BR_SearchObject::m_hProcess = NULL;
 bool BR_SearchObject::m_killFlag = false;
+HANDLE BR_SearchObject::m_hProcess = NULL;
 
 // Command and preference functions
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -488,6 +469,7 @@ void VersionCheckDialog (HWND hwnd)
 	{
 		DialogBoxParam(g_hInst, MAKEINTRESOURCE(IDD_BR_VERSION), hwnd, DialogProc, (LPARAM)searchObject);
 		delete searchObject;
+		searchObject = NULL;
 	}
 };
 
@@ -517,8 +499,27 @@ void SetStartupSearchOptions (bool official, bool beta, unsigned int lastTime)
 	WritePrivateProfileString("SWS", STARTUP_VERSION_KEY, tmp, get_ini_file());
 };
 
-// Startup function
+// Startup functionality
 //////////////////////////////////////////////////////////////////////////////////////////
+void StartupSearch()
+{
+	static BR_SearchObject* searchObject = new (nothrow) BR_SearchObject(true);
+
+	if (searchObject)
+	{
+		int status = searchObject->GetStatus(NULL, NULL);
+		if (status != SEARCH_INITIATED)
+		{
+			if (status == OFFICIAL_AVAILABLE || status == BETA_AVAILABLE || status == BOTH_AVAILABLE)
+				DialogBoxParam(g_hInst, MAKEINTRESOURCE(IDD_BR_VERSION), g_hwndParent, DialogProc, (LPARAM)searchObject);
+			delete searchObject;
+			searchObject = NULL;
+		}
+	}
+	else
+		plugin_register("-timer",(void*)StartupSearch);
+};
+
 void VersionCheckInit ()
 {
 	// Get options
@@ -534,9 +535,8 @@ void VersionCheckInit ()
 			// Write current time
 			SetStartupSearchOptions (official, beta, currentTime);
 
-			// Start search
-			BR_SearchObject* searchObject;
-			searchObject = new (nothrow) BR_SearchObject(true);
+			// Register timer that starts after reaper loads, from there we start search
+			plugin_register("timer",(void*)StartupSearch);
 		}
 	}
 };

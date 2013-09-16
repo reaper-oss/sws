@@ -28,6 +28,7 @@
 #pragma once
 
 #define TOOLTIP_MAX_LEN					512
+#define CELL_MAX_LEN					256
 #define MIN_DOCKWND_WIDTH				147
 #define MIN_DOCKWND_HEIGHT				100
 

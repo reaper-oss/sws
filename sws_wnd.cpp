@@ -247,8 +247,8 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 					AddToMenu(hMenu, SWS_SEPARATOR, 0);
 
 				// Add std menu items
-				char str[100];
-				if (_snprintf(str, 100, __LOCALIZE_VERFMT("Dock %s in Docker","sws_menu"), m_wndTitle.Get()) > 0)
+				char str[128];
+				if (_snprintf(str, sizeof(str), __LOCALIZE_VERFMT("Dock %s in Docker","sws_menu"), m_wndTitle.Get()) > 0)
 					AddToMenu(hMenu, str, DOCK_MSG);
 
 				// Check dock state
@@ -1027,7 +1027,6 @@ void SWS_ListView::OnDestroy()
 	EditListItemEnd(false);
 
 	// Save cols
-	char str[256];
 	int cols[20];
 	int iCols = 0;
 	for (int i = 0; i < m_iCols; i++)
@@ -1046,6 +1045,7 @@ void SWS_ListView::OnDestroy()
 		if (m_pCols[i].iPos != -1)
 			m_pCols[i].iPos = cols[iCols++];
 		
+	char str[256];
 	sprintf(str, "%d", m_iSortCol);
 
 	iCols = 0;
@@ -1134,7 +1134,7 @@ void SWS_ListView::Update()
 	{
 		m_bDisableUpdates = true;
 
-		char str[256];
+		char str[CELL_MAX_LEN]="";
 		bool bRemovedItems = false;
 
 		bool bResort = false;
@@ -1214,7 +1214,7 @@ void SWS_ListView::Update()
 				if (m_pCols[k].iPos != -1)
 				{
 					item.iSubItem = iCol;
-					GetItemText(pItem, k, str, 256);
+					GetItemText(pItem, k, str, sizeof(str));
 					if (!iCol && !bFound)
 					{
 						item.mask |= LVIF_PARAM | LVIF_TEXT;
@@ -1224,8 +1224,8 @@ void SWS_ListView::Update()
 					}
 					else
 					{
-						char curStr[256];
-						ListView_GetItemText(m_hwndList, item.iItem, iCol, curStr, 256);
+						char curStr[CELL_MAX_LEN]="";
+						ListView_GetItemText(m_hwndList, item.iItem, iCol, curStr, sizeof(curStr));
 						if (strcmp(str, curStr))
 							item.mask |= LVIF_TEXT;
 						if (item.mask)
@@ -1265,7 +1265,7 @@ void SWS_ListView::Update()
 				ListView_GetItemRect(m_hwndList, i, &r, LVIR_BOUNDS);
 				memcpy(&ti.rect, &r, sizeof(RECT));
 				ti.uId = i;
-				GetItemTooltip(GetListItem(i), str, 100);
+				GetItemTooltip(GetListItem(i), str, sizeof(str));
 				SendMessage(m_hwndTooltip, TTM_ADDTOOL, 0, (LPARAM)&ti);
 			}
 		}
@@ -1460,8 +1460,8 @@ void SWS_ListView::EditListItem(int iIndex, int iCol)
 	ShowWindow(m_hwndEdit, SW_SHOW);
 
 	SWS_ListItem* item = GetListItem(iIndex);
-	char str[100];
-	GetItemText(item, iCol, str, 100);
+	char str[CELL_MAX_LEN]="";
+	GetItemText(item, iCol, str, sizeof(str));
 	SetWindowText(m_hwndEdit, str);
 	SetFocus(m_hwndEdit);
 	SendMessage(m_hwndEdit, EM_SETSEL, 0, -1);
@@ -1482,15 +1482,15 @@ bool SWS_ListView::EditListItemEnd(bool bSave, bool bResort)
 			int editedCol = m_iEditingCol;
 			m_iEditingCol = -1;
 
-			char newStr[100];
-			char curStr[100];
-			GetWindowText(m_hwndEdit, newStr, 100);
+			char newStr[CELL_MAX_LEN];
+			char curStr[CELL_MAX_LEN];
+			GetWindowText(m_hwndEdit, newStr, sizeof(newStr));
 			SWS_ListItem* item = GetListItem(m_iEditingItem);
-			GetItemText(item, editedCol, curStr, 100);
+			GetItemText(item, editedCol, curStr, sizeof(curStr));
 			if (strcmp(curStr, newStr))
 			{
 				SetItemText(item, editedCol, newStr);
-				GetItemText(item, editedCol, newStr, 100);
+				GetItemText(item, editedCol, newStr, sizeof(newStr));
 				ListView_SetItemText(m_hwndList, m_iEditingItem, DataToDisplayCol(editedCol), newStr);
 				updated = true;
 			}
@@ -1517,10 +1517,10 @@ int SWS_ListView::OnEditingTimer()
 int SWS_ListView::OnItemSort(SWS_ListItem* item1, SWS_ListItem* item2)
 {
 	// Just sort by string
-	char str1[64];
-	char str2[64];
-	GetItemText(item1, abs(m_iSortCol)-1, str1, 64);
-	GetItemText(item2, abs(m_iSortCol)-1, str2, 64);
+	char str1[CELL_MAX_LEN];
+	char str2[CELL_MAX_LEN];
+	GetItemText(item1, abs(m_iSortCol)-1, str1, sizeof(str1));
+	GetItemText(item2, abs(m_iSortCol)-1, str2, sizeof(str2));
 
 	// If strings are purely numbers, sort numerically
 	char* pEnd1, *pEnd2;

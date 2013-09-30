@@ -1,8 +1,15 @@
-ReaScript:
+ReaScript function export:
 +Added function BR_SetTakeSourceFromFile()
++Issue 598: fixed potential crash
 
-Update checker:
-+Wait for startup project to load completely before displaying startup dialog
+Localization: fixed the following features/actions when the extension is translated
++All SWS zoom features
++Xenakios "Scroll track view" actions
++S&M "Toggle offscreen item selection" actions
+
+Other:
++Update checker: wait for startup project to load completely before displaying startup dialog
++Issue 593: increased maximum cell length for all list views
 
 !v2.4.0 #1 (August 6, 2013)
 Fixed some actions learned with <b>relative</b> MIDI CC events, those actions belong to the section "S&M extension":

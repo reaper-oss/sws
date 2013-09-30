@@ -729,7 +729,7 @@ static void removeDuplicates(std::vector<RprMidiNote *> &midiNotes)
 {
     for(int noteOffset = 0; (midiNotes.begin() + noteOffset) != midiNotes.end(); noteOffset++)
     {
-        std::vector<RprMidiNote *>::iterator i = midiNotes.begin() + noteOffset;
+		std::vector<RprMidiNote *>::iterator i = midiNotes.begin() + noteOffset;
         RprMidiNote *lhs = *i;
         for(std::vector<RprMidiNote *>::iterator j = i + 1; j != midiNotes.end(); j++)
         {
@@ -755,6 +755,8 @@ static void removeDuplicates(std::vector<RprMidiNote *> &midiNotes)
             {
                 delete rhs;
                 j = midiNotes.erase(j);
+                if (noteOffset+1 >= (int)midiNotes.size())
+                    break;
             }
             else
             {

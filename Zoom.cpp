@@ -1228,7 +1228,7 @@ LRESULT CALLBACK DragZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 			bDragStart = false;
 			bDragging = false;
 			break;
-			
+
 		case WM_MOUSEMOVE:
 			if (bDragStart)
 			{
@@ -1293,6 +1293,18 @@ LRESULT CALLBACK DragZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 			break;
 	}
 	return g_ReaperRulerWndProc(hwnd, uMsg, wParam, lParam); 
+}
+
+void EnableDragZoom(COMMAND_T* _ct)
+{
+	if ((int)_ct->user)
+		g_bDragZoomUpper = !g_bDragZoomUpper;
+	else
+		g_bDragZoomLower = !g_bDragZoomLower;
+}
+
+int IsDragZoomEnabled(COMMAND_T* _ct) {
+	return (int)_ct->user ? g_bDragZoomUpper : g_bDragZoomLower;
 }
 
 void ZoomTool(COMMAND_T*)
@@ -1483,6 +1495,9 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Redo zoom" },												"SWS_REDOZOOM",			RedoZoom,			NULL, },
 	{ { DEFACCEL, "SWS: Zoom tool (marquee)" },										"SWS_ZOOM",				ZoomTool,			NULL, 0, IsZoomMode },
 	{ { DEFACCEL, "SWS: Zoom preferences" },										"SWS_ZOOMPREFS",		ZoomPrefs,			"SWS Zoom preferences...", },
+
+	{ { DEFACCEL, "SWS: Toggle drag zoom enable (ruler bottom half)" },				"SWS_EN_DRAGZOOM_BOT",	EnableDragZoom, NULL, 0, IsDragZoomEnabled},
+	{ { DEFACCEL, "SWS: Toggle drag zoom enable (ruler top half)" },				"SWS_EN_DRAGZOOM_TOP",	EnableDragZoom, NULL, 1, IsDragZoomEnabled},
 
 	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, }, // for main Extensions menu
 	{ {}, LAST_COMMAND, }, // Denote end of table

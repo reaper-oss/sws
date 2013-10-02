@@ -7,6 +7,10 @@ Localization: fixed the following features/actions when the extension is transla
 +Xenakios "Scroll track view" actions
 +S&M "Toggle offscreen item selection" actions
 
+Issue 540 / Ruler's drag zoom: added actions for better usability
++SWS: Toggle drag zoom enable (ruler top half)
++SWS: Toggle drag zoom enable (ruler bottom half)
+
 Other:
 +Update checker: wait for startup project to load completely before displaying startup dialog
 +Issue 593: increased maximum cell length for all list views

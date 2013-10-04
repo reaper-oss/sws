@@ -82,13 +82,13 @@ static bool g_bAIEnabled = false;
 static WDL_String g_ACIni;
 
 // Register to marker/region updates 
-class ACMarkerRegionListener : public SNM_MarkerRegionListener {
+class AC_MarkerRegionListener : public SNM_MarkerRegionListener {
 public:
-	ACMarkerRegionListener() : SNM_MarkerRegionListener() {}
+	AC_MarkerRegionListener() : SNM_MarkerRegionListener() {}
 	void NotifyMarkerRegionUpdate(int _updateFlags) { AutoColorMarkerRegion(false, _updateFlags); }
 };
 
-ACMarkerRegionListener g_mkrRgnSubscriber;
+AC_MarkerRegionListener g_mkrRgnListener;
 
 // Optimized/custom version of RegisterToMarkerRegionUpdates()
 // (to avoid useless polling behind the scene)
@@ -98,10 +98,10 @@ bool ACRegisterUnregisterToMarkerRegionUpdates()
 		for (int i = 0; i < g_pACItems.GetSize(); i++)
 			if (SWS_RuleItem* rule = (SWS_RuleItem*)g_pACItems.Get(i))
 				if ((g_bACMEnabled && rule->m_type == AC_MARKER) || (g_bACREnabled && rule->m_type == AC_REGION)) {
-					RegisterToMarkerRegionUpdates(&g_mkrRgnSubscriber); 
+					RegisterToMarkerRegionUpdates(&g_mkrRgnListener); 
 					return true; // do not use the above returned value
 				}
-	UnregisterToMarkerRegionUpdates(&g_mkrRgnSubscriber); 
+	UnregisterToMarkerRegionUpdates(&g_mkrRgnListener); 
 	return false; // do not use the above returned value
 }
 
@@ -144,8 +144,8 @@ void SWS_AutoColorView::GetItemText(SWS_ListItem* item, int iCol, char* str, int
 		}
 		break;
 	case COL_COLOR:
-		if (pItem->m_color < 0)
-			lstrcpyn(str, __localizeFunc(cColorTypes[-pItem->m_color - 1],"sws_DLG_115",LOCALIZE_FLAG_NOCACHE), iStrMax);
+		if (pItem->m_color<0 && (-pItem->m_color-1) < __ARRAY_SIZE(cColorTypes))
+			lstrcpyn(str, __localizeFunc(cColorTypes[-pItem->m_color-1],"sws_DLG_115",LOCALIZE_FLAG_NOCACHE), iStrMax);
 		else
 #ifdef _WIN32
 			_snprintf(str, iStrMax, "0x%02x%02x%02x", pItem->m_color & 0xFF, (pItem->m_color >> 8) & 0xFF, (pItem->m_color >> 16) & 0xFF); //Brado: I think this is in reverse. Ini file dec to hex conversion (correct value for color) shows opposite of what this outputs to screen. e.g. 0xFFFF80 instead of 0x80FFFF
@@ -356,7 +356,7 @@ void SWS_AutoColorWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				{
 					int x = 0;
 					while ((item = (SWS_RuleItem*)m_pLists.Get(0)->EnumSelected(&x)))
-						item->m_color = cc.rgbResult;
+						item->m_color = cc.rgbResult & 0xFFFFFF; // fix for issue 600
 				}
 				Update();
 #else
@@ -1152,7 +1152,7 @@ void AutoColorSaveState()
 
 void AutoColorExit()
 {
-	UnregisterToMarkerRegionUpdates(&g_mkrRgnSubscriber);
+	UnregisterToMarkerRegionUpdates(&g_mkrRgnListener);
 	AutoColorSaveState();
 	delete g_pACWnd;
 }

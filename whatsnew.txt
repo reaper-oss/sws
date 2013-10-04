@@ -1,15 +1,14 @@
 ReaScript function export:
 +Added function BR_SetTakeSourceFromFile()
-+Issue 598: fixed potential crash
-
-Localization: fixed the following features/actions when the extension is translated
-+All SWS zoom features
-+Xenakios "Scroll track view" actions
-+S&M "Toggle offscreen item selection" actions
++Issue 598: fixed potential crash with FNG_FreeMidiTake
 
 Issue 540 / Ruler's drag zoom: added actions for better usability
 +SWS: Toggle drag zoom enable (ruler top half)
 +SWS: Toggle drag zoom enable (ruler bottom half)
+
+Fixes
++Issue 600: fixed potential crash when changing colors in the Auto color/icon window
++Localization: fixed SWS zoom, "Scroll track view" and "Toggle offscreen item selection" actions (when the extension is translated)
 
 Other:
 +Update checker: wait for startup project to load completely before displaying startup dialog

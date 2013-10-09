@@ -29,6 +29,7 @@
 
 // SWS_Mutex: OS independently wraps a mutex.  You can use this class alone, or
 // for a slightly easier way, use SWS_SectionLock below.
+// Note: SWS_Mutex is re-entrant (the same thread can acquire the lock multiple times)
 class SWS_Mutex
 {
 #ifdef _WIN32

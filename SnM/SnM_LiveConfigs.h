@@ -79,7 +79,7 @@ public:
 	SNM_OscCSurf* m_osc;
 
 private:
-	GUID m_inputTr; // GUID rather than MediaTrack* (to handle track deletion + undo, etc)
+	GUID m_inputTr; // GUID rather than MediaTrack* (to handle undo of track deletion, etc)
 };
 
 
@@ -148,48 +148,50 @@ protected:
 };
 
 
-class ApplyLiveConfigJob : public SNM_MidiOscActionJob {
+class LiveConfigJob : public MidiOscActionJob {
 public:
-	ApplyLiveConfigJob(int _jobId, int _approxDelayMs, int _curval, int _val, int _valhw, int _relmode, int _cfgId) 
-		: SNM_MidiOscActionJob(_jobId,_approxDelayMs,_curval,_val,_valhw,_relmode,NULL), m_cfgId(_cfgId) {}
-	void Perform();
-	
-	// overrides SNM_MidiOscActionJob::GetValue() in order to clamp
-	// to SNM_LIVECFG_NB_ROWS (the received value can be greater)
-	virtual int GetValue()
-	{
-		return BOUNDED(m_absval, 0, SNM_LIVECFG_NB_ROWS-1);
-	}
+	LiveConfigJob(int _jobId, int _approxMs, int _val, int _valhw, int _relmode, int _cfgId) 
+		: MidiOscActionJob(_jobId,_approxMs,_val,_valhw,_relmode), m_cfgId(_cfgId) {}
+protected:
+	double GetMinValue() { return 0; }
+	double GetMaxValue() { return SNM_LIVECFG_NB_ROWS-1; }
 	int m_cfgId;
 };
 
-
-class PreloadLiveConfigJob : public SNM_MidiOscActionJob {
+class ApplyLiveConfigJob : public LiveConfigJob {
 public:
-	PreloadLiveConfigJob(int _jobId, int _approxDelayMs, int _curval, int _val, int _valhw, int _relmode, int _cfgId) 
-		: SNM_MidiOscActionJob(_jobId,_approxDelayMs,_curval,_val,_valhw,_relmode,NULL), m_cfgId(_cfgId)  {}
+	ApplyLiveConfigJob(int _cfgId, int _approxMs, int _val, int _valhw, int _relmode) 
+		: LiveConfigJob(SNM_SCHEDJOB_LIVECFG_APPLY+_cfgId,_approxMs,_val,_valhw,_relmode,_cfgId) {}
+	virtual void Init(ScheduledJob* _replacedJob = NULL);
+protected:
 	void Perform();
+	double GetCurrentValue();
+};
 
-	// overrides SNM_MidiOscActionJob::GetValue() in order to clamp
-	// to SNM_LIVECFG_NB_ROWS (the received value can be greater)
-	virtual int GetValue()
-	{
-		return BOUNDED(m_absval, 0, SNM_LIVECFG_NB_ROWS-1);
-	}
-	int m_cfgId;
+class PreloadLiveConfigJob : public LiveConfigJob {
+public:
+	PreloadLiveConfigJob(int _cfgId, int _approxMs, int _val, int _valhw, int _relmode)
+		: LiveConfigJob(SNM_SCHEDJOB_LIVECFG_PRELOAD+_cfgId,_approxMs,_val,_valhw,_relmode,_cfgId)  {}
+	virtual void Init(ScheduledJob* _replacedJob = NULL);
+protected:
+	void Perform();
+	double GetCurrentValue();
 };
 
 
-class LiveConfigsUpdateJob : public SNM_ScheduledJob {
+class LiveConfigsUpdateEditorJob : public ScheduledJob {
 public:
-	LiveConfigsUpdateJob() : SNM_ScheduledJob(SNM_SCHEDJOB_LIVECFG_UPDATE, SNM_SCHEDJOB_SLOW_DELAY) {}
+	LiveConfigsUpdateEditorJob(int _approxMs)
+		: ScheduledJob(SNM_SCHEDJOB_LIVECFG_UPDATE, _approxMs) {}
+protected:
 	void Perform();
 };
 
-class LiveConfigsUpdateFadeJob : public SNM_ScheduledJob {
+class LiveConfigsUpdateFadeJob : public ScheduledJob {
 public:
 	LiveConfigsUpdateFadeJob(int _value) 
-		: SNM_ScheduledJob(SNM_SCHEDJOB_LIVECFG_FADE_UPDATE, SNM_SCHEDJOB_DEFAULT_DELAY), m_value(_value) {}
+		: ScheduledJob(SNM_SCHEDJOB_LIVECFG_FADE_UPDATE, SNM_SCHEDJOB_DEFAULT_DELAY), m_value(_value) {}
+protected:
 	void Perform();
 	int m_value;
 };

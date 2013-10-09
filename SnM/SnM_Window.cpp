@@ -506,20 +506,35 @@ bool GetSelectedAction(char* _idstrOut, int _idStrSz, KbdSectionInfo* _expectedS
 	{
 		case -4: {
 			char msg[256]="";
-			_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("The section \"%s\" is not selected in the Actions window!\nDo you want to select it?","sws_mbox"), __localizeFunc(_expectedSection->name,"accel_sec",0));
+			_snprintfSafe(msg,
+				sizeof(msg),
+				__LOCALIZE_VERFMT("The section \"%s\" is not selected in the Actions window!\nDo you want to select it?","sws_mbox"),
+				__localizeFunc(_expectedSection->name,"accel_sec",0));
 			if (IDYES == MessageBox(GetMainHwnd(), msg, __LOCALIZE("S&M - Error","sws_mbox"), MB_YESNO))
 				ShowActionList(_expectedSection, NULL);
 			return false;
 		}
 		case -3:
-			MessageBox(GetMainHwnd(), __LOCALIZE("There is no selected action in the Actions window!","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
+			MessageBox(GetMainHwnd(),
+				__LOCALIZE("There is no selected action in the Actions window!","sws_mbox"),
+				__LOCALIZE("S&M - Error","sws_mbox"),
+				MB_OK);
 			return false;
 		case -2:
-			MessageBox(GetMainHwnd(), __LOCALIZE("Action IDs are not displayed in the Actions window!\nTip: right-click on the table header > Show action IDs.","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
+			MessageBox(GetMainHwnd(),
+				__LOCALIZE("Action IDs are not displayed in the Actions window!\nTip: right-click on the table header > Show action IDs.","sws_mbox"),
+				__LOCALIZE("S&M - Error","sws_mbox"),
+				MB_OK);
 			return false;
 		case -1:
-			if (IDYES == MessageBox(GetMainHwnd(), __LOCALIZE("Actions window not opened!\nDo you want to open it?","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_YESNO))
+			if (IDYES == MessageBox(
+				GetMainHwnd(),
+				__LOCALIZE("Actions window not opened!\nDo you want to open it?","sws_mbox"),
+				__LOCALIZE("S&M - Error","sws_mbox"),
+				MB_YESNO))
+			{
 				ShowActionList(_expectedSection, NULL);
+			}
 			return false;
 	}
 	return true;
@@ -563,7 +578,7 @@ bool DumpActionList(int _type, const char* _title, const char* _lineFormat, cons
 				return false; // just in case..
 
 			if (_heading)
-				fprintf(f, "%s", _heading); 
+				fprintf(f, "%s", _heading);
 
 			int nbWrote=0;
 			LVITEM li;
@@ -676,7 +691,7 @@ void HideFXChain(COMMAND_T* _ct)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (tr && (!_ct || (_ct && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))))
-			TrackFX_Show(tr, GetSelectedTrackFX(tr), 0);
+			TrackFX_Show(tr, GetSelectedTrackFX(tr), 0); // includes an undo point
 	}
 }
 

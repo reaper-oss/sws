@@ -32,9 +32,8 @@
 #ifndef _SNM_CHUNK_H_
 #define _SNM_CHUNK_H_
 
-#include "SnM_ChunkParserPatcher.h"
 
-#define SNM_RECPASSPARSER_MAX_TAKES	1024
+#define SNM_RECPASSPARSER_MAX_TAKES		1024
 
 
 ///////////////////////////////////////////////////////////////////////////////

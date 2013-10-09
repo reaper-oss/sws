@@ -30,8 +30,6 @@
 #ifndef _SNM_ROUTING_H_
 #define _SNM_ROUTING_H_
 
-#include "SnM_ChunkParserPatcher.h"
-
 
 class SNM_SndRcv
 {

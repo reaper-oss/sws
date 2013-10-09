@@ -32,31 +32,36 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// SNM_MarkerRegionListener, see SNM_CSurfRun()
+// Marker and region update listener
 ///////////////////////////////////////////////////////////////////////////////
 
-WDL_PtrList<SNM_MarkerRegionListener> g_SNM_MkrRgnListeners;
-SWS_Mutex g_SNM_MkrRgnListenersMutex;
+DWORD g_mkrRgnNotifyTime = 0; // really approx (updated on timer)
+#ifdef _SNM_MUTEX
+SWS_Mutex g_mkrRgnListenersMutex;
+#endif
 WDL_PtrList<MarkerRegion> g_mkrRgnCache;
+WDL_PtrList<SNM_MarkerRegionListener> g_mkrRgnListeners;
 
-bool RegisterToMarkerRegionUpdates(SNM_MarkerRegionListener* _sub) {
-	SWS_SectionLock lock(&g_SNM_MkrRgnListenersMutex);
-	if (_sub && g_SNM_MkrRgnListeners.Find(_sub) < 0)
-		return (g_SNM_MkrRgnListeners.Add(_sub) != NULL);
-	return false;
+void RegisterToMarkerRegionUpdates(SNM_MarkerRegionListener* _listener)
+{
+#ifdef _SNM_MUTEX
+	SWS_SectionLock lock(&g_mkrRgnListenersMutex);
+#endif
+	if (_listener && g_mkrRgnListeners.Find(_listener) < 0)
+		g_mkrRgnListeners.Add(_listener);
 }
 
-bool UnregisterToMarkerRegionUpdates(SNM_MarkerRegionListener* _sub) {
-	SWS_SectionLock lock(&g_SNM_MkrRgnListenersMutex);
-	int idx = _sub ? g_SNM_MkrRgnListeners.Find(_sub) : -1;
-	if (idx >= 0) {
-		g_SNM_MkrRgnListeners.Delete(idx, false);
-		return true;
-	}
-	return false;
+void UnregisterToMarkerRegionUpdates(SNM_MarkerRegionListener* _listener)
+{
+#ifdef _SNM_MUTEX
+	SWS_SectionLock lock(&g_mkrRgnListenersMutex);
+#endif
+	int idx = _listener ? g_mkrRgnListeners.Find(_listener) : -1;
+	if (idx >= 0)
+		g_mkrRgnListeners.Delete(idx, false);
 }
 
-// returns an update mask: 0 if nothing changed, &SNM_MARKER_MASK: marker change, &SNM_REGION_MASK: region change
+// return a bitmask: &SNM_MARKER_MASK: marker update, &SNM_REGION_MASK: region update
 int UpdateMarkerRegionCache()
 {
 	int updateFlags=0;
@@ -89,6 +94,24 @@ int UpdateMarkerRegionCache()
 				return SNM_MARKER_MASK|SNM_REGION_MASK;
 			}
 	return updateFlags;
+}
+
+// notify marker/region listeners?
+// polled via SNM_CSurfRun()
+void UpdateMarkerRegionRun()
+{
+	if (GetTickCount() > g_mkrRgnNotifyTime)
+	{
+		g_mkrRgnNotifyTime = GetTickCount() + SNM_MKR_RGN_UPDATE_FREQ;
+		
+#ifdef _SNM_MUTEX
+		SWS_SectionLock lock(&g_mkrRgnListenersMutex);
+#endif
+		if (int sz=g_mkrRgnListeners.GetSize())
+			if (int updateFlags = UpdateMarkerRegionCache())
+				for (int i=sz-1; i>=0; i--)
+					g_mkrRgnListeners.Get(i)->NotifyMarkerRegionUpdate(updateFlags);
+	}
 }
 
 
@@ -355,7 +378,7 @@ bool GotoMarkerRegion(ReaProject* _proj, int _num, int _flags, bool _select = fa
 				GetSet_LoopTimeRange2(NULL, true, true, &pos, &end, false); // seek is managed below
 
 			int* opt = (int*)GetConfigVar("smoothseek"); // obeys smooth seek
-			SetEditCurPos2(_proj, pos, true, opt && *opt); // incl. undo point if enabled in prefs
+			SetEditCurPos2(_proj, pos, true, opt && *opt); // includes an undo point, if enabled in prefs
 
 			PreventUIRefresh(-1);
 			UpdateTimeline(); // ruler + arrange

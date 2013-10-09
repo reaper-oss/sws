@@ -39,9 +39,11 @@
 //#define _SNM_SCREENSET_DEBUG
 //#define _SNM_DYN_FONT_DEBUG
 //#define _SNM_MISC				// not released, deprecated, tests, etc..
-//#define _SNM_WDL				// if my wdl version is used
-#define _SNM_HOST_AW			// hosts some of Adam's stuff
+//#define _SNM_WDL				// if my WDL version is used
+#define _SNM_HOST_AW			// hosts Adam's stuff
 //#define _SNM_OVERLAYS			// looks bad with some themes ATM
+//#define _SNM_MUTEX			// un-mutexing since IReaperControlSurface::Run() is called from the main thread
+//#define _SNM_LAZY_SLOTS		// WIP
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -54,11 +56,12 @@
 								// - GetToggleCommandState2() only works for the main section
 
 #ifdef __APPLE__
-  #define _SNM_SWELL_ISSUES		// workaround some SWELL issues
-#endif							// last test: WDL d1d8d2 - Dec. 20 2012
+#define _SNM_SWELL_ISSUES		// workaround some SWELL issues
+								// last test: WDL d1d8d2 - Dec. 20 2012
 								// - native font rendering won't draw multiple lines
 								// - missing EN_CHANGE msg, see SnM_Notes.cpp
 								// - EN_SETFOCUS, EN_KILLFOCUS not supported yet
+#endif
 
 #define _SNM_NO_ASYNC_UPDT		// disable async UI updates 
 								// (seems ok on Win, unstable on OSX)
@@ -116,7 +119,10 @@
 
 #define SNM_LIVECFG_NB_CONFIGS		4		//JFB do not change this value, contact me plz thx!
 #define SNM_LIVECFG_NB_ROWS			128		//JFB do not change this value, contact me plz thx!
+#define SNM_PRESETS_NB_FX			8
 #define SNM_CSURF_RUN_TICK_MS		27.0	// monitored average, 1 tick ~= 27ms
+#define SNM_MKR_RGN_UPDATE_FREQ		500		// gentle value (ms) not to stress REAPER
+#define SNM_OFFSCREEN_UPDATE_FREQ	1000	// gentle value (ms) not to stress REAPER
 #define SNM_DEF_TOOLBAR_RFRSH_FREQ	300		// default frequency in ms for the "auto-refresh toolbars" option 
 #define SNM_FUDGE_FACTOR			0.0000000001
 #define SNM_CSURF_EXT_UNREGISTER	0x00016666
@@ -158,9 +164,12 @@
 #define SNM_MAX_FX_NAME_LEN			128
 #define SNM_MAX_OSC_MSG_LEN			256
 
-// scheduled job ids
-// [0 .. SNM_LIVECFG_NB_CONFIGS-1] are reserved for "apply live config" actions
-// [SNM_LIVECFG_NB_CONFIGS .. 2*SNM_LIVECFG_NB_CONFIGS-1] are reserved for "preload live config" actions
+
+///////////////////////////////////////////////////////////////////////////////
+// Scheduled jobs
+///////////////////////////////////////////////////////////////////////////////
+
+// Scheduled job ids
 #define SNM_SCHEDJOB_LIVECFG_APPLY			0
 #define SNM_SCHEDJOB_LIVECFG_PRELOAD		SNM_SCHEDJOB_LIVECFG_APPLY + SNM_LIVECFG_NB_CONFIGS
 #define SNM_SCHEDJOB_LIVECFG_UPDATE			SNM_SCHEDJOB_LIVECFG_PRELOAD + SNM_LIVECFG_NB_CONFIGS
@@ -169,85 +178,123 @@
 #define SNM_SCHEDJOB_NOTES_UPDATE			SNM_SCHEDJOB_UNDO + 1
 #define SNM_SCHEDJOB_SEL_PRJ				SNM_SCHEDJOB_NOTES_UPDATE + 1
 #define SNM_SCHEDJOB_TRIG_PRESET			SNM_SCHEDJOB_SEL_PRJ + 1
-#define SNM_SCHEDJOB_RES_ATTACH				SNM_SCHEDJOB_TRIG_PRESET + 1
+#define SNM_SCHEDJOB_RES_ATTACH				SNM_SCHEDJOB_TRIG_PRESET + SNM_PRESETS_NB_FX + 1 // +1 for the "selected fx" preset action
 #define SNM_SCHEDJOB_PLAYLIST_UPDATE		SNM_SCHEDJOB_RES_ATTACH + 1
 #define SNM_SCHEDJOB_PRJ_ACTION				SNM_SCHEDJOB_PLAYLIST_UPDATE + 1
 #define SNM_SCHEDJOB_OSX_FIX				SNM_SCHEDJOB_PRJ_ACTION + 1	//JFB!! removeme some day
 
 #define SNM_SCHEDJOB_DEFAULT_DELAY			250
 #define SNM_SCHEDJOB_SLOW_DELAY				500
+#ifdef _SNM_NO_ASYNC_UPDT
+#define SNM_SCHEDJOB_ASYNC_DELAY_OPT		0
+#else
+#define SNM_SCHEDJOB_ASYNC_DELAY_OPT		SNM_SCHEDJOB_SLOW_DELAY
+#endif
 
 
-///////////////////////////////////////////////////////////////////////////////
-// Scheduled jobs
-///////////////////////////////////////////////////////////////////////////////
-
-class SNM_ScheduledJob {
+// scheduled jobs are added in a queue and wait for _approxMs before 
+// being performed. if a job with the same _id is already present in 
+// the queue, it is replaced and re-waits for _approxMs (by default).
+// to use this, you just need to implement Perform() in most cases,
+// if you need to process all intermediate values before jobs are performed, 
+// just override Init() - which is called once when the job is actually 
+// added to the processing queue.
+class ScheduledJob
+{
 public:
-	SNM_ScheduledJob(int _id, int _approxDelayMs)
-		: m_id(_id), m_tick((int)floor((_approxDelayMs/SNM_CSURF_RUN_TICK_MS) + 0.5)),m_isPerforming(false) {}
-	virtual ~SNM_ScheduledJob() {}
+	// _approxMs==0 means "to be performed immediately" (not added to the processing queue)
+	ScheduledJob(int _id, int _approxMs)
+		: m_id(_id),m_approxMs(_approxMs),m_scheduled(false),m_time(GetTickCount()+_approxMs) {}
+	virtual ~ScheduledJob() {}
+
+	static void Schedule(ScheduledJob* _job);
+	static void Run(); // polled from the main thread via SNM_CSurfRun()
+
+	// not safe to make anything public: 1-jobs are auto-deleted, 2-Init() may not have been called
+
+protected:
 	virtual void Perform() {}
-	int m_id, m_tick;
-	bool m_isPerforming;
+	virtual void Init(ScheduledJob* _replacedJob = NULL) {}
+	bool IsImmediate() { return m_approxMs==0; }
+	int m_id, m_approxMs; // really approx since Run() is called on timer
+
+private:
+	void InitSafe(ScheduledJob* _replacedJob = NULL) { if (!m_scheduled) Init(_replacedJob); m_scheduled=true; }
+	void PerformSafe() { InitSafe(); Perform(); }
+	bool m_scheduled;
+	DWORD m_time;
 };
 
-// avoid undo points flooding (i.e. async undo, handle with care!)
-class UndoJob : public SNM_ScheduledJob {
+
+class MidiOscActionJob : public ScheduledJob
+{
+public:
+	MidiOscActionJob(int _jobId, int _approxMs, int _val, int _valhw, int _relmode) 
+		: ScheduledJob(_jobId, _approxMs),m_val(_val),m_valhw(_valhw),m_relmode(_relmode),m_absval(0.0)
+	{
+		// can't call pure virtual funcs in constructor, this is where C++ sucks
+		// => Init() will do the job later on..
+	}
+protected:
+	virtual void Init(ScheduledJob* _replacedJob = NULL);
+	double GetValue() { return m_absval; }
+	int GetIntValue() { return int(0.5+GetValue()); }
+
+	// pure virtual callbacks, see MidiOscActionJob::Init()
+	virtual double GetCurrentValue() = 0;
+	virtual double GetMinValue() = 0;
+	virtual double GetMaxValue() = 0;
+	int m_val, m_valhw, m_relmode; // values from the controller
+private:
+	int AdjustRelative(int _adjmode, int _reladj);
+	double m_absval; // internal absolute value
+};
+
+
+// avoid undo points flooding (i.e. async undo => handle with care!)
+class UndoJob : public ScheduledJob
+{
 public:
 	UndoJob(const char* _desc, int _flags, int _tr = -1) 
-		: SNM_ScheduledJob(SNM_SCHEDJOB_UNDO, SNM_SCHEDJOB_DEFAULT_DELAY), 
-		m_desc(_desc), m_flags(_flags), m_tr(_tr) {}
+		: ScheduledJob(SNM_SCHEDJOB_UNDO, SNM_SCHEDJOB_DEFAULT_DELAY), 
+			m_desc(_desc), m_flags(_flags), m_tr(_tr) {}
+protected:
 	void Perform() { Undo_OnStateChangeEx2(NULL, m_desc, m_flags, m_tr); }
 private:
 	const char* m_desc;
 	int m_flags, m_tr;
 };
 
-class SNM_MidiOscActionJob : public SNM_ScheduledJob
-{
-public:
-	SNM_MidiOscActionJob(int _jobId, int _approxDelayMs, int _curCC, int _val, int _valhw, int _relmode, HWND _hwnd); 
-	virtual void Perform() {}
-	virtual int GetValue() { return m_absval; }
-protected:
-	int m_val, m_valhw, m_relmode; // values from the controller
-	HWND m_hwnd;
-	int m_absval;
-};
-
-void SNM_AddOrReplaceScheduledJob(SNM_ScheduledJob* _job);
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // Common funcs
 ///////////////////////////////////////////////////////////////////////////////
 
-int GetFakeToggleState(COMMAND_T*);
-
 int SNM_Init(reaper_plugin_info_t* _rec);
 void SNM_Exit();
+
+KbdSectionInfo* SNM_GetMySection();
+bool SNM_GetActionName(const char* _custId, WDL_FastString* _nameOut, int _slot = -1);
+int GetFakeToggleState(COMMAND_T*);
+void ExclusiveToggle(COMMAND_T*);
 
 static void freecharptr(char* _p) { FREE_NULL(_p); }
 static void deleteintptr(int* _p) { DELETE_NULL(_p); }
 static void deletefaststrptr(WDL_FastString* _p) { DELETE_NULL(_p); }
 
-
-///////////////////////////////////////////////////////////////////////////////
-// Misc extern vars, structs & classes
-///////////////////////////////////////////////////////////////////////////////
-
 /* commented: replaced with a common SWS_CMD_SHORTNAME()
 #define SNM_CMD_SHORTNAME(_ct) (GetLocalizedActionName(_ct->id, _ct->accel.desc) + 9) // +9 to skip "SWS/S&M: "
 */
 
-// global/common S&M vars
-extern SWS_Mutex g_SNM_JobsMutex;
-extern WDL_PtrList_DeleteOnDestroy<SNM_ScheduledJob> g_SNM_Jobs;
 
-extern int g_SNM_IniVersion;
-extern int g_SNM_Beta;
+///////////////////////////////////////////////////////////////////////////////
+// Misc classes, struct, extern vars, etc.
+///////////////////////////////////////////////////////////////////////////////
+
+// global/common S&M vars
+extern int g_SNM_IniVersion, g_SNM_Beta, g_SNM_LearnPitchAndNormOSC, g_SNM_MediaFlags, g_SNM_ToolbarRefreshFreq;
 extern WDL_FastString g_SNM_IniFn, g_SNM_CyclIniFn, g_SNM_DiffToolFn;
+extern bool g_SNM_ToolbarRefresh;
 
 
 class SNM_TrackInt {

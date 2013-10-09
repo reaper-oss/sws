@@ -449,7 +449,7 @@ bool LiveConfig::IsDefault(bool _ignoreComment)
 	return isDefault;
 }
 
-// undo point and more UI refresh is up to the caller
+// primitive (no undo point, no ui refresh)
 int LiveConfig::SetInputTrack(MediaTrack* _newInputTr, bool _updateSends)
 {
 	int nbSends = 0;
@@ -528,7 +528,7 @@ bool LiveConfig::IsLastConfiguredTrack(MediaTrack* _tr)
 
 // !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_155
 static SWS_LVColumn s_liveCfgListCols[] = { 
-	{95,2,"OSC/CC value"}, {150,1,"Comment"}, {150,2,"Track"}, {175,2,"Track template"}, {175,2,"FX Chain"}, {150,2,"FX presets"}, {150,1,"Activate action"}, {150,1,"Deactivate action"}};
+	{95,2,"Controller value"}, {150,1,"Comment"}, {150,2,"Track"}, {175,2,"Track template"}, {175,2,"FX Chain"}, {150,2,"FX presets"}, {150,1,"Activate action"}, {150,1,"Deactivate action"}};
 // !WANT_LOCALIZE_STRINGS_END
 
 LiveConfigView::LiveConfigView(HWND hwndList, HWND hwndEdit)
@@ -843,6 +843,7 @@ void LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			if (PromptUserForString(GetMainHwnd(), __LOCALIZE("S&M - Create input track","sws_DLG_155"), trName, sizeof(trName), true))
 			{
 				// no Undo_OnStateChangeEx2() here, rec arm below creates an undo point
+				// (fixed in REAPER v4.5 but kept for older versions..)
 				Undo_BeginBlock2(NULL); 
 
 				InsertTrackAtIndex(GetNumTracks(), false);
@@ -943,7 +944,7 @@ void LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				if (sortCol && sortCol!=1)
 				{
 					//JFB lazy here.. better than confusing the user..
-					MessageBox(GetHWND(), __LOCALIZE("The list view must be sorted by ascending OSC/CC values!","sws_DLG_155"), __LOCALIZE("S&M - Error","sws_DLG_155"), MB_OK);
+					MessageBox(GetHWND(), __LOCALIZE("The list view must be sorted by ascending values!","sws_DLG_155"), __LOCALIZE("S&M - Error","sws_DLG_155"), MB_OK);
 					break;
 				}
 				bool updt = false, firstSel = true;
@@ -1306,13 +1307,13 @@ INT_PTR LiveConfigsWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				case KNBID_CC_DELAY:
 					lc->m_ccDelay = m_knobCC.GetSliderPosition();
 					m_vwndCC.SetValue(lc->m_ccDelay);
-					SNM_AddOrReplaceScheduledJob(new UndoJob(UNDO_STR, UNDO_STATE_MISCCFG));
+					ScheduledJob::Schedule(new UndoJob(UNDO_STR, UNDO_STATE_MISCCFG));
 					break;
 				case KNBID_FADE:
 					lc->m_fade = m_knobFade.GetSliderPosition();
 					m_vwndFade.SetValue(lc->m_fade);
-					SNM_AddOrReplaceScheduledJob(new UndoJob(UNDO_STR, UNDO_STATE_MISCCFG));
-					SNM_AddOrReplaceScheduledJob(new LiveConfigsUpdateFadeJob(lc->m_fade));
+					ScheduledJob::Schedule(new UndoJob(UNDO_STR, UNDO_STATE_MISCCFG));
+					ScheduledJob::Schedule(new LiveConfigsUpdateFadeJob(lc->m_fade));
 					break;
 			}
 	return 0;
@@ -1393,9 +1394,9 @@ void LiveConfigsWnd::AddLearnMenu(HMENU _menu, bool _subItems)
 		if (_subItems) hOptMenu = CreatePopupMenu();
 		else hOptMenu = _menu;
 
-		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Apply Live Config %d (MIDI CC/OSC only)","s&m_section_actions"), g_configId+1);
+		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Apply Live Config %d (MIDI/OSC only)","s&m_section_actions"), g_configId+1);
 		AddToMenu(hOptMenu, buf, LEARN_APPLY_MSG);
-		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Preload Live Config %d (MIDI CC/OSC only)","s&m_section_actions"), g_configId+1);
+		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Preload Live Config %d (MIDI/OSC only)","s&m_section_actions"), g_configId+1);
 		AddToMenu(hOptMenu, buf, LEARN_PRELOAD_MSG);
 		if (_subItems && GetMenuItemCount(hOptMenu))
 			AddSubMenu(_menu, hOptMenu, __LOCALIZE("Learn","sws_DLG_155"));
@@ -1703,7 +1704,7 @@ bool LiveConfigsWnd::Insert(int _dir)
 	if (sortCol && sortCol!=1)
 	{
 		//JFB lazy here.. better than confusing the user..
-		MessageBox(GetHWND(), __LOCALIZE("The list view must be sorted by ascending OSC/CC values!","sws_DLG_155"), __LOCALIZE("S&M - Error","sws_DLG_155"), MB_OK);
+		MessageBox(GetHWND(), __LOCALIZE("The list view must be sorted by ascending values!","sws_DLG_155"), __LOCALIZE("S&M - Error","sws_DLG_155"), MB_OK);
 		return false;
 	}
 	if (LiveConfig* lc = g_liveConfigs.Get()->Get(g_configId))
@@ -1746,13 +1747,12 @@ bool LiveConfigsWnd::Insert(int _dir)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void LiveConfigsUpdateJob::Perform() {
+void LiveConfigsUpdateEditorJob::Perform() {
 	if (LiveConfigsWnd* w = g_lcWndMgr.Get())
 		w->Update();
 }
 
-
-// moderate write access to reaper.ini
+// moderate things a bit
 void LiveConfigsUpdateFadeJob::Perform()
 {
 	if (m_value>0) // let the user pref as it is otherwise
@@ -1761,6 +1761,8 @@ void LiveConfigsUpdateFadeJob::Perform()
 }
 
 
+///////////////////////////////////////////////////////////////////////////////
+// project_config_extension_t
 ///////////////////////////////////////////////////////////////////////////////
 
 static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
@@ -1954,14 +1956,8 @@ static project_config_extension_t s_projectconfig = {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void LiveConfigsSetTrackTitle()
-{
-#ifdef _SNM_NO_ASYNC_UPDT
-	LiveConfigsUpdateJob job;
-	job.Perform();
-#else
-	SNM_AddOrReplaceScheduledJob(new LiveConfigsUpdateJob());
-#endif
+void LiveConfigsSetTrackTitle() {
+	ScheduledJob::Schedule(new LiveConfigsUpdateEditorJob(SNM_SCHEDJOB_ASYNC_DELAY_OPT));
 }
 
 // ScheduledJob because of multi-notifs
@@ -1980,12 +1976,8 @@ void LiveConfigsTrackListChange()
 			lc->SetInputTrack(lc->GetInputTrack(), lc->m_autoSends==1); // lc->GetInputTrack() can be NULL when deleted, etc..
 		}
 	}
-#ifdef _SNM_NO_ASYNC_UPDT
-	LiveConfigsUpdateJob job;
-	job.Perform();
-#else
-	SNM_AddOrReplaceScheduledJob(new LiveConfigsUpdateJob());
-#endif
+
+	ScheduledJob::Schedule(new LiveConfigsUpdateEditorJob(SNM_SCHEDJOB_ASYNC_DELAY_OPT));
 }
 
 
@@ -2440,19 +2432,26 @@ void ApplyLiveConfig(int _cfgId, int _val, bool _immediate, int _valhw, int _rel
 	LiveConfig* lc = g_liveConfigs.Get()->Get(_cfgId);
 	if (lc && lc->m_enable) 
 	{
-		if (ApplyLiveConfigJob* job = 
-			new ApplyLiveConfigJob(SNM_SCHEDJOB_LIVECFG_APPLY+_cfgId, lc->m_ccDelay, lc->m_curMidiVal, _val, _valhw, _relmode, _cfgId))
-		{
-			lc->m_curMidiVal = job->GetValue();
-			if (!_immediate && lc->m_ccDelay) {
-				UpdateMonitoring(_cfgId, APPLY_MASK, 0);
-				SNM_AddOrReplaceScheduledJob(job);
-			}
-			else {
-				job->Perform();
-				delete job;
-			}
-		}
+		ScheduledJob::Schedule(
+			new ApplyLiveConfigJob(_cfgId, _immediate ? 0 : lc->m_ccDelay, _val, _valhw, _relmode));
+
+		// => lc->m_curMidiVal is updated via ApplyLiveConfigJob::Init()
+		//    (cannot do things like lc->m_curMidiVal = job->GetValue();
+		//    as the job may already be destroyed at this point)
+	}
+}
+
+void ApplyLiveConfigJob::Init(ScheduledJob* _replacedJob)
+{
+	MidiOscActionJob::Init(_replacedJob);
+	if (LiveConfig* lc = g_liveConfigs.Get()->Get(m_cfgId))
+	{
+		lc->m_curMidiVal = GetIntValue();
+
+		// ui/osc update: value is "changing" (e.g. grayed in monitors)
+		// no editor update though, does not display "changing" values only "solid" ones
+		if (!IsImmediate())
+			UpdateMonitoring(m_cfgId, APPLY_MASK, 0); // ui/osc update: "changing"
 	}
 }
 
@@ -2464,7 +2463,7 @@ void ApplyLiveConfigJob::Perform()
 	Undo_BeginBlock2(NULL);
 
 	// swap preload/current configs?
-	int absval = GetValue();
+	int absval = GetIntValue();
 	bool preloaded = (lc->m_preloadMidiVal>=0 && lc->m_preloadMidiVal==absval);
 
 	LiveConfigItem* cfg = lc->m_ccConfs.Get(absval);
@@ -2491,7 +2490,7 @@ void ApplyLiveConfigJob::Perform()
 
 	{
 		char buf[SNM_MAX_ACTION_NAME_LEN]="";
-		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Apply Live Config %d (OSC/CC %d)","sws_undo"), m_cfgId+1, absval);
+		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Apply Live Config %d, value %d","sws_undo"), m_cfgId+1, absval);
 		Undo_EndBlock2(NULL, buf, UNDO_STATE_ALL);
 	}
 
@@ -2508,6 +2507,12 @@ void ApplyLiveConfigJob::Perform()
 		APPLY_MASK | (preloaded ? PRELOAD_MASK : 0));
 }
 
+double ApplyLiveConfigJob::GetCurrentValue() {
+	if (LiveConfig* lc = g_liveConfigs.Get()->Get(m_cfgId))
+		return lc->m_curMidiVal;
+	return 0;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Preload configs
@@ -2518,19 +2523,23 @@ void PreloadLiveConfig(int _cfgId, int _val, bool _immediate, int _valhw, int _r
 	LiveConfig* lc = g_liveConfigs.Get()->Get(_cfgId);
 	if (lc && lc->m_enable)
 	{
-		if (PreloadLiveConfigJob* job = 
-			new PreloadLiveConfigJob(SNM_SCHEDJOB_LIVECFG_PRELOAD+_cfgId, lc->m_ccDelay, lc->m_curPreloadMidiVal, _val, _valhw, _relmode, _cfgId))
-		{
-			lc->m_curPreloadMidiVal = job->GetValue();
-			if (!_immediate && lc->m_ccDelay) {
-				UpdateMonitoring(_cfgId, PRELOAD_MASK, 0);
-				SNM_AddOrReplaceScheduledJob(job);
-			}
-			else {
-				job->Perform();
-				delete job;
-			}
-		}
+		ScheduledJob::Schedule(
+			new PreloadLiveConfigJob(_cfgId, _immediate ? 0 : lc->m_ccDelay, _val, _valhw, _relmode));
+
+		// => lc->m_curPreloadMidiVal is updated via PreloadLiveConfigJob::Init()
+	}
+}
+
+void PreloadLiveConfigJob::Init(ScheduledJob* _replacedJob)
+{
+	MidiOscActionJob::Init(_replacedJob);
+	if (LiveConfig* lc = g_liveConfigs.Get()->Get(m_cfgId))
+	{
+		lc->m_curPreloadMidiVal = GetIntValue();
+
+		// ui/osc update
+		if (!IsImmediate())
+			UpdateMonitoring(m_cfgId, PRELOAD_MASK, 0); 
 	}
 }
 
@@ -2541,7 +2550,7 @@ void PreloadLiveConfigJob::Perform()
 
 	Undo_BeginBlock2(NULL);
 
-	int absval = GetValue();
+	int absval = GetIntValue();
 	MediaTrack* inputTr = lc->GetInputTrack();
 	LiveConfigItem* cfg = lc->m_ccConfs.Get(absval);
 	LiveConfigItem* lastCfg = lc->m_ccConfs.Get(lc->m_activeMidiVal); // can be <0
@@ -2570,7 +2579,7 @@ void PreloadLiveConfigJob::Perform()
 
 	{
 		char buf[SNM_MAX_ACTION_NAME_LEN]="";
-		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Preload Live Config %d (OSC/CC %d)","sws_undo"), m_cfgId+1, absval);
+		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Preload Live Config %d, value: %d","sws_undo"), m_cfgId+1, absval);
 		Undo_EndBlock2(NULL, buf, UNDO_STATE_ALL);
 	}
 
@@ -2580,6 +2589,12 @@ void PreloadLiveConfigJob::Perform()
 //		w->SelectByCCValue(m_cfgId, lc->m_preloadMidiVal);
 	}
 	UpdateMonitoring(m_cfgId, PRELOAD_MASK, PRELOAD_MASK);
+}
+
+double PreloadLiveConfigJob::GetCurrentValue() {
+	if (LiveConfig* lc = g_liveConfigs.Get()->Get(m_cfgId))
+		return lc->m_curPreloadMidiVal;
+	return 0;
 }
 
 
@@ -2757,41 +2772,40 @@ INT_PTR LiveConfigMonitorWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lP
 	switch (uMsg)
 	{
 		case WM_MOUSEWHEEL:
-			if (LiveConfig* lc = g_liveConfigs.Get()->Get(m_cfgId))
-			{
-				int val = (short)HIWORD(wParam);
+		{
+			int val = (short)HIWORD(wParam);
 #ifdef _SNM_DEBUG
-				char dbg[256] = "";
-				_snprintfSafe(dbg, sizeof(dbg), "WM_MOUSEWHEEL - val: %d\n", val);
-				OutputDebugString(dbg);
+			char dbg[256] = "";
+			_snprintfSafe(dbg, sizeof(dbg), "WM_MOUSEWHEEL - val: %d\n", val);
+			OutputDebugString(dbg);
 #endif
-				if (WDL_VWnd* mon0 = m_parentVwnd.GetChildByID(TXTID_MON0))
-				{
-					bool vis = mon0->IsVisible();
-					mon0->SetVisible(false); // just a setter.. to exclude from VirtWndFromPoint()
+			if (WDL_VWnd* mon0 = m_parentVwnd.GetChildByID(TXTID_MON0))
+			{
+				bool vis = mon0->IsVisible();
+				mon0->SetVisible(false); // just a setter.. to exclude from VirtWndFromPoint()
 
-					POINT p; GetCursorPos(&p);
-					ScreenToClient(m_hwnd, &p);
-					if (WDL_VWnd* v = m_parentVwnd.VirtWndFromPoint(p.x,p.y,1))
+				POINT p; GetCursorPos(&p);
+				ScreenToClient(m_hwnd, &p);
+				if (WDL_VWnd* v = m_parentVwnd.VirtWndFromPoint(p.x,p.y,1))
+				{
+					switch (v->GetID())
 					{
-						switch (v->GetID())
-						{
-							case TXTID_MON1:
-							case TXTID_MON2:
-								if (val>0) NextPreviousLiveConfig(m_cfgId, false, -1);
-								else NextPreviousLiveConfig(m_cfgId, false, 1);
-								break;
-							case TXTID_MON3:
-							case TXTID_MON4:
-								if (val>0) NextPreviousLiveConfig(m_cfgId, true, -1);
-								else NextPreviousLiveConfig(m_cfgId, true, 1);
-								break;
-						}
+						case TXTID_MON1:
+						case TXTID_MON2:
+							if (val>0) NextPreviousLiveConfig(m_cfgId, false, -1);
+							else NextPreviousLiveConfig(m_cfgId, false, 1);
+							break;
+						case TXTID_MON3:
+						case TXTID_MON4:
+							if (val>0) NextPreviousLiveConfig(m_cfgId, true, -1);
+							else NextPreviousLiveConfig(m_cfgId, true, 1);
+							break;
 					}
-					mon0->SetVisible(vis);
 				}
+				mon0->SetVisible(vis);
 			}
-			return -1;
+		}
+		return -1;
 	}
 	return 0;
 }
@@ -3095,8 +3109,7 @@ void UpdateTinyFadesLiveConfig(COMMAND_T* _ct, int _val)
 		lc->m_fade = _val<0 ? (lc->m_fade>0 ? 0 : DEF_FADE) : _val;
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_MISCCFG, -1);
 
-		LiveConfigsUpdateFadeJob job(lc->m_fade);
-		job.Perform();
+		ScheduledJob::Schedule(new LiveConfigsUpdateFadeJob(lc->m_fade));
 
 		if (LiveConfigsWnd* w = g_lcWndMgr.Get())
 			w->Update();

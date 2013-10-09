@@ -31,17 +31,18 @@
 #define _SNM_TRACK_H_
 
 
-extern int g_SNM_MediaFlags;
-
 void CopyCutTrackGrouping(COMMAND_T*);
 void PasteTrackGrouping(COMMAND_T*);
 void RemoveTrackGrouping(COMMAND_T*);
 void SetTrackGroup(COMMAND_T*);
 void SetTrackToFirstUnusedGroup(COMMAND_T*);
+
 void SaveTracksFolderStates(COMMAND_T*);
 void RestoreTracksFolderStates(COMMAND_T*);
 void SetTracksFolderState(COMMAND_T*);
+
 void SelOnlyTrackWithSelEnv(COMMAND_T*);
+
 bool LookupTrackEnvName(const char* _str, bool _allEnvs);
 void ToggleArmTrackEnv(COMMAND_T*);
 void RemoveAllEnvsSelTracks(COMMAND_T*);
@@ -62,14 +63,10 @@ bool SetTrackIcon(MediaTrack* _tr, const char* _fn);
 
 bool MakeSingleTrackTemplateChunk(WDL_FastString* _in, WDL_FastString* _out, bool _delItems, bool _delEnvs, int _tmpltIdx = 0, bool _obeyOffset = true);
 bool GetItemsSubChunk(WDL_FastString* _in, WDL_FastString* _out, int _tmpltIdx = 0);
+bool ReplacePasteItemsFromTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmpltItems, bool _paste, SNM_ChunkParserPatcher* _p = NULL);
 bool ApplyTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmplt, bool _itemsFromTmplt, bool _envsFromTmplt, void* _p = NULL);
-void ImportTrackTemplateSlot(int _slotType, const char* _title, int _slot);
-void ApplyTrackTemplateSlot(int _slotType, const char* _title, int _slot, bool _itemsFromTmplt, bool _envsFromTmplt);
-void ReplacePasteItemsTrackTemplateSlot(int _slotType, const char* _title, int _slot, bool _paste);
-void LoadApplyTrackTemplateSlot(COMMAND_T*);
-void LoadApplyTrackTemplateSlotWithItemsEnvs(COMMAND_T*);
-void LoadImportTrackTemplateSlot(COMMAND_T*);
-bool AutoSaveTrackSlots(int _slotType, const char* _dirPath, WDL_PtrList<void>* _owSlots, bool _delItems, bool _delEnvs);
+void SaveSelTrackTemplates(bool _delItems, bool _delEnvs, WDL_FastString* _chunkOut);
+
 
 void SetMIDIInputChannel(COMMAND_T*);
 void RemapMIDIInputChannel(COMMAND_T*);

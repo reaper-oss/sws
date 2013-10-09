@@ -30,8 +30,6 @@
 #ifndef _SNM_ITEM_H_
 #define _SNM_ITEM_H_
 
-#include "SnM_ChunkParserPatcher.h"
-
 
 enum {
   SNM_ITEM_SEL_LEFT=0,
@@ -76,8 +74,8 @@ bool SplitSelectItemsInInterval(MediaTrack* _tr, double _pos1, double _pos2, WDL
 bool SplitSelectItemsInInterval(const char* _undoTitle, double _pos1, double _pos2, bool _selTracks = false, WDL_PtrList<void>* _newItemsOut = NULL);
 void SplitSelectAllItemsInRegion(COMMAND_T*);
 
-void CopyCutTake(COMMAND_T*);
-void PasteTake(COMMAND_T*);
+void CopyCutTakes(COMMAND_T*);
+void PasteTakes(COMMAND_T*);
 
 bool IsEmptyMidi(MediaItem_Take* _take);
 void SetEmptyTakeChunk(WDL_FastString* _chunk, int _recPass = -1, int _color = -1, bool _v4style = true);
@@ -108,7 +106,7 @@ bool ShowTakeEnvPan(MediaItem_Take* _take);
 bool ShowTakeEnvMute(MediaItem_Take* _take);
 bool ShowTakeEnvPitch(MediaItem_Take* _take);
 
-void OffscreenSelItemsPoll();
+void RefreshOffscreenItems();
 void ToggleOffscreenSelItems(COMMAND_T*);
 int HasOffscreenSelItems(COMMAND_T*);
 void UnselectOffscreenItems(COMMAND_T*);
@@ -118,25 +116,5 @@ void ScrollToSelItem(COMMAND_T*);
 void SetPan(COMMAND_T*);
 void OpenMediaPathInExplorerFinder(COMMAND_T*);
 
-void PlaySelTrackMediaSlot(COMMAND_T*);
-void LoopSelTrackMediaSlot(COMMAND_T*);
-void SyncPlaySelTrackMediaSlot(COMMAND_T*);
-void SyncLoopSelTrackMediaSlot(COMMAND_T*);
-bool TogglePlaySelTrackMediaSlot(int _slotType, const char* _title, int _slot, bool _pause, bool _loop, double _msi = -1.0);
-void TogglePlaySelTrackMediaSlot(COMMAND_T*);
-void ToggleLoopSelTrackMediaSlot(COMMAND_T*);
-void TogglePauseSelTrackMediaSlot(COMMAND_T*);
-void ToggleLoopPauseSelTrackMediaSlot(COMMAND_T*);
-#ifdef _SNM_MISC
-void SyncTogglePlaySelTrackMediaSlot(COMMAND_T*);
-void SyncToggleLoopSelTrackMediaSlot(COMMAND_T*);
-void SyncTogglePauseSelTrackMediaSlot(COMMAND_T*);
-void SyncToggleLoopPauseSelTrackMediaSlot(COMMAND_T*);
-#endif
-void InsertMediaSlot(int _slotType, const char* _title, int _slot, int _insertMode);
-void InsertMediaSlotCurTr(COMMAND_T*);
-void InsertMediaSlotNewTr(COMMAND_T*);
-void InsertMediaSlotTakes(COMMAND_T*);
-bool AutoSaveMediaSlots(int _slotType, const char* _dirPath, WDL_PtrList<void>* _owSlots);
 
 #endif

@@ -33,6 +33,7 @@
 
 const char* GetFileRelativePath(const char* _fn);
 const char* GetFileExtension(const char* _fn);
+bool HasFileExtension(const char* _fn, const char* _expectedExt);
 void GetFilenameNoExt(const char* _fullFn, char* _fn, int _fnSz);
 const char* GetFilenameWithExt(const char* _fullFn);
 bool Filenamize(char* _fnInOut, bool _checkOnly = false);
@@ -41,7 +42,7 @@ bool FileOrDirExists(const char* _fn);
 bool FileOrDirExistsErrMsg(const char* _fn, bool _errMsg = true);
 bool SNM_DeleteFile(const char* _filename, bool _recycleBin);
 bool SNM_CopyFile(const char* _destFn, const char* _srcFn);
-void OpenSelectInExplorerFinder(const char* _fn, bool _errMsg = true);
+void RevealFile(const char* _fn, bool _errMsg = true);
 bool BrowseResourcePath(const char* _title, const char* _dir, const char* _fileFilters, char* _fn, int _fnSize, bool _wantFullPath = false);
 void GetShortResourcePath(const char* _resSubDir, const char* _fullFn, char* _shortFn, int _shortFnSize);
 void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fullFn, int _fullFnSize);
@@ -75,15 +76,17 @@ int SNM_SnapToMeasure(double _pos);
 void TranslatePos(double _pos, int* _h, int* _m = NULL, int* _s = NULL, int* _ms = NULL);
 double SeekPlay(double _pos, bool _moveView = false);
 
-int SNM_GetActionSectionUniqueId(int _idx);
-const char* SNM_GetActionSectionName(int _idx);
-int SNM_GetActionSectionIndex(const char* _localizedName);
-KbdSectionInfo* SNM_GetActionSection(int _idx);
-KbdSectionInfo* SNM_GetMySection();
 int SNM_NamedCommandLookup(const char* _custId, KbdSectionInfo* _section = NULL, bool _hardCheck = false);
 bool LoadKbIni(WDL_PtrList<WDL_FastString>* _out);
 int GetMacroOrScript(const char* _customId, int _sectionUniqueId, WDL_PtrList<WDL_FastString>* _inMacroScripts, WDL_PtrList<WDL_FastString>* _outCmds, WDL_FastString* _outName = NULL);
 bool IsMacroOrScript(const char* _cmd, bool _cmdIsName = true);
+int CheckSwsMacroScriptNumCustomId(const char* _custId, int _secIdx = 0);
+
+int SNM_GetActionSectionUniqueId(int _idx);
+const char* SNM_GetActionSectionName(int _idx);
+int SNM_GetActionSectionIndex(const char* _localizedName);
+KbdSectionInfo* SNM_GetActionSection(int _idx);
+
 bool LearnAction(KbdSectionInfo* _section, int _cmdId);
 bool GetSectionURL(bool _alr, const char* _section, char* _sectionURL, int _sectionURLSize);
 

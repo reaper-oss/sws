@@ -67,17 +67,19 @@ public:
 	WDL_FastString m_notes;
 };
 
-class NotesUpdateJob : public SNM_ScheduledJob {
+class NotesUpdateJob : public ScheduledJob {
 public:
-	NotesUpdateJob() : SNM_ScheduledJob(SNM_SCHEDJOB_NOTES_UPDATE, SNM_SCHEDJOB_SLOW_DELAY) {}
+	NotesUpdateJob(int _approxMs) : ScheduledJob(SNM_SCHEDJOB_NOTES_UPDATE, _approxMs) {}
+protected:
 	void Perform();
 };
 
 // OSX fix/workaround (SWELL bug?)
 #ifdef _SNM_SWELL_ISSUES
-class OSXForceTxtChangeJob : public SNM_ScheduledJob {
+class OSXForceTxtChangeJob : public ScheduledJob {
 public:
-	OSXForceTxtChangeJob() : SNM_ScheduledJob(SNM_SCHEDJOB_OSX_FIX, 50) {} // ~fast enough to follow key strokes 
+	OSXForceTxtChangeJob() : ScheduledJob(SNM_SCHEDJOB_OSX_FIX, 50) {} // ~fast enough to follow key strokes 
+protected:
 	void Perform();
 };
 #endif
@@ -131,7 +133,7 @@ protected:
 	WDL_VirtualStaticText m_txtLabel;
 	SNM_DynSizedText m_bigNotes;
 
-	NotesMarkerRegionListener m_mkrRgnSubscriber;
+	NotesMarkerRegionListener m_mkrRgnListener;
 };
 
 

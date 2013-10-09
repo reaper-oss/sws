@@ -51,6 +51,10 @@ const char* GetFileExtension(const char* _fn)
 	return "";
 }
 
+bool HasFileExtension(const char* _fn, const char* _expectedExt) {
+	return _stricmp(GetFileExtension(_fn), _expectedExt) == 0;
+}
+
 void GetFilenameNoExt(const char* _fullFn, char* _fn, int _fnSz)
 {
 	const char* p = strrchr(_fullFn, PATH_SLASH_CHAR);
@@ -69,7 +73,7 @@ const char* GetFilenameWithExt(const char* _fullFn)
 	return p;
 }
 
-// check the most retrictive OS forbidden chars (so that filenames are crossplatform)
+// check the most restrictive OS forbidden chars (so that filenames are cross-platform)
 bool Filenamize(char* _fnInOut, bool _checkOnly)
 {
 	if (_fnInOut && *_fnInOut)
@@ -110,7 +114,7 @@ bool IsValidFilenameErrMsg(const char* _fn, bool _errMsg)
 	return !ko;
 }
 
-// the API function file_exists() is a bit different, it returns false for folder paths
+// the API function file_exists() is a bit different, it returns false for folders
 bool FileOrDirExists(const char* _fn)
 {
 	if (_fn && *_fn && *_fn!='.') // valid absolute path (1/2)?
@@ -130,8 +134,8 @@ bool FileOrDirExists(const char* _fn)
 	return false;
 }
 
-// FileOrDirExists() and FileOrDirExistsErrMsg() are not merged so
-// that it does not to impact other project members' code...
+// FileOrDirExists() and FileOrDirExistsErrMsg() are intentionally not merged
+// (would impact other project members' code...)
 bool FileOrDirExistsErrMsg(const char* _fn, bool _errMsg)
 {
 	bool exists = FileOrDirExists(_fn);
@@ -172,24 +176,20 @@ bool SNM_CopyFile(const char* _destFn, const char* _srcFn)
 	return ok;
 }
 
-// for files only, directories can be browsed with:
+// for files only - on Win & OSX, directories can be browsed with:
 // ShellExecute(NULL, "open", path, NULL, NULL, SW_SHOWNORMAL);
-void OpenSelectInExplorerFinder(const char* _fn, bool _errMsg)
+void RevealFile(const char* _fn, bool _errMsg)
 {
 	if (FileOrDirExistsErrMsg(_fn, _errMsg))
 	{
+		WDL_FastString cmd;
 #ifdef _WIN32
-		WDL_FastString cmd("/select,");
+		cmd.Set("/select,");
 		cmd.Append(_fn);
 		ShellExecute(NULL, "", "explorer", cmd.Get(), NULL, SW_SHOWNORMAL);
 #else
-		char path[SNM_MAX_PATH] = "";
-		lstrcpyn(path, _fn, sizeof(path));
-		if (char* p = strrchr(path, PATH_SLASH_CHAR)) // assumes _fn is a file!
-		{
-			*(p+1) = '\0'; // ShellExecute() is KO otherwise..
-			ShellExecute(NULL, "open", path, NULL, NULL, SW_SHOWNORMAL);
-		}
+		cmd.SetFormatted(SNM_MAX_PATH, "open -R \"%s\"", _fn);
+		system(cmd.Get());
 #endif
 	}
 }
@@ -436,35 +436,40 @@ void ScanFiles(WDL_PtrList<WDL_String>* _files, const char* _initDir, const char
 	WDL_DirScan ds;
 	if (_files && _initDir && !ds.First(_initDir))
 	{
+		char* curFn;
+		const char* curfnExt;
+		WDL_String fn, ext;
 		do 
 		{
-			if (!strcmp(ds.GetCurrentFN(), ".") || !strcmp(ds.GetCurrentFN(), "..")) 
+			curFn = ds.GetCurrentFN();
+			if (!strcmp(curFn, ".") || !strcmp(curFn, "..")) 
 				continue;
-
-			WDL_String* foundFn = new WDL_String();
-			ds.GetCurrentFullFN(foundFn);
 
 			if (ds.GetCurrentIsDirectory())
 			{
-				if (_subdirs)
-					ScanFiles(_files, foundFn->Get(), _filterList, true);
-				delete
-					foundFn;
+				if (_subdirs) {
+					ds.GetCurrentFullFN(&fn);
+					ScanFiles(_files, fn.Get(), _filterList, true);
+				}
 			}
 			else
 			{
-				if (!strcmp("*", _filterList))
+				if (!strcmp("*", _filterList)) // || !strcmp("*.*", _filterList))
 				{
-					_files->Add(foundFn);
+					ds.GetCurrentFullFN(&fn);
+					_files->Add(new WDL_String(fn.Get()));
 				}
 				else
 				{
-					WDL_FastString ext;
-					ext.SetFormatted(16, "*.%s", GetFileExtension(foundFn->Get()));
-					if (stristr(_filterList, ext.Get()))
-						_files->Add(foundFn);
-					else
-						delete foundFn;
+					curfnExt = GetFileExtension(curFn);
+					if (*curfnExt)
+					{
+						ext.SetFormatted(32, "*.%s", curfnExt);
+						if (stristr(_filterList, ext.Get())) {
+							ds.GetCurrentFullFN(&fn);
+							_files->Add(new WDL_String(fn.Get()));
+						}
+					}
 				}
 			}
 		}
@@ -625,7 +630,10 @@ void SNM_UpgradeIniFiles()
 		WritePrivateProfileString("NbOfActions", "S&M_NEXT_LIVE_CFG", STR(SNM_LIVECFG_NB_CONFIGS), g_SNM_IniFn.Get());
 		WritePrivateProfileString("NbOfActions", "S&M_PREVIOUS_LIVE_CFG", STR(SNM_LIVECFG_NB_CONFIGS), g_SNM_IniFn.Get());
 	}
-
+/*JFB!! deprecated stuff, uncommentme someday
+	WritePrivateProfileString("Resources", "ProjectLoaderStartSlot", NULL, g_SNM_IniFn.Get());
+	WritePrivateProfileString("Resources", "ProjectLoaderStartSlot", NULL, g_SNM_IniFn.Get());
+*/
 	g_SNM_IniVersion = SNM_INI_FILE_VERSION;
 }
 
@@ -708,8 +716,10 @@ bool GetStringWithRN(const char* _bufIn, char* _bufOut, int _bufOutSz)
 	return (j < _bufOutSz);
 }
 
-const char* FindFirstRN(const char* _str) {
-	if (_str) {
+const char* FindFirstRN(const char* _str)
+{
+	if (_str)
+	{
 		const char* p = strchr(_str, '\r');
 		if (!p) p = strchr(_str, '\n');
 		return p;
@@ -717,7 +727,8 @@ const char* FindFirstRN(const char* _str) {
 	return NULL;
 }
 
-char* ShortenStringToFirstRN(char* _str) {
+char* ShortenStringToFirstRN(char* _str)
+{
 	if (char* p = (char*)FindFirstRN(_str)) {
 		*p = '\0'; 
 		return p;
@@ -726,9 +737,11 @@ char* ShortenStringToFirstRN(char* _str) {
 }
 
 // replace "%02d " with _replaceCh in _str
-void Replace02d(char* _str, char _replaceCh) {
+void Replace02d(char* _str, char _replaceCh)
+{
 	if (_str && *_str)
-		if (char* p = strstr(_str, "%02d")) {
+		if (char* p = strstr(_str, "%02d"))
+		{
 			p[0] = _replaceCh;
 			if (p[4]) memmove((char*)(p+1), p+4, strlen(p+4)+1);
 			else p[1] = '\0';
@@ -793,11 +806,14 @@ double SeekPlay(double _pos, bool _moveView)
 // Action helpers
 ///////////////////////////////////////////////////////////////////////////////
 
-// overrides the API's NamedCommandLookup: works for all action sections
+// overrides the API's NamedCommandLookup: works for all action sections, and
+// fix a REAPER BUG: NamedCommandLookup("65534") returns "65534" although this 
+// action does not exist (= noop's cmdId-1)
 // _hardCheck: if true, do more tests on the returned command id because the 
 //             API's NamedCommandLookup can return an id although the related 
 //             action is not registered yet, ex: at init time, when an action
 //             is attached to a mouse modifier
+// _section: section or NULL for the main section
 // note: calling this func with default param values like SNM_NamedCommandLookup("_bla") 
 //       is the same as the native NamedCommandLookup("_bla")
 int SNM_NamedCommandLookup(const char* _custId, KbdSectionInfo* _section, bool _hardCheck)
@@ -805,36 +821,28 @@ int SNM_NamedCommandLookup(const char* _custId, KbdSectionInfo* _section, bool _
 	int cmdId = 0;
 	if (_custId && *_custId)
 	{
-		// main section?
-		if (!_section || _section==SNM_GetActionSection(SNM_SEC_IDX_MAIN))
-		{
+		//JFB! cool finding (REAPER v4.34rc1):
+		// for macros/scripts (which are the only non-native things that can be registered
+		// in those sections ATM), it turns out NamedCommandLookup() works for all sections (!)
+		// 3rd party sections are ok too because they can't register custom ids in there yet
+		if (*_custId == '_')
 			cmdId = NamedCommandLookup(_custId);
-		}
 		else
+			cmdId = atoi(_custId);
+
+		// make sure things like "-666" do not match
+		if (cmdId)
 		{
-			//JFB! cool finding for other sections (REAPER v4.34rc1):
-			// for macros/scripts (which are the only non-native things that can be registered
-			// in those sections ATM), it turns out NamedCommandLookup() works (!)
-			// 3rd party sections are ok too because they can't register custom ids in there yet
-			if (*_custId == '_')
-			{
-				cmdId = NamedCommandLookup(_custId);
-			}
-			else
-			{
-				if (cmdId = atoi(_custId)) // not enough, e.g. "-666" would match
-				{
-					bool found = false;
-					for (int i=0; i<_section->action_list_cnt; i++) {
-						if (_section->action_list[i].cmd == cmdId) {
-							found = true;
-							break;
-						}
-					}
-					if (!found)
-						cmdId = 0;
+			bool found = false;
+			KbdSectionInfo* section = _section ? _section : SNM_GetActionSection(SNM_SEC_IDX_MAIN);
+			for (int i=0; i<section->action_list_cnt; i++) {
+				if (section->action_list[i].cmd == cmdId) {
+					found = true;
+					break;
 				}
 			}
+			if (!found)
+				cmdId = 0;
 		}
 	}
 
@@ -950,6 +958,25 @@ bool IsMacroOrScript(const char* _cmd, bool _cmdIsName)
 		}
 	}
 	return false;
+}
+
+// check numeric ids
+// returns 0=not a numeric custom id (does not ensure _custId is valid!), -1=bad sws custom id, -2=bad script/macro custom id
+int CheckSwsMacroScriptNumCustomId(const char* _custId, int _secIdx)
+{
+	if (_custId && *_custId!='_')
+	{
+		if (int numCmdId = atoi(_custId))
+		{
+			// sws check
+			if (!_secIdx && SWSGetCommandByID(numCmdId)) // API LIMITATION: extension action actions can only belong to the main section ATM
+				return -1;
+			// macro check
+			if (IsMacroOrScript(kbd_getTextFromCmd(numCmdId, SNM_GetActionSection(_secIdx)), true))
+				return -2;
+		}
+	}
+	return 0;
 }
 
 int SNM_GetActionSectionUniqueId(int _sectionIdx) {

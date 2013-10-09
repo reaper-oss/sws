@@ -33,6 +33,32 @@
 #define SNM_DEF_VWND_X_STEP			12
 
 
+// slight override in order to ignore separators
+//JFB!! would be great if WDL_VirtualComboBox's GetCurSel() and SetCurSel() were "virtual"
+// => TODO when done: cleanup GetCurSel2->GetCurSel, etc..
+class SNM_VirtualComboBox : public WDL_VirtualComboBox
+{
+public:
+	SNM_VirtualComboBox() : WDL_VirtualComboBox() {}
+	virtual ~SNM_VirtualComboBox() {}
+	int GetCurSel2()
+	{
+		int sel = WDL_VirtualComboBox::GetCurSel();
+		for (int i=sel; i>=0; i--)
+			if (!strcmp("<SEP>", m_items.Get(i)))
+				sel--;
+		return sel;
+	}
+	void SetCurSel2(int _sel)
+	{
+		for (int i=0; i<m_items.GetSize(); i++) {
+			if (!strcmp("<SEP>", m_items.Get(i))) _sel++;
+			else if (i==_sel) break;
+		}
+		WDL_VirtualComboBox::SetCurSel(_sel);
+	}
+};
+
 class SNM_DynSizedText : public WDL_VWnd {
 public:
 	SNM_DynSizedText() : WDL_VWnd()
@@ -68,7 +94,6 @@ protected:
 	int m_maxLineIdx, m_lastFontH, m_col;
 	bool m_wantBorder, m_wantTitleLane;
 	unsigned char m_alpha;
-	SWS_Mutex m_mutex;
 	UINT m_align, m_titleAlign;
 };
 

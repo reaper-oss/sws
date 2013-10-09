@@ -38,7 +38,6 @@
 
 #include "stdafx.h"
 #include "SnM.h"
-#include "SnM_ChunkParserPatcher.h"
 #include "SnM_Dlg.h"
 #include "SnM_Marker.h"
 #include "SnM_Notes.h"
@@ -173,7 +172,7 @@ void NotesWnd::OnInitDlg()
 	SetType(BOUNDED(g_notesViewType, 0, m_cbType.GetCount()-1)); // + Update()
 
 /* see OnTimer()
-	RegisterToMarkerRegionUpdates(&m_mkrRgnSubscriber);
+	RegisterToMarkerRegionUpdates(&m_mkrRgnListener);
 */
 	SetTimer(m_hwnd, UPDATE_TIMER, NOTES_UPDATE_FREQ, NULL);
 }
@@ -182,7 +181,7 @@ void NotesWnd::OnDestroy()
 {
 	KillTimer(m_hwnd, UPDATE_TIMER);
 /* see OnTimer()
-	UnregisterToMarkerRegionUpdates(&m_mkrRgnSubscriber);
+	UnregisterToMarkerRegionUpdates(&m_mkrRgnListener);
 */
 	g_prevNotesViewType = -1;
 	m_cbType.Empty();
@@ -350,7 +349,7 @@ int NotesWnd::OnKey(MSG* _msg, int _iKeyState)
 			// but we definitely need those..
 			{
 				if (!IsDocked())
-					SNM_AddOrReplaceScheduledJob(new OSXForceTxtChangeJob());
+					ScheduledJob::Schedule(new OSXForceTxtChangeJob());
 				return -1; // send the return key to the edit control
 			}
 #endif
@@ -368,10 +367,10 @@ void NotesWnd::OnTimer(WPARAM wParam)
 		{
 			case SNM_NOTES_REGION_SUBTITLES:
 			case SNM_NOTES_REGION_NAME:
-				RegisterToMarkerRegionUpdates(&m_mkrRgnSubscriber); // no-op if alreday registered
+				RegisterToMarkerRegionUpdates(&m_mkrRgnListener); // no-op if alreday registered
 				break;
 			default:
-				UnregisterToMarkerRegionUpdates(&m_mkrRgnSubscriber);
+				UnregisterToMarkerRegionUpdates(&m_mkrRgnListener);
 				break;
 		}
 
@@ -1030,26 +1029,14 @@ void NotesMarkerRegionListener::NotifyMarkerRegionUpdate(int _updateFlags)
 {
 	if (g_notesViewType == SNM_NOTES_REGION_SUBTITLES)
 	{
-#ifdef _SNM_NO_ASYNC_UPDT
-		NotesUpdateJob job;
-		job.Perform();
-#else
-		SNM_AddOrReplaceScheduledJob(new NotesUpdateJob());
-#endif
+		ScheduledJob::Schedule(new NotesUpdateJob(SNM_SCHEDJOB_ASYNC_DELAY_OPT));
 	}
 	else if (g_notesViewType == SNM_NOTES_REGION_NAME)
 	{
 		if (g_internalMkrRgnChange)
 			g_internalMkrRgnChange = false;
 		else
-		{
-#ifdef _SNM_NO_ASYNC_UPDT
-			NotesUpdateJob job;
-			job.Perform();
-#else
-			SNM_AddOrReplaceScheduledJob(new NotesUpdateJob());
-#endif
-		}
+			ScheduledJob::Schedule(new NotesUpdateJob(SNM_SCHEDJOB_ASYNC_DELAY_OPT));
 	}
 }
 
@@ -1201,6 +1188,8 @@ void ExportSubTitleFile(COMMAND_T* _ct)
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// project_config_extension_t
+///////////////////////////////////////////////////////////////////////////////
 
 static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
 {
@@ -1348,14 +1337,8 @@ void NotesSetTrackTitle()
 
 // this is our only notification of active project tab change, so update everything
 // (ScheduledJob because of multi-notifs)
-void NotesSetTrackListChange()
-{
-#ifdef _SNM_NO_ASYNC_UPDT
-	NotesUpdateJob job;
-	job.Perform();
-#else
-	SNM_AddOrReplaceScheduledJob(new NotesUpdateJob());
-#endif
+void NotesSetTrackListChange() {
+	ScheduledJob::Schedule(new NotesUpdateJob(SNM_SCHEDJOB_ASYNC_DELAY_OPT));
 }
 
 

@@ -28,7 +28,6 @@
 #include "stdafx.h" 
 #include "SnM.h"
 #include "SnM_CSurf.h"
-#include "SnM_Item.h"
 #include "SnM_LiveConfigs.h"
 #include "SnM_Misc.h"
 #include "SnM_Notes.h"
@@ -45,82 +44,23 @@
 // SWSTimeSlice:IReaperControlSurface callbacks
 ///////////////////////////////////////////////////////////////////////////////
 
-double g_toolbarMsCounter = 0.0;
-double g_itemSelToolbarMsCounter = 0.0;
-double g_markerRegionNotifyMsCounter = 0.0;
-
+// called from the main thread via IReaperControlSurface::Run()
 // processing order is important here
 void SNM_CSurfRun()
 {
-	// region playlist
+	static bool sRecurseCheck = false;
+	if (sRecurseCheck)
+		return;
+
+	sRecurseCheck = true;
+
 	PlaylistRun();
-
-	// stop playing track previews if needed
+	ScheduledJob::Run();
 	StopTrackPreviewsRun();
+	UpdateMarkerRegionRun();
+	AutoRefreshToolbarRun();
 
-	// perform scheduled jobs
-	{
-		SWS_SectionLock lock(&g_SNM_JobsMutex);
-		for (int i=g_SNM_Jobs.GetSize()-1; i >=0; i--)
-		{
-			if (SNM_ScheduledJob* job = g_SNM_Jobs.Get(i))
-			{
-				job->m_tick--;
-				if (job->m_tick <= 0)
-				{
-					if (!job->m_isPerforming)
-					{
-						job->m_isPerforming = true;
-						job->Perform();
-#ifdef _SNM_DEBUG
-						char dbg[256]="";
-						_snprintfSafe(dbg, sizeof(dbg), "SNM_CSurfRun() - Performed SNM_ScheduledJob id: %d\n", job->m_id);
-						OutputDebugString(dbg);
-#endif
-						g_SNM_Jobs.Delete(i, false);
-						DELETE_NULL(job);
-					}
-					else
-					{
-#ifdef _SNM_DEBUG
-						char dbg[256]="";
-						_snprintfSafe(dbg, sizeof(dbg), "SNM_CSurfRun() - Ignored SNM_ScheduledJob id: %d\n", job->m_id);
-						OutputDebugString(dbg);
-#endif
-					}
-				}
-			}
-		}
-	}
-
-	// marker/region updates notifications
-	g_markerRegionNotifyMsCounter += SNM_CSURF_RUN_TICK_MS;
-	if (g_markerRegionNotifyMsCounter > 500.0)
-	{
-		g_markerRegionNotifyMsCounter = 0.0;
-		
-		SWS_SectionLock lock(&g_SNM_MkrRgnListenersMutex);
-		if (int sz=g_SNM_MkrRgnListeners.GetSize())
-			if (int updateFlags = UpdateMarkerRegionCache())
-				for (int i=sz-1; i>=0; i--)
-					g_SNM_MkrRgnListeners.Get(i)->NotifyMarkerRegionUpdate(updateFlags);
-	}
-
-	// toolbars auto-refresh options
-	g_toolbarMsCounter += SNM_CSURF_RUN_TICK_MS;
-	g_itemSelToolbarMsCounter += SNM_CSURF_RUN_TICK_MS;
-
-	if (g_itemSelToolbarMsCounter > 1000) { // might be hungry => gentle hard-coded freq
-		g_itemSelToolbarMsCounter = 0.0;
-		if (g_SNM_ToolbarRefresh) 
-			OffscreenSelItemsPoll();
-	}
-
-	if (g_toolbarMsCounter > g_SNM_ToolbarRefreshFreq) {
-		g_toolbarMsCounter = 0.0;
-		if (g_SNM_ToolbarRefresh) 
-			RefreshToolbars();
-	}
+	sRecurseCheck = false;
 }
 
 void SNM_CSurfSetTrackTitle() {
@@ -128,7 +68,8 @@ void SNM_CSurfSetTrackTitle() {
 	LiveConfigsSetTrackTitle();
 }
 
-void SNM_CSurfSetTrackListChange() {
+void SNM_CSurfSetTrackListChange()
+{
 	NotesSetTrackListChange();
 	LiveConfigsTrackListChange();
 	RegionPlaylistSetTrackListChange();
@@ -145,25 +86,26 @@ void SNM_CSurfSetPlayState(bool _play, bool _pause, bool _rec)
 			PlaylistStopped(_pause);
 		g_lastPlayState = _play;
 	}
+
 	if (g_lastPauseState != _pause)
 	{
 		if (g_lastPlayState && !_pause)
 			PlaylistUnpaused();
 		g_lastPauseState = _pause;
 	}
-	if (g_lastRecState != _rec) {
+
+	if (g_lastRecState != _rec)
 		g_lastRecState = _rec;
-	}
 }
 
 int SNM_CSurfExtended(int _call, void* _parm1, void* _parm2, void* _parm3)
 {
 #ifdef _SNM_DEBUG
-	char dbg[256] = "";
-	_snprintfSafe(dbg, sizeof(dbg), "SNM_CSurfExtended() - Call: %d, prm1: %p, prm2: %p prm3: %p\n", _call, _parm1, _parm2, _parm3);
-	OutputDebugString(dbg);
+//	char dbg[256] = "";
+//	_snprintfSafe(dbg, sizeof(dbg), "SNM_CSurfExtended() - Call: %d, prm1: %p, prm2: %p prm3: %p\n", _call, _parm1, _parm2, _parm3);
+//	OutputDebugString(dbg);
 #endif
-	return 0; // return 0 if unsupported
+	return 0; // i.e. unsupported
 }
 
 

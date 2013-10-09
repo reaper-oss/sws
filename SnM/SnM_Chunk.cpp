@@ -434,8 +434,8 @@ int SNM_TakeParserPatcher::AddLastTake(WDL_FastString* _tkChunk)
 int SNM_TakeParserPatcher::InsertTake(int _takeIdx, WDL_FastString* _chunk, int _pos)
 {
 	int afterPos = -1;
-	int length = _chunk->GetLength();
-	if (_chunk && length && GetChunk()) // force GetChunk() (force cache + add fake 1st take if needed)
+	int length = _chunk ? _chunk->GetLength() : 0;
+	if (length && GetChunk()) // force GetChunk() (force cache + add fake 1st take if needed)
 	{
 		// last pos?
 		if (_takeIdx >= CountTakesInChunk())

@@ -1,32 +1,104 @@
-ReaScript function export:
+<b>S&M MIDI/OSC actions support learn with both MIDI Pitch and "normalized" OSC messages</b>
++To enable this new option: set "LearnPitchAndNormOSC" to 1 in the section [General] of the S&M.ini file (quit REAPER first!)
++When the new option is enabled, all actions of the section "S&M Extension" can be learned with:
+ - New: OSC messages with float arguments in [0, 1]
+   Useful for buggy OSC controllers that cannot handle absolute float values, e.g. <b>TouchOSC for Android needs this!</b>
+ - New: MIDI Pitch messages (i.e. 14-bit resolution)
+ - MIDI CC messages
+
+Auto color/icon
++Issue 602: Marker/region rules now support the filters (any) and (unnamed)
++Issue 600 / Windows OS: fixed potential crash when changing colors
++Fixed marker/region rules not obeying priorities
+
+Resources: house cleaning
++<b>Removed all "prompt for slot" actions (*)</b>
+ Prehistoric actions that used to make sense when there were no dedicated GUI...
++<b>Deprecated the "project loader/selecter" tool (*)</b>
+ This tool was useful to switch projects or select project tabs (during live performances, for ex.)
+ Instead, you can just create a new dedicated bookmark (say "Live projects"), add projects to it and 
+ attach relevant slot actions to it via the context menu > Bookmark > Attach project slot actions to this bookmark
+ Deprecated actions have been replaced as follow:
+ - "Resources - Project loader/selecter: next (cycle)"  ->  "Resources - Open project, next slot (cycle)"
+ - "Resources - Project loader/selecter: previous (cycle)"  ->  "Resources - Open project, previous slot (cycle)"
++(*) If you have any trouble because of that, please http://code.google.com/p/sws-extension/issues/list|say something|!
+
+Resources / Issue 591: make it possible to save and use new slots/files only via user macros (w/o using the GUI, w/o tweaking the S&M.ini file, etc..)
++Made "Auto-save" slots/files <i>actions</i> more macro-friendly: they won't prompt for anything
+ Note: the "Auto-save" <i>button</i> still prompt to overwrite selected slots/files
++Added a bunch of "last slot" actions (e.g. auto-saved slots ^^), a few examples:
+ - SWS/S&M: Resources - Apply track template to selected tracks, <i>last slot</i>
+ - SWS/S&M: Resources - Apply track template (+envelopes/items) to selected tracks, <i>last slot</i>
+ - SWS/S&M: Resources - Import tracks from track template, <i>last slot</i>
+ - etc..
++Added actions to cleanup things at the end of user macros, if needed:
+ - SWS/S&M: Resources - Delete last track template slot/file
+ - SWS/S&M: Resources - Delete last FX chain slot/file
+ - SWS/S&M: Resources - Delete last media slot/file
+ - SWS/S&M: Resources - Delete last project slot/file
+ - SWS/S&M: Resources - Delete last theme slot/file
+ - SWS/S&M: Resources - Delete last image slot/file
+
+Resources: other updates
++Media files: added "Add media file" options in the context menu (+ new actions)
+ - Stretch/loop to fit time selection
+ - Try to match tempo 0.5x
+ - Try to match tempo 1x
+ - Try to match tempo 2x
+ <b>Note: all "Add media file" slot actions obey these new options too!</b>
++Track templates: added actions where 'n' is in [1; 4], http://forum.cockos.com/showthread.php?p=984786#post984786|customizable in the S&M.ini file|
+ - SWS/S&M: Resources - Paste (replace) template items to selected tracks, slot n
+ - SWS/S&M: Resources - Paste (replace) template items to selected tracks, last slot
+ - SWS/S&M: Resources - Paste template items to selected tracks, slot n
+ - SWS/S&M: Resources - Paste template items to selected tracks, last slot
++Projects: added actions to open next/previous projects in new tabs
+ - "SWS/S&M: Resources - Open project, next slot (new tab, cycle)"
+ - "SWS/S&M: Resources - Open project, previous slot (new tab, cycle)"
++Fixed "Offset items/envelopes by edit cursor" not being obeyed, 
++Tag bookmark names with [x] when relevant slot actions are attached to them
++GUI tweaks, better wordings and undo point names (with slot numbers), etc..
+
+ReaScript function export
 +Added function BR_SetTakeSourceFromFile()
 +Issue 598: fixed potential crash with FNG_FreeMidiTake
 
-Issue 540 / Ruler's drag zoom: added actions for better usability
+Ruler's drag zoom / Issue 540: added actions for better usability
 +SWS: Toggle drag zoom enable (ruler top half)
 +SWS: Toggle drag zoom enable (ruler bottom half)
 
 Fixes
-+Issue 600: fixed potential crash when changing colors in the Auto color/icon window
-+Localization: fixed SWS zoom, "Scroll track view" and "Toggle offscreen item selection" actions (when the extension is translated)
++Localization / Windows OS: fixed broken features/actions when the extension was translated
+ - Most of zoom features
+ - Xenakios "Scroll track view" actions
+ - S&M "Toggle offscreen item selection" actions
++Issue 595: cut/copy/paste take actions now handle multiple item selection
++"Cut active take" now removes items if needed (rather than leaving empty items)
++S&M actions to switch FX preset now support concurrent use (e.g. tweaking 2 knobs at the same time)
++Fixed the toggle state reported by some "offscreen item selection" actions
 
-Other:
-+Update checker: wait for startup project to load completely before displaying startup dialog
+Other
++Update checker: wait for project to load completely before displaying startup dialog
++Cycle Action editor: reject unreliable command ids for SWS actions, macros and scripts
++S&M project startup action: faster, safer, reject unreliable command ids for SWS actions, macros and scripts
 +Issue 593: increased maximum cell length for all list views
++Issue 517 / OSX: S&M actions and commands that open the Finder now also reveal files (like on Windows OS)
++Live Configs: improved timing for tiny fades, controller smoothing, etc...
++S&M actions/windows: various performance/timing improvements
 
 !v2.4.0 #1 (August 6, 2013)
-Fixed some actions learned with <b>relative</b> MIDI CC events, those actions belong to the section "S&M extension":
+Fixed some actions learned with <b>relative</b> MIDI CC events
 +SWS/S&M: Select project (MIDI CC/OSC only)
 +SWS/S&M: Trigger preset for FX n of selected track (MIDI CC/OSC only) - where 'n' is in [1; 8]
- Trigger preset actions from FX4 to FX8 are new actions by the way!
+ Note: FX 4 to FX 8 are new actions
 +SWS/S&M: Trigger preset for selected FX of selected track (MIDI CC/OSC only)
++Reminder: those actions belong to the section "S&M extension" of the action list (top-right dropdown box)
 
 Live Configs:
 +Allow switches to "comments-only" configs (e.g. OSC feedback with random/custom strings)
 +Added actions (where 'n' is in [1; 4], http://forum.cockos.com/showthread.php?p=984786#post984786|customizable in the S&M.ini file|):
  - SWS/S&M: Live Config n - Preload next config
  - SWS/S&M: Live Config n - Preload previous config
- Note: useful to preload configs with -/+ controllers (like pedals), there already are similar actions to switch to the next/previous config
+ Notes: useful to preload configs with -/+ controllers (like pedals), there already are similar actions to switch to the next/previous config
 +Monitor windows:
  - Mouse wheel/trackpad gesture now cycles back to the first/last config
  - Mouse wheel/trackpad gesture now obeys the option "Ignore switches to empty configs"
@@ -38,7 +110,7 @@ Live Configs:
 Cycle Action editor: copy/paste commands with Ctrl-C, Ctrl-V, Ctrl-X (on OS X: CMD-C, etc..)
 
 !v2.3.0 #23 (July 22, 2013)
-Fixed theme loading actions http://forum.cockos.com/showthread.php?p=1213324#post1213324|vs some user preferences|, thanks Breeder!
+Fixed theme actions http://forum.cockos.com/showthread.php?p=1213324#post1213324|vs some user preferences|, thanks Breeder!
 
 Resources window:
 +Improved context menus (right-click the bookmark dropdown box, the attached project label, etc..)
@@ -95,7 +167,7 @@ Other:
 +Actions that renumber marker/region IDs now create undo points
 
 !v2.3.0 #18 (June 9, 2013)
-Issue 517 / Windows OS: S&M actions and commands that open the Explorer now also select files (when applicable)
+Issue 517 / Windows OS: S&M actions and commands that open the Explorer now also reveal files
 OS X: better fonts in S&M windows (again!)
 
 Fixes:
@@ -359,8 +431,9 @@ Tempo improvements:
    => Big thanks to user http://forum.cockos.com/member.php?u=22191|G-Sun| for all the wiki work, suggestions and testing
 
 Added actions:
-+Issue 544: SWS/S&M: Set project startup action
-+Issue 544: SWS/S&M: Clear project startup action
++Issue 544: SWS/S&M: Set project startup action (and SWS/S&M: Clear project startup action)
+ Note: startup actions are defined <b>per project</b>. If you need to run an action when launching REAPER (or with new blank projects),
+ define a project template (in Preferences > Project) and a startup action for this template.
 +SWS/BR: Check for new SWS version...
 
 Fix for OSC & MIDI CC relative "mode 3" learn
@@ -902,7 +975,7 @@ Added actions (and new context menu items):
 Other
 +Fixed some dropped character bugs in Label processor
 +ClearType for tooltips too
- Optional: set ClearTypeFont to 1 in the section [General] of the S&M.ini file
+ Optional: set "ClearTypeFont" to 1 in the section [General] of the S&M.ini file (quit REAPER first!)
 +Refresh some S&M views when changing time mode
 
 !v2.2.0 #3 (March 25, 2012)
@@ -959,7 +1032,8 @@ Marker list:
 +Convert regions to markers
 
 Other, fixes:
-+All S&M windows: optional Windows-rendered fonts (ClearType) - To enable this option set ClearTypeFont to 1 in the section [General] of the S&M.ini file
++All S&M windows: optional Windows-rendered fonts (ClearType)
+ To enable this option set "ClearTypeFont" to 1 in the section [General] of the S&M.ini file (quit REAPER first!)
 +Support the global preference "Disable saving full plugin states"
 +Fixed all S&M copy/cut/paste sends/receives/routings actions (possible problem with multi track selection, see issue 174).
  Note: this also fixes SWS smart cut/copy actions: "SWS: Copy items/tracks/env, obeying time sel" and "SWS: Cut items/tracks/env, obeying time sel"
@@ -1314,7 +1388,7 @@ Resource window: Project Loader/Selecter overhauled
  - SWS/S&M: Project loader/selecter: next (cycle)
  - SWS/S&M: Project loader/selecter: previous (cycle)
 +The current open project slot is automatically selected
-+Reminder: the Project Loader/Selecter allows you opening some projects (or selecting project tabs) with following actions. 
++Reminder: the Project Loader/Selecter allows you opening some projects (or selecting project tabs) with following actions.
  It is useful for live performance. Details and demo http://forum.cockos.com/showpost.php?p=831103&postcount=655|here|.
 
 Fixed autogrouping broken in 2.1.0 #15

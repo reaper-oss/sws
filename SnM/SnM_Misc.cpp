@@ -30,20 +30,14 @@
 #include "SnM_Chunk.h"
 #include "SnM_Item.h"
 #include "SnM_Misc.h"
-#include "SnM_Resources.h"
 #include "SnM_Track.h"
-#include "SnM_Util.h"
-#include "../reaper/localize.h"
-#include "../Prompt.h"
-#include "../../WDL/projectcontext.h"
 #ifdef _SNM_HOST_AW
 #include "../Misc/Adam.h"
 #endif
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Reascript export
-// => funcs must be made dumb-proof!
+// Reascript export, funcs made dumb-proof!
 ///////////////////////////////////////////////////////////////////////////////
 
 WDL_FastString* SNM_CreateFastString(const char* _str) {
@@ -194,109 +188,10 @@ bool SNM_SetDoubleConfigVar(const char* _varName, double _newVal) {
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Theme slots (Resources view)
+// Toolbars auto refresh option
 ///////////////////////////////////////////////////////////////////////////////
 
-// _title unused (no undo point here)
-void LoadThemeSlot(int _slotType, const char* _title, int _slot)
-{
-	if (WDL_FastString* fnStr = GetOrPromptOrBrowseSlot(_slotType, &_slot))
-	{
-		char cmd[SNM_MAX_PATH]=""; 
-		if (_snprintfStrict(cmd, sizeof(cmd), SNM_REAPER_EXE_FILE, GetExePath()) > 0)
-		{
-			WDL_FastString syscmd;
-			// on Win, force -nonewinst not to spawn a new instance (i.e. ignore multi instance prefs)
-			// note: can't access those prefs via GetConfigVar("multinst"), not exposed?
-#ifdef _WIN32
-			syscmd.SetFormatted(SNM_MAX_PATH, "\"%s\" -nonewinst -ignoreerrors", fnStr->Get());
-			ShellExecute(GetMainHwnd(), "open", cmd, syscmd.Get(), NULL, SW_SHOWNORMAL);
-#else
-			syscmd.SetFormatted(SNM_MAX_PATH, "open -a \"%s\" \"%s\"", cmd, fnStr->Get());
-/*JFB useless on OSX: no multi instance prefs like on Win but this would work if so (--args requires OSX >= 10.6 though)
-			syscmd.SetFormatted(SNM_MAX_PATH, "open -a '%s' '%s' --args -nonewinst -ignoreerrors", cmd, fnStr->Get());
-*/
-			system(syscmd.Get());
-#endif
-		}
-		delete fnStr;
-	}
-}
-
-void LoadThemeSlot(COMMAND_T* _ct) {
-	LoadThemeSlot(g_SNM_TiedSlotActions[SNM_SLOT_THM], SWS_CMD_SHORTNAME(_ct), (int)_ct->user);
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-// Image slots (Resources view)
-///////////////////////////////////////////////////////////////////////////////
-
-int g_SNM_LastImgSlot = -1;
-
-// _title unused (no undo point here)
-void ShowImageSlot(int _slotType, const char* _title, int _slot)
-{
-	if (WDL_FastString* fnStr = GetOrPromptOrBrowseSlot(_slotType, &_slot))
-	{
-		if (!_stricmp("png", GetFileExtension(fnStr->Get())))
-		{
-			if (OpenImageWnd(fnStr->Get()))
-				g_SNM_LastImgSlot = _slot;
-		}
-		else
-		{
-			WDL_FastString msg;
-			msg.SetFormatted(256, __LOCALIZE_VERFMT("Cannot load %s","sws_mbox"), fnStr->Get());
-			msg.Append("\n");
-			msg.Append(__LOCALIZE("Only PNG files are supported at the moment, sorry.","sws_mbox")); //JFB!!
-			MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
-		}
-		delete fnStr;
-	}
-}
-
-void ShowImageSlot(COMMAND_T* _ct) {
-	ShowImageSlot(g_SNM_TiedSlotActions[SNM_SLOT_IMG], SWS_CMD_SHORTNAME(_ct), (int)_ct->user);
-}
-
-void ShowNextPreviousImageSlot(COMMAND_T* _ct)
-{
-	int sz = g_SNM_ResSlots.Get(g_SNM_TiedSlotActions[SNM_SLOT_IMG])->GetSize();
-	if (sz) {
-		g_SNM_LastImgSlot += (int)_ct->user;
-		if (g_SNM_LastImgSlot<0) g_SNM_LastImgSlot = sz-1;
-		else if (g_SNM_LastImgSlot>=sz) g_SNM_LastImgSlot = 0;
-	}
-	ShowImageSlot(g_SNM_TiedSlotActions[SNM_SLOT_IMG], SWS_CMD_SHORTNAME(_ct), sz ? g_SNM_LastImgSlot : -1); // -1: err msg (empty list)
-}
-
-void SetSelTrackIconSlot(int _slotType, const char* _title, int _slot)
-{
-	bool updated = false;
-	if (WDL_FastString* fnStr = GetOrPromptOrBrowseSlot(_slotType, &_slot))
-	{
-		for (int j=0; j <= GetNumTracks(); j++)
-			if (MediaTrack* tr = CSurf_TrackFromID(j, false))
-				if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
-					updated |= SetTrackIcon(tr, fnStr->Get());
-		delete fnStr;
-	}
-	if (updated && _title)
-		Undo_OnStateChangeEx2(NULL, _title, UNDO_STATE_ALL, -1);
-}
-
-void SetSelTrackIconSlot(COMMAND_T* _ct) {
-	SetSelTrackIconSlot(g_SNM_TiedSlotActions[SNM_SLOT_IMG], SWS_CMD_SHORTNAME(_ct), (int)_ct->user);
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-// Toolbars auto refresh option, see SNM_CSurfRun()
-///////////////////////////////////////////////////////////////////////////////
-
-bool g_SNM_ToolbarRefresh = false;
-int g_SNM_ToolbarRefreshFreq = SNM_DEF_TOOLBAR_RFRSH_FREQ;
+DWORD g_toolbarRefreshTime=0, g_offscreenItemsRefreshTime=0;  // really approx (updated on timer)
 
 void EnableToolbarsAutoRefesh(COMMAND_T* _ct) {
 	g_SNM_ToolbarRefresh = !g_SNM_ToolbarRefresh;
@@ -321,6 +216,22 @@ void RefreshToolbars()
 	UpdateGridToolbar();
 	UpdateTrackTimebaseToolbar();
 #endif
+}
+
+// polled via SNM_CSurfRun()
+void AutoRefreshToolbarRun()
+{
+	if (g_SNM_ToolbarRefresh)
+	{
+		if (GetTickCount() > g_offscreenItemsRefreshTime) {
+			g_offscreenItemsRefreshTime = GetTickCount() + SNM_OFFSCREEN_UPDATE_FREQ;
+			RefreshOffscreenItems();
+		}
+		if (GetTickCount() > g_toolbarRefreshTime) {
+			g_toolbarRefreshTime = GetTickCount() + g_SNM_ToolbarRefreshFreq; // custom freq (from S&M.ini)
+			RefreshToolbars();
+		}
+	}
 }
 
 

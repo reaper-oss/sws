@@ -37,21 +37,27 @@ void UntieFileFromProject(const char* _fn, ReaProject* _prj = NULL);
 double GetProjectLength(bool _items = true, bool _inclRgnsMkrs = false);
 bool InsertSilence(const char* _undoTitle, double _pos, double _len);
 
-void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
 void LoadOrSelectProject(const char* _fn, bool _newTab);
 
-void LoadOrSelectProjectSlot(int _slotType, const char* _title, int _slot, bool _newTab);
-bool AutoSaveProjectSlot(int _slotType, const char* _dirPath, WDL_PtrList<void>* _owSlots, bool _saveCurPrj);
-void LoadOrSelectProjectSlot(COMMAND_T*);
-void LoadOrSelectProjectTabSlot(COMMAND_T*);
-
-bool IsProjectLoaderConfValid();
-void ProjectLoaderConf(COMMAND_T*);
-void LoadOrSelectNextPreviousProject(COMMAND_T*);
-
-class ProjectActionJob : public SNM_ScheduledJob {
+class SelectProjectJob : public MidiOscActionJob
+{
 public:
-	ProjectActionJob(int _cmdId) : m_cmdId(_cmdId), SNM_ScheduledJob(SNM_SCHEDJOB_PRJ_ACTION, 1000) {}
+	SelectProjectJob(int _approxMs, int _val, int _valhw, int _relmode) 
+		: MidiOscActionJob(SNM_SCHEDJOB_SEL_PRJ,_approxMs,_val,_valhw,_relmode) {}
+protected:
+	void Perform();
+	double GetCurrentValue();
+	double GetMinValue() { return 0; }
+	double GetMaxValue();
+};
+
+void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
+
+
+class StartupProjectActionJob : public ScheduledJob {
+public:
+	StartupProjectActionJob(int _cmdId) : m_cmdId(_cmdId), ScheduledJob(SNM_SCHEDJOB_PRJ_ACTION, 1000) {}
+protected:
 	void Perform() { if (m_cmdId) Main_OnCommand(m_cmdId, 0); }
 	int m_cmdId;
 };

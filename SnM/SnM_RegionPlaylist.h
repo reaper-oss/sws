@@ -74,7 +74,9 @@ public:
 class RegionPlaylistView : public SWS_ListView {
 public:
 	RegionPlaylistView(HWND hwndList, HWND hwndEdit);
+#ifdef _SNM_MUTEX
 	void Update();
+#endif
 	void UpdateCompact();
 protected:
 	void GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax);
@@ -109,7 +111,7 @@ protected:
 	void DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight = NULL);
 	bool GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOutSz);
 
-	PlaylistMarkerRegionListener m_mkrRgnSubscriber;
+	PlaylistMarkerRegionListener m_mkrRgnListener;
 
 	WDL_VirtualStaticText m_txtPlaylist;
 	WDL_VirtualComboBox m_cbPlaylist;
@@ -123,9 +125,10 @@ protected:
 	SNM_DynSizedText m_txtMon[5];
 };
 
-class PlaylistUpdateJob : public SNM_ScheduledJob {
+class PlaylistUpdateJob : public ScheduledJob {
 public:
-	PlaylistUpdateJob() : SNM_ScheduledJob(SNM_SCHEDJOB_PLAYLIST_UPDATE, SNM_SCHEDJOB_SLOW_DELAY) {}
+	PlaylistUpdateJob(int _approxMs) : ScheduledJob(SNM_SCHEDJOB_PLAYLIST_UPDATE, _approxMs) {}
+protected:
 	void Perform();
 };
 

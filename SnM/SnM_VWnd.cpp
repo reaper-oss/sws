@@ -40,8 +40,6 @@
 // _col: 0 to use the default theme text color
 void SNM_DynSizedText::SetText(const char* _txt, int _col, unsigned char _alpha)
 { 
-	SWS_SectionLock lock(&m_mutex);
-
 	if (m_col==_col && m_alpha==_alpha && !strcmp(m_lastText.Get(), _txt?_txt:""))
 		return;
 
@@ -100,8 +98,8 @@ void SNM_DynSizedText::DrawLines(LICE_IBitmap* _drawbm, RECT* _r, int _fontHeigh
 
 void SNM_DynSizedText::SetTitle(const char* _txt)
 {
-	SWS_SectionLock lock(&m_mutex);
-	if (!strcmp(m_title.Get(), _txt?_txt:"")) return;
+	if (!strcmp(m_title.Get(), _txt?_txt:""))
+		return;
 	m_title.Set(_txt?_txt:"");
 	RequestRedraw(NULL);
 }
@@ -117,8 +115,6 @@ bool SNM_DynSizedText::HasTitleLane() {
 //JFB!? with big fonts LICE_FONT_FLAG_FORCE_NATIVE seems ignored..
 void SNM_DynSizedText::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect)
 {
-	SWS_SectionLock lock(&m_mutex);
-
 	RECT r = m_position;
 	r.left += origin_x;
 	r.right += origin_x;

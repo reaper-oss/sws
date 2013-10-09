@@ -51,7 +51,6 @@
 #include "../reaper/localize.h"
 
 
-void ExclusiveToggle(COMMAND_T*);
 void Noop(COMMAND_T* _ct) {}
 
 
@@ -59,7 +58,7 @@ void Noop(COMMAND_T* _ct) {}
 // S&M actions (main section)
 ///////////////////////////////////////////////////////////////////////////////
 
-static COMMAND_T s_cmdTable[] = 
+static COMMAND_T s_cmdTable[] =
 {
 
 //	{ { DEFACCEL, "SWS/S&M: [Internal] QuickTest" }, "S&M_QUICKTEST", Noop, NULL, },
@@ -218,66 +217,79 @@ static COMMAND_T s_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Open/close Resources window" }, "S&M_SHOW_RESOURCES_VIEW", OpenResources, NULL, -1, IsResourcesDisplayed},
 
 	{ { DEFACCEL, "SWS/S&M: Open/close Resources window (FX chains)" }, "S&M_SHOWFXCHAINSLOTS", OpenResources, NULL, SNM_SLOT_FXC, IsResourcesDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Resources - Clear FX chain slot..." }, "S&M_CLRFXCHAINSLOT", ResourcesClearSlotPrompt, NULL, SNM_SLOT_FXC},
+	{ { DEFACCEL, "SWS/S&M: Resources - Delete last FX chain slot/file" }, "S&M_DEL_LAST_FXCHAINSLOT", ResourcesDeleteLastSlot, NULL, SNM_SLOT_FXC},
 	{ { DEFACCEL, "SWS/S&M: Resources - Delete all FX chain slots" }, "S&M_DEL_ALL_FXCHAINSLOT", ResourcesDeleteAllSlots, NULL, SNM_SLOT_FXC},
-	{ { DEFACCEL, "SWS/S&M: Resources - Auto-save FX Chain slots for selected tracks" }, "S&M_SAVE_FXCHAIN_SLOT1", ResourcesAutoSaveFXChain, NULL, FXC_AUTOSAVE_PREF_TRACK},
-	{ { DEFACCEL, "SWS/S&M: Resources - Auto-save FX Chain slots for selected items" }, "S&M_SAVE_FXCHAIN_SLOT2", ResourcesAutoSaveFXChain, NULL, FXC_AUTOSAVE_PREF_ITEM},
-	{ { DEFACCEL, "SWS/S&M: Resources - Auto-save input FX Chain slots for selected tracks" }, "S&M_SAVE_FXCHAIN_SLOT3", ResourcesAutoSaveFXChain, NULL, FXC_AUTOSAVE_PREF_INPUT_FX},
-	{ { DEFACCEL, "SWS/S&M: Resources - Paste (replace) FX chain to selected items, prompt for slot" }, "S&M_TAKEFXCHAINp1", LoadSetTakeFXChain, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Resources - Paste (replace) FX chain to selected items, all takes, prompt for slot" }, "S&M_TAKEFXCHAINp2", LoadSetAllTakesFXChain, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Resources - Paste FX chain to selected items, prompt for slot" }, "S&M_PASTE_TAKEFXCHAINp1", LoadPasteTakeFXChain, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Resources - Paste FX chain to selected items, all takes, prompt for slot" }, "S&M_PASTE_TAKEFXCHAINp2", LoadPasteAllTakesFXChain, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Resources - Paste (replace) FX chain to selected tracks, prompt for slot" }, "S&M_TRACKFXCHAINp1", LoadSetTrackFXChain, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Resources - Paste FX chain to selected tracks, prompt for slot" }, "S&M_PASTE_TRACKFXCHAINp1", LoadPasteTrackFXChain, NULL, -1},
+	//JFB!! auto-save actions are poorly identified: should be S&M_SAVE_FXCHAIN1, S&M_SAVE_FXCHAIN2, etc..
+	{ { DEFACCEL, "SWS/S&M: Resources - Auto-save FX chains for selected tracks" }, "S&M_SAVE_FXCHAIN_SLOT1", ResourcesAutoSaveFXChain, NULL, FXC_AUTOSAVE_PREF_TRACK},
+	{ { DEFACCEL, "SWS/S&M: Resources - Auto-save FX chains for selected items" }, "S&M_SAVE_FXCHAIN_SLOT2", ResourcesAutoSaveFXChain, NULL, FXC_AUTOSAVE_PREF_ITEM},
+	{ { DEFACCEL, "SWS/S&M: Resources - Auto-save input FX chains for selected tracks" }, "S&M_SAVE_FXCHAIN_SLOT3", ResourcesAutoSaveFXChain, NULL, FXC_AUTOSAVE_PREF_INPUT_FX},
+	{ { DEFACCEL, "SWS/S&M: Resources - Paste (replace) FX chain to selected items, last slot" }, "S&M_TAKEFXCHAINl1", LoadSetTakeFXChainSlot, NULL, -2},
+	{ { DEFACCEL, "SWS/S&M: Resources - Paste (replace) FX chain to selected items, all takes, last slot" }, "S&M_TAKEFXCHAINl2", LoadSetAllTakesFXChainSlot, NULL, -2},
+	{ { DEFACCEL, "SWS/S&M: Resources - Paste FX chain to selected items, last slot" }, "S&M_PASTE_TAKEFXCHAINl1", LoadPasteTakeFXChainSlot, NULL, -2},
+	{ { DEFACCEL, "SWS/S&M: Resources - Paste FX chain to selected items, all takes, last slot" }, "S&M_PASTE_TAKEFXCHAINl2", LoadPasteAllTakesFXChainSlot, NULL, -2},
+	{ { DEFACCEL, "SWS/S&M: Resources - Paste (replace) FX chain to selected tracks, last slot" }, "S&M_TRACKFXCHAINl1", LoadSetTrackFXChainSlot, NULL, -2},
+	{ { DEFACCEL, "SWS/S&M: Resources - Paste FX chain to selected tracks, last slot" }, "S&M_PASTE_TRACKFXCHAINl1", LoadPasteTrackFXChainSlot, NULL, -2},
 
 	{ { DEFACCEL, "SWS/S&M: Open/close Resources window (track templates)" }, "S&M_SHOW_RESVIEW_TR_TEMPLATES", OpenResources, NULL, SNM_SLOT_TR, IsResourcesDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Resources - Clear track template slot..." }, "S&M_CLR_TRTEMPLATE_SLOT", ResourcesClearSlotPrompt, NULL, SNM_SLOT_TR},
+	{ { DEFACCEL, "SWS/S&M: Resources - Delete last track template slot/file" }, "S&M_DEL_LAST_TRTEMPLATE_SLOT", ResourcesDeleteLastSlot, NULL, SNM_SLOT_TR},
 	{ { DEFACCEL, "SWS/S&M: Resources - Delete all track template slots" }, "S&M_DEL_ALL_TRTEMPLATE_SLOT", ResourcesDeleteAllSlots, NULL, SNM_SLOT_TR},
-	{ { DEFACCEL, "SWS/S&M: Resources - Auto-save track template slots" }, "S&M_SAVE_TRTEMPLATE_SLOT1", ResourcesAutoSaveTrTemplate, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Resources - Auto-save track template slots (with items, envelopes) " }, "S&M_SAVE_TRTEMPLATE_SLOT2", ResourcesAutoSaveTrTemplate, NULL, 3},
-	{ { DEFACCEL, "SWS/S&M: Resources - Apply track template to selected tracks, prompt for slot" }, "S&M_APPLY_TRTEMPLATEp", LoadApplyTrackTemplateSlot, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Resources - Apply track template (+envelopes/items) to selected tracks, prompt for slot" }, "S&M_APPLY_TRTEMPLATE_ITEMSENVSp", LoadApplyTrackTemplateSlotWithItemsEnvs, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Resources - Import tracks from track template, prompt for slot" }, "S&M_ADD_TRTEMPLATEp", LoadImportTrackTemplateSlot, NULL, -1},
+	//JFB!! auto-save actions are poorly identified: should be S&M_SAVE_TRTEMPLATE1, S&M_SAVE_TRTEMPLATE2, etc..
+	{ { DEFACCEL, "SWS/S&M: Resources - Auto-save track template" }, "S&M_SAVE_TRTEMPLATE_SLOT1", ResourcesAutoSaveTrTemplate, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Resources - Auto-save track template (with items, envelopes) " }, "S&M_SAVE_TRTEMPLATE_SLOT2", ResourcesAutoSaveTrTemplate, NULL, 3},
+	{ { DEFACCEL, "SWS/S&M: Resources - Auto-save track template (with envelopes) " }, "S&M_SAVE_TRTEMPLATE_SLOT3", ResourcesAutoSaveTrTemplate, NULL, 2},
+	{ { DEFACCEL, "SWS/S&M: Resources - Auto-save track template (with items)" }, "S&M_SAVE_TRTEMPLATE_SLOT4", ResourcesAutoSaveTrTemplate, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Resources - Import tracks from track template, last slot" }, "S&M_ADD_TRTEMPLATEl", LoadImportTrackTemplateSlot, NULL, -2},
+	{ { DEFACCEL, "SWS/S&M: Resources - Apply track template to selected tracks, last slot" }, "S&M_APPLY_TRTEMPLATEl", LoadApplyTrackTemplateSlot, NULL, -2},
+	{ { DEFACCEL, "SWS/S&M: Resources - Apply track template (+envelopes/items) to selected tracks, last slot" }, "S&M_APPLY_TRTEMPLATE_ITEMSENVSl", LoadApplyTrackTemplateSlotWithItemsEnvs, NULL, -2},
+	{ { DEFACCEL, "SWS/S&M: Resources - Paste (replace) template items to selected tracks, last slot" }, "S&M_REPLACE_TEMPLATE_ITEMSl", ReplaceItemsTrackTemplateSlot, NULL, -2},
+	{ { DEFACCEL, "SWS/S&M: Resources - Paste template items to selected tracks, last slot" }, "S&M_PASTE_TEMPLATE_ITEMSl", PasteItemsTrackTemplateSlot, NULL, -2},
 
-	{ { DEFACCEL, "SWS/S&M: Open/close Resources window (project templates)" }, "S&M_SHOW_RESVIEW_PRJ_TEMPLATES", OpenResources, NULL, SNM_SLOT_PRJ, IsResourcesDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Resources - Clear project template slot..." }, "S&M_CLR_PRJTEMPLATE_SLOT", ResourcesClearSlotPrompt, NULL, SNM_SLOT_PRJ},
-	{ { DEFACCEL, "SWS/S&M: Resources - Delete all project template slots" }, "S&M_DEL_ALL_PRJTEMPLATE_SLOT", ResourcesDeleteAllSlots, NULL, SNM_SLOT_PRJ},
-	{ { DEFACCEL, "SWS/S&M: Resources - Auto-save project template slot" }, "S&M_SAVE_PRJTEMPLATE_SLOT", ResourcesAutoSave, NULL, SNM_SLOT_PRJ},
-	{ { DEFACCEL, "SWS/S&M: Resources - Open/select project template, prompt for slot" }, "S&M_APPLY_PRJTEMPLATEp", LoadOrSelectProjectSlot, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Resources - Open/select project template (new tab), prompt for slot" }, "S&M_NEWTAB_PRJTEMPLATEp", LoadOrSelectProjectTabSlot, NULL, -1},
-
-	{ { DEFACCEL, "SWS/S&M: Resources - Project loader/selecter: configuration" }, "S&M_PRJ_LOADER_CONF", ProjectLoaderConf, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Resources - Project loader/selecter: next (cycle)" }, "S&M_PRJ_LOADER_NEXT", LoadOrSelectNextPreviousProject, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Resources - Project loader/selecter: previous (cycle)" }, "S&M_PRJ_LOADER_PREV", LoadOrSelectNextPreviousProject, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Open/close Resources window (projects)" }, "S&M_SHOW_RESVIEW_PRJ_TEMPLATES", OpenResources, NULL, SNM_SLOT_PRJ, IsResourcesDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Resources - Delete last project slot/file" }, "S&M_DEL_LAST_PRJTEMPLATE_SLOT", ResourcesDeleteLastSlot, NULL, SNM_SLOT_PRJ},
+	{ { DEFACCEL, "SWS/S&M: Resources - Delete all project slots" }, "S&M_DEL_ALL_PRJTEMPLATE_SLOT", ResourcesDeleteAllSlots, NULL, SNM_SLOT_PRJ},
+	{ { DEFACCEL, "SWS/S&M: Resources - Auto-save project" }, "S&M_SAVE_PRJTEMPLATE_SLOT", ResourcesAutoSave, NULL, SNM_SLOT_PRJ},
+	{ { DEFACCEL, "SWS/S&M: Resources - Open project, last slot" }, "S&M_APPLY_PRJTEMPLATEl", LoadOrSelectProjectSlot, NULL, -2},
+	{ { DEFACCEL, "SWS/S&M: Resources - Open project, last slot (new tab)" }, "S&M_NEWTAB_PRJTEMPLATEl", LoadOrSelectProjectTabSlot, NULL, -2},
+	{ { DEFACCEL, "SWS/S&M: Resources - Open project, next slot (cycle)" }, "S&M_PRJ_NEXT_SLOT", LoadOrSelectNextPreviousProjectSlot, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Resources - Open project, previous slot (cycle)" }, "S&M_PRJ_PREV_SLOT", LoadOrSelectNextPreviousProjectSlot, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Resources - Open project, next slot (new tab, cycle)" }, "S&M_PRJ_NEXT_TAB_SLOT", LoadOrSelectNextPreviousProjectTabSlot, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Resources - Open project, previous slot (new tab, cycle)" }, "S&M_PRJ_PREV_TAB_SLOT", LoadOrSelectNextPreviousProjectTabSlot, NULL, -1},
 
 	{ { DEFACCEL, "SWS/S&M: Open/close Resources window (media files)" }, "S&M_SHOW_RESVIEW_MEDIA", OpenResources, NULL, SNM_SLOT_MEDIA, IsResourcesDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Resources - Clear media file slot..." }, "S&M_CLR_MEDIA_SLOT", ResourcesClearSlotPrompt, NULL, SNM_SLOT_MEDIA},
-	{ { DEFACCEL, "SWS/S&M: Resources - Delete all media file slots" }, "S&M_DEL_ALL_MEDIA_SLOT", ResourcesDeleteAllSlots, NULL, SNM_SLOT_MEDIA},
-	{ { DEFACCEL, "SWS/S&M: Resources - Auto-save media file slots for selected items" }, "S&M_SAVE_MEDIA_SLOT", ResourcesAutoSave, NULL, SNM_SLOT_MEDIA},
-	{ { DEFACCEL, "SWS/S&M: Resources - Play media file in selected tracks, prompt for slot" }, "S&M_PLAYMEDIA_SELTRACKp", PlaySelTrackMediaSlot, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Resources - Loop media file in selected tracks, prompt for slot" }, "S&M_LOOPMEDIA_SELTRACKp", LoopSelTrackMediaSlot, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Resources - Play media file in selected tracks (toggle), prompt for slot" }, "S&M_TGL_PLAYMEDIA_SELTRACKp", TogglePlaySelTrackMediaSlot, NULL, -1, GetFakeToggleState},
-	{ { DEFACCEL, "SWS/S&M: Resources - Loop media file in selected tracks (toggle), prompt for slot" }, "S&M_TGL_LOOPMEDIA_SELTRACKp", ToggleLoopSelTrackMediaSlot, NULL, -1, GetFakeToggleState},
-	{ { DEFACCEL, "SWS/S&M: Resources - Play media file in selected tracks (toggle pause), prompt for slot" }, "S&M_TGLPAUSE_PLAYMEDIA_SELTRACKp", TogglePauseSelTrackMediaSlot, NULL, -1, GetFakeToggleState},
-	{ { DEFACCEL, "SWS/S&M: Resources - Loop media file in selected tracks (toggle pause), prompt for slot - Infinite loop!" }, "S&M_TGLPAUSE_LOOPMEDIA_SELTRACKp", ToggleLoopPauseSelTrackMediaSlot, NULL, -1, GetFakeToggleState},
 	{ { DEFACCEL, "SWS/S&M: Resources - Stop all playing media files" }, "S&M_STOPMEDIA_ALLTRACK", StopTrackPreviews, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Resources - Stop all playing media files in selected tracks" }, "S&M_STOPMEDIA_SELTRACK", StopTrackPreviews, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Resources - Add media file to current track, prompt for slot" }, "S&M_ADDMEDIA_CURTRACKp", InsertMediaSlotCurTr, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Resources - Add media file to new track, prompt for slot" }, "S&M_ADDMEDIA_NEWTRACKp", InsertMediaSlotNewTr, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Resources - Add media file to selected items as takes, prompt for slot" }, "S&M_ADDMEDIA_SELITEMp", InsertMediaSlotTakes, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Resources - Delete last media file slot/file" }, "S&M_DEL_LAST_MEDIA_SLOT", ResourcesDeleteLastSlot, NULL, SNM_SLOT_MEDIA},
+	{ { DEFACCEL, "SWS/S&M: Resources - Delete all media file slots" }, "S&M_DEL_ALL_MEDIA_SLOT", ResourcesDeleteAllSlots, NULL, SNM_SLOT_MEDIA},
+	{ { DEFACCEL, "SWS/S&M: Resources - Auto-save media files for selected items" }, "S&M_SAVE_MEDIA_SLOT", ResourcesAutoSave, NULL, SNM_SLOT_MEDIA},
+	{ { DEFACCEL, "SWS/S&M: Resources - Play media file in selected tracks, last slot" }, "S&M_PLAYMEDIA_SELTRACKl", PlaySelTrackMediaSlot, NULL, -2},
+	{ { DEFACCEL, "SWS/S&M: Resources - Loop media file in selected tracks, last slot" }, "S&M_LOOPMEDIA_SELTRACKl", LoopSelTrackMediaSlot, NULL, -2},
+	{ { DEFACCEL, "SWS/S&M: Resources - Play media file in selected tracks (toggle), last slot" }, "S&M_TGL_PLAYMEDIA_SELTRACKl", TogglePlaySelTrackMediaSlot, NULL, -2, GetFakeToggleState},
+	{ { DEFACCEL, "SWS/S&M: Resources - Loop media file in selected tracks (toggle), last slot" }, "S&M_TGL_LOOPMEDIA_SELTRACKl", ToggleLoopSelTrackMediaSlot, NULL, -2, GetFakeToggleState},
+	{ { DEFACCEL, "SWS/S&M: Resources - Play media file in selected tracks (toggle pause), last slot" }, "S&M_TGLPAUSE_PLAYMEDIA_SELTRACKl", TogglePauseSelTrackMediaSlot, NULL, -2, GetFakeToggleState},
+	{ { DEFACCEL, "SWS/S&M: Resources - Loop media file in selected tracks (toggle pause), last slot" }, "S&M_TGLPAUSE_LOOPMEDIA_SELTRACKl", ToggleLoopPauseSelTrackMediaSlot, NULL, -2, GetFakeToggleState},
+
+	{ { DEFACCEL, "SWS/S&M: Resources - Add media file to current track, last slot" }, "S&M_ADDMEDIA_CURTRACKl", InsertMediaSlotCurTr, NULL, -2},
+	{ { DEFACCEL, "SWS/S&M: Resources - Add media file to new track, last slot" }, "S&M_ADDMEDIA_NEWTRACKl", InsertMediaSlotNewTr, NULL, -2},
+	{ { DEFACCEL, "SWS/S&M: Resources - Add media file to selected items as takes, last slot" }, "S&M_ADDMEDIA_SELITEMl", InsertMediaSlotTakes, NULL, -2},
+
+	{ { DEFACCEL, "SWS/S&M: Resources - Set \"Add media file\" option to \"Default\"" }, "S&M_ADDMEDIA_OPT0", SetMediaOption, NULL, 0, IsMediaOption},
+	{ { DEFACCEL, "SWS/S&M: Resources - Set \"Add media file\" option to \"Stretch/loop to fit time sel\"" }, "S&M_ADDMEDIA_OPT1", SetMediaOption, NULL, 1, IsMediaOption},
+	{ { DEFACCEL, "SWS/S&M: Resources - Set \"Add media file\" option to \"Try to match tempo 0.5x\"" }, "S&M_ADDMEDIA_OPT2", SetMediaOption, NULL, 2, IsMediaOption},
+	{ { DEFACCEL, "SWS/S&M: Resources - Set \"Add media file\" option to \"Try to match tempo 1x\"" }, "S&M_ADDMEDIA_OPT3", SetMediaOption, NULL, 3, IsMediaOption},
+	{ { DEFACCEL, "SWS/S&M: Resources - Set \"Add media file\" option to \"Try to match tempo 2x\"" }, "S&M_ADDMEDIA_OPT4", SetMediaOption, NULL, 4, IsMediaOption},
 
 	{ { DEFACCEL, "SWS/S&M: Open/close Resources window (images)" }, "S&M_SHOW_RESVIEW_IMAGE", OpenResources, NULL, SNM_SLOT_IMG, IsResourcesDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Resources - Clear image slot..." }, "S&M_CLR_IMAGE_SLOT", ResourcesClearSlotPrompt, NULL, SNM_SLOT_IMG},
-	{ { DEFACCEL, "SWS/S&M: Resources - Delete all image slots" }, "S&M_DEL_ALL_IMAGE_SLOT", ResourcesDeleteAllSlots, NULL, SNM_SLOT_IMG},
 	{ { DEFACCEL, "SWS/S&M: Resources - Show next image slot" }, "S&M_SHOW_NEXT_IMG", ShowNextPreviousImageSlot, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Resources - Show previous image slot" }, "S&M_SHOW_PREV_IMG", ShowNextPreviousImageSlot, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Resources - Show image, prompt for slot" }, "S&M_SHOW_IMAGEp", ShowImageSlot, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Resources - Set track icon for selected tracks, prompt for slot" }, "S&M_SET_TRACK_ICONp", SetSelTrackIconSlot, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Resources - Delete last image slot/file" }, "S&M_DEL_LAST_IMAGE_SLOT", ResourcesDeleteLastSlot, NULL, SNM_SLOT_IMG},
+	{ { DEFACCEL, "SWS/S&M: Resources - Delete all image slots" }, "S&M_DEL_ALL_IMAGE_SLOT", ResourcesDeleteAllSlots, NULL, SNM_SLOT_IMG},
+	{ { DEFACCEL, "SWS/S&M: Resources - Show image, last slot" }, "S&M_SHOW_IMAGEl", ShowImageSlot, NULL, -2},
+	{ { DEFACCEL, "SWS/S&M: Resources - Set track icon for selected tracks, last slot" }, "S&M_SET_TRACK_ICONl", SetSelTrackIconSlot, NULL, -2},
 
 	{ { DEFACCEL, "SWS/S&M: Open/close Resources window (themes)" }, "S&M_SHOW_RESVIEW_THEME", OpenResources, NULL, SNM_SLOT_THM, IsResourcesDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Resources - Clear theme slot..." }, "S&M_CLR_THEME_SLOT", ResourcesClearSlotPrompt, NULL, SNM_SLOT_THM},
+	{ { DEFACCEL, "SWS/S&M: Resources - Delete last theme slot/file" }, "S&M_DEL_LAST_THEME_SLOT", ResourcesDeleteLastSlot, NULL, SNM_SLOT_THM},
 	{ { DEFACCEL, "SWS/S&M: Resources - Delete all theme slots" }, "S&M_DEL_ALL_THEME_SLOT", ResourcesDeleteAllSlots, NULL, SNM_SLOT_THM},
-	{ { DEFACCEL, "SWS/S&M: Resources - Load theme, prompt for slot" }, "S&M_LOAD_THEMEp", LoadThemeSlot, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Resources - Load theme, last slot" }, "S&M_LOAD_THEMEl", LoadThemeSlot, NULL, -2},
 
 	// FX presets -------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Trigger next preset for selected FX of selected tracks" }, "S&M_NEXT_SELFX_PRESET", NextPresetSelTracks, NULL, -1},
@@ -305,10 +317,10 @@ static COMMAND_T s_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Pan active takes of selected items to 75% right" }, "S&M_PAN_TAKES_75R", SetPan, NULL, 75},
 	{ { DEFACCEL, "SWS/S&M: Pan active takes of selected items to 100% right" }, "S&M_PAN_TAKES_100R", SetPan, NULL, 100},
 
-	{ { DEFACCEL, "SWS/S&M: Copy active take" }, "S&M_COPY_TAKE", CopyCutTake, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Cut active take" }, "S&M_CUT_TAKE", CopyCutTake, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Paste take" }, "S&M_PASTE_TAKE", PasteTake, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Paste take (after active take)" }, "S&M_PASTE_TAKE_AFTER", PasteTake, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Copy active takes" }, "S&M_COPY_TAKE", CopyCutTakes, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Cut active takes" }, "S&M_CUT_TAKE", CopyCutTakes, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Paste takes" }, "S&M_PASTE_TAKE", PasteTakes, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Paste takes (after active takes)" }, "S&M_PASTE_TAKE_AFTER", PasteTakes, NULL, 1},
 
 	{ { DEFACCEL, "SWS/S&M: Takes - Clear active takes/items" }, "S&M_CLRTAKE1", ClearTake, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Takes - Activate lanes from selected items" }, "S&M_LANETAKE2", ActivateLaneFromSelItem, NULL, },
@@ -495,7 +507,51 @@ static COMMAND_T s_cmdTable[] =
 
 	// Deprecated, unreleased, etc... -----------------------------------------
 #ifdef _SNM_MISC
-	// those ones do not focus the main window on cycle
+	// deprecated prompt actions (old stuff, no GUI at that time..)
+	{ { DEFACCEL, "SWS/S&M: Resources - Clear FX chain slot, prompt for slot" }, "S&M_CLRFXCHAINSLOT", ResourcesClearSlotPrompt, NULL, SNM_SLOT_FXC},
+	{ { DEFACCEL, "SWS/S&M: Resources - Clear track template slot, prompt for slot" }, "S&M_CLR_TRTEMPLATE_SLOT", ResourcesClearSlotPrompt, NULL, SNM_SLOT_TR},
+	{ { DEFACCEL, "SWS/S&M: Resources - Clear project template slot, prompt for slot" }, "S&M_CLR_PRJTEMPLATE_SLOT", ResourcesClearSlotPrompt, NULL, SNM_SLOT_PRJ},
+	{ { DEFACCEL, "SWS/S&M: Resources - Clear media file slot, prompt for slot" }, "S&M_CLR_MEDIA_SLOT", ResourcesClearSlotPrompt, NULL, SNM_SLOT_MEDIA},
+	{ { DEFACCEL, "SWS/S&M: Resources - Clear image slot, prompt for slot" }, "S&M_CLR_IMAGE_SLOT", ResourcesClearSlotPrompt, NULL, SNM_SLOT_IMG},
+	{ { DEFACCEL, "SWS/S&M: Resources - Clear theme slot, prompt for slot" }, "S&M_CLR_THEME_SLOT", ResourcesClearSlotPrompt, NULL, SNM_SLOT_THM},
+
+	{ { DEFACCEL, "SWS/S&M: Resources - Paste (replace) FX chain to selected items, prompt for slot" }, "S&M_TAKEFXCHAINp1", LoadSetTakeFXChainSlot, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Resources - Paste (replace) FX chain to selected items, all takes, prompt for slot" }, "S&M_TAKEFXCHAINp2", LoadSetAllTakesFXChainSlot, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Resources - Paste FX chain to selected items, prompt for slot" }, "S&M_PASTE_TAKEFXCHAINp1", LoadPasteTakeFXChainSlot, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Resources - Paste FX chain to selected items, all takes, prompt for slot" }, "S&M_PASTE_TAKEFXCHAINp2", LoadPasteAllTakesFXChainSlot, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Resources - Paste (replace) FX chain to selected tracks, prompt for slot" }, "S&M_TRACKFXCHAINp1", LoadSetTrackFXChainSlot, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Resources - Paste FX chain to selected tracks, prompt for slot" }, "S&M_PASTE_TRACKFXCHAINp1", LoadPasteTrackFXChainSlot, NULL, -1},
+
+	{ { DEFACCEL, "SWS/S&M: Resources - Import tracks from track template, prompt for slot" }, "S&M_ADD_TRTEMPLATEp", LoadImportTrackTemplateSlot, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Resources - Apply track template to selected tracks, prompt for slot" }, "S&M_APPLY_TRTEMPLATEp", LoadApplyTrackTemplateSlot, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Resources - Apply track template (+envelopes/items) to selected tracks, prompt for slot" }, "S&M_APPLY_TRTEMPLATE_ITEMSENVSp", LoadApplyTrackTemplateSlotWithItemsEnvs, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Resources - Paste (replace) template items to selected tracks, last slot" }, "S&M_REPLACE_TEMPLATE_ITEMSp", ReplaceItemsTrackTemplateSlot, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Resources - Paste template items to selected tracks, last slot" }, "S&M_PASTE_TEMPLATE_ITEMSp", PasteItemsTrackTemplateSlot, NULL, -1},
+
+	{ { DEFACCEL, "SWS/S&M: Resources - Open project, prompt for slot" }, "S&M_APPLY_PRJTEMPLATEp", LoadOrSelectProjectSlot, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Resources - Open project, prompt for slot (new tab)" }, "S&M_NEWTAB_PRJTEMPLATEp", LoadOrSelectProjectTabSlot, NULL, -1},
+
+	// deprecated
+	{ { DEFACCEL, "SWS/S&M: Resources - Project loader/selecter: configuration" }, "S&M_PRJ_LOADER_CONF", ProjectLoaderConf, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Resources - Project loader/selecter: next (cycle)" }, "S&M_PRJ_LOADER_NEXT", LoadOrSelectNextPreviousProjectSlot, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Resources - Project loader/selecter: previous (cycle)" }, "S&M_PRJ_LOADER_PREV", LoadOrSelectNextPreviousProjectSlot, NULL, -1},
+
+	{ { DEFACCEL, "SWS/S&M: Resources - Play media file in selected tracks, prompt for slot" }, "S&M_PLAYMEDIA_SELTRACKp", PlaySelTrackMediaSlot, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Resources - Loop media file in selected tracks, prompt for slot" }, "S&M_LOOPMEDIA_SELTRACKp", LoopSelTrackMediaSlot, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Resources - Play media file in selected tracks (toggle), prompt for slot" }, "S&M_TGL_PLAYMEDIA_SELTRACKp", TogglePlaySelTrackMediaSlot, NULL, -1, GetFakeToggleState},
+	{ { DEFACCEL, "SWS/S&M: Resources - Loop media file in selected tracks (toggle), prompt for slot" }, "S&M_TGL_LOOPMEDIA_SELTRACKp", ToggleLoopSelTrackMediaSlot, NULL, -1, GetFakeToggleState},
+	{ { DEFACCEL, "SWS/S&M: Resources - Play media file in selected tracks (toggle pause), prompt for slot" }, "S&M_TGLPAUSE_PLAYMEDIA_SELTRACKp", TogglePauseSelTrackMediaSlot, NULL, -1, GetFakeToggleState},
+	{ { DEFACCEL, "SWS/S&M: Resources - Loop media file in selected tracks (toggle pause), prompt for slot" }, "S&M_TGLPAUSE_LOOPMEDIA_SELTRACKp", ToggleLoopPauseSelTrackMediaSlot, NULL, -1, GetFakeToggleState},
+	{ { DEFACCEL, "SWS/S&M: Resources - Add media file to current track, prompt for slot" }, "S&M_ADDMEDIA_CURTRACKp", InsertMediaSlotCurTr, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Resources - Add media file to new track, prompt for slot" }, "S&M_ADDMEDIA_NEWTRACKp", InsertMediaSlotNewTr, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Resources - Add media file to selected items as takes, prompt for slot" }, "S&M_ADDMEDIA_SELITEMp", InsertMediaSlotTakes, NULL, -1},
+
+	{ { DEFACCEL, "SWS/S&M: Resources - Show image, prompt for slot" }, "S&M_SHOW_IMAGEp", ShowImageSlot, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Resources - Set track icon for selected tracks, prompt for slot" }, "S&M_SET_TRACK_ICONp", SetSelTrackIconSlot, NULL, -1},
+
+	{ { DEFACCEL, "SWS/S&M: Resources - Load theme, prompt for slot" }, "S&M_LOAD_THEMEp", LoadThemeSlot, NULL, -1},
+
+	// those actions do not focus the main window on cycle
 	{ { DEFACCEL, "SWS/S&M: Focus previous floating FX for selected tracks (cycle)" }, "S&M_WNFOCUS1", CycleFocusFXWndSelTracks, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Focus next floating FX for selected tracks (cycle)" }, "S&M_WNFOCUS2", CycleFocusFXWndSelTracks, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Focus previous floating FX (cycle)" }, "S&M_WNFOCUS3", CycleFocusFXWndAllTracks, NULL, -1},
@@ -512,10 +568,10 @@ static COMMAND_T s_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Takes - Build lanes for selected tracks" }, "S&M_LANETAKE1", BuildLanes, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Takes - Build lanes for selected items" }, "S&M_LANETAKE3", BuildLanes, NULL, 1},
 
-// contrary to their native versions, the following actions were spliting selected items *and only them*
-// (http://forum.cockos.com/showthread.php?t=51547) => removed because of REAPER v3.67's new native pref 
-// "if no items are selected, some split/trim/delete actions affect all items at the edit cursor", those 
-// actions are less useful: they would still split only selected items, even if that native pref is ticked. 
+	// contrary to their native versions, the following actions were spliting selected items *and only them*
+	// (http://forum.cockos.com/showthread.php?t=51547) => removed because of REAPER v3.67's new native pref 
+	// "if no items are selected, some split/trim/delete actions affect all items at the edit cursor", those 
+	// actions are less useful: they would still split only selected items, even if that native pref is ticked. 
 	{ { DEFACCEL, "SWS/S&M: Split selected items at play cursor" }, "S&M_SPLIT3", SplitSelectedItems, NULL, 40196},
 	{ { DEFACCEL, "SWS/S&M: Split selected items at time selection" }, "S&M_SPLIT4", SplitSelectedItems, NULL, 40061},
 	{ { DEFACCEL, "SWS/S&M: Split selected items at edit cursor (no change selection)" }, "S&M_SPLIT5", SplitSelectedItems, NULL, 40757},
@@ -528,7 +584,6 @@ static COMMAND_T s_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Toggle show take volume envelope" }, "S&M_TAKEENV7", ShowHideTakeVolEnvelope, NULL, -1, GetFakeToggleState},
 	{ { DEFACCEL, "SWS/S&M: Toggle show take pan envelope" }, "S&M_TAKEENV8", ShowHideTakePanEnvelope, NULL, -1, GetFakeToggleState},
 	{ { DEFACCEL, "SWS/S&M: Toggle show take mute envelope" }, "S&M_TAKEENV9", ShowHideTakeMuteEnvelope, NULL, -1, GetFakeToggleState},
-
 #endif
 
 	{ {}, LAST_COMMAND, } // denote end of table
@@ -546,11 +601,11 @@ static COMMAND_T s_cmdTable[] =
 // - custom command ids are not formated strings, but final ids will end with
 //   slot numbers (1-based for display reasons)
 // Example: 
-// { "Do stuff %02d", "DO_STUFF", doStuff, 2, SNM_MAX_DYN_ACTIONS, NULL }
-// if not overrided in the S&M.ini file (e.g. "DO_STUFF=32"), 2 actions will 
-// be created: "Do stuff 01" and "Do stuff 02" both calling doStuff(c) with 
-// c->user=0 and c->user=1, respectively. 
-// custom ids will be "_DO_STUFF1" and "_DO_STUFF2", repectively.
+//   { "Do stuff %02d", "DO_STUFF", doStuff, 2, SNM_MAX_DYN_ACTIONS, NULL }
+//   if not overrided in the S&M.ini file (e.g. "DO_STUFF=32"), 2 actions will 
+//   be created: "Do stuff 01" and "Do stuff 02" both calling doStuff(c) with 
+//   c->user=0 and c->user=1, respectively. custom ids will be "_DO_STUFF1"  
+//   and "_DO_STUFF2", repectively.
 ///////////////////////////////////////////////////////////////////////////////
 
 static DYN_COMMAND_T s_dynCmdTable[] =
@@ -574,23 +629,25 @@ static DYN_COMMAND_T s_dynCmdTable[] =
 	{ "SWS/S&M: Unbypass all FX (except %02d) for selected tracks", "S&M_FXBYP_ALL_OFF_EXCPT", UnypassAllFXsExceptSelTracks, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
 
 	{ "SWS/S&M: Resources - Clear FX chain slot %02d", "S&M_CLRFXCHAINSLOT", ResourcesClearFXChainSlot, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
-	{ "SWS/S&M: Resources - Paste (replace) FX chain to selected items, slot %02d", "S&M_TAKEFXCHAIN", LoadSetTakeFXChain, 4, SNM_MAX_DYN_ACTIONS, NULL},
-	{ "SWS/S&M: Resources - Paste FX chain to selected items, slot %02d", "S&M_PASTE_TAKEFXCHAIN", LoadPasteTakeFXChain, 4, SNM_MAX_DYN_ACTIONS, NULL},
-	{ "SWS/S&M: Resources - Paste (replace) FX chain to selected items, all takes, slot %02d", "S&M_FXCHAIN_ALLTAKES", LoadSetAllTakesFXChain, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
-	{ "SWS/S&M: Resources - Paste FX chain to selected items, all takes, slot %02d", "S&M_PASTE_FXCHAIN_ALLTAKES", LoadPasteAllTakesFXChain, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
-	{ "SWS/S&M: Resources - Paste (replace) FX chain to selected tracks, slot %02d", "S&M_TRACKFXCHAIN", LoadSetTrackFXChain, 4, SNM_MAX_DYN_ACTIONS, NULL},
-	{ "SWS/S&M: Resources - Paste FX chain to selected tracks, slot %02d", "S&M_PASTE_TRACKFXCHAIN", LoadPasteTrackFXChain, 4, SNM_MAX_DYN_ACTIONS, NULL},
-	{ "SWS/S&M: Resources - Paste (replace) input FX chain to selected tracks, slot %02d", "S&M_INFXCHAIN", LoadSetTrackInFXChain, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
-	{ "SWS/S&M: Resources - Paste input FX chain to selected tracks, slot %02d", "S&M_PASTE_INFXCHAIN", LoadPasteTrackInFXChain, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
+	{ "SWS/S&M: Resources - Paste (replace) FX chain to selected items, slot %02d", "S&M_TAKEFXCHAIN", LoadSetTakeFXChainSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Resources - Paste FX chain to selected items, slot %02d", "S&M_PASTE_TAKEFXCHAIN", LoadPasteTakeFXChainSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Resources - Paste (replace) FX chain to selected items, all takes, slot %02d", "S&M_FXCHAIN_ALLTAKES", LoadSetAllTakesFXChainSlot, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
+	{ "SWS/S&M: Resources - Paste FX chain to selected items, all takes, slot %02d", "S&M_PASTE_FXCHAIN_ALLTAKES", LoadPasteAllTakesFXChainSlot, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
+	{ "SWS/S&M: Resources - Paste (replace) FX chain to selected tracks, slot %02d", "S&M_TRACKFXCHAIN", LoadSetTrackFXChainSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Resources - Paste FX chain to selected tracks, slot %02d", "S&M_PASTE_TRACKFXCHAIN", LoadPasteTrackFXChainSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Resources - Paste (replace) input FX chain to selected tracks, slot %02d", "S&M_INFXCHAIN", LoadSetTrackInFXChainSlot, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
+	{ "SWS/S&M: Resources - Paste input FX chain to selected tracks, slot %02d", "S&M_PASTE_INFXCHAIN", LoadPasteTrackInFXChainSlot, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
+	{ "SWS/S&M: Resources - Paste (replace) template items to selected tracks, slot %02d", "S&M_REPLACE_TEMPLATE_ITEMS", ReplaceItemsTrackTemplateSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Resources - Paste template items to selected tracks, slot %02d", "S&M_PASTE_TEMPLATE_ITEMS", PasteItemsTrackTemplateSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
 
 	{ "SWS/S&M: Resources - Clear track template slot %02d", "S&M_CLR_TRTEMPLATE_SLOT", ResourcesClearTrTemplateSlot, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
 	{ "SWS/S&M: Resources - Apply track template to selected tracks, slot %02d", "S&M_APPLY_TRTEMPLATE", LoadApplyTrackTemplateSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
 	{ "SWS/S&M: Resources - Apply track template (+envelopes/items) to selected tracks, slot %02d", "S&M_APPLY_TRTEMPLATE_ITEMSENVS", LoadApplyTrackTemplateSlotWithItemsEnvs, 4, SNM_MAX_DYN_ACTIONS, NULL},
 	{ "SWS/S&M: Resources - Import tracks from track template, slot %02d", "S&M_ADD_TRTEMPLATE", LoadImportTrackTemplateSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
 
-	{ "SWS/S&M: Resources - Clear project template slot %02d", "S&M_CLR_PRJTEMPLATE_SLOT", ResourcesClearPrjTemplateSlot, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
-	{ "SWS/S&M: Resources - Open/select project template, slot %02d", "S&M_APPLY_PRJTEMPLATE", LoadOrSelectProjectSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
-	{ "SWS/S&M: Resources - Open/select project template (new tab), slot %02d", "S&M_NEWTAB_PRJTEMPLATE", LoadOrSelectProjectTabSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Resources - Clear project slot %02d", "S&M_CLR_PRJTEMPLATE_SLOT", ResourcesClearPrjTemplateSlot, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
+	{ "SWS/S&M: Resources - Open project, slot %02d", "S&M_APPLY_PRJTEMPLATE", LoadOrSelectProjectSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Resources - Open project, slot %02d (new tab)", "S&M_NEWTAB_PRJTEMPLATE", LoadOrSelectProjectTabSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
 
 	{ "SWS/S&M: Resources - Clear media file slot %02d", "S&M_CLR_MEDIA_SLOT", ResourcesClearMediaSlot, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
 	{ "SWS/S&M: Resources - Play media file in selected tracks, slot %02d", "S&M_PLAYMEDIA_SELTRACK", PlaySelTrackMediaSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
@@ -600,7 +657,7 @@ static DYN_COMMAND_T s_dynCmdTable[] =
 	{ "SWS/S&M: Resources - Play media file in selected tracks (toggle), slot %02d", "S&M_TGL_PLAYMEDIA_SELTRACK", TogglePlaySelTrackMediaSlot, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
 	{ "SWS/S&M: Resources - Loop media file in selected tracks (toggle), slot %02d", "S&M_TGL_LOOPMEDIA_SELTRACK", ToggleLoopSelTrackMediaSlot, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
 	{ "SWS/S&M: Resources - Play media file in selected tracks (toggle pause), slot %02d", "S&M_TGLPAUSE_PLAYMEDIA_SELTR", TogglePauseSelTrackMediaSlot, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
-	{ "SWS/S&M: Resources - Loop media file in selected tracks (toggle pause), slot %02d - Infinite loop!", "S&M_TGLPAUSE_LOOPMEDIA_SELTR", ToggleLoopPauseSelTrackMediaSlot, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
+	{ "SWS/S&M: Resources - Loop media file in selected tracks (toggle pause), slot %02d", "S&M_TGLPAUSE_LOOPMEDIA_SELTR", ToggleLoopPauseSelTrackMediaSlot, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
 
 	{ "SWS/S&M: Resources - Add media file to current track, slot %02d", "S&M_ADDMEDIA_CURTRACK", InsertMediaSlotCurTr, 4, SNM_MAX_DYN_ACTIONS, NULL},
 	{ "SWS/S&M: Resources - Add media file to new track, slot %02d", "S&M_ADDMEDIA_NEWTRACK", InsertMediaSlotNewTr, 4, SNM_MAX_DYN_ACTIONS, NULL},
@@ -666,11 +723,15 @@ static DYN_COMMAND_T s_dynCmdTable[] =
 	{ "SWS/S&M: Play media file in selected tracks (toggle, sync with next measure), slot %02d", "S&M_TGL_PLAYMEDIA_SELTRACK_SYNC", SyncTogglePlaySelTrackMediaSlot, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
 	{ "SWS/S&M: Loop media file in selected tracks (toggle, sync with next measure), slot %02d", "S&M_TGL_LOOPMEDIA_SELTRACK_SYNC", SyncToggleLoopSelTrackMediaSlot, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
 	{ "SWS/S&M: Play media file in selected tracks (toggle pause, sync with next measure), slot %02d", "S&M_TGLPAUSE_PLAYMEDIA_SELTR_SYNC", SyncTogglePauseSelTrackMediaSlot, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
-	{ "SWS/S&M: Loop media file in selected tracks (toggle pause, sync with next measure), slot %02d - Infinite loop!", "S&M_TGLPAUSE_LOOPMEDIA_SELTR_SYNC", SyncToggleLoopPauseSelTrackMediaSlot, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
+	{ "SWS/S&M: Loop media file in selected tracks (toggle pause, sync with next measure), slot %02d", "S&M_TGLPAUSE_LOOPMEDIA_SELTR_SYNC", SyncToggleLoopPauseSelTrackMediaSlot, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
 #endif
 
 	{ LAST_COMMAND, }, // denote end of table
 };
+
+
+// for optimization (avoid write accesses to S&M.ini on exit)
+static bool s_newDynActions = false;
 
 int RegisterDynamicActions(DYN_COMMAND_T* _cmds, const char* _inifn)
 {
@@ -679,9 +740,9 @@ int RegisterDynamicActions(DYN_COMMAND_T* _cmds, const char* _inifn)
 	while(_cmds[i].desc != LAST_COMMAND)
 	{
 		DYN_COMMAND_T* ct = &_cmds[i++];
-
-		// store the custom nb of actions
-		ct->count = BOUNDED((unsigned short)GetPrivateProfileInt("NbOfActions", ct->id, ct->count, _inifn), 0, ct->max<=0 ? SNM_MAX_DYN_ACTIONS : ct->max);
+		int n = GetPrivateProfileInt("NbOfActions", ct->id, -1, _inifn);
+		if (n<0) { s_newDynActions=true; n=ct->count; }
+		ct->count = BOUNDED(n, 0, ct->max<=0 ? SNM_MAX_DYN_ACTIONS : ct->max);
 		for (int j=0; j<ct->count; j++)
 		{
 			if (_snprintfStrict(actionName, sizeof(actionName), GetLocalizedActionName(ct->desc, LOCALIZE_FLAG_VERIFY_FMTS), j+1) > 0 &&
@@ -734,12 +795,58 @@ void SaveDynamicActions(DYN_COMMAND_T* _cmds, const char* _inifn)
 	SaveIniSection("NbOfActions", &iniSection, _inifn);
 }
 
+bool SNM_GetActionName(const char* _custId, WDL_FastString* _nameOut, int _slot)
+{
+	if (!_nameOut) return false;
+
+	int i=-1;
+	if (_slot<0)
+	{
+		while(s_cmdTable[++i].id != LAST_COMMAND)
+		{
+			COMMAND_T* ct = &s_cmdTable[i];
+			if (ct && !strcmp(ct->id, _custId)) {
+				_nameOut->Set(GetLocalizedActionName(ct->accel.desc) + IsSwsAction(ct->accel.desc));
+				return true;
+			}
+		}
+	}
+
+	// 2nd try: search as dynamic cmd
+	i=-1;
+	WDL_String nameStr; // no fast string here: the buffer gets mangeled..
+	while(s_dynCmdTable[++i].desc != LAST_COMMAND)
+	{
+		DYN_COMMAND_T* ct = &s_dynCmdTable[i];
+		if (ct && !strcmp(ct->id, _custId))
+		{
+			nameStr.Set(GetLocalizedActionName(ct->desc) + IsSwsAction(ct->desc));
+
+			if (_slot>=0)
+			{
+				if (char* p = strstr(nameStr.Get(), "%02d"))
+				{
+					nameStr.DeleteSub(p-nameStr.Get(), 4);
+					nameStr.Insert("%d", p-nameStr.Get());
+					_nameOut->SetFormatted(SNM_MAX_ACTION_NAME_LEN, nameStr.Get(), _slot+1);
+					return true;
+				}
+			}
+
+			// fall back
+			Replace02d(nameStr.Get(), 'x');
+			_nameOut->Set(nameStr.Get());
+			return true;
+		}
+	}
+	_nameOut->Set("");
+	return false;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Fake toggle states
-// Those states are toggled when actions are performed, see hookCommandProc()
-// Use-case: when an action deals with tracks with a mix of inconsistent toggle
-// states, you can report states via GetFakeToggleState()
+// Those fake states are automatically toggled when actions are performed, 
+// see hookCommandProc()
 ///////////////////////////////////////////////////////////////////////////////
 
 int GetFakeToggleState(COMMAND_T* _ct) {
@@ -793,7 +900,7 @@ bool OnMidiAction(int _cmd, int _val, int _valhw, int _relmode, HWND _hwnd)
 	return false;
 }
 
-// default key bindings are not used yet
+//JFB default key bindings are not used yet => not fully managed..
 KbdSectionInfo* SNM_GetMySection()
 {
 
@@ -801,27 +908,31 @@ KbdSectionInfo* SNM_GetMySection()
 
 	static MIDI_COMMAND_T sCmdTable[] = 
 	{
-		// keep these first actions here, in this order!
-		{ { DEFACCEL, "SWS/S&M: Apply Live Config 1 (MIDI CC/OSC only)" }, "S&M_LIVECONFIG1", ApplyLiveConfig, NULL, 0},
-		{ { DEFACCEL, "SWS/S&M: Apply Live Config 2 (MIDI CC/OSC only)" }, "S&M_LIVECONFIG2", ApplyLiveConfig, NULL, 1},
-		{ { DEFACCEL, "SWS/S&M: Apply Live Config 3 (MIDI CC/OSC only)" }, "S&M_LIVECONFIG3", ApplyLiveConfig, NULL, 2},
-		{ { DEFACCEL, "SWS/S&M: Apply Live Config 4 (MIDI CC/OSC only)" }, "S&M_LIVECONFIG4", ApplyLiveConfig, NULL, 3},
-		{ { DEFACCEL, "SWS/S&M: Preload Live Config 1 (MIDI CC/OSC only)" }, "S&M_PRE_LIVECONFIG1", PreloadLiveConfig, NULL, 0},
-		{ { DEFACCEL, "SWS/S&M: Preload Live Config 2 (MIDI CC/OSC only)" }, "S&M_PRE_LIVECONFIG2", PreloadLiveConfig, NULL, 1},
-		{ { DEFACCEL, "SWS/S&M: Preload Live Config 3 (MIDI CC/OSC only)" }, "S&M_PRE_LIVECONFIG3", PreloadLiveConfig, NULL, 2},
-		{ { DEFACCEL, "SWS/S&M: Preload Live Config 4 (MIDI CC/OSC only)" }, "S&M_PRE_LIVECONFIG4", PreloadLiveConfig, NULL, 3},
+		// keep these first actions here, keep this order (some learn commands depend on this)
+		// also, keep the following actions in sync with SNM_LIVECFG_NB_CONFIGS
+		{ { DEFACCEL, "SWS/S&M: Apply Live Config 1 (MIDI/OSC only)" }, "S&M_LIVECONFIG1", ApplyLiveConfig, NULL, 0},
+		{ { DEFACCEL, "SWS/S&M: Apply Live Config 2 (MIDI/OSC only)" }, "S&M_LIVECONFIG2", ApplyLiveConfig, NULL, 1},
+		{ { DEFACCEL, "SWS/S&M: Apply Live Config 3 (MIDI/OSC only)" }, "S&M_LIVECONFIG3", ApplyLiveConfig, NULL, 2},
+		{ { DEFACCEL, "SWS/S&M: Apply Live Config 4 (MIDI/OSC only)" }, "S&M_LIVECONFIG4", ApplyLiveConfig, NULL, 3},
+		{ { DEFACCEL, "SWS/S&M: Preload Live Config 1 (MIDI/OSC only)" }, "S&M_PRE_LIVECONFIG1", PreloadLiveConfig, NULL, 0},
+		{ { DEFACCEL, "SWS/S&M: Preload Live Config 2 (MIDI/OSC only)" }, "S&M_PRE_LIVECONFIG2", PreloadLiveConfig, NULL, 1},
+		{ { DEFACCEL, "SWS/S&M: Preload Live Config 3 (MIDI/OSC only)" }, "S&M_PRE_LIVECONFIG3", PreloadLiveConfig, NULL, 2},
+		{ { DEFACCEL, "SWS/S&M: Preload Live Config 4 (MIDI/OSC only)" }, "S&M_PRE_LIVECONFIG4", PreloadLiveConfig, NULL, 3},
 
-		// fom this point, order does not matter anymore: greater than SNM_SNM_SECTION_1ST_CMD_ID + 2*SNM_LIVECFG_NB_CONFIGS
-		{ { DEFACCEL, "SWS/S&M: Select project (MIDI CC/OSC only)" }, "S&M_SELECT_PROJECT", SelectProject, NULL, 0},
-		{ { DEFACCEL, "SWS/S&M: Trigger preset for selected FX of selected track (MIDI CC/OSC only)" }, "S&M_SELFX_PRESET", TriggerFXPreset, NULL, -1},
-		{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 1 of selected track (MIDI CC/OSC only)" }, "S&M_PRESET_FX1", TriggerFXPreset, NULL, 0},
-		{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 2 of selected track (MIDI CC/OSC only)" }, "S&M_PRESET_FX2", TriggerFXPreset, NULL, 1},
-		{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 3 of selected track (MIDI CC/OSC only)" }, "S&M_PRESET_FX3", TriggerFXPreset, NULL, 2},
-		{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 4 of selected track (MIDI CC/OSC only)" }, "S&M_PRESET_FX4", TriggerFXPreset, NULL, 3},
-		{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 5 of selected track (MIDI CC/OSC only)" }, "S&M_PRESET_FX5", TriggerFXPreset, NULL, 4},
-		{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 6 of selected track (MIDI CC/OSC only)" }, "S&M_PRESET_FX6", TriggerFXPreset, NULL, 5},
-		{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 7 of selected track (MIDI CC/OSC only)" }, "S&M_PRESET_FX7", TriggerFXPreset, NULL, 6},
-		{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 8 of selected track (MIDI CC/OSC only)" }, "S&M_PRESET_FX8", TriggerFXPreset, NULL, 7}
+		// fom this point, order does not matter anymore..
+
+		{ { DEFACCEL, "SWS/S&M: Select project (MIDI/OSC only)" }, "S&M_SELECT_PROJECT", SelectProject, NULL, 0},
+
+		// keep the nb of following actions consistent with SNM_PRESETS_NB_FX
+		{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 1 of selected track (MIDI/OSC only)" }, "S&M_PRESET_FX1", TriggerFXPresetSelTrack, NULL, 0},
+		{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 2 of selected track (MIDI/OSC only)" }, "S&M_PRESET_FX2", TriggerFXPresetSelTrack, NULL, 1},
+		{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 3 of selected track (MIDI/OSC only)" }, "S&M_PRESET_FX3", TriggerFXPresetSelTrack, NULL, 2},
+		{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 4 of selected track (MIDI/OSC only)" }, "S&M_PRESET_FX4", TriggerFXPresetSelTrack, NULL, 3},
+		{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 5 of selected track (MIDI/OSC only)" }, "S&M_PRESET_FX5", TriggerFXPresetSelTrack, NULL, 4},
+		{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 6 of selected track (MIDI/OSC only)" }, "S&M_PRESET_FX6", TriggerFXPresetSelTrack, NULL, 5},
+		{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 7 of selected track (MIDI/OSC only)" }, "S&M_PRESET_FX7", TriggerFXPresetSelTrack, NULL, 6},
+		{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 8 of selected track (MIDI/OSC only)" }, "S&M_PRESET_FX8", TriggerFXPresetSelTrack, NULL, 7},
+		{ { DEFACCEL, "SWS/S&M: Trigger preset for selected FX of selected track (MIDI/OSC only)" }, "S&M_SELFX_PRESET", TriggerFXPresetSelTrack, NULL, -1}
 	};
 
 //!WANT_LOCALIZE_1ST_STRING_END
@@ -856,99 +967,142 @@ KbdSectionInfo* SNM_GetMySection()
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// SNM_ScheduledJob, see SNM_CSurfRun()
+// ScheduledJob
 ///////////////////////////////////////////////////////////////////////////////
 
-WDL_PtrList_DeleteOnDestroy<SNM_ScheduledJob> g_SNM_Jobs;
-SWS_Mutex g_SNM_JobsMutex;
+WDL_PtrList_DeleteOnDestroy<ScheduledJob> g_jobs;
+#ifdef _SNM_MUTEX
+SWS_Mutex g_jobsMutex;
+#endif
 
-void SNM_AddOrReplaceScheduledJob(SNM_ScheduledJob* _job) 
+void ScheduledJob::Schedule(ScheduledJob* _job)
 {
-	SWS_SectionLock lock(&g_SNM_JobsMutex);
-	if (!_job) return;
-	bool found = false;
-	for (int i=0; i<g_SNM_Jobs.GetSize(); i++)
+#ifdef _SNM_MUTEX
+	SWS_SectionLock lock(&g_jobsMutex);
+#endif
+	if (!_job)
+		return;
+
+	// perform?
+	if (_job->IsImmediate())
 	{
-		if (SNM_ScheduledJob* job = g_SNM_Jobs.Get(i))
+		_job->PerformSafe();
+#ifdef _SNM_DEBUG
+		char dbg[256]="";
+		_snprintfSafe(dbg, sizeof(dbg), "ScheduledJob::Schedule() - Performed job #%d\n", _job->m_id);
+		OutputDebugString(dbg);
+#endif
+		DELETE_NULL(_job);
+		return;
+	}
+
+	// replace?
+	for (int i=0; i<g_jobs.GetSize(); i++)
+	{
+		if (ScheduledJob* job = g_jobs.Get(i))
 		{
 			if (job->m_id == _job->m_id)
 			{
-				found = true;
-				if (!job->m_isPerforming)
-				{
-					g_SNM_Jobs.Set(i, _job);
+				_job->InitSafe(job);
+				g_jobs.Set(i, _job);
+				DELETE_NULL(job);
 #ifdef _SNM_DEBUG
-					char dbg[256]="";
-					_snprintfSafe(dbg, sizeof(dbg), "SNM_AddOrReplaceScheduledJob() - Replaced SNM_ScheduledJob id: %d\n", _job->m_id);
-					OutputDebugString(dbg);
+				char dbg[256]="";
+				_snprintfSafe(dbg, sizeof(dbg), "ScheduledJob::Schedule() - Replaced job #%d\n", _job->m_id);
+				OutputDebugString(dbg);
 #endif
-					DELETE_NULL(job);
-				}
-				else
-				{
-#ifdef _SNM_DEBUG
-					char dbg[256]="";
-					_snprintfSafe(dbg, sizeof(dbg), "SNM_AddOrReplaceScheduledJob() - Ignored SNM_ScheduledJob id: %d\n", _job->m_id);
-					OutputDebugString(dbg);
-#endif
-					DELETE_NULL(_job);
-				}
-				break;
+				return;
 			}
 		}
 	}
 
-	if (!found)
-	{
-		g_SNM_Jobs.Add(_job);
+	// add (exclusive with the above)
+	_job->InitSafe();
+	g_jobs.Add(_job);
+
 #ifdef _SNM_DEBUG
-		char dbg[256]="";
-		_snprintfSafe(dbg, sizeof(dbg), "SNM_AddOrReplaceScheduledJob() - Added SNM_ScheduledJob id: %d\n", _job->m_id);
-		OutputDebugString(dbg);
+	char dbg[256]="";
+	_snprintfSafe(dbg, sizeof(dbg), "ScheduledJob::Schedule() - Added job #%d\n", _job->m_id);
+	OutputDebugString(dbg);
 #endif
+}
+
+// perform (and auto-delete) scheduled jobs, if needed
+// polled from the main thread via SNM_CSurfRun()
+void ScheduledJob::Run()
+{
+#ifdef _SNM_MUTEX
+	SWS_SectionLock lock(&g_jobsMutex);
+#endif
+	for (int i=g_jobs.GetSize()-1; i>=0; i--)
+	{
+		if (ScheduledJob* job = g_jobs.Get(i))
+		{
+			if (GetTickCount() > job->m_time)
+			{
+				g_jobs.Delete(i, false);
+				job->PerformSafe();
+#ifdef _SNM_DEBUG
+				char dbg[256]="";
+				_snprintfSafe(dbg, sizeof(dbg), "ScheduledJob::Run() - Performed job %d\n", job->m_id);
+				OutputDebugString(dbg);
+#endif
+				DELETE_NULL(job);
+			}
+		}
 	}
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// SNM_MidiOscActionJob
+// MidiOscActionJob
+// Unless g_SNM_LearnPitchAndNormOSC is enabled, MIDI pitch is not supported,
+// see http://forum.cockos.com/showthread.php?t=116377
 ///////////////////////////////////////////////////////////////////////////////
 
-// learn with midi pitch is not supported atm, see
-// http://forum.cockos.com/showthread.php?t=116377
-// and http://forum.cockos.com/project.php?issueid=4576
-// OSC on REAPER end = 
-//        int ival=(int)(*arg*16383.0);
-//        int ret=sec->onAction(cmd, (ival>>7)&0x7F, ival&0x7F, 0, 0);
-SNM_MidiOscActionJob::SNM_MidiOscActionJob(int _jobId, int _approxDelayMs, int _curCC, int _val, int _valhw, int _relmode, HWND _hwnd) 
-	: SNM_ScheduledJob(_jobId, _approxDelayMs),m_val(_val),m_valhw(_valhw),m_relmode(_relmode),m_hwnd(_hwnd)
+void MidiOscActionJob::Init(ScheduledJob* _replacedJob)
 {
-	// very default init
-	m_absval = 0;
+	double min=GetMinValue(), max=GetMaxValue();
 
-	// osc & pitch midi events (14-bit resolution)
-	if (_valhw>=0)
+	// 14-bit resolution (osc & midi pitch ATM)
+	if (m_valhw>=0)
 	{
-		m_absval = _valhw||_val ? BOUNDED(16384-(_valhw|_val<<7), 0, 16383) : 0;
+		if (g_SNM_LearnPitchAndNormOSC)
+			m_absval = min + (max-min) * (BOUNDED(m_valhw|m_val<<7, 0.0, 16383.0)/16383.0);
+		else
+			m_absval = m_valhw||m_val ? BOUNDED(16384.0-(m_valhw|m_val<<7), 0.0, 16383.0) : 0.0; // see top remark!
 	}
-	// cc midi events
-	else if (_valhw==-1) // && _val>=0 && _val<128)
+	// midi
+	else if (m_valhw==-1 && m_val>=0 && m_val<128)
 	{
-		switch (_relmode)
-		{
-			// absolute mode
-			case 0:
-				m_absval = _val;
-				return; // !!
+		// absolute mode
+		if (!m_relmode) m_absval = m_val;
+		// relative modes
+		else m_absval = (_replacedJob ? 
+			((MidiOscActionJob*)_replacedJob)->m_absval : 
+			GetCurrentValue()) + AdjustRelative(m_relmode, m_val);
+	}
 
-			// relative modes
-			case 1: if (_val >= 0x40) _val|=~0x3f;		break;  // sign extend if 0x40 set
-			case 2: _val-=0x40;							break;  // offset by 0x40
-			case 3: if (_val&0x40) _val=-(_val&0x3f);	break;  // 0x40 is sign bit
-		}
-		// relative modes, again
-		m_absval = BOUNDED(_curCC+_val, 0, 127);
-	}
+	// clamp if needed
+	m_absval = BOUNDED(m_absval, min, max);
+
+#ifdef _SNM_DEBUG
+	char dbg[256]="";
+	_snprintfSafe(dbg, sizeof(dbg), 
+		"MidiOscActionJob::Init() - val: %d, valhw: %d, relmode: %d ===> value: %f\n", 
+		m_val, m_valhw, m_relmode, m_absval);
+	OutputDebugString(dbg);
+#endif
+}
+
+// http://forum.cockos.com/project.php?issueid=4576
+int MidiOscActionJob::AdjustRelative(int _adjmode, int _reladj)
+{
+  if (_adjmode==1) { if (_reladj >= 0x40) _reladj|=~0x3f; } // sign extend if 0x40 set
+  else if (_adjmode==2) { _reladj-=0x40; } // offset by 0x40
+  else if (_adjmode==3) { if (_reladj&0x40) _reladj=-(_reladj&0x3f); } // 0x40 is sign bit
+  else _reladj=0;
+  return _reladj;
 }
 
 
@@ -957,7 +1111,10 @@ SNM_MidiOscActionJob::SNM_MidiOscActionJob(int _jobId, int _approxDelayMs, int _
 ///////////////////////////////////////////////////////////////////////////////
 
 WDL_FastString g_SNM_IniFn, g_SNM_CyclIniFn, g_SNM_DiffToolFn;
-int g_SNM_IniVersion=0, g_SNM_Beta=0;
+int g_SNM_IniVersion=0, g_SNM_Beta=0, g_SNM_LearnPitchAndNormOSC=0;
+int g_SNM_MediaFlags=0, g_SNM_ToolbarRefreshFreq=SNM_DEF_TOOLBAR_RFRSH_FREQ;
+bool g_SNM_ToolbarRefresh = false;
+
 
 void IniFileInit()
 {
@@ -984,6 +1141,7 @@ void IniFileInit()
 	GetPrivateProfileString("General", "DiffTool", "", fn.Get(), SNM_MAX_PATH, g_SNM_IniFn.Get());
 	g_SNM_DiffToolFn.Set(fn.Get());
 #endif
+	g_SNM_LearnPitchAndNormOSC = GetPrivateProfileInt("General", "LearnPitchAndNormOSC", 0, g_SNM_IniFn.Get());
 	g_SNM_Beta = GetPrivateProfileInt("General", "Beta", 0, g_SNM_IniFn.Get());
 }
 
@@ -1003,11 +1161,13 @@ void IniFileExit()
 	iniSection.AppendFormatted(128, "ClearTypeFont=%d\n", g_SNM_ClearType ? 1:0);
 	iniSection.AppendFormatted(SNM_MAX_PATH, "DiffTool=\"%s\"\n", g_SNM_DiffToolFn.Get());
 #endif
+	iniSection.AppendFormatted(128, "LearnPitchAndNormOSC=%d\n", g_SNM_LearnPitchAndNormOSC); 
 	iniSection.AppendFormatted(128, "Beta=%d\n", g_SNM_Beta); 
 	SaveIniSection("General", &iniSection, g_SNM_IniFn.Get());
 
-	// save dynamic actions
-	SaveDynamicActions(s_dynCmdTable, g_SNM_IniFn.Get());
+	// save dynamic actions, if needed
+	if (s_newDynActions) //JFB!!! a ameliorer
+		SaveDynamicActions(s_dynCmdTable, g_SNM_IniFn.Get());
 
 #ifdef _WIN32
 	// force ini file's cache flush, see http://support.microsoft.com/kb/68827

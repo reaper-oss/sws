@@ -27,16 +27,14 @@
 
 #include "stdafx.h"
 #include "SnM.h"
-#include "SnM_ChunkParserPatcher.h"
 #include "SnM_Project.h"
-#include "SnM_Resources.h"
 #include "SnM_Util.h"
 #include "../Prompt.h"
 #include "../reaper/localize.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// General project helpers
+// Project helpers
 ///////////////////////////////////////////////////////////////////////////////
 
 bool IsActiveProjectInLoadSave(char* _projfn, int _projfnSz, bool _ensureRPP)
@@ -48,10 +46,10 @@ bool IsActiveProjectInLoadSave(char* _projfn, int _projfnSz, bool _ensureRPP)
 		{
 			char buf[SNM_MAX_PATH] = "";
 			EnumProjects(-1, buf, sizeof(buf));
-			ok = (strlen(buf)>3 && !_stricmp(buf+strlen(buf)-3, "RPP"));		
+			ok = HasFileExtension(buf, "RPP");
 		}
 		else
-			ok = (strlen(_projfn)>3 && !_stricmp(_projfn+strlen(_projfn)-3, "RPP"));
+			ok = HasFileExtension(_projfn, "RPP");
 	}
 	return ok;
 }
@@ -137,52 +135,7 @@ bool InsertSilence(const char* _undoTitle, double _pos, double _len)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Select project via MIDI CC/OSC action
-///////////////////////////////////////////////////////////////////////////////
-
-int g_curPrjMidiVal = -1;
-
-class SelectProjectJob : public SNM_MidiOscActionJob
-{
-public:
-	SelectProjectJob(int _approxDelayMs, int _curval, int _val, int _valhw, int _relmode, HWND _hwnd) 
-		: SNM_MidiOscActionJob(SNM_SCHEDJOB_SEL_PRJ,_approxDelayMs,_curval,_val,_valhw,_relmode,_hwnd) {}
-	void Perform()
-	{
-		if (ReaProject* proj = EnumProjects(GetValue(), NULL, 0)) // project number is 0-based
-			SelectProjectInstance(proj);
-		g_curPrjMidiVal = -1;
-	}
-};
-
-void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd)
-{
-	// re-sync the current value
-	if (g_curPrjMidiVal<0)
-	{
-		int i=-1, curIdx=-1; 
-		ReaProject *prj, *curProj = EnumProjects(-1, NULL, 0);
-		while (prj = EnumProjects(++i, NULL, 0)) {
-			if (prj == curProj) {
-				curIdx = i;
-				break;
-			}
-		}
-		g_curPrjMidiVal = curIdx;
-	}
-	if (g_curPrjMidiVal<0)
-		g_curPrjMidiVal = 0;
-
-	if (SelectProjectJob* job = new SelectProjectJob(SNM_SCHEDJOB_DEFAULT_DELAY, g_curPrjMidiVal, _val, _valhw, _relmode, _hwnd))
-	{
-		g_curPrjMidiVal = job->GetValue();
-		SNM_AddOrReplaceScheduledJob(job);
-	}
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-// Project template slots (Resources view)
+// Select/open project
 ///////////////////////////////////////////////////////////////////////////////
 
 void LoadOrSelectProject(const char* _fn, bool _newTab)
@@ -199,153 +152,70 @@ void LoadOrSelectProject(const char* _fn, bool _newTab)
 			found = true;
 
 	if (found)
-	{
 		SelectProjectInstance(prj);
-	}
-	else
-	{
-		if (_newTab)
-			Main_OnCommand(40859,0);
-		Main_openProject((char*)_fn); // already includes an undo point (_title unused)
+	else {
+		if (_newTab) Main_OnCommand(40859,0);
+		Main_openProject((char*)_fn); // includes an undo point
 	}
 }
 
-void LoadOrSelectProjectSlot(int _slotType, const char* _title, int _slot, bool _newTab)
+void SelectProjectJob::Perform() {
+	if (ReaProject* proj = EnumProjects(GetIntValue(), NULL, 0)) // project number is 0-based
+		SelectProjectInstance(proj);
+}
+
+double SelectProjectJob::GetCurrentValue()
 {
-	if (WDL_FastString* fnStr = GetOrPromptOrBrowseSlot(_slotType, &_slot)) {
-		LoadOrSelectProject(fnStr->Get(), _newTab);
-		delete fnStr;
-	}
+	int i=-1;
+	ReaProject *prj, *curprj=EnumProjects(-1, NULL, 0);
+	while (prj = EnumProjects(++i, NULL, 0))
+		if (prj == curprj)
+			return i;
+	return 0.0;
 }
 
-bool AutoSaveProjectSlot(int _slotType, const char* _dirPath, WDL_PtrList<void>* _owSlots, bool _saveCurPrj)
+double SelectProjectJob::GetMaxValue()
 {
-	int owIdx = 0;
-	if (_saveCurPrj)
-		Main_OnCommand(40026,0);
-	char prjFn[SNM_MAX_PATH] = "";
-	EnumProjects(-1, prjFn, sizeof(prjFn));
-	return AutoSaveSlot(_slotType, _dirPath, prjFn, "RPP", (WDL_PtrList<ResourceItem>*)_owSlots, &owIdx);
+	int i=0;
+	ReaProject *prj;
+	while (prj = EnumProjects(i++, NULL, 0));
+	return i;
 }
 
-void LoadOrSelectProjectSlot(COMMAND_T* _ct) {
-	LoadOrSelectProjectSlot(g_SNM_TiedSlotActions[SNM_SLOT_PRJ], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false);
-}
-
-void LoadOrSelectProjectTabSlot(COMMAND_T* _ct) {
-	LoadOrSelectProjectSlot(g_SNM_TiedSlotActions[SNM_SLOT_PRJ], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true);
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-// Project loader/selecter actions
-// note: g_SNM_TiedSlotActions[] is ignored here, the opener/selecter only deals 
-//       with g_SNM_ResSlots.Get(SNM_SLOT_PRJ): that feature is not available for 
-//       custom project slots
-///////////////////////////////////////////////////////////////////////////////
-
-int g_prjCurSlot = -1; // 0-based
-
-bool IsProjectLoaderConfValid()
-{
-	return (g_SNM_PrjLoaderStartPref > 0 && 
-		g_SNM_PrjLoaderEndPref > g_SNM_PrjLoaderStartPref && 
-		g_SNM_PrjLoaderEndPref <= g_SNM_ResSlots.Get(SNM_SLOT_PRJ)->GetSize());
-}
-
-void ProjectLoaderConf(COMMAND_T* _ct)
-{
-	bool ok = false;
-	int start, end;
-	WDL_FastString question(__LOCALIZE("Start slot (in Resources view):","sws_mbox"));
-	question.Append(",");
-	question.Append(__LOCALIZE("End slot:","sws_mbox"));
-
-	char reply[64]="";
-	_snprintfSafe(reply, sizeof(reply), "%d,%d", g_SNM_PrjLoaderStartPref, g_SNM_PrjLoaderEndPref);
-
-	if (GetUserInputs(__LOCALIZE("S&M - Project loader/selecter","sws_mbox"), 2, question.Get(), reply, sizeof(reply)))
-	{
-		if (*reply && *reply != ',' && strlen(reply) > 2)
-		{
-			if (char* p = strchr(reply, ','))
-			{
-				start = atoi(reply);
-				end = atoi((char*)(p+1));
-				if (start>0 && end>start && end<=g_SNM_ResSlots.Get(SNM_SLOT_PRJ)->GetSize())
-				{
-					g_SNM_PrjLoaderStartPref = start;
-					g_SNM_PrjLoaderEndPref = end;
-					ok = true;
-				}
-			}
-		}
-
-		if (ok)
-		{
-			g_prjCurSlot = -1; // reset current prj
-			ResourcesUpdate();
-		}
-		else
-			MessageBox(GetMainHwnd(),
-			__LOCALIZE("Invalid start and/or end slot(s) !\nProbable cause: out of bounds, the Resources view is empty, etc...","sws_mbox"),
-			__LOCALIZE("S&M - Error","sws_mbox"),
-			MB_OK);
-	}
-}
-
-void LoadOrSelectNextPreviousProject(COMMAND_T* _ct)
-{
-	// check prefs validity (user configurable..)
-	// reminder: 1-based prefs!
-	if (IsProjectLoaderConfValid())
-	{
-		int dir = (int)_ct->user; // -1 (previous) or +1 (next)
-		int cpt=0, slotCount = g_SNM_PrjLoaderEndPref-g_SNM_PrjLoaderStartPref+1;
-
-		// (try to) find the current project in the slot range defined in the prefs
-		if (g_prjCurSlot < 0)
-		{
-			char pCurPrj[SNM_MAX_PATH] = "";
-			EnumProjects(-1, pCurPrj, sizeof(pCurPrj));
-			if (pCurPrj && *pCurPrj)
-				for (int i=g_SNM_PrjLoaderStartPref-1; g_prjCurSlot < 0 && i < g_SNM_PrjLoaderEndPref-1; i++)
-					if (!g_SNM_ResSlots.Get(SNM_SLOT_PRJ)->Get(i)->IsDefault() && strstr(pCurPrj, g_SNM_ResSlots.Get(SNM_SLOT_PRJ)->Get(i)->m_shortPath.Get()))
-						g_prjCurSlot = i;
-		}
-
-		if (g_prjCurSlot < 0) // not found => default init
-			g_prjCurSlot = (dir > 0 ? g_SNM_PrjLoaderStartPref-2 : g_SNM_PrjLoaderEndPref);
-
-		// the meat
-		do
-		{
-			if ((dir > 0 && (g_prjCurSlot+dir) > (g_SNM_PrjLoaderEndPref-1)) ||	
-				(dir < 0 && (g_prjCurSlot+dir) < (g_SNM_PrjLoaderStartPref-1)))
-			{
-				g_prjCurSlot = (dir > 0 ? g_SNM_PrjLoaderStartPref-1 : g_SNM_PrjLoaderEndPref-1);
-			}
-			else g_prjCurSlot += dir;
-		}
-		while (++cpt <= slotCount && g_SNM_ResSlots.Get(SNM_SLOT_PRJ)->Get(g_prjCurSlot)->IsDefault());
-
-		// found one?
-		if (cpt <= slotCount)
-		{
-			LoadOrSelectProjectSlot(SNM_SLOT_PRJ, "", g_prjCurSlot, false);
-			ResourcesSelectBySlot(g_prjCurSlot);
-		}
-		else
-			g_prjCurSlot = -1;
-	}
+void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd) {
+	ScheduledJob::Schedule(new SelectProjectJob(SNM_SCHEDJOB_DEFAULT_DELAY, _val, _valhw, _relmode));
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 // Project startup action
+// Based on a registered timer so that everything has been initialized before
+// triggering the startup action (especially useful on REAPER launch)
 ///////////////////////////////////////////////////////////////////////////////
 
 SWSProjConfig<WDL_FastString> g_prjActions;
+
+void OnTriggerActionTimer()
+{
+	// unregister timer (called once)
+	plugin_register("-timer",(void*)OnTriggerActionTimer);
+
+	if (int cmdId = NamedCommandLookup(g_prjActions.Get()->Get()))
+	{
+		// specific case for "load theme" actions (~1s delay)
+		if (strstr(g_prjActions.Get()->Get(), "S&M_LOAD_THEME"))
+			ScheduledJob::Schedule(new StartupProjectActionJob(cmdId));
+
+		// standard cases (faster)
+		else
+			Main_OnCommand(cmdId, 0);
+#ifdef _SNM_DEBUG
+		OutputDebugString("OnTriggerActionTimer() - Performed startup action '");
+		OutputDebugString(g_prjActions.Get()->Get());
+		OutputDebugString("'\n");
+#endif
+	}
+}
 
 void SetProjectStartupAction(COMMAND_T* _ct)
 {
@@ -354,28 +224,40 @@ void SetProjectStartupAction(COMMAND_T* _ct)
 	if (PromptUserForString(GetMainHwnd(), SWS_CMD_SHORTNAME(_ct), idstr, sizeof(idstr), true))
 	{
 		WDL_FastString msg;
-		if (int cmdId = NamedCommandLookup(idstr))
+		if (int cmdId = SNM_NamedCommandLookup(idstr))
 		{
-			g_prjActions.Get()->Set(idstr);
-			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_MISCCFG, -1);
-
-			msg.SetFormatted(SNM_MAX_PATH, __LOCALIZE_VERFMT("'%s' is defined as startup action","sws_mbox"), kbd_getTextFromCmd(cmdId, NULL));
-
-			char prjFn[SNM_MAX_PATH] = "";
-			EnumProjects(-1, prjFn, sizeof(prjFn));
-			if (*prjFn) {
+			// more useless checks...
+			// http://forum.cockos.com/showpost.php?p=1252206&postcount=1618
+			if (int tstNum = CheckSwsMacroScriptNumCustomId(idstr))
+			{
+				msg.SetFormatted(256, __LOCALIZE_VERFMT("%s failed: unreliable command ID '%s'!","sws_DLG_161"), SWS_CMD_SHORTNAME(_ct), idstr);
 				msg.Append("\n");
-				msg.AppendFormatted(SNM_MAX_PATH, __LOCALIZE_VERFMT("for %s","sws_mbox"), prjFn);
+
+				// localization note: msgs shared with the CA editor
+				if (tstNum==-1)
+					msg.Append(__LOCALIZE("For SWS/S&M actions, you must use identifier strings (e.g. _SWS_ABOUT), not command IDs (e.g. 47145)\nTip: to copy such identifiers, right-click the action in the Actions window > Copy selected action cmdID/identifier string","sws_mbox"));
+				else if (tstNum==-2)
+					msg.Append(__LOCALIZE("For macros/scripts, you must use identifier strings (e.g. _f506bc780a0ab34b8fdedb67ed5d3649), not command IDs (e.g. 47145)\nTip: to copy such identifiers, right-click the macro/script in the Actions window > Copy selected action cmdID/identifier string","sws_mbox"));
+				MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("S&M - Error","sws_DLG_161"), MB_OK);
 			}
-			MessageBox(GetMainHwnd(), msg.Get(), SWS_CMD_SHORTNAME(_ct), MB_OK);
+			else
+			{
+				g_prjActions.Get()->Set(idstr);
+				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_MISCCFG, -1);
+
+				char prjFn[SNM_MAX_PATH]="";
+				msg.SetFormatted(256, __LOCALIZE_VERFMT("'%s' is defined as startup action","sws_mbox"), kbd_getTextFromCmd(cmdId, NULL));
+				EnumProjects(-1, prjFn, sizeof(prjFn));
+				if (*prjFn) {
+					msg.Append("\n");
+					msg.AppendFormatted(SNM_MAX_PATH, __LOCALIZE_VERFMT("for %s","sws_mbox"), prjFn);
+				}
+				MessageBox(GetMainHwnd(), msg.Get(), SWS_CMD_SHORTNAME(_ct), MB_OK);
+			}
 		}
 		else
 		{
-			msg.SetFormatted(SNM_MAX_PATH, __LOCALIZE_VERFMT("%s failed!","sws_mbox"), SWS_CMD_SHORTNAME(_ct));
-			msg.Append("\n");
-			msg.Append(__LOCALIZE("Unknown command ID or identifier string:","sws_mbox"));
-			msg.Append("\n");
-			msg.Append(idstr);
+			msg.SetFormatted(256, __LOCALIZE_VERFMT("%s failed: unknown command ID or identifier string '%s'!","sws_DLG_161"), SWS_CMD_SHORTNAME(_ct), idstr);
 			MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("S&M - Error","sws_DLG_161"), MB_OK);
 		}
 	}
@@ -408,14 +290,10 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 	{
 		g_prjActions.Get()->Set(lp.gettoken_str(1));
 
-		if (!isUndo && IsActiveProjectInLoadSave())
-		{
-			if (int cmdId = NamedCommandLookup(lp.gettoken_str(1)))
-			{
-				// ~1s delay to avoid multi-triggers + reentrance test (for sws actions)
-				SNM_AddOrReplaceScheduledJob(new ProjectActionJob(cmdId));
-			}
-		}
+		// by default, a registered timer is not armed when 
+		// loading projects, only when launching REAPER, so...
+		if (!isUndo && g_prjActions.Get()->GetLength() && IsActiveProjectInLoadSave())
+			plugin_register("timer",(void*)OnTriggerActionTimer);
 		return true;
 	}
 	return false;
@@ -487,7 +365,7 @@ void InsertSilence(COMMAND_T* _ct)
 
 		if (len>0.0) {
 			lstrcpyn(g_lastSilenceVal[(int)_ct->user], val, sizeof(val));
-			InsertSilence(SWS_CMD_SHORTNAME(_ct), pos, len); // includes undo point
+			InsertSilence(SWS_CMD_SHORTNAME(_ct), pos, len); // includes an undo point
 		}
 		else
 			MessageBox(GetMainHwnd(), __LOCALIZE("Invalid input!","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
@@ -497,12 +375,8 @@ void InsertSilence(COMMAND_T* _ct)
 void OpenProjectPathInExplorerFinder(COMMAND_T*)
 {
 	char path[SNM_MAX_PATH] = "";
-
 	GetProjectPath(path, sizeof(path));
 	if (*path)
 		ShellExecute(NULL, "open", path, NULL, NULL, SW_SHOWNORMAL);
-
-//	if (EnumProjects(-1, path, sizeof(path)) && *path)
-//		OpenSelectInExplorerFinder(path);
 }
 

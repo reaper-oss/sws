@@ -105,8 +105,7 @@
 #include "ObjectState/ObjectState.h"
 #include "ObjectState/TrackFX.h"
 #include "ObjectState/TrackSends.h"
-
- // Padre
+#include "SnM/SnM_ChunkParserPatcher.h"
 #include "Padre/padreUtils.h"
 #include "Padre/padreMidi.h"
 #include "Padre/padreMidiItemProcBase.h"

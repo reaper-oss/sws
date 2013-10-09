@@ -29,7 +29,6 @@
 #include "SnM.h"
 #include "SnM_Chunk.h"
 #include "SnM_Item.h"
-#include "SnM_Misc.h"
 #include "SnM_Resources.h"
 #include "SnM_Track.h"
 #include "SnM_Util.h"
@@ -369,7 +368,7 @@ bool SplitSelectItemsInInterval(MediaTrack* _tr, double _pos1, double _pos2, WDL
 	return updated;
 }
 
-// !_undoTitle: use as a primitive (no undo point, no arrange refresh)
+// !_undoTitle: use as a primitive (no undo point, no ui refresh)
 // _selTracks: true split in sel tracks only, false: split all tracks
 bool SplitSelectItemsInInterval(const char* _undoTitle, double _pos1, double _pos2, bool _selTracks, WDL_PtrList<void>* _newItemsOut)
 {
@@ -406,52 +405,51 @@ void SplitSelectAllItemsInRegion(COMMAND_T* _ct)
 // Takes
 ///////////////////////////////////////////////////////////////////////////////
 
-WDL_FastString g_takeClipoard;
+WDL_PtrList_DeleteOnDestroy<WDL_FastString> g_takesClipoard;
 
-void CopyCutTake(COMMAND_T* _ct)
+void CopyCutTakes(COMMAND_T* _ct)
 {
 	bool updated = false;
-	g_takeClipoard.Set("");
-	MediaItem* item = GetSelectedMediaItem(NULL, 0);
-	if (item)
-	{
-		int activeTake = *(int*)GetSetMediaItemInfo(item, "I_CURTAKE", NULL);
-		SNM_TakeParserPatcher p(item, CountTakes(item));
-		if (p.GetTakeChunk(activeTake, &g_takeClipoard))
-		{
-			if ((int)_ct->user) // Cut take?
-			{
-				updated = p.RemoveTake(activeTake);
-/*JFB TODO? leaves an empty item atm
-				if (updated) {
-					p.Commit();
-					deleteMediaItemIfNeeded(item);
-				}
-*/
-			}
-		}
-	}
+	g_takesClipoard.Empty(true);
+
+	for (int i=1; i <= GetNumTracks(); i++) // skip master
+		if (MediaTrack* tr = CSurf_TrackFromID(i, false))
+			for (int j=0; j < GetTrackNumMediaItems(tr); j++)
+				if (MediaItem* item = GetTrackMediaItem(tr,j))
+					if (*(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
+					{
+						SNM_TakeParserPatcher p(item, CountTakes(item));
+						WDL_FastString* tkChunk = g_takesClipoard.Add(new WDL_FastString);
+						int activeTake = *(int*)GetSetMediaItemInfo(item, "I_CURTAKE", NULL);
+						if (p.GetTakeChunk(activeTake, tkChunk))
+						{
+							// cut take?
+							if ((int)_ct->user && p.RemoveTake(activeTake))
+							{
+								p.Commit();
+								DeleteMediaItemIfNeeded(item); // do not leave an impty item!
+								updated = true;
+							}
+						}
+					}
 	if (updated)
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 
-void PasteTake(COMMAND_T* _ct)
+void PasteTakes(COMMAND_T* _ct)
 {
 	bool updated = false;
-	for (int i=1; g_takeClipoard.GetLength() && i <= GetNumTracks(); i++) // skip master
-	{
-		MediaTrack* tr = CSurf_TrackFromID(i, false);
-		for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
-		{
-			MediaItem* item = GetTrackMediaItem(tr,j);
-			if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
-			{
-				SNM_TakeParserPatcher p(item, CountTakes(item));
-				int activeTake = *(int*)GetSetMediaItemInfo(item, "I_CURTAKE", NULL) + (int)_ct->user;
-				updated |= 	(p.InsertTake(activeTake, &g_takeClipoard) >= 0);
-			}
-		}
-	}
+	int idxClipboard = 0;
+	for (int i=1; i <= GetNumTracks(); i++) // skip master
+		if (MediaTrack* tr = CSurf_TrackFromID(i, false))
+			for (int j=0; j < GetTrackNumMediaItems(tr); j++)
+				if (MediaItem* item = GetTrackMediaItem(tr,j))
+					if (*(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
+					{
+						SNM_TakeParserPatcher p(item, CountTakes(item));
+						int activeTake = *(int*)GetSetMediaItemInfo(item, "I_CURTAKE", NULL) + (int)_ct->user;
+						updated |= (p.InsertTake(activeTake, g_takesClipoard.Get(idxClipboard++)) >= 0);
+					}
 	if (updated)
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
@@ -675,7 +673,8 @@ bool RemoveEmptyTakes(const char* _undoTitle, bool _empty, bool _midiEmpty, bool
 	bool updated = false;
 	for (int i=0; i < GetNumTracks(); i++)
 		updated |= RemoveEmptyTakes(CSurf_TrackFromID(i+1,false), _empty, _midiEmpty, _trSel, _itemSel);
-	if (updated) {
+	if (updated)
+	{
 		UpdateTimeline();
 		if (_undoTitle)
 			Undo_OnStateChangeEx2(NULL, _undoTitle, UNDO_STATE_ALL, -1);
@@ -1214,12 +1213,15 @@ bool ShowTakeEnvPitch(MediaItem_Take* _take) {
 
 WDL_PtrList<void> g_toolbarItemSel[SNM_ITEM_SEL_COUNT];
 WDL_PtrList<void> g_toolbarItemSelToggle[SNM_ITEM_SEL_COUNT];
+#ifdef _SNM_MUTEX
 SWS_Mutex g_toolbarItemSelLock;
+#endif
 
-void OffscreenSelItemsPoll()
+void RefreshOffscreenItems()
 {
+#ifdef _SNM_MUTEX
 	SWS_SectionLock lock(&g_toolbarItemSelLock);
-
+#endif
 	for(int i=0; i<SNM_ITEM_SEL_COUNT; i++)
 		g_toolbarItemSel[i].Empty(false);
 
@@ -1229,10 +1231,11 @@ void OffscreenSelItemsPoll()
 		double pos,len,start_time,end_time;
 		bool horizontal = false;
 
-		if (HWND w = GetTrackWnd()) // works on osx too
+		if (HWND w = GetTrackWnd()) // works on OSX too
 		{
 			RECT r; GetWindowRect(w, &r);
-			GetSet_ArrangeView2(NULL, false, r.left, r.right-17, &start_time, &end_time); // -17 = width of the vert. scrollbar
+			//JFB!! -17 = width of the vert. scrollbar, oh well
+			GetSet_ArrangeView2(NULL, false, r.left, r.right-17, &start_time, &end_time);
 			horizontal = true;
 		}
 
@@ -1294,8 +1297,9 @@ void OffscreenSelItemsPoll()
 // note: callers must call UpdateTimeline() if it returns true
 bool ToggleOffscreenSelItems(int _dir)
 {
+#ifdef _SNM_MUTEX
 	SWS_SectionLock lock(&g_toolbarItemSelLock);
-
+#endif
 	bool updated = false;
 
 	int dir1=_dir, dir2=_dir+1;
@@ -1345,32 +1349,49 @@ bool ToggleOffscreenSelItems(int _dir)
 void ToggleOffscreenSelItems(COMMAND_T* _ct)
 {
 	int dir = (int)_ct->user;
+
+	// force refresh if not auto
+	if (!g_SNM_ToolbarRefresh) 
+		RefreshOffscreenItems();
+
 	if (ToggleOffscreenSelItems(dir)) {
 		UpdateTimeline();
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 	}
 }
 
-// returns the toggle state as fast as possible: background job done in OffscreenSelItemsPoll() 
+// returns the toggle state as fast as possible:
+// background job done in RefreshOffscreenItems() 
 int HasOffscreenSelItems(COMMAND_T* _ct)
 {
+#ifdef _SNM_MUTEX
 	SWS_SectionLock lock(&g_toolbarItemSelLock);
+#endif
+	// force refresh if not auto
+	if (!g_SNM_ToolbarRefresh) 
+		RefreshOffscreenItems();
+
 	int dir = (int)_ct->user;
 	if (dir<0)
+	{
 		for(dir=0; dir<SNM_ITEM_SEL_COUNT; dir++)
 			if (g_toolbarItemSel[dir].GetSize() > 0)
 				return true;
-	return (g_toolbarItemSel[dir].GetSize() > 0);
+	}
+	else
+		return (g_toolbarItemSel[dir].GetSize() > 0);
+	return false;
 }
 
 // deselects offscreen items
 void UnselectOffscreenItems(COMMAND_T* _ct)
 {
+#ifdef _SNM_MUTEX
 	SWS_SectionLock lock(&g_toolbarItemSelLock);
-
+#endif
 	// force refresh if not auto
 	if (!g_SNM_ToolbarRefresh) 
-		OffscreenSelItemsPoll();
+		RefreshOffscreenItems();
 
 	bool updated = false;
 	for(int i=0; i<SNM_ITEM_SEL_COUNT; i++)
@@ -1453,7 +1474,7 @@ void OpenMediaPathInExplorerFinder(COMMAND_T*)
 					if (*(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
 						if (MediaItem_Take* tk = GetActiveTake(item))
 							if (PCM_source* pcm = (PCM_source*)GetSetMediaItemTakeInfo(tk, "P_SOURCE", NULL)) {
-								OpenSelectInExplorerFinder(pcm->GetFileName());
+								RevealFile(pcm->GetFileName());
 								return;
 							}
 	// if we are here, it means the above failed
@@ -1461,127 +1482,4 @@ void OpenMediaPathInExplorerFinder(COMMAND_T*)
 		__LOCALIZE("Cannot show path in explorer/finder!\nProbable cause: empty source, in-project MIDI source, etc...","sws_mbox"), 
 		__LOCALIZE("S&M - Error","sws_mbox"), 
 		MB_OK);
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-// Media file slots (Resources view)
-// note: no slot "pause" actions, does not make sense
-///////////////////////////////////////////////////////////////////////////////
-
-// _title unused (no undo point here)
-void PlaySelTrackMediaSlot(int _slotType, const char* _title, int _slot, bool _pause, bool _loop, double _msi) {
-	if (WDL_FastString* fnStr = GetOrPromptOrBrowseSlot(_slotType, &_slot)) {
-		SNM_PlaySelTrackPreviews(fnStr->Get(), _pause, _loop, _msi);
-		delete fnStr;
-	}
-}
-
-void PlaySelTrackMediaSlot(COMMAND_T* _ct) {
-	PlaySelTrackMediaSlot(g_SNM_TiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, false, -1.0);
-}
-
-void LoopSelTrackMediaSlot(COMMAND_T* _ct) {
-	PlaySelTrackMediaSlot(g_SNM_TiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, true, -1.0);
-}
-
-void SyncPlaySelTrackMediaSlot(COMMAND_T* _ct) {
-	PlaySelTrackMediaSlot(g_SNM_TiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, false, 1.0);
-}
-
-void SyncLoopSelTrackMediaSlot(COMMAND_T* _ct) {
-	PlaySelTrackMediaSlot(g_SNM_TiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, true, 1.0);
-}
-
-// _title unused (no undo point here)
-bool TogglePlaySelTrackMediaSlot(int _slotType, const char* _title, int _slot, bool _pause, bool _loop, double _msi)
-{
-	bool done = false;
-	if (WDL_FastString* fnStr = GetOrPromptOrBrowseSlot(_slotType, &_slot)) {
-		done = SNM_TogglePlaySelTrackPreviews(fnStr->Get(), _pause, _loop, _msi);
-		delete fnStr;
-	}
-	return done;
-}
-
-// no sync
-void TogglePlaySelTrackMediaSlot(COMMAND_T* _ct) {
-	TogglePlaySelTrackMediaSlot(g_SNM_TiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, false);
-}
-
-void ToggleLoopSelTrackMediaSlot(COMMAND_T* _ct) {
-	TogglePlaySelTrackMediaSlot(g_SNM_TiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, true);
-}
-
-void TogglePauseSelTrackMediaSlot(COMMAND_T* _ct) {
-	TogglePlaySelTrackMediaSlot(g_SNM_TiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, false);
-}
-
-void ToggleLoopPauseSelTrackMediaSlot(COMMAND_T* _ct) {
-	TogglePlaySelTrackMediaSlot(g_SNM_TiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, true);
-}
-
-// with sync
-#ifdef _SNM_MISC
-void SyncTogglePlaySelTrackMediaSlot(COMMAND_T* _ct) {
-	TogglePlaySelTrackMediaSlot(g_SNM_TiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, false, 1.0);
-}
-
-void SyncToggleLoopSelTrackMediaSlot(COMMAND_T* _ct) {
-	TogglePlaySelTrackMediaSlot(g_SNM_TiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, true, 1.0);
-}
-
-void SyncTogglePauseSelTrackMediaSlot(COMMAND_T* _ct) {
-	TogglePlaySelTrackMediaSlot(g_SNM_TiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, false, 1.0);
-}
-
-void SyncToggleLoopPauseSelTrackMediaSlot(COMMAND_T* _ct) {
-	TogglePlaySelTrackMediaSlot(g_SNM_TiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, true, 1.0);
-}
-#endif
-
-// _insertMode: 0=add to current track, 1=add new track, 3=add to selected items as takes, &4=stretch/loop to fit time sel, &8=try to match tempo 1x, &16=try to match tempo 0.5x, &32=try to match tempo 2x
-void InsertMediaSlot(int _slotType, const char* _title, int _slot, int _insertMode) {
-	if (WDL_FastString* fnStr = GetOrPromptOrBrowseSlot(_slotType, &_slot)) {
-		InsertMedia((char*)fnStr->Get(), _insertMode);  // already includes an undo point (_title unused)
-		delete fnStr;
-	}
-}
-
-void InsertMediaSlotCurTr(COMMAND_T* _ct) {
-	InsertMediaSlot(g_SNM_TiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, 0);
-}
-
-void InsertMediaSlotNewTr(COMMAND_T* _ct) {
-	InsertMediaSlot(g_SNM_TiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, 1);
-}
-
-void InsertMediaSlotTakes(COMMAND_T* _ct) {
-	InsertMediaSlot(g_SNM_TiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, 3);
-}
-
-bool AutoSaveMidiSlot(const void* _obj, const char* _fn) {
-	((PCM_source*)_obj)->Extended(PCM_SOURCE_EXT_EXPORTTOFILE, (void*)_fn, NULL, NULL);
-	return true;
-}
-
-bool AutoSaveMediaSlots(int _slotType, const char* _dirPath, WDL_PtrList<void>* _owSlots)
-{
-	bool saved = false;
-	int owIdx = 0;
-	for (int i=1; i <= GetNumTracks(); i++) // skip master
-		if (MediaTrack* tr = CSurf_TrackFromID(i, false))
-			for (int j=0; j < GetTrackNumMediaItems(tr); j++)
-				if (MediaItem* item = GetTrackMediaItem(tr,j))
-					if (*(bool*)GetSetMediaItemInfo(item, "B_UISEL", NULL))
-						if (MediaItem_Take* tk = GetActiveTake(item))
-							if (PCM_source* src = (PCM_source*)GetSetMediaItemTakeInfo(tk, "P_SOURCE", NULL))
-								if (src->GetFileName())
-								{
-									if(*src->GetFileName()) // ext file
-										saved |= AutoSaveSlot(_slotType, _dirPath, src->GetFileName(), GetFileExtension(src->GetFileName()), (WDL_PtrList<ResourceItem>*)_owSlots, &owIdx);
-									else // in-project midi
-										saved |= AutoSaveSlot(_slotType, _dirPath, (const char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL), "mid", (WDL_PtrList<ResourceItem>*)_owSlots, &owIdx, AutoSaveMidiSlot, src);
-								}
-	return saved;
 }

@@ -166,118 +166,6 @@ void SetTakeFXChain(const char* _title, WDL_FastString* _chain, bool _activeOnly
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Take FX chain slots (Resources view)
-///////////////////////////////////////////////////////////////////////////////
-
-// _slot: 0-based, -1 will prompt for slot
-// _set=false: paste, _set=true: set
-void ApplyTakesFXChainSlot(int _slotType, const char* _title, int _slot, bool _activeOnly, bool _set)
-{
-	WDL_FastString* fnStr = GetOrPromptOrBrowseSlot(_slotType, &_slot);
-	if (fnStr && CountSelectedMediaItems(NULL))
-	{
-		WDL_FastString chain;
-		if (LoadChunk(fnStr->Get(), &chain))
-		{
-			// remove all fx param envelopes
-			// (were saved for track fx chains before SWS v2.1.0 #11)
-			{
-				SNM_ChunkParserPatcher p(&chain);
-				p.RemoveSubChunk("PARMENV", 1, -1);
-			}
-			if (_set) SetTakeFXChain(_title, &chain, _activeOnly);
-			else PasteTakeFXChain(_title, &chain, _activeOnly);
-		}
-		delete fnStr;
-	}
-}
-
-bool AutoSaveItemFXChainSlots(int _slotType, const char* _dirPath, WDL_PtrList<void>* _owSlots, bool _nameFromFx)
-{
-	bool saved = false;
-	int owIdx = 0;
-	WDL_PtrList<MediaItem> items;
-	SNM_GetSelectedItems(NULL, &items);
-	for (int i=0; i < items.GetSize(); i++)
-	{
-		if (MediaItem* item = items.Get(i))
-		{
-			WDL_FastString fxChain("");
-			if (CopyTakeFXChain(&fxChain, i) == i)
-			{
-				RemoveAllIds(&fxChain);
-
-				char name[SNM_MAX_FX_NAME_LEN] = "";
-				if (_nameFromFx)
-				{
-					SNM_FXSummaryParser p(&fxChain);
-					WDL_PtrList<SNM_FXSummary>* summaries = p.GetSummaries();
-					SNM_FXSummary* sum = summaries ? summaries->Get(0) : NULL;
-					if (sum) lstrcpyn(name, sum->m_name.Get(), SNM_MAX_FX_NAME_LEN);
-				}
-				else if (GetName(item))
-					lstrcpyn(name, GetName(item), SNM_MAX_FX_NAME_LEN);
-
-				saved |= AutoSaveSlot(_slotType, _dirPath, 
-					!*name ? __LOCALIZE("Untitled","sws_DLG_150") : name, 
-					"RfxChain", (WDL_PtrList<ResourceItem>*)_owSlots, &owIdx, AutoSaveChunkSlot, &fxChain);
-			}
-		}
-	}
-	return saved;
-}
-
-void LoadSetTakeFXChain(COMMAND_T* _ct) {
-	ApplyTakesFXChainSlot(g_SNM_TiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, true);
-}
-
-void LoadPasteTakeFXChain(COMMAND_T* _ct) {
-	ApplyTakesFXChainSlot(g_SNM_TiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, false);
-}
-
-void LoadSetAllTakesFXChain(COMMAND_T* _ct) {
-	ApplyTakesFXChainSlot(g_SNM_TiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, true);
-}
-
-void LoadPasteAllTakesFXChain(COMMAND_T* _ct) {
-	ApplyTakesFXChainSlot(g_SNM_TiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, false);
-}
-
-void CopyTakeFXChain(COMMAND_T* _ct) {
-	CopyTakeFXChain(&g_fXChainClipboard);
-}
-
-void CutTakeFXChain(COMMAND_T* _ct) {
-	CopyTakeFXChain(_ct);
-	SetTakeFXChain(SWS_CMD_SHORTNAME(_ct), NULL, true);
-}
-
-void PasteTakeFXChain(COMMAND_T* _ct) {
-	PasteTakeFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, true);
-}
-
-void SetTakeFXChain(COMMAND_T* _ct) {
-	SetTakeFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, true);
-}
-
-void PasteAllTakesFXChain(COMMAND_T* _ct) {
-	PasteTakeFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, false);
-}
-
-void SetAllTakesFXChain(COMMAND_T* _ct) {
-	SetTakeFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, false);
-}
-
-void ClearActiveTakeFXChain(COMMAND_T* _ct) {
-	SetTakeFXChain(SWS_CMD_SHORTNAME(_ct), NULL, true);
-}
-
-void ClearAllTakesFXChain(COMMAND_T* _ct) {
-	SetTakeFXChain(SWS_CMD_SHORTNAME(_ct), NULL, false);
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
 // Track FX chains
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -403,92 +291,12 @@ int CopyTrackFXChain(WDL_FastString* _fxChain, bool _inputFX, int _startTr)
 	return -1;
 }
 
+
 ///////////////////////////////////////////////////////////////////////////////
-// Track FX chain slots (Resources view)
+// Cut, copy, paste, clear, etc..
 ///////////////////////////////////////////////////////////////////////////////
 
-// _set=false => paste
-void ApplyTracksFXChainSlot(int _slotType, const char* _title, int _slot, bool _set, bool _inputFX)
-{
-	WDL_FastString* fnStr = GetOrPromptOrBrowseSlot(_slotType, &_slot);
-	if (fnStr && SNM_CountSelectedTracks(NULL, true))
-	{
-		WDL_FastString chain;
-		if (LoadChunk(fnStr->Get(), &chain))
-		{
-			// remove all fx param envelopes
-			// (were saved for track fx chains before SWS v2.1.0 #11)
-			{
-				SNM_ChunkParserPatcher p(&chain);
-				p.RemoveSubChunk("PARMENV", 1, -1);
-			}
-			if (_set) SetTrackFXChain(_title, &chain, _inputFX);
-			else  PasteTrackFXChain(_title, &chain, _inputFX);
-		}
-		delete fnStr;
-	}
-}
-
-bool AutoSaveTrackFXChainSlots(int _slotType, const char* _dirPath, WDL_PtrList<void>* _owSlots, bool _nameFromFx, bool _inputFX)
-{
-	bool saved = false;
-	int owIdx = 0;
-	for (int i=0; i <= GetNumTracks(); i++)
-	{
-		MediaTrack* tr = CSurf_TrackFromID(i,false); 
-		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
-		{
-			WDL_FastString fxChain("");
-			if (CopyTrackFXChain(&fxChain, _inputFX, i) == i)
-			{
-				RemoveAllIds(&fxChain);
-
-				// add track channels as a comment (so that it does not bother REAPER)
-				// i.e. best effort for http://code.google.com/p/sws-extension/issues/detail?id=363
-				WDL_FastString nbChStr;
-				nbChStr.SetFormatted(32, "#NCHAN %d\n", *(int*)GetSetMediaTrackInfo(tr, "I_NCHAN", NULL));
-				fxChain.Insert(nbChStr.Get(), 0);
-
-				char name[SNM_MAX_FX_NAME_LEN] = "";
-				if (_nameFromFx)
-				{
-					if (_inputFX) // no API yet => parse
-					{
-						SNM_FXSummaryParser p(&fxChain);
-						WDL_PtrList<SNM_FXSummary>* summaries = p.GetSummaries();
-						SNM_FXSummary* sum = summaries ? summaries->Get(0) : NULL;
-						if (sum) lstrcpyn(name, sum->m_name.Get(), SNM_MAX_FX_NAME_LEN);
-					}
-					else
-						TrackFX_GetFXName(tr, 0, name, SNM_MAX_FX_NAME_LEN);
-				}
-				else if (char* trName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL))
-					lstrcpyn(name, trName, SNM_MAX_FX_NAME_LEN);
-
-				saved |= AutoSaveSlot(_slotType, _dirPath, 
-					!i ? __LOCALIZE("Master","sws_DLG_150") : (!*name ? __LOCALIZE("Untitled","sws_DLG_150") : name), 
-					"RfxChain", (WDL_PtrList<ResourceItem>*)_owSlots, &owIdx, AutoSaveChunkSlot, &fxChain);
-			}
-		}
-	}
-	return saved;
-}
-
-void LoadSetTrackFXChain(COMMAND_T* _ct) {
-	ApplyTracksFXChainSlot(g_SNM_TiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, false);
-}
-
-void LoadPasteTrackFXChain(COMMAND_T* _ct) {
-	ApplyTracksFXChainSlot(g_SNM_TiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, false);
-}
-
-void LoadSetTrackInFXChain(COMMAND_T* _ct) {
-	ApplyTracksFXChainSlot(g_SNM_TiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, true);
-}
-
-void LoadPasteTrackInFXChain(COMMAND_T* _ct) {
-	ApplyTracksFXChainSlot(g_SNM_TiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, true);
-}
+// *** Track FX chains ***
 
 void ClearTrackFXChain(COMMAND_T* _ct) {
 	SetTrackFXChain(SWS_CMD_SHORTNAME(_ct), NULL, false);
@@ -507,12 +315,13 @@ void PasteTrackFXChain(COMMAND_T* _ct) {
 	PasteTrackFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, false);
 }
 
-// i.e. paste (replace)
+// paste (replace)
 void SetTrackFXChain(COMMAND_T* _ct) {
 	SetTrackFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, false);
 }
 
-// *** Input FX ***
+
+// *** Track Input FX chains ***
 
 void ClearTrackInputFXChain(COMMAND_T* _ct) {
 	SetTrackFXChain(SWS_CMD_SHORTNAME(_ct), NULL, true);
@@ -531,15 +340,49 @@ void PasteTrackInputFXChain(COMMAND_T* _ct) {
 	PasteTrackFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, true);
 }
 
-// i.e. paste (replace)
+// paste (replace)
 void SetTrackInputFXChain(COMMAND_T* _ct) {
 	SetTrackFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, true);
 }
 
 
-///////////////////////////////////////////////////////////////////////////////
-// Common to take & track FX chain
-///////////////////////////////////////////////////////////////////////////////
+// *** Take FX Chains ***
+
+void CopyTakeFXChain(COMMAND_T* _ct) {
+	CopyTakeFXChain(&g_fXChainClipboard);
+}
+
+void CutTakeFXChain(COMMAND_T* _ct) {
+	CopyTakeFXChain(_ct);
+	SetTakeFXChain(SWS_CMD_SHORTNAME(_ct), NULL, true);
+}
+
+void PasteTakeFXChain(COMMAND_T* _ct) {
+	PasteTakeFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, true);
+}
+
+void SetTakeFXChain(COMMAND_T* _ct) {
+	SetTakeFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, true);
+}
+
+void PasteAllTakesFXChain(COMMAND_T* _ct) {
+	PasteTakeFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, false);
+}
+
+void SetAllTakesFXChain(COMMAND_T* _ct) {
+	SetTakeFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, false);
+}
+
+void ClearActiveTakeFXChain(COMMAND_T* _ct) {
+	SetTakeFXChain(SWS_CMD_SHORTNAME(_ct), NULL, true);
+}
+
+void ClearAllTakesFXChain(COMMAND_T* _ct) {
+	SetTakeFXChain(SWS_CMD_SHORTNAME(_ct), NULL, false);
+}
+
+
+// *** Common to take & track FX chains ***
 
 void SmartCopyFXChain(COMMAND_T* _ct) {
 	if (GetCursorContext() == 1 && CountSelectedMediaItems(NULL)) CopyTakeFXChain(&g_fXChainClipboard);

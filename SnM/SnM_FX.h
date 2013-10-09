@@ -64,12 +64,25 @@ void SelectTrackFX(COMMAND_T*);
 int GetSelectedTrackFX(MediaTrack* _tr);
 
 int GetUserPresetNames(MediaTrack* _tr, int _fx, WDL_PtrList<WDL_FastString>* _presetsOut);
-int GetSetFXPresetSelTrack(int _fxId, int* _presetIdx);
+int GetSetFXPresetSelTrack(int _fxId, int* _presetIdx, int* _numberOfPresetsOut = NULL);
 bool TriggerFXPreset(MediaTrack* _tr, int _fxId, int _presetId, int _dir);
 void NextPresetSelTracks(COMMAND_T*);
 void PrevPresetSelTracks(COMMAND_T*);
 void NextPrevPresetLastTouchedFX(COMMAND_T*);
-void TriggerFXPreset(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
+
+
+class TriggerPresetJob : public MidiOscActionJob {
+public:
+	TriggerPresetJob(int _approxMs, int _val, int _valhw, int _relmode, int _fxId); 
+protected:
+	void Perform();
+	double GetCurrentValue();
+	double GetMinValue() { return 0; }
+	double GetMaxValue();
+	int m_fxId;
+};
+
+void TriggerFXPresetSelTrack(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
 
 bool SNM_MoveOrRemoveTrackFX(MediaTrack* _tr, int _fxId, int _what);
 void MoveOrRemoveTrackFX(COMMAND_T*);

@@ -46,24 +46,10 @@ bool SNM_SetIntConfigVar(const char* _varName, int _newVal);
 double SNM_GetDoubleConfigVar(const char* _varName, double _errVal);
 bool SNM_SetDoubleConfigVar(const char* _varName, double _newVal);
 
-// exotic resources slots
-void LoadThemeSlot(int _slotType, const char* _title, int _slot);
-void LoadThemeSlot(COMMAND_T*);
-void ShowImageSlot(int _slotType, const char* _title, int _slot);
-void ShowImageSlot(COMMAND_T*);
-void ShowNextPreviousImageSlot(COMMAND_T*);
-void SetSelTrackIconSlot(int _slotType, const char* _title, int _slot);
-void SetSelTrackIconSlot(COMMAND_T*);
-
-extern int g_SNM_LastImgSlot;
-
 // toolbar auto refresh
 void EnableToolbarsAutoRefesh(COMMAND_T*);
 int IsToolbarsAutoRefeshEnabled(COMMAND_T*);
-void RefreshToolbars();
-
-extern bool g_SNM_ToolbarRefresh;
-extern int g_SNM_ToolbarRefreshFreq;
+void AutoRefreshToolbarRun();
 
 // misc actions
 void ChangeMetronomeVolume(COMMAND_T*);

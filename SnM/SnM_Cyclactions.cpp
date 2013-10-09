@@ -43,7 +43,6 @@
 
 #include "stdafx.h"
 #include "SnM.h"
-#include "SnM_ChunkParserPatcher.h" 
 #include "SnM_Cyclactions.h"
 #include "SnM_Dlg.h"
 #include "SnM_Util.h"
@@ -575,9 +574,7 @@ void RunCycleAction(int _section, COMMAND_T* _ct)
 				if (g_undos)
 					Undo_EndBlock2(NULL, undoStr, UNDO_STATE_ALL);
 
-/* useless: REAPER does it
-				RefreshToolbar(_ct->accel.accel.cmd);
-*/
+//				RefreshToolbar(_ct->accel.accel.cmd);
 #ifdef _SNM_DEBUG
 				OutputDebugString("RunCycleAction <-------------------------");
 				OutputDebugString("\n");
@@ -659,11 +656,9 @@ bool AppendErrMsg(int _section, Cyclaction* _a, WDL_FastString* _outErrMsg, cons
 	{
 		WDL_FastString errMsg;
 		errMsg.AppendFormatted(256, 
-			__LOCALIZE_VERFMT("ERROR: '%s', section '%s'","sws_DLG_161"), 
+			__LOCALIZE_VERFMT("ERROR: the cycle action '%s' of the section '%s' was not registered!","sws_DLG_161"), 
 			_a ? _a->GetName() : __LOCALIZE("invalid cycle action","sws_DLG_161"), 
 			SNM_GetActionSectionName(_section));
-		errMsg.Append("\n");
-		errMsg.Append(__LOCALIZE("This cycle action was not registered","sws_DLG_161"));
 		if (_msg && *_msg)
 		{
 			errMsg.Append("\n");
@@ -681,9 +676,9 @@ void AppendWarnMsg(int _section, Cyclaction* _a, WDL_FastString* _outWarnMsg, co
 {
 	if (_a && _outWarnMsg)
 	{
-		_outWarnMsg->AppendFormatted(256, __LOCALIZE_VERFMT("Warning: '%s', section '%s'","sws_DLG_161"), _a->GetName(), SNM_GetActionSectionName(_section));
-		_outWarnMsg->Append("\n");
-		_outWarnMsg->Append(__LOCALIZE("This cycle action has been registered but it could be improved","sws_DLG_161"));
+		_outWarnMsg->AppendFormatted(256, 
+			__LOCALIZE_VERFMT("Warning: the cycle action '%s' of the section '%s' has been registered but it could be improved!","sws_DLG_161"), 
+			_a->GetName(), SNM_GetActionSectionName(_section));
 		_outWarnMsg->Append("\n");
 		_outWarnMsg->Append(__LOCALIZE("Details:","sws_DLG_161"));
 		_outWarnMsg->Append(" ");
@@ -853,9 +848,23 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_PtrList<WDL_F
 			// only actions, macros & scripts at this point 
 			else
 			{
-				// sws check
-				if (!_section && SWSGetCommandByID(atoi(cmd))) // API LIMITATION: extension action actions can only belong to the main section ATM
-					return AppendErrMsg(_section, _a, _applyMsg, __LOCALIZE("for SWS/S&M actions, you must use identifier strings (e.g. _SWS_ABOUT), not command IDs (e.g. 47145)","sws_DLG_161"));
+				// check numeric ids
+				if (int tstNum = CheckSwsMacroScriptNumCustomId(cmd, _section))
+				{
+					str.SetFormatted(256, __LOCALIZE_VERFMT("unreliable command ID '%s'","sws_DLG_161"), cmd);
+					str.Append("\n");
+
+					// sws check
+					if (tstNum==-1) {
+						str.Append(__LOCALIZE("For SWS/S&M actions, you must use identifier strings (e.g. _SWS_ABOUT), not command IDs (e.g. 47145)\nTip: to copy such identifiers, right-click the action in the Actions window > Copy selected action cmdID/identifier string","sws_DLG_161"));
+						return AppendErrMsg(_section, _a, _applyMsg, str.Get());
+					}
+					// macro/script check
+					else if (tstNum==-2) {
+						str.Append(__LOCALIZE("For macros/scripts, you must use identifier strings (e.g. _f506bc780a0ab34b8fdedb67ed5d3649), not command IDs (e.g. 47145)\nTip: to copy such identifiers, right-click the macro/script in the Actions window > Copy selected action cmdID/identifier string","sws_DLG_161"));
+						return AppendErrMsg(_section, _a, _applyMsg, str.Get());
+					}
+				}
 
 				// explode everything and do more checks: validity, non recursive, etc...
 				WDL_PtrList_DeleteOnDestroy<WDL_FastString> parentCmds;
@@ -1580,12 +1589,16 @@ void CommandsView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iStr
 					}
 					if (g_editedAction)
 					{
-						// won't cross for CAs that are not yet registered, that's probably better anyway
+						// won't work for cross CAs that are not yet registered, that's probably better anyway..
 						if (KbdSectionInfo* kbdSec = SNM_GetActionSection(g_editedSection))
 						{
-							if (int cmdId = SNM_NamedCommandLookup(pItem->Get(), kbdSec)) {
-								lstrcpyn(str, kbd_getTextFromCmd(cmdId, kbdSec), iStrMax);
-								if (*str) return;
+							if (int cmdId = SNM_NamedCommandLookup(pItem->Get(), kbdSec))
+							{
+//								if (!CheckSwsMacroScriptNumCustomId(pItem->Get(), g_editedSection))
+								{
+									lstrcpyn(str, kbd_getTextFromCmd(cmdId, kbdSec), iStrMax);
+									if (*str) return;
+								}
 							}
 						}
 						lstrcpyn(str, __LOCALIZE("Unknown","sws_DLG_161"), iStrMax); 
@@ -2355,7 +2368,6 @@ HMENU CyclactionWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 		if (GetMenuItemCount(hMenu))
 			AddToMenu(hMenu, SWS_SEPARATOR, 0);
 
-		char buf[128] = "";
 		HMENU hImpExpSubMenu = CreatePopupMenu();
 		AddSubMenu(hMenu, hImpExpSubMenu, __LOCALIZE("Import/export","sws_DLG_161"));
 		AddImportExportMenu(hImpExpSubMenu, false);
@@ -2430,6 +2442,8 @@ void CyclactionWnd::UpdateSection(int _newSection)
 }
 
 
+///////////////////////////////////////////////////////////////////////////////
+// project_config_extension_t
 ///////////////////////////////////////////////////////////////////////////////
 
 static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)

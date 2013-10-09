@@ -42,12 +42,9 @@ public:
 	virtual void NotifyMarkerRegionUpdate(int _updateFlags) {}
 };
 
-bool RegisterToMarkerRegionUpdates(SNM_MarkerRegionListener* _sub);
-bool UnregisterToMarkerRegionUpdates(SNM_MarkerRegionListener* _sub) ;
-int UpdateMarkerRegionCache();
-
-extern SWS_Mutex g_SNM_MkrRgnListenersMutex;
-extern WDL_PtrList<SNM_MarkerRegionListener> g_SNM_MkrRgnListeners;
+void RegisterToMarkerRegionUpdates(SNM_MarkerRegionListener* _sub);
+void UnregisterToMarkerRegionUpdates(SNM_MarkerRegionListener* _sub) ;
+void UpdateMarkerRegionRun();
 
 bool SNM_SetProjectMarker(ReaProject* _proj, int _num, bool _isrgn, double _pos, double _rgnend, const char* _name, int _color = 0);
 bool SNM_GetProjectMarkerName(ReaProject* _proj, int _num, bool _isrgn, WDL_FastString* _name);

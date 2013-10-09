@@ -39,7 +39,6 @@
 #define PRI_DOWN_MSG	0x10001
 #define TYPETYPE_MSG	0x100F0
 #define FILTERTYPE_MSG	0x10100
-#define RGNFILTERTYPE_MSG	0x100E0
 #define COLORTYPE_MSG	0x10110
 #define LOAD_ICON_MSG	0x110000
 #define CLEAR_ICON_MSG	0x110001
@@ -54,19 +53,18 @@
 #define AC_ITEM_KEY		"AutoColor %d"
 
 
-enum { AC_UNNAMED, AC_FOLDER, AC_CHILDREN, AC_RECEIVE, AC_ANY, AC_MASTER, NUM_FILTERTYPES };
-enum { AC_RGNUNNAMED, AC_RGNANY, NUM_RGNFILTERTYPES };
+enum { AC_ANY=0, AC_UNNAMED, AC_FOLDER, AC_CHILDREN, AC_RECEIVE, AC_MASTER, NUM_FILTERTYPES };
+enum { AC_RGNANY=0, AC_RGNUNNAMED, NUM_RGNFILTERTYPES };
 enum { AC_CUSTOM, AC_GRADIENT, AC_RANDOM, AC_NONE, AC_PARENT, AC_IGNORE, NUM_COLORTYPES };
 enum { COL_ID=0, COL_TYPE, COL_FILTER, COL_COLOR, COL_ICON, COL_COUNT };
 enum { AC_TRACK=0, AC_MARKER, AC_REGION, NUM_TYPETYPES }; // keep this order and 2^ values 
                                                           // (values used as masks => adding a 4th type would require another solution)
 
-// Larger allocs for localized string..
+// Larger allocs for localized strings..
 // !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_115
 static SWS_LVColumn g_cols[] = { {25, 0, "#" }, {25, 0, "Type"}, { 185, 1, "Filter" }, { 70, 1, "Color" }, { 200, 2, "Icon" }};
 static const char cTypes[][32] = {"Track", "Marker", "Region" }; // keep this order, see above
-static const char cFilterTypes[][32] = { "(unnamed)", "(folder)", "(children)", "(receive)", "(any)", "(master)" };
-static const char cRgnFilterTypes[][32] = { "(unnamed)", "(any)" };
+static const char cFilterTypes[][32] = { "(any)", "(unnamed)", "(folder)", "(children)", "(receive)", "(master)" };
 static const char cColorTypes[][32] = { "Custom", "Gradient", "Random", "None", "Parent", "Ignore" };
 // !WANT_LOCALIZE_STRINGS_END
 
@@ -133,7 +131,7 @@ void SWS_AutoColorView::GetItemText(SWS_ListItem* item, int iCol, char* str, int
 		break;
 	case COL_FILTER:
 		{
-			// internal? => localize
+			// internal str? => localize for display
 			for (int i=0; i<NUM_FILTERTYPES; i++)
 				if (!strcmp(pItem->m_str_filter.Get(), cFilterTypes[i])) {
 					lstrcpyn(str, __localizeFunc(pItem->m_str_filter.Get(),"sws_DLG_115",LOCALIZE_FLAG_NOCACHE), iStrMax);
@@ -566,19 +564,17 @@ HMENU SWS_AutoColorWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 			}
 			case COL_FILTER:
 			{
-				// Display a different set of options for Regions and Markers
-				if(item->m_type == AC_TRACK)
+				int numFilters = 0;
+				if (item->m_type == AC_TRACK)
+					numFilters= NUM_FILTERTYPES;
+				else if (item->m_type == AC_MARKER || item->m_type == AC_REGION)
+					numFilters = NUM_RGNFILTERTYPES;
+				if (numFilters)
 				{
-					for (int i = 0; i < NUM_FILTERTYPES; i++)
+					for (int i=0; i<numFilters; i++)
 						AddToMenu(hMenu, __localizeFunc(cFilterTypes[i],"sws_DLG_115",LOCALIZE_FLAG_NOCACHE), FILTERTYPE_MSG + i);
 					AddToMenu(hMenu, SWS_SEPARATOR, 0);
 				}
-				//else
-				//{
-				//	for (int i = 0; i < NUM_RGNFILTERTYPES; i++)
-				//		AddToMenu(hMenu, __localizeFunc(cRgnFilterTypes[i],"sws_DLG_115",LOCALIZE_FLAG_NOCACHE), RGNFILTERTYPE_MSG + i);
-				//	AddToMenu(hMenu, SWS_SEPARATOR, 0);
-				//}
 				break;
 			}
 			case COL_COLOR:
@@ -586,12 +582,12 @@ HMENU SWS_AutoColorWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 				AddToMenu(hMenu, __LOCALIZE("Set color...","sws_DLG_115"), IDC_COLOR);
 				AddToMenu(hMenu, SWS_SEPARATOR, 0);
 
-				if(item->m_type == AC_TRACK)
+				if (item->m_type == AC_TRACK)
 				{
 					for (int i = 0; i < NUM_COLORTYPES; i++)
 						AddToMenu(hMenu, __localizeFunc(cColorTypes[i],"sws_DLG_115",LOCALIZE_FLAG_NOCACHE), COLORTYPE_MSG + i);
 				}
-				else if(item->m_type == AC_MARKER || item->m_type == AC_REGION)
+				else if (item->m_type == AC_MARKER || item->m_type == AC_REGION)
 					AddToMenu(hMenu, __localizeFunc(cColorTypes[AC_NONE],"sws_DLG_115",LOCALIZE_FLAG_NOCACHE), COLORTYPE_MSG + AC_NONE);
 				AddToMenu(hMenu, SWS_SEPARATOR, 0);
 				break;
@@ -666,7 +662,7 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 					break;
 				}
 			}
-			
+
 			if (bFound)
 			{
 				// If already colored by a different rule, or ignoring the color ignore this track
@@ -895,21 +891,35 @@ void AutoColorTrack(bool bForce)
 
 void ApplyColorRuleToMarkerRegion(SWS_RuleItem* _rule, int _flags)
 {
-	if (!_rule || !_flags)
+	ColorTheme* ct = SNM_GetColorTheme();
+	if (!_rule || !_flags || !ct)
 		return;
 
-	ColorTheme* ct = SNM_GetColorTheme();
 	double pos, end;
 	int x=0, num, color;
-	bool isRgn;
+	bool isRgn, update=false;
 	char* name;
 
+	PreventUIRefresh(1);
 	if(_rule->m_type & _flags)
+	{
 		while (x = EnumProjectMarkers3(NULL, x, &isRgn, &pos, &end, &name, &num, &color))
-			if (name && stristr(name, _rule->m_str_filter.Get()) &&
-				((_flags&AC_REGION && isRgn && _rule->m_type==AC_REGION) || (_flags&AC_MARKER && !isRgn && _rule->m_type==AC_MARKER))) 
-				if(SNM_SetProjectMarker(NULL, num, isRgn, pos, end, name, (ct && _rule->m_color == -AC_NONE-1) ? (isRgn?ct->marker:ct->region) : _rule->m_color | 0x1000000))
-					UpdateTimeline();
+		{
+			if ((!strcmp(cFilterTypes[AC_RGNANY], _rule->m_str_filter.Get()) || 
+				(!strcmp(cFilterTypes[AC_RGNUNNAMED], _rule->m_str_filter.Get()) && (!name || !*name)) ||
+				(name && stristr(name, _rule->m_str_filter.Get())))
+				&&
+				((_flags&AC_REGION && isRgn && _rule->m_type==AC_REGION) || 
+				(_flags&AC_MARKER && !isRgn && _rule->m_type==AC_MARKER)))
+			{
+				update |= SNM_SetProjectMarker(NULL, num, isRgn, pos, end, name, _rule->m_color==-AC_NONE-1 ? (isRgn?ct->marker:ct->region) : _rule->m_color | 0x1000000);
+			}
+		}
+	}
+	PreventUIRefresh(-1);
+
+	if (update)
+		UpdateTimeline();
 }
 
 void AutoColorMarkerRegion(bool _force, int _flags)
@@ -930,7 +940,7 @@ void AutoColorMarkerRegion(bool _force, int _flags)
 		if (PreventUIRefresh)
 			PreventUIRefresh(1);
 
-		for (int i=0; i<g_pACItems.GetSize(); i++)
+		for (int i=g_pACItems.GetSize()-1; i>=0; i--) // reverse to obey priority
 			ApplyColorRuleToMarkerRegion(g_pACItems.Get(i), newFlags);
 
 		if (PreventUIRefresh)

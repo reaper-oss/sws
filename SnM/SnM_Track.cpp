@@ -182,7 +182,7 @@ void PasteTrackGrouping(COMMAND_T* _ct)
 		{
 			SNM_ChunkParserPatcher p(tr);
 			updates += p.RemoveLines("GROUP_FLAGS", true); // brutal removing ok: "GROUP_FLAGS" is not part of freeze data
-			int patchPos = p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKHEIGHT", 0, 0, NULL, NULL, "MAINSEND"); //JFB strstr instead?
+			int patchPos = p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKHEIGHT", 0, 0, NULL, NULL, "MAINSEND");
 			if (patchPos > 0)
 			{
 				p.GetChunk()->Insert(g_trackGrpClipboard.Get(), --patchPos);

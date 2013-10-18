@@ -67,6 +67,7 @@ Ruler's drag zoom / Issue 540: added actions for better usability
 +SWS: Toggle drag zoom enable (ruler bottom half)
 
 Fixes
+Issue 603: fixed paste grouping crash
 +Localization / Windows OS: fixed broken features/actions when the extension was translated
  - Most of zoom features
  - Xenakios "Scroll track view" actions

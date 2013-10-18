@@ -1,5 +1,5 @@
 /******************************************************************************
-/ SnM_ChunkParserPatcher.h - v1.32
+/ SnM_ChunkParserPatcher.h - v1.33
 / Copyright (c) 2008-2013 Jeffos
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,52 +24,25 @@
 ******************************************************************************/
 
 
-// Some fast tools to parse and alter RPP state chunks and sub-chunks. 
+// Some fast tools to parse and alter RPP state chunks.
 //
 // SNM_ChunkParserPatcher is a class that can be used either as a SAX-ish 
-// parser (inheritance) or as a direct getter or altering tool, see ParsePatch() 
-// and Parse().
-// In both cases, it is also either attached to a WDL_FastString* (simple text 
-// chunk parser/patcher) -OR- to a reaThing* (MediaTrack*, MediaItem*, ..). 
-// A SNM_ChunkParserPatcher instance only gets and sets the chunk once. In between,
-// the user works on a cache. IF ANY, the updates are automatically comitted when 
-// destroying the instance (can also be avoided/forced, see m_autoCommit & Commit()).
+// parser (via inheritance) -OR- as a direct getter/altering tool (via Parse() 
+// and ParsePatch(), respectively).
+// In both cases, it is either attached to a WDL_FastString* (simple text 
+// processor) -OR- to a reaThing* (MediaTrack*, MediaItem*, ..). 
+// A SNM_ChunkParserPatcher instance only gets and sets the chunk once. In
+// between, it works on a cache. IF ANY, updates are automatically comitted 
+// when destroying the instance (can also be avoided/forced, see m_autoCommit
+// and Commit()).
 //
-// See many use-cases here: 
+// Use-cases here: 
 // http://code.google.com/p/sws-extension/source/browse/trunk#trunk/SnM
 //
-// This code relies on Cockos' WDL library: http://cockos.com/wdl
-// Thank you Cockos!
-// 
 // Important: 
-// - Chunks can be HUGE!
+// - Chunks can be HUGE! e.g. 4Mb+ is an usual case
 // - The code assumes RPP chunks are consistent, left trimmed, with Unix EOL
-//
-// Changelog:
-// v1.3x
-// - TEMPORARY VERSIONS: v2.0 on the way..
-// - Fixed possible crash with veeeeery long lines, new max line length = 8Ko
-// - New SNM_D_ADD and SNM_D_MUL altering modes
-// v1.2x
-// - Frozen track support: do not mess with frozen data
-//   note: FREEZE sub-chunks can be optionally processed like base-64 and in-project MIDI data
-// - Fix: when getting, override the native "VST minimal state" preference by default (so that 
-//   chunks are always complete)
-// - Performance improvements: new option to get minimal states, see m_minimalState
-// - Auto-commit when attached to a WDL_FastString* (just like when attached to a reaThing*)
-// - New helpers, new SNM_COUNT_KEYWORD parsing mode
-// - Inheritance: Commit() & GetChunk() can be overrided
-// - GetSubChunk() now returns the start position of the sub-chunk (or -1 if not found)
-// v1.1
-// - Fixes
-// - Use SWS_GetSetObjectState if _SWS_EXTENSION is #defined: optional/additional cache level.
-//   See http://code.google.com/p/sws-extension/source/browse/trunk/ObjectState/ObjectState.cpp
-//   Note: SWS_GetSetObjectState == native GetSetObjectState if it is not surrounded with
-//   SWS_CacheObjectState(true)/SWS_CacheObjectState(false).
-// v1.0
-// - Licensing update, see header
-// - Performance improvements
-// - Safer commit of chunk updates (ids auto removal)
+// - A v2.0 with major refactoring is on the way..
 
 
 #ifndef _SNM_CHUNKPARSERPATCHER_H_
@@ -230,7 +203,7 @@ void* GetObject() {
 }
 
 // get and cache the RPP chunk
-// note: this method *always* returns a valid value (i.e. never NULL)
+// note: this method *always* returns a valid value (non NULL)
 virtual WDL_FastString* GetChunk() 
 {
 	if (!m_chunk->GetLength())
@@ -249,9 +222,9 @@ virtual WDL_FastString* GetChunk()
 
 
 // IMPORTANT: 
-// m_updates has to be kept up-to-date (nothing will be comitted otherwise).
-// you must use UpdateChunk() or SetChunk() methods when altering the cached
-// chunk -OR- you must also 'manually' alter m_updates.
+// m_updates has to be kept up-to-date (nothing will be comitted otherwise)
+// => you must use UpdateChunk() or SetChunk() methods when altering the
+//    the cached chunk directly (or 'manually' alter m_updates)
 
 // clearing the cache is allowed
 void SetChunk(const char* _newChunk, int _updates=1) {
@@ -484,7 +457,7 @@ protected:
 	WDL_FastString* m_originalChunk;
 	int m_updates;
 
-	// advanced/optional optimization flags
+	// *** advanced/optional optimization flags ***
 
 	// base-64 and in-project MIDI data as well as FREEZE sub-chunks
 	// are ignored by default when parsing (+ bulk recopy when patching)
@@ -526,7 +499,7 @@ const char* SNM_GetSetObjectState(void* _obj, WDL_FastString* _str)
 bool WriteChunkLine(WDL_FastString* _chunkLine, const char* _value, int _tokenPos, LineParser* _lp)
 {
 	bool updated = false;
-	if (strcmp(_lp->gettoken_str(_tokenPos), _value) != 0)
+	if (strcmp(_lp->gettoken_str(_tokenPos), _value))
 	{
 		int numtokens = _lp->getnumtokens();
 		for (int i=0; i < numtokens; i++) 
@@ -544,7 +517,7 @@ bool WriteChunkLine(WDL_FastString* _chunkLine, const char* _value, int _tokenPo
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Parsing callbacks (to be implemented for SAX-ish parsing style)
+// Parsing callbacks: to be implemented for SAX-ish parsing style
 // Parameters:
 // _mode: parsing mode, see ParsePatchCore(), <0 for custom parsing modes
 // _lp: the line being parsed as a LineParser
@@ -671,33 +644,40 @@ int ParsePatchCore(
 	if (!cData)
 		return -1;
 
-	// Start of chunk parsing
 	NotifyStartChunk(_mode);
 
+	LineParser lp(false);
 	WDL_FastString* newChunk = _write ? new WDL_FastString(SNM_HEAPBUF_GRANUL) : NULL; 
 	char curLine[SNM_MAX_CHUNK_LINE_LENGTH] = "";
-	int updates = 0, occurence = 0, posStartOfSubchunk = -1;
+	int updates = 0, occurence = 0, posStartOfSubchunk = -1, linePos, curLineLen;
 	WDL_FastString* subChunkKeyword = NULL;
 	WDL_PtrList_DeleteOnDestroy<WDL_FastString> parents;
-	m_isParsingSource = false; // avoids many strcmp() calls
-	const char* pEOL = cData-1;
+	const char* pEOL = cData-1, *keyword, *pLine, *pEOSkippedChunk;
+	bool alter, tolerantMatch, strictMatch;
 
-	// ok, big stuff begins
+	m_isParsingSource = false;
 	for(;;)
 	{
-		const char* pLine = pEOL+1;
+		pLine = pEOL+1;
 		pEOL = strchr(pLine, '\n');
 
 		// break conditions
-		if (!pEOL) break;
-		if (m_breakParsePatch) {
-			if (_write) newChunk->Append(pLine);
+		if (!pEOL)
+			break;
+
+		if (m_breakParsePatch)
+		{
+			if (_write)
+				newChunk->Append(pLine);
 			break;
 		}
-		int curLineLen = (int)(pEOL-pLine); // avoids many strlen() calls
 
-		// *** optimization (optional): skip some data and sub-chunks  ***
-		const char* pEOSkippedChunk = NULL;
+		// will avoid strlen() calls..
+		curLineLen = (int)(pEOL-pLine);
+
+
+		// *** optional optimization: skip some data and sub-chunks ***
+		pEOSkippedChunk = NULL;
 
 		// skip base64 data (e.g. FX states, sysEx events, ..)
 		if (!m_processBase64 &&
@@ -742,71 +722,71 @@ int ParsePatchCore(
 		}
 
 
-		// *** next line parsing (trimmed if too long) ***
-		bool alter = false;
+		// get the next line (trimmed if too long)
+		alter = false;
 		memcpy(curLine, pLine, curLineLen >= SNM_MAX_CHUNK_LINE_LENGTH ? SNM_MAX_CHUNK_LINE_LENGTH-1 : curLineLen);
 		curLine[curLineLen >= SNM_MAX_CHUNK_LINE_LENGTH ? SNM_MAX_CHUNK_LINE_LENGTH-1 : curLineLen] = '\0';
-		int linePos = (int)(pLine-cData);
-		const char* keyword = NULL;
+		linePos = (int)(pLine-cData);
 
-		LineParser lp(false);
-		if (lp.parse(curLine))
+		// zap this line?
+		if (lp.parse(curLine) || !lp.getnumtokens())
 			continue;
 
-		int lpNumTokens=lp.getnumtokens();
-		if (lpNumTokens > 0)
+		// zap this line?
+		keyword = lp.gettoken_str(0);
+		if (!*keyword)
+			continue;
+
+		// sub chunk?
+		if (*keyword == '<')
 		{
-			keyword = lp.gettoken_str(0);
-			if (*keyword == '<')
+			m_isParsingSource |= (lp.getnumtokens()==2 && curLineLen>9 /* e.g. <SOURCE MIDI*/ && !strcmp(keyword+1, "SOURCE"));
+
+			// notify & update parent list
+			parents.Add(new WDL_FastString(keyword+1)); // +1 to zap '<'
+			alter = NotifyStartElement(_mode, &lp, curLine, linePos, &parents, newChunk, updates);
+		}
+		// end of sub chunk?
+		else if (*keyword == '>')
+		{
+			// end of processed sub-chunk ?
+			if (subChunkKeyword && _depth == parents.GetSize() && 
+				subChunkKeyword == parents.Get(_depth-1)) // => valid _depth must be provided
 			{
-				m_isParsingSource |= (lpNumTokens == 2 && curLineLen>9 /* e.g. <SOURCE MIDI*/ && !strcmp(keyword+1, "SOURCE"));
+				subChunkKeyword = NULL;
 
-				// notify & update parent list
-				parents.Add(new WDL_FastString(keyword+1)); // +1 to zap '<'
-				alter = NotifyStartElement(_mode, &lp, curLine, linePos, &parents, newChunk, updates);
-			}
-			else if (*keyword == '>')
-			{
-				// end of processed sub-chunk ?
-				if (subChunkKeyword && _depth == parents.GetSize() && 
-					subChunkKeyword == parents.Get(_depth-1)) // => valid _depth must be provided
-				{
-					subChunkKeyword = NULL;
-
-					// don't recopy '>' depending on the modes..
-					if (_mode == SNM_REPLACE_SUBCHUNK_OR_LINE) {
-						alter = true;
-						m_breakParsePatch = (_occurence != -1);
-					}
-					// .. but recopy it for some
-					else if (_mode == SNM_GET_SUBCHUNK_OR_LINE || _mode == SNM_GET_SUBCHUNK_OR_LINE_EOL)
-					{
-						if (_value) 
-							((WDL_FastString*)_value)->Append(">\n",2);
-
-						// SNM_GET_SUBCHUNK_OR_LINE:
-						// => returns 1st *KEYWORD* position of the sub-chunk + 1 (0 reserved for "not found")
-						// otherwise
-						// => return the *EOL* position of the sub-chunk + 1 (0 reserved for "not found")
-						return (_mode == SNM_GET_SUBCHUNK_OR_LINE ? posStartOfSubchunk : (int)(pEOL-cData+1));
-					}
+				// don't recopy '>' depending on the modes..
+				if (_mode == SNM_REPLACE_SUBCHUNK_OR_LINE) {
+					alter = true;
+					m_breakParsePatch = (_occurence != -1);
 				}
+				// .. but recopy it for some
+				else if (_mode == SNM_GET_SUBCHUNK_OR_LINE || _mode == SNM_GET_SUBCHUNK_OR_LINE_EOL)
+				{
+					if (_value) 
+						((WDL_FastString*)_value)->Append(">\n",2);
 
-				if (m_isParsingSource) 
-					m_isParsingSource = !!strcmp(GetParent(&parents), "SOURCE");
-
-				// notify & update parent list
-				alter |= NotifyEndElement(_mode, &lp, curLine, linePos, &parents, newChunk, updates);
-				parents.Delete(parents.GetSize()-1, true);
+					// SNM_GET_SUBCHUNK_OR_LINE:
+					// => returns 1st *KEYWORD* position of the sub-chunk + 1 (0 reserved for "not found")
+					// otherwise
+					// => return the *EOL* position of the sub-chunk + 1 (0 reserved for "not found")
+					return (_mode == SNM_GET_SUBCHUNK_OR_LINE ? posStartOfSubchunk : (int)(pEOL-cData+1));
+				}
 			}
+
+			if (m_isParsingSource) 
+				m_isParsingSource = !!strcmp(GetParent(&parents), "SOURCE");
+
+			// notify & update parent list
+			alter |= NotifyEndElement(_mode, &lp, curLine, linePos, &parents, newChunk, updates);
+			parents.Delete(parents.GetSize()-1, true);
 		}
 
-		// end of chunk lines (">") are not processed/notified (but copied if needed)
+		// end of chunk lines (">") are not processed/notified (but copied if needed!)
 		if (parents.GetSize())
 		{
 			WDL_FastString* currentParent = parents.Get(parents.GetSize()-1);
 
-			bool tolerantMatch, strictMatch;
 			IsMatchingParsedLine(
 				&tolerantMatch, &strictMatch, 
 				_depth, parents.GetSize(), 
@@ -839,8 +819,11 @@ int ParsePatchCore(
 							break;
 						case SNM_SETALL_CHUNK_CHAR_EXCEPT:
 						case SNM_TOGGLE_CHUNK_INT_EXCEPT:
-							if (_valueExcept){
+							if (_valueExcept)
+							{
+/* done in WriteChunkLine()
 								if (strcmp((char*)_valueExcept, lp.gettoken_str(_tokenPos)))
+*/
 									alter |= WriteChunkLine(newChunk, (char*)_valueExcept, _tokenPos, &lp); 
 							}
 							break;
@@ -911,7 +894,9 @@ int ParsePatchCore(
 					switch (_mode)
 					{
 						case SNM_SETALL_CHUNK_CHAR_EXCEPT:
+/* done in WriteChunkLine()
 							if (strcmp((char*)_value, lp.gettoken_str(_tokenPos)))
+*/
 								alter |= WriteChunkLine(newChunk, (char*)_value, _tokenPos, &lp); 
 							break;
 						case SNM_GETALL_CHUNK_CHAR_EXCEPT:
@@ -951,9 +936,8 @@ int ParsePatchCore(
 		}
 		updates += (_write && alter);
 
-		// copy current line if RW mode & if it wasn't altered above & if inerited classes 
-		// authorize it (for optimization when using matching criteria: depth, parent,..)
-		if (_write && !alter && lpNumTokens) {
+		// copy current line only in RW mode & if it wasn't altered above
+		if (_write && !alter) {
 			newChunk->Append(curLine);
 			newChunk->Append("\n");
 		}
@@ -962,9 +946,10 @@ int ParsePatchCore(
 	// update cache if needed
 	if (_write && newChunk)
 	{
-		if (updates && newChunk->GetLength()) 
+		if (updates && newChunk->GetLength())
 		{
 			m_updates += updates;
+
 			// avoids buffer re-copy
 			WDL_FastString* oldChunk = m_chunk;
 			m_chunk = newChunk;
@@ -974,7 +959,6 @@ int ParsePatchCore(
 			delete newChunk;
 	}
 
-	// end of chunk parsing
 	NotifyEndChunk(_mode);
 
 	// return values

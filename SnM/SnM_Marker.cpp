@@ -167,36 +167,24 @@ bool SNM_GetProjectMarkerName(ReaProject* _proj, int _num, bool _isrgn, WDL_Fast
 // _flags: &SNM_MARKER_MASK=marker, &SNM_REGION_MASK=region
 int FindMarkerRegion(ReaProject* _proj, double _pos, int _flags, int* _idOut)
 {
-	if (_idOut)
-		*_idOut = -1;
-
-	int idx=-1, x=0, lastx=0, num; double dPos, dEnd; bool isRgn;
-	while (x = EnumProjectMarkers3(_proj, x, &isRgn, &dPos, &dEnd, NULL, &num, NULL))
+	bool isrgn;
+	double dPos, dEnd;
+	int x=0, lastx=0, num, foundId=-1, foundx=-1;
+	while (x = EnumProjectMarkers3(_proj, x, &isrgn, &dPos, &dEnd, NULL, &num, NULL))
 	{
-		if ((!isRgn && _flags&SNM_MARKER_MASK) || (isRgn && _flags&SNM_REGION_MASK))
+		if ((!isrgn && _flags&SNM_MARKER_MASK) || (isrgn && _flags&SNM_REGION_MASK && _pos<=dEnd))
 		{
-			if (_pos >= dPos && (!isRgn || (isRgn && _pos <= dEnd)))
-			{
-				bool isRgn2;
-				if (EnumProjectMarkers3(_proj, x, &isRgn2, &dPos, NULL, NULL, NULL, NULL) &&
-					((!isRgn2 && _flags&SNM_MARKER_MASK) || (isRgn2 && _flags&SNM_REGION_MASK)))
-				{
-					if (_pos < dPos) {
-						idx = lastx;
-						break;
-					}
-				}
-				else {
-					idx = lastx;
-					break;
-				}
+			if (_pos >= dPos) {
+				foundId = MakeMarkerRegionId(num, isrgn);
+				foundx = lastx;
 			}
+			else
+				break;
 		}
 		lastx=x;
 	}
-	if (idx >= 0 && _idOut)
-		*_idOut = MakeMarkerRegionId(num, isRgn);
-	return idx;
+	if (_idOut) *_idOut = foundId;
+	return foundx;
 }
 
 
@@ -225,7 +213,6 @@ int GetMarkerRegionIdFromIndex(ReaProject* _proj, int _idx)
 	return -1;
 }
 
-//JFB!! removeme (->EnumMarkerRegionById())
 int GetMarkerRegionIndexFromId(ReaProject* _proj, int _id) 
 {
 	if (_id > 0)

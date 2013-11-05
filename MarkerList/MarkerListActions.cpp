@@ -31,6 +31,7 @@
 #include "MarkerList.h"
 #include "MarkerListActions.h"
 #include "../reaper/localize.h"
+#include "../SnM/SnM_Project.h"
 
 void ListToClipboard(COMMAND_T*)
 {
@@ -297,11 +298,7 @@ void MarkersToRegions(COMMAND_T* ct)
 
 	if(markers.GetSize() == 0) return; // Bail if there are no markers/regions
 
-	// Find project end. Is there a neater way to do this?
-	double temp = GetCursorPositionEx(NULL);
-	CSurf_GoEnd();
-	double projEnd = GetCursorPositionEx(NULL);
-	SetEditCurPos2(NULL, temp, false, false);
+	double projEnd = SNM_GetProjectLength();
 
 	Undo_BeginBlock2(NULL);
 

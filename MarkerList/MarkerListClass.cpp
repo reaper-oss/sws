@@ -33,6 +33,8 @@
 #include "MarkerListClass.h"
 #include "MarkerListActions.h"
 #include "../SnM/SnM_Marker.h"
+#include "../SnM/SnM_Project.h"
+
 
 MarkerItem::MarkerItem(bool bReg, double dPos, double dRegEnd, const char* cName, int num, int color)
 {
@@ -237,12 +239,7 @@ char* MarkerList::GetFormattedList(const char* format) // Must delete [] returne
 	char* str = new char[iLen];
 	str[0] = 0;
 
-	// Get end of project
-	double dSavedCur = GetCursorPosition();
-	CSurf_GoEnd();
-	double dEnd = GetCursorPosition();
-	SetEditCurPos(dSavedCur, true, true);
-
+	double dEnd = SNM_GetProjectLength();
 	char* s = str;
 	int count = 1;
 

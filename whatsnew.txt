@@ -7,7 +7,7 @@
  - MIDI CC messages (absolute and relative modes, as usual)
 
 Region Playlist
-+<b>Fixed playback that could get out of sync randomly<b>
++<b>Fixed playback that could get out of sync randomly</b>
 +Added option "Smooth seek (seek immediately if disabled)" in the context menu, details http://forum.cockos.com/showthread.php?t=128371|here|
 
 Auto color/icon
@@ -29,7 +29,7 @@ Notes window
  - SWS/S&M: Open/close Notes window (region names)
  - SWS/S&M: Open/close Notes window (marker subtitles)
  - SWS/S&M: Open/close Notes window (region subtitles)
-+REAPER >= v4.55: Mark project dirty (needing save) rather than creating undo points for each key stroke
++If REAPER >= v4.55: Mark project dirty (needing save) rather than creating undo points for each key stroke
 +Potential fix for http://forum.cockos.com/showpost.php?p=1180135&postcount=1595|"things that smells like Pont-l'Évêque"|
 +House cleaning: allow notes for macros and scripts (aka "Action help")
  String identifiers used to be displayed in the Notes window for macros/scripts.

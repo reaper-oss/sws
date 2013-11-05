@@ -1,7 +1,7 @@
 /******************************************************************************
 / Prompt.cpp
 /
-/ Copyright (c) 2010 Tim Payne (SWS)
+/ Copyright (c) 2013 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -30,17 +30,17 @@
 #include "./SnM/SnM_Dlg.h"
 #include "./reaper/localize.h"
 
-#define PROMPTWND_KEY "PromptWindowPos"
-#define INFOWND_KEY "InfoWindowPos"
+#define PROMPTWND_KEY	"PromptWindowPos"
+#define INFOWND_KEY		"InfoWindowPos"
 
-static const char* g_cTitle;
-static char* g_cString;
-static int g_iMax;
-static bool g_bOK = false;
-static bool g_bOption = false;
-static bool g_bAtMouse = false;
-static const char* g_cOption;
-static HWND g_hwndModelessInfo = NULL;
+const char* g_cTitle;
+char* g_cString;
+int g_iMax;
+bool g_bOK = false;
+bool g_bOption = false;
+bool g_bAtMouse = false;
+const char* g_cOption;
+HWND g_hwndModelessInfo = NULL;
 
 INT_PTR WINAPI doPromptDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {

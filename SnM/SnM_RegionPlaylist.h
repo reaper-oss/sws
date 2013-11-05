@@ -105,8 +105,10 @@ public:
 protected:
 	void OnInitDlg();
 	void OnDestroy();
+	void PlaylistMenu(HMENU _menu);
+	void EditMenu(HMENU _menu);
+	void OptionsMenu(HMENU _menu);
 	HMENU OnContextMenu(int x, int y, bool* wantDefaultItems);
-	void AddPasteContextMenu(HMENU _menu);
 	int OnKey(MSG* msg, int iKeyState) ;
 	void DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight = NULL);
 	bool GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOutSz);

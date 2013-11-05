@@ -1,7 +1,7 @@
 /******************************************************************************
 / sws_extension.cpp
 /
-/ Copyright (c) 2012 Tim Payne (SWS), Jeffos
+/ Copyright (c) 2013 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -76,21 +76,15 @@ int g_iLastCommand = 0;
 
 bool hookCommandProc(int iCmd, int flag)
 {
-	static bool bReentrancyCheck = false;
-	if (bReentrancyCheck)
-		return false;
+	static WDL_PtrList<const char> sReentrantCmds;
 
 	// for Xen extensions
 	g_KeyUpUndoHandler=0;
 
 	// "Hack" to make actions will #s less than 1000 work with SendMessage (AHK)
+	// no recursion check here: handled by REAPER
 	if (iCmd < 1000)
-	{
-		bReentrancyCheck = true;	
-		KBD_OnMainActionEx(iCmd, 0, 0, 0, g_hwndParent, NULL);
-		bReentrancyCheck = false;
-		return true;
-	}
+		return KBD_OnMainActionEx(iCmd, 0, 0, 0, g_hwndParent, NULL) ? true : false; // C4800
 
 	// Special case for checking recording
 	if (iCmd == 1013 && !RecordInputCheck())
@@ -101,15 +95,26 @@ bool hookCommandProc(int iCmd, int flag)
 	{
 		if (cmd->accel.accel.cmd==iCmd && cmd->doCommand && cmd->doCommand!=SWS_NOOP)
 		{
-			if (!strstr(cmd->id, "_CYCLACTION")) bReentrancyCheck = true;
-			cmd->fakeToggle = !cmd->fakeToggle;
+			if (sReentrantCmds.Find(cmd->id) == -1)
+			{
+				sReentrantCmds.Add(cmd->id);
+				cmd->fakeToggle = !cmd->fakeToggle;
 #ifndef DEBUG_PERFORMANCE_TIME
-			cmd->doCommand(cmd);
+				cmd->doCommand(cmd);
 #else
-			CommandTimer(cmd);
+				CommandTimer(cmd);
 #endif
-			bReentrancyCheck = false;
-			return true;
+				sReentrantCmds.Delete(sReentrantCmds.Find(cmd->id));
+				return true;
+			}
+#ifdef ACTION_DEBUG
+			else
+			{
+				OutputDebugString("hookCommandProc - recursive action: ");
+				OutputDebugString(cmd->id);
+				OutputDebugString("\n");
+			}
+#endif
 		}
 	}
 	return false;
@@ -121,18 +126,26 @@ bool hookCommandProc(int iCmd, int flag)
 //  1 = action belongs to this extension and is currently set to "on"
 int toggleActionHook(int iCmd)
 {
-	static bool bReentrancyCheck = false;
-	if (bReentrancyCheck)
-		return -1;
-
+	static WDL_PtrList<const char> sReentrantCmds;
 	if (COMMAND_T* cmd = SWSGetCommandByID(iCmd))
 	{
 		if (cmd->accel.accel.cmd==iCmd && cmd->getEnabled && cmd->doCommand!=SWS_NOOP)
 		{
-			if (!strstr(cmd->id, "_CYCLACTION")) bReentrancyCheck = true;
-			int state = cmd->getEnabled(cmd);
-			bReentrancyCheck = false;
-			return state;
+			if (sReentrantCmds.Find(cmd->id) == -1)
+			{
+				sReentrantCmds.Add(cmd->id);
+				int state = cmd->getEnabled(cmd);
+				sReentrantCmds.Delete(sReentrantCmds.Find(cmd->id));
+				return state;
+			}
+#ifdef ACTION_DEBUG
+			else
+			{
+				OutputDebugString("toggleActionHook - recursive action: ");
+				OutputDebugString(cmd->id);
+				OutputDebugString("\n");
+			}
+#endif
 		}
 	}
 	return -1;
@@ -664,6 +677,7 @@ extern "C"
 		IMPAPI(Main_openProject);
 		IMPAPI(MainThread_LockTracks);
 		IMPAPI(MainThread_UnlockTracks);
+		*(void**)&MarkProjectDirty = rec->GetFunc("MarkProjectDirty"); //>= v4.55pre2
 		IMPAPI(MIDIEditor_GetActive);
 		IMPAPI(MIDIEditor_GetMode);
 		IMPAPI(MIDIEditor_GetTake);

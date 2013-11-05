@@ -155,7 +155,7 @@
 #define MED_ADD_NEWTR_STR			__LOCALIZE("Add to new tracks","sws_DLG_150")
 #define MED_ADD_ITEM_STR			__LOCALIZE("Add to selected items","sws_DLG_150")
 #define IMG_SHOW_STR				__LOCALIZE("Show image","sws_DLG_150")
-#define IMG_TRICON_STR				__LOCALIZE("Set track icon for selected tracks","sws_DLG_150")
+#define IMG_TRICON_STR				__LOCALIZE("Set as icon for selected tracks","sws_DLG_150")
 #define THM_LOAD_STR				__LOCALIZE("Load theme","sws_DLG_150")
 
 // no default filter text on OSX (cannot catch EN_SETFOCUS/EN_KILLFOCUS)
@@ -1039,7 +1039,8 @@ void ResourcesWnd::OnInitDlg()
 	m_parentVwnd.AddChild(&m_cbType);
 
 	m_txtTiedPrj.SetID(TXTID_TIED_PRJ);
-	m_txtTiedPrj.SetFont(SNM_GetThemeFont());
+	m_txtTiedPrj.SetFont(g_SNM_ClearType ? SNM_GetFont(0) : SNM_GetThemeFont()); // SNM_GetFont(0) to support alpha
+																				 //JFB!! todo? mod/inherit WDL_VirtualStaticText?
 	m_parentVwnd.AddChild(&m_txtTiedPrj);
 
 	m_cbDblClickType.SetID(CMBID_DBLCLICK_TYPE);
@@ -1055,7 +1056,7 @@ void ResourcesWnd::OnInitDlg()
 
 	m_txtDblClickType.SetID(TXTID_DBL_TYPE);
 	m_txtDblClickType.SetFont(font);
-	m_txtDblClickType.SetText(__LOCALIZE("Dbl-click to:","sws_DLG_150"));
+	m_txtDblClickType.SetText(__LOCALIZE("Double-click:","sws_DLG_150"));
 	m_parentVwnd.AddChild(&m_txtDblClickType);
 
 	m_btnAdd.SetID(BTNID_ADD_BOOKMARK);
@@ -1127,7 +1128,7 @@ void ResourcesWnd::FillTypeCombo()
 		*typeName.Get() = toupper(*typeName.Get()); // 1st char to upper
 		typeName.Append(" ");
 		if (IsMultiType(i))
-			typeName.Append(g_tiedSlotActions[GetTypeForUser(i)] == i ? " [x]" : " [ ]"); //UTF8_BULLET : UTF8_CIRCLE);
+			typeName.Append(g_tiedSlotActions[GetTypeForUser(i)] == i ? " [x]" : ""); //UTF8_BULLET : UTF8_CIRCLE);
 		m_cbType.AddItem(typeName.Get());
 	}
 	m_cbType.SetCurSel2((g_resType>0 && g_resType<g_SNM_ResSlots.GetSize()) ? g_resType : SNM_SLOT_FXC);
@@ -1441,7 +1442,7 @@ void ResourcesWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			break;
 		case TIE_ACTIONS_MSG:
 			g_tiedSlotActions[GetTypeForUser()] = g_resType;
-			FillTypeCombo(); // update [x] and [ ] tags
+			FillTypeCombo(); // update [x] tag
 			Update();
 			break;
 		case UNTIE_PROJECT_MSG:
@@ -1696,9 +1697,9 @@ HMENU ResourcesWnd::AttachPrjContextMenu(HMENU _menu, bool _openSelPrj)
 		{
 			if (GetMenuItemCount(_menu))
 				AddToMenu(_menu, SWS_SEPARATOR, 0);
-			_snprintfSafe(buf, sizeof(buf), TIED_PRJ_SELECT_LOAD_STR, *g_curProjectFn ? GetFileRelativePath(g_curProjectFn) : __LOCALIZE("(unsaved project?)","sws_DLG_150"));
+			_snprintfSafe(buf, sizeof(buf), TIED_PRJ_SELECT_LOAD_STR, GetFileRelativePath(g_tiedProjects.Get(g_resType)->Get()));
 			AddToMenu(_menu, buf, LOAD_TIED_PRJ_MSG);
-			_snprintfSafe(buf, sizeof(buf), TIED_PRJ_SELECT_LOADTAB_STR, *g_curProjectFn ? GetFileRelativePath(g_curProjectFn) : __LOCALIZE("(unsaved project?)","sws_DLG_150"));
+			_snprintfSafe(buf, sizeof(buf), TIED_PRJ_SELECT_LOADTAB_STR, GetFileRelativePath(g_tiedProjects.Get(g_resType)->Get()));
 			AddToMenu(_menu, buf, LOAD_TIED_PRJ_TAB_MSG);
 		}
 
@@ -2136,7 +2137,8 @@ void ResourcesWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltip
 					if (g_resType>=SNM_NUM_DEFAULT_SLOTS && g_tiedProjects.Get(g_resType)->GetLength())
 					{
 						char buf[128] = "";
-						_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Bookmark files attached to %s","sws_DLG_150"), GetFileRelativePath(g_tiedProjects.Get(g_resType)->Get()));
+						// "Bookmark files attached to %s" would be more consistent, but too long...
+						_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Files attached to %s","sws_DLG_150"), GetFileRelativePath(g_tiedProjects.Get(g_resType)->Get()));
 						m_txtTiedPrj.SetText(buf);
 
 						// plain text if current project == tied project, alpha otherwise
@@ -2229,7 +2231,7 @@ bool ResourcesWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bu
 				}
 				break;
 			case CMBID_TYPE:
-				return (lstrcpyn(_bufOut, __LOCALIZE("Bookmarks (right-click for options)\nBookmark names end with [x] when relevant slot actions are attached to them","sws_DLG_150"), _bufOutSz) != NULL);
+				return (lstrcpyn(_bufOut, __LOCALIZE("Bookmarks (right-click for options)\nA bookmark name ends with [x] when relevant slot actions are attached to it","sws_DLG_150"), _bufOutSz) != NULL);
 			case BTNID_ADD_BOOKMARK:
 				return (_snprintfStrict(_bufOut, _bufOutSz, __LOCALIZE_VERFMT("New %s bookmark","sws_DLG_150"), g_SNM_ResSlots.Get(typeForUser)->GetName()) > 0);
 			case BTNID_DEL_BOOKMARK:

@@ -405,7 +405,7 @@ void ShowThemeHelper(COMMAND_T* _ct)
 // Action list hacks
 // Everything here could be cleaned up thanks to schwa's suggestion here:
 // http://forum.cockos.com/showpost.php?p=1144769&postcount=7
-// .. unfortunately, it remained a suggestion, my fault?
+// .. unfortunately, it remained a suggestion (my fault?)
 ///////////////////////////////////////////////////////////////////////////////
 
 HWND GetActionListBox(char* _currentSection, int _sectionSz)
@@ -440,7 +440,8 @@ HWND GetActionListBox(char* _currentSection, int _sectionSz)
 // -2 if the custom id cannot be retrieved (hidden column)
 // -3 if there is no selected action
 // note: no multi-selection mgmt here..
-// API LIMITATION: things like kbd_getTextFromCmd() cannot work for other sections than the main one
+// API LIMITATION: could be much simplified if we could retrieve string ids fom cmdIds, 
+//                 e.g. if we had: const char* ReverseNamedCommandLookup(int)
 int GetSelectedAction(char* _section, int _secSize, int* _cmdId, char* _id, int _idSize, char* _desc, int _descSize)
 {
 	HWND hList = GetActionListBox(_section, _secSize);
@@ -540,12 +541,12 @@ bool GetSelectedAction(char* _idstrOut, int _idStrSz, KbdSectionInfo* _expectedS
 	return true;
 }
 
-//JFB!!! TODO: cleanup thanks to new APIs, e.g. SectionFromUniqueID()
 // dump actions or the wiki ALR summary for the current section *as displayed* in the action dlg
-// API LIMITATION: the action dlg is hacked because only the main section could be dumped othewise..
-// See http://forum.cockos.com/showthread.php?t=61929 and http://wiki.cockos.com/wiki/index.php/Action_List_Reference
+// see http://forum.cockos.com/showthread.php?t=61929 and http://wiki.cockos.com/wiki/index.php/Action_List_Reference
 // _type: 1 & 2 for ALR wiki (1=native actions, 2=SWS)
 // _type: 3, 4 & 5 for basic dump (3=native actions, 4=SWS, 5=user macros)
+// API LIMITATION: could be much simplified if we could retrieve string ids fom cmdIds, 
+//                 e.g. if we had: const char* ReverseNamedCommandLookup(int)
 bool DumpActionList(int _type, const char* _title, const char* _lineFormat, const char* _heading, const char* _ending)
 {
 	// keep the help text on a signle line (for the langpack gen tool..)

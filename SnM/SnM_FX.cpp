@@ -416,9 +416,8 @@ int GetSelectedTrackFX(MediaTrack* _tr)
 // FX presets helpers
 ///////////////////////////////////////////////////////////////////////////////
 
-// API LIMITATION: get can't get preset names (without activating them)
+// API LIMITATION: get can't get preset names without activating them
 // => parse ini files instead => limited to user presets (.rpl) ATM
-//
 // _fxType: as defined in FX chunk ("VST", "AU", etc..)
 // _fxName: as defined in FX chunk ("foo.dll", etc..)
 // it is up to the caller to unalloc _presetNames

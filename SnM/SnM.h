@@ -38,10 +38,12 @@
 //#define _SNM_DEBUG
 //#define _SNM_SCREENSET_DEBUG
 //#define _SNM_DYN_FONT_DEBUG
+//#define _SNM_RGNPL_DEBUG1
+//#define _SNM_RGNPL_DEBUG2
 //#define _SNM_MISC				// not released, deprecated, tests, etc..
 //#define _SNM_WDL				// if my WDL version is used
-#define _SNM_HOST_AW			// hosts Adam's stuff
-//#define _SNM_OVERLAYS			// looks bad with some themes ATM
+#define _SNM_HOST_AW			// host Adam's stuff
+//#define _SNM_OVERLAYS			// look bad with some themes ATM
 //#define _SNM_MUTEX			// un-mutexing since IReaperControlSurface::Run() is called from the main thread
 //#define _SNM_LAZY_SLOTS		// WIP
 

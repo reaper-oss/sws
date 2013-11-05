@@ -36,7 +36,8 @@
 // SNM_DynSizedText
 ///////////////////////////////////////////////////////////////////////////////
 
-// split the text into lines and store them (not to do that in OnPaint())
+// split the text into lines and store them (not to do that in OnPaint()),
+// empty lines are ignored
 // _col: 0 to use the default theme text color
 void SNM_DynSizedText::SetText(const char* _txt, int _col, unsigned char _alpha)
 { 
@@ -51,23 +52,26 @@ void SNM_DynSizedText::SetText(const char* _txt, int _col, unsigned char _alpha)
 
 	if (_txt && *_txt)
 	{
-		int maxLineLen=0;
+		int maxLineLen=0, len;
 		const char* p=_txt, *p2=NULL;
-		while (p2 = FindFirstRN(p))
+		while (p2 = FindFirstRN(p, true)) // \r or \n in any order (for OSX..)
 		{
-			int len = (int)(p2-p);
-			if (len > maxLineLen) {
-				maxLineLen = len;
-				m_maxLineIdx = m_lines.GetSize();
+			if (len = (int)(p2-p))
+			{
+				if (len > maxLineLen) {
+					maxLineLen = len;
+					m_maxLineIdx = m_lines.GetSize();
+				}
+
+				WDL_FastString* line = new WDL_FastString;
+				line->Append(p, len);
+				m_lines.Add(line);
+				p = p2+1;
 			}
 
-			WDL_FastString* line = new WDL_FastString;
-			line->Append(p, len);
-			m_lines.Add(line);
-			p = p2+1;
-			if (*p == '\r') p++;
-			if (*p == '\n') p++;
-			if (*p == '\0') break;
+			while (*p && (*p == '\r' || *p == '\n')) p++;
+
+			if (!*p) break;
 		}
 		if (p && *p && !p2)
 		{
@@ -77,21 +81,32 @@ void SNM_DynSizedText::SetText(const char* _txt, int _col, unsigned char _alpha)
 			m_lines.Add(s);
 		}
 	}
+	m_lastFontH = -1; // will force font refresh
 	RequestRedraw(NULL);
-} 
+}
 
 void SNM_DynSizedText::DrawLines(LICE_IBitmap* _drawbm, RECT* _r, int _fontHeight)
 {
+	if (!m_font.GetHFont() || m_lastFontH<=0)
+		return;
+
 	RECT tr;
-	tr.top = _r->top + int((_r->bottom-_r->top)/2 - (_fontHeight*m_lines.GetSize())/2 + 0.5);
+	tr.top = _r->top + int((_r->bottom-_r->top)/2.0 - (_fontHeight*m_lines.GetSize())/2.0 + 0.5);
 	tr.left = _r->left;
 	tr.right = _r->right;
 	
 	for (int i=0; i < m_lines.GetSize(); i++)
 	{
 		tr.bottom = tr.top+_fontHeight;
-		if (m_font.GetHFont() && m_lastFontH>0)
-			m_font.DrawText(_drawbm, m_lines.Get(i)->Get(), -1, &tr, m_align | (m_alpha<255 ? (LICE_DT_USEFGALPHA|LICE_DT_NEEDALPHA) : 0)); // cleartype not supported w/ LICE_DT_USEFGALPHA
+#ifdef _SNM_DYN_FONT_DEBUG
+		LICE_DrawRect(_drawbm, tr.left, tr.top, tr.right, tr.bottom, LICE_RGBA(255,255,255,255));
+#endif
+		m_font.DrawText(
+			_drawbm, 
+			m_lines.Get(i)->Get(), -1, &tr,
+			// DT_BOTTOM to avoid cropped display (issue 606)
+			m_align | (m_alpha<255 ? (DT_SINGLELINE|DT_NOPREFIX|DT_BOTTOM|LICE_DT_USEFGALPHA|LICE_DT_NEEDALPHA) : DT_SINGLELINE|DT_NOPREFIX|DT_BOTTOM)
+		);
 		tr.top = tr.bottom;
 	}
 }
@@ -112,7 +127,6 @@ bool SNM_DynSizedText::HasTitleLane() {
 	return (m_visible && m_title.GetLength() && (m_position.bottom-m_position.top) > 4*GetTitleLaneHeight());
 }
 
-//JFB!? with big fonts LICE_FONT_FLAG_FORCE_NATIVE seems ignored..
 void SNM_DynSizedText::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect)
 {
 	RECT r = m_position;
@@ -154,13 +168,13 @@ void SNM_DynSizedText::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y,
 			// others props are set on demand (support theme switches)
 		}
 		sFont.SetBkMode(TRANSPARENT);
-		sFont.SetTextColor(LICE_RGBA_FROMNATIVE(WDL_STYLE_GetSysColor(COLOR_WINDOW), 255));
+		sFont.SetTextColor(LICE_RGBA_FROMNATIVE(WDL_STYLE_GetSysColor(COLOR_WINDOW), 255)); // "negative" color
 
 		{
 			RECT tr = {r.left,r.top,r.right,r.top+laneHeight};
 			char buf[64] = "";
 			_snprintfSafe(buf, sizeof(buf), " %s ", m_title.Get()); // trick for better display when left/right align
-			sFont.DrawText(drawbm, buf, -1, &tr, DT_SINGLELINE|DT_VCENTER|m_titleAlign);
+			sFont.DrawText(drawbm, buf, -1, &tr, DT_SINGLELINE|DT_NOPREFIX|DT_VCENTER|m_titleAlign);
 		}
 
 		// resize draw rect: take band into account
@@ -175,12 +189,12 @@ void SNM_DynSizedText::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y,
 
 
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef _SNM_MISC // 1st sol.: use full width but several fonts can be tried
+#ifndef _SNM_MISC // 1st sol.: full width but several fonts can be tried
 
 
 	// initial font height estimation
 	// touchy: the better estimation, the less cpu use!
-	int estimFontH = int((w*2.65)/m_lines.Get(m_maxLineIdx)->GetLength()); // 2.625 = average from tests..
+	int estimFontH = int((w*2.65)/m_lines.Get(m_maxLineIdx)->GetLength()); // 2.65 = average from tests..
 	if (estimFontH > int(h/m_lines.GetSize())+0.5)
 		estimFontH = int(h/m_lines.GetSize()+0.5);
 
@@ -203,18 +217,17 @@ void SNM_DynSizedText::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y,
 		{
 			HFONT lf = CreateFont(m_lastFontH,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
 				OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,m_fontName.Get());
+
 			m_font.SetFromHFont(lf, LICE_FONT_FLAG_OWNS_HFONT|LICE_FONT_FLAG_FORCE_NATIVE);
 			m_font.SetBkMode(TRANSPARENT);
 			m_font.SetTextColor(col);
 
 			RECT tr = {0,0,0,0};
-			m_font.DrawText(NULL, m_lines.Get(m_maxLineIdx)->Get(), -1, &tr, DT_CALCRECT);
-			
-			if ((tr.right - tr.left) > (w-int(w*0.02+0.5)) // room: 2% of w
-/*JFB ensures no top/bottom truncation but much more font creations => clamp to h/m_lines.GetSize() instead, see above..
-				|| (tr.bottom - tr.top) > (h-int(h*0.02+0.5)) // room: 2% of h
-*/
-				)
+
+			// DT flags must be consistent with DrawLines()
+			m_font.DrawText(NULL, m_lines.Get(m_maxLineIdx)->Get(), -1, &tr, DT_SINGLELINE|DT_BOTTOM|DT_NOPREFIX|DT_CALCRECT);
+
+			if ((tr.right - tr.left) > (w-int(w*0.02+0.5))) // room: 2% of w
 			{
 				m_font.SetFromHFont(NULL,LICE_FONT_FLAG_OWNS_HFONT);
 				DeleteObject(lf);
@@ -226,7 +239,7 @@ void SNM_DynSizedText::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y,
 			else
 			{
 				DrawLines(drawbm, &r, m_lastFontH);
-				// no font deletion: we will try to re-use it..
+				// no font deletion: will try to re-use it..
 				break;
 			}
 		}
@@ -243,7 +256,7 @@ void SNM_DynSizedText::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y,
 
 
 /*JFB commented: truncated text..
-	int fontHeight = int((w*2.65)/m_lines.Get(m_maxLineIdx)->GetLength()); // 2.625 = average from tests..
+	int fontHeight = int((w*2.65)/m_lines.Get(m_maxLineIdx)->GetLength()); // 2.65 = average from tests..
 	if (fontHeight > int(h/m_lines.GetSize())+0.5)
 		fontHeight = int(h/m_lines.GetSize()+0.5);
 */
@@ -671,7 +684,7 @@ LICE_CachedFont* SNM_KnobCaption::GetFont()
 #endif
 }
 
-// just to make both DT_VCENTER & DT_CALCRECT calls possible..
+// factorization for _dtFlags..
 void SNM_KnobCaption::DrawText(LICE_IBitmap* _drawbm, RECT* _rect, UINT _dtFlags)
 {
 	if (LICE_CachedFont* font = GetFont())
@@ -696,7 +709,7 @@ void SNM_KnobCaption::OnPaint(LICE_IBitmap* drawbm, int origin_x, int origin_y, 
 	r.bottom += origin_y;
 
 	RECT tr = {r.left+SNM_GUI_W_H_KNOB+2, r.top, r.right, r.bottom}; // +2: room w/ knob
-	DrawText(drawbm, &tr, DT_VCENTER);
+	DrawText(drawbm, &tr, DT_NOPREFIX|DT_VCENTER);
 }
 
 
@@ -756,7 +769,7 @@ void SNM_SkinToolbarButton(SNM_ToolbarButton* _btn, const char* _text)
 void SNM_SkinKnob(SNM_Knob* _knob)
 {
 	static WDL_VirtualSlider_SkinConfig sSkin;
-	IconTheme* it = SNM_GetIconTheme(true); // true: knobs are recent (v4)
+	IconTheme* it = SNM_GetIconTheme(true); // true: knobs are ~recent (v4)
 	if (it && it->knob.bgimage)
 	{
 		WDL_VirtualSlider_PreprocessSkinConfig(&sSkin);
@@ -826,7 +839,7 @@ bool SNM_AutoVWndPosition(UINT _align, WDL_VWnd* _comp, WDL_VWnd* _tiedComp, con
 		{
 			WDL_VirtualStaticText* txt = (WDL_VirtualStaticText*)_comp;
 			RECT tr = {0,0,0,0};
-			txt->GetFont()->DrawText(NULL, txt->GetText(), -1, &tr, DT_CALCRECT);
+			txt->GetFont()->DrawText(NULL, txt->GetText(), -1, &tr, DT_SINGLELINE|DT_NOPREFIX|DT_CALCRECT);
 			width = tr.right;
 			height = tr.bottom;
 		}
@@ -837,7 +850,7 @@ bool SNM_AutoVWndPosition(UINT _align, WDL_VWnd* _comp, WDL_VWnd* _tiedComp, con
 			for (int i=0; i < cb->GetCount(); i++)
 			{
 				RECT tr = {0,0,0,0};
-				cb->GetFont()->DrawText(NULL, cb->GetItem(i), -1, &tr, DT_CALCRECT);
+				cb->GetFont()->DrawText(NULL, cb->GetItem(i), -1, &tr, DT_SINGLELINE|DT_NOPREFIX|DT_CALCRECT);
 				if (tr.right > width)
 					width = tr.right;
 				if (tr.bottom > height)
@@ -866,7 +879,7 @@ bool SNM_AutoVWndPosition(UINT _align, WDL_VWnd* _comp, WDL_VWnd* _tiedComp, con
 			if (btn->GetFont())
 			{
 				RECT tr = {0,0,0,0};
-				btn->GetFont()->DrawText(NULL, btn->GetTextLabel(), -1, &tr, DT_CALCRECT);
+				btn->GetFont()->DrawText(NULL, btn->GetTextLabel(), -1, &tr, DT_SINGLELINE|DT_NOPREFIX|DT_CALCRECT);
 				if (tr.bottom > height)
 					height = int(tr.bottom + tr.bottom/2 + 0.5);
 				if ((tr.right+int(height/2 + 0.5)) > width)
@@ -884,9 +897,9 @@ bool SNM_AutoVWndPosition(UINT _align, WDL_VWnd* _comp, WDL_VWnd* _tiedComp, con
 		{
 			SNM_KnobCaption* knobCap = (SNM_KnobCaption*)_comp;
 			RECT tr = {0,0,0,0};
-			knobCap->DrawText(NULL, &tr, DT_CALCRECT);
+			knobCap->DrawText(NULL, &tr, DT_NOPREFIX|DT_CALCRECT); // multi-line
 			width = SNM_GUI_W_H_KNOB + 2 + tr.right; // +2 room between knob & caption, see SNM_KnobCaption::OnPaint()
-			height=tr.bottom*2; // 2 lines of text
+			height=tr.bottom;
 		}
 		else  if (!strcmp(_comp->GetType(), "SNM_TwoTinyButtons")) {
 			width=9;

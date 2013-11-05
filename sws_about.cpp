@@ -1,7 +1,7 @@
 /******************************************************************************
 / sws_about.cpp
 /
-/ Copyright (c) 2009 Tim Payne (SWS), Jeffos
+/ Copyright (c) 2013 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -135,7 +135,7 @@ INT_PTR WINAPI doAbout(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		else if (wParam == IDCANCEL)
 		{
 			SetStartupSearchOptions(!!IsDlgButtonChecked(hwndDlg, IDC_CHECK1), !!IsDlgButtonChecked(hwndDlg, IDC_CHECK2), 0);
-			EndDialog(hwndDlg, 0);
+			ShowWindow(hwndDlg, SW_HIDE);
 		}
 	}
 	return 0;
@@ -143,7 +143,11 @@ INT_PTR WINAPI doAbout(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 void OpenAboutBox(COMMAND_T*)
 {
-	DialogBox(g_hInst,MAKEINTRESOURCE(IDD_ABOUT), g_hwndParent, doAbout);
+	static HWND sHwndAbout = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_ABOUT), g_hwndParent, doAbout);
+	if (IsWindowVisible(sHwndAbout))
+		ShowWindow(sHwndAbout, SW_HIDE);
+	else
+		ShowWindow(sHwndAbout, SW_SHOW);
 }
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions

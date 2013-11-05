@@ -35,14 +35,17 @@
 
 #define NOTES_UPDATE_FREQ		150
 
-
-enum
-{
+// note types
+enum {
   SNM_NOTES_PROJECT=0,
   SNM_NOTES_ITEM,
   SNM_NOTES_TRACK,
-  SNM_NOTES_REGION_NAME,
-  SNM_NOTES_REGION_SUBTITLES,
+  SNM_NOTES_MKR_NAME,
+  SNM_NOTES_RGN_NAME,
+  SNM_NOTES_MKRRGN_NAME,
+  SNM_NOTES_MKR_SUB,
+  SNM_NOTES_RGN_SUB,
+  SNM_NOTES_MKRRGN_SUB,
   SNM_NOTES_ACTION_HELP // must remain the last item: no OSX support yet 
 };
 
@@ -103,18 +106,18 @@ public:
 	void GetMinSize(int* _w, int* _h) { *_w=MIN_DOCKWND_WIDTH; *_h=140; }
 	void ToggleLock();
 
-	void SaveCurrentText(int _type);
-	void SaveCurrentPrjNotes();
-	void SaveCurrentHelp();
-	void SaveCurrentItemNotes();
-	void SaveCurrentTrackNotes();
-	void SaveCurrentMkrRgnNameOrNotes(bool _name);
+	void SaveCurrentText(int _type, bool _wantUndo = true);
+	void SaveCurrentPrjNotes(bool _wantUndo = true);
+	void SaveCurrentItemNotes(bool _wantUndo = true);
+	void SaveCurrentTrackNotes(bool _wantUndo = true);
+	void SaveCurrentMkrRgnNameOrSub(int _type, bool _wantUndo = true);
+	void SaveCurrentHelp(); // no undo for action help (saved in a .ini)
 
 	void Update(bool _force = false);
 	int UpdateActionHelp();
 	int UpdateItemNotes();
 	int UpdateTrackNotes();
-	int UpdateMkrRgnNameOrNotes(bool _name);
+	int UpdateMkrRgnNameOrSub(int _type);
 
 protected:
 	void OnInitDlg();
@@ -127,7 +130,7 @@ protected:
 	void DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight = NULL);
 	bool GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOutSz);
 
-	WDL_VirtualComboBox m_cbType;
+	SNM_VirtualComboBox m_cbType;
 	WDL_VirtualIconButton m_btnLock;
 	SNM_ToolbarButton m_btnAlr, m_btnActionList, m_btnImportSub, m_btnExportSub;
 	WDL_VirtualStaticText m_txtLabel;

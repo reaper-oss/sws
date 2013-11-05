@@ -157,6 +157,7 @@ int ExplodeCyclaction(int _section, const char* _cmdStr, WDL_PtrList<WDL_FastStr
 int ExplodeConsoleAction(int _section, const char* _cmdStr, WDL_PtrList<WDL_FastString>* _cmds, WDL_PtrList<WDL_FastString>* _macros, WDL_PtrList<WDL_FastString>* _consoles, int _flags);
 
 int RegisterCyclation(const char* _name, int _type, int _cycleId, int _cmdId);
+void CAsInit();
 int CyclactionInit();
 void CyclactionExit();
 void OpenCyclaction(COMMAND_T*);

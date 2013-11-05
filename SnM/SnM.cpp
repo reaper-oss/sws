@@ -340,8 +340,12 @@ static COMMAND_T s_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (project notes)" }, "S&M_SHOWNOTESHELP", OpenNotes, NULL, SNM_NOTES_PROJECT, IsNotesDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (item notes)" }, "S&M_ITEMNOTES", OpenNotes, NULL, SNM_NOTES_ITEM, IsNotesDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (track notes)" }, "S&M_TRACKNOTES", OpenNotes, NULL, SNM_NOTES_TRACK, IsNotesDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (marker/region names)" }, "S&M_MARKERNAMES", OpenNotes, NULL, SNM_NOTES_REGION_NAME, IsNotesDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (marker/region subtitles)" }, "S&M_MARKERSUBTITLES", OpenNotes, NULL, SNM_NOTES_REGION_SUBTITLES, IsNotesDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (marker names)" }, "S&M_MKR_NAMES", OpenNotes, NULL, SNM_NOTES_MKR_NAME, IsNotesDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (region names)" }, "S&M_RGN_NAMES", OpenNotes, NULL, SNM_NOTES_RGN_NAME, IsNotesDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (marker/region names)" }, "S&M_MARKERNAMES", OpenNotes, NULL, SNM_NOTES_MKRRGN_NAME, IsNotesDisplayed}, // custom id poorly named for historical reasons...
+	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (marker subtitles)" }, "S&M_MKR_SUBTITLES", OpenNotes, NULL, SNM_NOTES_MKR_SUB, IsNotesDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (region subtitles)" }, "S&M_RGN_SUBTITLES", OpenNotes, NULL, SNM_NOTES_RGN_SUB, IsNotesDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (marker/region subtitles)" }, "S&M_MARKERSUBTITLES", OpenNotes, NULL, SNM_NOTES_MKRRGN_SUB, IsNotesDisplayed}, // custom id poorly named for historical reasons...
 #ifdef _WIN32
 	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (action help)" }, "S&M_ACTIONHELP", OpenNotes, NULL, SNM_NOTES_ACTION_HELP, IsNotesDisplayed},
 #endif
@@ -1136,7 +1140,7 @@ void IniFileInit()
 	g_SNM_ToolbarRefreshFreq = BOUNDED(GetPrivateProfileInt("General", "ToolbarsAutoRefreshFreq", SNM_DEF_TOOLBAR_RFRSH_FREQ, g_SNM_IniFn.Get()), 100, 5000);
 	g_SNM_SupportBuggyPlug = GetPrivateProfileInt("General", "BuggyPlugsSupport", 0, g_SNM_IniFn.Get());
 #ifdef _WIN32
-	g_SNM_ClearType = (GetPrivateProfileInt("General", "ClearTypeFont", 0, g_SNM_IniFn.Get()) == 1);
+	g_SNM_ClearType = (GetPrivateProfileInt("General", "ClearTypeFont", 1, g_SNM_IniFn.Get()) == 1);
 	fn.SetLen(SNM_MAX_PATH);
 	GetPrivateProfileString("General", "DiffTool", "", fn.Get(), SNM_MAX_PATH, g_SNM_IniFn.Get());
 	g_SNM_DiffToolFn.Set(fn.Get());
@@ -1189,6 +1193,12 @@ static void SNM_Menuhook(const char* _menustr, HMENU _hMenu, int _flag) {
 }
 #endif
 
+void OnInitTimer()
+{
+	plugin_register("-timer",(void*)OnInitTimer); // unregister timer (single call)
+	CAsInit();
+}
+
 int SNM_Init(reaper_plugin_info_t* _rec)
 {
 	if (!_rec)
@@ -1221,7 +1231,10 @@ int SNM_Init(reaper_plugin_info_t* _rec)
 	ImageInit();
 	RegionPlaylistInit();
 	ReaProjectInit();
-	CyclactionInit(); // keep it as the last one!
+	CyclactionInit();
+
+	// callback when REAPER is fully initialized 
+	plugin_register("timer",(void*)OnInitTimer);
 
 	return 1;
 }

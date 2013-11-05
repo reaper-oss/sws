@@ -58,12 +58,7 @@ void SNM_UIRefresh(COMMAND_T* _ct)
 
 // native font rendering default value
 // note: not configurable on osx, optional on win (s&m.ini)
-bool g_SNM_ClearType =
-#ifdef _WIN32
-	false;
-#else
-	true;
-#endif
+bool g_SNM_ClearType = true;
 
 ColorTheme* SNM_GetColorTheme(bool _checkForSize) {
 	int sz; ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(&sz);

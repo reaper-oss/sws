@@ -82,12 +82,14 @@ const char* GetCAIniSection(int _sectionIdx) {
 
 // this func works for CAs that are not registered yet
 // (i.e. does not use NamedCommandLookup())
-Cyclaction* GetCAFromCustomId(int _section, const char* _cmdStr)
+Cyclaction* GetCAFromCustomId(int _section, const char* _cmdStr, int* _cycleId = NULL)
 {
 	 // atoi() ok because custom ids are 1-based
 	if (_cmdStr && *_cmdStr)
-		if (int id = atoi((const char*)(_cmdStr + (*_cmdStr=='_'?1:0) + strlen(GetCACustomId(_section)))))
+		if (int id = atoi((const char*)(_cmdStr + (*_cmdStr=='_'?1:0) + strlen(GetCACustomId(_section))))) {
+			if (_cycleId) *_cycleId = id;
 			return g_cas[_section].Get(id-1);
+		}
 	return NULL;
 }
 
@@ -154,15 +156,14 @@ int IsInstructionWithParam(int _id) {
 ///////////////////////////////////////////////////////////////////////////////
 // Explode _cmdStr into "atomic" actions
 // IMPORTANT: THOSE FUNCS ASSUME ACTIONS ARE NOT YET REGISTERED
-// _flags: &1=perform
-//         &2=get 1st toggle state
-//         &8=explode all CAs' steps (current step only otherwise)
-// _cmdStr: custom id to explode
-// _cmds: if _flags&8 (recusion check): internal list of parent commands
-//        otherwise: output list of exploded commands
-//        in any case, it is up to the caller to unalloc items
-// _macros: to optimize accesses to reaper-kb.ini, 
-//          if NULL, macros won't be exploded, no file access
+// _flags:    &1=perform
+//            &2=get 1st toggle state
+//            &8=explode all CAs' steps (current step only otherwise)
+// _cmdStr:   custom id to explode
+// _cmds:     output list of exploded commands
+//            it is up to the caller to unalloc items!
+// _macros:   to optimize accesses to reaper-kb.ini, 
+//            if NULL, macros won't be exploded, no file access
 // _consoles: to optimize accesses to reaconsole_customcommands.txt
 //
 // return values:
@@ -217,8 +218,8 @@ int ExplodeMacro(int _section, const char* _cmdStr,
 {
 	if (_flags&2) return -1; // macros/scripts do not report toggle states
 
-	// safe single lazy init of _macros
-	if (_macros) // want macro explosion?
+	 // want macro explosion?
+	if (_macros)
 	{
 		bool loadOk = true;
 		if (!_macros->GetSize()) {
@@ -233,15 +234,14 @@ int ExplodeMacro(int _section, const char* _cmdStr,
 		{
 			return -1;
 		}
+		// macro?
 		else if (r==1) // macro only!
 		{
-			int parentIdx = -1;
 			WDL_FastString* parentCmd = NULL;
 			if (_cmds)
 			{
 				if (!CheckRecursiveCmd(_cmdStr, _cmds))
 					return -2;
-				parentIdx = _cmds->GetSize();
 				parentCmd = _cmds->Add(new WDL_FastString(_cmdStr));
 			}
 			for (int i=0; i<subCmds.GetSize(); i++) {
@@ -249,11 +249,17 @@ int ExplodeMacro(int _section, const char* _cmdStr,
 				if (r<0) return r;
 			}
 			// it's a recursion check, not a dup check => remove the parent cmd
-			if (_cmds && parentIdx>=0)
-				_cmds->Delete(parentIdx, true);
+			if (_cmds && parentCmd)
+				_cmds->Delete(_cmds->Find(parentCmd), true);
 			return 1;
 		}
-		// ... else: it's a script => fall through
+		// script?
+		else if (r==2)
+		{
+			// fall through...
+			// we could analyze action calls within scripts but we just rely on 
+			// hookCommandProc() and toggleActionHook() recursivity checks instead...
+		}
 	}
 
 	if (_cmds)
@@ -278,20 +284,21 @@ int ExplodeCyclaction(int _section, const char* _cmdStr,
 	if (!action) action = GetCAFromCustomId(_section, _cmdStr); 
 	if (!action) return -1;
 
-	if (_flags&2) 
-		switch(action->IsToggle()) {
+	if (_flags&2)
+	{
+		switch(action->IsToggle())
+		{
 			case 1: return action->m_fakeToggle ? 1 : 0; 
 			case 2: break; // real toggle state: requires explosion, see below..
 			default: return -1;
 		}
+	}
 
-	int parentIdx = -1;
 	WDL_FastString* parentCmd = NULL;
 	if (_cmds)
 	{
 		if (!CheckRecursiveCmd(_cmdStr, _cmds))
 			return -2;
-		parentIdx = _cmds->GetSize();
 		parentCmd = _cmds->Add(new WDL_FastString(_cmdStr));
 	}
 
@@ -327,8 +334,8 @@ int ExplodeCyclaction(int _section, const char* _cmdStr,
 	}
 
 	// it's a recursion check, not a dup check => remove the parent cmd
-	if (_cmds && parentIdx>=0)
-		_cmds->Delete(parentIdx, true);
+	if (_cmds && parentCmd)
+		_cmds->Delete(_cmds->Find(parentCmd), true);
 
 #ifdef _SNM_DEBUG
 	if (_cmds)
@@ -584,16 +591,14 @@ void RunCycleAction(int _section, COMMAND_T* _ct)
 			// (try to) switch to the next action step if nothing has been performed
 			// this avoid to have to run some CAs once before they sync properly
 			// note: m_performState is already updated via ExplodeCyclaction()
-			else //JFB!!! if (action->IsToggle()==2)
+			else //JFB!! if (action->IsToggle()==2)
 			{
 				// cycled back to the 1st step?
 				if (!action->m_performState)
 					break;
 			}
 		} // if (ExplodeCyclaction())
-
 	} // for(;;)
-
 }
 
 void RunCyclaction(COMMAND_T* _ct) {
@@ -633,6 +638,8 @@ int IsCyclactionEnabled(COMMAND_T* _ct) {
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// Tests & error messages 
+///////////////////////////////////////////////////////////////////////////////
 
 bool CheckEditableCyclaction(const char* _actionStr, WDL_FastString* _errMsg, bool _allowEmpty = true)
 {
@@ -656,7 +663,7 @@ bool AppendErrMsg(int _section, Cyclaction* _a, WDL_FastString* _outErrMsg, cons
 	{
 		WDL_FastString errMsg;
 		errMsg.AppendFormatted(256, 
-			__LOCALIZE_VERFMT("ERROR: the cycle action '%s' of the section '%s' was not registered!","sws_DLG_161"), 
+			__LOCALIZE_VERFMT("ERROR: '%s' (section '%s') was not registered!","sws_DLG_161"), 
 			_a ? _a->GetName() : __LOCALIZE("invalid cycle action","sws_DLG_161"), 
 			SNM_GetActionSectionName(_section));
 		if (_msg && *_msg)
@@ -667,7 +674,9 @@ bool AppendErrMsg(int _section, Cyclaction* _a, WDL_FastString* _outErrMsg, cons
 			errMsg.Append(_msg);
 		}
 		errMsg.Append("\n\n");
-		_outErrMsg->Insert(&errMsg, 0); // so that errors are on top, warnings at bottom
+
+		if (!strstr(_outErrMsg->Get(), errMsg.Get()))
+			_outErrMsg->Insert(&errMsg, 0); // so that errors are on top, warnings at bottom
 	}
 	return false; // for facility
 }
@@ -676,20 +685,25 @@ void AppendWarnMsg(int _section, Cyclaction* _a, WDL_FastString* _outWarnMsg, co
 {
 	if (_a && _outWarnMsg)
 	{
-		_outWarnMsg->AppendFormatted(256, 
-			__LOCALIZE_VERFMT("Warning: the cycle action '%s' of the section '%s' has been registered but it could be improved!","sws_DLG_161"), 
+		WDL_FastString warnMsg;
+		warnMsg.AppendFormatted(256, 
+			__LOCALIZE_VERFMT("Warning: '%s' (section '%s') has been registered but it could be improved!","sws_DLG_161"), 
 			_a->GetName(), SNM_GetActionSectionName(_section));
-		_outWarnMsg->Append("\n");
-		_outWarnMsg->Append(__LOCALIZE("Details:","sws_DLG_161"));
-		_outWarnMsg->Append(" ");
-		_outWarnMsg->Append(_msg);
-		_outWarnMsg->Append("\n\n");
+		warnMsg.Append("\n");
+		warnMsg.Append(__LOCALIZE("Details:","sws_DLG_161"));
+		warnMsg.Append(" ");
+		warnMsg.Append(_msg);
+		warnMsg.Append("\n\n");
+
+		if (!strstr(_outWarnMsg->Get(), warnMsg.Get()))
+			_outWarnMsg->Append(&warnMsg);
 	}
 }
 
-// _macros: just to optimize potential accesses to reaper-kb.ini
-// _applyMsg: non NULL only when the user is applying (i.e. NULL during init)
-bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_PtrList<WDL_FastString>* _macros, WDL_PtrList<WDL_FastString>* _consoles, WDL_FastString* _applyMsg = NULL)
+bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, 
+								 WDL_PtrList<WDL_FastString>* _macros, 
+								 WDL_PtrList<WDL_FastString>* _consoles, 
+								 WDL_FastString* _applyMsg)
 {
 	KbdSectionInfo* kbdSec = SNM_GetActionSection(_section);
 	if (kbdSec && _a && !_a->IsEmpty())
@@ -732,9 +746,9 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_PtrList<WDL_F
 				else if (!_stricmp(INSTRUC_IFNOT, cmd) || !_stricmp(INSTRUC_IF, cmd))
 				{
 					instructions++;
-#ifdef _SNM_REAPER_BUG // GetToggleCommandState2() KO in other sections than the main one
+#ifdef _SNM_REAPER_BUG // GetToggleCommandState2() KO in other sections than the main one (REAPER v4.402)
 					if (_section) {
-						str.SetFormatted(256, __LOCALIZE_VERFMT("%s (or %s) is only supported in the section '%s'","sws_DLG_161"), INSTRUC_IF, INSTRUC_IFNOT, SNM_GetActionSectionName(_section));
+						str.SetFormatted(256, __LOCALIZE_VERFMT("%s (or %s) is only supported in the section '%s'","sws_DLG_161"), INSTRUC_IF, INSTRUC_IFNOT, SNM_GetActionSectionName(0));
 						return AppendErrMsg(_section, _a, _applyMsg, str.Get());
 					}
 #endif
@@ -743,34 +757,31 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_PtrList<WDL_F
 					if ((i+1)<cmdSz)
 					{
 						nextCmd = _a->GetCmd(i+1);
-						if (strstr(nextCmd, "_CYCLACTION")) {
+						if (strstr(nextCmd, "_CYCLACTION"))
+						{
 							if (Cyclaction* nextAction = GetCAFromCustomId(_section, nextCmd))
 								tglOk = (nextAction->IsToggle() >= 0);
 						}
-						else if (IsMacroOrScript(nextCmd, false) || strstr(nextCmd, "_SWSCONSOLE_CUST")) {
+						else if (IsMacroOrScript(nextCmd, false) || strstr(nextCmd, "_SWSCONSOLE_CUST"))
+						{
 							// script, macros & console cmds do not report any toggle state
 						}
-
-						// either an "atomic" SWS or a native action at this point -> both action are registered, even at init
-						// BUT, for other 3rd part extensions, during init: dunno.. so, check if the user is applying
-						else if (_applyMsg)
+						else
 						{
-							// no SNM_NamedCommandLookup hard check here: custom ids might be known even if not registered yet
-							// (e.g. unregister/re-register CAs when applying..)
 							if (!_section)
 								tglOk = (GetToggleCommandState2(kbdSec, SNM_NamedCommandLookup(nextCmd, kbdSec)) >= 0);
+#ifndef _SNM_REAPER_BUG // see #ifdef above..
 							// for other sections the toggle state can depend on focus, etc..
-							// => in doubt, we authorize everything, nextCmd will be checked in next iteration anyway
+							// => in doubt, we authorize it
 							else
 								tglOk = true;
+#endif
 						}
-						else
-							tglOk = true; // at init time: can't say..
 					}
 
 					if (!tglOk)
 					{
-						str.SetFormatted(256, __LOCALIZE_VERFMT("%s (or %s) must be followed by an action that reports a toggle state","sws_DLG_161"), INSTRUC_IF, INSTRUC_IFNOT);
+						str.SetFormatted(256, __LOCALIZE_VERFMT("%s (or %s) must be followed by an action that reports a toggle state\nTip: such actions report \"on\" or \"off\" in the column \"State\" of the Actions window","sws_DLG_161"), INSTRUC_IF, INSTRUC_IFNOT);
 						return AppendErrMsg(_section, _a, _applyMsg, str.Get());
 					}
 
@@ -867,6 +878,8 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_PtrList<WDL_F
 				}
 
 				// explode everything and do more checks: validity, non recursive, etc...
+				// note: recursion via scripts is possible (not parsed) => we rely on hookCommandProc() and 
+				//       toggleActionHook() checks to avoid any stack overflow, it is an user error anyway...
 				WDL_PtrList_DeleteOnDestroy<WDL_FastString> parentCmds;
 				switch (ExplodeCmd(_section, cmd, &parentCmds, _macros, _consoles, 0x8))
 				{
@@ -874,16 +887,12 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_PtrList<WDL_F
 						str.SetFormatted(256, __LOCALIZE_VERFMT("unknown command ID or identifier string '%s'","sws_DLG_161"), cmd);
 						return AppendErrMsg(_section, _a, _applyMsg, str.Get());
 					case -2:
-						return AppendErrMsg(_section, _a, _applyMsg, __LOCALIZE("recursive action (i.e. uses itself)","sws_DLG_161"));
+						return AppendErrMsg(_section, _a, _applyMsg, __LOCALIZE("recursive action (i.e. uses itself directly or indirectly)","sws_DLG_161"));
 					case -3:
 						return AppendErrMsg(_section, _a, _applyMsg, __LOCALIZE("cross-section cycle action","sws_DLG_161"));
 				}
 
-				// check cmd ids only when the user applies changes: at init time all actions might not be registered yet
-				// no SNM_NamedCommandLookup hard check here: custom ids might be known even if not registered yet
-				// (e.g. unregister/re-register CAs when applying..)
-				if(_applyMsg && !SNM_NamedCommandLookup(cmd, kbdSec))
-				{
+				if (!SNM_NamedCommandLookup(cmd, kbdSec)) {
 					str.SetFormatted(256, __LOCALIZE_VERFMT("unknown command ID or identifier string '%s'","sws_DLG_161"), cmd);
 					return AppendErrMsg(_section, _a, _applyMsg, str.Get());
 				}
@@ -892,7 +901,7 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_PtrList<WDL_F
 			///////////////////////////////////////////////////////////////////
 			// warnings?
 
-			if (_applyMsg) // avoid some useless file access, see GetMacroOrScript()
+			if (_applyMsg)
 			{
 				if (!warned && // not already warned?
 					(strstr(cmd, "_CYCLACTION") ||
@@ -921,7 +930,10 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_PtrList<WDL_F
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// Load, save and registration
+///////////////////////////////////////////////////////////////////////////////
 
+// primitive, see other RegisterCyclation() below
 // returns the cmd id, or 0 if failed
 // _cmdId: id to re-use or 0 to register a new cmd id
 // _cycleId: 1-based
@@ -945,6 +957,40 @@ int RegisterCyclation(const char* _name, int _section, int _cycleId, int _cmdId)
 	return 0;
 }
 
+// register a CA *recursively*, i.e. register sub-CAs and then the parent CA
+// mandatory for CheckRegisterableCyclaction() that would fail otherwise
+int RegisterCyclation(Cyclaction* _a, int _section, int _cycleId,
+					  WDL_PtrList_DeleteOnDestroy<WDL_FastString>* _macros,
+					  WDL_PtrList_DeleteOnDestroy<WDL_FastString>* _consoles,
+					  WDL_FastString* _applyMsg)
+{
+	if (_a && !_a->IsEmpty())
+	{
+		if (_a->m_cmdId)
+			return _a->m_cmdId;
+
+		static WDL_PtrList<Cyclaction> sSubCAs;
+		sSubCAs.Add(_a);
+		for (int i=0; i<_a->GetCmdSize(); i++)
+		{
+			int cycleId;
+			if (Cyclaction* a = GetCAFromCustomId(_section, _a->GetCmd(i), &cycleId))
+			{
+				if (sSubCAs.Find(a) == -1) {
+					a->m_cmdId = RegisterCyclation(a, _section, cycleId, _macros, _consoles, _applyMsg);
+					if (!a->m_cmdId) break; // simple break for sSubCAs cleanup + _applyMsg update
+				}
+				else break; // recursice CA! simple break for sSubCAs cleanup + _applyMsg update
+			}
+		}
+		sSubCAs.Delete(sSubCAs.Find(_a));
+
+		if (CheckRegisterableCyclaction(_section, _a, _macros, _consoles, _applyMsg))
+			return RegisterCyclation(_a->GetName(), _section, _cycleId, 0);
+	}
+	return 0;
+}
+
 void FlushCyclactions(int _section)
 {
 	for (int i=0; i<g_cas[_section].GetSize(); i++)
@@ -955,12 +1001,11 @@ void FlushCyclactions(int _section)
 	g_cas[_section].EmptySafe(true);
 }
 
-// _applyMsg: build error/warning msg (when applying)
 // _cyclactions: NULL to add/register to the main model, imports into _cyclactions otherwise
 // _section: section index or -1 for all sections
 // _iniFn: NULL => S&M.ini
 // remark: undo pref is ignored, only loads cycle actions so that the user keeps his own undo pref
-void LoadCyclactions(bool _applyMsg, WDL_PtrList_DeleteOnDestroy<Cyclaction>* _cyclactions = NULL, int _section = -1, const char* _iniFn = NULL)
+void LoadCyclactions(bool _wantMsg, WDL_PtrList_DeleteOnDestroy<Cyclaction>* _cyclactions = NULL, int _section = -1, const char* _iniFn = NULL)
 {
 	WDL_FastString msg;
 	char buf[32] = "", actionBuf[CA_MAX_LEN] = "";
@@ -989,14 +1034,14 @@ void LoadCyclactions(bool _applyMsg, WDL_PtrList_DeleteOnDestroy<Cyclaction>* _c
 					// import into _cyclactions
 					if (_cyclactions)
 					{
-						if (CheckEditableCyclaction(actionBuf, _applyMsg ? &msg : NULL, false))
+						if (CheckEditableCyclaction(actionBuf, _wantMsg ? &msg : NULL, false))
 							_cyclactions[sec].Add(new Cyclaction(actionBuf, true));
 					}
 					// 1st pass: add CAs to main model
 					// (registered later, in a 2nd pass, because of possible cross-references)
 					else
 					{
-						if (CheckEditableCyclaction(actionBuf, _applyMsg ? &msg : NULL, false))
+						if (CheckEditableCyclaction(actionBuf, _wantMsg ? &msg : NULL, false))
 							g_cas[sec].Add(new Cyclaction(actionBuf));
 						else
 							g_cas[sec].Add(new Cyclaction(CA_EMPTY)); // failed => adds a no-op cycle action in order to preserve cycle action ids
@@ -1004,19 +1049,16 @@ void LoadCyclactions(bool _applyMsg, WDL_PtrList_DeleteOnDestroy<Cyclaction>* _c
 				}
 			}
 
-			// 2nd pass: now that *all* CAs have been added, (try to) register them
+			// 2nd pass: now that *all* CAs have been added, (try to) register them recursively
+			// as CAs can call other CAs in any order (i.e. not in g_cas[sec]'s order)
 			if (!_cyclactions)
-			{
 				for (int j=0; j<g_cas[sec].GetSize(); j++)
 					if (Cyclaction* a = g_cas[sec].Get(j))
-						if (!a->IsEmpty()) // tested here to avoid lots of dummy err msgs when applying
-							if (CheckRegisterableCyclaction(sec, a, &macros, &consoles, _applyMsg ? &msg : NULL))
-								a->m_cmdId = RegisterCyclation(a->GetName(), sec, j+1, 0);
-			}
+						a->m_cmdId = RegisterCyclation(a, sec, j+1, &macros, &consoles, _wantMsg ? &msg : NULL); // recursive
 		}
 	}
 
-	if (_applyMsg && msg.GetLength())
+	if (_wantMsg && msg.GetLength())
 		SNM_ShowMsg(msg.Get(), __LOCALIZE("S&M - Warning","sws_DLG_161"), g_caWndMgr.GetMsgHWND());
 }
 
@@ -1321,7 +1363,8 @@ void EditModelInit()
 		actionsToDelete.Add(g_editedActions[g_editedSection].Get(i));
 
 	// model init (we display/edit copies for apply/cancel)
-	for (int sec=0; sec < SNM_MAX_CA_SECTIONS; sec++) {
+	for (int sec=0; sec < SNM_MAX_CA_SECTIONS; sec++)
+	{
 		g_editedActions[sec].EmptySafe(g_editedSection != sec); // keep current (displayed!) pointers
 		for (int i=0; i < g_cas[sec].GetSize(); i++)
 			g_editedActions[sec].Add(new Cyclaction(g_cas[sec].Get(i)));
@@ -2522,6 +2565,17 @@ static project_config_extension_t s_projectconfig = {
 
 ///////////////////////////////////////////////////////////////////////////////
 
+// called once REAPER is fully initialized, see SnM.cpp
+// i.e. when *all*  actions are registered (native or not)
+void CAsInit()
+{
+	LoadCyclactions(false);
+
+	g_editedSection = 0;
+	g_edited = false;
+	EditModelInit();
+}
+
 int CyclactionInit()
 {
 	// localization
@@ -2536,18 +2590,12 @@ int CyclactionInit()
 	// load undo pref (default == enabled for ascendant compatibility)
 	g_undos = (GetPrivateProfileInt("Cyclactions", "Undos", 1, g_SNM_IniFn.Get()) == 1 ? true : false); // in main S&M.ini file (local property)
 
-	// load cycle actions
-	LoadCyclactions(false); // do not check cmd ids (may not have been registered yet)
-
 	if (!plugin_register("projectconfig", &s_projectconfig))
 		return 0;
 
 	// instanciate the window if needed, can be NULL
 	g_caWndMgr.Init();
 
-	g_editedSection = 0;
-	g_edited = false;
-	EditModelInit();
 
 	return 1;
 }

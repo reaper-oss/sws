@@ -75,7 +75,7 @@ void UntieFileFromProject(const char* _fn, ReaProject* _prj) {
 	TieFileToProject(_fn, _prj, false);
 }
 
-double GetProjectLength(bool _items, bool _inclRgnsMkrs)
+double SNM_GetProjectLength(bool _items, bool _inclRgnsMkrs)
 {
 	double prjlen = 0.0, pos, end;
 	if (_inclRgnsMkrs)
@@ -105,7 +105,7 @@ double GetProjectLength(bool _items, bool _inclRgnsMkrs)
 
 bool InsertSilence(const char* _undoTitle, double _pos, double _len)
 {
-	if (_pos >=0.0 && _len > 0.0 && _pos <GetProjectLength())
+	if (_pos >=0.0 && _len > 0.0 && _pos <SNM_GetProjectLength())
 	{
 		if (_undoTitle)
 			Undo_BeginBlock2(NULL);
@@ -267,7 +267,7 @@ void ClearProjectStartupAction(COMMAND_T* _ct)
 {
 	if (g_prjActions.Get()->GetLength())
 	{
-		int r=IDOK, cmdId=NamedCommandLookup(g_prjActions.Get()->Get());
+		int r=IDOK, cmdId = SNM_NamedCommandLookup(g_prjActions.Get()->Get());
 		if (cmdId) {
 			WDL_FastString msg;
 			msg.AppendFormatted(256, __LOCALIZE_VERFMT("Are you sure you want to clear the startup action '%s'?","sws_mbox"), kbd_getTextFromCmd(cmdId, NULL));

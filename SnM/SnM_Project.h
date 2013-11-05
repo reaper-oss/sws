@@ -30,11 +30,13 @@
 #ifndef _SNM_PROJECT_H_
 #define _SNM_PROJECT_H_
 
+#include "SnM.h"
+
 
 bool IsActiveProjectInLoadSave(char* _projfn = NULL, int _projfnSz = 0, bool _ensureRPP = false);
 void TieFileToProject(const char* _fn, ReaProject* _prj = NULL, bool _tie = true);
 void UntieFileFromProject(const char* _fn, ReaProject* _prj = NULL);
-double GetProjectLength(bool _items = true, bool _inclRgnsMkrs = false);
+double SNM_GetProjectLength(bool _items = true, bool _inclRgnsMkrs = false);
 bool InsertSilence(const char* _undoTitle, double _pos, double _len);
 
 void LoadOrSelectProject(const char* _fn, bool _newTab);
@@ -52,7 +54,6 @@ protected:
 };
 
 void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
-
 
 class StartupProjectActionJob : public ScheduledJob {
 public:

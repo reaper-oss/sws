@@ -716,24 +716,32 @@ bool GetStringWithRN(const char* _bufIn, char* _bufOut, int _bufOutSz)
 	return (j < _bufOutSz);
 }
 
-const char* FindFirstRN(const char* _str)
+const char* FindFirstRN(const char* _str, bool _anyOrder)
 {
+	const char* p = NULL;
 	if (_str)
 	{
-		const char* p = strchr(_str, '\r');
-		if (!p) p = strchr(_str, '\n');
-		return p;
+		if (_anyOrder)
+		{
+			p = strchr(_str, '\r');
+			const char* p2 = strchr(_str, '\n');
+			p = !p ? p2 : !p2 ? p :  p<p2 ? p : p2;
+		}
+		else 
+		{
+			p = strchr(_str, '\r');
+			p = !p ? strchr(_str, '\n') : p;
+		}
 	}
-	return NULL;
+	return p;
 }
 
-char* ShortenStringToFirstRN(char* _str)
+char* ShortenStringToFirstRN(char* _str, bool _anyOrder)
 {
-	if (char* p = (char*)FindFirstRN(_str)) {
+	char* p = NULL;
+	if (p = (char*)FindFirstRN(_str, _anyOrder))
 		*p = '\0'; 
-		return p;
-	}
-	return NULL;
+	return p;
 }
 
 // replace "%02d " with _replaceCh in _str

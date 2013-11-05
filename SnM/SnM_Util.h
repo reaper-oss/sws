@@ -67,8 +67,8 @@ void SNM_UpgradeIniFiles();
 int _snprintfSafe(char* _buf, size_t _n, const char* _fmt, ...);
 int _snprintfStrict(char* _buf, size_t _n, const char* _fmt, ...);
 bool GetStringWithRN(const char* _bufSrc, char* _buf, int _bufSize);
-const char* FindFirstRN(const char* _str);
-char* ShortenStringToFirstRN(char* _str);
+const char* FindFirstRN(const char* _str, bool _anyOrder = false);
+char* ShortenStringToFirstRN(char* _str, bool _anyOrder = false);
 void Replace02d(char* _str, char _replaceCh);
 void SplitStrings(const char* _list, WDL_PtrList<WDL_FastString>* _outItems, const char* _sep = ",");
 

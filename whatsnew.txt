@@ -1,3 +1,4 @@
+!v2.4.0 #2 (November 15, 2013) 
 <b>MIDI/OSC actions support learn with both MIDI Pitch and "normalized" OSC messages</b>
 +To enable this new option: set "LearnPitchAndNormOSC" to 1 in the section [General] of the S&M.ini file (quit REAPER first!)
 +When the new option is enabled, all actions of the section "S&M Extension" can be learned with:

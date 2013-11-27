@@ -214,14 +214,15 @@ int RegionPlaylist::GetNestedMarkerRegion()
 				{
 					if (rgnidx != lastx)
 					{
-						if (isRgn) {
-							if ((dPos > rgnpos && dPos < rgnend) || (dEnd > rgnpos && dEnd < rgnend))
+						if (isRgn)
+						{
+							// issue 613 => use SNM_FUDGE_FACTOR to skip adjacent regions
+							if ((dPos>=(rgnpos+SNM_FUDGE_FACTOR) && dPos<=(rgnend-SNM_FUDGE_FACTOR)) || 
+								(dEnd>=(rgnpos+SNM_FUDGE_FACTOR) && dEnd<=(rgnend-SNM_FUDGE_FACTOR)))
 								return num;
 						}
-						else {
-							if (dPos > rgnpos && dPos < rgnend)
-								return num;
-						}
+						else if (dPos>=(rgnpos+SNM_FUDGE_FACTOR) && dPos<=(rgnend-SNM_FUDGE_FACTOR))
+							return num;
 					}
 					lastx=x;
 				}

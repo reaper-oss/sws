@@ -608,6 +608,7 @@ extern "C"
 		IMPAPI(GetMediaSourceType);
 		IMPAPI(GetMediaTrackInfo_Value);
 		IMPAPI(get_midi_config_var);
+		IMPAPI(GetMouseModifier);
 		IMPAPI(GetNumTracks);
 		IMPAPI(GetOutputChannelName);
 		IMPAPI(GetPeakFileName);
@@ -729,6 +730,7 @@ extern "C"
 		IMPAPI(SetMediaItemTakeInfo_Value);
 		IMPAPI(SetMediaTrackInfo_Value);
 		IMPAPI(SetMixerScroll);
+		IMPAPI(SetMouseModifier);
 		IMPAPI(SetOnlyTrackSelected);
 		IMPAPI(SetProjectMarker);
 		IMPAPI(SetProjectMarker2);

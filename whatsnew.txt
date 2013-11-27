@@ -1,10 +1,13 @@
-!v2.4.0 #2 (November 15, 2013) 
++Issue 613 / Region Playlist: fixed rounding issues
++Action "Insert silence (measures.beats)": made .beats optional (e.g. enter 5 or 5.0 to insert 5 measures of slience/empty space)
+
+!v2.4.0 #2 (November 15, 2013)
 <b>MIDI/OSC actions support learn with both MIDI Pitch and "normalized" OSC messages</b>
 +To enable this new option: set "LearnPitchAndNormOSC" to 1 in the section [General] of the S&M.ini file (quit REAPER first!)
 +When the new option is enabled, all actions of the section "S&M Extension" can be learned with:
- - <u>New:</u> OSC messages with floating-point argument in [0, 1]
-   Useful for buggy OSC controllers that cannot handle absolute float values, e.g. <b>TouchOSC for Android needs this!</b>
- - <u>New:</u> MIDI Pitch messages (i.e. 14-bit resolution)
+ - <u>New:</u> OSC messages with floating-point argument in [0, 1] (14-bit resolution)
+   Useful for OSC controllers that cannot handle absolute float values, e.g. <b>TouchOSC for Android needs this!</b>
+ - <u>New:</u> MIDI Pitch messages (14-bit resolution)
  - MIDI CC messages (absolute and relative modes, as usual)
 
 Region Playlist
@@ -33,13 +36,13 @@ Notes window
 +If REAPER >= v4.55: Mark project dirty (needing save) rather than creating undo points for each key stroke
 +Potential fix for http://forum.cockos.com/showpost.php?p=1180135&postcount=1595|"things that smells like Pont-l'Évêque"|
 +House cleaning: allow notes for macros and scripts (aka "Action help")
- String identifiers used to be displayed in the Notes window for macros/scripts.
+ To easy copy/paste, string identifiers used to be displayed in the Notes window for macros/scripts.
  This is now useless since the action list offers "Copy selected action cmdID/identifier string".
 
 Resources / Issue 591: make it possible to save and use new slots/files only via user macros (w/o tweaking the S&M.ini file, etc..)
 +Made "Auto-save" slots/files <i>actions</i> more macro-friendly: they won't prompt for anything
  Note: the "Auto-save" <i>button</i> still prompt to overwrite selected slots/files
-+Added a "last slot" version to all existing actions (i.e. added actions that can deal with "auto-saved slots")
++Added a "last slot" version for all existing slot actions (i.e. new actions to deal with "auto-saved slots")
  A few examples:
  - SWS/S&M: Resources - Apply track template to selected tracks, <i>last slot</i>
  - SWS/S&M: Resources - Apply track template (+envelopes/items) to selected tracks, <i>last slot</i>
@@ -54,22 +57,19 @@ Resources / Issue 591: make it possible to save and use new slots/files only via
  - SWS/S&M: Resources - Delete last image slot/file
 
 Resources: other updates
-+Media files: added "Add media file" options in the context menu (+ new actions)
++Tag bookmark names with [x] when relevant slot actions are attached to them
++Media files: added "Add media file" options in the context menu (+ related actions)
  - Stretch/loop to fit time selection
  - Try to match tempo 0.5x
  - Try to match tempo 1x
  - Try to match tempo 2x
  <b>Note: all existing "Add media file" slot actions obey these new options too!</b>
-+Track templates: added actions where 'n' is in [1; 4], http://forum.cockos.com/showthread.php?p=984786#post984786|customizable in the S&M.ini file|
++Track templates: fixed the option "Offset items/envelopes by edit cursor" not being obeyed, sometimes
++Track templates: added actions where 'n' is in [1; 4], http://forum.cockos.com/showthread.php?p=984786#post984786|customizable in the S&M.ini file|:
  - SWS/S&M: Resources - Paste (replace) template items to selected tracks, slot n
  - SWS/S&M: Resources - Paste (replace) template items to selected tracks, last slot
  - SWS/S&M: Resources - Paste template items to selected tracks, slot n
  - SWS/S&M: Resources - Paste template items to selected tracks, last slot
-+Projects: added actions to open next/previous projects in new tabs
- - SWS/S&M: Resources - Open project, next slot (new tab, cycle)
- - SWS/S&M: Resources - Open project, previous slot (new tab, cycle)
-+Fixed "Offset items/envelopes by edit cursor" not being obeyed, sometimes 
-+Tag bookmark names with [x] when relevant slot actions are attached to them
 +GUI tweaks, better wordings and undo point names (with slot numbers), etc..
 
 Resources: house cleaning
@@ -77,11 +77,15 @@ Resources: house cleaning
  Prehistoric actions that used to make sense when there were no dedicated GUI...
 +<b>Deprecated the "project loader/selecter" tool (*)</b>
  This tool was useful to switch projects or select project tabs (during live performances, for ex.)
- Instead, you can just create a new dedicated bookmark (tiny button +), add projects and attach relevant 
- slot actions to it (via the context menu > Bookmark > Attach project slot actions to this bookmark)
+ Instead, you can just create a new dedicated bookmark (say "Live projects": click the tiny button +),
+ add projects to it (drag-drop RPP files from an Explorer/Finder), and attach relevant slot actions to
+ it via the context menu > Bookmark > Attach project slot actions to this bookmark.
  Deprecated actions have been replaced as follow:
  - "Resources - Project loader/selecter: next (cycle)"  ->  "Resources - Open project, next slot (cycle)"
  - "Resources - Project loader/selecter: previous (cycle)"  ->  "Resources - Open project, previous slot (cycle)"
+ Also added:
+ - SWS/S&M: Resources - Open project, next slot (new tab, cycle)
+ - SWS/S&M: Resources - Open project, previous slot (new tab, cycle)
 +(*) If you have any trouble because of that, please http://code.google.com/p/sws-extension/issues/list|say something|!
 
 ReaScript function export
@@ -94,15 +98,15 @@ Ruler's drag zoom / Issue 540: added actions for better usability
 
 Fixes
 +Issue 603: fixed potential crash when pasting track groups
-+Localization / Windows OS: fixed broken features/actions when the extension was translated
++Localization / Windows OS: fixed broken features/actions when the extension was translated (thanks drikssaï & neilerua):
  - Most of zoom features
  - Xenakios "Scroll track view" actions
  - S&M "Toggle offscreen item selection" actions
 +Issue 595: cut/copy/paste take actions now handle multiple item selection
 +The action "Cut active take" now removes items if needed (rather than leaving empty items)
 +Issue 601: fixed marker <-> region conversion actions (and export actions) that could affect playback
-+Issue 606 / OS X: fixed cropped text à la "Big Clock" for Notes, Region Playlist and Live Config Monitor windows
-+S&M actions to switch FX preset now support concurrent use (e.g. tweaking 2 knobs at the same time)
++Issue 606 / OS X: fixed text display à la "Big Clock" for Notes, Region Playlist and Live Config Monitor windows
++S&M actions to switch FX presets now support concurrent use (e.g. tweaking 2 knobs at the same time)
 +Fixed the toggle state reported by some "Toggle offscreen item selection" actions
 
 Other

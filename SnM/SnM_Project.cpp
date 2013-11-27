@@ -341,23 +341,21 @@ void InsertSilence(COMMAND_T* _ct)
 				len = parse_timestr_len(val, pos, 3);
 				break;
 			case 1: // meas.beat
-/*no! would not take get tempo markers into account since 'val' is not inserted yet
+			{
+/* no! would not take get tempo markers into account since 'val' is not inserted yet
 				len = parse_timestr_len(val, pos, 2);
 				break;
 */
-				if (char* p = strchr(val, '.'))
-				{
-					*p = '\0';
-					int in_meas = atoi(val);
-					double in_beats = p[1] ? atof(p+1) : 0.0;
+				int in_meas = atoi(val);
+				double in_beats = 0.0;
+				char* p = strchr(val, '.');
+				if (p && p[1]) in_beats = atof(p+1);
 
-					double bpm; int num, den;
-					TimeMap_GetTimeSigAtTime(NULL, pos, &num, &den, &bpm);
-					len = in_beats*(60.0/bpm) + in_meas*((240.0*num/den)/bpm);
-
-					*p = '.'; // restore val (used below)
-				}
+				double bpm; int num, den;
+				TimeMap_GetTimeSigAtTime(NULL, pos, &num, &den, &bpm);
+				len = in_beats*(60.0/bpm) + in_meas*((240.0*num/den)/bpm);
 				break;
+			}
 			case 2: // smp
 				len = parse_timestr_len(val, pos, 4);
 				break;

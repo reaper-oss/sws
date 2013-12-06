@@ -77,6 +77,7 @@ void TranslatePos(double _pos, int* _h, int* _m = NULL, int* _s = NULL, int* _ms
 double SeekPlay(double _pos, bool _moveView = false);
 
 int SNM_NamedCommandLookup(const char* _custId, KbdSectionInfo* _section = NULL, bool _hardCheck = false);
+const char* SNM_GetTextFromCmd(int _cmdId, KbdSectionInfo* _section);
 bool LoadKbIni(WDL_PtrList<WDL_FastString>* _out);
 int GetMacroOrScript(const char* _customId, int _sectionUniqueId, WDL_PtrList<WDL_FastString>* _inMacroScripts, WDL_PtrList<WDL_FastString>* _outCmds, WDL_FastString* _outName = NULL);
 bool IsMacroOrScript(const char* _cmd, bool _cmdIsName = true);

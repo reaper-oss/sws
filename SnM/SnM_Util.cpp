@@ -861,6 +861,14 @@ int SNM_NamedCommandLookup(const char* _custId, KbdSectionInfo* _section, bool _
 	return cmdId;
 }
 
+const char* SNM_GetTextFromCmd(int _cmdId, KbdSectionInfo* _section)
+{
+	const char* name = SWS_CMD_SHORTNAME(SWSGetCommandByID(_cmdId));
+	if (*name)
+		return name;
+	return kbd_getTextFromCmd(_cmdId, _section);
+}
+
 bool LoadKbIni(WDL_PtrList<WDL_FastString>* _out)
 {
 	char buf[SNM_MAX_PATH] = "";
@@ -883,7 +891,7 @@ bool LoadKbIni(WDL_PtrList<WDL_FastString>* _out)
 // _custId: custom id (both formats are allowed: "bla" and "_bla")
 // _inMacroScripts: to optimize accesses to reaper-kb.ini, required
 // _outCmds: optionnal, if any it is up to the caller to unalloc items
-// note: no cache here (as the user can create new macros)
+// note: no cache here (the user can create new macros...)
 int GetMacroOrScript(const char* _custId, int _sectionUniqueId, WDL_PtrList<WDL_FastString>* _inMacroScripts, WDL_PtrList<WDL_FastString>* _outCmds, WDL_FastString* _outName)
 {
 	if (!_custId || !_inMacroScripts)

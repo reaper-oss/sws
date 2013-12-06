@@ -576,8 +576,10 @@ void LiveConfigView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iS
 				{
 					// do not use m_iEditingItem here: it's set to -1 after the actual update, contrary to m_iEditingCol
 					// => display IDs when editing a cell, action names otherwise
-					int cmd = NamedCommandLookup(custId);
-					lstrcpyn(str, m_iEditingCol<0 && cmd>0 ? kbd_getTextFromCmd(cmd, NULL) : custId, iStrMax);
+					if (int cmd = SNM_NamedCommandLookup(custId, NULL)) {
+//						lstrcpyn(str, m_iEditingCol<0 && cmd>0 ? kbd_getTextFromCmd(cmd, NULL) : custId, iStrMax);
+						lstrcpyn(str, m_iEditingCol<0 && cmd>0 ? SNM_GetTextFromCmd(cmd, NULL) : custId, iStrMax);
+					}
 				}
 				break;
 			}

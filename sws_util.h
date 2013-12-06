@@ -47,7 +47,7 @@
 #define UTF8_INFINITY			"\xE2\x88\x9E"
 
 // +IsSwsAction() to skip "SWS: ", "SWS/S&M: ", "SWS/FNG: ", etc...
-#define SWS_CMD_SHORTNAME(_ct)	(GetLocalizedActionName(_ct->accel.desc) + IsSwsAction(_ct->accel.desc))
+#define SWS_CMD_SHORTNAME(_ct)	(_ct ? GetLocalizedActionName(_ct->accel.desc) + IsSwsAction(_ct->accel.desc) : "")
 #define __ARRAY_SIZE(x)			(sizeof(x) / sizeof(x[0]))
 #define BOUNDED(x,lo,hi)		((x) < (lo) ? (lo) : (x) > (hi) ? (hi) : (x))
 #define FREE_NULL(p)			{free(p);p=0;}

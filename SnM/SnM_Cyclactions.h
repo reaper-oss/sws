@@ -96,7 +96,6 @@ public:
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 	void Update(bool _updateListViews=true);
 	void UpdateSection(int _newSection);
-	bool IsConsolidatedUndo() { return m_btnUndo.GetCheckState()==1; }
 	void SetType(int _section) { m_cbSection.SetCurSel(_section); UpdateSection(_section); }
 protected:
 	void OnInitDlg();
@@ -157,6 +156,7 @@ int ExplodeCyclaction(int _section, const char* _cmdStr, WDL_PtrList<WDL_FastStr
 int ExplodeConsoleAction(int _section, const char* _cmdStr, WDL_PtrList<WDL_FastString>* _cmds, WDL_PtrList<WDL_FastString>* _macros, WDL_PtrList<WDL_FastString>* _consoles, int _flags);
 
 int RegisterCyclation(const char* _name, int _type, int _cycleId, int _cmdId);
+
 void CAsInit();
 int CyclactionInit();
 void CyclactionExit();

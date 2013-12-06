@@ -195,7 +195,7 @@ int ExplodeCmd(int _section, const char* _cmdStr,
 				return ExplodeMacro(_section, _cmdStr, _cmds, _macros, _consoles, _flags);
 		}
 
-		// default case: only native/3rd part actions or instructions
+		// default case: only native/3rd party actions, or instructions at this point
 		if (_flags&2)
 		{
 			if (KbdSectionInfo* kbdSec = SNM_GetActionSection(_section))
@@ -1375,12 +1375,6 @@ void EditModelInit()
 
 void Apply()
 {
-	// save the consolidate undo points pref
-	g_undos = false;
-	if (CyclactionWnd* w = g_caWndMgr.Get())
-		g_undos = w->IsConsolidatedUndo();
-	WritePrivateProfileString("Cyclactions", "Undos", g_undos ? "1" : "0", g_SNM_IniFn.Get()); // in main S&M.ini file (local property)
-
 	// save/register cycle actions
 	int oldCycleId = g_editedActions[g_editedSection].Find(g_editedAction);
 
@@ -1639,8 +1633,9 @@ void CommandsView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iStr
 							{
 //								if (!CheckSwsMacroScriptNumCustomId(pItem->Get(), g_editedSection))
 								{
-									lstrcpyn(str, kbd_getTextFromCmd(cmdId, kbdSec), iStrMax);
-									if (*str) return;
+									lstrcpyn(str, SNM_GetTextFromCmd(cmdId, kbdSec), iStrMax);
+									if (*str)
+										return;
 								}
 							}
 						}
@@ -1831,7 +1826,6 @@ void CyclactionWnd::OnInitDlg()
 	m_parentVwnd.AddChild(&m_cbSection);
 
 	m_btnUndo.SetID(BTNID_UNDO);
-	m_btnUndo.SetCheckState(g_undos);
 	m_btnUndo.SetTextLabel(__LOCALIZE("Consolidate undo points","sws_DLG_161"), -1, font);
 	m_parentVwnd.AddChild(&m_btnUndo);
 
@@ -2183,8 +2177,8 @@ void CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			break;
 		case BTNID_UNDO:
 			if (!HIWORD(wParam) || HIWORD(wParam)==600) {
-				m_btnUndo.SetCheckState(!m_btnUndo.GetCheckState()?1:0);
-				UpdateEditedStatus(true);
+				g_undos = !g_undos;
+				Update(false);
 			}
 			break;
 		case BTNID_APPLY:
@@ -2254,6 +2248,7 @@ void CyclactionWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _toolti
 	ScreenToClient(m_hwnd, ((LPPOINT)&r)+1);
 	x0 = r.right + SNM_GUI_X_MARGIN_OLD;
 
+	m_btnUndo.SetCheckState(g_undos?1:0);
 	SNM_AutoVWndPosition(DT_LEFT, &m_btnUndo, NULL, _r, &x0, _r->top, h, 4);
 
 	// right
@@ -2587,8 +2582,9 @@ int CyclactionInit()
 	_snprintfSafe(g_lastExportFn, sizeof(g_lastExportFn), SNM_CYCLACTION_EXPORT_FILE, GetResourcePath());
 	_snprintfSafe(g_lastImportFn, sizeof(g_lastImportFn), SNM_CYCLACTION_EXPORT_FILE, GetResourcePath());
 
-	// load undo pref (default == enabled for ascendant compatibility)
-	g_undos = (GetPrivateProfileInt("Cyclactions", "Undos", 1, g_SNM_IniFn.Get()) == 1 ? true : false); // in main S&M.ini file (local property)
+	// consolidate undo pref, default==enabled for ascendant compatibility
+	// local pref: comes from the S&M.ini file
+	g_undos = (GetPrivateProfileInt("Cyclactions", "Undos", 1, g_SNM_IniFn.Get()) == 1 ? true : false);
 
 	if (!plugin_register("projectconfig", &s_projectconfig))
 		return 0;
@@ -2596,11 +2592,11 @@ int CyclactionInit()
 	// instanciate the window if needed, can be NULL
 	g_caWndMgr.Init();
 
-
 	return 1;
 }
 
 void CyclactionExit() {
+	WritePrivateProfileString("Cyclactions", "Undos", g_undos ? "1" : "0", g_SNM_IniFn.Get());
 	g_caWndMgr.Delete();
 }
 

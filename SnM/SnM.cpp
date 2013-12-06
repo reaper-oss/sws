@@ -411,7 +411,7 @@ static COMMAND_T s_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Select only track with selected envelope" }, "S&M_SELTR_SELENV", SelOnlyTrackWithSelEnv, NULL, },
 
 	// Toolbar ----------------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Toggle toolbars auto refresh enable" },	"S&M_TOOLBAR_REFRESH_ENABLE", EnableToolbarsAutoRefesh, "Enable toolbars auto refresh", 0, IsToolbarsAutoRefeshEnabled},
+	{ { DEFACCEL, "SWS/S&M: Toggle toolbars auto refresh enable" },	"S&M_TOOLBAR_REFRESH_ENABLE", EnableToolbarsAutoRefesh, NULL, 0, IsToolbarsAutoRefeshEnabled},
 	{ { DEFACCEL, "SWS/S&M: Toolbar - Toggle track envelopes in touch/latch/write" }, "S&M_TOOLBAR_WRITE_ENV", ToggleWriteEnvExists, NULL, 0, WriteEnvExists},
 	{ { DEFACCEL, "SWS/S&M: Toolbar - Toggle offscreen item selection (left)" }, "S&M_TOOLBAR_ITEM_SEL0", ToggleOffscreenSelItems, NULL, SNM_ITEM_SEL_LEFT, HasOffscreenSelItems},
 	{ { DEFACCEL, "SWS/S&M: Toolbar - Toggle offscreen item selection (right)" },"S&M_TOOLBAR_ITEM_SEL1", ToggleOffscreenSelItems, NULL, SNM_ITEM_SEL_RIGHT, HasOffscreenSelItems},

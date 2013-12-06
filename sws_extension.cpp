@@ -291,7 +291,7 @@ int SWSGetCommandID(void (*cmdFunc)(COMMAND_T*), INT_PTR user, const char** pMen
 }
 
 COMMAND_T* SWSGetCommandByID(int cmdId) {
-	if (cmdId >= g_iFirstCommand && cmdId <= g_iLastCommand) // true but not enough to ensure it is a sws action
+	if (cmdId >= g_iFirstCommand && cmdId <= g_iLastCommand) // not enough to ensure it is a SWS action
 		return g_commands.Get(cmdId, NULL);
 	return NULL;
 }
@@ -300,7 +300,7 @@ int IsSwsAction(const char* _actionName)
 {
 	if (_actionName)
 		if (const char* p = strstr(_actionName, ": ")) // no strchr() here: make sure p[2] is not out of bounds
-			if (const char* tag = strstr(_actionName, "SWS")) // make sure it is a sws tag
+			if (const char* tag = strstr(_actionName, "SWS")) // make sure it is a SWS tag
 				if (tag < p) // make really sure
 					return ((int)(p+2-_actionName));
 	return 0;
@@ -519,7 +519,9 @@ extern "C"
 		IMPAPI(AddProjectMarker);
 		IMPAPI(AddProjectMarker2);
 		IMPAPI(AddTakeToMediaItem);
+/* deprecated
 		IMPAPI(AddTempoTimeSigMarker);
+*/
 		IMPAPI(adjustZoom);
 		IMPAPI(ApplyNudge);
 		IMPAPI(AttachWindowTopmostButton);

@@ -603,7 +603,7 @@ void SNM_TinyLeftButton::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_
 	float alpha = m_en ? 0.8f : 0.4f;
 
 	LICE_FillTriangle(drawbm, r.right-1, r.top, r.left, r.top+int((r.bottom-r.top)/2 +0.5), r.right-1, r.bottom-1, col, alpha);
-	// borders needed (the above ^^ draws w/o aa..)
+	// borders needed (the above ^^ draws w/o aa)
 	LICE_Line(drawbm, r.right-1, r.top, r.left, r.top+int((r.bottom-r.top)/2 +0.5), col, alpha, 0, true);
 	LICE_Line(drawbm, r.left, r.top+int((r.bottom-r.top)/2 +0.5), r.right-1, r.bottom-1, col, alpha, 0, true);
 	LICE_Line(drawbm, r.right-1, r.bottom-1, r.right-1, r.top, col, alpha, 0, true);
@@ -828,7 +828,7 @@ bool SNM_HasLeftVWnd(WDL_VWnd* _comp, int _left, int _top, int _bottom)
 // _h:     height of the destination panel
 // returns false if hidden
 // TODO? WDL_VWnd inheritance rather than checking for inherited types
-//       e.g. adding some kind of getPreferedWidthHeight(int* _width, int* _height)?
+//       e.g. some kind of getPreferedWidthHeight(int* _width, int* _height)?
 bool SNM_AutoVWndPosition(UINT _align, WDL_VWnd* _comp, WDL_VWnd* _tiedComp, const RECT* _r, int* _x, int _y, int _h, int _xRoom)
 {
 	if (_comp && _h && abs(_r->bottom-_r->top) >= _h)

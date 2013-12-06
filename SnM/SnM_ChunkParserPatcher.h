@@ -100,7 +100,9 @@ static int FindEndOfSubChunk(const char* _chunk, int _startPos);
 static int SNM_PreObjectState(WDL_FastString* _str = NULL, bool _wantsMinState = false);
 static void SNM_PostObjectState(int _oldfxstate);
 
-// both preserves POOLEDEVTS ids as well as frozen fx ids (FXID_NEXT)
+// remove all ids, e.g. GUIDs, FXIDs, etc..
+// fast but it does not check depth, parent, etc.. 
+// note: preserve both POOLEDEVTS & FXID_NEXT (frozen FX ids)
 static int RemoveAllIds(char* _chunk) {
 	return RemoveChunkLines(_chunk, "ID {", false, '}');
 }
@@ -385,14 +387,6 @@ int RemoveLines(const char* _removedKeyword, bool _checkBOL = true, int _checkEO
 // => beware of nested data! (FREEZE sub-chunks, for example)
 int RemoveLines(WDL_PtrList<const char>* _removedKeywords, bool _checkBOL = true, int _checkEOLChar = 0) {
 	return SetUpdates(RemoveChunkLines(GetChunk(), _removedKeywords, _checkBOL, _checkEOLChar));
-}
-
-// remove all ids, e.g. GUIDs, FXIDs, etc..
-// it is faster but it does not check depth, parent, etc.. 
-// m_updates is volontary ignored here: not considered as an user update (internal)
-// note: the method preserves POOLEDEVTS ids as well as frozen fx ids FXID_NEXT
-int RemoveIds() {
-	return RemoveChunkLines(GetChunk(), "ID {", false, '}');
 }
 
 //inserts _str either after (_dir=1) or before (_dir=0) _keyword (i.e. at next/previous start of line)
@@ -1011,7 +1005,6 @@ int ParsePatchCore(
 // Fast chunk helpers
 ///////////////////////////////////////////////////////////////////////////////
 
-// _len: for optimization, optional IN (initial length) and OUT (length after processing) param
 static int RemoveChunkLines(char* _chunk, const char* _searchStr, bool _checkBOL, int _checkEOLChar)
 {
 	if (!_chunk || !_searchStr)

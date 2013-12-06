@@ -1,5 +1,12 @@
-+Issue 613 / Region Playlist: fixed rounding issues
-+Action "Insert silence (measures.beats)": made .beats optional (e.g. enter 5 or 5.0 to insert 5 measures of slience/empty space)
+Fixes
++Issue 613 / Region Playlist: fixed rounding issues (with adjacent regions)
++Fixed broken actions "SWS: Set auto crossfade on/off"
+
+Other
++Made .beats optional for the action "SWS/S&M: Insert silence (measures.beats)"
+ e.g. enter 5 (or 5.0) to insert 5 measures of silence/empty space
++Cycle Actions & Live Configs editors: shorten action names when possible
+ e.g. "<s>SWS/S&M: </s>Insert silence (measures.beats)"
 
 !v2.4.0 #2 (November 15, 2013)
 <b>MIDI/OSC actions support learn with both MIDI Pitch and "normalized" OSC messages</b>

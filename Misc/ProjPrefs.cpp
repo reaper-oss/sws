@@ -35,10 +35,10 @@ static double g_dDefFadeLen = 0.01;
 
 void SaveXFade(COMMAND_T* = NULL)    { if (GetConfigVar("autoxfade")) g_prevautoxfade = *(int*)GetConfigVar("autoxfade"); }
 void RestoreXFade(COMMAND_T* = NULL) { if (GetConfigVar("autoxfade") && g_prevautoxfade != *(int*)GetConfigVar("autoxfade")) Main_OnCommand(40041, 0); }
-void XFadeOn(COMMAND_T* = NULL)      { int* p = (int*)GetConfigVar("autoxfade"); if (p && !(*p)) Main_OnCommand(40041, 0); }
-void XFadeOff(COMMAND_T* = NULL)     { int* p = (int*)GetConfigVar("autoxfade"); if (p && (*p))  Main_OnCommand(40041, 0); }
-void MEPWIXOn(COMMAND_T* = NULL)     { int* p = (int*)GetConfigVar("envattach"); if (p && !(*p)) Main_OnCommand(40070, 0); }
-void MEPWIXOff(COMMAND_T* = NULL)    { int* p = (int*)GetConfigVar("envattach"); if (p && (*p))  Main_OnCommand(40070, 0); }
+void XFadeOn(COMMAND_T* = NULL)      { if (!GetToggleCommandState(40041)) Main_OnCommand(40041, 0); }
+void XFadeOff(COMMAND_T* = NULL)     { if (GetToggleCommandState(40041)) Main_OnCommand(40041, 0); }
+void MEPWIXOn(COMMAND_T* = NULL)     { if (!GetToggleCommandState(40070)) Main_OnCommand(40070, 0); }
+void MEPWIXOff(COMMAND_T* = NULL)    { if (GetToggleCommandState(40070)) Main_OnCommand(40070, 0); }
 
 int IsOnRecStopMoveCursor(COMMAND_T*)  { int* p = (int*)GetConfigVar("itemclickmovecurs"); return p && (*p & 16); }
 void TogOnRecStopMoveCursor(COMMAND_T*) { int* p = (int*)GetConfigVar("itemclickmovecurs"); if (p) *p ^= 16; }

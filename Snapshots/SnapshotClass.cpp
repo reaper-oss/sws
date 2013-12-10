@@ -403,7 +403,6 @@ void TrackSnapshot::GetDetails(WDL_FastString* details, int iMask)
 	if (m_iTrackNum == 0)
 	{
 		details->Append(__LOCALIZE("Master Track","sws_DLG_101"));
-		details->Append(":\r\n");
 	}
 	else if (tr)
 	{
@@ -416,7 +415,7 @@ void TrackSnapshot::GetDetails(WDL_FastString* details, int iMask)
 	}
 	else
 		details->AppendFormatted(100, __LOCALIZE_VERFMT("Track #%d \"%s\" (not in current project!)","sws_DLG_101"), m_iTrackNum, m_sName.Get());
-	details->Append(":\r\n");
+	details->Append("\r\n");
 
 	if (iMask & VOL_MASK)
 	{
@@ -547,13 +546,21 @@ void TrackSnapshot::GetDetails(WDL_FastString* details, int iMask)
 			{
 				if (!lp.parse(line) && lp.getnumtokens() >= 2)
 				{
+					bool foundfx = false;
 					if (strncmp(lp.gettoken_str(0), "<VST", 4) == 0 || 
 						strncmp(lp.gettoken_str(0), "<AU", 3) == 0 ||
 						strncmp(lp.gettoken_str(0), "<DX", 3) == 0)
+					{
+						foundfx = true;
 						details->AppendFormatted(50, "\t%s\r\n", lp.gettoken_str(1));
+					}
 					else if (strcmp(lp.gettoken_str(0), "<JS") == 0)
+					{
+						foundfx = true;
 						details->AppendFormatted(50, "\tJS: %s\r\n", lp.gettoken_str(1));
-					details->Append("\r\n");
+					}
+					if (foundfx)
+						details->Append("\r\n");
 				}
 			}
 		}

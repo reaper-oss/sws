@@ -7,6 +7,7 @@ Other
  e.g. enter 5 (or 5.0) to insert 5 measures of silence/empty space
 +Cycle Actions & Live Configs editors: shorten action names when possible
  e.g. "<s>SWS/S&M: </s>Insert silence (measures.beats)"
++Better Snapshot details/descriptions
 
 !v2.4.0 #2 (November 15, 2013)
 <b>MIDI/OSC actions support learn with both MIDI Pitch and "normalized" OSC messages</b>
@@ -78,11 +79,9 @@ Resources: other updates
  - SWS/S&M: Resources - Paste template items to selected tracks, slot n
  - SWS/S&M: Resources - Paste template items to selected tracks, last slot
 +GUI tweaks, better wordings and undo point names (with slot numbers), etc..
-
-Resources: house cleaning
-+<b>Removed all "prompt for slot" actions (*)</b>
- Prehistoric actions that used to make sense when there were no dedicated GUI...
-+<b>Deprecated the "project loader/selecter" tool (*)</b>
++<b>House cleaning: Removed all "prompt for slot" actions (*)</b>
+ Prehistoric actions that used to make sense when there was no dedicated GUI...
++<b>House cleaning: Deprecated the "project loader/selecter" tool (*)</b>
  This tool was useful to switch projects or select project tabs (during live performances, for ex.)
  Instead, you can just create a new dedicated bookmark (say "Live projects": click the tiny button +),
  add projects to it (drag-drop RPP files from an Explorer/Finder), and attach relevant slot actions to

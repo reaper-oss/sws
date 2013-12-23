@@ -1,7 +1,7 @@
 /******************************************************************************
 / padreEnvelopeProcessor.cpp
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), JF Bédague, P. Bourdon
+/ Copyright (c) 2009-2010 Tim Payne (SWS), Jeffos (S&M), P. Bourdon
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy

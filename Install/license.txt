@@ -1,5 +1,6 @@
-Copyright (c) 2013 Tim Payne (SWS), JF Bedague, Xenakios, Fingers, P Bourdon, 
-Adam Wathan, Shane StClair, Philip S. Considine, Dominik Martin Drzic.
+Copyright (c) 2013 Tim Payne (SWS), Jeffos (S&M), Xenakios, Fingers, 
+P Bourdon, Adam Wathan, Shane StClair, Philip S. Considine, and
+Dominik Martin Drzic.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

@@ -146,8 +146,11 @@ void ReplaceAll (string &str, string oldStr, string newStr)
 
 void BR_ThemeListViewOnInit (HWND list)
 {
-	SWS_ListView listView(list, NULL, 0, NULL, NULL, false, NULL, true);
-	SNM_ThemeListView(&listView);
+	if (SWS_THEMING)
+	{
+		SWS_ListView listView(list, NULL, 0, NULL, NULL, false, NULL, true);
+		SNM_ThemeListView(&listView);
+	}
 };
 
 bool BR_ThemeListViewInProc (HWND hwnd, int uMsg, LPARAM lParam, HWND list, bool grid)

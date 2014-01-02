@@ -26,6 +26,7 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+#include "../SnM/SnM_Dlg.h"
 #include "../reaper/localize.h"
 
 using namespace std;
@@ -78,6 +79,9 @@ void DoRemapItemPositions(bool bRestorePos)
 WDL_DLGRET ItemPosRemapDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
 	static HWND hCurveSlider = NULL;
+
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, Message, wParam, lParam))
+		return r;
 
 	switch(Message)
     {
@@ -312,6 +316,9 @@ void DoRubberBandProcessing()
 
 WDL_DLGRET RubberBandDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, Message, wParam, lParam))
+		return r;
+
 	switch(Message)
     {
         case WM_INITDIALOG:
@@ -1061,6 +1068,9 @@ void DoSpreadSelItemsOver4Tracks(COMMAND_T*)
 
 WDL_DLGRET ItemSpreadDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, Message, wParam, lParam))
+		return r;
+
 	switch(Message)
     {
         case WM_INITDIALOG:
@@ -1131,6 +1141,10 @@ WDL_DLGRET TogItemsSelDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 	static bool Applied=false;
 	char tbuf[200];
 	static stringstream dlgSS;
+	
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, Message, wParam, lParam))
+		return r;
+
 	if (Message==WM_INITDIALOG)
 	{
 		dlgSS.str("");

@@ -26,6 +26,7 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+#include "../SnM/SnM_Dlg.h"	
 #include "../reaper/localize.h"
 #include "Parameters.h"
 #include "../Breeder/BR_Util.h"
@@ -176,6 +177,9 @@ void DoSetItemVols(double theVol)
 
 WDL_DLGRET ItemSetVolDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, Message, wParam, lParam))
+		return r;
+
 	switch(Message)
     {
         case WM_INITDIALOG:
@@ -224,6 +228,9 @@ void DoShowItemVolumeDialog(COMMAND_T*)
 
 WDL_DLGRET ItemPanVolDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, Message, wParam, lParam))
+		return r;
+
 	switch(Message)
     {
         case WM_INITDIALOG:
@@ -325,6 +332,9 @@ WDL_DLGRET RepeatPasteDialogProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM 
 	static char cBeatStr[50] = "1";
 	static int iNumRepeats = 1;
 	static int iRepeatMode = 2;	
+
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, Message, wParam, lParam))
+		return r;
 
 	switch(Message)
     {
@@ -567,7 +577,9 @@ int SkipItemSource=0; // 0 for all in selected tracks, 1 for items selected in s
 
 WDL_DLGRET SelEveryNthDialogProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-	//
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, Message, wParam, lParam))
+		return r;
+
 	switch(Message)
     {
         case WM_INITDIALOG:
@@ -935,7 +947,9 @@ void DoWorkForRenderItemsWithTail(double TailLen)
 
 WDL_DLGRET RenderItemsWithTailDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-	//
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, Message, wParam, lParam))
+		return r;
+
 	switch(Message)
     {
         case WM_INITDIALOG:
@@ -1078,6 +1092,9 @@ void RepositionItems(double theGap,int ModeA,int ModeB,int ModeC) // ModeA : gap
 
 WDL_DLGRET ReposItemsDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, Message, wParam, lParam))
+		return r;
+
 	switch(Message)
     {
 		case WM_INITDIALOG:
@@ -1283,6 +1300,10 @@ void PerformSwingItemPositions(double swingBase,double swingAmt)
 WDL_DLGRET SwingItemsDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
 	char tbuf[200];
+
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, Message, wParam, lParam))
+		return r;
+	
 	if (Message==WM_INITDIALOG)
 	{
 		sprintf(tbuf,"%.2f",g_swingAmt*100.0);

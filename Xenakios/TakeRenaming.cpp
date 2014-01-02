@@ -26,6 +26,7 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+#include "../SnM/SnM_Dlg.h"	
 #include "../reaper/localize.h"
 
 using namespace std;
@@ -44,9 +45,12 @@ typedef struct
 
 t_renameparams g_renameparams;
 
-BOOL WINAPI RenameDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
+WDL_DLGRET RenameDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
 	char buf[2048];
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, Message, wParam, lParam))
+		return r;
+	
 	if (Message == WM_INITDIALOG)
 	{
 		if (g_renameparams.mode==0 && !g_renameparams.batchnaming)

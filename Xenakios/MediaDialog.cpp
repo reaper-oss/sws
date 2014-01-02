@@ -26,6 +26,8 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+#include "../Breeder/BR_Util.h"
+#include "../SnM/SnM_Dlg.h"
 #include "../reaper/localize.h"
 
 using namespace std;
@@ -309,13 +311,18 @@ int ReplaceTakeSourceFile(MediaItem_Take *TheTake,string TheNewFile)
 	return -666;
 }
 
-BOOL WINAPI MulMatchesFoundDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
+WDL_DLGRET MulMatchesFoundDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
+	if (BR_ThemeListViewInProc(hwnd, Message, lParam, GetDlgItem(hwnd,IDC_MULMATCHLIST), true))
+		return 1;
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, Message, wParam, lParam))
+		return r;
+
 	switch(Message)
     {
         case WM_INITDIALOG:
 		{
-			WDL_UTF8_HookListView(GetDlgItem(hwnd,IDC_MULMATCHLIST));
+			BR_ThemeListViewOnInit(GetDlgItem(hwnd,IDC_MULMATCHLIST));
 			LVCOLUMN col;
 			col.mask=LVCF_TEXT|LVCF_WIDTH;
 			col.cx=425;
@@ -392,8 +399,11 @@ DWORD WINAPI DirScanThreadFunc(void*)
 	return 0;
 }
 
-BOOL WINAPI ScanProgDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
+WDL_DLGRET ScanProgDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, Message, wParam, lParam))
+		return r;
+
 	switch(Message)
     {
         case WM_INITDIALOG:
@@ -618,14 +628,23 @@ void SendSelectedProjFolFilesToRecycleBin()
 #endif
 }
 
-BOOL WINAPI ProjMediaDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
+WDL_DLGRET ProjMediaDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
 	static WDL_WndSizer resizer;
+
+	if (BR_ThemeListViewInProc(hwnd, Message, lParam, GetDlgItem(hwnd,IDC_PROJFILES_USED), true))
+		return 1;
+	if (BR_ThemeListViewInProc(hwnd, Message, lParam, GetDlgItem(hwnd,IDC_PROJFOLMEDLIST), true))
+		return 1;
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, Message, wParam, lParam))
+		return r;
 
 	switch(Message)
     {
         case WM_INITDIALOG:
 		{
+			BR_ThemeListViewOnInit(GetDlgItem(hwnd,IDC_PROJFILES_USED));
+			BR_ThemeListViewOnInit(GetDlgItem(hwnd,IDC_PROJFOLMEDLIST));
 			RECT r;
 			r.left=10;
 			r.right=300;
@@ -658,8 +677,6 @@ BOOL WINAPI ProjMediaDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 #ifdef _WIN32
 			ListView_SetExtendedListViewStyle(GetDlgItem(hwnd, IDC_PROJFILES_USED), LVS_EX_FULLROWSELECT);
 			ListView_SetExtendedListViewStyle(GetDlgItem(hwnd, IDC_PROJFOLMEDLIST), LVS_EX_FULLROWSELECT);
-			WDL_UTF8_HookListView(GetDlgItem(hwnd, IDC_PROJFILES_USED));
-			WDL_UTF8_HookListView(GetDlgItem(hwnd, IDC_PROJFOLMEDLIST));
 #endif
 			//resizer.init_item(IDC_DELFILESBUT,0.5,0.0,0.0,0.0);
 

@@ -113,7 +113,7 @@ void DoRecallEditCursorPosition(COMMAND_T*);
 //===========================================================
 // FloatingInspector.cpp
 extern HWND g_hItemInspector;
-BOOL WINAPI MyItemInspectorDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
+WDL_DLGRET MyItemInspectorDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
 void DoTglFltItemInspector(COMMAND_T*);
 
 //===========================================================

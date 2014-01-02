@@ -26,6 +26,8 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+#include "../Breeder/BR_Util.h"
+#include "../SnM/SnM_Dlg.h"
 #include "../reaper/localize.h"
 
 using namespace std;
@@ -596,15 +598,23 @@ void SetListViewSingleSelected(HWND hList,int idx)
 
 }
 
-BOOL WINAPI ItemInterpDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
+WDL_DLGRET ItemInterpDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
 	static bool FirstRun = true;
 	static bool projectPlays=false;
 	static HWND hGraph;
+
+	if (BR_ThemeListViewInProc(hwnd, Message, lParam, GetDlgItem(hwnd,IDC_IIACTPARLIST), false))
+		return 1;
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, Message, wParam, lParam))
+		return r;
+
 	switch (Message)
 	{
 		case WM_INITDIALOG:
 		{
+			BR_ThemeListViewOnInit(GetDlgItem(hwnd,IDC_IIACTPARLIST));
+
 			g_hIIdlg=hwnd;
 			g_IItakes.clear();
 			XenGetProjectTakes(g_IItakes,true,true);
@@ -634,7 +644,6 @@ BOOL WINAPI ItemInterpDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 			}
 
 			HWND hList = GetDlgItem(hwnd,IDC_IIACTPARLIST);
-			WDL_UTF8_HookListView(hList);
 			ListView_SetExtendedListViewStyleEx(hList, LVS_EX_FULLROWSELECT, LVS_EX_FULLROWSELECT);
 			LVCOLUMN col;
 			col.mask=LVCF_TEXT|LVCF_WIDTH;

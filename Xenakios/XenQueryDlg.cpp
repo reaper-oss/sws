@@ -26,6 +26,7 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+#include "../SnM/SnM_Dlg.h"	
 #include "../reaper/localize.h"
 
 char *g_QueryString;
@@ -33,8 +34,11 @@ int g_QueryMaxChars;
 const char *g_QueryTitle;
 int g_DialogResult;
 
-BOOL WINAPI GenQueryDlgProc1(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
+WDL_DLGRET GenQueryDlgProc1(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, Message, wParam, lParam))
+		return r;
+
 	if (Message==WM_INITDIALOG)
 	{
 		if (strlen(g_QueryTitle)>0)

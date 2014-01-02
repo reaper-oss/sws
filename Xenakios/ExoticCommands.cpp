@@ -26,6 +26,7 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+#include "../SnM/SnM_Dlg.h"
 #include "../reaper/localize.h"
 #include "Parameters.h"
 
@@ -570,7 +571,9 @@ void DoCSoundPvoc()
 
 WDL_DLGRET CSPVOCItemDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-	//
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, Message, wParam, lParam))
+		return r;
+
 	switch(Message)
     {
         case WM_INITDIALOG:
@@ -698,6 +701,9 @@ WDL_DLGRET ScaleItemPosDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lP
 	static HWND hPosScaler = NULL;
 	static HWND hLenScaler = NULL;
 
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, Message, wParam, lParam))
+		return r;
+
 	switch(Message)
     {
         case WM_INITDIALOG:
@@ -787,7 +793,7 @@ WDL_DLGRET ScaleItemPosDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lP
 					break;
 				case IDOK:
 					DoScaleItemPosStatic2(g_last_ScaleItemPosParams.dScaling, g_last_ScaleItemPosParams.dLengthScaling, false);
-					Undo_OnStateChangeEx("Scale Item Positions By Static Percentage", 4, -1);
+					Undo_OnStateChangeEx("Scale Item Positions By Percentage", 4, -1);
 					UpdateTimeline();
 					EndDialog(hwnd, 0);
 					break;
@@ -898,6 +904,9 @@ void DoRandomizePositions2(int obeyGroup)
 
 WDL_DLGRET RandomizeItemPosDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, Message, wParam, lParam))
+		return r;
+
 	switch(Message)
     {
         case WM_INITDIALOG:
@@ -1064,6 +1073,9 @@ bool g_autogen_firstrun=true;
 
 WDL_DLGRET GenEnvesDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, Message, wParam, lParam))
+		return r;
+
 	switch(Message)
     {
         case WM_INITDIALOG:
@@ -1248,6 +1260,9 @@ void TakeMixerResetTakes(bool ResetVol=false,bool ResetPan=false)
 
 WDL_DLGRET TakeMixerDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, Message, wParam, lParam))
+		return r;
+
 	switch(Message)
     {
         case WM_INITDIALOG:
@@ -1607,6 +1622,9 @@ int PerformTakeSearch(char *SearchString)
 
 WDL_DLGRET TakeFinderDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, Message, wParam, lParam))
+		return r;
+
 	switch(Message)
     {
         case WM_INITDIALOG:

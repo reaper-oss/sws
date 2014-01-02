@@ -26,16 +26,20 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+#include "../SnM/SnM_Dlg.h"
 
 using namespace std;
 
 HWND g_hItemInspector=NULL;
 bool g_ItemInspectorVisible=false;
 
-BOOL WINAPI MyItemInspectorDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
+WDL_DLGRET MyItemInspectorDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
 	static HMENU g_hItemInspCtxMenu=0;
 	static int g_InspshowMode=1;
+	
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, Message, wParam, lParam))
+		return r;
 	
 	switch(Message)
     {

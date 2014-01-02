@@ -8,6 +8,37 @@ Other
 +Cycle Actions & Live Configs editors: shorten action names when possible
  e.g. "<s>SWS/S&M: </s>Insert silence (measures.beats)"
 +Better Snapshot details/descriptions
++SWS: Exported marker list format dialog opens centered
++Added "..." to the end of all (hopefully) Xenakios dialog actions that were missing it
++The following Xenakios dialogs are now themed:
+ - Auto-rename selected takes
+ - Create new tracks
+ - Disk space calculator
+ - Find missing media for project's takes
+ - Insert random points to selected envelope
+ - Item property interpolator
+ - Normalize selected takes to dB value
+ - Process item with Rubberband/csound phase vocoder
+ - Project media
+ - Randomize item positions
+ - Remap item positions
+ - Rename selected takes
+ - Rename selected tracks
+ - Rename takes
+ - Render item to new take with tail
+ - Repeat paste
+ - Reposition selected items
+ - Scale item positions/lengths by percentage
+ - Search takes
+ - Set volume and pan of selected takes
+ - Set volume of selected items
+ - Show/hide floating item/track info
+ - Skip select items from selected items
+ - Skip select items in selected tracks
+ - Spread selected items over tracks
+ - Swing item positions
+ - Take mixer
+ - Toggle selected items selected randomly
 
 !v2.4.0 #2 (November 15, 2013)
 <b>MIDI/OSC actions support learn with both MIDI Pitch and "normalized" OSC messages</b>
@@ -173,7 +204,7 @@ Fixes:
 Added actions:
 +SWS/BR: Hide all but active envelope for selected tracks
 +SWS/BR: Enable "Ignore project tempo" for selected MIDI items (use tempo at item's start)
-+SWS/BR: Disable "Ignore project tempo" for selected MIDI items	
++SWS/BR: Disable "Ignore project tempo" for selected MIDI items
 
 Other:
 +Cycle Action editor: improved context menu (http://forum.cockos.com/showpost.php?p=1205514&postcount=5|as discussed here|)
@@ -245,7 +276,7 @@ Resources window and related "slot actions"
  - Added label for the attached project name (if any), right-click to load/select the said project
 +<b>Added custom bookmarks</b>: Context menu > Bookmark > New bookmark > Custom...
  The definition format is: resource_directory_name,description,file_extensions (no spaces around commas)
- - Example1: Configurations,ReaConfig,ReaperConfigZip => Bank of configs example: auto-fill, then double-click slots to switch ReaConfigs (or, on Win, drag-drop slots to the arrange) 
+ - Example1: Configurations,ReaConfig,ReaperConfigZip => Bank of configs example: auto-fill, then double-click slots to switch ReaConfigs (or, on Win, drag-drop slots to the arrange)
  - Example2: Docs,Document,txt,rtf,pdf => Multiple file extensions example
  - Example3: Misc,Any file,* => Can be useful to attach any type of file to a project, for example
 +<b>Theme bookmarks and related slots actions: OS X port + now support both .ReaperthemeZip and .ReaperTheme files</b>
@@ -278,7 +309,7 @@ Live Configs:
  To bind an OSC device: Live Configs window > Context menu > OSC feedback, and choose a device in the list
  Devices listed there are the OSC "control surfaces" defined in Options > Preferences > Control Surfaces
  Note: only the name, IP, max packet size and output port parameters are required. Unless you need REAPER feedback as well, you do not need to tick the option "Send to port"
- Up to 4 OSC devices are managed, i.e. distinct feedback for Live Config #1, #2, #3 and #4 
+ Up to 4 OSC devices are managed, i.e. distinct feedback for Live Config #1, #2, #3 and #4
  The possible OSC messages (with string arguments) are:
  - /snm/liveconfig<b>n</b>/current/changed - when the active config changed for the Live Config #<b>n</b>
  - /snm/liveconfig<b>n</b>/current/changing - when the active config is changing for the Live Config #<b>n</b> (same as grayed display in monitoring windows)
@@ -320,7 +351,7 @@ Fixes:
 +Don't skip last fade shape when using Xenakios/SWS: Set next/previous fade in/out shape for items
 +More consistent behavior for:
  - Xenakios/SWS: Explode selected items to new tracks (keeping positions)
- - Xenakios/SWS: Select takes in selected items, shuffled random 
+ - Xenakios/SWS: Select takes in selected items, shuffled random
  - Xenakios/SWS: Select takes of selected items cyclically
 +These actions now work with empty items (issue 281):
  - SWS: Create regions from sel item(s) named with take
@@ -593,8 +624,8 @@ Export functions to ReaScript (BETA)
 +Updated API, updated SNM_AddReceive() to obey preferences
 
 Added actions
-+Added "go to" marker/region actions 
- REAPER already proposes 30 goto actions for markers and 40 for regions, 
++Added "go to" marker/region actions
+ REAPER already proposes 30 goto actions for markers and 40 for regions,
  so those new actions are just meant to target up to 99 regions/markers => they are <b>hidden by default!</b>
  This number of actions is http://forum.cockos.com/showthread.php?p=984786#post984786|customizable in the S&M.ini file|
  Note: comes in handy with the new Region Playlist "re-synchronization" feature, see above
@@ -757,11 +788,11 @@ Updated actions "Set selected tracks folder states"
 +Added actions (they were missing for the above ones to make sense..):
  - SWS/S&M: Set selected tracks folder states to last of all folders
  - SWS/S&M: Set selected tracks folder states to last in folder
- Note: when this last action is performed on a track which is already the last one in a folder, 
+ Note: when this last action is performed on a track which is already the last one in a folder,
  running it again will turn the track into the last in the innermost and next-innermost folders, etc..
 
 Region playlist
-+Paste/crop to playlist: make sure envelopes are pasted too 
++Paste/crop to playlist: make sure envelopes are pasted too
  (whatever is the pref. "Envelope points move with media items")
 +Avoid "flashy" cursor while playing playlists
 +Reorganized the window/context menus a bit
@@ -1190,7 +1221,7 @@ Resources window: bookmark names as defined by the user
 !v2.1.0 #23 (December 15, 2011)
 Notes/Help window -> Notes/Subtitles/Help
 +Subtitles support: new mode "Marker/Region subtitles" in the top left dropdown box.
- You can edit notes for regions and/or markers. Such notes are saved in project files. 
+ You can edit notes for regions and/or markers. Such notes are saved in project files.
  When the view/text edition is locked, notes are displayed with a dynamic sized font (display à la "Big clock") and they follow the play cursor position (i.e. subtitles!).
  Useful for lyrics, video stuff (you can display subtitles or even to edit them in REAPER), etc...
  Also added new buttons and actions to import/export SubRip subtitle files (.srt files, this format is supported by most video players) :
@@ -1343,7 +1374,7 @@ Manage slots for all media file types supported by REAPER (WAV, MIDI, etc..).
 +Reminder: you can switch the Resources window to "Media files" in the top left dropdown box
 +External drag-drop (e.g. drag a bunch of files from an external tool -> drop them into the Resources window)
 +Internal drag-drop (e.g. re-order slots, drag a bunch of slots from the Resources window -> drop them into the arrange) - Windows OS only
-Context menu: 
+Context menu:
 +Various "auto-fill slots" features, rename & delete file(s), insert/add/clear/etc.. slot, show path in explorer/finder, etc..
 +Bulk-add multiple selected media file slots to current track, to new tracks or to selected items as takes
 +Bulk-play or loop multiple media file slots
@@ -1378,7 +1409,7 @@ Added slot actions for themes:
 +SWS/S&M: Load theme, prompt for slot
 +SWS/S&M: Clear theme slot...
 
-Show Bank Select and Bank/Program Select lanes in FNG CC lane actions 
+Show Bank Select and Bank/Program Select lanes in FNG CC lane actions
 Fixed FNG crashes (issue 410 and issue 390)
 
 Issue 375: Added actions to control the master track hardware output:
@@ -1725,7 +1756,7 @@ S&M Resource window updates:
 +New option (in popup menu) to filter the list view by comments or paths
 +Switch to "fast listview" mode only if there are more than 500 slots
 
-S&M Find updates: 
+S&M Find updates:
 +Issue 298: move view to found item (more to come..)
 +Use text buttons rather than icons (looked bad with some themes)
 +Red "Not found!" message
@@ -2049,7 +2080,7 @@ House cleaning (more to come):
 +Tagged action "Xenakios/SWS: Project media..." as deprecated
 
 Issue 50:  SWS: Create regions from sel item(s) named with take
-Issue 126: Warn about recording same inputs on multiple tracks: http://www.standingwaterstudios.com/shup/RecInputCheck.png Also added actions "SWS: Enable/Disable checking for duplicate inputs when recording." 
+Issue 126: Warn about recording same inputs on multiple tracks: http://www.standingwaterstudios.com/shup/RecInputCheck.png Also added actions "SWS: Enable/Disable checking for duplicate inputs when recording."
 Issue 244: Added "SWS: Set selected take(s) to custom color X" actions
 Issue 246: Added toolbar-status only action "SWS: Are any tracks soloed? [no-op, for toolbar]"
 Fixed using Windows generated reaconsole_customcommands.txt files on OS X.
@@ -2231,8 +2262,8 @@ S&M house cleaning:
  - S&M Live Configs...
 +Removed the following split actions:
  Contrary to their related native versions, the following ones were splitting selected items *and only them*, see http://forum.cockos.com/showthread.php?t=51547|this related thread|.
- Due to REAPER v3.67's new native pref "If no items are selected, some split/trim/delete actions affect all items at the edit cursor", 
- those actions are less useful (well, they would still split only selected items even if that native pref is ticked). 
+ Due to REAPER v3.67's new native pref "If no items are selected, some split/trim/delete actions affect all items at the edit cursor",
+ those actions are less useful (well, they would still split only selected items even if that native pref is ticked).
  Also removed because of the spam in the action list (many split actions).
  - SWS/S&M: Split selected items at play cursor
  - SWS/S&M: Split selected items at time selection

@@ -26,6 +26,7 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+#include "../SnM/SnM_Dlg.h"
 #include "../reaper/localize.h"
 #include "Parameters.h"
 
@@ -450,6 +451,9 @@ int g_RenaCurTrack=0;
 
 WDL_DLGRET RenameTraxDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, Message, wParam, lParam))
+		return r;
+
 	switch(Message)
     {
         case WM_INITDIALOG:

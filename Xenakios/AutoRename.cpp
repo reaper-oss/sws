@@ -26,6 +26,8 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+#include "../Breeder/BR_Util.h"
+#include "../SnM/SnM_Dlg.h"
 #include "../reaper/localize.h"
 
 #define LAST_AUTORENAME_STR_KEY "Last autorename string"
@@ -201,12 +203,17 @@ void InitPresets()
 
 WDL_DLGRET AutoRenameDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
+	if (BR_ThemeListViewInProc(hwnd, Message, lParam, GetDlgItem(hwnd,IDC_AUTONAMEOUTPUT), true))
+		return 1;
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, Message, wParam, lParam))
+		return r;
+
 	switch(Message)
     {
         case WM_INITDIALOG:
 		{
 			WDL_UTF8_HookComboBox(GetDlgItem(hwnd,IDC_AUTONAMEPRESETS));
-			WDL_UTF8_HookListView(GetDlgItem(hwnd,IDC_AUTONAMEOUTPUT));
+			BR_ThemeListViewOnInit(GetDlgItem(hwnd,IDC_AUTONAMEOUTPUT));
 			
 			for (int i = 0; i < (int)g_AutoNamePresets.size(); i++)
 			{

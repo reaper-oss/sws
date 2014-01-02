@@ -27,6 +27,7 @@
 ******************************************************************************/
 #include "stdafx.h"
 #include "BR_Util.h"
+#include "../SnM/SnM_Dlg.h"
 
 bool IsThisFraction (char* str, double &convertedFraction)
 {
@@ -141,6 +142,24 @@ void ReplaceAll (string &str, string oldStr, string newStr)
 		str.replace(pos, oldLen, newStr);
 		pos += newLen;
 	}
+};
+
+void BR_ThemeListViewOnInit (HWND list)
+{
+	SWS_ListView listView(list, NULL, 0, NULL, NULL, false, NULL, true);
+	SNM_ThemeListView(&listView);
+};
+
+bool BR_ThemeListViewInProc (HWND hwnd, int uMsg, LPARAM lParam, HWND list, bool grid)
+{
+	if (SWS_THEMING)
+	{
+		int colors[LISTVIEW_COLORHOOK_STATESIZE];
+		int columns = (grid) ? (Header_GetItemCount(ListView_GetHeader(list))) : (0);
+		if (ListView_HookThemeColorsMessage(hwnd, uMsg, lParam, colors, GetWindowLong(list,GWL_ID), 0, columns))
+			return true;
+	}
+	return false;
 };
 
 void CommandTimer (COMMAND_T* ct)

@@ -26,6 +26,7 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+#include "../SnM/SnM_Dlg.h"	
 #include "../reaper/localize.h"
 
 using namespace std;
@@ -41,9 +42,13 @@ struct t_newtrackparams
 
 t_newtrackparams g_newtrackparams;
 
-BOOL WINAPI CreateTxDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
+WDL_DLGRET CreateTxDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
 	char buf[200];
+
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, Message, wParam, lParam))
+		return r;
+
 	if (Message==WM_INITDIALOG)
 	{
 		

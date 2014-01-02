@@ -38,5 +38,7 @@ double EndOfProject (bool markers, bool regions);
 void CenterDialog (HWND hwnd, HWND target, HWND zOrder);
 void GetSelItemsInTrack (MediaTrack* track, vector<MediaItem*> &items);
 void ReplaceAll (string& str, string oldStr, string newStr);
+void BR_ThemeListViewOnInit (HWND list);
+bool BR_ThemeListViewInProc (HWND hwnd, int uMsg, LPARAM lParam, HWND list, bool grid);
 void CommandTimer (COMMAND_T* ct);
 bool BR_SetTakeSourceFromFile(MediaItem_Take* take, char* filename, bool inProjectData);

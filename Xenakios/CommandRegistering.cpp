@@ -95,7 +95,7 @@ COMMAND_T g_XenCommandTable[] =
 	{ { DEFACCEL, "Xenakios/SWS: Move selected items left by item length" }, "XENAKIOS_MOVEITEMSLEFTBYLEN", DoMoveItemsLeftByItemLen,	"Move selected items left by item length", },
 	{ { DEFACCEL, "Xenakios/SWS: Trim/untrim item left edge to edit cursor" }, "XENAKIOS_TRIM_LEFTEDGETO_EDCURSOR", DoTrimLeftEdgeToEditCursor,	"Trim/Untrim item left edge to edit cursor", },
 	{ { DEFACCEL, "Xenakios/SWS: Trim/untrim item right edge to edit cursor" }, "XENAKIOS_TRIM_RIGHTEDGETO_EDCURSOR", DoTrimRightEdgeToEditCursor,	"Trim/Untrim item right edge to edit cursor", },
-	{ { DEFACCEL, "Xenakios/SWS: Scale item positions/lengths by static percentage..." }, "XENAKIOS_SCALEITEMPOS_STATIC", DoScaleItemPosStaticDlg,	"Scale item positions/lengths by static percentage...", },
+	{ { DEFACCEL, "Xenakios/SWS: Scale item positions/lengths by percentage..." }, "XENAKIOS_SCALEITEMPOS_STATIC", DoScaleItemPosStaticDlg,	"Scale item positions/lengths by static percentage...", },
 	{ { DEFACCEL, "Xenakios/SWS: Reposition selected items..." }, "XENAKIOS_REPOSITION_ITEMS", DoReposItemsDlg,	"Reposition selected items...", },
 	{ { DEFACCEL, "Xenakios/SWS: Rename selected takes (deprecated)..." }, "XENAKIOS_RENAMEMULTIPLETAKES", DoRenameTakeDlg,	"Rename selected takes...", },
 	{ { DEFACCEL, "Xenakios/SWS: Auto-rename selected takes..." }, "XENAKIOS_AUTORENAMETAKES", DoAutoRename,	"Auto-rename selected takes...", },
@@ -195,11 +195,11 @@ COMMAND_T g_XenCommandTable[] =
 	{ { DEFACCEL, "Xenakios/SWS: Jump edit cursor by random amount (exp distribution)" }, "XENAKIOS_JUMPEDITCURSOR_RAND_AMNT", DoJumpEditCursorByRandomAmount,	NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Loop and play selected items" }, "XENAKIOS_LOOPANDPLAYSELITEMS", DoLoopAndPlaySelectedItems, NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Play selected items once" }, "XENAKIOS_TIMERTEST1", DoPlayItemsOnce,NULL, },
-	{ { DEFACCEL, "Xenakios/SWS: Toggle selected items selected randomly" }, "XENAKIOS_RANDOM_ITEM_SELTOGGLE", DoToggleSelectedItemsRndDlg,	NULL, },
-	{ { DEFACCEL, "Xenakios/SWS: Process item with csound phase vocoder" }, "XENAKIOS_CSOUNDPVOC", DoShowPVocDlg,NULL, },
-	{ { DEFACCEL, "Xenakios/SWS: Render item to new take with tail" }, "XENAKIOS_RENDERITEMNEWTAKEWITHTAIL", DoRenderItemsWithTail,NULL, },
+	{ { DEFACCEL, "Xenakios/SWS: Toggle selected items selected randomly..." }, "XENAKIOS_RANDOM_ITEM_SELTOGGLE", DoToggleSelectedItemsRndDlg,	NULL, },
+	{ { DEFACCEL, "Xenakios/SWS: Process item with csound phase vocoder..." }, "XENAKIOS_CSOUNDPVOC", DoShowPVocDlg,NULL, },
+	{ { DEFACCEL, "Xenakios/SWS: Render item to new take with tail..." }, "XENAKIOS_RENDERITEMNEWTAKEWITHTAIL", DoRenderItemsWithTail,NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Open associated REAPER project of item" }, "XENAKIOS_OPENASSOCIATED_RPP", DoOpenAssociatedRPP,	NULL, },
-	{ { DEFACCEL, "Xenakios/SWS: Take mixer" }, "XENAKIOS_SHOWTAKEMIXERDLG", DoShowTakeMixerDlg,	NULL, },
+	{ { DEFACCEL, "Xenakios/SWS: Take mixer..." }, "XENAKIOS_SHOWTAKEMIXERDLG", DoShowTakeMixerDlg,	NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Insert random points to selected envelope..." }, "XENAKIOS_CLIPBOARD_TEST1", DoInsertRandomEnvelopePoints,	NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Insert media file from clipboard" }, "XENAKIOS_INSERTMEDIAFROMCLIPBOARD", DoInsertMediaFromClipBoard,NULL, },
 	
@@ -240,8 +240,8 @@ COMMAND_T g_XenCommandTable[] =
 #ifdef _WIN32
 	{ { DEFACCEL, "Xenakios/SWS: [Deprecated] Project media..." }, "XENAKIOS_MANAGEMEDIA", DoShowProjectMediaDlg,NULL, },
 #endif
-	{ { DEFACCEL, "Xenakios/SWS: Find missing media for project's takes" }, "XENAKIOS_FINDMISSINGMEDIA", DoFindMissingMedia,NULL, true },
-	{ { DEFACCEL, "Xenakios/SWS: Show/hide floating item/track info" }, "XENAKIOS_SHOWHIDE_ITEMINSPECTOR", DoTglFltItemInspector,NULL, true },
+	{ { DEFACCEL, "Xenakios/SWS: Find missing media for project's takes..." }, "XENAKIOS_FINDMISSINGMEDIA", DoFindMissingMedia,NULL, true },
+	{ { DEFACCEL, "Xenakios/SWS: Show/hide floating item/track info..." }, "XENAKIOS_SHOWHIDE_ITEMINSPECTOR", DoTglFltItemInspector,NULL, true },
 	{ { DEFACCEL, "Xenakios/SWS: Spread selected items over 4 tracks" }, "XENAKIOS_SPREADITEMSOVER4TRAX", DoSpreadSelItemsOver4Tracks,NULL, true },
 	{ { DEFACCEL, "Xenakios/SWS: Spread selected items over tracks..." }, "XENAKIOS_SPREADITEMSOVERTRAX", DoShowSpreadItemsDlg,	NULL, true },
 	{ { DEFACCEL, "Xenakios/SWS: Explode selected items to new tracks (keeping positions)" }, "XENAK_SPRDITOVERNEWTX", DoSpeadSelItemsOverNewTx,NULL, },
@@ -275,7 +275,7 @@ COMMAND_T g_XenCommandTable[] =
 	{ { DEFACCEL, "Xenakios/SWS: Toggle ripple edit (all tracks) on/off" }, "XENAK__TOGGLERIPPLEALL", DoToggleRippleAll, NULL, 0, IsRippleAll },
 	{ { DEFACCEL, "Xenakios/SWS: Open (audio) take in external editor 3" }, "XENAKIOS_OPAUEXTED1", DoOpenInExtEditor1, NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Open (audio) take in external editor 4" }, "XENAKIOS_OPAUEXTED2", DoOpenInExtEditor2, NULL, },
-	{ { DEFACCEL, "Xenakios/SWS: Item property interpolator" }, "XENAKIOS_ITEMPROPINTERPDLG", DoShowItemInterpDLG,NULL, },
+	{ { DEFACCEL, "Xenakios/SWS: Item property interpolator..." }, "XENAKIOS_ITEMPROPINTERPDLG", DoShowItemInterpDLG,NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Nudge section loop length longer" }, "XENAKIOS_NUDGSECTLOOPLENPOS", DoNudgeSectionLoopLenPlus, NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Nudge section loop length shorter" }, "XENAKIOS_NUDGSECTLOOPLENNEG", DoNudgeSectionLoopLenMinus, NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Nudge section loop start later" }, "XENAKIOS_NUDGSECTLOOPSTARTPOS", DoNudgeSectionLoopStartPlus, NULL, },
@@ -346,7 +346,7 @@ COMMAND_T g_XenCommandTable[] =
 	{ { DEFACCEL, "Xenakios/SWS: Move edit cursor 32nd note right" }, "XEN_MOVE_EDCUR32NDRIGHT", DoMoveEditCursor32ndRight,	NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Move edit cursor 64th note left" }, "XEN_MOVE_EDCUR64THLEFT", DoMoveEditCursor64thLeft, NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Move edit cursor 64th note right" }, "XEN_MOVE_EDCUR64THRIGHT", DoMoveEditCursor64thRight, NULL, },
-	{ { DEFACCEL, "Xenakios/SWS: Disk space calculator" }, "XENAKIOS_DISKSPACECALC", DoShowDiskspaceCalc,NULL, },
+	{ { DEFACCEL, "Xenakios/SWS: Disk space calculator..." }, "XENAKIOS_DISKSPACECALC", DoShowDiskspaceCalc,NULL, },
 
 	{ { DEFACCEL, "Xenakios/SWS: Command parameters" }, "XENAKIOS_SHOW_COMMANDPARAMS", DoShowCommandParameters,	"Command parameters", },
 	

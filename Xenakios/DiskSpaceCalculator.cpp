@@ -26,6 +26,7 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+#include "../SnM/SnM_Dlg.h"	
 #include "../reaper/localize.h"
 
 using namespace std;
@@ -60,6 +61,9 @@ void UpdateDialogControls(HWND hwnd)
 
 WDL_DLGRET DiskCalcDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, Message, wParam, lParam))
+		return r;
+
 	if (Message==WM_INITDIALOG)
 	{
 		SendMessage(GetDlgItem(hwnd, IDC_COMBO1), CB_ADDSTRING, 0, (LPARAM)"8");

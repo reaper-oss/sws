@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Project.cpp
 /
-/ Copyright (c) 2011-2013 Jeffos
+/ Copyright (c) 2011-2014 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -105,7 +105,7 @@ double SNM_GetProjectLength(bool _items, bool _inclRgnsMkrs)
 
 bool InsertSilence(const char* _undoTitle, double _pos, double _len)
 {
-	if (_pos >=0.0 && _len > 0.0 && _pos <SNM_GetProjectLength())
+	if (_pos>=0.0 && _len>0.0 && _pos<SNM_GetProjectLength())
 	{
 		if (_undoTitle)
 			Undo_BeginBlock2(NULL);
@@ -117,7 +117,7 @@ bool InsertSilence(const char* _undoTitle, double _pos, double _len)
 		GetSet_LoopTimeRange2(NULL, true, false, &_pos, &d, false);
 		Main_OnCommand(40200, 0); // insert space at time sel
 
-		// restore time sel, enlarge it if needed (mimic native behavior with regions)
+		// restore time sel, enlarge if needed (mimic native behavior)
 		if (timeSel1>_pos) timeSel1+=_len;
 		if (_pos<timeSel2) timeSel2+=_len;
 		GetSet_LoopTimeRange2(NULL, true, false, &timeSel1, &timeSel2, false);
@@ -190,7 +190,7 @@ void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND
 ///////////////////////////////////////////////////////////////////////////////
 // Project startup action
 // Based on a registered timer so that everything has been initialized before
-// triggering the startup action (especially useful on REAPER launch)
+// triggering the startup action (useful on REAPER launch)
 ///////////////////////////////////////////////////////////////////////////////
 
 SWSProjConfig<WDL_FastString> g_prjActions;
@@ -206,7 +206,7 @@ void OnTriggerActionTimer()
 		if (strstr(g_prjActions.Get()->Get(), "S&M_LOAD_THEME"))
 			ScheduledJob::Schedule(new StartupProjectActionJob(cmdId));
 
-		// standard cases (faster)
+		// standard case, faster
 		else
 			Main_OnCommand(cmdId, 0);
 #ifdef _SNM_DEBUG
@@ -226,8 +226,7 @@ void SetProjectStartupAction(COMMAND_T* _ct)
 		WDL_FastString msg;
 		if (int cmdId = SNM_NamedCommandLookup(idstr))
 		{
-			// more useless checks...
-			// http://forum.cockos.com/showpost.php?p=1252206&postcount=1618
+			// more checks: http://forum.cockos.com/showpost.php?p=1252206&postcount=1618
 			if (int tstNum = CheckSwsMacroScriptNumCustomId(idstr))
 			{
 				msg.SetFormatted(256, __LOCALIZE_VERFMT("%s failed: unreliable command ID '%s'!","sws_DLG_161"), SWS_CMD_SHORTNAME(_ct), idstr);

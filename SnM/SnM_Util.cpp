@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Util.cpp
 /
-/ Copyright (c) 2012-2013 Jeffos
+/ Copyright (c) 2012-2014 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -644,7 +644,7 @@ void SNM_UpgradeIniFiles()
 
 // a _snprintf that ensures the string is always null terminated (but truncated if needed)
 // note: WDL_snprintf's return value cannot be trusted, see wdlcstring.h
-//       (using it could break other sws members' code)
+//       (using it could break other project members' code)
 int _snprintfSafe(char* _buf, size_t _n, const char* _fmt, ...)
 {
 	va_list va;
@@ -669,7 +669,7 @@ int _snprintfSafe(char* _buf, size_t _n, const char* _fmt, ...)
 // a _snprintf that returns >=0 when the string is null terminated and not truncated
 // => callers must check the returned value 
 // note: WDL_snprintf's return value cannot be trusted, see wdlcstring.h
-//       (using it could break other sws members' code)
+//       (using it could break other project members' code)
 int _snprintfStrict(char* _buf, size_t _n, const char* _fmt, ...)
 {
 	va_list va;
@@ -815,8 +815,8 @@ double SeekPlay(double _pos, bool _moveView)
 ///////////////////////////////////////////////////////////////////////////////
 
 // overrides the API's NamedCommandLookup: works for all action sections, and
-// fix a REAPER BUG: NamedCommandLookup("65534") returns "65534" although this 
-// action does not exist (= noop's cmdId-1)
+// fixes a REAPER BUG: NamedCommandLookup("65534") returns "65534" although 
+// this action does not exist (= noop's cmdId-1)
 // _hardCheck: if true, do more tests on the returned command id because the 
 //             API's NamedCommandLookup can return an id although the related 
 //             action is not registered yet, ex: at init time, when an action
@@ -830,15 +830,14 @@ int SNM_NamedCommandLookup(const char* _custId, KbdSectionInfo* _section, bool _
 	if (_custId && *_custId)
 	{
 		//JFB! cool finding (REAPER v4.34rc1):
-		// for macros/scripts (which are the only non-native things that can be registered
-		// in those sections ATM), it turns out NamedCommandLookup() works for all sections (!)
-		// 3rd party sections are ok too because they can't register custom ids in there yet
+		// for macros/scripts, it turns out NamedCommandLookup() works for all sections (!)
+		// ok for 3rd party sections too because they can't register custom ids (yet)
 		if (*_custId == '_')
 			cmdId = NamedCommandLookup(_custId);
 		else
 			cmdId = atoi(_custId);
 
-		// make sure things like "-666" do not match
+		// make sure things like -666 won't match
 		if (cmdId)
 		{
 			bool found = false;
@@ -863,9 +862,10 @@ int SNM_NamedCommandLookup(const char* _custId, KbdSectionInfo* _section, bool _
 
 const char* SNM_GetTextFromCmd(int _cmdId, KbdSectionInfo* _section)
 {
-	const char* name = SWS_CMD_SHORTNAME(SWSGetCommandByID(_cmdId));
-	if (*name)
-		return name;
+	if (!_section || _section==SNM_GetActionSection(SNM_SEC_IDX_MAIN)) {
+		const char* name = SWS_CMD_SHORTNAME(SWSGetCommandByID(_cmdId));
+		if (*name) return name;
+	}
 	return kbd_getTextFromCmd(_cmdId, _section);
 }
 

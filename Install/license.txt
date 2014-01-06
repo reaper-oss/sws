@@ -1,4 +1,4 @@
-Copyright (c) 2013 Tim Payne (SWS), Jeffos (S&M), Xenakios, Fingers, 
+Copyright (c) 2014 Tim Payne (SWS), Jeffos (S&M), Xenakios, Fingers, 
 P Bourdon, Adam Wathan, Shane StClair, Philip S. Considine, and
 Dominik Martin Drzic.
 

@@ -1,7 +1,7 @@
 #pragma once
 #define LICENSE_TEXT \
-"Copyright (c) 2013\tTim Payne (SWS)\r\n" \
-"\t\tJ.F. Bedague (S&M)\r\n" \
+"Copyright (c) 2014\tTim Payne (SWS)\r\n" \
+"\t\tJeffos (S&M)\r\n" \
 "\t\tFingers (FNG)\r\n" \
 "\t\tDominik Martin Drzic (BR)\r\n" \
 "Copyright (c) 2012\tPhilip S. Considine (IX)\r\n" \

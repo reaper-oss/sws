@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Resources.cpp
 /
-/ Copyright (c) 2009-2013 Jeffos
+/ Copyright (c) 2009-2014 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -26,8 +26,9 @@
 ******************************************************************************/
 
 //JFB
-// TODO: turn"Attach bookmark files to this project" into "In-project bookmark"
+// TODO: turn "Attach bookmark files to this project" into "In-project bookmark"
 //       requires some API updates first though : http://askjf.com/index.php?q=2465s
+//       => done in REAPER v4.58: file_in_project_ex2!
 
 #include "stdafx.h"
 #include "SnM.h"
@@ -49,6 +50,9 @@
 #define RES_WND_ID					"SnMResources"
 #define IMG_WND_ID					"SnMImage"
 #define RES_INI_SEC					"Resources"
+
+#define RES_TIE_TAG					" [x]" //UTF8_BULLET
+
 
 // common cmds
 #define AUTOFILL_MSG				0xF000
@@ -1099,12 +1103,28 @@ void ResourcesWnd::SetType(int _type)
 
 int ResourcesWnd::SetType(const char* _name)
 {
-	if (_name)
+	if (_name && *_name)
+	{
+		int sel=0;
 		for (int i=0; i<m_cbType.GetCount(); i++)
-			if (!_stricmp(_name, m_cbType.GetItem(i))) {
-				SetType(i);
-				return i;
+		{
+			const char* p1 = m_cbType.GetItem(i);
+
+			// zap " [x]" if needed (issue 615)
+			WDL_FastString item(p1);
+			const char* p2 = strstr(p1, RES_TIE_TAG);
+			item.Set(p1, p2 ? p2-p1 : 0);
+
+			if (strcmp("<SEP>", item.Get()))
+			{
+				if (!_stricmp(item.Get(), _name)) {
+					SetType(sel);
+					return sel;
+				}
+				sel++;
 			}
+		}
+	}
 	return -1;
 }
 
@@ -1126,9 +1146,8 @@ void ResourcesWnd::FillTypeCombo()
 
 		typeName.Set(g_SNM_ResSlots.Get(i)->GetName());
 		*typeName.Get() = toupper(*typeName.Get()); // 1st char to upper
-		typeName.Append(" ");
 		if (IsMultiType(i))
-			typeName.Append(g_tiedSlotActions[GetTypeForUser(i)] == i ? " [x]" : ""); //UTF8_BULLET : UTF8_CIRCLE);
+			typeName.Append(g_tiedSlotActions[GetTypeForUser(i)] == i ? RES_TIE_TAG : "");
 		m_cbType.AddItem(typeName.Get());
 	}
 	m_cbType.SetCurSel2((g_resType>0 && g_resType<g_SNM_ResSlots.GetSize()) ? g_resType : SNM_SLOT_FXC);
@@ -2231,7 +2250,7 @@ bool ResourcesWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bu
 				}
 				break;
 			case CMBID_TYPE:
-				return (lstrcpyn(_bufOut, __LOCALIZE("Bookmarks (right-click for options)\nA bookmark name ends with [x] when relevant slot actions are attached to it","sws_DLG_150"), _bufOutSz) != NULL);
+				return (_snprintfStrict(_bufOut, _bufOutSz, __LOCALIZE_VERFMT("Bookmarks (right-click for options)\nA bookmark name ends with%s when slot actions are attached to it","sws_DLG_150"), RES_TIE_TAG) > 0);
 			case BTNID_ADD_BOOKMARK:
 				return (_snprintfStrict(_bufOut, _bufOutSz, __LOCALIZE_VERFMT("New %s bookmark","sws_DLG_150"), g_SNM_ResSlots.Get(typeForUser)->GetName()) > 0);
 			case BTNID_DEL_BOOKMARK:
@@ -4468,8 +4487,17 @@ int SNM_SelectResourceBookmark(const char* _name)
 	return -1;
 }
 
-void SNM_TieResourceSlotActions(int _bookmarkId) {
+void SNM_TieResourceSlotActions(int _bookmarkId)
+{
 	int typeForUser = _bookmarkId>=0 ? GetTypeForUser(_bookmarkId) : -1;
 	if (typeForUser>=0 && typeForUser<SNM_NUM_DEFAULT_SLOTS)
+	{
 		g_tiedSlotActions[typeForUser] = _bookmarkId;
+
+		// update [x] tag
+		if (ResourcesWnd* w = g_resWndMgr.Get()) {
+			w->FillTypeCombo();
+			w->Update();
+		}
+	}
 }

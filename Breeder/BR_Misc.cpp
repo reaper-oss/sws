@@ -69,7 +69,7 @@ void MarkersAtTempo (COMMAND_T* ct)
 	if (!CountTempoTimeSigMarkers(NULL))
 		return;
 	LineParser lp(false);
-	TrackEnvelope* envelope = SWS_GetTrackEnvelopeByName(CSurf_TrackFromID(0, false), "Tempo map" );
+	TrackEnvelope* envelope = GetTempoEnv();
 	char* envState = GetSetObjectState(envelope, "");
 	char* token = strtok(envState, "\n");
 

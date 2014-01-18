@@ -1,5 +1,6 @@
 Fixes
 +Issue 613 / Region Playlist: fixed rounding issues (with adjacent regions)
++Issue 619 / Various tempo actions and dialogs now work when using langpacks
 +Fixed broken actions "SWS: Set auto crossfade on/off"
 
 Other

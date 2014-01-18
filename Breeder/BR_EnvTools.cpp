@@ -28,6 +28,7 @@
 #include "stdafx.h"
 #include "BR_EnvTools.h"
 #include "BR_Util.h"
+#include "../reaper/localize.h"
 
 BR_EnvChunk::BR_EnvChunk (TrackEnvelope* envelope, bool effCreate /*= false*/) :
 m_envelope	(envelope), 
@@ -488,7 +489,7 @@ vector<int> GetSelEnvPoints (TrackEnvelope* envelope)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 TrackEnvelope* GetTempoEnv ()
 {
-	return SWS_GetTrackEnvelopeByName(CSurf_TrackFromID(0, false), "Tempo map" );
+	return GetTrackEnvelopeByName(CSurf_TrackFromID(0, false),  __localizeFunc("Tempo map", "env", 0));
 };
 
 double AverageProjTempo ()

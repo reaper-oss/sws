@@ -886,7 +886,7 @@ void SelectTempo (int mode, int Nth, int timeSel, int bpm, double bpmStart, doub
 	GetSet_LoopTimeRange2 (NULL, false, false, &tStart, &tEnd, false);
 	
 	// Get tempo chunk
-	TrackEnvelope* envelope = SWS_GetTrackEnvelopeByName(CSurf_TrackFromID(0, false), "Tempo map" );
+	TrackEnvelope* envelope = GetTempoEnv();
 	char* envState = GetSetObjectState(envelope, "");
 	char* token = strtok(envState, "\n");
 
@@ -1034,7 +1034,7 @@ void AdjustTempo (int mode, double bpm, int shape)
 	*/
 
 	// Get tempo chunk
-	TrackEnvelope* envelope = SWS_GetTrackEnvelopeByName(CSurf_TrackFromID(0, false), "Tempo map" );
+	TrackEnvelope* envelope = GetTempoEnv();
 	char* envState = GetSetObjectState(envelope, "");
 	char* token = strtok(envState, "\n");
 
@@ -1707,7 +1707,7 @@ WDL_DLGRET RandomizeTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 			*(int*)GetConfigVar("undomask") = ClearBit(undoMask, 3);				// turn off undo for edit cursor
 
 			// Get current tempo
-			char* tempoEnv = GetSetObjectState(SWS_GetTrackEnvelopeByName(CSurf_TrackFromID(0, false), "Tempo map" ), "");
+			char* tempoEnv = GetSetObjectState(GetTempoEnv(), "");
 			size_t size = strlen(tempoEnv)+1;
 			oldTempo = new (nothrow) char[size];
 			if (oldTempo != NULL)
@@ -1963,7 +1963,7 @@ void SetRandomTempo (HWND hwnd, char* oldTempo, double min, double max, int unit
 	delete [] chunk;
 
 	// Update tempo chunk
-	GetSetObjectState(SWS_GetTrackEnvelopeByName(CSurf_TrackFromID(0, false), "Tempo map" ), newState.Get());
+	GetSetObjectState(GetTempoEnv(), newState.Get());
 
 	// Refresh tempo map
 	double t, b; int n, d; bool s;
@@ -1975,8 +1975,8 @@ void SetRandomTempo (HWND hwnd, char* oldTempo, double min, double max, int unit
 void SetPreRandTempo (char* oldTempo)
 {
 	// Set back the old tempo
-	GetSetObjectState(SWS_GetTrackEnvelopeByName(CSurf_TrackFromID(0, false), "Tempo map" ), oldTempo);
-	
+	GetSetObjectState(GetTempoEnv(), oldTempo);
+
 	// Refresh tempo map
 	double t, b; int n, d; bool s;
 	GetTempoTimeSigMarker(NULL, 0, &t, NULL, NULL, &b, &n, &d, &s);

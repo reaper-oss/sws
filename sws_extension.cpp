@@ -817,11 +817,6 @@ extern "C"
 			ERR_RETURN("SWS version incompatibility\n")
 		}
 
-#ifdef _WIN32
-		if (IsLocalized())
-			setlocale(LC_ALL, "");
-#endif
-
 		if (!rec->Register("hookcommand",(void*)hookCommandProc))
 			ERR_RETURN("hook command error\n")
 

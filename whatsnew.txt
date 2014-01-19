@@ -2,6 +2,7 @@ Fixes
 +Issue 613 / Region Playlist: fixed rounding issues (with adjacent regions)
 +Issue 619 / Various tempo actions and dialogs now work when using langpacks
 +Fixed broken actions "SWS: Set auto crossfade on/off"
++Fixed situation where using langpacks with certain locale settings (i.e. comma as a decimal mark) broke a lot of stuff
 
 Other
 +Made .beats optional for the action "SWS/S&M: Insert silence (measures.beats)"

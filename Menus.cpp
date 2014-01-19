@@ -165,6 +165,7 @@ int FindSortedPos(HMENU hMenu, const char* text)
 #endif
 	MENUITEMINFO mi = {sizeof(MENUITEMINFO),};
 	mi.fMask = MIIM_TYPE;
+	_locale_t locale = _create_locale(LC_ALL, "");
 	for (int i=nbItems-1; i>=0 ; i--)
 	{
 		GetMenuItemInfo(hMenu, i, true, &mi);
@@ -172,7 +173,7 @@ int FindSortedPos(HMENU hMenu, const char* text)
 			break;
 #ifdef _WIN32
 		GetMenuStringW(hMenu, i, widebuf, 4096, MF_BYPOSITION);
-		if (_wcsnicoll(widetext, widebuf, 4096) < 0) // requires setLocale(), see sws_extension.cpp
+		if (_wcsnicoll_l(widetext, widebuf, 4096, locale) < 0) // setLocale() can break things (atof and comma as a decimal mark) so use temporary locale object
 			pos = i;
 #else
 		GetMenuString(hMenu, i, buf, sizeof(buf), MF_BYPOSITION);
@@ -180,6 +181,7 @@ int FindSortedPos(HMENU hMenu, const char* text)
 			pos = i;
 #endif
 	}
+	_free_locale(locale);
 	return pos<0 ? nbItems : pos;
 }
 

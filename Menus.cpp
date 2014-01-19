@@ -160,12 +160,13 @@ int FindSortedPos(HMENU hMenu, const char* text)
 #ifdef _WIN32
 	wchar_t widetext[4096], widebuf[4096];
 	MultiByteToWideChar(CP_UTF8, 0, text, -1, widetext, 4096);
+	locale_t locale = _create_locale(LC_ALL, "");
 #else
 	char buf[4096] = "";
 #endif
 	MENUITEMINFO mi = {sizeof(MENUITEMINFO),};
 	mi.fMask = MIIM_TYPE;
-	_locale_t locale = _create_locale(LC_ALL, "");
+
 	for (int i=nbItems-1; i>=0 ; i--)
 	{
 		GetMenuItemInfo(hMenu, i, true, &mi);
@@ -181,7 +182,9 @@ int FindSortedPos(HMENU hMenu, const char* text)
 			pos = i;
 #endif
 	}
-	_free_locale(locale);
+#ifdef _WIN32	
+	free_locale(locale);
+#endif	
 	return pos<0 ? nbItems : pos;
 }
 

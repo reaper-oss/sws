@@ -1,5 +1,5 @@
 /******************************************************************************
-/ SnM_ChunkParserPatcher.h - v1.33
+/ SnM_ChunkParserPatcher.h - v1.34
 / Copyright (c) 2008-2013 Jeffos
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -272,7 +272,7 @@ virtual bool Commit(bool _force = false)
 }
 
 const char* GetInfo() {
-	return "SNM_ChunkParserPatcher - v1.31";
+	return "SNM_ChunkParserPatcher - v1.34";
 }
 
 void SetProcessBase64(bool _enable) {
@@ -474,7 +474,7 @@ const char* SNM_GetSetObjectState(void* _obj, WDL_FastString* _str)
 #ifdef _SWS_EXTENSION
 	p = SWS_GetSetObjectState(_obj, _str, m_minimalState);
 #else
-	itn fxstate = SNM_PreObjectState(_str, m_minimalState);
+	int fxstate = SNM_PreObjectState(_str, m_minimalState);
 	p = GetSetObjectState(_obj, _str ? _str->Get() : NULL);
 	SNM_PostObjectState(fxstate);
 #endif

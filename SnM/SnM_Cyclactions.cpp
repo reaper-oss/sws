@@ -105,57 +105,59 @@ bool CheckRecursiveCmd(const char* _cmdStr, WDL_PtrList<WDL_FastString>* _parent
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Instructions
+// Statements
 ///////////////////////////////////////////////////////////////////////////////
 
 enum {
-  IDX_INSTRUC_IFNOT=0,	
-  IDX_INSTRUC_IF,
-  IDX_INSTRUC_ELSE,
-  IDX_INSTRUC_ENDIF,
-  IDX_INSTRUC_LOOP,
-  IDX_INSTRUC_ENDLOOP,
-  IDX_INSTRUC_CONSOLE,
-  IDX_INSTRUC_LABEL,
-  NB_INSTRUCTIONS
+  IDX_STATEMENT_IFNOT=0,	
+  IDX_STATEMENT_IF,
+  IDX_STATEMENT_ELSE,
+  IDX_STATEMENT_ENDIF,
+  IDX_STATEMENT_LOOP,
+  IDX_STATEMENT_ENDLOOP,
+  IDX_STATEMENT_CONSOLE,
+  IDX_STATEMENT_LABEL,
+  NB_STATEMENTS
 };
 
 // gotcha1: do not localize these strings!
-// gotcha2: IDX_INSTRUC_IFNOT must be placed before IDX_INSTRUC_IF as both start with the same string
-//          (funcs like IsInstruction() would fail otherwise)
-#define INSTRUC_IFNOT	"IF NOT"
-#define INSTRUC_IF		"IF"
-#define INSTRUC_ELSE	"ELSE"
-#define INSTRUC_ENDIF	"ENDIF"
-#define INSTRUC_LOOP	"LOOP"
-#define INSTRUC_ENDLOOP	"ENDLOOP"
-#define INSTRUC_CONSOLE	"CONSOLE"
-#define INSTRUC_LABEL	"LABEL"
+// gotcha2: IDX_STATEMENT_IFNOT must be placed before IDX_STATEMENT_IF as both
+//          start with the same string: things like IsStatement() would fail otherwise
+#define STATEMENT_IFNOT		"IF NOT"
+#define STATEMENT_IF		"IF"
+#define STATEMENT_ELSE		"ELSE"
+#define STATEMENT_ENDIF		"ENDIF"
+#define STATEMENT_LOOP		"LOOP"
+#define STATEMENT_ENDLOOP	"ENDLOOP"
+#define STATEMENT_CONSOLE	"CONSOLE"
+#define STATEMENT_LABEL		"LABEL"
 
-const char g_instrucs[][16] = { INSTRUC_IFNOT, INSTRUC_IF, INSTRUC_ELSE, INSTRUC_ENDIF, INSTRUC_LOOP, INSTRUC_ENDLOOP, INSTRUC_CONSOLE, INSTRUC_LABEL };
+const char g_statements[][16] = { STATEMENT_IFNOT, STATEMENT_IF, STATEMENT_ELSE, STATEMENT_ENDIF, STATEMENT_LOOP, STATEMENT_ENDLOOP, STATEMENT_CONSOLE, STATEMENT_LABEL };
 
 //!WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_161
-const char g_instrucInfos[][64] = { "If not --->", "If --->", "<--- else --->", "<---", "Loop --->", "<---", "ReaConsole command", "Label Processor command" };
+const char g_statementInfos[][64] = { "If not --->", "If --->", "<--- else --->", "<---", "Loop --->", "<---", "ReaConsole command", "Label Processor command" };
 //!WANT_LOCALIZE_STRINGS_END
 
 
-int IsInstruction(const char* _cmd)
+int IsStatement(const char* _cmd)
 {
 	if (_cmd && *_cmd)
-		for (int i=0; i<NB_INSTRUCTIONS; i++)
-			if (!_strnicmp(g_instrucs[i], _cmd, strlen(g_instrucs[i])))
+		for (int i=0; i<NB_STATEMENTS; i++)
+			if (!_strnicmp(g_statements[i], _cmd, strlen(g_statements[i])))
 				return i;
 	return -1;
 }
 
-int IsInstructionWithParam(int _id) {
-	return _id==IDX_INSTRUC_LOOP || _id==IDX_INSTRUC_CONSOLE || _id==IDX_INSTRUC_LABEL;
+int IsStatementWithParam(int _id) {
+	return _id==IDX_STATEMENT_LOOP || _id==IDX_STATEMENT_CONSOLE || _id==IDX_STATEMENT_LABEL;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 // Explode _cmdStr into "atomic" actions
-// IMPORTANT: THOSE FUNCS ASSUME ACTIONS ARE NOT YET REGISTERED
+//
+// IMPORTANT: THOSE FUNCS MUST ASSUME ACTIONS ARE NOT REGISTERED YET!
+//
 // _flags:    &1=perform
 //               Rmk: no need to explode sub CAs, macros and console cmds 
 //               recursively in this case: faster + handles scripts + 
@@ -199,7 +201,7 @@ int ExplodeCmd(int _section, const char* _cmdStr,
 				return ExplodeMacro(_section, _cmdStr, _cmds, _macros, _consoles, _flags);
 		}
 
-		// default case: only native/3rd party actions, or instructions at this point
+		// default case: only native/3rd party actions, or statements at this point
 		if (_flags&2)
 		{
 			if (KbdSectionInfo* kbdSec = SNM_GetActionSection(_section)) {
@@ -383,7 +385,7 @@ int ExplodeConsoleAction(int _section, const char* _cmdStr,
 		if (_cmds)
 		{
 			WDL_FastString* explCmd = new WDL_FastString;
-			explCmd->SetFormatted(256, "%s %s", INSTRUC_CONSOLE, _consoles->Get(id)->Get());
+			explCmd->SetFormatted(256, "%s %s", STATEMENT_CONSOLE, _consoles->Get(id)->Get());
 			_cmds->Add(explCmd);
 		}
 		return 1;
@@ -434,26 +436,26 @@ int PerformSingleCommand(int _section, const char* _cmdStr)
 		}
 		// custom console command?
 		// note: authorized in any section
-		else if (!_strnicmp(INSTRUC_CONSOLE, _cmdStr, strlen(INSTRUC_CONSOLE)))
+		else if (!_strnicmp(STATEMENT_CONSOLE, _cmdStr, strlen(STATEMENT_CONSOLE)))
 		{
-			RunConsoleCommand(_cmdStr+strlen(INSTRUC_CONSOLE)+1); // +1 for the space char in "CONSOLE cmd"
+			RunConsoleCommand(_cmdStr+strlen(STATEMENT_CONSOLE)+1); // +1 for the space char in "CONSOLE cmd"
 			if (!g_undos)
 			{
 				char undo[128];
-				_snprintfSafe(undo, sizeof(undo), __LOCALIZE("ReaConsole command '%s'","sws_undo"), _cmdStr+strlen(INSTRUC_CONSOLE)+1);
+				_snprintfSafe(undo, sizeof(undo), __LOCALIZE("ReaConsole command '%s'","sws_undo"), _cmdStr+strlen(STATEMENT_CONSOLE)+1);
 				Undo_OnStateChangeEx2(NULL, undo, UNDO_STATE_ALL, -1);
 			}
 			return 1;
 		}
 		// label processor command
-		else if (!_strnicmp(INSTRUC_LABEL, _cmdStr, strlen(INSTRUC_LABEL)))
+		else if (!_strnicmp(STATEMENT_LABEL, _cmdStr, strlen(STATEMENT_LABEL)))
 		{
-			WDL_FastString str(_cmdStr+strlen(INSTRUC_LABEL)+1); // +1 for the space char in "LABEL cmd"
+			WDL_FastString str(_cmdStr+strlen(STATEMENT_LABEL)+1); // +1 for the space char in "LABEL cmd"
 			RunLabelCommand(&str);
 			if (!g_undos)
 			{
 				char undo[128];
-				_snprintfSafe(undo, sizeof(undo), __LOCALIZE("Label Processor command '%s'","sws_undo"), _cmdStr+strlen(INSTRUC_LABEL)+1);
+				_snprintfSafe(undo, sizeof(undo), __LOCALIZE("Label Processor command '%s'","sws_undo"), _cmdStr+strlen(STATEMENT_LABEL)+1);
 				Undo_OnStateChangeEx2(NULL, undo, UNDO_STATE_ALL, -1); // do not use UNDO_STATE_ITEMS here
 			}
 			return 1;
@@ -462,14 +464,14 @@ int PerformSingleCommand(int _section, const char* _cmdStr)
 	return 0;
 }
 
-// assumes the CA is valid (e.g. no recursion) + its instructions are valid + etc..
+// assumes the CA is valid (e.g. no recursion) + its statements are valid + etc..
 // (faulty CAs must not be registered at this point, see CheckRegisterableCyclaction())
 void RunCycleAction(int _section, COMMAND_T* _ct)
 {
 	if (!_ct || _section<0 || _section>=SNM_MAX_CA_SECTIONS) // possible via RunCyclaction(COMMAND_T*)
 		return;
 
-	Cyclaction* action = _ct ? g_cas[_section].Get((int)_ct->user-1) : NULL; // cycle action id is 1-based (for user display)
+	Cyclaction* action = _ct ? g_cas[_section].Get((int)_ct->user-1) : NULL; // id is 1-based (for user display)
 	if (!action || !action->m_cmdId) // registered actions only
 		return;
 
@@ -490,11 +492,11 @@ void RunCycleAction(int _section, COMMAND_T* _ct)
 			for (int i=0; i<subCmds.GetSize(); i++)
 			{
 				const char* cmdStr = subCmds.Get(i) ? subCmds.Get(i)->Get() : "";
-				if (!_stricmp(INSTRUC_IF, cmdStr) || !_stricmp(INSTRUC_IFNOT, cmdStr))
+				if (!_stricmp(STATEMENT_IF, cmdStr) || !_stricmp(STATEMENT_IFNOT, cmdStr))
 				{
 					if ((i+1)<subCmds.GetSize())
 					{
-						bool isIF = (_stricmp(INSTRUC_IFNOT, cmdStr) != 0);
+						bool isIF = (_stricmp(STATEMENT_IFNOT, cmdStr) != 0);
 						cmdStr = subCmds.Get(++i) ? subCmds.Get(i)->Get() : ""; //++i ! => zap next command
 
 						int tgl = GetToggleCommandState2(kbdSec, SNM_NamedCommandLookup(cmdStr, kbdSec));
@@ -513,7 +515,7 @@ void RunCycleAction(int _section, COMMAND_T* _ct)
 							{
 								// zap commands until next ELSE or ENDIF
 								while (++i<subCmds.GetSize())
-									if (subCmds.Get(i) && (!_stricmp(INSTRUC_ELSE, subCmds.Get(i)->Get()) || !_stricmp(INSTRUC_ENDIF, subCmds.Get(i)->Get())))
+									if (subCmds.Get(i) && (!_stricmp(STATEMENT_ELSE, subCmds.Get(i)->Get()) || !_stricmp(STATEMENT_ENDIF, subCmds.Get(i)->Get())))
 										break;
 							}
 						}
@@ -521,27 +523,27 @@ void RunCycleAction(int _section, COMMAND_T* _ct)
 						else
 						{
 							while (++i<subCmds.GetSize())
-								if (subCmds.Get(i) && !_stricmp(INSTRUC_ENDIF, subCmds.Get(i)->Get()))
+								if (subCmds.Get(i) && !_stricmp(STATEMENT_ENDIF, subCmds.Get(i)->Get()))
 									break;
 						}
 					}
 					continue; // zap 
 				}
-				else if (!_stricmp(INSTRUC_ELSE, cmdStr))
+				else if (!_stricmp(STATEMENT_ELSE, cmdStr))
 				{
 					// zap commands until next ELSE or ENDIF
 					while (++i<subCmds.GetSize())
-						if (subCmds.Get(i) && !_stricmp(INSTRUC_ENDIF, subCmds.Get(i)->Get()))
+						if (subCmds.Get(i) && !_stricmp(STATEMENT_ENDIF, subCmds.Get(i)->Get()))
 							break;
 					continue;
 				}
-				else if (!_strnicmp(INSTRUC_LOOP, cmdStr, strlen(INSTRUC_LOOP)))
+				else if (!_strnicmp(STATEMENT_LOOP, cmdStr, strlen(STATEMENT_LOOP)))
 				{
 					if (loopCnt<0)
-						loopCnt = atoi((char*)cmdStr+strlen(INSTRUC_LOOP)+1); // +1 for the space char in "LOOP n"
+						loopCnt = atoi((char*)cmdStr+strlen(STATEMENT_LOOP)+1); // +1 for the space char in "LOOP n"
 					continue;
 				}
-				else if (!_stricmp(INSTRUC_ENDLOOP, cmdStr))
+				else if (!_stricmp(STATEMENT_ENDLOOP, cmdStr))
 				{
 					if (loopCnt>=0)
 					{
@@ -554,7 +556,7 @@ void RunCycleAction(int _section, COMMAND_T* _ct)
 					}
 					continue;
 				}
-				else if (!_stricmp(INSTRUC_ENDIF, cmdStr))
+				else if (!_stricmp(STATEMENT_ENDIF, cmdStr))
 					continue;
 
 				if (*cmdStr)
@@ -712,7 +714,7 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a,
 	{
 		WDL_FastString str;
 		bool warned = false;
-		int steps=0, instructions=0, cmdSz=_a->GetCmdSize();
+		int steps=0, statements=0, cmdSz=_a->GetCmdSize();
 		for (int i=0; i<cmdSz; i++)
 		{
 			const char* cmd = _a->GetCmd(i);
@@ -729,28 +731,28 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a,
 				else if (_a->GetCmd(i+1)[0] == '!') // no bound issue here: checked above
 					return AppendErrMsg(_section, _a, _applyMsg, __LOCALIZE("duplicated steps '!'","sws_DLG_161"));
 			}
-			else if (IsInstruction(cmd)>=0)
+			else if (IsStatement(cmd)>=0)
 			{
-				if (!_strnicmp(INSTRUC_CONSOLE, cmd, strlen(INSTRUC_CONSOLE)))
+				if (!_strnicmp(STATEMENT_CONSOLE, cmd, strlen(STATEMENT_CONSOLE)))
 				{
-					if (cmd[strlen(INSTRUC_CONSOLE)] != ' ' || strlen((char*)cmd+strlen(INSTRUC_CONSOLE)+1)<2) {
-						str.SetFormatted(256, __LOCALIZE_VERFMT("%s must be followed by a valid ReaConsole command\nSee http://www.standingwaterstudios.com/reaconsole.php","sws_DLG_161"), INSTRUC_CONSOLE);
+					if (cmd[strlen(STATEMENT_CONSOLE)] != ' ' || strlen((char*)cmd+strlen(STATEMENT_CONSOLE)+1)<2) {
+						str.SetFormatted(256, __LOCALIZE_VERFMT("%s must be followed by a valid ReaConsole command\nSee http://www.standingwaterstudios.com/reaconsole.php","sws_DLG_161"), STATEMENT_CONSOLE);
 						return AppendErrMsg(_section, _a, _applyMsg, str.Get());
 					}
 				}
-				else if (!_strnicmp(INSTRUC_LABEL, cmd, strlen(INSTRUC_LABEL)))
+				else if (!_strnicmp(STATEMENT_LABEL, cmd, strlen(STATEMENT_LABEL)))
 				{
-					if (cmd[strlen(INSTRUC_LABEL)] != ' ' || strlen((char*)cmd+strlen(INSTRUC_LABEL)+1)<2) {
-						str.SetFormatted(256, __LOCALIZE_VERFMT("%s must be followed by a valid Label Processor command\nSee Main menu > Extensions > Label Processor","sws_DLG_161"), INSTRUC_LABEL);
+					if (cmd[strlen(STATEMENT_LABEL)] != ' ' || strlen((char*)cmd+strlen(STATEMENT_LABEL)+1)<2) {
+						str.SetFormatted(256, __LOCALIZE_VERFMT("%s must be followed by a valid Label Processor command\nSee Main menu > Extensions > Label Processor","sws_DLG_161"), STATEMENT_LABEL);
 						return AppendErrMsg(_section, _a, _applyMsg, str.Get());
 					}
 				}
-				else if (!_stricmp(INSTRUC_IFNOT, cmd) || !_stricmp(INSTRUC_IF, cmd))
+				else if (!_stricmp(STATEMENT_IFNOT, cmd) || !_stricmp(STATEMENT_IF, cmd))
 				{
-					instructions++;
+					statements++;
 #ifdef _SNM_REAPER_BUG // GetToggleCommandState2() KO in other sections than the main one (REAPER v4.402)
 					if (_section) {
-						str.SetFormatted(256, __LOCALIZE_VERFMT("%s (or %s) is only supported in the section '%s'","sws_DLG_161"), INSTRUC_IF, INSTRUC_IFNOT, SNM_GetActionSectionName(0));
+						str.SetFormatted(256, __LOCALIZE_VERFMT("%s (or %s) is only supported in the section '%s'","sws_DLG_161"), STATEMENT_IF, STATEMENT_IFNOT, SNM_GetActionSectionName(0));
 						return AppendErrMsg(_section, _a, _applyMsg, str.Get());
 					}
 #endif
@@ -783,75 +785,75 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a,
 
 					if (!tglOk)
 					{
-						str.SetFormatted(256, __LOCALIZE_VERFMT("%s (or %s) must be followed by an action that reports a toggle state\nTip: such actions report \"on\" or \"off\" in the column \"State\" of the Actions window","sws_DLG_161"), INSTRUC_IF, INSTRUC_IFNOT);
+						str.SetFormatted(256, __LOCALIZE_VERFMT("%s (or %s) must be followed by an action that reports a toggle state\nTip: such actions report \"on\" or \"off\" in the column \"State\" of the Actions window","sws_DLG_161"), STATEMENT_IF, STATEMENT_IFNOT);
 						return AppendErrMsg(_section, _a, _applyMsg, str.Get());
 					}
 
 					for (int j=i+1; j<cmdSz; j++)
 					{
-						if (!_stricmp(INSTRUC_ENDIF, _a->GetCmd(j)))
+						if (!_stricmp(STATEMENT_ENDIF, _a->GetCmd(j)))
 							break;
 						else if (j==(cmdSz-1) || _a->GetCmd(j)[0]=='!') {
-							str.SetFormatted(256, __LOCALIZE_VERFMT("missing %s","sws_DLG_161"), INSTRUC_ENDIF);
+							str.SetFormatted(256, __LOCALIZE_VERFMT("missing %s","sws_DLG_161"), STATEMENT_ENDIF);
 							return AppendErrMsg(_section, _a, _applyMsg, str.Get());
 						}
-						else if (!_stricmp(INSTRUC_IF, _a->GetCmd(j)) || !_stricmp(INSTRUC_IFNOT, _a->GetCmd(j))) {
-							str.SetFormatted(256, __LOCALIZE_VERFMT("nested %s or %s","sws_DLG_161"), INSTRUC_IF, INSTRUC_IFNOT);
+						else if (!_stricmp(STATEMENT_IF, _a->GetCmd(j)) || !_stricmp(STATEMENT_IFNOT, _a->GetCmd(j))) {
+							str.SetFormatted(256, __LOCALIZE_VERFMT("nested %s or %s","sws_DLG_161"), STATEMENT_IF, STATEMENT_IFNOT);
 							return AppendErrMsg(_section, _a, _applyMsg, str.Get());
 						}
 					}
 				}
-				else if (!_stricmp(INSTRUC_ELSE, cmd))
+				else if (!_stricmp(STATEMENT_ELSE, cmd))
 				{
-					instructions++;
+					statements++;
 
 					bool foundCond = false;
 					for (int j=i-1; !foundCond && j>=0; j--)
 					{
-						if (!_stricmp(INSTRUC_IFNOT, _a->GetCmd(j)) || !_stricmp(INSTRUC_IF, _a->GetCmd(j)))
+						if (!_stricmp(STATEMENT_IFNOT, _a->GetCmd(j)) || !_stricmp(STATEMENT_IF, _a->GetCmd(j)))
 							foundCond = true;
-						else if (!_stricmp(INSTRUC_ENDIF, _a->GetCmd(j)))
+						else if (!_stricmp(STATEMENT_ENDIF, _a->GetCmd(j)))
 							break;
 					}
 					if (!foundCond) {
-						str.SetFormatted(256, __LOCALIZE_VERFMT("%s without %s (or %s)","sws_DLG_161"), INSTRUC_ELSE, INSTRUC_IF, INSTRUC_IFNOT);
+						str.SetFormatted(256, __LOCALIZE_VERFMT("%s without %s (or %s)","sws_DLG_161"), STATEMENT_ELSE, STATEMENT_IF, STATEMENT_IFNOT);
 						return AppendErrMsg(_section, _a, _applyMsg, str.Get());
 					}
 
 					for (int j=i; j<cmdSz; j++)
 					{
-						if (!_stricmp(INSTRUC_ENDIF, _a->GetCmd(j)))
+						if (!_stricmp(STATEMENT_ENDIF, _a->GetCmd(j)))
 							break;
 						else if (j==(cmdSz-1) || _a->GetCmd(j)[0]=='!') {
-							str.SetFormatted(256, __LOCALIZE_VERFMT("missing %s","sws_DLG_161"), INSTRUC_ENDIF);
+							str.SetFormatted(256, __LOCALIZE_VERFMT("missing %s","sws_DLG_161"), STATEMENT_ENDIF);
 							return AppendErrMsg(_section, _a, _applyMsg, str.Get());
 						}
 					}
 				}
-				else if (!_strnicmp(INSTRUC_LOOP, cmd, strlen(INSTRUC_LOOP)))
+				else if (!_strnicmp(STATEMENT_LOOP, cmd, strlen(STATEMENT_LOOP)))
 				{
-					instructions++;
+					statements++;
 
-					if (cmd[strlen(INSTRUC_LOOP)] != ' ' || atoi((char*)cmd+strlen(INSTRUC_LOOP)+1)<2) {
-						str.SetFormatted(256, __LOCALIZE_VERFMT("%s n, with n>1 is required","sws_DLG_161"), INSTRUC_LOOP);
+					if (cmd[strlen(STATEMENT_LOOP)] != ' ' || atoi((char*)cmd+strlen(STATEMENT_LOOP)+1)<2) {
+						str.SetFormatted(256, __LOCALIZE_VERFMT("%s n, with n>1 is required","sws_DLG_161"), STATEMENT_LOOP);
 						return AppendErrMsg(_section, _a, _applyMsg, str.Get());
 					}
 					
 					if (i==(cmdSz-1)) {
-						str.SetFormatted(256, __LOCALIZE_VERFMT("missing %s","sws_DLG_161"), INSTRUC_ENDLOOP);
+						str.SetFormatted(256, __LOCALIZE_VERFMT("missing %s","sws_DLG_161"), STATEMENT_ENDLOOP);
 						return AppendErrMsg(_section, _a, _applyMsg, str.Get());
 					}
 
 					for (int j=i+1; j<cmdSz; j++)
 					{
-						if (!_stricmp(INSTRUC_ENDLOOP, _a->GetCmd(j)))
+						if (!_stricmp(STATEMENT_ENDLOOP, _a->GetCmd(j)))
 							break;
 						else if (j==(cmdSz-1) || _a->GetCmd(j)[0]=='!') {
-							str.SetFormatted(256, __LOCALIZE_VERFMT("missing %s","sws_DLG_161"), INSTRUC_ENDLOOP);
+							str.SetFormatted(256, __LOCALIZE_VERFMT("missing %s","sws_DLG_161"), STATEMENT_ENDLOOP);
 							return AppendErrMsg(_section, _a, _applyMsg, str.Get());
 						}
-						else if (!_strnicmp(INSTRUC_LOOP, _a->GetCmd(j), strlen(INSTRUC_LOOP))) {
-							str.SetFormatted(256, __LOCALIZE_VERFMT("nested %s","sws_DLG_161"), INSTRUC_LOOP);
+						else if (!_strnicmp(STATEMENT_LOOP, _a->GetCmd(j), strlen(STATEMENT_LOOP))) {
+							str.SetFormatted(256, __LOCALIZE_VERFMT("nested %s","sws_DLG_161"), STATEMENT_LOOP);
 							return AppendErrMsg(_section, _a, _applyMsg, str.Get());
 						}
 					}
@@ -922,7 +924,7 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a,
 
 		} // for()
 
-		if ((steps+instructions) == cmdSz)
+		if ((steps+statements) == cmdSz)
 			return AppendErrMsg(_section, _a, _applyMsg, __LOCALIZE("no valid command found","sws_DLG_161"));
 	}
 	else
@@ -1261,7 +1263,7 @@ void Cyclaction::UpdateFromCmd()
 #define EXPLODE_CMD_MSG					0xF012
 #define ADD_CMD_MSG						0xF013
 #define ADD_STEP_CMD_MSG				0xF014
-#define ADD_INSTRUC_MSG					0xF015 // --> leave some room here
+#define ADD_STATEMENT_MSG				0xF015 // --> leave some room here
 #define IMPORT_CUR_SECTION_MSG			0xF030 // <--
 #define IMPORT_ALL_SECTIONS_MSG			0xF031
 #define EXPORT_SEL_MSG					0xF032
@@ -1621,9 +1623,9 @@ void CommandsView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iStr
 						lstrcpyn(str, __LOCALIZE("----- Step -----","sws_DLG_161"), iStrMax);
 						return;
 					}
-					int instIdx = IsInstruction(pItem->Get());
+					int instIdx = IsStatement(pItem->Get());
 					if (instIdx>=0) {
-						lstrcpyn(str, g_instrucInfos[instIdx], iStrMax);
+						lstrcpyn(str, g_statementInfos[instIdx], iStrMax);
 						return;
 					}
 					if (g_editedAction)
@@ -2213,20 +2215,20 @@ void CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			}
 			break;
 		default:
-			if (LOWORD(wParam) >= ADD_INSTRUC_MSG && LOWORD(wParam) < (ADD_INSTRUC_MSG+NB_INSTRUCTIONS))
+			if (LOWORD(wParam) >= ADD_STATEMENT_MSG && LOWORD(wParam) < (ADD_STATEMENT_MSG+NB_STATEMENTS))
 			{
-				int id = LOWORD(wParam)-ADD_INSTRUC_MSG;
-				WDL_FastString cmd(g_instrucs[id]);
-				if (IsInstructionWithParam(id))
+				int id = LOWORD(wParam)-ADD_STATEMENT_MSG;
+				WDL_FastString cmd(g_statements[id]);
+				if (IsStatementWithParam(id))
 					cmd.Append(" ");
 
 				// auto-add ENLOOP or ENDIF if needed
-				if (!_stricmp(INSTRUC_IFNOT, g_instrucs[id]) || !_stricmp(INSTRUC_IF, g_instrucs[id]))
-					AddOrInsertCommand(INSTRUC_ENDIF, 1);
-				else if (!_stricmp(INSTRUC_LOOP, g_instrucs[id]))
-					AddOrInsertCommand(INSTRUC_ENDLOOP, 1);
+				if (!_stricmp(STATEMENT_IFNOT, g_statements[id]) || !_stricmp(STATEMENT_IF, g_statements[id]))
+					AddOrInsertCommand(STATEMENT_ENDIF, 1);
+				else if (!_stricmp(STATEMENT_LOOP, g_statements[id]))
+					AddOrInsertCommand(STATEMENT_ENDLOOP, 1);
 
-				AddOrInsertCommand(cmd.Get(), IsInstructionWithParam(id) ? 3 : 1); // cmds with params: edit cell
+				AddOrInsertCommand(cmd.Get(), IsStatementWithParam(id) ? 3 : 1); // cmds with params: edit cell
 				break;
 			}
 			else
@@ -2382,10 +2384,10 @@ HMENU CyclactionWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 			AddToMenu(hMenu, cmd && cmd!=&s_DEFAULT_R ? __LOCALIZE("Insert selected action (in the Actions window)","sws_DLG_161") : __LOCALIZE("Add selected action (in the Actions window)","sws_DLG_161"), LEARN_CMD_MSG);
 			AddToMenu(hMenu, SWS_SEPARATOR, 0);
 			AddToMenu(hMenu, cmd && cmd!=&s_DEFAULT_R ? __LOCALIZE("Insert","sws_DLG_161") : __LOCALIZE("Add","sws_DLG_161"), ADD_CMD_MSG);
-			HMENU hInstructionSubMenu = CreatePopupMenu();
-			AddSubMenu(hMenu, hInstructionSubMenu, cmd && cmd!=&s_DEFAULT_R ? __LOCALIZE("Insert instruction","sws_DLG_161") : __LOCALIZE("Add instruction","sws_DLG_161"));
-			for (int i=0; i<NB_INSTRUCTIONS; i++)
-				AddToMenu(hInstructionSubMenu, g_instrucs[i], ADD_INSTRUC_MSG+i);
+			HMENU hStatementSubMenu = CreatePopupMenu();
+			AddSubMenu(hMenu, hStatementSubMenu, cmd && cmd!=&s_DEFAULT_R ? __LOCALIZE("Insert statement","sws_DLG_161") : __LOCALIZE("Add statement","sws_DLG_161"));
+			for (int i=0; i<NB_STATEMENTS; i++)
+				AddToMenu(hStatementSubMenu, g_statements[i], ADD_STATEMENT_MSG+i);
 			AddToMenu(hMenu, cmd && cmd!=&s_DEFAULT_R ? __LOCALIZE("Insert step","sws_DLG_161") : __LOCALIZE("Add step","sws_DLG_161"), ADD_STEP_CMD_MSG);
 			AddToMenu(hMenu, SWS_SEPARATOR, 0);
 			if (cmd && cmd!=&s_DEFAULT_R)

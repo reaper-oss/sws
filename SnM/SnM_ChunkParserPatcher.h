@@ -32,7 +32,7 @@
 // In both cases, it is either attached to a WDL_FastString* (simple text 
 // processor) -OR- to a reaThing* (MediaTrack*, MediaItem*, ..). 
 // A SNM_ChunkParserPatcher instance only gets and sets the chunk once. In
-// between, it works on a cache. IF ANY, updates are automatically comitted 
+// between, it works on a cache. IF ANY, updates are automatically committed 
 // when destroying the instance (can also be avoided/forced, see m_autoCommit
 // and Commit()).
 //
@@ -58,7 +58,7 @@
 #endif
 
 
-// The differents modes for ParsePatch() and Parse()
+// The different modes for ParsePatch() and Parse()
 #define SNM_PARSE_AND_PATCH				0
 #define SNM_PARSE_AND_PATCH_EXCEPT		1
 #define SNM_PARSE						2
@@ -224,7 +224,7 @@ virtual WDL_FastString* GetChunk()
 
 
 // IMPORTANT: 
-// m_updates has to be kept up-to-date (nothing will be comitted otherwise)
+// m_updates has to be kept up-to-date (nothing will be committed otherwise)
 // => you must use UpdateChunk() or SetChunk() methods when altering the
 //    the cached chunk directly (or 'manually' alter m_updates)
 
@@ -322,7 +322,7 @@ int GetSubChunk(const char* _keyword, int _depth, int _occurence, WDL_FastString
 }
 
 // _depth: _keyword's depth
-// _occurence: subchunk occurence to be replaced (-1 to replace all)
+// _occurence: subchunk occurrence to be replaced (-1 to replace all)
 // _newSubChunk: the replacing string (so "" will remove the subchunk)
 // returns false if nothing done (e.g. subchunk not found)
 bool ReplaceSubChunk(const char* _keyword, int _depth, int _occurence, const char* _newSubChunk, const char* _breakKeyword = NULL)
@@ -362,7 +362,7 @@ bool ReplaceLine(int _pos, const char* _str = NULL)
 	return false;
 }
 
-// replace line(s) begining with _keyword
+// replace line(s) beginning with _keyword
 bool ReplaceLine(const char* _parent, const char* _keyword, int _depth, int _occurence, const char* _newSubChunk = "", const char* _breakKeyword = NULL)
 {
 	if (_keyword && _depth >= 0) // can be 0, e.g. .rfxchain file
@@ -370,19 +370,19 @@ bool ReplaceLine(const char* _parent, const char* _keyword, int _depth, int _occ
 	return false;
 }
 
-// remove line(s) begining with _keyword
+// remove line(s) beginning with _keyword
 bool RemoveLine(const char* _parent, const char* _keyword, int _depth, int _occurence, const char* _breakKeyword = NULL) {
 	return ReplaceLine(_parent, _keyword, _depth, _occurence, "", _breakKeyword);
 }
 
-// remove line(s) containing or begining with _keyword
+// remove line(s) containing or beginning with _keyword
 // this one is faster but it does not check depth, parent, etc.. 
 // => beware of nested data! (FREEZE sub-chunks, for example)
 int RemoveLines(const char* _removedKeyword, bool _checkBOL = true, int _checkEOLChar = 0) {
 	return SetUpdates(RemoveChunkLines(GetChunk(), _removedKeyword, _checkBOL, _checkEOLChar));
 }
 
-// remove line(s) containing or begining with any string of _removedKeywords
+// remove line(s) containing or beginning with any string of _removedKeywords
 // this one is faster but it does not check depth, parent, etc.. 
 // => beware of nested data! (FREEZE sub-chunks, for example)
 int RemoveLines(WDL_PtrList<const char>* _removedKeywords, bool _checkBOL = true, int _checkEOLChar = 0) {
@@ -519,7 +519,7 @@ bool WriteChunkLine(WDL_FastString* _chunkLine, const char* _value, int _tokenPo
 // _linePos: start position in the original chunk of the line being parsed 
 // _parsedParents: the parsed line's parent, grand-parent, etc.. up to the root
 //                 The number of items is also the parsed depth (so 1-based)
-// _newChunk: the chunk beeing built (while parsing)
+// _newChunk: the chunk being built (while parsing)
 // _updates: number of updates in comparison with the original chunk
 //
 // Return values: 
@@ -587,9 +587,9 @@ void IsMatchingParsedLine(bool* _tolerantMatch, bool* _strictMatch,
 
 ///////////////////////////////////////////////////////////////////////////////
 // ParsePatchCore()
-// Globaly, the func is tolerant; the less parameters provided, the more parsed
+// Globally, the func is tolerant; the less parameters provided, the more parsed
 // lines will be notified to inherited instances (through NotifyChunkLine()) or, 
-// when it's used direcly, the more lines will be read/altered.
+// when it's used directly, the more lines will be read/altered.
 // Examples: parse all lines, is the FX n bypassed under parent 'FXCHAIN'? etc..
 // Note: sometimes there are dependencies between parameters (most of the time 
 //       with _mode), must return -1 if it's not respected.
@@ -606,7 +606,7 @@ int ParsePatchCore(
 	int _depth,         // usually 1-based but 0 is allowed (e.g. for .rfxchain files that do not start with "<...")
 	const char* _expectedParent, 
 	const char* _keyWord, 
-	int _occurence,     // 0-based (-1: ignored, all occurences notified)
+	int _occurence,     // 0-based (-1: ignored, all occurrences notified)
 	int _tokenPos,      // 0-based (-1: ignored, may be mandatory depending on _mode)
 	void* _value,       // value to get/set (NULL: ignored)
 	void* _valueExcept, // value to get/set for the "except case" (NULL: ignored)
@@ -628,7 +628,7 @@ int ParsePatchCore(
 	// sub-chunk processing: depth must always be provided 
 	if (_depth <= 0 && (_mode == SNM_GET_SUBCHUNK_OR_LINE || _mode == SNM_GET_SUBCHUNK_OR_LINE_EOL))
 		return -1;
-	// count keywords: no occurence should be specified
+	// count keywords: no occurrence should be specified
 	if (_mode == SNM_COUNT_KEYWORD && _occurence != -1)
 		return -1;
 #endif
@@ -795,7 +795,7 @@ int ParsePatchCore(
 			}
 			else if (strictMatch && _mode >= 0)
 			{
-				// this occurence match
+				// this occurrence match
 				if (_occurence == occurence || _occurence == -1)
 				{
 					switch (_mode)
@@ -882,7 +882,7 @@ int ParsePatchCore(
 						break; 
 					}
 				}
-				// this occurence doesn't match
+				// this occurrence doesn't match
 				else 
 				{
 					switch (_mode)
@@ -1018,7 +1018,7 @@ static int RemoveChunkLines(char* _chunk, const char* _searchStr, bool _checkBOL
 		char* bol = idStr;
 		while (*bol && bol > _chunk && *bol != '\n') bol--;
 		if (eol && bol && (*bol == '\n' || bol == _chunk) &&
-			// additionnal optional checks (safety)
+			// additional optional checks (safety)
 			(!_checkEOLChar || (_checkEOLChar && *((char*)(eol-1)) == _checkEOLChar)) &&
 			(!_checkBOL || (_checkBOL && idStr == (char*)(bol + ((bol == _chunk ? 0 : 1))))))
 		{
@@ -1104,7 +1104,7 @@ static int SNM_PreObjectState(WDL_FastString* _str, bool _wantsMinState)
 		RemoveAllIds(_str);
 	}
 	// when getting: enables/disables the "VST full state" pref (that also minimize AU states, if REAPER >= v4)
-	// it also fixes possile incomplete chunk bug (pref overrided when needed)
+	// it also fixes possible incomplete chunk bug (pref overrided when needed)
 	else if (int* fxstate = (int*)GetConfigVar("vstfullstate")) {
 		int old = *fxstate;
 		int tmp = _wantsMinState ? *fxstate&0xFFFFFFFE : *fxstate|1;

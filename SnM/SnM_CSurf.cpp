@@ -311,7 +311,7 @@ bool SNM_SendLocalOscMessage(const char* _oscMsg)
 		if (!lp.parse(_oscMsg) && lp.getnumtokens()>0)
 		{
 			oscpkt::Message msg(lp.gettoken_str(0));
-			if (lp.getnumtokens()>1) // arguments(s)?
+			if (lp.getnumtokens()>1)
 			{
 				double d;
 				int success;

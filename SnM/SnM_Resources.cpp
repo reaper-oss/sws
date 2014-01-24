@@ -1108,10 +1108,9 @@ int ResourcesWnd::SetType(const char* _name)
 		int sel=0;
 		for (int i=0; i<m_cbType.GetCount(); i++)
 		{
-			const char* p1 = m_cbType.GetItem(i);
-
 			// zap " [x]" if needed (issue 615)
-			WDL_FastString item(p1);
+			WDL_FastString item;
+			const char* p1 = m_cbType.GetItem(i);
 			const char* p2 = strstr(p1, RES_TIE_TAG);
 			item.Set(p1, p2 ? p2-p1 : 0);
 

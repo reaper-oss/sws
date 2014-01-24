@@ -157,6 +157,9 @@ int IsInstructionWithParam(int _id) {
 // Explode _cmdStr into "atomic" actions
 // IMPORTANT: THOSE FUNCS ASSUME ACTIONS ARE NOT YET REGISTERED
 // _flags:    &1=perform
+//               Rmk: no need to explode sub CAs, macros and console cmds 
+//               recursively in this case: faster + handles scripts + 
+//               issue 618 + special macros made of "Wait for 1 s before..."
 //            &2=get 1st toggle state
 //            &8=explode all CAs' steps (current step only otherwise)
 // _cmdStr:   custom id to explode
@@ -178,7 +181,8 @@ int ExplodeCmd(int _section, const char* _cmdStr,
 {
 	if (_cmdStr && *_cmdStr)
 	{
-		if (*_cmdStr == '_') // extension, macro, script?
+		if ((_flags&1) != 1 && // no need to explode things recursively
+			*_cmdStr == '_') // CA, extension, macro, or script?
 		{
 			if (!_section)
 			{
@@ -198,11 +202,12 @@ int ExplodeCmd(int _section, const char* _cmdStr,
 		// default case: only native/3rd party actions, or instructions at this point
 		if (_flags&2)
 		{
-			if (KbdSectionInfo* kbdSec = SNM_GetActionSection(_section))
+			if (KbdSectionInfo* kbdSec = SNM_GetActionSection(_section)) {
 				if (int i = SNM_NamedCommandLookup(_cmdStr, kbdSec)) {
 					i = GetToggleCommandState2(kbdSec, i);
 					if (i>=0) return i;
 				}
+			}
 			return -1;
 		}
 
@@ -258,7 +263,7 @@ int ExplodeMacro(int _section, const char* _cmdStr,
 		{
 			// fall through...
 			// we could analyze action calls within scripts but we just rely on 
-			// hookCommandProc() and toggleActionHook() recursivity checks instead...
+			// hookCommandProc() and toggleActionHook() recursivity checks ATM...
 		}
 	}
 
@@ -394,7 +399,7 @@ int ExplodeConsoleAction(int _section, const char* _cmdStr,
 // Perform cycle actions
 ///////////////////////////////////////////////////////////////////////////////
 
-// assumes _cmdStr is valid and has been "exploded", if it is a CA
+// assumes _cmdStr is valid and has been "exploded", if needed
 int PerformSingleCommand(int _section, const char* _cmdStr)
 {
 #ifdef _SNM_DEBUG
@@ -457,8 +462,8 @@ int PerformSingleCommand(int _section, const char* _cmdStr)
 	return 0;
 }
 
-// assumes the cycle action is valid, instructions are valid, etc..
-// (faulty CAs are not registered at this point, see CheckRegisterableCyclaction())
+// assumes the CA is valid (e.g. no recursion) + its instructions are valid + etc..
+// (faulty CAs must not be registered at this point, see CheckRegisterableCyclaction())
 void RunCycleAction(int _section, COMMAND_T* _ct)
 {
 	if (!_ct || _section<0 || _section>=SNM_MAX_CA_SECTIONS) // possible via RunCyclaction(COMMAND_T*)
@@ -477,11 +482,8 @@ void RunCycleAction(int _section, COMMAND_T* _ct)
 		// store step or action name *before* m_performState update
 		const char* undoStr = action->GetStepName();
 
-		// no need to explode macros and custom console commands here: 
-		// they are triggered via their custom ids (faster + handles scripts +
-		// corner cases like special macros with "Wait n s", etc..)
 		WDL_PtrList_DeleteOnDestroy<WDL_FastString> subCmds;
-		if (ExplodeCyclaction(_section, _ct->id, &subCmds, NULL, NULL, 0x1, action) > 0)
+		if (ExplodeCyclaction(_section, _ct->id, &subCmds, NULL, NULL, 0x1, action) > 0) // 0x1!
 		{
 			int loopCnt = -1;
 			WDL_PtrList<WDL_FastString> allCmds, loopCmds;

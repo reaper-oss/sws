@@ -1,14 +1,14 @@
 Fixes
 +Issue 613 / Region Playlist: fixed rounding issues (with adjacent regions)
++Issue 618: fixed cycle actions using toggle states from other cycle actions (starting with IF/IF NOT statements)
 +Issue 619 / Various tempo actions and dialogs now work when using langpacks
 +Fixed broken actions "SWS: Set auto crossfade on/off"
 +Fixed situation where using langpacks with certain locale settings (i.e. comma as a decimal mark) broke a lot of stuff
 
 Other
-+Made .beats optional for the action "SWS/S&M: Insert silence (measures.beats)"
- e.g. enter 5 (or 5.0) to insert 5 measures of silence/empty space
-+Cycle Actions & Live Configs editors: shorten action names when possible
- e.g. "<s>SWS/S&M: </s>Insert silence (measures.beats)"
++OS X DMG: added info for Mavericks/10.9+ users
++Made .beats optional for the action "SWS/S&M: Insert silence (measures.beats)", e.g. enter 5 (or 5.0) to insert 5 measures of silence/empty space
++Cycle Actions & Live Configs editors: shorten action names when possible, e.g. "<s>SWS/S&M: </s>Insert silence (measures.beats)"
 +Better Snapshot details/descriptions
 +SWS: Exported marker list format dialog opens centered
 +Added "..." to the end of all (hopefully) Xenakios dialog actions that were missing it

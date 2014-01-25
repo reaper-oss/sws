@@ -1,46 +1,46 @@
 Fixes
++Windows OS / Issue 619, issue 621: <b>fixed various features (snapshots, tempo actions, etc) which were broken when using LangPacks and certain regional settings (i.e. comma as a decimal mark)</b>
 +Issue 613 / Region Playlist: fixed rounding issues (with adjacent regions)
 +Issue 618: fixed cycle actions using toggle states from other cycle actions (starting with IF/IF NOT statements)
-+Issue 619 / Various tempo actions and dialogs now work when using langpacks
 +Fixed broken actions "SWS: Set auto crossfade on/off"
-+Fixed situation where using langpacks with certain locale settings (i.e. comma as a decimal mark) broke a lot of stuff
+
+The following Xenakios' dialog boxes are now themed:
++Auto-rename selected takes
++Create new tracks
++Disk space calculator
++Find missing media for project's takes
++Insert random points to selected envelope
++Item property interpolator
++Normalize selected takes to dB value
++Process item with Rubberband/csound phase vocoder
++Project media
++Randomize item positions
++Remap item positions
++Rename selected takes
++Rename selected tracks
++Rename takes
++Render item to new take with tail
++Repeat paste
++Reposition selected items
++Scale item positions/lengths by percentage
++Search takes
++Set volume and pan of selected takes
++Set volume of selected items
++Show/hide floating item/track info
++Skip select items from selected items
++Skip select items in selected tracks
++Spread selected items over tracks
++Swing item positions
++Take mixer
++Toggle selected items selected randomly
 
 Other
-+OS X DMG: added info for Mavericks/10.9+ users
++OS X DMG / Issue 608: added info allowing Mavericks/10.9+ users to run the installation script
 +Made .beats optional for the action "SWS/S&M: Insert silence (measures.beats)", e.g. enter 5 (or 5.0) to insert 5 measures of silence/empty space
 +Cycle Actions & Live Configs editors: shorten action names when possible, e.g. "<s>SWS/S&M: </s>Insert silence (measures.beats)"
 +Better Snapshot details/descriptions
 +SWS: Exported marker list format dialog opens centered
 +Added "..." to the end of all (hopefully) Xenakios dialog actions that were missing it
-+The following Xenakios dialogs are now themed:
- - Auto-rename selected takes
- - Create new tracks
- - Disk space calculator
- - Find missing media for project's takes
- - Insert random points to selected envelope
- - Item property interpolator
- - Normalize selected takes to dB value
- - Process item with Rubberband/csound phase vocoder
- - Project media
- - Randomize item positions
- - Remap item positions
- - Rename selected takes
- - Rename selected tracks
- - Rename takes
- - Render item to new take with tail
- - Repeat paste
- - Reposition selected items
- - Scale item positions/lengths by percentage
- - Search takes
- - Set volume and pan of selected takes
- - Set volume of selected items
- - Show/hide floating item/track info
- - Skip select items from selected items
- - Skip select items in selected tracks
- - Spread selected items over tracks
- - Swing item positions
- - Take mixer
- - Toggle selected items selected randomly
 
 !v2.4.0 #2 (November 15, 2013)
 <b>MIDI/OSC actions support learn with both MIDI Pitch and "normalized" OSC messages</b>

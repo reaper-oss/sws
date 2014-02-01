@@ -99,7 +99,7 @@ bool hookCommandProc(int iCmd, int flag)
 			{
 				sReentrantCmds.Add(cmd->id);
 				cmd->fakeToggle = !cmd->fakeToggle;
-#ifndef DEBUG_PERFORMANCE_TIME
+#ifndef BR_DEBUG_PERFORMANCE_ACTIONS
 				cmd->doCommand(cmd);
 #else
 				CommandTimer(cmd);
@@ -400,6 +400,7 @@ public:
 	{
 		SNM_CSurfSetPlayState(play, pause, rec);
 		AWDoAutoGroup(rec);
+		ItemPreviewPlayState(play);
 	}
 
 	// This is our only notification of active project tab change, so update everything
@@ -704,6 +705,7 @@ extern "C"
 		IMPAPI(PCM_Source_CreateFromSimple);
 		IMPAPI(PCM_Source_CreateFromType);
 		IMPAPI(PlayPreview);
+		IMPAPI(PlayPreviewEx);
 		IMPAPI(PlayTrackPreview);
 		IMPAPI(PlayTrackPreview2Ex);
 		IMPAPI(plugin_getFilterList);
@@ -858,7 +860,7 @@ extern "C"
 			ERR_RETURN("Autorender init error\n")
 		if (!IXInit())
 			ERR_RETURN("IX init error\n")
-		if (!BreederInit())
+		if (!BR_Init())
 			ERR_RETURN("Breeder init error\n")
 		if (!SNM_Init(rec)) // keep it as the last init (for cyle actions)
 			ERR_RETURN("S&M init error\n")

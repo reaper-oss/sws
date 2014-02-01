@@ -3569,6 +3569,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Breeder\BR_Envelope.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Breeder\BR_Envelope.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Breeder\BR_EnvTools.cpp"
 				>
 			</File>
@@ -3585,6 +3593,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Breeder\BR_ProjState.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Breeder\BR_ProjState.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Breeder\BR_Tempo.cpp"
 				>
 			</File>
@@ -3598,6 +3614,14 @@
 			</File>
 			<File
 				RelativePath=".\Breeder\BR_TempoDlg.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Breeder\BR_Timer.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Breeder\BR_Timer.h"
 				>
 			</File>
 			<File

@@ -1075,6 +1075,20 @@ typedef struct
 // <-----------------------------------------------------------------------
 
 
+// --------------------------------------------------------------------------->
+// Registering files (code.google.com/p/sws-extension/issues/detail?id=177#c12)
+//
+//  You can register files that are used for a project so that reaper knows
+//  about them, and will copy them if you save as w/ media copy.
+//  Call the Register() function with "file_in_project_ex"
+//  (or "-file_in_project_ex" to remove) and pass it:
+//  void *p[2] = { (void *)filename, (void *)projectptr };
+//
+//
+//   v4.58 - December 16 2013
+//    + API: added file_in_project_ex2, so that plugins tracking media files
+//           can receive copy notifications in save-as-copy etc
+// <-----------------------------------------------------------------------
 
 #ifndef UNDO_STATE_ALL
 #define UNDO_STATE_ALL 0xFFFFFFFF

@@ -56,16 +56,16 @@ public:
 	SWS_ListItemList() {}
 	~SWS_ListItemList() {}
 	int GetSize() { return m_list.GetSize(); }
-	void Add(SWS_ListItem* item, bool sort = true) { if (sort) m_list.InsertSorted((INT_PTR*)item, ILIComp); else m_list.Add((INT_PTR*)item); }
+	void Add(SWS_ListItem* item, bool sort = true) { if (sort) m_list.InsertSorted(item, ILIComp); else m_list.Add(item); }
 	SWS_ListItem* Get(int iIndex) { return (SWS_ListItem*)m_list.Get(iIndex); }
-	int Find(SWS_ListItem* item) { return m_list.FindSorted((INT_PTR*)item, ILIComp); }
+	int Find(SWS_ListItem* item) { return m_list.FindSorted(item, ILIComp); }
 	void Delete(int iIndex) { m_list.Delete(iIndex); }
 	// Remove returns and also removes the last item.  It's the last because it's more efficient to remove at the end.
 	SWS_ListItem* Remove() { if (!m_list.GetSize()) return NULL; int last = m_list.GetSize()-1; SWS_ListItem* item = (SWS_ListItem*)m_list.Get(last); m_list.Delete(last); return item; }
 	void Empty() { m_list.Empty(); }
 private:
-	static int ILIComp(const INT_PTR** a, const INT_PTR** b) { return (int)(*a-*b); };
-	WDL_PtrList<INT_PTR> m_list;
+	static int ILIComp(const SWS_ListItem** a, const SWS_ListItem** b) { return (*a > *b ? 1 : *a < *b ? -1 : 0); };
+	WDL_PtrList<SWS_ListItem> m_list;
 };
 
 class SWS_ListView

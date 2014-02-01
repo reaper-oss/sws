@@ -139,7 +139,7 @@ SNM_WindowManager<LiveConfigsWnd> g_lcWndMgr(LIVECFG_WND_ID);
 SNM_MultiWindowManager<LiveConfigMonitorWnd> g_monWndsMgr(LIVECFG_MON_WND_ID);
 
 SWSProjConfig<WDL_PtrList_DeleteOnDestroy<LiveConfig> > g_liveConfigs;
-WDL_PtrList_DeleteOnDestroy<LiveConfigItem> g_clipboardConfigs; // for cut/copy/paste
+WDL_PtrList<LiveConfigItem> g_clipboardConfigs; // for cut/copy/paste
 int g_configId = 0; // the current *displayed/edited* config id
 
 // prefs
@@ -555,7 +555,7 @@ void LiveConfigView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iS
 				lstrcpyn(str, pItem->m_desc.Get(), iStrMax);
 				break;
 			case COL_TR:
-				if (pItem->m_track)
+				if (pItem->m_track && CSurf_TrackToID(pItem->m_track, false) > 0)
 					if (char* name = (char*)GetSetMediaTrackInfo(pItem->m_track, "P_NAME", NULL))
 						_snprintfSafe(str, iStrMax, "[%d] \"%s\"", CSurf_TrackToID(pItem->m_track, false), name);
 				break;
@@ -635,7 +635,7 @@ void LiveConfigView::OnItemSelChanged(SWS_ListItem* item, int iState)
 	if (lc && lc->m_selScroll)
 	{
 		LiveConfigItem* pItem = (LiveConfigItem*)item;
-		if (pItem && pItem->m_track)
+		if (pItem && pItem->m_track && CSurf_TrackToID(pItem->m_track, false) > 0)
 		{
 			if ((iState & LVIS_SELECTED ? true : false) != (*(int*)GetSetMediaTrackInfo(pItem->m_track, "I_SELECTED", NULL) ? true : false))
 				GetSetMediaTrackInfo(pItem->m_track, "I_SELECTED", iState & LVIS_SELECTED ? &g_i1 : &g_i0);
@@ -1946,9 +1946,15 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t *reg)
 {
 	g_liveConfigs.Cleanup();
-	g_liveConfigs.Get()->Empty(true);
-	for (int i=0; i<SNM_LIVECFG_NB_CONFIGS; i++) 
+
+	while (g_liveConfigs.Get()->GetSize() < SNM_LIVECFG_NB_CONFIGS)
 		g_liveConfigs.Get()->Add(new LiveConfig());
+
+	for (int i=0; i<g_liveConfigs.Get()->GetSize(); i++)
+		if (LiveConfig* lc = g_liveConfigs.Get()->Get(i))
+			for (int j=0; j<lc->m_ccConfs.GetSize(); j++)
+				if (LiveConfigItem* item = lc->m_ccConfs.Get(j))
+					item->Clear(false);
 }
 
 static project_config_extension_t s_projectconfig = {

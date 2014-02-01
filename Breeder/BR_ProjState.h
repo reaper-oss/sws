@@ -1,7 +1,7 @@
 /******************************************************************************
-/ BR_Tempo.h
+/ BR_ProjState.h
 /
-/ Copyright (c) 2013 Dominik Martin Drzic
+/ Copyright (c) 2014 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
 / http://www.standingwaterstudios.com/reaper
 /
@@ -27,28 +27,50 @@
 ******************************************************************************/
 #pragma once
 
-/******************************************************************************
-* Commands                                                                    *
-******************************************************************************/
-void MoveTempo (COMMAND_T*);
-void EditTempo (COMMAND_T*);
-void EditTempoGradual (COMMAND_T*);
-void DeleteTempo (COMMAND_T*);
-void TempoAtGrid (COMMAND_T*);
-void TempoShapeLinear (COMMAND_T*);
-void TempoShapeSquare (COMMAND_T*);
+class BR_EnvSel;
+class BR_CursorPos;
 
 /******************************************************************************
-* Dialogs                                                                     *
+* Globals                                                                     *
 ******************************************************************************/
-void ConvertMarkersToTempoDialog (COMMAND_T*);
-void SelectAdjustTempoDialog (COMMAND_T*);
-void RandomizeTempoDialog (COMMAND_T*);
-void TempoShapeOptionsDialog (COMMAND_T*);
+extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_EnvSel> >    g_envSel;
+extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_CursorPos> > g_cursorPos;
 
 /******************************************************************************
-* Toggle states                                                               *
+* Call on startup to register state saving functionality                      *
 ******************************************************************************/
-int IsConvertMarkersToTempoVisible (COMMAND_T*);
-int IsSelectAdjustTempoVisible (COMMAND_T*);
-int IsTempoShapeOptionsVisible (COMMAND_T*);
+int ProjStateInit ();
+
+/******************************************************************************
+* Envelope selection state                                                    *
+******************************************************************************/
+class BR_EnvSel
+{
+public:
+	BR_EnvSel (int slot, TrackEnvelope* envelope);
+	BR_EnvSel (int slot, ProjectStateContext* ctx);
+	void SaveState (ProjectStateContext* ctx);
+	void Save (TrackEnvelope* envelope);
+	void Restore (TrackEnvelope* envelope);
+	int  GetSlot ();
+private:
+	int m_slot;
+	vector<int> m_selection;
+};
+
+/******************************************************************************
+* Cursor position state                                                       *
+******************************************************************************/
+class BR_CursorPos
+{
+public:
+	BR_CursorPos (int slot);
+	BR_CursorPos (int slot, ProjectStateContext* ctx);
+	void SaveState (ProjectStateContext* ctx);
+	void Save ();
+	void Restore ();
+	int  GetSlot ();
+private:
+	int m_slot;
+	double m_position;
+};

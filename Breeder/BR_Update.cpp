@@ -28,29 +28,34 @@
 #include "stdafx.h"
 #include "BR_Update.h"
 #include "BR_Util.h"
-#include "../SnM/SnM_Dlg.h"
 #include "../version.h"
+#include "../SnM/SnM_Dlg.h"
+#include "../reaper/localize.h"
 #include "../../WDL/jnetlib/jnetlib.h"
 #include "../../WDL/jnetlib/httpget.h"
-#include "../reaper/localize.h"
 
-#define	SEARCH_TIMEOUT			5
-#define STARTUP_VERSION_KEY		"BR - StartupVersionCheck"
-#define OFFICIAL_VERSION_URL	"http://sws-extension.googlecode.com/svn/tags/release/version.h"
-#define BETA_VERSION_URL		"http://sws-extension.googlecode.com/svn/trunk/version.h"
-#define OFFICIAL_DOWNLOAD		"http://www.standingwaterstudios.com/new.php"
-#define BETA_DOWNLOAD			"http://code.google.com/p/sws-extension/downloads/list"
+/******************************************************************************
+* Constants                                                                   *
+******************************************************************************/
+const char* const OFFICIAL_VERSION_URL = "http://sws-extension.googlecode.com/svn/tags/release/version.h";
+const char* const BETA_VERSION_URL     = "http://sws-extension.googlecode.com/svn/trunk/version.h";
+const char* const OFFICIAL_DOWNLOAD    = "http://www.standingwaterstudios.com/new.php";
+const char* const BETA_DOWNLOAD        = "http://code.google.com/p/sws-extension/downloads/list";
+const char* const STARTUP_VERSION_KEY  = "BR - StartupVersionCheck";
 
-#define SEARCH_INITIATED 		-2
-#define NO_CONNECTION			-1
-#define	UP_TO_DATE				 0
-#define OFFICIAL_AVAILABLE		 1
-#define BETA_AVAILABLE			 2
-#define BOTH_AVAILABLE			 3
+const int SEARCH_TIMEOUT     =  5;
 
-// GUI
-//////////////////////////////////////////////////////////////////////////////////////////
-void SetVersionMessage (HWND hwnd, BR_SearchObject* searchObject)
+const int SEARCH_INITIATED   = -2;
+const int NO_CONNECTION      = -1;
+const int UP_TO_DATE         =  0;
+const int OFFICIAL_AVAILABLE =  1;
+const int BETA_AVAILABLE     =  2;
+const int BOTH_AVAILABLE     =  3;
+
+/******************************************************************************
+* Dialog functionality                                                        *
+******************************************************************************/
+static void SetVersionMessage (HWND hwnd, BR_SearchObject* searchObject)
 {
 	BR_Version versionO, versionB;
 	int status = searchObject->GetStatus(&versionO, &versionB);
@@ -68,8 +73,8 @@ void SetVersionMessage (HWND hwnd, BR_SearchObject* searchObject)
 	}
 	else if (status == NO_CONNECTION)
 	{
-		_snprintf(tmp, sizeof(tmp), __LOCALIZE_NOCACHE("Connection could not be established","sws_DLG_172"));
-		SetWindowText(GetDlgItem(hwnd, IDC_BR_VER_DOWNLOAD), __LOCALIZE_NOCACHE("Retry","sws_DLG_172"));
+		_snprintf(tmp, sizeof(tmp), __LOCALIZE("Connection could not be established","sws_DLG_172"));
+		SetWindowText(GetDlgItem(hwnd, IDC_BR_VER_DOWNLOAD), __LOCALIZE("Retry","sws_DLG_172"));
 		EnableWindow(GetDlgItem(hwnd, IDC_BR_VER_DOWNLOAD), true);
 		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_DOWNLOAD), SW_SHOW);
 		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_OFF), SW_HIDE);
@@ -78,7 +83,7 @@ void SetVersionMessage (HWND hwnd, BR_SearchObject* searchObject)
 	}
 	else if (status == UP_TO_DATE)
 	{
-		_snprintf(tmp, sizeof(tmp), __LOCALIZE_NOCACHE("SWS extension is up to date.","sws_DLG_172"));
+		_snprintf(tmp, sizeof(tmp), __LOCALIZE("SWS extension is up to date.","sws_DLG_172"));
 		EnableWindow(GetDlgItem(hwnd, IDC_BR_VER_DOWNLOAD), false);
 		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_DOWNLOAD), SW_SHOW);
 		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_OFF), SW_HIDE);
@@ -87,7 +92,7 @@ void SetVersionMessage (HWND hwnd, BR_SearchObject* searchObject)
 	}
 	else if (status == OFFICIAL_AVAILABLE)
 	{
-		_snprintf(tmp, sizeof(tmp), __LOCALIZE_NOCACHE("Official update is available: Version %d.%d.%d Build #%d","sws_DLG_172"), versionO.maj, versionO.min, versionO.rev, versionO.build);
+		_snprintf(tmp, sizeof(tmp), __LOCALIZE("Official update is available: Version %d.%d.%d Build #%d","sws_DLG_172"), versionO.maj, versionO.min, versionO.rev, versionO.build);
 		EnableWindow(GetDlgItem(hwnd, IDC_BR_VER_DOWNLOAD), true);
 		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_DOWNLOAD), SW_SHOW);
 		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_OFF), SW_HIDE);
@@ -96,7 +101,7 @@ void SetVersionMessage (HWND hwnd, BR_SearchObject* searchObject)
 	}
 	else if (status == BETA_AVAILABLE)
 	{
-		_snprintf(tmp, sizeof(tmp), __LOCALIZE_NOCACHE("Beta update is available: Version %d.%d.%d Build #%d","sws_DLG_172"), versionB.maj, versionB.min, versionB.rev, versionB.build);
+		_snprintf(tmp, sizeof(tmp), __LOCALIZE("Beta update is available: Version %d.%d.%d Build #%d","sws_DLG_172"), versionB.maj, versionB.min, versionB.rev, versionB.build);
 		EnableWindow(GetDlgItem(hwnd, IDC_BR_VER_DOWNLOAD), true);
 		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_DOWNLOAD), SW_SHOW);
 		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_OFF), SW_HIDE);
@@ -105,7 +110,7 @@ void SetVersionMessage (HWND hwnd, BR_SearchObject* searchObject)
 	}
 	else if (status == BOTH_AVAILABLE)
 	{
-		_snprintf(tmp, sizeof(tmp), __LOCALIZE_NOCACHE("Official update is available: Version %d.%d.%d Build #%d\nBeta update is available: Version %d.%d.%d Build #%d","sws_DLG_172"), versionO.maj, versionO.min, versionO.rev, versionO.build, versionB.maj, versionB.min, versionB.rev, versionB.build);
+		_snprintf(tmp, sizeof(tmp), __LOCALIZE("Official update is available: Version %d.%d.%d Build #%d\nBeta update is available: Version %d.%d.%d Build #%d","sws_DLG_172"), versionO.maj, versionO.min, versionO.rev, versionO.build, versionB.maj, versionB.min, versionB.rev, versionB.build);
 		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_OFF), SW_SHOW);
 		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_BETA), SW_SHOW);
 		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_DOWNLOAD), SW_HIDE);
@@ -113,17 +118,18 @@ void SetVersionMessage (HWND hwnd, BR_SearchObject* searchObject)
 	}
 
 	SetWindowText(GetDlgItem(hwnd, IDC_BR_VER_MESSAGE), tmp);
-};
+}
 
-WDL_DLGRET DialogProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static WDL_DLGRET DialogProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, uMsg, wParam, lParam))
 		return r;
 
 	static BR_SearchObject* searchObject = NULL;
-#ifndef _WIN32
-	static bool positionSet;
-#endif
+	#ifndef _WIN32
+		static bool positionSet;
+	#endif
+
 	switch(uMsg)
 	{
 		case WM_INITDIALOG:
@@ -131,24 +137,27 @@ WDL_DLGRET DialogProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			searchObject = (BR_SearchObject*)lParam;
 			SetVersionMessage(hwnd, searchObject);
 			SetTimer(hwnd, 1, 100, NULL);
-#ifdef _WIN32
-			CenterDialog(hwnd, GetParent(hwnd), HWND_TOPMOST);
-#else
-			positionSet = false;
-#endif
-		}
-		break;
-#ifndef _WIN32
-		case WM_ACTIVATE:
-		{
-			// SetWindowPos doesn't seem to work in WM_INITDIALOG on OSX
-			// when creating a dialog with DialogBox so call here
-			if (!positionSet)
+
+			#ifdef _WIN32
 				CenterDialog(hwnd, GetParent(hwnd), HWND_TOPMOST);
-			positionSet = true;
+			#else
+				positionSet = false;
+			#endif
 		}
 		break;
-#endif
+
+		#ifndef _WIN32
+			case WM_ACTIVATE:
+			{
+				// SetWindowPos doesn't seem to work in WM_INITDIALOG on OSX
+				// when creating a dialog with DialogBox so call here
+				if (!positionSet)
+					CenterDialog(hwnd, GetParent(hwnd), HWND_TOPMOST);
+				positionSet = true;
+			}
+			break;
+		#endif
+
 		case WM_COMMAND:
 		{
 			switch(LOWORD(wParam))
@@ -217,24 +226,144 @@ WDL_DLGRET DialogProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		break;
 	}
 	return 0;
-};
+}
 
-// Search object
-//////////////////////////////////////////////////////////////////////////////////////////
-/*
- To start search, simply create the object and use GetStatus to query results from
- the search thread.
-*/
-BR_SearchObject::BR_SearchObject (bool startup /*= false*/) : m_startup(startup), m_status(SEARCH_INITIATED), m_progress(0)
+/******************************************************************************
+* Startup functionality                                                       *
+******************************************************************************/
+void StartupSearch ()
+{
+	static BR_SearchObject* searchObject = new (nothrow) BR_SearchObject(true);
+
+	if (searchObject)
+	{
+		int status = searchObject->GetStatus(NULL, NULL);
+		if (status != SEARCH_INITIATED)
+		{
+			if (status == OFFICIAL_AVAILABLE || status == BETA_AVAILABLE || status == BOTH_AVAILABLE)
+				DialogBoxParam(g_hInst, MAKEINTRESOURCE(IDD_BR_VERSION), g_hwndParent, DialogProc, (LPARAM)searchObject);
+			delete searchObject;
+			searchObject = NULL;
+		}
+	}
+	else
+		plugin_register("-timer",(void*)StartupSearch);
+}
+
+void VersionCheckInit ()
+{
+	// Get options
+	bool official, beta; unsigned int lastTime;
+	GetStartupSearchOptions (&official, &beta, &lastTime);
+
+	if (official || beta)
+	{
+		// Make sure at least 24 hours have passed since last search
+		unsigned int currentTime = (unsigned int)time(NULL);
+		if (currentTime - lastTime >= 86400 || currentTime - lastTime < 0)
+		{
+			// Write current time
+			SetStartupSearchOptions (official, beta, currentTime);
+
+			// Register timer that starts after reaper loads, from there we start search
+			plugin_register("timer",(void*)StartupSearch);
+		}
+	}
+}
+
+/******************************************************************************
+* Command and preferences                                                    *
+******************************************************************************/
+void VersionCheckAction (COMMAND_T* ct)
+{
+	VersionCheckDialog(g_hwndParent);
+}
+
+void VersionCheckDialog (HWND hwnd)
+{
+	BR_SearchObject* searchObject = new (nothrow) BR_SearchObject();
+	if (searchObject)
+	{
+		DialogBoxParam(g_hInst, MAKEINTRESOURCE(IDD_BR_VERSION), hwnd, DialogProc, (LPARAM)searchObject);
+		delete searchObject;
+		searchObject = NULL;
+	}
+}
+
+void GetStartupSearchOptions (bool* official, bool* beta, unsigned int* lastTime)
+{
+	char tmp[256]; int tempO, tempB; unsigned int tempT;
+	GetPrivateProfileString("SWS", STARTUP_VERSION_KEY, "1 0 0", tmp, 256, get_ini_file());
+	sscanf(tmp, "%d %d %u", &tempO, &tempB, &tempT);
+
+	WritePtr(official, !!tempO);
+	WritePtr(beta,     !!tempB);
+	WritePtr(lastTime, tempT  );
+}
+
+void SetStartupSearchOptions (bool official, bool beta, unsigned int lastTime)
+{
+	char tmp[256];
+	if (lastTime == 0) // lastTime = 0 will prevent overwriting current lastTime
+	{
+		GetPrivateProfileString("SWS", STARTUP_VERSION_KEY, "1 0 0", tmp, 256, get_ini_file());
+		sscanf(tmp, "%*d %*d %d", &lastTime);
+	}
+	_snprintf(tmp, sizeof(tmp), "%d %d %u", !!official, !!beta, lastTime);
+	WritePrivateProfileString("SWS", STARTUP_VERSION_KEY, tmp, get_ini_file());
+}
+
+/******************************************************************************
+* BR_SearchObject                                                             *
+******************************************************************************/
+BR_SearchObject::BR_SearchObject (bool startup /*= false*/) :
+m_startup  (startup),
+m_status   (SEARCH_INITIATED),
+m_progress (0)
 {
 	this->EndSearch(); // make sure any existing search thread finishes
 	this->SetProcess(CreateThread(NULL, 0, this->StartSearch, (void*)this, 0, NULL));
-};
+}
 
 BR_SearchObject::~BR_SearchObject ()
 {
 	this->EndSearch();
-};
+}
+
+int BR_SearchObject::GetStatus (BR_Version* official, BR_Version* beta)
+{
+	SWS_SectionLock lock(&m_mutex);
+	if (official)
+		*official = m_official;
+	if (beta)
+		*beta = m_beta;
+	return m_status;
+}
+
+double BR_SearchObject::GetProgress ()
+{
+	return m_progress;
+}
+
+bool BR_SearchObject::GetKillFlag ()
+{
+	SWS_SectionLock lock(&m_mutex);
+	return m_killFlag;
+}
+
+bool BR_SearchObject::IsStartup ()
+{
+	return m_startup;
+}
+
+void BR_SearchObject::RestartSearch ()
+{
+	BR_Version version;
+	this->EndSearch();
+	this->SetProgress(0);
+	this->SetStatus(version, version, SEARCH_INITIATED);
+	this->SetProcess(CreateThread(NULL, 0, this->StartSearch, (void*)this, 0, NULL));
+}
 
 DWORD WINAPI BR_SearchObject::StartSearch (void* searchObject)
 {
@@ -252,7 +381,7 @@ DWORD WINAPI BR_SearchObject::StartSearch (void* searchObject)
 
 	// Get official version and compare
 	BR_Version versionO;
-	int statusO = -1;
+	int statusO = NO_CONNECTION;
 	if (searchO && !_this->GetKillFlag())
 	{
 		JNL_HTTPGet web;
@@ -287,9 +416,9 @@ DWORD WINAPI BR_SearchObject::StartSearch (void* searchObject)
 
 					// Compare with local version and save status
 					if (_this->CompareVersion(versionO, versionL) == 1)
-						statusO = 1;
+						statusO = OFFICIAL_AVAILABLE;
 					else
-						statusO = 0;
+						statusO = UP_TO_DATE;
 
 					delete buf;
 					break;
@@ -300,7 +429,7 @@ DWORD WINAPI BR_SearchObject::StartSearch (void* searchObject)
 
 	// Get beta version and compare
 	BR_Version versionB;
-	int statusB = -1;
+	int statusB = NO_CONNECTION;
 	if (searchB && !_this->GetKillFlag())
 	{
 		JNL_HTTPGet web;
@@ -335,9 +464,9 @@ DWORD WINAPI BR_SearchObject::StartSearch (void* searchObject)
 
 					// Compare with local version and save status
 					if (_this->CompareVersion(versionB, versionL) == 1)
-						statusB = 1;
+						statusB = BETA_AVAILABLE;
 					else
-						statusB = 0;
+						statusB = UP_TO_DATE;
 
 					delete buf;
 					break;
@@ -354,28 +483,42 @@ DWORD WINAPI BR_SearchObject::StartSearch (void* searchObject)
 		Sleep(1500);
 
 	// When both versions are available and are identical, ignore beta
-	if (statusO == 1 && statusB == 1)
+	if (statusO == OFFICIAL_AVAILABLE && statusB == BETA_AVAILABLE)
 		if (!_this->CompareVersion(versionO, versionB))
-			statusB = 0;
+			statusB = UP_TO_DATE;
 
 	// Save status
 	int status;
-	if (statusO == -1 && statusB == -1)
-		status = NO_CONNECTION;
-	else if (statusO == 1 && statusB == 1)
-		status = BOTH_AVAILABLE;
-	else if (statusO == 1)
-		status = OFFICIAL_AVAILABLE;
-	else if (statusB == 1)
-		status = BETA_AVAILABLE;
-	else
-		status = UP_TO_DATE;
+	if      (statusO == NO_CONNECTION && statusB == NO_CONNECTION)       status = NO_CONNECTION;
+	else if (statusO == OFFICIAL_AVAILABLE && statusB == BETA_AVAILABLE) status = BOTH_AVAILABLE;
+	else if (statusO == OFFICIAL_AVAILABLE)                              status = OFFICIAL_AVAILABLE;
+	else if (statusB == BETA_AVAILABLE)                                  status = BETA_AVAILABLE;
+	else                                                                 status = UP_TO_DATE;
+
 	_this->SetStatus(versionO, versionB, status);
-
-
 	JNL::close_socketlib();
 	return 0;
-};
+}
+
+void BR_SearchObject::SetStatus (BR_Version official, BR_Version beta, int status)
+{
+	SWS_SectionLock lock(&m_mutex);
+
+	m_official = official;
+	m_beta = beta;
+	m_status = status;
+}
+
+void BR_SearchObject::SetProgress (double progress)
+{
+	m_progress = progress;
+}
+
+void BR_SearchObject::SetKillFlag (bool killFlag)
+{
+	SWS_SectionLock lock(&m_mutex);
+	m_killFlag = killFlag;
+}
 
 void BR_SearchObject::EndSearch ()
 {
@@ -388,22 +531,25 @@ void BR_SearchObject::EndSearch ()
 		CloseHandle(this->GetProcess());
 		this->SetProcess(NULL);
 	}
-};
+}
 
-void BR_SearchObject::RestartSearch ()
+void BR_SearchObject::SetProcess (HANDLE process)
 {
-	BR_Version version;
-	this->EndSearch();
-	this->SetProgress(0);
-	this->SetStatus(version, version, SEARCH_INITIATED);
-	this->SetProcess(CreateThread(NULL, 0, this->StartSearch, (void*)this, 0, NULL));
-};
+	SWS_SectionLock lock(&m_mutex);
+	m_hProcess = process;
+}
+
+HANDLE BR_SearchObject::GetProcess ()
+{
+	SWS_SectionLock lock(&m_mutex);
+	return m_hProcess;
+}
 
 int BR_SearchObject::CompareVersion (BR_Version one, BR_Version two)
 {
 	// return 0 if equal
-	//		  1 if one is greater
-	//		  2 if two is greater
+	//        1 if one is greater
+	//        2 if two is greater
 
 	if (one.maj > two.maj)
 		return 1;
@@ -422,121 +568,7 @@ int BR_SearchObject::CompareVersion (BR_Version one, BR_Version two)
 	else if (one.build < two.build)
 		return 2;
 	return 0;
-};
-
-void BR_SearchObject::SetStatus (BR_Version official, BR_Version beta, int status)
-{
-	SWS_SectionLock lock(&m_mutex);
-
-	m_official = official;
-	m_beta = beta;
-	m_status = status;
-};
-
-int BR_SearchObject::GetStatus (BR_Version* official, BR_Version* beta)
-{
-	SWS_SectionLock lock(&m_mutex);
-
-	if (official)
-		*official = m_official;
-	if (beta)*beta = m_beta;
-
-	return m_status;
-};
-
-void BR_SearchObject::SetKillFlag (bool killFlag)	{ SWS_SectionLock lock(&m_mutex); m_killFlag = killFlag; }
-bool BR_SearchObject::GetKillFlag ()				{ SWS_SectionLock lock(&m_mutex); return m_killFlag; }
-void BR_SearchObject::SetProcess (HANDLE process)	{ SWS_SectionLock lock(&m_mutex); m_hProcess = process; }
-HANDLE BR_SearchObject::GetProcess ()				{ SWS_SectionLock lock(&m_mutex); return m_hProcess; }
-void BR_SearchObject::SetProgress (double progress)	{ m_progress = progress; }
-double BR_SearchObject::GetProgress ()				{ return m_progress; }
-bool BR_SearchObject::IsStartup ()					{ return m_startup; }
+}
 
 bool BR_SearchObject::m_killFlag = false;
 HANDLE BR_SearchObject::m_hProcess = NULL;
-
-// Command and preference functions
-//////////////////////////////////////////////////////////////////////////////////////////
-void VersionCheckAction (COMMAND_T* ct)
-{
-	VersionCheckDialog(g_hwndParent);
-};
-
-void VersionCheckDialog (HWND hwnd)
-{
-	BR_SearchObject* searchObject = new (nothrow) BR_SearchObject();
-	if (searchObject)
-	{
-		DialogBoxParam(g_hInst, MAKEINTRESOURCE(IDD_BR_VERSION), hwnd, DialogProc, (LPARAM)searchObject);
-		delete searchObject;
-		searchObject = NULL;
-	}
-};
-
-void GetStartupSearchOptions (bool* official, bool* beta, unsigned int* lastTime)
-{
-	char tmp[256]; int tempO, tempB; unsigned int tempT;
-	GetPrivateProfileString("SWS", STARTUP_VERSION_KEY, "1 0 0", tmp, 256, get_ini_file());
-	sscanf(tmp, "%d %d %u", &tempO, &tempB, &tempT);
-
-	if (official)
-		*official = !!tempO;
-	if (beta)
-		*beta = !!tempB;
-	if (lastTime)
-		*lastTime = tempT;
-};
-
-void SetStartupSearchOptions (bool official, bool beta, unsigned int lastTime)
-{
-	char tmp[256];
-	if (lastTime == 0) // lastTime = 0 will prevent overwriting current lastTime
-	{
-		GetPrivateProfileString("SWS", STARTUP_VERSION_KEY, "1 0 0", tmp, 256, get_ini_file());
-		sscanf(tmp, "%*d %*d %d", &lastTime);
-	}
-	_snprintf(tmp, sizeof(tmp), "%d %d %u", !!official, !!beta, lastTime);
-	WritePrivateProfileString("SWS", STARTUP_VERSION_KEY, tmp, get_ini_file());
-};
-
-// Startup functionality
-//////////////////////////////////////////////////////////////////////////////////////////
-void StartupSearch()
-{
-	static BR_SearchObject* searchObject = new (nothrow) BR_SearchObject(true);
-
-	if (searchObject)
-	{
-		int status = searchObject->GetStatus(NULL, NULL);
-		if (status != SEARCH_INITIATED)
-		{
-			if (status == OFFICIAL_AVAILABLE || status == BETA_AVAILABLE || status == BOTH_AVAILABLE)
-				DialogBoxParam(g_hInst, MAKEINTRESOURCE(IDD_BR_VERSION), g_hwndParent, DialogProc, (LPARAM)searchObject);
-			delete searchObject;
-			searchObject = NULL;
-		}
-	}
-	else
-		plugin_register("-timer",(void*)StartupSearch);
-};
-
-void VersionCheckInit ()
-{
-	// Get options
-	bool official, beta; unsigned int lastTime;
-	GetStartupSearchOptions (&official, &beta, &lastTime);
-
-	if (official || beta)
-	{
-		// Make sure at least 24 hours have passed since last search
-		unsigned int currentTime = (unsigned int)time(NULL);
-		if (currentTime - lastTime >= 86400 || currentTime - lastTime < 0)
-		{
-			// Write current time
-			SetStartupSearchOptions (official, beta, currentTime);
-
-			// Register timer that starts after reaper loads, from there we start search
-			plugin_register("timer",(void*)StartupSearch);
-		}
-	}
-};

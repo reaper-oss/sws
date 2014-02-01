@@ -1195,7 +1195,7 @@ END
 
 IDD_BR_MARKERS_TO_TEMPO DIALOGEX 0, 0, 141, 160
 STYLE DS_SETFONT | DS_MODALFRAME | DS_3DLOOK | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Convert markers to tempo"
+CAPTION "SWS/BR - Markers to tempo"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     GROUPBOX        "",IDC_GROUP1,7,3,126,65
@@ -1217,7 +1217,7 @@ END
 
 IDD_BR_SELECT_ADJUST_TEMPO DIALOGEX 0, 0, 379, 184
 STYLE DS_SETFONT | DS_MODALFRAME | DS_3DLOOK | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "SWS Select and adjust tempo markers"
+CAPTION "SWS/BR - Select and adjust tempo markers"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     GROUPBOX        "Select tempo markers",IDC_BR_SEL_GROUP,7,7,174,171
@@ -1272,7 +1272,7 @@ END
 
 IDD_BR_UNSELECT_TEMPO DIALOGEX 0, 0, 219, 44
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "SWS Unselect tempo markers..."
+CAPTION "SWS/BR - Unselect tempo markers"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     LTEXT           "Unselect every",IDC_STATIC,7,9,49,8
@@ -1284,19 +1284,19 @@ BEGIN
     PUSHBUTTON      "Close",IDCANCEL,162,24,50,14
 END
 
-IDD_BR_TEMPO_SHAPE_OPTIONS DIALOGEX 0, 0, 162, 26
+IDD_BR_TEMPO_SHAPE_OPTIONS DIALOGEX 0, 0, 168, 26
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "SWS Set tempo shape options"
+CAPTION "SWS/BR - Set tempo shape options"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     CONTROL         "Split created middle point by:",IDC_BR_SHAPE_SPLIT,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,8,106,8
-    COMBOBOX        IDC_BR_SHAPE_SPLIT_RATIO,114,7,41,39,CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,9,106,8
+    COMBOBOX        IDC_BR_SHAPE_SPLIT_RATIO,115,7,46,39,CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_BR_RANDOMIZE_TEMPO DIALOGEX 0, 0, 239, 81
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "SWS Randomize selected tempo markers"
+CAPTION "SWS/BR - Randomize tempo markers"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     LTEXT           "Minimum",IDC_STATIC,111,7,28,8
@@ -1816,7 +1816,7 @@ BEGIN
     IDD_BR_TEMPO_SHAPE_OPTIONS, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 155
+        RIGHTMARGIN, 161
         TOPMARGIN, 7
         BOTTOMMARGIN, 19
     END
@@ -1895,8 +1895,7 @@ IDC_ZOOMDRAG            CURSOR                  "zoomdrag.cur"
 // Generated from the TEXTINCLUDE 3 resource.
 //
 #include "version.h"
-#include "version.rc2"
-
+#include "version.rc2"
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

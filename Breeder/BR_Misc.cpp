@@ -1,7 +1,7 @@
 /******************************************************************************
 / BR_Misc.cpp
 /
-/ Copyright (c) 2013 Dominik Martin Drzic
+/ Copyright (c) 2013-2014 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
 / http://www.standingwaterstudios.com/reaper
 /
@@ -11,10 +11,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -28,11 +28,16 @@
 #include "stdafx.h"
 #include "BR_Misc.h"
 #include "BR_EnvTools.h"
+#include "BR_ProjState.h"
 #include "BR_Util.h"
 #include "../Fingers/RprItem.h"
 #include "../Fingers/RprMidiTake.h"
+#include "../Xenakios/XenakiosExts.h"
 #include "../reaper/localize.h"
 
+/******************************************************************************
+* Commands                                                                    *
+******************************************************************************/
 void SplitItemAtTempo (COMMAND_T* ct)
 {
 	WDL_TypedBuf<MediaItem*> items;
@@ -42,17 +47,17 @@ void SplitItemAtTempo (COMMAND_T* ct)
 
 	Undo_BeginBlock2(NULL);
 	for (int i = 0; i < items.GetSize(); ++i)
-	{	
+	{
 		MediaItem* item = items.Get()[i];
 		double iStart = GetMediaItemInfo_Value(item, "D_POSITION");
 		double iEnd = iStart + GetMediaItemInfo_Value(item, "D_LENGTH");
 		double tPos = iStart - 1;
-		
+
 		// Split item currently in the loop
 		while (true)
 		{
 			item = SplitMediaItem(item, tPos);
-			if (!item) // in case item did not get split (splitting at nonexistent position)
+			if (!item) // split at nonexistent position?
 				item = items.Get()[i];
 
 			tPos = TimeMap2_GetNextChangeTime(NULL, tPos);
@@ -62,47 +67,41 @@ void SplitItemAtTempo (COMMAND_T* ct)
 	}
 	Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL);
 	UpdateArrange();
-};
+}
 
 void MarkersAtTempo (COMMAND_T* ct)
 {
-	if (!CountTempoTimeSigMarkers(NULL))
+	BR_Envelope tempoMap(GetTempoEnv());
+	if (!tempoMap.CountSelected())
 		return;
-	LineParser lp(false);
-	TrackEnvelope* envelope = GetTempoEnv();
-	char* envState = GetSetObjectState(envelope, "");
-	char* token = strtok(envState, "\n");
 
 	PreventUIRefresh(1);
 	Undo_BeginBlock2(NULL);
-	while (token != NULL)
+	for (int i = 0; i < tempoMap.CountSelected(); ++i)
 	{
-		lp.parse(token);
-		if (!strcmp(lp.gettoken_str(0), "PT"))
-			if (lp.gettoken_int(5))
-				AddProjectMarker(NULL, false, lp.gettoken_float(1), 0, NULL, -1);
-		token = strtok(NULL, "\n");	
+		int id = tempoMap.GetSelected(i);
+		double position; tempoMap.GetPoint(id, &position, NULL, NULL, NULL);
+		AddProjectMarker(NULL, false, position, 0, NULL, -1);
 	}
 	Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL);
 	PreventUIRefresh(-1);
-	
 	UpdateTimeline();
-	FreeHeapPtr(envState);
-};
+}
 
-void MidiProjectTempo (COMMAND_T* ct)
+void MidiItemTempo (COMMAND_T* ct)
 {
 	bool stateChanged = false;
 	for (int i = 0; i < CountSelectedMediaItems(NULL); ++i)
 	{
 		MediaItem* item = GetSelectedMediaItem(NULL, i);
-	
-		// Before parsing the whole item chunk, check if it has MIDI takes
+
+		// Before parsing the whole item chunk, check if it contains MIDI takes
 		bool midiFound = false;
 		for (int i = 0; i < CountTakes(item); ++i)
 		{
+			PCM_source* source = GetMediaItemTake_Source(GetMediaItemTake(item, i));
 			char type[64] = {0};
-			GetMediaSourceType(GetMediaItemTake_Source(GetMediaItemTake(item, i)), type, sizeof(type));
+			GetMediaSourceType(source, type, sizeof(type));
 			if (!strcmp(type, "MIDI") || !strcmp(type, "MIDIPOOL"))
 			{
 				midiFound = true;
@@ -117,7 +116,7 @@ void MidiProjectTempo (COMMAND_T* ct)
 		WDL_FastString newState;
 		char* chunk = GetSetObjectState(item, "");
 		double position = *(double*)GetSetMediaItemInfo(item, "D_POSITION", NULL);
-		
+
 		// Find IGNTEMPO lines
 		char* token = strtok(chunk, "\n");
 		while (token != NULL)
@@ -125,7 +124,7 @@ void MidiProjectTempo (COMMAND_T* ct)
 			if (!strncmp(token, "IGNTEMPO ", 9))
 			{
 				int value, num, den; double bpm;
-				if (ct->user == 0)
+				if ((int)ct->user == 0)
 				{
 					value = 1;
 					TimeMap_GetTimeSigAtTime(NULL, position, &num, &den, &bpm);
@@ -136,14 +135,14 @@ void MidiProjectTempo (COMMAND_T* ct)
 					sscanf(token, "IGNTEMPO %*d %lf %d %d\n", &bpm, &num, &den);
 				}
 
-				newState.AppendFormatted(256, "IGNTEMPO %d %.8f %d %d\n", value, bpm, num, den);
+				newState.AppendFormatted(256, "IGNTEMPO %d %.14lf %d %d\n", value, bpm, num, den);
 			}
 			else
 			{
 				newState.Append(token);
 				newState.Append("\n");
 			}
-			token = strtok(NULL, "\n");	
+			token = strtok(NULL, "\n");
 		}
 		GetSetObjectState(item, newState.Get());
 		FreeHeapPtr(chunk);
@@ -151,16 +150,16 @@ void MidiProjectTempo (COMMAND_T* ct)
 	}
 	if (stateChanged)
 		Undo_OnStateChange2(NULL, SWS_CMD_SHORTNAME(ct));
-};
+}
 
 void MarkersAtNotes (COMMAND_T* ct)
 {
 	RprItemCtrPtr items = RprItemCollec::getSelected();
 	if (!items->size())
 		return;
-	
-	PreventUIRefresh(1);	
-	Undo_BeginBlock2(NULL);	
+
+	PreventUIRefresh(1);
+	Undo_BeginBlock2(NULL);
 
 	// Check for .MID files and convert them to in project midi
 	for (int i = 0; i < items->size(); i++)
@@ -170,7 +169,7 @@ void MarkersAtNotes (COMMAND_T* ct)
 
 	// Loop through items and create markers
 	for (int i = 0; i < items->size(); i++)
-	{	
+	{
 		RprTake take = items->getAt(i).getActiveTake();
 		if (take.isFile() || !take.isMIDI())
 			continue;
@@ -194,11 +193,11 @@ void MarkersAtNotes (COMMAND_T* ct)
 	Main_OnCommand(40685,0);
 	for (int i = 0; i < items->size(); i++)
 		SetMediaItemInfo_Value(items->getAt(i).toReaper(), "B_UISEL", true);
-	
+
 	Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL);
-	PreventUIRefresh(-1);	
+	PreventUIRefresh(-1);
 	UpdateArrange();
-};
+}
 
 void MarkersRegionsAtItems (COMMAND_T* ct)
 {
@@ -206,7 +205,7 @@ void MarkersRegionsAtItems (COMMAND_T* ct)
 		return;
 
 	Undo_BeginBlock2(NULL);
-	PreventUIRefresh(1);	
+	PreventUIRefresh(1);
 
 	for (int i = 0; i < CountSelectedMediaItems(NULL); ++i)
 	{
@@ -214,211 +213,115 @@ void MarkersRegionsAtItems (COMMAND_T* ct)
 		double iStart = *(double*)GetSetMediaItemInfo(item, "D_POSITION", NULL);
 		double iEnd = iStart + *(double*)GetSetMediaItemInfo(item, "D_LENGTH", NULL);
 		char* pNotes = (char*)GetSetMediaItemInfo(item, "P_NOTES", NULL);
-		
+
 		// Replace newlines with spaces
 		string notes(pNotes, strlen(pNotes)+1);
 		ReplaceAll(notes, "\r\n", " ");
-	
-		if (ct->user == 0)	// Markers
+
+		if ((int)ct->user == 0)  // Markers
 			AddProjectMarker(NULL, false, iStart, 0, notes.c_str(), -1);
-		else				// Regions
+		else                     // Regions
 			AddProjectMarker(NULL, true, iStart, iEnd, notes.c_str(), -1);
 	}
 
 	PreventUIRefresh(-1);
 	UpdateTimeline();
 	Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL);
-};
+}
 
-void CursorToEnv1 (COMMAND_T* ct)
+void SnapFollowsGridVis (COMMAND_T* ct)
 {
-	// Get active envelope
-	TrackEnvelope* envelope = GetSelectedTrackEnvelope(NULL);
-	if (!envelope)
-		return;
-	char* envState = GetSetObjectState(envelope, "");
-	char* token = strtok(envState, "\n");
-	
-	bool found = false;
-	double pTime = 0, cTime = 0, nTime = 0;
-	double cursor = GetCursorPositionEx(NULL);
-	
-	// Find next point
-	if (ct->user > 0)
-	{
-		while (token != NULL)
-		{
-			if (sscanf(token, "PT %lf", &cTime))
-			{	
-				if (cTime > cursor)
-				{
-					found = true;
-					token = strtok(NULL, "\n");
-					if (!sscanf(token, "PT %lf", &nTime))
-						nTime = cTime + 0.001;
-					break;
-				}
-				pTime = cTime;
-			}
-			token = strtok(NULL, "\n");	
-		}
-	}
+	int option; GetConfig("projshowgrid", option);
+	SetConfig("projshowgrid", ToggleBit(option, 15));
+}
 
-	// Find previous point
-	else if (ct->user < 0)
-	{
-		double ppTime = -1;
-		while (token != NULL)
-		{
-			if (sscanf(token, "PT %lf", &cTime))
-			{					
-				if (cTime >= cursor)
-				{
-					if (ppTime != -1)
-					{
-						found = true;
-						nTime = cTime;
-						cTime = pTime;
-						pTime = ppTime;
-						if (nTime == 0)
-							nTime = cTime + 0.001;
-					}
-					break;
-				}
-				ppTime = pTime;
-				pTime = cTime;
-			}
-			token = strtok(NULL, "\n");	
-		}
-					
-		// Fix for a case when cursor is after the last point
-		if (!found && cursor > cTime )
-		{
-			found = true;
-			nTime = cTime;
-			cTime = pTime;
-			pTime = ppTime;
-			if (nTime == 0)
-				nTime = cTime + 0.001;
-		}
-	}
-				
-	// Yes, this is a hack...however, testing showed it has more advantages (in time of execution when 
-	// dealing with a lot of points) over modifying an envelope chunk. With this method there is no need
-	// to parse and set the whole chunk but only find a target point (after which parsing stops) and then,
-	// via manipulation of the preferences and time selection, make reaper do the rest.
-	// Another good thing is that we escape envelope redrawing issues: http://forum.cockos.com/project.php?issueid=4416
-	if (found)
-	{
-		Undo_BeginBlock2(NULL);
-		
-		// Select point	
-		if (ct->user == -2 || ct->user == 2 )
-		{
-			PreventUIRefresh(1);	
-				
-			// Get current time selection
-			double tStart, tEnd, nStart, nEnd;
-			GetSet_LoopTimeRange2(NULL, false, false, &tStart, &tEnd, false);
-			
-			// Enable selection of points in time selection
-			int envClickSegMode = *(int*)GetConfigVar("envclicksegmode");
-			*(int*)GetConfigVar("envclicksegmode") = SetBit(envClickSegMode, 6);
-						
-			// Set time selection that in turn sets new envelope selection
-			nStart = (cTime - pTime) / 2 + pTime;
-			nEnd = (nTime - cTime) / 2 + cTime;
-			GetSet_LoopTimeRange2(NULL, true, false, &nStart, &nEnd, false);
-						
-			// Change preferences again so point selection doesn't get lost when a previous time selection gets restored
-			*(int*)GetConfigVar("envclicksegmode") = ClearBit(envClickSegMode, 6);
-			GetSet_LoopTimeRange2(NULL, true, false, &tStart, &tEnd, false);
-						
-			// Restore preferences
-			*(int*)GetConfigVar("envclicksegmode") = envClickSegMode;	
-			
-			PreventUIRefresh(-1);	
-		}
-
-		// Set edit cursor position
-		SetEditCurPos(cTime, true, false);
-		Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL);		
-	}
-	FreeHeapPtr(envState);	
-};
-
-void CursorToEnv2 (COMMAND_T* ct)
+void TrimNewVolPanEnvs (COMMAND_T* ct)
 {
-	// Get active envelope
-	TrackEnvelope* env = GetSelectedTrackEnvelope(NULL);
-	if (!env)
-		return;
-	BR_EnvChunk envelope(env);
+	SetConfig("envtrimadjmode", (int)ct->user);
+	RefreshToolbar(0);
+}
 
-	// Find next/previous point
-	int id;
-	if (ct->user > 0)
-		id = envelope.FindNext(GetCursorPositionEx(NULL));		
-	else
-		id = envelope.FindPrevious(GetCursorPositionEx(NULL));
-
-	// Select and set edit cursor
-	double targetPos;
-	if (envelope.GetPoint(id, &targetPos, NULL, NULL, NULL))
-	{
-		// Select all points at the same time position
-		double position;
-		while (envelope.GetPoint(id, &position, NULL, NULL, NULL))
-		{
-			if (targetPos == position)
-			{
-				envelope.SetSelection(id, true);
-				if (ct->user > 0) {++id;} else {--id;}
-			}
-			else
-				break;
-		}
-
-		Undo_BeginBlock2(NULL);
-		SetEditCurPos(targetPos, true, false);
-		envelope.Commit();
-		Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL);
-	}
-};
-
-void ShowActiveEnvOnly (COMMAND_T* ct)
+void CycleRecordModes (COMMAND_T*)
 {
-	// Get active envelope (with VIS and ACT already set)
-	TrackEnvelope* env = GetSelectedTrackEnvelope(NULL);
-	if (!env)
-		return;	
-	BR_EnvChunk envelope(env, true);
-	
-	// If dealing with selected tracks only, check if there is selection
-	if (ct->user == 1)
-		if (!CountSelectedTracks(NULL))
-			return;
-	
-	Undo_BeginBlock2(NULL);
+	int mode; GetConfig("projrecmode", mode);
+	if (++mode > 2) mode = 0;
 
-	// If envelope has only one point Reaper will not show it after hiding all envs and committing so create another artifical point
-	bool flag = false;
-	if (envelope.Count() <= 1)
+	if      (mode == 0) Main_OnCommandEx(40253, 0, NULL);
+	else if (mode == 1) Main_OnCommandEx(40252, 0, NULL);
+	else if (mode == 2) Main_OnCommandEx(40076, 0, NULL);
+}
+
+void FocusArrange (COMMAND_T* ct)
+{
+	SetFocus(GetArrangeWnd());
+}
+
+void PreviewItemAtMouse (COMMAND_T* ct)
+{
+	double position;
+	if (MediaItem* item = ItemAtMouseCursor(&position))
 	{
-		flag = envelope.CreatePoint(0, 100, 100, 0, 0, false);
-		envelope.Commit(); // Give back edited envelope to reaper before hiding all envelopes
+		int toggle = GetFirstDigit((int)ct->user);
+		int output = GetFirstDigit((int)ct->user - toggle*100);
+		int type   = GetLastDigit((int)ct->user);
+
+		double      volume  = 1;
+		double      start   = 0;
+		double      measure = 0;
+		MediaTrack* track   = NULL;
+
+		if (output == 2)
+			volume = GetMediaTrackInfo_Value(GetMediaItem_Track(item), "D_VOL");
+		else if (output == 3)
+			track = GetMediaItem_Track(item);
+
+		if (type == 2)
+			start = position - GetMediaItemInfo_Value(item, "D_POSITION");
+		else if (type == 3)
+			measure = 1;
+
+		ItemPreview (toggle, item, track, volume, start, measure);
+	}
+}
+
+void SaveCursorPosSlot (COMMAND_T* ct)
+{
+	int slot = (int)ct->user;
+
+	for (int i = 0; i < g_cursorPos.Get()->GetSize(); i++)
+	{
+		if (slot == g_cursorPos.Get()->Get(i)->GetSlot())
+			return g_cursorPos.Get()->Get(i)->Save();
 	}
 
-	// Hide all envelopes
-	if (ct->user == 0)
-		Main_OnCommand(41150, 0); // all
-	else
-		Main_OnCommand(40889 ,0); // for selected tracks
+	g_cursorPos.Get()->Add(new BR_CursorPos(slot));
+}
 
-	// Set back active envelope
-	if (flag)
-		envelope.DeletePoint(envelope.Count()-1);
-	envelope.Commit(true);
+void RestoreCursorPosSlot (COMMAND_T* ct)
+{
+	int slot = (int)ct->user;
 
-	Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL);
-};
+	for (int i = 0; i < g_cursorPos.Get()->GetSize(); i++)
+	{
+		if (slot == g_cursorPos.Get()->Get(i)->GetSlot())
+		{
+			g_cursorPos.Get()->Get(i)->Restore();
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		}
+	}
+}
+
+/******************************************************************************
+* Toggle states                                                               *
+******************************************************************************/
+int IsSnapFollowsGridVisOn (COMMAND_T* = NULL)
+{
+	int option; GetConfig("projshowgrid", option);
+	return !GetBit(option, 15);
+}
+
+int IsTrimNewVolPanEnvsOn (COMMAND_T* ct)
+{
+	int option; GetConfig("envtrimadjmode", option);
+	return (option == (int)ct->user);
+}

@@ -1,7 +1,7 @@
 /******************************************************************************
-/ BR.h
+/ BR_Envelope.h
 /
-/ Copyright (c) 2012-2014 Dominik Martin Drzic
+/ Copyright (c) 2014 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
 / http://www.standingwaterstudios.com/reaper
 /
@@ -27,4 +27,20 @@
 ******************************************************************************/
 #pragma once
 
-int BR_Init ();
+/******************************************************************************
+* Commands                                                                    *
+******************************************************************************/
+void CursorToEnv1 (COMMAND_T*);
+void CursorToEnv2 (COMMAND_T*);
+void SelNextPrevEnvPoint (COMMAND_T*);
+void ExpandEnvSel (COMMAND_T*);
+void ExpandEnvSelEnd (COMMAND_T*);
+void ShrinkEnvSel (COMMAND_T*);
+void ShrinkEnvSelEnd (COMMAND_T*);
+void ShiftEnvSelection (COMMAND_T*);
+void PeaksDipsEnv (COMMAND_T*);
+void SelEnvTimeSel (COMMAND_T*);
+void ShowActiveEnvOnly (COMMAND_T*);
+void CreateEnvPointMouse (COMMAND_T* ct);
+void SaveEnvSelSlot (COMMAND_T* ct);
+void RestoreEnvSelSlot (COMMAND_T* ct);

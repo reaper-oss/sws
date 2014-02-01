@@ -27,15 +27,35 @@
 ******************************************************************************/
 #pragma once
 
+/******************************************************************************
+* Call on startup to initiate search                                          *
+******************************************************************************/
+void VersionCheckInit ();
+
+/******************************************************************************
+* Command and preferences (used from About dialog)                            *
+******************************************************************************/
+void VersionCheckAction (COMMAND_T*);
+void VersionCheckDialog (HWND hwnd);
+void GetStartupSearchOptions (bool* official, bool* beta, unsigned int* lastTime);
+void SetStartupSearchOptions (bool official, bool beta, unsigned int lastTime);
+
+/******************************************************************************
+* Holds version information                                                   *
+******************************************************************************/
 struct BR_Version
 {
-	int maj; 		// major
-	int min;		// minor
-	int rev;		// revision
-	int build;		// build
+	int maj;        // major
+	int min;        // minor
+	int rev;        // revision
+	int build;      // build
 	BR_Version () {maj = min = rev = build = 0;}
 };
 
+/******************************************************************************
+* To start search, simply create the object and use GetStatus to query        *
+* results from the search thread.                                             *
+******************************************************************************/
 class BR_SearchObject
 {
 public:
@@ -46,28 +66,23 @@ public:
 	bool GetKillFlag ();
 	bool IsStartup ();
 	void RestartSearch ();
+
 private:
 	static DWORD WINAPI StartSearch (void* searchObject);
-	void EndSearch ();
-	int CompareVersion (BR_Version one, BR_Version two);
 	void SetStatus (BR_Version official, BR_Version beta, int status);
 	void SetProgress (double progress);
 	void SetKillFlag (bool killFlag);
+	void EndSearch ();
 	void SetProcess (HANDLE process);
 	HANDLE GetProcess ();
+	int CompareVersion (BR_Version one, BR_Version two);
 
 	const bool m_startup;
-	BR_Version m_official;
-	BR_Version m_beta;
 	int m_status;
 	double m_progress;
+	BR_Version m_official;
+	BR_Version m_beta;
 	SWS_Mutex m_mutex;
 	static bool m_killFlag;
 	static HANDLE m_hProcess;
 };
-
-void VersionCheckInit ();
-void VersionCheckAction (COMMAND_T*);
-void VersionCheckDialog (HWND hwnd);
-void GetStartupSearchOptions (bool* official, bool* beta, unsigned int* lastTime);
-void SetStartupSearchOptions (bool official, bool beta, unsigned int lastTime);

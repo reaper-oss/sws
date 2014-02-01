@@ -102,7 +102,7 @@ APIdef g_apidefs[] =
 	{ APIFUNC(FNG_SetMidiNoteIntProperty), "void", "RprMidiNote*,const char*,int", "midiNote,property,value", "[FNG] Set MIDI note property", },
 	{ APIFUNC(FNG_AddMidiNote), "RprMidiNote*", "RprMidiTake*", "midiTake", "[FNG] Add MIDI note to MIDI take", },
 	
-	{ APIFUNC(BR_SetTakeSourceFromFile), "bool", "MediaItem_Take*,char*,bool", "take,filename,inProjectData", "[BR] Set new take source from file. To import MIDI file as in-project source data pass inProjectData=true. Returns false if failed.\nNote: To set source from existing take, see SNM_GetSetSourceState2", },
+	{ APIFUNC(BR_SetTakeSourceFromFile), "bool", "MediaItem_Take*,const char*,bool", "take,filename,inProjectData", "[BR] Set new take source from file. To import MIDI file as in-project source data pass inProjectData=true. Returns false if failed.\nNote: To set source from existing take, see SNM_GetSetSourceState2", },
 
 	{ NULL, } // denote end of table
 };

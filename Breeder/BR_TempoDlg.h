@@ -11,10 +11,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -27,34 +27,25 @@
 ******************************************************************************/
 #pragma once
 
+/******************************************************************************
+* Convert project markers to tempo markers                                    *
+******************************************************************************/
 WDL_DLGRET ConvertMarkersToTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-void ConvertMarkersToTempo (int markers, int num, int den, bool removeMarkers, bool timeSel, bool gradualTempo, bool split, double splitRatio);
-void ShowGradualOptions (bool show, HWND hwnd);
-void LoadOptionsConversion (int &markers, int &num, int &den, int &removeMarkers, int &timeSel, int &gradual, int &split, char* splitRatio);
-void SaveOptionsConversion (HWND hwnd);
 
+/******************************************************************************
+* Select and adjust tempo markers                                             *
+******************************************************************************/
 WDL_DLGRET SelectAdjustTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-void SelectTempo (int mode, int Nth, int timeSel, int bpm, double bpmStart, double bpmEnd, int shape, int sig, int num, int den, int type);
-void AdjustTempo (int mode, double bpm, int shape);
-void UpdateTargetBpm (HWND hwnd, int doFirst, int doCursor, int doLast);
-void UpdateCurrentBpm (HWND hwnd, const vector<int> &selectedPoints);
-void UpdateSelectionFields (HWND hwnd);
-void SelectTempoCase (HWND hwnd, int operationType, int unselectNth);
-void AdjustTempoCase (HWND hwnd);
-void UnselectNthDialog(bool show, HWND parentHandle);
-void LoadOptionsSelAdj (double &bpmStart, double &bpmEnd, int &num, int &den, int &bpmEnb, int &sigEnb, int &timeSel, int &shape, int &type, int &selPref, int &invertPref, int &adjustType, int &adjustShape);
-void SaveOptionsSelAdj (HWND hwnd);
 WDL_DLGRET UnselectNthProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-void LoadOptionsUnselectNth (int &Nth, int &criteria);
-void SaveOptionsUnselectNth (HWND hwnd);
+void UnselectNthDialog (bool show, HWND parentHandle);
 
-WDL_DLGRET TempoShapeOptionsProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-void SetTempoShapeGlobalVariable (int split, char* splitRatio);
-void LoadOptionsTempoShape (int &split, char* splitRatio);
-void SaveOptionsTempoShape (HWND hwnd);
-
+/******************************************************************************
+* Randomize selected tempo markers                                            *
+******************************************************************************/
 WDL_DLGRET RandomizeTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-void SetRandomTempo (HWND hwnd, char* oldTempo, double min, double max, int unit, double minLimit, double maxLimit, int unitLimit, int limit);
-void SetPreRandTempo (char* oldTempo);
-void LoadOptionsRandomizeTempo (double &min, double &max, int &unit, double &minLimit, double &maxLimit, int &unitLimit, int &limit);
-void SaveOptionsRandomizeTempo (HWND hwnd);
+
+/******************************************************************************
+* Set tempo marker shape (options)                                            *
+******************************************************************************/
+WDL_DLGRET TempoShapeOptionsProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+bool GetTempoShapeOptions (double* splitRatio);

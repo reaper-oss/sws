@@ -1,7 +1,7 @@
 /******************************************************************************
 / BR_Util.h
 /
-/ Copyright (c) 2013 Dominik Martin Drzic
+/ Copyright (c) 2013-2014 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
 / http://www.standingwaterstudios.com/reaper
 /
@@ -27,18 +27,79 @@
 ******************************************************************************/
 #pragma once
 
-#define SKIP(x,y) {x+=y; continue;}
+/******************************************************************************
+* Constants                                                                   *
+******************************************************************************/
+const int VERT_SCROLL_W = 17;
 
-bool IsThisFraction (char* str, double &convertedFraction);
-int GetFirstDigit (int val);
-int ClearBit (int val, int pos);
-int SetBit (int val, int pos);
+/******************************************************************************
+* Macros                                                                      *
+******************************************************************************/
+#define SKIP(counter, count)    {(counter)+=(count); continue;}
+
+/******************************************************************************
+* Miscellaneous                                                               *
+******************************************************************************/
+bool IsThisFraction (char* str, double& convertedFraction);
 double AltAtof (char* str);
-double EndOfProject (bool markers, bool regions);
-void CenterDialog (HWND hwnd, HWND target, HWND zOrder);
-void GetSelItemsInTrack (MediaTrack* track, vector<MediaItem*> &items);
 void ReplaceAll (string& str, string oldStr, string newStr);
-void BR_ThemeListViewOnInit (HWND list);
-bool BR_ThemeListViewInProc (HWND hwnd, int uMsg, LPARAM lParam, HWND list, bool grid);
-void CommandTimer (COMMAND_T* ct);
-bool BR_SetTakeSourceFromFile(MediaItem_Take* take, char* filename, bool inProjectData);
+int GetFirstDigit (int val);
+int GetLastDigit (int val);
+int GetBit (int val, int pos);
+int SetBit (int val, int pos);
+int ToggleBit (int val, int pos);
+int ClearBit (int val, int pos);
+template <typename T> void WritePtr (T* ptr, T val) {if (ptr) *ptr = val;};
+template <typename T> void ReadPtr  (T* ptr, T& val) {if (ptr) val = *ptr;};
+template <typename T> T CheckBounds (T val, T min, T max) {if (val < min) return min; if (val > max) return max; return val;};
+
+/******************************************************************************
+* General                                                                     *
+******************************************************************************/
+vector<MediaItem*> GetSelItems (MediaTrack* track);
+vector<double> GetProjectMarkers (bool timeSel);
+double EndOfProject (bool markers, bool regions);
+double GetProjectSettingsTempo (int* num, int* den);
+bool TcpVis (MediaTrack* track);
+template <typename T> void GetConfig (const char* key, T& val) { val = *static_cast<T*>(GetConfigVar(key)); };
+template <typename T> void SetConfig (const char* key, T  val) { *static_cast<T*>(GetConfigVar(key)) = val; };
+
+/******************************************************************************
+* Height                                                                      *
+******************************************************************************/
+int GetTrackHeight (MediaTrack* track, int* offsetY);
+int GetItemHeight (MediaItem* item, int* offsetY);
+int GetTakeHeight (MediaItem_Take* take, int* offsetY);
+int GetTakeHeight (MediaItem* item, int id, int* offsetY);
+int GetTakeEnvHeight (MediaItem_Take* take, int* offsetY);
+int GetTakeEnvHeight (MediaItem* item, int id, int* offsetY);
+int GetTrackEnvHeight (TrackEnvelope* envelope, int* offsetY, MediaTrack* parent = NULL);
+
+/******************************************************************************
+* Arrange                                                                     *
+******************************************************************************/
+void MoveArrange (double amountTime);
+void CenterArrange (double position);
+void MoveArrangeToTarget (double target, double reference);
+bool IsOffScreen (double position);
+bool PositionAtMouseCursor (double* position);
+MediaItem* ItemAtMouseCursor (double* position);
+
+/******************************************************************************
+* Window                                                                      *
+******************************************************************************/
+HWND GetTcpWnd ();
+HWND GetTcpTrackWnd (MediaTrack* track);
+HWND GetArrangeWnd ();
+void CenterDialog (HWND hwnd, HWND target, HWND zOrder);
+
+/******************************************************************************
+* Theming                                                                     *
+******************************************************************************/
+void ThemeListViewOnInit (HWND list);
+bool ThemeListViewInProc (HWND hwnd, int uMsg, LPARAM lParam, HWND list, bool grid);
+
+/******************************************************************************
+* ReaScript                                                                   *
+******************************************************************************/
+bool BR_SetTakeSourceFromFile (MediaItem_Take* take, const char* filename, bool inProjectData);

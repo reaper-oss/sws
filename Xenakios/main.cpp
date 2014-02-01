@@ -10,10 +10,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -68,12 +68,12 @@ bool GenerateShuffledRandomTable(int *IntTable,int numItems,int badFirstNumber)
 	int IterCount=0;
 	int rndInt;
 	int i;
-	for (i=0;i<1024;i++) 
+	for (i=0;i<1024;i++)
 	{
 		CheckTable[i]=0;
 		IntTable[i]=0;
 	}
-	
+
 	for (i=0;i<numItems;i++)
 	{
 		GoodFound=FALSE;
@@ -84,12 +84,12 @@ bool GenerateShuffledRandomTable(int *IntTable,int numItems,int badFirstNumber)
 				GoodFound=TRUE;
 			if ((CheckTable[rndInt]==0) && (i>0))
 				GoodFound=TRUE;
-					
+
 			IterCount++;
-			if (IterCount>10000000) 
+			if (IterCount>10000000)
 				break;
 		}
-		if (GoodFound) 
+		if (GoodFound)
 		{
 			IntTable[i]=rndInt;
 			CheckTable[rndInt]=1;
@@ -128,7 +128,7 @@ void DoInsRndFileEx(bool RndLen,bool RndOffset,bool UseTimeSel)
 	if (g_filenames->GetSize()>0)
 	{
 		int filenameindex=rand() % g_filenames->GetSize();
-		
+
 		t_vect_of_Reaper_tracks TheTracks;
 		XenGetProjectTracks(TheTracks,true);
 		if (TheTracks.size()>0)
@@ -145,7 +145,7 @@ void DoInsRndFileEx(bool RndLen,bool RndOffset,bool UseTimeSel)
 			double ItemPos=TimeSelStart;
 			double ItemLen=NewPCM->GetLength();
 			double MediaOffset=0.0;
-			if (RndOffset) 
+			if (RndOffset)
 			{
 				MediaOffset=(NewPCM->GetLength()/RAND_MAX)*rand();
 				ItemLen-=MediaOffset;
@@ -155,7 +155,7 @@ void DoInsRndFileEx(bool RndLen,bool RndOffset,bool UseTimeSel)
 			if (!UseTimeSel) ItemPos=GetCursorPosition();
 			GetSetMediaItemTakeInfo(NewTake,"P_SOURCE",NewPCM);
 			GetSetMediaItemTakeInfo(NewTake,"D_STARTOFFS",&MediaOffset);
-			
+
 			GetSetMediaItemInfo(NewItem,"D_POSITION",&ItemPos);
 			GetSetMediaItemInfo(NewItem,"D_LENGTH",&ItemLen);
 			Main_OnCommand(40047,0); // build any missing peaks
@@ -163,12 +163,12 @@ void DoInsRndFileEx(bool RndLen,bool RndOffset,bool UseTimeSel)
 			Undo_OnStateChangeEx(__LOCALIZE("Insert random file","sws_undo"),UNDO_STATE_ITEMS,-1);
 			UpdateTimeline();
 		}
-	}	
+	}
 }
 
 void DoInsRndFileRndLen(COMMAND_T*)
 {
-	DoInsRndFileEx(true,false,false);	
+	DoInsRndFileEx(true,false,false);
 }
 
 void DoInsRndFileAtTimeSel(COMMAND_T*)
@@ -192,8 +192,8 @@ void DoRoundRobinSelectTakes(COMMAND_T* ct)
 	{
 		MediaItem* item = GetSelectedMediaItem(NULL, i);
 		int takeId = *(int*)GetSetMediaItemInfo(item,"I_CURTAKE",NULL);
-		
-		++takeId; 
+
+		++takeId;
 		if (takeId > CountTakes(item)-1)
 			takeId = 0;
 		GetSetMediaItemInfo(item,"I_CURTAKE",&takeId);
@@ -229,7 +229,7 @@ void DoSelectTakeInSelectedItems(int takeIndx) // -1 first -2 last take, otherwi
 					if (takeIndx==-2) { TakeToSelect=numTakes-1; GetSetMediaItemInfo(CurItem,"I_CURTAKE",&TakeToSelect); }
 					if (takeIndx==-1) { TakeToSelect=0; GetSetMediaItemInfo(CurItem,"I_CURTAKE",&TakeToSelect); }
 					if (takeIndx>=0)
-					{ 
+					{
 						TakeToSelect=takeIndx;
 						GetSetMediaItemInfo(CurItem,"I_CURTAKE",&TakeToSelect);
 					}
@@ -257,7 +257,7 @@ void DoInsertShuffledRandomFile(COMMAND_T*)
 {
 	if (g_filenames->GetSize()>2)
 	{
-	 int FileToChoose=ShuffledNumbers[ShuffledNumbersGenerated];	
+	 int FileToChoose=ShuffledNumbers[ShuffledNumbersGenerated];
 	 char* filename;
 	 filename=g_filenames->Get(FileToChoose);
 	 InsertMedia(filename,0);
@@ -270,7 +270,7 @@ void DoInsertShuffledRandomFile(COMMAND_T*)
 	}
 	else
 		MessageBox(g_hwndParent, __LOCALIZE("Too few files for random shuffled insert!","sws_mbox"), __LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
-	
+
 }
 
 bool ItemTimesCompFunc(MediaItem* ita,MediaItem* itb)
@@ -345,7 +345,7 @@ void DoResampleTakeOneSemitoneDown(COMMAND_T* ct)
 	Undo_BeginBlock();
 	Main_OnCommand(40518, 0);
 	Main_OnCommand(40205, 0);
-	Undo_EndBlock(SWS_CMD_SHORTNAME(ct),0);	
+	Undo_EndBlock(SWS_CMD_SHORTNAME(ct),0);
 }
 
 void DoResampleTakeOneSemitoneUp(COMMAND_T* ct)
@@ -362,7 +362,7 @@ void DoLoopAndPlaySelectedItems(COMMAND_T*)
 	DoSetLoopPointsToSelectedItems(true);
 	Main_OnCommand(40632, 0); // Move cursor to start of loop
 	GetSetRepeat(1); // set repeat on
-	Main_OnCommand(1007, 0); // Transport Play	
+	Main_OnCommand(1007, 0); // Transport Play
 }
 
 void PlayItemsOnceSlice()
@@ -392,7 +392,7 @@ void DoPlayItemsOnce(COMMAND_T*)
 		Main_OnCommand(40634, 0); // remove loop points
 		DoSetLoopPointsToSelectedItems(false);
 		SetEditCurPos(g_FirstSelectedItemPos, false, false);
-		
+
 		Main_OnCommand(1007, 0); // Transport Play
 		Sleep(100);
 		g_PlayItemsOncePlaying = true;
@@ -429,153 +429,167 @@ void DoMoveCursor10pixRightCreateSel(COMMAND_T*) { for (int i = 0; i < ALEXPIXEL
 
 preview_register_t g_ItemPreview = { {}, 0, };
 bool g_itemPreviewPlaying = false;
-MediaItem* g_previewItem = NULL;
-bool g_bItemMuteState = false;
 void ItemPreviewSlice()
 {
 	if (g_itemPreviewPlaying)
 	{
-#ifdef _WIN32
-		EnterCriticalSection(&g_ItemPreview.cs);
-#else
-		pthread_mutex_lock(&g_ItemPreview.mutex);
-#endif
+		#ifdef _WIN32
+			EnterCriticalSection(&g_ItemPreview.cs);
+		#else
+			pthread_mutex_lock(&g_ItemPreview.mutex);
+		#endif
+
 		// Have we reached the end?
 		if (g_ItemPreview.curpos >= g_ItemPreview.src->GetLength())
 		{
-#ifdef _WIN32
-			LeaveCriticalSection(&g_ItemPreview.cs);
-#else
-			pthread_mutex_unlock(&g_ItemPreview.mutex);
-#endif
-			StopPreview(&g_ItemPreview);
-			g_itemPreviewPlaying = false;
-			GetSetMediaItemInfo(g_previewItem, "B_MUTE", &g_bItemMuteState);
-			UpdateItemInProject(g_previewItem);
-			delete g_ItemPreview.src;
+			#ifdef _WIN32
+				LeaveCriticalSection(&g_ItemPreview.cs);
+			#else
+				pthread_mutex_unlock(&g_ItemPreview.mutex);
+			#endif
+			ItemPreview (0, NULL, NULL, 0, 0, 0);
 		}
 		else
-#ifdef _WIN32
-			LeaveCriticalSection(&g_ItemPreview.cs);
-#else
-			pthread_mutex_unlock(&g_ItemPreview.mutex);
-#endif
+		{
+			#ifdef _WIN32
+				LeaveCriticalSection(&g_ItemPreview.cs);
+			#else
+				pthread_mutex_unlock(&g_ItemPreview.mutex);
+			#endif
+		}
 	}
 }
 
-// t->user:
-// 0: start
-// 1: stop
-// 2: toggle
-// 3: start, but use track fader trim
-// 4: toggle, but use track fader trim
-void DoPreviewItem(COMMAND_T* t)
+void ItemPreviewPlayState(bool play)
 {
+	if (!play && g_itemPreviewPlaying)
+		ItemPreview (0, NULL, NULL, 0, 0, 0);
+}
+
+// mode:
+// 0: stop
+// 1: start
+// 2: toggle
+void ItemPreview(int mode, MediaItem* item, MediaTrack* track, double volume, double startOffset, double measureSync)
+{
+	// Preview called while preview in progress, stopping previous preview...
 	if (g_itemPreviewPlaying)
 	{
-		// preview called while preview in progress, stopping previous preview...
-		StopPreview(&g_ItemPreview);
+		if (g_ItemPreview.preview_track)
+			StopTrackPreview(&g_ItemPreview);
+		else
+			StopPreview(&g_ItemPreview);
 		g_itemPreviewPlaying = false;
-		GetSetMediaItemInfo(g_previewItem, "B_MUTE", &g_bItemMuteState);
-		UpdateItemInProject(g_previewItem);
 		delete g_ItemPreview.src;
-		if (t->user == 2 || t->user == 4)
+		if (mode == 2)
 			return;
 	}
-
-	if (t->user == 1)
+	if (mode == 0)
 		return;
 
-	if (CountSelectedMediaItems(0) && CountTakes(GetSelectedMediaItem(0, 0)))
+	if (CountTakes(item))
 	{
-		g_previewItem = GetSelectedMediaItem(0, 0);
+		bool itemMuteState = *(bool*)GetSetMediaItemInfo(item, "B_MUTE", NULL);
+		GetSetMediaItemInfo(item, "B_MUTE", &g_bFalse); // needs to be set before getting the source
 
-		PCM_source* src = ((PCM_source*)g_previewItem)->Duplicate(); // Casting from MediaItem* to PCM_source works!  Who would have known?
+		PCM_source* src = ((PCM_source*)item)->Duplicate(); // Casting from MediaItem* to PCM_source works!  Who would have known?
 		if (src)
 		{
-			g_bItemMuteState = *(bool*)GetSetMediaItemInfo(g_previewItem, "B_MUTE", NULL);
-			GetSetMediaItemInfo(g_previewItem, "B_MUTE", &g_bFalse);
-
-			double dZero = 0.0;
-			GetSetMediaItemInfo((MediaItem*)src, "D_POSITION", &dZero);
+			GetSetMediaItemInfo((MediaItem*)src, "D_POSITION", &g_d0);
 
 			if (!g_ItemPreview.src) // src == 0 means need to initialize structure
 			{
-#ifdef _WIN32
-				InitializeCriticalSection(&g_ItemPreview.cs);
-#else
-				pthread_mutex_init(&g_ItemPreview.mutex, NULL);
-#endif
-				g_ItemPreview.m_out_chan = 0;
+				#ifdef _WIN32
+					InitializeCriticalSection(&g_ItemPreview.cs);
+				#else
+					pthread_mutex_init(&g_ItemPreview.mutex, NULL);
+				#endif
 				g_ItemPreview.loop = false;
 			}
 
-			if (t->user == 3 || t->user == 4) // Use track's fader level for volume
-			{
-				MediaTrack* tr = (MediaTrack*)GetSetMediaItemInfo(g_previewItem, "P_TRACK", NULL);
-				g_ItemPreview.volume = *(double*)GetSetMediaTrackInfo(tr, "D_VOL", NULL);
-			}
-			else						
-				g_ItemPreview.volume = 1.0;
 			g_ItemPreview.src = src;
-			g_ItemPreview.curpos = 0.0;
-			if (PlayPreview(&g_ItemPreview))
-				g_itemPreviewPlaying = true;
+			g_ItemPreview.m_out_chan = (track) ? (-1) : (0);
+			g_ItemPreview.curpos = startOffset;
+			g_ItemPreview.volume = volume;
+			g_ItemPreview.preview_track = track;
+
+			if (g_ItemPreview.preview_track)
+				g_itemPreviewPlaying = !!PlayTrackPreview2Ex(NULL, &g_ItemPreview, (measureSync) ? (1) : (0), measureSync);
+			else
+				g_itemPreviewPlaying = !!PlayPreviewEx(&g_ItemPreview, (measureSync) ? (1) : (0), measureSync);
+
+			if (!g_itemPreviewPlaying)
+				delete g_ItemPreview.src;
 		}
+
+		GetSetMediaItemInfo(item, "B_MUTE", &itemMuteState);
 	}
 }
 
-void DoStopPreviewItem(COMMAND_T*)
+void DoPreviewSelectedItem (COMMAND_T* ct)
 {
-	if (g_itemPreviewPlaying)
+	if (MediaItem* item = GetSelectedMediaItem(NULL, 0))
 	{
-		// preview called while preview in progress, stopping previous preview...
-		StopPreview(&g_ItemPreview);
-		g_itemPreviewPlaying = false;
-		delete g_ItemPreview.src;
+		int mode = 0;
+		if ((int)ct->user == 0)     // zero is stop
+			mode = 0;
+		else if ((int)ct->user & 1) // odd numbers are start
+			mode = 1;
+		else                        // even numbers are toggle
+			mode = 2;
+
+		double volume = 1;
+		if ((int)ct->user == 3 || (int)ct->user == 4)
+			volume = GetMediaTrackInfo_Value(GetMediaItem_Track(item), "D_VOL");
+
+		MediaTrack* track = NULL;
+		if ((int)ct->user == 5 || (int)ct->user == 6)
+			track = GetMediaItem_Track(item);
+
+		ItemPreview(mode, item, track, volume, 0, 0);
 	}
 }
 
 void DoScrollTVPageDown(COMMAND_T*)
 {
 	HWND hTrackView=GetTrackWnd();
-	if (hTrackView) 
+	if (hTrackView)
 	{
-		SendMessage(hTrackView,WM_VSCROLL,SB_PAGEDOWN,0);	
+		SendMessage(hTrackView,WM_VSCROLL,SB_PAGEDOWN,0);
 	}
 }
 
 void DoScrollTVPageUp(COMMAND_T*)
 {
 	HWND hTrackView=GetTrackWnd();
-	if (hTrackView) 
+	if (hTrackView)
 	{
-		SendMessage(hTrackView,WM_VSCROLL,SB_PAGEUP,0);	
+		SendMessage(hTrackView,WM_VSCROLL,SB_PAGEUP,0);
 	}
 }
 
 void DoScrollTVHome(COMMAND_T*)
 {
 	HWND hTrackView=GetTrackWnd();
-	if (hTrackView) 
+	if (hTrackView)
 	{
-		SendMessage(hTrackView,WM_VSCROLL,SB_TOP,0);	
+		SendMessage(hTrackView,WM_VSCROLL,SB_TOP,0);
 	}
 }
 
 void DoScrollTVEnd(COMMAND_T*)
 {
 	HWND hTrackView=GetTrackWnd();
-	if (hTrackView) 
+	if (hTrackView)
 	{
-		SendMessage(hTrackView,WM_VSCROLL,SB_BOTTOM,0);	
+		SendMessage(hTrackView,WM_VSCROLL,SB_BOTTOM,0);
 	}
 }
 
 void DoRenameMarkersWithAscendingNumbers(COMMAND_T* ct)
 {
 	int x=0;
-	
+
 	bool isrgn;
 	double pos, rgnend;
 	char *name;
@@ -599,8 +613,8 @@ void DoSetStopAtEndOfTimeSel(int enabled) // -1 toggle 0 unset 1 set
 	// stopendofloop
 	int sz=0;
 	int *stopatend = (int *)get_config_var("stopendofloop",&sz);
-    if (stopatend) 
-	{ 
+    if (stopatend)
+	{
 		if (enabled==-1)
 		{
 			if (*stopatend==0)
@@ -647,12 +661,12 @@ int XenakiosInit()
 	SWSRegisterCommands(g_XenCommandTable);
 
 	InitCommandParams();
-	
+
 	g_filenames = new(WDL_PtrList<char>);
-    
+
 	InitUndoKeyUpHandler01();
 	g_hItemInspector = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_ITEM_INSPECTOR), g_hwndParent, (DLGPROC)MyItemInspectorDlgProc);
-	if (g_hItemInspector != NULL) 
+	if (g_hItemInspector != NULL)
 		ShowWindow(g_hItemInspector, SW_HIDE);
 
 	srand ((unsigned int)time(NULL));

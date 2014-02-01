@@ -10,10 +10,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -68,7 +68,7 @@ typedef struct t_interpolator_item_state
 	double takepan;
 	double takevol;
 	double fipmYpos;
-	
+
 	MediaItem_Take *pTake;
 } t_interpolator_item_state;
 
@@ -93,23 +93,23 @@ t_interpolator_item_property g_IIproperties[] =
 	{false,"Item volume",false,"D_VOL",0.0,2.0,1.0,0,0},
 	{false,"Item fade in length",false,"D_FADEINLEN",0.0,0.25,0.0,0,0},
 	{false,"Item fade out length",false,"D_FADEOUTLEN",0.0,0.25,0.0,0,0},
-	
+
 	{false,"Item FIPM Y-pos",false,"F_FREEMODE_Y",0.0,1.0,0.0,0,0},
 	{false,"Take pan",true,"D_PAN",-1.0,1.0,0.0,0,0},
-	
+
 	{false,"Take pitch",true,"D_PITCH",-24.0,24.0,0.0,0,0},
 	{false,"Take pitch (resampled)",true,"D_PLAYRATE",-24.0,24.0,0.0,0,0},
 	{false,"Take media offset",true,"D_STARTOFFS",0.0,1.0,0.0,0,0},
-	
+
 	{false,"Item position",false,"D_POSITION",0.0,2.0,1.0,0,0},
 	{false,"Item rnd sel toggle",false,"B_UISEL",0.0,1.0,1.0,0,0},
-	
+
 	{false,NULL,}
 
 };
 
-bool MyNodeSortFunction (t_interpolator_envelope_node a,t_interpolator_envelope_node b) 
-{ 
+bool MyNodeSortFunction (t_interpolator_envelope_node a,t_interpolator_envelope_node b)
+{
 	if (a.Time<b.Time) return true;
 	return false;
 }
@@ -140,7 +140,7 @@ void DrawEnvelope()
 		for (int i = 0; i < numVertlines; i++)
 		{
 			int ycor = (int)(ycorScaler * i * pitchGridSpacing);
-			LICE_Line(g_framebuffer,0,ycor,r.right,ycor,LICE_RGBA(90,90,90,255));	
+			LICE_Line(g_framebuffer,0,ycor,r.right,ycor,LICE_RGBA(90,90,90,255));
 		}
 	}
 	for (int i = 0; i < (int)g_ii_storeditemstates.size(); i++)
@@ -153,12 +153,12 @@ void DrawEnvelope()
 		{
 			int ycor=r.bottom-(int)((r.bottom/(g_MaxItemTime-g_MinItemTime))*itemPos);
 			LICE_Line(g_framebuffer,xcor-3,ycor,xcor+3,ycor,LICE_RGBA(128,128,128,255));
-		
+
 		}
 	}
 	t_interpolator_envelope *pActiveEnvelope=g_IIproperties[g_activePropertyEnvelope].Envelope;
 	LICE_pixel thecolor=LICE_RGBA(0,255,0,255);
-	
+
 	for (int i = 0; i < (int)pActiveEnvelope->size(); i++)
 	{
 		int Xcor1, Ycor1, Xcor2, Ycor2;
@@ -191,10 +191,10 @@ int GetHotNodeIndex(int xcor,int ycor)
 	int GraphHeight=abs(r.bottom-r.top);
 	RECT dlgRect;
 	GetWindowRect(g_hIIdlg,&dlgRect);
-	
+
 	RECT compareRECT;
 	t_interpolator_envelope *TargetEnvelope=g_IIproperties[g_activePropertyEnvelope].Envelope;
-	
+
 	for (int i = 0; i < (int)TargetEnvelope->size(); i++)
 	{
 		compareRECT.left   = (LONG)(GraphWidth*TargetEnvelope->at(i).Time)-detectRange+r.left;
@@ -227,7 +227,7 @@ void MoveNodeByCoords(int nodeIndex,int x,int y)
 			if (nodeIndex==0 && NewTime>1.0) NewTime=1.0;
 		if (nodeIndex>0 && nodeIndex<(int)TargetEnvelope->size()-1 && NewTime>=TargetEnvelope->at(nodeIndex+1).Time) NewTime=TargetEnvelope->at(nodeIndex+1).Time-0.001;// [nodeIndex+1].Time-0.001;
 		if (nodeIndex>0 && NewTime<=TargetEnvelope->at(nodeIndex-1).Time) NewTime=TargetEnvelope->at(nodeIndex-1).Time+0.001;
-		
+
 		if (nodeIndex==TargetEnvelope->size()-1 && x>=r.right) NewTime=1.0;
 		if (NewValue<0.0) NewValue=0.0;
 		if (NewValue>1.0) NewValue=1.0;
@@ -253,7 +253,7 @@ int AddNodeFromCoordinates(int x,int y)
 	sort(TargetEnv->begin(),TargetEnv->end(),MyNodeSortFunction);
 	InvalidateRect(g_hIIdlg,NULL,FALSE);
 	return -666;
-}	
+}
 
 void RecallOrigProps()
 {
@@ -294,7 +294,7 @@ LRESULT CALLBACK EnveAreaWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM 
 				HotNodeIndex = GetHotNodeIndex(mouseX, mouseY);
 			else if (LeftMouseBtnDown && HotNodeIndex >= 0)
 				MoveNodeByCoords(HotNodeIndex, mouseX, mouseY);
-			
+
 			if (HotNodeIndex >= 0)
 				SetCursor(hLinkCursor);
 			else
@@ -314,11 +314,11 @@ LRESULT CALLBACK EnveAreaWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM 
 						TargetEnv->erase(TargetEnv->begin() + HotNodeIndex);
 						sort(TargetEnv->begin(), TargetEnv->end(), MyNodeSortFunction);
 						InvalidateRect(g_hIIdlg, NULL, FALSE);
-						
+
 					}
 					else
 						MessageBox(g_hIIdlg, __LOCALIZE("Cannot remove only point of envelope!","sws_mbox"), __LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
-					
+
 				}
 				return 0;
 			}
@@ -350,7 +350,7 @@ LRESULT CALLBACK EnveAreaWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM 
 			return 0;
 		}
 	}
-#ifdef _WIN32	
+#ifdef _WIN32
 	return CallWindowProc(g_OldGraphAreaWndProc, hwnd, Message, wParam, lParam);
 #else
 	return DefWindowProc(hwnd, Message, wParam, lParam);
@@ -383,7 +383,7 @@ void GetActItemsMinMaxTimes(double *timea,double *timeb)
 			double itemPos=*(double*)GetSetMediaItemInfo(CurItem,"D_POSITION",0);
 			if (itemPos<=mintime)
 				mintime=itemPos;
-		}	
+		}
 	}
 	*timea=mintime;
 	*timeb=maxtime;
@@ -425,7 +425,7 @@ double GetInterpolatedNodeValue(t_interpolator_envelope &TheNodes, double TheTim
 		}
 		double interpvalue;
 		double timedur=NodeTimeB-NodeTimeA;
-		if (timedur<=0) 
+		if (timedur<=0)
 		{
 			timedur=0.01;
 		}
@@ -450,7 +450,7 @@ void PerformPropertyChanges()
 		double itemLen=g_ii_storeditemstates[i].length;
 		while (g_IIproperties[j].Name!=NULL)
 		{
-		
+
 		if (!g_IIproperties[j].IsTakeProperty)
 		{
 			double newItemPropValue=0.0;
@@ -483,8 +483,8 @@ void PerformPropertyChanges()
 			if (strcmp(g_IIproperties[j].APIAccessID,"D_POSITION")==0 && g_IIproperties[j].enabled)
 			{
 				double ItemPosX=g_ii_storeditemstates[i].position-g_MinItemTime;
-				double newItemPropValueF=MinValue+((MaxValue-MinValue)*interpValue);	
-				
+				double newItemPropValueF=MinValue+((MaxValue-MinValue)*interpValue);
+
 				ItemPosX=g_MinItemTime+(ItemPosX*newItemPropValueF);
 				GetSetMediaItemInfo((MediaItem*)GetSetMediaItemTakeInfo(g_IItakes[i],"P_ITEM",0),"D_POSITION",&ItemPosX);
 				accumScaler+=interpValue;
@@ -500,11 +500,11 @@ void PerformPropertyChanges()
 				newItemPropValue=(MinValue+valRange*interpValue)*itemLen;
 				itemLen=newItemPropValue;
 				GetSetMediaItemInfo((MediaItem*)GetSetMediaItemTakeInfo(g_IItakes[i],"P_ITEM",0),"D_LENGTH",&newItemPropValue);
-				
+
 			}
 			if (strcmp(g_IIproperties[j].APIAccessID,"D_VOL")==0 && g_IIproperties[j].enabled)
 			{
-				newItemPropValue=MinValue+((MaxValue-MinValue)*interpValue);	
+				newItemPropValue=MinValue+((MaxValue-MinValue)*interpValue);
 				GetSetMediaItemInfo((MediaItem*)GetSetMediaItemTakeInfo(g_IItakes[i],"P_ITEM",0),"D_VOL",&newItemPropValue);
 			}
 		}
@@ -550,16 +550,16 @@ void PerformPropertyChanges()
 				GetSetMediaItemTakeInfo(g_IItakes[i],"D_PLAYRATE",&newItemPropValue);
 				// note : this now presumes item length processing is done before take pitch resampling processing
 				newItemPropValue=itemLen*(1.0/newItemPropValue);
-				GetSetMediaItemInfo((MediaItem*)GetSetMediaItemTakeInfo(g_IItakes[i],"P_ITEM",0),"D_LENGTH",&newItemPropValue);	
+				GetSetMediaItemInfo((MediaItem*)GetSetMediaItemTakeInfo(g_IItakes[i],"P_ITEM",0),"D_LENGTH",&newItemPropValue);
 			}
-			
+
 		}
 		j++;
 		}
-		
+
 	}
 	UpdateTimeline();
-	
+
 }
 
 void StoreOrigProps()
@@ -604,7 +604,7 @@ WDL_DLGRET ItemInterpDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 	static bool projectPlays=false;
 	static HWND hGraph;
 
-	if (BR_ThemeListViewInProc(hwnd, Message, lParam, GetDlgItem(hwnd,IDC_IIACTPARLIST), false))
+	if (ThemeListViewInProc(hwnd, Message, lParam, GetDlgItem(hwnd,IDC_IIACTPARLIST), false))
 		return 1;
 	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, Message, wParam, lParam))
 		return r;
@@ -613,7 +613,7 @@ WDL_DLGRET ItemInterpDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 	{
 		case WM_INITDIALOG:
 		{
-			BR_ThemeListViewOnInit(GetDlgItem(hwnd,IDC_IIACTPARLIST));
+			ThemeListViewOnInit(GetDlgItem(hwnd,IDC_IIACTPARLIST));
 
 			g_hIIdlg=hwnd;
 			g_IItakes.clear();
@@ -665,7 +665,7 @@ WDL_DLGRET ItemInterpDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 				item.pszText=(char*)(g_IIproperties[i].Name);
 				ListView_SetItem(GetDlgItem(hwnd,IDC_IIACTPARLIST),&item);
 			}
-			
+
 			RECT r;
 			GetWindowRect(GetDlgItem(hwnd,IDC_IIENVAREA), &r);
 			g_framebuffer = new LICE_SysBitmap(r.right-r.left, abs(r.bottom-r.top));
@@ -767,7 +767,7 @@ WDL_DLGRET ItemInterpDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 							if (itemState==LVIS_SELECTED)
 							{
 								g_activePropertyEnvelope=i;
-								InvalidateRect(hwnd,NULL,FALSE);	
+								InvalidateRect(hwnd,NULL,FALSE);
 							}
 						}
 					}

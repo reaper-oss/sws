@@ -10,10 +10,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -117,7 +117,7 @@ void UpdateSampleNameList(HWND hDlg, const char* formatString)
 		bTimeOrder = true;
 		pTakes = &g_VecTakesToRenameTimeOrdered;
 	}
-	
+
 	ListView_DeleteAllItems(GetDlgItem(hDlg,IDC_AUTONAMEOUTPUT));
 	int trackItemCounter = 0;
 	MediaTrack* trPrev = NULL;
@@ -125,7 +125,7 @@ void UpdateSampleNameList(HWND hDlg, const char* formatString)
 	for (int i = 0; i < (int)pTakes->size();i++)
 	{
 		MediaTrack* tr = (MediaTrack*)GetSetMediaItemTakeInfo((*pTakes)[i], "P_TRACK", NULL);
-		if (!bTimeOrder && tr != trPrev) 
+		if (!bTimeOrder && tr != trPrev)
 		{
 			trackItemCounter = 0;
 			trPrev = tr;
@@ -142,7 +142,7 @@ void UpdateSampleNameList(HWND hDlg, const char* formatString)
 	}
 }
 
-typedef struct 
+typedef struct
 {
 	string Description;
 	string FormattingString;
@@ -161,13 +161,13 @@ void InitPresets()
 		if (f)
 		{
 			char buf[512];
-			strcpy(buf, "Increasing suffix, track-by-track==[takename]-[inctrackorder]\n");	
+			strcpy(buf, "Increasing suffix, track-by-track==[takename]-[inctrackorder]\n");
 			fwrite(buf, strlen(buf), 1, f);
-			strcpy(buf, "Increasing suffix, time order across all tracks==[takename]-[inctimeorder]\n");	
+			strcpy(buf, "Increasing suffix, time order across all tracks==[takename]-[inctimeorder]\n");
 			fwrite(buf, strlen(buf), 1, f);
-			strcpy(buf, "Folder.Track.Increasing suffix==[foldername].[trackname].[inctrackorder]\n");	
+			strcpy(buf, "Folder.Track.Increasing suffix==[foldername].[trackname].[inctrackorder]\n");
 			fwrite(buf, strlen(buf), 1, f);
-			strcpy(buf, "Strip file extension==[takenamenoext]\n");	
+			strcpy(buf, "Strip file extension==[takenamenoext]\n");
 			fwrite(buf, strlen(buf), 1, f);
 			fclose(f);
 		}
@@ -203,7 +203,7 @@ void InitPresets()
 
 WDL_DLGRET AutoRenameDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-	if (BR_ThemeListViewInProc(hwnd, Message, lParam, GetDlgItem(hwnd,IDC_AUTONAMEOUTPUT), true))
+	if (ThemeListViewInProc(hwnd, Message, lParam, GetDlgItem(hwnd,IDC_AUTONAMEOUTPUT), true))
 		return 1;
 	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, Message, wParam, lParam))
 		return r;
@@ -213,8 +213,8 @@ WDL_DLGRET AutoRenameDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
         case WM_INITDIALOG:
 		{
 			WDL_UTF8_HookComboBox(GetDlgItem(hwnd,IDC_AUTONAMEPRESETS));
-			BR_ThemeListViewOnInit(GetDlgItem(hwnd,IDC_AUTONAMEOUTPUT));
-			
+			ThemeListViewOnInit(GetDlgItem(hwnd,IDC_AUTONAMEOUTPUT));
+
 			for (int i = 0; i < (int)g_AutoNamePresets.size(); i++)
 			{
 				// fill preset combobox
@@ -225,18 +225,18 @@ WDL_DLGRET AutoRenameDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 			char buf[500];
 			GetPrivateProfileString(SWS_INI, LAST_AUTORENAME_STR_KEY, "[trackname]-Take[inctrackorder]", buf, 500, get_ini_file());
 			SetDlgItemText(hwnd,IDC_EDIT1,buf);
-			
+
 			LVCOLUMN col;
 			col.mask=LVCF_TEXT|LVCF_WIDTH;
 			col.cx=242;
 			col.pszText=(char*)__LOCALIZE("Current take name","sws_DLG_136");
 			ListView_InsertColumn(GetDlgItem(hwnd,IDC_AUTONAMEOUTPUT), 0 , &col);
-			
+
 			col.mask=LVCF_TEXT|LVCF_WIDTH;
 			col.cx=242;
 			col.pszText=(char*)__LOCALIZE("New take name","sws_DLG_136");
 			ListView_InsertColumn(GetDlgItem(hwnd,IDC_AUTONAMEOUTPUT), 1 , &col);
-			
+
 			UpdateSampleNameList(hwnd, buf);
 			break;
 		}
@@ -270,7 +270,7 @@ WDL_DLGRET AutoRenameDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 					char buf[500];
 					GetDlgItemText(hwnd, IDC_EDIT1, buf, 500);
 					WritePrivateProfileString(SWS_INI, LAST_AUTORENAME_STR_KEY, buf, get_ini_file());
-					
+
 					// Do the work!
 					string NewTakeName;
 					MediaTrack* PrevTrack = NULL;
@@ -287,7 +287,7 @@ WDL_DLGRET AutoRenameDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 						NewTakeName.assign("");
 						MediaItem* CurItem = (MediaItem*)GetSetMediaItemTakeInfo(g_VecTakesToRename[i],"P_ITEM",NULL);
 						MediaTrack* CurTrack = (MediaTrack*)GetSetMediaItemInfo(CurItem,"P_TRACK",NULL);
-						if (!bTimeOrder && CurTrack != PrevTrack) 
+						if (!bTimeOrder && CurTrack != PrevTrack)
 						{
 							TrackItemCounter = 0;
 							PrevTrack = CurTrack;
@@ -296,7 +296,7 @@ WDL_DLGRET AutoRenameDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 						GetSetMediaItemTakeInfo(g_VecTakesToRename[i], "P_NAME", (void*)SampleName.c_str());
 						TrackItemCounter++;
 					}
-					
+
 					Undo_OnStateChangeEx(__LOCALIZE("Autorename takes","sws_undo"),4,-1);
 					UpdateTimeline();
 
@@ -309,8 +309,8 @@ WDL_DLGRET AutoRenameDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 	return 0;
 }
 
-bool MyTakeSortByTimeFunc (MediaItem_Take *a,MediaItem_Take *b) 
-{ 
+bool MyTakeSortByTimeFunc (MediaItem_Take *a,MediaItem_Take *b)
+{
 	MediaItem *CompaItem;
 	CompaItem=(MediaItem*)GetSetMediaItemTakeInfo(a,"P_ITEM",NULL);
 	double ItemPosA=*(double*)GetSetMediaItemInfo(CompaItem,"D_POSITION",NULL);

@@ -10,10 +10,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -187,7 +187,7 @@ void GetProjectFileList(vector<t_mediafile_status>& AMediaList)
 			}
 		}
 	}
-	
+
 	AMediaList.clear();
 	for (i=0;i<(int)TempList.size();i++)
 	{
@@ -218,21 +218,21 @@ vector<string> g_ProjFolFiles;
 void UpdateProjFolderList(HWND hList, bool onlyUnused)
 {
 	LVITEM item;
-	
+
 	int NumListEntries=ListView_GetItemCount(GetDlgItem(g_hMediaDlg,IDC_PROJFOLMEDLIST));
 	int i=0;
-	
+
 	for (i=0;i<NumListEntries;i++)
 	{
 		item.mask=LVIF_PARAM;
 		item.iItem=i;
 		item.iSubItem=0;
-		ListView_GetItem(GetDlgItem(g_hMediaDlg,IDC_PROJFOLMEDLIST),&item);	
+		ListView_GetItem(GetDlgItem(g_hMediaDlg,IDC_PROJFOLMEDLIST),&item);
 		if (item.lParam!=0)
 		{
 			string *blah=(string*)item.lParam;
-			
-			
+
+
 			delete blah;
 			blah=0;
 		}
@@ -243,7 +243,7 @@ void UpdateProjFolderList(HWND hList, bool onlyUnused)
 	g_ProjFolFiles.clear();
 	ListView_DeleteAllItems(hList);
 	GetProjectPath(buf,2048);
-				
+
 	SearchDirectory(g_ProjFolFiles,buf,NULL,true);
 	int j=0;
 	bool HidePaths=false;
@@ -264,7 +264,7 @@ void UpdateProjFolderList(HWND hList, bool onlyUnused)
 			item.pszText=ShortName;
 		} else
 			item.pszText=buf;
-		
+
 		item.iItem=j;
 		item.iSubItem = 0;
 		int UsedInProject=IsFileUsedInProject(g_ProjFolFiles[i]);
@@ -290,7 +290,7 @@ int g_SelectedMatchFile;
 
 int ReplaceTakeSourceFile(MediaItem_Take *TheTake,string TheNewFile)
 {
-	
+
 	PCM_source *ThePCM=0;
 	ThePCM=(PCM_source*)GetSetMediaItemTakeInfo(TheTake,"P_SOURCE",NULL);
 	if (ThePCM!=0)
@@ -313,7 +313,7 @@ int ReplaceTakeSourceFile(MediaItem_Take *TheTake,string TheNewFile)
 
 WDL_DLGRET MulMatchesFoundDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-	if (BR_ThemeListViewInProc(hwnd, Message, lParam, GetDlgItem(hwnd,IDC_MULMATCHLIST), true))
+	if (ThemeListViewInProc(hwnd, Message, lParam, GetDlgItem(hwnd,IDC_MULMATCHLIST), true))
 		return 1;
 	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, Message, wParam, lParam))
 		return r;
@@ -322,7 +322,7 @@ WDL_DLGRET MulMatchesFoundDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM
     {
         case WM_INITDIALOG:
 		{
-			BR_ThemeListViewOnInit(GetDlgItem(hwnd,IDC_MULMATCHLIST));
+			ThemeListViewOnInit(GetDlgItem(hwnd,IDC_MULMATCHLIST));
 			LVCOLUMN col;
 			col.mask=LVCF_TEXT|LVCF_WIDTH;
 			col.cx=425;
@@ -465,7 +465,7 @@ void FindMissingFiles()
 		char FullFilenameB[2048];
 		char Shortfilename[2048];
 		char ShortfilenameB[2048];
-		
+
 		DialogBox(g_hInst,MAKEINTRESOURCE(IDD_SCANPROGR),g_hMediaDlg,(DLGPROC)ScanProgDlgProc);
 		g_ScanStatus=0;
 		g_ScanFinished=true;
@@ -480,7 +480,7 @@ void FindMissingFiles()
 		Main_OnCommand(40100,0); // set all media offline
 		int SanityCheck=(int)TakesMissingFiles.size();
 		i=0;
-		
+
 		bool TakesLeft=true;
 		if (TakesMissingFiles.size()==0) TakesLeft=false;
 		while (TakesLeft==true)
@@ -504,9 +504,9 @@ void FindMissingFiles()
 			}
 			string TheMatchingFile;
 			TheMatchingFile.assign(TakesMissingFiles[i].FileName);
-			if (g_MatchingFiles.size()==0) 
+			if (g_MatchingFiles.size()==0)
 				TakesMissingFiles.erase(TakesMissingFiles.begin()+i);
-			else if (g_MatchingFiles.size()==1) 
+			else if (g_MatchingFiles.size()==1)
 			{
 				TheMatchingFile.assign(g_MatchingFiles[0]);
 				ReplaceTakeSourceFile(TakesMissingFiles[i].TheTake,TheMatchingFile);
@@ -536,7 +536,7 @@ void FindMissingFiles()
 			}
 			if (TakesMissingFiles.size()==0) TakesLeft=false;
 			SanityCheck--;
-			if (SanityCheck<0) 
+			if (SanityCheck<0)
 			{
 				// Sanity check, exiting while (TakesMissingFiles.size()>0)
 				break;
@@ -601,7 +601,7 @@ void PopulateProjectUsedList(bool HidePaths)
 		char ynh[20];
 		sprintf(ynh, "%d", NumTimesFileUsedInProject(g_RProjectFiles[i].FileName, thetakes));
 		ListView_SetItemText(GetDlgItem(g_hMediaDlg, IDC_PROJFILES_USED), i, 1, ynh);
-	}	
+	}
 }
 
 void SendSelectedProjFolFilesToRecycleBin()
@@ -632,9 +632,9 @@ WDL_DLGRET ProjMediaDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 {
 	static WDL_WndSizer resizer;
 
-	if (BR_ThemeListViewInProc(hwnd, Message, lParam, GetDlgItem(hwnd,IDC_PROJFILES_USED), true))
+	if (ThemeListViewInProc(hwnd, Message, lParam, GetDlgItem(hwnd,IDC_PROJFILES_USED), true))
 		return 1;
-	if (BR_ThemeListViewInProc(hwnd, Message, lParam, GetDlgItem(hwnd,IDC_PROJFOLMEDLIST), true))
+	if (ThemeListViewInProc(hwnd, Message, lParam, GetDlgItem(hwnd,IDC_PROJFOLMEDLIST), true))
 		return 1;
 	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, Message, wParam, lParam))
 		return r;
@@ -643,8 +643,8 @@ WDL_DLGRET ProjMediaDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
     {
         case WM_INITDIALOG:
 		{
-			BR_ThemeListViewOnInit(GetDlgItem(hwnd,IDC_PROJFILES_USED));
-			BR_ThemeListViewOnInit(GetDlgItem(hwnd,IDC_PROJFOLMEDLIST));
+			ThemeListViewOnInit(GetDlgItem(hwnd,IDC_PROJFILES_USED));
+			ThemeListViewOnInit(GetDlgItem(hwnd,IDC_PROJFOLMEDLIST));
 			RECT r;
 			r.left=10;
 			r.right=300;
@@ -656,13 +656,13 @@ WDL_DLGRET ProjMediaDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 			r.right=20;
 			r.top=5;
 			r.bottom=60;
-			
+
 			//SendMessage(GetDlgItem(hwnd,IDC_SHOWUNUS),WM_CHANGEUISTATE,
 			//SetParent(GetDlgItem(hwnd,IDC_SHOWUNUS), GetDlgItem(hwnd,IDC_GROUP2));
 			//SetParent(GetDlgItem(hwnd,IDC_DELFILESBUT), GetDlgItem(hwnd,IDC_GROUP2));
 			//SetParent(GetDlgItem(hwnd,IDC_PROJFOLMEDLIST), GetDlgItem(hwnd,IDC_GROUP2));
 			//SendMessage(GetDlgItem(hwnd,IDC_SHOWUNUS),WM_CHANGEUISTATE,
-			
+
 
 			//resizer.init_item(IDC_GROUP1,0.5,0.0,1.0,0.0);
 			resizer.init_item(IDC_STATIC2,0.5,0.0,0.5,0.0);
@@ -682,7 +682,7 @@ WDL_DLGRET ProjMediaDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 
 			//resizer.init_itemhwnd(GetDlgItem(hwnd,ID_CLOSE),1.0,1.0,1.0,1.0);
 			g_hMediaDlg=hwnd;
-			
+
 			GetProjectFileList(g_RProjectFiles);
 			LVCOLUMN col;
 			col.mask=LVCF_TEXT|LVCF_WIDTH;
@@ -695,7 +695,7 @@ WDL_DLGRET ProjMediaDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 			col.cx=50;
 			col.pszText="Status";
 			ListView_InsertColumn(GetDlgItem(hwnd,IDC_PROJFILES_USED), 2 , &col);
-				
+
 			col.cx=345;
 			col.pszText="File name";
 			ListView_InsertColumn(GetDlgItem(hwnd,IDC_PROJFOLMEDLIST), 0 , &col);
@@ -710,9 +710,9 @@ WDL_DLGRET ProjMediaDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 			break;
 		}
 		case WM_SIZE:
-			if (wParam != SIZE_MINIMIZED) 
+			if (wParam != SIZE_MINIMIZED)
 			{
-				resizer.onResize(); 
+				resizer.onResize();
 			}
 			break;
 		case WM_COMMAND:
@@ -743,7 +743,7 @@ WDL_DLGRET ProjMediaDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 					break;
 			}
 			break;
-	}		
+	}
 	return 0;
 }
 

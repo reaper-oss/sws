@@ -1112,7 +1112,7 @@ int ResourcesWnd::SetType(const char* _name)
 			WDL_FastString item;
 			const char* p1 = m_cbType.GetItem(i);
 			const char* p2 = strstr(p1, RES_TIE_TAG);
-			item.Set(p1, p2 ? p2-p1 : 0);
+			item.Set(p1, p2 ? (int)(p2-p1) : 0);
 
 			if (strcmp("<SEP>", item.Get()))
 			{

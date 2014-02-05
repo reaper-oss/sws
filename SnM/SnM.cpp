@@ -830,8 +830,8 @@ bool SNM_GetActionName(const char* _custId, WDL_FastString* _nameOut, int _slot)
 			{
 				if (char* p = strstr(nameStr.Get(), "%02d"))
 				{
-					nameStr.DeleteSub(p-nameStr.Get(), 4);
-					nameStr.Insert("%d", p-nameStr.Get());
+					nameStr.DeleteSub((int)(p-nameStr.Get()), 4);
+					nameStr.Insert("%d", (int)(p-nameStr.Get()));
 					_nameOut->SetFormatted(SNM_MAX_ACTION_NAME_LEN, nameStr.Get(), _slot+1);
 					return true;
 				}

@@ -191,7 +191,7 @@ void DoMoveCursor10pixLeftCreateSel(COMMAND_T*);
 void DoMoveCursor10pixRightCreateSel(COMMAND_T*);
 void ItemPreviewSlice();
 void ItemPreviewPlayState (bool play);
-void ItemPreview (int mode, MediaItem* item, MediaTrack* track, double volume, double startOffset, double measureSync);
+void ItemPreview (int mode, MediaItem* item, MediaTrack* track, double volume, double startOffset, double measureSync, bool pauseDuringPrev);
 void DoPreviewSelectedItem(COMMAND_T*);
 void DoScrollTVPageDown(COMMAND_T*);
 void DoScrollTVPageUp(COMMAND_T*);

@@ -88,19 +88,6 @@ void ReplaceAll (string& str, string oldStr, string newStr)
 	}
 }
 
-int GetFirstDigit (int val)
-{
-	val = abs(val);
-	while (val >= 10)
-		val /= 10;
-	return val;
-}
-
-int GetLastDigit (int val)
-{
-	return abs(val) % 10;
-}
-
 int GetBit (int val, int pos)
 {
 	return (val & 1 << pos) != 0;
@@ -121,6 +108,33 @@ int ClearBit (int val, int pos)
 	return val & ~(1 << pos);
 }
 
+int GetFirstDigit (int val)
+{
+	val = abs(val);
+	while (val >= 10)
+		val /= 10;
+	return val;
+}
+
+int GetLastDigit (int val)
+{
+	return abs(val) % 10;
+}
+
+vector<int> GetDigits(int val)
+{
+	int count = (int)(log10((float)val)) + 1;
+
+	vector<int> digits;
+	digits.resize(count);
+
+	for (int i = count-1; i >= 0; --i)
+	{
+		digits[i] = GetLastDigit(val);
+		val = val / 10;
+	}
+	return digits;
+}
 /******************************************************************************
 * General                                                                     *
 ******************************************************************************/
@@ -897,9 +911,9 @@ MediaItem* ItemAtMouseCursor (double* position)
 		{
 			if (iStart >= iStartLast)
 			{
-				int yStart = offset;                                             // due to FIMP/overlapping items in lanes, we check every
-				int yEnd = GetItemHeight(currentItem, &yStart, trackH) + yStart; // item - the last one that is closest to cursor and whose
-				if (cursorY > yStart && cursorY < yEnd)                          // height overlaps with cursor Y position is the correct one
+				int yStart = offset;                                             // due to FIMP/overlapping items in lanes, check every
+				int yEnd = GetItemHeight(currentItem, &yStart, trackH) + yStart; // item - last one closest to cursor and whose height
+				if (cursorY > yStart && cursorY < yEnd)                          // overlaps with cursor Y position is the correct one
 					item = currentItem;
 			}
 			iStartLast = iStart;
@@ -907,7 +921,7 @@ MediaItem* ItemAtMouseCursor (double* position)
 		}
 	}
 
-	WritePtr(position, (item) ? (cursorPosition) : (-1));
+	WritePtr(position, (item) ? (cursorPosition - GetMediaItemInfo_Value(item, "D_POSITION")) : (-1));
 	return item;
 }
 

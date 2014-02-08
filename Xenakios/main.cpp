@@ -28,6 +28,7 @@
 #include "stdafx.h"
 #include "../reaper/localize.h"
 #include "Parameters.h"
+#include "../SnM/SnM_Track.h"
 
 using namespace std;
 
@@ -429,6 +430,9 @@ void DoMoveCursor10pixRightCreateSel(COMMAND_T*) { for (int i = 0; i < ALEXPIXEL
 
 preview_register_t g_ItemPreview = { {}, 0, };
 bool g_itemPreviewPlaying = false;
+bool g_itemPreviewPaused = false;
+bool g_itemPreviewSendCC123 = false;
+
 void ItemPreviewSlice()
 {
 	if (g_itemPreviewPlaying)
@@ -447,7 +451,8 @@ void ItemPreviewSlice()
 			#else
 				pthread_mutex_unlock(&g_ItemPreview.mutex);
 			#endif
-			ItemPreview (0, NULL, NULL, 0, 0, 0);
+			g_itemPreviewSendCC123 = false; // item played out completely, no need to send all-notes-off
+			ItemPreview (0, NULL, NULL, 0, 0, 0, false);
 		}
 		else
 		{
@@ -463,29 +468,54 @@ void ItemPreviewSlice()
 void ItemPreviewPlayState(bool play)
 {
 	if (!play && g_itemPreviewPlaying)
-		ItemPreview (0, NULL, NULL, 0, 0, 0);
+		ItemPreview (0, NULL, NULL, 0, 0, 0, false);
 }
 
 // mode:
 // 0: stop
 // 1: start
 // 2: toggle
-void ItemPreview(int mode, MediaItem* item, MediaTrack* track, double volume, double startOffset, double measureSync)
+void ItemPreview(int mode, MediaItem* item, MediaTrack* track, double volume, double startOffset, double measureSync, bool pauseDuringPrev)
 {
 	// Preview called while preview in progress, stopping previous preview...
 	if (g_itemPreviewPlaying)
 	{
 		if (g_ItemPreview.preview_track)
+		{
 			StopTrackPreview(&g_ItemPreview);
+			if (g_itemPreviewSendCC123)
+				SendAllNotesOff((MediaTrack*)g_ItemPreview.preview_track);
+		}
 		else
+		{
 			StopPreview(&g_ItemPreview);
+		}
 		g_itemPreviewPlaying = false;
+		g_itemPreviewSendCC123 = false;
 		delete g_ItemPreview.src;
+
+		if (g_itemPreviewPaused && mode != 1) // requesting new preview while old one is still playing shouldn't unpause playback
+		{
+			if (GetPlayStateEx(NULL)&2)
+				OnPauseButton();
+			g_itemPreviewPaused = false;
+		}
+
 		if (mode == 2)
 			return;
 	}
 	if (mode == 0)
 		return;
+
+	if (pauseDuringPrev)
+	{
+		if ((GetPlayStateEx(NULL)&1) == 1 && (GetPlayStateEx(NULL)&2) != 1)
+		{
+			g_itemPreviewPaused = true;
+			OnPauseButton();
+		}
+	}
+
 
 	if (CountTakes(item))
 	{
@@ -514,7 +544,13 @@ void ItemPreview(int mode, MediaItem* item, MediaTrack* track, double volume, do
 			g_ItemPreview.preview_track = track;
 
 			if (g_ItemPreview.preview_track)
+			{
+				char type[64] = {0};
+				GetMediaSourceType(GetMediaItemTake_Source(GetActiveTake(item)), type, sizeof(type));
+				if (!strcmp(type, "MIDI") || !strcmp(type, "MIDIPOOL"))
+					g_itemPreviewSendCC123 = true;
 				g_itemPreviewPlaying = !!PlayTrackPreview2Ex(NULL, &g_ItemPreview, (measureSync) ? (1) : (0), measureSync);
+			}
 			else
 				g_itemPreviewPlaying = !!PlayPreviewEx(&g_ItemPreview, (measureSync) ? (1) : (0), measureSync);
 
@@ -546,7 +582,7 @@ void DoPreviewSelectedItem (COMMAND_T* ct)
 		if ((int)ct->user == 5 || (int)ct->user == 6)
 			track = GetMediaItem_Track(item);
 
-		ItemPreview(mode, item, track, volume, 0, 0);
+		ItemPreview(mode, item, track, volume, 0, 0, false);
 	}
 }
 

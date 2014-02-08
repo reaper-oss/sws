@@ -119,7 +119,7 @@ public:
 	void UpdateSelected ();                         // Update selected points' ids based on current state of things
 	int CountSelected ();                           // Count selected points
 	int GetSelected (int idx);                      // Get selected point based on selected point count (idx is 0 based);
-	int CountConseq ();	                            // Count number of consequential selections
+	int CountConseq ();                             // Count number of consequential selections
 	bool GetConseq (int idx, int* start, int* end); // Get consequential selection pair based on count (idx is 0 based)
 
 	/* All points */

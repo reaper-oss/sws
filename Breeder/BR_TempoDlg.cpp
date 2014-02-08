@@ -520,23 +520,23 @@ static void SelectTempo (int mode, int Nth, int timeSel, int bpm, double bpmStar
 {
 	/*
 	mode     ---> Ignore criteria
-				--> 0 to clear
-				--> 1 to invert selection
-				--> 2 to unselect every nth selected point
+	               --> 0 to clear
+	               --> 1 to invert selection
+	               --> 2 to unselect every nth selected point
 
-			 ---> Check by criteria before selecting
-				--> 3 to set new
-				--> 4 to add to existing selection
-				--> 5 to unselect
-				--> 6 to unselect every Nth selected marker
-				--> 7 to invert
+	         ---> Check by criteria before selecting
+	               --> 3 to set new
+	               --> 4 to add to existing selection
+	               --> 5 to unselect
+	               --> 6 to unselect every Nth selected marker
+	               --> 7 to invert
 
 	criteria ---> Nth     ---> ordinal number of the selected point
-			 ---> timeSel ---> 0 for all, 1 for time selection, 2 to exclude time selection
-			 ---> bpm     ---> 0 to ignore BPM, 1 to compare with bpmStart and bpmEnd
-			 ---> shape   ---> 0 for all, 1 for square, 2 for linear
-			 ---> sig     ---> 0 to ignore sig, if 1 num and den need to be specified
-			 ---> type    ---> 0 for all, 1 for tempo markers only, 2 for time signature only
+	         ---> timeSel ---> 0 for all, 1 for time selection, 2 to exclude time selection
+	         ---> bpm     ---> 0 to ignore BPM, 1 to compare with bpmStart and bpmEnd
+	         ---> shape   ---> 0 for all, 1 for square, 2 for linear
+	         ---> sig     ---> 0 to ignore sig, if 1 num and den need to be specified
+	         ---> type    ---> 0 for all, 1 for tempo markers only, 2 for time signature only
 	*/
 
 	// Get time selection
@@ -917,8 +917,8 @@ static void SelectTempoCase (HWND hwnd, int operationType, int unselectNth)
 {
 	/*
 	operation type --> 0 to select
-				   --> 1 to unselect, if unselectNth > 1 unselect every Nth selected marker
-				   --> 2 to invert
+	               --> 1 to unselect, if unselectNth > 1 unselect every Nth selected marker
+	               --> 2 to invert
 	*/
 
 	// Read values from the dialog
@@ -1063,33 +1063,6 @@ static void LoadOptionsSelAdj (double& bpmStart, double& bpmEnd, int& num, int& 
 		adjustType = 1;
 	if (adjustShape < 0 || adjustShape > 3)
 		adjustShape = 0;
-}
-
-void UnselectNthDialog (bool show, HWND parentHandle)
-{
-	static HWND hwnd = CreateDialog (g_hInst, MAKEINTRESOURCE(IDD_BR_UNSELECT_TEMPO), parentHandle, UnselectNthProc);
-	static bool visible = false;
-
-	if (show)
-	{
-		// this lets user toggle the dialog from the parent dialog
-		if (!visible)
-		{
-			ShowWindow(hwnd, SW_SHOW);
-			SetFocus(hwnd);
-			visible = true;
-		}
-		else
-		{
-			ShowWindow(hwnd, SW_HIDE);
-			visible = false;
-		}
-	}
-	else
-	{
-		ShowWindow(hwnd, SW_HIDE);
-		visible = false;
-	}
 }
 
 WDL_DLGRET SelectAdjustTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -1523,6 +1496,33 @@ WDL_DLGRET UnselectNthProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		break;
 	}
 	return 0;
+}
+
+void UnselectNthDialog (bool show, HWND parentHandle)
+{
+	static HWND hwnd = CreateDialog (g_hInst, MAKEINTRESOURCE(IDD_BR_UNSELECT_TEMPO), parentHandle, UnselectNthProc);
+	static bool visible = false;
+
+	if (show)
+	{
+		// this lets user toggle the dialog from the parent dialog
+		if (!visible)
+		{
+			ShowWindow(hwnd, SW_SHOW);
+			SetFocus(hwnd);
+			visible = true;
+		}
+		else
+		{
+			ShowWindow(hwnd, SW_HIDE);
+			visible = false;
+		}
+	}
+	else
+	{
+		ShowWindow(hwnd, SW_HIDE);
+		visible = false;
+	}
 }
 
 /******************************************************************************

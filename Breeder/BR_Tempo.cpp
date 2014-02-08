@@ -192,7 +192,7 @@ void MoveTempo (COMMAND_T* ct)
 	if (tempoMap.Commit())
 	{
 		if ((int)ct->user == 3)
-			SetEditCurPos2(NULL, cursor, false, false); // Keep cursor position when moving to closest tempo marker
+			SetEditCurPos2(NULL, cursor, false, false); // keep cursor position when moving to closest tempo marker
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 	}
 	PreventUIRefresh(-1);
@@ -256,7 +256,8 @@ void EditTempo (COMMAND_T* ct)
 				if (!tempoMap.GetSelection(id+offset))
 				{
 					--offset;    // since this point is not taken into account, correct offset
-					i += offset; // In case of consequential selection, points are treated as
+
+					i += offset; // in case of consequential selection, points are treated as
 					break;       // one big transition, so skip them all
 				}
 
@@ -1071,7 +1072,7 @@ void TempoShapeSquare (COMMAND_T* ct)
 
 		// Get next point
 		double b2; bool P2;
-		if (id < count) // since we're creating points at the end of tempo map this will let us know if we are dealing with the last point
+		if (id < count) // since we're creating points at the end of tempo map, check if dealing with the last point
 			P2 = tempoMap.GetPoint(id+1, NULL, &b2, NULL, NULL);
 		else
 			P2 = false;

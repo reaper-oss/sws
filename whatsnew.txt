@@ -1,3 +1,10 @@
+Fixes
++Preview media item actions now send all-notes-off when stopping MIDI item preview
+
+Added actions
++SWS/BR: Preview media item under mouse (versions for pausing project playback during preview)
+
+
 !v2.4.0 #3 (February 5, 2014)
 Fixes
 +Windows OS / Issue 619, issue 621: <b>fixed various features (snapshots, tempo actions, etc) which were broken when using LangPacks and certain regional settings (i.e. comma as a decimal mark)</b>

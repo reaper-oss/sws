@@ -261,14 +261,17 @@ void PreviewItemAtMouse (COMMAND_T* ct)
 	double position;
 	if (MediaItem* item = ItemAtMouseCursor(&position))
 	{
-		int toggle = GetFirstDigit((int)ct->user);
-		int output = GetFirstDigit((int)ct->user - toggle*100);
-		int type   = GetLastDigit((int)ct->user);
+		vector<int> options = GetDigits((int)ct->user);
+		int toggle = options[0];
+		int output = options[1];
+		int type   = options[2];
+		int pause  = options[3];
 
-		double      volume  = 1;
-		double      start   = 0;
-		double      measure = 0;
-		MediaTrack* track   = NULL;
+		MediaTrack* track     = NULL;
+		double      volume    = 1;
+		double      start     = 0;
+		double      measure   = 0;
+		bool        pausePlay = false;
 
 		if (output == 2)
 			volume = GetMediaTrackInfo_Value(GetMediaItem_Track(item), "D_VOL");
@@ -276,11 +279,14 @@ void PreviewItemAtMouse (COMMAND_T* ct)
 			track = GetMediaItem_Track(item);
 
 		if (type == 2)
-			start = position - GetMediaItemInfo_Value(item, "D_POSITION");
+			start = position;
 		else if (type == 3)
 			measure = 1;
 
-		ItemPreview (toggle, item, track, volume, start, measure);
+		if (pause == 2)
+			pausePlay = true;
+
+		ItemPreview(toggle, item, track, volume, start, measure, pausePlay);
 	}
 }
 

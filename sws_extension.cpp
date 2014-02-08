@@ -10,10 +10,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -51,7 +51,7 @@
 #include "Fingers/FNG_client.h"
 #include "Autorender/Autorender.h"
 #include "IX/IX.h"
-#include "Breeder/BR.h" 
+#include "Breeder/BR.h"
 
 #define LOCALIZE_IMPORT_PREFIX "sws_"
 #ifdef LOCALIZE_IMPORT_PREFIX
@@ -172,7 +172,7 @@ int SWSRegisterCmd(COMMAND_T* pCommand, const char* cFile, int cmdId, bool local
 		const char* defaultName = pCommand->accel.desc;
 		if (localize)
 			pCommand->accel.desc = GetLocalizedActionName(pCommand->accel.desc); // no alloc + no-op when no LangPack file is defined
-		
+
 		if (!plugin_register("gaccel", &pCommand->accel))
 			return 0;
 
@@ -329,7 +329,7 @@ HMENU SWSCreateMenuFromCommandTable(COMMAND_T pCommands[], HMENU hMenu, int* iIn
 		}
 		i++;
 	}
-	
+
 	if (iIndex)
 		*iIndex = i;
 	return hMenu;
@@ -439,9 +439,9 @@ bool WDL_STYLE_GetBackgroundGradient(double *gradstart, double *gradslope) { ret
 bool WDL_STYLE_AllowSliderMouseWheel() { return true; }
 LICE_IBitmap *WDL_STYLE_GetSliderBitmap2(bool vert) { return NULL; }
 int WDL_STYLE_GetSliderDynamicCenterPos() { return 500; }
-int WDL_STYLE_GetSysColor(int i) 
+int WDL_STYLE_GetSysColor(int i)
 {
-	int col = GSC_mainwnd(i); 
+	int col = GSC_mainwnd(i);
 
 	// check & "fix" 3D colors that aren't distinguished in many themes..
 #ifdef _WIN32
@@ -573,7 +573,7 @@ extern "C"
 		IMPAPI(file_exists);
 		IMPAPI(format_timestr);
 		IMPAPI(format_timestr_pos);
-		IMPAPI(format_timestr_len);	
+		IMPAPI(format_timestr_len);
 		IMPAPI(FreeHeapPtr);
 		IMPAPI(GetActionShortcutDesc);
 		IMPAPI(GetActiveTake);
@@ -669,7 +669,7 @@ extern "C"
 		IMPAPI(InsertTrackAtIndex);
 		IMPAPI(IsMediaExtension);
 		IMPAPI(kbd_enumerateActions);
-		IMPAPI(kbd_formatKeyName); 
+		IMPAPI(kbd_formatKeyName);
 		IMPAPI(kbd_getCommandName);
 		IMPAPI(kbd_getTextFromCmd);
 		IMPAPI(KBD_OnMainActionEx);
@@ -694,6 +694,7 @@ extern "C"
 		IMPAPI(mkvolstr);
 		IMPAPI(MoveEditCursor);
 		IMPAPI(MoveMediaItemToTrack);
+		IMPAPI(OnPauseButton);
 		IMPAPI(OnPlayButton);
 		IMPAPI(OnStopButton);
 		IMPAPI(NamedCommandLookup);
@@ -809,7 +810,7 @@ extern "C"
 			if (_strnicmp("ReaMote", txt, 7))
 			{
 				_snprintf(txt, sizeof(txt),
-					// keep the message on a single line (for the LangPack generator) 
+					// keep the message on a single line (for the LangPack generator)
 					__LOCALIZE_VERFMT("The version of SWS extension you have installed is incompatible with your version of REAPER.\nYou probably have a REAPER version less than v%s installed.\nPlease install the latest version of REAPER from www.reaper.fm.","sws_mbox"),
 					"4.33"); // <- update compatible version here
 

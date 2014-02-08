@@ -45,7 +45,7 @@ SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_CursorPos> > g_cursorPos;
 /******************************************************************************
 * Project state saving functionality                                          *
 ******************************************************************************/
-static bool ProcessExtensionLine (const char *line, ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
+static bool ProcessExtensionLine (const char *line, ProjectStateContext *ctx, bool isUndo, project_config_extension_t *reg)
 {
 	if (isUndo)
 		return false;
@@ -71,7 +71,7 @@ static bool ProcessExtensionLine (const char *line, ProjectStateContext *ctx, bo
 	return false;
 }
 
-static void SaveExtensionConfig (ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
+static void SaveExtensionConfig (ProjectStateContext *ctx, bool isUndo, project_config_extension_t *reg)
 {
 	if (isUndo)
 		return;
@@ -91,7 +91,7 @@ static void SaveExtensionConfig (ProjectStateContext *ctx, bool isUndo, struct p
 	}
 }
 
-static void BeginLoadProjectState (bool isUndo, struct project_config_extension_t *reg)
+static void BeginLoadProjectState (bool isUndo, project_config_extension_t *reg)
 {
 	if (isUndo)
 		return;

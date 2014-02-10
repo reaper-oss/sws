@@ -35,9 +35,9 @@
 
 int main(int argc, char* argv[])
 {
-	if (argc != 2 && argc != 3)
+	if (argc < 2)
 	{
-		fprintf(stderr, "Usage: PrintVersion version.h [-d]\n\n");
+		fprintf(stderr, "Usage: PrintVersion version.h [-d]ate [format_string]\n\n");
 		fprintf(stderr, "Prints the version # from a version.h file.\n");
 		return 1;
 	}
@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
 	fopen_s(&pF, argv[1], "r");
 	if (!pF)
 	{
-		fprintf(stderr, "File %s not found.\n", argv[1]);
+		fprintf(stderr, "PrintVersion: file %s not found.\n", argv[1]);
 		return 2;
 	}
 
@@ -60,30 +60,43 @@ int main(int argc, char* argv[])
 	cBuf[iOrigSize] = 0;
 
 	char* pVersion = strstr(cBuf, "#define");
-
 	int iVersion[4];
 	int iVersionIdx = 0;
 	while (iVersionIdx < 4)
 	{
 		// Go to the next digit
 		while(pVersion && *pVersion && !isdigit(*pVersion)) pVersion++;
-		if (*pVersion == 0)
-		{
-			fprintf(stderr, "#define with version not found.\n");
+		if (*pVersion == 0) {
+			fprintf(stderr, "PrintVersion: #define with version not found.\n");
 			return 3;
 		}
-
 		iVersion[iVersionIdx++] = atoi(pVersion);
 		
 		// Go to the next non-digit
 		while(isdigit(*pVersion) && *pVersion) pVersion++;
 	}
 
-	// Print the version!
-	char cDate[100] = "";
-	if (argc == 3 && strcmp(argv[2], "-d") == 0)
-		GetDateFormat(LOCALE_USER_DEFAULT, 0, NULL, " (MMMM d, yyyy)", cDate, 100);
-	
-	printf("v%d.%d.%d #%d%s\n", iVersion[0], iVersion[1], iVersion[2], iVersion[3], cDate);
+	// Custom format string?
+	int i=2; for(i; i<argc; i++) if(_stricmp(argv[i], "-d")) break; // not the optional date?
+	if (i<argc)
+		printf(argv[i], iVersion[0], iVersion[1], iVersion[2], iVersion[3]);
+	else
+		printf("v%d.%d.%d #%d", iVersion[0], iVersion[1], iVersion[2], iVersion[3]);
+
+	// Optional date (in English whatever are regional settings and supported languages)
+	i=2; for (i; i<argc; i++) if (!_stricmp(argv[i], "-d")) break;
+	if (i<argc)
+	{
+		char pDate[128] = "";
+		GetDateFormat(LOCALE_USER_DEFAULT, 0, NULL, "M", pDate, sizeof(pDate));
+		if (int m = atoi(pDate))
+		{
+			const char cMonths[][16] = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
+			GetDateFormat(LOCALE_USER_DEFAULT, 0, NULL, "d, yyyy", pDate, sizeof(pDate));
+			printf(" (%s %s)", cMonths[m-1], pDate);
+		}
+	}
+
+	printf("\n");
 	return 0;
 }

@@ -183,7 +183,7 @@ BEGIN
     LTEXT           "Filter:",IDC_STATIC_FILTER,3,170,20,8
 END
 
-IDD_ABOUT DIALOGEX 0, 0, 255, 200
+IDD_ABOUT DIALOGEX 0, 0, 255, 179
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "About SWS/S&M Extension"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
@@ -193,16 +193,13 @@ BEGIN
     LTEXT           "SWS/S&&M Extension, a REAPER plugin.",IDC_STATIC,7,7,150,8
     LTEXT           "Version String",IDC_VERSION,7,15,150,8
     LTEXT           "(c) 2014\tTim Payne (SWS)\r\t\tJeffos (S&&M)\r\t\tFingers (FNG)\r\t\tDominik Martin Držic (BR)\r(c) 2012\tPhilip S. Considine (IX)\r\t\tBrad Coe\r(c) 2011\tShane StClair (Autorender)\r\t\tAdam Wathan (AW)\r(c) 2010\tP. Bourdon (Padre)\r(c) 2009\tXenakios",IDC_STATIC,7,25,180,82
-    LTEXT           "Documentation is available at the SWS website:",IDC_STATIC,7,112,153,8
+    LTEXT           "For more information and latest downloads, visit the SWS website:",IDC_STATIC,7,112,214,8
     CONTROL         "http://www.standingwaterstudios.com/reaper/",IDC_WEBSITE,
                     "Button",BS_OWNERDRAW | WS_TABSTOP,7,120,241,11
-    LTEXT           "Download the latest version:",IDC_STATIC,7,135,92,9
-    CONTROL         "http://www.standingwaterstudios.com/reaper/sws_extension.exe",IDC_LATESTVER,
-                    "Button",BS_OWNERDRAW | WS_TABSTOP,7,144,241,11
-    GROUPBOX        "Check for new versions on startup",IDC_FILTERGROUP,7,160,241,34
-    CONTROL         "Official releases",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,172,74,14
-    CONTROL         "Beta releases",IDC_CHECK2,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,90,172,99,14
-    PUSHBUTTON      "Check now",IDC_UPDATE,190,172,52,14
+    GROUPBOX        "Check for new versions on startup",IDC_FILTERGROUP,7,137,241,34
+    CONTROL         "Official releases",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,149,74,14
+    CONTROL         "Beta releases",IDC_CHECK2,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,90,149,99,14
+    PUSHBUTTON      "Check now",IDC_UPDATE,190,149,52,14
 END
 
 IDD_PROMPT DIALOGEX 0, 0, 161, 46
@@ -274,11 +271,7 @@ EXSTYLE WS_EX_TOOLWINDOW
 CAPTION "Info"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-#ifdef _WIN32
     EDITTEXT        IDC_EDIT,7,7,311,260,ES_MULTILINE | ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL | WS_HSCROLL
-#else
-    EDITTEXT        IDC_EDIT,7,7,311,260,ES_MULTILINE | ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL
-#endif
 END
 
 IDD_RECVMISSING DIALOGEX 0, 0, 253, 74
@@ -978,7 +971,6 @@ CAPTION "S&M - Live Configs"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     CONTROL         "",IDC_LIST,"SysListView32",LVS_REPORT | LVS_SHOWSELALWAYS | WS_BORDER,0,22,500,103
-//    CONTROL         "",IDC_LIST,"SysListView32",LVS_REPORT | LVS_SHOWSELALWAYS | WS_BORDER,0,22,500,115
     EDITTEXT        IDC_EDIT,110,40,59,12,ES_AUTOHSCROLL | NOT WS_VISIBLE | NOT WS_BORDER
 END
 
@@ -1341,7 +1333,6 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 208
         TOPMARGIN, 7
-        BOTTOMMARGIN, 51
     END
 
     IDD_MACRODEBUG, DIALOG
@@ -1413,7 +1404,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 248
         TOPMARGIN, 7
-        BOTTOMMARGIN, 176
+        BOTTOMMARGIN, 171
     END
 
     IDD_PROMPT, DIALOG
@@ -1461,7 +1452,6 @@ BEGIN
         LEFTMARGIN, 3
         RIGHTMARGIN, 226
         TOPMARGIN, 3
-        BOTTOMMARGIN, 166
     END
 
     IDD_RANDTEMPOS, DIALOG

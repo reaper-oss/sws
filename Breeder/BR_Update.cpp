@@ -39,7 +39,7 @@
 ******************************************************************************/
 const char* const OFFICIAL_VERSION_URL = "http://sws-extension.googlecode.com/svn/tags/release/version.h";
 const char* const BETA_VERSION_URL     = "http://sws-extension.googlecode.com/svn/trunk/version.h";
-const char* const OFFICIAL_DOWNLOAD    = "http://www.standingwaterstudios.com/new.php";
+const char* const OFFICIAL_DOWNLOAD    = "http://www.standingwaterstudios.com/reaper";
 const char* const BETA_DOWNLOAD        = "http://code.google.com/p/sws-extension/downloads/list";
 const char* const STARTUP_VERSION_KEY  = "BR - StartupVersionCheck";
 

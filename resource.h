@@ -70,7 +70,6 @@
 #define IDD_SNM_CYCLACTION              161
 #define IDD_SNM_IMAGE                   162
 #define IDD_IX_LABELDLG                 163
-#define IDD_SNM_MERGE_LANGPACK          164
 #define IDD_SNM_RGNPLAYLIST             165
 #define IDD_BR_MARKERS_TO_TEMPO         166
 #define IDD_BR_SELECT_ADJUST_TEMPO      167
@@ -219,7 +218,6 @@
 #define IDC_VERSION                     1124
 #define IDC_WEBSITE                     1125
 #define IDC_FILTER                      1126
-#define IDC_LATESTVER                   1127
 #define IDC_HIDE                        1128
 #define IDC_CLEAR                       1129
 #define IDC_STATIC_FILTER               1130
@@ -234,8 +232,6 @@
 #define IDC_SNAME                       1139
 #define IDC_TRACK                       1140
 #define IDC_TEXT                        1141
-#define IDC_AUTOCOLOR                   1142
-#define IDC_AUTOICON                    1143
 #define IDC_COLOR                       1147
 #define IDC_PADRELFO_SYNCFREQUENCY      1148
 #define IDC_PADRELFO_FREQUENCY          1149
@@ -321,9 +317,7 @@
 #define IDC_DRAGSCALE                   1230
 #define IDC_LIST1                       1231
 #define IDC_LIST2                       1232
-#define IDC_PROGRES                     1234
-#define IDC_PROGRESS                    1234 // JFB: duplicated.. normal?
-#define IDC_BUTTON3                     1235
+#define IDC_PROGRESS                    1234
 #define IDC_GROUP1                      1236
 #define IDC_GROUP2                      1237
 #define IDC_GROUP3                      1238

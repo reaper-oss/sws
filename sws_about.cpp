@@ -94,12 +94,6 @@ INT_PTR WINAPI doAbout(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			char cVersion[256];
 			sprintf(cVersion, __LOCALIZE_VERFMT("Version %d.%d.%d Build #%d, built on %s","sws_DLG_109"), SWS_VERSION, __DATE__);
 			SetWindowText(GetDlgItem(hwndDlg, IDC_VERSION), cVersion);
-#ifdef _WIN64
-			SetDlgItemText(hwndDlg, IDC_LATESTVER, "http://www.standingwaterstudios.com/reaper/sws_extension_x64.exe");
-#endif
-#ifndef _WIN32
-			SetDlgItemText(hwndDlg, IDC_LATESTVER, "http://www.standingwaterstudios.com/reaper/sws_osx.dmg");
-#endif
 			bool official, beta; GetStartupSearchOptions(&official, &beta, NULL);
 			CheckDlgButton(hwndDlg, IDC_CHECK1, official);
 			CheckDlgButton(hwndDlg, IDC_CHECK2, beta);
@@ -133,7 +127,7 @@ INT_PTR WINAPI doAbout(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		case WM_COMMAND:
 		{
-			if (wParam == IDC_WEBSITE || wParam == IDC_LATESTVER)
+			if (wParam == IDC_WEBSITE)
 			{
 				char cLink[512];
 				GetDlgItemText(hwndDlg, (int)wParam, cLink, 512);

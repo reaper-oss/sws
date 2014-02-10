@@ -129,9 +129,9 @@ int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML)
 	// Insert header if desired
 	if (bFullHTML)
 	{
-		fputs("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n", pOut);
-		fputs("<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">\n", pOut);
-		fputs("<head><title>SWS/S&M Extension - What's new?</title></head>\n", pOut);
+		fputs("<!DOCTYPE html >\n", pOut);
+		fputs("<html lang=\"en\">\n", pOut);
+		fputs("<head><meta charset=\"utf-8\"><title>SWS/S&M Extension - What's new?</title></head>\n", pOut);
 		fputs("<body>\n<h1>SWS/S&M Extension - What's new?</title></h1>\n", pOut);
 	}
 

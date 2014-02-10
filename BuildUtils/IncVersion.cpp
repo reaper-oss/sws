@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
 	fopen_s(&pF, argv[1], "r+b");
 	if (!pF)
 	{
-		printf("File %s not found.\n", argv[1]);
+		printf("IncVersion: file %s not found.\n", argv[1]);
 		return 2;
 	}
 
@@ -95,7 +95,7 @@ int main(int argc, char* argv[])
 		cBuf++;
 	}
 
-	printf("Modified %d lines of %s.\n", iModifiedLines, argv[1]);
+	printf("IncVersion: modified %d lines of %s.\n", iModifiedLines, argv[1]);
 	fclose(pF);
 	return 0;
 }

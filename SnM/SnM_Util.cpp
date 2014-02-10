@@ -626,14 +626,21 @@ void SNM_UpgradeIniFiles()
 		WritePrivateProfileStruct("LIVE_CONFIGS", NULL, NULL, 0, g_SNM_IniFn.Get()); // flush section, everything moved to rpp
 
 		// update nb of default actions (SNM_LIVECFG_NB_CONFIGS changed)
-		WritePrivateProfileString("NbOfActions", "S&M_TOGGLE_LIVE_CFG", STR(SNM_LIVECFG_NB_CONFIGS), g_SNM_IniFn.Get());
-		WritePrivateProfileString("NbOfActions", "S&M_NEXT_LIVE_CFG", STR(SNM_LIVECFG_NB_CONFIGS), g_SNM_IniFn.Get());
-		WritePrivateProfileString("NbOfActions", "S&M_PREVIOUS_LIVE_CFG", STR(SNM_LIVECFG_NB_CONFIGS), g_SNM_IniFn.Get());
+		WritePrivateProfileString("NbOfActions", "S&M_LIVECFG_TGL", NULL, g_SNM_IniFn.Get());
+		WritePrivateProfileString("NbOfActions", "S&M_NEXT_LIVE_CFG", NULL, g_SNM_IniFn.Get());
+		WritePrivateProfileString("NbOfActions", "S&M_PREVIOUS_LIVE_CFG", NULL, g_SNM_IniFn.Get());
 	}
-/*JFB!! deprecated stuff, uncommentme someday
-	WritePrivateProfileString("Resources", "ProjectLoaderStartSlot", NULL, g_SNM_IniFn.Get());
-	WritePrivateProfileString("Resources", "ProjectLoaderStartSlot", NULL, g_SNM_IniFn.Get());
-*/
+	if (g_SNM_IniVersion < 8) // < v2.4.0 #4
+	{
+		// deprecated
+		WritePrivateProfileString("Resources", "ProjectLoaderStartSlot", NULL, g_SNM_IniFn.Get());
+		WritePrivateProfileString("Resources", "ProjectLoaderStartSlot", NULL, g_SNM_IniFn.Get());
+
+		// update nb of default actions
+		WritePrivateProfileString("NbOfActions", "S&M_DUMMY_TGL", NULL, g_SNM_IniFn.Get());
+		WritePrivateProfileString("NbOfActions", "S&M_EXCL_TGL", NULL, g_SNM_IniFn.Get());
+	}
+
 	g_SNM_IniVersion = SNM_INI_FILE_VERSION;
 }
 

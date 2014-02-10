@@ -717,8 +717,8 @@ static DYN_COMMAND_T s_dynCmdTable[] =
 	{ "SWS/S&M: Go to region %02d (obeys smooth seek)", "S&M_GOTO_REGION", GotoRegion, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
 	{ "SWS/S&M: Go to/select region %02d (obeys smooth seek)", "S&M_GOTO_SEL_REGION", GotoAnsSelectRegion, 4, SNM_MAX_DYN_ACTIONS, NULL},
 
-	{ "SWS/S&M: Dummy toggle %02d", "S&M_DUMMY_TGL", Noop, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
-	{ "SWS/S&M: Exclusive toggle %02d", "S&M_EXCL_TGL", ExclusiveToggle, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
+	{ "SWS/S&M: Dummy toggle %02d", "S&M_DUMMY_TGL", Noop, 8, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
+	{ "SWS/S&M: Exclusive toggle %02d", "S&M_EXCL_TGL", ExclusiveToggle, 8, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
 
 //!WANT_LOCALIZE_1ST_STRING_END
 

@@ -73,7 +73,7 @@
 // Constants
 ///////////////////////////////////////////////////////////////////////////////
 
-#define SNM_INI_FILE_VERSION		7
+#define SNM_INI_FILE_VERSION		8
 
 #ifdef _WIN32
 

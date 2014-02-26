@@ -99,6 +99,7 @@ public:
 	void Update();
 protected:
 	void OnInitDlg();
+	HMENU OnContextMenu(int x, int y, bool* wantDefaultItems);
 	int OnKey(MSG* msg, int iKeyState);
 private:
 	char m_strCmd[256];

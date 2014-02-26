@@ -24,7 +24,7 @@
 / OTHER DEALINGS IN THE SOFTWARE.
 /
 / This presents a console to the user
-/ Setup action "SWS: Open console", default 'C' key
+/ Setup action "SWS: Open console", default 'c' key
 / (mapped by REAPERs built in keyboard/command mapping dialog)
 /
 / For a list of commands, see the list in code below,
@@ -47,6 +47,7 @@ static WDL_TypedBuf<int> g_selTracks;
 static char g_cLastKey = 0;
 static DWORD g_dwLastKeyMsg = 0;
 #define CONSOLE_WINDOWPOS_KEY "ReaConsoleWindowPos"
+bool g_bCloseOnReturnPref = false;
 
 // Prototypes
 CONSOLE_COMMAND Tokenize(char* strCommand, const char** trackid, const char** args);
@@ -790,7 +791,7 @@ static accelerator_register_t g_ar = { translateAccel, TRUE, NULL };
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] = 
 {
-	{ { { 0, 'C', 0 }, "SWS: Open console" },								"SWSCONSOLE",       ConsoleCommand,  "SWS ReaConsole", 0, IsConsoleDisplayed },
+	{ { { 0, 'c', 0 }, "SWS: Open console" },								"SWSCONSOLE",       ConsoleCommand,  "SWS ReaConsole", 0, IsConsoleDisplayed },
 	{ { DEFACCEL,   "SWS: Open console and copy keystroke" },				"SWSCONSOLE2",      BringKeyCommand, NULL, },
 	{ { DEFACCEL,   "SWS: Open console with 'S' to select track(s)" },		"SWSCONSOLEEXSEL",  ConsoleCommand,  NULL,   'S' },
 	{ { DEFACCEL,   "SWS: Open console with 'n' to name track(s)" },		"SWSCONSOLENAME",   ConsoleCommand,  NULL,   'n' },
@@ -827,6 +828,8 @@ int ConsoleInit()
 	if (!plugin_register("accelerator",&g_ar))
 		return 0;
 
+	g_bCloseOnReturnPref = (GetPrivateProfileInt("SWS", "CloseConsoleOnReturnKey", 0, get_ini_file()) == 1);
+
 	SWSRegisterCommands(g_commandTable);
 
 	// Add custom commands
@@ -850,6 +853,7 @@ int ConsoleInit()
 }
 
 void ConsoleExit() {
+	WritePrivateProfileString("SWS","CloseConsoleOnReturnKey",g_bCloseOnReturnPref?"1":"0",get_ini_file());
 	DELETE_NULL(g_pConsoleWnd);
 }
 
@@ -901,6 +905,17 @@ void ReaConsoleWnd::OnInitDlg()
 	Update();
 }
 
+HMENU ReaConsoleWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
+{
+	HMENU hMenu = CreatePopupMenu();
+#ifdef _WIN32
+	AddToMenu(hMenu, __LOCALIZE("Close on ENTER key (CTRL+ENTER otherwise)","sws_DLG_100"), IDC_OPTIONS, -1, false, g_bCloseOnReturnPref?MFS_CHECKED:MFS_UNCHECKED);
+#else
+	AddToMenu(hMenu, __LOCALIZE("Close on ENTER key (CMD+ENTER otherwise)","sws_DLG_100"), IDC_OPTIONS, -1, false, g_bCloseOnReturnPref?MFS_CHECKED:MFS_UNCHECKED);
+#endif
+	return hMenu;
+}
+
 int ReaConsoleWnd::OnKey(MSG* msg, int iKeyState) 
 {
 	HWND h = GetDlgItem(m_hwnd, IDC_COMMAND);
@@ -934,6 +949,9 @@ void ReaConsoleWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 {
 	switch(LOWORD(wParam))
 	{
+		case IDC_OPTIONS:
+			g_bCloseOnReturnPref = !g_bCloseOnReturnPref;
+			break;
 		case IDC_COMMAND:
 			if (HIWORD(wParam)==EN_CHANGE)
 				Update();
@@ -946,8 +964,9 @@ void ReaConsoleWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			_snprintf(cUndo, sizeof(cUndo), __LOCALIZE("ReaConsole command %s","sws_undo"), m_strCmd);
 			Undo_OnStateChangeEx(cUndo, UNDO_STATE_ALL, -1); // UNDO_STATE_TRACKCFG is not enough (marker, osc, ..)
 
-			// close the window if ctrl-enter was pressed
-			if (GetAsyncKeyState(VK_CONTROL) & 0x8000)
+			// close the window? if ctrl-enter was pressed by default, or enter if g_bCloseOnReturnPref is true (issue 588)
+			if ((g_bCloseOnReturnPref && (GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0x8000) ||
+				(!g_bCloseOnReturnPref && (GetAsyncKeyState(VK_CONTROL) & 0x8000)))
 			{
 				m_bUserClosed = true;
 				DestroyWindow(m_hwnd);

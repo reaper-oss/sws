@@ -119,7 +119,7 @@ bool MarkerList::BuildFromReaper()
 	int id, x = 0, i = 0, iColor = 0;
 	bool bR, bChanged = false;
 	double dPos, dRend;
-	char *cName;
+	const char *cName;
 
 	while ((x=EnumMarkers(x, &bR, &dPos, &dRend, &cName, &id, &iColor)))
 	{
@@ -422,7 +422,7 @@ void MarkerList::CropToTimeSel(bool bOffset)
 }
 
 // Helper func
-int EnumMarkers(int idx, bool* isrgn, double* pos, double* rgnend, char** name, int* markrgnindexnumber, int* color)
+int EnumMarkers(int idx, bool* isrgn, double* pos, double* rgnend, const char** name, int* markrgnindexnumber, int* color)
 {
 	return EnumProjectMarkers3(NULL, idx, isrgn, pos, rgnend, name, markrgnindexnumber, color);
 }

@@ -703,7 +703,7 @@ static bool markerExists(int myIndex, const std::string &myName, double myPos)
     bool isRegion;
     double pos;
     double regionEnd;
-    char *markerName;
+    const char *markerName;
     int index;
     double delta = 0.00001;
     while( EnumProjectMarkers( markerIndex++, &isRegion, &pos, &regionEnd, &markerName, &index) > 0 ) {

@@ -85,4 +85,4 @@ private:
 	char* GetFormattedList(const char* format); // Must delete [] returned string
 };
 
-int EnumMarkers(int idx, bool* isrgn, double* pos, double* rgnend, char** name, int* markrgnindexnumber, int* color);
+int EnumMarkers(int idx, bool* isrgn, double* pos, double* rgnend, const char** name, int* markrgnindexnumber, int* color);

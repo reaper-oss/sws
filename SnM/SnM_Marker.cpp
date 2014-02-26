@@ -65,7 +65,7 @@ void UnregisterToMarkerRegionUpdates(SNM_MarkerRegionListener* _listener)
 int UpdateMarkerRegionCache()
 {
 	int updateFlags=0;
-	int i=0, x=0, num, col; double pos, rgnend; char* name; bool isRgn;
+	int i=0, x=0, num, col; double pos, rgnend; const char* name; bool isRgn;
 
 	// added/updated markers/regions?
 	while (x = EnumProjectMarkers3(NULL, x, &isRgn, &pos, &rgnend, &name, &num, &col))
@@ -152,7 +152,7 @@ bool SNM_GetProjectMarkerName(ReaProject* _proj, int _num, bool _isrgn, WDL_Fast
 {
 	if (_name)
 	{
-		int x=0, num; char* name; bool isrgn;
+		int x=0, num; const char* name; bool isrgn;
 		while (x = EnumProjectMarkers3(_proj, x, &isrgn, NULL, NULL, &name, &num, NULL))
 			if (num==_num && isrgn==_isrgn) {
 				_name->Set(name);
@@ -236,11 +236,11 @@ bool IsRegion(int _id) {
 	return (_id > 0 && (_id&0x40000000) != 0);
 }
 
-int EnumMarkerRegionById(ReaProject* _proj, int _id, bool* _isrgn, double* _pos, double* _end, char** _name, int* _num, int* _color)
+int EnumMarkerRegionById(ReaProject* _proj, int _id, bool* _isrgn, double* _pos, double* _end, const char** _name, int* _num, int* _color)
 {
 	if (_id > 0)
 	{
-		char* name2;
+		const char* name2;
 		double pos2, end2;
 		bool isrgn = IsRegion(_id), isrgn2;
 		int  num=(_id&0x3FFFFFFF), x=0, num2, col2; 
@@ -312,7 +312,7 @@ int EnumMarkerRegionDescById(ReaProject* _proj, int _id, char* _descOut, int _ou
 	if (_descOut && _outSz && _id > 0)
 	{
 		*_descOut = '\0';
-		double pos, end; int num; bool isrgn; char* name;
+		double pos, end; int num; bool isrgn; const char* name;
 		int idx = EnumMarkerRegionById(_proj, _id, &isrgn, &pos, &end, &name, &num, NULL);
 		if (idx>0) GetMarkerRegionDesc(name, isrgn, num, pos, end, _flags, _wantNum, _wantName, _wantTime, _descOut, _outSz);
 		return idx;
@@ -326,7 +326,7 @@ int EnumMarkerRegionDesc(ReaProject* _proj, int _idx, char* _descOut, int _outSz
 	if (_descOut && _outSz && _idx >= 0)
 	{
 		*_descOut = '\0';
-		double pos, end; int num; bool isrgn; char* name;
+		double pos, end; int num; bool isrgn; const char* name;
 		int nextIdx = EnumProjectMarkers2(_proj, _idx, &isrgn, &pos, &end, &name, &num);
 		if (nextIdx>0) GetMarkerRegionDesc(name, isrgn, num, pos, end, _flags, _wantNum, _wantName, _wantTime, _descOut, _outSz);
 		return nextIdx;

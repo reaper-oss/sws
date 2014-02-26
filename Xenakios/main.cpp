@@ -324,7 +324,7 @@ void DoSaveMarkersAsTextFile(COMMAND_T*)
 		int x=0;
 		bool isrgn;
 		double pos, rgnend;
-		char *name;
+		const char *name;
 		int number;
 		std::ofstream os(OutFileName);
 		if (!os)
@@ -628,7 +628,7 @@ void DoRenameMarkersWithAscendingNumbers(COMMAND_T* ct)
 
 	bool isrgn;
 	double pos, rgnend;
-	char *name;
+	const char *name;
 	int number;
 	char newmarkname[100];
 	int j=1;

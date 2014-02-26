@@ -1794,7 +1794,7 @@ void AppendPasteCropPlaylist(RegionPlaylist* _playlist, int _mode)
 	{
 		if (RgnPlaylistItem* plItem = _playlist->Get(i))
 		{
-			int rgnnum, rgncol=0; double rgnpos, rgnend; char* rgnname;
+			int rgnnum, rgncol=0; double rgnpos, rgnend; const char* rgnname;
 			if (EnumMarkerRegionById(NULL, plItem->m_rgnId, NULL, &rgnpos, &rgnend, &rgnname, &rgnnum, &rgncol))
 			{
 				WDL_PtrList<void> itemsToKeep;

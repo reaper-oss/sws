@@ -898,7 +898,7 @@ void ApplyColorRuleToMarkerRegion(SWS_RuleItem* _rule, int _flags)
 	double pos, end;
 	int x=0, num, color;
 	bool isRgn, update=false;
-	char* name;
+	const char* name;
 
 	PreventUIRefresh(1);
 	if(_rule->m_type & _flags)

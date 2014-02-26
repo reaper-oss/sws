@@ -655,7 +655,7 @@ void AutorenderRegions(COMMAND_T*) {
 	int marker_index = 0, track_index = 0, idx;
 	bool isrgn;
 	double pos, rgnend;
-	char* track_name;
+	const char* track_name;
 	vector<RenderTrack> renderTracks;
 	map<int,bool> foundIdx;
 

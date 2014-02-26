@@ -75,7 +75,7 @@ void MarkerActionSlice()
 			// Quick and dirty IIR
 			dUsualPosDelta = dUsualPosDelta * 0.99 + dDelta * 0.01;
 			int x = 0;
-			char* cName;
+			const char* cName;
 			double dMarkerPos;
 			// Look for markers with '!' as the first char with the right time
 			while ((x = EnumProjectMarkers(x, NULL, &dMarkerPos, NULL, &cName, NULL)))
@@ -118,7 +118,7 @@ void MarkerActionRunUnderCursor(COMMAND_T*)
 		return;
 
 	int x = 0;
-	char* cName;
+	const char* cName;
 	double dMarkerPos;
 	double dCurPos = GetCursorPosition();
 	// Look for markers with '!' as the first char with the right time

@@ -902,7 +902,7 @@ int NotesWnd::UpdateMkrRgnNameOrSub(int _type)
 				// update name?
 				if (_type>=SNM_NOTES_MKR_NAME && _type<=SNM_NOTES_MKRRGN_NAME)
 				{
-					char* name = NULL;
+					const char* name = NULL;
 					EnumProjectMarkers2(NULL, idx, NULL, NULL, NULL, &name, NULL);
 					SetText(name ? name : "");
 				}

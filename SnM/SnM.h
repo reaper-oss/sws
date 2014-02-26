@@ -278,13 +278,12 @@ void SNM_Exit();
 KbdSectionInfo* SNM_GetMySection();
 bool SNM_GetActionName(const char* _custId, WDL_FastString* _nameOut, int _slot = -1);
 int GetFakeToggleState(COMMAND_T*);
-void ExclusiveToggle(COMMAND_T*);
 
 static void freecharptr(char* _p) { FREE_NULL(_p); }
 static void deleteintptr(int* _p) { DELETE_NULL(_p); }
 static void deletefaststrptr(WDL_FastString* _p) { DELETE_NULL(_p); }
 
-/* commented: replaced with a common SWS_CMD_SHORTNAME()
+/* commented: replaced with a global SWS_CMD_SHORTNAME()
 #define SNM_CMD_SHORTNAME(_ct) (GetLocalizedActionName(_ct->id, _ct->accel.desc) + 9) // +9 to skip "SWS/S&M: "
 */
 

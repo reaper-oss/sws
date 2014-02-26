@@ -219,7 +219,7 @@ static COMMAND_T s_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Open/close Resources window (FX chains)" }, "S&M_SHOWFXCHAINSLOTS", OpenResources, NULL, SNM_SLOT_FXC, IsResourcesDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Resources - Delete last FX chain slot/file" }, "S&M_DEL_LAST_FXCHAINSLOT", ResourcesDeleteLastSlot, NULL, SNM_SLOT_FXC},
 	{ { DEFACCEL, "SWS/S&M: Resources - Delete all FX chain slots" }, "S&M_DEL_ALL_FXCHAINSLOT", ResourcesDeleteAllSlots, NULL, SNM_SLOT_FXC},
-	//JFB!! auto-save actions are poorly identified: should be S&M_SAVE_FXCHAIN1, S&M_SAVE_FXCHAIN2, etc..
+	//JFB!! auto-save actions are poorly identified: should have been S&M_SAVE_FXCHAIN1, S&M_SAVE_FXCHAIN2, etc..
 	{ { DEFACCEL, "SWS/S&M: Resources - Auto-save FX chains for selected tracks" }, "S&M_SAVE_FXCHAIN_SLOT1", ResourcesAutoSaveFXChain, NULL, FXC_AUTOSAVE_PREF_TRACK},
 	{ { DEFACCEL, "SWS/S&M: Resources - Auto-save FX chains for selected items" }, "S&M_SAVE_FXCHAIN_SLOT2", ResourcesAutoSaveFXChain, NULL, FXC_AUTOSAVE_PREF_ITEM},
 	{ { DEFACCEL, "SWS/S&M: Resources - Auto-save input FX chains for selected tracks" }, "S&M_SAVE_FXCHAIN_SLOT3", ResourcesAutoSaveFXChain, NULL, FXC_AUTOSAVE_PREF_INPUT_FX},
@@ -233,7 +233,7 @@ static COMMAND_T s_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Open/close Resources window (track templates)" }, "S&M_SHOW_RESVIEW_TR_TEMPLATES", OpenResources, NULL, SNM_SLOT_TR, IsResourcesDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Resources - Delete last track template slot/file" }, "S&M_DEL_LAST_TRTEMPLATE_SLOT", ResourcesDeleteLastSlot, NULL, SNM_SLOT_TR},
 	{ { DEFACCEL, "SWS/S&M: Resources - Delete all track template slots" }, "S&M_DEL_ALL_TRTEMPLATE_SLOT", ResourcesDeleteAllSlots, NULL, SNM_SLOT_TR},
-	//JFB!! auto-save actions are poorly identified: should be S&M_SAVE_TRTEMPLATE1, S&M_SAVE_TRTEMPLATE2, etc..
+	//JFB!! auto-save actions are poorly identified: should have been S&M_SAVE_TRTEMPLATE1, S&M_SAVE_TRTEMPLATE2, etc..
 	{ { DEFACCEL, "SWS/S&M: Resources - Auto-save track template" }, "S&M_SAVE_TRTEMPLATE_SLOT1", ResourcesAutoSaveTrTemplate, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Resources - Auto-save track template (with items, envelopes) " }, "S&M_SAVE_TRTEMPLATE_SLOT2", ResourcesAutoSaveTrTemplate, NULL, 3},
 	{ { DEFACCEL, "SWS/S&M: Resources - Auto-save track template (with envelopes) " }, "S&M_SAVE_TRTEMPLATE_SLOT3", ResourcesAutoSaveTrTemplate, NULL, 2},
@@ -612,6 +612,15 @@ static COMMAND_T s_cmdTable[] =
 //   and "_DO_STUFF2", repectively.
 ///////////////////////////////////////////////////////////////////////////////
 
+void ExclusiveToggleA(COMMAND_T*);
+void ExclusiveToggleB(COMMAND_T*);
+void ExclusiveToggleC(COMMAND_T*);
+void ExclusiveToggleD(COMMAND_T*);
+void ExclusiveToggleE(COMMAND_T*);
+void ExclusiveToggleF(COMMAND_T*);
+void ExclusiveToggleG(COMMAND_T*);
+void ExclusiveToggleH(COMMAND_T*);
+
 static DYN_COMMAND_T s_dynCmdTable[] =
 {
 
@@ -718,7 +727,14 @@ static DYN_COMMAND_T s_dynCmdTable[] =
 	{ "SWS/S&M: Go to/select region %02d (obeys smooth seek)", "S&M_GOTO_SEL_REGION", GotoAnsSelectRegion, 4, SNM_MAX_DYN_ACTIONS, NULL},
 
 	{ "SWS/S&M: Dummy toggle %02d", "S&M_DUMMY_TGL", Noop, 8, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
-	{ "SWS/S&M: Exclusive toggle %02d", "S&M_EXCL_TGL", ExclusiveToggle, 8, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
+	{ "SWS/S&M: Exclusive toggle A%02d", "S&M_EXCL_TGL", ExclusiveToggleA, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // not "S&M_EXCL_TGL_A" for historical reasons...
+	{ "SWS/S&M: Exclusive toggle B%02d", "S&M_EXCL_TGL_B", ExclusiveToggleB, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
+	{ "SWS/S&M: Exclusive toggle C%02d", "S&M_EXCL_TGL_C", ExclusiveToggleC, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
+	{ "SWS/S&M: Exclusive toggle D%02d", "S&M_EXCL_TGL_D", ExclusiveToggleD, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
+	{ "SWS/S&M: Exclusive toggle E%02d", "S&M_EXCL_TGL_E", ExclusiveToggleE, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
+	{ "SWS/S&M: Exclusive toggle F%02d", "S&M_EXCL_TGL_F", ExclusiveToggleF, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
+	{ "SWS/S&M: Exclusive toggle G%02d", "S&M_EXCL_TGL_G", ExclusiveToggleG, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
+	{ "SWS/S&M: Exclusive toggle H%02d", "S&M_EXCL_TGL_H", ExclusiveToggleH, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
 
 //!WANT_LOCALIZE_1ST_STRING_END
 
@@ -857,11 +873,11 @@ int GetFakeToggleState(COMMAND_T* _ct) {
 	return (_ct && _ct->fakeToggle);
 }
 
-void ExclusiveToggle(COMMAND_T* _ct)
+void ExclusiveToggle(COMMAND_T* _ct, void (*ExclTgl)(COMMAND_T*))
 {
 	if (_ct && _ct->fakeToggle)
 		for (int i=0; i<SNM_MAX_DYN_ACTIONS; i++)
-			if (int cmd = SWSGetCommandID(ExclusiveToggle, i))
+			if (int cmd = SWSGetCommandID(ExclTgl, i))
 			{
 				if (cmd != _ct->accel.accel.cmd) 
 					if (COMMAND_T* ct = SWSGetCommandByID(cmd)) {
@@ -872,6 +888,15 @@ void ExclusiveToggle(COMMAND_T* _ct)
 			else
 				break;
 }
+
+void ExclusiveToggleA(COMMAND_T* _ct) { ExclusiveToggle(_ct, ExclusiveToggleA); }
+void ExclusiveToggleB(COMMAND_T* _ct) { ExclusiveToggle(_ct, ExclusiveToggleB); }
+void ExclusiveToggleC(COMMAND_T* _ct) { ExclusiveToggle(_ct, ExclusiveToggleC); }
+void ExclusiveToggleD(COMMAND_T* _ct) { ExclusiveToggle(_ct, ExclusiveToggleD); }
+void ExclusiveToggleE(COMMAND_T* _ct) { ExclusiveToggle(_ct, ExclusiveToggleE); }
+void ExclusiveToggleF(COMMAND_T* _ct) { ExclusiveToggle(_ct, ExclusiveToggleF); }
+void ExclusiveToggleG(COMMAND_T* _ct) { ExclusiveToggle(_ct, ExclusiveToggleG); }
+void ExclusiveToggleH(COMMAND_T* _ct) { ExclusiveToggle(_ct, ExclusiveToggleH); }
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1218,9 +1243,17 @@ int SNM_Init(reaper_plugin_info_t* _rec)
 	{
 		return 0;
 	}
-	// init exlusive toggle actions
-	if (COMMAND_T* ct = SWSGetCommandByID(SWSGetCommandID(ExclusiveToggle, 0)))
-		ct->fakeToggle = true;
+
+	// init exlusive toggle actions (can be hidden => test action presence first)
+	COMMAND_T* ct;
+	if (ct = SWSGetCommandByID(SWSGetCommandID(ExclusiveToggleA, 0))) ct->fakeToggle = true;
+	if (ct = SWSGetCommandByID(SWSGetCommandID(ExclusiveToggleB, 0))) ct->fakeToggle = true;
+	if (ct = SWSGetCommandByID(SWSGetCommandID(ExclusiveToggleC, 0))) ct->fakeToggle = true;
+	if (ct = SWSGetCommandByID(SWSGetCommandID(ExclusiveToggleD, 0))) ct->fakeToggle = true;
+	if (ct = SWSGetCommandByID(SWSGetCommandID(ExclusiveToggleE, 0))) ct->fakeToggle = true;
+	if (ct = SWSGetCommandByID(SWSGetCommandID(ExclusiveToggleF, 0))) ct->fakeToggle = true;
+	if (ct = SWSGetCommandByID(SWSGetCommandID(ExclusiveToggleG, 0))) ct->fakeToggle = true;
+	if (ct = SWSGetCommandByID(SWSGetCommandID(ExclusiveToggleH, 0))) ct->fakeToggle = true;
 
 	SNM_UIInit();
 	CueBussInit();

@@ -636,9 +636,11 @@ void SNM_UpgradeIniFiles()
 		WritePrivateProfileString("Resources", "ProjectLoaderStartSlot", NULL, g_SNM_IniFn.Get());
 		WritePrivateProfileString("Resources", "ProjectLoaderStartSlot", NULL, g_SNM_IniFn.Get());
 
-		// update nb of default actions
-		WritePrivateProfileString("NbOfActions", "S&M_DUMMY_TGL", NULL, g_SNM_IniFn.Get());
-		WritePrivateProfileString("NbOfActions", "S&M_EXCL_TGL", NULL, g_SNM_IniFn.Get());
+		// show some actions by default, if hidden (do not scratch user tweaks)
+		if (!GetPrivateProfileInt("NbOfActions", "S&M_DUMMY_TGL", 0, g_SNM_IniFn.Get()))
+			WritePrivateProfileString("NbOfActions", "S&M_DUMMY_TGL", NULL, g_SNM_IniFn.Get());
+		if (!GetPrivateProfileInt("NbOfActions", "S&M_EXCL_TGL", 0, g_SNM_IniFn.Get()))
+			WritePrivateProfileString("NbOfActions", "S&M_EXCL_TGL", NULL, g_SNM_IniFn.Get());
 	}
 
 	g_SNM_IniVersion = SNM_INI_FILE_VERSION;

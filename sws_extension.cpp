@@ -685,7 +685,7 @@ extern "C"
 		IMPAPI(Main_openProject);
 		IMPAPI(MainThread_LockTracks);
 		IMPAPI(MainThread_UnlockTracks);
-		*(void**)&MarkProjectDirty = rec->GetFunc("MarkProjectDirty"); //>= v4.55pre2
+		IMPAPI(MarkProjectDirty);
 		IMPAPI(MIDIEditor_GetActive);
 		IMPAPI(MIDIEditor_GetMode);
 		IMPAPI(MIDIEditor_GetTake);

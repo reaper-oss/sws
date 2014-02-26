@@ -554,6 +554,8 @@ extern "C"
 		IMPAPI(CSurf_TrackToID);
 		IMPAPI(DeleteActionShortcut);
 		IMPAPI(DeleteProjectMarker);
+		IMPAPI(DeleteProjectMarkerByIndex);
+		IMPAPI(DeleteTakeStretchMarkers);
 		IMPAPI(DeleteTrack);
 		IMPAPI(DeleteTrackMediaItem);
 		IMPAPI(DestroyLocalOscHandler);
@@ -641,12 +643,14 @@ extern "C"
 		IMPAPI(GetSetRepeat);
 		IMPAPI(GetTempoTimeSigMarker);
 		IMPAPI(GetTakeEnvelopeByName);
+		IMPAPI(GetTakeStretchMarker);
 		IMPAPI(GetSetTrackSendInfo);
 		IMPAPI(GetSetTrackState);
 		IMPAPI(GetSet_LoopTimeRange);
 		IMPAPI(GetSet_LoopTimeRange2);
 		IMPAPI(GetSubProjectFromSource);
 		IMPAPI(GetTake);
+		IMPAPI(GetTakeNumStretchMarkers);
 		IMPAPI(GetTCPFXParm);
 		IMPAPI(GetToggleCommandState);
 		IMPAPI(GetToggleCommandState2);
@@ -737,10 +741,12 @@ extern "C"
 		IMPAPI(SetMixerScroll);
 		IMPAPI(SetMouseModifier);
 		IMPAPI(SetOnlyTrackSelected);
+		IMPAPI(SetProjectMarkerByIndex);
 		IMPAPI(SetProjectMarker);
 		IMPAPI(SetProjectMarker2);
 		IMPAPI(SetProjectMarker3);
 		IMPAPI(SetTempoTimeSigMarker);
+		IMPAPI(SetTakeStretchMarker);
 		IMPAPI(SetTrackSelected);
 		IMPAPI(ShowActionList);
 		IMPAPI(ShowConsoleMsg);
@@ -812,7 +818,7 @@ extern "C"
 				_snprintf(txt, sizeof(txt),
 					// keep the message on a single line (for the LangPack generator)
 					__LOCALIZE_VERFMT("The version of SWS extension you have installed is incompatible with your version of REAPER.\nYou probably have a REAPER version less than v%s installed.\nPlease install the latest version of REAPER from www.reaper.fm.","sws_mbox"),
-					"4.33"); // <- update compatible version here
+					"4.60"); // <- update compatible version here
 
 				//JFB: NULL parent so that the message is at least visible in taskbars (hidden since REAPER v4 and its "splash 2.0")
 				MessageBox(NULL, txt, __LOCALIZE("SWS - Version Incompatibility","sws_mbox"), MB_OK);

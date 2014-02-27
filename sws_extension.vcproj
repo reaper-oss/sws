@@ -3597,6 +3597,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Breeder\BR_ReaScript.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Breeder\BR_ReaScript.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Breeder\BR_Tempo.cpp"
 				>
 			</File>

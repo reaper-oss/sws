@@ -331,6 +331,8 @@
 		98C0E230189CF266004F2EEF /* BR_ProjState.h in Headers */ = {isa = PBXBuildFile; fileRef = 98C0E22A189CF266004F2EEF /* BR_ProjState.h */; };
 		98C0E231189CF266004F2EEF /* BR_Timer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98C0E22B189CF266004F2EEF /* BR_Timer.cpp */; };
 		98C0E232189CF266004F2EEF /* BR_Timer.h in Headers */ = {isa = PBXBuildFile; fileRef = 98C0E22C189CF266004F2EEF /* BR_Timer.h */; };
+		98C918E618BFFEB500745DA1 /* BR_ReaScript.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98C918E418BFFEB500745DA1 /* BR_ReaScript.cpp */; };
+		98C918E718BFFEB500745DA1 /* BR_ReaScript.h in Headers */ = {isa = PBXBuildFile; fileRef = 98C918E518BFFEB500745DA1 /* BR_ReaScript.h */; };
 		98D3CA9C0F871B6F009B006A /* TracklistFilter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98D3CA9B0F871B6F009B006A /* TracklistFilter.cpp */; };
 		98D3CA9E0F871B80009B006A /* TracklistFilter.h in Headers */ = {isa = PBXBuildFile; fileRef = 98D3CA9D0F871B80009B006A /* TracklistFilter.h */; };
 		98D590480F628703003F75B4 /* Tracklist.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98D590460F628703003F75B4 /* Tracklist.cpp */; };
@@ -684,6 +686,8 @@
 		98C0E22A189CF266004F2EEF /* BR_ProjState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BR_ProjState.h; path = Breeder/BR_ProjState.h; sourceTree = "<group>"; };
 		98C0E22B189CF266004F2EEF /* BR_Timer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BR_Timer.cpp; path = Breeder/BR_Timer.cpp; sourceTree = "<group>"; };
 		98C0E22C189CF266004F2EEF /* BR_Timer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BR_Timer.h; path = Breeder/BR_Timer.h; sourceTree = "<group>"; };
+		98C918E418BFFEB500745DA1 /* BR_ReaScript.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BR_ReaScript.cpp; path = Breeder/BR_ReaScript.cpp; sourceTree = "<group>"; };
+		98C918E518BFFEB500745DA1 /* BR_ReaScript.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BR_ReaScript.h; path = Breeder/BR_ReaScript.h; sourceTree = "<group>"; };
 		98D3CA9B0F871B6F009B006A /* TracklistFilter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TracklistFilter.cpp; path = TrackList/TracklistFilter.cpp; sourceTree = "<group>"; };
 		98D3CA9D0F871B80009B006A /* TracklistFilter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TracklistFilter.h; path = TrackList/TracklistFilter.h; sourceTree = "<group>"; };
 		98D590460F628703003F75B4 /* Tracklist.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Tracklist.cpp; path = TrackList/Tracklist.cpp; sourceTree = "<group>"; };
@@ -1138,6 +1142,8 @@
 		4D859DAC16AB127100E34EAA /* Breeder */ = {
 			isa = PBXGroup;
 			children = (
+				98C918E418BFFEB500745DA1 /* BR_ReaScript.cpp */,
+				98C918E518BFFEB500745DA1 /* BR_ReaScript.h */,
 				98C0E227189CF266004F2EEF /* BR_Envelope.cpp */,
 				98C0E228189CF266004F2EEF /* BR_Envelope.h */,
 				98C0E229189CF266004F2EEF /* BR_ProjState.cpp */,
@@ -1363,6 +1369,7 @@
 				98C0E22E189CF266004F2EEF /* BR_Envelope.h in Headers */,
 				98C0E230189CF266004F2EEF /* BR_ProjState.h in Headers */,
 				98C0E232189CF266004F2EEF /* BR_Timer.h in Headers */,
+				98C918E718BFFEB500745DA1 /* BR_ReaScript.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1646,6 +1653,7 @@
 				98C0E22D189CF266004F2EEF /* BR_Envelope.cpp in Sources */,
 				98C0E22F189CF266004F2EEF /* BR_ProjState.cpp in Sources */,
 				98C0E231189CF266004F2EEF /* BR_Timer.cpp in Sources */,
+				98C918E618BFFEB500745DA1 /* BR_ReaScript.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

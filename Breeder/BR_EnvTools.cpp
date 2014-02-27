@@ -87,12 +87,13 @@ void BR_EnvPoint::Append (WDL_FastString& string)
 * BR_Envelope                                                                 *
 ******************************************************************************/
 BR_Envelope::BR_Envelope (TrackEnvelope* envelope) :
-m_envelope (envelope),
-m_take     (NULL),
-m_parent   (NULL),
-m_tempoMap (envelope == GetTempoEnv()),
-m_update   (false),
-m_sorted   (true)
+m_envelope    (envelope),
+m_take        (NULL),
+m_parent      (NULL),
+m_tempoMap    (envelope == GetTempoEnv()),
+m_update      (false),
+m_sorted      (true),
+m_takeEnvType (0)
 {
 	if (m_envelope)
 	{
@@ -105,12 +106,13 @@ m_sorted   (true)
 }
 
 BR_Envelope::BR_Envelope (MediaItem_Take* take, BR_EnvType envType) :
-m_envelope (GetTakeEnv(take, envType)),
-m_take     (take),
-m_parent   (NULL),
-m_tempoMap (false),
-m_update   (false),
-m_sorted   (true)
+m_envelope    (GetTakeEnv(take, envType)),
+m_take        (take),
+m_parent      (NULL),
+m_tempoMap    (false),
+m_update      (false),
+m_sorted      (true),
+m_takeEnvType (envType)
 {
 	int size = 32768; // should fit around 1000 points (depending if bezier)
 	while (char* envState = new (nothrow) char[size])
@@ -571,14 +573,39 @@ double BR_Envelope::ValueAtPosition (double position)
 			y1 -= tension * ((tension > 0) ? (y1-v1) : (v2-y1));
 			y2 -= tension * ((tension > 0) ? (y2-v1) : (v2-y2));
 
-			x1 = CheckBounds(x1, t1, t2);
-			x2 = CheckBounds(x2, t1, t2);
-			y1 = CheckBounds(y1, this->MinValue(), this->MaxValue());
-			y2 = CheckBounds(y2, this->MinValue(), this->MaxValue());
+			x1 = SetToBounds(x1, t1, t2);
+			x2 = SetToBounds(x2, t1, t2);
+			y1 = SetToBounds(y1, this->MinValue(), this->MaxValue());
+			y2 = SetToBounds(y2, this->MinValue(), this->MaxValue());
 			return LICE_CBezier_GetY(t1, x1, x2, t2, v1, y1, y2, v2, position);
 		}
 	}
 	return 0;
+}
+
+double BR_Envelope::NormalizedDisplayValue (double value)
+{
+	double min = LaneMinValue();
+	double max = LaneMaxValue();
+	double displayValue = SetToBounds(value, min, max);
+
+	if (this->Type() == PLAYRATE)
+	{
+		if (displayValue > 1)
+			return  0.5 + (displayValue - 1) / 3 * 0.5;
+		else
+			return (displayValue - min) / (1 - min) * 0.5;
+	}
+	else
+		return (displayValue - min) / (max - min);
+}
+
+double BR_Envelope::NormalizedDisplayValue (int id)
+{
+	if (this->ValidateId(id))
+		return this->NormalizedDisplayValue(m_points[id].value);
+	else
+		return 0;
 }
 
 void BR_Envelope::MoveArrangeToPoint (int id, int referenceId)
@@ -643,6 +670,19 @@ bool BR_Envelope::IsTempo ()
 	return m_tempoMap;
 }
 
+bool BR_Envelope::IsTakeEnvelope ()
+{
+	if (m_take)
+		return true;
+	else
+		return false;
+}
+
+MediaItem_Take* BR_Envelope::GetTake ()
+{
+	return m_take;
+}
+
 MediaTrack* BR_Envelope::GetParent ()
 {
 	if (!m_parent)
@@ -653,6 +693,11 @@ MediaTrack* BR_Envelope::GetParent ()
 			m_parent = GetEnvParent(m_envelope);
 	}
 	return m_parent;
+}
+
+TrackEnvelope* BR_Envelope::GetPointer ()
+{
+	return m_envelope;
 }
 
 bool BR_Envelope::IsActive ()
@@ -713,6 +758,41 @@ double BR_Envelope::CenterValue ()
 {
 	this->FillProperties();
 	return m_properties.centerValue;
+}
+
+double BR_Envelope::LaneMaxValue ()
+{
+	if (m_tempoMap)
+	{
+		int max; GetConfig("tempoenvmax", max);
+		return (double)max;
+	}
+	else if (this->Type() == VOLUME)
+	{
+		int max; GetConfig("volenvrange", max);
+		if (max == 1) return 1;
+	}
+	else if (this->Type() == PITCH)
+	{
+		int max; GetConfig("pitchenvrange", max);
+		return max;
+	}
+	return this->MaxValue();
+}
+
+double BR_Envelope::LaneMinValue ()
+{
+	if (m_tempoMap)
+	{
+		int min; GetConfig("tempoenvmin", min);
+		return (double)min;
+	}
+	else if (this->Type() == PITCH)
+	{
+		int min; GetConfig("pitchenvrange", min);
+		return -min;
+	}
+	return this->MinValue();
 }
 
 void BR_Envelope::SetActive (bool active)
@@ -971,6 +1051,37 @@ void BR_Envelope::FillProperties ()
 					m_properties.maxValue = MAX_BPM;
 					m_properties.centerValue = GetProjectSettingsTempo(NULL, NULL);
 					m_properties.type = TEMPO;
+					m_properties.paramType.Set(token);
+				}
+				else if (m_take && strstr(token, "TRACK_ENVELOPE_UNKNOWN"))
+				{
+					if (m_takeEnvType == VOLUME)
+					{
+						m_properties.minValue = 0;
+						m_properties.maxValue = 2;
+						m_properties.centerValue = 1;
+					}
+					else if (m_takeEnvType == PAN)
+					{
+						m_properties.minValue = -1;
+						m_properties.maxValue = 1;
+						m_properties.centerValue = 0;
+
+					}
+					else if (m_takeEnvType == MUTE)
+					{
+						m_properties.minValue = 0;
+						m_properties.maxValue = 1;
+						m_properties.centerValue = 0.5;
+					}
+					else if (m_takeEnvType == PITCH)
+					{
+						m_properties.minValue = -255;
+						m_properties.maxValue = 255;
+						m_properties.centerValue = 0;
+					}
+
+					m_properties.type = m_takeEnvType;
 					m_properties.paramType.Set(token);
 				}
 

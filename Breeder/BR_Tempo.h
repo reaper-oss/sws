@@ -34,6 +34,7 @@ void MoveTempo (COMMAND_T*);
 void EditTempo (COMMAND_T*);
 void EditTempoGradual (COMMAND_T*);
 void DeleteTempo (COMMAND_T*);
+void DeleteTempoPreserveItems (COMMAND_T*);
 void TempoAtGrid (COMMAND_T*);
 void TempoShapeLinear (COMMAND_T*);
 void TempoShapeSquare (COMMAND_T*);

@@ -33,13 +33,13 @@
 #include "SnM/SnM_Routing.h"
 #include "SnM/SnM_Track.h"
 #include "Fingers/RprMidiTake.h"
-#include "Breeder/BR_Util.h"
+#include "Breeder/BR_ReaScript.h"
 
 
-// Important: 
+// Important:
 // keep APIFUNC() and the 6 first fields of the struct "APIdef" as they are defined:
 // the script reascript_python.pl needs those to parse the exported functions and generate
-// python wrappers (sws_python.py) at compile-time. 
+// python wrappers (sws_python.py) at compile-time.
 // "Yes, that is a Perl script reading C++ to generate Python." - schwa
 // See http://code.google.com/p/sws-extension/issues/detail?id=432
 
@@ -65,7 +65,7 @@ typedef struct APIdef
 
 ///////////////////////////////////////////////////////////////////////////////
 // Add the functions you want to export here (+ related #include on top)
-// Make sure function names have a prefix like "SWS_", "FNG_", etc.. 
+// Make sure function names have a prefix like "SWS_", "FNG_", etc..
 ///////////////////////////////////////////////////////////////////////////////
 
 APIdef g_apidefs[] =
@@ -93,7 +93,7 @@ APIdef g_apidefs[] =
 	{ APIFUNC(SNM_SelectResourceBookmark), "int", "const char*", "name", "[S&M] Select a bookmark of the Resources window. Returns the related bookmark id (or -1 if failed).", },
 	{ APIFUNC(SNM_TieResourceSlotActions), "void", "int", "bookmarkId", "[S&M] Attach Resources slot actions to a given bookmark.", },
 	{ APIFUNC(SNM_AddTCPFXParm), "bool", "MediaTrack*,int,int", "tr,fxId,prmId", "[S&M] Add an FX parameter knob in the TCP. Returns false if nothing updated (invalid parameters, knob already present, etc..)", },
-	
+
 	{ APIFUNC(FNG_AllocMidiTake), "RprMidiTake*", "MediaItem_Take*", "take", "[FNG] Allocate a RprMidiTake from a take pointer. Returns a NULL pointer if the take is not an in-project MIDI take", },
 	{ APIFUNC(FNG_FreeMidiTake), "void", "RprMidiTake*", "midiTake", "[FNG] Commit changes to MIDI take and free allocated memory", },
 	{ APIFUNC(FNG_CountMidiNotes), "int", "RprMidiTake*", "midiTake", "[FNG] Count of how many MIDI notes are in the MIDI take", },
@@ -101,8 +101,19 @@ APIdef g_apidefs[] =
 	{ APIFUNC(FNG_GetMidiNoteIntProperty), "int", "RprMidiNote*,const char*", "midiNote,property", "[FNG] Get MIDI note property", },
 	{ APIFUNC(FNG_SetMidiNoteIntProperty), "void", "RprMidiNote*,const char*,int", "midiNote,property,value", "[FNG] Set MIDI note property", },
 	{ APIFUNC(FNG_AddMidiNote), "RprMidiNote*", "RprMidiTake*", "midiTake", "[FNG] Add MIDI note to MIDI take", },
-	
-	{ APIFUNC(BR_SetTakeSourceFromFile), "bool", "MediaItem_Take*,const char*,bool", "take,filename,inProjectData", "[BR] Set new take source from file. To import MIDI file as in-project source data pass inProjectData=true. Returns false if failed.\nNote: To set source from existing take, see SNM_GetSetSourceState2", },
+
+	{ APIFUNC(BR_GetMouseCursorContext), "void", "char*,char*,char*,int", "window,segment,details,char_sz", BR_MOUSE_REASCRIPT_DESC, },
+	{ APIFUNC(BR_GetMouseCursorContext_Envelope), "TrackEnvelope*", "bool*", "takeEnvelope", "[BR] Returns envelope that was captured with the last call to <a href=\"#BR_GetMouseCursorContext\">BR_GetMouseCursorContext</a>. In case envelope belongs to take takeEnvelope will be true.", },
+	{ APIFUNC(BR_GetMouseCursorContext_Item), "MediaItem*", "", "", "[BR] Returns item under mouse cursor that was captured with the last call to <a href=\"#BR_GetMouseCursorContext\">BR_GetMouseCursorContext</a>."},
+	{ APIFUNC(BR_GetMouseCursorContext_Position), "double", "", "", "[BR] Returns arrange/ruler position that was captured with the last call to <a href=\"#BR_GetMouseCursorContext\">BR_GetMouseCursorContext</a>."},
+	{ APIFUNC(BR_GetMouseCursorContext_Take), "MediaItem_Take*", "", "", "[BR] Returns take under mouse cursor that was captured with the last call to <a href=\"#BR_GetMouseCursorContext\">BR_GetMouseCursorContext</a>."},
+	{ APIFUNC(BR_GetMouseCursorContext_Track), "MediaTrack*", "", "", "[BR] Returns track under mouse cursor that was captured with the last call to <a href=\"#BR_GetMouseCursorContext\">BR_GetMouseCursorContext</a>."},
+	{ APIFUNC(BR_ItemAtMouseCursor), "MediaItem*", "double*", "position", "[BR] Get media item under mouse cursor. Position is mouse cursor position in arrange.", },
+	{ APIFUNC(BR_PositionAtMouseCursor), "double", "bool", "checkRuler", "[BR] Get position at mouse cursor. To check ruler along with arrange, pass checkRuler = true. Returns -1 if cursor is not over arrange/ruler.", },
+	{ APIFUNC(BR_SetTakeSourceFromFile), "bool", "MediaItem_Take*,const char*,bool", "take,filename,inProjectData", "[BR] Set new take source from file. To import MIDI file as in-project source data pass inProjectData=true. Returns false if failed.\nNote: To set source from existing take, see SNM_GetSetSourceState2.", },
+	{ APIFUNC(BR_TakeAtMouseCursor), "MediaItem_Take*", "double*", "position", "[BR] Get take under mouse cursor. Position is mouse cursor position in arrange.", },
+	{ APIFUNC(BR_TrackAtMouseCursor), "MediaTrack*", "int*,double*", "context,position", "[BR] Get track under mouse cursor.\nContext signifies where the track was found: 0 = TCP, 1 = MCP, 2 = Arrange.\nPosition will hold mouse cursor position in arrange if applicable.", },
+
 
 	{ NULL, } // denote end of table
 };

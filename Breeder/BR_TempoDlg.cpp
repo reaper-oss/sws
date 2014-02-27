@@ -305,7 +305,7 @@ static void LoadOptionsConversion (int& markers, int& num, int& den, int& remove
 
 	// Restore defaults if needed
 	double convertedRatio;
-	IsThisFraction (splitRatio, convertedRatio);
+	IsFraction (splitRatio, convertedRatio);
 	if (convertedRatio <= 0 || convertedRatio >= 1)
 		strcpy(splitRatio, "0");
 	if (markers <= 0)
@@ -413,7 +413,7 @@ WDL_DLGRET ConvertMarkersToTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 					int den = atoi(eDen); if (den > MAX_SIG){den = MAX_SIG;}
 
 					int markers = atoi(eMarkers);
-					IsThisFraction(splitRatio, convertedSplitRatio);
+					IsFraction(splitRatio, convertedSplitRatio);
 					if (convertedSplitRatio <= 0 || convertedSplitRatio >= 1)
 					{
 						convertedSplitRatio = 0;
@@ -1817,7 +1817,7 @@ static void LoadOptionsTempoShape (int& split, char* splitRatio)
 
 	// Restore defaults if needed
 	double convertedRatio;
-	IsThisFraction (splitRatio, convertedRatio);
+	IsFraction (splitRatio, convertedRatio);
 	if (split != 0 && split != 1)
 		split = 0;
 	if (convertedRatio <= 0 || convertedRatio >= 1)
@@ -1831,7 +1831,7 @@ static void SetTempoShapeOptions (int& split, char* splitRatio)
 	else
 		g_tempoShapeSplitMiddle = 1;
 
-	double convertedRatio; IsThisFraction (splitRatio, convertedRatio);
+	double convertedRatio; IsFraction (splitRatio, convertedRatio);
 	if (convertedRatio <= 0 || convertedRatio >= 1)
 		g_tempoShapeSplitRatio = 0;
 	else
@@ -1898,7 +1898,7 @@ WDL_DLGRET TempoShapeOptionsProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					char splitRatio[128]; GetDlgItemText(hwnd, IDC_BR_SHAPE_SPLIT_RATIO, splitRatio, 128);
 
 					// Check split ratio
-					double convertedRatio; IsThisFraction(splitRatio, convertedRatio);
+					double convertedRatio; IsFraction(splitRatio, convertedRatio);
 					if (convertedRatio <= 0 || convertedRatio >= 1)
 						strcpy(splitRatio, "0");
 
@@ -1918,7 +1918,7 @@ WDL_DLGRET TempoShapeOptionsProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					char splitRatio[128]; GetDlgItemText(hwnd, IDC_BR_SHAPE_SPLIT_RATIO, splitRatio, 128);
 
 					// Check split ratio
-					double convertedRatio; IsThisFraction(splitRatio, convertedRatio);
+					double convertedRatio; IsFraction(splitRatio, convertedRatio);
 					if (convertedRatio <= 0 || convertedRatio >= 1)
 						strcpy(splitRatio, "0");
 

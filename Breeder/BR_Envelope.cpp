@@ -447,8 +447,8 @@ void ShowActiveEnvOnly (COMMAND_T* ct)
 void CreateEnvPointMouse (COMMAND_T* ct)
 {
 	BR_Envelope envelope(GetSelectedTrackEnvelope(NULL));
-	double position;
-	if (PositionAtMouseCursor(&position) && envelope.VisibleInArrange())
+	double position = PositionAtMouseCursor(false);
+	if (position != -1 && envelope.VisibleInArrange())
 	{
 		position = SnapToGrid(NULL, position);
 		double fudgeFactor = (envelope.IsTempo()) ? (MIN_TEMPO_DIST) : (MIN_ENV_DIST);

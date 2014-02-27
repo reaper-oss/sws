@@ -40,9 +40,10 @@ const int VERT_SCROLL_W = 17;
 /******************************************************************************
 * Miscellaneous                                                               *
 ******************************************************************************/
-bool IsThisFraction (char* str, double& convertedFraction);
+bool IsFraction (char* str, double& convertedFraction);
 double AltAtof (char* str);
 void ReplaceAll (string& str, string oldStr, string newStr);
+int Round (double val);
 int GetBit (int val, int pos);
 int SetBit (int val, int pos);
 int ToggleBit (int val, int pos);
@@ -50,20 +51,23 @@ int ClearBit (int val, int pos);
 int GetFirstDigit (int val);
 int GetLastDigit (int val);
 vector<int> GetDigits(int val);
-template <typename T> void WritePtr (T* ptr, T val) {if (ptr) *ptr = val;};
-template <typename T> void ReadPtr  (T* ptr, T& val) {if (ptr) val = *ptr;};
-template <typename T> T CheckBounds (T val, T min, T max) {if (val < min) return min; if (val > max) return max; return val;};
+template <typename T> void WritePtr (T* ptr, T val)  {if (ptr)*ptr = val;}
+template <typename T> void ReadPtr  (T* ptr, T& val) {if (ptr) val = *ptr;}
+template <typename T> bool CheckBounds (T val, T min, T max) {if (val < min) return false; if (val > max) return false; return true;}
+template <typename T> T    SetToBounds (T val, T min, T max) {if (val < min) return min; if (val > max) return max; return val;}
 
 /******************************************************************************
 * General                                                                     *
 ******************************************************************************/
 vector<MediaItem*> GetSelItems (MediaTrack* track);
 vector<double> GetProjectMarkers (bool timeSel);
+double GetClosestGrid (double position);
+double GetClosestMeasureGrid (double position);
 double EndOfProject (bool markers, bool regions);
 double GetProjectSettingsTempo (int* num, int* den);
 bool TcpVis (MediaTrack* track);
-template <typename T> void GetConfig (const char* key, T& val) { val = *static_cast<T*>(GetConfigVar(key)); };
-template <typename T> void SetConfig (const char* key, T  val) { *static_cast<T*>(GetConfigVar(key)) = val; };
+template <typename T> void GetConfig (const char* key, T& val) {val = *static_cast<T*>(GetConfigVar(key));}
+template <typename T> void SetConfig (const char* key, T  val) {*static_cast<T*>(GetConfigVar(key)) = val;}
 
 /******************************************************************************
 * Height                                                                      *
@@ -83,15 +87,38 @@ void MoveArrange (double amountTime);
 void CenterArrange (double position);
 void MoveArrangeToTarget (double target, double reference);
 bool IsOffScreen (double position);
-bool PositionAtMouseCursor (double* position);
+
+/******************************************************************************
+* Mouse cursor                                                                *
+******************************************************************************/
+struct BR_MouseContextInfo
+{
+	MediaTrack* track; MediaItem* item; MediaItem_Take* take; TrackEnvelope* envelope; bool takeEnvelope; double position;
+	BR_MouseContextInfo () {track = NULL; item = NULL; take = NULL; envelope = NULL; takeEnvelope = false; position = -1;}
+};
+void GetMouseCursorContext (const char** window, const char** segment, const char** details, BR_MouseContextInfo* info);
+double PositionAtMouseCursor (bool checkRuler);
 MediaItem* ItemAtMouseCursor (double* position);
+MediaItem_Take* TakeAtMouseCursor (double* position);
+MediaTrack* TrackAtMouseCursor (int* context, double* position); // context: 0->TCP, 1->MCP, 2->Arrange
 
 /******************************************************************************
 * Window                                                                      *
 ******************************************************************************/
+HWND FindInFloatingDockers (const char* name);
+HWND FindInReaperDockers (const char* name);
+HWND FindInReaper (const char* name);
+HWND FindFloating (const char* name);
+HWND GetMixerWnd ();
+HWND GetMixerMasterWnd ();
+HWND GetArrangeWnd ();
+HWND GetTransportWnd ();
+HWND GetRulerWndAlt ();
+HWND GetMcpWnd ();
 HWND GetTcpWnd ();
 HWND GetTcpTrackWnd (MediaTrack* track);
-HWND GetArrangeWnd ();
+MediaTrack* HwndToTrack (HWND hwnd, int* hwndContext); 	// context: 0->unknown, 1->tcp, 2->mcp (works even if hwnd is not a track but something else in mcp/tcp)
+TrackEnvelope* HwndToEnvelope (HWND hwnd);
 void CenterDialog (HWND hwnd, HWND target, HWND zOrder);
 
 /******************************************************************************
@@ -99,8 +126,3 @@ void CenterDialog (HWND hwnd, HWND target, HWND zOrder);
 ******************************************************************************/
 void ThemeListViewOnInit (HWND list);
 bool ThemeListViewInProc (HWND hwnd, int uMsg, LPARAM lParam, HWND list, bool grid);
-
-/******************************************************************************
-* ReaScript                                                                   *
-******************************************************************************/
-bool BR_SetTakeSourceFromFile (MediaItem_Take* take, const char* filename, bool inProjectData);

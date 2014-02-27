@@ -30,6 +30,7 @@
 #include "BR_EnvTools.h"
 #include "BR_TempoDlg.h"
 #include "BR_Util.h"
+#include "../SnM/SnM_Util.h"
 #include "../reaper/localize.h"
 
 /******************************************************************************
@@ -49,13 +50,15 @@ void MoveTempo (COMMAND_T* ct)
 	if (tempoMap.Count() <= 1)
 		return;
 
-	// Get closest point
-	int closestId;
 	double cursor = GetCursorPositionEx(NULL);
-	if ((int)ct->user == 3)
+	int targetId = -1;
+	double tDiff = 0;
+
+	// Move closest tempo marker
+	if ((int)ct->user == 3 || (int)ct->user == 4)
 	{
-		// Get first point behind cursor
-		int id = tempoMap.FindPrevious(cursor);
+		double cursorPos = ((int)ct->user == 3) ? (cursor) : (PositionAtMouseCursor(true));
+		int id = tempoMap.FindPrevious(cursorPos);
 		double pos1;
 		if (!tempoMap.GetPoint(id, &pos1, NULL, NULL, NULL))
 			return;
@@ -64,43 +67,60 @@ void MoveTempo (COMMAND_T* ct)
 		double pos2;
 		if (tempoMap.GetPoint(id+1, &pos2, NULL, NULL, NULL))
 		{
-			double len1 = cursor - pos1;
-			double len2 = pos2 - cursor;
+			double len1 = cursorPos - pos1;
+			double len2 = pos2 - cursorPos;
 
-			if (len1 >= len2 || id == 0) // if cursor is equally spaced between two points or first point
-				closestId = id+1;        // (which can't be moved) is the closest, move the point to the right
+			if (len1 >= len2 || id == 0)
+				targetId = id+1;
 			else
-				closestId = id;
+				targetId = id;
 		}
 		else
-			closestId = id;
-	}
+			targetId = id;
 
-	// Get amount of movement to be performed on the selected tempo points
-	double tDiff;
-	if ((int)ct->user == 2 || (int)ct->user == -2)
-	{
-		tDiff = 1 / GetHZoomLevel() * (double)ct->user / 2;
+		// Get amount of movement needed
+		double cTime; tempoMap.GetPoint(targetId, &cTime, NULL, NULL, NULL);
+		tDiff = cursorPos - cTime;
 	}
-	else if ((int)ct->user == 3)
+	// Move grid
+	else if ((int)ct->user == 5 || (int)ct->user == 6)
 	{
-		double cTime;
-		tempoMap.GetPoint(closestId, &cTime, NULL, NULL, NULL);
-		tDiff = cursor - cTime;
-		if (tDiff == 0)
+		double cursorPos = PositionAtMouseCursor(false);
+		if (cursorPos == -1)
 			return;
+		double grid = ((int)ct->user == 5) ? (GetClosestGrid(cursorPos)) : (GetClosestMeasureGrid(cursorPos));
+
+		// Find/create grid tempo marker
+		targetId = tempoMap.Find(grid, MIN_TEMPO_DIST);
+		if (!tempoMap.ValidateId(targetId))
+		{
+			int prevId = tempoMap.FindPrevious(grid);
+			double value = tempoMap.ValueAtPosition(grid);
+			int shape; tempoMap.GetPoint(prevId, NULL, NULL, &shape, NULL);
+
+			tempoMap.CreatePoint (prevId+1, grid, value, shape, 0, false);
+			targetId = prevId+1;
+		}
+		tDiff = cursorPos - grid;
 	}
+	// Move selected
 	else
 	{
-		tDiff = (double)ct->user/10000;
+		if ((int)ct->user == 2 || (int)ct->user == -2)
+			tDiff = 1 / GetHZoomLevel() * (double)ct->user / 2;
+		else
+			tDiff = (double)ct->user/10000;
 	}
+
+	if (tDiff == 0)
+		return;
 
 	// Loop through selected points
 	int skipped = 0;
-	int count = ((int)ct->user == 3) ? (1) : (tempoMap.CountSelected());
+	int count = (targetId != -1) ? (1) : (tempoMap.CountSelected());
 	for (int i = 0; i < count; ++i)
 	{
-		int id = ((int)ct->user == 3) ? (closestId) : (tempoMap.GetSelected(i));
+		int id = (targetId != -1) ? (targetId) : (tempoMap.GetSelected(i));
 		if (id == 0) // Skip first
 			continue;
 
@@ -168,8 +188,6 @@ void MoveTempo (COMMAND_T* ct)
 			}
 			direction *= -1;
 		}
-
-		// Check if previous points adjustment is legal
 		if (!possible)
 			SKIP(skipped, 1);
 
@@ -189,20 +207,23 @@ void MoveTempo (COMMAND_T* ct)
 
 	// Commit changes
 	PreventUIRefresh(1); // prevent jumpy cursor
-	if (tempoMap.Commit())
+	if ((targetId != -1 && skipped == 0) || (targetId = -1)) // if moving grid line, new point could have been created and then skipped
 	{
-		if ((int)ct->user == 3)
-			SetEditCurPos2(NULL, cursor, false, false); // keep cursor position when moving to closest tempo marker
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		if (tempoMap.Commit())
+		{
+			if ((int)ct->user == 3)
+				SetEditCurPos2(NULL, cursor, false, false); // keep cursor position when moving to closest tempo marker
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		}
 	}
 	PreventUIRefresh(-1);
 
 	// Warn user if some points weren't processed
 	static bool s_warnUser = true;
-	if (s_warnUser && skipped != 0 && ((int)ct->user == 3 || tempoMap.CountSelected() > 1))
+	if (s_warnUser && skipped != 0 && (targetId != -1 || tempoMap.CountSelected() > 1))
 	{
 		char buffer[512];
-		_snprintf(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
+		_snprintfSafe(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
 		int userAnswer = ShowMessageBox(buffer, __LOCALIZE("SWS - Warning", "sws_mbox"), 4);
 		if (userAnswer == 7)
 			s_warnUser = false;
@@ -537,7 +558,7 @@ void EditTempo (COMMAND_T* ct)
 	if (s_warnUser && skipped != 0 && tempoMap.CountSelected() > 1)
 	{
 		char buffer[512];
-		_snprintf(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
+		_snprintfSafe(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
 		int userAnswer = ShowMessageBox(buffer, __LOCALIZE("SWS - Warning", "sws_mbox"), 4);
 		if (userAnswer == 7)
 			s_warnUser = false;
@@ -711,7 +732,7 @@ void EditTempoGradual (COMMAND_T* ct)
 	if (s_warnUser && skipped != 0 && tempoMap.CountSelected() > 1 )
 	{
 		char buffer[512];
-		_snprintf(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
+		_snprintfSafe(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
 		int userAnswer = ShowMessageBox(buffer, __LOCALIZE("SWS - Warning", "sws_mbox"), 4);
 		if (userAnswer == 7)
 			s_warnUser = false;
@@ -892,11 +913,196 @@ void DeleteTempo (COMMAND_T* ct)
 	if (s_warnUser && skipped != 0)
 	{
 		char buffer[512];
-		_snprintf(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
+		_snprintfSafe(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
 		int userAnswer = ShowMessageBox(buffer, __LOCALIZE("SWS - Warning", "sws_mbox"), 4);
 		if (userAnswer == 7)
 			s_warnUser = false;
 	}
+}
+
+struct MediaItemPosInfo
+{
+	struct MidiEvents
+	{
+		MediaItem_Take* take;
+		vector<double> notePos;
+		vector<double> noteEnd;
+		vector<double> ccPos;
+		vector<double> textPos;
+		MidiEvents(MediaItem_Take* take) : take(take) {};
+	};
+
+	MediaItem* item;
+	double position, length, timeBase;
+	vector<MidiEvents> midiEvents;
+
+	MediaItemPosInfo (MediaItem* item) : item (item)
+	{
+		position = GetMediaItemInfo_Value(item, "D_POSITION");
+		length = GetMediaItemInfo_Value(item, "D_LENGTH");
+		timeBase = GetMediaItemInfo_Value(item, "C_BEATATTACHMODE");
+
+		for (int i = 0; i < CountTakes(item); ++i)
+		{
+			MediaItem_Take* take = GetTake(item, i);
+
+			int noteCount, ccCount, textCount;
+			if (MIDI_CountEvts(take, &noteCount, &ccCount, &textCount))
+			{
+				midiEvents.push_back(MidiEvents(take));
+				MidiEvents* midiTake = &midiEvents.back();
+
+				midiTake->notePos.reserve(noteCount);
+				midiTake->noteEnd.reserve(noteCount);
+				for (int i = 0; i < noteCount; ++i)
+				{
+					double pos, end;
+					MIDI_GetNote(take, i, NULL, NULL, &pos, &end, NULL, NULL, NULL);
+					midiTake->notePos.push_back(MIDI_GetProjTimeFromPPQPos(take, pos));
+					midiTake->noteEnd.push_back(MIDI_GetProjTimeFromPPQPos(take, end));
+				}
+
+				midiTake->ccPos.reserve(ccCount);
+				for (int i = 0; i < ccCount; ++i)
+				{
+					double pos;
+					MIDI_GetCC(take, i, NULL, NULL, &pos, NULL, NULL, NULL, NULL);
+					midiTake->ccPos.push_back(MIDI_GetProjTimeFromPPQPos(take, pos));
+				}
+
+				midiTake->textPos.reserve(textCount);
+				for (int i = 0; i < textCount; ++i)
+				{
+					double pos;
+					MIDI_GetTextSysexEvt(take, i, NULL, NULL, &pos, NULL, NULL, NULL);
+					midiTake->textPos.push_back(MIDI_GetProjTimeFromPPQPos(take, pos));
+				}
+			}
+		}
+	}
+
+	void Restore ()
+	{
+		SetMediaItemInfo_Value(item, "D_POSITION", position);
+		SetMediaItemInfo_Value(item, "D_LENGTH", length);
+		SetMediaItemInfo_Value(item, "C_BEATATTACHMODE", timeBase);
+
+		for (size_t i = 0; i < midiEvents.size(); ++i)
+		{
+			MidiEvents* midiTake = &midiEvents[i];
+			MediaItem_Take* take = midiTake->take;
+
+			for (size_t i = 0; i < midiTake->notePos.size(); ++i)
+			{
+				double pos = MIDI_GetPPQPosFromProjTime(take, midiTake->notePos[i]);
+				double end = MIDI_GetPPQPosFromProjTime(take, midiTake->noteEnd[i]);
+				MIDI_SetNote(take, i, NULL, NULL, &pos, &end, NULL, NULL, NULL);
+			}
+
+			for (size_t i = 0; i < midiTake->ccPos.size(); ++i)
+			{
+				double pos = MIDI_GetPPQPosFromProjTime(take, midiTake->ccPos[i]);
+				MIDI_SetCC(take, i, NULL, NULL, &pos, NULL, NULL, NULL, NULL);
+			}
+
+			for (size_t i = 0; i < midiTake->textPos.size(); ++i)
+			{
+				double pos = MIDI_GetPPQPosFromProjTime(take, midiTake->textPos[i]);
+				MIDI_SetTextSysexEvt(take, i, NULL, NULL, &pos, NULL, NULL, 0);
+			}
+		}
+	}
+};
+
+void DeleteTempoPreserveItems (COMMAND_T* ct)
+{
+	BR_Envelope tempoMap(GetTempoEnv());
+	if (!tempoMap.CountSelected())
+		return;
+
+	// Get items' position info and set their timebase to time
+	vector<MediaItemPosInfo> items;
+	double firstMarker;
+	tempoMap.GetPoint(tempoMap.GetSelected(0), &firstMarker, NULL, NULL, NULL);
+
+	int itemCount = ((int)ct->user) ? CountSelectedMediaItems(NULL) : CountMediaItems(NULL);
+	items.reserve(itemCount);
+	for (int i = 0; i < itemCount; ++i)
+	{
+		MediaItem* item = ((int)ct->user) ? GetSelectedMediaItem(NULL, i) : GetMediaItem(NULL, i);
+		double itemEnd = GetMediaItemInfo_Value(item, "D_POSITION") + GetMediaItemInfo_Value(item, "D_LENGTH");
+		if (itemEnd >= firstMarker)
+		{
+			items.push_back(MediaItemPosInfo(item));
+			SetMediaItemInfo_Value(item, "C_BEATATTACHMODE", 0);
+		}
+	}
+
+	// Readjust unselected tempo markers
+	double offset = 0;
+	for (int i = 0; i < tempoMap.CountConseq(); ++i)
+	{
+		int startId, endId;
+		tempoMap.GetConseq (i, &startId, &endId);
+
+		if (endId == tempoMap.Count()-1) continue;         // no points after selection, nothing to adjust
+		if (startId == 0 && (++startId > endId)) continue; // skip first point
+
+		// Get musical length of selection
+		double musicalLen = 0;
+		for (int i = startId - 1; i <= endId; ++i )
+		{
+			double t0, t1, b0, b1; int s0;
+			tempoMap.GetPoint(i,   &t0, &b0, &s0, NULL);
+			tempoMap.GetPoint(i+1, &t1, &b1, NULL, NULL);
+			if (i == startId-1) t0 -= offset; // readjust position to original (earlier iterations moved it)
+
+			if (s0 == SQUARE)
+				musicalLen += (t1-t0) * b0 / 240;
+			else
+				musicalLen += (t1-t0) * (b0+b1) / 480;
+		}
+
+		// Readjust points after selection
+		double t0, t1, b0, b1; int s0;
+		tempoMap.GetPoint(startId - 1, &t0, &b0, &s0, NULL);
+		tempoMap.GetPoint(endId   + 1, &t1, &b1, NULL, NULL);
+
+		if (s0 == SQUARE)
+			offset = (t0 + (240*musicalLen) / b0) - t1;
+		else
+			offset = (t0 + (480*musicalLen) / (b0 + b1)) - t1;
+
+		while (!tempoMap.GetSelection(++endId) && endId < tempoMap.Count())
+		{
+			double t;
+			tempoMap.GetPoint(endId, &t, NULL, NULL, NULL);
+			t += offset;
+			tempoMap.SetPoint (endId, &t, NULL, NULL, NULL);
+		}
+	}
+
+	// Delete selected tempo markers
+	int idOffset = 0;
+	for (int i = 0; i < tempoMap.CountSelected(); ++i)
+	{
+		int id = tempoMap.GetSelected(i) - idOffset;
+		if (id != 0) // skip first point
+		{
+			tempoMap.DeletePoint(id);
+			++idOffset;
+		}
+	}
+
+	// Commit tempo map and restore position info
+	PreventUIRefresh(1);
+	if (tempoMap.Commit())
+	{
+		for (size_t i = 0; i < items.size(); ++i)
+			items[i].Restore();
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+	}
+	PreventUIRefresh(-1);
 }
 
 void TempoAtGrid (COMMAND_T* ct)
@@ -1037,7 +1243,7 @@ void TempoShapeLinear (COMMAND_T* ct)
 	if (s_warnUser && skipped != 0)
 	{
 		char buffer[512];
-		_snprintf(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
+		_snprintfSafe(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
 		int userAnswer = ShowMessageBox(buffer, __LOCALIZE("SWS - Warning", "sws_mbox"), 4);
 		if (userAnswer == 7)
 			s_warnUser = false;
@@ -1140,7 +1346,7 @@ void TempoShapeSquare (COMMAND_T* ct)
 	if (s_warnUser && skipped != 0)
 	{
 		char buffer[512];
-		_snprintf(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
+		_snprintfSafe(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
 		int userAnswer = ShowMessageBox(buffer, __LOCALIZE("SWS - Warning", "sws_mbox"), 4);
 		if (userAnswer == 7)
 			s_warnUser = false;

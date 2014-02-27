@@ -279,7 +279,7 @@ void PreviewItemAtMouse (COMMAND_T* ct)
 			track = GetMediaItem_Track(item);
 
 		if (type == 2)
-			start = position;
+			start = position - GetMediaItemInfo_Value(item, "D_POSITION");
 		else if (type == 3)
 			measure = 1;
 

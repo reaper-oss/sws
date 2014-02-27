@@ -30,6 +30,7 @@
 #include "BR_Util.h"
 #include "../version.h"
 #include "../SnM/SnM_Dlg.h"
+#include "../SnM/SnM_Util.h"
 #include "../reaper/localize.h"
 #include "../../WDL/jnetlib/jnetlib.h"
 #include "../../WDL/jnetlib/httpget.h"
@@ -73,7 +74,7 @@ static void SetVersionMessage (HWND hwnd, BR_SearchObject* searchObject)
 	}
 	else if (status == NO_CONNECTION)
 	{
-		_snprintf(tmp, sizeof(tmp), __LOCALIZE("Connection could not be established","sws_DLG_172"));
+		_snprintfSafe(tmp, sizeof(tmp), __LOCALIZE("Connection could not be established","sws_DLG_172"));
 		SetWindowText(GetDlgItem(hwnd, IDC_BR_VER_DOWNLOAD), __LOCALIZE("Retry","sws_DLG_172"));
 		EnableWindow(GetDlgItem(hwnd, IDC_BR_VER_DOWNLOAD), true);
 		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_DOWNLOAD), SW_SHOW);
@@ -83,7 +84,7 @@ static void SetVersionMessage (HWND hwnd, BR_SearchObject* searchObject)
 	}
 	else if (status == UP_TO_DATE)
 	{
-		_snprintf(tmp, sizeof(tmp), __LOCALIZE("SWS extension is up to date.","sws_DLG_172"));
+		_snprintfSafe(tmp, sizeof(tmp), __LOCALIZE("SWS extension is up to date.","sws_DLG_172"));
 		EnableWindow(GetDlgItem(hwnd, IDC_BR_VER_DOWNLOAD), false);
 		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_DOWNLOAD), SW_SHOW);
 		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_OFF), SW_HIDE);
@@ -92,7 +93,7 @@ static void SetVersionMessage (HWND hwnd, BR_SearchObject* searchObject)
 	}
 	else if (status == OFFICIAL_AVAILABLE)
 	{
-		_snprintf(tmp, sizeof(tmp), __LOCALIZE("Official update is available: Version %d.%d.%d Build #%d","sws_DLG_172"), versionO.maj, versionO.min, versionO.rev, versionO.build);
+		_snprintfSafe(tmp, sizeof(tmp), __LOCALIZE("Official update is available: Version %d.%d.%d Build #%d","sws_DLG_172"), versionO.maj, versionO.min, versionO.rev, versionO.build);
 		EnableWindow(GetDlgItem(hwnd, IDC_BR_VER_DOWNLOAD), true);
 		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_DOWNLOAD), SW_SHOW);
 		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_OFF), SW_HIDE);
@@ -101,7 +102,7 @@ static void SetVersionMessage (HWND hwnd, BR_SearchObject* searchObject)
 	}
 	else if (status == BETA_AVAILABLE)
 	{
-		_snprintf(tmp, sizeof(tmp), __LOCALIZE("Beta update is available: Version %d.%d.%d Build #%d","sws_DLG_172"), versionB.maj, versionB.min, versionB.rev, versionB.build);
+		_snprintfSafe(tmp, sizeof(tmp), __LOCALIZE("Beta update is available: Version %d.%d.%d Build #%d","sws_DLG_172"), versionB.maj, versionB.min, versionB.rev, versionB.build);
 		EnableWindow(GetDlgItem(hwnd, IDC_BR_VER_DOWNLOAD), true);
 		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_DOWNLOAD), SW_SHOW);
 		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_OFF), SW_HIDE);
@@ -110,7 +111,7 @@ static void SetVersionMessage (HWND hwnd, BR_SearchObject* searchObject)
 	}
 	else if (status == BOTH_AVAILABLE)
 	{
-		_snprintf(tmp, sizeof(tmp), __LOCALIZE("Official update is available: Version %d.%d.%d Build #%d\nBeta update is available: Version %d.%d.%d Build #%d","sws_DLG_172"), versionO.maj, versionO.min, versionO.rev, versionO.build, versionB.maj, versionB.min, versionB.rev, versionB.build);
+		_snprintfSafe(tmp, sizeof(tmp), __LOCALIZE("Official update is available: Version %d.%d.%d Build #%d\nBeta update is available: Version %d.%d.%d Build #%d","sws_DLG_172"), versionO.maj, versionO.min, versionO.rev, versionO.build, versionB.maj, versionB.min, versionB.rev, versionB.build);
 		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_OFF), SW_SHOW);
 		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_BETA), SW_SHOW);
 		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_DOWNLOAD), SW_HIDE);
@@ -309,7 +310,7 @@ void SetStartupSearchOptions (bool official, bool beta, unsigned int lastTime)
 		GetPrivateProfileString("SWS", STARTUP_VERSION_KEY, "1 0 0", tmp, 256, get_ini_file());
 		sscanf(tmp, "%*d %*d %d", &lastTime);
 	}
-	_snprintf(tmp, sizeof(tmp), "%d %d %u", !!official, !!beta, lastTime);
+	_snprintfSafe(tmp, sizeof(tmp), "%d %d %u", !!official, !!beta, lastTime);
 	WritePrivateProfileString("SWS", STARTUP_VERSION_KEY, tmp, get_ini_file());
 }
 
@@ -322,7 +323,7 @@ m_status   (SEARCH_INITIATED),
 m_progress (0)
 {
 	this->EndSearch(); // make sure any existing search thread finishes
-	this->SetProcess(CreateThread(NULL, 0, this->StartSearch, (void*)this, 0, NULL));
+	this->SetProcess((HANDLE)_beginthreadex(NULL, 0, this->StartSearch, (void*)this, 0, NULL));
 }
 
 BR_SearchObject::~BR_SearchObject ()
@@ -362,10 +363,10 @@ void BR_SearchObject::RestartSearch ()
 	this->EndSearch();
 	this->SetProgress(0);
 	this->SetStatus(version, version, SEARCH_INITIATED);
-	this->SetProcess(CreateThread(NULL, 0, this->StartSearch, (void*)this, 0, NULL));
+	this->SetProcess((HANDLE)_beginthreadex(NULL, 0, this->StartSearch, (void*)this, 0, NULL));
 }
 
-DWORD WINAPI BR_SearchObject::StartSearch (void* searchObject)
+unsigned WINAPI BR_SearchObject::StartSearch (void* searchObject)
 {
 	BR_SearchObject* _this = (BR_SearchObject*)searchObject;
 	JNL::open_socketlib();

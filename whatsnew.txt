@@ -1,8 +1,13 @@
-Fixes
-+Preview media item actions now send all-notes-off when stopping MIDI item preview
+<b>REAPER v4.60+ is required!</b>
+New API functions were introduced in this version, they enable various improvements in the SWS/S&M Extension.
+Thank you Cockos!
 
 Added actions
 +SWS/BR: Preview media item under mouse (versions for pausing project playback during preview)
++SWS/BR: Delete tempo marker while preserving position and length of (selected) items (including MIDI events)
++SWS/BR: Move closest tempo marker to mouse cursor
++SWS/BR: Move closest (measure) grid line to mouse cursor (may create tempo marker)
+ Hint: There is an interesting effect if you keep shortcut key pressed while moving the mouse - grid/tempo marker will follow it. The only con is that bunch of undo points will get created
 +Added toggle actions (from Mars):
  - SWS/S&M: Dummy toggle n (where 'n' is in [1; 8], http://forum.cockos.com/showthread.php?p=984786#post984786|customizable in the S&M.ini file|, up to 99 toggles)
  - SWS/S&M: Exclusive toggle An (where 'n' is in [1; 4], http://forum.cockos.com/showthread.php?p=984786#post984786|customizable in the S&M.ini file|, up to 99 toggles)
@@ -20,6 +25,22 @@ ReaConsole
  - Or the ENTER key can perform commands and close the console, while CRTL+ENTER performs commands but let it open
    Useful when using ReaConsole the old-school way: as a dialog box
 +New default shortcut 'c' to open ReaConsole ('C' might conflict with the native action "Insert time signature/tempo Marker")
+
+ReaScript
++Added functions:
+ - BR_GetMouseCursorContext
+ - BR_GetMouseCursorContext_Envelope
+ - BR_GetMouseCursorContext_Item
+ - BR_GetMouseCursorContext_Position
+ - BR_GetMouseCursorContext_Take
+ - BR_GetMouseCursorContext_Track
+ - BR_ItemAtMouseCursor
+ - BR_PositionAtMouseCursor
+ - BR_TakeAtMouseCursor
+ - BR_TrackAtMouseCursor
+
+Fixes
++Preview media item actions now send all-notes-off when stopping MIDI item preview
 
 !v2.4.0 #3 (February 5, 2014)
 Fixes

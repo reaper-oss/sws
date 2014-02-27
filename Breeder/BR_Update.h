@@ -68,7 +68,7 @@ public:
 	void RestartSearch ();
 
 private:
-	static DWORD WINAPI StartSearch (void* searchObject);
+	static unsigned WINAPI StartSearch (void* searchObject);
 	void SetStatus (BR_Version official, BR_Version beta, int status);
 	void SetProgress (double progress);
 	void SetKillFlag (bool killFlag);

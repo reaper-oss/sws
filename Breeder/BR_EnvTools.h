@@ -119,7 +119,7 @@ public:
 	void UpdateSelected ();                         // Update selected points' ids based on current state of things
 	int CountSelected ();                           // Count selected points
 	int GetSelected (int idx);                      // Get selected point based on selected point count (idx is 0 based);
-	int CountConseq ();                             // Count number of consequential selections
+	int CountConseq ();                             // Count number of consequential selections (won't work with unsorted points)
 	bool GetConseq (int idx, int* start, int* end); // Get consequential selection pair based on count (idx is 0 based)
 
 	/* All points */
@@ -132,10 +132,15 @@ public:
 
 	/* Miscellaneous */
 	double ValueAtPosition (double position);          // Using find functionality, so efficiency may vary (see comment about Find())
+	double NormalizedDisplayValue (double value);      // Return point value in 0.0 - 1.0 range as displayed in arrange
+	double NormalizedDisplayValue (int id);
 	void MoveArrangeToPoint (int id, int referenceId); // Moves arrange horizontally if needed so point is visible
 	bool VisibleInArrange ();                          // Check if arrange scroll position allows envelope to be shown
 	bool IsTempo ();
+	bool IsTakeEnvelope ();
+	MediaItem_Take* GetTake ();
 	MediaTrack* GetParent ();
+	TrackEnvelope* GetPointer ();
 
 	/* Get envelope properties */
 	bool IsActive ();
@@ -148,6 +153,8 @@ public:
 	double MinValue ();
 	double MaxValue ();
 	double CenterValue ();
+	double LaneMaxValue ();
+	double LaneMinValue ();
 
 	/* Set envelope properties */
 	void SetActive (bool active);
@@ -183,6 +190,7 @@ private:
 	vector<IdPair> m_pointsConseq;
 	WDL_FastString m_chunkStart;
 	WDL_FastString m_chunkEnd;
+	int m_takeEnvType;
 	struct EnvProperties
 	{
 		WDL_FastString paramType;

@@ -45,8 +45,8 @@ const int TAKE_MIN_HEIGHT_HIGH  = 12; // min height when take count <= TAKE_MIN_
 const int TAKE_MIN_HEIGHT_LOW   = 6;  // min height when take count >  TAKE_MIN_HEIGHT_COUNT
 
 const int ENV_HIT_POINT         = 5;
-const int ENV_HIT_POINT_LEFT    = 6; // envelope point doesn't have middle pixel so hit point is different for one side
-const int ENV_HIT_POINT_DOWN    = 6; // +1 because lower part is tracked starting 1 pixel bellow line (so when envelope is active, hit points appear the same)
+const int ENV_HIT_POINT_LEFT    = 6;  // envelope point doesn't have middle pixel so hit point is different for one side
+const int ENV_HIT_POINT_DOWN    = 6;  // +1 because lower part is tracked starting 1 pixel bellow line (so when envelope is active, hit points appear the same)
 
 const int RULER_WIDTH_REGIONS   = 10;
 const int RULER_WIDTH_MARKERS   = 12;
@@ -1365,25 +1365,25 @@ void GetMouseCursorContext (const char** window, const char** segment, const cha
 	| window       | segment       | details                             |
 	|______________|_______________|_____________________________________|
 	| unknown      | ""            | ""                                  |
-    |______________|_______________|_____________________________________|
+	|______________|_______________|_____________________________________|
 	| ruler        | regions       | ""                                  |
-    |              | markers       | ""                                  |
-    |              | tempo         | ""                                  |
-    |              | timeline      | ""                                  |
-    |______________|_______________|_____________________________________|
+	|              | markers       | ""                                  |
+	|              | tempo         | ""                                  |
+	|              | timeline      | ""                                  |
+	|______________|_______________|_____________________________________|
 	| transport    | ""            | ""                                  |
 	|______________|_______________|_____________________________________|
 	| tcp          | track         | ""                                  |
-    |              | envelope      | ""                                  |
-    |              | empty         | ""                                  |
-    |______________|_______________|_____________________________________|
+	|              | envelope      | ""                                  |
+	|              | empty         | ""                                  |
+	|______________|_______________|_____________________________________|
 	| mcp          | track         | ""                                  |
-    |              | empty         | ""                                  |
-    |______________|_______________|_____________________________________|
+	|              | empty         | ""                                  |
+	|______________|_______________|_____________________________________|
 	| arrange      | track         | item, env_point, env_segment, empty |
-    |              | envelope      | env_point, env_segment, empty       |
-    |              | empty         | ""                                  |
-    *********************************************************************/
+	|              | envelope      | env_point, env_segment, empty       |
+	|              | empty         | ""                                  |
+	*********************************************************************/
 
 	POINT p; GetCursorPos(&p);
 	HWND hwnd = WindowFromPoint(p);

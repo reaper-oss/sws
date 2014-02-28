@@ -182,7 +182,7 @@ private:
 	bool m_tempoMap;
 	bool m_update;
 	bool m_sorted;
- 	int m_count;
+	int m_count;
 	int m_countSel;
 	int m_countConseq;
 	vector<BR_EnvPoint> m_points;

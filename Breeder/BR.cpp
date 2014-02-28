@@ -120,7 +120,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Expand envelope point selection to the right" },                     "BR_ENV_SEL_EXPAND_RIGHT",        ExpandEnvSel,    NULL, 1},
 	{ { DEFACCEL, "SWS/BR: Expand envelope point selection to the left" },                      "BR_ENV_SEL_EXPAND_LEFT",         ExpandEnvSel,    NULL, -1},
 	{ { DEFACCEL, "SWS/BR: Expand envelope point selection to the right (end point only)" },    "BR_ENV_SEL_EXPAND_RIGHT_END",    ExpandEnvSelEnd, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Expand envelope point selection to the left (end point only)" },	    "BR_ENV_SEL_EXPAND_L_END",        ExpandEnvSelEnd, NULL, -1},
+	{ { DEFACCEL, "SWS/BR: Expand envelope point selection to the left (end point only)" },     "BR_ENV_SEL_EXPAND_L_END",        ExpandEnvSelEnd, NULL, -1},
 	{ { DEFACCEL, "SWS/BR: Shrink envelope point selection from the right" },                   "BR_ENV_SEL_SHRINK_RIGHT",        ShrinkEnvSel,    NULL, 1},
 	{ { DEFACCEL, "SWS/BR: Shrink envelope point selection from the left" },                    "BR_ENV_SEL_SHRINK_LEFT",         ShrinkEnvSel,    NULL, -1},
 	{ { DEFACCEL, "SWS/BR: Shrink envelope point selection from the right (end point only)" },  "BR_ENV_SEL_SHRINK_RIGHT_END",    ShrinkEnvSelEnd, NULL, 1},

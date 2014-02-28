@@ -117,7 +117,7 @@ HWND GetRulerWndAlt ();
 HWND GetMcpWnd ();
 HWND GetTcpWnd ();
 HWND GetTcpTrackWnd (MediaTrack* track);
-MediaTrack* HwndToTrack (HWND hwnd, int* hwndContext); 	// context: 0->unknown, 1->tcp, 2->mcp (works even if hwnd is not a track but something else in mcp/tcp)
+MediaTrack* HwndToTrack (HWND hwnd, int* hwndContext);  // context: 0->unknown, 1->tcp, 2->mcp (works even if hwnd is not a track but something else in mcp/tcp)
 TrackEnvelope* HwndToEnvelope (HWND hwnd);
 void CenterDialog (HWND hwnd, HWND target, HWND zOrder);
 

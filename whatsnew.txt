@@ -41,6 +41,7 @@ ReaScript
 
 Fixes
 +Preview media item actions now send all-notes-off when stopping MIDI item preview
++More efficient toolbars auto refresh in certain instances
 
 !v2.4.0 #3 (February 5, 2014)
 Fixes

@@ -218,13 +218,16 @@ double GetClosestGrid (double position)
 
 double GetClosestMeasureGrid (double position)
 {
+	double grid; GetConfig("projgriddiv", grid);
+	if (grid/4 > 1) // if grid division is bigger than one 1 measure, let reaper handle it for us
+		return GetClosestGrid(position);
+
 	int prevMeasure;
 	TimeMap2_timeToBeats(NULL, position, &prevMeasure, NULL, NULL, NULL);
 	int nextMeasure = prevMeasure + 1;
 
 	double prevPos = TimeMap2_beatsToTime(NULL, 0, &prevMeasure);
 	double nextPos = TimeMap2_beatsToTime(NULL, 0, &nextMeasure);
-
 	return ((position-prevPos) > (nextPos-position)) ? (nextPos) : (prevPos);
 }
 
@@ -1020,9 +1023,9 @@ static void GetTrackOrEnvelopeFromY (int y, TrackEnvelope** _envelope, MediaTrac
 			hwnd = GetWindow(hwnd, GW_HWNDNEXT);
 		}
 
-		// Envelopes hwnds don't have to be in order they are drawn so need to sort them by id before searching
 		if (!yInTrack)
 		{
+			// Envelopes hwnds don't have to be in order they are drawn so need to sort them by id before searching
 			std::sort(envHeights.begin(), envHeights.end(), SortEnvHeightsById);
 			int envelopeStart = elementOffset + elementHeight;
 			for (size_t i = 0; i < envHeights.size(); ++i)
@@ -1078,6 +1081,10 @@ static bool IsPointInArrange (POINT* p, bool checkPointVisibilty = true)
 
 static double PositionAtArrangePoint (POINT p, double* arrangeStart = NULL, double* arrangeEnd = NULL, double* hZoom = NULL)
 {
+	/* Does not check if point is in arrange, to make it work it *
+	*  it is enough to have p.x in arrange, p.y can be somewhere *
+	*  else like ruler etc...                                    */
+
 	HWND hwnd = GetArrangeWnd();
 	ScreenToClient(hwnd, &p);
 
@@ -1096,6 +1103,7 @@ static double PositionAtArrangePoint (POINT p, double* arrangeStart = NULL, doub
 static int TranslatePointToArrangeScrollY (POINT p)
 {
 	/* returns real, scrollbar Y, not displayed Y */
+
 	HWND hwnd = GetArrangeWnd();
 	ScreenToClient(hwnd, &p);
 
@@ -1109,6 +1117,7 @@ static int TranslatePointToArrangeScrollY (POINT p)
 static int TranslatePointToArrangeX (POINT p)
 {
 	/* returns displayed X, not real, scrollbar X */
+
 	HWND hwnd = GetArrangeWnd();
 	ScreenToClient(hwnd, &p);
 	return (int)p.x;
@@ -1323,11 +1332,10 @@ static int IsMouseOverEnvelopeLineTrackLane (MediaTrack* track, int trackHeight,
 static int IsMouseOverEnvelopeLineTake (MediaItem_Take* take, int takeHeight, int takeOffset, int mouseY, int mouseX, double mousePos, double arrangeStart, double arrangeEnd, double arrangeZoom, TrackEnvelope** trackEnvelope)
 {
 	/* MouseX is displayed X, not taking  scrollbars into account. MouseY on the *
-	*  other hand has to take scrollbar position into account                   *
-	*                                                                           *
-	*  Return values: 0 -> no hit, 1 -> over point, 2 - > over segment          *
-	*  If there is a hit, trackEnvelope will hold envelope and envPoint will    *
-	*  hold point/first point behind segment                                    */
+	*  other hand has to take scrollbar position into account                    *
+	*                                                                            *
+	*  Return values: 0 -> no hit, 1 -> over point, 2 - > over segment           *
+	*  If there is a hit, trackEnvelope will hold envelope                       */
 
 	int mouseHit = 0;
 	TrackEnvelope* envelopeUnderMouse = NULL;
@@ -1386,16 +1394,15 @@ void GetMouseCursorContext (const char** window, const char** segment, const cha
 	*********************************************************************/
 
 	POINT p; GetCursorPos(&p);
+	double arrangeStart, arrangeEnd, arrangeZoom;
+	double mousePos = PositionAtArrangePoint(p, &arrangeStart, &arrangeEnd, &arrangeZoom);
+	int mouseX = TranslatePointToArrangeX(p);
 	HWND hwnd = WindowFromPoint(p);
 
 	const char* returnWindow  = "unknown";
 	const char* returnSegment = "";
 	const char* returnDetails = "";
 	BR_MouseContextInfo returnInfo;
-
-	int mouseX = TranslatePointToArrangeX(p);
-	double arrangeStart, arrangeEnd, arrangeZoom;
-	double mousePos = PositionAtArrangePoint(p, &arrangeStart, &arrangeEnd, &arrangeZoom);
 
 	bool found = false;
 

@@ -45,16 +45,25 @@ static bool g_tempoShapeDialog = false;
 ******************************************************************************/
 void MoveTempo (COMMAND_T* ct)
 {
-	// Get tempo map
-	BR_Envelope tempoMap(GetTempoEnv());
-	if (tempoMap.Count() <= 1)
-		return;
+	// In case of grid actions make sure tempo map already has at least one point created (for some reason it won't work if creating it directly in chunk)
+	if (((int)ct->user == 5 || (int)ct->user == 6) && !CountTempoTimeSigMarkers(NULL))
+	{
+		PreventUIRefresh(1);
+		bool master = TcpVis(GetMasterTrack(NULL));
+		Main_OnCommand(41046, 0);              // Toggle show master tempo envelope
+		Main_OnCommand(41046, 0);
+		if (!master) Main_OnCommand(40075, 0); // Hide master if needed
+		PreventUIRefresh(-1);
+	}
 
+	BR_Envelope tempoMap(GetTempoEnv());
+	if (!tempoMap.Count())
+		return;
 	double cursor = GetCursorPositionEx(NULL);
 	int targetId = -1;
 	double tDiff = 0;
 
-	// Move closest tempo marker
+	// Find closest tempo marker
 	if ((int)ct->user == 3 || (int)ct->user == 4)
 	{
 		double cursorPos = ((int)ct->user == 3) ? (cursor) : (PositionAtMouseCursor(true));
@@ -82,7 +91,7 @@ void MoveTempo (COMMAND_T* ct)
 		double cTime; tempoMap.GetPoint(targetId, &cTime, NULL, NULL, NULL);
 		tDiff = cursorPos - cTime;
 	}
-	// Move grid
+	// Find closest grid
 	else if ((int)ct->user == 5 || (int)ct->user == 6)
 	{
 		double cursorPos = PositionAtMouseCursor(false);
@@ -103,7 +112,7 @@ void MoveTempo (COMMAND_T* ct)
 		}
 		tDiff = cursorPos - grid;
 	}
-	// Move selected
+	// Just get time difference for selected points
 	else
 	{
 		if ((int)ct->user == 2 || (int)ct->user == -2)
@@ -207,7 +216,7 @@ void MoveTempo (COMMAND_T* ct)
 
 	// Commit changes
 	PreventUIRefresh(1); // prevent jumpy cursor
-	if ((targetId != -1 && skipped == 0) || (targetId = -1)) // if moving grid line, new point could have been created and then skipped
+	if ((targetId == -1) || (targetId != -1 && skipped == 0)) // if moving grid line, new point could have been created and then skipped
 	{
 		if (tempoMap.Commit())
 		{

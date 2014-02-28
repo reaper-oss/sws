@@ -612,9 +612,11 @@ void BR_Envelope::MoveArrangeToPoint (int id, int referenceId)
 {
 	if (this->ValidateId(id))
 	{
-		double pos = m_points[id].position;
+		double takePosOffset = (m_take) ? (0) : GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION");
+
+		double pos = m_points[id].position + takePosOffset;
 		if (this->ValidateId(referenceId))
-			MoveArrangeToTarget(pos, m_points[referenceId].position);
+			MoveArrangeToTarget(pos, m_points[referenceId].position + takePosOffset);
 		else
 			CenterArrange(pos);
 	}

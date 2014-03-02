@@ -1436,7 +1436,7 @@ void GetMouseCursorContext (const char** window, const char** segment, const cha
 			for (int i = 0; i < 4; ++i)
 			{
 				if (i == 0)      {limitL = limitH; limitH += GetRulerLaneHeight(rulerH, i); returnSegment = "regions"; }
-				else if (i == 1) {limitL = limitH; limitH += GetRulerLaneHeight(rulerH, i); returnSegment = "marker";  }
+				else if (i == 1) {limitL = limitH; limitH += GetRulerLaneHeight(rulerH, i); returnSegment = "markers";  }
 				else if (i == 2) {limitL = limitH; limitH += GetRulerLaneHeight(rulerH, i); returnSegment = "tempo";   }
 				else if (i == 3) {limitL = limitH; limitH += GetRulerLaneHeight(rulerH, i); returnSegment = "timeline";}
 

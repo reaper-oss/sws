@@ -48,11 +48,6 @@ const int ENV_HIT_POINT         = 5;
 const int ENV_HIT_POINT_LEFT    = 6;  // envelope point doesn't have middle pixel so hit point is different for one side
 const int ENV_HIT_POINT_DOWN    = 6;  // +1 because lower part is tracked starting 1 pixel bellow line (so when envelope is active, hit points appear the same)
 
-const int RULER_WIDTH_REGIONS   = 10;
-const int RULER_WIDTH_MARKERS   = 12;
-const int RULER_WIDTH_TEMPO     = 12;
-const int RULER_WIDTH_TIMELINE  = 35;
-
 /******************************************************************************
 * Miscellaneous                                                               *
 ******************************************************************************/
@@ -1366,6 +1361,25 @@ static int IsMouseOverEnvelopeLineTake (MediaItem_Take* take, int takeHeight, in
 	return mouseHit;
 }
 
+static int GetRulerLaneHeight (int rulerH, int lane)
+{
+	/* lane: 0 -> regions  *
+	*        1 -> markers  *
+	*        2 -> tempo    *
+	*        3 -> timeline */
+
+	int markers = Round((double)rulerH/6);
+	int timeline = Round((double)rulerH/2)-2;
+
+	if (lane == 0)
+		return rulerH - markers*2 - timeline;
+	if (lane == 1 || lane == 2)
+		return markers;
+	if (lane == 3)
+		return timeline;
+	return 0;
+}
+
 void GetMouseCursorContext (const char** window, const char** segment, const char** details, BR_MouseContextInfo* info)
 {
 	// Return values:
@@ -1414,19 +1428,22 @@ void GetMouseCursorContext (const char** window, const char** segment, const cha
 		{
 			returnWindow = "ruler";
 			ScreenToClient(ruler, &p);
+			RECT r; GetClientRect(ruler, &r);
 
+			int rulerH = r.bottom-r.top;
 			int limitL = 0;
 			int limitH = 0;
 			for (int i = 0; i < 4; ++i)
 			{
-				if (i == 0)      {limitL = limitH; limitH += RULER_WIDTH_REGIONS;  returnSegment = "regions"; }
-				else if (i == 1) {limitL = limitH; limitH += RULER_WIDTH_MARKERS;  returnSegment = "marker";  }
-				else if (i == 2) {limitL = limitH; limitH += RULER_WIDTH_TEMPO;    returnSegment = "tempo";   }
-				else if (i == 3) {limitL = limitH; limitH += RULER_WIDTH_TIMELINE; returnSegment = "timeline";}
+				if (i == 0)      {limitL = limitH; limitH += GetRulerLaneHeight(rulerH, i); returnSegment = "regions"; }
+				else if (i == 1) {limitL = limitH; limitH += GetRulerLaneHeight(rulerH, i); returnSegment = "marker";  }
+				else if (i == 2) {limitL = limitH; limitH += GetRulerLaneHeight(rulerH, i); returnSegment = "tempo";   }
+				else if (i == 3) {limitL = limitH; limitH += GetRulerLaneHeight(rulerH, i); returnSegment = "timeline";}
 
-				if (p.y >= limitL && p.y <= limitH )
+				if (p.y >= limitL && p.y < limitH )
 					break;
 			}
+
 			returnInfo.position = mousePos;
 			found = true;
 		}

@@ -4,6 +4,8 @@ Thank you Cockos!
 
 Added actions
 +SWS/BR: Preview media item under mouse (versions for pausing project playback during preview)
++SWS/BR: Set envelope point to next/previous point's value
++SWS/BR: Set envelope point to first/last selected point's value
 +SWS/BR: Delete tempo marker while preserving position and length of (selected) items (including MIDI events)
 +SWS/BR: Move closest tempo marker to mouse cursor
 +SWS/BR: Move closest (measure) grid line to mouse cursor (may create tempo marker)

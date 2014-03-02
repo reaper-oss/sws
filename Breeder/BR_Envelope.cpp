@@ -410,6 +410,42 @@ void SelEnvTimeSel (COMMAND_T* ct)
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 }
 
+void SetEnvValToNextPrev (COMMAND_T* ct)
+{
+	BR_Envelope envelope(GetSelectedTrackEnvelope(NULL));
+	if (!envelope.CountSelected())
+		return;
+
+	// Next/previous point
+	if (abs((int)ct->user) == 1)
+	{
+		for (int i = 0; i < envelope.CountConseq(); ++i)
+		{
+			int start, end;	envelope.GetConseq(i, &start, &end);
+			int referenceId = ((int)ct->user > 0) ? (end+1) : (start-1);
+
+			double newVal;
+			if (envelope.GetPoint(referenceId, NULL, &newVal, NULL, NULL))
+			{
+				for (int i = start; i <= end; ++i)
+					envelope.SetPoint(i, NULL, &newVal, NULL, NULL);
+			}
+		}
+	}
+	// First/last selected point
+	else
+	{
+		int referenceId = ((int)ct->user > 0) ? (envelope.GetSelected(envelope.CountSelected()-1)) : (envelope.GetSelected(0));
+		double newVal; envelope.GetPoint(referenceId, NULL, &newVal, NULL, NULL);
+
+		for (int i = 0; i < envelope.CountSelected(); ++i)
+			envelope.SetPoint(envelope.GetSelected(i), NULL, &newVal, NULL, NULL);
+	}
+
+	if (envelope.Commit())
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+}
+
 void ShowActiveEnvOnly (COMMAND_T* ct)
 {
 	TrackEnvelope* env = GetSelectedTrackEnvelope(NULL);

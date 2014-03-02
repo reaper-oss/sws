@@ -103,7 +103,6 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Toggle preview media item under mouse through track and pause during preview" },                                      "BR_TPREV_ITEM_PAUSE_CURSOR_TRACK",      PreviewItemAtMouse, NULL, 2312},
 	{ { DEFACCEL, "SWS/BR: Toggle preview media item under mouse through track and pause during preview (start from cursor position)" },         "BR_TPREV_ITEM_PAUSE_CURSOR_TRACK_POS",  PreviewItemAtMouse, NULL, 2322},
 
-
 	/******************************************************************************
 	* Envelopes                                                                   *
 	******************************************************************************/
@@ -136,6 +135,11 @@ static COMMAND_T g_commandTable[] =
 
 	{ { DEFACCEL, "SWS/BR: Unselect envelope points outside time selection" },                  "BR_ENV_UNSEL_OUT_TIME_SEL",      SelEnvTimeSel, NULL, -1},
 	{ { DEFACCEL, "SWS/BR: Unselect envelope points in time selection" },                       "BR_ENV_UNSEL_IN_TIME_SEL",       SelEnvTimeSel, NULL, 1},
+
+	{ { DEFACCEL, "SWS/BR: Set envelope point to next point's value" },                         "BR_SET_ENV_TO_NEXT_VAL",         SetEnvValToNextPrev, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Set envelope point to previous point's value" },                     "BR_SET_ENV_TO_PREV_VAL",         SetEnvValToNextPrev, NULL, -1},
+	{ { DEFACCEL, "SWS/BR: Set envelope point to last selected point's value" },                "BR_SET_ENV_TO_LAST_SEL_VAL",     SetEnvValToNextPrev, NULL, 2},
+	{ { DEFACCEL, "SWS/BR: Set envelope point to first selected point's value" },               "BR_SET_ENV_TO_FIRST_SEL_VAL",    SetEnvValToNextPrev, NULL, -2},
 
 	{ { DEFACCEL, "SWS/BR: Hide all but active envelope for all tracks" },                      "BR_ENV_HIDE_ALL_BUT_ACTIVE",     ShowActiveEnvOnly, NULL, 0},
 	{ { DEFACCEL, "SWS/BR: Hide all but active envelope for selected tracks" },                 "BR_ENV_HIDE_ALL_BUT_ACTIVE_SEL", ShowActiveEnvOnly, NULL, 1},

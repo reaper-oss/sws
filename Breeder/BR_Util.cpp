@@ -45,7 +45,7 @@ const int TAKE_MIN_HEIGHT_HIGH  = 12; // min height when take count <= TAKE_MIN_
 const int TAKE_MIN_HEIGHT_LOW   = 6;  // min height when take count >  TAKE_MIN_HEIGHT_COUNT
 
 const int ENV_HIT_POINT         = 5;
-const int ENV_HIT_POINT_LEFT    = 6;  // envelope point doesn't have middle pixel so hit point is different for one side
+const int ENV_HIT_POINT_LEFT    = 6;  // envelope point doesn't always have middle pixel so hit point is different for one side
 const int ENV_HIT_POINT_DOWN    = 6;  // +1 because lower part is tracked starting 1 pixel bellow line (so when envelope is active, hit points appear the same)
 
 /******************************************************************************
@@ -1170,7 +1170,7 @@ bool IsOffScreen (double position)
 /******************************************************************************
 * Mouse cursor                                                                *
 ******************************************************************************/
-static int IsMouseOverEnvelopeLine (BR_Envelope& envelope, int drawableEnvHeight, int yOffset, int mouseY, int mouseX, double mousePos, double arrangeStart, double arrangeEnd, double arrangeZoom)
+static int IsMouseOverEnvelopeLine (BR_Envelope& envelope, int drawableEnvHeight, int yOffset, int mouseY, int mouseX, double mousePos, double arrangeStart, double arrangeZoom)
 {
 	/* mouseX is displayed X, not taking scrollbars into account. mouseY on the  *
 	*  other hand has to take scrollbar position into account                    *
@@ -1182,17 +1182,23 @@ static int IsMouseOverEnvelopeLine (BR_Envelope& envelope, int drawableEnvHeight
 	// Check if mouse is in drawable part of envelope lane where line resides
 	if (mouseY >= yOffset && mouseY < yOffset + drawableEnvHeight)
 	{
+		double mousePosLeft = mousePos - 1/arrangeZoom * ENV_HIT_POINT*2;
+		double mousePosRight = mousePos + 1/arrangeZoom * ENV_HIT_POINT*2;
 		double takePosOffset = (!envelope.IsTakeEnvelope()) ? (0) : GetMediaItemInfo_Value(GetMediaItemTake_Item(envelope.GetTake()), "D_POSITION");
+
 		int prevId = envelope.FindPrevious(mousePos - takePosOffset);
 		int nextId = prevId + 1;
+
 		int tempoHit = (envelope.IsTempo()) ? (ENV_HIT_POINT) : (0); // for some reason, tempo points have double up/down hit area
 		bool found = false;
 
 		// Check surrounding points first - they take priority over segment
 		if (!found)
 		{
+			// Check all the points around mouse cursor position
+			// gotcha: since point can be partially visible even when it's position is not within arrange start/end we don't check if within bounds
 			double prevPos;
-			if (envelope.GetPoint(prevId, &prevPos, NULL, NULL, NULL) && prevPos >= arrangeStart && prevPos <= arrangeEnd)
+			while (envelope.GetPoint(prevId, &prevPos, NULL, NULL, NULL) && CheckBounds(prevPos, mousePosLeft, mousePosRight))
 			{
 				prevPos += takePosOffset;
 				int x = Round(arrangeZoom * (prevPos - arrangeStart));
@@ -1201,13 +1207,15 @@ static int IsMouseOverEnvelopeLine (BR_Envelope& envelope, int drawableEnvHeight
 				{
 					mouseHit = 1;
 					found = true;
+					break;
 				}
+				--prevId;
 			}
 		}
 		if (!found)
 		{
 			double nextPos;
-			if (envelope.GetPoint(nextId, &nextPos, NULL, NULL, NULL) && nextPos >= arrangeStart && nextPos <= arrangeEnd)
+			while (envelope.GetPoint(nextId, &nextPos, NULL, NULL, NULL) && CheckBounds(nextPos, mousePosLeft, mousePosRight))
 			{
 				nextPos += takePosOffset;
 				int x = Round(arrangeZoom * (nextPos - arrangeStart));
@@ -1216,7 +1224,9 @@ static int IsMouseOverEnvelopeLine (BR_Envelope& envelope, int drawableEnvHeight
 				{
 					mouseHit = 1;
 					found = true;
+					break;
 				}
+				++nextId;
 			}
 		}
 
@@ -1235,7 +1245,7 @@ static int IsMouseOverEnvelopeLine (BR_Envelope& envelope, int drawableEnvHeight
 	return mouseHit;
 }
 
-static int IsMouseOverEnvelopeLineTrackLane (MediaTrack* track, int trackHeight, int trackOffset, list<TrackEnvelope*>& laneEnvs, int mouseY, int mouseX, double mousePos, double arrangeStart, double arrangeEnd, double arrangeZoom, TrackEnvelope** trackEnvelope)
+static int IsMouseOverEnvelopeLineTrackLane (MediaTrack* track, int trackHeight, int trackOffset, list<TrackEnvelope*>& laneEnvs, int mouseY, int mouseX, double mousePos, double arrangeStart, double arrangeZoom, TrackEnvelope** trackEnvelope)
 {
 	/* laneEnv list should hold all track envelopes that have their own lane so *
 	*  we don't have to check for their visibility in track lane (chunks are    *
@@ -1291,7 +1301,7 @@ static int IsMouseOverEnvelopeLineTrackLane (MediaTrack* track, int trackHeight,
 						int envOffset = trackOffset + trackGapTop + i*envLaneH + ENV_GAP;
 						BR_Envelope envelope(trackLaneEnvs[i]);
 
-						mouseHit = IsMouseOverEnvelopeLine(envelope, envHeight, envOffset, mouseY, mouseX, mousePos, arrangeStart, arrangeEnd, arrangeZoom);
+						mouseHit = IsMouseOverEnvelopeLine(envelope, envHeight, envOffset, mouseY, mouseX, mousePos, arrangeStart, arrangeZoom);
 						if (mouseHit != 0)
 							envelopeUnderMouse = envelope.GetPointer();
 						break;
@@ -1309,7 +1319,7 @@ static int IsMouseOverEnvelopeLineTrackLane (MediaTrack* track, int trackHeight,
 					int envOffset = trackOffset + trackGapTop + ENV_GAP;
 					BR_Envelope envelope(trackLaneEnvs[i]);
 
-					mouseHit = IsMouseOverEnvelopeLine(envelope, envHeight, envOffset, mouseY, mouseX, mousePos, arrangeStart, arrangeEnd, arrangeZoom);
+					mouseHit = IsMouseOverEnvelopeLine(envelope, envHeight, envOffset, mouseY, mouseX, mousePos, arrangeStart, arrangeZoom);
 					if (mouseHit != 0)
 					{
 						envelopeUnderMouse = envelope.GetPointer();
@@ -1324,7 +1334,7 @@ static int IsMouseOverEnvelopeLineTrackLane (MediaTrack* track, int trackHeight,
 	return mouseHit;
 }
 
-static int IsMouseOverEnvelopeLineTake (MediaItem_Take* take, int takeHeight, int takeOffset, int mouseY, int mouseX, double mousePos, double arrangeStart, double arrangeEnd, double arrangeZoom, TrackEnvelope** trackEnvelope)
+static int IsMouseOverEnvelopeLineTake (MediaItem_Take* take, int takeHeight, int takeOffset, int mouseY, int mouseX, double mousePos, double arrangeStart, double arrangeZoom, TrackEnvelope** trackEnvelope)
 {
 	/* MouseX is displayed X, not taking  scrollbars into account. MouseY on the *
 	*  other hand has to take scrollbar position into account                    *
@@ -1348,7 +1358,7 @@ static int IsMouseOverEnvelopeLineTake (MediaItem_Take* take, int takeHeight, in
 
 		BR_Envelope envelope (take, type);
 		if (envelope.IsVisible())
-			mouseHit = IsMouseOverEnvelopeLine(envelope, takeHeight, takeOffset, mouseY, mouseX, mousePos, arrangeStart, arrangeEnd, arrangeZoom);
+			mouseHit = IsMouseOverEnvelopeLine(envelope, takeHeight, takeOffset, mouseY, mouseX, mousePos, arrangeStart, arrangeZoom);
 
 		if (mouseHit != 0)
 		{
@@ -1503,7 +1513,7 @@ void GetMouseCursorContext (const char** window, const char** segment, const cha
 				returnSegment = "envelope";
 
 				BR_Envelope envelope(returnInfo.envelope);
-				int trackEnvHit = IsMouseOverEnvelopeLine(envelope, height-2*ENV_GAP, offset+ENV_GAP, mouseY, mouseX, mousePos, arrangeStart, arrangeEnd, arrangeZoom);
+				int trackEnvHit = IsMouseOverEnvelopeLine(envelope, height-2*ENV_GAP, offset+ENV_GAP, mouseY, mouseX, mousePos, arrangeStart, arrangeZoom);
 				if (trackEnvHit == 1)
 					returnDetails = "env_point";
 				else if (trackEnvHit == 2)
@@ -1520,14 +1530,14 @@ void GetMouseCursorContext (const char** window, const char** segment, const cha
 				returnSegment = "track";
 
 				// Check envelope lane for track envelope, items and take envelopes
-				int trackEnvHit = IsMouseOverEnvelopeLineTrackLane (returnInfo.track, height, offset, laneEnvs, mouseY, mouseX, mousePos, arrangeStart, arrangeEnd, arrangeZoom, &returnInfo.envelope);
+				int trackEnvHit = IsMouseOverEnvelopeLineTrackLane (returnInfo.track, height, offset, laneEnvs, mouseY, mouseX, mousePos, arrangeStart, arrangeZoom, &returnInfo.envelope);
 				returnInfo.item = GetItemFromY(mouseY, mousePos, &returnInfo.take);
 				int takeEnvHit = 0;
 				if (trackEnvHit == 0 && returnInfo.take)
 				{
 					int takeOffset;
 					int takeHeight = GetTakeHeight(returnInfo.take, NULL, 0, &takeOffset, true, height, offset);
-					takeEnvHit = IsMouseOverEnvelopeLineTake(returnInfo.take, takeHeight, takeOffset, mouseY, mouseX, mousePos, arrangeStart, arrangeEnd, arrangeZoom, &returnInfo.envelope);
+					takeEnvHit = IsMouseOverEnvelopeLineTake(returnInfo.take, takeHeight, takeOffset, mouseY, mouseX, mousePos, arrangeStart, arrangeZoom, &returnInfo.envelope);
 				}
 
 				// Track envelope takes priority

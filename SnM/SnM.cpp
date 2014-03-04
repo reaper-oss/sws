@@ -760,20 +760,30 @@ int RegisterDynamicActions(DYN_COMMAND_T* _cmds, const char* _inifn)
 	while(_cmds[i].desc != LAST_COMMAND)
 	{
 		DYN_COMMAND_T* ct = &_cmds[i++];
+
 		int n = GetPrivateProfileInt("NbOfActions", ct->id, -1, _inifn);
-		if (n<0) { s_newDynActions=true; n=ct->count; }
+		if (n<0) { n=ct->count; s_newDynActions=true; }
 		ct->count = BOUNDED(n, 0, ct->max<=0 ? SNM_MAX_DYN_ACTIONS : ct->max);
+
 		for (int j=0; j<ct->count; j++)
 		{
 			if (_snprintfStrict(actionName, sizeof(actionName), GetLocalizedActionName(ct->desc, LOCALIZE_FLAG_VERIFY_FMTS), j+1) > 0 &&
-				_snprintfStrict(custId, sizeof(custId), "%s%d", ct->id, j+1) > 0 &&
-				SWSCreateRegisterDynamicCmd(0, ct->doCommand, ct->getEnabled, custId, actionName, "", j, __FILE__, false)) // already localized
+				_snprintfStrict(custId, sizeof(custId), "%s%d", ct->id, j+1) > 0)
 			{
+				if (int cmdId = SWSCreateRegisterDynamicCmd(0, ct->doCommand, ct->getEnabled, custId, actionName, "", j, __FILE__, false)) // already localized
+				{
 #ifdef _SNM_DEBUG
-				OutputDebugString("RegisterDynamicActions() - Registered: ");
-				OutputDebugString(actionName);
-				OutputDebugString("\n");
+					OutputDebugString("RegisterDynamicActions() - Registered: ");
+					OutputDebugString(actionName);
+					OutputDebugString("\n");
 #endif
+					// special case: init states of "Exclusive toggle" actions
+					if (!j && strstr(ct->id, "S&M_EXCL_TGL"))
+						if (COMMAND_T* c = SWSGetCommandByID(cmdId)) // not ideal but not worth changing SWSCreateRegisterDynamicCmd()
+							c->fakeToggle = true;
+				}
+				else
+					return 0;
 			}
 			else
 				return 0;
@@ -873,30 +883,57 @@ int GetFakeToggleState(COMMAND_T* _ct) {
 	return (_ct && _ct->fakeToggle);
 }
 
-void ExclusiveToggle(COMMAND_T* _ct, void (*ExclTgl)(COMMAND_T*))
+void ExclusiveToggle(COMMAND_T* _ct)
 {
+/*JFB commented: the proper solution should look like this, but it fails
+   with release builds (!), debug is ok => compiler issue?
+   anyway, replaced with code below: faster but it first 
+   aims at avoiding func pointers which seem the culprit...
+
 	if (_ct && _ct->fakeToggle)
-		for (int i=0; i<SNM_MAX_DYN_ACTIONS; i++)
-			if (int cmd = SWSGetCommandID(ExclTgl, i))
+		for (INT_PTR i=0; i<SNM_MAX_DYN_ACTIONS; i++)
+			if (COMMAND_T* ct = SWSGetCommand(_ct->doCommand, i))
 			{
-				if (cmd != _ct->accel.accel.cmd) 
-					if (COMMAND_T* ct = SWSGetCommandByID(cmd)) {
-						ct->fakeToggle = false;
-						RefreshToolbar(cmd);
-					}
+				if (ct->accel.accel.cmd != _ct->accel.accel.cmd) {
+					ct->fakeToggle = false;
+					RefreshToolbar(ct->accel.accel.cmd);
+				}
 			}
 			else
 				break;
+*/
+	int id = _ct->accel.accel.cmd;
+	int user = (int)_ct->user;
+	while (user>0) { user--; id--; }
+
+	for (int i=0; i<SNM_MAX_DYN_ACTIONS; i++)
+	{
+		if (COMMAND_T* ct = SWSGetCommandByID(id+i)) // relies on "ordered" cmd ids, etc
+		{
+			if ((int)ct->user == i) // ditto, the real loop breaking criteria
+			{
+				if (ct->accel.accel.cmd != _ct->accel.accel.cmd) {
+					ct->fakeToggle = false;
+					RefreshToolbar(ct->accel.accel.cmd);
+				}
+			}
+			else
+				break;
+		}
+		else
+			break;
+	}
 }
 
-void ExclusiveToggleA(COMMAND_T* _ct) { ExclusiveToggle(_ct, ExclusiveToggleA); }
-void ExclusiveToggleB(COMMAND_T* _ct) { ExclusiveToggle(_ct, ExclusiveToggleB); }
-void ExclusiveToggleC(COMMAND_T* _ct) { ExclusiveToggle(_ct, ExclusiveToggleC); }
-void ExclusiveToggleD(COMMAND_T* _ct) { ExclusiveToggle(_ct, ExclusiveToggleD); }
-void ExclusiveToggleE(COMMAND_T* _ct) { ExclusiveToggle(_ct, ExclusiveToggleE); }
-void ExclusiveToggleF(COMMAND_T* _ct) { ExclusiveToggle(_ct, ExclusiveToggleF); }
-void ExclusiveToggleG(COMMAND_T* _ct) { ExclusiveToggle(_ct, ExclusiveToggleG); }
-void ExclusiveToggleH(COMMAND_T* _ct) { ExclusiveToggle(_ct, ExclusiveToggleH); }
+// yeah, looks a bit strange: due to registration system + see above!
+void ExclusiveToggleA(COMMAND_T* _ct) { ExclusiveToggle(_ct); }
+void ExclusiveToggleB(COMMAND_T* _ct) { ExclusiveToggle(_ct); }
+void ExclusiveToggleC(COMMAND_T* _ct) { ExclusiveToggle(_ct); }
+void ExclusiveToggleD(COMMAND_T* _ct) { ExclusiveToggle(_ct); }
+void ExclusiveToggleE(COMMAND_T* _ct) { ExclusiveToggle(_ct); }
+void ExclusiveToggleF(COMMAND_T* _ct) { ExclusiveToggle(_ct); }
+void ExclusiveToggleG(COMMAND_T* _ct) { ExclusiveToggle(_ct); }
+void ExclusiveToggleH(COMMAND_T* _ct) { ExclusiveToggle(_ct); }
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1243,17 +1280,6 @@ int SNM_Init(reaper_plugin_info_t* _rec)
 	{
 		return 0;
 	}
-
-	// init exlusive toggle actions (can be hidden => test action presence first)
-	COMMAND_T* ct;
-	if (ct = SWSGetCommandByID(SWSGetCommandID(ExclusiveToggleA, 0))) ct->fakeToggle = true;
-	if (ct = SWSGetCommandByID(SWSGetCommandID(ExclusiveToggleB, 0))) ct->fakeToggle = true;
-	if (ct = SWSGetCommandByID(SWSGetCommandID(ExclusiveToggleC, 0))) ct->fakeToggle = true;
-	if (ct = SWSGetCommandByID(SWSGetCommandID(ExclusiveToggleD, 0))) ct->fakeToggle = true;
-	if (ct = SWSGetCommandByID(SWSGetCommandID(ExclusiveToggleE, 0))) ct->fakeToggle = true;
-	if (ct = SWSGetCommandByID(SWSGetCommandID(ExclusiveToggleF, 0))) ct->fakeToggle = true;
-	if (ct = SWSGetCommandByID(SWSGetCommandID(ExclusiveToggleG, 0))) ct->fakeToggle = true;
-	if (ct = SWSGetCommandByID(SWSGetCommandID(ExclusiveToggleH, 0))) ct->fakeToggle = true;
 
 	SNM_UIInit();
 	CueBussInit();

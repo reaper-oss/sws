@@ -612,14 +612,8 @@ static COMMAND_T s_cmdTable[] =
 //   and "_DO_STUFF2", repectively.
 ///////////////////////////////////////////////////////////////////////////////
 
-void ExclusiveToggleA(COMMAND_T*);
-void ExclusiveToggleB(COMMAND_T*);
-void ExclusiveToggleC(COMMAND_T*);
-void ExclusiveToggleD(COMMAND_T*);
-void ExclusiveToggleE(COMMAND_T*);
-void ExclusiveToggleF(COMMAND_T*);
-void ExclusiveToggleG(COMMAND_T*);
-void ExclusiveToggleH(COMMAND_T*);
+
+void ExclusiveToggle(COMMAND_T*);
 
 static DYN_COMMAND_T s_dynCmdTable[] =
 {
@@ -727,14 +721,14 @@ static DYN_COMMAND_T s_dynCmdTable[] =
 	{ "SWS/S&M: Go to/select region %02d (obeys smooth seek)", "S&M_GOTO_SEL_REGION", GotoAnsSelectRegion, 4, SNM_MAX_DYN_ACTIONS, NULL},
 
 	{ "SWS/S&M: Dummy toggle %02d", "S&M_DUMMY_TGL", Noop, 8, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
-	{ "SWS/S&M: Exclusive toggle A%02d", "S&M_EXCL_TGL", ExclusiveToggleA, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // not "S&M_EXCL_TGL_A" for historical reasons...
-	{ "SWS/S&M: Exclusive toggle B%02d", "S&M_EXCL_TGL_B", ExclusiveToggleB, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
-	{ "SWS/S&M: Exclusive toggle C%02d", "S&M_EXCL_TGL_C", ExclusiveToggleC, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
-	{ "SWS/S&M: Exclusive toggle D%02d", "S&M_EXCL_TGL_D", ExclusiveToggleD, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
-	{ "SWS/S&M: Exclusive toggle E%02d", "S&M_EXCL_TGL_E", ExclusiveToggleE, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
-	{ "SWS/S&M: Exclusive toggle F%02d", "S&M_EXCL_TGL_F", ExclusiveToggleF, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
-	{ "SWS/S&M: Exclusive toggle G%02d", "S&M_EXCL_TGL_G", ExclusiveToggleG, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
-	{ "SWS/S&M: Exclusive toggle H%02d", "S&M_EXCL_TGL_H", ExclusiveToggleH, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
+	{ "SWS/S&M: Exclusive toggle A%02d", "S&M_EXCL_TGL", ExclusiveToggle, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // not "S&M_EXCL_TGL_A" for historical reasons...
+	{ "SWS/S&M: Exclusive toggle B%02d", "S&M_EXCL_TGL_B", ExclusiveToggle, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
+	{ "SWS/S&M: Exclusive toggle C%02d", "S&M_EXCL_TGL_C", ExclusiveToggle, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
+	{ "SWS/S&M: Exclusive toggle D%02d", "S&M_EXCL_TGL_D", ExclusiveToggle, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
+	{ "SWS/S&M: Exclusive toggle E%02d", "S&M_EXCL_TGL_E", ExclusiveToggle, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
+	{ "SWS/S&M: Exclusive toggle F%02d", "S&M_EXCL_TGL_F", ExclusiveToggle, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
+	{ "SWS/S&M: Exclusive toggle G%02d", "S&M_EXCL_TGL_G", ExclusiveToggle, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
+	{ "SWS/S&M: Exclusive toggle H%02d", "S&M_EXCL_TGL_H", ExclusiveToggle, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
 
 //!WANT_LOCALIZE_1ST_STRING_END
 
@@ -777,7 +771,7 @@ int RegisterDynamicActions(DYN_COMMAND_T* _cmds, const char* _inifn)
 					OutputDebugString(actionName);
 					OutputDebugString("\n");
 #endif
-					// special case: init states of "Exclusive toggle" actions
+					// special case: init states of some "Exclusive toggle" actions
 					if (!j && strstr(ct->id, "S&M_EXCL_TGL"))
 						if (COMMAND_T* c = SWSGetCommandByID(cmdId)) // not ideal but not worth changing SWSCreateRegisterDynamicCmd()
 							c->fakeToggle = true;
@@ -885,10 +879,11 @@ int GetFakeToggleState(COMMAND_T* _ct) {
 
 void ExclusiveToggle(COMMAND_T* _ct)
 {
-/*JFB commented: the proper solution should look like this, but it fails
-   with release builds (!), debug is ok => compiler issue?
-   anyway, replaced with code below: faster but it first 
-   aims at avoiding func pointers which seem the culprit...
+/*JFB commented: the proper solution should look like this + related funcs
+   like ExclusiveToggleA(COMMAND_T*), ExclusiveToggleB, etc but it is
+   broken in release builds, debug ok => compiler/optimizations issue?
+   anyway, replaced with code below: faster but it first aims at avoiding
+   func pointers which seem the culprit...
 
 	if (_ct && _ct->fakeToggle)
 		for (INT_PTR i=0; i<SNM_MAX_DYN_ACTIONS; i++)
@@ -902,15 +897,13 @@ void ExclusiveToggle(COMMAND_T* _ct)
 			else
 				break;
 */
-	int id = _ct->accel.accel.cmd;
-	int user = (int)_ct->user;
-	while (user>0) { user--; id--; }
-
+	//JFB! enough ATM but relies on *ordered* cmds, cmd ids, etc
+	int id = _ct->accel.accel.cmd - (int)_ct->user;
 	for (int i=0; i<SNM_MAX_DYN_ACTIONS; i++)
 	{
-		if (COMMAND_T* ct = SWSGetCommandByID(id+i)) // relies on "ordered" cmd ids, etc
+		if (COMMAND_T* ct = SWSGetCommandByID(id+i))
 		{
-			if ((int)ct->user == i) // ditto, the real loop breaking criteria
+			if ((int)ct->user == i) // real break condition
 			{
 				if (ct->accel.accel.cmd != _ct->accel.accel.cmd) {
 					ct->fakeToggle = false;
@@ -924,16 +917,6 @@ void ExclusiveToggle(COMMAND_T* _ct)
 			break;
 	}
 }
-
-// yeah, looks a bit strange: due to registration system + see above!
-void ExclusiveToggleA(COMMAND_T* _ct) { ExclusiveToggle(_ct); }
-void ExclusiveToggleB(COMMAND_T* _ct) { ExclusiveToggle(_ct); }
-void ExclusiveToggleC(COMMAND_T* _ct) { ExclusiveToggle(_ct); }
-void ExclusiveToggleD(COMMAND_T* _ct) { ExclusiveToggle(_ct); }
-void ExclusiveToggleE(COMMAND_T* _ct) { ExclusiveToggle(_ct); }
-void ExclusiveToggleF(COMMAND_T* _ct) { ExclusiveToggle(_ct); }
-void ExclusiveToggleG(COMMAND_T* _ct) { ExclusiveToggle(_ct); }
-void ExclusiveToggleH(COMMAND_T* _ct) { ExclusiveToggle(_ct); }
 
 
 ///////////////////////////////////////////////////////////////////////////////

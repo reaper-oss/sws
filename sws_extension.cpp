@@ -273,6 +273,8 @@ void ActionsList(COMMAND_T*)
 }
 #endif
 
+//JFB questionnable func: ok most of the time but, for ex., 
+// 2 different cmds can share the same function pointer cmd->doCommand
 int SWSGetCommandID(void (*cmdFunc)(COMMAND_T*), INT_PTR user, const char** pMenuText)
 {
 	for (int i=0; i<g_commands.GetSize(); i++)

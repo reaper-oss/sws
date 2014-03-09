@@ -109,7 +109,13 @@ bool CheckRecursiveCmd(const char* _cmdStr, WDL_PtrList<WDL_FastString>* _parent
 ///////////////////////////////////////////////////////////////////////////////
 
 enum {
-  IDX_STATEMENT_IFNOT=0,	
+  IDX_STATEMENT_IFNOT=0,
+  IDX_STATEMENT_IFAND,			//wol +
+  IDX_STATEMENT_IFNAND,			//wol +
+  IDX_STATEMENT_IFOR,			//wol +
+  IDX_STATEMENT_IFNOR,			//wol +
+  IDX_STATEMENT_IFXOR,			//wol +
+  IDX_STATEMENT_IFXNOR,			//wol +
   IDX_STATEMENT_IF,
   IDX_STATEMENT_ELSE,
   IDX_STATEMENT_ENDIF,
@@ -124,6 +130,12 @@ enum {
 // gotcha2: IDX_STATEMENT_IFNOT must be placed before IDX_STATEMENT_IF as both
 //          start with the same string: things like IsStatement() would fail otherwise
 #define STATEMENT_IFNOT		"IF NOT"
+#define STATEMENT_IFAND		"IF AND"			//wol +
+#define STATEMENT_IFNAND	"IF NAND"			//wol +
+#define STATEMENT_IFOR  	"IF OR"				//wol +
+#define STATEMENT_IFNOR		"IF NOR"			//wol +
+#define STATEMENT_IFXOR		"IF XOR"			//wol +
+#define STATEMENT_IFXNOR	"IF XNOR"			//wol +
 #define STATEMENT_IF		"IF"
 #define STATEMENT_ELSE		"ELSE"
 #define STATEMENT_ENDIF		"ENDIF"
@@ -132,10 +144,10 @@ enum {
 #define STATEMENT_CONSOLE	"CONSOLE"
 #define STATEMENT_LABEL		"LABEL"
 
-const char g_statements[][16] = { STATEMENT_IFNOT, STATEMENT_IF, STATEMENT_ELSE, STATEMENT_ENDIF, STATEMENT_LOOP, STATEMENT_ENDLOOP, STATEMENT_CONSOLE, STATEMENT_LABEL };
+const char g_statements[][16] = { STATEMENT_IFNOT, STATEMENT_IFAND, STATEMENT_IFNAND, STATEMENT_IFOR, STATEMENT_IFNOR, STATEMENT_IFXOR, STATEMENT_IFXNOR, STATEMENT_IF, STATEMENT_ELSE, STATEMENT_ENDIF, STATEMENT_LOOP, STATEMENT_ENDLOOP, STATEMENT_CONSOLE, STATEMENT_LABEL };			//wol m
 
 //!WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_161
-const char g_statementInfos[][64] = { "If not --->", "If --->", "<--- else --->", "<---", "Loop --->", "<---", "ReaConsole command", "Label Processor command" };
+const char g_statementInfos[][64] = { "If not --->", "If and --->", "If nand --->", "If or --->", "If nor --->", "If xor --->", "If xnor --->", "If --->", "<--- else --->", "<---", "Loop --->", "<---", "ReaConsole command", "Label Processor command" };			//wol m
 //!WANT_LOCALIZE_STRINGS_END
 
 
@@ -492,14 +504,75 @@ void RunCycleAction(int _section, COMMAND_T* _ct)
 			for (int i=0; i<subCmds.GetSize(); i++)
 			{
 				const char* cmdStr = subCmds.Get(i) ? subCmds.Get(i)->Get() : "";
-				if (!_stricmp(STATEMENT_IF, cmdStr) || !_stricmp(STATEMENT_IFNOT, cmdStr))
+				if (!_stricmp(STATEMENT_IF, cmdStr) || !_stricmp(STATEMENT_IFNOT, cmdStr) || !_stricmp(STATEMENT_IFAND, cmdStr)
+					 || !_stricmp(STATEMENT_IFNAND, cmdStr) || !_stricmp(STATEMENT_IFOR, cmdStr) || !_stricmp(STATEMENT_IFNOR, cmdStr)
+					 || !_stricmp(STATEMENT_IFXOR, cmdStr) || !_stricmp(STATEMENT_IFXNOR, cmdStr))			//wol m
 				{
-					if ((i+1)<subCmds.GetSize())
+					if ((i+ (!_stricmp(STATEMENT_IF, cmdStr) || !_stricmp(STATEMENT_IFNOT, cmdStr) ? 1 : 2))<subCmds.GetSize())			//wol m
 					{
-						bool isIF = (_stricmp(STATEMENT_IFNOT, cmdStr) != 0);
-						cmdStr = subCmds.Get(++i) ? subCmds.Get(i)->Get() : ""; //++i ! => zap next command
+						bool isIF = (_stricmp(STATEMENT_IFNOT, cmdStr) != 0) && (_stricmp(STATEMENT_IFNAND, cmdStr) != 0) 
+										&& (_stricmp(STATEMENT_IFNOR, cmdStr) != 0) && (_stricmp(STATEMENT_IFXNOR, cmdStr) != 0);			//wol m
 
+						bool TwoConditions = !((_stricmp(STATEMENT_IF, cmdStr) == 0) || (_stricmp(STATEMENT_IFNOT, cmdStr) == 0));			//wol +
+						const char* cmdStrIF = cmdStr;			//wol +
+
+						/*ShowConsoleMsg(cmdStr);
+						ShowConsoleMsg(" detected.\n");
+						ShowConsoleMsg("isIF: ");
+						ShowConsoleMsg(isIF ? "true" : "false");
+						ShowConsoleMsg(" so it is a ");
+						if (isIF) {
+							ShowConsoleMsg("IF-AND-OR-XOR.\n");
+						} else {
+							ShowConsoleMsg("IFNOT-NAND-NOR-XNOR.\n");
+						}
+						ShowConsoleMsg("It ");
+						if (TwoConditions) {
+							ShowConsoleMsg("is");
+						} else {
+							ShowConsoleMsg("isn't");
+						}
+						ShowConsoleMsg(" a two condition statement.\n");*/
+
+						cmdStr = subCmds.Get(++i) ? subCmds.Get(i)->Get() : ""; //++i ! => zap next command
 						int tgl = GetToggleCommandState2(kbdSec, SNM_NamedCommandLookup(cmdStr, kbdSec));
+
+						/*char dbg[128];
+						ShowConsoleMsg("RunCycleAction: toggle state of ");
+						ShowConsoleMsg(cmdStr);
+						ShowConsoleMsg(", section ");
+						ShowConsoleMsg(kbdSec->name);
+						_snprintfSafe(dbg, sizeof(dbg), " = %d\n", tgl);
+						ShowConsoleMsg(dbg);*/
+
+						if (TwoConditions)																		//wol +
+						{
+							cmdStr = subCmds.Get(++i) ? subCmds.Get(i)->Get() : "";
+							int tgl2 = GetToggleCommandState2(kbdSec, SNM_NamedCommandLookup(cmdStr, kbdSec));
+							if (!_stricmp(STATEMENT_IFAND, cmdStrIF) || !_stricmp(STATEMENT_IFNAND, cmdStrIF))
+							{
+								tgl = ((tgl == tgl2) && (tgl == 1) ? 1 : 0);
+							}
+							else if (!_stricmp(STATEMENT_IFOR, cmdStrIF) || !_stricmp(STATEMENT_IFNOR, cmdStrIF))
+							{
+								tgl = ((tgl == tgl2) && (tgl == 0) ? 0 : 1);
+							}
+							else //if (!_stricmp(STATEMENT_IFXOR, cmdStrIF) || !_stricmp(STATEMENT_IFXNOR, cmdStrIF))
+							{
+								tgl = (tgl != tgl2 ? 1 : 0);
+							}
+							/*char dbg[128];
+							ShowConsoleMsg("RunCycleAction: toggle state of ");
+							ShowConsoleMsg(cmdStr);
+							ShowConsoleMsg(", section ");
+							ShowConsoleMsg(kbdSec->name);
+							_snprintfSafe(dbg, sizeof(dbg), " = %d\n", tgl2);
+							ShowConsoleMsg(dbg);
+							ShowConsoleMsg("Total toggle state: ");
+							_snprintfSafe(dbg, sizeof(dbg), " = %d\n", tgl);
+							ShowConsoleMsg(dbg);*/
+						}																						
+
 #ifdef _SNM_DEBUG
 						char dbg[128];
 						OutputDebugString("RunCycleAction: toggle state of ");
@@ -747,16 +820,17 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a,
 						return AppendErrMsg(_section, _a, _applyMsg, str.Get());
 					}
 				}
-				else if (!_stricmp(STATEMENT_IFNOT, cmd) || !_stricmp(STATEMENT_IF, cmd))
+				else if (!_stricmp(STATEMENT_IFNOT, cmd) || !_stricmp(STATEMENT_IF, cmd) || !_stricmp(STATEMENT_IFAND, cmd) || !_stricmp(STATEMENT_IFNAND, cmd) || !_stricmp(STATEMENT_IFOR, cmd) || !_stricmp(STATEMENT_IFNOR, cmd) || !_stricmp(STATEMENT_IFXOR, cmd) || !_stricmp(STATEMENT_IFXNOR, cmd))			//wol m
 				{
 					statements++;
 #ifdef _SNM_REAPER_BUG // GetToggleCommandState2() KO in other sections than the main one (REAPER v4.402)
 					if (_section) {
-						str.SetFormatted(256, __LOCALIZE_VERFMT("%s (or %s) is only supported in the section '%s'","sws_DLG_161"), STATEMENT_IF, STATEMENT_IFNOT, SNM_GetActionSectionName(0));
+						str.SetFormatted(256, __LOCALIZE_VERFMT("Conditional statements are only supported in the section '%s'","sws_DLG_161"), SNM_GetActionSectionName(0));			//wol m
 						return AppendErrMsg(_section, _a, _applyMsg, str.Get());
 					}
 #endif
 					bool tglOk = false;
+					bool tglOk2 = false;			//wol +
 					const char* nextCmd = "";
 					if ((i+1)<cmdSz)
 					{
@@ -781,11 +855,50 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a,
 								tglOk = true;
 #endif
 						}
+						if ((i+2)<cmdSz && !(!_stricmp(STATEMENT_IFNOT, cmd) || !_stricmp(STATEMENT_IF, cmd)))			//wol + (until line 881)
+						{
+							nextCmd = _a->GetCmd(i+2);
+							if (strstr(nextCmd, "_CYCLACTION"))
+							{
+								if (Cyclaction* nextAction = GetCAFromCustomId(_section, nextCmd))
+									tglOk2 = (nextAction->IsToggle() >= 0);
+							}
+							else if (IsMacroOrScript(nextCmd, false) || strstr(nextCmd, "_SWSCONSOLE_CUST"))
+							{
+								// script, macros & console cmds do not report any toggle state
+							}
+							else
+							{
+								if (!_section)
+									tglOk2 = (GetToggleCommandState2(kbdSec, SNM_NamedCommandLookup(nextCmd, kbdSec)) >= 0);
+#ifndef _SNM_REAPER_BUG		// see #ifdef above..
+							// for other sections the toggle state can depend on focus, etc..
+							// => in doubt, we authorize it
+								else
+									tglOk2 = true;
+#endif
+							}
+						}
 					}
 
-					if (!tglOk)
+					if (!tglOk && (!_stricmp(STATEMENT_IFNOT, cmd) || !_stricmp(STATEMENT_IF, cmd)))			//wol m
 					{
 						str.SetFormatted(256, __LOCALIZE_VERFMT("%s (or %s) must be followed by an action that reports a toggle state\nTip: such actions report \"on\" or \"off\" in the column \"State\" of the Actions window","sws_DLG_161"), STATEMENT_IF, STATEMENT_IFNOT);
+						return AppendErrMsg(_section, _a, _applyMsg, str.Get());
+					}
+					else if (!tglOk && tglOk2)			//wol + (until line 903)
+					{
+						str.SetFormatted(256, __LOCALIZE_VERFMT("%s, %s, %s, %s, %s, %s must be followed by TWO actions \nthat report a toggle state, the first is not reporting a toggle state.\nTip: such actions report \"on\" or \"off\" in the column \"State\" of the Actions window","sws_DLG_161"), STATEMENT_IFAND, STATEMENT_IFNAND, STATEMENT_IFOR, STATEMENT_IFNOR, STATEMENT_IFXOR, STATEMENT_IFXNOR);
+						return AppendErrMsg(_section, _a, _applyMsg, str.Get());
+					}
+					else if (tglOk && !tglOk2 && !(!_stricmp(STATEMENT_IFNOT, cmd) || !_stricmp(STATEMENT_IF, cmd)))
+					{
+						str.SetFormatted(256, __LOCALIZE_VERFMT("%s, %s, %s, %s, %s, %s must be followed by TWO actions \nthat report a toggle state, the second is not reporting a toggle state.\nTip: such actions report \"on\" or \"off\" in the column \"State\" of the Actions window","sws_DLG_161"), STATEMENT_IFAND, STATEMENT_IFNAND, STATEMENT_IFOR, STATEMENT_IFNOR, STATEMENT_IFXOR, STATEMENT_IFXNOR);
+						return AppendErrMsg(_section, _a, _applyMsg, str.Get());
+					}
+					else if (!tglOk && !tglOk2)
+					{
+						str.SetFormatted(256, __LOCALIZE_VERFMT("%s, %s, %s, %s, %s, %s must be followed by TWO actions \nthat report a toggle state.\nTip: such actions report \"on\" or \"off\" in the column \"State\" of the Actions window","sws_DLG_161"), STATEMENT_IFAND, STATEMENT_IFNAND, STATEMENT_IFOR, STATEMENT_IFNOR, STATEMENT_IFXOR, STATEMENT_IFXNOR);
 						return AppendErrMsg(_section, _a, _applyMsg, str.Get());
 					}
 
@@ -797,8 +910,8 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a,
 							str.SetFormatted(256, __LOCALIZE_VERFMT("missing %s","sws_DLG_161"), STATEMENT_ENDIF);
 							return AppendErrMsg(_section, _a, _applyMsg, str.Get());
 						}
-						else if (!_stricmp(STATEMENT_IF, _a->GetCmd(j)) || !_stricmp(STATEMENT_IFNOT, _a->GetCmd(j))) {
-							str.SetFormatted(256, __LOCALIZE_VERFMT("nested %s or %s","sws_DLG_161"), STATEMENT_IF, STATEMENT_IFNOT);
+						else if (!_stricmp(STATEMENT_IF, _a->GetCmd(j)) || !_stricmp(STATEMENT_IFNOT, _a->GetCmd(j)) || !_stricmp(STATEMENT_IFAND, _a->GetCmd(j)) || !_stricmp(STATEMENT_IFNAND, _a->GetCmd(j)) || !_stricmp(STATEMENT_IFOR, _a->GetCmd(j)) || !_stricmp(STATEMENT_IFNOR, _a->GetCmd(j)) || !_stricmp(STATEMENT_IFXOR, _a->GetCmd(j)) || !_stricmp(STATEMENT_IFXNOR, _a->GetCmd(j))) {			//wol m
+							str.SetFormatted(256, __LOCALIZE_VERFMT("nested %s or %s or %s or %s or %s or %s or %s or %s","sws_DLG_161"), STATEMENT_IF, STATEMENT_IFNOT, STATEMENT_IFAND, STATEMENT_IFNAND, STATEMENT_IFOR, STATEMENT_IFNOR, STATEMENT_IFXOR, STATEMENT_IFXNOR);			//wol m
 							return AppendErrMsg(_section, _a, _applyMsg, str.Get());
 						}
 					}
@@ -810,13 +923,13 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a,
 					bool foundCond = false;
 					for (int j=i-1; !foundCond && j>=0; j--)
 					{
-						if (!_stricmp(STATEMENT_IFNOT, _a->GetCmd(j)) || !_stricmp(STATEMENT_IF, _a->GetCmd(j)))
+						if (!_stricmp(STATEMENT_IFNOT, _a->GetCmd(j)) || !_stricmp(STATEMENT_IF, _a->GetCmd(j)) || !_stricmp(STATEMENT_IFAND, _a->GetCmd(j)) || !_stricmp(STATEMENT_IFNAND, _a->GetCmd(j)) || !_stricmp(STATEMENT_IFOR, _a->GetCmd(j)) || !_stricmp(STATEMENT_IFNOR, _a->GetCmd(j)) || !_stricmp(STATEMENT_IFXOR, _a->GetCmd(j)) || !_stricmp(STATEMENT_IFXNOR, _a->GetCmd(j)))			//wol m
 							foundCond = true;
 						else if (!_stricmp(STATEMENT_ENDIF, _a->GetCmd(j)))
 							break;
 					}
 					if (!foundCond) {
-						str.SetFormatted(256, __LOCALIZE_VERFMT("%s without %s (or %s)","sws_DLG_161"), STATEMENT_ELSE, STATEMENT_IF, STATEMENT_IFNOT);
+						str.SetFormatted(256, __LOCALIZE_VERFMT("%s without %s or %s or %s or %s or %s or %s or %s or %s","sws_DLG_161"), STATEMENT_ELSE, STATEMENT_IF, STATEMENT_IFNOT, STATEMENT_IFAND, STATEMENT_IFNAND, STATEMENT_IFOR, STATEMENT_IFNOR, STATEMENT_IFXOR, STATEMENT_IFXNOR);			//wol m
 						return AppendErrMsg(_section, _a, _applyMsg, str.Get());
 					}
 
@@ -2223,7 +2336,7 @@ void CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 					cmd.Append(" ");
 
 				// auto-add ENLOOP or ENDIF if needed
-				if (!_stricmp(STATEMENT_IFNOT, g_statements[id]) || !_stricmp(STATEMENT_IF, g_statements[id]))
+				if (!_stricmp(STATEMENT_IFNOT, g_statements[id]) || !_stricmp(STATEMENT_IF, g_statements[id]) || !_stricmp(STATEMENT_IFAND, g_statements[id]) || !_stricmp(STATEMENT_IFNAND, g_statements[id]) || !_stricmp(STATEMENT_IFOR, g_statements[id]) || !_stricmp(STATEMENT_IFNOR, g_statements[id]) || !_stricmp(STATEMENT_IFXOR, g_statements[id]) || !_stricmp(STATEMENT_IFXNOR, g_statements[id]))			//wol m
 					AddOrInsertCommand(STATEMENT_ENDIF, 1);
 				else if (!_stricmp(STATEMENT_LOOP, g_statements[id]))
 					AddOrInsertCommand(STATEMENT_ENDLOOP, 1);

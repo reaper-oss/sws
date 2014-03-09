@@ -19,6 +19,7 @@ Added actions
  "Exclusive toggle" means only one toggle action is ON at a time. For ex: in the set of toggles "A", if "Exclusive toggle A03" is ON, A01 A02 and A04 are OFF.
  These actions come in handy with Cycle Actions for example, see details and use-cases http://forum.cockos.com/showpost.php?p=1315222&postcount=1652|here| (thanks Reno.thestraws!)
  "Split tool" example: a single keyboard shortcut 'S' that either splits at edit cursor or at time selection depending on a toolbar button's state
++Cycle actions: IFAND, IFNAND, IFOR, IFNOR, IFXOR, IFXNOR statements added
 
 ReaConsole
 +Issue 588: added option in the context menu to invert ENTER and  CRTL+ENTER (CMD+ENTER on OS X) key shortcuts:

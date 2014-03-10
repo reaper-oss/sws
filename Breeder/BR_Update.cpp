@@ -232,7 +232,7 @@ static WDL_DLGRET DialogProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 /******************************************************************************
 * Startup functionality                                                       *
 ******************************************************************************/
-void StartupSearch ()
+static void StartupSearch ()
 {
 	static BR_SearchObject* searchObject = new (nothrow) BR_SearchObject(true);
 
@@ -344,17 +344,6 @@ int BR_SearchObject::GetStatus (BR_Version* official, BR_Version* beta)
 double BR_SearchObject::GetProgress ()
 {
 	return m_progress;
-}
-
-bool BR_SearchObject::GetKillFlag ()
-{
-	SWS_SectionLock lock(&m_mutex);
-	return m_killFlag;
-}
-
-bool BR_SearchObject::IsStartup ()
-{
-	return m_startup;
 }
 
 void BR_SearchObject::RestartSearch ()
@@ -515,10 +504,28 @@ void BR_SearchObject::SetProgress (double progress)
 	m_progress = progress;
 }
 
+bool BR_SearchObject::GetKillFlag ()
+{
+	SWS_SectionLock lock(&m_mutex);
+	return m_killFlag;
+}
+
 void BR_SearchObject::SetKillFlag (bool killFlag)
 {
 	SWS_SectionLock lock(&m_mutex);
 	m_killFlag = killFlag;
+}
+
+HANDLE BR_SearchObject::GetProcess ()
+{
+	SWS_SectionLock lock(&m_mutex);
+	return m_hProcess;
+}
+
+void BR_SearchObject::SetProcess (HANDLE process)
+{
+	SWS_SectionLock lock(&m_mutex);
+	m_hProcess = process;
 }
 
 void BR_SearchObject::EndSearch ()
@@ -534,16 +541,9 @@ void BR_SearchObject::EndSearch ()
 	}
 }
 
-void BR_SearchObject::SetProcess (HANDLE process)
+bool BR_SearchObject::IsStartup ()
 {
-	SWS_SectionLock lock(&m_mutex);
-	m_hProcess = process;
-}
-
-HANDLE BR_SearchObject::GetProcess ()
-{
-	SWS_SectionLock lock(&m_mutex);
-	return m_hProcess;
+	return m_startup;
 }
 
 int BR_SearchObject::CompareVersion (BR_Version one, BR_Version two)

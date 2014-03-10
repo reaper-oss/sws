@@ -43,6 +43,7 @@ const int VERT_SCROLL_W = 17;
 bool IsFraction (char* str, double& convertedFraction);
 double AltAtof (char* str);
 void ReplaceAll (string& str, string oldStr, string newStr);
+void AppendLine (WDL_FastString& str, const char* line);
 int Round (double val);
 int GetBit (int val, int pos);
 int SetBit (int val, int pos);
@@ -51,6 +52,7 @@ int ClearBit (int val, int pos);
 int GetFirstDigit (int val);
 int GetLastDigit (int val);
 vector<int> GetDigits(int val);
+WDL_FastString GetSourceChunk(PCM_source* source);
 template <typename T> void WritePtr (T* ptr, T val)  {if (ptr)*ptr = val;}
 template <typename T> void ReadPtr  (T* ptr, T& val) {if (ptr) val = *ptr;}
 template <typename T> bool CheckBounds (T val, T min, T max) {if (val < min) return false; if (val > max) return false; return true;}
@@ -66,6 +68,9 @@ double GetClosestMeasureGrid (double position);
 double EndOfProject (bool markers, bool regions);
 double GetProjectSettingsTempo (int* num, int* den);
 bool TcpVis (MediaTrack* track);
+bool IsMidi (MediaItem_Take* take);
+bool GetMediaSourceProperties (MediaItem_Take* take, bool* section, double* start, double* length, double* fade, bool* reverse);
+bool SetMediaSourceProperties (MediaItem_Take* take, bool section, double start, double length, double fade, bool reverse);
 template <typename T> void GetConfig (const char* key, T& val) {val = *static_cast<T*>(GetConfigVar(key));}
 template <typename T> void SetConfig (const char* key, T  val) {*static_cast<T*>(GetConfigVar(key)) = val;}
 

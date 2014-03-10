@@ -924,15 +924,9 @@ void BR_Envelope::ParseState (char* envState, size_t size)
 		else
 		{
 			if (!start)
-			{
-				m_chunkStart.Append(token);
-				m_chunkStart.Append("\n");
-			}
+				AppendLine(m_chunkStart, token);
 			else
-			{
-				m_chunkEnd.Append(token);
-				m_chunkEnd.Append("\n");
-			}
+				AppendLine(m_chunkEnd, token);
 		}
 		token = strtok(NULL, "\n");
 	}

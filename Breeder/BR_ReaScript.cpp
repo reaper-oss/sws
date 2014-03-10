@@ -37,6 +37,11 @@ static BR_MouseContextInfo g_mouseInfo;
 /******************************************************************************
 * ReaScript export                                                            *
 ******************************************************************************/
+bool BR_GetMediaSourceProperties (MediaItem_Take* take, bool* section, double* start, double* length, double* fade, bool* reverse)
+{
+	return GetMediaSourceProperties(take, section, start, length, fade, reverse);
+}
+
 void BR_GetMouseCursorContext (char* window, char* segment, char* details, int char_sz)
 {
 	const char* _window;
@@ -83,6 +88,11 @@ MediaItem* BR_ItemAtMouseCursor (double* position)
 double BR_PositionAtMouseCursor (bool checkRuler)
 {
 	return PositionAtMouseCursor(checkRuler);
+}
+
+bool BR_SetMediaSourceProperties (MediaItem_Take* take, bool section, double start, double length, double fade, bool reverse)
+{
+	return SetMediaSourceProperties(take, section, start, length, fade, reverse);
 }
 
 bool BR_SetTakeSourceFromFile (MediaItem_Take* take, const char* filename, bool inProjectData)

@@ -128,7 +128,7 @@ BR_EnvSel::BR_EnvSel (int slot, ProjectStateContext* ctx)
 	LineParser lp(false);
 	while(!ctx->GetLine(line, sizeof(line)) && !lp.parse(line))
 	{
-		if (strcmp(lp.gettoken_str(0), ">") == 0)
+		if (!strcmp(lp.gettoken_str(0), ">"))
 			break;
 		m_selection.push_back(lp.gettoken_int(0));
 	}
@@ -180,7 +180,7 @@ BR_CursorPos::BR_CursorPos (int slot, ProjectStateContext* ctx)
 	LineParser lp(false);
 	while(!ctx->GetLine(line, sizeof(line)) && !lp.parse(line))
 	{
-		if (strcmp(lp.gettoken_str(0), ">") == 0)
+		if (!strcmp(lp.gettoken_str(0), ">"))
 			break;
 		m_position = lp.gettoken_float(0);
 	}

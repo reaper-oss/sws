@@ -4,12 +4,13 @@ Thank you Cockos!
 
 Added actions
 +SWS/BR: Preview media item under mouse (versions for pausing project playback during preview)
++SWS/BR: Toggle media item online/offline
 +SWS/BR: Set selected envelope points to next/previous point's value
 +SWS/BR: Set selected envelope points to first/last selected point's value
 +SWS/BR: Delete tempo marker while preserving position and length of (selected) items (including MIDI events)
 +SWS/BR: Move closest tempo marker to mouse cursor
 +SWS/BR: Move closest (measure) grid line to mouse cursor (may create tempo marker)
- Hint: There is an interesting effect if you keep shortcut key pressed while moving the mouse - grid/tempo marker will follow it. The only con is that bunch of undo points will get created
+ Hint: There is an interesting effect if you keep shortcut key pressed while moving the mouse - grid/tempo marker will follow it. The only con is that a bunch of undo points will get created
 +Added toggle actions (from Mars):
  - SWS/S&M: Dummy toggle n (where 'n' is in [1; 8], http://forum.cockos.com/showthread.php?p=984786#post984786|customizable in the S&M.ini file|, up to 99 toggles)
  - SWS/S&M: Exclusive toggle An (where 'n' is in [1; 4], http://forum.cockos.com/showthread.php?p=984786#post984786|customizable in the S&M.ini file|, up to 99 toggles)
@@ -41,10 +42,13 @@ ReaScript
  - BR_PositionAtMouseCursor
  - BR_TakeAtMouseCursor
  - BR_TrackAtMouseCursor
+ - BR_GetMediaSourceProperties
+ - BR_SetMediaSourceProperties
 
 Fixes
 +Preview media item actions now send all-notes-off when stopping MIDI item preview
 +More efficient toolbars auto refresh in certain instances
++Action "SWS/BR: Create project markers from notes in selected MIDI items" now works properly with looped items
 
 !v2.4.0 #3 (February 5, 2014)
 Fixes

@@ -56,6 +56,7 @@ static COMMAND_T g_commandTable[] =
 
 	{ { DEFACCEL, "SWS/BR: Cycle through record modes" },                                                          "BR_CYCLE_RECORD_MODES",           CycleRecordModes},
 	{ { DEFACCEL, "SWS/BR: Focus arrange window" },                                                                "BR_FOCUS_ARRANGE_WND",            FocusArrange},
+	{ { DEFACCEL, "SWS/BR: Toggle media item online/offline" },                                                    "BR_TOGGLE_ITEM_ONLINE",           ToggleItemOnline},
 
 	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 1" },                                                   "BR_SAVE_CURSOR_POS_SLOT_1",       SaveCursorPosSlot, NULL, 0},
 	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 2" },                                                   "BR_SAVE_CURSOR_POS_SLOT_2",       SaveCursorPosSlot, NULL, 1},

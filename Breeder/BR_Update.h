@@ -63,18 +63,18 @@ public:
 	~BR_SearchObject ();
 	int GetStatus (BR_Version* official, BR_Version* beta);
 	double GetProgress ();
-	bool GetKillFlag ();
-	bool IsStartup ();
 	void RestartSearch ();
 
 private:
 	static unsigned WINAPI StartSearch (void* searchObject);
 	void SetStatus (BR_Version official, BR_Version beta, int status);
-	void SetProgress (double progress);
+	void SetProgress (double progress);	
+	bool GetKillFlag ();
 	void SetKillFlag (bool killFlag);
-	void EndSearch ();
-	void SetProcess (HANDLE process);
 	HANDLE GetProcess ();
+	void SetProcess (HANDLE process);
+	void EndSearch ();
+	bool IsStartup ();
 	int CompareVersion (BR_Version one, BR_Version two);
 
 	const bool m_startup;

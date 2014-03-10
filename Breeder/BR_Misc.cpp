@@ -99,10 +99,7 @@ void MidiItemTempo (COMMAND_T* ct)
 		bool midiFound = false;
 		for (int i = 0; i < CountTakes(item); ++i)
 		{
-			PCM_source* source = GetMediaItemTake_Source(GetMediaItemTake(item, i));
-			char type[64] = {0};
-			GetMediaSourceType(source, type, sizeof(type));
-			if (!strcmp(type, "MIDI") || !strcmp(type, "MIDIPOOL"))
+			if (IsMidi(GetMediaItemTake(item, i)))
 			{
 				midiFound = true;
 				break;
@@ -139,8 +136,7 @@ void MidiItemTempo (COMMAND_T* ct)
 			}
 			else
 			{
-				newState.Append(token);
-				newState.Append("\n");
+				AppendLine(newState, token);
 			}
 			token = strtok(NULL, "\n");
 		}
@@ -154,47 +150,41 @@ void MidiItemTempo (COMMAND_T* ct)
 
 void MarkersAtNotes (COMMAND_T* ct)
 {
-	RprItemCtrPtr items = RprItemCollec::getSelected();
-	if (!items->size())
-		return;
-
 	PreventUIRefresh(1);
-	Undo_BeginBlock2(NULL);
+	bool success = false;
 
-	// Check for .MID files and convert them to in project midi
-	for (int i = 0; i < items->size(); i++)
-		if (!items->getAt(i).getActiveTake().isFile())
-			SetMediaItemInfo_Value(items->getAt(i).toReaper(), "B_UISEL", false);
-	Main_OnCommand(40684,0);
-
-	// Loop through items and create markers
-	for (int i = 0; i < items->size(); i++)
+	for (int i = 0; i < CountSelectedMediaItems(NULL); ++i)
 	{
-		RprTake take = items->getAt(i).getActiveTake();
-		if (take.isFile() || !take.isMIDI())
-			continue;
+		MediaItem* item = GetSelectedMediaItem(NULL, i);
+		MediaItem_Take* take = GetActiveTake(item);
+		double itemStart =  GetMediaItemInfo_Value(item, "D_POSITION");
+		double itemEnd = GetMediaItemInfo_Value(item, "D_POSITION") + GetMediaItemInfo_Value(item, "D_LENGTH");
+		double sourceLen = GetMediaItemTake_Source(take)->GetLength();
 
-		// Get end of item (to avoid creating markers when item is trimmed)
-		MediaItem* item = items->getAt(i).toReaper();
-		double iEnd = GetMediaItemInfo_Value(item, "D_POSITION") + GetMediaItemInfo_Value(item, "D_LENGTH");
+		// Due to possible tempo changes, always work with PPQ, never time
+		double itemPPQEnd = MIDI_GetPPQPosFromProjTime(take, itemEnd);
+		double sourcePPQLen = MIDI_GetPPQPosFromProjTime(take, itemStart + sourceLen) - MIDI_GetPPQPosFromProjTime(take, itemStart); 
 
-		// Loop through notes in active take
-		RprMidiTake midiTake(take, true);
-		for (int j = 0; j < midiTake.countNotes(); j++)
+		int noteCount = 0;
+		MIDI_CountEvts(take, &noteCount, NULL, NULL);
+		if (noteCount != 0)
 		{
-			double position = midiTake.getNoteAt(j)->getPosition();
-			if (position >= iEnd)
-				break;
-			AddProjectMarker(NULL, false, position, 0, NULL, -1);
+			success = true;
+			for (int j = 0; j < noteCount; ++j)
+			{
+				double position;
+				MIDI_GetNote(take, j, NULL, NULL, &position, NULL, NULL, NULL, NULL);
+				while (position <= itemPPQEnd) // in case source is looped
+				{
+					AddProjectMarker(NULL, false, MIDI_GetProjTimeFromPPQPos(take, position), 0, NULL, -1);
+					position += sourcePPQLen;
+				}
+			}
 		}
 	}
 
-	// Convert in project midi back to .MID files
-	Main_OnCommand(40685,0);
-	for (int i = 0; i < items->size(); i++)
-		SetMediaItemInfo_Value(items->getAt(i).toReaper(), "B_UISEL", true);
-
-	Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL);
+	if (success)
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 	PreventUIRefresh(-1);
 	UpdateArrange();
 }
@@ -254,6 +244,20 @@ void CycleRecordModes (COMMAND_T*)
 void FocusArrange (COMMAND_T* ct)
 {
 	SetFocus(GetArrangeWnd());
+}
+
+void ToggleItemOnline (COMMAND_T* ct)
+{
+	for (int i = 0; i < CountSelectedMediaItems(NULL); ++i)
+	{
+		MediaItem* item = GetSelectedMediaItem(NULL, i);
+		for (int j = 0; j < CountTakes(item); ++j)
+		{
+			if (PCM_source* source = GetMediaItemTake_Source(GetMediaItemTake(item, j)))
+				source->SetAvailable(!source->IsAvailable());
+		}
+	}
+	UpdateArrange();
 }
 
 void PreviewItemAtMouse (COMMAND_T* ct)

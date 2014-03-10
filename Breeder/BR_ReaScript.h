@@ -30,6 +30,7 @@
 /******************************************************************************
 * ReaScript export                                                            *
 ******************************************************************************/
+bool            BR_GetMediaSourceProperties (MediaItem_Take* take, bool* section, double* start, double* length, double* fade, bool* reverse);
 void            BR_GetMouseCursorContext (char* window, char* segment, char* details, int char_sz);
 TrackEnvelope*  BR_GetMouseCursorContext_Envelope (bool* takeEnvelope);
 MediaItem*      BR_GetMouseCursorContext_Item ();
@@ -38,6 +39,7 @@ MediaItem_Take* BR_GetMouseCursorContext_Take ();
 MediaTrack*     BR_GetMouseCursorContext_Track ();
 MediaItem*      BR_ItemAtMouseCursor (double* position);
 double          BR_PositionAtMouseCursor (bool checkRuler);
+bool            BR_SetMediaSourceProperties (MediaItem_Take* take, bool section, double start, double length, double fade, bool reverse);
 bool            BR_SetTakeSourceFromFile (MediaItem_Take* take, const char* filename, bool inProjectData);
 MediaItem_Take* BR_TakeAtMouseCursor (double* position);
 MediaTrack*     BR_TrackAtMouseCursor (int* context, double* position);

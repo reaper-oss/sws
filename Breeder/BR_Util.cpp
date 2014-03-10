@@ -31,22 +31,25 @@
 #include "../SnM/SnM_Dlg.h"
 #include "../SnM/SnM_Util.h"
 #include "../reaper/localize.h"
+#include "../../WDL/projectcontext.h"
 
 /******************************************************************************
 * Constants                                                                   *
 ******************************************************************************/
 const int ITEM_LABEL_MIN_HEIGHT = 28;
 const int TCP_MASTER_GAP        = 5;
-const int ENV_GAP               = 4;  // bottom gap may seem like 3 when selected, but that
-const int ENV_LINE_WIDTH        = 1;  // first pixel is used to "bold" selected envelope
+const int ENV_GAP               = 4;    // bottom gap may seem like 3 when selected, but that
+const int ENV_LINE_WIDTH        = 1;    // first pixel is used to "bold" selected envelope
 
 const int TAKE_MIN_HEIGHT_COUNT = 10;
-const int TAKE_MIN_HEIGHT_HIGH  = 12; // min height when take count <= TAKE_MIN_HEIGHT_COUNT
-const int TAKE_MIN_HEIGHT_LOW   = 6;  // min height when take count >  TAKE_MIN_HEIGHT_COUNT
+const int TAKE_MIN_HEIGHT_HIGH  = 12;   // min height when take count <= TAKE_MIN_HEIGHT_COUNT
+const int TAKE_MIN_HEIGHT_LOW   = 6;    // min height when take count >  TAKE_MIN_HEIGHT_COUNT
 
 const int ENV_HIT_POINT         = 5;
-const int ENV_HIT_POINT_LEFT    = 6;  // envelope point doesn't always have middle pixel so hit point is different for one side
-const int ENV_HIT_POINT_DOWN    = 6;  // +1 because lower part is tracked starting 1 pixel bellow line (so when envelope is active, hit points appear the same)
+const int ENV_HIT_POINT_LEFT    = 6;    // envelope point doesn't always have middle pixel so hit point is different for one side
+const int ENV_HIT_POINT_DOWN    = 6;    // +1 because lower part is tracked starting 1 pixel bellow line (so when envelope is active, hit points appear the same)
+
+const int PROJ_CONTEXT_LINE     = 4096; // same length used by ProjectContext
 
 /******************************************************************************
 * Miscellaneous                                                               *
@@ -92,6 +95,12 @@ void ReplaceAll (string& str, string oldStr, string newStr)
 		str.replace(pos, oldLen, newStr);
 		pos += newLen;
 	}
+}
+
+void AppendLine (WDL_FastString& str, const char* line)
+{
+	str.Append(line);
+	str.Append("\n");
 }
 
 int Round (double val)
@@ -148,6 +157,28 @@ vector<int> GetDigits(int val)
 		val /= 10;
 	}
 	return digits;
+}
+
+WDL_FastString GetSourceChunk(PCM_source* source)
+{
+	WDL_FastString sourceStr;
+	if (source)
+	{
+		WDL_HeapBuf hb;
+		if (ProjectStateContext* ctx = ProjectCreateMemCtx(&hb))
+		{
+			source->SaveState(ctx);
+
+			sourceStr.AppendFormatted(PROJ_CONTEXT_LINE, "%s%s\n", "<SOURCE ", source->GetType());
+			char line[PROJ_CONTEXT_LINE];
+			while(!ctx->GetLine(line, sizeof(line)))
+				AppendLine(sourceStr, line);
+			sourceStr.Append( ">");
+
+			delete ctx;
+		}
+	}
+	return sourceStr;
 }
 
 /******************************************************************************
@@ -283,6 +314,187 @@ bool TcpVis (MediaTrack* track)
 		else
 			return true;
 	}
+}
+
+bool IsMidi (MediaItem_Take* take)
+{
+	if (PCM_source* source = GetMediaItemTake_Source(take))
+	{
+		const char* type = source->GetType();
+		if (!strcmp(type, "MIDI") || !strcmp(type, "MIDIPOOL"))
+			return true;
+	}
+	return false;
+}
+
+bool GetMediaSourceProperties (MediaItem_Take* take, bool* section, double* start, double* length, double* fade, bool* reverse)
+{
+	bool sucess = false;
+	bool returnSection = false;
+	bool returnReverse = false;
+	double returnStart = 0;
+	double returnLength = 0;
+	double returnFade = 0;	
+	
+	PCM_source* source = (PCM_source*)GetSetMediaItemTakeInfo(take,"P_SOURCE",NULL);
+	if (source && !IsMidi(take))
+	{
+		bool foundSectionInChunk = false;
+		int mode = 0;
+
+		WDL_HeapBuf hb;
+		ProjectStateContext* ctx = ProjectCreateMemCtx(&hb);
+		source->SaveState(ctx);
+		LineParser lp(false);		
+		while (ProjectContext_GetNextLine(ctx, &lp))
+		{
+			if (!strcmp(lp.gettoken_str(0), "LENGTH"))
+			{
+				foundSectionInChunk = true;
+				returnSection = true;
+				returnLength = lp.gettoken_float(1);
+			}
+			else if (!strcmp(lp.gettoken_str(0), "STARTPOS"))
+				returnStart = lp.gettoken_float(1);
+			else if (!strcmp(lp.gettoken_str(0), "OVERLAP"))
+				returnFade = lp.gettoken_float(1);
+			else if (!strcmp(lp.gettoken_str(0), "MODE"))
+				mode = lp.gettoken_int(1);
+			else if (lp.gettoken_str(0)[0] == '<')
+				ProjectContext_EatCurrentBlock(ctx);
+		}
+		delete ctx;
+
+		// Mode token doesn't have to be after other section info, so check it only after parsing everything
+		if (mode == 2)
+			returnReverse = true;
+		else if (mode == 3)
+		{
+			returnReverse = true;
+			returnSection = false;
+		}
+
+		// Even if section is turned off, it does display section info so get it
+		if (!foundSectionInChunk)
+		{
+			returnLength = GetMediaItemInfo_Value(GetMediaItemTake_Item(take), "D_LENGTH");
+			returnStart = GetMediaItemTakeInfo_Value(take, "D_STARTOFFS");
+			returnFade = 0;
+		}
+		sucess = true;
+	}
+
+	WritePtr(section, returnSection);
+	WritePtr(start, returnStart);
+	WritePtr(length, returnLength);
+	WritePtr(fade, returnFade);
+	WritePtr(reverse, returnReverse);
+	return sucess;
+}
+
+bool SetMediaSourceProperties (MediaItem_Take* take, bool section, double start, double length, double fade, bool reverse)
+{
+	PCM_source* source = (PCM_source*)GetSetMediaItemTakeInfo(take,"P_SOURCE",NULL);
+	if (take && !IsMidi(take) && source)
+	{
+		// If existing source has properties already set, it constitutes a special source named "section" that holds
+		// another source within which the "real" media resides
+		PCM_source* mediaSource = (!strcmp(source->GetType(), "SECTION")) ? (source->GetSource()) : (source);
+
+		// Create new source
+		PCM_source* newSource = NULL;
+		if (!section && !reverse)
+		{
+			newSource = mediaSource->Duplicate();
+		}
+		else if (newSource = PCM_Source_CreateFromType("SECTION"))
+		{
+			newSource->SetSource(mediaSource->Duplicate());
+			WDL_FastString sourceStr;
+
+			// Get default section values if needed
+			bool getSectionDefaults = !section;
+			if (!strcmp(source->GetType(), "SECTION"))
+			{
+				WDL_HeapBuf hb;
+				if (ProjectStateContext* ctx = ProjectCreateMemCtx(&hb))
+				{
+					source->SaveState(ctx);
+					char line[PROJ_CONTEXT_LINE];
+					LineParser lp(false);
+					while(!ctx->GetLine(line, sizeof(line)) && !lp.parse(line))
+					{
+						if (!strcmp(lp.gettoken_str(0), "LENGTH"))
+						{
+							if (getSectionDefaults)
+								length = lp.gettoken_float(1);
+						}
+						else if (!strcmp(lp.gettoken_str(0), "STARTPOS"))
+						{
+							if (getSectionDefaults)
+								start = lp.gettoken_float(1);
+						}
+						else if (!strcmp(lp.gettoken_str(0), "OVERLAP"))
+						{
+							if (getSectionDefaults)
+								fade = lp.gettoken_float(1);
+						}
+						else if (!strcmp(lp.gettoken_str(0), "MODE"))
+						{
+							continue;
+						}
+						else if (!strcmp(lp.gettoken_str(0), "<SOURCE")) // already got it in mediaSource
+						{
+							ProjectContext_EatCurrentBlock(ctx);
+						}
+						else                                             // in case things get added in the future
+						{
+							AppendLine(sourceStr, line); 
+						}
+					}
+				}
+			}
+			else if (getSectionDefaults)
+			{
+				length = GetMediaItemInfo_Value(GetMediaItemTake_Item(take), "D_LENGTH");
+				start = GetMediaItemTakeInfo_Value(take, "D_STARTOFFS");
+				fade = 0.01;
+			}
+
+			// Add properties data to source string
+			sourceStr.AppendFormatted(256, "%s%lf\n", "LENGTH ", length);
+			sourceStr.AppendFormatted(256, "%s%lf\n", "STARTPOS ", start);
+			sourceStr.AppendFormatted(256, "%s%lf\n", "OVERLAP ", fade);
+			if (section && reverse) sourceStr.AppendFormatted(256, "%s%d\n", "MODE ", 2);
+			else if (reverse)       sourceStr.AppendFormatted(256, "%s%d\n", "MODE ", 3);
+			AppendLine(sourceStr, GetSourceChunk(mediaSource).Get());
+
+			// Load project context into new source
+			WDL_HeapBuf hb;
+			if (void* p = hb.Resize(sourceStr.GetLength(), false))
+			{
+				if (ProjectStateContext* ctx = ProjectCreateMemCtx(&hb))
+				{
+					memcpy(p, sourceStr.Get(), sourceStr.GetLength());
+					newSource->LoadState("<SOURCE SECTION", ctx);
+					delete ctx;
+				}
+				else
+					newSource = NULL;
+			}
+			else
+				newSource = NULL;
+		}
+
+		// Set new source
+		if (newSource)
+		{
+			GetSetMediaItemTakeInfo(take,"P_SOURCE", newSource);
+			delete source;
+			return true;
+		}
+	}
+	return false;
 }
 
 /******************************************************************************
@@ -1275,6 +1487,7 @@ static int IsMouseOverEnvelopeLineTrackLane (MediaTrack* track, int trackHeight,
 			trackLaneEnvs.push_back(envelope);
 	}
 
+	// Find envelope lane in track lane at mouse cursor and check mouse cursor against it
 	int overlapLimit,trackGapTop, trackGapBottom;
 	GetConfig("env_ol_minh", overlapLimit);
 	GetTrackGap(trackHeight, &trackGapTop, &trackGapBottom);
@@ -1284,6 +1497,8 @@ static int IsMouseOverEnvelopeLineTrackLane (MediaTrack* track, int trackHeight,
 	if (envLaneCount > 0)
 	{
 		bool envelopesOverlapping = (overlapLimit >= 0 && envLaneFull / envLaneCount < overlapLimit) ? (true) : (false);
+
+		// Each envelope has it's own lane, find the right one
 		if (!envelopesOverlapping)
 		{
 			int envLaneH = envLaneFull / envLaneCount;
@@ -1307,6 +1522,7 @@ static int IsMouseOverEnvelopeLineTrackLane (MediaTrack* track, int trackHeight,
 				}
 			}
 		}
+		// Envelopes are overlapping each other, search them all
 		else
 		{
 			int envHeight = envLaneFull - 2*ENV_GAP;
@@ -1527,9 +1743,11 @@ void GetMouseCursorContext (const char** window, const char** segment, const cha
 			{
 				returnSegment = "track";
 
-				// Check envelope lane for track envelope, items and take envelopes
+				// Check track lane for track envelope and item/take under mouse
 				int trackEnvHit = IsMouseOverEnvelopeLineTrackLane (returnInfo.track, height, offset, laneEnvs, mouseY, mouseX, mousePos, arrangeStart, arrangeZoom, &returnInfo.envelope);
 				returnInfo.item = GetItemFromY(mouseY, mousePos, &returnInfo.take);
+				
+				// Check track lane for take envelope
 				int takeEnvHit = 0;
 				if (trackEnvHit == 0 && returnInfo.take)
 				{
@@ -1546,9 +1764,11 @@ void GetMouseCursorContext (const char** window, const char** segment, const cha
 					else if (trackEnvHit == 2)
 						returnDetails = "env_segment";
 				}
-				// No track envelope found, check item and take envelopes
+
+				// Item and take envelope next
 				else if (returnInfo.item)
 				{
+					// Take envelope takes priority
 					if (takeEnvHit != 0)
 					{
 						if (takeEnvHit == 1)
@@ -1560,9 +1780,12 @@ void GetMouseCursorContext (const char** window, const char** segment, const cha
 					else
 						returnDetails = "item";
 				}
+
+				// No items, no envelopes, no nothing
 				else
 					returnDetails = "empty";
 			}
+			// Mouse cursor is in empty arrange space
 			else
 				returnSegment = "empty";
 

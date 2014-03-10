@@ -673,8 +673,7 @@ static void SelectTempo (int mode, int Nth, int timeSel, int bpm, double bpmStar
 
 		else
 		{
-			newState.Append(token);
-			newState.Append("\n");
+			AppendLine(newState, token);
 		}
 		token = strtok(NULL, "\n");
 	}
@@ -783,8 +782,7 @@ static void AdjustTempo (int mode, double bpm, int shape)
 
 		else
 		{
-			newState.Append(token);
-			newState.Append("\n");
+			AppendLine(newState, token);
 		}
 
 		token = strtok(NULL, "\n");

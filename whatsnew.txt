@@ -11,7 +11,7 @@ Added actions
 +SWS/BR: Move closest tempo marker to mouse cursor
 +SWS/BR: Move closest (measure) grid line to mouse cursor (may create tempo marker)
  Hint: There is an interesting effect if you keep shortcut key pressed while moving the mouse - grid/tempo marker will follow it. The only con is that a bunch of undo points will get created
-+Added toggle actions (from Mars):
++Added stock toggle actions:
  - SWS/S&M: Dummy toggle n (where 'n' is in [1; 8], http://forum.cockos.com/showthread.php?p=984786#post984786|customizable in the S&M.ini file|, up to 99 toggles)
  - SWS/S&M: Exclusive toggle An (where 'n' is in [1; 4], http://forum.cockos.com/showthread.php?p=984786#post984786|customizable in the S&M.ini file|, up to 99 toggles)
  - SWS/S&M: Exclusive toggle Bn (where 'n' is in [1; 4])
@@ -19,16 +19,21 @@ Added actions
  - SWS/S&M: Exclusive toggle Dn (where 'n' is in [1; 4])
  "Exclusive toggle" means only one toggle action is ON at a time. For ex: in the set of toggles "A", if "Exclusive toggle A03" is ON, A01 A02 and A04 are OFF.
  These actions come in handy with Cycle Actions for example, see details and use-cases http://forum.cockos.com/showpost.php?p=1315222&postcount=1652|here| (thanks Reno.thestraws!)
- "Split tool" example: a single keyboard shortcut 'S' that either splits at edit cursor or at time selection depending on a toolbar button's state
-+Cycle actions: IFAND, IFNAND, IFOR, IFNOR, IFXOR, IFXNOR statements added
 
 ReaConsole
 +Issue 588: added option in the context menu to invert ENTER and  CRTL+ENTER (CMD+ENTER on OS X) key shortcuts:
  - The ENTER key can either perform commands and let the console open, while CRTL+ENTER performs commands but closes it
    Useful when ReaConsole is docked for example, default behavior
  - Or the ENTER key can perform commands and close the console, while CRTL+ENTER performs commands but let it open
-   Useful when using ReaConsole the old-school way: as a dialog box
+   Useful when using ReaConsole the old-school way, as a dialog box
 +New default shortcut 'c' to open ReaConsole ('C' might conflict with the native action "Insert time signature/tempo Marker")
+
+Cycle actions
++Issue 634: added IFAND, IFNAND, IFOR, IFNOR, IFXOR, and IFXNOR conditional statements
+ Thanks to our new project member wol!
++Editor: commands indentation
++Editor: better description of conditional statements (in plain English)
++Tweaks: better context menu, message dialog box, etc
 
 ReaScript
 +Added functions:

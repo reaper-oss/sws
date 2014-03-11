@@ -73,6 +73,7 @@ public:
 	void ReplaceCmd(WDL_FastString* _cmd, bool _wantDelete=false, WDL_PtrList<WDL_FastString>* _newCmds = NULL);
 	WDL_FastString* GetCmdString(int _i) { return m_cmds.Get(_i); }
 	int FindCmd(WDL_FastString* _cmd) { return m_cmds.Find(_cmd); }
+	int GetIndent(WDL_FastString* _cmd);
 
 	int m_performState;
 	bool m_added; // CA added by the user, not yet registered

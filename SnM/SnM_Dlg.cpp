@@ -235,6 +235,11 @@ void SNM_ShowMsg(const char* _msg, const char* _title, HWND _hParent)
 	DisplayInfoBox(_hParent?_hParent:GetMainHwnd(), _title, msg, false, false); // modeless
 }
 
+// for modeless box created with SNM_ShowMsg()
+void SNM_CloseMsg(HWND _hParent) {
+	DisplayInfoBox(_hParent?_hParent:GetMainHwnd(), "", "", false, false);
+}
+
 // _min and _max: 1-based (i.e. as displayed)
 // returns -1 on cancel, 0-based number otherwise
 int PromptForInteger(const char* _title, const char* _what, int _min, int _max)

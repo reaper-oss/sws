@@ -40,7 +40,7 @@ bool g_bOK = false;
 bool g_bOption = false;
 bool g_bAtMouse = false;
 const char* g_cOption;
-HWND g_hwndModelessInfo = NULL;
+HWND g_hwndModeless = NULL;
 
 INT_PTR WINAPI doPromptDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -121,10 +121,10 @@ INT_PTR WINAPI doInfoDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 				case IDOK:
 				case IDCANCEL:
 					SaveWindowPos(hwndDlg, INFOWND_KEY);
-					if (hwndDlg == g_hwndModelessInfo)
+					if (hwndDlg == g_hwndModeless)
 					{
-						DestroyWindow(g_hwndModelessInfo);
-						g_hwndModelessInfo = NULL;
+						DestroyWindow(g_hwndModeless);
+						g_hwndModeless = NULL;
 					}
 					else
 						EndDialog(hwndDlg, 0);
@@ -149,26 +149,24 @@ int PromptUserForString(HWND hParent, const char* cTitle, char* cString, int iMa
 	return g_bOK ? (cOption ? (g_bOption?2:1) : 1) : 0;
 }
 
+// if modeless, cTitle=="" will close
 void DisplayInfoBox(HWND hParent, const char* cTitle, const char* cInfo, bool bAtMouse, bool bModal)
 {
 	g_cTitle = cTitle;
 	g_cString = (char*)cInfo;
-	g_bAtMouse = !bModal && g_hwndModelessInfo ? false : bAtMouse; // ignored if a modeless info box is already displayed
+	g_bAtMouse = !bModal && g_hwndModeless ? false : bAtMouse; // ignored if a modeless info box is already displayed
 
-	if (g_hwndModelessInfo)
+	if (g_hwndModeless)
 	{
-		SaveWindowPos(g_hwndModelessInfo, INFOWND_KEY);
-		DestroyWindow(g_hwndModelessInfo);
-		g_hwndModelessInfo = NULL;
+		SaveWindowPos(g_hwndModeless, INFOWND_KEY);
+		DestroyWindow(g_hwndModeless);
+		g_hwndModeless = NULL;
 	}
 
 	if (bModal)
-	{
 		DialogBox(g_hInst, MAKEINTRESOURCE(IDD_INFO), hParent, doInfoDialog);
-	}
-	else
-	{
-		g_hwndModelessInfo = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_INFO), hParent, doInfoDialog);
-		ShowWindow(g_hwndModelessInfo, SW_SHOW);
+	else if (*cTitle) {
+		g_hwndModeless = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_INFO), hParent, doInfoDialog);
+		ShowWindow(g_hwndModeless, SW_SHOW);
 	}
 }

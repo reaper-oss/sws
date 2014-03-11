@@ -255,6 +255,7 @@ LICE_IBitmap* SNM_GetThemeLogo();
 WDL_DLGRET SNM_HookThemeColorsMessage(HWND _hwnd, UINT _uMsg, WPARAM _wParam, LPARAM _lParam, bool _wantColorEdit = true);
 
 void SNM_ShowMsg(const char* _msg, const char* _title = "", HWND _hParent = NULL); 
+void SNM_CloseMsg(HWND _hParent = NULL);
 int PromptForInteger(const char* _title, const char* _what, int _min, int _max);
 
 #endif

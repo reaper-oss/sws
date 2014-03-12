@@ -71,6 +71,7 @@ bool TcpVis (MediaTrack* track);
 bool IsMidi (MediaItem_Take* take);
 bool GetMediaSourceProperties (MediaItem_Take* take, bool* section, double* start, double* length, double* fade, bool* reverse);
 bool SetMediaSourceProperties (MediaItem_Take* take, bool section, double start, double length, double fade, bool reverse);
+bool SetTakeSourceFromFile (MediaItem_Take* take, const char* filename, bool inProjectData, bool keepSourceProperties);
 template <typename T> void GetConfig (const char* key, T& val) {val = *static_cast<T*>(GetConfigVar(key));}
 template <typename T> void SetConfig (const char* key, T  val) {*static_cast<T*>(GetConfigVar(key)) = val;}
 

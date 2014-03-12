@@ -49,6 +49,7 @@ ReaScript
  - BR_TrackAtMouseCursor
  - BR_GetMediaSourceProperties
  - BR_SetMediaSourceProperties
+ - BR_SetTakeSourceFromFile2
 
 Fixes
 +Preview media item actions now send all-notes-off when stopping MIDI item preview

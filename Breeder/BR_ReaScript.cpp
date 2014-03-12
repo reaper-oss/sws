@@ -97,17 +97,12 @@ bool BR_SetMediaSourceProperties (MediaItem_Take* take, bool section, double sta
 
 bool BR_SetTakeSourceFromFile (MediaItem_Take* take, const char* filename, bool inProjectData)
 {
-	if (take && file_exists(filename))
-	{
-		if (PCM_source* oldSource = (PCM_source*)GetSetMediaItemTakeInfo(take,"P_SOURCE",NULL))
-		{
-			PCM_source* newSource = PCM_Source_CreateFromFileEx(filename, !inProjectData);
-			GetSetMediaItemTakeInfo(take,"P_SOURCE", newSource);
-			delete oldSource;
-			return true;
-		}
-	}
-	return false;
+	return SetTakeSourceFromFile(take, filename, inProjectData, false);
+}
+
+bool BR_SetTakeSourceFromFile2 (MediaItem_Take* take, const char* filename, bool inProjectData, bool keepSourceProperties)
+{
+	return SetTakeSourceFromFile(take, filename, inProjectData, keepSourceProperties);
 }
 
 MediaItem_Take* BR_TakeAtMouseCursor (double* position)

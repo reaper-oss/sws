@@ -30,8 +30,6 @@
 #include "BR_EnvTools.h"
 #include "BR_ProjState.h"
 #include "BR_Util.h"
-#include "../Fingers/RprItem.h"
-#include "../Fingers/RprMidiTake.h"
 #include "../Xenakios/XenakiosExts.h"
 #include "../reaper/localize.h"
 

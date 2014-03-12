@@ -41,6 +41,7 @@ MediaItem*      BR_ItemAtMouseCursor (double* position);
 double          BR_PositionAtMouseCursor (bool checkRuler);
 bool            BR_SetMediaSourceProperties (MediaItem_Take* take, bool section, double start, double length, double fade, bool reverse);
 bool            BR_SetTakeSourceFromFile (MediaItem_Take* take, const char* filename, bool inProjectData);
+bool            BR_SetTakeSourceFromFile2 (MediaItem_Take* take, const char* filename, bool inProjectData, bool keepSourceProperties);
 MediaItem_Take* BR_TakeAtMouseCursor (double* position);
 MediaTrack*     BR_TrackAtMouseCursor (int* context, double* position);
 

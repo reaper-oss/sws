@@ -497,6 +497,32 @@ bool SetMediaSourceProperties (MediaItem_Take* take, bool section, double start,
 	return false;
 }
 
+bool SetTakeSourceFromFile (MediaItem_Take* take, const char* filename, bool inProjectData, bool keepSourceProperties)
+{
+	if (take && file_exists(filename))
+	{		
+		if (PCM_source* oldSource = (PCM_source*)GetSetMediaItemTakeInfo(take,"P_SOURCE",NULL))
+		{	
+			// Getting and setting properties appears faster than source->SetFileName(filename), testing
+			// ReaScript export on 10000 items results in 3x performance
+			bool section, reverse;
+			double start, len, fade;
+			bool properties = false;
+			if (keepSourceProperties)
+				properties = GetMediaSourceProperties(take, &section, &start, &len, &fade, &reverse);
+
+			PCM_source* newSource = PCM_Source_CreateFromFileEx(filename, !inProjectData);
+			GetSetMediaItemTakeInfo(take,"P_SOURCE", newSource);
+			delete oldSource;
+
+			if (properties)
+				SetMediaSourceProperties(take, section, start, len, fade, reverse);
+			return true;
+		}
+	}
+	return false;
+}
+
 /******************************************************************************
 * Height helpers                                                              *
 ******************************************************************************/

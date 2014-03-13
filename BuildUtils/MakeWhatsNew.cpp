@@ -3,9 +3,7 @@
 /
 / A little win32 console application to parse a What's New file (.txt) and
 / create a formatted HTML file.
-/
-/ JFB: this source file is also used in the main SWS project so the code must
-/      be compatible with OSX
+/ This file is also used in the main SWS project so the code must be portable
 /
 / Copyright (c) 2010-2012 Tim Payne (SWS), Jeffos
 /
@@ -47,6 +45,12 @@ public:
 	int Size() { return m_stack.GetSize(); }
 };
 
+// Write the file back to the output with formatting
+// Formatting is:
+// Line starting with ! : Make into a header line
+// Line starting with + : Make into bullet
+// URLs are converted into <a href>.  If you suffix a link with |, the following text will be used as the desc text
+// Text "issue %d" is converted into a link into the tracker
 int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML)
 {
 	FILE* pIn;
@@ -118,21 +122,13 @@ int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML)
 	IntStack curSection;
 	WDL_String url;
 
-	// Write the file back to the output with formatting
-	// Formatting is:
-	// Line starting with ! : Make into a header line
-	// Line starting with + : Make into bullet
-	// URLs are converted into <a href>.  If you suffix a link with |, the following text will be used as the desc text
-	// Text "issue %d" is converted into a link into the tracker
-	// 
-
 	// Insert header if desired
 	if (bFullHTML)
 	{
 		fputs("<!DOCTYPE html >\n", pOut);
 		fputs("<html lang=\"en\">\n", pOut);
 		fputs("<head><meta charset=\"utf-8\"><title>SWS/S&M Extension - What's new?</title></head>\n", pOut);
-		fputs("<body>\n<h1>SWS/S&M Extension - What's new?</title></h1>\n", pOut);
+		fputs("<body>\n<h1><a href=\"http://www.standingwaterstudios.com/reaper\">SWS/S&M Extension</a> - What's new?</title></h1>\n", pOut);
 	}
 
 	while (cBuf[iPos] && iPos < iSize)

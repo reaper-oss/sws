@@ -53,6 +53,12 @@ int main(int argc, char* argv[])
 	// Read the entire file into a buffer
 	fseek(pF, 0L, SEEK_END);
 	int iOrigSize = ftell(pF);
+	if (iOrigSize<7)
+	{
+		fprintf(stderr, "PrintVersion: invalid file %s.\n", argv[1]);
+		return 3;
+	}
+
 	char* cBuf = new char[iOrigSize+1];
 	fseek(pF, 0L, SEEK_SET);
 	fread(cBuf, sizeof(char), iOrigSize, pF);

@@ -54,8 +54,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #define _SNM_REAPER_BUG			// workaround API/REAPER bugs
-								// last test: REAPER v4.5rc11
-								// - GetToggleCommandState2() only works for the main section
+								// - GetToggleCommandState2() only works for the main section (last test: v4.5rc11)
+								// - RenderFileSection() always return false (last test: v4.60)
 
 #ifdef __APPLE__
 #define _SNM_SWELL_ISSUES		// workaround some SWELL issues
@@ -158,7 +158,7 @@
 #define SNM_MAX_ACTION_CUSTID_LEN	128
 #define SNM_MAX_MACRO_CUSTID_LEN	32
 #define SNM_MAX_ACTION_NAME_LEN		128
-#define SNM_MAX_DYN_ACTIONS			99     // if > 99, the "dynamic actions" code must be updated
+#define SNM_MAX_DYN_ACTIONS			99     // if > 99, the "dynamic action" code must be updated
 #define SNM_MAX_ENV_CHUNKNAME_LEN	32
 #define SNM_MAX_MARKER_NAME_LEN		64     // + regions
 #define SNM_MAX_TRACK_NAME_LEN		128

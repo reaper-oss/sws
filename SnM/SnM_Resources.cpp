@@ -4349,15 +4349,47 @@ void InsertMediaSlotTakes(COMMAND_T* _ct) {
 	InsertMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, 3);
 }
 
-bool AutoSaveMidiSlot(const void* _obj, const char* _fn) {
-	((PCM_source*)_obj)->Extended(PCM_SOURCE_EXT_EXPORTTOFILE, (void*)_fn, NULL, NULL);
-	return true;
+typedef struct {
+	PCM_source* src;
+	double start_time;
+	double length;
+	double playrate;
+} PCM_SourceSlice;
+
+//JFB!!! TODO: PCM_Sink
+bool AutoSaveMediaSlot(const void* _obj, const char* _fn)
+{
+	PCM_SourceSlice* slice = (PCM_SourceSlice*)_obj;
+	if (_fn && slice && slice->src)
+	{
+#ifndef _SNM_REAPER_BUG // RenderFileSection() always return false (last test: v4.60)
+		return
+#endif
+			RenderFileSection(
+				slice->src->GetFileName(), _fn, 
+				slice->start_time / slice->src->GetLength(), 
+				(slice->start_time+slice->length) / slice->src->GetLength(),
+				slice->playrate);
+#ifdef _SNM_REAPER_BUG
+		return FileExists(_fn);
+#endif
+	}
+	return false;
+}
+
+bool AutoSaveInProjectMediaSlot(const void* _obj, const char* _fn)
+{
+	PCM_SourceSlice* slice = (PCM_SourceSlice*)_obj;
+	if (_fn && slice && slice->src)
+		return slice->src->Extended(PCM_SOURCE_EXT_EXPORTTOFILE, (void*)_fn, NULL, NULL) ? true: false; // warning C4800
+	return false;
 }
 
 bool AutoSaveMediaSlots(int _slotType, const char* _dirPath, WDL_PtrList<ResourceItem>* _owSlots)
 {
-	bool saved = false;
 	int owIdx = 0;
+	bool saved = false;
+	PCM_SourceSlice slice;
 	for (int i=1; i <= GetNumTracks(); i++) // skip master
 		if (MediaTrack* tr = CSurf_TrackFromID(i, false))
 			for (int j=0; j < GetTrackNumMediaItems(tr); j++)
@@ -4365,13 +4397,30 @@ bool AutoSaveMediaSlots(int _slotType, const char* _dirPath, WDL_PtrList<Resourc
 					if (*(bool*)GetSetMediaItemInfo(item, "B_UISEL", NULL))
 						if (MediaItem_Take* tk = GetActiveTake(item))
 							if (PCM_source* src = (PCM_source*)GetSetMediaItemTakeInfo(tk, "P_SOURCE", NULL))
+							{
+								slice.src = src;
+								slice.start_time = *(double*)GetSetMediaItemTakeInfo(tk, "D_STARTOFFS", NULL);
+								slice.length = *(double*)GetSetMediaItemInfo(item, "D_LENGTH", NULL);
+								slice.playrate = *(double*)GetSetMediaItemTakeInfo(tk, "D_PLAYRATE", NULL);
+
+								// section?
+								if (!src->GetFileName() && src->GetSource())
+								{
+									double offs, len;
+									PCM_Source_GetSectionInfo(src, &offs, &len, NULL);
+									slice.length = min(slice.length, fabs(len- slice.start_time));
+									slice.start_time += offs;
+									slice.src = src = src->GetSource();
+								}
+
 								if (src->GetFileName())
 								{
-									if(*src->GetFileName()) // ext file
-										saved |= AutoSaveSlot(_slotType, _dirPath, src->GetFileName(), GetFileExtension(src->GetFileName()), _owSlots, &owIdx);
+									if(*src->GetFileName()) // ext file (.mid is supported too)
+										saved |= AutoSaveSlot(_slotType, _dirPath, src->GetFileName(), GetFileExtension(src->GetFileName()), _owSlots, &owIdx, AutoSaveMediaSlot, &slice);
 									else // in-project midi
-										saved |= AutoSaveSlot(_slotType, _dirPath, (const char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL), "mid", _owSlots, &owIdx, AutoSaveMidiSlot, src);
+										saved |= AutoSaveSlot(_slotType, _dirPath, (const char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL), "mid", _owSlots, &owIdx, AutoSaveInProjectMediaSlot, &slice);
 								}
+							}
 	return saved;
 }
 

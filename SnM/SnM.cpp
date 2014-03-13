@@ -771,9 +771,9 @@ int RegisterDynamicActions(DYN_COMMAND_T* _cmds, const char* _inifn)
 					OutputDebugString(actionName);
 					OutputDebugString("\n");
 #endif
-					// special case: init states of some "Exclusive toggle" actions
+					//JFB! special case: init states of some "Exclusive toggle" actions
 					if (!j && strstr(ct->id, "S&M_EXCL_TGL"))
-						if (COMMAND_T* c = SWSGetCommandByID(cmdId)) // not ideal but not worth changing SWSCreateRegisterDynamicCmd()
+						if (COMMAND_T* c = SWSGetCommandByID(cmdId)) // not ideal, but does not worth changing SWSCreateRegisterDynamicCmd()
 							c->fakeToggle = true;
 				}
 				else

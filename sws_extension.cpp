@@ -717,11 +717,12 @@ extern "C"
 		IMPAPI(NamedCommandLookup);
 		IMPAPI(parse_timestr_len);
 		IMPAPI(parse_timestr_pos);
-		IMPAPI(PCM_Sink_Create);
+		IMPAPI(PCM_Sink_CreateEx);
 		IMPAPI(PCM_Source_CreateFromFile);
 		IMPAPI(PCM_Source_CreateFromFileEx);
 		IMPAPI(PCM_Source_CreateFromSimple);
 		IMPAPI(PCM_Source_CreateFromType);
+		IMPAPI(PCM_Source_GetSectionInfo);
 		IMPAPI(PlayPreview);
 		IMPAPI(PlayPreviewEx);
 		IMPAPI(PlayTrackPreview);
@@ -736,6 +737,7 @@ extern "C"
 #ifdef _WIN32
 		IMPAPI(RemoveXPStyle);
 #endif
+		IMPAPI(RenderFileSection);
 		IMPAPI(Resampler_Create);
 		IMPAPI(screenset_register);
 		IMPAPI(screenset_registerNew);

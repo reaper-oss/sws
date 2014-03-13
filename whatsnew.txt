@@ -1,3 +1,4 @@
+!v2.4.0 #4 (March 13, 2014)
 <b>REAPER v4.60+ is required!</b>
 New API functions were introduced in this version, they enable various improvements in the SWS/S&M Extension.
 Thank you Cockos!
@@ -19,6 +20,8 @@ Added actions
  - SWS/S&M: Exclusive toggle Dn (where 'n' is in [1; 4])
  "Exclusive toggle" means only one toggle action is ON at a time. For ex: in the set of toggles "A", if "Exclusive toggle A03" is ON, A01 A02 and A04 are OFF.
  These actions come in handy with Cycle Actions for example, see details and use-cases http://forum.cockos.com/showpost.php?p=1315222&postcount=1652|here| (thanks Reno.thestraws!)
+
+Resources: auto-save media files improvements
 
 ReaConsole
 +Issue 588: added option in the context menu to invert ENTER and  CRTL+ENTER (CMD+ENTER on OS X) key shortcuts:

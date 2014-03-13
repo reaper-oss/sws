@@ -37,8 +37,8 @@ int main(int argc, char* argv[])
 {
 	if (argc != 2)
 	{
-		printf("Usage: IncVersion version.h\n\n");
-		printf("Increments the build number in all compatible #defines in the file.\n");
+		fprintf(stderr, "Usage: IncVersion version.h\n\n");
+		fprintf(stderr, "Increments the build number in all compatible #defines in the file.\n");
 		return 1;
 	}
 
@@ -46,14 +46,19 @@ int main(int argc, char* argv[])
 	fopen_s(&pF, argv[1], "r+b");
 	if (!pF)
 	{
-		printf("IncVersion: file %s not found.\n", argv[1]);
+		fprintf(stderr, "IncVersion: file %s not found.\n", argv[1]);
 		return 2;
 	}
 
 	// Get the file size
-	/* Get the number of bytes */
 	fseek(pF, 0L, SEEK_END);
 	int iOrigSize = ftell(pF);
+	if (iOrigSize<7)
+	{
+		fprintf(stderr, "IncVersion: invalid file %s.\n", argv[1]);
+		return 3;
+	}
+
 	char* cBuf = new char[iOrigSize+10];
 	fseek(pF, 0L, SEEK_SET);
 	fread(cBuf, sizeof(char), iOrigSize, pF);
@@ -95,7 +100,6 @@ int main(int argc, char* argv[])
 		cBuf++;
 	}
 
-	printf("IncVersion: modified %d lines of %s.\n", iModifiedLines, argv[1]);
 	fclose(pF);
 	return 0;
 }

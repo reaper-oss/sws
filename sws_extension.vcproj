@@ -101,8 +101,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="Building installer... (created in Install/output)"
-				CommandLine="copy /y &quot;$(OutDir)\$(TargetFilename)&quot; &quot;$(REAPER_DIR)\plugins&quot; &amp;&amp; if exist &quot;c:\bin\nsis\makensis.exe&quot; &quot;c:\bin\nsis\makensis.exe&quot; /v2  &quot;$(SolutionDir)\Install\$(SolutionName).nsi&quot;"
+				Description="Copying DLL..."
+				CommandLine="copy /y &quot;$(OutDir)\$(TargetFilename)&quot; &quot;$(REAPER_DIR)\plugins&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -188,8 +188,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="Building x64 installer... (created in Install/output)"
-				CommandLine="copy /y &quot;$(OutDir)\$(TargetFilename)&quot; &quot;$(REAPER64_DIR)\plugins&quot; &amp;&amp; if exist &quot;c:\bin\nsis\makensis.exe&quot; &quot;c:\bin\nsis\makensis.exe&quot; /v2  &quot;$(SolutionDir)\Install\$(SolutionName)_x64.nsi&quot;"
+				Description="Copying DLL..."
+				CommandLine="copy /y &quot;$(OutDir)\$(TargetFilename)&quot; &quot;$(REAPER64_DIR)\plugins&quot;"
 			/>
 		</Configuration>
 		<Configuration

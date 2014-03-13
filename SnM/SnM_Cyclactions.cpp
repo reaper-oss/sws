@@ -193,14 +193,14 @@ int IsStatement(const char* _cmd)
 
 bool IsTwoCondStatement(const char* _cmd)
 {
-	return (_cmd && 
+	return (_cmd && (
 		!_stricmp(STATEMENT_IFAND, _cmd) || !_stricmp(STATEMENT_IFNAND, _cmd) || 
 		!_stricmp(STATEMENT_IFOR, _cmd) || !_stricmp(STATEMENT_IFNOR, _cmd) || 
-		!_stricmp(STATEMENT_IFXOR, _cmd) || !_stricmp(STATEMENT_IFXNOR, _cmd));
+		!_stricmp(STATEMENT_IFXOR, _cmd) || !_stricmp(STATEMENT_IFXNOR, _cmd)));
 }
 
 bool IsCondStatement(const char* _cmd) {
-	return (_cmd && !_stricmp(STATEMENT_IF, _cmd) || !_stricmp(STATEMENT_IFNOT, _cmd) || IsTwoCondStatement(_cmd));
+	return (_cmd && (!_stricmp(STATEMENT_IF, _cmd) || !_stricmp(STATEMENT_IFNOT, _cmd) || IsTwoCondStatement(_cmd)));
 }
 
 

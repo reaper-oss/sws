@@ -1,8 +1,8 @@
 /******************************************************************************
 / Console.cpp
 /
-/ Copyright (c) 2011 Tim Payne (SWS), Jeffos
-/ http://www.standingwaterstudios.com/reaper
+/ Copyright (c) 2011-2014 Tim Payne (SWS), Jeffos
+/ https://code.google.com/p/sws-extension
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -41,7 +41,7 @@
 #include "../SnM/SnM_Util.h"
 #include "Console.h"
 
-// Globals, g_foo
+
 static ReaConsoleWnd* g_pConsoleWnd = NULL;
 static WDL_TypedBuf<int> g_selTracks;
 static char g_cLastKey = 0;
@@ -49,7 +49,6 @@ static DWORD g_dwLastKeyMsg = 0;
 #define CONSOLE_WINDOWPOS_KEY "ReaConsoleWindowPos"
 bool g_bCloseOnReturnPref = false;
 
-// Prototypes
 CONSOLE_COMMAND Tokenize(char* strCommand, const char** trackid, const char** args);
 void ParseTrackId(char* strId, bool bReset = true);
 void ProcessCommand(CONSOLE_COMMAND command, const char* args);

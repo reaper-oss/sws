@@ -217,8 +217,27 @@ void OnTriggerActionTimer()
 	}
 }
 
+int PromptClearProjectStartupAction(bool _clear)
+{
+	int r=0, cmdId=SNM_NamedCommandLookup(g_prjActions.Get()->Get());
+	if (cmdId)
+	{
+		WDL_FastString msg;
+		msg.AppendFormatted(256,
+			_clear ?
+				__LOCALIZE_VERFMT("Are you sure you want to clear the current startup action: '%s'?","sws_mbox") :
+				__LOCALIZE_VERFMT("Are you sure you want to replace the current startup action: '%s'?","sws_mbox"),
+			kbd_getTextFromCmd(cmdId, NULL));
+		r = MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("S&M - Confirmation","sws_mbox"), MB_OKCANCEL);
+	}
+	return r;
+}
+
 void SetProjectStartupAction(COMMAND_T* _ct)
 {
+	if (PromptClearProjectStartupAction(false) == IDCANCEL)
+		return;
+
 	char idstr[SNM_MAX_ACTION_CUSTID_LEN];
 	lstrcpyn(idstr, __LOCALIZE("Paste command ID or identifier string here","sws_mbox"), sizeof(idstr));
 	if (PromptUserForString(GetMainHwnd(), SWS_CMD_SHORTNAME(_ct), idstr, sizeof(idstr), true))
@@ -245,7 +264,7 @@ void SetProjectStartupAction(COMMAND_T* _ct)
 				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_MISCCFG, -1);
 
 				char prjFn[SNM_MAX_PATH]="";
-				msg.SetFormatted(256, __LOCALIZE_VERFMT("'%s' is defined as startup action","sws_mbox"), kbd_getTextFromCmd(cmdId, NULL));
+				msg.SetFormatted(256, __LOCALIZE_VERFMT("'%s' is defined as project startup action.","sws_mbox"), kbd_getTextFromCmd(cmdId, NULL));
 				EnumProjects(-1, prjFn, sizeof(prjFn));
 				if (*prjFn) {
 					msg.Append("\n");
@@ -264,19 +283,18 @@ void SetProjectStartupAction(COMMAND_T* _ct)
 
 void ClearProjectStartupAction(COMMAND_T* _ct)
 {
-	if (g_prjActions.Get()->GetLength())
-	{
-		int r=IDOK, cmdId = SNM_NamedCommandLookup(g_prjActions.Get()->Get());
-		if (cmdId) {
-			WDL_FastString msg;
-			msg.AppendFormatted(256, __LOCALIZE_VERFMT("Are you sure you want to clear the startup action '%s'?","sws_mbox"), kbd_getTextFromCmd(cmdId, NULL));
-			r = MessageBox(GetMainHwnd(), msg.Get(), SWS_CMD_SHORTNAME(_ct), MB_OKCANCEL);
-		}
-		if (r==IDOK) {
-			g_prjActions.Get()->Set("");
-			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_MISCCFG, -1);
-		}
+	if (PromptClearProjectStartupAction(true)==IDOK) {
+		g_prjActions.Get()->Set("");
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_MISCCFG, -1);
 	}
+}
+
+void ShowProjectStartupAction(COMMAND_T* _ct)
+{
+	WDL_FastString msg(__LOCALIZE("No startup action is defined.","sws_mbox"));
+	if (int cmdId = SNM_NamedCommandLookup(g_prjActions.Get()->Get()))
+		msg.SetFormatted(256, __LOCALIZE_VERFMT("Current project startup action: '%s'","sws_mbox"), kbd_getTextFromCmd(cmdId, NULL));
+	MessageBox(GetMainHwnd(), msg.Get(), SWS_CMD_SHORTNAME(_ct), MB_OK);
 }
 
 static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)

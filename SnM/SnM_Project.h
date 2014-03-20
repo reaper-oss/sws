@@ -65,6 +65,7 @@ protected:
 
 void SetProjectStartupAction(COMMAND_T*);
 void ClearProjectStartupAction(COMMAND_T*);
+void ShowProjectStartupAction(COMMAND_T*);
 int ReaProjectInit();
 
 void InsertSilence(COMMAND_T*);

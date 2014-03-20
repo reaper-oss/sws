@@ -2377,5 +2377,5 @@ Other S&M updates/fixes:
 Issue 225: Fixed selected text in Notes/help view when switching between docker tabs
 
 !SWS v1.x.x
-Go http://www.standingwaterstudios.com/reaper/whatsnew_v1.txt|here| for older changes
+Go http://sws.mj-s.com/download/whatsnew_v1.txt|here| for older changes
 

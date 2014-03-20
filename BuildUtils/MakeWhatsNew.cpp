@@ -51,7 +51,7 @@ public:
 // Line starting with + : Make into bullet
 // URLs are converted into <a href>.  If you suffix a link with |, the following text will be used as the desc text
 // Text "issue %d" is converted into a link into the tracker
-int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML)
+int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML, const char* _url)
 {
 	FILE* pIn;
 	FILE* pOut;
@@ -128,7 +128,19 @@ int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML)
 		fputs("<!DOCTYPE html >\n", pOut);
 		fputs("<html lang=\"en\">\n", pOut);
 		fputs("<head><meta charset=\"utf-8\"><title>SWS/S&M Extension - What's new?</title></head>\n", pOut);
-		fputs("<body>\n<h1><a href=\"http://www.standingwaterstudios.com/reaper\">SWS/S&M Extension</a> - What's new?</title></h1>\n", pOut);
+		fputs("<body>\n<h1>", pOut);
+		if (_url)
+		{
+			fputs("<a href=\"", pOut);
+			fputs(_url, pOut);
+			fputs("\">", pOut);
+		}
+		fputs("SWS/S&M Extension", pOut);
+		if (_url)
+		{
+			fputs("</a>", pOut);
+		}
+		fputs(" - What's new?</title></h1>\n", pOut);
 	}
 
 	while (cBuf[iPos] && iPos < iSize)
@@ -140,7 +152,7 @@ int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML)
 			{
 				if (cBuf[iPos] == '!')
 				{
-					if (bFullHTML && iPos)
+					if (iPos)
 						fputs("<hr />", pOut);
 					fputs("<h3>", pOut);
 					curSection.Push(HEADER);
@@ -315,6 +327,6 @@ int main(int argc, char* argv[])
 	if (argc == iNextArg + 1)
 		lstrcpyn(fnOut, argv[iNextArg], sizeof(fnOut));
 
-	return GenHtmlWhatsNew(fnIn, fnOut, bFullHTML);
+	return GenHtmlWhatsNew(fnIn, fnOut, bFullHTML, NULL);
 }
 #endif

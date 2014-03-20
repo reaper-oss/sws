@@ -1202,95 +1202,98 @@ enum { UPPER = 1, LOWER = 2 }; // Part of time display where drag started
 
 LRESULT CALLBACK DragZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	static POINT ptPrev;
-	static int dragArea;
-	static bool bDragStart = false;
-	static bool bDragging = false;
-	static double dOrigPos;
-	
-	switch (uMsg)
+	if (g_bDragZoomUpper || g_bDragZoomLower)
 	{
-		case WM_LBUTTONDOWN:
+		static POINT ptPrev;
+		static int dragArea;
+		static bool bDragStart = false;
+		static bool bDragging = false;
+		static double dOrigPos;
+		
+		switch (uMsg)
 		{
-			ptPrev.x = GET_X_LPARAM(lParam); 
-			ptPrev.y = GET_Y_LPARAM(lParam);
-			RECT r;
-			GetWindowRect(hwnd, &r);
-			if (ptPrev.y * 2 <= abs(r.bottom - r.top) + 1)
-				dragArea = UPPER;
-			else
-				dragArea = LOWER;
-			bDragStart = (dragArea == UPPER && g_bDragZoomUpper) || (dragArea == LOWER && g_bDragZoomLower);
-			break;
-		}
-
-		case WM_LBUTTONUP:
-			bDragStart = false;
-			bDragging = false;
-			break;
-
-		case WM_MOUSEMOVE:
-			if (bDragStart)
+			case WM_LBUTTONDOWN:
 			{
-				POINT ptClient;
-				ptClient.x = GET_X_LPARAM(lParam);
-				ptClient.y = GET_Y_LPARAM(lParam);
+				ptPrev.x = GET_X_LPARAM(lParam); 
+				ptPrev.y = GET_Y_LPARAM(lParam);
+				RECT r;
+				GetWindowRect(hwnd, &r);
+				if (ptPrev.y * 2 <= abs(r.bottom - r.top) + 1)
+					dragArea = UPPER;
+				else
+					dragArea = LOWER;
+				bDragStart = (dragArea == UPPER && g_bDragZoomUpper) || (dragArea == LOWER && g_bDragZoomLower);
+				break;
+			}
 
-				int xDelta = ptClient.x - ptPrev.x;
-				int yDelta = ptClient.y - ptPrev.y;
-				ptPrev.x = ptClient.x;
+			case WM_LBUTTONUP:
+				bDragStart = false;
+				bDragging = false;
+				break;
 
-				// Don't start drag zooming until we've crossed a threshold
-				// Then, then take over control of mouse movements (don't call the main wndproc)
-				if (!bDragging && ((dragArea == UPPER && abs(yDelta) < UPPER_DEADBAND) || (dragArea == LOWER && abs(yDelta) < LOWER_DEADBAND)))
-					break;
-
-				if (!bDragging)
+			case WM_MOUSEMOVE:
+				if (bDragStart)
 				{
-					bDragging = true;
-					ptPrev.y = ptClient.y;
-					yDelta = yDelta > 0 ? 1 : -1; // Smooth engagement
-					SCROLLINFO si = { sizeof(SCROLLINFO), };
-					si.fMask = SIF_ALL;
-					CoolSB_GetScrollInfo(GetTrackWnd(), SB_HORZ, &si);
-					dOrigPos = (si.nPos + ptClient.x) / GetHZoomLevel();
-				}
-				
-				if (!xDelta && !yDelta)
-					return 0;
+					POINT ptClient;
+					ptClient.x = GET_X_LPARAM(lParam);
+					ptClient.y = GET_Y_LPARAM(lParam);
+
+					int xDelta = ptClient.x - ptPrev.x;
+					int yDelta = ptClient.y - ptPrev.y;
+					ptPrev.x = ptClient.x;
+
+					// Don't start drag zooming until we've crossed a threshold
+					// Then, then take over control of mouse movements (don't call the main wndproc)
+					if (!bDragging && ((dragArea == UPPER && abs(yDelta) < UPPER_DEADBAND) || (dragArea == LOWER && abs(yDelta) < LOWER_DEADBAND)))
+						break;
+
+					if (!bDragging)
+					{
+						bDragging = true;
+						ptPrev.y = ptClient.y;
+						yDelta = yDelta > 0 ? 1 : -1; // Smooth engagement
+						SCROLLINFO si = { sizeof(SCROLLINFO), };
+						si.fMask = SIF_ALL;
+						CoolSB_GetScrollInfo(GetTrackWnd(), SB_HORZ, &si);
+						dOrigPos = (si.nPos + ptClient.x) / GetHZoomLevel();
+					}
+					
+					if (!xDelta && !yDelta)
+						return 0;
 
 // Setcursor just doesn't work well on OSX :( (the cursor jumps),
 // ...and SetCursorPos works, but it's SLOW
 #ifdef _WIN32 
-				SetCursor(g_hZoomDragCur);
+					SetCursor(g_hZoomDragCur);
 #endif
 
-				if (yDelta)
-				{
+					if (yDelta)
+					{
 #ifdef _WIN32
-					
-					// Keep the cursor from moving up and down regardless of actual mouse movement
-					POINT ptScreen = ptClient;
-					ptScreen.y = ptPrev.y;
-					ClientToScreen(hwnd, &ptScreen);
-					SetCursorPos(ptScreen.x, ptScreen.y);
+						
+						// Keep the cursor from moving up and down regardless of actual mouse movement
+						POINT ptScreen = ptClient;
+						ptScreen.y = ptPrev.y;
+						ClientToScreen(hwnd, &ptScreen);
+						SetCursorPos(ptScreen.x, ptScreen.y);
 #else
-					ptPrev.y = ptClient.y;
+						ptPrev.y = ptClient.y;
 #endif
-					adjustZoom((double)yDelta * g_dDragZoomScale, 0, false, 3);
-				}
+						adjustZoom((double)yDelta * g_dDragZoomScale, 0, false, 3);
+					}
 
-				static double dPrevPos = 0.0;
-				double dNewPos = dOrigPos - (ptClient.x / GetHZoomLevel());
-				if (dNewPos != dPrevPos)
-				{
-					SetHorizPos(GetTrackWnd(), dNewPos);
-					dPrevPos = dNewPos;
+					static double dPrevPos = 0.0;
+					double dNewPos = dOrigPos - (ptClient.x / GetHZoomLevel());
+					if (dNewPos != dPrevPos)
+					{
+						SetHorizPos(GetTrackWnd(), dNewPos);
+						dPrevPos = dNewPos;
+					}
+					
+					return 0;
 				}
-				
-				return 0;
-			}
-			break;
+				break;
+		}
 	}
 	return g_ReaperRulerWndProc(hwnd, uMsg, wParam, lParam); 
 }

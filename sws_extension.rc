@@ -194,8 +194,7 @@ BEGIN
     LTEXT           "Version String",IDC_VERSION,7,15,150,8
     LTEXT           "(c) 2014\tTim Payne (SWS)\r\t\tJeffos (S&&M)\r\t\tFingers (FNG)\r\t\tDominik Martin Držic (BR)\r(c) 2012\tPhilip S. Considine (IX)\r\t\tBrad Coe\r(c) 2011\tShane StClair (Autorender)\r\t\tAdam Wathan (AW)\r(c) 2010\tP. Bourdon (Padre)\r(c) 2009\tXenakios",IDC_STATIC,7,25,180,82
     LTEXT           "For more information and latest downloads, visit the SWS website:",IDC_STATIC,7,112,214,8
-    CONTROL         "http://www.standingwaterstudios.com/reaper/",IDC_WEBSITE,
-                    "Button",BS_OWNERDRAW | WS_TABSTOP,7,120,241,11
+    CONTROL         "",IDC_WEBSITE,"Button",BS_OWNERDRAW | WS_TABSTOP,7,120,241,11
     GROUPBOX        "Check for new versions on startup",IDC_FILTERGROUP,7,137,241,34
     CONTROL         "Official releases",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,149,74,14
     CONTROL         "Beta releases",IDC_CHECK2,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,90,149,99,14
@@ -1885,7 +1884,8 @@ IDC_ZOOMDRAG            CURSOR                  "zoomdrag.cur"
 // Generated from the TEXTINCLUDE 3 resource.
 //
 #include "version.h"
-#include "version.rc2"
+#include "version.rc2"
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

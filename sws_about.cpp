@@ -67,7 +67,7 @@ void WhatsNew(COMMAND_T*)
 #endif
 		fnOut.SetFormatted(BUFFER_SIZE, WHATSNEW_HTM, tmpDir);
 
-		if (!GenHtmlWhatsNew(fnIn.Get(), fnOut.Get(), true))
+		if (!GenHtmlWhatsNew(fnIn.Get(), fnOut.Get(), true, SWS_URL))
 		{
 /*JFB commented: fails on osx (safari), optional on windows
 			fnOut.Insert("file://", 0);
@@ -94,6 +94,7 @@ INT_PTR WINAPI doAbout(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			char cVersion[256];
 			sprintf(cVersion, __LOCALIZE_VERFMT("Version %d.%d.%d Build #%d, built on %s","sws_DLG_109"), SWS_VERSION, __DATE__);
 			SetWindowText(GetDlgItem(hwndDlg, IDC_VERSION), cVersion);
+			SetWindowText(GetDlgItem(hwndDlg, IDC_WEBSITE), SWS_URL);	
 			bool official, beta; GetStartupSearchOptions(&official, &beta, NULL);
 			CheckDlgButton(hwndDlg, IDC_CHECK1, official);
 			CheckDlgButton(hwndDlg, IDC_CHECK2, beta);

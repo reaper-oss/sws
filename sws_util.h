@@ -30,6 +30,13 @@
 #define IMPAPI(x)				if (!((*((void **)&(x)) = (void *)rec->GetFunc(#x)))) errcnt++;
 #define IMPVAR(x,nm)			if (!((*(void **)&(x)) = get_config_var(nm,&sztmp)) || sztmp != sizeof(*x)) errcnt++;
 
+#define SWS_URL					"http://www.standingwaterstudios.com/reaper"
+#define SWS_URL_DOWNLOAD		SWS_URL
+#define SWS_URL_VERSION_H		"http://sws.mj-s.com/download/featured/version.h"
+#define SWS_URL_BETA_DOWNLOAD	SWS_URL
+#define SWS_URL_BETA_VERSION_H	"http://sws.mj-s.com/download/pre-release/version.h"
+#define SWS_URL_HELP_DIR		"http://sws.mj-s.com" // e.g. SWS_URL_HELP"/reaconsole.php"
+
 #define BUFFER_SIZE				2048
 #define SWS_THEMING				true
 #define SWS_INI					"SWS"
@@ -259,7 +266,7 @@ TrackEnvelope* SWS_GetTakeEnvelopeByName(MediaItem_Take* take, const char* envna
 TrackEnvelope* SWS_GetTrackEnvelopeByName(MediaTrack* track, const char* envname);
 
 // Generate html whatsnew, MakeWhatsNew.cpp
-int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML);
+int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML, const char* _url);
 
 // Functions export to reascript and c++ plugins, Reascript.cpp
 bool RegisterExportedFuncs(reaper_plugin_info_t* _rec);

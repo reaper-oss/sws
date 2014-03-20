@@ -27,9 +27,6 @@
 / Setup action "SWS: Open console", default 'c' key
 / (mapped by REAPERs built in keyboard/command mapping dialog)
 /
-/ For a list of commands, see the list in code below,
-/ or see full docs at http://www.standingwaterstudios.com/reaper
-/
 ******************************************************************************/
 
 
@@ -104,8 +101,8 @@ static console_COMMAND_T g_commands[NUM_COMMANDS] =
 	{ INPUT_SET,        0, 'i',  1, "Set input on ",         " to %s" },
 	{ COLOR_SET,        0, 'c',  9, "Change color on ",      " to %s" },
 	{ MARKER_ADD,       0, '!', 25, "Insert action marker ", "!%s" },
-	{ OSC_CMD,          0, '/', 25, "Send local OSC message",0 },
-	{ HELP_CMD,         0, '?', -1, "http://www.standingwaterstudios.com/reaconsole.php", 0 },
+	{ OSC_CMD,          0, '/', 25, "Send local OSC message", 0 },
+	{ HELP_CMD,         0, '?', -1, SWS_URL_HELP_DIR"/reaconsole.php", 0 },
 	{ UNKNOWN_COMMAND,  0,   0, -1, "Enter a command...",    0 },
 };
 //!WANT_LOCALIZE_STRINGS_END

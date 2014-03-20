@@ -38,14 +38,8 @@
 /******************************************************************************
 * Constants                                                                   *
 ******************************************************************************/
-const char* const OFFICIAL_VERSION_URL = "http://sws.mj-s.com/download/featured/version.h";
-const char* const BETA_VERSION_URL     = "http://sws.mj-s.com/download/pre-release/version.h";
-const char* const OFFICIAL_DOWNLOAD    = "http://www.standingwaterstudios.com/reaper";
-const char* const BETA_DOWNLOAD        = "http://www.standingwaterstudios.com/reaper";
 const char* const STARTUP_VERSION_KEY  = "BR - StartupVersionCheck";
-
 const int SEARCH_TIMEOUT     =  5;
-
 const int SEARCH_INITIATED   = -2;
 const int NO_CONNECTION      = -1;
 const int UP_TO_DATE         =  0;
@@ -173,12 +167,12 @@ static WDL_DLGRET DialogProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 					}
 					if (searchObject->GetStatus(NULL, NULL) == OFFICIAL_AVAILABLE)
 					{
-						ShellExecute(NULL, "open", OFFICIAL_DOWNLOAD, NULL, NULL, SW_SHOWNORMAL);
+						ShellExecute(NULL, "open", SWS_URL_DOWNLOAD, NULL, NULL, SW_SHOWNORMAL);
 						EndDialog(hwnd, 0);
 					}
 					else if (searchObject->GetStatus(NULL, NULL) == BETA_AVAILABLE)
 					{
-						ShellExecute(NULL, "open", BETA_DOWNLOAD, NULL, NULL, SW_SHOWNORMAL);
+						ShellExecute(NULL, "open", SWS_URL_BETA_DOWNLOAD, NULL, NULL, SW_SHOWNORMAL);
 						EndDialog(hwnd, 0);
 					}
 				}
@@ -186,14 +180,14 @@ static WDL_DLGRET DialogProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 				case IDC_BR_VER_OFF:
 				{
-					ShellExecute(NULL, "open", OFFICIAL_DOWNLOAD , NULL, NULL, SW_SHOWNORMAL);
+					ShellExecute(NULL, "open", SWS_URL_DOWNLOAD , NULL, NULL, SW_SHOWNORMAL);
 					EndDialog(hwnd, 0);
 				}
 				break;
 
 				case IDC_BR_VER_BETA:
 				{
-					ShellExecute(NULL, "open", BETA_DOWNLOAD, NULL, NULL, SW_SHOWNORMAL);
+					ShellExecute(NULL, "open", SWS_URL_BETA_DOWNLOAD, NULL, NULL, SW_SHOWNORMAL);
 					EndDialog(hwnd, 0);
 				}
 				break;
@@ -377,7 +371,7 @@ unsigned WINAPI BR_SearchObject::StartSearch (void* searchObject)
 		JNL_HTTPGet web;
 		web.addheader("User-Agent:SWS (Mozilla)");
 		web.addheader("Accept:*/*");
-		web.connect(OFFICIAL_VERSION_URL);
+		web.connect(SWS_URL_VERSION_H);
 		time_t startTime = time(NULL);
 		while (time(NULL) - startTime <= SEARCH_TIMEOUT && !_this->GetKillFlag())
 		{
@@ -425,7 +419,7 @@ unsigned WINAPI BR_SearchObject::StartSearch (void* searchObject)
 		JNL_HTTPGet web;
 		web.addheader("User-Agent:SWS (Mozilla)");
 		web.addheader("Accept:*/*");
-		web.connect(BETA_VERSION_URL);
+		web.connect(SWS_URL_BETA_VERSION_H);
 		time_t startTime = time(NULL);
 		while (time(NULL) - startTime <= SEARCH_TIMEOUT && !_this->GetKillFlag())
 		{

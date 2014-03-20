@@ -831,7 +831,7 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a,
 				if (!_strnicmp(STATEMENT_CONSOLE, cmd, strlen(STATEMENT_CONSOLE)))
 				{
 					if (cmd[strlen(STATEMENT_CONSOLE)] != ' ' || strlen((char*)cmd+strlen(STATEMENT_CONSOLE)+1)<2) {
-						str.SetFormatted(256, __LOCALIZE_VERFMT("%s must be followed by a valid ReaConsole command\nSee http://www.standingwaterstudios.com/reaconsole.php","sws_DLG_161"), STATEMENT_CONSOLE);
+						str.SetFormatted(256, __LOCALIZE_VERFMT("%s must be followed by a valid ReaConsole command\nSee %s","sws_DLG_161"), STATEMENT_CONSOLE, SWS_URL_HELP_DIR"/reaconsole.php");
 						return AppendErrMsg(_section, _a, _applyMsg, str.Get());
 					}
 				}

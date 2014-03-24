@@ -186,6 +186,18 @@ bool SNM_SetDoubleConfigVar(const char* _varName, double _newVal) {
 	return false;
 }
 
+// host some funcs from Ultraschall, https://github.com/Ultraschall
+const char* ULT_GetMediaItemNote(MediaItem* _item) {
+	if (_item)
+		return (const char*)GetSetMediaItemInfo(_item, "P_NOTES", NULL);
+	return "";
+}
+
+void ULT_SetMediaItemNote(MediaItem* _item, char* _str) {
+	if (_str && _item)
+		GetSetMediaItemInfo(_item, "P_NOTES", _str);
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Toolbars auto refresh option

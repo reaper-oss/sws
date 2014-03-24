@@ -45,6 +45,8 @@ int SNM_GetIntConfigVar(const char* _varName, int _errVal);
 bool SNM_SetIntConfigVar(const char* _varName, int _newVal);
 double SNM_GetDoubleConfigVar(const char* _varName, double _errVal);
 bool SNM_SetDoubleConfigVar(const char* _varName, double _newVal);
+const char* ULT_GetMediaItemNote(MediaItem* _item);
+void ULT_SetMediaItemNote(MediaItem* _item, char* _str);
 
 // toolbar auto refresh
 void EnableToolbarsAutoRefesh(COMMAND_T*);

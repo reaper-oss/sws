@@ -117,6 +117,8 @@ APIdef g_apidefs[] =
 	{ APIFUNC(BR_TakeAtMouseCursor), "MediaItem_Take*", "double*", "position", "[BR] Get take under mouse cursor. Position is mouse cursor position in arrange.", },
 	{ APIFUNC(BR_TrackAtMouseCursor), "MediaTrack*", "int*,double*", "context,position", "[BR] Get track under mouse cursor.\nContext signifies where the track was found: 0 = TCP, 1 = MCP, 2 = Arrange.\nPosition will hold mouse cursor position in arrange if applicable.", },
 
+	{ APIFUNC(ULT_GetMediaItemNote), "const char*", "MediaItem*", "item", "[ULT] Get item notes.", },
+	{ APIFUNC(ULT_SetMediaItemNote), "void", "MediaItem*,char*", "item,note", "[ULT] Set item notes.", },
 
 	{ NULL, } // denote end of table
 };

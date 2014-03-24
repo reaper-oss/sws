@@ -3,6 +3,10 @@ Project startup action
 +The action (and new menu item) "SWS/S&M: Set project startup action" now prompts to overwrite
 +Added action "SWS/S&M: Show project startup action"
 
+Added ReaScript functions
++ULT_GetMediaItemNote
++ULT_SetMediaItemNote
+
 !v2.4.0 #4 (March 13, 2014)
 <strong>REAPER v4.60+ is required!</strong>
 New API functions were introduced in this version, they enable various improvements in the SWS/S&M Extension.
@@ -66,15 +70,6 @@ Fixes
 +Action "SWS/BR: Create project markers from notes in selected MIDI items" now works properly with looped items
 
 !v2.4.0 #3 (February 5, 2014)
-Fixes
-+<strong>Windows OS / Issue 619, issue 621:</strong>
- fixed various features which were broken when using LangPacks and certain regional settings (i.e. comma as a decimal mark)
-+OS X 64-bit / Live Configs: fixed potential crash and broken list view (as reported http://forum.cockos.com/showpost.php?p=1307498&postcount=39|here|)
-+Issue 613 / Region Playlist: fixed rounding issues (with adjacent regions)
-+Issue 618: fixed cycle actions using toggle states from other cycle actions (starting with IF/IF NOT statements)
-+Fixed broken actions "SWS: Set auto crossfade on/off"
-+Action "Xenakios/SWS: Preview selected media item" now works properly with muted items
-
 Added actions
 +Xenakios/SWS: Preview selected media item through track (toggle and normal)
 +SWS/BR: Preview media item under mouse (lots of different versions, see action list) (Note: "Xenakios/SWS: Stop current media item preview" works on these too)
@@ -91,6 +86,15 @@ Added actions
 +SWS/BR: Set "Apply trim when adding volume/pan envelopes"
 +SWS/BR: Cycle through record modes
 +SWS/BR: Focus arrange window
+
+Fixes
++<strong>Windows OS / Issue 619, issue 621:</strong>
+ fixed various features which were broken when using LangPacks and certain regional settings (i.e. comma as a decimal mark)
++OS X 64-bit / Live Configs: fixed potential crash and broken list view (as reported http://forum.cockos.com/showpost.php?p=1307498&postcount=39|here|)
++Issue 613 / Region Playlist: fixed rounding issues (with adjacent regions)
++Issue 618: fixed cycle actions using toggle states from other cycle actions (starting with IF/IF NOT statements)
++Fixed broken actions "SWS: Set auto crossfade on/off"
++Action "Xenakios/SWS: Preview selected media item" now works properly with muted items
 
 Other
 +OS X DMG / Issue 608: added info allowing Mavericks/10.9+ users to run the installation script

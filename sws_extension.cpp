@@ -52,6 +52,7 @@
 #include "Autorender/Autorender.h"
 #include "IX/IX.h"
 #include "Breeder/BR.h"
+#include "Wol/wol.h"
 
 #define LOCALIZE_IMPORT_PREFIX "sws_"
 #ifdef LOCALIZE_IMPORT_PREFIX
@@ -884,6 +885,8 @@ extern "C"
 			ERR_RETURN("IX init error\n")
 		if (!BR_Init())
 			ERR_RETURN("Breeder init error\n")
+		if (!WOL_Init())
+			ERR_RETURN("Wol init error\n")
 		if (!SNM_Init(rec)) // keep it as the last init (for cyle actions)
 			ERR_RETURN("S&M init error\n")
 

@@ -31,6 +31,14 @@ Added actions
    "Exclusive toggle" means only one toggle action is ON at a time.
    For ex: in the set of toggles "A", if "Exclusive toggle A03" is ON, A01 A02 and A04 are OFF.
    These actions come in handy with Cycle Actions for example, see details and use-cases http://forum.cockos.com/showpost.php?p=1315222&postcount=1652|here| (thanks Reno.thestraws!)
++SWS/wol: Set "Vertical zoom center" to "Track at center of view"
++SWS/wol: Set "Vertical zoom center" to "Top visible track
++SWS/wol: Set "Vertical zoom center" to "Last selected track"
++SWS/wol: Set "Vertical zoom center" to "Track under mouse cursor"
++SWS/wol: Set "Horizontal zoom center" to "Edit cursor or play cursor (default)"
++SWS/wol: Set "Horizontal zoom center" to "Edit cursor"
++SWS/wol: Set "Horizontal zoom center" to "Center of view"
++SWS/wol: Set "Horizontal zoom center" to "Mouse cursor"
 
 Resources: auto-save media files improvements
 

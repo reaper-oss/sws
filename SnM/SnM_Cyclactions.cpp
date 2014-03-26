@@ -601,7 +601,11 @@ void RunCycleAction(int _section, COMMAND_T* _ct)
 				}
 				else if (!_strnicmp(STATEMENT_LOOP, cmdStr, strlen(STATEMENT_LOOP)))
 				{
-					if (loopCnt<0)
+					if (cmdStr[strlen(STATEMENT_LOOP)+1] == 'x' || cmdStr[strlen(STATEMENT_LOOP)+1] == 'X') {
+						loopCnt = PromptForInteger(undoStr, __LOCALIZE("Number of times to repeat:","sws_DLG_161"), 0, 4096, false); // returns -1 on cancel
+						if (loopCnt<0) loopCnt=0;
+					}
+					else
 						loopCnt = atoi((char*)cmdStr+strlen(STATEMENT_LOOP)+1); // +1 for the space char in "LOOP n"
 					continue;
 				}
@@ -613,6 +617,7 @@ void RunCycleAction(int _section, COMMAND_T* _ct)
 							for (int k=0; k<loopCmds.GetSize(); k++)
 								if (loopCmds.Get(k))
 									allCmds.Add(loopCmds.Get(k));
+
 						loopCmds.Empty(false);
 						loopCnt = -1;
 					}
@@ -623,9 +628,9 @@ void RunCycleAction(int _section, COMMAND_T* _ct)
 
 				if (*cmdStr)
 				{
-					if (loopCnt>=0)
+					if (loopCnt > 0)
 						loopCmds.Add(subCmds.Get(i));
-					else
+					else if (loopCnt == -1)
 						allCmds.Add(subCmds.Get(i));
 				}
 			}
@@ -654,8 +659,8 @@ void RunCycleAction(int _section, COMMAND_T* _ct)
 #endif
 				break;
 			}
-			// (try to) switch to the next action step if nothing has been performed
-			// this avoid to have to run some CAs once before they sync properly
+			// (try to) switch to the next action step if nothing has been
+			// performed (avoids to run some CAs once before they sync properly)
 			// note: m_performState is already updated via ExplodeCyclaction()
 			else //JFB!! if (action->IsToggle()==2)
 			{
@@ -907,9 +912,11 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a,
 				else if (!_strnicmp(STATEMENT_LOOP, cmd, strlen(STATEMENT_LOOP)))
 				{
 					statements++;
-
-					if (cmd[strlen(STATEMENT_LOOP)] != ' ' || atoi((char*)cmd+strlen(STATEMENT_LOOP)+1)<2) {
-						str.SetFormatted(256, __LOCALIZE_VERFMT("%s n, with n>1 is required","sws_DLG_161"), STATEMENT_LOOP);
+					int loopCnt = (strlen(STATEMENT_LOOP)+1) < strlen(cmd) ? atoi((char*)cmd+strlen(STATEMENT_LOOP)+1) : 0;
+					if (cmd[strlen(STATEMENT_LOOP)] != ' ' || 
+						(loopCnt<2 && cmd[strlen(STATEMENT_LOOP)+1] != 'x' && cmd[strlen(STATEMENT_LOOP)+1] != 'X'))
+					{
+						str.SetFormatted(256, __LOCALIZE_VERFMT("%s n (with n>1), or %s x (prompt) is required","sws_DLG_161"), STATEMENT_LOOP, STATEMENT_LOOP);
 						return AppendErrMsg(_section, _a, _applyMsg, str.Get());
 					}
 					

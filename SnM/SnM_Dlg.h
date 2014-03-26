@@ -256,6 +256,6 @@ WDL_DLGRET SNM_HookThemeColorsMessage(HWND _hwnd, UINT _uMsg, WPARAM _wParam, LP
 
 void SNM_ShowMsg(const char* _msg, const char* _title = "", HWND _hParent = NULL); 
 void SNM_CloseMsg(HWND _hParent = NULL);
-int PromptForInteger(const char* _title, const char* _what, int _min, int _max);
+int PromptForInteger(const char* _title, const char* _what, int _min, int _max, bool _showMinMax = true);
 
 #endif

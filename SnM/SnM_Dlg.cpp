@@ -242,13 +242,14 @@ void SNM_CloseMsg(HWND _hParent) {
 
 // _min and _max: 1-based (i.e. as displayed)
 // returns -1 on cancel, 0-based number otherwise
-int PromptForInteger(const char* _title, const char* _what, int _min, int _max)
+int PromptForInteger(const char* _title, const char* _what, int _min, int _max, bool _showMinMax)
 {
-	WDL_String str;
+	WDL_String str(_what);
 	int nb = -1;
 	while (nb == -1)
 	{
-		str.SetFormatted(128, "%s (%d-%d):", _what, _min, _max);
+		if (_showMinMax)
+			str.SetFormatted(128, "%s (%d-%d):", _what, _min, _max);
 		char reply[32]= ""; // no default
 		if (GetUserInputs(_title, 1, str.Get(), reply, sizeof(reply)))
 		{

@@ -9,9 +9,13 @@ Added actions
 +SWS/wol: Set "Horizontal zoom center" to "Mouse cursor"
 
 Project startup action
-+Added "Project startup action" sub-menu in Main menu > Extensions (for easier set-up)
++Added "SWS/S&M: Show project startup action"
++Added dedicated menu items in Main menu > Extensions > Project startup action (for easier set-up)
 +The action (and new menu item) "SWS/S&M: Set project startup action" now prompts to overwrite
-+Added action "SWS/S&M: Show project startup action"
+
+Cycle actions
++Added "LOOP x" statement (thanks wol!): prompts the user for the number of times to repeat something
++Tiny fixes (corner cases)
 
 Added ReaScript functions
 +ULT_GetMediaItemNote
@@ -100,7 +104,7 @@ Added actions
 Fixes
 +<strong>Windows OS / Issue 619, issue 621:</strong>
  fixed various features which were broken when using LangPacks and certain regional settings (i.e. comma as a decimal mark)
-+OS X 64-bit / Live Configs: fixed potential crash and broken list view (as reported http://forum.cockos.com/showpost.php?p=1307498&postcount=39|here|)
++OS X 64-bit: fixed broken list views (as reported http://forum.cockos.com/showpost.php?p=1307498&postcount=39|here|)
 +Issue 613 / Region Playlist: fixed rounding issues (with adjacent regions)
 +Issue 618: fixed cycle actions using toggle states from other cycle actions (starting with IF/IF NOT statements)
 +Fixed broken actions "SWS: Set auto crossfade on/off"

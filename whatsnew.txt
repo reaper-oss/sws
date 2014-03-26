@@ -57,8 +57,14 @@ ReaConsole
 +New default shortcut 'c' to open ReaConsole ('C' might conflict with the native action "Insert time signature/tempo Marker")
 
 Cycle actions
-+Issue 634: added IFAND, IFNAND, IFOR, IFNOR, IFXOR, and IFXNOR conditional statements
- Thanks to our new project member wol!
++Issue 634: our new project member wol has added some conditional statements, thanks!
+ - IF AND: if both next actions are ON
+ - IF NAND: if at least 1 of the next 2 actions is OFF
+ - IF OR: if at least 1 of the next 2 actions is ON
+ - IF NOR: if both next actions are OFF
+ - IF XOR: if the next 2 actions' states are different
+ - IF XNOR: if the next 2 actions' states are the same
+ Note: these new statements must be followed by <strong>two</strong> actions that report a toggle state
 +Editor: commands indentation
 +Editor: better description of conditional statements (in plain English)
 +Tweaks: better context menu, message dialog box, etc

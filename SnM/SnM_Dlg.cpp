@@ -244,25 +244,30 @@ void SNM_CloseMsg(HWND _hParent) {
 // returns -1 on cancel, 0-based number otherwise
 int PromptForInteger(const char* _title, const char* _what, int _min, int _max, bool _showMinMax)
 {
-	WDL_String str(_what);
+	WDL_String str;
 	int nb = -1;
 	while (nb == -1)
 	{
 		if (_showMinMax)
 			str.SetFormatted(128, "%s (%d-%d):", _what, _min, _max);
+		else
+			str.SetFormatted(128, "%s:", _what);
+
 		char reply[32]= ""; // no default
 		if (GetUserInputs(_title, 1, str.Get(), reply, sizeof(reply)))
 		{
 			nb = atoi(reply); // 0 on error
 			if (nb >= _min && nb <= _max)
 				return (nb-1);
-			else {
+			else
+			{
 				nb = -1;
-				str.SetFormatted(128, "Invalid %s!\nPlease enter a value in [%d; %d].", _what, _min, _max);
+				str.SetFormatted(128, "Please enter a value in [%d; %d].", _min, _max);
 				MessageBox(GetMainHwnd(), str.Get(), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
 			}
 		}
-		else return -1; // user has cancelled
+		else
+			return -1; // user has cancelled
 	}
 	return -1;
 }

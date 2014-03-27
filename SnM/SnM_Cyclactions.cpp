@@ -602,8 +602,8 @@ void RunCycleAction(int _section, COMMAND_T* _ct)
 				else if (!_strnicmp(STATEMENT_LOOP, cmdStr, strlen(STATEMENT_LOOP)))
 				{
 					if (cmdStr[strlen(STATEMENT_LOOP)+1] == 'x' || cmdStr[strlen(STATEMENT_LOOP)+1] == 'X') {
-						loopCnt = PromptForInteger(undoStr, __LOCALIZE("Number of times to repeat:","sws_DLG_161"), 0, 4096, false); // returns -1 on cancel
-						if (loopCnt<0) loopCnt=0;
+						loopCnt = PromptForInteger(undoStr, __LOCALIZE("Number of times to repeat","sws_DLG_161"), 0, 4096, false);
+						loopCnt++; // 0-based => 1-based + ignore the loop if user has cancelled
 					}
 					else
 						loopCnt = atoi((char*)cmdStr+strlen(STATEMENT_LOOP)+1); // +1 for the space char in "LOOP n"

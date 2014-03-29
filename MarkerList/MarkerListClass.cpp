@@ -321,7 +321,7 @@ char* MarkerList::GetFormattedList(const char* format) // Must delete [] returne
 
 void MarkerList::ExportToClipboard(const char* format)
 {
-#ifdef _WIN32
+
 	char* str = GetFormattedList(format);
 	
 	if (!str || !strlen(str) || !OpenClipboard(g_hwndParent))
@@ -332,8 +332,8 @@ void MarkerList::ExportToClipboard(const char* format)
 
 	EmptyClipboard();
 	HGLOBAL hglbCopy;
-
-#if !defined(WDL_NO_SUPPORT_UTF8)
+#ifdef _WIN32
+	#if !defined(WDL_NO_SUPPORT_UTF8)
 	if (WDL_HasUTF8(str))
 	{
 		DWORD size;
@@ -345,6 +345,7 @@ void MarkerList::ExportToClipboard(const char* format)
 		SetClipboardData(CF_UNICODETEXT, hglbCopy);
 	}
 	else
+	#endif
 #endif
 	{
 		hglbCopy = GlobalAlloc(GMEM_MOVEABLE, strlen(str)+1); 
@@ -354,9 +355,6 @@ void MarkerList::ExportToClipboard(const char* format)
 	}
 	CloseClipboard();
 	delete [] str;
-#else
-	MessageBox(g_hwndParent, __LOCALIZE("Not supported on OSX, sorry!", "sws_mbox"), __LOCALIZE("SWS - Error", "sws_mbox"), MB_OK);
-#endif
 }
 
 void MarkerList::ExportToFile(const char* format)

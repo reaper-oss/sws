@@ -86,6 +86,20 @@ void BR_EnvPoint::Append (WDL_FastString& string)
 /******************************************************************************
 * BR_Envelope                                                                 *
 ******************************************************************************/
+BR_Envelope::BR_Envelope () :
+m_envelope     (NULL),
+m_take         (NULL),
+m_parent       (NULL),
+m_tempoMap     (false),
+m_update       (false),
+m_sorted       (true),
+m_takeEnvType  (0),
+m_count        (0),
+m_countSel     (0),
+m_countConseq  (0)
+{
+}
+
 BR_Envelope::BR_Envelope (TrackEnvelope* envelope) :
 m_envelope    (envelope),
 m_take        (NULL),
@@ -138,6 +152,93 @@ m_takeEnvType (envType)
 	}
 
 	this->SetCounts();
+}
+
+BR_Envelope::BR_Envelope (const BR_Envelope& envelope) :
+m_envelope     (envelope.m_envelope),
+m_take         (envelope.m_take),
+m_parent       (envelope.m_parent),
+m_tempoMap     (envelope.m_tempoMap),
+m_update       (envelope.m_update),
+m_sorted       (envelope.m_sorted),
+m_takeEnvType  (envelope.m_takeEnvType),
+m_count        (envelope.m_count),
+m_countSel     (envelope.m_countSel),
+m_countConseq  (envelope.m_countConseq),
+m_points       (envelope.m_points),
+m_pointsSel    (envelope.m_pointsSel),
+m_pointsConseq (envelope.m_pointsConseq),
+m_chunkStart   (envelope.m_chunkStart),
+m_chunkEnd     (envelope.m_chunkEnd),
+m_properties   (envelope.m_properties)
+{
+}
+
+BR_Envelope& BR_Envelope::operator=  (const BR_Envelope& envelope)
+{
+	if (this == &envelope)
+		return *this;
+
+	m_envelope     = envelope.m_envelope;
+	m_take         = envelope.m_take;
+	m_parent       = envelope.m_parent;
+	m_tempoMap     = envelope.m_tempoMap;
+	m_update       = envelope.m_update;
+	m_sorted       = envelope.m_sorted;
+	m_takeEnvType  = envelope.m_takeEnvType;
+	m_count        = envelope.m_count;
+	m_countSel     = envelope.m_countSel;
+	m_countConseq  = envelope.m_countConseq;
+	m_points       = envelope.m_points;
+	m_pointsSel    = envelope.m_pointsSel;
+	m_pointsConseq = envelope.m_pointsConseq;
+	m_properties   = envelope.m_properties;
+	m_chunkStart.Set(&envelope.m_chunkStart);
+	m_chunkEnd.Set(&envelope.m_chunkEnd);
+
+	return *this;
+}
+
+bool BR_Envelope::operator== (const BR_Envelope& envelope)
+{
+	if (this->m_tempoMap != envelope.m_tempoMap)
+		return false;
+	if (this->m_count    != envelope.m_count)
+		return false;
+	if (this->m_countSel != envelope.m_countSel)
+		return false;
+
+	if (this->m_properties.filled    == false)
+		this->FillProperties();
+	if (envelope.m_properties.filled == false)
+		envelope.FillProperties();
+
+	if (this->m_properties.active != envelope.m_properties.active)
+		return false;
+
+	for (int i = 0 ; i < this->m_count; ++i)
+	{
+		if (this->m_points[i].position != envelope.m_points[i].position)
+			return false;
+		if (this->m_points[i].value    != envelope.m_points[i].value)
+			return false;
+		if (this->m_points[i].bezier   != envelope.m_points[i].bezier)
+			return false;
+		if (this->m_points[i].shape    != envelope.m_points[i].shape)
+			return false;
+		if (this->m_points[i].sig      != envelope.m_points[i].sig)
+			return false;
+		if (this->m_points[i].selected != envelope.m_points[i].selected)
+			return false;
+		if (this->m_points[i].partial  != envelope.m_points[i].partial)
+			return false;
+	}
+	return true;
+}
+
+bool BR_Envelope::operator!= (const BR_Envelope& envelope)
+{
+	return !(*this == envelope);
 }
 
 bool BR_Envelope::GetPoint (int id, double* position, double* value, int* shape, double* bezier)
@@ -221,13 +322,24 @@ bool BR_Envelope::DeletePoint (int id)
 {
 	if (this->ValidateId(id))
 	{
-		m_points.erase(m_points.begin()+id);
+		m_points.erase(m_points.begin() + id);
 		--m_count;
 		m_update = true;
 		return true;
 	}
 	else
 		return false;
+}
+
+bool BR_Envelope::DeletePoints (int startId, int endId)
+{
+	if (!this->ValidateId(startId) || !this->ValidateId(endId) )
+		return false;
+
+	m_points.erase(m_points.begin() + startId, m_points.begin() + endId+1);
+	m_count -= endId - startId + 1;
+	m_update = true;
+	return true;
 }
 
 bool BR_Envelope::GetTimeSig (int id, bool* sig, int* num, int* den)
@@ -361,6 +473,69 @@ bool BR_Envelope::ValidateId (int id)
 		return false;
 	else
 		return true;
+}
+
+void BR_Envelope::DeletePointsInRange (double start, double end)
+{
+	if (m_sorted)
+	{
+		int startId = FindPrevious(start);
+		while (startId < m_count)
+		{
+			if (this->ValidateId(startId) && m_points[startId].position >= start)
+				break;
+			else
+				++startId;
+		}
+
+		int endId = FindNext(end);
+		while (endId >= 0)
+		{
+			if (this->ValidateId(endId) && m_points[endId].position <= end)
+				break;
+			else
+				--endId;
+		}
+
+		// Nothing to delete
+		if (!this->ValidateId(startId))
+			return;
+
+		// Make sure end is valid
+		if (endId < startId)
+			return;
+		else if (!this->ValidateId(endId))
+			endId = m_count -1;
+
+		if (this->DeletePoints(startId, endId))
+			m_update = true;
+
+
+
+	}
+	else
+	{
+		for (vector<BR_EnvPoint>::iterator i = m_points.begin(); i != m_points.end();)
+		{
+			if (i->position >= start && i->position <= end)
+			{
+        		i = m_points.erase(i);
+				m_update = true;
+   			}
+			else
+       			++i;
+       	}
+	}
+
+	m_count = m_points.size();
+}
+
+void BR_Envelope::DeleteAllPoints ()
+{
+	m_points.clear();
+	m_sorted = true;
+	m_update = true;
+	m_count = 0;
 }
 
 void BR_Envelope::Sort ()
@@ -497,7 +672,7 @@ int BR_Envelope::FindPrevious (double position)
 
 double BR_Envelope::ValueAtPosition (double position)
 {
-	int id = this->FindPrevious(position);
+	int	id = this->FindPrevious(position);
 
 	// No previous point?
 	if (!this->ValidateId(id))
@@ -962,7 +1137,7 @@ void BR_Envelope::UpdateConsequential ()
 	}
 }
 
-void BR_Envelope::FillProperties ()
+void BR_Envelope::FillProperties () const
 {
 	if (!m_properties.filled)
 	{
@@ -1121,6 +1296,7 @@ int BR_Envelope::FindFirstPoint ()
 
 int BR_Envelope::LastPointAtPos (int id)
 {
+	/* no bounds checking - internal function so class handles before calling */
 	double position = m_points[id].position;
 	int lastId = id;
 
@@ -1144,23 +1320,101 @@ int BR_Envelope::LastPointAtPos (int id)
 	return lastId;
 }
 
-BR_Envelope::EnvProperties::EnvProperties ()
+BR_Envelope::EnvProperties::EnvProperties () :
+active        (0),
+visible       (0),
+lane          (0),
+visUnknown    (0),
+height        (0),
+heightUnknown (0),
+armed         (0),
+shape         (0),
+shapeUnknown1 (0),
+shapeUnknown2 (0),
+type          (0),
+minValue      (0),
+maxValue      (0),
+centerValue   (0),
+filled        (false),
+changed       (false)
 {
-	active = 0;
-	visible = lane = 0;
-	visUnknown = 0;
-	height = heightUnknown = 0;
-	armed = 0;
-	shape = shapeUnknown1 = shapeUnknown2 = 0;
-	type = 0;
-	minValue = maxValue = centerValue = 0;
-	filled = false;
-	changed = false;
+}
+
+BR_Envelope::EnvProperties::EnvProperties (const EnvProperties& properties) :
+active        (properties.active),
+visible       (properties.visible),
+lane          (properties.lane),
+visUnknown    (properties.visUnknown),
+height        (properties.height),
+heightUnknown (properties.heightUnknown),
+armed         (properties.armed),
+shape         (properties.shape),
+shapeUnknown1 (properties.shapeUnknown1),
+shapeUnknown2 (properties.shapeUnknown2),
+type          (properties.type),
+minValue      (properties.minValue),
+maxValue      (properties.maxValue),
+centerValue   (properties.centerValue),
+filled        (properties.filled),
+changed       (properties.changed),
+paramType     (properties.paramType)
+{
+}
+
+BR_Envelope::EnvProperties& BR_Envelope::EnvProperties::operator= (const EnvProperties& properties)
+{
+	if (this == &properties)
+		return *this;
+	active        = properties.active;
+	visible       = properties.visible;
+	lane          = properties.lane;
+	visUnknown    = properties.visUnknown;
+	height        = properties.height;
+	heightUnknown = properties.heightUnknown;
+	armed         = properties.armed;
+	shape         = properties.shape;
+	shapeUnknown1 = properties.shapeUnknown1;
+	shapeUnknown2 = properties.shapeUnknown2;
+	type          = properties.type;
+	minValue      = properties.minValue;
+	maxValue      = properties.maxValue;
+	centerValue   = properties.centerValue;
+	filled        = properties.filled;
+	changed       = properties.changed;
+	paramType.Set(&properties.paramType);
+
+	return *this;
 }
 
 /******************************************************************************
 * Miscellaneous                                                               *
 ******************************************************************************/
+TrackEnvelope* GetTempoEnv ()
+{
+	return GetTrackEnvelopeByName(CSurf_TrackFromID(0, false),  __localizeFunc("Tempo map", "env", 0));
+}
+
+TrackEnvelope* GetVolEnv (MediaTrack* track)
+{
+	return SWS_GetTrackEnvelopeByName (track, "Volume");
+}
+
+TrackEnvelope* GetVolEnvPreFX (MediaTrack* track)
+{
+	return SWS_GetTrackEnvelopeByName (track, "Volume (Pre-FX)");
+}
+
+TrackEnvelope* GetTakeEnv (MediaItem_Take* take, BR_EnvType envelope)
+{
+	char* envName = NULL;
+	if      (envelope == VOLUME) envName = "Volume";
+	else if (envelope == PAN)    envName = "Pan";
+	else if (envelope == MUTE)   envName = "Mute";
+	else if (envelope == PITCH)  envName = "Pitch";
+
+	return SWS_GetTakeEnvelopeByName(take, envName);
+}
+
 bool EnvVis (TrackEnvelope* envelope, bool* lane)
 {
 	if (char* tmp = new (nothrow) char[128])
@@ -1199,17 +1453,6 @@ int GetEnvId (TrackEnvelope* envelope, MediaTrack* parent /*= NULL*/)
 			return i;
 	}
 	return -1;
-}
-
-TrackEnvelope* GetTakeEnv (MediaItem_Take* take, BR_EnvType envelope)
-{
-	char* envName = NULL;
-	if      (envelope == VOLUME) envName = "Volume";
-	else if (envelope == PAN)    envName = "Pan";
-	else if (envelope == MUTE)   envName = "Mute";
-	else if (envelope == PITCH)  envName = "Pitch";
-
-	return SWS_GetTakeEnvelopeByName(take, envName);
 }
 
 vector<int> GetSelPoints (TrackEnvelope* envelope)
@@ -1253,11 +1496,6 @@ MediaTrack* GetEnvParent (TrackEnvelope* envelope)
 /******************************************************************************
 * Tempo                                                                       *
 ******************************************************************************/
-TrackEnvelope* GetTempoEnv ()
-{
-	return GetTrackEnvelopeByName(CSurf_TrackFromID(0, false),  __localizeFunc("Tempo map", "env", 0));
-}
-
 double AverageProjTempo ()
 {
 	if (int count = CountTempoTimeSigMarkers(NULL))

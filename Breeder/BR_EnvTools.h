@@ -100,9 +100,14 @@ struct BR_EnvPoint
 class BR_Envelope
 {
 public:
+	BR_Envelope ();
 	BR_Envelope (TrackEnvelope* envelope);
 	BR_Envelope (MediaItem_Take* take, BR_EnvType envType);
+	BR_Envelope (const BR_Envelope& envelope);
 	~BR_Envelope () {}
+	BR_Envelope& operator=  (const BR_Envelope& envelope);
+	bool         operator== (const BR_Envelope& envelope); // This only compares points and if envelope is active (aka things that affect playback) - other
+	bool         operator!= (const BR_Envelope& envelope); // properties like type, envelope pointer, height, armed, default shape etc... are ignored)
 
 	/* Direct point manipulation (returns false if id does not exist) */
 	bool GetPoint (int id, double* position, double* value, int* shape, double* bezier);
@@ -111,6 +116,7 @@ public:
 	bool SetSelection (int id, bool selected);
 	bool CreatePoint (int id, double position, double value, int shape, double bezier, bool selected);
 	bool DeletePoint (int id);
+	bool DeletePoints (int startId, int endId);
 	bool GetTimeSig (int id, bool* sig, int* num, int* den);
 	bool SetTimeSig (int id, bool sig, int num, int den);
 
@@ -124,6 +130,8 @@ public:
 
 	/* All points */
 	bool ValidateId (int id);
+	void DeletePointsInRange (double start, double end);
+	void DeleteAllPoints ();
 	void Sort ();                                            // Sort points by position
 	int Count ();                                            // Count existing points
 	int Find (double position, double surroundingRange = 0); // All find functions will be more efficient if points are sorted. When point's
@@ -131,11 +139,11 @@ public:
 	int FindPrevious (double position);                      // unless Sort() is used afterwards. Caller needs to check if returned id exists
 
 	/* Miscellaneous */
-	double ValueAtPosition (double position);          // Using find functionality, so efficiency may vary (see comment about Find())
-	double NormalizedDisplayValue (double value);      // Return point value in 0.0 - 1.0 range as displayed in arrange
+	double ValueAtPosition (double position);                // Using find functionality, so efficiency may vary (see comment about Find())
+	double NormalizedDisplayValue (double value);            // Return point value in 0.0 - 1.0 range as displayed in arrange
 	double NormalizedDisplayValue (int id);
-	void MoveArrangeToPoint (int id, int referenceId); // Moves arrange horizontally if needed so point is visible
-	bool VisibleInArrange ();                          // Check if arrange scroll position allows envelope to be shown
+	void MoveArrangeToPoint (int id, int referenceId);       // Moves arrange horizontally if needed so point is visible
+	bool VisibleInArrange ();                                // Check if arrange scroll position allows envelope to be shown
 	bool IsTempo ();
 	bool IsTakeEnvelope ();
 	MediaItem_Take* GetTake ();
@@ -164,7 +172,7 @@ public:
 	void SetLaneHeight (int height);
 	void SetDefaultShape (int shape);
 
-	/* Committing - does absolutely nothing if there are no edits (unless forced) */
+	/* Committing - does absolutely nothing if there are no edits (unless forced) - updateTimeline is used for one corner case in DeleteTempoPreserveItems() */
 	bool Commit (bool force = false);
 
 private:
@@ -172,7 +180,7 @@ private:
 	void ParseState (char* envState, size_t size);
 	void SetCounts ();
 	void UpdateConsequential ();
-	void FillProperties ();
+	void FillProperties () const; // to make operator== const (yes, m_properties does get modified, but always according to chunk and only if not cached already)
 	WDL_FastString GetProperties ();
 	int FindFirstPoint ();
 	int LastPointAtPos (int id);
@@ -182,6 +190,7 @@ private:
 	bool m_tempoMap;
 	bool m_update;
 	bool m_sorted;
+	int m_takeEnvType;
 	int m_count;
 	int m_countSel;
 	int m_countConseq;
@@ -190,10 +199,8 @@ private:
 	vector<IdPair> m_pointsConseq;
 	WDL_FastString m_chunkStart;
 	WDL_FastString m_chunkEnd;
-	int m_takeEnvType;
 	struct EnvProperties
 	{
-		WDL_FastString paramType;
 		int active;
 		int visible, lane;
 		double visUnknown;
@@ -203,23 +210,28 @@ private:
 		int type;
 		double minValue, maxValue, centerValue;
 		bool filled, changed;
+		WDL_FastString paramType;
 		EnvProperties ();
-	} m_properties;
+		EnvProperties (const EnvProperties& properties);
+		EnvProperties& operator=  (const EnvProperties& properties);
+	} mutable m_properties; // because FillProperties must be const (to make operator== const) but still be able to change m_propeties
 };
 
 /******************************************************************************
 * Miscellaneous                                                               *
 ******************************************************************************/
+TrackEnvelope* GetTempoEnv ();
+TrackEnvelope* GetVolEnv (MediaTrack* track);
+TrackEnvelope* GetVolEnvPreFX (MediaTrack* track);
+TrackEnvelope* GetTakeEnv (MediaItem_Take* take, BR_EnvType envelope);
 bool EnvVis (TrackEnvelope* envelope, bool* lane);
 int GetEnvId (TrackEnvelope* envelope, MediaTrack* parent = NULL);
-TrackEnvelope* GetTakeEnv (MediaItem_Take* take, BR_EnvType envelope);
 vector<int> GetSelPoints (TrackEnvelope* envelope);
 MediaTrack* GetEnvParent (TrackEnvelope* envelope);
 
 /******************************************************************************
 * Tempo                                                                       *
 ******************************************************************************/
-TrackEnvelope* GetTempoEnv ();
 double AverageProjTempo ();
 double TempoAtPosition (double startBpm, double endBpm, double startTime, double endTime, double targetTime);
 double MeasureAtPosition (double startBpm, double endBpm, double timeLen, double targetTime);

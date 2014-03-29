@@ -446,6 +446,121 @@ void SetEnvValToNextPrev (COMMAND_T* ct)
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 }
 
+void MoveEnvPointToEditCursor (COMMAND_T* ct)
+{
+	double cursor = GetCursorPositionEx(NULL);
+	int id = -1;
+
+	BR_Envelope envelope(GetSelectedTrackEnvelope(NULL));
+	if (!envelope.CountSelected())
+		return;
+
+	// Find closest
+	if ((int)ct->user == 0)
+	{
+		int prevId = envelope.FindPrevious(cursor);
+		double pos1;
+
+		if (!envelope.GetPoint(prevId, &pos1, NULL, NULL, NULL))
+		{
+			if (envelope.GetPoint(prevId+1, &pos1, NULL, NULL, NULL))
+				id = prevId+1;
+			else
+				return;
+		}
+		else
+		{
+			double pos2;
+			if (envelope.GetPoint(prevId+1, &pos2, NULL, NULL, NULL))
+			{
+				double len1 = cursor - pos1;
+				double len2 = pos2 - cursor;
+
+				if (len1 >= len2)
+					id = prevId+1;
+				else
+					id = prevId;
+			}
+			else
+				id = prevId;
+		}
+	}
+
+	// Find closest selected
+	else
+	{
+		id = envelope.GetSelected(0);
+		double currentLen;
+		if (!envelope.GetPoint(id, &currentLen, NULL, NULL, NULL))
+			return;
+		currentLen = abs(currentLen - cursor);
+
+		for (int i = 0; i < envelope.CountSelected(); ++i)
+		{
+			int currentId = envelope.GetSelected(i);
+
+			double currentPos;
+			envelope.GetPoint(currentId, &currentPos, NULL, NULL, NULL);
+			double len = abs(cursor - currentPos);
+
+			if (len < currentLen)
+			{
+				currentLen = len;
+				id = currentId;
+			}
+		}
+	}
+
+	// Move point
+	if (id != -1)
+	{
+		double position;
+		envelope.GetPoint(id, &position, NULL, NULL, NULL);
+		if (position != cursor)
+		{
+			envelope.SetPoint(id, &cursor, NULL, NULL, NULL);
+			if (envelope.Commit())
+				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		}
+	}
+}
+
+void Insert2EnvPointsTimeSelection (COMMAND_T* ct)
+{
+	double tStart, tEnd;
+	GetSet_LoopTimeRange2(NULL, false, false, &tStart, &tEnd, false);
+
+	if (tStart + MIN_ENV_DIST >= tEnd)
+		return;
+
+	BR_Envelope envelope(GetSelectedTrackEnvelope(NULL));
+	int startId = envelope.Find(tStart, MIN_ENV_DIST);
+	int endId   = envelope.Find(tEnd, MIN_ENV_DIST);
+	int defaultShape = envelope.DefaultShape();
+	envelope.UnselectAll();
+
+	// Create points only if surrounding points are not to close, otherwise just move existing points;
+	if (envelope.ValidateId(startId))
+	{
+		envelope.SetSelection(startId, true);
+		envelope.SetPoint(startId, &tStart, NULL, &defaultShape, 0);
+	}
+	else
+		envelope.CreatePoint(envelope.Count(), tStart, envelope.ValueAtPosition(tStart), defaultShape, 0, true);
+
+	if (envelope.ValidateId(endId))
+	{
+		envelope.SetSelection(endId, true);
+		envelope.SetPoint(endId, &tEnd, NULL, &defaultShape, 0);
+	}
+	else
+		envelope.CreatePoint(envelope.Count(), tEnd, envelope.ValueAtPosition(tEnd), defaultShape, 0, true);
+
+
+	if (envelope.Commit())
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+}
+
 void ShowActiveEnvOnly (COMMAND_T* ct)
 {
 	TrackEnvelope* env = GetSelectedTrackEnvelope(NULL);

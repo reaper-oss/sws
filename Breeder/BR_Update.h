@@ -84,5 +84,5 @@ private:
 	BR_Version m_beta;
 	SWS_Mutex m_mutex;
 	static bool m_killFlag;
-	static HANDLE m_hProcess;
+	static HANDLE m_process;
 };

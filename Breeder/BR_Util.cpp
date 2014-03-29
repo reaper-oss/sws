@@ -30,6 +30,7 @@
 #include "BR_EnvTools.h"
 #include "../SnM/SnM_Dlg.h"
 #include "../SnM/SnM_Util.h"
+#include "../SnM/SnM_Chunk.h"
 #include "../reaper/localize.h"
 #include "../../WDL/projectcontext.h"
 
@@ -82,6 +83,21 @@ double AltAtof (char* str)
 {
 	replace(str, str+strlen(str), ',', '.' );
 	return atof(str);
+}
+
+double RoundToN (double val, double n)
+{
+    double shift = pow(10.0, n);
+    return Round(val*shift) / shift;
+}
+
+double TranslateRange (double value, double oldMin, double oldMax, double newMin, double newMax)
+{
+	double oldRange = oldMax - oldMin;
+	double newRange = newMax - newMin;
+	double newValue = ((value - oldMin) * newRange / oldRange) + newMin;
+
+	return SetToBounds(newValue, newMin, newMax);
 }
 
 void ReplaceAll (string& str, string oldStr, string newStr)
@@ -194,7 +210,7 @@ vector<MediaItem*> GetSelItems (MediaTrack* track)
 	return items;
 }
 
-vector<double> GetProjectMarkers (bool timeSel)
+vector<double> GetProjectMarkers (bool timeSel, double delta /*=0*/)
 {
 	double tStart, tEnd;
 	GetSet_LoopTimeRange2(NULL, false, false, &tStart, &tEnd, false);
@@ -217,9 +233,9 @@ vector<double> GetProjectMarkers (bool timeSel)
 			{
 				if (timeSel)
 				{
-					if (pos > tEnd)
+					if (pos > tEnd + delta)
 						break;
-					if (pos >= tStart)
+					if (pos >= tStart - delta)
 						markers.push_back(pos);
 				}
 				else
@@ -229,6 +245,33 @@ vector<double> GetProjectMarkers (bool timeSel)
 		++i;
 	}
 	return markers;
+}
+
+int GetTakeChannelCount (MediaItem_Take* take)
+{
+	int channels = (GetMediaItemTake_Source(take))->GetNumChannels();
+
+	if (channels == 1)
+		return 1;
+	else
+	{
+		int channelMode = *(int*)GetSetMediaItemTakeInfo(take, "I_CHANMODE", NULL);
+
+		if (channelMode == 0)      // Normal
+			return channels;
+		else if (channelMode == 1) // Reversed stereo
+			return channels;
+		else if (channelMode == 2) // Mono mix)
+			return 1;
+		else if (channelMode == 3) // Mono left
+			return 1;
+		else if (channelMode == 4) // Mono right
+			return 1;
+		else if (channelMode >= 5 && channelMode <= 66) // Mono other channels
+			return 1;
+		else                                            // Stereo other channels
+			return 2;
+	}
 }
 
 double GetClosestGrid (double position)
@@ -255,6 +298,70 @@ double GetClosestMeasureGrid (double position)
 	double prevPos = TimeMap2_beatsToTime(NULL, 0, &prevMeasure);
 	double nextPos = TimeMap2_beatsToTime(NULL, 0, &nextMeasure);
 	return ((position-prevPos) > (nextPos-position)) ? (nextPos) : (prevPos);
+}
+
+double GetClosestLeftSideGrid (double position)
+{
+	double grid = GetClosestGrid(position);
+
+	if (position == grid)
+		return position;
+	if (grid < position)
+		return grid;
+
+	double gridDiv;
+	GetConfig("projgriddiv", gridDiv);
+
+	// Dealing with measures
+	if (gridDiv/4 >= 1)
+	{
+		int measure;
+		TimeMap2_timeToBeats(NULL, grid, &measure, NULL, NULL, NULL);
+		measure -= (int)gridDiv/4;
+		return TimeMap2_beatsToTime(NULL, 0, &measure);
+	}
+
+	// Dealing with beats
+	else
+	{
+		double beats;
+		int denom;
+		TimeMap2_timeToBeats(NULL, grid, NULL, NULL, &beats, &denom);
+		gridDiv *= (double)denom/4;
+		return TimeMap2_beatsToTime(NULL, beats - gridDiv, NULL);
+	}
+}
+
+double GetClosestRightSideGrid (double position)
+{
+	double grid = GetClosestGrid(position);
+
+	if (position == grid)
+		return position;
+	if (grid > position)
+		return grid;
+
+	double gridDiv;
+	GetConfig("projgriddiv", gridDiv);
+
+	// Dealing with measures
+	if (gridDiv/4 >= 1)
+	{
+		int measure;
+		TimeMap2_timeToBeats(NULL, grid, &measure, NULL, NULL, NULL);
+		measure += (int)gridDiv/4;
+		return TimeMap2_beatsToTime(NULL, 0, &measure);
+	}
+
+	// Dealing with beats
+	else
+	{
+		double beats;
+		int denom;
+		TimeMap2_timeToBeats(NULL, grid, NULL, NULL, &beats, &denom);
+		gridDiv *= (double)denom/4;
+		return TimeMap2_beatsToTime(NULL, beats + gridDiv, NULL);
+	}
 }
 
 double EndOfProject (bool markers, bool regions)
@@ -297,6 +404,40 @@ double GetProjectSettingsTempo (int* num, int* den)
 	return bpm/_den*4;
 }
 
+void InitTempoMap ()
+{
+	if (!CountTempoTimeSigMarkers(NULL))
+	{
+		PreventUIRefresh(1);
+		bool master = TcpVis(GetMasterTrack(NULL));
+		Main_OnCommand(41046, 0);              // Toggle show master tempo envelope
+		Main_OnCommand(41046, 0);
+		if (!master) Main_OnCommand(40075, 0); // Hide master if needed
+		PreventUIRefresh(-1);
+	}
+}
+
+void ScrollToTrackIfNotInArrange (MediaTrack* track)
+{
+	int offsetY;
+	int height = GetTrackHeight(track, &offsetY);
+
+	HWND hwnd = GetArrangeWnd();
+	SCROLLINFO si = { sizeof(SCROLLINFO), };
+	si.fMask = SIF_ALL;
+	CoolSB_GetScrollInfo(hwnd, SB_VERT, &si);
+
+	int trackEnd = offsetY + height;
+	int pageEnd = si.nPos + (int)si.nPage + VERT_SCROLL_W;
+
+	if (offsetY < si.nPos || trackEnd > pageEnd)
+	{
+		si.nPos = offsetY;
+		CoolSB_SetScrollInfo(hwnd, SB_VERT, &si, true);
+		SendMessage(hwnd, WM_VSCROLL, si.nPos << 16 | SB_THUMBPOSITION, NULL);
+	}
+}
+
 bool TcpVis (MediaTrack* track)
 {
 	if ((GetMasterTrack(NULL) == track))
@@ -334,9 +475,9 @@ bool GetMediaSourceProperties (MediaItem_Take* take, bool* section, double* star
 	bool returnReverse = false;
 	double returnStart = 0;
 	double returnLength = 0;
-	double returnFade = 0;	
-	
-	PCM_source* source = (PCM_source*)GetSetMediaItemTakeInfo(take,"P_SOURCE",NULL);
+	double returnFade = 0;
+
+	PCM_source* source = GetMediaItemTake_Source(take);
 	if (source && !IsMidi(take))
 	{
 		bool foundSectionInChunk = false;
@@ -345,7 +486,7 @@ bool GetMediaSourceProperties (MediaItem_Take* take, bool* section, double* star
 		WDL_HeapBuf hb;
 		ProjectStateContext* ctx = ProjectCreateMemCtx(&hb);
 		source->SaveState(ctx);
-		LineParser lp(false);		
+		LineParser lp(false);
 		while (ProjectContext_GetNextLine(ctx, &lp))
 		{
 			if (!strcmp(lp.gettoken_str(0), "LENGTH"))
@@ -394,8 +535,8 @@ bool GetMediaSourceProperties (MediaItem_Take* take, bool* section, double* star
 
 bool SetMediaSourceProperties (MediaItem_Take* take, bool section, double start, double length, double fade, bool reverse)
 {
-	PCM_source* source = (PCM_source*)GetSetMediaItemTakeInfo(take,"P_SOURCE",NULL);
-	if (take && !IsMidi(take) && source)
+	PCM_source* source = GetMediaItemTake_Source(take);
+	if (take && source && !IsMidi(take))
 	{
 		// If existing source has properties already set, it constitutes a special source named "section" that holds
 		// another source within which the "real" media resides
@@ -449,7 +590,7 @@ bool SetMediaSourceProperties (MediaItem_Take* take, bool section, double start,
 						}
 						else                                             // in case things get added in the future
 						{
-							AppendLine(sourceStr, line); 
+							AppendLine(sourceStr, line);
 						}
 					}
 				}
@@ -500,9 +641,9 @@ bool SetMediaSourceProperties (MediaItem_Take* take, bool section, double start,
 bool SetTakeSourceFromFile (MediaItem_Take* take, const char* filename, bool inProjectData, bool keepSourceProperties)
 {
 	if (take && file_exists(filename))
-	{		
+	{
 		if (PCM_source* oldSource = (PCM_source*)GetSetMediaItemTakeInfo(take,"P_SOURCE",NULL))
-		{	
+		{
 			// Getting and setting properties appears faster than source->SetFileName(filename), testing
 			// ReaScript export on 10000 items results in 3x performance
 			bool section, reverse;
@@ -528,6 +669,9 @@ bool SetTakeSourceFromFile (MediaItem_Take* take, const char* filename, bool inP
 ******************************************************************************/
 static void GetTrackGap (int trackHeight, int* top, int* bottom)
 {
+	/* Calculates the part above the item where buttons and labels *
+	*  reside and gets us user setting for the bottom gap          */
+
 	if (top)
 	{
 		int label; GetConfig("labelitems2", label);
@@ -599,7 +743,7 @@ static int GetMinTakeHeight (MediaTrack* track, int takeCount, int trackHeight, 
 	int takeH;
 	if (*(bool*)GetSetMediaTrackInfo(track, "B_FREEMODE", NULL) || overlappingItems)
 	{
-		int maxTakeH = (trackHeight - trackTop - trackBottom) / takeCount;
+		int maxTakeH = (trackHeight - trackTop - trackBottom) / takeCount; // max take height when item occupies the whole track lane
 
 		// If max take height is over limits, reaper lets takes get
 		// resized to 1 px in FIPM or when in overlapping lane
@@ -705,19 +849,25 @@ static bool IsLastTakeTooTall (int itemHeight, int averageTakeHeight, int effect
 ******************************************************************************/
 static int GetItemHeight (MediaItem* item, int* offsetY, int trackHeight)
 {
-	// Reaper takes into account FIPM and overlapping media item lanes
-	// so no gotchas here besides track height checking since I_LASTH
-	// might return wrong value when track height is 0
+	/* Reaper takes into account FIPM and overlapping media item lanes *
+	/* so no gotchas here besides track height checking since I_LASTH  *
+	/* might return wrong value when track height is 0                 */
+
 	if (trackHeight == 0)
 		return 0;
 
-	// supplied offsetY MUST hold item's track offset
+	// Supplied offsetY MUST hold item's track offset
 	if (offsetY) *offsetY = *offsetY + *(int*)GetSetMediaItemInfo(item, "I_LASTY", NULL);
 	return *(int*)GetSetMediaItemInfo(item, "I_LASTH", NULL);
 }
 
 static int GetTakeHeight (MediaItem_Take* take, MediaItem* item, int id, int* offsetY, bool averagedLast, int trackHeight, int trackOffset)
 {
+	/* Calculates take height using all the input variables. Exists as *
+	*  a separate function since sometimes trackHeight and trackOffset *
+	*  will be known prior to calling this, so let the caller optimize *
+	*  to prevent calculating the same thing twice                     */
+
 	// Function is for internal use, so it isn't possible to have both take and item valid, but opposite must be checked
 	if (!take && !item)
 	{
@@ -898,7 +1048,7 @@ int GetTakeHeight (MediaItem* item, int id, int* offsetY)
 
 int GetTakeEnvHeight (MediaItem_Take* take, int* offsetY)
 {
-	// Last take may have different height then the others, but envelope is always positioned based
+	// Last take may have different height than the others, but envelope is always positioned based
 	// on take height of other takes so we get average take height (relevant for last take only)
 	int envelopeH = GetTakeHeight(take, NULL, 0, offsetY, true) - 2*ENV_GAP;
 	envelopeH = (envelopeH > ENV_LINE_WIDTH) ? envelopeH : 0;
@@ -909,7 +1059,7 @@ int GetTakeEnvHeight (MediaItem_Take* take, int* offsetY)
 
 int GetTakeEnvHeight (MediaItem* item, int id, int* offsetY)
 {
-	// Last take may have different height then the others, but envelope is always positioned based
+	// Last take may have different height than the others, but envelope is always positioned based
 	// on take height of other takes so we get average take height (relevant for last take only)
 	int envelopeH = GetTakeHeight(NULL, item, id, offsetY, true) - 2*ENV_GAP;
 	envelopeH = (envelopeH > ENV_LINE_WIDTH) ? envelopeH : 0;
@@ -1287,9 +1437,9 @@ static void GetTrackOrEnvelopeFromY (int y, TrackEnvelope** _envelope, MediaTrac
 ******************************************************************************/
 static bool IsPointInArrange (POINT* p, bool checkPointVisibilty = true)
 {
-	/* Check if point is in arrange. Since WindowFromPoint is sometimes   *
-	*  called before this function, caller can choose not to check it but *
-	*  only if point point is over arrange (disregarding scrollbars)      */
+	/* Check if point is in arrange. Since WindowFromPoint is sometimes     *
+	*  called before this function, caller can choose not to check it but   *
+	*  only if point's coordinates are in arrange (disregarding scrollbars) */
 
 	HWND hwnd = GetArrangeWnd();
 	RECT r; GetWindowRect(hwnd, &r);
@@ -1378,6 +1528,18 @@ void CenterArrange (double position)
 	double halfSpan = (endTime - startTime) / 2;
 	startTime = position - halfSpan;
 	endTime = position + halfSpan;
+	GetSet_ArrangeView2(NULL, true, r.left, r.right-VERT_SCROLL_W, &startTime, &endTime);
+}
+
+void SetArrangeStart (double start)
+{
+	RECT r;
+	double startTime, endTime;
+	GetWindowRect(GetArrangeWnd(), &r);
+
+	GetSet_ArrangeView2(NULL, false, r.left, r.right-VERT_SCROLL_W, &startTime, &endTime);
+	endTime = start + (endTime - startTime);
+	startTime = start;
 	GetSet_ArrangeView2(NULL, true, r.left, r.right-VERT_SCROLL_W, &startTime, &endTime);
 }
 
@@ -1587,7 +1749,6 @@ static int IsMouseOverEnvelopeLineTake (MediaItem_Take* take, int takeHeight, in
 
 	takeHeight -= 2*ENV_GAP;
 	takeOffset += ENV_GAP;
-	bool found = false;
 
 	for (int i = 0; i < 4; ++i)
 	{
@@ -1772,7 +1933,7 @@ void GetMouseCursorContext (const char** window, const char** segment, const cha
 				// Check track lane for track envelope and item/take under mouse
 				int trackEnvHit = IsMouseOverEnvelopeLineTrackLane (returnInfo.track, height, offset, laneEnvs, mouseY, mouseX, mousePos, arrangeStart, arrangeZoom, &returnInfo.envelope);
 				returnInfo.item = GetItemFromY(mouseY, mousePos, &returnInfo.take);
-				
+
 				// Check track lane for take envelope
 				int takeEnvHit = 0;
 				if (trackEnvHit == 0 && returnInfo.take)
@@ -1829,7 +1990,7 @@ double PositionAtMouseCursor (bool checkRuler)
 	POINT p; GetCursorPos(&p);
 	if (IsPointInArrange(&p))
 		return PositionAtArrangePoint(p);
-	else if (checkRuler && GetRulerWnd() == WindowFromPoint(p))
+	else if (checkRuler && GetRulerWndAlt() == WindowFromPoint(p))
 		return PositionAtArrangePoint(p);
 	else
 		return -1;
@@ -1931,7 +2092,7 @@ HWND FindInFloatingDockers (const char* name)
 			hwnd = SearchFloatingDockers(name, dockerName.Get());
 		}
 		if (!hwnd)
-			hwnd =SearchFloatingDockers(name, __localizeFunc("Toolbar Docker", "docker", 0));
+			hwnd = SearchFloatingDockers(name, __localizeFunc("Toolbar Docker", "docker", 0));
 	#endif
 
 	return hwnd;
@@ -2004,8 +2165,7 @@ HWND GetTransportWnd ()
 
 HWND GetRulerWndAlt ()
 {
-	static HWND hwnd = NULL;
-	if (!hwnd) hwnd = GetRulerWnd();
+	static HWND hwnd = GetRulerWnd();
 	return hwnd;
 }
 
@@ -2182,4 +2342,68 @@ bool ThemeListViewInProc (HWND hwnd, int uMsg, LPARAM lParam, HWND list, bool gr
 			return true;
 	}
 	return false;
+}
+
+/******************************************************************************
+* MIDI                                                                        *
+******************************************************************************/
+BR_NoteEvent::BR_NoteEvent (MediaItem_Take* take, int id)
+{
+	MIDI_GetNote(take, id, &selected, &muted, &timePos, &timeEnd, &chan, &pitch, &vel);
+	timePos = MIDI_GetProjTimeFromPPQPos(take, timePos);
+	timeEnd = MIDI_GetProjTimeFromPPQPos(take, timeEnd);
+}
+
+void BR_NoteEvent::InsertEvent (MediaItem_Take* take)
+{
+	timePos = MIDI_GetPPQPosFromProjTime(take, timePos);
+	timeEnd = MIDI_GetPPQPosFromProjTime(take, timeEnd);
+	MIDI_InsertNote(take, selected, muted, timePos, timeEnd, chan, pitch, vel);
+}
+
+BR_CCEvent::BR_CCEvent (MediaItem_Take* take, int id)
+{
+	MIDI_GetCC(take, id, &selected, &muted, &timePos, &chanmsg, &chan, &msg2, &msg3);
+	timePos = MIDI_GetProjTimeFromPPQPos(take, timePos);
+}
+
+void BR_CCEvent::InsertEvent (MediaItem_Take* take)
+{
+	timePos = MIDI_GetPPQPosFromProjTime(take, timePos);
+	MIDI_InsertCC(take, selected, muted, timePos, chanmsg, chan, msg2, msg3);
+}
+
+BR_SysEvent::BR_SysEvent (MediaItem_Take* take, int id)
+{
+	char* message = NULL;
+	int message_sz = 0;
+	MIDI_GetTextSysexEvt(take, id, &selected, &muted, &timePos, &type, NULL, NULL);
+	timePos = MIDI_GetProjTimeFromPPQPos(take, timePos);
+	if (type == -1)
+	{
+		message = new (nothrow) char[32768];
+		message_sz = 32768;
+	}
+	else
+	{
+		message = new (nothrow) char[64];
+		message_sz = 64;
+	}
+	MIDI_GetTextSysexEvt(take, id, NULL, NULL, NULL, NULL, message, &message_sz);
+	msg.Set(message);
+	DELETE_NULL(message);
+}
+
+void BR_SysEvent::InsertEvent (MediaItem_Take* take)
+{
+	timePos = MIDI_GetPPQPosFromProjTime(take, timePos);
+	MIDI_InsertTextSysexEvt(take, selected, muted, timePos, type, msg.Get(), msg.GetLength());
+}
+
+BR_MidiTake::BR_MidiTake (MediaItem_Take* take, int noteCount /*=0*/, int ccCount /*=0*/, int sysCount /*=0*/) :
+take (take)
+{
+	noteEvents.reserve(noteCount);
+	ccEvents.reserve(ccCount),
+	sysEvents.reserve(sysCount);
 }

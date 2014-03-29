@@ -40,6 +40,7 @@
 ******************************************************************************/
 const char* const STARTUP_VERSION_KEY  = "BR - StartupVersionCheck";
 const int SEARCH_TIMEOUT     =  5;
+
 const int SEARCH_INITIATED   = -2;
 const int NO_CONNECTION      = -1;
 const int UP_TO_DATE         =  0;
@@ -253,7 +254,7 @@ void VersionCheckInit ()
 
 	if (official || beta)
 	{
-		// Make sure at least 24 hours have passed since last search
+		// Make sure at least 24 hours have passed since the last search
 		unsigned int currentTime = (unsigned int)time(NULL);
 		if (currentTime - lastTime >= 86400 || currentTime - lastTime < 0)
 		{
@@ -316,7 +317,7 @@ m_startup  (startup),
 m_status   (SEARCH_INITIATED),
 m_progress (0)
 {
-	this->EndSearch(); // make sure any existing search thread finishes
+	this->EndSearch(); // make sure any existing search thread finishes that was started in another instance of the object
 	this->SetProcess((HANDLE)_beginthreadex(NULL, 0, this->StartSearch, (void*)this, 0, NULL));
 }
 
@@ -382,7 +383,7 @@ unsigned WINAPI BR_SearchObject::StartSearch (void* searchObject)
 			int run = web.run();
 			if (run < 0 || web.get_status() < 0 || web.getreplycode() >= 400)
 				break;
-			else if (run == 1 && web.getreplycode() == 200) //  get data only after the connection has closed
+			if (run == 1 && web.getreplycode() == 200) //  get data only after the connection has closed
 			{
 				// Parse version.h and save results
 				int size = web.bytes_available();
@@ -513,13 +514,13 @@ void BR_SearchObject::SetKillFlag (bool killFlag)
 HANDLE BR_SearchObject::GetProcess ()
 {
 	SWS_SectionLock lock(&m_mutex);
-	return m_hProcess;
+	return m_process;
 }
 
 void BR_SearchObject::SetProcess (HANDLE process)
 {
 	SWS_SectionLock lock(&m_mutex);
-	m_hProcess = process;
+	m_process = process;
 }
 
 void BR_SearchObject::EndSearch ()
@@ -566,4 +567,4 @@ int BR_SearchObject::CompareVersion (BR_Version one, BR_Version two)
 }
 
 bool BR_SearchObject::m_killFlag = false;
-HANDLE BR_SearchObject::m_hProcess = NULL;
+HANDLE BR_SearchObject::m_process = NULL;

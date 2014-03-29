@@ -59,7 +59,7 @@ const char* const UNSEL_WND   = "BR - DeselectNthTempo WndPos";
 ******************************************************************************/
 static void ConvertMarkersToTempo (int markers, int num, int den, bool removeMarkers, bool timeSel, bool gradualTempo, bool split, double splitRatio)
 {
-	vector<double> markerPositions = GetProjectMarkers(timeSel);
+	vector<double> markerPositions = GetProjectMarkers(timeSel, MAX_GRID_DIV); // delta: sometimes time selection won't catch start/end project marker due to small rounding differences
 
 	// Check number of markers
 	if (markerPositions.size() <=1)
@@ -506,7 +506,7 @@ WDL_DLGRET ConvertMarkersToTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 		case WM_DESTROY:
 		{
 			SaveWindowPos(hwnd, CONVERT_WND);
-			SaveOptionsConversion (hwnd);
+			SaveOptionsConversion(hwnd);
 		}
 		break;
 	}
@@ -1363,7 +1363,7 @@ WDL_DLGRET SelectAdjustTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			vector<int> selectedPoints = GetSelPoints(GetTempoEnv());
 			char pointCount[512];
 			_snprintf(pointCount, sizeof(pointCount), __LOCALIZE_VERFMT("SWS/BR - Select and adjust tempo markers (%d of %d points selected)","sws_DLG_167") , selectedPoints.size(), CountTempoTimeSigMarkers(NULL) );
-			SetWindowText(hwnd,pointCount);
+			SetWindowText(hwnd, pointCount);
 
 			// Update current and target edit boxes
 			UpdateCurrentBpm(hwnd, selectedPoints);

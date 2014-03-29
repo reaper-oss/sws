@@ -40,34 +40,405 @@ static bool g_convertMarkersToTempoDialog = false;
 static bool g_selectAdjustTempoDialog = false;
 static bool g_tempoShapeDialog = false;
 
+static BR_Envelope* g_tempoMap = NULL;       // once moving begins, tempo map gets cached so we don't read chunk multiple times
+static const int    g_moveGridFlag = -666;   // timer will use this to signal it run the action and not the user
+static int          g_moveGridCmd = 0;       // which move grid action is getting called right now? (0 = no active move in progress)
+static int          g_moveGridId = -666;
+static double       g_moveGridLastPos = 0;
+static bool         g_movedGridOnce = false;
+static HCURSOR      g_moveGridCur = NULL;
+static WNDPROC      g_arrangeWndProc = NULL;
+
+/******************************************************************************
+* Move grid to mouse cursor functionality. We use timer to repeatedly call    *
+* the action while shortcut is pressed. Undo is handled in translateAccel,    *
+* other stuff like drawing mouse cursor etc... is handled in InitMoveGrid     *
+******************************************************************************/
+static void InitMoveGrid (bool init, int cmd = 0);
+static int translateAccel (MSG* msg, accelerator_register_t* ctx)
+{
+	if (msg->message == WM_KEYUP || msg->message == WM_SYSKEYUP)
+	{
+		if (g_movedGridOnce)
+			Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(SWSGetCommandByID(g_moveGridCmd)) ,UNDO_STATE_ITEMS,-1);
+		InitMoveGrid(false);
+	}
+	return 0;
+}
+
+static LRESULT CALLBACK ArrangeWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	if (g_moveGridCmd && uMsg == WM_SETCURSOR && g_moveGridCur)
+	{
+		SetCursor(g_moveGridCur);
+		return 0;
+	}
+	return g_arrangeWndProc(hwnd, uMsg, wParam, lParam);
+}
+
+static void MoveGridTimer ()
+{
+	if (g_moveGridCmd)
+		Main_OnCommand(g_moveGridCmd, g_moveGridFlag);
+}
+
+static void InitMoveGrid (bool init, int cmd)
+{
+	static accelerator_register_t accelerator = { translateAccel, TRUE, NULL };
+	static int s_editCursorUndo = 0;
+
+	if (init)
+	{
+		#ifdef _WIN32
+			if (!g_moveGridCur)
+				g_moveGridCur = LoadCursor(NULL, IDC_SIZEWE);
+			if (!g_arrangeWndProc && GetArrangeWnd())
+				g_arrangeWndProc = (WNDPROC)SetWindowLongPtr(GetArrangeWnd(), GWLP_WNDPROC, (LONG_PTR)ArrangeWndProc);
+		#endif
+
+		GetConfig("undomask", s_editCursorUndo);
+		SetConfig("undomask", ClearBit(s_editCursorUndo, 3));
+
+		g_moveGridCmd = cmd;
+		plugin_register("accelerator",&accelerator);
+		plugin_register("timer",(void*)MoveGridTimer);
+	}
+	else
+	{
+		plugin_register("-accelerator",&accelerator);
+		plugin_register("-timer",(void*)MoveGridTimer);
+		SetConfig("undomask", s_editCursorUndo);
+		DELETE_NULL(g_tempoMap);
+		g_moveGridCmd = 0;
+
+		#ifdef _WIN32
+			SetWindowLongPtr(GetArrangeWnd(), GWLP_WNDPROC, (LONG_PTR)g_arrangeWndProc);
+			SendMessage(g_hwndParent, WM_SETCURSOR, (WPARAM)g_hwndParent, 0);
+			g_arrangeWndProc = NULL;
+		#endif
+	}
+
+	g_moveGridId = -666;
+	g_moveGridLastPos = 0;
+	g_movedGridOnce = false;
+}
+
+bool BR_MoveGridActionHook (int cmd, int flag)
+{
+	static int gridAction1 = NamedCommandLookup("_BR_MOVE_GRID_TO_MOUSE");
+	static int gridAction2 = NamedCommandLookup("_BR_MOVE_M_GRID_TO_MOUSE");
+	static int gridAction3 = NamedCommandLookup("_BR_MOVE_CLOSEST_TEMPO_MOUSE");
+
+	if (cmd == gridAction1 || cmd == gridAction2 || cmd == gridAction3)
+	{
+		// No active move, init and return false so action gets executed first time from shortcut
+		if (g_moveGridCmd == 0)
+		{
+			InitMoveGrid(true, cmd);
+			return false;
+		}
+
+		// Eat it if not called from a timer
+		if (flag != g_moveGridFlag)
+			return true;
+	}
+	// Not our action, pass it through
+	return false;
+}
+
 /******************************************************************************
 * Commands                                                                    *
 ******************************************************************************/
-void MoveTempo (COMMAND_T* ct)
+static bool MoveTempo (BR_Envelope& tempoMap, int id, double timeDiff)
 {
-	// In case of grid actions make sure tempo map already has at least one point created (for some reason it won't work if creating it directly in chunk)
-	if (((int)ct->user == 5 || (int)ct->user == 6) && !CountTempoTimeSigMarkers(NULL))
+	// Get tempo points
+	double t1, t2, t3;
+	double b1, b2, b3, Nb1, Nb2;
+	int s1, s2;
+
+	tempoMap.GetPoint(id-1, &t1, &b1, &s1, NULL);
+	tempoMap.GetPoint(id,   &t2, &b2, &s2, NULL);
+	bool P3 = tempoMap.GetPoint(id+1, &t3, &b3, NULL, NULL);
+	double Nt2 = t2+timeDiff;
+
+	///// CALCULATE BPM VALUES /////
+	////////////////////////////////
+
+	// Current point
+	if (P3)
 	{
-		PreventUIRefresh(1);
-		bool master = TcpVis(GetMasterTrack(NULL));
-		Main_OnCommand(41046, 0);              // Toggle show master tempo envelope
-		Main_OnCommand(41046, 0);
-		if (!master) Main_OnCommand(40075, 0); // Hide master if needed
-		PreventUIRefresh(-1);
+		if (s2 == SQUARE)
+			Nb2 = b2*(t3-t2) / (t3-Nt2);
+		else
+			Nb2 = (b2+b3)*(t3-t2) / (t3-Nt2) - b3;
+	}
+	else
+	{
+		Nb2 = b2;
+		t3 = Nt2 + 1; // t3 is faked so it can pass legality check
 	}
 
+	// Previous point
+	if (s1 == SQUARE)
+		Nb1 = b1*(t2-t1) / (Nt2-t1);
+	else
+		Nb1 = (b1+b2)*(t2-t1) / (Nt2-t1) - Nb2;
+
+	// Check if values are legal
+	if (Nb2 < MIN_BPM || Nb2 > MAX_BPM || Nb1 < MIN_BPM || Nb1 > MAX_BPM)
+		return false;
+	if ((Nt2-t1) < MIN_TEMPO_DIST || (t3 - Nt2) < MIN_TEMPO_DIST)
+		return false;
+
+	///// CHECK POINTS BEFORE PREVIOUS POINT /////
+	/////////////////////////////////////////////
+
+	// Go through points backwards and get new values for linear points
+	vector<double> prevBpm;
+	bool possible = true;
+	int direction = 1;
+	for (int i = id-2; i >= 0; --i)
+	{
+		double b; int s;
+		if (!tempoMap.GetPoint(i, NULL, &b, &s, NULL) || s == SQUARE)
+			break;
+		else
+		{
+			double newBpm = b - direction*(Nb1 - b1);
+			if (newBpm <= MAX_BPM && newBpm >= MIN_BPM)
+				prevBpm.push_back(newBpm);
+			else
+			{
+				possible = false;
+				break;
+			}
+		}
+		direction *= -1;
+	}
+	if (!possible)
+		return false;
+
+	///// SET NEW BPM VALUES /////
+	/////////////////////////////
+
+	// Points before previous (if needed)
+	for (size_t i = 0; i < prevBpm.size(); ++i)
+		tempoMap.SetPoint(id-2-i, NULL, &prevBpm[i], NULL, NULL);
+
+	// Previous point
+	tempoMap.SetPoint(id-1, NULL, &Nb1, NULL, NULL);
+
+	// Selected point
+	tempoMap.SetPoint(id, &Nt2, &Nb2, NULL, NULL);
+
+	return true;
+}
+
+void MoveGridToMouse (COMMAND_T* ct)
+{
+	// Cache tempo map for future calls
+	if (!g_tempoMap)
+	{
+		// Make sure tempo map already has at least one point created (for some reason it won't work if creating it directly in chunk)
+		if ((int)ct->user != 0) // do it only if not moving tempo marker
+			InitTempoMap();
+		g_tempoMap = new BR_Envelope(GetTempoEnv());
+	}
+
+	if (!g_tempoMap->Count())
+		return;
+	SetFocus(GetArrangeWnd()); // don't let other windows steal our keyboard accelerator
+
+	// Find closest grid/tempo marker
+	double tDiff = 0;
+	double mousePosition = PositionAtMouseCursor(true);
+	if (mousePosition == -1)
+	{
+		// Cancel undo in accelerator and do it here when cursor moves out of arrange/ruler
+		if (g_movedGridOnce)
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		InitMoveGrid(false);
+	}
+	else
+	{
+		// Move action was already called so use data from the previous mouse move
+		if (g_movedGridOnce)
+		{
+			tDiff = mousePosition - g_moveGridLastPos;
+		}
+
+		// Find or create tempo marker to move
+		else
+		{
+			double grid;
+			int targetId;
+
+			// Find closest grid tempo marker
+			if ((int)ct->user == 1 || (int)ct->user == 2)
+			{
+				grid = ((int)ct->user == 1) ? (GetClosestGrid(mousePosition)) : (GetClosestMeasureGrid(mousePosition));
+				targetId = g_tempoMap->Find(grid, MIN_TEMPO_DIST);
+			}
+			// Find closest tempo marker
+			else
+			{
+				targetId = g_tempoMap->FindPrevious(mousePosition);
+
+				double pos1;
+				if (!g_tempoMap->GetPoint(targetId, &pos1, NULL, NULL, NULL))
+					return;
+
+				// Compare with the next point to find the closest
+				double pos2;
+				if (g_tempoMap->GetPoint(targetId+1, &pos2, NULL, NULL, NULL))
+				{
+					if ((mousePosition - pos1) >= (pos2 - mousePosition) || targetId == 0)
+						targetId = targetId+1;
+					else
+						targetId = targetId;
+				}
+				g_tempoMap->GetPoint(targetId, &grid, NULL, NULL, NULL);
+			}
+
+			// No tempo marker on grid, create it (skip if moving closest tempo marker)
+			if (!g_tempoMap->ValidateId(targetId))
+			{
+				int prevId  = g_tempoMap->FindPrevious(grid);
+				double value = g_tempoMap->ValueAtPosition(grid);
+				int shape;
+				g_tempoMap->GetPoint(prevId, NULL, NULL, &shape, NULL);
+				g_tempoMap->CreatePoint(prevId+1, grid, value, shape, 0, false);
+				targetId = prevId+1;
+			}
+			else
+
+
+			// Can't move first tempo marker so ignore this move action and wait for valid mouse position
+			if (targetId != 0)
+			{
+				g_moveGridId = targetId;
+				tDiff = mousePosition - grid;
+			}
+		}
+	}
+
+	// Move grid and commit changes (undo is handled in translateAccel unless move is impossible and user gets warned!)
+	if (tDiff != 0 && g_moveGridId != -666)
+	{
+		// Warn user if tempo marker couldn't get processed
+		if (!MoveTempo(*g_tempoMap, g_moveGridId, tDiff))
+		{
+			static bool s_warnUser = true;
+			if (s_warnUser)
+			{
+				// Cancel undo in accelerator and do it here when warning user
+				if (g_movedGridOnce)
+					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+				InitMoveGrid(false);
+
+				int userAnswer = ShowMessageBox(__LOCALIZE("Moving grid failed because some tempo markers would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), __LOCALIZE("SWS - Warning", "sws_mbox"), 4);
+				if (userAnswer == 7)
+					s_warnUser = false;
+			}
+		}
+		else
+		{
+			g_moveGridLastPos = mousePosition;
+			g_tempoMap->Commit();
+			g_movedGridOnce = true;
+		}
+	}
+}
+
+void MoveGridToEditPlayCursor (COMMAND_T* ct)
+{
+	// Find cursor immediately (in case of playback we want the most accurate position)
+	double cursor = ((int)ct->user == 1 || (int)ct->user == 3) ? (GetPlayPositionEx(NULL)) : (GetCursorPositionEx(NULL));
+
+	// Make sure tempo map already has at least one point created (for some reason it won't work if creating it directly in chunk)
+	InitTempoMap();
+	BR_Envelope tempoMap(GetTempoEnv());
+	if (!tempoMap.Count())
+		return;
+
+	// Set preferences to prevent play cursor from jumping
+	int seekmodes;
+	if ((int)ct->user == 1 || (int)ct->user == 3)
+	{
+		GetConfig("seekmodes", seekmodes);
+		SetConfig("seekmodes", ClearBit(seekmodes, 5));
+	}
+	// Find closest grid
+	double tDiff = 0;
+	double grid = 0;
+	if ((int)ct->user == 0 || (int)ct->user == 1)
+		grid = GetClosestGrid(cursor);
+	else if ((int)ct->user == 2 || (int)ct->user == 3)
+		grid = GetClosestMeasureGrid(cursor);
+	else if ((int)ct->user == 4)
+		grid = GetClosestLeftSideGrid(cursor);
+	else
+		grid = GetClosestRightSideGrid(cursor);
+
+	int targetId = tempoMap.Find(grid, MIN_TEMPO_DIST);
+
+	// No tempo marker on grid, create it
+	if (!tempoMap.ValidateId(targetId))
+	{
+		int prevId  = tempoMap.FindPrevious(grid);
+		double value = tempoMap.ValueAtPosition(grid);
+		int shape;
+		tempoMap.GetPoint(prevId, NULL, NULL, &shape, NULL);
+		tempoMap.CreatePoint(prevId+1, grid, value, shape, 0, false);
+		targetId = prevId+1;
+	}
+	tDiff = cursor - grid;
+
+	// Commit changes and warn user if needed
+	if (tDiff != 0)
+	{
+		if (MoveTempo(tempoMap, targetId, tDiff))
+		{
+			PreventUIRefresh(1); // prevent jumpy cursor
+			if (tempoMap.Commit())
+			{
+				// Restore edit cursor only if moving to it
+				if ((int)ct->user != 1 && (int)ct->user != 3)
+					SetEditCurPos2(NULL, cursor, false, false);
+				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+			}
+			PreventUIRefresh(-1);
+		}
+		else
+		{
+			static bool s_warnUser = true;
+			if (s_warnUser)
+			{
+				int userAnswer = ShowMessageBox(__LOCALIZE("Moving grid failed because some tempo markers would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), __LOCALIZE("SWS - Warning", "sws_mbox"), 4);
+				if (userAnswer == 7)
+					s_warnUser = false;
+			}
+		}
+	}
+
+	// Restore preferences
+	if ((int)ct->user == 1 || (int)ct->user == 3)
+		SetConfig("seekmodes", seekmodes);
+}
+
+void MoveTempo (COMMAND_T* ct)
+{
 	BR_Envelope tempoMap(GetTempoEnv());
 	if (!tempoMap.Count())
 		return;
 	double cursor = GetCursorPositionEx(NULL);
-	int targetId = -1;
 	double tDiff = 0;
+	int targetId = -1;
 
-	// Find closest tempo marker
-	if ((int)ct->user == 3 || (int)ct->user == 4)
+	// Find tempo marker closest to the edit cursor
+	if ((int)ct->user == 3)
 	{
-		double cursorPos = ((int)ct->user == 3) ? (cursor) : (PositionAtMouseCursor(true));
-		int id = tempoMap.FindPrevious(cursorPos);
+		int id = tempoMap.FindPrevious(cursor);
 		double pos1;
 		if (!tempoMap.GetPoint(id, &pos1, NULL, NULL, NULL))
 			return;
@@ -76,8 +447,8 @@ void MoveTempo (COMMAND_T* ct)
 		double pos2;
 		if (tempoMap.GetPoint(id+1, &pos2, NULL, NULL, NULL))
 		{
-			double len1 = cursorPos - pos1;
-			double len2 = pos2 - cursorPos;
+			double len1 = cursor - pos1;
+			double len2 = pos2 - cursor;
 
 			if (len1 >= len2 || id == 0)
 				targetId = id+1;
@@ -89,29 +460,9 @@ void MoveTempo (COMMAND_T* ct)
 
 		// Get amount of movement needed
 		double cTime; tempoMap.GetPoint(targetId, &cTime, NULL, NULL, NULL);
-		tDiff = cursorPos - cTime;
+		tDiff = cursor - cTime;
 	}
-	// Find closest grid
-	else if ((int)ct->user == 5 || (int)ct->user == 6)
-	{
-		double cursorPos = PositionAtMouseCursor(false);
-		if (cursorPos == -1)
-			return;
-		double grid = ((int)ct->user == 5) ? (GetClosestGrid(cursorPos)) : (GetClosestMeasureGrid(cursorPos));
 
-		// Find/create grid tempo marker
-		targetId = tempoMap.Find(grid, MIN_TEMPO_DIST);
-		if (!tempoMap.ValidateId(targetId))
-		{
-			int prevId = tempoMap.FindPrevious(grid);
-			double value = tempoMap.ValueAtPosition(grid);
-			int shape; tempoMap.GetPoint(prevId, NULL, NULL, &shape, NULL);
-
-			tempoMap.CreatePoint (prevId+1, grid, value, shape, 0, false);
-			targetId = prevId+1;
-		}
-		tDiff = cursorPos - grid;
-	}
 	// Just get time difference for selected points
 	else
 	{
@@ -129,107 +480,23 @@ void MoveTempo (COMMAND_T* ct)
 	int count = (targetId != -1) ? (1) : (tempoMap.CountSelected());
 	for (int i = 0; i < count; ++i)
 	{
-		int id = (targetId != -1) ? (targetId) : (tempoMap.GetSelected(i));
-		if (id == 0) // Skip first
-			continue;
-
-		// Get tempo points
-		double t1, t2, t3;
-		double b1, b2, b3, Nb1, Nb2;
-		int s1, s2;
-
-		tempoMap.GetPoint(id-1, &t1, &b1, &s1, NULL);
-		tempoMap.GetPoint(id,   &t2, &b2, &s2, NULL);
-		bool P3 = tempoMap.GetPoint(id+1, &t3, &b3, NULL, NULL);
-		double Nt2 = t2+tDiff;
-
-		///// CALCULATE BPM VALUES /////
-		////////////////////////////////
-
-		// Current point
-		if (P3)
-		{
-			if (s2 == SQUARE)
-				Nb2 = b2*(t3-t2) / (t3-Nt2);
-			else
-				Nb2 = (b2+b3)*(t3-t2) / (t3-Nt2) - b3;
-		}
-		else
-		{
-			Nb2 = b2;
-			t3 = Nt2 + 1; // t3 is faked so it can pass legality check
-		}
-
-		// Previous point
-		if (s1 == SQUARE)
-			Nb1 = b1*(t2-t1) / (Nt2-t1);
-		else
-			Nb1 = (b1+b2)*(t2-t1) / (Nt2-t1) - Nb2;
-
-		// Check if values are legal
-		if (Nb2 < MIN_BPM || Nb2 > MAX_BPM || Nb1 < MIN_BPM || Nb1 > MAX_BPM)
-			SKIP(skipped, 1);
-		if ((Nt2-t1) < MIN_TEMPO_DIST || (t3 - Nt2) < MIN_TEMPO_DIST)
-			SKIP(skipped, 1);
-
-		///// CHECK POINTS BEFORE PREVIOUS POINT /////
-		/////////////////////////////////////////////
-
-		// Go through points backwards and get new values for linear points
-		vector<double> prevBpm;
-		bool possible = true;
-		int direction = 1;
-		for (int i = id-2; i >= 0; --i)
-		{
-			double b; int s;
-			if (!tempoMap.GetPoint(i, NULL, &b, &s, NULL) || s == SQUARE)
-				break;
-			else
-			{
-				double newBpm = b - direction*(Nb1 - b1);
-				if (newBpm <= MAX_BPM && newBpm >= MIN_BPM)
-					prevBpm.push_back(newBpm);
-				else
-				{
-					possible = false;
-					break;
-				}
-			}
-			direction *= -1;
-		}
-		if (!possible)
-			SKIP(skipped, 1);
-
-		///// SET NEW BPM VALUES /////
-		/////////////////////////////
-
-		// Points before previous (if needed)
-		for (size_t i = 0; i < prevBpm.size(); ++i)
-			tempoMap.SetPoint(id-2-i, NULL, &prevBpm[i], NULL, NULL);
-
-		// Previous point
-		tempoMap.SetPoint(id-1, NULL, &Nb1, NULL, NULL);
-
-		// Selected point
-		tempoMap.SetPoint(id, &Nt2, &Nb2, NULL, NULL);
+		if (int id = tempoMap.GetSelected(i)) // skip first point
+			skipped += (MoveTempo(tempoMap, id, tDiff)) ? (0) : (1);
 	}
 
 	// Commit changes
 	PreventUIRefresh(1); // prevent jumpy cursor
-	if ((targetId == -1) || (targetId != -1 && skipped == 0)) // if moving grid line, new point could have been created and then skipped
+	if (tempoMap.Commit())
 	{
-		if (tempoMap.Commit())
-		{
-			if ((int)ct->user == 3)
-				SetEditCurPos2(NULL, cursor, false, false); // keep cursor position when moving to closest tempo marker
-			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
-		}
+		if ((int)ct->user == 3)
+			SetEditCurPos2(NULL, cursor, false, false); // always keep cursor position when moving to closest tempo marker
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 	}
 	PreventUIRefresh(-1);
 
 	// Warn user if some points weren't processed
 	static bool s_warnUser = true;
-	if (s_warnUser && skipped != 0 && (targetId != -1 || tempoMap.CountSelected() > 1))
+	if (s_warnUser && skipped != 0)
 	{
 		char buffer[512];
 		_snprintfSafe(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
@@ -931,19 +1198,9 @@ void DeleteTempo (COMMAND_T* ct)
 
 struct MediaItemPosInfo
 {
-	struct MidiEvents
-	{
-		MediaItem_Take* take;
-		vector<double> notePos;
-		vector<double> noteEnd;
-		vector<double> ccPos;
-		vector<double> textPos;
-		MidiEvents(MediaItem_Take* take) : take(take) {};
-	};
-
 	MediaItem* item;
 	double position, length, timeBase;
-	vector<MidiEvents> midiEvents;
+	vector<BR_MidiTake> savedMidiTakes;
 
 	MediaItemPosInfo (MediaItem* item) : item (item)
 	{
@@ -958,33 +1215,23 @@ struct MediaItemPosInfo
 			int noteCount, ccCount, textCount;
 			if (MIDI_CountEvts(take, &noteCount, &ccCount, &textCount))
 			{
-				midiEvents.push_back(MidiEvents(take));
-				MidiEvents* midiTake = &midiEvents.back();
+				savedMidiTakes.push_back(BR_MidiTake(take, noteCount, ccCount, textCount));
+				BR_MidiTake* midiTake = &savedMidiTakes.back();
 
-				midiTake->notePos.reserve(noteCount);
-				midiTake->noteEnd.reserve(noteCount);
 				for (int i = 0; i < noteCount; ++i)
 				{
-					double pos, end;
-					MIDI_GetNote(take, i, NULL, NULL, &pos, &end, NULL, NULL, NULL);
-					midiTake->notePos.push_back(MIDI_GetProjTimeFromPPQPos(take, pos));
-					midiTake->noteEnd.push_back(MIDI_GetProjTimeFromPPQPos(take, end));
+					midiTake->noteEvents.push_back(BR_NoteEvent(take, 0));
+					MIDI_DeleteNote(take, 0);
 				}
-
-				midiTake->ccPos.reserve(ccCount);
 				for (int i = 0; i < ccCount; ++i)
 				{
-					double pos;
-					MIDI_GetCC(take, i, NULL, NULL, &pos, NULL, NULL, NULL, NULL);
-					midiTake->ccPos.push_back(MIDI_GetProjTimeFromPPQPos(take, pos));
+					midiTake->ccEvents.push_back(BR_CCEvent(take, 0));
+					MIDI_DeleteCC(take, 0);
 				}
-
-				midiTake->textPos.reserve(textCount);
 				for (int i = 0; i < textCount; ++i)
 				{
-					double pos;
-					MIDI_GetTextSysexEvt(take, i, NULL, NULL, &pos, NULL, NULL, NULL);
-					midiTake->textPos.push_back(MIDI_GetProjTimeFromPPQPos(take, pos));
+					midiTake->sysEvents.push_back(BR_SysEvent(take, 0));
+					MIDI_DeleteTextSysexEvt(take, 0);
 				}
 			}
 		}
@@ -996,29 +1243,22 @@ struct MediaItemPosInfo
 		SetMediaItemInfo_Value(item, "D_LENGTH", length);
 		SetMediaItemInfo_Value(item, "C_BEATATTACHMODE", timeBase);
 
-		for (size_t i = 0; i < midiEvents.size(); ++i)
+		for (size_t i = 0; i < savedMidiTakes.size(); ++i)
 		{
-			MidiEvents* midiTake = &midiEvents[i];
+			BR_MidiTake* midiTake = &savedMidiTakes[i];
 			MediaItem_Take* take = midiTake->take;
 
-			for (size_t i = 0; i < midiTake->notePos.size(); ++i)
-			{
-				double pos = MIDI_GetPPQPosFromProjTime(take, midiTake->notePos[i]);
-				double end = MIDI_GetPPQPosFromProjTime(take, midiTake->noteEnd[i]);
-				MIDI_SetNote(take, i, NULL, NULL, &pos, &end, NULL, NULL, NULL);
-			}
 
-			for (size_t i = 0; i < midiTake->ccPos.size(); ++i)
-			{
-				double pos = MIDI_GetPPQPosFromProjTime(take, midiTake->ccPos[i]);
-				MIDI_SetCC(take, i, NULL, NULL, &pos, NULL, NULL, NULL, NULL);
-			}
 
-			for (size_t i = 0; i < midiTake->textPos.size(); ++i)
-			{
-				double pos = MIDI_GetPPQPosFromProjTime(take, midiTake->textPos[i]);
-				MIDI_SetTextSysexEvt(take, i, NULL, NULL, &pos, NULL, NULL, 0);
-			}
+			for (size_t i = 0; i < midiTake->noteEvents.size(); ++i)
+				midiTake->noteEvents[i].InsertEvent(take);
+
+			for (size_t i = 0; i < midiTake->ccEvents.size(); ++i)
+				midiTake->ccEvents[i].InsertEvent(take);
+
+			for (size_t i = 0; i < midiTake->sysEvents.size(); ++i)
+				midiTake->sysEvents[i].InsertEvent(take);
+
 		}
 	}
 };
@@ -1103,9 +1343,9 @@ void DeleteTempoPreserveItems (COMMAND_T* ct)
 		}
 	}
 
-	// Commit tempo map and restore position info
+	// Commit tempo map and restore position info (we don't update timeline via commit because it can screw MIDI items's internal positioning info due to notes moving
 	PreventUIRefresh(1);
-	if (tempoMap.Commit())
+	if (tempoMap.Commit(false))
 	{
 		for (size_t i = 0; i < items.size(); ++i)
 			items[i].Restore();

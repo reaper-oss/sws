@@ -28,8 +28,15 @@
 #pragma once
 
 /******************************************************************************
+* Call this in action hook and swallow action if it returns true.             *
+******************************************************************************/
+bool BR_MoveGridActionHook (int cmd, int flag);
+
+/******************************************************************************
 * Commands                                                                    *
 ******************************************************************************/
+void MoveGridToMouse (COMMAND_T*);
+void MoveGridToEditPlayCursor (COMMAND_T*);
 void MoveTempo (COMMAND_T*);
 void EditTempo (COMMAND_T*);
 void EditTempoGradual (COMMAND_T*);

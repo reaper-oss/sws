@@ -37,9 +37,11 @@ void MarkersAtNotes (COMMAND_T*);
 void MarkersRegionsAtItems (COMMAND_T*);
 void SnapFollowsGridVis (COMMAND_T*);
 void TrimNewVolPanEnvs (COMMAND_T*);
+void PlaybackFollowsTempoChange (COMMAND_T*);
 void CycleRecordModes (COMMAND_T*);
 void FocusArrange (COMMAND_T*);
 void ToggleItemOnline (COMMAND_T*);
+void ItemSourcePathToClipBoard (COMMAND_T*);
 void PreviewItemAtMouse (COMMAND_T*);
 void SaveCursorPosSlot (COMMAND_T*);
 void RestoreCursorPosSlot (COMMAND_T*);
@@ -49,3 +51,4 @@ void RestoreCursorPosSlot (COMMAND_T*);
 ******************************************************************************/
 int IsSnapFollowsGridVisOn (COMMAND_T*);
 int IsTrimNewVolPanEnvsOn (COMMAND_T*);
+int IsPlaybackFollowingTempoChange (COMMAND_T*);

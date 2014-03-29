@@ -1,12 +1,38 @@
-Added actions
-+SWS/wol: Set "Vertical zoom center" to "Track at center of view"
-+SWS/wol: Set "Vertical zoom center" to "Top visible track
-+SWS/wol: Set "Vertical zoom center" to "Last selected track"
-+SWS/wol: Set "Vertical zoom center" to "Track under mouse cursor"
-+SWS/wol: Set "Horizontal zoom center" to "Edit cursor or play cursor (default)"
-+SWS/wol: Set "Horizontal zoom center" to "Edit cursor"
-+SWS/wol: Set "Horizontal zoom center" to "Center of view"
-+SWS/wol: Set "Horizontal zoom center" to "Mouse cursor"
+<strong>Analyze and normalize loudness</strong>
++Functionality in general:
+ - Loudness is measured according to EBU 3342 standard thanks to excellent http://github.com/jiixyj/libebur128|libebur128| by Jan Kokemuller
+ - Due to <b>limitations in Reaper API</b>, we can extract audio data only from certain parts of the audio chain. Chart can be found http://stash.reaper.fm/20186/SWS%20loudness%20analysis%20signal%20flow%20chart.png|here|. A few gotchas:
+   - You can't use item fades for extensive volume control
+   - If you need to use FX, current workaround is to put one item with needed FX in an empty track and measure that track
++Added actions:
+ - SWS/BR: Normalize loudness of selected items/tracks...
+ - SWS/BR: Normalized loudness of selected items/tracks to -23 LUFS
+ - SWS/BR: Analyze loudness...
++Analyze loudness dialog:
+ - Accessible from the Action list or Main menu > Extensions > Loudness...
+ - Right-click on the dialog or just click "Options" button for various settings
+ - Measures integrated, range, short-term and momentary loudness of selected items and tracks
+ - To normalize items or tracks, right-click analyzed targets in the list view - often faster than using separate actions because data for already analyzed targets in the dialog is cached (to prevent needles reanalyzing before normalization if nothing changed)
+ - Draw momentary and short-term loudness graph to selected envelope. Right-clicking analyzed item should reveal the feature. You can use dummy JS effects from http://stash.reaper.fm/v/20187/SWS%20dummy%20loudness%20graph|here| as a canvas for loudness graphs
+ - After the target is analyzed, it's possible to position edit cursor over maximum short-term and momentary loudness interval by double-clicking cells holding their measurements. There is also an option to create time selection over that part of the item/track.
+ - Dialog is designed to follow project state. If you rename or delete analyzed target, the change will get reflected in the dialog. For various settings relating to this, check dialog options
+ - Analyzing happens in a separate thread so user is free to keep on using Reaper while it's happening.
+
+Warp grid
++SWS/BR: Move closest grid line/tempo marker to mouse cursor:
+ - Prevent creating multiple undo points while shortcut is kept on being pressed
+ - Smoother reaction to mouse movements, not depending on the OS keyboard settings anymore
+ - While the shortcut is pressed, target grid gets "locked" to mouse so it isn't possible to accidentally edit surrounding grids
+ - Change mouse cursor when using the action (win only)
+ - Improved efficiency when dealing with high tempo marker count
+ - Note: due to the way upper improvements are made, you can't arm the action from the toolbar (as some users are doing http://forum.cockos.com/showthread.php?p=1332827#post1332827|here|). If you really need that, you can create a separate macro just for that:
+     - SWS/BR Save edit cursor position, slot x
+     - View: Move edit cursor to mouse cursor (no snapping)
+     - SWS/BR: Move closest grid to edit cursor
+     - SWS/BR Restore edit cursor position, slot x
++Added actions:
+ - SWS/BR: Move closest (measure) grid line to edit/play cursor (Issue 638)
+ - SWS/BR: Move closest left/right side grid line to edit cursor
 
 Project startup action
 +Added "SWS/S&M: Show project startup action"
@@ -17,9 +43,31 @@ Cycle actions
 +Added "LOOP x" statement (thanks wol!): prompts the user for the number of times to repeat something
 +Tiny fixes (corner cases)
 
+Marker list
++Export formatted marker list to clipboard now works on OSX
+
+Added actions
++SWS/wol: Set "Vertical zoom center" to "Track at center of view"
++SWS/wol: Set "Vertical zoom center" to "Top visible track
++SWS/wol: Set "Vertical zoom center" to "Last selected track"
++SWS/wol: Set "Vertical zoom center" to "Track under mouse cursor"
++SWS/wol: Set "Horizontal zoom center" to "Edit cursor or play cursor (default)"
++SWS/wol: Set "Horizontal zoom center" to "Edit cursor"
++SWS/wol: Set "Horizontal zoom center" to "Center of view"
++SWS/wol: Set "Horizontal zoom center" to "Mouse cursor"
++SWS/BR: Copy take media source file path of selected items to clipboard
++SWS/BR: Toggle "Playback position follows project timebase when changing tempo"
++SWS/BR: Move closest (selected) envelope point to edit cursor
++SWS/BR: Insert 2 envelopes points at time selection
+
 Added ReaScript functions
 +ULT_GetMediaItemNote
 +ULT_SetMediaItemNote
+
+Fixes
++The action "SWS/BR: Delete tempo marker and preserve position and length of (selected) items (including MIDI events)" should now work properly
+ - Note: due to bug in the API, please update to 4.62pre3 otherwise you will lose any text events. (however, you will always lose sysex events because that part of the bug still remains unfixed)
++Fixed rounding issues when converting projects markers to tempo markers in time selection (reported http://forum.cockos.com/showthread.php?p=1330369#post1330369|here|)
 
 !v2.4.0 #4 (March 13, 2014)
 <strong>REAPER v4.60+ is required!</strong>
@@ -391,7 +439,7 @@ Resources window and related "slot actions"
  - Added label for the attached project name (if any), right-click to load/select the said project
 +<strong>Added custom bookmarks</strong>: Context menu > Bookmark > New bookmark > Custom...
  The definition format is: resource_directory_name,description,file_extensions (no spaces around commas)
- - Example1: Configurations,ReaConfig,ReaperConfigZip 
+ - Example1: Configurations,ReaConfig,ReaperConfigZip
    => Bank of configs example: auto-fill, then double-click slots to switch ReaConfigs (or, on Win, drag-drop slots to the arrange)
  - Example2: Docs,Document,txt,rtf,pdf => Multiple file extensions example
  - Example3: Misc,Any file,* => Can be useful to attach any type of file to a project, for example
@@ -681,7 +729,7 @@ The fine details will be posted in this http://forum.cockos.com/showthread.php?p
  - Support 2 fingers scroll gesture over "Current" and "Preload" areas, e.g. switch or preload instruments/effects with a trackpad
  - Click on the "Preload" area to swap the preloaded and the current config
  - Up to 4 Monitor Windows can be used simultaneously, i.e. one per Live Config/controller
-+Added (per config) option: "Offline all but active/preloaded tracks (RAM savings)" 
++Added (per config) option: "Offline all but active/preloaded tracks (RAM savings)"
  When enabled, instruments/effects will be only be loaded for the current and preloaded tracks.
  Other tracks that are not part of the config will remain as they are, of course.
  This option works without preload too (switches will be slower though).
@@ -692,10 +740,10 @@ The fine details will be posted in this http://forum.cockos.com/showthread.php?p
 +Added (per config) option: "Send all notes off when switching configs"
 +Added (per config) option: "Select/scroll to track on list view click"
 +Added (per config) option "Automatically update sends from the input track"
- When enabled, sends of the "Input track" will be automatically created/updated, 
+ When enabled, sends of the "Input track" will be automatically created/updated,
  each a new track is added/removed from the editor's list view, for example
 +New logic for "Activation" and "Deactivation" actions/macros/scripts:
- - If a track is defined for a config (a row), only this track will be selected when the 
+ - If a track is defined for a config (a row), only this track will be selected when the
    "Activation" (or "Deactivation") action is performed.
    Track selection is restored right after the action is performed.
    => Useful since many actions deal with "selected track(s)"

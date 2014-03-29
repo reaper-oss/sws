@@ -28,6 +28,7 @@
 #include "stdafx.h"
 #include "BR_ProjState.h"
 #include "BR_EnvTools.h"
+#include "BR_Loudness.h"
 #include "BR_Util.h"
 
 /******************************************************************************
@@ -103,6 +104,9 @@ static void BeginLoadProjectState (bool isUndo, project_config_extension_t *reg)
 	// Edit cursor position
 	g_cursorPos.Get()->Empty(true);
 	g_cursorPos.Cleanup();
+
+	// Analyze loudness data
+	CleanAnalyzeLoudnessProjectData();
 }
 
 int ProjStateInit ()

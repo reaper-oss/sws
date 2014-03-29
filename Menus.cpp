@@ -265,6 +265,7 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 	AddToMenu(hMenu, __LOCALIZE("Find", "sws_ext_menu"), NamedCommandLookup("_S&M_SHOWFIND"));
 	AddToMenu(hMenu, __LOCALIZE("Groove tool...", "sws_ext_menu"), NamedCommandLookup("_FNG_GROOVE_TOOL"));
 	AddToMenu(hMenu, __LOCALIZE("Label processor...", "sws_ext_menu"), NamedCommandLookup("_IX_LABEL_PROC"));
+	AddToMenu(hMenu, __LOCALIZE("Loudness...", "sws_ext_menu"), NamedCommandLookup("_BR_ANALAYZE_LOUDNESS_DLG"));
 	AddToMenu(hMenu, __LOCALIZE("LFO generator...", "sws_ext_menu"), NamedCommandLookup("_PADRE_ENVLFO"));
 	AddToMenu(hMenu, __LOCALIZE("Live Configs", "sws_ext_menu"), NamedCommandLookup("_S&M_SHOWMIDILIVE"));
 	AddToMenu(hMenu, __LOCALIZE("MarkerList", "sws_ext_menu"), NamedCommandLookup("_SWSMARKERLIST1"));

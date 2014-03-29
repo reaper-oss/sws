@@ -28,3 +28,6 @@
 #pragma once
 
 int BR_Init ();
+void BR_Exit ();
+
+bool BR_MoveGridActionHook (int cmd, int flag);

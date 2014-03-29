@@ -79,6 +79,10 @@
 #define IDD_BR_RANDOMIZE_TEMPO          171
 #define IDD_BR_VERSION                  172
 #define IDD_PROMPT_OPTION               173
+#define IDD_BR_ANALYZE_LOUDNESS         174
+#define IDD_BR_NORMALIZE_LOUDNESS       175
+#define IDD_BR_NORMALIZE_LOUDNESS_USER  176
+#define IDD_BR_GRAPH_LOUDNESS           177
 #define IDB_UP                          500
 #define IDB_DOWN                        501
 #define IDC_BUTTON1                     1000
@@ -387,14 +391,18 @@
 #define IDC_NEXT                        1302
 #define IDC_SWAP_UP                     1303
 #define IDC_SWAP_DOWN                   1304
+#define IDC_ANALYZE                     1305
+#define IDC_CANCEL                      1306
+#define IDC_MIN                         1307
+#define IDC_MAX                         1308
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        174
+#define _APS_NEXT_RESOURCE_VALUE        178
 #define _APS_NEXT_COMMAND_VALUE         40000
-#define _APS_NEXT_CONTROL_VALUE         1305
+#define _APS_NEXT_CONTROL_VALUE         1309
 #define _APS_NEXT_SYMED_VALUE           100
 #endif
 #endif

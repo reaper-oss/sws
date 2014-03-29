@@ -161,7 +161,7 @@ void MarkersAtNotes (COMMAND_T* ct)
 
 		// Due to possible tempo changes, always work with PPQ, never time
 		double itemPPQEnd = MIDI_GetPPQPosFromProjTime(take, itemEnd);
-		double sourcePPQLen = MIDI_GetPPQPosFromProjTime(take, itemStart + sourceLen) - MIDI_GetPPQPosFromProjTime(take, itemStart); 
+		double sourcePPQLen = MIDI_GetPPQPosFromProjTime(take, itemStart + sourceLen) - MIDI_GetPPQPosFromProjTime(take, itemStart);
 
 		int noteCount = 0;
 		MIDI_CountEvts(take, &noteCount, NULL, NULL);
@@ -219,13 +219,23 @@ void MarkersRegionsAtItems (COMMAND_T* ct)
 
 void SnapFollowsGridVis (COMMAND_T* ct)
 {
-	int option; GetConfig("projshowgrid", option);
+	int option;
+	GetConfig("projshowgrid", option);
 	SetConfig("projshowgrid", ToggleBit(option, 15));
+	RefreshToolbar(0);
 }
 
 void TrimNewVolPanEnvs (COMMAND_T* ct)
 {
 	SetConfig("envtrimadjmode", (int)ct->user);
+	RefreshToolbar(0);
+}
+
+void PlaybackFollowsTempoChange (COMMAND_T*)
+{
+	int option;
+	GetConfig("seekmodes", option);
+	SetConfig("seekmodes", ToggleBit(option, 5));
 	RefreshToolbar(0);
 }
 
@@ -256,6 +266,56 @@ void ToggleItemOnline (COMMAND_T* ct)
 		}
 	}
 	UpdateArrange();
+}
+
+void ItemSourcePathToClipBoard (COMMAND_T*)
+{
+	// Build file path list
+	WDL_FastString sourceList;
+	for (int i = 0; i < CountSelectedMediaItems(NULL); ++i)
+	{
+		MediaItem* item = GetSelectedMediaItem(NULL, i);
+		if (PCM_source* source = GetMediaItemTake_Source(GetActiveTake(item)))
+		{
+			// If section, get the "real" source
+			if (!strcmp(source->GetType(), "SECTION"))
+				source = source->GetSource();
+
+			if (const char* fileName = source->GetFileName())
+				if (strcmp(fileName, "")) // skip in-project files
+					sourceList.AppendFormatted(4096, "%s\n", fileName);
+		}
+	}
+
+	// Copy list to clipboard
+	if (OpenClipboard(g_hwndParent))
+	{
+		EmptyClipboard();
+		HGLOBAL hglbCopy;
+		#ifdef _WIN32
+			#if !defined(WDL_NO_SUPPORT_UTF8)
+			if (WDL_HasUTF8(sourceList.Get()))
+			{
+				DWORD size;
+				WCHAR* wc = WDL_UTF8ToWC(sourceList.Get(), false, 0, &size);
+
+				hglbCopy = GlobalAlloc(GMEM_MOVEABLE, size*sizeof(WCHAR));
+				memcpy(GlobalLock(hglbCopy), wc, size*sizeof(WCHAR));
+				free(wc);
+				GlobalUnlock(hglbCopy);
+				SetClipboardData(CF_UNICODETEXT, hglbCopy);
+			}
+			else
+			#endif
+		#endif
+		{
+			hglbCopy = GlobalAlloc(GMEM_MOVEABLE, sourceList.GetLength() + 1);
+			memcpy(GlobalLock(hglbCopy), sourceList.Get(), sourceList.GetLength() + 1);
+			GlobalUnlock(hglbCopy);
+			SetClipboardData(CF_TEXT, hglbCopy);
+		}
+		CloseClipboard();
+	}
 }
 
 void PreviewItemAtMouse (COMMAND_T* ct)
@@ -332,4 +392,10 @@ int IsTrimNewVolPanEnvsOn (COMMAND_T* ct)
 {
 	int option; GetConfig("envtrimadjmode", option);
 	return (option == (int)ct->user);
+}
+
+int IsPlaybackFollowingTempoChange (COMMAND_T*)
+{
+	int option; GetConfig("seekmodes", option);
+	return GetBit(option, 5);
 }

@@ -47,6 +47,7 @@
 #include "SnM/SnM.h"
 #include "SnM/SnM_CSurf.h"
 #include "SnM/SnM_Dlg.h"
+#include "SnM/SnM_Util.h"
 #include "Padre/padreActions.h"
 #include "Fingers/FNG_client.h"
 #include "Autorender/Autorender.h"
@@ -508,7 +509,7 @@ extern "C"
 		}
 
 		if (rec->caller_version != REAPER_PLUGIN_VERSION)
-			ERR_RETURN("Wrong REAPER_PLUGIN_VERSION!\n");
+			ERR_RETURN("Wrong REAPER_PLUGIN_VERSION!\n")
 
 		if (!rec->GetFunc)
 			ERR_RETURN("Null rec->GetFunc ptr\n")
@@ -841,6 +842,10 @@ extern "C"
 			}
 			ERR_RETURN("SWS version incompatibility\n")
 		}
+
+		// check for dupe/clone before registering any new action
+		if (SNM_NamedCommandLookup("_SWS_ABOUT", NULL, true))
+			ERR_RETURN("Dupe SWS\n")
 
 		if (!rec->Register("hookcommand",(void*)hookCommandProc))
 			ERR_RETURN("hook command error\n")

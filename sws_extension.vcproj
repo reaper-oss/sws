@@ -3287,6 +3287,66 @@
 					RelativePath=".\Utility\SectionLock.h"
 					>
 				</File>
+				<Filter
+					Name="libebur128"
+					>
+					<File
+						RelativePath=".\libebur128\ebur128.c"
+						>
+						<FileConfiguration
+							Name="Release|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								UsePrecompiledHeader="0"
+								WarningLevel="2"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Release|x64"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								UsePrecompiledHeader="0"
+								WarningLevel="2"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Test|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								UsePrecompiledHeader="0"
+								WarningLevel="2"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Test|x64"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								UsePrecompiledHeader="0"
+								WarningLevel="2"
+							/>
+						</FileConfiguration>
+					</File>
+					<File
+						RelativePath=".\libebur128\ebur128.h"
+						>
+					</File>
+					<Filter
+						Name="queue"
+						>
+						<Filter
+							Name="sys"
+							>
+							<File
+								RelativePath=".\libebur128\queue\sys\queue.h"
+								>
+							</File>
+						</Filter>
+					</Filter>
+				</Filter>
 			</Filter>
 			<Filter
 				Name="Chunk Processing"
@@ -3578,6 +3638,14 @@
 			</File>
 			<File
 				RelativePath=".\Breeder\BR_EnvTools.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Breeder\BR_Loudness.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Breeder\BR_Loudness.h"
 				>
 			</File>
 			<File

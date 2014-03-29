@@ -92,6 +92,10 @@ bool hookCommandProc(int iCmd, int flag)
 	if (iCmd == 1013 && !RecordInputCheck())
 		return true;
 
+	// Initiate move grid stuff and then swallow if needed
+	if (BR_MoveGridActionHook(iCmd, flag))
+		return true;
+
 	// Ignore commands that don't have anything to do with us from this point forward
 	if (COMMAND_T* cmd = SWSGetCommandByID(iCmd))
 	{
@@ -505,6 +509,7 @@ extern "C"
 			MiscExit();
 			PadreExit();
 			SNM_Exit();
+			BR_Exit();
 			ERR_RETURN("Exiting Reaper.\n")
 		}
 
@@ -532,6 +537,7 @@ extern "C"
 		IMPAPI(AttachWindowTopmostButton);
 		IMPAPI(AttachWindowResizeGrip);
 		IMPAPI(Audio_RegHardwareHook);
+		IMPAPI(AudioAccessorValidateState);
 		IMPAPI(CoolSB_GetScrollInfo);
 		IMPAPI(CoolSB_SetScrollInfo);
 		IMPAPI(CountActionShortcuts);
@@ -546,6 +552,8 @@ extern "C"
 		IMPAPI(CountTrackEnvelopes);
 		IMPAPI(CreateLocalOscHandler);
 		IMPAPI(CreateNewMIDIItemInProj);
+		IMPAPI(CreateTakeAudioAccessor);
+		IMPAPI(CreateTrackAudioAccessor);
 		IMPAPI(CSurf_FlushUndo);
 		IMPAPI(CSurf_GoEnd);
 		IMPAPI(CSurf_OnMuteChange);
@@ -562,6 +570,7 @@ extern "C"
 		IMPAPI(DeleteTakeStretchMarkers);
 		IMPAPI(DeleteTrack);
 		IMPAPI(DeleteTrackMediaItem);
+		IMPAPI(DestroyAudioAccessor);
 		IMPAPI(DestroyLocalOscHandler);
 		IMPAPI(DoActionShortcutDialog);
 		IMPAPI(Dock_UpdateDockID);
@@ -584,6 +593,10 @@ extern "C"
 		IMPAPI(GetActionShortcutDesc);
 		IMPAPI(GetActiveTake);
 		IMPAPI(GetAppVersion);
+		IMPAPI(GetAudioAccessorEndTime);
+		IMPAPI(GetAudioAccessorHash);
+		IMPAPI(GetAudioAccessorSamples);
+		IMPAPI(GetAudioAccessorStartTime);
 		IMPAPI(GetColorThemeStruct);
 		IMPAPI(GetContextMenu);
 		IMPAPI(GetCurrentProjectInLoadSave);
@@ -691,6 +704,10 @@ extern "C"
 		IMPAPI(MainThread_UnlockTracks);
 		IMPAPI(MarkProjectDirty);
 		IMPAPI(MIDI_CountEvts);
+		IMPAPI(MIDI_DeleteCC);
+		IMPAPI(MIDI_DeleteEvt);
+		IMPAPI(MIDI_DeleteNote);
+		IMPAPI(MIDI_DeleteTextSysexEvt);
 		IMPAPI(MIDI_eventlist_Create);
 		IMPAPI(MIDI_eventlist_Destroy);
 		IMPAPI(MIDI_GetCC);
@@ -699,6 +716,10 @@ extern "C"
 		IMPAPI(MIDI_GetPPQPosFromProjTime);
 		IMPAPI(MIDI_GetProjTimeFromPPQPos);
 		IMPAPI(MIDI_GetTextSysexEvt);
+		IMPAPI(MIDI_InsertCC);
+		IMPAPI(MIDI_InsertEvt);
+		IMPAPI(MIDI_InsertNote);
+		IMPAPI(MIDI_InsertTextSysexEvt);
 		IMPAPI(MIDI_SetCC);
 		IMPAPI(MIDI_SetEvt);
 		IMPAPI(MIDI_SetNote);

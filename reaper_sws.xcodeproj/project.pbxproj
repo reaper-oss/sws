@@ -324,6 +324,8 @@
 		981007390F4768020072D712 /* stdafx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 981006FA0F4768020072D712 /* stdafx.cpp */; };
 		9879B3D90F48977C004D98EB /* reaper_plugin_functions.h in Headers */ = {isa = PBXBuildFile; fileRef = 9879B3D80F48977C004D98EB /* reaper_plugin_functions.h */; };
 		9879B7480F489D9D004D98EB /* stdafx.h in Headers */ = {isa = PBXBuildFile; fileRef = 9879B7400F489CE7004D98EB /* stdafx.h */; };
+		98B6AAF418E7317900BACB96 /* wol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98B6AAF218E7317900BACB96 /* wol.cpp */; };
+		98B6AAF518E7317900BACB96 /* wol.h in Headers */ = {isa = PBXBuildFile; fileRef = 98B6AAF318E7317900BACB96 /* wol.h */; };
 		98B75DAF0F48F8F900AC5A25 /* Base64.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98B75DAE0F48F8F900AC5A25 /* Base64.cpp */; };
 		98C0E22D189CF266004F2EEF /* BR_Envelope.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98C0E227189CF266004F2EEF /* BR_Envelope.cpp */; };
 		98C0E22E189CF266004F2EEF /* BR_Envelope.h in Headers */ = {isa = PBXBuildFile; fileRef = 98C0E228189CF266004F2EEF /* BR_Envelope.h */; };
@@ -333,6 +335,11 @@
 		98C0E232189CF266004F2EEF /* BR_Timer.h in Headers */ = {isa = PBXBuildFile; fileRef = 98C0E22C189CF266004F2EEF /* BR_Timer.h */; };
 		98C918E618BFFEB500745DA1 /* BR_ReaScript.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98C918E418BFFEB500745DA1 /* BR_ReaScript.cpp */; };
 		98C918E718BFFEB500745DA1 /* BR_ReaScript.h in Headers */ = {isa = PBXBuildFile; fileRef = 98C918E518BFFEB500745DA1 /* BR_ReaScript.h */; };
+		98CC19DC18DFD11D00EE9809 /* BR_Loudness.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98CC19DA18DFD11D00EE9809 /* BR_Loudness.cpp */; };
+		98CC19DD18DFD11D00EE9809 /* BR_Loudness.h in Headers */ = {isa = PBXBuildFile; fileRef = 98CC19DB18DFD11D00EE9809 /* BR_Loudness.h */; };
+		98CC1A0718DFD27300EE9809 /* queue.h in Headers */ = {isa = PBXBuildFile; fileRef = 98CC1A0618DFD27300EE9809 /* queue.h */; };
+		98CC1A0A18DFD28000EE9809 /* ebur128.c in Sources */ = {isa = PBXBuildFile; fileRef = 98CC1A0818DFD28000EE9809 /* ebur128.c */; };
+		98CC1A0B18DFD28000EE9809 /* ebur128.h in Headers */ = {isa = PBXBuildFile; fileRef = 98CC1A0918DFD28000EE9809 /* ebur128.h */; };
 		98D3CA9C0F871B6F009B006A /* TracklistFilter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98D3CA9B0F871B6F009B006A /* TracklistFilter.cpp */; };
 		98D3CA9E0F871B80009B006A /* TracklistFilter.h in Headers */ = {isa = PBXBuildFile; fileRef = 98D3CA9D0F871B80009B006A /* TracklistFilter.h */; };
 		98D590480F628703003F75B4 /* Tracklist.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98D590460F628703003F75B4 /* Tracklist.cpp */; };
@@ -679,6 +686,8 @@
 		98B4088E0F5B524D00865A09 /* swell-gdi.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "swell-gdi.mm"; path = "../WDL/swell/swell-gdi.mm"; sourceTree = SOURCE_ROOT; };
 		98B4088F0F5B524D00865A09 /* swell-kb.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "swell-kb.mm"; path = "../WDL/swell/swell-kb.mm"; sourceTree = SOURCE_ROOT; };
 		98B408A20F5B544A00865A09 /* swell.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = swell.cpp; path = ../WDL/swell/swell.cpp; sourceTree = SOURCE_ROOT; };
+		98B6AAF218E7317900BACB96 /* wol.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = wol.cpp; path = Wol/wol.cpp; sourceTree = "<group>"; };
+		98B6AAF318E7317900BACB96 /* wol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wol.h; path = Wol/wol.h; sourceTree = "<group>"; };
 		98B75DAE0F48F8F900AC5A25 /* Base64.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Base64.cpp; path = Utility/Base64.cpp; sourceTree = "<group>"; };
 		98C0E227189CF266004F2EEF /* BR_Envelope.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BR_Envelope.cpp; path = Breeder/BR_Envelope.cpp; sourceTree = "<group>"; };
 		98C0E228189CF266004F2EEF /* BR_Envelope.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BR_Envelope.h; path = Breeder/BR_Envelope.h; sourceTree = "<group>"; };
@@ -688,6 +697,11 @@
 		98C0E22C189CF266004F2EEF /* BR_Timer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BR_Timer.h; path = Breeder/BR_Timer.h; sourceTree = "<group>"; };
 		98C918E418BFFEB500745DA1 /* BR_ReaScript.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BR_ReaScript.cpp; path = Breeder/BR_ReaScript.cpp; sourceTree = "<group>"; };
 		98C918E518BFFEB500745DA1 /* BR_ReaScript.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BR_ReaScript.h; path = Breeder/BR_ReaScript.h; sourceTree = "<group>"; };
+		98CC19DA18DFD11D00EE9809 /* BR_Loudness.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BR_Loudness.cpp; path = Breeder/BR_Loudness.cpp; sourceTree = "<group>"; };
+		98CC19DB18DFD11D00EE9809 /* BR_Loudness.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BR_Loudness.h; path = Breeder/BR_Loudness.h; sourceTree = "<group>"; };
+		98CC1A0618DFD27300EE9809 /* queue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = queue.h; path = libebur128/queue/sys/queue.h; sourceTree = "<group>"; };
+		98CC1A0818DFD28000EE9809 /* ebur128.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ebur128.c; path = libebur128/ebur128.c; sourceTree = "<group>"; };
+		98CC1A0918DFD28000EE9809 /* ebur128.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ebur128.h; path = libebur128/ebur128.h; sourceTree = "<group>"; };
 		98D3CA9B0F871B6F009B006A /* TracklistFilter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TracklistFilter.cpp; path = TrackList/TracklistFilter.cpp; sourceTree = "<group>"; };
 		98D3CA9D0F871B80009B006A /* TracklistFilter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TracklistFilter.h; path = TrackList/TracklistFilter.h; sourceTree = "<group>"; };
 		98D590460F628703003F75B4 /* Tracklist.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Tracklist.cpp; path = TrackList/Tracklist.cpp; sourceTree = "<group>"; };
@@ -725,6 +739,7 @@
 				22AC0E0D112A7DAC0067BBE3 /* WDL */,
 				22C769F410B0F03900774777 /* SnM */,
 				22257D6D108BDC330058CF75 /* Xenakios */,
+				98B6AAF118E7315B00BACB96 /* Wol */,
 				08FB7795FE84155DC02AAC07 /* Source */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
 			);
@@ -734,6 +749,7 @@
 		08FB7795FE84155DC02AAC07 /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				98CC1A0318DFD23C00EE9809 /* libebur128 */,
 				2246D06112F1622800EEDBD5 /* Autorender */,
 				229A7E7B1165742C00325BC2 /* Misc */,
 				22FFD278114CD8310077F1CA /* Autocolor.cpp */,
@@ -1142,6 +1158,8 @@
 		4D859DAC16AB127100E34EAA /* Breeder */ = {
 			isa = PBXGroup;
 			children = (
+				98CC19DA18DFD11D00EE9809 /* BR_Loudness.cpp */,
+				98CC19DB18DFD11D00EE9809 /* BR_Loudness.h */,
 				98C918E418BFFEB500745DA1 /* BR_ReaScript.cpp */,
 				98C918E518BFFEB500745DA1 /* BR_ReaScript.h */,
 				98C0E227189CF266004F2EEF /* BR_Envelope.cpp */,
@@ -1211,6 +1229,41 @@
 				98B4088F0F5B524D00865A09 /* swell-kb.mm */,
 			);
 			name = SWELL;
+			sourceTree = "<group>";
+		};
+		98B6AAF118E7315B00BACB96 /* Wol */ = {
+			isa = PBXGroup;
+			children = (
+				98B6AAF218E7317900BACB96 /* wol.cpp */,
+				98B6AAF318E7317900BACB96 /* wol.h */,
+			);
+			name = Wol;
+			sourceTree = "<group>";
+		};
+		98CC1A0318DFD23C00EE9809 /* libebur128 */ = {
+			isa = PBXGroup;
+			children = (
+				98CC1A0818DFD28000EE9809 /* ebur128.c */,
+				98CC1A0918DFD28000EE9809 /* ebur128.h */,
+				98CC1A0418DFD25500EE9809 /* queue */,
+			);
+			name = libebur128;
+			sourceTree = "<group>";
+		};
+		98CC1A0418DFD25500EE9809 /* queue */ = {
+			isa = PBXGroup;
+			children = (
+				98CC1A0518DFD26500EE9809 /* sys */,
+			);
+			name = queue;
+			sourceTree = "<group>";
+		};
+		98CC1A0518DFD26500EE9809 /* sys */ = {
+			isa = PBXGroup;
+			children = (
+				98CC1A0618DFD27300EE9809 /* queue.h */,
+			);
+			name = sys;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -1370,6 +1423,10 @@
 				98C0E230189CF266004F2EEF /* BR_ProjState.h in Headers */,
 				98C0E232189CF266004F2EEF /* BR_Timer.h in Headers */,
 				98C918E718BFFEB500745DA1 /* BR_ReaScript.h in Headers */,
+				98CC19DD18DFD11D00EE9809 /* BR_Loudness.h in Headers */,
+				98CC1A0718DFD27300EE9809 /* queue.h in Headers */,
+				98CC1A0B18DFD28000EE9809 /* ebur128.h in Headers */,
+				98B6AAF518E7317900BACB96 /* wol.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1654,6 +1711,9 @@
 				98C0E22F189CF266004F2EEF /* BR_ProjState.cpp in Sources */,
 				98C0E231189CF266004F2EEF /* BR_Timer.cpp in Sources */,
 				98C918E618BFFEB500745DA1 /* BR_ReaScript.cpp in Sources */,
+				98CC19DC18DFD11D00EE9809 /* BR_Loudness.cpp in Sources */,
+				98CC1A0A18DFD28000EE9809 /* ebur128.c in Sources */,
+				98B6AAF418E7317900BACB96 /* wol.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

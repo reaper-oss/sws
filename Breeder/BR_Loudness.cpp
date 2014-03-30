@@ -524,7 +524,7 @@ void BR_LoudnessObject::GotoMomentaryMax (bool timeSelection)
 		return;
 
 	double newPosition = (m_track) ? (0) : (GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION"));
-	for (int i = 0; i < m_momentaryValues.size(); ++i)
+	for (size_t i = 0; i < m_momentaryValues.size(); ++i)
 	{
 		if (m_momentaryValues[i] == m_momentaryMax)
 			break;
@@ -553,7 +553,7 @@ void BR_LoudnessObject::GotoShortTermMax (bool timeSelection)
 		return;
 
 	double newPosition = (m_track) ? (0) : (GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION"));
-	for (int i = 0; i < m_shortTermValues.size(); ++i)
+	for (size_t i = 0; i < m_shortTermValues.size(); ++i)
 	{
 		if (m_shortTermValues[i] == m_shortTermMax)
 			break;

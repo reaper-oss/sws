@@ -110,6 +110,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <BrowseInformation>true</BrowseInformation>
     </ClCompile>
     <PreLinkEvent>
       <Message>Generating sws_python.py, copying whatsnew.txt...</Message>
@@ -140,6 +141,9 @@ copy /y "whatsnew.txt" "$(REAPER_DIR)\plugins\reaper_sws_whatsnew.txt"
       <Message>Copying DLL...</Message>
       <Command>copy /y "$(OutDir)$(TargetFilename)" "$(REAPER_DIR)\plugins"</Command>
     </PostBuildEvent>
+    <Bscmake>
+      <PreserveSbr>true</PreserveSbr>
+    </Bscmake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <PreBuildEvent>
@@ -159,6 +163,7 @@ copy /y "whatsnew.txt" "$(REAPER_DIR)\plugins\reaper_sws_whatsnew.txt"
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <BrowseInformation>true</BrowseInformation>
     </ClCompile>
     <PreLinkEvent>
       <Message>Generating sws_python.py, copying whatsnew.txt...</Message>
@@ -189,6 +194,9 @@ copy /y "whatsnew.txt" "$(REAPER64_DIR)\plugins\reaper_sws_whatsnew.txt"
       <Message>Copying DLL...</Message>
       <Command>copy /y "$(OutDir)$(TargetFilename)" "$(REAPER64_DIR)\plugins"</Command>
     </PostBuildEvent>
+    <Bscmake>
+      <PreserveSbr>true</PreserveSbr>
+    </Bscmake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">
     <PreBuildEvent>
@@ -204,6 +212,7 @@ copy /y "whatsnew.txt" "$(REAPER64_DIR)\plugins\reaper_sws_whatsnew.txt"
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <BrowseInformation>true</BrowseInformation>
     </ClCompile>
     <PreLinkEvent>
       <Message>Generating sws_python.py, copying whatsnew.txt...</Message>
@@ -236,6 +245,9 @@ copy /y "whatsnew.txt" "$(REAPER_DIR)\plugins\reaper_sws_whatsnew.txt"
       <Message>Copying to REAPER\Plugins...</Message>
       <Command>copy /y "$(OutDir)$(TargetFilename)" "$(REAPER_DIR)\plugins"</Command>
     </PostBuildEvent>
+    <Bscmake>
+      <PreserveSbr>true</PreserveSbr>
+    </Bscmake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Test|x64'">
     <PreBuildEvent>
@@ -253,6 +265,7 @@ copy /y "whatsnew.txt" "$(REAPER_DIR)\plugins\reaper_sws_whatsnew.txt"
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <BrowseInformation>true</BrowseInformation>
     </ClCompile>
     <PreLinkEvent>
       <Message>Generating sws_python.py, copying whatsnew.txt...</Message>
@@ -285,6 +298,9 @@ copy /y "whatsnew.txt" "$(REAPER64_DIR)\plugins\reaper_sws_whatsnew.txt"
       <Message>Copying to REAPER\Plugins...</Message>
       <Command>copy /y "$(OutDir)$(TargetFilename)" "$(REAPER64_DIR)\plugins"</Command>
     </PostBuildEvent>
+    <Bscmake>
+      <PreserveSbr>true</PreserveSbr>
+    </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="downarrow.bmp" />

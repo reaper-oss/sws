@@ -6,10 +6,11 @@ REM The version checker reads the uploaded version.h too.
 
 REM You must set these according to your local setup
 REM FTP access is reserved for project owners
+set ftp_host=TO_BE_DEFINED
 set ftp_user=TO_BE_DEFINED
 set ftp_pwd=TO_BE_DEFINED
-set vcvars32_path="C:\Program Files\Microsoft Visual Studio 9.0\VC\bin\vcvars32.bat"
-set makensis_path="C:\Program Files\NSIS\makensis.exe"
+set vcvars_path="C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat"
+set makensis_path="D:\Program Files (x86)\NSIS\makensis.exe"
 
 
 REM ====== INIT ===============================================================
@@ -20,24 +21,45 @@ REM == Backup whatsnew.txt and version.h in case the script fails
 copy ..\version.h temp\oldversion.h > NUL
 copy ..\whatsnew.txt temp\oldwhatsnew.txt > NUL
 
+set build_type=
+set /p build_type=Build type? (f[eatured] / p[re-release]) 
+if %build_type%==f (
+	set build_type=featured
+	goto inc_choice
+)
+if %build_type%==p (
+	set build_type=pre-release
+	goto inc_choice
+)
+echo Invalid input '%build_type%': 'f', 'p', or 'n' expected!
+goto error
+
 
 REM ====== VERSIONING =========================================================
+:inc_choice
+..\BuildUtils\Release\PrintVersion ..\version.h "Current version: v%%d.%%d.%%d #%%d"
+
 set choice_inc=
 set /p choice_inc=Increment version (y/n)? 
 if %choice_inc%==y goto inc
+
+REM Do not add a line in ..\whatsnew.txt
+..\BuildUtils\Release\PrintVersion ..\version.h -d "!v%%d.%%d.%%d #%%d %build_type% build" > output\whatsnew.txt
+type temp\oldwhatsnew.txt >> output\whatsnew.txt
 goto whatsnew 
 
 :inc
 echo Incrementing version...
 ..\BuildUtils\Release\IncVersion.exe ..\version.h
-..\BuildUtils\Release\PrintVersion ..\version.h -d "!v%%d.%%d.%%d #%%d" > ..\whatsnew.txt
+
+REM Add a version line in ..\whatsnew.txt
+..\BuildUtils\Release\PrintVersion ..\version.h -d "!v%%d.%%d.%%d #%%d %build_type% build" > ..\whatsnew.txt
 type temp\oldwhatsnew.txt >> ..\whatsnew.txt
+copy ..\whatsnew.txt output\whatsnew.txt > NUL
 
-
-REM ====== WHATSNEW ===========================================================
 :whatsnew
 echo Generating output\whatsnew.htm...
-..\BuildUtils\Release\MakeWhatsNew.exe -h ..\whatsnew.txt > output\whatsnew.htm
+..\BuildUtils\Release\MakeWhatsNew.exe output\whatsnew.txt > output\whatsnew.html
 
 REM ====== LANGPACK ===========================================================
 :langpack
@@ -56,18 +78,25 @@ if %choice%==y goto build
 goto installers_choice 
 
 :build
-if not exist %vcvars32_path% (
-	echo Error: you must configure the env var 'vcvars32_path' in %0.bat!
+if not exist %vcvars_path% (
+	echo Error: env var 'vcvars_path' not defined in in %0.bat!
 	goto error
 )
 
 setlocal
-call %vcvars32_path% > NUL
+call %vcvars_path% > NUL
 
-vcbuild /r /platform:x64 ..\sws_extension.vcproj release
+REM With Visual Studio 2008 you will need:
+REM vcbuild /r /platform:x64 ..\sws_extension.vcproj release
+REM if errorlevel 1 goto error
+REM vcbuild /r /platform:Win32 ..\sws_extension.vcproj release
+REM if errorlevel 1 goto error
+
+REM With Visual Studio 2013
+msbuild /t:rebuild /p:Platform=x64,Configuration=release ..\sws_extension.vcxproj
 if errorlevel 1 goto error
 
-vcbuild /r /platform:Win32 ..\sws_extension.vcproj release
+msbuild /t:rebuild /p:Platform=Win32,Configuration=release ..\sws_extension.vcxproj
 if errorlevel 1 goto error
 
 endlocal
@@ -96,26 +125,15 @@ if errorlevel 1 goto error
 REM ======UPLOAD===============================================================
 :upload_choice
 set choice=
-set /p choice=Upload (f[eatured] / p[re-release] / n)? 
-if %choice%==f (
-	set choice=featured
-	goto upload
-)
-if %choice%==p (
-	set choice=pre-release
-	goto upload
-)
-if %choice%==n goto success
-
-echo Invalid input '%choice%': 'f', 'p', or 'n' expected!
-goto error
+set /p choice=Upload (y/n)? 
+if %choice%==y goto upload
+goto success
 
 :upload
-if %ftp_user%==TO_BE_DEFINED (
+if %ftp_host%==TO_BE_DEFINED (
 	echo Error: you must configure FTP env vars in %0.bat!
 	goto error
 )
-
 
 REM Two FTP steps are required because the "ftp" command
 REM does not release downloaded files while running
@@ -125,22 +143,22 @@ REM get the current version as there might be a gap between local and remote ver
 REM e.g. uploaded a featured version then a pre-release one
 echo user %ftp_user% > temp\get_version.ftp
 echo %ftp_pwd%>> temp\get_version.ftp
-echo cd download/%choice% >> temp\get_version.ftp
+echo cd download/%build_type% >> temp\get_version.ftp
 echo ascii >> temp\get_version.ftp
 echo get version.h temp\online_version.h >> temp\get_version.ftp
 echo quit >> temp\get_version.ftp
 
 echo FTP: getting current version...
-ftp -v -n -i -s:temp\get_version.ftp ftp.online.net
+ftp -v -n -i -s:temp\get_version.ftp %ftp_host%
 
 REM 2nd step ==========================
 REM backup remote files and upload new ones
 echo user %ftp_user% > temp\upload.ftp
 echo %ftp_pwd%>> temp\upload.ftp
-echo cd download/%choice% >> temp\upload.ftp
+echo cd download/%build_type% >> temp\upload.ftp
 echo binary >> temp\upload.ftp
 
-REM Backup current remote files into download/%choice%/old (except whatsnew.htm: common to all versions)
+REM Backup current remote files into download/%build_type%/old (except whatsnew.html: common to all versions)
 if exist temp\online_version.h (
 	..\BuildUtils\Release\PrintVersion temp\online_version.h "rename sws-v%%d.%%d.%%d.%%d-install.exe tmp.exe" >> temp\upload.ftp
 	..\BuildUtils\Release\PrintVersion temp\online_version.h "rename tmp.exe old/sws-v%%d.%%d.%%d.%%d-install.exe" >> temp\upload.ftp
@@ -154,7 +172,7 @@ if exist temp\online_version.h (
 echo mdelete *.* >> temp\upload.ftp
 
 REM Upload new files
-echo put output\whatsnew.htm index.htm >> temp\upload.ftp
+echo put output\whatsnew.html index.html >> temp\upload.ftp
 ..\BuildUtils\Release\PrintVersion ..\version.h "put output\sws_extension.exe sws-v%%d.%%d.%%d.%%d-install.exe" >> temp\upload.ftp
 ..\BuildUtils\Release\PrintVersion ..\version.h "put output\sws_extension_x64.exe sws-v%%d.%%d.%%d.%%d-x64-install.exe" >> temp\upload.ftp
 ..\BuildUtils\Release\PrintVersion ..\version.h "put output\sws_osx.dmg sws-v%%d.%%d.%%d.%%d.dmg" >> temp\upload.ftp
@@ -166,7 +184,7 @@ echo put ..\version.h >> temp\upload.ftp
 echo quit >> temp\upload.ftp
 
 echo FTP: uploading...
-ftp -v -n -i -s:temp\upload.ftp ftp.online.net
+ftp -v -n -i -s:temp\upload.ftp %ftp_host%
 echo.
 echo Can't test if ftp has succeeded (always return 0, unfortunately :/)
 echo Please double-check the above log, and terminate batch job if needed (ctrl-c)

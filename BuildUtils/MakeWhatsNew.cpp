@@ -140,8 +140,11 @@ int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML, const c
 		{
 			fputs("</a>", pOut);
 		}
-		fputs(" - What's new?</title></h1>\n", pOut);
+		fputs(" - What's new?</h1>\n", pOut);
 	}
+	else
+		fputs("<h1>What's new?</h1><br />\n", pOut);
+
 
 	while (cBuf[iPos] && iPos < iSize)
 	{
@@ -161,7 +164,7 @@ int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML, const c
 				else if (cBuf[iPos] == '+'
 					&& (iPos == 0 || cBuf[iPos-1] == '\n')) // '+' at start of file/line?
 				{
-					fputs("<ul style=\"margin-top:0px;margin-bottom:0px;\">\n", pOut);
+					fputs(bFullHTML ? "<ul style=\"margin-top:0px;margin-bottom:0px;\">\n" : "<ul>\n", pOut);
 					curSection.Push(BULLET);
 				}
 				else
@@ -231,6 +234,8 @@ int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML, const c
 				{
 				case HEADER:
 					fputs("</h3>\n", pOut);
+					if (!bFullHTML)
+						fputs("<br />\n", pOut);
 					curSection.Pop();
 					break;
 				case BULLET:

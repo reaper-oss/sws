@@ -645,8 +645,18 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 	int bufSz = sampleCount*channels;
 	double sampleTimeLen = 1/samplerate;
 	double currentTime = startTime;
+	int processedSamples = 0;
 	while (currentTime < endTime && !_this->GetKillFlag())
 	{
+		// Make sure we always fill our buffer exactly to audio end (and skip momentary/short-term intervals if not enough new samples)
+		bool skipIntervals = false;
+		if (endTime - currentTime < 0.2)
+		{
+			sampleCount = (int)(samplerate * (endTime - currentTime));
+			bufSz = sampleCount * channels;
+			skipIntervals = true;
+		}
+
 		// Get new 200 ms of samples
 		double* buf = new double[bufSz];
 		GetAudioAccessorSamples(audio, samplerate, channels, currentTime, sampleCount, buf);
@@ -689,7 +699,7 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 		ebur128_add_frames_double(loudnessState, buf, sampleCount);
 		delete buf;
 
-		if (!integratedOnly)
+		if (!integratedOnly && !skipIntervals)
 		{
 			// Momentary buffer (400 ms) filled
 			if (i % 2 == momentaryFilled)
@@ -722,7 +732,9 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 			}
 		}
 
-		currentTime += 0.2; // how accurate is this? it would be nice to be able to access accessor with sample position, not time position
+		// This is definitely more accurate than adding 0.2 seconds every time
+		processedSamples += sampleCount;
+		currentTime = startTime + ((double)processedSamples/ (double)samplerate);
 
 		_this->SetProgress ((currentTime-startTime) / (endTime - startTime) * 0.95); // loudness_global and loudness_range seem rather fast and since we currently
 		if (++i == 15)                                                               // can't monitor their progress, leave last 10% of progress for them
@@ -730,6 +742,10 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 			i = 0;
 			momentaryFilled = (momentaryFilled == 1) ? (0) : (1);
 		}
+
+		// We reached the end of the file, break without checking currentTime against endTime (rounding errors could make us go through loop one more time)
+		if (skipIntervals)
+			break;
 	}
 
 

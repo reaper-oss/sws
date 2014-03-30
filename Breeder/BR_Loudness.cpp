@@ -106,8 +106,6 @@ m_integrated     (NEGATIVE_INF),
 m_shortTermMax   (NEGATIVE_INF),
 m_momentaryMax   (NEGATIVE_INF),
 m_range          (0),
-m_shortTermPos   (-1),
-m_momentaryPos   (-1),
 m_progress       (0),
 m_running        (false),
 m_analyzed       (false),
@@ -127,8 +125,6 @@ m_integrated     (NEGATIVE_INF),
 m_shortTermMax   (NEGATIVE_INF),
 m_momentaryMax   (NEGATIVE_INF),
 m_range          (0),
-m_shortTermPos   (-1),
-m_momentaryPos   (-1),
 m_progress       (0),
 m_running        (false),
 m_analyzed       (false),
@@ -206,7 +202,7 @@ void BR_LoudnessObject::NormalizeIntegrated (double target)
 		return;
 
 	double integrated;
-	this->GetAnalyzeData(&integrated, NULL, NULL, NULL, NULL, NULL);
+	this->GetAnalyzeData(&integrated, NULL, NULL, NULL);
 
 	if (integrated > NEGATIVE_INF)
 	{
@@ -342,19 +338,19 @@ double BR_LoudnessObject::GetColumnVal (int column)
 	switch (column)
 	{
 		case COL_INTEGRATED:
-			this->GetAnalyzeData(&returnVal, NULL, NULL, NULL, NULL, NULL);
+			this->GetAnalyzeData(&returnVal, NULL, NULL, NULL);
 		break;
 
 		case COL_RANGE:
-			this->GetAnalyzeData(NULL, &returnVal, NULL, NULL, NULL, NULL);
+			this->GetAnalyzeData(NULL, &returnVal, NULL, NULL);
 		break;
 
 		case COL_SHORTTERM:
-			this->GetAnalyzeData(NULL, NULL, &returnVal, NULL, NULL, NULL);
+			this->GetAnalyzeData(NULL, NULL, &returnVal, NULL);
 		break;
 
 		case COL_MOMENTARY:
-			this->GetAnalyzeData(NULL, NULL, NULL, &returnVal, NULL, NULL);
+			this->GetAnalyzeData(NULL, NULL, NULL, &returnVal);
 		break;
 	}
 
@@ -388,7 +384,7 @@ void BR_LoudnessObject::GetColumnStr (int column, char* str, int strSz)
 		case COL_INTEGRATED:
 		{
 			double integrated;
-			this->GetAnalyzeData(&integrated, NULL, NULL, NULL, NULL, NULL);
+			this->GetAnalyzeData(&integrated, NULL, NULL, NULL);
 
 			if (integrated <= NEGATIVE_INF)
 				_snprintf(str, strSz, "%s", __localizeFunc("-inf", "vol", 0));
@@ -400,7 +396,7 @@ void BR_LoudnessObject::GetColumnStr (int column, char* str, int strSz)
 		case COL_RANGE:
 		{
 			double range;
-			this->GetAnalyzeData(NULL, &range, NULL, NULL, NULL, NULL);
+			this->GetAnalyzeData(NULL, &range, NULL, NULL);
 
 			if (range <= NEGATIVE_INF)
 				_snprintf(str, strSz, "%s", __localizeFunc("-inf", "vol", 0));
@@ -412,7 +408,7 @@ void BR_LoudnessObject::GetColumnStr (int column, char* str, int strSz)
 		case COL_SHORTTERM:
 		{
 			double shortTermMax;
-			this->GetAnalyzeData(NULL, NULL, &shortTermMax, NULL, NULL, NULL);
+			this->GetAnalyzeData(NULL, NULL, &shortTermMax, NULL);
 
 			if (shortTermMax <= NEGATIVE_INF)
 				_snprintf(str, strSz, "%s", __localizeFunc("-inf", "vol", 0));
@@ -424,7 +420,7 @@ void BR_LoudnessObject::GetColumnStr (int column, char* str, int strSz)
 		case COL_MOMENTARY:
 		{
 			double momentaryMax;
-			this->GetAnalyzeData(NULL, NULL, NULL, &momentaryMax, NULL, NULL);
+			this->GetAnalyzeData(NULL, NULL, NULL, &momentaryMax);
 
 			if (momentaryMax <= NEGATIVE_INF)
 				_snprintf(str, strSz, "%s", __localizeFunc("-inf", "vol", 0));
@@ -524,21 +520,19 @@ void BR_LoudnessObject::GotoMomentaryMax (bool timeSelection)
 {
 	SWS_SectionLock lock(&m_mutex);
 
-	if (!this->IsTargetValid() || m_momentaryPos == -1)
+	if (!this->IsTargetValid() && !m_momentaryValues.size())
 		return;
 
-	double newPosition;
-	MediaTrack* track = NULL;
-	if (m_track)
+	double newPosition = (m_track) ? (0) : (GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION"));
+	for (int i = 0; i < m_momentaryValues.size(); ++i)
 	{
-		newPosition = m_momentaryPos;
-		track = m_track;
+		if (m_momentaryValues[i] == m_momentaryMax)
+			break;
+		else
+			newPosition += 0.4;
 	}
-	else
-	{
-		newPosition = m_momentaryPos + GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION");
-		track = GetMediaItemTake_Track(m_take);
-	}
+
+	MediaTrack* track = (m_track) ? (m_track) : (GetMediaItemTake_Track(m_take));
 
 	PreventUIRefresh(1);
 	SetEditCurPos2(NULL, newPosition, true, false);
@@ -555,21 +549,19 @@ void BR_LoudnessObject::GotoShortTermMax (bool timeSelection)
 {
 	SWS_SectionLock lock(&m_mutex);
 
-	if (!this->IsTargetValid() || m_shortTermPos == -1)
+	if (!this->IsTargetValid() && !m_shortTermValues.size())
 		return;
 
-	double newPosition;
-	MediaTrack* track = NULL;
-	if (m_track)
+	double newPosition = (m_track) ? (0) : (GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION"));
+	for (int i = 0; i < m_shortTermValues.size(); ++i)
 	{
-		newPosition = m_shortTermPos;
-		track = m_track;
+		if (m_shortTermValues[i] == m_shortTermMax)
+			break;
+		else
+			newPosition += 3;
 	}
-	else
-	{
-		newPosition = m_shortTermPos + GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION");
-		track = GetMediaItemTake_Track(m_take);
-	}
+
+	MediaTrack* track = (m_track) ? (m_track) : (GetMediaItemTake_Track(m_take));
 
 	PreventUIRefresh(1);
 	SetEditCurPos2(NULL, newPosition, true, false);
@@ -633,8 +625,6 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 	double momentaryMax = NEGATIVE_INF;
 	double shortTermMax = NEGATIVE_INF;
 	double range        = 0;
-	double momentaryPos = -1;
-	double shortTermPos = -1;
 	vector<double> momentaryValues;
 	vector<double> shortTermValues;
 
@@ -709,10 +699,7 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 				if (momentary == -HUGE_VAL)
 					momentary = NEGATIVE_INF;
 				if (momentary > momentaryMax)
-				{
 					momentaryMax = momentary;
-					momentaryPos = currentTime;
-				}
 				momentaryValues.push_back(momentary);
 			}
 
@@ -724,17 +711,14 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 				if (shortTerm == -HUGE_VAL)
 					shortTerm = NEGATIVE_INF;
 				if (shortTerm > shortTermMax)
-				{
 					shortTermMax = shortTerm;
-					shortTermPos = currentTime;
-				}
 				shortTermValues.push_back(shortTerm);
 			}
 		}
 
 		// This is definitely more accurate than adding 0.2 seconds every time
 		processedSamples += sampleCount;
-		currentTime = startTime + ((double)processedSamples/ (double)samplerate);
+		currentTime = startTime + ((double)processedSamples / (double)samplerate);
 
 		_this->SetProgress ((currentTime-startTime) / (endTime - startTime) * 0.95); // loudness_global and loudness_range seem rather fast and since we currently
 		if (++i == 15)                                                               // can't monitor their progress, leave last 10% of progress for them
@@ -761,7 +745,7 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 	// Write analyze data
 	if (!_this->GetKillFlag())
 	{
-		_this->SetAnalyzeData(integrated, range, shortTermMax, momentaryMax, shortTermPos, momentaryPos, shortTermValues, momentaryValues);
+		_this->SetAnalyzeData(integrated, range, shortTermMax, momentaryMax, shortTermValues, momentaryValues);
 		_this->SetProgress(1);
 		_this->SetRunning(false);
 		if (!integratedOnly)
@@ -856,28 +840,24 @@ void BR_LoudnessObject::SetProgress (double progress)
 	m_progress = progress;
 }
 
-void BR_LoudnessObject::SetAnalyzeData (double integrated, double range, double shortTermMax, double momentaryMax, double shortTermPos, double momentaryPos, vector<double>& shortTermValues, vector<double>& momentaryValues)
+void BR_LoudnessObject::SetAnalyzeData (double integrated, double range, double shortTermMax, double momentaryMax, vector<double>& shortTermValues, vector<double>& momentaryValues)
 {
 	SWS_SectionLock lock(&m_mutex);
 	m_integrated   = integrated;
 	m_shortTermMax = shortTermMax;
 	m_momentaryMax = momentaryMax;
 	m_range        = range;
-	m_shortTermPos = shortTermPos;
-	m_momentaryPos = momentaryPos;
-	m_momentaryValues = momentaryValues;
 	m_shortTermValues = shortTermValues;
+	m_momentaryValues = momentaryValues;
 }
 
-void BR_LoudnessObject::GetAnalyzeData (double* integrated, double* range, double* shortTermMax, double* momentaryMax, double* shortTermPos, double* momentaryPos)
+void BR_LoudnessObject::GetAnalyzeData (double* integrated, double* range, double* shortTermMax, double* momentaryMax)
 {
 	SWS_SectionLock lock(&m_mutex);
 	WritePtr(integrated,   m_integrated);
 	WritePtr(range,        m_range);
 	WritePtr(shortTermMax, m_shortTermMax);
 	WritePtr(momentaryMax, m_momentaryMax);
-	WritePtr(shortTermPos, m_shortTermPos);
-	WritePtr(momentaryPos, m_momentaryPos);
 }
 
 void BR_LoudnessObject::SetAnalyzedStatus (bool analyzed)

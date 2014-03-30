@@ -77,8 +77,8 @@ private:
 	AudioData* GetAudioData ();
 	void SetRunning (bool running);
 	void SetProgress (double progress);
-	void SetAnalyzeData (double integrated, double range, double shortTermMax, double momentaryMax, double shortTermPos, double momentaryPos, vector<double>& shortTermValues, vector<double>& momentaryValues);
-	void GetAnalyzeData (double* integrated, double* range, double* shortTermMax, double* momentaryMax, double* shortTermPos, double* momentaryPos);
+	void SetAnalyzeData (double integrated, double range, double shortTermMax, double momentaryMax, vector<double>& shortTermValues, vector<double>& momentaryValues);
+	void GetAnalyzeData (double* integrated, double* range, double* shortTermMax, double* momentaryMax);
 	void SetAnalyzedStatus (bool analyzed);
 	bool GetAnalyzedStatus ();
 	void SetIntegratedOnly (bool integratedOnly);
@@ -95,7 +95,7 @@ private:
 	MediaTrack* m_track;
 	MediaItem_Take* m_take;
 	GUID m_takeGuid, m_trackGuid;
-	double m_integrated, m_shortTermMax, m_momentaryMax, m_range, m_shortTermPos, m_momentaryPos;
+	double m_integrated, m_shortTermMax, m_momentaryMax, m_range;
 	double m_progress;
 	bool m_running, m_analyzed, m_killFlag, m_integratedOnly;
 	HANDLE m_process;

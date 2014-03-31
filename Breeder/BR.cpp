@@ -119,10 +119,10 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Create regions from selected items (name by item's notes)" },                           "BR_ITEMS_TO_REGIONS_NOTES",        MarkersRegionsAtItems, NULL, 1},
 
 	{ { DEFACCEL, "SWS/BR: Toggle \"Grid snap settings follow grid visibility\"" },                                "BR_OPTIONS_SNAP_FOLLOW_GRID_VIS",  SnapFollowsGridVis, NULL, 0, IsSnapFollowsGridVisOn},
+	{ { DEFACCEL, "SWS/BR: Toggle \"Playback position follows project timebase when changing tempo\"" },           "BR_OPTIONS_PLAYBACK_TEMPO_CHANGE", PlaybackFollowsTempoChange, NULL, 0, IsPlaybackFollowingTempoChange},
 	{ { DEFACCEL, "SWS/BR: Set \"Apply trim when adding volume/pan envelopes\" to \"Always\"" },                   "BR_OPTIONS_ENV_TRIM_ALWAYS",       TrimNewVolPanEnvs, NULL, 0, IsTrimNewVolPanEnvsOn},
 	{ { DEFACCEL, "SWS/BR: Set \"Apply trim when adding volume/pan envelopes\" to \"In read/write\"" },            "BR_OPTIONS_ENV_TRIM_READWRITE",    TrimNewVolPanEnvs, NULL, 1, IsTrimNewVolPanEnvsOn},
 	{ { DEFACCEL, "SWS/BR: Set \"Apply trim when adding volume/pan envelopes\" to \"Never\"" },                    "BR_OPTIONS_ENV_TRIM_NEVER",        TrimNewVolPanEnvs, NULL, 2, IsTrimNewVolPanEnvsOn},
-	{ { DEFACCEL, "SWS/BR: Toggle \"Playback position follows project timebase when changing tempo\"" },           "BR_OPTIONS_PLAYBACK_TEMPO_CHANGE", PlaybackFollowsTempoChange, NULL, 0, IsPlaybackFollowingTempoChange},
 
 	{ { DEFACCEL, "SWS/BR: Cycle through record modes" },                                                          "BR_CYCLE_RECORD_MODES",            CycleRecordModes},
 	{ { DEFACCEL, "SWS/BR: Focus arrange window" },                                                                "BR_FOCUS_ARRANGE_WND",             FocusArrange},

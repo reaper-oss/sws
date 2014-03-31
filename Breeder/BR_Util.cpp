@@ -30,7 +30,6 @@
 #include "BR_EnvTools.h"
 #include "../SnM/SnM_Dlg.h"
 #include "../SnM/SnM_Util.h"
-#include "../SnM/SnM_Chunk.h"
 #include "../reaper/localize.h"
 #include "../../WDL/projectcontext.h"
 
@@ -87,8 +86,8 @@ double AltAtof (char* str)
 
 double RoundToN (double val, double n)
 {
-    double shift = pow(10.0, n);
-    return Round(val*shift) / shift;
+	double shift = pow(10.0, n);
+	return Round(val*shift) / shift;
 }
 
 double TranslateRange (double value, double oldMin, double oldMax, double newMin, double newMax)
@@ -2391,7 +2390,7 @@ BR_SysEvent::BR_SysEvent (MediaItem_Take* take, int id)
 	}
 	MIDI_GetTextSysexEvt(take, id, NULL, NULL, NULL, NULL, message, &message_sz);
 	msg.Set(message);
-	DELETE_NULL(message);
+	delete[] message;
 }
 
 void BR_SysEvent::InsertEvent (MediaItem_Take* take)

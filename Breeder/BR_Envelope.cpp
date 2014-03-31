@@ -214,13 +214,13 @@ void SelNextPrevEnvPoint (COMMAND_T* ct)
 	}
 }
 
-void ExpandEnvSel(COMMAND_T* ct)
+void ExpandEnvSel (COMMAND_T* ct)
 {
 	BR_Envelope envelope(GetSelectedTrackEnvelope(NULL));
 	if (!envelope.CountSelected())
 		return;
 
-	int id;
+	int id = -1;
 	if ((int)ct->user > 0)
 	{
 		for (int i = 0; i < envelope.CountConseq(); ++i)
@@ -246,7 +246,7 @@ void ExpandEnvSel(COMMAND_T* ct)
 	}
 }
 
-void ExpandEnvSelEnd(COMMAND_T* ct)
+void ExpandEnvSelEnd (COMMAND_T* ct)
 {
 	BR_Envelope envelope(GetSelectedTrackEnvelope(NULL));
 	if (!envelope.CountSelected())
@@ -272,7 +272,7 @@ void ShrinkEnvSel (COMMAND_T* ct)
 	if (!envelope.CountSelected())
 		return;
 
-	int id;
+	int id = -1;
 	if ((int)ct->user > 0)
 	{
 		for (int i = 0; i < envelope.CountConseq(); ++i)

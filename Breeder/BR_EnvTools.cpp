@@ -174,7 +174,7 @@ m_properties   (envelope.m_properties)
 {
 }
 
-BR_Envelope& BR_Envelope::operator=  (const BR_Envelope& envelope)
+BR_Envelope& BR_Envelope::operator= (const BR_Envelope& envelope)
 {
 	if (this == &envelope)
 		return *this;
@@ -519,12 +519,12 @@ void BR_Envelope::DeletePointsInRange (double start, double end)
 		{
 			if (i->position >= start && i->position <= end)
 			{
-        		i = m_points.erase(i);
+				i = m_points.erase(i);
 				m_update = true;
-   			}
+			}
 			else
-       			++i;
-       	}
+				++i;
+		}
 	}
 
 	m_count = m_points.size();
@@ -1365,6 +1365,7 @@ BR_Envelope::EnvProperties& BR_Envelope::EnvProperties::operator= (const EnvProp
 {
 	if (this == &properties)
 		return *this;
+
 	active        = properties.active;
 	visible       = properties.visible;
 	lane          = properties.lane;

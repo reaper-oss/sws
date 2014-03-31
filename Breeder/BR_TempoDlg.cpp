@@ -30,8 +30,8 @@
 #include "BR_EnvTools.h"
 #include "BR_Tempo.h"
 #include "BR_Util.h"
-#include "../MarkerList/MarkerListActions.h"
 #include "../SnM/SnM_Dlg.h"
+#include "../SnM/SnM_Util.h"
 #include "../reaper/localize.h"
 
 /******************************************************************************
@@ -228,7 +228,17 @@ static void ConvertMarkersToTempo (int markers, int num, int den, bool removeMar
 		if (timeSel)
 			Main_OnCommand(40420, 0);
 		else
-			DeleteAllMarkers();
+		{
+			bool region;
+			int id, x = 0;
+			while (EnumProjectMarkers(x, &region, NULL, NULL, NULL, &id))
+			{
+				if (!region)
+					DeleteProjectMarker(NULL, id, false);
+				else
+					++x;
+			}
+		}
 	}
 
 	UpdateTimeline();
@@ -293,7 +303,7 @@ static void SaveOptionsConversion (HWND hwnd)
 	int split = IsDlgButtonChecked(hwnd, IDC_BR_CON_SPLIT);
 
 	char tmp[256];
-	_snprintf(tmp, sizeof(tmp), "%d %d %d %d %d %d %d %s", markers, num, den, removeMarkers, timeSel, gradual, split, splitRatio);
+	_snprintfSafe(tmp, sizeof(tmp), "%d %d %d %d %d %d %d %s", markers, num, den, removeMarkers, timeSel, gradual, split, splitRatio);
 	WritePrivateProfileString("SWS", CONVERT_KEY, tmp, get_ini_file());
 }
 
@@ -1028,7 +1038,7 @@ static void SaveOptionsSelAdj (HWND hwnd)
 	int adjustShape = (int)SendDlgItemMessage(hwnd,IDC_BR_ADJ_SHAPE,CB_GETCURSEL,0,0);
 
 	char tmp[256];
-	_snprintf(tmp, sizeof(tmp), "%lf %lf %d %d %d %d %d %d %d %d %d %d %d", bpmStart, bpmEnd, num, den, bpmEnb, sigEnb, timeSel, shape, type, selPref, invertPref, adjustType, adjustShape);
+	_snprintfSafe(tmp, sizeof(tmp), "%lf %lf %d %d %d %d %d %d %d %d %d %d %d", bpmStart, bpmEnd, num, den, bpmEnb, sigEnb, timeSel, shape, type, selPref, invertPref, adjustType, adjustShape);
 	WritePrivateProfileString("SWS", SEL_ADJ_KEY, tmp, get_ini_file());
 }
 
@@ -1389,7 +1399,7 @@ static void SaveOptionsUnselectNth (HWND hwnd)
 	int criteria = IsDlgButtonChecked(hwnd, IDC_BR_UNSEL_CRITERIA);
 
 	char tmp[256];
-	_snprintf(tmp, sizeof(tmp), "%d %d", Nth, criteria);
+	_snprintfSafe(tmp, sizeof(tmp), "%d %d", Nth, criteria);
 	WritePrivateProfileString("SWS", UNSEL_KEY, tmp, get_ini_file());
 }
 
@@ -1627,7 +1637,7 @@ static void SaveOptionsRandomizeTempo (HWND hwnd)
 	int limit = IsDlgButtonChecked(hwnd, IDC_BR_RAND_LIMIT);
 
 	char tmp[256];
-	_snprintf(tmp, sizeof(tmp), "%lf %lf %d %lf %lf %d %d", min, max, unit, minLimit, maxLimit, unitLimit, limit);
+	_snprintfSafe(tmp, sizeof(tmp), "%lf %lf %d %lf %lf %d %d", min, max, unit, minLimit, maxLimit, unitLimit, limit);
 	WritePrivateProfileString("SWS", RAND_KEY, tmp, get_ini_file());
 }
 
@@ -1803,7 +1813,7 @@ static void SaveOptionsTempoShape (HWND hwnd)
 	char splitRatio[128]; GetDlgItemText(hwnd, IDC_BR_SHAPE_SPLIT_RATIO, splitRatio, 128);
 
 	char tmp[256];
-	_snprintf(tmp, sizeof(tmp), "%d %s", split, splitRatio);
+	_snprintfSafe(tmp, sizeof(tmp), "%d %s", split, splitRatio);
 	WritePrivateProfileString("SWS", SHAPE_KEY, tmp, get_ini_file());
 }
 

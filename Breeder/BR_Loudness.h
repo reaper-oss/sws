@@ -91,7 +91,6 @@ private:
 	WDL_FastString GetTrackName ();
 	void operator= (const BR_LoudnessObject&);    // we don't need assignment or copy constructor so disable
 	BR_LoudnessObject (const BR_LoudnessObject&); // for now! (it could destroy perfectly valid accessor)
-
 	MediaTrack* m_track;
 	MediaItem_Take* m_take;
 	GUID m_takeGuid, m_trackGuid;
@@ -152,7 +151,7 @@ protected:
 	virtual void OnCommand (WPARAM wParam, LPARAM lParam);
 	virtual void OnTimer (WPARAM wParam);
 	virtual void OnDestroy ();
-	virtual void GetMinSize(int* w, int* h);
+	virtual void GetMinSize (int* w, int* h);
 	virtual HMENU OnContextMenu (int x, int y, bool* wantDefaultItems);
 
 	double m_objectsLen;

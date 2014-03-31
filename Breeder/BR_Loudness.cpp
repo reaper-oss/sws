@@ -30,6 +30,7 @@
 #include "BR_EnvTools.h"
 #include "BR_Util.h"
 #include "../SnM/SnM_Dlg.h"
+#include "../SnM/SnM_Util.h"
 #include "../SnM/SnM.h"
 #include "../libebur128/ebur128.h"
 #include "../reaper/localize.h"
@@ -788,17 +789,17 @@ int BR_LoudnessObject::CheckSetAudioData ()
 
 
 	if (AudioAccessorValidateState(m_audioData.audio)     ||
-	    strcmp(newHash, m_audioData.audioHash)            ||
-	    audioStart  != m_audioData.audioStart             ||
-	    audioEnd    != m_audioData.audioEnd               ||
-	    channels    != m_audioData.channels               ||
-	    channelMode != m_audioData.channelMode            ||
-	    samplerate  != m_audioData.samplerate             ||
-	    fabs(volume - m_audioData.volume) >= VOLUME_DELTA ||
-	    fabs(pan    - m_audioData.pan)    >= PAN_DELTA    ||
-	    volEnv      != m_audioData.volEnv                 ||
-	    volEnvPreFX != m_audioData.volEnvPreFX
-	    )
+		strcmp(newHash, m_audioData.audioHash)            ||
+		audioStart  != m_audioData.audioStart             ||
+		audioEnd    != m_audioData.audioEnd               ||
+		channels    != m_audioData.channels               ||
+		channelMode != m_audioData.channelMode            ||
+		samplerate  != m_audioData.samplerate             ||
+		fabs(volume - m_audioData.volume) >= VOLUME_DELTA ||
+		fabs(pan    - m_audioData.pan)    >= PAN_DELTA    ||
+		volEnv      != m_audioData.volEnv                 ||
+		volEnvPreFX != m_audioData.volEnvPreFX
+		)
 	{
 		DestroyAudioAccessor(m_audioData.audio);
 		m_audioData.audio = (m_track) ? (CreateTrackAudioAccessor(m_track)) : (CreateTakeAudioAccessor(m_take));
@@ -810,12 +811,12 @@ int BR_LoudnessObject::CheckSetAudioData ()
 		m_audioData.channels    = channels;
 		m_audioData.channelMode = channelMode;
 		m_audioData.samplerate  = samplerate;
- 		m_audioData.volume      = volume;
- 		m_audioData.pan         = pan;
- 		m_audioData.volEnv      = volEnv;
- 		m_audioData.volEnvPreFX = volEnvPreFX;
+		m_audioData.volume      = volume;
+		m_audioData.pan         = pan;
+		m_audioData.volEnv      = volEnv;
+		m_audioData.volEnvPreFX = volEnvPreFX;
 
- 		this->SetAnalyzedStatus(false);
+		this->SetAnalyzedStatus(false);
 		return 2;
 	}
 	else
@@ -1087,9 +1088,9 @@ static WDL_DLGRET NormalizeDialogProgressProc (HWND hwnd, UINT uMsg, WPARAM wPar
 					if (normalizeData->items->GetSize())
 					{
 						if (undoTrack)
-							Undo_OnStateChangeEx(__LOCALIZE("Normalize track loudness","sws_undo"), UNDO_STATE_ITEMS, -1);
+							Undo_OnStateChangeEx2(NULL, __LOCALIZE("Normalize track loudness","sws_undo"), UNDO_STATE_ITEMS, -1);
 						else
-							Undo_OnStateChangeEx(__LOCALIZE("Normalize item loudness","sws_undo"), UNDO_STATE_ITEMS, -1);
+							Undo_OnStateChangeEx2(NULL, __LOCALIZE("Normalize item loudness","sws_undo"), UNDO_STATE_ITEMS, -1);
 					}
 
 					normalizeData->success = true;
@@ -1587,7 +1588,7 @@ void BR_AnalyzeLoudnessWnd::OnCommand (WPARAM wParam, LPARAM lParam)
 						success = listItem->CreateGraph(envelope, this->m_properties.graphMin, this->m_properties.graphMax, momentary);
 
 					if (success && envelope.Commit())
-						Undo_OnStateChangeEx(__LOCALIZE("Draw loudness graph in active envelope","sws_undo"), UNDO_STATE_ITEMS, -1);
+						Undo_OnStateChangeEx2(NULL, __LOCALIZE("Draw loudness graph in active envelope","sws_undo"), UNDO_STATE_ITEMS, -1);
 				}
 			}
 		}
@@ -1658,14 +1659,14 @@ void BR_AnalyzeLoudnessWnd::OnCommand (WPARAM wParam, LPARAM lParam)
 		case GO_TO_SHORTTERM:
 		{
 			if (BR_LoudnessObject* listItem = (BR_LoudnessObject*)m_list->EnumSelected(NULL))
-			    listItem->GotoShortTermMax(this->m_properties.timeSelectionOverMax);
+				listItem->GotoShortTermMax(this->m_properties.timeSelectionOverMax);
 		}
 		break;
 
 		case GO_TO_MOMENTARY:
 		{
 			if (BR_LoudnessObject* listItem = (BR_LoudnessObject*)m_list->EnumSelected(NULL))
-			    listItem->GotoMomentaryMax(this->m_properties.timeSelectionOverMax);
+				listItem->GotoMomentaryMax(this->m_properties.timeSelectionOverMax);
 		}
 		break;
 
@@ -1832,8 +1833,8 @@ void BR_AnalyzeLoudnessWnd::OnTimer (WPARAM wParam)
 				{
 					if (listItem->IsTargetValid())
 					{
-						char listName[CELL_MAX_LEN];
-						char realName[CELL_MAX_LEN];
+						char listName[CELL_MAX_LEN] = "";
+						char realName[CELL_MAX_LEN] = "";
 
 						ListView_GetItemText(hwnd, i, COL_TRACK, listName, sizeof(listName));
 						listItem->GetColumnStr(COL_TRACK, realName, sizeof(realName));
@@ -1883,13 +1884,13 @@ void BR_AnalyzeLoudnessWnd::OnDestroy ()
 	KillTimer(m_hwnd, UPDATE_TIMER);
 }
 
-void BR_AnalyzeLoudnessWnd::GetMinSize(int* w, int* h)
+void BR_AnalyzeLoudnessWnd::GetMinSize (int* w, int* h)
 {
 	*w = 275;
 	*h = 160;
 }
 
-HMENU BR_AnalyzeLoudnessWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
+HMENU BR_AnalyzeLoudnessWnd::OnContextMenu (int x, int y, bool* wantDefaultItems)
 {
 	HMENU menu = CreatePopupMenu();
 
@@ -1977,7 +1978,7 @@ void BR_AnalyzeLoudnessWnd::Properties::Save ()
 	int timeSelectionOverMaxInt = timeSelectionOverMax;
 	int clearEnvelopeInt = clearEnvelope;
 	char tmp[256];
-	_snprintf(tmp, sizeof(tmp), "%d %d %d %d %d %d %lf %lf", analyzeTracksInt, analyzeOnNormalizeInt, mirrorSelectionInt, doubleClickGotoTargetInt, timeSelectionOverMaxInt, clearEnvelopeInt, graphMin, graphMax);
+	_snprintfSafe(tmp, sizeof(tmp), "%d %d %d %d %d %d %lf %lf", analyzeTracksInt, analyzeOnNormalizeInt, mirrorSelectionInt, doubleClickGotoTargetInt, timeSelectionOverMaxInt, clearEnvelopeInt, graphMin, graphMax);
 	WritePrivateProfileString("SWS", LOUDNESS_KEY, tmp, get_ini_file());
 }
 

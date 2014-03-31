@@ -60,7 +60,7 @@ static int translateAccel (MSG* msg, accelerator_register_t* ctx)
 	if (msg->message == WM_KEYUP || msg->message == WM_SYSKEYUP)
 	{
 		if (g_movedGridOnce)
-			Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(SWSGetCommandByID(g_moveGridCmd)) ,UNDO_STATE_ITEMS,-1);
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(SWSGetCommandByID(g_moveGridCmd)), UNDO_STATE_ALL, -1);
 		InitMoveGrid(false);
 	}
 	return 0;
@@ -362,7 +362,7 @@ void MoveGridToEditPlayCursor (COMMAND_T* ct)
 		return;
 
 	// Set preferences to prevent play cursor from jumping
-	int seekmodes;
+	int seekmodes = 0;
 	if ((int)ct->user == 1 || (int)ct->user == 3)
 	{
 		GetConfig("seekmodes", seekmodes);

@@ -1,5 +1,6 @@
 Fixes
- - Fixed memory leak when analyzing loudness
+ - Fixed some memory leaks
+ - Fixed undo in certain instances when moving grid to mouse cursor
 
 !v2.4.0 #5 pre-release build (March 30, 2014)
 <strong>Analyze and normalize loudness</strong>

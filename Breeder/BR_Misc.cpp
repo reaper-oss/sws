@@ -143,7 +143,7 @@ void MidiItemTempo (COMMAND_T* ct)
 		stateChanged = true;
 	}
 	if (stateChanged)
-		Undo_OnStateChange2(NULL, SWS_CMD_SHORTNAME(ct));
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 }
 
 void MarkersAtNotes (COMMAND_T* ct)
@@ -225,17 +225,17 @@ void SnapFollowsGridVis (COMMAND_T* ct)
 	RefreshToolbar(0);
 }
 
-void TrimNewVolPanEnvs (COMMAND_T* ct)
-{
-	SetConfig("envtrimadjmode", (int)ct->user);
-	RefreshToolbar(0);
-}
-
 void PlaybackFollowsTempoChange (COMMAND_T*)
 {
 	int option;
 	GetConfig("seekmodes", option);
 	SetConfig("seekmodes", ToggleBit(option, 5));
+	RefreshToolbar(0);
+}
+
+void TrimNewVolPanEnvs (COMMAND_T* ct)
+{
+	SetConfig("envtrimadjmode", (int)ct->user);
 	RefreshToolbar(0);
 }
 
@@ -388,14 +388,14 @@ int IsSnapFollowsGridVisOn (COMMAND_T* = NULL)
 	return !GetBit(option, 15);
 }
 
+int IsPlaybackFollowingTempoChange (COMMAND_T* = NULL)
+{
+	int option; GetConfig("seekmodes", option);
+	return GetBit(option, 5);
+}
+
 int IsTrimNewVolPanEnvsOn (COMMAND_T* ct)
 {
 	int option; GetConfig("envtrimadjmode", option);
 	return (option == (int)ct->user);
-}
-
-int IsPlaybackFollowingTempoChange (COMMAND_T*)
-{
-	int option; GetConfig("seekmodes", option);
-	return GetBit(option, 5);
 }

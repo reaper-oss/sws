@@ -405,7 +405,7 @@ unsigned WINAPI BR_SearchObject::StartSearch (void* searchObject)
 					else
 						statusO = UP_TO_DATE;
 
-					delete buf;
+					delete[] buf;
 					break;
 				}
 			}
@@ -453,7 +453,7 @@ unsigned WINAPI BR_SearchObject::StartSearch (void* searchObject)
 					else
 						statusB = UP_TO_DATE;
 
-					delete buf;
+					delete[] buf;
 					break;
 				}
 			}

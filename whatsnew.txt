@@ -1,3 +1,6 @@
+Fixes
+ - Fixed memory leak when analyzing loudness
+
 !v2.4.0 #5 pre-release build (March 30, 2014)
 <strong>Analyze and normalize loudness</strong>
 +Functionality in general:

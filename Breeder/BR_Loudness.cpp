@@ -687,7 +687,7 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 				currentChannel = 1;
 		}
 		ebur128_add_frames_double(loudnessState, buf, sampleCount);
-		delete buf[];
+		delete[] buf;
 
 		if (!integratedOnly && !skipIntervals)
 		{

@@ -40,9 +40,10 @@
 #include "SnM_Dlg.h"
 #include "SnM_Util.h"
 #include "SnM_Window.h"
-#include "../reaper/localize.h"
 #include "../Console/Console.h"
 #include "../IX/IX.h"
+#include "../reaper/localize.h"
+#include "../../WDL/projectcontext.h"
 
 #define CA_WND_ID	"SnMCyclaction"
 

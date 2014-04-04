@@ -37,6 +37,7 @@
 #include "SnM_Window.h"
 #include "../reaper/localize.h"
 #include "../Prompt.h"
+#include "../../WDL/projectcontext.h"
 
 
 #define LIVECFG_WND_ID				"SnMLiveConfigs"

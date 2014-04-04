@@ -34,6 +34,7 @@
 #include "SnM_Track.h"
 #include "SnM_Util.h"
 #include "../reaper/localize.h"
+#include "../../WDL/projectcontext.h"
 
 
 HWND g_cueBussHwnd = NULL;

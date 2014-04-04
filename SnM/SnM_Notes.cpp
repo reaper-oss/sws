@@ -48,6 +48,7 @@
 #include "SnM_Util.h"
 #include "SnM_Window.h"
 #include "../reaper/localize.h"
+#include "../../WDL/projectcontext.h"
 
 
 #define NOTES_WND_ID				"SnMNotesHelp"

@@ -865,8 +865,12 @@ extern "C"
 		}
 
 		// check for dupe/clone before registering any new action
-		if (SNM_NamedCommandLookup("_SWS_ABOUT", NULL, true))
-			ERR_RETURN("Dupe SWS\n")
+		{
+			int(*SNM_GetIntConfigVar)(const char* varname, int errvalue);
+			IMPAPI(SNM_GetIntConfigVar);
+			if (!errcnt)
+				ERR_RETURN("Dupe SWS\n")
+		}
 
 		if (!rec->Register("hookcommand",(void*)hookCommandProc))
 			ERR_RETURN("hook command error\n")

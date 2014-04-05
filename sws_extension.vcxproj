@@ -421,7 +421,6 @@ copy /y "whatsnew.txt" "$(REAPER64_DIR)\plugins\reaper_sws_whatsnew.txt"
     <ClInclude Include="reaper\localize-import.h" />
     <ClInclude Include="reaper\localize.h" />
     <ClInclude Include="reaper\reaper_plugin.h" />
-    <ClInclude Include="..\..\Program Files (x86)\REAPER\reaper_plugin_functions.h" />
     <ClInclude Include="reaper\sws_rpf_wrapper.h" />
     <ClInclude Include="DragDrop.h" />
     <ClInclude Include="Menus.h" />

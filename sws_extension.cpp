@@ -47,7 +47,6 @@
 #include "SnM/SnM.h"
 #include "SnM/SnM_CSurf.h"
 #include "SnM/SnM_Dlg.h"
-#include "SnM/SnM_Util.h"
 #include "Padre/padreActions.h"
 #include "Fingers/FNG_client.h"
 #include "Autorender/Autorender.h"
@@ -870,6 +869,7 @@ extern "C"
 			IMPAPI(SNM_GetIntConfigVar);
 			if (!errcnt)
 				ERR_RETURN("Dupe SWS\n")
+			errcnt=0;
 		}
 
 		if (!rec->Register("hookcommand",(void*)hookCommandProc))

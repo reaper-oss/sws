@@ -1,6 +1,11 @@
+Misc
++Cycle Actions: improved toolbar refresh
++Exclusive toggle actions are now off on start-up
++Prevent conflicts with dupe/clone extension
+
 Fixes
- - Fixed some memory leaks
- - Fixed undo in certain instances when moving grid to mouse cursor
++Fixed some memory leaks (loudness, tempo)
++Fixed undo in certain instances when moving grid to mouse cursor
 
 !v2.4.0 #5 pre-release build (March 30, 2014)
 <strong>Analyze and normalize loudness</strong>

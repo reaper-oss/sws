@@ -1145,7 +1145,9 @@ void LoadCyclactions(bool _wantMsg, WDL_PtrList_DeleteOnDestroy<Cyclaction>* _cy
 	}
 
 	if (_wantMsg && msg.GetLength())
-		SNM_ShowMsg(msg.Get(), __LOCALIZE("S&M - Warning","sws_DLG_161"), g_caWndMgr.GetMsgHWND());
+		SNM_ShowMsg(msg.Get(), __LOCALIZE("S&M - Warning", "sws_DLG_161"), g_caWndMgr.GetMsgHWND());
+
+	RefreshToolbar(0);
 }
 
 // _cyclactions: NULL to update main model

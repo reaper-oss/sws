@@ -772,10 +772,12 @@ int RegisterDynamicActions(DYN_COMMAND_T* _cmds, const char* _inifn)
 					OutputDebugString(actionName);
 					OutputDebugString("\n");
 #endif
-					//JFB! special case: init states of some "Exclusive toggle" actions
+#if 0 //JFB disbled: exclusive toggle actions are now off on start-up
+					//JFB! ugly special case: init states of some "Exclusive toggle" actions
 					if (!j && strstr(ct->id, "S&M_EXCL_TGL"))
 						if (COMMAND_T* c = SWSGetCommandByID(cmdId)) // not ideal, but does not worth changing SWSCreateRegisterDynamicCmd()
 							c->fakeToggle = true;
+#endif
 				}
 				else
 					return 0;
@@ -906,10 +908,8 @@ void ExclusiveToggle(COMMAND_T* _ct)
 		{
 			if ((int)ct->user == i) // real break condition
 			{
-				if (ct->accel.accel.cmd != _ct->accel.accel.cmd) {
+				if (ct->accel.accel.cmd != _ct->accel.accel.cmd)
 					ct->fakeToggle = false;
-					RefreshToolbar(ct->accel.accel.cmd);
-				}
 			}
 			else
 				break;
@@ -917,6 +917,7 @@ void ExclusiveToggle(COMMAND_T* _ct)
 		else
 			break;
 	}
+	RefreshToolbar(0); // 0 in case there are tied CAs too
 }
 
 
@@ -936,7 +937,7 @@ bool OnMidiAction(int _cmd, int _val, int _valhw, int _relmode, HWND _hwnd)
 	// ignore commands that don't have anything to do with us from this point forward
 	if (_cmd >= SNM_SECTION_1ST_CMD_ID)
 	{
-		if (MIDI_COMMAND_T* ct = s_mySectionCmds.Get(_cmd, NULL))
+		if (MIDI_COMMAND_T* ct = s_mySectionCmds.Get(_cmd))
 		{
 			sReentrancyCheck = true;
 #ifdef _SNM_MISC // see MIDI_COMMAND_T declaration

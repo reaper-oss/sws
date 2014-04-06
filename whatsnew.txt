@@ -1,3 +1,4 @@
+!v2.4.0 #6 pre-release build (April 6, 2014)
 Misc
 +Cycle Actions: improved toolbar refresh
 +Exclusive toggle actions are now off on start-up

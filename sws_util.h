@@ -99,6 +99,7 @@ typedef struct COMMAND_T
 	bool fakeToggle;
 } COMMAND_T;
 
+
 template<class PTRTYPE> class SWSProjConfig
 {
 protected:

@@ -100,7 +100,7 @@ bool hookCommandProc(int iCmd, int flag)
 	{
 		if (!cmd->uniqueSectionId && cmd->accel.accel.cmd==iCmd && cmd->doCommand)
 		{
-			if (sReentrantCmds.Find(cmd->id) == -1)
+			if (sReentrantCmds.Find(cmd->id)<0)
 			{
 				sReentrantCmds.Add(cmd->id);
 				cmd->fakeToggle = !cmd->fakeToggle;
@@ -139,23 +139,25 @@ bool hookCommandProc2(KbdSectionInfo* sec, int cmdId, int val, int valhw, int re
 			if (cmd->doCommand)
 				return false;
 
-			if (sReentrantCmds.Find(cmd->id) == -1)
+			if (cmd->onAction)
 			{
-				sReentrantCmds.Add(cmd->id);
-				cmd->fakeToggle = !cmd->fakeToggle;
-				if (cmd->onAction)
+				if (sReentrantCmds.Find(cmd->id)<0)
+				{
+					sReentrantCmds.Add(cmd->id);
+					cmd->fakeToggle = !cmd->fakeToggle;
 					cmd->onAction(cmd, val, valhw, relmode, hwnd);
-				sReentrantCmds.Delete(sReentrantCmds.Find(cmd->id));
-				return true;
-			}
+					sReentrantCmds.Delete(sReentrantCmds.Find(cmd->id));
+					return true;
+				}
 #ifdef ACTION_DEBUG
-			else
-			{
-				OutputDebugString("hookCommandProc2 - recursive action: ");
-				OutputDebugString(cmd->id);
-				OutputDebugString("\n");
-			}
+				else
+				{
+					OutputDebugString("hookCommandProc2 - recursive action: ");
+					OutputDebugString(cmd->id);
+					OutputDebugString("\n");
+				}
 #endif
+			}
 		}
 	}
 	return false;
@@ -196,7 +198,7 @@ int toggleActionHook(int iCmd)
 // 2) Add keyboard accelerator (with localized action name) and add to the "action" list
 int SWSRegisterCmd(COMMAND_T* pCommand, const char* cFile, int cmdId, bool localize)
 {
-	if (!pCommand) return 0;
+  if (!pCommand || !pCommand->id || !pCommand->accel.desc || (!pCommand->doCommand && !pCommand->onAction)) return 0;
 
 	// localized action name, if needed
 	const char* defaultName = pCommand->accel.desc;
@@ -205,7 +207,11 @@ int SWSRegisterCmd(COMMAND_T* pCommand, const char* cFile, int cmdId, bool local
 	if (!pCommand->uniqueSectionId && pCommand->doCommand)
 	{
 		if (!cmdId) cmdId = plugin_register("command_id", (void*)pCommand->id);
-		if (cmdId) cmdId = plugin_register("gaccel", &pCommand->accel) ? cmdId : 0;
+		if (cmdId)
+		{
+			pCommand->accel.accel.cmd = cmdId; // need to this before registering "gaccel"
+			cmdId = (plugin_register("gaccel", &pCommand->accel) ? cmdId : 0);
+		}
 	}
 	else if (pCommand->onAction)
 	{

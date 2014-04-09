@@ -646,6 +646,21 @@ typedef struct accelerator_register_t
 
 
 /*
+** custom_action_register_t allows you to register ("custom_action") an action into a keyboard section action list
+** register("custom_action",ca) will return the command ID (instance-dependent but unique across all sections), or 0 if failed (e.g. dupe idStr)
+** the related callback should be registered with "hookcommand2"
+*/
+
+typedef struct
+{
+  int uniqueSectionId; // 0/100=main/main alt, 32063=media explorer, 32060=midi editor, 32061=midi event list editor, 32062=midi inline editor, etc
+  const char* idStr; // must be unique accross all sections
+  const char* name;
+  void *extra; // reserved for future use
+} custom_action_register_t;
+
+
+/*
 ** gaccel_register_t allows you to register ("gaccel") an action into the main keyboard section action list, and at the same time
 ** a default binding for it (accel.cmd is the command ID, desc is the description, and accel's other parameters are the
 ** key to bind. 

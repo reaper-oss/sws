@@ -228,14 +228,14 @@ int PromptClearProjectStartupAction(bool _clear)
 				__LOCALIZE_VERFMT("Are you sure you want to clear the current startup action: '%s'?","sws_mbox") :
 				__LOCALIZE_VERFMT("Are you sure you want to replace the current startup action: '%s'?","sws_mbox"),
 			kbd_getTextFromCmd(cmdId, NULL));
-		r = MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("S&M - Confirmation","sws_mbox"), MB_OKCANCEL);
+		r = MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("S&M - Confirmation","sws_mbox"), MB_YESNO);
 	}
 	return r;
 }
 
 void SetProjectStartupAction(COMMAND_T* _ct)
 {
-	if (PromptClearProjectStartupAction(false) == IDCANCEL)
+	if (PromptClearProjectStartupAction(false) == IDNO)
 		return;
 
 	char idstr[SNM_MAX_ACTION_CUSTID_LEN];
@@ -253,9 +253,9 @@ void SetProjectStartupAction(COMMAND_T* _ct)
 
 				// localization note: msgs shared with the CA editor
 				if (tstNum==-1)
-					msg.Append(__LOCALIZE("For SWS/S&M actions, you must use identifier strings (e.g. _SWS_ABOUT), not command IDs (e.g. 47145)\nTip: to copy such identifiers, right-click the action in the Actions window > Copy selected action cmdID/identifier string","sws_mbox"));
+					msg.Append(__LOCALIZE("For SWS/S&M actions, you must use identifier strings (e.g. _SWS_ABOUT), not command IDs (e.g. 47145).\nTip: to copy such identifiers, right-click the action in the Actions window > Copy selected action cmdID/identifier string.","sws_mbox"));
 				else if (tstNum==-2)
-					msg.Append(__LOCALIZE("For macros/scripts, you must use identifier strings (e.g. _f506bc780a0ab34b8fdedb67ed5d3649), not command IDs (e.g. 47145)\nTip: to copy such identifiers, right-click the macro/script in the Actions window > Copy selected action cmdID/identifier string","sws_mbox"));
+					msg.Append(__LOCALIZE("For macros/scripts, you must use identifier strings (e.g. _f506bc780a0ab34b8fdedb67ed5d3649), not command IDs (e.g. 47145).\nTip: to copy such identifiers, right-click the macro/script in the Actions window > Copy selected action cmdID/identifier string.","sws_mbox"));
 				MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("S&M - Error","sws_DLG_161"), MB_OK);
 			}
 			else
@@ -263,13 +263,14 @@ void SetProjectStartupAction(COMMAND_T* _ct)
 				g_prjActions.Get()->Set(idstr);
 				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_MISCCFG, -1);
 
-				char prjFn[SNM_MAX_PATH]="";
-				msg.SetFormatted(256, __LOCALIZE_VERFMT("'%s' is defined as project startup action.","sws_mbox"), kbd_getTextFromCmd(cmdId, NULL));
+				msg.SetFormatted(256, __LOCALIZE_VERFMT("'%s' is defined as project startup action","sws_mbox"), kbd_getTextFromCmd(cmdId, NULL));
+				char prjFn[SNM_MAX_PATH] = "";
 				EnumProjects(-1, prjFn, sizeof(prjFn));
 				if (*prjFn) {
 					msg.Append("\n");
 					msg.AppendFormatted(SNM_MAX_PATH, __LOCALIZE_VERFMT("for %s","sws_mbox"), prjFn);
 				}
+				msg.Append(".");
 				MessageBox(GetMainHwnd(), msg.Get(), SWS_CMD_SHORTNAME(_ct), MB_OK);
 			}
 		}
@@ -283,7 +284,7 @@ void SetProjectStartupAction(COMMAND_T* _ct)
 
 void ClearProjectStartupAction(COMMAND_T* _ct)
 {
-	if (PromptClearProjectStartupAction(true)==IDOK) {
+	if (PromptClearProjectStartupAction(true)==IDYES) {
 		g_prjActions.Get()->Set("");
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_MISCCFG, -1);
 	}
@@ -291,9 +292,17 @@ void ClearProjectStartupAction(COMMAND_T* _ct)
 
 void ShowProjectStartupAction(COMMAND_T* _ct)
 {
-	WDL_FastString msg(__LOCALIZE("No startup action is defined.","sws_mbox"));
+	WDL_FastString msg(__LOCALIZE("No startup action is defined","sws_mbox"));
 	if (int cmdId = SNM_NamedCommandLookup(g_prjActions.Get()->Get()))
-		msg.SetFormatted(256, __LOCALIZE_VERFMT("Current project startup action: '%s'","sws_mbox"), kbd_getTextFromCmd(cmdId, NULL));
+		msg.SetFormatted(256, __LOCALIZE_VERFMT("'%s' is defined as project startup action", "sws_mbox"), kbd_getTextFromCmd(cmdId, NULL));
+
+	char prjFn[SNM_MAX_PATH] = "";
+	EnumProjects(-1, prjFn, sizeof(prjFn));
+	if (*prjFn) {
+		msg.Append("\n");
+		msg.AppendFormatted(SNM_MAX_PATH, __LOCALIZE_VERFMT("for %s", "sws_mbox"), prjFn);
+	}
+	msg.Append(".");
 	MessageBox(GetMainHwnd(), msg.Get(), SWS_CMD_SHORTNAME(_ct), MB_OK);
 }
 

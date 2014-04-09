@@ -5,6 +5,9 @@ Note: these actions were already present in the "Main" section of the action lis
 +SWS/S&M: Restore displayed CC lanes, slot n (where 'n' is in [1; 8], http://forum.cockos.com/showthread.php?p=984786#post984786|customizable in the S&M.ini file|, up to 99 slots)
 +SWS/S&M: Save displayed CC lanes, slot n
 
+Snapshots: the default number of recall actions is now configurable in REAPER.ini 
+Edit the key "DefaultNbSnapsRecall" in the section [SWS] (quit REAPER before editing this file!)
+
 !v2.4.0 #6 pre-release build (April 6, 2014)
 Misc
 +Cycle Actions: improved toolbar refresh

@@ -1219,14 +1219,18 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 	}
 }
 
+int g_nbRecallPref = 12;
+
 int SnapshotsInit()
 {
 	if (!plugin_register("projectconfig",&g_projectconfig))
 		return 0;
 
 	SWSRegisterCommands(g_commandTable);
-	// Add 12 gets by default, more are added dynamically as needed.
-	for (int i = 0; i < 12; i++)
+
+	// Add gets by default, more actions are added dynamically as needed
+	g_nbRecallPref = GetPrivateProfileInt(SWS_INI, "DefaultNbSnapsRecall", 12, get_ini_file());
+	for (int i = 0; i < g_nbRecallPref; i++)
 		Snapshot::RegisterGetCommand(i+1);
 
 	if (!plugin_register("hookcustommenu", (void*)menuhook))
@@ -1239,5 +1243,9 @@ int SnapshotsInit()
 
 void SnapshotsExit()
 {
+	char buf[64];
+	sprintf(buf, "%d", g_nbRecallPref);
+	WritePrivateProfileString(SWS_INI, "DefaultNbSnapsRecall", buf, get_ini_file());
+
 	delete g_pSSWnd;
 }

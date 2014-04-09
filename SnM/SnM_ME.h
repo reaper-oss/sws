@@ -30,9 +30,16 @@
 #ifndef _SNM_ME_H_
 #define _SNM_ME_H_
 
-void MECreateCCLane(COMMAND_T*);
-void MEHideCCLanes(COMMAND_T*);
-void MESetCCLanes(COMMAND_T*);
-void MESaveCCLanes(COMMAND_T*);
+void MainCreateCCLane(COMMAND_T*);
+void MECreateCCLane(COMMAND_T*, int, int, int, HWND);
+
+void MainHideCCLanes(COMMAND_T*);
+void MEHideCCLanes(COMMAND_T*, int, int, int, HWND);
+
+void MainSetCCLanes(COMMAND_T*);
+void MESetCCLanes(COMMAND_T*, int, int, int, HWND);
+
+void MainSaveCCLanes(COMMAND_T*);
+void MESaveCCLanes(COMMAND_T*, int, int, int, HWND);
 
 #endif

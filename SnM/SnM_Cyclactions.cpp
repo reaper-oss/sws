@@ -1030,8 +1030,10 @@ int RegisterCyclation(const char* _name, int _section, int _cycleId, int _cmdId)
 	if (_snprintfStrict(custId, sizeof(custId), "%s%d", GetCACustomId(_section), _cycleId) > 0)
 	{
 		return SWSCreateRegisterDynamicCmd(
+			0,
 			_cmdId,
-			RunCyclaction, 
+			RunCyclaction,
+			NULL,
 			IsCyclactionEnabled,
 			custId,
 			_name,

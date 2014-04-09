@@ -326,6 +326,8 @@ typedef struct DYN_COMMAND_T {
 	unsigned char count;
 	unsigned char max;
 	int (*getEnabled)(COMMAND_T*);
+	int uniqueSectionId;
+	void(*onAction)(COMMAND_T*, int, int, int, HWND);
 } DYN_COMMAND_T;
 
 typedef struct SECTION_INFO_T {

@@ -1,8 +1,15 @@
+Added actions in the MIDI Editor action list (<strong>requires REAPER v4.62pre7+</strong>):
+Note: these actions were already present in the "Main" section of the action list, they remain there too (not to break users' configs), but they are deprecated now
++SWS/S&M: Hide all CC lanes
++SWS/S&M: Create CC lane
++SWS/S&M: Restore displayed CC lanes, slot n (where 'n' is in [1; 8], http://forum.cockos.com/showthread.php?p=984786#post984786|customizable in the S&M.ini file|, up to 99 slots)
++SWS/S&M: Save displayed CC lanes, slot n
+
 !v2.4.0 #6 pre-release build (April 6, 2014)
 Misc
 +Cycle Actions: improved toolbar refresh
 +Exclusive toggle actions are now off on start-up
-+Prevent conflicts with dupe/clone extension
++Prevent conflicts with dupe/clone extensions
 
 Fixes
 +Fixed some memory leaks (loudness, tempo)

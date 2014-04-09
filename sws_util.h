@@ -94,11 +94,10 @@ typedef struct COMMAND_T
 	const char* menuText;
 	INT_PTR user;
 	int (*getEnabled)(COMMAND_T*);
+	int uniqueSectionId;
+	void(*onAction)(COMMAND_T*, int, int, int, HWND);
 	bool fakeToggle;
 } COMMAND_T;
-
-typedef void (*SWS_COMMANDFUNC)(COMMAND_T*);
-#define SWS_NOOP ((SWS_COMMANDFUNC)-1)
 
 template<class PTRTYPE> class SWSProjConfig
 {
@@ -198,14 +197,14 @@ int GetMenuString(HMENU hMenu, UINT uIDItem, char* lpString, int nMaxCount, UINT
 #endif
 
 // Command/action handling, sws_extension.cpp
-int SWSRegisterCmd(COMMAND_T* pCommand, const char* cFile, int cmdId = 0, bool localize = true); // One command
+int SWSRegisterCmd(COMMAND_T* pCommand, const char* cFile, int cmdId = 0, bool localize = true);
 COMMAND_T* SWSUnregisterCmd(int id);
 
 int SWSRegisterCmds(COMMAND_T* pCommands, const char* cFile, bool localize); // Multiple commands in a table, terminated with LAST_COMMAND
 #define SWSRegisterCommands(c) SWSRegisterCmds(c, __FILE__, true)
 
-int SWSCreateRegisterDynamicCmd(int cmdId, void (*doCommand)(COMMAND_T*), int (*getEnabled)(COMMAND_T*), const char* cID, const char* cDesc, const char* cMenu, INT_PTR user, const char* cFile, bool localize);
-#define SWSRegisterCommandExt(a, b, c, d, e) SWSCreateRegisterDynamicCmd(0, a, NULL, b, c, "", d, __FILE__, e)
+int SWSCreateRegisterDynamicCmd(int uniqueSectionId, int cmdId, void(*doCommand)(COMMAND_T*), void(*onAction)(COMMAND_T*, int, int, int, HWND), int(*getEnabled)(COMMAND_T*), const char* cID, const char* cDesc, const char* cMenu, INT_PTR user, const char* cFile, bool localize);
+#define SWSRegisterCommandExt(a, b, c, d, e) SWSCreateRegisterDynamicCmd(0, 0, a, NULL, NULL, b, c, "", d, __FILE__, e)
 void SWSFreeUnregisterDynamicCmd(int id);
 
 void ActionsList(COMMAND_T*);

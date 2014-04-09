@@ -98,7 +98,7 @@ bool hookCommandProc(int iCmd, int flag)
 	// Ignore commands that don't have anything to do with us from this point forward
 	if (COMMAND_T* cmd = SWSGetCommandByID(iCmd))
 	{
-		if (cmd->accel.accel.cmd==iCmd && cmd->doCommand && cmd->doCommand!=SWS_NOOP)
+		if (!cmd->uniqueSectionId && cmd->accel.accel.cmd==iCmd && cmd->doCommand)
 		{
 			if (sReentrantCmds.Find(cmd->id) == -1)
 			{
@@ -125,6 +125,42 @@ bool hookCommandProc(int iCmd, int flag)
 	return false;
 }
 
+bool hookCommandProc2(KbdSectionInfo* sec, int cmdId, int val, int valhw, int relmode, HWND hwnd)
+{
+	static WDL_PtrList<const char> sReentrantCmds;
+
+	// Ignore commands that don't have anything to do with us from this point forward
+	if (COMMAND_T* cmd = SWSGetCommandByID(cmdId))
+	{
+		if (cmd->uniqueSectionId==sec->uniqueID && cmd->accel.accel.cmd==cmdId)
+		{
+			// job for hookCommandProc?
+			// note: we could perform cmd->doCommand() here, but we'd loose the "flag" param value
+			if (cmd->doCommand)
+				return false;
+
+			if (sReentrantCmds.Find(cmd->id) == -1)
+			{
+				sReentrantCmds.Add(cmd->id);
+				cmd->fakeToggle = !cmd->fakeToggle;
+				if (cmd->onAction)
+					cmd->onAction(cmd, val, valhw, relmode, hwnd);
+				sReentrantCmds.Delete(sReentrantCmds.Find(cmd->id));
+				return true;
+			}
+#ifdef ACTION_DEBUG
+			else
+			{
+				OutputDebugString("hookCommandProc2 - recursive action: ");
+				OutputDebugString(cmd->id);
+				OutputDebugString("\n");
+			}
+#endif
+		}
+	}
+	return false;
+}
+
 // Returns:
 // -1 = action does not belong to this extension, or does not toggle
 //  0 = action belongs to this extension and is currently set to "off"
@@ -134,7 +170,7 @@ int toggleActionHook(int iCmd)
 	static WDL_PtrList<const char> sReentrantCmds;
 	if (COMMAND_T* cmd = SWSGetCommandByID(iCmd))
 	{
-		if (cmd->accel.accel.cmd==iCmd && cmd->getEnabled && cmd->doCommand!=SWS_NOOP)
+		if (cmd->accel.accel.cmd==iCmd && cmd->getEnabled)
 		{
 			if (sReentrantCmds.Find(cmd->id) == -1)
 			{
@@ -160,41 +196,43 @@ int toggleActionHook(int iCmd)
 // 2) Add keyboard accelerator (with localized action name) and add to the "action" list
 int SWSRegisterCmd(COMMAND_T* pCommand, const char* cFile, int cmdId, bool localize)
 {
-	if (pCommand->doCommand)
+	if (!pCommand) return 0;
+
+	// localized action name, if needed
+	const char* defaultName = pCommand->accel.desc;
+	if (localize) pCommand->accel.desc = GetLocalizedActionName(pCommand->accel.desc); // no alloc + no-op when no LangPack file is defined
+
+	if (!pCommand->uniqueSectionId && pCommand->doCommand)
 	{
-		// SWS - Unfortunately can't check for duplicate actions here because when commands are used in the mouse editor
-		//   they have a command ID (53000+) assigned before SWS is even loaded.
-		// char pId[128];
-		// if (_snprintf(pId, 128, "_%s", pCommand->id)<=0 || NamedCommandLookup(pId))
-		//	return 0; // duplicated action
-
-		if (!cmdId && !(cmdId = plugin_register("command_id", (void*)pCommand->id)))
-			return 0;
-
-		pCommand->accel.accel.cmd = cmdId;
-
-		// localized action name, if needed
-		const char* defaultName = pCommand->accel.desc;
-		if (localize)
-			pCommand->accel.desc = GetLocalizedActionName(pCommand->accel.desc); // no alloc + no-op when no LangPack file is defined
-
-		if (!plugin_register("gaccel", &pCommand->accel))
-			return 0;
-
-		// now that it is registered, restore the default action name
-		if (pCommand->accel.desc != defaultName)
-			pCommand->accel.desc = defaultName;
-
-		if (!g_iFirstCommand || g_iFirstCommand > cmdId)
-			g_iFirstCommand = cmdId;
-		if (cmdId > g_iLastCommand)
-			g_iLastCommand = cmdId;
-
-		g_commands.Insert(cmdId, pCommand);
-#ifdef ACTION_DEBUG
-		g_cmdFiles.Insert(cmdId, new WDL_String(cFile));
-#endif
+		if (!cmdId) cmdId = plugin_register("command_id", (void*)pCommand->id);
+		if (cmdId) cmdId = plugin_register("gaccel", &pCommand->accel) ? cmdId : 0;
 	}
+	else if (pCommand->onAction)
+	{
+		static custom_action_register_t s;
+		memset(&s, 0, sizeof(custom_action_register_t));
+		s.idStr = pCommand->id;
+		s.name = pCommand->accel.desc;
+		s.uniqueSectionId = pCommand->uniqueSectionId;
+		cmdId = plugin_register("custom_action", (void*)&s); // will re-use the known cmd ID, if any
+	}
+	else
+		cmdId = 0;
+	pCommand->accel.accel.cmd = cmdId;
+
+	// now that it is registered, restore the default action name
+	if (pCommand->accel.desc != defaultName) pCommand->accel.desc = defaultName;
+
+	if (!cmdId) return 0;
+
+	if (!g_iFirstCommand || g_iFirstCommand > cmdId) g_iFirstCommand = cmdId;
+	if (cmdId > g_iLastCommand) g_iLastCommand = cmdId;
+
+	g_commands.Insert(cmdId, pCommand);
+#ifdef ACTION_DEBUG
+	g_cmdFiles.Insert(cmdId, new WDL_String(cFile));
+#endif
+
 	return pCommand->accel.accel.cmd;
 }
 
@@ -210,13 +248,15 @@ int SWSRegisterCmds(COMMAND_T* pCommands, const char* cFile, bool localize)
 // Make and register a dynamic action (created at runtime)
 // If cmdId==0, get command ID from Reaper (use the provided cmdId otherwise)
 // Note: SWSFreeUnregisterDynamicCmd() can be used to free/unregister such an action
-int SWSCreateRegisterDynamicCmd(int cmdId, void (*doCommand)(COMMAND_T*), int (*getEnabled)(COMMAND_T*), const char* cID, const char* cDesc, const char* cMenu, INT_PTR user, const char* cFile, bool localize)
+int SWSCreateRegisterDynamicCmd(int uniqueSectionId, int cmdId, void(*doCommand)(COMMAND_T*), void(*onAction)(COMMAND_T*, int, int, int, HWND), int(*getEnabled)(COMMAND_T*), const char* cID, const char* cDesc, const char* cMenu, INT_PTR user, const char* cFile, bool localize)
 {
 	COMMAND_T* ct = new COMMAND_T;
 	memset(ct, 0, sizeof(COMMAND_T));
+	ct->uniqueSectionId = uniqueSectionId;
 	ct->accel.desc = _strdup(cDesc);
 	ct->id = _strdup(cID);
 	ct->doCommand = doCommand;
+	ct->onAction = onAction;
 	ct->getEnabled = getEnabled;
 	ct->user = user;
 	ct->menuText = cMenu;
@@ -238,8 +278,18 @@ COMMAND_T* SWSUnregisterCmd(int id)
 {
 	if (COMMAND_T* ct = g_commands.Get(id, NULL))
 	{
-		plugin_register("-gaccel", &ct->accel);
-		plugin_register("-command_id", &id);
+		if (!ct->uniqueSectionId && ct->doCommand)
+		{
+			plugin_register("-gaccel", &ct->accel);
+			plugin_register("-command_id", &id);
+		}
+		else if (ct->onAction)
+		{
+			static custom_action_register_t s;
+			s.idStr = ct->id;
+			s.uniqueSectionId = ct->uniqueSectionId;
+			plugin_register("-custom_action", (void*)&s);
+		}
 		g_commands.Delete(id);
 #ifdef ACTION_DEBUG
 		g_cmdFiles.Delete(id);
@@ -872,8 +922,16 @@ extern "C"
 			errcnt=0;
 		}
 
-		if (!rec->Register("hookcommand",(void*)hookCommandProc))
-			ERR_RETURN("hook command error\n")
+		// hookcommand2 must be registered before hookcommand
+		if (!rec->Register("hookcommand2", (void*)hookCommandProc2))
+		{
+/*JFB!!! make it tolerant for the moment: 4.62pre7+ needed
+			ERR_RETURN("hookcommand error\n")
+*/
+		}
+
+		if (!rec->Register("hookcommand", (void*)hookCommandProc))
+			ERR_RETURN("hookcommand error\n")
 
 		if (!rec->Register("toggleaction", (void*)toggleActionHook))
 			ERR_RETURN("Toggle action hook error\n")

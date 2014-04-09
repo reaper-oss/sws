@@ -362,8 +362,12 @@ static COMMAND_T s_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Split and select items in region near cursor" }, "S&M_SPLIT11", SplitSelectAllItemsInRegion, NULL, },
 
 	// ME ---------------------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Active MIDI Editor - Hide all CC lanes" }, "S&M_MEHIDECCLANES", MEHideCCLanes, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Active MIDI Editor - Create CC lane" }, "S&M_MECREATECCLANE", MECreateCCLane, NULL, },
+	// outdated, kept for asc. compatibility: those versions are registered in the main section
+	{ { DEFACCEL, "SWS/S&M: Active MIDI Editor - Hide all CC lanes" }, "S&M_MEHIDECCLANES", MainHideCCLanes, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Active MIDI Editor - Create CC lane" }, "S&M_MECREATECCLANE", MainCreateCCLane, NULL, },
+	// those versions are registered in the ME section
+	{ { DEFACCEL, "SWS/S&M: Hide all CC lanes" }, "S&M_HIDECCLANES_ME", NULL, NULL, 0, NULL, 32060, MEHideCCLanes, },
+	{ { DEFACCEL, "SWS/S&M: Create CC lane" }, "S&M_CREATECCLANE_ME", NULL, NULL, 0, NULL, 32060, MECreateCCLane, },
 
 	// Tracks -----------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Copy selected track grouping" }, "S&M_COPY_TR_GRP", CopyCutTrackGrouping, NULL, 0},
@@ -688,8 +692,12 @@ static DYN_COMMAND_T s_dynCmdTable[] =
 	{ "SWS/S&M: Unfloat FX %02d for selected tracks", "S&M_UNFLOATFX", UnfloatFX, 8, SNM_MAX_DYN_ACTIONS, NULL},
 	{ "SWS/S&M: Toggle float FX %02d for selected tracks", "S&M_TOGLFLOATFX", ToggleFloatFX, 8, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
 
-	{ "SWS/S&M: Active MIDI Editor - Restore displayed CC lanes, slot %02d", "S&M_MESETCCLANES", MESetCCLanes, 8, SNM_MAX_DYN_ACTIONS, NULL},
-	{ "SWS/S&M: Active MIDI Editor - Save displayed CC lanes, slot %02d", "S&M_MESAVECCLANES", MESaveCCLanes, 8, SNM_MAX_DYN_ACTIONS, NULL},
+	// outdated, kept for asc. compatibility: those versions are registered in the main section
+	{ "SWS/S&M: Active MIDI Editor - Restore displayed CC lanes, slot %02d", "S&M_MESETCCLANES", MainSetCCLanes, 8, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Active MIDI Editor - Save displayed CC lanes, slot %02d", "S&M_MESAVECCLANES", MainSaveCCLanes, 8, SNM_MAX_DYN_ACTIONS, NULL},
+	// those versions are registered in the ME section
+	{ "SWS/S&M: Restore displayed CC lanes, slot %02d", "S&M_SETCCLANES_ME", NULL, 8, SNM_MAX_DYN_ACTIONS, NULL, 32060, MESetCCLanes, },
+	{ "SWS/S&M: Save displayed CC lanes, slot %02d", "S&M_SAVECCLANES_ME", NULL, 8, SNM_MAX_DYN_ACTIONS, NULL, 32060, MESaveCCLanes, },
 
 	{ "SWS/S&M: Set selected tracks to group %02d (default flags)", "S&M_SET_TRACK_GROUP", SetTrackGroup, 8, SNM_MAX_TRACK_GROUPS, NULL}, // not all the 32 groups by default!
 
@@ -765,7 +773,7 @@ int RegisterDynamicActions(DYN_COMMAND_T* _cmds, const char* _inifn)
 			if (_snprintfStrict(actionName, sizeof(actionName), GetLocalizedActionName(ct->desc, LOCALIZE_FLAG_VERIFY_FMTS), j+1) > 0 &&
 				_snprintfStrict(custId, sizeof(custId), "%s%d", ct->id, j+1) > 0)
 			{
-				if (int cmdId = SWSCreateRegisterDynamicCmd(0, ct->doCommand, ct->getEnabled, custId, actionName, "", j, __FILE__, false)) // already localized
+				if (int cmdId = SWSCreateRegisterDynamicCmd(ct->uniqueSectionId, 0, ct->doCommand, ct->onAction, ct->getEnabled, custId, actionName, "", j, __FILE__, false)) // already localized
 				{
 #ifdef _SNM_DEBUG
 					OutputDebugString("RegisterDynamicActions() - Registered: ");
@@ -779,8 +787,10 @@ int RegisterDynamicActions(DYN_COMMAND_T* _cmds, const char* _inifn)
 							c->fakeToggle = true;
 #endif
 				}
+/*JFB!!! make it tolerant for the moment: 4.62pre7+ needed
 				else
 					return 0;
+*/
 			}
 			else
 				return 0;
@@ -875,6 +885,14 @@ bool SNM_GetActionName(const char* _custId, WDL_FastString* _nameOut, int _slot)
 // Those fake states are automatically toggled when actions are performed, 
 // see hookCommandProc()
 ///////////////////////////////////////////////////////////////////////////////
+
+void FakeToggle(COMMAND_T* _ct)
+{
+	if (_ct) {
+		if (strstr(_ct->id, "S&M_EXCL_TGL")) ExclusiveToggle(_ct);
+		else _ct->fakeToggle = !_ct->fakeToggle;
+	}
+}
 
 int GetFakeToggleState(COMMAND_T* _ct) {
 	return (_ct && _ct->fakeToggle);

@@ -33,7 +33,7 @@
 #include "SnM_Util.h"
 
 
-void MECreateCCLane(COMMAND_T* _ct)
+void MainCreateCCLane(COMMAND_T* _ct)
 {
 	bool updated = false;
 	void* me = MIDIEditor_GetActive();
@@ -83,6 +83,10 @@ void MECreateCCLane(COMMAND_T* _ct)
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 
+void MECreateCCLane(COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd) {
+	MainCreateCCLane(_ct);
+}
+
 bool replaceCCLanes(const char* _newCClanes)
 {
 	bool updated = false;
@@ -119,14 +123,18 @@ bool replaceCCLanes(const char* _newCClanes)
 	return updated;
 }
 
-void MEHideCCLanes(COMMAND_T* _ct)
+void MainHideCCLanes(COMMAND_T* _ct)
 {
 	if (replaceCCLanes("VELLANE -1 0 0\n")) 
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 
+void MEHideCCLanes(COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd) {
+	MainHideCCLanes(_ct);
+}
 
-void MESetCCLanes(COMMAND_T* _ct)
+
+void MainSetCCLanes(COMMAND_T* _ct)
 {
 	void* me = MIDIEditor_GetActive();
 	MediaItem_Take* tk = me ? MIDIEditor_GetTake(me) : NULL;
@@ -154,7 +162,12 @@ void MESetCCLanes(COMMAND_T* _ct)
 	}
 }
 
-void MESaveCCLanes(COMMAND_T* _ct)
+void MESetCCLanes(COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd) {
+	MainSetCCLanes(_ct);
+}
+
+
+void MainSaveCCLanes(COMMAND_T* _ct)
 {
 	void* me = MIDIEditor_GetActive();
 	MediaItem_Take* tk = me ? MIDIEditor_GetTake(me) : NULL;
@@ -205,4 +218,8 @@ void MESaveCCLanes(COMMAND_T* _ct)
 			}
 		}
 	}
+}
+
+void MESaveCCLanes(COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd) {
+	MainSaveCCLanes(_ct);
 }

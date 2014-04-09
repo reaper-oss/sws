@@ -138,8 +138,11 @@ copy /y "whatsnew.txt" "$(REAPER_DIR)\plugins\reaper_sws_whatsnew.txt"
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Message>Copying DLL...</Message>
-      <Command>copy /y "$(OutDir)$(TargetFilename)" "$(REAPER_DIR)\plugins"</Command>
+      <Message>
+      </Message>
+      <Command>copy /y "$(OutDir)$(TargetFilename)" "$(REAPER_DIR)\plugins" &gt; NUL
+echo Copied to "$(REAPER_DIR)\plugins\$(TargetFilename)"
+</Command>
     </PostBuildEvent>
     <Bscmake>
       <PreserveSbr>true</PreserveSbr>
@@ -191,8 +194,10 @@ copy /y "whatsnew.txt" "$(REAPER64_DIR)\plugins\reaper_sws_whatsnew.txt"
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Message>Copying DLL...</Message>
-      <Command>copy /y "$(OutDir)$(TargetFilename)" "$(REAPER64_DIR)\plugins"</Command>
+      <Message>
+      </Message>
+      <Command>copy /y "$(OutDir)$(TargetFilename)" "$(REAPER64_DIR)\plugins" &gt; NUL
+echo Copied to "$(REAPER64_DIR)\plugins\$(TargetFilename)"</Command>
     </PostBuildEvent>
     <Bscmake>
       <PreserveSbr>true</PreserveSbr>
@@ -242,8 +247,10 @@ copy /y "whatsnew.txt" "$(REAPER_DIR)\plugins\reaper_sws_whatsnew.txt"
       <Profile>true</Profile>
     </Link>
     <PostBuildEvent>
-      <Message>Copying to REAPER\Plugins...</Message>
-      <Command>copy /y "$(OutDir)$(TargetFilename)" "$(REAPER_DIR)\plugins"</Command>
+      <Message>
+      </Message>
+      <Command>copy /y "$(OutDir)$(TargetFilename)" "$(REAPER_DIR)\plugins" &gt; NUL
+echo Copied to "$(REAPER_DIR)\plugins\$(TargetFilename)"</Command>
     </PostBuildEvent>
     <Bscmake>
       <PreserveSbr>true</PreserveSbr>
@@ -295,8 +302,10 @@ copy /y "whatsnew.txt" "$(REAPER64_DIR)\plugins\reaper_sws_whatsnew.txt"
       <Profile>true</Profile>
     </Link>
     <PostBuildEvent>
-      <Message>Copying to REAPER\Plugins...</Message>
-      <Command>copy /y "$(OutDir)$(TargetFilename)" "$(REAPER64_DIR)\plugins"</Command>
+      <Message>
+      </Message>
+      <Command>copy /y "$(OutDir)$(TargetFilename)" "$(REAPER64_DIR)\plugins" &gt; NUL
+echo Copied to "$(REAPER64_DIR)\plugins\$(TargetFilename)"</Command>
     </PostBuildEvent>
     <Bscmake>
       <PreserveSbr>true</PreserveSbr>

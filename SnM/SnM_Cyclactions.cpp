@@ -26,10 +26,6 @@
 ******************************************************************************/
 
 //JFB
-// - API LIMITATION: cannot register actions in MIDI sections yet, that
-//   is why cycle actions are registered in the main section although they 
-//   can perform actions of other sections: best effort
-// - TODO: register cycle action in proper sections (when it will be possible)
 // - TODO: use native macro file format?
 //   (CAs have their own format for historical reasons..)
 
@@ -48,8 +44,7 @@
 #define CA_WND_ID	"SnMCyclaction"
 
 
-// no exit issue vs "DeleteOnDestroy" here: CAs are saved on the fly
-WDL_PtrList_DeleteOnDestroy<Cyclaction> g_cas[SNM_MAX_CA_SECTIONS]; 
+WDL_PtrList<Cyclaction> g_cas[SNM_MAX_CA_SECTIONS];
 SNM_WindowManager<CyclactionWnd> g_caWndMgr(CA_WND_ID);
 bool g_undos = true; // consolidate undo points
 
@@ -238,22 +233,14 @@ int ExplodeCmd(int _section, const char* _cmdStr,
 		if ((_flags&1) != 1 && // no need to explode things recursively
 			*_cmdStr == '_') // CA, extension, macro, or script?
 		{
-			if (!_section)
-			{
-				if (strstr(_cmdStr, "_CYCLACTION"))
-					return ExplodeCyclaction(_section, _cmdStr, _cmds, _macros, _consoles, _flags);
-				else if (strstr(_cmdStr, "_SWSCONSOLE_CUST"))
-					return ExplodeConsoleAction(_section, _cmdStr, _cmds, _macros, _consoles, _flags);
-				else if (IsMacroOrScript(_cmdStr, false))
-					return ExplodeMacro(_section, _cmdStr, _cmds, _macros, _consoles, _flags);
-			}
-			// tiny optimiz: can only be a macro/script at this point
-			// (as no extension can register actions in these sections ATM)
-			else
+			if (strstr(_cmdStr, "_CYCLACTION"))
+				return ExplodeCyclaction(_section, _cmdStr, _cmds, _macros, _consoles, _flags);
+			else if (strstr(_cmdStr, "_SWSCONSOLE_CUST"))
+				return ExplodeConsoleAction(_section, _cmdStr, _cmds, _macros, _consoles, _flags);
+			else if (IsMacroOrScript(_cmdStr, false))
 				return ExplodeMacro(_section, _cmdStr, _cmds, _macros, _consoles, _flags);
 		}
 
-		// default case: only native/3rd party actions, or statements at this point
 		if (_flags&2)
 		{
 			if (KbdSectionInfo* kbdSec = SNM_GetActionSection(_section)) {
@@ -454,7 +441,7 @@ int ExplodeConsoleAction(int _section, const char* _cmdStr,
 ///////////////////////////////////////////////////////////////////////////////
 
 // assumes _cmdStr is valid and has been "exploded", if needed
-int PerformSingleCommand(int _section, const char* _cmdStr)
+int PerformSingleCommand(int _section, const char* _cmdStr, int _val, int _valhw, int _relmode, HWND _hwnd)
 {
 #ifdef _SNM_DEBUG
 	OutputDebugString(_cmdStr);
@@ -468,11 +455,13 @@ int PerformSingleCommand(int _section, const char* _cmdStr)
 
 		// SNM_NamedCommandLookup hard check: the command MUST be registered
 		if (int cmdId = SNM_NamedCommandLookup(_cmdStr, kbdSec, true))
-		{
+	{
+			// can't just rely on kbdSec->onAction() because some actions
+			// depend on the current focused window, etc
 			switch (_section)
 			{
 				case SNM_SEC_IDX_MAIN:
-					return KBD_OnMainActionEx(cmdId, 0, 0, 0, GetMainHwnd(), NULL);
+					return KBD_OnMainActionEx(cmdId, _val, _valhw, _relmode, _hwnd, NULL);
 				case SNM_SEC_IDX_ME:
 				case SNM_SEC_IDX_ME_EL:
 					return MIDIEditor_LastFocused_OnCommand(cmdId, _section==SNM_SEC_IDX_ME_EL);
@@ -483,7 +472,7 @@ int PerformSingleCommand(int _section, const char* _cmdStr)
 					}
 					return 0;
 				default:
-					return kbdSec->onAction(cmdId, 0, 0, 0, GetMainHwnd());
+					return kbdSec->onAction(cmdId, _val, _valhw, _relmode, _hwnd);
 			}
 		}
 		// custom console command?
@@ -518,16 +507,17 @@ int PerformSingleCommand(int _section, const char* _cmdStr)
 
 // assumes the CA is valid (e.g. no recursion) + its statements are valid + etc..
 // (faulty CAs must not be registered at this point, see CheckRegisterableCyclaction())
-void RunCycleAction(int _section, COMMAND_T* _ct)
+void RunCycleAction(COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd)
 {
-	if (!_ct || _section<0 || _section>=SNM_MAX_CA_SECTIONS) // possible via RunCyclaction(COMMAND_T*)
+	int sec = _ct ? SNM_GetActionSectionIndex(_ct->uniqueSectionId) : -1;
+	if (sec<0)
 		return;
 
-	Cyclaction* action = _ct ? g_cas[_section].Get((int)_ct->user-1) : NULL; // id is 1-based (for user display)
+	Cyclaction* action = _ct ? g_cas[sec].Get((int)_ct->user-1) : NULL; // id is 1-based (for user display)
 	if (!action || !action->m_cmdId) // registered actions only
 		return;
 
-	KbdSectionInfo* kbdSec = SNM_GetActionSection(_section);
+	KbdSectionInfo* kbdSec = SNM_GetActionSection(sec);
 	if (!kbdSec) 
 		return;
 
@@ -537,7 +527,7 @@ void RunCycleAction(int _section, COMMAND_T* _ct)
 		const char* undoStr = action->GetStepName();
 
 		WDL_PtrList_DeleteOnDestroy<WDL_FastString> subCmds;
-		if (ExplodeCyclaction(_section, _ct->id, &subCmds, NULL, NULL, 0x1, action) > 0) // 0x1!
+		if (ExplodeCyclaction(sec, _ct->id, &subCmds, NULL, NULL, 0x1, action) > 0) // 0x1!
 		{
 			int loopCnt = -1;
 			WDL_PtrList<WDL_FastString> allCmds, loopCmds;
@@ -648,7 +638,7 @@ void RunCycleAction(int _section, COMMAND_T* _ct)
 					Undo_BeginBlock2(NULL);
 
 				for (int i=0; i<allCmds.GetSize(); i++)
-					PerformSingleCommand(_section, allCmds.Get(i)->Get());
+					PerformSingleCommand(sec, allCmds.Get(i)->Get(), _val, _valhw, _relmode, _hwnd);
 
 				if (g_undos)
 					Undo_EndBlock2(NULL, undoStr, UNDO_STATE_ALL);
@@ -673,24 +663,19 @@ void RunCycleAction(int _section, COMMAND_T* _ct)
 	} // for(;;)
 }
 
-void RunCyclaction(COMMAND_T* _ct) {
-	RunCycleAction(SNM_GetActionSectionIndex(_ct->menuText), _ct); // trick
-}
-
-// API LIMITATION: although they can target the ME, all cycle actions belong to the main section ATM
-int IsCyclactionEnabled(int _section, COMMAND_T* _ct)
+int IsCyclactionEnabled(COMMAND_T* _ct)
 {
-	if (!_ct || _section<0 || _section>=SNM_MAX_CA_SECTIONS) // possible via IsCyclactionEnabled(COMMAND_T*)
+	int sec = _ct ? SNM_GetActionSectionIndex(_ct->uniqueSectionId) : -1;
+	if (sec<0)
 		return -1;
 
-	Cyclaction* action = g_cas[_section].Get((int)_ct->user-1); // id is 1-based
+	Cyclaction* action = g_cas[sec].Get((int)_ct->user-1); // id is 1-based
 	if (action && action->m_cmdId && action->IsToggle()) // registered toggle cycle actions only
 	{
-		// report a real state?
-		if (action->IsToggle()==2)
+		if (action->IsToggle()==2) // real state?
 		{
 			// no recursion check, etc.. : such faulty cycle actions are not registered
-			int tgl = ExplodeCyclaction(_section, _ct->id, NULL, NULL, NULL, 0x2, action);
+			int tgl = ExplodeCyclaction(sec, _ct->id, NULL, NULL, NULL, 0x2, action);
 			if (tgl>=0)
 				return tgl;
 		}
@@ -702,10 +687,6 @@ int IsCyclactionEnabled(int _section, COMMAND_T* _ct)
 		return action->m_fakeToggle;
 	}
 	return -1;
-}
-
-int IsCyclactionEnabled(COMMAND_T* _ct) {
-	return IsCyclactionEnabled(SNM_GetActionSectionIndex(_ct->menuText), _ct); // trick
 }
 
 
@@ -751,12 +732,10 @@ bool CheckToggle(int _section, Cyclaction* _a, int _cmdIdx)
 				KbdSectionInfo* kbdSec = SNM_GetActionSection(_section);
 				tglOk = (GetToggleCommandState2(kbdSec, SNM_NamedCommandLookup(nextCmd, kbdSec)) >= 0);
 			}
-#ifndef _SNM_REAPER_BUG  // GetToggleCommandState2() KO in other sections than the main one (REAPER v4.402)
-		// for other sections the toggle state can depend on focus, etc..
-		// => in doubt, we authorize it
+			// for other sections the toggle state can depend on focus, etc..
+			// => in doubt, we authorize it
 			else
 				tglOk = true;
-#endif
 		}
 	}
 	return tglOk;
@@ -1030,14 +1009,14 @@ int RegisterCyclation(const char* _name, int _section, int _cycleId, int _cmdId)
 	if (_snprintfStrict(custId, sizeof(custId), "%s%d", GetCACustomId(_section), _cycleId) > 0)
 	{
 		return SWSCreateRegisterDynamicCmd(
-			0,
+			SNM_GetActionSectionUniqueId(_section),
 			_cmdId,
-			RunCyclaction,
 			NULL,
+			RunCycleAction,
 			IsCyclactionEnabled,
 			custId,
 			_name,
-			SNM_GetActionSectionName(_section), // trick
+			NULL,
 			_cycleId,
 			__FILE__,
 			false); // no localization for cycle actions (name defined by the user)
@@ -1093,7 +1072,7 @@ void FlushCyclactions(int _section)
 // _section: section index or -1 for all sections
 // _iniFn: NULL => S&M.ini
 // remark: undo pref is ignored, only loads cycle actions so that the user keeps his own undo pref
-void LoadCyclactions(bool _wantMsg, WDL_PtrList_DeleteOnDestroy<Cyclaction>* _cyclactions = NULL, int _section = -1, const char* _iniFn = NULL)
+void LoadCyclactions(bool _wantMsg, WDL_PtrList<Cyclaction>* _cyclactions = NULL, int _section = -1, const char* _iniFn = NULL)
 {
 	WDL_FastString msg;
 	char buf[32] = "", actionBuf[CA_MAX_LEN] = "";
@@ -1156,7 +1135,7 @@ void LoadCyclactions(bool _wantMsg, WDL_PtrList_DeleteOnDestroy<Cyclaction>* _cy
 // _section: section index or -1 for all sections
 // _iniFn: NULL means S&M.ini
 // remark: undo pref ignored, only saves cycle actions
-void SaveCyclactions(WDL_PtrList_DeleteOnDestroy<Cyclaction>* _cyclactions = NULL, int _section = -1, const char* _iniFn = NULL)
+void SaveCyclactions(WDL_PtrList<Cyclaction>* _cyclactions = NULL, int _section = -1, const char* _iniFn = NULL)
 {
 	if (!_cyclactions)
 		_cyclactions = g_cas;
@@ -1431,8 +1410,8 @@ static WDL_FastString s_DEFAULT_R;
 
 WDL_FastString g_caFilter; // init + localization in CyclactionInit()
 
-WDL_PtrList_DeleteOnDestroy<Cyclaction> g_editedActions[SNM_MAX_CA_SECTIONS];
-WDL_PtrList_DeleteOnDestroy<WDL_FastString> g_clipboardCmds;
+WDL_PtrList<Cyclaction> g_editedActions[SNM_MAX_CA_SECTIONS];
+WDL_PtrList<WDL_FastString> g_clipboardCmds;
 Cyclaction* g_editedAction = NULL;
 int g_editedSection = 0; // edited section index
 bool g_edited = false;

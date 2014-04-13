@@ -84,8 +84,8 @@ bool IsMacroOrScript(const char* _cmd, bool _cmdIsName = true);
 int CheckSwsMacroScriptNumCustomId(const char* _custId, int _secIdx = 0);
 
 int SNM_GetActionSectionUniqueId(int _idx);
+int SNM_GetActionSectionIndex(int _uniqueId);
 const char* SNM_GetActionSectionName(int _idx);
-int SNM_GetActionSectionIndex(const char* _localizedName);
 KbdSectionInfo* SNM_GetActionSection(int _idx);
 
 bool LearnAction(KbdSectionInfo* _section, int _cmdId);

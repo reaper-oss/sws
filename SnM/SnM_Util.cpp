@@ -994,7 +994,7 @@ int CheckSwsMacroScriptNumCustomId(const char* _custId, int _secIdx)
 		if (int numCmdId = atoi(_custId))
 		{
 			// sws check
-			if (!_secIdx && SWSGetCommandByID(numCmdId)) // API LIMITATION: extension action actions can only belong to the main section ATM
+			if (SWSGetCommandByID(numCmdId)) // unique cmd ids acrross sections
 				return -1;
 			// macro check
 			if (IsMacroOrScript(kbd_getTextFromCmd(numCmdId, SNM_GetActionSection(_secIdx)), true))
@@ -1008,20 +1008,19 @@ int SNM_GetActionSectionUniqueId(int _sectionIdx) {
 	return _sectionIdx>=0 && _sectionIdx<SNM_NUM_MANAGED_SECTIONS ? s_SNM_sectionInfos[_sectionIdx].unique_id : -1;
 }
 
+int SNM_GetActionSectionIndex(int _uniqueId)
+{
+	for (int i=0; i<SNM_NUM_MANAGED_SECTIONS; i++)
+		if (s_SNM_sectionInfos[i].unique_id == _uniqueId)
+			return i;
+	return -1;
+}
+
 const char* SNM_GetActionSectionName(int _sectionIdx)
 {
 	if (KbdSectionInfo* sec = SNM_GetActionSection(_sectionIdx))
 		return __localizeFunc(sec->name,"accel_sec",0);
 	return "";
-}
-
-int SNM_GetActionSectionIndex(const char* _localizedName)
-{
-	for (int idx=0; idx<SNM_NUM_MANAGED_SECTIONS; idx++)
-		if (KbdSectionInfo* sec = SNM_GetActionSection(idx))
-			if (!_stricmp(_localizedName, __localizeFunc(sec->name,"accel_sec",0)))
-				return idx;
-	return -1;
 }
 
 // returns NULL on error (must not be considered as the "Main" section here!)

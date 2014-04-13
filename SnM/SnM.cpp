@@ -773,18 +773,12 @@ int RegisterDynamicActions(DYN_COMMAND_T* _cmds, const char* _inifn)
 			if (_snprintfStrict(actionName, sizeof(actionName), GetLocalizedActionName(ct->desc, LOCALIZE_FLAG_VERIFY_FMTS), j+1) > 0 &&
 				_snprintfStrict(custId, sizeof(custId), "%s%d", ct->id, j+1) > 0)
 			{
-				if (int cmdId = SWSCreateRegisterDynamicCmd(ct->uniqueSectionId, 0, ct->doCommand, ct->onAction, ct->getEnabled, custId, actionName, "", j, __FILE__, false)) // already localized
+				if (SWSCreateRegisterDynamicCmd(ct->uniqueSectionId, 0, ct->doCommand, ct->onAction, ct->getEnabled, custId, actionName, "", j, __FILE__, false)) // already localized
 				{
 #ifdef _SNM_DEBUG
 					OutputDebugString("RegisterDynamicActions() - Registered: ");
 					OutputDebugString(actionName);
 					OutputDebugString("\n");
-#endif
-#if 0 //JFB disbled: exclusive toggle actions are now off on start-up
-					//JFB! ugly special case: init states of some "Exclusive toggle" actions
-					if (!j && strstr(ct->id, "S&M_EXCL_TGL"))
-						if (COMMAND_T* c = SWSGetCommandByID(cmdId)) // not ideal, but does not worth changing SWSCreateRegisterDynamicCmd()
-							c->fakeToggle = true;
 #endif
 				}
 /*JFB!!! make it tolerant for the moment: 4.62pre7+ needed
@@ -943,27 +937,36 @@ void ExclusiveToggle(COMMAND_T* _ct)
 // "S&M Extension" section
 ///////////////////////////////////////////////////////////////////////////////
 
-//JFB very few actions in this section => really useful?
+//JFB very few actions in this section atm => really useful?
 static WDL_IntKeyedArray<MIDI_COMMAND_T*> s_mySectionCmds;
 
 bool OnMidiAction(int _cmd, int _val, int _valhw, int _relmode, HWND _hwnd)
 {
-	static bool sReentrancyCheck = false;
-	if (sReentrancyCheck)
-		return false;
+	static WDL_PtrList<const char> sReentrantCmds;
 
 	// ignore commands that don't have anything to do with us from this point forward
-	if (_cmd >= SNM_SECTION_1ST_CMD_ID)
+	if (MIDI_COMMAND_T* ct = s_mySectionCmds.Get(_cmd))
 	{
-		if (MIDI_COMMAND_T* ct = s_mySectionCmds.Get(_cmd))
+		if (ct->doCommand)
 		{
-			sReentrancyCheck = true;
+			if (sReentrantCmds.Find(ct->id)<0)
+			{
+				sReentrantCmds.Add(ct->id);
 #ifdef _SNM_MISC // see MIDI_COMMAND_T declaration
-			ct->fakeToggle = !ct->fakeToggle;
+				ct->fakeToggle = !ct->fakeToggle;
 #endif
-			ct->doCommand(ct, _val, _valhw, _relmode, _hwnd);
-			sReentrancyCheck = false;
-			return true;
+				ct->doCommand(ct, _val, _valhw, _relmode, _hwnd);
+				sReentrantCmds.Delete(sReentrantCmds.Find(ct->id));
+				return true;
+			}
+#ifdef ACTION_DEBUG
+			else
+			{
+				OutputDebugString("S&M Extension - recursive action: ");
+				OutputDebugString(ct->id);
+				OutputDebugString("\n");
+			}
+#endif
 		}
 	}
 	return false;
@@ -1016,8 +1019,9 @@ KbdSectionInfo* SNM_GetMySection()
 			if (MIDI_COMMAND_T* ct = &sCmdTable[i])
 			{
 				sKbdCmd[i].text = GetLocalizedActionName(ct->accel.desc, 0, "s&m_section_actions");
-				sKbdCmd[i].cmd = ct->accel.accel.cmd = SNM_SECTION_1ST_CMD_ID+i;
-				s_mySectionCmds.Insert(ct->accel.accel.cmd, ct);
+				sKbdCmd[i].cmd = ct->accel.accel.cmd = plugin_register("command_id", (void*)ct->id); // unique accross all sections
+				if (sKbdCmd[i].cmd)
+					s_mySectionCmds.Insert(ct->accel.accel.cmd, ct);
 			}
 		}
 	}

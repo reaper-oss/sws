@@ -342,7 +342,6 @@ typedef struct SECTION_INFO_T {
 ///////////////////////////////////////////////////////////////////////////////
 
 #define SNM_SECTION_ID				0x10000101 // "< 0x10000000 for cockos use only plzk thx"
-#define SNM_SECTION_1ST_CMD_ID		40000
 
 // section indexes
 enum {

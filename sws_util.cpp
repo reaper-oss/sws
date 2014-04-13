@@ -303,7 +303,8 @@ void* GetConfigVar(const char* cVar)
 HWND GetTrackWnd()
 {
 #ifdef _WIN32
-	return FindWindowEx(g_hwndParent,0,"REAPERTrackListWindow",__LOCALIZE("trackview","DLG_102"));
+	static const char* sTrackview = __LOCALIZE("trackview", "DLG_102");
+	return FindWindowEx(g_hwndParent,0,"REAPERTrackListWindow", sTrackview);
 #else
 	return GetWindow(g_hwndParent, GW_CHILD);
 #endif
@@ -312,7 +313,8 @@ HWND GetTrackWnd()
 HWND GetRulerWnd()
 {
 #ifdef _WIN32
-	return FindWindowEx(g_hwndParent,0,"REAPERTimeDisplay",__LOCALIZE("timeline","DLG_102"));
+	static const char* sTimeline = __LOCALIZE("timeline", "DLG_102");
+	return FindWindowEx(g_hwndParent, 0, "REAPERTimeDisplay", sTimeline);
 #else
 	return GetWindow(GetTrackWnd(), GW_HWNDNEXT);
 #endif

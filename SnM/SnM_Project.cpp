@@ -276,7 +276,7 @@ void SetProjectStartupAction(COMMAND_T* _ct)
 		}
 		else
 		{
-			msg.SetFormatted(256, __LOCALIZE_VERFMT("%s failed: unknown command ID or identifier string '%s'!","sws_DLG_161"), SWS_CMD_SHORTNAME(_ct), idstr);
+			msg.SetFormatted(256, __LOCALIZE_VERFMT("%s failed: command ID or identifier string '%s' not found in the 'Main' section of the action list!","sws_DLG_161"), SWS_CMD_SHORTNAME(_ct), idstr);
 			MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("S&M - Error","sws_DLG_161"), MB_OK);
 		}
 	}

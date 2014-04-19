@@ -543,7 +543,9 @@ int WDL_STYLE_WantGlobalButtonBorders() { return 0; }
 bool WDL_STYLE_WantGlobalButtonBackground(int *col) { return false; }
 void WDL_STYLE_ScaleImageCoords(int *x, int *y) { }
 
+
 // Main DLL entry point
+
 #define ERR_RETURN(a) { return 0; }
 #define OK_RETURN(a)  { return 1; }
 //#define ERR_RETURN(a) { FILE* f = fopen("c:\\swserror.txt", "a"); if (f) { fprintf(f, a); fclose(f); } return 0; }
@@ -726,6 +728,7 @@ extern "C"
 		IMPAPI(GetTCPFXParm);
 		IMPAPI(GetToggleCommandState);
 		IMPAPI(GetToggleCommandState2);
+		IMPAPI(GetToggleCommandStateThroughHooks);
 		IMPAPI(GetTrack);
 		IMPAPI(GetTrackGUID);
 		IMPAPI(GetTrackEnvelope);
@@ -911,7 +914,7 @@ extern "C"
 				_snprintf(txt, sizeof(txt),
 					// keep the message on a single line (for the LangPack generator)
 					__LOCALIZE_VERFMT("The version of SWS extension you have installed is incompatible with your version of REAPER.\nYou probably have a REAPER version less than v%s installed.\nPlease install the latest version of REAPER from www.reaper.fm.","sws_mbox"),
-					"4.60"); // <- update compatible version here
+					"4.62"); // <- update compatible version here
 
 				//JFB: NULL parent so that the message is at least visible in taskbars (hidden since REAPER v4 and its "splash 2.0")
 				MessageBox(NULL, txt, __LOCALIZE("SWS - Version Incompatibility","sws_mbox"), MB_OK);

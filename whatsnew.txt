@@ -1,3 +1,12 @@
+!v2.4.0 #9 pre-release build (April 19, 2014)
+<strong>This version requires REAPER v4.62pre8+</strong>, an "Incompatible version" error message will be displayed otherwise...
+
+Cycle Actions support conditional statements (IF, IF NOT, etc) in the MIDI Editor
+
+Fixes
++Windows OS: fixed extension not being loaded
++Cycle Action editor: fixed "Run" context menu item 
+
 !v2.4.0 #8 pre-release build (April 13, 2014)
 Cycle Actions can be registered in any section of the action list (e.g. MIDI Editor)
 Note: <strong>requires REAPER v4.62pre7+</strong>

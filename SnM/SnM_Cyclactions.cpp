@@ -830,12 +830,7 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a,
 				else if (IsCondStatement(cmd))
 				{
 					statements++;
-#ifdef _SNM_REAPER_BUG // GetToggleCommandState2() KO in other sections than the main one (REAPER v4.402)
-					if (_section) {
-						str.SetFormatted(256, __LOCALIZE_VERFMT("Conditional statements (%s, %s, etc) are only supported in the section '%s'","sws_DLG_161"), STATEMENT_IF, STATEMENT_IFNOT, SNM_GetActionSectionName(0));
-						return AppendErrMsg(_section, _a, _applyMsg, str.Get());
-					}
-#endif
+
 					bool twoConds = IsTwoCondStatement(cmd);
 					bool tglOk = CheckToggle(_section, _a, i+1);
 					bool tglOk2 = twoConds ? CheckToggle(_section, _a, i+2) : false;
@@ -2113,7 +2108,10 @@ void CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				if (action->m_cmdId)
 				{
 					if (LOWORD(wParam) == RUN_CYCLACTION_MSG)
-						Main_OnCommand(action->m_cmdId, 0);
+					{
+						int c = action->m_cmdId, val=63, valhw=-1, relmode=0; // actioncommandID may get modified below
+						kbd_RunCommandThroughHooks(kbdSec,&c,&val,&valhw,&relmode,NULL); // NULL hwnd here, this is "managed" in PerformSingleCommand()
+					}
 					else if (LearnAction(kbdSec, action->m_cmdId) && g_lvL)
 						g_lvL->Update();
 				}

@@ -4357,23 +4357,17 @@ typedef struct {
 	double playrate;
 } PCM_SourceSlice;
 
-//JFB!!! TODO: PCM_Sink
+//JFB!! TODO: PCM_Sink
 bool AutoSaveMediaSlot(const void* _obj, const char* _fn)
 {
 	PCM_SourceSlice* slice = (PCM_SourceSlice*)_obj;
 	if (_fn && slice && slice->src)
 	{
-#ifndef _SNM_REAPER_BUG // RenderFileSection() always return false (last test: v4.60)
-		return
-#endif
-			RenderFileSection(
+		return RenderFileSection(
 				slice->src->GetFileName(), _fn, 
 				slice->start_time / slice->src->GetLength(), 
 				(slice->start_time+slice->length) / slice->src->GetLength(),
 				slice->playrate);
-#ifdef _SNM_REAPER_BUG
-		return FileExists(_fn);
-#endif
 	}
 	return false;
 }

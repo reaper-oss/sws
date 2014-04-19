@@ -922,6 +922,7 @@ extern "C"
 			ERR_RETURN("SWS version incompatibility\n")
 		}
 
+#ifndef _WIN32
 		// check for dupe/clone before registering any new action
 		{
 			int(*SNM_GetIntConfigVar)(const char* varname, int errvalue);
@@ -930,6 +931,7 @@ extern "C"
 				ERR_RETURN("Dupe SWS\n")
 			errcnt=0;
 		}
+#endif
 
 		// hookcommand2 must be registered before hookcommand
 		if (!rec->Register("hookcommand2", (void*)hookCommandProc2))

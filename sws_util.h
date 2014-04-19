@@ -264,8 +264,6 @@ bool IsLocalizableAction(const char* _customId);
 TrackEnvelope* SWS_GetTakeEnvelopeByName(MediaItem_Take* take, const char* envname);
 TrackEnvelope* SWS_GetTrackEnvelopeByName(MediaTrack* track, const char* envname);
 
-BOOL WritePrivateProfileStringEscaped(LPCTSTR lpAppName,LPCTSTR lpKeyName,LPCTSTR lpString,LPCTSTR lpFileName);
-
 // Generate html whatsnew, MakeWhatsNew.cpp
 int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML, const char* _url);
 

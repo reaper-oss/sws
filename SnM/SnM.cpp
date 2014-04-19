@@ -781,13 +781,7 @@ int RegisterDynamicActions(DYN_COMMAND_T* _cmds, const char* _inifn)
 					OutputDebugString("\n");
 #endif
 				}
-/*JFB!!! make it tolerant for the moment: 4.62pre7+ needed
-				else
-					return 0;
-*/
 			}
-			else
-				return 0;
 		}
 	}
 	return 1;
@@ -1019,9 +1013,8 @@ KbdSectionInfo* SNM_GetMySection()
 			if (MIDI_COMMAND_T* ct = &sCmdTable[i])
 			{
 				sKbdCmd[i].text = GetLocalizedActionName(ct->accel.desc, 0, "s&m_section_actions");
-				sKbdCmd[i].cmd = ct->accel.accel.cmd = plugin_register("command_id", (void*)ct->id); // unique accross all sections
-				if (sKbdCmd[i].cmd)
-					s_mySectionCmds.Insert(ct->accel.accel.cmd, ct);
+				sKbdCmd[i].cmd = ct->accel.accel.cmd = SNM_SECTION_1ST_CMD_ID+i;
+				s_mySectionCmds.Insert(ct->accel.accel.cmd, ct);
 			}
 		}
 	}

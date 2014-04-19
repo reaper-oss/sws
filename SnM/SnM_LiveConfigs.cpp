@@ -1190,14 +1190,11 @@ void LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				UpdateEnableLiveConfig(g_configId, -1);
 			break;
 		case LEARN_APPLY_MSG:
-		case LEARN_PRELOAD_MSG:
-		{
-			char custId[SNM_MAX_ACTION_CUSTID_LEN]="";
-			if (_snprintfStrict(custId, sizeof(custId), "%s%d", LOWORD(wParam)==LEARN_APPLY_MSG ? "_S&M_LIVECONFIG" : "_S&M_PRE_LIVECONFIG", g_configId+1) > 0)
-				if (int cmdId = SNM_NamedCommandLookup(custId, SNM_GetMySection()))
-					LearnAction(SNM_GetMySection(), cmdId);
+			LearnAction(SNM_GetMySection(), SNM_SECTION_1ST_CMD_ID + g_configId);
 			break;
-		}
+		case LEARN_PRELOAD_MSG:
+			LearnAction(SNM_GetMySection(), SNM_SECTION_1ST_CMD_ID + SNM_LIVECFG_NB_CONFIGS + g_configId);
+			break;
 		case BTNID_LEARN:
 		{
 			RECT r; m_btnLearn.GetPositionInTopVWnd(&r);

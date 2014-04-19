@@ -53,10 +53,6 @@
 // #undef to activate the "expected code", #define to activate workarounds
 ///////////////////////////////////////////////////////////////////////////////
 
-#define _SNM_REAPER_BUG			// workaround API/REAPER bugs
-								// - GetToggleCommandState2() only works for the main section (last test: v4.5rc11)
-								// - RenderFileSection() always return false (last test: v4.60)
-
 #ifdef __APPLE__
 #define _SNM_SWELL_ISSUES		// workaround some SWELL issues
 								// last test: WDL d1d8d2 - Dec. 20 2012
@@ -342,6 +338,7 @@ typedef struct SECTION_INFO_T {
 ///////////////////////////////////////////////////////////////////////////////
 
 #define SNM_SECTION_ID				0x10000101 // "< 0x10000000 for cockos use only plzk thx"
+#define SNM_SECTION_1ST_CMD_ID		40000
 
 // section indexes
 enum {

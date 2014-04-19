@@ -3,7 +3,7 @@
 # osx_build.sh
 # reaper_sws
 #
-# Created by Tim Payne on 4/18/10. Updated by Jeffos on 9/11/12.
+# Created by Tim Payne on 4/18/10. Updated by Jeffos.
 # Copyright 2010-2012 SWS. All rights reserved.
 #
 if [ ! -d output ]; then
@@ -11,7 +11,10 @@ if [ ! -d output ]; then
 fi
 # Build
 cd ..
+xcodebuild clean -configuration "Release x86_64"
 xcodebuild -configuration "Release x86_64"
+read -p "Check build results, then press enter to continue..."
+xcodebuild clean -configuration Release
 xcodebuild -configuration Release
 read -p "Check build results, then press enter to continue..."
 #

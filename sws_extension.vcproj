@@ -3649,6 +3649,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Breeder\BR_MidiTools.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Breeder\BR_MidiTools.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Breeder\BR_Misc.cpp"
 				>
 			</File>

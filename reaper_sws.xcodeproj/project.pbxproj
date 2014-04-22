@@ -324,6 +324,8 @@
 		981007390F4768020072D712 /* stdafx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 981006FA0F4768020072D712 /* stdafx.cpp */; };
 		9879B3D90F48977C004D98EB /* reaper_plugin_functions.h in Headers */ = {isa = PBXBuildFile; fileRef = 9879B3D80F48977C004D98EB /* reaper_plugin_functions.h */; };
 		9879B7480F489D9D004D98EB /* stdafx.h in Headers */ = {isa = PBXBuildFile; fileRef = 9879B7400F489CE7004D98EB /* stdafx.h */; };
+		98B464E419060FE600AE2930 /* BR_MidiTools.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98B464E219060FE600AE2930 /* BR_MidiTools.cpp */; };
+		98B464E519060FE600AE2930 /* BR_MidiTools.h in Headers */ = {isa = PBXBuildFile; fileRef = 98B464E319060FE600AE2930 /* BR_MidiTools.h */; };
 		98B6AAF418E7317900BACB96 /* wol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98B6AAF218E7317900BACB96 /* wol.cpp */; };
 		98B6AAF518E7317900BACB96 /* wol.h in Headers */ = {isa = PBXBuildFile; fileRef = 98B6AAF318E7317900BACB96 /* wol.h */; };
 		98B75DAF0F48F8F900AC5A25 /* Base64.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98B75DAE0F48F8F900AC5A25 /* Base64.cpp */; };
@@ -686,6 +688,8 @@
 		98B4088E0F5B524D00865A09 /* swell-gdi.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "swell-gdi.mm"; path = "../WDL/swell/swell-gdi.mm"; sourceTree = SOURCE_ROOT; };
 		98B4088F0F5B524D00865A09 /* swell-kb.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "swell-kb.mm"; path = "../WDL/swell/swell-kb.mm"; sourceTree = SOURCE_ROOT; };
 		98B408A20F5B544A00865A09 /* swell.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = swell.cpp; path = ../WDL/swell/swell.cpp; sourceTree = SOURCE_ROOT; };
+		98B464E219060FE600AE2930 /* BR_MidiTools.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BR_MidiTools.cpp; path = Breeder/BR_MidiTools.cpp; sourceTree = "<group>"; };
+		98B464E319060FE600AE2930 /* BR_MidiTools.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BR_MidiTools.h; path = Breeder/BR_MidiTools.h; sourceTree = "<group>"; };
 		98B6AAF218E7317900BACB96 /* wol.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = wol.cpp; path = Wol/wol.cpp; sourceTree = "<group>"; };
 		98B6AAF318E7317900BACB96 /* wol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wol.h; path = Wol/wol.h; sourceTree = "<group>"; };
 		98B75DAE0F48F8F900AC5A25 /* Base64.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Base64.cpp; path = Utility/Base64.cpp; sourceTree = "<group>"; };
@@ -1158,6 +1162,8 @@
 		4D859DAC16AB127100E34EAA /* Breeder */ = {
 			isa = PBXGroup;
 			children = (
+				98B464E219060FE600AE2930 /* BR_MidiTools.cpp */,
+				98B464E319060FE600AE2930 /* BR_MidiTools.h */,
 				98CC19DA18DFD11D00EE9809 /* BR_Loudness.cpp */,
 				98CC19DB18DFD11D00EE9809 /* BR_Loudness.h */,
 				98C918E418BFFEB500745DA1 /* BR_ReaScript.cpp */,
@@ -1427,6 +1433,7 @@
 				98CC1A0718DFD27300EE9809 /* queue.h in Headers */,
 				98CC1A0B18DFD28000EE9809 /* ebur128.h in Headers */,
 				98B6AAF518E7317900BACB96 /* wol.h in Headers */,
+				98B464E519060FE600AE2930 /* BR_MidiTools.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1714,6 +1721,7 @@
 				98CC19DC18DFD11D00EE9809 /* BR_Loudness.cpp in Sources */,
 				98CC1A0A18DFD28000EE9809 /* ebur128.c in Sources */,
 				98B6AAF418E7317900BACB96 /* wol.cpp in Sources */,
+				98B464E419060FE600AE2930 /* BR_MidiTools.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

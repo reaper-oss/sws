@@ -735,6 +735,7 @@ extern "C"
 		IMPAPI(GetTrackEnvelopeByName);
 		IMPAPI(GetTrackInfo);
 		IMPAPI(GetTrackMediaItem);
+		IMPAPI(GetTrackMIDINoteNameEx);
 		IMPAPI(GetTrackNumMediaItems);
 		IMPAPI(GetTrackUIVolPan);
 		IMPAPI(GetUserInputs);
@@ -784,6 +785,7 @@ extern "C"
 		IMPAPI(MIDI_SetTextSysexEvt);
 		IMPAPI(MIDIEditor_GetActive);
 		IMPAPI(MIDIEditor_GetMode);
+		IMPAPI(MIDIEditor_GetSetting_int);
 		IMPAPI(MIDIEditor_GetTake);
 		IMPAPI(MIDIEditor_LastFocused_OnCommand);
 		IMPAPI(MIDIEditor_OnCommand);

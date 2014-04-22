@@ -912,7 +912,7 @@ void ApplyColorRuleToMarkerRegion(SWS_RuleItem* _rule, int _flags)
 				((_flags&AC_REGION && isRgn && _rule->m_type==AC_REGION) || 
 				(_flags&AC_MARKER && !isRgn && _rule->m_type==AC_MARKER)))
 			{
-				update |= SNM_SetProjectMarker(NULL, num, isRgn, pos, end, name, _rule->m_color==-AC_NONE-1 ? (isRgn?ct->marker:ct->region) : _rule->m_color | 0x1000000);
+				update |= SetProjectMarkerByIndex(NULL, x-1, isRgn, pos, end, num, NULL, _rule->m_color==-AC_NONE-1 ? (isRgn?ct->marker:ct->region) : _rule->m_color | 0x1000000);
 			}
 		}
 	}

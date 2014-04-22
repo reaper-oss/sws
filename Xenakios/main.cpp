@@ -628,16 +628,15 @@ void DoRenameMarkersWithAscendingNumbers(COMMAND_T* ct)
 
 	bool isrgn;
 	double pos, rgnend;
-	const char *name;
-	int number;
+	int number, color;
 	char newmarkname[100];
 	int j=1;
-	while ((x=EnumProjectMarkers(x,&isrgn,&pos,&rgnend,&name,&number)))
+	while (x = EnumProjectMarkers3(NULL, x, &isrgn, &pos, &rgnend, NULL, &number, &color))
 	{
 		if (!isrgn)
 		{
 			sprintf(newmarkname,"%.3d",j);
-			SetProjectMarker(number,false,pos,rgnend,newmarkname);
+			SetProjectMarkerByIndex(NULL, x-1, isrgn, pos, rgnend, number, newmarkname, color);
 			j++;
 		}
 	}

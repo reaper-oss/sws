@@ -136,18 +136,21 @@ void MarkerNudge(bool bRight)
 {
 	// Find the marker underneath the edit cursor
 	int x = 0;
-	int iIndex;
-	double dMarkerPos;
+	int iIndex, iColor;
+	double dPos, dEnd;
 	bool bReg;
 	double dCurPos = GetCursorPosition();
-	while ((x = EnumProjectMarkers(x, &bReg, &dMarkerPos, NULL, NULL, &iIndex)))
+	while (x = EnumProjectMarkers3(NULL, x, &bReg, &dPos, &dEnd, NULL, &iIndex, &iColor))
 	{
-		if (dMarkerPos == dCurPos)
+		if (dPos == dCurPos)
 		{
 			dCurPos += (bRight ? 1.0 : -1.0) / GetHZoomLevel();
-			SetProjectMarker(iIndex, false, dCurPos, 0.0, NULL);
-			SetEditCurPos(dCurPos, true, false);
-			return;
+			if (dCurPos >= 0)
+			{
+				SetProjectMarkerByIndex(NULL, x-1, bReg, dCurPos, dEnd, iIndex, NULL, iColor);
+				SetEditCurPos(dCurPos, true, false);
+				return;
+			}
 		}
 	}
 }

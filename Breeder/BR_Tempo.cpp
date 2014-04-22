@@ -28,6 +28,7 @@
 #include "stdafx.h"
 #include "BR_Tempo.h"
 #include "BR_EnvTools.h"
+#include "BR_MidiTools.h"
 #include "BR_TempoDlg.h"
 #include "BR_Util.h"
 #include "../SnM/SnM_Util.h"
@@ -41,7 +42,7 @@ static bool g_selectAdjustTempoDialog = false;
 static bool g_tempoShapeDialog = false;
 
 static BR_Envelope* g_tempoMap = NULL;       // once moving begins, tempo map gets cached so we don't read chunk multiple times
-static const int    g_moveGridFlag = -666;   // timer will use this to signal it run the action and not the user
+static const int    g_moveGridFlag = -666;   // timer will use this to signal when it run the action (to differentiate when user does it)
 static int          g_moveGridCmd = 0;       // which move grid action is getting called right now? (0 = no active move in progress)
 static int          g_moveGridId = -666;
 static double       g_moveGridLastPos = 0;
@@ -242,12 +243,14 @@ void MoveGridToMouse (COMMAND_T* ct)
 		// Make sure tempo map already has at least one point created (for some reason it won't work if creating it directly in chunk)
 		if ((int)ct->user != 0) // do it only if not moving tempo marker
 			InitTempoMap();
-		g_tempoMap = new BR_Envelope(GetTempoEnv());
+		g_tempoMap = new (nothrow) BR_Envelope(GetTempoEnv());
 	}
 
 	if (!g_tempoMap->Count())
 		return;
-	SetFocus(GetArrangeWnd()); // don't let other windows steal our keyboard accelerator
+
+	// Don't let other windows steal our keyboard accelerator
+	SetFocus(GetArrangeWnd());
 
 	// Find closest grid/tempo marker
 	double tDiff = 0;
@@ -261,7 +264,7 @@ void MoveGridToMouse (COMMAND_T* ct)
 	}
 	else
 	{
-		// Move action was already called so use data from the previous mouse move
+		// Move action was already called so use data from the previous move
 		if (g_movedGridOnce)
 		{
 			tDiff = mousePosition - g_moveGridLastPos;
@@ -288,7 +291,6 @@ void MoveGridToMouse (COMMAND_T* ct)
 				if (!g_tempoMap->GetPoint(targetId, &pos1, NULL, NULL, NULL))
 					return;
 
-				// Compare with the next point to find the closest
 				double pos2;
 				if (g_tempoMap->GetPoint(targetId+1, &pos2, NULL, NULL, NULL))
 				{
@@ -310,8 +312,6 @@ void MoveGridToMouse (COMMAND_T* ct)
 				g_tempoMap->CreatePoint(prevId+1, grid, value, shape, 0, false);
 				targetId = prevId+1;
 			}
-			else
-
 
 			// Can't move first tempo marker so ignore this move action and wait for valid mouse position
 			if (targetId != 0)
@@ -322,11 +322,11 @@ void MoveGridToMouse (COMMAND_T* ct)
 		}
 	}
 
-	// Move grid and commit changes (undo is handled in translateAccel unless move is impossible and user gets warned!)
+	// Move grid and commit changes
 	if (tDiff != 0 && g_moveGridId != -666)
 	{
 		// Warn user if tempo marker couldn't get processed
-		if (!MoveTempo(*g_tempoMap, g_moveGridId, tDiff))
+		if (!g_tempoMap || !MoveTempo(*g_tempoMap, g_moveGridId, tDiff))
 		{
 			static bool s_warnUser = true;
 			if (s_warnUser)
@@ -368,18 +368,13 @@ void MoveGridToEditPlayCursor (COMMAND_T* ct)
 		GetConfig("seekmodes", seekmodes);
 		SetConfig("seekmodes", ClearBit(seekmodes, 5));
 	}
-	// Find closest grid
-	double tDiff = 0;
-	double grid = 0;
-	if ((int)ct->user == 0 || (int)ct->user == 1)
-		grid = GetClosestGrid(cursor);
-	else if ((int)ct->user == 2 || (int)ct->user == 3)
-		grid = GetClosestMeasureGrid(cursor);
-	else if ((int)ct->user == 4)
-		grid = GetClosestLeftSideGrid(cursor);
-	else
-		grid = GetClosestRightSideGrid(cursor);
 
+	// Find closest grid
+	double grid = 0;
+	if      ((int)ct->user == 0 || (int)ct->user == 1) grid = GetClosestGrid(cursor);
+	else if ((int)ct->user == 2 || (int)ct->user == 3) grid = GetClosestMeasureGrid(cursor);
+	else if ((int)ct->user == 4)                       grid = GetClosestLeftSideGrid(cursor);
+	else                                               grid = GetClosestRightSideGrid(cursor);
 	int targetId = tempoMap.Find(grid, MIN_TEMPO_DIST);
 
 	// No tempo marker on grid, create it
@@ -392,7 +387,7 @@ void MoveGridToEditPlayCursor (COMMAND_T* ct)
 		tempoMap.CreatePoint(prevId+1, grid, value, shape, 0, false);
 		targetId = prevId+1;
 	}
-	tDiff = cursor - grid;
+	double tDiff = cursor - grid;
 
 	// Commit changes and warn user if needed
 	if (tDiff != 0)
@@ -443,7 +438,6 @@ void MoveTempo (COMMAND_T* ct)
 		if (!tempoMap.GetPoint(id, &pos1, NULL, NULL, NULL))
 			return;
 
-		// Compare with the next point to find the closest
 		double pos2;
 		if (tempoMap.GetPoint(id+1, &pos2, NULL, NULL, NULL))
 		{
@@ -1196,73 +1190,6 @@ void DeleteTempo (COMMAND_T* ct)
 	}
 }
 
-struct MediaItemPosInfo
-{
-	MediaItem* item;
-	double position, length, timeBase;
-	vector<BR_MidiTake> savedMidiTakes;
-
-	MediaItemPosInfo (MediaItem* item) : item (item)
-	{
-		position = GetMediaItemInfo_Value(item, "D_POSITION");
-		length = GetMediaItemInfo_Value(item, "D_LENGTH");
-		timeBase = GetMediaItemInfo_Value(item, "C_BEATATTACHMODE");
-
-		for (int i = 0; i < CountTakes(item); ++i)
-		{
-			MediaItem_Take* take = GetTake(item, i);
-
-			int noteCount, ccCount, textCount;
-			if (MIDI_CountEvts(take, &noteCount, &ccCount, &textCount))
-			{
-				savedMidiTakes.push_back(BR_MidiTake(take, noteCount, ccCount, textCount));
-				BR_MidiTake* midiTake = &savedMidiTakes.back();
-
-				for (int i = 0; i < noteCount; ++i)
-				{
-					midiTake->noteEvents.push_back(BR_NoteEvent(take, 0));
-					MIDI_DeleteNote(take, 0);
-				}
-				for (int i = 0; i < ccCount; ++i)
-				{
-					midiTake->ccEvents.push_back(BR_CCEvent(take, 0));
-					MIDI_DeleteCC(take, 0);
-				}
-				for (int i = 0; i < textCount; ++i)
-				{
-					midiTake->sysEvents.push_back(BR_SysEvent(take, 0));
-					MIDI_DeleteTextSysexEvt(take, 0);
-				}
-			}
-		}
-	}
-
-	void Restore ()
-	{
-		SetMediaItemInfo_Value(item, "D_POSITION", position);
-		SetMediaItemInfo_Value(item, "D_LENGTH", length);
-		SetMediaItemInfo_Value(item, "C_BEATATTACHMODE", timeBase);
-
-		for (size_t i = 0; i < savedMidiTakes.size(); ++i)
-		{
-			BR_MidiTake* midiTake = &savedMidiTakes[i];
-			MediaItem_Take* take = midiTake->take;
-
-
-
-			for (size_t i = 0; i < midiTake->noteEvents.size(); ++i)
-				midiTake->noteEvents[i].InsertEvent(take);
-
-			for (size_t i = 0; i < midiTake->ccEvents.size(); ++i)
-				midiTake->ccEvents[i].InsertEvent(take);
-
-			for (size_t i = 0; i < midiTake->sysEvents.size(); ++i)
-				midiTake->sysEvents[i].InsertEvent(take);
-
-		}
-	}
-};
-
 void DeleteTempoPreserveItems (COMMAND_T* ct)
 {
 	BR_Envelope tempoMap(GetTempoEnv());
@@ -1270,7 +1197,7 @@ void DeleteTempoPreserveItems (COMMAND_T* ct)
 		return;
 
 	// Get items' position info and set their timebase to time
-	vector<MediaItemPosInfo> items;
+	vector<BR_MidiItemTimePos> items;
 	double firstMarker;
 	tempoMap.GetPoint(tempoMap.GetSelected(0), &firstMarker, NULL, NULL, NULL);
 
@@ -1282,7 +1209,7 @@ void DeleteTempoPreserveItems (COMMAND_T* ct)
 		double itemEnd = GetMediaItemInfo_Value(item, "D_POSITION") + GetMediaItemInfo_Value(item, "D_LENGTH");
 		if (itemEnd >= firstMarker)
 		{
-			items.push_back(MediaItemPosInfo(item));
+			items.push_back(BR_MidiItemTimePos(item));
 			SetMediaItemInfo_Value(item, "C_BEATATTACHMODE", 0);
 		}
 	}
@@ -1343,7 +1270,7 @@ void DeleteTempoPreserveItems (COMMAND_T* ct)
 		}
 	}
 
-	// Commit tempo map and restore position info (we don't update timeline via commit because it can screw MIDI items's internal positioning info due to notes moving
+	// Commit tempo map and restore position info
 	PreventUIRefresh(1);
 	if (tempoMap.Commit(false))
 	{

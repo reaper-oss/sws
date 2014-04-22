@@ -40,10 +40,10 @@ public:
 
 	/* Analyze */
 	bool Analyze (bool integratedOnly = false);
-	void StopAnalyze ();
 	bool IsRunning ();
 	double GetProgress ();
-	void NormalizeIntegrated (double target); // normalize using existing analyze data to target dB
+	void StopAnalyze ();
+	void NormalizeIntegrated (double targetdB); // normalize using existing analyze data
 	bool CreateGraph (BR_Envelope& envelope, double min, double max, bool momentary);
 
 	/* For populating list view in analyze loudness dialog */
@@ -52,6 +52,8 @@ public:
 
 	/* Various options (mainly for analyze loudness dialog) */
 	double GetAudioLength ();
+	bool CheckTarget (MediaTrack* track);
+	bool CheckTarget (MediaItem_Take* take);
 	bool IsTrack ();
 	bool IsTargetValid ();
 	bool IsSelectedInProject ();
@@ -71,7 +73,6 @@ private:
 		BR_Envelope volEnv, volEnvPreFX;
 		AudioData();
 	} m_audioData;
-
 	static unsigned WINAPI AnalyzeData (void* loudnessObject);
 	int CheckSetAudioData (); // call from main thread only, returns 0->target doesn't exist anymore, 1->old accessor still valid, 2->accessor got updated
 	AudioData* GetAudioData ();
@@ -136,6 +137,7 @@ public:
 		bool doubleClickGotoTarget;
 		bool timeSelectionOverMax;
 		bool clearEnvelope;
+		bool clearAnalyzed;
 		double graphMin;
 		double graphMax;
 		Properties ();
@@ -147,19 +149,20 @@ protected:
 	void StopAnalyze ();
 	void StopReanalyze ();
 	void ClearList ();
+	bool IsObjectInAnalyzeQueue (MediaTrack* track);
+	bool IsObjectInAnalyzeQueue (MediaItem_Take* take);
 	virtual void OnInitDlg ();
 	virtual void OnCommand (WPARAM wParam, LPARAM lParam);
 	virtual void OnTimer (WPARAM wParam);
 	virtual void OnDestroy ();
 	virtual void GetMinSize (int* w, int* h);
+	virtual int OnKey (MSG* msg, int iKeyState);
 	virtual HMENU OnContextMenu (int x, int y, bool* wantDefaultItems);
-
 	double m_objectsLen;
 	int m_currentObjectId;
 	bool m_analyzeInProgress;
 	BR_AnalyzeLoudnessView* m_list;                                                  // never delete objects in reanalyzeQueue when removing them from list!!
 	WDL_PtrList_DeleteOnDestroy<BR_LoudnessObject> m_analyzeQueue, m_reanalyzeQueue; // m_analyzeQueue is ok if the object didn't enter g_analyzedObjects
-
 };
 
 void AnalyzeLoudness (COMMAND_T*);

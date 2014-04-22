@@ -309,6 +309,7 @@ bool BR_Envelope::CreatePoint (int id, double position, double value, int shape,
 	{
 		BR_EnvPoint newPoint(position, value, shape, 0, selected, 0, bezier);
 		m_points.insert(m_points.begin() + id, newPoint);
+
 		++m_count;
 		m_update = true;
 		m_sorted = false;
@@ -323,6 +324,7 @@ bool BR_Envelope::DeletePoint (int id)
 	if (this->ValidateId(id))
 	{
 		m_points.erase(m_points.begin() + id);
+
 		--m_count;
 		m_update = true;
 		return true;
@@ -337,6 +339,7 @@ bool BR_Envelope::DeletePoints (int startId, int endId)
 		return false;
 
 	m_points.erase(m_points.begin() + startId, m_points.begin() + endId+1);
+
 	m_count -= endId - startId + 1;
 	m_update = true;
 	return true;
@@ -348,27 +351,25 @@ bool BR_Envelope::GetTimeSig (int id, bool* sig, int* num, int* den)
 	{
 		WritePtr(sig, (m_points[id].sig) ? (true) : (false));
 
-		// Search for active time signature of a point
 		if (num != NULL || den != NULL)
 		{
-			// Look backwards for the first tempo marker with time signature
-			int effSig = 0;
+			int effectiveTimeSig = 0;
 			for (;id >= 0; --id)
 			{
 				if (m_points[id].sig != 0)
 				{
-					effSig = m_points[id].sig;
+					effectiveTimeSig = m_points[id].sig;
 					break;
 				}
 			}
 
 			int effNum, effDen;
-			if (effSig == 0)
+			if (!effectiveTimeSig)
 				TimeMap_GetTimeSigAtTime(NULL, -1, &effNum, &effDen, NULL);
 			else
 			{
-				effNum = effSig & 0xff; // num is low 16 bits
-				effDen = effSig >> 16;  // den is high 16 bits
+				effNum = effectiveTimeSig & 0xff; // num is low 16 bits
+				effDen = effectiveTimeSig >> 16;  // den is high 16 bits
 			}
 			WritePtr(num, effNum);
 			WritePtr(den, effDen);
@@ -388,28 +389,28 @@ bool BR_Envelope::SetTimeSig (int id, bool sig, int num, int den)
 {
 	if (this->ValidateId(id) && m_tempoMap)
 	{
-		int effSig;
+		int effectiveTimeSig;
 		if (sig)
 		{
 			// Unlike native method, this function will fail when illegal num/den are requested
 			if (num < MIN_SIG || num > MAX_SIG || den < MIN_SIG || den > MAX_SIG)
 				return false;
 
-			effSig = (den << 16) + num;         // Partial token is set according to time signature:
-			if (m_points[id].partial == 0)      // -sig -partial
-				m_points[id].partial = 1;       // +sig -partial
-			else if (m_points[id].partial == 4) // -sig +partial
-				m_points[id].partial = 5;       // +sig +partial
+			effectiveTimeSig = (den << 16) + num; // Partial token is set according to time signature:
+			if (m_points[id].partial == 0)        // -sig -partial
+				m_points[id].partial = 1;         // +sig -partial
+			else if (m_points[id].partial == 4)   // -sig +partial
+				m_points[id].partial = 5;         // +sig +partial
 		}
 		else
 		{
-			effSig = 0;
-			if (m_points[id].partial == 1)      // +sig -partial
-				m_points[id].partial = 0;       // -sig -partial
-			else if (m_points[id].partial == 5) // +sig +partial
-				m_points[id].partial = 4;       // -sig +partial
+			effectiveTimeSig = 0;
+			if (m_points[id].partial == 1)        // +sig -partial
+				m_points[id].partial = 0;         // -sig -partial
+			else if (m_points[id].partial == 5)   // +sig +partial
+				m_points[id].partial = 4;         // -sig +partial
 		}
-		m_points[id].sig = effSig;
+		m_points[id].sig = effectiveTimeSig;
 		return true;
 	}
 	else
@@ -487,6 +488,8 @@ void BR_Envelope::DeletePointsInRange (double start, double end)
 			else
 				++startId;
 		}
+		if (!this->ValidateId(startId))
+			return;
 
 		int endId = FindNext(end);
 		while (endId >= 0)
@@ -496,22 +499,13 @@ void BR_Envelope::DeletePointsInRange (double start, double end)
 			else
 				--endId;
 		}
-
-		// Nothing to delete
-		if (!this->ValidateId(startId))
-			return;
-
-		// Make sure end is valid
 		if (endId < startId)
 			return;
-		else if (!this->ValidateId(endId))
-			endId = m_count -1;
 
+		if (!this->ValidateId(endId))
+			endId = m_count -1;
 		if (this->DeletePoints(startId, endId))
 			m_update = true;
-
-
-
 	}
 	else
 	{
@@ -723,7 +717,7 @@ double BR_Envelope::ValueAtPosition (double position)
 			return v1 + (v2 - v1) * (1 - pow(1-t, 3));
 		}
 
-		case SLOW_START_END:                            // f(x) = x^2 * (3-2x)
+		case SLOW_START_END:                           // f(x) = x^2 * (3-2x)
 		{
 			double t = (position - t1) / (t2 - t1);
 			return v1 + (v2 - v1) * (pow(t, 2) * (3 - 2*t));
@@ -811,7 +805,7 @@ bool BR_Envelope::VisibleInArrange ()
 	{
 		int offset;
 		int height = GetTrackEnvHeight (m_envelope, &offset, this->GetParent());
-		int pageEnd = si.nPos + (int)si.nPage + VERT_SCROLL_W;
+		int pageEnd = si.nPos + (int)si.nPage + SCROLLBAR_W;
 		int envelopeEnd = offset + height;
 
 		if (offset >= si.nPos && offset <= pageEnd)
@@ -824,13 +818,13 @@ bool BR_Envelope::VisibleInArrange ()
 		int offset;
 		int height = GetTakeEnvHeight (m_take, &offset);
 		int envelopeEnd = offset + height;
-		int pageEnd = si.nPos + (int)si.nPage + VERT_SCROLL_W;
+		int pageEnd = si.nPos + (int)si.nPage + SCROLLBAR_W;
 
 		if ((offset >= si.nPos && offset <= pageEnd) || (envelopeEnd >= si.nPos && envelopeEnd <= pageEnd))
 		{
 			double arrangeStart, arrangeEnd;
 			RECT r; GetWindowRect(hwnd, &r);
-			GetSet_ArrangeView2(NULL, false, r.left, r.right-VERT_SCROLL_W, &arrangeStart, &arrangeEnd);
+			GetSet_ArrangeView2(NULL, false, r.left, r.right-SCROLLBAR_W, &arrangeStart, &arrangeEnd);
 
 			double itemStart = GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION");
 			double itemEnd = itemStart + GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_LENGTH");
@@ -865,7 +859,7 @@ MediaTrack* BR_Envelope::GetParent ()
 	if (!m_parent)
 	{
 		if (m_take)
-			m_parent = GetMediaItem_Track(GetMediaItemTake_Item(m_take));
+			m_parent = GetMediaItemTake_Track(m_take);
 		else
 			m_parent = GetEnvParent(m_envelope);
 	}
@@ -1037,7 +1031,6 @@ bool BR_Envelope::Commit (bool force /*=false*/)
 		int envClickSegMode; GetConfig("envclicksegmode", envClickSegMode);
 		SetConfig("envclicksegmode", ClearBit(envClickSegMode, 6));
 
-		// Build and commit chunk
 		WDL_FastString chunkStart = (m_properties.changed) ? this->GetProperties() : m_chunkStart;
 		for (vector<BR_EnvPoint>::iterator i = m_points.begin(); i != m_points.end() ; ++i)
 			i->Append(chunkStart);
@@ -1066,7 +1059,6 @@ bool BR_Envelope::Commit (bool force /*=false*/)
 
 void BR_Envelope::ParseState (char* envState, size_t size)
 {
-	// Reserve storage to reduce overhead (guessing for everything but tempo map)
 	if (m_tempoMap)
 	{
 		int count = CountTempoTimeSigMarkers(NULL);
@@ -1079,7 +1071,6 @@ void BR_Envelope::ParseState (char* envState, size_t size)
 		m_pointsSel.reserve(size/25);
 	}
 
-	// Parse envelope
 	char* token = strtok(envState, "\n");
 	LineParser lp(false);
 	bool start = false;
@@ -1296,7 +1287,7 @@ int BR_Envelope::FindFirstPoint ()
 
 int BR_Envelope::LastPointAtPos (int id)
 {
-	/* no bounds checking - internal function so class handles before calling */
+	/* no bounds checking - internal function so caller handles before calling */
 	double position = m_points[id].position;
 	int lastId = id;
 
@@ -1548,9 +1539,9 @@ void FindMiddlePoint (double* middleTime, double* middleBpm, double measure, dou
 	double c = a*(startTime*endTime) + f*(startTime+endTime);
 
 	double pos = c / (b + sqrt(pow(b,2) - a*c));
-	double bpm = f / (pos-startTime) - startBpm; // when editing tempo we usually move forward so previous point remains
-	WritePtr(middleTime, pos);                   // the same and calculating the middle point in relation to it will
-	WritePtr(middleBpm, bpm);                    // make middle point land on the correct musical position
+	double bpm = f / (pos-startTime) - startBpm; // when editing tempo we usually move forward so previous point
+	WritePtr(middleTime, pos);                   // remains the same and calculating the middle point in relation
+	WritePtr(middleBpm, bpm);                    // to it will make middle point land on the correct musical position
 }
 
 void SplitMiddlePoint (double* time1, double* time2, double* bpm1, double* bpm2, double splitRatio, double measure, double startTime, double middleTime, double endTime, double startBpm, double middleBpm, double endBpm)
@@ -1559,8 +1550,8 @@ void SplitMiddlePoint (double* time1, double* time2, double* bpm1, double* bpm2,
 	double temp = measure * (1-splitRatio) / 2;
 	double pos1 = PositionAtMeasure(startBpm, middleBpm, (middleTime-startTime), temp) + startTime;
 	double val1 = 480*temp / (pos1-startTime) - startBpm;
-	WritePtr (time1, pos1);
-	WritePtr (bpm1, val1);
+	WritePtr(time1, pos1);
+	WritePtr(bpm1, val1);
 
 	// Second point
 	double f1 = 480 * measure*splitRatio;

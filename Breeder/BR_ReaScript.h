@@ -34,10 +34,13 @@ bool            BR_GetMediaSourceProperties (MediaItem_Take* take, bool* section
 void            BR_GetMouseCursorContext (char* window, char* segment, char* details, int char_sz);
 TrackEnvelope*  BR_GetMouseCursorContext_Envelope (bool* takeEnvelope);
 MediaItem*      BR_GetMouseCursorContext_Item ();
+void*           BR_GetMouseCursorContext_MIDI (bool* inlineEditor, int* noteRow, int* ccLane, int* ccLaneVal, int* ccLaneId);
 double          BR_GetMouseCursorContext_Position ();
 MediaItem_Take* BR_GetMouseCursorContext_Take ();
 MediaTrack*     BR_GetMouseCursorContext_Track ();
 MediaItem*      BR_ItemAtMouseCursor (double* position);
+bool            BR_MIDI_CCLaneRemove (void* midiEditor, int laneId);
+bool            BR_MIDI_CCLaneReplace (void* midiEditor, int laneId, int newCC);
 double          BR_PositionAtMouseCursor (bool checkRuler);
 bool            BR_SetMediaSourceProperties (MediaItem_Take* take, bool section, double start, double length, double fade, bool reverse);
 bool            BR_SetTakeSourceFromFile (MediaItem_Take* take, const char* filename, bool inProjectData);
@@ -49,25 +52,31 @@ MediaTrack*     BR_TrackAtMouseCursor (int* context, double* position);
 * Big description!                                                            *
 ******************************************************************************/
 #define BR_MOUSE_REASCRIPT_DESC "[BR] \
-Get mouse cursor context. Each parameter returns information in a form of string as specified in the table below.\n\n               \
-To get more info on stuff that was found under mouse cursor see BR_GetMouseCursorContext_Envelope,                                  \
-BR_GetMouseCursorContext_Item, BR_GetMouseCursorContext_Position, BR_GetMouseCursorContext_Take, BR_GetMouseCursorContext_Track \n  \
-Note that these functions will return every element found under mouse cursor. For example, if details is \"env_segment\",           \
-BR_GetMouseCursorContext_Item will still return valid item if it was under that envelope segment.\n\n                               \
-<table border=\"2\">                                                                                                                \
-<tr><th style=\"width:100px\">Window</th> <th style=\"width:100px\">Segment</th> <th style=\"width:300px\">Details</th>      </tr>  \
-<tr><td rowspan=\"1\" align = \"center\"> unknown   </th> <td> \"\"     </td> <td> \"\"                                </td> </tr>  \
-<tr><td rowspan=\"4\" align = \"center\"> ruler     </th> <td> regions  </td> <td> \"\"                                </td> </tr>  \
-<tr>                                                      <td> markers  </td> <td> \"\"                                </td> </tr>  \
-<tr>                                                      <td> tempo    </td> <td> \"\"                                </td> </tr>  \
-<tr>                                                      <td> timeline </td> <td> \"\"                                </td> </tr>  \
-<tr><td rowspan=\"1\" align = \"center\"> transport </th> <td> \"\"     </td> <td> \"\"                                </td> </tr>  \
-<tr><td rowspan=\"3\" align = \"center\"> tcp       </th> <td> track    </td> <td> \"\"                                </td> </tr>  \
-<tr>                                                      <td> envelope </td> <td> \"\"                                </td> </tr>  \
-<tr>                                                      <td> empty    </td> <td> \"\"                                </td> </tr>  \
-<tr><td rowspan=\"2\" align = \"center\"> mcp       </th> <td> track    </td> <td> \"\"                                </td> </tr>  \
-<tr>                                                      <td> empty    </td> <td> \"\"                                </td> </tr>  \
-<tr><td rowspan=\"3\" align = \"center\"> arrange   </th> <td> track    </td> <td> item, env_point, env_segment, empty </td> </tr>  \
-<tr>                                                      <td> envelope </td> <td> env_point, env_segment, empty       </td> </tr>  \
-<tr>                                                      <td> empty    </td> <td> \"\"                                </td> </tr>  \
+Get mouse cursor context. Each parameter returns information in a form of string as specified in the table below.\n\n                  \
+To get more info on stuff that was found under mouse cursor see BR_GetMouseCursorContext_Envelope,                                     \
+BR_GetMouseCursorContext_Item, BR_GetMouseCursorContext_MIDI, BR_GetMouseCursorContext_Position, BR_GetMouseCursorContext_Take,        \
+BR_GetMouseCursorContext_Track \n                                                                                                      \
+Note that these functions will return every element found under mouse cursor. For example, if details is \"env_segment\",              \
+BR_GetMouseCursorContext_Item will still return valid item if it was under that envelope segment.\n\n                                  \
+<table border=\"2\">                                                                                                                   \
+<tr><th style=\"width:100px\">Window</th> <th style=\"width:100px\">Segment</th> <th style=\"width:300px\">Details</th>          </tr>\
+<tr><td rowspan=\"1\" align = \"center\"> unknown     </th> <td> \"\"       </td> <td> \"\"                                </td> </tr> \
+<tr><td rowspan=\"4\" align = \"center\"> ruler       </th> <td> regions    </td> <td> \"\"                                </td> </tr> \
+<tr>                                                        <td> markers    </td> <td> \"\"                                </td> </tr> \
+<tr>                                                        <td> tempo      </td> <td> \"\"                                </td> </tr> \
+<tr>                                                        <td> timeline   </td> <td> \"\"                                </td> </tr> \
+<tr><td rowspan=\"1\" align = \"center\"> transport   </th> <td> \"\"       </td> <td> \"\"                                </td> </tr> \
+<tr><td rowspan=\"3\" align = \"center\"> tcp         </th> <td> track      </td> <td> \"\"                                </td> </tr> \
+<tr>                                                        <td> envelope   </td> <td> \"\"                                </td> </tr> \
+<tr>                                                        <td> empty      </td> <td> \"\"                                </td> </tr> \
+<tr><td rowspan=\"2\" align = \"center\"> mcp         </th> <td> track      </td> <td> \"\"                                </td> </tr> \
+<tr>                                                        <td> empty      </td> <td> \"\"                                </td> </tr> \
+<tr><td rowspan=\"3\" align = \"center\"> arrange     </th> <td> track      </td> <td> item, env_point, env_segment, empty </td> </tr> \
+<tr>                                                        <td> envelope   </td> <td> env_point, env_segment, empty       </td> </tr> \
+<tr>                                                        <td> empty      </td> <td> \"\"                                </td> </tr> \
+<tr><td rowspan=\"5\" align = \"center\"> midi_editor </th> <td> unknown    </td> <td> \"\"                                </td> </tr> \
+<tr>                                                        <td> ruler      </td> <td> \"\"                                </td> </tr> \
+<tr>                                                        <td> piano_view </td> <td> \"\"                                </td> </tr> \
+<tr>                                                        <td> notes_view </td> <td> \"\"                                </td> </tr> \
+<tr>                                                        <td> cc_lane    </td> <td> cc_selector, cc_lane                </td> </tr> \
 </table>"

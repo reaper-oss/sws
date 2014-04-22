@@ -61,7 +61,6 @@ static void ConvertMarkersToTempo (int markers, int num, int den, bool removeMar
 {
 	vector<double> markerPositions = GetProjectMarkers(timeSel, MAX_GRID_DIV); // delta: sometimes time selection won't catch start/end project marker due to small rounding differences
 
-	// Check number of markers
 	if (markerPositions.size() <=1)
 	{
 		if (timeSel)
@@ -71,7 +70,6 @@ static void ConvertMarkersToTempo (int markers, int num, int den, bool removeMar
 			return;
 	}
 
-	// Check if there are existing tempo markers after the first project marker
 	if (CountTempoTimeSigMarkers(NULL) > 0)
 	{
 		bool check = false;
@@ -81,7 +79,6 @@ static void ConvertMarkersToTempo (int markers, int num, int den, bool removeMar
 			double position;
 			GetTempoTimeSigMarker(NULL, i, &position, NULL, NULL, NULL, NULL, NULL, NULL);
 
-			// Check for tempo markers between project markers
 			if (!check && position > markerPositions.front() && position <= markerPositions.back())
 			{
 				int answer = MessageBox(g_hwndParent, __LOCALIZE("Detected existing tempo markers between project markers.\nAre you sure you want to continue? Strange things may happen.","sws_DLG_166"), __LOCALIZE("SWS - Warning","sws_mbox"), MB_YESNO);
@@ -91,7 +88,6 @@ static void ConvertMarkersToTempo (int markers, int num, int den, bool removeMar
 					check = true;
 			}
 
-			// Check for tempo markers after last project marker
 			if (position > markerPositions.back())
 			{
 				// When tempo envelope timebase is time, these tempo markers can't be moved so there is no need to warn user
@@ -110,12 +106,11 @@ static void ConvertMarkersToTempo (int markers, int num, int den, bool removeMar
 		}
 	}
 
-	// If all went well start converting
+
 	Undo_BeginBlock2(NULL);
 	double measure = num / (den * (double)markers);
 	int exceed = 0;
 
-	// Square points
 	if (!gradualTempo)
 	{
 		for (size_t i = 0; i < markerPositions.size()-1 ; ++i)
@@ -130,8 +125,6 @@ static void ConvertMarkersToTempo (int markers, int num, int den, bool removeMar
 				SetTempoTimeSigMarker (NULL, -1, markerPositions[i], -1, -1, bpm, 0, 0, false);
 		}
 	}
-
-	// Linear points
 	else
 	{
 		// Get linear points' BPM (these get put where project markers are)
@@ -161,8 +154,7 @@ static void ConvertMarkersToTempo (int markers, int num, int den, bool removeMar
 			prevBpm = bpm;
 		}
 
-		// Musical distance between starting tempo point and first middle point (used for checking at the end)
-		double midMeasure = (split) ? (measure*(1-splitRatio) / 2) : (measure/2);
+		double beatsInternval = (split) ? (measure*(1-splitRatio) / 2) : (measure/2);
 
 		// Set points
 		for(size_t i = 0; i < linearPoints.size(); ++i)
@@ -186,19 +178,15 @@ static void ConvertMarkersToTempo (int markers, int num, int den, bool removeMar
 			// Create middle point(s)
 			if (i != linearPoints.size()-1)
 			{
-				// Get middle point's position and BPM
 				double pos, bpm;
 				FindMiddlePoint(&pos, &bpm, measure, markerPositions[i], markerPositions[i+1], linearPoints[i], linearPoints[i+1]);
 
-				// Set middle point
 				if (!split)
 				{
 					SetTempoTimeSigMarker(NULL, -1, pos, -1, -1, bpm, 0, 0, true);
 					if (bpm > MAX_BPM)
 						++exceed;
 				}
-
-				// Or split it
 				else
 				{
 					double pos1, pos2, bpm1, bpm2;
@@ -217,12 +205,11 @@ static void ConvertMarkersToTempo (int markers, int num, int den, bool removeMar
 				// But it can also make the end point move from it's designated musical position due to rounding errors (even if small at the
 				// beginning, they can accumulate). That's why we recalculate next point's BPM (in a relation to last middle point) so it always lands
 				// on the correct musical position
-				linearPoints[i+1] = (480*midMeasure) / (markerPositions[i+1]-pos) - bpm;
+				linearPoints[i+1] = (480*beatsInternval) / (markerPositions[i+1]-pos) - bpm;
 			}
 		}
 	}
 
-	// Remove markers
 	if (removeMarkers)
 	{
 		if (timeSel)
@@ -244,7 +231,6 @@ static void ConvertMarkersToTempo (int markers, int num, int den, bool removeMar
 	UpdateTimeline();
 	Undo_EndBlock2 (NULL, __LOCALIZE("Convert project markers to tempo markers","sws_undo"), UNDO_STATE_ALL);
 
-	// Warn user if there were tempo markers created with a BPM over 960
 	if (exceed != 0)
 		ShowMessageBox(__LOCALIZE("Some of the created tempo markers have a BPM over 960. If you try to edit them, they will revert back to 960 or lower.\n\nIt is recommended that you undo, edit project markers and try again.", "sws_DLG_166"),__LOCALIZE("SWS - Warning", "sws_mbox"), 0);
 }
@@ -268,17 +254,14 @@ static void ShowGradualOptions (bool show, HWND hwnd)
 
 	RECT r;
 
-	// Move/resize group boxes
 	GetWindowRect(GetDlgItem(hwnd, IDC_BR_CON_GROUP2), &r);
 	SetWindowPos(GetDlgItem(hwnd, IDC_BR_CON_GROUP2), HWND_BOTTOM, 0, 0, r.right-r.left, r.bottom-r.top+c, SWP_NOMOVE);
 
-	// Move buttons
 	GetWindowRect(GetDlgItem(hwnd, IDOK), &r); ScreenToClient(hwnd, (LPPOINT)&r);
 	SetWindowPos(GetDlgItem(hwnd, IDOK), NULL, r.left, r.top+c, 0, 0, SWP_NOSIZE);
 	GetWindowRect(GetDlgItem(hwnd, IDCANCEL), &r); ScreenToClient(hwnd, (LPPOINT)&r);
 	SetWindowPos(GetDlgItem(hwnd, IDCANCEL), NULL, r.left, r.top+c, 0, 0, SWP_NOSIZE);
 
-	// Resize window
 	GetWindowRect(hwnd, &r);
 	#ifdef _WIN32
 		SetWindowPos(hwnd, NULL, 0, 0, r.right-r.left, r.bottom-r.top+c, SWP_NOMOVE);
@@ -313,7 +296,6 @@ static void LoadOptionsConversion (int& markers, int& num, int& den, int& remove
 	GetPrivateProfileString("SWS", CONVERT_KEY, "4 4 4 1 0 0 0 4/8", tmp, 256, get_ini_file());
 	sscanf(tmp, "%d %d %d %d %d %d %d %s", &markers, &num, &den, &removeMarkers, &timeSel, &gradual, &split, splitRatio);
 
-	// Restore defaults if needed
 	double convertedRatio;
 	IsFraction (splitRatio, convertedRatio);
 	if (convertedRatio <= 0 || convertedRatio >= 1)
@@ -445,7 +427,6 @@ WDL_DLGRET ConvertMarkersToTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 					SetDlgItemText(hwnd, IDC_BR_CON_MARKERS, eMarkers);
 					SetDlgItemText(hwnd, IDC_BR_CON_SPLIT_RATIO, splitRatio);
 
-					// Check values
 					if (markers <= 0 || num <= 0 || den <= 0)
 					{
 						MessageBox(g_hwndParent, __LOCALIZE("All values have to be positive integers.","sws_DLG_166"), __LOCALIZE("SWS - Error","sws_mbox"), MB_OK);
@@ -466,7 +447,6 @@ WDL_DLGRET ConvertMarkersToTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 							SendMessage(GetDlgItem(hwnd, IDC_BR_CON_DEN), EM_SETSEL, 0, -1);
 						}
 					}
-					// If all went well, start converting
 					else
 					{
 						if (convertedSplitRatio == 0)
@@ -549,11 +529,9 @@ static void SelectTempo (int mode, int Nth, int timeSel, int bpm, double bpmStar
 	         ---> type    ---> 0 for all, 1 for tempo markers only, 2 for time signature only
 	*/
 
-	// Get time selection
 	double tStart, tEnd;
 	GetSet_LoopTimeRange2 (NULL, false, false, &tStart, &tEnd, false);
 
-	// Get tempo chunk
 	TrackEnvelope* envelope = GetTempoEnv();
 	char* envState = GetSetObjectState(envelope, "");
 	char* token = strtok(envState, "\n");
@@ -594,31 +572,25 @@ static void SelectTempo (int mode, int Nth, int timeSel, int bpm, double bpmStar
 			// Select/Unselect points by criteria
 			else
 			{
-				//// Check point by criteria
-				///////////////////////////////////////////////////////////////////////////////////////
+				/* Check point by criteria */
 				bool selectPt = true;
 
-				// Check BPM
 				if (selectPt && bpm)
+				{
 					selectPt = (point.value >= bpmStart && point.value <= bpmEnd);
-
-				// Check time signature
+				}
 				if (selectPt && sig)
 				{
 					int effNum, effDen;
 					TimeMap_GetTimeSigAtTime(NULL, point.position, &effNum, &effDen, NULL);
 					selectPt = (num == effNum && den == effDen);
 				}
-
-				// Check time
 				if (selectPt && timeSel)
 				{
 					selectPt = (point.position >= tStart && point.position <= tEnd);
 					if (timeSel == 2)
 						selectPt = !selectPt;
 				}
-
-				// Check shape
 				if (selectPt && shape)
 				{
 					if (shape == 1)
@@ -626,8 +598,6 @@ static void SelectTempo (int mode, int Nth, int timeSel, int bpm, double bpmStar
 					else if (shape == 2)
 						selectPt = (point.shape == 0);
 				}
-
-				// Check type
 				if (selectPt && type)
 				{
 					selectPt = (point.sig == 0);
@@ -635,19 +605,17 @@ static void SelectTempo (int mode, int Nth, int timeSel, int bpm, double bpmStar
 						selectPt = !selectPt;
 				}
 
-				//// Depending on the mode, designate point for selection/unselection
-				///////////////////////////////////////////////////////////////////////////////////////
+				/* Depending on the mode, designate point for selection/unselection */
 
-				// Mode "add to selection" - no matter the upper criteria, selected point stays selected
-				if (mode == 4)
+				if (mode == 4)      // add to selection
+				{
 					selectPt = (point.selected) ? (true) : (selectPt);
-
-				// Mode "unselect while obeying criteria" - unselected points stay that way...others get checked by criteria
-				else if (mode == 5)
+				}
+				else if (mode == 5) // unselect while obeying criteria
+				{
 					selectPt = (point.selected) ? (!selectPt) : (false);
-
-				// Mode "unselect every Nth selected marker while obeying criteria"
-				else if (mode == 6)
+				}
+				else if (mode == 6) // unselect every Nth selected marker while obeying criteria
 				{
 					if (selectPt)
 					{
@@ -667,20 +635,15 @@ static void SelectTempo (int mode, int Nth, int timeSel, int bpm, double bpmStar
 					else
 						selectPt = !!point.selected;
 				}
-
-				// Mode "invert while obeying criteria" - check if point passed criteria and then invert selection
-				else if (mode == 7)
+				else if (mode == 7) // invert while obeying criteria
+				{
 					selectPt = (selectPt) ? (!point.selected) : (!!point.selected);
+				}
 
-				/// Finally select or unselect the point
-				///////////////////////////////////////////////////////////////////////////////////////
 				point.selected = (selectPt) ? (1) : (0);
 			}
-
-			// Update tempo point
 			point.Append(newState);
 		}
-
 		else
 		{
 			AppendLine(newState, token);
@@ -688,7 +651,6 @@ static void SelectTempo (int mode, int Nth, int timeSel, int bpm, double bpmStar
 		token = strtok(NULL, "\n");
 	}
 
-	// Update tempo chunk
 	GetSetObjectState(envelope, newState.Get());
 	FreeHeapPtr(envState);
 }
@@ -700,7 +662,6 @@ static void AdjustTempo (int mode, double bpm, int shape)
 	shape --> 0 to ignore, 1 to invert, 2 for linear, 3 for square
 	*/
 
-	// Get tempo chunk
 	TrackEnvelope* envelope = GetTempoEnv();
 	char* envState = GetSetObjectState(envelope, "");
 	char* token = strtok(envState, "\n");
@@ -714,11 +675,12 @@ static void AdjustTempo (int mode, double bpm, int shape)
 
 	// Prepare variables
 	double pTime; GetTempoTimeSigMarker(NULL, 0, &pTime, NULL, NULL, NULL, NULL, NULL, NULL);
-	double pBpm = 1;
-	int pShape = 1;
-	double pOldTime = pTime;
-	double pOldBpm = 1;
-	int pOldShape = 1;
+	double pBpm   = 1;
+	int    pShape = 1;
+
+	double pOldTime  = pTime;
+	double pOldBpm   = 1;
+	int    pOldShape = 1;
 
 	// Loop through tempo chunk and perform BPM calculations
 	WDL_FastString newState;
@@ -729,27 +691,18 @@ static void AdjustTempo (int mode, double bpm, int shape)
 		BR_EnvPoint point;
 		if (point.ReadLine(lp))
 		{
-			// Save "soon to be old" values
 			double oldTime = point.position;
 			double oldBpm = point.value;
 			int oldShape = point.shape;
 
-			// If point is selected calculate it's new BPM and shape.
 			if (point.selected)
 			{
-				// Calculate BPM
-				if (mode == 0)
-					point.value += bpm;
-				else
-					point.value *= 1 + bpm/100;
+				if (mode == 0) point.value += bpm;
+				else           point.value *= 1 + bpm/100;
 
-				// Check if BPM is legal
-				if (point.value < MIN_BPM)
-					point.value = MIN_BPM;
-				else if (point.value > MAX_BPM)
-					point.value = MAX_BPM;
+				if (point.value < MIN_BPM)       point.value = MIN_BPM;
+				else if (point.value > MAX_BPM) point.value = MAX_BPM;
 
-				// Set shape
 				if (shape == 3)
 					point.shape = 1;
 				else if (shape == 2)
@@ -763,25 +716,17 @@ static void AdjustTempo (int mode, double bpm, int shape)
 				}
 			}
 
-			// Get new position but only if timebase is beats
 			if (timeBase == 1)
 			{
 				double measure;
-				if (pOldShape == 1)
-					measure = (oldTime-pOldTime) * pOldBpm / 240;
-				else
-					measure = (oldTime-pOldTime) * (oldBpm+pOldBpm) / 480;
+				if (pOldShape == 1) measure = (oldTime-pOldTime) * pOldBpm / 240;
+				else                measure = (oldTime-pOldTime) * (oldBpm+pOldBpm) / 480;
 
-				if (pShape == 1)
-					point.position = pTime + (240*measure) / pBpm;
-				else
-					point.position = pTime + (480*measure) / (pBpm + point.value);
+				if (pShape == 1) point.position = pTime + (240*measure) / pBpm;
+				else             point.position = pTime + (480*measure) / (pBpm + point.value);
 			}
 
-			// Update tempo point
 			point.Append(newState);
-
-			// Update data on previous point
 			pTime = point.position;
 			pBpm = point.value;
 			pShape = point.shape;
@@ -797,8 +742,6 @@ static void AdjustTempo (int mode, double bpm, int shape)
 
 		token = strtok(NULL, "\n");
 	}
-
-	// Update tempo chunk
 	GetSetObjectState(envelope, newState.Get());
 	FreeHeapPtr(envState);
 
@@ -879,7 +822,6 @@ static void UpdateCurrentBpm (HWND hwnd, const vector<int>& selectedPoints)
 	sprintf(eBpmCursor, "%.6g", bpmCursor);
 	sprintf(eBpmLast, "%.6g", bpmLast);
 
-	// Get values from edit boxes
 	GetDlgItemText(hwnd, IDC_BR_ADJ_BPM_CUR_1, eBpmFirstChk, 128);
 	GetDlgItemText(hwnd, IDC_BR_ADJ_BPM_CUR_2, eBpmCursorChk, 128);
 	GetDlgItemText(hwnd, IDC_BR_ADJ_BPM_CUR_3, eBpmLastChk, 128);
@@ -929,7 +871,6 @@ static void SelectTempoCase (HWND hwnd, int operationType, int unselectNth)
 	               --> 2 to invert
 	*/
 
-	// Read values from the dialog
 	int mode;
 	if (IsDlgButtonChecked(hwnd, IDC_BR_SEL_ADD))
 		mode = 4; // Add to existing selection
@@ -947,12 +888,11 @@ static void SelectTempoCase (HWND hwnd, int operationType, int unselectNth)
 	GetDlgItemText(hwnd, IDC_BR_SEL_BPM_END, eBpmEnd, 128);
 	GetDlgItemText(hwnd, IDC_BR_SEL_SIG_NUM, eNum, 128);
 	GetDlgItemText(hwnd, IDC_BR_SEL_SIG_DEN, eDen, 128);
+	double bpmStart = AltAtof(eBpmStart);
+	double bpmEnd   = AltAtof(eBpmEnd);
 	int num = atoi(eNum); if (num < MIN_SIG){num = MIN_SIG;} else if (num > MAX_SIG){num = MAX_SIG;}
 	int den = atoi(eDen); if (den < MIN_SIG){den = MIN_SIG;} else if (den > MAX_SIG){den = MAX_SIG;}
-	double bpmStart = AltAtof(eBpmStart);
-	double bpmEnd = AltAtof(eBpmEnd);
 
-	// Invert BPM values if needed
 	if (bpmStart > bpmEnd)
 	{
 		double temp = bpmStart;
@@ -962,15 +902,15 @@ static void SelectTempoCase (HWND hwnd, int operationType, int unselectNth)
 
 	// Select
 	if (operationType == 0)
-		SelectTempo (mode, 0, timeSel, bpm, bpmStart, bpmEnd, shape, sig, num, den, type);
+		SelectTempo(mode, 0, timeSel, bpm, bpmStart, bpmEnd, shape, sig, num, den, type);
 
 	// Unselect
 	if (operationType == 1)
 	{
 		if (unselectNth == 0)
-			SelectTempo (5, 0, timeSel, bpm, bpmStart, bpmEnd, shape, sig, num, den, type);
+			SelectTempo(5, 0, timeSel, bpm, bpmStart, bpmEnd, shape, sig, num, den, type);
 		else
-			SelectTempo (6, unselectNth, timeSel, bpm, bpmStart, bpmEnd, shape, sig, num, den, type);
+			SelectTempo(6, unselectNth, timeSel, bpm, bpmStart, bpmEnd, shape, sig, num, den, type);
 	}
 
 	// Invert
@@ -1127,7 +1067,6 @@ WDL_DLGRET SelectAdjustTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			sprintf(eNum, "%d", num);
 			sprintf(eDen, "%d", den);
 
-			// Find tempo at cursor
 			char bpmCursor[128]; double effBpmCursor;
 			TimeMap_GetTimeSigAtTime(NULL, GetCursorPositionEx(NULL), NULL, NULL, &effBpmCursor);
 			sprintf(bpmCursor, "%.6g", effBpmCursor);
@@ -1177,7 +1116,7 @@ WDL_DLGRET SelectAdjustTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 		{
 			switch(LOWORD(wParam))
 			{
-				////// SELECT MARKERS //////
+				/* SELECT MARKERS */
 
 				// Check boxes
 				case IDC_BR_SEL_BPM:
@@ -1243,7 +1182,7 @@ WDL_DLGRET SelectAdjustTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				break;
 
 
-				////// ADJUST MARKERS //////
+				/* ADJUST MARKERS */
 
 				// Radio buttons
 				case IDC_BR_ADJ_BPM_VAL_ENB:
@@ -1369,13 +1308,10 @@ WDL_DLGRET SelectAdjustTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 		case WM_TIMER:
 		{
-			// Get number of selected points and set Windows caption
 			vector<int> selectedPoints = GetSelPoints(GetTempoEnv());
 			char pointCount[512];
 			_snprintf(pointCount, sizeof(pointCount), __LOCALIZE_VERFMT("SWS/BR - Select and adjust tempo markers (%d of %d points selected)","sws_DLG_167") , selectedPoints.size(), CountTempoTimeSigMarkers(NULL) );
 			SetWindowText(hwnd, pointCount);
-
-			// Update current and target edit boxes
 			UpdateCurrentBpm(hwnd, selectedPoints);
 		}
 		break;
@@ -1513,7 +1449,6 @@ void UnselectNthDialog (bool show, HWND parentHandle)
 
 	if (show)
 	{
-		// this lets user toggle the dialog from the parent dialog
 		if (!visible)
 		{
 			ShowWindow(hwnd, SW_SHOW);
@@ -1551,36 +1486,31 @@ static void SetRandomTempo (HWND hwnd, BR_Envelope* oldTempo, double min, double
 	// Go through all tempo points and randomize tempo
 	for (int i = 0; i < tempoMap.Count(); ++i)
 	{
-		// Get current point
 		double t1, b1;
 		int s1;
 		tempoMap.GetPoint(i, &t1, &b1, &s1, NULL);
 
-		// If point is selected calculate it's new BPM
 		double newBpm = b1;
 		if (tempoMap.GetSelection(i))
 		{
 			double random = (double)(rand() % 101) / 100;
 
-			// Calculate new bpm
 			if (unit == 0)        // Value
 				newBpm = (b1 + min) + ((max-min) * random);
 			else                  // Percentage
 				newBpm = (b1 * (100 + min + random*(max-min)))/100;
 
-			// Check against limits
 			if (limit)
 			{
-				// Value
-				if (unitLimit == 0)
+
+				if (unitLimit == 0)             // Value
 				{
 					if (newBpm < minLimit)
 						newBpm = minLimit;
 					else if (newBpm > maxLimit)
 						newBpm = maxLimit;
 				}
-				// Percentage
-				else
+				else                            // Percentage
 				{
 					if (newBpm < b1 * (1 + minLimit/100))
 						newBpm = b1 * (1 + minLimit/100);
@@ -1589,14 +1519,10 @@ static void SetRandomTempo (HWND hwnd, BR_Envelope* oldTempo, double min, double
 				}
 			}
 
-			// Check if BPM is legal
-			if (newBpm < MIN_BPM)
-				newBpm = MIN_BPM;
-			else if (newBpm > MAX_BPM)
-				newBpm = MAX_BPM;
+			if (newBpm < MIN_BPM)      newBpm = MIN_BPM;
+			else if (newBpm > MAX_BPM) newBpm = MAX_BPM;
 		}
 
-		// Get new position but only if timebase is beats
 		double newTime = t1;
 		if (timeBase == 1)
 		{
@@ -1606,17 +1532,14 @@ static void SetRandomTempo (HWND hwnd, BR_Envelope* oldTempo, double min, double
 				newTime = t0 + ((t1 - t0_old) * (b0_old + b1)) / (b0 + newBpm);
 		}
 
-		// Update data on previous point
 		t0 = newTime;
 		b0 = newBpm;
 		s0 = s1;
 		t0_old = t1;
 		b0_old = b1;
-
 		tempoMap.SetPoint(i, &newTime, &newBpm, NULL, NULL);
 	}
 
-	// Update tempo
 	tempoMap.Commit(true);
 }
 
@@ -1669,14 +1592,13 @@ WDL_DLGRET RandomizeTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 	{
 		case WM_INITDIALOG:
 		{
+			oldTempo = new (nothrow) BR_Envelope(GetTempoEnv());
+
 			// Save and set preferences
 			GetConfig("envclicksegmode", envClickSegMode);
 			GetConfig("undomask", undoMask);
 			SetConfig("envclicksegmode", ClearBit(envClickSegMode, 6));  // prevent reselection of points in time selection
 			SetConfig("undomask", ClearBit(undoMask, 3));                // turn off undo for edit cursor
-
-			// Get current tempo
-			oldTempo = new (nothrow) BR_Envelope(GetTempoEnv());
 
 			// Drop lists
 			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_BR_RAND_UNIT));
@@ -1901,36 +1823,29 @@ WDL_DLGRET TempoShapeOptionsProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			{
 				case IDC_BR_SHAPE_SPLIT:
 				{
-					// Read dialog values
 					int split = IsDlgButtonChecked(hwnd, IDC_BR_SHAPE_SPLIT);
 					char splitRatio[128]; GetDlgItemText(hwnd, IDC_BR_SHAPE_SPLIT_RATIO, splitRatio, 128);
 
-					// Check split ratio
 					double convertedRatio; IsFraction(splitRatio, convertedRatio);
 					if (convertedRatio <= 0 || convertedRatio >= 1)
 						strcpy(splitRatio, "0");
 
-					// Set global variable and update split ratio edit box
 					SetTempoShapeOptions (split, splitRatio);
 					SetDlgItemText(hwnd, IDC_BR_SHAPE_SPLIT_RATIO, splitRatio);
 
-					// Enable/disable check boxes
 					EnableWindow(GetDlgItem(hwnd, IDC_BR_SHAPE_SPLIT_RATIO), !!split);
 				}
 				break;
 
 				case IDC_BR_SHAPE_SPLIT_RATIO:
 				{
-					// Read dialog values
 					int split = IsDlgButtonChecked(hwnd, IDC_BR_SHAPE_SPLIT);
 					char splitRatio[128]; GetDlgItemText(hwnd, IDC_BR_SHAPE_SPLIT_RATIO, splitRatio, 128);
 
-					// Check split ratio
 					double convertedRatio; IsFraction(splitRatio, convertedRatio);
 					if (convertedRatio <= 0 || convertedRatio >= 1)
 						strcpy(splitRatio, "0");
 
-					// Set global variable
 					SetTempoShapeOptions(split, splitRatio);
 				}
 				break;

@@ -28,6 +28,7 @@
 #include "stdafx.h"
 #include "BR_Misc.h"
 #include "BR_EnvTools.h"
+#include "BR_MidiTools.h"
 #include "BR_ProjState.h"
 #include "BR_Util.h"
 #include "../Xenakios/XenakiosExts.h"
@@ -93,7 +94,6 @@ void MidiItemTempo (COMMAND_T* ct)
 	{
 		MediaItem* item = GetSelectedMediaItem(NULL, i);
 
-		// Before parsing the whole item chunk, check if it contains MIDI takes
 		bool midiFound = false;
 		for (int i = 0; i < CountTakes(item); ++i)
 		{
@@ -103,16 +103,13 @@ void MidiItemTempo (COMMAND_T* ct)
 				break;
 			}
 		}
-
 		if (!midiFound)
 			continue;
 
-		// Get item chunk and it's position
 		WDL_FastString newState;
 		char* chunk = GetSetObjectState(item, "");
 		double position = *(double*)GetSetMediaItemInfo(item, "D_POSITION", NULL);
 
-		// Find IGNTEMPO lines
 		char* token = strtok(chunk, "\n");
 		while (token != NULL)
 		{
@@ -202,7 +199,6 @@ void MarkersRegionsAtItems (COMMAND_T* ct)
 		double iEnd = iStart + *(double*)GetSetMediaItemInfo(item, "D_LENGTH", NULL);
 		char* pNotes = (char*)GetSetMediaItemInfo(item, "P_NOTES", NULL);
 
-		// Replace newlines with spaces
 		string notes(pNotes, strlen(pNotes)+1);
 		ReplaceAll(notes, "\r\n", " ");
 
@@ -268,9 +264,8 @@ void ToggleItemOnline (COMMAND_T* ct)
 	UpdateArrange();
 }
 
-void ItemSourcePathToClipBoard (COMMAND_T*)
+void ItemSourcePathToClipBoard (COMMAND_T* ct)
 {
-	// Build file path list
 	WDL_FastString sourceList;
 	for (int i = 0; i < CountSelectedMediaItems(NULL); ++i)
 	{
@@ -287,7 +282,6 @@ void ItemSourcePathToClipBoard (COMMAND_T*)
 		}
 	}
 
-	// Copy list to clipboard
 	if (OpenClipboard(g_hwndParent))
 	{
 		EmptyClipboard();

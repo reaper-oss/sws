@@ -143,7 +143,6 @@ void CursorToEnv1 (COMMAND_T* ct)
 			PreventUIRefresh(-1);
 		}
 
-		// Set edit cursor position
 		SetEditCurPos(cTime, true, false);
 		Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL);
 	}
@@ -261,7 +260,7 @@ void ExpandEnvSelEnd (COMMAND_T* ct)
 
 	if (envelope.Commit())
 	{
-		envelope.MoveArrangeToPoint (id, ((int)ct->user > 0) ? (id-1) : (id+1));
+		envelope.MoveArrangeToPoint(id, ((int)ct->user > 0) ? (id-1) : (id+1));
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 	}
 }
@@ -435,7 +434,7 @@ void SetEnvValToNextPrev (COMMAND_T* ct)
 	// First/last selected point
 	else
 	{
-		int referenceId = ((int)ct->user > 0) ? (envelope.GetSelected(envelope.CountSelected()-1)) : (envelope.GetSelected(0));
+		int referenceId = envelope.GetSelected(((int)ct->user < 0) ? 0 : envelope.CountSelected()-1);
 		double newVal; envelope.GetPoint(referenceId, NULL, &newVal, NULL, NULL);
 
 		for (int i = 0; i < envelope.CountSelected(); ++i)
@@ -511,7 +510,6 @@ void MoveEnvPointToEditCursor (COMMAND_T* ct)
 		}
 	}
 
-	// Move point
 	if (id != -1)
 	{
 		double position;
@@ -539,7 +537,7 @@ void Insert2EnvPointsTimeSelection (COMMAND_T* ct)
 	int defaultShape = envelope.DefaultShape();
 	envelope.UnselectAll();
 
-	// Create points only if surrounding points are not to close, otherwise just move existing points;
+	// Create left-side point only if surrounding points are not too close, otherwise just move existing
 	if (envelope.ValidateId(startId))
 	{
 		envelope.SetSelection(startId, true);
@@ -548,6 +546,7 @@ void Insert2EnvPointsTimeSelection (COMMAND_T* ct)
 	else
 		envelope.CreatePoint(envelope.Count(), tStart, envelope.ValueAtPosition(tStart), defaultShape, 0, true);
 
+	// Create right-side point only if surrounding points are not too close, otherwise just move existing
 	if (envelope.ValidateId(endId))
 	{
 		envelope.SetSelection(endId, true);
@@ -555,7 +554,6 @@ void Insert2EnvPointsTimeSelection (COMMAND_T* ct)
 	}
 	else
 		envelope.CreatePoint(envelope.Count(), tEnd, envelope.ValueAtPosition(tEnd), defaultShape, 0, true);
-
 
 	if (envelope.Commit())
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
@@ -570,7 +568,7 @@ void ShowActiveEnvOnly (COMMAND_T* ct)
 
 	Undo_BeginBlock2(NULL);
 
-	// If envelope has only one point Reaper will not show it after hiding all
+	// If envelope has only one point, Reaper will not show it after hiding all
 	// envelopes and committing with vis = 1, so we create another artificial point
 	bool flag = false;
 	if (envelope.Count() <= 1)
@@ -613,7 +611,6 @@ void CreateEnvPointMouse (COMMAND_T* ct)
 					UpdateTimeline();
 					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 				}
-
 			}
 			else
 			{

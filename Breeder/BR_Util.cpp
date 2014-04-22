@@ -28,48 +28,68 @@
 #include "stdafx.h"
 #include "BR_Util.h"
 #include "BR_EnvTools.h"
+#include "BR_MidiTools.h"
 #include "../SnM/SnM_Dlg.h"
 #include "../SnM/SnM_Util.h"
+#include "../SnM/SnM_Chunk.h"
+#include "../SnM/SnM_Item.h"
 #include "../reaper/localize.h"
 #include "../../WDL/projectcontext.h"
 
 /******************************************************************************
 * Constants                                                                   *
 ******************************************************************************/
-const int ITEM_LABEL_MIN_HEIGHT = 28;
-const int TCP_MASTER_GAP        = 5;
-const int ENV_GAP               = 4;    // bottom gap may seem like 3 when selected, but that
-const int ENV_LINE_WIDTH        = 1;    // first pixel is used to "bold" selected envelope
+const int ITEM_LABEL_MIN_HEIGHT      = 28;
+const int TCP_MASTER_GAP             = 5;
+const int ENV_GAP                    = 4;    // bottom gap may seem like 3 when selected, but that
+const int ENV_LINE_WIDTH             = 1;    // first pixel is used to "bold" selected envelope
 
-const int TAKE_MIN_HEIGHT_COUNT = 10;
-const int TAKE_MIN_HEIGHT_HIGH  = 12;   // min height when take count <= TAKE_MIN_HEIGHT_COUNT
-const int TAKE_MIN_HEIGHT_LOW   = 6;    // min height when take count >  TAKE_MIN_HEIGHT_COUNT
+const int ENV_HIT_POINT              = 5;
+const int ENV_HIT_POINT_LEFT         = 6;    // envelope point doesn't always have middle pixel so hit point is different for one side
+const int ENV_HIT_POINT_DOWN         = 6;    // +1 because lower part is tracked starting 1 pixel below line (so when envelope is active, hit points appear the same)
 
-const int ENV_HIT_POINT         = 5;
-const int ENV_HIT_POINT_LEFT    = 6;    // envelope point doesn't always have middle pixel so hit point is different for one side
-const int ENV_HIT_POINT_DOWN    = 6;    // +1 because lower part is tracked starting 1 pixel bellow line (so when envelope is active, hit points appear the same)
+const int TAKE_MIN_HEIGHT_COUNT      = 10;
+const int TAKE_MIN_HEIGHT_HIGH       = 12;   // min height when take count <= TAKE_MIN_HEIGHT_COUNT
+const int TAKE_MIN_HEIGHT_LOW        = 6;    // min height when take count >  TAKE_MIN_HEIGHT_COUNT
 
-const int PROJ_CONTEXT_LINE     = 4096; // same length used by ProjectContext
+const int MIDI_RULER_H               = 36;
+const int MIDI_LANE_DIVIDER_H        = 9;
+const int MIDI_LANE_TOP_GAP          = 4;
+const int MIDI_BLACK_KEYS_W          = 73;
+
+const int INLINE_MIDI_MIN_H          = 32;
+const int INLINE_MIDI_MIN_NOTEVIEW_H = 24;
+const int INLINE_MIDI_KEYBOARD_W     = 12;
+const int INLINE_MIDI_LANE_DIVIDER_H = 6;
+const int INLINE_MIDI_TOP_BAR_H      = 17;
+
+const int PROJ_CONTEXT_LINE          = 4096; // same length used by ProjectContext
+
+// Not tied to Reaper, purely for readability
+const int MIDI_WND_NOTEVIEW     = 1;
+const int MIDI_WND_KEYBOARD     = 2;
+const int MIDI_WND_UNKNOWN      = 3;
 
 /******************************************************************************
 * Miscellaneous                                                               *
 ******************************************************************************/
 bool IsFraction (char* str, double& convertedFraction)
 {
-	replace(str, str+strlen(str), ',', '.' );
+	int size = strlen(str);
+	replace(str, str + size, ',', '.' );
 	char* buf = strstr(str,"/");
 
 	if (!buf)
 	{
 		convertedFraction = atof(str);
-		_snprintfSafe(str, strlen(str)+1, "%g", convertedFraction);
+		_snprintfSafe(str, size + 1, "%g", convertedFraction);
 		return false;
 	}
 	else
 	{
 		int num = atoi(str);
 		int den = atoi(buf+1);
-		_snprintfSafe(str, strlen(str)+1, "%d/%d", num, den);
+		_snprintfSafe(str, size + 1, "%d/%d", num, den);
 		if (den != 0)
 			convertedFraction = (double)num/(double)den;
 		else
@@ -246,31 +266,16 @@ vector<double> GetProjectMarkers (bool timeSel, double delta /*=0*/)
 	return markers;
 }
 
-int GetTakeChannelCount (MediaItem_Take* take)
+int GetTakeId (MediaItem_Take* take, MediaItem* item /*= NULL*/)
 {
-	int channels = (GetMediaItemTake_Source(take))->GetNumChannels();
+	item = (item) ? item : GetMediaItemTake_Item(take);
 
-	if (channels == 1)
-		return 1;
-	else
+	for (int i = 0; i < CountTakes(item); ++i)
 	{
-		int channelMode = *(int*)GetSetMediaItemTakeInfo(take, "I_CHANMODE", NULL);
-
-		if (channelMode == 0)      // Normal
-			return channels;
-		else if (channelMode == 1) // Reversed stereo
-			return channels;
-		else if (channelMode == 2) // Mono mix)
-			return 1;
-		else if (channelMode == 3) // Mono left
-			return 1;
-		else if (channelMode == 4) // Mono right
-			return 1;
-		else if (channelMode >= 5 && channelMode <= 66) // Mono other channels
-			return 1;
-		else                                            // Stereo other channels
-			return 2;
+		if (GetTake(item, 0) == take)
+			return i;
 	}
+	return -1;
 }
 
 double GetClosestGrid (double position)
@@ -303,31 +308,25 @@ double GetClosestLeftSideGrid (double position)
 {
 	double grid = GetClosestGrid(position);
 
-	if (position == grid)
-		return position;
-	if (grid < position)
-		return grid;
+	if (position == grid) return position;
+	if (position >  grid) return grid;
 
 	double gridDiv;
 	GetConfig("projgriddiv", gridDiv);
 
-	// Dealing with measures
-	if (gridDiv/4 >= 1)
+	if (gridDiv/4 < 1)
+	{
+		double beats; int denom;
+		TimeMap2_timeToBeats(NULL, grid, NULL, NULL, &beats, &denom);
+		gridDiv *= (double)denom/4;
+		return TimeMap2_beatsToTime(NULL, beats - gridDiv, NULL);
+	}
+	else
 	{
 		int measure;
 		TimeMap2_timeToBeats(NULL, grid, &measure, NULL, NULL, NULL);
 		measure -= (int)gridDiv/4;
 		return TimeMap2_beatsToTime(NULL, 0, &measure);
-	}
-
-	// Dealing with beats
-	else
-	{
-		double beats;
-		int denom;
-		TimeMap2_timeToBeats(NULL, grid, NULL, NULL, &beats, &denom);
-		gridDiv *= (double)denom/4;
-		return TimeMap2_beatsToTime(NULL, beats - gridDiv, NULL);
 	}
 }
 
@@ -335,31 +334,25 @@ double GetClosestRightSideGrid (double position)
 {
 	double grid = GetClosestGrid(position);
 
-	if (position == grid)
-		return position;
-	if (grid > position)
-		return grid;
+	if (position == grid) return position;
+	if (position <  grid) return grid;
 
 	double gridDiv;
 	GetConfig("projgriddiv", gridDiv);
 
-	// Dealing with measures
-	if (gridDiv/4 >= 1)
+	if (gridDiv/4 < 1)
+	{
+		double beats; int denom;
+		TimeMap2_timeToBeats(NULL, grid, NULL, NULL, &beats, &denom);
+		gridDiv *= (double)denom/4;
+		return TimeMap2_beatsToTime(NULL, beats + gridDiv, NULL);
+	}
+	else
 	{
 		int measure;
 		TimeMap2_timeToBeats(NULL, grid, &measure, NULL, NULL, NULL);
 		measure += (int)gridDiv/4;
 		return TimeMap2_beatsToTime(NULL, 0, &measure);
-	}
-
-	// Dealing with beats
-	else
-	{
-		double beats;
-		int denom;
-		TimeMap2_timeToBeats(NULL, grid, NULL, NULL, &beats, &denom);
-		gridDiv *= (double)denom/4;
-		return TimeMap2_beatsToTime(NULL, beats + gridDiv, NULL);
 	}
 }
 
@@ -427,7 +420,7 @@ void ScrollToTrackIfNotInArrange (MediaTrack* track)
 	CoolSB_GetScrollInfo(hwnd, SB_VERT, &si);
 
 	int trackEnd = offsetY + height;
-	int pageEnd = si.nPos + (int)si.nPage + VERT_SCROLL_W;
+	int pageEnd = si.nPos + (int)si.nPage + SCROLLBAR_W;
 
 	if (offsetY < si.nPos || trackEnd > pageEnd)
 	{
@@ -456,25 +449,14 @@ bool TcpVis (MediaTrack* track)
 	}
 }
 
-bool IsMidi (MediaItem_Take* take)
-{
-	if (PCM_source* source = GetMediaItemTake_Source(take))
-	{
-		const char* type = source->GetType();
-		if (!strcmp(type, "MIDI") || !strcmp(type, "MIDIPOOL"))
-			return true;
-	}
-	return false;
-}
-
 bool GetMediaSourceProperties (MediaItem_Take* take, bool* section, double* start, double* length, double* fade, bool* reverse)
 {
-	bool sucess = false;
-	bool returnSection = false;
-	bool returnReverse = false;
-	double returnStart = 0;
+	bool sucess         = false;
+	bool returnSection  = false;
+	bool returnReverse  = false;
+	double returnStart  = 0;
 	double returnLength = 0;
-	double returnFade = 0;
+	double returnFade   = 0;
 
 	PCM_source* source = GetMediaItemTake_Source(take);
 	if (source && !IsMidi(take))
@@ -541,7 +523,6 @@ bool SetMediaSourceProperties (MediaItem_Take* take, bool section, double start,
 		// another source within which the "real" media resides
 		PCM_source* mediaSource = (!strcmp(source->GetType(), "SECTION")) ? (source->GetSource()) : (source);
 
-		// Create new source
 		PCM_source* newSource = NULL;
 		if (!section && !reverse)
 		{
@@ -601,7 +582,6 @@ bool SetMediaSourceProperties (MediaItem_Take* take, bool section, double start,
 				fade = 0.01;
 			}
 
-			// Add properties data to source string
 			sourceStr.AppendFormatted(256, "%s%lf\n", "LENGTH ", length);
 			sourceStr.AppendFormatted(256, "%s%lf\n", "STARTPOS ", start);
 			sourceStr.AppendFormatted(256, "%s%lf\n", "OVERLAP ", fade);
@@ -609,7 +589,6 @@ bool SetMediaSourceProperties (MediaItem_Take* take, bool section, double start,
 			else if (reverse)       sourceStr.AppendFormatted(256, "%s%d\n", "MODE ", 3);
 			AppendLine(sourceStr, GetSourceChunk(mediaSource).Get());
 
-			// Load project context into new source
 			WDL_HeapBuf hb;
 			if (void* p = hb.Resize(sourceStr.GetLength(), false))
 			{
@@ -626,7 +605,6 @@ bool SetMediaSourceProperties (MediaItem_Take* take, bool section, double start,
 				newSource = NULL;
 		}
 
-		// Set new source
 		if (newSource)
 		{
 			GetSetMediaItemTakeInfo(take,"P_SOURCE", newSource);
@@ -1013,7 +991,6 @@ int GetTrackHeight (MediaTrack* track, int* offsetY)
 		// minimum, but I_HEIGHTOVERRIDE doesn't get updated)
 		else
 		{
-
 			if (master)
 			{
 				if (height < theme->tcp_master_min_height)
@@ -1069,7 +1046,6 @@ int GetTakeEnvHeight (MediaItem* item, int id, int* offsetY)
 
 int GetTrackEnvHeight (TrackEnvelope* envelope, int* offsetY, MediaTrack* parent /*=NULL*/)
 {
-	// If parent is NULL, search for it
 	MediaTrack* track = (parent) ? (parent) : (GetEnvParent(envelope));
 	if (!track || !envelope)
 	{
@@ -1098,14 +1074,12 @@ int GetTrackEnvHeight (TrackEnvelope* envelope, int* offsetY, MediaTrack* parent
 			break;
 		TrackEnvelope* currentEnvelope = (TrackEnvelope*)hwndData;
 
-		// Envelope's lane has been found
 		if (currentEnvelope == envelope)
 		{
 			RECT r; GetClientRect(hwnd, &r);
 			envHeight = r.bottom - r.top - 2*ENV_GAP;
 			found = true;
 		}
-		// No match, add to offset
 		else
 		{
 			// In certain cases (depending if user scrolled up or down), envelope
@@ -1451,8 +1425,8 @@ static bool IsPointInArrange (POINT* p, bool checkPointVisibilty = true)
 	}
 	#endif
 
-	r.right  -= VERT_SCROLL_W + 1;
-	r.bottom -= VERT_SCROLL_W + 1;
+	r.right  -= SCROLLBAR_W + 1;
+	r.bottom -= SCROLLBAR_W + 1;
 	bool pointInArrange = p->x >= r.left && p->x <= r.right && p->y >= r.top && p->y <= r.bottom;
 
 	if (checkPointVisibilty)
@@ -1472,7 +1446,7 @@ static double PositionAtArrangePoint (POINT p, double* arrangeStart = NULL, doub
 
 	double start, end;
 	RECT r; GetWindowRect(hwnd, &r);
-	GetSet_ArrangeView2(NULL, false, r.left, r.right-VERT_SCROLL_W, &start, &end);
+	GetSet_ArrangeView2(NULL, false, r.left, r.right-SCROLLBAR_W, &start, &end);
 	GetClientRect(hwnd, &r);
 	double zoom = GetHZoomLevel();
 
@@ -1511,10 +1485,10 @@ void MoveArrange (double amountTime)
 	double startTime, endTime;
 	GetWindowRect(GetArrangeWnd(), &r);
 
-	GetSet_ArrangeView2(NULL, false, r.left, r.right-VERT_SCROLL_W, &startTime, &endTime);
+	GetSet_ArrangeView2(NULL, false, r.left, r.right-SCROLLBAR_W, &startTime, &endTime);
 	startTime += amountTime;
 	endTime += amountTime;
-	GetSet_ArrangeView2(NULL, true, r.left, r.right-VERT_SCROLL_W, &startTime, &endTime);
+	GetSet_ArrangeView2(NULL, true, r.left, r.right-SCROLLBAR_W, &startTime, &endTime);
 }
 
 void CenterArrange (double position)
@@ -1523,11 +1497,11 @@ void CenterArrange (double position)
 	double startTime, endTime;
 	GetWindowRect(GetArrangeWnd(), &r);
 
-	GetSet_ArrangeView2(NULL, false, r.left, r.right-VERT_SCROLL_W, &startTime, &endTime);
+	GetSet_ArrangeView2(NULL, false, r.left, r.right-SCROLLBAR_W, &startTime, &endTime);
 	double halfSpan = (endTime - startTime) / 2;
 	startTime = position - halfSpan;
 	endTime = position + halfSpan;
-	GetSet_ArrangeView2(NULL, true, r.left, r.right-VERT_SCROLL_W, &startTime, &endTime);
+	GetSet_ArrangeView2(NULL, true, r.left, r.right-SCROLLBAR_W, &startTime, &endTime);
 }
 
 void SetArrangeStart (double start)
@@ -1536,10 +1510,10 @@ void SetArrangeStart (double start)
 	double startTime, endTime;
 	GetWindowRect(GetArrangeWnd(), &r);
 
-	GetSet_ArrangeView2(NULL, false, r.left, r.right-VERT_SCROLL_W, &startTime, &endTime);
+	GetSet_ArrangeView2(NULL, false, r.left, r.right-SCROLLBAR_W, &startTime, &endTime);
 	endTime = start + (endTime - startTime);
 	startTime = start;
-	GetSet_ArrangeView2(NULL, true, r.left, r.right-VERT_SCROLL_W, &startTime, &endTime);
+	GetSet_ArrangeView2(NULL, true, r.left, r.right-SCROLLBAR_W, &startTime, &endTime);
 }
 
 void MoveArrangeToTarget (double target, double reference)
@@ -1558,7 +1532,7 @@ bool IsOffScreen (double position)
 	RECT r;
 	double startTime, endTime;
 	GetWindowRect(GetArrangeWnd(), &r);
-	GetSet_ArrangeView2(NULL, false, r.left, r.right-VERT_SCROLL_W, &startTime, &endTime);
+	GetSet_ArrangeView2(NULL, false, r.left, r.right-SCROLLBAR_W, &startTime, &endTime);
 
 	if (position >= startTime && position <= endTime)
 		return true;
@@ -1567,8 +1541,488 @@ bool IsOffScreen (double position)
 }
 
 /******************************************************************************
+* Window                                                                      *
+******************************************************************************/
+static void PrepareLocalizedString (const char* name, char* buf, int buf_sz)
+{
+	/* If all the letters in name would be part of user set locale in win32  *
+	*  this would not be needed - however, that doesn't have to be the case  *
+	*  so we convert name to follow user locale - in turn it can be used by  *
+	*  ANSI version of GetWindowText()                                       */
+
+	#ifdef _WIN32
+		wchar_t widetext[2048];
+		MultiByteToWideChar(CP_UTF8, 0, name, -1, widetext, 2048);
+		WideCharToMultiByte(CP_ACP, 0, widetext, -1, buf, buf_sz, NULL, NULL);
+		MultiByteToWideChar(CP_ACP, 0, buf, -1, widetext, 2048);
+		WideCharToMultiByte(CP_UTF8, 0, widetext, -1, buf, buf_sz, NULL, NULL);
+	#endif
+}
+
+static HWND SearchChildren (const char* name, HWND hwnd, HWND startHwnd = NULL)
+{
+	/* FindWindowEx alternative that works with name prepared by *
+	*  PrepareLocalizedString() (relevant for win32 only)        */
+
+	#ifdef _WIN32
+		if (IsLocalized())
+		{
+			if (!hwnd) hwnd = GetDesktopWindow();
+			hwnd = (startHwnd) ? startHwnd : GetWindow(hwnd, GW_CHILD);
+
+			HWND returnHwnd = NULL;
+			do
+			{
+				char wndName[2048];
+				GetWindowText(hwnd, wndName, sizeof(wndName));
+				if (!strcmp(wndName, name))
+					returnHwnd = hwnd;
+			}
+			while ((hwnd = GetWindow(hwnd, GW_HWNDNEXT)) && !returnHwnd);
+
+			return returnHwnd;
+		}
+		else
+	#endif
+		{
+			return FindWindowEx(hwnd, NULL, NULL , name);
+		}
+}
+
+static HWND SearchFloatingDockers (const char* name, const char* dockerName)
+{
+	HWND docker = FindWindowEx(NULL, NULL, NULL, dockerName);
+	while(docker)
+	{
+		if (GetParent(docker) == g_hwndParent)
+		{
+			HWND insideDocker = FindWindowEx(docker, NULL, NULL, "REAPER_dock");
+			while(insideDocker)
+			{
+				if (HWND w = SearchChildren(name, insideDocker))
+					return w;
+				insideDocker = FindWindowEx(docker, insideDocker, NULL, "REAPER_dock");
+			}
+		}
+		docker = FindWindowEx(NULL, docker, NULL, dockerName);
+	}
+	return NULL;
+}
+
+static HWND FindInFloatingDockers (const char* name)
+{
+	#ifdef _WIN32
+		HWND hwnd = SearchFloatingDockers(name, NULL);
+	#else
+		HWND hwnd = SearchFloatingDockers(name, __localizeFunc("Docker", "docker", 0));
+		if (!hwnd)
+		{
+			WDL_FastString dockerName;
+			dockerName.AppendFormatted(256, "%s%s", name, __localizeFunc(" (docked)", "docker", 0));
+			hwnd = SearchFloatingDockers(name, dockerName.Get());
+		}
+		if (!hwnd)
+			hwnd = SearchFloatingDockers(name, __localizeFunc("Toolbar Docker", "docker", 0));
+	#endif
+
+	return hwnd;
+}
+
+static HWND FindInReaperDockers (const char* name)
+{
+	HWND docker = FindWindowEx(g_hwndParent, NULL, NULL, "REAPER_dock");
+	while (docker)
+	{
+		if (HWND hwnd = SearchChildren(name, docker))
+			return hwnd;
+		docker = FindWindowEx(g_hwndParent, docker, NULL, "REAPER_dock");
+	}
+	return NULL;
+}
+
+static HWND FindFloating (const char* name)
+{
+	HWND hwnd = SearchChildren(name, NULL);
+	while (hwnd)
+	{
+		if (GetParent(hwnd) == g_hwndParent)
+			return hwnd;
+		hwnd = SearchChildren(name, NULL, hwnd);
+	}
+	return NULL;
+}
+
+static HWND FindInReaper (const char* name)
+{
+	return SearchChildren(name, g_hwndParent);
+}
+
+HWND FindReaperWndByTitle (const char* name)
+{
+	#ifdef _WIN32
+		if (IsLocalized())
+		{
+			char preparedName[2048];
+			PrepareLocalizedString(name, preparedName, sizeof(preparedName));
+			HWND hwnd = FindInReaperDockers(preparedName);
+			if (!hwnd) hwnd = FindFloating(preparedName);
+			if (!hwnd) hwnd = FindInFloatingDockers(preparedName);
+			if (!hwnd) hwnd = FindInReaper(preparedName);
+			return hwnd;
+		}
+		else
+	#endif
+		{
+			HWND hwnd = FindInReaperDockers(name);
+			if (!hwnd) hwnd = FindFloating(name);
+			if (!hwnd) hwnd = FindInFloatingDockers(name);
+			if (!hwnd) hwnd = FindInReaper(name);
+			return hwnd;
+		}
+}
+
+HWND GetMixerWnd ()
+{
+	static const char* name = NULL;
+	if (!name)
+	{
+		#ifdef _WIN32
+			if (IsLocalized())
+			{
+				char* preparedName = new (nothrow) char[2048];
+				PrepareLocalizedString(__localizeFunc("Mixer", "DLG_151", 0), preparedName, 2048);
+				name = preparedName;
+			}
+			else
+		#endif
+			{
+				name = __localizeFunc("Mixer", "DLG_151", 0);
+			}		
+	}
+
+	HWND hwnd = FindInReaperDockers(name);
+	if (!hwnd) hwnd = FindFloating(name);
+	if (!hwnd) hwnd = FindInFloatingDockers(name);
+	if (!hwnd) hwnd = FindInReaper(name);
+	return hwnd;
+}
+
+HWND GetMixerMasterWnd ()
+{
+	static const char* name = NULL;
+	if (!name)
+	{
+		#ifdef _WIN32
+			if (IsLocalized())
+			{
+				char* preparedName = new (nothrow) char[2048];
+				PrepareLocalizedString(__localizeFunc("Mixer Master", "mixer", 0), preparedName, 2048);
+				name = preparedName;
+			}
+			else
+		#endif
+			{
+				name = __localizeFunc("Mixer Master", "mixer", 0);
+			}
+	}
+
+	HWND hwnd = FindInReaperDockers(name);
+	if (!hwnd) hwnd = FindFloating(name);
+	if (!hwnd) hwnd = FindInFloatingDockers(name);
+	if (!hwnd) hwnd = FindInReaper(name);
+	return hwnd;
+}
+
+HWND GetTransportWnd ()
+{
+	static const char* name = NULL;
+	if (!name)
+	{
+		#ifdef _WIN32
+			if (IsLocalized())
+			{
+				char* preparedName = new (nothrow) char[2048];
+				PrepareLocalizedString(__localizeFunc("Transport", "DLG_188", 0), preparedName, 2048);
+				name = preparedName;
+			}
+			else
+		#endif
+			{
+				name = __localizeFunc("Transport", "DLG_188", 0);
+			}
+		
+	}
+
+	HWND hwnd = FindInReaper(name);
+	if (!hwnd) hwnd = FindInReaperDockers(name);
+	if (!hwnd) hwnd = FindInFloatingDockers(name);
+	if (!hwnd) hwnd = FindFloating(name); // transport can't float by itself but search in case this changes in the future
+	return hwnd;
+}
+
+HWND GetArrangeWnd ()
+{
+	static HWND hwnd = NULL; /* More efficient and Justin says it's safe: http://askjf.com/index.php?q=2653s */
+
+	if (!hwnd)
+	{
+		#ifdef _WIN32
+			if (IsLocalized())
+			{
+				char preparedName[2048];
+				PrepareLocalizedString(__localizeFunc("trackview", "DLG_102", 0), preparedName, sizeof(preparedName));
+
+				HWND wnd = SearchChildren(preparedName, g_hwndParent);
+				while (wnd)
+				{
+					char buf[256];
+					GetClassName(wnd, buf, sizeof(buf));
+					if (!strcmp(buf, "REAPERTrackListWindow"))
+					{
+						hwnd = wnd;
+						break;
+					}
+					wnd = SearchChildren(preparedName, g_hwndParent, wnd);
+				}
+			}
+			else
+			{
+				hwnd = FindWindowEx(g_hwndParent, 0, "REAPERTrackListWindow", __localizeFunc("trackview", "DLG_102", 0));
+			}
+		#else
+			return GetWindow(g_hwndParent, GW_CHILD);
+		#endif
+	}
+	return hwnd;
+}
+
+HWND GetRulerWndAlt ()
+{
+	static HWND hwnd = NULL; /* More efficient and Justin says it's safe: http://askjf.com/index.php?q=2653s */
+	if (!hwnd)
+	{
+		#ifdef _WIN32
+			if (IsLocalized())
+			{
+				char preparedName[2048];
+				PrepareLocalizedString(__localizeFunc("timeline", "DLG_102", 0), preparedName, sizeof(preparedName));
+
+				HWND wnd = SearchChildren(preparedName, g_hwndParent);
+				while (wnd)
+				{
+					char buf[256];
+					GetClassName(wnd, buf, sizeof(buf));
+					if (!strcmp(buf, "REAPERTimeDisplay"))
+					{
+						hwnd = wnd;
+						break;
+					}
+					wnd = SearchChildren(preparedName, g_hwndParent, wnd);
+				}
+			}
+			else
+			{
+				hwnd = FindWindowEx(g_hwndParent, 0, "REAPERTimeDisplay", __localizeFunc("timeline", "DLG_102", 0));
+			}
+		#else
+			return GetWindow(GetArrangeWnd(), GW_HWNDNEXT);
+		#endif
+	}
+	return hwnd;
+}
+
+HWND GetMediaExplorerWnd ()
+{
+	static const char* name = NULL;
+	if (!name)
+	{
+		#ifdef _WIN32
+			if (IsLocalized())
+			{
+				char* preparedName = new (nothrow) char[2048];
+				PrepareLocalizedString(__localizeFunc("Media Explorer", "explorer", 0), preparedName, 2048);
+				name = preparedName;
+			}
+			else
+		#endif
+			{
+				name = __localizeFunc("Media Explorer", "explorer", 0);
+			}
+	}
+
+	HWND hwnd = FindInReaperDockers(name);
+	if (!hwnd) hwnd = FindFloating(name);
+	if (!hwnd) hwnd = FindInFloatingDockers(name);
+	if (!hwnd) hwnd = FindInReaper(name);
+	return hwnd;
+}
+
+HWND GetMcpWnd ()
+{
+	if (HWND mixer = GetMixerWnd())
+	{
+		HWND hwnd = FindWindowEx(mixer, NULL, NULL, NULL);
+		while (hwnd)
+		{
+			if ((MediaTrack*)GetWindowLongPtr(hwnd, GWLP_USERDATA) != GetMasterTrack(NULL)) // skip master track
+				return hwnd;
+			hwnd = FindWindowEx(mixer, hwnd, NULL, NULL);
+		}
+	}
+	return NULL;
+}
+
+HWND GetTcpWnd ()
+{
+	static HWND hwnd = NULL;
+	if (!hwnd)
+	{
+		MediaTrack* track = GetTrack(NULL, 0);
+		MediaTrack* master = GetMasterTrack(NULL);
+		bool IsMasterVisible = TcpVis(master) ? true : false;
+
+		// Can't find TCP if there are no tracks in project, kinda silly to expect no tracks in a DAW but oh well... :)
+		MediaTrack* firstTrack = (IsMasterVisible) ? (master) : (track ? track : master);
+		if (!track && !IsMasterVisible)
+		{
+			PreventUIRefresh(1);
+			Main_OnCommandEx(40075, 0, NULL);
+		}
+
+		// TCP hierarchy: TCP owner -> TCP hwnd -> tracks
+		bool found = false;
+		HWND tcpOwner = FindWindowEx(g_hwndParent, NULL, NULL, "");
+		while (tcpOwner && !found)
+		{
+			HWND tcpHwnd = FindWindowEx(tcpOwner, NULL, NULL, "");
+			while (tcpHwnd && !found)
+			{
+				HWND trackHwnd = FindWindowEx(tcpHwnd, NULL, NULL, "");
+				while (trackHwnd && !found)
+				{
+					if ((MediaTrack*)GetWindowLongPtr(trackHwnd, GWLP_USERDATA) == firstTrack)
+					{
+						hwnd = tcpHwnd;
+						found = true;
+					}
+					trackHwnd = FindWindowEx(tcpHwnd, trackHwnd, NULL, "");
+				}
+				tcpHwnd = FindWindowEx(tcpOwner, tcpHwnd, NULL, "");
+			}
+			tcpOwner = FindWindowEx(g_hwndParent, tcpOwner, NULL, "");
+		}
+
+		// Restore TCP master to previous state
+		if (!track && !IsMasterVisible)
+		{
+			PreventUIRefresh(-1);
+			Main_OnCommandEx(40075, 0, NULL);
+		}
+	}
+	return hwnd;
+}
+
+HWND GetTcpTrackWnd (MediaTrack* track)
+{
+	HWND hwnd = GetWindow(GetTcpWnd(), GW_CHILD);
+	do
+	{
+		if ((MediaTrack*)GetWindowLongPtr(hwnd, GWLP_USERDATA) == track)
+			return hwnd;
+	}
+	while (hwnd = GetWindow(hwnd, GW_HWNDNEXT));
+
+	return NULL;
+}
+
+MediaTrack* HwndToTrack (HWND hwnd, int* hwndContext)
+{
+	MediaTrack* track = NULL;
+	HWND hwndParent = GetParent(hwnd);
+	int context = 0;
+
+	if (!track)
+	{
+		HWND tcp = GetTcpWnd();
+		if (hwndParent == tcp)                                                             // hwnd is a track
+			track = (MediaTrack*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+		else if (GetParent(hwndParent) == tcp)                                             // hwnd is vu meter inside track
+			track = (MediaTrack*)GetWindowLongPtr(hwndParent, GWLP_USERDATA);
+
+		if (track)
+			context = 1;
+		else if (hwnd == tcp)
+			context = 1;
+	}
+
+	if (!track)
+	{
+		HWND mcp = GetMcpWnd();
+		HWND mixer = GetParent(mcp);
+		HWND mixerMaster = GetMixerMasterWnd();
+		HWND hwndPParent = GetParent(hwndParent);
+
+		if (hwndParent == mcp || hwndParent == mixer || hwndParent == mixerMaster)         // hwnd is a track
+			track = (MediaTrack*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+		else if (hwndPParent == mcp || hwndPParent == mixer || hwndPParent == mixerMaster) // hwnd is vu meter inside track
+			track = (MediaTrack*)GetWindowLongPtr(hwndParent, GWLP_USERDATA);
+
+		if (track)
+			context = 2;
+		else if (hwnd == mcp || hwnd == mixerMaster)
+			context = 2;
+	}
+
+	if (!ValidatePtr(track, "MediaTrack*"))
+		track = NULL;
+
+	WritePtr(hwndContext, context);
+	return track;
+}
+
+TrackEnvelope* HwndToEnvelope (HWND hwnd)
+{
+	if (GetParent(hwnd) == GetTcpWnd())
+	{
+		TrackEnvelope* envelope = (TrackEnvelope*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+		if (ValidatePtr(envelope, "TrackEnvelope*"))
+			return envelope;
+	}
+	return NULL;
+}
+
+void CenterDialog (HWND hwnd, HWND target, HWND zOrder)
+{
+	RECT r; GetWindowRect(hwnd, &r);
+	RECT r1; GetWindowRect(target, &r1);
+
+	int hwndW = r.right - r.left;
+	int hwndH = r.bottom - r.top;
+	int targW = r1.right - r1.left;
+	int targH = r1.bottom - r1.top;
+
+	r.left = r1.left + (targW-hwndW)/2;
+	r.top = r1.top + (targH-hwndH)/2;
+
+	EnsureNotCompletelyOffscreen(&r);
+	SetWindowPos(hwnd, zOrder, r.left, r.top, 0, 0, SWP_NOSIZE);
+}
+
+/******************************************************************************
 * Mouse cursor                                                                *
 ******************************************************************************/
+BR_MouseContextInfo::BR_MouseContextInfo()
+{
+	track        = NULL;
+	item         = NULL;
+	take         = NULL;
+	envelope     = NULL;
+	midiEditor   = NULL;
+	takeEnvelope = midiInlineEditor = false;
+	position     = -1;
+	noteRow      = ccLane = ccLaneVal = ccLaneId = -1;
+}
+
 static int IsMouseOverEnvelopeLine (BR_Envelope& envelope, int drawableEnvHeight, int yOffset, int mouseY, int mouseX, double mousePos, double arrangeStart, double arrangeZoom)
 {
 	/* mouseX is displayed X, not taking scrollbars into account. mouseY on the  *
@@ -1790,6 +2244,384 @@ static int GetRulerLaneHeight (int rulerH, int lane)
 	return 0;
 }
 
+static int IsHwndMidi (HWND hwnd, void** midiEditor, HWND* subView)
+{
+	int status = 0;
+
+	if (MIDIEditor_GetMode(hwnd) != -1)
+	{
+		status = MIDI_WND_UNKNOWN;
+		WritePtr(midiEditor, (void*)hwnd);
+		WritePtr(subView, (HWND)NULL);
+	}
+	else
+	{
+		HWND subWnd = NULL;
+		while (hwnd)
+		{
+			subWnd = hwnd;
+			hwnd = GetParent(hwnd);
+			if (MIDIEditor_GetMode(hwnd) != -1)
+			{
+				WritePtr(midiEditor, (void*)hwnd);
+				WritePtr(subView, subWnd);
+
+				#ifdef _WIN32
+					if (IsLocalized())
+					{
+						if      (subWnd == SearchChildren(__localizeFunc("midiview", "midi_DLG_102", 0), hwnd))      { status = MIDI_WND_NOTEVIEW; break;}
+						else if (subWnd == SearchChildren(__localizeFunc("midipianoview", "midi_DLG_102", 0), hwnd)) { status = MIDI_WND_KEYBOARD; break;}
+						else                                                                                         { status = MIDI_WND_UNKNOWN;  break;}
+					}
+					else
+					{
+						char buf[256] = "";
+						GetWindowText(subWnd, buf, sizeof(buf));
+						if      (!strcmp(buf, __localizeFunc("midiview", "midi_DLG_102", 0)))      { status = MIDI_WND_NOTEVIEW; break;}
+						else if (!strcmp(buf, __localizeFunc("midipianoview", "midi_DLG_102", 0))) { status = MIDI_WND_KEYBOARD; break;}
+						else                                                                       { status = MIDI_WND_UNKNOWN;  break;}
+					}
+				#else
+					HWND pianoViewHwnd = GetWindow(hwnd, GW_CHILD);
+					if      (subWnd == pianoViewHwnd )                         { status = MIDI_WND_KEYBOARD; break;}
+					else if (subWnd == GetWindow(pianoViewHwnd, GW_HWNDNEXT) ) { status = MIDI_WND_NOTEVIEW; break;}
+					else                                                       { status = MIDI_WND_UNKNOWN;  break;}
+				#endif
+			}
+		}
+	}
+	return status;
+}
+
+static bool GetMouseCursorContextMidi (HWND hwnd, POINT p, BR_MouseContextInfo& info, const char** window, const char** segment, const char** details)
+{
+	HWND segmentHwnd = NULL;
+	if (int cursorSegment = IsHwndMidi(hwnd, &info.midiEditor, &segmentHwnd))
+	{
+		WritePtr(window, "midi_editor");
+		ScreenToClient(segmentHwnd, &p);
+		RECT r; GetClientRect(segmentHwnd, &r);
+
+		if (cursorSegment == MIDI_WND_NOTEVIEW)
+		{
+			if      (p.x > (r.right - r.left - 1)) cursorSegment = MIDI_WND_UNKNOWN;
+			else if (p.y > (r.bottom - r.top - 1)) cursorSegment = MIDI_WND_UNKNOWN;
+		}
+
+		if (cursorSegment == MIDI_WND_NOTEVIEW || cursorSegment == MIDI_WND_KEYBOARD)
+		{
+			BR_MidiEditor midiEditor(info.midiEditor);
+			if (!midiEditor.IsValid())
+				return false;
+
+			// Get mouse cursor time position
+			if (cursorSegment == MIDI_WND_NOTEVIEW)
+			{
+				if (midiEditor.GetTimebase() == PROJECT_BEATS || midiEditor.GetTimebase() == SOURCE_BEATS)
+				{
+					double ppqPos = midiEditor.GetStartPos() + ((r.left + p.x) / midiEditor.GetHZoom());
+					info.position = MIDI_GetProjTimeFromPPQPos(midiEditor.GetActiveTake(), ppqPos);
+				}
+				else
+				{
+					double timePos = MIDI_GetProjTimeFromPPQPos(midiEditor.GetActiveTake(), midiEditor.GetStartPos()) + ((r.left + p.x) / midiEditor.GetHZoom());
+					info.position = timePos;
+				}
+			}
+
+			if (p.y < MIDI_RULER_H)
+			{
+				if      (cursorSegment == MIDI_WND_NOTEVIEW) WritePtr(segment, "ruler");
+				else if (cursorSegment == MIDI_WND_KEYBOARD) WritePtr(segment, "unknown");
+			}
+			else
+			{
+				int viewHeight = r.bottom - r.top;
+				int ccFullHeight = 0;
+
+				for (int i = 0; i < midiEditor.CountCCLanes(); ++i)
+					ccFullHeight += midiEditor.GetCCLaneHeight (i);
+				if (cursorSegment == MIDI_WND_KEYBOARD)
+					ccFullHeight += SCROLLBAR_W - 3;   // envelope selector is not completely aligned with cc lane
+
+				// Over CC lanes
+				if (p.y > (viewHeight - ccFullHeight))
+				{
+					WritePtr(segment, "cc_lane");
+
+					if      (cursorSegment == MIDI_WND_NOTEVIEW) WritePtr(details, "cc_lane");
+					else if (cursorSegment == MIDI_WND_KEYBOARD) WritePtr(details, "cc_selector");
+
+					// Get CC lane number
+					int ccStart = viewHeight - ccFullHeight + ((cursorSegment == MIDI_WND_KEYBOARD) ? (1) : (0));
+					for (int i = 0; i < midiEditor.CountCCLanes(); ++i)
+					{
+						int ccEnd = ccStart + midiEditor.GetCCLaneHeight(i);
+						if (i == midiEditor.CountCCLanes() - 1)
+							ccEnd += (cursorSegment == MIDI_WND_KEYBOARD) ? (SCROLLBAR_W) : (0);
+
+						if (p.y >= ccStart && p.y < ccEnd)
+						{
+							info.ccLane = MapVelLaneToCC(midiEditor.GetCCLane(i));
+							info.ccLaneId = i;
+
+							// Get CC value at Y position
+							if (cursorSegment == MIDI_WND_NOTEVIEW)
+							{
+								ccStart += MIDI_LANE_DIVIDER_H;
+								if (p.y >= ccStart)
+								{
+									int mouse = ccEnd - p.y;
+									int laneHeight = ccEnd - ccStart;
+									double steps = (info.ccLane == 0x201 || (info.ccLane & 0x100) == 0x100) ? (16383) : (128);
+									info.ccLaneVal = (int)(steps / laneHeight * mouse);
+									if (steps == 128 && info.ccLaneVal == 128)
+										info.ccLaneVal = 127;
+								}
+							}
+							break;
+						}
+						else
+						{
+							ccStart = ccEnd;
+						}
+					}
+				}
+
+				// Over note view/keyboard
+				else
+				{
+					if      (cursorSegment == MIDI_WND_KEYBOARD) WritePtr(segment, "piano_view");
+					else if (cursorSegment == MIDI_WND_NOTEVIEW) WritePtr(segment, "notes_view");
+
+					// This is mouse Y position counting from the bottom - make sure it's not outside valid, drawable note range
+					int realMouseY = (128 * midiEditor.GetVZoom()) - (p.y - MIDI_RULER_H + midiEditor.GetVPos() * midiEditor.GetVZoom());
+					if (realMouseY > 0)
+					{
+						bool processKeyboardSeparately = true;
+						vector<int> visibleNoteRows = GetUsedNamedNotes(info.midiEditor, NULL, midiEditor.GetNoteshow() != SHOW_ALL_NOTES, midiEditor.GetNoteshow() == HIDE_UNUSED_UNNAMED_NOTES, midiEditor.GetDrawChannel());
+
+						if (cursorSegment == MIDI_WND_NOTEVIEW)
+							processKeyboardSeparately = false;
+						else if ((midiEditor.GetPianoRoll() != 0) || (midiEditor.GetNoteshow() != SHOW_ALL_NOTES && visibleNoteRows.size()))
+							processKeyboardSeparately = false;
+
+						if (!processKeyboardSeparately)
+						{
+							int noteRow = (realMouseY - 1) / midiEditor.GetVZoom();
+
+							if (midiEditor.GetNoteshow() == SHOW_ALL_NOTES)
+							{
+								info.noteRow = noteRow;
+							}
+							else
+							{
+								int firstNoteRow = 128 - (int)visibleNoteRows.size();
+								if (noteRow >= firstNoteRow)
+									info.noteRow = visibleNoteRows[noteRow - firstNoteRow];
+							}
+						}
+						else
+						{
+							int noteRow = (realMouseY) / midiEditor.GetVZoom();
+							bool doWhiteKeys = (p.x < MIDI_BLACK_KEYS_W) ? (false) : (true);
+
+							if (!doWhiteKeys && IsMidiNoteBlack(noteRow))
+								info.noteRow = noteRow;
+							else
+								doWhiteKeys = true;
+
+							if (doWhiteKeys)
+							{
+								int octave = noteRow / 12;
+								int octaveStart = octave * midiEditor.GetVZoom() * 12;
+
+								// First part of the octave (C D E)
+								if (realMouseY >= octaveStart && realMouseY < (octaveStart + midiEditor.GetVZoom() * 5))
+								{
+									int fullHeight = midiEditor.GetVZoom() * 5;
+									int keyHeight = fullHeight / 3;
+
+									int leftOver = 0;
+									if      ((fullHeight % 3) == 1) leftOver = 0 | 1;
+									else if ((fullHeight % 3) == 2) leftOver = 0 | 3;
+
+									int keyStart = octaveStart;
+									for (int i = 0; i < 3; ++i)
+									{
+										int keyEnd = keyStart + keyHeight + GetBit(leftOver, i) + ((i == 0) ? (1) : (0));
+
+										if (realMouseY >= keyStart && realMouseY < keyEnd)
+										{
+											info.noteRow = (octave * 12) + (i * 2);
+											break;
+										}
+										else
+											keyStart = keyEnd;
+									}
+								}
+								// Second part of the octave (F G A H)
+								else
+								{
+									int fullHeight = midiEditor.GetVZoom() * 7;
+									int keyHeight = fullHeight / 4;
+
+									int leftOver = 0;
+									if      ((fullHeight % 4) == 1) leftOver = 0 | 1;
+									else if ((fullHeight % 4) == 2) leftOver = 0 | 5;
+									else if ((fullHeight % 4) == 3) leftOver = 0 | 7;
+
+									int keyStart = octaveStart + midiEditor.GetVZoom() * 5;
+									for (int i = 0; i < 4; ++i)
+									{
+										int keyEnd = keyStart + keyHeight + GetBit(leftOver, i) + ((i == 0) ? (1) : (0));
+
+										if (realMouseY >= keyStart && realMouseY < keyEnd)
+										{
+											info.noteRow = (octave * 12) + (i * 2) + 5;
+											break;
+										}
+										else
+											keyStart = keyEnd;
+									}
+								}
+							}
+						}
+
+
+					}
+				}
+			}
+		}
+		else
+		{
+			WritePtr(segment, "unknown");
+		}
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+static bool GetMouseCursorContextMidiInline (BR_MouseContextInfo& info, const char** window, const char** segment, const char** details, int mouseY, int mouseX, int takeHeight, int takeOffset)
+{
+	/* MouseX is displayed X, not taking  scrollbars into account. MouseY on the *
+	*  other hand has to take scrollbar position into account                    *
+	*                                                                            *
+	*  Return false is there isn't inline CC lane, note row or keyboard under    *
+	*  mouse cursor                                                              */
+
+	if (takeHeight < INLINE_MIDI_MIN_H)
+		return false;
+
+	bool topBar       = (takeHeight - INLINE_MIDI_TOP_BAR_H < INLINE_MIDI_MIN_H) ? false : true;
+	int editorOffsetY = takeOffset + ((topBar) ? INLINE_MIDI_TOP_BAR_H : 0);
+	int editorHeight  = takeHeight - ((topBar) ? INLINE_MIDI_TOP_BAR_H : 0);
+
+	if (mouseY < editorOffsetY || mouseY > takeOffset + takeHeight)
+		return false;
+
+	BR_MidiEditor midiEditor(info.take);
+	if (midiEditor.IsValid())
+	{
+		WritePtr(window, "midi_editor");
+		info.midiInlineEditor = true;
+
+		// Get heights of various elements
+		int ccFullHeight = 0;
+		for (int i = 0; i < midiEditor.CountCCLanes(); ++i)
+			ccFullHeight +=midiEditor.GetCCLaneHeight(i);
+
+		int pianoRollFullHeight = editorHeight - ccFullHeight;
+		if (pianoRollFullHeight < INLINE_MIDI_MIN_NOTEVIEW_H)
+		{
+			pianoRollFullHeight += ccFullHeight;
+			ccFullHeight = 0;
+		}
+
+		// Over CC lanes
+		if (mouseY > editorOffsetY + pianoRollFullHeight)
+		{
+			WritePtr(segment, "cc_lane");
+			WritePtr(details, "cc_lane");
+
+			// Get CC lane number
+			int ccStart = editorOffsetY + pianoRollFullHeight;
+			for (int i = 0; i < midiEditor.CountCCLanes(); ++i)
+			{
+				int ccEnd = ccStart + midiEditor.GetCCLaneHeight(i);
+
+				if (mouseY >= ccStart && mouseY < ccEnd)
+				{
+					info.ccLane = MapVelLaneToCC(midiEditor.GetCCLane(i));
+					info.ccLaneId = i;
+
+					// Get CC value at Y position
+					ccStart += INLINE_MIDI_LANE_DIVIDER_H;
+					if (mouseY >= ccStart)
+					{
+						int mouse = ccEnd - mouseY;
+						int laneHeight = ccEnd - ccStart;
+						double steps = (info.ccLane == 0x201 || (info.ccLane & 0x100) == 0x100) ? (16383) : (128);
+						info.ccLaneVal = (int)(steps / laneHeight * mouse);
+						if (steps == 128 && info.ccLaneVal == 128)
+							info.ccLaneVal = 127;
+					}
+					break;
+				}
+				else
+				{
+					ccStart = ccEnd;
+				}
+			}
+		}
+
+		// Over note view / keyboard
+		else
+		{
+			// Check if mouse is over keyboard or notes view
+			RECT r; GetWindowRect(GetArrangeWnd(), &r);
+			double arrangeStartTime, arrangeEndTime;
+			double itemStartTime = GetMediaItemInfo_Value(info.item, "D_POSITION");
+			double itemEndTime   = GetMediaItemInfo_Value(info.item, "D_LENGTH") + itemStartTime;
+			GetSet_ArrangeView2(NULL, false, r.left, r.right-SCROLLBAR_W, &arrangeStartTime, &arrangeEndTime);
+
+			int itemStartX = (itemStartTime <= arrangeStartTime) ? (0)                                                                  : ((int)((itemStartTime - arrangeStartTime) * midiEditor.GetHZoom()));
+			int itemEndX   = (itemEndTime   >  arrangeEndTime  ) ? ((int)((arrangeEndTime - arrangeStartTime) * midiEditor.GetHZoom())) : ((int)((itemEndTime   - arrangeStartTime) * midiEditor.GetHZoom()));
+
+			bool pianoVisible = (itemEndX - itemStartX - INLINE_MIDI_KEYBOARD_W > INLINE_MIDI_KEYBOARD_W) ? (true) : (false);
+			if (mouseX >= itemStartX && mouseX < itemStartX + INLINE_MIDI_KEYBOARD_W)
+				WritePtr(segment, (pianoVisible) ? ("piano_view") : ("notes_view"));
+			else
+				WritePtr(segment, "notes_view");
+
+			// Get note row
+			int realMouseY = (128 * midiEditor.GetVZoom()) - ((mouseY - editorOffsetY) + midiEditor.GetVPos() * midiEditor.GetVZoom()); // This is mouse Y position counting from the bottom - make sure it's not outside valid, drawable note range
+			if (realMouseY > 0)
+			{
+				vector<int> visibleNoteRows = GetUsedNamedNotes(NULL, info.take, midiEditor.GetNoteshow() != SHOW_ALL_NOTES, midiEditor.GetNoteshow() == HIDE_UNUSED_UNNAMED_NOTES, midiEditor.GetDrawChannel());
+
+				int noteRow = (realMouseY - 1) / midiEditor.GetVZoom();
+
+				if (midiEditor.GetNoteshow() == SHOW_ALL_NOTES)
+				{
+					info.noteRow = noteRow;
+				}
+				else
+				{
+					/* Since we can't known inline editor vertical zoom and vertical *
+					*  position at all times we currently can't support this         */
+				}
+			}
+		}
+
+		return true;
+	}
+	return false;
+}
+
 void GetMouseCursorContext (const char** window, const char** segment, const char** details, BR_MouseContextInfo* info)
 {
 	// Return values:
@@ -1815,6 +2647,12 @@ void GetMouseCursorContext (const char** window, const char** segment, const cha
 	| arrange      | track         | item, env_point, env_segment, empty |
 	|              | envelope      | env_point, env_segment, empty       |
 	|              | empty         | ""                                  |
+	|______________|_______________|_____________________________________|
+	| midi_editor  | unknown       | ""                                  |
+	|              | ruler         | ""                                  |
+	|              | piano_view    | ""                                  |
+	|              | notes_view    | ""                                  |
+	|              | cc_lane       | cc_selector, cc_lane                |
 	*********************************************************************/
 
 	POINT p; GetCursorPos(&p);
@@ -1846,7 +2684,7 @@ void GetMouseCursorContext (const char** window, const char** segment, const cha
 			for (int i = 0; i < 4; ++i)
 			{
 				if (i == 0)      {limitL = limitH; limitH += GetRulerLaneHeight(rulerH, i); returnSegment = "regions"; }
-				else if (i == 1) {limitL = limitH; limitH += GetRulerLaneHeight(rulerH, i); returnSegment = "markers";  }
+				else if (i == 1) {limitL = limitH; limitH += GetRulerLaneHeight(rulerH, i); returnSegment = "markers"; }
 				else if (i == 2) {limitL = limitH; limitH += GetRulerLaneHeight(rulerH, i); returnSegment = "tempo";   }
 				else if (i == 3) {limitL = limitH; limitH += GetRulerLaneHeight(rulerH, i); returnSegment = "timeline";}
 
@@ -1964,7 +2802,19 @@ void GetMouseCursorContext (const char** window, const char** segment, const cha
 						returnInfo.takeEnvelope = true;
 					}
 					else
-						returnDetails = "item";
+					{
+						if (IsOpenInInlineEditor(returnInfo.take))
+						{
+							int takeOffset;
+							int takeHeight = GetTakeHeight(returnInfo.take, NULL, GetTakeId(returnInfo.take), &takeOffset, false, height, offset);
+							if (!GetMouseCursorContextMidiInline(returnInfo, &returnWindow, &returnSegment, &returnDetails, mouseY, mouseX, takeHeight, takeOffset))
+								returnDetails = "item";
+						}
+						else
+						{
+							returnDetails = "item";
+						}
+					}
 				}
 
 				// No items, no envelopes, no nothing
@@ -1978,10 +2828,15 @@ void GetMouseCursorContext (const char** window, const char** segment, const cha
 			found = true;
 		}
 	}
-	WritePtr(window, returnWindow);
+
+	// Check MIDI editor
+	if (!found)
+		found = GetMouseCursorContextMidi(hwnd, p, returnInfo, &returnWindow, &returnSegment, &returnDetails);
+
+	WritePtr(window,  returnWindow);
 	WritePtr(segment, returnSegment);
 	WritePtr(details, returnDetails);
-	WritePtr(info, returnInfo);
+	WritePtr(info,    returnInfo);
 }
 
 double PositionAtMouseCursor (bool checkRuler)
@@ -2056,270 +2911,6 @@ MediaTrack* TrackAtMouseCursor (int* context, double* position)
 }
 
 /******************************************************************************
-* Window                                                                      *
-******************************************************************************/
-static HWND SearchFloatingDockers (const char* name, const char* dockerName)
-{
-	HWND docker = FindWindowEx(NULL, NULL, NULL, dockerName);
-	while(docker)
-	{
-		if (GetParent(docker) == g_hwndParent)
-		{
-			HWND insideDocker = FindWindowEx(docker, NULL, NULL, "REAPER_dock");
-			while(insideDocker)
-			{
-				if (HWND w = FindWindowEx(insideDocker, NULL, NULL, name))
-					return w;
-				insideDocker = FindWindowEx(docker, insideDocker, NULL, "REAPER_dock");
-			}
-		}
-		docker = FindWindowEx(NULL, docker, NULL, dockerName);
-	}
-	return NULL;
-}
-
-HWND FindInFloatingDockers (const char* name)
-{
-	#ifdef _WIN32
-		HWND hwnd = SearchFloatingDockers(name, NULL);
-	#else
-		HWND hwnd = SearchFloatingDockers(name, __localizeFunc("Docker", "docker", 0));
-		if (!hwnd)
-		{
-			WDL_FastString dockerName;
-			dockerName.AppendFormatted(256, "%s%s", name, __localizeFunc(" (docked)", "docker", 0));
-			hwnd = SearchFloatingDockers(name, dockerName.Get());
-		}
-		if (!hwnd)
-			hwnd = SearchFloatingDockers(name, __localizeFunc("Toolbar Docker", "docker", 0));
-	#endif
-
-	return hwnd;
-}
-
-HWND FindInReaperDockers (const char* name)
-{
-	HWND docker = FindWindowEx(g_hwndParent, NULL, NULL, "REAPER_dock");
-	while (docker)
-	{
-		if (HWND hwnd = FindWindowEx(docker, NULL, NULL , (LPCSTR)name))
-			return hwnd;
-		docker = FindWindowEx(g_hwndParent, docker, NULL, "REAPER_dock");
-	}
-	return NULL;
-}
-
-HWND FindFloating (const char* name)
-{
-	HWND hwnd = FindWindowEx(NULL, NULL, NULL, name);
-	while (hwnd)
-	{
-		if (GetParent(hwnd) == g_hwndParent)
-			return hwnd;
-		hwnd = FindWindowEx(NULL, hwnd, NULL, name);
-	}
-	return NULL;
-}
-
-HWND FindInReaper (const char* name)
-{
-	return FindWindowEx(g_hwndParent, NULL, NULL , name);
-}
-
-HWND GetMixerWnd ()
-{
-	const char* name = __localizeFunc("Mixer", "DLG_151", 0);
-	HWND hwnd = FindInReaperDockers(name);
-	if (!hwnd) hwnd = FindFloating(name);
-	if (!hwnd) hwnd = FindInFloatingDockers(name);
-	if (!hwnd) hwnd = FindInReaper(name);
-	return hwnd;
-}
-
-HWND GetMixerMasterWnd ()
-{
-	const char* name = __localizeFunc("Mixer Master", "mixer", 0);
-	HWND hwnd = FindInReaperDockers(name);
-	if (!hwnd) hwnd = FindFloating(name);
-	if (!hwnd) hwnd = FindInFloatingDockers(name);
-	if (!hwnd) hwnd = FindInReaper(name);
-	return hwnd;
-}
-
-HWND GetArrangeWnd ()
-{
-	static HWND hwnd = GetTrackWnd();
-	return hwnd;
-}
-
-HWND GetTransportWnd ()
-{
-	const char* name = __localizeFunc("Transport", "DLG_188", 0);
-	HWND hwnd = FindInReaper(name);
-	if (!hwnd) hwnd = FindInReaperDockers(name);
-	if (!hwnd) hwnd = FindInFloatingDockers(name);
-	if (!hwnd) hwnd = FindFloating(name); // transport can't float by itself but search in case this changes in the future
-	return hwnd;
-}
-
-HWND GetRulerWndAlt ()
-{
-	static HWND hwnd = GetRulerWnd();
-	return hwnd;
-}
-
-HWND GetMcpWnd ()
-{
-	if (HWND mixer = GetMixerWnd())
-	{
-		HWND hwnd = FindWindowEx(mixer, NULL, NULL, NULL);
-		while (hwnd)
-		{
-			if ((MediaTrack*)GetWindowLongPtr(hwnd, GWLP_USERDATA) != GetMasterTrack(NULL)) // skip master track
-				return hwnd;
-			hwnd = FindWindowEx(mixer, hwnd, NULL, NULL);
-		}
-	}
-	return NULL;
-}
-
-HWND GetTcpWnd ()
-{
-	static HWND hwnd = NULL;
-	if (!hwnd)
-	{
-		MediaTrack* track = GetTrack(NULL, 0);
-		MediaTrack* master = GetMasterTrack(NULL);
-		bool IsMasterVisible = TcpVis(master) ? true : false;
-
-		// Can't find tcp if there are no tracks in project, kinda silly to expect no tracks in a DAW but oh well... :)
-		MediaTrack* firstTrack = (IsMasterVisible) ? (master) : (track ? track : master);
-		if (!track && !IsMasterVisible)
-		{
-			PreventUIRefresh(1);
-			Main_OnCommandEx(40075, 0, NULL);
-		}
-
-		// TCP hierarchy: TCP owner -> TCP hwnd -> tracks
-		bool found = false;
-		HWND tcpOwner = FindWindowEx(g_hwndParent, NULL, NULL, "");
-		while (tcpOwner && !found)
-		{
-			HWND tcp = FindWindowEx(tcpOwner, NULL, NULL, "");
-			while (tcp && !found)
-			{
-				HWND track = FindWindowEx(tcp, NULL, NULL, "");
-				while (track && !found)
-				{
-					if ((MediaTrack*)GetWindowLongPtr(track, GWLP_USERDATA) == firstTrack)
-					{
-						hwnd = tcp;
-						found = true;
-					}
-					track = FindWindowEx(tcp, track, NULL, "");
-				}
-				tcp = FindWindowEx(tcpOwner, tcp, NULL, "");
-			}
-			tcpOwner = FindWindowEx(g_hwndParent, tcpOwner, NULL, "");
-		}
-
-		// Restore TCP master to previous state
-		if (!track && !IsMasterVisible)
-		{
-			PreventUIRefresh(-1);
-			Main_OnCommandEx(40075, 0, NULL);
-		}
-	}
-	return hwnd;
-}
-
-HWND GetTcpTrackWnd (MediaTrack* track)
-{
-	HWND hwnd = GetWindow(GetTcpWnd(), GW_CHILD);
-	do
-	{
-		if ((MediaTrack*)GetWindowLongPtr(hwnd, GWLP_USERDATA) == track)
-			return hwnd;
-	}
-	while (hwnd = GetWindow(hwnd, GW_HWNDNEXT));
-
-	return NULL;
-}
-
-MediaTrack* HwndToTrack (HWND hwnd, int* hwndContext)
-{
-	MediaTrack* track = NULL;
-	HWND hwndParent = GetParent(hwnd);
-	int context = 0;
-
-	if (!track)
-	{
-		HWND tcp = GetTcpWnd();
-		if (hwndParent == tcp)                                                             // hwnd is a track
-			track = (MediaTrack*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-		else if (GetParent(hwndParent) == tcp)                                             // hwnd is vu meter inside track
-			track = (MediaTrack*)GetWindowLongPtr(hwndParent, GWLP_USERDATA);
-
-		if (track)
-			context = 1;
-		else if (hwnd == tcp)
-			context = 1;
-	}
-
-	if (!track)
-	{
-		HWND mcp = GetMcpWnd();
-		HWND mixer = GetParent(mcp);
-		HWND mixerMaster = GetMixerMasterWnd();
-		HWND hwndPParent = GetParent(hwndParent);
-
-		if (hwndParent == mcp || hwndParent == mixer || hwndParent == mixerMaster)         // hwnd is a track
-			track = (MediaTrack*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-		else if (hwndPParent == mcp || hwndPParent == mixer || hwndPParent == mixerMaster) // hwnd is vu meter inside track
-			track = (MediaTrack*)GetWindowLongPtr(hwndParent, GWLP_USERDATA);
-
-		if (track)
-			context = 2;
-		else if (hwnd == mcp || hwnd == mixerMaster)
-			context = 2;
-	}
-
-	if (!ValidatePtr(track, "MediaTrack*"))
-		track = NULL;
-
-	WritePtr(hwndContext, context);
-	return track;
-}
-
-TrackEnvelope* HwndToEnvelope (HWND hwnd)
-{
-	if (GetParent(hwnd) == GetTcpWnd())
-	{
-		TrackEnvelope* envelope = (TrackEnvelope*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-		if (ValidatePtr(envelope, "TrackEnvelope*"))
-			return envelope;
-	}
-	return NULL;
-}
-
-void CenterDialog (HWND hwnd, HWND target, HWND zOrder)
-{
-	RECT r; GetWindowRect(hwnd, &r);
-	RECT r1; GetWindowRect(target, &r1);
-
-	int hwndW = r.right - r.left;
-	int hwndH = r.bottom - r.top;
-	int targW = r1.right - r1.left;
-	int targH = r1.bottom - r1.top;
-
-	r.left = r1.left + (targW-hwndW)/2;
-	r.top = r1.top + (targH-hwndH)/2;
-
-	EnsureNotCompletelyOffscreen(&r);
-	SetWindowPos(hwnd, zOrder, r.left, r.top, 0, 0, SWP_NOSIZE);
-}
-
-/******************************************************************************
 * Theming                                                                     *
 ******************************************************************************/
 void ThemeListViewOnInit (HWND list)
@@ -2341,68 +2932,4 @@ bool ThemeListViewInProc (HWND hwnd, int uMsg, LPARAM lParam, HWND list, bool gr
 			return true;
 	}
 	return false;
-}
-
-/******************************************************************************
-* MIDI                                                                        *
-******************************************************************************/
-BR_NoteEvent::BR_NoteEvent (MediaItem_Take* take, int id)
-{
-	MIDI_GetNote(take, id, &selected, &muted, &timePos, &timeEnd, &chan, &pitch, &vel);
-	timePos = MIDI_GetProjTimeFromPPQPos(take, timePos);
-	timeEnd = MIDI_GetProjTimeFromPPQPos(take, timeEnd);
-}
-
-void BR_NoteEvent::InsertEvent (MediaItem_Take* take)
-{
-	timePos = MIDI_GetPPQPosFromProjTime(take, timePos);
-	timeEnd = MIDI_GetPPQPosFromProjTime(take, timeEnd);
-	MIDI_InsertNote(take, selected, muted, timePos, timeEnd, chan, pitch, vel);
-}
-
-BR_CCEvent::BR_CCEvent (MediaItem_Take* take, int id)
-{
-	MIDI_GetCC(take, id, &selected, &muted, &timePos, &chanmsg, &chan, &msg2, &msg3);
-	timePos = MIDI_GetProjTimeFromPPQPos(take, timePos);
-}
-
-void BR_CCEvent::InsertEvent (MediaItem_Take* take)
-{
-	timePos = MIDI_GetPPQPosFromProjTime(take, timePos);
-	MIDI_InsertCC(take, selected, muted, timePos, chanmsg, chan, msg2, msg3);
-}
-
-BR_SysEvent::BR_SysEvent (MediaItem_Take* take, int id)
-{
-	char* message = NULL;
-	int message_sz = 0;
-	MIDI_GetTextSysexEvt(take, id, &selected, &muted, &timePos, &type, NULL, NULL);
-	timePos = MIDI_GetProjTimeFromPPQPos(take, timePos);
-	if (type == -1)
-	{
-		message = new (nothrow) char[32768];
-		message_sz = 32768;
-	}
-	else
-	{
-		message = new (nothrow) char[64];
-		message_sz = 64;
-	}
-	MIDI_GetTextSysexEvt(take, id, NULL, NULL, NULL, NULL, message, &message_sz);
-	msg.Set(message);
-	delete[] message;
-}
-
-void BR_SysEvent::InsertEvent (MediaItem_Take* take)
-{
-	timePos = MIDI_GetPPQPosFromProjTime(take, timePos);
-	MIDI_InsertTextSysexEvt(take, selected, muted, timePos, type, msg.Get(), msg.GetLength());
-}
-
-BR_MidiTake::BR_MidiTake (MediaItem_Take* take, int noteCount /*=0*/, int ccCount /*=0*/, int sysCount /*=0*/) :
-take (take)
-{
-	noteEvents.reserve(noteCount);
-	ccEvents.reserve(ccCount),
-	sysEvents.reserve(sysCount);
 }

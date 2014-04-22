@@ -124,7 +124,7 @@ public:
 	void UnselectAll ();
 	void UpdateSelected ();                         // Update selected points' ids based on current state of things
 	int CountSelected ();                           // Count selected points
-	int GetSelected (int idx);                      // Get selected point based on selected point count (idx is 0 based);
+	int GetSelected (int idx);                      // Get selected point based on count (idx is 0 based)
 	int CountConseq ();                             // Count number of consequential selections (won't work with unsorted points)
 	bool GetConseq (int idx, int* start, int* end); // Get consequential selection pair based on count (idx is 0 based)
 
@@ -172,7 +172,7 @@ public:
 	void SetLaneHeight (int height);
 	void SetDefaultShape (int shape);
 
-	/* Committing - does absolutely nothing if there are no edits (unless forced) - updateTimeline is used for one corner case in DeleteTempoPreserveItems() */
+	/* Committing - does absolutely nothing if there are no edits (unless forced) */
 	bool Commit (bool force = false);
 
 private:

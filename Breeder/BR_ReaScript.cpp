@@ -27,7 +27,10 @@
 ******************************************************************************/
 #include "stdafx.h"
 #include "BR_ReaScript.h"
+#include "BR_MidiTools.h"
 #include "BR_Util.h"
+#include "../SnM/SnM_Chunk.h"
+#include "../SnM/SnM_Item.h"
 
 /******************************************************************************
 * Globals                                                                     *
@@ -49,9 +52,9 @@ void BR_GetMouseCursorContext (char* window, char* segment, char* details, int c
 	const char* _details;
 	GetMouseCursorContext(&_window, &_segment, &_details, &g_mouseInfo);
 
-	strncpy(window,_window, char_sz-1);
-	strncpy(segment,_segment, char_sz-1);
-	strncpy(details,_details, char_sz-1);
+	strncpy(window,  _window,  char_sz-1);
+	strncpy(segment, _segment, char_sz-1);
+	strncpy(details, _details, char_sz-1);
 }
 
 TrackEnvelope* BR_GetMouseCursorContext_Envelope (bool* takeEnvelope)
@@ -63,6 +66,17 @@ TrackEnvelope* BR_GetMouseCursorContext_Envelope (bool* takeEnvelope)
 MediaItem* BR_GetMouseCursorContext_Item ()
 {
 	return g_mouseInfo.item;
+}
+
+void* BR_GetMouseCursorContext_MIDI (bool* inlineEditor, int* noteRow, int* ccLane, int* ccLaneVal, int* ccLaneId)
+{
+	WritePtr(inlineEditor, g_mouseInfo.midiInlineEditor);
+	WritePtr(noteRow,      g_mouseInfo.noteRow);
+	WritePtr(ccLane,       g_mouseInfo.ccLane);
+	WritePtr(ccLaneVal,    g_mouseInfo.ccLaneVal);
+	WritePtr(ccLaneId,     g_mouseInfo.ccLaneId);
+
+	return g_mouseInfo.midiEditor;
 }
 
 double BR_GetMouseCursorContext_Position ()
@@ -83,6 +97,65 @@ MediaTrack* BR_GetMouseCursorContext_Track ()
 MediaItem* BR_ItemAtMouseCursor (double* position)
 {
 	return ItemAtMouseCursor(position);
+}
+
+bool BR_MIDI_CCLaneReplace (void* midiEditor, int laneId, int newCC)
+{
+	MediaItem_Take* take = MIDIEditor_GetTake(midiEditor);
+	int newLane = MapCCToVelLane(newCC);
+
+	if (take && IsVelLaneValid(newLane))
+	{
+		MediaItem* item = GetMediaItemTake_Item(take);
+		int takeId = GetTakeIndex(item, take);
+		if (takeId >= 0)
+		{
+			SNM_TakeParserPatcher p(item, CountTakes(item));
+			WDL_FastString takeChunk;
+			int tkPos, tklen;
+			if (p.GetTakeChunk(takeId, &takeChunk, &tkPos, &tklen))
+			{
+				SNM_ChunkParserPatcher ptk(&takeChunk, false);
+
+				if (ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "SOURCE", "VELLANE", laneId, -1))
+				{
+					WDL_FastString newLaneStr;
+					newLaneStr.AppendFormatted(256, "%d", newLane);
+					ptk.ParsePatch(SNM_SET_CHUNK_CHAR, 1, "SOURCE", "VELLANE", laneId, 1, (void*)newLaneStr.Get());
+					return p.ReplaceTake(tkPos, tklen, ptk.GetChunk());
+				}
+			}
+		}
+	}
+	return false;
+}
+
+bool BR_MIDI_CCLaneRemove (void* midiEditor, int laneId)
+{
+	MediaItem_Take* take = MIDIEditor_GetTake(midiEditor);
+
+	if (take)
+	{
+		MediaItem* item = GetMediaItemTake_Item(take);
+		int takeId = GetTakeIndex(item, take);
+		if (takeId >= 0)
+		{
+			SNM_TakeParserPatcher p(item, CountTakes(item));
+			WDL_FastString takeChunk;
+			int tkPos, tklen;
+			if (p.GetTakeChunk(takeId, &takeChunk, &tkPos, &tklen))
+			{
+				SNM_ChunkParserPatcher ptk(&takeChunk, false);
+
+				if (ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "SOURCE", "VELLANE", laneId, -1))
+				{
+					ptk.RemoveLine("SOURCE", "VELLANE", 1, laneId);
+					return p.ReplaceTake(tkPos, tklen, ptk.GetChunk());
+				}
+			}
+		}
+	}
+	return false;
 }
 
 double BR_PositionAtMouseCursor (bool checkRuler)

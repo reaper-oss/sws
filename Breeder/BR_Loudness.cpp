@@ -74,14 +74,15 @@ const int SET_MIRROR_SELECTION        = 0xF003;
 const int SET_DOUBLECLICK_GOTO_TARGET = 0xF004;
 const int SET_TIMESEL_OVER_MAX        = 0xF005;
 const int SET_CLEAR_ENVELOPE          = 0xF006;
-const int GO_TO_SHORTTERM             = 0xF007;
-const int GO_TO_MOMENTARY             = 0xF008;
-const int DRAW_SHORTTERM              = 0xF009;
-const int DRAW_MOMENTARY              = 0xF00A;
-const int NORMALIZE                   = 0xF00B;
-const int NORMALIZE_TO_23             = 0xF00C;
-const int REANALYZE_ITEMS             = 0xF00D;
-const int DELETE_ITEM                 = 0xF00E;
+const int SET_CLEAR_ON_ANALYZE        = 0xF007;
+const int GO_TO_SHORTTERM             = 0xF008;
+const int GO_TO_MOMENTARY             = 0xF009;
+const int DRAW_SHORTTERM              = 0xF00A;
+const int DRAW_MOMENTARY              = 0xF00B;
+const int NORMALIZE                   = 0xF00C;
+const int NORMALIZE_TO_23             = 0xF00D;
+const int REANALYZE_ITEMS             = 0xF00E;
+const int DELETE_ITEM                 = 0xF00F;
 
 const int ANALYZE_TIMER     = 1;
 const int REANALYZE_TIMER   = 2;
@@ -151,6 +152,7 @@ bool BR_LoudnessObject::Analyze (bool integratedOnly /*= false*/)
 	// Is audio data still valid?
 	if (this->CheckSetAudioData())
 	{
+		// Was this data already analyzed?
 		if (!this->GetAnalyzedStatus())
 		{
 			this->SetRunning(true);
@@ -159,6 +161,7 @@ bool BR_LoudnessObject::Analyze (bool integratedOnly /*= false*/)
 		}
 		return true;
 	}
+
 	// Audio isn't valid and can't be retrieved (related track/take is no more)
 	else
 	{
@@ -166,6 +169,18 @@ bool BR_LoudnessObject::Analyze (bool integratedOnly /*= false*/)
 		this->SetProgress(0);
 		return false;
 	}
+}
+
+bool BR_LoudnessObject::IsRunning ()
+{
+	SWS_SectionLock lock(&m_mutex);
+	return m_running;
+}
+
+double BR_LoudnessObject::GetProgress ()
+{
+	SWS_SectionLock lock(&m_mutex);
+	return m_progress;
 }
 
 void BR_LoudnessObject::StopAnalyze ()
@@ -183,19 +198,7 @@ void BR_LoudnessObject::StopAnalyze ()
 	}
 }
 
-bool BR_LoudnessObject::IsRunning ()
-{
-	SWS_SectionLock lock(&m_mutex);
-	return m_running;
-}
-
-double BR_LoudnessObject::GetProgress ()
-{
-	SWS_SectionLock lock(&m_mutex);
-	return m_progress;
-}
-
-void BR_LoudnessObject::NormalizeIntegrated (double target)
+void BR_LoudnessObject::NormalizeIntegrated (double targetdB)
 {
 	SWS_SectionLock lock(&m_mutex);
 
@@ -210,13 +213,13 @@ void BR_LoudnessObject::NormalizeIntegrated (double target)
 		if (m_track)
 		{
 			double volume = *(double*)GetSetMediaTrackInfo(m_track, "D_VOL", NULL);
-			volume *= DB2VAL(target) / DB2VAL(integrated);
+			volume *= DB2VAL(targetdB) / DB2VAL(integrated);
 			GetSetMediaTrackInfo(m_track, "D_VOL", &volume);
 		}
 		else
 		{
 			double volume = *(double*)GetSetMediaItemTakeInfo(m_take, "D_VOL", NULL);
-			volume *= DB2VAL(target) / DB2VAL(integrated);
+			volume *= DB2VAL(targetdB) / DB2VAL(integrated);
 			GetSetMediaItemTakeInfo(m_take, "D_VOL", &volume);
 		}
 	}
@@ -231,13 +234,13 @@ bool BR_LoudnessObject::CreateGraph (BR_Envelope& envelope, double min, double m
 
 	envelope.Sort();
 
-
 	double start = (m_track) ? (m_audioData.audioStart) : (GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION"));
 	double end   = (m_track) ? (m_audioData.audioEnd)   : (start + GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_LENGTH"));
 	double newMin = envelope.LaneMinValue();
 	double newMax = envelope.LaneMaxValue();
 
-	envelope.DeletePointsInRange(start , end);
+	envelope.DeletePointsInRange(start, end);
+
 	if (momentary)
 	{
 		double position = start;
@@ -438,14 +441,27 @@ double BR_LoudnessObject::GetAudioLength ()
 	return m_audioData.audioEnd - m_audioData.audioStart;
 }
 
-bool BR_LoudnessObject::IsTrack ()
+bool BR_LoudnessObject::CheckTarget (MediaTrack* track)
 {
-	SWS_SectionLock lock(&m_mutex);
-
-	if (m_track)
+	if (this->IsTargetValid() && m_track && m_track == track)
 		return true;
 	else
 		return false;
+}
+
+bool BR_LoudnessObject::CheckTarget (MediaItem_Take* take)
+{
+	if (this->IsTargetValid() && m_take && m_take == take)
+		return true;
+	else
+		return false;
+}
+
+bool BR_LoudnessObject::IsTrack ()
+{
+	SWS_SectionLock lock(&m_mutex);
+	if (m_track) return true;
+	else         return false;
 }
 
 bool BR_LoudnessObject::IsTargetValid ()
@@ -595,39 +611,65 @@ void BR_LoudnessObject::GotoTarget ()
 
 unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 {
-	// Get take/track info
-	BR_LoudnessObject* _this = (BR_LoudnessObject*)loudnessObject;
-	AudioData* audioData     = 	_this->GetAudioData();
-	AudioAccessor* audio     = audioData->audio;
-	int samplerate           = audioData->samplerate;
-	int channels             = audioData->channels;
-	double startTime    = audioData->audioStart;
-	double endTime      = audioData->audioEnd;
-	double volume            = audioData->volume;
-	double pan               = audioData->pan;
-	BR_Envelope& volEnv      = audioData->volEnv;
-	BR_Envelope& volEnvPreFX = audioData->volEnvPreFX;
-
-	bool doPan          = (channels > 1 && pan != 0)                      ? (true) : (false); // tracks will always get false here (see CheckSetAudioData())
-	bool doVolEnv       = (volEnv.Count()      && volEnv.IsActive())      ? (true) : (false);
-	bool doVolPreFXEnv  = (volEnvPreFX.Count() && volEnvPreFX.IsActive()) ? (true) : (false);
-	bool integratedOnly = _this->GetIntegratedOnly();
-
-	// Prepare ebur123_state
-	ebur128_state* loudnessState = NULL;
-	loudnessState = ebur128_init((size_t)channels, (size_t)samplerate, EBUR128_MODE_M | EBUR128_MODE_S | EBUR128_MODE_I | EBUR128_MODE_LRA);
-	ebur128_set_channel(loudnessState, 0, EBUR128_LEFT);
-	ebur128_set_channel(loudnessState, 1, EBUR128_RIGHT);
-	ebur128_set_channel(loudnessState, 2, EBUR128_CENTER);
-	ebur128_set_channel(loudnessState, 3, EBUR128_LEFT_SURROUND);
-	ebur128_set_channel(loudnessState, 4, EBUR128_RIGHT_SURROUND);
-
+	// Analyze results that get saved at the end
 	double integrated   = NEGATIVE_INF;
 	double momentaryMax = NEGATIVE_INF;
 	double shortTermMax = NEGATIVE_INF;
 	double range        = 0;
 	vector<double> momentaryValues;
 	vector<double> shortTermValues;
+
+	// Get take/track info
+	BR_LoudnessObject* _this = (BR_LoudnessObject*)loudnessObject;
+	AudioData* audioData     = 	_this->GetAudioData();
+	AudioAccessor* audio     = audioData->audio;
+	int samplerate           = audioData->samplerate;
+	int channels             = audioData->channels;
+	int channelMode          = audioData->channelMode;
+	double startTime         = audioData->audioStart;
+	double endTime           = audioData->audioEnd;
+	double volume            = audioData->volume;
+	double pan               = audioData->pan;
+
+	BR_Envelope& volEnv      = audioData->volEnv;
+	BR_Envelope& volEnvPreFX = audioData->volEnvPreFX;
+	bool doPan               = (channels > 1 && pan != 0)                      ? (true) : (false); // tracks will always get false here (see CheckSetAudioData())
+	bool doVolEnv            = (volEnv.Count()      && volEnv.IsActive())      ? (true) : (false);
+	bool doVolPreFXEnv       = (volEnvPreFX.Count() && volEnvPreFX.IsActive()) ? (true) : (false);
+	bool integratedOnly      = _this->GetIntegratedOnly();
+
+	// Prepare ebur123_state
+	ebur128_state* loudnessState = NULL;
+	loudnessState = ebur128_init((size_t)channels, (size_t)samplerate, EBUR128_MODE_M | EBUR128_MODE_S | EBUR128_MODE_I | EBUR128_MODE_LRA);
+
+	// Ignore channels according to channel mode. Note: we can't partially request samples, i.e. channel mode is mono, but take is stereo...asking for
+	// 1 channel only won't work. We must always request the real channel count even though reaper interleaves active channels starting from 0
+	if (channelMode > 1)
+	{
+		// Mono channel modes
+		if (channelMode <= 66)
+		{
+			ebur128_set_channel(loudnessState, 0, EBUR128_LEFT);
+			for (int i = 1; i <= channels; ++i)
+				ebur128_set_channel(loudnessState, i, EBUR128_UNUSED);
+		}
+		// Stereo channel modes
+		else
+		{
+			ebur128_set_channel(loudnessState, 0, EBUR128_LEFT);
+			ebur128_set_channel(loudnessState, 1, EBUR128_RIGHT);
+			for (int i = 2; i <= channels; ++i)
+				ebur128_set_channel(loudnessState, i, EBUR128_UNUSED);
+		}
+	}
+	else
+	{
+		ebur128_set_channel(loudnessState, 0, EBUR128_LEFT);
+		ebur128_set_channel(loudnessState, 1, EBUR128_RIGHT);
+		ebur128_set_channel(loudnessState, 2, EBUR128_CENTER);
+		ebur128_set_channel(loudnessState, 3, EBUR128_LEFT_SURROUND);
+		ebur128_set_channel(loudnessState, 4, EBUR128_RIGHT_SURROUND);
+	}
 
 	// Fill loudnessState with samples and get momentary/short-term measurements
 	int i = 0;
@@ -733,7 +775,6 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 			break;
 	}
 
-
 	// Get integrated and loudness range
 	if (!_this->GetKillFlag())
 	{
@@ -767,7 +808,7 @@ int BR_LoudnessObject::CheckSetAudioData ()
 
 	double audioStart = GetAudioAccessorStartTime(m_audioData.audio);
 	double audioEnd   = GetAudioAccessorEndTime(m_audioData.audio);
-	int channels    = (m_track) ? ((int)GetMediaTrackInfo_Value(m_track, "I_NCHAN")) : (GetTakeChannelCount(m_take));
+	int channels    = (m_track) ? ((int)GetMediaTrackInfo_Value(m_track, "I_NCHAN")) : ((GetMediaItemTake_Source(m_take))->GetNumChannels());
 	int channelMode = (m_track) ? (0) : (*(int*)GetSetMediaItemTakeInfo(m_take, "I_CHANMODE", NULL));
 	int samplerate; GetConfig("projsrate", samplerate);
 
@@ -789,17 +830,17 @@ int BR_LoudnessObject::CheckSetAudioData ()
 
 
 	if (AudioAccessorValidateState(m_audioData.audio)     ||
-		strcmp(newHash, m_audioData.audioHash)            ||
-		audioStart  != m_audioData.audioStart             ||
-		audioEnd    != m_audioData.audioEnd               ||
-		channels    != m_audioData.channels               ||
-		channelMode != m_audioData.channelMode            ||
-		samplerate  != m_audioData.samplerate             ||
-		fabs(volume - m_audioData.volume) >= VOLUME_DELTA ||
-		fabs(pan    - m_audioData.pan)    >= PAN_DELTA    ||
-		volEnv      != m_audioData.volEnv                 ||
-		volEnvPreFX != m_audioData.volEnvPreFX
-		)
+	    strcmp(newHash, m_audioData.audioHash)            ||
+	    audioStart  != m_audioData.audioStart             ||
+	    audioEnd    != m_audioData.audioEnd               ||
+	    channels    != m_audioData.channels               ||
+	    channelMode != m_audioData.channelMode            ||
+	    samplerate  != m_audioData.samplerate             ||
+	    fabs(volume - m_audioData.volume) >= VOLUME_DELTA ||
+	    fabs(pan    - m_audioData.pan)    >= PAN_DELTA    ||
+	    volEnv      != m_audioData.volEnv                 ||
+	    volEnvPreFX != m_audioData.volEnvPreFX
+	    )
 	{
 		DestroyAudioAccessor(m_audioData.audio);
 		m_audioData.audio = (m_track) ? (CreateTrackAudioAccessor(m_track)) : (CreateTakeAudioAccessor(m_take));
@@ -923,7 +964,7 @@ WDL_FastString BR_LoudnessObject::GetTakeName ()
 		if (this->IsTargetValid())
 			takeName.Set((char*)GetSetMediaItemTakeInfo(m_take, "P_NAME", NULL));
 		else
-			takeName.Set(__LOCALIZE("--NO TAKE FOUND--", "sws_DLG_174")); // Analyze loudness window should remove invalid objects but leave this anyway
+			takeName.Set(__LOCALIZE("--NO TAKE FOUND--", "sws_DLG_174")); // Analyze loudness window should remove invalid objects, but leave this anyway
 	}
 
 	return takeName;
@@ -944,14 +985,14 @@ WDL_FastString BR_LoudnessObject::GetTrackName ()
 				trackName.Set((char*)GetSetMediaTrackInfo(m_track, "P_NAME", NULL));
 		}
 		else
-			trackName.Set(__LOCALIZE("--NO TRACK FOUND--", "sws_DLG_174")); // Analyze loudness window should remove invalid objects but leave this anyway
+			trackName.Set(__LOCALIZE("--NO TRACK FOUND--", "sws_DLG_174")); // Analyze loudness window should remove invalid objects, but leave this anyway
 	}
 	else
 	{
 		if (this->IsTargetValid())
-			trackName.Set((char*)GetSetMediaTrackInfo(GetMediaItem_Track(GetMediaItemTake_Item(m_take)), "P_NAME", NULL));
+			trackName.Set((char*)GetSetMediaTrackInfo(GetMediaItemTake_Track(m_take), "P_NAME", NULL));
 		else
-			trackName.Set(__LOCALIZE("--NO TAKE FOUND--", "sws_DLG_174")); // Analyze loudness window should remove invalid objects but leave this anyway
+			trackName.Set(__LOCALIZE("--NO TAKE FOUND--", "sws_DLG_174")); // Analyze loudness window should remove invalid objects, but leave this anyway
 	}
 
 	return trackName;
@@ -971,14 +1012,14 @@ pan         (0)
 }
 
 /******************************************************************************
-* Additional dialogs and normalize loudness                                *
+* Additional dialogs and normalize loudness                                   *
 ******************************************************************************/
 struct BR_NormalizeData
 {
 	WDL_PtrList<BR_LoudnessObject>* items;
 	double targetLufs;
 	bool quickMode;   // analyze integrated loudness only (used when normalizing with actions)
-	bool success;     // did items get successfully  normalized?
+	bool success;     // did items get successfully normalized?
 	bool userCanceled;
 };
 
@@ -990,14 +1031,14 @@ static WDL_DLGRET NormalizeDialogProgressProc (HWND hwnd, UINT uMsg, WPARAM wPar
 	static BR_NormalizeData* normalizeData = NULL;
 
 	static BR_LoudnessObject* currentItem = NULL;
-	static int currentItemId = 0;
-	static double itemsLen = 0;
-	static double currentItemLen = 0;
+	static int currentItemId       = 0;
+	static double itemsLen         = 0;
+	static double currentItemLen   = 0;
 	static double finishedItemsLen = 0;
-	static bool analyzeInProgress = false;
+	static bool analyzeInProgress  = false;
 
 	#ifndef _WIN32
-		static bool positionSet;
+		static bool positionSet = false;
 	#endif
 
 	switch(uMsg)
@@ -1007,7 +1048,10 @@ static WDL_DLGRET NormalizeDialogProgressProc (HWND hwnd, UINT uMsg, WPARAM wPar
 			// Reset variables
 			normalizeData = (BR_NormalizeData*)lParam;
 			if (!normalizeData || !normalizeData->items)
+			{
 				EndDialog(hwnd, 0);
+				return 0;
+			}
 
 			currentItemId = 0;
 			itemsLen = 0;
@@ -1082,13 +1126,12 @@ static WDL_DLGRET NormalizeDialogProgressProc (HWND hwnd, UINT uMsg, WPARAM wPar
 							item->NormalizeIntegrated(normalizeData->targetLufs);
 							undoTrack = item->IsTrack();
 						}
-
 					}
 
 					if (normalizeData->items->GetSize())
 					{
 						if (undoTrack)
-							Undo_OnStateChangeEx2(NULL, __LOCALIZE("Normalize track loudness","sws_undo"), UNDO_STATE_ITEMS, -1);
+							Undo_OnStateChangeEx2(NULL, __LOCALIZE("Normalize track loudness","sws_undo"), UNDO_STATE_ALL, -1);
 						else
 							Undo_OnStateChangeEx2(NULL, __LOCALIZE("Normalize item loudness","sws_undo"), UNDO_STATE_ITEMS, -1);
 					}
@@ -1148,7 +1191,7 @@ static WDL_DLGRET NormalizeDialogProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
 
 	static BR_NormalizeData* normalizeData = NULL;
 	#ifndef _WIN32
-		static bool positionSet;
+		static bool positionSet = false;
 	#endif
 
 	switch(uMsg)
@@ -1228,17 +1271,17 @@ static WDL_DLGRET GraphDialogProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, uMsg, wParam, lParam))
 		return r;
 
-	static bool* process = NULL;
+	static bool* userCanceled = NULL;
 	#ifndef _WIN32
-		static bool positionSet;
+		static bool positionSet = false;
 	#endif
 
 	switch(uMsg)
 	{
 		case WM_INITDIALOG:
 		{
-			process = (bool*)lParam;
-			if (!process)
+			userCanceled = (bool*)lParam;
+			if (!userCanceled)
 				EndDialog(hwnd, 0);
 
 			char tmp[128];
@@ -1273,14 +1316,14 @@ static WDL_DLGRET GraphDialogProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 			{
 				case IDOK:
 				{
-					*process = true;
+					*userCanceled = false;
 					EndDialog(hwnd, 0);
 				}
 				break;
 
 				case IDCANCEL:
 				{
-					*process = false;
+					*userCanceled = true;
 					EndDialog(hwnd, 0);
 				}
 				break;
@@ -1371,7 +1414,7 @@ int BR_AnalyzeLoudnessView::OnItemSort (SWS_ListItem* item1, SWS_ListItem* item2
 		if (i1 > i2)      iRet = 1;
 		else if (i1 < i2) iRet = -1;
 
-		if (m_iSortCol < 0)	return -iRet;
+		if (m_iSortCol < 0) return -iRet;
 		else                return  iRet;
 	}
 	else
@@ -1424,6 +1467,32 @@ void BR_AnalyzeLoudnessWnd::ClearList ()
 	m_list->Update();
 }
 
+bool BR_AnalyzeLoudnessWnd::IsObjectInAnalyzeQueue (MediaTrack* track)
+{
+	for (int i = 0; i < m_analyzeQueue.GetSize(); ++i)
+	{
+		if (BR_LoudnessObject* object = m_analyzeQueue.Get(i))
+		{
+			if (object->CheckTarget(track))
+				return true;
+		}
+	}
+	return false;
+}
+
+bool BR_AnalyzeLoudnessWnd::IsObjectInAnalyzeQueue (MediaItem_Take* take)
+{
+	for (int i = 0; i < m_analyzeQueue.GetSize(); ++i)
+	{
+		if (BR_LoudnessObject* object = m_analyzeQueue.Get(i))
+		{
+			if (object->CheckTarget(take))
+				return true;
+		}
+	}
+	return false;
+}
+
 void BR_AnalyzeLoudnessWnd::OnInitDlg ()
 {
 	m_parentVwnd.SetRealParent(m_hwnd);
@@ -1454,28 +1523,46 @@ void BR_AnalyzeLoudnessWnd::OnCommand (WPARAM wParam, LPARAM lParam)
 		{
 			this->StopAnalyze();
 			this->StopReanalyze();
-			this->ClearList();
+
+			if (!m_properties.clearAnalyzed)
+			{
+				for (int i = 0; i < g_analyzedObjects.Get()->GetSize(); ++i)
+				{
+					if (BR_LoudnessObject* object = g_analyzedObjects.Get()->Get(i))
+						m_analyzeQueue.Add(object);
+				}
+				g_analyzedObjects.Get()->Empty(false);
+			}
+			else
+				this->ClearList();
 
 			// Add currently selected tracks/takes to queue
 			if (m_properties.analyzeTracks)
 			{
 				// Can't analyze master for now (accessor doesn't take receives into account) but leave in case this changes
 				if (*(int*)GetSetMediaTrackInfo(GetMasterTrack(NULL), "I_SELECTED", NULL))
-					m_analyzeQueue.Add(new BR_LoudnessObject(GetMasterTrack(NULL)));
-
+				{
+					if (m_properties.clearAnalyzed || !this->IsObjectInAnalyzeQueue(GetMasterTrack(NULL)))
+						m_analyzeQueue.Add(new BR_LoudnessObject(GetMasterTrack(NULL)));
+				}
 				for (int i = 0; i < CountSelectedTracks(NULL); ++i)
-					m_analyzeQueue.Add(new BR_LoudnessObject(GetSelectedTrack(NULL, i)));
+				{
+					if (m_properties.clearAnalyzed || !this->IsObjectInAnalyzeQueue(GetSelectedTrack(NULL, i)))
+						m_analyzeQueue.Add(new BR_LoudnessObject(GetSelectedTrack(NULL, i)));
+				}
 			}
 			else
 			{
 				for (int i = 0; i < CountSelectedMediaItems(NULL); ++i)
 				{
 					if (MediaItem_Take* take = GetActiveTake(GetSelectedMediaItem(NULL, i)))
-						m_analyzeQueue.Add(new BR_LoudnessObject(take));
+					{
+						if (m_properties.clearAnalyzed || !this->IsObjectInAnalyzeQueue(take))
+							m_analyzeQueue.Add(new BR_LoudnessObject(take));
+					}
 				}
 			}
 
-			// Proceed only if there is something selected
 			if (m_analyzeQueue.GetSize())
 			{
 				for (int i = 0; i < m_analyzeQueue.GetSize(); ++i)
@@ -1503,7 +1590,6 @@ void BR_AnalyzeLoudnessWnd::OnCommand (WPARAM wParam, LPARAM lParam)
 			while (BR_LoudnessObject* listItem = (BR_LoudnessObject*)m_list->EnumSelected(&x))
 				m_reanalyzeQueue.Add(listItem);
 
-			// Proceed only if there is something selected
 			if (m_reanalyzeQueue.GetSize())
 			{
 				for (int i = 0; i < m_reanalyzeQueue.GetSize(); ++i)
@@ -1524,31 +1610,26 @@ void BR_AnalyzeLoudnessWnd::OnCommand (WPARAM wParam, LPARAM lParam)
 		case NORMALIZE:
 		case NORMALIZE_TO_23:
 		{
-			// Stop any work in progress
 			this->StopAnalyze();
 			this->StopReanalyze();
 			m_list->Update();
 
-			// Get list items to analyze
 			WDL_PtrList<BR_LoudnessObject> itemsToNormalize;
 			int x = 0;
 			while (BR_LoudnessObject* listItem = (BR_LoudnessObject*)m_list->EnumSelected(&x))
 				itemsToNormalize.Add(listItem);
-
-			// Get normalize value
 			BR_NormalizeData normalizeData = {&itemsToNormalize, 0, false, false, false};
 			if (wParam == NORMALIZE)
 				GetUserNormalizeValue(&normalizeData);
 			else
 				normalizeData.targetLufs = -23;
 
-			// Normalize and update if needed
 			if (!normalizeData.userCanceled)
 			{
 				Normalize(&normalizeData);
 				m_list->Update();
 				if (m_properties.analyzeOnNormalize && normalizeData.success)
-					SendMessage(m_hwnd, WM_COMMAND, REANALYZE_ITEMS, 0);
+					this->OnCommand(REANALYZE_ITEMS, 0);
 			}
 		}
 		break;
@@ -1561,12 +1642,10 @@ void BR_AnalyzeLoudnessWnd::OnCommand (WPARAM wParam, LPARAM lParam)
 			this->StopReanalyze();
 			m_list->Update();
 
-			// Get user preferences
-			bool process = false;
-			DialogBoxParam(g_hInst, MAKEINTRESOURCE(IDD_BR_GRAPH_LOUDNESS), g_hwndParent, GraphDialogProc, (LPARAM)&process);
-			if (process)
+			bool userCanceled = true;
+			DialogBoxParam(g_hInst, MAKEINTRESOURCE(IDD_BR_GRAPH_LOUDNESS), g_hwndParent, GraphDialogProc, (LPARAM)&userCanceled);
+			if (!userCanceled)
 			{
-				// Start drawing
 				if (TrackEnvelope* env = GetSelectedTrackEnvelope(NULL))
 				{
 					BR_Envelope envelope(env);
@@ -1588,7 +1667,7 @@ void BR_AnalyzeLoudnessWnd::OnCommand (WPARAM wParam, LPARAM lParam)
 						success = listItem->CreateGraph(envelope, this->m_properties.graphMin, this->m_properties.graphMax, momentary);
 
 					if (success && envelope.Commit())
-						Undo_OnStateChangeEx2(NULL, __LOCALIZE("Draw loudness graph in active envelope","sws_undo"), UNDO_STATE_ITEMS, -1);
+						Undo_OnStateChangeEx2(NULL, __LOCALIZE("Draw loudness graph in active envelope","sws_undo"), UNDO_STATE_ALL, -1);
 				}
 			}
 		}
@@ -1635,6 +1714,12 @@ void BR_AnalyzeLoudnessWnd::OnCommand (WPARAM wParam, LPARAM lParam)
 		case SET_ANALYZE_ON_NORMALIZE:
 		{
 			m_properties.analyzeOnNormalize = !m_properties.analyzeOnNormalize;
+		}
+		break;
+
+		case SET_CLEAR_ON_ANALYZE:
+		{
+			m_properties.clearAnalyzed = !m_properties.clearAnalyzed;
 		}
 		break;
 
@@ -1698,9 +1783,9 @@ void BR_AnalyzeLoudnessWnd::OnTimer (WPARAM wParam)
 		if (!m_analyzeInProgress)
 		{
 			// New analyze task began, reset variables
-			if (m_currentObjectId == 0)	finishedObjectsLen = 0;
+			if (m_currentObjectId == 0)
+				finishedObjectsLen = 0;
 
-			// No more objects to analyze, update list
 			if (!m_analyzeQueue.GetSize())
 			{
 				// Make sure list view isn't populated with invalid items (i.e. user could have deleted them during analyzing)
@@ -1709,7 +1794,7 @@ void BR_AnalyzeLoudnessWnd::OnTimer (WPARAM wParam)
 					if (BR_LoudnessObject* object = g_analyzedObjects.Get()->Get(i))
 					{	if (!object->IsTargetValid())
 						{
-							g_analyzedObjects.Get()->Delete(i);
+							g_analyzedObjects.Get()->Delete(i, true);
 							--i;
 						}
 					}
@@ -1723,17 +1808,18 @@ void BR_AnalyzeLoudnessWnd::OnTimer (WPARAM wParam)
 				KillTimer(m_hwnd, ANALYZE_TIMER);
 				return;
 			}
-
-			// Start analyzing next object
-			if (currentObject = m_analyzeQueue.Get(0))
-			{
-				currentObjectLen = currentObject->GetAudioLength();
-				currentObject->Analyze();
-				m_analyzeInProgress = true;
-			}
 			else
-				m_analyzeQueue.Delete(0, true);
-			++m_currentObjectId;
+			{
+				if (currentObject = m_analyzeQueue.Get(0))
+				{
+					currentObjectLen = currentObject->GetAudioLength();
+					currentObject->Analyze();
+					m_analyzeInProgress = true;
+				}
+				else
+					m_analyzeQueue.Delete(0, true);
+				++m_currentObjectId;
+			}
 		}
 		else
 		{
@@ -1763,9 +1849,9 @@ void BR_AnalyzeLoudnessWnd::OnTimer (WPARAM wParam)
 		if (!m_analyzeInProgress)
 		{
 			// New analyze task began, reset variables
-			if (m_currentObjectId == 0)	finishedObjectsLen = 0;
+			if (m_currentObjectId == 0)
+				finishedObjectsLen = 0;
 
-			// No more objects to analyze, update list
 			if (!m_reanalyzeQueue.GetSize())
 			{
 				m_list->Update();
@@ -1776,17 +1862,18 @@ void BR_AnalyzeLoudnessWnd::OnTimer (WPARAM wParam)
 				KillTimer(m_hwnd, ANALYZE_TIMER);
 				return;
 			}
-
-			// Start analyzing next object
-			if (currentObject = m_reanalyzeQueue.Get(0))
-			{
-				currentObjectLen = currentObject->GetAudioLength();
-				currentObject->Analyze();
-				m_analyzeInProgress = true;
-			}
 			else
-				m_reanalyzeQueue.Delete(0, false);
-			++m_currentObjectId;
+			{
+				if (currentObject = m_reanalyzeQueue.Get(0))
+				{
+					currentObjectLen = currentObject->GetAudioLength();
+					currentObject->Analyze();
+					m_analyzeInProgress = true;
+				}
+				else
+					m_reanalyzeQueue.Delete(0, false);
+				++m_currentObjectId;
+			}
 		}
 		else
 		{
@@ -1890,6 +1977,16 @@ void BR_AnalyzeLoudnessWnd::GetMinSize (int* w, int* h)
 	*h = 160;
 }
 
+int BR_AnalyzeLoudnessWnd::OnKey (MSG* msg, int iKeyState)
+{
+	if (msg->message == WM_KEYDOWN && msg->wParam == VK_DELETE && !iKeyState)
+	{
+		this->OnCommand(DELETE_ITEM, 0);
+		return 1;
+	}
+	return 0;
+}
+
 HMENU BR_AnalyzeLoudnessWnd::OnContextMenu (int x, int y, bool* wantDefaultItems)
 {
 	HMENU menu = CreatePopupMenu();
@@ -1925,10 +2022,13 @@ HMENU BR_AnalyzeLoudnessWnd::OnContextMenu (int x, int y, bool* wantDefaultItems
 		AddToMenu(menu, SWS_SEPARATOR, 0);
 
 		HMENU optionsMenu = CreatePopupMenu();
+		AddToMenu((button ? menu : optionsMenu), __LOCALIZE("Clear list when analyzing", "sws_DLG_174"), SET_CLEAR_ON_ANALYZE, -1, false, m_properties.clearAnalyzed ?  MF_CHECKED : MF_UNCHECKED);
 		AddToMenu((button ? menu : optionsMenu), __LOCALIZE("Analyze after normalizing", "sws_DLG_174"), SET_ANALYZE_ON_NORMALIZE, -1, false, m_properties.analyzeOnNormalize ?  MF_CHECKED : MF_UNCHECKED);
+		AddToMenu((button ? menu : optionsMenu), SWS_SEPARATOR, 0);
 		AddToMenu((button ? menu : optionsMenu), __LOCALIZE("Mirror project selection", "sws_DLG_174"), SET_MIRROR_SELECTION, -1, false, m_properties.mirrorSelection ?  MF_CHECKED : MF_UNCHECKED);
 		AddToMenu((button ? menu : optionsMenu), __LOCALIZE("Double-click moves arrange to track/take", "sws_DLG_174"), SET_DOUBLECLICK_GOTO_TARGET, -1, false, m_properties.doubleClickGotoTarget ?  MF_CHECKED : MF_UNCHECKED);
-		AddToMenu((button ? menu : optionsMenu), __LOCALIZE("Create time selection over maximum short-term/momentary", "sws_DLG_174"), SET_TIMESEL_OVER_MAX, -1, false, m_properties.timeSelectionOverMax ?  MF_CHECKED : MF_UNCHECKED);
+		AddToMenu((button ? menu : optionsMenu), __LOCALIZE("Double-clicking maximum short-term/momentary creates time selection", "sws_DLG_174"), SET_TIMESEL_OVER_MAX, -1, false, m_properties.timeSelectionOverMax ?  MF_CHECKED : MF_UNCHECKED);
+		AddToMenu((button ? menu : optionsMenu), SWS_SEPARATOR, 0);
 		AddToMenu((button ? menu : optionsMenu), __LOCALIZE("Clear envelope when creating loudness graph", "sws_DLG_174"), SET_CLEAR_ENVELOPE, -1, false, m_properties.clearEnvelope ?  MF_CHECKED : MF_UNCHECKED);
 		if (!button)
 			AddSubMenu(menu, optionsMenu, __LOCALIZE("Options", "sws_menu"), 0);
@@ -1950,35 +2050,38 @@ graphMax              (-14)
 
 void BR_AnalyzeLoudnessWnd::Properties::Load ()
 {
-	int analyzeTracksInt;
-	int analyzeOnNormalizeInt;
-	int mirrorSelectionInt;
-	int doubleClickGotoTargetInt;
-	int timeSelectionOverMaxInt;
-	int clearEnvelopeInt;
+	int analyzeTracksInt         = 0;
+	int analyzeOnNormalizeInt    = 1;
+	int mirrorSelectionInt       = 1;
+	int doubleClickGotoTargetInt = 1;
+	int timeSelectionOverMaxInt  = 0;
+	int clearEnvelopeInt         = 1;
+	int clearAnalyzedInt         = 1;
 
 	char tmp[256];
-	GetPrivateProfileString("SWS", LOUDNESS_KEY, "0 1 1 1 0 1 -41 -14", tmp, 256, get_ini_file());
-	sscanf(tmp, "%d %d %d %d %d %d %lf %lf", &analyzeTracksInt, &analyzeOnNormalizeInt, &mirrorSelectionInt, &doubleClickGotoTargetInt, &timeSelectionOverMaxInt, &clearEnvelopeInt, &graphMin, &graphMax);
+	GetPrivateProfileString("SWS", LOUDNESS_KEY, "0 1 1 1 0 1 -41 -14 1", tmp, 256, get_ini_file());
+	sscanf(tmp, "%d %d %d %d %d %d %lf %lf %d", &analyzeTracksInt, &analyzeOnNormalizeInt, &mirrorSelectionInt, &doubleClickGotoTargetInt, &timeSelectionOverMaxInt, &clearEnvelopeInt, &graphMin, &graphMax, &clearAnalyzedInt);
 
-	analyzeTracks = !!analyzeTracksInt;
-	analyzeOnNormalize = !!analyzeOnNormalizeInt;
-	mirrorSelection = !!mirrorSelectionInt;
+	analyzeTracks         = !!analyzeTracksInt;
+	analyzeOnNormalize    = !!analyzeOnNormalizeInt;
+	mirrorSelection       = !!mirrorSelectionInt;
 	doubleClickGotoTarget = !!doubleClickGotoTargetInt;
-	timeSelectionOverMax = !!timeSelectionOverMaxInt;
-	clearEnvelope = !!clearEnvelopeInt;
+	timeSelectionOverMax  = !!timeSelectionOverMaxInt;
+	clearEnvelope         = !!clearEnvelopeInt;
+	clearAnalyzed         = !!clearAnalyzedInt;
 }
 
 void BR_AnalyzeLoudnessWnd::Properties::Save ()
 {
-	int analyzeTracksInt = analyzeTracks;
-	int analyzeOnNormalizeInt = analyzeOnNormalize;
-	int mirrorSelectionInt = mirrorSelection;
+	int analyzeTracksInt         = analyzeTracks;
+	int analyzeOnNormalizeInt    = analyzeOnNormalize;
+	int mirrorSelectionInt       = mirrorSelection;
 	int doubleClickGotoTargetInt = doubleClickGotoTarget;
-	int timeSelectionOverMaxInt = timeSelectionOverMax;
-	int clearEnvelopeInt = clearEnvelope;
+	int timeSelectionOverMaxInt  = timeSelectionOverMax;
+	int clearEnvelopeInt         = clearEnvelope;
+	int clearAnalyzedInt         = clearAnalyzed;
 	char tmp[256];
-	_snprintfSafe(tmp, sizeof(tmp), "%d %d %d %d %d %d %lf %lf", analyzeTracksInt, analyzeOnNormalizeInt, mirrorSelectionInt, doubleClickGotoTargetInt, timeSelectionOverMaxInt, clearEnvelopeInt, graphMin, graphMax);
+	_snprintfSafe(tmp, sizeof(tmp), "%d %d %d %d %d %d %lf %lf %d", analyzeTracksInt, analyzeOnNormalizeInt, mirrorSelectionInt, doubleClickGotoTargetInt, timeSelectionOverMaxInt, clearEnvelopeInt, graphMin, graphMax, clearAnalyzedInt);
 	WritePrivateProfileString("SWS", LOUDNESS_KEY, tmp, get_ini_file());
 }
 

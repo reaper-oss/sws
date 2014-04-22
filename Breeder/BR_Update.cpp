@@ -123,7 +123,7 @@ static WDL_DLGRET DialogProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 	static BR_SearchObject* searchObject = NULL;
 	#ifndef _WIN32
-		static bool positionSet;
+		static bool positionSet = false;
 	#endif
 
 	switch(uMsg)
@@ -248,7 +248,6 @@ static void StartupSearch ()
 
 void VersionCheckInit ()
 {
-	// Get options
 	bool official, beta; unsigned int lastTime;
 	GetStartupSearchOptions (&official, &beta, &lastTime);
 
@@ -258,11 +257,8 @@ void VersionCheckInit ()
 		unsigned int currentTime = (unsigned int)time(NULL);
 		if (currentTime - lastTime >= 86400 || currentTime - lastTime < 0)
 		{
-			// Write current time
 			SetStartupSearchOptions (official, beta, currentTime);
-
-			// Register timer that starts after reaper loads, from there we start search
-			plugin_register("timer",(void*)StartupSearch);
+			plugin_register("timer",(void*)StartupSearch); // timer starts only after project whole load
 		}
 	}
 }
@@ -355,7 +351,6 @@ unsigned WINAPI BR_SearchObject::StartSearch (void* searchObject)
 	BR_SearchObject* _this = (BR_SearchObject*)searchObject;
 	JNL::open_socketlib();
 
-	// Get local version
 	BR_Version versionL;
 	sscanf(SWS_VERSION_STR, "%d,%d,%d,%d", &versionL.maj, &versionL.min, &versionL.rev, &versionL.build);
 
@@ -376,7 +371,6 @@ unsigned WINAPI BR_SearchObject::StartSearch (void* searchObject)
 		time_t startTime = time(NULL);
 		while (time(NULL) - startTime <= SEARCH_TIMEOUT && !_this->GetKillFlag())
 		{
-			// Set progress bar used in dialog
 			_this->SetProgress((double)(time(NULL) - startTime) / (SEARCH_TIMEOUT*2));
 
 			// Try to get version.h
@@ -385,11 +379,9 @@ unsigned WINAPI BR_SearchObject::StartSearch (void* searchObject)
 				break;
 			if (run == 1 && web.getreplycode() == 200) //  get data only after the connection has closed
 			{
-				// Parse version.h and save results
 				int size = web.bytes_available();
 				if (char* buf = new (nothrow) char[size])
 				{
-					// Get official version number
 					web.get_bytes(buf, size);
 					char* token = strtok(buf, "\n");
 					while (token != NULL)
@@ -399,7 +391,6 @@ unsigned WINAPI BR_SearchObject::StartSearch (void* searchObject)
 						token = strtok(NULL, "\n");
 					}
 
-					// Compare with local version and save status
 					if (_this->CompareVersion(versionO, versionL) == 1)
 						statusO = OFFICIAL_AVAILABLE;
 					else
@@ -424,7 +415,6 @@ unsigned WINAPI BR_SearchObject::StartSearch (void* searchObject)
 		time_t startTime = time(NULL);
 		while (time(NULL) - startTime <= SEARCH_TIMEOUT && !_this->GetKillFlag())
 		{
-			// Set progress bar used in dialog
 			_this->SetProgress((double)(time(NULL) - startTime) / (SEARCH_TIMEOUT*2) + 0.5);
 
 			// Try to get version.h
@@ -433,11 +423,9 @@ unsigned WINAPI BR_SearchObject::StartSearch (void* searchObject)
 				break;
 			else if (run == 1 && web.getreplycode() == 200) //  get data only after the connection has closed
 			{
-				// Parse version.h and save results
 				int size = web.bytes_available();
 				if (char* buf = new (nothrow) char[size])
 				{
-					// Get beta version number
 					web.get_bytes(buf, size);
 					char* token = strtok(buf, "\n");
 					while (token != NULL)
@@ -447,7 +435,6 @@ unsigned WINAPI BR_SearchObject::StartSearch (void* searchObject)
 						token = strtok(NULL, "\n");
 					}
 
-					// Compare with local version and save status
 					if (_this->CompareVersion(versionB, versionL) == 1)
 						statusB = BETA_AVAILABLE;
 					else
@@ -460,7 +447,6 @@ unsigned WINAPI BR_SearchObject::StartSearch (void* searchObject)
 		}
 	}
 
-	// Make progress bar 100% when done searching
 	_this->SetProgress(1);
 
 	// Give some breathing space to hwndDlg (i.e. SNM startup action may load screenset that repositions Reaper...)
@@ -472,7 +458,6 @@ unsigned WINAPI BR_SearchObject::StartSearch (void* searchObject)
 		if (!_this->CompareVersion(versionO, versionB))
 			statusB = UP_TO_DATE;
 
-	// Save status
 	int status;
 	if      (statusO == NO_CONNECTION && statusB == NO_CONNECTION)       status = NO_CONNECTION;
 	else if (statusO == OFFICIAL_AVAILABLE && statusB == BETA_AVAILABLE) status = BOTH_AVAILABLE;

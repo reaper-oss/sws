@@ -1,15 +1,15 @@
 Analyze and normalize loudness
- +Added an option to preserve already analyzed tracks/items when analyzing selected tracks/items
- +Fixes:
-  - Analyzing items with different channel modes should now work properly
-  - Fixed undo when normalizing tracks
-  - Pressing DELETE key will delete selected list view entries
++Added an option to preserve already analyzed tracks/items when analyzing selected tracks/items
++Fixes:
+ - Analyzing items with different channel modes should now work properly
+ - Fixed undo when normalizing tracks
+ - Pressing DELETE key will delete selected list view entries
 
 ReaScript
- +Added support for MIDI editor to BR_GetMouseCursorContext
- +Added functions:
-  - BR_MIDI_CCLaneRemove
-  - BR_MIDI_CCLaneReplace
++Added support for MIDI editor to BR_GetMouseCursorContext
++Added functions:
+ - BR_MIDI_CCLaneRemove
+ - BR_MIDI_CCLaneReplace
 
 Fixes
 +Localization / Windows OS: fixed stuff that could potentially make things broken when using:

@@ -27,6 +27,7 @@
 
 
 #include "stdafx.h"
+#include "Breeder/BR_Util.h"
 #include "../WDL/sha.h"
 #include "reaper/localize.h"
 
@@ -302,22 +303,12 @@ void* GetConfigVar(const char* cVar)
 
 HWND GetTrackWnd()
 {
-#ifdef _WIN32
-	static const char* sTrackview = __LOCALIZE("trackview", "DLG_102");
-	return FindWindowEx(g_hwndParent,0,"REAPERTrackListWindow", sTrackview);
-#else
-	return GetWindow(g_hwndParent, GW_CHILD);
-#endif
+	return GetArrangeWnd(); // BR: will take care of any localization issues
 }
 
 HWND GetRulerWnd()
 {
-#ifdef _WIN32
-	static const char* sTimeline = __LOCALIZE("timeline", "DLG_102");
-	return FindWindowEx(g_hwndParent, 0, "REAPERTimeDisplay", sTimeline);
-#else
-	return GetWindow(GetTrackWnd(), GW_HWNDNEXT);
-#endif
+	return GetRulerWndAlt(); // BR: will take care of any localization issues
 }
 
 // Output string must be 41 bytes minimum.  out is returned as a convenience.

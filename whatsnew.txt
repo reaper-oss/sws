@@ -1,3 +1,27 @@
+Analyze and normalize loudness
+ +Added an option to preserve already analyzed tracks/items when analyzing selected tracks/items
+ +Fixes:
+  - Analyzing items with different channel modes should now work properly
+  - Fixed undo when normalizing tracks
+  - Pressing DELETE key will delete selected list view entries
+
+ReaScript
+ +Added support for MIDI editor to BR_GetMouseCursorContext
+ +Added functions:
+  - BR_MIDI_CCLaneRemove
+  - BR_MIDI_CCLaneReplace
+
+Fixes
++Localization / Windows OS: fixed stuff that could potentially make things broken when using:
+ - SWS/BR: Preview media item under mouse
+ - SWS/BR: Move closest grid line to mouse cursor
+ - ReaScript BR_GetMouseCursorContext and similar functions
+ - Project navigation functionality (zoom/scroll etc...)
++Prevent moving project markers with the same ID:
+ - SWS: Auto Color/Icon
+ - SWS: Nudge marker under cursor left/right
+ - Xenakios/SWS: Rename project markers with ascending numbers
+
 !v2.4.0 #9 pre-release build (April 19, 2014)
 <strong>This version requires REAPER v4.62pre8+</strong>, an "Incompatible version" error message will be displayed otherwise...
 
@@ -5,7 +29,7 @@ Cycle Actions support conditional statements (IF, IF NOT, etc) in the MIDI Edito
 
 Fixes
 +Windows OS: fixed extension not being loaded
-+Cycle Action editor: fixed "Run" context menu item 
++Cycle Action editor: fixed "Run" context menu item
 
 !v2.4.0 #8 pre-release build (April 13, 2014)
 Cycle Actions can be registered in any section of the action list (e.g. MIDI Editor)
@@ -19,7 +43,7 @@ Added actions in the MIDI Editor action list (<strong>requires REAPER v4.62pre7+
 +SWS/S&M: Save displayed CC lanes, slot n
  Note: these actions were already present in the "Main" section of the action list, they will remain there (not to break users' configs), but these versions are deprecated now
 
-Snapshots: the default number of recall actions is now configurable in REAPER.ini 
+Snapshots: the default number of recall actions is now configurable in REAPER.ini
 Edit the key "DefaultNbSnapsRecall" in the section [SWS] (quit REAPER before editing this file!)
 
 !v2.4.0 #6 pre-release build (April 6, 2014)
@@ -101,7 +125,7 @@ Added ReaScript functions
 
 Fixes
 +The action "SWS/BR: Delete tempo marker and preserve position and length of (selected) items (including MIDI events)" should now work properly
- - Note: due to bug in the API, please update to 4.62pre3 otherwise you will lose any text events. (however, you will always lose sysex events because that part of the bug still remains unfixed)
+ - Note: due to bug in the API, please update to 4.611 otherwise you will lose any text and sysex events
 +Fixed rounding issues when converting projects markers to tempo markers in time selection (reported http://forum.cockos.com/showthread.php?p=1330369#post1330369|here|)
 
 !v2.4.0 #4 (March 13, 2014)

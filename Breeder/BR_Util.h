@@ -58,8 +58,8 @@ int GetFirstDigit (int val);
 int GetLastDigit (int val);
 vector<int> GetDigits(int val);
 WDL_FastString GetSourceChunk(PCM_source* source);
-template <typename T> void WritePtr (T* ptr, T val)  {if (ptr)*ptr = val;}
-template <typename T> void ReadPtr  (T* ptr, T& val) {if (ptr) val = *ptr;}
+template <typename T> bool WritePtr (T* ptr, T val)  {if (ptr){*ptr = val; return true;} return false;}
+template <typename T> bool ReadPtr  (T* ptr, T& val) {if (ptr){val = *ptr; return true;} return false;}
 template <typename T> bool CheckBounds (T val, T min, T max) {if (val < min) return false; if (val > max) return false; return true;}
 template <typename T> T    SetToBounds (T val, T min, T max) {if (val < min) return min; if (val > max) return max; return val;}
 
@@ -108,11 +108,11 @@ bool IsOffScreen (double position);
 * Window                                                                      *
 ******************************************************************************/
 HWND FindReaperWndByTitle (const char* name);
-HWND GetMixerWnd ();
-HWND GetMixerMasterWnd ();
-HWND GetTransportWnd ();
 HWND GetArrangeWnd ();
 HWND GetRulerWndAlt ();
+HWND GetTransportWnd ();
+HWND GetMixerWnd ();
+HWND GetMixerMasterWnd ();
 HWND GetMediaExplorerWnd ();
 HWND GetMcpWnd ();
 HWND GetTcpWnd ();

@@ -1552,11 +1552,30 @@ static void PrepareLocalizedString (const char* name, char* buf, int buf_sz)
 
 	#ifdef _WIN32
 		wchar_t widetext[2048];
-		MultiByteToWideChar(CP_UTF8, 0, name, -1, widetext, 2048);
+		MultiByteToWideChar(CP_UTF8, 0, name, -1, widetext,  sizeof(widetext)/sizeof(wchar_t));
 		WideCharToMultiByte(CP_ACP, 0, widetext, -1, buf, buf_sz, NULL, NULL);
-		MultiByteToWideChar(CP_ACP, 0, buf, -1, widetext, 2048);
+		MultiByteToWideChar(CP_ACP, 0, buf, -1, widetext,  sizeof(widetext)/sizeof(wchar_t));
 		WideCharToMultiByte(CP_UTF8, 0, widetext, -1, buf, buf_sz, NULL, NULL);
 	#endif
+}
+
+static void AllocPreparedString (const char* name, char** destination)
+{
+	#ifdef _WIN32
+		if (IsLocalized())
+		{
+			char buf[2048];
+			PrepareLocalizedString(name, buf, sizeof(buf));
+
+			int size = strlen(buf) + 1;
+			if (WritePtr(destination, new (nothrow) char[size]))
+				strncpy(*destination, buf, strlen(buf) + 1);
+		}
+		else
+	#endif
+		{
+			*destination = const_cast<char*>(name);
+		}
 }
 
 static HWND SearchChildren (const char* name, HWND hwnd, HWND startHwnd = NULL)
@@ -1657,6 +1676,19 @@ static HWND FindInReaper (const char* name)
 	return SearchChildren(name, g_hwndParent);
 }
 
+static HWND FindReaperWndByPreparedTitle (const char* name)
+{
+	if (name)
+	{
+		HWND hwnd = FindInReaperDockers(name);
+		if (!hwnd) hwnd = FindFloating(name);
+		if (!hwnd) hwnd = FindInFloatingDockers(name);
+		if (!hwnd) hwnd = FindInReaper(name);
+		return hwnd;
+	}
+	return NULL;
+}
+
 HWND FindReaperWndByTitle (const char* name)
 {
 	#ifdef _WIN32
@@ -1664,100 +1696,13 @@ HWND FindReaperWndByTitle (const char* name)
 		{
 			char preparedName[2048];
 			PrepareLocalizedString(name, preparedName, sizeof(preparedName));
-			HWND hwnd = FindInReaperDockers(preparedName);
-			if (!hwnd) hwnd = FindFloating(preparedName);
-			if (!hwnd) hwnd = FindInFloatingDockers(preparedName);
-			if (!hwnd) hwnd = FindInReaper(preparedName);
-			return hwnd;
+			return FindReaperWndByPreparedTitle(preparedName);
 		}
 		else
 	#endif
 		{
-			HWND hwnd = FindInReaperDockers(name);
-			if (!hwnd) hwnd = FindFloating(name);
-			if (!hwnd) hwnd = FindInFloatingDockers(name);
-			if (!hwnd) hwnd = FindInReaper(name);
-			return hwnd;
+			return FindReaperWndByPreparedTitle(name);
 		}
-}
-
-HWND GetMixerWnd ()
-{
-	static const char* name = NULL;
-	if (!name)
-	{
-		#ifdef _WIN32
-			if (IsLocalized())
-			{
-				char* preparedName = new (nothrow) char[2048];
-				PrepareLocalizedString(__localizeFunc("Mixer", "DLG_151", 0), preparedName, 2048);
-				name = preparedName;
-			}
-			else
-		#endif
-			{
-				name = __localizeFunc("Mixer", "DLG_151", 0);
-			}		
-	}
-
-	HWND hwnd = FindInReaperDockers(name);
-	if (!hwnd) hwnd = FindFloating(name);
-	if (!hwnd) hwnd = FindInFloatingDockers(name);
-	if (!hwnd) hwnd = FindInReaper(name);
-	return hwnd;
-}
-
-HWND GetMixerMasterWnd ()
-{
-	static const char* name = NULL;
-	if (!name)
-	{
-		#ifdef _WIN32
-			if (IsLocalized())
-			{
-				char* preparedName = new (nothrow) char[2048];
-				PrepareLocalizedString(__localizeFunc("Mixer Master", "mixer", 0), preparedName, 2048);
-				name = preparedName;
-			}
-			else
-		#endif
-			{
-				name = __localizeFunc("Mixer Master", "mixer", 0);
-			}
-	}
-
-	HWND hwnd = FindInReaperDockers(name);
-	if (!hwnd) hwnd = FindFloating(name);
-	if (!hwnd) hwnd = FindInFloatingDockers(name);
-	if (!hwnd) hwnd = FindInReaper(name);
-	return hwnd;
-}
-
-HWND GetTransportWnd ()
-{
-	static const char* name = NULL;
-	if (!name)
-	{
-		#ifdef _WIN32
-			if (IsLocalized())
-			{
-				char* preparedName = new (nothrow) char[2048];
-				PrepareLocalizedString(__localizeFunc("Transport", "DLG_188", 0), preparedName, 2048);
-				name = preparedName;
-			}
-			else
-		#endif
-			{
-				name = __localizeFunc("Transport", "DLG_188", 0);
-			}
-		
-	}
-
-	HWND hwnd = FindInReaper(name);
-	if (!hwnd) hwnd = FindInReaperDockers(name);
-	if (!hwnd) hwnd = FindInFloatingDockers(name);
-	if (!hwnd) hwnd = FindFloating(name); // transport can't float by itself but search in case this changes in the future
-	return hwnd;
 }
 
 HWND GetArrangeWnd ()
@@ -1831,30 +1776,45 @@ HWND GetRulerWndAlt ()
 	return hwnd;
 }
 
+HWND GetTransportWnd ()
+{
+	static char* name = NULL;
+	if (!name)
+		AllocPreparedString(__localizeFunc("Transport", "DLG_188", 0), &name);
+
+	if (name)
+	{
+		HWND hwnd = FindInReaper(name);
+		if (!hwnd) hwnd = FindInReaperDockers(name);
+		if (!hwnd) hwnd = FindInFloatingDockers(name);
+		if (!hwnd) hwnd = FindFloating(name); // transport can't float by itself but search in case this changes in the future
+		return hwnd;
+	}
+	return NULL;
+}
+
+HWND GetMixerWnd ()
+{
+	static char* name = NULL;
+	if (!name)
+		AllocPreparedString(__localizeFunc("Mixer", "DLG_151", 0), &name);
+	return FindReaperWndByPreparedTitle(name);
+}
+
+HWND GetMixerMasterWnd ()
+{
+	static char* name = NULL;
+	if (!name)
+		AllocPreparedString(__localizeFunc("Mixer Master", "mixer", 0), &name);
+	return FindReaperWndByPreparedTitle(name);
+}
+
 HWND GetMediaExplorerWnd ()
 {
-	static const char* name = NULL;
+	static char* name = NULL;
 	if (!name)
-	{
-		#ifdef _WIN32
-			if (IsLocalized())
-			{
-				char* preparedName = new (nothrow) char[2048];
-				PrepareLocalizedString(__localizeFunc("Media Explorer", "explorer", 0), preparedName, 2048);
-				name = preparedName;
-			}
-			else
-		#endif
-			{
-				name = __localizeFunc("Media Explorer", "explorer", 0);
-			}
-	}
-
-	HWND hwnd = FindInReaperDockers(name);
-	if (!hwnd) hwnd = FindFloating(name);
-	if (!hwnd) hwnd = FindInFloatingDockers(name);
-	if (!hwnd) hwnd = FindInReaper(name);
-	return hwnd;
+		AllocPreparedString(__localizeFunc("Media Explorer", "explorer", 0), &name);
+	return FindReaperWndByPreparedTitle(name);
 }
 
 HWND GetMcpWnd ()

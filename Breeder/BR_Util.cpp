@@ -1569,7 +1569,7 @@ static void AllocPreparedString (const char* name, char** destination)
 
 			int size = strlen(buf) + 1;
 			if (WritePtr(destination, new (nothrow) char[size]))
-				strncpy(*destination, buf, strlen(buf) + 1);
+				strncpy(*destination, buf, size);
 		}
 		else
 	#endif
@@ -1676,7 +1676,7 @@ static HWND FindInReaper (const char* name)
 	return SearchChildren(name, g_hwndParent);
 }
 
-static HWND FindReaperWndByPreparedTitle (const char* name)
+static HWND FindReaperWndByPreparedString (const char* name)
 {
 	if (name)
 	{
@@ -1696,12 +1696,12 @@ HWND FindReaperWndByTitle (const char* name)
 		{
 			char preparedName[2048];
 			PrepareLocalizedString(name, preparedName, sizeof(preparedName));
-			return FindReaperWndByPreparedTitle(preparedName);
+			return FindReaperWndByPreparedString(preparedName);
 		}
 		else
 	#endif
 		{
-			return FindReaperWndByPreparedTitle(name);
+			return FindReaperWndByPreparedString(name);
 		}
 }
 
@@ -1798,7 +1798,7 @@ HWND GetMixerWnd ()
 	static char* name = NULL;
 	if (!name)
 		AllocPreparedString(__localizeFunc("Mixer", "DLG_151", 0), &name);
-	return FindReaperWndByPreparedTitle(name);
+	return FindReaperWndByPreparedString(name);
 }
 
 HWND GetMixerMasterWnd ()
@@ -1806,7 +1806,7 @@ HWND GetMixerMasterWnd ()
 	static char* name = NULL;
 	if (!name)
 		AllocPreparedString(__localizeFunc("Mixer Master", "mixer", 0), &name);
-	return FindReaperWndByPreparedTitle(name);
+	return FindReaperWndByPreparedString(name);
 }
 
 HWND GetMediaExplorerWnd ()
@@ -1814,7 +1814,7 @@ HWND GetMediaExplorerWnd ()
 	static char* name = NULL;
 	if (!name)
 		AllocPreparedString(__localizeFunc("Media Explorer", "explorer", 0), &name);
-	return FindReaperWndByPreparedTitle(name);
+	return FindReaperWndByPreparedString(name);
 }
 
 HWND GetMcpWnd ()

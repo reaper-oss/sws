@@ -334,7 +334,7 @@ void ActionsList(COMMAND_T*)
 }
 #endif
 
-//JFB questionnable func: ok most of the time but, for ex., 
+//JFB questionnable func: ok most of the time but, for ex.,
 // 2 different cmds can share the same function pointer cmd->doCommand
 int SWSGetCommandID(void (*cmdFunc)(COMMAND_T*), INT_PTR user, const char** pMenuText)
 {
@@ -439,14 +439,10 @@ public:
 	int m_iACIgnore;
 	SWSTimeSlice() : m_bChanged(false), m_iACIgnore(0) {}
 
-	void Run()
-	{
+	void Run() // BR: Removed some stuff from here and made it use plugin_register("timer"/"-timer") - it's the same thing as this but it enables us to remove unused stuff completely
+	{          // I guess we could do the rest too (and add user options to enable where needed)...
 		SNM_CSurfRun();
 		ZoomSlice();
-		MarkerActionSlice();
-		ItemPreviewSlice();
-		PlayItemsOnceSlice();
-		ColorSlice();
 		MiscSlice();
 
 		if (m_bChanged)
@@ -463,7 +459,8 @@ public:
 	{
 		SNM_CSurfSetPlayState(play, pause, rec);
 		AWDoAutoGroup(rec);
-		ItemPreviewPlayState(play);
+		ItemPreviewPlayState(play, rec);
+		BR_CSurfSetPlayState(play, pause, rec);
 	}
 
 	// This is our only notification of active project tab change, so update everything
@@ -767,6 +764,10 @@ extern "C"
 		IMPAPI(MIDI_DeleteEvt);
 		IMPAPI(MIDI_DeleteNote);
 		IMPAPI(MIDI_DeleteTextSysexEvt);
+		IMPAPI(MIDI_EnumSelCC);
+		IMPAPI(MIDI_EnumSelEvts);
+		IMPAPI(MIDI_EnumSelNotes);
+		IMPAPI(MIDI_EnumSelTextSysexEvts);
 		IMPAPI(MIDI_eventlist_Create);
 		IMPAPI(MIDI_eventlist_Destroy);
 		IMPAPI(MIDI_GetCC);
@@ -828,6 +829,7 @@ extern "C"
 		IMPAPI(SectionFromUniqueID);
 		IMPAPI(SelectProjectInstance);
 		IMPAPI(SendLocalOscMessage);
+		IMPAPI(SetActiveTake)
 		IMPAPI(SetCurrentBPM);
 		IMPAPI(SetEditCurPos);
 		IMPAPI(SetEditCurPos2);

@@ -302,8 +302,6 @@ void DoSetLoopPointsToSelectedItems(bool SetTheLoop)
 	}
 }
 
-bool g_PlayItemsOncePlaying=false;
-
 void DoNudgeItemsLeftSecsAndConfBased(COMMAND_T*)
 {
 	DoNudgeSelectedItemsPositions(true,false,0.0);
@@ -366,7 +364,9 @@ void DoLoopAndPlaySelectedItems(COMMAND_T*)
 	Main_OnCommand(1007, 0); // Transport Play
 }
 
-void PlayItemsOnceSlice()
+static bool g_PlayItemsOncePlaying=false;
+
+void PlayItemsOnceTimer()
 {
 	if (g_PlayItemsOncePlaying)
 	{
@@ -377,6 +377,9 @@ void PlayItemsOnceSlice()
 			g_PlayItemsOncePlaying = false;
 			Main_OnCommand(1016, 0); // Transport Stop
 		}
+
+		if (!g_PlayItemsOncePlaying)
+			plugin_register("-timer", (void*)PlayItemsOnceTimer);
 	}
 }
 
@@ -387,6 +390,7 @@ void DoPlayItemsOnce(COMMAND_T*)
 		if (g_PlayItemsOncePlaying)
 		{
 			g_PlayItemsOncePlaying = false;
+			plugin_register("-timer", (void*)PlayItemsOnceTimer);
 			Main_OnCommand(1016, 0); // Transport Stop
 		}
 
@@ -397,6 +401,9 @@ void DoPlayItemsOnce(COMMAND_T*)
 		Main_OnCommand(1007, 0); // Transport Play
 		Sleep(100);
 		g_PlayItemsOncePlaying = true;
+
+		if (g_PlayItemsOncePlaying)
+			plugin_register("timer", (void*)PlayItemsOnceTimer);
 	}
 }
 
@@ -428,12 +435,12 @@ void DoMoveCursor10pixLeft(COMMAND_T*)  { for (int i = 0; i < ALEXPIXELS; i++) M
 void DoMoveCursor10pixLeftCreateSel(COMMAND_T*)  { for (int i = 0; i < ALEXPIXELS; i++) Main_OnCommand(40102,0); }
 void DoMoveCursor10pixRightCreateSel(COMMAND_T*) { for (int i = 0; i < ALEXPIXELS; i++) Main_OnCommand(40103,0); }
 
-preview_register_t g_ItemPreview = { {}, 0, };
-bool g_itemPreviewPlaying = false;
-bool g_itemPreviewPaused = false;
-bool g_itemPreviewSendCC123 = false;
+static preview_register_t g_ItemPreview = { {}, 0, };
+static bool g_itemPreviewPlaying = false;
+static bool g_itemPreviewPaused = false;
+static bool g_itemPreviewSendCC123 = false;
 
-void ItemPreviewSlice()
+void ItemPreviewTimer()
 {
 	if (g_itemPreviewPlaying)
 	{
@@ -453,6 +460,7 @@ void ItemPreviewSlice()
 			#endif
 			g_itemPreviewSendCC123 = false; // item played out completely, no need to send all-notes-off
 			ItemPreview (0, NULL, NULL, 0, 0, 0, false);
+			plugin_register("-timer",(void*)ItemPreviewTimer);
 		}
 		else
 		{
@@ -463,12 +471,16 @@ void ItemPreviewSlice()
 			#endif
 		}
 	}
+	else
+	{
+		plugin_register("-timer",(void*)ItemPreviewTimer);
+	}
 }
 
-void ItemPreviewPlayState(bool play)
+void ItemPreviewPlayState(bool play, bool rec)
 {
-	if (!play && g_itemPreviewPlaying)
-		ItemPreview (0, NULL, NULL, 0, 0, 0, false);
+	if (g_itemPreviewPlaying && (!play || rec || (g_itemPreviewPaused && play)))
+		ItemPreview(0, NULL, NULL, 0, 0, 0, false);
 }
 
 // mode:
@@ -490,6 +502,7 @@ void ItemPreview(int mode, MediaItem* item, MediaTrack* track, double volume, do
 		{
 			StopPreview(&g_ItemPreview);
 		}
+
 		g_itemPreviewPlaying = false;
 		g_itemPreviewSendCC123 = false;
 		delete g_ItemPreview.src;
@@ -506,16 +519,6 @@ void ItemPreview(int mode, MediaItem* item, MediaTrack* track, double volume, do
 	}
 	if (mode == 0)
 		return;
-
-	if (pauseDuringPrev)
-	{
-		if ((GetPlayStateEx(NULL)&1) == 1 && (GetPlayStateEx(NULL)&2) != 1)
-		{
-			g_itemPreviewPaused = true;
-			OnPauseButton();
-		}
-	}
-
 
 	if (CountTakes(item))
 	{
@@ -543,6 +546,12 @@ void ItemPreview(int mode, MediaItem* item, MediaTrack* track, double volume, do
 			g_ItemPreview.volume = volume;
 			g_ItemPreview.preview_track = track;
 
+
+			// Pause before preview otherwise ItemPreviewPlayState will stop it
+			g_itemPreviewPaused = pauseDuringPrev;
+			if (g_itemPreviewPaused && (GetPlayStateEx(NULL)&1) == 1 && (GetPlayStateEx(NULL)&2) != 1)
+				OnPauseButton();
+
 			if (g_ItemPreview.preview_track)
 			{
 				char type[64] = {0};
@@ -554,7 +563,9 @@ void ItemPreview(int mode, MediaItem* item, MediaTrack* track, double volume, do
 			else
 				g_itemPreviewPlaying = !!PlayPreviewEx(&g_ItemPreview, (measureSync) ? (1) : (0), measureSync);
 
-			if (!g_itemPreviewPlaying)
+			if (g_itemPreviewPlaying)
+				plugin_register("timer",(void*)ItemPreviewTimer);
+			else
 				delete g_ItemPreview.src;
 		}
 

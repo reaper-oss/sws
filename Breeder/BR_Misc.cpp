@@ -325,24 +325,46 @@ void PreviewItemAtMouse (COMMAND_T* ct)
 
 		MediaTrack* track     = NULL;
 		double      volume    = 1;
-		double      start     = 0;
-		double      measure   = 0;
-		bool        pausePlay = false;
+		double      start     = (type  == 2) ? (position - GetMediaItemInfo_Value(item, "D_POSITION")) : 0;
+		double      measure   = (type  == 3) ? 1 : 0;
+		bool        pausePlay = (pause == 2) ? true : false;
 
 		if (output == 2)
 			volume = GetMediaTrackInfo_Value(GetMediaItem_Track(item), "D_VOL");
 		else if (output == 3)
 			track = GetMediaItem_Track(item);
 
-		if (type == 2)
-			start = position - GetMediaItemInfo_Value(item, "D_POSITION");
-		else if (type == 3)
-			measure = 1;
-
-		if (pause == 2)
-			pausePlay = true;
-
 		ItemPreview(toggle, item, track, volume, start, measure, pausePlay);
+	}
+}
+
+void PlaybackAtMouseCursor (COMMAND_T* ct)
+{
+	// Don't disrupt recording
+	if (GetPlayStateEx(NULL)&4)
+		return;
+
+	// Do both MIDI and arrange from here to prevent focusing issues (not unexpected in dual monitor situation)
+	double mousePos = PositionAtMouseCursor(true);
+	if (mousePos == -1)
+		mousePos = ME_PositionAtMouseCursor(true, true);
+
+	if (mousePos != -1)
+	{
+		if ((int)ct->user == 0)
+		{
+			StartPlayback(mousePos);
+		}
+		else
+		{
+			if (!GetPlayStateEx(NULL)&1 || GetPlayStateEx(NULL)&2)
+				StartPlayback(mousePos);
+			else
+			{
+				if ((int)ct->user == 1) OnPauseButton();
+				if ((int)ct->user == 2) OnStopButton();
+			}
+		}
 	}
 }
 

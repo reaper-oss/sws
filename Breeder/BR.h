@@ -29,5 +29,6 @@
 
 int BR_Init ();
 void BR_Exit ();
+void BR_CSurfSetPlayState (bool play, bool pause, bool rec);
 
 bool BR_MoveGridActionHook (int cmd, int flag);

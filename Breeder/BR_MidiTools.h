@@ -137,9 +137,19 @@ private:
 };
 
 /******************************************************************************
+* Mouse cursor                                                                *
+******************************************************************************/
+double ME_PositionAtMouseCursor (bool checkRuler, bool checkCCLanes);
+
+/******************************************************************************
 * Miscellaneous                                                               *
 ******************************************************************************/
 vector<int> GetUsedNamedNotes (void* midiEditor, MediaItem_Take* take, bool used, bool named, int channelForNames);
+vector<int> GetSelectedNotes (MediaItem_Take* take);
+vector<int> MuteSelectedSaveOldState (MediaItem_Take* take);
+void SetMutedState (MediaItem_Take* take, vector<int>& muteStatus);
+void SetSelectedNotes (MediaItem_Take* take, vector<int>& selectedNotes, bool unselectOthers);
+bool AreAllNotesUnselected (MediaItem_Take* take);
 bool IsMidi (MediaItem_Take* take, bool* inProject = NULL);
 bool IsOpenInInlineEditor (MediaItem_Take* take);
 bool IsMidiNoteBlack (int note);

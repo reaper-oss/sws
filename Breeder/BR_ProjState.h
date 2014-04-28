@@ -29,12 +29,14 @@
 
 class BR_EnvSel;
 class BR_CursorPos;
+class BR_MidiNoteSel;
 
 /******************************************************************************
 * Globals                                                                     *
 ******************************************************************************/
-extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_EnvSel> >    g_envSel;
-extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_CursorPos> > g_cursorPos;
+extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_EnvSel> >      g_envSel;
+extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_CursorPos> >   g_cursorPos;
+extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_MidiNoteSel> > g_midiNoteSel;
 
 /******************************************************************************
 * Call on startup to register state saving functionality                      *
@@ -73,4 +75,21 @@ public:
 private:
 	int m_slot;
 	double m_position;
+};
+
+/******************************************************************************
+* MIDI notes selection state                                                  *
+******************************************************************************/
+class BR_MidiNoteSel
+{
+public:
+	BR_MidiNoteSel (int slot, MediaItem_Take* take);
+	BR_MidiNoteSel (int slot, ProjectStateContext* ctx);
+	void SaveState (ProjectStateContext* ctx);
+	void Save (MediaItem_Take* take);
+	void Restore (MediaItem_Take* take);
+	int  GetSlot ();
+private:
+	int m_slot;
+	vector<int> m_selection;
 };

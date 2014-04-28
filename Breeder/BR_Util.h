@@ -75,6 +75,7 @@ double GetClosestLeftSideGrid (double position);
 double GetClosestRightSideGrid (double position);
 double EndOfProject (bool markers, bool regions);
 double GetProjectSettingsTempo (int* num, int* den);
+void StartPlayback (double position);
 void InitTempoMap ();
 void ScrollToTrackIfNotInArrange (MediaTrack* track);
 bool TcpVis (MediaTrack* track);
@@ -126,6 +127,7 @@ void CenterDialog (HWND hwnd, HWND target, HWND zOrder);
 ******************************************************************************/
 struct BR_MouseContextInfo
 {
+	/* Invalid stuff will always be NULL, false, -1 depending on the type */
 	MediaTrack* track;
 	MediaItem* item;
 	MediaItem_Take* take;

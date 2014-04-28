@@ -32,6 +32,9 @@
 #include "BR_Util.h"
 #include "../reaper/localize.h"
 
+/******************************************************************************
+* Commands                                                                    *
+******************************************************************************/
 void CursorToEnv1 (COMMAND_T* ct)
 {
 	TrackEnvelope* envelope = GetSelectedTrackEnvelope(NULL);

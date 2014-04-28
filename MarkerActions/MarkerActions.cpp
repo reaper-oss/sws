@@ -61,7 +61,7 @@ void RunActionMarker(const char* cName)
 	}
 }
 
-void MarkerActionSlice()
+void MarkerActionTimer()
 {
 	static double dLastPos = 0.0;
 	static double dUsualPosDelta = 0.050;
@@ -91,6 +91,8 @@ void MarkerActionSlice()
 void MarkerActionsToggle(COMMAND_T* = NULL)
 {
 	g_bMAEnabled = !g_bMAEnabled;
+	if (g_bMAEnabled) plugin_register("timer", (void*)MarkerActionTimer);
+	else              plugin_register("-timer",(void*)MarkerActionTimer);   
 	WritePrivateProfileString("SWS", "MarkerActionsEnabled", g_bMAEnabled ? "1" : "0", get_ini_file());
 	RefreshMAToolbar();
 }
@@ -218,5 +220,6 @@ int MarkerActionsInit()
 	SWSRegisterCommands(g_commandTable);
 
 	g_bMAEnabled = GetPrivateProfileInt("SWS", "MarkerActionsEnabled", 1, get_ini_file()) ? true : false;
+	if (g_bMAEnabled) plugin_register("timer", (void*)MarkerActionTimer);
 	return 1;
 }

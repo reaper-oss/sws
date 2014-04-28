@@ -700,18 +700,12 @@ void CustomColorAll(COMMAND_T*)
 	Main_OnCommand(40704, 0); // Set item(s) to one custom color
 }
 
-void RecRedRuler(COMMAND_T*)
-{
-	g_bRecRedRuler = !g_bRecRedRuler;
-	WritePrivateProfileString(SWS_INI, RECREDRULER_KEY, g_bRecRedRuler ? "1" : "0", get_ini_file());
-}
-
 int RecRedRulerEnabled(COMMAND_T*)
 {
 	return g_bRecRedRuler;
 }
 
-void ColorSlice()
+void ColorTimer()
 {
 	static int iRulerLaneCol[3];
 	static bool bRecording = false;
@@ -737,6 +731,14 @@ void ColorSlice()
 		UpdateTimeline();
 		bRecording = false;
 	}
+}
+
+void RecRedRuler(COMMAND_T*)
+{
+	g_bRecRedRuler = !g_bRecRedRuler;
+	if (g_bRecRedRuler) plugin_register("timer", (void*)ColorTimer);
+	else                plugin_register("-timer",(void*)ColorTimer);  
+	WritePrivateProfileString(SWS_INI, RECREDRULER_KEY, g_bRecRedRuler ? "1" : "0", get_ini_file());
 }
 
 COLORREF CalcGradient(COLORREF crStart, COLORREF crEnd, double dPos)
@@ -1187,6 +1189,7 @@ int ColorInit()
 		g_crGradEnd = lp.gettoken_int(1);
 	}
 	g_bRecRedRuler = GetPrivateProfileInt(SWS_INI, RECREDRULER_KEY, g_bRecRedRuler, get_ini_file()) ? true : false;
+	if (g_bRecRedRuler) plugin_register("timer", (void*)ColorTimer);
 
 	return 1;
 }

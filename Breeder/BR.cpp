@@ -29,10 +29,12 @@
 #include "BR.h"
 #include "BR_Envelope.h"
 #include "BR_Loudness.h"
+#include "BR_MidiEditor.h"
 #include "BR_Misc.h"
 #include "BR_ProjState.h"
 #include "BR_Tempo.h"
 #include "BR_Update.h"
+#include "BR_Util.h"
 #include "../reaper/localize.h"
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
@@ -80,7 +82,6 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Move closest selected envelope point to edit cursor" },              "BR_MOVE_CLOSEST_SEL_ENV_ECURSOR", MoveEnvPointToEditCursor, NULL, 1},
 	{ { DEFACCEL, "SWS/BR: Insert 2 envelopes points at time selection" },                      "BR_INSERT_2_ENV_POINT_TIME_SEL",  Insert2EnvPointsTimeSelection, NULL, 1},
 
-
 	{ { DEFACCEL, "SWS/BR: Hide all but active envelope for all tracks" },                      "BR_ENV_HIDE_ALL_BUT_ACTIVE",      ShowActiveEnvOnly, NULL, 0},
 	{ { DEFACCEL, "SWS/BR: Hide all but active envelope for selected tracks" },                 "BR_ENV_HIDE_ALL_BUT_ACTIVE_SEL",  ShowActiveEnvOnly, NULL, 1},
 
@@ -107,6 +108,62 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Normalize loudness of selected items to -23 LUFS" },  "BR_NORMALIZE_LOUDNESS_ITEMS23",  NormalizeLoudness, NULL, 3, },
 
 	/******************************************************************************
+	* Midi editor - Media item preview                                            *
+	******************************************************************************/
+	{ { DEFACCEL, "SWS/BR: Stop media item preview" },                                                                                                   "BR_ME_PREV_ACT_ITEM",                  NULL, NULL, 0,  NULL, 32060, ME_StopMidiTakePreview},
+
+	{ { DEFACCEL, "SWS/BR: Preview active media item through track" },                                                                                   "BR_ME_PREV_ACT_ITEM",                  NULL, NULL, 1111, NULL, 32060, ME_PreviewActiveTake},
+	{ { DEFACCEL, "SWS/BR: Preview active media item through track (start from mouse position)" },                                                       "BR_ME_PREV_ACT_ITEM_POS",              NULL, NULL, 1211, NULL, 32060, ME_PreviewActiveTake},
+	{ { DEFACCEL, "SWS/BR: Preview active media item through track (sync with next measure)" },                                                          "BR_ME_PREV_ACT_ITEM_SYNC",             NULL, NULL, 1311, NULL, 32060, ME_PreviewActiveTake},
+	{ { DEFACCEL, "SWS/BR: Preview active media item through track and pause during preview" },                                                          "BR_ME_PREV_ACT_ITEM_PAUSE",            NULL, NULL, 1112, NULL, 32060, ME_PreviewActiveTake},
+	{ { DEFACCEL, "SWS/BR: Preview active media item through track and pause during preview (start from mouse position)" },                              "BR_ME_PREV_ACT_ITEM_PAUSE_POS",        NULL, NULL, 1212, NULL, 32060, ME_PreviewActiveTake},
+	{ { DEFACCEL, "SWS/BR: Preview active media item (selected notes only) through track" },                                                             "BR_ME_PREV_ACT_ITEM_NOTES",            NULL, NULL, 1121, NULL, 32060, ME_PreviewActiveTake},
+	{ { DEFACCEL, "SWS/BR: Preview active media item (selected notes only) through track (start from mouse position)" },                                 "BR_ME_PREV_ACT_ITEM_NOTES_POS",        NULL, NULL, 1221, NULL, 32060, ME_PreviewActiveTake},
+	{ { DEFACCEL, "SWS/BR: Preview active media item (selected notes only) through track (sync with next measure)" },                                    "BR_ME_PREV_ACT_ITEM_NOTES_SYNC",       NULL, NULL, 1321, NULL, 32060, ME_PreviewActiveTake},
+	{ { DEFACCEL, "SWS/BR: Preview active media item (selected notes only) through track and pause during preview" },                                    "BR_ME_PREV_ACT_ITEM_NOTES_PAUSE",      NULL, NULL, 1122, NULL, 32060, ME_PreviewActiveTake},
+	{ { DEFACCEL, "SWS/BR: Preview active media item (selected notes only) through track and pause during preview (start from mouse position)" },        "BR_ME_PREV_ACT_ITEM_NOTES_PAUSE_POS",  NULL, NULL, 1222, NULL, 32060, ME_PreviewActiveTake},
+
+	{ { DEFACCEL, "SWS/BR: Toggle preview active media item through track" },                                                                            "BR_ME_TPREV_ACT_ITEM",                 NULL, NULL, 2111, NULL, 32060, ME_PreviewActiveTake},
+	{ { DEFACCEL, "SWS/BR: Toggle preview active media item through track (start from mouse position)" },                                                "BR_ME_TPREV_ACT_ITEM_POS",             NULL, NULL, 2211, NULL, 32060, ME_PreviewActiveTake},
+	{ { DEFACCEL, "SWS/BR: Toggle preview active media item through track (sync with next measure)" },                                                   "BR_ME_TPREV_ACT_ITEM_SYNC",            NULL, NULL, 2311, NULL, 32060, ME_PreviewActiveTake},
+	{ { DEFACCEL, "SWS/BR: Toggle preview active media item through track and pause during preview" },                                                   "BR_ME_TPREV_ACT_ITEM_PAUSE",           NULL, NULL, 2112, NULL, 32060, ME_PreviewActiveTake},
+	{ { DEFACCEL, "SWS/BR: Toggle preview active media item through track and pause during preview (start from mouse position)" },                       "BR_ME_TPREV_ACT_ITEM_PAUSE_POS",       NULL, NULL, 2212, NULL, 32060, ME_PreviewActiveTake},
+	{ { DEFACCEL, "SWS/BR: Toggle preview active media item (selected notes only) through track" },                                                      "BR_ME_TPREV_ACT_ITEM_NOTES",           NULL, NULL, 2121, NULL, 32060, ME_PreviewActiveTake},
+	{ { DEFACCEL, "SWS/BR: Toggle preview active media item (selected notes only) through track (start from mouse position)" },                          "BR_ME_TPREV_ACT_ITEM_NOTES_POS",       NULL, NULL, 2221, NULL, 32060, ME_PreviewActiveTake},
+	{ { DEFACCEL, "SWS/BR: Toggle preview active media item (selected notes only) through track (sync with next measure)" },                             "BR_ME_TPREV_ACT_ITEM_NOTES_SYNC",      NULL, NULL, 2321, NULL, 32060, ME_PreviewActiveTake},
+	{ { DEFACCEL, "SWS/BR: Toggle preview active media item (selected notes only) through track and pause during preview" },                             "BR_ME_TPREV_ACT_ITEM_NOTES_PAUSE",     NULL, NULL, 2122, NULL, 32060, ME_PreviewActiveTake},
+	{ { DEFACCEL, "SWS/BR: Toggle preview active media item (selected notes only) through track and pause during preview (start from mouse position)" }, "BR_ME_TPREV_ACT_ITEM_NOTES_PAUSE_POS", NULL, NULL, 2222, NULL, 32060, ME_PreviewActiveTake},
+
+	/******************************************************************************
+	* Midi editor - Misc                                                          *
+	******************************************************************************/
+	{ { DEFACCEL, "SWS/BR: Play from mouse cursor position" },               "BR_ME_PLAY_MOUSECURSOR",              NULL, NULL, 0,  NULL, 32060, ME_PlaybackAtMouseCursor},
+	{ { DEFACCEL, "SWS/BR: Play/pause from mouse cursor position" },         "BR_ME_PLAY_PAUSE_MOUSECURSOR",        NULL, NULL, 1,  NULL, 32060, ME_PlaybackAtMouseCursor},
+	{ { DEFACCEL, "SWS/BR: Play/stop from mouse cursor position" },          "BR_ME_PLAY_STOP_MOUSECURSOR",         NULL, NULL, 2,  NULL, 32060, ME_PlaybackAtMouseCursor},
+
+	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 1" },             "BR_ME_SAVE_CURSOR_POS_SLOT_1",        NULL, NULL, 0, NULL, 32060, ME_SaveCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 2" },             "BR_ME_SAVE_CURSOR_POS_SLOT_2",        NULL, NULL, 1, NULL, 32060, ME_SaveCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 3" },             "BR_ME_SAVE_CURSOR_POS_SLOT_3",        NULL, NULL, 2, NULL, 32060, ME_SaveCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 4" },             "BR_ME_SAVE_CURSOR_POS_SLOT_4",        NULL, NULL, 3, NULL, 32060, ME_SaveCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 5" },             "BR_ME_SAVE_CURSOR_POS_SLOT_5",        NULL, NULL, 4, NULL, 32060, ME_SaveCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 1" },          "BR_ME_RESTORE_CURSOR_POS_SLOT_1",     NULL, NULL, 0, NULL, 32060, ME_RestoreCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 2" },          "BR_ME_RESTORE_CURSOR_POS_SLOT_2",     NULL, NULL, 1, NULL, 32060, ME_RestoreCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 3" },          "BR_ME_RESTORE_CURSOR_POS_SLOT_3",     NULL, NULL, 2, NULL, 32060, ME_RestoreCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 4" },          "BR_ME_RESTORE_CURSOR_POS_SLOT_4",     NULL, NULL, 3, NULL, 32060, ME_RestoreCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 5" },          "BR_ME_RESTORE_CURSOR_POS_SLOT_5",     NULL, NULL, 4, NULL, 32060, ME_RestoreCursorPosSlot},
+
+	{ { DEFACCEL, "SWS/BR: Save note selection from active take, slot 1" },  "BR_ME_SAVE_NOTE_SEL_SLOT_1",         NULL, NULL, 0, NULL, 32060, ME_SaveNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Save note selection from active take, slot 2" },  "BR_ME_SAVE_NOTE_SEL_SLOT_2",         NULL, NULL, 1, NULL, 32060, ME_SaveNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Save note selection from active take, slot 3" },  "BR_ME_SAVE_NOTE_SEL_SLOT_3",         NULL, NULL, 2, NULL, 32060, ME_SaveNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Save note selection from active take, slot 4" },  "BR_ME_SAVE_NOTE_SEL_SLOT_4",         NULL, NULL, 3, NULL, 32060, ME_SaveNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Save note selection from active take, slot 5" },  "BR_ME_SAVE_NOTE_SEL_SLOT_5",         NULL, NULL, 4, NULL, 32060, ME_SaveNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Restore note selection to active take, slot 1" }, "BR_ME_RESTORE_NOTE_SEL_SLOT_1",      NULL, NULL, 0, NULL, 32060, ME_RestoreNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Restore note selection to active take, slot 2" }, "BR_ME_RESTORE_NOTE_SEL_SLOT_2",      NULL, NULL, 1, NULL, 32060, ME_RestoreNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Restore note selection to active take, slot 3" }, "BR_ME_RESTORE_NOTE_SEL_SLOT_3",      NULL, NULL, 2, NULL, 32060, ME_RestoreNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Restore note selection to active take, slot 4" }, "BR_ME_RESTORE_NOTE_SEL_SLOT_4",      NULL, NULL, 3, NULL, 32060, ME_RestoreNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Restore note selection to active take, slot 5" }, "BR_ME_RESTORE_NOTE_SEL_SLOT_5",      NULL, NULL, 4, NULL, 32060, ME_RestoreNoteSelSlot},
+
+	/******************************************************************************
 	* Misc                                                                        *
 	******************************************************************************/
 	{ { DEFACCEL, "SWS/BR: Split selected items at tempo markers" },                                               "SWS_BRSPLITSELECTEDTEMPO",         SplitItemAtTempo},
@@ -129,6 +186,10 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Toggle media item online/offline" },                                                    "BR_TOGGLE_ITEM_ONLINE",            ToggleItemOnline},
 	{ { DEFACCEL, "SWS/BR: Copy take media source file path of selected items to clipboard" },                     "BR_TSOURCE_PATH_TO_CLIPBOARD",     ItemSourcePathToClipBoard},
 
+	{ { DEFACCEL, "SWS/BR: Play from mouse cursor position" },                                                     "BR_PLAY_MOUSECURSOR",              PlaybackAtMouseCursor, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Play/pause from mouse cursor position" },                                               "BR_PLAY_PAUSE_MOUSECURSOR",        PlaybackAtMouseCursor, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Play/stop from mouse cursor position" },                                                "BR_PLAY_STOP_MOUSECURSOR",         PlaybackAtMouseCursor, NULL, 2},
+
 	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 1" },                                                   "BR_SAVE_CURSOR_POS_SLOT_1",        SaveCursorPosSlot, NULL, 0},
 	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 2" },                                                   "BR_SAVE_CURSOR_POS_SLOT_2",        SaveCursorPosSlot, NULL, 1},
 	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 3" },                                                   "BR_SAVE_CURSOR_POS_SLOT_3",        SaveCursorPosSlot, NULL, 2},
@@ -143,37 +204,37 @@ static COMMAND_T g_commandTable[] =
 	/******************************************************************************
 	* Media item preview                                                          *
 	******************************************************************************/
-	{ { DEFACCEL, "SWS/BR: Preview media item under mouse" },                                                                                    "BR_PREV_ITEM_CURSOR",             PreviewItemAtMouse, NULL, 1111},
-	{ { DEFACCEL, "SWS/BR: Preview media item under mouse (start from cursor position)" },                                                       "BR_PREV_ITEM_CURSOR_POS",         PreviewItemAtMouse, NULL, 1121},
-	{ { DEFACCEL, "SWS/BR: Preview media item under mouse (sync with next measure)" },                                                           "BR_PREV_ITEM_CURSOR_SYNC",        PreviewItemAtMouse, NULL, 1131},
-	{ { DEFACCEL, "SWS/BR: Preview media item under mouse at track fader volume" },                                                              "BR_PREV_ITEM_CURSOR_FADER",       PreviewItemAtMouse, NULL, 1211},
-	{ { DEFACCEL, "SWS/BR: Preview media item under mouse at track fader volume (start from cursor position)" },                                 "BR_PREV_ITEM_CURSOR_FADER_POS",   PreviewItemAtMouse, NULL, 1221},
-	{ { DEFACCEL, "SWS/BR: Preview media item under mouse at track fader volume (sync with next measure)" },                                     "BR_PREV_ITEM_CURSOR_FADER_SYNC",  PreviewItemAtMouse, NULL, 1231},
-	{ { DEFACCEL, "SWS/BR: Preview media item under mouse through track" },                                                                      "BR_PREV_ITEM_CURSOR_TRACK",       PreviewItemAtMouse, NULL, 1311},
-	{ { DEFACCEL, "SWS/BR: Preview media item under mouse through track (start from cursor position)" },                                         "BR_PREV_ITEM_CURSOR_TRACK_POS",   PreviewItemAtMouse, NULL, 1321},
-	{ { DEFACCEL, "SWS/BR: Preview media item under mouse through track (sync with next measure)" },                                             "BR_PREV_ITEM_CURSOR_TRACK_SYNC",  PreviewItemAtMouse, NULL, 1331},
-	{ { DEFACCEL, "SWS/BR: Toggle preview media item under mouse" },                                                                             "BR_TPREV_ITEM_CURSOR",            PreviewItemAtMouse, NULL, 2111},
-	{ { DEFACCEL, "SWS/BR: Toggle preview media item under mouse (start from cursor position)" },                                                "BR_TPREV_ITEM_CURSOR_POS",        PreviewItemAtMouse, NULL, 2121},
-	{ { DEFACCEL, "SWS/BR: Toggle preview media item under mouse (sync with next measure)" },                                                    "BR_TPREV_ITEM_CURSOR_SYNC",       PreviewItemAtMouse, NULL, 2131},
-	{ { DEFACCEL, "SWS/BR: Toggle preview media item under mouse at track fader volume" },                                                       "BR_TPREV_ITEM_CURSOR_FADER",      PreviewItemAtMouse, NULL, 2211},
-	{ { DEFACCEL, "SWS/BR: Toggle preview media item under mouse at track fader volume (start from cursor position)" },                          "BR_TPREV_ITEM_CURSOR_FADER_POS",  PreviewItemAtMouse, NULL, 2221},
-	{ { DEFACCEL, "SWS/BR: Toggle preview media item under mouse at track fader volume (sync with next measure)" },                              "BR_TPREV_ITEM_CURSOR_FADER_SYNC", PreviewItemAtMouse, NULL, 2231},
-	{ { DEFACCEL, "SWS/BR: Toggle preview media item under mouse through track" },                                                               "BR_TPREV_ITEM_CURSOR_TRACK",      PreviewItemAtMouse, NULL, 2311},
-	{ { DEFACCEL, "SWS/BR: Toggle preview media item under mouse through track (start from cursor position)" },                                  "BR_TPREV_ITEM_CURSOR_TRACK_POS",  PreviewItemAtMouse, NULL, 2321},
-	{ { DEFACCEL, "SWS/BR: Toggle preview media item under mouse through track (sync with next measure)" },                                      "BR_TPREV_ITEM_CURSOR_TRACK_SYNC", PreviewItemAtMouse, NULL, 2331},
+	{ { DEFACCEL, "SWS/BR: Preview media item under mouse" },                                                                                          "BR_PREV_ITEM_CURSOR",             PreviewItemAtMouse, NULL, 1111},
+	{ { DEFACCEL, "SWS/BR: Preview media item under mouse (start from mouse cursor position)" },                                                       "BR_PREV_ITEM_CURSOR_POS",         PreviewItemAtMouse, NULL, 1121},
+	{ { DEFACCEL, "SWS/BR: Preview media item under mouse (sync with next measure)" },                                                                 "BR_PREV_ITEM_CURSOR_SYNC",        PreviewItemAtMouse, NULL, 1131},
+	{ { DEFACCEL, "SWS/BR: Preview media item under mouse and pause during preview" },                                                                 "BR_PREV_ITEM_PAUSE_CURSOR",             PreviewItemAtMouse, NULL, 1112},
+	{ { DEFACCEL, "SWS/BR: Preview media item under mouse and pause during preview (start from mouse cursor position)" },                              "BR_PREV_ITEM_PAUSE_CURSOR_POS",         PreviewItemAtMouse, NULL, 1122},
+	{ { DEFACCEL, "SWS/BR: Preview media item under mouse at track fader volume" },                                                                    "BR_PREV_ITEM_CURSOR_FADER",       PreviewItemAtMouse, NULL, 1211},
+	{ { DEFACCEL, "SWS/BR: Preview media item under mouse at track fader volume (start from mouse position)" },                                        "BR_PREV_ITEM_CURSOR_FADER_POS",   PreviewItemAtMouse, NULL, 1221},
+	{ { DEFACCEL, "SWS/BR: Preview media item under mouse at track fader volume (sync with next measure)" },                                           "BR_PREV_ITEM_CURSOR_FADER_SYNC",  PreviewItemAtMouse, NULL, 1231},
+	{ { DEFACCEL, "SWS/BR: Preview media item under mouse at track fader volume and pause during preview" },                                           "BR_PREV_ITEM_PAUSE_CURSOR_FADER",       PreviewItemAtMouse, NULL, 1212},
+	{ { DEFACCEL, "SWS/BR: Preview media item under mouse at track fader volume and pause during preview (start from mouse cursor position)" },        "BR_PREV_ITEM_PAUSE_CURSOR_FADER_POS",   PreviewItemAtMouse, NULL, 1222},
+	{ { DEFACCEL, "SWS/BR: Preview media item under mouse through track" },                                                                            "BR_PREV_ITEM_CURSOR_TRACK",       PreviewItemAtMouse, NULL, 1311},
+	{ { DEFACCEL, "SWS/BR: Preview media item under mouse through track (start from mouse position)" },                                                "BR_PREV_ITEM_CURSOR_TRACK_POS",   PreviewItemAtMouse, NULL, 1321},
+	{ { DEFACCEL, "SWS/BR: Preview media item under mouse through track (sync with next measure)" },                                                   "BR_PREV_ITEM_CURSOR_TRACK_SYNC",  PreviewItemAtMouse, NULL, 1331},
+	{ { DEFACCEL, "SWS/BR: Preview media item under mouse through track and pause during preview" },                                                   "BR_PREV_ITEM_PAUSE_CURSOR_TRACK",       PreviewItemAtMouse, NULL, 1312},
+	{ { DEFACCEL, "SWS/BR: Preview media item under mouse through track and pause during preview (start from mouse cursor position)" },                "BR_PREV_ITEM_PAUSE_CURSOR_TRACK_POS",   PreviewItemAtMouse, NULL, 1322},
 
-	{ { DEFACCEL, "SWS/BR: Preview media item under mouse and pause during preview" },                                                           "BR_PREV_ITEM_PAUSE_CURSOR",             PreviewItemAtMouse, NULL, 1112},
-	{ { DEFACCEL, "SWS/BR: Preview media item under mouse and pause during preview (start from cursor position)" },                              "BR_PREV_ITEM_PAUSE_CURSOR_POS",         PreviewItemAtMouse, NULL, 1122},
-	{ { DEFACCEL, "SWS/BR: Preview media item under mouse at track fader volume and pause during preview" },                                     "BR_PREV_ITEM_PAUSE_CURSOR_FADER",       PreviewItemAtMouse, NULL, 1212},
-	{ { DEFACCEL, "SWS/BR: Preview media item under mouse at track fader volume and pause during preview (start from cursor position)" },        "BR_PREV_ITEM_PAUSE_CURSOR_FADER_POS",   PreviewItemAtMouse, NULL, 1222},
-	{ { DEFACCEL, "SWS/BR: Preview media item under mouse through track and pause during preview" },                                             "BR_PREV_ITEM_PAUSE_CURSOR_TRACK",       PreviewItemAtMouse, NULL, 1312},
-	{ { DEFACCEL, "SWS/BR: Preview media item under mouse through track and pause during preview (start from cursor position)" },                "BR_PREV_ITEM_PAUSE_CURSOR_TRACK_POS",   PreviewItemAtMouse, NULL, 1322},
-	{ { DEFACCEL, "SWS/BR: Toggle preview media item under mouse and pause during preview" },                                                    "BR_TPREV_ITEM_PAUSE_CURSOR",            PreviewItemAtMouse, NULL, 2112},
-	{ { DEFACCEL, "SWS/BR: Toggle preview media item under mouse and pause during preview (start from cursor position)" },                       "BR_TPREV_ITEM_PAUSE_CURSOR_POS",        PreviewItemAtMouse, NULL, 2122},
-	{ { DEFACCEL, "SWS/BR: Toggle preview media item under mouse at track fader volume and pause during preview" },                              "BR_TPREV_ITEM_PAUSE_CURSOR_FADER",      PreviewItemAtMouse, NULL, 2212},
-	{ { DEFACCEL, "SWS/BR: Toggle preview media item under mouse at track fader volume and pause during preview (start from cursor position)" }, "BR_TPREV_ITEM_PAUSE_CURSOR_FADER_POS",  PreviewItemAtMouse, NULL, 2222},
-	{ { DEFACCEL, "SWS/BR: Toggle preview media item under mouse through track and pause during preview" },                                      "BR_TPREV_ITEM_PAUSE_CURSOR_TRACK",      PreviewItemAtMouse, NULL, 2312},
-	{ { DEFACCEL, "SWS/BR: Toggle preview media item under mouse through track and pause during preview (start from cursor position)" },         "BR_TPREV_ITEM_PAUSE_CURSOR_TRACK_POS",  PreviewItemAtMouse, NULL, 2322},
+	{ { DEFACCEL, "SWS/BR: Toggle preview media item under mouse" },                                                                                   "BR_TPREV_ITEM_CURSOR",            PreviewItemAtMouse, NULL, 2111},
+	{ { DEFACCEL, "SWS/BR: Toggle preview media item under mouse (start from mouse position)" },                                                       "BR_TPREV_ITEM_CURSOR_POS",        PreviewItemAtMouse, NULL, 2121},
+	{ { DEFACCEL, "SWS/BR: Toggle preview media item under mouse (sync with next measure)" },                                                          "BR_TPREV_ITEM_CURSOR_SYNC",       PreviewItemAtMouse, NULL, 2131},
+	{ { DEFACCEL, "SWS/BR: Toggle preview media item under mouse and pause during preview" },                                                          "BR_TPREV_ITEM_PAUSE_CURSOR",            PreviewItemAtMouse, NULL, 2112},
+	{ { DEFACCEL, "SWS/BR: Toggle preview media item under mouse and pause during preview (start from mouse cursor position)" },                       "BR_TPREV_ITEM_PAUSE_CURSOR_POS",        PreviewItemAtMouse, NULL, 2122},
+	{ { DEFACCEL, "SWS/BR: Toggle preview media item under mouse at track fader volume" },                                                             "BR_TPREV_ITEM_CURSOR_FADER",      PreviewItemAtMouse, NULL, 2211},
+	{ { DEFACCEL, "SWS/BR: Toggle preview media item under mouse at track fader volume (start from mouse position)" },                                 "BR_TPREV_ITEM_CURSOR_FADER_POS",  PreviewItemAtMouse, NULL, 2221},
+	{ { DEFACCEL, "SWS/BR: Toggle preview media item under mouse at track fader volume (sync with next measure)" },                                    "BR_TPREV_ITEM_CURSOR_FADER_SYNC", PreviewItemAtMouse, NULL, 2231},
+	{ { DEFACCEL, "SWS/BR: Toggle preview media item under mouse at track fader volume and pause during preview" },                                    "BR_TPREV_ITEM_PAUSE_CURSOR_FADER",      PreviewItemAtMouse, NULL, 2212},
+	{ { DEFACCEL, "SWS/BR: Toggle preview media item under mouse at track fader volume and pause during preview (start from mouse cursor position)" }, "BR_TPREV_ITEM_PAUSE_CURSOR_FADER_POS",  PreviewItemAtMouse, NULL, 2222},
+	{ { DEFACCEL, "SWS/BR: Toggle preview media item under mouse through track" },                                                                     "BR_TPREV_ITEM_CURSOR_TRACK",      PreviewItemAtMouse, NULL, 2311},
+	{ { DEFACCEL, "SWS/BR: Toggle preview media item under mouse through track (start from mouse position)" },                                         "BR_TPREV_ITEM_CURSOR_TRACK_POS",  PreviewItemAtMouse, NULL, 2321},
+	{ { DEFACCEL, "SWS/BR: Toggle preview media item under mouse through track (sync with next measure)" },                                            "BR_TPREV_ITEM_CURSOR_TRACK_SYNC", PreviewItemAtMouse, NULL, 2331},
+	{ { DEFACCEL, "SWS/BR: Toggle preview media item under mouse through track and pause during preview" },                                            "BR_TPREV_ITEM_PAUSE_CURSOR_TRACK",      PreviewItemAtMouse, NULL, 2312},
+	{ { DEFACCEL, "SWS/BR: Toggle preview media item under mouse through track and pause during preview (start from mouse cursor position)" },         "BR_TPREV_ITEM_PAUSE_CURSOR_TRACK_POS",  PreviewItemAtMouse, NULL, 2322},
 
 	/******************************************************************************
 	* Grid                                                                        *
@@ -271,4 +332,9 @@ int BR_Init()
 void BR_Exit()
 {
 	AnalyzeLoudnessExit();
+}
+
+void BR_CSurfSetPlayState (bool play, bool pause, bool rec)
+{
+	MidiTakePreviewPlayState(play, rec);
 }

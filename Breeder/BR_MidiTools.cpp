@@ -315,6 +315,25 @@ take (take)
 }
 
 /******************************************************************************
+* Mouse cursor                                                                *
+******************************************************************************/
+double ME_PositionAtMouseCursor (bool checkRuler, bool checkCCLanes)
+{
+	BR_MouseContextInfo info;
+	const char* segment;
+	GetMouseCursorContext (NULL, &segment, NULL, &info);
+	if (info.midiEditor)
+	{
+		if (checkRuler && checkCCLanes)                  return info.position; // no need for strcmp, if position is invalid it's already -1
+
+		if (!strcmp(segment,"notes_view"))               return info.position;
+		if (checkRuler   && !strcmp(segment, "ruler"))	 return info.position;
+		if (checkCCLanes && !strcmp(segment, "cc_lane")) return info.position;
+	}
+	return -1;
+}
+
+/******************************************************************************
 * Miscellaneous                                                               *
 ******************************************************************************/
 vector<int> GetUsedNamedNotes (void* midiEditor, MediaItem_Take* take, bool used, bool named, int channelForNames)
@@ -358,6 +377,84 @@ vector<int> GetUsedNamedNotes (void* midiEditor, MediaItem_Take* take, bool used
 	return notes;
 }
 
+vector<int> GetSelectedNotes (MediaItem_Take* take)
+{
+	vector<int> selectedNotes;
+
+	int noteCount;
+	MIDI_CountEvts(take, &noteCount, NULL, NULL);
+	for (int i = 0; i < noteCount; ++i)
+	{
+		bool selected = false;;
+		MIDI_GetNote(take, i, &selected, NULL, NULL, NULL, NULL, NULL, NULL);
+		if (selected)
+			selectedNotes.push_back(i);
+	}
+	return selectedNotes;
+}
+
+vector<int> MuteSelectedSaveOldState (MediaItem_Take* take)
+{
+	vector<int> muteStatus;
+
+	int noteCount;
+	if (MIDI_CountEvts(take, &noteCount, NULL, NULL))
+	{
+		for (int i = 0; i < noteCount; ++i)
+		{
+			bool selected, muted;
+			MIDI_GetNote(take, i, &selected, &muted, NULL, NULL, NULL, NULL, NULL);
+			muteStatus.push_back((int)muted);
+			if (!selected)
+			{
+				muted = true;
+				MIDI_SetNote(take, i, NULL, &muted, NULL, NULL, NULL, NULL, NULL);
+			}
+		}
+	}
+	return muteStatus;
+}
+
+void SetMutedState (MediaItem_Take* take, vector<int>& muteStatus)
+{
+	int noteCount = muteStatus.size();
+	for (int i = 0; i < noteCount; ++i)
+	{
+		bool muted = !!muteStatus[i];
+		MIDI_SetNote(take, i, NULL, &muted, NULL, NULL, NULL, NULL, NULL);
+	}
+}
+
+void SetSelectedNotes (MediaItem_Take* take, vector<int>& selectedNotes, bool unselectOthers)
+{
+	int selectedCount = selectedNotes.size();
+	int selectedId = (selectedCount > 0) ? (0) : (1);
+
+	int noteCount;
+	MIDI_CountEvts(take, &noteCount, NULL, NULL);
+	for (int i = 0; i < noteCount; ++i)
+	{
+		bool selected = false;
+		if (selectedId < selectedCount && i == selectedNotes[selectedId])
+		{
+			selected = true;
+			++selectedId;
+		}
+
+		MIDI_SetNote(take, i, ((unselectOthers) ? (&selected) : ((&selected) ? &selected : NULL)), NULL, NULL, NULL, NULL, NULL, NULL);
+	}
+}
+
+bool AreAllNotesUnselected (MediaItem_Take* take)
+{
+	bool firstNote = false;
+	MIDI_GetNote(take, 0, &firstNote, NULL, NULL, NULL, NULL, NULL, NULL);
+
+	if (!firstNote && MIDI_EnumSelNotes(take, 0) == -1)
+		return true;
+	else
+		return false;
+}
 bool IsMidi (MediaItem_Take* take, bool* inProject /*= NULL*/)
 {
 	if (PCM_source* source = GetMediaItemTake_Source(take))

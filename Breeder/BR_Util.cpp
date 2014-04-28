@@ -396,6 +396,17 @@ double GetProjectSettingsTempo (int* num, int* den)
 	return bpm/_den*4;
 }
 
+void StartPlayback (double position)
+{
+	double editCursor = GetCursorPositionEx(NULL);
+
+	PreventUIRefresh(1);
+	SetEditCurPos2(NULL, position, false, false);
+	OnPlayButton();
+	SetEditCurPos2(NULL, editCursor, false, false);
+	PreventUIRefresh(-1);
+}
+
 void InitTempoMap ()
 {
 	if (!CountTempoTimeSigMarkers(NULL))
@@ -1408,7 +1419,7 @@ static void GetTrackOrEnvelopeFromY (int y, TrackEnvelope** _envelope, MediaTrac
 /******************************************************************************
 * Arrange                                                                     *
 ******************************************************************************/
-static bool IsPointInArrange (POINT* p, bool checkPointVisibilty = true)
+static bool IsPointInArrange (POINT* p, bool checkPointVisibilty = true, HWND* wndFromPoint = NULL)
 {
 	/* Check if point is in arrange. Since WindowFromPoint is sometimes     *
 	*  called before this function, caller can choose not to check it but   *
@@ -1430,9 +1441,27 @@ static bool IsPointInArrange (POINT* p, bool checkPointVisibilty = true)
 	bool pointInArrange = p->x >= r.left && p->x <= r.right && p->y >= r.top && p->y <= r.bottom;
 
 	if (checkPointVisibilty)
-		return pointInArrange && hwnd == WindowFromPoint(*p);
+	{
+		if (pointInArrange)
+		{
+			HWND hwndPt = WindowFromPoint(*p);
+			WritePtr(wndFromPoint, hwndPt);
+			if (hwnd == hwndPt)
+				return true;
+			else
+				return false;
+		}
+		else
+		{
+			WritePtr(wndFromPoint, WindowFromPoint(*p));
+			return false;
+		}
+	}
 	else
+	{
+		WritePtr(wndFromPoint, (HWND)NULL);
 		return pointInArrange;
+	}
 }
 
 static double PositionAtArrangePoint (POINT p, double* arrangeStart = NULL, double* arrangeEnd = NULL, double* hZoom = NULL)
@@ -1973,6 +2002,9 @@ void CenterDialog (HWND hwnd, HWND target, HWND zOrder)
 ******************************************************************************/
 BR_MouseContextInfo::BR_MouseContextInfo()
 {
+	/* Note: other parts of the code rely on these *
+	*  default values. Be careful if changing them */
+
 	track        = NULL;
 	item         = NULL;
 	take         = NULL;
@@ -2204,7 +2236,7 @@ static int GetRulerLaneHeight (int rulerH, int lane)
 	return 0;
 }
 
-static int IsHwndMidi (HWND hwnd, void** midiEditor, HWND* subView)
+static int IsHwndMidiEditor (HWND hwnd, void** midiEditor, HWND* subView)
 {
 	int status = 0;
 
@@ -2227,18 +2259,24 @@ static int IsHwndMidi (HWND hwnd, void** midiEditor, HWND* subView)
 				WritePtr(subView, subWnd);
 
 				#ifdef _WIN32
+					static char* midiViewName  = (IsLocalized()) ? (NULL) : (const_cast<char*>(__localizeFunc("midiview", "midi_DLG_102", 0)));
+					static char* midiPianoName = (IsLocalized()) ? (NULL) : (const_cast<char*>(__localizeFunc("midipianoview", "midi_DLG_102", 0)));
+
 					if (IsLocalized())
 					{
-						if      (subWnd == SearchChildren(__localizeFunc("midiview", "midi_DLG_102", 0), hwnd))      { status = MIDI_WND_NOTEVIEW; break;}
-						else if (subWnd == SearchChildren(__localizeFunc("midipianoview", "midi_DLG_102", 0), hwnd)) { status = MIDI_WND_KEYBOARD; break;}
+						if (!midiViewName)  AllocPreparedString(__localizeFunc("midiview", "midi_DLG_102", 0),      &midiViewName);
+						if (!midiPianoName) AllocPreparedString(__localizeFunc("midipianoview", "midi_DLG_102", 0), &midiPianoName);
+
+						if      (subWnd == SearchChildren(midiViewName,  hwnd)) { status = MIDI_WND_NOTEVIEW; break;}
+						else if (subWnd == SearchChildren(midiPianoName, hwnd)) { status = MIDI_WND_KEYBOARD; break;}
 						else                                                                                         { status = MIDI_WND_UNKNOWN;  break;}
 					}
 					else
 					{
 						char buf[256] = "";
 						GetWindowText(subWnd, buf, sizeof(buf));
-						if      (!strcmp(buf, __localizeFunc("midiview", "midi_DLG_102", 0)))      { status = MIDI_WND_NOTEVIEW; break;}
-						else if (!strcmp(buf, __localizeFunc("midipianoview", "midi_DLG_102", 0))) { status = MIDI_WND_KEYBOARD; break;}
+						if      (!strcmp(buf, midiViewName ))      { status = MIDI_WND_NOTEVIEW; break;}
+						else if (!strcmp(buf, midiPianoName)) { status = MIDI_WND_KEYBOARD; break;}
 						else                                                                       { status = MIDI_WND_UNKNOWN;  break;}
 					}
 				#else
@@ -2256,7 +2294,7 @@ static int IsHwndMidi (HWND hwnd, void** midiEditor, HWND* subView)
 static bool GetMouseCursorContextMidi (HWND hwnd, POINT p, BR_MouseContextInfo& info, const char** window, const char** segment, const char** details)
 {
 	HWND segmentHwnd = NULL;
-	if (int cursorSegment = IsHwndMidi(hwnd, &info.midiEditor, &segmentHwnd))
+	if (int cursorSegment = IsHwndMidiEditor(hwnd, &info.midiEditor, &segmentHwnd))
 	{
 		WritePtr(window, "midi_editor");
 		ScreenToClient(segmentHwnd, &p);
@@ -2801,10 +2839,11 @@ void GetMouseCursorContext (const char** window, const char** segment, const cha
 
 double PositionAtMouseCursor (bool checkRuler)
 {
-	POINT p; GetCursorPos(&p);
-	if (IsPointInArrange(&p))
+	POINT p; HWND hwnd;
+	GetCursorPos(&p);
+	if (IsPointInArrange(&p, true, &hwnd))
 		return PositionAtArrangePoint(p);
-	else if (checkRuler && GetRulerWndAlt() == WindowFromPoint(p))
+	else if (checkRuler && GetRulerWndAlt() == hwnd)
 		return PositionAtArrangePoint(p);
 	else
 		return -1;

@@ -29,6 +29,7 @@
 #include "BR_ProjState.h"
 #include "BR_EnvTools.h"
 #include "BR_Loudness.h"
+#include "BR_MidiTools.h"
 #include "BR_Util.h"
 
 /******************************************************************************
@@ -36,12 +37,14 @@
 ******************************************************************************/
 const char* const ENVELOPE_SEL  = "<BR_ENV_SEL_SLOT";
 const char* const CURSOR_POS    = "<BR_CURSOR_POS";
+const char* const NOTE_SEL      = "<BR_NOTE_SEL_SLOT";
 
 /******************************************************************************
 * Globals                                                                     *
 ******************************************************************************/
-SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_EnvSel> >    g_envSel;
-SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_CursorPos> > g_cursorPos;
+SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_EnvSel> >      g_envSel;
+SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_CursorPos> >   g_cursorPos;
+SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_MidiNoteSel> > g_midiNoteSel;
 
 /******************************************************************************
 * Project state saving functionality                                          *
@@ -69,6 +72,13 @@ static bool ProcessExtensionLine (const char *line, ProjectStateContext *ctx, bo
 		return true;
 	}
 
+	// Midi note selection
+	if (!strcmp(lp.gettoken_str(0), NOTE_SEL))
+	{
+		g_midiNoteSel.Get()->Add(new BR_MidiNoteSel(lp.gettoken_int(1), ctx));
+		return true;
+	}
+
 	return false;
 }
 
@@ -90,6 +100,13 @@ static void SaveExtensionConfig (ProjectStateContext *ctx, bool isUndo, project_
 		for (int i = 0; i < count; ++i)
 			g_cursorPos.Get()->Get(i)->SaveState(ctx);
 	}
+
+	// Midi note selection
+	if (int count = g_midiNoteSel.Get()->GetSize())
+	{
+		for (int i = 0; i < count; ++i)
+			g_midiNoteSel.Get()->Get(i)->SaveState(ctx);
+	}
 }
 
 static void BeginLoadProjectState (bool isUndo, project_config_extension_t *reg)
@@ -104,6 +121,10 @@ static void BeginLoadProjectState (bool isUndo, project_config_extension_t *reg)
 	// Edit cursor position
 	g_cursorPos.Get()->Empty(true);
 	g_cursorPos.Cleanup();
+
+	// Midi note selection
+	g_midiNoteSel.Get()->Empty(true);
+	g_midiNoteSel.Cleanup();
 
 	// Analyze loudness data
 	CleanAnalyzeLoudnessProjectData();
@@ -208,6 +229,52 @@ void BR_CursorPos::Restore ()
 }
 
 int BR_CursorPos::GetSlot ()
+{
+	return m_slot;
+}
+
+/******************************************************************************
+* MIDI notes selection state                                                  *
+******************************************************************************/
+BR_MidiNoteSel::BR_MidiNoteSel (int slot, MediaItem_Take* take)
+{
+	m_slot = slot;
+	m_selection = GetSelectedNotes(take);
+}
+
+BR_MidiNoteSel::BR_MidiNoteSel (int slot, ProjectStateContext* ctx)
+{
+	m_slot = slot;
+
+	char line[32];
+	LineParser lp(false);
+	while(!ctx->GetLine(line, sizeof(line)) && !lp.parse(line))
+	{
+		if (!strcmp(lp.gettoken_str(0), ">"))
+			break;
+		m_selection.push_back(lp.gettoken_int(0));
+	}
+}
+
+void BR_MidiNoteSel::SaveState (ProjectStateContext* ctx)
+{
+	ctx->AddLine("%s %.2d", NOTE_SEL, m_slot);
+	for (size_t i = 0; i < m_selection.size(); ++i)
+		ctx->AddLine("%d", m_selection[i]);
+	ctx->AddLine(">");
+}
+
+void BR_MidiNoteSel::Save (MediaItem_Take* take)
+{
+	m_selection = GetSelectedNotes(take);
+}
+
+void BR_MidiNoteSel::Restore (MediaItem_Take* take)
+{
+	SetSelectedNotes(take, m_selection, true);
+}
+
+int BR_MidiNoteSel::GetSlot ()
 {
 	return m_slot;
 }

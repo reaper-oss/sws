@@ -109,14 +109,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="downarrow.bmp">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="uparrow.bmp">
-      <Filter>Resource Files</Filter>
-    </Image>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="resource.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
@@ -438,9 +430,6 @@
     <ClInclude Include="reaper\reaper_plugin.h">
       <Filter>Core\Reaper</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Program Files (x86)\REAPER\reaper_plugin_functions.h">
-      <Filter>Core\Reaper</Filter>
-    </ClInclude>
     <ClInclude Include="reaper\sws_rpf_wrapper.h">
       <Filter>Core\Reaper</Filter>
     </ClInclude>
@@ -567,6 +556,9 @@
     <ClInclude Include="Breeder\BR_Loudness.h">
       <Filter>Breeder</Filter>
     </ClInclude>
+    <ClInclude Include="Breeder\BR_MidiEditor.h">
+      <Filter>Breeder</Filter>
+    </ClInclude>
     <ClInclude Include="Breeder\BR_MidiTools.h">
       <Filter>Breeder</Filter>
     </ClInclude>
@@ -597,6 +589,9 @@
     <ClInclude Include="Wol\wol.h">
       <Filter>Wol</Filter>
     </ClInclude>
+    <ClInclude Include="C:\Program Files (x86)\REAPER\reaper_plugin_functions.h">
+      <Filter>Core\Reaper</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="sws_extension.rc">
@@ -619,6 +614,13 @@
     <None Include="zoomundo.cur">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="downarrow.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="uparrow.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="whatsnew.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Xenakios\AutoRename.cpp">
@@ -1152,6 +1154,9 @@
     <ClCompile Include="Breeder\BR_Loudness.cpp">
       <Filter>Breeder</Filter>
     </ClCompile>
+    <ClCompile Include="Breeder\BR_MidiEditor.cpp">
+      <Filter>Breeder</Filter>
+    </ClCompile>
     <ClCompile Include="Breeder\BR_MidiTools.cpp">
       <Filter>Breeder</Filter>
     </ClCompile>
@@ -1182,11 +1187,5 @@
     <ClCompile Include="Wol\wol.cpp">
       <Filter>Wol</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="IX\todo.txt">
-      <Filter>IX</Filter>
-    </Text>
-    <Text Include="whatsnew.txt" />
   </ItemGroup>
 </Project>

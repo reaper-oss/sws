@@ -101,7 +101,7 @@
       <Command>if "$(REAPER_DIR)"=="" exit 1</Command>
     </PreBuildEvent>
     <ClCompile>
-      <Optimization>Full</Optimization>
+      <Optimization>MaxSpeed</Optimization>
       <AdditionalIncludeDirectories>$(SolutionDir);$(REAPER_DIR);$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
@@ -157,7 +157,7 @@ echo Copied to "$(REAPER_DIR)\plugins\$(TargetFilename)"
       <TargetEnvironment>X64</TargetEnvironment>
     </Midl>
     <ClCompile>
-      <Optimization>Full</Optimization>
+      <Optimization>MaxSpeed</Optimization>
       <AdditionalIncludeDirectories>$(SolutionDir);$(REAPER64_DIR);$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
@@ -273,6 +273,7 @@ echo Copied to "$(REAPER_DIR)\plugins\$(TargetFilename)"</Command>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <BrowseInformation>true</BrowseInformation>
+      <Optimization>Disabled</Optimization>
     </ClCompile>
     <PreLinkEvent>
       <Message>Generating sws_python.py, copying whatsnew.txt...</Message>
@@ -319,11 +320,12 @@ echo Copied to "$(REAPER64_DIR)\plugins\$(TargetFilename)"</Command>
     <None Include="zoomin.cur" />
     <None Include="zoomout.cur" />
     <None Include="zoomundo.cur" />
-    <None Include="IX\todo.txt" />
     <None Include="whatsnew.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Breeder\BR_MidiEditor.h" />
     <ClInclude Include="Breeder\BR_MidiTools.h" />
+    <ClInclude Include="C:\Program Files (x86)\REAPER\reaper_plugin_functions.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Xenakios\Parameters.h" />
     <ClInclude Include="Xenakios\XenakiosExts.h" />
@@ -487,6 +489,7 @@ echo Copied to "$(REAPER64_DIR)\plugins\$(TargetFilename)"</Command>
     <ResourceCompile Include="sws_extension.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Breeder\BR_MidiEditor.cpp" />
     <ClCompile Include="Breeder\BR_MidiTools.cpp" />
     <ClCompile Include="Xenakios\AutoRename.cpp" />
     <ClCompile Include="Xenakios\BroadCastWavCommands.cpp" />

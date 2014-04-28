@@ -329,6 +329,8 @@
 		98B6AAF418E7317900BACB96 /* wol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98B6AAF218E7317900BACB96 /* wol.cpp */; };
 		98B6AAF518E7317900BACB96 /* wol.h in Headers */ = {isa = PBXBuildFile; fileRef = 98B6AAF318E7317900BACB96 /* wol.h */; };
 		98B75DAF0F48F8F900AC5A25 /* Base64.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98B75DAE0F48F8F900AC5A25 /* Base64.cpp */; };
+		98B7ECE3190E10060057F6C8 /* BR_MidiEditor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98B7ECE1190E10060057F6C8 /* BR_MidiEditor.cpp */; };
+		98B7ECE4190E10060057F6C8 /* BR_MidiEditor.h in Headers */ = {isa = PBXBuildFile; fileRef = 98B7ECE2190E10060057F6C8 /* BR_MidiEditor.h */; };
 		98C0E22D189CF266004F2EEF /* BR_Envelope.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98C0E227189CF266004F2EEF /* BR_Envelope.cpp */; };
 		98C0E22E189CF266004F2EEF /* BR_Envelope.h in Headers */ = {isa = PBXBuildFile; fileRef = 98C0E228189CF266004F2EEF /* BR_Envelope.h */; };
 		98C0E22F189CF266004F2EEF /* BR_ProjState.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98C0E229189CF266004F2EEF /* BR_ProjState.cpp */; };
@@ -693,6 +695,8 @@
 		98B6AAF218E7317900BACB96 /* wol.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = wol.cpp; path = Wol/wol.cpp; sourceTree = "<group>"; };
 		98B6AAF318E7317900BACB96 /* wol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wol.h; path = Wol/wol.h; sourceTree = "<group>"; };
 		98B75DAE0F48F8F900AC5A25 /* Base64.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Base64.cpp; path = Utility/Base64.cpp; sourceTree = "<group>"; };
+		98B7ECE1190E10060057F6C8 /* BR_MidiEditor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BR_MidiEditor.cpp; path = Breeder/BR_MidiEditor.cpp; sourceTree = "<group>"; };
+		98B7ECE2190E10060057F6C8 /* BR_MidiEditor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BR_MidiEditor.h; path = Breeder/BR_MidiEditor.h; sourceTree = "<group>"; };
 		98C0E227189CF266004F2EEF /* BR_Envelope.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BR_Envelope.cpp; path = Breeder/BR_Envelope.cpp; sourceTree = "<group>"; };
 		98C0E228189CF266004F2EEF /* BR_Envelope.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BR_Envelope.h; path = Breeder/BR_Envelope.h; sourceTree = "<group>"; };
 		98C0E229189CF266004F2EEF /* BR_ProjState.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BR_ProjState.cpp; path = Breeder/BR_ProjState.cpp; sourceTree = "<group>"; };
@@ -1162,32 +1166,34 @@
 		4D859DAC16AB127100E34EAA /* Breeder */ = {
 			isa = PBXGroup;
 			children = (
-				98B464E219060FE600AE2930 /* BR_MidiTools.cpp */,
-				98B464E319060FE600AE2930 /* BR_MidiTools.h */,
-				98CC19DA18DFD11D00EE9809 /* BR_Loudness.cpp */,
-				98CC19DB18DFD11D00EE9809 /* BR_Loudness.h */,
-				98C918E418BFFEB500745DA1 /* BR_ReaScript.cpp */,
-				98C918E518BFFEB500745DA1 /* BR_ReaScript.h */,
+				4D859DB916AB128700E34EAA /* BR.cpp */,
+				4D859DBA16AB128700E34EAA /* BR.h */,
 				98C0E227189CF266004F2EEF /* BR_Envelope.cpp */,
 				98C0E228189CF266004F2EEF /* BR_Envelope.h */,
-				98C0E229189CF266004F2EEF /* BR_ProjState.cpp */,
-				98C0E22A189CF266004F2EEF /* BR_ProjState.h */,
-				98C0E22B189CF266004F2EEF /* BR_Timer.cpp */,
-				98C0E22C189CF266004F2EEF /* BR_Timer.h */,
 				4D92ED8817863C5C00521375 /* BR_EnvTools.cpp */,
 				4D92ED8917863C5C00521375 /* BR_EnvTools.h */,
+				98CC19DA18DFD11D00EE9809 /* BR_Loudness.cpp */,
+				98CC19DB18DFD11D00EE9809 /* BR_Loudness.h */,
+				98B7ECE1190E10060057F6C8 /* BR_MidiEditor.cpp */,
+				98B7ECE2190E10060057F6C8 /* BR_MidiEditor.h */,
+				98B464E219060FE600AE2930 /* BR_MidiTools.cpp */,
+				98B464E319060FE600AE2930 /* BR_MidiTools.h */,
 				4D859DAD16AB128700E34EAA /* BR_Misc.cpp */,
 				4D859DAE16AB128700E34EAA /* BR_Misc.h */,
+				98C0E229189CF266004F2EEF /* BR_ProjState.cpp */,
+				98C0E22A189CF266004F2EEF /* BR_ProjState.h */,
+				98C918E418BFFEB500745DA1 /* BR_ReaScript.cpp */,
+				98C918E518BFFEB500745DA1 /* BR_ReaScript.h */,
 				4D859DAF16AB128700E34EAA /* BR_Tempo.cpp */,
 				4D859DB016AB128700E34EAA /* BR_Tempo.h */,
 				4D859DB116AB128700E34EAA /* BR_TempoDlg.cpp */,
 				4D859DB216AB128700E34EAA /* BR_TempoDlg.h */,
+				98C0E22B189CF266004F2EEF /* BR_Timer.cpp */,
+				98C0E22C189CF266004F2EEF /* BR_Timer.h */,
 				4D859DB516AB128700E34EAA /* BR_Update.cpp */,
 				4D859DB616AB128700E34EAA /* BR_Update.h */,
 				4D859DB716AB128700E34EAA /* BR_Util.cpp */,
 				4D859DB816AB128700E34EAA /* BR_Util.h */,
-				4D859DB916AB128700E34EAA /* BR.cpp */,
-				4D859DBA16AB128700E34EAA /* BR.h */,
 			);
 			name = Breeder;
 			sourceTree = "<group>";
@@ -1434,6 +1440,7 @@
 				98CC1A0B18DFD28000EE9809 /* ebur128.h in Headers */,
 				98B6AAF518E7317900BACB96 /* wol.h in Headers */,
 				98B464E519060FE600AE2930 /* BR_MidiTools.h in Headers */,
+				98B7ECE4190E10060057F6C8 /* BR_MidiEditor.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1722,6 +1729,7 @@
 				98CC1A0A18DFD28000EE9809 /* ebur128.c in Sources */,
 				98B6AAF418E7317900BACB96 /* wol.cpp in Sources */,
 				98B464E419060FE600AE2930 /* BR_MidiTools.cpp in Sources */,
+				98B7ECE3190E10060057F6C8 /* BR_MidiEditor.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

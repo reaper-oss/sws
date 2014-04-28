@@ -47,7 +47,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="3"
+				Optimization="2"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(REAPER_DIR)&quot;;&quot;$(ProjectDir)&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS"
 				StringPooling="true"
@@ -134,7 +134,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="3"
+				Optimization="2"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(REAPER_DIR)&quot;;&quot;$(ProjectDir)&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS"
 				StringPooling="true"
@@ -3646,6 +3646,14 @@
 			</File>
 			<File
 				RelativePath=".\Breeder\BR_Loudness.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Breeder\BR_MidiEditor.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Breeder\BR_MidiEditor.h"
 				>
 			</File>
 			<File

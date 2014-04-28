@@ -211,12 +211,12 @@ void ME_PreviewActiveTake (COMMAND_T* ct, int val, int valhw, int relmode, HWND 
 
 		vector<int> muteState;
 		if (selNotes == 2 && !AreAllNotesUnselected(take))
-			muteState = MuteSelectedSaveOldState(take);
+			muteState = MuteSelectedNotes(take);
 
 		MidiTakePreview(toggle, take, track, volume, start, measure, pausePlay);
 
 		if (muteState.size() > 0)
-			SetMutedState(take, muteState);
+			SetMutedNotes(take, muteState);
 	}
 }
 

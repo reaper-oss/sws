@@ -679,6 +679,11 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 	double sampleTimeLen = 1/samplerate;
 	double currentTime = startTime;
 	int processedSamples = 0;
+
+	// This let's us get readings even if the target is too short
+	if (endTime - startTime < 3)
+		endTime = startTime + 3;
+
 	while (currentTime < endTime && !_this->GetKillFlag())
 	{
 		// Make sure we always fill our buffer exactly to audio end (and skip momentary/short-term intervals if not enough new samples)

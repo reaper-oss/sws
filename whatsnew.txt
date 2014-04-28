@@ -2,6 +2,7 @@ Analyze and normalize loudness
 +Added an option to preserve already analyzed tracks/items when analyzing selected tracks/items
 +Fixes:
  - Analyzing items with different channel modes should now work properly
+ - Fixed analyzing short items/tracks
  - Fixed undo when normalizing tracks
  - Pressing DELETE key will delete selected list view entries
 

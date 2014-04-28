@@ -393,7 +393,7 @@ vector<int> GetSelectedNotes (MediaItem_Take* take)
 	return selectedNotes;
 }
 
-vector<int> MuteSelectedSaveOldState (MediaItem_Take* take)
+vector<int> MuteSelectedNotes (MediaItem_Take* take)
 {
 	vector<int> muteStatus;
 
@@ -415,7 +415,7 @@ vector<int> MuteSelectedSaveOldState (MediaItem_Take* take)
 	return muteStatus;
 }
 
-void SetMutedState (MediaItem_Take* take, vector<int>& muteStatus)
+void SetMutedNotes (MediaItem_Take* take, vector<int>& muteStatus)
 {
 	int noteCount = muteStatus.size();
 	for (int i = 0; i < noteCount; ++i)
@@ -455,6 +455,7 @@ bool AreAllNotesUnselected (MediaItem_Take* take)
 	else
 		return false;
 }
+
 bool IsMidi (MediaItem_Take* take, bool* inProject /*= NULL*/)
 {
 	if (PCM_source* source = GetMediaItemTake_Source(take))

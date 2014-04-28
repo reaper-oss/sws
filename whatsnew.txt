@@ -5,6 +5,15 @@ Analyze and normalize loudness
  - Fixed undo when normalizing tracks
  - Pressing DELETE key will delete selected list view entries
 
+Added actions
++Main and MIDI editor:
+ - SWS/BR: Play from mouse cursor position (3 versions)
++MIDI editor:
+ - SWS/BR: Preview active media item (lots of versions: from mouse position, selected notes only, measure sync etc...)
+ - SWS/BR: Save/Restore note selection from/to active take (5 slots)
+ - SWS/BR: Save/Restore edit cursor position (5 slots)
+  - Note: edit cursor slots are shared with already existing actions in Main
+
 ReaScript
 +Added support for MIDI editor to BR_GetMouseCursorContext
 +Added functions:
@@ -21,6 +30,7 @@ Fixes
  - SWS: Auto Color/Icon
  - SWS: Nudge marker under cursor left/right
  - Xenakios/SWS: Rename project markers with ascending numbers
++SWS/BR Preview media item actions that pause playback should work properly now
 
 !v2.4.0 #9 pre-release build (April 19, 2014)
 <strong>This version requires REAPER v4.62pre8+</strong>, an "Incompatible version" error message will be displayed otherwise...

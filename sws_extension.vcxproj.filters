@@ -592,6 +592,9 @@
     <ClInclude Include="C:\Program Files (x86)\REAPER\reaper_plugin_functions.h">
       <Filter>Core\Reaper</Filter>
     </ClInclude>
+    <ClInclude Include="Wol\wol_Zoom.h">
+      <Filter>Wol</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="sws_extension.rc">
@@ -1185,6 +1188,9 @@
       <Filter>Breeder</Filter>
     </ClCompile>
     <ClCompile Include="Wol\wol.cpp">
+      <Filter>Wol</Filter>
+    </ClCompile>
+    <ClCompile Include="Wol\wol_Zoom.cpp">
       <Filter>Wol</Filter>
     </ClCompile>
   </ItemGroup>

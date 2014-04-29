@@ -27,10 +27,7 @@
 
 #include "stdafx.h"
 #include "wol.h"
-#include "../Breeder/BR_Util.h"
-
-void SetVerticalZoomCenter(COMMAND_T* ct);
-void SetHorizontalZoomCenter(COMMAND_T* ct);
+#include "wol_Zoom.h"
 
 static COMMAND_T g_commandTable[] =
 {
@@ -44,24 +41,14 @@ static COMMAND_T g_commandTable[] =
 		{ { DEFACCEL, "SWS/wol: Set \"Horizontal zoom center\" to \"Edit cursor\"" }, "WOL_SETHZOOMC_EDITCUR", SetHorizontalZoomCenter, NULL, 1},
 		{ { DEFACCEL, "SWS/wol: Set \"Horizontal zoom center\" to \"Center of view\"" }, "WOL_SETHZOOMC_CENTERVIEW", SetHorizontalZoomCenter, NULL, 2},
 		{ { DEFACCEL, "SWS/wol: Set \"Horizontal zoom center\" to \"Mouse cursor\"" }, "WOL_SETHZOOMC_MOUSECUR", SetHorizontalZoomCenter, NULL, 3},
+
+		{ { DEFACCEL, "SWS/wol: Set selected envelope vertical zoom to default" }, "WOL_SETSELENVVZOOMDEF", SetVerticalZoomSelectedEnvelope, NULL, 0 },
+		{ { DEFACCEL, "SWS/wol: Set selected envelope vertical zoom to minimum" }, "WOL_SETSELENVVZOOMMIN", SetVerticalZoomSelectedEnvelope, NULL, 1 },
+		{ { DEFACCEL, "SWS/wol: Zoom vertically selected envelope (MIDI CC relative/mousewheel)" }, "WOL_VZOOMSELENV", NULL, NULL, 0, NULL, 0, VerticalZoomSelectedEnvelope, },
 //!WANT_LOCALIZE_1ST_STRING_END
 
 		{ {}, LAST_COMMAND, },
 };
-
-
-
-void SetVerticalZoomCenter(COMMAND_T* ct)
-{
-	SetConfig("vzoommode", (int)ct->user);
-}
-
-
-
-void SetHorizontalZoomCenter(COMMAND_T* ct)
-{
-	SetConfig("zoommode", (int)ct->user);
-}
 
 
 

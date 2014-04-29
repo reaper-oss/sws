@@ -14,6 +14,10 @@ Added actions
  - SWS/BR: Save/Restore note selection from/to active take (5 slots)
  - SWS/BR: Save/Restore edit cursor position (5 slots)
   - Note: edit cursor slots are shared with already existing actions in Main
++Envelope Zoom:
+ - SWS/wol: Set selected envelope vertical zoom to default
+ - SWS/wol: Set selected envelope vertical zoom to minimum
+ - SWS/wol: Zoom vertically selected envelope (MIDI CC relative/mousewheel)
 
 ReaScript
 +Added support for MIDI editor to BR_GetMouseCursorContext

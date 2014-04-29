@@ -1,5 +1,5 @@
 /******************************************************************************
-/ wol.h
+/ wol_Zoom.h
 /
 / Copyright (c) 2014 wol
 / http://forum.cockos.com/member.php?u=70153
@@ -31,4 +31,9 @@
 
 
 
-int WOL_Init();
+void VerticalZoomSelectedEnvelope(COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd);
+void SetVerticalZoomSelectedEnvelope(COMMAND_T* ct);
+void SetVerticalZoomCenter(COMMAND_T* ct);
+void SetHorizontalZoomCenter(COMMAND_T* ct);
+int GetTcpMinHeight();
+int GetCurrentTcpMaxHeight();

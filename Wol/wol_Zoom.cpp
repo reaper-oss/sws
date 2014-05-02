@@ -45,10 +45,10 @@ int AdjustRelative(int _adjmode, int _reladj)
 	return _reladj;
 }
 
-int GetTcpMinHeight()
+int GetTcpEnvMinHeight()
 {
-	IconTheme* theme = SNM_GetIconTheme();
-	return theme->tcp_small_height;
+	//IconTheme* theme = SNM_GetIconTheme();
+	return SNM_GetIconTheme()->envcp_min_height;
 }
 
 int GetCurrentTcpMaxHeight()
@@ -58,6 +58,28 @@ int GetCurrentTcpMaxHeight()
 	return r.bottom - r.top;
 }
 
+// Stolen from BR_Util.cpp !
+void ScrollToTrackEnvIfNotInArrange(TrackEnvelope* envelope)
+{
+	int offsetY;
+	int height = GetTrackEnvHeight(envelope, &offsetY, NULL);
+
+	HWND hwnd = GetArrangeWnd();
+	SCROLLINFO si = { sizeof(SCROLLINFO), };
+	si.fMask = SIF_ALL;
+	CoolSB_GetScrollInfo(hwnd, SB_VERT, &si);
+
+	int envEnd = offsetY + height;
+	int pageEnd = si.nPos + (int)si.nPage + SCROLLBAR_W;
+
+	if (offsetY < si.nPos || envEnd > pageEnd)
+	{
+		si.nPos = offsetY - 4;			// GetTrackEnvHeight() always adds ENV_GAP to offsetY
+		CoolSB_SetScrollInfo(hwnd, SB_VERT, &si, true);
+		SendMessage(hwnd, WM_VSCROLL, si.nPos << 16 | SB_THUMBPOSITION, NULL);
+	}
+}
+
 void VerticalZoomSelectedEnvelope(COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
 	if (relmode > 0)
@@ -65,13 +87,14 @@ void VerticalZoomSelectedEnvelope(COMMAND_T* ct, int val, int valhw, int relmode
 		if (TrackEnvelope* env = GetSelectedTrackEnvelope(NULL))
 		{
 			int maxHeight = GetCurrentTcpMaxHeight();
-			int minHeight = GetTcpMinHeight();
+			int minHeight = GetTcpEnvMinHeight();
 			BR_Envelope brEnv(env);
 			int height = brEnv.LaneHeight() + AdjustRelative(relmode, (valhw == -1) ? BOUNDED(val, -1, 128) : (int)BOUNDED(16384.0 - (valhw | val << 7), 0.0, 16383.0));
 			if (height < minHeight) height = minHeight;
 			if (height > maxHeight) height = maxHeight;
 			brEnv.SetLaneHeight(height);
 			brEnv.Commit();
+			ScrollToTrackEnvIfNotInArrange(env);
 		}
 	}
 }
@@ -81,8 +104,9 @@ void SetVerticalZoomSelectedEnvelope(COMMAND_T* ct)
 	if (TrackEnvelope* env = GetSelectedTrackEnvelope(NULL))
 	{
 		BR_Envelope brEnv(env);
-		brEnv.SetLaneHeight(((int)ct->user == 0) ? 0 : GetTcpMinHeight());
+		brEnv.SetLaneHeight(((int)ct->user == 0) ? 0 : ((int)ct->user == 1) ? GetTcpEnvMinHeight() : GetCurrentTcpMaxHeight());
 		brEnv.Commit();
+		ScrollToTrackEnvIfNotInArrange(env);
 	}
 }
 

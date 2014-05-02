@@ -35,5 +35,6 @@ void VerticalZoomSelectedEnvelope(COMMAND_T* ct, int val, int valhw, int relmode
 void SetVerticalZoomSelectedEnvelope(COMMAND_T* ct);
 void SetVerticalZoomCenter(COMMAND_T* ct);
 void SetHorizontalZoomCenter(COMMAND_T* ct);
-int GetTcpMinHeight();
+int GetTcpEnvMinHeight();
 int GetCurrentTcpMaxHeight();
+void ScrollToTrackEnvIfNotInArrange(TrackEnvelope* envelope);

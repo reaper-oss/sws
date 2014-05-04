@@ -7,9 +7,9 @@ Analyze and normalize loudness
  - Pressing DELETE key will delete selected list view entries
 
 Added actions
- - SWS/wol: Set selected envelope vertical zoom to default
- - SWS/wol: Set selected envelope vertical zoom to minimum
- - SWS/wol: Set selected envelope vertical zoom to maximum
+ - SWS/wol: Set selected envelope height to default
+ - SWS/wol: Set selected envelope height to minimum
+ - SWS/wol: Set selected envelope height to maximum
  - SWS/wol: Adjust selected envelope height (MIDI CC relative/mousewheel)
 +Main and MIDI editor:
  - SWS/BR: Play from mouse cursor position (3 versions)

@@ -31,7 +31,7 @@
 
 
 
-void VerticalZoomSelectedEnvelope(COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd);
+void AdjustSelectedEnvelopeHeight(COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd);
 void SetVerticalZoomSelectedEnvelope(COMMAND_T* ct);
 void SetVerticalZoomCenter(COMMAND_T* ct);
 void SetHorizontalZoomCenter(COMMAND_T* ct);

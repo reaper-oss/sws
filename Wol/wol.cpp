@@ -45,7 +45,7 @@ static COMMAND_T g_commandTable[] =
 		{ { DEFACCEL, "SWS/wol: Set selected envelope vertical zoom to default" }, "WOL_SETSELENVVZOOMDEF", SetVerticalZoomSelectedEnvelope, NULL, 0 },
 		{ { DEFACCEL, "SWS/wol: Set selected envelope vertical zoom to minimum" }, "WOL_SETSELENVVZOOMMIN", SetVerticalZoomSelectedEnvelope, NULL, 1 },
 		{ { DEFACCEL, "SWS/wol: Set selected envelope vertical zoom to maximum" }, "WOL_SETSELENVVZOOMMAX", SetVerticalZoomSelectedEnvelope, NULL, 2 },
-		{ { DEFACCEL, "SWS/wol: Zoom vertically selected envelope (MIDI CC relative/mousewheel)" }, "WOL_VZOOMSELENV", NULL, NULL, 0, NULL, 0, VerticalZoomSelectedEnvelope, },
+		{ { DEFACCEL, "SWS/wol: Adjust selected envelope height (MIDI CC relative/mousewheel)" }, "WOL_ADJSELENVH", NULL, NULL, 0, NULL, 0, AdjustSelectedEnvelopeHeight, },
 //!WANT_LOCALIZE_1ST_STRING_END
 
 		{ {}, LAST_COMMAND, },

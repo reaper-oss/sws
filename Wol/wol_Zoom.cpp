@@ -47,7 +47,6 @@ int AdjustRelative(int _adjmode, int _reladj)
 
 int GetTcpEnvMinHeight()
 {
-	//IconTheme* theme = SNM_GetIconTheme();
 	return SNM_GetIconTheme()->envcp_min_height;
 }
 
@@ -80,7 +79,7 @@ void ScrollToTrackEnvIfNotInArrange(TrackEnvelope* envelope)
 	}
 }
 
-void VerticalZoomSelectedEnvelope(COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
+void AdjustSelectedEnvelopeHeight(COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
 	if (relmode > 0)
 	{
@@ -89,7 +88,8 @@ void VerticalZoomSelectedEnvelope(COMMAND_T* ct, int val, int valhw, int relmode
 			int maxHeight = GetCurrentTcpMaxHeight();
 			int minHeight = GetTcpEnvMinHeight();
 			BR_Envelope brEnv(env);
-			int height = brEnv.LaneHeight() + AdjustRelative(relmode, (valhw == -1) ? BOUNDED(val, -1, 128) : (int)BOUNDED(16384.0 - (valhw | val << 7), 0.0, 16383.0));
+			int height = AdjustRelative(relmode, (valhw == -1) ? BOUNDED(val, 0, 127) : (int)BOUNDED(16384.0 - (valhw | val << 7), 0.0, 16383.0));
+			height += (brEnv.LaneHeight() == 0) ? GetTrackEnvHeight(env, NULL, NULL) : brEnv.LaneHeight();
 			if (height < minHeight) height = minHeight;
 			if (height > maxHeight) height = maxHeight;
 			brEnv.SetLaneHeight(height);

@@ -10,10 +10,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -61,7 +61,7 @@ int GetCurrentTcpMaxHeight()
 void ScrollToTrackEnvIfNotInArrange(TrackEnvelope* envelope)
 {
 	int offsetY;
-	int height = GetTrackEnvHeight(envelope, &offsetY, NULL);
+	int height = GetTrackEnvHeight(envelope, &offsetY, false);
 
 	HWND hwnd = GetArrangeWnd();
 	SCROLLINFO si = { sizeof(SCROLLINFO), };
@@ -73,7 +73,7 @@ void ScrollToTrackEnvIfNotInArrange(TrackEnvelope* envelope)
 
 	if (offsetY < si.nPos || envEnd > pageEnd)
 	{
-		si.nPos = offsetY - 4;			// GetTrackEnvHeight() always adds ENV_GAP to offsetY
+		si.nPos = offsetY;
 		CoolSB_SetScrollInfo(hwnd, SB_VERT, &si, true);
 		SendMessage(hwnd, WM_VSCROLL, si.nPos << 16 | SB_THUMBPOSITION, NULL);
 	}

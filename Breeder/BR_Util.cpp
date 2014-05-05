@@ -179,7 +179,7 @@ int GetLastDigit (int val)
 	return abs(val) % 10;
 }
 
-vector<int> GetDigits(int val)
+vector<int> GetDigits (int val)
 {
 	int count = (int)(log10((float)val)) + 1;
 
@@ -194,7 +194,7 @@ vector<int> GetDigits(int val)
 	return digits;
 }
 
-WDL_FastString GetSourceChunk(PCM_source* source)
+WDL_FastString GetSourceChunk (PCM_source* source)
 {
 	WDL_FastString sourceStr;
 	if (source)
@@ -1055,7 +1055,7 @@ int GetTakeEnvHeight (MediaItem* item, int id, int* offsetY)
 	return envelopeH;
 }
 
-int GetTrackEnvHeight (TrackEnvelope* envelope, int* offsetY, MediaTrack* parent /*=NULL*/)
+int GetTrackEnvHeight (TrackEnvelope* envelope, int* offsetY, bool drawableRangeOnly, MediaTrack* parent /*=NULL*/)
 {
 	MediaTrack* track = (parent) ? (parent) : (GetEnvParent(envelope));
 	if (!track || !envelope)
@@ -1088,7 +1088,7 @@ int GetTrackEnvHeight (TrackEnvelope* envelope, int* offsetY, MediaTrack* parent
 		if (currentEnvelope == envelope)
 		{
 			RECT r; GetClientRect(hwnd, &r);
-			envHeight = r.bottom - r.top - 2*ENV_GAP;
+			envHeight = r.bottom - r.top - ((drawableRangeOnly) ? 2*ENV_GAP : 0);
 			found = true;
 		}
 		else
@@ -1109,7 +1109,7 @@ int GetTrackEnvHeight (TrackEnvelope* envelope, int* offsetY, MediaTrack* parent
 	// Envelope lane has been found...just calculate the offset
 	if (found)
 	{
-		envOffset = trackOffset + trackHeight + envOffset + ENV_GAP;
+		envOffset = trackOffset + trackHeight + envOffset + ((drawableRangeOnly) ? ENV_GAP : 0);
 	}
 	// Envelope lane wasn't found...so it's either hidden or drawn over track
 	else
@@ -1165,23 +1165,57 @@ int GetTrackEnvHeight (TrackEnvelope* envelope, int* offsetY, MediaTrack* parent
 					int envLaneH = envLaneFull / envLaneCount; // div reminder isn't important
 					if (overlapEnv && envLaneH < overlapLimit)
 					{
-						envHeight = envLaneFull - 2*ENV_GAP;
-						envOffset = trackOffset + trackGapTop + ENV_GAP;
+						if (drawableRangeOnly)
+						{
+							envHeight = envLaneFull - 2*ENV_GAP ;
+							envOffset = trackOffset + trackGapTop + ENV_GAP;
+						}
+						else
+						{
+							// Make sure envelope line is visible
+							if ((envLaneFull - 2*ENV_GAP <= ENV_LINE_WIDTH))
+							{
+								envHeight = 0;
+								envOffset = 0;
+							}
+							else
+							{
+								envHeight = trackHeight;
+								envOffset = trackOffset;
+							}
+						}
 						break;
 					}
 
 					// No need to calculate return values every iteration
 					if (i == count-1)
 					{
-						envHeight = envLaneH - 2*ENV_GAP;
-						envOffset = trackOffset + trackGapTop + envLanePos*envLaneH + ENV_GAP;
+						if (drawableRangeOnly || envLaneCount != 1 ) // if only one env is in lane and full range is requested, tread whole track as env lane
+						{
+							envHeight = envLaneH - 2*ENV_GAP;
+							envOffset = trackOffset + trackGapTop + envLanePos*envLaneH + ENV_GAP;
+						}
+						else
+						{
+							// Make sure envelope line is visible
+							if ((envLaneFull - 2*ENV_GAP <= ENV_LINE_WIDTH))
+							{
+								envHeight = 0;
+								envOffset = 0;
+							}
+							else
+							{
+								envHeight = trackHeight;
+								envOffset = trackOffset;
+							}
+						}
 					}
 				}
 			}
 		}
 	}
 
-	if (envHeight <= ENV_LINE_WIDTH)
+	if (drawableRangeOnly && envHeight <= ENV_LINE_WIDTH)
 		envHeight = 0;
 	WritePtr (offsetY, envOffset);
 	return envHeight;

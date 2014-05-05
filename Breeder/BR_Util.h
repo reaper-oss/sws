@@ -56,8 +56,8 @@ int ToggleBit (int val, int pos);
 int ClearBit (int val, int pos);
 int GetFirstDigit (int val);
 int GetLastDigit (int val);
-vector<int> GetDigits(int val);
-WDL_FastString GetSourceChunk(PCM_source* source);
+vector<int> GetDigits (int val);
+WDL_FastString GetSourceChunk (PCM_source* source);
 template <typename T> bool WritePtr (T* ptr, T val)  {if (ptr){*ptr = val; return true;} return false;}
 template <typename T> bool ReadPtr  (T* ptr, T& val) {if (ptr){val = *ptr; return true;} return false;}
 template <typename T> bool CheckBounds (T val, T min, T max) {if (val < min) return false; if (val > max) return false; return true;}
@@ -94,7 +94,7 @@ int GetTakeHeight (MediaItem_Take* take, int* offsetY);
 int GetTakeHeight (MediaItem* item, int id, int* offsetY);
 int GetTakeEnvHeight (MediaItem_Take* take, int* offsetY);
 int GetTakeEnvHeight (MediaItem* item, int id, int* offsetY);
-int GetTrackEnvHeight (TrackEnvelope* envelope, int* offsetY, MediaTrack* parent = NULL);
+int GetTrackEnvHeight (TrackEnvelope* envelope, int* offsetY, bool drawableRangeOnly, MediaTrack* parent = NULL);
 
 /******************************************************************************
 * Arrange                                                                     *

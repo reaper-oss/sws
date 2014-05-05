@@ -328,6 +328,8 @@
 		98B464E519060FE600AE2930 /* BR_MidiTools.h in Headers */ = {isa = PBXBuildFile; fileRef = 98B464E319060FE600AE2930 /* BR_MidiTools.h */; };
 		98B6AAF418E7317900BACB96 /* wol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98B6AAF218E7317900BACB96 /* wol.cpp */; };
 		98B6AAF518E7317900BACB96 /* wol.h in Headers */ = {isa = PBXBuildFile; fileRef = 98B6AAF318E7317900BACB96 /* wol.h */; };
+		98B6DC501917D64C0078561E /* wol_Zoom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98B6DC4E1917D64C0078561E /* wol_Zoom.cpp */; };
+		98B6DC511917D64C0078561E /* wol_Zoom.h in Headers */ = {isa = PBXBuildFile; fileRef = 98B6DC4F1917D64C0078561E /* wol_Zoom.h */; };
 		98B75DAF0F48F8F900AC5A25 /* Base64.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98B75DAE0F48F8F900AC5A25 /* Base64.cpp */; };
 		98B7ECE3190E10060057F6C8 /* BR_MidiEditor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98B7ECE1190E10060057F6C8 /* BR_MidiEditor.cpp */; };
 		98B7ECE4190E10060057F6C8 /* BR_MidiEditor.h in Headers */ = {isa = PBXBuildFile; fileRef = 98B7ECE2190E10060057F6C8 /* BR_MidiEditor.h */; };
@@ -694,6 +696,8 @@
 		98B464E319060FE600AE2930 /* BR_MidiTools.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BR_MidiTools.h; path = Breeder/BR_MidiTools.h; sourceTree = "<group>"; };
 		98B6AAF218E7317900BACB96 /* wol.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = wol.cpp; path = Wol/wol.cpp; sourceTree = "<group>"; };
 		98B6AAF318E7317900BACB96 /* wol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wol.h; path = Wol/wol.h; sourceTree = "<group>"; };
+		98B6DC4E1917D64C0078561E /* wol_Zoom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = wol_Zoom.cpp; path = Wol/wol_Zoom.cpp; sourceTree = "<group>"; };
+		98B6DC4F1917D64C0078561E /* wol_Zoom.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wol_Zoom.h; path = Wol/wol_Zoom.h; sourceTree = "<group>"; };
 		98B75DAE0F48F8F900AC5A25 /* Base64.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Base64.cpp; path = Utility/Base64.cpp; sourceTree = "<group>"; };
 		98B7ECE1190E10060057F6C8 /* BR_MidiEditor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BR_MidiEditor.cpp; path = Breeder/BR_MidiEditor.cpp; sourceTree = "<group>"; };
 		98B7ECE2190E10060057F6C8 /* BR_MidiEditor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BR_MidiEditor.h; path = Breeder/BR_MidiEditor.h; sourceTree = "<group>"; };
@@ -1246,6 +1250,8 @@
 		98B6AAF118E7315B00BACB96 /* Wol */ = {
 			isa = PBXGroup;
 			children = (
+				98B6DC4E1917D64C0078561E /* wol_Zoom.cpp */,
+				98B6DC4F1917D64C0078561E /* wol_Zoom.h */,
 				98B6AAF218E7317900BACB96 /* wol.cpp */,
 				98B6AAF318E7317900BACB96 /* wol.h */,
 			);
@@ -1441,6 +1447,7 @@
 				98B6AAF518E7317900BACB96 /* wol.h in Headers */,
 				98B464E519060FE600AE2930 /* BR_MidiTools.h in Headers */,
 				98B7ECE4190E10060057F6C8 /* BR_MidiEditor.h in Headers */,
+				98B6DC511917D64C0078561E /* wol_Zoom.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1730,6 +1737,7 @@
 				98B6AAF418E7317900BACB96 /* wol.cpp in Sources */,
 				98B464E419060FE600AE2930 /* BR_MidiTools.cpp in Sources */,
 				98B7ECE3190E10060057F6C8 /* BR_MidiEditor.cpp in Sources */,
+				98B6DC501917D64C0078561E /* wol_Zoom.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -804,19 +804,23 @@ bool BR_Envelope::VisibleInArrange ()
 	if (!m_take)
 	{
 		int offset;
-		int height = GetTrackEnvHeight (m_envelope, &offset, this->GetParent());
-		int pageEnd = si.nPos + (int)si.nPage + SCROLLBAR_W;
-		int envelopeEnd = offset + height;
+		int height = GetTrackEnvHeight(m_envelope, &offset, true, this->GetParent());
 
-		if (offset >= si.nPos && offset <= pageEnd)
-			return true;
-		if (envelopeEnd >= si.nPos && envelopeEnd <= pageEnd)
-			return true;
+		if (height > 0)
+		{
+			int pageEnd = si.nPos + (int)si.nPage + SCROLLBAR_W;
+			int envelopeEnd = offset + height;
+
+			if (offset >= si.nPos && offset <= pageEnd)
+				return true;
+			if (envelopeEnd >= si.nPos && envelopeEnd <= pageEnd)
+				return true;
+		}
 	}
 	else
 	{
 		int offset;
-		int height = GetTakeEnvHeight (m_take, &offset);
+		int height = GetTakeEnvHeight(m_take, &offset);
 		int envelopeEnd = offset + height;
 		int pageEnd = si.nPos + (int)si.nPage + SCROLLBAR_W;
 

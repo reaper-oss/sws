@@ -1650,7 +1650,7 @@ static HWND SearchChildren (const char* name, HWND hwnd, HWND startHwnd = NULL)
 		if (IsLocalized())
 		{
 			if (!hwnd) hwnd = GetDesktopWindow();
-			hwnd = (startHwnd) ? startHwnd : GetWindow(hwnd, GW_CHILD);
+			hwnd = (startHwnd) ? GetWindow(startHwnd, GW_HWNDNEXT) : GetWindow(hwnd, GW_CHILD);
 
 			HWND returnHwnd = NULL;
 			do
@@ -1667,7 +1667,7 @@ static HWND SearchChildren (const char* name, HWND hwnd, HWND startHwnd = NULL)
 		else
 	#endif
 		{
-			return FindWindowEx(hwnd, NULL, NULL , name);
+			return FindWindowEx(hwnd, startHwnd, NULL , name);
 		}
 }
 

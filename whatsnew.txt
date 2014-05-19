@@ -12,6 +12,10 @@ Added actions
  - SWS/wol: Set selected envelope height to minimum
  - SWS/wol: Set selected envelope height to maximum
  - SWS/wol: Adjust selected envelope height (MIDI CC relative/mousewheel)
+ - SWS/wol: Toggle enable extended zoom for envelopes in track lane
+ - SWS/wol: Toggle enable envelopes overlap for envelopes in track lane
+ - SWS/wol: Force envelope overlap in track lane in its track height
+ - SWS/wol: Restore previous envelope overlap settings
 +Main and MIDI editor:
  - SWS/BR: Play from mouse cursor position (3 versions)
 +MIDI editor:

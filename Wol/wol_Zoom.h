@@ -31,10 +31,21 @@
 
 
 
+void wol_ZoomInit();
+
+int GetTcpEnvMinHeight();
+int GetCurrentTcpMaxHeight();
+void ScrollToTrackEnvIfNotInArrange(TrackEnvelope* envelope);
+
 void AdjustSelectedEnvelopeHeight(COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd);
 void SetVerticalZoomSelectedEnvelope(COMMAND_T* ct);
 void SetVerticalZoomCenter(COMMAND_T* ct);
 void SetHorizontalZoomCenter(COMMAND_T* ct);
-int GetTcpEnvMinHeight();
-int GetCurrentTcpMaxHeight();
-void ScrollToTrackEnvIfNotInArrange(TrackEnvelope* envelope);
+
+void ToggleEnableEnvelopesExtendedZoom(COMMAND_T* = NULL);
+int IsEnvelopesExtendedZoomEnabled(COMMAND_T* = NULL);
+
+void ToggleEnableEnvelopeOverlap(COMMAND_T* = NULL);
+int IsEnvelopeOverlapEnabled(COMMAND_T* = NULL);
+
+void ForceEnvelopeOverlap(COMMAND_T* ct);

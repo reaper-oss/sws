@@ -29,9 +29,12 @@
 #include "wol_Zoom.h"
 #include "../sws_util.h"
 #include "../SnM/SnM_Dlg.h"
-#include "../SnM/SnM_Util.h"
 #include "../Breeder/BR_Util.h"
 #include "../Breeder/BR_EnvTools.h"
+
+bool EnvelopesExtendedZoom = false;
+int SavedEnvelopeOverlapSettings = 0;
+
 
 
 // from SnM.cpp
@@ -57,17 +60,44 @@ int GetCurrentTcpMaxHeight()
 	return r.bottom - r.top;
 }
 
-// Stolen from BR_Util.cpp !
+int CountVisibleTrackEnvelopesInTrackLane(MediaTrack* track)
+{
+	int count = 0;
+	for (int i = 0; i < CountTrackEnvelopes(track); i++)
+	{
+		BR_Envelope env(GetTrackEnvelope(track, i));
+		if (!env.IsInLane() && env.IsVisible())
+			count++;
+	}
+	return count;
+}
+
+//Return true for multiple lanes; false for single lane (envelopes are overlapped or there is only one -visible-) or if envelope is not in track lane
+bool IsTrackLaneEnvelopeInMultipleLanes(TrackEnvelope* envelope)
+{
+	BR_Envelope env(envelope);
+	if (env.IsInLane())
+		return false;
+
+	int overlapMinHeight = *(int*)GetConfigVar("env_ol_minh");
+	if (overlapMinHeight >= 0 && GetTrackEnvHeight(envelope, NULL, false) < overlapMinHeight)
+		return false;
+
+	return true;
+}
+
+// Stolen from BR_Util.cpp
 void ScrollToTrackEnvIfNotInArrange(TrackEnvelope* envelope)
 {
 	int offsetY;
-	int height = GetTrackEnvHeight(envelope, &offsetY, false);
+	int height = GetTrackEnvHeight(envelope, &offsetY, false, NULL);
 
 	HWND hwnd = GetArrangeWnd();
 	SCROLLINFO si = { sizeof(SCROLLINFO), };
 	si.fMask = SIF_ALL;
 	CoolSB_GetScrollInfo(hwnd, SB_VERT, &si);
 
+	BR_Envelope env(envelope);
 	int envEnd = offsetY + height;
 	int pageEnd = si.nPos + (int)si.nPage + SCROLLBAR_W;
 
@@ -85,15 +115,27 @@ void AdjustSelectedEnvelopeHeight(COMMAND_T* ct, int val, int valhw, int relmode
 	{
 		if (TrackEnvelope* env = GetSelectedTrackEnvelope(NULL))
 		{
-			int maxHeight = GetCurrentTcpMaxHeight();
-			int minHeight = GetTcpEnvMinHeight();
 			BR_Envelope brEnv(env);
 			int height = AdjustRelative(relmode, (valhw == -1) ? BOUNDED(val, 0, 127) : (int)BOUNDED(16384.0 - (valhw | val << 7), 0.0, 16383.0));
-			height += (brEnv.LaneHeight() == 0) ? GetTrackEnvHeight(env, NULL, NULL) : brEnv.LaneHeight();
-			if (height < minHeight) height = minHeight;
-			if (height > maxHeight) height = maxHeight;
-			brEnv.SetLaneHeight(height);
-			brEnv.Commit();
+
+			if (brEnv.IsInLane())
+			{
+				height = SetToBounds(height + GetTrackEnvHeight(env, NULL, false), GetTcpEnvMinHeight(), GetCurrentTcpMaxHeight());
+				brEnv.SetLaneHeight(height);
+				brEnv.Commit();
+			}
+			else
+			{
+				int trackGapTop, trackGapBottom, mul, currentHeight;
+				currentHeight = GetTrackHeight(brEnv.GetParent(), NULL, &trackGapTop, &trackGapBottom);
+				mul = EnvelopesExtendedZoom ? (IsTrackLaneEnvelopeInMultipleLanes(env) ? CountVisibleTrackEnvelopesInTrackLane(brEnv.GetParent()) : 1) : 1;
+				height = SetToBounds(height * mul + currentHeight, SNM_GetIconTheme()->tcp_small_height, GetCurrentTcpMaxHeight() * mul + (EnvelopesExtendedZoom ? trackGapTop + trackGapBottom : 0));
+				GetSetMediaTrackInfo(brEnv.GetParent(), "I_HEIGHTOVERRIDE", &height);
+				PreventUIRefresh(1);
+				Main_OnCommand(41327, 0);
+				Main_OnCommand(41328, 0);
+				PreventUIRefresh(-1);
+			}
 			ScrollToTrackEnvIfNotInArrange(env);
 		}
 	}
@@ -104,10 +146,77 @@ void SetVerticalZoomSelectedEnvelope(COMMAND_T* ct)
 	if (TrackEnvelope* env = GetSelectedTrackEnvelope(NULL))
 	{
 		BR_Envelope brEnv(env);
-		brEnv.SetLaneHeight(((int)ct->user == 0) ? 0 : ((int)ct->user == 1) ? GetTcpEnvMinHeight() : GetCurrentTcpMaxHeight());
-		brEnv.Commit();
+		if (brEnv.IsInLane())
+		{
+			brEnv.SetLaneHeight(((int)ct->user == 0) ? 0 : ((int)ct->user == 1) ? GetTcpEnvMinHeight() : GetCurrentTcpMaxHeight());
+			brEnv.Commit();
+		}
+		else
+		{
+			int trackGapTop, trackGapBottom, mul, height;
+			GetTrackHeight(brEnv.GetParent(), NULL, &trackGapTop, &trackGapBottom);
+			mul = EnvelopesExtendedZoom ? (IsTrackLaneEnvelopeInMultipleLanes(env) ? CountVisibleTrackEnvelopesInTrackLane(brEnv.GetParent()) : 1) : 1;
+			height = ((int)ct->user == 0) ? 0 : (((int)ct->user == 1) ? 0 : GetCurrentTcpMaxHeight()  * mul + (EnvelopesExtendedZoom ? trackGapTop + trackGapBottom : 0));
+			GetSetMediaTrackInfo(brEnv.GetParent(), "I_HEIGHTOVERRIDE", &height);
+			PreventUIRefresh(1);
+			Main_OnCommand(41327, 0);
+			Main_OnCommand(41328, 0);
+			PreventUIRefresh(-1);
+		}
 		ScrollToTrackEnvIfNotInArrange(env);
 	}
+}
+
+void ToggleEnableEnvelopesExtendedZoom(COMMAND_T*)
+{
+	EnvelopesExtendedZoom = !EnvelopesExtendedZoom;
+	char str[32];
+	sprintf(str, "%d", EnvelopesExtendedZoom);
+	WritePrivateProfileString(SWS_INI, "WOLExtZoomEnvInTrLane", str, get_ini_file());
+}
+
+int IsEnvelopesExtendedZoomEnabled(COMMAND_T*)
+{
+	return EnvelopesExtendedZoom;
+}
+
+void ToggleEnableEnvelopeOverlap(COMMAND_T*)
+{
+	SetConfig("env_ol_minh", -((*(int*)GetConfigVar("env_ol_minh")) + 1));
+	TrackList_AdjustWindows(false);
+	UpdateTimeline();
+}
+
+int IsEnvelopeOverlapEnabled(COMMAND_T*)
+{
+	return (*(int*)GetConfigVar("env_ol_minh") >= 0);
+}
+
+void ForceEnvelopeOverlap(COMMAND_T* ct)
+{
+	if ((int)ct->user == 0)
+	{
+		if (TrackEnvelope* env = GetSelectedTrackEnvelope(NULL))
+		{
+			SavedEnvelopeOverlapSettings = *(int*)GetConfigVar("env_ol_minh");
+			BR_Envelope envelope(env);
+			int envCount = CountVisibleTrackEnvelopesInTrackLane(envelope.GetParent());
+			if (envCount && !envelope.IsInLane())
+			{
+				int val = (int)(GetTrackHeight(envelope.GetParent(), NULL) / envCount);
+				SetConfig("env_ol_minh", val);
+				TrackList_AdjustWindows(false);
+				UpdateTimeline();
+			}
+		}
+	}
+	else
+	{
+		SetConfig("env_ol_minh", SavedEnvelopeOverlapSettings);
+		TrackList_AdjustWindows(false);
+		UpdateTimeline();
+	}
+	RefreshToolbar(SWSGetCommandID(ToggleEnableEnvelopeOverlap));
 }
 
 void SetVerticalZoomCenter(COMMAND_T* ct)
@@ -118,4 +227,10 @@ void SetVerticalZoomCenter(COMMAND_T* ct)
 void SetHorizontalZoomCenter(COMMAND_T* ct)
 {
 	SetConfig("zoommode", (int)ct->user);
+}
+
+void wol_ZoomInit()
+{
+	EnvelopesExtendedZoom = GetPrivateProfileInt(SWS_INI, "WOLExtZoomEnvInTrLane", 0, get_ini_file()) ? true : false;
+	SavedEnvelopeOverlapSettings = *(int*)GetConfigVar("env_ol_minh");
 }

@@ -918,7 +918,7 @@ static int GetTakeHeight (MediaItem_Take* take, MediaItem* item, int id, int* of
 	return GetTakeHeight (take, item, id, offsetY, averagedLast, trackHeight, trackOffset);
 }
 
-int GetTrackHeight (MediaTrack* track, int* offsetY)
+int GetTrackHeight (MediaTrack* track, int* offsetY, int* topGap /*=NULL*/, int* bottomGap /*=NULL*/)
 {
 	bool master = (GetMasterTrack(NULL) == track) ? (true) : (false);
 	IconTheme* theme = SNM_GetIconTheme();
@@ -933,7 +933,7 @@ int GetTrackHeight (MediaTrack* track, int* offsetY)
 			if (count >= -1)
 			{
 				for (int i = 0; i < count; ++i)
-					offset += (int)GetMediaTrackInfo_Value(GetTrack(NULL, i), "I_WNDH");
+					offset += (int)GetMediaTrackInfo_Value(GetTrack(NULL, i), "I_WNDH"); // I_WNDH counts both track lane and any visible envelope lanes
 				if (TcpVis(GetMasterTrack(NULL)))
 					offset += (int)GetMediaTrackInfo_Value(GetMasterTrack(NULL), "I_WNDH") + TCP_MASTER_GAP;
 			}
@@ -1014,6 +1014,9 @@ int GetTrackHeight (MediaTrack* track, int* offsetY)
 			}
 		}
 	}
+
+	if (topGap || bottomGap)
+		GetTrackGap(height, topGap, bottomGap);
 	return height;
 }
 
@@ -1089,6 +1092,7 @@ int GetTrackEnvHeight (TrackEnvelope* envelope, int* offsetY, bool drawableRange
 		{
 			RECT r; GetClientRect(hwnd, &r);
 			envHeight = r.bottom - r.top - ((drawableRangeOnly) ? 2*ENV_GAP : 0);
+			envOffset = trackOffset + trackHeight + envOffset + ((drawableRangeOnly) ? ENV_GAP : 0);
 			found = true;
 		}
 		else
@@ -1100,19 +1104,14 @@ int GetTrackEnvHeight (TrackEnvelope* envelope, int* offsetY, bool drawableRange
 			{
 				RECT r; GetClientRect(hwnd, &r);
 				envOffset += r.bottom-r.top;
-				checkedEnvs.push_back(currentEnvelope);
 			}
+			checkedEnvs.push_back(currentEnvelope);
 		}
 		hwnd = GetWindow(hwnd, GW_HWNDNEXT);
 	}
 
-	// Envelope lane has been found...just calculate the offset
-	if (found)
-	{
-		envOffset = trackOffset + trackHeight + envOffset + ((drawableRangeOnly) ? ENV_GAP : 0);
-	}
-	// Envelope lane wasn't found...so it's either hidden or drawn over track
-	else
+	// Envelope is either hidden or drawn in track lane
+	if (!found)
 	{
 		if (!EnvVis(envelope, NULL))
 		{
@@ -1172,17 +1171,8 @@ int GetTrackEnvHeight (TrackEnvelope* envelope, int* offsetY, bool drawableRange
 						}
 						else
 						{
-							// Make sure envelope line is visible
-							if ((envLaneFull - 2*ENV_GAP <= ENV_LINE_WIDTH))
-							{
-								envHeight = 0;
-								envOffset = 0;
-							}
-							else
-							{
-								envHeight = trackHeight;
-								envOffset = trackOffset;
-							}
+							envHeight = (envLaneFull - 2*ENV_GAP <= ENV_LINE_WIDTH) ? 0 : envLaneH;
+							envOffset = (envLaneFull - 2*ENV_GAP <= ENV_LINE_WIDTH) ? 0 : trackOffset + trackGapTop + envLanePos*envLaneH;
 						}
 						break;
 					}
@@ -1190,24 +1180,15 @@ int GetTrackEnvHeight (TrackEnvelope* envelope, int* offsetY, bool drawableRange
 					// No need to calculate return values every iteration
 					if (i == count-1)
 					{
-						if (drawableRangeOnly || envLaneCount != 1 ) // if only one env is in lane and full range is requested, tread whole track as env lane
+						if (drawableRangeOnly)
 						{
 							envHeight = envLaneH - 2*ENV_GAP;
 							envOffset = trackOffset + trackGapTop + envLanePos*envLaneH + ENV_GAP;
 						}
 						else
 						{
-							// Make sure envelope line is visible
-							if ((envLaneFull - 2*ENV_GAP <= ENV_LINE_WIDTH))
-							{
-								envHeight = 0;
-								envOffset = 0;
-							}
-							else
-							{
-								envHeight = trackHeight;
-								envOffset = trackOffset;
-							}
+							envHeight = (envLaneFull - 2*ENV_GAP <= ENV_LINE_WIDTH) ? 0 : envLaneH;
+							envOffset = (envLaneFull - 2*ENV_GAP <= ENV_LINE_WIDTH) ? 0 : trackOffset + trackGapTop + envLanePos*envLaneH;
 						}
 					}
 				}
@@ -1958,6 +1939,52 @@ HWND GetTcpTrackWnd (MediaTrack* track)
 	return NULL;
 }
 
+HWND GetNotesView (void* midiEditor)
+{
+	if (MIDIEditor_GetMode(midiEditor) != -1)
+	{
+		#ifdef _WIN32
+			static char* name  = (IsLocalized()) ? (NULL) : (const_cast<char*>(__localizeFunc("midiview", "midi_DLG_102", 0)));
+
+			if (IsLocalized())
+			{
+				if (!name)
+					AllocPreparedString(__localizeFunc("midiview", "midi_DLG_102", 0),&name);
+				return SearchChildren(name,  (HWND)midiEditor);
+			}
+			else
+				return FindWindowEx((HWND)midiEditor, NULL, NULL , name);
+		#else
+			return GetWindow(GetWindow((HWND)midiEditor, GW_CHILD), GW_HWNDNEXT);
+		#endif
+	}
+	else
+		return NULL;
+}
+
+HWND GetPianoView (void* midiEditor)
+{
+	if (MIDIEditor_GetMode(midiEditor) != -1)
+	{
+		#ifdef _WIN32
+			static char* name  = (IsLocalized()) ? (NULL) : (const_cast<char*>(__localizeFunc("midipianoview", "midi_DLG_102", 0)));
+
+			if (IsLocalized())
+			{
+				if (!name)
+					AllocPreparedString(__localizeFunc("midipianoview", "midi_DLG_102", 0),&name);
+				return SearchChildren(name,  (HWND)midiEditor);
+			}
+			else
+				return FindWindowEx((HWND)midiEditor, NULL, NULL , name);
+		#else
+			return GetWindow((HWND)midiEditor, GW_CHILD);
+		#endif
+	}
+	else
+		return NULL;
+}
+
 MediaTrack* HwndToTrack (HWND hwnd, int* hwndContext)
 {
 	MediaTrack* track = NULL;
@@ -2292,33 +2319,9 @@ static int IsHwndMidiEditor (HWND hwnd, void** midiEditor, HWND* subView)
 				WritePtr(midiEditor, (void*)hwnd);
 				WritePtr(subView, subWnd);
 
-				#ifdef _WIN32
-					static char* midiViewName  = (IsLocalized()) ? (NULL) : (const_cast<char*>(__localizeFunc("midiview", "midi_DLG_102", 0)));
-					static char* midiPianoName = (IsLocalized()) ? (NULL) : (const_cast<char*>(__localizeFunc("midipianoview", "midi_DLG_102", 0)));
-
-					if (IsLocalized())
-					{
-						if (!midiViewName)  AllocPreparedString(__localizeFunc("midiview", "midi_DLG_102", 0),      &midiViewName);
-						if (!midiPianoName) AllocPreparedString(__localizeFunc("midipianoview", "midi_DLG_102", 0), &midiPianoName);
-
-						if      (subWnd == SearchChildren(midiViewName,  hwnd)) { status = MIDI_WND_NOTEVIEW; break;}
-						else if (subWnd == SearchChildren(midiPianoName, hwnd)) { status = MIDI_WND_KEYBOARD; break;}
-						else                                                                                         { status = MIDI_WND_UNKNOWN;  break;}
-					}
-					else
-					{
-						char buf[256] = "";
-						GetWindowText(subWnd, buf, sizeof(buf));
-						if      (!strcmp(buf, midiViewName ))      { status = MIDI_WND_NOTEVIEW; break;}
-						else if (!strcmp(buf, midiPianoName)) { status = MIDI_WND_KEYBOARD; break;}
-						else                                                                       { status = MIDI_WND_UNKNOWN;  break;}
-					}
-				#else
-					HWND pianoViewHwnd = GetWindow(hwnd, GW_CHILD);
-					if      (subWnd == pianoViewHwnd )                         { status = MIDI_WND_KEYBOARD; break;}
-					else if (subWnd == GetWindow(pianoViewHwnd, GW_HWNDNEXT) ) { status = MIDI_WND_NOTEVIEW; break;}
-					else                                                       { status = MIDI_WND_UNKNOWN;  break;}
-				#endif
+				if      (subWnd == GetNotesView((void*)hwnd)) { status = MIDI_WND_NOTEVIEW; break;}
+				else if (subWnd == GetPianoView((void*)hwnd)) { status = MIDI_WND_KEYBOARD; break;}
+				else                                          { status = MIDI_WND_UNKNOWN;  break;}
 			}
 		}
 	}
@@ -2423,8 +2426,8 @@ static bool GetMouseCursorContextMidi (HWND hwnd, POINT p, BR_MouseContextInfo& 
 				// Over note view/keyboard
 				else
 				{
-					if      (cursorSegment == MIDI_WND_KEYBOARD) WritePtr(segment, "piano_view");
-					else if (cursorSegment == MIDI_WND_NOTEVIEW) WritePtr(segment, "notes_view");
+					if      (cursorSegment == MIDI_WND_KEYBOARD) WritePtr(segment, "piano");
+					else if (cursorSegment == MIDI_WND_NOTEVIEW) WritePtr(segment, "notes");
 
 					// This is mouse Y position counting from the bottom - make sure it's not outside valid, drawable note range
 					int realMouseY = (128 * midiEditor.GetVZoom()) - (p.y - MIDI_RULER_H + midiEditor.GetVPos() * midiEditor.GetVZoom());
@@ -2625,9 +2628,9 @@ static bool GetMouseCursorContextMidiInline (BR_MouseContextInfo& info, const ch
 
 			bool pianoVisible = (itemEndX - itemStartX - INLINE_MIDI_KEYBOARD_W > INLINE_MIDI_KEYBOARD_W) ? (true) : (false);
 			if (mouseX >= itemStartX && mouseX < itemStartX + INLINE_MIDI_KEYBOARD_W)
-				WritePtr(segment, (pianoVisible) ? ("piano_view") : ("notes_view"));
+				WritePtr(segment, (pianoVisible) ? ("piano") : ("notes"));
 			else
-				WritePtr(segment, "notes_view");
+				WritePtr(segment, "notes");
 
 			// Get note row
 			int realMouseY = (128 * midiEditor.GetVZoom()) - ((mouseY - editorOffsetY) + midiEditor.GetVPos() * midiEditor.GetVZoom()); // This is mouse Y position counting from the bottom - make sure it's not outside valid, drawable note range
@@ -2662,9 +2665,9 @@ void GetMouseCursorContext (const char** window, const char** segment, const cha
 	|______________|_______________|_____________________________________|
 	| unknown      | ""            | ""                                  |
 	|______________|_______________|_____________________________________|
-	| ruler        | regions       | ""                                  |
-	|              | markers       | ""                                  |
-	|              | tempo         | ""                                  |
+	| ruler        | region_lane   | ""                                  |
+	|              | marker_lane   | ""                                  |
+	|              | tempo_lane    | ""                                  |
 	|              | timeline      | ""                                  |
 	|______________|_______________|_____________________________________|
 	| transport    | ""            | ""                                  |
@@ -2682,8 +2685,8 @@ void GetMouseCursorContext (const char** window, const char** segment, const cha
 	|______________|_______________|_____________________________________|
 	| midi_editor  | unknown       | ""                                  |
 	|              | ruler         | ""                                  |
-	|              | piano_view    | ""                                  |
-	|              | notes_view    | ""                                  |
+	|              | piano         | ""                                  |
+	|              | notes         | ""                                  |
 	|              | cc_lane       | cc_selector, cc_lane                |
 	*********************************************************************/
 
@@ -2700,7 +2703,7 @@ void GetMouseCursorContext (const char** window, const char** segment, const cha
 
 	bool found = false;
 
-	// Check ruler
+	// Ruler
 	if (!found)
 	{
 		HWND ruler = GetRulerWndAlt();
@@ -2715,21 +2718,20 @@ void GetMouseCursorContext (const char** window, const char** segment, const cha
 			int limitH = 0;
 			for (int i = 0; i < 4; ++i)
 			{
-				if (i == 0)      {limitL = limitH; limitH += GetRulerLaneHeight(rulerH, i); returnSegment = "regions"; }
-				else if (i == 1) {limitL = limitH; limitH += GetRulerLaneHeight(rulerH, i); returnSegment = "markers"; }
-				else if (i == 2) {limitL = limitH; limitH += GetRulerLaneHeight(rulerH, i); returnSegment = "tempo";   }
-				else if (i == 3) {limitL = limitH; limitH += GetRulerLaneHeight(rulerH, i); returnSegment = "timeline";}
+				if (i == 0)      {limitL = limitH; limitH += GetRulerLaneHeight(rulerH, i); returnSegment = "region_lane";  }
+				else if (i == 1) {limitL = limitH; limitH += GetRulerLaneHeight(rulerH, i); returnSegment = "marker_lane";  }
+				else if (i == 2) {limitL = limitH; limitH += GetRulerLaneHeight(rulerH, i); returnSegment = "tempo_lane";   }
+				else if (i == 3) {limitL = limitH; limitH += GetRulerLaneHeight(rulerH, i); returnSegment = "timeline";     }
 
 				if (p.y >= limitL && p.y < limitH )
 					break;
 			}
-
 			returnInfo.position = mousePos;
 			found = true;
 		}
 	}
 
-	// Check transport
+	// Transport
 	if (!found)
 	{
 		HWND transport = GetTransportWnd();
@@ -2740,7 +2742,7 @@ void GetMouseCursorContext (const char** window, const char** segment, const cha
 		}
 	}
 
-	// Check MCP and TCP
+	// MCP and TCP
 	if (!found)
 	{
 		int context;
@@ -2764,7 +2766,7 @@ void GetMouseCursorContext (const char** window, const char** segment, const cha
 		}
 	}
 
-	// Check Arrange
+	// Arrange
 	if (!found)
 	{
 		if (hwnd == GetArrangeWnd() && IsPointInArrange(&p, false))
@@ -2861,7 +2863,7 @@ void GetMouseCursorContext (const char** window, const char** segment, const cha
 		}
 	}
 
-	// Check MIDI editor
+	// MIDI editor
 	if (!found)
 		found = GetMouseCursorContextMidi(hwnd, p, returnInfo, &returnWindow, &returnSegment, &returnDetails);
 

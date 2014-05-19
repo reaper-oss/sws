@@ -229,7 +229,7 @@ bool BR_LoudnessObject::CreateGraph (BR_Envelope& envelope, double min, double m
 {
 	SWS_SectionLock lock(&m_mutex);
 
-	if ((!this->IsTargetValid()) || (momentary && !m_momentaryValues.size()) || (!momentary && !m_shortTermValues.size()))
+	if (!this->IsTargetValid())
 		return false;
 
 	envelope.Sort();
@@ -285,6 +285,9 @@ bool BR_LoudnessObject::CreateGraph (BR_Envelope& envelope, double min, double m
 				break;
 			}
 		}
+		// In case there are no momentary measurements (item too short) make sure graph ends with minimum
+		if (size == 0)
+			envelope.CreatePoint(envelope.Count(), end, newMin, SQUARE, 0, false);
 	}
 	else
 	{
@@ -329,6 +332,9 @@ bool BR_LoudnessObject::CreateGraph (BR_Envelope& envelope, double min, double m
 				break;
 			}
 		}
+		// In case there are no short-term measurements (item too short) make sure graph ends with minimum
+		if (size == 0)
+			envelope.CreatePoint(envelope.Count(), end, newMin, SQUARE, 0, false);
 	}
 
 	return true;
@@ -640,7 +646,10 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 
 	// Prepare ebur123_state
 	ebur128_state* loudnessState = NULL;
-	loudnessState = ebur128_init((size_t)channels, (size_t)samplerate, EBUR128_MODE_M | EBUR128_MODE_S | EBUR128_MODE_I | EBUR128_MODE_LRA);
+	if (integratedOnly)
+		loudnessState = ebur128_init((size_t)channels, (size_t)samplerate, EBUR128_MODE_I);
+	else
+		loudnessState = ebur128_init((size_t)channels, (size_t)samplerate, EBUR128_MODE_M | EBUR128_MODE_S | EBUR128_MODE_I | EBUR128_MODE_LRA);
 
 	// Ignore channels according to channel mode. Note: we can't partially request samples, i.e. channel mode is mono, but take is stereo...asking for
 	// 1 channel only won't work. We must always request the real channel count even though reaper interleaves active channels starting from 0
@@ -671,24 +680,29 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 		ebur128_set_channel(loudnessState, 4, EBUR128_RIGHT_SURROUND);
 	}
 
+	// This lets us get integrated reading even if the target is too short
+	bool doShortTerm = true;
+	bool doMomentary = true;
+	double effectiveEndTime = endTime;
+	if (endTime - startTime < 3)
+	{
+		doShortTerm = false; // momentary checking is done during calculation
+		endTime = startTime + 3;
+	}
+
 	// Fill loudnessState with samples and get momentary/short-term measurements
-	int i = 0;
-	int momentaryFilled = 1;
 	int sampleCount = samplerate/5;
 	int bufSz = sampleCount*channels;
-	double sampleTimeLen = 1/samplerate;
-	double currentTime = startTime;
 	int processedSamples = 0;
-
-	// This let's us get readings even if the target is too short
-	if (endTime - startTime < 3)
-		endTime = startTime + 3;
-
+	double sampleTimeLen = 1/samplerate;
+	double currentTime   = startTime;
+	int i = 0;
+	int momentaryFilled = 1;
 	while (currentTime < endTime && !_this->GetKillFlag())
 	{
 		// Make sure we always fill our buffer exactly to audio end (and skip momentary/short-term intervals if not enough new samples)
 		bool skipIntervals = false;
-		if (endTime - currentTime < 0.2)
+		if (endTime - currentTime < 0.2 + numeric_limits<double>::epsilon())
 		{
 			sampleCount = (int)(samplerate * (endTime - currentTime));
 			bufSz = sampleCount * channels;
@@ -739,8 +753,14 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 
 		if (!integratedOnly && !skipIntervals)
 		{
+			if (!doShortTerm && doMomentary)
+			{
+				if (currentTime + 0.2 >= effectiveEndTime + numeric_limits<double>::epsilon())
+					doMomentary = false;
+			}
+
 			// Momentary buffer (400 ms) filled
-			if (i % 2 == momentaryFilled)
+			if (i % 2 == momentaryFilled && doMomentary)
 			{
 				double momentary;
 				ebur128_loudness_momentary(loudnessState, &momentary);
@@ -752,7 +772,7 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 			}
 
 			// Short-term buffer (3000 ms) filled
-			if (i == 14)
+			if (i == 14 && doShortTerm)
 			{
 				double shortTerm;
 				ebur128_loudness_shortterm(loudnessState, &shortTerm);
@@ -2032,7 +2052,7 @@ HMENU BR_AnalyzeLoudnessWnd::OnContextMenu (int x, int y, bool* wantDefaultItems
 		AddToMenu((button ? menu : optionsMenu), SWS_SEPARATOR, 0);
 		AddToMenu((button ? menu : optionsMenu), __LOCALIZE("Mirror project selection", "sws_DLG_174"), SET_MIRROR_SELECTION, -1, false, m_properties.mirrorSelection ?  MF_CHECKED : MF_UNCHECKED);
 		AddToMenu((button ? menu : optionsMenu), __LOCALIZE("Double-click moves arrange to track/take", "sws_DLG_174"), SET_DOUBLECLICK_GOTO_TARGET, -1, false, m_properties.doubleClickGotoTarget ?  MF_CHECKED : MF_UNCHECKED);
-		AddToMenu((button ? menu : optionsMenu), __LOCALIZE("Double-clicking maximum short-term/momentary creates time selection", "sws_DLG_174"), SET_TIMESEL_OVER_MAX, -1, false, m_properties.timeSelectionOverMax ?  MF_CHECKED : MF_UNCHECKED);
+		AddToMenu((button ? menu : optionsMenu), __LOCALIZE("Double-click maximum short-term/momentary to create time selection", "sws_DLG_174"), SET_TIMESEL_OVER_MAX, -1, false, m_properties.timeSelectionOverMax ?  MF_CHECKED : MF_UNCHECKED);
 		AddToMenu((button ? menu : optionsMenu), SWS_SEPARATOR, 0);
 		AddToMenu((button ? menu : optionsMenu), __LOCALIZE("Clear envelope when creating loudness graph", "sws_DLG_174"), SET_CLEAR_ENVELOPE, -1, false, m_properties.clearEnvelope ?  MF_CHECKED : MF_UNCHECKED);
 		if (!button)

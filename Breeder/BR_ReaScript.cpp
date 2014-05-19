@@ -27,10 +27,12 @@
 ******************************************************************************/
 #include "stdafx.h"
 #include "BR_ReaScript.h"
+#include "BR_EnvTools.h"
 #include "BR_MidiTools.h"
 #include "BR_Util.h"
 #include "../SnM/SnM_Chunk.h"
 #include "../SnM/SnM_Item.h"
+#include "../SnM/SnM_Util.h"
 
 /******************************************************************************
 * Globals                                                                     *
@@ -40,6 +42,184 @@ static BR_MouseContextInfo g_mouseInfo;
 /******************************************************************************
 * ReaScript export                                                            *
 ******************************************************************************/
+void* BR_EnvAlloc (TrackEnvelope* envelope)
+{
+	if (envelope)
+		return (void*)(new (nothrow) BR_Envelope(envelope));
+	else
+		return NULL;
+}
+
+int BR_EnvCountPoints (void* envelope)
+{
+	if (envelope)
+		return ((BR_Envelope*)envelope)->Count();
+	else
+		return 0;
+}
+
+bool BR_EnvDeletePoint (void* envelope, int id)
+{
+	if (envelope)
+		return ((BR_Envelope*)envelope)->DeletePoint(id);
+	else
+		return false;
+}
+
+int BR_EnvFind (void* envelope, double position, double delta)
+{
+	if (envelope)
+	{
+		BR_Envelope* env = (BR_Envelope*)envelope;
+		int id = env->Find(position, delta);
+
+		if (env->ValidateId(id))
+			return id;
+		else
+			return -1;
+	}
+	else
+		return -1;
+}
+
+int BR_EnvFindNext (void* envelope, double position)
+{
+	if (envelope)
+	{
+		BR_Envelope* env = (BR_Envelope*)envelope;
+		int id = env->FindNext(position);
+
+		if (env->ValidateId(id))
+			return id;
+		else
+			return -1;
+	}
+	else
+		return -1;
+}
+
+int BR_EnvFindPrevious (void* envelope, double position)
+{
+	if (envelope)
+	{
+		BR_Envelope* env = (BR_Envelope*)envelope;
+		int id = env->FindPrevious(position);
+
+		if (env->ValidateId(id))
+			return id;
+		else
+			return -1;
+	}
+	else
+		return -1;
+}
+
+bool BR_EnvFree (void* envelope, bool commit)
+{
+	if (envelope)
+	{
+		bool commited = (commit) ? ((BR_Envelope*)envelope)->Commit() : false;
+
+		delete envelope;
+		return commited;
+	}
+	else
+		return false;
+}
+
+bool BR_EnvGetPoint (void* envelope, int id, double* position, double* value, int* shape, bool* selected, double* bezier)
+{
+	if (envelope)
+	{
+		BR_Envelope* env = (BR_Envelope*)envelope;
+
+		WritePtr(selected, env->GetSelection(id));
+		return env->GetPoint(id, position, value, shape, bezier);
+	}
+	else
+		return false;
+}
+
+void BR_EnvGetProperties (void* envelope, bool* active, bool* visible, bool* armed, bool* inLane, int* laneHeight, int* defaultShape, double* minValue, double* maxValue, double* centerValue, int* type)
+{
+	if (envelope)
+	{
+		BR_Envelope* env = (BR_Envelope*)envelope;
+
+		WritePtr(active,       env->IsActive());
+		WritePtr(visible,      env->IsVisible());
+		WritePtr(armed,        env->IsArmed());
+		WritePtr(inLane,       env->IsInLane());
+		WritePtr(laneHeight,   env->LaneHeight());
+		WritePtr(defaultShape, env->DefaultShape());
+		WritePtr(minValue,     env->MinValue());
+		WritePtr(maxValue,     env->MaxValue());
+		WritePtr(centerValue,  env->CenterValue());
+
+		if (type)
+		{
+			int value = env->Type();
+			if      (value == VOLUME)       value = 0;
+			else if (value == VOLUME_PREFX) value = 1;
+			else if (value == PAN)          value = 2;
+			else if (value == PAN_PREFX)    value = 3;
+			else if (value == WIDTH)        value = 4;
+			else if (value == WIDTH_PREFX)  value = 5;
+			else if (value == MUTE)         value = 6;
+			else if (value == PITCH)        value = 7;
+			else if (value == PLAYRATE)     value = 8;
+			else if (value == TEMPO)        value = 9;
+			else if (value == PARAMETER)    value = 10;
+
+			*type = value;
+		}
+	}
+	else
+	{
+		WritePtr(active,       false);
+		WritePtr(visible,      false);
+		WritePtr(armed,        false);
+		WritePtr(inLane,       false);
+		WritePtr(laneHeight,   0);
+		WritePtr(defaultShape, 0);
+		WritePtr(minValue,     0.0);
+		WritePtr(maxValue,     0.0);
+		WritePtr(centerValue,  0.0);
+	}
+}
+
+bool BR_EnvSetPoint (void* envelope, int id, double position, double value, int shape, bool selected, double bezier)
+{
+	if (envelope)
+		return ((BR_Envelope*)envelope)->SetCreateSortedPoint(id, position, value, shape, bezier, selected);
+	else
+		return false;
+}
+
+void BR_EnvSetProperties (void* envelope, bool active, bool visible, bool armed, bool inLane, int laneHeight, int defaultShape)
+{
+	if (envelope)
+	{
+		BR_Envelope* env = (BR_Envelope*)envelope;
+
+		env->SetActive(active);
+		env->SetVisible(visible);
+		env->SetArmed(armed);
+		env->SetInLane(inLane);
+		env->SetLaneHeight(laneHeight);
+		if (defaultShape >= 0 && defaultShape <= 5)
+			env->SetDefaultShape(defaultShape);
+	}
+}
+
+double BR_EnvValAtPos (void* envelope, double position)
+{
+	if (envelope)
+		return ((BR_Envelope*)envelope)->ValueAtPosition(position);
+	else
+		return 0;
+}
+
 bool BR_GetMediaSourceProperties (MediaItem_Take* take, bool* section, double* start, double* length, double* fade, bool* reverse)
 {
 	return GetMediaSourceProperties(take, section, start, length, fade, reverse);
@@ -52,9 +232,9 @@ void BR_GetMouseCursorContext (char* window, char* segment, char* details, int c
 	const char* _details;
 	GetMouseCursorContext(&_window, &_segment, &_details, &g_mouseInfo);
 
-	strncpy(window,  _window,  char_sz-1);
-	strncpy(segment, _segment, char_sz-1);
-	strncpy(details, _details, char_sz-1);
+	if (window)  _snprintfSafe(window,  char_sz-1, "%s", _window);
+	if (segment) _snprintfSafe(segment, char_sz-1, "%s", _segment);
+	if (details) _snprintfSafe(details, char_sz-1, "%s", _details);
 }
 
 TrackEnvelope* BR_GetMouseCursorContext_Envelope (bool* takeEnvelope)

@@ -88,7 +88,7 @@ template <typename T> void SetConfig (const char* key, T  val) {*static_cast<T*>
 /******************************************************************************
 * Height                                                                      *
 ******************************************************************************/
-int GetTrackHeight (MediaTrack* track, int* offsetY);
+int GetTrackHeight (MediaTrack* track, int* offsetY, int* topGap = NULL, int* bottomGap = NULL);
 int GetItemHeight (MediaItem* item, int* offsetY);
 int GetTakeHeight (MediaItem_Take* take, int* offsetY);
 int GetTakeHeight (MediaItem* item, int id, int* offsetY);
@@ -118,6 +118,8 @@ HWND GetMediaExplorerWnd ();
 HWND GetMcpWnd ();
 HWND GetTcpWnd ();
 HWND GetTcpTrackWnd (MediaTrack* track);
+HWND GetNotesView (void* midiEditor);
+HWND GetPianoView (void* midiEditor);
 MediaTrack* HwndToTrack (HWND hwnd, int* hwndContext);  // context: 0->unknown, 1->tcp, 2->mcp (works even if hwnd is not a track but something else in mcp/tcp)
 TrackEnvelope* HwndToEnvelope (HWND hwnd);
 void CenterDialog (HWND hwnd, HWND target, HWND zOrder);

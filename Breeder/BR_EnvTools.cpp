@@ -417,6 +417,42 @@ bool BR_Envelope::SetTimeSig (int id, bool sig, int num, int den)
 		return false;
 }
 
+bool BR_Envelope::SetCreateSortedPoint (int id, double position, double value, int shape, double bezier, bool selected)
+{
+	if (id == -1)
+	{
+		id = this->FindNext(position);
+		BR_EnvPoint newPoint(position, value, (shape < 0 || shape > 5) ? this->DefaultShape() : shape, 0, selected, 0, (shape == 5) ? bezier : 0);
+		m_points.insert(m_points.begin() + id, newPoint);
+
+		++m_count;
+		m_update = true;
+		return true;
+	}
+	else if (this->ValidateId(id))
+	{
+		if ((this->ValidateId(id-1) && position < m_points[id-1].position) || (this->ValidateId(id+1) && position  > m_points[id+1].position))
+			m_sorted = false;
+
+		if (shape >= 0 && shape <= 5)
+			m_points[id].shape = shape;
+
+		m_points[id].position = position;
+		m_points[id].value    = value;
+		m_points[id].bezier   = (m_points[id].shape == 5) ? bezier : 0;
+		m_points[id].selected = selected;
+
+
+
+		m_update = true;
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
 void BR_Envelope::UnselectAll ()
 {
 	for (int i = 0; i < m_count; ++i)
@@ -534,8 +570,11 @@ void BR_Envelope::DeleteAllPoints ()
 
 void BR_Envelope::Sort ()
 {
-	stable_sort(m_points.begin(), m_points.end(), BR_EnvPoint::ComparePoints());
-	m_sorted = true;
+	if (!m_sorted)
+	{
+		stable_sort(m_points.begin(), m_points.end(), BR_EnvPoint::ComparePoints());
+		m_sorted = true;
+	}
 }
 
 int BR_Envelope::Count ()
@@ -942,7 +981,7 @@ double BR_Envelope::LaneMaxValue ()
 		int max; GetConfig("tempoenvmax", max);
 		return (double)max;
 	}
-	else if (this->Type() == VOLUME)
+	else if (this->Type() == VOLUME || this->Type() == VOLUME_PREFX)
 	{
 		int max; GetConfig("volenvrange", max);
 		if (max == 1) return 1;
@@ -1176,7 +1215,7 @@ void BR_Envelope::FillProperties () const
 					m_properties.minValue = 0;
 					m_properties.maxValue = 2;
 					m_properties.centerValue = 1;
-					m_properties.type = VOLUME;
+					m_properties.type = (strstr(token, "VOLENV2")) ? VOLUME : VOLUME_PREFX;
 					m_properties.paramType.Set(token);
 				}
 				else if (strstr(token, "PANENV"))
@@ -1184,7 +1223,7 @@ void BR_Envelope::FillProperties () const
 					m_properties.minValue = -1;
 					m_properties.maxValue = 1;
 					m_properties.centerValue = 0;
-					m_properties.type = PAN;
+					m_properties.type = (strstr(token, "PANENV2")) ? PAN : PAN_PREFX;
 					m_properties.paramType.Set(token);
 				}
 				else if (strstr(token, "WIDTHENV"))
@@ -1192,7 +1231,7 @@ void BR_Envelope::FillProperties () const
 					m_properties.minValue = -1;
 					m_properties.maxValue = 1;
 					m_properties.centerValue = 0;
-					m_properties.type = WIDTH;
+					m_properties.type = (strstr(token, "WIDTHENV2")) ? WIDTH : WIDTH_PREFX;
 					m_properties.paramType.Set(token);
 				}
 				else if (strstr(token, "MUTEENV"))

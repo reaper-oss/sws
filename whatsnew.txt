@@ -7,6 +7,7 @@ Analyze and normalize loudness
  - Pressing DELETE key will delete selected list view entries
 
 Added actions
++Main:
  - SWS/wol: Set selected envelope height to default
  - SWS/wol: Set selected envelope height to minimum
  - SWS/wol: Set selected envelope height to maximum
@@ -20,8 +21,12 @@ Added actions
   - Note: edit cursor slots are shared with already existing actions in Main
 
 ReaScript
-+Added support for MIDI editor to BR_GetMouseCursorContext
++BR_GetMouseCursorContext:
+ - Added support for MIDI editor
+ - Fixed BR_GetMouseCursorContext envelope detection when envelope is in track lane
+ - Changed return strings (ruler segments) in BR_GetMouseCursorContext
 +Added functions:
+ - BR_EnvAlloc, BR_EnvCountPoints, BR_EnvDeletePoint, BR_EnvFind, BR_EnvFindNext, BR_EnvFindPrevious, BR_EnvFree, BR_EnvGetPoint, BR_EnvGetProperties, BR_EnvSetPoint, BR_EnvSetProperties, BR_EnvValAtPos
  - BR_MIDI_CCLaneRemove
  - BR_MIDI_CCLaneReplace
 
@@ -36,6 +41,7 @@ Fixes
  - SWS: Nudge marker under cursor left/right
  - Xenakios/SWS: Rename project markers with ascending numbers
 +SWS/BR Preview media item actions that pause playback should work properly now
++Fixed unresponsive SWS/BR: Move closest envelope point to edit cursor
 
 !v2.4.0 #9 pre-release build (April 19, 2014)
 <strong>This version requires REAPER v4.62pre8+</strong>, an "Incompatible version" error message will be displayed otherwise...

@@ -454,7 +454,7 @@ void MoveEnvPointToEditCursor (COMMAND_T* ct)
 	int id = -1;
 
 	BR_Envelope envelope(GetSelectedTrackEnvelope(NULL));
-	if (!envelope.CountSelected())
+	if (!envelope.Count())
 		return;
 
 	// Find closest

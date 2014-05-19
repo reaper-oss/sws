@@ -57,10 +57,13 @@ enum BR_EnvShape
 enum BR_EnvType
 {
 	VOLUME = 0,
+	VOLUME_PREFX,
 	PAN,
+	PAN_PREFX,
+	WIDTH,
+	WIDTH_PREFX,
 	MUTE,
 	PITCH,
-	WIDTH,
 	PLAYRATE,
 	TEMPO,
 	PARAMETER
@@ -119,6 +122,7 @@ public:
 	bool DeletePoints (int startId, int endId);
 	bool GetTimeSig (int id, bool* sig, int* num, int* den);
 	bool SetTimeSig (int id, bool sig, int num, int den);
+	bool SetCreateSortedPoint (int id, double position, double value, int shape, double bezier, bool selected); // for ReaScript export
 
 	/* Selected points (never updated when editing, use UpdateSelected() if needed) */
 	void UnselectAll ();

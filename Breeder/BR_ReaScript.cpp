@@ -212,7 +212,7 @@ void BR_EnvSetProperties (void* envelope, bool active, bool visible, bool armed,
 	}
 }
 
-double BR_EnvValAtPos (void* envelope, double position)
+double BR_EnvValueAtPos (void* envelope, double position)
 {
 	if (envelope)
 		return ((BR_Envelope*)envelope)->ValueAtPosition(position);

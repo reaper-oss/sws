@@ -41,7 +41,7 @@ bool            BR_EnvGetPoint (void* envelope, int id, double* position, double
 void            BR_EnvGetProperties (void* envelope, bool* active, bool* visible, bool* armed, bool* inLane, int* laneHeight, int* defaultShape, double* minValue, double* maxValue, double* centerValue, int* type);
 bool            BR_EnvSetPoint (void* envelope, int id, double position, double value, int shape, bool selected, double bezier);
 void            BR_EnvSetProperties (void* envelope, bool active, bool visible, bool armed, bool inLane, int laneHeight, int defaultShape);
-double          BR_EnvValAtPos (void* envelope, double position);
+double          BR_EnvValueAtPos (void* envelope, double position);
 bool            BR_GetMediaSourceProperties (MediaItem_Take* take, bool* section, double* start, double* length, double* fade, bool* reverse);
 void            BR_GetMouseCursorContext (char* window, char* segment, char* details, int char_sz);
 TrackEnvelope*  BR_GetMouseCursorContext_Envelope (bool* takeEnvelope);

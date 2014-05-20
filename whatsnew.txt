@@ -30,7 +30,7 @@ ReaScript
  - Fixed BR_GetMouseCursorContext envelope detection when envelope is in track lane
  - Changed return strings (ruler segments) in BR_GetMouseCursorContext
 +Added functions:
- - BR_EnvAlloc, BR_EnvCountPoints, BR_EnvDeletePoint, BR_EnvFind, BR_EnvFindNext, BR_EnvFindPrevious, BR_EnvFree, BR_EnvGetPoint, BR_EnvGetProperties, BR_EnvSetPoint, BR_EnvSetProperties, BR_EnvValAtPos
+ - BR_EnvAlloc, BR_EnvCountPoints, BR_EnvDeletePoint, BR_EnvFind, BR_EnvFindNext, BR_EnvFindPrevious, BR_EnvFree, BR_EnvGetPoint, BR_EnvGetProperties, BR_EnvSetPoint, BR_EnvSetProperties, BR_EnvVauelAtPos
  - BR_MIDI_CCLaneRemove
  - BR_MIDI_CCLaneReplace
 

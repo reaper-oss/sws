@@ -44,6 +44,7 @@ Fixes
  - SWS: Auto Color/Icon
  - SWS: Nudge marker under cursor left/right
  - Xenakios/SWS: Rename project markers with ascending numbers
++All preview actions stop after last note/CC/sysex event when previewing MIDI
 +SWS/BR Preview media item actions that pause playback should work properly now
 +Fixed unresponsive SWS/BR: Move closest envelope point to edit cursor
 

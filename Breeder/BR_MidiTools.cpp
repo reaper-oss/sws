@@ -415,6 +415,49 @@ vector<int> MuteSelectedNotes (MediaItem_Take* take)
 	return muteStatus;
 }
 
+double EffectiveMidiTakeLength (MediaItem_Take* take)
+{
+	if (take && IsMidi(take))
+	{
+		double takeStartTime = GetMediaItemInfo_Value(GetMediaItemTake_Item(take), "D_POSITION");
+		double takeEndPpq = MIDI_GetPPQPosFromProjTime(take, takeStartTime);
+
+		int noteCount, ccCount, sysCount;
+		MIDI_CountEvts(take, &noteCount, &ccCount, &sysCount);
+
+		for (int i = 0; i < noteCount; ++i)
+		{
+			bool muted;	double noteEnd;
+			MIDI_GetNote(take, i, NULL, &muted, NULL, &noteEnd, NULL, NULL, NULL);
+			if (!muted && noteEnd > takeEndPpq)
+				takeEndPpq = noteEnd;
+		}
+
+		for (int i = ccCount-1 ; i >= 0; ++i)
+		{
+			bool muted;	double pos;
+			MIDI_GetCC(take, i, NULL, &muted, &pos, NULL, NULL, NULL, NULL);
+			if (!muted)
+			{
+				if (pos > takeEndPpq)
+					takeEndPpq = pos;
+				break;
+			}
+		}
+
+		for (int i = 0; i < sysCount; ++i)
+		{
+			bool muted;	double pos; int type;
+			MIDI_GetTextSysexEvt(take, i, NULL, &muted, &pos, &type, NULL, NULL);
+			if (!muted && type == -1 && pos > takeEndPpq)
+				takeEndPpq = pos;
+		}
+
+		return MIDI_GetProjTimeFromPPQPos(take, takeEndPpq) - takeStartTime;
+	}
+	return -1;
+}
+
 void SetMutedNotes (MediaItem_Take* take, vector<int>& muteStatus)
 {
 	int noteCount = muteStatus.size();

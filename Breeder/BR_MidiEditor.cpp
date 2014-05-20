@@ -82,17 +82,19 @@ static void MidiTakePreview (int mode, MediaItem_Take* take, MediaTrack* track, 
 
 	if (take)
 	{
-		MediaItem* item = GetMediaItemTake_Item(take);
-
-		bool itemMuteState      = *(bool*)GetSetMediaItemInfo(item, "B_MUTE", NULL);
+		MediaItem* item         = GetMediaItemTake_Item(take);
 		MediaItem_Take* oldTake = GetActiveTake(item);
-		GetSetMediaItemInfo(item, "B_MUTE", &g_bFalse); // needs to be set before getting the source
-		SetActiveTake(take);                            // active item take and editor take may differ
-
-		// We need to take item source otherwise item/take volume won't get accounted for
-		if (PCM_source* src = ((PCM_source*)item)->Duplicate())
+		bool itemMuteState      = *(bool*)GetSetMediaItemInfo(item, "B_MUTE", NULL);
+		double effectiveTakeLen = EffectiveMidiTakeLength(take);
+		
+		GetSetMediaItemInfo(item, "B_MUTE", &g_bFalse);     // needs to be set before getting the source
+		SetActiveTake(take);                                // active item take and editor take may differ
+		PCM_source* src = ((PCM_source*)item)->Duplicate(); // must be item source otherwise item/take volume won't get accounted for
+		
+		if (src && effectiveTakeLen > 0 && effectiveTakeLen > startOffset)
 		{
 			GetSetMediaItemInfo((MediaItem*)src, "D_POSITION", &g_d0);
+			GetSetMediaItemInfo((MediaItem*)src, "D_LENGTH", &effectiveTakeLen);
 
 			if (!g_ItemPreview.src)
 			{

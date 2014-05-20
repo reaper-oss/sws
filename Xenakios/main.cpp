@@ -29,6 +29,7 @@
 #include "../reaper/localize.h"
 #include "Parameters.h"
 #include "../SnM/SnM_Track.h"
+#include "../Breeder/BR_MidiTools.h"
 
 using namespace std;
 
@@ -522,13 +523,17 @@ void ItemPreview(int mode, MediaItem* item, MediaTrack* track, double volume, do
 
 	if (CountTakes(item))
 	{
+		MediaItem_Take* take = GetActiveTake(item);
 		bool itemMuteState = *(bool*)GetSetMediaItemInfo(item, "B_MUTE", NULL);
+		bool isMidi = IsMidi(take);
+		double effectiveMidiTakeLen = (isMidi) ? EffectiveMidiTakeLength(take) : 0;
 		GetSetMediaItemInfo(item, "B_MUTE", &g_bFalse); // needs to be set before getting the source
 
 		PCM_source* src = ((PCM_source*)item)->Duplicate(); // Casting from MediaItem* to PCM_source works!  Who would have known?
-		if (src)
+		if (src && (!isMidi || (isMidi && effectiveMidiTakeLen > 0 && effectiveMidiTakeLen > startOffset)))
 		{
 			GetSetMediaItemInfo((MediaItem*)src, "D_POSITION", &g_d0);
+			if (isMidi) GetSetMediaItemInfo((MediaItem*)src, "D_LENGTH", &effectiveMidiTakeLen);
 
 			if (!g_ItemPreview.src) // src == 0 means need to initialize structure
 			{
@@ -554,9 +559,7 @@ void ItemPreview(int mode, MediaItem* item, MediaTrack* track, double volume, do
 
 			if (g_ItemPreview.preview_track)
 			{
-				char type[64] = {0};
-				GetMediaSourceType(GetMediaItemTake_Source(GetActiveTake(item)), type, sizeof(type));
-				if (!strcmp(type, "MIDI") || !strcmp(type, "MIDIPOOL"))
+				if (isMidi)
 					g_itemPreviewSendCC123 = true;
 				g_itemPreviewPlaying = !!PlayTrackPreview2Ex(NULL, &g_ItemPreview, (measureSync) ? (1) : (0), measureSync);
 			}

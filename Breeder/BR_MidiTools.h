@@ -147,6 +147,7 @@ double ME_PositionAtMouseCursor (bool checkRuler, bool checkCCLanes);
 vector<int> GetUsedNamedNotes (void* midiEditor, MediaItem_Take* take, bool used, bool named, int channelForNames);
 vector<int> GetSelectedNotes (MediaItem_Take* take);
 vector<int> MuteSelectedNotes (MediaItem_Take* take); // returns previous mute state of all notes
+double EffectiveMidiTakeLength (MediaItem_Take* take);
 void SetMutedNotes (MediaItem_Take* take, vector<int>& muteStatus);
 void SetSelectedNotes (MediaItem_Take* take, vector<int>& selectedNotes, bool unselectOthers);
 bool AreAllNotesUnselected (MediaItem_Take* take);

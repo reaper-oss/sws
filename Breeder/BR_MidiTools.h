@@ -49,6 +49,21 @@ enum BR_MidiNoteshow
 };
 
 /******************************************************************************
+* MIDI CC lanes - this is how Reaper stores CC lanes internally               *
+******************************************************************************/
+enum BR_MidiVelLanes
+{
+	CC_VELOCITY         = -1,
+	CC_PITCH            = 128,
+	CC_PROGRAM          = 129,
+	CC_CHANNEL_PRESSURE = 130,
+	CC_BANK_SELECT      = 131,
+	CC_TEXT_EVENTS      = 132,
+	CC_SYSEX            = 133,
+	CC_14BIT_START    = 134
+};
+
+/******************************************************************************
 * Class for managing normal or inline MIDI editor (read-only for now)         *
 ******************************************************************************/
 class BR_MidiEditor
@@ -147,6 +162,7 @@ double ME_PositionAtMouseCursor (bool checkRuler, bool checkCCLanes);
 vector<int> GetUsedNamedNotes (void* midiEditor, MediaItem_Take* take, bool used, bool named, int channelForNames);
 vector<int> GetSelectedNotes (MediaItem_Take* take);
 vector<int> MuteSelectedNotes (MediaItem_Take* take); // returns previous mute state of all notes
+set<int> GetUsedCCLanes (MediaItem_Take* take, int dectect14bit); // dectect14bit: 0-> don't detect 14-bit, 1->detect partial 14-bit (if CC parts have additional data count them too) 2->detect full 14-bit (detect only if all CCs that make it have exactly same time positions)
 double EffectiveMidiTakeLength (MediaItem_Take* take);
 void SetMutedNotes (MediaItem_Take* take, vector<int>& muteStatus);
 void SetSelectedNotes (MediaItem_Take* take, vector<int>& selectedNotes, bool unselectOthers);
@@ -155,5 +171,5 @@ bool IsMidi (MediaItem_Take* take, bool* inProject = NULL);
 bool IsOpenInInlineEditor (MediaItem_Take* take);
 bool IsMidiNoteBlack (int note);
 bool IsVelLaneValid (int lane);
-int MapVelLaneToCC (int lane);
-int MapCCToVelLane (int cc);
+int MapVelLaneToReaScriptCC (int lane); // CC format follows ReaScript scheme:  0-127=CC, 0x100|(0-31)=14-bit CC, 0x200=velocity, 0x201=pitch,
+int MapReaScriptCCToVelLane (int cc);   // 0x202=program, 0x203=channel pressure, 0x204=bank/program select, 0x205=text, 0x206=sysex

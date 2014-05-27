@@ -38,7 +38,7 @@ void MidiTakePreviewPlayState (bool play, bool rec);
 void ME_StopMidiTakePreview (COMMAND_T*, int, int, int, HWND);
 void ME_PreviewActiveTake (COMMAND_T*, int, int, int, HWND);
 void ME_PlaybackAtMouseCursor (COMMAND_T*, int, int, int, HWND);
-void ME_StopMidiTakePreview (COMMAND_T*, int, int, int, HWND);
+void ME_ShowUsedCCLanesDetect14Bit (COMMAND_T*, int, int, int, HWND);
 void ME_SaveCursorPosSlot (COMMAND_T*, int, int, int, HWND);
 void ME_RestoreCursorPosSlot (COMMAND_T*, int, int, int, HWND);
 void ME_SaveNoteSelSlot (COMMAND_T*, int, int, int, HWND);

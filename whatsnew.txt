@@ -23,6 +23,15 @@ Added actions
  - SWS/BR: Save/Restore note selection from/to active take (5 slots)
  - SWS/BR: Save/Restore edit cursor position (5 slots)
   - Note: edit cursor slots are shared with already existing actions in Main
+ - SWS/FNG: Cycle through CC lanes
+ - SWS/FNG: Cycle through CC lanes (keep lane heights constant)
+ - SWS/FNG: Show only used CC lanes
+ - SWS/FNG: Hide unused CC lanes
+ - SWS/FNG: Show only top CC lane
+ - SWS/FNG: Select muted MIDI notes
+ - SWS/FNG: Select notes nearest edit cursor
+ - SWS/FNG: Apply groove to selected MIDI notes (within 16th)/(withing 32nd)
+ - SWS/BR: Hide unused CC lanes (detect 14-bit)
 
 ReaScript
 +BR_GetMouseCursorContext:
@@ -44,9 +53,18 @@ Fixes
  - SWS: Auto Color/Icon
  - SWS: Nudge marker under cursor left/right
  - Xenakios/SWS: Rename project markers with ascending numbers
-+All preview actions stop after last note/CC/sysex event when previewing MIDI
-+SWS/BR Preview media item actions that pause playback should work properly now
++Preview media item actions:
+  - Preview stops after last note/CC/sysex event when previewing MIDI
+  - Actions that pause playback should work properly now
+  - Prevent toggling preview state during recording
 +Fixed unresponsive SWS/BR: Move closest envelope point to edit cursor
++SWS/FNG: Hide unused CC lanes in active midi editor:
+ - Wasn't working if all displayed lanes were empty
+ - Wasn't detecting 14-bit lanes properly
+
+Other:
++Renamed FNG MIDI actions in Main section (remove MIDI prefix and added "in active MIDI editor" description at the end)
++Capitalized certain FNG actions names
 
 !v2.4.0 #9 pre-release build (April 19, 2014)
 <strong>This version requires REAPER v4.62pre8+</strong>, an "Incompatible version" error message will be displayed otherwise...

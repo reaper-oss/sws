@@ -19,6 +19,9 @@ static void SelectAllNearestEditCursor(int flag, void *data);
 static void SelectMutedMidiNotes(int flag, void *data);
 static void QuantizeAllToGrid(int flag, void *data);
 
+static void SelectAllNearestEditCursor(COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd);
+static void SelectMutedMidiNotes(COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd);
+
 static bool convertToInProjectMidi(RprItemCtrPtr &ctr)
 {
     bool hasMidiFile = false;
@@ -48,9 +51,18 @@ void MiscCommands::Init()
 {
     RprCommand::registerCommand("SWS/FNG: Apply MIDI hardware emulation to selected midi takes", "FNG_MIDI_HW_EMULATION_APPLY", &EmulateMidiHardware, UNDO_STATE_ITEMS);
     RprCommand::registerCommand("SWS/FNG: MIDI hardware emulation settings", "FNG_MIDI_HW_EMULATION_SETTINGS", &GetEmulationSettings, NO_UNDO);
-    RprCommand::registerCommand("SWS/FNG MIDI: select muted MIDI notes", "FNG_SELECT_MUTED", &SelectMutedMidiNotes, NO_UNDO);
+    RprCommand::registerCommand("SWS/FNG: Select muted MIDI notes in active MIDI editor", "FNG_SELECT_MUTED", &SelectMutedMidiNotes, NO_UNDO);
     RprCommand::registerCommand("SWS/FNG: Quantize item positions and MIDI note positions to grid", "FNG_QUANTIZE_TO_GRID", &QuantizeAllToGrid, UNDO_STATE_ITEMS);
-    RprCommand::registerCommand("SWS/FNG MIDI: select notes nearest edit cursor", "FNG_SELECT_NOTES_NEAR_EDIT_CURSOR", &SelectAllNearestEditCursor, UNDO_STATE_ITEMS);
+    RprCommand::registerCommand("SWS/FNG: Select notes nearest edit cursor in active MIDI editor", "FNG_SELECT_NOTES_NEAR_EDIT_CURSOR", &SelectAllNearestEditCursor, UNDO_STATE_ITEMS);
+
+	// BR: rather crude (not following how Fingers did it, but is simple, works and should be easily changeable in case Fingers decides to upgrade his RprCommand class)
+	static COMMAND_T g_commandTable[] =
+	{
+		{ { DEFACCEL, "SWS/FNG: Select muted MIDI notes" }, "FNG_ME_SELECT_MUTED",  NULL, NULL, 0, NULL, 32060, SelectMutedMidiNotes},
+		{ { DEFACCEL, "SWS/FNG: Select notes nearest edit cursor" }, "FNG_ME_SELECT_NOTES_NEAR_EDIT_CURSOR",  NULL, NULL, 1, NULL, 32060, SelectAllNearestEditCursor},
+		{ {}, LAST_COMMAND, },
+	};
+	SWSRegisterCommands(g_commandTable);
 }
 //!WANT_LOCALIZE_1ST_STRING_END
 
@@ -59,6 +71,12 @@ static void SelectMutedMidiNotes(int flag, void *data)
     RprMidiTakePtr midiTake = RprMidiTake::createFromMidiEditor();
     for(int i = 0; i < midiTake->countNotes(); i++)
         midiTake->getNoteAt(i)->setSelected(midiTake->getNoteAt(i)->isMuted());
+}
+
+
+static void SelectMutedMidiNotes(COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
+{
+	SelectMutedMidiNotes(0, &ct->user);
 }
 
 static void SelectAllNearestEditCursor(int flag, void *data)
@@ -90,6 +108,10 @@ static void SelectAllNearestEditCursor(int flag, void *data)
     }
 }
 
+static void SelectAllNearestEditCursor(COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
+{
+	SelectAllNearestEditCursor(0, &ct->user);
+}
 static bool sortMidiPositions(const RprMidiNote *lhs, const RprMidiNote *rhs)
 {
     if (lhs->getPosition() == rhs->getPosition())

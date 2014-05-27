@@ -285,7 +285,6 @@ void ItemSourcePathToClipBoard (COMMAND_T* ct)
 	if (OpenClipboard(g_hwndParent))
 	{
 		EmptyClipboard();
-		HGLOBAL hglbCopy;
 		#ifdef _WIN32
 			#if !defined(WDL_NO_SUPPORT_UTF8)
 			if (WDL_HasUTF8(sourceList.Get()))
@@ -293,7 +292,7 @@ void ItemSourcePathToClipBoard (COMMAND_T* ct)
 				DWORD size;
 				WCHAR* wc = WDL_UTF8ToWC(sourceList.Get(), false, 0, &size);
 
-				hglbCopy = GlobalAlloc(GMEM_MOVEABLE, size*sizeof(WCHAR));
+				HGLOBAL hglbCopy = GlobalAlloc(GMEM_MOVEABLE, size*sizeof(WCHAR));
 				memcpy(GlobalLock(hglbCopy), wc, size*sizeof(WCHAR));
 				free(wc);
 				GlobalUnlock(hglbCopy);
@@ -303,7 +302,7 @@ void ItemSourcePathToClipBoard (COMMAND_T* ct)
 			#endif
 		#endif
 		{
-			hglbCopy = GlobalAlloc(GMEM_MOVEABLE, sourceList.GetLength() + 1);
+			HGLOBAL hglbCopy = GlobalAlloc(GMEM_MOVEABLE, sourceList.GetLength() + 1);
 			memcpy(GlobalLock(hglbCopy), sourceList.Get(), sourceList.GetLength() + 1);
 			GlobalUnlock(hglbCopy);
 			SetClipboardData(CF_TEXT, hglbCopy);
@@ -334,14 +333,13 @@ void PreviewItemAtMouse (COMMAND_T* ct)
 		else if (output == 3)
 			track = GetMediaItem_Track(item);
 
-		ItemPreview(toggle, item, track, volume, start, measure, pausePlay);
+ 		ItemPreview(toggle, item, track, volume, start, measure, pausePlay);
 	}
 }
 
 void PlaybackAtMouseCursor (COMMAND_T* ct)
 {
-	// Don't disrupt recording
-	if (GetPlayStateEx(NULL)&4)
+	if (IsRecording())
 		return;
 
 	// Do both MIDI and arrange from here to prevent focusing issues (not unexpected in dual monitor situation)
@@ -357,7 +355,7 @@ void PlaybackAtMouseCursor (COMMAND_T* ct)
 		}
 		else
 		{
-			if (!GetPlayStateEx(NULL)&1 || GetPlayStateEx(NULL)&2)
+			if (!IsPlaying() || IsPaused())
 				StartPlayback(mousePos);
 			else
 			{

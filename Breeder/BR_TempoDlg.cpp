@@ -285,16 +285,16 @@ static void SaveOptionsConversion (HWND hwnd)
 	int gradual = IsDlgButtonChecked(hwnd, IDC_BR_CON_GRADUAL);
 	int split = IsDlgButtonChecked(hwnd, IDC_BR_CON_SPLIT);
 
-	char tmp[256];
+	char tmp[512];
 	_snprintfSafe(tmp, sizeof(tmp), "%d %d %d %d %d %d %d %s", markers, num, den, removeMarkers, timeSel, gradual, split, splitRatio);
 	WritePrivateProfileString("SWS", CONVERT_KEY, tmp, get_ini_file());
 }
 
 static void LoadOptionsConversion (int& markers, int& num, int& den, int& removeMarkers, int& timeSel, int& gradual, int& split, char* splitRatio)
 {
-	char tmp[256];
+	char tmp[512];
 	GetPrivateProfileString("SWS", CONVERT_KEY, "4 4 4 1 0 0 0 4/8", tmp, 256, get_ini_file());
-	sscanf(tmp, "%d %d %d %d %d %d %d %s", &markers, &num, &den, &removeMarkers, &timeSel, &gradual, &split, splitRatio);
+	sscanf(tmp, "%d %d %d %d %d %d %d %20s", &markers, &num, &den, &removeMarkers, &timeSel, &gradual, &split, splitRatio);
 
 	double convertedRatio;
 	IsFraction (splitRatio, convertedRatio);
@@ -757,8 +757,8 @@ static void AdjustTempo (int mode, double bpm, int shape)
 
 static void UpdateTargetBpm (HWND hwnd, int doFirst, int doCursor, int doLast)
 {
-	char bpmAdj[128], bpm1Cur[128], bpm2Cur[128], bpm3Cur[128];
-	double bpm1Tar, bpm2Tar, bpm3Tar;
+	char bpm1Cur[128], bpm2Cur[128], bpm3Cur[128];
+
 	GetDlgItemText(hwnd, IDC_BR_ADJ_BPM_CUR_1, bpm1Cur, 128);
 	GetDlgItemText(hwnd, IDC_BR_ADJ_BPM_CUR_2, bpm2Cur, 128);
 	GetDlgItemText(hwnd, IDC_BR_ADJ_BPM_CUR_3, bpm3Cur, 128);
@@ -771,17 +771,18 @@ static void UpdateTargetBpm (HWND hwnd, int doFirst, int doCursor, int doLast)
 	}
 	else
 	{
+		char bpmAdj[128]; GetDlgItemText(hwnd, IDC_BR_ADJ_BPM_VAL, bpmAdj, 128);
+		double bpm1Tar, bpm2Tar, bpm3Tar;
+
 		// Calculate target
 		if (IsDlgButtonChecked(hwnd, IDC_BR_ADJ_BPM_VAL_ENB))
 		{
-			GetDlgItemText(hwnd, IDC_BR_ADJ_BPM_VAL, bpmAdj, 128);
 			bpm1Tar = AltAtof(bpmAdj) + AltAtof(bpm1Cur);
 			bpm2Tar = AltAtof(bpmAdj) + AltAtof(bpm2Cur);
 			bpm3Tar = AltAtof(bpmAdj) + AltAtof(bpm3Cur);
 		}
 		else
 		{
-			GetDlgItemText(hwnd, IDC_BR_ADJ_BPM_PERC, bpmAdj, 128);
 			bpm1Tar = (1 + AltAtof(bpmAdj)/100) * AltAtof(bpm1Cur);
 			bpm2Tar = (1 + AltAtof(bpmAdj)/100) * AltAtof(bpm2Cur);
 			bpm3Tar = (1 + AltAtof(bpmAdj)/100) * AltAtof(bpm3Cur);
@@ -977,14 +978,14 @@ static void SaveOptionsSelAdj (HWND hwnd)
 	int adjustType = IsDlgButtonChecked(hwnd, IDC_BR_ADJ_BPM_VAL_ENB);
 	int adjustShape = (int)SendDlgItemMessage(hwnd,IDC_BR_ADJ_SHAPE,CB_GETCURSEL,0,0);
 
-	char tmp[256];
+	char tmp[512];
 	_snprintfSafe(tmp, sizeof(tmp), "%lf %lf %d %d %d %d %d %d %d %d %d %d %d", bpmStart, bpmEnd, num, den, bpmEnb, sigEnb, timeSel, shape, type, selPref, invertPref, adjustType, adjustShape);
 	WritePrivateProfileString("SWS", SEL_ADJ_KEY, tmp, get_ini_file());
 }
 
 static void LoadOptionsSelAdj (double& bpmStart, double& bpmEnd, int& num, int& den, int& bpmEnb, int& sigEnb, int& timeSel, int& shape, int& type, int& selPref, int& invertPref, int& adjustType, int& adjustShape)
 {
-	char tmp[256];
+	char tmp[512];
 	GetPrivateProfileString("SWS", SEL_ADJ_KEY, "120 150 4 4 1 0 0 0 0 0 0 0 0", tmp, 256, get_ini_file());
 	sscanf(tmp, "%lf %lf %d %d %d %d %d %d %d %d %d %d %d", &bpmStart, &bpmEnd, &num, &den, &bpmEnb, &sigEnb, &timeSel, &shape, &type, &selPref, &invertPref, &adjustType, &adjustShape);
 
@@ -1334,19 +1335,19 @@ static void SaveOptionsUnselectNth (HWND hwnd)
 	int Nth = (int)SendDlgItemMessage(hwnd,IDC_BR_UNSEL_NTH_TEMPO,CB_GETCURSEL,0,0);
 	int criteria = IsDlgButtonChecked(hwnd, IDC_BR_UNSEL_CRITERIA);
 
-	char tmp[256];
+	char tmp[512];
 	_snprintfSafe(tmp, sizeof(tmp), "%d %d", Nth, criteria);
 	WritePrivateProfileString("SWS", UNSEL_KEY, tmp, get_ini_file());
 }
 
 static void LoadOptionsUnselectNth (int& Nth, int& criteria)
 {
-	char tmp[256];
+	char tmp[512];
 	GetPrivateProfileString("SWS", UNSEL_KEY, "0 0", tmp, 256, get_ini_file());
-	sscanf(tmp, "%d %d ", &Nth, &criteria);
+	sscanf(tmp, "%d %d", &Nth, &criteria);
 
 	// Restore defaults if needed
-	if (Nth < 0 && Nth > 14)
+	if (Nth < 0 || Nth > 14)
 		Nth = 0;
 	if (criteria != 0 && criteria != 1)
 		criteria = 1;
@@ -1559,14 +1560,14 @@ static void SaveOptionsRandomizeTempo (HWND hwnd)
 	int unitLimit = (int)SendDlgItemMessage(hwnd,IDC_BR_RAND_LIMIT_UNIT,CB_GETCURSEL,0,0);
 	int limit = IsDlgButtonChecked(hwnd, IDC_BR_RAND_LIMIT);
 
-	char tmp[256];
+	char tmp[512];
 	_snprintfSafe(tmp, sizeof(tmp), "%lf %lf %d %lf %lf %d %d", min, max, unit, minLimit, maxLimit, unitLimit, limit);
 	WritePrivateProfileString("SWS", RAND_KEY, tmp, get_ini_file());
 }
 
 static void LoadOptionsRandomizeTempo (double& min, double& max, int& unit, double& minLimit, double& maxLimit, int& unitLimit, int& limit)
 {
-	char tmp[256];
+	char tmp[512];
 	GetPrivateProfileString("SWS", RAND_KEY, "-1 1 0 40 260 0 0", tmp, 256, get_ini_file());
 	sscanf(tmp, "%lf %lf %d %lf %lf %d %d", &min, &max, &unit, &minLimit, &maxLimit, &unitLimit, &limit);
 
@@ -1734,16 +1735,16 @@ static void SaveOptionsTempoShape (HWND hwnd)
 	int split = IsDlgButtonChecked(hwnd, IDC_BR_SHAPE_SPLIT);
 	char splitRatio[128]; GetDlgItemText(hwnd, IDC_BR_SHAPE_SPLIT_RATIO, splitRatio, 128);
 
-	char tmp[256];
+	char tmp[512];
 	_snprintfSafe(tmp, sizeof(tmp), "%d %s", split, splitRatio);
 	WritePrivateProfileString("SWS", SHAPE_KEY, tmp, get_ini_file());
 }
 
 static void LoadOptionsTempoShape (int& split, char* splitRatio)
 {
-	char tmp[256];
+	char tmp[512];
 	GetPrivateProfileString("SWS", SHAPE_KEY, "0 4/8", tmp, 256, get_ini_file());
-	sscanf(tmp, "%d %s", &split, splitRatio);
+	sscanf(tmp, "%d %20s", &split, splitRatio);
 
 	// Restore defaults if needed
 	double convertedRatio;

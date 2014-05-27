@@ -396,17 +396,6 @@ double GetProjectSettingsTempo (int* num, int* den)
 	return bpm/_den*4;
 }
 
-void StartPlayback (double position)
-{
-	double editCursor = GetCursorPositionEx(NULL);
-
-	PreventUIRefresh(1);
-	SetEditCurPos2(NULL, position, false, false);
-	OnPlayButton();
-	SetEditCurPos2(NULL, editCursor, false, false);
-	PreventUIRefresh(-1);
-}
-
 void InitTempoMap ()
 {
 	if (!CountTempoTimeSigMarkers(NULL))
@@ -439,6 +428,32 @@ void ScrollToTrackIfNotInArrange (MediaTrack* track)
 		CoolSB_SetScrollInfo(hwnd, SB_VERT, &si, true);
 		SendMessage(hwnd, WM_VSCROLL, si.nPos << 16 | SB_THUMBPOSITION, NULL);
 	}
+}
+
+void StartPlayback (double position)
+{
+	double editCursor = GetCursorPositionEx(NULL);
+
+	PreventUIRefresh(1);
+	SetEditCurPos2(NULL, position, false, false);
+	OnPlayButton();
+	SetEditCurPos2(NULL, editCursor, false, false);
+	PreventUIRefresh(-1);
+}
+
+bool IsPlaying ()
+{
+	return (GetPlayStateEx(NULL) & 1) == 1;
+}
+
+bool IsPaused ()
+{
+	return (GetPlayStateEx(NULL) & 2) == 2;
+}
+
+bool IsRecording ()
+{
+	return (GetPlayStateEx(NULL) & 4) == 4;
 }
 
 bool TcpVis (MediaTrack* track)
@@ -863,15 +878,15 @@ static int GetTakeHeight (MediaItem_Take* take, MediaItem* item, int id, int* of
 		return 0;
 	}
 	MediaItem_Take* validTake = (take) ? (take) : (GetTake(item, id));
-	MediaItem* validItem = (item) ? (item) : (GetMediaItemTake_Item(take));
-	MediaTrack* track = GetMediaItem_Track(validItem);
+	MediaItem*      validItem = (item) ? (item) : (GetMediaItemTake_Item(take));
+	MediaTrack*     track     = GetMediaItem_Track(validItem);
 
 	// This gets us the offset to start of the item
 	int takeOffset = trackOffset;
 	int itemH = GetItemHeight(validItem, &takeOffset, trackHeight);
 
-	int takeH;
 	int takeLanes; GetConfig("projtakelane", takeLanes);
+	int takeH = 0;
 
 	// Take lanes displayed
 	if (GetBit(takeLanes, 0))
@@ -2309,10 +2324,9 @@ static int IsHwndMidiEditor (HWND hwnd, void** midiEditor, HWND* subView)
 	}
 	else
 	{
-		HWND subWnd = NULL;
 		while (hwnd)
 		{
-			subWnd = hwnd;
+			HWND subWnd = hwnd;
 			hwnd = GetParent(hwnd);
 			if (MIDIEditor_GetMode(hwnd) != -1)
 			{
@@ -2397,7 +2411,7 @@ static bool GetMouseCursorContextMidi (HWND hwnd, POINT p, BR_MouseContextInfo& 
 
 						if (p.y >= ccStart && p.y < ccEnd)
 						{
-							info.ccLane = MapVelLaneToCC(midiEditor.GetCCLane(i));
+							info.ccLane = midiEditor.GetCCLane(i);
 							info.ccLaneId = i;
 
 							// Get CC value at Y position
@@ -2408,7 +2422,7 @@ static bool GetMouseCursorContextMidi (HWND hwnd, POINT p, BR_MouseContextInfo& 
 								{
 									int mouse = ccEnd - p.y;
 									int laneHeight = ccEnd - ccStart;
-									double steps = (info.ccLane == 0x201 || (info.ccLane & 0x100) == 0x100) ? (16383) : (128);
+									double steps = (info.ccLane == CC_PITCH || info.ccLane >= CC_14BIT_START) ? (16383) : (128);
 									info.ccLaneVal = (int)(steps / laneHeight * mouse);
 									if (steps == 128 && info.ccLaneVal == 128)
 										info.ccLaneVal = 127;
@@ -2590,7 +2604,7 @@ static bool GetMouseCursorContextMidiInline (BR_MouseContextInfo& info, const ch
 
 				if (mouseY >= ccStart && mouseY < ccEnd)
 				{
-					info.ccLane = MapVelLaneToCC(midiEditor.GetCCLane(i));
+					info.ccLane = midiEditor.GetCCLane(i);
 					info.ccLaneId = i;
 
 					// Get CC value at Y position
@@ -2599,7 +2613,7 @@ static bool GetMouseCursorContextMidiInline (BR_MouseContextInfo& info, const ch
 					{
 						int mouse = ccEnd - mouseY;
 						int laneHeight = ccEnd - ccStart;
-						double steps = (info.ccLane == 0x201 || (info.ccLane & 0x100) == 0x100) ? (16383) : (128);
+						double steps = (info.ccLane == CC_PITCH || info.ccLane >= CC_14BIT_START) ? (16383) : (128);
 						info.ccLaneVal = (int)(steps / laneHeight * mouse);
 						if (steps == 128 && info.ccLaneVal == 128)
 							info.ccLaneVal = 127;

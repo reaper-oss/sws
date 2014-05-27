@@ -34,20 +34,26 @@
 /******************************************************************************
 * BR_EnvPoint                                                                 *
 ******************************************************************************/
-BR_EnvPoint::BR_EnvPoint (double position)
+BR_EnvPoint::BR_EnvPoint (double position) :
+position (position),
+value    (0),
+shape    (0),
+sig      (0),
+selected (0),
+partial  (0),
+bezier   (0)
 {
-	this->position = position;
 }
 
-BR_EnvPoint::BR_EnvPoint (double position, double value, int shape, int sig, int selected, int partial, double bezier)
+BR_EnvPoint::BR_EnvPoint (double position, double value, int shape, int sig, int selected, int partial, double bezier) :
+position (position),
+value    (value),
+shape    (shape),
+sig      (sig),
+selected (selected),
+partial  (partial),
+bezier   (bezier)
 {
-	this->position = position;
-	this->value    = value;
-	this->shape    = shape;
-	this->sig      = sig;
-	this->selected = selected;
-	this->partial  = partial;
-	this->bezier   = bezier;
 }
 
 bool BR_EnvPoint::ReadLine (const LineParser& lp)

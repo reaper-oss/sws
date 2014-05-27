@@ -31,6 +31,7 @@
 #include "BR_Misc.h"
 #include "BR_ProjState.h"
 #include "BR_Util.h"
+#include "../Fingers/RprMidiCCLane.h"
 #include "../SnM/SnM_Track.h"
 #include "../reaper/localize.h"
 
@@ -52,6 +53,9 @@ static void MidiTakePreview (int mode, MediaItem_Take* take, MediaTrack* track, 
 	*        1 -> start  *
 	*        2 -> toggle */
 
+	if (IsRecording()) // Reaper won't preview anything during recording but extension will still think preview is in progress (could disrupt toggle states and send unneeded CC123)
+		return;
+
 	if (g_itemPreviewPlaying)
 	{
 		if (g_ItemPreview.preview_track)
@@ -69,8 +73,7 @@ static void MidiTakePreview (int mode, MediaItem_Take* take, MediaTrack* track, 
 
 		if (g_itemPreviewPaused && mode != 1) // requesting new preview while old one is still playing shouldn't unpause playback
 		{
-			if (GetPlayStateEx(NULL)&2)
-				OnPauseButton();
+			if (IsPaused()) OnPauseButton();
 			g_itemPreviewPaused = false;
 		}
 
@@ -86,11 +89,11 @@ static void MidiTakePreview (int mode, MediaItem_Take* take, MediaTrack* track, 
 		MediaItem_Take* oldTake = GetActiveTake(item);
 		bool itemMuteState      = *(bool*)GetSetMediaItemInfo(item, "B_MUTE", NULL);
 		double effectiveTakeLen = EffectiveMidiTakeLength(take);
-		
+
 		GetSetMediaItemInfo(item, "B_MUTE", &g_bFalse);     // needs to be set before getting the source
 		SetActiveTake(take);                                // active item take and editor take may differ
 		PCM_source* src = ((PCM_source*)item)->Duplicate(); // must be item source otherwise item/take volume won't get accounted for
-		
+
 		if (src && effectiveTakeLen > 0 && effectiveTakeLen > startOffset)
 		{
 			GetSetMediaItemInfo((MediaItem*)src, "D_POSITION", &g_d0);
@@ -115,7 +118,7 @@ static void MidiTakePreview (int mode, MediaItem_Take* take, MediaTrack* track, 
 
 			// Pause before preview otherwise MidiTakePreviewPlayState will stop it
 			g_itemPreviewPaused = pauseDuringPrev;
-			if (g_itemPreviewPaused && (GetPlayStateEx(NULL)&1) == 1 && (GetPlayStateEx(NULL)&2) != 1)
+			if (g_itemPreviewPaused && IsPlaying() && !IsPaused())
 				OnPauseButton();
 
 			if (g_ItemPreview.preview_track)
@@ -220,6 +223,30 @@ void ME_PreviewActiveTake (COMMAND_T* ct, int val, int valhw, int relmode, HWND 
 		if (muteState.size() > 0)
 			SetMutedNotes(take, muteState);
 	}
+}
+
+void ME_ShowUsedCCLanesDetect14Bit (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
+{
+	int defaultHeight = 67; // same height FNG versions use (to keep behavior identical)
+	RprMidiCCLanePtr laneView = RprMidiCCLane::createFromMidiEditor();
+	set<int> usedCC = GetUsedCCLanes(MIDIEditor_GetTake(MIDIEditor_GetActive()), 2);
+
+	for (int i = 0; i < laneView->countShown(); ++i)
+		if (usedCC.find(laneView->getIdAt(i)) == usedCC.end())
+			laneView->remove(i--);
+
+	// Special case: Bank select and CC0 (from FNG version to keep behavior identical)
+	if (usedCC.find(0) != usedCC.end() && usedCC.find(CC_BANK_SELECT) != usedCC.end() && !laneView->isShown(131))
+		laneView->append(131, defaultHeight);
+
+	for(set<int>::iterator it = usedCC.begin(); it != usedCC.end(); ++it)
+		if (!laneView->isShown(*it))
+			laneView->append(*it, defaultHeight);
+
+	if (laneView->countShown() == 0)
+		laneView->append(-1, 0);
+
+	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 }
 
 void ME_PlaybackAtMouseCursor (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)

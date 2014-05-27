@@ -2063,11 +2063,12 @@ HMENU BR_AnalyzeLoudnessWnd::OnContextMenu (int x, int y, bool* wantDefaultItems
 
 BR_AnalyzeLoudnessWnd::Properties::Properties () :
 analyzeTracks         (false),
-analyzeOnNormalize    (false),
-mirrorSelection       (false),
-doubleClickGotoTarget (false),
+analyzeOnNormalize    (true),
+mirrorSelection       (true),
+doubleClickGotoTarget (true),
 timeSelectionOverMax  (false),
-clearEnvelope         (false),
+clearEnvelope         (true),
+clearAnalyzed         (true),
 graphMin              (-41),
 graphMax              (-14)
 {

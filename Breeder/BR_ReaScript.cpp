@@ -252,7 +252,7 @@ void* BR_GetMouseCursorContext_MIDI (bool* inlineEditor, int* noteRow, int* ccLa
 {
 	WritePtr(inlineEditor, g_mouseInfo.midiInlineEditor);
 	WritePtr(noteRow,      g_mouseInfo.noteRow);
-	WritePtr(ccLane,       g_mouseInfo.ccLane);
+	WritePtr(ccLane,       MapVelLaneToReaScriptCC(g_mouseInfo.ccLane));
 	WritePtr(ccLaneVal,    g_mouseInfo.ccLaneVal);
 	WritePtr(ccLaneId,     g_mouseInfo.ccLaneId);
 
@@ -282,7 +282,7 @@ MediaItem* BR_ItemAtMouseCursor (double* position)
 bool BR_MIDI_CCLaneReplace (void* midiEditor, int laneId, int newCC)
 {
 	MediaItem_Take* take = MIDIEditor_GetTake(midiEditor);
-	int newLane = MapCCToVelLane(newCC);
+	int newLane = MapReaScriptCCToVelLane(newCC);
 
 	if (take && IsVelLaneValid(newLane))
 	{

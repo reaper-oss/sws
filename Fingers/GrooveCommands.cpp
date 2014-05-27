@@ -22,6 +22,12 @@ static void ApplyGrooveInMidiEditor(int flags, void *data)
     me->ApplyGrooveToMidiEditor(*beatDivider, 1.0, 1.0);
 }
 
+static void ApplyGrooveInMidiEditor(COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
+{
+	ApplyGrooveInMidiEditor(0, &ct->user);
+	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
+}
+
 static void GetGrooveFromItems(int flags, void *data)
 {
     GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
@@ -113,8 +119,8 @@ void GrooveCommands::Init()
 {
     RprCommand::registerCommand("SWS/FNG: Apply groove to selected media items (within 16th)", "FNG_APPLY_GROOVE",&ApplyGroove, 16, UNDO_STATE_ITEMS);
     RprCommand::registerCommand("SWS/FNG: Apply groove to selected media items (within 32nd)", "FNG_APPLY_GROOVE_32", &ApplyGroove, 32, UNDO_STATE_ITEMS);
-    RprCommand::registerCommand("SWS/FNG MIDI: Apply groove to selected MIDI notes in active MIDI editor (within 16th)", "FNG_APPLY_MIDI_GROOVE_16", &ApplyGrooveInMidiEditor, 16, UNDO_STATE_ITEMS);
-    RprCommand::registerCommand("SWS/FNG MIDI: Apply groove to selected MIDI notes in active MIDI editor (within 32nd)", "FNG_APPLY_MIDI_GROOVE_32", &ApplyGrooveInMidiEditor, 32, UNDO_STATE_ITEMS);
+    RprCommand::registerCommand("SWS/FNG: Apply groove to selected MIDI notes in active MIDI editor (within 16th)", "FNG_APPLY_MIDI_GROOVE_16", &ApplyGrooveInMidiEditor, 16, UNDO_STATE_ITEMS);
+    RprCommand::registerCommand("SWS/FNG: Apply groove to selected MIDI notes in active MIDI editor (within 32nd)", "FNG_APPLY_MIDI_GROOVE_32", &ApplyGrooveInMidiEditor, 32, UNDO_STATE_ITEMS);
     RprCommand::registerCommand("SWS/FNG: Get groove from selected media items", "FNG_GET_GROOVE", &GetGrooveFromItems, NO_UNDO);
     RprCommand::registerCommand("SWS/FNG: Get groove from selected MIDI notes in active MIDI editor", "FNG_GET_GROOVE_MIDI", &GetGrooveFromMIDIEditor, NO_UNDO);
     RprCommand::registerCommand("SWS/FNG: Save groove template to file", "FNG_SAVE_GROOVE", &SaveGrooveToFile, NO_UNDO);
@@ -127,5 +133,14 @@ void GrooveCommands::Init()
     RprCommand::registerCommand("SWS/FNG: Set groove marker start to edit cursor", "FNG_GROOVE_MARKER_START_CUR", &MarkGrooveStart, (int)GrooveTemplateHandler::EDITCURSOR,     NO_UNDO);
     RprCommand::registerCommand("SWS/FNG: Set groove marker start to current bar", "FNG_GROOVE_MARKER_START_BAR", &MarkGrooveStart, (int)GrooveTemplateHandler::CURRENTBAR,     NO_UNDO);
     RprCommand::registerToggleCommand("SWS/FNG: Show groove tool", "FNG_GROOVE_TOOL",&ShowGrooveDialog, IsGrooveDialogOpen, NO_UNDO);
+
+	// BR: rather crude (not following how Fingers did it, but is simple, works and should be easily changeable in case Fingers decides to upgrade his RprCommand class)
+	static COMMAND_T g_commandTable[] =
+	{
+		{ { DEFACCEL, "SWS/FNG: Apply groove to selected MIDI notes (within 16th)" }, "FNG_ME_APPLY_MIDI_GROOVE_16",  NULL, NULL, 16, NULL, 32060, ApplyGrooveInMidiEditor},
+		{ { DEFACCEL, "SWS/FNG: Apply groove to selected MIDI notes (within 32nd)" }, "FNG_ME_APPLY_MIDI_GROOVE_32",  NULL, NULL, 32, NULL, 32060, ApplyGrooveInMidiEditor},
+		{ {}, LAST_COMMAND, },
+	};
+	SWSRegisterCommands(g_commandTable);
 }
 //!WANT_LOCALIZE_1ST_STRING_END

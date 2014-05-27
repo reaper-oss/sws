@@ -296,8 +296,6 @@ void MoveGridToMouse (COMMAND_T* ct)
 				{
 					if ((mousePosition - pos1) >= (pos2 - mousePosition) || targetId == 0)
 						targetId = targetId+1;
-					else
-						targetId = targetId;
 				}
 				g_tempoMap->GetPoint(targetId, &grid, NULL, NULL, NULL);
 			}
@@ -888,7 +886,7 @@ void EditTempoGradual (COMMAND_T* ct)
 			}
 
 			// Get new BPM
-			double bpm = b1 + (percentage) ? (b1*diff) : (diff);
+			double bpm = b1 + ((percentage) ? (b1*diff) : (diff));
 			if (bpm < MIN_BPM)
 				bpm = MIN_BPM;
 			else if (bpm > MAX_BPM)

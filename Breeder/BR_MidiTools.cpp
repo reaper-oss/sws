@@ -415,6 +415,123 @@ vector<int> MuteSelectedNotes (MediaItem_Take* take)
 	return muteStatus;
 }
 
+set<int> GetUsedCCLanes (MediaItem_Take* take, int dectect14bit)
+{
+	set<int> usedCC;
+
+	int noteCount, ccCount, sysCount;
+	if (take && MIDI_CountEvts(take, &noteCount, &ccCount, &sysCount))
+	{
+		for (int i = 0; i < ccCount; ++i)
+		{
+			int chanMsg, msg2;
+			MIDI_GetCC(take, i, NULL, NULL, NULL, &chanMsg, NULL, &msg2, NULL);
+			if      (chanMsg == 0xB0) usedCC.insert(msg2);
+			else if (chanMsg == 0xC0) usedCC.insert(CC_PROGRAM);
+			else if (chanMsg == 0xD0) usedCC.insert(CC_CHANNEL_PRESSURE);
+			else if (chanMsg == 0xE0) usedCC.insert(CC_PITCH);
+		}
+
+		if (dectect14bit != 0)
+		{
+			set<int>::iterator usedCCIt;
+			usedCCIt = usedCC.upper_bound(-1);
+			bool hasFirstPart  = (usedCCIt != usedCC.end() && *usedCCIt <= 31)  ? true : false;
+			usedCCIt = usedCC.upper_bound(31);
+			bool hasSecondPart  = (usedCCIt != usedCC.end() && *usedCCIt <= 63) ? true : false;
+
+			if (hasFirstPart && hasSecondPart)
+			{
+				if (dectect14bit == 1)
+				{
+					vector<set<double> > pairsPositions;
+					pairsPositions.resize(64);
+
+					for (int i = 0; i < ccCount; ++i)
+					{
+						double position;
+						int chanMsg, msg2;
+						MIDI_GetCC(take, i, NULL, NULL, &position, &chanMsg, NULL, &msg2, NULL);
+						if (chanMsg == 0xB0 && CheckBounds(msg2, 0, 63))
+							pairsPositions[msg2].insert(position);
+					}
+
+					for (int i = 0; i < 32; ++i)
+					{
+						int j = i + 32;
+
+						if (pairsPositions[i].size() && pairsPositions[j].size())
+						{
+							for(set<double>::iterator it = pairsPositions[i].begin(); it != pairsPositions[i].end(); ++it)
+							{
+								if (pairsPositions[j].count(*it))
+								{
+									usedCC.insert(i + 134);
+									break;
+								}
+							}
+						}
+					}
+				}
+				else
+				{
+					vector<vector<double> > pairsPositions;
+					pairsPositions.resize(64);
+
+					for (int i = 0; i < ccCount; ++i)
+					{
+						double position;
+						int chanMsg, msg2;
+						MIDI_GetCC(take, i, NULL, NULL, &position, &chanMsg, NULL, &msg2, NULL);
+						if (chanMsg == 0xB0 && CheckBounds(msg2, 0, 63))
+							pairsPositions[msg2].push_back(position);
+					}
+
+					for (int i = 0; i < 32; ++i)
+					{
+						int j = i + 32;
+						if (pairsPositions[i].size() && pairsPositions[j].size() && pairsPositions[i] == pairsPositions[j])
+						{
+							usedCC.erase(i);
+							usedCC.erase(j);
+							usedCC.insert(i + 134);
+						}
+					}
+				}
+			}
+		}
+
+		if (noteCount)
+			usedCC.insert(-1);
+
+		bool foundText = false, foundSys = false;
+		for (int i = 0; i < sysCount; ++i)
+		{
+			int type = 0;
+			MIDI_GetTextSysexEvt(take, i, NULL, NULL, NULL, &type, NULL, NULL);
+
+			if (type == -1)
+			{
+				if (!foundSys)
+				{
+					usedCC.insert(CC_SYSEX);
+					foundSys = true;
+				}
+			}
+			else
+			{
+				if (!foundText)
+				{
+					usedCC.insert(CC_TEXT_EVENTS);
+					foundText = true;
+				}
+			}
+		}
+	}
+
+	return usedCC;
+}
+
 double EffectiveMidiTakeLength (MediaItem_Take* take)
 {
 	if (take && IsMidi(take))
@@ -427,15 +544,15 @@ double EffectiveMidiTakeLength (MediaItem_Take* take)
 
 		for (int i = 0; i < noteCount; ++i)
 		{
-			bool muted;	double noteEnd;
+			bool muted; double noteEnd;
 			MIDI_GetNote(take, i, NULL, &muted, NULL, &noteEnd, NULL, NULL, NULL);
 			if (!muted && noteEnd > takeEndPpq)
 				takeEndPpq = noteEnd;
 		}
 
-		for (int i = ccCount-1 ; i >= 0; ++i)
+		for (int i = ccCount-1 ; i >= 0; --i)
 		{
-			bool muted;	double pos;
+			bool muted; double pos;
 			MIDI_GetCC(take, i, NULL, &muted, &pos, NULL, NULL, NULL, NULL);
 			if (!muted)
 			{
@@ -447,7 +564,7 @@ double EffectiveMidiTakeLength (MediaItem_Take* take)
 
 		for (int i = 0; i < sysCount; ++i)
 		{
-			bool muted;	double pos; int type;
+			bool muted; double pos; int type;
 			MIDI_GetTextSysexEvt(take, i, NULL, &muted, &pos, &type, NULL, NULL);
 			if (!muted && type == -1 && pos > takeEndPpq)
 				takeEndPpq = pos;
@@ -549,7 +666,7 @@ bool IsVelLaneValid (int lane)
 		return false;
 }
 
-int MapVelLaneToCC (int lane)
+int MapVelLaneToReaScriptCC (int lane)
 {
 	if (lane == -1)	                return 0x200;
 	if (lane >= 0   && lane <= 127) return lane;
@@ -557,7 +674,7 @@ int MapVelLaneToCC (int lane)
 	else                            return 0x100 | (lane - 134);
 }
 
-int MapCCToVelLane (int cc)
+int MapReaScriptCCToVelLane (int cc)
 {
 	if (cc == 0x200)                return -1;
 	if (cc >= 0     && cc <= 127)   return cc;

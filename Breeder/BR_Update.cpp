@@ -299,7 +299,7 @@ void SetStartupSearchOptions (bool official, bool beta, unsigned int lastTime)
 	if (lastTime == 0) // lastTime = 0 will prevent overwriting current lastTime
 	{
 		GetPrivateProfileString("SWS", STARTUP_VERSION_KEY, "1 0 0", tmp, 256, get_ini_file());
-		sscanf(tmp, "%*d %*d %d", &lastTime);
+		sscanf(tmp, "%*d %*d %u", &lastTime);
 	}
 	_snprintfSafe(tmp, sizeof(tmp), "%d %d %u", !!official, !!beta, lastTime);
 	WritePrivateProfileString("SWS", STARTUP_VERSION_KEY, tmp, get_ini_file());

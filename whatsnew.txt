@@ -16,6 +16,8 @@ Added actions
  - SWS/wol: Toggle enable envelopes overlap for envelopes in track lane
  - SWS/wol: Force envelope overlap in track lane in its track height
  - SWS/wol: Restore previous envelope overlap settings
+ - SWS/wol: Horizontal zoom to selected envelope in time selection
+ - SWS/wol: Full zoom to selected envelope in time selection
 +Main and MIDI editor:
  - SWS/BR: Play from mouse cursor position (3 versions)
 +MIDI editor:

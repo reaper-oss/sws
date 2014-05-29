@@ -110,7 +110,7 @@ static COMMAND_T g_commandTable[] =
 	/******************************************************************************
 	* Midi editor - Media item preview                                            *
 	******************************************************************************/
-	{ { DEFACCEL, "SWS/BR: Stop media item preview" },                                                                                                   "BR_ME_PREV_ACT_ITEM",                  NULL, NULL, 0,  NULL, 32060, ME_StopMidiTakePreview},
+	{ { DEFACCEL, "SWS/BR: Stop media item preview" },                                                                                                   "BR_ME_STOP_PREV_ACT_ITEM",             NULL, NULL, 0,  NULL, 32060, ME_StopMidiTakePreview},
 
 	{ { DEFACCEL, "SWS/BR: Preview active media item through track" },                                                                                   "BR_ME_PREV_ACT_ITEM",                  NULL, NULL, 1111, NULL, 32060, ME_PreviewActiveTake},
 	{ { DEFACCEL, "SWS/BR: Preview active media item through track (start from mouse position)" },                                                       "BR_ME_PREV_ACT_ITEM_POS",              NULL, NULL, 1211, NULL, 32060, ME_PreviewActiveTake},

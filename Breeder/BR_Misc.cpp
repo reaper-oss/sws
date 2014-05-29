@@ -333,7 +333,7 @@ void PreviewItemAtMouse (COMMAND_T* ct)
 		else if (output == 3)
 			track = GetMediaItem_Track(item);
 
- 		ItemPreview(toggle, item, track, volume, start, measure, pausePlay);
+		ItemPreview(toggle, item, track, volume, start, measure, pausePlay);
 	}
 }
 

@@ -530,7 +530,7 @@ public:
 	}
 };
 
-static SWSProjConfig<ArrangeState> g_stdAS;
+static SWSProjConfig<ArrangeState> g_stdAS[5];
 static SWSProjConfig<ArrangeState> g_togAS;
 static bool g_bASToggled = false;
 
@@ -575,8 +575,8 @@ void TogZoomItemsOnly(COMMAND_T* = NULL)	{ TogZoom(2, 0); }
 void TogZoomItemsOnlyMin(COMMAND_T* = NULL)	{ TogZoom(2, 1); }
 void TogZoomItemsOnlyHide(COMMAND_T* = NULL){ TogZoom(2, 2); }
 void TogZoomHoriz(COMMAND_T* = NULL)		{ TogZoom(3, 0); }
-void SaveArngView(COMMAND_T* = NULL)		{ g_stdAS.Get()->Save(true, true); }
-void RestoreArngView(COMMAND_T* = NULL)		{ g_stdAS.Get()->Restore(); }
+void SaveCurrentArrangeViewSlot(COMMAND_T* ct)	{ g_stdAS[(int)ct->user].Get()->Save(true, true); }
+void RestoreArrangeViewSlot(COMMAND_T* ct) { g_stdAS[(int)ct->user].Get()->Restore(); }
 
 // Returns the track at a point on the track view window
 // Point is in client coords
@@ -1442,8 +1442,11 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 
 static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t *reg)
 {
-	g_stdAS.Get()->Clear();
-	g_stdAS.Cleanup();
+	for (int i = 0; i < 5; ++i) 
+		g_stdAS[i].Get()->Clear();
+	for (int i = 0; i < 5; ++i)
+		g_stdAS[i].Cleanup();
+
 	g_togAS.Get()->Clear();
 	g_togAS.Cleanup();
 	g_bASToggled = false;
@@ -1491,8 +1494,16 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Scroll left 1%" },											"SWS_SCROLL_L1",		HorizScroll,		NULL, -1 },
 	{ { DEFACCEL, "SWS: Scroll right 1%" },											"SWS_SCROLL_R1",		HorizScroll,		NULL, 1 },
 
-	{ { DEFACCEL, "SWS: Save current arrange view" },				 				"SWS_SAVEVIEW",			SaveArngView,		NULL, },
-	{ { DEFACCEL, "SWS: Restore arrange view" },				 					"SWS_RESTOREVIEW",		RestoreArngView,	NULL, },
+	{ { DEFACCEL, "SWS: Save current arrenge view, slot 1" }, "SWS_SAVEVIEW", SaveCurrentArrangeViewSlot, NULL, 0 },	//Use same id of the old action for compatibility
+	{ { DEFACCEL, "SWS: Save current arrenge view, slot 2" }, "WOL_SAVEVIEWS2", SaveCurrentArrangeViewSlot, NULL, 1 },
+	{ { DEFACCEL, "SWS: Save current arrenge view, slot 3" }, "WOL_SAVEVIEWS3", SaveCurrentArrangeViewSlot, NULL, 2 },
+	{ { DEFACCEL, "SWS: Save current arrenge view, slot 4" }, "WOL_SAVEVIEWS4", SaveCurrentArrangeViewSlot, NULL, 3 },
+	{ { DEFACCEL, "SWS: Save current arrenge view, slot 5" }, "WOL_SAVEVIEWS5", SaveCurrentArrangeViewSlot, NULL, 4 },
+	{ { DEFACCEL, "SWS: Restore arrenge view, slot 1" }, "SWS_RESTOREVIEW", RestoreArrangeViewSlot, NULL, 0 },
+	{ { DEFACCEL, "SWS: Restore arrenge view, slot 2" }, "WOL_RESTOREVIEWS2", RestoreArrangeViewSlot, NULL, 1 },
+	{ { DEFACCEL, "SWS: Restore arrenge view, slot 3" }, "WOL_RESTOREVIEWS3", RestoreArrangeViewSlot, NULL, 2 },
+	{ { DEFACCEL, "SWS: Restore arrenge view, slot 4" }, "WOL_RESTOREVIEWS4", RestoreArrangeViewSlot, NULL, 3 },
+	{ { DEFACCEL, "SWS: Restore arrenge view, slot 5" }, "WOL_RESTOREVIEWS5", RestoreArrangeViewSlot, NULL, 4 },
 
 	{ { DEFACCEL, "SWS: Undo zoom" },												"SWS_UNDOZOOM",			UndoZoom,			NULL, },
 	{ { DEFACCEL, "SWS: Redo zoom" },												"SWS_REDOZOOM",			RedoZoom,			NULL, },

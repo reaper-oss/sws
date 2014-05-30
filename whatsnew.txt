@@ -18,6 +18,16 @@ Added actions
  - SWS/wol: Restore previous envelope overlap settings
  - SWS/wol: Horizontal zoom to selected envelope in time selection
  - SWS/wol: Full zoom to selected envelope in time selection
+ - SWS: Save current arrange view, slot 1
+ - SWS: Save current arrange view, slot 2
+ - SWS: Save current arrange view, slot 3
+ - SWS: Save current arrange view, slot 4
+ - SWS: Save current arrange view, slot 5
+ - SWS: Restore arrange view, slot 1
+ - SWS: Restore arrange view, slot 2
+ - SWS: Restore arrange view, slot 3
+ - SWS: Restore arrange view, slot 4
+ - SWS: Restore arrange view, slot 5
 +Main and MIDI editor:
  - SWS/BR: Play from mouse cursor position (3 versions)
 +MIDI editor:

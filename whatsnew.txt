@@ -8,9 +8,7 @@ Analyze and normalize loudness
 
 Added actions
 +Main:
- - SWS/wol: Set selected envelope height to default
- - SWS/wol: Set selected envelope height to minimum
- - SWS/wol: Set selected envelope height to maximum
+ - SWS/wol: Set selected envelope height to default/minimum/maximum
  - SWS/wol: Adjust selected envelope height (MIDI CC relative/mousewheel)
  - SWS/wol: Toggle enable extended zoom for envelopes in track lane
  - SWS/wol: Toggle enable envelopes overlap for envelopes in track lane
@@ -18,16 +16,7 @@ Added actions
  - SWS/wol: Restore previous envelope overlap settings
  - SWS/wol: Horizontal zoom to selected envelope in time selection
  - SWS/wol: Full zoom to selected envelope in time selection
- - SWS: Save current arrange view, slot 1
- - SWS: Save current arrange view, slot 2
- - SWS: Save current arrange view, slot 3
- - SWS: Save current arrange view, slot 4
- - SWS: Save current arrange view, slot 5
- - SWS: Restore arrange view, slot 1
- - SWS: Restore arrange view, slot 2
- - SWS: Restore arrange view, slot 3
- - SWS: Restore arrange view, slot 4
- - SWS: Restore arrange view, slot 5
+ - SWS: Save/Restore current arrange view (5 slots)
 +Main and MIDI editor:
  - SWS/BR: Play from mouse cursor position (3 versions)
 +MIDI editor:
@@ -77,6 +66,7 @@ Fixes
 Other:
 +Renamed FNG MIDI actions in Main section (remove MIDI prefix and added "in active MIDI editor" description at the end)
 +Capitalized certain FNG actions names
++Renamed SWS: Save/Restore current arrange view to SWS: Save/Restore current arrange view, slot 1
 
 !v2.4.0 #9 pre-release build (April 19, 2014)
 <strong>This version requires REAPER v4.62pre8+</strong>, an "Incompatible version" error message will be displayed otherwise...

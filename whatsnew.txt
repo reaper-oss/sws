@@ -43,7 +43,7 @@ Added actions
  - SWS/FNG: Select muted MIDI notes
  - SWS/FNG: Select notes nearest edit cursor
  - SWS/FNG: Apply groove to selected MIDI notes (within 16th)/(withing 32nd)
- - SWS/BR: Hide unused CC lanes (detect 14-bit)
+ - SWS/BR: Show only used CC lanes (detect 14-bit)
 
 ReaScript
 +BR_GetMouseCursorContext:

@@ -61,8 +61,7 @@ void DoShowDiskspaceCalc(COMMAND_T*);
 
 //===========================================================
 // Envelope_actions.cpp
-void DoShiftEnvelopeLater(COMMAND_T*);
-void DoShiftEnvelopeEarlier(COMMAND_T*);
+void DoShiftEnvelope(COMMAND_T*);
 
 //===========================================================
 // ExoticCommands.cpp

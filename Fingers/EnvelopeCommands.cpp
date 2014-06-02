@@ -3,6 +3,8 @@
 #include "Envelope.h"
 #include "EnvelopeCommands.h"
 #include "CommandHandler.h"
+#include "Breeder\BR_EnvTools.h"
+#include "Breeder\BR_Util.h"
 
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
@@ -84,60 +86,42 @@ private:
 
 void TimeCompressExpandPoints::doCommand(int flag)
 {
-        TrackEnvelope *trackEnvelope = GetSelectedTrackEnvelope(0);
-        if (trackEnvelope == NULL)
+    BR_Envelope envelope(GetSelectedEnvelope(NULL));
+    if (envelope.CountSelected() < 2)
+        return;
+
+    double firstPointTime;
+    envelope.GetPoint(envelope.GetSelected(0), &firstPointTime, NULL, NULL, NULL);
+    for (int i = 1; i < envelope.CountSelected(); ++i)
     {
-                return;
+        double position;
+        envelope.GetPoint(envelope.GetSelected(i), &position, NULL, NULL, NULL);
+        position += (position - firstPointTime) * m_dAmount;
+        envelope.SetPoint(envelope.GetSelected(i), &position, NULL, NULL, NULL);
     }
 
-    RprEnvelope envelope(trackEnvelope);
-
-    bool firstPointFound = false;
-        double firstPointTime = 0.0;
-
-        for (RprEnvelope::iterator i = envelope.begin(); i != envelope.end(); i++)
-    {
-                if (i->selected())
-        {
-                        if (firstPointFound)
-            {
-                                i->setTime( i->time() + (i->time() - firstPointTime) * m_dAmount);
-            }
-                        else
-            {
-                                firstPointFound = true;
-                                firstPointTime = i->time();
-                        }
-                }
-        }
-
-        envelope.Write();
+    envelope.Commit();
 }
 
 void AddToEnvPoints::doCommand(int flag)
 {
-        TrackEnvelope *trackEnvelope = GetSelectedTrackEnvelope(0);
-        if (trackEnvelope == NULL)
-    {
-                return;
-    }
-    RprEnvelope envelope(trackEnvelope);
-
-        double cursorPos = GetCursorPosition();
+    BR_Envelope envelope(GetSelectedEnvelope(NULL));
+    if (!envelope.CountSelected())
+        return;
+    double cursorPos = GetCursorPosition();
 
     if( m_pp == POINTTIME)
         {
                 double beat = (240.0 / TimeMap2_GetDividedBpmAtTime(0, cursorPos));
-                AddToPointPosition op(beat * m_dAmount);
-                envelope.ApplyToPoints(op);
+                double amount = beat * m_dAmount;
+                envelope.ApplyToSelectedPoints(&amount, NULL);
         }
         else
         {
-                double amt = (envelope.GetMax() - envelope.GetMin()) / 100 * m_dAmount;
-                AddToValue op(amt);
-                envelope.ApplyToPoints(op);
+                double amt = (envelope.LaneMaxValue() - envelope.LaneMinValue()) / 100 * m_dAmount;
+                envelope.ApplyToSelectedPoints(NULL, &amt);
         }
-        envelope.Write();
+        envelope.Commit();
 }
 
 bool selected(RprEnvelopePoint &p)
@@ -146,52 +130,36 @@ bool selected(RprEnvelopePoint &p)
 
 void LinearShiftAmplitude::doCommand(int flag)
 {
-        TrackEnvelope *trackEnvelope = GetSelectedTrackEnvelope(0);
-        if (trackEnvelope == NULL)
-    {
-                return;
-    }
-    RprEnvelope envelope(trackEnvelope);
-
-        std::vector<RprEnvelopePoint>::iterator it = std::find_if(envelope.begin(),
-                envelope.end(), selected);
-
-        if (it == envelope.end())
-    {
+    BR_Envelope envelope(GetSelectedEnvelope(NULL));
+    if (envelope.CountSelected() < 2)
         return;
-    }
 
-        double amt = (envelope.GetMax() - envelope.GetMin()) / 100 * m_dAmount;
+    double amt = (envelope.LaneMaxValue() - envelope.LaneMinValue()) / 100 * m_dAmount;
 
-        double p0 = it->time();
-        std::vector<RprEnvelopePoint>::reverse_iterator rit;
-        rit = std::find_if(envelope.rbegin(), envelope.rend(), selected);
-        double pN = rit->time();
-        if (p0 == pN)
+    double p0; envelope.GetPoint(envelope.GetSelected(0), &p0, NULL, NULL, NULL);
+    double pN; envelope.GetPoint(envelope.GetSelected(envelope.CountSelected()-1), &pN, NULL, NULL, NULL);
+    if (p0 == pN)
+        return; // same point in time
+
+    double m = amt / (pN - p0);
+    double b;
+
+    if (m_bReverse)
+        m *= -1.0;
+    if (m_bReverse)
+        b = amt - m *p0;
+    else
+        b = -m * p0;
+
+    for (int i = 0; i < envelope.CountSelected(); ++i)
     {
-                return; // same point in time
-    }
+        double position, value;
+        envelope.GetPoint(envelope.GetSelected(i), &position, &value, NULL, NULL);
 
-        double m = amt / (pN - p0);
-        double b;
-
-        if (m_bReverse)
-    {
-                m *= -1.0;
+        value = SetToBounds(value + position * m + b, envelope.LaneMinValue(), envelope.LaneMaxValue());
+        envelope.SetPoint(envelope.GetSelected(i), NULL, &value, NULL, NULL);
     }
-
-        if (m_bReverse)
-    {
-                b = amt - m *p0;
-    }
-        else
-    {
-                b = -m * p0;
-    }
-
-        AddToValue op(m, b);
-        envelope.ApplyToPoints(op);
-        envelope.Write();
+    envelope.Commit();
 }
 
 void BoundsOfSelectedPoints(RprEnvelope::iterator start, RprEnvelope::iterator end, double *min, double *max)
@@ -214,52 +182,74 @@ void BoundsOfSelectedPoints(RprEnvelope::iterator start, RprEnvelope::iterator e
 
 void CompressExpandPoints::doCommand(int flag)
 {
-        TrackEnvelope *env = GetSelectedTrackEnvelope(0);
-        if(env == NULL)
-                return;
-        RprEnvelope Cenv(env);
-        std::vector<RprEnvelopePoint>::iterator it = std::find_if(Cenv.begin(),
-                Cenv.end(), selected);
+    BR_Envelope envelope(GetSelectedEnvelope(NULL));
+    if (envelope.CountSelected() < 2)
+        return;
 
-        if(it == Cenv.end()) return;
+    double minVal, maxVal;
+    envelope.GetSelectedPointsExtrema(&minVal, &maxVal);
+    double midPoint = (maxVal + minVal) / 2;
 
-        double maxVal = Cenv.GetMin();
-        double minVal = Cenv.GetMax();
-        BoundsOfSelectedPoints(Cenv.begin(), Cenv.end(), &minVal, &maxVal);
-        double midPoint = (maxVal + minVal) / 2;
+    double p0; envelope.GetPoint(envelope.GetSelected(0), &p0, NULL, NULL, NULL);
+    double pN; envelope.GetPoint(envelope.GetSelected(envelope.CountSelected()-1), &pN, NULL, NULL, NULL);
+    if (p0 == pN)
+        return; // same point in time
 
-        double p0 = it->time();
-        std::vector<RprEnvelopePoint>::reverse_iterator rit;
-        rit = std::find_if(Cenv.rbegin(), Cenv.rend(), selected);
-        double pN = rit->time();
-        if(p0 == pN)
-                return;
+    double m = m_dGradientFactor * (m_dAmount - 1) * (pN - p0);
 
-        double m = m_dGradientFactor * (m_dAmount - 1) * (pN - p0);
-
-        for(RprEnvelope::iterator i = Cenv.begin(); i != Cenv.end(); i++)
+    if (envelope.IsTempo() && *(int*)GetConfigVar("tempoenvtimelock") == 1)
     {
-                if (i->selected())
+        double t0, b0; int s0;
+        envelope.GetPoint(0, &t0, &b0, &s0, NULL);
+        double t0_old = t0;
+        double b0_old = b0;
+
+        for (int i = 0; i < envelope.Count(); ++i)
         {
-                        if (i->value() == midPoint)
+            double t1, b1; int s1;
+            envelope.GetPoint(i, &t1, &b1, &s1, NULL);
+
+            double newValue = b1;
+            if (envelope.GetSelection(i) && b1 != midPoint)
             {
-                                continue;
+                double extremePoint = (b1 > midPoint) ? maxVal : minVal;
+                double normalized = (b1 - midPoint) / (extremePoint - midPoint);
+                normalized *= m * (t1 - p0) + m_dAmount;
+                newValue = SetToBounds(normalized * ( extremePoint - midPoint) + midPoint, envelope.LaneMinValue(), envelope.LaneMaxValue());
             }
 
-                        double extremePoint;
-                        if( i->value() > midPoint)
-            {
-                                extremePoint = maxVal;
-            }
-                        else
-            {
-                                extremePoint = minVal;
-            }
+            double newTime = t1;
+            if (s0 == SQUARE)
+                newTime = t0 + ((t1 - t0_old) * b0_old) / b0;
+            else
+                newTime = t0 + ((t1 - t0_old) * (b0_old + b1)) / (b0 + newValue);
 
-                        double normalized = (i->value() - midPoint) / (extremePoint - midPoint);
-                        normalized *= m * (i->time() - p0) + m_dAmount;
-                        i->setValue(normalized * ( extremePoint - midPoint) + midPoint);
-                }
+            t0 = newTime;
+            b0 = newValue;
+            s0 = s1;
+            t0_old = t1;
+            b0_old = b1;
+
+            envelope.SetPoint(i, &newTime, &newValue, NULL, NULL);
         }
-        Cenv.Write();
+    }
+    else
+    {
+        for (int i = 0; i < envelope.CountSelected(); ++i)
+        {
+            double position, value;
+            envelope.GetPoint(envelope.GetSelected(i), &position, &value, NULL, NULL);
+
+            if (value == midPoint)
+               continue;
+
+            double extremePoint = (value > midPoint) ? maxVal : minVal;
+            double normalized = (value - midPoint) / (extremePoint - midPoint);
+            normalized *= m * (position - p0) + m_dAmount;
+            value = SetToBounds(normalized * ( extremePoint - midPoint) + midPoint, envelope.LaneMinValue(), envelope.LaneMaxValue());
+            envelope.SetPoint(envelope.GetSelected(i), NULL, &value, NULL, NULL);
+        }
+    }
+
+    envelope.Commit();
 }

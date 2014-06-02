@@ -26,6 +26,7 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+#include "Breeder\BR_EnvTools.h"
 
 using namespace std;
 
@@ -168,14 +169,11 @@ private:
 
 CEnvelopeStateHandler g_EnvelopeHandler;
 
-void DoShiftEnvelopeLater(COMMAND_T* ct)
+void DoShiftEnvelope(COMMAND_T* ct)
 {
-	g_EnvelopeHandler.EnvTransform_ShiftInTime(1.0);
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
-}
-
-void DoShiftEnvelopeEarlier(COMMAND_T* ct)
-{
-	g_EnvelopeHandler.EnvTransform_ShiftInTime(-1.0);
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
+	BR_Envelope envelope(GetSelectedEnvelope(NULL));
+	double amount = (double)ct->user;
+	envelope.ApplyToPoints(&amount, NULL);
+	if (envelope.Commit())
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }

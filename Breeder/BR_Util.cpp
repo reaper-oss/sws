@@ -2105,9 +2105,8 @@ static int IsMouseOverEnvelopeLine (BR_Envelope& envelope, int drawableEnvHeight
 	{
 		double mousePosLeft = mousePos - 1/arrangeZoom * ENV_HIT_POINT*2;
 		double mousePosRight = mousePos + 1/arrangeZoom * ENV_HIT_POINT*2;
-		double takePosOffset = (!envelope.IsTakeEnvelope()) ? (0) : GetMediaItemInfo_Value(GetMediaItemTake_Item(envelope.GetTake()), "D_POSITION");
 
-		int prevId = envelope.FindPrevious(mousePos - takePosOffset);
+		int prevId = envelope.FindPrevious(mousePos);
 		int nextId = prevId + 1;
 
 		int tempoHit = (envelope.IsTempo()) ? (ENV_HIT_POINT) : (0); // for some reason, tempo points have double up/down hit area
@@ -2119,7 +2118,7 @@ static int IsMouseOverEnvelopeLine (BR_Envelope& envelope, int drawableEnvHeight
 			// Check all the points around mouse cursor position
 			// gotcha: since point can be partially visible even when it's position is not within arrange start/end we don't check if within bounds
 			double prevPos;
-			while (envelope.GetPoint(prevId, &prevPos, NULL, NULL, NULL) && CheckBounds(prevPos+=takePosOffset, mousePosLeft, mousePosRight))
+			while (envelope.GetPoint(prevId, &prevPos, NULL, NULL, NULL) && CheckBounds(prevPos, mousePosLeft, mousePosRight))
 			{
 				int x = Round(arrangeZoom * (prevPos - arrangeStart));
 				int y = yOffset + drawableEnvHeight - Round(envelope.NormalizedDisplayValue(prevId) * drawableEnvHeight);
@@ -2135,7 +2134,7 @@ static int IsMouseOverEnvelopeLine (BR_Envelope& envelope, int drawableEnvHeight
 		if (!found)
 		{
 			double nextPos;
-			while (envelope.GetPoint(nextId, &nextPos, NULL, NULL, NULL) && CheckBounds(nextPos+=takePosOffset, mousePosLeft, mousePosRight))
+			while (envelope.GetPoint(nextId, &nextPos, NULL, NULL, NULL) && CheckBounds(nextPos, mousePosLeft, mousePosRight))
 			{
 				int x = Round(arrangeZoom * (nextPos - arrangeStart));
 				int y = yOffset + drawableEnvHeight - Round(envelope.NormalizedDisplayValue(nextId) * drawableEnvHeight);
@@ -2152,7 +2151,7 @@ static int IsMouseOverEnvelopeLine (BR_Envelope& envelope, int drawableEnvHeight
 		// Not over points, check segment
 		if (!found)
 		{
-			double mouseValue = envelope.ValueAtPosition(mousePos - takePosOffset);
+			double mouseValue = envelope.ValueAtPosition(mousePos);
 			int x = Round(arrangeZoom * (mousePos - arrangeStart));
 			int y = yOffset + drawableEnvHeight - Round(envelope.NormalizedDisplayValue(mouseValue) * drawableEnvHeight);
 			if (CheckBounds(mouseX, x - ENV_HIT_POINT, x + ENV_HIT_POINT) && CheckBounds(mouseY, y - ENV_HIT_POINT, y + ENV_HIT_POINT_DOWN))
@@ -2278,7 +2277,7 @@ static int IsMouseOverEnvelopeLineTake (MediaItem_Take* take, int takeHeight, in
 		else if (i == 2) type = MUTE;
 		else if (i == 3) type = PITCH;
 
-		BR_Envelope envelope (take, type);
+		BR_Envelope envelope(take, type);
 		if (envelope.IsVisible())
 			mouseHit = IsMouseOverEnvelopeLine(envelope, takeHeight, takeOffset, mouseY, mouseX, mousePos, arrangeStart, arrangeZoom);
 

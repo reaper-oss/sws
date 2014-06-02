@@ -56,7 +56,8 @@ enum BR_EnvShape
 ******************************************************************************/
 enum BR_EnvType
 {
-	VOLUME = 0,
+	UNKNOWN = 0,
+	VOLUME,
 	VOLUME_PREFX,
 	PAN,
 	PAN_PREFX,
@@ -104,20 +105,20 @@ class BR_Envelope
 {
 public:
 	BR_Envelope ();
-	BR_Envelope (TrackEnvelope* envelope);
-	BR_Envelope (MediaItem_Take* take, BR_EnvType envType);
+	BR_Envelope (TrackEnvelope* envelope, bool takeEnvelopesUseProjectTime = true); // for takeEnvelopesUseProjectTime explanation see declaration of SetTakeEnvelopeTimebase()
+	BR_Envelope (MediaItem_Take* take, BR_EnvType envType, bool takeEnvelopesUseProjectTime = true);
 	BR_Envelope (const BR_Envelope& envelope);
 	~BR_Envelope () {}
 	BR_Envelope& operator=  (const BR_Envelope& envelope);
 	bool         operator== (const BR_Envelope& envelope); // This only compares points and if envelope is active (aka things that affect playback) - other
 	bool         operator!= (const BR_Envelope& envelope); // properties like type, envelope pointer, height, armed, default shape etc... are ignored)
 
-	/* Direct point manipulation (returns false if id does not exist) */
+	/* Direct point manipulation (returns false if id does not exist) (checkPosition only works for take envelopes) */
 	bool GetPoint (int id, double* position, double* value, int* shape, double* bezier);
-	bool SetPoint (int id, double* position, double* value, int* shape, double* bezier);
+	bool SetPoint (int id, double* position, double* value, int* shape, double* bezier, bool checkPosition = false);
 	bool GetSelection (int id);
 	bool SetSelection (int id, bool selected);
-	bool CreatePoint (int id, double position, double value, int shape, double bezier, bool selected);
+	bool CreatePoint (int id, double position, double value, int shape, double bezier, bool selected, bool checkPosition = false);
 	bool DeletePoint (int id);
 	bool DeletePoints (int startId, int endId);
 	bool GetTimeSig (int id, bool* sig, int* num, int* den);
@@ -125,6 +126,8 @@ public:
 	bool SetCreateSortedPoint (int id, double position, double value, int shape, double bezier, bool selected); // for ReaScript export
 
 	/* Selected points (never updated when editing, use UpdateSelected() if needed) */
+	void ApplyToSelectedPoints (double* position, double* value);
+	void GetSelectedPointsExtrema (double* minimum, double* maximum);
 	void UnselectAll ();
 	void UpdateSelected ();                         // Update selected points' ids based on current state of things
 	int CountSelected ();                           // Count selected points
@@ -136,6 +139,7 @@ public:
 	bool ValidateId (int id);
 	void DeletePointsInRange (double start, double end);
 	void DeleteAllPoints ();
+	void ApplyToPoints (double* position, double* value);
 	void Sort ();                                            // Sort points by position
 	int Count ();                                            // Count existing points
 	int Find (double position, double surroundingRange = 0); // All find functions will be more efficient if points are sorted. When point's
@@ -146,6 +150,7 @@ public:
 	double ValueAtPosition (double position);                // Using find functionality, so efficiency may vary (see comment about Find())
 	double NormalizedDisplayValue (double value);            // Return point value in 0.0 - 1.0 range as displayed in arrange
 	double NormalizedDisplayValue (int id);
+	void SetTakeEnvelopeTimebase (bool useProjectTime);      // By setting this to true you can use project time everywhere when dealing with take envelopes. If take changes position just call this again.
 	void MoveArrangeToPoint (int id, int referenceId);       // Moves arrange horizontally if needed so point is visible
 	bool VisibleInArrange ();                                // Check if arrange scroll position allows envelope to be shown
 	bool IsTempo ();
@@ -181,23 +186,25 @@ public:
 
 private:
 	struct IdPair { int first, second; };
+	int FindFirstPoint ();
+	int LastPointAtPos (int id);
+	int FindNext (double position, double offset);     // used for internal stuff since sometimes we have to keep
+	int FindPrevious (double position, double offset); // track of position offset when dealing with take envelopes
 	void ParseState (char* envState, size_t size);
-	void SetCounts ();
 	void UpdateConsequential ();
 	void FillProperties () const; // to make operator== const (yes, m_properties does get modified, but always according to chunk and only if not cached already)
 	WDL_FastString GetProperties ();
-	int FindFirstPoint ();
-	int LastPointAtPos (int id);
 	TrackEnvelope* m_envelope;
 	MediaItem_Take* m_take;
 	MediaTrack* m_parent;
 	bool m_tempoMap;
 	bool m_update;
 	bool m_sorted;
+	double m_takeEnvOffset;
 	int m_takeEnvType;
+	int m_countConseq;
 	int m_count;
 	int m_countSel;
-	int m_countConseq;
 	vector<BR_EnvPoint> m_points;
 	vector<int> m_pointsSel;
 	vector<IdPair> m_pointsConseq;
@@ -228,6 +235,7 @@ TrackEnvelope* GetTempoEnv ();
 TrackEnvelope* GetVolEnv (MediaTrack* track);
 TrackEnvelope* GetVolEnvPreFX (MediaTrack* track);
 TrackEnvelope* GetTakeEnv (MediaItem_Take* take, BR_EnvType envelope);
+MediaItem_Take* GetTakeEnvParent (TrackEnvelope* envelope, int* type); // for type see BR_EnvType
 bool EnvVis (TrackEnvelope* envelope, bool* lane);
 int GetEnvId (TrackEnvelope* envelope, MediaTrack* parent = NULL);
 vector<int> GetSelPoints (TrackEnvelope* envelope);

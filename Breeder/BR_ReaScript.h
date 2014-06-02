@@ -30,13 +30,15 @@
 /******************************************************************************
 * ReaScript export                                                            *
 ******************************************************************************/
-void*           BR_EnvAlloc (TrackEnvelope* envelope);
+void*           BR_EnvAlloc (TrackEnvelope* envelope, bool takeEnvelopesUseProjectTime);
 int             BR_EnvCountPoints (void* envelope);
 bool            BR_EnvDeletePoint (void* envelope, int id);
 int             BR_EnvFind (void* envelope, double position, double delta);
 int             BR_EnvFindNext (void* envelope, double position);
 int             BR_EnvFindPrevious (void* envelope, double position);
 bool            BR_EnvFree (void* envelope, bool commit);
+MediaItem_Take* BR_EnvGetParentTake (void* envelope);
+MediaTrack*     BR_EnvGetParentTrack (void* envelope);
 bool            BR_EnvGetPoint (void* envelope, int id, double* position, double* value, int* shape, bool* selected, double* bezier);
 void            BR_EnvGetProperties (void* envelope, bool* active, bool* visible, bool* armed, bool* inLane, int* laneHeight, int* defaultShape, double* minValue, double* maxValue, double* centerValue, int* type);
 bool            BR_EnvSetPoint (void* envelope, int id, double position, double value, int shape, bool selected, double bezier);

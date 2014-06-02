@@ -37,7 +37,7 @@
 ******************************************************************************/
 void CursorToEnv1 (COMMAND_T* ct)
 {
-	TrackEnvelope* envelope = GetSelectedTrackEnvelope(NULL);
+	TrackEnvelope* envelope = GetSelectedEnvelope(NULL);
 	if (!envelope)
 		return;
 	char* envState = GetSetObjectState(envelope, "");
@@ -46,6 +46,8 @@ void CursorToEnv1 (COMMAND_T* ct)
 	bool found = false;
 	double pTime = 0, cTime = 0, nTime = 0;
 	double cursor = GetCursorPositionEx(NULL);
+	double takeEnvStartPos = (envelope == GetSelectedTrackEnvelope(NULL)) ? 0 : GetMediaItemInfo_Value(GetMediaItemTake_Item(GetTakeEnvParent(envelope, NULL)), "D_POSITION");
+	cursor -= takeEnvStartPos;
 
 	// Find previous
 	if ((int)ct->user > 0)
@@ -132,8 +134,8 @@ void CursorToEnv1 (COMMAND_T* ct)
 			SetConfig("envclicksegmode", SetBit(envClickSegMode, 6));
 
 			// Set time selection that in turn sets new envelope selection
-			nStart = (cTime - pTime) / 2 + pTime;
-			nEnd = (nTime - cTime) / 2 + cTime;
+			nStart = (cTime + pTime) / 2 + takeEnvStartPos;
+			nEnd = (nTime + cTime) / 2 + takeEnvStartPos;
 			GetSet_LoopTimeRange2(NULL, true, false, &nStart, &nEnd, false);
 
 			// Preserve point when previous time selection gets restored
@@ -146,7 +148,7 @@ void CursorToEnv1 (COMMAND_T* ct)
 			PreventUIRefresh(-1);
 		}
 
-		SetEditCurPos(cTime, true, false);
+		SetEditCurPos(cTime + takeEnvStartPos, true, false);
 		Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL);
 	}
 	FreeHeapPtr(envState);
@@ -154,7 +156,7 @@ void CursorToEnv1 (COMMAND_T* ct)
 
 void CursorToEnv2 (COMMAND_T* ct)
 {
-	BR_Envelope envelope(GetSelectedTrackEnvelope(NULL));
+	BR_Envelope envelope(GetSelectedEnvelope(NULL));
 	if (!envelope.Count())
 		return;
 
@@ -189,13 +191,13 @@ void CursorToEnv2 (COMMAND_T* ct)
 
 void SelNextPrevEnvPoint (COMMAND_T* ct)
 {
-	BR_Envelope envelope(GetSelectedTrackEnvelope(NULL));
+	BR_Envelope envelope(GetSelectedEnvelope(NULL));
 	if (!envelope.CountSelected())
 		return;
 
 	int id;
 	if ((int)ct->user > 0)
-		id = envelope.GetSelected(envelope.CountSelected()-1) + 1 ;
+		id = envelope.GetSelected(envelope.CountSelected()-1) + 1;
 	else
 		id = envelope.GetSelected(0) - 1;
 
@@ -218,7 +220,7 @@ void SelNextPrevEnvPoint (COMMAND_T* ct)
 
 void ExpandEnvSel (COMMAND_T* ct)
 {
-	BR_Envelope envelope(GetSelectedTrackEnvelope(NULL));
+	BR_Envelope envelope(GetSelectedEnvelope(NULL));
 	if (!envelope.CountSelected())
 		return;
 
@@ -250,7 +252,7 @@ void ExpandEnvSel (COMMAND_T* ct)
 
 void ExpandEnvSelEnd (COMMAND_T* ct)
 {
-	BR_Envelope envelope(GetSelectedTrackEnvelope(NULL));
+	BR_Envelope envelope(GetSelectedEnvelope(NULL));
 	if (!envelope.CountSelected())
 		return;
 
@@ -270,7 +272,7 @@ void ExpandEnvSelEnd (COMMAND_T* ct)
 
 void ShrinkEnvSel (COMMAND_T* ct)
 {
-	BR_Envelope envelope(GetSelectedTrackEnvelope(NULL));
+	BR_Envelope envelope(GetSelectedEnvelope(NULL));
 	if (!envelope.CountSelected())
 		return;
 
@@ -302,7 +304,7 @@ void ShrinkEnvSel (COMMAND_T* ct)
 
 void ShrinkEnvSelEnd (COMMAND_T* ct)
 {
-	BR_Envelope envelope(GetSelectedTrackEnvelope(NULL));
+	BR_Envelope envelope(GetSelectedEnvelope(NULL));
 	if (!envelope.CountSelected())
 		return;
 
@@ -322,7 +324,7 @@ void ShrinkEnvSelEnd (COMMAND_T* ct)
 
 void ShiftEnvSelection (COMMAND_T* ct)
 {
-	BR_Envelope envelope(GetSelectedTrackEnvelope(NULL));
+	BR_Envelope envelope(GetSelectedEnvelope(NULL));
 	if (!envelope.CountSelected())
 		return;
 
@@ -351,7 +353,7 @@ void ShiftEnvSelection (COMMAND_T* ct)
 
 void PeaksDipsEnv (COMMAND_T* ct)
 {
-	BR_Envelope envelope(GetSelectedTrackEnvelope(NULL));
+	BR_Envelope envelope(GetSelectedEnvelope(NULL));
 	if (!envelope.Count())
 		return;
 
@@ -388,7 +390,7 @@ void SelEnvTimeSel (COMMAND_T* ct)
 	if (tStart == tEnd)
 		return;
 
-	BR_Envelope envelope(GetSelectedTrackEnvelope(NULL));
+	BR_Envelope envelope(GetSelectedEnvelope(NULL));
 	if (!envelope.Count())
 		return;
 
@@ -414,7 +416,7 @@ void SelEnvTimeSel (COMMAND_T* ct)
 
 void SetEnvValToNextPrev (COMMAND_T* ct)
 {
-	BR_Envelope envelope(GetSelectedTrackEnvelope(NULL));
+	BR_Envelope envelope(GetSelectedEnvelope(NULL));
 	if (!envelope.CountSelected())
 		return;
 
@@ -453,7 +455,7 @@ void MoveEnvPointToEditCursor (COMMAND_T* ct)
 	double cursor = GetCursorPositionEx(NULL);
 	int id = -1;
 
-	BR_Envelope envelope(GetSelectedTrackEnvelope(NULL));
+	BR_Envelope envelope(GetSelectedEnvelope(NULL));
 	if (!envelope.Count())
 		return;
 
@@ -519,7 +521,7 @@ void MoveEnvPointToEditCursor (COMMAND_T* ct)
 		envelope.GetPoint(id, &position, NULL, NULL, NULL);
 		if (position != cursor)
 		{
-			envelope.SetPoint(id, &cursor, NULL, NULL, NULL);
+			envelope.SetPoint(id, &cursor, NULL, NULL, NULL, true);
 			if (envelope.Commit())
 				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 		}
@@ -534,7 +536,7 @@ void Insert2EnvPointsTimeSelection (COMMAND_T* ct)
 	if (tStart + MIN_ENV_DIST >= tEnd)
 		return;
 
-	BR_Envelope envelope(GetSelectedTrackEnvelope(NULL));
+	BR_Envelope envelope(GetSelectedEnvelope(NULL));
 	int startId = envelope.Find(tStart, MIN_ENV_DIST);
 	int endId   = envelope.Find(tEnd, MIN_ENV_DIST);
 	int defaultShape = envelope.DefaultShape();
@@ -543,26 +545,26 @@ void Insert2EnvPointsTimeSelection (COMMAND_T* ct)
 	// Create left-side point only if surrounding points are not too close, otherwise just move existing
 	if (envelope.ValidateId(startId))
 	{
-		envelope.SetSelection(startId, true);
-		envelope.SetPoint(startId, &tStart, NULL, &defaultShape, 0);
+		if (envelope.SetPoint(startId, &tStart, NULL, &defaultShape, 0, true))
+			envelope.SetSelection(startId, true);
 	}
 	else
-		envelope.CreatePoint(envelope.Count(), tStart, envelope.ValueAtPosition(tStart), defaultShape, 0, true);
+		envelope.CreatePoint(envelope.Count(), tStart, envelope.ValueAtPosition(tStart), defaultShape, 0, true, true);
 
 	// Create right-side point only if surrounding points are not too close, otherwise just move existing
 	if (envelope.ValidateId(endId))
 	{
-		envelope.SetSelection(endId, true);
-		envelope.SetPoint(endId, &tEnd, NULL, &defaultShape, 0);
+		if (envelope.SetPoint(endId, &tEnd, NULL, &defaultShape, 0, true))
+			envelope.SetSelection(endId, true);
 	}
 	else
-		envelope.CreatePoint(envelope.Count(), tEnd, envelope.ValueAtPosition(tEnd), defaultShape, 0, true);
+		envelope.CreatePoint(envelope.Count(), tEnd, envelope.ValueAtPosition(tEnd), defaultShape, 0, true, true);
 
 	if (envelope.Commit())
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 }
 
-void ShowActiveEnvOnly (COMMAND_T* ct)
+void ShowActiveTrackEnvOnly (COMMAND_T* ct)
 {
 	TrackEnvelope* env = GetSelectedTrackEnvelope(NULL);
 	if (!env || ((int)ct->user == 1 && !CountSelectedTracks(NULL)))
@@ -598,8 +600,18 @@ void ShowActiveEnvOnly (COMMAND_T* ct)
 
 void CreateEnvPointMouse (COMMAND_T* ct)
 {
-	BR_Envelope envelope(GetSelectedTrackEnvelope(NULL));
+	BR_Envelope envelope(GetSelectedEnvelope(NULL));
 	double position = PositionAtMouseCursor(false);
+
+	// For take envelopes check cursor position here in case it gets snapped later
+	if (MediaItem_Take* take = envelope.GetTake())
+	{
+		double start = GetMediaItemInfo_Value(GetMediaItemTake_Item(take), "D_POSITION");
+		double end   = start +  GetMediaItemInfo_Value(GetMediaItemTake_Item(take), "D_LENGTH");
+		if (!CheckBounds(position, start, end))
+			return;
+	}
+	
 	if (position != -1 && envelope.VisibleInArrange())
 	{
 		position = SnapToGrid(NULL, position);
@@ -617,7 +629,7 @@ void CreateEnvPointMouse (COMMAND_T* ct)
 			}
 			else
 			{
-				envelope.CreatePoint(envelope.Count(), position, value, envelope.DefaultShape(), 0, false);
+				envelope.CreatePoint(envelope.Count(), position, value, envelope.DefaultShape(), 0, false, true);
 				if (envelope.Commit())
 					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 			}
@@ -627,7 +639,7 @@ void CreateEnvPointMouse (COMMAND_T* ct)
 
 void SaveEnvSelSlot (COMMAND_T* ct)
 {
-	if (TrackEnvelope* envelope = GetSelectedTrackEnvelope(NULL))
+	if (TrackEnvelope* envelope = GetSelectedEnvelope(NULL))
 	{
 		int slot = (int)ct->user;
 
@@ -642,7 +654,7 @@ void SaveEnvSelSlot (COMMAND_T* ct)
 
 void RestoreEnvSelSlot (COMMAND_T* ct)
 {
-	if (TrackEnvelope* envelope = GetSelectedTrackEnvelope(NULL))
+	if (TrackEnvelope* envelope = GetSelectedEnvelope(NULL))
 	{
 		int slot = (int)ct->user;
 
@@ -652,7 +664,7 @@ void RestoreEnvSelSlot (COMMAND_T* ct)
 			{
 				g_envSel.Get()->Get(i)->Restore(envelope);
 				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
-				return;
+				break;
 			}
 		}
 	}

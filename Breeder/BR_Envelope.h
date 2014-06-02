@@ -43,7 +43,7 @@ void SelEnvTimeSel (COMMAND_T*);
 void SetEnvValToNextPrev (COMMAND_T*);
 void MoveEnvPointToEditCursor (COMMAND_T*);
 void Insert2EnvPointsTimeSelection (COMMAND_T*);
-void ShowActiveEnvOnly (COMMAND_T*);
+void ShowActiveTrackEnvOnly (COMMAND_T*);
 void CreateEnvPointMouse (COMMAND_T*);
 void SaveEnvSelSlot (COMMAND_T*);
 void RestoreEnvSelSlot (COMMAND_T*);

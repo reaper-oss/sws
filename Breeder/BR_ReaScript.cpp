@@ -42,10 +42,10 @@ static BR_MouseContextInfo g_mouseInfo;
 /******************************************************************************
 * ReaScript export                                                            *
 ******************************************************************************/
-void* BR_EnvAlloc (TrackEnvelope* envelope)
+void* BR_EnvAlloc (TrackEnvelope* envelope, bool takeEnvelopesUseProjectTime)
 {
 	if (envelope)
-		return (void*)(new (nothrow) BR_Envelope(envelope));
+		return (void*)(new (nothrow) BR_Envelope(envelope, takeEnvelopesUseProjectTime));
 	else
 		return NULL;
 }
@@ -127,6 +127,26 @@ bool BR_EnvFree (void* envelope, bool commit)
 		return false;
 }
 
+MediaItem_Take* BR_EnvGetParentTake (void* envelope)
+{
+	if (envelope)
+		return ((BR_Envelope*)envelope)->GetTake();
+	else
+		return NULL;
+}
+
+MediaTrack* BR_EnvGetParentTrack (void* envelope)
+{
+	if (envelope)
+	{
+		BR_Envelope* env = (BR_Envelope*)envelope;
+		if (env->GetTake())
+			return NULL;
+		else 
+			return env->GetParent();
+	}
+	return NULL;
+}
 bool BR_EnvGetPoint (void* envelope, int id, double* position, double* value, int* shape, bool* selected, double* bezier)
 {
 	if (envelope)
@@ -158,7 +178,7 @@ void BR_EnvGetProperties (void* envelope, bool* active, bool* visible, bool* arm
 
 		if (type)
 		{
-			int value = env->Type();
+			int value = -1;
 			if      (value == VOLUME)       value = 0;
 			else if (value == VOLUME_PREFX) value = 1;
 			else if (value == PAN)          value = 2;

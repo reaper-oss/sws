@@ -700,19 +700,19 @@ static void AdjustTempo (int mode, double bpm, int shape)
 				if (mode == 0) point.value += bpm;
 				else           point.value *= 1 + bpm/100;
 
-				if (point.value < MIN_BPM)       point.value = MIN_BPM;
+				if (point.value < MIN_BPM)      point.value = MIN_BPM;
 				else if (point.value > MAX_BPM) point.value = MAX_BPM;
 
 				if (shape == 3)
-					point.shape = 1;
+					point.shape = SQUARE;
 				else if (shape == 2)
-					point.shape = 0;
+					point.shape = LINEAR;
 				else if (shape == 1)
 				{
 					if (point.shape == 1)
-						point.shape = 0;
+						point.shape = LINEAR;
 					else
-						point.shape = 1;
+						point.shape = SQUARE;
 				}
 			}
 

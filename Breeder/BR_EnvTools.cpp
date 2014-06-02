@@ -78,7 +78,7 @@ void BR_EnvPoint::Append (WDL_FastString& string)
 	string.AppendFormatted
 	(
 		256,
-		"PT %.14lf %.14lf %d %d %d %d %.14lf\n",
+		"PT %.12lf %.10lf %d %d %d %d %.8lf\n",
 		this->position,
 		this->value,
 		this->shape,
@@ -93,27 +93,55 @@ void BR_EnvPoint::Append (WDL_FastString& string)
 * BR_Envelope                                                                 *
 ******************************************************************************/
 BR_Envelope::BR_Envelope () :
-m_envelope     (NULL),
-m_take         (NULL),
-m_parent       (NULL),
-m_tempoMap     (false),
-m_update       (false),
-m_sorted       (true),
-m_takeEnvType  (0),
-m_count        (0),
-m_countSel     (0),
-m_countConseq  (0)
+m_envelope      (NULL),
+m_take          (NULL),
+m_parent        (NULL),
+m_tempoMap      (false),
+m_update        (false),
+m_sorted        (true),
+m_takeEnvOffset (0),
+m_takeEnvType   (UNKNOWN),
+m_count         (0),
+m_countSel      (0),
+m_countConseq   (-1)
 {
 }
 
-BR_Envelope::BR_Envelope (TrackEnvelope* envelope) :
-m_envelope    (envelope),
-m_take        (NULL),
-m_parent      (NULL),
-m_tempoMap    (envelope == GetTempoEnv()),
-m_update      (false),
-m_sorted      (true),
-m_takeEnvType (0)
+BR_Envelope::BR_Envelope (TrackEnvelope* envelope, bool takeEnvelopesUseProjectTime /*=true*/) :
+m_envelope      (envelope),
+m_take          (NULL),
+m_parent        (NULL),
+m_tempoMap      (envelope == GetTempoEnv()),
+m_update        (false),
+m_sorted        (true),
+m_takeEnvOffset (0),
+m_takeEnvType   (UNKNOWN),
+m_countConseq   (-1)
+{
+	if (m_envelope)
+	{
+		char* envState = GetSetObjectState(m_envelope, "");
+		if (!strncmp(envState, "<TRACK_ENVELOPE_UNKNOWN", sizeof("<TRACK_ENVELOPE_UNKNOWN")-1))
+			m_take = GetTakeEnvParent(m_envelope, &m_takeEnvType);
+		this->ParseState(envState, strlen(envState));
+		FreeHeapPtr(envState);
+	}
+
+	m_count    = (int)m_points.size();
+	m_countSel = (int)m_pointsSel.size();
+	if (takeEnvelopesUseProjectTime && m_take) m_takeEnvOffset = GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION");
+}
+
+BR_Envelope::BR_Envelope (MediaItem_Take* take, BR_EnvType envType, bool takeEnvelopesUseProjectTime /*=true*/) :
+m_envelope      (GetTakeEnv(take, envType)),
+m_take          (take),
+m_parent        (NULL),
+m_tempoMap      (false),
+m_update        (false),
+m_sorted        (true),
+m_takeEnvOffset (0),
+m_takeEnvType   (m_envelope ? envType : UNKNOWN),
+m_countConseq   (-1)
 {
 	if (m_envelope)
 	{
@@ -122,61 +150,29 @@ m_takeEnvType (0)
 		FreeHeapPtr(envState);
 	}
 
-	this->SetCounts();
-}
-
-BR_Envelope::BR_Envelope (MediaItem_Take* take, BR_EnvType envType) :
-m_envelope    (GetTakeEnv(take, envType)),
-m_take        (take),
-m_parent      (NULL),
-m_tempoMap    (false),
-m_update      (false),
-m_sorted      (true),
-m_takeEnvType (envType)
-{
-	int size = 32768; // should fit around 1000 points (depending if bezier)
-	while (char* envState = new (nothrow) char[size])
-	{
-		envState[0] = 0;
-		if (GetSetEnvelopeState(m_envelope, envState, size))
-		{
-			int envSize = strlen(envState);
-			if (envSize < size-1)
-			{
-				this->ParseState(envState, envSize);
-				delete[] envState;
-				break;
-			}
-		}
-		else
-		{
-			delete[] envState;
-			break;
-		}
-		size *= 2;
-		delete[] envState;
-	}
-
-	this->SetCounts();
+	m_count    = (int)m_points.size();
+	m_countSel = (int)m_pointsSel.size();
+	if (takeEnvelopesUseProjectTime && m_take) m_takeEnvOffset = GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION");
 }
 
 BR_Envelope::BR_Envelope (const BR_Envelope& envelope) :
-m_envelope     (envelope.m_envelope),
-m_take         (envelope.m_take),
-m_parent       (envelope.m_parent),
-m_tempoMap     (envelope.m_tempoMap),
-m_update       (envelope.m_update),
-m_sorted       (envelope.m_sorted),
-m_takeEnvType  (envelope.m_takeEnvType),
-m_count        (envelope.m_count),
-m_countSel     (envelope.m_countSel),
-m_countConseq  (envelope.m_countConseq),
-m_points       (envelope.m_points),
-m_pointsSel    (envelope.m_pointsSel),
-m_pointsConseq (envelope.m_pointsConseq),
-m_chunkStart   (envelope.m_chunkStart),
-m_chunkEnd     (envelope.m_chunkEnd),
-m_properties   (envelope.m_properties)
+m_envelope      (envelope.m_envelope),
+m_take          (envelope.m_take),
+m_parent        (envelope.m_parent),
+m_tempoMap      (envelope.m_tempoMap),
+m_update        (envelope.m_update),
+m_sorted        (envelope.m_sorted),
+m_takeEnvOffset (envelope.m_takeEnvOffset),
+m_takeEnvType   (envelope.m_takeEnvType),
+m_countConseq   (envelope.m_countConseq),
+m_count         (envelope.m_count),
+m_countSel      (envelope.m_countSel),
+m_points        (envelope.m_points),
+m_pointsSel     (envelope.m_pointsSel),
+m_pointsConseq  (envelope.m_pointsConseq),
+m_chunkStart    (envelope.m_chunkStart),
+m_chunkEnd      (envelope.m_chunkEnd),
+m_properties    (envelope.m_properties)
 {
 }
 
@@ -185,20 +181,21 @@ BR_Envelope& BR_Envelope::operator= (const BR_Envelope& envelope)
 	if (this == &envelope)
 		return *this;
 
-	m_envelope     = envelope.m_envelope;
-	m_take         = envelope.m_take;
-	m_parent       = envelope.m_parent;
-	m_tempoMap     = envelope.m_tempoMap;
-	m_update       = envelope.m_update;
-	m_sorted       = envelope.m_sorted;
-	m_takeEnvType  = envelope.m_takeEnvType;
-	m_count        = envelope.m_count;
-	m_countSel     = envelope.m_countSel;
-	m_countConseq  = envelope.m_countConseq;
-	m_points       = envelope.m_points;
-	m_pointsSel    = envelope.m_pointsSel;
-	m_pointsConseq = envelope.m_pointsConseq;
-	m_properties   = envelope.m_properties;
+	m_envelope      = envelope.m_envelope;
+	m_take          = envelope.m_take;
+	m_parent        = envelope.m_parent;
+	m_tempoMap      = envelope.m_tempoMap;
+	m_update        = envelope.m_update;
+	m_sorted        = envelope.m_sorted;
+	m_takeEnvOffset = envelope.m_takeEnvOffset;
+	m_takeEnvType   = envelope.m_takeEnvType;
+	m_countConseq   = envelope.m_countConseq;
+	m_count         = envelope.m_count;
+	m_countSel      = envelope.m_countSel;
+	m_points        = envelope.m_points;
+	m_pointsSel     = envelope.m_pointsSel;
+	m_pointsConseq  = envelope.m_pointsConseq;
+	m_properties    = envelope.m_properties;
 	m_chunkStart.Set(&envelope.m_chunkStart);
 	m_chunkEnd.Set(&envelope.m_chunkEnd);
 
@@ -251,7 +248,7 @@ bool BR_Envelope::GetPoint (int id, double* position, double* value, int* shape,
 {
 	if (this->ValidateId(id))
 	{
-		WritePtr(position, m_points[id].position);
+		WritePtr(position, m_points[id].position + m_takeEnvOffset);
 		WritePtr(value,    m_points[id].value   );
 		WritePtr(shape,    m_points[id].shape   );
 		WritePtr(bezier,   m_points[id].bezier  );
@@ -267,17 +264,20 @@ bool BR_Envelope::GetPoint (int id, double* position, double* value, int* shape,
 	}
 }
 
-bool BR_Envelope::SetPoint (int id, double* position, double* value, int* shape, double* bezier)
+bool BR_Envelope::SetPoint (int id, double* position, double* value, int* shape, double* bezier, bool checkPosition /*= false*/)
 {
 	if (this->ValidateId(id))
 	{
-		ReadPtr(position, m_points[id].position);
+		if (m_take && position && checkPosition && !CheckBounds(*position - m_takeEnvOffset, 0.0, GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_LENGTH")))
+			return false;
+
+		if (position) m_points[id].position = *position - m_takeEnvOffset;
 		ReadPtr(value,    m_points[id].value   );
 		ReadPtr(shape,    m_points[id].shape   );
 		ReadPtr(bezier,   m_points[id].bezier  );
+
 		m_update = true;
-		if (position)
-			m_sorted = false;
+		if (position) m_sorted = false;
 		return true;
 	}
 	else
@@ -287,12 +287,7 @@ bool BR_Envelope::SetPoint (int id, double* position, double* value, int* shape,
 bool BR_Envelope::GetSelection (int id)
 {
 	if (this->ValidateId(id))
-	{
-		if (m_points[id].selected)
-			return true;
-		else
-			return false;
-	}
+		return (m_points[id].selected) ? true : false;
 	else
 		return false;
 }
@@ -309,10 +304,15 @@ bool BR_Envelope::SetSelection (int id, bool selected)
 		return false;
 }
 
-bool BR_Envelope::CreatePoint (int id, double position, double value, int shape, double bezier, bool selected)
+bool BR_Envelope::CreatePoint (int id, double position, double value, int shape, double bezier, bool selected, bool checkPosition /*=false*/)
 {
 	if (this->ValidateId(id) || id == m_count)
 	{
+		position -= m_takeEnvOffset;
+
+		if (m_take && checkPosition && !CheckBounds(position, 0.0, GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_LENGTH")))
+			return false;
+
 		BR_EnvPoint newPoint(position, value, shape, 0, selected, 0, bezier);
 		m_points.insert(m_points.begin() + id, newPoint);
 
@@ -341,7 +341,7 @@ bool BR_Envelope::DeletePoint (int id)
 
 bool BR_Envelope::DeletePoints (int startId, int endId)
 {
-	if (!this->ValidateId(startId) || !this->ValidateId(endId) )
+	if (!this->ValidateId(startId) || !this->ValidateId(endId))
 		return false;
 
 	m_points.erase(m_points.begin() + startId, m_points.begin() + endId+1);
@@ -425,9 +425,11 @@ bool BR_Envelope::SetTimeSig (int id, bool sig, int num, int den)
 
 bool BR_Envelope::SetCreateSortedPoint (int id, double position, double value, int shape, double bezier, bool selected)
 {
+	position -= m_takeEnvOffset;
+
 	if (id == -1)
 	{
-		id = this->FindNext(position);
+		id = this->FindNext(position, 0);
 		BR_EnvPoint newPoint(position, value, (shape < 0 || shape > 5) ? this->DefaultShape() : shape, 0, selected, 0, (shape == 5) ? bezier : 0);
 		m_points.insert(m_points.begin() + id, newPoint);
 
@@ -448,8 +450,6 @@ bool BR_Envelope::SetCreateSortedPoint (int id, double position, double value, i
 		m_points[id].bezier   = (m_points[id].shape == 5) ? bezier : 0;
 		m_points[id].selected = selected;
 
-
-
 		m_update = true;
 		return true;
 	}
@@ -457,6 +457,97 @@ bool BR_Envelope::SetCreateSortedPoint (int id, double position, double value, i
 	{
 		return false;
 	}
+}
+
+void BR_Envelope::ApplyToSelectedPoints (double* position, double* value)
+{
+	if (m_update)
+	{
+		for (size_t i = 0; i < m_points.size(); ++i)
+		{
+			if (m_points[i].selected)
+			{
+				if (position)
+				{
+					m_points[i].position += *position;
+					m_sorted = false;
+					m_update = true;
+				}
+				if (value)
+				{
+					m_points[i].value += *value;
+					SetToBounds(m_points[i].value, this->LaneMinValue(), this->LaneMaxValue());
+					m_update = true;
+				}
+			}
+		}
+	}
+	else
+	{
+		for (size_t i = 0; i < m_pointsSel.size(); ++i)
+		{
+			if (position)
+			{
+				m_points[m_pointsSel[i]].position += *position;
+				m_sorted = false;
+				m_update = true;
+			}
+			if (value)
+			{
+				m_points[m_pointsSel[i]].value += *value;
+				m_update = true;
+			}
+		}
+	}
+}
+
+void BR_Envelope::GetSelectedPointsExtrema (double* minimum, double* maximum)
+{
+	double minVal = 0;
+	double maxVal = 0;
+
+	if (m_update)
+	{
+		bool  found = false;
+		for (size_t i = 0; i < m_points.size(); ++i)
+		{
+			if (m_points[i].selected)
+			{
+				if (!found)
+				{
+					found = true;
+					maxVal = m_points[i].value;
+					minVal = m_points[i].value;
+				}
+				else
+				{
+					if (m_points[i].value > maxVal) maxVal = m_points[i].value;
+					if (m_points[i].value < minVal) minVal = m_points[i].value;
+				}
+			}
+		}
+	}
+	else
+	{
+		bool found = false;
+		for (size_t i = 0; i < m_pointsSel.size(); ++i)
+		{
+			if (!found)
+			{
+				found = true;
+				maxVal = m_points[i].value;
+				minVal = m_points[i].value;
+			}
+			else
+			{
+				if (m_points[i].value > maxVal) maxVal = m_points[i].value;
+				if (m_points[i].value < minVal) minVal = m_points[i].value;
+			}
+		}
+	}
+
+	WritePtr(minimum, minVal);
+	WritePtr(maximum, maxVal);
 }
 
 void BR_Envelope::UnselectAll ()
@@ -520,9 +611,12 @@ bool BR_Envelope::ValidateId (int id)
 
 void BR_Envelope::DeletePointsInRange (double start, double end)
 {
+	start -= m_takeEnvOffset;
+	end   -= m_takeEnvOffset;
+
 	if (m_sorted)
 	{
-		int startId = FindPrevious(start);
+		int startId = FindPrevious(start, 0);
 		while (startId < m_count)
 		{
 			if (this->ValidateId(startId) && m_points[startId].position >= start)
@@ -533,7 +627,7 @@ void BR_Envelope::DeletePointsInRange (double start, double end)
 		if (!this->ValidateId(startId))
 			return;
 
-		int endId = FindNext(end);
+		int endId = FindNext(end, 0);
 		while (endId >= 0)
 		{
 			if (this->ValidateId(endId) && m_points[endId].position <= end)
@@ -574,6 +668,23 @@ void BR_Envelope::DeleteAllPoints ()
 	m_count = 0;
 }
 
+void BR_Envelope::ApplyToPoints (double* position, double* value)
+{
+	for (vector<BR_EnvPoint>::iterator i = m_points.begin(); i != m_points.end(); ++i)
+	{
+		if (position)
+		{
+			i->position += *position;
+			m_update = true;
+		}
+		if (value)
+		{
+			i->value += *value;
+			m_update = true;
+		}
+	}
+}
+
 void BR_Envelope::Sort ()
 {
 	if (!m_sorted)
@@ -590,8 +701,10 @@ int BR_Envelope::Count ()
 
 int BR_Envelope::Find (double position, double surroundingRange /*=0*/)
 {
+	position -= m_takeEnvOffset;
+
 	int id = -1;
-	int prevId = (m_sorted) ? (this->FindPrevious(position)) : (0);
+	int prevId = (m_sorted) ? (this->FindPrevious(position, 0)) : (0);
 
 	// First search for the exact position
 	if (m_sorted)
@@ -615,8 +728,8 @@ int BR_Envelope::Find (double position, double surroundingRange /*=0*/)
 	// Search in range only if nothing has been found at the exact position
 	if (id == -1 && surroundingRange != 0)
 	{
-		prevId     = (m_sorted) ? (prevId)     : (this->FindPrevious(position));
-		int nextId = (m_sorted) ? (prevId + 1) : (this->FindNext(position));
+		prevId     = (m_sorted) ? (prevId)     : (this->FindPrevious(position, 0));
+		int nextId = (m_sorted) ? (prevId + 1) : (this->FindNext(position, 0));
 		double distanceFromPrev = (this->ValidateId(prevId)) ? (position - m_points[prevId].position) : (abs(surroundingRange) + 1);
 		double distanceFromNext = (this->ValidateId(nextId)) ? (m_points[nextId].position - position) : (abs(surroundingRange) + 1);
 
@@ -637,81 +750,18 @@ int BR_Envelope::Find (double position, double surroundingRange /*=0*/)
 
 int BR_Envelope::FindNext (double position)
 {
-	if (m_sorted)
-	{
-		BR_EnvPoint val(position);
-		return (int)(upper_bound(m_points.begin(), m_points.end(), val, BR_EnvPoint::ComparePoints()) - m_points.begin());
-	}
-	else
-	{
-		int id = -1;
-		double nextPos = 0;
-		bool foundFirst = false;
-		for (vector<BR_EnvPoint>::iterator i = m_points.begin(); i != m_points.end() ; ++i)
-		{
-			double currentPos = i->position;
-			if (currentPos > position)
-			{
-				if (foundFirst)
-				{
-					if (currentPos < nextPos)
-					{
-						nextPos = currentPos;
-						id = (int)(i - m_points.begin());
-					}
-				}
-				else
-				{
-					nextPos = currentPos;
-					id = (int)(i - m_points.begin());
-					foundFirst = true;
-				}
-			}
-		}
-		return id;
-	}
+	return this->FindNext(position, m_takeEnvOffset);
 }
 
 int BR_Envelope::FindPrevious (double position)
 {
-	if (m_sorted)
-	{
-		BR_EnvPoint val(position);
-		return (int)(lower_bound(m_points.begin(), m_points.end(), val, BR_EnvPoint::ComparePoints()) - m_points.begin())-1;
-	}
-	else
-	{
-		int id = -1;
-		double prevPos = 0;
-		bool foundFirst = false;
-		for (vector<BR_EnvPoint>::iterator i = m_points.begin(); i != m_points.end() ; ++i)
-		{
-			double currentPos = i->position;
-			if (currentPos < position)
-			{
-				if (foundFirst)
-				{
-					if (currentPos >= prevPos)
-					{
-						prevPos = currentPos;
-						id = (int)(i - m_points.begin());
-					}
-				}
-				else
-				{
-					prevPos = currentPos;
-					id = (int)(i - m_points.begin());
-					foundFirst = true;
-				}
-			}
-		}
-		return id;
-	}
+	return this->FindPrevious(position, m_takeEnvOffset);
 }
 
 double BR_Envelope::ValueAtPosition (double position)
 {
-	int	id = this->FindPrevious(position);
+	position -= m_takeEnvOffset;
+	int	id = this->FindPrevious(position, 0);
 
 	// No previous point?
 	if (!this->ValidateId(id))
@@ -724,7 +774,7 @@ double BR_Envelope::ValueAtPosition (double position)
 	}
 
 	// No next point?
-	int nextId = (m_sorted) ? (id+1) : this->FindNext(m_points[id].position);
+	int nextId = (m_sorted) ? (id+1) : this->FindNext(m_points[id].position, 0);
 	if (!this->ValidateId(nextId))
 		return m_points[id].value;
 
@@ -770,8 +820,8 @@ double BR_Envelope::ValueAtPosition (double position)
 
 		case BEZIER:
 		{
-			int id0 = (m_sorted) ? (id-1)     : (this->FindPrevious(t1));
-			int id3 = (m_sorted) ? (nextId+1) : (this->FindNext(t2));
+			int id0 = (m_sorted) ? (id-1)     : (this->FindPrevious(t1, 0));
+			int id3 = (m_sorted) ? (nextId+1) : (this->FindNext(t2, 0));
 			double t0 = (!this->ValidateId(id0)) ? (t1) : (m_points[id0].position);
 			double v0 = (!this->ValidateId(id0)) ? (v1) : (m_points[id0].value);
 			double t3 = (!this->ValidateId(id3)) ? (t2) : (m_points[id3].position);
@@ -820,6 +870,11 @@ double BR_Envelope::NormalizedDisplayValue (int id)
 		return this->NormalizedDisplayValue(m_points[id].value);
 	else
 		return 0;
+}
+
+void BR_Envelope::SetTakeEnvelopeTimebase (bool useProjectTime)
+{
+	m_takeEnvOffset = (useProjectTime && m_take) ? (GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION")) : (0);
 }
 
 void BR_Envelope::MoveArrangeToPoint (int id, int referenceId)
@@ -1106,6 +1161,128 @@ bool BR_Envelope::Commit (bool force /*=false*/)
 	return false;
 }
 
+int BR_Envelope::FindFirstPoint ()
+{
+	if (m_count <= 0)
+		return -1;
+
+	if (m_sorted)
+		return 0;
+	else
+	{
+		int id = 0;
+		double first = m_points[id].position;
+		for (vector<BR_EnvPoint>::iterator i = m_points.begin(); i != m_points.end() ; ++i)
+			if (i->position < first)
+				id = (int)(i - m_points.begin());
+		return id;
+	}
+}
+
+int BR_Envelope::LastPointAtPos (int id)
+{
+	/* no bounds checking - internal function so caller handles before calling */
+	double position = m_points[id].position;
+	int lastId = id;
+
+	if (m_sorted)
+	{
+		for (vector<BR_EnvPoint>::iterator i = id + m_points.begin(); i != m_points.end() ; ++i)
+		{
+			if (i->position == position)
+				lastId = (int)(i - m_points.begin());
+			else
+				break;
+		}
+	}
+	else
+	{
+		for (vector<BR_EnvPoint>::iterator i = m_points.begin(); i != m_points.end() ; ++i)
+			if (i->position == position)
+				lastId = (int)(i - m_points.begin());
+	}
+
+	return lastId;
+}
+
+int BR_Envelope::FindNext (double position, double offset)
+{
+	position -= offset;
+
+	if (m_sorted)
+	{
+		BR_EnvPoint val(position);
+		return (int)(upper_bound(m_points.begin(), m_points.end(), val, BR_EnvPoint::ComparePoints()) - m_points.begin());
+	}
+	else
+	{
+		int id = -1;
+		double nextPos = 0;
+		bool foundFirst = false;
+		for (vector<BR_EnvPoint>::iterator i = m_points.begin(); i != m_points.end() ; ++i)
+		{
+			double currentPos = i->position;
+			if (currentPos > position)
+			{
+				if (foundFirst)
+				{
+					if (currentPos < nextPos)
+					{
+						nextPos = currentPos;
+						id = (int)(i - m_points.begin());
+					}
+				}
+				else
+				{
+					nextPos = currentPos;
+					id = (int)(i - m_points.begin());
+					foundFirst = true;
+				}
+			}
+		}
+		return id;
+	}
+}
+
+int BR_Envelope::FindPrevious (double position, double offset)
+{
+	position -= offset;
+
+	if (m_sorted)
+	{
+		BR_EnvPoint val(position);
+		return (int)(lower_bound(m_points.begin(), m_points.end(), val, BR_EnvPoint::ComparePoints()) - m_points.begin())-1;
+	}
+	else
+	{
+		int id = -1;
+		double prevPos = 0;
+		bool foundFirst = false;
+		for (vector<BR_EnvPoint>::iterator i = m_points.begin(); i != m_points.end() ; ++i)
+		{
+			double currentPos = i->position;
+			if (currentPos < position)
+			{
+				if (foundFirst)
+				{
+					if (currentPos >= prevPos)
+					{
+						prevPos = currentPos;
+						id = (int)(i - m_points.begin());
+					}
+				}
+				else
+				{
+					prevPos = currentPos;
+					id = (int)(i - m_points.begin());
+					foundFirst = true;
+				}
+			}
+		}
+		return id;
+	}
+}
+
 void BR_Envelope::ParseState (char* envState, size_t size)
 {
 	if (m_tempoMap)
@@ -1145,13 +1322,6 @@ void BR_Envelope::ParseState (char* envState, size_t size)
 		}
 		token = strtok(NULL, "\n");
 	}
-}
-
-void BR_Envelope::SetCounts ()
-{
-	m_count = (int)m_points.size();
-	m_countSel = (int)m_pointsSel.size();
-	m_countConseq = -1;
 }
 
 void BR_Envelope::UpdateConsequential ()
@@ -1316,50 +1486,6 @@ WDL_FastString BR_Envelope::GetProperties ()
 	return properties;
 }
 
-int BR_Envelope::FindFirstPoint ()
-{
-	if (m_count <= 0)
-		return -1;
-
-	if (m_sorted)
-		return 0;
-	else
-	{
-		int id = 0;
-		double first = m_points[id].position;
-		for (vector<BR_EnvPoint>::iterator i = m_points.begin(); i != m_points.end() ; ++i)
-			if (i->position < first)
-				id = (int)(i - m_points.begin());
-		return id;
-	}
-}
-
-int BR_Envelope::LastPointAtPos (int id)
-{
-	/* no bounds checking - internal function so caller handles before calling */
-	double position = m_points[id].position;
-	int lastId = id;
-
-	if (m_sorted)
-	{
-		for (vector<BR_EnvPoint>::iterator i = id + m_points.begin(); i != m_points.end() ; ++i)
-		{
-			if (i->position == position)
-				lastId = (int)(i - m_points.begin());
-			else
-				break;
-		}
-	}
-	else
-	{
-		for (vector<BR_EnvPoint>::iterator i = m_points.begin(); i != m_points.end() ; ++i)
-			if (i->position == position)
-				lastId = (int)(i - m_points.begin());
-	}
-
-	return lastId;
-}
-
 BR_Envelope::EnvProperties::EnvProperties () :
 active        (0),
 visible       (0),
@@ -1454,6 +1580,38 @@ TrackEnvelope* GetTakeEnv (MediaItem_Take* take, BR_EnvType envelope)
 	else if (envelope == PITCH)  envName = "Pitch";
 
 	return SWS_GetTakeEnvelopeByName(take, envName);
+}
+
+MediaItem_Take* GetTakeEnvParent (TrackEnvelope* envelope, int* type)
+{
+	if (envelope)
+	{
+		int itemCount = CountMediaItems(NULL);
+		for (int i = 0; i < itemCount; ++i)
+		{
+			MediaItem* item = GetMediaItem(NULL, i);
+			int takeCount = CountTakes(item);
+			for (int j = 0; j < takeCount; ++j)
+			{
+				MediaItem_Take* take = GetTake(item, j);
+				int returnType = UNKNOWN;
+
+				if      (GetTakeEnv(take, VOLUME) == envelope) returnType = VOLUME;
+				else if (GetTakeEnv(take, PAN)    == envelope) returnType = PAN;
+				else if (GetTakeEnv(take, MUTE)   == envelope) returnType = MUTE;
+				else if (GetTakeEnv(take, PITCH)  == envelope) returnType = PITCH;
+
+				if (returnType != UNKNOWN)
+				{
+					WritePtr(type, returnType);
+					return take;
+				}
+			}
+		}
+	}
+
+	WritePtr(type, (int)UNKNOWN);
+	return NULL;
 }
 
 bool EnvVis (TrackEnvelope* envelope, bool* lane)

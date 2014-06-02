@@ -1671,7 +1671,7 @@ void BR_AnalyzeLoudnessWnd::OnCommand (WPARAM wParam, LPARAM lParam)
 			DialogBoxParam(g_hInst, MAKEINTRESOURCE(IDD_BR_GRAPH_LOUDNESS), g_hwndParent, GraphDialogProc, (LPARAM)&userCanceled);
 			if (!userCanceled)
 			{
-				if (TrackEnvelope* env = GetSelectedTrackEnvelope(NULL))
+				if (TrackEnvelope* env = GetSelectedEnvelope(NULL))
 				{
 					BR_Envelope envelope(env);
 					if (m_properties.clearEnvelope)

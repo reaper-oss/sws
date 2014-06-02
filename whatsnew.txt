@@ -1,5 +1,10 @@
+<strong>REAPER v4.70+ is required!</strong>
+New API functions were introduced in this version, they enable various improvements in the SWS/S&M Extension.
+Thank you Cockos!
+
 Analyze and normalize loudness
 +Added an option to preserve already analyzed tracks/items when analyzing selected tracks/items
++Creating graph in selected envelope functionality now works with take envelopes
 +Fixes:
  - Analyzing items with different channel modes should now work properly
  - Fixed analyzing short items/tracks
@@ -40,7 +45,7 @@ ReaScript
  - Fixed BR_GetMouseCursorContext envelope detection when envelope is in track lane
  - Changed return strings (ruler segments) in BR_GetMouseCursorContext
 +Added functions:
- - BR_EnvAlloc, BR_EnvCountPoints, BR_EnvDeletePoint, BR_EnvFind, BR_EnvFindNext, BR_EnvFindPrevious, BR_EnvFree, BR_EnvGetPoint, BR_EnvGetProperties, BR_EnvSetPoint, BR_EnvSetProperties, BR_EnvVauelAtPos
+ - BR_EnvAlloc, BR_EnvCountPoints, BR_EnvDeletePoint, BR_EnvFind, BR_EnvFindNext, BR_EnvFindPrevious, BR_EnvFree, BR_EnvGetParentTake, BR_EnvGetParentTrack, BR_EnvGetPoint, BR_EnvGetProperties, BR_EnvSetPoint, BR_EnvSetProperties, BR_EnvVauelAtPos
  - BR_MIDI_CCLaneRemove
  - BR_MIDI_CCLaneReplace
 
@@ -62,6 +67,24 @@ Fixes
 +SWS/FNG: Hide unused CC lanes in active midi editor:
  - Wasn't working if all displayed lanes were empty
  - Wasn't detecting 14-bit lanes properly
++SWS/FNG: Expand/Compress amplitude of selected envelope points around midpoint now obeys tempo map timebase
++These actions now work with take envelopes:
+ - SWS/BR: Move edit cursor to next/previous envelope point
+ - SWS/BR: Select next/previous envelope point
+ - SWS/BR: Expand/Shrink envelope point selection to the right/left
+ - SWS/BR: Shift envelope point selection left/right
+ - SWS/BR: Select peaks/dips in envelope
+ - SWS/BR: Unselect envelope points outside/in time selection
+ - SWS/BR: Set selected envelope points to next/previous/last selected/first selected point's value
+ - SWS/BR: Move closest (selected) envelope point to edit cursor
+ - SWS/BR: Insert 2 envelope points at time selection
+ - SWS/BR: Insert new envelope point at mouse cursor
+ - SWS/BR: Save/Restore envelope point selection
+ - SWS/FNG: Move selected envelope points up/down/left/right
+ - SWS/FNG: Shift selected envelope points up/down on left/right
+ - SWS/FNG: Expand/Compress amplitude of selected envelope points around midpoint
+ - SWS/FNG: Time compress/stretch selected envelope points
+ - Xenakios/SWS: Shift current envelope to left/right
 
 Other:
 +Renamed FNG MIDI actions in Main section (remove MIDI prefix and added "in active MIDI editor" description at the end)

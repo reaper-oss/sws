@@ -114,12 +114,12 @@ void AddToEnvPoints::doCommand(int flag)
         {
                 double beat = (240.0 / TimeMap2_GetDividedBpmAtTime(0, cursorPos));
                 double amount = beat * m_dAmount;
-                envelope.ApplyToSelectedPoints(&amount, NULL);
+                envelope.AddToSelectedPoints(&amount, NULL);
         }
         else
         {
                 double amt = (envelope.LaneMaxValue() - envelope.LaneMinValue()) / 100 * m_dAmount;
-                envelope.ApplyToSelectedPoints(NULL, &amt);
+                envelope.AddToSelectedPoints(NULL, &amt);
         }
         envelope.Commit();
 }

@@ -140,7 +140,7 @@ MediaTrack* BR_EnvGetParentTrack (void* envelope)
 	if (envelope)
 	{
 		BR_Envelope* env = (BR_Envelope*)envelope;
-		if (env->GetTake())
+		if (env->IsTakeEnvelope())
 			return NULL;
 		else 
 			return env->GetParent();

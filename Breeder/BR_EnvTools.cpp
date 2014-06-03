@@ -459,99 +459,6 @@ bool BR_Envelope::SetCreateSortedPoint (int id, double position, double value, i
 	}
 }
 
-void BR_Envelope::ApplyToSelectedPoints (double* position, double* value)
-{
-	if (m_update)
-	{
-		for (size_t i = 0; i < m_points.size(); ++i)
-		{
-			if (m_points[i].selected)
-			{
-				if (position)
-				{
-					m_points[i].position += *position;
-					m_sorted = false;
-					m_update = true;
-				}
-				if (value)
-				{
-					m_points[i].value += *value;
-					SetToBounds(m_points[i].value, this->LaneMinValue(), this->LaneMaxValue());
-					m_update = true;
-				}
-			}
-		}
-	}
-	else
-	{
-		for (size_t i = 0; i < m_pointsSel.size(); ++i)
-		{
-			int id = m_pointsSel[i];
-			if (position)
-			{
-				m_points[id].position += *position;
-				m_sorted = false;
-				m_update = true;
-			}
-			if (value)
-			{
-				m_points[id].value += *value;
-				m_update = true;
-			}
-		}
-	}
-}
-
-void BR_Envelope::GetSelectedPointsExtrema (double* minimum, double* maximum)
-{
-	double minVal = 0;
-	double maxVal = 0;
-
-	if (m_update)
-	{
-		bool found = false;
-		for (size_t i = 0; i < m_points.size(); ++i)
-		{
-			if (m_points[i].selected)
-			{
-				if (!found)
-				{
-					found = true;
-					maxVal = m_points[i].value;
-					minVal = m_points[i].value;
-				}
-				else
-				{
-					if (m_points[i].value > maxVal) maxVal = m_points[i].value;
-					if (m_points[i].value < minVal) minVal = m_points[i].value;
-				}
-			}
-		}
-	}
-	else
-	{
-		bool found = false;
-		for (size_t i = 0; i < m_pointsSel.size(); ++i)
-		{
-			int id = m_pointsSel[i];
-			if (!found)
-			{
-				found = true;
-				maxVal = m_points[id].value;
-				minVal = m_points[id].value;
-			}
-			else
-			{
-				if (m_points[id].value > maxVal) maxVal = m_points[id].value;
-				if (m_points[id].value < minVal) minVal = m_points[id].value;
-			}
-		}
-	}
-
-	WritePtr(minimum, minVal);
-	WritePtr(maximum, maxVal);
-}
-
 void BR_Envelope::UnselectAll ()
 {
 	for (int i = 0; i < m_count; ++i)
@@ -668,23 +575,6 @@ void BR_Envelope::DeleteAllPoints ()
 	m_sorted = true;
 	m_update = true;
 	m_count = 0;
-}
-
-void BR_Envelope::ApplyToPoints (double* position, double* value)
-{
-	for (vector<BR_EnvPoint>::iterator i = m_points.begin(); i != m_points.end(); ++i)
-	{
-		if (position)
-		{
-			i->position += *position;
-			m_update = true;
-		}
-		if (value)
-		{
-			i->value += *value;
-			m_update = true;
-		}
-	}
 }
 
 void BR_Envelope::Sort ()
@@ -874,23 +764,17 @@ double BR_Envelope::NormalizedDisplayValue (int id)
 		return 0;
 }
 
-void BR_Envelope::SetTakeEnvelopeTimebase (bool useProjectTime)
+bool BR_Envelope::IsTempo ()
 {
-	m_takeEnvOffset = (useProjectTime && m_take) ? (GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION")) : (0);
+	return m_tempoMap;
 }
 
-void BR_Envelope::MoveArrangeToPoint (int id, int referenceId)
+bool BR_Envelope::IsTakeEnvelope ()
 {
-	if (this->ValidateId(id))
-	{
-		double takePosOffset = (!m_take) ? (0) : GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION");
-
-		double pos = m_points[id].position + takePosOffset;
-		if (this->ValidateId(referenceId))
-			MoveArrangeToTarget(pos, m_points[referenceId].position + takePosOffset);
-		else
-			CenterArrange(pos);
-	}
+	if (m_take)
+		return true;
+	else
+		return false;
 }
 
 bool BR_Envelope::VisibleInArrange ()
@@ -942,17 +826,133 @@ bool BR_Envelope::VisibleInArrange ()
 	return false;
 }
 
-bool BR_Envelope::IsTempo ()
+void BR_Envelope::MoveArrangeToPoint (int id, int referenceId)
 {
-	return m_tempoMap;
+	if (this->ValidateId(id))
+	{
+		double takePosOffset = (!m_take) ? (0) : GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION");
+
+		double pos = m_points[id].position + takePosOffset;
+		if (this->ValidateId(referenceId))
+			MoveArrangeToTarget(pos, m_points[referenceId].position + takePosOffset);
+		else
+			CenterArrange(pos);
+	}
 }
 
-bool BR_Envelope::IsTakeEnvelope ()
+void BR_Envelope::SetTakeEnvelopeTimebase (bool useProjectTime)
 {
-	if (m_take)
-		return true;
+	m_takeEnvOffset = (useProjectTime && m_take) ? (GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION")) : (0);
+}
+
+void BR_Envelope::AddToPoints (double* position, double* value)
+{
+	for (vector<BR_EnvPoint>::iterator i = m_points.begin(); i != m_points.end(); ++i)
+	{
+		if (position)
+		{
+			i->position += *position;
+			m_update = true;
+		}
+		if (value)
+		{
+			i->value += *value;
+			m_update = true;
+		}
+	}
+}
+
+void BR_Envelope::AddToSelectedPoints (double* position, double* value)
+{
+	if (m_update)
+	{
+		for (size_t i = 0; i < m_points.size(); ++i)
+		{
+			if (m_points[i].selected)
+			{
+				if (position)
+				{
+					m_points[i].position += *position;
+					m_sorted = false;
+					m_update = true;
+				}
+				if (value)
+				{
+					m_points[i].value += *value;
+					SetToBounds(m_points[i].value, this->LaneMinValue(), this->LaneMaxValue());
+					m_update = true;
+				}
+			}
+		}
+	}
 	else
-		return false;
+	{
+		for (size_t i = 0; i < m_pointsSel.size(); ++i)
+		{
+			int id = m_pointsSel[i];
+			if (position)
+			{
+				m_points[id].position += *position;
+				m_sorted = false;
+				m_update = true;
+			}
+			if (value)
+			{
+				m_points[id].value += *value;
+				m_update = true;
+			}
+		}
+	}
+}
+
+void BR_Envelope::GetSelectedPointsExtrema (double* minimum, double* maximum)
+{
+	double minVal = 0;
+	double maxVal = 0;
+
+	if (m_update)
+	{
+		bool found = false;
+		for (size_t i = 0; i < m_points.size(); ++i)
+		{
+			if (m_points[i].selected)
+			{
+				if (!found)
+				{
+					found = true;
+					maxVal = m_points[i].value;
+					minVal = m_points[i].value;
+				}
+				else
+				{
+					if (m_points[i].value > maxVal) maxVal = m_points[i].value;
+					if (m_points[i].value < minVal) minVal = m_points[i].value;
+				}
+			}
+		}
+	}
+	else
+	{
+		bool found = false;
+		for (size_t i = 0; i < m_pointsSel.size(); ++i)
+		{
+			int id = m_pointsSel[i];
+			if (!found)
+			{
+				found = true;
+				maxVal = m_points[id].value;
+				minVal = m_points[id].value;
+			}
+			else
+			{
+				if (m_points[id].value > maxVal) maxVal = m_points[id].value;
+				if (m_points[id].value < minVal) minVal = m_points[id].value;
+			}
+		}
+	}
+
+	WritePtr(minimum, minVal);
+	WritePtr(maximum, maxVal);
 }
 
 MediaItem_Take* BR_Envelope::GetTake ()

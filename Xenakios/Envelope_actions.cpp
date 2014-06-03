@@ -173,7 +173,7 @@ void DoShiftEnvelope(COMMAND_T* ct)
 {
 	BR_Envelope envelope(GetSelectedEnvelope(NULL));
 	double amount = (double)ct->user;
-	envelope.ApplyToPoints(&amount, NULL);
+	envelope.AddToPoints(&amount, NULL);
 	if (envelope.Commit())
 		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }

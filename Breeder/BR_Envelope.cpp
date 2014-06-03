@@ -564,6 +564,46 @@ void Insert2EnvPointsTimeSelection (COMMAND_T* ct)
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 }
 
+void FitEnvPointsToTimeSel (COMMAND_T* ct)
+{
+	double tStart, tEnd;
+	GetSet_LoopTimeRange2(NULL, false, false, &tStart, &tEnd, false);
+	
+	BR_Envelope envelope(GetSelectedEnvelope(NULL));
+	if (envelope.CountSelected() < 2)
+		return;
+
+	if (envelope.IsTakeEnvelope())
+	{
+		double itemStart = GetMediaItemInfo_Value(GetMediaItemTake_Item(envelope.GetTake()), "D_POSITION");
+		double itemEnd   = GetMediaItemInfo_Value(GetMediaItemTake_Item(envelope.GetTake()), "D_LENGTH") + itemStart;
+		tStart = SetToBounds(tStart, itemStart, itemEnd);
+		tEnd   = SetToBounds(tEnd,   itemStart, itemEnd);
+	}
+	
+	if (tStart + MIN_ENV_DIST >= tEnd)
+		return;
+
+	int firstId = envelope.GetSelected(0);
+	int lastId  = envelope.GetSelected(envelope.CountSelected()-1);
+
+	double firstPos; envelope.GetPoint(firstId, &firstPos, NULL, NULL, NULL);
+	double lastPos;  envelope.GetPoint(lastId,  &lastPos,  NULL, NULL, NULL);
+
+	for (int i = 0; i < envelope.CountSelected(); ++i)
+	{
+		int id = envelope.GetSelected(i);
+		double position;
+		envelope.GetPoint(id, &position, NULL, NULL, NULL);
+
+		position = TranslateRange(position, firstPos, lastPos, tStart, tEnd);
+		envelope.SetPoint(id, &position, NULL, NULL, NULL);
+	}
+
+	if (envelope.Commit())
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+}
+
 void ShowActiveTrackEnvOnly (COMMAND_T* ct)
 {
 	TrackEnvelope* env = GetSelectedTrackEnvelope(NULL);
@@ -604,14 +644,14 @@ void CreateEnvPointMouse (COMMAND_T* ct)
 	double position = PositionAtMouseCursor(false);
 
 	// For take envelopes check cursor position here in case it gets snapped later
-	if (MediaItem_Take* take = envelope.GetTake())
+	if (envelope.IsTakeEnvelope())
 	{
-		double start = GetMediaItemInfo_Value(GetMediaItemTake_Item(take), "D_POSITION");
-		double end   = start +  GetMediaItemInfo_Value(GetMediaItemTake_Item(take), "D_LENGTH");
+		double start = GetMediaItemInfo_Value(GetMediaItemTake_Item(envelope.GetTake()), "D_POSITION");
+		double end   = start +  GetMediaItemInfo_Value(GetMediaItemTake_Item(envelope.GetTake()), "D_LENGTH");
 		if (!CheckBounds(position, start, end))
 			return;
 	}
-	
+
 	if (position != -1 && envelope.VisibleInArrange())
 	{
 		position = SnapToGrid(NULL, position);

@@ -126,8 +126,6 @@ public:
 	bool SetCreateSortedPoint (int id, double position, double value, int shape, double bezier, bool selected); // for ReaScript export
 
 	/* Selected points (never updated when editing, use UpdateSelected() if needed) */
-	void ApplyToSelectedPoints (double* position, double* value);
-	void GetSelectedPointsExtrema (double* minimum, double* maximum);
 	void UnselectAll ();
 	void UpdateSelected ();                         // Update selected points' ids based on current state of things
 	int CountSelected ();                           // Count selected points
@@ -139,7 +137,6 @@ public:
 	bool ValidateId (int id);
 	void DeletePointsInRange (double start, double end);
 	void DeleteAllPoints ();
-	void ApplyToPoints (double* position, double* value);
 	void Sort ();                                            // Sort points by position
 	int Count ();                                            // Count existing points
 	int Find (double position, double surroundingRange = 0); // All find functions will be more efficient if points are sorted. When point's
@@ -150,11 +147,14 @@ public:
 	double ValueAtPosition (double position);                // Using find functionality, so efficiency may vary (see comment about Find())
 	double NormalizedDisplayValue (double value);            // Return point value in 0.0 - 1.0 range as displayed in arrange
 	double NormalizedDisplayValue (int id);
-	void SetTakeEnvelopeTimebase (bool useProjectTime);      // By setting this to true you can use project time everywhere when dealing with take envelopes. If take changes position just call this again.
-	void MoveArrangeToPoint (int id, int referenceId);       // Moves arrange horizontally if needed so point is visible
-	bool VisibleInArrange ();                                // Check if arrange scroll position allows envelope to be shown
 	bool IsTempo ();
 	bool IsTakeEnvelope ();
+	bool VisibleInArrange ();                                // Check if arrange scroll position allows envelope to be shown
+	void MoveArrangeToPoint (int id, int referenceId);       // Moves arrange horizontally if needed so point is visible
+	void SetTakeEnvelopeTimebase (bool useProjectTime);      // By setting this to true you can use project time everywhere when dealing with take envelopes. If take changes position just call this again.
+	void AddToPoints (double* position, double* value);
+	void AddToSelectedPoints (double* position, double* value);
+	void GetSelectedPointsExtrema (double* minimum, double* maximum);
 	MediaItem_Take* GetTake ();
 	MediaTrack* GetParent ();
 	TrackEnvelope* GetPointer ();

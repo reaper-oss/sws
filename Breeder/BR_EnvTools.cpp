@@ -486,15 +486,16 @@ void BR_Envelope::ApplyToSelectedPoints (double* position, double* value)
 	{
 		for (size_t i = 0; i < m_pointsSel.size(); ++i)
 		{
+			int id = m_pointsSel[i];
 			if (position)
 			{
-				m_points[m_pointsSel[i]].position += *position;
+				m_points[id].position += *position;
 				m_sorted = false;
 				m_update = true;
 			}
 			if (value)
 			{
-				m_points[m_pointsSel[i]].value += *value;
+				m_points[id].value += *value;
 				m_update = true;
 			}
 		}
@@ -508,7 +509,7 @@ void BR_Envelope::GetSelectedPointsExtrema (double* minimum, double* maximum)
 
 	if (m_update)
 	{
-		bool  found = false;
+		bool found = false;
 		for (size_t i = 0; i < m_points.size(); ++i)
 		{
 			if (m_points[i].selected)
@@ -532,16 +533,17 @@ void BR_Envelope::GetSelectedPointsExtrema (double* minimum, double* maximum)
 		bool found = false;
 		for (size_t i = 0; i < m_pointsSel.size(); ++i)
 		{
+			int id = m_pointsSel[i];
 			if (!found)
 			{
 				found = true;
-				maxVal = m_points[i].value;
-				minVal = m_points[i].value;
+				maxVal = m_points[id].value;
+				minVal = m_points[id].value;
 			}
 			else
 			{
-				if (m_points[i].value > maxVal) maxVal = m_points[i].value;
-				if (m_points[i].value < minVal) minVal = m_points[i].value;
+				if (m_points[id].value > maxVal) maxVal = m_points[id].value;
+				if (m_points[id].value < minVal) minVal = m_points[id].value;
 			}
 		}
 	}

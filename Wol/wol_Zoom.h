@@ -28,19 +28,21 @@
 #pragma once
 
 #include "stdafx.h"
+#include "./ObjectState/TrackEnvelope.h"
 
 
 
 void wol_ZoomInit();
 
 int GetTcpEnvMinHeight();
+int GetTcpTrackMinHeight();
 int GetCurrentTcpMaxHeight();
 int CountVisibleTrackEnvelopesInTrackLane(MediaTrack* track);
 int GetEnvelopeOverlapState(TrackEnvelope* envelope, int* laneCount = NULL, int* envCount = NULL);
 void ScrollToTrackEnvelopeIfNotInArrange(TrackEnvelope* envelope);
 void ScrollToTrackIfNotInArrange(TrackEnvelope* envelope);
 
-void AdjustSelectedEnvelopeHeight(COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd);
+void AdjustSelectedEnvelopeOrTrackHeight(COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd);
 void SetVerticalZoomSelectedEnvelope(COMMAND_T* ct);
 void SetVerticalZoomCenter(COMMAND_T* ct);
 void SetHorizontalZoomCenter(COMMAND_T* ct);

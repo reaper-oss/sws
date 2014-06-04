@@ -53,6 +53,11 @@ int GetTcpEnvMinHeight()
 	return SNM_GetIconTheme()->envcp_min_height;
 }
 
+int GetTcpTrackMinHeight()
+{
+	return SNM_GetIconTheme()->tcp_small_height;
+}
+
 int GetCurrentTcpMaxHeight()
 {
 	RECT r;
@@ -97,6 +102,15 @@ int GetEnvelopeOverlapState(TrackEnvelope* envelope, int* laneCount, int* envCou
 	return (WritePtr(laneCount, (visEnvCount > 1) ? visEnvCount : 1), WritePtr(envCount, (visEnvCount > 1) ? visEnvCount : 1), (visEnvCount > 1) ? 4 : 3);
 }
 
+void SetTrackHeight(MediaTrack* track, int height)
+{
+	GetSetMediaTrackInfo(track, "I_HEIGHTOVERRIDE", &height);
+	PreventUIRefresh(1);
+	Main_OnCommand(41327, 0);
+	Main_OnCommand(41328, 0);
+	PreventUIRefresh(-1);
+}
+
 // Stolen from BR_Util.cpp
 void ScrollToTrackEnvelopeIfNotInArrange(TrackEnvelope* envelope)
 {
@@ -125,20 +139,27 @@ void ScrollToTrackIfNotInArrange(TrackEnvelope* envelope)
 	ScrollToTrackIfNotInArrange(GetEnvParent(envelope));
 }
 
-void AdjustSelectedEnvelopeHeight(COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
+void AdjustSelectedEnvelopeOrTrackHeight(COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
 	if (relmode > 0)
 	{
-		if (TrackEnvelope* env = GetSelectedTrackEnvelope(NULL))
+		void(*ScrollTo)(TrackEnvelope*) = ScrollToTrackEnvelopeIfNotInArrange;
+		int height = AdjustRelative(relmode, (valhw == -1) ? BOUNDED(val, 0, 127) : (int)BOUNDED(16384.0 - (valhw | val << 7), 0.0, 16383.0));
+		if (TrackEnvelope* env = GetSelectedEnvelope(NULL))
 		{
-			void(*ScrollTo)(TrackEnvelope*) = ScrollToTrackEnvelopeIfNotInArrange;
 			BR_Envelope brEnv(env);
-			int height = AdjustRelative(relmode, (valhw == -1) ? BOUNDED(val, 0, 127) : (int)BOUNDED(16384.0 - (valhw | val << 7), 0.0, 16383.0));
 			if (brEnv.IsInLane())
 			{
-				height = SetToBounds(height + GetTrackEnvHeight(env, NULL, false), GetTcpEnvMinHeight(), GetCurrentTcpMaxHeight());
-				brEnv.SetLaneHeight(height);
-				brEnv.Commit();
+				if (brEnv.IsTakeEnvelope())
+				{
+					SetTrackHeight(brEnv.GetParent(), SetToBounds(height + GetTrackHeight(brEnv.GetParent(), NULL), GetTcpTrackMinHeight(), GetCurrentTcpMaxHeight()));
+					ScrollTo = ScrollToTrackIfNotInArrange;
+				}
+				else
+				{
+					brEnv.SetLaneHeight(SetToBounds(height + GetTrackEnvHeight(env, NULL, false), GetTcpEnvMinHeight(), GetCurrentTcpMaxHeight()));
+					brEnv.Commit();
+				}
 			}
 			else
 			{
@@ -148,29 +169,40 @@ void AdjustSelectedEnvelopeHeight(COMMAND_T* ct, int val, int valhw, int relmode
 				mul = EnvelopesExtendedZoom ? laneCount : 1;
 				if (mul == 1)
 					ScrollTo = ScrollToTrackIfNotInArrange;
-				height = SetToBounds(height * mul + currentHeight, SNM_GetIconTheme()->tcp_small_height, (EnvelopesExtendedZoom ? GetCurrentTcpMaxHeight() * envCount + trackGapTop + trackGapBottom : GetCurrentTcpMaxHeight()));
 
-				GetSetMediaTrackInfo(brEnv.GetParent(), "I_HEIGHTOVERRIDE", &height);
-				PreventUIRefresh(1);
-				Main_OnCommand(41327, 0);
-				Main_OnCommand(41328, 0);
-				PreventUIRefresh(-1);
+				SetTrackHeight(brEnv.GetParent(), SetToBounds(height * mul + currentHeight, GetTcpTrackMinHeight(), (EnvelopesExtendedZoom ? GetCurrentTcpMaxHeight() * envCount + trackGapTop + trackGapBottom : GetCurrentTcpMaxHeight())));
 			}
 			ScrollTo(env);
+		}
+		else if ((int)ct->user == 1)
+		{
+			if (MediaTrack* tr = GetLastTouchedTrack())
+			{
+				SetTrackHeight(tr, SetToBounds(height + GetTrackHeight(tr, NULL), GetTcpTrackMinHeight(), GetCurrentTcpMaxHeight()));
+				ScrollToTrackIfNotInArrange(tr);
+			}
 		}
 	}
 }
 
 void SetVerticalZoomSelectedEnvelope(COMMAND_T* ct)
 {
-	if (TrackEnvelope* env = GetSelectedTrackEnvelope(NULL))
+	if (TrackEnvelope* env = GetSelectedEnvelope(NULL))
 	{
 		BR_Envelope brEnv(env);
 		void(*ScrollTo)(TrackEnvelope*) = ScrollToTrackEnvelopeIfNotInArrange;
 		if (brEnv.IsInLane())
 		{
-			brEnv.SetLaneHeight(((int)ct->user == 0) ? 0 : ((int)ct->user == 1) ? GetTcpEnvMinHeight() : GetCurrentTcpMaxHeight());
-			brEnv.Commit();
+			if (brEnv.IsTakeEnvelope())
+			{
+				SetTrackHeight(brEnv.GetParent(), ((int)ct->user == 0) ? 0 : ((int)ct->user == 1) ? GetTcpTrackMinHeight() : GetCurrentTcpMaxHeight());
+				ScrollTo = ScrollToTrackIfNotInArrange;
+			}
+			else
+			{
+				brEnv.SetLaneHeight(((int)ct->user == 0) ? 0 : ((int)ct->user == 1) ? GetTcpEnvMinHeight() : GetCurrentTcpMaxHeight());
+				brEnv.Commit();
+			}
 		}
 		else
 		{
@@ -218,11 +250,7 @@ void SetVerticalZoomSelectedEnvelope(COMMAND_T* ct)
 				height = 0;
 				ScrollTo = ScrollToTrackIfNotInArrange;
 			}
-			GetSetMediaTrackInfo(brEnv.GetParent(), "I_HEIGHTOVERRIDE", &height);
-			PreventUIRefresh(1);
-			Main_OnCommand(41327, 0);
-			Main_OnCommand(41328, 0);
-			PreventUIRefresh(-1);
+			SetTrackHeight(brEnv.GetParent(), height);
 		}
 		ScrollTo(env);
 	}
@@ -284,7 +312,7 @@ void ZoomSelectedEnvelopeTimeSelection(COMMAND_T* ct)
 {
 	double d1, d2;
 	GetSet_LoopTimeRange(false, false, &d1, &d2, false);
-	TrackEnvelope* env = GetSelectedTrackEnvelope(NULL);
+	TrackEnvelope* env = GetSelectedEnvelope(NULL);
 	if (env && (d1 != d2))
 	{
 		Main_OnCommand(40031, 0);

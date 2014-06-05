@@ -94,6 +94,7 @@ Other:
 +Renamed FNG MIDI actions in Main section (remove MIDI prefix and added "in active MIDI editor" description at the end)
 +Capitalized certain FNG actions names
 +Renamed SWS: Save/Restore current arrange view to SWS: Save/Restore current arrange view, slot 1
++Renamed SWS/BR: Move closest tempo marker/grid line/measure grid line to mouse cursor (added (perform until shortcut released) to clearly reflect how they work)
 
 !v2.4.0 #9 pre-release build (April 19, 2014)
 <strong>This version requires REAPER v4.62pre8+</strong>, an "Incompatible version" error message will be displayed otherwise...

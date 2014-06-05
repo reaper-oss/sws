@@ -243,17 +243,17 @@ static COMMAND_T g_commandTable[] =
 	/******************************************************************************
 	* Grid                                                                        *
 	******************************************************************************/
-	{ { DEFACCEL, "SWS/BR: Move closest tempo marker to mouse cursor" },        "BR_MOVE_CLOSEST_TEMPO_MOUSE", MoveGridToMouse, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Move closest tempo marker to mouse cursor (perform until shortcut released)" },        "BR_MOVE_CLOSEST_TEMPO_MOUSE", MoveGridToMouse, NULL, 0},
 
-	{ { DEFACCEL, "SWS/BR: Move closest grid line to mouse cursor" },           "BR_MOVE_GRID_TO_MOUSE",       MoveGridToMouse, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Move closest measure grid line to mouse cursor" },   "BR_MOVE_M_GRID_TO_MOUSE",     MoveGridToMouse, NULL, 2},
+	{ { DEFACCEL, "SWS/BR: Move closest grid line to mouse cursor (perform until shortcut released)" },           "BR_MOVE_GRID_TO_MOUSE",       MoveGridToMouse, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Move closest measure grid line to mouse cursor (perform until shortcut released)" },   "BR_MOVE_M_GRID_TO_MOUSE",     MoveGridToMouse, NULL, 2},
 
-	{ { DEFACCEL, "SWS/BR: Move closest grid line to edit cursor" },            "BR_MOVE_GRID_TO_EDIT_CUR",    MoveGridToEditPlayCursor, NULL, 0},
-	{ { DEFACCEL, "SWS/BR: Move closest grid line to play cursor" },            "BR_MOVE_GRID_TO_PLAY_CUR",    MoveGridToEditPlayCursor, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Move closest measure grid line to edit cursor" },    "BR_MOVE_M_GRID_TO_EDIT_CUR",  MoveGridToEditPlayCursor, NULL, 2},
-	{ { DEFACCEL, "SWS/BR: Move closest measure grid line to play cursor" },    "BR_MOVE_M_GRID_TO_PLAY_CUR",  MoveGridToEditPlayCursor, NULL, 3},
-	{ { DEFACCEL, "SWS/BR: Move closest left side grid line to edit cursor" },  "BR_MOVE_L_GRID_TO_EDIT_CUR",  MoveGridToEditPlayCursor, NULL, 4},
-	{ { DEFACCEL, "SWS/BR: Move closest right side grid line to edit cursor" }, "BR_MOVE_R_GRID_TO_EDIT_CUR",  MoveGridToEditPlayCursor, NULL, 5},
+	{ { DEFACCEL, "SWS/BR: Move closest grid line to edit cursor" },                                              "BR_MOVE_GRID_TO_EDIT_CUR",    MoveGridToEditPlayCursor, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Move closest grid line to play cursor" },                                              "BR_MOVE_GRID_TO_PLAY_CUR",    MoveGridToEditPlayCursor, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Move closest measure grid line to edit cursor" },                                      "BR_MOVE_M_GRID_TO_EDIT_CUR",  MoveGridToEditPlayCursor, NULL, 2},
+	{ { DEFACCEL, "SWS/BR: Move closest measure grid line to play cursor" },                                      "BR_MOVE_M_GRID_TO_PLAY_CUR",  MoveGridToEditPlayCursor, NULL, 3},
+	{ { DEFACCEL, "SWS/BR: Move closest left side grid line to edit cursor" },                                    "BR_MOVE_L_GRID_TO_EDIT_CUR",  MoveGridToEditPlayCursor, NULL, 4},
+	{ { DEFACCEL, "SWS/BR: Move closest right side grid line to edit cursor" },                                   "BR_MOVE_R_GRID_TO_EDIT_CUR",  MoveGridToEditPlayCursor, NULL, 5},
 
 	/******************************************************************************
 	* Tempo                                                                       *

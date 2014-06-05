@@ -24,6 +24,8 @@ Added actions
  - SWS/wol: Full zoom to selected envelope in time selection
  - SWS: Save/Restore current arrange view (5 slots)
  - SWS/BR: Fit selected envelope points to time selection
+ - SWS/AW: Grid to 1/64 notes
+ - SWS/AW: Grid to 1/128 notes
 +Main and MIDI editor:
  - SWS/BR: Play from mouse cursor position (3 versions)
 +MIDI editor:

@@ -2652,6 +2652,42 @@ void AWGrid32(COMMAND_T* = NULL)
 
 int IsGrid32(COMMAND_T* = NULL)     { return (*(double*)GetConfigVar("projgriddiv") == 0.125 || *(double*)GetConfigVar("projgriddiv") == 0.125*(2.0/3.0) || *(double*)GetConfigVar("projgriddiv") == 0.125*(3.0/2.0)); }
 
+void AWGrid64(COMMAND_T* = NULL)
+{
+	double* pGridDiv = (double*)GetConfigVar("projgriddiv");
+
+	if (IsGridTriplet())
+		*pGridDiv = 0.0625*(2.0/3.0);
+	else if (IsGridDotted())
+		*pGridDiv = 0.0625*(3.0/2.0);
+	else
+		*pGridDiv = 0.0625;
+
+	UpdateGridToolbar();
+	UpdateTimeline();
+
+}
+
+int IsGrid64(COMMAND_T* = NULL)     { return (*(double*)GetConfigVar("projgriddiv") == 0.0625 || *(double*)GetConfigVar("projgriddiv") == 0.0625*(2.0/3.0) || *(double*)GetConfigVar("projgriddiv") == 0.0625*(3.0/2.0)); }
+
+void AWGrid128(COMMAND_T* = NULL)
+{
+	double* pGridDiv = (double*)GetConfigVar("projgriddiv");
+
+	if (IsGridTriplet())
+		*pGridDiv = 0.03125*(2.0/3.0);
+	else if (IsGridDotted())
+		*pGridDiv = 0.03125*(3.0/2.0);
+	else
+		*pGridDiv = 0.03125;
+
+	UpdateGridToolbar();
+	UpdateTimeline();
+
+}
+
+int IsGrid128(COMMAND_T* = NULL)     { return (*(double*)GetConfigVar("projgriddiv") == 0.03125 || *(double*)GetConfigVar("projgriddiv") == 0.03125*(2.0/3.0) || *(double*)GetConfigVar("projgriddiv") == 0.03125*(3.0/2.0)); }
+
 void AWToggleClickTrack(COMMAND_T*)
 {
 	for (int i = 1; i <= GetNumTracks(); i++)
@@ -2673,15 +2709,22 @@ void AWToggleClickTrack(COMMAND_T*)
 
 void UpdateGridToolbar()
 {
-	RefreshToolbar(SWSGetCommandID(AWToggleTriplet));
-	RefreshToolbar(SWSGetCommandID(AWToggleDotted));
-	RefreshToolbar(SWSGetCommandID(AWGridWhole));
-	RefreshToolbar(SWSGetCommandID(AWGridHalf));
-	RefreshToolbar(SWSGetCommandID(AWGrid4));
-	RefreshToolbar(SWSGetCommandID(AWGrid8));
-	RefreshToolbar(SWSGetCommandID(AWGrid16));
-	RefreshToolbar(SWSGetCommandID(AWGrid32));
-	RefreshToolbar(SWSGetCommandID(AWToggleClickTrack));
+	static int cmds[11] =
+	{
+		SWSGetCommandID(AWToggleTriplet),
+		SWSGetCommandID(AWToggleDotted),
+		SWSGetCommandID(AWGridWhole),
+		SWSGetCommandID(AWGridHalf),
+		SWSGetCommandID(AWGrid4),
+		SWSGetCommandID(AWGrid8),
+		SWSGetCommandID(AWGrid16),
+		SWSGetCommandID(AWGrid32),
+		SWSGetCommandID(AWGrid64),
+		SWSGetCommandID(AWGrid128),
+		SWSGetCommandID(AWToggleClickTrack)
+	};
+	for (int i = 0; i < 11; ++i)
+		RefreshToolbar(cmds[i]);
 }
 
 void AWInsertClickTrack(COMMAND_T* t)
@@ -2971,9 +3014,15 @@ int IsSelTracksTimebaseBeatAll(COMMAND_T* = NULL)
 
 void UpdateTrackTimebaseToolbar()
 {
-	RefreshToolbar(SWSGetCommandID(AWSelTracksTimebaseTime));
-	RefreshToolbar(SWSGetCommandID(AWSelTracksTimebaseBeatPos));
-	RefreshToolbar(SWSGetCommandID(AWSelTracksTimebaseBeatAll));
+	static int cmds[3] =
+	{
+		SWSGetCommandID(AWSelTracksTimebaseTime),
+		SWSGetCommandID(AWSelTracksTimebaseBeatPos),
+		SWSGetCommandID(AWSelTracksTimebaseBeatAll),
+
+	};
+	for (int i = 0; i < 3; ++i)
+		RefreshToolbar(cmds[i]);
 }
 
 
@@ -3128,8 +3177,8 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/AW: Grid to 1/8 notes" },            "SWS_AWGRID8",              AWGrid8, NULL, 0, IsGrid8},
 	{ { DEFACCEL, "SWS/AW: Grid to 1/16 notes" },           "SWS_AWGRID16",             AWGrid16, NULL, 0, IsGrid16},
 	{ { DEFACCEL, "SWS/AW: Grid to 1/32 notes" },           "SWS_AWGRID32",             AWGrid32, NULL, 0, IsGrid32},
-
-
+	{ { DEFACCEL, "SWS/AW: Grid to 1/64 notes" },           "SWS_AWGRID64",             AWGrid64, NULL, 0, IsGrid64},
+	{ { DEFACCEL, "SWS/AW: Grid to 1/128 notes" },          "SWS_AWGRID128",            AWGrid128, NULL, 0, IsGrid128},
 	{ { DEFACCEL, "SWS/AW: Paste" },        "SWS_AWPASTE",                  AWPaste, },
 	{ { DEFACCEL, "SWS/AW: Remove tracks/items/env, obeying time selection and leaving children" },     "SWS_AWBUSDELETE",                  AWBusDelete, },
 

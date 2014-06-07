@@ -84,8 +84,8 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Insert 2 envelope points at time selection" },                       "BR_INSERT_2_ENV_POINT_TIME_SEL",  Insert2EnvPointsTimeSelection, NULL, 1},
 	{ { DEFACCEL, "SWS/BR: Fit selected envelope points to time selection" },                   "BR_FIT_ENV_POINTS_TO_TIMESEL",    FitEnvPointsToTimeSel, NULL},
 
-	{ { DEFACCEL, "SWS/BR: Hide all but active track envelope for all tracks" },                "BR_ENV_HIDE_ALL_BUT_ACTIVE",      ShowActiveTrackEnvOnly, NULL, 0},
-	{ { DEFACCEL, "SWS/BR: Hide all but active track envelope for selected tracks" },           "BR_ENV_HIDE_ALL_BUT_ACTIVE_SEL",  ShowActiveTrackEnvOnly, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Hide all but selected track envelope for all tracks" },                "BR_ENV_HIDE_ALL_BUT_ACTIVE",      ShowActiveTrackEnvOnly, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Hide all but selected track envelope for selected tracks" },           "BR_ENV_HIDE_ALL_BUT_ACTIVE_SEL",  ShowActiveTrackEnvOnly, NULL, 1},
 
 	{ { DEFACCEL, "SWS/BR: Insert new envelope point at mouse cursor" },                        "BR_ENV_POINT_MOUSE_CURSOR",       CreateEnvPointMouse, NULL},
 
@@ -176,6 +176,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Disable \"Ignore project tempo\" for selected MIDI items" },                            "BR_MIDI_PROJ_TEMPO_DIS",           MidiItemTempo, NULL, 1},
 
 	{ { DEFACCEL, "SWS/BR: Create project markers from notes in selected MIDI items" },                            "BR_MIDI_NOTES_TO_MARKERS",         MarkersAtNotes},
+	{ { DEFACCEL, "SWS/BR: Create project markers from stretch markers in selected items" },                       "BR_STRETCH_MARKERS_TO_MARKERS",    MarkersAtStretchMarkers},
 	{ { DEFACCEL, "SWS/BR: Create project markers from selected items (name by item's notes)" },                   "BR_ITEMS_TO_MARKERS_NOTES",        MarkersRegionsAtItems, NULL, 0},
 	{ { DEFACCEL, "SWS/BR: Create regions from selected items (name by item's notes)" },                           "BR_ITEMS_TO_REGIONS_NOTES",        MarkersRegionsAtItems, NULL, 1},
 

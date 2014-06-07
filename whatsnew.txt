@@ -24,6 +24,7 @@ Added actions
  - SWS/wol: Full zoom to selected envelope in time selection
  - SWS: Save/Restore current arrange view (5 slots)
  - SWS/BR: Fit selected envelope points to time selection
+ - SWS/BR: Create project markers from stretch markers in selected items
  - SWS/AW: Grid to 1/64 notes
  - SWS/AW: Grid to 1/128 notes
 +Main and MIDI editor:
@@ -95,6 +96,7 @@ Other:
 +Capitalized certain FNG actions names
 +Renamed SWS: Save/Restore current arrange view to SWS: Save/Restore current arrange view, slot 1
 +Renamed SWS/BR: Move closest tempo marker/grid line/measure grid line to mouse cursor (added (perform until shortcut released) to clearly reflect how they work)
++Renamed SWS/BR: Hide all but active envelope for all/selected tracks (so it's clear that it works only with selected track envelopes)
 
 !v2.4.0 #9 pre-release build (April 19, 2014)
 <strong>This version requires REAPER v4.62pre8+</strong>, an "Incompatible version" error message will be displayed otherwise...

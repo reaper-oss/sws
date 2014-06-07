@@ -184,6 +184,31 @@ void MarkersAtNotes (COMMAND_T* ct)
 	UpdateArrange();
 }
 
+void MarkersAtStretchMarkers (COMMAND_T* ct)
+{
+	bool success = false;
+	PreventUIRefresh(1);
+
+	for (int i = 0; i < CountSelectedMediaItems(NULL); ++i)
+	{
+		MediaItem_Take* take = GetActiveTake(GetSelectedMediaItem(NULL, i));
+
+		double itemPos = GetMediaItemInfo_Value(GetSelectedMediaItem(NULL, i), "D_POSITION");
+		for (int i = 0; i < GetTakeNumStretchMarkers(take); ++i)
+		{
+			double position;
+			GetTakeStretchMarker(take, i, &position, NULL);
+			if (AddProjectMarker(NULL, false, itemPos + position, 0, NULL, -1) != -1)
+				success = true;
+		}
+	}
+
+	if (success)
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+	PreventUIRefresh(-1);
+	UpdateArrange();
+}
+
 void MarkersRegionsAtItems (COMMAND_T* ct)
 {
 	if (!CountSelectedMediaItems(NULL))

@@ -227,26 +227,32 @@ void ME_PreviewActiveTake (COMMAND_T* ct, int val, int valhw, int relmode, HWND 
 
 void ME_ShowUsedCCLanesDetect14Bit (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
-	int defaultHeight = 67; // same height FNG versions use (to keep behavior identical)
-	RprMidiCCLanePtr laneView = RprMidiCCLane::createFromMidiEditor();
-	set<int> usedCC = GetUsedCCLanes(MIDIEditor_GetTake(MIDIEditor_GetActive()), 2);
+	if (MediaItem_Take* take = MIDIEditor_GetTake(MIDIEditor_GetActive()))
+	{
+		if (RprMidiCCLane* laneView = new (nothrow) RprMidiCCLane(RprTake(take)))
+		{
+			int defaultHeight = 67; // same height FNG versions use (to keep behavior identical)
+			set<int> usedCC = GetUsedCCLanes(MIDIEditor_GetTake(MIDIEditor_GetActive()), 2);
 
-	for (int i = 0; i < laneView->countShown(); ++i)
-		if (usedCC.find(laneView->getIdAt(i)) == usedCC.end())
-			laneView->remove(i--);
+			for (int i = 0; i < laneView->countShown(); ++i)
+				if (usedCC.find(laneView->getIdAt(i)) == usedCC.end())
+					laneView->remove(i--);
 
-	// Special case: Bank select and CC0 (from FNG version to keep behavior identical)
-	if (usedCC.find(0) != usedCC.end() && usedCC.find(CC_BANK_SELECT) != usedCC.end() && !laneView->isShown(131))
-		laneView->append(131, defaultHeight);
+			// Special case: Bank select and CC0 (from FNG version to keep behavior identical)
+			if (usedCC.find(0) != usedCC.end() && usedCC.find(CC_BANK_SELECT) != usedCC.end() && !laneView->isShown(131))
+				laneView->append(131, defaultHeight);
 
-	for(set<int>::iterator it = usedCC.begin(); it != usedCC.end(); ++it)
-		if (!laneView->isShown(*it))
-			laneView->append(*it, defaultHeight);
+			for(set<int>::iterator it = usedCC.begin(); it != usedCC.end(); ++it)
+				if (!laneView->isShown(*it))
+					laneView->append(*it, defaultHeight);
 
-	if (laneView->countShown() == 0)
-		laneView->append(-1, 0);
+			if (laneView->countShown() == 0)
+				laneView->append(-1, 0);
 
-	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
+			delete laneView;
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
+		}
+	}
 }
 
 void ME_PlaybackAtMouseCursor (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)

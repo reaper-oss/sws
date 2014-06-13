@@ -321,7 +321,7 @@ double ME_PositionAtMouseCursor (bool checkRuler, bool checkCCLanes)
 {
 	BR_MouseContextInfo info;
 	const char* segment;
-	GetMouseCursorContext (NULL, &segment, NULL, &info);
+	GetMouseCursorContext(NULL, &segment, NULL, &info);
 	if (info.midiEditor)
 	{
 		if (checkRuler && checkCCLanes)                  return info.position; // no need for strcmp, if position is invalid it's already -1
@@ -671,7 +671,8 @@ int MapVelLaneToReaScriptCC (int lane)
 	if (lane == -1)	                return 0x200;
 	if (lane >= 0   && lane <= 127) return lane;
 	if (lane >= 128 && lane <= 133)	return 0x200 | (lane+1 & 0x7F);
-	else                            return 0x100 | (lane - 134);
+	if (lane >= 134 && lane <= 165) return 0x100 | (lane - 134);
+	else                            return -1;
 }
 
 int MapReaScriptCCToVelLane (int cc)

@@ -132,7 +132,7 @@ void CenterDialog (HWND hwnd, HWND target, HWND zOrder);
 ******************************************************************************/
 struct BR_MouseContextInfo
 {
-	/* Invalid stuff will always be NULL, false, -1 depending on the type */
+	/* Invalid stuff will always be NULL, false, -1 or -2 depending on the type */
 	MediaTrack* track;
 	MediaItem* item;
 	MediaItem_Take* take;

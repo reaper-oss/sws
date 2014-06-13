@@ -2088,7 +2088,8 @@ BR_MouseContextInfo::BR_MouseContextInfo()
 	midiEditor   = NULL;
 	takeEnvelope = midiInlineEditor = false;
 	position     = -1;
-	noteRow      = ccLane = ccLaneVal = ccLaneId = -1;
+	noteRow      = ccLaneVal = ccLaneId = -1;
+	ccLane       = -2; // because -1 stands for velocity lane
 }
 
 static int IsMouseOverEnvelopeLine (BR_Envelope& envelope, int drawableEnvHeight, int yOffset, int mouseY, int mouseX, double mousePos, double arrangeStart, double arrangeZoom)

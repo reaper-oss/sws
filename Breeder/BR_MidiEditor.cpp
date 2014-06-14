@@ -242,9 +242,19 @@ void ME_ShowUsedCCLanesDetect14Bit (COMMAND_T* ct, int val, int valhw, int relmo
 			if (usedCC.find(0) != usedCC.end() && usedCC.find(CC_BANK_SELECT) != usedCC.end() && !laneView->isShown(131))
 				laneView->append(131, defaultHeight);
 
-			for(set<int>::iterator it = usedCC.begin(); it != usedCC.end(); ++it)
+			for (set<int>::iterator it = usedCC.begin(); it != usedCC.end(); ++it)
+			{
 				if (!laneView->isShown(*it))
 					laneView->append(*it, defaultHeight);
+				else
+				{
+					for (int i = 0; i < laneView->countShown(); ++i)
+					{
+						if (laneView->getIdAt(i) == *it && laneView->getHeight(i) == 0)
+							laneView->setHeightAt(i, defaultHeight);
+					}
+				}
+			}
 
 			if (laneView->countShown() == 0)
 				laneView->append(-1, 0);

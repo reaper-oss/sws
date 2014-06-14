@@ -137,9 +137,19 @@ static void ShowUsedCCLanes(int flag, void *data)
 		laneView->append(131, defaultHeight);
 
 	/* add new lanes at bottom for used ccs if not already shown */
-	for(set<int>::iterator it = usedCC.begin(); it != usedCC.end(); ++it)
+	for (set<int>::iterator it = usedCC.begin(); it != usedCC.end(); ++it)
+	{
 		if (!laneView->isShown(*it))
 			laneView->append(*it, defaultHeight);
+		else
+		{
+			for (int i = 0; i < laneView->countShown(); ++i)
+			{
+				if (laneView->getIdAt(i) == *it && laneView->getHeight(i) == 0)
+					laneView->setHeightAt(i, defaultHeight);
+			}
+		}
+	}
 
 	/* BR: If all lanes are removed it won't really work - we need to leave one lane with height 0 */
 	if (laneView->countShown() == 0)

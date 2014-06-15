@@ -3,8 +3,8 @@
 #include "Envelope.h"
 #include "EnvelopeCommands.h"
 #include "CommandHandler.h"
-#include "Breeder\BR_EnvTools.h"
-#include "Breeder\BR_Util.h"
+#include "../Breeder/BR_EnvTools.h"
+#include "../Breeder/BR_Util.h"
 
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions

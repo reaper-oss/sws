@@ -229,7 +229,8 @@ void ME_ShowUsedCCLanesDetect14Bit (COMMAND_T* ct, int val, int valhw, int relmo
 {
 	if (MediaItem_Take* take = MIDIEditor_GetTake(MIDIEditor_GetActive()))
 	{
-		if (RprMidiCCLane* laneView = new (nothrow) RprMidiCCLane(RprTake(take)))
+		RprTake rprTake(take);
+		if (RprMidiCCLane* laneView = new (nothrow) RprMidiCCLane(rprTake))
 		{
 			int defaultHeight = 67; // same height FNG versions use (to keep behavior identical)
 			set<int> usedCC = GetUsedCCLanes(MIDIEditor_GetTake(MIDIEditor_GetActive()), 2);

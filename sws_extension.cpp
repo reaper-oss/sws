@@ -91,8 +91,8 @@ bool hookCommandProc(int iCmd, int flag)
 	if (iCmd == 1013 && !RecordInputCheck())
 		return true;
 
-	// Initiate move grid stuff and then swallow if needed
-	if (BR_MoveGridActionHook(iCmd, flag))
+	// For continuous actions
+	if (BR_ActionHook(iCmd, flag))
 		return true;
 
 	// Ignore commands that don't have anything to do with us from this point forward

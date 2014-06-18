@@ -3625,6 +3625,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Breeder\BR_ContinuousActions.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Breeder\BR_ContinuousActions.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Breeder\BR_Envelope.cpp"
 				>
 			</File>

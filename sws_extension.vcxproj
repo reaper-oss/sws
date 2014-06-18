@@ -323,6 +323,7 @@ echo Copied to "$(REAPER64_DIR)\plugins\$(TargetFilename)"</Command>
     <None Include="whatsnew.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Breeder\BR_ContinuousActions.h" />
     <ClInclude Include="Breeder\BR_MidiEditor.h" />
     <ClInclude Include="Breeder\BR_MidiTools.h" />
     <ClInclude Include="C:\Program Files (x86)\REAPER\reaper_plugin_functions.h" />
@@ -490,6 +491,7 @@ echo Copied to "$(REAPER64_DIR)\plugins\$(TargetFilename)"</Command>
     <ResourceCompile Include="sws_extension.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Breeder\BR_ContinuousActions.cpp" />
     <ClCompile Include="Breeder\BR_MidiEditor.cpp" />
     <ClCompile Include="Breeder\BR_MidiTools.cpp" />
     <ClCompile Include="Wol\wol_Zoom.cpp" />

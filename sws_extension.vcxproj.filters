@@ -595,6 +595,9 @@
     <ClInclude Include="Wol\wol_Zoom.h">
       <Filter>Wol</Filter>
     </ClInclude>
+    <ClInclude Include="Breeder\BR_ContinuousActions.h">
+      <Filter>Breeder</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="sws_extension.rc">
@@ -1192,6 +1195,9 @@
     </ClCompile>
     <ClCompile Include="Wol\wol_Zoom.cpp">
       <Filter>Wol</Filter>
+    </ClCompile>
+    <ClCompile Include="Breeder\BR_ContinuousActions.cpp">
+      <Filter>Breeder</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -285,74 +285,108 @@ double GetClosestGrid (double position)
 
 	double grid = SnapToGrid(NULL, position);
 	SetConfig("projshowgrid", snap);
-
 	return grid;
 }
 
 double GetClosestMeasureGrid (double position)
 {
-	double grid; GetConfig("projgriddiv", grid);
-	if (grid/4 > 1) // if grid division is bigger than one 1 measure, let reaper handle it for us
-		return GetClosestGrid(position);
+	double gridDiv; GetConfig("projgriddiv", gridDiv);
 
-	int prevMeasure;
-	TimeMap2_timeToBeats(NULL, position, &prevMeasure, NULL, NULL, NULL);
-	int nextMeasure = prevMeasure + 1;
-
-	double prevPos = TimeMap2_beatsToTime(NULL, 0, &prevMeasure);
-	double nextPos = TimeMap2_beatsToTime(NULL, 0, &nextMeasure);
-	return ((position-prevPos) > (nextPos-position)) ? (nextPos) : (prevPos);
+	double gridLine = 0;
+	if (gridDiv/4 < 1)
+	{
+		SetConfig("projgriddiv", 4);
+		gridLine = GetClosestGrid(position);
+		SetConfig("projgriddiv", gridDiv);
+	}
+	else
+	{
+		gridLine = GetClosestGrid(position);
+	}
+	return gridLine;
 }
 
 double GetClosestLeftSideGrid (double position)
 {
 	double grid = GetClosestGrid(position);
+	if (position >= grid)
+		return grid;
 
-	if (position == grid) return position;
-	if (position >  grid) return grid;
-
-	double gridDiv;
-	GetConfig("projgriddiv", gridDiv);
+	double gridDiv; GetConfig("projgriddiv", gridDiv);
+	int minGridPx; GetConfig("projgridmin", minGridPx);
+	double hZoom = GetHZoomLevel();
 
 	if (gridDiv/4 < 1)
 	{
 		double beats; int denom;
 		TimeMap2_timeToBeats(NULL, grid, NULL, NULL, &beats, &denom);
 		gridDiv *= (double)denom/4;
-		return TimeMap2_beatsToTime(NULL, beats - gridDiv, NULL);
+
+		double leftSideGrid  = TimeMap2_beatsToTime(NULL, beats - gridDiv, NULL);
+		while ((grid - leftSideGrid) * hZoom < minGridPx)
+		{
+			gridDiv *= 2;
+			leftSideGrid = TimeMap2_beatsToTime(NULL, beats - gridDiv, NULL);
+		}
+		return leftSideGrid;
 	}
 	else
 	{
+		gridDiv = (int)gridDiv/4;
 		int measure;
 		TimeMap2_timeToBeats(NULL, grid, &measure, NULL, NULL, NULL);
-		measure -= (int)gridDiv/4;
-		return TimeMap2_beatsToTime(NULL, 0, &measure);
+
+		measure -= (int)gridDiv;
+		double leftSideGrid  = TimeMap2_beatsToTime(NULL, 0, &measure);
+		while ((grid - leftSideGrid) * hZoom < minGridPx)
+		{
+			measure -= (int)gridDiv;
+			leftSideGrid  = TimeMap2_beatsToTime(NULL, 0, &measure);
+			gridDiv *= 2;
+		}
+		return leftSideGrid;
 	}
 }
 
 double GetClosestRightSideGrid (double position)
 {
 	double grid = GetClosestGrid(position);
+	if (position <= grid)
+		return grid;
 
-	if (position == grid) return position;
-	if (position <  grid) return grid;
-
-	double gridDiv;
-	GetConfig("projgriddiv", gridDiv);
+	double gridDiv; GetConfig("projgriddiv", gridDiv);
+	int minGridPx; GetConfig("projgridmin", minGridPx);
+	double hZoom = GetHZoomLevel();
 
 	if (gridDiv/4 < 1)
 	{
 		double beats; int denom;
 		TimeMap2_timeToBeats(NULL, grid, NULL, NULL, &beats, &denom);
 		gridDiv *= (double)denom/4;
-		return TimeMap2_beatsToTime(NULL, beats + gridDiv, NULL);
+
+		double rightSideGrid = TimeMap2_beatsToTime(NULL, beats + gridDiv, NULL);
+		while ((rightSideGrid - grid) * hZoom < minGridPx)
+		{
+			gridDiv *= 2;
+			rightSideGrid = TimeMap2_beatsToTime(NULL, beats + gridDiv, NULL);
+		}
+		return rightSideGrid;
 	}
 	else
 	{
+		gridDiv = (int)gridDiv/4;
 		int measure;
 		TimeMap2_timeToBeats(NULL, grid, &measure, NULL, NULL, NULL);
-		measure += (int)gridDiv/4;
-		return TimeMap2_beatsToTime(NULL, 0, &measure);
+
+		measure += (int)gridDiv;
+		double rightSideGrid = TimeMap2_beatsToTime(NULL, 0, &measure);
+		while ((rightSideGrid - grid) * hZoom < minGridPx)
+		{
+			measure += (int)gridDiv;
+			rightSideGrid = TimeMap2_beatsToTime(NULL, 0, &measure);
+			gridDiv *= 2;
+		}
+		return rightSideGrid;
 	}
 }
 
@@ -360,7 +394,7 @@ double EndOfProject (bool markers, bool regions)
 {
 	double projEnd = 0;
 	int tracks = GetNumTracks();
-	for (int i = 0; i < tracks; i++)
+	for (int i = 0; i < tracks; ++i)
 	{
 		MediaTrack* track = GetTrack(0, i);
 		MediaItem* item = GetTrackMediaItem(track, GetTrackNumMediaItems(track) - 1);
@@ -2879,7 +2913,7 @@ void GetMouseCursorContext (const char** window, const char** segment, const cha
 
 	// MIDI editor
 	if (!found)
-		found = GetMouseCursorContextMidi(hwnd, p, returnInfo, &returnWindow, &returnSegment, &returnDetails);
+		GetMouseCursorContextMidi(hwnd, p, returnInfo, &returnWindow, &returnSegment, &returnDetails);
 
 	WritePtr(window,  returnWindow);
 	WritePtr(segment, returnSegment);
@@ -2887,16 +2921,33 @@ void GetMouseCursorContext (const char** window, const char** segment, const cha
 	WritePtr(info,    returnInfo);
 }
 
-double PositionAtMouseCursor (bool checkRuler)
+double PositionAtMouseCursor (bool checkRuler, int* yOffset /*=NULL*/, bool* overRuler /*= NULL*/)
 {
 	POINT p; HWND hwnd;
 	GetCursorPos(&p);
 	if (IsPointInArrange(&p, true, &hwnd))
+	{
+		WritePtr(yOffset, TranslatePointToArrangeScrollY(p));
+		WritePtr(overRuler, false);
 		return PositionAtArrangePoint(p);
+	}
 	else if (checkRuler && GetRulerWndAlt() == hwnd)
-		return PositionAtArrangePoint(p);
+	{
+		WritePtr(overRuler, true);
+		double position = PositionAtArrangePoint(p);
+		if (yOffset)
+		{
+			ScreenToClient(hwnd, &p);
+			*yOffset = (int)p.y;
+		}
+		return position;
+	}
 	else
+	{
+		WritePtr(yOffset, -1);
+		WritePtr(overRuler, false);
 		return -1;
+	}
 }
 
 MediaItem* ItemAtMouseCursor (double* position)

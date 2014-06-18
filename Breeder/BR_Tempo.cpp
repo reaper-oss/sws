@@ -27,6 +27,7 @@
 ******************************************************************************/
 #include "stdafx.h"
 #include "BR_Tempo.h"
+#include "BR_ContinuousActions.h"
 #include "BR_EnvTools.h"
 #include "BR_MidiTools.h"
 #include "BR_TempoDlg.h"
@@ -41,110 +42,58 @@ static bool g_convertMarkersToTempoDialog = false;
 static bool g_selectAdjustTempoDialog = false;
 static bool g_tempoShapeDialog = false;
 
-static BR_Envelope* g_tempoMap = NULL;       // once moving begins, tempo map gets cached so we don't read chunk multiple times
-static const int    g_moveGridFlag = -666;   // timer will use this to signal when it run the action (to differentiate when user does it)
-static int          g_moveGridCmd = 0;       // which move grid action is getting called right now? (0 = no active move in progress)
-static int          g_moveGridId = -666;
-static double       g_moveGridLastPos = 0;
-static bool         g_movedGridOnce = false;
-static HCURSOR      g_moveGridCur = NULL;
-static WNDPROC      g_arrangeWndProc = NULL;
-
 /******************************************************************************
-* Move grid to mouse cursor functionality. We use timer to repeatedly call    *
-* the action while shortcut is pressed. Undo is handled in translateAccel,    *
-* other stuff like drawing mouse cursor etc... is handled in InitMoveGrid     *
+* Continuous action: move grid to mouse cursor                                *
 ******************************************************************************/
-static void InitMoveGrid (bool init, int cmd = 0);
-static int translateAccel (MSG* msg, accelerator_register_t* ctx)
-{
-	if (msg->message == WM_KEYUP || msg->message == WM_SYSKEYUP)
-	{
-		if (g_movedGridOnce)
-			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(SWSGetCommandByID(g_moveGridCmd)), UNDO_STATE_ALL, -1);
-		InitMoveGrid(false);
-	}
-	return 0;
-}
+static BR_Envelope* g_moveGridTempoMap = NULL;
+static bool         g_movedGridOnce    = false;
 
-static LRESULT CALLBACK ArrangeWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static bool MoveGridInit (bool init)
 {
-	if (g_moveGridCmd && uMsg == WM_SETCURSOR && g_moveGridCur)
-	{
-		SetCursor(g_moveGridCur);
-		return 0;
-	}
-	return g_arrangeWndProc(hwnd, uMsg, wParam, lParam);
-}
-
-static void MoveGridTimer ()
-{
-	if (g_moveGridCmd)
-		Main_OnCommand(g_moveGridCmd, g_moveGridFlag);
-}
-
-static void InitMoveGrid (bool init, int cmd)
-{
-	static accelerator_register_t accelerator = { translateAccel, TRUE, NULL };
 	static int s_editCursorUndo = 0;
 
+	bool initSuccessful = true;
 	if (init)
 	{
-		#ifdef _WIN32
-			if (!g_moveGridCur)
-				g_moveGridCur = LoadCursor(NULL, IDC_SIZEWE);
-			if (!g_arrangeWndProc && GetArrangeWnd())
-				g_arrangeWndProc = (WNDPROC)SetWindowLongPtr(GetArrangeWnd(), GWLP_WNDPROC, (LONG_PTR)ArrangeWndProc);
-		#endif
-
 		GetConfig("undomask", s_editCursorUndo);
-		SetConfig("undomask", ClearBit(s_editCursorUndo, 3));
 
-		g_moveGridCmd = cmd;
-		plugin_register("accelerator",&accelerator);
-		plugin_register("timer",(void*)MoveGridTimer);
+		initSuccessful = PositionAtMouseCursor(true) != -1;
+		if (initSuccessful)
+			SetConfig("undomask", ClearBit(s_editCursorUndo, 3));
 	}
 	else
 	{
-		plugin_register("-accelerator",&accelerator);
-		plugin_register("-timer",(void*)MoveGridTimer);
 		SetConfig("undomask", s_editCursorUndo);
-		DELETE_NULL(g_tempoMap);
-		g_moveGridCmd = 0;
-
-		#ifdef _WIN32
-			SetWindowLongPtr(GetArrangeWnd(), GWLP_WNDPROC, (LONG_PTR)g_arrangeWndProc);
-			SendMessage(g_hwndParent, WM_SETCURSOR, (WPARAM)g_hwndParent, 0);
-			g_arrangeWndProc = NULL;
-		#endif
+		delete g_moveGridTempoMap;
+		g_moveGridTempoMap = NULL;
 	}
 
-	g_moveGridId = -666;
-	g_moveGridLastPos = 0;
 	g_movedGridOnce = false;
+	return initSuccessful;
 }
 
-bool BR_MoveGridActionHook (int cmd, int flag)
+static bool MoveGridDoUndo ()
 {
-	static int gridAction1 = NamedCommandLookup("_BR_MOVE_GRID_TO_MOUSE");
-	static int gridAction2 = NamedCommandLookup("_BR_MOVE_M_GRID_TO_MOUSE");
-	static int gridAction3 = NamedCommandLookup("_BR_MOVE_CLOSEST_TEMPO_MOUSE");
+	return g_movedGridOnce;
+}
 
-	if (cmd == gridAction1 || cmd == gridAction2 || cmd == gridAction3)
-	{
-		// No active move, init and return false so action gets executed first time from shortcut
-		if (g_moveGridCmd == 0)
-		{
-			InitMoveGrid(true, cmd);
-			return false;
-		}
+static HCURSOR MoveGridCursor (int window)
+{
+	static HCURSOR cursor = NULL;
+	if (!cursor)
+		cursor = LoadCursor(NULL, IDC_SIZEWE);
 
-		// Eat it if not called from a timer
-		if (flag != g_moveGridFlag)
-			return true;
-	}
-	// Not our action, pass it through
-	return false;
+	if (window == BR_ContinuousAction::ARRANGE || window == BR_ContinuousAction::RULER)
+		return cursor;
+	else
+		return NULL;
+}
+
+void MoveGridToMouseInit ()
+{
+	ContinuousActionRegister(new BR_ContinuousAction(NamedCommandLookup("_BR_MOVE_GRID_TO_MOUSE"),       &MoveGridInit, &MoveGridDoUndo, &MoveGridCursor));
+	ContinuousActionRegister(new BR_ContinuousAction(NamedCommandLookup("_BR_MOVE_M_GRID_TO_MOUSE"),     &MoveGridInit, &MoveGridDoUndo, &MoveGridCursor));
+	ContinuousActionRegister(new BR_ContinuousAction(NamedCommandLookup("_BR_MOVE_CLOSEST_TEMPO_MOUSE"), &MoveGridInit, &MoveGridDoUndo, &MoveGridCursor));
 }
 
 /******************************************************************************
@@ -237,37 +186,40 @@ static bool MoveTempo (BR_Envelope& tempoMap, int id, double timeDiff)
 
 void MoveGridToMouse (COMMAND_T* ct)
 {
-	// Cache tempo map for future calls
-	if (!g_tempoMap)
+	static int    lockedId = -1;
+	static double lastPosition = 0;
+
+	// Action called for the first time: reset variables and cache tempo map for future calls
+	if (!g_moveGridTempoMap)
 	{
+		lockedId = -1;
+		lastPosition = 0;
+
 		// Make sure tempo map already has at least one point created (for some reason it won't work if creating it directly in chunk)
 		if ((int)ct->user != 0) // do it only if not moving tempo marker
 			InitTempoMap();
-		g_tempoMap = new (nothrow) BR_Envelope(GetTempoEnv());
+
+		g_moveGridTempoMap = new (nothrow) BR_Envelope(GetTempoEnv());
+		if (!g_moveGridTempoMap || !g_moveGridTempoMap->Count())
+		{
+			ContinuousActionStopAll();
+			return;
+		}
 	}
-
-	if (!g_tempoMap->Count())
-		return;
-
-	// Don't let other windows steal our keyboard accelerator
-	SetFocus(GetArrangeWnd());
 
 	// Find closest grid/tempo marker
 	double tDiff = 0;
 	double mousePosition = PositionAtMouseCursor(true);
 	if (mousePosition == -1)
 	{
-		// Cancel undo in accelerator and do it here when cursor moves out of arrange/ruler
-		if (g_movedGridOnce)
-			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
-		InitMoveGrid(false);
+		ContinuousActionStopAll ();
 	}
 	else
 	{
 		// Move action was already called so use data from the previous move
 		if (g_movedGridOnce)
 		{
-			tDiff = mousePosition - g_moveGridLastPos;
+			tDiff = mousePosition - lastPosition;
 		}
 
 		// Find or create tempo marker to move
@@ -280,60 +232,46 @@ void MoveGridToMouse (COMMAND_T* ct)
 			if ((int)ct->user == 1 || (int)ct->user == 2)
 			{
 				grid = ((int)ct->user == 1) ? (GetClosestGrid(mousePosition)) : (GetClosestMeasureGrid(mousePosition));
-				targetId = g_tempoMap->Find(grid, MIN_TEMPO_DIST);
+				targetId = g_moveGridTempoMap->Find(grid, MIN_TEMPO_DIST);
 			}
 			// Find closest tempo marker
 			else
 			{
-				targetId = g_tempoMap->FindPrevious(mousePosition);
-
-				double pos1;
-				if (!g_tempoMap->GetPoint(targetId, &pos1, NULL, NULL, NULL))
+				targetId = g_moveGridTempoMap->FindClosest(mousePosition);
+				if (targetId ==0) ++targetId;
+				if (!g_moveGridTempoMap->ValidateId(targetId))
 					return;
-
-				double pos2;
-				if (g_tempoMap->GetPoint(targetId+1, &pos2, NULL, NULL, NULL))
-				{
-					if ((mousePosition - pos1) >= (pos2 - mousePosition) || targetId == 0)
-						targetId = targetId+1;
-				}
-				g_tempoMap->GetPoint(targetId, &grid, NULL, NULL, NULL);
+				g_moveGridTempoMap->GetPoint(targetId, &grid, NULL, NULL, NULL);
 			}
 
 			// No tempo marker on grid, create it (skip if moving closest tempo marker)
-			if (!g_tempoMap->ValidateId(targetId))
+			if (!g_moveGridTempoMap->ValidateId(targetId))
 			{
-				int prevId  = g_tempoMap->FindPrevious(grid);
-				double value = g_tempoMap->ValueAtPosition(grid);
-				int shape;
-				g_tempoMap->GetPoint(prevId, NULL, NULL, &shape, NULL);
-				g_tempoMap->CreatePoint(prevId+1, grid, value, shape, 0, false);
+				int prevId = g_moveGridTempoMap->FindPrevious(grid);
+				int shape; g_moveGridTempoMap->GetPoint(prevId, NULL, NULL, &shape, NULL);
+				g_moveGridTempoMap->CreatePoint(prevId+1, grid, g_moveGridTempoMap->ValueAtPosition(grid), shape, 0, false);
 				targetId = prevId+1;
 			}
 
 			// Can't move first tempo marker so ignore this move action and wait for valid mouse position
 			if (targetId != 0)
 			{
-				g_moveGridId = targetId;
+				lockedId = targetId;
 				tDiff = mousePosition - grid;
 			}
 		}
 	}
 
 	// Move grid and commit changes
-	if (tDiff != 0 && g_moveGridId != -666)
+	if (tDiff != 0 && lockedId >= 0)
 	{
 		// Warn user if tempo marker couldn't get processed
-		if (!g_tempoMap || !MoveTempo(*g_tempoMap, g_moveGridId, tDiff))
+		if (!g_moveGridTempoMap || !MoveTempo(*g_moveGridTempoMap, lockedId, tDiff))
 		{
 			static bool s_warnUser = true;
 			if (s_warnUser)
 			{
-				// Cancel undo in accelerator and do it here when warning user
-				if (g_movedGridOnce)
-					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
-				InitMoveGrid(false);
-
+				ContinuousActionStopAll ();
 				int userAnswer = ShowMessageBox(__LOCALIZE("Moving grid failed because some tempo markers would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), __LOCALIZE("SWS - Warning", "sws_mbox"), 4);
 				if (userAnswer == 7)
 					s_warnUser = false;
@@ -341,8 +279,8 @@ void MoveGridToMouse (COMMAND_T* ct)
 		}
 		else
 		{
-			g_moveGridLastPos = mousePosition;
-			g_tempoMap->Commit();
+			lastPosition = mousePosition;
+			g_moveGridTempoMap->Commit();
 			g_movedGridOnce = true;
 		}
 	}
@@ -431,26 +369,11 @@ void MoveTempo (COMMAND_T* ct)
 	// Find tempo marker closest to the edit cursor
 	if ((int)ct->user == 3)
 	{
-		int id = tempoMap.FindPrevious(cursor);
-		double pos1;
-		if (!tempoMap.GetPoint(id, &pos1, NULL, NULL, NULL))
+		targetId = tempoMap.FindClosest(cursor);
+		if (targetId == 0) ++targetId;
+		if (!tempoMap.ValidateId(targetId))
 			return;
 
-		double pos2;
-		if (tempoMap.GetPoint(id+1, &pos2, NULL, NULL, NULL))
-		{
-			double len1 = cursor - pos1;
-			double len2 = pos2 - cursor;
-
-			if (len1 >= len2 || id == 0)
-				targetId = id+1;
-			else
-				targetId = id;
-		}
-		else
-			targetId = id;
-
-		// Get amount of movement needed
 		double cTime; tempoMap.GetPoint(targetId, &cTime, NULL, NULL, NULL);
 		tDiff = cursor - cTime;
 	}
@@ -472,7 +395,7 @@ void MoveTempo (COMMAND_T* ct)
 	int count = (targetId != -1) ? (1) : (tempoMap.CountSelected());
 	for (int i = 0; i < count; ++i)
 	{
-		if (int id = tempoMap.GetSelected(i)) // skip first point
+		if (int id = ((int)ct->user == 3) ? (targetId) : (tempoMap.GetSelected(i))) // skip first point
 			skipped += (MoveTempo(tempoMap, id, tDiff)) ? (0) : (1);
 	}
 

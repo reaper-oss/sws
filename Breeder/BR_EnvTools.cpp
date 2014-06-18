@@ -103,7 +103,9 @@ m_takeEnvOffset (0),
 m_takeEnvType   (UNKNOWN),
 m_count         (0),
 m_countSel      (0),
-m_countConseq   (-1)
+m_countConseq   (-1),
+m_height        (-1),
+m_yOffset       (-1)
 {
 }
 
@@ -116,7 +118,9 @@ m_update        (false),
 m_sorted        (true),
 m_takeEnvOffset (0),
 m_takeEnvType   (UNKNOWN),
-m_countConseq   (-1)
+m_countConseq   (-1),
+m_height        (-1),
+m_yOffset       (-1)
 {
 	if (m_envelope)
 	{
@@ -141,7 +145,9 @@ m_update        (false),
 m_sorted        (true),
 m_takeEnvOffset (0),
 m_takeEnvType   (m_envelope ? envType : UNKNOWN),
-m_countConseq   (-1)
+m_countConseq   (-1),
+m_height        (-1),
+m_yOffset       (-1)
 {
 	if (m_envelope)
 	{
@@ -165,6 +171,8 @@ m_sorted        (envelope.m_sorted),
 m_takeEnvOffset (envelope.m_takeEnvOffset),
 m_takeEnvType   (envelope.m_takeEnvType),
 m_countConseq   (envelope.m_countConseq),
+m_height        (envelope.m_height),
+m_yOffset       (envelope.m_yOffset),
 m_count         (envelope.m_count),
 m_countSel      (envelope.m_countSel),
 m_points        (envelope.m_points),
@@ -190,6 +198,8 @@ BR_Envelope& BR_Envelope::operator= (const BR_Envelope& envelope)
 	m_takeEnvOffset = envelope.m_takeEnvOffset;
 	m_takeEnvType   = envelope.m_takeEnvType;
 	m_countConseq   = envelope.m_countConseq;
+	m_height        = envelope.m_height;
+	m_yOffset       = envelope.m_yOffset;
 	m_count         = envelope.m_count;
 	m_countSel      = envelope.m_countSel;
 	m_points        = envelope.m_points;
@@ -790,7 +800,7 @@ double BR_Envelope::NormalizedDisplayValue (double value)
 	if (this->Type() == PLAYRATE)
 	{
 		if (displayValue > 1)
-			return (2 + displayValue) / 6;      // original formula (max is always known so optimized): 0.5 + (displayValue - 1) / (max - 1) * 0.5 
+			return (2 + displayValue) / 6;      // original formula (max is always known so optimized): 0.5 + (displayValue - 1) / (max - 1) * 0.5
 		else
 			return (displayValue - 0.1) / 1.8 ; // original formula (min is always known so optimized): (displayValue - min) / (1 - min) * 0.5;
 	}
@@ -836,7 +846,7 @@ double BR_Envelope::SnapValue (double value)
 		else if (mode == 3) return round(value * 4) / 4;     // 25 cent
 		else if (mode == 4) return round(value * 10) / 10;   // 10 cent
 		else if (mode == 5) return round(value * 20) / 20;   // 5  cent
-		else                return round(value * 100) / 100; // 1 cents	
+		else                return round(value * 100) / 100; // 1 cents
 	}
 	else
 	{
@@ -857,7 +867,7 @@ bool BR_Envelope::IsTakeEnvelope ()
 		return false;
 }
 
-bool BR_Envelope::VisibleInArrange (int* envHeight /*=NULL*/, int* yOffset /*= NULL*/)
+bool BR_Envelope::VisibleInArrange (int* envHeight /*=NULL*/, int* yOffset /*= NULL*/, bool cacheValues /*=false*/)
 {
 	if (!this->IsVisible())
 		return false;
@@ -869,17 +879,21 @@ bool BR_Envelope::VisibleInArrange (int* envHeight /*=NULL*/, int* yOffset /*= N
 
 	if (!m_take)
 	{
-		int offset;
-		int height = GetTrackEnvHeight(m_envelope, &offset, true, this->GetParent());
-		WritePtr(envHeight, height);
-		WritePtr(yOffset, offset);
+		if (!cacheValues || (cacheValues && m_height == -1))
+		{
+			m_yOffset;
+			m_height = GetTrackEnvHeight(m_envelope, &m_yOffset, true, this->GetParent());
+		}
 
-		if (height > 0)
+		WritePtr(envHeight, m_height);
+		WritePtr(yOffset, m_yOffset);
+
+		if (m_height > 0)
 		{
 			int pageEnd = si.nPos + (int)si.nPage + SCROLLBAR_W;
-			int envelopeEnd = offset + height;
+			int envelopeEnd = m_yOffset + m_height;
 
-			if (offset >= si.nPos && offset <= pageEnd)
+			if (m_yOffset >= si.nPos && m_yOffset <= pageEnd)
 				return true;
 			if (envelopeEnd >= si.nPos && envelopeEnd <= pageEnd)
 				return true;
@@ -887,15 +901,19 @@ bool BR_Envelope::VisibleInArrange (int* envHeight /*=NULL*/, int* yOffset /*= N
 	}
 	else
 	{
-		int offset;
-		int height = GetTakeEnvHeight(m_take, &offset);
-		WritePtr(envHeight, height);
-		WritePtr(yOffset, offset);
+		if (!cacheValues || (cacheValues && m_height == -1))
+		{
+			m_yOffset;
+			m_height = GetTakeEnvHeight(m_take, &m_yOffset);
+		}
 
-		int envelopeEnd = offset + height;
+		WritePtr(envHeight, m_height);
+		WritePtr(yOffset, m_yOffset);
+
+		int envelopeEnd = m_yOffset + m_height;
 		int pageEnd = si.nPos + (int)si.nPage + SCROLLBAR_W;
 
-		if ((offset >= si.nPos && offset <= pageEnd) || (envelopeEnd >= si.nPos && envelopeEnd <= pageEnd))
+		if ((m_yOffset >= si.nPos && m_yOffset <= pageEnd) || (envelopeEnd >= si.nPos && envelopeEnd <= pageEnd))
 		{
 			double arrangeStart, arrangeEnd;
 			RECT r; GetWindowRect(hwnd, &r);
@@ -1782,6 +1800,102 @@ MediaTrack* GetEnvParent (TrackEnvelope* envelope)
 /******************************************************************************
 * Tempo                                                                       *
 ******************************************************************************/
+int FindPreviousTempoMarker (double position)
+{
+	int first = 0;
+	int last = CountTempoTimeSigMarkers(NULL);
+
+	while (first != last)
+	{
+		int mid = (first + last) /2;
+		double currentPos; GetTempoTimeSigMarker(NULL, mid, &currentPos, NULL, NULL, NULL, NULL, NULL, NULL);
+
+		if (currentPos < position) first = mid + 1;
+		else                       last  = mid;
+
+	}
+	return first - 1;
+}
+
+int FindNextTempoMarker (double position)
+{
+	int first = 0;
+	int last = CountTempoTimeSigMarkers(NULL);
+	int count = last;
+
+	while (first != last)
+	{
+		int mid = (first + last) /2;
+		double currentPos; GetTempoTimeSigMarker(NULL, mid, &currentPos, NULL, NULL, NULL, NULL, NULL, NULL);
+
+		if (position >= currentPos) first = mid + 1;
+		else                        last  = mid;
+
+	}
+	return (first < count) ? first: -1;
+}
+
+int FindClosestTempoMarker (double position)
+{
+	int prevId = FindPreviousTempoMarker(position);
+	int nextId = prevId + 1;
+
+	int count = CountTempoTimeSigMarkers(NULL);
+	if (prevId == -1)
+	{
+		return (nextId < count) ? nextId : -1;
+	}
+	else
+	{
+		if (nextId < count)
+		{
+
+			double prevPos, nextPos;
+			GetTempoTimeSigMarker(NULL, prevId, &prevPos, NULL, NULL, NULL, NULL, NULL, NULL);
+			GetTempoTimeSigMarker(NULL, nextId, &nextPos, NULL, NULL, NULL, NULL, NULL, NULL);
+
+			double len1 = position - prevPos;
+			double len2 = nextPos - position;
+
+			if (len1 >= len2)
+				return nextId;
+			else
+				return prevId;
+		}
+		else
+		{
+			return prevId;
+		}
+	}
+}
+
+int FindTempoMarker (double position, double surroundingRange /*= 0*/)
+{
+	int prevId = FindPreviousTempoMarker(position);
+	int nextId = prevId + 1;
+
+	double prevPos, nextPos;
+	GetTempoTimeSigMarker(NULL, prevId, &prevPos, NULL, NULL, NULL, NULL, NULL, NULL);
+	GetTempoTimeSigMarker(NULL, nextId, &nextPos, NULL, NULL, NULL, NULL, NULL, NULL);
+
+	int count = CountTempoTimeSigMarkers(NULL);
+	double distanceFromPrev = (CheckBounds(prevId, 0, count-1)) ? (position - prevPos) : (abs(surroundingRange) + 1);
+	double distanceFromNext = (CheckBounds(nextId, 0, count-1)) ? (nextPos - position) : (abs(surroundingRange) + 1);
+
+	int id = -1;
+	if (distanceFromPrev <= distanceFromNext)
+	{
+		if (distanceFromPrev <= surroundingRange)
+			id = prevId;
+	}
+	else
+	{
+		if (distanceFromNext <= surroundingRange)
+			id = nextId;
+	}
+	return (id < count) ? id : -1;
+}
+
 double AverageProjTempo ()
 {
 	if (int count = CountTempoTimeSigMarkers(NULL))

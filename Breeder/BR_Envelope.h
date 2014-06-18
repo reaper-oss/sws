@@ -30,6 +30,8 @@
 /******************************************************************************
 * Commands                                                                    *
 ******************************************************************************/
+void SetEnvPointMouseValueInit ();
+void SetEnvPointMouseValue (COMMAND_T*);
 void CursorToEnv1 (COMMAND_T*);
 void CursorToEnv2 (COMMAND_T*);
 void SelNextPrevEnvPoint (COMMAND_T*);

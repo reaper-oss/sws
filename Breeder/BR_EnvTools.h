@@ -139,9 +139,9 @@ public:
 	void DeleteAllPoints ();
 	void Sort ();                                            // Sort points by position
 	int Count ();                                            // Count existing points
-	int Find (double position, double surroundingRange = 0); // All find functions will be more efficient if points are sorted. 
-	int FindNext (double position);                          // When point's position is edited or new point is created, code  
-	int FindPrevious (double position);                      // assumes they are not sorted unless Sort() is used afterwards, 
+	int Find (double position, double surroundingRange = 0); // All find functions will be more efficient if points are sorted.
+	int FindNext (double position);                          // When point's position is edited or new point is created, code
+	int FindPrevious (double position);                      // assumes they are not sorted unless Sort() is used afterwards,
 	int FindClosest (double position);                       // note that caller needs to check if returned id exists
 
 	/* Miscellaneous */
@@ -152,9 +152,9 @@ public:
 	double SnapValue (double value);                  // Snaps value to current settings (only relevant for take pitch envelope)
 	bool IsTempo ();
 	bool IsTakeEnvelope ();
-	bool VisibleInArrange (int* envHeight = NULL, int* yOffset = NULL); // Check if arrange scroll position allows envelope to be shown
-	void MoveArrangeToPoint (int id, int referenceId);                  // Moves arrange horizontally if needed so point is visible
-	void SetTakeEnvelopeTimebase (bool useProjectTime);                 // By setting this to true you can use project time everywhere when dealing with take envelopes. If take changes position just call this again.
+	bool VisibleInArrange (int* envHeight = NULL, int* yOffset = NULL, bool cacheValues = false); // Does arrange scroll allow envelope to be shown (height calculation can sometimes be intensive (envelopes in track lane), use cacheValues if situation allows)
+	void MoveArrangeToPoint (int id, int referenceId);                                            // Moves arrange horizontally if needed so point is visible
+	void SetTakeEnvelopeTimebase (bool useProjectTime);                                           // By setting this to true, project time can be used everywhere when dealing with take envelopes. If take changes position just call again.
 	void AddToPoints (double* position, double* value);
 	void AddToSelectedPoints (double* position, double* value);
 	void GetSelectedPointsExtrema (double* minimum, double* maximum);
@@ -191,8 +191,8 @@ private:
 	struct IdPair { int first, second; };
 	int FindFirstPoint ();
 	int LastPointAtPos (int id);
-	int FindNext (double position, double offset);     // used for internal stuff since sometimes we have to keep
-	int FindPrevious (double position, double offset); // track of position offset when dealing with take envelopes
+	int FindNext (double position, double offset);     // used for internal stuff since position
+	int FindPrevious (double position, double offset); // offset of take envelopes has to be tracked
 	void ParseState (char* envState, size_t size);
 	void UpdateConsequential ();
 	void FillProperties () const; // to make operator== const (yes, m_properties does get modified, but always according to chunk and only if not cached already)
@@ -206,6 +206,8 @@ private:
 	double m_takeEnvOffset;
 	int m_takeEnvType;
 	int m_countConseq;
+	int m_height;
+	int m_yOffset;
 	int m_count;
 	int m_countSel;
 	vector<BR_EnvPoint> m_points;
@@ -247,6 +249,10 @@ MediaTrack* GetEnvParent (TrackEnvelope* envelope);
 /******************************************************************************
 * Tempo                                                                       *
 ******************************************************************************/
+int FindPreviousTempoMarker (double position);
+int FindNextTempoMarker (double position);
+int FindClosestTempoMarker (double position);
+int FindTempoMarker (double position, double surroundingRange = 0);
 double AverageProjTempo ();
 double TempoAtPosition (double startBpm, double endBpm, double startTime, double endTime, double targetTime);
 double MeasureAtPosition (double startBpm, double endBpm, double timeLen, double targetTime);

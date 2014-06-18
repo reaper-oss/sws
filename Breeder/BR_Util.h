@@ -145,7 +145,7 @@ struct BR_MouseContextInfo
 };
 
 void GetMouseCursorContext (const char** window, const char** segment, const char** details, BR_MouseContextInfo* info);
-double PositionAtMouseCursor (bool checkRuler);
+double PositionAtMouseCursor (bool checkRuler, int* yOffset = NULL, bool* overRuler = NULL);
 MediaItem* ItemAtMouseCursor (double* position);
 MediaItem_Take* TakeAtMouseCursor (double* position);
 MediaTrack* TrackAtMouseCursor (int* context, double* position); // context: 0->TCP, 1->MCP, 2->Arrange

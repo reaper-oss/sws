@@ -88,7 +88,7 @@ public:
 	int GetCCLane (int idx);
 	int GetCCLaneHeight (int idx);
 
-	/* Check if MIDI editor data is valid - should call right after creating an object */
+	/* Check if MIDI editor data is valid - should call right after creating the object */
 	bool IsValid ();
 
 private:
@@ -171,5 +171,5 @@ bool IsMidi (MediaItem_Take* take, bool* inProject = NULL);
 bool IsOpenInInlineEditor (MediaItem_Take* take);
 bool IsMidiNoteBlack (int note);
 bool IsVelLaneValid (int lane);
-int MapVelLaneToReaScriptCC (int lane); // CC format follows ReaScript scheme:  0-127=CC, 0x100|(0-31)=14-bit CC, 0x200=velocity, 0x201=pitch,
+int MapVelLaneToReaScriptCC (int lane); // CC format follows ReaScript scheme: 0-127=CC, 0x100|(0-31)=14-bit CC, 0x200=velocity, 0x201=pitch,
 int MapReaScriptCCToVelLane (int cc);   // 0x202=program, 0x203=channel pressure, 0x204=bank/program select, 0x205=text, 0x206=sysex

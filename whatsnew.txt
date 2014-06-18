@@ -25,6 +25,8 @@ Added actions
  - SWS: Save/Restore current arrange view (5 slots)
  - SWS/BR: Fit selected envelope points to time selection
  - SWS/BR: Create project markers from stretch markers in selected items
+ - SWS/BR: Set closest (left side) envelope point's value to mouse cursor (perform until shortcut released)
+   - Note: these 2 actions are actually meant to solve the problem of freehand points editing in the tempo map. Use <i>SWS/BR: Create tempo markers at grid after every selected tempo marker</i> to set needed density of the tempo map and then use this action to easily edit the tempo map.
  - SWS/AW: Grid to 1/64 notes
  - SWS/AW: Grid to 1/128 notes
 +Main and MIDI editor:
@@ -97,6 +99,7 @@ Other:
 +Renamed SWS: Save/Restore current arrange view to SWS: Save/Restore current arrange view, slot 1
 +Renamed SWS/BR: Move closest tempo marker/grid line/measure grid line to mouse cursor (added (perform until shortcut released) to clearly reflect how they work)
 +Renamed SWS/BR: Hide all but active envelope for all/selected tracks (so it's clear that it works only with selected track envelopes)
++Renamed SWS/BR: Insert new envelope point at mouse cursor (added "using value at current position (obey snapping)" at the end)
 
 !v2.4.0 #9 pre-release build (April 19, 2014)
 <strong>This version requires REAPER v4.62pre8+</strong>, an "Incompatible version" error message will be displayed otherwise...

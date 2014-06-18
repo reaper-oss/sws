@@ -655,7 +655,7 @@ bool IsOpenInInlineEditor (MediaItem_Take* take)
 bool IsMidiNoteBlack (int note)
 {
 	note = 1 << (note % 12);     // note position in an octave (first bit is C, second bit is C# etc...)
-	return (note & 0x054a) != 0; // 54a = all black notes bits set to 1
+	return (note & 0x054A) != 0; // 54A = all black notes bits set to 1
 }
 
 bool IsVelLaneValid (int lane)

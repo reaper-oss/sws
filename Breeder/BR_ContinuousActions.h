@@ -1,7 +1,7 @@
 /******************************************************************************
-/ BR_Tempo.h
+/ BR_ContinuousActions.h
 /
-/ Copyright (c) 2013 Dominik Martin Drzic
+/ Copyright (c) 2014 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
 / https://code.google.com/p/sws-extension
 /
@@ -28,31 +28,32 @@
 #pragma once
 
 /******************************************************************************
-* Commands                                                                    *
+* Continuous actions                                                          *
+*                                                                             *
+* To make action continuous create BR_ContinuousAction object and register it *
+* with ContinuousActionRegister().                                            *
+* For examples see MoveGridToMouseInit() in BR_Tempo.cpp                      *
 ******************************************************************************/
-void MoveGridToMouseInit ();
-void MoveGridToMouse (COMMAND_T*);
-void MoveGridToEditPlayCursor (COMMAND_T*);
-void MoveTempo (COMMAND_T*);
-void EditTempo (COMMAND_T*);
-void EditTempoGradual (COMMAND_T*);
-void DeleteTempo (COMMAND_T*);
-void DeleteTempoPreserveItems (COMMAND_T*);
-void TempoAtGrid (COMMAND_T*);
-void TempoShapeLinear (COMMAND_T*);
-void TempoShapeSquare (COMMAND_T*);
+struct BR_ContinuousAction
+{
+	BR_ContinuousAction(int cmd, bool (*Init)(bool) = NULL, bool (*DoUndo)() = NULL, HCURSOR (*GetCursor)(int) = NULL) : cmd(cmd), Init(Init), DoUndo(DoUndo), GetCursor(GetCursor) {}
+
+	bool    (*Init)(bool init);       // called before the first run with init = true and on shortcut release with init = false. Return false to abort init.
+	bool    (*DoUndo)();              // called when shortcut is released, return true to create undo point. If NULL, no undo point will get created
+	HCURSOR (*GetCursor)(int window); // called when setting cursor for each window, return NULL to skip (win only)
+	const int cmd;                    // cmd of the action to be made continuous
+
+	enum Window
+	{
+		RULER,
+		ARRANGE
+	};
+};
+
+bool ContinuousActionRegister (BR_ContinuousAction* action); // register continuous action, returns true on success
+void ContinuousActionStopAll ();                             // call from continuous action to stop execution before shortcut release
 
 /******************************************************************************
-* Dialogs                                                                     *
+* Call from the action hook and swallow action if it returns true             *
 ******************************************************************************/
-void ConvertMarkersToTempoDialog (COMMAND_T*);
-void SelectAdjustTempoDialog (COMMAND_T*);
-void RandomizeTempoDialog (COMMAND_T*);
-void TempoShapeOptionsDialog (COMMAND_T*);
-
-/******************************************************************************
-* Toggle states                                                               *
-******************************************************************************/
-int IsConvertMarkersToTempoVisible (COMMAND_T*);
-int IsSelectAdjustTempoVisible (COMMAND_T*);
-int IsTempoShapeOptionsVisible (COMMAND_T*);
+bool ContinuousActionHook (int cmd, int flag);

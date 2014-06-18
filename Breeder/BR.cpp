@@ -27,6 +27,7 @@
 ******************************************************************************/
 #include "stdafx.h"
 #include "BR.h"
+#include "BR_ContinuousActions.h"
 #include "BR_Envelope.h"
 #include "BR_Loudness.h"
 #include "BR_MidiEditor.h"
@@ -43,62 +44,65 @@ static COMMAND_T g_commandTable[] =
 	/******************************************************************************
 	* Envelopes                                                                   *
 	******************************************************************************/
-	{ { DEFACCEL, "SWS/BR: Move edit cursor to next envelope point" },                          "SWS_BRMOVEEDITTONEXTENV",         CursorToEnv1, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Move edit cursor to next envelope point and select it" },            "SWS_BRMOVEEDITSELNEXTENV",        CursorToEnv1, NULL, 2},
-	{ { DEFACCEL, "SWS/BR: Move edit cursor to next envelope point and add to selection" },     "SWS_BRMOVEEDITTONEXTENVADDSELL",  CursorToEnv2, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Move edit cursor to previous envelope point" },                      "SWS_BRMOVEEDITTOPREVENV",         CursorToEnv1, NULL, -1},
-	{ { DEFACCEL, "SWS/BR: Move edit cursor to previous envelope point and select it" },        "SWS_BRMOVEEDITSELPREVENV",        CursorToEnv1, NULL, -2},
-	{ { DEFACCEL, "SWS/BR: Move edit cursor to previous envelope point and add to selection" }, "SWS_BRMOVEEDITTOPREVENVADDSELL",  CursorToEnv2, NULL, -1},
+	{ { DEFACCEL, "SWS/BR: Set closest envelope point's value to mouse cursor (perform until shortcut released)" },           "BR_ENV_PT_VAL_CLOSEST_MOUSE",      SetEnvPointMouseValue, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Set closest left side envelope point's value to mouse cursor (perform until shortcut released)" }, "BR_ENV_PT_VAL_CLOSEST_LEFT_MOUSE", SetEnvPointMouseValue, NULL, 1},
 
-	{ { DEFACCEL, "SWS/BR: Select next envelope point" },                                       "BR_ENV_SEL_NEXT_POINT",           SelNextPrevEnvPoint, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Select previous envelope point" },                                   "BR_ENV_SEL_PREV_POINT",           SelNextPrevEnvPoint, NULL, -1},
+	{ { DEFACCEL, "SWS/BR: Move edit cursor to next envelope point" },                                                        "SWS_BRMOVEEDITTONEXTENV",          CursorToEnv1, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Move edit cursor to next envelope point and select it" },                                          "SWS_BRMOVEEDITSELNEXTENV",         CursorToEnv1, NULL, 2},
+	{ { DEFACCEL, "SWS/BR: Move edit cursor to next envelope point and add to selection" },                                   "SWS_BRMOVEEDITTONEXTENVADDSELL",   CursorToEnv2, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Move edit cursor to previous envelope point" },                                                    "SWS_BRMOVEEDITTOPREVENV",          CursorToEnv1, NULL, -1},
+	{ { DEFACCEL, "SWS/BR: Move edit cursor to previous envelope point and select it" },                                      "SWS_BRMOVEEDITSELPREVENV",         CursorToEnv1, NULL, -2},
+	{ { DEFACCEL, "SWS/BR: Move edit cursor to previous envelope point and add to selection" },                               "SWS_BRMOVEEDITTOPREVENVADDSELL",   CursorToEnv2, NULL, -1},
 
-	{ { DEFACCEL, "SWS/BR: Expand envelope point selection to the right" },                     "BR_ENV_SEL_EXPAND_RIGHT",         ExpandEnvSel,    NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Expand envelope point selection to the left" },                      "BR_ENV_SEL_EXPAND_LEFT",          ExpandEnvSel,    NULL, -1},
-	{ { DEFACCEL, "SWS/BR: Expand envelope point selection to the right (end point only)" },    "BR_ENV_SEL_EXPAND_RIGHT_END",     ExpandEnvSelEnd, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Expand envelope point selection to the left (end point only)" },     "BR_ENV_SEL_EXPAND_L_END",         ExpandEnvSelEnd, NULL, -1},
-	{ { DEFACCEL, "SWS/BR: Shrink envelope point selection from the right" },                   "BR_ENV_SEL_SHRINK_RIGHT",         ShrinkEnvSel,    NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Shrink envelope point selection from the left" },                    "BR_ENV_SEL_SHRINK_LEFT",          ShrinkEnvSel,    NULL, -1},
-	{ { DEFACCEL, "SWS/BR: Shrink envelope point selection from the right (end point only)" },  "BR_ENV_SEL_SHRINK_RIGHT_END",     ShrinkEnvSelEnd, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Shrink envelope point selection from the left (end point only)" },   "BR_ENV_SEL_SHRINK_LEFT_END",      ShrinkEnvSelEnd, NULL, -1},
+	{ { DEFACCEL, "SWS/BR: Select next envelope point" },                                                                     "BR_ENV_SEL_NEXT_POINT",            SelNextPrevEnvPoint, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Select previous envelope point" },                                                                 "BR_ENV_SEL_PREV_POINT",            SelNextPrevEnvPoint, NULL, -1},
 
-	{ { DEFACCEL, "SWS/BR: Shift envelope point selection left" },                              "BR_ENV_SHIFT_SEL_LEFT",           ShiftEnvSelection, NULL, -1},
-	{ { DEFACCEL, "SWS/BR: Shift envelope point selection right" },                             "BR_ENV_SHIFT_SEL_RIGHT",          ShiftEnvSelection, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Expand envelope point selection to the right" },                                                   "BR_ENV_SEL_EXPAND_RIGHT",          ExpandEnvSel,    NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Expand envelope point selection to the left" },                                                    "BR_ENV_SEL_EXPAND_LEFT",           ExpandEnvSel,    NULL, -1},
+	{ { DEFACCEL, "SWS/BR: Expand envelope point selection to the right (end point only)" },                                  "BR_ENV_SEL_EXPAND_RIGHT_END",      ExpandEnvSelEnd, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Expand envelope point selection to the left (end point only)" },                                   "BR_ENV_SEL_EXPAND_L_END",          ExpandEnvSelEnd, NULL, -1},
+	{ { DEFACCEL, "SWS/BR: Shrink envelope point selection from the right" },                                                 "BR_ENV_SEL_SHRINK_RIGHT",          ShrinkEnvSel,    NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Shrink envelope point selection from the left" },                                                  "BR_ENV_SEL_SHRINK_LEFT",           ShrinkEnvSel,    NULL, -1},
+	{ { DEFACCEL, "SWS/BR: Shrink envelope point selection from the right (end point only)" },                                "BR_ENV_SEL_SHRINK_RIGHT_END",      ShrinkEnvSelEnd, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Shrink envelope point selection from the left (end point only)" },                                 "BR_ENV_SEL_SHRINK_LEFT_END",       ShrinkEnvSelEnd, NULL, -1},
 
-	{ { DEFACCEL, "SWS/BR: Select peaks in envelope (add to selection)" },                      "BR_ENV_SEL_PEAKS_ADD",            PeaksDipsEnv, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Select peaks in envelope" },                                         "BR_ENV_SEL_PEAKS",                PeaksDipsEnv, NULL, 2},
-	{ { DEFACCEL, "SWS/BR: Select dips in envelope (add to selection)" },                       "BR_ENV_SEL_DIPS_ADD",             PeaksDipsEnv, NULL, -1},
-	{ { DEFACCEL, "SWS/BR: Select dips in envelope" },                                          "BR_ENV_SEL_DIPS",                 PeaksDipsEnv, NULL, -2},
+	{ { DEFACCEL, "SWS/BR: Shift envelope point selection left" },                                                            "BR_ENV_SHIFT_SEL_LEFT",            ShiftEnvSelection, NULL, -1},
+	{ { DEFACCEL, "SWS/BR: Shift envelope point selection right" },                                                           "BR_ENV_SHIFT_SEL_RIGHT",           ShiftEnvSelection, NULL, 1},
 
-	{ { DEFACCEL, "SWS/BR: Unselect envelope points outside time selection" },                  "BR_ENV_UNSEL_OUT_TIME_SEL",       SelEnvTimeSel, NULL, -1},
-	{ { DEFACCEL, "SWS/BR: Unselect envelope points in time selection" },                       "BR_ENV_UNSEL_IN_TIME_SEL",        SelEnvTimeSel, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Select peaks in envelope (add to selection)" },                                                    "BR_ENV_SEL_PEAKS_ADD",             PeaksDipsEnv, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Select peaks in envelope" },                                                                       "BR_ENV_SEL_PEAKS",                 PeaksDipsEnv, NULL, 2},
+	{ { DEFACCEL, "SWS/BR: Select dips in envelope (add to selection)" },                                                     "BR_ENV_SEL_DIPS_ADD",              PeaksDipsEnv, NULL, -1},
+	{ { DEFACCEL, "SWS/BR: Select dips in envelope" },                                                                        "BR_ENV_SEL_DIPS",                  PeaksDipsEnv, NULL, -2},
 
-	{ { DEFACCEL, "SWS/BR: Set selected envelope points to next point's value" },               "BR_SET_ENV_TO_NEXT_VAL",          SetEnvValToNextPrev, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Set selected envelope points to previous point's value" },           "BR_SET_ENV_TO_PREV_VAL",          SetEnvValToNextPrev, NULL, -1},
-	{ { DEFACCEL, "SWS/BR: Set selected envelope points to last selected point's value" },      "BR_SET_ENV_TO_LAST_SEL_VAL",      SetEnvValToNextPrev, NULL, 2},
-	{ { DEFACCEL, "SWS/BR: Set selected envelope points to first selected point's value" },     "BR_SET_ENV_TO_FIRST_SEL_VAL",     SetEnvValToNextPrev, NULL, -2},
+	{ { DEFACCEL, "SWS/BR: Unselect envelope points outside time selection" },                                                "BR_ENV_UNSEL_OUT_TIME_SEL",        SelEnvTimeSel, NULL, -1},
+	{ { DEFACCEL, "SWS/BR: Unselect envelope points in time selection" },                                                     "BR_ENV_UNSEL_IN_TIME_SEL",         SelEnvTimeSel, NULL, 1},
 
-	{ { DEFACCEL, "SWS/BR: Move closest envelope point to edit cursor" },                       "BR_MOVE_CLOSEST_ENV_ECURSOR",     MoveEnvPointToEditCursor, NULL, 0},
-	{ { DEFACCEL, "SWS/BR: Move closest selected envelope point to edit cursor" },              "BR_MOVE_CLOSEST_SEL_ENV_ECURSOR", MoveEnvPointToEditCursor, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Set selected envelope points to next point's value" },                                             "BR_SET_ENV_TO_NEXT_VAL",           SetEnvValToNextPrev, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Set selected envelope points to previous point's value" },                                         "BR_SET_ENV_TO_PREV_VAL",           SetEnvValToNextPrev, NULL, -1},
+	{ { DEFACCEL, "SWS/BR: Set selected envelope points to last selected point's value" },                                    "BR_SET_ENV_TO_LAST_SEL_VAL",       SetEnvValToNextPrev, NULL, 2},
+	{ { DEFACCEL, "SWS/BR: Set selected envelope points to first selected point's value" },                                   "BR_SET_ENV_TO_FIRST_SEL_VAL",      SetEnvValToNextPrev, NULL, -2},
 
-	{ { DEFACCEL, "SWS/BR: Insert 2 envelope points at time selection" },                       "BR_INSERT_2_ENV_POINT_TIME_SEL",  Insert2EnvPointsTimeSelection, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Fit selected envelope points to time selection" },                   "BR_FIT_ENV_POINTS_TO_TIMESEL",    FitEnvPointsToTimeSel, NULL},
+	{ { DEFACCEL, "SWS/BR: Move closest envelope point to edit cursor" },                                                     "BR_MOVE_CLOSEST_ENV_ECURSOR",      MoveEnvPointToEditCursor, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Move closest selected envelope point to edit cursor" },                                            "BR_MOVE_CLOSEST_SEL_ENV_ECURSOR",  MoveEnvPointToEditCursor, NULL, 1},
 
-	{ { DEFACCEL, "SWS/BR: Hide all but selected track envelope for all tracks" },                "BR_ENV_HIDE_ALL_BUT_ACTIVE",      ShowActiveTrackEnvOnly, NULL, 0},
-	{ { DEFACCEL, "SWS/BR: Hide all but selected track envelope for selected tracks" },           "BR_ENV_HIDE_ALL_BUT_ACTIVE_SEL",  ShowActiveTrackEnvOnly, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Insert 2 envelope points at time selection" },                                                     "BR_INSERT_2_ENV_POINT_TIME_SEL",   Insert2EnvPointsTimeSelection, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Fit selected envelope points to time selection" },                                                 "BR_FIT_ENV_POINTS_TO_TIMESEL",     FitEnvPointsToTimeSel, NULL},
 
-	{ { DEFACCEL, "SWS/BR: Insert new envelope point at mouse cursor" },                        "BR_ENV_POINT_MOUSE_CURSOR",       CreateEnvPointMouse, NULL},
+	{ { DEFACCEL, "SWS/BR: Hide all but selected track envelope for all tracks" },                                            "BR_ENV_HIDE_ALL_BUT_ACTIVE",       ShowActiveTrackEnvOnly, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Hide all but selected track envelope for selected tracks" },                                       "BR_ENV_HIDE_ALL_BUT_ACTIVE_SEL",   ShowActiveTrackEnvOnly, NULL, 1},
 
-	{ { DEFACCEL, "SWS/BR: Save envelope point selection, slot 1" },                            "BR_SAVE_ENV_SEL_SLOT_1",          SaveEnvSelSlot, NULL, 0},
-	{ { DEFACCEL, "SWS/BR: Save envelope point selection, slot 2" },                            "BR_SAVE_ENV_SEL_SLOT_2",          SaveEnvSelSlot, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Save envelope point selection, slot 3" },                            "BR_SAVE_ENV_SEL_SLOT_3",          SaveEnvSelSlot, NULL, 2},
-	{ { DEFACCEL, "SWS/BR: Save envelope point selection, slot 4" },                            "BR_SAVE_ENV_SEL_SLOT_4",          SaveEnvSelSlot, NULL, 3},
-	{ { DEFACCEL, "SWS/BR: Save envelope point selection, slot 5" },                            "BR_SAVE_ENV_SEL_SLOT_5",          SaveEnvSelSlot, NULL, 4},
-	{ { DEFACCEL, "SWS/BR: Restore envelope point selection, slot 1" },                         "BR_RESTORE_ENV_SEL_SLOT_1",       RestoreEnvSelSlot, NULL, 0},
-	{ { DEFACCEL, "SWS/BR: Restore envelope point selection, slot 2" },                         "BR_RESTORE_ENV_SEL_SLOT_2",       RestoreEnvSelSlot, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Restore envelope point selection, slot 3" },                         "BR_RESTORE_ENV_SEL_SLOT_3",       RestoreEnvSelSlot, NULL, 2},
-	{ { DEFACCEL, "SWS/BR: Restore envelope point selection, slot 4" },                         "BR_RESTORE_ENV_SEL_SLOT_4",       RestoreEnvSelSlot, NULL, 3},
-	{ { DEFACCEL, "SWS/BR: Restore envelope point selection, slot 5" },                         "BR_RESTORE_ENV_SEL_SLOT_5",       RestoreEnvSelSlot, NULL, 4},
+	{ { DEFACCEL, "SWS/BR: Insert new envelope point at mouse cursor using value at current position (obey snapping)" },      "BR_ENV_POINT_MOUSE_CURSOR",        CreateEnvPointMouse, NULL},
+
+	{ { DEFACCEL, "SWS/BR: Save envelope point selection, slot 1" },                                                          "BR_SAVE_ENV_SEL_SLOT_1",           SaveEnvSelSlot, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Save envelope point selection, slot 2" },                                                          "BR_SAVE_ENV_SEL_SLOT_2",           SaveEnvSelSlot, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Save envelope point selection, slot 3" },                                                          "BR_SAVE_ENV_SEL_SLOT_3",           SaveEnvSelSlot, NULL, 2},
+	{ { DEFACCEL, "SWS/BR: Save envelope point selection, slot 4" },                                                          "BR_SAVE_ENV_SEL_SLOT_4",           SaveEnvSelSlot, NULL, 3},
+	{ { DEFACCEL, "SWS/BR: Save envelope point selection, slot 5" },                                                          "BR_SAVE_ENV_SEL_SLOT_5",           SaveEnvSelSlot, NULL, 4},
+	{ { DEFACCEL, "SWS/BR: Restore envelope point selection, slot 1" },                                                       "BR_RESTORE_ENV_SEL_SLOT_1",        RestoreEnvSelSlot, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Restore envelope point selection, slot 2" },                                                       "BR_RESTORE_ENV_SEL_SLOT_2",        RestoreEnvSelSlot, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Restore envelope point selection, slot 3" },                                                       "BR_RESTORE_ENV_SEL_SLOT_3",        RestoreEnvSelSlot, NULL, 2},
+	{ { DEFACCEL, "SWS/BR: Restore envelope point selection, slot 4" },                                                       "BR_RESTORE_ENV_SEL_SLOT_4",        RestoreEnvSelSlot, NULL, 3},
+	{ { DEFACCEL, "SWS/BR: Restore envelope point selection, slot 5" },                                                       "BR_RESTORE_ENV_SEL_SLOT_5",        RestoreEnvSelSlot, NULL, 4},
 
 	/******************************************************************************
 	* Loudness                                                                    *
@@ -325,18 +329,31 @@ static COMMAND_T g_commandTable[] =
 };
 //!WANT_LOCALIZE_1ST_STRING_END
 
-int BR_Init()
+void InitContinuousActions ()
+{
+	MoveGridToMouseInit();
+	SetEnvPointMouseValueInit();
+}
+
+int BR_Init ()
 {
 	SWSRegisterCommands(g_commandTable);
+
+	InitContinuousActions ();
 	ProjStateInit();
 	AnalyzeLoudnessInit();
 	VersionCheckInit();
 	return 1;
 }
 
-void BR_Exit()
+void BR_Exit ()
 {
 	AnalyzeLoudnessExit();
+}
+
+bool BR_ActionHook (int cmd, int flag)
+{
+	return ContinuousActionHook(cmd, flag);
 }
 
 void BR_CSurfSetPlayState (bool play, bool pause, bool rec)

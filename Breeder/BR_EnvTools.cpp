@@ -264,12 +264,15 @@ bool BR_Envelope::GetPoint (int id, double* position, double* value, int* shape,
 	}
 }
 
-bool BR_Envelope::SetPoint (int id, double* position, double* value, int* shape, double* bezier, bool checkPosition /*= false*/)
+bool BR_Envelope::SetPoint (int id, double* position, double* value, int* shape, double* bezier, bool checkPosition /*= false*/, bool snapValue /*= false*/)
 {
 	if (this->ValidateId(id))
 	{
 		if (m_take && position && checkPosition && !CheckBounds(*position - m_takeEnvOffset, 0.0, GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_LENGTH")))
 			return false;
+
+		if (snapValue && value)
+			WritePtr(value, this->SnapValue(*value));
 
 		if (position) m_points[id].position = *position - m_takeEnvOffset;
 		ReadPtr(value,    m_points[id].value   );
@@ -304,7 +307,7 @@ bool BR_Envelope::SetSelection (int id, bool selected)
 		return false;
 }
 
-bool BR_Envelope::CreatePoint (int id, double position, double value, int shape, double bezier, bool selected, bool checkPosition /*=false*/)
+bool BR_Envelope::CreatePoint (int id, double position, double value, int shape, double bezier, bool selected, bool checkPosition /*=false*/, bool snapValue /*= false*/)
 {
 	if (this->ValidateId(id) || id == m_count)
 	{
@@ -313,7 +316,7 @@ bool BR_Envelope::CreatePoint (int id, double position, double value, int shape,
 		if (m_take && checkPosition && !CheckBounds(position, 0.0, GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_LENGTH")))
 			return false;
 
-		BR_EnvPoint newPoint(position, value, shape, 0, selected, 0, bezier);
+		BR_EnvPoint newPoint(position, (snapValue) ? (this->SnapValue(value)) : (value), shape, 0, selected, 0, bezier);
 		m_points.insert(m_points.begin() + id, newPoint);
 
 		++m_count;
@@ -374,7 +377,7 @@ bool BR_Envelope::GetTimeSig (int id, bool* sig, int* num, int* den)
 				TimeMap_GetTimeSigAtTime(NULL, -1, &effNum, &effDen, NULL);
 			else
 			{
-				effNum = effectiveTimeSig & 0xff; // num is low 16 bits
+				effNum = effectiveTimeSig & 0xFF; // num is low 16 bits
 				effDen = effectiveTimeSig >> 16;  // den is high 16 bits
 			}
 			WritePtr(num, effNum);
@@ -594,34 +597,12 @@ int BR_Envelope::Count ()
 int BR_Envelope::Find (double position, double surroundingRange /*=0*/)
 {
 	position -= m_takeEnvOffset;
-
 	int id = -1;
-	int prevId = (m_sorted) ? (this->FindPrevious(position, 0)) : (0);
 
-	// First search for the exact position
 	if (m_sorted)
 	{
+		int prevId = this->FindPrevious(position, 0);
 		int nextId = prevId + 1;
-		if (this->ValidateId(nextId) && m_points[nextId].position == position)
-			id = nextId;
-	}
-	else
-	{
-		for (vector<BR_EnvPoint>::iterator i = m_points.begin(); i != m_points.end() ; ++i)
-		{
-			if (i->position == position)
-			{
-				id = (int)(i - m_points.begin());
-				break;
-			}
-		}
-	}
-
-	// Search in range only if nothing has been found at the exact position
-	if (id == -1 && surroundingRange != 0)
-	{
-		prevId     = (m_sorted) ? (prevId)     : (this->FindPrevious(position, 0));
-		int nextId = (m_sorted) ? (prevId + 1) : (this->FindNext(position, 0));
 		double distanceFromPrev = (this->ValidateId(prevId)) ? (position - m_points[prevId].position) : (abs(surroundingRange) + 1);
 		double distanceFromNext = (this->ValidateId(nextId)) ? (m_points[nextId].position - position) : (abs(surroundingRange) + 1);
 
@@ -636,6 +617,38 @@ int BR_Envelope::Find (double position, double surroundingRange /*=0*/)
 				id = nextId;
 		}
 	}
+	else
+	{
+		int prevId = (m_sorted) ? (this->FindPrevious(position, 0)) : (0);
+
+		for (vector<BR_EnvPoint>::iterator i = m_points.begin(); i != m_points.end() ; ++i)
+		{
+			if (i->position == position)
+			{
+				id = (int)(i - m_points.begin());
+				break;
+			}
+		}
+
+		// Search in range only if nothing has been found at the exact position
+		if (id == -1 && surroundingRange != 0)
+		{
+			int nextId = this->FindNext(position, 0);
+			double distanceFromPrev = (this->ValidateId(prevId)) ? (position - m_points[prevId].position) : (abs(surroundingRange) + 1);
+			double distanceFromNext = (this->ValidateId(nextId)) ? (m_points[nextId].position - position) : (abs(surroundingRange) + 1);
+
+			if (distanceFromPrev <= distanceFromNext)
+			{
+				if (distanceFromPrev <= surroundingRange)
+					id = prevId;
+			}
+			else
+			{
+				if (distanceFromNext <= surroundingRange)
+					id = nextId;
+			}
+		}
+	}
 
 	return id;
 }
@@ -648,6 +661,35 @@ int BR_Envelope::FindNext (double position)
 int BR_Envelope::FindPrevious (double position)
 {
 	return this->FindPrevious(position, m_takeEnvOffset);
+}
+
+int BR_Envelope::FindClosest (double position)
+{
+	int prevId = this->FindPrevious(position, m_takeEnvOffset);
+	if (!this->ValidateId(prevId))
+	{
+		int nextId = this->FindNext(position, m_takeEnvOffset);
+		if (this->ValidateId(nextId))
+			return nextId;
+		else
+			return -1;
+	}
+	else
+	{
+		int nextId = (m_sorted) ? prevId + 1 : this->FindNext(position, m_takeEnvOffset);
+		if (!this->ValidateId(nextId))
+			return prevId;
+		else
+		{
+			double len1 = position - (m_points[prevId].position + m_takeEnvOffset);
+			double len2 = (m_points[nextId].position + m_takeEnvOffset) - position;
+
+			if (len1 >= len2)
+				return nextId;
+			else
+				return prevId;
+		}
+	}
 }
 
 double BR_Envelope::ValueAtPosition (double position)
@@ -741,16 +783,16 @@ double BR_Envelope::ValueAtPosition (double position)
 
 double BR_Envelope::NormalizedDisplayValue (double value)
 {
-	double min = LaneMinValue();
-	double max = LaneMaxValue();
+	double min = this->LaneMinValue();
+	double max = this->LaneMaxValue();
 	double displayValue = SetToBounds(value, min, max);
 
 	if (this->Type() == PLAYRATE)
 	{
 		if (displayValue > 1)
-			return  0.5 + (displayValue - 1) / 3 * 0.5;
+			return (2 + displayValue) / 6;      // original formula (max is always known so optimized): 0.5 + (displayValue - 1) / (max - 1) * 0.5 
 		else
-			return (displayValue - min) / (1 - min) * 0.5;
+			return (displayValue - 0.1) / 1.8 ; // original formula (min is always known so optimized): (displayValue - min) / (1 - min) * 0.5;
 	}
 	else
 		return (displayValue - min) / (max - min);
@@ -762,6 +804,44 @@ double BR_Envelope::NormalizedDisplayValue (int id)
 		return this->NormalizedDisplayValue(m_points[id].value);
 	else
 		return 0;
+}
+
+double BR_Envelope::RealDisplayValue (double normalizedValue)
+{
+	double min = this->LaneMinValue();
+	double max = this->LaneMaxValue();
+	normalizedValue = SetToBounds(normalizedValue, 0.0, 1.0);
+
+	if (this->Type() == PLAYRATE)
+	{
+		if (normalizedValue > 0.5)
+			return 6 * normalizedValue - 2;     // see BR_Envelope::NormalizedDisplayValue() for original formula
+		else
+			return 1.8 * normalizedValue + 0.1;
+	}
+	else
+		return min + normalizedValue * (max - min);
+}
+
+double BR_Envelope::SnapValue (double value)
+{
+	if (this->Type() == PITCH)
+	{
+		int pitchenvrange; GetConfig("pitchenvrange", pitchenvrange);
+		int mode = pitchenvrange >> 8; // range is in high 8 bits
+
+		if      (mode == 0) return value;
+		else if (mode == 1) return round(value);             // 1 semitone
+		else if (mode == 2) return round(value * 2) / 2;     // 50 cent
+		else if (mode == 3) return round(value * 4) / 4;     // 25 cent
+		else if (mode == 4) return round(value * 10) / 10;   // 10 cent
+		else if (mode == 5) return round(value * 20) / 20;   // 5  cent
+		else                return round(value * 100) / 100; // 1 cents	
+	}
+	else
+	{
+		return value;
+	}
 }
 
 bool BR_Envelope::IsTempo ()
@@ -777,7 +857,7 @@ bool BR_Envelope::IsTakeEnvelope ()
 		return false;
 }
 
-bool BR_Envelope::VisibleInArrange ()
+bool BR_Envelope::VisibleInArrange (int* envHeight /*=NULL*/, int* yOffset /*= NULL*/)
 {
 	if (!this->IsVisible())
 		return false;
@@ -791,6 +871,8 @@ bool BR_Envelope::VisibleInArrange ()
 	{
 		int offset;
 		int height = GetTrackEnvHeight(m_envelope, &offset, true, this->GetParent());
+		WritePtr(envHeight, height);
+		WritePtr(yOffset, offset);
 
 		if (height > 0)
 		{
@@ -807,6 +889,9 @@ bool BR_Envelope::VisibleInArrange ()
 	{
 		int offset;
 		int height = GetTakeEnvHeight(m_take, &offset);
+		WritePtr(envHeight, height);
+		WritePtr(yOffset, offset);
+
 		int envelopeEnd = offset + height;
 		int pageEnd = si.nPos + (int)si.nPage + SCROLLBAR_W;
 
@@ -1052,7 +1137,7 @@ double BR_Envelope::LaneMaxValue ()
 	else if (this->Type() == PITCH)
 	{
 		int max; GetConfig("pitchenvrange", max);
-		return max;
+		return max & 0x0F; // range is in low 8 bits
 	}
 	return this->MaxValue();
 }
@@ -1067,7 +1152,7 @@ double BR_Envelope::LaneMinValue ()
 	else if (this->Type() == PITCH)
 	{
 		int min; GetConfig("pitchenvrange", min);
-		return -min;
+		return -(min & 0x0F); // range is in low 8 bits
 	}
 	return this->MinValue();
 }
@@ -1309,7 +1394,7 @@ void BR_Envelope::ParseState (char* envState, size_t size)
 		BR_EnvPoint point;
 		if (point.ReadLine(lp))
 		{
-			id++;
+			++id;
 			start = true;
 			m_points.push_back(point);
 			if (point.selected == 1)

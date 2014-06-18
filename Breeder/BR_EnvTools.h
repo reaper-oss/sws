@@ -113,12 +113,12 @@ public:
 	bool         operator== (const BR_Envelope& envelope); // This only compares points and if envelope is active (aka things that affect playback) - other
 	bool         operator!= (const BR_Envelope& envelope); // properties like type, envelope pointer, height, armed, default shape etc... are ignored)
 
-	/* Direct point manipulation (returns false if id does not exist) (checkPosition only works for take envelopes) */
+	/* Direct point manipulation (returns false if id does not exist) (checkPosition only works for take envelopes, snapValue only for pitch envelopes) */
 	bool GetPoint (int id, double* position, double* value, int* shape, double* bezier);
-	bool SetPoint (int id, double* position, double* value, int* shape, double* bezier, bool checkPosition = false);
+	bool SetPoint (int id, double* position, double* value, int* shape, double* bezier, bool checkPosition = false, bool snapValue = false);
 	bool GetSelection (int id);
 	bool SetSelection (int id, bool selected);
-	bool CreatePoint (int id, double position, double value, int shape, double bezier, bool selected, bool checkPosition = false);
+	bool CreatePoint (int id, double position, double value, int shape, double bezier, bool selected, bool checkPosition = false, bool snapValue = false);
 	bool DeletePoint (int id);
 	bool DeletePoints (int startId, int endId);
 	bool GetTimeSig (int id, bool* sig, int* num, int* den);
@@ -139,19 +139,22 @@ public:
 	void DeleteAllPoints ();
 	void Sort ();                                            // Sort points by position
 	int Count ();                                            // Count existing points
-	int Find (double position, double surroundingRange = 0); // All find functions will be more efficient if points are sorted. When point's
-	int FindNext (double position);                          // position is edited or new point is created, code assumes they are not sorted
-	int FindPrevious (double position);                      // unless Sort() is used afterwards. Caller needs to check if returned id exists
+	int Find (double position, double surroundingRange = 0); // All find functions will be more efficient if points are sorted. 
+	int FindNext (double position);                          // When point's position is edited or new point is created, code  
+	int FindPrevious (double position);                      // assumes they are not sorted unless Sort() is used afterwards, 
+	int FindClosest (double position);                       // note that caller needs to check if returned id exists
 
 	/* Miscellaneous */
-	double ValueAtPosition (double position);                // Using find functionality, so efficiency may vary (see comment about Find())
-	double NormalizedDisplayValue (double value);            // Return point value in 0.0 - 1.0 range as displayed in arrange
+	double ValueAtPosition (double position);         // Using find functionality, so efficiency may vary (see comment about Find())
+	double NormalizedDisplayValue (double value);     // Convert point value to 0.0 - 1.0 range as displayed in arrange
 	double NormalizedDisplayValue (int id);
+	double RealDisplayValue (double normalizedValue); // Convert normalized display value in range 0.0 - 1.0 to real envelope value
+	double SnapValue (double value);                  // Snaps value to current settings (only relevant for take pitch envelope)
 	bool IsTempo ();
 	bool IsTakeEnvelope ();
-	bool VisibleInArrange ();                                // Check if arrange scroll position allows envelope to be shown
-	void MoveArrangeToPoint (int id, int referenceId);       // Moves arrange horizontally if needed so point is visible
-	void SetTakeEnvelopeTimebase (bool useProjectTime);      // By setting this to true you can use project time everywhere when dealing with take envelopes. If take changes position just call this again.
+	bool VisibleInArrange (int* envHeight = NULL, int* yOffset = NULL); // Check if arrange scroll position allows envelope to be shown
+	void MoveArrangeToPoint (int id, int referenceId);                  // Moves arrange horizontally if needed so point is visible
+	void SetTakeEnvelopeTimebase (bool useProjectTime);                 // By setting this to true you can use project time everywhere when dealing with take envelopes. If take changes position just call this again.
 	void AddToPoints (double* position, double* value);
 	void AddToSelectedPoints (double* position, double* value);
 	void GetSelectedPointsExtrema (double* minimum, double* maximum);
@@ -225,7 +228,7 @@ private:
 		EnvProperties ();
 		EnvProperties (const EnvProperties& properties);
 		EnvProperties& operator=  (const EnvProperties& properties);
-	} mutable m_properties; // because FillProperties must be const (to make operator== const) but still be able to change m_propeties
+	} mutable m_properties; // because FillProperties must be const (to make operator== const) but still be able to change m_properties
 };
 
 /******************************************************************************

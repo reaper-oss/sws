@@ -36,10 +36,11 @@
 /******************************************************************************
 * Continuous action: set envelope point value to mouse                        *
 ******************************************************************************/
-static BR_Envelope* g_envToMouseEnvelope = NULL;
-static bool         g_envToMouseDidOnce  = false;
+static BR_Envelope* g_envMouseEnvelope = NULL;
+static bool         g_envMouseDidOnce  = false;
+static int          g_envMouseMode     = -666;
 
-static bool EnvPtToMouseInit (bool init)
+static bool EnvMouseInit (bool init)
 {
 	static int s_editCursorUndo = 0;
 
@@ -47,26 +48,36 @@ static bool EnvPtToMouseInit (bool init)
 	if (init)
 	{
 		GetConfig("undomask", s_editCursorUndo);
-		initSuccessful = GetSelectedEnvelope(NULL) && PositionAtMouseCursor(false) != -1;
+		g_envMouseEnvelope = new (nothrow) BR_Envelope(GetSelectedEnvelope(NULL));
+		initSuccessful = g_envMouseEnvelope && g_envMouseEnvelope->Count() && PositionAtMouseCursor(false) != -1;
+
 		if (initSuccessful)
 			SetConfig("undomask", ClearBit(s_editCursorUndo, 3));
+		else
+		{
+			delete g_envMouseEnvelope;
+			g_envMouseEnvelope = NULL;
+		}
+		GetConfig("undomask", s_editCursorUndo);
 	}
 	else
 	{
 		SetConfig("undomask", s_editCursorUndo);
-		DELETE_NULL(g_envToMouseEnvelope);
+		delete g_envMouseEnvelope;
+		g_envMouseEnvelope = NULL;
 	}
 
-	g_envToMouseDidOnce = false;
+	g_envMouseDidOnce = false;
+	g_envMouseMode    = -666;
 	return initSuccessful;
 }
 
-static bool EnvPtToMouseUndo ()
+static bool EnvMouseUndo ()
 {
-	return g_envToMouseDidOnce;
+	return g_envMouseDidOnce;
 }
 
-static HCURSOR EnvPtToMouseCursor (int window)
+static HCURSOR EnvMouseCursor (int window)
 {
 	static HCURSOR cursor = NULL;
 	if (!cursor)
@@ -78,10 +89,40 @@ static HCURSOR EnvPtToMouseCursor (int window)
 		return NULL;
 }
 
+static WDL_FastString EnvMouseTooltip (int window)
+{
+	WDL_FastString tooltip;
+
+	if (g_envMouseEnvelope && !GetBit(ContinuousActionTooltips(), 0))
+	{
+		if (window == BR_ContinuousAction::ARRANGE || window == BR_ContinuousAction::RULER)
+		{
+			int envHeight, envY, yOffset;
+			bool overRuler;
+			double position = PositionAtMouseCursor(true, false, &yOffset, &overRuler);
+
+			g_envMouseEnvelope->VisibleInArrange(&envHeight, &envY, true);
+			yOffset = (overRuler) ? envY : SetToBounds(yOffset, envY, envY + envHeight);
+
+			double normalizedValue = ((double)envHeight + (double)envY - (double)yOffset) / (double)envHeight;
+			double value = g_envMouseEnvelope->SnapValue(g_envMouseEnvelope->RealDisplayValue(normalizedValue));
+			if (g_envMouseEnvelope->IsTempo())
+				GetTempoTimeSigMarker(NULL, (g_envMouseMode == 0) ? FindClosestTempoMarker(position) : FindPreviousTempoMarker(position), &position, NULL, NULL, NULL, NULL, NULL, NULL);
+			else
+				g_envMouseEnvelope->GetPoint((g_envMouseMode == 0) ? g_envMouseEnvelope->FindClosest(position) : g_envMouseEnvelope->FindPrevious(position), &position, NULL, NULL, NULL);
+
+			static const char* format = __localizeFunc("Envelope: %s\n%s at %s", "tooltip", 0);
+			tooltip.AppendFormatted(512, format, (g_envMouseEnvelope->GetName()).Get(), (g_envMouseEnvelope->FormatValue(value)).Get(), FormatTime(position).Get());
+		}
+
+	}
+	return tooltip;
+}
+
 void SetEnvPointMouseValueInit ()
 {
-	ContinuousActionRegister(new BR_ContinuousAction(NamedCommandLookup("_BR_ENV_PT_VAL_CLOSEST_MOUSE"),      &EnvPtToMouseInit, &EnvPtToMouseUndo, &EnvPtToMouseCursor));
-	ContinuousActionRegister(new BR_ContinuousAction(NamedCommandLookup("_BR_ENV_PT_VAL_CLOSEST_LEFT_MOUSE"), &EnvPtToMouseInit, &EnvPtToMouseUndo, &EnvPtToMouseCursor));
+	ContinuousActionRegister(new BR_ContinuousAction(NamedCommandLookup("_BR_ENV_PT_VAL_CLOSEST_MOUSE"),      &EnvMouseInit, &EnvMouseUndo, &EnvMouseCursor, EnvMouseTooltip));
+	ContinuousActionRegister(new BR_ContinuousAction(NamedCommandLookup("_BR_ENV_PT_VAL_CLOSEST_LEFT_MOUSE"), &EnvMouseInit, &EnvMouseUndo, &EnvMouseCursor, EnvMouseTooltip));
 }
 
 /******************************************************************************
@@ -93,40 +134,32 @@ void SetEnvPointMouseValue (COMMAND_T* ct)
 	static double lastEndPosition = -1;
 	static double lastEndNormVal  = -1;
 
-	// Action called for the first time: reset variables and cache envelope for future calls (not needed for tempo map (we're using more efficient functions) but it eases readability)
-	if (!g_envToMouseEnvelope)
+	// Action called for the first time
+	if (g_envMouseMode == -666)
 	{
 		lastEndId       = -1;
 		lastEndPosition = -1;
 		lastEndNormVal  = -1;
-
-		g_envToMouseEnvelope = new (nothrow) BR_Envelope(GetSelectedEnvelope(NULL));
-		if (!g_envToMouseEnvelope || !g_envToMouseEnvelope->Count())
-		{
-			ContinuousActionStopAll();
-			return;
-		}
+		g_envMouseMode  = (int)ct->user;
 	}
 
 	// Check envelope is visible
 	int envHeight, envY;
-	if (!g_envToMouseEnvelope->VisibleInArrange(&envHeight, &envY, true)) // caching values is not 100% correct, but we don't expect for envelope lane height to change during the action
-		return;                                                           // and it can speed things if dealing with big envelope that's in track lane (quite possible with tempo map)
+	if (!g_envMouseEnvelope->VisibleInArrange(&envHeight, &envY, true)) // caching values is not 100% correct, but we don't expect for envelope lane height to change during the action
+		return;                                                         // and it can speed things if dealing with big envelope that's in track lane (quite possible with tempo map)
 
 	// Get mouse positions
 	int yOffset; bool overRuler;
-	double endPosition   = PositionAtMouseCursor(true, &yOffset, &overRuler);
+	double endPosition   = PositionAtMouseCursor(true, false, &yOffset, &overRuler);
 	double startPosition = (lastEndPosition == -1) ? (endPosition) : (lastEndPosition);
 	if (endPosition == -1)
 	{
 		ContinuousActionStopAll();
 		return;
 	}
-	if (overRuler)
-		yOffset = envY;
 
 	// Get normalized mouse values
-	yOffset = SetToBounds(yOffset, envY, envY + envHeight);
+	yOffset = (overRuler) ? envY : SetToBounds(yOffset, envY, envY + envHeight);
 	double endNormVal   = ((double)envHeight + (double)envY - (double)yOffset) / (double)envHeight;
 	double startNormVal = (lastEndPosition == -1) ? (endNormVal) : (lastEndNormVal);
 
@@ -136,21 +169,21 @@ void SetEnvPointMouseValue (COMMAND_T* ct)
 	if ((int)ct->user == 0)
 	{
 		if (lastEndId == -1)
-			startId = (g_envToMouseEnvelope->IsTempo()) ? FindClosestTempoMarker(startPosition) : g_envToMouseEnvelope->FindClosest(startPosition);
+			startId = (g_envMouseEnvelope->IsTempo()) ? FindClosestTempoMarker(startPosition) : g_envMouseEnvelope->FindClosest(startPosition);
 		else
 			startId = lastEndId;
 
-		endId  = (g_envToMouseEnvelope->IsTempo()) ? FindClosestTempoMarker(endPosition) : g_envToMouseEnvelope->FindClosest(endPosition);
+		endId  = (g_envMouseEnvelope->IsTempo()) ? FindClosestTempoMarker(endPosition) : g_envMouseEnvelope->FindClosest(endPosition);
 	}
 	else
 	{
 		if (lastEndId == -1)
 		{
-			startId = (g_envToMouseEnvelope->IsTempo()) ? FindPreviousTempoMarker(startPosition) : g_envToMouseEnvelope->FindPrevious(startPosition);
+			startId = (g_envMouseEnvelope->IsTempo()) ? FindPreviousTempoMarker(startPosition) : g_envMouseEnvelope->FindPrevious(startPosition);
 			double nextPos;
-			if (g_envToMouseEnvelope->IsTempo() && GetTempoTimeSigMarker(NULL, startId, &nextPos, NULL, NULL, NULL, NULL, NULL, NULL) && nextPos == startPosition)
+			if (g_envMouseEnvelope->IsTempo() && GetTempoTimeSigMarker(NULL, startId, &nextPos, NULL, NULL, NULL, NULL, NULL, NULL) && nextPos == startPosition)
 				++startId;
-			else if (!g_envToMouseEnvelope->IsTempo() && g_envToMouseEnvelope->GetPoint(startId+1, &nextPos, NULL, NULL, NULL) && nextPos == startPosition)
+			else if (!g_envMouseEnvelope->IsTempo() && g_envMouseEnvelope->GetPoint(startId+1, &nextPos, NULL, NULL, NULL) && nextPos == startPosition)
 				++startId;
 		}
 		else
@@ -158,16 +191,16 @@ void SetEnvPointMouseValue (COMMAND_T* ct)
 			startId = lastEndId;
 		}
 
-		endId = (g_envToMouseEnvelope->IsTempo()) ? FindPreviousTempoMarker(endPosition) : g_envToMouseEnvelope->FindPrevious(endPosition);
+		endId = (g_envMouseEnvelope->IsTempo()) ? FindPreviousTempoMarker(endPosition) : g_envMouseEnvelope->FindPrevious(endPosition);
 		double nextPos;
-		if (g_envToMouseEnvelope->IsTempo() && GetTempoTimeSigMarker(NULL, endId, &nextPos, NULL, NULL, NULL, NULL, NULL, NULL) && nextPos == endPosition)
+		if (g_envMouseEnvelope->IsTempo() && GetTempoTimeSigMarker(NULL, endId, &nextPos, NULL, NULL, NULL, NULL, NULL, NULL) && nextPos == endPosition)
 			++endId;
-		else if (!g_envToMouseEnvelope->IsTempo() && g_envToMouseEnvelope->GetPoint(endId+1, &nextPos, NULL, NULL, NULL) && nextPos == endPosition)
+		else if (!g_envMouseEnvelope->IsTempo() && g_envMouseEnvelope->GetPoint(endId+1, &nextPos, NULL, NULL, NULL) && nextPos == endPosition)
 			++endId;
 	}
 
 	// Apply changes to all the points
-	if (g_envToMouseEnvelope->ValidateId(startId) && g_envToMouseEnvelope->ValidateId(endId))
+	if (g_envMouseEnvelope->ValidateId(startId) && g_envMouseEnvelope->ValidateId(endId))
 	{
 		bool oppositeDirection = false;
 		if (endId < startId)
@@ -183,12 +216,12 @@ void SetEnvPointMouseValue (COMMAND_T* ct)
 		{
 			// Get current point's position
 			double currentPointPos;
-			if (g_envToMouseEnvelope->IsTempo())
+			if (g_envMouseEnvelope->IsTempo())
 			{
 				GetTempoTimeSigMarker(NULL, i, &currentPointPos, NULL, NULL, NULL, NULL, NULL, NULL);
 
 				// If going forward, make sure edited tempo points do not come in front of mouse cursor (if so, leave them for the next action call)
-				if (!oppositeDirection && !CheckBounds(currentPointPos, startPosition, endPosition))
+				if (!oppositeDirection && endId != startId && !CheckBounds(currentPointPos, startPosition, endPosition))
 				{
 					endId = i;
 					endPosition = currentPointPos;
@@ -196,23 +229,23 @@ void SetEnvPointMouseValue (COMMAND_T* ct)
 				}
 			}
 			else
-				g_envToMouseEnvelope->GetPoint(i, &currentPointPos, NULL, NULL, NULL);
+				g_envMouseEnvelope->GetPoint(i, &currentPointPos, NULL, NULL, NULL);
 
 			// Find new value
 			double value = 0;
 			if  (i == startId)
-				value = g_envToMouseEnvelope->RealDisplayValue(startNormVal);
+				value = g_envMouseEnvelope->RealDisplayValue(startNormVal);
 			else if (i == endId)
-				value = g_envToMouseEnvelope->RealDisplayValue(endNormVal);
+				value = g_envMouseEnvelope->RealDisplayValue(endNormVal);
 			else
 			{
 				double t = (currentPointPos - startPosition) / (endPosition - startPosition);
 				double currentNormVal = startNormVal + (endNormVal - startNormVal) * t;
-				value = g_envToMouseEnvelope->RealDisplayValue(currentNormVal);
+				value = g_envMouseEnvelope->RealDisplayValue(currentNormVal);
 			}
 
 			// Update current point
-			if (g_envToMouseEnvelope->IsTempo())
+			if (g_envMouseEnvelope->IsTempo())
 			{
 				int measure, num, den;
 				double beat;
@@ -223,16 +256,17 @@ void SetEnvPointMouseValue (COMMAND_T* ct)
 			}
 			else
 			{
-				if (g_envToMouseEnvelope->SetPoint(i, NULL, &value, NULL, NULL, false, true))
+				if (g_envMouseEnvelope->SetPoint(i, NULL, &value, NULL, NULL, false, true))
 					pointsMoved = true;
 			}
 		}
 
 		if (pointsMoved)
 		{
-			if (g_envToMouseEnvelope->IsTempo()) UpdateTimeline();
-			else                                 g_envToMouseEnvelope->Commit();
-			g_envToMouseDidOnce = pointsMoved;
+			if (g_envMouseEnvelope->IsTempo()) UpdateTimeline();
+			else                               g_envMouseEnvelope->Commit();
+
+			g_envMouseDidOnce = pointsMoved;
 		}
 
 		// Swap values back before storing them

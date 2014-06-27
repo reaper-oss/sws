@@ -329,7 +329,7 @@ static COMMAND_T g_commandTable[] =
 };
 //!WANT_LOCALIZE_1ST_STRING_END
 
-void InitContinuousActions ()
+static void InitContinuousActions ()
 {
 	MoveGridToMouseInit();
 	SetEnvPointMouseValueInit();
@@ -338,8 +338,7 @@ void InitContinuousActions ()
 int BR_Init ()
 {
 	SWSRegisterCommands(g_commandTable);
-
-	InitContinuousActions ();
+	InitContinuousActions (); // call only after registering all actions
 	ProjStateInit();
 	AnalyzeLoudnessInit();
 	VersionCheckInit();

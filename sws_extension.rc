@@ -1368,6 +1368,12 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,131,31,50,14
 END
 
+IDD_BR_TOOLTIP DIALOGEX 0, 0, 65, 22
+STYLE DS_SETFONT | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1874,6 +1880,14 @@ BEGIN
         RIGHTMARGIN, 202
         TOPMARGIN, 7
         BOTTOMMARGIN, 48
+    END
+
+    IDD_BR_TOOLTIP, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 58
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 15
     END
 END
 #endif    // APSTUDIO_INVOKED

@@ -83,6 +83,7 @@
 #define IDD_BR_NORMALIZE_LOUDNESS       175
 #define IDD_BR_NORMALIZE_LOUDNESS_USER  176
 #define IDD_BR_GRAPH_LOUDNESS           177
+#define IDD_BR_TOOLTIP                  178
 #define IDB_UP                          500
 #define IDB_DOWN                        501
 #define IDC_BUTTON1                     1000
@@ -400,7 +401,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        178
+#define _APS_NEXT_RESOURCE_VALUE        179
 #define _APS_NEXT_COMMAND_VALUE         40000
 #define _APS_NEXT_CONTROL_VALUE         1309
 #define _APS_NEXT_SYMED_VALUE           100

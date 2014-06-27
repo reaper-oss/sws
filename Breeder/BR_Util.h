@@ -68,6 +68,7 @@ template <typename T> T    SetToBounds (T val, T min, T max) {if (val < min) ret
 ******************************************************************************/
 vector<MediaItem*> GetSelItems (MediaTrack* track);
 vector<double> GetProjectMarkers (bool timeSel, double delta = 0);
+WDL_FastString FormatTime (double position, int mode = -1);  // same as format_timestr_pos but handles "measures.beats + time" properly
 int GetTakeId (MediaItem_Take* take, MediaItem* item = NULL);
 double GetClosestGrid (double position);
 double GetClosestMeasureGrid (double position);
@@ -145,7 +146,7 @@ struct BR_MouseContextInfo
 };
 
 void GetMouseCursorContext (const char** window, const char** segment, const char** details, BR_MouseContextInfo* info);
-double PositionAtMouseCursor (bool checkRuler, int* yOffset = NULL, bool* overRuler = NULL);
+double PositionAtMouseCursor (bool checkRuler, bool checkCursorVisibility = true, int* yOffset = NULL, bool* overRuler = NULL);
 MediaItem* ItemAtMouseCursor (double* position);
 MediaItem_Take* TakeAtMouseCursor (double* position);
 MediaTrack* TrackAtMouseCursor (int* context, double* position); // context: 0->TCP, 1->MCP, 2->Arrange
@@ -153,5 +154,6 @@ MediaTrack* TrackAtMouseCursor (int* context, double* position); // context: 0->
 /******************************************************************************
 * Theming                                                                     *
 ******************************************************************************/
+void DrawTooltip (LICE_IBitmap* bm, const char* text);
 void ThemeListViewOnInit (HWND list);
 bool ThemeListViewInProc (HWND hwnd, int uMsg, LPARAM lParam, HWND list, bool grid);

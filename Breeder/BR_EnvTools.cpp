@@ -180,6 +180,7 @@ m_pointsSel     (envelope.m_pointsSel),
 m_pointsConseq  (envelope.m_pointsConseq),
 m_chunkStart    (envelope.m_chunkStart),
 m_chunkEnd      (envelope.m_chunkEnd),
+m_envName       (envelope.m_envName),
 m_properties    (envelope.m_properties)
 {
 }
@@ -208,6 +209,7 @@ BR_Envelope& BR_Envelope::operator= (const BR_Envelope& envelope)
 	m_properties    = envelope.m_properties;
 	m_chunkStart.Set(&envelope.m_chunkStart);
 	m_chunkEnd.Set(&envelope.m_chunkEnd);
+	m_envName.Set(&envelope.m_envName);
 
 	return *this;
 }
@@ -1056,6 +1058,96 @@ void BR_Envelope::GetSelectedPointsExtrema (double* minimum, double* maximum)
 
 	WritePtr(minimum, minVal);
 	WritePtr(maximum, maxVal);
+}
+
+WDL_FastString BR_Envelope::FormatValue (double value)
+{
+	WDL_FastString formatedValue;
+
+	if (this->Type() == VOLUME || this->Type() == VOLUME_PREFX)
+	{
+		static const char* unit        = __localizeFunc("dB", "common", 0);
+		static const char* negativeInf = __localizeFunc("-inf", "vol", 0);
+
+		value = VAL2DB(value);
+
+		if (value == NEGATIVE_INF)
+		{
+			formatedValue.AppendFormatted(256, "%s %s", negativeInf, unit);
+		}
+		else if (value == 0)
+			formatedValue.AppendFormatted(256, "%#.2lg%s", value, unit);
+		else if (value > -1 && value < 1)
+			formatedValue.AppendFormatted(256, "%#+.2lg%s", value, unit);
+		else
+			formatedValue.AppendFormatted(256, "%#+.3lg%s", value, unit);
+	}
+
+	else if (this->Type() == PAN || this->Type() == PAN_PREFX)
+	{
+		static const char* left   = __localizeFunc("L", "pan", 0);
+		static const char* right  = __localizeFunc("R", "pan", 0);
+		static const char* center = __localizeFunc("center", "pan", 0);
+		static const char* unit   = __localizeFunc("%", "common", 0);
+
+		if (value == 0)
+			formatedValue.AppendFormatted(256, "%s", center);
+		else if (value > 0)
+			formatedValue.AppendFormatted(256, "%d%s%s", (int)(value*100), unit, left);
+		else
+			formatedValue.AppendFormatted(256, "%d%s%s", (int)(-value*100), unit, right);
+	}
+
+	else if (this->Type() == WIDTH || this->Type() == WIDTH_PREFX)
+	{
+		static const char* unit = __localizeFunc("%", "common", 0);
+
+		formatedValue.AppendFormatted(256, "%.1lf%s", value*100, unit);
+	}
+
+	else if (this->Type() == MUTE)
+	{
+		static const char* mute   = __localizeFunc("MUTE", "env", 0);
+		static const char* unmute = __localizeFunc("UNMUTE", "env", 0);
+
+		formatedValue.AppendFormatted(256, "%s", (value < 0.25) ? mute : unmute);
+	}
+
+	else if (this->Type() == PITCH)
+	{
+		static const char* unit = __localizeFunc("semitones", "env", 0);
+
+		formatedValue.AppendFormatted(256, "%+.4lf %s", value, unit);
+	}
+
+	else if (this->Type() == PLAYRATE)
+	{
+		formatedValue.AppendFormatted(256, "%.2lf%s", value, "x");
+	}
+
+	else if (this->Type() == TEMPO)
+	{
+		static const char* unit = __localizeFunc(" bpm", "env", 0);
+		formatedValue.AppendFormatted(256, "%.3lf%s", value, unit);
+	}
+
+	else if (this->Type() == PARAMETER)
+	{
+		formatedValue.AppendFormatted(256, "%lf", value);
+	}
+
+	return formatedValue;
+}
+
+WDL_FastString BR_Envelope::GetName ()
+{
+	if (!m_envName.GetLength())
+	{
+		char envName[64];
+		GetEnvelopeName(m_envelope, envName, sizeof(envName));
+		m_envName.AppendFormatted(sizeof(envName), "%s", envName);
+	}
+	return m_envName;
 }
 
 MediaItem_Take* BR_Envelope::GetTake ()

@@ -29,11 +29,12 @@
 #include "BR_Util.h"
 #include "BR_EnvTools.h"
 #include "BR_MidiTools.h"
-#include "../SnM/SnM_Dlg.h"
-#include "../SnM/SnM_Util.h"
-#include "../SnM/SnM_Chunk.h"
-#include "../SnM/SnM_Item.h"
 #include "../reaper/localize.h"
+#include "../SnM/SnM_Chunk.h"
+#include "../SnM/SnM_Dlg.h"
+#include "../SnM/SnM_Item.h"
+#include "../SnM/SnM_Util.h"
+#include "../../WDL/lice/lice.h"
 #include "../../WDL/projectcontext.h"
 
 /******************************************************************************
@@ -264,6 +265,30 @@ vector<double> GetProjectMarkers (bool timeSel, double delta /*=0*/)
 		++i;
 	}
 	return markers;
+}
+
+WDL_FastString FormatTime (double position, int mode /*=-1*/)
+{
+	WDL_FastString string;
+	int projTimeMode; GetConfig("projtimemode", projTimeMode);
+
+	if (mode == 1 || (mode == -1 && projTimeMode == 1))
+	{
+		char formatedPosition[128];
+		format_timestr_pos(position, formatedPosition, sizeof(formatedPosition), 2);
+		string.AppendFormatted(sizeof(formatedPosition), "%s", formatedPosition);
+
+		format_timestr_pos(position, formatedPosition, sizeof(formatedPosition), 0);
+		string.AppendFormatted(sizeof(formatedPosition), " / %s", formatedPosition);
+	}
+	else
+	{
+		char formatedPosition[128];
+		format_timestr_pos(position, formatedPosition, sizeof(formatedPosition), mode);
+		string.AppendFormatted(sizeof(formatedPosition), "%s", formatedPosition);
+	}
+
+	return string;
 }
 
 int GetTakeId (MediaItem_Take* take, MediaItem* item /*= NULL*/)
@@ -1523,7 +1548,7 @@ static bool IsPointInArrange (POINT* p, bool checkPointVisibilty = true, HWND* w
 	}
 	else
 	{
-		WritePtr(wndFromPoint, (HWND)NULL);
+		WritePtr(wndFromPoint, WindowFromPoint(*p));
 		return pointInArrange;
 	}
 }
@@ -2921,11 +2946,11 @@ void GetMouseCursorContext (const char** window, const char** segment, const cha
 	WritePtr(info,    returnInfo);
 }
 
-double PositionAtMouseCursor (bool checkRuler, int* yOffset /*=NULL*/, bool* overRuler /*= NULL*/)
+double PositionAtMouseCursor (bool checkRuler, bool checkCursorVisibility /*=true*/, int* yOffset /*=NULL*/, bool* overRuler /*= NULL*/)
 {
 	POINT p; HWND hwnd;
 	GetCursorPos(&p);
-	if (IsPointInArrange(&p, true, &hwnd))
+	if (IsPointInArrange(&p, checkCursorVisibility, &hwnd))
 	{
 		WritePtr(yOffset, TranslatePointToArrangeScrollY(p));
 		WritePtr(overRuler, false);
@@ -3013,6 +3038,50 @@ MediaTrack* TrackAtMouseCursor (int* context, double* position)
 /******************************************************************************
 * Theming                                                                     *
 ******************************************************************************/
+void DrawTooltip (LICE_IBitmap* bm, const char* text)
+{
+	if (bm)
+	{
+		static LICE_CachedFont* font = NULL;
+		if (!font)
+		{
+			if (HFONT ttFont = (HFONT)SendMessage(GetTooltipWindow(),WM_GETFONT,0,0))
+			{
+				if (font = new (nothrow) LICE_CachedFont())
+				{
+					#ifdef _WIN32
+						font->SetFromHFont(ttFont, LICE_FONT_FLAG_OWNS_HFONT|LICE_FONT_FLAG_FORCE_NATIVE);
+					#else
+						font->SetFromHFont(ttFont, LICE_FONT_FLAG_OWNS_HFONT);
+					#endif
+					font->SetBkMode(TRANSPARENT);
+					font->SetTextColor(LICE_RGBA(0, 0, 0, 255));
+				}
+			}
+		}
+
+		if (font)
+		{
+			RECT r = {0, 0, 0, 0};
+			font->DrawText(NULL, text, -1, &r, DT_CALCRECT);
+			bm->resize(r.right + 8, r.bottom + 2);
+
+			#ifdef _WIN32
+				LICE_FillRect(bm, 1, 1, bm->getWidth(), bm->getHeight(), LICE_RGBA(255, 255, 225, 255), 1.0, LICE_BLIT_MODE_COPY);
+			#else
+				LICE_FillRect(bm, 1, 1, bm->getWidth(), bm->getHeight(), LICE_RGBA(255, 240, 200, 255), 1.0, LICE_BLIT_MODE_COPY);
+			#endif
+			LICE_DrawRect(bm, 0, 0, bm->getWidth()-1, bm->getHeight()-1, LICE_RGBA(0, 0, 0, 255), 1.0, LICE_BLIT_MODE_COPY);
+
+			r.left   += 3;
+			r.right  += 3;
+			r.bottom += 1;
+			r.top    += 1;
+			font->DrawText(bm, text, -1, &r, 0);
+		}
+	}
+}
+
 void ThemeListViewOnInit (HWND list)
 {
 	if (SWS_THEMING)

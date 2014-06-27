@@ -152,12 +152,14 @@ public:
 	double SnapValue (double value);                  // Snaps value to current settings (only relevant for take pitch envelope)
 	bool IsTempo ();
 	bool IsTakeEnvelope ();
-	bool VisibleInArrange (int* envHeight = NULL, int* yOffset = NULL, bool cacheValues = false); // Does arrange scroll allow envelope to be shown (height calculation can sometimes be intensive (envelopes in track lane), use cacheValues if situation allows)
+	bool VisibleInArrange (int* envHeight = NULL, int* yOffset = NULL, bool cacheValues = false); // Is part of the envelope visible in arrange (height calculation can be intensive (envelopes in track lane), use cacheValues if situation allows)
 	void MoveArrangeToPoint (int id, int referenceId);                                            // Moves arrange horizontally if needed so point is visible
 	void SetTakeEnvelopeTimebase (bool useProjectTime);                                           // By setting this to true, project time can be used everywhere when dealing with take envelopes. If take changes position just call again.
 	void AddToPoints (double* position, double* value);
 	void AddToSelectedPoints (double* position, double* value);
 	void GetSelectedPointsExtrema (double* minimum, double* maximum);
+	WDL_FastString FormatValue (double value);                        // Due to API limitation we can't known to which parameter envelope belongs so FX envelopes won't get properly formated
+	WDL_FastString GetName ();
 	MediaItem_Take* GetTake ();
 	MediaTrack* GetParent ();
 	TrackEnvelope* GetPointer ();
@@ -215,6 +217,7 @@ private:
 	vector<IdPair> m_pointsConseq;
 	WDL_FastString m_chunkStart;
 	WDL_FastString m_chunkEnd;
+	WDL_FastString m_envName;
 	struct EnvProperties
 	{
 		int active;

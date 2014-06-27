@@ -727,6 +727,7 @@ extern "C"
 		IMPAPI(GetToggleCommandState);
 		IMPAPI(GetToggleCommandState2);
 		IMPAPI(GetToggleCommandStateThroughHooks);
+		IMPAPI(GetTooltipWindow);
 		IMPAPI(GetTrack);
 		IMPAPI(GetTrackGUID);
 		IMPAPI(GetTrackEnvelope);

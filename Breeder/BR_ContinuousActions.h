@@ -32,16 +32,20 @@
 *                                                                             *
 * To make action continuous create BR_ContinuousAction object and register it *
 * with ContinuousActionRegister().                                            *
-* For examples see MoveGridToMouseInit() in BR_Tempo.cpp                      *
+* Note: works only with Main section actions for now                          *
+*                                                                             *
+* For examples see BR_Tempo.cpp or BR_Envelope.cpp                            *
 ******************************************************************************/
 struct BR_ContinuousAction
 {
-	BR_ContinuousAction(int cmd, bool (*Init)(bool) = NULL, bool (*DoUndo)() = NULL, HCURSOR (*GetCursor)(int) = NULL) : cmd(cmd), Init(Init), DoUndo(DoUndo), GetCursor(GetCursor) {}
+	BR_ContinuousAction(int cmd, bool (*Init)(bool) = NULL, bool (*DoUndo)() = NULL, HCURSOR (*SetMouseCursor)(int) = NULL, WDL_FastString (*SetTooltip)(int) = NULL)
+	: cmd(cmd), Init(Init), DoUndo(DoUndo), SetMouseCursor(SetMouseCursor), SetTooltip(SetTooltip) {}
 
-	bool    (*Init)(bool init);       // called before the first run with init = true and on shortcut release with init = false. Return false to abort init.
-	bool    (*DoUndo)();              // called when shortcut is released, return true to create undo point. If NULL, no undo point will get created
-	HCURSOR (*GetCursor)(int window); // called when setting cursor for each window, return NULL to skip (win only)
-	const int cmd;                    // cmd of the action to be made continuous
+	bool           (*Init)(bool init);            // called on start with init = true and on shortcut release with init = false. Return false to abort init.
+	bool           (*DoUndo)();                   // called when shortcut is released, return true to create undo point. If NULL, no undo point will get created
+	HCURSOR        (*SetMouseCursor)(int window); // called when setting cursor for each window, return NULL to skip (win only)
+	WDL_FastString (*SetTooltip)(int window);     // called when setting cursor tooltip, return empty string to remove existing tooltip
+	const int cmd;                                // cmd of the action to be made continuous
 
 	enum Window
 	{
@@ -52,6 +56,7 @@ struct BR_ContinuousAction
 
 bool ContinuousActionRegister (BR_ContinuousAction* action); // register continuous action, returns true on success
 void ContinuousActionStopAll ();                             // call from continuous action to stop execution before shortcut release
+int  ContinuousActionTooltips ();                            // get current tooltips options (they get changed during continuous action so GetConfig() is useless)
 
 /******************************************************************************
 * Call from the action hook and swallow action if it returns true             *

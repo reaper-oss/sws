@@ -43,7 +43,7 @@ struct BR_ContinuousAction
 
 	bool           (*Init)(bool init);            // called on start with init = true and on shortcut release with init = false. Return false to abort init.
 	bool           (*DoUndo)();                   // called when shortcut is released, return true to create undo point. If NULL, no undo point will get created
-	HCURSOR        (*SetMouseCursor)(int window); // called when setting cursor for each window, return NULL to skip (win only)
+	HCURSOR        (*SetMouseCursor)(int window); // called when setting cursor for each window, return NULL to skip
 	WDL_FastString (*SetTooltip)(int window);     // called when setting cursor tooltip, return empty string to remove existing tooltip
 	const int cmd;                                // cmd of the action to be made continuous
 

@@ -455,6 +455,20 @@ double GetProjectSettingsTempo (int* num, int* den)
 	return bpm/_den*4;
 }
 
+double GetSourceLengthPPQ (MediaItem_Take* take)
+{
+	if (take)
+	{
+		double itemStart  = GetMediaItemInfo_Value(GetMediaItemTake_Item(take), "D_POSITION");
+		double takeOffset = GetMediaItemTakeInfo_Value(take, "D_STARTOFFS");
+		double startPPQ   = MIDI_GetPPQPosFromProjTime(take, itemStart - takeOffset);
+		double endPPQ = MIDI_GetPPQPosFromProjTime(take, itemStart - takeOffset + GetMediaItemTake_Source(take)->GetLength());
+
+		return endPPQ - startPPQ;
+	}
+	return 0;
+}
+
 void InitTempoMap ()
 {
 	if (!CountTempoTimeSigMarkers(NULL))
@@ -498,6 +512,41 @@ void StartPlayback (double position)
 	OnPlayButton();
 	SetEditCurPos2(NULL, editCursor, false, false);
 	PreventUIRefresh(-1);
+}
+
+bool DoesItemHaveMidiEvents (MediaItem* item)
+{
+	for (int i = 0; i < CountTakes(item); ++i)
+	{
+		if (MIDI_CountEvts(GetTake(item, i), NULL, NULL, NULL))
+			return true;
+	}
+	return false;
+}
+
+bool TrimItem (MediaItem* item, double start, double end)
+{
+	double newLen  = end - start;
+	double itemPos = GetMediaItemInfo_Value(item, "D_POSITION");
+	double itemLen = GetMediaItemInfo_Value(item, "D_LENGTH");
+
+	if (start != itemPos || newLen != itemLen)
+	{
+		double startDif = start - itemPos;
+		SetMediaItemInfo_Value(item, "D_LENGTH", newLen);
+		SetMediaItemInfo_Value(item, "D_POSITION", start);
+
+		for (int i = 0; i < CountTakes(item); ++i)
+		{
+			MediaItem_Take* take = GetTake(item, i);
+			double playrate = GetMediaItemTakeInfo_Value(take, "D_PLAYRATE");
+			double offset   = GetMediaItemTakeInfo_Value(take, "D_STARTOFFS");
+
+			SetMediaItemTakeInfo_Value(take, "D_STARTOFFS", offset + playrate*startDif);
+		}
+		return true;
+	}
+	return false;
 }
 
 bool IsPlaying ()
@@ -1516,17 +1565,20 @@ static bool IsPointInArrange (POINT* p, bool checkPointVisibilty = true, HWND* w
 
 	HWND hwnd = GetArrangeWnd();
 	RECT r; GetWindowRect(hwnd, &r);
-	#ifndef _WIN32
-	if (r.top > r.bottom)
-	{
-		int tmp = r.top;
-		r.top = r.bottom;
-		r.bottom = tmp;
-	}
+	#ifdef _WIN32
+		r.right  -= SCROLLBAR_W + 1;
+		r.bottom -= SCROLLBAR_W + 1;
+	#else
+		r.right  -= SCROLLBAR_W;
+		if (r.top > r.bottom)
+		{
+			swap(r.top, r.bottom);
+			r.top += SCROLLBAR_W;
+		}
+		else
+			r.bottom -= SCROLLBAR_W;
 	#endif
 
-	r.right  -= SCROLLBAR_W + 1;
-	r.bottom -= SCROLLBAR_W + 1;
 	bool pointInArrange = p->x >= r.left && p->x <= r.right && p->y >= r.top && p->y <= r.bottom;
 
 	if (checkPointVisibilty)

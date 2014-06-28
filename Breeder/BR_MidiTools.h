@@ -163,7 +163,8 @@ vector<int> GetUsedNamedNotes (void* midiEditor, MediaItem_Take* take, bool used
 vector<int> GetSelectedNotes (MediaItem_Take* take);
 vector<int> MuteSelectedNotes (MediaItem_Take* take); // returns previous mute state of all notes
 set<int> GetUsedCCLanes (MediaItem_Take* take, int dectect14bit); // dectect14bit: 0-> don't detect 14-bit, 1->detect partial 14-bit (if CC parts have additional data count them too) 2->detect full 14-bit (detect only if all CCs that make it have exactly same time positions)
-double EffectiveMidiTakeLength (MediaItem_Take* take);
+double EffectiveMidiTakeLength (MediaItem_Take* take, bool ignoreMutedEvents, bool ignoreTextEvents);
+double EffectiveMidiTakeStart (MediaItem_Take* take, bool ignoreMutedEvents, bool ignoreTextEvents);
 void SetMutedNotes (MediaItem_Take* take, vector<int>& muteStatus);
 void SetSelectedNotes (MediaItem_Take* take, vector<int>& selectedNotes, bool unselectOthers);
 bool AreAllNotesUnselected (MediaItem_Take* take);

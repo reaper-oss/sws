@@ -178,6 +178,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Create project markers from selected tempo markers" },                                  "BR_TEMPO_TO_MARKERS",              MarkersAtTempo},
 	{ { DEFACCEL, "SWS/BR: Enable \"Ignore project tempo\" for selected MIDI items (use tempo at item's start)" }, "BR_MIDI_PROJ_TEMPO_ENB",           MidiItemTempo, NULL, 0},
 	{ { DEFACCEL, "SWS/BR: Disable \"Ignore project tempo\" for selected MIDI items" },                            "BR_MIDI_PROJ_TEMPO_DIS",           MidiItemTempo, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Trim MIDI item to active content" },                                                    "BR_TRIM_MIDI_ITEM_ACT_CONTENT",    MidiItemTrim, NULL},
 
 	{ { DEFACCEL, "SWS/BR: Create project markers from notes in selected MIDI items" },                            "BR_MIDI_NOTES_TO_MARKERS",         MarkersAtNotes},
 	{ { DEFACCEL, "SWS/BR: Create project markers from stretch markers in selected items" },                       "BR_STRETCH_MARKERS_TO_MARKERS",    MarkersAtStretchMarkers},

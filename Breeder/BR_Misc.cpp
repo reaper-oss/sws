@@ -64,7 +64,7 @@ void SplitItemAtTempo (COMMAND_T* ct)
 				break;
 		}
 	}
-	Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL);
+	Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS);
 	UpdateArrange();
 }
 
@@ -82,7 +82,7 @@ void MarkersAtTempo (COMMAND_T* ct)
 		double position; tempoMap.GetPoint(id, &position, NULL, NULL, NULL);
 		AddProjectMarker(NULL, false, position, 0, NULL, -1);
 	}
-	Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL);
+	Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG);
 	PreventUIRefresh(-1);
 	UpdateTimeline();
 }
@@ -140,7 +140,47 @@ void MidiItemTempo (COMMAND_T* ct)
 		stateChanged = true;
 	}
 	if (stateChanged)
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
+}
+
+void MidiItemTrim (COMMAND_T* ct)
+{
+	bool success = false;
+	for (int i = 0; i < CountSelectedMediaItems(0); ++i)
+	{
+		MediaItem* item = GetSelectedMediaItem(0, i);
+		if (DoesItemHaveMidiEvents(item))
+		{
+			double start = -1;
+			double end   = -1;
+
+			for (int j = 0; j < CountTakes(item); ++j)
+			{
+				MediaItem_Take* take = GetTake(item, j);
+				if (MIDI_CountEvts(take, NULL, NULL, NULL))
+				{
+					double currentStart = EffectiveMidiTakeStart(take, false, false);
+					double currentEnd   = GetMediaItemInfo_Value(GetMediaItemTake_Item(take), "D_POSITION") + EffectiveMidiTakeLength(take, false, false);;
+
+					if (start == -1 && end == -1)
+					{
+						start = currentStart;
+						end   = currentEnd;
+					}
+					else
+					{
+						start = min(currentStart, start);
+						end   = max(currentEnd, end);
+					}
+				}
+			}
+
+			success = TrimItem(item, start, end);
+		}
+	}
+
+	if (success)
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 }
 
 void MarkersAtNotes (COMMAND_T* ct)
@@ -150,15 +190,15 @@ void MarkersAtNotes (COMMAND_T* ct)
 
 	for (int i = 0; i < CountSelectedMediaItems(NULL); ++i)
 	{
-		MediaItem* item = GetSelectedMediaItem(NULL, i);
+		MediaItem* item      = GetSelectedMediaItem(NULL, i);
 		MediaItem_Take* take = GetActiveTake(item);
 		double itemStart =  GetMediaItemInfo_Value(item, "D_POSITION");
-		double itemEnd = GetMediaItemInfo_Value(item, "D_POSITION") + GetMediaItemInfo_Value(item, "D_LENGTH");
-		double sourceLen = GetMediaItemTake_Source(take)->GetLength();
+		double itemEnd   = GetMediaItemInfo_Value(item, "D_POSITION") + GetMediaItemInfo_Value(item, "D_LENGTH");
 
 		// Due to possible tempo changes, always work with PPQ, never time
-		double itemPPQEnd = MIDI_GetPPQPosFromProjTime(take, itemEnd);
-		double sourcePPQLen = MIDI_GetPPQPosFromProjTime(take, itemStart + sourceLen) - MIDI_GetPPQPosFromProjTime(take, itemStart);
+		double itemStartPPQ = MIDI_GetPPQPosFromProjTime(take, itemStart);
+		double itemEndPPQ = MIDI_GetPPQPosFromProjTime(take, itemEnd);
+		double sourceLenPPQ = GetSourceLengthPPQ(take);
 
 		int noteCount = 0;
 		MIDI_CountEvts(take, &noteCount, NULL, NULL);
@@ -169,17 +209,18 @@ void MarkersAtNotes (COMMAND_T* ct)
 			{
 				double position;
 				MIDI_GetNote(take, j, NULL, NULL, &position, NULL, NULL, NULL, NULL);
-				while (position <= itemPPQEnd) // in case source is looped
+				while (position <= itemEndPPQ) // in case source is looped
 				{
-					AddProjectMarker(NULL, false, MIDI_GetProjTimeFromPPQPos(take, position), 0, NULL, -1);
-					position += sourcePPQLen;
+					if (CheckBounds(position, itemStartPPQ, itemEndPPQ))
+						AddProjectMarker(NULL, false, MIDI_GetProjTimeFromPPQPos(take, position), 0, NULL, -1);
+					position += sourceLenPPQ;
 				}
 			}
 		}
 	}
 
 	if (success)
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
 	PreventUIRefresh(-1);
 	UpdateArrange();
 }
@@ -204,7 +245,7 @@ void MarkersAtStretchMarkers (COMMAND_T* ct)
 	}
 
 	if (success)
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
 	PreventUIRefresh(-1);
 	UpdateArrange();
 }
@@ -235,7 +276,7 @@ void MarkersRegionsAtItems (COMMAND_T* ct)
 
 	PreventUIRefresh(-1);
 	UpdateTimeline();
-	Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL);
+	Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG);
 }
 
 void SnapFollowsGridVis (COMMAND_T* ct)
@@ -413,7 +454,7 @@ void RestoreCursorPosSlot (COMMAND_T* ct)
 		if (slot == g_cursorPos.Get()->Get(i)->GetSlot())
 		{
 			g_cursorPos.Get()->Get(i)->Restore();
-			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
 		}
 	}
 }

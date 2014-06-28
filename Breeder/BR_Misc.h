@@ -33,6 +33,7 @@
 void SplitItemAtTempo (COMMAND_T*);
 void MarkersAtTempo (COMMAND_T*);
 void MidiItemTempo (COMMAND_T*);
+void MidiItemTrim (COMMAND_T*);
 void MarkersAtNotes (COMMAND_T*);
 void MarkersAtStretchMarkers (COMMAND_T*);
 void MarkersRegionsAtItems (COMMAND_T*);

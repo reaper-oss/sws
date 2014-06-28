@@ -88,7 +88,7 @@ static void MidiTakePreview (int mode, MediaItem_Take* take, MediaTrack* track, 
 		MediaItem* item         = GetMediaItemTake_Item(take);
 		MediaItem_Take* oldTake = GetActiveTake(item);
 		bool itemMuteState      = *(bool*)GetSetMediaItemInfo(item, "B_MUTE", NULL);
-		double effectiveTakeLen = EffectiveMidiTakeLength(take);
+		double effectiveTakeLen = EffectiveMidiTakeLength(take, true, true);
 
 		GetSetMediaItemInfo(item, "B_MUTE", &g_bFalse);     // needs to be set before getting the source
 		SetActiveTake(take);                                // active item take and editor take may differ

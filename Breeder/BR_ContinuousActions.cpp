@@ -123,13 +123,11 @@ static LRESULT CALLBACK ArrangeWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPA
 
 	if (uMsg == WM_SETCURSOR && g_actionInProgress && g_actionInProgress->SetMouseCursor)
 	{
-		#ifdef _WIN32 // SetCursor seems too jumpy on OSX
 		if (HCURSOR cursor = g_actionInProgress->SetMouseCursor(BR_ContinuousAction::ARRANGE))
 		{
 			SetCursor(cursor);
-			return 0;
+			return 1; // without this SetCursor won't work on OSX
 		}
-		#endif
 	}
 	else if (uMsg == WM_MOUSEMOVE && g_actionInProgress && g_actionInProgress->SetTooltip)
 	{
@@ -153,13 +151,11 @@ static LRESULT CALLBACK RulerWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 {
 	if (uMsg == WM_SETCURSOR && g_actionInProgress && g_actionInProgress->SetMouseCursor)
 	{
-		#ifdef _WIN32
 		if (HCURSOR cursor = g_actionInProgress->SetMouseCursor(BR_ContinuousAction::RULER))
 		{
 			SetCursor(cursor);
-			return 0;
+			return 1;
 		}
-		#endif
 	}
 	else if (uMsg == WM_MOUSEMOVE && g_actionInProgress && g_actionInProgress->SetTooltip)
 	{
@@ -248,10 +244,8 @@ static bool ContinuousActionInit (bool init, int cmd, BR_ContinuousAction* actio
 						}
 					}
 					g_arrangeWndProc = (WNDPROC)SetWindowLongPtr(GetArrangeWnd(), GWLP_WNDPROC, (LONG_PTR)ArrangeWndProc);
-					#ifdef _WIN32
-						if (g_actionInProgress->SetMouseCursor && g_actionInProgress->SetMouseCursor(BR_ContinuousAction::ARRANGE))
-							SendMessage(GetArrangeWnd(), WM_SETCURSOR, (WPARAM)GetArrangeWnd(), 0);
-					#endif
+					if (g_actionInProgress->SetMouseCursor && g_actionInProgress->SetMouseCursor(BR_ContinuousAction::ARRANGE))
+						SendMessage(GetArrangeWnd(), WM_SETCURSOR, (WPARAM)GetArrangeWnd(), 0);
 					InvalidateRect(GetArrangeWnd(), NULL, TRUE); // kill existing native tooltip, if any
 				}
 
@@ -268,10 +262,8 @@ static bool ContinuousActionInit (bool init, int cmd, BR_ContinuousAction* actio
 					}
 
 					g_rulerWndProc = (WNDPROC)SetWindowLongPtr(GetRulerWndAlt(), GWLP_WNDPROC, (LONG_PTR)RulerWndProc);
-					#ifdef _WIN32
-						if (g_actionInProgress->SetMouseCursor && g_actionInProgress->SetMouseCursor(BR_ContinuousAction::RULER))
-							SendMessage(GetRulerWndAlt(), WM_SETCURSOR, (WPARAM)GetRulerWndAlt(), 0);
-					#endif
+					if (g_actionInProgress->SetMouseCursor && g_actionInProgress->SetMouseCursor(BR_ContinuousAction::RULER))
+						SendMessage(GetRulerWndAlt(), WM_SETCURSOR, (WPARAM)GetRulerWndAlt(), 0);
 					InvalidateRect(GetRulerWndAlt(), NULL, TRUE);
 				}
 			}
@@ -291,20 +283,16 @@ static bool ContinuousActionInit (bool init, int cmd, BR_ContinuousAction* actio
 		if (g_arrangeWndProc && GetArrangeWnd())
 		{
 			SetWindowLongPtr(GetArrangeWnd(), GWLP_WNDPROC, (LONG_PTR)g_arrangeWndProc);
-			#ifdef _WIN32
-				SendMessage(GetArrangeWnd(), WM_SETCURSOR, (WPARAM)GetArrangeWnd(), 0);
-				InvalidateRect(GetArrangeWnd(), NULL, FALSE);
-			#endif
+			SendMessage(GetArrangeWnd(), WM_SETCURSOR, (WPARAM)GetArrangeWnd(), 0);
+			InvalidateRect(GetArrangeWnd(), NULL, FALSE);
 			g_arrangeWndProc = NULL;
 		}
 
 		if (g_rulerWndProc && GetRulerWndAlt())
 		{
 			SetWindowLongPtr(GetRulerWndAlt(), GWLP_WNDPROC, (LONG_PTR)g_rulerWndProc);
-			#ifdef _WIN32
-				SendMessage(GetRulerWndAlt(), WM_SETCURSOR, (WPARAM)GetRulerWndAlt(), 0);
-				InvalidateRect(GetRulerWndAlt(), NULL, FALSE);
-			#endif
+			SendMessage(GetRulerWndAlt(), WM_SETCURSOR, (WPARAM)GetRulerWndAlt(), 0);
+			InvalidateRect(GetRulerWndAlt(), NULL, FALSE);
 			g_rulerWndProc = NULL;
 		}
 

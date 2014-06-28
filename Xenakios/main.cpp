@@ -530,7 +530,7 @@ void ItemPreview(int mode, MediaItem* item, MediaTrack* track, double volume, do
 		MediaItem_Take* take = GetActiveTake(item);
 		bool itemMuteState = *(bool*)GetSetMediaItemInfo(item, "B_MUTE", NULL);
 		bool isMidi = IsMidi(take);
-		double effectiveMidiTakeLen = (isMidi) ? EffectiveMidiTakeLength(take) : 0;
+		double effectiveMidiTakeLen = (isMidi) ? EffectiveMidiTakeLength(take, true, true) : 0;
 		GetSetMediaItemInfo(item, "B_MUTE", &g_bFalse); // needs to be set before getting the source
 
 		PCM_source* src = ((PCM_source*)item)->Duplicate(); // Casting from MediaItem* to PCM_source works!  Who would have known?

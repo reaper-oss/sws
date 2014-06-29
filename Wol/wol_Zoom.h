@@ -28,7 +28,6 @@
 #pragma once
 
 #include "stdafx.h"
-#include "../ObjectState/TrackEnvelope.h"
 
 
 

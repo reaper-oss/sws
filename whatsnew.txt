@@ -95,6 +95,7 @@ Fixes
  - Xenakios/SWS: Shift current envelope to left/right
 +Fixed SWS/BR: Create project markers from notes in selected MIDI items not working properly with looped items
 +OSX: Fixed various things when detecting mouse cursor at the top of arrange (ReaScript, Warp grid actions etc...)
++Issue 645: "Xenakios/SWS: Select takes in selected items, shuffled random" now does not select the same take number 1+ times consecutively
 
 Other:
 +Renamed FNG MIDI actions in Main section (remove MIDI prefix and added "in active MIDI editor" description at the end)

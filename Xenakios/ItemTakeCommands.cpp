@@ -687,11 +687,13 @@ void DoShuffleSelectTakesInItems(COMMAND_T* ct)
 		int takes = CountTakes(item);
 		if (takes > 1)
 		{
+			static int prevId = 0;
 			int id = *(int*)GetSetMediaItemInfo(item,"I_CURTAKE",NULL);
 			int newId = id;
-			while (id == newId)
+			while (id == newId || newId == prevId)
 				newId = rand() % takes;
 			GetSetMediaItemInfo(item,"I_CURTAKE",&newId);
+			prevId = newId;
 		}
 	}
 	UpdateArrange();

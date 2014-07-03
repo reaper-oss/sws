@@ -503,16 +503,17 @@ void ExtensionConfigToString(WDL_FastString* _str, ProjectStateContext* _ctx)
 {
 	if (_str && _ctx)
 	{
-		LineParser lp(false);
+		char* p;
 		char linebuf[SNM_MAX_CHUNK_LINE_LENGTH] = "";
 		for(;;) 
 		{
-			if (!_ctx->GetLine(linebuf, sizeof(linebuf)) && !lp.parse(linebuf))
+			if (!_ctx->GetLine(linebuf, sizeof(linebuf)))
 			{
-				_str->Append(linebuf);
+				p=linebuf;
+				while (*p == ' ' || *p == '\t') p++;
+				if (!*p || *p == '>') break;
+				_str->Append(p);
 				_str->Append("\n");
-				if (lp.gettoken_str(0)[0] == '>')
-					break;
 			}
 			else
 				break;
@@ -1084,7 +1085,7 @@ bool GetSectionURL(bool _alr, const char* _section, char* _sectionURL, int _sect
 	{
 		if (!_stricmp(_section, __localizeFunc("Main","accel_sec",0)) || !strcmp(_section, __localizeFunc("Main (alt recording)","accel_sec",0)))
 			lstrcpyn(_sectionURL, "ALR_Main", _sectionURLSize);
-		else if (!_stricmp(_section, __localizeFunc("Media explorer","accel_sec",0)))
+		else if (!_stricmp(_section, __localizeFunc("Media Explorer","accel_sec",0)))
 			lstrcpyn(_sectionURL, "ALR_MediaExplorer", _sectionURLSize);
 		else if (!_stricmp(_section, __localizeFunc("MIDI Editor","accel_sec",0)))
 			lstrcpyn(_sectionURL, "ALR_MIDIEditor", _sectionURLSize);

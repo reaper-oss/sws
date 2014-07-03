@@ -461,7 +461,7 @@ int GetUserPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL
 		// replace special chars
 		// would have been better to use something like Filenamize() here
 		// but the following code mimics REAPER's behavior => can lead to 
-		// invalid/non-crossplatform filenames, e.g. filenames containing "/"
+		// invalid/non-crossplatform filenames, e.g. filenames containing "\"
 		int i=0;
 		while (buf[i]) {
 			if (buf[i] == '.' || buf[i] == '/') buf[i] = '_';
@@ -471,11 +471,11 @@ int GetUserPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL
 		char* fxType = _strdup(_fxType);
 		for (int i=0; i < (int)strlen(fxType); i++)
 			fxType[i] = tolower(fxType[i]);
-		_snprintfSafe(iniFn, sizeof(iniFn), "%s%cpresets%c%s-%s.ini", GetResourcePath(), PATH_SLASH_CHAR, PATH_SLASH_CHAR, fxType, buf);
+		_snprintfSafe(iniFn, sizeof(iniFn), "%s%cpresets-%s-%s.ini", GetResourcePath(), PATH_SLASH_CHAR, fxType, buf);
 
 		bool exitTst = FileOrDirExists(iniFn);
 		if (!exitTst)
-			_snprintfSafe(iniFn, sizeof(iniFn), "%s%cpresets-%s-%s.ini", GetResourcePath(), PATH_SLASH_CHAR, fxType, buf);
+			_snprintfSafe(iniFn, sizeof(iniFn), "%s%cpresets%c%s-%s.ini", GetResourcePath(), PATH_SLASH_CHAR, PATH_SLASH_CHAR, fxType, buf);
 		free(fxType);
 
 		// *** get presets ***

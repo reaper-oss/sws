@@ -739,6 +739,9 @@ static DYN_COMMAND_T s_dynCmdTable[] =
 	{ "SWS/S&M: Exclusive toggle G%02d", "S&M_EXCL_TGL_G", ExclusiveToggle, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
 	{ "SWS/S&M: Exclusive toggle H%02d", "S&M_EXCL_TGL_H", ExclusiveToggle, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
 
+	{ "SWS/S&M: Restore displayed CC lanes, slot %02d", "S&M_SETCCLANES_ME", NULL, 8, SNM_MAX_DYN_ACTIONS, NULL, 32060, MESetCCLanes, },
+	{ "SWS/S&M: Save displayed CC lanes, slot %02d", "S&M_SAVECCLANES_ME", NULL, 8, SNM_MAX_DYN_ACTIONS, NULL, 32060, MESaveCCLanes, },
+
 //!WANT_LOCALIZE_1ST_STRING_END
 
 
@@ -754,7 +757,7 @@ static DYN_COMMAND_T s_dynCmdTable[] =
 
 
 // for optimization (avoid write accesses to S&M.ini on exit)
-static bool s_newDynActions = false;
+static bool s_newDynActions = true; //JFB!! disabled ATM
 
 int RegisterDynamicActions(DYN_COMMAND_T* _cmds, const char* _inifn)
 {
@@ -792,24 +795,23 @@ void SaveDynamicActions(DYN_COMMAND_T* _cmds, const char* _inifn)
 	// no localization here, intentional
 	WDL_FastString iniSection, str;
 	iniSection.Set("; Set the number of actions you want below. Quit REAPER first!\n");
-	iniSection.AppendFormatted(256, "; Unless specified (e.g. \"[n <= 32!]\"), the maximum number of actions is %d. To hide/remove actions: 0.\n", SNM_MAX_DYN_ACTIONS);
+	iniSection.AppendFormatted(512, "; Unless specified, the maximum number of actions is %d. To hide/remove actions: 0.\n", SNM_MAX_DYN_ACTIONS);
 
 	int i=0;
 	WDL_String nameStr; // no fast string here: the buffer gets mangeled..
 	while(_cmds[i].desc != LAST_COMMAND)
 	{
 		DYN_COMMAND_T* ct = &_cmds[i++];
+		KbdSectionInfo* sec = SectionFromUniqueID(ct->uniqueSectionId);
+		if (sec) nameStr.SetFormatted(512, "[%s] ",  __localizeFunc(sec->name,"accel_sec",0));
+		else nameStr.Set("");
 
-		nameStr.Set(GetLocalizedActionName(ct->desc) + IsSwsAction(ct->desc));
+		nameStr.Append(GetLocalizedActionName(ct->desc) + IsSwsAction(ct->desc));
 		Replace02d(nameStr.Get(), 'n');
 		if (ct->max>0 && ct->max!=SNM_MAX_DYN_ACTIONS) // is a specific max value defined?
-		{
-			nameStr.Append(" [n <= ");
-			nameStr.AppendFormatted(16, "%d", ct->max);
-			nameStr.Append("!]");
-		}
+			nameStr.AppendFormatted(128, " -- Max. = %d!", ct->max);
 
-		// indent things (a \t solution would suck here!)
+		// indent things (a \t solution would suck here)
 		str.SetFormatted(256, "%s=%d", ct->id, ct->count);
 		while (str.GetLength() < 40) str.Append(" ");
 		str.Append(" ; ");
@@ -889,10 +891,10 @@ int GetFakeToggleState(COMMAND_T* _ct) {
 void ExclusiveToggle(COMMAND_T* _ct)
 {
 /*JFB commented: the proper solution should look like this + related funcs
-   like ExclusiveToggleA(COMMAND_T*), ExclusiveToggleB, etc but it is
-   broken in release builds, debug ok => compiler/optimizations issue?
+   like ExclusiveToggleA(COMMAND_T*), ExclusiveToggleB, etc but such func 
+   pointers are messed-up (inlined) in release builds
    anyway, replaced with code below: faster but it first aims at avoiding
-   func pointers which seem the culprit...
+   function pointers
 
 	if (_ct && _ct->fakeToggle)
 		for (INT_PTR i=0; i<SNM_MAX_DYN_ACTIONS; i++)
@@ -923,7 +925,7 @@ void ExclusiveToggle(COMMAND_T* _ct)
 		else
 			break;
 	}
-	RefreshToolbar(0); // 0 in case there are tied CAs too
+	RefreshToolbar(0); // 0 for tied CAs
 }
 
 

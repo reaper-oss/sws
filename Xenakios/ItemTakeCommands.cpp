@@ -688,11 +688,13 @@ void DoShuffleSelectTakesInItems(COMMAND_T* ct)
 		if (takes > 1)
 		{
 			static int prevId = 0;
+			static int prevprevId = -1;
 			int id = *(int*)GetSetMediaItemInfo(item,"I_CURTAKE",NULL);
 			int newId = id;
-			while (id == newId || newId == prevId)
+			while (id == newId || (takes < 3 ? false : newId == prevId) || (takes < 4 ? false : newId == prevprevId))
 				newId = rand() % takes;
 			GetSetMediaItemInfo(item,"I_CURTAKE",&newId);
+			prevprevId = prevId;
 			prevId = newId;
 		}
 	}

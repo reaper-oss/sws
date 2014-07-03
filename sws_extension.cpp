@@ -163,6 +163,14 @@ bool hookCommandProc2(KbdSectionInfo* sec, int cmdId, int val, int valhw, int re
 	return false;
 }
 
+// just a dummy example, not used ATM (commented in the entry point)
+void hookPostCommandProc(int iCmd, int flag)
+{
+	WDL_FastString str;
+	str.SetFormatted(512, "hookPostCommandProc: %s, flag=%d\r\n", kbd_getTextFromCmd(iCmd, NULL), flag);
+	ShowConsoleMsg(str.Get());
+}
+
 // Returns:
 // -1 = action does not belong to this extension, or does not toggle
 //  0 = action belongs to this extension and is currently set to "off"
@@ -578,6 +586,9 @@ extern "C"
 #endif
 
 		int errcnt=0;
+
+		IMPAPI(IsREAPER); // must be tested first, see below
+
 		IMPAPI(AddExtensionsMainMenu);
 		IMPAPI(AddMediaItemToTrack);
 		IMPAPI(AddProjectMarker);
@@ -726,6 +737,7 @@ extern "C"
 		IMPAPI(GetTCPFXParm);
 		IMPAPI(GetToggleCommandState);
 		IMPAPI(GetToggleCommandState2);
+		IMPAPI(GetSelectedEnvelope);
 		IMPAPI(GetToggleCommandStateThroughHooks);
 		IMPAPI(GetTooltipWindow);
 		IMPAPI(GetTrack);
@@ -825,6 +837,7 @@ extern "C"
 #endif
 		IMPAPI(RenderFileSection);
 		IMPAPI(Resampler_Create);
+		IMPAPI(ReverseNamedCommandLookup);
 		IMPAPI(screenset_register);
 		IMPAPI(screenset_registerNew);
 		IMPAPI(screenset_unregister);
@@ -844,9 +857,11 @@ extern "C"
 		IMPAPI(SetMouseModifier);
 		IMPAPI(SetOnlyTrackSelected);
 		IMPAPI(SetProjectMarkerByIndex);
+		IMPAPI(SetProjectMarkerByIndex2);
 		IMPAPI(SetProjectMarker);
 		IMPAPI(SetProjectMarker2);
 		IMPAPI(SetProjectMarker3);
+		IMPAPI(SetProjectMarker4);
 		IMPAPI(SetTempoTimeSigMarker);
 		IMPAPI(SetTakeStretchMarker);
 		IMPAPI(SetTrackSelected);
@@ -854,6 +869,7 @@ extern "C"
 		IMPAPI(ShowConsoleMsg);
 		IMPAPI(ShowMessageBox);
 		IMPAPI(SnapToGrid);
+		IMPAPI(Splash_GetWnd);
 		IMPAPI(SplitMediaItem);
 		IMPAPI(StopPreview);
 		IMPAPI(StopTrackPreview);
@@ -912,23 +928,19 @@ extern "C"
 
 		if (errcnt)
 		{
-			char txt[512]="";
-			// hacky "fix" for ReaMote that loads the extension
-			GetWindowText(rec->hwnd_main, txt, sizeof(txt));
-			if (_strnicmp("ReaMote", txt, 7))
+			if (IsREAPER && IsREAPER())
 			{
+				char txt[512]="";
 				_snprintf(txt, sizeof(txt),
 					// keep the message on a single line (for the LangPack generator)
 					__LOCALIZE_VERFMT("The version of SWS extension you have installed is incompatible with your version of REAPER.\nYou probably have a REAPER version less than v%s installed.\nPlease install the latest version of REAPER from www.reaper.fm.","sws_mbox"),
 					"4.7"); // <- update compatible version here
 
-				//JFB: NULL parent so that the message is at least visible in taskbars (hidden since REAPER v4 and its "splash 2.0")
-				MessageBox(NULL, txt, __LOCALIZE("SWS - Version Incompatibility","sws_mbox"), MB_OK);
+				MessageBox(Splash_GetWnd && Splash_GetWnd() ? Splash_GetWnd() : NULL, txt, __LOCALIZE("SWS - Version Incompatibility","sws_mbox"), MB_OK);
 			}
 			ERR_RETURN("SWS version incompatibility\n")
 		}
 
-#ifndef _WIN32
 		// check for dupe/clone before registering any new action
 		{
 			int(*SNM_GetIntConfigVar)(const char* varname, int errvalue);
@@ -937,7 +949,6 @@ extern "C"
 				ERR_RETURN("Dupe SWS\n")
 			errcnt=0;
 		}
-#endif
 
 		// hookcommand2 must be registered before hookcommand
 		if (!rec->Register("hookcommand2", (void*)hookCommandProc2))
@@ -949,6 +960,9 @@ extern "C"
 
 		if (!rec->Register("hookcommand", (void*)hookCommandProc))
 			ERR_RETURN("hookcommand error\n")
+
+		//if (!rec->Register("hookpostcommand", (void*)hookPostCommandProc))
+		//	ERR_RETURN("hookpostcommand error\n")
 
 		if (!rec->Register("toggleaction", (void*)toggleActionHook))
 			ERR_RETURN("Toggle action hook error\n")

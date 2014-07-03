@@ -53,7 +53,7 @@
 
 #define NOTES_WND_ID				"SnMNotesHelp"
 #define NOTES_INI_SEC				"Notes"
-#define MAX_HELP_LENGTH				4096 //JFB instead of MAX_INI_SECTION (too large)
+#define MAX_HELP_LENGTH				(64*1024) //JFB! instead of MAX_INI_SECTION (too large)
 #define SET_ACTION_HELP_FILE_MSG	0xF001
 #define UPDATE_TIMER				1
 
@@ -1359,7 +1359,7 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 
 			// just read the very begining of the file (where prj notes are, no-op if notes are bigger)
 			// => much faster REAPER startup (based on the parser tolerance..)
-			if (LoadChunk(buf, &startOfrpp, true, MAX_HELP_LENGTH+128) && startOfrpp.GetLength())
+			if (LoadChunk(buf, &startOfrpp, true, 4096) && startOfrpp.GetLength())
 			{
 				SNM_ChunkParserPatcher p(&startOfrpp);
 				WDL_FastString notes;
@@ -1432,7 +1432,7 @@ void NotesExit()
 
 	// save the action help filename
 	WDL_FastString escapedStr;
-	makeEscapedConfigString(g_actionHelpFn, &escapedStr);
+	escapedStr.SetFormatted(SNM_MAX_PATH, "\"%s\"", g_actionHelpFn);
 	WritePrivateProfileString(NOTES_INI_SEC, "Action_help_file", escapedStr.Get(), g_SNM_IniFn.Get());
 
 	g_notesWndMgr.Delete();

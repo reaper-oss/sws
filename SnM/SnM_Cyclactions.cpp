@@ -230,8 +230,7 @@ int ExplodeCmd(int _section, const char* _cmdStr,
 {
 	if (_cmdStr && *_cmdStr)
 	{
-		if ((_flags&1) != 1 && // no need to explode things recursively
-			*_cmdStr == '_') // CA, extension, macro, or script?
+		if (*_cmdStr == '_') // CA, extension, macro, or script?
 		{
 			if (strstr(_cmdStr, "_CYCLACTION"))
 				return ExplodeCyclaction(_section, _cmdStr, _cmds, _macros, _consoles, _flags);
@@ -643,7 +642,7 @@ void RunCycleAction(COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hw
 				if (g_undos)
 					Undo_EndBlock2(NULL, undoStr, UNDO_STATE_ALL);
 
-//				RefreshToolbar(_ct->accel.accel.cmd);
+				RefreshToolbar(0); // not strictly needed, except for toggle states of CAs calling other CAs
 #ifdef _SNM_DEBUG
 				OutputDebugString("RunCycleAction <-------------------------");
 				OutputDebugString("\n");
@@ -1019,7 +1018,7 @@ int RegisterCyclation(const char* _name, int _section, int _cycleId, int _cmdId)
 	return 0;
 }
 
-// register a CA *recursively*, i.e. register sub-CAs and then the parent CA
+// register a CA recursively, i.e. register sub-CAs and then the parent CA
 // mandatory for CheckRegisterableCyclaction() that would fail otherwise
 int RegisterCyclation(Cyclaction* _a, int _section, int _cycleId,
 					  WDL_PtrList_DeleteOnDestroy<WDL_FastString>* _macros,
@@ -1036,7 +1035,7 @@ int RegisterCyclation(Cyclaction* _a, int _section, int _cycleId,
 		for (int i=0; i<_a->GetCmdSize(); i++)
 		{
 			int cycleId;
-			if (Cyclaction* a = GetCAFromCustomId(_section, _a->GetCmd(i), &cycleId))
+			if (Cyclaction* a = GetCAFromCustomId(_section, _a->GetCmd(i), &cycleId)) // works even is CA is not registered yet
 			{
 				if (sSubCAs.Find(a) == -1) {
 					a->m_cmdId = RegisterCyclation(a, _section, cycleId, _macros, _consoles, _applyMsg);
@@ -1111,7 +1110,7 @@ void LoadCyclactions(bool _wantMsg, WDL_PtrList<Cyclaction>* _cyclactions = NULL
 				}
 			}
 
-			// 2nd pass: now that *all* CAs have been added, (try to) register them recursively
+			// 2nd pass: now that all CAs have been added, (try to) register them recursively
 			// as CAs can call other CAs in any order (i.e. not in g_cas[sec]'s order)
 			if (!_cyclactions)
 				for (int j=0; j<g_cas[sec].GetSize(); j++)
@@ -1140,7 +1139,7 @@ void SaveCyclactions(WDL_PtrList<Cyclaction>* _cyclactions = NULL, int _section 
 		if (_section == sec || _section == -1)
 		{
 			WDL_PtrList_DeleteOnDestroy<int> freeCycleIds;
-			WDL_FastString iniSection("; Do not tweak by hand! Use the Cycle Action editor instead\n"), escapedStr; // no localization for ini files..
+			WDL_FastString iniSection("; Do not tweak by hand! Use the Cycle Action editor instead\n"); // no localization for ini files..
 
 			// prepare ids "compression" (i.e. will re-assign ids of new actions for the next load)
 			for (int j=0; j < _cyclactions[sec].GetSize(); j++)
@@ -1155,8 +1154,7 @@ void SaveCyclactions(WDL_PtrList<Cyclaction>* _cyclactions = NULL, int _section 
 				{
 					if (!a->m_added)
 					{
-						makeEscapedConfigString(a->GetDefinition(), &escapedStr);
-						iniSection.AppendFormatted(CA_MAX_LEN, "Action%d=%s\n", j+1, escapedStr.Get()); 
+						iniSection.AppendFormatted(CA_MAX_LEN, "Action%d=\"%s\"\n", j+1, a->GetDefinition());
 						maxId = max(j+1, maxId);
 					}
 					else
@@ -1164,16 +1162,14 @@ void SaveCyclactions(WDL_PtrList<Cyclaction>* _cyclactions = NULL, int _section 
 						a->m_added = false;
 						if (freeCycleIds.GetSize())
 						{
-							makeEscapedConfigString(a->GetDefinition(), &escapedStr);
 							int id = *(freeCycleIds.Get(0));
-							iniSection.AppendFormatted(CA_MAX_LEN, "Action%d=%s\n", id+1, escapedStr.Get()); 
+							iniSection.AppendFormatted(CA_MAX_LEN, "Action%d=\"%s\"\n", id+1, a->GetDefinition());
 							freeCycleIds.Delete(0, true);
 							maxId = max(id+1, maxId);
 						}
 						else
 						{
-							makeEscapedConfigString(a->GetDefinition(), &escapedStr);
-							iniSection.AppendFormatted(CA_MAX_LEN, "Action%d=%s\n", ++maxId, escapedStr.Get()); 
+							iniSection.AppendFormatted(CA_MAX_LEN, "Action%d=\"%s\"\n", ++maxId, a->GetDefinition()); 
 						}
 					}
 				}

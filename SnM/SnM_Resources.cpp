@@ -3327,15 +3327,11 @@ void ResourcesExit()
 	{
 		if (i >= SNM_NUM_DEFAULT_SLOTS)
 		{
-			WDL_FastString str;
-			str.SetFormatted(
-				SNM_MAX_PATH,
-				"%s,%s,%s",
+			iniStr.SetFormatted(8192, "%s=\"%s,%s,%s\"\n",
+				iniSections.Get(i)->Get(),
 				g_SNM_ResSlots.Get(i)->GetResourceDir(),
 				g_SNM_ResSlots.Get(i)->GetName(),
 				g_SNM_ResSlots.Get(i)->GetFileExtStr());
-			makeEscapedConfigString(str.Get(), &escapedStr);
-			iniStr.AppendFormatted(SNM_MAX_PATH, "%s=%s\n", iniSections.Get(i)->Get(), escapedStr.Get());
 		}
 	}
 	iniStr.AppendFormatted(256, "Type=%d\n", g_resType);
@@ -3345,14 +3341,12 @@ void ResourcesExit()
 	for (int i=0; i < g_SNM_ResSlots.GetSize(); i++)
 	{
 		// save auto-fill & auto-save paths
-		if (g_autoFillDirs.Get(i)->GetLength()) {
-			makeEscapedConfigString(g_autoFillDirs.Get(i)->Get(), &escapedStr);
-			iniStr.AppendFormatted(SNM_MAX_PATH, "AutoFillDir%s=%s\n", iniSections.Get(i)->Get(), escapedStr.Get());
-		}
-		if (g_autoSaveDirs.Get(i)->GetLength() && g_SNM_ResSlots.Get(i)->IsAutoSave()) {
-			makeEscapedConfigString(g_autoSaveDirs.Get(i)->Get(), &escapedStr);
-			iniStr.AppendFormatted(SNM_MAX_PATH, "AutoSaveDir%s=%s\n", iniSections.Get(i)->Get(), escapedStr.Get());
-		}
+		if (g_autoFillDirs.Get(i)->GetLength())
+			iniStr.AppendFormatted(SNM_MAX_PATH, "AutoFillDir%s=\"%s\"\n", iniSections.Get(i)->Get(), g_autoFillDirs.Get(i)->Get());
+
+		if (g_autoSaveDirs.Get(i)->GetLength() && g_SNM_ResSlots.Get(i)->IsAutoSave())
+			iniStr.AppendFormatted(SNM_MAX_PATH, "AutoSaveDir%s=\"%s\"\n", iniSections.Get(i)->Get(), g_autoSaveDirs.Get(i)->Get());
+
 		iniStr.AppendFormatted(256, "SyncAutoDirs%s=%d\n", iniSections.Get(i)->Get(), g_syncAutoDirPrefs[i]);
 
 		// default type? (fx chains, track templates, etc...)
@@ -3365,10 +3359,8 @@ void ResourcesExit()
 		else
 		{
 			// save tied project
-			if (g_tiedProjects.Get(i)->GetLength()) {
-				makeEscapedConfigString(g_tiedProjects.Get(i)->Get(), &escapedStr);
-				iniStr.AppendFormatted(SNM_MAX_PATH, "TiedProject%s=%s\n", iniSections.Get(i)->Get(), escapedStr.Get());
-			}
+			if (g_tiedProjects.Get(i)->GetLength())
+				iniStr.AppendFormatted(SNM_MAX_PATH, "TiedProject%s=\"%s\"\n", iniSections.Get(i)->Get(), g_tiedProjects.Get(i)->Get());
 		}
 
 		// dbl-click pref
@@ -3404,16 +3396,14 @@ void ResourcesExit()
 	for (int i=0; i < g_SNM_ResSlots.GetSize(); i++)
 	{
 		iniStr.SetFormatted(256, "Max_slot=%d\n", g_SNM_ResSlots.Get(i)->GetSize());
-		for (int j=0; j < g_SNM_ResSlots.Get(i)->GetSize(); j++) {
-			if (ResourceItem* item = g_SNM_ResSlots.Get(i)->Get(j)) {
-				if (item->m_shortPath.GetLength()) {
-					makeEscapedConfigString(item->m_shortPath.Get(), &escapedStr);
-					iniStr.AppendFormatted(SNM_MAX_PATH, "Slot%d=%s\n", j+1, escapedStr.Get());
-				}
-				if (item->m_comment.GetLength()) {
-					makeEscapedConfigString(item->m_comment.Get(), &escapedStr);
-					iniStr.AppendFormatted(256, "Desc%d=%s\n", j+1, escapedStr.Get());
-				}
+		for (int j=0; j < g_SNM_ResSlots.Get(i)->GetSize(); j++)
+		{
+			if (ResourceItem* item = g_SNM_ResSlots.Get(i)->Get(j))
+			{
+				if (item->m_shortPath.GetLength())
+					iniStr.AppendFormatted(SNM_MAX_PATH, "Slot%d=\"%s\"\n", j+1, item->m_shortPath.Get());
+				if (item->m_comment.GetLength())
+					iniStr.AppendFormatted(256, "Desc%d=\"%s\"\n", j+1, item->m_comment.Get());
 			}
 		}
 		// write things in one go (avoid to slow down REAPER shutdown)
@@ -3549,7 +3539,7 @@ void ImageExit()
 		if (*fn)
 		{
 			WDL_FastString str;
-			makeEscapedConfigString(fn, &str);
+			str.SetFormatted(SNM_MAX_PATH, "\"%s\"", fn);
 			WritePrivateProfileString("ImageView", "LastImage", str.Get(), g_SNM_IniFn.Get());
 		}
 		else

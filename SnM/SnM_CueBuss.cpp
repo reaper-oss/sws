@@ -255,12 +255,12 @@ void SaveCueBusIniFile(int _confId, const char* _busName, int _type, bool _trTem
 		{
 			char buf[16]="", slot[16]="";
 			WDL_FastString escapedStr;
-			makeEscapedConfigString(_busName, &escapedStr);
+			escapedStr.SetFormatted(256, "\"%s\"", _busName);
 			WritePrivateProfileString(iniSection,"name",escapedStr.Get(),g_SNM_IniFn.Get());
 			if (_snprintfStrict(buf, sizeof(buf), "%d" ,_type) > 0)
 				WritePrivateProfileString(iniSection,"reatype",buf,g_SNM_IniFn.Get());
 			WritePrivateProfileString(iniSection,"track_template_enabled",_trTemplate ? "1" : "0",g_SNM_IniFn.Get());
-			makeEscapedConfigString(_trTemplatePath, &escapedStr);
+			escapedStr.SetFormatted(SNM_MAX_PATH, "\"%s\"", _trTemplatePath);
 			WritePrivateProfileString(iniSection,"track_template_path",escapedStr.Get(),g_SNM_IniFn.Get());
 			WritePrivateProfileString(iniSection,"show_routing",_showRouting ? "1" : "0",g_SNM_IniFn.Get());
 			WritePrivateProfileString(iniSection,"send_to_masterparent",_sendToMaster ? "1" : "0",g_SNM_IniFn.Get());

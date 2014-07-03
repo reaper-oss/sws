@@ -2135,7 +2135,7 @@ void RegionPlaylistExit()
 	if (g_osc)
 	{
 		WDL_FastString escStr;
-		makeEscapedConfigString(g_osc->m_name.Get(), &escStr);
+		escStr.SetFormatted(SNM_MAX_PATH, "\"%s\"", g_osc->m_name.Get());
 		WritePrivateProfileString("RegionPlaylist", "OscFeedback", escStr.Get(), g_SNM_IniFn.Get());
 	}
 	else

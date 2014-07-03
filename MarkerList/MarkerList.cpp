@@ -612,7 +612,7 @@ INT_PTR WINAPI doFormatDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				{
 					// Fix quotes in user string
 					WDL_String fixedStr;
-					makeEscapedConfigString(str, &fixedStr);
+					fixedStr.SetFormatted(256, "\"%s\"", str);
 					WritePrivateProfileString(SWS_INI, EXPORT_FORMAT_KEY, fixedStr.Get(), get_ini_file());
 				}
 				EndDialog(hwndDlg, 0);

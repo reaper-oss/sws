@@ -132,7 +132,7 @@ HWND GetReaHwndByTitle(const char* _title)
 	HWND w = GetReaChildWindowByTitle(GetMainHwnd(), _title);
 	if (w) return w;
 
-	char buf[256] = "";
+	char buf[2048] = "";
 	WDL_PtrList<HWND__> hwnds;
 	EnumWindows(EnumReaWindows, (LPARAM)&hwnds);
 	for (int i=0; i<hwnds.GetSize(); i++)

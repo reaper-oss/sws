@@ -46,6 +46,9 @@ Added actions
  - SWS/FNG: Select notes nearest edit cursor
  - SWS/FNG: Apply groove to selected MIDI notes (within 16th)/(withing 32nd)
  - SWS/BR: Show only used CC lanes (detect 14-bit)
+ - SWS/S&M: Restore displayed CC lanes, slot n - where 'n' is in [1; 8], http://forum.cockos.com/showthread.php?p=984786#post984786|customizable in the S&M.ini file)
+ - SWS/S&M: Save displayed CC lanes, slot n - where 'n' is in [1; 8], http://forum.cockos.com/showthread.php?p=984786#post984786|customizable in the S&M.ini file)
+   - Note: these 2 actions are also present in the main section. These new instances allow to bind them to MIDI toolbars, for ex.
 
 ReaScript
 +BR_GetMouseCursorContext:
@@ -58,6 +61,8 @@ ReaScript
  - BR_MIDI_CCLaneReplace
 
 Fixes
++Cycle Actions: fixed ON/OFF state corner case (as reported http://forum.cockos.com/showpost.php?p=1344403&postcount=1747|here|)
++Localization: fix for actions dealing with the Media Explorer
 +Localization / Windows OS: fixed stuff that could potentially make things broken when using:
  - SWS/BR: Preview media item under mouse
  - SWS/BR: Move closest grid line to mouse cursor
@@ -105,6 +110,8 @@ Other:
 +Renamed SWS/BR: Move closest tempo marker/grid line/ to mouse cursor (added (perform until shortcut released) to clearly reflect how they work)
 +Renamed SWS/BR: Hide all but active envelope for all/selected tracks (so it's clear that it works only with selected track envelopes)
 +Renamed SWS/BR: Insert new envelope point at mouse cursor (added "using value at current position (obey snapping)" at the end)
++S&M Notes maximum length raised to 64kb
++Better startup error message (can now be displayed over the splash window)
 
 !v2.4.0 #9 pre-release build (April 19, 2014)
 <strong>This version requires REAPER v4.62pre8+</strong>, an "Incompatible version" error message will be displayed otherwise...

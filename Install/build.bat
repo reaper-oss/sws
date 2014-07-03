@@ -1,16 +1,21 @@
 @echo off
 
 REM Copyright 2014 Jeffos. All rights reserved.
-REM When uploading, the website is automatically updated (a PHP reads the uploaded version.h).
-REM The version checker reads the uploaded version.h too.
 
+REM When uploading, the website will be automatically updated thanks to a PHP 
+REM that reads the (new) version.h. The version checker reads that file too.
+
+
+REM ===========================================================================
 REM You must set these according to your local setup
 REM FTP access is reserved for project owners
+REM ===========================================================================
 set ftp_host=TO_BE_DEFINED
 set ftp_user=TO_BE_DEFINED
 set ftp_pwd=TO_BE_DEFINED
 set vcvars_path="C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat"
 set makensis_path="D:\Program Files (x86)\NSIS\makensis.exe"
+set osx_dmg_path="D:\dev\sws_osx.dmg"
 
 
 REM ====== INIT ===============================================================
@@ -39,22 +44,33 @@ REM ====== VERSIONING =========================================================
 :inc_choice
 ..\BuildUtils\Release\PrintVersion ..\version.h "Current version: v%%d.%%d.%%d #%%d"
 
-set choice_inc=
-set /p choice_inc=Increment version (y/n)? 
-if %choice_inc%==y goto inc
+echo.
+echo New version, enter:
+echo   i[ncrement]: to increment build # in version.h, and
+echo                add this new version to the whatsnew.txt
+echo   m[anual]: to add the current version to the whatsnew.txt 
+echo             (e.g. when version.h was edited by hand)
+echo   n[o]: to use the current version.h and whatsnew.txt
 
-REM Do not add a line in ..\whatsnew.txt
-..\BuildUtils\Release\PrintVersion ..\version.h -d "!v%%d.%%d.%%d #%%d %build_type% build" > output\whatsnew.txt
-type temp\oldwhatsnew.txt >> output\whatsnew.txt
-goto whatsnew 
+set choice_inc=
+set /p choice_inc=New version? (i[ncrement] / m[anual] / n[o]) 
+if %choice_inc%==i goto inc
+if %choice_inc%==m goto inc_add
+if %choice_inc%==n goto inc_no
+
+echo Invalid input '%choice_inc%': 'i', 'm', or 'n' expected!
+goto error
 
 :inc
 echo Incrementing version...
 ..\BuildUtils\Release\IncVersion.exe ..\version.h
 
+:inc_add
 REM Add a version line in ..\whatsnew.txt
 ..\BuildUtils\Release\PrintVersion ..\version.h -d "!v%%d.%%d.%%d #%%d %build_type% build" > ..\whatsnew.txt
 type temp\oldwhatsnew.txt >> ..\whatsnew.txt
+
+:inc_no
 copy ..\whatsnew.txt output\whatsnew.txt > NUL
 
 :whatsnew
@@ -82,17 +98,21 @@ if not exist %vcvars_path% (
 	echo Error: env var 'vcvars_path' not defined in in %0.bat!
 	goto error
 )
+if not exist "%REAPER_DIR%\reaper_plugin_functions.h" (
+	echo Error: "%REAPER_DIR%\reaper_plugin_functions.h" not found!
+	goto error
+)
 
 setlocal
 call %vcvars_path% > NUL
 
-REM With Visual Studio 2008 you will need:
+REM For VCBuild / Visual Studio 2008 you will need:
 REM vcbuild /r /platform:x64 ..\sws_extension.vcproj release
 REM if errorlevel 1 goto error
 REM vcbuild /r /platform:Win32 ..\sws_extension.vcproj release
 REM if errorlevel 1 goto error
 
-REM With Visual Studio 2013
+REM For MSBuild / Visual Studio 2013
 msbuild /t:rebuild /p:Platform=x64,Configuration=release ..\sws_extension.vcxproj
 if errorlevel 1 goto error
 
@@ -132,6 +152,10 @@ goto success
 :upload
 if %ftp_host%==TO_BE_DEFINED (
 	echo Error: you must configure FTP env vars in %0.bat!
+	goto error
+)
+if not exist %osx_dmg_path% (
+	echo Error: %osx_dmg_path% not found!
 	goto error
 )
 
@@ -175,7 +199,7 @@ REM Upload new files
 echo put output\whatsnew.html index.html >> temp\upload.ftp
 ..\BuildUtils\Release\PrintVersion ..\version.h "put output\sws_extension.exe sws-v%%d.%%d.%%d.%%d-install.exe" >> temp\upload.ftp
 ..\BuildUtils\Release\PrintVersion ..\version.h "put output\sws_extension_x64.exe sws-v%%d.%%d.%%d.%%d-x64-install.exe" >> temp\upload.ftp
-..\BuildUtils\Release\PrintVersion ..\version.h "put output\sws_osx.dmg sws-v%%d.%%d.%%d.%%d.dmg" >> temp\upload.ftp
+..\BuildUtils\Release\PrintVersion ..\version.h "put %osx_dmg_path% sws-v%%d.%%d.%%d.%%d.dmg" >> temp\upload.ftp
 ..\BuildUtils\Release\PrintVersion ..\version.h "put output\sws_template.ReaperLangPack sws-v%%d.%%d.%%d.%%d-template.ReaperLangPack" >> temp\upload.ftp
 
 REM Upload for PHP website auto-update
@@ -194,9 +218,9 @@ goto success
 
 :error
 echo.
-echo *****************
+echo ************
 echo   Error!!!
-echo *****************
+echo ************
 echo.
 copy /y temp\oldversion.h ..\version.h > NUL
 copy /y temp\oldwhatsnew.txt ..\whatsnew.txt > NUL
@@ -204,10 +228,10 @@ goto pause
 
 :success
 echo.
-echo ****************
+echo ****************************************
 echo Success!
 ..\BuildUtils\Release\PrintVersion ..\version.h -d
-echo ****************
+echo ****************************************
 echo.
 
 :pause

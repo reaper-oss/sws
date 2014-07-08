@@ -337,7 +337,8 @@ int  ContinuousActionTooltips ()
 
 bool ContinuousActionHook (int cmd, int flag)
 {
-	int id = g_actions.FindSorted(&BR_ContinuousAction(cmd, NULL, NULL, NULL, NULL), &CompareActionsByCmd);
+	BR_ContinuousAction ca(cmd, NULL, NULL, NULL, NULL);
+	int id = g_actions.FindSorted(&ca, &CompareActionsByCmd);
 	if (id != -1)
 	{
 		if (!g_actionInProgress)

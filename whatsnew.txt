@@ -1,6 +1,6 @@
 <strong>REAPER v4.70+ is required!</strong>
 New API functions were introduced in this version, they enable various improvements in the SWS/S&M Extension.
-Thank you Cockos!
+Thank you Cockos, again!
 
 Analyze and normalize loudness
 +Added an option to preserve already analyzed tracks/items when analyzing selected tracks/items

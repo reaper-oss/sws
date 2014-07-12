@@ -1,3 +1,16 @@
+Auto color/icon/action
+An action can be executed automatically when a rule is matched (tracks only), use the "Enable track auto selection" option to select the track matching the rule being applied so that actions can act on the selected track.
+Track auto color/icon/action can be enabled/disabled for each track in the new tracks list near the rules list. Per-track settings override the "Force" button. So if you want to use a name that matches a rule, but don't want the so named track to be processed by the rule, disable its auto color/icon/action in the track list and it won't be affected.
+
+Added actions
+ - SWS/wol: Toggle auto action enable
+ - SWS/wol: Toggle enable auto color/icon/action for selected track(s)
+ - SWS/wol: Enable/Disable auto color/icon/action for selected track(s)
+ - SWS/wol: Toggle enable track auto selection when an action is performed with auto action
+	(Desc: since some actions (like applying a layout) work only on selected tracks, enabling this option will make Reaper select the track that currently matches the rule being applied and the performed action will work on that track.)
+ - SWS/wol: Toggle automatic auto color/icon/action disable for processed tracks
+	(Desc: when a rule colors/icons a track or performs an action you can get auto color/icon/action disabled for the track matching the rule.)
+
 !v2.4.0 #10 pre-release build (July 11, 2014)
 <strong>REAPER v4.70+ is required!</strong>
 New API functions were introduced in this version, they enable various improvements in the SWS/S&M Extension.

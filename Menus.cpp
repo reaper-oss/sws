@@ -247,7 +247,7 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 		AddToMenu(hMenu, SWS_SEPARATOR, 0);
 
 	AddToMenu(hMenu, __LOCALIZE("About SWS Extensions", "sws_ext_menu"), NamedCommandLookup("_SWS_ABOUT"));
-	AddToMenu(hMenu, __LOCALIZE("Auto Color/Icon", "sws_ext_menu"), NamedCommandLookup("_SWSAUTOCOLOR_OPEN"));
+	AddToMenu(hMenu, __LOCALIZE("Auto Color/Icon/Action", "sws_ext_menu"), NamedCommandLookup("_SWSAUTOCOLOR_OPEN"));
 
 	HMENU hAutoRenderSubMenu = CreatePopupMenu();
 	AddSubMenu(hMenu, hAutoRenderSubMenu, __LOCALIZE("Autorender", "sws_ext_menu"));
@@ -315,10 +315,20 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 	HMENU hOptionsSubMenu = CreatePopupMenu();
 	AddSubMenu(hMenu, hOptionsSubMenu, __LOCALIZE("SWS Options", "sws_ext_menu"));
 
-	AddToMenu(hOptionsSubMenu, __LOCALIZE("Enable auto track coloring", "sws_ext_menu"), NamedCommandLookup("_SWSAUTOCOLOR_ENABLE"));
-	AddToMenu(hOptionsSubMenu, __LOCALIZE("Enable auto marker coloring", "sws_ext_menu"), NamedCommandLookup("_S&MAUTOCOLOR_MKR_ENABLE"));
-	AddToMenu(hOptionsSubMenu, __LOCALIZE("Enable auto region coloring", "sws_ext_menu"), NamedCommandLookup("_S&MAUTOCOLOR_RGN_ENABLE"));
-	AddToMenu(hOptionsSubMenu, __LOCALIZE("Enable auto track icon", "sws_ext_menu"), NamedCommandLookup("_S&MAUTOICON_ENABLE"));
+	HMENU hACOptionsSubMenu = CreatePopupMenu();
+	AddSubMenu(hOptionsSubMenu, hACOptionsSubMenu, __LOCALIZE("SWS Auto Color/Icon/Action Options", "sws_ext_menu"));
+
+	AddToMenu(hACOptionsSubMenu, __LOCALIZE("Enable auto track coloring", "sws_ext_menu"), NamedCommandLookup("_SWSAUTOCOLOR_ENABLE"));
+	AddToMenu(hACOptionsSubMenu, __LOCALIZE("Enable auto marker coloring", "sws_ext_menu"), NamedCommandLookup("_S&MAUTOCOLOR_MKR_ENABLE"));
+	AddToMenu(hACOptionsSubMenu, __LOCALIZE("Enable auto region coloring", "sws_ext_menu"), NamedCommandLookup("_S&MAUTOCOLOR_RGN_ENABLE"));
+	AddToMenu(hACOptionsSubMenu, __LOCALIZE("Enable auto track icon", "sws_ext_menu"), NamedCommandLookup("_S&MAUTOICON_ENABLE"));
+	AddToMenu(hACOptionsSubMenu, __LOCALIZE("Enable auto action", "sws_ext_menu"), NamedCommandLookup("_WOLAUTOACTION_ENABLE"));
+	AddToMenu(hACOptionsSubMenu, SWS_SEPARATOR, 0);
+	AddToMenu(hACOptionsSubMenu, __LOCALIZE("Enable track auto selection", "sws_ext_menu"), NamedCommandLookup("_WOL_TENTRAUTOSELAUTO"));
+
+	AddToMenu(hACOptionsSubMenu, __LOCALIZE("Automatically disable auto color for processed tracks", "sws_ext_menu"), NamedCommandLookup("_WOL_TENAUTOCOLORDIS"));
+	AddToMenu(hACOptionsSubMenu, __LOCALIZE("Automatically disable auto icon for processed tracks", "sws_ext_menu"), NamedCommandLookup("_WOL_TENAUTOICONDIS"));
+	AddToMenu(hACOptionsSubMenu, __LOCALIZE("Automatically disable auto action for processed tracks", "sws_ext_menu"), NamedCommandLookup("_WOL_TENAUTOACTIONDIS"));
 
 	AddToMenu(hOptionsSubMenu, __LOCALIZE("Enable marker actions", "sws_ext_menu"), NamedCommandLookup("_SWSMA_TOGGLE"));
 	AddToMenu(hOptionsSubMenu, __LOCALIZE("Enable record input check", "sws_ext_menu"), NamedCommandLookup("_SWS_TOGRECINCHECK"));

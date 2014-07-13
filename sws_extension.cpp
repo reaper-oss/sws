@@ -574,7 +574,6 @@ extern "C"
 			PadreExit();
 			SNM_Exit();
 			BR_Exit();
-			//WOL_Exit();
 			ERR_RETURN("Exiting Reaper.\n")
 		}
 

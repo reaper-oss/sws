@@ -379,16 +379,18 @@ int IsSwsAction(const char* _actionName)
 
 HMENU SWSCreateMenuFromCommandTable(COMMAND_T pCommands[], HMENU hMenu, int* iIndex)
 {
-	if (!hMenu)
-		hMenu = CreatePopupMenu();
 	int i = 0;
 	if (iIndex)
 		i = *iIndex;
 
 	while (pCommands[i].id != LAST_COMMAND && pCommands[i].id != SWS_ENDSUBMENU)
 	{
-		if (const char* name = pCommands[i].menuText)
+    const char* name = pCommands[i].menuText;
+		if (name && *name)
 		{
+      if (!hMenu)
+        hMenu = CreatePopupMenu();
+
 			if (pCommands[i].id == SWS_STARTSUBMENU)
 			{
 				i++;

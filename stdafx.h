@@ -85,6 +85,7 @@
 #include "../WDL/assocarray.h"
 #include "../WDL/win32_utf8.h"
 #include "../WDL/lineparse.h"
+#include "../WDL/MersenneTwister.h"
 #pragma warning(default : 4996)
 #pragma warning(default : 4267)
 #pragma warning(default : 4244)

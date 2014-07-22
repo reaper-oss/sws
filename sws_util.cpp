@@ -38,6 +38,7 @@ int  g_i1 = 1;
 int  g_i2 = 2;
 bool g_bTrue  = true;
 bool g_bFalse = false;
+MTRand g_MTRand;
 #ifndef _WIN32
 const GUID GUID_NULL = { 0, 0, 0, "\0\0\0\0\0\0\0" };
 #endif

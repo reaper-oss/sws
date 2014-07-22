@@ -1494,7 +1494,7 @@ static void SetRandomTempo (HWND hwnd, BR_Envelope* oldTempo, double min, double
 		double newBpm = b1;
 		if (tempoMap.GetSelection(i))
 		{
-			double random = (double)(rand() % 101) / 100;
+			double random = g_MTRand.rand();
 
 			if (unit == 0)        // Value
 				newBpm = (b1 + min) + ((max-min) * random);

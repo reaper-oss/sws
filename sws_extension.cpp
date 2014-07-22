@@ -501,7 +501,12 @@ public:
 	void SetSurfaceMute(MediaTrack *tr, bool mute)		{ ScheduleTracklistUpdate(); UpdateTrackMute(); }
 	void SetSurfaceSolo(MediaTrack *tr, bool solo)		{ ScheduleTracklistUpdate(); UpdateTrackSolo(); }
 	void SetSurfaceRecArm(MediaTrack *tr, bool arm)		{ ScheduleTracklistUpdate(); UpdateTrackArm(); }
-	int Extended(int call, void *parm1, void *parm2, void *parm3) { return SNM_CSurfExtended(call, parm1, parm2, parm3); }
+	int Extended(int call, void *parm1, void *parm2, void *parm3)
+	{
+		BR_CSurfExtended(call, parm1, parm2, parm3);
+		SNM_CSurfExtended(call, parm1, parm2, parm3);
+		return 0;
+	}
 };
 
 // WDL Stuff

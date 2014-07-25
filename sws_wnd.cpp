@@ -1582,6 +1582,7 @@ void SWS_ListView::Sort()
 	if (m_iSortCol < 0)
 		iCol = -iCol;
 	SetListviewColumnArrows(iCol);
+	OnItemSortEnd();
 }
 
 void SWS_ListView::SetListviewColumnArrows(int iSortCol)

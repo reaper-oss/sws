@@ -121,6 +121,7 @@ protected:
 	virtual void OnItemBtnClk(SWS_ListItem* item, int iCol, int iKeyState) {}
 	virtual void OnItemDblClk(SWS_ListItem* item, int iCol) {}
 	virtual int  OnItemSort(SWS_ListItem* item1, SWS_ListItem* item2);
+	virtual void OnItemSortEnd() {};
 	virtual void OnBeginDrag(SWS_ListItem* item) {}
 	virtual bool IsEditListItemAllowed(SWS_ListItem* item, int iCol) { return true; }
 

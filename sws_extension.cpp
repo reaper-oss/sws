@@ -838,6 +838,7 @@ extern "C"
 		IMPAPI(RemoveXPStyle);
 #endif
 		IMPAPI(RenderFileSection);
+		IMPAPI(Resample_EnumModes);
 		IMPAPI(Resampler_Create);
 		IMPAPI(ReverseNamedCommandLookup);
 		IMPAPI(screenset_register);

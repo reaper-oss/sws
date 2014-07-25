@@ -494,6 +494,7 @@ echo Copied to "$(REAPER64_DIR)\plugins\$(TargetFilename)"</Command>
     <ClCompile Include="Breeder\BR_ContinuousActions.cpp" />
     <ClCompile Include="Breeder\BR_MidiEditor.cpp" />
     <ClCompile Include="Breeder\BR_MidiTools.cpp" />
+    <ClCompile Include="libebur128\ebur128.cpp" />
     <ClCompile Include="Wol\wol_Zoom.cpp" />
     <ClCompile Include="Xenakios\AutoRename.cpp" />
     <ClCompile Include="Xenakios\BroadCastWavCommands.cpp" />
@@ -1285,20 +1286,6 @@ echo Copied to "$(REAPER64_DIR)\plugins\$(TargetFilename)"</Command>
       </PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Test|x64'">
       </PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="libebur128\ebur128.c">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-      </PrecompiledHeader>
-      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Level2</WarningLevel>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-      </PrecompiledHeader>
-      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Level2</WarningLevel>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">
-      </PrecompiledHeader>
-      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">Level2</WarningLevel>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Test|x64'">
-      </PrecompiledHeader>
-      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Test|x64'">Level2</WarningLevel>
     </ClCompile>
     <ClCompile Include="ObjectState\ObjectState.cpp" />
     <ClCompile Include="ObjectState\TrackEnvelope.cpp" />

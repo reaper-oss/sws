@@ -36,6 +36,9 @@ ReaScript
 +Other:
  - Changed envelope object type in BR_EnvAlloc and other functions to avoid confusion (existing scripts should be unaffected)
 
+Fixes
++Improved deleting tempo markers with different time signatures when using SWS/BR: Delete tempo marker and preserve position and length of items (including MIDI events)
+
 !v2.4.0 #10 pre-release build (July 11, 2014)
 <strong>REAPER v4.70+ is required!</strong>
 New API functions were introduced in this version, they enable various improvements in the SWS/S&M Extension.

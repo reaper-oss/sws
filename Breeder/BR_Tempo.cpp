@@ -1135,55 +1135,42 @@ void DeleteTempoPreserveItems (COMMAND_T* ct)
 		}
 	}
 
-	// Readjust unselected tempo markers
-	double offset = 0;
-	for (int i = 0; i < tempoMap.CountConseq(); ++i)
+	// Readjust unselected tempo markers if needed
+	int timeBase; GetConfig("tempoenvtimelock", timeBase);
+	if (timeBase != 0)
 	{
-		int startId, endId;
-		tempoMap.GetConseq(i, &startId, &endId);
-
-		if (endId == tempoMap.Count()-1) continue;         // no points after selection, nothing to adjust
-		if (startId == 0 && (++startId > endId)) continue; // skip first point
-
-		// Get musical length of selection
-		double musicalLen = 0;
-		for (int i = startId ; i <= endId + 1; ++i)
+		double offset = 0;
+		for (int i = 0; i < tempoMap.CountConseq(); ++i)
 		{
+			int startId, endId;
+			tempoMap.GetConseq(i, &startId, &endId);
+			if (startId == 0 && (++startId > endId)) continue; // skip first point
+
 			double t0, t1, b0, b1; int s0;
-			tempoMap.GetPoint(i-1,   &t0, &b0, &s0, NULL);
-			tempoMap.GetPoint(i, &t1, &b1, NULL, NULL);
-			if (i == startId) t0 -= offset; // last unselected point before next selection - readjust position to original (earlier iterations moved it)
+			tempoMap.GetPoint(startId - 1, &t0, &b0, &s0, NULL);	
 
-			bool sig, partial;
-			if (tempoMap.GetTimeSig(i, &sig, &partial, NULL, NULL) && sig && partial)
+			if (tempoMap.GetPoint(endId + 1, &t1, &b1, NULL, NULL))
 			{
-				musicalLen += (TimeMap_timeToQN(t1) - TimeMap_timeToQN(t0)) / 4;
-			}
-			else
-			{
+				t0 -= offset; // last unselected point before next selection - readjust position to original (earlier iterations moved it)
+
+				int startMeasure, endMeasure, num, den;
+				double startBeats = TimeMap2_timeToBeats(NULL, t0, &startMeasure, &num, NULL, &den);
+				double endBeats   = TimeMap2_timeToBeats(NULL, t1, &endMeasure, NULL, NULL, NULL);
+				double beatCount = endBeats - startBeats + num * (endMeasure - startMeasure);
+
 				if (s0 == SQUARE)
-					musicalLen += (t1-t0) * b0 / 240;
-				else
-					musicalLen += (t1-t0) * (b0+b1) / 480;
+					offset += (t0 + (240*beatCount) / (den * b0))        - t1;  // num and den can actually be different because some of tempo markers with time signatures
+				else                                                            // could have been scheduled for deletion but reaper does it in the same manner so leave it
+					offset += (t0 + (480*beatCount) / (den * (b0 + b1))) - t1;
+
+				while (!tempoMap.GetSelection(++endId) && endId < tempoMap.Count())
+				{
+					double t;
+					tempoMap.GetPoint(endId, &t, NULL, NULL, NULL);
+					t += offset;
+					tempoMap.SetPoint(endId, &t, NULL, NULL, NULL);
+				}
 			}
-		}
-
-		// Readjust points after selection
-		double t0, t1, b0, b1; int s0;
-		tempoMap.GetPoint(startId - 1, &t0, &b0, &s0, NULL);
-		tempoMap.GetPoint(endId   + 1, &t1, &b1, NULL, NULL);
-
-		if (s0 == SQUARE)
-			offset = (t0 + (240*musicalLen) / b0) - t1;
-		else
-			offset = (t0 + (480*musicalLen) / (b0 + b1)) - t1;
-
-		while (!tempoMap.GetSelection(++endId) && endId < tempoMap.Count())
-		{
-			double t;
-			tempoMap.GetPoint(endId, &t, NULL, NULL, NULL);
-			t += offset;
-			tempoMap.SetPoint(endId, &t, NULL, NULL, NULL);
 		}
 	}
 

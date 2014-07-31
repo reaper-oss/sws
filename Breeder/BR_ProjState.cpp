@@ -143,6 +143,7 @@ BR_EnvSel::BR_EnvSel (int slot, TrackEnvelope* envelope)
 {
 	m_slot = slot;
 	m_selection = GetSelPoints(envelope);
+	MarkProjectDirty(NULL);
 }
 
 BR_EnvSel::BR_EnvSel (int slot, ProjectStateContext* ctx)
@@ -170,6 +171,7 @@ void BR_EnvSel::SaveState (ProjectStateContext* ctx)
 void BR_EnvSel::Save (TrackEnvelope* envelope)
 {
 	m_selection = GetSelPoints(envelope);
+	MarkProjectDirty(NULL);
 }
 
 void BR_EnvSel::Restore (TrackEnvelope* envelope)
@@ -195,6 +197,7 @@ BR_CursorPos::BR_CursorPos (int slot)
 {
 	m_slot = slot;
 	m_position = GetCursorPositionEx(NULL);
+	MarkProjectDirty(NULL);
 }
 
 BR_CursorPos::BR_CursorPos (int slot, ProjectStateContext* ctx)
@@ -221,6 +224,7 @@ void BR_CursorPos::SaveState (ProjectStateContext* ctx)
 void BR_CursorPos::Save ()
 {
 	m_position = GetCursorPositionEx(NULL);
+	MarkProjectDirty(NULL);
 }
 
 void BR_CursorPos::Restore ()
@@ -240,6 +244,7 @@ BR_MidiNoteSel::BR_MidiNoteSel (int slot, MediaItem_Take* take)
 {
 	m_slot = slot;
 	m_selection = GetSelectedNotes(take);
+	MarkProjectDirty(NULL);
 }
 
 BR_MidiNoteSel::BR_MidiNoteSel (int slot, ProjectStateContext* ctx)
@@ -267,6 +272,7 @@ void BR_MidiNoteSel::SaveState (ProjectStateContext* ctx)
 void BR_MidiNoteSel::Save (MediaItem_Take* take)
 {
 	m_selection = GetSelectedNotes(take);
+	MarkProjectDirty(NULL);
 }
 
 void BR_MidiNoteSel::Restore (MediaItem_Take* take)

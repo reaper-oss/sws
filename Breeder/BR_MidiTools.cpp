@@ -227,17 +227,17 @@ item (item)
 
 			for (int i = 0; i < noteCount; ++i)
 			{
-				midiTake->noteEvents.push_back(BR_MidiItemTimePos::MidiTake::NoteEvent(take, 0));
+				midiTake->noteEvents.push_back(BR_MidiItemTimePos::MidiTake::NoteEvent(take, deleteSavedEvents ? 0 : i));
 				if (deleteSavedEvents) MIDI_DeleteNote(take, 0);
 			}
 			for (int i = 0; i < ccCount; ++i)
 			{
-				midiTake->ccEvents.push_back(BR_MidiItemTimePos::MidiTake::CCEvent(take, 0));
+				midiTake->ccEvents.push_back(BR_MidiItemTimePos::MidiTake::CCEvent(take, deleteSavedEvents ? 0 : i));
 				if (deleteSavedEvents) MIDI_DeleteCC(take, 0);
 			}
 			for (int i = 0; i < textCount; ++i)
 			{
-				midiTake->sysEvents.push_back(BR_MidiItemTimePos::MidiTake::SysEvent(take, 0));
+				midiTake->sysEvents.push_back(BR_MidiItemTimePos::MidiTake::SysEvent(take, deleteSavedEvents ? 0 : i));
 				if (deleteSavedEvents) MIDI_DeleteTextSysexEvt(take, 0);
 			}
 		}
@@ -246,10 +246,7 @@ item (item)
 
 void BR_MidiItemTimePos::Restore (double offset /*=0*/)
 {
-	SetMediaItemInfo_Value(item, "D_POSITION", position);
-	SetMediaItemInfo_Value(item, "D_LENGTH", length);
-	SetMediaItemInfo_Value(item, "C_BEATATTACHMODE", timeBase);
-
+	SetMediaItemInfo_Value(item, "C_BEATATTACHMODE", 0);
 	for (size_t i = 0; i < savedMidiTakes.size(); ++i)
 	{
 		BR_MidiItemTimePos::MidiTake* midiTake = &savedMidiTakes[i];
@@ -264,6 +261,10 @@ void BR_MidiItemTimePos::Restore (double offset /*=0*/)
 		for (size_t i = 0; i < midiTake->sysEvents.size(); ++i)
 			midiTake->sysEvents[i].InsertEvent(take, offset);
 	}
+
+	SetMediaItemInfo_Value(item, "D_POSITION", position);
+	SetMediaItemInfo_Value(item, "D_LENGTH", length);
+	SetMediaItemInfo_Value(item, "C_BEATATTACHMODE", timeBase);
 }
 
 BR_MidiItemTimePos::MidiTake::NoteEvent::NoteEvent (MediaItem_Take* take, int id)
@@ -275,9 +276,9 @@ BR_MidiItemTimePos::MidiTake::NoteEvent::NoteEvent (MediaItem_Take* take, int id
 
 void BR_MidiItemTimePos::MidiTake::NoteEvent::InsertEvent (MediaItem_Take* take, double offset)
 {
-	pos = MIDI_GetPPQPosFromProjTime(take, pos + offset);
-	end = MIDI_GetPPQPosFromProjTime(take, end + offset);
-	MIDI_InsertNote(take, selected, muted, pos, end, chan, pitch, vel);
+	double posPPQ = MIDI_GetPPQPosFromProjTime(take, pos + offset);
+	double endPPQ = MIDI_GetPPQPosFromProjTime(take, end + offset);
+	MIDI_InsertNote(take, selected, muted, posPPQ, endPPQ, chan, pitch, vel);
 }
 
 BR_MidiItemTimePos::MidiTake::CCEvent::CCEvent (MediaItem_Take* take, int id)
@@ -288,8 +289,8 @@ BR_MidiItemTimePos::MidiTake::CCEvent::CCEvent (MediaItem_Take* take, int id)
 
 void BR_MidiItemTimePos::MidiTake::CCEvent::InsertEvent (MediaItem_Take* take, double offset)
 {
-	pos = MIDI_GetPPQPosFromProjTime(take, pos + offset);
-	MIDI_InsertCC(take, selected, muted, pos, chanmsg, chan, msg2, msg3);
+	double posPPQ = MIDI_GetPPQPosFromProjTime(take, pos + offset);
+	MIDI_InsertCC(take, selected, muted, posPPQ, chanmsg, chan, msg2, msg3);
 }
 
 BR_MidiItemTimePos::MidiTake::SysEvent::SysEvent (MediaItem_Take* take, int id)
@@ -302,8 +303,8 @@ BR_MidiItemTimePos::MidiTake::SysEvent::SysEvent (MediaItem_Take* take, int id)
 
 void BR_MidiItemTimePos::MidiTake::SysEvent::InsertEvent (MediaItem_Take* take, double offset)
 {
-	pos = MIDI_GetPPQPosFromProjTime(take, pos + offset);
-	MIDI_InsertTextSysexEvt(take, selected, muted, pos, type, msg.Get(), msg_sz);
+	double posPPQ = MIDI_GetPPQPosFromProjTime(take, pos + offset);
+	MIDI_InsertTextSysexEvt(take, selected, muted, posPPQ, type, msg.Get(), msg_sz);
 }
 
 BR_MidiItemTimePos::MidiTake::MidiTake (MediaItem_Take* take, int noteCount /*=0*/, int ccCount /*=0*/, int sysCount /*=0*/) :

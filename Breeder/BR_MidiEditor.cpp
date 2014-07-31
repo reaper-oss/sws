@@ -73,14 +73,13 @@ static void MidiTakePreview (int mode, MediaItem_Take* take, MediaTrack* track, 
 
 		if (g_itemPreviewPaused && mode != 1) // requesting new preview while old one is still playing shouldn't unpause playback
 		{
-			if (IsPaused()) OnPauseButton();
+			if (IsPaused())
+				OnPauseButton();
 			g_itemPreviewPaused = false;
 		}
-
-		if (mode == 2)
-			return;
 	}
-	if (mode == 0)
+
+	if (mode == 0 || mode == 2)
 		return;
 
 	if (take)
@@ -236,8 +235,10 @@ void ME_ShowUsedCCLanesDetect14Bit (COMMAND_T* ct, int val, int valhw, int relmo
 			set<int> usedCC = GetUsedCCLanes(MIDIEditor_GetTake(MIDIEditor_GetActive()), 2);
 
 			for (int i = 0; i < laneView->countShown(); ++i)
+			{
 				if (usedCC.find(laneView->getIdAt(i)) == usedCC.end())
 					laneView->remove(i--);
+			}
 
 			// Special case: Bank select and CC0 (from FNG version to keep behavior identical)
 			if (usedCC.find(0) != usedCC.end() && usedCC.find(CC_BANK_SELECT) != usedCC.end() && !laneView->isShown(131))
@@ -287,7 +288,7 @@ void ME_SaveNoteSelSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWND hw
 	{
 		int slot = (int)ct->user;
 
-		for (int i = 0; i < g_midiNoteSel.Get()->GetSize(); i++)
+		for (int i = 0; i < g_midiNoteSel.Get()->GetSize(); ++i)
 		{
 			if (slot == g_midiNoteSel.Get()->Get(i)->GetSlot())
 				return g_midiNoteSel.Get()->Get(i)->Save(take);
@@ -302,7 +303,7 @@ void ME_RestoreNoteSelSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWND
 	{
 		int slot = (int)ct->user;
 
-		for (int i = 0; i < g_midiNoteSel.Get()->GetSize(); i++)
+		for (int i = 0; i < g_midiNoteSel.Get()->GetSize(); ++i)
 		{
 			if (slot == g_midiNoteSel.Get()->Get(i)->GetSlot())
 			{

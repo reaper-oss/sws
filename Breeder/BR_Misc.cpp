@@ -113,7 +113,7 @@ void MidiItemTempo (COMMAND_T* ct)
 		char* token = strtok(chunk, "\n");
 		while (token != NULL)
 		{
-			if (!strncmp(token, "IGNTEMPO ", 9))
+			if (!strncmp(token, "IGNTEMPO ", sizeof("IGNTEMPO ") - 1))
 			{
 				int value, num, den; double bpm;
 				if ((int)ct->user == 0)
@@ -408,7 +408,7 @@ void PlaybackAtMouseCursor (COMMAND_T* ct)
 	if (IsRecording())
 		return;
 
-	// Do both MIDI and arrange from here to prevent focusing issues (not unexpected in dual monitor situation)
+	// Do both MIDI editor and arrange from here to prevent focusing issues (not unexpected in dual monitor situation)
 	double mousePos = PositionAtMouseCursor(true);
 	if (mousePos == -1)
 		mousePos = ME_PositionAtMouseCursor(true, true);
@@ -436,7 +436,7 @@ void SaveCursorPosSlot (COMMAND_T* ct)
 {
 	int slot = (int)ct->user;
 
-	for (int i = 0; i < g_cursorPos.Get()->GetSize(); i++)
+	for (int i = 0; i < g_cursorPos.Get()->GetSize(); ++i)
 	{
 		if (slot == g_cursorPos.Get()->Get(i)->GetSlot())
 			return g_cursorPos.Get()->Get(i)->Save();
@@ -449,7 +449,7 @@ void RestoreCursorPosSlot (COMMAND_T* ct)
 {
 	int slot = (int)ct->user;
 
-	for (int i = 0; i < g_cursorPos.Get()->GetSize(); i++)
+	for (int i = 0; i < g_cursorPos.Get()->GetSize(); ++i)
 	{
 		if (slot == g_cursorPos.Get()->Get(i)->GetSlot())
 		{
@@ -462,13 +462,13 @@ void RestoreCursorPosSlot (COMMAND_T* ct)
 /******************************************************************************
 * Toggle states                                                               *
 ******************************************************************************/
-int IsSnapFollowsGridVisOn (COMMAND_T* = NULL)
+int IsSnapFollowsGridVisOn (COMMAND_T* ct)
 {
 	int option; GetConfig("projshowgrid", option);
 	return !GetBit(option, 15);
 }
 
-int IsPlaybackFollowingTempoChange (COMMAND_T* = NULL)
+int IsPlaybackFollowingTempoChange (COMMAND_T* ct)
 {
 	int option; GetConfig("seekmodes", option);
 	return GetBit(option, 5);

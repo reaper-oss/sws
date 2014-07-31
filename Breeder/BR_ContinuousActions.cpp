@@ -78,12 +78,6 @@ static WDL_DLGRET TooltipWnd(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 static void SetTooltip (const char* text, POINT* p)
 {
-	#ifdef _WIN32
-		static int yOffset = 0;
-	#else
-		static int yOffset = -27;
-	#endif
-
 	if (text)
 	{
 		if (!g_tooltipBm)
@@ -91,6 +85,12 @@ static void SetTooltip (const char* text, POINT* p)
 
 		if (g_tooltipBm)
 		{
+			#ifdef _WIN32
+				static int s_yOffset = 0;
+			#else
+				static int s_yOffset = -27;
+			#endif
+
 			if (!g_tooltipWnd)
 			{
 				g_tooltipWnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_BR_TOOLTIP), g_hwndParent, TooltipWnd);
@@ -98,13 +98,13 @@ static void SetTooltip (const char* text, POINT* p)
 
 				EnableWindow(g_tooltipWnd, false);
 				DrawTooltip(g_tooltipBm, text);
-				SetWindowPos(g_tooltipWnd, HWND_TOPMOST, p->x + 30, p->y + yOffset, g_tooltipBm->getWidth(), g_tooltipBm->getHeight(), SWP_NOACTIVATE);
+				SetWindowPos(g_tooltipWnd, HWND_TOPMOST, p->x + 30, p->y + s_yOffset, g_tooltipBm->getWidth(), g_tooltipBm->getHeight(), SWP_NOACTIVATE);
 				ShowWindow(g_tooltipWnd, SW_SHOWNOACTIVATE);
 			}
 			else
 			{
 				DrawTooltip(g_tooltipBm, text);
-				SetWindowPos(g_tooltipWnd, 0, p->x + 30, p->y + yOffset, g_tooltipBm->getWidth(), g_tooltipBm->getHeight(), SWP_NOACTIVATE|SWP_NOZORDER);
+				SetWindowPos(g_tooltipWnd, 0, p->x + 30, p->y + s_yOffset, g_tooltipBm->getWidth(), g_tooltipBm->getHeight(), SWP_NOACTIVATE|SWP_NOZORDER);
 				InvalidateRect(g_tooltipWnd, NULL, TRUE);
 			}
 		}
@@ -337,8 +337,8 @@ int  ContinuousActionTooltips ()
 
 bool ContinuousActionHook (int cmd, int flag)
 {
-	BR_ContinuousAction ca(cmd, NULL, NULL, NULL, NULL);
-	int id = g_actions.FindSorted(&ca, &CompareActionsByCmd);
+	BR_ContinuousAction key(cmd, NULL, NULL, NULL, NULL);
+	int id = g_actions.FindSorted(&key, &CompareActionsByCmd);
 	if (id != -1)
 	{
 		if (!g_actionInProgress)

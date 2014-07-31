@@ -79,12 +79,12 @@ static bool EnvMouseUndo ()
 
 static HCURSOR EnvMouseCursor (int window)
 {
-	static HCURSOR cursor = NULL;
-	if (!cursor)
-		cursor = LoadCursor(NULL, IDC_SIZENS);
+	static HCURSOR s_cursor = NULL;
+	if (!s_cursor)
+		s_cursor = LoadCursor(NULL, IDC_SIZENS);
 
 	if (window == BR_ContinuousAction::ARRANGE || window == BR_ContinuousAction::RULER)
-		return cursor;
+		return s_cursor;
 	else
 		return NULL;
 }
@@ -111,8 +111,8 @@ static WDL_FastString EnvMouseTooltip (int window)
 			else
 				g_envMouseEnvelope->GetPoint((g_envMouseMode == 0) ? g_envMouseEnvelope->FindClosest(position) : g_envMouseEnvelope->FindPrevious(position), &position, NULL, NULL, NULL);
 
-			static const char* format = __localizeFunc("Envelope: %s\n%s at %s", "tooltip", 0);
-			tooltip.AppendFormatted(512, format, (g_envMouseEnvelope->GetName()).Get(), (g_envMouseEnvelope->FormatValue(value)).Get(), FormatTime(position).Get());
+			static const char* s_format = __localizeFunc("Envelope: %s\n%s at %s", "tooltip", 0);
+			tooltip.AppendFormatted(512, s_format, (g_envMouseEnvelope->GetName()).Get(), (g_envMouseEnvelope->FormatValue(value)).Get(), FormatTime(position).Get());
 		}
 
 	}
@@ -130,16 +130,16 @@ void SetEnvPointMouseValueInit ()
 ******************************************************************************/
 void SetEnvPointMouseValue (COMMAND_T* ct)
 {
-	static int    lastEndId       = -1;
-	static double lastEndPosition = -1;
-	static double lastEndNormVal  = -1;
+	static int    s_lastEndId       = -1;
+	static double s_lastEndPosition = -1;
+	static double s_lastEndNormVal  = -1;
 
 	// Action called for the first time
 	if (g_envMouseMode == -666)
 	{
-		lastEndId       = -1;
-		lastEndPosition = -1;
-		lastEndNormVal  = -1;
+		s_lastEndId       = -1;
+		s_lastEndPosition = -1;
+		s_lastEndNormVal  = -1;
 		g_envMouseMode  = (int)ct->user;
 	}
 
@@ -151,7 +151,7 @@ void SetEnvPointMouseValue (COMMAND_T* ct)
 	// Get mouse positions
 	int yOffset; bool overRuler;
 	double endPosition   = PositionAtMouseCursor(true, false, &yOffset, &overRuler);
-	double startPosition = (lastEndPosition == -1) ? (endPosition) : (lastEndPosition);
+	double startPosition = (s_lastEndPosition == -1) ? (endPosition) : (s_lastEndPosition);
 	if (endPosition == -1)
 	{
 		ContinuousActionStopAll();
@@ -161,23 +161,23 @@ void SetEnvPointMouseValue (COMMAND_T* ct)
 	// Get normalized mouse values
 	yOffset = (overRuler) ? envY : SetToBounds(yOffset, envY, envY + envHeight);
 	double endNormVal   = ((double)envHeight + (double)envY - (double)yOffset) / (double)envHeight;
-	double startNormVal = (lastEndPosition == -1) ? (endNormVal) : (lastEndNormVal);
+	double startNormVal = (s_lastEndPosition == -1) ? (endNormVal) : (s_lastEndNormVal);
 
 	// Find all the point over which mouse passed
 	int startId = -1;
 	int endId   = -1;
 	if ((int)ct->user == 0)
 	{
-		if (lastEndId == -1)
+		if (s_lastEndId == -1)
 			startId = (g_envMouseEnvelope->IsTempo()) ? FindClosestTempoMarker(startPosition) : g_envMouseEnvelope->FindClosest(startPosition);
 		else
-			startId = lastEndId;
+			startId = s_lastEndId;
 
 		endId  = (g_envMouseEnvelope->IsTempo()) ? FindClosestTempoMarker(endPosition) : g_envMouseEnvelope->FindClosest(endPosition);
 	}
 	else
 	{
-		if (lastEndId == -1)
+		if (s_lastEndId == -1)
 		{
 			startId = (g_envMouseEnvelope->IsTempo()) ? FindPreviousTempoMarker(startPosition) : g_envMouseEnvelope->FindPrevious(startPosition);
 			double nextPos;
@@ -188,7 +188,7 @@ void SetEnvPointMouseValue (COMMAND_T* ct)
 		}
 		else
 		{
-			startId = lastEndId;
+			startId = s_lastEndId;
 		}
 
 		endId = (g_envMouseEnvelope->IsTempo()) ? FindPreviousTempoMarker(endPosition) : g_envMouseEnvelope->FindPrevious(endPosition);
@@ -276,9 +276,9 @@ void SetEnvPointMouseValue (COMMAND_T* ct)
 			swap(endPosition, startPosition);
 			swap(endNormVal,  startNormVal);
 		}
-		lastEndId       = endId;
-		lastEndPosition = endPosition;
-		lastEndNormVal  = endNormVal;
+		s_lastEndId       = endId;
+		s_lastEndPosition = endPosition;
+		s_lastEndNormVal  = endNormVal;
 	}
 }
 

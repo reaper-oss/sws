@@ -28,11 +28,15 @@
 #pragma once
 
 /******************************************************************************
-* Commands                                                                    *
+* Commands: Tempo - Grid                                                      *
 ******************************************************************************/
 void MoveGridToMouseInit ();
 void MoveGridToMouse (COMMAND_T*);
 void MoveGridToEditPlayCursor (COMMAND_T*);
+
+/******************************************************************************
+* Commands: Tempo - Misc                                                      *
+******************************************************************************/
 void MoveTempo (COMMAND_T*);
 void EditTempo (COMMAND_T*);
 void EditTempoGradual (COMMAND_T*);
@@ -49,10 +53,6 @@ void ConvertMarkersToTempoDialog (COMMAND_T*);
 void SelectAdjustTempoDialog (COMMAND_T*);
 void RandomizeTempoDialog (COMMAND_T*);
 void TempoShapeOptionsDialog (COMMAND_T*);
-
-/******************************************************************************
-* Toggle states                                                               *
-******************************************************************************/
 int IsConvertMarkersToTempoVisible (COMMAND_T*);
 int IsSelectAdjustTempoVisible (COMMAND_T*);
 int IsTempoShapeOptionsVisible (COMMAND_T*);

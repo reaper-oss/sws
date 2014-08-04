@@ -28,7 +28,7 @@
 #pragma once
 
 /******************************************************************************
-* Commands                                                                    *
+* Commands: Misc                                                              *
 ******************************************************************************/
 void SplitItemAtTempo (COMMAND_T*);
 void MarkersAtTempo (COMMAND_T*);
@@ -36,6 +36,7 @@ void MidiItemTempo (COMMAND_T*);
 void MidiItemTrim (COMMAND_T*);
 void MarkersAtNotes (COMMAND_T*);
 void MarkersAtStretchMarkers (COMMAND_T*);
+void MarkerAtMouse (COMMAND_T*);
 void MarkersRegionsAtItems (COMMAND_T*);
 void SnapFollowsGridVis (COMMAND_T*);
 void TrimNewVolPanEnvs (COMMAND_T*);
@@ -44,13 +45,17 @@ void CycleRecordModes (COMMAND_T*);
 void FocusArrange (COMMAND_T*);
 void ToggleItemOnline (COMMAND_T*);
 void ItemSourcePathToClipBoard (COMMAND_T*);
-void PreviewItemAtMouse (COMMAND_T*);
 void PlaybackAtMouseCursor (COMMAND_T*);
 void SaveCursorPosSlot (COMMAND_T*);
 void RestoreCursorPosSlot (COMMAND_T*);
 
 /******************************************************************************
-* Toggle states                                                               *
+* Commands: Misc - Media item preview                                         *
+******************************************************************************/
+void PreviewItemAtMouse (COMMAND_T*);
+
+/******************************************************************************
+* Toggle states: Misc                                                         *
 ******************************************************************************/
 int IsSnapFollowsGridVisOn (COMMAND_T*);
 int IsTrimNewVolPanEnvsOn (COMMAND_T*);

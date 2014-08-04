@@ -89,15 +89,8 @@ static HCURSOR MoveGridCursor (int window)
 		return NULL;
 }
 
-void MoveGridToMouseInit ()
-{
-	ContinuousActionRegister(new BR_ContinuousAction(NamedCommandLookup("_BR_MOVE_GRID_TO_MOUSE"),       &MoveGridInit, &MoveGridDoUndo, &MoveGridCursor));
-	ContinuousActionRegister(new BR_ContinuousAction(NamedCommandLookup("_BR_MOVE_M_GRID_TO_MOUSE"),     &MoveGridInit, &MoveGridDoUndo, &MoveGridCursor));
-	ContinuousActionRegister(new BR_ContinuousAction(NamedCommandLookup("_BR_MOVE_CLOSEST_TEMPO_MOUSE"), &MoveGridInit, &MoveGridDoUndo, &MoveGridCursor));
-}
-
 /******************************************************************************
-* Commands                                                                    *
+* Misc                                                                        *
 ******************************************************************************/
 static bool MoveTempo (BR_Envelope& tempoMap, int id, double timeDiff)
 {
@@ -182,6 +175,16 @@ static bool MoveTempo (BR_Envelope& tempoMap, int id, double timeDiff)
 	tempoMap.SetPoint(id, &Nt2, &Nb2, NULL, NULL);
 
 	return true;
+}
+
+/******************************************************************************
+* Commands: Tempo - Grid                                                      *
+******************************************************************************/
+void MoveGridToMouseInit ()
+{
+	ContinuousActionRegister(new BR_ContinuousAction(NamedCommandLookup("_BR_MOVE_GRID_TO_MOUSE"),       &MoveGridInit, &MoveGridDoUndo, &MoveGridCursor));
+	ContinuousActionRegister(new BR_ContinuousAction(NamedCommandLookup("_BR_MOVE_M_GRID_TO_MOUSE"),     &MoveGridInit, &MoveGridDoUndo, &MoveGridCursor));
+	ContinuousActionRegister(new BR_ContinuousAction(NamedCommandLookup("_BR_MOVE_CLOSEST_TEMPO_MOUSE"), &MoveGridInit, &MoveGridDoUndo, &MoveGridCursor));
 }
 
 void MoveGridToMouse (COMMAND_T* ct)
@@ -357,6 +360,9 @@ void MoveGridToEditPlayCursor (COMMAND_T* ct)
 		SetConfig("seekmodes", seekmodes);
 }
 
+/******************************************************************************
+* Commands: Tempo - Misc                                                      *
+******************************************************************************/
 void MoveTempo (COMMAND_T* ct)
 {
 	BR_Envelope tempoMap(GetTempoEnv());
@@ -1147,7 +1153,7 @@ void DeleteTempoPreserveItems (COMMAND_T* ct)
 			if (startId == 0 && (++startId > endId)) continue; // skip first point
 
 			double t0, t1, b0, b1; int s0;
-			tempoMap.GetPoint(startId - 1, &t0, &b0, &s0, NULL);	
+			tempoMap.GetPoint(startId - 1, &t0, &b0, &s0, NULL);
 
 			if (tempoMap.GetPoint(endId + 1, &t1, &b1, NULL, NULL))
 			{
@@ -1499,9 +1505,6 @@ void TempoShapeOptionsDialog (COMMAND_T* ct)
 	RefreshToolbar(NamedCommandLookup("_BR_TEMPO_SHAPE_OPTIONS"));
 }
 
-/******************************************************************************
-* Toggle states                                                               *
-******************************************************************************/
 int IsConvertMarkersToTempoVisible (COMMAND_T* ct)
 {
 	return g_convertMarkersToTempoDialog;

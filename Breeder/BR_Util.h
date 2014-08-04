@@ -63,8 +63,9 @@ vector<int> GetDigits (int val); // in 567 [0] = 5, [1] = 6 etc...
 WDL_FastString GetSourceChunk (PCM_source* source);
 template <typename T> bool WritePtr (T* ptr, T val)  {if (ptr){*ptr = val; return true;} return false;}
 template <typename T> bool ReadPtr  (T* ptr, T& val) {if (ptr){val = *ptr; return true;} return false;}
-template <typename T> bool CheckBounds (T val, T min, T max) {if (val < min) return false; if (val > max) return false; return true;}
-template <typename T> T    SetToBounds (T val, T min, T max) {if (val < min) return min; if (val > max) return max; return val;}
+template <typename T> bool CheckBounds   (T val, T min, T max) {if (val < min)  return false; if (val > max)  return false; return true;}
+template <typename T> bool CheckBoundsEx (T val, T min, T max) {if (val <= min) return false; if (val >= max) return false; return true;}
+template <typename T> T    SetToBounds   (T val, T min, T max) {if (val < min)  return min;   if (val > max)  return max;   return val;}
 template <typename T> T    IsEqual (T a, T b, T epsilon) {epsilon = abs(epsilon); return CheckBounds(a, b - epsilon, b + epsilon);}
 
 /******************************************************************************
@@ -82,6 +83,7 @@ void InitTempoMap ();
 void ScrollToTrackIfNotInArrange (MediaTrack* track);
 void StartPlayback (double position);
 void GetSetLastAdjustedSend (bool set, MediaTrack** track, int* sendId, int* type); // for type see BR_EnvType (works only for volume and pan, not mute)
+bool SetIgnoreTempo (MediaItem* item, bool ignoreTempo, double bpm, int num, int den);
 bool DoesItemHaveMidiEvents (MediaItem* item);
 bool TrimItem (MediaItem* item, double start, double end);
 bool IsPlaying ();
@@ -147,15 +149,16 @@ void CenterDialog (HWND hwnd, HWND target, HWND zOrder);
 ******************************************************************************/
 struct BR_MouseContextInfo
 {
-	/* Invalid stuff will always be NULL, false, -1 or -2 depending on the type */
-	MediaTrack* track;
-	MediaItem* item;
-	MediaItem_Take* take;
-	TrackEnvelope* envelope;
-	void* midiEditor;
-	bool takeEnvelope, midiInlineEditor;
-	double position;
-	int noteRow, ccLane, ccLaneVal, ccLaneId;
+											  // In case the thing is invalid:
+	MediaTrack* track;                        // NULL
+	MediaItem* item;                          // NULL
+	MediaItem_Take* take;                     // NULL
+	TrackEnvelope* envelope;                  // NULL
+	void* midiEditor;                         // NULL
+	bool takeEnvelope, midiInlineEditor;      // false
+	double position;                          // -1
+	int noteRow, ccLaneVal, ccLaneId;         // -1
+	int ccLane;                               // -2
 	BR_MouseContextInfo();
 };
 

@@ -385,11 +385,11 @@ HMENU SWSCreateMenuFromCommandTable(COMMAND_T pCommands[], HMENU hMenu, int* iIn
 
 	while (pCommands[i].id != LAST_COMMAND && pCommands[i].id != SWS_ENDSUBMENU)
 	{
-    const char* name = pCommands[i].menuText;
+	const char* name = pCommands[i].menuText;
 		if (name && *name)
 		{
-      if (!hMenu)
-        hMenu = CreatePopupMenu();
+	  if (!hMenu)
+		hMenu = CreatePopupMenu();
 
 			if (pCommands[i].id == SWS_STARTSUBMENU)
 			{
@@ -755,6 +755,7 @@ extern "C"
 		IMPAPI(GetTrackMediaItem);
 		IMPAPI(GetTrackMIDINoteNameEx);
 		IMPAPI(GetTrackNumMediaItems);
+		IMPAPI(GetTrackNumSends);
 		IMPAPI(GetTrackUIVolPan);
 		IMPAPI(GetUserInputs);
 		IMPAPI(get_config_var);
@@ -873,6 +874,8 @@ extern "C"
 		IMPAPI(SetTempoTimeSigMarker);
 		IMPAPI(SetTakeStretchMarker);
 		IMPAPI(SetTrackSelected);
+		IMPAPI(SetTrackSendUIPan);
+		IMPAPI(SetTrackSendUIVol);
 		IMPAPI(ShowActionList);
 		IMPAPI(ShowConsoleMsg);
 		IMPAPI(ShowMessageBox);

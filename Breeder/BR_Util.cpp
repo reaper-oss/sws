@@ -453,6 +453,54 @@ void GetSetLastAdjustedSend (bool set, MediaTrack** track, int* sendId, int* typ
 	}
 }
 
+bool SetIgnoreTempo (MediaItem* item, bool ignoreTempo, double bpm, int num, int den)
+{
+	bool midiFound = false;
+	for (int i = 0; i < CountTakes(item); ++i)
+	{
+		if (IsMidi(GetMediaItemTake(item, i)))
+		{
+			midiFound = true;
+			break;
+		}
+	}
+	if (!midiFound)
+		return false;
+
+	WDL_FastString newState;
+	char* chunk = GetSetObjectState(item, "");
+	bool stateChanged = false;
+
+	char* token = strtok(chunk, "\n");
+	while (token != NULL)
+	{
+		if (!strncmp(token, "IGNTEMPO ", sizeof("IGNTEMPO ") - 1))
+		{
+			if (ignoreTempo)
+				newState.AppendFormatted(256, "IGNTEMPO %d %.14lf %d %d\n", 1, bpm, num, den);
+			else
+			{
+				double currentBpm;
+				int currentNum, currentDen;
+				sscanf(token, "IGNTEMPO %*d %lf %d %d\n", &currentBpm, &currentNum, &currentDen);
+				newState.AppendFormatted(256, "IGNTEMPO %d %.14lf %d %d\n", 0, currentBpm, currentNum, currentDen);
+			}
+			stateChanged = true;			
+		}
+		else
+		{
+			AppendLine(newState, token);
+		}
+		token = strtok(NULL, "\n");
+	}
+
+	if (stateChanged)
+		GetSetObjectState(item, newState.Get());
+	FreeHeapPtr(chunk);
+
+	return stateChanged;
+}
+
 bool DoesItemHaveMidiEvents (MediaItem* item)
 {
 	for (int i = 0; i < CountTakes(item); ++i)

@@ -32,12 +32,37 @@ Analyze and normalize loudness
  - Renamed SWS/BR: Normalize loudness of selected items to SWS/BR: Normalize loudness of selected items/tracks (also no longer modal)
  - Removed SWS/BR: Normalize loudness of selected tracks
 
+Added actions
++Main:
+ - SWS/BR: Select envelope points on/between grid (2 versions: time selection and normal)
+ - SWS/BR: Add envelope points located on/between grid to existing selection (2 versions: time selection and normal)
+ - SWS/BR: Delete envelope points on/between grid (2 versions: time selection and normal)
+ - SWS/BR: Create project marker at mouse cursor
+ - SWS/BR: Create project marker at mouse cursor (obey snapping)
+ - SWS/BR: Insert 2 envelope points at time selection to all visible track envelopes
+ - SWS/BR: Insert 2 envelope points at time selection to all visible track envelopes in selected tracks
+ - SWS/BR: Show all active FX envelopes for selected tracks
+ - SWS/BR: Show all FX envelopes for selected tracks
+ - SWS/BR: Show all/volume/pan/mute active send envelopes for selected track
+ - SWS/BR: Show all/volume/pan/mute send envelopes for selected track
+  - Note: all show FX/send envelope actions come in 3 flavors : show, hide and toggle show
+ - SWS/BR: Show/hide track envelope for last adjusted send (3 verions)
+  - Note: that's right, due to API limitation it's last adjusted, not touched
+ - SWS/BR: Enable "Ignore project tempo" for selected MIDI items preserving time position of MIDI events (use tempo at item's start)
+  - Note: the action is meant for http://forum.cockos.com/showthread.php?p=1374175#post1374175|these kind of issues|
++MIDI editor:
+ - SWS/BR: Save/Restore selected events in last clicked CC lane (8 slots) (Restore has 2 versions: last clicked lane or all visible lanes)
+ - SWS/BR: Insert CC event at edit cursor in CC lane under mouse cursor (active item only)
+
 ReaScript
 +Other:
  - Changed envelope object type in BR_EnvAlloc and other functions to avoid confusion (existing scripts should be unaffected)
 
 Fixes
 +Improved deleting tempo markers with different time signatures when using SWS/BR: Delete tempo marker and preserve position and length of items (including MIDI events)
+
+Other
++Increased all SWS/BR slot actions to 8 slots
 
 !v2.4.0 #10 pre-release build (July 11, 2014)
 <strong>REAPER v4.70+ is required!</strong>

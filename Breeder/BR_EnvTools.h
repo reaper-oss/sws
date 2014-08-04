@@ -108,6 +108,7 @@ class BR_Envelope
 public:
 	BR_Envelope ();
 	BR_Envelope (TrackEnvelope* envelope, bool takeEnvelopesUseProjectTime = true); // for takeEnvelopesUseProjectTime explanation see declaration of SetTakeEnvelopeTimebase()
+	BR_Envelope (MediaTrack* track, int envelopeId, bool takeEnvelopesUseProjectTime = true);
 	BR_Envelope (MediaItem_Take* take, BR_EnvType envType, bool takeEnvelopesUseProjectTime = true);
 	BR_Envelope (const BR_Envelope& envelope);
 	~BR_Envelope () {}
@@ -147,6 +148,7 @@ public:
 	int FindClosest (double position);                       // note that caller needs to check if returned id exists
 
 	/* Miscellaneous */
+	int GetSendId ();                                 // If send envelope, get send id for it's parent track, otherwise -1
 	double ValueAtPosition (double position);         // Using find functionality, so efficiency may vary (see comment about Find())
 	double NormalizedDisplayValue (double value);     // Convert point value to 0.0 - 1.0 range as displayed in arrange
 	double NormalizedDisplayValue (int id);
@@ -256,6 +258,7 @@ bool EnvVis (TrackEnvelope* envelope, bool* lane);
 int GetEnvId (TrackEnvelope* envelope, MediaTrack* parent = NULL);
 int GetDefaultPointShape ();                                      // see BR_EnvShape for return values;
 int GetEnvType (TrackEnvelope* envelope, bool* isSend);           // for return type see BR_EnvType (note: function relies on envelope names, localization could theoretically break it)
+int GetCurrentAutomationMode (MediaTrack* track);                 // this should check global override too, but currently it won't due to API limitations (when API allows, it will be enough to update this function only)
 
 /******************************************************************************
 * Tempo                                                                       *

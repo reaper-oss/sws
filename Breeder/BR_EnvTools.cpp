@@ -136,6 +136,31 @@ m_yOffset       (-1)
 	if (takeEnvelopesUseProjectTime && m_take) m_takeEnvOffset = GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION");
 }
 
+BR_Envelope::BR_Envelope (MediaTrack* track, int envelopeId, bool takeEnvelopesUseProjectTime /*=true*/) :
+m_envelope      (GetTrackEnvelope(track, envelopeId)),
+m_take          (NULL),
+m_parent        (track),
+m_tempoMap      (m_envelope == GetTempoEnv()),
+m_update        (false),
+m_sorted        (true),
+m_takeEnvOffset (0),
+m_takeEnvType   (UNKNOWN),
+m_countConseq   (-1),
+m_height        (-1),
+m_yOffset       (-1)
+{
+	if (m_envelope)
+	{
+		char* envState = GetSetObjectState(m_envelope, "");
+		this->ParseState(envState, strlen(envState));
+		FreeHeapPtr(envState);
+	}
+
+	m_count    = (int)m_points.size();
+	m_countSel = (int)m_pointsSel.size();
+	if (takeEnvelopesUseProjectTime && m_take) m_takeEnvOffset = GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION");
+}
+
 BR_Envelope::BR_Envelope (MediaItem_Take* take, BR_EnvType envType, bool takeEnvelopesUseProjectTime /*=true*/) :
 m_envelope      (GetTakeEnv(take, envType)),
 m_take          (take),
@@ -280,7 +305,7 @@ bool BR_Envelope::SetPoint (int id, double* position, double* value, int* shape,
 {
 	if (this->ValidateId(id))
 	{
-		if (m_take && position && checkPosition && !CheckBounds(*position - m_takeEnvOffset, 0.0, GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_LENGTH")))
+		if (this->IsTakeEnvelope() && position && checkPosition && !CheckBounds(*position - m_takeEnvOffset, 0.0, GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_LENGTH")))
 			return false;
 
 		if (snapValue && value)
@@ -325,7 +350,7 @@ bool BR_Envelope::CreatePoint (int id, double position, double value, int shape,
 	{
 		position -= m_takeEnvOffset;
 
-		if (m_take && checkPosition && !CheckBounds(position, 0.0, GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_LENGTH")))
+		if (this->IsTakeEnvelope() && checkPosition && !CheckBounds(position, 0.0, GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_LENGTH")))
 			return false;
 
 		BR_EnvPoint newPoint(position, (snapValue) ? (this->SnapValue(value)) : (value), shape, 0, selected, 0, bezier);
@@ -691,6 +716,27 @@ int BR_Envelope::FindClosest (double position)
 	}
 }
 
+int BR_Envelope::GetSendId ()
+{
+	int id = -1;
+
+	if (!this->IsTakeEnvelope())
+	{
+		MediaTrack* track    = this->GetParent();
+		const char* sendType = (this->Type() == VOLUME) ? ("<VOLENV") : ((this->Type() == PAN) ? ("<PANENV") : ("<MUTEENV"));
+
+		for (int i = 0; i < GetTrackNumSends(track, 0); ++i)
+		{
+			if (m_envelope == (TrackEnvelope*)GetSetTrackSendInfo(track, 0, i, "P_ENV", (void*)sendType))
+			{
+				id = i;
+				break;
+			}
+		}
+	}
+	return id;
+}
+
 double BR_Envelope::ValueAtPosition (double position)
 {
 	position -= m_takeEnvOffset;
@@ -916,29 +962,7 @@ bool BR_Envelope::VisibleInArrange (int* envHeight /*=NULL*/, int* yOffset /*= N
 	si.fMask = SIF_ALL;
 	CoolSB_GetScrollInfo(hwnd, SB_VERT, &si);
 
-	if (!m_take)
-	{
-		if (!cacheValues || (cacheValues && m_height == -1))
-		{
-			m_yOffset;
-			m_height = GetTrackEnvHeight(m_envelope, &m_yOffset, true, this->GetParent());
-		}
-
-		WritePtr(envHeight, m_height);
-		WritePtr(yOffset, m_yOffset);
-
-		if (m_height > 0)
-		{
-			int pageEnd = si.nPos + (int)si.nPage + SCROLLBAR_W;
-			int envelopeEnd = m_yOffset + m_height;
-
-			if (m_yOffset >= si.nPos && m_yOffset <= pageEnd)
-				return true;
-			if (envelopeEnd >= si.nPos && envelopeEnd <= pageEnd)
-				return true;
-		}
-	}
-	else
+	if (this->IsTakeEnvelope())
 	{
 		if (!cacheValues || (cacheValues && m_height == -1))
 		{
@@ -965,6 +989,29 @@ bool BR_Envelope::VisibleInArrange (int* envHeight /*=NULL*/, int* yOffset /*= N
 				return true;
 		}
 	}
+	else
+	{
+		if (!cacheValues || (cacheValues && m_height == -1))
+		{
+			m_yOffset;
+			m_height = GetTrackEnvHeight(m_envelope, &m_yOffset, true, this->GetParent());
+		}
+
+		WritePtr(envHeight, m_height);
+		WritePtr(yOffset, m_yOffset);
+
+		if (m_height > 0)
+		{
+			int pageEnd = si.nPos + (int)si.nPage + SCROLLBAR_W;
+			int envelopeEnd = m_yOffset + m_height;
+
+			if (m_yOffset >= si.nPos && m_yOffset <= pageEnd)
+				return true;
+			if (envelopeEnd >= si.nPos && envelopeEnd <= pageEnd)
+				return true;
+		}
+	}
+
 	return false;
 }
 
@@ -972,7 +1019,7 @@ void BR_Envelope::MoveArrangeToPoint (int id, int referenceId)
 {
 	if (this->ValidateId(id))
 	{
-		double takePosOffset = (!m_take) ? (0) : GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION");
+		double takePosOffset = (!this->IsTakeEnvelope()) ? (0) : GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION");
 
 		double pos = m_points[id].position + takePosOffset;
 		if (this->ValidateId(referenceId))
@@ -984,7 +1031,7 @@ void BR_Envelope::MoveArrangeToPoint (int id, int referenceId)
 
 void BR_Envelope::SetTakeEnvelopeTimebase (bool useProjectTime)
 {
-	m_takeEnvOffset = (useProjectTime && m_take) ? (GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION")) : (0);
+	m_takeEnvOffset = (useProjectTime && this->IsTakeEnvelope()) ? (GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION")) : (0);
 }
 
 void BR_Envelope::AddToPoints (double* position, double* value)
@@ -1196,7 +1243,7 @@ MediaTrack* BR_Envelope::GetParent ()
 {
 	if (!m_parent)
 	{
-		if (m_take)
+		if (this->IsTakeEnvelope())
 			m_parent = GetMediaItemTake_Track(m_take);
 		else
 			m_parent = GetEnvParent(m_envelope);
@@ -1324,7 +1371,7 @@ void BR_Envelope::SetVisible (bool visible)
 
 void BR_Envelope::SetInLane (bool lane)
 {
-	if (!m_take)
+	if (!this->IsTakeEnvelope())
 	{
 		if (!m_properties.filled)
 			this->FillProperties();
@@ -1374,7 +1421,7 @@ bool BR_Envelope::Commit (bool force /*=false*/)
 			i->Append(chunkStart);
 		chunkStart.Append(m_chunkEnd.Get());
 
-		if (m_take) // cast: FastString is faster/we're done with the object anyway
+		if (this->IsTakeEnvelope()) // cast: FastString is faster/we're done with the object anyway
 			GetSetEnvelopeState(m_envelope, const_cast<char*>(chunkStart.Get()), 0);
 		else
 			GetSetObjectState(m_envelope, chunkStart.Get());
@@ -1894,17 +1941,18 @@ WDL_FastString ConstructReceiveEnv (int type, double firstPointValue)
 		return envelope;
 
 	int defAutoMode; GetConfig("defautomode", defAutoMode);
+	int envLanes;    GetConfig("envlanes", envLanes);
 	int defShape = (type == MUTE) ? SQUARE : GetDefaultPointShape();
 
 	if      (type == VOLUME) AppendLine(envelope, "<AUXVOLENV");
 	else if (type == PAN)    AppendLine(envelope, "<AUXPANENV");
 	else if (type == MUTE)   AppendLine(envelope, "<AUXMUTEENV");
 
-	AppendLine(envelope, "ACT 1");
-	AppendLine(envelope, "VIS 1 1 1");
-	AppendLine(envelope, "LANEHEIGHT 0 0");
-	envelope.AppendFormatted(128, "%s %d\n", "ARM", !GetBit(defAutoMode, 9));
-	envelope.AppendFormatted(128, "%s %d %d %d\n", "DEFSHAPE", defShape, -1, -1);
+	envelope.AppendFormatted(128, "%s %d\n",             "ACT", 1);
+	envelope.AppendFormatted(128, "%s %d %d %d\n",       "VIS", 1, GetBit(envLanes, 0), 1);
+	envelope.AppendFormatted(128, "%s %d %d\n",          "LANEHEIGHT", 0, 0);
+	envelope.AppendFormatted(128, "%s %d\n",             "ARM", !GetBit(defAutoMode, 9));
+	envelope.AppendFormatted(128, "%s %d %d %d\n",       "DEFSHAPE", defShape, -1, -1);
 	envelope.AppendFormatted(128, "%s %.8lf %.8lf %d\n", "PT", 0.0, firstPointValue, defShape);
 	AppendLine(envelope, ">");
 
@@ -2015,7 +2063,7 @@ bool ToggleShowSendEnvelope (MediaTrack* track, int sendId, int type)
 
 						bool trim = false;
 						int trimMode; GetConfig("envtrimadjmode", trimMode);
-						if (trimMode == 0 || (trimMode == 1 && GetMediaTrackInfo_Value(CSurf_TrackFromID(sendTrackId + 1, false), "I_AUTOMODE") != 0))
+						if (trimMode == 0 || (trimMode == 1 && GetCurrentAutomationMode(CSurf_TrackFromID(sendTrackId + 1, false)) != 0))
 						{
 							trim = true;
 
@@ -2169,7 +2217,7 @@ bool ShowSendEnvelopes (vector<MediaTrack*>& tracks, int envelopes)
 						}
 
 						bool trim = false;
-						if (trimMode == 0 || (trimMode == 1 && GetMediaTrackInfo_Value(CSurf_TrackFromID(sendTrackId + 1, false), "I_AUTOMODE") != 0))
+						if (trimMode == 0 || (trimMode == 1 && GetCurrentAutomationMode(CSurf_TrackFromID(sendTrackId + 1, false)) != 0))
 						{
 							trim = true;
 
@@ -2306,6 +2354,11 @@ int GetEnvType (TrackEnvelope* envelope, bool* isSend)
 
 	WritePtr(isSend, send);
 	return type;
+}
+
+int GetCurrentAutomationMode (MediaTrack* track)
+{
+	return (int)GetMediaTrackInfo_Value(track, "I_AUTOMODE");
 }
 
 /******************************************************************************

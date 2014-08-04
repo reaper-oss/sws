@@ -35,6 +35,27 @@
 /******************************************************************************
 * BR_MidiEditor                                                               *
 ******************************************************************************/
+BR_MidiEditor::BR_MidiEditor () :
+m_take          (NULL),
+m_midiEditor    (MIDIEditor_GetActive()),
+m_startPos      (-1),
+m_hZoom         (-1),
+m_vPos          (-1),
+m_vZoom         (-1),
+m_noteshow      (-1),
+m_timebase      (-1),
+m_pianoroll     (-1),
+m_drawChannel   (-1),
+m_eventFilterCh (-1),
+m_ppq           (-1),
+m_lastLane      (-666),
+m_valid         (false)
+{
+	m_valid        = this->Build();
+	m_lastLane     = GetLastClickedVelLane(m_midiEditor);
+	m_ccLanesCount = (int)m_ccLanes.size();
+}
+
 BR_MidiEditor::BR_MidiEditor (void* midiEditor) :
 m_take          (NULL),
 m_midiEditor    (midiEditor),
@@ -46,9 +67,13 @@ m_noteshow      (-1),
 m_timebase      (-1),
 m_pianoroll     (-1),
 m_drawChannel   (-1),
+m_eventFilterCh (-1),
+m_ppq           (-1),
+m_lastLane      (-666),
 m_valid         (false)
 {
 	m_valid        = this->Build();
+	m_lastLane     = GetLastClickedVelLane(m_midiEditor);
 	m_ccLanesCount = (int)m_ccLanes.size();
 }
 
@@ -63,6 +88,8 @@ m_noteshow      (-1),
 m_timebase      (-1),
 m_pianoroll     (-1),
 m_drawChannel   (-1),
+m_ppq           (-1),
+m_lastLane      (-666),
 m_valid         (false)
 {
 	m_valid        = this->Build();
@@ -87,6 +114,11 @@ double BR_MidiEditor::GetStartPos ()
 double BR_MidiEditor::GetHZoom ()
 {
 	return m_hZoom;
+}
+
+int BR_MidiEditor::GetPPQ ()
+{
+	return m_ppq;
 }
 
 int BR_MidiEditor::GetVPos ()
@@ -140,6 +172,48 @@ int BR_MidiEditor::GetCCLaneHeight (int idx)
 		return -1;
 }
 
+int BR_MidiEditor::GetLastClickedCCLane ()
+{
+	return m_lastLane;
+}
+
+int BR_MidiEditor::FindCCLane (int lane)
+{
+	int id = -1;
+	for (size_t i = 0; i < m_ccLanes.size(); ++i)
+	{
+		if (m_ccLanes[i] == lane)
+		{
+			id = i;
+			break;
+		}
+	}
+	return id;
+}
+
+bool BR_MidiEditor::IsCCLaneVisible (int lane)
+{
+	for (size_t i = 0; i < m_ccLanes.size(); ++i)
+	{
+		if (m_ccLanes[i] == lane)
+			return true;
+	}
+	return false;
+}
+
+bool BR_MidiEditor::IsChannelVisible (int channel)
+{
+	if (m_eventFilterCh == 0)
+		return true;
+	else
+		return !!GetBit(m_eventFilterCh, channel);
+}
+
+void* BR_MidiEditor::GetEditor ()
+{
+	return m_midiEditor;
+}
+
 bool BR_MidiEditor::IsValid ()
 {
 	return m_valid;
@@ -160,22 +234,37 @@ bool BR_MidiEditor::Build ()
 			if (p.GetTakeChunk(takeId, &takeChunk))
 			{
 				SNM_ChunkParserPatcher ptk(&takeChunk, false);
+				LineParser lp(false);
 
 				int laneId = 0;
 				WDL_FastString lineLane;
 				while (ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "SOURCE", "VELLANE", laneId++, -1, &lineLane))
 				{
-					LineParser lp(false);
 					lp.parse(lineLane.Get());
 					m_ccLanes.push_back(lp.gettoken_int(1));
 					m_ccLanesHeight.push_back(lp.gettoken_int((m_midiEditor) ? 2 : 3));
 					lineLane.DeleteSub(0, lineLane.GetLength());
 				}
 
+				WDL_FastString dataLine;
+				if (ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "SOURCE", "HASDATA", 0, -1, &dataLine))
+				{
+					lp.parse(dataLine.Get());
+					m_ppq = lp.gettoken_int(2);
+				}
+				else if (ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "SOURCE", "FILE", 0, -1, &dataLine))
+				{
+					lp.parse(dataLine.Get());
+					m_ppq = GetMIDIFilePPQ (lp.gettoken_str(1));
+					if (!m_ppq)
+						return false;
+				}
+				else
+					return false;
+
 				WDL_FastString lineView;
 				if (ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "SOURCE", "CFGEDITVIEW", 0, -1, &lineView))
 				{
-					LineParser lp(false);
 					lp.parse(lineView.Get());
 					m_startPos = lp.gettoken_float(1);
 					m_hZoom    = lp.gettoken_float(2);
@@ -185,13 +274,21 @@ bool BR_MidiEditor::Build ()
 				else
 					return false;
 
+				WDL_FastString lineFilter;
+				if (ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "SOURCE", "EVTFILTER", 0, -1, &lineFilter))
+				{
+					lp.parse(lineFilter.Get());
+					m_eventFilterCh    = lp.gettoken_int(1);
+				}
+				else
+					return false;
+
 				WDL_FastString lineProp;
 				if (ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "SOURCE", "CFGEDIT", 0, -1, &lineProp))
 				{
-					LineParser lp(false);
 					lp.parse(lineProp.Get());
 					m_pianoroll    = lp.gettoken_int(6);
-					m_drawChannel  = lp.gettoken_int(9);
+					m_drawChannel  = lp.gettoken_int(9) - 1;
 					m_noteshow     = lp.gettoken_int(18);
 					m_timebase     = lp.gettoken_int(19);
 				}
@@ -244,13 +341,24 @@ item (item)
 	}
 }
 
-void BR_MidiItemTimePos::Restore (double offset /*=0*/)
+void BR_MidiItemTimePos::Restore (bool clearCurrentEvents /*=true*/, double offset /*=0*/)
 {
 	SetMediaItemInfo_Value(item, "C_BEATATTACHMODE", 0);
 	for (size_t i = 0; i < savedMidiTakes.size(); ++i)
 	{
 		BR_MidiItemTimePos::MidiTake* midiTake = &savedMidiTakes[i];
 		MediaItem_Take* take = midiTake->take;
+
+		if (clearCurrentEvents)
+		{
+			int noteCount, ccCount, textCount;
+			if (MIDI_CountEvts(take, &noteCount, &ccCount, &textCount))
+			{
+				for (int i = 0; i < noteCount; ++i) MIDI_DeleteNote(take, 0);
+				for (int i = 0; i < ccCount; ++i)   MIDI_DeleteCC(take, 0);
+				for (int i = 0; i < textCount; ++i) MIDI_DeleteTextSysexEvt(take, 0);
+			}
+		}
 
 		for (size_t i = 0; i < midiTake->noteEvents.size(); ++i)
 			midiTake->noteEvents[i].InsertEvent(take, offset);
@@ -681,6 +789,65 @@ void SetSelectedNotes (MediaItem_Take* take, vector<int>& selectedNotes, bool un
 	}
 }
 
+void UnselectAllEvents (MediaItem_Take* take, int lane)
+{
+	if (take)
+	{
+		if ((lane >= 0 && lane <= 127))
+		{
+			int id = -1;
+			while ((id = MIDI_EnumSelCC(take, id)) != -1)
+			{
+				int cc;
+				if (MIDI_GetCC(take, id, NULL, NULL, NULL, NULL, NULL, &cc, NULL) && cc == lane)
+					MIDI_SetCC(take, id, &g_bFalse, NULL, NULL, NULL, NULL, NULL, NULL);
+			}
+		}
+		else if (lane == CC_PROGRAM || lane == CC_CHANNEL_PRESSURE || lane == CC_PITCH || lane == CC_BANK_SELECT)
+		{
+			if (lane == CC_BANK_SELECT) lane = CC_PROGRAM;
+
+			int type = (lane == CC_PROGRAM) ? (0xC0) : (lane == CC_CHANNEL_PRESSURE ? 0xD0 : 0xE0);
+			int id = -1;
+			while ((id = MIDI_EnumSelCC(take, id)) != -1)
+			{
+				int currentType;
+				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &currentType, NULL, NULL, NULL) && currentType == type)
+					MIDI_SetCC(take, id, &g_bFalse, NULL, NULL, NULL, NULL, NULL, NULL);
+			}
+		}
+		else if (lane == CC_VELOCITY)
+		{
+			int id = -1;
+			while ((id = MIDI_EnumSelNotes(take, id)) != -1)
+				MIDI_SetNote(take, id, &g_bFalse, NULL, NULL, NULL, NULL, NULL, NULL);
+		}
+		else if (lane == CC_TEXT_EVENTS || lane == CC_SYSEX)
+		{
+			int id = -1;
+			while ((id = MIDI_EnumSelTextSysexEvts(take, id)) != -1)
+			{
+				int type = 0;
+				if (MIDI_GetTextSysexEvt(take, id, NULL, NULL, NULL, &type, NULL, NULL) && ((lane == CC_SYSEX && type == -1) || (lane == CC_TEXT_EVENTS && type != -1)))
+					MIDI_SetTextSysexEvt(take, id, &g_bFalse, NULL, NULL, NULL, NULL, NULL);
+			}
+		}
+		else if (lane >= CC_14BIT_START)
+		{
+			int id = -1;
+
+			int cc1 = lane - CC_14BIT_START;
+			int cc2 = cc1 + 32;
+			while ((id = MIDI_EnumSelCC(take, id)) != -1)
+			{
+				int cc;
+				if (MIDI_GetCC(take, id, NULL, NULL, NULL, NULL, NULL, &cc, NULL) && (cc == cc1 || cc == cc2))
+					MIDI_SetCC(take, id, &g_bFalse, NULL, NULL, NULL, NULL, NULL, NULL);
+			}
+		}
+	}
+}
+
 bool AreAllNotesUnselected (MediaItem_Take* take)
 {
 	bool firstNote = false;
@@ -740,6 +907,30 @@ bool IsVelLaneValid (int lane)
 		return true;
 	else
 		return false;
+}
+
+int GetMIDIFilePPQ (const char* fp)
+{
+	WDL_FileRead file(fp);
+
+	char line[14] = "";
+	if (file.Read(line, sizeof(line)) && !strncmp(line, "MThd\0\0\0\x6", 8))
+	{
+		int byte1 = (int)((unsigned char)line[12]);
+		int byte2 = (int)((unsigned char)line[13]);
+		return byte1 << 8 | byte2;
+	}
+	else
+		return 0;
+}
+
+int GetLastClickedVelLane (void* midiEditor)
+{
+	int cc = MIDIEditor_GetSetting_int(midiEditor, "last_clicked_cc_lane");
+	if (cc == -1)
+		return -666;
+	else
+		return MapReaScriptCCToVelLane(cc);
 }
 
 int MapVelLaneToReaScriptCC (int lane)

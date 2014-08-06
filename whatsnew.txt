@@ -66,6 +66,7 @@ Fixes
 
 Other
 +Increased all SWS/BR slot actions to 8 slots
++Display proper dialog icon (same one REAPER uses) in all dialogs (win only)
 +Added tempo actions to Main menu > Extensions > Tempo
 
 !v2.4.0 #10 pre-release build (July 11, 2014)

@@ -172,5 +172,6 @@ MediaTrack* TrackAtMouseCursor (int* context, double* position); // context: 0->
 * Theming                                                                     *
 ******************************************************************************/
 void DrawTooltip (LICE_IBitmap* bm, const char* text);
+void SetWndIcon (HWND hwnd); // win32 only
 void ThemeListViewOnInit (HWND list);
 bool ThemeListViewInProc (HWND hwnd, int uMsg, LPARAM lParam, HWND list, bool grid);

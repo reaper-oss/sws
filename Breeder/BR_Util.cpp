@@ -3359,6 +3359,22 @@ void ThemeListViewOnInit (HWND list)
 	}
 }
 
+void SetWndIcon (HWND hwnd)
+{
+	#ifdef _WIN32
+		static HICON s_icon = NULL;
+		if (!s_icon)
+		{
+			wchar_t path[2094];
+			GetModuleFileNameW(NULL, path, sizeof(path)/sizeof(wchar_t));
+			s_icon = ExtractIconW(g_hInst, path, 0); // WM_GETICON isn't working so use this instead
+		}
+
+		if (s_icon)
+			SendMessage(hwnd, WM_SETICON, ICON_SMALL, (LPARAM)s_icon);
+	#endif
+}
+
 bool ThemeListViewInProc (HWND hwnd, int uMsg, LPARAM lParam, HWND list, bool grid)
 {
 	if (SWS_THEMING)

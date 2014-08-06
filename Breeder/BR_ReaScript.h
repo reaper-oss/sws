@@ -27,23 +27,25 @@
 ******************************************************************************/
 #pragma once
 
+class BR_Envelope;
+
 /******************************************************************************
 * ReaScript export                                                            *
 ******************************************************************************/
-void*           BR_EnvAlloc (TrackEnvelope* envelope, bool takeEnvelopesUseProjectTime);
-int             BR_EnvCountPoints (void* envelope);
-bool            BR_EnvDeletePoint (void* envelope, int id);
-int             BR_EnvFind (void* envelope, double position, double delta);
-int             BR_EnvFindNext (void* envelope, double position);
-int             BR_EnvFindPrevious (void* envelope, double position);
-bool            BR_EnvFree (void* envelope, bool commit);
-MediaItem_Take* BR_EnvGetParentTake (void* envelope);
-MediaTrack*     BR_EnvGetParentTrack (void* envelope);
-bool            BR_EnvGetPoint (void* envelope, int id, double* position, double* value, int* shape, bool* selected, double* bezier);
-void            BR_EnvGetProperties (void* envelope, bool* active, bool* visible, bool* armed, bool* inLane, int* laneHeight, int* defaultShape, double* minValue, double* maxValue, double* centerValue, int* type);
-bool            BR_EnvSetPoint (void* envelope, int id, double position, double value, int shape, bool selected, double bezier);
-void            BR_EnvSetProperties (void* envelope, bool active, bool visible, bool armed, bool inLane, int laneHeight, int defaultShape);
-double          BR_EnvValueAtPos (void* envelope, double position);
+BR_Envelope*    BR_EnvAlloc (TrackEnvelope* envelope, bool takeEnvelopesUseProjectTime);
+int             BR_EnvCountPoints (BR_Envelope* envelope);
+bool            BR_EnvDeletePoint (BR_Envelope* envelope, int id);
+int             BR_EnvFind (BR_Envelope* envelope, double position, double delta);
+int             BR_EnvFindNext (BR_Envelope* envelope, double position);
+int             BR_EnvFindPrevious (BR_Envelope* envelope, double position);
+bool            BR_EnvFree (BR_Envelope* envelope, bool commit);
+MediaItem_Take* BR_EnvGetParentTake (BR_Envelope* envelope);
+MediaTrack*     BR_EnvGetParentTrack (BR_Envelope* envelope);
+bool            BR_EnvGetPoint (BR_Envelope* envelope, int id, double* position, double* value, int* shape, bool* selected, double* bezier);
+void            BR_EnvGetProperties (BR_Envelope* envelope, bool* active, bool* visible, bool* armed, bool* inLane, int* laneHeight, int* defaultShape, double* minValue, double* maxValue, double* centerValue, int* type);
+bool            BR_EnvSetPoint (BR_Envelope* envelope, int id, double position, double value, int shape, bool selected, double bezier);
+void            BR_EnvSetProperties (BR_Envelope* envelope, bool active, bool visible, bool armed, bool inLane, int laneHeight, int defaultShape);
+double          BR_EnvValueAtPos (BR_Envelope* envelope, double position);
 bool            BR_GetMediaSourceProperties (MediaItem_Take* take, bool* section, double* start, double* length, double* fade, bool* reverse);
 void            BR_GetMouseCursorContext (char* window, char* segment, char* details, int char_sz);
 TrackEnvelope*  BR_GetMouseCursorContext_Envelope (bool* takeEnvelope);

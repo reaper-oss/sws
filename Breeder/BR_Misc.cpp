@@ -31,6 +31,7 @@
 #include "BR_MidiTools.h"
 #include "BR_ProjState.h"
 #include "BR_Util.h"
+#include "../SnM/SnM_Util.h"
 #include "../Xenakios/XenakiosExts.h"
 #include "../reaper/localize.h"
 
@@ -107,7 +108,7 @@ void MidiItemTempo (COMMAND_T* ct)
 	for (int i = 0; i < CountSelectedMediaItems(NULL); ++i)
 	{
 		MediaItem* item = GetSelectedMediaItem(NULL, i);
-		
+
 		double bpm; int num, den;
 		TimeMap_GetTimeSigAtTime(NULL, GetMediaItemInfo_Value(item, "D_POSITION"), &num, &den, &bpm);
 		if ((int)ct->user == 2)
@@ -291,16 +292,25 @@ void SnapFollowsGridVis (COMMAND_T* ct)
 
 void PlaybackFollowsTempoChange (COMMAND_T*)
 {
-	int option;
-	GetConfig("seekmodes", option);
-	SetConfig("seekmodes", ToggleBit(option, 5));
+	int option; GetConfig("seekmodes", option);
+
+	option = ToggleBit(option, 5);
+	SetConfig("seekmodes", option);
 	RefreshToolbar(0);
+
+	char tmp[256];
+	_snprintfSafe(tmp, sizeof(tmp), "%d", option);
+	WritePrivateProfileString("reaper", "seekmodes", tmp, get_ini_file());
 }
 
 void TrimNewVolPanEnvs (COMMAND_T* ct)
 {
 	SetConfig("envtrimadjmode", (int)ct->user);
 	RefreshToolbar(0);
+
+	char tmp[256];
+	_snprintfSafe(tmp, sizeof(tmp), "%d", (int)ct->user);
+	WritePrivateProfileString("reaper", "envtrimadjmode", tmp, get_ini_file());
 }
 
 void CycleRecordModes (COMMAND_T*)

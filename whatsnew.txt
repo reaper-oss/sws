@@ -60,6 +60,9 @@ ReaScript
 
 Fixes
 +Improved deleting tempo markers with different time signatures when using SWS/BR: Delete tempo marker and preserve position and length of items (including MIDI events)
++Preserve options between REAPER sessions set with these actions:
+ - SWS/BR: Set "Apply trim when adding volume/pan envelope"
+ - SWS/BR: Toggle "Playback position follows project timebase when changing tempo"
 
 Other
 +Increased all SWS/BR slot actions to 8 slots

@@ -79,11 +79,13 @@
 #define IDD_BR_RANDOMIZE_TEMPO          171
 #define IDD_BR_VERSION                  172
 #define IDD_PROMPT_OPTION               173
-#define IDD_BR_ANALYZE_LOUDNESS         174
-#define IDD_BR_NORMALIZE_LOUDNESS       175
-#define IDD_BR_NORMALIZE_LOUDNESS_USER  176
-#define IDD_BR_GRAPH_LOUDNESS           177
+#define IDD_BR_LOUDNESS_ANALYZER        174
+#define IDD_BR_LOUDNESS_ANALYZER_NORM   175
+#define IDD_BR_LOUDNESS_NORM_PROGRESS   176
+#define IDD_BR_LOUDNESS_NORMALIZE       177
 #define IDD_BR_TOOLTIP                  178
+#define IDD_BR_LOUDNESS_PREF            179
+#define IDD_BR_LOUDNESS_EXPORT_FORMAT   180
 #define IDB_UP                          500
 #define IDB_DOWN                        501
 #define IDC_BUTTON1                     1000
@@ -396,14 +398,28 @@
 #define IDC_CANCEL                      1306
 #define IDC_MIN                         1307
 #define IDC_MAX                         1308
+#define IDC_PROJ_LU                     1309
+#define IDC_GLOBAL_LU                   1310
+#define IDC_ENB_PROJ_LU                 1311
+#define IDC_LU_FORMAT                   1312
+#define IDC_TARGET                      1313
+#define IDC_ENB_PROJ_GRAPH              1314
+#define IDC_UNIT                        1315
+#define IDC_VALUE                       1316
+#define IDC_MIN_PROJ                    1317
+#define IDC_MAX_PROJ                    1318
+#define IDC_WILDCARDS                   1319
+#define IDC_FORMAT                      1320
+#define IDC_FORMAT_STATIC               1321
+#define IDC_PREVIEW_STATIC              1322
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        179
+#define _APS_NEXT_RESOURCE_VALUE        181
 #define _APS_NEXT_COMMAND_VALUE         40000
-#define _APS_NEXT_CONTROL_VALUE         1309
+#define _APS_NEXT_CONTROL_VALUE         1323
 #define _APS_NEXT_SYMED_VALUE           100
 #endif
 #endif

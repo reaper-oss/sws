@@ -1,3 +1,37 @@
+Analyze and normalize loudness
++Analyze loudness dialog:
+ - Analyzer can now measure true peak (disabled by default since it prolongs analysis due to resampling - see Options to enable/disable)
+  - Double-click true peak cell to move edit cursor to true peak location (or right-click selected item/track in list view to reveal the option)
+ - Added user preference to display either LUFS or LU (see Options->Unit).
+  - To set reference level for 0 LU and formatting of LU unit, see Options->Global preferences (or run SWS/BR: Global loudness preferences)
+  - Right-click menu entry for normalizing follows Options->Unit and will alternate between "Normalize to -23 LUFS" and "Normalize to 0 LU"
+  - Normalizing to specific value can normalize to both LUFS and LU
+ - Export list of analyzed items/tracks to clipboard or file
+  - To export the list, select items in list view, right-click them and select "Export formated list to clipboard/file"
+  - For setting the format of exported items, see Options->Export format
+   - Formating supports wildcards. Wildcards description can be found in the same dialog. To hide description, simply resize the dialog
+   - Besides typing, wildcards can also be inserted using the "Wildcard" button.
+   - Previously used format patterns are stored in the "Wildcard" button submenu
+ - Other:
+  - Right-click menu entry for creating loudness graph no longer queries range, instead it uses range set in Options->Global preferences (or SWS/BR: Global loudness preferences)
+  - Normalize dialog is no longer modal (but will be closed if loudness analyzer is closed/hidden to avoid confusion)
+  - Display new items/tracks in list view as soon as they're analyzed
+  - Analyze button changes caption depending on what is to be analyzed
+  - Added Help... menu entry to options menus
+   - Note: opens http://wiki.cockos.com/wiki/index.php/Measure_and_normalize_loudness_with_SWS|wiki page on everything loudness related in SWS| which is currently unfinished (if you want to contribute you're more than welcome)
+  - Various small fixes
++Added actions:
+ +SWS/BR: Global loudness preferences...
+  - Note: Preferences set here affect everything loudness related in SWS (analyze loudness dialog and separate normalize actions)
+   - 0 LU reference can be set to an arbitrary value (most common values are provided in the dropdown)
+   - LU unit format only affects display of LU unit in various dialogs
+   - Envelope graph range affects drawing range when drawing loudness envelopes in Analyze loudness dialog
+ +SWS/BR: Normalize loudness of selected items to 0 LU
+ +SWS/BR: Normalize loudness of selected tracks to 0 LU
++Other:
+ - Renamed SWS/BR: Normalize loudness of selected items to SWS/BR: Normalize loudness of selected items/tracks (also no longer modal)
+ - Removed SWS/BR: Normalize loudness of selected tracks
+
 ReaScript
 +Other:
  - Changed envelope object type in BR_EnvAlloc and other functions to avoid confusion (existing scripts should be unaffected)
@@ -31,7 +65,7 @@ Added actions
  - SWS/BR: Fit selected envelope points to time selection
  - SWS/BR: Create project markers from stretch markers in selected items
  - SWS/BR: Set closest (left side) envelope point's value to mouse cursor (perform until shortcut released)
-   - Note: these 2 actions are actually meant to solve the problem of freehand points editing in the tempo map. Use <i>SWS/BR: Create tempo markers at grid after every selected tempo marker</i> to set needed density of the tempo map and then use this action to easily edit the tempo map.
+   - Note: these 2 actions are actually meant to solve the problem of freehand points editing in the tempo map. Use SWS/BR: Create tempo markers at grid after every selected tempo marker to set needed density of the tempo map and then use this action to easily edit the tempo map.
  - SWS/BR: Trim MIDI item to active content
  - SWS/AW: Grid to 1/64 notes
  - SWS/AW: Grid to 1/128 notes

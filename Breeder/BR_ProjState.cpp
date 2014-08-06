@@ -125,9 +125,6 @@ static void BeginLoadProjectState (bool isUndo, project_config_extension_t *reg)
 	// Midi note selection
 	g_midiNoteSel.Get()->Empty(true);
 	g_midiNoteSel.Cleanup();
-
-	// Analyze loudness data
-	CleanAnalyzeLoudnessProjectData();
 }
 
 int ProjStateInit ()

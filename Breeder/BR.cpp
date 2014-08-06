@@ -107,11 +107,14 @@ static COMMAND_T g_commandTable[] =
 	/******************************************************************************
 	* Loudness                                                                    *
 	******************************************************************************/
-	{ { DEFACCEL, "SWS/BR: Analyze loudness..." },                               "BR_ANALAYZE_LOUDNESS_DLG",       AnalyzeLoudness, NULL, 0, IsAnalyzeLoudnessVisible},
-	{ { DEFACCEL, "SWS/BR: Normalize loudness of selected tracks..." },          "BR_NORMALIZE_LOUDNESS_TRACKS",   NormalizeLoudness, NULL, 0, },
-	{ { DEFACCEL, "SWS/BR: Normalize loudness of selected tracks to -23 LUFS" }, "BR_NORMALIZE_LOUDNESS_TRACKS23", NormalizeLoudness, NULL, 1, },
-	{ { DEFACCEL, "SWS/BR: Normalize loudness of selected items..." },           "BR_NORMALIZE_LOUDNESS_ITEMS",    NormalizeLoudness, NULL, 2, },
-	{ { DEFACCEL, "SWS/BR: Normalize loudness of selected items to -23 LUFS" },  "BR_NORMALIZE_LOUDNESS_ITEMS23",  NormalizeLoudness, NULL, 3, },
+	{ { DEFACCEL, "SWS/BR: Global loudness preferences..." },                    "BR_LOUDNESS_PREF",                ToggleLoudnessPref, NULL, 0, IsLoudnessPrefVisible},
+	{ { DEFACCEL, "SWS/BR: Analyze loudness..." },                               "BR_ANALAYZE_LOUDNESS_DLG",        AnalyzeLoudness,    NULL, 0, IsAnalyzeLoudnessVisible},
+
+	{ { DEFACCEL, "SWS/BR: Normalize loudness of selected items/tracks..." },    "BR_NORMALIZE_LOUDNESS_ITEMS",     NormalizeLoudness,  NULL, 0, IsNormalizeLoudnessVisible},
+	{ { DEFACCEL, "SWS/BR: Normalize loudness of selected items to -23 LUFS" },  "BR_NORMALIZE_LOUDNESS_ITEMS23",   NormalizeLoudness,  NULL, 1, },
+	{ { DEFACCEL, "SWS/BR: Normalize loudness of selected items to 0 LU" },      "BR_NORMALIZE_LOUDNESS_ITEMS_LU",  NormalizeLoudness,  NULL, -1, },
+	{ { DEFACCEL, "SWS/BR: Normalize loudness of selected tracks to -23 LUFS" }, "BR_NORMALIZE_LOUDNESS_TRACKS23",  NormalizeLoudness,  NULL, 2, },
+	{ { DEFACCEL, "SWS/BR: Normalize loudness of selected tracks to 0 LU" },     "BR_NORMALIZE_LOUDNESS_TRACKS_LU", NormalizeLoudness,  NULL, -2, },
 
 	/******************************************************************************
 	* Midi editor - Media item preview                                            *
@@ -341,14 +344,14 @@ int BR_Init ()
 	SWSRegisterCommands(g_commandTable);
 	InitContinuousActions (); // call only after registering all actions
 	ProjStateInit();
-	AnalyzeLoudnessInit();
+	LoudnessInit();
 	VersionCheckInit();
 	return 1;
 }
 
 void BR_Exit ()
 {
-	AnalyzeLoudnessExit();
+	LoudnessExit();
 }
 
 bool BR_ActionHook (int cmd, int flag)
@@ -359,4 +362,14 @@ bool BR_ActionHook (int cmd, int flag)
 void BR_CSurfSetPlayState (bool play, bool pause, bool rec)
 {
 	MidiTakePreviewPlayState(play, rec);
+}
+
+int BR_CSurfExtended(int call, void* parm1, void* parm2, void* parm3)
+{
+	if (call == CSURF_EXT_RESET)
+	{
+		LoudnessUpdate();
+	}
+
+	return 0;
 }

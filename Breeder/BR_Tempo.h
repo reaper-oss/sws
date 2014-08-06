@@ -45,6 +45,7 @@ void DeleteTempoPreserveItems (COMMAND_T*);
 void TempoAtGrid (COMMAND_T*);
 void TempoShapeLinear (COMMAND_T*);
 void TempoShapeSquare (COMMAND_T*);
+void OpenTempoWiki (COMMAND_T*);
 
 /******************************************************************************
 * Dialogs                                                                     *

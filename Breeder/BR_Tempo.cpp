@@ -1436,6 +1436,11 @@ void TempoShapeSquare (COMMAND_T* ct)
 	}
 }
 
+void OpenTempoWiki (COMMAND_T*)
+{
+	ShellExecute(NULL, "open", "http://wiki.cockos.com/wiki/index.php/Tempo_manipulation_with_SWS", NULL, NULL, SW_SHOWNORMAL);
+}
+
 /******************************************************************************
 * Dialogs                                                                     *
 ******************************************************************************/

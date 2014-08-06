@@ -63,6 +63,7 @@ Fixes
 
 Other
 +Increased all SWS/BR slot actions to 8 slots
++Added tempo actions to Main menu > Extensions > Tempo
 
 !v2.4.0 #10 pre-release build (July 11, 2014)
 <strong>REAPER v4.70+ is required!</strong>

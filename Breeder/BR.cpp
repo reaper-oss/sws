@@ -427,6 +427,8 @@ static COMMAND_T g_commandTable[] =
 
 	{ { DEFACCEL, "SWS/BR: Create tempo markers at grid after every selected tempo marker" },                                 "BR_TEMPO_GRID",               TempoAtGrid},
 
+	{ { DEFACCEL, "SWS/BR: Tempo help..." },                                                                                  "BR_TEMPO_HELP_WIKI",          OpenTempoWiki},
+
 	{ { DEFACCEL, "SWS/BR: Convert project markers to tempo markers..." },                                                    "SWS_BRCONVERTMARKERSTOTEMPO", ConvertMarkersToTempoDialog, NULL, 0, IsConvertMarkersToTempoVisible},
 	{ { DEFACCEL, "SWS/BR: Select and adjust tempo markers..." },                                                             "SWS_BRADJUSTSELTEMPO",        SelectAdjustTempoDialog, NULL, 0, IsSelectAdjustTempoVisible},
 	{ { DEFACCEL, "SWS/BR: Randomize tempo markers..." },                                                                     "BR_RANDOMIZE_TEMPO",          RandomizeTempoDialog},

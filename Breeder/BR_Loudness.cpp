@@ -219,7 +219,7 @@ BR_LoudnessObject::~BR_LoudnessObject ()
 		DestroyAudioAccessor(this->GetAudioData().audio);
 }
 
-bool BR_LoudnessObject::Analyze (bool integratedOnly /*=false*/, bool doTruePeak /*=true*/)
+bool BR_LoudnessObject::Analyze (bool integratedOnly, bool doTruePeak)
 {
 	this->AbortAnalyze();
 	this->SetIntegratedOnly(integratedOnly);
@@ -1768,7 +1768,7 @@ static WDL_DLGRET NormalizeProgressProc (HWND hwnd, UINT uMsg, WPARAM wParam, LP
 				if (s_currentItem = s_normalizeData->items->Get(s_currentItemId))
 				{
 					s_currentItemLen = s_currentItem->GetAudioLength();
-					s_currentItem->Analyze(s_normalizeData->quickMode);
+					s_currentItem->Analyze(s_normalizeData->quickMode, false);
 					s_analyzeInProgress = true;
 				}
 				else

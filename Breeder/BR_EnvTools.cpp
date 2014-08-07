@@ -976,7 +976,8 @@ bool BR_Envelope::VisibleInArrange (int* envHeight /*=NULL*/, int* yOffset /*= N
 		int envelopeEnd = m_yOffset + m_height;
 		int pageEnd = si.nPos + (int)si.nPage + SCROLLBAR_W;
 
-		if ((m_yOffset >= si.nPos && m_yOffset <= pageEnd) || (envelopeEnd >= si.nPos && envelopeEnd <= pageEnd))
+		
+		if (AreOverlappedEx(m_yOffset, envelopeEnd, si.nPos, pageEnd))
 		{
 			double arrangeStart, arrangeEnd;
 			RECT r; GetWindowRect(hwnd, &r);
@@ -985,7 +986,7 @@ bool BR_Envelope::VisibleInArrange (int* envHeight /*=NULL*/, int* yOffset /*= N
 			double itemStart = GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION");
 			double itemEnd = itemStart + GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_LENGTH");
 
-			if (itemStart <= arrangeEnd && itemEnd >= arrangeStart)
+			if (AreOverlappedEx(itemStart, itemEnd, arrangeStart, arrangeEnd))
 				return true;
 		}
 	}
@@ -998,16 +999,14 @@ bool BR_Envelope::VisibleInArrange (int* envHeight /*=NULL*/, int* yOffset /*= N
 		}
 
 		WritePtr(envHeight, m_height);
-		WritePtr(yOffset, m_yOffset);
+		WritePtr(yOffset,   m_yOffset);
 
 		if (m_height > 0)
 		{
 			int pageEnd = si.nPos + (int)si.nPage + SCROLLBAR_W;
 			int envelopeEnd = m_yOffset + m_height;
 
-			if (m_yOffset >= si.nPos && m_yOffset <= pageEnd)
-				return true;
-			if (envelopeEnd >= si.nPos && envelopeEnd <= pageEnd)
+			if (AreOverlappedEx(m_yOffset, envelopeEnd, si.nPos, pageEnd))
 				return true;
 		}
 	}
@@ -1150,13 +1149,12 @@ WDL_FastString BR_Envelope::FormatValue (double value)
 
 	if (this->Type() == VOLUME || this->Type() == VOLUME_PREFX)
 	{
-		static const char* s_unit        = __localizeFunc("dB", "common", 0);
-		static const char* s_negativeInf = __localizeFunc("-inf", "vol", 0);
+		static const char* s_unit = __localizeFunc("dB", "common", 0);
 
 		value = VAL2DB(value);
-
 		if (value == NEGATIVE_INF)
 		{
+			static const char* s_negativeInf = __localizeFunc("-inf", "vol", 0);
 			formatedValue.AppendFormatted(256, "%s %s", s_negativeInf, s_unit);
 		}
 		else if (value == 0)
@@ -1169,17 +1167,22 @@ WDL_FastString BR_Envelope::FormatValue (double value)
 
 	else if (this->Type() == PAN || this->Type() == PAN_PREFX)
 	{
-		static const char* s_left   = __localizeFunc("L", "pan", 0);
-		static const char* s_right  = __localizeFunc("R", "pan", 0);
-		static const char* s_center = __localizeFunc("center", "pan", 0);
 		static const char* s_unit   = __localizeFunc("%", "common", 0);
-
 		if (value == 0)
+		{
+			static const char* s_center = __localizeFunc("center", "pan", 0);
 			formatedValue.AppendFormatted(256, "%s", s_center);
+		}
 		else if (value > 0)
+		{
+			static const char* s_left   = __localizeFunc("L", "pan", 0);
 			formatedValue.AppendFormatted(256, "%d%s%s", (int)(value*100), s_unit, s_left);
+		}
 		else
+		{
+			static const char* s_right  = __localizeFunc("R", "pan", 0);
 			formatedValue.AppendFormatted(256, "%d%s%s", (int)(-value*100), s_unit, s_right);
+		}
 	}
 
 	else if (this->Type() == WIDTH || this->Type() == WIDTH_PREFX)

@@ -1968,7 +1968,6 @@ BR_LoudnessObject* BR_AnalyzeLoudnessWnd::IsObjectInList (MediaTrack* track)
 
 BR_LoudnessObject* BR_AnalyzeLoudnessWnd::IsObjectInList (MediaItem_Take* take)
 {
-	int bla = g_analyzedObjects.Get()->GetSize();
 	for (int i = 0; i < g_analyzedObjects.Get()->GetSize(); ++i)
 	{
 		if (BR_LoudnessObject* object = g_analyzedObjects.Get()->Get(i))

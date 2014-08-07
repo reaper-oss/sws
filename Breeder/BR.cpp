@@ -303,6 +303,13 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Play/pause from mouse cursor position" },                                                                                       "BR_PLAY_PAUSE_MOUSECURSOR",        PlaybackAtMouseCursor, NULL, 1},
 	{ { DEFACCEL, "SWS/BR: Play/stop from mouse cursor position" },                                                                                        "BR_PLAY_STOP_MOUSECURSOR",         PlaybackAtMouseCursor, NULL, 2},
 
+	{ { DEFACCEL, "SWS/BR: Select all MIDI items" },                                                                                                       "BR_SEL_ALL_ITEMS_MIDI",            SelectItemsByType, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Select all audio items" },                                                                                                      "BR_SEL_ALL_ITEMS_AUDIO",           SelectItemsByType, NULL, 2},
+	{ { DEFACCEL, "SWS/BR: Select all video items" },                                                                                                      "BR_SEL_ALL_ITEMS_VIDEO",           SelectItemsByType, NULL, 3},
+	{ { DEFACCEL, "SWS/BR: Select all MIDI items (obey time selection, if any)" },                                                                         "BR_SEL_ALL_ITEMS_TIME_SEL_MIDI",   SelectItemsByType, NULL, -1},
+	{ { DEFACCEL, "SWS/BR: Select all audio items (obey time selection, if any)" },                                                                        "BR_SEL_ALL_ITEMS_TIME_SEL_AUDIO",  SelectItemsByType, NULL, -2},
+	{ { DEFACCEL, "SWS/BR: Select all video items (obey time selection, if any)" },                                                                        "BR_SEL_ALL_ITEMS_TIME_SEL_VIDEO",  SelectItemsByType, NULL, -3},
+
 	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 1" },                                                                                           "BR_SAVE_CURSOR_POS_SLOT_1",        SaveCursorPosSlot, NULL, 0},
 	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 2" },                                                                                           "BR_SAVE_CURSOR_POS_SLOT_2",        SaveCursorPosSlot, NULL, 1},
 	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 3" },                                                                                           "BR_SAVE_CURSOR_POS_SLOT_3",        SaveCursorPosSlot, NULL, 2},

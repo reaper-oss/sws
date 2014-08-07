@@ -1,16 +1,16 @@
 Auto color/icon/action
-+An action can be executed automatically when a rule is matched (tracks only), use the "Enable track auto selection" option to select the track matching the rule being applied so that actions can act on the selected track.
-+Track auto color/icon/action can be enabled/disabled for each track in the new tracks list near the rules list. Per-track settings override the "Force" button. So if you want to use a name that matches a rule, but don't want the so named track to be processed by the rule, disable its auto color/icon/action in the track list and it won't be affected.
-
-Added actions
++Support for executing an action when a track rule is matched
+ - Note: use the "Enable track auto selection" option to select the track that matches the rule (useful in cases when the action needs to work on selected tracks only)
++Ability to disable auto rule matching on per-track basis
+ - Track auto color/icon/action can be enabled/disabled for each track in the new tracks list (next to rules list view - arrows between two list views toggle their visibility)
+ - Per-track settings override the "Force" button - for example, if you want to use a name that matches a rule, but don't want some other track to be processed by the same rule, disable specific property in the track list so it doesn't get affected
+ - To automatically disable further processing on a processed track, see Options->Automatically disable auto color/icon/action for processed tracks
++Added actions
  - SWS/wol: Toggle auto action enable
  - SWS/wol: Toggle enable auto color/icon/action for selected track(s)
  - SWS/wol: Enable/Disable auto color/icon/action for selected track(s)
  - SWS/wol: Toggle enable track auto selection when an action is performed with auto action
-   (Desc: since some actions (like applying a layout) work only on selected tracks, enabling this option will make Reaper select the track that currently matches the rule being applied and the performed action will work on that track.)
  - SWS/wol: Toggle automatic auto color/icon/action disable for processed tracks
-   (Desc: when a rule colors/icons a track or performs an action you can get auto color/icon/action disabled for the track matching the rule.)
- - SWS/wol: Select all tracks except folder parents
 
 Analyze and normalize loudness
 +Analyze loudness dialog:
@@ -64,6 +64,8 @@ Added actions
   - Note: that's right, due to API limitation it's last adjusted, not touched
  - SWS/BR: Enable "Ignore project tempo" for selected MIDI items preserving time position of MIDI events (use tempo at item's start)
   - Note: the action is meant for http://forum.cockos.com/showthread.php?p=1374175#post1374175|these kind of issues|
+ - SWS/BR: Select all MIDI/audio/video items
+ - SWS/wol: Select all tracks except folder parents
 +MIDI editor:
  - SWS/BR: Save/Restore selected events in last clicked CC lane (8 slots) (Restore has 2 versions: last clicked lane or all visible lanes)
  - SWS/BR: Insert CC event at edit cursor in CC lane under mouse cursor (active item only)

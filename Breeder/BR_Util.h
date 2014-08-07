@@ -63,9 +63,11 @@ vector<int> GetDigits (int val); // in 567 [0] = 5, [1] = 6 etc...
 WDL_FastString GetSourceChunk (PCM_source* source);
 template <typename T> bool WritePtr (T* ptr, T val)  {if (ptr){*ptr = val; return true;} return false;}
 template <typename T> bool ReadPtr  (T* ptr, T& val) {if (ptr){val = *ptr; return true;} return false;}
-template <typename T> bool CheckBounds   (T val, T min, T max) {if (val < min)  return false; if (val > max)  return false; return true;}
-template <typename T> bool CheckBoundsEx (T val, T min, T max) {if (val <= min) return false; if (val >= max) return false; return true;}
-template <typename T> T    SetToBounds   (T val, T min, T max) {if (val < min)  return min;   if (val > max)  return max;   return val;}
+template <typename T> bool AreOverlapped   (T x1, T x2, T y1, T y2) {if (x1 > x2) swap(x1, x2); if (y1 > y2) swap(y1, y2); return x1 <= y2 && y1 <= x2;}
+template <typename T> bool AreOverlappedEx (T x1, T x2, T y1, T y2) {if (x1 > x2) swap(x1, x2); if (y1 > y2) swap(y1, y2); return x1 <  y2 && y1 <  x2;}
+template <typename T> bool CheckBounds   (T val, T min, T max)    {if (val < min)  return false; if (val > max)  return false; return true;}
+template <typename T> bool CheckBoundsEx (T val, T min, T max)    {if (val <= min) return false; if (val >= max) return false; return true;}
+template <typename T> T    SetToBounds   (T val, T min, T max)    {if (val < min)  return min;   if (val > max)  return max;   return val;}
 template <typename T> T    IsEqual (T a, T b, T epsilon) {epsilon = abs(epsilon); return CheckBounds(a, b - epsilon, b + epsilon);}
 
 /******************************************************************************

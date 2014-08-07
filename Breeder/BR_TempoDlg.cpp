@@ -1582,7 +1582,7 @@ WDL_DLGRET RandomizeTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 	static int s_envClickSegMode;
 	static int s_undoMask;
 	#ifndef _WIN32
-		static bool positionSet = false;
+		static bool s_positionSet = false;
 	#endif
 	switch(uMsg)
 	{
@@ -1636,7 +1636,12 @@ WDL_DLGRET RandomizeTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 			// Set new random tempo and preview it
 			SetRandomTempo(hwnd, s_oldTempo, min, max, unit, minLimit, maxLimit, unitLimit, limit);
-			RestoreWindowPos(hwnd, RAND_WND, false);
+
+			#ifdef _WIN32
+				RestoreWindowPos(hwnd, RAND_WND, false);
+			#else
+				s_positionSet = false;
+			#endif
 		}
 		break;
 
@@ -1645,9 +1650,9 @@ WDL_DLGRET RandomizeTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 			{
 				// SetWindowPos doesn't seem to work in WM_INITDIALOG on OSX
 				// when creating a dialog with DialogBox so call here
-				if (!positionSet)
+				if (!s_positionSet)
 					RestoreWindowPos(hwnd, RAND_WND, false);
-				positionSet = true;
+				s_positionSet = true;
 			}
 			break;
 		#endif

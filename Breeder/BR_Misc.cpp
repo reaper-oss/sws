@@ -424,6 +424,67 @@ void PlaybackAtMouseCursor (COMMAND_T* ct)
 	}
 }
 
+void SelectItemsByType (COMMAND_T* ct)
+{
+	double tStart, tEnd;
+	GetSet_LoopTimeRange(false, false, &tStart, &tEnd, false);
+
+	bool checkTimeSel = ((int)ct->user > 0) ? false : ((tStart == tEnd) ? false : true);
+	bool update = false;
+	for (int i = 0; i < CountMediaItems(NULL); ++i)
+	{
+		MediaItem* item = GetMediaItem(NULL, i);
+		if (MediaItem_Take* take = GetActiveTake(item))
+		{
+			PCM_source* source = GetMediaItemTake_Source(take);
+			source = (!strcmp(source->GetType(), "SECTION")) ? (source->GetSource()) : (source);
+			if (source)
+			{
+				const char* type = source->GetType();
+
+				bool select = false;
+				if (abs((int)ct->user) == 1)
+				{
+					if (!strcmp(type, "MIDI") || !strcmp(type, "MIDIPOOL"))
+						select = true;
+				}
+				else if (abs((int)ct->user) == 2)
+				{
+					if (strcmp(type, "MIDI") && strcmp(type, "MIDIPOOL") && strcmp(type, "VIDEO") && strcmp(type, ""))
+						select = true;
+				}
+				else if (abs((int)ct->user) == 3)
+				{
+					if (!strcmp(type, "VIDEO"))
+						select = true;
+				}
+
+				if (select && checkTimeSel)
+				{
+					double itemStart = GetMediaItemInfo_Value(item, "D_POSITION");
+					double itemEnd   = itemStart + GetMediaItemInfo_Value(item, "D_LENGTH");
+
+					if (!AreOverlappedEx(itemStart, itemEnd, tStart, tEnd))
+						select = false;
+				}
+
+				if (select)
+				{
+
+					SetMediaItemInfo_Value(item, "B_UISEL", 1);
+					update = true;
+				}
+			}
+		}
+	}
+
+	if (update)
+	{
+		UpdateArrange();
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
+	}
+}
+
 void SaveCursorPosSlot (COMMAND_T* ct)
 {
 	int slot = (int)ct->user;

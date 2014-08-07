@@ -396,6 +396,7 @@
 #define IDC_CANCEL                      1306
 #define IDC_MIN                         1307
 #define IDC_MAX                         1308
+#define IDC_LISTTR                      1309
 
 // Next default values for new objects
 // 
@@ -403,7 +404,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        179
 #define _APS_NEXT_COMMAND_VALUE         40000
-#define _APS_NEXT_CONTROL_VALUE         1309
+#define _APS_NEXT_CONTROL_VALUE         1310
 #define _APS_NEXT_SYMED_VALUE           100
 #endif
 #endif

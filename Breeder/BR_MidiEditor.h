@@ -33,13 +33,20 @@
 void MidiTakePreviewPlayState (bool play, bool rec);
 
 /******************************************************************************
-* Commands                                                                    *
+* Commands: MIDI editor - Item preview                                        *
 ******************************************************************************/
 void ME_StopMidiTakePreview (COMMAND_T*, int, int, int, HWND);
 void ME_PreviewActiveTake (COMMAND_T*, int, int, int, HWND);
+
+/******************************************************************************
+* Commands: MIDI editor - Misc                                                *
+******************************************************************************/
 void ME_PlaybackAtMouseCursor (COMMAND_T*, int, int, int, HWND);
+void ME_CCEventAtEditCursor (COMMAND_T*, int, int, int, HWND);
 void ME_ShowUsedCCLanesDetect14Bit (COMMAND_T*, int, int, int, HWND);
 void ME_SaveCursorPosSlot (COMMAND_T*, int, int, int, HWND);
 void ME_RestoreCursorPosSlot (COMMAND_T*, int, int, int, HWND);
 void ME_SaveNoteSelSlot (COMMAND_T*, int, int, int, HWND);
 void ME_RestoreNoteSelSlot (COMMAND_T*, int, int, int, HWND);
+void ME_SaveCCEventsSlot (COMMAND_T*, int, int, int, HWND);
+void ME_RestoreCCEventsSlot (COMMAND_T*, int, int, int, HWND);

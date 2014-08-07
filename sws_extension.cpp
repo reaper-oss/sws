@@ -385,11 +385,11 @@ HMENU SWSCreateMenuFromCommandTable(COMMAND_T pCommands[], HMENU hMenu, int* iIn
 
 	while (pCommands[i].id != LAST_COMMAND && pCommands[i].id != SWS_ENDSUBMENU)
 	{
-    const char* name = pCommands[i].menuText;
+	const char* name = pCommands[i].menuText;
 		if (name && *name)
 		{
-      if (!hMenu)
-        hMenu = CreatePopupMenu();
+	  if (!hMenu)
+		hMenu = CreatePopupMenu();
 
 			if (pCommands[i].id == SWS_STARTSUBMENU)
 			{
@@ -503,7 +503,12 @@ public:
 	void SetSurfaceMute(MediaTrack *tr, bool mute)		{ ScheduleTracklistUpdate(); UpdateTrackMute(); }
 	void SetSurfaceSolo(MediaTrack *tr, bool solo)		{ ScheduleTracklistUpdate(); UpdateTrackSolo(); }
 	void SetSurfaceRecArm(MediaTrack *tr, bool arm)		{ ScheduleTracklistUpdate(); UpdateTrackArm(); }
-	int Extended(int call, void *parm1, void *parm2, void *parm3) { return SNM_CSurfExtended(call, parm1, parm2, parm3); }
+	int Extended(int call, void *parm1, void *parm2, void *parm3)
+	{
+		BR_CSurfExtended(call, parm1, parm2, parm3);
+		SNM_CSurfExtended(call, parm1, parm2, parm3);
+		return 0;
+	}
 };
 
 // WDL Stuff
@@ -752,6 +757,7 @@ extern "C"
 		IMPAPI(GetTrackMediaItem);
 		IMPAPI(GetTrackMIDINoteNameEx);
 		IMPAPI(GetTrackNumMediaItems);
+		IMPAPI(GetTrackNumSends);
 		IMPAPI(GetTrackUIVolPan);
 		IMPAPI(GetUserInputs);
 		IMPAPI(get_config_var);
@@ -840,6 +846,7 @@ extern "C"
 		IMPAPI(RemoveXPStyle);
 #endif
 		IMPAPI(RenderFileSection);
+		IMPAPI(Resample_EnumModes);
 		IMPAPI(Resampler_Create);
 		IMPAPI(ReverseNamedCommandLookup);
 		IMPAPI(screenset_register);
@@ -869,6 +876,8 @@ extern "C"
 		IMPAPI(SetTempoTimeSigMarker);
 		IMPAPI(SetTakeStretchMarker);
 		IMPAPI(SetTrackSelected);
+		IMPAPI(SetTrackSendUIPan);
+		IMPAPI(SetTrackSendUIVol);
 		IMPAPI(ShowActionList);
 		IMPAPI(ShowConsoleMsg);
 		IMPAPI(ShowMessageBox);

@@ -38,7 +38,8 @@ const double PAN_DELTA    = 0.001;
 /******************************************************************************
 * Macros                                                                      *
 ******************************************************************************/
-#define SKIP(counter, count)    {(counter)+=(count); continue;}
+#define SKIP(counter, count)   {(counter)+=(count); continue;}
+#define BINARY(x)              BinaryToDecimal(#x)
 
 /******************************************************************************
 * Miscellaneous                                                               *
@@ -51,17 +52,21 @@ void ReplaceAll (string& str, string oldStr, string newStr);
 void AppendLine (WDL_FastString& str, const char* line);
 int Round (double val);
 int GetBit (int val, int pos);
+int SetBit (int val, int pos, bool set);
 int SetBit (int val, int pos);
-int ToggleBit (int val, int pos);
 int ClearBit (int val, int pos);
+int ToggleBit (int val, int pos);
 int GetFirstDigit (int val);
 int GetLastDigit (int val);
-vector<int> GetDigits (int val);
+int BinaryToDecimal (const char* binaryString);
+vector<int> GetDigits (int val); // in 567 [0] = 5, [1] = 6 etc...
 WDL_FastString GetSourceChunk (PCM_source* source);
 template <typename T> bool WritePtr (T* ptr, T val)  {if (ptr){*ptr = val; return true;} return false;}
 template <typename T> bool ReadPtr  (T* ptr, T& val) {if (ptr){val = *ptr; return true;} return false;}
-template <typename T> bool CheckBounds (T val, T min, T max) {if (val < min) return false; if (val > max) return false; return true;}
-template <typename T> T    SetToBounds (T val, T min, T max) {if (val < min) return min; if (val > max) return max; return val;}
+template <typename T> bool CheckBounds   (T val, T min, T max) {if (val < min)  return false; if (val > max)  return false; return true;}
+template <typename T> bool CheckBoundsEx (T val, T min, T max) {if (val <= min) return false; if (val >= max) return false; return true;}
+template <typename T> T    SetToBounds   (T val, T min, T max) {if (val < min)  return min;   if (val > max)  return max;   return val;}
+template <typename T> T    IsEqual (T a, T b, T epsilon) {epsilon = abs(epsilon); return CheckBounds(a, b - epsilon, b + epsilon);}
 
 /******************************************************************************
 * General                                                                     *
@@ -70,16 +75,15 @@ vector<MediaItem*> GetSelItems (MediaTrack* track);
 vector<double> GetProjectMarkers (bool timeSel, double delta = 0);
 WDL_FastString FormatTime (double position, int mode = -1);  // same as format_timestr_pos but handles "measures.beats + time" properly
 int GetTakeId (MediaItem_Take* take, MediaItem* item = NULL);
-double GetClosestGrid (double position);
-double GetClosestMeasureGrid (double position);
-double GetClosestLeftSideGrid (double position);
-double GetClosestRightSideGrid (double position);
 double EndOfProject (bool markers, bool regions);
 double GetProjectSettingsTempo (int* num, int* den);
 double GetSourceLengthPPQ (MediaItem_Take* take);
+double GetGridDivSafe (); // makes sure grid div is never over MAX_GRID_DIV
 void InitTempoMap ();
 void ScrollToTrackIfNotInArrange (MediaTrack* track);
 void StartPlayback (double position);
+void GetSetLastAdjustedSend (bool set, MediaTrack** track, int* sendId, int* type); // for type see BR_EnvType (works only for volume and pan, not mute)
+bool SetIgnoreTempo (MediaItem* item, bool ignoreTempo, double bpm, int num, int den);
 bool DoesItemHaveMidiEvents (MediaItem* item);
 bool TrimItem (MediaItem* item, double start, double end);
 bool IsPlaying ();
@@ -91,6 +95,15 @@ bool SetMediaSourceProperties (MediaItem_Take* take, bool section, double start,
 bool SetTakeSourceFromFile (MediaItem_Take* take, const char* filename, bool inProjectData, bool keepSourceProperties);
 template <typename T> void GetConfig (const char* key, T& val) {val = *static_cast<T*>(GetConfigVar(key));}
 template <typename T> void SetConfig (const char* key, T  val) {*static_cast<T*>(GetConfigVar(key)) = val;}
+
+/******************************************************************************
+* Grid                                                                        *
+******************************************************************************/
+double GetNextGridDiv (double position);           // unlike other functions, this one doesn't care about grid visibility
+double GetClosestGridLine (double position);
+double GetClosestMeasureGridLine (double position);
+double GetClosestLeftSideGridLine (double position);
+double GetClosestRightSideGridLine (double position);
 
 /******************************************************************************
 * Height                                                                      *
@@ -136,15 +149,16 @@ void CenterDialog (HWND hwnd, HWND target, HWND zOrder);
 ******************************************************************************/
 struct BR_MouseContextInfo
 {
-	/* Invalid stuff will always be NULL, false, -1 or -2 depending on the type */
-	MediaTrack* track;
-	MediaItem* item;
-	MediaItem_Take* take;
-	TrackEnvelope* envelope;
-	void* midiEditor;
-	bool takeEnvelope, midiInlineEditor;
-	double position;
-	int noteRow, ccLane, ccLaneVal, ccLaneId;
+											  // In case the thing is invalid:
+	MediaTrack* track;                        // NULL
+	MediaItem* item;                          // NULL
+	MediaItem_Take* take;                     // NULL
+	TrackEnvelope* envelope;                  // NULL
+	void* midiEditor;                         // NULL
+	bool takeEnvelope, midiInlineEditor;      // false
+	double position;                          // -1
+	int noteRow, ccLaneVal, ccLaneId;         // -1
+	int ccLane;                               // -2
 	BR_MouseContextInfo();
 };
 
@@ -158,5 +172,6 @@ MediaTrack* TrackAtMouseCursor (int* context, double* position); // context: 0->
 * Theming                                                                     *
 ******************************************************************************/
 void DrawTooltip (LICE_IBitmap* bm, const char* text);
+void SetWndIcon (HWND hwnd); // win32 only
 void ThemeListViewOnInit (HWND list);
 bool ThemeListViewInProc (HWND hwnd, int uMsg, LPARAM lParam, HWND list, bool grid);

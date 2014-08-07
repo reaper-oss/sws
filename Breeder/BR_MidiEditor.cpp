@@ -73,14 +73,13 @@ static void MidiTakePreview (int mode, MediaItem_Take* take, MediaTrack* track, 
 
 		if (g_itemPreviewPaused && mode != 1) // requesting new preview while old one is still playing shouldn't unpause playback
 		{
-			if (IsPaused()) OnPauseButton();
+			if (IsPaused())
+				OnPauseButton();
 			g_itemPreviewPaused = false;
 		}
-
-		if (mode == 2)
-			return;
 	}
-	if (mode == 0)
+
+	if (mode == 0 || mode == 2)
 		return;
 
 	if (take)
@@ -180,7 +179,7 @@ void MidiTakePreviewPlayState (bool play, bool rec)
 }
 
 /******************************************************************************
-* Commands                                                                    *
+* Commands: MIDI editor - Item preview                                        *
 ******************************************************************************/
 void ME_StopMidiTakePreview (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
@@ -225,6 +224,52 @@ void ME_PreviewActiveTake (COMMAND_T* ct, int val, int valhw, int relmode, HWND 
 	}
 }
 
+/******************************************************************************
+* Commands: MIDI editor - Misc                                                *
+******************************************************************************/
+void ME_PlaybackAtMouseCursor (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
+{
+	PlaybackAtMouseCursor(ct);
+}
+
+void ME_CCEventAtEditCursor (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
+{
+	BR_MouseContextInfo mouseContext;
+	GetMouseCursorContext(NULL, NULL, NULL, &mouseContext);
+	if (mouseContext.midiEditor)
+	{
+		if (MediaItem_Take* take = MIDIEditor_GetTake(mouseContext.midiEditor))
+		{
+			double positionPPQ = MIDI_GetPPQPosFromProjTime(take, GetCursorPositionEx(NULL));
+			int value          = mouseContext.ccLaneVal;
+			int lane           = mouseContext.ccLane;
+
+			if (value != -1 && lane != -2)
+			{
+				if (lane == CC_TEXT_EVENTS || lane == CC_SYSEX || lane == CC_BANK_SELECT || lane == CC_VELOCITY)
+					MessageBox((HWND)mouseContext.midiEditor, __LOCALIZE("Can't insert in velocity, text, sysex and bank select lanes","sws_mbox"), __LOCALIZE("SWS/BR - Warning","sws_mbox"), MB_OK);
+				else
+				{
+					bool do14bit    = (lane >= CC_14BIT_START) ? true : false;
+					int type        = (lane == CC_PROGRAM) ? (0xC0) : (lane == CC_CHANNEL_PRESSURE ? 0xD0 : (lane == CC_PITCH ? 0xE0 : 0xB0));
+					int channel     = MIDIEditor_GetSetting_int(mouseContext.midiEditor, "default_note_chan");
+					int msg2        = CheckBounds(lane, 0, 127) ? ((value >> 7) | 0) : (value & 0x7F);
+					int msg3        = CheckBounds(lane, 0, 127) ? (value & 0x7F)     : ((value >> 7) | 0);
+
+					int targetLane  = (do14bit) ? lane - CC_14BIT_START : lane;
+					int targetLane2 = (do14bit) ? targetLane + 32       : lane;
+
+					MIDI_InsertCC(take, true, false, positionPPQ, type,	channel, (CheckBounds(targetLane, 0, 127) ? targetLane : msg2), msg3);
+					if (do14bit)
+						MIDI_InsertCC(take, true, false, positionPPQ, type, channel, targetLane2, msg2);
+
+					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+				}
+			}
+		}
+	}
+}
+
 void ME_ShowUsedCCLanesDetect14Bit (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
 	if (MediaItem_Take* take = MIDIEditor_GetTake(MIDIEditor_GetActive()))
@@ -236,8 +281,10 @@ void ME_ShowUsedCCLanesDetect14Bit (COMMAND_T* ct, int val, int valhw, int relmo
 			set<int> usedCC = GetUsedCCLanes(MIDIEditor_GetTake(MIDIEditor_GetActive()), 2);
 
 			for (int i = 0; i < laneView->countShown(); ++i)
+			{
 				if (usedCC.find(laneView->getIdAt(i)) == usedCC.end())
 					laneView->remove(i--);
+			}
 
 			// Special case: Bank select and CC0 (from FNG version to keep behavior identical)
 			if (usedCC.find(0) != usedCC.end() && usedCC.find(CC_BANK_SELECT) != usedCC.end() && !laneView->isShown(131))
@@ -261,14 +308,9 @@ void ME_ShowUsedCCLanesDetect14Bit (COMMAND_T* ct, int val, int valhw, int relmo
 				laneView->append(-1, 0);
 
 			delete laneView;
-			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 		}
 	}
-}
-
-void ME_PlaybackAtMouseCursor (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
-{
-	PlaybackAtMouseCursor(ct);
 }
 
 void ME_SaveCursorPosSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
@@ -287,7 +329,7 @@ void ME_SaveNoteSelSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWND hw
 	{
 		int slot = (int)ct->user;
 
-		for (int i = 0; i < g_midiNoteSel.Get()->GetSize(); i++)
+		for (int i = 0; i < g_midiNoteSel.Get()->GetSize(); ++i)
 		{
 			if (slot == g_midiNoteSel.Get()->Get(i)->GetSlot())
 				return g_midiNoteSel.Get()->Get(i)->Save(take);
@@ -302,12 +344,63 @@ void ME_RestoreNoteSelSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWND
 	{
 		int slot = (int)ct->user;
 
-		for (int i = 0; i < g_midiNoteSel.Get()->GetSize(); i++)
+		for (int i = 0; i < g_midiNoteSel.Get()->GetSize(); ++i)
 		{
 			if (slot == g_midiNoteSel.Get()->Get(i)->GetSlot())
 			{
 				g_midiNoteSel.Get()->Get(i)->Restore(take);
 				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+				return;
+			}
+		}
+	}
+}
+
+void ME_SaveCCEventsSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
+{
+	BR_MidiEditor midiEditor;
+	if (midiEditor.IsValid())
+	{
+		int lane = midiEditor.GetLastClickedCCLane();
+		if (lane != CC_TEXT_EVENTS && lane != CC_SYSEX && lane != CC_BANK_SELECT)
+		{
+			int slot = (int)ct->user;
+			for (int i = 0; i < g_midiCCEvents.Get()->GetSize(); ++i)
+			{
+				if (slot == g_midiCCEvents.Get()->Get(i)->GetSlot())
+					return g_midiCCEvents.Get()->Get(i)->Save(midiEditor);
+			}
+			g_midiCCEvents.Get()->Add(new BR_MidiCCEvents(slot, midiEditor));
+		}
+		else
+			MessageBox((HWND)midiEditor.GetEditor(), __LOCALIZE("Can't save events from text, sysex and bank select lanes","sws_mbox"), __LOCALIZE("SWS/BR - Warning","sws_mbox"), MB_OK);
+	}
+}
+
+void ME_RestoreCCEventsSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
+{
+	BR_MidiEditor midiEditor;
+	if (midiEditor.IsValid())
+	{
+		int slot = abs((int)ct->user) - 1;
+		bool allVisible = ((int)ct->user < 0) ? true : false;
+
+		for (int i = 0; i < g_midiCCEvents.Get()->GetSize(); ++i)
+		{
+			if (slot == g_midiCCEvents.Get()->Get(i)->GetSlot())
+			{
+				bool process = true;
+				int lane = midiEditor.GetLastClickedCCLane();
+				if (!allVisible && (lane == CC_TEXT_EVENTS || lane == CC_SYSEX || lane == CC_BANK_SELECT || lane == CC_VELOCITY))
+					process = false;
+
+				if (process)
+				{
+					if (g_midiCCEvents.Get()->Get(i)->Restore(midiEditor, allVisible))
+						Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+				}
+				else
+					MessageBox((HWND)midiEditor.GetEditor(), __LOCALIZE("Can't restore to velocity, text, sysex and bank select lanes","sws_mbox"), __LOCALIZE("SWS/BR - Warning","sws_mbox"), MB_OK);
 				return;
 			}
 		}

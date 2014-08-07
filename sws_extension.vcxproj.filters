@@ -1055,9 +1055,6 @@
     <ClCompile Include="Utility\Base64.cpp">
       <Filter>Core\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="libebur128\ebur128.c">
-      <Filter>Core\Utils\libebur128</Filter>
-    </ClCompile>
     <ClCompile Include="ObjectState\ObjectState.cpp">
       <Filter>Core\Chunk Processing</Filter>
     </ClCompile>
@@ -1198,6 +1195,9 @@
     </ClCompile>
     <ClCompile Include="Breeder\BR_ContinuousActions.cpp">
       <Filter>Breeder</Filter>
+    </ClCompile>
+    <ClCompile Include="libebur128\ebur128.cpp">
+      <Filter>Core\Utils\libebur128</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

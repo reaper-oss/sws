@@ -39,7 +39,7 @@ public:
 	~BR_LoudnessObject ();
 
 	/* Analyze */
-	bool Analyze (bool integratedOnly = false, bool doTruePeak = true);
+	bool Analyze (bool integratedOnly, bool doTruePeak);
 	void AbortAnalyze ();
 	bool IsRunning ();
 	double GetProgress ();

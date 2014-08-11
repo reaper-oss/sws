@@ -27,8 +27,6 @@
 
 #pragma once
 
-#include "stdafx.h"
-
 
 
 int WOL_Init();

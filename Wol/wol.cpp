@@ -28,6 +28,7 @@
 #include "stdafx.h"
 #include "wol.h"
 #include "wol_Zoom.h"
+#include "../reaper/localize.h"
 
 void SelectAllTracksExceptFolderParents(COMMAND_T* = NULL);
 
@@ -71,6 +72,7 @@ void SelectAllTracksExceptFolderParents(COMMAND_T*)
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		GetSetMediaTrackInfo(tr, "I_SELECTED", *(int*)GetSetMediaTrackInfo(tr, "I_FOLDERDEPTH", NULL) == 1 ? &g_i0 : &g_i1);
 	}
+	Undo_OnStateChangeEx(__LOCALIZE("Select all tracks except folder parents", "sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 

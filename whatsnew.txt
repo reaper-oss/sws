@@ -79,6 +79,14 @@ Fixes
 +Preserve options between REAPER sessions set with these actions:
  - SWS/BR: Set "Apply trim when adding volume/pan envelope"
  - SWS/BR: Toggle "Playback position follows project timebase when changing tempo"
+ - SWS/wol: Set "Vertical zoom center" to "Track at center of view"
+ - SWS/wol: Set "Vertical zoom center" to "Top visible track
+ - SWS/wol: Set "Vertical zoom center" to "Last selected track"
+ - SWS/wol: Set "Vertical zoom center" to "Track under mouse cursor"
+ - SWS/wol: Set "Horizontal zoom center" to "Edit cursor or play cursor (default)"
+ - SWS/wol: Set "Horizontal zoom center" to "Edit cursor"
+ - SWS/wol: Set "Horizontal zoom center" to "Center of view"
+ - SWS/wol: Set "Horizontal zoom center" to "Mouse cursor"
 
 Other
 +Increased all SWS/BR slot actions to 8 slots

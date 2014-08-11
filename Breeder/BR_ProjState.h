@@ -27,16 +27,20 @@
 ******************************************************************************/
 #pragma once
 
+#include "BR_MidiTools.h"
+
 class BR_EnvSel;
 class BR_CursorPos;
 class BR_MidiNoteSel;
+class BR_MidiCCEvents;
 
 /******************************************************************************
 * Globals                                                                     *
 ******************************************************************************/
-extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_EnvSel> >      g_envSel;
-extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_CursorPos> >   g_cursorPos;
-extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_MidiNoteSel> > g_midiNoteSel;
+extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_EnvSel> >       g_envSel;
+extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_CursorPos> >    g_cursorPos;
+extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_MidiNoteSel> >  g_midiNoteSel;
+extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_MidiCCEvents> > g_midiCCEvents;
 
 /******************************************************************************
 * Call on startup to register state saving functionality                      *
@@ -55,6 +59,7 @@ public:
 	void Save (TrackEnvelope* envelope);
 	void Restore (TrackEnvelope* envelope);
 	int  GetSlot ();
+
 private:
 	int m_slot;
 	vector<int> m_selection;
@@ -72,6 +77,7 @@ public:
 	void Save ();
 	void Restore ();
 	int  GetSlot ();
+
 private:
 	int m_slot;
 	double m_position;
@@ -89,7 +95,37 @@ public:
 	void Save (MediaItem_Take* take);
 	void Restore (MediaItem_Take* take);
 	int  GetSlot ();
+
 private:
 	int m_slot;
 	vector<int> m_selection;
+};
+
+/******************************************************************************
+* MIDI saved cc events state                                                  *
+******************************************************************************/
+class BR_MidiCCEvents
+{
+public:
+	BR_MidiCCEvents (int slot, BR_MidiEditor& midiEditor);
+	BR_MidiCCEvents (int slot, ProjectStateContext* ctx);
+	void SaveState (ProjectStateContext* ctx);
+	void Save (BR_MidiEditor& midiEditor);
+	bool Restore (BR_MidiEditor& midiEditor, bool allVisible);
+	int  GetSlot ();
+
+private:
+	struct Event
+	{
+		double positionPPQ;
+		int channel, msg2, msg3;
+		bool mute;
+		Event ();
+		Event (double positionPPQ, int channel, int msg2, int msg3, bool mute);
+	};
+
+	bool SaveEvents (BR_MidiEditor& midiEditor);
+
+	int m_slot, m_sourceLane, m_ppq;
+	vector<BR_MidiCCEvents::Event> m_events;
 };

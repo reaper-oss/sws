@@ -121,23 +121,23 @@ static WDL_DLGRET DialogProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, uMsg, wParam, lParam))
 		return r;
 
-	static BR_SearchObject* searchObject = NULL;
+	static BR_SearchObject* s_searchObject = NULL;
 	#ifndef _WIN32
-		static bool positionSet = false;
+		static bool s_positionSet = false;
 	#endif
 
 	switch(uMsg)
 	{
 		case WM_INITDIALOG:
 		{
-			searchObject = (BR_SearchObject*)lParam;
-			SetVersionMessage(hwnd, searchObject);
+			s_searchObject = (BR_SearchObject*)lParam;
+			SetVersionMessage(hwnd, s_searchObject);
 			SetTimer(hwnd, 1, 100, NULL);
 
 			#ifdef _WIN32
 				CenterDialog(hwnd, GetParent(hwnd), HWND_TOPMOST);
 			#else
-				positionSet = false;
+				s_positionSet = false;
 			#endif
 		}
 		break;
@@ -147,9 +147,9 @@ static WDL_DLGRET DialogProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			{
 				// SetWindowPos doesn't seem to work in WM_INITDIALOG on OSX
 				// when creating a dialog with DialogBox so call here
-				if (!positionSet)
+				if (!s_positionSet)
 					CenterDialog(hwnd, GetParent(hwnd), HWND_TOPMOST);
-				positionSet = true;
+				s_positionSet = true;
 			}
 			break;
 		#endif
@@ -160,18 +160,18 @@ static WDL_DLGRET DialogProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			{
 				case IDC_BR_VER_DOWNLOAD:
 				{
-					if (searchObject->GetStatus(NULL, NULL) == NO_CONNECTION)
+					if (s_searchObject->GetStatus(NULL, NULL) == NO_CONNECTION)
 					{
-						searchObject->RestartSearch();
-						SetVersionMessage(hwnd, searchObject);
+						s_searchObject->RestartSearch();
+						SetVersionMessage(hwnd, s_searchObject);
 						SetTimer(hwnd, 1, 100, NULL);
 					}
-					if (searchObject->GetStatus(NULL, NULL) == OFFICIAL_AVAILABLE)
+					if (s_searchObject->GetStatus(NULL, NULL) == OFFICIAL_AVAILABLE)
 					{
 						ShellExecute(NULL, "open", SWS_URL_DOWNLOAD, NULL, NULL, SW_SHOWNORMAL);
 						EndDialog(hwnd, 0);
 					}
-					else if (searchObject->GetStatus(NULL, NULL) == BETA_AVAILABLE)
+					else if (s_searchObject->GetStatus(NULL, NULL) == BETA_AVAILABLE)
 					{
 						ShellExecute(NULL, "open", SWS_URL_BETA_DOWNLOAD, NULL, NULL, SW_SHOWNORMAL);
 						EndDialog(hwnd, 0);
@@ -204,11 +204,11 @@ static WDL_DLGRET DialogProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 		case WM_TIMER:
 		{
-			SendMessage(GetDlgItem(hwnd, IDC_BR_VER_PROGRESS), PBM_SETPOS, (int)(searchObject->GetProgress() * 100.0), 0);
+			SendMessage(GetDlgItem(hwnd, IDC_BR_VER_PROGRESS), PBM_SETPOS, (int)(s_searchObject->GetProgress() * 100.0), 0);
 
-			if (searchObject->GetStatus(NULL, NULL) != SEARCH_INITIATED)
+			if (s_searchObject->GetStatus(NULL, NULL) != SEARCH_INITIATED)
 			{
-				SetVersionMessage(hwnd, searchObject);
+				SetVersionMessage(hwnd, s_searchObject);
 				KillTimer(hwnd, 1);
 			}
 		}
@@ -217,7 +217,7 @@ static WDL_DLGRET DialogProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		case WM_DESTROY:
 		{
 			KillTimer(hwnd, 1);
-			searchObject = NULL;
+			s_searchObject = NULL;
 		}
 		break;
 	}
@@ -229,17 +229,17 @@ static WDL_DLGRET DialogProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 ******************************************************************************/
 static void StartupSearch ()
 {
-	static BR_SearchObject* searchObject = new (nothrow) BR_SearchObject(true);
+	static BR_SearchObject* s_searchObject = new (nothrow) BR_SearchObject(true);
 
-	if (searchObject)
+	if (s_searchObject)
 	{
-		int status = searchObject->GetStatus(NULL, NULL);
+		int status = s_searchObject->GetStatus(NULL, NULL);
 		if (status != SEARCH_INITIATED)
 		{
 			if (status == OFFICIAL_AVAILABLE || status == BETA_AVAILABLE || status == BOTH_AVAILABLE)
-				DialogBoxParam(g_hInst, MAKEINTRESOURCE(IDD_BR_VERSION), g_hwndParent, DialogProc, (LPARAM)searchObject);
-			delete searchObject;
-			searchObject = NULL;
+				DialogBoxParam(g_hInst, MAKEINTRESOURCE(IDD_BR_VERSION), g_hwndParent, DialogProc, (LPARAM)s_searchObject);
+			delete s_searchObject;
+			s_searchObject = NULL;
 		}
 	}
 	else

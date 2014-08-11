@@ -330,6 +330,7 @@
 		98B6AAF518E7317900BACB96 /* wol.h in Headers */ = {isa = PBXBuildFile; fileRef = 98B6AAF318E7317900BACB96 /* wol.h */; };
 		98B6DC501917D64C0078561E /* wol_Zoom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98B6DC4E1917D64C0078561E /* wol_Zoom.cpp */; };
 		98B6DC511917D64C0078561E /* wol_Zoom.h in Headers */ = {isa = PBXBuildFile; fileRef = 98B6DC4F1917D64C0078561E /* wol_Zoom.h */; };
+		98B70128196ED9E60072FA00 /* ebur128.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98B70127196ED9E60072FA00 /* ebur128.cpp */; };
 		98B75DAF0F48F8F900AC5A25 /* Base64.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98B75DAE0F48F8F900AC5A25 /* Base64.cpp */; };
 		98B7ECE3190E10060057F6C8 /* BR_MidiEditor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98B7ECE1190E10060057F6C8 /* BR_MidiEditor.cpp */; };
 		98B7ECE4190E10060057F6C8 /* BR_MidiEditor.h in Headers */ = {isa = PBXBuildFile; fileRef = 98B7ECE2190E10060057F6C8 /* BR_MidiEditor.h */; };
@@ -346,7 +347,6 @@
 		98CC19DC18DFD11D00EE9809 /* BR_Loudness.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98CC19DA18DFD11D00EE9809 /* BR_Loudness.cpp */; };
 		98CC19DD18DFD11D00EE9809 /* BR_Loudness.h in Headers */ = {isa = PBXBuildFile; fileRef = 98CC19DB18DFD11D00EE9809 /* BR_Loudness.h */; };
 		98CC1A0718DFD27300EE9809 /* queue.h in Headers */ = {isa = PBXBuildFile; fileRef = 98CC1A0618DFD27300EE9809 /* queue.h */; };
-		98CC1A0A18DFD28000EE9809 /* ebur128.c in Sources */ = {isa = PBXBuildFile; fileRef = 98CC1A0818DFD28000EE9809 /* ebur128.c */; };
 		98CC1A0B18DFD28000EE9809 /* ebur128.h in Headers */ = {isa = PBXBuildFile; fileRef = 98CC1A0918DFD28000EE9809 /* ebur128.h */; };
 		98D3CA9C0F871B6F009B006A /* TracklistFilter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98D3CA9B0F871B6F009B006A /* TracklistFilter.cpp */; };
 		98D3CA9E0F871B80009B006A /* TracklistFilter.h in Headers */ = {isa = PBXBuildFile; fileRef = 98D3CA9D0F871B80009B006A /* TracklistFilter.h */; };
@@ -700,6 +700,7 @@
 		98B6AAF318E7317900BACB96 /* wol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wol.h; path = Wol/wol.h; sourceTree = "<group>"; };
 		98B6DC4E1917D64C0078561E /* wol_Zoom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = wol_Zoom.cpp; path = Wol/wol_Zoom.cpp; sourceTree = "<group>"; };
 		98B6DC4F1917D64C0078561E /* wol_Zoom.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wol_Zoom.h; path = Wol/wol_Zoom.h; sourceTree = "<group>"; };
+		98B70127196ED9E60072FA00 /* ebur128.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ebur128.cpp; path = libebur128/ebur128.cpp; sourceTree = "<group>"; };
 		98B75DAE0F48F8F900AC5A25 /* Base64.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Base64.cpp; path = Utility/Base64.cpp; sourceTree = "<group>"; };
 		98B7ECE1190E10060057F6C8 /* BR_MidiEditor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BR_MidiEditor.cpp; path = Breeder/BR_MidiEditor.cpp; sourceTree = "<group>"; };
 		98B7ECE2190E10060057F6C8 /* BR_MidiEditor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BR_MidiEditor.h; path = Breeder/BR_MidiEditor.h; sourceTree = "<group>"; };
@@ -716,7 +717,6 @@
 		98CC19DA18DFD11D00EE9809 /* BR_Loudness.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BR_Loudness.cpp; path = Breeder/BR_Loudness.cpp; sourceTree = "<group>"; };
 		98CC19DB18DFD11D00EE9809 /* BR_Loudness.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BR_Loudness.h; path = Breeder/BR_Loudness.h; sourceTree = "<group>"; };
 		98CC1A0618DFD27300EE9809 /* queue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = queue.h; path = libebur128/queue/sys/queue.h; sourceTree = "<group>"; };
-		98CC1A0818DFD28000EE9809 /* ebur128.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ebur128.c; path = libebur128/ebur128.c; sourceTree = "<group>"; };
 		98CC1A0918DFD28000EE9809 /* ebur128.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ebur128.h; path = libebur128/ebur128.h; sourceTree = "<group>"; };
 		98D3CA9B0F871B6F009B006A /* TracklistFilter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TracklistFilter.cpp; path = TrackList/TracklistFilter.cpp; sourceTree = "<group>"; };
 		98D3CA9D0F871B80009B006A /* TracklistFilter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TracklistFilter.h; path = TrackList/TracklistFilter.h; sourceTree = "<group>"; };
@@ -1174,10 +1174,10 @@
 		4D859DAC16AB127100E34EAA /* Breeder */ = {
 			isa = PBXGroup;
 			children = (
-				98BD45DD195245BB006958FD /* BR_ContinuousActions.cpp */,
-				98BD45DE195245BB006958FD /* BR_ContinuousActions.h */,
 				4D859DB916AB128700E34EAA /* BR.cpp */,
 				4D859DBA16AB128700E34EAA /* BR.h */,
+				98BD45DD195245BB006958FD /* BR_ContinuousActions.cpp */,
+				98BD45DE195245BB006958FD /* BR_ContinuousActions.h */,
 				98C0E227189CF266004F2EEF /* BR_Envelope.cpp */,
 				98C0E228189CF266004F2EEF /* BR_Envelope.h */,
 				4D92ED8817863C5C00521375 /* BR_EnvTools.cpp */,
@@ -1267,7 +1267,7 @@
 		98CC1A0318DFD23C00EE9809 /* libebur128 */ = {
 			isa = PBXGroup;
 			children = (
-				98CC1A0818DFD28000EE9809 /* ebur128.c */,
+				98B70127196ED9E60072FA00 /* ebur128.cpp */,
 				98CC1A0918DFD28000EE9809 /* ebur128.h */,
 				98CC1A0418DFD25500EE9809 /* queue */,
 			);
@@ -1485,6 +1485,8 @@
 /* Begin PBXProject section */
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+			};
 			buildConfigurationList = 1DEB914E08733D8E0010E9CD /* Build configuration list for PBXProject "reaper_sws" */;
 			compatibilityVersion = "Xcode 3.1";
 			developmentRegion = English;
@@ -1740,12 +1742,12 @@
 				98C0E231189CF266004F2EEF /* BR_Timer.cpp in Sources */,
 				98C918E618BFFEB500745DA1 /* BR_ReaScript.cpp in Sources */,
 				98CC19DC18DFD11D00EE9809 /* BR_Loudness.cpp in Sources */,
-				98CC1A0A18DFD28000EE9809 /* ebur128.c in Sources */,
 				98B6AAF418E7317900BACB96 /* wol.cpp in Sources */,
 				98B464E419060FE600AE2930 /* BR_MidiTools.cpp in Sources */,
 				98B7ECE3190E10060057F6C8 /* BR_MidiEditor.cpp in Sources */,
 				98B6DC501917D64C0078561E /* wol_Zoom.cpp in Sources */,
 				98BD45DF195245BB006958FD /* BR_ContinuousActions.cpp in Sources */,
+				98B70128196ED9E60072FA00 /* ebur128.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1756,6 +1758,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_LINK_OBJC_RUNTIME = NO;
 				COPY_PHASE_STRIP = NO;
 				EXECUTABLE_PREFIX = "";
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -1771,6 +1774,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_LINK_OBJC_RUNTIME = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				EXECUTABLE_PREFIX = "";
 				GCC_MODEL_TUNING = G5;
@@ -1860,6 +1864,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_LINK_OBJC_RUNTIME = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				EXECUTABLE_PREFIX = "";
 				GCC_MODEL_TUNING = G5;

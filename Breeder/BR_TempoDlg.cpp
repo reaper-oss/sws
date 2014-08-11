@@ -59,14 +59,14 @@ const char* const UNSEL_WND   = "BR - DeselectNthTempo WndPos";
 ******************************************************************************/
 static void ConvertMarkersToTempo (int markers, int num, int den, bool removeMarkers, bool timeSel, bool gradualTempo, bool split, double splitRatio)
 {
-	vector<double> markerPositions = GetProjectMarkers(timeSel, MAX_GRID_DIV); // delta: sometimes time selection won't catch start/end project marker due to small rounding differences
+	vector<double> markerPositions = GetProjectMarkers(timeSel, MIN_GRID_DIST); // delta: sometimes time selection won't catch start/end project marker due to small rounding differences
 
 	if (markerPositions.size() <=1)
 	{
 		if (timeSel)
-			MessageBox(g_hwndParent, __LOCALIZE("Not enough project markers in the time selection to perform conversion.", "sws_DLG_166"), __LOCALIZE("SWS - Error", "sws_mbox"), MB_OK);
+			MessageBox(g_hwndParent, __LOCALIZE("Not enough project markers in the time selection to perform conversion.", "sws_DLG_166"), __LOCALIZE("SWS/BR - Error", "sws_mbox"), MB_OK);
 		else
-			MessageBox(g_hwndParent, __LOCALIZE("Not enough project markers in the project to perform conversion.", "sws_DLG_166"), __LOCALIZE("SWS - Error", "sws_mbox"), MB_OK);
+			MessageBox(g_hwndParent, __LOCALIZE("Not enough project markers in the project to perform conversion.", "sws_DLG_166"), __LOCALIZE("SWS/BR - Error", "sws_mbox"), MB_OK);
 			return;
 	}
 
@@ -81,11 +81,9 @@ static void ConvertMarkersToTempo (int markers, int num, int den, bool removeMar
 
 			if (!check && position > markerPositions.front() && position <= markerPositions.back())
 			{
-				int answer = MessageBox(g_hwndParent, __LOCALIZE("Detected existing tempo markers between project markers.\nAre you sure you want to continue? Strange things may happen.","sws_DLG_166"), __LOCALIZE("SWS - Warning","sws_mbox"), MB_YESNO);
-				if (answer == 7)
-					return;
-				if (answer == 6)
-					check = true;
+				int answer = MessageBox(g_hwndParent, __LOCALIZE("Detected existing tempo markers between project markers.\nAre you sure you want to continue? Strange things may happen.","sws_DLG_166"), __LOCALIZE("SWS/BR - Warning","sws_mbox"), MB_YESNO);
+				if (answer == IDNO)  return;
+				if (answer == IDYES) check = true;
 			}
 
 			if (position > markerPositions.back())
@@ -96,11 +94,9 @@ static void ConvertMarkersToTempo (int markers, int num, int den, bool removeMar
 					break;
 				else
 				{
-					int answer = MessageBox(g_hwndParent, __LOCALIZE("Detected existing tempo markers after the last project marker.\nThey may get moved during the conversion. Are you sure you want to continue?","sws_DLG_166"), __LOCALIZE("SWS - Warning","sws_mbox"), MB_YESNO);
-					if (answer == 7)
-						return;
-					if (answer == 6)
-						break;
+					int answer = MessageBox(g_hwndParent, __LOCALIZE("Detected existing tempo markers after the last project marker.\nThey may get moved during the conversion. Are you sure you want to continue?","sws_DLG_166"), __LOCALIZE("SWS/BR - Warning","sws_mbox"), MB_YESNO);
+					if (answer == IDNO)  return;
+					if (answer == IDYES) break;
 				}
 			}
 		}
@@ -232,7 +228,7 @@ static void ConvertMarkersToTempo (int markers, int num, int den, bool removeMar
 	Undo_EndBlock2 (NULL, __LOCALIZE("Convert project markers to tempo markers","sws_undo"), UNDO_STATE_ALL);
 
 	if (exceed != 0)
-		ShowMessageBox(__LOCALIZE("Some of the created tempo markers have a BPM over 960. If you try to edit them, they will revert back to 960 or lower.\n\nIt is recommended that you undo, edit project markers and try again.", "sws_DLG_166"),__LOCALIZE("SWS - Warning", "sws_mbox"), 0);
+		MessageBox(g_hwndParent, __LOCALIZE("Some of the created tempo markers have a BPM over 960. If you try to edit them, they will revert back to 960 or lower.\n\nIt is recommended that you undo, edit project markers and try again.", "sws_DLG_166"),__LOCALIZE("SWS/BR - Warning", "sws_mbox"), MB_OK);
 }
 
 static void ShowGradualOptions (bool show, HWND hwnd)
@@ -293,7 +289,7 @@ static void SaveOptionsConversion (HWND hwnd)
 static void LoadOptionsConversion (int& markers, int& num, int& den, int& removeMarkers, int& timeSel, int& gradual, int& split, char* splitRatio)
 {
 	char tmp[512];
-	GetPrivateProfileString("SWS", CONVERT_KEY, "4 4 4 1 0 0 0 4/8", tmp, 256, get_ini_file());
+	GetPrivateProfileString("SWS", CONVERT_KEY, "4 4 4 1 0 0 0 1/2", tmp, 256, get_ini_file());
 	sscanf(tmp, "%d %d %d %d %d %d %d %20s", &markers, &num, &den, &removeMarkers, &timeSel, &gradual, &split, splitRatio);
 
 	double convertedRatio;
@@ -327,12 +323,9 @@ WDL_DLGRET ConvertMarkersToTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 		{
 			// Drop down
 			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_BR_CON_SPLIT_RATIO));
-			int x = (int)SendDlgItemMessage(hwnd, IDC_BR_CON_SPLIT_RATIO, CB_ADDSTRING, 0, (LPARAM)"1/2");
-			SendDlgItemMessage(hwnd, IDC_BR_CON_SPLIT_RATIO, CB_SETITEMDATA, x, 0);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_CON_SPLIT_RATIO, CB_ADDSTRING, 0, (LPARAM)"1/3");
-			SendDlgItemMessage(hwnd, IDC_BR_CON_SPLIT_RATIO, CB_SETITEMDATA, x, 1);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_CON_SPLIT_RATIO, CB_ADDSTRING, 0, (LPARAM)"1/4");
-			SendDlgItemMessage(hwnd, IDC_BR_CON_SPLIT_RATIO, CB_SETITEMDATA, x, 2);
+			SendDlgItemMessage(hwnd, IDC_BR_CON_SPLIT_RATIO, CB_ADDSTRING, 0, (LPARAM)"1/2");
+			SendDlgItemMessage(hwnd, IDC_BR_CON_SPLIT_RATIO, CB_ADDSTRING, 0, (LPARAM)"1/3");
+			SendDlgItemMessage(hwnd, IDC_BR_CON_SPLIT_RATIO, CB_ADDSTRING, 0, (LPARAM)"1/4");
 
 			// Load options from .ini
 			int markers, num, den, removeMarkers, timeSel, gradual, split;
@@ -383,7 +376,11 @@ WDL_DLGRET ConvertMarkersToTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 
 			if (!gradual)
 				ShowGradualOptions(false, hwnd);
+
+			SetTimer(hwnd, 1, 100, NULL);
 			RestoreWindowPos(hwnd, CONVERT_WND, false);
+			ShowWindow(hwnd, SW_SHOW);
+			SetFocus(hwnd);
 		}
 		break;
 
@@ -429,7 +426,7 @@ WDL_DLGRET ConvertMarkersToTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 
 					if (markers <= 0 || num <= 0 || den <= 0)
 					{
-						MessageBox(g_hwndParent, __LOCALIZE("All values have to be positive integers.","sws_DLG_166"), __LOCALIZE("SWS - Error","sws_mbox"), MB_OK);
+						MessageBox(g_hwndParent, __LOCALIZE("All values have to be positive integers.","sws_DLG_166"), __LOCALIZE("SWS/BR - Error","sws_mbox"), MB_OK);
 
 						if (markers <= 0)
 						{
@@ -495,6 +492,7 @@ WDL_DLGRET ConvertMarkersToTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 
 		case WM_DESTROY:
 		{
+			KillTimer(hwnd, 1);
 			SaveWindowPos(hwnd, CONVERT_WND);
 			SaveOptionsConversion(hwnd);
 		}
@@ -880,9 +878,9 @@ static void SelectTempoCase (HWND hwnd, int operationType, int unselectNth)
 
 	int bpm = IsDlgButtonChecked(hwnd, IDC_BR_SEL_BPM);
 	int sig = IsDlgButtonChecked(hwnd, IDC_BR_SEL_SIG);
-	int timeSel = (int)SendDlgItemMessage(hwnd,IDC_BR_SEL_TIME_RANGE,CB_GETCURSEL,0,0);
-	int shape = (int)SendDlgItemMessage(hwnd,IDC_BR_SEL_SHAPE,CB_GETCURSEL,0,0);
-	int type = (int)SendDlgItemMessage(hwnd,IDC_BR_SEL_TYPE,CB_GETCURSEL,0,0);
+	int timeSel = (int)SendDlgItemMessage(hwnd, IDC_BR_SEL_TIME_RANGE, CB_GETCURSEL, 0, 0);
+	int shape = (int)SendDlgItemMessage(hwnd, IDC_BR_SEL_SHAPE, CB_GETCURSEL, 0, 0);
+	int type = (int)SendDlgItemMessage(hwnd, IDC_BR_SEL_TYPE, CB_GETCURSEL, 0, 0);
 
 	char eBpmStart[128], eBpmEnd[128], eNum[128], eDen[128];
 	GetDlgItemText(hwnd, IDC_BR_SEL_BPM_START, eBpmStart, 128);
@@ -945,7 +943,7 @@ static void AdjustTempoCase (HWND hwnd)
 		mode = 1;       // Adjust by percentage
 		bpm = bpmPerc;
 	}
-	int shape = (int)SendDlgItemMessage(hwnd,IDC_BR_ADJ_SHAPE,CB_GETCURSEL,0,0);
+	int shape = (int)SendDlgItemMessage(hwnd, IDC_BR_ADJ_SHAPE, CB_GETCURSEL, 0, 0);
 
 	// Adjust markers
 	if (bpm != 0 || shape != 0)
@@ -970,13 +968,13 @@ static void SaveOptionsSelAdj (HWND hwnd)
 	int den = atoi(eDen);
 	int bpmEnb = IsDlgButtonChecked(hwnd, IDC_BR_SEL_BPM);
 	int sigEnb = IsDlgButtonChecked(hwnd, IDC_BR_SEL_SIG);
-	int timeSel = (int)SendDlgItemMessage(hwnd,IDC_BR_SEL_TIME_RANGE,CB_GETCURSEL,0,0);
-	int shape = (int)SendDlgItemMessage(hwnd,IDC_BR_SEL_SHAPE,CB_GETCURSEL,0,0);
-	int type = (int)SendDlgItemMessage(hwnd,IDC_BR_SEL_TYPE,CB_GETCURSEL,0,0);
+	int timeSel = (int)SendDlgItemMessage(hwnd, IDC_BR_SEL_TIME_RANGE, CB_GETCURSEL, 0, 0);
+	int shape = (int)SendDlgItemMessage(hwnd, IDC_BR_SEL_SHAPE, CB_GETCURSEL, 0, 0);
+	int type = (int)SendDlgItemMessage(hwnd, IDC_BR_SEL_TYPE, CB_GETCURSEL, 0, 0);
 	int selPref = IsDlgButtonChecked(hwnd, IDC_BR_SEL_ADD);
 	int invertPref = IsDlgButtonChecked(hwnd, IDC_BR_SEL_INVERT_PREF);
 	int adjustType = IsDlgButtonChecked(hwnd, IDC_BR_ADJ_BPM_VAL_ENB);
-	int adjustShape = (int)SendDlgItemMessage(hwnd,IDC_BR_ADJ_SHAPE,CB_GETCURSEL,0,0);
+	int adjustShape = (int)SendDlgItemMessage(hwnd, IDC_BR_ADJ_SHAPE, CB_GETCURSEL, 0, 0);
 
 	char tmp[512];
 	_snprintfSafe(tmp, sizeof(tmp), "%lf %lf %d %d %d %d %d %d %d %d %d %d %d", bpmStart, bpmEnd, num, den, bpmEnb, sigEnb, timeSel, shape, type, selPref, invertPref, adjustType, adjustShape);
@@ -1014,6 +1012,134 @@ static void LoadOptionsSelAdj (double& bpmStart, double& bpmEnd, int& num, int& 
 		adjustShape = 0;
 }
 
+WDL_DLGRET UnselectNthProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+static void UnselectNthDialog (bool show, bool toggle, HWND parentHandle)
+{
+	static HWND s_hwnd = NULL;
+
+	if (toggle)
+		show = !s_hwnd;
+
+	if (show)
+	{
+		if (!s_hwnd)
+			s_hwnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_BR_UNSELECT_TEMPO), parentHandle, UnselectNthProc);
+		else
+		{
+			ShowWindow(s_hwnd, SW_SHOW);
+			SetFocus(s_hwnd);
+		}
+	}
+	else
+	{
+		if (s_hwnd)
+		{
+			DestroyWindow(s_hwnd);
+			s_hwnd = NULL;
+		}
+	}
+}
+
+static void SaveOptionsUnselectNth (HWND hwnd)
+{
+	int Nth = (int)SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_GETCURSEL, 0, 0);
+	int criteria = IsDlgButtonChecked(hwnd, IDC_BR_UNSEL_CRITERIA);
+
+	char tmp[512];
+	_snprintfSafe(tmp, sizeof(tmp), "%d %d", Nth, criteria);
+	WritePrivateProfileString("SWS", UNSEL_KEY, tmp, get_ini_file());
+}
+
+static void LoadOptionsUnselectNth (int& Nth, int& criteria)
+{
+	char tmp[512];
+	GetPrivateProfileString("SWS", UNSEL_KEY, "0 0", tmp, 256, get_ini_file());
+	sscanf(tmp, "%d %d", &Nth, &criteria);
+
+	// Restore defaults if needed
+	if (Nth < 0 || Nth > 14)
+		Nth = 0;
+	if (criteria != 0 && criteria != 1)
+		criteria = 1;
+}
+
+WDL_DLGRET UnselectNthProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, uMsg, wParam, lParam))
+		return r;
+
+	switch(uMsg)
+	{
+		case WM_INITDIALOG:
+		{
+			// Drop down menu
+			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_BR_UNSEL_NTH_TEMPO));
+			SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("2nd","sws_DLG_168"));
+			SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("3rd","sws_DLG_168"));
+			SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("4th","sws_DLG_168"));
+			SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("5th","sws_DLG_168"));
+			SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("6th","sws_DLG_168"));
+			SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("7th","sws_DLG_168"));
+			SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("8th","sws_DLG_168"));
+			SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("9th","sws_DLG_168"));
+			SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("10th","sws_DLG_168"));
+			SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("11th","sws_DLG_168"));
+			SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("12th","sws_DLG_168"));
+			SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("13th","sws_DLG_168"));
+			SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("14th","sws_DLG_168"));
+			SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("15th","sws_DLG_168"));
+			SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("16th","sws_DLG_168"));
+
+			// Load options from .ini
+			int Nth, criteria;
+			LoadOptionsUnselectNth(Nth, criteria);
+
+			// Set controls
+			SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_SETCURSEL, Nth, 0);
+			CheckDlgButton(hwnd, IDC_BR_UNSEL_CRITERIA, !!criteria);
+
+			RestoreWindowPos(hwnd, UNSEL_WND, false);
+			ShowWindow(hwnd, SW_SHOW);
+			SetFocus(hwnd);
+		}
+		break;
+
+		case WM_COMMAND:
+		{
+			switch(LOWORD(wParam))
+			{
+				case IDOK:
+				{
+					int Nth = (int)SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_GETCURSEL, 0, 0) + 2;
+					Undo_BeginBlock2(NULL);
+					if (IsDlgButtonChecked(hwnd, IDC_BR_UNSEL_CRITERIA))
+						SelectTempoCase(GetParent(hwnd), 1, Nth);
+					else
+						SelectTempo(2, Nth, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+					Undo_EndBlock2(NULL, __LOCALIZE("Unselect tempo markers","sws_undo"), UNDO_STATE_ALL);
+				}
+				break;
+
+				case IDCANCEL:
+				{
+					UnselectNthDialog(false, false, NULL);
+				}
+				break;
+			}
+		}
+		break;
+
+		case WM_DESTROY:
+		{
+			SaveWindowPos(hwnd, UNSEL_WND);
+			SaveOptionsUnselectNth(hwnd);
+		}
+		break;
+	}
+	return 0;
+}
+
 WDL_DLGRET SelectAdjustTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, uMsg, wParam, lParam))
@@ -1025,38 +1151,25 @@ WDL_DLGRET SelectAdjustTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 		{
 			// Drop downs
 			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_BR_SEL_TIME_RANGE));
-			int x = (int)SendDlgItemMessage(hwnd, IDC_BR_SEL_TIME_RANGE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("All","sws_DLG_167"));
-			SendDlgItemMessage(hwnd, IDC_BR_SEL_TIME_RANGE, CB_SETITEMDATA, x, 0);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_SEL_TIME_RANGE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Time selection","sws_DLG_167"));
-			SendDlgItemMessage(hwnd, IDC_BR_SEL_TIME_RANGE, CB_SETITEMDATA, x, 1);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_SEL_TIME_RANGE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Ignore time selection","sws_DLG_167"));
-			SendDlgItemMessage(hwnd, IDC_BR_SEL_TIME_RANGE, CB_SETITEMDATA, x, 2);
+			SendDlgItemMessage(hwnd, IDC_BR_SEL_TIME_RANGE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("All","sws_DLG_167"));
+			SendDlgItemMessage(hwnd, IDC_BR_SEL_TIME_RANGE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Time selection","sws_DLG_167"));
+			SendDlgItemMessage(hwnd, IDC_BR_SEL_TIME_RANGE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Ignore time selection","sws_DLG_167"));
 
 			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_BR_SEL_SHAPE));
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_SEL_SHAPE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("All","sws_DLG_167"));
-			SendDlgItemMessage(hwnd, IDC_BR_SEL_SHAPE, CB_SETITEMDATA, x, 0);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_SEL_SHAPE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Square","sws_DLG_167"));
-			SendDlgItemMessage(hwnd, IDC_BR_SEL_SHAPE, CB_SETITEMDATA, x, 1);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_SEL_SHAPE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Linear","sws_DLG_167"));
-			SendDlgItemMessage(hwnd, IDC_BR_SEL_SHAPE, CB_SETITEMDATA, x, 2);
+			SendDlgItemMessage(hwnd, IDC_BR_SEL_SHAPE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("All","sws_DLG_167"));
+			SendDlgItemMessage(hwnd, IDC_BR_SEL_SHAPE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Square","sws_DLG_167"));
+			SendDlgItemMessage(hwnd, IDC_BR_SEL_SHAPE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Linear","sws_DLG_167"));
 
 			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_BR_SEL_TYPE));
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_SEL_TYPE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("All","sws_DLG_167"));
-			SendDlgItemMessage(hwnd, IDC_BR_SEL_TYPE, CB_SETITEMDATA, x, 0);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_SEL_TYPE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Tempo markers","sws_DLG_167"));
-			SendDlgItemMessage(hwnd, IDC_BR_SEL_TYPE, CB_SETITEMDATA, x, 1);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_SEL_TYPE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Time signature markers","sws_DLG_167"));
-			SendDlgItemMessage(hwnd, IDC_BR_SEL_TYPE, CB_SETITEMDATA, x, 2);
+			SendDlgItemMessage(hwnd, IDC_BR_SEL_TYPE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("All","sws_DLG_167"));
+			SendDlgItemMessage(hwnd, IDC_BR_SEL_TYPE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Tempo markers","sws_DLG_167"));
+			SendDlgItemMessage(hwnd, IDC_BR_SEL_TYPE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Time signature markers","sws_DLG_167"));
 
 			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_BR_ADJ_SHAPE));
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_ADJ_SHAPE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Preserve","sws_DLG_167"));
-			SendDlgItemMessage(hwnd, IDC_BR_ADJ_SHAPE, CB_SETITEMDATA, x, 0);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_ADJ_SHAPE,CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Invert","sws_DLG_167"));
-			SendDlgItemMessage(hwnd, IDC_BR_ADJ_SHAPE, CB_SETITEMDATA, x, 1);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_ADJ_SHAPE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Linear","sws_DLG_167"));
-			SendDlgItemMessage(hwnd, IDC_BR_ADJ_SHAPE, CB_SETITEMDATA, x, 2);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_ADJ_SHAPE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Square","sws_DLG_167"));
-			SendDlgItemMessage(hwnd, IDC_BR_ADJ_SHAPE, CB_SETITEMDATA, x, 3);
+			SendDlgItemMessage(hwnd, IDC_BR_ADJ_SHAPE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Preserve","sws_DLG_167"));
+			SendDlgItemMessage(hwnd, IDC_BR_ADJ_SHAPE,CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Invert","sws_DLG_167"));
+			SendDlgItemMessage(hwnd, IDC_BR_ADJ_SHAPE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Linear","sws_DLG_167"));
+			SendDlgItemMessage(hwnd, IDC_BR_ADJ_SHAPE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Square","sws_DLG_167"));
 
 			// Load options from .ini
 			double bpmStart, bpmEnd;
@@ -1110,6 +1223,9 @@ WDL_DLGRET SelectAdjustTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			#endif
 
 			RestoreWindowPos(hwnd, SEL_ADJ_WND, false);
+			SetTimer(hwnd, 1, 500, NULL);
+			ShowWindow(hwnd, SW_SHOW);
+			SetFocus(hwnd);
 		}
 		break;
 
@@ -1178,7 +1294,11 @@ WDL_DLGRET SelectAdjustTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 				case IDC_BR_SEL_UNSELECT_NTH:
 				{
-					UnselectNthDialog(true, hwnd); // show child dialog and pass parent's handle to it
+					#ifdef _WIN32
+						UnselectNthDialog(true, true, hwnd);
+					#else
+						UnselectNthDialog(true, true, g_hwndParent); // so dialog doesn't get hidden behind main dialog
+					#endif
 				}
 				break;
 
@@ -1309,164 +1429,37 @@ WDL_DLGRET SelectAdjustTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 		case WM_TIMER:
 		{
-			vector<int> selectedPoints = GetSelPoints(GetTempoEnv());
-			char pointCount[512];
-			_snprintf(pointCount, sizeof(pointCount), __LOCALIZE_VERFMT("SWS/BR - Select and adjust tempo markers (%d of %d points selected)","sws_DLG_167") , selectedPoints.size(), CountTempoTimeSigMarkers(NULL) );
-			SetWindowText(hwnd, pointCount);
-			UpdateCurrentBpm(hwnd, selectedPoints);
-		}
-		break;
-
-		case WM_DESTROY:
-		{
-			SaveWindowPos(hwnd, SEL_ADJ_WND);
-			SaveOptionsSelAdj(hwnd);
-		}
-		break;
-	}
-	return 0;
-}
-
-/******************************************************************************
-* Unselect Nth selected tempo markers                                         *
-******************************************************************************/
-static void SaveOptionsUnselectNth (HWND hwnd)
-{
-	int Nth = (int)SendDlgItemMessage(hwnd,IDC_BR_UNSEL_NTH_TEMPO,CB_GETCURSEL,0,0);
-	int criteria = IsDlgButtonChecked(hwnd, IDC_BR_UNSEL_CRITERIA);
-
-	char tmp[512];
-	_snprintfSafe(tmp, sizeof(tmp), "%d %d", Nth, criteria);
-	WritePrivateProfileString("SWS", UNSEL_KEY, tmp, get_ini_file());
-}
-
-static void LoadOptionsUnselectNth (int& Nth, int& criteria)
-{
-	char tmp[512];
-	GetPrivateProfileString("SWS", UNSEL_KEY, "0 0", tmp, 256, get_ini_file());
-	sscanf(tmp, "%d %d", &Nth, &criteria);
-
-	// Restore defaults if needed
-	if (Nth < 0 || Nth > 14)
-		Nth = 0;
-	if (criteria != 0 && criteria != 1)
-		criteria = 1;
-}
-
-WDL_DLGRET UnselectNthProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, uMsg, wParam, lParam))
-		return r;
-
-	switch(uMsg)
-	{
-		case WM_INITDIALOG:
-		{
-			// Drop down menu
-			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_BR_UNSEL_NTH_TEMPO));
-
-			int x = (int)SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("2nd","sws_DLG_168"));
-			SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_SETITEMDATA, x, 0);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("3rd","sws_DLG_168"));
-			SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_SETITEMDATA, x, 1);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("4th","sws_DLG_168"));
-			SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_SETITEMDATA, x, 2);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("5th","sws_DLG_168"));
-			SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_SETITEMDATA, x, 3);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("6th","sws_DLG_168"));
-			SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_SETITEMDATA, x, 4);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("7th","sws_DLG_168"));
-			SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_SETITEMDATA, x, 5);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("8th","sws_DLG_168"));
-			SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_SETITEMDATA, x, 6);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("9th","sws_DLG_168"));
-			SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_SETITEMDATA, x, 7);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("10th","sws_DLG_168"));
-			SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_SETITEMDATA, x, 8);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("11th","sws_DLG_168"));
-			SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_SETITEMDATA, x, 9);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("12th","sws_DLG_168"));
-			SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_SETITEMDATA, x, 10);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("13th","sws_DLG_168"));
-			SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_SETITEMDATA, x, 11);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("14th","sws_DLG_168"));
-			SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_SETITEMDATA, x, 12);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("15th","sws_DLG_168"));
-			SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_SETITEMDATA, x, 13);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("16th","sws_DLG_168"));
-			SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_SETITEMDATA, x, 14);
-
-			// Load options from .ini
-			int Nth, criteria;
-			LoadOptionsUnselectNth (Nth, criteria);
-
-			// Set controls
-			SendDlgItemMessage(hwnd, IDC_BR_UNSEL_NTH_TEMPO, CB_SETCURSEL, Nth, 0);
-			CheckDlgButton(hwnd, IDC_BR_UNSEL_CRITERIA, !!criteria);
-
-			RestoreWindowPos(hwnd, UNSEL_WND, false);
-		}
-		break;
-
-		case WM_COMMAND:
-		{
-			switch(LOWORD(wParam))
+			static WDL_FastString* s_title = NULL;
+			if (!s_title)
 			{
-				case IDOK:
+				if (s_title = new (nothrow) WDL_FastString())
 				{
-					int Nth = (int)SendDlgItemMessage(hwnd,IDC_BR_UNSEL_NTH_TEMPO,CB_GETCURSEL,0,0) + 2;
-					Undo_BeginBlock2(NULL);
-					if (IsDlgButtonChecked(hwnd, IDC_BR_UNSEL_CRITERIA))
-						SelectTempoCase (GetParent(hwnd), 1, Nth);
-					else
-						SelectTempo (2, Nth, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-					Undo_EndBlock2 (NULL, __LOCALIZE("Unselect tempo markers","sws_undo"), UNDO_STATE_ALL);
+					s_title->AppendFormatted(62, "%s", "SWS/BR - ");
+					s_title->AppendFormatted(512, "%s", __LOCALIZE_VERFMT("Select and adjust tempo markers (%d of %d points selected)", "sws_DLG_167"));
 				}
-				break;
+			}
 
-				case IDCANCEL:
-				{
-					UnselectNthDialog (false, NULL);
-				}
-				break;
+			if (s_title)
+			{
+				vector<int> selectedPoints = GetSelPoints(GetTempoEnv());
+				char pointCount[512];
+				_snprintf(pointCount, sizeof(pointCount), s_title->Get(), selectedPoints.size(), CountTempoTimeSigMarkers(NULL) );
+				SetWindowText(hwnd, pointCount);
+				UpdateCurrentBpm(hwnd, selectedPoints);
 			}
 		}
 		break;
 
 		case WM_DESTROY:
 		{
-			SaveWindowPos(hwnd, UNSEL_WND);
-			SaveOptionsUnselectNth (hwnd);
+			KillTimer(hwnd, 1);
+			UnselectNthDialog(false, false, NULL);
+			SaveWindowPos(hwnd, SEL_ADJ_WND);
+			SaveOptionsSelAdj(hwnd);
 		}
 		break;
 	}
 	return 0;
-}
-
-void UnselectNthDialog (bool show, HWND parentHandle)
-{
-	static HWND hwnd = CreateDialog (g_hInst, MAKEINTRESOURCE(IDD_BR_UNSELECT_TEMPO), parentHandle, UnselectNthProc);
-	static bool visible = false;
-
-	if (show)
-	{
-		if (!visible)
-		{
-			ShowWindow(hwnd, SW_SHOW);
-			SetFocus(hwnd);
-			visible = true;
-		}
-		else
-		{
-			ShowWindow(hwnd, SW_HIDE);
-			visible = false;
-		}
-	}
-	else
-	{
-		ShowWindow(hwnd, SW_HIDE);
-		visible = false;
-	}
 }
 
 /******************************************************************************
@@ -1494,7 +1487,7 @@ static void SetRandomTempo (HWND hwnd, BR_Envelope* oldTempo, double min, double
 		double newBpm = b1;
 		if (tempoMap.GetSelection(i))
 		{
-			double random = (double)(rand() % 101) / 100;
+			double random = g_MTRand.rand();
 
 			if (unit == 0)        // Value
 				newBpm = (b1 + min) + ((max-min) * random);
@@ -1556,8 +1549,8 @@ static void SaveOptionsRandomizeTempo (HWND hwnd)
 	double max = AltAtof(eMax);
 	double minLimit = AltAtof(eMinLimit);
 	double maxLimit = AltAtof(eMaxLimit);
-	int unit = (int)SendDlgItemMessage(hwnd,IDC_BR_RAND_UNIT,CB_GETCURSEL,0,0);
-	int unitLimit = (int)SendDlgItemMessage(hwnd,IDC_BR_RAND_LIMIT_UNIT,CB_GETCURSEL,0,0);
+	int unit = (int)SendDlgItemMessage(hwnd, IDC_BR_RAND_UNIT, CB_GETCURSEL, 0, 0);
+	int unitLimit = (int)SendDlgItemMessage(hwnd, IDC_BR_RAND_LIMIT_UNIT, CB_GETCURSEL, 0, 0);
 	int limit = IsDlgButtonChecked(hwnd, IDC_BR_RAND_LIMIT);
 
 	char tmp[512];
@@ -1585,33 +1578,32 @@ WDL_DLGRET RandomizeTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, uMsg, wParam, lParam))
 		return r;
 
-	static BR_Envelope* oldTempo = NULL;
-	static int envClickSegMode;
-	static int undoMask;
-
+	static BR_Envelope* s_oldTempo = NULL;
+	static int s_envClickSegMode;
+	static int s_undoMask;
+	#ifndef _WIN32
+		static bool s_positionSet = false;
+	#endif
 	switch(uMsg)
 	{
 		case WM_INITDIALOG:
 		{
-			oldTempo = new (nothrow) BR_Envelope(GetTempoEnv());
+			s_oldTempo = new (nothrow) BR_Envelope(GetTempoEnv());
 
 			// Save and set preferences
-			GetConfig("envclicksegmode", envClickSegMode);
-			GetConfig("undomask", undoMask);
-			SetConfig("envclicksegmode", ClearBit(envClickSegMode, 6));  // prevent reselection of points in time selection
-			SetConfig("undomask", ClearBit(undoMask, 3));                // turn off undo for edit cursor
+			GetConfig("envclicksegmode", s_envClickSegMode);
+			GetConfig("undomask", s_undoMask);
+			SetConfig("envclicksegmode", ClearBit(s_envClickSegMode, 6));  // prevent reselection of points in time selection
+			SetConfig("undomask", ClearBit(s_undoMask, 3));                // turn off undo for edit cursor
 
 			// Drop lists
 			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_BR_RAND_UNIT));
-			int x = (int)SendDlgItemMessage(hwnd, IDC_BR_RAND_UNIT, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("BPM","sws_DLG_171"));
-			SendDlgItemMessage(hwnd, IDC_BR_RAND_UNIT, CB_SETITEMDATA, x, 0);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_RAND_UNIT, CB_ADDSTRING, 0, (LPARAM)"%");
-			SendDlgItemMessage(hwnd, IDC_BR_RAND_UNIT, CB_SETITEMDATA, x, 1);
+			SendDlgItemMessage(hwnd, IDC_BR_RAND_UNIT, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("BPM","sws_DLG_171"));
+			SendDlgItemMessage(hwnd, IDC_BR_RAND_UNIT, CB_ADDSTRING, 0, (LPARAM)"%");
+
 			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_BR_RAND_LIMIT_UNIT));
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_RAND_LIMIT_UNIT, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("BPM","sws_DLG_171"));
-			SendDlgItemMessage(hwnd, IDC_BR_RAND_LIMIT_UNIT, CB_SETITEMDATA, x, 0);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_RAND_LIMIT_UNIT, CB_ADDSTRING, 0, (LPARAM)"%");
-			SendDlgItemMessage(hwnd, IDC_BR_RAND_LIMIT_UNIT, CB_SETITEMDATA, x, 1);
+			SendDlgItemMessage(hwnd, IDC_BR_RAND_LIMIT_UNIT, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("BPM","sws_DLG_171"));
+			SendDlgItemMessage(hwnd, IDC_BR_RAND_LIMIT_UNIT, CB_ADDSTRING, 0, (LPARAM)"%");
 
 			// Load options from .ini
 			double min, max, minLimit, maxLimit;
@@ -1643,10 +1635,27 @@ WDL_DLGRET RandomizeTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 			#endif
 
 			// Set new random tempo and preview it
-			SetRandomTempo(hwnd, oldTempo, min, max, unit, minLimit, maxLimit, unitLimit, limit);
-			RestoreWindowPos(hwnd, RAND_WND, false);
+			SetRandomTempo(hwnd, s_oldTempo, min, max, unit, minLimit, maxLimit, unitLimit, limit);
+
+			#ifdef _WIN32
+				RestoreWindowPos(hwnd, RAND_WND, false);
+			#else
+				s_positionSet = false;
+			#endif
 		}
 		break;
+
+		#ifndef _WIN32
+			case WM_ACTIVATE:
+			{
+				// SetWindowPos doesn't seem to work in WM_INITDIALOG on OSX
+				// when creating a dialog with DialogBox so call here
+				if (!s_positionSet)
+					RestoreWindowPos(hwnd, RAND_WND, false);
+				s_positionSet = true;
+			}
+			break;
+		#endif
 
 		case WM_COMMAND:
 		{
@@ -1674,8 +1683,8 @@ WDL_DLGRET RandomizeTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 					double minLimit = AltAtof(eMinLimit);
 					double maxLimit = AltAtof(eMaxLimit);
 					int limit = IsDlgButtonChecked(hwnd, IDC_BR_RAND_LIMIT);
-					int unit = (int)SendDlgItemMessage(hwnd,IDC_BR_RAND_UNIT,CB_GETCURSEL,0,0);
-					int unitLimit = (int)SendDlgItemMessage(hwnd,IDC_BR_RAND_LIMIT_UNIT,CB_GETCURSEL,0,0);
+					int unit = (int)SendDlgItemMessage(hwnd, IDC_BR_RAND_UNIT, CB_GETCURSEL, 0, 0);
+					int unitLimit = (int)SendDlgItemMessage(hwnd, IDC_BR_RAND_LIMIT_UNIT, CB_GETCURSEL, 0, 0);
 
 					// Update edit boxes with "atofed" values
 					sprintf(eMin, "%.19g", min);
@@ -1688,13 +1697,13 @@ WDL_DLGRET RandomizeTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 					SetDlgItemText(hwnd, IDC_BR_RAND_LIMIT_MAX, eMaxLimit);
 
 					// Set new random tempo and preview it
-					SetRandomTempo(hwnd, oldTempo, min, max, unit, minLimit, maxLimit, unitLimit, limit);
+					SetRandomTempo(hwnd, s_oldTempo, min, max, unit, minLimit, maxLimit, unitLimit, limit);
 				}
 				break;
 
 				case IDOK:
 				{
-					SetConfig("undomask", undoMask); // treat undo behavior of edit cursor per user preference
+					SetConfig("undomask", s_undoMask); // treat undo behavior of edit cursor per user preference
 					Undo_OnStateChangeEx2(NULL, __LOCALIZE("Randomize selected tempo markers", "sws_undo"), UNDO_STATE_ALL, -1);
 					EndDialog(hwnd, 0);
 				}
@@ -1703,7 +1712,7 @@ WDL_DLGRET RandomizeTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 				case IDCANCEL:
 				{
 					// Set old tempo
-					oldTempo->Commit(true);
+					s_oldTempo->Commit(true);
 					EndDialog(hwnd, 0);
 				}
 				break;
@@ -1713,14 +1722,14 @@ WDL_DLGRET RandomizeTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 		case WM_DESTROY:
 		{
-			delete oldTempo;
-			oldTempo = NULL;
+			delete s_oldTempo;
+			s_oldTempo = NULL;
 			SaveOptionsRandomizeTempo(hwnd);
 			SaveWindowPos(hwnd, RAND_WND);
 
 			// Restore preferences
-			SetConfig("envclicksegmode", envClickSegMode);
-			SetConfig("undomask", undoMask);
+			SetConfig("envclicksegmode", s_envClickSegMode);
+			SetConfig("undomask", s_undoMask);
 		}
 		break;
 	}
@@ -1796,12 +1805,9 @@ WDL_DLGRET TempoShapeOptionsProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 		{
 			// Dropdown (split ratio)
 			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_BR_SHAPE_SPLIT_RATIO));
-			int x = (int)SendDlgItemMessage(hwnd, IDC_BR_SHAPE_SPLIT_RATIO, CB_ADDSTRING, 0, (LPARAM)"1/2");
-			SendDlgItemMessage(hwnd, IDC_BR_SHAPE_SPLIT_RATIO, CB_SETITEMDATA, x, 0);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_SHAPE_SPLIT_RATIO, CB_ADDSTRING, 0, (LPARAM)"1/3");
-			SendDlgItemMessage(hwnd, IDC_BR_SHAPE_SPLIT_RATIO, CB_SETITEMDATA, x, 1);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_SHAPE_SPLIT_RATIO, CB_ADDSTRING, 0, (LPARAM)"1/4");
-			SendDlgItemMessage(hwnd, IDC_BR_SHAPE_SPLIT_RATIO, CB_SETITEMDATA, x, 2);
+			SendDlgItemMessage(hwnd, IDC_BR_SHAPE_SPLIT_RATIO, CB_ADDSTRING, 0, (LPARAM)"1/2");
+			SendDlgItemMessage(hwnd, IDC_BR_SHAPE_SPLIT_RATIO, CB_ADDSTRING, 0, (LPARAM)"1/3");
+			SendDlgItemMessage(hwnd, IDC_BR_SHAPE_SPLIT_RATIO, CB_ADDSTRING, 0, (LPARAM)"1/4");
 
 			// Load options from .ini file
 			int split;
@@ -1815,6 +1821,8 @@ WDL_DLGRET TempoShapeOptionsProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			SetTempoShapeOptions (split, splitRatio);
 
 			RestoreWindowPos(hwnd, SHAPE_WND, false);
+			ShowWindow(hwnd, SW_SHOW);
+			SetFocus(hwnd);
 		}
 		break;
 

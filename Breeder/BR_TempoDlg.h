@@ -36,7 +36,7 @@ WDL_DLGRET ConvertMarkersToTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 * Select and adjust tempo markers                                             *
 ******************************************************************************/
 WDL_DLGRET SelectAdjustTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-void UnselectNthDialog (bool show, HWND parentHandle);
+
 
 /******************************************************************************
 * Randomize selected tempo markers                                            *

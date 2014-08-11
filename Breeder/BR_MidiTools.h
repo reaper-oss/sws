@@ -60,7 +60,7 @@ enum BR_MidiVelLanes
 	CC_BANK_SELECT      = 131,
 	CC_TEXT_EVENTS      = 132,
 	CC_SYSEX            = 133,
-	CC_14BIT_START    = 134
+	CC_14BIT_START      = 134
 };
 
 /******************************************************************************
@@ -69,13 +69,15 @@ enum BR_MidiVelLanes
 class BR_MidiEditor
 {
 public:
-	BR_MidiEditor (void* midiEditor);
-	BR_MidiEditor (MediaItem_Take* take);
+	BR_MidiEditor ();                     // last active MIDI editor
+	BR_MidiEditor (void* midiEditor);     // main MIDI editor
+	BR_MidiEditor (MediaItem_Take* take); // inline MIDI editor
 
 	/* Various MIDI editor view options */
 	MediaItem_Take* GetActiveTake ();
 	double GetStartPos ();            // can be ppq or time - depends on timebase
 	double GetHZoom ();               // also dependent on timebase settings
+	int GetPPQ ();
 	int GetVPos ();
 	int GetVZoom ();
 	int GetNoteshow ();               // see BR_MidiNoteshow
@@ -87,15 +89,24 @@ public:
 	int CountCCLanes ();
 	int GetCCLane (int idx);
 	int GetCCLaneHeight (int idx);
+	int GetLastClickedCCLane ();
+	int FindCCLane (int lane);
+	bool IsCCLaneVisible (int lane);
 
-	/* Check if MIDI editor data is valid - should call right after creating the object */
+	/* Event filter */
+	bool IsChannelVisible (int channel);
+
+	/* Misc */
+	void* GetEditor ();
+
+	/* Check if MIDI editor data is valid - should call right after creating the object  */
 	bool IsValid ();
 
 private:
 	MediaItem_Take* m_take;
 	void* m_midiEditor;
 	double m_startPos, m_hZoom;
-	int m_vPos, m_vZoom, m_noteshow, m_timebase, m_pianoroll, m_drawChannel, m_ccLanesCount;
+	int m_vPos, m_vZoom, m_noteshow, m_timebase, m_pianoroll, m_drawChannel, m_eventFilterCh, m_ccLanesCount, m_ppq, m_lastLane;
 	vector<int> m_ccLanes, m_ccLanesHeight;
 	bool m_valid;
 	bool Build ();
@@ -109,7 +120,7 @@ class BR_MidiItemTimePos
 {
 public:
 	BR_MidiItemTimePos (MediaItem* item, bool deleteSavedEvents = true);
-	void Restore (double offset = 0);
+	void Restore (bool clearCurrentEvents = true, double offset = 0);
 
 private:
 	struct MidiTake
@@ -167,10 +178,13 @@ double EffectiveMidiTakeLength (MediaItem_Take* take, bool ignoreMutedEvents, bo
 double EffectiveMidiTakeStart (MediaItem_Take* take, bool ignoreMutedEvents, bool ignoreTextEvents);
 void SetMutedNotes (MediaItem_Take* take, vector<int>& muteStatus);
 void SetSelectedNotes (MediaItem_Take* take, vector<int>& selectedNotes, bool unselectOthers);
+void UnselectAllEvents (MediaItem_Take* take, int lane);
 bool AreAllNotesUnselected (MediaItem_Take* take);
 bool IsMidi (MediaItem_Take* take, bool* inProject = NULL);
 bool IsOpenInInlineEditor (MediaItem_Take* take);
 bool IsMidiNoteBlack (int note);
 bool IsVelLaneValid (int lane);
-int MapVelLaneToReaScriptCC (int lane); // CC format follows ReaScript scheme: 0-127=CC, 0x100|(0-31)=14-bit CC, 0x200=velocity, 0x201=pitch,
-int MapReaScriptCCToVelLane (int cc);   // 0x202=program, 0x203=channel pressure, 0x204=bank/program select, 0x205=text, 0x206=sysex
+int GetMIDIFilePPQ (const char* fp);
+int GetLastClickedVelLane (void* midiEditor);
+int MapVelLaneToReaScriptCC (int lane);       // CC format follows ReaScript scheme: 0-127=CC, 0x100|(0-31)=14-bit CC, 0x200=velocity, 0x201=pitch,
+int MapReaScriptCCToVelLane (int cc);         // 0x202=program, 0x203=channel pressure, 0x204=bank/program select, 0x205=text, 0x206=sysex

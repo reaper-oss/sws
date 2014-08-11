@@ -36,38 +36,40 @@ const int    MIN_SIG        = 1;
 const int    MAX_SIG        = 255;
 const double MIN_TEMPO_DIST = 0.001;
 const double MIN_ENV_DIST   = 0.000001;
-const double MAX_GRID_DIV   = 0.00097; // 1/256 at 960 BPM
+const double MIN_GRID_DIST  = 0.00097;         // 1/256 at 960 BPM (can't set it to more than 1/256 in grid settings, but other actions like Adjust grid by 1/2 can)
+const double MAX_GRID_DIV   = 1.0 / 256.0 * 4; // 1/256 because things can get broken after that (http://forum.cockos.com/project.php?issueid=5263)
 
 /******************************************************************************
 * Envelope shapes - this is how Reaper stores point shapes internally         *
 ******************************************************************************/
 enum BR_EnvShape
 {
-	LINEAR = 0,
-	SQUARE,
-	SLOW_START_END,
-	FAST_START,
-	FAST_END,
-	BEZIER
+	LINEAR         = 0,
+	SQUARE         = 1,
+	SLOW_START_END = 2,
+	FAST_START     = 3,
+	FAST_END       = 4,
+	BEZIER         = 5
 };
 
 /******************************************************************************
-* Envelope types - purely for readability, not tied to Reaper in any way      *
+* Envelope types - purely for readability and bitmasks, not tied to Reaper in *
+* any way                                                                     *
 ******************************************************************************/
 enum BR_EnvType
 {
-	UNKNOWN = 0,
-	VOLUME,
-	VOLUME_PREFX,
-	PAN,
-	PAN_PREFX,
-	WIDTH,
-	WIDTH_PREFX,
-	MUTE,
-	PITCH,
-	PLAYRATE,
-	TEMPO,
-	PARAMETER
+	UNKNOWN      = 0x1,
+	VOLUME       = 0x2,
+	VOLUME_PREFX = 0x4,
+	PAN          = 0x8,
+	PAN_PREFX    = 0x10,
+	WIDTH        = 0x20,
+	WIDTH_PREFX  = 0x40,
+	MUTE         = 0x80,
+	PITCH        = 0x100,
+	PLAYRATE     = 0x200,
+	TEMPO        = 0x400,
+	PARAMETER    = 0x800
 };
 
 /******************************************************************************
@@ -106,6 +108,7 @@ class BR_Envelope
 public:
 	BR_Envelope ();
 	BR_Envelope (TrackEnvelope* envelope, bool takeEnvelopesUseProjectTime = true); // for takeEnvelopesUseProjectTime explanation see declaration of SetTakeEnvelopeTimebase()
+	BR_Envelope (MediaTrack* track, int envelopeId, bool takeEnvelopesUseProjectTime = true);
 	BR_Envelope (MediaItem_Take* take, BR_EnvType envType, bool takeEnvelopesUseProjectTime = true);
 	BR_Envelope (const BR_Envelope& envelope);
 	~BR_Envelope () {}
@@ -121,8 +124,8 @@ public:
 	bool CreatePoint (int id, double position, double value, int shape, double bezier, bool selected, bool checkPosition = false, bool snapValue = false);
 	bool DeletePoint (int id);
 	bool DeletePoints (int startId, int endId);
-	bool GetTimeSig (int id, bool* sig, int* num, int* den);
-	bool SetTimeSig (int id, bool sig, int num, int den);
+	bool GetTimeSig (int id, bool* sig, bool* partial, int* num, int* den);
+	bool SetTimeSig (int id, bool sig, bool partial, int num, int den);
 	bool SetCreateSortedPoint (int id, double position, double value, int shape, double bezier, bool selected); // for ReaScript export
 
 	/* Selected points (never updated when editing, use UpdateSelected() if needed) */
@@ -145,6 +148,7 @@ public:
 	int FindClosest (double position);                       // note that caller needs to check if returned id exists
 
 	/* Miscellaneous */
+	int GetSendId ();                                 // If send envelope, get send id for it's parent track, otherwise -1
 	double ValueAtPosition (double position);         // Using find functionality, so efficiency may vary (see comment about Find())
 	double NormalizedDisplayValue (double value);     // Convert point value to 0.0 - 1.0 range as displayed in arrange
 	double NormalizedDisplayValue (int id);
@@ -152,13 +156,14 @@ public:
 	double SnapValue (double value);                  // Snaps value to current settings (only relevant for take pitch envelope)
 	bool IsTempo ();
 	bool IsTakeEnvelope ();
-	bool VisibleInArrange (int* envHeight = NULL, int* yOffset = NULL, bool cacheValues = false); // Is part of the envelope visible in arrange (height calculation can be intensive (envelopes in track lane), use cacheValues if situation allows)
-	void MoveArrangeToPoint (int id, int referenceId);                                            // Moves arrange horizontally if needed so point is visible
-	void SetTakeEnvelopeTimebase (bool useProjectTime);                                           // By setting this to true, project time can be used everywhere when dealing with take envelopes. If take changes position just call again.
+	bool GetPointsInTimeSelection (int* startId, int* endId, double* tStart = NULL, double* tEnd = NULL); // Presumes points are sorted, returns false if there is there is no time selection (if there are no points in time selection, both ids will be -1)
+	bool VisibleInArrange (int* envHeight = NULL, int* yOffset = NULL, bool cacheValues = false);         // Is part of the envelope visible in arrange (height calculation can be intensive (envelopes in track lane), use cacheValues if situation allows)
+	void MoveArrangeToPoint (int id, int referenceId);                                                    // Moves arrange horizontally if needed so point is visible
+	void SetTakeEnvelopeTimebase (bool useProjectTime);                                                   // By setting this to true, project time can be used everywhere when dealing with take envelopes. If take changes position just call again.
 	void AddToPoints (double* position, double* value);
 	void AddToSelectedPoints (double* position, double* value);
 	void GetSelectedPointsExtrema (double* minimum, double* maximum);
-	WDL_FastString FormatValue (double value);                        // Due to API limitation we can't known to which parameter envelope belongs so FX envelopes won't get properly formated
+	WDL_FastString FormatValue (double value); // Due to API limitation we can't known to which parameter envelope belongs so FX (non-native) envelopes won't get properly formated
 	WDL_FastString GetName ();
 	MediaItem_Take* GetTake ();
 	MediaTrack* GetParent ();
@@ -244,10 +249,16 @@ TrackEnvelope* GetVolEnv (MediaTrack* track);
 TrackEnvelope* GetVolEnvPreFX (MediaTrack* track);
 TrackEnvelope* GetTakeEnv (MediaItem_Take* take, BR_EnvType envelope);
 MediaItem_Take* GetTakeEnvParent (TrackEnvelope* envelope, int* type); // for type see BR_EnvType
+MediaTrack* GetEnvParent (TrackEnvelope* envelope);
+vector<int> GetSelPoints (TrackEnvelope* envelope);
+WDL_FastString ConstructReceiveEnv (int type, double firstPointValue); // for type see BR_EnvType
+bool ToggleShowSendEnvelope (MediaTrack* track, int sendId, int type); // for type see BR_EnvType
+bool ShowSendEnvelopes (vector<MediaTrack*>& tracks, int envelopes);   // envelopes is a bitmask (see BR_EnvType)
 bool EnvVis (TrackEnvelope* envelope, bool* lane);
 int GetEnvId (TrackEnvelope* envelope, MediaTrack* parent = NULL);
-vector<int> GetSelPoints (TrackEnvelope* envelope);
-MediaTrack* GetEnvParent (TrackEnvelope* envelope);
+int GetDefaultPointShape ();                                      // see BR_EnvShape for return values;
+int GetEnvType (TrackEnvelope* envelope, bool* isSend);           // for return type see BR_EnvType (note: function relies on envelope names, localization could theoretically break it)
+int GetCurrentAutomationMode (MediaTrack* track);                 // this should check global override too, but currently it won't due to API limitations (when API allows, it will be enough to update this function only)
 
 /******************************************************************************
 * Tempo                                                                       *

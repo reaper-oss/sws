@@ -152,19 +152,25 @@ int GetBit (int val, int pos)
 	return (val & 1 << pos) != 0;
 }
 
+int SetBit (int val, int pos, bool set)
+{
+	if (set) return SetBit(val, pos);
+	else     return ClearBit(val, pos);
+}
+
 int SetBit (int val, int pos)
 {
 	return val | 1 << pos;
 }
 
-int ToggleBit (int val, int pos)
-{
-	return val ^= 1 << pos;
-}
-
 int ClearBit (int val, int pos)
 {
 	return val & ~(1 << pos);
+}
+
+int ToggleBit (int val, int pos)
+{
+	return val ^= 1 << pos;
 }
 
 int GetFirstDigit (int val)
@@ -178,6 +184,18 @@ int GetFirstDigit (int val)
 int GetLastDigit (int val)
 {
 	return abs(val) % 10;
+}
+
+int BinaryToDecimal (const char* binaryString)
+{
+	int base10 = 0;
+	for (size_t i = 0; i < strlen(binaryString); ++i)
+	{
+		int digit = binaryString[i] - '0';
+		if (digit == 0 || digit == 1)
+			base10 = base10 << 1 | digit;
+	}
+	return base10;
 }
 
 vector<int> GetDigits (int val)
@@ -303,118 +321,6 @@ int GetTakeId (MediaItem_Take* take, MediaItem* item /*= NULL*/)
 	return -1;
 }
 
-double GetClosestGrid (double position)
-{
-	int snap; GetConfig("projshowgrid", snap);
-	SetConfig("projshowgrid", ClearBit(snap, 8));
-
-	double grid = SnapToGrid(NULL, position);
-	SetConfig("projshowgrid", snap);
-	return grid;
-}
-
-double GetClosestMeasureGrid (double position)
-{
-	double gridDiv; GetConfig("projgriddiv", gridDiv);
-
-	double gridLine = 0;
-	if (gridDiv/4 < 1)
-	{
-		SetConfig("projgriddiv", 4);
-		gridLine = GetClosestGrid(position);
-		SetConfig("projgriddiv", gridDiv);
-	}
-	else
-	{
-		gridLine = GetClosestGrid(position);
-	}
-	return gridLine;
-}
-
-double GetClosestLeftSideGrid (double position)
-{
-	double grid = GetClosestGrid(position);
-	if (position >= grid)
-		return grid;
-
-	double gridDiv; GetConfig("projgriddiv", gridDiv);
-	int minGridPx; GetConfig("projgridmin", minGridPx);
-	double hZoom = GetHZoomLevel();
-
-	if (gridDiv/4 < 1)
-	{
-		double beats; int denom;
-		TimeMap2_timeToBeats(NULL, grid, NULL, NULL, &beats, &denom);
-		gridDiv *= (double)denom/4;
-
-		double leftSideGrid  = TimeMap2_beatsToTime(NULL, beats - gridDiv, NULL);
-		while ((grid - leftSideGrid) * hZoom < minGridPx)
-		{
-			gridDiv *= 2;
-			leftSideGrid = TimeMap2_beatsToTime(NULL, beats - gridDiv, NULL);
-		}
-		return leftSideGrid;
-	}
-	else
-	{
-		gridDiv = (int)gridDiv/4;
-		int measure;
-		TimeMap2_timeToBeats(NULL, grid, &measure, NULL, NULL, NULL);
-
-		measure -= (int)gridDiv;
-		double leftSideGrid  = TimeMap2_beatsToTime(NULL, 0, &measure);
-		while ((grid - leftSideGrid) * hZoom < minGridPx)
-		{
-			measure -= (int)gridDiv;
-			leftSideGrid  = TimeMap2_beatsToTime(NULL, 0, &measure);
-			gridDiv *= 2;
-		}
-		return leftSideGrid;
-	}
-}
-
-double GetClosestRightSideGrid (double position)
-{
-	double grid = GetClosestGrid(position);
-	if (position <= grid)
-		return grid;
-
-	double gridDiv; GetConfig("projgriddiv", gridDiv);
-	int minGridPx; GetConfig("projgridmin", minGridPx);
-	double hZoom = GetHZoomLevel();
-
-	if (gridDiv/4 < 1)
-	{
-		double beats; int denom;
-		TimeMap2_timeToBeats(NULL, grid, NULL, NULL, &beats, &denom);
-		gridDiv *= (double)denom/4;
-
-		double rightSideGrid = TimeMap2_beatsToTime(NULL, beats + gridDiv, NULL);
-		while ((rightSideGrid - grid) * hZoom < minGridPx)
-		{
-			gridDiv *= 2;
-			rightSideGrid = TimeMap2_beatsToTime(NULL, beats + gridDiv, NULL);
-		}
-		return rightSideGrid;
-	}
-	else
-	{
-		gridDiv = (int)gridDiv/4;
-		int measure;
-		TimeMap2_timeToBeats(NULL, grid, &measure, NULL, NULL, NULL);
-
-		measure += (int)gridDiv;
-		double rightSideGrid = TimeMap2_beatsToTime(NULL, 0, &measure);
-		while ((rightSideGrid - grid) * hZoom < minGridPx)
-		{
-			measure += (int)gridDiv;
-			rightSideGrid = TimeMap2_beatsToTime(NULL, 0, &measure);
-			gridDiv *= 2;
-		}
-		return rightSideGrid;
-	}
-}
-
 double EndOfProject (bool markers, bool regions)
 {
 	double projEnd = 0;
@@ -469,6 +375,19 @@ double GetSourceLengthPPQ (MediaItem_Take* take)
 	return 0;
 }
 
+double GetGridDivSafe ()
+{
+	double gridDiv;
+	GetConfig("projgriddiv", gridDiv);
+	if (gridDiv < MAX_GRID_DIV)
+	{
+		SetConfig("projgriddiv", MAX_GRID_DIV);
+		return MAX_GRID_DIV;
+	}
+	else
+		return gridDiv;
+}
+
 void InitTempoMap ()
 {
 	if (!CountTempoTimeSigMarkers(NULL))
@@ -512,6 +431,74 @@ void StartPlayback (double position)
 	OnPlayButton();
 	SetEditCurPos2(NULL, editCursor, false, false);
 	PreventUIRefresh(-1);
+}
+
+void GetSetLastAdjustedSend (bool set, MediaTrack** track, int* sendId, int* type)
+{
+	static MediaTrack* lastTrack = NULL;
+	static int         lastId    = -1;
+	static int         lastType  = UNKNOWN;
+
+	if (set)
+	{
+		lastTrack = *track;
+		lastId    = *sendId;
+		lastType  = *type;
+	}
+	else
+	{
+		WritePtr(track, lastTrack);
+		WritePtr(sendId, lastId);
+		WritePtr(type,   lastType);
+	}
+}
+
+bool SetIgnoreTempo (MediaItem* item, bool ignoreTempo, double bpm, int num, int den)
+{
+	bool midiFound = false;
+	for (int i = 0; i < CountTakes(item); ++i)
+	{
+		if (IsMidi(GetMediaItemTake(item, i)))
+		{
+			midiFound = true;
+			break;
+		}
+	}
+	if (!midiFound)
+		return false;
+
+	WDL_FastString newState;
+	char* chunk = GetSetObjectState(item, "");
+	bool stateChanged = false;
+
+	char* token = strtok(chunk, "\n");
+	while (token != NULL)
+	{
+		if (!strncmp(token, "IGNTEMPO ", sizeof("IGNTEMPO ") - 1))
+		{
+			if (ignoreTempo)
+				newState.AppendFormatted(256, "IGNTEMPO %d %.14lf %d %d\n", 1, bpm, num, den);
+			else
+			{
+				double currentBpm;
+				int currentNum, currentDen;
+				sscanf(token, "IGNTEMPO %*d %lf %d %d\n", &currentBpm, &currentNum, &currentDen);
+				newState.AppendFormatted(256, "IGNTEMPO %d %.14lf %d %d\n", 0, currentBpm, currentNum, currentDen);
+			}
+			stateChanged = true;			
+		}
+		else
+		{
+			AppendLine(newState, token);
+		}
+		token = strtok(NULL, "\n");
+	}
+
+	if (stateChanged)
+		GetSetObjectState(item, newState.Get());
+	FreeHeapPtr(chunk);
+
+	return stateChanged;
 }
 
 bool DoesItemHaveMidiEvents (MediaItem* item)
@@ -773,6 +760,235 @@ bool SetTakeSourceFromFile (MediaItem_Take* take, const char* filename, bool inP
 		}
 	}
 	return false;
+}
+
+/******************************************************************************
+* Grid                                                                        *
+******************************************************************************/
+double GetNextGridDiv (double position)
+{
+	/* This got a tiny bit complicated, but we're trying to replicate        *
+	*  REAPER behavior as closely as possible...I guess the ultimate test    *
+	*  would be inserting a bunch of really strange time signatures coupled  *
+	*  with possibly even stranger grid divisions, things any sane person    *
+	*  would never use - like 11/7 with grid division of 2/13...haha. As it  *
+	*  stands now, at REAPER v4.7, this function handles it all              */
+
+	// Grid dividing starts again from the measure in which tempo marker is so find location of first measure grid (obvious if grid division spans more measures)
+	int gridDivStartTempo = FindPreviousTempoMarker(position);
+	double gridDivStart;
+	if (gridDivStartTempo >= 0)
+	{
+		if (GetTempoTimeSigMarker(NULL, gridDivStartTempo + 1, &gridDivStart, NULL, NULL, NULL, NULL, NULL, NULL))
+		{
+			if (gridDivStart > position)
+				GetTempoTimeSigMarker(NULL, gridDivStartTempo, &gridDivStart, NULL, NULL, NULL, NULL, NULL, NULL);
+			else
+				gridDivStartTempo += 1;
+		}
+		else
+			GetTempoTimeSigMarker(NULL, gridDivStartTempo, &gridDivStart, NULL, NULL, NULL, NULL, NULL, NULL);
+	}
+	else
+	{
+		gridDivStart = 0;
+		gridDivStartTempo = 0; // if position is right at project start this would be -1 even if first tempo marker exists
+	}
+
+	// Get grid division translated into current time signature
+	int gridDivStartMeasure, num, den;
+	TimeMap2_timeToBeats(0, gridDivStart, &gridDivStartMeasure, &num, NULL, &den);
+	double gridDiv = GetGridDivSafe();
+	gridDiv = (den*gridDiv) / 4;
+
+	// How much measures must pass for grid diving to start anew? (again, obvious when grid division spans more measures)
+	int measureStep = (int)(gridDiv/num);
+	if (measureStep == 0) measureStep = 1;
+
+	// Find closest measure to our position, where grid diving starts again
+	int positionMeasure;
+	TimeMap2_timeToBeats(0, position, &positionMeasure, NULL, NULL, NULL);
+	gridDivStartMeasure += (int)((positionMeasure - gridDivStartMeasure) / measureStep) * measureStep;
+	gridDivStart = TimeMap2_beatsToTime(0, 0, &gridDivStartMeasure);
+
+	// Finally find next grid position (different cases for measures and beats)
+	double nextGridPosition;
+	if (gridDiv > num)
+	{
+		int gridDivEndMeasure = gridDivStartMeasure + measureStep;
+		double gridDivEnd = TimeMap2_beatsToTime(0, 0, &gridDivEndMeasure);
+
+		// Same as before, existing tempo markers can move end measure grid (where our next grid should be) so find if that's the case
+		if (measureStep > 1)
+		{
+			double tempoPosition;
+			while (GetTempoTimeSigMarker(NULL, ++gridDivStartTempo, &tempoPosition, NULL, NULL, NULL, NULL, NULL, NULL) && tempoPosition <= gridDivEnd)
+			{
+				int currentMeasure;
+				TimeMap2_timeToBeats(0, tempoPosition, &currentMeasure, NULL, NULL, NULL);
+
+				gridDivEndMeasure = currentMeasure + ((currentMeasure == positionMeasure) ? (measureStep) : (0));
+				gridDivEnd = TimeMap2_beatsToTime(0, 0, &gridDivEndMeasure);
+			}
+		}
+
+		nextGridPosition = TimeMap2_beatsToTime(0, 0, &gridDivEndMeasure);
+	}
+	else
+	{
+		double positionBeats = TimeMap2_timeToBeats(0, position, NULL, NULL, NULL, NULL) - TimeMap2_timeToBeats(0, gridDivStart, NULL, NULL, NULL, NULL);
+		double nextGridBeats = (int)((positionBeats + gridDiv) / gridDiv) * gridDiv;
+		while (abs(nextGridBeats - positionBeats) < 1E-6) nextGridBeats += gridDiv; // rounding errors, yuck...
+
+		nextGridPosition = TimeMap2_beatsToTime(0, nextGridBeats, &gridDivStartMeasure);
+
+		// Check it didn't pass over into next measure
+		int gridDivEndMeasure = gridDivStartMeasure + measureStep;
+		double gridDivEnd     = TimeMap2_beatsToTime(0, 0, &gridDivEndMeasure);
+		if (nextGridPosition > gridDivEnd)
+			nextGridPosition = gridDivEnd;
+	}
+
+	// Not so perfect fix for this issue: http://forum.cockos.com/project.php?issueid=5263
+	if (nextGridPosition < position)
+	{
+		double gridDiv = GetGridDivSafe();
+
+		double tempoPosition, beat; int measure; GetTempoTimeSigMarker(NULL, gridDivStartTempo, &tempoPosition, &measure, &beat, NULL, NULL, NULL, NULL);
+		double offset =  gridDiv - fmod(TimeMap_timeToQN(TimeMap2_beatsToTime(0, 0, &measure)), gridDiv);
+
+		double gridLn = TimeMap_timeToQN(tempoPosition);
+		gridLn = TimeMap_QNToTime(gridLn - offset - fmod(gridLn, gridDiv));
+		while (gridLn < position + (MIN_GRID_DIST/2))
+			gridLn = TimeMap_QNToTime(TimeMap_timeToQN(gridLn) + gridDiv);
+
+		nextGridPosition = gridLn;
+	}
+
+	return nextGridPosition;
+}
+
+double GetClosestGridLine (double position)
+{
+	/* All other GridLine (but not GridDiv) functions   *
+	*  are depending on this, but it appears SnapToGrid *
+	*  is broken in certain non-real-world testing      *
+	*  situations, so it should probably we rewritten   *
+	*  using the stuff from GetNextGridDiv()            */
+
+	int snap; GetConfig("projshowgrid", snap);
+	SetConfig("projshowgrid", ClearBit(snap, 8));
+
+	double grid = SnapToGrid(NULL, position);
+	SetConfig("projshowgrid", snap);
+	return grid;
+}
+
+double GetClosestMeasureGridLine (double position)
+{
+	double gridDiv = GetGridDivSafe();
+	int num, den; TimeMap_GetTimeSigAtTime(0, position, &num, &den, NULL);
+
+	double gridLine = 0;
+	if ((den*gridDiv) / 4 < num)
+	{
+		SetConfig("projgriddiv", 4*(double)num/(double)den); // temporarily set grid div to full measure of current time signature
+		gridLine = GetClosestGridLine(position);
+		SetConfig("projgriddiv", gridDiv);
+	}
+	else
+	{
+		gridLine = GetClosestGridLine(position);
+	}
+	return gridLine;
+}
+
+double GetClosestLeftSideGridLine (double position)
+{
+	double grid = GetClosestGridLine(position);
+	if (position >= grid)
+		return grid;
+
+	double gridDiv = GetGridDivSafe();
+	int minGridPx; GetConfig("projgridmin", minGridPx);
+	double hZoom = GetHZoomLevel();
+
+	int num, den; TimeMap_GetTimeSigAtTime(0, position, &num, &den, NULL);
+
+	if ((den*gridDiv) / 4 < num)
+	{
+		double beats; int denom;
+		TimeMap2_timeToBeats(NULL, grid, NULL, NULL, &beats, &denom);
+		gridDiv *= (double)denom/4;
+
+		double leftSideGrid  = TimeMap2_beatsToTime(NULL, beats - gridDiv, NULL);
+		while ((grid - leftSideGrid) * hZoom < minGridPx)
+		{
+			gridDiv *= 2;
+			leftSideGrid = TimeMap2_beatsToTime(NULL, beats - gridDiv, NULL);
+		}
+		return leftSideGrid;
+	}
+	else
+	{
+		gridDiv = (int)gridDiv/4;
+		int measure;
+		TimeMap2_timeToBeats(NULL, grid, &measure, NULL, NULL, NULL);
+
+		measure -= (int)gridDiv;
+		double leftSideGrid  = TimeMap2_beatsToTime(NULL, 0, &measure);
+		while ((grid - leftSideGrid) * hZoom < minGridPx)
+		{
+			measure -= (int)gridDiv;
+			leftSideGrid  = TimeMap2_beatsToTime(NULL, 0, &measure);
+			gridDiv *= 2;
+		}
+		return leftSideGrid;
+	}
+}
+
+double GetClosestRightSideGridLine (double position)
+{
+	double grid = GetClosestGridLine(position);
+	if (position <= grid)
+		return grid;
+
+	double gridDiv = GetGridDivSafe();
+	int minGridPx; GetConfig("projgridmin", minGridPx);
+	double hZoom = GetHZoomLevel();
+
+	int num, den; TimeMap_GetTimeSigAtTime(0, position, &num, &den, NULL);
+
+	if ((den*gridDiv) / 4 < num)
+	{
+		double beats; int denom;
+		TimeMap2_timeToBeats(NULL, grid, NULL, NULL, &beats, &denom);
+		gridDiv *= (double)denom/4;
+
+		double rightSideGrid = TimeMap2_beatsToTime(NULL, beats + gridDiv, NULL);
+		while ((rightSideGrid - grid) * hZoom < minGridPx)
+		{
+			gridDiv *= 2;
+			rightSideGrid = TimeMap2_beatsToTime(NULL, beats + gridDiv, NULL);
+		}
+		return rightSideGrid;
+	}
+	else
+	{
+		gridDiv = (int)gridDiv/4;
+		int measure;
+		TimeMap2_timeToBeats(NULL, grid, &measure, NULL, NULL, NULL);
+
+		measure += (int)gridDiv;
+		double rightSideGrid = TimeMap2_beatsToTime(NULL, 0, &measure);
+		while ((rightSideGrid - grid) * hZoom < minGridPx)
+		{
+			measure += (int)gridDiv;
+			rightSideGrid = TimeMap2_beatsToTime(NULL, 0, &measure);
+			gridDiv *= 2;
+		}
+		return rightSideGrid;
+	}
 }
 
 /******************************************************************************
@@ -1877,9 +2093,9 @@ HWND FindReaperWndByTitle (const char* name)
 
 HWND GetArrangeWnd ()
 {
-	static HWND hwnd = NULL; /* More efficient and Justin says it's safe: http://askjf.com/index.php?q=2653s */
+	static HWND s_hwnd = NULL; /* More efficient and Justin says it's safe: http://askjf.com/index.php?q=2653s */
 
-	if (!hwnd)
+	if (!s_hwnd)
 	{
 		#ifdef _WIN32
 			if (IsLocalized())
@@ -1894,7 +2110,7 @@ HWND GetArrangeWnd ()
 					GetClassName(wnd, buf, sizeof(buf));
 					if (!strcmp(buf, "REAPERTrackListWindow"))
 					{
-						hwnd = wnd;
+						s_hwnd = wnd;
 						break;
 					}
 					wnd = SearchChildren(preparedName, g_hwndParent, wnd);
@@ -1902,19 +2118,19 @@ HWND GetArrangeWnd ()
 			}
 			else
 			{
-				hwnd = FindWindowEx(g_hwndParent, 0, "REAPERTrackListWindow", __localizeFunc("trackview", "DLG_102", 0));
+				s_hwnd = FindWindowEx(g_hwndParent, 0, "REAPERTrackListWindow", __localizeFunc("trackview", "DLG_102", 0));
 			}
 		#else
 			return GetWindow(g_hwndParent, GW_CHILD);
 		#endif
 	}
-	return hwnd;
+	return s_hwnd;
 }
 
 HWND GetRulerWndAlt ()
 {
-	static HWND hwnd = NULL; /* More efficient and Justin says it's safe: http://askjf.com/index.php?q=2653s */
-	if (!hwnd)
+	static HWND s_hwnd = NULL; /* More efficient and Justin says it's safe: http://askjf.com/index.php?q=2653s */
+	if (!s_hwnd)
 	{
 		#ifdef _WIN32
 			if (IsLocalized())
@@ -1929,7 +2145,7 @@ HWND GetRulerWndAlt ()
 					GetClassName(wnd, buf, sizeof(buf));
 					if (!strcmp(buf, "REAPERTimeDisplay"))
 					{
-						hwnd = wnd;
+						s_hwnd = wnd;
 						break;
 					}
 					wnd = SearchChildren(preparedName, g_hwndParent, wnd);
@@ -1937,27 +2153,27 @@ HWND GetRulerWndAlt ()
 			}
 			else
 			{
-				hwnd = FindWindowEx(g_hwndParent, 0, "REAPERTimeDisplay", __localizeFunc("timeline", "DLG_102", 0));
+				s_hwnd = FindWindowEx(g_hwndParent, 0, "REAPERTimeDisplay", __localizeFunc("timeline", "DLG_102", 0));
 			}
 		#else
 			return GetWindow(GetArrangeWnd(), GW_HWNDNEXT);
 		#endif
 	}
-	return hwnd;
+	return s_hwnd;
 }
 
 HWND GetTransportWnd ()
 {
-	static char* name = NULL;
-	if (!name)
-		AllocPreparedString(__localizeFunc("Transport", "DLG_188", 0), &name);
+	static char* s_name = NULL;
+	if (!s_name)
+		AllocPreparedString(__localizeFunc("Transport", "DLG_188", 0), &s_name);
 
-	if (name)
+	if (s_name)
 	{
-		HWND hwnd = FindInReaper(name);
-		if (!hwnd) hwnd = FindInReaperDockers(name);
-		if (!hwnd) hwnd = FindInFloatingDockers(name);
-		if (!hwnd) hwnd = FindFloating(name); // transport can't float by itself but search in case this changes in the future
+		HWND hwnd = FindInReaper(s_name);
+		if (!hwnd) hwnd = FindInReaperDockers(s_name);
+		if (!hwnd) hwnd = FindInFloatingDockers(s_name);
+		if (!hwnd) hwnd = FindFloating(s_name); // transport can't float by itself but search in case this changes in the future
 		return hwnd;
 	}
 	return NULL;
@@ -1965,26 +2181,26 @@ HWND GetTransportWnd ()
 
 HWND GetMixerWnd ()
 {
-	static char* name = NULL;
-	if (!name)
-		AllocPreparedString(__localizeFunc("Mixer", "DLG_151", 0), &name);
-	return FindReaperWndByPreparedString(name);
+	static char* s_name = NULL;
+	if (!s_name)
+		AllocPreparedString(__localizeFunc("Mixer", "DLG_151", 0), &s_name);
+	return FindReaperWndByPreparedString(s_name);
 }
 
 HWND GetMixerMasterWnd ()
 {
-	static char* name = NULL;
-	if (!name)
-		AllocPreparedString(__localizeFunc("Mixer Master", "mixer", 0), &name);
-	return FindReaperWndByPreparedString(name);
+	static char* s_name = NULL;
+	if (!s_name)
+		AllocPreparedString(__localizeFunc("Mixer Master", "mixer", 0), &s_name);
+	return FindReaperWndByPreparedString(s_name);
 }
 
 HWND GetMediaExplorerWnd ()
 {
-	static char* name = NULL;
-	if (!name)
-		AllocPreparedString(__localizeFunc("Media Explorer", "explorer", 0), &name);
-	return FindReaperWndByPreparedString(name);
+	static char* s_name = NULL;
+	if (!s_name)
+		AllocPreparedString(__localizeFunc("Media Explorer", "explorer", 0), &s_name);
+	return FindReaperWndByPreparedString(s_name);
 }
 
 HWND GetMcpWnd ()
@@ -2004,8 +2220,8 @@ HWND GetMcpWnd ()
 
 HWND GetTcpWnd ()
 {
-	static HWND hwnd = NULL;
-	if (!hwnd)
+	static HWND s_hwnd = NULL;
+	if (!s_hwnd)
 	{
 		MediaTrack* track = GetTrack(NULL, 0);
 		MediaTrack* master = GetMasterTrack(NULL);
@@ -2032,7 +2248,7 @@ HWND GetTcpWnd ()
 				{
 					if ((MediaTrack*)GetWindowLongPtr(trackHwnd, GWLP_USERDATA) == firstTrack)
 					{
-						hwnd = tcpHwnd;
+						s_hwnd = tcpHwnd;
 						found = true;
 					}
 					trackHwnd = FindWindowEx(tcpHwnd, trackHwnd, NULL, "");
@@ -2049,7 +2265,7 @@ HWND GetTcpWnd ()
 			Main_OnCommandEx(40075, 0, NULL);
 		}
 	}
-	return hwnd;
+	return s_hwnd;
 }
 
 HWND GetTcpTrackWnd (MediaTrack* track)
@@ -2070,16 +2286,16 @@ HWND GetNotesView (void* midiEditor)
 	if (MIDIEditor_GetMode(midiEditor) != -1)
 	{
 		#ifdef _WIN32
-			static char* name  = (IsLocalized()) ? (NULL) : (const_cast<char*>(__localizeFunc("midiview", "midi_DLG_102", 0)));
+			static char* s_name  = (IsLocalized()) ? (NULL) : (const_cast<char*>(__localizeFunc("midiview", "midi_DLG_102", 0)));
 
 			if (IsLocalized())
 			{
-				if (!name)
-					AllocPreparedString(__localizeFunc("midiview", "midi_DLG_102", 0),&name);
-				return SearchChildren(name,  (HWND)midiEditor);
+				if (!s_name)
+					AllocPreparedString(__localizeFunc("midiview", "midi_DLG_102", 0),&s_name);
+				return SearchChildren(s_name,  (HWND)midiEditor);
 			}
 			else
-				return FindWindowEx((HWND)midiEditor, NULL, NULL , name);
+				return FindWindowEx((HWND)midiEditor, NULL, NULL , s_name);
 		#else
 			return GetWindow(GetWindow((HWND)midiEditor, GW_CHILD), GW_HWNDNEXT);
 		#endif
@@ -2093,16 +2309,16 @@ HWND GetPianoView (void* midiEditor)
 	if (MIDIEditor_GetMode(midiEditor) != -1)
 	{
 		#ifdef _WIN32
-			static char* name  = (IsLocalized()) ? (NULL) : (const_cast<char*>(__localizeFunc("midipianoview", "midi_DLG_102", 0)));
+			static char* s_name  = (IsLocalized()) ? (NULL) : (const_cast<char*>(__localizeFunc("midipianoview", "midi_DLG_102", 0)));
 
 			if (IsLocalized())
 			{
-				if (!name)
-					AllocPreparedString(__localizeFunc("midipianoview", "midi_DLG_102", 0),&name);
-				return SearchChildren(name,  (HWND)midiEditor);
+				if (!s_name)
+					AllocPreparedString(__localizeFunc("midipianoview", "midi_DLG_102", 0),&s_name);
+				return SearchChildren(s_name,  (HWND)midiEditor);
 			}
 			else
-				return FindWindowEx((HWND)midiEditor, NULL, NULL , name);
+				return FindWindowEx((HWND)midiEditor, NULL, NULL , s_name);
 		#else
 			return GetWindow((HWND)midiEditor, GW_CHILD);
 		#endif
@@ -3094,28 +3310,28 @@ void DrawTooltip (LICE_IBitmap* bm, const char* text)
 {
 	if (bm)
 	{
-		static LICE_CachedFont* font = NULL;
-		if (!font)
+		static LICE_CachedFont* s_font = NULL;
+		if (!s_font)
 		{
 			if (HFONT ttFont = (HFONT)SendMessage(GetTooltipWindow(),WM_GETFONT,0,0))
 			{
-				if (font = new (nothrow) LICE_CachedFont())
+				if (s_font = new (nothrow) LICE_CachedFont())
 				{
 					#ifdef _WIN32
-						font->SetFromHFont(ttFont, LICE_FONT_FLAG_OWNS_HFONT|LICE_FONT_FLAG_FORCE_NATIVE);
+						s_font->SetFromHFont(ttFont, LICE_FONT_FLAG_OWNS_HFONT|LICE_FONT_FLAG_FORCE_NATIVE);
 					#else
-						font->SetFromHFont(ttFont, LICE_FONT_FLAG_OWNS_HFONT);
+						s_font->SetFromHFont(ttFont, LICE_FONT_FLAG_OWNS_HFONT);
 					#endif
-					font->SetBkMode(TRANSPARENT);
-					font->SetTextColor(LICE_RGBA(0, 0, 0, 255));
+					s_font->SetBkMode(TRANSPARENT);
+					s_font->SetTextColor(LICE_RGBA(0, 0, 0, 255));
 				}
 			}
 		}
 
-		if (font)
+		if (s_font)
 		{
 			RECT r = {0, 0, 0, 0};
-			font->DrawText(NULL, text, -1, &r, DT_CALCRECT);
+			s_font->DrawText(NULL, text, -1, &r, DT_CALCRECT);
 			bm->resize(r.right + 8, r.bottom + 2);
 
 			#ifdef _WIN32
@@ -3129,7 +3345,7 @@ void DrawTooltip (LICE_IBitmap* bm, const char* text)
 			r.right  += 3;
 			r.bottom += 1;
 			r.top    += 1;
-			font->DrawText(bm, text, -1, &r, 0);
+			s_font->DrawText(bm, text, -1, &r, 0);
 		}
 	}
 }
@@ -3141,6 +3357,22 @@ void ThemeListViewOnInit (HWND list)
 		SWS_ListView listView(list, NULL, 0, NULL, NULL, false, NULL, true);
 		SNM_ThemeListView(&listView);
 	}
+}
+
+void SetWndIcon (HWND hwnd)
+{
+	#ifdef _WIN32
+		static HICON s_icon = NULL;
+		if (!s_icon)
+		{
+			wchar_t path[2094];
+			GetModuleFileNameW(NULL, path, sizeof(path)/sizeof(wchar_t));
+			s_icon = ExtractIconW(g_hInst, path, 0); // WM_GETICON isn't working so use this instead
+		}
+
+		if (s_icon)
+			SendMessage(hwnd, WM_SETICON, ICON_SMALL, (LPARAM)s_icon);
+	#endif
 }
 
 bool ThemeListViewInProc (HWND hwnd, int uMsg, LPARAM lParam, HWND list, bool grid)

@@ -158,6 +158,7 @@ extern bool g_bTrue;
 extern bool g_bFalse;
 extern int g_iFirstCommand;
 extern int g_iLastCommand;
+extern MTRand g_MTRand;
 
 // Stuff to do in swell someday
 #ifndef _WIN32

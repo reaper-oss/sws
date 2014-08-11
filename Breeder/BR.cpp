@@ -42,79 +42,141 @@
 static COMMAND_T g_commandTable[] =
 {
 	/******************************************************************************
-	* Envelopes                                                                   *
+	* Envelopes - Misc                                                            *
 	******************************************************************************/
-	{ { DEFACCEL, "SWS/BR: Set closest envelope point's value to mouse cursor (perform until shortcut released)" },           "BR_ENV_PT_VAL_CLOSEST_MOUSE",      SetEnvPointMouseValue, NULL, 0},
-	{ { DEFACCEL, "SWS/BR: Set closest left side envelope point's value to mouse cursor (perform until shortcut released)" }, "BR_ENV_PT_VAL_CLOSEST_LEFT_MOUSE", SetEnvPointMouseValue, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Set closest envelope point's value to mouse cursor (perform until shortcut released)" },           "BR_ENV_PT_VAL_CLOSEST_MOUSE",        SetEnvPointMouseValue, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Set closest left side envelope point's value to mouse cursor (perform until shortcut released)" }, "BR_ENV_PT_VAL_CLOSEST_LEFT_MOUSE",   SetEnvPointMouseValue, NULL, 1},
 
-	{ { DEFACCEL, "SWS/BR: Move edit cursor to next envelope point" },                                                        "SWS_BRMOVEEDITTONEXTENV",          CursorToEnv1, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Move edit cursor to next envelope point and select it" },                                          "SWS_BRMOVEEDITSELNEXTENV",         CursorToEnv1, NULL, 2},
-	{ { DEFACCEL, "SWS/BR: Move edit cursor to next envelope point and add to selection" },                                   "SWS_BRMOVEEDITTONEXTENVADDSELL",   CursorToEnv2, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Move edit cursor to previous envelope point" },                                                    "SWS_BRMOVEEDITTOPREVENV",          CursorToEnv1, NULL, -1},
-	{ { DEFACCEL, "SWS/BR: Move edit cursor to previous envelope point and select it" },                                      "SWS_BRMOVEEDITSELPREVENV",         CursorToEnv1, NULL, -2},
-	{ { DEFACCEL, "SWS/BR: Move edit cursor to previous envelope point and add to selection" },                               "SWS_BRMOVEEDITTOPREVENVADDSELL",   CursorToEnv2, NULL, -1},
+	{ { DEFACCEL, "SWS/BR: Move edit cursor to next envelope point" },                                                        "SWS_BRMOVEEDITTONEXTENV",            CursorToEnv1, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Move edit cursor to next envelope point and select it" },                                          "SWS_BRMOVEEDITSELNEXTENV",           CursorToEnv1, NULL, 2},
+	{ { DEFACCEL, "SWS/BR: Move edit cursor to next envelope point and add to selection" },                                   "SWS_BRMOVEEDITTONEXTENVADDSELL",     CursorToEnv2, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Move edit cursor to previous envelope point" },                                                    "SWS_BRMOVEEDITTOPREVENV",            CursorToEnv1, NULL, -1},
+	{ { DEFACCEL, "SWS/BR: Move edit cursor to previous envelope point and select it" },                                      "SWS_BRMOVEEDITSELPREVENV",           CursorToEnv1, NULL, -2},
+	{ { DEFACCEL, "SWS/BR: Move edit cursor to previous envelope point and add to selection" },                               "SWS_BRMOVEEDITTOPREVENVADDSELL",     CursorToEnv2, NULL, -1},
 
-	{ { DEFACCEL, "SWS/BR: Select next envelope point" },                                                                     "BR_ENV_SEL_NEXT_POINT",            SelNextPrevEnvPoint, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Select previous envelope point" },                                                                 "BR_ENV_SEL_PREV_POINT",            SelNextPrevEnvPoint, NULL, -1},
+	{ { DEFACCEL, "SWS/BR: Select next envelope point" },                                                                     "BR_ENV_SEL_NEXT_POINT",              SelNextPrevEnvPoint, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Select previous envelope point" },                                                                 "BR_ENV_SEL_PREV_POINT",              SelNextPrevEnvPoint, NULL, -1},
 
-	{ { DEFACCEL, "SWS/BR: Expand envelope point selection to the right" },                                                   "BR_ENV_SEL_EXPAND_RIGHT",          ExpandEnvSel,    NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Expand envelope point selection to the left" },                                                    "BR_ENV_SEL_EXPAND_LEFT",           ExpandEnvSel,    NULL, -1},
-	{ { DEFACCEL, "SWS/BR: Expand envelope point selection to the right (end point only)" },                                  "BR_ENV_SEL_EXPAND_RIGHT_END",      ExpandEnvSelEnd, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Expand envelope point selection to the left (end point only)" },                                   "BR_ENV_SEL_EXPAND_L_END",          ExpandEnvSelEnd, NULL, -1},
-	{ { DEFACCEL, "SWS/BR: Shrink envelope point selection from the right" },                                                 "BR_ENV_SEL_SHRINK_RIGHT",          ShrinkEnvSel,    NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Shrink envelope point selection from the left" },                                                  "BR_ENV_SEL_SHRINK_LEFT",           ShrinkEnvSel,    NULL, -1},
-	{ { DEFACCEL, "SWS/BR: Shrink envelope point selection from the right (end point only)" },                                "BR_ENV_SEL_SHRINK_RIGHT_END",      ShrinkEnvSelEnd, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Shrink envelope point selection from the left (end point only)" },                                 "BR_ENV_SEL_SHRINK_LEFT_END",       ShrinkEnvSelEnd, NULL, -1},
+	{ { DEFACCEL, "SWS/BR: Expand envelope point selection to the right" },                                                   "BR_ENV_SEL_EXPAND_RIGHT",            ExpandEnvSel,    NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Expand envelope point selection to the left" },                                                    "BR_ENV_SEL_EXPAND_LEFT",             ExpandEnvSel,    NULL, -1},
+	{ { DEFACCEL, "SWS/BR: Expand envelope point selection to the right (end point only)" },                                  "BR_ENV_SEL_EXPAND_RIGHT_END",        ExpandEnvSelEnd, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Expand envelope point selection to the left (end point only)" },                                   "BR_ENV_SEL_EXPAND_L_END",            ExpandEnvSelEnd, NULL, -1},
+	{ { DEFACCEL, "SWS/BR: Shrink envelope point selection from the right" },                                                 "BR_ENV_SEL_SHRINK_RIGHT",            ShrinkEnvSel,    NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Shrink envelope point selection from the left" },                                                  "BR_ENV_SEL_SHRINK_LEFT",             ShrinkEnvSel,    NULL, -1},
+	{ { DEFACCEL, "SWS/BR: Shrink envelope point selection from the right (end point only)" },                                "BR_ENV_SEL_SHRINK_RIGHT_END",        ShrinkEnvSelEnd, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Shrink envelope point selection from the left (end point only)" },                                 "BR_ENV_SEL_SHRINK_LEFT_END",         ShrinkEnvSelEnd, NULL, -1},
 
-	{ { DEFACCEL, "SWS/BR: Shift envelope point selection left" },                                                            "BR_ENV_SHIFT_SEL_LEFT",            ShiftEnvSelection, NULL, -1},
-	{ { DEFACCEL, "SWS/BR: Shift envelope point selection right" },                                                           "BR_ENV_SHIFT_SEL_RIGHT",           ShiftEnvSelection, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Select envelope points on grid" },                                                                 "BR_ENV_SEL_PT_GRID",                 EnvPointsGrid, NULL, BINARY(1100)},
+	{ { DEFACCEL, "SWS/BR: Select envelope points on grid (obey time selection, if any)" },                                   "BR_ENV_SEL_PT_GRID_TS",              EnvPointsGrid, NULL, BINARY(1101)},
+	{ { DEFACCEL, "SWS/BR: Select envelope points between grid" },                                                            "BR_ENV_SEL_PT_NO_GRID",              EnvPointsGrid, NULL, BINARY(0100)},
+	{ { DEFACCEL, "SWS/BR: Select envelope points between grid (obey time selection, if any)" },                              "BR_ENV_SEL_PT_NO_GRID_TS",           EnvPointsGrid, NULL, BINARY(0101)},
+	{ { DEFACCEL, "SWS/BR: Add envelope points located on grid to existing selection" },                                      "BR_ENV_ADD_SEL_PT_GRID",             EnvPointsGrid, NULL, BINARY(1000)},
+	{ { DEFACCEL, "SWS/BR: Add envelope points located on grid to existing selection (obey time selection, if any)" },        "BR_ENV_ADD_SEL_PT_GRID_TS",          EnvPointsGrid, NULL, BINARY(1001)},
+	{ { DEFACCEL, "SWS/BR: Add envelope points located between grid to existing selection " },                                "BR_ENV_ADD_SEL_PT_NO_GRID",          EnvPointsGrid, NULL, BINARY(0000)},
+	{ { DEFACCEL, "SWS/BR: Add envelope points located between grid to existing selection (obey time selection, if any)" },   "BR_ENV_ADD_SEL_PT_NO_GRID_TS",       EnvPointsGrid, NULL, BINARY(0001)},
+	{ { DEFACCEL, "SWS/BR: Delete envelope points on grid" },                                                                 "BR_ENV_DEL_PT_GRID",                 EnvPointsGrid, NULL, BINARY(1010)},
+	{ { DEFACCEL, "SWS/BR: Delete envelope points on grid (obey time selection, if any)" },                                   "BR_ENV_DEL_PT_GRID_TS",              EnvPointsGrid, NULL, BINARY(1011)},
+	{ { DEFACCEL, "SWS/BR: Delete envelope points between grid" },                                                            "BR_ENV_DEL_PT_NO_GRID",              EnvPointsGrid, NULL, BINARY(0010)},
+	{ { DEFACCEL, "SWS/BR: Delete envelope points between grid (obey time selection, if any)" },                              "BR_ENV_DEL_PT_NO_GRID_TS",           EnvPointsGrid, NULL, BINARY(0011)},
+	{ { DEFACCEL, "SWS/BR: Insert envelope points on grid using shape of the previous point" },                               "BR_ENV_INS_PT_GRID",                 CreateEnvPointsGrid, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Insert envelope points on grid using shape of the previous point (obey time selection, if any)" }, "BR_ENV_INS_PT_GRID_TS",              CreateEnvPointsGrid, NULL, 1},
 
-	{ { DEFACCEL, "SWS/BR: Select peaks in envelope (add to selection)" },                                                    "BR_ENV_SEL_PEAKS_ADD",             PeaksDipsEnv, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Select peaks in envelope" },                                                                       "BR_ENV_SEL_PEAKS",                 PeaksDipsEnv, NULL, 2},
-	{ { DEFACCEL, "SWS/BR: Select dips in envelope (add to selection)" },                                                     "BR_ENV_SEL_DIPS_ADD",              PeaksDipsEnv, NULL, -1},
-	{ { DEFACCEL, "SWS/BR: Select dips in envelope" },                                                                        "BR_ENV_SEL_DIPS",                  PeaksDipsEnv, NULL, -2},
+	{ { DEFACCEL, "SWS/BR: Shift envelope point selection left" },                                                            "BR_ENV_SHIFT_SEL_LEFT",              ShiftEnvSelection, NULL, -1},
+	{ { DEFACCEL, "SWS/BR: Shift envelope point selection right" },                                                           "BR_ENV_SHIFT_SEL_RIGHT",             ShiftEnvSelection, NULL, 1},
 
-	{ { DEFACCEL, "SWS/BR: Unselect envelope points outside time selection" },                                                "BR_ENV_UNSEL_OUT_TIME_SEL",        SelEnvTimeSel, NULL, -1},
-	{ { DEFACCEL, "SWS/BR: Unselect envelope points in time selection" },                                                     "BR_ENV_UNSEL_IN_TIME_SEL",         SelEnvTimeSel, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Select peaks in envelope (add to selection)" },                                                    "BR_ENV_SEL_PEAKS_ADD",               PeaksDipsEnv, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Select peaks in envelope" },                                                                       "BR_ENV_SEL_PEAKS",                   PeaksDipsEnv, NULL, 2},
+	{ { DEFACCEL, "SWS/BR: Select dips in envelope (add to selection)" },                                                     "BR_ENV_SEL_DIPS_ADD",                PeaksDipsEnv, NULL, -1},
+	{ { DEFACCEL, "SWS/BR: Select dips in envelope" },                                                                        "BR_ENV_SEL_DIPS",                    PeaksDipsEnv, NULL, -2},
 
-	{ { DEFACCEL, "SWS/BR: Set selected envelope points to next point's value" },                                             "BR_SET_ENV_TO_NEXT_VAL",           SetEnvValToNextPrev, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Set selected envelope points to previous point's value" },                                         "BR_SET_ENV_TO_PREV_VAL",           SetEnvValToNextPrev, NULL, -1},
-	{ { DEFACCEL, "SWS/BR: Set selected envelope points to last selected point's value" },                                    "BR_SET_ENV_TO_LAST_SEL_VAL",       SetEnvValToNextPrev, NULL, 2},
-	{ { DEFACCEL, "SWS/BR: Set selected envelope points to first selected point's value" },                                   "BR_SET_ENV_TO_FIRST_SEL_VAL",      SetEnvValToNextPrev, NULL, -2},
+	{ { DEFACCEL, "SWS/BR: Unselect envelope points outside time selection" },                                                "BR_ENV_UNSEL_OUT_TIME_SEL",          SelEnvTimeSel, NULL, -1},
+	{ { DEFACCEL, "SWS/BR: Unselect envelope points in time selection" },                                                     "BR_ENV_UNSEL_IN_TIME_SEL",           SelEnvTimeSel, NULL, 1},
 
-	{ { DEFACCEL, "SWS/BR: Move closest envelope point to edit cursor" },                                                     "BR_MOVE_CLOSEST_ENV_ECURSOR",      MoveEnvPointToEditCursor, NULL, 0},
-	{ { DEFACCEL, "SWS/BR: Move closest selected envelope point to edit cursor" },                                            "BR_MOVE_CLOSEST_SEL_ENV_ECURSOR",  MoveEnvPointToEditCursor, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Set selected envelope points to next point's value" },                                             "BR_SET_ENV_TO_NEXT_VAL",             SetEnvValToNextPrev, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Set selected envelope points to previous point's value" },                                         "BR_SET_ENV_TO_PREV_VAL",             SetEnvValToNextPrev, NULL, -1},
+	{ { DEFACCEL, "SWS/BR: Set selected envelope points to last selected point's value" },                                    "BR_SET_ENV_TO_LAST_SEL_VAL",         SetEnvValToNextPrev, NULL, 2},
+	{ { DEFACCEL, "SWS/BR: Set selected envelope points to first selected point's value" },                                   "BR_SET_ENV_TO_FIRST_SEL_VAL",        SetEnvValToNextPrev, NULL, -2},
 
-	{ { DEFACCEL, "SWS/BR: Insert 2 envelope points at time selection" },                                                     "BR_INSERT_2_ENV_POINT_TIME_SEL",   Insert2EnvPointsTimeSelection, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Fit selected envelope points to time selection" },                                                 "BR_FIT_ENV_POINTS_TO_TIMESEL",     FitEnvPointsToTimeSel, NULL},
+	{ { DEFACCEL, "SWS/BR: Move closest envelope point to edit cursor" },                                                     "BR_MOVE_CLOSEST_ENV_ECURSOR",        MoveEnvPointToEditCursor, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Move closest selected envelope point to edit cursor" },                                            "BR_MOVE_CLOSEST_SEL_ENV_ECURSOR",    MoveEnvPointToEditCursor, NULL, 1},
 
-	{ { DEFACCEL, "SWS/BR: Hide all but selected track envelope for all tracks" },                                            "BR_ENV_HIDE_ALL_BUT_ACTIVE",       ShowActiveTrackEnvOnly, NULL, 0},
-	{ { DEFACCEL, "SWS/BR: Hide all but selected track envelope for selected tracks" },                                       "BR_ENV_HIDE_ALL_BUT_ACTIVE_SEL",   ShowActiveTrackEnvOnly, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Insert 2 envelope points at time selection" },                                                     "BR_INSERT_2_ENV_POINT_TIME_SEL",     Insert2EnvPointsTimeSelection, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Insert 2 envelope points at time selection to all visible track envelopes" },                      "BR_INS_2_ENV_POINT_TIME_SEL_ALL",    Insert2EnvPointsTimeSelection, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Insert 2 envelope points at time selection to all visible track envelopes in selected tracks" },   "BR_INS_2_ENV_POINT_TIME_SEL_TRACKS", Insert2EnvPointsTimeSelection, NULL, 2},
 
-	{ { DEFACCEL, "SWS/BR: Insert new envelope point at mouse cursor using value at current position (obey snapping)" },      "BR_ENV_POINT_MOUSE_CURSOR",        CreateEnvPointMouse, NULL},
+	{ { DEFACCEL, "SWS/BR: Fit selected envelope points to time selection" },                                                 "BR_FIT_ENV_POINTS_TO_TIMESEL",       FitEnvPointsToTimeSel, NULL},
+	{ { DEFACCEL, "SWS/BR: Insert new envelope point at mouse cursor using value at current position (obey snapping)" },      "BR_ENV_POINT_MOUSE_CURSOR",          CreateEnvPointMouse, NULL},
 
-	{ { DEFACCEL, "SWS/BR: Save envelope point selection, slot 1" },                                                          "BR_SAVE_ENV_SEL_SLOT_1",           SaveEnvSelSlot, NULL, 0},
-	{ { DEFACCEL, "SWS/BR: Save envelope point selection, slot 2" },                                                          "BR_SAVE_ENV_SEL_SLOT_2",           SaveEnvSelSlot, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Save envelope point selection, slot 3" },                                                          "BR_SAVE_ENV_SEL_SLOT_3",           SaveEnvSelSlot, NULL, 2},
-	{ { DEFACCEL, "SWS/BR: Save envelope point selection, slot 4" },                                                          "BR_SAVE_ENV_SEL_SLOT_4",           SaveEnvSelSlot, NULL, 3},
-	{ { DEFACCEL, "SWS/BR: Save envelope point selection, slot 5" },                                                          "BR_SAVE_ENV_SEL_SLOT_5",           SaveEnvSelSlot, NULL, 4},
-	{ { DEFACCEL, "SWS/BR: Restore envelope point selection, slot 1" },                                                       "BR_RESTORE_ENV_SEL_SLOT_1",        RestoreEnvSelSlot, NULL, 0},
-	{ { DEFACCEL, "SWS/BR: Restore envelope point selection, slot 2" },                                                       "BR_RESTORE_ENV_SEL_SLOT_2",        RestoreEnvSelSlot, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Restore envelope point selection, slot 3" },                                                       "BR_RESTORE_ENV_SEL_SLOT_3",        RestoreEnvSelSlot, NULL, 2},
-	{ { DEFACCEL, "SWS/BR: Restore envelope point selection, slot 4" },                                                       "BR_RESTORE_ENV_SEL_SLOT_4",        RestoreEnvSelSlot, NULL, 3},
-	{ { DEFACCEL, "SWS/BR: Restore envelope point selection, slot 5" },                                                       "BR_RESTORE_ENV_SEL_SLOT_5",        RestoreEnvSelSlot, NULL, 4},
+	{ { DEFACCEL, "SWS/BR: Save envelope point selection, slot 1" },                                                          "BR_SAVE_ENV_SEL_SLOT_1",             SaveEnvSelSlot, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Save envelope point selection, slot 2" },                                                          "BR_SAVE_ENV_SEL_SLOT_2",             SaveEnvSelSlot, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Save envelope point selection, slot 3" },                                                          "BR_SAVE_ENV_SEL_SLOT_3",             SaveEnvSelSlot, NULL, 2},
+	{ { DEFACCEL, "SWS/BR: Save envelope point selection, slot 4" },                                                          "BR_SAVE_ENV_SEL_SLOT_4",             SaveEnvSelSlot, NULL, 3},
+	{ { DEFACCEL, "SWS/BR: Save envelope point selection, slot 5" },                                                          "BR_SAVE_ENV_SEL_SLOT_5",             SaveEnvSelSlot, NULL, 4},
+	{ { DEFACCEL, "SWS/BR: Save envelope point selection, slot 6" },                                                          "BR_SAVE_ENV_SEL_SLOT_6",             SaveEnvSelSlot, NULL, 5},
+	{ { DEFACCEL, "SWS/BR: Save envelope point selection, slot 7" },                                                          "BR_SAVE_ENV_SEL_SLOT_7",             SaveEnvSelSlot, NULL, 6},
+	{ { DEFACCEL, "SWS/BR: Save envelope point selection, slot 8" },                                                          "BR_SAVE_ENV_SEL_SLOT_8",             SaveEnvSelSlot, NULL, 7},
+	{ { DEFACCEL, "SWS/BR: Restore envelope point selection, slot 1" },                                                       "BR_RESTORE_ENV_SEL_SLOT_1",          RestoreEnvSelSlot, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Restore envelope point selection, slot 2" },                                                       "BR_RESTORE_ENV_SEL_SLOT_2",          RestoreEnvSelSlot, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Restore envelope point selection, slot 3" },                                                       "BR_RESTORE_ENV_SEL_SLOT_3",          RestoreEnvSelSlot, NULL, 2},
+	{ { DEFACCEL, "SWS/BR: Restore envelope point selection, slot 4" },                                                       "BR_RESTORE_ENV_SEL_SLOT_4",          RestoreEnvSelSlot, NULL, 3},
+	{ { DEFACCEL, "SWS/BR: Restore envelope point selection, slot 5" },                                                       "BR_RESTORE_ENV_SEL_SLOT_5",          RestoreEnvSelSlot, NULL, 4},
+	{ { DEFACCEL, "SWS/BR: Restore envelope point selection, slot 6" },                                                       "BR_RESTORE_ENV_SEL_SLOT_6",          RestoreEnvSelSlot, NULL, 5},
+	{ { DEFACCEL, "SWS/BR: Restore envelope point selection, slot 7" },                                                       "BR_RESTORE_ENV_SEL_SLOT_7",          RestoreEnvSelSlot, NULL, 6},
+	{ { DEFACCEL, "SWS/BR: Restore envelope point selection, slot 8" },                                                       "BR_RESTORE_ENV_SEL_SLOT_8",          RestoreEnvSelSlot, NULL, 7},
+
+	/******************************************************************************
+	* Envelopes - Visibility                                                      *
+	******************************************************************************/
+	{ { DEFACCEL, "SWS/BR: Hide all but selected track envelope for all tracks" },               "BR_ENV_HIDE_ALL_BUT_ACTIVE",            ShowActiveTrackEnvOnly, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Hide all but selected track envelope for selected tracks" },          "BR_ENV_HIDE_ALL_BUT_ACTIVE_SEL",        ShowActiveTrackEnvOnly, NULL, 1},
+
+	{ { DEFACCEL, "SWS/BR: Show/hide track envelope for last adjusted send (volume/pan only)" }, "BR_LAST_ADJ_SEND_ENVELOPE",             ShowLastAdjustedSendEnv, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Show/hide volume track envelope for last adjusted send" },            "BR_LAST_ADJ_SEND_ENVELOPE_VOL",         ShowLastAdjustedSendEnv, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Show/hide pan track envelope for last adjusted send" },               "BR_LAST_ADJ_SEND_ENVELOPE_PAN",         ShowLastAdjustedSendEnv, NULL, 2},
+
+	{ { DEFACCEL, "SWS/BR: Toggle show all active FX envelopes for selected tracks" },           "BR_T_SHOW_ACT_FX_ENV_SEL_TRACK",        ShowHideFxEnv, NULL, BINARY(110)},
+	{ { DEFACCEL, "SWS/BR: Toggle show all FX envelopes for selected tracks" },                  "BR_T_SHOW_FX_ENV_SEL_TRACK",            ShowHideFxEnv, NULL, BINARY(100)},
+	{ { DEFACCEL, "SWS/BR: Show all active FX envelopes for selected tracks" },                  "BR_SHOW_ACT_FX_ENV_SEL_TRACK",          ShowHideFxEnv, NULL, BINARY(010)},
+	{ { DEFACCEL, "SWS/BR: Show all FX envelopes for selected tracks" },                         "BR_SHOW_FX_ENV_SEL_TRACK",              ShowHideFxEnv, NULL, BINARY(000)},
+	{ { DEFACCEL, "SWS/BR: Hide all FX envelopes for selected tracks" },                         "BR_HIDE_FX_ENV_SEL_TRACK",              ShowHideFxEnv, NULL, BINARY(001)},
+
+	{ { DEFACCEL, "SWS/BR: Toggle show all active send envelopes for selected tracks" },         "BR_T_SHOW_ACT_SEND_ENV_ALL_SEL_TRACK",  ShowHideSendEnv, NULL, BINARY(111110)},
+	{ { DEFACCEL, "SWS/BR: Toggle show active volume send envelopes for selected tracks" },      "BR_T_SHOW_ACT_SEND_ENV_VOL_SEL_TRACK",  ShowHideSendEnv, NULL, BINARY(001110)},
+	{ { DEFACCEL, "SWS/BR: Toggle show active pan send envelopes for selected tracks" },         "BR_T_SHOW_ACT_SEND_ENV_PAN_SEL_TRACK",  ShowHideSendEnv, NULL, BINARY(010110)},
+	{ { DEFACCEL, "SWS/BR: Toggle show active mute send envelopes for selected tracks" },        "BR_T_SHOW_ACT_SEND_ENV_MUTE_SEL_TRACK", ShowHideSendEnv, NULL, BINARY(100110)},
+	{ { DEFACCEL, "SWS/BR: Show all active send envelopes for selected tracks" },                "BR_SHOW_ACT_SEND_ENV_ALL_SEL_TRACK",    ShowHideSendEnv, NULL, BINARY(111010)},
+	{ { DEFACCEL, "SWS/BR: Show active volume send envelopes for selected tracks" },             "BR_SHOW_ACT_SEND_ENV_VOL_SEL_TRACK",    ShowHideSendEnv, NULL, BINARY(001010)},
+	{ { DEFACCEL, "SWS/BR: Show active pan send envelopes for selected tracks" },                "BR_SHOW_ACT_SEND_ENV_PAN_SEL_TRACK",    ShowHideSendEnv, NULL, BINARY(010010)},
+	{ { DEFACCEL, "SWS/BR: Show active mute send envelopes for selected tracks" },               "BR_SHOW_ACT_SEND_ENV_MUTE_SEL_TRACK",   ShowHideSendEnv, NULL, BINARY(100010)},
+
+	{ { DEFACCEL, "SWS/BR: Toggle show all send envelopes for selected tracks" },                "BR_T_SHOW_SEND_ENV_ALL_SEL_TRACK",      ShowHideSendEnv, NULL, BINARY(111100)},
+	{ { DEFACCEL, "SWS/BR: Toggle show volume send envelopes for selected tracks" },             "BR_T_SHOW_SEND_ENV_VOL_SEL_TRACK",      ShowHideSendEnv, NULL, BINARY(001100)},
+	{ { DEFACCEL, "SWS/BR: Toggle show pan send envelopes for selected tracks" },                "BR_T_SHOW_SEND_ENV_PAN_SEL_TRACK",      ShowHideSendEnv, NULL, BINARY(010100)},
+	{ { DEFACCEL, "SWS/BR: Toggle show mute send envelopes for selected tracks" },               "BR_T_SHOW_SEND_ENV_MUTE_SEL_TRACK",     ShowHideSendEnv, NULL, BINARY(100100)},
+	{ { DEFACCEL, "SWS/BR: Show all send envelopes for selected tracks" },                       "BR_SHOW_SEND_ENV_ALL_SEL_TRACK",        ShowHideSendEnv, NULL, BINARY(111000)},
+	{ { DEFACCEL, "SWS/BR: Show volume send envelopes for selected tracks" },                    "BR_SHOW_SEND_ENV_VOL_SEL_TRACK",        ShowHideSendEnv, NULL, BINARY(001000)},
+	{ { DEFACCEL, "SWS/BR: Show pan send envelopes for selected tracks" },                       "BR_SHOW_SEND_ENV_PAN_SEL_TRACK",        ShowHideSendEnv, NULL, BINARY(010000)},
+	{ { DEFACCEL, "SWS/BR: Show mute send envelopes for selected tracks" },                      "BR_SHOW_SEND_ENV_MUTE_SEL_TRACK",       ShowHideSendEnv, NULL, BINARY(100000)},
+
+	{ { DEFACCEL, "SWS/BR: Hide all send envelopes for selected tracks" },                       "BR_HIDE_SEND_ENV_SEL_ALL_TRACK",        ShowHideSendEnv, NULL, BINARY(111001)},
+	{ { DEFACCEL, "SWS/BR: Hide volume send envelopes for selected tracks" },                    "BR_HIDE_SEND_ENV_SEL_VOL_TRACK",        ShowHideSendEnv, NULL, BINARY(001001)},
+	{ { DEFACCEL, "SWS/BR: Hide pan send envelopes for selected tracks" },                       "BR_HIDE_SEND_ENV_SEL_PAN_TRACK",        ShowHideSendEnv, NULL, BINARY(010001)},
+	{ { DEFACCEL, "SWS/BR: Hide mute send envelopes for selected tracks" },                      "BR_HIDE_SEND_ENV_SEL_NUTE_TRACK",       ShowHideSendEnv, NULL, BINARY(100001)},
 
 	/******************************************************************************
 	* Loudness                                                                    *
 	******************************************************************************/
-	{ { DEFACCEL, "SWS/BR: Analyze loudness..." },                               "BR_ANALAYZE_LOUDNESS_DLG",       AnalyzeLoudness, NULL, 0, IsAnalyzeLoudnessVisible},
-	{ { DEFACCEL, "SWS/BR: Normalize loudness of selected tracks..." },          "BR_NORMALIZE_LOUDNESS_TRACKS",   NormalizeLoudness, NULL, 0, },
-	{ { DEFACCEL, "SWS/BR: Normalize loudness of selected tracks to -23 LUFS" }, "BR_NORMALIZE_LOUDNESS_TRACKS23", NormalizeLoudness, NULL, 1, },
-	{ { DEFACCEL, "SWS/BR: Normalize loudness of selected items..." },           "BR_NORMALIZE_LOUDNESS_ITEMS",    NormalizeLoudness, NULL, 2, },
-	{ { DEFACCEL, "SWS/BR: Normalize loudness of selected items to -23 LUFS" },  "BR_NORMALIZE_LOUDNESS_ITEMS23",  NormalizeLoudness, NULL, 3, },
+	{ { DEFACCEL, "SWS/BR: Global loudness preferences..." },                    "BR_LOUDNESS_PREF",                ToggleLoudnessPref, NULL, 0, IsLoudnessPrefVisible},
+	{ { DEFACCEL, "SWS/BR: Analyze loudness..." },                               "BR_ANALAYZE_LOUDNESS_DLG",        AnalyzeLoudness,    NULL, 0, IsAnalyzeLoudnessVisible},
+
+	{ { DEFACCEL, "SWS/BR: Normalize loudness of selected items/tracks..." },    "BR_NORMALIZE_LOUDNESS_ITEMS",     NormalizeLoudness,  NULL, 0, IsNormalizeLoudnessVisible},
+	{ { DEFACCEL, "SWS/BR: Normalize loudness of selected items to -23 LUFS" },  "BR_NORMALIZE_LOUDNESS_ITEMS23",   NormalizeLoudness,  NULL, 1, },
+	{ { DEFACCEL, "SWS/BR: Normalize loudness of selected items to 0 LU" },      "BR_NORMALIZE_LOUDNESS_ITEMS_LU",  NormalizeLoudness,  NULL, -1, },
+	{ { DEFACCEL, "SWS/BR: Normalize loudness of selected tracks to -23 LUFS" }, "BR_NORMALIZE_LOUDNESS_TRACKS23",  NormalizeLoudness,  NULL, 2, },
+	{ { DEFACCEL, "SWS/BR: Normalize loudness of selected tracks to 0 LU" },     "BR_NORMALIZE_LOUDNESS_TRACKS_LU", NormalizeLoudness,  NULL, -2, },
 
 	/******************************************************************************
-	* Midi editor - Media item preview                                            *
+	* MIDI editor - Item preview                                                  *
 	******************************************************************************/
 	{ { DEFACCEL, "SWS/BR: Stop media item preview" },                                                                                                   "BR_ME_STOP_PREV_ACT_ITEM",             NULL, NULL, 0,    NULL, 32060, ME_StopMidiTakePreview},
 
@@ -141,78 +203,132 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Toggle preview active media item (selected notes only) through track and pause during preview (start from mouse position)" }, "BR_ME_TPREV_ACT_ITEM_NOTES_PAUSE_POS", NULL, NULL, 2222, NULL, 32060, ME_PreviewActiveTake},
 
 	/******************************************************************************
-	* Midi editor - Misc                                                          *
+	* MIDI editor - Misc                                                          *
 	******************************************************************************/
-	{ { DEFACCEL, "SWS/BR: Play from mouse cursor position" },               "BR_ME_PLAY_MOUSECURSOR",          NULL, NULL, 0, NULL, 32060, ME_PlaybackAtMouseCursor},
-	{ { DEFACCEL, "SWS/BR: Play/pause from mouse cursor position" },         "BR_ME_PLAY_PAUSE_MOUSECURSOR",    NULL, NULL, 1, NULL, 32060, ME_PlaybackAtMouseCursor},
-	{ { DEFACCEL, "SWS/BR: Play/stop from mouse cursor position" },          "BR_ME_PLAY_STOP_MOUSECURSOR",     NULL, NULL, 2, NULL, 32060, ME_PlaybackAtMouseCursor},
+	{ { DEFACCEL, "SWS/BR: Play from mouse cursor position" },                                                 "BR_ME_PLAY_MOUSECURSOR",                 NULL, NULL, 0, NULL, 32060, ME_PlaybackAtMouseCursor},
+	{ { DEFACCEL, "SWS/BR: Play/pause from mouse cursor position" },                                           "BR_ME_PLAY_PAUSE_MOUSECURSOR",           NULL, NULL, 1, NULL, 32060, ME_PlaybackAtMouseCursor},
+	{ { DEFACCEL, "SWS/BR: Play/stop from mouse cursor position" },                                            "BR_ME_PLAY_STOP_MOUSECURSOR",            NULL, NULL, 2, NULL, 32060, ME_PlaybackAtMouseCursor},
 
-	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 1" },             "BR_ME_SAVE_CURSOR_POS_SLOT_1",    NULL, NULL, 0, NULL, 32060, ME_SaveCursorPosSlot},
-	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 2" },             "BR_ME_SAVE_CURSOR_POS_SLOT_2",    NULL, NULL, 1, NULL, 32060, ME_SaveCursorPosSlot},
-	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 3" },             "BR_ME_SAVE_CURSOR_POS_SLOT_3",    NULL, NULL, 2, NULL, 32060, ME_SaveCursorPosSlot},
-	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 4" },             "BR_ME_SAVE_CURSOR_POS_SLOT_4",    NULL, NULL, 3, NULL, 32060, ME_SaveCursorPosSlot},
-	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 5" },             "BR_ME_SAVE_CURSOR_POS_SLOT_5",    NULL, NULL, 4, NULL, 32060, ME_SaveCursorPosSlot},
-	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 1" },          "BR_ME_RESTORE_CURSOR_POS_SLOT_1", NULL, NULL, 0, NULL, 32060, ME_RestoreCursorPosSlot},
-	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 2" },          "BR_ME_RESTORE_CURSOR_POS_SLOT_2", NULL, NULL, 1, NULL, 32060, ME_RestoreCursorPosSlot},
-	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 3" },          "BR_ME_RESTORE_CURSOR_POS_SLOT_3", NULL, NULL, 2, NULL, 32060, ME_RestoreCursorPosSlot},
-	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 4" },          "BR_ME_RESTORE_CURSOR_POS_SLOT_4", NULL, NULL, 3, NULL, 32060, ME_RestoreCursorPosSlot},
-	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 5" },          "BR_ME_RESTORE_CURSOR_POS_SLOT_5", NULL, NULL, 4, NULL, 32060, ME_RestoreCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Insert CC event at edit cursor in CC lane under mouse cursor (active item only)" }, "BR_ME_INSERT_CC_EDIT_CURSOR_MOUSE_LANE", NULL, NULL, 0, NULL, 32060, ME_CCEventAtEditCursor},
+	{ { DEFACCEL, "SWS/BR: Show only used CC lanes (detect 14-bit)" },                                         "BR_ME_SHOW_USED_CC_14_BIT",              NULL, NULL, 0, NULL, 32060, ME_ShowUsedCCLanesDetect14Bit},
 
-	{ { DEFACCEL, "SWS/BR: Save note selection from active take, slot 1" },  "BR_ME_SAVE_NOTE_SEL_SLOT_1",      NULL, NULL, 0, NULL, 32060, ME_SaveNoteSelSlot},
-	{ { DEFACCEL, "SWS/BR: Save note selection from active take, slot 2" },  "BR_ME_SAVE_NOTE_SEL_SLOT_2",      NULL, NULL, 1, NULL, 32060, ME_SaveNoteSelSlot},
-	{ { DEFACCEL, "SWS/BR: Save note selection from active take, slot 3" },  "BR_ME_SAVE_NOTE_SEL_SLOT_3",      NULL, NULL, 2, NULL, 32060, ME_SaveNoteSelSlot},
-	{ { DEFACCEL, "SWS/BR: Save note selection from active take, slot 4" },  "BR_ME_SAVE_NOTE_SEL_SLOT_4",      NULL, NULL, 3, NULL, 32060, ME_SaveNoteSelSlot},
-	{ { DEFACCEL, "SWS/BR: Save note selection from active take, slot 5" },  "BR_ME_SAVE_NOTE_SEL_SLOT_5",      NULL, NULL, 4, NULL, 32060, ME_SaveNoteSelSlot},
-	{ { DEFACCEL, "SWS/BR: Restore note selection to active take, slot 1" }, "BR_ME_RESTORE_NOTE_SEL_SLOT_1",   NULL, NULL, 0, NULL, 32060, ME_RestoreNoteSelSlot},
-	{ { DEFACCEL, "SWS/BR: Restore note selection to active take, slot 2" }, "BR_ME_RESTORE_NOTE_SEL_SLOT_2",   NULL, NULL, 1, NULL, 32060, ME_RestoreNoteSelSlot},
-	{ { DEFACCEL, "SWS/BR: Restore note selection to active take, slot 3" }, "BR_ME_RESTORE_NOTE_SEL_SLOT_3",   NULL, NULL, 2, NULL, 32060, ME_RestoreNoteSelSlot},
-	{ { DEFACCEL, "SWS/BR: Restore note selection to active take, slot 4" }, "BR_ME_RESTORE_NOTE_SEL_SLOT_4",   NULL, NULL, 3, NULL, 32060, ME_RestoreNoteSelSlot},
-	{ { DEFACCEL, "SWS/BR: Restore note selection to active take, slot 5" }, "BR_ME_RESTORE_NOTE_SEL_SLOT_5",   NULL, NULL, 4, NULL, 32060, ME_RestoreNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 1" },                                               "BR_ME_SAVE_CURSOR_POS_SLOT_1",           NULL, NULL, 0, NULL, 32060, ME_SaveCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 2" },                                               "BR_ME_SAVE_CURSOR_POS_SLOT_2",           NULL, NULL, 1, NULL, 32060, ME_SaveCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 3" },                                               "BR_ME_SAVE_CURSOR_POS_SLOT_3",           NULL, NULL, 2, NULL, 32060, ME_SaveCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 4" },                                               "BR_ME_SAVE_CURSOR_POS_SLOT_4",           NULL, NULL, 3, NULL, 32060, ME_SaveCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 5" },                                               "BR_ME_SAVE_CURSOR_POS_SLOT_5",           NULL, NULL, 4, NULL, 32060, ME_SaveCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 6" },                                               "BR_ME_SAVE_CURSOR_POS_SLOT_6",           NULL, NULL, 5, NULL, 32060, ME_SaveCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 7" },                                               "BR_ME_SAVE_CURSOR_POS_SLOT_7",           NULL, NULL, 6, NULL, 32060, ME_SaveCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 8" },                                               "BR_ME_SAVE_CURSOR_POS_SLOT_8",           NULL, NULL, 7, NULL, 32060, ME_SaveCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 1" },                                            "BR_ME_RESTORE_CURSOR_POS_SLOT_1",        NULL, NULL, 0, NULL, 32060, ME_RestoreCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 2" },                                            "BR_ME_RESTORE_CURSOR_POS_SLOT_2",        NULL, NULL, 1, NULL, 32060, ME_RestoreCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 3" },                                            "BR_ME_RESTORE_CURSOR_POS_SLOT_3",        NULL, NULL, 2, NULL, 32060, ME_RestoreCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 4" },                                            "BR_ME_RESTORE_CURSOR_POS_SLOT_4",        NULL, NULL, 3, NULL, 32060, ME_RestoreCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 5" },                                            "BR_ME_RESTORE_CURSOR_POS_SLOT_5",        NULL, NULL, 4, NULL, 32060, ME_RestoreCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 6" },                                            "BR_ME_RESTORE_CURSOR_POS_SLOT_6",        NULL, NULL, 5, NULL, 32060, ME_RestoreCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 7" },                                            "BR_ME_RESTORE_CURSOR_POS_SLOT_7",        NULL, NULL, 6, NULL, 32060, ME_RestoreCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 8" },                                            "BR_ME_RESTORE_CURSOR_POS_SLOT_8",        NULL, NULL, 7, NULL, 32060, ME_RestoreCursorPosSlot},
 
-	{ { DEFACCEL, "SWS/BR: Show only used CC lanes (detect 14-bit)" },       "BR_ME_SHOW_USED_CC_14_BIT",       NULL, NULL, 0, NULL, 32060, ME_ShowUsedCCLanesDetect14Bit},
+	{ { DEFACCEL, "SWS/BR: Save note selection from active item, slot 1" },                                    "BR_ME_SAVE_NOTE_SEL_SLOT_1",             NULL, NULL, 0, NULL, 32060, ME_SaveNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Save note selection from active item, slot 2" },                                    "BR_ME_SAVE_NOTE_SEL_SLOT_2",             NULL, NULL, 1, NULL, 32060, ME_SaveNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Save note selection from active item, slot 3" },                                    "BR_ME_SAVE_NOTE_SEL_SLOT_3",             NULL, NULL, 2, NULL, 32060, ME_SaveNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Save note selection from active item, slot 4" },                                    "BR_ME_SAVE_NOTE_SEL_SLOT_4",             NULL, NULL, 3, NULL, 32060, ME_SaveNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Save note selection from active item, slot 5" },                                    "BR_ME_SAVE_NOTE_SEL_SLOT_5",             NULL, NULL, 4, NULL, 32060, ME_SaveNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Save note selection from active item, slot 6" },                                    "BR_ME_SAVE_NOTE_SEL_SLOT_6",             NULL, NULL, 5, NULL, 32060, ME_SaveNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Save note selection from active item, slot 7" },                                    "BR_ME_SAVE_NOTE_SEL_SLOT_7",             NULL, NULL, 6, NULL, 32060, ME_SaveNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Save note selection from active item, slot 8" },                                    "BR_ME_SAVE_NOTE_SEL_SLOT_8",             NULL, NULL, 7, NULL, 32060, ME_SaveNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Restore note selection to active item, slot 1" },                                   "BR_ME_RESTORE_NOTE_SEL_SLOT_1",          NULL, NULL, 0, NULL, 32060, ME_RestoreNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Restore note selection to active item, slot 2" },                                   "BR_ME_RESTORE_NOTE_SEL_SLOT_2",          NULL, NULL, 1, NULL, 32060, ME_RestoreNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Restore note selection to active item, slot 3" },                                   "BR_ME_RESTORE_NOTE_SEL_SLOT_3",          NULL, NULL, 2, NULL, 32060, ME_RestoreNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Restore note selection to active item, slot 4" },                                   "BR_ME_RESTORE_NOTE_SEL_SLOT_4",          NULL, NULL, 3, NULL, 32060, ME_RestoreNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Restore note selection to active item, slot 5" },                                   "BR_ME_RESTORE_NOTE_SEL_SLOT_5",          NULL, NULL, 4, NULL, 32060, ME_RestoreNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Restore note selection to active item, slot 6" },                                   "BR_ME_RESTORE_NOTE_SEL_SLOT_6",          NULL, NULL, 5, NULL, 32060, ME_RestoreNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Restore note selection to active item, slot 7" },                                   "BR_ME_RESTORE_NOTE_SEL_SLOT_7",          NULL, NULL, 6, NULL, 32060, ME_RestoreNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Restore note selection to active item, slot 8" },                                   "BR_ME_RESTORE_NOTE_SEL_SLOT_8",          NULL, NULL, 7, NULL, 32060, ME_RestoreNoteSelSlot},
+
+	{ { DEFACCEL, "SWS/BR: Save selected events in last clicked CC lane, slot 1" },                            "BR_ME_SAVE_CC_SLOT_1",                   NULL, NULL, 0,  NULL, 32060, ME_SaveCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Save selected events in last clicked CC lane, slot 2" },                            "BR_ME_SAVE_CC_SLOT_2",                   NULL, NULL, 1,  NULL, 32060, ME_SaveCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Save selected events in last clicked CC lane, slot 3" },                            "BR_ME_SAVE_CC_SLOT_3",                   NULL, NULL, 2,  NULL, 32060, ME_SaveCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Save selected events in last clicked CC lane, slot 4" },                            "BR_ME_SAVE_CC_SLOT_4",                   NULL, NULL, 3,  NULL, 32060, ME_SaveCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Save selected events in last clicked CC lane, slot 5" },                            "BR_ME_SAVE_CC_SLOT_5",                   NULL, NULL, 4,  NULL, 32060, ME_SaveCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Save selected events in last clicked CC lane, slot 6" },                            "BR_ME_SAVE_CC_SLOT_6",                   NULL, NULL, 5,  NULL, 32060, ME_SaveCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Save selected events in last clicked CC lane, slot 7" },                            "BR_ME_SAVE_CC_SLOT_7",                   NULL, NULL, 6,  NULL, 32060, ME_SaveCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Save selected events in last clicked CC lane, slot 8" },                            "BR_ME_SAVE_CC_SLOT_8",                   NULL, NULL, 7,  NULL, 32060, ME_SaveCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to last clicked CC lane in active item, slot 1" },          "BR_ME_RESTORE_CC_LAST_CL_SLOT_1",        NULL, NULL, 1,  NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to last clicked CC lane in active item, slot 2" },          "BR_ME_RESTORE_CC_LAST_CL_SLOT_2",        NULL, NULL, 2,  NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to last clicked CC lane in active item, slot 3" },          "BR_ME_RESTORE_CC_LAST_CL_SLOT_3",        NULL, NULL, 3,  NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to last clicked CC lane in active item, slot 4" },          "BR_ME_RESTORE_CC_LAST_CL_SLOT_4",        NULL, NULL, 4,  NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to last clicked CC lane in active item, slot 5" },          "BR_ME_RESTORE_CC_LAST_CL_SLOT_5",        NULL, NULL, 5,  NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to last clicked CC lane in active item, slot 6" },          "BR_ME_RESTORE_CC_LAST_CL_SLOT_6",        NULL, NULL, 6,  NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to last clicked CC lane in active item, slot 7" },          "BR_ME_RESTORE_CC_LAST_CL_SLOT_7",        NULL, NULL, 7,  NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to last clicked CC lane in active item, slot 8" },          "BR_ME_RESTORE_CC_LAST_CL_SLOT_8",        NULL, NULL, 8,  NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to all visible CC lanes in active item, slot 1" },          "BR_ME_RESTORE_CC_ALL_VIS_SLOT_1",        NULL, NULL, -1, NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to all visible CC lanes in active item, slot 2" },          "BR_ME_RESTORE_CC_ALL_VIS_SLOT_2",        NULL, NULL, -2, NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to all visible CC lanes in active item, slot 3" },          "BR_ME_RESTORE_CC_ALL_VIS_SLOT_3",        NULL, NULL, -3, NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to all visible CC lanes in active item, slot 4" },          "BR_ME_RESTORE_CC_ALL_VIS_SLOT_4",        NULL, NULL, -4, NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to all visible CC lanes in active item, slot 5" },          "BR_ME_RESTORE_CC_ALL_VIS_SLOT_5",        NULL, NULL, -5, NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to all visible CC lanes in active item, slot 6" },          "BR_ME_RESTORE_CC_ALL_VIS_SLOT_6",        NULL, NULL, -6, NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to all visible CC lanes in active item, slot 7" },          "BR_ME_RESTORE_CC_ALL_VIS_SLOT_7",        NULL, NULL, -7, NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to all visible CC lanes in active item, slot 8" },          "BR_ME_RESTORE_CC_ALL_VIS_SLOT_8",        NULL, NULL, -8, NULL, 32060, ME_RestoreCCEventsSlot},
 
 	/******************************************************************************
 	* Misc                                                                        *
 	******************************************************************************/
-	{ { DEFACCEL, "SWS/BR: Split selected items at tempo markers" },                                               "SWS_BRSPLITSELECTEDTEMPO",         SplitItemAtTempo},
-	{ { DEFACCEL, "SWS/BR: Create project markers from selected tempo markers" },                                  "BR_TEMPO_TO_MARKERS",              MarkersAtTempo},
-	{ { DEFACCEL, "SWS/BR: Enable \"Ignore project tempo\" for selected MIDI items (use tempo at item's start)" }, "BR_MIDI_PROJ_TEMPO_ENB",           MidiItemTempo, NULL, 0},
-	{ { DEFACCEL, "SWS/BR: Disable \"Ignore project tempo\" for selected MIDI items" },                            "BR_MIDI_PROJ_TEMPO_DIS",           MidiItemTempo, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Trim MIDI item to active content" },                                                    "BR_TRIM_MIDI_ITEM_ACT_CONTENT",    MidiItemTrim, NULL},
+	{ { DEFACCEL, "SWS/BR: Split selected items at tempo markers" },                                                                                       "SWS_BRSPLITSELECTEDTEMPO",         SplitItemAtTempo},
+	{ { DEFACCEL, "SWS/BR: Create project markers from selected tempo markers" },                                                                          "BR_TEMPO_TO_MARKERS",              MarkersAtTempo},
+	{ { DEFACCEL, "SWS/BR: Disable \"Ignore project tempo\" for selected MIDI items" },                                                                    "BR_MIDI_PROJ_TEMPO_DIS",           MidiItemTempo, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Enable \"Ignore project tempo\" for selected MIDI items (use tempo at item's start)" },                                         "BR_MIDI_PROJ_TEMPO_ENB",           MidiItemTempo, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Enable \"Ignore project tempo\" for selected MIDI items preserving time position of MIDI events (use tempo at item's start)" }, "BR_MIDI_PROJ_TEMPO_ENB_TIME",      MidiItemTempo, NULL, 2},
+	{ { DEFACCEL, "SWS/BR: Trim MIDI item to active content" },                                                                                            "BR_TRIM_MIDI_ITEM_ACT_CONTENT",    MidiItemTrim, NULL},
 
-	{ { DEFACCEL, "SWS/BR: Create project markers from notes in selected MIDI items" },                            "BR_MIDI_NOTES_TO_MARKERS",         MarkersAtNotes},
-	{ { DEFACCEL, "SWS/BR: Create project markers from stretch markers in selected items" },                       "BR_STRETCH_MARKERS_TO_MARKERS",    MarkersAtStretchMarkers},
-	{ { DEFACCEL, "SWS/BR: Create project markers from selected items (name by item's notes)" },                   "BR_ITEMS_TO_MARKERS_NOTES",        MarkersRegionsAtItems, NULL, 0},
-	{ { DEFACCEL, "SWS/BR: Create regions from selected items (name by item's notes)" },                           "BR_ITEMS_TO_REGIONS_NOTES",        MarkersRegionsAtItems, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Create project markers from notes in selected MIDI items" },                                                                    "BR_MIDI_NOTES_TO_MARKERS",         MarkersAtNotes},
+	{ { DEFACCEL, "SWS/BR: Create project markers from stretch markers in selected items" },                                                               "BR_STRETCH_MARKERS_TO_MARKERS",    MarkersAtStretchMarkers},
+	{ { DEFACCEL, "SWS/BR: Create project marker at mouse cursor" },                                                                                       "BR_MARKER_AT_MOUSE",               MarkerAtMouse, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Create project marker at mouse cursor (obey snapping)" },                                                                       "BR_MARKER_AT_MOUSE_SNAP",          MarkerAtMouse, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Create project markers from selected items (name by item's notes)" },                                                           "BR_ITEMS_TO_MARKERS_NOTES",        MarkersRegionsAtItems, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Create regions from selected items (name by item's notes)" },                                                                   "BR_ITEMS_TO_REGIONS_NOTES",        MarkersRegionsAtItems, NULL, 1},
 
-	{ { DEFACCEL, "SWS/BR: Toggle \"Grid snap settings follow grid visibility\"" },                                "BR_OPTIONS_SNAP_FOLLOW_GRID_VIS",  SnapFollowsGridVis, NULL, 0, IsSnapFollowsGridVisOn},
-	{ { DEFACCEL, "SWS/BR: Toggle \"Playback position follows project timebase when changing tempo\"" },           "BR_OPTIONS_PLAYBACK_TEMPO_CHANGE", PlaybackFollowsTempoChange, NULL, 0, IsPlaybackFollowingTempoChange},
-	{ { DEFACCEL, "SWS/BR: Set \"Apply trim when adding volume/pan envelopes\" to \"Always\"" },                   "BR_OPTIONS_ENV_TRIM_ALWAYS",       TrimNewVolPanEnvs, NULL, 0, IsTrimNewVolPanEnvsOn},
-	{ { DEFACCEL, "SWS/BR: Set \"Apply trim when adding volume/pan envelopes\" to \"In read/write\"" },            "BR_OPTIONS_ENV_TRIM_READWRITE",    TrimNewVolPanEnvs, NULL, 1, IsTrimNewVolPanEnvsOn},
-	{ { DEFACCEL, "SWS/BR: Set \"Apply trim when adding volume/pan envelopes\" to \"Never\"" },                    "BR_OPTIONS_ENV_TRIM_NEVER",        TrimNewVolPanEnvs, NULL, 2, IsTrimNewVolPanEnvsOn},
+	{ { DEFACCEL, "SWS/BR: Toggle \"Grid snap settings follow grid visibility\"" },                                                                        "BR_OPTIONS_SNAP_FOLLOW_GRID_VIS",  SnapFollowsGridVis, NULL, 0, IsSnapFollowsGridVisOn},
+	{ { DEFACCEL, "SWS/BR: Toggle \"Playback position follows project timebase when changing tempo\"" },                                                   "BR_OPTIONS_PLAYBACK_TEMPO_CHANGE", PlaybackFollowsTempoChange, NULL, 0, IsPlaybackFollowingTempoChange},
+	{ { DEFACCEL, "SWS/BR: Set \"Apply trim when adding volume/pan envelopes\" to \"Always\"" },                                                           "BR_OPTIONS_ENV_TRIM_ALWAYS",       TrimNewVolPanEnvs, NULL, 0, IsTrimNewVolPanEnvsOn},
+	{ { DEFACCEL, "SWS/BR: Set \"Apply trim when adding volume/pan envelopes\" to \"In read/write\"" },                                                    "BR_OPTIONS_ENV_TRIM_READWRITE",    TrimNewVolPanEnvs, NULL, 1, IsTrimNewVolPanEnvsOn},
+	{ { DEFACCEL, "SWS/BR: Set \"Apply trim when adding volume/pan envelopes\" to \"Never\"" },                                                            "BR_OPTIONS_ENV_TRIM_NEVER",        TrimNewVolPanEnvs, NULL, 2, IsTrimNewVolPanEnvsOn},
 
-	{ { DEFACCEL, "SWS/BR: Cycle through record modes" },                                                          "BR_CYCLE_RECORD_MODES",            CycleRecordModes},
-	{ { DEFACCEL, "SWS/BR: Focus arrange window" },                                                                "BR_FOCUS_ARRANGE_WND",             FocusArrange},
-	{ { DEFACCEL, "SWS/BR: Toggle media item online/offline" },                                                    "BR_TOGGLE_ITEM_ONLINE",            ToggleItemOnline},
-	{ { DEFACCEL, "SWS/BR: Copy take media source file path of selected items to clipboard" },                     "BR_TSOURCE_PATH_TO_CLIPBOARD",     ItemSourcePathToClipBoard},
+	{ { DEFACCEL, "SWS/BR: Cycle through record modes" },                                                                                                  "BR_CYCLE_RECORD_MODES",            CycleRecordModes},
+	{ { DEFACCEL, "SWS/BR: Focus arrange window" },                                                                                                        "BR_FOCUS_ARRANGE_WND",             FocusArrange},
+	{ { DEFACCEL, "SWS/BR: Toggle media item online/offline" },                                                                                            "BR_TOGGLE_ITEM_ONLINE",            ToggleItemOnline},
+	{ { DEFACCEL, "SWS/BR: Copy take media source file path of selected items to clipboard" },                                                             "BR_TSOURCE_PATH_TO_CLIPBOARD",     ItemSourcePathToClipBoard},
 
-	{ { DEFACCEL, "SWS/BR: Play from mouse cursor position" },                                                     "BR_PLAY_MOUSECURSOR",              PlaybackAtMouseCursor, NULL, 0},
-	{ { DEFACCEL, "SWS/BR: Play/pause from mouse cursor position" },                                               "BR_PLAY_PAUSE_MOUSECURSOR",        PlaybackAtMouseCursor, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Play/stop from mouse cursor position" },                                                "BR_PLAY_STOP_MOUSECURSOR",         PlaybackAtMouseCursor, NULL, 2},
+	{ { DEFACCEL, "SWS/BR: Play from mouse cursor position" },                                                                                             "BR_PLAY_MOUSECURSOR",              PlaybackAtMouseCursor, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Play/pause from mouse cursor position" },                                                                                       "BR_PLAY_PAUSE_MOUSECURSOR",        PlaybackAtMouseCursor, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Play/stop from mouse cursor position" },                                                                                        "BR_PLAY_STOP_MOUSECURSOR",         PlaybackAtMouseCursor, NULL, 2},
 
-	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 1" },                                                   "BR_SAVE_CURSOR_POS_SLOT_1",        SaveCursorPosSlot, NULL, 0},
-	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 2" },                                                   "BR_SAVE_CURSOR_POS_SLOT_2",        SaveCursorPosSlot, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 3" },                                                   "BR_SAVE_CURSOR_POS_SLOT_3",        SaveCursorPosSlot, NULL, 2},
-	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 4" },                                                   "BR_SAVE_CURSOR_POS_SLOT_4",        SaveCursorPosSlot, NULL, 3},
-	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 5" },                                                   "BR_SAVE_CURSOR_POS_SLOT_5",        SaveCursorPosSlot, NULL, 4},
-	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 1" },                                                "BR_RESTORE_CURSOR_POS_SLOT_1",     RestoreCursorPosSlot, NULL, 0},
-	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 2" },                                                "BR_RESTORE_CURSOR_POS_SLOT_2",     RestoreCursorPosSlot, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 3" },                                                "BR_RESTORE_CURSOR_POS_SLOT_3",     RestoreCursorPosSlot, NULL, 2},
-	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 4" },                                                "BR_RESTORE_CURSOR_POS_SLOT_4",     RestoreCursorPosSlot, NULL, 3},
-	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 5" },                                                "BR_RESTORE_CURSOR_POS_SLOT_5",     RestoreCursorPosSlot, NULL, 4},
+	{ { DEFACCEL, "SWS/BR: Select all MIDI items" },                                                                                                       "BR_SEL_ALL_ITEMS_MIDI",            SelectItemsByType, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Select all audio items" },                                                                                                      "BR_SEL_ALL_ITEMS_AUDIO",           SelectItemsByType, NULL, 2},
+	{ { DEFACCEL, "SWS/BR: Select all video items" },                                                                                                      "BR_SEL_ALL_ITEMS_VIDEO",           SelectItemsByType, NULL, 3},
+	{ { DEFACCEL, "SWS/BR: Select all MIDI items (obey time selection, if any)" },                                                                         "BR_SEL_ALL_ITEMS_TIME_SEL_MIDI",   SelectItemsByType, NULL, -1},
+	{ { DEFACCEL, "SWS/BR: Select all audio items (obey time selection, if any)" },                                                                        "BR_SEL_ALL_ITEMS_TIME_SEL_AUDIO",  SelectItemsByType, NULL, -2},
+	{ { DEFACCEL, "SWS/BR: Select all video items (obey time selection, if any)" },                                                                        "BR_SEL_ALL_ITEMS_TIME_SEL_VIDEO",  SelectItemsByType, NULL, -3},
+
+	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 1" },                                                                                           "BR_SAVE_CURSOR_POS_SLOT_1",        SaveCursorPosSlot, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 2" },                                                                                           "BR_SAVE_CURSOR_POS_SLOT_2",        SaveCursorPosSlot, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 3" },                                                                                           "BR_SAVE_CURSOR_POS_SLOT_3",        SaveCursorPosSlot, NULL, 2},
+	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 4" },                                                                                           "BR_SAVE_CURSOR_POS_SLOT_4",        SaveCursorPosSlot, NULL, 3},
+	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 5" },                                                                                           "BR_SAVE_CURSOR_POS_SLOT_5",        SaveCursorPosSlot, NULL, 4},
+	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 6" },                                                                                           "BR_SAVE_CURSOR_POS_SLOT_6",        SaveCursorPosSlot, NULL, 5},
+	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 7" },                                                                                           "BR_SAVE_CURSOR_POS_SLOT_7",        SaveCursorPosSlot, NULL, 6},
+	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 8" },                                                                                           "BR_SAVE_CURSOR_POS_SLOT_8",        SaveCursorPosSlot, NULL, 7},
+	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 1" },                                                                                        "BR_RESTORE_CURSOR_POS_SLOT_1",     RestoreCursorPosSlot, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 2" },                                                                                        "BR_RESTORE_CURSOR_POS_SLOT_2",     RestoreCursorPosSlot, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 3" },                                                                                        "BR_RESTORE_CURSOR_POS_SLOT_3",     RestoreCursorPosSlot, NULL, 2},
+	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 4" },                                                                                        "BR_RESTORE_CURSOR_POS_SLOT_4",     RestoreCursorPosSlot, NULL, 3},
+	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 5" },                                                                                        "BR_RESTORE_CURSOR_POS_SLOT_5",     RestoreCursorPosSlot, NULL, 4},
+	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 6" },                                                                                        "BR_RESTORE_CURSOR_POS_SLOT_6",     RestoreCursorPosSlot, NULL, 5},
+	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 7" },                                                                                        "BR_RESTORE_CURSOR_POS_SLOT_7",     RestoreCursorPosSlot, NULL, 6},
+	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 8" },                                                                                        "BR_RESTORE_CURSOR_POS_SLOT_8",     RestoreCursorPosSlot, NULL, 7},
 
 	/******************************************************************************
-	* Media item preview                                                          *
+	* Misc - Media item preview                                                   *
 	******************************************************************************/
 	{ { DEFACCEL, "SWS/BR: Preview media item under mouse" },                                                                                          "BR_PREV_ITEM_CURSOR",                 PreviewItemAtMouse, NULL, 1111},
 	{ { DEFACCEL, "SWS/BR: Preview media item under mouse (start from mouse cursor position)" },                                                       "BR_PREV_ITEM_CURSOR_POS",             PreviewItemAtMouse, NULL, 1121},
@@ -247,22 +363,22 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Toggle preview media item under mouse through track and pause during preview (start from mouse cursor position)" },         "BR_TPREV_ITEM_PAUSE_CURSOR_TRACK_POS", PreviewItemAtMouse, NULL, 2322},
 
 	/******************************************************************************
-	* Grid                                                                        *
+	* Tempo - Grid                                                                *
 	******************************************************************************/
-	{ { DEFACCEL, "SWS/BR: Move closest tempo marker to mouse cursor (perform until shortcut released)" },        "BR_MOVE_CLOSEST_TEMPO_MOUSE", MoveGridToMouse, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Move closest tempo marker to mouse cursor (perform until shortcut released)" },      "BR_MOVE_CLOSEST_TEMPO_MOUSE", MoveGridToMouse, NULL, 0},
 
-	{ { DEFACCEL, "SWS/BR: Move closest grid line to mouse cursor (perform until shortcut released)" },           "BR_MOVE_GRID_TO_MOUSE",       MoveGridToMouse, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Move closest measure grid line to mouse cursor (perform until shortcut released)" },   "BR_MOVE_M_GRID_TO_MOUSE",     MoveGridToMouse, NULL, 2},
+	{ { DEFACCEL, "SWS/BR: Move closest grid line to mouse cursor (perform until shortcut released)" },         "BR_MOVE_GRID_TO_MOUSE",       MoveGridToMouse, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Move closest measure grid line to mouse cursor (perform until shortcut released)" }, "BR_MOVE_M_GRID_TO_MOUSE",     MoveGridToMouse, NULL, 2},
 
-	{ { DEFACCEL, "SWS/BR: Move closest grid line to edit cursor" },                                              "BR_MOVE_GRID_TO_EDIT_CUR",    MoveGridToEditPlayCursor, NULL, 0},
-	{ { DEFACCEL, "SWS/BR: Move closest grid line to play cursor" },                                              "BR_MOVE_GRID_TO_PLAY_CUR",    MoveGridToEditPlayCursor, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Move closest measure grid line to edit cursor" },                                      "BR_MOVE_M_GRID_TO_EDIT_CUR",  MoveGridToEditPlayCursor, NULL, 2},
-	{ { DEFACCEL, "SWS/BR: Move closest measure grid line to play cursor" },                                      "BR_MOVE_M_GRID_TO_PLAY_CUR",  MoveGridToEditPlayCursor, NULL, 3},
-	{ { DEFACCEL, "SWS/BR: Move closest left side grid line to edit cursor" },                                    "BR_MOVE_L_GRID_TO_EDIT_CUR",  MoveGridToEditPlayCursor, NULL, 4},
-	{ { DEFACCEL, "SWS/BR: Move closest right side grid line to edit cursor" },                                   "BR_MOVE_R_GRID_TO_EDIT_CUR",  MoveGridToEditPlayCursor, NULL, 5},
+	{ { DEFACCEL, "SWS/BR: Move closest grid line to edit cursor" },                                            "BR_MOVE_GRID_TO_EDIT_CUR",    MoveGridToEditPlayCursor, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Move closest grid line to play cursor" },                                            "BR_MOVE_GRID_TO_PLAY_CUR",    MoveGridToEditPlayCursor, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Move closest measure grid line to edit cursor" },                                    "BR_MOVE_M_GRID_TO_EDIT_CUR",  MoveGridToEditPlayCursor, NULL, 2},
+	{ { DEFACCEL, "SWS/BR: Move closest measure grid line to play cursor" },                                    "BR_MOVE_M_GRID_TO_PLAY_CUR",  MoveGridToEditPlayCursor, NULL, 3},
+	{ { DEFACCEL, "SWS/BR: Move closest left side grid line to edit cursor" },                                  "BR_MOVE_L_GRID_TO_EDIT_CUR",  MoveGridToEditPlayCursor, NULL, 4},
+	{ { DEFACCEL, "SWS/BR: Move closest right side grid line to edit cursor" },                                 "BR_MOVE_R_GRID_TO_EDIT_CUR",  MoveGridToEditPlayCursor, NULL, 5},
 
 	/******************************************************************************
-	* Tempo                                                                       *
+	* Tempo - Misc                                                                *
 	******************************************************************************/
 	{ { DEFACCEL, "SWS/BR: Move tempo marker forward 0.1 ms" },                                                               "SWS_BRMOVETEMPOFORWARD01",    MoveTempo, NULL, 1},
 	{ { DEFACCEL, "SWS/BR: Move tempo marker forward 1 ms" },                                                                 "SWS_BRMOVETEMPOFORWARD1",     MoveTempo, NULL, 10},
@@ -318,6 +434,8 @@ static COMMAND_T g_commandTable[] =
 
 	{ { DEFACCEL, "SWS/BR: Create tempo markers at grid after every selected tempo marker" },                                 "BR_TEMPO_GRID",               TempoAtGrid},
 
+	{ { DEFACCEL, "SWS/BR: Tempo help..." },                                                                                  "BR_TEMPO_HELP_WIKI",          OpenTempoWiki},
+
 	{ { DEFACCEL, "SWS/BR: Convert project markers to tempo markers..." },                                                    "SWS_BRCONVERTMARKERSTOTEMPO", ConvertMarkersToTempoDialog, NULL, 0, IsConvertMarkersToTempoVisible},
 	{ { DEFACCEL, "SWS/BR: Select and adjust tempo markers..." },                                                             "SWS_BRADJUSTSELTEMPO",        SelectAdjustTempoDialog, NULL, 0, IsSelectAdjustTempoVisible},
 	{ { DEFACCEL, "SWS/BR: Randomize tempo markers..." },                                                                     "BR_RANDOMIZE_TEMPO",          RandomizeTempoDialog},
@@ -341,14 +459,14 @@ int BR_Init ()
 	SWSRegisterCommands(g_commandTable);
 	InitContinuousActions (); // call only after registering all actions
 	ProjStateInit();
-	AnalyzeLoudnessInit();
+	LoudnessInit();
 	VersionCheckInit();
 	return 1;
 }
 
 void BR_Exit ()
 {
-	AnalyzeLoudnessExit();
+	LoudnessExit();
 }
 
 bool BR_ActionHook (int cmd, int flag)
@@ -359,4 +477,22 @@ bool BR_ActionHook (int cmd, int flag)
 void BR_CSurfSetPlayState (bool play, bool pause, bool rec)
 {
 	MidiTakePreviewPlayState(play, rec);
+}
+
+int BR_CSurfExtended(int call, void* parm1, void* parm2, void* parm3)
+{
+	if (call == CSURF_EXT_RESET)
+	{
+		LoudnessUpdate();
+	}
+	else if (call == CSURF_EXT_SETSENDVOLUME || call == CSURF_EXT_SETSENDPAN)
+	{
+		if (parm1 && parm2)
+		{
+			int type = (call == CSURF_EXT_SETSENDPAN) ? PAN : VOLUME;
+			GetSetLastAdjustedSend(true, (MediaTrack**)&parm1, (int*)parm2, &type);
+		}
+	}
+
+	return 0;
 }

@@ -96,9 +96,8 @@ int GetTcpTrackMinHeight()
 int GetCurrentTcpMaxHeight()
 {
 	RECT r;
-	if (GetClientRect(GetArrangeWnd(), &r))
-		return r.bottom - r.top;
-	return 0;
+	GetClientRect(GetArrangeWnd(), &r);
+	return r.bottom - r.top;
 }
 
 // Stolen from BR_Util.cpp

@@ -434,6 +434,14 @@ void SelectItemsByType (COMMAND_T* ct)
 	for (int i = 0; i < CountMediaItems(NULL); ++i)
 	{
 		MediaItem* item = GetMediaItem(NULL, i);
+		if (checkTimeSel)
+		{
+			double itemStart = GetMediaItemInfo_Value(item, "D_POSITION");
+			double itemEnd   = itemStart + GetMediaItemInfo_Value(item, "D_LENGTH");
+			if (!AreOverlappedEx(itemStart, itemEnd, tStart, tEnd))
+				continue;
+		}
+
 		if (MediaItem_Take* take = GetActiveTake(item))
 		{
 			PCM_source* source = GetMediaItemTake_Source(take);
@@ -444,33 +452,14 @@ void SelectItemsByType (COMMAND_T* ct)
 
 				bool select = false;
 				if (abs((int)ct->user) == 1)
-				{
-					if (!strcmp(type, "MIDI") || !strcmp(type, "MIDIPOOL"))
-						select = true;
-				}
+					select = !strcmp(type, "MIDI") || !strcmp(type, "MIDIPOOL");
 				else if (abs((int)ct->user) == 2)
-				{
-					if (strcmp(type, "MIDI") && strcmp(type, "MIDIPOOL") && strcmp(type, "VIDEO") && strcmp(type, ""))
-						select = true;
-				}
+					select = strcmp(type, "MIDI") && strcmp(type, "MIDIPOOL") && strcmp(type, "VIDEO") && strcmp(type, "");
 				else if (abs((int)ct->user) == 3)
-				{
-					if (!strcmp(type, "VIDEO"))
-						select = true;
-				}
-
-				if (select && checkTimeSel)
-				{
-					double itemStart = GetMediaItemInfo_Value(item, "D_POSITION");
-					double itemEnd   = itemStart + GetMediaItemInfo_Value(item, "D_LENGTH");
-
-					if (!AreOverlappedEx(itemStart, itemEnd, tStart, tEnd))
-						select = false;
-				}
+					select = !strcmp(type, "VIDEO");
 
 				if (select)
 				{
-
 					SetMediaItemInfo_Value(item, "B_UISEL", 1);
 					update = true;
 				}

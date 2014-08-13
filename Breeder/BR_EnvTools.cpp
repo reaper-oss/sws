@@ -902,7 +902,7 @@ bool BR_Envelope::IsTakeEnvelope ()
 		return false;
 }
 
-bool BR_Envelope::GetPointsInTimeSelection (int* startId, int* endId, double* tStart/*=NULL*/, double* tEnd /*=NULL*/)
+bool BR_Envelope::GetPointsInTimeSelection (int* startId, int* endId, double* tStart /*=NULL*/, double* tEnd /*=NULL*/)
 {
 	double start, end;
 	GetSet_LoopTimeRange2(NULL, false, false, &start, &end, false);
@@ -976,7 +976,7 @@ bool BR_Envelope::VisibleInArrange (int* envHeight /*=NULL*/, int* yOffset /*= N
 		int envelopeEnd = m_yOffset + m_height;
 		int pageEnd = si.nPos + (int)si.nPage + SCROLLBAR_W;
 
-		
+
 		if (AreOverlappedEx(m_yOffset, envelopeEnd, si.nPos, pageEnd))
 		{
 			double arrangeStart, arrangeEnd;

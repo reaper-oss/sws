@@ -144,9 +144,9 @@ void SetEnvPointMouseValue (COMMAND_T* ct)
 	}
 
 	// Check envelope is visible
-	int envHeight, envY;
-	if (!g_envMouseEnvelope->VisibleInArrange(&envHeight, &envY, true)) // caching values is not 100% correct, but we don't expect for envelope lane height to change during the action
-		return;                                                         // and it can speed things if dealing with big envelope that's in track lane (quite possible with tempo map)
+	int envHeight, envY;                                                // caching values is not 100% correct, but we don't expect for envelope lane height to change during the action
+	if (!g_envMouseEnvelope->VisibleInArrange(&envHeight, &envY, true)) // and it can speed things if dealing with big envelope that's in track lane (quite possible with tempo map)
+		return;
 
 	// Get mouse positions
 	int yOffset; bool overRuler;
@@ -653,8 +653,8 @@ void EnvPointsGrid (COMMAND_T* ct)
 					double beatCount = endBeats - startBeats + num * (endMeasure - startMeasure);
 
 					if (s0 == SQUARE)
-						offset += (t0 + (240*beatCount) / (den * b0))        - t1;  // num and den can actually be different because some of tempo markers with time signatures
-					else                                                            // could have been scheduled for deletion but reaper does it in the same manner so leave it
+						offset += (t0 + (240*beatCount) / (den * b0))        - t1;  // num and den can be different due to some time signatures being scheduled for deletion but reaper does it in the same manner so leave it
+					else
 						offset += (t0 + (480*beatCount) / (den * (b0 + b1))) - t1;
 
 					int nextPoint = (i == pointsToDelete.size() - 1) ? envelope.Count() : pointsToDelete[i+1].first;
@@ -1320,4 +1320,3 @@ void ShowHideSendEnv (COMMAND_T* ct)
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 	PreventUIRefresh(-1);
 }
-

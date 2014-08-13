@@ -73,30 +73,34 @@ template <typename T> T    IsEqual (T a, T b, T epsilon) {epsilon = abs(epsilon)
 /******************************************************************************
 * General                                                                     *
 ******************************************************************************/
-vector<MediaItem*> GetSelItems (MediaTrack* track);
 vector<double> GetProjectMarkers (bool timeSel, double delta = 0);
 WDL_FastString FormatTime (double position, int mode = -1);  // same as format_timestr_pos but handles "measures.beats + time" properly
-int GetTakeId (MediaItem_Take* take, MediaItem* item = NULL);
 double EndOfProject (bool markers, bool regions);
 double GetProjectSettingsTempo (int* num, int* den);
-double GetSourceLengthPPQ (MediaItem_Take* take);
 double GetGridDivSafe (); // makes sure grid div is never over MAX_GRID_DIV
 void InitTempoMap ();
 void ScrollToTrackIfNotInArrange (MediaTrack* track);
 void StartPlayback (double position);
 void GetSetLastAdjustedSend (bool set, MediaTrack** track, int* sendId, int* type); // for type see BR_EnvType (works only for volume and pan, not mute)
-bool SetIgnoreTempo (MediaItem* item, bool ignoreTempo, double bpm, int num, int den);
-bool DoesItemHaveMidiEvents (MediaItem* item);
-bool TrimItem (MediaItem* item, double start, double end);
 bool IsPlaying ();
 bool IsPaused ();
 bool IsRecording ();
 bool TcpVis (MediaTrack* track);
+template <typename T> void GetConfig (const char* key, T& val) {val = *static_cast<T*>(GetConfigVar(key));}
+template <typename T> void SetConfig (const char* key, T  val) {*static_cast<T*>(GetConfigVar(key)) = val;}
+
+/******************************************************************************
+* Items                                                                       *
+******************************************************************************/
+vector<MediaItem*> GetSelItems (MediaTrack* track);
+double GetSourceLengthPPQ (MediaItem_Take* take);
+int GetTakeId (MediaItem_Take* take, MediaItem* item = NULL);
+bool SetIgnoreTempo (MediaItem* item, bool ignoreTempo, double bpm, int num, int den);
+bool DoesItemHaveMidiEvents (MediaItem* item);
+bool TrimItem (MediaItem* item, double start, double end);
 bool GetMediaSourceProperties (MediaItem_Take* take, bool* section, double* start, double* length, double* fade, bool* reverse);
 bool SetMediaSourceProperties (MediaItem_Take* take, bool section, double start, double length, double fade, bool reverse);
 bool SetTakeSourceFromFile (MediaItem_Take* take, const char* filename, bool inProjectData, bool keepSourceProperties);
-template <typename T> void GetConfig (const char* key, T& val) {val = *static_cast<T*>(GetConfigVar(key));}
-template <typename T> void SetConfig (const char* key, T  val) {*static_cast<T*>(GetConfigVar(key)) = val;}
 
 /******************************************************************************
 * Grid                                                                        *

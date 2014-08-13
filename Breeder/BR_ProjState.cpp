@@ -405,7 +405,7 @@ bool BR_MidiCCEvents::Restore (BR_MidiEditor& midiEditor, bool allVisible)
 				int currentLoop = (int)((insertionStartPPQ - itemStartPPQ) / sourceLenPPQ);
 				int loopCount   = (int)((itemEndPPQ        - itemStartPPQ) / sourceLenPPQ);
 
-				insertionStartPPQ -= currentLoop * sourceLenPPQ; // when dealing with looped item's always insert at the first iteration of the loop
+				insertionStartPPQ -= currentLoop * sourceLenPPQ; // when dealing with looped items, always insert at the first iteration of the loop
 
 				if (currentLoop == loopCount)
 				{

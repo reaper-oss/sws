@@ -7,8 +7,7 @@
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
-/ in the Software without restriction, including without limitation the rights to
-/ use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
 /
@@ -238,16 +237,6 @@ WDL_FastString GetSourceChunk (PCM_source* source)
 /******************************************************************************
 * General                                                                     *
 ******************************************************************************/
-vector<MediaItem*> GetSelItems (MediaTrack* track)
-{
-	vector<MediaItem*> items;
-	int count = CountTrackMediaItems(track);
-	for (int i = 0; i < count ; ++i)
-		if (*(bool*)GetSetMediaItemInfo(GetTrackMediaItem(track, i), "B_UISEL", NULL))
-			items.push_back(GetTrackMediaItem(track, i));
-	return items;
-}
-
 vector<double> GetProjectMarkers (bool timeSel, double delta /*=0*/)
 {
 	double tStart, tEnd;
@@ -309,18 +298,6 @@ WDL_FastString FormatTime (double position, int mode /*=-1*/)
 	return string;
 }
 
-int GetTakeId (MediaItem_Take* take, MediaItem* item /*= NULL*/)
-{
-	item = (item) ? item : GetMediaItemTake_Item(take);
-
-	for (int i = 0; i < CountTakes(item); ++i)
-	{
-		if (GetTake(item, 0) == take)
-			return i;
-	}
-	return -1;
-}
-
 double EndOfProject (bool markers, bool regions)
 {
 	double projEnd = 0;
@@ -359,20 +336,6 @@ double GetProjectSettingsTempo (int* num, int* den)
 
 	WritePtr(den, _den);
 	return bpm/_den*4;
-}
-
-double GetSourceLengthPPQ (MediaItem_Take* take)
-{
-	if (take)
-	{
-		double itemStart  = GetMediaItemInfo_Value(GetMediaItemTake_Item(take), "D_POSITION");
-		double takeOffset = GetMediaItemTakeInfo_Value(take, "D_STARTOFFS");
-		double startPPQ   = MIDI_GetPPQPosFromProjTime(take, itemStart - takeOffset);
-		double endPPQ = MIDI_GetPPQPosFromProjTime(take, itemStart - takeOffset + GetMediaItemTake_Source(take)->GetLength());
-
-		return endPPQ - startPPQ;
-	}
-	return 0;
 }
 
 double GetGridDivSafe ()
@@ -453,6 +416,79 @@ void GetSetLastAdjustedSend (bool set, MediaTrack** track, int* sendId, int* typ
 	}
 }
 
+bool IsPlaying ()
+{
+	return (GetPlayStateEx(NULL) & 1) == 1;
+}
+
+bool IsPaused ()
+{
+	return (GetPlayStateEx(NULL) & 2) == 2;
+}
+
+bool IsRecording ()
+{
+	return (GetPlayStateEx(NULL) & 4) == 4;
+}
+
+bool TcpVis (MediaTrack* track)
+{
+	if ((GetMasterTrack(NULL) == track))
+	{
+		int master; GetConfig("showmaintrack", master);
+		if (master == 0 || (int)GetMediaTrackInfo_Value(track, "I_WNDH") == 0)
+			return false;
+		else
+			return true;
+	}
+	else
+	{
+		if ((int)GetMediaTrackInfo_Value(track, "B_SHOWINTCP") == 0 || (int)GetMediaTrackInfo_Value(track, "I_WNDH") == 0)
+			return false;
+		else
+			return true;
+	}
+}
+
+/******************************************************************************
+* Items                                                                       *
+******************************************************************************/
+vector<MediaItem*> GetSelItems (MediaTrack* track)
+{
+	vector<MediaItem*> items;
+	int count = CountTrackMediaItems(track);
+	for (int i = 0; i < count ; ++i)
+		if (*(bool*)GetSetMediaItemInfo(GetTrackMediaItem(track, i), "B_UISEL", NULL))
+			items.push_back(GetTrackMediaItem(track, i));
+	return items;
+}
+
+double GetSourceLengthPPQ (MediaItem_Take* take)
+{
+	if (take)
+	{
+		double itemStart  = GetMediaItemInfo_Value(GetMediaItemTake_Item(take), "D_POSITION");
+		double takeOffset = GetMediaItemTakeInfo_Value(take, "D_STARTOFFS");
+		double startPPQ   = MIDI_GetPPQPosFromProjTime(take, itemStart - takeOffset);
+		double endPPQ = MIDI_GetPPQPosFromProjTime(take, itemStart - takeOffset + GetMediaItemTake_Source(take)->GetLength());
+
+		return endPPQ - startPPQ;
+	}
+	return 0;
+}
+
+int GetTakeId (MediaItem_Take* take, MediaItem* item /*= NULL*/)
+{
+	item = (item) ? item : GetMediaItemTake_Item(take);
+
+	for (int i = 0; i < CountTakes(item); ++i)
+	{
+		if (GetTake(item, 0) == take)
+			return i;
+	}
+	return -1;
+}
+
 bool SetIgnoreTempo (MediaItem* item, bool ignoreTempo, double bpm, int num, int den)
 {
 	bool midiFound = false;
@@ -485,7 +521,7 @@ bool SetIgnoreTempo (MediaItem* item, bool ignoreTempo, double bpm, int num, int
 				sscanf(token, "IGNTEMPO %*d %lf %d %d\n", &currentBpm, &currentNum, &currentDen);
 				newState.AppendFormatted(256, "IGNTEMPO %d %.14lf %d %d\n", 0, currentBpm, currentNum, currentDen);
 			}
-			stateChanged = true;			
+			stateChanged = true;
 		}
 		else
 		{
@@ -534,40 +570,6 @@ bool TrimItem (MediaItem* item, double start, double end)
 		return true;
 	}
 	return false;
-}
-
-bool IsPlaying ()
-{
-	return (GetPlayStateEx(NULL) & 1) == 1;
-}
-
-bool IsPaused ()
-{
-	return (GetPlayStateEx(NULL) & 2) == 2;
-}
-
-bool IsRecording ()
-{
-	return (GetPlayStateEx(NULL) & 4) == 4;
-}
-
-bool TcpVis (MediaTrack* track)
-{
-	if ((GetMasterTrack(NULL) == track))
-	{
-		int master; GetConfig("showmaintrack", master);
-		if (master == 0 || (int)GetMediaTrackInfo_Value(track, "I_WNDH") == 0)
-			return false;
-		else
-			return true;
-	}
-	else
-	{
-		if ((int)GetMediaTrackInfo_Value(track, "B_SHOWINTCP") == 0 || (int)GetMediaTrackInfo_Value(track, "I_WNDH") == 0)
-			return false;
-		else
-			return true;
-	}
 }
 
 bool GetMediaSourceProperties (MediaItem_Take* take, bool* section, double* start, double* length, double* fade, bool* reverse)

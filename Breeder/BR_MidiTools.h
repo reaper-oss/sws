@@ -69,7 +69,7 @@ enum BR_MidiVelLanes
 class BR_MidiEditor
 {
 public:
-	BR_MidiEditor ();                     // last active MIDI editor
+	BR_MidiEditor ();                     // last active main MIDI editor
 	BR_MidiEditor (void* midiEditor);     // main MIDI editor
 	BR_MidiEditor (MediaItem_Take* take); // inline MIDI editor
 

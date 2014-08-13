@@ -104,10 +104,7 @@ static bool MoveTempo (BR_Envelope& tempoMap, int id, double timeDiff)
 	bool P3 = tempoMap.GetPoint(id+1, &t3, &b3, NULL, NULL);
 	double Nt2 = t2+timeDiff;
 
-	///// CALCULATE BPM VALUES /////
-	////////////////////////////////
-
-	// Current point
+	// Calculate new value for current point
 	if (P3)
 	{
 		if (s2 == SQUARE)
@@ -121,7 +118,7 @@ static bool MoveTempo (BR_Envelope& tempoMap, int id, double timeDiff)
 		t3 = Nt2 + 1; // t3 is faked so it can pass legality check
 	}
 
-	// Previous point
+	// Calculate new value for previous point
 	if (s1 == SQUARE)
 		Nb1 = b1*(t2-t1) / (Nt2-t1);
 	else
@@ -133,10 +130,7 @@ static bool MoveTempo (BR_Envelope& tempoMap, int id, double timeDiff)
 	if ((Nt2-t1) < MIN_TEMPO_DIST || (t3 - Nt2) < MIN_TEMPO_DIST)
 		return false;
 
-	///// CHECK POINTS BEFORE PREVIOUS POINT /////
-	/////////////////////////////////////////////
-
-	// Go through points backwards and get new values for linear points
+	// Go through points backwards and get new values for linear points (if needed)
 	vector<double> prevBpm;
 	bool possible = true;
 	int direction = 1;
@@ -161,17 +155,14 @@ static bool MoveTempo (BR_Envelope& tempoMap, int id, double timeDiff)
 	if (!possible)
 		return false;
 
-	///// SET NEW BPM VALUES /////
-	/////////////////////////////
-
-	// Points before previous (if needed)
+	// Set points before previous (if needed)
 	for (size_t i = 0; i < prevBpm.size(); ++i)
 		tempoMap.SetPoint(id-2-i, NULL, &prevBpm[i], NULL, NULL);
 
-	// Previous point
+	// Set previous point
 	tempoMap.SetPoint(id-1, NULL, &Nb1, NULL, NULL);
 
-	// Selected point
+	// Set current point
 	tempoMap.SetPoint(id, &Nt2, &Nb2, NULL, NULL);
 
 	return true;

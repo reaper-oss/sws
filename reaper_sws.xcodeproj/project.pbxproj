@@ -342,6 +342,8 @@
 		98C0E230189CF266004F2EEF /* BR_ProjState.h in Headers */ = {isa = PBXBuildFile; fileRef = 98C0E22A189CF266004F2EEF /* BR_ProjState.h */; };
 		98C0E231189CF266004F2EEF /* BR_Timer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98C0E22B189CF266004F2EEF /* BR_Timer.cpp */; };
 		98C0E232189CF266004F2EEF /* BR_Timer.h in Headers */ = {isa = PBXBuildFile; fileRef = 98C0E22C189CF266004F2EEF /* BR_Timer.h */; };
+		98C38704199C0CEE00ECA114 /* wol_Util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98C38702199C0CEE00ECA114 /* wol_Util.cpp */; };
+		98C38705199C0CEE00ECA114 /* wol_Util.h in Headers */ = {isa = PBXBuildFile; fileRef = 98C38703199C0CEE00ECA114 /* wol_Util.h */; };
 		98C918E618BFFEB500745DA1 /* BR_ReaScript.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98C918E418BFFEB500745DA1 /* BR_ReaScript.cpp */; };
 		98C918E718BFFEB500745DA1 /* BR_ReaScript.h in Headers */ = {isa = PBXBuildFile; fileRef = 98C918E518BFFEB500745DA1 /* BR_ReaScript.h */; };
 		98CC19DC18DFD11D00EE9809 /* BR_Loudness.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98CC19DA18DFD11D00EE9809 /* BR_Loudness.cpp */; };
@@ -712,6 +714,8 @@
 		98C0E22A189CF266004F2EEF /* BR_ProjState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BR_ProjState.h; path = Breeder/BR_ProjState.h; sourceTree = "<group>"; };
 		98C0E22B189CF266004F2EEF /* BR_Timer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BR_Timer.cpp; path = Breeder/BR_Timer.cpp; sourceTree = "<group>"; };
 		98C0E22C189CF266004F2EEF /* BR_Timer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BR_Timer.h; path = Breeder/BR_Timer.h; sourceTree = "<group>"; };
+		98C38702199C0CEE00ECA114 /* wol_Util.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = wol_Util.cpp; path = Wol/wol_Util.cpp; sourceTree = "<group>"; };
+		98C38703199C0CEE00ECA114 /* wol_Util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wol_Util.h; path = Wol/wol_Util.h; sourceTree = "<group>"; };
 		98C918E418BFFEB500745DA1 /* BR_ReaScript.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BR_ReaScript.cpp; path = Breeder/BR_ReaScript.cpp; sourceTree = "<group>"; };
 		98C918E518BFFEB500745DA1 /* BR_ReaScript.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BR_ReaScript.h; path = Breeder/BR_ReaScript.h; sourceTree = "<group>"; };
 		98CC19DA18DFD11D00EE9809 /* BR_Loudness.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BR_Loudness.cpp; path = Breeder/BR_Loudness.cpp; sourceTree = "<group>"; };
@@ -1256,10 +1260,12 @@
 		98B6AAF118E7315B00BACB96 /* Wol */ = {
 			isa = PBXGroup;
 			children = (
-				98B6DC4E1917D64C0078561E /* wol_Zoom.cpp */,
-				98B6DC4F1917D64C0078561E /* wol_Zoom.h */,
 				98B6AAF218E7317900BACB96 /* wol.cpp */,
 				98B6AAF318E7317900BACB96 /* wol.h */,
+				98C38702199C0CEE00ECA114 /* wol_Util.cpp */,
+				98C38703199C0CEE00ECA114 /* wol_Util.h */,
+				98B6DC4E1917D64C0078561E /* wol_Zoom.cpp */,
+				98B6DC4F1917D64C0078561E /* wol_Zoom.h */,
 			);
 			name = Wol;
 			sourceTree = "<group>";
@@ -1455,6 +1461,7 @@
 				98B7ECE4190E10060057F6C8 /* BR_MidiEditor.h in Headers */,
 				98B6DC511917D64C0078561E /* wol_Zoom.h in Headers */,
 				98BD45E0195245BB006958FD /* BR_ContinuousActions.h in Headers */,
+				98C38705199C0CEE00ECA114 /* wol_Util.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1748,6 +1755,7 @@
 				98B6DC501917D64C0078561E /* wol_Zoom.cpp in Sources */,
 				98BD45DF195245BB006958FD /* BR_ContinuousActions.cpp in Sources */,
 				98B70128196ED9E60072FA00 /* ebur128.cpp in Sources */,
+				98C38704199C0CEE00ECA114 /* wol_Util.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

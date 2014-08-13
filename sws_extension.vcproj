@@ -3713,6 +3713,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Wol\wol_Util.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Wol\wol_Util.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Wol\wol_Zoom.cpp"
 				>
 			</File>

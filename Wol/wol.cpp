@@ -28,8 +28,9 @@
 #include "stdafx.h"
 #include "wol.h"
 #include "wol_Zoom.h"
+#include "../reaper/localize.h"
 
-void SelectAllTracksExceptFolderParents(COMMAND_T* = NULL);
+void SelectAllTracksExceptFolderParents(COMMAND_T* ct);
 
 static COMMAND_T g_commandTable[] =
 {
@@ -64,13 +65,14 @@ static COMMAND_T g_commandTable[] =
 
 
 
-void SelectAllTracksExceptFolderParents(COMMAND_T*)
+void SelectAllTracksExceptFolderParents(COMMAND_T* ct)
 {
 	for (int i = 1; i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		GetSetMediaTrackInfo(tr, "I_SELECTED", *(int*)GetSetMediaTrackInfo(tr, "I_FOLDERDEPTH", NULL) == 1 ? &g_i0 : &g_i1);
 	}
+	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 }
 
 

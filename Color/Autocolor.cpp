@@ -34,6 +34,7 @@
 #include "../SnM/SnM_Marker.h"
 #include "../SnM/SnM_Util.h"
 #include "../SnM/SnM_Window.h"
+#include "../Wol/wol_Util.h"
 #include "../reaper/localize.h"
 #include "../../WDL/projectcontext.h"
 
@@ -1271,6 +1272,7 @@ void AutoColorTrack(bool bForce)
 	}
 
 	// Apply the rules
+	SaveSelectedTracks();
 	SWS_CacheObjectState(true);
 	bool bDoColors = g_bACEnabled || bForce;
 	bool bDoIcons  = g_bAIEnabled || bForce;
@@ -1310,6 +1312,7 @@ void AutoColorTrack(bool bForce)
 		}
 	}
 	SWS_CacheObjectState(false);
+	RestoreSelectedTracks();
 
 	if (bForce)
 		Undo_OnStateChangeEx(__LOCALIZE("Apply auto color/icon/action","sws_undo"), UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);

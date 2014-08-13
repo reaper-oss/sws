@@ -79,6 +79,7 @@ Fixes
 +Preserve options between REAPER sessions set with these actions:
  - SWS/BR: Set "Apply trim when adding volume/pan envelope"
  - SWS/BR: Toggle "Playback position follows project timebase when changing tempo"
+ - SWS/wol: Set "Vertical/Horizontal zoom center"
 
 Other
 +Increased all SWS/BR slot actions to 8 slots

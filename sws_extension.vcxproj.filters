@@ -598,6 +598,9 @@
     <ClInclude Include="Breeder\BR_ContinuousActions.h">
       <Filter>Breeder</Filter>
     </ClInclude>
+    <ClInclude Include="Wol\wol_Util.h">
+      <Filter>Wol</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="sws_extension.rc">
@@ -1198,6 +1201,9 @@
     </ClCompile>
     <ClCompile Include="libebur128\ebur128.cpp">
       <Filter>Core\Utils\libebur128</Filter>
+    </ClCompile>
+    <ClCompile Include="Wol\wol_Util.cpp">
+      <Filter>Wol</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

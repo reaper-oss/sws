@@ -36,28 +36,32 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Track
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-static vector<MediaTrack*> g_savedSelectedTracks;
+static vector<MediaTrack*>* g_savedSelectedTracks = NULL;
 static bool g_free;
 
 bool SaveSelectedTracks()
 {
-	if (!g_free)
+	if (g_savedSelectedTracks)
 		return false;
-	for (int i = 0; i < CountSelectedTracks(NULL); ++i)
-		if (MediaTrack* tr = GetSelectedTrack(NULL, i))
-			g_savedSelectedTracks.push_back(tr);
-	g_free = false;
-	return true;
+	g_savedSelectedTracks = new (nothrow)vector < MediaTrack* > ;
+	if (g_savedSelectedTracks)
+	{
+		for (int i = 0; i < CountSelectedTracks(NULL); ++i)
+			if (MediaTrack* tr = GetSelectedTrack(NULL, i))
+				g_savedSelectedTracks->push_back(tr);
+		return true;
+	}
+	return false;
 }
 
 bool RestoreSelectedTracks()
 {
-	if (g_free)
+	if (!g_savedSelectedTracks)
 		return false;
-	for (size_t i = 0; i < g_savedSelectedTracks.size(); ++i)
-		SetTrackSelected(g_savedSelectedTracks.at(i), true);
-	g_savedSelectedTracks.clear();
-	g_free = true;
+	for (size_t i = 0; i < g_savedSelectedTracks->size(); ++i)
+		SetTrackSelected(g_savedSelectedTracks->at(i), true);
+	g_savedSelectedTracks->clear();
+	DELETE_NULL(g_savedSelectedTracks);
 	return true;
 }
 

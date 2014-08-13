@@ -10,10 +10,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -68,8 +68,8 @@ enum { AC_ANY=0, AC_UNNAMED, AC_FOLDER, AC_CHILDREN, AC_RECEIVE, AC_MASTER, NUM_
 enum { AC_RGNANY=0, AC_RGNUNNAMED, NUM_RGNFILTERTYPES };
 enum { AC_CUSTOM, AC_GRADIENT, AC_RANDOM, AC_NONE, AC_PARENT, AC_IGNORE, NUM_COLORTYPES };
 enum { COL_ID=0, COL_TYPE, COL_FILTER, COL_COLOR, COL_ICON, COL_ACTION, COL_COUNT };
-enum { AC_TRACK=0, AC_MARKER, AC_REGION, NUM_TYPETYPES }; // keep this order and 2^ values 
-                                                          // (values used as masks => adding a 4th type would require another solution)
+enum { AC_TRACK=0, AC_MARKER, AC_REGION, NUM_TYPETYPES }; // keep this order and 2^ values
+														  // (values used as masks => adding a 4th type would require another solution)
 
 enum { WNDID_LR = 2000, BTNID_L, BTNID_R };
 enum { COLTRL_ID = 0, COLTRL_COLOR, COLTRL_NAME, COLTRL_AC, COLTRL_AI, COLTRL_AA, COLTRL_LASTACTION, COLTRL_COUNT };
@@ -102,7 +102,7 @@ static RECT g_origRectL = { 0, 0, 0, 0 };
 static RECT g_origRectR = { 0, 0, 0, 0 };
 static WDL_String g_ACIni;
 
-// Register to marker/region updates 
+// Register to marker/region updates
 class AC_MarkerRegionListener : public SNM_MarkerRegionListener {
 public:
 	AC_MarkerRegionListener() : SNM_MarkerRegionListener() {}
@@ -119,10 +119,10 @@ bool ACRegisterUnregisterToMarkerRegionUpdates()
 		for (int i = 0; i < g_pACItems.GetSize(); i++)
 			if (SWS_RuleItem* rule = (SWS_RuleItem*)g_pACItems.Get(i))
 				if ((g_bACMEnabled && rule->m_type == AC_MARKER) || (g_bACREnabled && rule->m_type == AC_REGION)) {
-					RegisterToMarkerRegionUpdates(&g_mkrRgnListener); 
+					RegisterToMarkerRegionUpdates(&g_mkrRgnListener);
 					return true; // do not use the above returned value
 				}
-	UnregisterToMarkerRegionUpdates(&g_mkrRgnListener); 
+	UnregisterToMarkerRegionUpdates(&g_mkrRgnListener);
 	return false; // do not use the above returned value
 }
 
@@ -637,7 +637,7 @@ void SWS_AutoColorWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			{
 				char filename[BUFFER_SIZE], dir[32];
 				sprintf(dir,"Data%ctrack_icons",PATH_SLASH_CHAR);
-				if (BrowseResourcePath(__LOCALIZE("Load icon","sws_DLG_115"), dir, "PNG files (*.PNG)\0*.PNG\0ICO files (*.ICO)\0*.ICO\0JPEG files (*.JPG)\0*.JPG\0BMP files (*.BMP)\0*.BMP\0PCX files (*.PCX)\0*.PCX\0", 
+				if (BrowseResourcePath(__LOCALIZE("Load icon","sws_DLG_115"), dir, "PNG files (*.PNG)\0*.PNG\0ICO files (*.ICO)\0*.ICO\0JPEG files (*.JPG)\0*.JPG\0BMP files (*.BMP)\0*.BMP\0PCX files (*.PCX)\0*.PCX\0",
 					filename, BUFFER_SIZE))
 					item->m_icon.Set(filename);
 			}
@@ -740,7 +740,7 @@ void SWS_AutoColorWnd::OnTimer(WPARAM wParam)
 		}
 	}
 #endif
-	if (wParam == 2) 
+	if (wParam == 2)
 		m_pLists.Get(1)->Update();
 }
 
@@ -835,7 +835,7 @@ INT_PTR SWS_AutoColorWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam
 		LPDRAWITEMSTRUCT pDI = (LPDRAWITEMSTRUCT)lParam;
 		if (pDI->CtlID == IDC_COLOR)
 		{
-			// Dialog-box background grey for no selection, or multiple colors in selection	
+			// Dialog-box background grey for no selection, or multiple colors in selection
 			// Doesn't account for the "special colors" because they're less than zero and get trapped
 			// out below anyway.
 			int col = -1;
@@ -876,7 +876,7 @@ void SWS_AutoColorWnd::AddOptionsMenu(HMENU _menu)
 	AddToMenu(_menu, __LOCALIZE("Enable auto action", "sws_ext_menu"), NamedCommandLookup("_WOLAUTOACTION_ENABLE"), -1, false, g_bAATEnabled ? MF_CHECKED : MF_UNCHECKED);
 	AddToMenu(_menu, SWS_SEPARATOR, 0);
 	AddToMenu(_menu, __LOCALIZE("Enable track auto selection", "sws_ext_menu"), NamedCommandLookup("_WOL_TENTRAUTOSELAUTO"), -1, false, g_bTrackAutoSelectionEn ? MF_CHECKED : MF_UNCHECKED);
-	
+
 	AddToMenu(_menu, __LOCALIZE("Automatically disable auto color for processed tracks", "sws_ext_menu"), NamedCommandLookup("_WOL_TENAUTOCOLORDIS"), -1, false, g_bAutoColorDisable ? MF_CHECKED : MF_UNCHECKED);
 	AddToMenu(_menu, __LOCALIZE("Automatically disable auto icon for processed tracks", "sws_ext_menu"), NamedCommandLookup("_WOL_TENAUTOICONDIS"), -1, false, g_bAutoIconDisable ? MF_CHECKED : MF_UNCHECKED);
 	AddToMenu(_menu, __LOCALIZE("Automatically disable auto action for processed tracks ", "sws_ext_menu"), NamedCommandLookup("_WOL_TENAUTOACTIONDIS"), -1, false, g_bAutoActionDisable ? MF_CHECKED : MF_UNCHECKED);
@@ -900,7 +900,7 @@ HMENU SWS_AutoColorWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 
 	// "standard" context menu
 	POINT pt = { x, y };
-	RECT r;	
+	RECT r;
 	GetWindowRect(GetDlgItem(m_hwnd, IDC_LIST), &r);
 	if (PtInRect(&r, pt))
 	{
@@ -965,7 +965,7 @@ HMENU SWS_AutoColorWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 			}
 			AddToMenu(hMenu, __LOCALIZE("Up in priority","sws_DLG_115"), PRI_UP_MSG);
 			AddToMenu(hMenu, __LOCALIZE("Down in priority","sws_DLG_115"), PRI_DOWN_MSG);
-		}		
+		}
 	}
 	else
 	{
@@ -990,7 +990,7 @@ int SWS_AutoColorWnd::OnKey(MSG* msg, int iKeyState)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
-// 
+//
 ////////////////////////////////////////////////////////////////////////////////////////////////
 void OpenAutoColor(COMMAND_T*)
 {
@@ -1047,7 +1047,7 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 			}
 			else
 				pACTrack = g_pACTracks.Get()->Add(new SWS_RuleTrack(tr));
-			
+
 			// Do the track rule matching
 			if (bColor || bIcon || bAction)
 			{
@@ -1065,7 +1065,7 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 					}
 					else if (strcmp(rule->m_str_filter.Get(), cFilterTypes[AC_CHILDREN]) == 0)
 					{
-						temp = CSurf_TrackFromID(0, false); // JFB fix: 'temp' could be out of sync 
+						temp = CSurf_TrackFromID(0, false); // JFB fix: 'temp' could be out of sync
 						if (GetFolderDepth(tr, NULL, &temp) >= 1)
 							bMatch = true;
 					}
@@ -1181,7 +1181,7 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 								if (bForce || iconChunkPos == 0 || strcmp(pIconLine, pACTrack->m_icon.Get()) == 0)
 								{
 									if (rule->m_icon.GetLength())
-										sprintf(pIconLine, "TRACKIMGFN \"%s\"\n", rule->m_icon.Get());	
+										sprintf(pIconLine, "TRACKIMGFN \"%s\"\n", rule->m_icon.Get());
 									else // The code as written will never hit this case, as empty m_icon means "ignore"
 										*pIconLine = 0;
 
@@ -1271,8 +1271,12 @@ void AutoColorTrack(bool bForce)
 			g_pACTracks.Get()->Get(i)->m_lastMatchedRule = -1;
 	}
 
+	PreventUIRefresh(1);
+	vector<MediaTrack*> selectedTracks;
+	for (int i = 0; i < CountSelectedTracks(NULL); ++i)
+		selectedTracks.push_back(GetSelectedTrack(NULL, i));
+
 	// Apply the rules
-	SaveSelectedTracks();
 	SWS_CacheObjectState(true);
 	bool bDoColors = g_bACEnabled || bForce;
 	bool bDoIcons  = g_bAIEnabled || bForce;
@@ -1297,7 +1301,7 @@ void AutoColorTrack(bool bForce)
 				GetSetMediaTrackInfo(pACTrack->m_pTr, "I_CUSTOMCOLOR", &g_i0);
 			pACTrack->m_col = 0;
 		}
-		
+
 		if (bDoIcons && !pACTrack->m_bIconed && *pACTrack->m_icon.Get())
 		{	// There's an icon set, but there shouldn't be!
 			SNM_ChunkParserPatcher p(pACTrack->m_pTr); // Yay for the patcher
@@ -1312,7 +1316,12 @@ void AutoColorTrack(bool bForce)
 		}
 	}
 	SWS_CacheObjectState(false);
-	RestoreSelectedTracks();
+
+	for (int i = 0; i < CountTracks(NULL); ++i)
+		SetMediaTrackInfo_Value(GetTrack(NULL, i), "I_SELECTED", 0);
+	for (size_t i = 0; i < selectedTracks.size(); ++i)
+		SetMediaTrackInfo_Value(selectedTracks[i], "I_SELECTED", 1);
+	PreventUIRefresh(-1);
 
 	if (bForce)
 		Undo_OnStateChangeEx(__LOCALIZE("Apply auto color/icon/action","sws_undo"), UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);
@@ -1335,11 +1344,11 @@ void ApplyColorRuleToMarkerRegion(SWS_RuleItem* _rule, int _flags)
 	{
 		while (x = EnumProjectMarkers3(NULL, x, &isRgn, &pos, &end, &name, &num, &color))
 		{
-			if ((!strcmp(cFilterTypes[AC_RGNANY], _rule->m_str_filter.Get()) || 
+			if ((!strcmp(cFilterTypes[AC_RGNANY], _rule->m_str_filter.Get()) ||
 				(!strcmp(cFilterTypes[AC_RGNUNNAMED], _rule->m_str_filter.Get()) && (!name || !*name)) ||
 				(name && stristr(name, _rule->m_str_filter.Get())))
 				&&
-				((_flags&AC_REGION && isRgn && _rule->m_type==AC_REGION) || 
+				((_flags&AC_REGION && isRgn && _rule->m_type==AC_REGION) ||
 				(_flags&AC_MARKER && !isRgn && _rule->m_type==AC_MARKER)))
 			{
 				update |= SetProjectMarkerByIndex(NULL, x-1, isRgn, pos, end, num, NULL, _rule->m_color==-AC_NONE-1 ? (isRgn?ct->marker:ct->region) : _rule->m_color | 0x1000000);
@@ -1347,7 +1356,7 @@ void ApplyColorRuleToMarkerRegion(SWS_RuleItem* _rule, int _flags)
 		}
 	}
 	PreventUIRefresh(-1);
-	
+
 	if (update)
 		UpdateTimeline();
 }
@@ -1625,7 +1634,7 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 static project_config_extension_t g_projectconfig = { ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL };
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
-static COMMAND_T g_commandTable[] = 
+static COMMAND_T g_commandTable[] =
 {
 	{ { DEFACCEL, "SWS: Open auto color/icon/action window" },	   "SWSAUTOCOLOR_OPEN",		  OpenAutoColor,	"SWS Auto color/icon/action",  0, IsAutoColorOpen },
 	{ { DEFACCEL, "SWS: Toggle auto track coloring enable" },	   "SWSAUTOCOLOR_ENABLE",	  EnableAutoColor,	"Enable auto track coloring",  0, IsAutoColorEnabled },
@@ -1645,7 +1654,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/wol: Disable auto action for selected track(s)" },		"WOLSELTRAUTOACTION_DISABLE", TEDSelectedTrackAuto, "Disable selected track auto action", 8, },
 
 	{ { DEFACCEL, "SWS/wol: Toggle enable track auto selection when an action is performed with auto action" }, "WOL_TENTRAUTOSELAUTO", ToggleEnableTrackAutoSelection, NULL, 0, IsTrackAutoSelectionEnabled },
-	
+
 	{ { DEFACCEL, "SWS/wol: Toggle automatic auto color disable for processed tracks" },   "WOL_TENAUTOCOLORDIS",  ToggleEnableAutoDisable, NULL, 0, IsAutoDisableEnabled },
 	{ { DEFACCEL, "SWS/wol: Toggle automatic auto icon disable for processed tracks" },    "WOL_TENAUTOICONDIS",   ToggleEnableAutoDisable, NULL, 1, IsAutoDisableEnabled },
 	{ { DEFACCEL, "SWS/wol: Toggle automatic auto action disable for processed tracks " }, "WOL_TENAUTOACTIONDIS", ToggleEnableAutoDisable, NULL, 2, IsAutoDisableEnabled },
@@ -1792,7 +1801,7 @@ void AutoColorSaveState()
 	WritePrivateProfileString(SWS_INI, AAT_ENABLE_KEY, str, g_ACIni.Get());
 	sprintf(str, "%d", g_pACItems.GetSize());
 	WritePrivateProfileString(SWS_INI, AC_COUNT_KEY, str, g_ACIni.Get());
-	
+
 	char key[32];
 	for (int i = 0; i < g_pACItems.GetSize(); i++)
 	{

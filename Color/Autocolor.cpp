@@ -1336,7 +1336,7 @@ void ApplyColorRuleToMarkerRegion(SWS_RuleItem* _rule, int _flags)
 
 	double pos, end;
 	int x=0, num, color;
-	bool isRgn, update=false;
+	bool isRgn;
 	const char* name;
 
 	PreventUIRefresh(1);
@@ -1351,14 +1351,11 @@ void ApplyColorRuleToMarkerRegion(SWS_RuleItem* _rule, int _flags)
 				((_flags&AC_REGION && isRgn && _rule->m_type==AC_REGION) ||
 				(_flags&AC_MARKER && !isRgn && _rule->m_type==AC_MARKER)))
 			{
-				update |= SetProjectMarkerByIndex(NULL, x-1, isRgn, pos, end, num, NULL, _rule->m_color==-AC_NONE-1 ? (isRgn?ct->marker:ct->region) : _rule->m_color | 0x1000000);
+				SetProjectMarkerByIndex(NULL, x-1, isRgn, pos, end, num, NULL, _rule->m_color==-AC_NONE-1 ? (isRgn?ct->marker:ct->region) : _rule->m_color | 0x1000000);
 			}
 		}
 	}
 	PreventUIRefresh(-1);
-
-	if (update)
-		UpdateTimeline();
 }
 
 void AutoColorMarkerRegion(bool _force, int _flags)
@@ -1376,16 +1373,12 @@ void AutoColorMarkerRegion(bool _force, int _flags)
 
 	if (newFlags)
 	{
-		if (PreventUIRefresh)
-			PreventUIRefresh(1);
+    PreventUIRefresh(1);
 
 		for (int i=g_pACItems.GetSize()-1; i>=0; i--) // reverse to obey priority
 			ApplyColorRuleToMarkerRegion(g_pACItems.Get(i), newFlags);
 
-		if (PreventUIRefresh)
-			PreventUIRefresh(-1);
-
-		UpdateTimeline();
+    PreventUIRefresh(-1);
 	}
 
 	bRecurse = false;

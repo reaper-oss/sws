@@ -1868,7 +1868,7 @@ void AppendPasteCropPlaylist(RegionPlaylist* _playlist, int _mode)
 		SetEditCurPos2(NULL, endPos, true, false);
 
 		PreventUIRefresh(-1);
-		UpdateTimeline(); // ruler+arrange
+
 		Undo_EndBlock2(NULL, _mode==2 ? __LOCALIZE("Append playlist to project","sws_undo") : __LOCALIZE("Paste playlist at edit cursor","sws_undo"), UNDO_STATE_ALL);
 		return;
 	}
@@ -1909,7 +1909,7 @@ void AppendPasteCropPlaylist(RegionPlaylist* _playlist, int _mode)
 		SetEditCurPos2(NULL, 0.0, true, false);
 
 		PreventUIRefresh(-1);
-		UpdateTimeline();
+
 		Undo_EndBlock2(NULL, __LOCALIZE("Crop project to playlist","sws_undo"), UNDO_STATE_ALL);
 
 		if (RegionPlaylistWnd* w = g_rgnplWndMgr.Get()) {

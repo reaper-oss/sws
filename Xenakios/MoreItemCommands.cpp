@@ -1459,8 +1459,7 @@ void DoCreateMarkersFromSelItems1(COMMAND_T* ct)
 	{
 		sort(theitems.begin(),theitems.end(),MySortItemsByTimeFunc);
 
-		if (PreventUIRefresh)
-			PreventUIRefresh(1);
+    PreventUIRefresh(1);
 
 		Undo_BeginBlock2(NULL);
 
@@ -1478,10 +1477,7 @@ void DoCreateMarkersFromSelItems1(COMMAND_T* ct)
 
 		Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL);
 
-		if (PreventUIRefresh)
-			PreventUIRefresh(-1);
-
-		UpdateTimeline();
+    PreventUIRefresh(-1);
 	}
 }
 

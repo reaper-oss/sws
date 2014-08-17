@@ -141,7 +141,6 @@ bool SNM_SetProjectMarker(ReaProject* _proj, int _num, bool _isrgn, double _pos,
 		if (DeleteProjectMarker(_proj, _num, _isrgn))
 			ok = (AddProjectMarker2(_proj, _isrgn, _pos, _rgnend, _name, _num, color) == _num);
 		PreventUIRefresh(-1);
-		UpdateTimeline();
 		return ok;
 	}
 	return SetProjectMarker3(_proj, _num, _isrgn, _pos, _rgnend, _name, _color);
@@ -368,7 +367,7 @@ bool GotoMarkerRegion(ReaProject* _proj, int _num, int _flags, bool _select = fa
 			SetEditCurPos2(_proj, pos, true, opt && *opt); // includes an undo point, if enabled in prefs
 
 			PreventUIRefresh(-1);
-			UpdateTimeline(); // ruler + arrange
+
 			return true;
 		}
 	return false;

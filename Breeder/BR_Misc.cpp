@@ -85,7 +85,6 @@ void MarkersAtTempo (COMMAND_T* ct)
 	}
 	Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG);
 	PreventUIRefresh(-1);
-	UpdateTimeline();
 }
 
 void MidiItemTempo (COMMAND_T* ct)
@@ -211,7 +210,6 @@ void MarkersAtNotes (COMMAND_T* ct)
 	if (success)
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
 	PreventUIRefresh(-1);
-	UpdateArrange();
 }
 
 void MarkersAtStretchMarkers (COMMAND_T* ct)
@@ -236,7 +234,6 @@ void MarkersAtStretchMarkers (COMMAND_T* ct)
 	if (success)
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
 	PreventUIRefresh(-1);
-	UpdateArrange();
 }
 
 void MarkerAtMouse (COMMAND_T* ct)
@@ -278,7 +275,6 @@ void MarkersRegionsAtItems (COMMAND_T* ct)
 	}
 
 	PreventUIRefresh(-1);
-	UpdateTimeline();
 	Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG);
 }
 

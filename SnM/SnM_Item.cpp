@@ -326,12 +326,11 @@ void GoferSplitSelectedItems(COMMAND_T* _ct)
 	}
 }
 
-// primitive (no undo point, no ui refresh)
+// primitive (no undo point)
 bool SplitSelectItemsInInterval(MediaTrack* _tr, double _pos1, double _pos2, WDL_PtrList<void>* _newItemsOut)
 {
 	bool updated = false;
 
-	PreventUIRefresh(1);
 	// new items might be created during the loop!
 	for (int j=0; _tr && j < GetTrackNumMediaItems(_tr); j++)
 	{
@@ -364,7 +363,6 @@ bool SplitSelectItemsInInterval(MediaTrack* _tr, double _pos1, double _pos2, WDL
 			}
 		}
 	}
-	PreventUIRefresh(-1);
 	return updated;
 }
 
@@ -373,13 +371,18 @@ bool SplitSelectItemsInInterval(MediaTrack* _tr, double _pos1, double _pos2, WDL
 bool SplitSelectItemsInInterval(const char* _undoTitle, double _pos1, double _pos2, bool _selTracks, WDL_PtrList<void>* _newItemsOut)
 {
 	bool updated = false;
+  
+  PreventUIRefresh(1);
+
 	for (int i=1; i <= GetNumTracks(); i++) // skip master
 		if (MediaTrack* tr = CSurf_TrackFromID(i, false))
 			if (!_selTracks || (_selTracks && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL)))
 				updated |= SplitSelectItemsInInterval(tr, _pos1, _pos2, _newItemsOut);
+
+	PreventUIRefresh(-1);
+
 	if (updated)
 	{
-		UpdateTimeline();
 		if (_undoTitle)
 			Undo_OnStateChangeEx2(NULL, _undoTitle, UNDO_STATE_ALL, -1);
 	}
@@ -1425,8 +1428,6 @@ void ScrollToSelItem(MediaItem* _item)
 			ScrollTrack(tr, true, false);
 
 		PreventUIRefresh(-1);
-
-		UpdateTimeline();
 	}
 }
 

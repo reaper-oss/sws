@@ -51,8 +51,15 @@
 #include "../reaper/localize.h"
 
 
-void Noop(COMMAND_T* _ct) {}
+void Noop(COMMAND_T* _ct) {
+}
 
+void Noop2(COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd)
+{
+	WDL_FastString str;
+  str.SetFormatted(512, "Noop2: _val=%d, _valhw=%d, _relmode=%d\r\n", _val, _valhw, _relmode, _valhw|(_val<<7));
+	ShowConsoleMsg(str.Get());
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // S&M actions (main section)
@@ -61,7 +68,8 @@ void Noop(COMMAND_T* _ct) {}
 static COMMAND_T s_cmdTable[] =
 {
 
-//	{ { DEFACCEL, "SWS/S&M: [Internal] QuickTest" }, "S&M_QUICKTEST", Noop, NULL, },
+//	{ { DEFACCEL, "SWS/S&M: [Internal] QuickTest1" }, "S&M_QUICKTEST1", Noop, NULL, },
+//	{ { DEFACCEL, "SWS/S&M: [Internal] QuickTest2" }, "S&M_QUICKTEST2", NULL, NULL, 0, NULL, 0, Noop2, },
 
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions

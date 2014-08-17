@@ -221,6 +221,7 @@ BOOL IsCommCtrlVersion6();
 void SaveWindowPos(HWND hwnd, const char* cKey);
 void RestoreWindowPos(HWND hwnd, const char* cKey, bool bRestoreSize = true);
 void SetWindowPosAtMouse(HWND hwnd);
+void SWS_ShowTextScrollbar(HWND hwnd, bool show);
 
 MediaTrack* GetFirstSelectedTrack();
 int NumSelTracks();

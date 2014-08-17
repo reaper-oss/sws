@@ -506,3 +506,20 @@ BOOL IsWindowEnabled(HWND hwnd)
     return FALSE;
 }
 
+void SWS_ShowTextScrollbar(HWND hwnd, bool show)
+{
+    if (!hwnd) return;
+
+    DWORD dwStyle = GetWindowLong(hwnd, GWL_STYLE);
+    if (!show) dwStyle &= ~WS_HSCROLL;
+    else dwStyle |= WS_HSCROLL;
+    SetWindowLong(hwnd, GWL_STYLE, dwStyle);
+
+    SWELL_TextView *tv=(SWELL_TextView*)hwnd;
+    [tv setHorizontallyResizable:show?NO:YES];
+  
+    NSScrollView *sc = [tv enclosingScrollView];
+    [sc setHasHorizontalScroller:show?YES:NO];
+}
+
+

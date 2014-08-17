@@ -55,7 +55,8 @@
 #define NOTES_INI_SEC				"Notes"
 #define MAX_HELP_LENGTH				(64*1024) //JFB! instead of MAX_INI_SECTION (too large)
 #define SET_ACTION_HELP_FILE_MSG	0xF001
-#define UPDATE_TIMER				1
+#define WRAP_MSG                  0xF002
+#define UPDATE_TIMER              1
 
 enum {
   BTNID_LOCK=2000, //JFB would be great to have _APS_NEXT_CONTROL_VALUE *always* defined
@@ -88,6 +89,7 @@ char g_lastImportSubFn[SNM_MAX_PATH] = "";
 char g_lastExportSubFn[SNM_MAX_PATH] = "";
 char g_actionHelpFn[SNM_MAX_PATH] = "";
 char g_notesBigFontName[64] = SNM_DYN_FONT_NAME;
+bool g_wrapText=false;
 
 // used for action help updates tracking
 //JFB TODO: cleanup when we'll be able to access all sections & custom ids
@@ -127,6 +129,8 @@ NotesWnd::~NotesWnd()
 
 void NotesWnd::OnInitDlg()
 {
+  SWS_ShowTextScrollbar(GetDlgItem(m_hwnd, IDC_EDIT), !g_wrapText);
+  
 	m_resize.init_item(IDC_EDIT, 0.0, 0.0, 1.0, 1.0);
 	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_EDIT), GWLP_USERDATA, 0xdeadf00b);
 
@@ -264,6 +268,13 @@ void NotesWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case SET_ACTION_HELP_FILE_MSG:
 			SetActionHelpFilename(NULL);
 			break;
+		case WRAP_MSG:
+    {
+      g_wrapText = !g_wrapText;
+      SWS_ShowTextScrollbar(GetDlgItem(m_hwnd, IDC_EDIT), !g_wrapText);
+      SendMessage(m_hwnd, WM_SIZE, 0xf00b, 0);
+			break;
+    }
 		case BTNID_LOCK:
 			if (!HIWORD(wParam))
 				ToggleLock();
@@ -309,13 +320,13 @@ bool NotesWnd::IsActive(bool bWantEdit) {
 
 HMENU NotesWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 {
+  HMENU hMenu = CreatePopupMenu();
+  AddToMenu(hMenu, __LOCALIZE("Wrap text","sws_DLG_152"), WRAP_MSG, -1, false, g_wrapText ? MFS_CHECKED : MFS_UNCHECKED);
 	if (g_notesType == SNM_NOTES_ACTION_HELP)
 	{
-		HMENU hMenu = CreatePopupMenu();
 		AddToMenu(hMenu, __LOCALIZE("Set action help file...","sws_DLG_152"), SET_ACTION_HELP_FILE_MSG);
-		return hMenu;
 	}
-	return NULL;
+  return hMenu;
 }
 
 // OSX fix/workaround (SWELL bug?)
@@ -1406,6 +1417,7 @@ int NotesInit()
 	g_notesType = GetPrivateProfileInt(NOTES_INI_SEC, "Type", 0, g_SNM_IniFn.Get());
 	g_locked = (GetPrivateProfileInt(NOTES_INI_SEC, "Lock", 0, g_SNM_IniFn.Get()) == 1);
 	GetPrivateProfileString(NOTES_INI_SEC, "BigFontName", SNM_DYN_FONT_NAME, g_notesBigFontName, sizeof(g_notesBigFontName), g_SNM_IniFn.Get());
+  g_wrapText=(GetPrivateProfileInt(NOTES_INI_SEC, "WrapText", 0, g_SNM_IniFn.Get()) == 1);
 
 	// get the action help filename
 	char defaultHelpFn[SNM_MAX_PATH] = "";
@@ -1429,6 +1441,7 @@ void NotesExit()
 		WritePrivateProfileString(NOTES_INI_SEC, "Type", tmp, g_SNM_IniFn.Get()); 
 	WritePrivateProfileString(NOTES_INI_SEC, "Lock", g_locked?"1":"0", g_SNM_IniFn.Get()); 
 	WritePrivateProfileString(NOTES_INI_SEC, "BigFontName", g_notesBigFontName, g_SNM_IniFn.Get());
+	WritePrivateProfileString(NOTES_INI_SEC, "WrapText", g_wrapText?"1":"0", g_SNM_IniFn.Get());
 
 	// save the action help filename
 	WDL_FastString escapedStr;

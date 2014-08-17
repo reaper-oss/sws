@@ -1,6 +1,7 @@
 Release/
 Test/
 x64/
+Release x86_64/
 *.ncb
 *.opt
 *.rc_mac_dlg

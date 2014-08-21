@@ -32,7 +32,7 @@ Analyze and normalize loudness
   - Display new items/tracks in list view as soon as they're analyzed
   - Analyze button changes caption depending on what is to be analyzed
   - Added Help... menu entry to options menus
-   - Note: opens http://wiki.cockos.com/wiki/index.php/Measure_and_normalize_loudness_with_SWS|wiki page on everything loudness related in SWS| which is currently unfinished (if you want to contribute you're more than welcome)
+   - Note: opens http://wiki.cockos.com/wiki/index.php/Measure_and_normalize_loudness_with_SWS|wiki page on everything loudness related in SWS| which is currently unfinished (if you want to contribute you're more than welcome. Big thanks to user http://forum.cockos.com/member.php?u=1482|Airon| for the work so far)
   - Various small fixes
 +Added actions:
  +SWS/BR: Global loudness preferences...

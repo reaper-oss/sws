@@ -1317,10 +1317,16 @@ void AutoColorTrack(bool bForce)
 	}
 	SWS_CacheObjectState(false);
 
-	for (int i = 0; i < CountTracks(NULL); ++i)
-		SetMediaTrackInfo_Value(GetTrack(NULL, i), "I_SELECTED", 0);
-	for (size_t i = 0; i < selectedTracks.size(); ++i)
-		SetMediaTrackInfo_Value(selectedTracks[i], "I_SELECTED", 1);
+	vector<MediaTrack*> newSelectedTracks;
+	for (int i = 0; i < CountSelectedTracks(NULL); ++i)
+		newSelectedTracks.push_back(GetSelectedTrack(NULL, i));
+	if (newSelectedTracks != selectedTracks) // Restore selection only if changed - otherwise envelope selection will be lost due to the bug in the API. Better solution
+	{                                        // would be if REAPER didn't lose envelope selection on changing track selection (or at least let us set selected envelope)
+		for (int i = 0; i < CountTracks(NULL); ++i)
+			SetMediaTrackInfo_Value(GetTrack(NULL, i), "I_SELECTED", 0);
+		for (size_t i = 0; i < selectedTracks.size(); ++i)
+			SetMediaTrackInfo_Value(selectedTracks[i], "I_SELECTED", 1);
+	}
 	PreventUIRefresh(-1);
 
 	if (bForce)

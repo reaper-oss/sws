@@ -10,10 +10,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -81,7 +81,7 @@ void MarkerActionTimer()
 			while ((x = EnumProjectMarkers(x, NULL, &dMarkerPos, NULL, &cName, NULL)))
 				if (dMarkerPos >= dLastPos && dMarkerPos < dPlayPos)
 					RunActionMarker(cName);
-		}			
+		}
 		dLastPos = dPlayPos;
 	}
 	else
@@ -92,7 +92,7 @@ void MarkerActionsToggle(COMMAND_T* = NULL)
 {
 	g_bMAEnabled = !g_bMAEnabled;
 	if (g_bMAEnabled) plugin_register("timer", (void*)MarkerActionTimer);
-	else              plugin_register("-timer",(void*)MarkerActionTimer);   
+	else              plugin_register("-timer",(void*)MarkerActionTimer);
 	WritePrivateProfileString("SWS", "MarkerActionsEnabled", g_bMAEnabled ? "1" : "0", get_ini_file());
 	RefreshMAToolbar();
 }
@@ -193,18 +193,18 @@ void RegionsFromItems(COMMAND_T* ct)
 }
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
-static COMMAND_T g_commandTable[] = 
+static COMMAND_T g_commandTable[] =
 {
 	{ { DEFACCEL, "SWS: Toggle marker actions enable" },    "SWSMA_TOGGLE",		MarkerActionsToggle,		"Enable SWS marker actions", 0, MarkerActionsEnabled },
 	{ { DEFACCEL, "SWS: Enable marker actions" },           "SWSMA_ENABLE",		MarkerActionsEnable,		NULL, },
 	{ { DEFACCEL, "SWS: Disable marker actions" },          "SWSMA_DISABLE",	MarkerActionsDisable,		NULL, },
 	{ { DEFACCEL, "SWS: Run action marker under cursor" },  "SWSMA_RUNEDIT",	MarkerActionRunUnderCursor,	NULL, },
 	{ { DEFACCEL, "SWS: Ignore next marker action" },		"SWSMA_IGNORE",		MarkerActionIgnoreNext,		NULL, },
-	
+
 	// Not sure if these should be in MarkerActions.cpp or MarkerListActions.cpp.  Eh, doesn't matter.
 	{ { DEFACCEL, "SWS: Nudge marker under cursor left" },  "SWS_MNUDGEL",		MarkerNudgeLeft,			NULL, },
 	{ { DEFACCEL, "SWS: Nudge marker under cursor right" }, "SWS_MNUDGER",		MarkerNudgeRight,			NULL, },
-	{ { DEFACCEL, "SWS: Create regions from sel item(s) named with take" }, "SWS_REGIONSFROMITEMS",	RegionsFromItems, NULL, },
+	{ { DEFACCEL, "SWS: Create regions from selected items (name by active take)" }, "SWS_REGIONSFROMITEMS",	RegionsFromItems, NULL, },
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

@@ -10,10 +10,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -62,7 +62,7 @@ int TrackHeightFromVZoomIndex(HWND hwnd, MediaTrack* tr, int iZoom, SWS_TrackEnv
 	bool bRecArmed = *(int*)GetSetMediaTrackInfo(tr, "I_RECARM", NULL) ? true : false;
 	int supercompactmode = *(int*)GetSetMediaTrackInfo(tr, "I_FOLDERCOMPACT", NULL);
 	// Todo ^^^ add config var bit
-  
+
 	if (iZoom < 4)
 	{
 		if (/*!g_config_zoomrecshowwhenarmed ||*/ !bRecArmed)
@@ -198,7 +198,7 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers)
 					iLanesHeight += pTES[i].GetLanesHeight(iEachHeight);
 			if (iEachHeight * iZoomed + iLanesHeight <= iTotalHeight)
 				break;
-			
+
 			// Guess new iEachHeight - may be wrong!
 			int iNewEachHeight = (int)(iTotalHeight / ((double)iLanesHeight / iEachHeight + iZoomed));
 			if (iNewEachHeight == iEachHeight)
@@ -269,7 +269,7 @@ void VertZoomSelTracks(int iOthers)
 	if (iFirstSel == -1)
 		return;
 
-	// Hide tracks from TCP only after making sure there's actually something selected 
+	// Hide tracks from TCP only after making sure there's actually something selected
 	if (iOthers == 2)
 		for (int i = 0; i <= GetNumTracks(); i++)
 			if (!hbSelected.Get()[i])
@@ -315,7 +315,7 @@ void VertZoomSelItems(int iOthers)
 	if (y1 == -1)
 		return;
 
-	// Hide tracks from TCP only after making sure there's actually something selected 
+	// Hide tracks from TCP only after making sure there's actually something selected
 	if (iOthers == 2)
 		for (int i = 1; i <= GetNumTracks(); i++)
 			if (!hbVisOnTrack.Get()[i-1])
@@ -589,7 +589,7 @@ MediaTrack* TrackAtPoint(HWND hTrackView, int iY, int* iOffset, int* iYMin, int*
 	int iVPos = -si.nPos; // Account for current scroll pos
 	int iTrack = 0;
 	int iTrackH = 0;
-	
+
 	// Find the current track #
 	while (iTrack <= GetNumTracks())
 	{
@@ -757,7 +757,7 @@ public:
 		for (int i = 0; i < m_iTrackHeights.GetSize(); i++)
 			if (zs->m_iTrackHeights.Get()[i] != m_iTrackHeights.Get()[i])
 				return false;
-		
+
 		return true;
 	}
 	// Debug
@@ -811,7 +811,7 @@ void SaveZoomSlice(bool bSWS)
 
 		zs = NULL;
 	}
-	
+
 	// Save the position for every call
 	if (g_zoomStack.Get()->GetSize())
 		g_zoomStack.Get()->Get(*g_zoomLevel.Get())->SavePos();
@@ -879,7 +879,7 @@ static bool g_bDragZoomUpper = false;
 static bool g_bDragZoomLower = false;
 static double g_dDragZoomScale = 0.1;
 
-// Zoom into a given rectangle on Reaper's track view 
+// Zoom into a given rectangle on Reaper's track view
 // If dX1 != dX2, use those as times in s to horiz zoom to
 void ZoomToRect(HWND hTrackView, RECT* rZoom, double dX1, double dX2)
 {
@@ -900,7 +900,7 @@ void ZoomToRect(HWND hTrackView, RECT* rZoom, double dX1, double dX2)
 		si.fMask = SIF_ALL;
 		CoolSB_GetScrollInfo(hTrackView, SB_HORZ, &si); // Get the current scroll pos
 		iX1 = rZoom->left + si.nPos;
-		iX2 = rZoom->right + si.nPos; 
+		iX2 = rZoom->right + si.nPos;
 		dX1 = (double)iX1 / GetHZoomLevel();
 		dX2 = (double)iX2 / GetHZoomLevel();
 		adjustZoom(GetHZoomLevel() * r.right / (iX2 - iX1), 1, false, -1);
@@ -1042,7 +1042,7 @@ LRESULT CALLBACK ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			rZoom = rBox; // Zoom area starts as the drawn box
 			itemZoom = NULL;
 			bUndoZoom = false;
-			
+
 			// Check for really small move, and do item zoom mode if so
 			if (rBox.right - rBox.left <= 2 && rBox.bottom - rBox.top <= 2)
 			{
@@ -1075,11 +1075,11 @@ LRESULT CALLBACK ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				rZoom.right++;
 			}
 
-#ifdef _WIN32			
+#ifdef _WIN32
 			HDC dc = GetDC(hwnd);
 			if (!dc)
 				return 0;
-			
+
 			// Get the entire screen
 			if (!bmStd)
 			{
@@ -1088,7 +1088,7 @@ LRESULT CALLBACK ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				bmStd = new LICE_SysBitmap(r.right - r.left, r.bottom - r.top);
 				BitBlt(bmStd->getDC(), 0, 0, bmStd->getWidth(), bmStd->getHeight(), dc, 0, 0, SRCCOPY);
 			}
-			
+
 			// Are we in "unzoom" mode?
 			if (g_bUnzoomMode && pStart.y - p.y > 2)
 			{
@@ -1110,8 +1110,8 @@ LRESULT CALLBACK ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				rZoom.bottom = bmStd->getHeight() + (rBox.bottom - rMini.bottom) * 10;
 
 				LICE_SysBitmap bm(bmStd->getWidth(), bmStd->getHeight());
-				LICE_Copy(&bm, bmStd);				
-				LICE_FillRect(&bm, 0, 0, bm.getWidth(), bm.getHeight(), LICE_RGBA(0, 0, 0, 255), 0.7f, LICE_BLIT_MODE_COPY); 
+				LICE_Copy(&bm, bmStd);
+				LICE_FillRect(&bm, 0, 0, bm.getWidth(), bm.getHeight(), LICE_RGBA(0, 0, 0, 255), 0.7f, LICE_BLIT_MODE_COPY);
 				LICE_ScaledBlit(&bm, bmStd, rMini.left, rMini.top, rMini.right - rMini.left, rMini.bottom - rMini.top, 0.0, 0.0, (float)bmStd->getWidth(), (float)bmStd->getHeight(), 1.0, LICE_BLIT_MODE_COPY);
 				LICE_DrawRect(&bm, rBox.left, rBox.top, rBox.right - rBox.left - 1, rBox.bottom - rBox.top - 1, LICE_RGBA(255, 255, 255, 150), 1.0, LICE_BLIT_MODE_COPY);
 				BitBlt(dc, 0, 0, bm.getWidth(), bm.getHeight(), bm.getDC(), 0, 0, SRCCOPY);
@@ -1130,18 +1130,18 @@ LRESULT CALLBACK ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 				UnionRect(&rDraw, &rBox, &rZoom);
 				UnionRect(&rDraw, &rDraw, &rLastDraw);
-				
+
 				LICE_SysBitmap bm(rDraw.right - rDraw.left + 1, rDraw.bottom - rDraw.top + 1);
 				LICE_Blit(&bm, bmStd, 0, 0, rDraw.left, rDraw.top, bm.getWidth(), bm.getHeight(), 1.0, LICE_BLIT_MODE_COPY);
-				
+
 				// Don't draw small boxes
 				if (rZoom.right - rZoom.left > 1 && rZoom.bottom - rZoom.top > 1)
-					LICE_FillRect(&bm, rZoom.left - rDraw.left, rZoom.top - rDraw.top, rZoom.right - rZoom.left, rZoom.bottom - rZoom.top, LICE_RGBA(128, 128, 110, 150), 1.0, LICE_BLIT_MODE_HSVADJ); 
+					LICE_FillRect(&bm, rZoom.left - rDraw.left, rZoom.top - rDraw.top, rZoom.right - rZoom.left, rZoom.bottom - rZoom.top, LICE_RGBA(128, 128, 110, 150), 1.0, LICE_BLIT_MODE_HSVADJ);
 				if (rBox.right - rBox.left > 1 && rBox.bottom - rBox.top > 1)
 					LICE_DrawRect(&bm, rBox.left - rDraw.left, rBox.top - rDraw.top, rBox.right - rBox.left - 1, rBox.bottom - rBox.top - 1, LICE_RGBA(255, 255, 255, 150), 1.0, LICE_BLIT_MODE_COPY);
 				BitBlt(dc, rDraw.left, rDraw.top, bm.getWidth(), bm.getHeight(), bm.getDC(), 0, 0, SRCCOPY);
 			}
-		
+
 			ReleaseDC(hwnd, dc);
 #else
 			RECT r, rDraw = rZoom;
@@ -1209,12 +1209,12 @@ LRESULT CALLBACK DragZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 		static bool bDragStart = false;
 		static bool bDragging = false;
 		static double dOrigPos;
-		
+
 		switch (uMsg)
 		{
 			case WM_LBUTTONDOWN:
 			{
-				ptPrev.x = GET_X_LPARAM(lParam); 
+				ptPrev.x = GET_X_LPARAM(lParam);
 				ptPrev.y = GET_Y_LPARAM(lParam);
 				RECT r;
 				GetWindowRect(hwnd, &r);
@@ -1257,20 +1257,20 @@ LRESULT CALLBACK DragZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 						CoolSB_GetScrollInfo(GetTrackWnd(), SB_HORZ, &si);
 						dOrigPos = (si.nPos + ptClient.x) / GetHZoomLevel();
 					}
-					
+
 					if (!xDelta && !yDelta)
 						return 0;
 
 // Setcursor just doesn't work well on OSX :( (the cursor jumps),
 // ...and SetCursorPos works, but it's SLOW
-#ifdef _WIN32 
+#ifdef _WIN32
 					SetCursor(g_hZoomDragCur);
 #endif
 
 					if (yDelta)
 					{
 #ifdef _WIN32
-						
+
 						// Keep the cursor from moving up and down regardless of actual mouse movement
 						POINT ptScreen = ptClient;
 						ptScreen.y = ptPrev.y;
@@ -1289,13 +1289,13 @@ LRESULT CALLBACK DragZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 						SetHorizPos(GetTrackWnd(), dNewPos);
 						dPrevPos = dNewPos;
 					}
-					
+
 					return 0;
 				}
 				break;
 		}
 	}
-	return g_ReaperRulerWndProc(hwnd, uMsg, wParam, lParam); 
+	return g_ReaperRulerWndProc(hwnd, uMsg, wParam, lParam);
 }
 
 void EnableDragZoom(COMMAND_T* _ct)
@@ -1442,7 +1442,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 
 static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t *reg)
 {
-	for (int i = 0; i < 5; ++i) 
+	for (int i = 0; i < 5; ++i)
 		g_stdAS[i].Get()->Clear();
 	for (int i = 0; i < 5; ++i)
 		g_stdAS[i].Cleanup();
@@ -1462,56 +1462,56 @@ int IsTogZoomed(COMMAND_T*)
 static project_config_extension_t g_projectconfig = { ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL };
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
-static COMMAND_T g_commandTable[] = 
+static COMMAND_T g_commandTable[] =
 {
-	{ { DEFACCEL, "SWS: Set reaper window size to reaper.ini setwndsize" },			"SWS_SETWINDOWSIZE",	SetReaperWndSize,	NULL, },
-	{ { DEFACCEL, "SWS: Horizontal scroll to put edit cursor at 10%" },				"SWS_HSCROLL10",		ScrollToCursor,		NULL, 10, },
-	{ { DEFACCEL, "SWS: Horizontal scroll to put edit cursor at 50%" },				"SWS_HSCROLL50",		ScrollToCursor,		NULL, 50, },
-	{ { DEFACCEL, "SWS: Horizontal scroll to put play cursor at 10%" },				"SWS_HSCROLLPLAY10",	ScrollToCursor,		NULL, -10, },
-	{ { DEFACCEL, "SWS: Horizontal scroll to put play cursor at 50%" },				"SWS_HSCROLLPLAY50",	ScrollToCursor,		NULL, -50, },
-	{ { DEFACCEL, "SWS: Vertical zoom to selected track(s)" },	 					"SWS_VZOOMFIT",			FitSelTracks,		NULL, },
-	{ { DEFACCEL, "SWS: Vertical zoom to selected track(s), minimize others" }, 	"SWS_VZOOMFITMIN",		FitSelTracksMin,	NULL, },
-	{ { DEFACCEL, "SWS: Vertical zoom to selected item(s)" },	 					"SWS_VZOOMIITEMS",		VZoomToSelItems,	NULL, },
-	{ { DEFACCEL, "SWS: Vertical zoom to selected item(s), minimize others" },		"SWS_VZOOMITEMSMIN",	VZoomToSelItemsMin,	NULL, },
-	{ { DEFACCEL, "SWS: Horizontal zoom to selected item(s)" },	 				"SWS_HZOOMITEMS",		HZoomToSelItems,	NULL, },
-	{ { DEFACCEL, "SWS: Zoom to selected item(s)" },				 				"SWS_ITEMZOOM",			ZoomToSelItems,		NULL, },
-	{ { DEFACCEL, "SWS: Zoom to selected item(s), minimize others" },				"SWS_ITEMZOOMMIN",		ZoomToSelItemsMin,	NULL, },
-	{ { DEFACCEL, "SWS: Zoom to sel item(s) or time sel" },				 			"SWS_ZOOMSIT",			ZoomToSIT,			NULL, },
-	{ { DEFACCEL, "SWS: Zoom to sel item(s) or time sel, minimize others" },		"SWS_ZOOMSITMIN",		ZoomToSITMin,		NULL, },
-	{ { DEFACCEL, "SWS: Toggle zoom to sel track(s) + time sel" },					"SWS_TOGZOOMTT",		TogZoomTT,			NULL, 0, IsTogZoomed },
-	{ { DEFACCEL, "SWS: Toggle zoom to sel track(s) + time sel, minimize others" },	"SWS_TOGZOOMTTMIN",		TogZoomTTMin,		NULL, 0, IsTogZoomed },
-	{ { DEFACCEL, "SWS: Toggle zoom to sel track(s) + time sel, hide others" },		"SWS_TOGZOOMTTHIDE",	TogZoomTTHide,		NULL, 0, IsTogZoomed },
-	{ { DEFACCEL, "SWS: Toggle zoom to sel item(s) or time sel" },					"SWS_TOGZOOMI",			TogZoomItems,		NULL, 0, IsTogZoomed },
-	{ { DEFACCEL, "SWS: Toggle zoom to sel item(s) or time sel, minimize other tracks" },"SWS_TOGZOOMIMIN",TogZoomItemsMin,	NULL, 0, IsTogZoomed },
-	{ { DEFACCEL, "SWS: Toggle zoom to sel item(s) or time sel, hide other tracks" },	"SWS_TOGZOOMIHIDE",	TogZoomItemsHide,	NULL, 0, IsTogZoomed },
-	{ { DEFACCEL, "SWS: Toggle zoom to sel item(s)" },								"SWS_TOGZOOMIONLY",		TogZoomItemsOnly,	NULL, 0, IsTogZoomed },
-	{ { DEFACCEL, "SWS: Toggle zoom to sel item(s), minimize other tracks" },		"SWS_TOGZOOMIONLYMIN",	TogZoomItemsOnlyMin,NULL, 0, IsTogZoomed },
-	{ { DEFACCEL, "SWS: Toggle zoom to sel item(s), hide other tracks" },			"SWS_TOGZOOMIONLYHIDE",	TogZoomItemsOnlyHide,NULL, 0, IsTogZoomed },
-	{ { DEFACCEL, "SWS: Toggle horizontal zoom to sel item(s) or time sel" },		"SWS_TOGZOOMHORIZ",		TogZoomHoriz,		NULL, 0, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Set reaper window size to reaper.ini setwndsize" },                        "SWS_SETWINDOWSIZE",       SetReaperWndSize,    NULL, },
+	{ { DEFACCEL, "SWS: Horizontal scroll to put edit cursor at 10%" },                            "SWS_HSCROLL10",           ScrollToCursor,      NULL, 10, },
+	{ { DEFACCEL, "SWS: Horizontal scroll to put edit cursor at 50%" },                            "SWS_HSCROLL50",           ScrollToCursor,      NULL, 50, },
+	{ { DEFACCEL, "SWS: Horizontal scroll to put play cursor at 10%" },                            "SWS_HSCROLLPLAY10",       ScrollToCursor,      NULL, -10, },
+	{ { DEFACCEL, "SWS: Horizontal scroll to put play cursor at 50%" },                            "SWS_HSCROLLPLAY50",       ScrollToCursor,      NULL, -50, },
+	{ { DEFACCEL, "SWS: Vertical zoom to selected tracks" },                                       "SWS_VZOOMFIT",            FitSelTracks,        NULL, },
+	{ { DEFACCEL, "SWS: Vertical zoom to selected tracks, minimize others" },                      "SWS_VZOOMFITMIN",         FitSelTracksMin,     NULL, },
+	{ { DEFACCEL, "SWS: Vertical zoom to selected items" },                                        "SWS_VZOOMIITEMS",         VZoomToSelItems,     NULL, },
+	{ { DEFACCEL, "SWS: Vertical zoom to selected items, minimize others" },                       "SWS_VZOOMITEMSMIN",       VZoomToSelItemsMin,  NULL, },
+	{ { DEFACCEL, "SWS: Horizontal zoom to selected items" },                                      "SWS_HZOOMITEMS",          HZoomToSelItems,     NULL, },
+	{ { DEFACCEL, "SWS: Zoom to selected items" },                                                 "SWS_ITEMZOOM",            ZoomToSelItems,      NULL, },
+	{ { DEFACCEL, "SWS: Zoom to selected items, minimize others" },                                "SWS_ITEMZOOMMIN",         ZoomToSelItemsMin,   NULL, },
+	{ { DEFACCEL, "SWS: Zoom to selected items or time selection" },                               "SWS_ZOOMSIT",             ZoomToSIT,           NULL, },
+	{ { DEFACCEL, "SWS: Zoom to selected items or time selection, minimize others" },              "SWS_ZOOMSITMIN",          ZoomToSITMin,        NULL, },
+	{ { DEFACCEL, "SWS: Toggle zoom to selected tracks and time selection" },                      "SWS_TOGZOOMTT",           TogZoomTT,           NULL, 0, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to selected tracks and time selection, minimize others" },     "SWS_TOGZOOMTTMIN",        TogZoomTTMin,        NULL, 0, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to selected tracks and time selection, hide others" },         "SWS_TOGZOOMTTHIDE",       TogZoomTTHide,       NULL, 0, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to selected items or time selection" },                        "SWS_TOGZOOMI",            TogZoomItems,        NULL, 0, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to selected items or time selection, minimize other tracks" }, "SWS_TOGZOOMIMIN",         TogZoomItemsMin,     NULL, 0, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to selected items or time selection, hide other tracks" },     "SWS_TOGZOOMIHIDE",        TogZoomItemsHide,    NULL, 0, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to selected items" },                                          "SWS_TOGZOOMIONLY",        TogZoomItemsOnly,    NULL, 0, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to selected items, minimize other tracks" },                   "SWS_TOGZOOMIONLYMIN",     TogZoomItemsOnlyMin, NULL, 0, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to selected items, hide other tracks" },                       "SWS_TOGZOOMIONLYHIDE",    TogZoomItemsOnlyHide,NULL, 0, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle horizontal zoom to selected items or time selection" },             "SWS_TOGZOOMHORIZ",        TogZoomHoriz,        NULL, 0, IsTogZoomed },
 
-	{ { DEFACCEL, "SWS: Scroll left 10%" },											"SWS_SCROLL_L10",		HorizScroll,		NULL, -10 },
-	{ { DEFACCEL, "SWS: Scroll right 10%" },										"SWS_SCROLL_R10",		HorizScroll,		NULL, 10 },
-	{ { DEFACCEL, "SWS: Scroll left 1%" },											"SWS_SCROLL_L1",		HorizScroll,		NULL, -1 },
-	{ { DEFACCEL, "SWS: Scroll right 1%" },											"SWS_SCROLL_R1",		HorizScroll,		NULL, 1 },
+	{ { DEFACCEL, "SWS: Scroll left 10%" },  "SWS_SCROLL_L10",  HorizScroll, NULL, -10 },
+	{ { DEFACCEL, "SWS: Scroll right 10%" }, "SWS_SCROLL_R10",  HorizScroll, NULL, 10 },
+	{ { DEFACCEL, "SWS: Scroll left 1%" },   "SWS_SCROLL_L1",   HorizScroll, NULL, -1 },
+	{ { DEFACCEL, "SWS: Scroll right 1%" },  "SWS_SCROLL_R1",   HorizScroll, NULL, 1 },
 
-	{ { DEFACCEL, "SWS: Save current arrenge view, slot 1" }, "SWS_SAVEVIEW", SaveCurrentArrangeViewSlot, NULL, 0 },	//Use same id of the old action for compatibility
-	{ { DEFACCEL, "SWS: Save current arrenge view, slot 2" }, "WOL_SAVEVIEWS2", SaveCurrentArrangeViewSlot, NULL, 1 },
-	{ { DEFACCEL, "SWS: Save current arrenge view, slot 3" }, "WOL_SAVEVIEWS3", SaveCurrentArrangeViewSlot, NULL, 2 },
-	{ { DEFACCEL, "SWS: Save current arrenge view, slot 4" }, "WOL_SAVEVIEWS4", SaveCurrentArrangeViewSlot, NULL, 3 },
-	{ { DEFACCEL, "SWS: Save current arrenge view, slot 5" }, "WOL_SAVEVIEWS5", SaveCurrentArrangeViewSlot, NULL, 4 },
-	{ { DEFACCEL, "SWS: Restore arrenge view, slot 1" }, "SWS_RESTOREVIEW", RestoreArrangeViewSlot, NULL, 0 },
-	{ { DEFACCEL, "SWS: Restore arrenge view, slot 2" }, "WOL_RESTOREVIEWS2", RestoreArrangeViewSlot, NULL, 1 },
-	{ { DEFACCEL, "SWS: Restore arrenge view, slot 3" }, "WOL_RESTOREVIEWS3", RestoreArrangeViewSlot, NULL, 2 },
-	{ { DEFACCEL, "SWS: Restore arrenge view, slot 4" }, "WOL_RESTOREVIEWS4", RestoreArrangeViewSlot, NULL, 3 },
-	{ { DEFACCEL, "SWS: Restore arrenge view, slot 5" }, "WOL_RESTOREVIEWS5", RestoreArrangeViewSlot, NULL, 4 },
+	{ { DEFACCEL, "SWS: Save current arrange view, slot 1" }, "SWS_SAVEVIEW",      SaveCurrentArrangeViewSlot, NULL, 0 },
+	{ { DEFACCEL, "SWS: Save current arrange view, slot 2" }, "WOL_SAVEVIEWS2",    SaveCurrentArrangeViewSlot, NULL, 1 },
+	{ { DEFACCEL, "SWS: Save current arrange view, slot 3" }, "WOL_SAVEVIEWS3",    SaveCurrentArrangeViewSlot, NULL, 2 },
+	{ { DEFACCEL, "SWS: Save current arrange view, slot 4" }, "WOL_SAVEVIEWS4",    SaveCurrentArrangeViewSlot, NULL, 3 },
+	{ { DEFACCEL, "SWS: Save current arrange view, slot 5" }, "WOL_SAVEVIEWS5",    SaveCurrentArrangeViewSlot, NULL, 4 },
+	{ { DEFACCEL, "SWS: Restore arrange view, slot 1" },      "SWS_RESTOREVIEW",   RestoreArrangeViewSlot, NULL, 0 },
+	{ { DEFACCEL, "SWS: Restore arrange view, slot 2" },      "WOL_RESTOREVIEWS2", RestoreArrangeViewSlot, NULL, 1 },
+	{ { DEFACCEL, "SWS: Restore arrange view, slot 3" },      "WOL_RESTOREVIEWS3", RestoreArrangeViewSlot, NULL, 2 },
+	{ { DEFACCEL, "SWS: Restore arrange view, slot 4" },      "WOL_RESTOREVIEWS4", RestoreArrangeViewSlot, NULL, 3 },
+	{ { DEFACCEL, "SWS: Restore arrange view, slot 5" },      "WOL_RESTOREVIEWS5", RestoreArrangeViewSlot, NULL, 4 },
 
-	{ { DEFACCEL, "SWS: Undo zoom" },												"SWS_UNDOZOOM",			UndoZoom,			NULL, },
-	{ { DEFACCEL, "SWS: Redo zoom" },												"SWS_REDOZOOM",			RedoZoom,			NULL, },
-	{ { DEFACCEL, "SWS: Zoom tool (marquee)" },										"SWS_ZOOM",				ZoomTool,			NULL, 0, IsZoomMode },
-	{ { DEFACCEL, "SWS: Zoom preferences" },										"SWS_ZOOMPREFS",		ZoomPrefs,			"SWS Zoom preferences...", },
+	{ { DEFACCEL, "SWS: Undo zoom" },           "SWS_UNDOZOOM",  UndoZoom,  NULL, },
+	{ { DEFACCEL, "SWS: Redo zoom" },           "SWS_REDOZOOM",  RedoZoom,  NULL, },
+	{ { DEFACCEL, "SWS: Zoom tool (marquee)" }, "SWS_ZOOM",      ZoomTool,  NULL, 0, IsZoomMode },
+	{ { DEFACCEL, "SWS: Zoom preferences" },    "SWS_ZOOMPREFS", ZoomPrefs, "SWS Zoom preferences...", },
 
-	{ { DEFACCEL, "SWS: Toggle drag zoom enable (ruler bottom half)" },				"SWS_EN_DRAGZOOM_BOT",	EnableDragZoom, NULL, 0, IsDragZoomEnabled},
-	{ { DEFACCEL, "SWS: Toggle drag zoom enable (ruler top half)" },				"SWS_EN_DRAGZOOM_TOP",	EnableDragZoom, NULL, 1, IsDragZoomEnabled},
+	{ { DEFACCEL, "SWS: Toggle drag zoom enable (ruler bottom half)" }, "SWS_EN_DRAGZOOM_BOT", EnableDragZoom, NULL, 0, IsDragZoomEnabled},
+	{ { DEFACCEL, "SWS: Toggle drag zoom enable (ruler top half)" },    "SWS_EN_DRAGZOOM_TOP", EnableDragZoom, NULL, 1, IsDragZoomEnabled},
 
 	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, }, // for main Extensions menu
 	{ {}, LAST_COMMAND, }, // Denote end of table

@@ -10,10 +10,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -112,7 +112,7 @@ void MoveCursorSample(COMMAND_T* ct)
 		iCurSample++;
 
 	double dNewPos = (double)(iCurSample / dSrate);
-	
+
 	SetEditCurPos(dNewPos, true, false);
 }
 
@@ -133,20 +133,20 @@ void MoveCursorFade(COMMAND_T* ct)
 }
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
-static COMMAND_T g_commandTable[] = 
+static COMMAND_T g_commandTable[] =
 {
-	{ { DEFACCEL, "SWS: Undo edit cursor move" },					"SWS_EDITCURUNDO",		UndoEditCursor, },
-	{ { DEFACCEL, "SWS: Redo edit cursor move" },					"SWS_EDITCURREDO",		RedoEditCursor, },
-	{ { DEFACCEL, "SWS: Move cursor and time sel left to grid" },	"SWS_MOVECURSELLEFT",	MoveCursorAndSel, NULL, -1 },
-	{ { DEFACCEL, "SWS: Move cursor and time sel right to grid" },	"SWS_MOVECURSELRIGHT",	MoveCursorAndSel, NULL,  1 },
-	{ { DEFACCEL, "SWS: Move cursor left 1 sample (on grid)" },		"SWS_MOVECURSAMPLEFT",	MoveCursorSample, NULL, -1 },
-	{ { DEFACCEL, "SWS: Move cursor right 1 sample (on grid)" },	"SWS_MOVECURSAMPRIGHT",	MoveCursorSample, NULL,  1 },
-	{ { DEFACCEL, "SWS: Move cursor left 1ms" },					"SWS_MOVECUR1MSLEFT",	MoveCursorMs,     NULL, -1 },
-	{ { DEFACCEL, "SWS: Move cursor right 1ms" },					"SWS_MOVECUR1MSRIGHT",	MoveCursorMs,     NULL,  1 },
-	{ { DEFACCEL, "SWS: Move cursor left 5ms" },					"SWS_MOVECUR5MSLEFT",	MoveCursorMs,     NULL, -5 },
-	{ { DEFACCEL, "SWS: Move cursor right 5ms" },					"SWS_MOVECUR5MSRIGHT",	MoveCursorMs,     NULL,  5 },
-	{ { DEFACCEL, "SWS: Move cursor left by default fade length" },	"SWS_MOVECURFADELEFT",	MoveCursorFade,   NULL, -1 },
-	{ { DEFACCEL, "SWS: Move cursor right by default fade length" },"SWS_MOVECURFADERIGHT",	MoveCursorFade,   NULL,  1 },
+	{ { DEFACCEL, "SWS: Undo edit cursor move" },						"SWS_EDITCURUNDO",		UndoEditCursor, },
+	{ { DEFACCEL, "SWS: Redo edit cursor move" },						"SWS_EDITCURREDO",		RedoEditCursor, },
+	{ { DEFACCEL, "SWS: Move cursor and time selection left to grid" },	"SWS_MOVECURSELLEFT",	MoveCursorAndSel, NULL, -1 },
+	{ { DEFACCEL, "SWS: Move cursor and time selection right to grid" },"SWS_MOVECURSELRIGHT",	MoveCursorAndSel, NULL,  1 },
+	{ { DEFACCEL, "SWS: Move cursor left 1 sample (on grid)" },			"SWS_MOVECURSAMPLEFT",	MoveCursorSample, NULL, -1 },
+	{ { DEFACCEL, "SWS: Move cursor right 1 sample (on grid)" },		"SWS_MOVECURSAMPRIGHT",	MoveCursorSample, NULL,  1 },
+	{ { DEFACCEL, "SWS: Move cursor left 1ms" },						"SWS_MOVECUR1MSLEFT",	MoveCursorMs,     NULL, -1 },
+	{ { DEFACCEL, "SWS: Move cursor right 1ms" },						"SWS_MOVECUR1MSRIGHT",	MoveCursorMs,     NULL,  1 },
+	{ { DEFACCEL, "SWS: Move cursor left 5ms" },						"SWS_MOVECUR5MSLEFT",	MoveCursorMs,     NULL, -5 },
+	{ { DEFACCEL, "SWS: Move cursor right 5ms" },						"SWS_MOVECUR5MSRIGHT",	MoveCursorMs,     NULL,  5 },
+	{ { DEFACCEL, "SWS: Move cursor left by default fade length" },		"SWS_MOVECURFADELEFT",	MoveCursorFade,   NULL, -1 },
+	{ { DEFACCEL, "SWS: Move cursor right by default fade length" },	"SWS_MOVECURFADERIGHT",	MoveCursorFade,   NULL,  1 },
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

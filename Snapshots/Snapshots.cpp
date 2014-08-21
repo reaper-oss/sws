@@ -10,10 +10,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -96,13 +96,13 @@ void CopySnapshotToClipboard(Snapshot* ss)
 	if (OpenClipboard(g_hwndParent))
 	{
 		EmptyClipboard();
-		HGLOBAL hglbCopy; 
-		hglbCopy = GlobalAlloc(GMEM_MOVEABLE, ssStr.GetLength() + 1); 
+		HGLOBAL hglbCopy;
+		hglbCopy = GlobalAlloc(GMEM_MOVEABLE, ssStr.GetLength() + 1);
 		if (hglbCopy)
 		{
-			memcpy(GlobalLock(hglbCopy), ssStr.Get(), ssStr.GetLength() + 1);	
+			memcpy(GlobalLock(hglbCopy), ssStr.Get(), ssStr.GetLength() + 1);
 			GlobalUnlock(hglbCopy);
-			SetClipboardData(CF_TEXT, hglbCopy); 
+			SetClipboardData(CF_TEXT, hglbCopy);
 		}
 		CloseClipboard();
 	}
@@ -190,11 +190,11 @@ void ImportSnapshot()
 				ss = NULL;
 			}
 			else
-				MergeSnapshot(ss); // Handles delete of ss if necessary			
+				MergeSnapshot(ss); // Handles delete of ss if necessary
 		}
 		else
 			MessageBox(g_hwndParent, __LOCALIZE("Unable to open file.","sws_DLG_101"), __LOCALIZE("SWS Snaphot Import Error","sws_DLG_101"), MB_OK);
-		
+
 		free(cFile);
 	}
 }
@@ -539,7 +539,7 @@ void SWS_SnapshotsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				if ((ss->m_iSlot > 0) ) //&& (m_pLists.Get(0)->GetSortColumn() == 1) //can either ignore the button here or ...
 				{
 					Snapshot* ss_swap = (Snapshot*)m_pLists.Get(0)->EnumSelected(NULL,-1);
-					if (ss_swap) 
+					if (ss_swap)
 					{
 						m_pLists.Get(0)->SetSortColumn(1); //force the sort to slot...doesnt make sense with other sorts
 						int temp = ss->m_iSlot;
@@ -556,10 +556,10 @@ void SWS_SnapshotsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->EnumSelected(NULL);
 			if (ss)
 			{
-				if (ss->m_iSlot < g_ss.Get()->m_snapshots.GetSize()) 
+				if (ss->m_iSlot < g_ss.Get()->m_snapshots.GetSize())
 				{
 					Snapshot* ss_swap = (Snapshot*)m_pLists.Get(0)->EnumSelected(NULL,1);
-					if (ss_swap) 
+					if (ss_swap)
 					{
 						m_pLists.Get(0)->SetSortColumn(1); //force the sort to slot...doesnt make sense with other sorts
 						int temp = ss->m_iSlot;
@@ -885,7 +885,7 @@ void SWS_SnapshotsWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 	GetWindowRect(GetDlgItem(m_hwnd, IDC_LIST), &r);
 	ScreenToClient(m_hwnd, (LPPOINT)&r);
 	ScreenToClient(m_hwnd, ((LPPOINT)&r)+1);
-	r.top = r.bottom - (9*2+1+1); 
+	r.top = r.bottom - (9*2+1+1);
 	r.bottom = r.top + (9*2+1);
 	r.left = r.right + 1;
 	r.right = r.left + 5;
@@ -1115,61 +1115,61 @@ void PasteSnapshot(COMMAND_T*)
 }
 
 //!WANT_LOCALIZE_SWS_CMD_TABLE_BEGIN:sws_actions
-static COMMAND_T g_commandTable[] = 
+static COMMAND_T g_commandTable[] =
 {
-	{ { DEFACCEL, "SWS: Open snapshots window" },						"SWSSNAPSHOT_OPEN",	     OpenSnapshotsDialog,  "Show snapshots list and settings", 0, SnapshotsWindowEnabled },
-	{ { DEFACCEL, "SWS: Add selected track(s) to current snapshot" },	"SWSSNAPSHOT_ADD",	     AddSnapshotTracks,	   "Add selected track(s) to current snapshot", },
-	{ { DEFACCEL, "SWS: Add selected track(s) to all snapshots" },		"SWSSNAPSHOTS_ADD",	     AddTracks,			   "Add selected track(s) to all snapshots", },
-	{ { DEFACCEL, "SWS: Delete selected track(s) from current snapshot" },"SWSSNAPSHOT_DEL",	 DelSnapshotTracks,	   "Delete selected track(s) from current snapshot", },
-	{ { DEFACCEL, "SWS: Delete selected track(s) from all snapshots" },	"SWSSNAPSHOTS_DEL",	     DelTracks,			   "Delete selected track(s) from all snapshots", },
-	{ { DEFACCEL, "SWS: Select current snapshot track(s)" },			"SWSSNAPSHOT_SEL",	     SelSnapshotTracks,	   "Select current snapshot's track(s)", },
+	{ { DEFACCEL, "SWS: Open snapshots window" },							"SWSSNAPSHOT_OPEN",	     OpenSnapshotsDialog,  "Show snapshots list and settings", 0, SnapshotsWindowEnabled },
+	{ { DEFACCEL, "SWS: Add selected track(s) to current snapshot" },		"SWSSNAPSHOT_ADD",	     AddSnapshotTracks,	   "Add selected track(s) to current snapshot", },
+	{ { DEFACCEL, "SWS: Add selected track(s) to all snapshots" },			"SWSSNAPSHOTS_ADD",	     AddTracks,			   "Add selected track(s) to all snapshots", },
+	{ { DEFACCEL, "SWS: Delete selected track(s) from current snapshot" },	"SWSSNAPSHOT_DEL",	 DelSnapshotTracks,	   "Delete selected track(s) from current snapshot", },
+	{ { DEFACCEL, "SWS: Delete selected track(s) from all snapshots" },		"SWSSNAPSHOTS_DEL",	     DelTracks,			   "Delete selected track(s) from all snapshots", },
+	{ { DEFACCEL, "SWS: Select current snapshot track(s)" },				"SWSSNAPSHOT_SEL",	     SelSnapshotTracks,	   "Select current snapshot's track(s)", },
 	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
-	{ { DEFACCEL, "SWS: New snapshot (all tracks)" },					"SWSSNAPSHOT_NEWALL",    NewSnapshot,		   "New snapshot (all tracks)", 1 },
-	{ { DEFACCEL, "SWS: New snapshot (selected track(s))" },			"SWSSNAPSHOT_NEWSEL",    NewSnapshot,		   "New snapshot (selected track(s))", 2 },
-	{ { DEFACCEL, "SWS: Save over current snapshot" },					"SWSSNAPSHOT_SAVE",	     SaveCurSnapshot,	   "Save over current snapshot", },
-	{ { DEFACCEL, "SWS: Recall current snapshot" },						"SWSSNAPSHOT_GET",	     GetCurSnapshot,       "Recall current snapshot", },
-	{ { DEFACCEL, "SWS: Recall previous snapshot" },					"SWSSNAPSHOT_GET_PREVIOUS",	 GetPreviousSnapshot,  "Recall previous snapshot", },
-	{ { DEFACCEL, "SWS: Recall next snapshot" },						"SWSSNAPSHOT_GET_NEXT",	     GetNextSnapshot,      "Recall next snapshot", },
-	{ { DEFACCEL, "SWS: Copy current snapshot" },						"SWSSNAPSHOT_COPY",	     CopyCurSnapshot,      "Copy current snapshot", },
-	{ { DEFACCEL, "SWS: Copy new snapshot (selected track(s))" },		"SWSSNAPSHOT_COPYSEL",   CopySelSnapshot,      "Copy new snapshot (selected track(s))", },
-	{ { DEFACCEL, "SWS: Copy new snapshot (all track(s))" },			"SWSSNAPSHOT_COPYALL",   CopyAllSnapshot,      "Copy new snapshot (all track(s))", },
-	{ { DEFACCEL, "SWS: Paste snapshot" },								"SWSSNAPSHOT_PASTE",	 PasteSnapshot,        "Paste snapshot", },
+	{ { DEFACCEL, "SWS: New snapshot (all tracks)" },						"SWSSNAPSHOT_NEWALL",    NewSnapshot,		   "New snapshot (all tracks)", 1 },
+	{ { DEFACCEL, "SWS: New snapshot (selected track(s))" },				"SWSSNAPSHOT_NEWSEL",    NewSnapshot,		   "New snapshot (selected track(s))", 2 },
+	{ { DEFACCEL, "SWS: Save over current snapshot" },						"SWSSNAPSHOT_SAVE",	     SaveCurSnapshot,	   "Save over current snapshot", },
+	{ { DEFACCEL, "SWS: Recall current snapshot" },							"SWSSNAPSHOT_GET",	     GetCurSnapshot,       "Recall current snapshot", },
+	{ { DEFACCEL, "SWS: Recall previous snapshot" },						"SWSSNAPSHOT_GET_PREVIOUS",	 GetPreviousSnapshot,  "Recall previous snapshot", },
+	{ { DEFACCEL, "SWS: Recall next snapshot" },							"SWSSNAPSHOT_GET_NEXT",	     GetNextSnapshot,      "Recall next snapshot", },
+	{ { DEFACCEL, "SWS: Copy current snapshot" },							"SWSSNAPSHOT_COPY",	     CopyCurSnapshot,      "Copy current snapshot", },
+	{ { DEFACCEL, "SWS: Copy new snapshot (selected track(s))" },			"SWSSNAPSHOT_COPYSEL",   CopySelSnapshot,      "Copy new snapshot (selected track(s))", },
+	{ { DEFACCEL, "SWS: Copy new snapshot (all track(s))" },				"SWSSNAPSHOT_COPYALL",   CopyAllSnapshot,      "Copy new snapshot (all track(s))", },
+	{ { DEFACCEL, "SWS: Paste snapshot" },									"SWSSNAPSHOT_PASTE",	 PasteSnapshot,        "Paste snapshot", },
 
-	{ { DEFACCEL, "SWS: New snapshot (with current settings)" },		"SWSSNAPSHOT_NEW",	     NewSnapshot,		   NULL, 0 },
-	{ { DEFACCEL, "SWS: New snapshot and edit name" },					"SWSSNAPSHOT_NEWEDIT",   NewSnapshotEdit,	   NULL, 1 },
+	{ { DEFACCEL, "SWS: New snapshot (with current settings)" },			"SWSSNAPSHOT_NEW",	     NewSnapshot,		   NULL, 0 },
+	{ { DEFACCEL, "SWS: New snapshot and edit name" },						"SWSSNAPSHOT_NEWEDIT",   NewSnapshotEdit,	   NULL, 1 },
 	//{ { DEFACCEL, "SWS: Delete current snapshot" },						"SWSSNAPSHOT_NEWEDIT",   NewSnapshotEdit,	   NULL, 1 },
-	{ { DEFACCEL, "SWS: Save as snapshot 1" },							"SWSSNAPSHOT_SAVE1",	 SaveSnapshot,         NULL, 1 },
-	{ { DEFACCEL, "SWS: Save as snapshot 2" },							"SWSSNAPSHOT_SAVE2",	 SaveSnapshot,         NULL, 2 },
-	{ { DEFACCEL, "SWS: Save as snapshot 3" },							"SWSSNAPSHOT_SAVE3",	 SaveSnapshot,         NULL, 3 },
-	{ { DEFACCEL, "SWS: Save as snapshot 4" },							"SWSSNAPSHOT_SAVE4",	 SaveSnapshot,         NULL, 4 },
-	{ { DEFACCEL, "SWS: Save as snapshot 5" },							"SWSSNAPSHOT_SAVE5",	 SaveSnapshot,         NULL, 5 },
-	{ { DEFACCEL, "SWS: Save as snapshot 6" },							"SWSSNAPSHOT_SAVE6",	 SaveSnapshot,         NULL, 6 },
-	{ { DEFACCEL, "SWS: Save as snapshot 7" },							"SWSSNAPSHOT_SAVE7",	 SaveSnapshot,         NULL, 7 },
-	{ { DEFACCEL, "SWS: Save as snapshot 8" },							"SWSSNAPSHOT_SAVE8",	 SaveSnapshot,         NULL, 8 },
-	{ { DEFACCEL, "SWS: Save as snapshot 9" },							"SWSSNAPSHOT_SAVE9",	 SaveSnapshot,         NULL, 9 },
-	{ { DEFACCEL, "SWS: Save as snapshot 10" },							"SWSSNAPSHOT_SAVE10",	 SaveSnapshot,         NULL, 10 },
-	{ { DEFACCEL, "SWS: Save as snapshot 11" },							"SWSSNAPSHOT_SAVE11",	 SaveSnapshot,         NULL, 11 },
-	{ { DEFACCEL, "SWS: Save as snapshot 12" },							"SWSSNAPSHOT_SAVE12",	 SaveSnapshot,         NULL, 12 },
+	{ { DEFACCEL, "SWS: Save as snapshot 1" },								"SWSSNAPSHOT_SAVE1",	 SaveSnapshot,         NULL, 1 },
+	{ { DEFACCEL, "SWS: Save as snapshot 2" },								"SWSSNAPSHOT_SAVE2",	 SaveSnapshot,         NULL, 2 },
+	{ { DEFACCEL, "SWS: Save as snapshot 3" },								"SWSSNAPSHOT_SAVE3",	 SaveSnapshot,         NULL, 3 },
+	{ { DEFACCEL, "SWS: Save as snapshot 4" },								"SWSSNAPSHOT_SAVE4",	 SaveSnapshot,         NULL, 4 },
+	{ { DEFACCEL, "SWS: Save as snapshot 5" },								"SWSSNAPSHOT_SAVE5",	 SaveSnapshot,         NULL, 5 },
+	{ { DEFACCEL, "SWS: Save as snapshot 6" },								"SWSSNAPSHOT_SAVE6",	 SaveSnapshot,         NULL, 6 },
+	{ { DEFACCEL, "SWS: Save as snapshot 7" },								"SWSSNAPSHOT_SAVE7",	 SaveSnapshot,         NULL, 7 },
+	{ { DEFACCEL, "SWS: Save as snapshot 8" },								"SWSSNAPSHOT_SAVE8",	 SaveSnapshot,         NULL, 8 },
+	{ { DEFACCEL, "SWS: Save as snapshot 9" },								"SWSSNAPSHOT_SAVE9",	 SaveSnapshot,         NULL, 9 },
+	{ { DEFACCEL, "SWS: Save as snapshot 10" },								"SWSSNAPSHOT_SAVE10",	 SaveSnapshot,         NULL, 10 },
+	{ { DEFACCEL, "SWS: Save as snapshot 11" },								"SWSSNAPSHOT_SAVE11",	 SaveSnapshot,         NULL, 11 },
+	{ { DEFACCEL, "SWS: Save as snapshot 12" },								"SWSSNAPSHOT_SAVE12",	 SaveSnapshot,         NULL, 12 },
 
-	{ { DEFACCEL, "SWS: Set snapshots to 'mix' mode" },					"SWSSNAPSHOT_MIXMODE",   SetSnapType,    NULL, 0 },
-	{ { DEFACCEL, "SWS: Set snapshots to 'visibility' mode" },			"SWSSNAPSHOT_VISMODE",   SetSnapType,    NULL, 1 },
+	{ { DEFACCEL, "SWS: Set snapshots to 'mix' mode" },						"SWSSNAPSHOT_MIXMODE",   SetSnapType,    NULL, 0 },
+	{ { DEFACCEL, "SWS: Set snapshots to 'visibility' mode" },				"SWSSNAPSHOT_VISMODE",   SetSnapType,    NULL, 1 },
 
-	{ { DEFACCEL, "SWS: Toggle snapshot mute" },						"SWSSNAPSHOT_MUTE",			TogSnapParam,			NULL, MUTE_MASK,    IsSnapParamEn },
-	{ { DEFACCEL, "SWS: Toggle snapshot solo" },						"SWSSNAPSHOT_SOLO",			TogSnapParam,			NULL, SOLO_MASK,    IsSnapParamEn },
-	{ { DEFACCEL, "SWS: Toggle snapshot pan" },							"SWSSNAPSHOT_PAN",			TogSnapParam,			NULL, PAN_MASK,     IsSnapParamEn },
-	{ { DEFACCEL, "SWS: Toggle snapshot vol" },							"SWSSNAPSHOT_VOL",			TogSnapParam,			NULL, VOL_MASK,     IsSnapParamEn },
-	{ { DEFACCEL, "SWS: Toggle snapshot sends" },						"SWSSNAPSHOT_SEND",			TogSnapParam,			NULL, SENDS_MASK,   IsSnapParamEn },
-	{ { DEFACCEL, "SWS: Toggle snapshot FX" },							"SWSSNAPSHOT_FX",			TogSnapParam,			NULL, FXCHAIN_MASK, IsSnapParamEn },
-	{ { DEFACCEL, "SWS: Toggle snapshot visibility" },					"SWSSNAPSHOT_VIS",			TogSnapParam,			NULL, VIS_MASK,     IsSnapParamEn },
-	{ { DEFACCEL, "SWS: Toggle snapshot selection" },					"SWSSNAPSHOT_TOGSEL",		TogSnapParam,			NULL, SEL_MASK,     IsSnapParamEn },
-	{ { DEFACCEL, "SWS: Toggle snapshot selected only on save" },		"SWSSNAPSHOT_SELONLY",		ToggleSelOnlySave,		NULL, 0,			IsSnapParamEn },
-	{ { DEFACCEL, "SWS: Toggle snapshot selected only on recall" },		"SWSSNAPSHOT_SELONLYRECALL",ToggleSelOnlyRecall,	NULL, 0,			IsSnapParamEn },
-	{ { DEFACCEL, "SWS: Toggle snapshot apply filter to recall" },      "SWSSNAPSHOT_APPLYLOAD",	ToggleAppToRec,			NULL, 0,			IsSnapParamEn },
-	{ { DEFACCEL, "SWS: Toggle snapshot show only for sel tracks" },	"SWSSNAPSHOT_SHOWONLYSEL",	ToggleShowForSelTracks, NULL, 0,			IsSnapParamEn },
+	{ { DEFACCEL, "SWS: Toggle snapshot mute" },							"SWSSNAPSHOT_MUTE",			TogSnapParam,			NULL, MUTE_MASK,    IsSnapParamEn },
+	{ { DEFACCEL, "SWS: Toggle snapshot solo" },							"SWSSNAPSHOT_SOLO",			TogSnapParam,			NULL, SOLO_MASK,    IsSnapParamEn },
+	{ { DEFACCEL, "SWS: Toggle snapshot pan" },								"SWSSNAPSHOT_PAN",			TogSnapParam,			NULL, PAN_MASK,     IsSnapParamEn },
+	{ { DEFACCEL, "SWS: Toggle snapshot vol" },								"SWSSNAPSHOT_VOL",			TogSnapParam,			NULL, VOL_MASK,     IsSnapParamEn },
+	{ { DEFACCEL, "SWS: Toggle snapshot sends" },							"SWSSNAPSHOT_SEND",			TogSnapParam,			NULL, SENDS_MASK,   IsSnapParamEn },
+	{ { DEFACCEL, "SWS: Toggle snapshot FX" },								"SWSSNAPSHOT_FX",			TogSnapParam,			NULL, FXCHAIN_MASK, IsSnapParamEn },
+	{ { DEFACCEL, "SWS: Toggle snapshot visibility" },						"SWSSNAPSHOT_VIS",			TogSnapParam,			NULL, VIS_MASK,     IsSnapParamEn },
+	{ { DEFACCEL, "SWS: Toggle snapshot selection" },						"SWSSNAPSHOT_TOGSEL",		TogSnapParam,			NULL, SEL_MASK,     IsSnapParamEn },
+	{ { DEFACCEL, "SWS: Toggle snapshot selected only on save" },			"SWSSNAPSHOT_SELONLY",		ToggleSelOnlySave,		NULL, 0,			IsSnapParamEn },
+	{ { DEFACCEL, "SWS: Toggle snapshot selected only on recall" },			"SWSSNAPSHOT_SELONLYRECALL",ToggleSelOnlyRecall,	NULL, 0,			IsSnapParamEn },
+	{ { DEFACCEL, "SWS: Toggle snapshot apply filter to recall" },			"SWSSNAPSHOT_APPLYLOAD",	ToggleAppToRec,			NULL, 0,			IsSnapParamEn },
+	{ { DEFACCEL, "SWS: Toggle snapshot show only for selected tracks" },	"SWSSNAPSHOT_SHOWONLYSEL",	ToggleShowForSelTracks, NULL, 0,			IsSnapParamEn },
 
-	{ { DEFACCEL, "SWS: Clear all snapshot filter options" },           "SWSSNAPSHOT_CLEARFILT", ClearFilter,    NULL, },
-	{ { DEFACCEL, "SWS: Save current snapshot filter options" },        "SWSSNAPSHOT_SAVEFILT",  SaveFilter,     NULL, },
-	{ { DEFACCEL, "SWS: Restore snapshot filter options" },             "SWSSNAPSHOT_RESTFILT",  RestoreFilter,  NULL, },
+	{ { DEFACCEL, "SWS: Clear all snapshot filter options" },				"SWSSNAPSHOT_CLEARFILT", ClearFilter,    NULL, },
+	{ { DEFACCEL, "SWS: Save current snapshot filter options" },			"SWSSNAPSHOT_SAVEFILT",  SaveFilter,     NULL, },
+	{ { DEFACCEL, "SWS: Restore snapshot filter options" },					"SWSSNAPSHOT_RESTFILT",  RestoreFilter,  NULL, },
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 //!WANT_LOCALIZE_SWS_CMD_TABLE_END

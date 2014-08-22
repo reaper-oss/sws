@@ -103,13 +103,15 @@ public:
 	bool IsValid ();
 
 private:
+	bool Build ();
+
 	MediaItem_Take* m_take;
 	void* m_midiEditor;
 	double m_startPos, m_hZoom;
 	int m_vPos, m_vZoom, m_noteshow, m_timebase, m_pianoroll, m_drawChannel, m_eventFilterCh, m_ccLanesCount, m_ppq, m_lastLane;
 	vector<int> m_ccLanes, m_ccLanesHeight;
-	bool m_valid;
-	bool Build ();
+	bool m_eventFilter, m_valid;
+
 };
 
 /******************************************************************************
@@ -173,7 +175,7 @@ double ME_PositionAtMouseCursor (bool checkRuler, bool checkCCLanes);
 vector<int> GetUsedNamedNotes (void* midiEditor, MediaItem_Take* take, bool used, bool named, int channelForNames);
 vector<int> GetSelectedNotes (MediaItem_Take* take);
 vector<int> MuteSelectedNotes (MediaItem_Take* take); // returns previous mute state of all notes
-set<int> GetUsedCCLanes (MediaItem_Take* take, int dectect14bit); // dectect14bit: 0-> don't detect 14-bit, 1->detect partial 14-bit (if CC parts have additional data count them too) 2->detect full 14-bit (detect only if all CCs that make it have exactly same time positions)
+set<int> GetUsedCCLanes (void* midiEditor, int detect14bit); // detect14bit: 0-> don't detect 14-bit, 1->detect partial 14-bit (count both 14 bit lanes and their counterparts) 2->detect full 14-bit (detect only if all CCs that make it have exactly same time positions)
 double EffectiveMidiTakeLength (MediaItem_Take* take, bool ignoreMutedEvents, bool ignoreTextEvents);
 double EffectiveMidiTakeStart (MediaItem_Take* take, bool ignoreMutedEvents, bool ignoreTextEvents);
 void SetMutedNotes (MediaItem_Take* take, vector<int>& muteStatus);

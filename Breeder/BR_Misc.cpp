@@ -31,6 +31,7 @@
 #include "BR_MidiTools.h"
 #include "BR_ProjState.h"
 #include "BR_Util.h"
+#include "../SnM/SnM.h"
 #include "../SnM/SnM_Util.h"
 #include "../Xenakios/XenakiosExts.h"
 #include "../reaper/localize.h"
@@ -352,7 +353,7 @@ void ItemSourcePathToClipBoard (COMMAND_T* ct)
 
 			if (const char* fileName = source->GetFileName())
 				if (strcmp(fileName, "")) // skip in-project files
-					sourceList.AppendFormatted(4096, "%s\n", fileName);
+					sourceList.AppendFormatted(SNM_MAX_PATH, "%s\n", fileName);
 		}
 	}
 

@@ -70,6 +70,7 @@ m_drawChannel   (-1),
 m_eventFilterCh (-1),
 m_ppq           (-1),
 m_lastLane      (-666),
+m_eventFilter   (false),
 m_valid         (false)
 {
 	m_valid        = this->Build();
@@ -78,19 +79,21 @@ m_valid         (false)
 }
 
 BR_MidiEditor::BR_MidiEditor (MediaItem_Take* take) :
-m_take          (take),
-m_midiEditor    (NULL),
-m_startPos      (-1),
-m_hZoom         (-1),
-m_vPos          (-1),
-m_vZoom         (-1),
-m_noteshow      (-1),
-m_timebase      (-1),
-m_pianoroll     (-1),
-m_drawChannel   (-1),
-m_ppq           (-1),
-m_lastLane      (-666),
-m_valid         (false)
+m_take           (take),
+m_midiEditor     (NULL),
+m_startPos       (-1),
+m_hZoom          (-1),
+m_vPos           (-1),
+m_vZoom          (-1),
+m_noteshow       (-1),
+m_timebase       (-1),
+m_pianoroll      (-1),
+m_drawChannel    (-1),
+m_eventFilterCh  (-1),
+m_ppq            (-1),
+m_lastLane       (-666),
+m_eventFilter    (false),
+m_valid          (false)
 {
 	m_valid        = this->Build();
 	m_ccLanesCount = (int)m_ccLanes.size();
@@ -203,10 +206,15 @@ bool BR_MidiEditor::IsCCLaneVisible (int lane)
 
 bool BR_MidiEditor::IsChannelVisible (int channel)
 {
-	if (m_eventFilterCh == 0)
-		return true;
+	if (m_eventFilter)
+	{
+		if (m_eventFilterCh == 0)
+			return true;
+		else
+			return !!GetBit(m_eventFilterCh, channel);
+	}
 	else
-		return !!GetBit(m_eventFilterCh, channel);
+		return true;
 }
 
 void* BR_MidiEditor::GetEditor ()
@@ -278,7 +286,11 @@ bool BR_MidiEditor::Build ()
 				if (ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "SOURCE", "EVTFILTER", 0, -1, &lineFilter))
 				{
 					lp.parse(lineFilter.Get());
-					m_eventFilterCh    = lp.gettoken_int(1);
+					m_eventFilterCh     = lp.gettoken_int(1);
+					m_eventFilter       = !!GetBit(lp.gettoken_int(7), 0);
+
+					if (!!GetBit(lp.gettoken_int(7), 2)) // invert filter if needed
+						m_eventFilterCh = ~m_eventFilterCh;
 				}
 				else
 					return false;
@@ -524,94 +536,127 @@ vector<int> MuteSelectedNotes (MediaItem_Take* take)
 	return muteStatus;
 }
 
-set<int> GetUsedCCLanes (MediaItem_Take* take, int dectect14bit)
+set<int> GetUsedCCLanes (void* midiEditor, int detect14bit)
 {
+	MediaItem_Take* take = MIDIEditor_GetTake(midiEditor);
 	set<int> usedCC;
 
 	int noteCount, ccCount, sysCount;
 	if (take && MIDI_CountEvts(take, &noteCount, &ccCount, &sysCount))
 	{
-		for (int i = 0; i < ccCount; ++i)
+		BR_MidiEditor editor(midiEditor);
+
+		set<int> unpairedMSB;
+		for (int id = 0; id < ccCount; ++id)
 		{
-			int chanMsg, msg2;
-			MIDI_GetCC(take, i, NULL, NULL, NULL, &chanMsg, NULL, &msg2, NULL);
-			if      (chanMsg == 0xB0) usedCC.insert(msg2);
-			else if (chanMsg == 0xC0) usedCC.insert(CC_PROGRAM);
+			int chanMsg, chan, msg2;
+			MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, &chan, &msg2, NULL);
+
+			if (!editor.IsChannelVisible(chan))
+				continue;
+
+			if      (chanMsg == 0xC0) usedCC.insert(CC_PROGRAM);
 			else if (chanMsg == 0xD0) usedCC.insert(CC_CHANNEL_PRESSURE);
 			else if (chanMsg == 0xE0) usedCC.insert(CC_PITCH);
-		}
-
-		if (dectect14bit != 0)
-		{
-			set<int>::iterator usedCCIt;
-			usedCCIt = usedCC.upper_bound(-1);
-			bool hasFirstPart  = (usedCCIt != usedCC.end() && *usedCCIt <= 31)  ? true : false;
-			usedCCIt = usedCC.upper_bound(31);
-			bool hasSecondPart  = (usedCCIt != usedCC.end() && *usedCCIt <= 63) ? true : false;
-
-			if (hasFirstPart && hasSecondPart)
+			else if (chanMsg == 0xB0)
 			{
-				if (dectect14bit == 1)
+				if (msg2 > 63 || detect14bit == 0)
+					usedCC.insert(msg2);
+				else
 				{
-					vector<set<double> > pairsPositions;
-					pairsPositions.resize(64);
+					if (detect14bit == 1)
+						usedCC.insert(msg2);
 
-					for (int i = 0; i < ccCount; ++i)
+					// If MSB also check for LSB that makes up 14 bit event
+					if (msg2 <= 31)
 					{
-						double position;
-						int chanMsg, msg2;
-						MIDI_GetCC(take, i, NULL, NULL, &position, &chanMsg, NULL, &msg2, NULL);
-						if (chanMsg == 0xB0 && CheckBounds(msg2, 0, 63))
-							pairsPositions[msg2].insert(position);
-					}
-
-					for (int i = 0; i < 32; ++i)
-					{
-						int j = i + 32;
-
-						if (pairsPositions[i].size() && pairsPositions[j].size())
+						int tmpId = id;
+						if (MIDI_GetCC(take, tmpId + 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL))
 						{
-							for(set<double>::iterator it = pairsPositions[i].begin(); it != pairsPositions[i].end(); ++it)
+							double pos;
+							MIDI_GetCC(take, id, NULL, NULL, &pos, NULL, NULL, NULL, NULL);
+
+							double nextPos;
+							int nextChanMsg, nextChan, nextMsg2;
+							while (MIDI_GetCC(take, ++tmpId, NULL, NULL, &nextPos, &nextChanMsg, &nextChan, &nextMsg2, NULL))
 							{
-								if (pairsPositions[j].count(*it))
+								if (nextPos > pos)
 								{
-									usedCC.insert(i + 134);
+									if (detect14bit == 2)
+									{
+										usedCC.insert(msg2);
+										unpairedMSB.insert(msg2);
+									}
+									break;
+								}
+
+								if (chanMsg == nextChanMsg && msg2 == nextMsg2 - 32 && chan == nextChan)
+								{
+									usedCC.insert(msg2 + CC_14BIT_START);
 									break;
 								}
 							}
 						}
-					}
-				}
-				else
-				{
-					vector<vector<double> > pairsPositions;
-					pairsPositions.resize(64);
-
-					for (int i = 0; i < ccCount; ++i)
-					{
-						double position;
-						int chanMsg, msg2;
-						MIDI_GetCC(take, i, NULL, NULL, &position, &chanMsg, NULL, &msg2, NULL);
-						if (chanMsg == 0xB0 && CheckBounds(msg2, 0, 63))
-							pairsPositions[msg2].push_back(position);
-					}
-
-					for (int i = 0; i < 32; ++i)
-					{
-						int j = i + 32;
-						if (pairsPositions[i].size() && pairsPositions[j].size() && pairsPositions[i] == pairsPositions[j])
+						else
 						{
-							usedCC.erase(i);
-							usedCC.erase(j);
-							usedCC.insert(i + 134);
+							if (detect14bit == 2)
+							{
+								usedCC.insert(msg2);
+								unpairedMSB.insert(msg2);
+							}
 						}
+					}
+					// If LSB, just make sure it was paired
+					else if (detect14bit == 2)
+					{
+						int tmpId = id;
+						if (MIDI_GetCC(take, tmpId - 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL))
+						{
+							double pos;
+							MIDI_GetCC(take, id, NULL, NULL, &pos, NULL, NULL, NULL, NULL);
+
+							double prevPos;
+							int prevChanMsg, prevChan, prevMsg2;
+							while (MIDI_GetCC(take, --tmpId, NULL, NULL, &prevPos, &prevChanMsg, &prevChan, &prevMsg2, NULL))
+							{
+								if (prevPos < pos)
+								{
+									if (detect14bit == 2)
+										usedCC.insert(msg2);
+									break;
+								}
+								if (chanMsg == prevChanMsg && msg2 == prevMsg2 + 32 && chan == prevChan)
+									break;
+							}
+						}
+						else
+							usedCC.insert(msg2);
 					}
 				}
 			}
 		}
+		if (detect14bit == 2)
+		{
+			for (set<int>::iterator it = unpairedMSB.begin(); it != unpairedMSB.end(); ++it)
+			{
+				if (usedCC.find(*it +CC_14BIT_START) != usedCC.end())
+				{
+					usedCC.erase(*it + CC_14BIT_START);
+					usedCC.insert(*it + 32);             // MSB is already there, LSB doesn't have to be so add it
+				}
+			}
+		}
 
-		if (noteCount)
-			usedCC.insert(-1);
+		for (int i = 0; i < noteCount; ++i)
+		{
+			int chan;
+			MIDI_GetNote(take, i, NULL, NULL, NULL, NULL, &chan, NULL, NULL);
+			if (editor.IsChannelVisible(chan))
+			{
+				usedCC.insert(-1);
+				break;
+			}
+		}
 
 		bool foundText = false, foundSys = false;
 		for (int i = 0; i < sysCount; ++i)
@@ -625,6 +670,8 @@ set<int> GetUsedCCLanes (MediaItem_Take* take, int dectect14bit)
 				{
 					usedCC.insert(CC_SYSEX);
 					foundSys = true;
+					if (foundText)
+						break;
 				}
 			}
 			else
@@ -633,6 +680,8 @@ set<int> GetUsedCCLanes (MediaItem_Take* take, int dectect14bit)
 				{
 					usedCC.insert(CC_TEXT_EVENTS);
 					foundText = true;
+					if (foundSys)
+						break;
 				}
 			}
 		}

@@ -80,6 +80,7 @@ Fixes
  - SWS/BR: Set "Apply trim when adding volume/pan envelope"
  - SWS/BR: Toggle "Playback position follows project timebase when changing tempo"
  - SWS/wol: Set "Vertical/Horizontal zoom center"
++MIDI editor actions that hide/show used CC lanes now obey filter's channel settings
 
 Other
 +Increased all SWS/BR slot actions to 8 slots

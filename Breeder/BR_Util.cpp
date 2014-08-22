@@ -29,6 +29,7 @@ use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 #include "BR_EnvTools.h"
 #include "BR_MidiTools.h"
 #include "../reaper/localize.h"
+#include "../SnM/SnM.h"
 #include "../SnM/SnM_Chunk.h"
 #include "../SnM/SnM_Dlg.h"
 #include "../SnM/SnM_Item.h"
@@ -3367,9 +3368,9 @@ void SetWndIcon (HWND hwnd)
 		static HICON s_icon = NULL;
 		if (!s_icon)
 		{
-			wchar_t path[2094];
-			GetModuleFileNameW(NULL, path, sizeof(path)/sizeof(wchar_t));
-			s_icon = ExtractIconW(g_hInst, path, 0); // WM_GETICON isn't working so use this instead
+			wchar_t path[SNM_MAX_PATH];
+			if (GetModuleFileNameW(NULL, path, sizeof(path)/sizeof(wchar_t)))
+				s_icon = ExtractIconW(g_hInst, path, 0); // WM_GETICON isn't working so use this instead
 		}
 
 		if (s_icon)

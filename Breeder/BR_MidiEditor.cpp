@@ -358,49 +358,100 @@ void ME_RestoreNoteSelSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWND
 
 void ME_SaveCCEventsSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
-	BR_MidiEditor midiEditor;
-	if (midiEditor.IsValid())
+	int lane;
+	void* midiEditor;
+	if ((int)ct->user < 0)
 	{
-		int lane = midiEditor.GetLastClickedCCLane();
+		BR_MouseContextInfo mouseInfo;
+		GetMouseCursorContext (NULL, NULL, NULL, &mouseInfo);
+		if (mouseInfo.ccLane == -2)
+			midiEditor = NULL;
+		else
+		{
+			midiEditor = mouseInfo.midiEditor;
+			lane = mouseInfo.ccLane;
+		}
+	}
+	else
+	{
+		midiEditor = MIDIEditor_GetActive();
+		lane = GetLastClickedVelLane(midiEditor);
+	}
+
+	BR_MidiEditor editor(midiEditor);
+	if (editor.IsValid())
+	{
+		int slot = abs((int)ct->user) - 1;
 		if (lane != CC_TEXT_EVENTS && lane != CC_SYSEX && lane != CC_BANK_SELECT)
 		{
-			int slot = (int)ct->user;
 			for (int i = 0; i < g_midiCCEvents.Get()->GetSize(); ++i)
 			{
 				if (slot == g_midiCCEvents.Get()->Get(i)->GetSlot())
-					return g_midiCCEvents.Get()->Get(i)->Save(midiEditor);
+					return g_midiCCEvents.Get()->Get(i)->Save(editor, lane);
 			}
-			g_midiCCEvents.Get()->Add(new BR_MidiCCEvents(slot, midiEditor));
+			g_midiCCEvents.Get()->Add(new BR_MidiCCEvents(slot, editor, lane));
 		}
 		else
-			MessageBox((HWND)midiEditor.GetEditor(), __LOCALIZE("Can't save events from text, sysex and bank select lanes","sws_mbox"), __LOCALIZE("SWS/BR - Warning","sws_mbox"), MB_OK);
+			MessageBox((HWND)editor.GetEditor(), __LOCALIZE("Can't save events from text, sysex and bank select lanes","sws_mbox"), __LOCALIZE("SWS/BR - Warning","sws_mbox"), MB_OK);
 	}
 }
 
 void ME_RestoreCCEventsSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
-	BR_MidiEditor midiEditor;
-	if (midiEditor.IsValid())
+	int lane;
+	void* midiEditor;
+	if ((int)ct->user < 0)
+	{
+		BR_MouseContextInfo mouseInfo;
+		GetMouseCursorContext (NULL, NULL, NULL, &mouseInfo);
+		if (mouseInfo.ccLane == -2)
+			midiEditor = NULL;
+		else
+		{
+			midiEditor = mouseInfo.midiEditor;
+			lane = mouseInfo.ccLane;
+		}
+	}
+	else
+	{
+		midiEditor = MIDIEditor_GetActive();
+		lane = GetLastClickedVelLane(midiEditor);
+	}
+
+	BR_MidiEditor editor(midiEditor);
+	if (editor.IsValid())
 	{
 		int slot = abs((int)ct->user) - 1;
-		bool allVisible = ((int)ct->user < 0) ? true : false;
-
 		for (int i = 0; i < g_midiCCEvents.Get()->GetSize(); ++i)
 		{
 			if (slot == g_midiCCEvents.Get()->Get(i)->GetSlot())
 			{
-				bool process = true;
-				int lane = midiEditor.GetLastClickedCCLane();
-				if (!allVisible && (lane == CC_TEXT_EVENTS || lane == CC_SYSEX || lane == CC_BANK_SELECT || lane == CC_VELOCITY))
-					process = false;
-
-				if (process)
+				if (lane != CC_TEXT_EVENTS && lane != CC_SYSEX && lane != CC_BANK_SELECT && lane != CC_VELOCITY)
 				{
-					if (g_midiCCEvents.Get()->Get(i)->Restore(midiEditor, allVisible))
+					if (g_midiCCEvents.Get()->Get(i)->Restore(editor, lane, false))
 						Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 				}
 				else
-					MessageBox((HWND)midiEditor.GetEditor(), __LOCALIZE("Can't restore to velocity, text, sysex and bank select lanes","sws_mbox"), __LOCALIZE("SWS/BR - Warning","sws_mbox"), MB_OK);
+					MessageBox((HWND)editor.GetEditor(), __LOCALIZE("Can't restore to velocity, text, sysex and bank select lanes","sws_mbox"), __LOCALIZE("SWS/BR - Warning","sws_mbox"), MB_OK);
+				return;
+			}
+		}
+	}
+}
+
+void ME_RestoreCCEvents2Slot (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
+{
+	BR_MidiEditor midiEditor;
+	if (midiEditor.IsValid())
+	{
+		int slot = (int)ct->user;
+		for (int i = 0; i < g_midiCCEvents.Get()->GetSize(); ++i)
+		{
+			if (slot == g_midiCCEvents.Get()->Get(i)->GetSlot())
+			{
+				int lane = midiEditor.GetLastClickedCCLane();
+				if (g_midiCCEvents.Get()->Get(i)->Restore(midiEditor, 0, true))
+					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 				return;
 			}
 		}

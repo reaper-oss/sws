@@ -107,11 +107,11 @@ private:
 class BR_MidiCCEvents
 {
 public:
-	BR_MidiCCEvents (int slot, BR_MidiEditor& midiEditor);
+	BR_MidiCCEvents (int slot, BR_MidiEditor& midiEditor, int lane);
 	BR_MidiCCEvents (int slot, ProjectStateContext* ctx);
 	void SaveState (ProjectStateContext* ctx);
-	void Save (BR_MidiEditor& midiEditor);
-	bool Restore (BR_MidiEditor& midiEditor, bool allVisible);
+	void Save (BR_MidiEditor& midiEditor, int lane);
+	bool Restore (BR_MidiEditor& midiEditor, int lane, bool allVisible);
 	int  GetSlot ();
 
 private:
@@ -124,7 +124,7 @@ private:
 		Event (double positionPPQ, int channel, int msg2, int msg3, bool mute);
 	};
 
-	bool SaveEvents (BR_MidiEditor& midiEditor);
+	bool SaveEvents (BR_MidiEditor& midiEditor, int lane);
 
 	int m_slot, m_sourceLane, m_ppq;
 	vector<BR_MidiCCEvents::Event> m_events;

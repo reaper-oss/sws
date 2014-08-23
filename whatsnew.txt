@@ -67,7 +67,7 @@ Added actions
  - SWS/BR: Select all MIDI/audio/video items
  - SWS/wol: Select all tracks except folder parents
 +MIDI editor:
- - SWS/BR: Save/Restore selected events in last clicked CC lane (8 slots) (Restore has 2 versions: last clicked lane or all visible lanes)
+ - SWS/BR: Save/Restore selected events in last clicked CC lane (8 slots) (Save has 2 versions: last clicked lane, lane under mouse cursor. Restore has 3 versions: last clicked lane, lane under mouse cursor, all visible lanes)
  - SWS/BR: Insert CC event at edit cursor in CC lane under mouse cursor (active item only)
 
 ReaScript

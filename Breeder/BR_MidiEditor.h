@@ -50,3 +50,4 @@ void ME_SaveNoteSelSlot (COMMAND_T*, int, int, int, HWND);
 void ME_RestoreNoteSelSlot (COMMAND_T*, int, int, int, HWND);
 void ME_SaveCCEventsSlot (COMMAND_T*, int, int, int, HWND);
 void ME_RestoreCCEventsSlot (COMMAND_T*, int, int, int, HWND);
+void ME_RestoreCCEvents2Slot (COMMAND_T*, int, int, int, HWND);

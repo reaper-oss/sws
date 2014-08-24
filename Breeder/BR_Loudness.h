@@ -277,7 +277,7 @@ protected:
 ******************************************************************************/
 void NormalizeLoudness (COMMAND_T*);
 void AnalyzeLoudness (COMMAND_T*);
-void ToggleLoudnessPref (COMMAND_T* ct);
+void ToggleLoudnessPref (COMMAND_T*);
 
 /******************************************************************************
 * Toggle states                                                               *

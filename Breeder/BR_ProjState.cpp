@@ -590,7 +590,7 @@ bool BR_MidiCCEvents::SaveEvents (BR_MidiEditor& midiEditor, int lane)
 					{
 						double pos; int channel, value;
 						MIDI_GetCC(take, tmpId, NULL, NULL, &pos, NULL, &channel, &cc, &value);
-						if (cc == cc1)
+						if (pos > event.positionPPQ)
 							break;
 						if (cc == cc2 && channel == events.back().channel && pos == events.back().positionPPQ)
 						{

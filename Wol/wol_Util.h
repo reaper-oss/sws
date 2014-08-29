@@ -48,6 +48,11 @@ void ScrollToTrackIfNotInArrange(TrackEnvelope* envelope);
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Envelope
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+struct EnvelopeHeight
+{
+	TrackEnvelope* env;
+	int h;
+};
 int CountVisibleTrackEnvelopesInTrackLane(MediaTrack* track);
 int GetEnvelopeOverlapState(TrackEnvelope* envelope, int* laneCount = NULL, int* envCount = NULL);
 

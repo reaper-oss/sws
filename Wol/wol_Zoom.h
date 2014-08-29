@@ -47,3 +47,5 @@ int IsEnvelopeOverlapEnabled(COMMAND_T* = NULL);
 void ForceEnvelopeOverlap(COMMAND_T* ct);
 
 void ZoomSelectedEnvelopeTimeSelection(COMMAND_T* ct);
+
+void ManageEnvelopeHeight(COMMAND_T* ct);

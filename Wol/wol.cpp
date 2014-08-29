@@ -35,6 +35,10 @@ void SelectAllTracksExceptFolderParents(COMMAND_T* ct);
 static COMMAND_T g_commandTable[] =
 {
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
+
+		///////////////////////////////////////////////////////////////////////////////////////////////////
+		// Zoom
+		///////////////////////////////////////////////////////////////////////////////////////////////////
 		{ { DEFACCEL, "SWS/wol: Set \"Vertical zoom center\" to \"Track at center of view\"" }, "WOL_SETVZOOMC_TRACKCVIEW", SetVerticalZoomCenter, NULL, 0},
 		{ { DEFACCEL, "SWS/wol: Set \"Vertical zoom center\" to \"Top visible track\"" }, "WOL_SETVZOOMC_TOPVISTRACK", SetVerticalZoomCenter, NULL, 1},
 		{ { DEFACCEL, "SWS/wol: Set \"Vertical zoom center\" to \"Last selected track\"" }, "WOL_SETVZOOMC_LASTSELTRACK", SetVerticalZoomCenter, NULL, 2},
@@ -57,7 +61,16 @@ static COMMAND_T g_commandTable[] =
 		{ { DEFACCEL, "SWS/wol: Horizontal zoom to selected envelope in time selection" }, "WOL_HZOOMSELENVTIMESEL", ZoomSelectedEnvelopeTimeSelection, NULL, 0 },
 		{ { DEFACCEL, "SWS/wol: Full zoom to selected envelope in time selection" }, "WOL_FZOOMSELENVTIMESEL", ZoomSelectedEnvelopeTimeSelection, NULL, 1 },
 
+		{ { DEFACCEL, "SWS/wol: Get height of selected envelope" }, "WOL_GETHEIGHTSELENV", ManageEnvelopeHeight, NULL, 0 },
+		{ { DEFACCEL, "SWS/wol: Apply height to selected envelope" }, "WOL_APPLYHEIGHTSELENV", ManageEnvelopeHeight, NULL, 1 },
+		{ { DEFACCEL, "SWS/wol: Save selected envelope height" }, "WOL_SAVEENVHEIGHT", ManageEnvelopeHeight, NULL, 2 },
+		{ { DEFACCEL, "SWS/wol: Restore selected envelope height" }, "WOL_RESTENVHEIGHT", ManageEnvelopeHeight, NULL, 3 },
+
+		///////////////////////////////////////////////////////////////////////////////////////////////////
+		// Track
+		///////////////////////////////////////////////////////////////////////////////////////////////////
 		{ { DEFACCEL, "SWS/wol: Select all tracks except folder parents" }, "WOL_SELTREXCFOLDPAR", SelectAllTracksExceptFolderParents, NULL },
+
 //!WANT_LOCALIZE_1ST_STRING_END
 
 		{ {}, LAST_COMMAND, },

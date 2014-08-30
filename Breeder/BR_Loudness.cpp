@@ -3390,8 +3390,8 @@ HMENU BR_AnalyzeLoudnessWnd::OnContextMenu (int x, int y, bool* wantDefaultItems
 
 		AddToMenu((button ? menu : optionsMenu), SWS_SEPARATOR, 0);
 		AddToMenu((button ? menu : optionsMenu), __LOCALIZE("Mirror project selection", "sws_DLG_174"), SET_MIRROR_SELECTION, -1, false, m_properties.mirrorProjSelection ?  MF_CHECKED : MF_UNCHECKED);
-		AddToMenu((button ? menu : optionsMenu), __LOCALIZE("Double-click moves arrange to track/take", "sws_DLG_174"), SET_DOUBLECLICK_GOTO_TARGET, -1, false, m_properties.doubleClickGoToTarget ?  MF_CHECKED : MF_UNCHECKED);
-		AddToMenu((button ? menu : optionsMenu), __LOCALIZE("Double-click maximum short-term/momentary creates time selection", "sws_DLG_174"), SET_TIMESEL_OVER_MAX, -1, false, m_properties.timeSelOverMax ?  MF_CHECKED : MF_UNCHECKED);
+		AddToMenu((button ? menu : optionsMenu), __LOCALIZE("Double-click moves arrange to track/item", "sws_DLG_174"), SET_DOUBLECLICK_GOTO_TARGET, -1, false, m_properties.doubleClickGoToTarget ?  MF_CHECKED : MF_UNCHECKED);
+		AddToMenu((button ? menu : optionsMenu), __LOCALIZE("Navigating to maximum short-term/momentary creates time selection", "sws_DLG_174"), SET_TIMESEL_OVER_MAX, -1, false, m_properties.timeSelOverMax ?  MF_CHECKED : MF_UNCHECKED);
 
 		AddToMenu((button ? menu : optionsMenu), SWS_SEPARATOR, 0);
 		AddSubMenu((button ? menu : optionsMenu), unitMenu, __LOCALIZE("Unit", "sws_DLG_174"), -1);

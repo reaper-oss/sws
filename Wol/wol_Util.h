@@ -29,11 +29,15 @@
 
 
 
+void wol_UtilInit();
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Track
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 bool SaveSelectedTracks();
 bool RestoreSelectedTracks();
+
+/* refreshes UI too */
 void SetTrackHeight(MediaTrack* track, int height);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -54,9 +58,32 @@ struct EnvelopeHeight
 	int h;
 };
 int CountVisibleTrackEnvelopesInTrackLane(MediaTrack* track);
+
+/*  Return   -1 for envelope not in track lane or not visible, *laneCount and *envCount not modified
+			 0 for overlap disabled, *laneCount = *envCount = number of lanes (same as visible envelopes)
+			 1 for overlap enabled, envelope height < overlap limit -> single lane (one envelope visible), *laneCount = *envCount = 1
+			 2 for overlap enabled, envelope height < overlap limit -> single lane (overlapping), *laneCount = 1, *envCount = number of visible envelopes
+			 3 for overlap enabled, envelope height > overlap limit -> single lane (one envelope visible), *laneCount = *envCount = 1
+			 4 for overlap enabled, envelope height > overlap limit -> multiple lanes, *laneCount = *envCount = number of lanes (same as visible envelopes) */
 int GetEnvelopeOverlapState(TrackEnvelope* envelope, int* laneCount = NULL, int* envCount = NULL);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Midi
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 int AdjustRelative(int _adjmode, int _reladj);
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/// Ini
+///////////////////////////////////////////////////////////////////////////////////////////////////
+const char* GetWolIni();
+void SaveIniSettings(const char* section, const char* key, bool val, const char* path = GetWolIni());
+void SaveIniSettings(const char* section, const char* key, int val, const char* path = GetWolIni());
+void SaveIniSettings(const char* section, const char* key, const char* val, const char* path = GetWolIni());
+bool GetIniSettings(const char* section, const char* key, bool defVal, const char* path = GetWolIni());
+int GetIniSettings(const char* section, const char* key, int defVal, const char* path = GetWolIni());
+int GetIniSettings(const char* section, const char* key, const char* defVal, char* outBuf, int maxOutBufSize, const char* path = GetWolIni());
+void DeleteIniSection(const char* section, const char* path = GetWolIni());
+void DeleteIniKey(const char* section, const char* key, const char* path = GetWolIni());
+#ifdef _WIN32
+void FlushIni(const char* path = GetWolIni());
+#endif

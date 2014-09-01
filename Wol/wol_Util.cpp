@@ -30,8 +30,24 @@
 #include "../Breeder/BR_Util.h"
 #include "../Breeder/BR_EnvTools.h"
 #include "../SnM/SnM_Dlg.h"
+#include "../SnM/SnM_Util.h"
 
+#ifdef _WIN32
+#define WOL_INI_FILE "%s\\wol.ini"
+#else
+#define WOL_INI_FILE "%s/wol.ini"
+#endif
 
+//---------//
+
+static WDL_FastString g_wolIni;
+
+//---------//
+
+void wol_UtilInit()
+{
+	g_wolIni.SetFormatted(2048, WOL_INI_FILE, GetResourcePath());
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Track
@@ -171,12 +187,6 @@ int CountVisibleTrackEnvelopesInTrackLane(MediaTrack* track)
 	return count;
 }
 
-// Return   -1 for envelope not in track lane or not visible, *laneCount and *envCount not modified
-//			 0 for overlap disabled, *laneCount = *envCount = number of lanes (same as visible envelopes)
-//			 1 for overlap enabled, envelope height < overlap limit -> single lane (one envelope visible), *laneCount = *envCount = 1
-//			 2 for overlap enabled, envelope height < overlap limit -> single lane (overlapping), *laneCount = 1, *envCount = number of visible envelopes
-//			 3 for overlap enabled, envelope height > overlap limit -> single lane (one envelope visible), *laneCount = *envCount = 1
-//			 4 for overlap enabled, envelope height > overlap limit -> multiple lanes, *laneCount = *envCount = number of lanes (same as visible envelopes)
 int GetEnvelopeOverlapState(TrackEnvelope* envelope, int* laneCount, int* envCount)
 {
 	bool lane, visible;
@@ -210,3 +220,64 @@ int AdjustRelative(int _adjmode, int _reladj)
 	else _reladj = 0;
 	return _reladj;
 }
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/// Ini
+///////////////////////////////////////////////////////////////////////////////////////////////////
+const char* GetWolIni()
+{
+	return g_wolIni.Get();
+}
+
+void SaveIniSettings(const char* section, const char* key, bool val, const char* path)
+{
+	char tmp[256];
+	_snprintfSafe(tmp, sizeof(tmp), "%d", val ? 1 : 0);
+	WritePrivateProfileString(section, key, tmp, path);
+}
+
+void SaveIniSettings(const char* section, const char* key, int val, const char* path)
+{
+	char tmp[256];
+	_snprintfSafe(tmp, sizeof(tmp), "%d", val);
+	WritePrivateProfileString(section, key, tmp, path);
+}
+
+void SaveIniSettings(const char* section, const char* key, const char* val, const char* path)
+{
+	WritePrivateProfileString(section, key, val, path);
+}
+
+bool GetIniSettings(const char* section, const char* key, bool defVal, const char* path)
+{
+	return GetPrivateProfileInt(section, key, defVal ? 1 : 0, path) ? true : false;
+}
+
+int GetIniSettings(const char* section, const char* key, int defVal, const char* path)
+{
+	return GetPrivateProfileInt(section, key, defVal, path);
+}
+
+int GetIniSettings(const char* section, const char* key, const char* defVal, char* outBuf, int maxOutBufSize, const char* path)
+{
+	return GetPrivateProfileString(section, key, defVal, outBuf, maxOutBufSize, path);
+}
+
+void DeleteIniSection(const char* section, const char* path)
+{
+	WritePrivateProfileString(section, NULL, NULL, path);
+}
+
+void DeleteIniKey(const char* section, const char* key, const char* path)
+{
+	WritePrivateProfileString(section, key, NULL, path);
+}
+
+#ifdef _WIN32
+void FlushIni(const char* path)
+{
+	WritePrivateProfileString(NULL, NULL, NULL, path);
+}
+#endif

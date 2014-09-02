@@ -46,7 +46,7 @@ void ZoomSelectedEnvelopeTimeSelection(COMMAND_T* ct);
 void SetVerticalZoomCenter(COMMAND_T* ct);
 void SetHorizontalZoomCenter(COMMAND_T* ct);
 
-void SaveSetSelectedEnvelopeHeightSlot(COMMAND_T* ct);
+void SaveRestoreSelectedEnvelopeHeightSlot(COMMAND_T* ct);
 
 void EnvelopeHeightList(COMMAND_T* ct);
 

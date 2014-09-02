@@ -66,7 +66,7 @@ Added actions
   - Note: the action is meant for http://forum.cockos.com/showthread.php?p=1374175#post1374175|these kind of issues|
  - SWS/BR: Select all MIDI/audio/video items
  - SWS/wol: Select all tracks except folder parents
- - SWS/wol: Save/Set selected envelope height (8 slots)
+ - SWS/wol: Save/Restore selected envelope height (8 slots)
  - SWS/wol: Save/Restore/Remove selected envelope in/from envelope heights list
 +MIDI editor:
  - SWS/BR: Save/Restore selected events in last clicked CC lane (8 slots) (Save has 2 versions: last clicked lane, lane under mouse cursor. Restore has 3 versions: last clicked lane, lane under mouse cursor, all visible lanes)

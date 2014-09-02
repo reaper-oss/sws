@@ -260,7 +260,7 @@ void SetHorizontalZoomCenter(COMMAND_T* ct)
 //---------//
 
 static int EnvH[8];
-void SaveSetSelectedEnvelopeHeightSlot(COMMAND_T* ct)
+void SaveRestoreSelectedEnvelopeHeightSlot(COMMAND_T* ct)
 {
 	if (TrackEnvelope* env = GetSelectedEnvelope(NULL))
 	{
@@ -269,9 +269,9 @@ void SaveSetSelectedEnvelopeHeightSlot(COMMAND_T* ct)
 			int s = (int)ct->user;
 			BR_Envelope brEnv(env);
 			if (brEnv.IsInLane())
-				if (brEnv.IsTakeEnvelope())
-					EnvH[s] = GetTrackHeight(brEnv.GetParent(), 0);
-				else
+				//if (brEnv.IsTakeEnvelope())
+				//	EnvH[s] = GetTrackHeight(brEnv.GetParent(), 0);
+				//else
 					EnvH[s] = brEnv.LaneHeight();
 			else
 			{
@@ -293,16 +293,16 @@ void SaveSetSelectedEnvelopeHeightSlot(COMMAND_T* ct)
 			void(*ScrollTo)(TrackEnvelope*) = ScrollToTrackEnvelopeIfNotInArrange;
 			if (brEnv.IsInLane())
 			{
-				if (brEnv.IsTakeEnvelope())
-				{
-					SetTrackHeight(brEnv.GetParent(), EnvH[s]);
-					ScrollTo = ScrollToTrackIfNotInArrange;
-				}
-				else
-				{
+				//if (brEnv.IsTakeEnvelope())
+				//{
+				//	SetTrackHeight(brEnv.GetParent(), EnvH[s]);
+				//	ScrollTo = ScrollToTrackIfNotInArrange;
+				//}
+				//else
+				//{
 					brEnv.SetLaneHeight(EnvH[s]);
 					brEnv.Commit();
-				}
+				//}
 			}
 			else
 			{

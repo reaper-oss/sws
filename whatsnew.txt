@@ -65,6 +65,7 @@ Added actions
  - SWS/BR: Enable "Ignore project tempo" for selected MIDI items preserving time position of MIDI events (use tempo at item's start)
   - Note: the action is meant for http://forum.cockos.com/showthread.php?p=1374175#post1374175|these kind of issues|
  - SWS/BR: Select all MIDI/audio/video items
+ - SWS/BR: Move closest project marker to edit/play/mouse cursor (2 versions: normal and obey snapping) (Issue 668)
  - SWS/wol: Select all tracks except folder parents
 +MIDI editor:
  - SWS/BR: Save/Restore selected events in last clicked CC lane (8 slots) (Save has 2 versions: last clicked lane, lane under mouse cursor. Restore has 3 versions: last clicked lane, lane under mouse cursor, all visible lanes)

@@ -299,6 +299,50 @@ WDL_FastString FormatTime (double position, int mode /*=-1*/)
 	return string;
 }
 
+int FindClosestProjMarkerIndex (double position)
+{
+	int first = 0;
+	int last  = CountProjectMarkers(NULL, NULL, NULL);
+	if (last < 0)
+		return -1;
+
+	// Find previous marker/region
+	while (first != last)
+	{
+		int mid = (first + last) /2;
+		double currentPos; EnumProjectMarkers3(NULL, mid, NULL, &currentPos, NULL, NULL, NULL, NULL);
+
+		if (currentPos < position) first = mid + 1;
+		else                       last  = mid;
+	}
+	int prevId = first - ((first == 0) ? 0 : 1);
+
+	// Make sure we get marker index, not region
+	int id = prevId + 1; bool region; double prevPosition;
+	while (EnumProjectMarkers3(NULL, --id, &region, &prevPosition, NULL, NULL, NULL, NULL))
+	{
+		if (!region)
+			break;
+	}
+	if (id < 0)
+		return -1;
+
+	// Check against next marker
+	int nextId = prevId;
+	double nextPosition;
+	while (EnumProjectMarkers3(NULL, ++nextId, &region, &nextPosition, NULL, NULL, NULL, NULL))
+	{
+		if (!region)
+		{
+			if (abs(nextPosition - position) < abs(position - prevPosition)) id = nextId;
+			if (id >= CountProjectMarkers(NULL, NULL, NULL))                 id = -1;
+			break;
+		}
+	}
+
+	return id;
+}
+
 double EndOfProject (bool markers, bool regions)
 {
 	double projEnd = 0;

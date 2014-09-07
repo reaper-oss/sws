@@ -534,7 +534,8 @@ static SWSProjConfig<ArrangeState> g_stdAS[5];
 static SWSProjConfig<ArrangeState> g_togAS;
 static bool g_bASToggled = false;
 
-// iType == 0 tracks, 1 items or time sel, 2 just items, 3 just horiz; iOthers == 0 nothing, 1 minimize, 2 hide from TCP
+// iType == 0 tracks, 1 items or time sel, 2 just items, 3 horiz items or time sel, 4 horiz items, 5 horiz time sel
+// iOthers == 0 nothing, 1 minimize, 2 hide from TCP
 void TogZoom(int iType, int iOthers)
 {
 	if (g_bASToggled)
@@ -544,8 +545,21 @@ void TogZoom(int iType, int iOthers)
 		return;
 	}
 
+	double d1, d2;
+	GetSet_LoopTimeRange(false, false, &d1, &d2, false);
+	int itemCount = CountSelectedMediaItems(NULL);
+
+	if (((iType == 1 || iType == 3) && itemCount == 0 && d1 == d2) ||
+		((iType == 2 || iType == 4) && itemCount == 0)             ||
+		(iType == 5                 && d1 == d2)
+	   )
+	{
+		return;
+	}
+
+
 	g_bASToggled = true;
-	g_togAS.Get()->Save(true, iType != 3);
+	g_togAS.Get()->Save(true, iType < 3);
 
 	if (iType == 0)
 	{
@@ -554,13 +568,11 @@ void TogZoom(int iType, int iOthers)
 	}
 	else
 	{
-		double d1, d2;
-		GetSet_LoopTimeRange(false, false, &d1, &d2, false);
-		if (d1 != d2 && (iType == 1 || iType == 3))
-			Main_OnCommand(40031, 0);
+		if (d1 != d2 && (iType == 1 || iType == 3 || iType == 5))
+			Main_OnCommand(40031, 0); // View: Zoom time selection
 		else
 			HorizZoomSelItems();
-		if (iType != 3)
+		if (iType < 3)
 			VertZoomSelItems(iOthers);
 	}
 }
@@ -574,9 +586,10 @@ void TogZoomItemsHide(COMMAND_T* = NULL)	{ TogZoom(1, 2); }
 void TogZoomItemsOnly(COMMAND_T* = NULL)	{ TogZoom(2, 0); }
 void TogZoomItemsOnlyMin(COMMAND_T* = NULL)	{ TogZoom(2, 1); }
 void TogZoomItemsOnlyHide(COMMAND_T* = NULL){ TogZoom(2, 2); }
-void TogZoomHoriz(COMMAND_T* = NULL)		{ TogZoom(3, 0); }
+void TogZoomHoriz(COMMAND_T* ct)		    { TogZoom((int)ct->user, 0); }
+
 void SaveCurrentArrangeViewSlot(COMMAND_T* ct)	{ g_stdAS[(int)ct->user].Get()->Save(true, true); }
-void RestoreArrangeViewSlot(COMMAND_T* ct) { g_stdAS[(int)ct->user].Get()->Restore(); }
+void RestoreArrangeViewSlot(COMMAND_T* ct)      { g_stdAS[(int)ct->user].Get()->Restore(); }
 
 // Returns the track at a point on the track view window
 // Point is in client coords
@@ -1487,7 +1500,9 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Toggle zoom to selected items" },                                          "SWS_TOGZOOMIONLY",        TogZoomItemsOnly,    NULL, 0, IsTogZoomed },
 	{ { DEFACCEL, "SWS: Toggle zoom to selected items, minimize other tracks" },                   "SWS_TOGZOOMIONLYMIN",     TogZoomItemsOnlyMin, NULL, 0, IsTogZoomed },
 	{ { DEFACCEL, "SWS: Toggle zoom to selected items, hide other tracks" },                       "SWS_TOGZOOMIONLYHIDE",    TogZoomItemsOnlyHide,NULL, 0, IsTogZoomed },
-	{ { DEFACCEL, "SWS: Toggle horizontal zoom to selected items or time selection" },             "SWS_TOGZOOMHORIZ",        TogZoomHoriz,        NULL, 0, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle horizontal zoom to selected items or time selection" },             "SWS_TOGZOOMHORIZ",        TogZoomHoriz,        NULL, 3, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle horizontal zoom to selected items" },                               "SWS_TOGZOOMHORIZ_ITEMS",  TogZoomHoriz,        NULL, 4, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle horizontal zoom to time selection" },                               "SWS_TOGZOOMHORIZ_TSEL",   TogZoomHoriz,        NULL, 5, IsTogZoomed },
 
 	{ { DEFACCEL, "SWS: Scroll left 10%" },  "SWS_SCROLL_L10",  HorizScroll, NULL, -10 },
 	{ { DEFACCEL, "SWS: Scroll right 10%" }, "SWS_SCROLL_R10",  HorizScroll, NULL, 10 },

@@ -70,6 +70,7 @@ Added actions
  - SWS: Toggle horizontal zoom to selected items/time selection
  - SWS/wol: Save/Restore selected envelope height (8 slots)
  - SWS/wol: Save/Restore/Remove selected envelope in/from envelope heights list
+ - SWS/wol: Select the closest envelope point to the left/right side of mouse cursor (and move edit cursor)
 +MIDI editor:
  - SWS/BR: Save/Restore selected events in last clicked CC lane (8 slots) (Save has 2 versions: last clicked lane, lane under mouse cursor. Restore has 3 versions: last clicked lane, lane under mouse cursor, all visible lanes)
  - SWS/BR: Insert CC event at edit cursor in CC lane under mouse cursor (active item only)

@@ -26,7 +26,6 @@
 ******************************************************************************/
 
 #include "stdafx.h"
-#include "wol.h"
 #include "wol_Zoom.h"
 #include "wol_Util.h"
 #include "../Breeder/BR_Util.h"

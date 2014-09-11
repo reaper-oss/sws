@@ -27,6 +27,7 @@
 
 #include "stdafx.h"
 #include "wol.h"
+#include "wol_Envelope.h"
 #include "wol_Util.h"
 #include "wol_Zoom.h"
 #include "../reaper/localize.h"
@@ -99,6 +100,14 @@ static COMMAND_T g_commandTable[] =
 		// Track
 		///////////////////////////////////////////////////////////////////////////////////////////////////
 		{ { DEFACCEL, "SWS/wol: Select all tracks except folder parents" }, "WOL_SELTREXCFOLDPAR", SelectAllTracksExceptFolderParents, NULL },
+
+		///////////////////////////////////////////////////////////////////////////////////////////////////
+		// Envelope
+		///////////////////////////////////////////////////////////////////////////////////////////////////
+		{ { DEFACCEL, "SWS/wol: Select the closest envelope point to the left side of mouse cursor" }, "WOL_SELCLOSEENVPTLEFTMOUSE", SelectClosestEnvelopePointMouseCursor, NULL, -1 },
+		{ { DEFACCEL, "SWS/wol: Select the closest envelope point to the left side of mouse cursor and move edit cursor" }, "WOL_SELCLOSEENVPTLEFTMOUSEMOVEEDITC", SelectClosestEnvelopePointMouseCursor, NULL, -2 },
+		{ { DEFACCEL, "SWS/wol: Select the closest envelope point to the right side of mouse cursor" }, "WOL_SELCLOSEENVPTRIGHTMOUSE", SelectClosestEnvelopePointMouseCursor, NULL, 1 },
+		{ { DEFACCEL, "SWS/wol: Select the closest envelope point to the right side of mouse cursor and move edit cursor" }, "WOL_SELCLOSEENVPTRIGHTMOUSEMOVEEDITC", SelectClosestEnvelopePointMouseCursor, NULL, 2 },
 
 //!WANT_LOCALIZE_1ST_STRING_END
 

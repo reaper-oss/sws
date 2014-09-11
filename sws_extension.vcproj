@@ -3728,6 +3728,14 @@
 				RelativePath=".\Wol\wol_Zoom.h"
 				>
 			</File>
+			<File
+				RelativePath=".\Wol\wol_Envelope.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Wol\wol_Envelope.h"
+				>
+			</File>
 		</Filter>
 		<File
 			RelativePath=".\whatsnew.txt"

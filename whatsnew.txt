@@ -65,7 +65,9 @@ Added actions
  - SWS/BR: Enable "Ignore project tempo" for selected MIDI items preserving time position of MIDI events (use tempo at item's start)
   - Note: the action is meant for http://forum.cockos.com/showthread.php?p=1374175#post1374175|these kind of issues|
  - SWS/BR: Select all MIDI/audio/video items
+ - SWS/BR: Move closest project marker to edit/play/mouse cursor (2 versions: normal and obey snapping) (Issue 668)
  - SWS/wol: Select all tracks except folder parents
+ - SWS: Toggle horizontal zoom to selected items/time selection
  - SWS/wol: Save/Restore selected envelope height (8 slots)
  - SWS/wol: Save/Restore/Remove selected envelope in/from envelope heights list
 +MIDI editor:
@@ -83,6 +85,7 @@ Fixes
  - SWS/BR: Toggle "Playback position follows project timebase when changing tempo"
  - SWS/wol: Set "Vertical/Horizontal zoom center"
 +MIDI editor actions that hide/show used CC lanes now obey filter's channel settings
++Prevent toggling zoom with zoom actions when inappropriate (i.e. toggling zoom to selected items when there are no selected items)
 
 Other
 +Increased all SWS/BR slot actions to 8 slots

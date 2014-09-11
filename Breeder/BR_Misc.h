@@ -38,6 +38,7 @@ void MarkersAtNotes (COMMAND_T*);
 void MarkersAtStretchMarkers (COMMAND_T*);
 void MarkerAtMouse (COMMAND_T*);
 void MarkersRegionsAtItems (COMMAND_T*);
+void MoveClosestMarker (COMMAND_T*);
 void SnapFollowsGridVis (COMMAND_T*);
 void TrimNewVolPanEnvs (COMMAND_T*);
 void PlaybackFollowsTempoChange (COMMAND_T*);

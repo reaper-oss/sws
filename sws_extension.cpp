@@ -616,6 +616,7 @@ extern "C"
 		IMPAPI(CoolSB_SetScrollInfo);
 		IMPAPI(CountActionShortcuts);
 		IMPAPI(CountMediaItems);
+		IMPAPI(CountProjectMarkers);
 		IMPAPI(CountSelectedMediaItems);
 		IMPAPI(CountSelectedTracks);
 		IMPAPI(CountTakes);

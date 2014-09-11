@@ -279,6 +279,28 @@ void MarkersRegionsAtItems (COMMAND_T* ct)
 	Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG);
 }
 
+void MoveClosestMarker (COMMAND_T* ct)
+{
+	double position;
+	if      (abs((int)ct->user == 1)) position = GetPlayPositionEx(NULL);
+	else if (abs((int)ct->user == 2)) position = GetCursorPositionEx(NULL);
+	else                              position = PositionAtMouseCursor(true);
+
+	if (position >= 0)
+	{
+		int id = FindClosestProjMarkerIndex(position);
+		if (id >= 0)
+		{
+			if ((int)ct->user < 0) position = SnapToGrid(NULL, position);
+			int markerId;
+			EnumProjectMarkers3(NULL, id, NULL, NULL, NULL, NULL, &markerId, NULL);
+
+			SetProjectMarkerByIndex(NULL, id, NULL, position, NULL, markerId, NULL, NULL);
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
+		}
+	}
+}
+
 void SnapFollowsGridVis (COMMAND_T* ct)
 {
 	int option;

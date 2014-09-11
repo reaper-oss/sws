@@ -75,6 +75,7 @@ template <typename T> T    IsEqual (T a, T b, T epsilon) {epsilon = abs(epsilon)
 ******************************************************************************/
 vector<double> GetProjectMarkers (bool timeSel, double delta = 0);
 WDL_FastString FormatTime (double position, int mode = -1);  // same as format_timestr_pos but handles "measures.beats + time" properly
+int FindClosestProjMarkerIndex (double position);
 double EndOfProject (bool markers, bool regions);
 double GetProjectSettingsTempo (int* num, int* den);
 double GetGridDivSafe (); // makes sure grid div is never over MAX_GRID_DIV
@@ -146,7 +147,7 @@ HWND GetTcpWnd ();
 HWND GetTcpTrackWnd (MediaTrack* track);
 HWND GetNotesView (void* midiEditor);
 HWND GetPianoView (void* midiEditor);
-MediaTrack* HwndToTrack (HWND hwnd, int* hwndContext);  // context: 0->unknown, 1->tcp, 2->mcp (works even if hwnd is not a track but something else in mcp/tcp)
+MediaTrack* HwndToTrack (HWND hwnd, int* hwndContext);  // context: 0->unknown, 1->TCP, 2->MCP (works even if hwnd is not a track but something else in mcp/tcp)
 TrackEnvelope* HwndToEnvelope (HWND hwnd);
 void CenterDialog (HWND hwnd, HWND target, HWND zOrder);
 
@@ -155,7 +156,7 @@ void CenterDialog (HWND hwnd, HWND target, HWND zOrder);
 ******************************************************************************/
 struct BR_MouseContextInfo
 {
-											  // In case the thing is invalid:
+	                                          // In case the thing is invalid:
 	MediaTrack* track;                        // NULL
 	MediaItem* item;                          // NULL
 	MediaItem_Take* take;                     // NULL

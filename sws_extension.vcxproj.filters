@@ -604,6 +604,9 @@
     <ClInclude Include="Wol\wol_Envelope.h">
       <Filter>Wol</Filter>
     </ClInclude>
+    <ClInclude Include="Wol\wol_Misc.h">
+      <Filter>Wol</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="sws_extension.rc">
@@ -1209,6 +1212,9 @@
       <Filter>Wol</Filter>
     </ClCompile>
     <ClCompile Include="Wol\wol_Envelope.cpp">
+      <Filter>Wol</Filter>
+    </ClCompile>
+    <ClCompile Include="Wol\wol_Misc.cpp">
       <Filter>Wol</Filter>
     </ClCompile>
   </ItemGroup>

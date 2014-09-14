@@ -329,6 +329,7 @@ echo Copied to "$(REAPER64_DIR)\plugins\$(TargetFilename)"</Command>
     <ClInclude Include="C:\Program Files (x86)\REAPER\reaper_plugin_functions.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Wol\wol_Envelope.h" />
+    <ClInclude Include="Wol\wol_Misc.h" />
     <ClInclude Include="Wol\wol_Util.h" />
     <ClInclude Include="Wol\wol_Zoom.h" />
     <ClInclude Include="Xenakios\Parameters.h" />
@@ -498,6 +499,7 @@ echo Copied to "$(REAPER64_DIR)\plugins\$(TargetFilename)"</Command>
     <ClCompile Include="Breeder\BR_MidiTools.cpp" />
     <ClCompile Include="libebur128\ebur128.cpp" />
     <ClCompile Include="Wol\wol_Envelope.cpp" />
+    <ClCompile Include="Wol\wol_Misc.cpp" />
     <ClCompile Include="Wol\wol_Util.cpp" />
     <ClCompile Include="Wol\wol_Zoom.cpp" />
     <ClCompile Include="Xenakios\AutoRename.cpp" />

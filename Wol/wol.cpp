@@ -28,6 +28,7 @@
 #include "stdafx.h"
 #include "wol.h"
 #include "wol_Envelope.h"
+#include "wol_Misc.h"
 #include "wol_Util.h"
 #include "wol_Zoom.h"
 #include "../reaper/localize.h"
@@ -108,6 +109,38 @@ static COMMAND_T g_commandTable[] =
 		{ { DEFACCEL, "SWS/wol: Select the closest envelope point to the left side of mouse cursor and move edit cursor" }, "WOL_SELCLOSEENVPTLEFTMOUSEMOVEEDITC", SelectClosestEnvelopePointMouseCursor, NULL, -2 },
 		{ { DEFACCEL, "SWS/wol: Select the closest envelope point to the right side of mouse cursor" }, "WOL_SELCLOSEENVPTRIGHTMOUSE", SelectClosestEnvelopePointMouseCursor, NULL, 1 },
 		{ { DEFACCEL, "SWS/wol: Select the closest envelope point to the right side of mouse cursor and move edit cursor" }, "WOL_SELCLOSEENVPTRIGHTMOUSEMOVEEDITC", SelectClosestEnvelopePointMouseCursor, NULL, 2 },
+
+		///////////////////////////////////////////////////////////////////////////////////////////////////
+		// Original ReaScript/EEL scripts written by user spk77.
+		// All credits to spk77 http://forum.cockos.com/member.php?u=49553
+		// Thanks so much!
+		///////////////////////////////////////////////////////////////////////////////////////////////////
+		///////////////////////////////////////////////////////////////////////////////////////////////////
+		// Navigation
+		///////////////////////////////////////////////////////////////////////////////////////////////////
+		{ { DEFACCEL, "SWS/wol-spk77: Move edit cursor to beat 1" }, "WOL_MOVEEDCURTOBEAT1", MoveEditCursorToBeatN, NULL, 1 },
+		{ { DEFACCEL, "SWS/wol-spk77: Move edit cursor to beat 2" }, "WOL_MOVEEDCURTOBEAT2", MoveEditCursorToBeatN, NULL, 2 },
+		{ { DEFACCEL, "SWS/wol-spk77: Move edit cursor to beat 3" }, "WOL_MOVEEDCURTOBEAT3", MoveEditCursorToBeatN, NULL, 3 },
+		{ { DEFACCEL, "SWS/wol-spk77: Move edit cursor to beat 4" }, "WOL_MOVEEDCURTOBEAT4", MoveEditCursorToBeatN, NULL, 4 },
+		{ { DEFACCEL, "SWS/wol-spk77: Move edit cursor to beat 5" }, "WOL_MOVEEDCURTOBEAT5", MoveEditCursorToBeatN, NULL, 5 },
+		{ { DEFACCEL, "SWS/wol-spk77: Move edit cursor to beat 6" }, "WOL_MOVEEDCURTOBEAT6", MoveEditCursorToBeatN, NULL, 6 },
+		{ { DEFACCEL, "SWS/wol-spk77: Move edit cursor to beat 7" }, "WOL_MOVEEDCURTOBEAT7", MoveEditCursorToBeatN, NULL, 7 },
+		{ { DEFACCEL, "SWS/wol-spk77: Move edit cursor to beat 8" }, "WOL_MOVEEDCURTOBEAT8", MoveEditCursorToBeatN, NULL, 8 },
+		{ { DEFACCEL, "SWS/wol-spk77: Move edit cursor to beat 9" }, "WOL_MOVEEDCURTOBEAT9", MoveEditCursorToBeatN, NULL, 9 },
+		{ { DEFACCEL, "SWS/wol-spk77: Move edit cursor to beat 10" }, "WOL_MOVEEDCURTOBEAT10", MoveEditCursorToBeatN, NULL, 10 },
+		{ { DEFACCEL, "SWS/wol-spk77: Move edit cursor to beat 11" }, "WOL_MOVEEDCURTOBEAT11", MoveEditCursorToBeatN, NULL, 11 },
+		{ { DEFACCEL, "SWS/wol-spk77: Move edit cursor to beat 12" }, "WOL_MOVEEDCURTOBEAT12", MoveEditCursorToBeatN, NULL, 12 },
+		{ { DEFACCEL, "SWS/wol-spk77: Move edit cursor to beat 13" }, "WOL_MOVEEDCURTOBEAT13", MoveEditCursorToBeatN, NULL, 13 },
+		{ { DEFACCEL, "SWS/wol-spk77: Move edit cursor to beat 14" }, "WOL_MOVEEDCURTOBEAT14", MoveEditCursorToBeatN, NULL, 14 },
+		{ { DEFACCEL, "SWS/wol-spk77: Move edit cursor to beat 15" }, "WOL_MOVEEDCURTOBEAT15", MoveEditCursorToBeatN, NULL, 15 },
+
+		{ { DEFACCEL, "SWS/wol-spk77: Move edit cursor to closest beat" }, "WOL_MOVEEDCURTOCLOSESTBEAT", MoveEditCursorTo, NULL, 0 },
+		{ { DEFACCEL, "SWS/wol-spk77: Move edit cursor to next beat in current measure (cycle)" }, "WOL_MOVEEDCURTONEXTBEATCYCLE", MoveEditCursorTo, NULL, 1 },
+		{ { DEFACCEL, "SWS/wol-spk77: Move edit cursor to next beat" }, "WOL_MOVEEDCURTONEXTBEAT", MoveEditCursorTo, NULL, 2 },
+		{ { DEFACCEL, "SWS/wol-spk77: Move edit cursor to next frame/beat (depends on ruler settings)" }, "WOL_MOVEEDCURNEXTFRAMEBEAT", MoveEditCursorTo, NULL, 3 },
+		{ { DEFACCEL, "SWS/wol-spk77: Move edit cursor to previous beat in current measure (cycle)" }, "WOL_MOVEEDCURTOPREVBEATCYCLE", MoveEditCursorTo, NULL, -1 },
+		{ { DEFACCEL, "SWS/wol-spk77: Move edit cursor to previous beat" }, "WOL_MOVEEDCURTOPREVBEAT", MoveEditCursorTo, NULL, -2 },
+		{ { DEFACCEL, "SWS/wol-spk77: Move edit cursor to previous frame/beat (depends on ruler settings)" }, "WOL_MOVEEDCURPREVFRAMEBEAT", MoveEditCursorTo, NULL, -3 },
 
 //!WANT_LOCALIZE_1ST_STRING_END
 

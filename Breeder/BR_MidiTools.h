@@ -141,7 +141,7 @@ private:
 			void InsertEvent (MediaItem_Take* take, double offset);
 			bool selected, muted;
 			double pos;
-			int chanmsg, chan, msg2, msg3;
+			int chanMsg, chan, msg2, msg3;
 		};
 		struct SysEvent
 		{

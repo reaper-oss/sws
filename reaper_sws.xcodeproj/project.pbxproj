@@ -366,6 +366,10 @@
 		98E89AC40FC9C03700A56C44 /* Zoom.h in Headers */ = {isa = PBXBuildFile; fileRef = 98E89AC30FC9C03700A56C44 /* Zoom.h */; };
 		98E89AC80FC9C05C00A56C44 /* TrackEnvelope.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98E89AC60FC9C05C00A56C44 /* TrackEnvelope.cpp */; };
 		98E89AC90FC9C05C00A56C44 /* TrackEnvelope.h in Headers */ = {isa = PBXBuildFile; fileRef = 98E89AC70FC9C05C00A56C44 /* TrackEnvelope.h */; };
+		E82AC90E19C8979300336206 /* wol_Envelope.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E82AC90D19C8979300336206 /* wol_Envelope.cpp */; };
+		E82AC91019C8979D00336206 /* wol_Envelope.h in Headers */ = {isa = PBXBuildFile; fileRef = E82AC90F19C8979D00336206 /* wol_Envelope.h */; };
+		E82AC91219C897A500336206 /* wol_Misc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E82AC91119C897A500336206 /* wol_Misc.cpp */; };
+		E82AC91419C897AE00336206 /* wol_Misc.h in Headers */ = {isa = PBXBuildFile; fileRef = E82AC91319C897AE00336206 /* wol_Misc.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -734,6 +738,10 @@
 		98E89AC70FC9C05C00A56C44 /* TrackEnvelope.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TrackEnvelope.h; path = ObjectState/TrackEnvelope.h; sourceTree = "<group>"; };
 		98E8A0AF0F9123F900FC657D /* sws_util.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = sws_util.mm; sourceTree = "<group>"; };
 		D2AAC0630554660B00DB518D /* reaper_sws.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = reaper_sws.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		E82AC90D19C8979300336206 /* wol_Envelope.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = wol_Envelope.cpp; path = Wol/wol_Envelope.cpp; sourceTree = "<group>"; };
+		E82AC90F19C8979D00336206 /* wol_Envelope.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wol_Envelope.h; path = Wol/wol_Envelope.h; sourceTree = "<group>"; };
+		E82AC91119C897A500336206 /* wol_Misc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = wol_Misc.cpp; path = Wol/wol_Misc.cpp; sourceTree = "<group>"; };
+		E82AC91319C897AE00336206 /* wol_Misc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wol_Misc.h; path = Wol/wol_Misc.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1260,6 +1268,10 @@
 		98B6AAF118E7315B00BACB96 /* Wol */ = {
 			isa = PBXGroup;
 			children = (
+				E82AC91319C897AE00336206 /* wol_Misc.h */,
+				E82AC91119C897A500336206 /* wol_Misc.cpp */,
+				E82AC90F19C8979D00336206 /* wol_Envelope.h */,
+				E82AC90D19C8979300336206 /* wol_Envelope.cpp */,
 				98B6AAF218E7317900BACB96 /* wol.cpp */,
 				98B6AAF318E7317900BACB96 /* wol.h */,
 				98C38702199C0CEE00ECA114 /* wol_Util.cpp */,
@@ -1322,10 +1334,12 @@
 				98D3CA9E0F871B80009B006A /* TracklistFilter.h in Headers */,
 				98E89AC40FC9C03700A56C44 /* Zoom.h in Headers */,
 				98E89AC90FC9C05C00A56C44 /* TrackEnvelope.h in Headers */,
+				E82AC91019C8979D00336206 /* wol_Envelope.h in Headers */,
 				22B4C2500FE311C7009A6731 /* Prompt.h in Headers */,
 				22257D96108BDC6B0058CF75 /* Parameters.h in Headers */,
 				22257D9C108BDC6B0058CF75 /* XenakiosExts.h in Headers */,
 				229AC7E9108F891700E4A962 /* sws_wnd.h in Headers */,
+				E82AC91419C897AE00336206 /* wol_Misc.h in Headers */,
 				229AC7F7108F985C00E4A962 /* MarkerList.h in Headers */,
 				229AC7F9108F985C00E4A962 /* MarkerListActions.h in Headers */,
 				229AC801108FB3B600E4A962 /* ActiveTake.h in Headers */,
@@ -1728,6 +1742,7 @@
 				387407D01664177E008626AA /* lice_arc.cpp in Sources */,
 				1FE350CA16A8A6D10032F465 /* SnM_CueBuss.cpp in Sources */,
 				1FE350CC16A8A6D10032F465 /* SnM_Find.cpp in Sources */,
+				E82AC91219C897A500336206 /* wol_Misc.cpp in Sources */,
 				1FE350CE16A8A6D10032F465 /* SnM_Marker.cpp in Sources */,
 				1FE350D016A8A6D10032F465 /* SnM_Notes.cpp in Sources */,
 				1FE350D216A8A6D10032F465 /* SnM_RegionPlaylist.cpp in Sources */,
@@ -1755,6 +1770,7 @@
 				98B6DC501917D64C0078561E /* wol_Zoom.cpp in Sources */,
 				98BD45DF195245BB006958FD /* BR_ContinuousActions.cpp in Sources */,
 				98B70128196ED9E60072FA00 /* ebur128.cpp in Sources */,
+				E82AC90E19C8979300336206 /* wol_Envelope.cpp in Sources */,
 				98C38704199C0CEE00ECA114 /* wol_Util.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

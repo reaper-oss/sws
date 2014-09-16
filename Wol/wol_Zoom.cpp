@@ -33,10 +33,12 @@
 #include "../SnM/SnM_Util.h"
 
 static struct wol_Zoom_Ini {
-	const char* Section = "Zoom";
-	const char* EnvelopeExtendedZoom = "EnvelopeExtendedZoomInTrackLane";
+	static const char* Section;
+	static const char* EnvelopeExtendedZoom;
 	static const char* EnvelopeHeightSlots[8];
 } wol_Zoom_Ini;
+const char* wol_Zoom_Ini::Section = "Zoom";
+const char* wol_Zoom_Ini::EnvelopeExtendedZoom = "EnvelopeExtendedZoomInTrackLane";
 const char* wol_Zoom_Ini::EnvelopeHeightSlots[8] = {
 	"EnvelopeHeightSlot1",
 	"EnvelopeHeightSlot2",

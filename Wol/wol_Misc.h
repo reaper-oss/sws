@@ -30,6 +30,6 @@
 
 
 void MoveEditCursorToBeatN(COMMAND_T* ct);
-//void MoveEditCursorToNPCBeat(COMMAND_T* ct);
-//void MoveEditCursorNPFrameBeat(COMMAND_T* ct);
 void MoveEditCursorTo(COMMAND_T* ct);
+
+void SelectAllTracksExceptFolderParents(COMMAND_T* ct);

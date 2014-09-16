@@ -28,7 +28,7 @@
 #include "stdafx.h"
 #include "wol_Misc.h"
 
-
+//---------//
 
 void MoveEditCursorToBeatN(COMMAND_T* ct)
 {
@@ -66,7 +66,7 @@ void MoveEditCursorTo(COMMAND_T* ct)
 				SetEditCurPos(TimeMap2_beatsToTime(NULL, (double)(beat + 1), &meas), true, false);
 		}
 	}
-	else //if ((int)ct->user < 0)
+	else
 	{
 		if ((int)ct->user == -3 && GetToggleCommandState(40370) == 1)
 			ApplyNudge(NULL, 2, 6, 18, 1.0f, true, 0);
@@ -85,4 +85,16 @@ void MoveEditCursorTo(COMMAND_T* ct)
 		}
 	}
 	//Undo_OnStateChange2(NULL, SWS_CMD_SHORTNAME(ct));
+}
+
+//---------//
+
+void SelectAllTracksExceptFolderParents(COMMAND_T* ct)
+{
+	for (int i = 1; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		GetSetMediaTrackInfo(tr, "I_SELECTED", *(int*)GetSetMediaTrackInfo(tr, "I_FOLDERDEPTH", NULL) == 1 ? &g_i0 : &g_i1);
+	}
+	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 }

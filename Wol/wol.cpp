@@ -35,18 +35,6 @@
 
 //---------//
 
-void SelectAllTracksExceptFolderParents(COMMAND_T* ct)
-{
-	for (int i = 1; i <= GetNumTracks(); i++)
-	{
-		MediaTrack* tr = CSurf_TrackFromID(i, false);
-		GetSetMediaTrackInfo(tr, "I_SELECTED", *(int*)GetSetMediaTrackInfo(tr, "I_FOLDERDEPTH", NULL) == 1 ? &g_i0 : &g_i1);
-	}
-	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
-}
-
-//---------//
-
 static COMMAND_T g_commandTable[] =
 {
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
@@ -154,8 +142,14 @@ int WOL_Init()
 	SWSRegisterCommands(g_commandTable);
 	wol_UtilInit();
 	if (!wol_ZoomInit())
+#ifdef _WIN32
 		MessageBox(GetMainHwnd(), 
 		__LOCALIZE("Error registering zoom project config.\n Envelope heights list saving in RPP project is not available.", "sws_mbox"), 
 		__LOCALIZE("SWS/wol - Warning", "sws_mbox"), MB_OK | MB_ICONWARNING);
+#else
+		MessageBox(GetMainHwnd(), 
+		__LOCALIZE("Error registering zoom project config.\n Envelope heights list saving in RPP project is not available.", "sws_mbox"),
+		__LOCALIZE("SWS/wol - Warning", "sws_mbox"), MB_OK);
+#endif
 	return 1;
 }

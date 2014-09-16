@@ -403,14 +403,14 @@ void BR_MidiItemTimePos::MidiTake::NoteEvent::InsertEvent (MediaItem_Take* take,
 
 BR_MidiItemTimePos::MidiTake::CCEvent::CCEvent (MediaItem_Take* take, int id)
 {
-	MIDI_GetCC(take, id, &selected, &muted, &pos, &chanmsg, &chan, &msg2, &msg3);
+	MIDI_GetCC(take, id, &selected, &muted, &pos, &chanMsg, &chan, &msg2, &msg3);
 	pos = MIDI_GetProjTimeFromPPQPos(take, pos);
 }
 
 void BR_MidiItemTimePos::MidiTake::CCEvent::InsertEvent (MediaItem_Take* take, double offset)
 {
 	double posPPQ = MIDI_GetPPQPosFromProjTime(take, pos + offset);
-	MIDI_InsertCC(take, selected, muted, posPPQ, chanmsg, chan, msg2, msg3);
+	MIDI_InsertCC(take, selected, muted, posPPQ, chanMsg, chan, msg2, msg3);
 }
 
 BR_MidiItemTimePos::MidiTake::SysEvent::SysEvent (MediaItem_Take* take, int id)
@@ -590,7 +590,7 @@ set<int> GetUsedCCLanes (void* midiEditor, int detect14bit)
 									break;
 								}
 
-								if (chanMsg == nextChanMsg && msg2 == nextMsg2 - 32 && chan == nextChan)
+								if (nextChanMsg == 0xB0 && msg2 == nextMsg2 - 32 && chan == nextChan)
 								{
 									usedCC.insert(msg2 + CC_14BIT_START);
 									break;
@@ -625,7 +625,7 @@ set<int> GetUsedCCLanes (void* midiEditor, int detect14bit)
 										usedCC.insert(msg2);
 									break;
 								}
-								if (chanMsg == prevChanMsg && msg2 == prevMsg2 + 32 && chan == prevChan)
+								if (prevChanMsg == 0xB0 && msg2 == prevMsg2 + 32 && chan == prevChan)
 									break;
 							}
 						}
@@ -847,8 +847,8 @@ void UnselectAllEvents (MediaItem_Take* take, int lane)
 			int id = -1;
 			while ((id = MIDI_EnumSelCC(take, id)) != -1)
 			{
-				int cc;
-				if (MIDI_GetCC(take, id, NULL, NULL, NULL, NULL, NULL, &cc, NULL) && cc == lane)
+				int cc, chanMsg;
+				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, NULL, &cc, NULL) && chanMsg == 0xB0 && cc == lane)
 					MIDI_SetCC(take, id, &g_bFalse, NULL, NULL, NULL, NULL, NULL, NULL);
 			}
 		}
@@ -860,8 +860,8 @@ void UnselectAllEvents (MediaItem_Take* take, int lane)
 			int id = -1;
 			while ((id = MIDI_EnumSelCC(take, id)) != -1)
 			{
-				int currentType;
-				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &currentType, NULL, NULL, NULL) && currentType == type)
+				int chanMsg;
+				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, NULL, NULL, NULL) && chanMsg == type)
 					MIDI_SetCC(take, id, &g_bFalse, NULL, NULL, NULL, NULL, NULL, NULL);
 			}
 		}
@@ -889,8 +889,8 @@ void UnselectAllEvents (MediaItem_Take* take, int lane)
 			int cc2 = cc1 + 32;
 			while ((id = MIDI_EnumSelCC(take, id)) != -1)
 			{
-				int cc;
-				if (MIDI_GetCC(take, id, NULL, NULL, NULL, NULL, NULL, &cc, NULL) && (cc == cc1 || cc == cc2))
+				int cc, chanMsg;
+				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, NULL, &cc, NULL) && chanMsg == 0xB0 && (cc == cc1 || cc == cc2))
 					MIDI_SetCC(take, id, &g_bFalse, NULL, NULL, NULL, NULL, NULL, NULL);
 			}
 		}

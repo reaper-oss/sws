@@ -516,8 +516,8 @@ bool BR_MidiCCEvents::SaveEvents (BR_MidiEditor& midiEditor, int lane)
 			int id = -1;
 			while ((id = MIDI_EnumSelCC(take, id)) != -1)
 			{
-				int cc;
-				if (MIDI_GetCC(take, id, NULL, NULL, NULL, NULL, NULL, &cc, NULL) && cc == lane)
+				int cc, chanMsg;
+				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, NULL, &cc, NULL) && chanMsg == 0xB0 && cc == lane)
 				{
 					BR_MidiCCEvents::Event event;
 					MIDI_GetCC(take, id, NULL, &event.mute, &event.positionPPQ, NULL, &event.channel, NULL, &event.msg3);
@@ -578,8 +578,8 @@ bool BR_MidiCCEvents::SaveEvents (BR_MidiEditor& midiEditor, int lane)
 			int cc2 = cc1 + 32;
 			while ((id = MIDI_EnumSelCC(take, id)) != -1)
 			{
-				int cc;
-				if (MIDI_GetCC(take, id, NULL, NULL, NULL, NULL, NULL, &cc, NULL) && cc == cc1)
+				int cc, chanMsg;
+				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, NULL, &cc, NULL) && chanMsg == 0xB0 && cc == cc1)
 				{
 					BR_MidiCCEvents::Event event;
 					MIDI_GetCC(take, id, NULL, &event.mute, &event.positionPPQ, NULL, &event.channel, NULL, &event.msg3);
@@ -588,11 +588,11 @@ bool BR_MidiCCEvents::SaveEvents (BR_MidiEditor& midiEditor, int lane)
 					int tmpId = id;
 					while ((tmpId = MIDI_EnumSelCC(take, tmpId)) != -1)
 					{
-						double pos; int channel, value;
-						MIDI_GetCC(take, tmpId, NULL, NULL, &pos, NULL, &channel, &cc, &value);
+						double pos; int channel, value, chanMsg2;
+						MIDI_GetCC(take, tmpId, NULL, NULL, &pos, &chanMsg2, &channel, &cc, &value);
 						if (pos > event.positionPPQ)
 							break;
-						if (cc == cc2 && channel == events.back().channel && pos == events.back().positionPPQ)
+						if (chanMsg2 == 0xB0 && cc == cc2 && channel == events.back().channel)
 						{
 							events.back().msg2 = value;
 							break;

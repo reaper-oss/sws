@@ -130,8 +130,13 @@ static COMMAND_T g_commandTable[] =
 		{ { DEFACCEL, "SWS/wol-spk77: Move edit cursor to previous beat" }, "WOL_MOVEEDCURTOPREVBEAT", MoveEditCursorTo, NULL, -2 },
 		{ { DEFACCEL, "SWS/wol-spk77: Move edit cursor to previous frame/beat (depends on ruler settings)" }, "WOL_MOVEEDCURPREVFRAMEBEAT", MoveEditCursorTo, NULL, -3 },
 
-//!WANT_LOCALIZE_1ST_STRING_END
+		///////////////////////////////////////////////////////////////////////////////////////////////////
+		// Midi
+		///////////////////////////////////////////////////////////////////////////////////////////////////
+		{ { DEFACCEL, "SWS/wol-spk77: Move edit cursor to start of previous note" }, "WOL_MOVEEDCURTOPREVNOTE", NULL, NULL, -1, NULL, 32060, MoveEditCursorToNote },
+		{ { DEFACCEL, "SWS/wol-spk77: Move edit cursor to start of next note" }, "WOL_MOVEEDCURTONEXTNOTE", NULL, NULL, 1, NULL, 32060, MoveEditCursorToNote },
 
+//!WANT_LOCALIZE_1ST_STRING_END
 		{ {}, LAST_COMMAND, },
 };
 
@@ -141,15 +146,6 @@ int WOL_Init()
 {
 	SWSRegisterCommands(g_commandTable);
 	wol_UtilInit();
-	if (!wol_ZoomInit())
-#ifdef _WIN32
-		MessageBox(GetMainHwnd(), 
-		__LOCALIZE("Error registering zoom project config.\n Envelope heights list saving in RPP project is not available.", "sws_mbox"), 
-		__LOCALIZE("SWS/wol - Warning", "sws_mbox"), MB_OK | MB_ICONWARNING);
-#else
-		MessageBox(GetMainHwnd(), 
-		__LOCALIZE("Error registering zoom project config.\n Envelope heights list saving in RPP project is not available.", "sws_mbox"),
-		__LOCALIZE("SWS/wol - Warning", "sws_mbox"), MB_OK);
-#endif
+	wol_ZoomInit();
 	return 1;
 }

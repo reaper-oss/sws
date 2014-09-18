@@ -31,6 +31,7 @@
 #include "../Breeder/BR_EnvTools.h"
 #include "../SnM/SnM_Dlg.h"
 #include "../SnM/SnM_Util.h"
+#include "../reaper/localize.h"
 
 #ifdef _WIN32
 #define WOL_INI_FILE "%s\\wol.ini"
@@ -281,3 +282,39 @@ void FlushIni(const char* path)
 	WritePrivateProfileString(NULL, NULL, NULL, path);
 }
 #endif
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/// Messages
+///////////////////////////////////////////////////////////////////////////////////////////////////
+int ShowMessageBox2(const char* msg, const char* title, UINT uType, UINT uIcon, bool localizeMsg, bool localizeTitle, HWND hwnd)
+{
+#ifdef _WIN32
+	return MessageBox(hwnd,
+		localizeMsg ? __localizeFunc(msg, "sws_mbox", 0) : msg,
+		localizeTitle ? __localizeFunc(title, "sws_mbox", 0) : title, uType | uIcon);
+#else
+	return MessageBox(hwnd,
+		localizeMsg ? __localizeFunc(msg, "sws_mbox", 0) : msg,
+		localizeTitle ? __localizeFunc(title, "sws_mbox", 0) : title, uType);
+#endif
+}
+
+int ShowErrorMessageBox(const char* msg, const char* title, bool localizeMsg, bool localizeTitle, UINT uType, HWND hwnd)
+{
+#ifdef _WIN32
+	return ShowMessageBox2(msg, title, uType, MB_ICONERROR, localizeMsg, localizeTitle, hwnd);
+#else
+	return ShowMessageBox2(msg, title, uType, 0, localizeMsg, localizeTitle, hwnd);
+#endif
+}
+
+int ShowWarningMessageBox(const char* msg, const char* title, bool localizeMsg, bool localizeTitle, UINT uType, HWND hwnd)
+{
+#ifdef _WIN32
+	return ShowMessageBox2(msg, title, uType, MB_ICONWARNING, localizeMsg, localizeTitle, hwnd);
+#else
+	return ShowMessageBox2(msg, title, uType, 0, localizeMsg, localizeTitle, hwnd);
+#endif
+}

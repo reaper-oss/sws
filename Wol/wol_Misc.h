@@ -33,3 +33,5 @@ void MoveEditCursorToBeatN(COMMAND_T* ct);
 void MoveEditCursorTo(COMMAND_T* ct);
 
 void SelectAllTracksExceptFolderParents(COMMAND_T* ct);
+
+void MoveEditCursorToNote(COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd);

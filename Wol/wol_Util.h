@@ -87,3 +87,12 @@ void DeleteIniKey(const char* section, const char* key, const char* path = GetWo
 #ifdef _WIN32
 void FlushIni(const char* path = GetWolIni());
 #endif
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/// Messages
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/* msg is localized in "sws_mbox" if localizeMsg is true, title is localized in "sws_mbox" if localizeTitle is true.
+   uIcon not used in OSX.*/
+int ShowMessageBox2(const char* msg, const char* title, UINT uType = MB_OK, UINT uIcon = 0, bool localizeMsg = true, bool localizeTitle = true, HWND hwnd = GetMainHwnd());
+int ShowErrorMessageBox(const char* msg, const char* title = "SWS/wol - Error", bool localizeMsg = true, bool localizeTitle = true, UINT uType = MB_OK, HWND hwnd = GetMainHwnd());
+int ShowWarningMessageBox(const char* msg, const char* title = "SWS/wol - Warning", bool localizeMsg = true, bool localizeTitle = true, UINT uType = MB_OK, HWND hwnd = GetMainHwnd());

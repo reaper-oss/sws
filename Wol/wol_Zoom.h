@@ -50,4 +50,4 @@ void SaveRestoreSelectedEnvelopeHeightSlot(COMMAND_T* ct);
 
 void EnvelopeHeightList(COMMAND_T* ct);
 
-bool wol_ZoomInit();
+void wol_ZoomInit();

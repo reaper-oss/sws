@@ -28,8 +28,11 @@
 #include "stdafx.h"
 #include "wol_Misc.h"
 
-//---------//
 
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// Navigation
+///////////////////////////////////////////////////////////////////////////////////////////////////
 void MoveEditCursorToBeatN(COMMAND_T* ct)
 {
 	int beat = (int)ct->user - 1;
@@ -38,7 +41,6 @@ void MoveEditCursorToBeatN(COMMAND_T* ct)
 	if (beat >= cml)
 		beat = cml - 1;
 	SetEditCurPos(TimeMap2_beatsToTime(0, (double)beat, &meas), 1, 0);
-	//Undo_OnStateChange2(NULL, SWS_CMD_SHORTNAME(ct));
 }
 
 void MoveEditCursorTo(COMMAND_T* ct)
@@ -84,11 +86,13 @@ void MoveEditCursorTo(COMMAND_T* ct)
 				SetEditCurPos(TimeMap2_beatsToTime(NULL, (double)(beat - 1), &meas), true, false);
 		}
 	}
-	//Undo_OnStateChange2(NULL, SWS_CMD_SHORTNAME(ct));
 }
 
-//---------//
 
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// Track
+///////////////////////////////////////////////////////////////////////////////////////////////////
 void SelectAllTracksExceptFolderParents(COMMAND_T* ct)
 {
 	for (int i = 1; i <= GetNumTracks(); i++)
@@ -97,4 +101,39 @@ void SelectAllTracksExceptFolderParents(COMMAND_T* ct)
 		GetSetMediaTrackInfo(tr, "I_SELECTED", *(int*)GetSetMediaTrackInfo(tr, "I_FOLDERDEPTH", NULL) == 1 ? &g_i0 : &g_i1);
 	}
 	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// Midi
+///////////////////////////////////////////////////////////////////////////////////////////////////
+void MoveEditCursorToNote(COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
+{
+	if (MediaItem_Take* take = MIDIEditor_GetTake(MIDIEditor_GetActive()))
+	{
+		int note_count = 0;
+		MIDI_CountEvts(take, &note_count, NULL, NULL);
+		int i = 0;
+		for (i = 0; i < note_count; ++i)
+		{
+			double start_pos = 0.0f;
+			if (MIDI_GetNote(take, i, NULL, NULL, &start_pos, NULL, NULL, NULL, NULL))
+			{
+				if (((int)ct->user < 0) ? MIDI_GetProjTimeFromPPQPos(take, start_pos) >= GetCursorPosition() : MIDI_GetProjTimeFromPPQPos(take, start_pos) > GetCursorPosition())
+				{
+					if ((int)ct->user < 0 && i > 0)
+						MIDI_GetNote(take, i - 1, NULL, NULL, &start_pos, NULL, NULL, NULL, NULL);
+					SetEditCurPos(MIDI_GetProjTimeFromPPQPos(take, start_pos), true, false);
+					break;
+				}
+			}
+		}
+		if ((int)ct->user < 0 && i == note_count)
+		{
+			double start_pos = 0.0f;
+			MIDI_GetNote(take, i - 1, NULL, NULL, &start_pos, NULL, NULL, NULL, NULL);
+			SetEditCurPos(MIDI_GetProjTimeFromPPQPos(take, start_pos), true, false);
+		}
+	}
 }

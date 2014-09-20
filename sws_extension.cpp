@@ -704,6 +704,7 @@ extern "C"
 		IMPAPI(GetMediaSourceFileName);
 		IMPAPI(GetMediaSourceType);
 		IMPAPI(GetMediaTrackInfo_Value);
+		IMPAPI(GetMixerScroll);
 		IMPAPI(get_midi_config_var);
 		IMPAPI(GetMouseModifier);
 		IMPAPI(GetNumTracks);
@@ -770,6 +771,7 @@ extern "C"
 		IMPAPI(InsertMedia);
 		IMPAPI(InsertTrackAtIndex);
 		IMPAPI(IsMediaExtension);
+		IMPAPI(IsTrackVisible);
 		IMPAPI(kbd_enumerateActions);
 		IMPAPI(kbd_formatKeyName);
 		IMPAPI(kbd_getCommandName);

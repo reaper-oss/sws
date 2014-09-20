@@ -136,6 +136,12 @@ static COMMAND_T g_commandTable[] =
 		{ { DEFACCEL, "SWS/wol-spk77: Move edit cursor to start of previous note" }, "WOL_MOVEEDCURTOPREVNOTE", NULL, NULL, -1, NULL, 32060, MoveEditCursorToNote },
 		{ { DEFACCEL, "SWS/wol-spk77: Move edit cursor to start of next note" }, "WOL_MOVEEDCURTONEXTNOTE", NULL, NULL, 1, NULL, 32060, MoveEditCursorToNote },
 
+		///////////////////////////////////////////////////////////////////////////////////////////////////
+		// Mixer
+		///////////////////////////////////////////////////////////////////////////////////////////////////
+		{ { DEFACCEL, "SWS/wol-spk77: Scroll mixer view left by 1 track" }, "WOL_SCROLLMIXERL1TR", ScrollMixer, NULL, 0 },
+		{ { DEFACCEL, "SWS/wol-spk77: Scroll mixer view right by 1 track" }, "WOL_SCROLLMIXERR1TR", ScrollMixer, NULL, 1 },
+
 //!WANT_LOCALIZE_1ST_STRING_END
 		{ {}, LAST_COMMAND, },
 };

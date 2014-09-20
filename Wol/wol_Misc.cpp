@@ -137,3 +137,43 @@ void MoveEditCursorToNote(COMMAND_T* ct, int val, int valhw, int relmode, HWND h
 		}
 	}
 }
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// Mixer
+///////////////////////////////////////////////////////////////////////////////////////////////////
+void ScrollMixer(COMMAND_T* ct)
+{
+	MediaTrack* tr = GetMixerScroll();
+	if (tr)
+	{
+		int count = CountTracks(NULL);
+		int i = (int)GetMediaTrackInfo_Value(tr, "IP_TRACKNUMBER") - 1;
+		MediaTrack* nTr = NULL;
+		if ((int)ct->user == 0)
+		{
+			for (int k = 1; k <= i; ++k)
+			{
+				if (IsTrackVisible(GetTrack(NULL, i - k), true))
+				{
+					nTr = GetTrack(NULL, i - k);
+					break;
+				}
+			}
+		}
+		else
+		{
+			for (int k = 1; k < count - i; ++k)
+			{
+				if (IsTrackVisible(GetTrack(NULL, i + k), true))
+				{
+					nTr = GetTrack(NULL, i + k);
+					break;
+				}
+			}
+		}
+		if (nTr && nTr != tr)
+			SetMixerScroll(nTr);
+	}
+}

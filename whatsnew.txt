@@ -74,6 +74,7 @@ Added actions
  - SWS/wol-spk77: Move edit cursor to beat 1-15
  - SWS/wol-spk77: Move edit cursor to closest beat
  - SWS/wol-spk77: Move edit cursor to previous/next beat/frame (3 versions)
+ - SWS/wol-spk77: Scroll mixer view left/right by 1 track
 +MIDI editor:
  - SWS/BR: Save/Restore selected events in last clicked CC lane (8 slots) (Save has 2 versions: last clicked lane, lane under mouse cursor. Restore has 3 versions: last clicked lane, lane under mouse cursor, all visible lanes)
  - SWS/BR: Insert CC event at edit cursor in CC lane under mouse cursor (active item only)

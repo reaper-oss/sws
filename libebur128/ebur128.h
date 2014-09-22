@@ -72,7 +72,7 @@ enum mode {
   EBUR128_MODE_M           = (1 << 0),
   /** can call ebur128_loudness_shortterm */
   EBUR128_MODE_S           = (1 << 1) | EBUR128_MODE_M,
-  /** can call ebur128_gated_loudness_* */
+   /** can call ebur128_loudness_global_* */
   EBUR128_MODE_I           = (1 << 2) | EBUR128_MODE_M,
   /** can call ebur128_loudness_range */
   EBUR128_MODE_LRA         = (1 << 3) | EBUR128_MODE_S,

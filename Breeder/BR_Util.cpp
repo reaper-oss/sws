@@ -53,7 +53,7 @@ const int TAKE_MIN_HEIGHT_COUNT      = 10;
 const int TAKE_MIN_HEIGHT_HIGH       = 12;   // min height when take count <= TAKE_MIN_HEIGHT_COUNT
 const int TAKE_MIN_HEIGHT_LOW        = 6;    // min height when take count >  TAKE_MIN_HEIGHT_COUNT
 
-const int MIDI_RULER_H               = 36;
+const int MIDI_RULER_H               = 44;
 const int MIDI_LANE_DIVIDER_H        = 9;
 const int MIDI_LANE_TOP_GAP          = 4;
 const int MIDI_BLACK_KEYS_W          = 73;

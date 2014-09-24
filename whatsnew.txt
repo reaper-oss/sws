@@ -73,7 +73,7 @@ Added actions
  - SWS/BR: Insert CC event at edit cursor in CC lane under mouse cursor (active item only)
 
 ReaScript
-+Other:
+ - Fixed BR_GetMouseCursorContext() and related function in regards to MIDI editor (changes introduced in REAPER v4.7 broke it)
  - Changed envelope object type in BR_EnvAlloc and other functions to avoid confusion (existing scripts should be unaffected)
 
 Fixes

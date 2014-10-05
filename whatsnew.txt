@@ -81,7 +81,7 @@ Added actions
  - SWS/wol-spk77: Move edit cursor to start of previous/next note
 
 ReaScript
-+Other:
+ - Fixed BR_GetMouseCursorContext() and related function in regards to MIDI editor (changes introduced in REAPER v4.7 broke it)
  - Changed envelope object type in BR_EnvAlloc and other functions to avoid confusion (existing scripts should be unaffected)
 
 Fixes

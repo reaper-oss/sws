@@ -135,6 +135,15 @@ static COMMAND_T g_commandTable[] =
 		///////////////////////////////////////////////////////////////////////////////////////////////////
 		{ { DEFACCEL, "SWS/wol-spk77: Move edit cursor to start of previous note" }, "WOL_MOVEEDCURTOPREVNOTE", NULL, NULL, -1, NULL, 32060, MoveEditCursorToNote },
 		{ { DEFACCEL, "SWS/wol-spk77: Move edit cursor to start of next note" }, "WOL_MOVEEDCURTONEXTNOTE", NULL, NULL, 1, NULL, 32060, MoveEditCursorToNote },
+		{ { DEFACCEL, "SWS/wol-spk77: Randomize selected midi velocities tool" }, "WOL_RANDSELMIDIVEL", RandomizeSelectedMidiVelocitiesTool, NULL, 0, IsRandomizeSelectedMidiVelocitiesOpen },
+		{ { DEFACCEL, "SWS/wol-spk77: Randomize selected midi velocities, slot 1" }, "WOL_RANDSELMIDIVELS1", RandomizeSelectedMidiVelocitiesTool, NULL, 1 },
+		{ { DEFACCEL, "SWS/wol-spk77: Randomize selected midi velocities, slot 2" }, "WOL_RANDSELMIDIVELS2", RandomizeSelectedMidiVelocitiesTool, NULL, 2 },
+		{ { DEFACCEL, "SWS/wol-spk77: Randomize selected midi velocities, slot 3" }, "WOL_RANDSELMIDIVELS3", RandomizeSelectedMidiVelocitiesTool, NULL, 3 },
+		{ { DEFACCEL, "SWS/wol-spk77: Randomize selected midi velocities, slot 4" }, "WOL_RANDSELMIDIVELS4", RandomizeSelectedMidiVelocitiesTool, NULL, 4 },
+		{ { DEFACCEL, "SWS/wol-spk77: Randomize selected midi velocities, slot 5" }, "WOL_RANDSELMIDIVELS5", RandomizeSelectedMidiVelocitiesTool, NULL, 5 },
+		{ { DEFACCEL, "SWS/wol-spk77: Randomize selected midi velocities, slot 6" }, "WOL_RANDSELMIDIVELS6", RandomizeSelectedMidiVelocitiesTool, NULL, 6 },
+		{ { DEFACCEL, "SWS/wol-spk77: Randomize selected midi velocities, slot 7" }, "WOL_RANDSELMIDIVELS7", RandomizeSelectedMidiVelocitiesTool, NULL, 7 },
+		{ { DEFACCEL, "SWS/wol-spk77: Randomize selected midi velocities, slot 8" }, "WOL_RANDSELMIDIVELS8", RandomizeSelectedMidiVelocitiesTool, NULL, 8 },
 
 		///////////////////////////////////////////////////////////////////////////////////////////////////
 		// Mixer
@@ -152,6 +161,12 @@ int WOL_Init()
 {
 	SWSRegisterCommands(g_commandTable);
 	wol_UtilInit();
+	wol_MiscInit();
 	wol_ZoomInit();
 	return 1;
+}
+
+void WOL_Exit()
+{
+	wol_MiscExit();
 }

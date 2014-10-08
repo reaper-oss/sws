@@ -54,7 +54,6 @@ void wol_UtilInit()
 /// Track
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 static vector<MediaTrack*>* g_savedSelectedTracks = NULL;
-static bool g_free;
 
 bool SaveSelectedTracks()
 {

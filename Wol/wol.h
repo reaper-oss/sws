@@ -30,3 +30,4 @@
 
 
 int WOL_Init();
+void WOL_Exit();

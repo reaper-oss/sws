@@ -86,6 +86,7 @@
 #define IDD_BR_TOOLTIP                  178
 #define IDD_BR_LOUDNESS_PREF            179
 #define IDD_BR_LOUDNESS_EXPORT_FORMAT   180
+#define IDD_WOL_RANDOMMIDIVEL		    181
 #define IDB_UP                          500
 #define IDB_DOWN                        501
 #define IDC_BUTTON1                     1000
@@ -413,14 +414,32 @@
 #define IDC_FORMAT_STATIC               1321
 #define IDC_PREVIEW_STATIC              1322
 #define IDC_LISTTR                      1323
+#define IDC_WOL_SLOT1L					1324
+#define IDC_WOL_SLOT2L					1325
+#define IDC_WOL_SLOT3L					1326
+#define IDC_WOL_SLOT4L					1327
+#define IDC_WOL_SLOT5L					1328
+#define IDC_WOL_SLOT6L					1329
+#define IDC_WOL_SLOT7L					1330
+#define IDC_WOL_SLOT8L					1331
+#define IDC_WOL_SLOT1S					1332
+#define IDC_WOL_SLOT2S					1333
+#define IDC_WOL_SLOT3S					1334
+#define IDC_WOL_SLOT4S					1335
+#define IDC_WOL_SLOT5S					1336
+#define IDC_WOL_SLOT6S					1337
+#define IDC_WOL_SLOT7S					1338
+#define IDC_WOL_SLOT8S					1339
+#define IDC_WOL_RANDOMIZE				1340
+
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        181
+#define _APS_NEXT_RESOURCE_VALUE        182
 #define _APS_NEXT_COMMAND_VALUE         40000
-#define _APS_NEXT_CONTROL_VALUE         1324
+#define _APS_NEXT_CONTROL_VALUE         1341
 #define _APS_NEXT_SYMED_VALUE           100
 #endif
 #endif

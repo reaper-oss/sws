@@ -1268,10 +1268,10 @@
 		98B6AAF118E7315B00BACB96 /* Wol */ = {
 			isa = PBXGroup;
 			children = (
-				E82AC91319C897AE00336206 /* wol_Misc.h */,
 				E82AC91119C897A500336206 /* wol_Misc.cpp */,
-				E82AC90F19C8979D00336206 /* wol_Envelope.h */,
+				E82AC91319C897AE00336206 /* wol_Misc.h */,
 				E82AC90D19C8979300336206 /* wol_Envelope.cpp */,
+				E82AC90F19C8979D00336206 /* wol_Envelope.h */,
 				98B6AAF218E7317900BACB96 /* wol.cpp */,
 				98B6AAF318E7317900BACB96 /* wol.h */,
 				98C38702199C0CEE00ECA114 /* wol_Util.cpp */,

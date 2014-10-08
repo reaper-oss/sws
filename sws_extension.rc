@@ -1374,6 +1374,39 @@ BEGIN
     EDITTEXT        IDC_EDIT,6,7,457,106,ES_MULTILINE | ES_READONLY | WS_VSCROLL
 END
 
+IDD_WOL_RANDOMMIDIVEL DIALOGEX 0, 0, 250, 112
+STYLE DS_SETFONT | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "SWS/wol-spk77 - Randomize midi velocities tool"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+       LTEXT           "Slot 1",IDC_STATIC,21,4,19,8
+       LTEXT           "Slot 2",IDC_STATIC,84,4,19,8
+       LTEXT           "Slot 3",IDC_STATIC,147,4,19,8
+       LTEXT           "Slot 4",IDC_STATIC,210,4,19,8
+       LTEXT           "Slot 5",IDC_STATIC,21,34,19,8
+       LTEXT           "Slot 6",IDC_STATIC,84,34,19,8
+       LTEXT           "Slot 7",IDC_STATIC,147,34,19,8
+       LTEXT           "Slot 8",IDC_STATIC,210,34,19,8
+       PUSHBUTTON      "Load",IDC_WOL_SLOT1L,3,15,26,14
+       PUSHBUTTON      "Save",IDC_WOL_SLOT1S,34,15,26,14
+       PUSHBUTTON      "Load",IDC_WOL_SLOT2L,66,15,26,14
+       PUSHBUTTON      "Save",IDC_WOL_SLOT2S,94,15,26,14
+       PUSHBUTTON      "Load",IDC_WOL_SLOT3L,130,15,26,14
+       PUSHBUTTON      "Save",IDC_WOL_SLOT3S,157,15,26,14
+       PUSHBUTTON      "Load",IDC_WOL_SLOT4L,192,15,26,14
+       PUSHBUTTON      "Save",IDC_WOL_SLOT4S,220,15,26,14
+       PUSHBUTTON      "Load",IDC_WOL_SLOT5L,3,45,26,14
+       PUSHBUTTON      "Save",IDC_WOL_SLOT5S,34,45,26,14
+       PUSHBUTTON      "Load",IDC_WOL_SLOT6L,66,45,26,14
+       PUSHBUTTON      "Save",IDC_WOL_SLOT6S,94,45,26,14
+       PUSHBUTTON      "Load",IDC_WOL_SLOT7L,130,45,26,14
+       PUSHBUTTON      "Save",IDC_WOL_SLOT7S,157,45,26,14
+       PUSHBUTTON      "Load",IDC_WOL_SLOT8L,192,45,26,14
+       PUSHBUTTON      "Save",IDC_WOL_SLOT8S,220,45,26,14
+       DEFPUSHBUTTON   "Randomize",IDC_WOL_RANDOMIZE,80,95,44,14
+       PUSHBUTTON      "Cancel",IDCANCEL,125,95,44,14
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //

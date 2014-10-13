@@ -1,17 +1,3 @@
-Auto color/icon/action
-+Support for executing an action when a track rule is matched
- - Note: use the "Enable track auto selection" option to select the track that matches the rule (useful in cases when the action needs to work on selected tracks only)
-+Ability to disable auto rule matching on per-track basis
- - Track auto color/icon/action can be enabled/disabled for each track in the new tracks list (next to rules list view - arrows between two list views toggle their visibility)
- - Per-track settings override the "Force" button - for example, if you want to use a name that matches a rule, but don't want some other track to be processed by the same rule, disable specific property in the track list so it doesn't get affected
- - To automatically disable further processing on a processed track, see Options->Automatically disable auto color/icon/action for processed tracks
-+Added actions
- - SWS/wol: Toggle auto action enable
- - SWS/wol: Toggle enable auto color/icon/action for selected track(s)
- - SWS/wol: Enable/Disable auto color/icon/action for selected track(s)
- - SWS/wol: Toggle enable track auto selection when an action is performed with auto action
- - SWS/wol: Toggle automatic auto color/icon/action disable for processed tracks
-
 Analyze and normalize loudness
 +Analyze loudness dialog:
  - Analyzer can now measure true peak (disabled by default since it prolongs analysis due to resampling - see Options to enable/disable)

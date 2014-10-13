@@ -412,7 +412,6 @@
 #define IDC_FORMAT                      1320
 #define IDC_FORMAT_STATIC               1321
 #define IDC_PREVIEW_STATIC              1322
-#define IDC_LISTTR                      1323
 
 // Next default values for new objects
 // 
@@ -420,7 +419,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        181
 #define _APS_NEXT_COMMAND_VALUE         40000
-#define _APS_NEXT_CONTROL_VALUE         1324
+#define _APS_NEXT_CONTROL_VALUE         1323
 #define _APS_NEXT_SYMED_VALUE           100
 #endif
 #endif

@@ -459,7 +459,6 @@ public:
 		{
 			m_bChanged = false;
 			ScheduleTracklistUpdate();
-			AutoColorTrackListUpdate();
 			g_pMarkerList->Update();
 			UpdateSnapshotsDialog();
 			ProjectListUpdate();
@@ -489,7 +488,6 @@ public:
 	void SetTrackTitle(MediaTrack *tr, const char *c)
 	{
 		ScheduleTracklistUpdate();
-		AutoColorTrackListUpdate();
 		if (!m_iACIgnore)
 		{
 			AutoColorTrack(false);
@@ -1022,8 +1020,6 @@ extern "C"
 			ERR_RETURN("Wol init error\n")
 		if (!SNM_Init(rec)) // keep it as the last init (for cycle actions)
 			ERR_RETURN("S&M init error\n")
-		if (!AutoColorInitTimer()) // keep it after cycle actions init so that autocolor timer is called after cycle actions' one
-			ERR_RETURN("Auto Color init timer error\n")
 
 		if (!rec->Register("hookcustommenu", (void*)swsMenuHook))
 			ERR_RETURN("Menu hook error\n")

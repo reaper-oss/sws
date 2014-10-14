@@ -78,6 +78,7 @@ public:
 	SWS_ListItem* GetListItem(int iIndex, int* iState = NULL);
 	bool IsSelected(int index);
 	SWS_ListItem* EnumSelected(int* i, int iOffset = 0);
+	int CountSelected ();
 	bool SelectByItem(SWS_ListItem* item, bool bSelectOnly = true, bool bEnsureVisible = true);
 	int OnNotify(WPARAM wParam, LPARAM lParam);
 	void OnDestroy();
@@ -104,6 +105,7 @@ public:
 	bool UpdatesDisabled() { return m_bDisableUpdates; }
 	HWND GetHWND() { return m_hwndList; }
 	HWND GetEditHWND() { return m_hwndEdit; }
+	virtual bool HideGridLines() {return false;}
 
 protected:
 	void EditListItem(int iIndex, int iCol);
@@ -190,6 +192,7 @@ public:
 	int SaveState(char* cStateBuf, int iMaxLen);
 	void LoadState(const char* cStateBuf, int iLen);
 	virtual void OnCommand(WPARAM wParam, LPARAM lParam) {}
+	virtual bool CloseOnCancel () {return true;}
 
 	static LRESULT screensetCallback(int action, char *id, void *param, void *actionParm, int actionParmSize);
 
@@ -204,6 +207,9 @@ protected:
 	virtual void OnInitDlg() {}
 	virtual int OnNotify(WPARAM wParam, LPARAM lParam) { return 0; }
 	virtual HMENU OnContextMenu(int x, int y, bool* wantDefaultItems) { return NULL; }
+	virtual bool ReprocessContextMenu() {return true;} // return false to prevent setting key assignments for ids that correspond to mapped action ids
+	virtual bool NotifyOnContextMenu() {return true;}  // return false to prevent sending notification to OnCommand() and send it to ContextMenuReturnId() instead
+	virtual void ContextMenuReturnId (int id) {} // see NotifyOnContextMenu()
 	virtual bool OnPaint() { return false; } // return true if implemented
 	virtual void OnResize() {}
 	virtual void OnDestroy() {}

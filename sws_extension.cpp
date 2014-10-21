@@ -674,11 +674,13 @@ extern "C"
 		IMPAPI(GetContextMenu);
 		IMPAPI(GetCurrentProjectInLoadSave);
 		IMPAPI(GetCursorContext);
+		IMPAPI(GetCursorContext2);
 		IMPAPI(GetCursorPosition);
 		IMPAPI(GetCursorPositionEx);
 		IMPAPI(GetEnvelopeName);
 		IMPAPI(GetExePath);
 		IMPAPI(GetFocusedFX);
+		IMPAPI(GetGlobalAutomationOverride);
 		IMPAPI(GetHZoomLevel);
 		IMPAPI(GetIconThemePointer);
 		IMPAPI(GetIconThemeStruct);
@@ -699,6 +701,7 @@ extern "C"
 		IMPAPI(GetMediaItemTake_Source);
 		IMPAPI(GetMediaItemTake_Track);
 		IMPAPI(GetMediaItemTakeInfo_Value);
+		IMPAPI(GetMediaItemTrack);
 		IMPAPI(GetMediaSourceFileName);
 		IMPAPI(GetMediaSourceType);
 		IMPAPI(GetMediaTrackInfo_Value);
@@ -856,8 +859,10 @@ extern "C"
 		IMPAPI(SendLocalOscMessage);
 		IMPAPI(SetActiveTake)
 		IMPAPI(SetCurrentBPM);
+		IMPAPI(SetCursorContext);
 		IMPAPI(SetEditCurPos);
 		IMPAPI(SetEditCurPos2);
+		IMPAPI(SetGlobalAutomationOverride);
 		IMPAPI(SetMediaItemInfo_Value);
 		IMPAPI(SetMediaItemLength);
 		IMPAPI(SetMediaItemPosition);
@@ -946,7 +951,7 @@ extern "C"
 				_snprintf(txt, sizeof(txt),
 					// keep the message on a single line (for the LangPack generator)
 					__LOCALIZE_VERFMT("The version of SWS extension you have installed is incompatible with your version of REAPER.\nYou probably have a REAPER version less than v%s installed.\nPlease install the latest version of REAPER from www.reaper.fm.","sws_mbox"),
-					"4.7"); // <- update compatible version here
+					"4.74"); // <- update compatible version here
 
 				MessageBox(Splash_GetWnd && Splash_GetWnd() ? Splash_GetWnd() : NULL, txt, __LOCALIZE("SWS - Version Incompatibility","sws_mbox"), MB_OK);
 			}
@@ -965,9 +970,9 @@ extern "C"
 		// hookcommand2 must be registered before hookcommand
 		if (!rec->Register("hookcommand2", (void*)hookCommandProc2))
 		{
-/*JFB!!! make it tolerant for the moment: 4.62pre7+ needed
+
 			ERR_RETURN("hookcommand error\n")
-*/
+
 		}
 
 		if (!rec->Register("hookcommand", (void*)hookCommandProc))

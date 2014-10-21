@@ -1,3 +1,7 @@
+<strong>REAPER v4.74+ is required!</strong>
+New API functions were introduced in this version, they enable various improvements in the SWS/S&M Extension.
+Thank you Cockos!
+
 Analyze and normalize loudness
 +Analyze loudness dialog:
  - Analyzer can now measure true peak (disabled by default since it prolongs analysis due to resampling - see Options to enable/disable)

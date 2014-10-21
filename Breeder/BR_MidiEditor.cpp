@@ -29,6 +29,7 @@
 #include "BR_MidiEditor.h"
 #include "BR_MidiTools.h"
 #include "BR_Misc.h"
+#include "BR_MouseUtil.h"
 #include "BR_ProjState.h"
 #include "BR_Util.h"
 #include "../Fingers/RprMidiCCLane.h"
@@ -234,25 +235,23 @@ void ME_PlaybackAtMouseCursor (COMMAND_T* ct, int val, int valhw, int relmode, H
 
 void ME_CCEventAtEditCursor (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
-	BR_MouseContextInfo mouseContext;
-	GetMouseCursorContext(NULL, NULL, NULL, &mouseContext);
-	if (mouseContext.midiEditor)
+	BR_MouseContextInfo mouseInfo(BR_MouseContextInfo::MIDI_EDITOR_ALL);
+	if (mouseInfo.GetMidiEditor())
 	{
-		if (MediaItem_Take* take = MIDIEditor_GetTake(mouseContext.midiEditor))
+		if (MediaItem_Take* take = MIDIEditor_GetTake(mouseInfo.GetMidiEditor()))
 		{
 			double positionPPQ = MIDI_GetPPQPosFromProjTime(take, GetCursorPositionEx(NULL));
-			int value          = mouseContext.ccLaneVal;
-			int lane           = mouseContext.ccLane;
 
-			if (value != -1 && lane != -2)
+			int lane, value;
+			if (mouseInfo.GetCCLane(&lane, &value, NULL) && value >= 0)
 			{
 				if (lane == CC_TEXT_EVENTS || lane == CC_SYSEX || lane == CC_BANK_SELECT || lane == CC_VELOCITY)
-					MessageBox((HWND)mouseContext.midiEditor, __LOCALIZE("Can't insert in velocity, text, sysex and bank select lanes","sws_mbox"), __LOCALIZE("SWS/BR - Warning","sws_mbox"), MB_OK);
+					MessageBox((HWND)mouseInfo.GetMidiEditor(), __LOCALIZE("Can't insert in velocity, text, sysex and bank select lanes","sws_mbox"), __LOCALIZE("SWS/BR - Warning","sws_mbox"), MB_OK);
 				else
 				{
 					bool do14bit    = (lane >= CC_14BIT_START) ? true : false;
 					int type        = (lane == CC_PROGRAM) ? (0xC0) : (lane == CC_CHANNEL_PRESSURE ? 0xD0 : (lane == CC_PITCH ? 0xE0 : 0xB0));
-					int channel     = MIDIEditor_GetSetting_int(mouseContext.midiEditor, "default_note_chan");
+					int channel     = MIDIEditor_GetSetting_int(mouseInfo.GetMidiEditor(), "default_note_chan");
 					int msg2        = CheckBounds(lane, 0, 127) ? ((value >> 7) | 0) : (value & 0x7F);
 					int msg3        = CheckBounds(lane, 0, 127) ? (value & 0x7F)     : ((value >> 7) | 0);
 
@@ -348,9 +347,9 @@ void ME_RestoreNoteSelSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWND
 		{
 			if (slot == g_midiNoteSel.Get()->Get(i)->GetSlot())
 			{
-				g_midiNoteSel.Get()->Get(i)->Restore(take);
-				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
-				return;
+				if (g_midiNoteSel.Get()->Get(i)->Restore(take))
+					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+				break;
 			}
 		}
 	}
@@ -362,15 +361,8 @@ void ME_SaveCCEventsSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWND h
 	void* midiEditor;
 	if ((int)ct->user < 0)
 	{
-		BR_MouseContextInfo mouseInfo;
-		GetMouseCursorContext (NULL, NULL, NULL, &mouseInfo);
-		if (mouseInfo.ccLane == -2)
-			midiEditor = NULL;
-		else
-		{
-			midiEditor = mouseInfo.midiEditor;
-			lane = mouseInfo.ccLane;
-		}
+		BR_MouseContextInfo mouseInfo(BR_MouseContextInfo::MIDI_EDITOR_ALL);
+		midiEditor = (mouseInfo.GetCCLane(&lane, NULL, NULL)) ? mouseInfo.GetMidiEditor() : NULL;
 	}
 	else
 	{
@@ -402,15 +394,8 @@ void ME_RestoreCCEventsSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWN
 	void* midiEditor;
 	if ((int)ct->user < 0)
 	{
-		BR_MouseContextInfo mouseInfo;
-		GetMouseCursorContext (NULL, NULL, NULL, &mouseInfo);
-		if (mouseInfo.ccLane == -2)
-			midiEditor = NULL;
-		else
-		{
-			midiEditor = mouseInfo.midiEditor;
-			lane = mouseInfo.ccLane;
-		}
+		BR_MouseContextInfo mouseInfo(BR_MouseContextInfo::MIDI_EDITOR_ALL);
+		midiEditor = (mouseInfo.GetCCLane(&lane, NULL, NULL)) ? mouseInfo.GetMidiEditor() : NULL;
 	}
 	else
 	{
@@ -433,7 +418,7 @@ void ME_RestoreCCEventsSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWN
 				}
 				else
 					MessageBox((HWND)editor.GetEditor(), __LOCALIZE("Can't restore to velocity, text, sysex and bank select lanes","sws_mbox"), __LOCALIZE("SWS/BR - Warning","sws_mbox"), MB_OK);
-				return;
+				break;
 			}
 		}
 	}
@@ -449,10 +434,9 @@ void ME_RestoreCCEvents2Slot (COMMAND_T* ct, int val, int valhw, int relmode, HW
 		{
 			if (slot == g_midiCCEvents.Get()->Get(i)->GetSlot())
 			{
-				int lane = midiEditor.GetLastClickedCCLane();
 				if (g_midiCCEvents.Get()->Get(i)->Restore(midiEditor, 0, true))
 					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
-				return;
+				break;
 			}
 		}
 	}

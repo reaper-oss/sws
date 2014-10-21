@@ -190,7 +190,7 @@ void BR_EnvSel::Save (TrackEnvelope* envelope)
 	MarkProjectDirty(NULL);
 }
 
-void BR_EnvSel::Restore (TrackEnvelope* envelope)
+bool BR_EnvSel::Restore (TrackEnvelope* envelope)
 {
 	BR_Envelope env(envelope);
 	env.UnselectAll();
@@ -198,7 +198,10 @@ void BR_EnvSel::Restore (TrackEnvelope* envelope)
 	for (size_t i = 0; i < m_selection.size(); ++i)
 		env.SetSelection(m_selection[i], true);
 
-	env.Commit();
+	if (env.Commit())
+		return true;
+	else
+		return false;
 }
 
 int BR_EnvSel::GetSlot ()
@@ -242,9 +245,15 @@ void BR_CursorPos::Save ()
 	MarkProjectDirty(NULL);
 }
 
-void BR_CursorPos::Restore ()
+bool BR_CursorPos::Restore ()
 {
-	SetEditCurPos2(NULL, m_position, true, false);
+	if (GetCursorPositionEx(NULL) == m_position)
+		return false;
+	else
+	{
+		SetEditCurPos2(NULL, m_position, true, false);
+		return true;
+	}
 }
 
 int BR_CursorPos::GetSlot ()
@@ -289,9 +298,15 @@ void BR_MidiNoteSel::Save (MediaItem_Take* take)
 	MarkProjectDirty(NULL);
 }
 
-void BR_MidiNoteSel::Restore (MediaItem_Take* take)
+bool BR_MidiNoteSel::Restore (MediaItem_Take* take)
 {
-	SetSelectedNotes(take, m_selection, true);
+	if (GetSelectedNotes(take) == m_selection)
+		return false;
+	else
+	{
+		SetSelectedNotes(take, m_selection, true);
+		return true;
+	}
 }
 
 int BR_MidiNoteSel::GetSlot ()
@@ -356,7 +371,7 @@ void BR_MidiCCEvents::Save (BR_MidiEditor& midiEditor, int lane)
 
 bool BR_MidiCCEvents::Restore (BR_MidiEditor& midiEditor, int lane, bool allVisible)
 {
-	bool success = false;
+	bool update = false;
 	if (m_events.size() && midiEditor.IsValid())
 	{
 		MediaItem_Take* take     = midiEditor.GetActiveTake();
@@ -490,12 +505,12 @@ bool BR_MidiCCEvents::Restore (BR_MidiEditor& midiEditor, int lane, bool allVisi
 
 		if (moveOffsetPPQMax != -1)
 		{
-			success = true;
+			update = true;
 			double newPosPPQ = trunc(moveOffsetPPQMax + MIDI_GetPPQPosFromProjTime(take, GetCursorPositionEx(NULL))); // trunc because reaper creates events exactly on ppq
 			SetEditCurPos(MIDI_GetProjTimeFromPPQPos(take, newPosPPQ), true, false);
 		}
 	}
-	return success;
+	return update;
 }
 
 int BR_MidiCCEvents::GetSlot ()

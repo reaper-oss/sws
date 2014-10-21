@@ -187,7 +187,7 @@ static void ContinuousActionTimer ()
 	if (g_actionInProgress && g_actionInProgress->cmd)
 	{
 		// Don't let other windows steal our keyboard accelerator
-		SetFocus(GetArrangeWnd());
+		SetCursorContext(GetSelectedEnvelope(NULL) ? 2 : 1, GetSelectedEnvelope(NULL));
 
 		// Make sure tooltip is not displayed if mouse is over another window (tooltip only follows mouse movements in arrange/ruler)
 		if (g_actionInProgress->SetTooltip)

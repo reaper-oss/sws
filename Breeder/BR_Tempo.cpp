@@ -30,6 +30,7 @@
 #include "BR_ContinuousActions.h"
 #include "BR_EnvTools.h"
 #include "BR_MidiTools.h"
+#include "BR_MouseUtil.h"
 #include "BR_TempoDlg.h"
 #include "BR_Util.h"
 #include "../SnM/SnM_Util.h"
@@ -194,7 +195,7 @@ void MoveGridToMouse (COMMAND_T* ct)
 			InitTempoMap();
 
 		g_moveGridTempoMap = new (nothrow) BR_Envelope(GetTempoEnv());
-		if (!g_moveGridTempoMap || !g_moveGridTempoMap->Count())
+		if (!g_moveGridTempoMap || !g_moveGridTempoMap->Count() || g_moveGridTempoMap->IsLocked())
 		{
 			ContinuousActionStopAll();
 			return;
@@ -291,13 +292,10 @@ void MoveGridToEditPlayCursor (COMMAND_T* ct)
 	if (!tempoMap.Count())
 		return;
 
-	// Set preferences to prevent play cursor from jumping
-	int seekmodes = 0;
+	// Prevent play cursor from jumping
+	int seekmodes; GetConfig("seekmodes", seekmodes);
 	if ((int)ct->user == 1 || (int)ct->user == 3)
-	{
-		GetConfig("seekmodes", seekmodes);
 		SetConfig("seekmodes", ClearBit(seekmodes, 5));
-	}
 
 	// Find closest grid
 	double grid = 0;
@@ -337,7 +335,7 @@ void MoveGridToEditPlayCursor (COMMAND_T* ct)
 		else
 		{
 			static bool s_warnUser = true;
-			if (s_warnUser)
+			if (s_warnUser && !tempoMap.IsLocked()) // won't warn if locked
 			{
 				int userAnswer = MessageBox(g_hwndParent, __LOCALIZE("Moving grid failed because some tempo markers would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), __LOCALIZE("SWS/BR - Warning", "sws_mbox"), MB_YESNO);
 				if (userAnswer == IDNO)
@@ -346,9 +344,7 @@ void MoveGridToEditPlayCursor (COMMAND_T* ct)
 		}
 	}
 
-	// Restore preferences
-	if ((int)ct->user == 1 || (int)ct->user == 3)
-		SetConfig("seekmodes", seekmodes);
+	SetConfig("seekmodes", seekmodes);
 }
 
 /******************************************************************************
@@ -408,7 +404,7 @@ void MoveTempo (COMMAND_T* ct)
 
 	// Warn user if some points weren't processed
 	static bool s_warnUser = true;
-	if (s_warnUser && skipped != 0)
+	if (s_warnUser && skipped != 0 && !tempoMap.IsLocked()) // won't warn if locked
 	{
 		char buffer[512];
 		_snprintfSafe(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
@@ -743,7 +739,7 @@ void EditTempo (COMMAND_T* ct)
 
 	// Warn user if some points weren't processed
 	static bool s_warnUser = true;
-	if (s_warnUser && skipped != 0 && tempoMap.CountSelected() > 1)
+	if (s_warnUser && skipped != 0 && tempoMap.CountSelected() > 1 && !tempoMap.IsLocked()) // won't warn if locked
 	{
 		char buffer[512];
 		_snprintfSafe(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
@@ -917,7 +913,7 @@ void EditTempoGradual (COMMAND_T* ct)
 
 	// Warn user if some points weren't processed
 	static bool s_warnUser = true;
-	if (s_warnUser && skipped != 0 && tempoMap.CountSelected() > 1 )
+	if (s_warnUser && skipped != 0 && tempoMap.CountSelected() > 1 && !tempoMap.IsLocked()) // won't warn if locked
 	{
 		char buffer[512];
 		_snprintfSafe(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
@@ -1098,7 +1094,7 @@ void DeleteTempo (COMMAND_T* ct)
 
 	// Warn user if some points weren't processed
 	static bool s_warnUser = true;
-	if (s_warnUser && skipped != 0)
+	if (s_warnUser && skipped != 0 && !tempoMap.IsLocked()) // won't warn if locked
 	{
 		char buffer[512];
 		_snprintfSafe(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
@@ -1111,8 +1107,8 @@ void DeleteTempo (COMMAND_T* ct)
 void DeleteTempoPreserveItems (COMMAND_T* ct)
 {
 	BR_Envelope tempoMap(GetTempoEnv());
-	if (!tempoMap.CountSelected())
-		return;
+	if (!tempoMap.CountSelected() || tempoMap.IsLocked()) // BR_Envelope does check for locking, but since
+		return;                                                                                  // we're dealing with items too check here
 
 	// Get items' position info and set their timebase to time
 	vector<BR_MidiItemTimePos> items;
@@ -1185,7 +1181,7 @@ void DeleteTempoPreserveItems (COMMAND_T* ct)
 
 	// Commit tempo map and restore position info
 	PreventUIRefresh(1);
-	if (tempoMap.Commit(false))
+	if (tempoMap.Commit())
 	{
 		for (size_t i = 0; i < items.size(); ++i)
 			items[i].Restore();
@@ -1314,7 +1310,7 @@ void TempoShapeLinear (COMMAND_T* ct)
 
 	// Warn user if some points weren't processed
 	static bool s_warnUser = true;
-	if (s_warnUser && skipped != 0)
+	if (s_warnUser && skipped != 0 && !tempoMap.IsLocked()) // won't warn if locked
 	{
 		char buffer[512];
 		_snprintfSafe(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
@@ -1417,7 +1413,7 @@ void TempoShapeSquare (COMMAND_T* ct)
 
 	// Warn user if some points weren't processed
 	static bool s_warnUser = true;
-	if (s_warnUser && skipped != 0)
+	if (s_warnUser && skipped != 0 && !tempoMap.IsLocked()) // won't warn if locked
 	{
 		char buffer[512];
 		_snprintfSafe(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);

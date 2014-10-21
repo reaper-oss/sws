@@ -174,6 +174,7 @@ public:
 	bool IsVisible ();
 	bool IsInLane ();
 	bool IsArmed ();
+	bool IsLocked (); // check lock settings for specific envelope type
 	int LaneHeight ();
 	int Type ();          // See BR_EnvType for types
 	int DefaultShape ();
@@ -191,7 +192,7 @@ public:
 	void SetLaneHeight (int height);
 	void SetDefaultShape (int shape);
 
-	/* Committing - does absolutely nothing if there are no edits (unless forced) */
+	/* Committing - does absolutely nothing if there are no edits or locking is turned on (unless forced) */
 	bool Commit (bool force = false);
 
 private:
@@ -258,7 +259,7 @@ bool EnvVis (TrackEnvelope* envelope, bool* lane);
 int GetEnvId (TrackEnvelope* envelope, MediaTrack* parent = NULL);
 int GetDefaultPointShape ();                                      // see BR_EnvShape for return values;
 int GetEnvType (TrackEnvelope* envelope, bool* isSend);           // for return type see BR_EnvType (note: function relies on envelope names, localization could theoretically break it)
-int GetCurrentAutomationMode (MediaTrack* track);                 // this should check global override too, but currently it won't due to API limitations (when API allows, it will be enough to update this function only)
+int GetCurrentAutomationMode (MediaTrack* track);                 // takes global override into account
 
 /******************************************************************************
 * Tempo                                                                       *

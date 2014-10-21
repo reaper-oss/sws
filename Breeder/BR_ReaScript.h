@@ -52,6 +52,7 @@ TrackEnvelope*  BR_GetMouseCursorContext_Envelope (bool* takeEnvelope);
 MediaItem*      BR_GetMouseCursorContext_Item ();
 void*           BR_GetMouseCursorContext_MIDI (bool* inlineEditor, int* noteRow, int* ccLane, int* ccLaneVal, int* ccLaneId);
 double          BR_GetMouseCursorContext_Position ();
+int             BR_GetMouseCursorContext_StretchMarker ();
 MediaItem_Take* BR_GetMouseCursorContext_Take ();
 MediaTrack*     BR_GetMouseCursorContext_Track ();
 MediaItem*      BR_ItemAtMouseCursor (double* position);
@@ -75,24 +76,24 @@ BR_GetMouseCursorContext_Track \n\
 Note that these functions will return every element found under mouse cursor. For example, if details is \"env_segment\",\
 BR_GetMouseCursorContext_Item will still return valid item if it was under that envelope segment.\n\n\
 <table border=\"2\">\
-<tr><th style=\"width:100px\">Window</th> <th style=\"width:100px\">Segment</th> <th style=\"width:300px\">Details</th>           </tr>\
-<tr><td rowspan=\"1\" align = \"center\"> unknown     </th> <td> \"\"        </td> <td> \"\"                                </td> </tr>\
-<tr><td rowspan=\"4\" align = \"center\"> ruler       </th> <td> region_lane </td> <td> \"\"                                </td> </tr>\
-<tr>                                                        <td> marker_lane </td> <td> \"\"                                </td> </tr>\
-<tr>                                                        <td> tempo_lane  </td> <td> \"\"                                </td> </tr>\
-<tr>                                                        <td> timeline    </td> <td> \"\"                                </td> </tr>\
-<tr><td rowspan=\"1\" align = \"center\"> transport   </th> <td> \"\"        </td> <td> \"\"                                </td> </tr>\
-<tr><td rowspan=\"3\" align = \"center\"> tcp         </th> <td> track       </td> <td> \"\"                                </td> </tr>\
-<tr>                                                        <td> envelope    </td> <td> \"\"                                </td> </tr>\
-<tr>                                                        <td> empty       </td> <td> \"\"                                </td> </tr>\
-<tr><td rowspan=\"2\" align = \"center\"> mcp         </th> <td> track       </td> <td> \"\"                                </td> </tr>\
-<tr>                                                        <td> empty       </td> <td> \"\"                                </td> </tr>\
-<tr><td rowspan=\"3\" align = \"center\"> arrange     </th> <td> track       </td> <td> item, env_point, env_segment, empty </td> </tr>\
-<tr>                                                        <td> envelope    </td> <td> env_point, env_segment, empty       </td> </tr>\
-<tr>                                                        <td> empty       </td> <td> \"\"                                </td> </tr>\
-<tr><td rowspan=\"5\" align = \"center\"> midi_editor </th> <td> unknown     </td> <td> \"\"                                </td> </tr>\
-<tr>                                                        <td> ruler       </td> <td> \"\"                                </td> </tr>\
-<tr>                                                        <td> piano       </td> <td> \"\"                                </td> </tr>\
-<tr>                                                        <td> notes       </td> <td> \"\"                                </td> </tr>\
-<tr>                                                        <td> cc_lane     </td> <td> cc_selector, cc_lane                </td> </tr>\
+<tr><th style=\"width:100px\">Window</th> <th style=\"width:100px\">Segment</th> <th style=\"width:300px\">Details</th>                           </tr>\
+<tr><td rowspan=\"1\" align = \"center\"> unknown     </th> <td> \"\"        </td> <td> \"\"                                                </td> </tr>\
+<tr><td rowspan=\"4\" align = \"center\"> ruler       </th> <td> region_lane </td> <td> \"\"                                                </td> </tr>\
+<tr>                                                        <td> marker_lane </td> <td> \"\"                                                </td> </tr>\
+<tr>                                                        <td> tempo_lane  </td> <td> \"\"                                                </td> </tr>\
+<tr>                                                        <td> timeline    </td> <td> \"\"                                                </td> </tr>\
+<tr><td rowspan=\"1\" align = \"center\"> transport   </th> <td> \"\"        </td> <td> \"\"                                                </td> </tr>\
+<tr><td rowspan=\"3\" align = \"center\"> tcp         </th> <td> track       </td> <td> \"\"                                                </td> </tr>\
+<tr>                                                        <td> envelope    </td> <td> \"\"                                                </td> </tr>\
+<tr>                                                        <td> empty       </td> <td> \"\"                                                </td> </tr>\
+<tr><td rowspan=\"2\" align = \"center\"> mcp         </th> <td> track       </td> <td> \"\"                                                </td> </tr>\
+<tr>                                                        <td> empty       </td> <td> \"\"                                                </td> </tr>\
+<tr><td rowspan=\"3\" align = \"center\"> arrange     </th> <td> track       </td> <td> item, stretch_marker, env_point, env_segment, empty </td> </tr>\
+<tr>                                                        <td> envelope    </td> <td> env_point, env_segment, empty                       </td> </tr>\
+<tr>                                                        <td> empty       </td> <td> \"\"                                                </td> </tr>\
+<tr><td rowspan=\"5\" align = \"center\"> midi_editor </th> <td> unknown     </td> <td> \"\"                                                </td> </tr>\
+<tr>                                                        <td> ruler       </td> <td> \"\"                                                </td> </tr>\
+<tr>                                                        <td> piano       </td> <td> \"\"                                                </td> </tr>\
+<tr>                                                        <td> notes       </td> <td> \"\"                                                </td> </tr>\
+<tr>                                                        <td> cc_lane     </td> <td> cc_selector, cc_lane                                </td> </tr>\
 </table>"

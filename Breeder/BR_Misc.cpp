@@ -29,6 +29,7 @@
 #include "BR_Misc.h"
 #include "BR_EnvTools.h"
 #include "BR_MidiTools.h"
+#include "BR_MouseUtil.h"
 #include "BR_ProjState.h"
 #include "BR_Util.h"
 #include "../SnM/SnM.h"
@@ -43,13 +44,15 @@ void SplitItemAtTempo (COMMAND_T* ct)
 {
 	WDL_TypedBuf<MediaItem*> items;
 	SWS_GetSelectedMediaItems(&items);
-	if (!items.GetSize() || !CountTempoTimeSigMarkers(NULL))
+	if (!items.GetSize() || !CountTempoTimeSigMarkers(NULL) || IsLocked(ITEM_FULL))
 		return;
 
-	Undo_BeginBlock2(NULL);
+	bool update = false;
 	for (int i = 0; i < items.GetSize(); ++i)
 	{
 		MediaItem* item = items.Get()[i];
+		if (!IsItemLocked(item))
+		{
 		double iStart = GetMediaItemInfo_Value(item, "D_POSITION");
 		double iEnd = iStart + GetMediaItemInfo_Value(item, "D_LENGTH");
 		double tPos = iStart - 1;
@@ -60,20 +63,26 @@ void SplitItemAtTempo (COMMAND_T* ct)
 			item = SplitMediaItem(item, tPos);
 			if (!item) // split at nonexistent position?
 				item = items.Get()[i];
+				else
+					update = true;
 
 			tPos = TimeMap2_GetNextChangeTime(NULL, tPos);
 			if (tPos > iEnd || tPos == -1 )
 				break;
 		}
 	}
-	Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS);
+	}
+	if (update)
+	{
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 	UpdateArrange();
+}
 }
 
 void MarkersAtTempo (COMMAND_T* ct)
 {
 	BR_Envelope tempoMap(GetTempoEnv());
-	if (!tempoMap.CountSelected())
+	if (!tempoMap.CountSelected() || IsLocked(MARKERS))
 		return;
 
 	PreventUIRefresh(1);
@@ -90,6 +99,9 @@ void MarkersAtTempo (COMMAND_T* ct)
 
 void MidiItemTempo (COMMAND_T* ct)
 {
+	if (IsLocked(ITEM_FULL))
+		return;
+
 	vector<BR_MidiItemTimePos> items;
 	if ((int)ct->user == 2)
 	{
@@ -97,18 +109,21 @@ void MidiItemTempo (COMMAND_T* ct)
 		for (int i = 0; i < CountSelectedMediaItems(NULL); ++i)
 		{
 			MediaItem* item = GetSelectedMediaItem(NULL, i);
-
+			if (!IsItemLocked(item))
+			{
 			items.push_back(BR_MidiItemTimePos(item, false));
 			SetMediaItemInfo_Value(item, "C_BEATATTACHMODE", 0);
 		}
 	}
+	}
 
 	PreventUIRefresh(1);
-	bool success = false;
+	bool update = false;
 	for (int i = 0; i < CountSelectedMediaItems(NULL); ++i)
 	{
 		MediaItem* item = GetSelectedMediaItem(NULL, i);
-
+		if (!IsItemLocked(item))
+		{
 		double bpm; int num, den;
 		TimeMap_GetTimeSigAtTime(NULL, GetMediaItemInfo_Value(item, "D_POSITION"), &num, &den, &bpm);
 		if ((int)ct->user == 2)
@@ -117,28 +132,32 @@ void MidiItemTempo (COMMAND_T* ct)
 			if (SetIgnoreTempo(item, !!(int)ct->user, bpm, num, den))
 			{
 				timePos.Restore(true);
-				success = true;
+					update = true;
 			}
 		}
 		else
 		{
 			if (SetIgnoreTempo(item, !!(int)ct->user, bpm, num, den))
-				success = true;
+					update = true;
 		}
 	}
+	}
 
-	if (success)
+	if (update)
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 	PreventUIRefresh(-1);
 }
 
 void MidiItemTrim (COMMAND_T* ct)
 {
-	bool success = false;
+	if (IsLocked(ITEM_FULL) || IsLocked(ITEM_EDGES))
+		return;
+
+	bool update = false;
 	for (int i = 0; i < CountSelectedMediaItems(0); ++i)
 	{
 		MediaItem* item = GetSelectedMediaItem(0, i);
-		if (DoesItemHaveMidiEvents(item))
+		if (DoesItemHaveMidiEvents(item) && !IsItemLocked(item))
 		{
 			double start = -1;
 			double end   = -1;
@@ -149,7 +168,7 @@ void MidiItemTrim (COMMAND_T* ct)
 				if (MIDI_CountEvts(take, NULL, NULL, NULL))
 				{
 					double currentStart = EffectiveMidiTakeStart(take, false, false);
-					double currentEnd   = GetMediaItemInfo_Value(GetMediaItemTake_Item(take), "D_POSITION") + EffectiveMidiTakeLength(take, false, false);;
+					double currentEnd   = GetMediaItemInfo_Value(GetMediaItemTake_Item(take), "D_POSITION") + EffectiveMidiTakeLength(take, false, false);
 
 					if (start == -1 && end == -1)
 					{
@@ -164,19 +183,22 @@ void MidiItemTrim (COMMAND_T* ct)
 				}
 			}
 
-			success = TrimItem(item, start, end);
+			update = TrimItem(item, start, end);
 		}
 	}
 
-	if (success)
+	if (update)
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 }
 
 void MarkersAtNotes (COMMAND_T* ct)
 {
-	PreventUIRefresh(1);
-	bool success = false;
+	if (IsLocked(MARKERS))
+		return;
 
+	PreventUIRefresh(1);
+
+	bool update = false;
 	for (int i = 0; i < CountSelectedMediaItems(NULL); ++i)
 	{
 		MediaItem* item      = GetSelectedMediaItem(NULL, i);
@@ -193,7 +215,7 @@ void MarkersAtNotes (COMMAND_T* ct)
 		MIDI_CountEvts(take, &noteCount, NULL, NULL);
 		if (noteCount != 0)
 		{
-			success = true;
+			update = true;
 			for (int j = 0; j < noteCount; ++j)
 			{
 				double position;
@@ -208,16 +230,18 @@ void MarkersAtNotes (COMMAND_T* ct)
 		}
 	}
 
-	if (success)
+	if (update)
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
 	PreventUIRefresh(-1);
 }
 
 void MarkersAtStretchMarkers (COMMAND_T* ct)
 {
-	bool success = false;
-	PreventUIRefresh(1);
+	if (IsLocked(MARKERS))
+		return;
 
+	PreventUIRefresh(1);
+	bool update = false;
 	for (int i = 0; i < CountSelectedMediaItems(NULL); ++i)
 	{
 		MediaItem_Take* take = GetActiveTake(GetSelectedMediaItem(NULL, i));
@@ -228,17 +252,20 @@ void MarkersAtStretchMarkers (COMMAND_T* ct)
 			double position;
 			GetTakeStretchMarker(take, i, &position, NULL);
 			if (AddProjectMarker(NULL, false, itemPos + position, 0, NULL, -1) != -1)
-				success = true;
+				update = true;
 		}
 	}
 
-	if (success)
+	if (update)
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
 	PreventUIRefresh(-1);
 }
 
 void MarkerAtMouse (COMMAND_T* ct)
 {
+	if (IsLocked(MARKERS))
+		return;
+
 	double position = PositionAtMouseCursor(true);
 	if (position != -1)
 	{
@@ -253,7 +280,7 @@ void MarkerAtMouse (COMMAND_T* ct)
 
 void MarkersRegionsAtItems (COMMAND_T* ct)
 {
-	if (!CountSelectedMediaItems(NULL))
+	if (!CountSelectedMediaItems(NULL) || ((int)ct->user == 0 && IsLocked(MARKERS)) || ((int)ct->user == 1 && IsLocked(REGIONS)))
 		return;
 
 	Undo_BeginBlock2(NULL);
@@ -281,9 +308,12 @@ void MarkersRegionsAtItems (COMMAND_T* ct)
 
 void MoveClosestMarker (COMMAND_T* ct)
 {
+	if (IsLocked(MARKERS))
+		return;
+
 	double position;
-	if      (abs((int)ct->user == 1)) position = GetPlayPositionEx(NULL);
-	else if (abs((int)ct->user == 2)) position = GetCursorPositionEx(NULL);
+	if      (abs((int)ct->user) == 1) position = GetPlayPositionEx(NULL);
+	else if (abs((int)ct->user) == 2) position = GetCursorPositionEx(NULL);
 	else                              position = PositionAtMouseCursor(true);
 
 	if (position >= 0)
@@ -344,19 +374,25 @@ void CycleRecordModes (COMMAND_T*)
 
 void FocusArrange (COMMAND_T* ct)
 {
-	SetFocus(GetArrangeWnd());
-}
+	SetCursorContext(2, GetSelectedEnvelope(NULL));
+	}
 
 void ToggleItemOnline (COMMAND_T* ct)
 {
+	if (IsLocked(ITEM_FULL))
+		return;
+
 	for (int i = 0; i < CountSelectedMediaItems(NULL); ++i)
 	{
 		MediaItem* item = GetSelectedMediaItem(NULL, i);
+		if (!IsItemLocked(item))
+		{
 		for (int j = 0; j < CountTakes(item); ++j)
 		{
 			if (PCM_source* source = GetMediaItemTake_Source(GetMediaItemTake(item, j)))
 				source->SetAvailable(!source->IsAvailable());
 		}
+	}
 	}
 	UpdateArrange();
 }
@@ -445,6 +481,9 @@ void PlaybackAtMouseCursor (COMMAND_T* ct)
 
 void SelectItemsByType (COMMAND_T* ct)
 {
+	if (IsLocked(ITEM_FULL))
+		return;
+
 	double tStart, tEnd;
 	GetSet_LoopTimeRange(false, false, &tStart, &tEnd, false);
 
@@ -453,29 +492,25 @@ void SelectItemsByType (COMMAND_T* ct)
 	for (int i = 0; i < CountMediaItems(NULL); ++i)
 	{
 		MediaItem* item = GetMediaItem(NULL, i);
-		if (checkTimeSel)
+		if (!IsItemLocked(item))
 		{
-			double itemStart = GetMediaItemInfo_Value(item, "D_POSITION");
-			double itemEnd   = itemStart + GetMediaItemInfo_Value(item, "D_LENGTH");
-			if (!AreOverlappedEx(itemStart, itemEnd, tStart, tEnd))
-				continue;
-		}
-
-		if (MediaItem_Take* take = GetActiveTake(item))
-		{
-			PCM_source* source = GetMediaItemTake_Source(take);
-			source = (!strcmp(source->GetType(), "SECTION")) ? (source->GetSource()) : (source);
-			if (source)
+			if (checkTimeSel)
 			{
-				const char* type = source->GetType();
+				double itemStart = GetMediaItemInfo_Value(item, "D_POSITION");
+				double itemEnd   = itemStart + GetMediaItemInfo_Value(item, "D_LENGTH");
+				if (!AreOverlappedEx(itemStart, itemEnd, tStart, tEnd))
+					continue;
+			}
 
+
+			if (MediaItem_Take* take = GetActiveTake(item))
+			{
 				bool select = false;
-				if (abs((int)ct->user) == 1)
-					select = !strcmp(type, "MIDI") || !strcmp(type, "MIDIPOOL");
-				else if (abs((int)ct->user) == 2)
-					select = strcmp(type, "MIDI") && strcmp(type, "MIDIPOOL") && strcmp(type, "VIDEO") && strcmp(type, "");
-				else if (abs((int)ct->user) == 3)
-					select = !strcmp(type, "VIDEO");
+				int type = GetTakeType(take);
+
+				if      (abs((int)ct->user) == 1) select = (type == 0) ? true : false;
+				else if (abs((int)ct->user) == 2) select = (type == 1) ? true : false;
+				else if (abs((int)ct->user) == 3) select = (type == 2) ? true : false;
 
 				if (select)
 				{
@@ -514,8 +549,9 @@ void RestoreCursorPosSlot (COMMAND_T* ct)
 	{
 		if (slot == g_cursorPos.Get()->Get(i)->GetSlot())
 		{
-			g_cursorPos.Get()->Get(i)->Restore();
+			if (g_cursorPos.Get()->Get(i)->Restore())
 			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
+			break;
 		}
 	}
 }

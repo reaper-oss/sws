@@ -61,7 +61,7 @@ public:
 	bool CheckTarget (MediaItem_Take* take);
 	bool IsSelectedInProject ();
 	bool CreateGraph (BR_Envelope& envelope, double minLUFS, double maxLUFS, bool momentary);
-	void NormalizeIntegrated (double targetLUFS); // uses existing analyze data
+	bool NormalizeIntegrated (double targetLUFS); // uses existing analyze data
 	void SetSelectedInProject (bool selected);
 	void GoToTarget ();
 	void GoToMomentaryMax (bool timeSelection);
@@ -88,7 +88,7 @@ private:
 	AudioData GetAudioData ();
 	void SetRunning (bool running);
 	void SetProgress (double progress);
-	void SetAnalyzeData (double integrated, double range, double truePeak, double truePeakPos, double shortTermMax, double momentaryMax, vector<double>& shortTermValues, vector<double>& momentaryValues);
+	void SetAnalyzeData (double integrated, double range, double truePeak, double truePeakPos, double shortTermMax, double momentaryMax, const vector<double>& shortTermValues, const vector<double>& momentaryValues);
 	void GetAnalyzeData (double* integrated, double* range, double* truePeak, double* truePeakPos, double* shortTermMax, double* momentaryMax);
 	void SetAnalyzedStatus (bool analyzed);
 	bool GetAnalyzedStatus ();
@@ -121,7 +121,7 @@ private:
 };
 
 /******************************************************************************
-* Loudness preferences and general management/state saving                    *
+* Loudness preferences                                                        *
 ******************************************************************************/
 class BR_LoudnessPref
 {
@@ -157,6 +157,8 @@ private:
 		double valueLU, graphMin, graphMax;
 		WDL_FastString stringLU;
 	};
+	enum LUFormat        {LU = 0, LU_AT_K, LU_K, K, LU_FORMAT_COUNT};
+	enum PrefWndMessages {READ_PROJDATA = 0xF001, SAVE_PROJDATA, UPDATE_LU_FORMAT_PREVIEW};
 
 	BR_LoudnessPref ();
 	BR_LoudnessPref (const BR_LoudnessPref&);
@@ -168,14 +170,7 @@ private:
 	HWND m_prefWnd;
 	double m_valueLU, m_graphMin, m_graphMax;
 	int m_globalLUFormat;
-
-	enum LUFormat        {LU = 0, LU_AT_K, LU_K, K, LU_FORMAT_COUNT};
-	enum PrefWndMessages {READ_PROJDATA = 0xF001, SAVE_PROJDATA, UPDATE_LU_FORMAT_PREVIEW};
 };
-
-int LoudnessInit ();
-void LoudnessExit ();
-void LoudnessUpdate (bool updatePreferencesDlg = true);
 
 /******************************************************************************
 * Normalize loudness                                                          *
@@ -185,7 +180,7 @@ struct BR_NormalizeData
 	WDL_PtrList<BR_LoudnessObject>* items;
 	double targetLufs;
 	bool quickMode;   // analyze integrated loudness only (used when normalizing with actions)
-	bool success;     // did items get successfully normalized?
+	bool normalized;  // did items get successfully normalized?
 };
 
 void NormalizeAndShowProgress (BR_NormalizeData* normalizeData);
@@ -243,6 +238,7 @@ protected:
 	virtual void GetMinSize (int* w, int* h);
 	virtual int OnKey (MSG* msg, int iKeyState);
 	virtual HMENU OnContextMenu (int x, int y, bool* wantDefaultItems);
+	virtual bool ReprocessContextMenu();
 	virtual INT_PTR OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 	struct Properties
@@ -271,6 +267,13 @@ protected:
 	enum NormalizeWndMessages    {READ_PROJDATA = 0xF001};
 	enum ExportFormatWndMessages {UPDATE_FORMAT_AND_PREVIEW = 0xF001};
 };
+
+/******************************************************************************
+* Loudness init/exit                                                          *
+******************************************************************************/
+int LoudnessInit ();
+void LoudnessExit ();
+void LoudnessUpdate (bool updatePreferencesDlg = true);
 
 /******************************************************************************
 * Commands                                                                    *

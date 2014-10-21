@@ -284,13 +284,14 @@ void VersionCheckDialog (HWND hwnd)
 
 void GetStartupSearchOptions (bool* official, bool* beta, unsigned int* lastTime)
 {
-	char tmp[256]; int tempO, tempB; unsigned int tempT;
-	GetPrivateProfileString("SWS", STARTUP_VERSION_KEY, "1 0 0", tmp, 256, get_ini_file());
-	sscanf(tmp, "%d %d %u", &tempO, &tempB, &tempT);
+	char tmp[256];
+	GetPrivateProfileString("SWS", STARTUP_VERSION_KEY, "", tmp, 256, get_ini_file());
 
-	WritePtr(official, !!tempO);
-	WritePtr(beta,     !!tempB);
-	WritePtr(lastTime, tempT  );
+	LineParser lp(false);
+	lp.parse(tmp);
+	WritePtr(official, (lp.getnumtokens() > 0) ? !!lp.gettoken_int(0) : true);
+	WritePtr(beta,     (lp.getnumtokens() > 1) ? !!lp.gettoken_int(1) : false);
+	WritePtr(lastTime, lp.gettoken_uint(2));
 }
 
 void SetStartupSearchOptions (bool official, bool beta, unsigned int lastTime)
@@ -298,8 +299,10 @@ void SetStartupSearchOptions (bool official, bool beta, unsigned int lastTime)
 	char tmp[256];
 	if (lastTime == 0) // lastTime = 0 will prevent overwriting current lastTime
 	{
-		GetPrivateProfileString("SWS", STARTUP_VERSION_KEY, "1 0 0", tmp, 256, get_ini_file());
-		sscanf(tmp, "%*d %*d %u", &lastTime);
+		GetPrivateProfileString("SWS", STARTUP_VERSION_KEY, "", tmp, 256, get_ini_file());
+		LineParser lp(false);
+		lp.parse(tmp);
+		lastTime = lp.gettoken_uint(2);
 	}
 	_snprintfSafe(tmp, sizeof(tmp), "%d %d %u", !!official, !!beta, lastTime);
 	WritePrivateProfileString("SWS", STARTUP_VERSION_KEY, tmp, get_ini_file());
@@ -352,7 +355,12 @@ unsigned WINAPI BR_SearchObject::StartSearch (void* searchObject)
 	JNL::open_socketlib();
 
 	BR_Version versionL;
-	sscanf(SWS_VERSION_STR, "%d,%d,%d,%d", &versionL.maj, &versionL.min, &versionL.rev, &versionL.build);
+	LineParser lp(false);
+	lp.parse(SWS_VERSION_STR);
+	versionL.maj   = lp.gettoken_int(0);
+	versionL.min   = lp.gettoken_int(1);
+	versionL.rev   = lp.gettoken_int(2);
+	versionL.build = lp.gettoken_int(3);
 
 	// When searching by user request, lookup both official and beta
 	bool searchO = true, searchB = true;
@@ -386,7 +394,7 @@ unsigned WINAPI BR_SearchObject::StartSearch (void* searchObject)
 					char* token = strtok(buf, "\n");
 					while (token != NULL)
 					{
-						if (sscanf(token, "#define SWS_VERSION %d,%d,%d,%d", &versionO.maj, &versionO.min, &versionO.rev, &versionO.build) > 0)
+						if (sscanf(token, "#define SWS_VERSION %.10d,%.10d,%.10d,%.10d", &versionO.maj, &versionO.min, &versionO.rev, &versionO.build) > 0)
 							break;
 						token = strtok(NULL, "\n");
 					}
@@ -430,7 +438,7 @@ unsigned WINAPI BR_SearchObject::StartSearch (void* searchObject)
 					char* token = strtok(buf, "\n");
 					while (token != NULL)
 					{
-						if (sscanf(token, "#define SWS_VERSION %d,%d,%d,%d", &versionB.maj, &versionB.min, &versionB.rev, &versionB.build) > 0)
+						if (sscanf(token, "#define SWS_VERSION %.10d,%.10d,%.10d,%.10d", &versionB.maj, &versionB.min, &versionB.rev, &versionB.build) > 0)
 							break;
 						token = strtok(NULL, "\n");
 					}

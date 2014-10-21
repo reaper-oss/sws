@@ -57,7 +57,7 @@ public:
 	BR_EnvSel (int slot, ProjectStateContext* ctx);
 	void SaveState (ProjectStateContext* ctx);
 	void Save (TrackEnvelope* envelope);
-	void Restore (TrackEnvelope* envelope);
+	bool Restore (TrackEnvelope* envelope);
 	int  GetSlot ();
 
 private:
@@ -75,7 +75,7 @@ public:
 	BR_CursorPos (int slot, ProjectStateContext* ctx);
 	void SaveState (ProjectStateContext* ctx);
 	void Save ();
-	void Restore ();
+	bool Restore ();
 	int  GetSlot ();
 
 private:
@@ -93,7 +93,7 @@ public:
 	BR_MidiNoteSel (int slot, ProjectStateContext* ctx);
 	void SaveState (ProjectStateContext* ctx);
 	void Save (MediaItem_Take* take);
-	void Restore (MediaItem_Take* take);
+	bool Restore (MediaItem_Take* take);
 	int  GetSlot ();
 
 private:
@@ -102,7 +102,7 @@ private:
 };
 
 /******************************************************************************
-* MIDI saved cc events state                                                  *
+* MIDI saved CC events state                                                  *
 ******************************************************************************/
 class BR_MidiCCEvents
 {

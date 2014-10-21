@@ -27,9 +27,9 @@
 ******************************************************************************/
 #include "stdafx.h"
 #include "BR_MidiTools.h"
+#include "BR_MouseUtil.h"
 #include "BR_Util.h"
 #include "../SnM/SnM_Chunk.h"
-#include "../SnM/SnM_Item.h"
 #include "../reaper/localize.h"
 
 /******************************************************************************
@@ -234,7 +234,7 @@ bool BR_MidiEditor::Build ()
 	if (m_take)
 	{
 		MediaItem* item = GetMediaItemTake_Item(m_take);
-		int takeId = GetTakeIndex(item, m_take);
+		int takeId = GetTakeId(m_take, item);
 		if (takeId >= 0)
 		{
 			SNM_TakeParserPatcher p(item, CountTakes(item));
@@ -440,16 +440,13 @@ take (take)
 ******************************************************************************/
 double ME_PositionAtMouseCursor (bool checkRuler, bool checkCCLanes)
 {
-	BR_MouseContextInfo info;
-	const char* segment;
-	GetMouseCursorContext(NULL, &segment, NULL, &info);
-	if (info.midiEditor)
+	BR_MouseContextInfo mouseInfo(BR_MouseContextInfo::MODE_MIDI_EDITOR_ALL);
+	if (mouseInfo.GetMidiEditor())
 	{
-		if (checkRuler && checkCCLanes)                  return info.position; // no need for strcmp, if position is invalid it's already -1
-
-		if (!strcmp(segment,"notes_view"))               return info.position;
-		if (checkRuler   && !strcmp(segment, "ruler"))	 return info.position;
-		if (checkCCLanes && !strcmp(segment, "cc_lane")) return info.position;
+		if (checkRuler && checkCCLanes)                                 return mouseInfo.GetPosition(); // no need for strcmp, if position is invalid it's already -1
+		if (!strcmp(mouseInfo.GetSegment(),"notes_view"))               return mouseInfo.GetPosition();
+		if (checkRuler   && !strcmp(mouseInfo.GetSegment(), "ruler"))	return mouseInfo.GetPosition();
+		if (checkCCLanes && !strcmp(mouseInfo.GetSegment(), "cc_lane")) return mouseInfo.GetPosition();
 	}
 	return -1;
 }
@@ -506,7 +503,7 @@ vector<int> GetSelectedNotes (MediaItem_Take* take)
 	MIDI_CountEvts(take, &noteCount, NULL, NULL);
 	for (int i = 0; i < noteCount; ++i)
 	{
-		bool selected = false;;
+		bool selected = false;
 		MIDI_GetNote(take, i, &selected, NULL, NULL, NULL, NULL, NULL, NULL);
 		if (selected)
 			selectedNotes.push_back(i);
@@ -639,7 +636,7 @@ set<int> GetUsedCCLanes (void* midiEditor, int detect14bit)
 		{
 			for (set<int>::iterator it = unpairedMSB.begin(); it != unpairedMSB.end(); ++it)
 			{
-				if (usedCC.find(*it +CC_14BIT_START) != usedCC.end())
+				if (usedCC.find(*it + CC_14BIT_START) != usedCC.end())
 				{
 					usedCC.erase(*it + CC_14BIT_START);
 					usedCC.insert(*it + 32);             // MSB is already there, LSB doesn't have to be so add it
@@ -996,5 +993,6 @@ int MapReaScriptCCToVelLane (int cc)
 	if (cc == 0x200)                return -1;
 	if (cc >= 0     && cc <= 127)   return cc;
 	if (cc >= 0x201 && cc <= 0x206) return cc - 385;
-	else                            return cc - 122;
+	if (cc >= 0x100 && cc <= 0x11F) return cc - 122;
+	else                            return -2;
 }

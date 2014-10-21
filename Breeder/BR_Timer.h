@@ -31,7 +31,7 @@
 * Uncomment do enable timer functionality                                     *
 ******************************************************************************/
 //#define BR_DEBUG_PERFORMANCE_ACTIONS
-//#define BR_DEBUG_PERFORMANCE_TIMER
+#define BR_DEBUG_PERFORMANCE_TIMER
 
 /******************************************************************************
 * Used in command hook in sws_extension.cpp. If BR_DEBUG_PERFORMANCE_ACTIONS  *

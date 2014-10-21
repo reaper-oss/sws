@@ -44,12 +44,9 @@ const double PAN_DELTA    = 0.001;
 /******************************************************************************
 * Miscellaneous                                                               *
 ******************************************************************************/
-bool IsFraction (char* str, double& convertedFraction);
-double AltAtof (char* str);
-double RoundToN (double val, double n);
-double TranslateRange (double value, double oldMin, double oldMax, double newMin, double newMax);
-void ReplaceAll (string& str, string oldStr, string newStr);
-void AppendLine (WDL_FastString& str, const char* line);
+vector<int> GetDigits (int val); // in 567 [0] = 5, [1] = 6 etc...
+set<int> GetAllMenuIds (HMENU hMenu);
+int GetUnusedMenuId (HMENU hMenu);
 int Round (double val);
 int GetBit (int val, int pos);
 int SetBit (int val, int pos, bool set);
@@ -59,22 +56,29 @@ int ToggleBit (int val, int pos);
 int GetFirstDigit (int val);
 int GetLastDigit (int val);
 int BinaryToDecimal (const char* binaryString);
-vector<int> GetDigits (int val); // in 567 [0] = 5, [1] = 6 etc...
-WDL_FastString GetSourceChunk (PCM_source* source);
+bool IsFraction (char* str, double& convertedFraction);
+double AltAtof (char* str);
+double RoundToN (double val, double n);
+double TranslateRange (double value, double oldMin, double oldMax, double newMin, double newMax);
+void ReplaceAll (string& str, string oldStr, string newStr);
+void AppendLine (WDL_FastString& str, const char* line);
 template <typename T> bool WritePtr (T* ptr, T val)  {if (ptr){*ptr = val; return true;} return false;}
 template <typename T> bool ReadPtr  (T* ptr, T& val) {if (ptr){val = *ptr; return true;} return false;}
 template <typename T> bool AreOverlapped   (T x1, T x2, T y1, T y2) {if (x1 > x2) swap(x1, x2); if (y1 > y2) swap(y1, y2); return x1 <= y2 && y1 <= x2;}
 template <typename T> bool AreOverlappedEx (T x1, T x2, T y1, T y2) {if (x1 > x2) swap(x1, x2); if (y1 > y2) swap(y1, y2); return x1 <  y2 && y1 <  x2;}
-template <typename T> bool CheckBounds   (T val, T min, T max)    {if (val < min)  return false; if (val > max)  return false; return true;}
-template <typename T> bool CheckBoundsEx (T val, T min, T max)    {if (val <= min) return false; if (val >= max) return false; return true;}
-template <typename T> T    SetToBounds   (T val, T min, T max)    {if (val < min)  return min;   if (val > max)  return max;   return val;}
+template <typename T> bool CheckBounds   (T val, T min, T max)    {if (min > max) swap(min, max); if (val < min)  return false; if (val > max)  return false; return true;}
+template <typename T> bool CheckBoundsEx (T val, T min, T max)    {if (min > max) swap(min, max); if (val <= min) return false; if (val >= max) return false; return true;}
+template <typename T> T    SetToBounds   (T val, T min, T max)    {if (min > max) swap(min, max); if (val < min)  return min;   if (val > max)  return max;   return val;}
 template <typename T> T    IsEqual (T a, T b, T epsilon) {epsilon = abs(epsilon); return CheckBounds(a, b - epsilon, b + epsilon);}
 
 /******************************************************************************
 * General                                                                     *
 ******************************************************************************/
 vector<double> GetProjectMarkers (bool timeSel, double delta = 0);
-WDL_FastString FormatTime (double position, int mode = -1);  // same as format_timestr_pos but handles "measures.beats + time" properly
+WDL_FastString GetReaperMenuIniPath ();
+WDL_FastString FormatTime (double position, int mode = -1);                                      // same as format_timestr_pos but handles "measures.beats + time" properly
+int GetEffectiveTakeId (MediaItem_Take* take, MediaItem* item, int id, int* effectiveTakeCount); // empty takes could be hidden, so displayed id and real id can differ (pass either take or item and take id)
+int GetEffectiveCompactLevel (MediaTrack* track);                                                // displayed compact level is determined by the highest compact level of any successive parent
 int FindClosestProjMarkerIndex (double position);
 double EndOfProject (bool markers, bool regions);
 double GetProjectSettingsTempo (int* num, int* den);
@@ -83,6 +87,7 @@ void InitTempoMap ();
 void ScrollToTrackIfNotInArrange (MediaTrack* track);
 void StartPlayback (double position);
 void GetSetLastAdjustedSend (bool set, MediaTrack** track, int* sendId, int* type); // for type see BR_EnvType (works only for volume and pan, not mute)
+void GetSetFocus (bool set, HWND* hwnd, int* context);
 bool IsPlaying ();
 bool IsPaused ();
 bool IsRecording ();
@@ -95,22 +100,57 @@ template <typename T> void SetConfig (const char* key, T  val) {*static_cast<T*>
 ******************************************************************************/
 vector<MediaItem*> GetSelItems (MediaTrack* track);
 double GetSourceLengthPPQ (MediaItem_Take* take);
+double ProjectTimeToItemTime (MediaItem* item, double projTime);
+double ItemTimeToProjectTime (MediaItem* item, double itemTime);
 int GetTakeId (MediaItem_Take* take, MediaItem* item = NULL);
+int GetTakeType (MediaItem_Take* take); // -1 = unknown, 0 = audio, 1 = MIDI, 2 = video, 3 = click, 4 = timecode generator, 5 = RPR project
 bool SetIgnoreTempo (MediaItem* item, bool ignoreTempo, double bpm, int num, int den);
 bool DoesItemHaveMidiEvents (MediaItem* item);
 bool TrimItem (MediaItem* item, double start, double end);
 bool GetMediaSourceProperties (MediaItem_Take* take, bool* section, double* start, double* length, double* fade, bool* reverse);
 bool SetMediaSourceProperties (MediaItem_Take* take, bool section, double start, double length, double fade, bool reverse);
 bool SetTakeSourceFromFile (MediaItem_Take* take, const char* filename, bool inProjectData, bool keepSourceProperties);
+WDL_FastString GetSourceChunk (PCM_source* source);
+
+/******************************************************************************
+* Stretch markers                                                             *
+******************************************************************************/
+int FindPreviousStretchMarker (MediaItem_Take* take, double proj);
+int FindNextStretchMarker (MediaItem_Take* take, double position);
+int FindClosestStretchMarker (MediaItem_Take* take, double position);
+int FindStretchMarker (MediaItem_Take* take, double position, double surroundingRange = 0);
 
 /******************************************************************************
 * Grid                                                                        *
 ******************************************************************************/
-double GetNextGridDiv (double position);           // unlike other functions, this one doesn't care about grid visibility
+double GetNextGridDiv (double position); // unlike other functions, this one doesn't care about grid visibility
 double GetClosestGridLine (double position);
 double GetClosestMeasureGridLine (double position);
 double GetClosestLeftSideGridLine (double position);
 double GetClosestRightSideGridLine (double position);
+
+/******************************************************************************
+* Locking                                                                     *
+******************************************************************************/
+enum BR_LockElements
+{
+	TIME_SEL          = 1,
+	ITEM_FULL         = 2,
+	ITEM_HORZ_MOVE    = 64,
+	ITEM_VERT_MOVE    = 128,
+	ITEM_EDGES        = 256,
+	FADES_VOL_HANDLE  = 512,
+	STRETCH_MARKERS   = 4096,
+	TAKE_ENV          = 2048,
+	TRACK_ENV         = 4,
+	REGIONS           = 16,
+	MARKERS           = 8,
+	TEMPO_MARKERS     = 32,
+	LOOP_POINTS       = 1024
+};
+bool IsLockingActive ();
+bool IsLocked (int lockElements);
+bool IsItemLocked (MediaItem* item);
 
 /******************************************************************************
 * Height                                                                      *
@@ -152,33 +192,19 @@ TrackEnvelope* HwndToEnvelope (HWND hwnd);
 void CenterDialog (HWND hwnd, HWND target, HWND zOrder);
 
 /******************************************************************************
-* Mouse cursor                                                                *
-******************************************************************************/
-struct BR_MouseContextInfo
-{
-	                                          // In case the thing is invalid:
-	MediaTrack* track;                        // NULL
-	MediaItem* item;                          // NULL
-	MediaItem_Take* take;                     // NULL
-	TrackEnvelope* envelope;                  // NULL
-	void* midiEditor;                         // NULL
-	bool takeEnvelope, midiInlineEditor;      // false
-	double position;                          // -1
-	int noteRow, ccLaneVal, ccLaneId;         // -1
-	int ccLane;                               // -2
-	BR_MouseContextInfo();
-};
-
-void GetMouseCursorContext (const char** window, const char** segment, const char** details, BR_MouseContextInfo* info);
-double PositionAtMouseCursor (bool checkRuler, bool checkCursorVisibility = true, int* yOffset = NULL, bool* overRuler = NULL);
-MediaItem* ItemAtMouseCursor (double* position);
-MediaItem_Take* TakeAtMouseCursor (double* position);
-MediaTrack* TrackAtMouseCursor (int* context, double* position); // context: 0->TCP, 1->MCP, 2->Arrange
-
-/******************************************************************************
 * Theming                                                                     *
 ******************************************************************************/
 void DrawTooltip (LICE_IBitmap* bm, const char* text);
 void SetWndIcon (HWND hwnd); // win32 only
 void ThemeListViewOnInit (HWND list);
 bool ThemeListViewInProc (HWND hwnd, int uMsg, LPARAM lParam, HWND list, bool grid);
+
+/******************************************************************************
+* Height helpers (exposed here for usage outside of BR_Util.h)                *
+******************************************************************************/
+void GetTrackGap (int trackHeight, int* top, int* bottom);
+bool IsLastTakeTooTall (int itemHeight, int averageTakeHeight, int effectiveTakeCount, int* lastTakeHeight);
+int GetMinTakeHeight (MediaTrack* track, int takeCount, int trackHeight, int itemHeight);
+int GetItemHeight (MediaItem* item, int* offsetY, int trackHeight, int trackOffsetY);
+int GetTakeHeight (MediaItem_Take* take, MediaItem* item, int id, int* offsetY, bool averagedLast);                                   // pass either take or
+int GetTakeHeight (MediaItem_Take* take, MediaItem* item, int id, int* offsetY, bool averagedLast, int trackHeight, int trackOffset); // item and take id

@@ -63,8 +63,10 @@ Added actions
  - SWS/BR: Insert CC event at edit cursor in CC lane under mouse cursor (active item only)
 
 ReaScript
- - Fixed BR_GetMouseCursorContext() and related function in regards to MIDI editor (changes introduced in REAPER v4.7 broke it)
- - Changed envelope object type in BR_EnvAlloc and other functions to avoid confusion (existing scripts should be unaffected)
++BR_GetMouseCursorContext:
+ - Fixes related to MIDI editor (changes introduced in REAPER v4.7 broke it)
+ - Added support for stretch markers
++Changed envelope object type in BR_EnvAlloc and other functions to avoid confusion (existing scripts should be unaffected)
 
 Fixes
 +Improved deleting tempo markers with different time signatures when using SWS/BR: Delete tempo marker and preserve position and length of items (including MIDI events)
@@ -74,6 +76,8 @@ Fixes
  - SWS/wol: Set "Vertical/Horizontal zoom center"
 +MIDI editor actions that hide/show used CC lanes now obey filter's channel settings
 +Prevent toggling zoom with zoom actions when inappropriate (i.e. toggling zoom to selected items when there are no selected items)
++All SWS/BR actions now obey lock settings
++OSX: Fixed "Unselect tempo markers" child dialog of "Select and adjust tempo markers". It got hidden behind other dialogs when it lost focus
 
 Other
 +Increased all SWS/BR slot actions to 8 slots

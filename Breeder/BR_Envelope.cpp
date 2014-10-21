@@ -29,6 +29,7 @@
 #include "BR_Envelope.h"
 #include "BR_ContinuousActions.h"
 #include "BR_EnvTools.h"
+#include "BR_MouseUtil.h"
 #include "BR_ProjState.h"
 #include "BR_Util.h"
 #include "../reaper/localize.h"
@@ -141,6 +142,13 @@ void SetEnvPointMouseValue (COMMAND_T* ct)
 		s_lastEndPosition = -1;
 		s_lastEndNormVal  = -1;
 		g_envMouseMode  = (int)ct->user;
+
+		// BR_Envelope does check for locking but we're also using tempo API here so check manually
+		if (g_envMouseEnvelope->IsLocked())
+		{
+				ContinuousActionStopAll();
+				return;
+		}
 	}
 
 	// Check envelope is visible
@@ -368,7 +376,7 @@ void CursorToEnv1 (COMMAND_T* ct)
 		Undo_BeginBlock2(NULL);
 
 		// Select point
-		if ((int)ct->user == -2 || (int)ct->user == 2 )
+		if (((int)ct->user == -2 || (int)ct->user == 2) && !IsLocked(TRACK_ENV))
 		{
 			PreventUIRefresh(1);
 
@@ -429,10 +437,9 @@ void CursorToEnv2 (COMMAND_T* ct)
 				break;
 		}
 
-		Undo_BeginBlock2(NULL);
 		SetEditCurPos(targetPos, true, false);
 		envelope.Commit();
-		Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 	}
 }
 
@@ -966,7 +973,7 @@ void Insert2EnvPointsTimeSelection (COMMAND_T* ct)
 	if (tStart + MIN_ENV_DIST >= tEnd)
 		return;
 
-	bool success = false;
+	bool update = false;
 
 	PreventUIRefresh(1);
 	int trackCount = (selEnvOnly) ? (1) : (GetNumTracks() + 1);
@@ -1009,14 +1016,14 @@ void Insert2EnvPointsTimeSelection (COMMAND_T* ct)
 						envelope.CreatePoint(envelope.Count(), tEnd, envelope.ValueAtPosition(tEnd), defaultShape, 0, true, true);
 
 					if (envelope.Commit())
-						success = true;
+						update = true;
 				}
 			}
 		}
 	}
 	PreventUIRefresh(-1);
 
-	if (success)
+	if (update)
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 }
 
@@ -1124,8 +1131,8 @@ void RestoreEnvSelSlot (COMMAND_T* ct)
 		{
 			if (slot == g_envSel.Get()->Get(i)->GetSlot())
 			{
-				g_envSel.Get()->Get(i)->Restore(envelope);
-				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+				if (g_envSel.Get()->Get(i)->Restore(envelope))
+					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 				break;
 			}
 		}
@@ -1138,7 +1145,7 @@ void RestoreEnvSelSlot (COMMAND_T* ct)
 void ShowActiveTrackEnvOnly (COMMAND_T* ct)
 {
 	TrackEnvelope* env = GetSelectedTrackEnvelope(NULL);
-	if (!env || ((int)ct->user == 1 && !CountSelectedTracks(NULL)))
+	if ((int)ct->user == 1 && !CountSelectedTracks(NULL))
 		return;
 	BR_Envelope envelope(env);
 
@@ -1157,6 +1164,7 @@ void ShowActiveTrackEnvOnly (COMMAND_T* ct)
 		flag = true;
 	}
 
+	PreventUIRefresh(1);
 	if ((int)ct->user == 0)
 		Main_OnCommand(41150, 0); // hide all
 	else
@@ -1166,6 +1174,7 @@ void ShowActiveTrackEnvOnly (COMMAND_T* ct)
 		envelope.DeletePoint(envelope.Count()-1);
 
 	envelope.Commit(true);
+	PreventUIRefresh(-1);
 	Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL);
 }
 
@@ -1220,18 +1229,18 @@ void ShowHideFxEnv (COMMAND_T* ct)
 
 	// Set new visibility
 	PreventUIRefresh(1);
-	bool success = false;
+	bool update = false;
 	for (int i = 0; i < envelopes.GetSize(); ++i)
 	{
 		BR_Envelope* envelope = envelopes.Get(i);
 		if (hide == envelope->IsVisible() && (!activeOnly || activeOnly == envelope->IsActive()))
 		{
 			envelope->SetVisible(!hide);
-			envelope->Commit();
-			success = true;
+			envelope->Commit(true);
+			update = true;
 		}
 	}
-	if (success)
+	if (update)
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 	PreventUIRefresh(-1);
 }
@@ -1280,13 +1289,13 @@ void ShowHideSendEnv (COMMAND_T* ct)
 
 	// Set new visibility
 	PreventUIRefresh(1);
-	bool success = false;
+	bool update = false;
 	if (!hide && !activeOnly)
 	{
 		vector<MediaTrack*> selectedTracks;
 		for (int i = 0; i < CountSelectedTracks(NULL); ++i)
 			selectedTracks.push_back(GetSelectedTrack(NULL, i));
-		success = ShowSendEnvelopes(selectedTracks, mode);
+		update = ShowSendEnvelopes(selectedTracks, mode);
 	}
 	else
 	{
@@ -1310,13 +1319,13 @@ void ShowHideSendEnv (COMMAND_T* ct)
 					envelope->SetActive(false); // does the same things when hiding envelopes)
 				}
 
-				envelope->Commit();
-				success = true;
+				envelope->Commit(true);
+				update = true;
 			}
 		}
 	}
 
-	if (success)
+	if (update)
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 	PreventUIRefresh(-1);
 }

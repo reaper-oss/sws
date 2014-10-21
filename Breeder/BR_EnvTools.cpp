@@ -1283,6 +1283,18 @@ bool BR_Envelope::IsArmed ()
 	return !!m_properties.armed;
 }
 
+bool BR_Envelope::IsLocked ()
+{
+	bool locked = false;
+	if (IsLockingActive())
+	{
+		if      (m_take)     locked = ::IsLocked(TAKE_ENV);
+		else if (m_tempoMap) locked = ::IsLocked(this->IsVisible() ? TRACK_ENV : TEMPO_MARKERS);
+		else                 locked = ::IsLocked(TRACK_ENV);
+	}
+	return locked;
+}
+
 int BR_Envelope::LaneHeight ()
 {
 	this->FillProperties();
@@ -1413,7 +1425,7 @@ void BR_Envelope::SetDefaultShape (int shape)
 
 bool BR_Envelope::Commit (bool force /*=false*/)
 {
-	if (m_update || force)
+	if (force || (m_update && !this->IsLocked()))
 	{
 		// Prevents reselection of points in time selection
 		int envClickSegMode; GetConfig("envclicksegmode", envClickSegMode);
@@ -1641,32 +1653,46 @@ void BR_Envelope::FillProperties () const
 		{
 			memcpy(chunk, m_chunkStart.Get(), size);
 
+			LineParser lp(false);
 			char* token = strtok(chunk, "\n");
 			while (token != NULL)
 			{
 				if (!strncmp(token, "ACT ", sizeof("ACT ")-1))
 				{
-					sscanf(token, "ACT %d", &m_properties.active);
+					lp.parse(token);
+					m_properties.active = lp.gettoken_int(1);
 				}
 				else if (!strncmp(token, "VIS ", sizeof("VIS ")-1))
 				{
-					sscanf(token, "VIS %d %d %lf", &m_properties.visible, &m_properties.lane, &m_properties.visUnknown);
+					lp.parse(token);
+					m_properties.visible    = lp.gettoken_int(1);
+					m_properties.lane       = lp.gettoken_int(2);
+					m_properties.visUnknown = lp.gettoken_float(3);
 				}
 				else if (!strncmp(token, "LANEHEIGHT ", sizeof("LANEHEIGHT ")-1))
 				{
-					sscanf(token, "LANEHEIGHT %d %d", &m_properties.height, &m_properties.heightUnknown);
+					lp.parse(token);
+					m_properties.height        = lp.gettoken_int(1);
+					m_properties.heightUnknown = lp.gettoken_int(2);
 				}
 				else if (!strncmp(token, "ARM ", sizeof("ARM ")-1))
 				{
-					sscanf(token, "ARM %d", &m_properties.armed);
+					lp.parse(token);
+					m_properties.armed = lp.gettoken_int(1);
 				}
 				else if (!strncmp(token, "DEFSHAPE ", sizeof("DEFSHAPE ")-1))
 				{
-					sscanf(token, "DEFSHAPE %d %d %d", &m_properties.shape, &m_properties.shapeUnknown1, &m_properties.shapeUnknown2);
+					lp.parse(token);
+					m_properties.shape         = lp.gettoken_int(1);
+					m_properties.shapeUnknown1 = lp.gettoken_int(2);
+					m_properties.shapeUnknown2 = lp.gettoken_int(3);
 				}
 				else if (strstr(token, "PARMENV"))
 				{
-					sscanf(token, "<PARMENV %*s %lf %lf %lf", &m_properties.minValue, &m_properties.maxValue, &m_properties.centerValue);
+					lp.parse(token);
+					m_properties.minValue    = lp.gettoken_float(2);
+					m_properties.maxValue    = lp.gettoken_float(3);
+					m_properties.centerValue = lp.gettoken_float(4);
 					m_properties.type = PARAMETER;
 					m_properties.paramType.Set(token);
 				}
@@ -1967,7 +1993,7 @@ bool ToggleShowSendEnvelope (MediaTrack* track, int sendId, int type)
 
 	MediaTrack* receiveTrack = (MediaTrack*)GetSetTrackSendInfo(track, 0, sendId, "P_DESTTRACK", NULL);
 
-	bool success = false;
+	bool update = false;
 	if (receiveTrack && (type == VOLUME || type == PAN || type == MUTE))
 	{
 		int sendTrackId = CSurf_TrackToID(track, false) - 1; // -1 so it's the same id receives use
@@ -2007,7 +2033,7 @@ bool ToggleShowSendEnvelope (MediaTrack* track, int sendId, int type)
 						int sendTrackId   = lp.gettoken_int(1);
 						double sendVolume = lp.gettoken_float(3);
 						double sendPan    = -lp.gettoken_float(4);
-						double sendMute   = !lp.gettoken_float(5);
+						double sendMute   = (double)!lp.gettoken_float(5);
 
 						WDL_FastString receiveLine, volEnv, panEnv, muteEnv;
 						receiveLine.Set(token);
@@ -2105,12 +2131,12 @@ bool ToggleShowSendEnvelope (MediaTrack* track, int sendId, int type)
 		if (stateUpdated)
 		{
 			GetSetObjectState(receiveTrack, newState.Get());
-			success = true;
+			update = true;
 		}
 		FreeHeapPtr(trackState);
 	}
 
-	return success;
+	return update;
 }
 
 bool ShowSendEnvelopes (vector<MediaTrack*>& tracks, int envelopes)
@@ -2137,7 +2163,7 @@ bool ShowSendEnvelopes (vector<MediaTrack*>& tracks, int envelopes)
 
 
 	int trimMode; GetConfig("envtrimadjmode", trimMode);
-	bool success = false;
+	bool update = false;
 
 	for (size_t i = 0; i < receiveTracks.size(); i++)
 	{
@@ -2164,7 +2190,7 @@ bool ShowSendEnvelopes (vector<MediaTrack*>& tracks, int envelopes)
 						int sendTrackId   = lp.gettoken_int(1);
 						double sendVolume = lp.gettoken_float(3);
 						double sendPan    = -lp.gettoken_float(4);
-						double sendMute   = !lp.gettoken_float(5);
+						double sendMute   = (double)!lp.gettoken_float(5);
 
 						WDL_FastString receiveLine, volEnv, panEnv, muteEnv;
 						receiveLine.Set(token);
@@ -2258,13 +2284,13 @@ bool ShowSendEnvelopes (vector<MediaTrack*>& tracks, int envelopes)
 			if (stateUpdated)
 			{
 				GetSetObjectState(track, newState.Get());
-				success = true;
+				update = true;
 			}
 			FreeHeapPtr(trackState);
 		}
 	}
 
-	return success;
+	return update;
 }
 
 bool EnvVis (TrackEnvelope* envelope, bool* lane)
@@ -2361,7 +2387,11 @@ int GetEnvType (TrackEnvelope* envelope, bool* isSend)
 
 int GetCurrentAutomationMode (MediaTrack* track)
 {
-	return (int)GetMediaTrackInfo_Value(track, "I_AUTOMODE");
+	int override = GetGlobalAutomationOverride();
+	if (override == -1 || override == 5)
+		return (int)GetMediaTrackInfo_Value(track, "I_AUTOMODE");
+	else
+		return override;
 }
 
 /******************************************************************************
@@ -2374,7 +2404,7 @@ int FindPreviousTempoMarker (double position)
 
 	while (first != last)
 	{
-		int mid = (first + last) /2;
+		int mid = (first + last) / 2;
 		double currentPos; GetTempoTimeSigMarker(NULL, mid, &currentPos, NULL, NULL, NULL, NULL, NULL, NULL);
 
 		if (currentPos < position) first = mid + 1;
@@ -2438,6 +2468,10 @@ int FindClosestTempoMarker (double position)
 
 int FindTempoMarker (double position, double surroundingRange /*= 0*/)
 {
+	int count = CountTempoTimeSigMarkers(NULL);
+	if (count == 0)
+		return -1;
+
 	int prevId = FindPreviousTempoMarker(position);
 	int nextId = prevId + 1;
 
@@ -2445,7 +2479,6 @@ int FindTempoMarker (double position, double surroundingRange /*= 0*/)
 	GetTempoTimeSigMarker(NULL, prevId, &prevPos, NULL, NULL, NULL, NULL, NULL, NULL);
 	GetTempoTimeSigMarker(NULL, nextId, &nextPos, NULL, NULL, NULL, NULL, NULL, NULL);
 
-	int count = CountTempoTimeSigMarkers(NULL);
 	double distanceFromPrev = (CheckBounds(prevId, 0, count-1)) ? (position - prevPos) : (abs(surroundingRange) + 1);
 	double distanceFromNext = (CheckBounds(nextId, 0, count-1)) ? (nextPos - position) : (abs(surroundingRange) + 1);
 

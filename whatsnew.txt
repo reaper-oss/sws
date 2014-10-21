@@ -68,13 +68,19 @@ Added actions
   - Note: that's right, due to API limitation it's last adjusted, not touched
  - SWS/BR: Enable "Ignore project tempo" for selected MIDI items preserving time position of MIDI events (use tempo at item's start)
   - Note: the action is meant for http://forum.cockos.com/showthread.php?p=1374175#post1374175|these kind of issues|
- - SWS/BR: Select all MIDI/audio/video items
+ - SWS/BR: Select all MIDI/audio/video/click/timecode/empty/PiP items
  - SWS/BR: Move closest project marker to edit/play/mouse cursor (2 versions: normal and obey snapping) (Issue 668)
+ - SWS/BR: Focus tracks
+ - SWS/BR: Unselect envelope
  - SWS/wol: Select all tracks except folder parents
  - SWS: Toggle horizontal zoom to selected items/time selection
 +MIDI editor:
  - SWS/BR: Save/Restore selected events in last clicked CC lane (8 slots) (Save has 2 versions: last clicked lane, lane under mouse cursor. Restore has 3 versions: last clicked lane, lane under mouse cursor, all visible lanes)
  - SWS/BR: Insert CC event at edit cursor in CC lane under mouse cursor (active item only)
+ - SWS/BR: Hide last clicked CC lane
+ - SWS/BR: Hide all CC lanes except last clicked CC lane
+ - SWS/BR: Toggle hide all CC lanes except last clicked CC lane (multiple versions: one normal and bunch of others that set lane to specific height)
+ - SWS/BR: Convert selected CC events to envelope points in selected envelope (multiple versions for different point shape and clearing existing envelope points)
 
 ReaScript
 +BR_GetMouseCursorContext:

@@ -33,14 +33,16 @@ class BR_EnvSel;
 class BR_CursorPos;
 class BR_MidiNoteSel;
 class BR_MidiCCEvents;
+class BR_MidiToggleCCLane;
 
 /******************************************************************************
 * Globals                                                                     *
 ******************************************************************************/
-extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_EnvSel> >       g_envSel;
-extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_CursorPos> >    g_cursorPos;
-extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_MidiNoteSel> >  g_midiNoteSel;
-extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_MidiCCEvents> > g_midiCCEvents;
+extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_EnvSel> >           g_envSel;
+extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_CursorPos> >        g_cursorPos;
+extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_MidiNoteSel> >      g_midiNoteSel;
+extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_MidiCCEvents> >     g_midiCCEvents;
+extern SWSProjConfig<BR_MidiToggleCCLane>                               g_midiToggleHideCCLanes;
 
 /******************************************************************************
 * Call on startup to register state saving functionality                      *
@@ -128,4 +130,21 @@ private:
 
 	int m_slot, m_sourceLane, m_ppq;
 	vector<BR_MidiCCEvents::Event> m_events;
+};
+
+/******************************************************************************
+* MIDI toggle hide CC lanes                                                   *
+******************************************************************************/
+class BR_MidiToggleCCLane
+{
+public:
+	BR_MidiToggleCCLane ();
+	void SaveState (ProjectStateContext* ctx);
+	void LoadState (ProjectStateContext* ctx);
+	bool Hide (void* midiEditor, int editorHeight = -1, int inlineHeight = -1);
+	bool Restore (void* midiEditor);
+	bool IsHidden ();
+
+private:
+	vector<WDL_FastString> m_ccLanes;
 };

@@ -372,10 +372,16 @@ void CycleRecordModes (COMMAND_T*)
 	else if (mode == 2) Main_OnCommandEx(40076, 0, NULL);
 }
 
-void FocusArrange (COMMAND_T* ct)
+void FocusArrangeTracks (COMMAND_T* ct)
 {
-	SetCursorContext(2, GetSelectedEnvelope(NULL));
+	if ((int)ct->user == 0)
+	{
+		TrackEnvelope* envelope = GetSelectedEnvelope(NULL);
+		SetCursorContext(envelope ? 2 : 1, envelope);
 	}
+	else
+		SetCursorContext(0, NULL);
+}
 
 void ToggleItemOnline (COMMAND_T* ct)
 {
@@ -502,7 +508,6 @@ void SelectItemsByType (COMMAND_T* ct)
 					continue;
 			}
 
-
 			if (MediaItem_Take* take = GetActiveTake(item))
 			{
 				bool select = false;
@@ -511,12 +516,19 @@ void SelectItemsByType (COMMAND_T* ct)
 				if      (abs((int)ct->user) == 1) select = (type == 0) ? true : false;
 				else if (abs((int)ct->user) == 2) select = (type == 1) ? true : false;
 				else if (abs((int)ct->user) == 3) select = (type == 2) ? true : false;
-
+				else if (abs((int)ct->user) == 4) select = (type == 3) ? true : false;
+				else if (abs((int)ct->user) == 5) select = (type == 4) ? true : false;
+				else if (abs((int)ct->user) == 6) select = (type == 5) ? true : false;
 				if (select)
 				{
 					SetMediaItemInfo_Value(item, "B_UISEL", 1);
 					update = true;
 				}
+			}
+			else if (abs((int)ct->user) == 7)
+			{
+				SetMediaItemInfo_Value(item, "B_UISEL", 1);
+				update = true;
 			}
 		}
 	}

@@ -31,6 +31,7 @@
 #include "BR_Loudness.h"
 #include "BR_MidiTools.h"
 #include "BR_Util.h"
+#include "../SnM/SnM_Chunk.h"
 
 /******************************************************************************
 * Project state keys                                                          *
@@ -39,14 +40,16 @@ const char* const ENVELOPE_SEL    = "<BR_ENV_SEL_SLOT";
 const char* const CURSOR_POS      = "<BR_CURSOR_POS";
 const char* const NOTE_SEL        = "<BR_NOTE_SEL_SLOT";
 const char* const SAVED_CC_EVENTS = "<BR_SAVED_CC_EVENTS";
+const char* const SAVED_CC_LANES  = "<BR_SAVED_HIDDEN_CC_LANES";
 
 /******************************************************************************
 * Globals                                                                     *
 ******************************************************************************/
-SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_EnvSel> >       g_envSel;
-SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_CursorPos> >    g_cursorPos;
-SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_MidiNoteSel> >  g_midiNoteSel;
-SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_MidiCCEvents> > g_midiCCEvents;
+SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_EnvSel> >           g_envSel;
+SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_CursorPos> >        g_cursorPos;
+SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_MidiNoteSel> >      g_midiNoteSel;
+SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_MidiCCEvents> >     g_midiCCEvents;
+SWSProjConfig<BR_MidiToggleCCLane>                               g_midiToggleHideCCLanes;
 
 /******************************************************************************
 * Project state saving functionality                                          *
@@ -88,6 +91,13 @@ static bool ProcessExtensionLine (const char *line, ProjectStateContext *ctx, bo
 		return true;
 	}
 
+	// Toggled hidden CC lanes
+	if (!strcmp(lp.gettoken_str(0), SAVED_CC_LANES))
+	{
+		g_midiToggleHideCCLanes.Get()->LoadState(ctx);
+		return true;
+	}
+
 	return false;
 }
 
@@ -123,6 +133,10 @@ static void SaveExtensionConfig (ProjectStateContext *ctx, bool isUndo, project_
 		for (int i = 0; i < count; ++i)
 			g_midiCCEvents.Get()->Get(i)->SaveState(ctx);
 	}
+
+	// Toggled hidden CC lanes
+	if (g_midiToggleHideCCLanes.Get()->IsHidden())
+		g_midiToggleHideCCLanes.Get()->SaveState(ctx);
 }
 
 static void BeginLoadProjectState (bool isUndo, project_config_extension_t *reg)
@@ -144,6 +158,9 @@ static void BeginLoadProjectState (bool isUndo, project_config_extension_t *reg)
 
 	// Saved CC events
 	g_midiCCEvents.Get()->Empty(true);
+	g_midiCCEvents.Cleanup();
+
+	// Toggled hidden CC lanes
 	g_midiCCEvents.Cleanup();
 }
 
@@ -315,7 +332,7 @@ int BR_MidiNoteSel::GetSlot ()
 }
 
 /******************************************************************************
-* MIDI saved cc events state                                                  *
+* MIDI saved CC events state                                                  *
 ******************************************************************************/
 BR_MidiCCEvents::BR_MidiCCEvents (int slot, BR_MidiEditor& midiEditor, int lane) :
 m_slot       (slot),
@@ -649,4 +666,155 @@ msg2        (msg2),
 msg3        (msg3),
 mute        (mute)
 {
+}
+
+/******************************************************************************
+* MIDI toggle hide CC lanes                                                   *
+******************************************************************************/
+BR_MidiToggleCCLane::BR_MidiToggleCCLane ()
+{
+}
+
+void BR_MidiToggleCCLane::SaveState (ProjectStateContext* ctx)
+{
+	if (m_ccLanes.size() != 0)
+	{
+		ctx->AddLine("%s", SAVED_CC_LANES);
+		for (size_t i = 0; i < m_ccLanes.size(); ++i)
+			ctx->AddLine("%s", m_ccLanes[i].Get());
+		ctx->AddLine(">");
+	}
+}
+
+void BR_MidiToggleCCLane::LoadState (ProjectStateContext* ctx)
+{
+	char line[256];
+	LineParser lp(false);
+	while(!ctx->GetLine(line, sizeof(line)) && !lp.parse(line))
+	{
+		if (!strcmp(lp.gettoken_str(0), ">"))
+			break;
+		else
+		{
+			WDL_FastString lane;
+			lane.Append(line);
+			m_ccLanes.push_back(lane);
+		}
+	}
+}
+
+bool BR_MidiToggleCCLane::Hide (void* midiEditor, int editorHeight /*= -1*/, int inlineHeight /*= -1*/)
+{
+	bool update = false;
+	if (m_ccLanes.size() == 0 && MIDIEditor_GetMode(midiEditor) != -1)
+	{
+		if (MediaItem_Take* take = MIDIEditor_GetTake(midiEditor))
+		{
+			int lastCLickedLane = GetLastClickedVelLane(midiEditor);
+
+			MediaItem* item = GetMediaItemTake_Item(take);
+			int takeId = GetTakeId(take, item);
+			if (takeId >= 0)
+			{
+				SNM_TakeParserPatcher p(item, CountTakes(item));
+				WDL_FastString takeChunk;
+				int tkPos, tklen;
+				if (p.GetTakeChunk(takeId, &takeChunk, &tkPos, &tklen))
+				{
+					SNM_ChunkParserPatcher ptk(&takeChunk, false);
+					LineParser lp(false);
+
+					// Remove lanes
+					bool lanesRemoved = false;
+					vector<WDL_FastString> savedCCLanes;
+					int laneId = 0;
+					WDL_FastString lineLane;
+					while (int position = ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "SOURCE", "VELLANE", laneId, -1, &lineLane))
+					{
+						WDL_FastString currentLane;
+						currentLane.Append(lineLane.Get(), lineLane.GetLength() - 1); // -1 is to remove \n
+						savedCCLanes.push_back(currentLane);
+
+						lp.parse(lineLane.Get());
+						if (lp.gettoken_int(1) != lastCLickedLane)
+						{
+							ptk.RemoveLine("SOURCE", "VELLANE", 1, laneId);
+							lanesRemoved = true;
+						}
+						else
+						{
+							if ((editorHeight != -1 && editorHeight != lp.gettoken_int(2)) || (inlineHeight != -1 && inlineHeight != lp.gettoken_int(3)))
+							{
+								WDL_FastString newLane;
+								newLane.AppendFormatted(256, "%s %d %d %d\n", "VELLANE", lastCLickedLane, (editorHeight == -1) ? lp.gettoken_int(2) : editorHeight, (inlineHeight == -1) ? lp.gettoken_int(3) : inlineHeight);
+								ptk.ReplaceLine(position - 1, newLane.Get());
+								lanesRemoved = true;
+							}
+							++laneId;
+						}
+
+						lineLane.DeleteSub(0, lineLane.GetLength());
+					}
+
+					if (lanesRemoved && savedCCLanes.size() != 0 && p.ReplaceTake(tkPos, tklen, ptk.GetChunk()))
+					{
+						m_ccLanes.clear();
+						m_ccLanes = savedCCLanes;
+						update = true;
+						MarkProjectDirty(NULL);
+					}
+				}
+			}
+		}
+	}
+
+	return update;
+}
+
+bool BR_MidiToggleCCLane::Restore (void* midiEditor)
+{
+	bool update = false;
+	if (m_ccLanes.size() != 0 && MIDIEditor_GetMode(midiEditor) != -1)
+	{
+		if (MediaItem_Take* take = MIDIEditor_GetTake(midiEditor))
+		{
+			MediaItem* item = GetMediaItemTake_Item(take);
+			int takeId = GetTakeId(take, item);
+			if (takeId >= 0)
+			{
+				SNM_TakeParserPatcher p(item, CountTakes(item));
+				WDL_FastString takeChunk;
+				int tkPos, tklen;
+				if (p.GetTakeChunk(takeId, &takeChunk, &tkPos, &tklen))
+				{
+					SNM_ChunkParserPatcher ptk(&takeChunk, false);
+					LineParser lp(false);
+					if (int position = ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "SOURCE", "VELLANE", 0, 0))
+					{
+						if (ptk.RemoveLines("VELLANE"))
+						{
+							WDL_FastString newLanes;
+							for (size_t i = 0; i <m_ccLanes.size(); ++i)
+								AppendLine(newLanes, m_ccLanes[i].Get());
+							ptk.GetChunk()->Insert(newLanes.Get(), position - 1);
+
+							if (p.ReplaceTake(tkPos, tklen, ptk.GetChunk()))
+							{
+								m_ccLanes.clear();
+								update = true;
+							}
+						}
+					}
+
+				}
+			}
+		}
+	}
+
+	return update;
+}
+
+bool BR_MidiToggleCCLane::IsHidden ()
+{
+	return (m_ccLanes.size() == 0) ? false : true;
 }

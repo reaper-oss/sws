@@ -309,13 +309,13 @@ void CursorToEnv1 (COMMAND_T* ct)
 	{
 		while (token != NULL)
 		{
-			if (sscanf(token, "PT %lf", &cTime))
+			if (sscanf(token, "PT %.20lf", &cTime))
 			{
 				if (cTime > cursor)
 				{
 					// fake next point if it doesn't exist
 					token = strtok(NULL, "\n");
-					if (!sscanf(token, "PT %lf", &nTime))
+					if (!sscanf(token, "PT %.20lf", &nTime))
 						nTime = cTime + 0.001;
 
 					found = true;
@@ -333,7 +333,7 @@ void CursorToEnv1 (COMMAND_T* ct)
 		double ppTime = -1;
 		while (token != NULL)
 		{
-			if (sscanf(token, "PT %lf", &cTime))
+			if (sscanf(token, "PT %.20lf", &cTime))
 			{
 				if (cTime >= cursor)
 				{
@@ -1106,6 +1106,18 @@ void CreateEnvPointMouse (COMMAND_T* ct)
 	}
 }
 
+void UnselectEnvelope (COMMAND_T* ct)
+{
+	if (GetSelectedEnvelope(NULL))
+	{
+		HWND hwnd; int context;
+		GetSetFocus(false, &hwnd, &context);
+
+		SetCursorContext(2, NULL);
+		GetSetFocus(true, &hwnd, &context);
+	}
+}
+
 void SaveEnvSelSlot (COMMAND_T* ct)
 {
 	if (TrackEnvelope* envelope = GetSelectedEnvelope(NULL))
@@ -1309,7 +1321,7 @@ void ShowHideSendEnv (COMMAND_T* ct)
 				if (!envelope->IsVisible() && envelope->Count() <= 1)
 				{
 					double value;
-					if (envelope->GetPoint(0, NULL, &value, NULL, NULL))
+					if (envelope->GetPoint(0, NULL, &value, NULL, NULL) && GetCurrentAutomationMode(envelope->GetParent()) != 0)
 					{
 						if      (envelope->Type() == VOLUME) SetTrackSendUIVol(envelope->GetParent(), envelope->GetSendId(), value, 0); // don't do mute (reaper skips it too)
 						else if (envelope->Type() == PAN)    SetTrackSendUIPan(envelope->GetParent(), envelope->GetSendId(), -value, 0);

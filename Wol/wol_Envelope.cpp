@@ -27,7 +27,8 @@
 
 #include "stdafx.h"
 #include "wol_Envelope.h"
-#include "../Breeder/BR_EnvTools.h"
+#include "../Breeder/BR_EnvelopeUtil.h"
+#include "../Breeder/BR_MouseUtil.h"
 #include "../Breeder/BR_Util.h"
 
 

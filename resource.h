@@ -87,7 +87,7 @@
 #define IDD_BR_LOUDNESS_PREF            179
 #define IDD_BR_LOUDNESS_EXPORT_FORMAT   180
 #define IDD_BR_CONTEXTUAL_TOOLBARS      181
-#define IDD_WOL_RANDOMMIDIVEL		    181
+#define IDD_WOL_RANDOMMIDIVEL		    182
 #define IDB_UP                          500
 #define IDB_DOWN                        501
 #define IDC_BUTTON1                     1000
@@ -444,32 +444,32 @@
 #define IDC_INLINE_ITEM_COMBO           1350
 #define IDC_INLINE_CC_LANE_CLICKED      1351
 #define IDC_HELP_WIKI                   1352
-#define IDC_WOL_SLOT1L					1324
-#define IDC_WOL_SLOT2L					1325
-#define IDC_WOL_SLOT3L					1326
-#define IDC_WOL_SLOT4L					1327
-#define IDC_WOL_SLOT5L					1328
-#define IDC_WOL_SLOT6L					1329
-#define IDC_WOL_SLOT7L					1330
-#define IDC_WOL_SLOT8L					1331
-#define IDC_WOL_SLOT1S					1332
-#define IDC_WOL_SLOT2S					1333
-#define IDC_WOL_SLOT3S					1334
-#define IDC_WOL_SLOT4S					1335
-#define IDC_WOL_SLOT5S					1336
-#define IDC_WOL_SLOT6S					1337
-#define IDC_WOL_SLOT7S					1338
-#define IDC_WOL_SLOT8S					1339
-#define IDC_WOL_RANDOMIZE				1340
+#define IDC_WOL_SLOT1L					1353
+#define IDC_WOL_SLOT2L					1354
+#define IDC_WOL_SLOT3L					1355
+#define IDC_WOL_SLOT4L					1356
+#define IDC_WOL_SLOT5L					1357
+#define IDC_WOL_SLOT6L					1358
+#define IDC_WOL_SLOT7L					1359
+#define IDC_WOL_SLOT8L					1360
+#define IDC_WOL_SLOT1S					1361
+#define IDC_WOL_SLOT2S					1362
+#define IDC_WOL_SLOT3S					1363
+#define IDC_WOL_SLOT4S					1364
+#define IDC_WOL_SLOT5S					1365
+#define IDC_WOL_SLOT6S					1366
+#define IDC_WOL_SLOT7S					1367
+#define IDC_WOL_SLOT8S					1368
+#define IDC_WOL_RANDOMIZE				1369
 
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        182
+#define _APS_NEXT_RESOURCE_VALUE        183
 #define _APS_NEXT_COMMAND_VALUE         40000
-#define _APS_NEXT_CONTROL_VALUE         1353
+#define _APS_NEXT_CONTROL_VALUE         1370
 #define _APS_NEXT_SYMED_VALUE           100
 #endif
 #endif

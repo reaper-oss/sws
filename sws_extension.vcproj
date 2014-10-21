@@ -3588,6 +3588,14 @@
 				RelativePath=".\Breeder\BR.h"
 				>
 			</File>
+				<File
+				RelativePath=".\Breeder\BR_ContextualToolbars.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Breeder\BR_ContextualToolbars.h"
+				>
+			</File>
 			<File
 				RelativePath=".\Breeder\BR_ContinuousActions.cpp"
 				>
@@ -3642,6 +3650,14 @@
 			</File>
 			<File
 				RelativePath=".\Breeder\BR_Misc.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Breeder\BR_MouseUtil.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Breeder\BR_MouseUtil.h"
 				>
 			</File>
 			<File

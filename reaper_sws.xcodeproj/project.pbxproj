@@ -326,8 +326,12 @@
 		9879B7480F489D9D004D98EB /* stdafx.h in Headers */ = {isa = PBXBuildFile; fileRef = 9879B7400F489CE7004D98EB /* stdafx.h */; };
 		98B464E419060FE600AE2930 /* BR_MidiTools.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98B464E219060FE600AE2930 /* BR_MidiTools.cpp */; };
 		98B464E519060FE600AE2930 /* BR_MidiTools.h in Headers */ = {isa = PBXBuildFile; fileRef = 98B464E319060FE600AE2930 /* BR_MidiTools.h */; };
+		98B61A0319D36378004258F3 /* BR_MouseUtil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98B61A0119D36378004258F3 /* BR_MouseUtil.cpp */; };
+		98B61A0419D36378004258F3 /* BR_MouseUtil.h in Headers */ = {isa = PBXBuildFile; fileRef = 98B61A0219D36378004258F3 /* BR_MouseUtil.h */; };
 		98B6AAF418E7317900BACB96 /* wol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98B6AAF218E7317900BACB96 /* wol.cpp */; };
 		98B6AAF518E7317900BACB96 /* wol.h in Headers */ = {isa = PBXBuildFile; fileRef = 98B6AAF318E7317900BACB96 /* wol.h */; };
+		98B6CEB919D5F9BE00631487 /* BR_ContextualToolbars.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98B6CEB719D5F9BE00631487 /* BR_ContextualToolbars.cpp */; };
+		98B6CEBA19D5F9BE00631487 /* BR_ContextualToolbars.h in Headers */ = {isa = PBXBuildFile; fileRef = 98B6CEB819D5F9BE00631487 /* BR_ContextualToolbars.h */; };
 		98B6DC501917D64C0078561E /* wol_Zoom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98B6DC4E1917D64C0078561E /* wol_Zoom.cpp */; };
 		98B6DC511917D64C0078561E /* wol_Zoom.h in Headers */ = {isa = PBXBuildFile; fileRef = 98B6DC4F1917D64C0078561E /* wol_Zoom.h */; };
 		98B70128196ED9E60072FA00 /* ebur128.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98B70127196ED9E60072FA00 /* ebur128.cpp */; };
@@ -698,8 +702,12 @@
 		98B408A20F5B544A00865A09 /* swell.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = swell.cpp; path = ../WDL/swell/swell.cpp; sourceTree = SOURCE_ROOT; };
 		98B464E219060FE600AE2930 /* BR_MidiTools.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BR_MidiTools.cpp; path = Breeder/BR_MidiTools.cpp; sourceTree = "<group>"; };
 		98B464E319060FE600AE2930 /* BR_MidiTools.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BR_MidiTools.h; path = Breeder/BR_MidiTools.h; sourceTree = "<group>"; };
+		98B61A0119D36378004258F3 /* BR_MouseUtil.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BR_MouseUtil.cpp; path = Breeder/BR_MouseUtil.cpp; sourceTree = "<group>"; };
+		98B61A0219D36378004258F3 /* BR_MouseUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BR_MouseUtil.h; path = Breeder/BR_MouseUtil.h; sourceTree = "<group>"; };
 		98B6AAF218E7317900BACB96 /* wol.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = wol.cpp; path = Wol/wol.cpp; sourceTree = "<group>"; };
 		98B6AAF318E7317900BACB96 /* wol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wol.h; path = Wol/wol.h; sourceTree = "<group>"; };
+		98B6CEB719D5F9BE00631487 /* BR_ContextualToolbars.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BR_ContextualToolbars.cpp; path = Breeder/BR_ContextualToolbars.cpp; sourceTree = "<group>"; };
+		98B6CEB819D5F9BE00631487 /* BR_ContextualToolbars.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BR_ContextualToolbars.h; path = Breeder/BR_ContextualToolbars.h; sourceTree = "<group>"; };
 		98B6DC4E1917D64C0078561E /* wol_Zoom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = wol_Zoom.cpp; path = Wol/wol_Zoom.cpp; sourceTree = "<group>"; };
 		98B6DC4F1917D64C0078561E /* wol_Zoom.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wol_Zoom.h; path = Wol/wol_Zoom.h; sourceTree = "<group>"; };
 		98B70127196ED9E60072FA00 /* ebur128.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ebur128.cpp; path = libebur128/ebur128.cpp; sourceTree = "<group>"; };
@@ -1180,6 +1188,8 @@
 			children = (
 				4D859DB916AB128700E34EAA /* BR.cpp */,
 				4D859DBA16AB128700E34EAA /* BR.h */,
+				98B6CEB719D5F9BE00631487 /* BR_ContextualToolbars.cpp */,
+				98B6CEB819D5F9BE00631487 /* BR_ContextualToolbars.h */,
 				98BD45DD195245BB006958FD /* BR_ContinuousActions.cpp */,
 				98BD45DE195245BB006958FD /* BR_ContinuousActions.h */,
 				98C0E227189CF266004F2EEF /* BR_Envelope.cpp */,
@@ -1194,6 +1204,8 @@
 				98B464E319060FE600AE2930 /* BR_MidiTools.h */,
 				4D859DAD16AB128700E34EAA /* BR_Misc.cpp */,
 				4D859DAE16AB128700E34EAA /* BR_Misc.h */,
+				98B61A0119D36378004258F3 /* BR_MouseUtil.cpp */,
+				98B61A0219D36378004258F3 /* BR_MouseUtil.h */,
 				98C0E229189CF266004F2EEF /* BR_ProjState.cpp */,
 				98C0E22A189CF266004F2EEF /* BR_ProjState.h */,
 				98C918E418BFFEB500745DA1 /* BR_ReaScript.cpp */,
@@ -1462,6 +1474,8 @@
 				98B6DC511917D64C0078561E /* wol_Zoom.h in Headers */,
 				98BD45E0195245BB006958FD /* BR_ContinuousActions.h in Headers */,
 				98C38705199C0CEE00ECA114 /* wol_Util.h in Headers */,
+				98B61A0419D36378004258F3 /* BR_MouseUtil.h in Headers */,
+				98B6CEBA19D5F9BE00631487 /* BR_ContextualToolbars.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1492,8 +1506,6 @@
 /* Begin PBXProject section */
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
-			attributes = {
-			};
 			buildConfigurationList = 1DEB914E08733D8E0010E9CD /* Build configuration list for PBXProject "reaper_sws" */;
 			compatibilityVersion = "Xcode 3.1";
 			developmentRegion = English;
@@ -1756,6 +1768,8 @@
 				98BD45DF195245BB006958FD /* BR_ContinuousActions.cpp in Sources */,
 				98B70128196ED9E60072FA00 /* ebur128.cpp in Sources */,
 				98C38704199C0CEE00ECA114 /* wol_Util.cpp in Sources */,
+				98B61A0319D36378004258F3 /* BR_MouseUtil.cpp in Sources */,
+				98B6CEB919D5F9BE00631487 /* BR_ContextualToolbars.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -601,6 +601,12 @@
     <ClInclude Include="Wol\wol_Util.h">
       <Filter>Wol</Filter>
     </ClInclude>
+    <ClInclude Include="Breeder\BR_MouseUtil.h">
+      <Filter>Breeder</Filter>
+    </ClInclude>
+    <ClInclude Include="Breeder\BR_ContextualToolbars.h">
+      <Filter>Breeder</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="sws_extension.rc">
@@ -1204,6 +1210,12 @@
     </ClCompile>
     <ClCompile Include="Wol\wol_Util.cpp">
       <Filter>Wol</Filter>
+    </ClCompile>
+    <ClCompile Include="Breeder\BR_MouseUtil.cpp">
+      <Filter>Breeder</Filter>
+    </ClCompile>
+    <ClCompile Include="Breeder\BR_ContextualToolbars.cpp">
+      <Filter>Breeder</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -27,7 +27,7 @@
 ******************************************************************************/
 #include "stdafx.h"
 #include "BR_TempoDlg.h"
-#include "BR_EnvTools.h"
+#include "BR_EnvelopeUtil.h"
 #include "BR_Tempo.h"
 #include "BR_Util.h"
 #include "../SnM/SnM_Dlg.h"

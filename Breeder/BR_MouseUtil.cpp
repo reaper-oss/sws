@@ -27,8 +27,8 @@
 ******************************************************************************/
 #include "stdafx.h"
 #include "BR_MouseUtil.h"
-#include "BR_EnvTools.h"
-#include "BR_MidiTools.h"
+#include "BR_EnvelopeUtil.h"
+#include "BR_MidiUtil.h"
 #include "BR_Util.h"
 
 /******************************************************************************

@@ -27,9 +27,9 @@
 ******************************************************************************/
 #include "stdafx.h"
 #include "BR_ProjState.h"
-#include "BR_EnvTools.h"
+#include "BR_EnvelopeUtil.h"
 #include "BR_Loudness.h"
-#include "BR_MidiTools.h"
+#include "BR_MidiUtil.h"
 #include "BR_Util.h"
 #include "../SnM/SnM_Chunk.h"
 

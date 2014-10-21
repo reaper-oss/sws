@@ -27,7 +27,7 @@
 ******************************************************************************/
 #pragma once
 
-#include "BR_MidiTools.h"
+#include "BR_MidiUtil.h"
 
 class BR_EnvSel;
 class BR_CursorPos;

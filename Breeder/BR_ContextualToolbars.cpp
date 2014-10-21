@@ -27,7 +27,7 @@
 ******************************************************************************/
 #include "stdafx.h"
 #include "BR_ContextualToolbars.h"
-#include "BR_EnvTools.h"
+#include "BR_EnvelopeUtil.h"
 #include "BR_MouseUtil.h"
 #include "BR_Util.h"
 #include "BR.h"

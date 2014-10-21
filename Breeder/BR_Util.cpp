@@ -27,8 +27,8 @@
 ******************************************************************************/
 #include "stdafx.h"
 #include "BR_Util.h"
-#include "BR_EnvTools.h"
-#include "BR_MidiTools.h"
+#include "BR_EnvelopeUtil.h"
+#include "BR_MidiUtil.h"
 #include "../reaper/localize.h"
 #include "../SnM/SnM.h"
 #include "../SnM/SnM_Chunk.h"

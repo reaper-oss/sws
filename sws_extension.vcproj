@@ -3613,11 +3613,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Breeder\BR_EnvTools.cpp"
+				RelativePath=".\Breeder\BR_EnvelopeUtil.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Breeder\BR_EnvTools.h"
+				RelativePath=".\Breeder\BR_EnvelopeUtil.h"
 				>
 			</File>
 			<File
@@ -3637,11 +3637,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Breeder\BR_MidiTools.cpp"
+				RelativePath=".\Breeder\BR_MidiUtil.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Breeder\BR_MidiTools.h"
+				RelativePath=".\Breeder\BR_MidiUtil.h"
 				>
 			</File>
 			<File

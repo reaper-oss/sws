@@ -27,6 +27,7 @@
 ******************************************************************************/
 #include "stdafx.h"
 #include "BR.h"
+#include "BR_ContextualToolbars.h"
 #include "BR_ContinuousActions.h"
 #include "BR_Envelope.h"
 #include "BR_Loudness.h"
@@ -36,11 +37,58 @@
 #include "BR_Tempo.h"
 #include "BR_Update.h"
 #include "BR_Util.h"
+#include "../SnM/SnM.h"
 #include "../reaper/localize.h"
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] =
 {
+	/******************************************************************************
+	* Contextual toolbars                                                         *
+	******************************************************************************/
+	{ { DEFACCEL, "SWS/BR: Contextual toolbars..." }, "BR_CONTEXTUAL_TOOLBARS_PREF", ContextToolbarsOptions, NULL, 0, IsContextToolbarsOptionsVisible},
+
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 1" }, "BR_CONTEXTUAL_TOOLBAR_01", ToggleContextualToolbar, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 1" }, "BR_MX_CONTEXTUAL_TOOLBAR_01",  NULL, NULL, 0, NULL, 32063, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 1" }, "BR_ME_CONTEXTUAL_TOOLBAR_01",  NULL, NULL, 0, NULL, 32060, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 1" }, "BR_ML_CONTEXTUAL_TOOLBAR_01",  NULL, NULL, 0, NULL, 32061, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 1" }, "BR_MI_CONTEXTUAL_TOOLBAR_01",  NULL, NULL, 0, NULL, 32062, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 2" }, "BR_CONTEXTUAL_TOOLBAR_02", ToggleContextualToolbar, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 2" }, "BR_MX_CONTEXTUAL_TOOLBAR_02",  NULL, NULL, 1, NULL, 32063, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 2" }, "BR_ME_CONTEXTUAL_TOOLBAR_02",  NULL, NULL, 1, NULL, 32060, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 2" }, "BR_ML_CONTEXTUAL_TOOLBAR_02",  NULL, NULL, 1, NULL, 32061, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 2" }, "BR_MI_CONTEXTUAL_TOOLBAR_02",  NULL, NULL, 1, NULL, 32062, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 3" }, "BR_CONTEXTUAL_TOOLBAR_03", ToggleContextualToolbar, NULL, 2},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 3" }, "BR_MX_CONTEXTUAL_TOOLBAR_03",  NULL, NULL, 2, NULL, 32063, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 3" }, "BR_ME_CONTEXTUAL_TOOLBAR_03",  NULL, NULL, 2, NULL, 32060, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 3" }, "BR_ML_CONTEXTUAL_TOOLBAR_03",  NULL, NULL, 2, NULL, 32061, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 3" }, "BR_MI_CONTEXTUAL_TOOLBAR_03",  NULL, NULL, 2, NULL, 32062, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 4" }, "BR_CONTEXTUAL_TOOLBAR_04", ToggleContextualToolbar, NULL, 3},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 4" }, "BR_MX_CONTEXTUAL_TOOLBAR_04",  NULL, NULL, 3, NULL, 32063, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 4" }, "BR_ME_CONTEXTUAL_TOOLBAR_04",  NULL, NULL, 3, NULL, 32060, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 4" }, "BR_ML_CONTEXTUAL_TOOLBAR_04",  NULL, NULL, 3, NULL, 32061, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 4" }, "BR_MI_CONTEXTUAL_TOOLBAR_04",  NULL, NULL, 3, NULL, 32062, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 5" }, "BR_CONTEXTUAL_TOOLBAR_05", ToggleContextualToolbar, NULL, 4},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 5" }, "BR_MX_CONTEXTUAL_TOOLBAR_05",  NULL, NULL, 4, NULL, 32063, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 5" }, "BR_ME_CONTEXTUAL_TOOLBAR_05",  NULL, NULL, 4, NULL, 32060, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 5" }, "BR_ML_CONTEXTUAL_TOOLBAR_05",  NULL, NULL, 4, NULL, 32061, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 5" }, "BR_MI_CONTEXTUAL_TOOLBAR_05",  NULL, NULL, 4, NULL, 32062, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 6" }, "BR_CONTEXTUAL_TOOLBAR_06", ToggleContextualToolbar, NULL, 5},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 6" }, "BR_MX_CONTEXTUAL_TOOLBAR_06",  NULL, NULL, 5, NULL, 32063, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 6" }, "BR_ME_CONTEXTUAL_TOOLBAR_06",  NULL, NULL, 5, NULL, 32060, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 6" }, "BR_ML_CONTEXTUAL_TOOLBAR_06",  NULL, NULL, 5, NULL, 32061, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 6" }, "BR_MI_CONTEXTUAL_TOOLBAR_06",  NULL, NULL, 5, NULL, 32062, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 7" }, "BR_CONTEXTUAL_TOOLBAR_07", ToggleContextualToolbar, NULL, 6},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 7" }, "BR_MX_CONTEXTUAL_TOOLBAR_07",  NULL, NULL, 6, NULL, 32063, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 7" }, "BR_ME_CONTEXTUAL_TOOLBAR_07",  NULL, NULL, 6, NULL, 32060, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 7" }, "BR_ML_CONTEXTUAL_TOOLBAR_07",  NULL, NULL, 6, NULL, 32061, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 7" }, "BR_MI_CONTEXTUAL_TOOLBAR_07",  NULL, NULL, 6, NULL, 32062, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 8" }, "BR_CONTEXTUAL_TOOLBAR_08", ToggleContextualToolbar, NULL, 7},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 8" }, "BR_MX_CONTEXTUAL_TOOLBAR_08",  NULL, NULL, 7, NULL, 32063, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 8" }, "BR_ME_CONTEXTUAL_TOOLBAR_08",  NULL, NULL, 7, NULL, 32060, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 8" }, "BR_ML_CONTEXTUAL_TOOLBAR_08",  NULL, NULL, 7, NULL, 32061, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 8" }, "BR_MI_CONTEXTUAL_TOOLBAR_08",  NULL, NULL, 7, NULL, 32062, ToggleContextualToolbar},
+
 	/******************************************************************************
 	* Envelopes - Misc                                                            *
 	******************************************************************************/
@@ -481,14 +529,16 @@ int BR_Init ()
 {
 	SWSRegisterCommands(g_commandTable);
 	InitContinuousActions (); // call only after registering all actions
-	ProjStateInit();
+	ContextToolbarsInit();
 	LoudnessInit();
+	ProjStateInit();
 	VersionCheckInit();
 	return 1;
 }
 
 void BR_Exit ()
 {
+	ContextToolbarsExit();
 	LoudnessExit();
 }
 
@@ -518,4 +568,13 @@ int BR_CSurfExtended(int call, void* parm1, void* parm2, void* parm3)
 	}
 
 	return 0;
+}
+
+const char* BR_GetIniFile ()
+{
+	static WDL_FastString s_iniPath;
+	if (s_iniPath.GetLength() == 0)
+		s_iniPath.SetFormatted(SNM_MAX_PATH, "%s/BR.ini", GetResourcePath());
+
+	return s_iniPath.Get();
 }

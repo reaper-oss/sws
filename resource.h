@@ -86,6 +86,7 @@
 #define IDD_BR_TOOLTIP                  178
 #define IDD_BR_LOUDNESS_PREF            179
 #define IDD_BR_LOUDNESS_EXPORT_FORMAT   180
+#define IDD_BR_CONTEXTUAL_TOOLBARS      181
 #define IDB_UP                          500
 #define IDB_DOWN                        501
 #define IDC_BUTTON1                     1000
@@ -412,14 +413,44 @@
 #define IDC_FORMAT                      1320
 #define IDC_FORMAT_STATIC               1321
 #define IDC_PREVIEW_STATIC              1322
+#define IDC_PRESET                      1323
+#define IDC_ALL_BOX                     1324
+#define IDC_ALL_FOCUS                   1325
+#define IDC_ALL_FOCUS_COMBO             1326
+#define IDC_ALL_TOPMOST                 1327
+#define IDC_TCP_BOX                     1328
+#define IDC_TCP_TRACK                   1329
+#define IDC_TCP_TRACK_COMBO             1330
+#define IDC_TCP_ENV                     1331
+#define IDC_TCP_ENV_COMBO               1332
+#define IDC_MCP_BOX                     1333
+#define IDC_MCP_TRACK                   1334
+#define IDC_MCP_TRACK_COMBO             1335
+#define IDC_ARG_BOX                     1336
+#define IDC_ARG_TRACK                   1337
+#define IDC_ARG_TRACK_COMBO             1338
+#define IDC_ARG_ITEM                    1339
+#define IDC_ARG_ITEM_COMBO              1340
+#define IDC_ARG_TRACK_ENV               1341
+#define IDC_ARG_TRACK_ENV_COMBO         1342
+#define IDC_ARG_TAKE_ENV                1343
+#define IDC_ARG_TAKE_ENV_COMBO          1344
+#define IDC_ARG_TAKE_ACTIVATE           1345
+#define IDC_MIDI_BOX                    1346
+#define IDC_MIDI_CC_LANE_CLICKED        1347
+#define IDC_INLINE_BOX                  1348
+#define IDC_INLINE_ITEM                 1359
+#define IDC_INLINE_ITEM_COMBO           1350
+#define IDC_INLINE_CC_LANE_CLICKED      1351
+#define IDC_HELP_WIKI                   1352
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        181
+#define _APS_NEXT_RESOURCE_VALUE        182
 #define _APS_NEXT_COMMAND_VALUE         40000
-#define _APS_NEXT_CONTROL_VALUE         1323
+#define _APS_NEXT_CONTROL_VALUE         1353
 #define _APS_NEXT_SYMED_VALUE           100
 #endif
 #endif

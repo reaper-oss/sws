@@ -27,8 +27,9 @@
 ******************************************************************************/
 #pragma once
 
-int  BR_Init ();
-void BR_Exit ();
-bool BR_ActionHook (int cmd, int flag);
-void BR_CSurfSetPlayState (bool play, bool pause, bool rec);
-int  BR_CSurfExtended(int call, void* parm1, void* parm2, void* parm3);
+int         BR_Init ();
+void        BR_Exit ();
+bool        BR_ActionHook (int cmd, int flag);
+void        BR_CSurfSetPlayState (bool play, bool pause, bool rec);
+int         BR_CSurfExtended (int call, void* parm1, void* parm2, void* parm3);
+const char* BR_GetIniFile ();

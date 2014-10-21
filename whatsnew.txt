@@ -254,7 +254,7 @@ Fixes
 <strong>Analyze and normalize loudness</strong>
 +Functionality in general:
  - Loudness is measured according to EBU 3342 standard thanks to excellent http://github.com/jiixyj/libebur128|libebur128| by Jan Kokemuller
- - Due to <b>limitations in Reaper API</b>, we can extract audio data only from certain parts of the audio chain. Chart can be found http://stash.reaper.fm/20186/SWS%20loudness%20analysis%20signal%20flow%20chart.png|here|. A few gotchas:
+ - Due to <b>limitations in Reaper API</b>, we can extract audio data only from certain parts of the audio chain. Chart can be found http://wiki.cockos.com/wiki/images/5/50/SWS_loudness_analysis_signal_flow_chart.png|here|. A few gotchas:
    - You can't use item fades for extensive volume control
    - If you need to use FX, current workaround is to put one item with needed FX in an empty track and measure that track
 +Added actions:

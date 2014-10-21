@@ -258,6 +258,7 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 	AddToMenu(hAutoRenderSubMenu, __LOCALIZE("Global preferences...", "sws_ext_menu"), NamedCommandLookup("_AUTORENDER_PREFERENCES"));
 
 	AddToMenu(hMenu, __LOCALIZE("Command parameters...", "sws_ext_menu"), NamedCommandLookup("_XENAKIOS_SHOW_COMMANDPARAMS"));
+	AddToMenu(hMenu, __LOCALIZE("Contextual toolbars...", "sws_ext_menu"), NamedCommandLookup("_BR_CONTEXTUAL_TOOLBARS_PREF"));
 	AddToMenu(hMenu, __LOCALIZE("Cue Buss generator", "sws_ext_menu"), NamedCommandLookup("_S&M_SENDS4"));
 	AddToMenu(hMenu, __LOCALIZE("Cycle Action editor...", "sws_ext_menu"), NamedCommandLookup("_S&M_CYCLEDITOR"));
 	AddToMenu(hMenu, __LOCALIZE("Envelope processor...", "sws_ext_menu"), NamedCommandLookup("_PADRE_ENVPROC"));

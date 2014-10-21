@@ -323,9 +323,11 @@ echo Copied to "$(REAPER64_DIR)\plugins\$(TargetFilename)"</Command>
     <None Include="whatsnew.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Breeder\BR_ContextualToolbars.h" />
     <ClInclude Include="Breeder\BR_ContinuousActions.h" />
     <ClInclude Include="Breeder\BR_MidiEditor.h" />
-    <ClInclude Include="Breeder\BR_MidiTools.h" />
+    <ClInclude Include="Breeder\BR_MidiUtil.h" />
+    <ClInclude Include="Breeder\BR_MouseUtil.h" />
     <ClInclude Include="C:\Program Files (x86)\REAPER\reaper_plugin_functions.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Wol\wol_Envelope.h" />
@@ -478,7 +480,7 @@ echo Copied to "$(REAPER64_DIR)\plugins\$(TargetFilename)"</Command>
     <ClInclude Include="IX\IX.h" />
     <ClInclude Include="Breeder\BR.h" />
     <ClInclude Include="Breeder\BR_Envelope.h" />
-    <ClInclude Include="Breeder\BR_EnvTools.h" />
+    <ClInclude Include="Breeder\BR_EnvelopeUtil.h" />
     <ClInclude Include="Breeder\BR_Loudness.h" />
     <ClInclude Include="Breeder\BR_Misc.h" />
     <ClInclude Include="Breeder\BR_ProjState.h" />
@@ -494,9 +496,11 @@ echo Copied to "$(REAPER64_DIR)\plugins\$(TargetFilename)"</Command>
     <ResourceCompile Include="sws_extension.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Breeder\BR_ContextualToolbars.cpp" />
     <ClCompile Include="Breeder\BR_ContinuousActions.cpp" />
     <ClCompile Include="Breeder\BR_MidiEditor.cpp" />
-    <ClCompile Include="Breeder\BR_MidiTools.cpp" />
+    <ClCompile Include="Breeder\BR_MidiUtil.cpp" />
+    <ClCompile Include="Breeder\BR_MouseUtil.cpp" />
     <ClCompile Include="libebur128\ebur128.cpp" />
     <ClCompile Include="Wol\wol_Envelope.cpp" />
     <ClCompile Include="Wol\wol_Misc.cpp" />
@@ -1325,7 +1329,7 @@ echo Copied to "$(REAPER64_DIR)\plugins\$(TargetFilename)"</Command>
     <ClCompile Include="IX\PlaylistImport.cpp" />
     <ClCompile Include="Breeder\BR.cpp" />
     <ClCompile Include="Breeder\BR_Envelope.cpp" />
-    <ClCompile Include="Breeder\BR_EnvTools.cpp" />
+    <ClCompile Include="Breeder\BR_EnvelopeUtil.cpp" />
     <ClCompile Include="Breeder\BR_Loudness.cpp" />
     <ClCompile Include="Breeder\BR_Misc.cpp" />
     <ClCompile Include="Breeder\BR_ProjState.cpp" />

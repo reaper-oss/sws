@@ -27,7 +27,7 @@
 ******************************************************************************/
 #include "stdafx.h"
 #include "BR_Loudness.h"
-#include "BR_EnvTools.h"
+#include "BR_EnvelopeUtil.h"
 #include "BR_Util.h"
 #include "../SnM/SnM_Dlg.h"
 #include "../SnM/SnM_Util.h"
@@ -84,7 +84,7 @@ static const char* g_wildcards[][4] =
 	{"$luformat",               "\t\t\t",    "\t\t\t\t",     __LOCALIZE("LU unit format set in global preferences", "sws_DLG_180")},
 	{"$t",                      "\t\t\t",    "\t\t\t\t\t",   __LOCALIZE("inserts tab character (displayed as normal space in preview)", "sws_DLG_180")},
 	{"$n",                      "\t\t\t",    "\t\t\t\t\t",   __LOCALIZE("inserts newline (displayed as normal space in preview)", "sws_DLG_180")},
-	{"$$",                      "\t\t\t",    "\t\t\t\t\t",   __LOCALIZE("inserts $ character (normal $ works too, this is to prevent wilcard from being treated as wildcard)", "sws_DLG_180")},
+	{"$$",                      "\t\t\t",    "\t\t\t\t\t",   __LOCALIZE("inserts $ character (normal $ works too, this is to prevent wildcard from being treated as wildcard)", "sws_DLG_180")},
 	{NULL,                      NULL,      NULL,         NULL},
 };
 
@@ -569,7 +569,7 @@ bool BR_LoudnessObject::CreateGraph (BR_Envelope& envelope, double minLUFS, doub
 	envelope.CreatePoint(envelope.Count(), position, newMin, LINEAR, 0, false);
 	position += (momentary) ? 0.4 : 3;
 
-	size_t size = (momentary) ? m_momentaryValues.size() : m_shortTermValues.size();;
+	size_t size = (momentary) ? m_momentaryValues.size() : m_shortTermValues.size();
 	for (size_t i = 0; i < size; ++i)
 	{
 		double value = TranslateRange((momentary) ? m_momentaryValues[i] : m_shortTermValues[i], minLUFS, maxLUFS, newMin, newMax);
@@ -615,15 +615,16 @@ bool BR_LoudnessObject::CreateGraph (BR_Envelope& envelope, double minLUFS, doub
 	return true;
 }
 
-void BR_LoudnessObject::NormalizeIntegrated (double targetLUFS)
+bool BR_LoudnessObject::NormalizeIntegrated (double targetLUFS)
 {
 	SWS_SectionLock lock(&m_mutex);
 	if (!this->IsTargetValid())
-		return;
+		return false;
 
 	double integrated;
 	this->GetAnalyzeData(&integrated, NULL, NULL, NULL, NULL, NULL);
 
+	bool update = false;
 	if (integrated > NEGATIVE_INF)
 	{
 		if (m_track)
@@ -631,14 +632,23 @@ void BR_LoudnessObject::NormalizeIntegrated (double targetLUFS)
 			double volume = *(double*)GetSetMediaTrackInfo(m_track, "D_VOL", NULL);
 			volume *= DB2VAL(targetLUFS) / DB2VAL(integrated);
 			GetSetMediaTrackInfo(m_track, "D_VOL", &volume);
+
+			update = true;
 		}
 		else
 		{
-			double volume = *(double*)GetSetMediaItemTakeInfo(m_take, "D_VOL", NULL);
-			volume *= DB2VAL(targetLUFS) / DB2VAL(integrated);
-			GetSetMediaItemTakeInfo(m_take, "D_VOL", &volume);
+			if (!IsItemLocked(GetMediaItemTake_Item(m_take)) && !IsLocked(ITEM_FULL))
+			{
+				double volume = *(double*)GetSetMediaItemTakeInfo(m_take, "D_VOL", NULL);
+				volume *= DB2VAL(targetLUFS) / DB2VAL(integrated);
+				GetSetMediaItemTakeInfo(m_take, "D_VOL", &volume);
+
+				update = true;
+			}
 		}
 	}
+
+	return update;
 }
 
 void BR_LoudnessObject::SetSelectedInProject (bool selected)
@@ -1027,7 +1037,7 @@ int BR_LoudnessObject::CheckSetAudioData ()
 		memset(audioData.audioHash, 0, 128);
 		GetAudioAccessorHash(audioData.audio, audioData.audioHash);
 
-		audioData.audioStart  = GetAudioAccessorStartTime(audioData.audio);;
+		audioData.audioStart  = GetAudioAccessorStartTime(audioData.audio);
 		audioData.audioEnd    = GetAudioAccessorEndTime(audioData.audio);
 		audioData.channels    = channels;
 		audioData.channelMode = channelMode;
@@ -1071,7 +1081,7 @@ void BR_LoudnessObject::SetProgress (double progress)
 	m_progress = progress;
 }
 
-void BR_LoudnessObject::SetAnalyzeData (double integrated, double range, double truePeak, double truePeakPos, double shortTermMax, double momentaryMax, vector<double>& shortTermValues, vector<double>& momentaryValues)
+void BR_LoudnessObject::SetAnalyzeData (double integrated, double range, double truePeak, double truePeakPos, double shortTermMax, double momentaryMax, const vector<double>& shortTermValues, const vector<double>& momentaryValues)
 {
 	SWS_SectionLock lock(&m_mutex);
 	m_integrated      = integrated;
@@ -1229,7 +1239,7 @@ pan         (0)
 }
 
 /******************************************************************************
-* Loudness preferences and general management/state saving                    *
+* Loudness preferences                                                        *
 ******************************************************************************/
 static bool ProcessExtensionLine (const char *line, ProjectStateContext *ctx, bool isUndo, project_config_extension_t *reg)
 {
@@ -1353,8 +1363,14 @@ void BR_LoudnessPref::SaveGlobalPref ()
 void BR_LoudnessPref::LoadGlobalPref ()
 {
 	char tmp[256];
-	GetPrivateProfileString("SWS", PREF_KEY, "-23 0 -41 -14", tmp, sizeof(tmp), get_ini_file());
-	sscanf(tmp, "%lf %d %lf %lf", &m_valueLU, &m_globalLUFormat, &m_graphMin, &m_graphMax);
+	GetPrivateProfileString("SWS", PREF_KEY, "", tmp, sizeof(tmp), get_ini_file());
+
+	LineParser lp(false);
+	lp.parse(tmp);
+	m_valueLU         = (lp.getnumtokens() > 0) ? lp.gettoken_float(0) : -23;
+	m_globalLUFormat  = (lp.getnumtokens() > 1) ? lp.gettoken_int(1)   : 0;
+	m_graphMin        = (lp.getnumtokens() > 2) ? lp.gettoken_float(2) : -41;
+	m_graphMax        = (lp.getnumtokens() > 3) ? lp.gettoken_float(3) : -14;
 
 	if      (m_globalLUFormat == 0) m_globalLUFormat = BR_LoudnessPref::LU;  // don't rely on enum values
 	else if (m_globalLUFormat == 1) m_globalLUFormat = BR_LoudnessPref::LU_AT_K;
@@ -1454,7 +1470,7 @@ WDL_DLGRET BR_LoudnessPref::GlobalLoudnessPrefProc (HWND hwnd, UINT uMsg, WPARAM
 
 		case WM_COMMAND :
 		{
-			switch(LOWORD(wParam))
+			switch (LOWORD(wParam))
 			{
 				case IDC_ENB_PROJ_LU:
 				case IDC_ENB_PROJ_GRAPH:
@@ -1489,7 +1505,6 @@ WDL_DLGRET BR_LoudnessPref::GlobalLoudnessPrefProc (HWND hwnd, UINT uMsg, WPARAM
 						if (LOWORD(wParam) == IDC_PROJ_LU)
 							MarkProjectDirty(NULL);
 					}
-
 				}
 				break;
 
@@ -1508,7 +1523,7 @@ WDL_DLGRET BR_LoudnessPref::GlobalLoudnessPrefProc (HWND hwnd, UINT uMsg, WPARAM
 
 				case IDC_LU_FORMAT:
 				{
-					if (HIWORD(wParam) == CBN_SELCHANGE && GetFocus() == GetDlgItem(hwnd, LOWORD(wParam)))
+					if (HIWORD(wParam) == CBN_SELCHANGE)
 						SendMessage(hwnd, WM_COMMAND, BR_LoudnessPref::SAVE_PROJDATA, 0);
 				}
 				break;
@@ -1609,33 +1624,6 @@ graphMax     (-14)
 	graphMin = g_pref.m_graphMin;
 	graphMax = g_pref.m_graphMax;
 	stringLU = g_pref.GetFormatedLUString(g_pref.m_globalLUFormat, &g_pref.m_valueLU); // need to supply the value otherwise the object calls itself in constructor
-}
-
-int LoudnessInit ()
-{
-	static project_config_extension_t s_projectconfig = {ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL};
-	plugin_register("projectconfig", &s_projectconfig);
-
-	g_pref.LoadGlobalPref();
-	g_loudnessWndManager.Init();
-	return 1;
-}
-
-void LoudnessExit ()
-{
-	g_loudnessWndManager.Delete();
-	g_pref.SaveGlobalPref();
-}
-
-void LoudnessUpdate (bool updatePreferencesDlg /*true*/)
-{
-	if (BR_AnalyzeLoudnessWnd* dialog = g_loudnessWndManager.Get())
-		dialog->Update();
-	if (g_normalizeWnd)
-		SendMessage(g_normalizeWnd, WM_COMMAND, UPDATE_FROM_PROJDATA, 0);
-
-	if (updatePreferencesDlg)
-		g_pref.UpdatePreferenceDlg();
 }
 
 /******************************************************************************
@@ -1742,9 +1730,11 @@ static WDL_DLGRET NormalizeProgressProc (HWND hwnd, UINT uMsg, WPARAM wParam, LP
 					{
 						if (BR_LoudnessObject* item = s_normalizeData->items->Get(i))
 						{
-							item->NormalizeIntegrated(s_normalizeData->targetLufs);
-							if (!undoTrack && item->IsTrack()) undoTrack = true;
-							if (!undoItem && !item->IsTrack()) undoItem = true;
+							if (item->NormalizeIntegrated(s_normalizeData->targetLufs))
+							{
+								if (!undoTrack && item->IsTrack()) undoTrack = true;
+								if (!undoItem && !item->IsTrack()) undoItem = true;
+							}
 						}
 					}
 
@@ -1758,7 +1748,7 @@ static WDL_DLGRET NormalizeProgressProc (HWND hwnd, UINT uMsg, WPARAM wParam, LP
 							Undo_OnStateChangeEx2(NULL, __LOCALIZE("Normalize item and track loudness", "sws_undo"), UNDO_STATE_ALL, -1);
 					}
 
-					s_normalizeData->success = true;
+					s_normalizeData->normalized = true;
 					UpdateTimeline();
 					EndDialog(hwnd, 0);
 					return 0;
@@ -2028,12 +2018,10 @@ void BR_AnalyzeLoudnessWnd::ShowExportFormatDialog (bool show)
 	{
 		if (!m_exportFormatWnd)
 		{
-			#ifdef _WIN32
-				HWND parent = m_hwnd;
-			#else
-				HWND parent = g_hwndParent; // if m_hwnd is parent on OSX, window will for some reason be displayed under main dialog when undocked
+			m_exportFormatWnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_BR_LOUDNESS_EXPORT_FORMAT), m_hwnd, this->ExportFormatDialogProc);
+			#ifndef _WIN32
+				SWELL_SetWindowLevel(m_exportFormatWnd, 3); // NSFloatingWindowLevel
 			#endif
-			m_exportFormatWnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_BR_LOUDNESS_EXPORT_FORMAT), parent, this->ExportFormatDialogProc);
 		}
 		else
 		{
@@ -2057,12 +2045,10 @@ void BR_AnalyzeLoudnessWnd::ShowNormalizeDialog (bool show)
 	{
 		if (!m_normalizeWnd)
 		{
-			#ifdef _WIN32
-				HWND parent = m_hwnd;
-			#else
-				HWND parent = g_hwndParent;
+			m_normalizeWnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_BR_LOUDNESS_ANALYZER_NORM), m_hwnd, this->NormalizeDialogProc);
+			#ifndef _WIN32
+				SWELL_SetWindowLevel(m_normalizeWnd, 3); // NSFloatingWindowLevel
 			#endif
-			m_normalizeWnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_BR_LOUDNESS_ANALYZER_NORM), parent, this->NormalizeDialogProc);
 		}
 		else
 		{
@@ -2148,7 +2134,7 @@ WDL_FastString BR_AnalyzeLoudnessWnd::CreateExportString (bool previewOnly)
 	if (previewOnly)
 	{
 		int x = 0;
-		if  (BR_LoudnessObject* listItem = (BR_LoudnessObject*)m_list->EnumSelected(&x))
+		if (BR_LoudnessObject* listItem = (BR_LoudnessObject*)m_list->EnumSelected(&x))
 			objects.Add(listItem);
 		else if (m_list->GetListItemCount())
 		{
@@ -2616,8 +2602,12 @@ WDL_DLGRET BR_AnalyzeLoudnessWnd::NormalizeDialogProc (HWND hwnd, UINT uMsg, WPA
 		{
 			// Get data
 			char tmp[256];
-			GetPrivateProfileString("SWS", NORMALIZE_KEY, "-23 0 0", tmp, sizeof(tmp), get_ini_file());
-			double value; int unit; sscanf(tmp, "%lf %d %*d", &value, &unit);
+			GetPrivateProfileString("SWS", NORMALIZE_KEY, "", tmp, sizeof(tmp), get_ini_file());
+
+			LineParser lp(false);
+			lp.parse(tmp);
+			double value = (lp.getnumtokens() > 0) ? lp.gettoken_float(0) : -23;
+			int unit     = (lp.getnumtokens() > 1) ? lp.gettoken_int(1)   : 0;
 
 			// Set controls
 			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_UNIT));
@@ -2683,7 +2673,7 @@ WDL_DLGRET BR_AnalyzeLoudnessWnd::NormalizeDialogProc (HWND hwnd, UINT uMsg, WPA
 
 						NormalizeAndShowProgress(&normalizeData);
 						dialog->Update();
-						if (dialog->m_properties.analyzeOnNormalize && normalizeData.success)
+						if (dialog->m_properties.analyzeOnNormalize && normalizeData.normalized)
 							dialog->OnCommand(REANALYZE_ITEMS, 0);
 					}
 				}
@@ -2705,8 +2695,11 @@ WDL_DLGRET BR_AnalyzeLoudnessWnd::NormalizeDialogProc (HWND hwnd, UINT uMsg, WPA
 
 			// Third parameter is used by dialog invoked by normalize command, get it before storing new data
 			char tmp[256];
-			GetPrivateProfileString("SWS", NORMALIZE_KEY, "-23 0 0", tmp, sizeof(tmp), get_ini_file());
-			int target; sscanf(tmp, "%*lf %*d %d", &target);
+			GetPrivateProfileString("SWS", NORMALIZE_KEY, "", tmp, sizeof(tmp), get_ini_file());
+
+			LineParser lp(false);
+			lp.parse(tmp);
+			int target = (lp.getnumtokens() > 2) ? lp.gettoken_int(2) : 0;
 
 			_snprintfSafe(tmp, sizeof(tmp), "%lf %d %d", AltAtof(value), unit, target);
 			WritePrivateProfileString("SWS", NORMALIZE_KEY, tmp, get_ini_file());
@@ -2741,7 +2734,7 @@ void BR_AnalyzeLoudnessWnd::OnInitDlg ()
 
 void BR_AnalyzeLoudnessWnd::OnCommand (WPARAM wParam, LPARAM lParam)
 {
-	switch (wParam)
+	switch (LOWORD(wParam))
 	{
 		case IDC_OPTIONS:
 		{
@@ -2861,7 +2854,7 @@ void BR_AnalyzeLoudnessWnd::OnCommand (WPARAM wParam, LPARAM lParam)
 
 				NormalizeAndShowProgress(&normalizeData);
 				this->Update();
-				if (m_properties.analyzeOnNormalize && normalizeData.success)
+				if (m_properties.analyzeOnNormalize && normalizeData.normalized)
 					this->OnCommand(REANALYZE_ITEMS, 0);
 			}
 		}
@@ -2884,15 +2877,15 @@ void BR_AnalyzeLoudnessWnd::OnCommand (WPARAM wParam, LPARAM lParam)
 					envelope.SetPoint(0, &position, &value, &shape, &bezier);
 				}
 
-				bool success = false;
+				bool update = false;
 				int x = 0;
 				while (BR_LoudnessObject* listItem = (BR_LoudnessObject*)m_list->EnumSelected(&x))
 				{
 					if (listItem->CreateGraph(envelope, g_pref.GetGraphMin(), g_pref.GetGraphMax(), (wParam == DRAW_MOMENTARY) ? (true) : (false)))
-						success = true;
+						update = true;
 				}
 
-				if (success && envelope.Commit())
+				if (update && envelope.Commit())
 					Undo_OnStateChangeEx2(NULL, __LOCALIZE("Draw loudness graph in active envelope", "sws_undo"), UNDO_STATE_ALL, -1);
 			}
 		}
@@ -3298,10 +3291,6 @@ void BR_AnalyzeLoudnessWnd::OnDestroy ()
 {
 	this->AbortAnalyze();
 	this->AbortReanalyze();
-	#ifndef _WIN32
-		this->ShowExportFormatDialog(false); // see comment in
-		this->ShowNormalizeDialog(false);    // ShowExportFormatDialog()
-	#endif
 	m_properties.Save();
 	KillTimer(m_hwnd, UPDATE_TIMER);
 }
@@ -3327,7 +3316,7 @@ HMENU BR_AnalyzeLoudnessWnd::OnContextMenu (int x, int y, bool* wantDefaultItems
 	HMENU menu = CreatePopupMenu();
 
 	int column;
-	if ((BR_LoudnessObject*)m_pLists.Get(0)->GetHitItem(x, y, &column))
+	if ((BR_LoudnessObject*)m_list->GetHitItem(x, y, &column))
 	{
 		WritePtr(wantDefaultItems, false);
 		if (m_properties.usingLU)
@@ -3407,6 +3396,11 @@ HMENU BR_AnalyzeLoudnessWnd::OnContextMenu (int x, int y, bool* wantDefaultItems
 	return menu;
 }
 
+bool BR_AnalyzeLoudnessWnd::ReprocessContextMenu ()
+{
+	return false;
+}
+
 INT_PTR BR_AnalyzeLoudnessWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	if (uMsg == WM_SHOWWINDOW)
@@ -3438,29 +3432,20 @@ usingLU               (false)
 
 void BR_AnalyzeLoudnessWnd::Properties::Load ()
 {
-	int analyzeTracksInt         = 0;
-	int analyzeOnNormalizeInt    = 1;
-	int mirrorProjSelectionInt   = 1;
-	int doubleClickGoToTargetInt = 1;
-	int timeSelOverMaxInt        = 1;
-	int clearEnvelopeInt         = 1;
-	int clearAnalyzedInt         = 1;
-	int doTruePeakInt            = 0;
-	int usingLUInt               = 0;
-
 	char tmp[2048];
-	GetPrivateProfileString("SWS", LOUDNESS_KEY, "0 1 1 1 1 1 1 0 0", tmp, sizeof(tmp), get_ini_file());
-	sscanf(tmp, "%d %d %d %d %d %d %d %d %d", &analyzeTracksInt, &analyzeOnNormalizeInt, &mirrorProjSelectionInt, &doubleClickGoToTargetInt, &timeSelOverMaxInt, &clearEnvelopeInt, &clearAnalyzedInt, &doTruePeakInt, &usingLUInt);
+	GetPrivateProfileString("SWS", LOUDNESS_KEY, "", tmp, sizeof(tmp), get_ini_file());
 
-	analyzeTracks         = !!analyzeTracksInt;
-	analyzeOnNormalize    = !!analyzeOnNormalizeInt;
-	mirrorProjSelection   = !!mirrorProjSelectionInt;
-	doubleClickGoToTarget = !!doubleClickGoToTargetInt;
-	timeSelOverMax        = !!timeSelOverMaxInt;
-	clearEnvelope         = !!clearEnvelopeInt;
-	clearAnalyzed         = !!clearAnalyzedInt;
-	doTruePeak            = !!doTruePeakInt;
-	usingLU               = !!usingLUInt;
+	LineParser lp(false);
+	lp.parse(tmp);
+	analyzeTracks         = (lp.getnumtokens() > 0) ? !!lp.gettoken_int(0) : false;
+	analyzeOnNormalize    = (lp.getnumtokens() > 1) ? !!lp.gettoken_int(1) : true;
+	mirrorProjSelection   = (lp.getnumtokens() > 2) ? !!lp.gettoken_int(2) : true;
+	doubleClickGoToTarget = (lp.getnumtokens() > 3) ? !!lp.gettoken_int(3) : true;
+	timeSelOverMax        = (lp.getnumtokens() > 4) ? !!lp.gettoken_int(4) : true;
+	clearEnvelope         = (lp.getnumtokens() > 5) ? !!lp.gettoken_int(5) : true;
+	clearAnalyzed         = (lp.getnumtokens() > 6) ? !!lp.gettoken_int(6) : true;
+	doTruePeak            = (lp.getnumtokens() > 7) ? !!lp.gettoken_int(7) : false;
+	usingLU               = (lp.getnumtokens() > 8) ? !!lp.gettoken_int(8) : false;
 
 	GetPrivateProfileString("SWS", EXPORT_FORMAT_KEY, "$id - $target: $integrated, Range: $range, True peak: $truepeak", tmp, sizeof(tmp), get_ini_file());
 	exportFormat.Set(tmp);
@@ -3486,6 +3471,36 @@ void BR_AnalyzeLoudnessWnd::Properties::Save ()
 }
 
 /******************************************************************************
+* Loudness init/exit                                                          *
+******************************************************************************/
+int LoudnessInit ()
+{
+	static project_config_extension_t s_projectconfig = {ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL};
+	plugin_register("projectconfig", &s_projectconfig);
+
+	g_pref.LoadGlobalPref();
+	g_loudnessWndManager.Init();
+	return 1;
+}
+
+void LoudnessExit ()
+{
+	g_loudnessWndManager.Delete();
+	g_pref.SaveGlobalPref();
+}
+
+void LoudnessUpdate (bool updatePreferencesDlg /*true*/)
+{
+	if (BR_AnalyzeLoudnessWnd* dialog = g_loudnessWndManager.Get())
+		dialog->Update();
+	if (g_normalizeWnd)
+		SendMessage(g_normalizeWnd, WM_COMMAND, UPDATE_FROM_PROJDATA, 0);
+
+	if (updatePreferencesDlg)
+		g_pref.UpdatePreferenceDlg();
+}
+
+/******************************************************************************
 * Commands                                                                    *
 ******************************************************************************/
 static WDL_DLGRET NormalizeCommandDialogProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -3499,9 +3514,13 @@ static WDL_DLGRET NormalizeCommandDialogProc (HWND hwnd, UINT uMsg, WPARAM wPara
 		{
 			// Get data
 			char tmp[256];
-			GetPrivateProfileString("SWS", NORMALIZE_KEY, "-23 0 0", tmp, sizeof(tmp), get_ini_file());
-			double value; int unit, target;
-			sscanf(tmp, "%lf %d %d", &value, &unit, &target);
+			GetPrivateProfileString("SWS", NORMALIZE_KEY, "", tmp, sizeof(tmp), get_ini_file());
+
+			LineParser lp(false);
+			lp.parse(tmp);
+			double value = (lp.getnumtokens() > 0) ? lp.gettoken_float(0) : -23;
+			int unit     = (lp.getnumtokens() > 1) ? lp.gettoken_int(1)   : 0;
+			int target   = (lp.getnumtokens() > 2) ? lp.gettoken_int(2)   : 0;
 
 			// Set controls
 			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_UNIT));

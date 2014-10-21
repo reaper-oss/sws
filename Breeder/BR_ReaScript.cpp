@@ -27,17 +27,17 @@
 ******************************************************************************/
 #include "stdafx.h"
 #include "BR_ReaScript.h"
-#include "BR_EnvTools.h"
-#include "BR_MidiTools.h"
+#include "BR_EnvelopeUtil.h"
+#include "BR_MidiUtil.h"
+#include "BR_MouseUtil.h"
 #include "BR_Util.h"
 #include "../SnM/SnM_Chunk.h"
-#include "../SnM/SnM_Item.h"
 #include "../SnM/SnM_Util.h"
 
 /******************************************************************************
 * Globals                                                                     *
 ******************************************************************************/
-static BR_MouseContextInfo g_mouseInfo;
+static BR_MouseContextInfo g_mouseInfo(BR_MouseContextInfo::MODE_ALL, false);
 
 /******************************************************************************
 * ReaScript export                                                            *
@@ -233,51 +233,73 @@ bool BR_GetMediaSourceProperties (MediaItem_Take* take, bool* section, double* s
 
 void BR_GetMouseCursorContext (char* window, char* segment, char* details, int char_sz)
 {
-	const char* _window;
-	const char* _segment;
-	const char* _details;
-	GetMouseCursorContext(&_window, &_segment, &_details, &g_mouseInfo);
+	g_mouseInfo.Update();
 
-	if (window)  _snprintfSafe(window,  char_sz-1, "%s", _window);
-	if (segment) _snprintfSafe(segment, char_sz-1, "%s", _segment);
-	if (details) _snprintfSafe(details, char_sz-1, "%s", _details);
+	if (window)  _snprintfSafe(window,  char_sz-1, "%s", g_mouseInfo.GetWindow());
+	if (segment) _snprintfSafe(segment, char_sz-1, "%s", g_mouseInfo.GetSegment());
+	if (details) _snprintfSafe(details, char_sz-1, "%s", g_mouseInfo.GetDetails());
 }
 
 TrackEnvelope* BR_GetMouseCursorContext_Envelope (bool* takeEnvelope)
 {
-	WritePtr(takeEnvelope, g_mouseInfo.takeEnvelope);
-	return g_mouseInfo.envelope;
+	WritePtr(takeEnvelope, g_mouseInfo.IsTakeEnvelope());
+	return g_mouseInfo.GetEnvelope();
 }
 
 MediaItem* BR_GetMouseCursorContext_Item ()
 {
-	return g_mouseInfo.item;
+	return g_mouseInfo.GetItem();
 }
 
 void* BR_GetMouseCursorContext_MIDI (bool* inlineEditor, int* noteRow, int* ccLane, int* ccLaneVal, int* ccLaneId)
 {
-	WritePtr(inlineEditor, g_mouseInfo.midiInlineEditor);
-	WritePtr(noteRow,      g_mouseInfo.noteRow);
-	WritePtr(ccLane,       MapVelLaneToReaScriptCC(g_mouseInfo.ccLane));
-	WritePtr(ccLaneVal,    g_mouseInfo.ccLaneVal);
-	WritePtr(ccLaneId,     g_mouseInfo.ccLaneId);
+	if (g_mouseInfo.GetNoteRow() == -1)
+		WritePtr(noteRow, -1);
+	else
+		WritePtr(noteRow, g_mouseInfo.GetNoteRow());
 
-	return g_mouseInfo.midiEditor;
+	if (g_mouseInfo.GetCCLane(NULL, NULL, NULL))
+	{
+		g_mouseInfo.GetCCLane(ccLane, ccLaneVal, ccLaneId);
+		WritePtr(ccLane, MapVelLaneToReaScriptCC(*ccLane));
+	}
+	else
+	{
+		WritePtr(ccLane,    -1);
+		WritePtr(ccLaneVal, -1);
+		WritePtr(ccLaneId,  -1);
+	}
+
+	WritePtr(inlineEditor, g_mouseInfo.IsInlineMidi());
+	return g_mouseInfo.GetMidiEditor();
 }
 
 double BR_GetMouseCursorContext_Position ()
 {
-	return g_mouseInfo.position;
+	double position = g_mouseInfo.GetPosition();
+	if (position == -1)
+		return -1;
+	else
+		return position;
+}
+
+int BR_GetMouseCursorContext_StretchMarker ()
+{
+	int id = g_mouseInfo.GetStretchMarkerId();
+	if (id == -1)
+		return -1;
+	else
+		return id;
 }
 
 MediaItem_Take* BR_GetMouseCursorContext_Take ()
 {
-	return g_mouseInfo.take;
+	return g_mouseInfo.GetTake();
 }
 
 MediaTrack* BR_GetMouseCursorContext_Track ()
 {
-	return g_mouseInfo.track;
+	return g_mouseInfo.GetTrack();
 }
 
 MediaItem* BR_ItemAtMouseCursor (double* position)
@@ -293,7 +315,7 @@ bool BR_MIDI_CCLaneReplace (void* midiEditor, int laneId, int newCC)
 	if (take && IsVelLaneValid(newLane))
 	{
 		MediaItem* item = GetMediaItemTake_Item(take);
-		int takeId = GetTakeIndex(item, take);
+		int takeId = GetTakeId(take, item);
 		if (takeId >= 0)
 		{
 			SNM_TakeParserPatcher p(item, CountTakes(item));
@@ -323,7 +345,7 @@ bool BR_MIDI_CCLaneRemove (void* midiEditor, int laneId)
 	if (take)
 	{
 		MediaItem* item = GetMediaItemTake_Item(take);
-		int takeId = GetTakeIndex(item, take);
+		int takeId = GetTakeId(take, item);
 		if (takeId >= 0)
 		{
 			SNM_TakeParserPatcher p(item, CountTakes(item));

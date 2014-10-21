@@ -43,7 +43,7 @@ void SnapFollowsGridVis (COMMAND_T*);
 void TrimNewVolPanEnvs (COMMAND_T*);
 void PlaybackFollowsTempoChange (COMMAND_T*);
 void CycleRecordModes (COMMAND_T*);
-void FocusArrange (COMMAND_T*);
+void FocusArrangeTracks (COMMAND_T*);
 void ToggleItemOnline (COMMAND_T*);
 void ItemSourcePathToClipBoard (COMMAND_T*);
 void PlaybackAtMouseCursor (COMMAND_T*);

@@ -550,7 +550,7 @@
     <ClInclude Include="Breeder\BR_Envelope.h">
       <Filter>Breeder</Filter>
     </ClInclude>
-    <ClInclude Include="Breeder\BR_EnvTools.h">
+    <ClInclude Include="Breeder\BR_EnvelopeUtil.h">
       <Filter>Breeder</Filter>
     </ClInclude>
     <ClInclude Include="Breeder\BR_Loudness.h">
@@ -559,7 +559,7 @@
     <ClInclude Include="Breeder\BR_MidiEditor.h">
       <Filter>Breeder</Filter>
     </ClInclude>
-    <ClInclude Include="Breeder\BR_MidiTools.h">
+    <ClInclude Include="Breeder\BR_MidiUtil.h">
       <Filter>Breeder</Filter>
     </ClInclude>
     <ClInclude Include="Breeder\BR_Misc.h">
@@ -600,6 +600,12 @@
     </ClInclude>
     <ClInclude Include="Wol\wol_Util.h">
       <Filter>Wol</Filter>
+    </ClInclude>
+    <ClInclude Include="Breeder\BR_MouseUtil.h">
+      <Filter>Breeder</Filter>
+    </ClInclude>
+    <ClInclude Include="Breeder\BR_ContextualToolbars.h">
+      <Filter>Breeder</Filter>
     </ClInclude>
     <ClInclude Include="Wol\wol_Envelope.h">
       <Filter>Wol</Filter>
@@ -1160,7 +1166,7 @@
     <ClCompile Include="Breeder\BR_Envelope.cpp">
       <Filter>Breeder</Filter>
     </ClCompile>
-    <ClCompile Include="Breeder\BR_EnvTools.cpp">
+    <ClCompile Include="Breeder\BR_EnvelopeUtil.cpp">
       <Filter>Breeder</Filter>
     </ClCompile>
     <ClCompile Include="Breeder\BR_Loudness.cpp">
@@ -1169,7 +1175,7 @@
     <ClCompile Include="Breeder\BR_MidiEditor.cpp">
       <Filter>Breeder</Filter>
     </ClCompile>
-    <ClCompile Include="Breeder\BR_MidiTools.cpp">
+    <ClCompile Include="Breeder\BR_MidiUtil.cpp">
       <Filter>Breeder</Filter>
     </ClCompile>
     <ClCompile Include="Breeder\BR_Misc.cpp">
@@ -1210,6 +1216,12 @@
     </ClCompile>
     <ClCompile Include="Wol\wol_Util.cpp">
       <Filter>Wol</Filter>
+    </ClCompile>
+    <ClCompile Include="Breeder\BR_MouseUtil.cpp">
+      <Filter>Breeder</Filter>
+    </ClCompile>
+    <ClCompile Include="Breeder\BR_ContextualToolbars.cpp">
+      <Filter>Breeder</Filter>
     </ClCompile>
     <ClCompile Include="Wol\wol_Envelope.cpp">
       <Filter>Wol</Filter>

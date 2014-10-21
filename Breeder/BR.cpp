@@ -27,6 +27,7 @@
 ******************************************************************************/
 #include "stdafx.h"
 #include "BR.h"
+#include "BR_ContextualToolbars.h"
 #include "BR_ContinuousActions.h"
 #include "BR_Envelope.h"
 #include "BR_Loudness.h"
@@ -36,11 +37,58 @@
 #include "BR_Tempo.h"
 #include "BR_Update.h"
 #include "BR_Util.h"
+#include "../SnM/SnM.h"
 #include "../reaper/localize.h"
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] =
 {
+	/******************************************************************************
+	* Contextual toolbars                                                         *
+	******************************************************************************/
+	{ { DEFACCEL, "SWS/BR: Contextual toolbars..." }, "BR_CONTEXTUAL_TOOLBARS_PREF", ContextToolbarsOptions, NULL, 0, IsContextToolbarsOptionsVisible},
+
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 1" }, "BR_CONTEXTUAL_TOOLBAR_01", ToggleContextualToolbar, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 1" }, "BR_MX_CONTEXTUAL_TOOLBAR_01",  NULL, NULL, 0, NULL, 32063, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 1" }, "BR_ME_CONTEXTUAL_TOOLBAR_01",  NULL, NULL, 0, NULL, 32060, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 1" }, "BR_ML_CONTEXTUAL_TOOLBAR_01",  NULL, NULL, 0, NULL, 32061, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 1" }, "BR_MI_CONTEXTUAL_TOOLBAR_01",  NULL, NULL, 0, NULL, 32062, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 2" }, "BR_CONTEXTUAL_TOOLBAR_02", ToggleContextualToolbar, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 2" }, "BR_MX_CONTEXTUAL_TOOLBAR_02",  NULL, NULL, 1, NULL, 32063, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 2" }, "BR_ME_CONTEXTUAL_TOOLBAR_02",  NULL, NULL, 1, NULL, 32060, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 2" }, "BR_ML_CONTEXTUAL_TOOLBAR_02",  NULL, NULL, 1, NULL, 32061, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 2" }, "BR_MI_CONTEXTUAL_TOOLBAR_02",  NULL, NULL, 1, NULL, 32062, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 3" }, "BR_CONTEXTUAL_TOOLBAR_03", ToggleContextualToolbar, NULL, 2},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 3" }, "BR_MX_CONTEXTUAL_TOOLBAR_03",  NULL, NULL, 2, NULL, 32063, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 3" }, "BR_ME_CONTEXTUAL_TOOLBAR_03",  NULL, NULL, 2, NULL, 32060, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 3" }, "BR_ML_CONTEXTUAL_TOOLBAR_03",  NULL, NULL, 2, NULL, 32061, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 3" }, "BR_MI_CONTEXTUAL_TOOLBAR_03",  NULL, NULL, 2, NULL, 32062, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 4" }, "BR_CONTEXTUAL_TOOLBAR_04", ToggleContextualToolbar, NULL, 3},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 4" }, "BR_MX_CONTEXTUAL_TOOLBAR_04",  NULL, NULL, 3, NULL, 32063, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 4" }, "BR_ME_CONTEXTUAL_TOOLBAR_04",  NULL, NULL, 3, NULL, 32060, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 4" }, "BR_ML_CONTEXTUAL_TOOLBAR_04",  NULL, NULL, 3, NULL, 32061, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 4" }, "BR_MI_CONTEXTUAL_TOOLBAR_04",  NULL, NULL, 3, NULL, 32062, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 5" }, "BR_CONTEXTUAL_TOOLBAR_05", ToggleContextualToolbar, NULL, 4},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 5" }, "BR_MX_CONTEXTUAL_TOOLBAR_05",  NULL, NULL, 4, NULL, 32063, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 5" }, "BR_ME_CONTEXTUAL_TOOLBAR_05",  NULL, NULL, 4, NULL, 32060, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 5" }, "BR_ML_CONTEXTUAL_TOOLBAR_05",  NULL, NULL, 4, NULL, 32061, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 5" }, "BR_MI_CONTEXTUAL_TOOLBAR_05",  NULL, NULL, 4, NULL, 32062, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 6" }, "BR_CONTEXTUAL_TOOLBAR_06", ToggleContextualToolbar, NULL, 5},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 6" }, "BR_MX_CONTEXTUAL_TOOLBAR_06",  NULL, NULL, 5, NULL, 32063, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 6" }, "BR_ME_CONTEXTUAL_TOOLBAR_06",  NULL, NULL, 5, NULL, 32060, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 6" }, "BR_ML_CONTEXTUAL_TOOLBAR_06",  NULL, NULL, 5, NULL, 32061, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 6" }, "BR_MI_CONTEXTUAL_TOOLBAR_06",  NULL, NULL, 5, NULL, 32062, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 7" }, "BR_CONTEXTUAL_TOOLBAR_07", ToggleContextualToolbar, NULL, 6},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 7" }, "BR_MX_CONTEXTUAL_TOOLBAR_07",  NULL, NULL, 6, NULL, 32063, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 7" }, "BR_ME_CONTEXTUAL_TOOLBAR_07",  NULL, NULL, 6, NULL, 32060, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 7" }, "BR_ML_CONTEXTUAL_TOOLBAR_07",  NULL, NULL, 6, NULL, 32061, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 7" }, "BR_MI_CONTEXTUAL_TOOLBAR_07",  NULL, NULL, 6, NULL, 32062, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 8" }, "BR_CONTEXTUAL_TOOLBAR_08", ToggleContextualToolbar, NULL, 7},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 8" }, "BR_MX_CONTEXTUAL_TOOLBAR_08",  NULL, NULL, 7, NULL, 32063, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 8" }, "BR_ME_CONTEXTUAL_TOOLBAR_08",  NULL, NULL, 7, NULL, 32060, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 8" }, "BR_ML_CONTEXTUAL_TOOLBAR_08",  NULL, NULL, 7, NULL, 32061, ToggleContextualToolbar},
+	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 8" }, "BR_MI_CONTEXTUAL_TOOLBAR_08",  NULL, NULL, 7, NULL, 32062, ToggleContextualToolbar},
+
 	/******************************************************************************
 	* Envelopes - Misc                                                            *
 	******************************************************************************/
@@ -106,6 +154,8 @@ static COMMAND_T g_commandTable[] =
 
 	{ { DEFACCEL, "SWS/BR: Fit selected envelope points to time selection" },                                                 "BR_FIT_ENV_POINTS_TO_TIMESEL",       FitEnvPointsToTimeSel, NULL},
 	{ { DEFACCEL, "SWS/BR: Insert new envelope point at mouse cursor using value at current position (obey snapping)" },      "BR_ENV_POINT_MOUSE_CURSOR",          CreateEnvPointMouse, NULL},
+
+	{ { DEFACCEL, "SWS/BR: Unselect envelope" },                                                                              "BR_UNSEL_ENV",                       UnselectEnvelope, NULL, 0},
 
 	{ { DEFACCEL, "SWS/BR: Save envelope point selection, slot 1" },                                                          "BR_SAVE_ENV_SEL_SLOT_1",             SaveEnvSelSlot, NULL, 0},
 	{ { DEFACCEL, "SWS/BR: Save envelope point selection, slot 2" },                                                          "BR_SAVE_ENV_SEL_SLOT_2",             SaveEnvSelSlot, NULL, 1},
@@ -205,150 +255,178 @@ static COMMAND_T g_commandTable[] =
 	/******************************************************************************
 	* MIDI editor - Misc                                                          *
 	******************************************************************************/
-	{ { DEFACCEL, "SWS/BR: Play from mouse cursor position" },                                                 "BR_ME_PLAY_MOUSECURSOR",                 NULL, NULL, 0, NULL, 32060, ME_PlaybackAtMouseCursor},
-	{ { DEFACCEL, "SWS/BR: Play/pause from mouse cursor position" },                                           "BR_ME_PLAY_PAUSE_MOUSECURSOR",           NULL, NULL, 1, NULL, 32060, ME_PlaybackAtMouseCursor},
-	{ { DEFACCEL, "SWS/BR: Play/stop from mouse cursor position" },                                            "BR_ME_PLAY_STOP_MOUSECURSOR",            NULL, NULL, 2, NULL, 32060, ME_PlaybackAtMouseCursor},
+	{ { DEFACCEL, "SWS/BR: Play from mouse cursor position" },                                                                            "BR_ME_PLAY_MOUSECURSOR",                        NULL, NULL, 0, NULL, 32060, ME_PlaybackAtMouseCursor},
+	{ { DEFACCEL, "SWS/BR: Play/pause from mouse cursor position" },                                                                      "BR_ME_PLAY_PAUSE_MOUSECURSOR",                  NULL, NULL, 1, NULL, 32060, ME_PlaybackAtMouseCursor},
+	{ { DEFACCEL, "SWS/BR: Play/stop from mouse cursor position" },                                                                       "BR_ME_PLAY_STOP_MOUSECURSOR",                   NULL, NULL, 2, NULL, 32060, ME_PlaybackAtMouseCursor},
 
-	{ { DEFACCEL, "SWS/BR: Insert CC event at edit cursor in CC lane under mouse cursor (active item only)" }, "BR_ME_INSERT_CC_EDIT_CURSOR_MOUSE_LANE", NULL, NULL, 0, NULL, 32060, ME_CCEventAtEditCursor},
-	{ { DEFACCEL, "SWS/BR: Show only used CC lanes (detect 14-bit)" },                                         "BR_ME_SHOW_USED_CC_14_BIT",              NULL, NULL, 0, NULL, 32060, ME_ShowUsedCCLanesDetect14Bit},
+	{ { DEFACCEL, "SWS/BR: Insert CC event at edit cursor in CC lane under mouse cursor (active item only)" },                            "BR_ME_INSERT_CC_EDIT_CURSOR_MOUSE_LANE",        NULL, NULL, 0, NULL, 32060, ME_CCEventAtEditCursor},
+	{ { DEFACCEL, "SWS/BR: Show only used CC lanes (detect 14-bit)" },                                                                    "BR_ME_SHOW_USED_CC_14_BIT",                     NULL, NULL, 0, NULL, 32060, ME_ShowUsedCCLanesDetect14Bit},
 
-	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 1" },                                               "BR_ME_SAVE_CURSOR_POS_SLOT_1",           NULL, NULL, 0, NULL, 32060, ME_SaveCursorPosSlot},
-	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 2" },                                               "BR_ME_SAVE_CURSOR_POS_SLOT_2",           NULL, NULL, 1, NULL, 32060, ME_SaveCursorPosSlot},
-	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 3" },                                               "BR_ME_SAVE_CURSOR_POS_SLOT_3",           NULL, NULL, 2, NULL, 32060, ME_SaveCursorPosSlot},
-	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 4" },                                               "BR_ME_SAVE_CURSOR_POS_SLOT_4",           NULL, NULL, 3, NULL, 32060, ME_SaveCursorPosSlot},
-	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 5" },                                               "BR_ME_SAVE_CURSOR_POS_SLOT_5",           NULL, NULL, 4, NULL, 32060, ME_SaveCursorPosSlot},
-	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 6" },                                               "BR_ME_SAVE_CURSOR_POS_SLOT_6",           NULL, NULL, 5, NULL, 32060, ME_SaveCursorPosSlot},
-	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 7" },                                               "BR_ME_SAVE_CURSOR_POS_SLOT_7",           NULL, NULL, 6, NULL, 32060, ME_SaveCursorPosSlot},
-	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 8" },                                               "BR_ME_SAVE_CURSOR_POS_SLOT_8",           NULL, NULL, 7, NULL, 32060, ME_SaveCursorPosSlot},
-	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 1" },                                            "BR_ME_RESTORE_CURSOR_POS_SLOT_1",        NULL, NULL, 0, NULL, 32060, ME_RestoreCursorPosSlot},
-	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 2" },                                            "BR_ME_RESTORE_CURSOR_POS_SLOT_2",        NULL, NULL, 1, NULL, 32060, ME_RestoreCursorPosSlot},
-	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 3" },                                            "BR_ME_RESTORE_CURSOR_POS_SLOT_3",        NULL, NULL, 2, NULL, 32060, ME_RestoreCursorPosSlot},
-	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 4" },                                            "BR_ME_RESTORE_CURSOR_POS_SLOT_4",        NULL, NULL, 3, NULL, 32060, ME_RestoreCursorPosSlot},
-	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 5" },                                            "BR_ME_RESTORE_CURSOR_POS_SLOT_5",        NULL, NULL, 4, NULL, 32060, ME_RestoreCursorPosSlot},
-	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 6" },                                            "BR_ME_RESTORE_CURSOR_POS_SLOT_6",        NULL, NULL, 5, NULL, 32060, ME_RestoreCursorPosSlot},
-	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 7" },                                            "BR_ME_RESTORE_CURSOR_POS_SLOT_7",        NULL, NULL, 6, NULL, 32060, ME_RestoreCursorPosSlot},
-	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 8" },                                            "BR_ME_RESTORE_CURSOR_POS_SLOT_8",        NULL, NULL, 7, NULL, 32060, ME_RestoreCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Hide last clicked CC lane" },                                                                                  "BR_ME_HIDE_LAST_CLICKED_LANE",                  NULL, NULL, 0, NULL, 32060, ME_HideCCLanes},
+	{ { DEFACCEL, "SWS/BR: Hide all CC lanes except last clicked CC lane" },                                                              "BR_ME_HIDE_ALL_NO_LAST_CLICKED",                NULL, NULL, 1, NULL, 32060, ME_HideCCLanes},
+	{ { DEFACCEL, "SWS/BR: Toggle hide all CC lanes except last clicked CC lane" },                                                       "BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED",         NULL, NULL, 0,   ME_IsToggleHideCCLanesOn, 32060, ME_ToggleHideCCLanes},
+	{ { DEFACCEL, "SWS/BR: Toggle hide all CC lanes except last clicked CC lane (set lane height to 50 pixel)" },                         "BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_50_PX",   NULL, NULL, 50,  ME_IsToggleHideCCLanesOn, 32060, ME_ToggleHideCCLanes},
+	{ { DEFACCEL, "SWS/BR: Toggle hide all CC lanes except last clicked CC lane (set lane height to 100 pixel)" },                        "BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_100_PX",  NULL, NULL, 100, ME_IsToggleHideCCLanesOn, 32060, ME_ToggleHideCCLanes},
+	{ { DEFACCEL, "SWS/BR: Toggle hide all CC lanes except last clicked CC lane (set lane height to 150 pixel)" },                        "BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_150_PX",  NULL, NULL, 150, ME_IsToggleHideCCLanesOn, 32060, ME_ToggleHideCCLanes},
+	{ { DEFACCEL, "SWS/BR: Toggle hide all CC lanes except last clicked CC lane (set lane height to 200 pixel)" },                        "BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_200_PX",  NULL, NULL, 200, ME_IsToggleHideCCLanesOn, 32060, ME_ToggleHideCCLanes},
+	{ { DEFACCEL, "SWS/BR: Toggle hide all CC lanes except last clicked CC lane (set lane height to 250 pixel)" },                        "BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_250_PX",  NULL, NULL, 250, ME_IsToggleHideCCLanesOn, 32060, ME_ToggleHideCCLanes},
+	{ { DEFACCEL, "SWS/BR: Toggle hide all CC lanes except last clicked CC lane (set lane height to 300 pixel)" },                        "BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_300_PX",  NULL, NULL, 300, ME_IsToggleHideCCLanesOn, 32060, ME_ToggleHideCCLanes},
+	{ { DEFACCEL, "SWS/BR: Toggle hide all CC lanes except last clicked CC lane (set lane height to 350 pixel)" },                        "BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_350_PX",  NULL, NULL, 350, ME_IsToggleHideCCLanesOn, 32060, ME_ToggleHideCCLanes},
+	{ { DEFACCEL, "SWS/BR: Toggle hide all CC lanes except last clicked CC lane (set lane height to 400 pixel)" },                        "BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_400_PX",  NULL, NULL, 400, ME_IsToggleHideCCLanesOn, 32060, ME_ToggleHideCCLanes},
+	{ { DEFACCEL, "SWS/BR: Toggle hide all CC lanes except last clicked CC lane (set lane height to 450 pixel)" },                        "BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_450_PX",  NULL, NULL, 450, ME_IsToggleHideCCLanesOn, 32060, ME_ToggleHideCCLanes},
+	{ { DEFACCEL, "SWS/BR: Toggle hide all CC lanes except last clicked CC lane (set lane height to 500 pixel)" },                        "BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_500_PX",  NULL, NULL, 500, ME_IsToggleHideCCLanesOn, 32060, ME_ToggleHideCCLanes},
 
-	{ { DEFACCEL, "SWS/BR: Save note selection from active item, slot 1" },                                    "BR_ME_SAVE_NOTE_SEL_SLOT_1",             NULL, NULL, 0, NULL, 32060, ME_SaveNoteSelSlot},
-	{ { DEFACCEL, "SWS/BR: Save note selection from active item, slot 2" },                                    "BR_ME_SAVE_NOTE_SEL_SLOT_2",             NULL, NULL, 1, NULL, 32060, ME_SaveNoteSelSlot},
-	{ { DEFACCEL, "SWS/BR: Save note selection from active item, slot 3" },                                    "BR_ME_SAVE_NOTE_SEL_SLOT_3",             NULL, NULL, 2, NULL, 32060, ME_SaveNoteSelSlot},
-	{ { DEFACCEL, "SWS/BR: Save note selection from active item, slot 4" },                                    "BR_ME_SAVE_NOTE_SEL_SLOT_4",             NULL, NULL, 3, NULL, 32060, ME_SaveNoteSelSlot},
-	{ { DEFACCEL, "SWS/BR: Save note selection from active item, slot 5" },                                    "BR_ME_SAVE_NOTE_SEL_SLOT_5",             NULL, NULL, 4, NULL, 32060, ME_SaveNoteSelSlot},
-	{ { DEFACCEL, "SWS/BR: Save note selection from active item, slot 6" },                                    "BR_ME_SAVE_NOTE_SEL_SLOT_6",             NULL, NULL, 5, NULL, 32060, ME_SaveNoteSelSlot},
-	{ { DEFACCEL, "SWS/BR: Save note selection from active item, slot 7" },                                    "BR_ME_SAVE_NOTE_SEL_SLOT_7",             NULL, NULL, 6, NULL, 32060, ME_SaveNoteSelSlot},
-	{ { DEFACCEL, "SWS/BR: Save note selection from active item, slot 8" },                                    "BR_ME_SAVE_NOTE_SEL_SLOT_8",             NULL, NULL, 7, NULL, 32060, ME_SaveNoteSelSlot},
-	{ { DEFACCEL, "SWS/BR: Restore note selection to active item, slot 1" },                                   "BR_ME_RESTORE_NOTE_SEL_SLOT_1",          NULL, NULL, 0, NULL, 32060, ME_RestoreNoteSelSlot},
-	{ { DEFACCEL, "SWS/BR: Restore note selection to active item, slot 2" },                                   "BR_ME_RESTORE_NOTE_SEL_SLOT_2",          NULL, NULL, 1, NULL, 32060, ME_RestoreNoteSelSlot},
-	{ { DEFACCEL, "SWS/BR: Restore note selection to active item, slot 3" },                                   "BR_ME_RESTORE_NOTE_SEL_SLOT_3",          NULL, NULL, 2, NULL, 32060, ME_RestoreNoteSelSlot},
-	{ { DEFACCEL, "SWS/BR: Restore note selection to active item, slot 4" },                                   "BR_ME_RESTORE_NOTE_SEL_SLOT_4",          NULL, NULL, 3, NULL, 32060, ME_RestoreNoteSelSlot},
-	{ { DEFACCEL, "SWS/BR: Restore note selection to active item, slot 5" },                                   "BR_ME_RESTORE_NOTE_SEL_SLOT_5",          NULL, NULL, 4, NULL, 32060, ME_RestoreNoteSelSlot},
-	{ { DEFACCEL, "SWS/BR: Restore note selection to active item, slot 6" },                                   "BR_ME_RESTORE_NOTE_SEL_SLOT_6",          NULL, NULL, 5, NULL, 32060, ME_RestoreNoteSelSlot},
-	{ { DEFACCEL, "SWS/BR: Restore note selection to active item, slot 7" },                                   "BR_ME_RESTORE_NOTE_SEL_SLOT_7",          NULL, NULL, 6, NULL, 32060, ME_RestoreNoteSelSlot},
-	{ { DEFACCEL, "SWS/BR: Restore note selection to active item, slot 8" },                                   "BR_ME_RESTORE_NOTE_SEL_SLOT_8",          NULL, NULL, 7, NULL, 32060, ME_RestoreNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Convert selected CC events to square envelope points in selected envelope" },                                  "BR_ME_CC_TO_ENV_SQUARE",                        NULL, NULL, 1,  NULL, 32060, ME_CCToEnvPoints},
+	{ { DEFACCEL, "SWS/BR: Convert selected CC events to linear envelope points in selected envelope" },                                  "BR_ME_CC_TO_ENV_LINEAR",                        NULL, NULL, 2,  NULL, 32060, ME_CCToEnvPoints},
+	{ { DEFACCEL, "SWS/BR: Convert selected CC events to square envelope points in selected envelope (clear existing envelope points)" }, "BR_ME_CC_TO_ENV_SQUARE_CLEAR",                  NULL, NULL, -1, NULL, 32060, ME_CCToEnvPoints},
+	{ { DEFACCEL, "SWS/BR: Convert selected CC events to linear envelope points in selected envelope (clear existing envelope points)" }, "BR_ME_CC_TO_ENV_LINEAR_CLEAR",                  NULL, NULL, -2, NULL, 32060, ME_CCToEnvPoints},
 
-	{ { DEFACCEL, "SWS/BR: Save selected events in last clicked CC lane, slot 1" },                            "BR_ME_SAVE_CC_SLOT_1",                   NULL, NULL, 1,  NULL, 32060, ME_SaveCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Save selected events in last clicked CC lane, slot 2" },                            "BR_ME_SAVE_CC_SLOT_2",                   NULL, NULL, 2,  NULL, 32060, ME_SaveCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Save selected events in last clicked CC lane, slot 3" },                            "BR_ME_SAVE_CC_SLOT_3",                   NULL, NULL, 3,  NULL, 32060, ME_SaveCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Save selected events in last clicked CC lane, slot 4" },                            "BR_ME_SAVE_CC_SLOT_4",                   NULL, NULL, 4,  NULL, 32060, ME_SaveCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Save selected events in last clicked CC lane, slot 5" },                            "BR_ME_SAVE_CC_SLOT_5",                   NULL, NULL, 5,  NULL, 32060, ME_SaveCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Save selected events in last clicked CC lane, slot 6" },                            "BR_ME_SAVE_CC_SLOT_6",                   NULL, NULL, 6,  NULL, 32060, ME_SaveCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Save selected events in last clicked CC lane, slot 7" },                            "BR_ME_SAVE_CC_SLOT_7",                   NULL, NULL, 7,  NULL, 32060, ME_SaveCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Save selected events in last clicked CC lane, slot 8" },                            "BR_ME_SAVE_CC_SLOT_8",                   NULL, NULL, 8,  NULL, 32060, ME_SaveCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Save selected events in CC lane under mouse cursor, slot 1" },                      "BR_ME_SAVE_MOUSE_CC_SLOT_1",             NULL, NULL, -1,  NULL, 32060, ME_SaveCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Save selected events in CC lane under mouse cursor, slot 2" },                      "BR_ME_SAVE_MOUSE_CC_SLOT_2",             NULL, NULL, -2,  NULL, 32060, ME_SaveCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Save selected events in CC lane under mouse cursor, slot 3" },                      "BR_ME_SAVE_MOUSE_CC_SLOT_3",             NULL, NULL, -3,  NULL, 32060, ME_SaveCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Save selected events in CC lane under mouse cursor, slot 4" },                      "BR_ME_SAVE_MOUSE_CC_SLOT_4",             NULL, NULL, -4,  NULL, 32060, ME_SaveCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Save selected events in CC lane under mouse cursor, slot 5" },                      "BR_ME_SAVE_MOUSE_CC_SLOT_5",             NULL, NULL, -5,  NULL, 32060, ME_SaveCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Save selected events in CC lane under mouse cursor, slot 6" },                      "BR_ME_SAVE_MOUSE_CC_SLOT_6",             NULL, NULL, -6,  NULL, 32060, ME_SaveCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Save selected events in CC lane under mouse cursor, slot 7" },                      "BR_ME_SAVE_MOUSE_CC_SLOT_7",             NULL, NULL, -7,  NULL, 32060, ME_SaveCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Save selected events in CC lane under mouse cursor, slot 8" },                      "BR_ME_SAVE_MOUSE_CC_SLOT_8",             NULL, NULL, -8,  NULL, 32060, ME_SaveCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to last clicked CC lane in active item, slot 1" },          "BR_ME_RESTORE_CC_LAST_CL_SLOT_1",        NULL, NULL, 1,  NULL, 32060, ME_RestoreCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to last clicked CC lane in active item, slot 2" },          "BR_ME_RESTORE_CC_LAST_CL_SLOT_2",        NULL, NULL, 2,  NULL, 32060, ME_RestoreCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to last clicked CC lane in active item, slot 3" },          "BR_ME_RESTORE_CC_LAST_CL_SLOT_3",        NULL, NULL, 3,  NULL, 32060, ME_RestoreCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to last clicked CC lane in active item, slot 4" },          "BR_ME_RESTORE_CC_LAST_CL_SLOT_4",        NULL, NULL, 4,  NULL, 32060, ME_RestoreCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to last clicked CC lane in active item, slot 5" },          "BR_ME_RESTORE_CC_LAST_CL_SLOT_5",        NULL, NULL, 5,  NULL, 32060, ME_RestoreCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to last clicked CC lane in active item, slot 6" },          "BR_ME_RESTORE_CC_LAST_CL_SLOT_6",        NULL, NULL, 6,  NULL, 32060, ME_RestoreCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to last clicked CC lane in active item, slot 7" },          "BR_ME_RESTORE_CC_LAST_CL_SLOT_7",        NULL, NULL, 7,  NULL, 32060, ME_RestoreCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to last clicked CC lane in active item, slot 8" },          "BR_ME_RESTORE_CC_LAST_CL_SLOT_8",        NULL, NULL, 8,  NULL, 32060, ME_RestoreCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to CC lane under mouse cursor in active item, slot 1" },    "BR_ME_RESTORE_CC_MOUSE_SLOT_1",          NULL, NULL, -1, NULL, 32060, ME_RestoreCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to CC lane under mouse cursor in active item, slot 2" },    "BR_ME_RESTORE_CC_MOUSE_SLOT_2",          NULL, NULL, -2, NULL, 32060, ME_RestoreCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to CC lane under mouse cursor in active item, slot 3" },    "BR_ME_RESTORE_CC_MOUSE_SLOT_3",          NULL, NULL, -3, NULL, 32060, ME_RestoreCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to CC lane under mouse cursor in active item, slot 4" },    "BR_ME_RESTORE_CC_MOUSE_SLOT_4",          NULL, NULL, -4, NULL, 32060, ME_RestoreCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to CC lane under mouse cursor in active item, slot 5" },    "BR_ME_RESTORE_CC_MOUSE_SLOT_5",          NULL, NULL, -5, NULL, 32060, ME_RestoreCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to CC lane under mouse cursor in active item, slot 6" },    "BR_ME_RESTORE_CC_MOUSE_SLOT_6",          NULL, NULL, -6, NULL, 32060, ME_RestoreCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to CC lane under mouse cursor in active item, slot 7" },    "BR_ME_RESTORE_CC_MOUSE_SLOT_7",          NULL, NULL, -7, NULL, 32060, ME_RestoreCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to CC lane under mouse cursor in active item, slot 8" },    "BR_ME_RESTORE_CC_MOUSE_SLOT_8",          NULL, NULL, -8, NULL, 32060, ME_RestoreCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to all visible CC lanes in active item, slot 1" },          "BR_ME_RESTORE_CC_ALL_VIS_SLOT_1",        NULL, NULL,  0, NULL, 32060, ME_RestoreCCEvents2Slot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to all visible CC lanes in active item, slot 2" },          "BR_ME_RESTORE_CC_ALL_VIS_SLOT_2",        NULL, NULL,  1, NULL, 32060, ME_RestoreCCEvents2Slot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to all visible CC lanes in active item, slot 3" },          "BR_ME_RESTORE_CC_ALL_VIS_SLOT_3",        NULL, NULL,  2, NULL, 32060, ME_RestoreCCEvents2Slot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to all visible CC lanes in active item, slot 4" },          "BR_ME_RESTORE_CC_ALL_VIS_SLOT_4",        NULL, NULL,  3, NULL, 32060, ME_RestoreCCEvents2Slot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to all visible CC lanes in active item, slot 5" },          "BR_ME_RESTORE_CC_ALL_VIS_SLOT_5",        NULL, NULL,  4, NULL, 32060, ME_RestoreCCEvents2Slot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to all visible CC lanes in active item, slot 6" },          "BR_ME_RESTORE_CC_ALL_VIS_SLOT_6",        NULL, NULL,  5, NULL, 32060, ME_RestoreCCEvents2Slot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to all visible CC lanes in active item, slot 7" },          "BR_ME_RESTORE_CC_ALL_VIS_SLOT_7",        NULL, NULL,  6, NULL, 32060, ME_RestoreCCEvents2Slot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to all visible CC lanes in active item, slot 8" },          "BR_ME_RESTORE_CC_ALL_VIS_SLOT_8",        NULL, NULL,  7, NULL, 32060, ME_RestoreCCEvents2Slot},
+	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 1" },                                                                          "BR_ME_SAVE_CURSOR_POS_SLOT_1",                  NULL, NULL, 0, NULL, 32060, ME_SaveCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 2" },                                                                          "BR_ME_SAVE_CURSOR_POS_SLOT_2",                  NULL, NULL, 1, NULL, 32060, ME_SaveCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 3" },                                                                          "BR_ME_SAVE_CURSOR_POS_SLOT_3",                  NULL, NULL, 2, NULL, 32060, ME_SaveCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 4" },                                                                          "BR_ME_SAVE_CURSOR_POS_SLOT_4",                  NULL, NULL, 3, NULL, 32060, ME_SaveCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 5" },                                                                          "BR_ME_SAVE_CURSOR_POS_SLOT_5",                  NULL, NULL, 4, NULL, 32060, ME_SaveCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 6" },                                                                          "BR_ME_SAVE_CURSOR_POS_SLOT_6",                  NULL, NULL, 5, NULL, 32060, ME_SaveCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 7" },                                                                          "BR_ME_SAVE_CURSOR_POS_SLOT_7",                  NULL, NULL, 6, NULL, 32060, ME_SaveCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 8" },                                                                          "BR_ME_SAVE_CURSOR_POS_SLOT_8",                  NULL, NULL, 7, NULL, 32060, ME_SaveCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 1" },                                                                       "BR_ME_RESTORE_CURSOR_POS_SLOT_1",               NULL, NULL, 0, NULL, 32060, ME_RestoreCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 2" },                                                                       "BR_ME_RESTORE_CURSOR_POS_SLOT_2",               NULL, NULL, 1, NULL, 32060, ME_RestoreCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 3" },                                                                       "BR_ME_RESTORE_CURSOR_POS_SLOT_3",               NULL, NULL, 2, NULL, 32060, ME_RestoreCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 4" },                                                                       "BR_ME_RESTORE_CURSOR_POS_SLOT_4",               NULL, NULL, 3, NULL, 32060, ME_RestoreCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 5" },                                                                       "BR_ME_RESTORE_CURSOR_POS_SLOT_5",               NULL, NULL, 4, NULL, 32060, ME_RestoreCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 6" },                                                                       "BR_ME_RESTORE_CURSOR_POS_SLOT_6",               NULL, NULL, 5, NULL, 32060, ME_RestoreCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 7" },                                                                       "BR_ME_RESTORE_CURSOR_POS_SLOT_7",               NULL, NULL, 6, NULL, 32060, ME_RestoreCursorPosSlot},
+	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 8" },                                                                       "BR_ME_RESTORE_CURSOR_POS_SLOT_8",               NULL, NULL, 7, NULL, 32060, ME_RestoreCursorPosSlot},
+
+	{ { DEFACCEL, "SWS/BR: Save note selection from active item, slot 1" },                                                               "BR_ME_SAVE_NOTE_SEL_SLOT_1",                    NULL, NULL, 0, NULL, 32060, ME_SaveNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Save note selection from active item, slot 2" },                                                               "BR_ME_SAVE_NOTE_SEL_SLOT_2",                    NULL, NULL, 1, NULL, 32060, ME_SaveNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Save note selection from active item, slot 3" },                                                               "BR_ME_SAVE_NOTE_SEL_SLOT_3",                    NULL, NULL, 2, NULL, 32060, ME_SaveNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Save note selection from active item, slot 4" },                                                               "BR_ME_SAVE_NOTE_SEL_SLOT_4",                    NULL, NULL, 3, NULL, 32060, ME_SaveNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Save note selection from active item, slot 5" },                                                               "BR_ME_SAVE_NOTE_SEL_SLOT_5",                    NULL, NULL, 4, NULL, 32060, ME_SaveNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Save note selection from active item, slot 6" },                                                               "BR_ME_SAVE_NOTE_SEL_SLOT_6",                    NULL, NULL, 5, NULL, 32060, ME_SaveNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Save note selection from active item, slot 7" },                                                               "BR_ME_SAVE_NOTE_SEL_SLOT_7",                    NULL, NULL, 6, NULL, 32060, ME_SaveNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Save note selection from active item, slot 8" },                                                               "BR_ME_SAVE_NOTE_SEL_SLOT_8",                    NULL, NULL, 7, NULL, 32060, ME_SaveNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Restore note selection to active item, slot 1" },                                                              "BR_ME_RESTORE_NOTE_SEL_SLOT_1",                 NULL, NULL, 0, NULL, 32060, ME_RestoreNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Restore note selection to active item, slot 2" },                                                              "BR_ME_RESTORE_NOTE_SEL_SLOT_2",                 NULL, NULL, 1, NULL, 32060, ME_RestoreNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Restore note selection to active item, slot 3" },                                                              "BR_ME_RESTORE_NOTE_SEL_SLOT_3",                 NULL, NULL, 2, NULL, 32060, ME_RestoreNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Restore note selection to active item, slot 4" },                                                              "BR_ME_RESTORE_NOTE_SEL_SLOT_4",                 NULL, NULL, 3, NULL, 32060, ME_RestoreNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Restore note selection to active item, slot 5" },                                                              "BR_ME_RESTORE_NOTE_SEL_SLOT_5",                 NULL, NULL, 4, NULL, 32060, ME_RestoreNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Restore note selection to active item, slot 6" },                                                              "BR_ME_RESTORE_NOTE_SEL_SLOT_6",                 NULL, NULL, 5, NULL, 32060, ME_RestoreNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Restore note selection to active item, slot 7" },                                                              "BR_ME_RESTORE_NOTE_SEL_SLOT_7",                 NULL, NULL, 6, NULL, 32060, ME_RestoreNoteSelSlot},
+	{ { DEFACCEL, "SWS/BR: Restore note selection to active item, slot 8" },                                                              "BR_ME_RESTORE_NOTE_SEL_SLOT_8",                 NULL, NULL, 7, NULL, 32060, ME_RestoreNoteSelSlot},
+
+	{ { DEFACCEL, "SWS/BR: Save selected events in last clicked CC lane, slot 1" },                                                       "BR_ME_SAVE_CC_SLOT_1",                          NULL, NULL, 1,  NULL, 32060, ME_SaveCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Save selected events in last clicked CC lane, slot 2" },                                                       "BR_ME_SAVE_CC_SLOT_2",                          NULL, NULL, 2,  NULL, 32060, ME_SaveCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Save selected events in last clicked CC lane, slot 3" },                                                       "BR_ME_SAVE_CC_SLOT_3",                          NULL, NULL, 3,  NULL, 32060, ME_SaveCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Save selected events in last clicked CC lane, slot 4" },                                                       "BR_ME_SAVE_CC_SLOT_4",                          NULL, NULL, 4,  NULL, 32060, ME_SaveCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Save selected events in last clicked CC lane, slot 5" },                                                       "BR_ME_SAVE_CC_SLOT_5",                          NULL, NULL, 5,  NULL, 32060, ME_SaveCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Save selected events in last clicked CC lane, slot 6" },                                                       "BR_ME_SAVE_CC_SLOT_6",                          NULL, NULL, 6,  NULL, 32060, ME_SaveCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Save selected events in last clicked CC lane, slot 7" },                                                       "BR_ME_SAVE_CC_SLOT_7",                          NULL, NULL, 7,  NULL, 32060, ME_SaveCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Save selected events in last clicked CC lane, slot 8" },                                                       "BR_ME_SAVE_CC_SLOT_8",                          NULL, NULL, 8,  NULL, 32060, ME_SaveCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Save selected events in CC lane under mouse cursor, slot 1" },                                                 "BR_ME_SAVE_MOUSE_CC_SLOT_1",                    NULL, NULL, -1,  NULL, 32060, ME_SaveCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Save selected events in CC lane under mouse cursor, slot 2" },                                                 "BR_ME_SAVE_MOUSE_CC_SLOT_2",                    NULL, NULL, -2,  NULL, 32060, ME_SaveCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Save selected events in CC lane under mouse cursor, slot 3" },                                                 "BR_ME_SAVE_MOUSE_CC_SLOT_3",                    NULL, NULL, -3,  NULL, 32060, ME_SaveCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Save selected events in CC lane under mouse cursor, slot 4" },                                                 "BR_ME_SAVE_MOUSE_CC_SLOT_4",                    NULL, NULL, -4,  NULL, 32060, ME_SaveCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Save selected events in CC lane under mouse cursor, slot 5" },                                                 "BR_ME_SAVE_MOUSE_CC_SLOT_5",                    NULL, NULL, -5,  NULL, 32060, ME_SaveCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Save selected events in CC lane under mouse cursor, slot 6" },                                                 "BR_ME_SAVE_MOUSE_CC_SLOT_6",                    NULL, NULL, -6,  NULL, 32060, ME_SaveCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Save selected events in CC lane under mouse cursor, slot 7" },                                                 "BR_ME_SAVE_MOUSE_CC_SLOT_7",                    NULL, NULL, -7,  NULL, 32060, ME_SaveCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Save selected events in CC lane under mouse cursor, slot 8" },                                                 "BR_ME_SAVE_MOUSE_CC_SLOT_8",                    NULL, NULL, -8,  NULL, 32060, ME_SaveCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to last clicked CC lane in active item, slot 1" },                                     "BR_ME_RESTORE_CC_LAST_CL_SLOT_1",               NULL, NULL, 1,  NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to last clicked CC lane in active item, slot 2" },                                     "BR_ME_RESTORE_CC_LAST_CL_SLOT_2",               NULL, NULL, 2,  NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to last clicked CC lane in active item, slot 3" },                                     "BR_ME_RESTORE_CC_LAST_CL_SLOT_3",               NULL, NULL, 3,  NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to last clicked CC lane in active item, slot 4" },                                     "BR_ME_RESTORE_CC_LAST_CL_SLOT_4",               NULL, NULL, 4,  NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to last clicked CC lane in active item, slot 5" },                                     "BR_ME_RESTORE_CC_LAST_CL_SLOT_5",               NULL, NULL, 5,  NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to last clicked CC lane in active item, slot 6" },                                     "BR_ME_RESTORE_CC_LAST_CL_SLOT_6",               NULL, NULL, 6,  NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to last clicked CC lane in active item, slot 7" },                                     "BR_ME_RESTORE_CC_LAST_CL_SLOT_7",               NULL, NULL, 7,  NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to last clicked CC lane in active item, slot 8" },                                     "BR_ME_RESTORE_CC_LAST_CL_SLOT_8",               NULL, NULL, 8,  NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to CC lane under mouse cursor in active item, slot 1" },                               "BR_ME_RESTORE_CC_MOUSE_SLOT_1",                 NULL, NULL, -1, NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to CC lane under mouse cursor in active item, slot 2" },                               "BR_ME_RESTORE_CC_MOUSE_SLOT_2",                 NULL, NULL, -2, NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to CC lane under mouse cursor in active item, slot 3" },                               "BR_ME_RESTORE_CC_MOUSE_SLOT_3",                 NULL, NULL, -3, NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to CC lane under mouse cursor in active item, slot 4" },                               "BR_ME_RESTORE_CC_MOUSE_SLOT_4",                 NULL, NULL, -4, NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to CC lane under mouse cursor in active item, slot 5" },                               "BR_ME_RESTORE_CC_MOUSE_SLOT_5",                 NULL, NULL, -5, NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to CC lane under mouse cursor in active item, slot 6" },                               "BR_ME_RESTORE_CC_MOUSE_SLOT_6",                 NULL, NULL, -6, NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to CC lane under mouse cursor in active item, slot 7" },                               "BR_ME_RESTORE_CC_MOUSE_SLOT_7",                 NULL, NULL, -7, NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to CC lane under mouse cursor in active item, slot 8" },                               "BR_ME_RESTORE_CC_MOUSE_SLOT_8",                 NULL, NULL, -8, NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to all visible CC lanes in active item, slot 1" },                                     "BR_ME_RESTORE_CC_ALL_VIS_SLOT_1",               NULL, NULL,  0, NULL, 32060, ME_RestoreCCEvents2Slot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to all visible CC lanes in active item, slot 2" },                                     "BR_ME_RESTORE_CC_ALL_VIS_SLOT_2",               NULL, NULL,  1, NULL, 32060, ME_RestoreCCEvents2Slot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to all visible CC lanes in active item, slot 3" },                                     "BR_ME_RESTORE_CC_ALL_VIS_SLOT_3",               NULL, NULL,  2, NULL, 32060, ME_RestoreCCEvents2Slot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to all visible CC lanes in active item, slot 4" },                                     "BR_ME_RESTORE_CC_ALL_VIS_SLOT_4",               NULL, NULL,  3, NULL, 32060, ME_RestoreCCEvents2Slot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to all visible CC lanes in active item, slot 5" },                                     "BR_ME_RESTORE_CC_ALL_VIS_SLOT_5",               NULL, NULL,  4, NULL, 32060, ME_RestoreCCEvents2Slot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to all visible CC lanes in active item, slot 6" },                                     "BR_ME_RESTORE_CC_ALL_VIS_SLOT_6",               NULL, NULL,  5, NULL, 32060, ME_RestoreCCEvents2Slot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to all visible CC lanes in active item, slot 7" },                                     "BR_ME_RESTORE_CC_ALL_VIS_SLOT_7",               NULL, NULL,  6, NULL, 32060, ME_RestoreCCEvents2Slot},
+	{ { DEFACCEL, "SWS/BR: Restore selected events to all visible CC lanes in active item, slot 8" },                                     "BR_ME_RESTORE_CC_ALL_VIS_SLOT_8",               NULL, NULL,  7, NULL, 32060, ME_RestoreCCEvents2Slot},
 
 	/******************************************************************************
 	* Misc                                                                        *
 	******************************************************************************/
-	{ { DEFACCEL, "SWS/BR: Split selected items at tempo markers" },                                                                                       "SWS_BRSPLITSELECTEDTEMPO",          SplitItemAtTempo},
-	{ { DEFACCEL, "SWS/BR: Create project markers from selected tempo markers" },                                                                          "BR_TEMPO_TO_MARKERS",               MarkersAtTempo},
-	{ { DEFACCEL, "SWS/BR: Disable \"Ignore project tempo\" for selected MIDI items" },                                                                    "BR_MIDI_PROJ_TEMPO_DIS",            MidiItemTempo, NULL, 0},
-	{ { DEFACCEL, "SWS/BR: Enable \"Ignore project tempo\" for selected MIDI items (use tempo at item's start)" },                                         "BR_MIDI_PROJ_TEMPO_ENB",            MidiItemTempo, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Enable \"Ignore project tempo\" for selected MIDI items preserving time position of MIDI events (use tempo at item's start)" }, "BR_MIDI_PROJ_TEMPO_ENB_TIME",       MidiItemTempo, NULL, 2},
-	{ { DEFACCEL, "SWS/BR: Trim MIDI item to active content" },                                                                                            "BR_TRIM_MIDI_ITEM_ACT_CONTENT",     MidiItemTrim, NULL},
+	{ { DEFACCEL, "SWS/BR: Split selected items at tempo markers" },                                                                                       "SWS_BRSPLITSELECTEDTEMPO",           SplitItemAtTempo},
+	{ { DEFACCEL, "SWS/BR: Create project markers from selected tempo markers" },                                                                          "BR_TEMPO_TO_MARKERS",                MarkersAtTempo},
+	{ { DEFACCEL, "SWS/BR: Disable \"Ignore project tempo\" for selected MIDI items" },                                                                    "BR_MIDI_PROJ_TEMPO_DIS",             MidiItemTempo, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Enable \"Ignore project tempo\" for selected MIDI items (use tempo at item's start)" },                                         "BR_MIDI_PROJ_TEMPO_ENB",             MidiItemTempo, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Enable \"Ignore project tempo\" for selected MIDI items preserving time position of MIDI events (use tempo at item's start)" }, "BR_MIDI_PROJ_TEMPO_ENB_TIME",        MidiItemTempo, NULL, 2},
+	{ { DEFACCEL, "SWS/BR: Trim MIDI item to active content" },                                                                                            "BR_TRIM_MIDI_ITEM_ACT_CONTENT",      MidiItemTrim, NULL},
 
-	{ { DEFACCEL, "SWS/BR: Create project markers from notes in selected MIDI items" },                                                                    "BR_MIDI_NOTES_TO_MARKERS",          MarkersAtNotes},
-	{ { DEFACCEL, "SWS/BR: Create project markers from stretch markers in selected items" },                                                               "BR_STRETCH_MARKERS_TO_MARKERS",     MarkersAtStretchMarkers},
-	{ { DEFACCEL, "SWS/BR: Create project marker at mouse cursor" },                                                                                       "BR_MARKER_AT_MOUSE",                MarkerAtMouse, NULL, 0},
-	{ { DEFACCEL, "SWS/BR: Create project marker at mouse cursor (obey snapping)" },                                                                       "BR_MARKER_AT_MOUSE_SNAP",           MarkerAtMouse, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Create project markers from selected items (name by item's notes)" },                                                           "BR_ITEMS_TO_MARKERS_NOTES",         MarkersRegionsAtItems, NULL, 0},
-	{ { DEFACCEL, "SWS/BR: Create regions from selected items (name by item's notes)" },                                                                   "BR_ITEMS_TO_REGIONS_NOTES",         MarkersRegionsAtItems, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Create project markers from notes in selected MIDI items" },                                                                    "BR_MIDI_NOTES_TO_MARKERS",           MarkersAtNotes},
+	{ { DEFACCEL, "SWS/BR: Create project markers from stretch markers in selected items" },                                                               "BR_STRETCH_MARKERS_TO_MARKERS",      MarkersAtStretchMarkers},
+	{ { DEFACCEL, "SWS/BR: Create project marker at mouse cursor" },                                                                                       "BR_MARKER_AT_MOUSE",                 MarkerAtMouse, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Create project marker at mouse cursor (obey snapping)" },                                                                       "BR_MARKER_AT_MOUSE_SNAP",            MarkerAtMouse, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Create project markers from selected items (name by item's notes)" },                                                           "BR_ITEMS_TO_MARKERS_NOTES",          MarkersRegionsAtItems, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Create regions from selected items (name by item's notes)" },                                                                   "BR_ITEMS_TO_REGIONS_NOTES",          MarkersRegionsAtItems, NULL, 1},
 
-	{ { DEFACCEL, "SWS/BR: Move closest project marker to play cursor" },                                                                                  "BR_CLOSEST_PROJ_MARKER_PLAY",       MoveClosestMarker, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Move closest project marker to edit cursor" },                                                                                  "BR_CLOSEST_PROJ_MARKER_EDIT",       MoveClosestMarker, NULL, 2},
-	{ { DEFACCEL, "SWS/BR: Move closest project marker to mouse cursor" },                                                                                 "BR_CLOSEST_PROJ_MARKER_MOUSE",      MoveClosestMarker, NULL, 3},
-	{ { DEFACCEL, "SWS/BR: Move closest project marker to play cursor (obey snapping)" },                                                                  "BR_CLOSEST_PROJ_MARKER_PLAY_SNAP",  MoveClosestMarker, NULL, -1},
-	{ { DEFACCEL, "SWS/BR: Move closest project marker to edit cursor (obey snapping)" },                                                                  "BR_CLOSEST_PROJ_MARKER_EDIT_SNAP",  MoveClosestMarker, NULL, -2},
-	{ { DEFACCEL, "SWS/BR: Move closest project marker to mouse cursor (obey snapping)" },                                                                 "BR_CLOSEST_PROJ_MARKER_MOUSE_SNAP", MoveClosestMarker, NULL, -3},
+	{ { DEFACCEL, "SWS/BR: Move closest project marker to play cursor" },                                                                                  "BR_CLOSEST_PROJ_MARKER_PLAY",        MoveClosestMarker, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Move closest project marker to edit cursor" },                                                                                  "BR_CLOSEST_PROJ_MARKER_EDIT",        MoveClosestMarker, NULL, 2},
+	{ { DEFACCEL, "SWS/BR: Move closest project marker to mouse cursor" },                                                                                 "BR_CLOSEST_PROJ_MARKER_MOUSE",       MoveClosestMarker, NULL, 3},
+	{ { DEFACCEL, "SWS/BR: Move closest project marker to play cursor (obey snapping)" },                                                                  "BR_CLOSEST_PROJ_MARKER_PLAY_SNAP",   MoveClosestMarker, NULL, -1},
+	{ { DEFACCEL, "SWS/BR: Move closest project marker to edit cursor (obey snapping)" },                                                                  "BR_CLOSEST_PROJ_MARKER_EDIT_SNAP",   MoveClosestMarker, NULL, -2},
+	{ { DEFACCEL, "SWS/BR: Move closest project marker to mouse cursor (obey snapping)" },                                                                 "BR_CLOSEST_PROJ_MARKER_MOUSE_SNAP",  MoveClosestMarker, NULL, -3},
 
-	{ { DEFACCEL, "SWS/BR: Toggle \"Grid snap settings follow grid visibility\"" },                                                                        "BR_OPTIONS_SNAP_FOLLOW_GRID_VIS",   SnapFollowsGridVis, NULL, 0, IsSnapFollowsGridVisOn},
-	{ { DEFACCEL, "SWS/BR: Toggle \"Playback position follows project timebase when changing tempo\"" },                                                   "BR_OPTIONS_PLAYBACK_TEMPO_CHANGE",  PlaybackFollowsTempoChange, NULL, 0, IsPlaybackFollowingTempoChange},
-	{ { DEFACCEL, "SWS/BR: Set \"Apply trim when adding volume/pan envelopes\" to \"Always\"" },                                                           "BR_OPTIONS_ENV_TRIM_ALWAYS",        TrimNewVolPanEnvs, NULL, 0, IsTrimNewVolPanEnvsOn},
-	{ { DEFACCEL, "SWS/BR: Set \"Apply trim when adding volume/pan envelopes\" to \"In read/write\"" },                                                    "BR_OPTIONS_ENV_TRIM_READWRITE",     TrimNewVolPanEnvs, NULL, 1, IsTrimNewVolPanEnvsOn},
-	{ { DEFACCEL, "SWS/BR: Set \"Apply trim when adding volume/pan envelopes\" to \"Never\"" },                                                            "BR_OPTIONS_ENV_TRIM_NEVER",         TrimNewVolPanEnvs, NULL, 2, IsTrimNewVolPanEnvsOn},
+	{ { DEFACCEL, "SWS/BR: Toggle \"Grid snap settings follow grid visibility\"" },                                                                        "BR_OPTIONS_SNAP_FOLLOW_GRID_VIS",    SnapFollowsGridVis, NULL, 0, IsSnapFollowsGridVisOn},
+	{ { DEFACCEL, "SWS/BR: Toggle \"Playback position follows project timebase when changing tempo\"" },                                                   "BR_OPTIONS_PLAYBACK_TEMPO_CHANGE",   PlaybackFollowsTempoChange, NULL, 0, IsPlaybackFollowingTempoChange},
+	{ { DEFACCEL, "SWS/BR: Set \"Apply trim when adding volume/pan envelopes\" to \"Always\"" },                                                           "BR_OPTIONS_ENV_TRIM_ALWAYS",         TrimNewVolPanEnvs, NULL, 0, IsTrimNewVolPanEnvsOn},
+	{ { DEFACCEL, "SWS/BR: Set \"Apply trim when adding volume/pan envelopes\" to \"In read/write\"" },                                                    "BR_OPTIONS_ENV_TRIM_READWRITE",      TrimNewVolPanEnvs, NULL, 1, IsTrimNewVolPanEnvsOn},
+	{ { DEFACCEL, "SWS/BR: Set \"Apply trim when adding volume/pan envelopes\" to \"Never\"" },                                                            "BR_OPTIONS_ENV_TRIM_NEVER",          TrimNewVolPanEnvs, NULL, 2, IsTrimNewVolPanEnvsOn},
 
-	{ { DEFACCEL, "SWS/BR: Cycle through record modes" },                                                                                                  "BR_CYCLE_RECORD_MODES",             CycleRecordModes},
-	{ { DEFACCEL, "SWS/BR: Focus arrange window" },                                                                                                        "BR_FOCUS_ARRANGE_WND",              FocusArrange},
-	{ { DEFACCEL, "SWS/BR: Toggle media item online/offline" },                                                                                            "BR_TOGGLE_ITEM_ONLINE",             ToggleItemOnline},
-	{ { DEFACCEL, "SWS/BR: Copy take media source file path of selected items to clipboard" },                                                             "BR_TSOURCE_PATH_TO_CLIPBOARD",      ItemSourcePathToClipBoard},
+	{ { DEFACCEL, "SWS/BR: Cycle through record modes" },                                                                                                  "BR_CYCLE_RECORD_MODES",              CycleRecordModes},
+	{ { DEFACCEL, "SWS/BR: Focus arrange" },                                                                                                               "BR_FOCUS_ARRANGE_WND",               FocusArrangeTracks, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Focus tracks" },                                                                                                                "BR_FOCUS_TRACKS",                    FocusArrangeTracks, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Toggle media item online/offline" },                                                                                            "BR_TOGGLE_ITEM_ONLINE",              ToggleItemOnline},
+	{ { DEFACCEL, "SWS/BR: Copy take media source file path of selected items to clipboard" },                                                             "BR_TSOURCE_PATH_TO_CLIPBOARD",       ItemSourcePathToClipBoard},
 
-	{ { DEFACCEL, "SWS/BR: Play from mouse cursor position" },                                                                                             "BR_PLAY_MOUSECURSOR",               PlaybackAtMouseCursor, NULL, 0},
-	{ { DEFACCEL, "SWS/BR: Play/pause from mouse cursor position" },                                                                                       "BR_PLAY_PAUSE_MOUSECURSOR",         PlaybackAtMouseCursor, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Play/stop from mouse cursor position" },                                                                                        "BR_PLAY_STOP_MOUSECURSOR",          PlaybackAtMouseCursor, NULL, 2},
+	{ { DEFACCEL, "SWS/BR: Play from mouse cursor position" },                                                                                             "BR_PLAY_MOUSECURSOR",                PlaybackAtMouseCursor, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Play/pause from mouse cursor position" },                                                                                       "BR_PLAY_PAUSE_MOUSECURSOR",          PlaybackAtMouseCursor, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Play/stop from mouse cursor position" },                                                                                        "BR_PLAY_STOP_MOUSECURSOR",           PlaybackAtMouseCursor, NULL, 2},
 
-	{ { DEFACCEL, "SWS/BR: Select all MIDI items" },                                                                                                       "BR_SEL_ALL_ITEMS_MIDI",             SelectItemsByType, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Select all audio items" },                                                                                                      "BR_SEL_ALL_ITEMS_AUDIO",            SelectItemsByType, NULL, 2},
-	{ { DEFACCEL, "SWS/BR: Select all video items" },                                                                                                      "BR_SEL_ALL_ITEMS_VIDEO",            SelectItemsByType, NULL, 3},
-	{ { DEFACCEL, "SWS/BR: Select all MIDI items (obey time selection, if any)" },                                                                         "BR_SEL_ALL_ITEMS_TIME_SEL_MIDI",    SelectItemsByType, NULL, -1},
-	{ { DEFACCEL, "SWS/BR: Select all audio items (obey time selection, if any)" },                                                                        "BR_SEL_ALL_ITEMS_TIME_SEL_AUDIO",   SelectItemsByType, NULL, -2},
-	{ { DEFACCEL, "SWS/BR: Select all video items (obey time selection, if any)" },                                                                        "BR_SEL_ALL_ITEMS_TIME_SEL_VIDEO",   SelectItemsByType, NULL, -3},
+	{ { DEFACCEL, "SWS/BR: Select all audio items" },                                                                                                      "BR_SEL_ALL_ITEMS_AUDIO",             SelectItemsByType, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Select all MIDI items" },                                                                                                       "BR_SEL_ALL_ITEMS_MIDI",              SelectItemsByType, NULL, 2},
+	{ { DEFACCEL, "SWS/BR: Select all video items" },                                                                                                      "BR_SEL_ALL_ITEMS_VIDEO",             SelectItemsByType, NULL, 3},
+	{ { DEFACCEL, "SWS/BR: Select all click source items" },                                                                                               "BR_SEL_ALL_ITEMS_CLICK",             SelectItemsByType, NULL, 4},
+	{ { DEFACCEL, "SWS/BR: Select all timecode generator items" },                                                                                         "BR_SEL_ALL_ITEMS_TIMECODE",          SelectItemsByType, NULL, 5},
+	{ { DEFACCEL, "SWS/BR: Select all subproject (PiP) items" },                                                                                           "BR_SEL_ALL_ITEMS_PIP",               SelectItemsByType, NULL, 6},
+	{ { DEFACCEL, "SWS/BR: Select all empty items" },                                                                                                      "BR_SEL_ALL_ITEMS_EMPTY",             SelectItemsByType, NULL, 7},
+	{ { DEFACCEL, "SWS/BR: Select all audio items (obey time selection, if any)" },                                                                        "BR_SEL_ALL_ITEMS_TIME_SEL_AUDIO",    SelectItemsByType, NULL, -1},
+	{ { DEFACCEL, "SWS/BR: Select all MIDI items (obey time selection, if any)" },                                                                         "BR_SEL_ALL_ITEMS_TIME_SEL_MIDI",     SelectItemsByType, NULL, -2},
+	{ { DEFACCEL, "SWS/BR: Select all video items (obey time selection, if any)" },                                                                        "BR_SEL_ALL_ITEMS_TIME_SEL_VIDEO",    SelectItemsByType, NULL, -3},
+	{ { DEFACCEL, "SWS/BR: Select all click source items (obey time selection, if any)" },                                                                 "BR_SEL_ALL_ITEMS_TIME_SEL_CLICK",    SelectItemsByType, NULL, -4},
+	{ { DEFACCEL, "SWS/BR: Select all timecode items (obey time selection, if any)" },                                                                     "BR_SEL_ALL_ITEMS_TIME_SEL_TIMECODE", SelectItemsByType, NULL, -5},
+	{ { DEFACCEL, "SWS/BR: Select all subproject (PiP) items (obey time selection, if any)" },                                                             "BR_SEL_ALL_ITEMS_TIME_SEL_PIP",      SelectItemsByType, NULL, -6},
+	{ { DEFACCEL, "SWS/BR: Select all empty items (obey time selection, if any)" },                                                                        "BR_SEL_ALL_ITEMS_TIME_SEL_EMPTY",    SelectItemsByType, NULL, -7},
 
-	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 1" },                                                                                           "BR_SAVE_CURSOR_POS_SLOT_1",         SaveCursorPosSlot, NULL, 0},
-	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 2" },                                                                                           "BR_SAVE_CURSOR_POS_SLOT_2",         SaveCursorPosSlot, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 3" },                                                                                           "BR_SAVE_CURSOR_POS_SLOT_3",         SaveCursorPosSlot, NULL, 2},
-	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 4" },                                                                                           "BR_SAVE_CURSOR_POS_SLOT_4",         SaveCursorPosSlot, NULL, 3},
-	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 5" },                                                                                           "BR_SAVE_CURSOR_POS_SLOT_5",         SaveCursorPosSlot, NULL, 4},
-	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 6" },                                                                                           "BR_SAVE_CURSOR_POS_SLOT_6",         SaveCursorPosSlot, NULL, 5},
-	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 7" },                                                                                           "BR_SAVE_CURSOR_POS_SLOT_7",         SaveCursorPosSlot, NULL, 6},
-	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 8" },                                                                                           "BR_SAVE_CURSOR_POS_SLOT_8",         SaveCursorPosSlot, NULL, 7},
-	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 1" },                                                                                        "BR_RESTORE_CURSOR_POS_SLOT_1",      RestoreCursorPosSlot, NULL, 0},
-	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 2" },                                                                                        "BR_RESTORE_CURSOR_POS_SLOT_2",      RestoreCursorPosSlot, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 3" },                                                                                        "BR_RESTORE_CURSOR_POS_SLOT_3",      RestoreCursorPosSlot, NULL, 2},
-	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 4" },                                                                                        "BR_RESTORE_CURSOR_POS_SLOT_4",      RestoreCursorPosSlot, NULL, 3},
-	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 5" },                                                                                        "BR_RESTORE_CURSOR_POS_SLOT_5",      RestoreCursorPosSlot, NULL, 4},
-	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 6" },                                                                                        "BR_RESTORE_CURSOR_POS_SLOT_6",      RestoreCursorPosSlot, NULL, 5},
-	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 7" },                                                                                        "BR_RESTORE_CURSOR_POS_SLOT_7",      RestoreCursorPosSlot, NULL, 6},
-	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 8" },                                                                                        "BR_RESTORE_CURSOR_POS_SLOT_8",      RestoreCursorPosSlot, NULL, 7},
+	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 1" },                                                                                           "BR_SAVE_CURSOR_POS_SLOT_1",          SaveCursorPosSlot, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 2" },                                                                                           "BR_SAVE_CURSOR_POS_SLOT_2",          SaveCursorPosSlot, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 3" },                                                                                           "BR_SAVE_CURSOR_POS_SLOT_3",          SaveCursorPosSlot, NULL, 2},
+	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 4" },                                                                                           "BR_SAVE_CURSOR_POS_SLOT_4",          SaveCursorPosSlot, NULL, 3},
+	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 5" },                                                                                           "BR_SAVE_CURSOR_POS_SLOT_5",          SaveCursorPosSlot, NULL, 4},
+	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 6" },                                                                                           "BR_SAVE_CURSOR_POS_SLOT_6",          SaveCursorPosSlot, NULL, 5},
+	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 7" },                                                                                           "BR_SAVE_CURSOR_POS_SLOT_7",          SaveCursorPosSlot, NULL, 6},
+	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 8" },                                                                                           "BR_SAVE_CURSOR_POS_SLOT_8",          SaveCursorPosSlot, NULL, 7},
+	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 1" },                                                                                        "BR_RESTORE_CURSOR_POS_SLOT_1",       RestoreCursorPosSlot, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 2" },                                                                                        "BR_RESTORE_CURSOR_POS_SLOT_2",       RestoreCursorPosSlot, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 3" },                                                                                        "BR_RESTORE_CURSOR_POS_SLOT_3",       RestoreCursorPosSlot, NULL, 2},
+	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 4" },                                                                                        "BR_RESTORE_CURSOR_POS_SLOT_4",       RestoreCursorPosSlot, NULL, 3},
+	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 5" },                                                                                        "BR_RESTORE_CURSOR_POS_SLOT_5",       RestoreCursorPosSlot, NULL, 4},
+	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 6" },                                                                                        "BR_RESTORE_CURSOR_POS_SLOT_6",       RestoreCursorPosSlot, NULL, 5},
+	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 7" },                                                                                        "BR_RESTORE_CURSOR_POS_SLOT_7",       RestoreCursorPosSlot, NULL, 6},
+	{ { DEFACCEL, "SWS/BR: Restore edit cursor position, slot 8" },                                                                                        "BR_RESTORE_CURSOR_POS_SLOT_8",       RestoreCursorPosSlot, NULL, 7},
 
 	/******************************************************************************
 	* Misc - Media item preview                                                   *
@@ -481,14 +559,16 @@ int BR_Init ()
 {
 	SWSRegisterCommands(g_commandTable);
 	InitContinuousActions (); // call only after registering all actions
-	ProjStateInit();
+	ContextToolbarsInit();
 	LoudnessInit();
+	ProjStateInit();
 	VersionCheckInit();
 	return 1;
 }
 
 void BR_Exit ()
 {
+	ContextToolbarsExit();
 	LoudnessExit();
 }
 
@@ -518,4 +598,13 @@ int BR_CSurfExtended(int call, void* parm1, void* parm2, void* parm3)
 	}
 
 	return 0;
+}
+
+const char* BR_GetIniFile ()
+{
+	static WDL_FastString s_iniPath;
+	if (s_iniPath.GetLength() == 0)
+		s_iniPath.SetFormatted(SNM_MAX_PATH, "%s/BR.ini", GetResourcePath());
+
+	return s_iniPath.Get();
 }

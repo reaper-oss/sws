@@ -27,11 +27,14 @@
 ******************************************************************************/
 #include "stdafx.h"
 #include "BR_MidiEditor.h"
-#include "BR_MidiTools.h"
+#include "BR_EnvelopeUtil.h"
+#include "BR_MidiUtil.h"
 #include "BR_Misc.h"
+#include "BR_MouseUtil.h"
 #include "BR_ProjState.h"
 #include "BR_Util.h"
 #include "../Fingers/RprMidiCCLane.h"
+#include "../SnM/SnM_Chunk.h"
 #include "../SnM/SnM_Track.h"
 #include "../reaper/localize.h"
 
@@ -234,25 +237,23 @@ void ME_PlaybackAtMouseCursor (COMMAND_T* ct, int val, int valhw, int relmode, H
 
 void ME_CCEventAtEditCursor (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
-	BR_MouseContextInfo mouseContext;
-	GetMouseCursorContext(NULL, NULL, NULL, &mouseContext);
-	if (mouseContext.midiEditor)
+	BR_MouseContextInfo mouseInfo(BR_MouseContextInfo::MODE_MIDI_EDITOR_ALL);
+	if (mouseInfo.GetMidiEditor())
 	{
-		if (MediaItem_Take* take = MIDIEditor_GetTake(mouseContext.midiEditor))
+		if (MediaItem_Take* take = MIDIEditor_GetTake(mouseInfo.GetMidiEditor()))
 		{
 			double positionPPQ = MIDI_GetPPQPosFromProjTime(take, GetCursorPositionEx(NULL));
-			int value          = mouseContext.ccLaneVal;
-			int lane           = mouseContext.ccLane;
 
-			if (value != -1 && lane != -2)
+			int lane, value;
+			if (mouseInfo.GetCCLane(&lane, &value, NULL) && value >= 0)
 			{
 				if (lane == CC_TEXT_EVENTS || lane == CC_SYSEX || lane == CC_BANK_SELECT || lane == CC_VELOCITY)
-					MessageBox((HWND)mouseContext.midiEditor, __LOCALIZE("Can't insert in velocity, text, sysex and bank select lanes","sws_mbox"), __LOCALIZE("SWS/BR - Warning","sws_mbox"), MB_OK);
+					MessageBox((HWND)mouseInfo.GetMidiEditor(), __LOCALIZE("Can't insert in velocity, text, sysex and bank select lanes","sws_mbox"), __LOCALIZE("SWS/BR - Warning","sws_mbox"), MB_OK);
 				else
 				{
 					bool do14bit    = (lane >= CC_14BIT_START) ? true : false;
 					int type        = (lane == CC_PROGRAM) ? (0xC0) : (lane == CC_CHANNEL_PRESSURE ? 0xD0 : (lane == CC_PITCH ? 0xE0 : 0xB0));
-					int channel     = MIDIEditor_GetSetting_int(mouseContext.midiEditor, "default_note_chan");
+					int channel     = MIDIEditor_GetSetting_int(mouseInfo.GetMidiEditor(), "default_note_chan");
 					int msg2        = CheckBounds(lane, 0, 127) ? ((value >> 7) | 0) : (value & 0x7F);
 					int msg3        = CheckBounds(lane, 0, 127) ? (value & 0x7F)     : ((value >> 7) | 0);
 
@@ -313,6 +314,201 @@ void ME_ShowUsedCCLanesDetect14Bit (COMMAND_T* ct, int val, int valhw, int relmo
 	}
 }
 
+void ME_HideCCLanes (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
+{
+	if (void* midiEditor = MIDIEditor_GetActive())
+	{
+		MediaItem_Take* take = MIDIEditor_GetTake(MIDIEditor_GetActive());
+
+		int lastCLickedLane =  GetLastClickedVelLane(midiEditor);
+		if (take)
+		{
+			MediaItem* item = GetMediaItemTake_Item(take);
+			int takeId = GetTakeId(take, item);
+			if (takeId >= 0)
+			{
+				SNM_TakeParserPatcher p(item, CountTakes(item));
+				WDL_FastString takeChunk;
+				int tkPos, tklen;
+				if (p.GetTakeChunk(takeId, &takeChunk, &tkPos, &tklen))
+				{
+					SNM_ChunkParserPatcher ptk(&takeChunk, false);
+					LineParser lp(false);
+
+					// Remove lanes
+					int laneId = 0;
+					WDL_FastString lineLane;
+					int firstPos = 0;
+					int laneCount = 0;
+					while (int position = ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "SOURCE", "VELLANE", laneId, -1, &lineLane))
+					{
+						if (!firstPos)
+							firstPos = position - 1;
+						++laneCount;
+
+						lp.parse(lineLane.Get());
+						if (((int)ct->user == 0 && lp.gettoken_int(1) == lastCLickedLane) || ((int)ct->user == 1 && lp.gettoken_int(1) != lastCLickedLane))
+						{
+							--laneCount;
+							ptk.RemoveLine("SOURCE", "VELLANE", 1, laneId);
+						}
+						else
+							++laneId;
+
+						lineLane.DeleteSub(0, lineLane.GetLength());
+					}
+
+					// Make sure at least one vellane is left
+					if (firstPos && laneCount == 0)
+					{
+							char newLane[512] = "";
+							if (_snprintf(newLane, sizeof(newLane), "VELLANE -1 0 0\n"))
+								ptk.GetChunk()->Insert(newLane, firstPos);
+					}
+
+					if (p.ReplaceTake(tkPos, tklen, ptk.GetChunk()))
+						Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+				}
+			}
+		}
+	}
+}
+
+void ME_ToggleHideCCLanes (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
+{
+	if (void* midiEditor = MIDIEditor_GetActive())
+	{
+		if (g_midiToggleHideCCLanes.Get()->IsHidden())
+		{
+			if (g_midiToggleHideCCLanes.Get()->Restore(midiEditor))
+				Undo_OnStateChangeEx2(NULL, __LOCALIZE("Restore hidden CC lanes", "sws_undo"), UNDO_STATE_ALL, -1);
+		}
+		else
+		{
+			if (g_midiToggleHideCCLanes.Get()->Hide(midiEditor, ((int)ct->user == 0) ? -1 : (int)ct->user))
+				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		}
+
+		RefreshToolbar(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED"));
+		RefreshToolbar(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_50_PX"));
+		RefreshToolbar(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_100_PX"));
+		RefreshToolbar(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_150_PX"));
+		RefreshToolbar(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_200_PX"));
+		RefreshToolbar(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_250_PX"));
+		RefreshToolbar(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_300_PX"));
+		RefreshToolbar(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_350_PX"));
+		RefreshToolbar(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_400_PX"));
+		RefreshToolbar(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_450_PX"));
+		RefreshToolbar(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_500_PX"));
+	}
+}
+
+void ME_CCToEnvPoints (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
+{
+	BR_MidiEditor midiEditor (MIDIEditor_GetActive());
+	if (!midiEditor.IsValid() || !GetSelectedEnvelope(NULL))
+		return;
+
+	MediaItem_Take* take = MIDIEditor_GetTake(MIDIEditor_GetActive());
+	BR_Envelope envelope(GetSelectedEnvelope(NULL));
+	if ((int)ct->user < 0)
+		envelope.DeleteAllPoints();
+
+	int shape = (abs((int)ct->user) == 1) ? SQUARE : LINEAR;
+	bool update = false;
+
+	// Process CC events first
+	int id = -1;
+	set<int> processed14BitIds;
+	double ppqPosLast = -1;
+	while ((id = MIDI_EnumSelCC(take, id)) != -1)
+	{
+		int chanMsg, channel, msg2, msg3;
+		double ppqPos;
+		if (MIDI_GetCC(take, id, NULL, NULL, &ppqPos, &chanMsg, &channel, &msg2, &msg3) && midiEditor.IsChannelVisible(channel))
+		{
+			double value = -1;
+			double max = -1;
+
+			// Normal CC
+			if (chanMsg == 0xB0)
+			{
+				if (ppqPos != ppqPosLast)
+					processed14BitIds.clear();
+
+				if (processed14BitIds.find(id) == processed14BitIds.end())
+				{
+					value = (double)msg3;
+					max   = 127;
+
+					// Check for 14bit
+					if (CheckBounds(msg2, 0, 32))
+					{
+						if (midiEditor.FindCCLane(msg2 + CC_14BIT_START) != -1)
+						{
+							int tmpId = id;
+							while ((tmpId = MIDI_EnumSelCC(take, tmpId)) != -1)
+							{
+								double ppqPos2; int chanMsg2, channel2, nextMsg2, nextMsg3;
+								MIDI_GetCC(take, tmpId, NULL, NULL, &ppqPos2, &chanMsg2, &channel2, &nextMsg2, &nextMsg3);
+								if (ppqPos2 > ppqPos)
+									break;
+								if (chanMsg2 == 0xB0 && msg2 == nextMsg2 - 32 && channel == channel2)
+								{
+									value = (double)((msg3 << 7) | nextMsg3);
+									max   = 16383;
+									processed14BitIds.insert(tmpId);
+									break;
+								}
+							}
+						}
+					}
+				}
+
+				ppqPosLast = ppqPos;
+			}
+			// Pitch
+			else if (chanMsg == 0xE0)
+			{
+				value = (double)((msg3 << 7) | msg2);
+				max   = 16383;
+			}
+			// Program and channel pressure
+			else if (chanMsg == 0xC0 || chanMsg == 0xD0)
+			{
+				value = (double)(msg2);
+				max   = 127;
+			}
+
+			if (value != -1)
+			{
+				double newValue = TranslateRange(value, 0, max, envelope.LaneMinValue(), envelope.LaneMaxValue());
+				double position = MIDI_GetProjTimeFromPPQPos(take, ppqPos);
+				if (envelope.CreatePoint(envelope.Count(), position, newValue, shape, 0, false, true, true))
+					update = true;
+			}
+		}
+	}
+
+	// Velocity next
+	id = -1;
+	while ((id = MIDI_EnumSelNotes(take, id)) != -1)
+	{
+		int channel, velocity;
+		double ppqPos;
+		if (MIDI_GetNote(take, id, NULL, NULL, &ppqPos, NULL, &channel, NULL, &velocity) && midiEditor.IsChannelVisible(channel))
+		{
+			double newValue = TranslateRange(velocity, 1, 127, envelope.LaneMinValue(), envelope.LaneMaxValue());
+			double position = MIDI_GetProjTimeFromPPQPos(take, ppqPos);
+			if (envelope.CreatePoint(envelope.Count(), position, newValue, shape, 0, false, true, true))
+				update = true;
+		}
+	}
+
+	if (update && envelope.Commit())
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+}
+
 void ME_SaveCursorPosSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
 	SaveCursorPosSlot(ct);
@@ -348,9 +544,9 @@ void ME_RestoreNoteSelSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWND
 		{
 			if (slot == g_midiNoteSel.Get()->Get(i)->GetSlot())
 			{
-				g_midiNoteSel.Get()->Get(i)->Restore(take);
-				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
-				return;
+				if (g_midiNoteSel.Get()->Get(i)->Restore(take))
+					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+				break;
 			}
 		}
 	}
@@ -362,15 +558,8 @@ void ME_SaveCCEventsSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWND h
 	void* midiEditor;
 	if ((int)ct->user < 0)
 	{
-		BR_MouseContextInfo mouseInfo;
-		GetMouseCursorContext (NULL, NULL, NULL, &mouseInfo);
-		if (mouseInfo.ccLane == -2)
-			midiEditor = NULL;
-		else
-		{
-			midiEditor = mouseInfo.midiEditor;
-			lane = mouseInfo.ccLane;
-		}
+		BR_MouseContextInfo mouseInfo(BR_MouseContextInfo::MODE_MIDI_EDITOR_ALL);
+		midiEditor = (mouseInfo.GetCCLane(&lane, NULL, NULL)) ? mouseInfo.GetMidiEditor() : NULL;
 	}
 	else
 	{
@@ -402,15 +591,8 @@ void ME_RestoreCCEventsSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWN
 	void* midiEditor;
 	if ((int)ct->user < 0)
 	{
-		BR_MouseContextInfo mouseInfo;
-		GetMouseCursorContext (NULL, NULL, NULL, &mouseInfo);
-		if (mouseInfo.ccLane == -2)
-			midiEditor = NULL;
-		else
-		{
-			midiEditor = mouseInfo.midiEditor;
-			lane = mouseInfo.ccLane;
-		}
+		BR_MouseContextInfo mouseInfo(BR_MouseContextInfo::MODE_MIDI_EDITOR_ALL);
+		midiEditor = (mouseInfo.GetCCLane(&lane, NULL, NULL)) ? mouseInfo.GetMidiEditor() : NULL;
 	}
 	else
 	{
@@ -433,7 +615,7 @@ void ME_RestoreCCEventsSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWN
 				}
 				else
 					MessageBox((HWND)editor.GetEditor(), __LOCALIZE("Can't restore to velocity, text, sysex and bank select lanes","sws_mbox"), __LOCALIZE("SWS/BR - Warning","sws_mbox"), MB_OK);
-				return;
+				break;
 			}
 		}
 	}
@@ -449,11 +631,18 @@ void ME_RestoreCCEvents2Slot (COMMAND_T* ct, int val, int valhw, int relmode, HW
 		{
 			if (slot == g_midiCCEvents.Get()->Get(i)->GetSlot())
 			{
-				int lane = midiEditor.GetLastClickedCCLane();
 				if (g_midiCCEvents.Get()->Get(i)->Restore(midiEditor, 0, true))
 					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
-				return;
+				break;
 			}
 		}
 	}
+}
+
+/******************************************************************************
+* Toggle states: MIDI editor - Misc                                           *
+******************************************************************************/
+int ME_IsToggleHideCCLanesOn (COMMAND_T* ct)
+{
+	return (int)g_midiToggleHideCCLanes.Get()->IsHidden();
 }

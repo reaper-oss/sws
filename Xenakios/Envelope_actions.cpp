@@ -10,10 +10,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -26,7 +26,7 @@
 ******************************************************************************/
 
 #include "stdafx.h"
-#include "../Breeder/BR_EnvTools.h"
+#include "../Breeder/BR_EnvelopeUtil.h"
 
 using namespace std;
 
@@ -56,11 +56,11 @@ public:
 		m_newstateExists=false;
 		m_origenvstate.clear();
 		m_envnodes.clear();
-		
+
 		char rpplinebuf[4096];
 		stringstream ss;
 		ss << rppstate;
-		
+
 		LineParser wdlp(false);
 		bool ended=false;
 		while (!ended)
@@ -100,7 +100,7 @@ public:
 				{
 					this->ParseState(buf);
 					SWS_FreeHeapPtr(buf);
-				};	
+				};
 			}
 		}
 	}
@@ -147,14 +147,14 @@ public:
 			//if (m_newstateExists)
 			UpdateEnvToNewState();
 		}
-		
+
 	}
 	void EnvTransform_ScaleInTime(double scalingfactor)
 	{
 		this->UpdateToCurrentEnvelope();
 		if (m_envnodes.size()>0)
 		{
-			
+
 		}
 
 	}
@@ -162,8 +162,8 @@ public:
 private:
 	stringstream m_newenvstate;
 	vector<string> m_origenvstate; // the non-point envelope state strings
-	
-	LineParser *m_lp; 
+
+	LineParser *m_lp;
 	bool m_newstateExists;
 };
 

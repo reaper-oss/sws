@@ -29,7 +29,7 @@
 #include "../reaper/localize.h"
 #include "Parameters.h"
 #include "../SnM/SnM_Track.h"
-#include "../Breeder/BR_MidiTools.h"
+#include "../Breeder/BR_MidiUtil.h"
 #include "../Breeder/BR_Util.h"
 
 using namespace std;

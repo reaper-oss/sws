@@ -27,7 +27,7 @@
 ******************************************************************************/
 #include "stdafx.h"
 #include "BR_TempoDlg.h"
-#include "BR_EnvTools.h"
+#include "BR_EnvelopeUtil.h"
 #include "BR_Tempo.h"
 #include "BR_Util.h"
 #include "../SnM/SnM_Dlg.h"
@@ -116,9 +116,9 @@ static void ConvertMarkersToTempo (int markers, int num, int den, bool removeMar
 				++exceed;
 
 			if (i == 0) // Set first tempo marker with time signature
-				SetTempoTimeSigMarker (NULL, -1, markerPositions[0], -1, -1, bpm, num, den, false);
+				SetTempoTimeSigMarker(NULL, -1, markerPositions[0], -1, -1, bpm, num, den, false);
 			else
-				SetTempoTimeSigMarker (NULL, -1, markerPositions[i], -1, -1, bpm, 0, 0, false);
+				SetTempoTimeSigMarker(NULL, -1, markerPositions[i], -1, -1, bpm, 0, 0, false);
 		}
 	}
 	else
@@ -286,14 +286,24 @@ static void SaveOptionsConversion (HWND hwnd)
 	WritePrivateProfileString("SWS", CONVERT_KEY, tmp, get_ini_file());
 }
 
-static void LoadOptionsConversion (int& markers, int& num, int& den, int& removeMarkers, int& timeSel, int& gradual, int& split, char* splitRatio)
+static void LoadOptionsConversion (int& markers, int& num, int& den, int& removeMarkers, int& timeSel, int& gradual, int& split, char* splitRatio, int splitRatioSz)
 {
 	char tmp[512];
-	GetPrivateProfileString("SWS", CONVERT_KEY, "4 4 4 1 0 0 0 1/2", tmp, 256, get_ini_file());
-	sscanf(tmp, "%d %d %d %d %d %d %d %20s", &markers, &num, &den, &removeMarkers, &timeSel, &gradual, &split, splitRatio);
+	GetPrivateProfileString("SWS", CONVERT_KEY, "", tmp, 256, get_ini_file());
+
+	LineParser lp(false);
+	lp.parse(tmp);
+	markers         = (lp.getnumtokens() > 0) ? lp.gettoken_int(0) : 4;
+	num             = (lp.getnumtokens() > 1) ? lp.gettoken_int(1) : 4;
+	den             = (lp.getnumtokens() > 2) ? lp.gettoken_int(2) : 4;
+	removeMarkers   = (lp.getnumtokens() > 3) ? lp.gettoken_int(3) : 1;
+	timeSel         = (lp.getnumtokens() > 4) ? lp.gettoken_int(4) : 0;
+	gradual         = (lp.getnumtokens() > 5) ? lp.gettoken_int(5) : 0;
+	split           = (lp.getnumtokens() > 6) ? lp.gettoken_int(6) : 0;
+	strncpy(splitRatio, (lp.getnumtokens() > 7) ? lp.gettoken_str(7) : "1/2", splitRatioSz);
 
 	double convertedRatio;
-	IsFraction (splitRatio, convertedRatio);
+	IsFraction(splitRatio, convertedRatio);
 	if (convertedRatio <= 0 || convertedRatio >= 1)
 		strcpy(splitRatio, "0");
 	if (markers <= 0)
@@ -330,7 +340,7 @@ WDL_DLGRET ConvertMarkersToTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 			// Load options from .ini
 			int markers, num, den, removeMarkers, timeSel, gradual, split;
 			char eNum[128], eDen[128] , eMarkers[128], splitRatio[128];
-			LoadOptionsConversion(markers, num, den, removeMarkers, timeSel, gradual, split, splitRatio);
+			LoadOptionsConversion(markers, num, den, removeMarkers, timeSel, gradual, split, splitRatio, sizeof(splitRatio));
 			sprintf(eNum, "%d", num);
 			sprintf(eDen, "%d", den);
 			sprintf(eMarkers, "%d", markers);
@@ -732,7 +742,6 @@ static void AdjustTempo (int mode, double bpm, int shape)
 			pOldBpm = oldBpm;
 			pOldShape = oldShape;
 		}
-
 		else
 		{
 			AppendLine(newState, token);
@@ -949,8 +958,8 @@ static void AdjustTempoCase (HWND hwnd)
 	if (bpm != 0 || shape != 0)
 	{
 		Undo_BeginBlock2(NULL);
-		AdjustTempo (mode, bpm, shape);
-		Undo_EndBlock2 (NULL, __LOCALIZE("Adjust selected tempo markers","sws_undo"), UNDO_STATE_ALL);
+		AdjustTempo(mode, bpm, shape);
+		Undo_EndBlock2(NULL, __LOCALIZE("Adjust selected tempo markers","sws_undo"), UNDO_STATE_ALL);
 
 	}
 }
@@ -984,8 +993,25 @@ static void SaveOptionsSelAdj (HWND hwnd)
 static void LoadOptionsSelAdj (double& bpmStart, double& bpmEnd, int& num, int& den, int& bpmEnb, int& sigEnb, int& timeSel, int& shape, int& type, int& selPref, int& invertPref, int& adjustType, int& adjustShape)
 {
 	char tmp[512];
-	GetPrivateProfileString("SWS", SEL_ADJ_KEY, "120 150 4 4 1 0 0 0 0 0 0 0 0", tmp, 256, get_ini_file());
-	sscanf(tmp, "%lf %lf %d %d %d %d %d %d %d %d %d %d %d", &bpmStart, &bpmEnd, &num, &den, &bpmEnb, &sigEnb, &timeSel, &shape, &type, &selPref, &invertPref, &adjustType, &adjustShape);
+	GetPrivateProfileString("SWS", SEL_ADJ_KEY, "", tmp, 256, get_ini_file());
+
+	LineParser lp(false);
+	lp.parse(tmp);
+	bpmStart    = (lp.getnumtokens() > 0) ? lp.gettoken_float(0) : 120;
+	bpmEnd      = (lp.getnumtokens() > 1) ? lp.gettoken_float(1) : 150;
+	num         = (lp.getnumtokens() > 2) ? lp.gettoken_int(2)   : 4;
+	den         = (lp.getnumtokens() > 3) ? lp.gettoken_int(3)   : 4;
+	bpmEnb      = (lp.getnumtokens() > 4) ? lp.gettoken_int(4)   : 1;
+	sigEnb      = (lp.getnumtokens() > 5) ? lp.gettoken_int(5)   : 0;
+	timeSel     = (lp.getnumtokens() > 6) ? lp.gettoken_int(6)   : 0;
+	shape       = (lp.getnumtokens() > 7) ? lp.gettoken_int(7)   : 0;
+	type        = (lp.getnumtokens() > 8) ? lp.gettoken_int(8)   : 0;
+	selPref     = (lp.getnumtokens() > 9) ? lp.gettoken_int(9)   : 0;
+	invertPref  = (lp.getnumtokens() > 10) ? lp.gettoken_int(10) : 0;
+	adjustType  = (lp.getnumtokens() > 11) ? lp.gettoken_int(11) : 0;
+	adjustShape = (lp.getnumtokens() > 12) ? lp.gettoken_int(12) : 0;
+
+
 
 	// Restore defaults if needed
 	if (num < MIN_SIG || num > MAX_SIG)
@@ -1024,7 +1050,12 @@ static void UnselectNthDialog (bool show, bool toggle, HWND parentHandle)
 	if (show)
 	{
 		if (!s_hwnd)
+		{
 			s_hwnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_BR_UNSELECT_TEMPO), parentHandle, UnselectNthProc);
+			#ifndef _WIN32
+				SWELL_SetWindowLevel(s_hwnd, 3); // NSFloatingWindowLevel
+			#endif
+		}
 		else
 		{
 			ShowWindow(s_hwnd, SW_SHOW);
@@ -1054,8 +1085,12 @@ static void SaveOptionsUnselectNth (HWND hwnd)
 static void LoadOptionsUnselectNth (int& Nth, int& criteria)
 {
 	char tmp[512];
-	GetPrivateProfileString("SWS", UNSEL_KEY, "0 0", tmp, 256, get_ini_file());
-	sscanf(tmp, "%d %d", &Nth, &criteria);
+	GetPrivateProfileString("SWS", UNSEL_KEY, "", tmp, 256, get_ini_file());
+
+	LineParser lp(false);
+	lp.parse(tmp);
+	Nth      = (lp.getnumtokens() > 0) ? lp.gettoken_int(0) : 0;
+	criteria = (lp.getnumtokens() > 1) ? lp.gettoken_int(1) : 0;
 
 	// Restore defaults if needed
 	if (Nth < 0 || Nth > 14)
@@ -1294,11 +1329,7 @@ WDL_DLGRET SelectAdjustTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 				case IDC_BR_SEL_UNSELECT_NTH:
 				{
-					#ifdef _WIN32
-						UnselectNthDialog(true, true, hwnd);
-					#else
-						UnselectNthDialog(true, true, g_hwndParent); // so dialog doesn't get hidden behind main dialog
-					#endif
+					UnselectNthDialog(true, true, hwnd);
 				}
 				break;
 
@@ -1534,7 +1565,8 @@ static void SetRandomTempo (HWND hwnd, BR_Envelope* oldTempo, double min, double
 		tempoMap.SetPoint(i, &newTime, &newBpm, NULL, NULL);
 	}
 
-	tempoMap.Commit(true);
+	if (!tempoMap.IsLocked())
+		tempoMap.Commit(true);
 }
 
 static void SaveOptionsRandomizeTempo (HWND hwnd)
@@ -1561,8 +1593,19 @@ static void SaveOptionsRandomizeTempo (HWND hwnd)
 static void LoadOptionsRandomizeTempo (double& min, double& max, int& unit, double& minLimit, double& maxLimit, int& unitLimit, int& limit)
 {
 	char tmp[512];
-	GetPrivateProfileString("SWS", RAND_KEY, "-1 1 0 40 260 0 0", tmp, 256, get_ini_file());
-	sscanf(tmp, "%lf %lf %d %lf %lf %d %d", &min, &max, &unit, &minLimit, &maxLimit, &unitLimit, &limit);
+	GetPrivateProfileString("SWS", RAND_KEY, "", tmp, 256, get_ini_file());
+
+	LineParser lp(false);
+	lp.parse(tmp);
+	min         = (lp.getnumtokens() > 0) ? lp.gettoken_float(0) : -1;
+	max         = (lp.getnumtokens() > 1) ? lp.gettoken_float(1) : 1;
+	unit        = (lp.getnumtokens() > 2) ? lp.gettoken_int(2)   : 0;
+	minLimit    = (lp.getnumtokens() > 3) ? lp.gettoken_float(3) : 40;
+	maxLimit    = (lp.getnumtokens() > 4) ? lp.gettoken_float(4) : 260;
+	unitLimit   = (lp.getnumtokens() > 5) ? lp.gettoken_int(5)   : 0;
+	limit       = (lp.getnumtokens() > 6) ? lp.gettoken_int(6)   : 0;
+
+
 
 	// Restore defaults if needed
 	if (unit != 0 && unit != 1)
@@ -1749,15 +1792,19 @@ static void SaveOptionsTempoShape (HWND hwnd)
 	WritePrivateProfileString("SWS", SHAPE_KEY, tmp, get_ini_file());
 }
 
-static void LoadOptionsTempoShape (int& split, char* splitRatio)
+static void LoadOptionsTempoShape (int& split, char* splitRatio, int splitRatioSz)
 {
 	char tmp[512];
-	GetPrivateProfileString("SWS", SHAPE_KEY, "0 4/8", tmp, 256, get_ini_file());
-	sscanf(tmp, "%d %20s", &split, splitRatio);
+	GetPrivateProfileString("SWS", SHAPE_KEY, "", tmp, 256, get_ini_file());
+
+	LineParser lp(false);
+	lp.parse(tmp);
+	split = (lp.getnumtokens() > 0) ? lp.gettoken_int(0) : 0;
+	strncpy(splitRatio, (lp.getnumtokens() > 1) ? lp.gettoken_str(1) : "4/8", splitRatioSz);
 
 	// Restore defaults if needed
 	double convertedRatio;
-	IsFraction (splitRatio, convertedRatio);
+	IsFraction(splitRatio, convertedRatio);
 	if (split != 0 && split != 1)
 		split = 0;
 	if (convertedRatio <= 0 || convertedRatio >= 1)
@@ -1771,7 +1818,7 @@ static void SetTempoShapeOptions (int& split, char* splitRatio)
 	else
 		g_tempoShapeSplitMiddle = 1;
 
-	double convertedRatio; IsFraction (splitRatio, convertedRatio);
+	double convertedRatio; IsFraction(splitRatio, convertedRatio);
 	if (convertedRatio <= 0 || convertedRatio >= 1)
 		g_tempoShapeSplitRatio = 0;
 	else
@@ -1783,7 +1830,7 @@ bool GetTempoShapeOptions (double* splitRatio)
 	if (g_tempoShapeSplitMiddle == -1)
 	{
 		int split; char splitRatio[128];
-		LoadOptionsTempoShape(split, splitRatio);
+		LoadOptionsTempoShape(split, splitRatio, sizeof(splitRatio));
 		SetTempoShapeOptions (split, splitRatio);
 	}
 
@@ -1812,13 +1859,13 @@ WDL_DLGRET TempoShapeOptionsProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			// Load options from .ini file
 			int split;
 			char splitRatio[128];
-			LoadOptionsTempoShape (split, splitRatio);
+			LoadOptionsTempoShape(split, splitRatio, sizeof(splitRatio));
 
 			// Set controls and global variables
 			SetDlgItemText(hwnd, IDC_BR_SHAPE_SPLIT_RATIO, splitRatio);
 			CheckDlgButton(hwnd, IDC_BR_SHAPE_SPLIT, !!split);
 			EnableWindow(GetDlgItem(hwnd, IDC_BR_SHAPE_SPLIT_RATIO), !!split);
-			SetTempoShapeOptions (split, splitRatio);
+			SetTempoShapeOptions(split, splitRatio);
 
 			RestoreWindowPos(hwnd, SHAPE_WND, false);
 			ShowWindow(hwnd, SW_SHOW);

@@ -1,16 +1,21 @@
-Auto color/icon/action
-+Support for executing an action when a track rule is matched
- - Note: use the "Enable track auto selection" option to select the track that matches the rule (useful in cases when the action needs to work on selected tracks only)
-+Ability to disable auto rule matching on per-track basis
- - Track auto color/icon/action can be enabled/disabled for each track in the new tracks list (next to rules list view - arrows between two list views toggle their visibility)
- - Per-track settings override the "Force" button - for example, if you want to use a name that matches a rule, but don't want some other track to be processed by the same rule, disable specific property in the track list so it doesn't get affected
- - To automatically disable further processing on a processed track, see Options->Automatically disable auto color/icon/action for processed tracks
-+Added actions
- - SWS/wol: Toggle auto action enable
- - SWS/wol: Toggle enable auto color/icon/action for selected track(s)
- - SWS/wol: Enable/Disable auto color/icon/action for selected track(s)
- - SWS/wol: Toggle enable track auto selection when an action is performed with auto action
- - SWS/wol: Toggle automatic auto color/icon/action disable for processed tracks
+
+<strong>REAPER v4.74+ is required!</strong>
+New API functions were introduced in this version, they enable various improvements in the SWS/S&M Extension.
+Thank you Cockos!
+
+<strong>Contextual toolbars</strong>
++Functionality in general:
+ - Feature relies heavily on existing REAPER toolbars. The basic concept is fairly simple. User assigns different REAPER toolbars to different contexts (things like TCP, item, piano roll, etc...) and loads them under mouse cursor by calling a single action. The action will then load an appropriate toolbar for a thing under the mouse cursor, http://wiki.cockos.com/wiki/images/3/3c/Contextual_toolbars_example.gif|like this.|
+ - For more information, please http://wiki.cockos.com/wiki/index.php/Contextual_toolbars_with_SWS|visit the wiki on the subject| (which is also accessible from the Contextual toolbars dialog). In case you want to contribute to the wiki, you're more than welcome.
++Contextual toolbars dialog:
+ - To open a dialog for setting up contextual toolbars either run the action SWS/BR: Contextual toolbars... or go to Main menu > Extensions > Contextual toolbars...
+ - Dialog is divided into 3 parts, preset selector, list of possible contexts, and various options tied to those contexts. Select an arbitrary preset and right click contexts to assign them toolbars. Options can be found on the right and are executed only when toolbar is loaded. Once set up, use provided actions to load toolbars for each preset.
++Added actions:
+  - SWS/BR: Contextual toolbars...
+  - SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset x (8 presets) (added in all sections: Main, MIDI editor, etc...)
+   - Note: Actions work as toggle switches. If any of the toolbars set up in Contextual toolbars dialog is visible, all of them will get closed - otherwise toolbar corresponding to context under mouse cursor will get loaded.
++<strong>Feedback needed:</strong>
+ - Note that while new contexts won't get added at this time (but fades and volume handles are planned) now is the time to help us. Any feedback, comments and criticism of current contexts hierarchy is highly welcome. For example, http://wiki.cockos.com/wiki/index.php/Contextual_toolbars_with_SWS#Special_cases:_item_stretch_markers_and_take_envelopes|this workaround| would definitely benefit from discussion. Don't hesitate to express your opinion on http://forum.cockos.com/showthread.php?t=70185|our pre-release topic.| Thanks!
 
 Analyze and normalize loudness
 +Analyze loudness dialog:
@@ -64,8 +69,10 @@ Added actions
   - Note: that's right, due to API limitation it's last adjusted, not touched
  - SWS/BR: Enable "Ignore project tempo" for selected MIDI items preserving time position of MIDI events (use tempo at item's start)
   - Note: the action is meant for http://forum.cockos.com/showthread.php?p=1374175#post1374175|these kind of issues|
- - SWS/BR: Select all MIDI/audio/video items
+ - SWS/BR: Select all MIDI/audio/video/click/timecode/empty/PiP items
  - SWS/BR: Move closest project marker to edit/play/mouse cursor (2 versions: normal and obey snapping) (Issue 668)
+ - SWS/BR: Focus tracks
+ - SWS/BR: Unselect envelope
  - SWS/wol: Select all tracks except folder parents
  - SWS: Toggle horizontal zoom to selected items/time selection
  - SWS/wol: Save/Restore selected envelope height (8 slots)
@@ -80,11 +87,17 @@ Added actions
 +MIDI editor:
  - SWS/BR: Save/Restore selected events in last clicked CC lane (8 slots) (Save has 2 versions: last clicked lane, lane under mouse cursor. Restore has 3 versions: last clicked lane, lane under mouse cursor, all visible lanes)
  - SWS/BR: Insert CC event at edit cursor in CC lane under mouse cursor (active item only)
+ - SWS/BR: Hide last clicked CC lane
+ - SWS/BR: Hide all CC lanes except last clicked CC lane
+ - SWS/BR: Toggle hide all CC lanes except last clicked CC lane (multiple versions: one normal and bunch of others that set lane to specific height)
+ - SWS/BR: Convert selected CC events to envelope points in selected envelope (multiple versions for different point shape and clearing existing envelope points)
  - SWS/wol-spk77: Move edit cursor to start of previous/next note
 
 ReaScript
- - Fixed BR_GetMouseCursorContext() and related function in regards to MIDI editor (changes introduced in REAPER v4.7 broke it)
- - Changed envelope object type in BR_EnvAlloc and other functions to avoid confusion (existing scripts should be unaffected)
++BR_GetMouseCursorContext:
+ - Fixes related to MIDI editor (changes introduced in REAPER v4.7 broke it)
+ - Added support for stretch markers
++Changed envelope object type in BR_EnvAlloc and other functions to avoid confusion (existing scripts should be unaffected)
 
 Fixes
 +Improved deleting tempo markers with different time signatures when using SWS/BR: Delete tempo marker and preserve position and length of items (including MIDI events)
@@ -94,6 +107,8 @@ Fixes
  - SWS/wol: Set "Vertical/Horizontal zoom center"
 +MIDI editor actions that hide/show used CC lanes now obey filter's channel settings
 +Prevent toggling zoom with zoom actions when inappropriate (i.e. toggling zoom to selected items when there are no selected items)
++All SWS/BR actions now obey lock settings
++OSX: Fixed "Unselect tempo markers" child dialog of "Select and adjust tempo markers". It got hidden behind other dialogs when it lost focus
 
 Other
 +Increased all SWS/BR slot actions to 8 slots
@@ -256,7 +271,7 @@ Fixes
 <strong>Analyze and normalize loudness</strong>
 +Functionality in general:
  - Loudness is measured according to EBU 3342 standard thanks to excellent http://github.com/jiixyj/libebur128|libebur128| by Jan Kokemuller
- - Due to <b>limitations in Reaper API</b>, we can extract audio data only from certain parts of the audio chain. Chart can be found http://stash.reaper.fm/20186/SWS%20loudness%20analysis%20signal%20flow%20chart.png|here|. A few gotchas:
+ - Due to <b>limitations in Reaper API</b>, we can extract audio data only from certain parts of the audio chain. Chart can be found http://wiki.cockos.com/wiki/images/5/50/SWS_loudness_analysis_signal_flow_chart.png|here|. A few gotchas:
    - You can't use item fades for extensive volume control
    - If you need to use FX, current workaround is to put one item with needed FX in an empty track and measure that track
 +Added actions:

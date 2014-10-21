@@ -247,7 +247,7 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 		AddToMenu(hMenu, SWS_SEPARATOR, 0);
 
 	AddToMenu(hMenu, __LOCALIZE("About SWS Extensions", "sws_ext_menu"), NamedCommandLookup("_SWS_ABOUT"));
-	AddToMenu(hMenu, __LOCALIZE("Auto Color/Icon/Action", "sws_ext_menu"), NamedCommandLookup("_SWSAUTOCOLOR_OPEN"));
+	AddToMenu(hMenu, __LOCALIZE("Auto Color/Icon", "sws_ext_menu"), NamedCommandLookup("_SWSAUTOCOLOR_OPEN"));
 
 	HMENU hAutoRenderSubMenu = CreatePopupMenu();
 	AddSubMenu(hMenu, hAutoRenderSubMenu, __LOCALIZE("Autorender", "sws_ext_menu"));
@@ -258,6 +258,7 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 	AddToMenu(hAutoRenderSubMenu, __LOCALIZE("Global preferences...", "sws_ext_menu"), NamedCommandLookup("_AUTORENDER_PREFERENCES"));
 
 	AddToMenu(hMenu, __LOCALIZE("Command parameters...", "sws_ext_menu"), NamedCommandLookup("_XENAKIOS_SHOW_COMMANDPARAMS"));
+	AddToMenu(hMenu, __LOCALIZE("Contextual toolbars...", "sws_ext_menu"), NamedCommandLookup("_BR_CONTEXTUAL_TOOLBARS_PREF"));
 	AddToMenu(hMenu, __LOCALIZE("Cue Buss generator", "sws_ext_menu"), NamedCommandLookup("_S&M_SENDS4"));
 	AddToMenu(hMenu, __LOCALIZE("Cycle Action editor...", "sws_ext_menu"), NamedCommandLookup("_S&M_CYCLEDITOR"));
 	AddToMenu(hMenu, __LOCALIZE("Envelope processor...", "sws_ext_menu"), NamedCommandLookup("_PADRE_ENVPROC"));

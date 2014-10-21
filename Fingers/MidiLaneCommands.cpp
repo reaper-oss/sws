@@ -7,7 +7,7 @@
 #include "RprMidiCCLane.h"
 #include "RprMidiEvent.h"
 #include "RprMidiTake.h"
-#include "../Breeder/BR_MidiTools.h"
+#include "../Breeder/BR_MidiUtil.h"
 
 static const int defaultHeight = 67;
 
@@ -29,7 +29,7 @@ void MidiLaneCommands::Init()
     RprCommand::registerCommand("SWS/FNG: Show only used CC lanes in active MIDI editor", "FNG_SHOW_USED_CC_LANES", &ShowUsedCCLanes, UNDO_STATE_ITEMS);
     RprCommand::registerCommand("SWS/FNG: Hide unused CC lanes in active MIDI editor", "FNG_HIDE_UNUSED_CC_LANES", &HideUnusedCCLanes, UNDO_STATE_ITEMS);
     RprCommand::registerCommand("SWS/FNG: Show only top CC lane in active MIDI editor", "FNG_TOP_CC_LANE", &ShowOnlyTopCCLane, UNDO_STATE_ITEMS);
-	
+
 	// BR: rather crude (not following how Fingers did it, but is simple, works and should be easily changeable in case Fingers decides to upgrade his RprCommand class)
 	static COMMAND_T g_commandTable[] =
 	{

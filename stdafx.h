@@ -68,6 +68,7 @@
 #include <set>
 #include <numeric>
 #include <ctime>
+#include <limits>
 
 #pragma warning(disable : 4996) // POSIX deprecation warnings
 #pragma warning(disable : 4267) // size_t to int warnings

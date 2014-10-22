@@ -876,12 +876,12 @@ double BR_Envelope::SnapValue (double value)
 		int mode = pitchenvrange >> 8; // range is in high 8 bits
 
 		if      (mode == 0) return value;
-		else if (mode == 1) return round(value);             // 1 semitone
-		else if (mode == 2) return round(value * 2) / 2;     // 50 cent
-		else if (mode == 3) return round(value * 4) / 4;     // 25 cent
-		else if (mode == 4) return round(value * 10) / 10;   // 10 cent
-		else if (mode == 5) return round(value * 20) / 20;   // 5  cent
-		else                return round(value * 100) / 100; // 1 cents
+		else if (mode == 1) return Round(value);             // 1 semitone
+		else if (mode == 2) return Round(value * 2) / 2;     // 50 cent
+		else if (mode == 3) return Round(value * 4) / 4;     // 25 cent
+		else if (mode == 4) return Round(value * 10) / 10;   // 10 cent
+		else if (mode == 5) return Round(value * 20) / 20;   // 5  cent
+		else                return Round(value * 100) / 100; // 1 cents
 	}
 	else
 	{

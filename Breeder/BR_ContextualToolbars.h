@@ -126,9 +126,7 @@ public:
 	void LoadToolbar ();
 
 	/* Get and set toolbar info for specific context (for list of contexts see BR_ToolbarContexts) */
-	bool GetContext (int context, int* mouseAction, int* toggleAction);
-	bool SetContext (int context, int mouseAction, int toggleAction);
-	bool DisableContext (int context, bool inheritParent);
+	bool SetContext (int context, int mouseAction);
 	bool GetToolbarName (int context, char* name, int nameSz);
 
 	/* Get and set options for toolbar loading */

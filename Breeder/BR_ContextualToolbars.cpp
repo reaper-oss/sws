@@ -124,7 +124,7 @@ m_mode (0)
 BR_ContextualToolbar::BR_ContextualToolbar (const BR_ContextualToolbar& contextualToolbar) :
 m_mode (contextualToolbar.m_mode)
 {
-	std::copy(contextualToolbar.m_mouseActions, contextualToolbar.m_mouseActions + CONTEXT_COUNT, m_mouseActions);
+	std::copy(contextualToolbar.m_mouseActions,  contextualToolbar.m_mouseActions  + CONTEXT_COUNT, m_mouseActions);
 	std::copy(contextualToolbar.m_toggleActions, contextualToolbar.m_toggleActions + CONTEXT_COUNT, m_toggleActions);
 	m_options        = contextualToolbar.m_options;
 	m_activeContexts = contextualToolbar.m_activeContexts;
@@ -139,7 +139,7 @@ BR_ContextualToolbar& BR_ContextualToolbar::operator= (const BR_ContextualToolba
 	if (this == &contextualToolbar)
 		return *this;
 
-	std::copy(contextualToolbar.m_mouseActions, contextualToolbar.m_mouseActions + CONTEXT_COUNT, m_mouseActions);
+	std::copy(contextualToolbar.m_mouseActions,  contextualToolbar.m_mouseActions  + CONTEXT_COUNT, m_mouseActions);
 	std::copy(contextualToolbar.m_toggleActions, contextualToolbar.m_toggleActions + CONTEXT_COUNT, m_toggleActions);
 	m_options        = contextualToolbar.m_options;
 	m_activeContexts = contextualToolbar.m_activeContexts;
@@ -202,14 +202,12 @@ void BR_ContextualToolbar::LoadToolbar ()
 		{
 			bool update = false;
 
-			// Execute these before showing toolbar (otherwise toolbar can end up behind mixer/MIDi editor etc... due to focus changes)
+			// Execute these before showing toolbar (otherwise toolbar can end up behind mixer/MIDI editor etc... due to focus changes)
 			if (executeOnToolbarLoad.setCCLaneAsClicked)
 				mouseInfo.SetDetectedCCLaneAsLastClicked();
 
 			if (executeOnToolbarLoad.setFocus)
-			{
 				GetSetFocus(true, &executeOnToolbarLoad.focusHwnd, &executeOnToolbarLoad.focusContext);
-			}
 
 			if (executeOnToolbarLoad.envelopeToSelect)
 			{
@@ -219,7 +217,7 @@ void BR_ContextualToolbar::LoadToolbar ()
 					GetSetFocus(false, &hwnd, NULL);
 					SetCursorContext(g_i2, executeOnToolbarLoad.envelopeToSelect);
 					GetSetFocus(true, &hwnd, &g_i2); // don't let other window lose focus, but make sure context is set to envelope!
-					}
+				}
 				else
 				{
 					SetCursorContext(2, executeOnToolbarLoad.envelopeToSelect);
@@ -325,23 +323,7 @@ void BR_ContextualToolbar::LoadToolbar ()
 	}
 }
 
-bool BR_ContextualToolbar::GetContext (int context, int* mouseAction, int* toggleAction)
-{
-	if (g_toolbarsManager.IsContextValid(context))
-	{
-		WritePtr(mouseAction, m_mouseActions[context]);
-		WritePtr(toggleAction, m_toggleActions[context]);
-		return true;
-	}
-	else
-	{
-		WritePtr(mouseAction, DO_NOTHING);
-		WritePtr(toggleAction, DO_NOTHING);
-		return false;
-	}
-}
-
-bool BR_ContextualToolbar::SetContext (int context, int mouseAction, int toggleAction)
+bool BR_ContextualToolbar::SetContext (int context, int mouseAction)
 {
 	if (g_toolbarsManager.IsContextValid(context))
 	{
@@ -352,21 +334,10 @@ bool BR_ContextualToolbar::SetContext (int context, int mouseAction, int toggleA
 		else
 		{
 			m_mouseActions[context]  = mouseAction;
-			m_toggleActions[context] = toggleAction;
+			m_toggleActions[context] = g_toolbarsManager.GetToggleToolbarAction(mouseAction);
 			this->UpdateInternals();
 			return true;
 		}
-	}
-	return false;
-}
-
-bool  BR_ContextualToolbar::DisableContext (int context, bool inheritParent)
-{
-	if (g_toolbarsManager.IsContextValid(context))
-	{
-		m_mouseActions[context]  = (inheritParent) ? INHERIT_PARENT : DO_NOTHING;
-		m_toggleActions[context] = (inheritParent) ? INHERIT_PARENT : DO_NOTHING;
-		return true;
 	}
 	return false;
 }
@@ -2105,13 +2076,9 @@ void BR_ContextualToolbarsWnd::ContextMenuReturnId (int id)
 {
 	if (id)
 	{
-		int toggleAction = g_toolbarsManager.GetToggleToolbarAction(id);
-
 		int x = 0;
 		while (int context = (int)m_list->EnumSelected(&x))
-		{
-			m_currentToolbar.SetContext(context, id, toggleAction);
-		}
+			m_currentToolbar.SetContext(context, id);
 		m_list->Update();
 	}
 }

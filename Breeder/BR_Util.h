@@ -47,7 +47,7 @@ const double PAN_DELTA    = 0.001;
 vector<int> GetDigits (int val); // in 567 [0] = 5, [1] = 6 etc...
 set<int> GetAllMenuIds (HMENU hMenu);
 int GetUnusedMenuId (HMENU hMenu);
-int Round (double val);
+int RoundToInt (double val);
 int GetBit (int val, int pos);
 int SetBit (int val, int pos, bool set);
 int SetBit (int val, int pos);
@@ -58,6 +58,8 @@ int GetLastDigit (int val);
 int BinaryToDecimal (const char* binaryString);
 bool IsFraction (char* str, double& convertedFraction);
 double AltAtof (char* str);
+double Trunc (double val);
+double Round (double val);
 double RoundToN (double val, double n);
 double TranslateRange (double value, double oldMin, double oldMax, double newMin, double newMax);
 void ReplaceAll (string& str, string oldStr, string newStr);

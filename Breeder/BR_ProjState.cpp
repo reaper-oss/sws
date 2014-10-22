@@ -486,7 +486,7 @@ bool BR_MidiCCEvents::Restore (BR_MidiEditor& midiEditor, int lane, bool allVisi
 			double moveOffsetPPQ = -1;
 			for (size_t i = 0; i < m_events.size(); ++i)
 			{
-				double posAddPPQ = (!ratioPPQ) ? m_events[i].positionPPQ : round(m_events[i].positionPPQ * ratioPPQ);
+				double posAddPPQ = (ratioPPQ == 0) ? m_events[i].positionPPQ : Round(m_events[i].positionPPQ * ratioPPQ);
 				double positionPPQ = insertionStartPPQ + posAddPPQ;
 
 				if (positionPPQ < takeStartPPQ)
@@ -523,7 +523,7 @@ bool BR_MidiCCEvents::Restore (BR_MidiEditor& midiEditor, int lane, bool allVisi
 		if (moveOffsetPPQMax != -1)
 		{
 			update = true;
-			double newPosPPQ = trunc(moveOffsetPPQMax + MIDI_GetPPQPosFromProjTime(take, GetCursorPositionEx(NULL))); // trunc because reaper creates events exactly on ppq
+			double newPosPPQ = Trunc(moveOffsetPPQMax + MIDI_GetPPQPosFromProjTime(take, GetCursorPositionEx(NULL))); // trunc because reaper creates events exactly on ppq
 			SetEditCurPos(MIDI_GetProjTimeFromPPQPos(take, newPosPPQ), true, false);
 		}
 	}

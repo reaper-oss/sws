@@ -577,8 +577,8 @@ bool BR_MouseContextInfo::SetDetectedCCLaneAsLastClicked ()
 				double hZoom = GetHZoomLevel();
 				double itemStart = GetMediaItemInfo_Value(m_mouseInfo.item, "D_POSITION");
 				double itemEnd   = itemStart + GetMediaItemInfo_Value(m_mouseInfo.item, "D_LENGTH");
-				int itemStartPx = Round(itemStart * hZoom) - si.nPos; if (itemStartPx < 0)                         itemStartPx = 0;
-				int itemEndPx   = Round(itemEnd   * hZoom) - si.nPos; if (itemEndPx   > (int)(si.nPos + si.nPage)) itemEndPx = si.nPos + si.nPage;
+				int itemStartPx = RoundToInt(itemStart * hZoom) - si.nPos; if (itemStartPx < 0)                         itemStartPx = 0;
+				int itemEndPx   = RoundToInt(itemEnd   * hZoom) - si.nPos; if (itemEndPx   > (int)(si.nPos + si.nPage)) itemEndPx = si.nPos + si.nPage;
 				m_ccLaneClickPoint.x = (itemStartPx + itemEndPx) / 2;
 
 				if (!CheckBounds((int)m_ccLaneClickPoint.x, itemStartPx, itemEndPx)) // REAPER gives priority to what's inside rather than edges (so if item's too short, edge hit-points won't stretch inside the item)
@@ -1223,7 +1223,7 @@ int BR_MouseContextInfo::IsMouseOverStretchMarker (MediaItem* item, MediaItem_Ta
 
 			if (stretchMarkerPos > 0)
 			{
-				int x1 = Round(stretchMarkerPos * arrangeZoom);
+				int x1 = RoundToInt(stretchMarkerPos * arrangeZoom);
 				int x0 = x1 - STRETCH_M_HIT_POINT;
 				int x2 = x1 + STRETCH_M_HIT_POINT + 1;
 				if (CheckBounds(mouseDisplayX, x0, x2))
@@ -1268,8 +1268,8 @@ int BR_MouseContextInfo::IsMouseOverEnvelopeLine (BR_Envelope& envelope, int dra
 			double prevPos;
 			while (envelope.GetPoint(prevId, &prevPos, NULL, NULL, NULL) && CheckBounds(prevPos, mousePosLeft, mousePosRight))
 			{
-				int x = Round(arrangeZoom * (prevPos - arrangeStart));
-				int y = yOffset + drawableEnvHeight - Round(envelope.NormalizedDisplayValue(prevId) * drawableEnvHeight);
+				int x = RoundToInt(arrangeZoom * (prevPos - arrangeStart));
+				int y = yOffset + drawableEnvHeight - RoundToInt(envelope.NormalizedDisplayValue(prevId) * drawableEnvHeight);
 				if (CheckBounds(mouseDisplayX, x - ENV_HIT_POINT, x + ENV_HIT_POINT_LEFT) && CheckBounds(mouseY, y - ENV_HIT_POINT - tempoHit, y + ENV_HIT_POINT_DOWN + tempoHit))
 				{
 					mouseHit = 1;
@@ -1284,8 +1284,8 @@ int BR_MouseContextInfo::IsMouseOverEnvelopeLine (BR_Envelope& envelope, int dra
 			double nextPos;
 			while (envelope.GetPoint(nextId, &nextPos, NULL, NULL, NULL) && CheckBounds(nextPos, mousePosLeft, mousePosRight))
 			{
-				int x = Round(arrangeZoom * (nextPos - arrangeStart));
-				int y = yOffset + drawableEnvHeight - Round(envelope.NormalizedDisplayValue(nextId) * drawableEnvHeight);
+				int x = RoundToInt(arrangeZoom * (nextPos - arrangeStart));
+				int y = yOffset + drawableEnvHeight - RoundToInt(envelope.NormalizedDisplayValue(nextId) * drawableEnvHeight);
 				if (CheckBounds(mouseDisplayX, x - ENV_HIT_POINT, x + ENV_HIT_POINT_LEFT) && CheckBounds(mouseY, y - ENV_HIT_POINT - tempoHit, y + ENV_HIT_POINT_DOWN + tempoHit))
 				{
 					mouseHit = 1;
@@ -1300,8 +1300,8 @@ int BR_MouseContextInfo::IsMouseOverEnvelopeLine (BR_Envelope& envelope, int dra
 		if (!found)
 		{
 			double mouseValue = envelope.ValueAtPosition(mousePos);
-			int x = Round(arrangeZoom * (mousePos - arrangeStart));
-			int y = yOffset + drawableEnvHeight - Round(envelope.NormalizedDisplayValue(mouseValue) * drawableEnvHeight);
+			int x = RoundToInt(arrangeZoom * (mousePos - arrangeStart));
+			int y = yOffset + drawableEnvHeight - RoundToInt(envelope.NormalizedDisplayValue(mouseValue) * drawableEnvHeight);
 			if (CheckBounds(mouseDisplayX, x - ENV_HIT_POINT, x + ENV_HIT_POINT) && CheckBounds(mouseY, y - ENV_HIT_POINT, y + ENV_HIT_POINT_DOWN))
 			{
 				mouseHit = 2;
@@ -1441,8 +1441,8 @@ int BR_MouseContextInfo::GetRulerLaneHeight (int rulerH, int lane)
 	*        2 -> tempo    *
 	*        3 -> timeline */
 
-	int markers = Round((double)rulerH / 6);
-	int timeline = Round((double)rulerH / 2) - 2;
+	int markers = RoundToInt((double)rulerH / 6);
+	int timeline = RoundToInt((double)rulerH / 2) - 2;
 
 	if (lane == 0)
 		return rulerH - markers*2 - timeline;

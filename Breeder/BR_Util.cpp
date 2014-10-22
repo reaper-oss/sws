@@ -143,7 +143,7 @@ int GetUnusedMenuId (HMENU hMenu)
 	return unusedId;
 }
 
-int Round (double val)
+int RoundToInt (double val)
 {
 	if (val < 0)
 		return (int)(val - 0.5);
@@ -233,10 +233,20 @@ double AltAtof (char* str)
 	return atof(str);
 }
 
+double Trunc (double val)
+{
+	return (val < 0) ? ceil(val) : floor(val);
+}
+
+double Round (double val)
+{
+	return (double)(int)(val + ((val < 0) ? (-0.5) : (0.5)));
+}
+
 double RoundToN (double val, double n)
 {
 	double shift = pow(10.0, n);
-	return Round(val*shift) / shift;
+	return RoundToInt(val * shift) / shift;
 }
 
 double TranslateRange (double value, double oldMin, double oldMax, double newMin, double newMax)
@@ -1676,7 +1686,7 @@ void SetArrangeStart (double start)
 	si.fMask = SIF_ALL;
 	CoolSB_GetScrollInfo(GetArrangeWnd(), SB_HORZ, &si);
 
-	si.nPos = Round(start * GetHZoomLevel()); // OCD alert: GetSet_ArrangeView2() can sometimes be off for one pixel
+	si.nPos = RoundToInt(start * GetHZoomLevel()); // OCD alert: GetSet_ArrangeView2() can sometimes be off for one pixel
 	CoolSB_SetScrollInfo(GetArrangeWnd(), SB_HORZ, &si, true);
 	SendMessage(GetArrangeWnd(), WM_HSCROLL, SB_THUMBPOSITION, NULL);
 }

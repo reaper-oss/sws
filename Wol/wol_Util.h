@@ -27,6 +27,8 @@
 
 #pragma once
 
+#include "../SnM/SnM_VWnd.h"
+
 
 
 void wol_UtilInit();
@@ -96,3 +98,47 @@ void FlushIni(const char* path = GetWolIni());
 int ShowMessageBox2(const char* msg, const char* title, UINT uType = MB_OK, UINT uIcon = 0, bool localizeMsg = true, bool localizeTitle = true, HWND hwnd = GetMainHwnd());
 int ShowErrorMessageBox(const char* msg, const char* title = "SWS/wol - Error", bool localizeMsg = true, bool localizeTitle = true, UINT uType = MB_OK, HWND hwnd = GetMainHwnd());
 int ShowWarningMessageBox(const char* msg, const char* title = "SWS/wol - Warning", bool localizeMsg = true, bool localizeTitle = true, UINT uType = MB_OK, HWND hwnd = GetMainHwnd());
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/// User input
+///////////////////////////////////////////////////////////////////////////////////////////////////
+#define CMD_SETUNDOSTR 20
+class UserInputAndSlotsEditorWnd : public SWS_DockWnd
+{
+public:
+	UserInputAndSlotsEditorWnd(const char* wndtitle, const char* title, const char* id, int cmdId);
+
+	void Update();
+	void UseTwoKnobs(bool two = true) { m_twoknobs = two; }
+	void SetupKnob1(int min, int max, int center, int pos, double factor, const char* title, const char* suffix, const char* zerotext); //must be called in constructor
+	void SetupKnob2(int min, int max, int center, int pos, double factor, const char* title, const char* suffix, const char* zerotext); //must be called in constructor (two knobs only)
+	void SetupOnCommandCallback(void(*OnCommandCallback)(int cmd, int* min, int* max)); //must be called in constructor
+	void SetupOKText(const char* text);
+	void SetupQuestion(const char* questiontxt, const char* questiontitle, UINT type);
+
+	enum
+	{
+		CMD_LOAD = 0,
+		CMD_SAVE = 8,
+		CMD_CLOSE = 30,
+		CMD_USERANSWER
+	};
+
+protected:
+	virtual void OnInitDlg();
+	virtual void OnDestroy();
+	virtual void OnCommand(WPARAM wParam, LPARAM lParam);
+	virtual void DrawControls(LICE_IBitmap* bm, const RECT* r, int* tooltipHeight = NULL);
+	virtual INT_PTR OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+	void(*m_OnCommandCallback)(int cmd, int* min, int* max); //for single knob dialogs max is not used
+
+	SNM_Knob m_kn1, m_kn2;
+	SNM_KnobCaption m_kn1Text, m_kn2Text;
+
+	HWND m_btnL, m_btnR;
+
+	bool m_twoknobs, m_kn1rdy, m_kn2rdy, m_cbrdy, m_askquestion;
+	UINT m_questiontype;
+	string m_wndtitlebar, m_oktxt, m_questiontxt, m_questiontitle;
+};

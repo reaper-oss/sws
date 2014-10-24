@@ -36,34 +36,12 @@ static struct wol_Misc_Ini {
 	static const char* Section;
 	static const char* RandomizerSlotsMin[8];
 	static const char* RandomizerSlotsMax[8];
+	static const char* NoteVelocitiesSlotsMin[8];
+	static const char* NoteVelocitiesSlotsMax[8];
+	static const char* SelRandMidiNotesPercent[8];
 } wol_Misc_Ini;
+
 const char* wol_Misc_Ini::Section = "Misc";
-const char* wol_Misc_Ini::RandomizerSlotsMin[8] = {
-	"RandomizerSlot1Min",
-	"RandomizerSlot2Min",
-	"RandomizerSlot3Min",
-	"RandomizerSlot4Min",
-	"RandomizerSlot5Min",
-	"RandomizerSlot6Min",
-	"RandomizerSlot7Min",
-	"RandomizerSlot8Min",
-};
-const char* wol_Misc_Ini::RandomizerSlotsMax[8] = {
-	"RandomizerSlot1Max",
-	"RandomizerSlot2Max",
-	"RandomizerSlot3Max",
-	"RandomizerSlot4Max",
-	"RandomizerSlot5Max",
-	"RandomizerSlot6Max",
-	"RandomizerSlot7Max",
-	"RandomizerSlot8Max",
-};
-
-
-
-#define RANDMIDIVELWND_ID "WolRandMidiVelWnd"
-
-static SNM_WindowManager<RandomMidiVelWnd> g_RandMidiVelWndMgr(RANDMIDIVELWND_ID);
 
 
 
@@ -177,10 +155,26 @@ void MoveEditCursorToNote(COMMAND_T* ct, int val, int valhw, int relmode, HWND h
 
 //---------//
 
-#define MSG_MIN    0xF000
-#define MSG_MINTXT 0xF001
-#define MSG_MAX    0xF002
-#define MSG_MAXTXT 0xF003
+const char* wol_Misc_Ini::RandomizerSlotsMin[8] = {
+	"RandomizerSlot1Min",
+	"RandomizerSlot2Min",
+	"RandomizerSlot3Min",
+	"RandomizerSlot4Min",
+	"RandomizerSlot5Min",
+	"RandomizerSlot6Min",
+	"RandomizerSlot7Min",
+	"RandomizerSlot8Min",
+};
+const char* wol_Misc_Ini::RandomizerSlotsMax[8] = {
+	"RandomizerSlot1Max",
+	"RandomizerSlot2Max",
+	"RandomizerSlot3Max",
+	"RandomizerSlot4Max",
+	"RandomizerSlot5Max",
+	"RandomizerSlot6Max",
+	"RandomizerSlot7Max",
+	"RandomizerSlot8Max",
+};
 
 struct RandomizerSlots {
 	int min;
@@ -189,208 +183,9 @@ struct RandomizerSlots {
 
 static RandomizerSlots g_RandomizerSlots[8];
 
-bool RandomizeSelectedMidiVelocities(int min, int max);
-
-RandomMidiVelWnd::RandomMidiVelWnd()
-	: SWS_DockWnd(IDD_WOL_RANDOMMIDIVEL, __LOCALIZE("Random midi velocities tool", "sws_DLG_181"), "", SWSGetCommandID(RandomizeSelectedMidiVelocitiesTool))
-{
-	m_id.Set(RANDMIDIVELWND_ID);
-
-	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
-	Init();
-}
-
-void RandomMidiVelWnd::OnInitDlg()
-{
-	m_parentVwnd.SetRealParent(m_hwnd);
-	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
-
-	m_min.SetID(MSG_MIN);
-	m_min.SetRangeFactor(1, 127, 64, 12.0f);
-	m_min.SetSliderPosition(1);
-	m_minText.AddChild(&m_min);
-
-	m_minText.SetID(MSG_MINTXT);
-	m_minText.SetTitle(__LOCALIZE("Min value:", "sws_DLG_181"));
-	m_minText.SetSuffix(__LOCALIZE("", "sws_DLG_181"));
-	m_minText.SetZeroText(__LOCALIZE("1", "sws_DLG_181"));
-	m_minText.SetValue(m_min.GetSliderPosition());
-	m_parentVwnd.AddChild(&m_minText);
-
-	m_max.SetID(MSG_MAX);
-	m_max.SetRangeFactor(1, 127, 64, 12.0f);
-	m_max.SetSliderPosition(127);
-	m_maxText.AddChild(&m_max);
-
-	m_maxText.SetID(MSG_MAXTXT);
-	m_maxText.SetTitle(__LOCALIZE("Max value:", "sws_DLG_181"));
-	m_maxText.SetSuffix(__LOCALIZE("", "sws_DLG_181"));
-	m_maxText.SetZeroText(__LOCALIZE("1", "sws_DLG_181"));
-	m_maxText.SetValue(m_max.GetSliderPosition());
-	m_parentVwnd.AddChild(&m_maxText);
-
-	m_btnL = GetDlgItem(m_hwnd, IDC_WOL_SLOT6S);
-	m_btnR = GetDlgItem(m_hwnd, IDC_WOL_SLOT7L);
-}
-
-void RandomMidiVelWnd::OnDestroy()
-{
-	m_minText.RemoveAllChildren(false);
-	m_maxText.RemoveAllChildren(false);
-}
-
-void RandomMidiVelWnd::DrawControls(LICE_IBitmap* bm, const RECT* r, int* tooltipHeight)
-{
-	RECT r2 = { 0, 0, 0, 0 };
-	RECT tmp = { 0, 0, 0, 0 };
-	ColorTheme* ct = SNM_GetColorTheme();
-	LICE_pixel col = ct ? LICE_RGBA_FROMNATIVE(ct->main_text, 255) : LICE_RGBA(255, 255, 255, 255);
-
-	m_min.SetFGColors(col, col);
-	SNM_SkinKnob(&m_min);
-	m_minText.DrawText(NULL, &r2, DT_NOPREFIX | DT_CALCRECT);
-	GetWindowRect(m_btnL, &tmp);
-	ScreenToClient(m_hwnd, (LPPOINT)&tmp);
-	ScreenToClient(m_hwnd, (LPPOINT)&tmp + 1);
-	r2.left += tmp.right - r2.right - 19;
-	r2.top += tmp.bottom + 10;
-	r2.right = tmp.right;
-	r2.bottom += r2.top;
-	m_minText.SetPosition(&r2);
-	m_minText.SetVisible(true);
-
-	r2.left = r2.top = r2.right = r2.bottom = 0;
-	m_max.SetFGColors(col, col);
-	SNM_SkinKnob(&m_max);
-	m_maxText.DrawText(NULL, &r2, DT_NOPREFIX | DT_CALCRECT);
-	GetWindowRect(m_btnR, &tmp);
-	ScreenToClient(m_hwnd, (LPPOINT)&tmp);
-	ScreenToClient(m_hwnd, ((LPPOINT)&tmp) + 1);
-	r2.left = tmp.left;
-	r2.top += tmp.bottom + 10;
-	r2.right += r2.left + 19;
-	r2.bottom += r2.top;
-	m_maxText.SetPosition(&r2);
-	m_maxText.SetVisible(true);
-}
-
-void RandomMidiVelWnd::OnCommand(WPARAM wParam, LPARAM lParam)
-{
-	switch (LOWORD(wParam))
-	{
-	case IDC_WOL_SLOT1L:
-	case IDC_WOL_SLOT2L:
-	case IDC_WOL_SLOT3L:
-	case IDC_WOL_SLOT4L:
-	case IDC_WOL_SLOT5L:
-	case IDC_WOL_SLOT6L:
-	case IDC_WOL_SLOT7L:
-	case IDC_WOL_SLOT8L:
-	{
-		m_min.SetSliderPosition(g_RandomizerSlots[LOWORD(wParam) - IDC_WOL_SLOT1L].min);
-		m_max.SetSliderPosition(g_RandomizerSlots[LOWORD(wParam) - IDC_WOL_SLOT1L].max);
-		m_minText.SetValue(g_RandomizerSlots[LOWORD(wParam) - IDC_WOL_SLOT1L].min);
-		m_maxText.SetValue(g_RandomizerSlots[LOWORD(wParam) - IDC_WOL_SLOT1L].max);
-		Update();
-		break;
-	}
-	case IDC_WOL_SLOT1S:
-	case IDC_WOL_SLOT2S:
-	case IDC_WOL_SLOT3S:
-	case IDC_WOL_SLOT4S:
-	case IDC_WOL_SLOT5S:
-	case IDC_WOL_SLOT6S:
-	case IDC_WOL_SLOT7S:
-	case IDC_WOL_SLOT8S:
-	{
-		SaveIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.RandomizerSlotsMin[LOWORD(wParam) - IDC_WOL_SLOT1S], m_min.GetSliderPosition());
-		SaveIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.RandomizerSlotsMax[LOWORD(wParam) - IDC_WOL_SLOT1S], m_max.GetSliderPosition());
-		g_RandomizerSlots[LOWORD(wParam) - IDC_WOL_SLOT1S].min = m_min.GetSliderPosition();
-		g_RandomizerSlots[LOWORD(wParam) - IDC_WOL_SLOT1S].max = m_max.GetSliderPosition();
-		break;
-	}
-	case IDC_WOL_RANDOMIZE:
-	{
-		if (RandomizeSelectedMidiVelocities(m_min.GetSliderPosition(), m_max.GetSliderPosition()))
-			Undo_OnStateChangeEx2(NULL, m_undoDesc.data(), UNDO_STATE_ALL, -1);
-		break;
-	}
-	}
-}
-
-INT_PTR RandomMidiVelWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-	if (uMsg == WM_VSCROLL)
-	{
-		switch (lParam)
-		{
-		case MSG_MIN:
-		{
-			m_minText.SetValue(m_min.GetSliderPosition());
-			if (m_min.GetSliderPosition() > m_max.GetSliderPosition())
-			{
-				m_max.SetSliderPosition(m_min.GetSliderPosition());
-				m_maxText.SetValue(m_max.GetSliderPosition());
-			}
-			break;
-		}
-		case MSG_MAX:
-		{
-			m_maxText.SetValue(m_max.GetSliderPosition());
-			if (m_max.GetSliderPosition() < m_min.GetSliderPosition())
-			{
-				m_min.SetSliderPosition(m_max.GetSliderPosition());
-				m_minText.SetValue(m_min.GetSliderPosition());
-			}
-			break;
-		}
-		}
-	}
-	else if (uMsg == WM_MOUSEWHEEL)
-	{
-		POINT mouse = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-		ScreenToClient(m_hwnd, &mouse);
-		m_parentVwnd.OnMouseWheel(mouse.x,
-								  mouse.y,
-#ifdef _WIN32
-								  GET_WHEEL_DELTA_WPARAM(wParam)
-#else
-								  (short)HIWORD(wParam)
-#endif
-								  );
-	}
-	return 0;
-}
-
-void RandomMidiVelWnd::Update()
-{
-	m_parentVwnd.RequestRedraw(NULL);
-}
-
-void RandomizeSelectedMidiVelocitiesTool(COMMAND_T* ct)
-{
-	if ((int)ct->user == 0)
-	{
-		if (RandomMidiVelWnd* w = g_RandMidiVelWndMgr.Create())
-		{
-			w->Show(true, true);
-			w->SetUndoDescription(SWS_CMD_SHORTNAME(ct));
-		}
-	}
-	else
-	{
-		if (RandomizeSelectedMidiVelocities(g_RandomizerSlots[(int)ct->user - 1].min, g_RandomizerSlots[(int)ct->user - 1].max))
-			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
-	}
-}
-
-int IsRandomizeSelectedMidiVelocitiesOpen(COMMAND_T* ct)
-{
-	if ((int)ct->user == 0)
-		if (RandomMidiVelWnd* w = g_RandMidiVelWndMgr.Get())
-			return w->IsValidWindow();
-	return 0;
-}
+#define RANDMIDIVELWND_LOC "sws_DLG_182a"
+#define RANDMIDIVELWND_ID "WolRandMidiVelWnd"
+static SNM_WindowManager<RandomMidiVelWnd> g_RandMidiVelWndMgr(RANDMIDIVELWND_ID);
 
 bool RandomizeSelectedMidiVelocities(int min, int max)
 {
@@ -417,6 +212,362 @@ bool RandomizeSelectedMidiVelocities(int min, int max)
 		}
 	}
 	return false;
+}
+
+void OnCommandCallback_RandMidiVelWnd(int cmd, int* min, int* max)
+{
+	static string undoDesc;
+	switch (cmd)
+	{
+	case (UserInputAndSlotsEditorWnd::CMD_USERANSWER + MB_OK):
+	{
+		if (RandomizeSelectedMidiVelocities(*min, *max))
+			Undo_OnStateChangeEx2(NULL, undoDesc.data(), UNDO_STATE_ALL, -1);
+		break;
+	}
+	case UserInputAndSlotsEditorWnd::CMD_CLOSE:
+	{
+		undoDesc.clear();
+		break;
+	}
+	case CMD_SETUNDOSTR:
+	{
+		undoDesc = (const char*)min;
+		break;
+	}
+	default:
+	{
+		if (cmd < 8)
+		{
+			if (min && max)
+			{
+				*min = g_RandomizerSlots[cmd/* - UserInputAndSlotsEditorWnd::CMD_LOAD*/].min;
+				*max = g_RandomizerSlots[cmd].max;
+			}
+		}
+		else if (cmd < 16 && cmd > 7)
+		{
+			SaveIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.RandomizerSlotsMin[cmd - UserInputAndSlotsEditorWnd::CMD_SAVE], *min);
+			SaveIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.RandomizerSlotsMax[cmd - UserInputAndSlotsEditorWnd::CMD_SAVE], *max);
+			g_RandomizerSlots[cmd - UserInputAndSlotsEditorWnd::CMD_SAVE].min = *min;
+			g_RandomizerSlots[cmd - UserInputAndSlotsEditorWnd::CMD_SAVE].max = *max;
+		}
+	}
+	}
+}
+
+RandomMidiVelWnd::RandomMidiVelWnd()
+	: UserInputAndSlotsEditorWnd(__LOCALIZE("SWS/wol-spk77 - Randomize midi velocities tool", RANDMIDIVELWND_LOC), __LOCALIZE("Random midi velocities tool", RANDMIDIVELWND_LOC), RANDMIDIVELWND_ID, SWSGetCommandID(RandomizeSelectedMidiVelocitiesTool))
+{
+	UseTwoKnobs();
+	SetupKnob1(1, 127, 64, 1, 12.0f, __LOCALIZE("Min value:", RANDMIDIVELWND_LOC), __LOCALIZE("", RANDMIDIVELWND_LOC), __LOCALIZE("1", RANDMIDIVELWND_LOC));
+	SetupKnob2(1, 127, 64, 127, 12.0f, __LOCALIZE("Max value:", RANDMIDIVELWND_LOC), __LOCALIZE("", RANDMIDIVELWND_LOC), __LOCALIZE("1", RANDMIDIVELWND_LOC));
+	SetupOnCommandCallback(OnCommandCallback_RandMidiVelWnd);
+	SetupOKText(__LOCALIZE("Randomize", RANDMIDIVELWND_LOC));
+}
+
+void RandomizeSelectedMidiVelocitiesTool(COMMAND_T* ct)
+{
+	if ((int)ct->user == 0)
+	{
+		if (RandomMidiVelWnd* w = g_RandMidiVelWndMgr.Create())
+		{
+			OnCommandCallback_RandMidiVelWnd(CMD_SETUNDOSTR, (int*)SWS_CMD_SHORTNAME(ct), NULL);
+			w->Show(true, true);
+		}
+	}
+	else
+	{
+		if (RandomizeSelectedMidiVelocities(g_RandomizerSlots[(int)ct->user - 1].min, g_RandomizerSlots[(int)ct->user - 1].max))
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+	}
+}
+
+int IsRandomizeSelectedMidiVelocitiesOpen(COMMAND_T* ct)
+{
+	if ((int)ct->user == 0)
+		if (RandomMidiVelWnd* w = g_RandMidiVelWndMgr.Get())
+			return w->IsValidWindow();
+	return 0;
+}
+
+//---------//
+
+const char* wol_Misc_Ini::NoteVelocitiesSlotsMin[8] = {
+	"NoteVelocitiesSlot1Min",
+	"NoteVelocitiesSlot2Min",
+	"NoteVelocitiesSlot3Min",
+	"NoteVelocitiesSlot4Min",
+	"NoteVelocitiesSlot5Min",
+	"NoteVelocitiesSlot6Min",
+	"NoteVelocitiesSlot7Min",
+	"NoteVelocitiesSlot8Min",
+};
+const char* wol_Misc_Ini::NoteVelocitiesSlotsMax[8] = {
+	"NoteVelocitiesSlot1Max",
+	"NoteVelocitiesSlot2Max",
+	"NoteVelocitiesSlot3Max",
+	"NoteVelocitiesSlot4Max",
+	"NoteVelocitiesSlot5Max",
+	"NoteVelocitiesSlot6Max",
+	"NoteVelocitiesSlot7Max",
+	"NoteVelocitiesSlot8Max",
+};
+
+struct MidiVelocitiesSlots {
+	int min;
+	int max;
+};
+
+static MidiVelocitiesSlots g_MidiVelocitiesSlots[8];
+
+#define SELMIDINOTESBYVELINRANGEWND_LOC "sws_DLG_182b"
+#define SELMIDINOTESBYVELINRANGEWND_ID "WolSelMidiNotesByVelInRangeWnd"
+static SNM_WindowManager<SelMidiNotesByVelInRangeWnd> g_SelMidiNotesByVelInRangeWndMgr(SELMIDINOTESBYVELINRANGEWND_ID);
+
+static bool SelectMidiNotesByVelocityInRange(int min, int max, bool addToSelection)
+{
+	if (MediaItem_Take* take = MIDIEditor_GetTake(MIDIEditor_GetActive()))
+	{
+		if (min > 0 && max < 128)
+		{
+			int cnt = 0;
+			MIDI_CountEvts(take, &cnt, NULL, NULL);
+			for (int i = 0; i < cnt; ++i)
+			{
+				bool sel = false;
+				int vel = 0;
+				MIDI_GetNote(take, i, &sel, NULL, NULL, NULL, NULL, NULL, &vel);
+				if (addToSelection && sel)
+					continue;
+
+				sel = false;
+				if (min < max)
+				{
+					if (vel >= min && vel <= max)
+						sel = true;
+				}
+				else
+				{
+					if (vel == min)
+						sel = true;
+				}
+				MIDI_SetNote(take, i, &sel, NULL, NULL, NULL, NULL, NULL, NULL);
+			}
+			return true;
+		}
+	}
+	return false;
+}
+
+void OnCommandCallback_SelMidiNotesByVelInRangeWnd(int cmd, int* min, int* max)
+{
+	static string undoDesc;
+	switch (cmd)
+	{
+	case (UserInputAndSlotsEditorWnd::CMD_USERANSWER + IDYES):
+	{
+		if (SelectMidiNotesByVelocityInRange(*min, *max, true))
+			Undo_OnStateChangeEx2(NULL, undoDesc.data(), UNDO_STATE_ALL, -1);
+		break;
+	}
+	case (UserInputAndSlotsEditorWnd::CMD_USERANSWER + IDNO) :
+	{
+		if (SelectMidiNotesByVelocityInRange(*min, *max, false))
+			Undo_OnStateChangeEx2(NULL, undoDesc.data(), UNDO_STATE_ALL, -1);
+		break;
+	}
+	case UserInputAndSlotsEditorWnd::CMD_CLOSE:
+	{
+		undoDesc.clear();
+		break;
+	}
+	case CMD_SETUNDOSTR:
+	{
+		undoDesc = (const char*)min;
+		break;
+	}
+	default:
+	{
+		if (cmd < 8)
+		{
+			if (min && max)
+			{
+				*min = g_MidiVelocitiesSlots[cmd/* - UserInputAndSlotsEditorWnd::CMD_LOAD*/].min;
+				*max = g_MidiVelocitiesSlots[cmd].max;
+			}
+		}
+		else if (cmd < 16 && cmd > 7)
+		{
+			SaveIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.NoteVelocitiesSlotsMin[cmd - UserInputAndSlotsEditorWnd::CMD_SAVE], *min);
+			SaveIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.NoteVelocitiesSlotsMax[cmd - UserInputAndSlotsEditorWnd::CMD_SAVE], *max);
+			g_MidiVelocitiesSlots[cmd - UserInputAndSlotsEditorWnd::CMD_SAVE].min = *min;
+			g_MidiVelocitiesSlots[cmd - UserInputAndSlotsEditorWnd::CMD_SAVE].max = *max;
+		}
+	}
+	}
+}
+
+SelMidiNotesByVelInRangeWnd::SelMidiNotesByVelInRangeWnd()
+	: UserInputAndSlotsEditorWnd(__LOCALIZE("SWS/wol-spk77 - Select midi notes by velocities in range tool", SELMIDINOTESBYVELINRANGEWND_LOC), __LOCALIZE("Select midi notes by velocities in range tool", SELMIDINOTESBYVELINRANGEWND_LOC), SELMIDINOTESBYVELINRANGEWND_ID, SWSGetCommandID(SelectMidiNotesByVelocitiesInRangeTool))
+{
+	UseTwoKnobs();
+	SetupKnob1(1, 127, 64, 1, 12.0f, __LOCALIZE("Min velocity:", SELMIDINOTESBYVELINRANGEWND_LOC), __LOCALIZE("", SELMIDINOTESBYVELINRANGEWND_LOC), __LOCALIZE("1", SELMIDINOTESBYVELINRANGEWND_LOC));
+	SetupKnob2(1, 127, 64, 127, 12.0f, __LOCALIZE("Max velocity:", SELMIDINOTESBYVELINRANGEWND_LOC), __LOCALIZE("", SELMIDINOTESBYVELINRANGEWND_LOC), __LOCALIZE("1", SELMIDINOTESBYVELINRANGEWND_LOC));
+	SetupOnCommandCallback(OnCommandCallback_SelMidiNotesByVelInRangeWnd);
+	SetupOKText(__LOCALIZE("Select", SELMIDINOTESBYVELINRANGEWND_LOC));
+	SetupQuestion(__LOCALIZE("Add notes to selection? If answer is no, the selection will be cleared", SELMIDINOTESBYVELINRANGEWND_LOC), __LOCALIZE("SWS/wol-spk77 - Info", SELMIDINOTESBYVELINRANGEWND_LOC), MB_YESNO);
+}
+
+void SelectMidiNotesByVelocitiesInRangeTool(COMMAND_T* ct)
+{
+	if ((int)ct->user == 0)
+	{
+		if (SelMidiNotesByVelInRangeWnd* w = g_SelMidiNotesByVelInRangeWndMgr.Create())
+		{
+			OnCommandCallback_SelMidiNotesByVelInRangeWnd(CMD_SETUNDOSTR, (int*)SWS_CMD_SHORTNAME(ct), NULL);
+			w->Show(true, true);
+		}
+	}
+	else
+	{
+		if (SelectMidiNotesByVelocityInRange(g_MidiVelocitiesSlots[(int)ct->user - ((int)ct->user < 9 ? 1 : 9)].min, g_MidiVelocitiesSlots[(int)ct->user - ((int)ct->user < 9 ? 1 : 9)].max, (int)ct->user < 9 ? false : true))
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+	}
+}
+
+int IsSelectMidiNotesByVelocitiesInRangeOpen(COMMAND_T* ct)
+{
+	if ((int)ct->user == 0)
+		if (SelMidiNotesByVelInRangeWnd* w = g_SelMidiNotesByVelInRangeWndMgr.Get())
+			return w->IsValidWindow();
+	return 0;
+}
+
+//---------//
+
+const char* wol_Misc_Ini::SelRandMidiNotesPercent[8] = {
+	"SelRandMidiNotesPercentSlot1",
+	"SelRandMidiNotesPercentSlot2",
+	"SelRandMidiNotesPercentSlot3",
+	"SelRandMidiNotesPercentSlot4",
+	"SelRandMidiNotesPercentSlot5",
+	"SelRandMidiNotesPercentSlot6",
+	"SelRandMidiNotesPercentSlot7",
+	"SelRandMidiNotesPercentSlot8",
+};
+
+static UINT g_SelRandMidiNotesPercent[8];
+
+#define SELRANDMIDINOTESPERCWND_LOC "sws_DLG_182c"
+#define SELRANDMIDINOTESPERCWND_ID "WolSelRandMidiNotesPercWnd"
+static SNM_WindowManager<SelRandMidiNotesPercWnd> g_SelRandMidiNotesPercWndMgr(SELRANDMIDINOTESPERCWND_ID);
+
+static bool SelectRandomMidiNotesPercent(UINT perc, bool addToSelection, bool amongSelNotes)
+{
+	if (MediaItem_Take* take = MIDIEditor_GetTake(MIDIEditor_GetActive()))
+	{
+		if (perc >= 0 && perc < 101)
+		{
+			int cnt = 0;
+			MIDI_CountEvts(take, &cnt, NULL, NULL);
+			for (int i = 0; i < cnt; ++i)
+			{
+				bool sel = false;
+				MIDI_GetNote(take, i, &sel, NULL, NULL, NULL, NULL, NULL, NULL);
+				if ((addToSelection && sel && !amongSelNotes) || (amongSelNotes && !sel))
+					continue;
+
+				sel = (g_MTRand.randInt() % 100) < perc;
+				MIDI_SetNote(take, i, &sel, NULL, NULL, NULL, NULL, NULL, NULL);
+			}
+			return true;
+		}
+	}
+	return false;
+}
+
+void OnCommandCallback_SelRandMidiNotesPercWnd(int cmd, int* min, int* max)
+{
+	static string undoDesc;
+	switch (cmd)
+	{
+	case (UserInputAndSlotsEditorWnd::CMD_USERANSWER + IDYES) :
+	{
+		if (SelectRandomMidiNotesPercent((UINT)*min, true, false))
+			Undo_OnStateChangeEx2(NULL, undoDesc.data(), UNDO_STATE_ALL, -1);
+		break;
+	}
+	case (UserInputAndSlotsEditorWnd::CMD_USERANSWER + IDNO) :
+	{
+		if (SelectRandomMidiNotesPercent((UINT)*min, false, false))
+			Undo_OnStateChangeEx2(NULL, undoDesc.data(), UNDO_STATE_ALL, -1);
+		break;
+	}
+	case (UserInputAndSlotsEditorWnd::CMD_USERANSWER + IDCANCEL) :
+	{
+		if (SelectRandomMidiNotesPercent((UINT)*min, false, true))
+			Undo_OnStateChangeEx2(NULL, undoDesc.data(), UNDO_STATE_ALL, -1);
+		break;
+	}
+	case UserInputAndSlotsEditorWnd::CMD_CLOSE:
+	{
+		undoDesc.clear();
+		break;
+	}
+	case CMD_SETUNDOSTR:
+	{
+		undoDesc = (const char*)min;
+		break;
+	}
+	default:
+	{
+		if (cmd < 8)
+		{
+			if (min && max)
+				*min = g_SelRandMidiNotesPercent[cmd/* - UserInputAndSlotsEditorWnd::CMD_LOAD*/];
+		}
+		else if (cmd < 16 && cmd > 7)
+		{
+			SaveIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.SelRandMidiNotesPercent[cmd - UserInputAndSlotsEditorWnd::CMD_SAVE], *min);
+			g_SelRandMidiNotesPercent[cmd - UserInputAndSlotsEditorWnd::CMD_SAVE] = (UINT)*min;
+		}
+	}
+	}
+}
+
+SelRandMidiNotesPercWnd::SelRandMidiNotesPercWnd()
+	: UserInputAndSlotsEditorWnd(__LOCALIZE("SWS/wol-spk77 - Select random midi notes tool", SELRANDMIDINOTESPERCWND_ID), __LOCALIZE("Select random midi notes tool", SELMIDINOTESBYVELINRANGEWND_LOC), SELMIDINOTESBYVELINRANGEWND_ID, SWSGetCommandID(SelectMidiNotesByVelocitiesInRangeTool))
+{
+	SetupKnob1(1, 100, 50, 50, 12.0f, __LOCALIZE("Percent:", SELRANDMIDINOTESPERCWND_LOC), __LOCALIZE("%", SELRANDMIDINOTESPERCWND_LOC), __LOCALIZE("", SELRANDMIDINOTESPERCWND_LOC));
+	SetupOnCommandCallback(OnCommandCallback_SelRandMidiNotesPercWnd);
+	SetupOKText(__LOCALIZE("Select", SELRANDMIDINOTESPERCWND_LOC));
+	SetupQuestion(__LOCALIZE("Options:\n 'Yes' to add to selection\n 'No' for new selection\n 'Cancel' to select among selected notes.", SELRANDMIDINOTESPERCWND_LOC), __LOCALIZE("SWS/wol-spk77 - Info", SELRANDMIDINOTESPERCWND_LOC), MB_YESNOCANCEL);
+}
+
+void SelectRandomMidiNotesTool(COMMAND_T* ct)
+{
+	if ((int)ct->user == 0)
+	{
+		if (SelRandMidiNotesPercWnd* w = g_SelRandMidiNotesPercWndMgr.Create())
+		{
+			OnCommandCallback_SelRandMidiNotesPercWnd(CMD_SETUNDOSTR, (int*)SWS_CMD_SHORTNAME(ct), NULL);
+			w->Show(true, true);
+		}
+	}
+	else
+	{
+		if (SelectRandomMidiNotesPercent(g_SelRandMidiNotesPercent[(int)ct->user - ((int)ct->user < 9 ? 1 : ((int)ct->user < 17 ? 9 : 17))], ((int)ct->user < 9 || (int)ct->user > 16) ? false : true, (int)ct->user > 16))
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+	}
+}
+
+int IsSelectRandomMidiNotesOpen(COMMAND_T* ct)
+{
+	if ((int)ct->user == 0)
+		if (SelRandMidiNotesPercWnd* w = g_SelRandMidiNotesPercWndMgr.Get())
+			return w->IsValidWindow();
+	return 0;
 }
 
 
@@ -470,12 +621,19 @@ void wol_MiscInit()
 	{
 		g_RandomizerSlots[i].min = GetIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.RandomizerSlotsMin[i], 1);
 		g_RandomizerSlots[i].max = GetIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.RandomizerSlotsMax[i], 127);
+		g_MidiVelocitiesSlots[i].min = GetIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.NoteVelocitiesSlotsMin[i], 1);
+		g_MidiVelocitiesSlots[i].max = GetIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.NoteVelocitiesSlotsMax[i], 127);
+		g_SelRandMidiNotesPercent[i] = GetIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.SelRandMidiNotesPercent[i], 127);
 	}		
 
 	g_RandMidiVelWndMgr.Init();
+	g_SelMidiNotesByVelInRangeWndMgr.Init();
+	g_SelRandMidiNotesPercWndMgr.Init();
 }
 
 void wol_MiscExit()
 {
 	g_RandMidiVelWndMgr.Delete();
+	g_SelMidiNotesByVelInRangeWndMgr.Delete();
+	g_SelRandMidiNotesPercWndMgr.Delete();
 }

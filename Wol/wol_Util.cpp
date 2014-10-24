@@ -317,3 +317,262 @@ int ShowWarningMessageBox(const char* msg, const char* title, bool localizeMsg, 
 	return ShowMessageBox2(msg, title, uType, 0, localizeMsg, localizeTitle, hwnd);
 #endif
 }
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/// User input
+///////////////////////////////////////////////////////////////////////////////////////////////////
+#define MSG_MIN    0xF000
+#define MSG_MINTXT 0xF001
+#define MSG_MAX    0xF002
+#define MSG_MAXTXT 0xF003
+
+UserInputAndSlotsEditorWnd::UserInputAndSlotsEditorWnd(const char* wndtitle, const char* title, const char* id, int cmdId)
+	: SWS_DockWnd(IDD_WOL_USRINSLTEDWND, title, id, cmdId)
+{
+	m_wndtitlebar = wndtitle;
+	m_oktxt.clear();
+	m_questiontxt.clear();
+	m_questiontype = MB_OK;
+	m_twoknobs = m_kn1rdy = m_kn2rdy = m_cbrdy = m_askquestion = false;
+
+	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
+	Init();
+}
+
+void UserInputAndSlotsEditorWnd::SetupKnob1(int min, int max, int center, int pos, double factor, const char* title, const char* suffix, const char* zerotext)
+{
+	m_kn1.SetRangeFactor(min, max, center, factor);
+	m_kn1.SetSliderPosition(pos);
+
+	m_kn1Text.SetTitle(title);
+	m_kn1Text.SetSuffix(suffix);
+	m_kn1Text.SetZeroText(zerotext);
+
+	m_kn1rdy = true;
+	if (!m_twoknobs)
+		m_kn2rdy = true;
+}
+
+void UserInputAndSlotsEditorWnd::SetupKnob2(int min, int max, int center, int pos, double factor, const char* title, const char* suffix, const char* zerotext)
+{
+	m_kn2.SetRangeFactor(min, max, center, factor);
+	m_kn2.SetSliderPosition(pos);
+
+	m_kn2Text.SetTitle(title);
+	m_kn2Text.SetSuffix(suffix);
+	m_kn2Text.SetZeroText(zerotext);
+
+	m_kn2rdy = true;
+}
+
+void UserInputAndSlotsEditorWnd::SetupOnCommandCallback(void(*OnCommandCallback)(int cmd, int* min, int* max))
+{
+	m_OnCommandCallback = OnCommandCallback;
+
+	m_cbrdy = true;
+}
+
+void UserInputAndSlotsEditorWnd::SetupOKText(const char* text)
+{
+	m_oktxt = text;
+}
+
+void UserInputAndSlotsEditorWnd::SetupQuestion(const char* questiontxt, const char* questiontitle, UINT type)
+{
+	m_askquestion = true;
+	m_questiontxt = questiontxt;
+	m_questiontitle = questiontitle;
+	m_questiontype = type;
+}
+
+void UserInputAndSlotsEditorWnd::OnInitDlg()
+{
+	if (!m_kn1rdy || !m_kn2rdy || !m_cbrdy)
+		DestroyWindow(m_hwnd);
+
+	m_parentVwnd.SetRealParent(m_hwnd);
+	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
+
+	m_kn1.SetID(MSG_MIN);
+	m_kn1Text.AddChild(&m_kn1);
+
+	m_kn1Text.SetID(MSG_MINTXT);
+	m_kn1Text.SetValue(m_kn1.GetSliderPosition());
+	m_parentVwnd.AddChild(&m_kn1Text);
+
+	if (m_twoknobs)
+	{
+		m_kn2.SetID(MSG_MAX);
+		m_kn2Text.AddChild(&m_kn2);
+
+		m_kn2Text.SetID(MSG_MAXTXT);
+		m_kn2Text.SetValue(m_kn2.GetSliderPosition());
+		m_parentVwnd.AddChild(&m_kn2Text);
+	}
+
+	m_btnL = GetDlgItem(m_hwnd, IDC_WOL_SLOT6S);
+	m_btnR = GetDlgItem(m_hwnd, IDC_WOL_SLOT7L);
+
+	if (m_wndtitlebar.size())
+		SetWindowText(m_hwnd, m_wndtitlebar.data());
+
+	if (m_oktxt.size())
+		SetWindowText(GetDlgItem(m_hwnd, IDC_WOL_OK), m_oktxt.data());
+}
+
+void UserInputAndSlotsEditorWnd::OnDestroy()
+{
+	m_kn1Text.RemoveAllChildren(false);
+	m_kn2Text.RemoveAllChildren(false);
+}
+
+void UserInputAndSlotsEditorWnd::DrawControls(LICE_IBitmap* bm, const RECT* r, int* tooltipHeight)
+{
+	RECT r2 = { 0, 0, 0, 0 };
+	RECT tmp = { 0, 0, 0, 0 };
+	ColorTheme* ct = SNM_GetColorTheme();
+	LICE_pixel col = ct ? LICE_RGBA_FROMNATIVE(ct->main_text, 255) : LICE_RGBA(255, 255, 255, 255);
+
+	m_kn1.SetFGColors(col, col);
+	SNM_SkinKnob(&m_kn1);
+	m_kn1Text.DrawText(NULL, &r2, DT_NOPREFIX | DT_CALCRECT);
+	GetWindowRect(m_btnL, &tmp);
+	ScreenToClient(m_hwnd, (LPPOINT)&tmp);
+	ScreenToClient(m_hwnd, (LPPOINT)&tmp + 1);
+	if (m_twoknobs)
+	{
+		r2.left = tmp.right - r2.right - 19;
+		r2.top = tmp.bottom + 10;
+		r2.right = tmp.right;
+		r2.bottom += r2.top;
+	}
+	else
+	{
+		r2.left = tmp.right + 2 - (r2.right / 2) - 9;
+		r2.top = tmp.bottom + 10;
+		r2.right = tmp.right + (r2.right / 2) + 10;
+		r2.bottom += r2.top;
+	}
+	m_kn1Text.SetPosition(&r2);
+	m_kn1Text.SetVisible(true);
+
+	if (m_twoknobs)
+	{
+		r2.left = r2.top = r2.right = r2.bottom = 0;
+		m_kn2.SetFGColors(col, col);
+		SNM_SkinKnob(&m_kn2);
+		m_kn2Text.DrawText(NULL, &r2, DT_NOPREFIX | DT_CALCRECT);
+		GetWindowRect(m_btnR, &tmp);
+		ScreenToClient(m_hwnd, (LPPOINT)&tmp);
+		ScreenToClient(m_hwnd, ((LPPOINT)&tmp) + 1);
+		r2.left = tmp.left;
+		r2.top = tmp.bottom + 10;
+		r2.right += r2.left + 19;
+		r2.bottom += r2.top;
+		m_kn2Text.SetPosition(&r2);
+		m_kn2Text.SetVisible(true);
+	}
+}
+
+void UserInputAndSlotsEditorWnd::OnCommand(WPARAM wParam, LPARAM lParam)
+{
+	switch (LOWORD(wParam))
+	{
+	case IDC_WOL_SLOT1L:
+	case IDC_WOL_SLOT2L:
+	case IDC_WOL_SLOT3L:
+	case IDC_WOL_SLOT4L:
+	case IDC_WOL_SLOT5L:
+	case IDC_WOL_SLOT6L:
+	case IDC_WOL_SLOT7L:
+	case IDC_WOL_SLOT8L:
+	{
+		int min = 0, max = 0;
+		m_OnCommandCallback(CMD_LOAD + LOWORD(wParam) - IDC_WOL_SLOT1L, &min, &max);
+		m_kn1Text.SetValue(min);
+		m_kn2Text.SetValue(max);
+		Update();
+		break;
+	}
+	case IDC_WOL_SLOT1S:
+	case IDC_WOL_SLOT2S:
+	case IDC_WOL_SLOT3S:
+	case IDC_WOL_SLOT4S:
+	case IDC_WOL_SLOT5S:
+	case IDC_WOL_SLOT6S:
+	case IDC_WOL_SLOT7S:
+	case IDC_WOL_SLOT8S:
+	{
+		int min = m_kn1.GetSliderPosition(), max = m_kn2.GetSliderPosition();
+		m_OnCommandCallback(CMD_SAVE + LOWORD(wParam) - IDC_WOL_SLOT1S, &min, &max);
+		break;
+	}
+	case IDC_WOL_OK:
+	{
+		int min = m_kn1.GetSliderPosition(), max = m_kn2.GetSliderPosition();
+		int answer = CMD_USERANSWER;
+		if (m_askquestion)
+			answer += MessageBox(m_hwnd, m_questiontxt.data(), m_questiontitle.data(), m_questiontype);
+		else
+			answer += MB_OK;
+		m_OnCommandCallback(answer, &min, &max);
+		break;
+	}
+	case IDC_WOL_CLOSE:
+	{
+		int min = m_kn1.GetSliderPosition(), max = m_kn2.GetSliderPosition();
+		m_OnCommandCallback(CMD_CLOSE, &min, &max);
+		SendMessage(m_hwnd, WM_COMMAND, (WPARAM)IDCANCEL, (LPARAM)0);
+		break;
+	}
+	}
+}
+
+INT_PTR UserInputAndSlotsEditorWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	if (uMsg == WM_VSCROLL)
+	{
+		switch (lParam)
+		{
+		case MSG_MIN:
+		{
+			m_kn1Text.SetValue(m_kn1.GetSliderPosition());
+			if (m_kn1.GetSliderPosition() > m_kn2.GetSliderPosition())
+			{
+				m_kn2Text.SetValue(m_kn2.GetSliderPosition());
+			}
+			break;
+		}
+		case MSG_MAX:
+		{
+			m_kn2Text.SetValue(m_kn2.GetSliderPosition());
+			if (m_kn2.GetSliderPosition() < m_kn1.GetSliderPosition())
+			{
+				m_kn1Text.SetValue(m_kn1.GetSliderPosition());
+			}
+			break;
+		}
+		}
+	}
+	else if (uMsg == WM_MOUSEWHEEL)
+	{
+		POINT mouse = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+		ScreenToClient(m_hwnd, &mouse);
+		m_parentVwnd.OnMouseWheel(mouse.x,
+			mouse.y,
+#ifdef _WIN32
+			GET_WHEEL_DELTA_WPARAM(wParam)
+#else
+			(short)HIWORD(wParam)
+#endif
+			);
+	}
+	return 0;
+}
+
+void UserInputAndSlotsEditorWnd::Update()
+{
+	m_parentVwnd.RequestRedraw(NULL);
+}

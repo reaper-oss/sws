@@ -28,6 +28,7 @@
 #pragma once
 
 #include "../SnM/SnM_VWnd.h"
+#include "wol_Util.h"
 
 void MoveEditCursorToBeatN(COMMAND_T* ct);
 void MoveEditCursorTo(COMMAND_T* ct);
@@ -37,28 +38,26 @@ void SelectAllTracksExceptFolderParents(COMMAND_T* ct);
 void MoveEditCursorToNote(COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd);
 void RandomizeSelectedMidiVelocitiesTool(COMMAND_T* ct);
 int IsRandomizeSelectedMidiVelocitiesOpen(COMMAND_T* ct);
-class RandomMidiVelWnd : public SWS_DockWnd
+class RandomMidiVelWnd : public UserInputAndSlotsEditorWnd
 {
 public:
 	RandomMidiVelWnd();
+};
 
-	void Update();
-	void SetUndoDescription(const char* desc) { m_undoDesc.clear(); m_undoDesc = desc; }
+void SelectMidiNotesByVelocitiesInRangeTool(COMMAND_T* ct);
+int IsSelectMidiNotesByVelocitiesInRangeOpen(COMMAND_T* ct);
+class SelMidiNotesByVelInRangeWnd : public UserInputAndSlotsEditorWnd
+{
+public:
+	SelMidiNotesByVelInRangeWnd();
+};
 
-protected:
-	void OnInitDlg();
-	void OnDestroy();
-	void OnCommand(WPARAM wParam, LPARAM lParam);
-	void DrawControls(LICE_IBitmap* bm, const RECT* r, int* tooltipHeight = NULL);
-	INT_PTR OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-private:
-	SNM_Knob m_min, m_max;
-	SNM_KnobCaption m_minText, m_maxText;
-
-	HWND m_btnL, m_btnR;
-
-	string m_undoDesc;
+void SelectRandomMidiNotesTool(COMMAND_T* ct);
+int IsSelectRandomMidiNotesOpen(COMMAND_T* ct);
+class SelRandMidiNotesPercWnd : public UserInputAndSlotsEditorWnd
+{
+public:
+	SelRandMidiNotesPercWnd();
 };
 
 void ScrollMixer(COMMAND_T* ct);

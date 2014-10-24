@@ -87,7 +87,7 @@
 #define IDD_BR_LOUDNESS_PREF            179
 #define IDD_BR_LOUDNESS_EXPORT_FORMAT   180
 #define IDD_BR_CONTEXTUAL_TOOLBARS      181
-#define IDD_WOL_RANDOMMIDIVEL		    182
+#define IDD_WOL_USRINSLTEDWND		    182
 #define IDB_UP                          500
 #define IDB_DOWN                        501
 #define IDC_BUTTON1                     1000
@@ -462,7 +462,8 @@
 #define IDC_WOL_SLOT6S					1368
 #define IDC_WOL_SLOT7S					1369
 #define IDC_WOL_SLOT8S					1370
-#define IDC_WOL_RANDOMIZE				1371
+#define IDC_WOL_OK						1371
+#define IDC_WOL_CLOSE					1372
 
 
 // Next default values for new objects
@@ -471,7 +472,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        183
 #define _APS_NEXT_COMMAND_VALUE         40000
-#define _APS_NEXT_CONTROL_VALUE         1372
+#define _APS_NEXT_CONTROL_VALUE         1373
 #define _APS_NEXT_SYMED_VALUE           100
 #endif
 #endif

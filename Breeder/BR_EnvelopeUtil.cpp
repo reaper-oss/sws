@@ -312,9 +312,9 @@ bool BR_Envelope::SetPoint (int id, double* position, double* value, int* shape,
 			WritePtr(value, this->SnapValue(*value));
 
 		if (position) m_points[id].position = *position - m_takeEnvOffset;
-		ReadPtr(value,    m_points[id].value   );
-		ReadPtr(shape,    m_points[id].shape   );
-		ReadPtr(bezier,   m_points[id].bezier  );
+		ReadPtr(value,    m_points[id].value);
+		ReadPtr(shape,    m_points[id].shape);
+		ReadPtr(bezier,   m_points[id].bezier);
 
 		m_update = true;
 		if (position) m_sorted = false;
@@ -1295,16 +1295,22 @@ bool BR_Envelope::IsLocked ()
 	return locked;
 }
 
-int BR_Envelope::LaneHeight ()
-{
-	this->FillProperties();
-	return m_properties.height;
-}
-
 int BR_Envelope::Type ()
 {
 	this->FillProperties();
 	return m_properties.type;
+}
+
+int BR_Envelope::ParamId ()
+{
+	this->FillProperties();
+	return m_properties.paramId;
+}
+
+int BR_Envelope::LaneHeight ()
+{
+	this->FillProperties();
+	return m_properties.height;
 }
 
 int BR_Envelope::DefaultShape ()
@@ -1690,6 +1696,7 @@ void BR_Envelope::FillProperties () const
 				else if (strstr(token, "PARMENV"))
 				{
 					lp.parse(token);
+					m_properties.paramId     = lp.gettoken_int(1);
 					m_properties.minValue    = lp.gettoken_float(2);
 					m_properties.maxValue    = lp.gettoken_float(3);
 					m_properties.centerValue = lp.gettoken_float(4);
@@ -1811,6 +1818,7 @@ type          (0),
 minValue      (0),
 maxValue      (0),
 centerValue   (0),
+paramId       (-1),
 filled        (false),
 changed       (false)
 {
@@ -1831,6 +1839,7 @@ type          (properties.type),
 minValue      (properties.minValue),
 maxValue      (properties.maxValue),
 centerValue   (properties.centerValue),
+paramId       (properties.paramId),
 filled        (properties.filled),
 changed       (properties.changed),
 paramType     (properties.paramType)
@@ -1856,6 +1865,7 @@ BR_Envelope::EnvProperties& BR_Envelope::EnvProperties::operator= (const EnvProp
 	minValue      = properties.minValue;
 	maxValue      = properties.maxValue;
 	centerValue   = properties.centerValue;
+	paramId       = properties.paramId;
 	filled        = properties.filled;
 	changed       = properties.changed;
 	paramType.Set(&properties.paramType);

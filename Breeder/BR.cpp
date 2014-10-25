@@ -155,6 +155,17 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Fit selected envelope points to time selection" },                                                 "BR_FIT_ENV_POINTS_TO_TIMESEL",       FitEnvPointsToTimeSel, NULL},
 	{ { DEFACCEL, "SWS/BR: Insert new envelope point at mouse cursor using value at current position (obey snapping)" },      "BR_ENV_POINT_MOUSE_CURSOR",          CreateEnvPointMouse, NULL},
 
+	{ { DEFACCEL, "SWS/BR: Increase selected envelope points by 0.1 db (volume envelope only)" },                             "BR_INC_VOL_ENV_PT_01.db",            IncreaseDecreaseVolEnvPoints, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Increase selected envelope points by 0.5 db (volume envelope only)" },                             "BR_INC_VOL_ENV_PT_05.db",            IncreaseDecreaseVolEnvPoints, NULL, 5},
+	{ { DEFACCEL, "SWS/BR: Increase selected envelope points by 1 db (volume envelope only)" },                               "BR_INC_VOL_ENV_PT_1db",              IncreaseDecreaseVolEnvPoints, NULL, 10},
+	{ { DEFACCEL, "SWS/BR: Increase selected envelope points by 5 db (volume envelope only)" },                               "BR_INC_VOL_ENV_PT_5db",              IncreaseDecreaseVolEnvPoints, NULL, 50},
+	{ { DEFACCEL, "SWS/BR: Increase selected envelope points by 10 db (volume envelope only)" },                              "BR_INC_VOL_ENV_PT_10db",             IncreaseDecreaseVolEnvPoints, NULL, 100},
+	{ { DEFACCEL, "SWS/BR: Decrease selected envelope points by 0.1 db (volume envelope only)" },                             "BR_DEC_VOL_ENV_PT_01.db",            IncreaseDecreaseVolEnvPoints, NULL, -1},
+	{ { DEFACCEL, "SWS/BR: Decrease selected envelope points by 0.5 db (volume envelope only)" },                             "BR_DEC_VOL_ENV_PT_05.db",            IncreaseDecreaseVolEnvPoints, NULL, -5},
+	{ { DEFACCEL, "SWS/BR: Decrease selected envelope points by 1 db (volume envelope only)" },                               "BR_DEC_VOL_ENV_PT_1db",              IncreaseDecreaseVolEnvPoints, NULL, -10},
+	{ { DEFACCEL, "SWS/BR: Decrease selected envelope points by 5 db (volume envelope only)" },                               "BR_DEC_VOL_ENV_PT_5db",              IncreaseDecreaseVolEnvPoints, NULL, -50},
+	{ { DEFACCEL, "SWS/BR: Decrease selected envelope points by 10 db (volume envelope only)" },                              "BR_DEC_VOL_ENV_PT_10db",             IncreaseDecreaseVolEnvPoints, NULL, -100},
+
 	{ { DEFACCEL, "SWS/BR: Unselect envelope" },                                                                              "BR_UNSEL_ENV",                       UnselectEnvelope, NULL, 0},
 
 	{ { DEFACCEL, "SWS/BR: Save envelope point selection, slot 1" },                                                          "BR_SAVE_ENV_SEL_SLOT_1",             SaveEnvSelSlot, NULL, 0},

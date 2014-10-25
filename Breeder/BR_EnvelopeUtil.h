@@ -163,7 +163,7 @@ public:
 	void AddToPoints (double* position, double* value);
 	void AddToSelectedPoints (double* position, double* value);
 	void GetSelectedPointsExtrema (double* minimum, double* maximum);
-	WDL_FastString FormatValue (double value); // Due to API limitation we can't known to which parameter envelope belongs so FX (non-native) envelopes won't get properly formated
+	WDL_FastString FormatValue (double value); // Due to API limitation we can't known to which FX envelope belongs, so FX (non-native) envelopes won't get properly formated
 	WDL_FastString GetName ();
 	MediaItem_Take* GetTake ();
 	MediaTrack* GetParent ();
@@ -175,9 +175,11 @@ public:
 	bool IsInLane ();
 	bool IsArmed ();
 	bool IsLocked (); // check lock settings for specific envelope type
+	int Type ();      // See BR_EnvType for types
+	int ParamId ();   // returns  -1 if envelope is native
 	int LaneHeight ();
-	int Type ();          // See BR_EnvType for types
 	int DefaultShape ();
+
 	double MinValue ();
 	double MaxValue ();
 	double CenterValue ();
@@ -234,6 +236,7 @@ private:
 		int shape, shapeUnknown1, shapeUnknown2;
 		int type;
 		double minValue, maxValue, centerValue;
+		int paramId;
 		bool filled, changed;
 		WDL_FastString paramType;
 		EnvProperties ();

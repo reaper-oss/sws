@@ -1106,6 +1106,26 @@ void CreateEnvPointMouse (COMMAND_T* ct)
 	}
 }
 
+void IncreaseDecreaseVolEnvPoints (COMMAND_T* ct)
+{
+	BR_Envelope envelope (GetSelectedEnvelope(NULL));
+	if (envelope.CountSelected() > 0 && (envelope.Type() == VOLUME || envelope.Type() == VOLUME_PREFX))
+	{
+		double trim = DB2VAL(((double)ct->user) / 10);
+		for (int i = 0; i < envelope.CountSelected(); ++i)
+		{
+			double value;
+			if (envelope.GetPoint(envelope.GetSelected(i), NULL, &value, NULL, NULL))
+			{
+				value = SetToBounds(value * trim, envelope.LaneMinValue(), envelope.LaneMaxValue());
+				envelope.SetPoint(envelope.GetSelected(i), NULL, &value, NULL, NULL);
+			}
+		}
+		if (envelope.Commit())
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+	}
+}
+
 void UnselectEnvelope (COMMAND_T* ct)
 {
 	if (GetSelectedEnvelope(NULL))
@@ -1115,6 +1135,7 @@ void UnselectEnvelope (COMMAND_T* ct)
 
 		SetCursorContext(2, NULL);
 		GetSetFocus(true, &hwnd, &context);
+		UpdateArrange();
 	}
 }
 

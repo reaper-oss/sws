@@ -125,9 +125,21 @@ public:
 	/* Toggle appropriate toolbar under mouse cursor */
 	void LoadToolbar ();
 
+	/* Get toolbar info */
+	int CountToolbars ();
+	int GetToolbarType (int toolbarId); // -1 -> unknown, 0 -> do nothing, 1 -> inherit parent, 2 -> follow item context, 3 -> normal toolbar
+	bool GetToolbarName (int toolbarId, char* toolbarName, int toolbarNameSz);
+	bool IsFirstToolbar (int toolbarId);
+	bool IsFirstMidiToolbar (int toolbarId);
+
 	/* Get and set toolbar info for specific context (for list of contexts see BR_ToolbarContexts) */
-	bool SetContext (int context, int mouseAction);
-	bool GetToolbarName (int context, char* name, int nameSz);
+	bool SetContext (int context, int toolbarId);
+	bool GetContext (int context, int* toolbarId);
+
+	/* Check contexts for various types */
+	bool IsContextValid (int context);          // Check if context is nonexistent or something like END_ARRANGE etc...
+	bool CanContextInheritParent (int context); // Top contexts can't inherit parent since they have none
+	bool CanContextFollowItem (int context);    // Check if contexts can follow item contexts
 
 	/* Get and set options for toolbar loading */
 	void SetOptionsAll (int* focus, int* topmost);
@@ -136,8 +148,8 @@ public:
 	void GetOptionsTcp (int* track, int* envelope);
 	void SetOptionsMcp (int* track);
 	void GetOptionsMcp (int* track);
-	void SetOptionsArrange (int* track, int* item, int* trackEnvelope, int* takeEnvelope, int* activateTake);
-	void GetOptionsArrange (int* track, int* item, int* trackEnvelope, int* takeEnvelope, int* activateTake);
+	void SetOptionsArrange (int* track, int* item, int* stretchMarker, int* takeEnvelope, int* trackEnvelope, int* activateTake);
+	void GetOptionsArrange (int* track, int* item, int* stretchMarker, int* takeEnvelope, int* trackEnvelope, int* activateTake);
 	void SetOptionsMIDI (int* setCCLaneAsClicked);
 	void GetOptionsMIDI (int* setCCLaneAsClicked);
 	void SetOptionsInline (int* item, int* setCCLaneAsClicked);
@@ -154,7 +166,7 @@ private:
 		int topmost;
 		int tcpTrack, tcpEnvelope;
 		int mcpTrack;
-		int arrangeTrack, arrangeItem, arrangeTrackEnvelope, arrangeTakeEnvelope, arrangeActTake;
+		int arrangeTrack, arrangeItem, arrangeStretchMarker, arrangeTakeEnvelope, arrangeTrackEnvelope, arrangeActTake;
 		int midiSetCCLane;
 		int inlineItem, inlineSetCCLane;
 		Options ();
@@ -174,7 +186,54 @@ private:
 		bool setCCLaneAsClicked;
 		ExecuteOnToolbarLoad();
 	};
+	struct ToolbarWndData
+	{
+		HWND hwnd;
+		WNDPROC wndProc;
+		#ifndef _WIN32
+			int level;
+		#endif;
+	};
+	enum ToolbarActions
+	{
+		DO_NOTHING            = 0xF001,
+		INHERIT_PARENT        = 0xF002,
+		FOLLOW_ITEM_CONTEXT   = 0xF003,
+		TOOLBAR_1_MOUSE       = 41111,
+		TOOLBAR_2_MOUSE       = 41112,
+		TOOLBAR_3_MOUSE       = 41113,
+		TOOLBAR_4_MOUSE       = 41114,
+		TOOLBAR_5_MOUSE       = 41655,
+		TOOLBAR_6_MOUSE       = 41656,
+		TOOLBAR_7_MOUSE       = 41657,
+		TOOLBAR_8_MOUSE       = 41658,
+		MIDI_TOOLBAR_1_MOUSE  = 41640,
+		MIDI_TOOLBAR_2_MOUSE  = 41641,
+		MIDI_TOOLBAR_3_MOUSE  = 41642,
+		MIDI_TOOLBAR_4_MOUSE  = 41643,
+		TOOLBAR_1_TOGGLE      = 41679,
+		TOOLBAR_2_TOGGLE      = 41680,
+		TOOLBAR_3_TOGGLE      = 41681,
+		TOOLBAR_4_TOGGLE      = 41682,
+		TOOLBAR_5_TOGGLE      = 41683,
+		TOOLBAR_6_TOGGLE      = 41684,
+		TOOLBAR_7_TOGGLE      = 41685,
+		TOOLBAR_8_TOGGLE      = 41686,
+		MIDI_TOOLBAR_1_TOGGLE = 41687,
+		MIDI_TOOLBAR_2_TOGGLE = 41688,
+		MIDI_TOOLBAR_3_TOGGLE = 41689,
+		MIDI_TOOLBAR_4_TOGGLE = 41690,
 
+		TOOLBAR_COUNT         = 15
+	};
+
+	void UpdateInternals (); // call every time contexts change
+	void SetToolbarAlwaysOnTop (int toolbarId);
+	void CloseAllAssignedToolbars ();
+	bool AreAssignedToolbarsOpened ();
+	bool GetReaperToolbar (int id, int* mouseAction, int* toggleAction, char* toolbarName, int toolbarNameSz); // id is 0-based, returns false if toolbar doesn't exist
+	bool IsToolbarAction (int action);                                                                         // returns false in case action is something like DO_NOTHING etc..
+	int GetToolbarId (int mouseAction);
 	int FindRulerToolbar      (BR_MouseContextInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad);
 	int FindTransportToolbar  (BR_MouseContextInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad);
 	int FindTcpToolbar        (BR_MouseContextInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad);
@@ -182,15 +241,14 @@ private:
 	int FindArrangeToolbar    (BR_MouseContextInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad);
 	int FindMidiToolbar       (BR_MouseContextInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad);
 	int FindInlineMidiToolbar (BR_MouseContextInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad);
-	bool AreAssignedToolbarsOpened ();
-	void CloseAllAssignedToolbars ();
-	void UpdateInternals (); // call every time contexts change
+	static LRESULT CALLBACK ToolbarWndCallback (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 	BR_ContextualToolbar::Options m_options;
 	int m_mouseActions[CONTEXT_COUNT];
 	int m_toggleActions[CONTEXT_COUNT];
 	int m_mode;
 	set<int> m_activeContexts;
+	static WDL_PtrList<BR_ContextualToolbar::ToolbarWndData> m_topToolbars;
 };
 
 /******************************************************************************
@@ -202,39 +260,14 @@ public:
 	BR_ContextualToolbarsManager ();
 	~BR_ContextualToolbarsManager ();
 
-	/* Get and set contextual toolbar by id */
+	/* Get and set contextual toolbar by id (will serialize state) */
 	BR_ContextualToolbar* GetContextualToolbar (int id);
 	void                  SetContextualToolbar (int id, BR_ContextualToolbar& contextualToolbars);
-
-	/* Get toolbar data, id is 0 based - returns false in case of an invalid id */
-	bool GetReaperToolbar (int id, int* mouseAction, int* toggleAction, char* toolbarName, int toolbarNameSz);
-	bool GetToolbarName (int mouseAction, char* toolbarName, int toolbarNameSz);
-	int GetToggleToolbarAction (int mouseAction);
-
-	/* Check contexts and actions for various types */
-	bool IsContextValid (int context);            // Check if context is nonexistent or something like END_ARRANGE etc...
-	bool CanContextInheritParent (int context);   // Top contexts can't inherit parent since they have none
-	bool CanContextFollowItem (int context);      // Check if contexts can follow item contexts
-	bool IsToolbarAction (int action);            // Returns false in case action is something like DO_NOTHING etc..
-
-	/* Always on top hack */
-	void SetToolbarAlwaysOnTop (int mouseAction);
 
 private:
 	WDL_FastString GetContextKey (int id);
 	WDL_FastString GetOptionsKey (int id);
-	WDL_PtrList<BR_ContextualToolbar> m_contextualToolbars;
-
-	struct ToolbarWndData
-	{
-		HWND hwnd;
-		WNDPROC wndProc;
-		#ifndef _WIN32
-			int level;
-		#endif;
-	};
-	static WDL_PtrList<BR_ContextualToolbarsManager::ToolbarWndData> m_topToolbars;
-	static LRESULT CALLBACK ToolbarWndCallback (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+	static WDL_PtrList<BR_ContextualToolbar> m_contextualToolbars;
 };
 
 /******************************************************************************

@@ -78,9 +78,9 @@ Added actions
 +MIDI editor:
  - SWS/BR: Save/Restore selected events in last clicked CC lane (8 slots) (Save has 2 versions: last clicked lane, lane under mouse cursor. Restore has 3 versions: last clicked lane, lane under mouse cursor, all visible lanes)
  - SWS/BR: Insert CC event at edit cursor in CC lane under mouse cursor (active item only)
- - SWS/BR: Hide last clicked CC lane
- - SWS/BR: Hide all CC lanes except last clicked CC lane
- - SWS/BR: Toggle hide all CC lanes except last clicked CC lane (multiple versions: one normal and bunch of others that set lane to specific height)
+ - SWS/BR: Hide last clicked/under mouse cursor CC lane
+ - SWS/BR: Hide all CC lanes except last clicked/under mouse cursor CC lane
+ - SWS/BR: Toggle hide all CC lanes except last clicked/mouse cursor CC lane (multiple versions: one normal and bunch of others that set lane to specific height)
  - SWS/BR: Convert selected CC events to envelope points in selected envelope (multiple versions for different point shape and clearing existing envelope points)
 
 ReaScript

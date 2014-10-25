@@ -703,15 +703,13 @@ void BR_MidiToggleCCLane::LoadState (ProjectStateContext* ctx)
 	}
 }
 
-bool BR_MidiToggleCCLane::Hide (void* midiEditor, int editorHeight /*= -1*/, int inlineHeight /*= -1*/)
+bool BR_MidiToggleCCLane::Hide (void* midiEditor, int laneToKeep, int editorHeight /*= -1*/, int inlineHeight /*= -1*/)
 {
 	bool update = false;
 	if (m_ccLanes.size() == 0 && MIDIEditor_GetMode(midiEditor) != -1)
 	{
 		if (MediaItem_Take* take = MIDIEditor_GetTake(midiEditor))
 		{
-			int lastCLickedLane = GetLastClickedVelLane(midiEditor);
-
 			MediaItem* item = GetMediaItemTake_Item(take);
 			int takeId = GetTakeId(take, item);
 			if (takeId >= 0)
@@ -736,7 +734,7 @@ bool BR_MidiToggleCCLane::Hide (void* midiEditor, int editorHeight /*= -1*/, int
 						savedCCLanes.push_back(currentLane);
 
 						lp.parse(lineLane.Get());
-						if (lp.gettoken_int(1) != lastCLickedLane)
+						if (lp.gettoken_int(1) != laneToKeep)
 						{
 							ptk.RemoveLine("SOURCE", "VELLANE", 1, laneId);
 							lanesRemoved = true;
@@ -746,7 +744,7 @@ bool BR_MidiToggleCCLane::Hide (void* midiEditor, int editorHeight /*= -1*/, int
 							if ((editorHeight != -1 && editorHeight != lp.gettoken_int(2)) || (inlineHeight != -1 && inlineHeight != lp.gettoken_int(3)))
 							{
 								WDL_FastString newLane;
-								newLane.AppendFormatted(256, "%s %d %d %d\n", "VELLANE", lastCLickedLane, (editorHeight == -1) ? lp.gettoken_int(2) : editorHeight, (inlineHeight == -1) ? lp.gettoken_int(3) : inlineHeight);
+								newLane.AppendFormatted(256, "%s %d %d %d\n", "VELLANE", laneToKeep, (editorHeight == -1) ? lp.gettoken_int(2) : editorHeight, (inlineHeight == -1) ? lp.gettoken_int(3) : inlineHeight);
 								ptk.ReplaceLine(position - 1, newLane.Get());
 								lanesRemoved = true;
 							}

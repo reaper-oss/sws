@@ -316,11 +316,26 @@ void ME_ShowUsedCCLanesDetect14Bit (COMMAND_T* ct, int val, int valhw, int relmo
 
 void ME_HideCCLanes (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
-	if (void* midiEditor = MIDIEditor_GetActive())
+
+		
+
+	int laneToProcess;
+	void* midiEditor;
+	if ((int)ct->user > 0)
+	{
+		midiEditor    = MIDIEditor_GetActive();
+		laneToProcess = GetLastClickedVelLane(midiEditor);		
+	}
+	else
+	{
+		BR_MouseContextInfo mouseInfo(BR_MouseContextInfo::MODE_MIDI_EDITOR_ALL);		
+		midiEditor = mouseInfo.GetMidiEditor();
+		mouseInfo.GetCCLane(&laneToProcess, NULL, NULL);
+	}
+	
+	if (midiEditor)
 	{
 		MediaItem_Take* take = MIDIEditor_GetTake(MIDIEditor_GetActive());
-
-		int lastCLickedLane =  GetLastClickedVelLane(midiEditor);
 		if (take)
 		{
 			MediaItem* item = GetMediaItemTake_Item(take);
@@ -347,7 +362,7 @@ void ME_HideCCLanes (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 						++laneCount;
 
 						lp.parse(lineLane.Get());
-						if (((int)ct->user == 0 && lp.gettoken_int(1) == lastCLickedLane) || ((int)ct->user == 1 && lp.gettoken_int(1) != lastCLickedLane))
+						if ((abs((int)ct->user) == 1 && lp.gettoken_int(1) == laneToProcess) || (abs((int)ct->user) == 2 && lp.gettoken_int(1) != laneToProcess))
 						{
 							--laneCount;
 							ptk.RemoveLine("SOURCE", "VELLANE", 1, laneId);
@@ -376,16 +391,39 @@ void ME_HideCCLanes (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 
 void ME_ToggleHideCCLanes (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
-	if (void* midiEditor = MIDIEditor_GetActive())
-	{
 		if (g_midiToggleHideCCLanes.Get()->IsHidden())
 		{
-			if (g_midiToggleHideCCLanes.Get()->Restore(midiEditor))
+			void* midiEditor = NULL;
+			if ((int)ct->user > 0)
+			{
+				midiEditor = MIDIEditor_GetActive();
+			}
+			else
+			{
+				BR_MouseContextInfo mouseInfo(BR_MouseContextInfo::MODE_MIDI_EDITOR_ALL);
+				midiEditor = mouseInfo.GetMidiEditor();
+			}
+	
+			if (midiEditor && g_midiToggleHideCCLanes.Get()->Restore(midiEditor))
 				Undo_OnStateChangeEx2(NULL, __LOCALIZE("Restore hidden CC lanes", "sws_undo"), UNDO_STATE_ALL, -1);
 		}
 		else
 		{
-			if (g_midiToggleHideCCLanes.Get()->Hide(midiEditor, ((int)ct->user == 0) ? -1 : (int)ct->user))
+			void* midiEditor;
+			int laneToKeep;
+			if ((int)ct->user > 0)
+			{
+				midiEditor = MIDIEditor_GetActive();
+				laneToKeep = GetLastClickedVelLane(midiEditor);
+			}
+			else
+			{
+				BR_MouseContextInfo mouseInfo(BR_MouseContextInfo::MODE_MIDI_EDITOR_ALL);
+				midiEditor = mouseInfo.GetMidiEditor();
+				mouseInfo.GetCCLane(&laneToKeep, NULL, NULL);
+			}
+
+			if (midiEditor && g_midiToggleHideCCLanes.Get()->Hide(midiEditor, laneToKeep, (abs((int)ct->user) == 1) ? -1 : abs((int)ct->user)))
 				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 		}
 
@@ -400,7 +438,6 @@ void ME_ToggleHideCCLanes (COMMAND_T* ct, int val, int valhw, int relmode, HWND 
 		RefreshToolbar(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_400_PX"));
 		RefreshToolbar(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_450_PX"));
 		RefreshToolbar(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_500_PX"));
-	}
 }
 
 void ME_CCToEnvPoints (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)

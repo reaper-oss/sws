@@ -443,6 +443,8 @@
 #define IDC_INLINE_ITEM_COMBO           1350
 #define IDC_INLINE_CC_LANE_CLICKED      1351
 #define IDC_HELP_WIKI                   1352
+#define IDC_ARG_STRETCH                 1353
+#define IDC_ARG_STRETCH_COMBO           1354
 
 // Next default values for new objects
 // 

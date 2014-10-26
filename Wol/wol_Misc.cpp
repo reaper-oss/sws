@@ -623,7 +623,7 @@ void wol_MiscInit()
 		g_RandomizerSlots[i].max = GetIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.RandomizerSlotsMax[i], 127);
 		g_MidiVelocitiesSlots[i].min = GetIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.NoteVelocitiesSlotsMin[i], 1);
 		g_MidiVelocitiesSlots[i].max = GetIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.NoteVelocitiesSlotsMax[i], 127);
-		g_SelRandMidiNotesPercent[i] = GetIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.SelRandMidiNotesPercent[i], 127);
+		g_SelRandMidiNotesPercent[i] = GetIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.SelRandMidiNotesPercent[i], 100);
 	}		
 
 	g_RandMidiVelWndMgr.Init();

@@ -72,6 +72,7 @@ Added actions
  - SWS/BR: Move closest project marker to edit/play/mouse cursor (2 versions: normal and obey snapping) (Issue 668)
  - SWS/BR: Focus tracks
  - SWS/BR: Unselect envelope
+ - SWS/BR: Increase/Decrease selected envelope points by x db (volume envelope only) (multiple versions: 0.1, 0.5, 1, 5 and 10 db)
  - SWS/wol: Select all tracks except folder parents
  - SWS: Toggle horizontal zoom to selected items/time selection
  - SWS/wol: Save/Restore selected envelope height (8 slots)
@@ -90,9 +91,9 @@ Added actions
 +MIDI editor:
  - SWS/BR: Save/Restore selected events in last clicked CC lane (8 slots) (Save has 2 versions: last clicked lane, lane under mouse cursor. Restore has 3 versions: last clicked lane, lane under mouse cursor, all visible lanes)
  - SWS/BR: Insert CC event at edit cursor in CC lane under mouse cursor (active item only)
- - SWS/BR: Hide last clicked CC lane
- - SWS/BR: Hide all CC lanes except last clicked CC lane
- - SWS/BR: Toggle hide all CC lanes except last clicked CC lane (multiple versions: one normal and bunch of others that set lane to specific height)
+ - SWS/BR: Hide last clicked/under mouse cursor CC lane
+ - SWS/BR: Hide all CC lanes except last clicked/under mouse cursor CC lane
+ - SWS/BR: Toggle hide all CC lanes except last clicked/mouse cursor CC lane (multiple versions: one normal and bunch of others that set lane to specific height)
  - SWS/BR: Convert selected CC events to envelope points in selected envelope (multiple versions for different point shape and clearing existing envelope points)
  - SWS/wol-spk77: Move edit cursor to start of previous/next note
 

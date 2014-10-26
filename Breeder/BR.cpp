@@ -155,6 +155,17 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Fit selected envelope points to time selection" },                                                 "BR_FIT_ENV_POINTS_TO_TIMESEL",       FitEnvPointsToTimeSel, NULL},
 	{ { DEFACCEL, "SWS/BR: Insert new envelope point at mouse cursor using value at current position (obey snapping)" },      "BR_ENV_POINT_MOUSE_CURSOR",          CreateEnvPointMouse, NULL},
 
+	{ { DEFACCEL, "SWS/BR: Increase selected envelope points by 0.1 db (volume envelope only)" },                             "BR_INC_VOL_ENV_PT_01.db",            IncreaseDecreaseVolEnvPoints, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Increase selected envelope points by 0.5 db (volume envelope only)" },                             "BR_INC_VOL_ENV_PT_05.db",            IncreaseDecreaseVolEnvPoints, NULL, 5},
+	{ { DEFACCEL, "SWS/BR: Increase selected envelope points by 1 db (volume envelope only)" },                               "BR_INC_VOL_ENV_PT_1db",              IncreaseDecreaseVolEnvPoints, NULL, 10},
+	{ { DEFACCEL, "SWS/BR: Increase selected envelope points by 5 db (volume envelope only)" },                               "BR_INC_VOL_ENV_PT_5db",              IncreaseDecreaseVolEnvPoints, NULL, 50},
+	{ { DEFACCEL, "SWS/BR: Increase selected envelope points by 10 db (volume envelope only)" },                              "BR_INC_VOL_ENV_PT_10db",             IncreaseDecreaseVolEnvPoints, NULL, 100},
+	{ { DEFACCEL, "SWS/BR: Decrease selected envelope points by 0.1 db (volume envelope only)" },                             "BR_DEC_VOL_ENV_PT_01.db",            IncreaseDecreaseVolEnvPoints, NULL, -1},
+	{ { DEFACCEL, "SWS/BR: Decrease selected envelope points by 0.5 db (volume envelope only)" },                             "BR_DEC_VOL_ENV_PT_05.db",            IncreaseDecreaseVolEnvPoints, NULL, -5},
+	{ { DEFACCEL, "SWS/BR: Decrease selected envelope points by 1 db (volume envelope only)" },                               "BR_DEC_VOL_ENV_PT_1db",              IncreaseDecreaseVolEnvPoints, NULL, -10},
+	{ { DEFACCEL, "SWS/BR: Decrease selected envelope points by 5 db (volume envelope only)" },                               "BR_DEC_VOL_ENV_PT_5db",              IncreaseDecreaseVolEnvPoints, NULL, -50},
+	{ { DEFACCEL, "SWS/BR: Decrease selected envelope points by 10 db (volume envelope only)" },                              "BR_DEC_VOL_ENV_PT_10db",             IncreaseDecreaseVolEnvPoints, NULL, -100},
+
 	{ { DEFACCEL, "SWS/BR: Unselect envelope" },                                                                              "BR_UNSEL_ENV",                       UnselectEnvelope, NULL, 0},
 
 	{ { DEFACCEL, "SWS/BR: Save envelope point selection, slot 1" },                                                          "BR_SAVE_ENV_SEL_SLOT_1",             SaveEnvSelSlot, NULL, 0},
@@ -262,9 +273,9 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Insert CC event at edit cursor in CC lane under mouse cursor (active item only)" },                            "BR_ME_INSERT_CC_EDIT_CURSOR_MOUSE_LANE",        NULL, NULL, 0, NULL, 32060, ME_CCEventAtEditCursor},
 	{ { DEFACCEL, "SWS/BR: Show only used CC lanes (detect 14-bit)" },                                                                    "BR_ME_SHOW_USED_CC_14_BIT",                     NULL, NULL, 0, NULL, 32060, ME_ShowUsedCCLanesDetect14Bit},
 
-	{ { DEFACCEL, "SWS/BR: Hide last clicked CC lane" },                                                                                  "BR_ME_HIDE_LAST_CLICKED_LANE",                  NULL, NULL, 0, NULL, 32060, ME_HideCCLanes},
-	{ { DEFACCEL, "SWS/BR: Hide all CC lanes except last clicked CC lane" },                                                              "BR_ME_HIDE_ALL_NO_LAST_CLICKED",                NULL, NULL, 1, NULL, 32060, ME_HideCCLanes},
-	{ { DEFACCEL, "SWS/BR: Toggle hide all CC lanes except last clicked CC lane" },                                                       "BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED",         NULL, NULL, 0,   ME_IsToggleHideCCLanesOn, 32060, ME_ToggleHideCCLanes},
+	{ { DEFACCEL, "SWS/BR: Hide last clicked CC lane" },                                                                                  "BR_ME_HIDE_LAST_CLICKED_LANE",                  NULL, NULL, 1, NULL, 32060, ME_HideCCLanes},
+	{ { DEFACCEL, "SWS/BR: Hide all CC lanes except last clicked CC lane" },                                                              "BR_ME_HIDE_ALL_NO_LAST_CLICKED",                NULL, NULL, 2, NULL, 32060, ME_HideCCLanes},
+	{ { DEFACCEL, "SWS/BR: Toggle hide all CC lanes except last clicked CC lane" },                                                       "BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED",         NULL, NULL, 1,   ME_IsToggleHideCCLanesOn, 32060, ME_ToggleHideCCLanes},
 	{ { DEFACCEL, "SWS/BR: Toggle hide all CC lanes except last clicked CC lane (set lane height to 50 pixel)" },                         "BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_50_PX",   NULL, NULL, 50,  ME_IsToggleHideCCLanesOn, 32060, ME_ToggleHideCCLanes},
 	{ { DEFACCEL, "SWS/BR: Toggle hide all CC lanes except last clicked CC lane (set lane height to 100 pixel)" },                        "BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_100_PX",  NULL, NULL, 100, ME_IsToggleHideCCLanesOn, 32060, ME_ToggleHideCCLanes},
 	{ { DEFACCEL, "SWS/BR: Toggle hide all CC lanes except last clicked CC lane (set lane height to 150 pixel)" },                        "BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_150_PX",  NULL, NULL, 150, ME_IsToggleHideCCLanesOn, 32060, ME_ToggleHideCCLanes},
@@ -275,6 +286,21 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Toggle hide all CC lanes except last clicked CC lane (set lane height to 400 pixel)" },                        "BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_400_PX",  NULL, NULL, 400, ME_IsToggleHideCCLanesOn, 32060, ME_ToggleHideCCLanes},
 	{ { DEFACCEL, "SWS/BR: Toggle hide all CC lanes except last clicked CC lane (set lane height to 450 pixel)" },                        "BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_450_PX",  NULL, NULL, 450, ME_IsToggleHideCCLanesOn, 32060, ME_ToggleHideCCLanes},
 	{ { DEFACCEL, "SWS/BR: Toggle hide all CC lanes except last clicked CC lane (set lane height to 500 pixel)" },                        "BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_500_PX",  NULL, NULL, 500, ME_IsToggleHideCCLanesOn, 32060, ME_ToggleHideCCLanes},
+
+	{ { DEFACCEL, "SWS/BR: Hide CC lane under mouse cursor" },                                                                            "BR_ME_HIDE_MOUSE_LANE",                       NULL, NULL, -1, NULL, 32060, ME_HideCCLanes},
+	{ { DEFACCEL, "SWS/BR: Hide all CC lanes except CC lane under mouse cursor" },                                                        "BR_ME_HIDE_ALL_NO_MOUSE_LANE",                NULL, NULL, -2, NULL, 32060, ME_HideCCLanes},
+	{ { DEFACCEL, "SWS/BR: Toggle hide all CC lanes except CC lane under mouse cursor" },                                                 "BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE",         NULL, NULL, -1,   ME_IsToggleHideCCLanesOn, 32060, ME_ToggleHideCCLanes},
+	{ { DEFACCEL, "SWS/BR: Toggle hide all CC lanes except CC lane under mouse cursor (set lane height to 50 pixel)" },                   "BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_50_PX",   NULL, NULL, -50,  ME_IsToggleHideCCLanesOn, 32060, ME_ToggleHideCCLanes},
+	{ { DEFACCEL, "SWS/BR: Toggle hide all CC lanes except CC lane under mouse cursor (set lane height to 100 pixel)" },                  "BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_100_PX",  NULL, NULL, -100, ME_IsToggleHideCCLanesOn, 32060, ME_ToggleHideCCLanes},
+	{ { DEFACCEL, "SWS/BR: Toggle hide all CC lanes except CC lane under mouse cursor (set lane height to 150 pixel)" },                  "BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_150_PX",  NULL, NULL, -150, ME_IsToggleHideCCLanesOn, 32060, ME_ToggleHideCCLanes},
+	{ { DEFACCEL, "SWS/BR: Toggle hide all CC lanes except CC lane under mouse cursor (set lane height to 200 pixel)" },                  "BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_200_PX",  NULL, NULL, -200, ME_IsToggleHideCCLanesOn, 32060, ME_ToggleHideCCLanes},
+	{ { DEFACCEL, "SWS/BR: Toggle hide all CC lanes except CC lane under mouse cursor (set lane height to 250 pixel)" },                  "BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_250_PX",  NULL, NULL, -250, ME_IsToggleHideCCLanesOn, 32060, ME_ToggleHideCCLanes},
+	{ { DEFACCEL, "SWS/BR: Toggle hide all CC lanes except CC lane under mouse cursor (set lane height to 300 pixel)" },                  "BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_300_PX",  NULL, NULL, -300, ME_IsToggleHideCCLanesOn, 32060, ME_ToggleHideCCLanes},
+	{ { DEFACCEL, "SWS/BR: Toggle hide all CC lanes except CC lane under mouse cursor (set lane height to 350 pixel)" },                  "BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_350_PX",  NULL, NULL, -350, ME_IsToggleHideCCLanesOn, 32060, ME_ToggleHideCCLanes},
+	{ { DEFACCEL, "SWS/BR: Toggle hide all CC lanes except CC lane under mouse cursor (set lane height to 400 pixel)" },                  "BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_400_PX",  NULL, NULL, -400, ME_IsToggleHideCCLanesOn, 32060, ME_ToggleHideCCLanes},
+	{ { DEFACCEL, "SWS/BR: Toggle hide all CC lanes except CC lane under mouse cursor (set lane height to 450 pixel)" },                  "BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_450_PX",  NULL, NULL, -450, ME_IsToggleHideCCLanesOn, 32060, ME_ToggleHideCCLanes},
+	{ { DEFACCEL, "SWS/BR: Toggle hide all CC lanes except CC lane under mouse cursor (set lane height to 500 pixel)" },                  "BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_500_PX",  NULL, NULL, -500, ME_IsToggleHideCCLanesOn, 32060, ME_ToggleHideCCLanes},
+
 
 	{ { DEFACCEL, "SWS/BR: Convert selected CC events to square envelope points in selected envelope" },                                  "BR_ME_CC_TO_ENV_SQUARE",                        NULL, NULL, 1,  NULL, 32060, ME_CCToEnvPoints},
 	{ { DEFACCEL, "SWS/BR: Convert selected CC events to linear envelope points in selected envelope" },                                  "BR_ME_CC_TO_ENV_LINEAR",                        NULL, NULL, 2,  NULL, 32060, ME_CCToEnvPoints},

@@ -1265,11 +1265,11 @@ int BR_MouseContextInfo::IsMouseOverEnvelopeLine (BR_Envelope& envelope, int dra
 		{
 			// Check all the points around mouse cursor position
 			// gotcha: since point can be partially visible even when it's position is not within arrange start/end we don't check if within bounds
-			double prevPos;
-			while (envelope.GetPoint(prevId, &prevPos, NULL, NULL, NULL) && CheckBounds(prevPos, mousePosLeft, mousePosRight))
+			double prevPos, prevVal;
+			while (envelope.GetPoint(prevId, &prevPos, &prevVal, NULL, NULL) && CheckBounds(prevPos, mousePosLeft, mousePosRight))
 			{
 				int x = RoundToInt(arrangeZoom * (prevPos - arrangeStart));
-				int y = yOffset + drawableEnvHeight - RoundToInt(envelope.NormalizedDisplayValue(prevId) * drawableEnvHeight);
+				int y = yOffset + drawableEnvHeight - RoundToInt(envelope.NormalizedDisplayValue(prevVal) * drawableEnvHeight);
 				if (CheckBounds(mouseDisplayX, x - ENV_HIT_POINT, x + ENV_HIT_POINT_LEFT) && CheckBounds(mouseY, y - ENV_HIT_POINT - tempoHit, y + ENV_HIT_POINT_DOWN + tempoHit))
 				{
 					mouseHit = 1;
@@ -1281,11 +1281,11 @@ int BR_MouseContextInfo::IsMouseOverEnvelopeLine (BR_Envelope& envelope, int dra
 		}
 		if (!found)
 		{
-			double nextPos;
-			while (envelope.GetPoint(nextId, &nextPos, NULL, NULL, NULL) && CheckBounds(nextPos, mousePosLeft, mousePosRight))
+			double nextPos, nextVal;
+			while (envelope.GetPoint(nextId, &nextPos, &nextVal, NULL, NULL) && CheckBounds(nextPos, mousePosLeft, mousePosRight))
 			{
 				int x = RoundToInt(arrangeZoom * (nextPos - arrangeStart));
-				int y = yOffset + drawableEnvHeight - RoundToInt(envelope.NormalizedDisplayValue(nextId) * drawableEnvHeight);
+				int y = yOffset + drawableEnvHeight - RoundToInt(envelope.NormalizedDisplayValue(nextVal) * drawableEnvHeight);
 				if (CheckBounds(mouseDisplayX, x - ENV_HIT_POINT, x + ENV_HIT_POINT_LEFT) && CheckBounds(mouseY, y - ENV_HIT_POINT - tempoHit, y + ENV_HIT_POINT_DOWN + tempoHit))
 				{
 					mouseHit = 1;

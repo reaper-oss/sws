@@ -111,7 +111,7 @@ public:
 	BR_Envelope (MediaTrack* track, int envelopeId, bool takeEnvelopesUseProjectTime = true);
 	BR_Envelope (MediaItem_Take* take, BR_EnvType envType, bool takeEnvelopesUseProjectTime = true);
 	BR_Envelope (const BR_Envelope& envelope);
-	~BR_Envelope () {}
+	~BR_Envelope ();
 	BR_Envelope& operator=  (const BR_Envelope& envelope);
 	bool         operator== (const BR_Envelope& envelope); // This only compares points and if envelope is active (aka things that affect playback) - other
 	bool         operator!= (const BR_Envelope& envelope); // properties like type, envelope pointer, height, armed, default shape etc... are ignored)
@@ -141,45 +141,43 @@ public:
 	void DeletePointsInRange (double start, double end);
 	void DeleteAllPoints ();
 	void Sort ();                                            // Sort points by position
-	int Count ();                                            // Count existing points
+	int CountPoints ();                                      // Count existing points
 	int Find (double position, double surroundingRange = 0); // All find functions will be more efficient if points are sorted.
 	int FindNext (double position);                          // When point's position is edited or new point is created, code
 	int FindPrevious (double position);                      // assumes they are not sorted unless Sort() is used afterwards,
 	int FindClosest (double position);                       // note that caller needs to check if returned id exists
 
-	/* Miscellaneous */
-	int GetSendId ();                                 // If send envelope, get send id for it's parent track, otherwise -1
+	/* Points properties */
 	double ValueAtPosition (double position);         // Using find functionality, so efficiency may vary (see comment about Find())
 	double NormalizedDisplayValue (double value);     // Convert point value to 0.0 - 1.0 range as displayed in arrange
-	double NormalizedDisplayValue (int id);
 	double RealDisplayValue (double normalizedValue); // Convert normalized display value in range 0.0 - 1.0 to real envelope value
 	double SnapValue (double value);                  // Snaps value to current settings (only relevant for take pitch envelope)
-	bool IsTempo ();
-	bool IsTakeEnvelope ();
-	bool GetPointsInTimeSelection (int* startId, int* endId, double* tStart = NULL, double* tEnd = NULL); // Presumes points are sorted, returns false if there is there is no time selection (if there are no points in time selection, both ids will be -1)
-	bool VisibleInArrange (int* envHeight = NULL, int* yOffset = NULL, bool cacheValues = false);         // Is part of the envelope visible in arrange (height calculation can be intensive (envelopes in track lane), use cacheValues if situation allows)
-	void MoveArrangeToPoint (int id, int referenceId);                                                    // Moves arrange horizontally if needed so point is visible
-	void SetTakeEnvelopeTimebase (bool useProjectTime);                                                   // By setting this to true, project time can be used everywhere when dealing with take envelopes. If take changes position just call again.
-	void AddToPoints (double* position, double* value);
-	void AddToSelectedPoints (double* position, double* value);
 	void GetSelectedPointsExtrema (double* minimum, double* maximum);
-	WDL_FastString FormatValue (double value); // Due to API limitation we can't known to which FX envelope belongs, so FX (non-native) envelopes won't get properly formated
+	bool GetPointsInTimeSelection (int* startId, int* endId, double* tStart = NULL, double* tEnd = NULL); // Presumes points are sorted, returns false if there is there is no time selection (if there are no points in time selection, both ids will be -1)
+
+	/* Miscellaneous */
+	bool VisibleInArrange (int* envHeight, int* yOffset, bool cacheValues = false); // Is part of the envelope visible in arrange (height calculation can be intensive (envelopes in track lane), use cacheValues if situation allows)
+	void MoveArrangeToPoint (int id, int referenceId);                              // Moves arrange horizontally if needed so point is visible
+	void SetTakeEnvelopeTimebase (bool useProjectTime);                             // By setting this to true, project time can be used everywhere when dealing with take envelopes. If take changes position, just call again.
+	WDL_FastString FormatValue (double value);                                      // Due to API limitation we can't known to which FX envelope belongs, so FX (non-native) envelopes won't get properly formated
 	WDL_FastString GetName ();
 	MediaItem_Take* GetTake ();
 	MediaTrack* GetParent ();
 	TrackEnvelope* GetPointer ();
 
 	/* Get envelope properties */
+	bool IsTempo ();
+	bool IsTakeEnvelope ();
+	bool IsLocked (); // Check lock settings for specific envelope type
 	bool IsActive ();
 	bool IsVisible ();
 	bool IsInLane ();
 	bool IsArmed ();
-	bool IsLocked (); // check lock settings for specific envelope type
+	int GetLaneHeight ();
+	int GetDefaultShape ();
 	int Type ();      // See BR_EnvType for types
-	int ParamId ();   // returns  -1 if envelope is native
-	int LaneHeight ();
-	int DefaultShape ();
-
+	int ParamId ();   // If FX envelope, get parameter id for it's FX, otherwise -1
+	int GetSendId (); // If send envelope, get send id for it's parent track, otherwise -1
 	double MinValue ();
 	double MaxValue ();
 	double CenterValue ();

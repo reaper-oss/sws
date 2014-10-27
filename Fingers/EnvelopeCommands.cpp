@@ -111,17 +111,34 @@ void AddToEnvPoints::doCommand(int flag)
     double cursorPos = GetCursorPosition();
 
     if( m_pp == POINTTIME)
-        {
-                double beat = (240.0 / TimeMap2_GetDividedBpmAtTime(0, cursorPos));
-                double amount = beat * m_dAmount;
-                envelope.AddToSelectedPoints(&amount, NULL);
-        }
-        else
-        {
-                double amt = (envelope.LaneMaxValue() - envelope.LaneMinValue()) / 100 * m_dAmount;
-                envelope.AddToSelectedPoints(NULL, &amt);
-        }
-        envelope.Commit();
+	{
+		double beat = (240.0 / TimeMap2_GetDividedBpmAtTime(0, cursorPos));
+		double amount = beat * m_dAmount;
+
+		for (int i = 0; i < envelope.CountSelected(); ++i)
+		{
+			int id = envelope.GetSelected(i);
+			double position;
+			envelope.GetPoint(id, &position, NULL, NULL, NULL);
+			position += amount;
+			envelope.SetPoint(id, &position, NULL, NULL, NULL);
+		}
+	}
+	else
+	{
+		double amount = (envelope.LaneMaxValue() - envelope.LaneMinValue()) / 100 * m_dAmount;
+
+		for (int i = 0; i < envelope.CountSelected(); ++i)
+		{
+			int id = envelope.GetSelected(i);
+			double value;
+			envelope.GetPoint(id, NULL, &value, NULL, NULL);
+			value += amount;
+			SetToBounds(value, envelope.LaneMinValue(), envelope.LaneMaxValue());
+			envelope.SetPoint(id, NULL, &value, NULL, NULL);
+		}
+	}
+	envelope.Commit();
 }
 
 bool selected(RprEnvelopePoint &p)
@@ -204,7 +221,7 @@ void CompressExpandPoints::doCommand(int flag)
         double t0_old = t0;
         double b0_old = b0;
 
-        for (int i = 0; i < envelope.Count(); ++i)
+        for (int i = 0; i < envelope.CountPoints(); ++i)
         {
             double t1, b1; int s1;
             envelope.GetPoint(i, &t1, &b1, &s1, NULL);

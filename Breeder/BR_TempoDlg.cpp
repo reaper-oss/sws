@@ -1509,7 +1509,7 @@ static void SetRandomTempo (HWND hwnd, BR_Envelope* oldTempo, double min, double
 	double b0_old = b0;
 
 	// Go through all tempo points and randomize tempo
-	for (int i = 0; i < tempoMap.Count(); ++i)
+	for (int i = 0; i < tempoMap.CountPoints(); ++i)
 	{
 		double t1, b1;
 		int s1;

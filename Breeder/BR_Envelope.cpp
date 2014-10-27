@@ -50,7 +50,7 @@ static bool EnvMouseInit (bool init)
 	{
 		GetConfig("undomask", s_editCursorUndo);
 		g_envMouseEnvelope = new (nothrow) BR_Envelope(GetSelectedEnvelope(NULL));
-		initSuccessful = g_envMouseEnvelope && g_envMouseEnvelope->Count() && PositionAtMouseCursor(false) != -1;
+		initSuccessful = g_envMouseEnvelope && g_envMouseEnvelope->CountPoints() && PositionAtMouseCursor(false) != -1;
 
 		if (initSuccessful)
 			SetConfig("undomask", ClearBit(s_editCursorUndo, 3));
@@ -412,7 +412,7 @@ void CursorToEnv1 (COMMAND_T* ct)
 void CursorToEnv2 (COMMAND_T* ct)
 {
 	BR_Envelope envelope(GetSelectedEnvelope(NULL));
-	if (!envelope.Count())
+	if (!envelope.CountPoints())
 		return;
 
 	int id;
@@ -579,7 +579,7 @@ void ShrinkEnvSelEnd (COMMAND_T* ct)
 void EnvPointsGrid (COMMAND_T* ct)
 {
 	BR_Envelope envelope(GetSelectedEnvelope(NULL));
-	if (!envelope.Count())
+	if (!envelope.CountPoints())
 		return;
 
 	// Get options and the range to work on
@@ -592,7 +592,7 @@ void EnvPointsGrid (COMMAND_T* ct)
 	if (!timeSel || !envelope.GetPointsInTimeSelection(&startId, &endId))
 	{
 		startId = 0;
-		endId   = envelope.Count()-1;
+		endId   = envelope.CountPoints()-1;
 	}
 	else if (!envelope.ValidateId(startId) || !envelope.ValidateId(endId))
 		return;
@@ -664,7 +664,7 @@ void EnvPointsGrid (COMMAND_T* ct)
 					else
 						offset += (t0 + (480*beatCount) / (den * (b0 + b1))) - t1;
 
-					int nextPoint = (i == pointsToDelete.size() - 1) ? envelope.Count() : pointsToDelete[i+1].first;
+					int nextPoint = (i == pointsToDelete.size() - 1) ? envelope.CountPoints() : pointsToDelete[i+1].first;
 					while (++conseqEnd < nextPoint)
 					{
 						double t;
@@ -697,7 +697,7 @@ void EnvPointsGrid (COMMAND_T* ct)
 void CreateEnvPointsGrid (COMMAND_T* ct)
 {
 	BR_Envelope envelope(GetSelectedEnvelope(NULL));
-	if (!envelope.Count())
+	if (!envelope.CountPoints())
 		return;
 
 	bool timeSel = ((int)ct->user == 1) ? true : false;
@@ -706,7 +706,7 @@ void CreateEnvPointsGrid (COMMAND_T* ct)
 	if (!timeSel || !envelope.GetPointsInTimeSelection(&startId, &endId, &tStart, &tEnd))
 	{
 		startId = 0;
-		endId   = envelope.Count()-1;
+		endId   = envelope.CountPoints()-1;
 		tStart  = 0;
 		tEnd    = EndOfProject(true, true);
 	}
@@ -740,7 +740,7 @@ void CreateEnvPointsGrid (COMMAND_T* ct)
 			{
 				t1 = t0;
 				t0 = 0;
-				s0 = envelope.DefaultShape();
+				s0 = envelope.GetDefaultShape();
 				b0 = 0;
 				--i; // make loop process first point one more time, creating points AFTER first point
 			}
@@ -772,7 +772,7 @@ void CreateEnvPointsGrid (COMMAND_T* ct)
 	}
 
 	for (size_t i = 0; i < position.size(); ++i)
-		envelope.CreatePoint(envelope.Count(), position[i], value[i], shape[i], bezier[i], false, true);
+		envelope.CreatePoint(envelope.CountPoints(), position[i], value[i], shape[i], bezier[i], false, true);
 
 
 	if (envelope.Commit())
@@ -811,13 +811,13 @@ void ShiftEnvSelection (COMMAND_T* ct)
 void PeaksDipsEnv (COMMAND_T* ct)
 {
 	BR_Envelope envelope(GetSelectedEnvelope(NULL));
-	if (!envelope.Count())
+	if (!envelope.CountPoints())
 		return;
 
 	if ((int)ct->user == -2 || (int)ct->user == 2)
 		envelope.UnselectAll();
 
-	for (int i = 1; i < envelope.Count()-1 ; ++i)
+	for (int i = 1; i < envelope.CountPoints()-1 ; ++i)
 	{
 		double v0, v1, v2;
 		envelope.GetPoint(i-1, NULL, &v0, NULL, NULL);
@@ -848,10 +848,10 @@ void SelEnvTimeSel (COMMAND_T* ct)
 		return;
 
 	BR_Envelope envelope(GetSelectedEnvelope(NULL));
-	if (!envelope.Count())
+	if (!envelope.CountPoints())
 		return;
 
-	for (int i = 0; i < envelope.Count() ; ++i)
+	for (int i = 0; i < envelope.CountPoints() ; ++i)
 	{
 		double point;
 		envelope.GetPoint(i, &point, NULL, NULL, NULL);
@@ -913,7 +913,7 @@ void MoveEnvPointToEditCursor (COMMAND_T* ct)
 	int id = -1;
 
 	BR_Envelope envelope(GetSelectedEnvelope(NULL));
-	if (!envelope.Count())
+	if (!envelope.CountPoints())
 		return;
 
 	// Find closest
@@ -994,7 +994,7 @@ void Insert2EnvPointsTimeSelection (COMMAND_T* ct)
 				{
 					int startId = envelope.Find(tStart, MIN_ENV_DIST);
 					int endId   = envelope.Find(tEnd, MIN_ENV_DIST);
-					int defaultShape = envelope.DefaultShape();
+					int defaultShape = envelope.GetDefaultShape();
 					envelope.UnselectAll();
 
 					// Create left-side point only if surrounding points are not too close, otherwise just move existing
@@ -1004,7 +1004,7 @@ void Insert2EnvPointsTimeSelection (COMMAND_T* ct)
 							envelope.SetSelection(startId, true);
 					}
 					else
-						envelope.CreatePoint(envelope.Count(), tStart, envelope.ValueAtPosition(tStart), defaultShape, 0, true, true);
+						envelope.CreatePoint(envelope.CountPoints(), tStart, envelope.ValueAtPosition(tStart), defaultShape, 0, true, true);
 
 					// Create right-side point only if surrounding points are not too close, otherwise just move existing
 					if (envelope.ValidateId(endId))
@@ -1013,7 +1013,7 @@ void Insert2EnvPointsTimeSelection (COMMAND_T* ct)
 							envelope.SetSelection(endId, true);
 					}
 					else
-						envelope.CreatePoint(envelope.Count(), tEnd, envelope.ValueAtPosition(tEnd), defaultShape, 0, true, true);
+						envelope.CreatePoint(envelope.CountPoints(), tEnd, envelope.ValueAtPosition(tEnd), defaultShape, 0, true, true);
 
 					if (envelope.Commit())
 						update = true;
@@ -1081,7 +1081,7 @@ void CreateEnvPointMouse (COMMAND_T* ct)
 			return;
 	}
 
-	if (position != -1 && envelope.VisibleInArrange())
+	if (position != -1 && envelope.VisibleInArrange(NULL, NULL))
 	{
 		position = SnapToGrid(NULL, position);
 		double fudgeFactor = (envelope.IsTempo()) ? (MIN_TEMPO_DIST) : (MIN_ENV_DIST);
@@ -1090,7 +1090,7 @@ void CreateEnvPointMouse (COMMAND_T* ct)
 			double value = envelope.ValueAtPosition(position);
 			if (envelope.IsTempo())
 			{
-				if (SetTempoTimeSigMarker(NULL, -1, position, -1, -1, value, 0, 0, !envelope.DefaultShape()))
+				if (SetTempoTimeSigMarker(NULL, -1, position, -1, -1, value, 0, 0, !envelope.GetDefaultShape()))
 				{
 					UpdateTimeline();
 					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
@@ -1098,7 +1098,7 @@ void CreateEnvPointMouse (COMMAND_T* ct)
 			}
 			else
 			{
-				envelope.CreatePoint(envelope.Count(), position, value, envelope.DefaultShape(), 0, false, true);
+				envelope.CreatePoint(envelope.CountPoints(), position, value, envelope.GetDefaultShape(), 0, false, true);
 				if (envelope.Commit())
 					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 			}
@@ -1188,9 +1188,9 @@ void ShowActiveTrackEnvOnly (COMMAND_T* ct)
 	// If envelope has only one point, Reaper will not show it after hiding all
 	// envelopes and committing with vis = 1, so we create another artificial point
 	bool flag = false;
-	if (envelope.Count() <= 1)
+	if (envelope.CountPoints() <= 1)
 	{
-		int id = envelope.Count() - 1;
+		int id = envelope.CountPoints() - 1;
 		double position, value; int shape;
 		envelope.GetPoint(id, &position, &value, &shape, NULL);
 		envelope.CreatePoint(id+1, position+1, value, shape, 0, false);
@@ -1205,7 +1205,7 @@ void ShowActiveTrackEnvOnly (COMMAND_T* ct)
 		Main_OnCommand(40889 ,0); // hide for selected tracks
 
 	if (flag)
-		envelope.DeletePoint(envelope.Count()-1);
+		envelope.DeletePoint(envelope.CountPoints()-1);
 
 	envelope.Commit(true);
 	PreventUIRefresh(-1);
@@ -1340,7 +1340,7 @@ void ShowHideSendEnv (COMMAND_T* ct)
 			if (hide == envelope->IsVisible() && envelope->IsActive())
 			{
 				envelope->SetVisible(!hide);
-				if (!envelope->IsVisible() && envelope->Count() <= 1)
+				if (!envelope->IsVisible() && envelope->CountPoints() <= 1)
 				{
 					double value;
 					if (envelope->GetPoint(0, NULL, &value, NULL, NULL) && GetCurrentAutomationMode(envelope->GetParent()) != 0)

@@ -1136,6 +1136,7 @@ void UnselectEnvelope (COMMAND_T* ct)
 		SetCursorContext(2, NULL);
 		GetSetFocus(true, &hwnd, &context);
 		UpdateArrange();
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 	}
 }
 

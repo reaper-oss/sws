@@ -30,6 +30,7 @@ Analyze and normalize loudness
    - Formating supports wildcards. Wildcards description can be found in the same dialog. To hide description, simply resize the dialog
    - Besides typing, wildcards can also be inserted using the "Wildcard" button.
    - Previously used format patterns are stored in the "Wildcard" button submenu
+ - Analyzed objects are now restored on project load
  - Other:
   - Right-click menu entry for creating loudness graph no longer queries range, instead it uses range set in Options->Global preferences (or SWS/BR: Global loudness preferences)
   - Normalize dialog is no longer modal (but will be closed if loudness analyzer is closed/hidden to avoid confusion)

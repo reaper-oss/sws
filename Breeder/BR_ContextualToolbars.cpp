@@ -2151,13 +2151,13 @@ void BR_ContextualToolbarsWnd::ContextMenuReturnId (int id)
 /******************************************************************************
 * Contextual toolbars init/exit                                               *
 ******************************************************************************/
-int ContextToolbarsInit ()
+int ContextualToolbarsInit ()
 {
 	g_contextToolbarsWndManager.Init();
 	return 1;
 }
 
-void ContextToolbarsExit ()
+void ContextualToolbarsExit ()
 {
 	g_contextToolbarsWndManager.Delete();
 }

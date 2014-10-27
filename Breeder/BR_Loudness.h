@@ -34,6 +34,7 @@
 class BR_LoudnessObject
 {
 public:
+	BR_LoudnessObject ();
 	BR_LoudnessObject (MediaTrack* track);
 	BR_LoudnessObject (MediaItem_Take* take);
 	~BR_LoudnessObject ();
@@ -47,6 +48,10 @@ public:
 	/* For populating list view in analyze loudness dialog */
 	double GetColumnVal (int column, int mode);                    // mode: 0->LUFS, 1->LU (LU will follow global format settings)
 	void GetColumnStr (int column, char* str, int strSz, int mode);
+
+	/* For serializing */
+	void SaveObject (ProjectStateContext* ctx);
+	bool RestoreObject (ProjectStateContext* ctx);
 
 	/* Various options and manipulation (mainly for analyze loudness dialog) */
 	double GetAudioLength ();
@@ -110,7 +115,7 @@ private:
 	AudioData m_audioData;
 	MediaTrack* m_track;
 	MediaItem_Take* m_take;
-	GUID m_takeGuid, m_trackGuid;
+	GUID m_guid;
 	double m_integrated, m_truePeak, m_truePeakPos, m_shortTermMax, m_momentaryMax, m_range;
 	double m_progress;
 	bool m_running, m_analyzed, m_killFlag, m_integratedOnly, m_doTruePeak, m_truePeakAnalyzed;

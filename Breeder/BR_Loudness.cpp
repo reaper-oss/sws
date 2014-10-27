@@ -38,9 +38,16 @@
 /******************************************************************************
 * Constants                                                                   *
 ******************************************************************************/
-const char* const PROJ_KEY          = "<BR_LOUDNESS";
-const char* const PROJ_KEY_LU       = "LU";
-const char* const PROJ_KEY_GRAPH    = "GRAPH";
+const char* const PROJ_SETTINGS_KEY          = "<BR_LOUDNESS";
+const char* const PROJ_SETTINGS_KEY_LU       = "LU";
+const char* const PROJ_SETTINGS_KEY_GRAPH    = "GRAPH";
+
+const char* const PROJ_OBJECT_KEY              = "<BR_ANALYZED_LOUDNESS_OBJECT";
+const char* const PROJ_OBJECT_KEY_TARGET       = "TARGET";
+const char* const PROJ_OBJECT_KEY_MEASUREMENTS = "MEASUREMENTS";
+const char* const PROJ_OBJECT_KEY_STATUS       = "STATUS";
+const char* const PROJ_OBJECT_KEY_SHORT_TERM   = "PT_SHORT_TERM";
+const char* const PROJ_OBJECT_KEY_MOMENTARY    = "PT_MOMENTARY";
 
 const char* const LOUDNESS_KEY         = "BR - AnalyzeLoudness";
 const char* const LOUDNESS_WND         = "BR - AnalyzeLoudness WndPos" ;
@@ -166,11 +173,31 @@ static HWND                                                           g_normaliz
 /******************************************************************************
 * Loudness object                                                             *
 ******************************************************************************/
+BR_LoudnessObject::BR_LoudnessObject () :
+m_track            (NULL),
+m_take             (NULL),
+m_guid             (GUID_NULL),
+m_integrated       (NEGATIVE_INF),
+m_truePeak         (NEGATIVE_INF),
+m_truePeakPos      (-1),
+m_shortTermMax     (NEGATIVE_INF),
+m_momentaryMax     (NEGATIVE_INF),
+m_range            (0),
+m_progress         (0),
+m_running          (false),
+m_analyzed         (false),
+m_killFlag         (false),
+m_integratedOnly   (false),
+m_doTruePeak       (true),
+m_truePeakAnalyzed (false),
+m_process          (NULL)
+{
+}
+
 BR_LoudnessObject::BR_LoudnessObject (MediaTrack* track) :
 m_track            (track),
 m_take             (NULL),
-m_takeGuid         (GUID_NULL),
-m_trackGuid        (*(GUID*)GetSetMediaTrackInfo(track, "GUID", NULL)),
+m_guid             (*(GUID*)GetSetMediaTrackInfo(track, "GUID", NULL)),
 m_integrated       (NEGATIVE_INF),
 m_truePeak         (NEGATIVE_INF),
 m_truePeakPos      (-1),
@@ -192,8 +219,7 @@ m_process          (NULL)
 BR_LoudnessObject::BR_LoudnessObject (MediaItem_Take* take) :
 m_track            (NULL),
 m_take             (take),
-m_takeGuid         (*(GUID*)GetSetMediaItemTakeInfo(take, "GUID", NULL)),
-m_trackGuid        (GUID_NULL),
+m_guid             (*(GUID*)GetSetMediaItemTakeInfo(take, "GUID", NULL)),
 m_integrated       (NEGATIVE_INF),
 m_truePeak         (NEGATIVE_INF),
 m_truePeakPos      (-1),
@@ -380,6 +406,125 @@ void BR_LoudnessObject::GetColumnStr (int column, char* str, int strSz, int mode
 	}
 }
 
+void BR_LoudnessObject::SaveObject (ProjectStateContext* ctx)
+{
+	if (this->IsTargetValid())
+	{
+		char tmp[128]; guidToString(&m_guid, tmp);
+
+		ctx->AddLine(PROJ_OBJECT_KEY);
+		ctx->AddLine("%s %d %s", PROJ_OBJECT_KEY_TARGET, (m_track ? 1 : 0), tmp);
+		ctx->AddLine("%s %lf %lf %lf %lf %lf", PROJ_OBJECT_KEY_MEASUREMENTS, m_integrated, m_truePeak, m_shortTermMax, m_momentaryMax, m_range);
+		ctx->AddLine("%s %d %d %d %d", PROJ_OBJECT_KEY_STATUS, m_doTruePeak, m_truePeakAnalyzed, m_analyzed, m_integratedOnly);
+
+		int count = 0;
+		WDL_FastString string;
+		for (size_t i = 0; i < m_shortTermValues.size(); ++i)
+		{
+			string.AppendFormatted(512, " %lf", m_shortTermValues[i]);
+			++count;
+
+			if (count == 10 || i == m_shortTermValues.size() - 1)
+			{
+				ctx->AddLine("%s %s", PROJ_OBJECT_KEY_SHORT_TERM, string.Get());
+				string.DeleteSub(0, string.GetLength());
+				count = 0;
+			}
+		}
+
+		count = 0;
+		string.DeleteSub(0, string.GetLength());
+		for (size_t i = 0; i < m_momentaryValues.size(); ++i)
+		{
+			string.AppendFormatted(512, " %lf", m_momentaryValues[i]);
+			++count;
+
+			if (count == 10 || i == m_momentaryValues.size() - 1)
+			{
+				ctx->AddLine("%s %s", PROJ_OBJECT_KEY_MOMENTARY, string.Get());
+				string.DeleteSub(0, string.GetLength());
+				count = 0;
+			}
+		}
+		ctx->AddLine(">");
+	}
+}
+
+bool BR_LoudnessObject::RestoreObject (ProjectStateContext* ctx)
+{
+	bool doTruePeak = false, truePeakAnalyzed = false, analyzed = false, integratedOnly = false;
+	char line[256];
+	LineParser lp(false);
+	while(!ctx->GetLine(line, sizeof(line)) && !lp.parse(line))
+	{
+		if (!strcmp(lp.gettoken_str(0), ">"))
+			break;
+
+		if (!strcmp(lp.gettoken_str(0), PROJ_OBJECT_KEY_TARGET))
+		{
+			stringToGuid(lp.gettoken_str(2), &m_guid);
+			if (lp.gettoken_int(1) == 1) m_track = GuidToTrack(&m_guid);
+			else                         m_take  = GetMediaItemTakeByGUID(NULL, &m_guid);
+		}
+		else if (!strcmp(lp.gettoken_str(0), PROJ_OBJECT_KEY_MEASUREMENTS))
+		{
+			m_integrated   = (lp.getnumtokens() > 1)  ? lp.gettoken_float(1) : NEGATIVE_INF;
+			m_truePeak     = (lp.getnumtokens() > 2)  ? lp.gettoken_float(2) : NEGATIVE_INF;
+			m_shortTermMax = (lp.getnumtokens() > 3)  ? lp.gettoken_float(3) : NEGATIVE_INF;
+			m_momentaryMax = (lp.getnumtokens() > 4)  ? lp.gettoken_float(4) : NEGATIVE_INF;
+			m_range        = (lp.getnumtokens() > 5)  ? lp.gettoken_float(5) : 0;
+
+		}
+		else if (!strcmp(lp.gettoken_str(0), PROJ_OBJECT_KEY_STATUS))
+		{
+			doTruePeak       = !!lp.gettoken_int(1);
+			truePeakAnalyzed = !!lp.gettoken_int(2);
+			analyzed         = !!lp.gettoken_int(3);
+			integratedOnly   = !!lp.gettoken_int(4);
+		}
+		else if (!strcmp(lp.gettoken_str(0), PROJ_OBJECT_KEY_SHORT_TERM))
+		{
+			if (lp.getnumtokens() > 1)  m_shortTermValues.push_back(lp.gettoken_float(1));
+			if (lp.getnumtokens() > 2)  m_shortTermValues.push_back(lp.gettoken_float(2));
+			if (lp.getnumtokens() > 3)  m_shortTermValues.push_back(lp.gettoken_float(3));
+			if (lp.getnumtokens() > 4)  m_shortTermValues.push_back(lp.gettoken_float(4));
+			if (lp.getnumtokens() > 5)  m_shortTermValues.push_back(lp.gettoken_float(5));
+			if (lp.getnumtokens() > 6)  m_shortTermValues.push_back(lp.gettoken_float(6));
+			if (lp.getnumtokens() > 7)  m_shortTermValues.push_back(lp.gettoken_float(7));
+			if (lp.getnumtokens() > 8)  m_shortTermValues.push_back(lp.gettoken_float(8));
+			if (lp.getnumtokens() > 9)  m_shortTermValues.push_back(lp.gettoken_float(9));
+			if (lp.getnumtokens() > 10) m_shortTermValues.push_back(lp.gettoken_float(10));
+		}
+		else if (!strcmp(lp.gettoken_str(0), PROJ_OBJECT_KEY_MOMENTARY))
+		{
+			if (lp.getnumtokens() > 1)  m_momentaryValues.push_back(lp.gettoken_float(1));
+			if (lp.getnumtokens() > 2)  m_momentaryValues.push_back(lp.gettoken_float(2));
+			if (lp.getnumtokens() > 3)  m_momentaryValues.push_back(lp.gettoken_float(3));
+			if (lp.getnumtokens() > 4)  m_momentaryValues.push_back(lp.gettoken_float(4));
+			if (lp.getnumtokens() > 5)  m_momentaryValues.push_back(lp.gettoken_float(5));
+			if (lp.getnumtokens() > 6)  m_momentaryValues.push_back(lp.gettoken_float(6));
+			if (lp.getnumtokens() > 7)  m_momentaryValues.push_back(lp.gettoken_float(7));
+			if (lp.getnumtokens() > 8)  m_momentaryValues.push_back(lp.gettoken_float(8));
+			if (lp.getnumtokens() > 9)  m_momentaryValues.push_back(lp.gettoken_float(9));
+			if (lp.getnumtokens() > 10) m_momentaryValues.push_back(lp.gettoken_float(10));
+		}
+	}
+
+	if (this->IsTargetValid())
+	{
+		this->CheckSetAudioData();
+		m_doTruePeak       = doTruePeak;
+		m_truePeakAnalyzed = truePeakAnalyzed;
+		m_analyzed         = analyzed;
+		m_integratedOnly   = integratedOnly;
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
 double BR_LoudnessObject::GetAudioLength ()
 {
 	SWS_SectionLock lock(&m_mutex);
@@ -489,14 +634,14 @@ bool BR_LoudnessObject::IsTargetValid ()
 
 	if (m_track)
 	{
-		if (ValidatePtr(m_track, "MediaTrack*") && GuidsEqual(&m_trackGuid, (GUID*)GetSetMediaTrackInfo(m_track, "GUID", NULL)))
+		if (ValidatePtr(m_track, "MediaTrack*") && GuidsEqual(&m_guid, (GUID*)GetSetMediaTrackInfo(m_track, "GUID", NULL)))
 			return true;
 		else
 		{
 			// Deleting and undoing track will naturally change item's pointer so find new one if possible
-			if (MediaTrack* newTrack = GuidToTrack(&m_trackGuid))
+			if (MediaTrack* newTrack = GuidToTrack(&m_guid))
 			{
-				if (GuidsEqual(&m_trackGuid, (GUID*)GetSetMediaTrackInfo(newTrack, "GUID", NULL)))
+				if (GuidsEqual(&m_guid, (GUID*)GetSetMediaTrackInfo(newTrack, "GUID", NULL)))
 					m_track = newTrack;
 				return true;
 			}
@@ -504,13 +649,13 @@ bool BR_LoudnessObject::IsTargetValid ()
 	}
 	else
 	{
-		if (ValidatePtr(m_take, "MediaItem_Take*") && GuidsEqual(&m_takeGuid, (GUID*)GetSetMediaItemTakeInfo(m_take, "GUID", NULL)))
+		if (ValidatePtr(m_take, "MediaItem_Take*") && GuidsEqual(&m_guid, (GUID*)GetSetMediaItemTakeInfo(m_take, "GUID", NULL)))
 			return true;
 		else
 		{
-			if (MediaItem_Take* newTake = GetMediaItemTakeByGUID(NULL, &m_takeGuid))
+			if (MediaItem_Take* newTake = GetMediaItemTakeByGUID(NULL, &m_guid))
 			{
-				if (GuidsEqual(&m_takeGuid, (GUID*)GetSetMediaItemTakeInfo(newTake, "GUID", NULL)))
+				if (GuidsEqual(&m_guid, (GUID*)GetSetMediaItemTakeInfo(newTake, "GUID", NULL)))
 					m_take = newTake;
 				return true;
 			}
@@ -1250,9 +1395,21 @@ static bool ProcessExtensionLine (const char *line, ProjectStateContext *ctx, bo
 	if (lp.parse(line) || lp.getnumtokens() < 1)
 		return false;
 
-	if (!strcmp(lp.gettoken_str(0), PROJ_KEY))
+	if (!strcmp(lp.gettoken_str(0), PROJ_SETTINGS_KEY))
 	{
 		g_pref.LoadProjPref(ctx);
+		return true;
+	}
+
+	if (!strcmp(lp.gettoken_str(0), PROJ_OBJECT_KEY))
+	{
+		if (BR_LoudnessObject* object = new (nothrow) BR_LoudnessObject())
+		{
+			if (object->RestoreObject(ctx))
+				g_analyzedObjects.Get()->Add(object);
+			else
+				delete object;
+		}
 		return true;
 	}
 
@@ -1265,6 +1422,15 @@ static void SaveExtensionConfig (ProjectStateContext *ctx, bool isUndo, project_
 		return;
 
 	g_pref.SaveProjPref(ctx);
+
+	for (int i = 0; i < g_analyzedObjects.Get()->GetSize(); ++i)
+	{
+		if (BR_LoudnessObject* object = g_analyzedObjects.Get()->Get(i))
+		{
+			if (object->IsTargetValid())
+				object->SaveObject(ctx);
+		}
+	}
 }
 
 static void BeginLoadProjectState (bool isUndo, project_config_extension_t *reg)
@@ -1383,9 +1549,9 @@ void BR_LoudnessPref::SaveProjPref (ProjectStateContext *ctx)
 {
 	if (m_projData.Get()->useProjLU || m_projData.Get()->useProjGraph)
 	{
-		ctx->AddLine("%s", PROJ_KEY);
-		if (m_projData.Get()->useProjLU)    ctx->AddLine("%s %lf",     PROJ_KEY_LU,    m_projData.Get()->valueLU);
-		if (m_projData.Get()->useProjGraph) ctx->AddLine("%s %lf %lf", PROJ_KEY_GRAPH, m_projData.Get()->graphMin, m_projData.Get()->graphMax);
+		ctx->AddLine("%s", PROJ_SETTINGS_KEY);
+		if (m_projData.Get()->useProjLU)    ctx->AddLine("%s %lf",     PROJ_SETTINGS_KEY_LU,    m_projData.Get()->valueLU);
+		if (m_projData.Get()->useProjGraph) ctx->AddLine("%s %lf %lf", PROJ_SETTINGS_KEY_GRAPH, m_projData.Get()->graphMin, m_projData.Get()->graphMax);
 		ctx->AddLine(">");
 	}
 }
@@ -1399,12 +1565,12 @@ void BR_LoudnessPref::LoadProjPref (ProjectStateContext *ctx)
 		if (!strcmp(lp.gettoken_str(0), ">"))
 			break;
 
-		if (!strcmp(lp.gettoken_str(0), PROJ_KEY_LU))
+		if (!strcmp(lp.gettoken_str(0), PROJ_SETTINGS_KEY_LU))
 		{
 			m_projData.Get()->valueLU = lp.gettoken_float(1);
 			m_projData.Get()->useProjLU = true;
 		}
-		else if (!strcmp(lp.gettoken_str(0), PROJ_KEY_GRAPH))
+		else if (!strcmp(lp.gettoken_str(0), PROJ_SETTINGS_KEY_GRAPH))
 		{
 			m_projData.Get()->graphMin     = lp.gettoken_float(1);
 			m_projData.Get()->graphMax     = lp.gettoken_float(2);

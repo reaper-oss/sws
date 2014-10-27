@@ -139,7 +139,7 @@ public:
 	/* Check contexts for various types */
 	bool IsContextValid (int context);          // Check if context is nonexistent or something like END_ARRANGE etc...
 	bool CanContextInheritParent (int context); // Top contexts can't inherit parent since they have none
-	bool CanContextFollowItem (int context);    // Check if contexts can follow item contexts
+	bool CanContextFollowItem (int context);    // Check if context can follow item contexts
 
 	/* Get and set options for toolbar loading */
 	void SetOptionsAll (int* focus, int* topmost);
@@ -320,8 +320,8 @@ protected:
 /******************************************************************************
 * Contextual toolbars init/exit                                               *
 ******************************************************************************/
-int ContextToolbarsInit ();
-void ContextToolbarsExit ();
+int ContextualToolbarsInit ();
+void ContextualToolbarsExit ();
 
 /******************************************************************************
 * Commands                                                                    *

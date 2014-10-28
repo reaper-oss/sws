@@ -440,7 +440,7 @@ take (take)
 ******************************************************************************/
 double ME_PositionAtMouseCursor (bool checkRuler, bool checkCCLanes)
 {
-	BR_MouseContextInfo mouseInfo(BR_MouseContextInfo::MODE_MIDI_EDITOR_ALL);
+	BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_MIDI_EDITOR_ALL);
 	if (mouseInfo.GetMidiEditor())
 	{
 		if (checkRuler && checkCCLanes)                                 return mouseInfo.GetPosition(); // no need for strcmp, if position is invalid it's already -1

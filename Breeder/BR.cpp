@@ -166,6 +166,12 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Decrease selected envelope points by 5 db (volume envelope only)" },                               "BR_DEC_VOL_ENV_PT_5db",              IncreaseDecreaseVolEnvPoints, NULL, -50},
 	{ { DEFACCEL, "SWS/BR: Decrease selected envelope points by 10 db (volume envelope only)" },                              "BR_DEC_VOL_ENV_PT_10db",             IncreaseDecreaseVolEnvPoints, NULL, -100},
 
+	{ { DEFACCEL, "SWS/BR: Select envelope under mouse cursor" },                                                             "BR_SEL_ENV_MOUSE",                   SelectEnvelopeUnderMouse, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Select envelope point under mouse cursor (selected envelope only)" },                              "BR_SEL_ENV_PT_MOUSE_ACT_ENV_ONLY",   SelectDeleteEnvPointUnderMouse, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Select envelope point under mouse cursor" },                                                       "BR_SEL_ENV_PT_MOUSE",                SelectDeleteEnvPointUnderMouse, NULL, 2},
+	{ { DEFACCEL, "SWS/BR: Delete envelope point under mouse cursor (selected envelope only)" },                              "BR_DEL_ENV_PT_MOUSE_ACT_ENV_ONLY",   SelectDeleteEnvPointUnderMouse, NULL, -1},
+	{ { DEFACCEL, "SWS/BR: Delete envelope point under mouse cursor" },                                                       "BR_DEL_ENV_PT_MOUSE",                SelectDeleteEnvPointUnderMouse, NULL, -2},
+
 	{ { DEFACCEL, "SWS/BR: Unselect envelope" },                                                                              "BR_UNSEL_ENV",                       UnselectEnvelope, NULL, 0},
 
 	{ { DEFACCEL, "SWS/BR: Save envelope point selection, slot 1" },                                                          "BR_SAVE_ENV_SEL_SLOT_1",             SaveEnvSelSlot, NULL, 0},
@@ -417,6 +423,10 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Focus tracks" },                                                                                                                "BR_FOCUS_TRACKS",                    FocusArrangeTracks, NULL, 1},
 	{ { DEFACCEL, "SWS/BR: Toggle media item online/offline" },                                                                                            "BR_TOGGLE_ITEM_ONLINE",              ToggleItemOnline},
 	{ { DEFACCEL, "SWS/BR: Copy take media source file path of selected items to clipboard" },                                                             "BR_TSOURCE_PATH_TO_CLIPBOARD",       ItemSourcePathToClipBoard},
+
+	{ { DEFACCEL, "SWS/BR: Delete take under mouse cursor" },                                                                                              "BR_DELETE_TAKE_MOUSE",               DeleteTakeUnderMouse, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Select TCP track under mouse cursor" },                                                                                         "BR_SEL_TCP_TRACK_MOUSE",             SelectTrackUnderMouse, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Select MCP track under mouse cursor" },                                                                                         "BR_SEL_MCP_TRACK_MOUSE",             SelectTrackUnderMouse, NULL, 1},
 
 	{ { DEFACCEL, "SWS/BR: Play from mouse cursor position" },                                                                                             "BR_PLAY_MOUSECURSOR",                PlaybackAtMouseCursor, NULL, 0},
 	{ { DEFACCEL, "SWS/BR: Play/pause from mouse cursor position" },                                                                                       "BR_PLAY_PAUSE_MOUSECURSOR",          PlaybackAtMouseCursor, NULL, 1},

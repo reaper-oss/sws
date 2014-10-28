@@ -27,7 +27,7 @@
 ******************************************************************************/
 #pragma once
 
-class BR_MouseContextInfo;
+class BR_MouseInfo;
 
 /******************************************************************************
 * Constants                                                                   *
@@ -234,13 +234,13 @@ private:
 	bool GetReaperToolbar (int id, int* mouseAction, int* toggleAction, char* toolbarName, int toolbarNameSz); // id is 0-based, returns false if toolbar doesn't exist
 	bool IsToolbarAction (int action);                                                                         // returns false in case action is something like DO_NOTHING etc..
 	int GetToolbarId (int mouseAction);
-	int FindRulerToolbar      (BR_MouseContextInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad);
-	int FindTransportToolbar  (BR_MouseContextInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad);
-	int FindTcpToolbar        (BR_MouseContextInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad);
-	int FindMcpToolbar        (BR_MouseContextInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad);
-	int FindArrangeToolbar    (BR_MouseContextInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad);
-	int FindMidiToolbar       (BR_MouseContextInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad);
-	int FindInlineMidiToolbar (BR_MouseContextInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad);
+	int FindRulerToolbar      (BR_MouseInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad);
+	int FindTransportToolbar  (BR_MouseInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad);
+	int FindTcpToolbar        (BR_MouseInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad);
+	int FindMcpToolbar        (BR_MouseInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad);
+	int FindArrangeToolbar    (BR_MouseInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad);
+	int FindMidiToolbar       (BR_MouseInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad);
+	int FindInlineMidiToolbar (BR_MouseInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad);
 	static LRESULT CALLBACK ToolbarWndCallback (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 	BR_ContextualToolbar::Options m_options;

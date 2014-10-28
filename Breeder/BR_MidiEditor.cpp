@@ -237,7 +237,7 @@ void ME_PlaybackAtMouseCursor (COMMAND_T* ct, int val, int valhw, int relmode, H
 
 void ME_CCEventAtEditCursor (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
-	BR_MouseContextInfo mouseInfo(BR_MouseContextInfo::MODE_MIDI_EDITOR_ALL);
+	BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_MIDI_EDITOR_ALL);
 	if (mouseInfo.GetMidiEditor())
 	{
 		if (MediaItem_Take* take = MIDIEditor_GetTake(mouseInfo.GetMidiEditor()))
@@ -317,22 +317,22 @@ void ME_ShowUsedCCLanesDetect14Bit (COMMAND_T* ct, int val, int valhw, int relmo
 void ME_HideCCLanes (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
 
-		
+
 
 	int laneToProcess;
 	void* midiEditor;
 	if ((int)ct->user > 0)
 	{
 		midiEditor    = MIDIEditor_GetActive();
-		laneToProcess = GetLastClickedVelLane(midiEditor);		
+		laneToProcess = GetLastClickedVelLane(midiEditor);
 	}
 	else
 	{
-		BR_MouseContextInfo mouseInfo(BR_MouseContextInfo::MODE_MIDI_EDITOR_ALL);		
+		BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_MIDI_EDITOR_ALL);
 		midiEditor = mouseInfo.GetMidiEditor();
 		mouseInfo.GetCCLane(&laneToProcess, NULL, NULL);
 	}
-	
+
 	if (midiEditor)
 	{
 		MediaItem_Take* take = MIDIEditor_GetTake(MIDIEditor_GetActive());
@@ -400,10 +400,10 @@ void ME_ToggleHideCCLanes (COMMAND_T* ct, int val, int valhw, int relmode, HWND 
 			}
 			else
 			{
-				BR_MouseContextInfo mouseInfo(BR_MouseContextInfo::MODE_MIDI_EDITOR_ALL);
+				BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_MIDI_EDITOR_ALL);
 				midiEditor = mouseInfo.GetMidiEditor();
 			}
-	
+
 			if (midiEditor && g_midiToggleHideCCLanes.Get()->Restore(midiEditor))
 				Undo_OnStateChangeEx2(NULL, __LOCALIZE("Restore hidden CC lanes", "sws_undo"), UNDO_STATE_ALL, -1);
 		}
@@ -418,7 +418,7 @@ void ME_ToggleHideCCLanes (COMMAND_T* ct, int val, int valhw, int relmode, HWND 
 			}
 			else
 			{
-				BR_MouseContextInfo mouseInfo(BR_MouseContextInfo::MODE_MIDI_EDITOR_ALL);
+				BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_MIDI_EDITOR_ALL);
 				midiEditor = mouseInfo.GetMidiEditor();
 				mouseInfo.GetCCLane(&laneToKeep, NULL, NULL);
 			}
@@ -521,7 +521,7 @@ void ME_CCToEnvPoints (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd
 			{
 				double newValue = TranslateRange(value, 0, max, envelope.LaneMinValue(), envelope.LaneMaxValue());
 				double position = MIDI_GetProjTimeFromPPQPos(take, ppqPos);
-				if (envelope.CreatePoint(envelope.Count(), position, newValue, shape, 0, false, true, true))
+				if (envelope.CreatePoint(envelope.CountPoints(), position, newValue, shape, 0, false, true))
 					update = true;
 			}
 		}
@@ -537,7 +537,7 @@ void ME_CCToEnvPoints (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd
 		{
 			double newValue = TranslateRange(velocity, 1, 127, envelope.LaneMinValue(), envelope.LaneMaxValue());
 			double position = MIDI_GetProjTimeFromPPQPos(take, ppqPos);
-			if (envelope.CreatePoint(envelope.Count(), position, newValue, shape, 0, false, true, true))
+			if (envelope.CreatePoint(envelope.CountPoints(), position, newValue, shape, 0, false, true))
 				update = true;
 		}
 	}
@@ -595,7 +595,7 @@ void ME_SaveCCEventsSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWND h
 	void* midiEditor;
 	if ((int)ct->user < 0)
 	{
-		BR_MouseContextInfo mouseInfo(BR_MouseContextInfo::MODE_MIDI_EDITOR_ALL);
+		BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_MIDI_EDITOR_ALL);
 		midiEditor = (mouseInfo.GetCCLane(&lane, NULL, NULL)) ? mouseInfo.GetMidiEditor() : NULL;
 	}
 	else
@@ -628,7 +628,7 @@ void ME_RestoreCCEventsSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWN
 	void* midiEditor;
 	if ((int)ct->user < 0)
 	{
-		BR_MouseContextInfo mouseInfo(BR_MouseContextInfo::MODE_MIDI_EDITOR_ALL);
+		BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_MIDI_EDITOR_ALL);
 		midiEditor = (mouseInfo.GetCCLane(&lane, NULL, NULL)) ? mouseInfo.GetMidiEditor() : NULL;
 	}
 	else

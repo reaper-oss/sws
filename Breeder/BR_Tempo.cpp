@@ -195,7 +195,7 @@ void MoveGridToMouse (COMMAND_T* ct)
 			InitTempoMap();
 
 		g_moveGridTempoMap = new (nothrow) BR_Envelope(GetTempoEnv());
-		if (!g_moveGridTempoMap || !g_moveGridTempoMap->Count() || g_moveGridTempoMap->IsLocked())
+		if (!g_moveGridTempoMap || !g_moveGridTempoMap->CountPoints() || g_moveGridTempoMap->IsLocked())
 		{
 			ContinuousActionStopAll();
 			return;
@@ -289,7 +289,7 @@ void MoveGridToEditPlayCursor (COMMAND_T* ct)
 	// Make sure tempo map already has at least one point created (for some reason it won't work if creating it directly in chunk)
 	InitTempoMap();
 	BR_Envelope tempoMap(GetTempoEnv());
-	if (!tempoMap.Count())
+	if (!tempoMap.CountPoints())
 		return;
 
 	// Prevent play cursor from jumping
@@ -353,7 +353,7 @@ void MoveGridToEditPlayCursor (COMMAND_T* ct)
 void MoveTempo (COMMAND_T* ct)
 {
 	BR_Envelope tempoMap(GetTempoEnv());
-	if (!tempoMap.Count())
+	if (!tempoMap.CountPoints())
 		return;
 	double cursor = GetCursorPositionEx(NULL);
 	double tDiff = 0;
@@ -1156,7 +1156,7 @@ void DeleteTempoPreserveItems (COMMAND_T* ct)
 				else                                                            // could have been scheduled for deletion but reaper does it in the same manner so leave it
 					offset += (t0 + (480*beatCount) / (den * (b0 + b1))) - t1;
 
-				while (!tempoMap.GetSelection(++endId) && endId < tempoMap.Count())
+				while (!tempoMap.GetSelection(++endId) && endId < tempoMap.CountPoints())
 				{
 					double t;
 					tempoMap.GetPoint(endId, &t, NULL, NULL, NULL);
@@ -1197,7 +1197,7 @@ void TempoAtGrid (COMMAND_T* ct)
 		return;
 
 	Undo_BeginBlock2(NULL);
-	int count = tempoMap.Count()-1;
+	int count = tempoMap.CountPoints()-1;
 	for (int i = 0; i < tempoMap.CountSelected(); ++i)
 	{
 		// Get tempo points
@@ -1224,7 +1224,7 @@ void TempoAtGrid (COMMAND_T* ct)
 		{
 			gridLine = GetNextGridDiv(gridLine);
 			if (gridLine < t1 - (MIN_GRID_DIST/2))
-				tempoMap.CreatePoint(tempoMap.Count(), gridLine, TempoAtPosition(b0, b1, t0, t1, gridLine), s0, 0, false);
+				tempoMap.CreatePoint(tempoMap.CountPoints(), gridLine, TempoAtPosition(b0, b1, t0, t1, gridLine), s0, 0, false);
 			else
 				break;
 		}
@@ -1246,7 +1246,7 @@ void TempoShapeLinear (COMMAND_T* ct)
 
 	// Loop through selected points and perform BPM calculations
 	int skipped = 0;
-	int count = tempoMap.Count()-1;
+	int count = tempoMap.CountPoints()-1;
 	for (int i = 0; i < tempoMap.CountSelected(); ++i)
 	{
 		int id = tempoMap.GetSelected(i);
@@ -1278,7 +1278,7 @@ void TempoShapeLinear (COMMAND_T* ct)
 			{
 				// Check if value and position is legal, if not, skip
 				if (bpm>=MIN_BPM && bpm<=MAX_BPM && (position-t0)>=MIN_TEMPO_DIST && (t1-position)>=MIN_TEMPO_DIST)
-					tempoMap.CreatePoint(tempoMap.Count(), position, bpm, LINEAR, 0, false);
+					tempoMap.CreatePoint(tempoMap.CountPoints(), position, bpm, LINEAR, 0, false);
 				else
 					SKIP(skipped, 1);
 			}
@@ -1292,8 +1292,8 @@ void TempoShapeLinear (COMMAND_T* ct)
 				// Check if value and position is legal, if not, skip
 				if (bpm1>=MIN_BPM && bpm1<=MAX_BPM && bpm2>=MIN_BPM && bpm2<=MAX_BPM && (position1-t0)>=MIN_TEMPO_DIST && (position2-position1)>=MIN_TEMPO_DIST && (t1-position2)>=MIN_TEMPO_DIST)
 				{
-					tempoMap.CreatePoint(tempoMap.Count(), position1, bpm1, LINEAR, 0, false);
-					tempoMap.CreatePoint(tempoMap.Count(), position2, bpm2, LINEAR, 0, false);
+					tempoMap.CreatePoint(tempoMap.CountPoints(), position1, bpm1, LINEAR, 0, false);
+					tempoMap.CreatePoint(tempoMap.CountPoints(), position2, bpm2, LINEAR, 0, false);
 				}
 				else
 					SKIP(skipped, 1);
@@ -1333,7 +1333,7 @@ void TempoShapeSquare (COMMAND_T* ct)
 
 	// Loop through selected points and perform BPM calculations
 	int skipped = 0;
-	int count = tempoMap.Count()-1;
+	int count = tempoMap.CountPoints()-1;
 	for (int i = 0; i < tempoMap.CountSelected(); ++i)
 	{
 		int id = tempoMap.GetSelected(i);
@@ -1382,7 +1382,7 @@ void TempoShapeSquare (COMMAND_T* ct)
 			if (!split)
 			{
 				if (bpm<= MAX_BPM && bpm>=MIN_BPM && (position-t0)>=MIN_TEMPO_DIST && (t1-position)>=MIN_TEMPO_DIST)
-					tempoMap.CreatePoint(tempoMap.Count(), position, bpm, LINEAR, 0, false);
+					tempoMap.CreatePoint(tempoMap.CountPoints(), position, bpm, LINEAR, 0, false);
 				else
 					SKIP(skipped, 1);
 			}
@@ -1395,8 +1395,8 @@ void TempoShapeSquare (COMMAND_T* ct)
 
 				if (bpm1>=MIN_BPM && bpm1<=MAX_BPM && bpm2>=MIN_BPM && bpm2<=MAX_BPM && (position1-t0)>=MIN_TEMPO_DIST && (position2-position1)>=MIN_TEMPO_DIST && (t1-position2)>=MIN_TEMPO_DIST)
 				{
-					tempoMap.CreatePoint(tempoMap.Count(), position1, bpm1, LINEAR, 0, false);
-					tempoMap.CreatePoint(tempoMap.Count(), position2, bpm2, LINEAR, 0, false);
+					tempoMap.CreatePoint(tempoMap.CountPoints(), position1, bpm1, LINEAR, 0, false);
+					tempoMap.CreatePoint(tempoMap.CountPoints(), position2, bpm2, LINEAR, 0, false);
 				}
 				else
 					SKIP(skipped, 1);

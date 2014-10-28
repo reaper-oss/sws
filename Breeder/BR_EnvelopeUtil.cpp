@@ -210,6 +210,10 @@ m_properties    (envelope.m_properties)
 {
 }
 
+BR_Envelope::~BR_Envelope ()
+{
+}
+
 BR_Envelope& BR_Envelope::operator= (const BR_Envelope& envelope)
 {
 	if (this == &envelope)
@@ -457,7 +461,7 @@ bool BR_Envelope::SetCreateSortedPoint (int id, double position, double value, i
 	if (id == -1)
 	{
 		id = this->FindNext(position, 0);
-		BR_EnvPoint newPoint(position, value, (shape < 0 || shape > 5) ? this->DefaultShape() : shape, 0, selected, 0, (shape == 5) ? bezier : 0);
+		BR_EnvPoint newPoint(position, value, (shape < 0 || shape > 5) ? this->GetDefaultShape() : shape, 0, selected, 0, (shape == 5) ? bezier : 0);
 		m_points.insert(m_points.begin() + id, newPoint);
 
 		++m_count;
@@ -613,7 +617,7 @@ void BR_Envelope::Sort ()
 	}
 }
 
-int BR_Envelope::Count ()
+int BR_Envelope::CountPoints ()
 {
 	return m_count;
 }
@@ -714,27 +718,6 @@ int BR_Envelope::FindClosest (double position)
 				return prevId;
 		}
 	}
-}
-
-int BR_Envelope::GetSendId ()
-{
-	int id = -1;
-
-	if (!this->IsTakeEnvelope())
-	{
-		MediaTrack* track    = this->GetParent();
-		const char* sendType = (this->Type() == VOLUME) ? ("<VOLENV") : ((this->Type() == PAN) ? ("<PANENV") : ("<MUTEENV"));
-
-		for (int i = 0; i < GetTrackNumSends(track, 0); ++i)
-		{
-			if (m_envelope == (TrackEnvelope*)GetSetTrackSendInfo(track, 0, i, "P_ENV", (void*)sendType))
-			{
-				id = i;
-				break;
-			}
-		}
-	}
-	return id;
 }
 
 double BR_Envelope::ValueAtPosition (double position)
@@ -843,14 +826,6 @@ double BR_Envelope::NormalizedDisplayValue (double value)
 		return (displayValue - min) / (max - min);
 }
 
-double BR_Envelope::NormalizedDisplayValue (int id)
-{
-	if (this->ValidateId(id))
-		return this->NormalizedDisplayValue(m_points[id].value);
-	else
-		return 0;
-}
-
 double BR_Envelope::RealDisplayValue (double normalizedValue)
 {
 	double min = this->LaneMinValue();
@@ -889,17 +864,54 @@ double BR_Envelope::SnapValue (double value)
 	}
 }
 
-bool BR_Envelope::IsTempo ()
+void BR_Envelope::GetSelectedPointsExtrema (double* minimum, double* maximum)
 {
-	return m_tempoMap;
-}
+	double minVal = 0;
+	double maxVal = 0;
 
-bool BR_Envelope::IsTakeEnvelope ()
-{
-	if (m_take)
-		return true;
+	if (m_update)
+	{
+		bool found = false;
+		for (size_t i = 0; i < m_points.size(); ++i)
+		{
+			if (m_points[i].selected)
+			{
+				if (!found)
+				{
+					found = true;
+					maxVal = m_points[i].value;
+					minVal = m_points[i].value;
+				}
+				else
+				{
+					if (m_points[i].value > maxVal) maxVal = m_points[i].value;
+					if (m_points[i].value < minVal) minVal = m_points[i].value;
+				}
+			}
+		}
+	}
 	else
-		return false;
+	{
+		bool found = false;
+		for (size_t i = 0; i < m_pointsSel.size(); ++i)
+		{
+			int id = m_pointsSel[i];
+			if (!found)
+			{
+				found = true;
+				maxVal = m_points[id].value;
+				minVal = m_points[id].value;
+			}
+			else
+			{
+				if (m_points[id].value > maxVal) maxVal = m_points[id].value;
+				if (m_points[id].value < minVal) minVal = m_points[id].value;
+			}
+		}
+	}
+
+	WritePtr(minimum, minVal);
+	WritePtr(maximum, maxVal);
 }
 
 bool BR_Envelope::GetPointsInTimeSelection (int* startId, int* endId, double* tStart /*=NULL*/, double* tEnd /*=NULL*/)
@@ -952,7 +964,7 @@ bool BR_Envelope::GetPointsInTimeSelection (int* startId, int* endId, double* tS
 	}
 }
 
-bool BR_Envelope::VisibleInArrange (int* envHeight /*=NULL*/, int* yOffset /*= NULL*/, bool cacheValues /*=false*/)
+bool BR_Envelope::VisibleInArrange (int* envHeight, int* yOffset, bool cacheValues /*=false*/)
 {
 	if (!this->IsVisible())
 		return false;
@@ -1031,116 +1043,6 @@ void BR_Envelope::MoveArrangeToPoint (int id, int referenceId)
 void BR_Envelope::SetTakeEnvelopeTimebase (bool useProjectTime)
 {
 	m_takeEnvOffset = (useProjectTime && this->IsTakeEnvelope()) ? (GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION")) : (0);
-}
-
-void BR_Envelope::AddToPoints (double* position, double* value)
-{
-	for (vector<BR_EnvPoint>::iterator i = m_points.begin(); i != m_points.end(); ++i)
-	{
-		if (position)
-		{
-			i->position += *position;
-			m_update = true;
-		}
-		if (value)
-		{
-			i->value += *value;
-			m_update = true;
-		}
-	}
-}
-
-void BR_Envelope::AddToSelectedPoints (double* position, double* value)
-{
-	if (m_update)
-	{
-		for (size_t i = 0; i < m_points.size(); ++i)
-		{
-			if (m_points[i].selected)
-			{
-				if (position)
-				{
-					m_points[i].position += *position;
-					m_sorted = false;
-					m_update = true;
-				}
-				if (value)
-				{
-					m_points[i].value += *value;
-					SetToBounds(m_points[i].value, this->LaneMinValue(), this->LaneMaxValue());
-					m_update = true;
-				}
-			}
-		}
-	}
-	else
-	{
-		for (size_t i = 0; i < m_pointsSel.size(); ++i)
-		{
-			int id = m_pointsSel[i];
-			if (position)
-			{
-				m_points[id].position += *position;
-				m_sorted = false;
-				m_update = true;
-			}
-			if (value)
-			{
-				m_points[id].value += *value;
-				m_update = true;
-			}
-		}
-	}
-}
-
-void BR_Envelope::GetSelectedPointsExtrema (double* minimum, double* maximum)
-{
-	double minVal = 0;
-	double maxVal = 0;
-
-	if (m_update)
-	{
-		bool found = false;
-		for (size_t i = 0; i < m_points.size(); ++i)
-		{
-			if (m_points[i].selected)
-			{
-				if (!found)
-				{
-					found = true;
-					maxVal = m_points[i].value;
-					minVal = m_points[i].value;
-				}
-				else
-				{
-					if (m_points[i].value > maxVal) maxVal = m_points[i].value;
-					if (m_points[i].value < minVal) minVal = m_points[i].value;
-				}
-			}
-		}
-	}
-	else
-	{
-		bool found = false;
-		for (size_t i = 0; i < m_pointsSel.size(); ++i)
-		{
-			int id = m_pointsSel[i];
-			if (!found)
-			{
-				found = true;
-				maxVal = m_points[id].value;
-				minVal = m_points[id].value;
-			}
-			else
-			{
-				if (m_points[id].value > maxVal) maxVal = m_points[id].value;
-				if (m_points[id].value < minVal) minVal = m_points[id].value;
-			}
-		}
-	}
-
-	WritePtr(minimum, minVal);
-	WritePtr(maximum, maxVal);
 }
 
 WDL_FastString BR_Envelope::FormatValue (double value)
@@ -1259,6 +1161,31 @@ TrackEnvelope* BR_Envelope::GetPointer ()
 	return m_envelope;
 }
 
+bool BR_Envelope::IsTempo ()
+{
+	return m_tempoMap;
+}
+
+bool BR_Envelope::IsTakeEnvelope ()
+{
+	if (m_take)
+		return true;
+	else
+		return false;
+}
+
+bool BR_Envelope::IsLocked ()
+{
+	bool locked = false;
+	if (IsLockingActive())
+	{
+		if      (m_take)     locked = ::IsLocked(TAKE_ENV);
+		else if (m_tempoMap) locked = ::IsLocked(this->IsVisible() ? TRACK_ENV : TEMPO_MARKERS);
+		else                 locked = ::IsLocked(TRACK_ENV);
+	}
+	return locked;
+}
+
 bool BR_Envelope::IsActive ()
 {
 	this->FillProperties();
@@ -1283,16 +1210,16 @@ bool BR_Envelope::IsArmed ()
 	return !!m_properties.armed;
 }
 
-bool BR_Envelope::IsLocked ()
+int BR_Envelope::GetLaneHeight ()
 {
-	bool locked = false;
-	if (IsLockingActive())
-	{
-		if      (m_take)     locked = ::IsLocked(TAKE_ENV);
-		else if (m_tempoMap) locked = ::IsLocked(this->IsVisible() ? TRACK_ENV : TEMPO_MARKERS);
-		else                 locked = ::IsLocked(TRACK_ENV);
-	}
-	return locked;
+	this->FillProperties();
+	return m_properties.height;
+}
+
+int BR_Envelope::GetDefaultShape ()
+{
+	this->FillProperties();
+	return m_properties.shape;
 }
 
 int BR_Envelope::Type ()
@@ -1307,16 +1234,25 @@ int BR_Envelope::ParamId ()
 	return m_properties.paramId;
 }
 
-int BR_Envelope::LaneHeight ()
+int BR_Envelope::GetSendId ()
 {
-	this->FillProperties();
-	return m_properties.height;
-}
+	int id = -1;
 
-int BR_Envelope::DefaultShape ()
-{
-	this->FillProperties();
-	return m_properties.shape;
+	if (!this->IsTakeEnvelope())
+	{
+		MediaTrack* track    = this->GetParent();
+		const char* sendType = (this->Type() == VOLUME) ? ("<VOLENV") : ((this->Type() == PAN) ? ("<PANENV") : ("<MUTEENV"));
+
+		for (int i = 0; i < GetTrackNumSends(track, 0); ++i)
+		{
+			if (m_envelope == (TrackEnvelope*)GetSetTrackSendInfo(track, 0, i, "P_ENV", (void*)sendType))
+			{
+				id = i;
+				break;
+			}
+		}
+	}
+	return id;
 }
 
 double BR_Envelope::MinValue ()

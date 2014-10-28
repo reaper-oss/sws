@@ -425,9 +425,9 @@ MediaTrack* TrackAtMouseCursor (int* context, double* position)
 }
 
 /******************************************************************************
-* BR_MouseContextInfo                                                         *
+* BR_MouseInfo                                                                *
 ******************************************************************************/
-BR_MouseContextInfo::BR_MouseContextInfo (int mode /*= BR_MouseContextInfo::MODE_ALL*/, bool updateNow /*= true*/) :
+BR_MouseInfo::BR_MouseInfo (int mode /*= BR_MouseInfo::MODE_ALL*/, bool updateNow /*= true*/) :
 m_ccLaneClickPointHwnd (NULL)
 {
 	m_mode = mode;
@@ -435,11 +435,11 @@ m_ccLaneClickPointHwnd (NULL)
 		this->Update();
 }
 
-BR_MouseContextInfo::~BR_MouseContextInfo ()
+BR_MouseInfo::~BR_MouseInfo ()
 {
 }
 
-void BR_MouseContextInfo::Update (const POINT* p /*=NULL*/)
+void BR_MouseInfo::Update (const POINT* p /*=NULL*/)
 {
 	POINT currentPoint;
 	if (p)
@@ -451,72 +451,77 @@ void BR_MouseContextInfo::Update (const POINT* p /*=NULL*/)
 	this->GetContext(currentPoint);
 }
 
-void BR_MouseContextInfo::SetMode (int mode)
+void BR_MouseInfo::SetMode (int mode)
 {
 	m_mode = mode;
 }
 
-const char* BR_MouseContextInfo::GetWindow ()
+const char* BR_MouseInfo::GetWindow ()
 {
 	return m_mouseInfo.window;
 }
 
-const char* BR_MouseContextInfo::GetSegment ()
+const char* BR_MouseInfo::GetSegment ()
 {
 	return m_mouseInfo.segment;
 }
 
-const char* BR_MouseContextInfo::GetDetails ()
+const char* BR_MouseInfo::GetDetails ()
 {
 	return m_mouseInfo.details;
 }
 
-MediaTrack* BR_MouseContextInfo::GetTrack ()
+MediaTrack* BR_MouseInfo::GetTrack ()
 {
 	return m_mouseInfo.track;
 }
 
-MediaItem* BR_MouseContextInfo::GetItem ()
+MediaItem* BR_MouseInfo::GetItem ()
 {
 	return m_mouseInfo.item;
 }
 
-MediaItem_Take* BR_MouseContextInfo::GetTake()
+MediaItem_Take* BR_MouseInfo::GetTake()
 {
 	return m_mouseInfo.take;
 }
 
-TrackEnvelope* BR_MouseContextInfo::GetEnvelope ()
+TrackEnvelope* BR_MouseInfo::GetEnvelope ()
 {
 	return m_mouseInfo.envelope;
 }
 
-int BR_MouseContextInfo::GetTakeId ()
+int BR_MouseInfo::GetTakeId ()
 {
 	return m_mouseInfo.takeId;
 }
 
-int BR_MouseContextInfo::GetStretchMarkerId ()
+int BR_MouseInfo::GetEnvelopePoint ()
+{
+	return m_mouseInfo.envPointId;
+}
+
+int BR_MouseInfo::GetStretchMarker ()
 {
 	return m_mouseInfo.stretchMarkerId;
 }
 
-bool BR_MouseContextInfo::IsTakeEnvelope ()
+bool BR_MouseInfo::IsTakeEnvelope ()
 {
 	return m_mouseInfo.takeEnvelope;
 }
 
-void* BR_MouseContextInfo::GetMidiEditor ()
+void* BR_MouseInfo::GetMidiEditor ()
 {
 	return m_mouseInfo.midiEditor;
 }
 
-bool BR_MouseContextInfo::IsInlineMidi ()
+bool BR_MouseInfo::IsInlineMidi ()
 {
 	return m_mouseInfo.inlineMidi;
 }
 
-bool BR_MouseContextInfo::GetCCLane (int* ccLane, int* ccLaneVal, int* ccLaneId)
+bool BR_MouseInfo::GetCCLane (int* ccLane, int* ccLaneVal, int* ccLaneId)
 {
 	if (m_mouseInfo.ccLaneId == -1)
 	{
@@ -534,22 +539,22 @@ bool BR_MouseContextInfo::GetCCLane (int* ccLane, int* ccLaneVal, int* ccLaneId)
 	}
 }
 
-int BR_MouseContextInfo::GetNoteRow ()
+int BR_MouseInfo::GetNoteRow ()
 {
 	return m_mouseInfo.noteRow;
 }
 
-double BR_MouseContextInfo::GetPosition ()
+double BR_MouseInfo::GetPosition ()
 {
 	return m_mouseInfo.position;
 }
 
-int BR_MouseContextInfo::GetPianoRollMode ()
+int BR_MouseInfo::GetPianoRollMode ()
 {
 	return m_mouseInfo.pianoRollMode;
 }
 
-bool BR_MouseContextInfo::SetDetectedCCLaneAsLastClicked ()
+bool BR_MouseInfo::SetDetectedCCLaneAsLastClicked ()
 {
 	bool update = false;
 	if (m_mouseInfo.ccLaneId != -1)
@@ -623,7 +628,7 @@ bool BR_MouseContextInfo::SetDetectedCCLaneAsLastClicked ()
 	return update;
 }
 
-BR_MouseContextInfo::MouseInfo::MouseInfo () :
+BR_MouseInfo::MouseInfo::MouseInfo () :
 window          ("unknown"),
 segment         (""),
 details         (""),
@@ -636,6 +641,7 @@ takeEnvelope    (false),
 inlineMidi      (false),
 position        (-1),
 takeId          (-1),
+envPointId      (-1),
 stretchMarkerId (-1),
 noteRow         (-1),
 ccLaneVal       (-1),
@@ -647,11 +653,11 @@ pianoRollMode   (-1)
 	*  default values. Be careful if changing them */
 }
 
-void BR_MouseContextInfo::GetContext (const POINT& p)
+void BR_MouseInfo::GetContext (const POINT& p)
 {
 	HWND hwnd = WindowFromPoint(p);
 
-	BR_MouseContextInfo::MouseInfo mouseInfo;
+	BR_MouseInfo::MouseInfo mouseInfo;
 	if (hwnd)
 	{
 		double arrangeStart, arrangeEnd, arrangeZoom;
@@ -661,7 +667,7 @@ void BR_MouseContextInfo::GetContext (const POINT& p)
 		bool found = false;
 
 		// Ruler
-		if (!found && ((m_mode & BR_MouseContextInfo::MODE_ALL) || (m_mode & BR_MouseContextInfo::MODE_RULER)))
+		if (!found && ((m_mode & BR_MouseInfo::MODE_ALL) || (m_mode & BR_MouseInfo::MODE_RULER)))
 		{
 			HWND ruler = GetRulerWndAlt();
 			if (ruler == hwnd)
@@ -690,7 +696,7 @@ void BR_MouseContextInfo::GetContext (const POINT& p)
 		}
 
 		// Transport
-		if (!found && ((m_mode & BR_MouseContextInfo::MODE_ALL) || (m_mode & BR_MouseContextInfo::MODE_TRANSPORT)))
+		if (!found && ((m_mode & BR_MouseInfo::MODE_ALL) || (m_mode & BR_MouseInfo::MODE_TRANSPORT)))
 		{
 			HWND transport = GetTransportWnd();
 			if (transport == hwnd || transport == GetParent(hwnd)) // mouse may be over time status, child of transport
@@ -701,7 +707,7 @@ void BR_MouseContextInfo::GetContext (const POINT& p)
 		}
 
 		// MCP and TCP
-		if (!found && ((m_mode & BR_MouseContextInfo::MODE_ALL) || (m_mode & BR_MouseContextInfo::MODE_MCP_TCP)))
+		if (!found && ((m_mode & BR_MouseInfo::MODE_ALL) || (m_mode & BR_MouseInfo::MODE_MCP_TCP)))
 		{
 			int context;
 			if (mouseInfo.track = HwndToTrack(hwnd, &context))
@@ -725,16 +731,16 @@ void BR_MouseContextInfo::GetContext (const POINT& p)
 		}
 
 		// Arrange
-		if (!found && ((m_mode & BR_MouseContextInfo::MODE_ALL) || (m_mode & BR_MouseContextInfo::MODE_ARRANGE) || (m_mode & BR_MouseContextInfo::MODE_MIDI_INLINE)))
+		if (!found && ((m_mode & BR_MouseInfo::MODE_ALL) || (m_mode & BR_MouseInfo::MODE_ARRANGE) || (m_mode & BR_MouseInfo::MODE_MIDI_INLINE)))
 		{
 			if (hwnd == GetArrangeWnd() && IsPointInArrange(p, false))
 			{
 				int mouseY = TranslatePointToArrangeScrollY(p);
 				list<TrackEnvelope*> laneEnvs;
 				int height, offset;
-				this->GetTrackOrEnvelopeFromY(mouseY, &mouseInfo.envelope, &mouseInfo.track, ((m_mode & BR_MouseContextInfo::MODE_ALL) || (m_mode & BR_MouseContextInfo::MODE_ARRANGE)) ? &laneEnvs : NULL, &height, &offset);
+				this->GetTrackOrEnvelopeFromY(mouseY, &mouseInfo.envelope, &mouseInfo.track, ((m_mode & BR_MouseInfo::MODE_ALL) || (m_mode & BR_MouseInfo::MODE_ARRANGE)) ? &laneEnvs : NULL, &height, &offset);
 
-				if ((m_mode & BR_MouseContextInfo::MODE_ALL) || (m_mode & BR_MouseContextInfo::MODE_ARRANGE))
+				if ((m_mode & BR_MouseInfo::MODE_ALL) || (m_mode & BR_MouseInfo::MODE_ARRANGE))
 				{
 					mouseInfo.window   = "arrange";
 					mouseInfo.position = mousePos;
@@ -745,10 +751,10 @@ void BR_MouseContextInfo::GetContext (const POINT& p)
 						mouseInfo.segment = "envelope";
 
 						int trackEnvHit = 0;
-						if (!(m_mode & BR_MouseContextInfo::MODE_ENV_LANE_NO_SEGMENT))
+						if ((m_mode & BR_MouseInfo::MODE_ALL) || (m_mode & BR_MouseInfo::MODE_ENV_LANE_DO_SEGMENT))
 						{
 							BR_Envelope envelope(mouseInfo.envelope);
-							trackEnvHit = this->IsMouseOverEnvelopeLine(envelope, height-2*ENV_GAP, offset+ENV_GAP, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom);
+							trackEnvHit = this->IsMouseOverEnvelopeLine(envelope, height-2*ENV_GAP, offset+ENV_GAP, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, &mouseInfo.envPointId);
 						}
 
 						if      (trackEnvHit == 1) mouseInfo.details = "env_point";
@@ -763,7 +769,7 @@ void BR_MouseContextInfo::GetContext (const POINT& p)
 						mouseInfo.segment = "track";
 
 						// Check track lane for track envelope and item/take under mouse
-						int trackEnvHit = (IsLocked(TRACK_ENV)) ? 0 : this->IsMouseOverEnvelopeLineTrackLane(mouseInfo.track, height, offset, laneEnvs, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, &mouseInfo.envelope);
+						int trackEnvHit = (IsLocked(TRACK_ENV)) ? 0 : this->IsMouseOverEnvelopeLineTrackLane(mouseInfo.track, height, offset, laneEnvs, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, &mouseInfo.envelope, &mouseInfo.envPointId);
 						mouseInfo.item = GetItemFromY(mouseY, mousePos, &mouseInfo.take, &mouseInfo.takeId);
 
 						MediaItem_Take* activeTake = GetActiveTake(mouseInfo.item);
@@ -776,7 +782,7 @@ void BR_MouseContextInfo::GetContext (const POINT& p)
 						{
 							if (takeHeight == -666)
 								takeHeight = GetTakeHeight(mouseInfo.take, NULL, 0, &takeOffset, true, height, offset);
-							takeEnvHit = this->IsMouseOverEnvelopeLineTake(mouseInfo.take, takeHeight, takeOffset, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, &mouseInfo.envelope);
+							takeEnvHit = this->IsMouseOverEnvelopeLineTake(mouseInfo.take, takeHeight, takeOffset, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, &mouseInfo.envelope, &mouseInfo.envPointId);
 						}
 
 						// Check for stretch markers (again, only active take)
@@ -859,14 +865,14 @@ void BR_MouseContextInfo::GetContext (const POINT& p)
 		}
 
 		// MIDI editor
-		if (!found && ((m_mode & BR_MouseContextInfo::MODE_ALL) || (m_mode & BR_MouseContextInfo::MODE_MIDI_EDITOR)))
+		if (!found && ((m_mode & BR_MouseInfo::MODE_ALL) || (m_mode & BR_MouseInfo::MODE_MIDI_EDITOR)))
 			this->GetContextMIDI(p, hwnd, mouseInfo);
 	}
 
 	m_mouseInfo = mouseInfo;
 }
 
-bool BR_MouseContextInfo::GetContextMIDI (POINT p, HWND hwnd, BR_MouseContextInfo::MouseInfo& mouseInfo)
+bool BR_MouseInfo::GetContextMIDI (POINT p, HWND hwnd, BR_MouseInfo::MouseInfo& mouseInfo)
 {
 	HWND segmentHwnd = NULL;
 	if (int cursorSegment = this->IsHwndMidiEditor(hwnd, &mouseInfo.midiEditor, &segmentHwnd))
@@ -1082,7 +1088,7 @@ bool BR_MouseContextInfo::GetContextMIDI (POINT p, HWND hwnd, BR_MouseContextInf
 	}
 }
 
-bool BR_MouseContextInfo::GetContextMIDIInline (BR_MouseContextInfo::MouseInfo& mouseInfo, int mouseDisplayX, int mouseY, int takeHeight, int takeOffset)
+bool BR_MouseInfo::GetContextMIDIInline (BR_MouseInfo::MouseInfo& mouseInfo, int mouseDisplayX, int mouseY, int takeHeight, int takeOffset)
 {
 	/* Returns false is there isn't inline CC lane, note row or keyboard under  *
 	*  mouse cursor                                                             */
@@ -1203,7 +1209,7 @@ bool BR_MouseContextInfo::GetContextMIDIInline (BR_MouseContextInfo::MouseInfo& 
 	return false;
 }
 
-int BR_MouseContextInfo::IsMouseOverStretchMarker (MediaItem* item, MediaItem_Take* take, int takeHeight, int takeOffset, int mouseDisplayX, int mouseY, double mousePos, double arrangeStart, double arrangeZoom)
+int BR_MouseInfo::IsMouseOverStretchMarker (MediaItem* item, MediaItem_Take* take, int takeHeight, int takeOffset, int mouseDisplayX, int mouseY, double mousePos, double arrangeStart, double arrangeZoom)
 {
 	int returnId = -1;
 
@@ -1242,12 +1248,12 @@ int BR_MouseContextInfo::IsMouseOverStretchMarker (MediaItem* item, MediaItem_Ta
 	return returnId;
 }
 
-int BR_MouseContextInfo::IsMouseOverEnvelopeLine (BR_Envelope& envelope, int drawableEnvHeight, int yOffset, int mouseDisplayX, int mouseY, double mousePos, double arrangeStart, double arrangeZoom)
+int BR_MouseInfo::IsMouseOverEnvelopeLine (BR_Envelope& envelope, int drawableEnvHeight, int yOffset, int mouseDisplayX, int mouseY, double mousePos, double arrangeStart, double arrangeZoom, int* pointUnderMouse)
 {
 	/*  Return values: 0 -> no hit, 1 -> over point, 2 - > over segment */
 
 	int mouseHit = 0;
-
+	int pointId  = -1;
 	// Check if mouse is in drawable part of envelope lane where line resides
 	if (mouseY >= yOffset && mouseY < yOffset + drawableEnvHeight)
 	{
@@ -1265,14 +1271,15 @@ int BR_MouseContextInfo::IsMouseOverEnvelopeLine (BR_Envelope& envelope, int dra
 		{
 			// Check all the points around mouse cursor position
 			// gotcha: since point can be partially visible even when it's position is not within arrange start/end we don't check if within bounds
-			double prevPos;
-			while (envelope.GetPoint(prevId, &prevPos, NULL, NULL, NULL) && CheckBounds(prevPos, mousePosLeft, mousePosRight))
+			double prevPos, prevVal;
+			while (envelope.GetPoint(prevId, &prevPos, &prevVal, NULL, NULL) && CheckBounds(prevPos, mousePosLeft, mousePosRight))
 			{
 				int x = RoundToInt(arrangeZoom * (prevPos - arrangeStart));
-				int y = yOffset + drawableEnvHeight - RoundToInt(envelope.NormalizedDisplayValue(prevId) * drawableEnvHeight);
+				int y = yOffset + drawableEnvHeight - RoundToInt(envelope.NormalizedDisplayValue(prevVal) * drawableEnvHeight);
 				if (CheckBounds(mouseDisplayX, x - ENV_HIT_POINT, x + ENV_HIT_POINT_LEFT) && CheckBounds(mouseY, y - ENV_HIT_POINT - tempoHit, y + ENV_HIT_POINT_DOWN + tempoHit))
 				{
 					mouseHit = 1;
+					pointId = prevId;
 					found = true;
 					break;
 				}
@@ -1281,14 +1288,15 @@ int BR_MouseContextInfo::IsMouseOverEnvelopeLine (BR_Envelope& envelope, int dra
 		}
 		if (!found)
 		{
-			double nextPos;
-			while (envelope.GetPoint(nextId, &nextPos, NULL, NULL, NULL) && CheckBounds(nextPos, mousePosLeft, mousePosRight))
+			double nextPos, nextVal;
+			while (envelope.GetPoint(nextId, &nextPos, &nextVal, NULL, NULL) && CheckBounds(nextPos, mousePosLeft, mousePosRight))
 			{
 				int x = RoundToInt(arrangeZoom * (nextPos - arrangeStart));
-				int y = yOffset + drawableEnvHeight - RoundToInt(envelope.NormalizedDisplayValue(nextId) * drawableEnvHeight);
+				int y = yOffset + drawableEnvHeight - RoundToInt(envelope.NormalizedDisplayValue(nextVal) * drawableEnvHeight);
 				if (CheckBounds(mouseDisplayX, x - ENV_HIT_POINT, x + ENV_HIT_POINT_LEFT) && CheckBounds(mouseY, y - ENV_HIT_POINT - tempoHit, y + ENV_HIT_POINT_DOWN + tempoHit))
 				{
 					mouseHit = 1;
+					pointId = nextId;
 					found = true;
 					break;
 				}
@@ -1308,10 +1316,11 @@ int BR_MouseContextInfo::IsMouseOverEnvelopeLine (BR_Envelope& envelope, int dra
 			}
 		}
 	}
+	WritePtr(pointUnderMouse, pointId);
 	return mouseHit;
 }
 
-int BR_MouseContextInfo::IsMouseOverEnvelopeLineTrackLane (MediaTrack* track, int trackHeight, int trackOffset, list<TrackEnvelope*>& laneEnvs, int mouseDisplayX, int mouseY, double mousePos, double arrangeStart, double arrangeZoom, TrackEnvelope** trackEnvelope)
+int BR_MouseInfo::IsMouseOverEnvelopeLineTrackLane (MediaTrack* track, int trackHeight, int trackOffset, list<TrackEnvelope*>& laneEnvs, int mouseDisplayX, int mouseY, double mousePos, double arrangeStart, double arrangeZoom, TrackEnvelope** trackEnvelope, int* pointUnderMouse)
 {
 	/* laneEnv list should hold all track envelopes that have their own lane so *
 	*  we don't have to check for their visibility in track lane (chunks are    *
@@ -1367,7 +1376,7 @@ int BR_MouseContextInfo::IsMouseOverEnvelopeLineTrackLane (MediaTrack* track, in
 						int envOffset = trackOffset + trackGapTop + i*envLaneH + ENV_GAP;
 						BR_Envelope envelope(trackLaneEnvs[i]);
 
-						mouseHit = this->IsMouseOverEnvelopeLine(envelope, envHeight, envOffset, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom);
+						mouseHit = this->IsMouseOverEnvelopeLine(envelope, envHeight, envOffset, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, pointUnderMouse);
 						if (mouseHit != 0)
 							envelopeUnderMouse = envelope.GetPointer();
 						break;
@@ -1386,7 +1395,7 @@ int BR_MouseContextInfo::IsMouseOverEnvelopeLineTrackLane (MediaTrack* track, in
 					int envOffset = trackOffset + trackGapTop + ENV_GAP;
 					BR_Envelope envelope(trackLaneEnvs[i]);
 
-					mouseHit = this->IsMouseOverEnvelopeLine(envelope, envHeight, envOffset, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom);
+					mouseHit = this->IsMouseOverEnvelopeLine(envelope, envHeight, envOffset, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, pointUnderMouse);
 					if (mouseHit != 0)
 					{
 						envelopeUnderMouse = envelope.GetPointer();
@@ -1401,7 +1410,7 @@ int BR_MouseContextInfo::IsMouseOverEnvelopeLineTrackLane (MediaTrack* track, in
 	return mouseHit;
 }
 
-int BR_MouseContextInfo::IsMouseOverEnvelopeLineTake (MediaItem_Take* take, int takeHeight, int takeOffset, int mouseDisplayX, int mouseY, double mousePos, double arrangeStart, double arrangeZoom, TrackEnvelope** trackEnvelope)
+int BR_MouseInfo::IsMouseOverEnvelopeLineTake (MediaItem_Take* take, int takeHeight, int takeOffset, int mouseDisplayX, int mouseY, double mousePos, double arrangeStart, double arrangeZoom, TrackEnvelope** trackEnvelope, int* pointUnderMouse)
 {
 	/* Return values: 0 -> no hit, 1 -> over point, 2 - > over segment *
 	*  If there is a hit, trackEnvelope will hold envelope             */
@@ -1421,7 +1430,7 @@ int BR_MouseContextInfo::IsMouseOverEnvelopeLineTake (MediaItem_Take* take, int 
 
 		BR_Envelope envelope(take, type);
 		if (envelope.IsVisible())
-			mouseHit = this->IsMouseOverEnvelopeLine(envelope, takeHeight, takeOffset, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom);
+			mouseHit = this->IsMouseOverEnvelopeLine(envelope, takeHeight, takeOffset, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, pointUnderMouse);
 
 		if (mouseHit != 0)
 		{
@@ -1434,7 +1443,7 @@ int BR_MouseContextInfo::IsMouseOverEnvelopeLineTake (MediaItem_Take* take, int 
 	return mouseHit;
 }
 
-int BR_MouseContextInfo::GetRulerLaneHeight (int rulerH, int lane)
+int BR_MouseInfo::GetRulerLaneHeight (int rulerH, int lane)
 {
 	/* lane: 0 -> regions  *
 	*        1 -> markers  *
@@ -1453,7 +1462,7 @@ int BR_MouseContextInfo::GetRulerLaneHeight (int rulerH, int lane)
 	return 0;
 }
 
-int BR_MouseContextInfo::IsHwndMidiEditor (HWND hwnd, void** midiEditor, HWND* subView)
+int BR_MouseInfo::IsHwndMidiEditor (HWND hwnd, void** midiEditor, HWND* subView)
 {
 	int status = 0;
 
@@ -1483,12 +1492,12 @@ int BR_MouseContextInfo::IsHwndMidiEditor (HWND hwnd, void** midiEditor, HWND* s
 	return status;
 }
 
-bool BR_MouseContextInfo::SortEnvHeightsById (const pair<int,int>& left, const pair<int,int>& right)
+bool BR_MouseInfo::SortEnvHeightsById (const pair<int,int>& left, const pair<int,int>& right)
 {
 	return left.second < right.second;
 }
 
-void BR_MouseContextInfo::GetTrackOrEnvelopeFromY (int y, TrackEnvelope** _envelope, MediaTrack** _track, list<TrackEnvelope*>* envelopes, int* height, int* offset)
+void BR_MouseInfo::GetTrackOrEnvelopeFromY (int y, TrackEnvelope** _envelope, MediaTrack** _track, list<TrackEnvelope*>* envelopes, int* height, int* offset)
 {
 	/* If Y is at track get track pointer and all envelopes that have  *
 	*  control panels in TCP. If Y is at envelope get the envelope and *
@@ -1536,7 +1545,7 @@ void BR_MouseContextInfo::GetTrackOrEnvelopeFromY (int y, TrackEnvelope** _envel
 		if (!yInTrack)
 		{
 			// Envelopes hwnds don't have to be in order they are drawn so need to sort them by id before searching
-			std::sort(envHeights.begin(), envHeights.end(), BR_MouseContextInfo::SortEnvHeightsById);
+			std::sort(envHeights.begin(), envHeights.end(), BR_MouseInfo::SortEnvHeightsById);
 			int envelopeStart = elementOffset + elementHeight;
 			for (size_t i = 0; i < envHeights.size(); ++i)
 			{

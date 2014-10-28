@@ -711,7 +711,7 @@ bool BR_LoudnessObject::CreateGraph (BR_Envelope& envelope, double minLUFS, doub
 	envelope.DeletePointsInRange(start, end);
 
 	double position = start;
-	envelope.CreatePoint(envelope.Count(), position, newMin, LINEAR, 0, false);
+	envelope.CreatePoint(envelope.CountPoints(), position, newMin, LINEAR, 0, false);
 	position += (momentary) ? 0.4 : 3;
 
 	size_t size = (momentary) ? m_momentaryValues.size() : m_shortTermValues.size();
@@ -721,7 +721,7 @@ bool BR_LoudnessObject::CreateGraph (BR_Envelope& envelope, double minLUFS, doub
 
 		if (i != size-1)
 		{
-			envelope.CreatePoint(envelope.Count(), position, value, LINEAR, 0, false);
+			envelope.CreatePoint(envelope.CountPoints(), position, value, LINEAR, 0, false);
 			position += (momentary) ? 0.4 : 3;
 		}
 		else
@@ -729,10 +729,10 @@ bool BR_LoudnessObject::CreateGraph (BR_Envelope& envelope, double minLUFS, doub
 			// Reached the end, last point has to be square and end right where the audio ends
 			if (position < end)
 			{
-				envelope.CreatePoint(envelope.Count(), position, value, LINEAR, 0, false);
-				envelope.CreatePoint(envelope.Count(), end, value, LINEAR, 0, false);
+				envelope.CreatePoint(envelope.CountPoints(), position, value, LINEAR, 0, false);
+				envelope.CreatePoint(envelope.CountPoints(), end, value, LINEAR, 0, false);
 				if (value > newMin)
-					envelope.CreatePoint(envelope.Count(), end, newMin, SQUARE, 0, false);
+					envelope.CreatePoint(envelope.CountPoints(), end, newMin, SQUARE, 0, false);
 			}
 			else
 			{
@@ -741,12 +741,12 @@ bool BR_LoudnessObject::CreateGraph (BR_Envelope& envelope, double minLUFS, doub
 
 				if (value > newMin)
 				{
-					envelope.CreatePoint(envelope.Count(), position, value, LINEAR, 0, false);
-					envelope.CreatePoint(envelope.Count(), end, newMin, SQUARE, 0, false);
+					envelope.CreatePoint(envelope.CountPoints(), position, value, LINEAR, 0, false);
+					envelope.CreatePoint(envelope.CountPoints(), end, newMin, SQUARE, 0, false);
 				}
 				else
 				{
-					envelope.CreatePoint(envelope.Count(), position, value, SQUARE, 0, false);
+					envelope.CreatePoint(envelope.CountPoints(), position, value, SQUARE, 0, false);
 				}
 			}
 			break;
@@ -755,7 +755,7 @@ bool BR_LoudnessObject::CreateGraph (BR_Envelope& envelope, double minLUFS, doub
 
 	// In case there are no values (item too short) make sure graph ends with minimum
 	if (size == 0)
-		envelope.CreatePoint(envelope.Count(), end, newMin, SQUARE, 0, false);
+		envelope.CreatePoint(envelope.CountPoints(), end, newMin, SQUARE, 0, false);
 
 	return true;
 }
@@ -928,9 +928,9 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 	BR_LoudnessObject* _this = (BR_LoudnessObject*)loudnessObject;
 	BR_LoudnessObject::AudioData data = _this->GetAudioData();
 
-	bool doPan               = (data.channels > 1        && data.pan != 0)               ? (true) : (false); // tracks will always get false here (see CheckSetAudioData())
-	bool doVolEnv            = (data.volEnv.Count()      && data.volEnv.IsActive())      ? (true) : (false);
-	bool doVolPreFXEnv       = (data.volEnvPreFX.Count() && data.volEnvPreFX.IsActive()) ? (true) : (false);
+	bool doPan               = (data.channels > 1              && data.pan != 0)               ? (true) : (false); // tracks will always get false here (see CheckSetAudioData())
+	bool doVolEnv            = (data.volEnv.CountPoints()      && data.volEnv.IsActive())      ? (true) : (false);
+	bool doVolPreFXEnv       = (data.volEnvPreFX.CountPoints() && data.volEnvPreFX.IsActive()) ? (true) : (false);
 	bool integratedOnly      = _this->GetIntegratedOnly();
 	bool doTruePeak          = _this->GetDoTruePeak();
 
@@ -1164,18 +1164,18 @@ int BR_LoudnessObject::CheckSetAudioData ()
 
 
 	if (!this->GetAnalyzedStatus()                      ||
-		AudioAccessorValidateState(audioData.audio)     ||
-		strcmp(newHash, audioData.audioHash)            ||
-		audioStart  != audioData.audioStart             ||
-		audioEnd    != audioData.audioEnd               ||
-		channels    != audioData.channels               ||
-		channelMode != audioData.channelMode            ||
-		samplerate  != audioData.samplerate             ||
-		volEnv      != audioData.volEnv                 ||
-		volEnvPreFX != audioData.volEnvPreFX            ||
-		fabs(volume - audioData.volume) >= VOLUME_DELTA ||
-		fabs(pan    - audioData.pan)    >= PAN_DELTA
-		)
+	    AudioAccessorValidateState(audioData.audio)     ||
+	    strcmp(newHash, audioData.audioHash)            ||
+	    audioStart  != audioData.audioStart             ||
+	    audioEnd    != audioData.audioEnd               ||
+	    channels    != audioData.channels               ||
+	    channelMode != audioData.channelMode            ||
+	    samplerate  != audioData.samplerate             ||
+	    volEnv      != audioData.volEnv                 ||
+	    volEnvPreFX != audioData.volEnvPreFX            ||
+	    fabs(volume - audioData.volume) >= VOLUME_DELTA ||
+	    fabs(pan    - audioData.pan)    >= PAN_DELTA
+	)
 	{
 		DestroyAudioAccessor(audioData.audio);
 		audioData.audio = (m_track) ? (CreateTrackAudioAccessor(m_track)) : (CreateTakeAudioAccessor(m_take));
@@ -3034,7 +3034,7 @@ void BR_AnalyzeLoudnessWnd::OnCommand (WPARAM wParam, LPARAM lParam)
 				BR_Envelope envelope(env);
 				if (m_properties.clearEnvelope)
 				{
-					envelope.DeletePoints(1, envelope.Count()-1);
+					envelope.DeletePoints(1, envelope.CountPoints()-1);
 					envelope.UnselectAll();
 					double position = 0;
 					double value = envelope.LaneMinValue();

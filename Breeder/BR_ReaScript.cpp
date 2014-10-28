@@ -37,7 +37,7 @@
 /******************************************************************************
 * Globals                                                                     *
 ******************************************************************************/
-static BR_MouseContextInfo g_mouseInfo(BR_MouseContextInfo::MODE_ALL, false);
+static BR_MouseInfo g_mouseInfo(BR_MouseInfo::MODE_ALL, false);
 
 /******************************************************************************
 * ReaScript export                                                            *
@@ -53,7 +53,7 @@ BR_Envelope* BR_EnvAlloc (TrackEnvelope* envelope, bool takeEnvelopesUseProjectT
 int BR_EnvCountPoints (BR_Envelope* envelope)
 {
 	if (envelope)
-		return envelope->Count();
+		return envelope->CountPoints();
 	else
 		return 0;
 }
@@ -158,8 +158,8 @@ void BR_EnvGetProperties (BR_Envelope* envelope, bool* active, bool* visible, bo
 		WritePtr(visible,      envelope->IsVisible());
 		WritePtr(armed,        envelope->IsArmed());
 		WritePtr(inLane,       envelope->IsInLane());
-		WritePtr(laneHeight,   envelope->LaneHeight());
-		WritePtr(defaultShape, envelope->DefaultShape());
+		WritePtr(laneHeight,   envelope->GetLaneHeight());
+		WritePtr(defaultShape, envelope->GetDefaultShape());
 		WritePtr(minValue,     envelope->MinValue());
 		WritePtr(maxValue,     envelope->MaxValue());
 		WritePtr(centerValue,  envelope->CenterValue());
@@ -285,7 +285,7 @@ double BR_GetMouseCursorContext_Position ()
 
 int BR_GetMouseCursorContext_StretchMarker ()
 {
-	int id = g_mouseInfo.GetStretchMarkerId();
+	int id = g_mouseInfo.GetStretchMarker();
 	if (id == -1)
 		return -1;
 	else

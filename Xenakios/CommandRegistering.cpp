@@ -336,8 +336,8 @@ COMMAND_T g_XenCommandTable[] =
 	{ { DEFACCEL, "Xenakios/SWS: Reset item length and media offset" }, "XENAKIOS_RESETITEMLENMEDOFFS", DoResetItemsOffsetAndLength, NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Toggle reference track" }, "XENAKIOS_TOGGREFTRACK", DoToggleReferenceTrack, NULL, 0, IsRefTrack },
 	{ { DEFACCEL, "Xenakios/SWS: Set selected track as reference track" }, "XENAKIOS_SETSELTKREFTRACK", DoSetSelTrackAsRefTrack, NULL, },
-	{ { DEFACCEL, "Xenakios/SWS: Shift current envelope to right" }, "XEN_ENV_SHIFTRIGHT", DoShiftEnvelope, NULL, 1 },
-	{ { DEFACCEL, "Xenakios/SWS: Shift current envelope to left" }, "XEN_ENV_SHIFTLEFT", DoShiftEnvelope, NULL, -1},
+	{ { DEFACCEL, "Xenakios/SWS: Shift all points in selected envelope to right by 1 second" }, "XEN_ENV_SHIFTRIGHT", DoShiftEnvelope, NULL, 1 },
+	{ { DEFACCEL, "Xenakios/SWS: Shift all points in selected envelope to left by 1 second" }, "XEN_ENV_SHIFTLEFT", DoShiftEnvelope, NULL, -1},
 	{ { DEFACCEL, "Xenakios/SWS: Toggle stop playback at end of time selection" }, "XEN_PREF_STOPATENDLOOP", DoToggleSTopAtEndOfTimeSel, NULL, 0, IsStopAtEndOfTimeSel },
 
 	{ { DEFACCEL, "Xenakios/SWS: Rename project markers with ascending numbers" }, "XEN_RENNMARKERSASCNUMBERS", DoRenameMarkersWithAscendingNumbers, NULL, },

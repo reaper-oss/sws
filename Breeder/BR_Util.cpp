@@ -151,6 +151,11 @@ int RoundToInt (double val)
 		return (int)(val + 0.5);
 }
 
+int TruncToInt (double val)
+{
+	return (int)val;
+}
+
 int GetBit (int val, int pos)
 {
 	return (val & 1 << pos) != 0;

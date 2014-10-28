@@ -293,7 +293,7 @@ class BR_ContextualToolbarsWnd : public SWS_DockWnd
 {
 public:
 	BR_ContextualToolbarsWnd ();
-	~BR_ContextualToolbarsWnd () {};
+	~BR_ContextualToolbarsWnd ();
 
 	void Update ();
 	bool CheckForModificationsAndSave (bool onClose);

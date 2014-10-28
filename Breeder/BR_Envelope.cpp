@@ -146,8 +146,8 @@ void SetEnvPointMouseValue (COMMAND_T* ct)
 		// BR_Envelope does check for locking but we're also using tempo API here so check manually
 		if (g_envMouseEnvelope->IsLocked())
 		{
-				ContinuousActionStopAll();
-				return;
+			ContinuousActionStopAll();
+			return;
 		}
 	}
 
@@ -1144,7 +1144,7 @@ void SelectEnvelopeUnderMouse (COMMAND_T* ct)
 
 void SelectDeleteEnvPointUnderMouse (COMMAND_T* ct)
 {
-	BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_ARRANGE | BR_MouseInfo::MODE_ENV_LANE_DO_SEGMENT);
+	BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_ARRANGE_ALL);
 	if (!strcmp(mouseInfo.GetDetails(), "env_point"))
 	{
 		if (mouseInfo.GetEnvelope() && (abs((int)ct->user) == 2 || (abs((int)ct->user) == 1 && mouseInfo.GetEnvelope() == GetSelectedEnvelope(NULL))))

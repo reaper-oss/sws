@@ -145,7 +145,11 @@ bool hookCommandProc2(KbdSectionInfo* sec, int cmdId, int val, int valhw, int re
 				{
 					sReentrantCmds.Add(cmd->id);
 					cmd->fakeToggle = !cmd->fakeToggle;
+#ifndef BR_DEBUG_PERFORMANCE_ACTIONS
 					cmd->onAction(cmd, val, valhw, relmode, hwnd);
+#else
+					CommandTimer(cmd, val, valhw, relmode, hwnd, true);
+#endif
 					sReentrantCmds.Delete(sReentrantCmds.Find(cmd->id));
 					return true;
 				}

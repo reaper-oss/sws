@@ -2073,6 +2073,10 @@ m_exportFormatWnd   (NULL)
 	Init(); // Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 }
 
+BR_AnalyzeLoudnessWnd::~BR_AnalyzeLoudnessWnd ()
+{
+}
+
 void BR_AnalyzeLoudnessWnd::Update (bool updateList /*=true*/)
 {
 	if (this->IsValidWindow())

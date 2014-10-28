@@ -682,10 +682,10 @@ void BR_MouseInfo::GetContext (const POINT& p)
 				int limitH = 0;
 				for (int i = 0; i < 4; ++i)
 				{
-					if      (i == 0) {limitL = limitH; limitH += this->GetRulerLaneHeight(rulerH, i); mouseInfo.segment = "region_lane";  }
-					else if (i == 1) {limitL = limitH; limitH += this->GetRulerLaneHeight(rulerH, i); mouseInfo.segment = "marker_lane";  }
-					else if (i == 2) {limitL = limitH; limitH += this->GetRulerLaneHeight(rulerH, i); mouseInfo.segment = "tempo_lane";   }
-					else if (i == 3) {limitL = limitH; limitH += this->GetRulerLaneHeight(rulerH, i); mouseInfo.segment = "timeline";     }
+					if      (i == 0) {limitL = limitH; limitH += this->GetRulerLaneHeight(rulerH, i); mouseInfo.segment = "region_lane";}
+					else if (i == 1) {limitL = limitH; limitH += this->GetRulerLaneHeight(rulerH, i); mouseInfo.segment = "marker_lane";}
+					else if (i == 2) {limitL = limitH; limitH += this->GetRulerLaneHeight(rulerH, i); mouseInfo.segment = "tempo_lane"; }
+					else if (i == 3) {limitL = limitH; limitH += this->GetRulerLaneHeight(rulerH, i); mouseInfo.segment = "timeline";   }
 
 					if (rulerP.y >= limitL && rulerP.y < limitH )
 						break;
@@ -1450,8 +1450,8 @@ int BR_MouseInfo::GetRulerLaneHeight (int rulerH, int lane)
 	*        2 -> tempo    *
 	*        3 -> timeline */
 
-	int markers = RoundToInt((double)rulerH / 6);
-	int timeline = RoundToInt((double)rulerH / 2) - 2;
+	int timeline = RoundToInt((double)rulerH / 2);
+	int markers = TruncToInt((double)timeline / 3) + 1;
 
 	if (lane == 0)
 		return rulerH - markers*2 - timeline;

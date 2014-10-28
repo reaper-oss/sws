@@ -48,6 +48,7 @@ vector<int> GetDigits (int val); // in 567 [0] = 5, [1] = 6 etc...
 set<int> GetAllMenuIds (HMENU hMenu);
 int GetUnusedMenuId (HMENU hMenu);
 int RoundToInt (double val);
+int TruncToInt (double val);
 int GetBit (int val, int pos);
 int SetBit (int val, int pos, bool set);
 int SetBit (int val, int pos);

@@ -124,10 +124,11 @@ public:
 		MODE_TRANSPORT           = 0x4,
 		MODE_MCP_TCP             = 0x8,
 		MODE_ARRANGE             = 0x10,
-		MODE_ENV_LANE_DO_SEGMENT = 0x20, // valid only in tandem with MODE_ARRANGE. Set it to look for envelope points/segments in envelope lane (track lane gets checked always) 
+		MODE_ENV_LANE_DO_SEGMENT = 0x20, // valid only in tandem with MODE_ARRANGE. Set it to look for envelope points/segments in envelope lane (track lane gets checked always)
 		MODE_MIDI_EDITOR         = 0x40,
 		MODE_MIDI_INLINE         = 0x80,
-		MODE_MIDI_EDITOR_ALL     = MODE_MIDI_EDITOR | MODE_MIDI_INLINE
+		MODE_MIDI_EDITOR_ALL     = MODE_MIDI_EDITOR | MODE_MIDI_INLINE,
+		MODE_ARRANGE_ALL         = MODE_ARRANGE | MODE_ENV_LANE_DO_SEGMENT
 	};
 
 private:

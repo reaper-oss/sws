@@ -215,7 +215,7 @@ class BR_AnalyzeLoudnessWnd : public SWS_DockWnd
 {
 public:
 	BR_AnalyzeLoudnessWnd ();
-	~BR_AnalyzeLoudnessWnd () {};
+	~BR_AnalyzeLoudnessWnd ();
 
 	void Update (bool updateList = true);
 	void KillNormalizeDlg ();

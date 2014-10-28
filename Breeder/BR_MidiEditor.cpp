@@ -237,7 +237,7 @@ void ME_PlaybackAtMouseCursor (COMMAND_T* ct, int val, int valhw, int relmode, H
 
 void ME_CCEventAtEditCursor (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
-	BR_MouseContextInfo mouseInfo(BR_MouseContextInfo::MODE_MIDI_EDITOR_ALL);
+	BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_MIDI_EDITOR_ALL);
 	if (mouseInfo.GetMidiEditor())
 	{
 		if (MediaItem_Take* take = MIDIEditor_GetTake(mouseInfo.GetMidiEditor()))
@@ -328,7 +328,7 @@ void ME_HideCCLanes (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 	}
 	else
 	{
-		BR_MouseContextInfo mouseInfo(BR_MouseContextInfo::MODE_MIDI_EDITOR_ALL);
+		BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_MIDI_EDITOR_ALL);
 		midiEditor = mouseInfo.GetMidiEditor();
 		mouseInfo.GetCCLane(&laneToProcess, NULL, NULL);
 	}
@@ -400,7 +400,7 @@ void ME_ToggleHideCCLanes (COMMAND_T* ct, int val, int valhw, int relmode, HWND 
 			}
 			else
 			{
-				BR_MouseContextInfo mouseInfo(BR_MouseContextInfo::MODE_MIDI_EDITOR_ALL);
+				BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_MIDI_EDITOR_ALL);
 				midiEditor = mouseInfo.GetMidiEditor();
 			}
 
@@ -418,7 +418,7 @@ void ME_ToggleHideCCLanes (COMMAND_T* ct, int val, int valhw, int relmode, HWND 
 			}
 			else
 			{
-				BR_MouseContextInfo mouseInfo(BR_MouseContextInfo::MODE_MIDI_EDITOR_ALL);
+				BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_MIDI_EDITOR_ALL);
 				midiEditor = mouseInfo.GetMidiEditor();
 				mouseInfo.GetCCLane(&laneToKeep, NULL, NULL);
 			}
@@ -595,7 +595,7 @@ void ME_SaveCCEventsSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWND h
 	void* midiEditor;
 	if ((int)ct->user < 0)
 	{
-		BR_MouseContextInfo mouseInfo(BR_MouseContextInfo::MODE_MIDI_EDITOR_ALL);
+		BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_MIDI_EDITOR_ALL);
 		midiEditor = (mouseInfo.GetCCLane(&lane, NULL, NULL)) ? mouseInfo.GetMidiEditor() : NULL;
 	}
 	else
@@ -628,7 +628,7 @@ void ME_RestoreCCEventsSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWN
 	void* midiEditor;
 	if ((int)ct->user < 0)
 	{
-		BR_MouseContextInfo mouseInfo(BR_MouseContextInfo::MODE_MIDI_EDITOR_ALL);
+		BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_MIDI_EDITOR_ALL);
 		midiEditor = (mouseInfo.GetCCLane(&lane, NULL, NULL)) ? mouseInfo.GetMidiEditor() : NULL;
 	}
 	else

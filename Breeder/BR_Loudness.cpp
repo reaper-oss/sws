@@ -1164,18 +1164,18 @@ int BR_LoudnessObject::CheckSetAudioData ()
 
 
 	if (!this->GetAnalyzedStatus()                      ||
-		AudioAccessorValidateState(audioData.audio)     ||
-		strcmp(newHash, audioData.audioHash)            ||
-		audioStart  != audioData.audioStart             ||
-		audioEnd    != audioData.audioEnd               ||
-		channels    != audioData.channels               ||
-		channelMode != audioData.channelMode            ||
-		samplerate  != audioData.samplerate             ||
-		volEnv      != audioData.volEnv                 ||
-		volEnvPreFX != audioData.volEnvPreFX            ||
-		fabs(volume - audioData.volume) >= VOLUME_DELTA ||
-		fabs(pan    - audioData.pan)    >= PAN_DELTA
-		)
+	    AudioAccessorValidateState(audioData.audio)     ||
+	    strcmp(newHash, audioData.audioHash)            ||
+	    audioStart  != audioData.audioStart             ||
+	    audioEnd    != audioData.audioEnd               ||
+	    channels    != audioData.channels               ||
+	    channelMode != audioData.channelMode            ||
+	    samplerate  != audioData.samplerate             ||
+	    volEnv      != audioData.volEnv                 ||
+	    volEnvPreFX != audioData.volEnvPreFX            ||
+	    fabs(volume - audioData.volume) >= VOLUME_DELTA ||
+	    fabs(pan    - audioData.pan)    >= PAN_DELTA
+	)
 	{
 		DestroyAudioAccessor(audioData.audio);
 		audioData.audio = (m_track) ? (CreateTrackAudioAccessor(m_track)) : (CreateTakeAudioAccessor(m_take));

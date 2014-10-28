@@ -158,7 +158,7 @@ void BR_ContextualToolbar::LoadToolbar ()
 	}
 	else
 	{
-		BR_MouseContextInfo mouseInfo(m_mode, true);
+		BR_MouseInfo mouseInfo(m_mode, true);
 		BR_ContextualToolbar::ExecuteOnToolbarLoad executeOnToolbarLoad;
 
 		int context = -1;
@@ -784,67 +784,65 @@ void BR_ContextualToolbar::UpdateInternals ()
 	for (int i = CONTEXT_START; i < CONTEXT_COUNT; ++i)
 	{
 		int action = m_mouseActions[i];
-		if      (i == TRANSPORT                          && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_TRANSPORT;          m_activeContexts.insert(i);}
-		else if (i == RULER                              && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_RULER;              m_activeContexts.insert(i);}
-		else if (i == RULER_REGIONS                      && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_RULER;              m_activeContexts.insert(i);}
-		else if (i == RULER_MARKERS                      && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_RULER;              m_activeContexts.insert(i);}
-		else if (i == RULER_TEMPO                        && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_RULER;              m_activeContexts.insert(i);}
-		else if (i == RULER_TIMELINE                     && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_RULER;              m_activeContexts.insert(i);}
-		else if (i == TCP                                && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_MCP_TCP;            m_activeContexts.insert(i);}
-		else if (i == TCP_EMPTY                          && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_MCP_TCP;            m_activeContexts.insert(i);}
-		else if (i == TCP_TRACK                          && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_MCP_TCP;            m_activeContexts.insert(i);}
-		else if (i == TCP_TRACK_MASTER                   && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_MCP_TCP;            m_activeContexts.insert(i);}
-		else if (i == TCP_ENVELOPE                       && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_MCP_TCP;            m_activeContexts.insert(i);}
-		else if (i == TCP_ENVELOPE_VOLUME                && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_MCP_TCP;            m_activeContexts.insert(i);}
-		else if (i == TCP_ENVELOPE_PAN                   && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_MCP_TCP;            m_activeContexts.insert(i);}
-		else if (i == TCP_ENVELOPE_WIDTH                 && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_MCP_TCP;            m_activeContexts.insert(i);}
-		else if (i == TCP_ENVELOPE_MUTE                  && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_MCP_TCP;            m_activeContexts.insert(i);}
-		else if (i == TCP_ENVELOPE_PLAYRATE              && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_MCP_TCP;            m_activeContexts.insert(i);}
-		else if (i == TCP_ENVELOPE_TEMPO                 && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_MCP_TCP;            m_activeContexts.insert(i);}
-		else if (i == MCP                                && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_MCP_TCP;            m_activeContexts.insert(i);}
-		else if (i == MCP_EMPTY                          && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_MCP_TCP;            m_activeContexts.insert(i);}
-		else if (i == MCP_TRACK                          && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_MCP_TCP;            m_activeContexts.insert(i);}
-		else if (i == MCP_TRACK_MASTER                   && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_MCP_TCP;            m_activeContexts.insert(i);}
-		else if (i == ARRANGE                            && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
-		else if (i == ARRANGE_EMPTY                      && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
-		else if (i == ARRANGE_TRACK                      && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
-		else if (i == ARRANGE_TRACK_EMPTY                && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
-		else if (i == ARRANGE_TRACK_ITEM                 && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
-		else if (i == ARRANGE_TRACK_ITEM_AUDIO           && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
-		else if (i == ARRANGE_TRACK_ITEM_MIDI            && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
-		else if (i == ARRANGE_TRACK_ITEM_VIDEO           && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
-		else if (i == ARRANGE_TRACK_ITEM_EMPTY           && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
-		else if (i == ARRANGE_TRACK_ITEM_CLICK           && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
-		else if (i == ARRANGE_TRACK_ITEM_TIMECODE        && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
-		else if (i == ARRANGE_TRACK_ITEM_STRETCH_MARKER  && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
-		else if (i == ARRANGE_TRACK_TAKE_ENVELOPE        && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
-		else if (i == ARRANGE_TRACK_TAKE_ENVELOPE_VOLUME && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
-		else if (i == ARRANGE_TRACK_TAKE_ENVELOPE_PAN    && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
-		else if (i == ARRANGE_TRACK_TAKE_ENVELOPE_MUTE   && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
-		else if (i == ARRANGE_TRACK_TAKE_ENVELOPE_PITCH  && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
-		else if (i == ARRANGE_ENVELOPE_TRACK             && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
-		else if (i == ARRANGE_ENVELOPE_TRACK_VOLUME      && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
-		else if (i == ARRANGE_ENVELOPE_TRACK_PAN         && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
-		else if (i == ARRANGE_ENVELOPE_TRACK_WIDTH       && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
-		else if (i == ARRANGE_ENVELOPE_TRACK_MUTE        && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
-		else if (i == ARRANGE_ENVELOPE_TRACK_PITCH       && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
-		else if (i == ARRANGE_ENVELOPE_TRACK_PLAYRATE    && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
-		else if (i == ARRANGE_ENVELOPE_TRACK_TEMPO       && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
-		else if (i == MIDI_EDITOR                        && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_MIDI_EDITOR;        m_activeContexts.insert(i);}
-		else if (i == MIDI_EDITOR_RULER                  && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_MIDI_EDITOR;        m_activeContexts.insert(i);}
-		else if (i == MIDI_EDITOR_PIANO                  && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_MIDI_EDITOR;        m_activeContexts.insert(i);}
-		else if (i == MIDI_EDITOR_PIANO_NAMED            && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_MIDI_EDITOR;        m_activeContexts.insert(i);}
-		else if (i == MIDI_EDITOR_NOTES                  && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_MIDI_EDITOR;        m_activeContexts.insert(i);}
-		else if (i == MIDI_EDITOR_CC_LANE                && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_MIDI_EDITOR;        m_activeContexts.insert(i);}
-		else if (i == MIDI_EDITOR_CC_SELECTOR            && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_MIDI_EDITOR;        m_activeContexts.insert(i);}
-		else if (i == INLINE_MIDI_EDITOR                 && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_MIDI_INLINE;        m_activeContexts.insert(i);}
-		else if (i == INLINE_MIDI_EDITOR_PIANO           && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_MIDI_INLINE;        m_activeContexts.insert(i);}
-		else if (i == INLINE_MIDI_EDITOR_PIANO_NAMED     && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_MIDI_INLINE;        m_activeContexts.insert(i);}
-		else if (i == INLINE_MIDI_EDITOR_NOTES           && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_MIDI_INLINE;        m_activeContexts.insert(i);}
-		else if (i == INLINE_MIDI_EDITOR_CC_LANE         && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseContextInfo::MODE_MIDI_INLINE;        m_activeContexts.insert(i);}
-	}
-
-	m_mode |= BR_MouseContextInfo::MODE_ENV_LANE_NO_SEGMENT;
+		if      (i == TRANSPORT                          && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_TRANSPORT;          m_activeContexts.insert(i);}
+		else if (i == RULER                              && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_RULER;              m_activeContexts.insert(i);}
+		else if (i == RULER_REGIONS                      && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_RULER;              m_activeContexts.insert(i);}
+		else if (i == RULER_MARKERS                      && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_RULER;              m_activeContexts.insert(i);}
+		else if (i == RULER_TEMPO                        && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_RULER;              m_activeContexts.insert(i);}
+		else if (i == RULER_TIMELINE                     && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_RULER;              m_activeContexts.insert(i);}
+		else if (i == TCP                                && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_MCP_TCP;            m_activeContexts.insert(i);}
+		else if (i == TCP_EMPTY                          && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_MCP_TCP;            m_activeContexts.insert(i);}
+		else if (i == TCP_TRACK                          && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_MCP_TCP;            m_activeContexts.insert(i);}
+		else if (i == TCP_TRACK_MASTER                   && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_MCP_TCP;            m_activeContexts.insert(i);}
+		else if (i == TCP_ENVELOPE                       && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_MCP_TCP;            m_activeContexts.insert(i);}
+		else if (i == TCP_ENVELOPE_VOLUME                && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_MCP_TCP;            m_activeContexts.insert(i);}
+		else if (i == TCP_ENVELOPE_PAN                   && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_MCP_TCP;            m_activeContexts.insert(i);}
+		else if (i == TCP_ENVELOPE_WIDTH                 && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_MCP_TCP;            m_activeContexts.insert(i);}
+		else if (i == TCP_ENVELOPE_MUTE                  && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_MCP_TCP;            m_activeContexts.insert(i);}
+		else if (i == TCP_ENVELOPE_PLAYRATE              && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_MCP_TCP;            m_activeContexts.insert(i);}
+		else if (i == TCP_ENVELOPE_TEMPO                 && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_MCP_TCP;            m_activeContexts.insert(i);}
+		else if (i == MCP                                && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_MCP_TCP;            m_activeContexts.insert(i);}
+		else if (i == MCP_EMPTY                          && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_MCP_TCP;            m_activeContexts.insert(i);}
+		else if (i == MCP_TRACK                          && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_MCP_TCP;            m_activeContexts.insert(i);}
+		else if (i == MCP_TRACK_MASTER                   && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_MCP_TCP;            m_activeContexts.insert(i);}
+		else if (i == ARRANGE                            && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
+		else if (i == ARRANGE_EMPTY                      && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
+		else if (i == ARRANGE_TRACK                      && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
+		else if (i == ARRANGE_TRACK_EMPTY                && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
+		else if (i == ARRANGE_TRACK_ITEM                 && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
+		else if (i == ARRANGE_TRACK_ITEM_AUDIO           && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
+		else if (i == ARRANGE_TRACK_ITEM_MIDI            && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
+		else if (i == ARRANGE_TRACK_ITEM_VIDEO           && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
+		else if (i == ARRANGE_TRACK_ITEM_EMPTY           && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
+		else if (i == ARRANGE_TRACK_ITEM_CLICK           && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
+		else if (i == ARRANGE_TRACK_ITEM_TIMECODE        && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
+		else if (i == ARRANGE_TRACK_ITEM_STRETCH_MARKER  && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
+		else if (i == ARRANGE_TRACK_TAKE_ENVELOPE        && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
+		else if (i == ARRANGE_TRACK_TAKE_ENVELOPE_VOLUME && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
+		else if (i == ARRANGE_TRACK_TAKE_ENVELOPE_PAN    && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
+		else if (i == ARRANGE_TRACK_TAKE_ENVELOPE_MUTE   && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
+		else if (i == ARRANGE_TRACK_TAKE_ENVELOPE_PITCH  && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
+		else if (i == ARRANGE_ENVELOPE_TRACK             && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
+		else if (i == ARRANGE_ENVELOPE_TRACK_VOLUME      && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
+		else if (i == ARRANGE_ENVELOPE_TRACK_PAN         && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
+		else if (i == ARRANGE_ENVELOPE_TRACK_WIDTH       && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
+		else if (i == ARRANGE_ENVELOPE_TRACK_MUTE        && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
+		else if (i == ARRANGE_ENVELOPE_TRACK_PITCH       && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
+		else if (i == ARRANGE_ENVELOPE_TRACK_PLAYRATE    && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
+		else if (i == ARRANGE_ENVELOPE_TRACK_TEMPO       && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_ARRANGE;            m_activeContexts.insert(i);}
+		else if (i == MIDI_EDITOR                        && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_MIDI_EDITOR;        m_activeContexts.insert(i);}
+		else if (i == MIDI_EDITOR_RULER                  && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_MIDI_EDITOR;        m_activeContexts.insert(i);}
+		else if (i == MIDI_EDITOR_PIANO                  && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_MIDI_EDITOR;        m_activeContexts.insert(i);}
+		else if (i == MIDI_EDITOR_PIANO_NAMED            && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_MIDI_EDITOR;        m_activeContexts.insert(i);}
+		else if (i == MIDI_EDITOR_NOTES                  && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_MIDI_EDITOR;        m_activeContexts.insert(i);}
+		else if (i == MIDI_EDITOR_CC_LANE                && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_MIDI_EDITOR;        m_activeContexts.insert(i);}
+		else if (i == MIDI_EDITOR_CC_SELECTOR            && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_MIDI_EDITOR;        m_activeContexts.insert(i);}
+		else if (i == INLINE_MIDI_EDITOR                 && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_MIDI_INLINE;        m_activeContexts.insert(i);}
+		else if (i == INLINE_MIDI_EDITOR_PIANO           && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_MIDI_INLINE;        m_activeContexts.insert(i);}
+		else if (i == INLINE_MIDI_EDITOR_PIANO_NAMED     && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_MIDI_INLINE;        m_activeContexts.insert(i);}
+		else if (i == INLINE_MIDI_EDITOR_NOTES           && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_MIDI_INLINE;        m_activeContexts.insert(i);}
+		else if (i == INLINE_MIDI_EDITOR_CC_LANE         && action != DO_NOTHING && action != INHERIT_PARENT) {m_mode |= BR_MouseInfo::MODE_MIDI_INLINE;        m_activeContexts.insert(i);}
+	}	
 }
 
 void BR_ContextualToolbar::SetToolbarAlwaysOnTop (int toolbarId)
@@ -1046,7 +1044,7 @@ int BR_ContextualToolbar::GetToolbarId (int mouseAction)
 	return -1;
 }
 
-int BR_ContextualToolbar::FindRulerToolbar (BR_MouseContextInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad)
+int BR_ContextualToolbar::FindRulerToolbar (BR_MouseInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad)
 {
 	int context = -1;
 
@@ -1068,7 +1066,7 @@ int BR_ContextualToolbar::FindRulerToolbar (BR_MouseContextInfo& mouseInfo, BR_C
 	return context;
 }
 
-int BR_ContextualToolbar::FindTransportToolbar (BR_MouseContextInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad)
+int BR_ContextualToolbar::FindTransportToolbar (BR_MouseInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad)
 {
 	int context = TRANSPORT;
 
@@ -1083,7 +1081,7 @@ int BR_ContextualToolbar::FindTransportToolbar (BR_MouseContextInfo& mouseInfo, 
 	return context;
 }
 
-int BR_ContextualToolbar::FindTcpToolbar (BR_MouseContextInfo& mouseInfo,  BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad)
+int BR_ContextualToolbar::FindTcpToolbar (BR_MouseInfo& mouseInfo,  BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad)
 {
 	int context = -1;
 
@@ -1140,7 +1138,7 @@ int BR_ContextualToolbar::FindTcpToolbar (BR_MouseContextInfo& mouseInfo,  BR_Co
 	return context;
 }
 
-int BR_ContextualToolbar::FindMcpToolbar (BR_MouseContextInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad)
+int BR_ContextualToolbar::FindMcpToolbar (BR_MouseInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad)
 {
 	int context = -1;
 
@@ -1176,7 +1174,7 @@ int BR_ContextualToolbar::FindMcpToolbar (BR_MouseContextInfo& mouseInfo, BR_Con
 	return context;
 }
 
-int BR_ContextualToolbar::FindArrangeToolbar (BR_MouseContextInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad)
+int BR_ContextualToolbar::FindArrangeToolbar (BR_MouseInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad)
 {
 	bool focusEnvelope = false;
 	int context = -1;
@@ -1320,7 +1318,7 @@ int BR_ContextualToolbar::FindArrangeToolbar (BR_MouseContextInfo& mouseInfo, BR
 	return context;
 }
 
-int BR_ContextualToolbar::FindMidiToolbar (BR_MouseContextInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad)
+int BR_ContextualToolbar::FindMidiToolbar (BR_MouseInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad)
 {
 	int context = -1;
 
@@ -1350,7 +1348,7 @@ int BR_ContextualToolbar::FindMidiToolbar (BR_MouseContextInfo& mouseInfo, BR_Co
 	return context;
 }
 
-int BR_ContextualToolbar::FindInlineMidiToolbar (BR_MouseContextInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad)
+int BR_ContextualToolbar::FindInlineMidiToolbar (BR_MouseInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad)
 {
 	int context = -1;
 

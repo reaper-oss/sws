@@ -37,7 +37,7 @@
 /******************************************************************************
 * Globals                                                                     *
 ******************************************************************************/
-static BR_MouseContextInfo g_mouseInfo(BR_MouseContextInfo::MODE_ALL, false);
+static BR_MouseInfo g_mouseInfo(BR_MouseInfo::MODE_ALL, false);
 
 /******************************************************************************
 * ReaScript export                                                            *
@@ -285,7 +285,7 @@ double BR_GetMouseCursorContext_Position ()
 
 int BR_GetMouseCursorContext_StretchMarker ()
 {
-	int id = g_mouseInfo.GetStretchMarkerId();
+	int id = g_mouseInfo.GetStretchMarker();
 	if (id == -1)
 		return -1;
 	else

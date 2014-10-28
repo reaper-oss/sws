@@ -38,7 +38,7 @@ MediaItem_Take* TakeAtMouseCursor (double* position);
 MediaTrack* TrackAtMouseCursor (int* context, double* position); // context: 0->TCP, 1->MCP, 2->Arrange
 
 /******************************************************************************
-* BR_MouseContextInfo                                                         *
+* BR_MouseInfo                                                                *
 *                                                                             *
 * Create the object and use it's methods to query information about stuff     *
 * under mouse cursor. Note that the object doesn't recheck state of things    *
@@ -82,15 +82,15 @@ MediaTrack* TrackAtMouseCursor (int* context, double* position); // context: 0->
 * Note: due to API limitation, GetNoteRow() won't work when dealing with      *
 * inline MIDI                                                                 *
 ******************************************************************************/
-class BR_MouseContextInfo
+class BR_MouseInfo
 {
 public:
-	BR_MouseContextInfo (int mode = BR_MouseContextInfo::MODE_ALL, bool updateNow = true);
-	~BR_MouseContextInfo ();
+	BR_MouseInfo (int mode = BR_MouseInfo::MODE_ALL, bool updateNow = true);
+	~BR_MouseInfo ();
 	void Update (const POINT* p = NULL);
 	void SetMode (int mode);
 
-	// See description for BR_MouseContextInfo
+	// See description for BR_MouseInfo
 	const char* GetWindow ();
 	const char* GetSegment ();
 	const char* GetDetails ();
@@ -101,7 +101,8 @@ public:
 	MediaItem_Take* GetTake();
 	TrackEnvelope*  GetEnvelope ();
 	int GetTakeId ();
-	int GetStretchMarkerId ();
+	int GetEnvelopePoint ();
+	int GetStretchMarker ();
 	bool IsTakeEnvelope ();
 
 	// MIDI editor
@@ -123,7 +124,7 @@ public:
 		MODE_TRANSPORT           = 0x4,
 		MODE_MCP_TCP             = 0x8,
 		MODE_ARRANGE             = 0x10,
-		MODE_ENV_LANE_NO_SEGMENT = 0x20, // don't look for envelope points/segments in envelope lanes (if in track lane, it does get checked)
+		MODE_ENV_LANE_DO_SEGMENT = 0x20, // valid only in tandem with MODE_ARRANGE. Set it to look for envelope points/segments in envelope lane (track lane gets checked always) 
 		MODE_MIDI_EDITOR         = 0x40,
 		MODE_MIDI_INLINE         = 0x80,
 		MODE_MIDI_EDITOR_ALL     = MODE_MIDI_EDITOR | MODE_MIDI_INLINE
@@ -142,23 +143,23 @@ private:
 		void* midiEditor;
 		bool takeEnvelope, inlineMidi;
 		double position;
-		int takeId, stretchMarkerId, noteRow, ccLaneVal, ccLaneId, ccLane, pianoRollMode;
+		int takeId, envPointId, stretchMarkerId, noteRow, ccLaneVal, ccLaneId, ccLane, pianoRollMode;
 		MouseInfo ();
 	};
 
 	void GetContext (const POINT& p);
-	bool GetContextMIDI (POINT p, HWND hwnd, BR_MouseContextInfo::MouseInfo& mouseInfo);
-	bool GetContextMIDIInline (BR_MouseContextInfo::MouseInfo& mouseInfo, int mouseDisplayX, int mouseY, int takeHeight, int takeOffset);
+	bool GetContextMIDI (POINT p, HWND hwnd, BR_MouseInfo::MouseInfo& mouseInfo);
+	bool GetContextMIDIInline (BR_MouseInfo::MouseInfo& mouseInfo, int mouseDisplayX, int mouseY, int takeHeight, int takeOffset);
 	int IsMouseOverStretchMarker (MediaItem* item, MediaItem_Take* take, int takeHeight, int takeOffset, int mouseDisplayX, int mouseY, double mousePos, double arrangeStart, double arrangeZoom);
-	int IsMouseOverEnvelopeLine (BR_Envelope& envelope, int drawableEnvHeight, int yOffset, int mouseDisplayX, int mouseY, double mousePos, double arrangeStart, double arrangeZoom);
-	int IsMouseOverEnvelopeLineTrackLane (MediaTrack* track, int trackHeight, int trackOffset, list<TrackEnvelope*>& laneEnvs, int mouseDisplayX, int mouseY, double mousePos, double arrangeStart, double arrangeZoom, TrackEnvelope** trackEnvelope);
-	int IsMouseOverEnvelopeLineTake (MediaItem_Take* take, int takeHeight, int takeOffset, int mouseDisplayX, int mouseY, double mousePos, double arrangeStart, double arrangeZoom, TrackEnvelope** trackEnvelope);
+	int IsMouseOverEnvelopeLine (BR_Envelope& envelope, int drawableEnvHeight, int yOffset, int mouseDisplayX, int mouseY, double mousePos, double arrangeStart, double arrangeZoom, int* pointUnderMouse);
+	int IsMouseOverEnvelopeLineTrackLane (MediaTrack* track, int trackHeight, int trackOffset, list<TrackEnvelope*>& laneEnvs, int mouseDisplayX, int mouseY, double mousePos, double arrangeStart, double arrangeZoom, TrackEnvelope** trackEnvelope, int* pointUnderMouse);
+	int IsMouseOverEnvelopeLineTake (MediaItem_Take* take, int takeHeight, int takeOffset, int mouseDisplayX, int mouseY, double mousePos, double arrangeStart, double arrangeZoom, TrackEnvelope** trackEnvelope, int* pointUnderMouse);
 	int GetRulerLaneHeight (int rulerH, int lane);
 	int IsHwndMidiEditor (HWND hwnd, void** midiEditor, HWND* subView);
 	static bool SortEnvHeightsById (const pair<int,int>& left, const pair<int,int>& right);
 	void GetTrackOrEnvelopeFromY (int y, TrackEnvelope** _envelope, MediaTrack** _track, list<TrackEnvelope*>* envelopes, int* height, int* offset);
 
-	BR_MouseContextInfo::MouseInfo m_mouseInfo;
+	BR_MouseInfo::MouseInfo m_mouseInfo;
 	POINT m_ccLaneClickPoint;
 	HWND  m_ccLaneClickPointHwnd;
 	int m_mode;

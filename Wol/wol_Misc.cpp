@@ -222,7 +222,7 @@ void OnCommandCallback_RandMidiVelWnd(int cmd, int* min, int* max)
 	case (UserInputAndSlotsEditorWnd::CMD_USERANSWER + MB_OK):
 	{
 		if (RandomizeSelectedMidiVelocities(*min, *max))
-			Undo_OnStateChangeEx2(NULL, undoDesc.data(), UNDO_STATE_ALL, -1);
+			Undo_OnStateChangeEx2(NULL, undoDesc.c_str(), UNDO_STATE_ALL, -1);
 		break;
 	}
 	case UserInputAndSlotsEditorWnd::CMD_CLOSE:
@@ -368,13 +368,13 @@ void OnCommandCallback_SelMidiNotesByVelInRangeWnd(int cmd, int* min, int* max)
 	case (UserInputAndSlotsEditorWnd::CMD_USERANSWER + IDYES):
 	{
 		if (SelectMidiNotesByVelocityInRange(*min, *max, true))
-			Undo_OnStateChangeEx2(NULL, undoDesc.data(), UNDO_STATE_ALL, -1);
+			Undo_OnStateChangeEx2(NULL, undoDesc.c_str(), UNDO_STATE_ALL, -1);
 		break;
 	}
 	case (UserInputAndSlotsEditorWnd::CMD_USERANSWER + IDNO) :
 	{
 		if (SelectMidiNotesByVelocityInRange(*min, *max, false))
-			Undo_OnStateChangeEx2(NULL, undoDesc.data(), UNDO_STATE_ALL, -1);
+			Undo_OnStateChangeEx2(NULL, undoDesc.c_str(), UNDO_STATE_ALL, -1);
 		break;
 	}
 	case UserInputAndSlotsEditorWnd::CMD_CLOSE:
@@ -495,19 +495,19 @@ void OnCommandCallback_SelRandMidiNotesPercWnd(int cmd, int* min, int* max)
 	case (UserInputAndSlotsEditorWnd::CMD_USERANSWER + IDYES) :
 	{
 		if (SelectRandomMidiNotesPercent((UINT)*min, true, false))
-			Undo_OnStateChangeEx2(NULL, undoDesc.data(), UNDO_STATE_ALL, -1);
+			Undo_OnStateChangeEx2(NULL, undoDesc.c_str(), UNDO_STATE_ALL, -1);
 		break;
 	}
 	case (UserInputAndSlotsEditorWnd::CMD_USERANSWER + IDNO) :
 	{
 		if (SelectRandomMidiNotesPercent((UINT)*min, false, false))
-			Undo_OnStateChangeEx2(NULL, undoDesc.data(), UNDO_STATE_ALL, -1);
+			Undo_OnStateChangeEx2(NULL, undoDesc.c_str(), UNDO_STATE_ALL, -1);
 		break;
 	}
 	case (UserInputAndSlotsEditorWnd::CMD_USERANSWER + IDCANCEL) :
 	{
 		if (SelectRandomMidiNotesPercent((UINT)*min, false, true))
-			Undo_OnStateChangeEx2(NULL, undoDesc.data(), UNDO_STATE_ALL, -1);
+			Undo_OnStateChangeEx2(NULL, undoDesc.c_str(), UNDO_STATE_ALL, -1);
 		break;
 	}
 	case UserInputAndSlotsEditorWnd::CMD_CLOSE:

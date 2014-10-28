@@ -416,10 +416,10 @@ void UserInputAndSlotsEditorWnd::OnInitDlg()
 	m_btnR = GetDlgItem(m_hwnd, IDC_WOL_SLOT7L);
 
 	if (m_wndtitlebar.size())
-		SetWindowText(m_hwnd, m_wndtitlebar.data());
+		SetWindowText(m_hwnd, m_wndtitlebar.c_str());
 
 	if (m_oktxt.size())
-		SetWindowText(GetDlgItem(m_hwnd, IDC_WOL_OK), m_oktxt.data());
+		SetWindowText(GetDlgItem(m_hwnd, IDC_WOL_OK), m_oktxt.c_str());
 }
 
 void UserInputAndSlotsEditorWnd::OnDestroy()
@@ -514,7 +514,7 @@ void UserInputAndSlotsEditorWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		int min = m_kn1.GetSliderPosition(), max = m_kn2.GetSliderPosition();
 		int answer = CMD_USERANSWER;
 		if (m_askquestion)
-			answer += MessageBox(m_hwnd, m_questiontxt.data(), m_questiontitle.data(), m_questiontype);
+			answer += MessageBox(m_hwnd, m_questiontxt.c_str(), m_questiontitle.c_str(), m_questiontype);
 		else
 			answer += MB_OK;
 		m_OnCommandCallback(answer, &min, &max);

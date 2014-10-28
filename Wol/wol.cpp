@@ -165,7 +165,6 @@ static COMMAND_T g_commandTable[] =
 		{ { DEFACCEL, "SWS/wol-spk77: Select midi notes by velocities in range (add to selection), slot 8" }, "WOL_SELMIDIBYVELRANGEADDS8", SelectMidiNotesByVelocitiesInRangeTool, NULL, 16 },
 
 		{ { DEFACCEL, "SWS/wol-spk77: Select random midi notes tool" }, "WOL_SELRANDMIDINOTES", SelectRandomMidiNotesTool, NULL, 0, IsSelectRandomMidiNotesOpen },
-		//select random midi notes within velocity range
 		{ { DEFACCEL, "SWS/wol-spk77: Select random midi notes, slot 1" }, "WOL_SELRANDMIDINOTESS1", SelectRandomMidiNotesTool, NULL, 1 },
 		{ { DEFACCEL, "SWS/wol-spk77: Select random midi notes, slot 2" }, "WOL_SELRANDMIDINOTESS2", SelectRandomMidiNotesTool, NULL, 2 },
 		{ { DEFACCEL, "SWS/wol-spk77: Select random midi notes, slot 3" }, "WOL_SELRANDMIDINOTESS3", SelectRandomMidiNotesTool, NULL, 3 },

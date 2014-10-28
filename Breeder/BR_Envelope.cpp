@@ -1125,6 +1125,46 @@ void IncreaseDecreaseVolEnvPoints (COMMAND_T* ct)
 			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 	}
 }
+void SelectEnvelopeUnderMouse (COMMAND_T* ct)
+{
+	BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_MCP_TCP | BR_MouseInfo::MODE_ARRANGE);
+
+	if ((!strcmp(mouseInfo.GetWindow(),  "tcp")       && !strcmp(mouseInfo.GetSegment(), "envelope"))   ||
+		(!strcmp(mouseInfo.GetWindow(),  "arrange")   && !strcmp(mouseInfo.GetSegment(), "envelope"))   ||
+		(!strcmp(mouseInfo.GetDetails(), "env_point") || !strcmp(mouseInfo.GetSegment(), "env_segment"))
+	)
+	{
+		if (mouseInfo.GetEnvelope() && mouseInfo.GetEnvelope() != GetSelectedEnvelope(NULL))
+		{
+			SetCursorContext(2, mouseInfo.GetEnvelope());
+			UpdateArrange();
+		}
+	}
+}
+
+void SelectDeleteEnvPointUnderMouse (COMMAND_T* ct)
+{
+	BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_ARRANGE | BR_MouseInfo::MODE_ENV_LANE_DO_SEGMENT);
+	if (!strcmp(mouseInfo.GetDetails(), "env_point"))
+	{
+		if (mouseInfo.GetEnvelope() && (abs((int)ct->user) == 2 || (abs((int)ct->user) == 1 && mouseInfo.GetEnvelope() == GetSelectedEnvelope(NULL))))
+		{
+			BR_Envelope envelope(mouseInfo.GetEnvelope(), false);
+
+			if ((int)ct->user > 0 && !envelope.GetSelection(mouseInfo.GetEnvelopePoint()))
+				envelope.SetSelection(mouseInfo.GetEnvelopePoint(), true);
+			else if ((int)ct->user < 0)
+			{
+				envelope.DeletePoint(mouseInfo.GetEnvelopePoint());
+				if (envelope.CountPoints() == 0) // in case there are no more points left, envelope will get removed - so insert default point back
+					envelope.CreatePoint(0, 0, envelope.CenterValue(), envelope.GetDefaultShape(), 0, false); // position = 0 is why we created BR_Envelope with !takeEnvelopesUseProjectTime
+			}
+
+			if (envelope.Commit())
+				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		}
+	}
+}
 
 void UnselectEnvelope (COMMAND_T* ct)
 {
@@ -1136,7 +1176,6 @@ void UnselectEnvelope (COMMAND_T* ct)
 		SetCursorContext(2, NULL);
 		GetSetFocus(true, &hwnd, &context);
 		UpdateArrange();
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 	}
 }
 

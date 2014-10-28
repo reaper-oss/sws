@@ -50,6 +50,8 @@ void Insert2EnvPointsTimeSelection (COMMAND_T*);
 void FitEnvPointsToTimeSel (COMMAND_T*);
 void CreateEnvPointMouse (COMMAND_T*);
 void IncreaseDecreaseVolEnvPoints (COMMAND_T*);
+void SelectEnvelopeUnderMouse (COMMAND_T*);
+void SelectDeleteEnvPointUnderMouse (COMMAND_T*);
 void UnselectEnvelope (COMMAND_T*);
 void SaveEnvSelSlot (COMMAND_T*);
 void RestoreEnvSelSlot (COMMAND_T*);

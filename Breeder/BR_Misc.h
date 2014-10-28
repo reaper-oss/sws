@@ -46,6 +46,8 @@ void CycleRecordModes (COMMAND_T*);
 void FocusArrangeTracks (COMMAND_T*);
 void ToggleItemOnline (COMMAND_T*);
 void ItemSourcePathToClipBoard (COMMAND_T*);
+void DeleteTakeUnderMouse (COMMAND_T*);
+void SelectTrackUnderMouse (COMMAND_T*);
 void PlaybackAtMouseCursor (COMMAND_T*);
 void SelectItemsByType (COMMAND_T*);
 void SaveCursorPosSlot (COMMAND_T*);

@@ -33,6 +33,7 @@
 #include "BR_ProjState.h"
 #include "BR_Util.h"
 #include "../SnM/SnM.h"
+#include "../SnM/SnM_Chunk.h"
 #include "../SnM/SnM_Util.h"
 #include "../Xenakios/XenakiosExts.h"
 #include "../reaper/localize.h"
@@ -453,6 +454,36 @@ void ItemSourcePathToClipBoard (COMMAND_T* ct)
 			}
 		}
 		CloseClipboard();
+	}
+}
+
+void DeleteTakeUnderMouse (COMMAND_T* ct)
+{
+	BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_ARRANGE);
+
+	// Don't differentiate between things within the item, but ignore any envelopes
+	if (!strcmp(mouseInfo.GetWindow(), "arrange") && !strcmp(mouseInfo.GetSegment(), "track") && mouseInfo.GetItem() && !mouseInfo.GetEnvelope())
+	{
+		if (CountTakes(mouseInfo.GetItem()) > 1 && !IsItemLocked(mouseInfo.GetItem()) && !IsLocked(ITEM_FULL))
+		{
+			SNM_TakeParserPatcher takePatcher(mouseInfo.GetItem());
+			takePatcher.RemoveTake(mouseInfo.GetTakeId());
+			if (takePatcher.Commit())
+				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
+		}
+	}
+}
+
+void SelectTrackUnderMouse (COMMAND_T* ct)
+{
+	BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_MCP_TCP);
+	if (!strcmp(mouseInfo.GetWindow(), ((int)ct->user == 0) ? "tcp" : "mcp") && !strcmp(mouseInfo.GetSegment(), "track"))
+	{
+		if ((int)GetMediaTrackInfo_Value(mouseInfo.GetTrack(), "I_SELECTED") == 0)
+		{
+			SetMediaTrackInfo_Value(mouseInfo.GetTrack(), "I_SELECTED", 1);
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		}
 	}
 }
 

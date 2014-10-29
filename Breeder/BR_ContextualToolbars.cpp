@@ -1241,7 +1241,7 @@ int BR_ContextualToolbar::FindArrangeToolbar (BR_MouseInfo& mouseInfo, BR_Contex
 		focusEnvelope = true;
 	}
 	// Stretch markers
-	else if (!strcmp(mouseInfo.GetSegment(), "track") && (!strcmp(mouseInfo.GetDetails(), "stretch_marker")))
+	else if (!strcmp(mouseInfo.GetSegment(), "track") && (!strcmp(mouseInfo.GetDetails(), "item_stretch_marker")))
 	{
 		context = ARRANGE_TRACK_ITEM_STRETCH_MARKER;
 
@@ -1662,7 +1662,7 @@ int BR_ContextualToolbarsView::OnItemSort (SWS_ListItem* item1, SWS_ListItem* it
 * Contextual toolbars window                                                  *
 ******************************************************************************/
 BR_ContextualToolbarsWnd::BR_ContextualToolbarsWnd () :
-SWS_DockWnd(IDD_BR_CONTEXTUAL_TOOLBARS, __LOCALIZE("Contextual toolbars","sws_DLG_181"), "", SWSGetCommandID(ContextToolbarsOptions)),
+SWS_DockWnd(IDD_BR_CONTEXTUAL_TOOLBARS, __LOCALIZE("Contextual toolbars","sws_DLG_181"), "", SWSGetCommandID(ContextualToolbarsOptions)),
 m_list          (NULL),
 m_currentPreset (0)
 {
@@ -2163,7 +2163,7 @@ void ContextualToolbarsExit ()
 /******************************************************************************
 * Commands                                                                    *
 ******************************************************************************/
-void ContextToolbarsOptions (COMMAND_T* ct)
+void ContextualToolbarsOptions (COMMAND_T* ct)
 {
 	if (BR_ContextualToolbarsWnd* dialog = g_contextToolbarsWndManager.Create())
 		dialog->Show(true, true);
@@ -2183,7 +2183,7 @@ void ToggleContextualToolbar (COMMAND_T* ct, int val, int valhw, int relmode, HW
 /******************************************************************************
 * Toggle states                                                               *
 ******************************************************************************/
-int IsContextToolbarsOptionsVisible (COMMAND_T* ct)
+int IsContextualToolbarsOptionsVisible (COMMAND_T* ct)
 {
 	if (BR_ContextualToolbarsWnd* dialog = g_contextToolbarsWndManager.Get())
 		return dialog->IsValidWindow();

@@ -184,7 +184,7 @@ private:
 		bool clearTrackSelection;
 		bool clearItemSelection;
 		bool setCCLaneAsClicked;
-		ExecuteOnToolbarLoad();
+		ExecuteOnToolbarLoad ();
 	};
 	struct ToolbarWndData
 	{
@@ -326,11 +326,11 @@ void ContextualToolbarsExit ();
 /******************************************************************************
 * Commands                                                                    *
 ******************************************************************************/
-void ContextToolbarsOptions (COMMAND_T*);
+void ContextualToolbarsOptions (COMMAND_T*);
 void ToggleContextualToolbar (COMMAND_T*);
 void ToggleContextualToolbar (COMMAND_T*, int, int, int, HWND);
 
 /******************************************************************************
 * Toggle states                                                               *
 ******************************************************************************/
-int IsContextToolbarsOptionsVisible (COMMAND_T*);
+int IsContextualToolbarsOptionsVisible (COMMAND_T*);

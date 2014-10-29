@@ -104,6 +104,10 @@ Fixes
 +MIDI editor actions that hide/show used CC lanes now obey filter's channel settings
 +Prevent toggling zoom with zoom actions when inappropriate (i.e. toggling zoom to selected items when there are no selected items)
 +All SWS/BR actions now obey lock settings
++Zooming functionality:
+ - All zoom actions now obey track sizes set by custom themes (things like small/medium/full track height)
+ - Actions that zoom vertically to selected tracks/items never show track envelopes of the last selected item/track
+ - Fixed save/restore arrange view actions not working on envelopes with high point count (Issue 660)
 +OSX: Fixed "Unselect tempo markers" child dialog of "Select and adjust tempo markers". It got hidden behind other dialogs when it lost focus
 
 Other

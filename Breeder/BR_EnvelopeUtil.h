@@ -261,6 +261,7 @@ int GetEnvId (TrackEnvelope* envelope, MediaTrack* parent = NULL);
 int GetDefaultPointShape ();                                      // see BR_EnvShape for return values;
 int GetEnvType (TrackEnvelope* envelope, bool* isSend);           // for return type see BR_EnvType (note: function relies on envelope names, localization could theoretically break it)
 int GetCurrentAutomationMode (MediaTrack* track);                 // takes global override into account
+int CountTrackEnvelopePanels (MediaTrack* track);
 
 /******************************************************************************
 * Tempo                                                                       *

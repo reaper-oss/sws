@@ -618,21 +618,26 @@ bool IsRecording ()
 
 bool TcpVis (MediaTrack* track)
 {
-	if ((GetMasterTrack(NULL) == track))
+	if (track)
 	{
-		int master; GetConfig("showmaintrack", master);
-		if (master == 0 || (int)GetMediaTrackInfo_Value(track, "I_WNDH") == 0)
-			return false;
+		if ((GetMasterTrack(NULL) == track))
+		{
+			int master; GetConfig("showmaintrack", master);
+			if (master == 0 || (int)GetMediaTrackInfo_Value(track, "I_WNDH") == 0)
+				return false;
+			else
+				return true;
+		}
 		else
-			return true;
+		{
+			if ((int)GetMediaTrackInfo_Value(track, "B_SHOWINTCP") == 0 || (int)GetMediaTrackInfo_Value(track, "I_WNDH") == 0)
+				return false;
+			else
+				return true;
+		}
 	}
 	else
-	{
-		if ((int)GetMediaTrackInfo_Value(track, "B_SHOWINTCP") == 0 || (int)GetMediaTrackInfo_Value(track, "I_WNDH") == 0)
-			return false;
-		else
-			return true;
-	}
+		return false;
 }
 
 /******************************************************************************
@@ -1372,10 +1377,61 @@ bool IsItemLocked (MediaItem* item)
 /******************************************************************************
 * Height                                                                      *
 ******************************************************************************/
+int GetTrackHeightFromVZoomIndex (MediaTrack* track, int vZoom)
+{
+	int height = 0;
+	if (track)
+	{
+		IconTheme* theme = SNM_GetIconTheme();
+
+		int compact = GetEffectiveCompactLevel(track);
+		if (compact == 2)      height = theme->tcp_supercollapsed_height; // Compacted track is not affected by vertical
+		else if (compact == 1) height = theme->tcp_small_height;          // zoom if there is no height override
+		else
+		{
+			if (vZoom <= 4)
+			{
+				int fullArm; GetConfig("zoomshowarm", fullArm);
+				int armed =  (int)GetMediaTrackInfo_Value(track, "I_RECARM");
+
+				if ((GetMasterTrack(NULL) == track)) height = theme->tcp_master_min_height;
+				else if (fullArm && armed)           height = theme->tcp_full_height;
+				else if (vZoom == 0)                 height = theme->tcp_small_height;
+				else if (vZoom == 1)                 height = (theme->tcp_small_height + theme->tcp_medium_height) / 2;
+				else if (vZoom == 2)                 height = theme->tcp_medium_height;
+				else if (vZoom == 3)                 height = (theme->tcp_medium_height + theme->tcp_full_height) / 2;
+				else if (vZoom == 4)                 height = theme->tcp_full_height;
+			}
+			else
+			{
+				// Get max and min height
+				RECT r; GetClientRect(GetArrangeWnd(), &r);
+				int maxHeight = r.bottom - r.top;
+				int minHeight = theme->tcp_full_height;
+
+				// Calculate track height (method stolen from Zoom.cpp - Thanks Tim!)
+				int normalizedZoom = (vZoom < 30) ? (vZoom - 4) : (30 + 3*(vZoom - 30) - 4);
+				height = minHeight + ((maxHeight-minHeight)*normalizedZoom) / 56;
+			}
+		}
+	}
+	return height;
+}
+
+int GetEnvHeightFromTrackHeight (int trackHeight)
+{
+	int height = TruncToInt((double)trackHeight * 0.75);
+
+	int minHeight = SNM_GetIconTheme()->envcp_min_height;
+	if (height < minHeight)
+		height = minHeight;
+
+	return height;
+}
+
 int GetTrackHeight (MediaTrack* track, int* offsetY, int* topGap /*=NULL*/, int* bottomGap /*=NULL*/)
 {
 	bool master = (GetMasterTrack(NULL) == track) ? (true) : (false);
-	IconTheme* theme = SNM_GetIconTheme();
 
 	// Get track's start Y coordinate
 	if (offsetY)
@@ -1400,45 +1456,14 @@ int GetTrackHeight (MediaTrack* track, int* offsetY, int* topGap /*=NULL*/, int*
 
 	int compact = GetEffectiveCompactLevel(track); // Track can't get resized at compact 2 and "I_HEIGHTOVERRIDE" could return
 	if (compact == 2)                              // wrong value if track was resized prior to compacting so return here
-		return theme->tcp_supercollapsed_height;
+		return SNM_GetIconTheme()->tcp_supercollapsed_height;
 
 	// Get track height
 	int height = (int)GetMediaTrackInfo_Value(track, "I_HEIGHTOVERRIDE");
 	if (height == 0)
 	{
-		// Compacted track is not affected by all the zoom settings if there is no height override
-		if (compact == 1)
-			height = theme->tcp_small_height;
-		else
-		{
-			// Get track height from vertical zoom
-			int verticalZoom;
-			GetConfig("vzoom2", verticalZoom);
-			if (verticalZoom <= 4)
-			{
-				int fullArm; GetConfig("zoomshowarm", fullArm);
-				int armed =  (int)GetMediaTrackInfo_Value(track, "I_RECARM");
-
-				if (master)                 height = theme->tcp_master_min_height;
-				else if (fullArm && armed)  height = theme->tcp_full_height;
-				else if (verticalZoom == 0) height = theme->tcp_small_height;
-				else if (verticalZoom == 1) height = (theme->tcp_small_height + theme->tcp_medium_height) / 2;
-				else if (verticalZoom == 2) height = theme->tcp_medium_height;
-				else if (verticalZoom == 3) height = (theme->tcp_medium_height + theme->tcp_full_height) / 2;
-				else if (verticalZoom == 4) height = theme->tcp_full_height;
-			}
-			else
-			{
-				// Get max and min height
-				RECT r; GetClientRect(GetArrangeWnd(), &r);
-				int maxHeight = r.bottom - r.top;
-				int minHeight = theme->tcp_full_height;
-
-				// Calculate track height (method stolen from Zoom.cpp - Thanks Tim!)
-				int normalizedZoom = (verticalZoom < 30) ? (verticalZoom - 4) : (30 + 3*(verticalZoom - 30) - 4);
-				height = minHeight + ((maxHeight-minHeight)*normalizedZoom) / 56;
-			}
-		}
+		int vZoom; GetConfig("vzoom2", vZoom);
+		height = GetTrackHeightFromVZoomIndex(track, vZoom);
 	}
 	else
 	{
@@ -1456,6 +1481,8 @@ int GetTrackHeight (MediaTrack* track, int* offsetY, int* topGap /*=NULL*/, int*
 		// minimum, but I_HEIGHTOVERRIDE doesn't get updated)
 		else
 		{
+			IconTheme* theme = SNM_GetIconTheme();
+
 			if (master)
 			{
 				if (height < theme->tcp_master_min_height)
@@ -1534,34 +1561,37 @@ int GetTrackEnvHeight (TrackEnvelope* envelope, int* offsetY, bool drawableRange
 	list<TrackEnvelope*> checkedEnvs;
 
 	bool found = false;
-	int envelopeId = GetEnvId (envelope, track);
+	int envelopeId = GetEnvId(envelope, track);
 	int count = CountTrackEnvelopes(track);
 	for (int i = 0; i < count; ++i)
 	{
 		LONG_PTR hwndData = GetWindowLongPtr(hwnd, GWLP_USERDATA);
 		if ((MediaTrack*)hwndData == nextTrack)
 			break;
-		TrackEnvelope* currentEnvelope = (TrackEnvelope*)hwndData;
 
-		if (currentEnvelope == envelope)
+		if (TrackEnvelope* currentEnvelope = HwndToEnvelope(hwnd))
 		{
-			RECT r; GetClientRect(hwnd, &r);
-			envHeight = r.bottom - r.top - ((drawableRangeOnly) ? 2*ENV_GAP : 0);
-			envOffset = trackOffset + trackHeight + envOffset + ((drawableRangeOnly) ? ENV_GAP : 0);
-			found = true;
-		}
-		else
-		{
-			// In certain cases (depending if user scrolled up or down), envelope
-			// hwnds (got by GW_HWNDNEXT) won't be in order they are drawn, so make
-			// sure requested envelope is drawn under envelope currently in loop
-			if (envelopeId > GetEnvId(currentEnvelope, track))
+			if (currentEnvelope == envelope)
 			{
 				RECT r; GetClientRect(hwnd, &r);
-				envOffset += r.bottom-r.top;
+				envHeight = r.bottom - r.top - ((drawableRangeOnly) ? 2*ENV_GAP : 0);
+				envOffset = trackOffset + trackHeight + envOffset + ((drawableRangeOnly) ? ENV_GAP : 0);
+				found = true;
 			}
-			checkedEnvs.push_back(currentEnvelope);
+			else
+			{
+				// In certain cases (depending if user scrolled up or down), envelope
+				// hwnds (got by GW_HWNDNEXT) won't be in order they are drawn, so make
+				// sure requested envelope is drawn under envelope currently in loop
+				if (envelopeId > GetEnvId(currentEnvelope, track))
+				{
+					RECT r; GetClientRect(hwnd, &r);
+					envOffset += r.bottom-r.top;
+				}
+				checkedEnvs.push_back(currentEnvelope);
+			}
 		}
+
 		hwnd = GetWindow(hwnd, GW_HWNDNEXT);
 	}
 

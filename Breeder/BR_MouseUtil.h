@@ -98,13 +98,13 @@ public:
 
 	// Main window
 	MediaTrack*     GetTrack ();
-	MediaItem*      GetItem ();
+	MediaItem*      GetItem ();  // returns item even if mouse is over some other track element
 	MediaItem_Take* GetTake();
 	TrackEnvelope*  GetEnvelope ();
-	int GetTakeId ();
-	int GetEnvelopePoint ();
-	int GetStretchMarker ();
-	bool IsTakeEnvelope ();
+	int GetTakeId ();        // returns -1 if there is no take under mouse cursor
+	int GetEnvelopePoint (); // returns -1 if there is no envelope point under mouse cursor
+	int GetStretchMarker (); // returns -1 if there is no stretch marker under mouse cursor
+	bool IsTakeEnvelope ();  // returns true if envelope under mouse cursor is take envelope
 
 	// MIDI editor
 	void* GetMidiEditor ();
@@ -112,12 +112,12 @@ public:
 	bool  GetCCLane (int* ccLane, int* ccLaneVal, int* ccLaneId); // returns false if mouse is not over CC lane
 	int   GetNoteRow ();                                          // returns -1 if mouse is not over any note row
 	int   GetPianoRollMode ();                                    // returns 0->normal, 1->named notes, -1->unknown
-	bool  SetDetectedCCLaneAsLastClicked ();                      // hacky! works only if arrange state/MIDI editor didn't change after the last update ( switches focus to MIDI editor/arrange briefly...)
+	bool  SetDetectedCCLaneAsLastClicked ();                      // hacky! works only if MIDI editor/arrange state didn't change after the last update (it also briefly switches focus to MIDI editor/arrange...)
 
 	// Both main window and MIDI editor
 	double GetPosition ();  // time position in arrange or MIDI ruler (returns -1 if not applicable)
 
-	// Use these in constructor and Update() to optimize things if possible
+	// Use these in constructor and SetMode() to optimize things if possible
 	enum Modes
 	{
 		MODE_ALL                 = 0x1,

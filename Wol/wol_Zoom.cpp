@@ -273,7 +273,7 @@ void SaveRestoreSelectedEnvelopeHeightSlot(COMMAND_T* ct)
 				//if (brEnv.IsTakeEnvelope())
 				//	EnvH[s] = GetTrackHeight(brEnv.GetParent(), 0);
 				//else
-					EnvH[s] = brEnv.LaneHeight();
+					EnvH[s] = brEnv.GetLaneHeight();
 			else
 			{
 				int trackGapTop, trackGapBottom, mul, laneCount, envCount;
@@ -339,7 +339,7 @@ void EnvelopeHeightList(COMMAND_T* ct)
 				//if (brEnv.IsTakeEnvelope())
 				//	tmp.h = GetTrackHeight(brEnv.GetParent(), 0);
 				//else
-				tmp.h = brEnv.LaneHeight();
+				tmp.h = brEnv.GetLaneHeight();
 			}
 			else
 			{

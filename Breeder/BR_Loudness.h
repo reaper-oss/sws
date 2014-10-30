@@ -205,7 +205,6 @@ protected:
 	virtual void OnItemDblClk (SWS_ListItem* item, int iCol);
 	virtual void OnItemSortEnd ();
 	virtual int OnItemSort (SWS_ListItem* item1, SWS_ListItem* item2);
-
 };
 
 /******************************************************************************

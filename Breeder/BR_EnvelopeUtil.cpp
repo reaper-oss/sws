@@ -2340,6 +2340,36 @@ int GetCurrentAutomationMode (MediaTrack* track)
 		return override;
 }
 
+int CountTrackEnvelopePanels (MediaTrack* track)
+{
+	/* Much faster than getting each envelope's chunk */
+
+	int count  = 0;
+	if (TcpVis(track))
+	{
+		// Get first envelope's lane hwnd and cycle through the rest
+		HWND hwnd = GetWindow(GetTcpTrackWnd(track), GW_HWNDNEXT);
+		MediaTrack* nextTrack = CSurf_TrackFromID(1 + CSurf_TrackToID(track, false), false);
+		list<TrackEnvelope*> checkedEnvs;
+
+		int fullEnvCount = CountTrackEnvelopes(track);
+		for (int i = 0; i < fullEnvCount; ++i)
+		{
+			LONG_PTR hwndData = GetWindowLongPtr(hwnd, GWLP_USERDATA);
+			if ((MediaTrack*)hwndData == nextTrack)
+				break;
+
+			if (HwndToEnvelope(hwnd))
+				++count;
+			else
+				break;
+			hwnd = GetWindow(hwnd, GW_HWNDNEXT);
+		}
+	}
+
+	return count;
+}
+
 /******************************************************************************
 * Tempo                                                                       *
 ******************************************************************************/

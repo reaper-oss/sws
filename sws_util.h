@@ -44,7 +44,6 @@
 #define LAST_COMMAND			((char*)(INT_PTR)-1)
 #define SWS_STARTSUBMENU		((char*)(INT_PTR)-2)
 #define SWS_ENDSUBMENU			((char*)(INT_PTR)-3)
-#define MINTRACKHEIGHT			24
 #define DEFACCEL				{ 0, 0, 0 }
 
 #define UTF8_BULLET				"\xE2\x80\xA2"

@@ -46,7 +46,7 @@ static COMMAND_T g_commandTable[] =
 	/******************************************************************************
 	* Contextual toolbars                                                         *
 	******************************************************************************/
-	{ { DEFACCEL, "SWS/BR: Contextual toolbars..." }, "BR_CONTEXTUAL_TOOLBARS_PREF", ContextToolbarsOptions, NULL, 0, IsContextToolbarsOptionsVisible},
+	{ { DEFACCEL, "SWS/BR: Contextual toolbars..." }, "BR_CONTEXTUAL_TOOLBARS_PREF", ContextualToolbarsOptions, NULL, 0, IsContextualToolbarsOptionsVisible},
 
 	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 1" }, "BR_CONTEXTUAL_TOOLBAR_01", ToggleContextualToolbar, NULL, 0},
 	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 1" }, "BR_MX_CONTEXTUAL_TOOLBAR_01",  NULL, NULL, 0, NULL, 32063, ToggleContextualToolbar},

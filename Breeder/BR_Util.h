@@ -158,6 +158,8 @@ bool IsItemLocked (MediaItem* item);
 /******************************************************************************
 * Height                                                                      *
 ******************************************************************************/
+int GetTrackHeightFromVZoomIndex (MediaTrack* track, int vZoom);     // also takes track compacting into account
+int GetEnvHeightFromTrackHeight (int trackHeight);                   // what is envelope height in case it's height override is 0 ?
 int GetTrackHeight (MediaTrack* track, int* offsetY, int* topGap = NULL, int* bottomGap = NULL);
 int GetItemHeight (MediaItem* item, int* offsetY);
 int GetTakeHeight (MediaItem_Take* take, int* offsetY);

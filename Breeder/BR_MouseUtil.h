@@ -48,36 +48,37 @@ MediaTrack* TrackAtMouseCursor (int* context, double* position); // context: 0->
 * self-explanatory, for information about GetWindow(), GetSegment() and       *
 * GetDetails() see the following table:                                       *
 *                                                                             *
-*	|********************************************************************|    *
-*	| window       | segment       | details                             |    *
-*	|______________|_______________|_____________________________________|    *
-*	| unknown      | ""            | ""                                  |    *
-*	|______________|_______________|_____________________________________|    *
-*	| ruler        | region_lane   | ""                                  |    *
-*	|              | marker_lane   | ""                                  |    *
-*	|              | tempo_lane    | ""                                  |    *
-*	|              | timeline      | ""                                  |    *
-*	|______________|_______________|_____________________________________|    *
-*	| transport    | ""            | ""                                  |    *
-*	|______________|_______________|_____________________________________|    *
-*	| tcp          | track         | ""                                  |    *
-*	|              | envelope      | ""                                  |    *
-*	|              | empty         | ""                                  |    *
-*	|______________|_______________|_____________________________________|    *
-*	| mcp          | track         | ""                                  |    *
-*	|              | empty         | ""                                  |    *
-*	|______________|_______________|_____________________________________|    *
-*	| arrange      | track         | item, stretch_marker, env_point,    |    *
-*   |              |               | env_segment, empty                  |    *
-*	|              | envelope      | env_point, env_segment, empty       |    *
-*	|              | empty         | ""                                  |    *
-*	|______________|_______________|_____________________________________|    *
-*	| midi_editor  | unknown       | ""                                  |    *
-*	|              | ruler         | ""                                  |    *
-*	|              | piano         | ""                                  |    *
-*	|              | notes         | ""                                  |    *
-*	|              | cc_lane       | cc_selector, cc_lane                |    *
-*	|********************************************************************|    *
+*   |********************************************************************|    *
+*   | window       | segment       | details                             |    *
+*   |______________|_______________|_____________________________________|    *
+*   | unknown      | ""            | ""                                  |    *
+*   |______________|_______________|_____________________________________|    *
+*   | ruler        | region_lane   | ""                                  |    *
+*   |              | marker_lane   | ""                                  |    *
+*   |              | tempo_lane    | ""                                  |    *
+*   |              | timeline      | ""                                  |    *
+*   |______________|_______________|_____________________________________|    *
+*   | transport    | ""            | ""                                  |    *
+*   |______________|_______________|_____________________________________|    *
+*   | tcp          | track         | ""                                  |    *
+*   |              | envelope      | ""                                  |    *
+*   |              | empty         | ""                                  |    *
+*   |______________|_______________|_____________________________________|    *
+*   | mcp          | track         | ""                                  |    *
+*   |              | empty         | ""                                  |    *
+*   |______________|_______________|_____________________________________|    *
+*   | arrange      | track         | empty,                              |    *
+*   |              |               | item, item_stretch_marker,          |    *
+*   |              |               | env_point, env_segment              |    *
+*   |              | envelope      | empty, env_point, env_segment       |    *
+*   |              | empty         | ""                                  |    *
+*   |______________|_______________|_____________________________________|    *
+*   | midi_editor  | unknown       | ""                                  |    *
+*   |              | ruler         | ""                                  |    *
+*   |              | piano         | ""                                  |    *
+*   |              | notes         | ""                                  |    *
+*   |              | cc_lane       | cc_selector, cc_lane                |    *
+*   |********************************************************************|    *
 *                                                                             *
 * Note: due to API limitation, GetNoteRow() won't work when dealing with      *
 * inline MIDI                                                                 *
@@ -97,13 +98,13 @@ public:
 
 	// Main window
 	MediaTrack*     GetTrack ();
-	MediaItem*      GetItem ();
+	MediaItem*      GetItem ();  // returns item even if mouse is over some other track element
 	MediaItem_Take* GetTake();
 	TrackEnvelope*  GetEnvelope ();
-	int GetTakeId ();
-	int GetEnvelopePoint ();
-	int GetStretchMarker ();
-	bool IsTakeEnvelope ();
+	int GetTakeId ();        // returns -1 if there is no take under mouse cursor
+	int GetEnvelopePoint (); // returns -1 if there is no envelope point under mouse cursor
+	int GetStretchMarker (); // returns -1 if there is no stretch marker under mouse cursor
+	bool IsTakeEnvelope ();  // returns true if envelope under mouse cursor is take envelope
 
 	// MIDI editor
 	void* GetMidiEditor ();
@@ -111,12 +112,12 @@ public:
 	bool  GetCCLane (int* ccLane, int* ccLaneVal, int* ccLaneId); // returns false if mouse is not over CC lane
 	int   GetNoteRow ();                                          // returns -1 if mouse is not over any note row
 	int   GetPianoRollMode ();                                    // returns 0->normal, 1->named notes, -1->unknown
-	bool  SetDetectedCCLaneAsLastClicked ();                      // hacky! works only if arrange state/MIDI editor didn't change after the last update ( switches focus to MIDI editor/arrange briefly...)
+	bool  SetDetectedCCLaneAsLastClicked ();                      // hacky! works only if MIDI editor/arrange state didn't change after the last update (it also briefly switches focus to MIDI editor/arrange...)
 
 	// Both main window and MIDI editor
 	double GetPosition ();  // time position in arrange or MIDI ruler (returns -1 if not applicable)
 
-	// Use these in constructor and Update() to optimize things if possible
+	// Use these in constructor and SetMode() to optimize things if possible
 	enum Modes
 	{
 		MODE_ALL                 = 0x1,

@@ -29,15 +29,11 @@
 #include "./reaper/localize.h"
 #include "./ObjectState/TrackEnvelope.h"
 #include "./SnM/SnM_Dlg.h"
+#include "./Breeder/BR_EnvelopeUtil.h"
+#include "./Breeder/BR_Util.h"
 
 
-#define SUPERCOLLAPSED_VIEW_SIZE 3
-#define COLLAPSED_VIEW_SIZE 24
-#define SMALLISH_SIZE 49
-#define NORMAL_SIZE 72
-#define MIN_MASTER_SIZE 74
 #define VZOOM_RANGE 40
-#define VMAX_OFFSET 60
 
 void ZoomTool(COMMAND_T* = NULL);
 void SaveZoomSlice(bool bSWS);
@@ -50,62 +46,6 @@ void SetReaperWndSize(COMMAND_T* = NULL)
 	int y = GetPrivateProfileInt("REAPER", "setwndsize_y", 480, get_ini_file());
 	HWND hwnd = GetMainHwnd();
 	SetWindowPos(hwnd, NULL, 0, 0, x, y, SWP_NOMOVE | SWP_NOZORDER);
-}
-
-int TrackHeightFromVZoomIndex(HWND hwnd, MediaTrack* tr, int iZoom, SWS_TrackEnvelopes* pTE)
-{
-	if (!(GetTrackVis(tr) & 2))
-		return 0;
-
-	bool bIsMaster = CSurf_TrackToID(tr, false) ? false : true;
-	int ret = bIsMaster ? MIN_MASTER_SIZE : NORMAL_SIZE;
-	bool bRecArmed = *(int*)GetSetMediaTrackInfo(tr, "I_RECARM", NULL) ? true : false;
-	int supercompactmode = *(int*)GetSetMediaTrackInfo(tr, "I_FOLDERCOMPACT", NULL);
-	// Todo ^^^ add config var bit
-
-	if (iZoom < 4)
-	{
-		if (/*!g_config_zoomrecshowwhenarmed ||*/ !bRecArmed)
-		{
-			if      (iZoom==0) ret=COLLAPSED_VIEW_SIZE;
-			else if (iZoom==1) ret=(COLLAPSED_VIEW_SIZE+SMALLISH_SIZE)/2;
-			else if (iZoom==2) ret=(SMALLISH_SIZE);
-			else if (iZoom==3) ret=(SMALLISH_SIZE+NORMAL_SIZE)/2;
-		}
-	}
-	else
-	{
-		RECT r;
-		GetClientRect(hwnd, &r);
-		int vz = iZoom;
-		int cutoff = VZOOM_RANGE*3/4;
-		if (vz >= cutoff)
-			vz = cutoff+(vz-cutoff)*3;
-		int mv=(VZOOM_RANGE*3)/2;
-		vz-=4;
-		ret= NORMAL_SIZE + ((r.bottom-NORMAL_SIZE)*vz) / (mv-4);
-	}
-
-	if (bIsMaster)
-	{
-		if (ret<MIN_MASTER_SIZE) ret=MIN_MASTER_SIZE;
-		return ret;
-	}
-
-	// todo Find the parent first???
-	else
-	{
-		if (supercompactmode == 2 && ret > SUPERCOLLAPSED_VIEW_SIZE)
-		{
-			ret = SUPERCOLLAPSED_VIEW_SIZE;
-		}
-		else if (supercompactmode == 1 && ret > COLLAPSED_VIEW_SIZE)
-		{
-			ret = COLLAPSED_VIEW_SIZE;
-		}
-	}
-
-	return ret + pTE->GetLanesHeight(ret);
 }
 
 void SetHorizPos(HWND hwnd, double dPos, double dOffset = 0.0)
@@ -160,42 +100,47 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers)
 	// Zoom in vertically
 	RECT rect;
 	GetClientRect(hTrackView, &rect);
-	int iTotalHeight = (int)(rect.bottom * 0.99); // Take off a percent
-
-	SWS_TrackEnvelopes* pTES = new SWS_TrackEnvelopes[iNum];
-	for (int i = 0; i < iNum; i++)
-		pTES[i].SetTrack(CSurf_TrackFromID(i+iFirst, false));
+	int iTotalHeight = rect.bottom;
 
 	if (bMinimizeOthers)
 	{
 		*(int*)GetConfigVar("vzoom2") = 0;
 		for (int i = 0; i <= GetNumTracks(); i++)
 			GetSetMediaTrackInfo(CSurf_TrackFromID(i, false), "I_HEIGHTOVERRIDE", &g_i0);
-		Main_OnCommand(40112, 0); // Zoom out vert to minimize lanes too (calls refresh)
+		Main_OnCommand(40112, 0); // Zoom out vert to minimize envelope lanes too (since vZoom is now 0) (calls refresh)
 		//TrackList_AdjustWindows(false);
 		//UpdateTimeline();
 
 		// Get the size of shown but not zoomed tracks
 		int iNotZoomedSize = 0;
 		int iZoomed = 0;
+
 		for (int i = 0; i < iNum; i++)
 		{
 			MediaTrack* tr = CSurf_TrackFromID(i+iFirst, false);
 			if (bZoomed[i])
 				iZoomed++;
 			else
-				iNotZoomedSize += TrackHeightFromVZoomIndex(hTrackView, tr, 0, &pTES[i]);
+			{
+				int trackHeight = GetTrackHeightFromVZoomIndex(tr, 0);
+				trackHeight += CountTrackEnvelopePanels(tr) * GetEnvHeightFromTrackHeight(trackHeight);
+
+				iNotZoomedSize += trackHeight;
+			}
 		}
 		// Pixels we have to work with will all the sel tracks and their envelopes
 		iTotalHeight -= iNotZoomedSize;
 		int iEachHeight = iTotalHeight / iZoomed;
+		int minTrackHeight = SNM_GetIconTheme()->tcp_small_height;
 		while (true)
 		{
 			int iLanesHeight = 0;
 			// Calc envelope height
 			for (int i = 0; i < iNum; i++)
-				if (bZoomed[i])
-					iLanesHeight += pTES[i].GetLanesHeight(iEachHeight);
+			{
+				if (bZoomed[i] && i + 1 != iNum) // don't check envelope lanes height for the last track
+					iLanesHeight += CountTrackEnvelopePanels(CSurf_TrackFromID(i + iFirst, false)) * GetEnvHeightFromTrackHeight(iEachHeight);
+			}
 			if (iEachHeight * iZoomed + iLanesHeight <= iTotalHeight)
 				break;
 
@@ -205,11 +150,11 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers)
 				iEachHeight--;
 			else
 				iEachHeight = iNewEachHeight;
-			if (iEachHeight <= MINTRACKHEIGHT)
+			if (iEachHeight < minTrackHeight)
 				break;
 		}
 
-		if (iEachHeight > MINTRACKHEIGHT)
+		if (iEachHeight >= minTrackHeight)
 		{
 			for (int i = 0; i < iNum; i++)
 				if (bZoomed[i])
@@ -229,7 +174,11 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers)
 			for (int i = 0; i < iNum; i++)
 			{
 				MediaTrack* tr = CSurf_TrackFromID(i+iFirst, false);
-				iHeight += TrackHeightFromVZoomIndex(hTrackView, tr, iZoom, &pTES[i]);
+				int trackHeight = GetTrackHeightFromVZoomIndex(tr, iZoom);
+				if (i + 1 != iNum) // don't check envelope lanes height for the last track
+					 trackHeight += CountTrackEnvelopePanels(tr) * GetEnvHeightFromTrackHeight(trackHeight);
+				iHeight += trackHeight;
+
 			}
 		} while (iHeight > iTotalHeight && iZoom > 0);
 
@@ -241,7 +190,6 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers)
 		UpdateTimeline();
 	}
 
-	delete [] pTES;
 	SetVertPos(hTrackView, iFirst, false);
 }
 
@@ -464,9 +412,9 @@ public:
 					hbEnvVis.Resize(iEnv + iNumEnvelopes);
 					for (int j = 0; j < iNumEnvelopes; j++)
 					{
-						SWS_TrackEnvelope te(GetTrackEnvelope(tr, j));
-						hbEnvHeights.Get()[iEnv] = te.GetHeight(0);
-						hbEnvVis.Get()[iEnv] = te.GetVis();
+						BR_Envelope envelope(GetTrackEnvelope(tr, j));
+						hbEnvHeights.Get()[iEnv] = envelope.GetLaneHeight();
+						hbEnvVis.Get()[iEnv] = envelope.IsVisible();
 						iEnv++;
 					}
 				}
@@ -481,6 +429,8 @@ public:
 		HWND hTrackView = GetTrackWnd();
 		if (!hTrackView || !(m_bHoriz || m_bVert))
 			return;
+
+		PreventUIRefresh(1);
 
 		// Horiz zoom
 		if (m_bHoriz)
@@ -505,15 +455,16 @@ public:
 
 				for (int j = 0; j < CountTrackEnvelopes(tr); j++)
 				{
-					SWS_TrackEnvelope te(GetTrackEnvelope(tr, j));
+					BR_Envelope envelope(GetTrackEnvelope(tr, j));
 					if (iEnvPtr < hbEnvHeights.GetSize())
 					{
-						te.SetVis(hbEnvVis.Get()[iEnvPtr]);
-						te.SetHeight(hbEnvHeights.Get()[iEnvPtr]);
+						envelope.SetVisible(hbEnvVis.Get()[iEnvPtr]);
+						envelope.SetLaneHeight(hbEnvHeights.Get()[iEnvPtr]);
 						iEnvPtr++;
 					}
 					else
-						te.SetHeight(0);
+						envelope.SetLaneHeight(0);
+					envelope.Commit();
 				}
 			}
 
@@ -527,6 +478,7 @@ public:
 			SetHorizPos(hTrackView, (double)iXPos / dHZoom);
 
 		SaveZoomSlice(true);
+		PreventUIRefresh(-1);
 	}
 };
 

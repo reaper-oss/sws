@@ -813,7 +813,7 @@ void BR_MouseInfo::GetContext (const POINT& p)
 							// Stretch marker next
 							else if (stretchMarkerHit != -1)
 							{
-								mouseInfo.details = "stretch_marker";
+								mouseInfo.details = "item_stretch_marker";
 								mouseInfo.stretchMarkerId = stretchMarkerHit;
 							}
 							// And finally item itself

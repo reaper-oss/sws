@@ -205,9 +205,16 @@ static COMMAND_T g_commandTable[] =
 int WOL_Init()
 {
 	SWSRegisterCommands(g_commandTable);
+
+	HWND wnd = Splash_GetWnd();
+	if (!wnd)
+		wnd = GetMainHwnd();
+
 	wol_UtilInit();
 	wol_MiscInit();
-	wol_ZoomInit();
+	if (!wol_ZoomInit())
+		ShowErrorMessageBox(__LOCALIZE("Error registering zoom project config.\n Envelope heights list saving in RPP project is not available.", "sws_mbox"), MB_OK, wnd);
+
 	return 1;
 }
 

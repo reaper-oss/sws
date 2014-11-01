@@ -183,7 +183,6 @@ struct RandomizerSlots {
 
 static RandomizerSlots g_RandomizerSlots[8];
 
-#define RANDMIDIVELWND_LOC "sws_DLG_182a"
 #define RANDMIDIVELWND_ID "WolRandMidiVelWnd"
 static SNM_WindowManager<RandomMidiVelWnd> g_RandMidiVelWndMgr(RANDMIDIVELWND_ID);
 
@@ -257,13 +256,13 @@ void OnCommandCallback_RandMidiVelWnd(int cmd, int* min, int* max)
 }
 
 RandomMidiVelWnd::RandomMidiVelWnd()
-	: UserInputAndSlotsEditorWnd(__LOCALIZE("SWS/wol-spk77 - Randomize midi velocities tool", RANDMIDIVELWND_LOC), __LOCALIZE("Random midi velocities tool", RANDMIDIVELWND_LOC), RANDMIDIVELWND_ID, SWSGetCommandID(RandomizeSelectedMidiVelocitiesTool))
+	: UserInputAndSlotsEditorWnd(__LOCALIZE("SWS/wol-spk77 - Randomize midi velocities tool", "sws_DLG_182a"), __LOCALIZE("Random midi velocities tool", "sws_DLG_182a"), RANDMIDIVELWND_ID, SWSGetCommandID(RandomizeSelectedMidiVelocitiesTool))
 {
 	UseTwoKnobs();
-	SetupKnob1(1, 127, 64, 1, 12.0f, __LOCALIZE("Min value:", RANDMIDIVELWND_LOC), __LOCALIZE("", RANDMIDIVELWND_LOC), __LOCALIZE("1", RANDMIDIVELWND_LOC));
-	SetupKnob2(1, 127, 64, 127, 12.0f, __LOCALIZE("Max value:", RANDMIDIVELWND_LOC), __LOCALIZE("", RANDMIDIVELWND_LOC), __LOCALIZE("1", RANDMIDIVELWND_LOC));
+	SetupKnob1(1, 127, 64, 1, 12.0f, __LOCALIZE("Min value:", "sws_DLG_182a"), __LOCALIZE("", "sws_DLG_182a"), __LOCALIZE("1", "sws_DLG_182a"));
+	SetupKnob2(1, 127, 64, 127, 12.0f, __LOCALIZE("Max value:", "sws_DLG_182a"), __LOCALIZE("", "sws_DLG_182a"), __LOCALIZE("1", "sws_DLG_182a"));
 	SetupOnCommandCallback(OnCommandCallback_RandMidiVelWnd);
-	SetupOKText(__LOCALIZE("Randomize", RANDMIDIVELWND_LOC));
+	SetupOKText(__LOCALIZE("Randomize", "sws_DLG_182a"));
 }
 
 void RandomizeSelectedMidiVelocitiesTool(COMMAND_T* ct)
@@ -321,7 +320,6 @@ struct MidiVelocitiesSlots {
 
 static MidiVelocitiesSlots g_MidiVelocitiesSlots[8];
 
-#define SELMIDINOTESBYVELINRANGEWND_LOC "sws_DLG_182b"
 #define SELMIDINOTESBYVELINRANGEWND_ID "WolSelMidiNotesByVelInRangeWnd"
 static SNM_WindowManager<SelMidiNotesByVelInRangeWnd> g_SelMidiNotesByVelInRangeWndMgr(SELMIDINOTESBYVELINRANGEWND_ID);
 
@@ -409,14 +407,14 @@ void OnCommandCallback_SelMidiNotesByVelInRangeWnd(int cmd, int* min, int* max)
 }
 
 SelMidiNotesByVelInRangeWnd::SelMidiNotesByVelInRangeWnd()
-	: UserInputAndSlotsEditorWnd(__LOCALIZE("SWS/wol-spk77 - Select midi notes by velocities in range tool", SELMIDINOTESBYVELINRANGEWND_LOC), __LOCALIZE("Select midi notes by velocities in range tool", SELMIDINOTESBYVELINRANGEWND_LOC), SELMIDINOTESBYVELINRANGEWND_ID, SWSGetCommandID(SelectMidiNotesByVelocitiesInRangeTool))
+	: UserInputAndSlotsEditorWnd(__LOCALIZE("SWS/wol-spk77 - Select midi notes by velocities in range tool", "sws_DLG_182b"), __LOCALIZE("Select midi notes by velocities in range tool", "sws_DLG_182b"), SELMIDINOTESBYVELINRANGEWND_ID, SWSGetCommandID(SelectMidiNotesByVelocitiesInRangeTool))
 {
 	UseTwoKnobs();
-	SetupKnob1(1, 127, 64, 1, 12.0f, __LOCALIZE("Min velocity:", SELMIDINOTESBYVELINRANGEWND_LOC), __LOCALIZE("", SELMIDINOTESBYVELINRANGEWND_LOC), __LOCALIZE("1", SELMIDINOTESBYVELINRANGEWND_LOC));
-	SetupKnob2(1, 127, 64, 127, 12.0f, __LOCALIZE("Max velocity:", SELMIDINOTESBYVELINRANGEWND_LOC), __LOCALIZE("", SELMIDINOTESBYVELINRANGEWND_LOC), __LOCALIZE("1", SELMIDINOTESBYVELINRANGEWND_LOC));
+	SetupKnob1(1, 127, 64, 1, 12.0f, __LOCALIZE("Min velocity:", "sws_DLG_182b"), __LOCALIZE("", "sws_DLG_182b"), __LOCALIZE("1", "sws_DLG_182b"));
+	SetupKnob2(1, 127, 64, 127, 12.0f, __LOCALIZE("Max velocity:", "sws_DLG_182b"), __LOCALIZE("", "sws_DLG_182b"), __LOCALIZE("1", "sws_DLG_182b"));
 	SetupOnCommandCallback(OnCommandCallback_SelMidiNotesByVelInRangeWnd);
-	SetupOKText(__LOCALIZE("Select", SELMIDINOTESBYVELINRANGEWND_LOC));
-	SetupQuestion(__LOCALIZE("Add notes to selection? If answer is no, the selection will be cleared", SELMIDINOTESBYVELINRANGEWND_LOC), __LOCALIZE("SWS/wol-spk77 - Info", SELMIDINOTESBYVELINRANGEWND_LOC), MB_YESNO);
+	SetupOKText(__LOCALIZE("Select", "sws_DLG_182b"));
+	SetupQuestion(__LOCALIZE("Add notes to selection? If answer is no, the selection will be cleared", "sws_DLG_182b"), __LOCALIZE("SWS/wol-spk77 - Info", "sws_DLG_182b"), MB_YESNO);
 }
 
 void SelectMidiNotesByVelocitiesInRangeTool(COMMAND_T* ct)
@@ -459,7 +457,6 @@ const char* wol_Misc_Ini::SelRandMidiNotesPercent[8] = {
 
 static UINT g_SelRandMidiNotesPercent[8];
 
-#define SELRANDMIDINOTESPERCWND_LOC "sws_DLG_182c"
 #define SELRANDMIDINOTESPERCWND_ID "WolSelRandMidiNotesPercWnd"
 static SNM_WindowManager<SelRandMidiNotesPercWnd> g_SelRandMidiNotesPercWndMgr(SELRANDMIDINOTESPERCWND_ID);
 
@@ -537,12 +534,12 @@ void OnCommandCallback_SelRandMidiNotesPercWnd(int cmd, int* min, int* max)
 }
 
 SelRandMidiNotesPercWnd::SelRandMidiNotesPercWnd()
-	: UserInputAndSlotsEditorWnd(__LOCALIZE("SWS/wol-spk77 - Select random midi notes tool", SELRANDMIDINOTESPERCWND_ID), __LOCALIZE("Select random midi notes tool", SELMIDINOTESBYVELINRANGEWND_LOC), SELMIDINOTESBYVELINRANGEWND_ID, SWSGetCommandID(SelectMidiNotesByVelocitiesInRangeTool))
+	: UserInputAndSlotsEditorWnd(__LOCALIZE("SWS/wol-spk77 - Select random midi notes tool", "sws_DLG_182c"), __LOCALIZE("Select random midi notes tool", "sws_DLG_182c"), SELRANDMIDINOTESPERCWND_ID, SWSGetCommandID(SelectMidiNotesByVelocitiesInRangeTool))
 {
-	SetupKnob1(1, 100, 50, 50, 12.0f, __LOCALIZE("Percent:", SELRANDMIDINOTESPERCWND_LOC), __LOCALIZE("%", SELRANDMIDINOTESPERCWND_LOC), __LOCALIZE("", SELRANDMIDINOTESPERCWND_LOC));
+	SetupKnob1(1, 100, 50, 50, 12.0f, __LOCALIZE("Percent:", "sws_DLG_182c"), __LOCALIZE("%", "sws_DLG_182c"), __LOCALIZE("", "sws_DLG_182c"));
 	SetupOnCommandCallback(OnCommandCallback_SelRandMidiNotesPercWnd);
-	SetupOKText(__LOCALIZE("Select", SELRANDMIDINOTESPERCWND_LOC));
-	SetupQuestion(__LOCALIZE("Options:\n 'Yes' to add to selection\n 'No' for new selection\n 'Cancel' to select among selected notes.", SELRANDMIDINOTESPERCWND_LOC), __LOCALIZE("SWS/wol-spk77 - Info", SELRANDMIDINOTESPERCWND_LOC), MB_YESNOCANCEL);
+	SetupOKText(__LOCALIZE("Select", "sws_DLG_182c"));
+	SetupQuestion(__LOCALIZE("Options:\n 'Yes' to add to selection\n 'No' for new selection\n 'Cancel' to select among selected notes.", "sws_DLG_182c"), __LOCALIZE("SWS/wol-spk77 - Info", "sws_DLG_182c"), MB_YESNOCANCEL);
 }
 
 void SelectRandomMidiNotesTool(COMMAND_T* ct)

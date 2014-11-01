@@ -39,16 +39,9 @@
 #define WOL_INI_FILE "%s/wol.ini"
 #endif
 
-//---------//
-
 static WDL_FastString g_wolIni;
 
-//---------//
 
-void wol_UtilInit()
-{
-	g_wolIni.SetFormatted(2048, WOL_INI_FILE, GetResourcePath());
-}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Track
@@ -287,35 +280,38 @@ void FlushIni(const char* path)
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Messages
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-int ShowMessageBox2(const char* msg, const char* title, UINT uType, UINT uIcon, bool localizeMsg, bool localizeTitle, HWND hwnd)
+int ShowMessageBox2(const char* msg, const char* title, UINT uType, UINT uIcon, HWND hwnd)
 {
+	return MessageBox(hwnd, msg, title, 
+						uType
 #ifdef _WIN32
-	return MessageBox(hwnd,
-		localizeMsg ? __localizeFunc(msg, "sws_mbox", 0) : msg,
-		localizeTitle ? __localizeFunc(title, "sws_mbox", 0) : title, uType | uIcon);
-#else
-	return MessageBox(hwnd,
-		localizeMsg ? __localizeFunc(msg, "sws_mbox", 0) : msg,
-		localizeTitle ? __localizeFunc(title, "sws_mbox", 0) : title, uType);
+						| uIcon
 #endif
+						);
 }
 
-int ShowErrorMessageBox(const char* msg, const char* title, bool localizeMsg, bool localizeTitle, UINT uType, HWND hwnd)
+int ShowErrorMessageBox(const char* msg,  UINT uType, HWND hwnd)
 {
+	const char* title = __LOCALIZE("SWS/wol - Error", "sws_mbox");
+	return ShowMessageBox2(msg, title, uType,
 #ifdef _WIN32
-	return ShowMessageBox2(msg, title, uType, MB_ICONERROR, localizeMsg, localizeTitle, hwnd);
+							MB_ICONERROR,
 #else
-	return ShowMessageBox2(msg, title, uType, 0, localizeMsg, localizeTitle, hwnd);
+							0,
 #endif
+							hwnd);
 }
 
-int ShowWarningMessageBox(const char* msg, const char* title, bool localizeMsg, bool localizeTitle, UINT uType, HWND hwnd)
+int ShowWarningMessageBox(const char* msg, UINT uType, HWND hwnd)
 {
+	const char* title = __LOCALIZE("SWS/wol - Warning", "sws_mbox");
+	return ShowMessageBox2(msg, title, uType,
 #ifdef _WIN32
-	return ShowMessageBox2(msg, title, uType, MB_ICONWARNING, localizeMsg, localizeTitle, hwnd);
+							MB_ICONWARNING,
 #else
-	return ShowMessageBox2(msg, title, uType, 0, localizeMsg, localizeTitle, hwnd);
+							0,
 #endif
+							hwnd);
 }
 
 
@@ -575,4 +571,14 @@ INT_PTR UserInputAndSlotsEditorWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPA
 void UserInputAndSlotsEditorWnd::Update()
 {
 	m_parentVwnd.RequestRedraw(NULL);
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/// 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+void wol_UtilInit()
+{
+	g_wolIni.SetFormatted(2048, WOL_INI_FILE, GetResourcePath());
 }

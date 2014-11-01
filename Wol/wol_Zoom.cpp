@@ -497,7 +497,7 @@ static project_config_extension_t g_projectconfig = { ProcessExtensionLine, Save
 
 //---------//
 
-void wol_ZoomInit()
+bool wol_ZoomInit()
 {
 	if (GetIniSettings(SWS_INI, "WOLExtZoomEnvInTrLane", 2, get_ini_file()) == 2)
 		DeleteIniKey(SWS_INI, "WOLExtZoomEnvInTrLane", get_ini_file());
@@ -509,10 +509,7 @@ void wol_ZoomInit()
 		EnvH[i] = GetIniSettings(wol_Zoom_Ini.Section, wol_Zoom_Ini.EnvelopeHeightSlots[i], 0);
 
 	if (!plugin_register("projectconfig", &g_projectconfig))
-	{
-		HWND parenthwnd = Splash_GetWnd();
-		if (!parenthwnd)
-			parenthwnd = GetMainHwnd();
-		ShowErrorMessageBox("Error registering zoom project config.\n Envelope heights list saving in RPP project is not available.", "SWS/wol - Error", true, true, 0, parenthwnd);
-	}
+		return false;
+
+	return true;
 }

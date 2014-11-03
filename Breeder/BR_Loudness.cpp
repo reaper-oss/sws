@@ -408,7 +408,7 @@ void BR_LoudnessObject::GetColumnStr (int column, char* str, int strSz, int mode
 
 void BR_LoudnessObject::SaveObject (ProjectStateContext* ctx)
 {
-	if (this->IsTargetValid())
+	if (this->CheckSetAudioData())
 	{
 		char tmp[128]; guidToString(&m_guid, tmp);
 

@@ -61,6 +61,7 @@ const char* const EXPORT_FORMAT_WND    = "BR - LoudnessExportFormat WndPos";
 const char* const EXPORT_FORMAT_RECENT = "BR - LoudnessExportFormat_Pattern_";
 
 const int EXPORT_FORMAT_RECENT_MAX      = 10;
+const int VERSION                       = 1;
 
 // Export format wildcards
 static const char* g_wildcards[][4] =
@@ -415,7 +416,7 @@ void BR_LoudnessObject::SaveObject (ProjectStateContext* ctx)
 		ctx->AddLine(PROJ_OBJECT_KEY);
 		ctx->AddLine("%s %d %s", PROJ_OBJECT_KEY_TARGET, (m_track ? 1 : 0), tmp);
 		ctx->AddLine("%s %lf %lf %lf %lf %lf", PROJ_OBJECT_KEY_MEASUREMENTS, m_integrated, m_truePeak, m_shortTermMax, m_momentaryMax, m_range);
-		ctx->AddLine("%s %d %d %d %d", PROJ_OBJECT_KEY_STATUS, m_doTruePeak, m_truePeakAnalyzed, m_analyzed, m_integratedOnly);
+		ctx->AddLine("%s %d %d %d %d %d", PROJ_OBJECT_KEY_STATUS, m_doTruePeak, m_truePeakAnalyzed, m_analyzed, m_integratedOnly, VERSION);
 
 		int count = 0;
 		WDL_FastString string;
@@ -453,6 +454,8 @@ void BR_LoudnessObject::SaveObject (ProjectStateContext* ctx)
 bool BR_LoudnessObject::RestoreObject (ProjectStateContext* ctx)
 {
 	bool doTruePeak = false, truePeakAnalyzed = false, analyzed = false, integratedOnly = false;
+	int version = VERSION;
+
 	char line[256];
 	LineParser lp(false);
 	while(!ctx->GetLine(line, sizeof(line)) && !lp.parse(line))
@@ -481,6 +484,7 @@ bool BR_LoudnessObject::RestoreObject (ProjectStateContext* ctx)
 			truePeakAnalyzed = !!lp.gettoken_int(2);
 			analyzed         = !!lp.gettoken_int(3);
 			integratedOnly   = !!lp.gettoken_int(4);
+			version          = lp.gettoken_int(5);
 		}
 		else if (!strcmp(lp.gettoken_str(0), PROJ_OBJECT_KEY_SHORT_TERM))
 		{
@@ -515,7 +519,7 @@ bool BR_LoudnessObject::RestoreObject (ProjectStateContext* ctx)
 		this->CheckSetAudioData();
 		m_doTruePeak       = doTruePeak;
 		m_truePeakAnalyzed = truePeakAnalyzed;
-		m_analyzed         = analyzed;
+		m_analyzed         = (version == VERSION) ? analyzed : false;
 		m_integratedOnly   = integratedOnly;
 		return true;
 	}

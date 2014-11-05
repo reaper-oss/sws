@@ -1020,6 +1020,154 @@ WDL_FastString GetSourceChunk (PCM_source* source)
 }
 
 /******************************************************************************
+* Fades                                                                       *
+******************************************************************************/
+#include "../../WDL/lice/lice_bezier.h"
+
+static void AssignDir(double* x, double* y, const double* b)
+{
+	/* Code bits courtesy of Cockos, http://askjf.com/index.php?q=2967s */
+
+	x[1]=b[0];
+	y[1]=b[1];
+	x[2]=b[2];
+	y[2]=b[3];
+}
+
+static void ApplyDir(double* x, double* y, double w0, double w1, const double* b0, const double* b1)
+{
+	/* Code bits courtesy of Cockos, http://askjf.com/index.php?q=2967s */
+
+	x[1]=w0*b0[0]+w1*b1[0];
+	y[1]=w0*b0[1]+w1*b1[1];
+	x[2]=w0*b0[2]+w1*b1[2];
+	y[2]=w0*b0[3]+w1*b1[3];
+}
+
+static bool GetMediaItemFadeBezParms(int shape, double dir, bool isfadeout, double* x, double* y)
+{
+	/* Code bits courtesy of Cockos, http://askjf.com/index.php?q=2967s *
+	*                                                                   *
+	*  x[4], y[4] .. returns true if the fade is linear                 */
+
+	static const double b0[4] = { 0.5, 0.5, 0.5, 0.5 };
+	static const double b1[4] = { 0.25, 0.5, 0.625, 1.0 };
+	static const double b2[4] = { 0.375, 0.0, 0.75, 0.5 };
+	static const double b3[4] = { 0.25, 1.0, 0.5, 1.0 };
+	static const double b4[4] = { 0.5, 0.0, 0.75, 0.0 };
+	static const double b5[4] = { 0.375, 0.0, 0.625, 1.0 };
+	static const double b6[4] = { 0.875, 0.0, 0.125, 1.0 };
+	static const double b7[4] = { 0.25, 0.375, 0.625, 1.0 };
+
+	static const double b4i[4] = { 0.0, 1.0, 0.125, 1.0 };
+	static const double b50[4] = { 0.25, 0.25, 0.25, 1.0 };
+	static const double b51[4] = { 0.75, 0.0, 0.75, 0.75 };
+	static const double b60[4] = { 0.375, 0.25, 0.0, 1.0 };
+	static const double b61[4] = { 1.0, 0.0, 0.625, 0.75 };
+
+	if (!isfadeout)
+	{
+		x[0]=y[0]=0.0;
+		x[3]=y[3]=1.0;
+	}
+	else
+	{
+		x[0]=y[3]=0.0;
+		x[3]=y[0]=1.0;
+	}
+
+	if (shape < 0 || shape >= 8)
+	{
+		shape=0;
+		dir=0.0;
+	}
+
+	if (isfadeout) dir=-dir;
+
+	bool linear=false;
+
+	if (dir < 0.0)
+	{
+		double w0=-dir;
+		double w1=1.0+dir;
+		if (shape == 1) ApplyDir(x, y, w0, w1, b4i, b1);
+		else if (shape == 2) ApplyDir(x, y, w0, w1, b1, b0);
+		else if (shape == 5) ApplyDir(x, y, w0, w1, b50, b5);
+		else if (shape == 6) ApplyDir(x, y, w0, w1, b60, b6);
+		else if (shape == 7) ApplyDir(x, y, w0, w1, b4i, b7);
+		else ApplyDir(x, y, w0, w1, b3, b0);
+	}
+	else if (dir > 0.0)
+	{
+		double w0=1.0-dir;
+		double w1=dir;
+		if (shape == 1) ApplyDir(x, y, w0, w1, b1, b4);
+		else if (shape == 2) ApplyDir(x, y, w0, w1, b0, b2);
+		else if (shape == 5) ApplyDir(x, y, w0, w1, b5, b51);
+		else if (shape == 6) ApplyDir(x, y, w0, w1, b6, b61);
+		else if (shape == 7) ApplyDir(x, y, w0, w1, b7, b4);
+		else ApplyDir(x, y, w0, w1, b0, b4);
+	}
+	else // dir == 0.0
+	{
+		if (shape == 1) AssignDir(x, y, b1);
+		else if (shape == 5) AssignDir(x, y, b5);
+		else if (shape == 6) AssignDir(x, y, b6);
+		else if (shape == 7) AssignDir(x, y, b7);
+		else
+		{
+			AssignDir(x, y, b0);
+			linear=true;
+		}
+	}
+
+	if (isfadeout && !linear)
+	{
+		double ox1=x[1];
+		double ox2=x[2];
+		x[1]=1.0-ox2;
+		x[2]=1.0-ox1;
+		swap(y[1], y[2]);
+	}
+
+	return linear;
+}
+
+double GetNormalizedFadeValue (double position, double fadeStart, double fadeEnd, int fadeShape, double fadeCurve, bool isFadeOut)
+{
+	if (position < fadeStart)
+		return (isFadeOut) ? 1 : 0;
+	else if (position > fadeEnd)
+		return (isFadeOut) ? 0 : 1;
+	else
+	{
+		double x[4], y[4];
+		GetMediaItemFadeBezParms(fadeShape, fadeCurve, isFadeOut, x, y);
+
+		double t = (position - fadeStart) / (fadeEnd - fadeStart);
+		return LICE_CBezier_GetY(x[0], x[1], x[2], x[3], y[0], y[1], y[2], y[3], t);
+	}
+}
+
+double GetEffectiveFadeLength (MediaItem* item, bool isFadeOut, int* fadeShape /*= NULL*/, double* fadeCurve /*= NULL*/)
+{
+	if (item)
+	{
+		WritePtr(fadeShape, ((isFadeOut) ? (int)GetMediaItemInfo_Value(item, "C_FADEOUTSHAPE") : (int)GetMediaItemInfo_Value(item, "C_FADEINSHAPE")));
+		WritePtr(fadeCurve, ((isFadeOut) ?       GetMediaItemInfo_Value(item, "D_FADEOUTDIR")  :      GetMediaItemInfo_Value(item, "D_FADEINDIR")));
+
+		double fadeLength = GetMediaItemInfo_Value(item, ((isFadeOut) ? "D_FADEOUTLEN_AUTO" : "D_FADEINLEN_AUTO"));
+		return (fadeLength > 0) ? fadeLength : GetMediaItemInfo_Value(item, ((isFadeOut) ? "D_FADEOUTLEN" : "D_FADEINLEN"));
+	}
+	else
+	{
+		WritePtr(fadeShape, 0);
+		WritePtr(fadeCurve, 0.0);
+		return 0;
+	}
+}
+
+/******************************************************************************
 * Stretch markers                                                             *
 ******************************************************************************/
 int FindPreviousStretchMarker (MediaItem_Take* take, double position)

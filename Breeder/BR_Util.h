@@ -116,6 +116,12 @@ bool SetTakeSourceFromFile (MediaItem_Take* take, const char* filename, bool inP
 WDL_FastString GetSourceChunk (PCM_source* source);
 
 /******************************************************************************
+* Fades                                                                       *
+******************************************************************************/
+double GetNormalizedFadeValue (double position, double fadeStart, double fadeEnd, int fadeShape, double fadeCurve, bool isFadeOut);
+double GetEffectiveFadeLength (MediaItem* item, bool isFadeOut, int* fadeShape = NULL, double* fadeCurve = NULL);
+
+/******************************************************************************
 * Stretch markers                                                             *
 ******************************************************************************/
 int FindPreviousStretchMarker (MediaItem_Take* take, double proj);

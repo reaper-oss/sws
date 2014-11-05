@@ -312,23 +312,23 @@ double BR_LoudnessObject::GetColumnVal (int column, int mode)
 	switch (column)
 	{
 		case COL_INTEGRATED:
-			this->GetAnalyzeData(&returnVal, NULL, NULL, NULL, NULL, NULL);
+			this->GetAnalyzeData(&returnVal, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 		break;
 
 		case COL_RANGE:
-			this->GetAnalyzeData(NULL, &returnVal, NULL, NULL, NULL, NULL);
+			this->GetAnalyzeData(NULL, &returnVal, NULL, NULL, NULL, NULL, NULL, NULL);
 		break;
 
 		case COL_TRUEPEAK:
-			this->GetAnalyzeData(NULL, NULL, &returnVal, NULL, NULL, NULL);
+			this->GetAnalyzeData(NULL, NULL, &returnVal, NULL, NULL, NULL, NULL, NULL);
 		break;
 
 		case COL_SHORTTERM:
-			this->GetAnalyzeData(NULL, NULL, NULL, NULL, &returnVal, NULL);
+			this->GetAnalyzeData(NULL, NULL, NULL, NULL, &returnVal, NULL, NULL, NULL);
 		break;
 
 		case COL_MOMENTARY:
-			this->GetAnalyzeData(NULL, NULL, NULL, NULL, NULL, &returnVal);
+			this->GetAnalyzeData(NULL, NULL, NULL, NULL, NULL, &returnVal, NULL, NULL);
 		break;
 	}
 
@@ -365,7 +365,7 @@ void BR_LoudnessObject::GetColumnStr (int column, char* str, int strSz, int mode
 		case COL_RANGE:
 		{
 			double range;
-			this->GetAnalyzeData(NULL, &range, NULL, NULL, NULL, NULL);
+			this->GetAnalyzeData(NULL, &range, NULL, NULL, NULL, NULL, NULL, NULL);
 
 			if (range <= NEGATIVE_INF)
 				_snprintf(str, strSz, "%s", __localizeFunc("-inf", "vol", 0));
@@ -377,7 +377,7 @@ void BR_LoudnessObject::GetColumnStr (int column, char* str, int strSz, int mode
 		case COL_TRUEPEAK:
 		{
 			double truePeak;
-			this->GetAnalyzeData(NULL, NULL, &truePeak, NULL, NULL, NULL);
+			this->GetAnalyzeData(NULL, NULL, &truePeak, NULL, NULL, NULL, NULL, NULL);
 
 			if (truePeak <= NEGATIVE_INF)
 				_snprintf(str, strSz, "%s", __localizeFunc("-inf", "vol", 0));
@@ -391,9 +391,9 @@ void BR_LoudnessObject::GetColumnStr (int column, char* str, int strSz, int mode
 		case COL_MOMENTARY:
 		{
 			double value;
-			if      (column == COL_INTEGRATED) this->GetAnalyzeData(&value, NULL, NULL, NULL, NULL,   NULL);
-			else if (column == COL_SHORTTERM)  this->GetAnalyzeData(NULL,   NULL, NULL, NULL, &value, NULL);
-			else                               this->GetAnalyzeData(NULL,   NULL, NULL, NULL, NULL,   &value);
+			if      (column == COL_INTEGRATED) this->GetAnalyzeData(&value, NULL, NULL, NULL, NULL,   NULL,   NULL, NULL);
+			else if (column == COL_SHORTTERM)  this->GetAnalyzeData(NULL,   NULL, NULL, NULL, &value, NULL,   NULL, NULL);
+			else                               this->GetAnalyzeData(NULL,   NULL, NULL, NULL, NULL,   &value, NULL, NULL);
 
 			WDL_FastString unitLU = g_pref.GetFormatedLUString();
 			const char* unit = (mode == 1) ? unitLU.Get() : __LOCALIZE("LUFS", "sws_loudness");
@@ -411,21 +411,27 @@ void BR_LoudnessObject::SaveObject (ProjectStateContext* ctx)
 {
 	if (this->CheckSetAudioData())
 	{
-		char tmp[128]; guidToString(&m_guid, tmp);
+		GUID guid = this->GetGuid();
+		char tmp[128]; guidToString(&guid, tmp);
+
+		double integrated, range, truePeak, truePeakPos, shortTermMax, momentaryMax;
+		vector<double> shortTermValues, momentaryValues;
+		this->GetAnalyzeData(&integrated, &range, &truePeak, &truePeakPos, &shortTermMax, &momentaryMax, &shortTermValues, &momentaryValues);
 
 		ctx->AddLine(PROJ_OBJECT_KEY);
-		ctx->AddLine("%s %d %s", PROJ_OBJECT_KEY_TARGET, (m_track ? 1 : 0), tmp);
-		ctx->AddLine("%s %lf %lf %lf %lf %lf", PROJ_OBJECT_KEY_MEASUREMENTS, m_integrated, m_truePeak, m_shortTermMax, m_momentaryMax, m_range);
-		ctx->AddLine("%s %d %d %d %d %d", PROJ_OBJECT_KEY_STATUS, m_doTruePeak, m_truePeakAnalyzed, m_analyzed, m_integratedOnly, VERSION);
+		ctx->AddLine("%s %d %s", PROJ_OBJECT_KEY_TARGET, (this->GetTrack() ? 1 : 0), tmp);
+		ctx->AddLine("%s %lf %lf %lf %lf %lf %lf", PROJ_OBJECT_KEY_MEASUREMENTS, integrated, range, truePeak, truePeakPos, shortTermMax, momentaryMax);
+		ctx->AddLine("%s %d %d %d %d %d", PROJ_OBJECT_KEY_STATUS, this->GetDoTruePeak(), this->GetTruePeakAnalyzeStatus(), this->GetAnalyzedStatus(), this->GetIntegratedOnly(), VERSION);
 
 		int count = 0;
 		WDL_FastString string;
-		for (size_t i = 0; i < m_shortTermValues.size(); ++i)
+
+		for (size_t i = 0; i < shortTermValues.size(); ++i)
 		{
-			string.AppendFormatted(512, " %lf", m_shortTermValues[i]);
+			string.AppendFormatted(512, " %lf", shortTermValues[i]);
 			++count;
 
-			if (count == 10 || i == m_shortTermValues.size() - 1)
+			if (count == 10 || i == shortTermValues.size() - 1)
 			{
 				ctx->AddLine("%s %s", PROJ_OBJECT_KEY_SHORT_TERM, string.Get());
 				string.DeleteSub(0, string.GetLength());
@@ -435,12 +441,12 @@ void BR_LoudnessObject::SaveObject (ProjectStateContext* ctx)
 
 		count = 0;
 		string.DeleteSub(0, string.GetLength());
-		for (size_t i = 0; i < m_momentaryValues.size(); ++i)
+		for (size_t i = 0; i < momentaryValues.size(); ++i)
 		{
-			string.AppendFormatted(512, " %lf", m_momentaryValues[i]);
+			string.AppendFormatted(512, " %lf", momentaryValues[i]);
 			++count;
 
-			if (count == 10 || i == m_momentaryValues.size() - 1)
+			if (count == 10 || i == momentaryValues.size() - 1)
 			{
 				ctx->AddLine("%s %s", PROJ_OBJECT_KEY_MOMENTARY, string.Get());
 				string.DeleteSub(0, string.GetLength());
@@ -456,6 +462,15 @@ bool BR_LoudnessObject::RestoreObject (ProjectStateContext* ctx)
 	bool doTruePeak = false, truePeakAnalyzed = false, analyzed = false, integratedOnly = false;
 	int version = VERSION;
 
+	double integrated   = NEGATIVE_INF;
+	double range        = 0;
+	double truePeak     = NEGATIVE_INF;
+	double truePeakPos  = NEGATIVE_INF;
+	double shortTermMax = NEGATIVE_INF;
+	double momentaryMax = NEGATIVE_INF;
+	vector<double> shortTermValues;
+	vector<double> momentaryValues;
+
 	char line[256];
 	LineParser lp(false);
 	while(!ctx->GetLine(line, sizeof(line)) && !lp.parse(line))
@@ -465,18 +480,20 @@ bool BR_LoudnessObject::RestoreObject (ProjectStateContext* ctx)
 
 		if (!strcmp(lp.gettoken_str(0), PROJ_OBJECT_KEY_TARGET))
 		{
-			stringToGuid(lp.gettoken_str(2), &m_guid);
-			if (lp.gettoken_int(1) == 1) m_track = GuidToTrack(&m_guid);
-			else                         m_take  = GetMediaItemTakeByGUID(NULL, &m_guid);
+			GUID guid; stringToGuid(lp.gettoken_str(2), &guid);
+
+			this->SetGuid(guid);
+			if (lp.gettoken_int(1) == 1) this->SetTrack(GuidToTrack(&guid));
+			else                         this->SetTake(GetMediaItemTakeByGUID(NULL, &guid));
 		}
 		else if (!strcmp(lp.gettoken_str(0), PROJ_OBJECT_KEY_MEASUREMENTS))
 		{
-			m_integrated   = (lp.getnumtokens() > 1)  ? lp.gettoken_float(1) : NEGATIVE_INF;
-			m_truePeak     = (lp.getnumtokens() > 2)  ? lp.gettoken_float(2) : NEGATIVE_INF;
-			m_shortTermMax = (lp.getnumtokens() > 3)  ? lp.gettoken_float(3) : NEGATIVE_INF;
-			m_momentaryMax = (lp.getnumtokens() > 4)  ? lp.gettoken_float(4) : NEGATIVE_INF;
-			m_range        = (lp.getnumtokens() > 5)  ? lp.gettoken_float(5) : 0;
-
+			integrated   = (lp.getnumtokens() > 1)  ? lp.gettoken_float(1) : NEGATIVE_INF;
+			range        = (lp.getnumtokens() > 2)  ? lp.gettoken_float(2) : 0;
+			truePeak     = (lp.getnumtokens() > 3)  ? lp.gettoken_float(3) : NEGATIVE_INF;
+			truePeakPos  = (lp.getnumtokens() > 4)  ? lp.gettoken_float(4) : NEGATIVE_INF;
+			shortTermMax = (lp.getnumtokens() > 5)  ? lp.gettoken_float(5) : NEGATIVE_INF;
+			momentaryMax = (lp.getnumtokens() > 6)  ? lp.gettoken_float(6) : NEGATIVE_INF;
 		}
 		else if (!strcmp(lp.gettoken_str(0), PROJ_OBJECT_KEY_STATUS))
 		{
@@ -488,39 +505,42 @@ bool BR_LoudnessObject::RestoreObject (ProjectStateContext* ctx)
 		}
 		else if (!strcmp(lp.gettoken_str(0), PROJ_OBJECT_KEY_SHORT_TERM))
 		{
-			if (lp.getnumtokens() > 1)  m_shortTermValues.push_back(lp.gettoken_float(1));
-			if (lp.getnumtokens() > 2)  m_shortTermValues.push_back(lp.gettoken_float(2));
-			if (lp.getnumtokens() > 3)  m_shortTermValues.push_back(lp.gettoken_float(3));
-			if (lp.getnumtokens() > 4)  m_shortTermValues.push_back(lp.gettoken_float(4));
-			if (lp.getnumtokens() > 5)  m_shortTermValues.push_back(lp.gettoken_float(5));
-			if (lp.getnumtokens() > 6)  m_shortTermValues.push_back(lp.gettoken_float(6));
-			if (lp.getnumtokens() > 7)  m_shortTermValues.push_back(lp.gettoken_float(7));
-			if (lp.getnumtokens() > 8)  m_shortTermValues.push_back(lp.gettoken_float(8));
-			if (lp.getnumtokens() > 9)  m_shortTermValues.push_back(lp.gettoken_float(9));
-			if (lp.getnumtokens() > 10) m_shortTermValues.push_back(lp.gettoken_float(10));
+			if (lp.getnumtokens() > 1)  shortTermValues.push_back(lp.gettoken_float(1));
+			if (lp.getnumtokens() > 2)  shortTermValues.push_back(lp.gettoken_float(2));
+			if (lp.getnumtokens() > 3)  shortTermValues.push_back(lp.gettoken_float(3));
+			if (lp.getnumtokens() > 4)  shortTermValues.push_back(lp.gettoken_float(4));
+			if (lp.getnumtokens() > 5)  shortTermValues.push_back(lp.gettoken_float(5));
+			if (lp.getnumtokens() > 6)  shortTermValues.push_back(lp.gettoken_float(6));
+			if (lp.getnumtokens() > 7)  shortTermValues.push_back(lp.gettoken_float(7));
+			if (lp.getnumtokens() > 8)  shortTermValues.push_back(lp.gettoken_float(8));
+			if (lp.getnumtokens() > 9)  shortTermValues.push_back(lp.gettoken_float(9));
+			if (lp.getnumtokens() > 10) shortTermValues.push_back(lp.gettoken_float(10));
 		}
 		else if (!strcmp(lp.gettoken_str(0), PROJ_OBJECT_KEY_MOMENTARY))
 		{
-			if (lp.getnumtokens() > 1)  m_momentaryValues.push_back(lp.gettoken_float(1));
-			if (lp.getnumtokens() > 2)  m_momentaryValues.push_back(lp.gettoken_float(2));
-			if (lp.getnumtokens() > 3)  m_momentaryValues.push_back(lp.gettoken_float(3));
-			if (lp.getnumtokens() > 4)  m_momentaryValues.push_back(lp.gettoken_float(4));
-			if (lp.getnumtokens() > 5)  m_momentaryValues.push_back(lp.gettoken_float(5));
-			if (lp.getnumtokens() > 6)  m_momentaryValues.push_back(lp.gettoken_float(6));
-			if (lp.getnumtokens() > 7)  m_momentaryValues.push_back(lp.gettoken_float(7));
-			if (lp.getnumtokens() > 8)  m_momentaryValues.push_back(lp.gettoken_float(8));
-			if (lp.getnumtokens() > 9)  m_momentaryValues.push_back(lp.gettoken_float(9));
-			if (lp.getnumtokens() > 10) m_momentaryValues.push_back(lp.gettoken_float(10));
+			if (lp.getnumtokens() > 1)  momentaryValues.push_back(lp.gettoken_float(1));
+			if (lp.getnumtokens() > 2)  momentaryValues.push_back(lp.gettoken_float(2));
+			if (lp.getnumtokens() > 3)  momentaryValues.push_back(lp.gettoken_float(3));
+			if (lp.getnumtokens() > 4)  momentaryValues.push_back(lp.gettoken_float(4));
+			if (lp.getnumtokens() > 5)  momentaryValues.push_back(lp.gettoken_float(5));
+			if (lp.getnumtokens() > 6)  momentaryValues.push_back(lp.gettoken_float(6));
+			if (lp.getnumtokens() > 7)  momentaryValues.push_back(lp.gettoken_float(7));
+			if (lp.getnumtokens() > 8)  momentaryValues.push_back(lp.gettoken_float(8));
+			if (lp.getnumtokens() > 9)  momentaryValues.push_back(lp.gettoken_float(9));
+			if (lp.getnumtokens() > 10) momentaryValues.push_back(lp.gettoken_float(10));
 		}
 	}
+	this->SetAnalyzeData(integrated, range, truePeak, truePeakPos, shortTermMax, momentaryMax, shortTermValues, momentaryValues);
 
 	if (this->IsTargetValid())
 	{
-		this->CheckSetAudioData();
-		m_doTruePeak       = doTruePeak;
-		m_truePeakAnalyzed = truePeakAnalyzed;
-		m_analyzed         = (version == VERSION) ? analyzed : false;
-		m_integratedOnly   = integratedOnly;
+		this->CheckSetAudioData(); // call this before setting analyze status data (the function changes it)
+
+		this->SetDoTruePeak(doTruePeak);
+		this->SetTruePeakAnalyzed(truePeakAnalyzed);
+		this->SetAnalyzedStatus(((version == VERSION) ? analyzed : false));
+		this->SetIntegratedOnly(integratedOnly);
+
 		return true;
 	}
 	else
@@ -545,10 +565,10 @@ double BR_LoudnessObject::GetAudioStart ()
 		return -1;
 
 	double start = this->GetAudioData().audioStart;
-	if (m_track)
+	if (this->GetTrack())
 		return start;
 	else
-		return GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION") + start;
+		return GetMediaItemInfo_Value(this->GetItem(), "D_POSITION") + start;
 }
 
 double BR_LoudnessObject::GetAudioEnd ()
@@ -558,10 +578,10 @@ double BR_LoudnessObject::GetAudioEnd ()
 		return -1;
 
 	double end = this->GetAudioData().audioEnd;
-	if (m_track)
+	if (this->GetTrack())
 		return end;
 	else
-		return GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION") + end;
+		return GetMediaItemInfo_Value(this->GetItem(), "D_POSITION") + end;
 }
 
 double BR_LoudnessObject::GetMaxMomentaryPos (bool projectTime)
@@ -572,10 +592,14 @@ double BR_LoudnessObject::GetMaxMomentaryPos (bool projectTime)
 
 	double position = 0;
 	if (projectTime)
-		position = (m_track) ? (this->GetAudioData().audioStart) : (GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION"));
-	for (size_t i = 0; i < m_momentaryValues.size(); ++i)
+		position = (this->GetTrack()) ? (this->GetAudioData().audioStart) : (GetMediaItemInfo_Value(this->GetItem(), "D_POSITION"));
+
+	vector<double> momentaryValues;
+	double momentaryMax;
+	this->GetAnalyzeData(NULL, NULL, NULL, NULL, NULL, &momentaryMax, NULL, &momentaryValues);
+	for (size_t i = 0; i < momentaryValues.size(); ++i)
 	{
-		if (m_momentaryValues[i] == m_momentaryMax)
+		if (momentaryValues[i] == momentaryMax)
 			break;
 		else
 			position += 0.4;
@@ -592,11 +616,14 @@ double BR_LoudnessObject::GetMaxShorttermPos (bool projectTime)
 
 	double position = 0;
 	if (projectTime)
-		position = (m_track) ? (this->GetAudioData().audioStart) : (GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION"));
+		position = (this->GetTrack()) ? (this->GetAudioData().audioStart) : (GetMediaItemInfo_Value(this->GetItem(), "D_POSITION"));
 
-	for (size_t i = 0; i < m_shortTermValues.size(); ++i)
+	vector<double> shortTermValues;
+	double shortTermMax;
+	this->GetAnalyzeData(NULL, NULL, NULL, NULL, &shortTermMax, NULL, &shortTermValues, NULL);
+	for (size_t i = 0; i < shortTermValues.size(); ++i)
 	{
-		if (m_shortTermValues[i] == m_shortTermMax)
+		if (shortTermValues[i] == shortTermMax)
 			break;
 		else
 			position += 3;
@@ -612,12 +639,12 @@ double BR_LoudnessObject::GetTruePeakPos (bool projectTime)
 		return -1;
 
 	double position;
-	this->GetAnalyzeData(NULL, NULL, NULL, &position, NULL, NULL);
+	this->GetAnalyzeData(NULL, NULL, NULL, &position, NULL, NULL, NULL, NULL);
 
 	if (position >= 0)
 	{
 		if (projectTime)
-			position += (m_track) ? (this->GetAudioData().audioStart) : (GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION"));
+			position += (this->GetTrack()) ? (this->GetAudioData().audioStart) : (GetMediaItemInfo_Value(this->GetItem(), "D_POSITION"));
 	}
 	else
 		position = -1;
@@ -628,39 +655,41 @@ double BR_LoudnessObject::GetTruePeakPos (bool projectTime)
 bool BR_LoudnessObject::IsTrack ()
 {
 	SWS_SectionLock lock(&m_mutex);
-	if (m_track) return true;
-	else         return false;
+	if (this->GetTrack()) return true;
+	else                  return false;
 }
 
 bool BR_LoudnessObject::IsTargetValid ()
 {
 	SWS_SectionLock lock(&m_mutex);
 
-	if (m_track)
+	GUID guid = this->GetGuid();
+
+	if (this->GetTrack())
 	{
-		if (ValidatePtr(m_track, "MediaTrack*") && GuidsEqual(&m_guid, (GUID*)GetSetMediaTrackInfo(m_track, "GUID", NULL)))
+		if (ValidatePtr(this->GetTrack(), "MediaTrack*") && GuidsEqual(&guid, (GUID*)GetSetMediaTrackInfo(this->GetTrack(), "GUID", NULL)))
 			return true;
 		else
 		{
 			// Deleting and undoing track will naturally change item's pointer so find new one if possible
-			if (MediaTrack* newTrack = GuidToTrack(&m_guid))
+			if (MediaTrack* newTrack = GuidToTrack(&guid))
 			{
-				if (GuidsEqual(&m_guid, (GUID*)GetSetMediaTrackInfo(newTrack, "GUID", NULL)))
-					m_track = newTrack;
+				if (GuidsEqual(&guid, (GUID*)GetSetMediaTrackInfo(newTrack, "GUID", NULL)))
+					this->SetTrack(newTrack);
 				return true;
 			}
 		}
 	}
 	else
 	{
-		if (ValidatePtr(m_take, "MediaItem_Take*") && GuidsEqual(&m_guid, (GUID*)GetSetMediaItemTakeInfo(m_take, "GUID", NULL)))
+		if (ValidatePtr(this->GetTake(), "MediaItem_Take*") && GuidsEqual(&guid, (GUID*)GetSetMediaItemTakeInfo(this->GetTake(), "GUID", NULL)))
 			return true;
 		else
 		{
-			if (MediaItem_Take* newTake = GetMediaItemTakeByGUID(NULL, &m_guid))
+			if (MediaItem_Take* newTake = GetMediaItemTakeByGUID(NULL, &guid))
 			{
-				if (GuidsEqual(&m_guid, (GUID*)GetSetMediaItemTakeInfo(newTake, "GUID", NULL)))
-					m_take = newTake;
+				if (GuidsEqual(&guid, (GUID*)GetSetMediaItemTakeInfo(newTake, "GUID", NULL)))
+					this->SetTake(newTake);
 				return true;
 			}
 		}
@@ -672,7 +701,7 @@ bool BR_LoudnessObject::IsTargetValid ()
 bool BR_LoudnessObject::CheckTarget (MediaTrack* track)
 {
 	SWS_SectionLock lock(&m_mutex);
-	if (this->IsTargetValid() && m_track && m_track == track)
+	if (this->IsTargetValid() && this->GetTrack() && this->GetTrack() == track)
 		return true;
 	else
 		return false;
@@ -681,7 +710,7 @@ bool BR_LoudnessObject::CheckTarget (MediaTrack* track)
 bool BR_LoudnessObject::CheckTarget (MediaItem_Take* take)
 {
 	SWS_SectionLock lock(&m_mutex);
-	if (this->IsTargetValid() && m_take && m_take == take)
+	if (this->IsTargetValid() && this->GetTake() && this->GetTake() == take)
 		return true;
 	else
 		return false;
@@ -693,10 +722,10 @@ bool BR_LoudnessObject::IsSelectedInProject ()
 	if (!this->IsTargetValid())
 		return false;
 
-	if (m_track)
-		return !!(*(int*)GetSetMediaTrackInfo(m_track, "I_SELECTED", NULL));
+	if (this->GetTrack())
+		return !!(*(int*)GetSetMediaTrackInfo(this->GetTrack(), "I_SELECTED", NULL));
 	else
-		return *(bool*)GetSetMediaItemInfo(GetMediaItemTake_Item(m_take), "B_UISEL", NULL);
+		return *(bool*)GetSetMediaItemInfo(this->GetItem(), "B_UISEL", NULL);
 }
 
 bool BR_LoudnessObject::CreateGraph (BR_Envelope& envelope, double minLUFS, double maxLUFS, bool momentary)
@@ -704,24 +733,25 @@ bool BR_LoudnessObject::CreateGraph (BR_Envelope& envelope, double minLUFS, doub
 	SWS_SectionLock lock(&m_mutex);
 	if (!this->IsTargetValid())
 		return false;
-
-	envelope.Sort();
+		envelope.Sort();
 
 	double start = this->GetAudioStart();
 	double end   = this->GetAudioEnd();
 	double newMin = envelope.LaneMinValue();
 	double newMax = envelope.LaneMaxValue();
 
+	vector<double> values;
+	this->GetAnalyzeData(NULL, NULL, NULL, NULL, NULL, NULL, ((momentary) ? NULL : &values), ((momentary) ? &values : NULL));
 	envelope.DeletePointsInRange(start, end);
 
 	double position = start;
 	envelope.CreatePoint(envelope.CountPoints(), position, newMin, LINEAR, 0, false);
 	position += (momentary) ? 0.4 : 3;
 
-	size_t size = (momentary) ? m_momentaryValues.size() : m_shortTermValues.size();
+	size_t size = values.size();
 	for (size_t i = 0; i < size; ++i)
 	{
-		double value = TranslateRange((momentary) ? m_momentaryValues[i] : m_shortTermValues[i], minLUFS, maxLUFS, newMin, newMax);
+		double value = TranslateRange(values[i], minLUFS, maxLUFS, newMin, newMax);
 
 		if (i != size-1)
 		{
@@ -771,26 +801,26 @@ bool BR_LoudnessObject::NormalizeIntegrated (double targetLUFS)
 		return false;
 
 	double integrated;
-	this->GetAnalyzeData(&integrated, NULL, NULL, NULL, NULL, NULL);
+	this->GetAnalyzeData(&integrated, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
 	bool update = false;
 	if (integrated > NEGATIVE_INF)
 	{
-		if (m_track)
+		if (this->GetTrack())
 		{
-			double volume = *(double*)GetSetMediaTrackInfo(m_track, "D_VOL", NULL);
+			double volume = *(double*)GetSetMediaTrackInfo(this->GetTrack(), "D_VOL", NULL);
 			volume *= DB2VAL(targetLUFS) / DB2VAL(integrated);
-			GetSetMediaTrackInfo(m_track, "D_VOL", &volume);
+			GetSetMediaTrackInfo(this->GetTrack(), "D_VOL", &volume);
 
 			update = true;
 		}
 		else
 		{
-			if (!IsItemLocked(GetMediaItemTake_Item(m_take)) && !IsLocked(ITEM_FULL))
+			if (!IsItemLocked(this->GetItem()) && !IsLocked(ITEM_FULL))
 			{
-				double volume = *(double*)GetSetMediaItemTakeInfo(m_take, "D_VOL", NULL);
+				double volume = *(double*)GetSetMediaItemTakeInfo(this->GetTake(), "D_VOL", NULL);
 				volume *= DB2VAL(targetLUFS) / DB2VAL(integrated);
-				GetSetMediaItemTakeInfo(m_take, "D_VOL", &volume);
+				GetSetMediaItemTakeInfo(this->GetTake(), "D_VOL", &volume);
 
 				update = true;
 			}
@@ -806,14 +836,14 @@ void BR_LoudnessObject::SetSelectedInProject (bool selected)
 	if (!this->IsTargetValid())
 		return;
 
-	if (m_track)
+	if (this->GetTrack())
 	{
 		int sel = (selected) ? (1) : (0);
-		GetSetMediaTrackInfo(m_track, "I_SELECTED", &sel);
+		GetSetMediaTrackInfo(this->GetTrack(), "I_SELECTED", &sel);
 	}
 	else
 	{
-		MediaItem* item = GetMediaItemTake_Item(m_take);
+		MediaItem* item = this->GetItem();
 		GetSetMediaItemInfo(item, "B_UISEL", &selected);
 		UpdateItemInProject(item);
 	}
@@ -826,12 +856,12 @@ void BR_LoudnessObject::GoToTarget ()
 		return;
 
 	MediaTrack* track = NULL;
-	if (m_track)
-		track = m_track;
+	if (this->GetTrack())
+		track = this->GetTrack();
 	else
 	{
-		track = GetMediaItemTake_Track(m_take);
-		SetArrangeStart(GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION"));
+		track = GetMediaItemTake_Track(this->GetTake());
+		SetArrangeStart(GetMediaItemInfo_Value(this->GetItem(), "D_POSITION"));
 	}
 	ScrollToTrackIfNotInArrange(track);
 }
@@ -846,7 +876,7 @@ void BR_LoudnessObject::GoToMomentaryMax (bool timeSelection)
 
 	double position = this->GetMaxMomentaryPos(true);
 	SetEditCurPos2(NULL, position, true, false);
-	ScrollToTrackIfNotInArrange((m_track) ? m_track : GetMediaItemTake_Track(m_take));
+	ScrollToTrackIfNotInArrange((this->GetTrack()) ? this->GetTrack() : GetMediaItemTake_Track(this->GetTake()));
 
 	if (timeSelection)
 	{
@@ -866,7 +896,7 @@ void BR_LoudnessObject::GoToShortTermMax (bool timeSelection)
 
 	double position = this->GetMaxShorttermPos(true);
 	SetEditCurPos2(NULL, position, true, false);
-	ScrollToTrackIfNotInArrange((m_track) ? m_track : GetMediaItemTake_Track(m_take));
+	ScrollToTrackIfNotInArrange((this->GetTrack()) ? this->GetTrack() : GetMediaItemTake_Track(this->GetTake()));
 
 	if (timeSelection)
 	{
@@ -888,7 +918,7 @@ void BR_LoudnessObject::GoToTruePeak ()
 	{
 		PreventUIRefresh(1);
 		SetEditCurPos2(NULL, position, true, false);
-		ScrollToTrackIfNotInArrange((m_track) ? m_track : GetMediaItemTake_Track(m_take));
+		ScrollToTrackIfNotInArrange((this->GetTrack()) ? this->GetTrack() : GetMediaItemTake_Track(this->GetTake()));
 		PreventUIRefresh(-1);
 	}
 }
@@ -898,7 +928,7 @@ int BR_LoudnessObject::GetTrackNumber ()
 	SWS_SectionLock lock(&m_mutex);
 	if (!this->IsTargetValid())
 		return -1;
-	int id = (int)GetMediaTrackInfo_Value(m_track ? m_track : GetMediaItemTake_Track(m_take), "IP_TRACKNUMBER");
+	int id = (int)GetMediaTrackInfo_Value(this->GetTrack() ? this->GetTrack() : GetMediaItemTake_Track(this->GetTake()), "IP_TRACKNUMBER");
 	if (id == -1) return  0; // master
 	if (id == 0)  return -1; // nothing found
 	return id;
@@ -910,8 +940,8 @@ int BR_LoudnessObject::GetItemNumber ()
 	if (!this->IsTargetValid())
 		return -1;
 
-	if (!m_track)
-		return 1 + (int)GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "IP_ITEMNUMBER");
+	if (!this->GetTrack())
+		return 1 + (int)GetMediaItemInfo_Value(this->GetItem(), "IP_ITEMNUMBER");
 	else
 		return -1;
 }
@@ -935,6 +965,8 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 	bool doPan               = (data.channels > 1              && data.pan != 0)               ? (true) : (false); // tracks will always get false here (see CheckSetAudioData())
 	bool doVolEnv            = (data.volEnv.CountPoints()      && data.volEnv.IsActive())      ? (true) : (false);
 	bool doVolPreFXEnv       = (data.volEnvPreFX.CountPoints() && data.volEnvPreFX.IsActive()) ? (true) : (false);
+	bool doFadeIn            = !(data.fadeInStart  == data.fadeInEnd);
+	bool doFadeOut           = !(data.fadeOutStart == data.fadeOutEnd);
 	bool integratedOnly      = _this->GetIntegratedOnly();
 	bool doTruePeak          = _this->GetDoTruePeak();
 
@@ -1007,28 +1039,21 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 		double* buf = new double[bufSz];
 		GetAudioAccessorSamples(data.audio, data.samplerate, data.channels, currentTime, sampleCount, buf);
 
-		// Correct for volume, pan and volume envelopes
+		// Correct for volume, fade, and pan/volume envelopes
 		int currentChannel = 1;
 		double sampleTime = currentTime;
 		for (int j = 0; j < bufSz; ++j)
 		{
 			double adjust = 1;
 
-			// Adjust for volume envelopes
-			if (doVolPreFXEnv || doVolEnv)
-			{
-				double nextSampleTime = (currentChannel+1 > data.channels) ? (sampleTime + sampleTimeLen) : (-1);
+			// Volume envelopes
+			if (doVolPreFXEnv) adjust *= data.volEnvPreFX.ValueAtPosition(sampleTime);
+			if (doVolEnv)      adjust *= data.volEnv.ValueAtPosition(sampleTime);
 
-				if (doVolPreFXEnv) adjust *= data.volEnvPreFX.ValueAtPosition(sampleTime);
-				if (doVolEnv)      adjust *= data.volEnv.ValueAtPosition(sampleTime);
-				if (nextSampleTime != -1)
-					sampleTime = nextSampleTime;
-			}
-
-			// Adjust for volume fader
+			// Volume fader
 			adjust *= data.volume;
 
-			// Adjust for pan fader (takes only)
+			// Pan fader (takes only)
 			if (doPan)
 			{
 				if (data.pan > 0 && (currentChannel % 2 == 1))
@@ -1037,10 +1062,18 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 					adjust *= 1 + data.pan;
 			}
 
+			// Fades
+//			if (doFadeIn)  adjust *= GetNormalizedFadeValue(sampleTime, data.fadeInStart,  data.fadeInEnd,  data.fadeInShape,  data.fadeInCurve,  false);
+//			if (doFadeOut) adjust *= GetNormalizedFadeValue(sampleTime, data.fadeOutStart, data.fadeOutEnd, data.fadeOutShape, data.fadeOutCurve, true);
+
 			buf[j] *= adjust;
 
 			if (++currentChannel > data.channels)
 				currentChannel = 1;
+
+			double nextSampleTime = (currentChannel+1 > data.channels) ? (sampleTime + sampleTimeLen) : (-1);
+			if (nextSampleTime != -1)
+				sampleTime = nextSampleTime;
 		}
 		ebur128_add_frames_double(loudnessState, buf, sampleCount);
 		delete[] buf;
@@ -1146,55 +1179,84 @@ int BR_LoudnessObject::CheckSetAudioData ()
 
 	double audioStart = GetAudioAccessorStartTime(audioData.audio);
 	double audioEnd   = GetAudioAccessorEndTime(audioData.audio);
-	int channels    = (m_track) ? ((int)GetMediaTrackInfo_Value(m_track, "I_NCHAN")) : ((GetMediaItemTake_Source(m_take))->GetNumChannels());
-	int channelMode = (m_track) ? (0) : (*(int*)GetSetMediaItemTakeInfo(m_take, "I_CHANMODE", NULL));
+	int channels    = (this->GetTrack()) ? ((int)GetMediaTrackInfo_Value(this->GetTrack(), "I_NCHAN")) : ((GetMediaItemTake_Source(this->GetTake()))->GetNumChannels());
+	int channelMode = (this->GetTrack()) ? (0) : (*(int*)GetSetMediaItemTakeInfo(this->GetTake(), "I_CHANMODE", NULL));
 	int samplerate; GetConfig("projsrate", samplerate);
+
+	double fadeInStart  = 0;
+	double fadeOutStart = 0;
+	double fadeInEnd    = 0;
+	double fadeOutEnd   = 0;
+	double fadeInCurve  = 0;
+	double fadeOutCurve = 0;
+	int fadeInShape     = 0;
+	int fadeOutShape    = 0;
 
 	BR_Envelope volEnv, volEnvPreFX;
 	double volume = 0, pan = 0;
-	if (m_track)
+	if (this->GetTrack())
 	{
-		volume = *(double*)GetSetMediaTrackInfo(m_track, "D_VOL", NULL);
+		volume = *(double*)GetSetMediaTrackInfo(this->GetTrack(), "D_VOL", NULL);
 		pan = 0; // ignore track pan
-		volEnv = BR_Envelope(GetVolEnv(m_track));
-		volEnvPreFX = BR_Envelope(GetVolEnvPreFX(m_track));
+		volEnv = BR_Envelope(GetVolEnv(this->GetTrack()));
+		volEnvPreFX = BR_Envelope(GetVolEnvPreFX(this->GetTrack()));
 	}
 	else
 	{
-		volume = (*(double*)GetSetMediaItemTakeInfo(m_take, "D_VOL", NULL)) * (*(double*)GetSetMediaItemInfo(GetMediaItemTake_Item(m_take), "D_VOL", NULL));
-		pan = *(double*)GetSetMediaItemTakeInfo(m_take, "D_PAN", NULL);
-		volEnv = BR_Envelope(m_take, VOLUME);
+		volume = (*(double*)GetSetMediaItemTakeInfo(this->GetTake(), "D_VOL", NULL)) * (*(double*)GetSetMediaItemInfo(this->GetItem(), "D_VOL", NULL));
+		pan = *(double*)GetSetMediaItemTakeInfo(this->GetTake(), "D_PAN", NULL);
+		volEnv = BR_Envelope(this->GetTake(), VOLUME);
+
+//		fadeInEnd   = GetEffectiveFadeLength(this->GetItem(), false, &fadeInShape, &fadeInCurve);
+//		fadeInStart = 0;
+//		fadeOutEnd   = GetMediaItemInfo_Value(this->GetItem(), "D_LENGTH");
+//		fadeOutStart = fadeOutEnd - GetEffectiveFadeLength(this->GetItem(), true,  &fadeOutShape, &fadeOutCurve);
 	}
 
-
-	if (!this->GetAnalyzedStatus()                      ||
-	    AudioAccessorValidateState(audioData.audio)     ||
-	    strcmp(newHash, audioData.audioHash)            ||
-	    audioStart  != audioData.audioStart             ||
-	    audioEnd    != audioData.audioEnd               ||
-	    channels    != audioData.channels               ||
-	    channelMode != audioData.channelMode            ||
-	    samplerate  != audioData.samplerate             ||
-	    volEnv      != audioData.volEnv                 ||
-	    volEnvPreFX != audioData.volEnvPreFX            ||
-	    fabs(volume - audioData.volume) >= VOLUME_DELTA ||
-	    fabs(pan    - audioData.pan)    >= PAN_DELTA
+	if (!this->GetAnalyzedStatus()                       ||
+	    AudioAccessorValidateState(audioData.audio)      ||
+	    strcmp(newHash, audioData.audioHash)             ||
+	    audioStart   != audioData.audioStart             ||
+	    audioEnd     != audioData.audioEnd               ||
+	    channels     != audioData.channels               ||
+	    channelMode  != audioData.channelMode            ||
+	    samplerate   != audioData.samplerate             ||
+	    fadeInStart  != audioData.fadeInStart            ||
+	    fadeInEnd    != audioData.fadeInEnd              ||
+	    fadeInCurve  != audioData.fadeInCurve            ||
+	    fadeInShape  != audioData.fadeInShape            ||
+	    fadeOutStart != audioData.fadeOutStart           ||
+	    fadeOutEnd   != audioData.fadeOutEnd             ||
+	    fadeOutCurve != audioData.fadeOutCurve           ||
+	    fadeOutShape != audioData.fadeOutShape           ||
+	    fabs(volume - audioData.volume) >= VOLUME_DELTA  ||
+	    fabs(pan    - audioData.pan)    >= PAN_DELTA     ||
+	    volEnv       != audioData.volEnv                 ||
+	    volEnvPreFX  != audioData.volEnvPreFX
 	)
 	{
 		DestroyAudioAccessor(audioData.audio);
-		audioData.audio = (m_track) ? (CreateTrackAudioAccessor(m_track)) : (CreateTakeAudioAccessor(m_take));
+		audioData.audio = (this->GetTrack()) ? (CreateTrackAudioAccessor(this->GetTrack())) : (CreateTakeAudioAccessor(this->GetTake()));
 		memset(audioData.audioHash, 0, 128);
 		GetAudioAccessorHash(audioData.audio, audioData.audioHash);
 
-		audioData.audioStart  = GetAudioAccessorStartTime(audioData.audio);
-		audioData.audioEnd    = GetAudioAccessorEndTime(audioData.audio);
-		audioData.channels    = channels;
-		audioData.channelMode = channelMode;
-		audioData.samplerate  = samplerate;
-		audioData.volume      = volume;
-		audioData.pan         = pan;
-		audioData.volEnv      = volEnv;
-		audioData.volEnvPreFX = volEnvPreFX;
+		audioData.audioStart   = GetAudioAccessorStartTime(audioData.audio);
+		audioData.audioEnd     = GetAudioAccessorEndTime(audioData.audio);
+		audioData.channels     = channels;
+		audioData.channelMode  = channelMode;
+		audioData.samplerate   = samplerate;
+		audioData.volume       = volume;
+		audioData.pan          = pan;
+	    audioData.fadeInStart  = fadeInStart;
+	    audioData.fadeInEnd    = fadeInEnd;
+	    audioData.fadeInCurve  = fadeInCurve;
+	    audioData.fadeInShape  = fadeInShape;
+	    audioData.fadeOutStart = fadeOutStart;
+	    audioData.fadeOutEnd   = fadeOutEnd;
+	    audioData.fadeOutCurve = fadeOutCurve;
+	    audioData.fadeOutShape = fadeOutShape;
+		audioData.volEnv       = volEnv;
+		audioData.volEnvPreFX  = volEnvPreFX;
 
 		this->SetAudioData(audioData);
 
@@ -1216,6 +1278,52 @@ BR_LoudnessObject::AudioData BR_LoudnessObject::GetAudioData ()
 {
 	SWS_SectionLock lock(&m_mutex);
 	return m_audioData;
+}
+
+MediaItem* BR_LoudnessObject::GetItem ()
+{
+	SWS_SectionLock lock(&m_mutex);
+	MediaItem_Take* take = this->GetTake();
+	if (take)
+		return GetMediaItemTake_Item(take);
+	else
+		return NULL;
+}
+
+MediaTrack* BR_LoudnessObject::GetTrack ()
+{
+	SWS_SectionLock lock(&m_mutex);
+	return m_track;
+}
+
+MediaItem_Take* BR_LoudnessObject::GetTake ()
+{
+	SWS_SectionLock lock(&m_mutex);
+	return m_take;
+}
+
+GUID BR_LoudnessObject::GetGuid()
+{
+	SWS_SectionLock lock(&m_mutex);
+	return m_guid;
+}
+
+void BR_LoudnessObject::SetTrack (MediaTrack* track)
+{
+	SWS_SectionLock lock(&m_mutex);
+	m_track = track;
+}
+
+void BR_LoudnessObject::SetTake (MediaItem_Take* take)
+{
+	SWS_SectionLock lock(&m_mutex);
+	m_take = take;
+}
+
+void BR_LoudnessObject::SetGuid(GUID guid)
+{
+	SWS_SectionLock lock(&m_mutex);
+	m_guid = guid;
 }
 
 void BR_LoudnessObject::SetRunning (bool running)
@@ -1243,15 +1351,17 @@ void BR_LoudnessObject::SetAnalyzeData (double integrated, double range, double 
 	m_momentaryValues = momentaryValues;
 }
 
-void BR_LoudnessObject::GetAnalyzeData (double* integrated, double* range, double* truePeak, double* truePeakPos, double* shortTermMax, double* momentaryMax)
+void BR_LoudnessObject::GetAnalyzeData (double* integrated, double* range, double* truePeak, double* truePeakPos, double* shortTermMax, double* momentaryMax, vector<double>* shortTermValues, vector<double>* momentaryValues)
 {
 	SWS_SectionLock lock(&m_mutex);
-	WritePtr(integrated,   m_integrated);
-	WritePtr(range,        m_range);
-	WritePtr(truePeak,     m_truePeak);
-	WritePtr(truePeakPos,  m_truePeakPos);
-	WritePtr(shortTermMax, m_shortTermMax);
-	WritePtr(momentaryMax, m_momentaryMax);
+	WritePtr(integrated,      m_integrated);
+	WritePtr(range,           m_range);
+	WritePtr(truePeak,        m_truePeak);
+	WritePtr(truePeakPos,     m_truePeakPos);
+	WritePtr(shortTermMax,    m_shortTermMax);
+	WritePtr(momentaryMax,    m_momentaryMax);
+	WritePtr(shortTermValues, m_shortTermValues);
+	WritePtr(momentaryValues, m_momentaryValues);
 }
 
 void BR_LoudnessObject::SetAnalyzedStatus (bool analyzed)
@@ -1338,7 +1448,7 @@ WDL_FastString BR_LoudnessObject::GetTakeName ()
 	else
 	{
 		if (this->IsTargetValid())
-			takeName.Set((char*)GetSetMediaItemTakeInfo(m_take, "P_NAME", NULL));
+			takeName.Set((char*)GetSetMediaItemTakeInfo(this->GetTake(), "P_NAME", NULL));
 		else
 			takeName.Set(__LOCALIZE("--NO TAKE FOUND--", "sws_DLG_174")); // Analyze loudness window should remove invalid objects, but leave this anyway
 	}
@@ -1351,14 +1461,14 @@ WDL_FastString BR_LoudnessObject::GetTrackName ()
 	SWS_SectionLock lock(&m_mutex);
 
 	WDL_FastString trackName;
-	if (m_track)
+	if (this->GetTrack())
 	{
 		if (this->IsTargetValid())
 		{
-			if (m_track == GetMasterTrack(NULL))
+			if (this->GetTrack() == GetMasterTrack(NULL))
 				trackName.Set(__localizeFunc("MASTER", "track", 0));
 			else
-				trackName.Set((char*)GetSetMediaTrackInfo(m_track, "P_NAME", NULL));
+				trackName.Set((char*)GetSetMediaTrackInfo(this->GetTrack(), "P_NAME", NULL));
 		}
 		else
 			trackName.Set(__LOCALIZE("--NO TRACK FOUND--", "sws_DLG_174")); // Analyze loudness window should remove invalid objects, but leave this anyway
@@ -1366,7 +1476,7 @@ WDL_FastString BR_LoudnessObject::GetTrackName ()
 	else
 	{
 		if (this->IsTargetValid())
-			trackName.Set((char*)GetSetMediaTrackInfo(GetMediaItemTake_Track(m_take), "P_NAME", NULL));
+			trackName.Set((char*)GetSetMediaTrackInfo(GetMediaItemTake_Track(this->GetTake()), "P_NAME", NULL));
 		else
 			trackName.Set(__LOCALIZE("--NO TAKE FOUND--", "sws_DLG_174")); // Analyze loudness window should remove invalid objects, but leave this anyway
 	}
@@ -1375,14 +1485,22 @@ WDL_FastString BR_LoudnessObject::GetTrackName ()
 }
 
 BR_LoudnessObject::AudioData::AudioData () :
-audio       (NULL),
-samplerate  (0),
-channels    (0),
-channelMode (0),
-audioStart  (0),
-audioEnd    (0),
-volume      (0),
-pan         (0)
+audio        (NULL),
+samplerate   (0),
+channels     (0),
+channelMode  (0),
+audioStart   (0),
+audioEnd     (0),
+volume       (0),
+pan          (0),
+fadeInStart  (0),
+fadeOutStart (0),
+fadeInEnd    (0),
+fadeOutEnd   (0),
+fadeInCurve  (0),
+fadeOutCurve (0),
+fadeInShape  (0),
+fadeOutShape (0)
 {
 	memset(audioHash, 0, 128);
 }

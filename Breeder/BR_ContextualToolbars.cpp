@@ -730,10 +730,10 @@ void BR_ContextualToolbar::ImportConfig (const char* contexts, const char* optio
 		m_options.mcpTrack             = (lp.getnumtokens() > 4)  ? lp.gettoken_int(4)  : cleanOptions.mcpTrack;
 		m_options.arrangeTrack         = (lp.getnumtokens() > 5)  ? lp.gettoken_int(5)  : cleanOptions.arrangeTrack;
 		m_options.arrangeItem          = (lp.getnumtokens() > 6)  ? lp.gettoken_int(6)  : cleanOptions.arrangeItem;
-		m_options.arrangeStretchMarker = (lp.getnumtokens() > 7)  ? lp.gettoken_int(7) : cleanOptions.arrangeStretchMarker;
+		m_options.arrangeStretchMarker = (lp.getnumtokens() > 7)  ? lp.gettoken_int(7)  : cleanOptions.arrangeStretchMarker;
 		m_options.arrangeTakeEnvelope  = (lp.getnumtokens() > 8)  ? lp.gettoken_int(8)  : cleanOptions.arrangeTakeEnvelope;
 		m_options.arrangeTrackEnvelope = (lp.getnumtokens() > 9)  ? lp.gettoken_int(9)  : cleanOptions.arrangeTrackEnvelope;
-		m_options.arrangeActTake       = (lp.getnumtokens() > 10) ? lp.gettoken_int(10)  : cleanOptions.arrangeActTake;
+		m_options.arrangeActTake       = (lp.getnumtokens() > 10) ? lp.gettoken_int(10) : cleanOptions.arrangeActTake;
 		m_options.midiSetCCLane        = (lp.getnumtokens() > 11) ? lp.gettoken_int(11) : cleanOptions.midiSetCCLane;
 		m_options.inlineItem           = (lp.getnumtokens() > 12) ? lp.gettoken_int(12) : cleanOptions.inlineItem;
 		m_options.inlineSetCCLane      = (lp.getnumtokens() > 13) ? lp.gettoken_int(13) : cleanOptions.inlineSetCCLane;

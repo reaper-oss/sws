@@ -391,53 +391,53 @@ void ME_HideCCLanes (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 
 void ME_ToggleHideCCLanes (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
-		if (g_midiToggleHideCCLanes.Get()->IsHidden())
+	if (g_midiToggleHideCCLanes.Get()->IsHidden())
+	{
+		void* midiEditor = NULL;
+		if ((int)ct->user > 0)
 		{
-			void* midiEditor = NULL;
-			if ((int)ct->user > 0)
-			{
-				midiEditor = MIDIEditor_GetActive();
-			}
-			else
-			{
-				BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_MIDI_EDITOR_ALL);
-				midiEditor = mouseInfo.GetMidiEditor();
-			}
-
-			if (midiEditor && g_midiToggleHideCCLanes.Get()->Restore(midiEditor))
-				Undo_OnStateChangeEx2(NULL, __LOCALIZE("Restore hidden CC lanes", "sws_undo"), UNDO_STATE_ALL, -1);
+			midiEditor = MIDIEditor_GetActive();
 		}
 		else
 		{
-			void* midiEditor;
-			int laneToKeep;
-			if ((int)ct->user > 0)
-			{
-				midiEditor = MIDIEditor_GetActive();
-				laneToKeep = GetLastClickedVelLane(midiEditor);
-			}
-			else
-			{
-				BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_MIDI_EDITOR_ALL);
-				midiEditor = mouseInfo.GetMidiEditor();
-				mouseInfo.GetCCLane(&laneToKeep, NULL, NULL);
-			}
-
-			if (midiEditor && g_midiToggleHideCCLanes.Get()->Hide(midiEditor, laneToKeep, (abs((int)ct->user) == 1) ? -1 : abs((int)ct->user)))
-				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+			BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_MIDI_EDITOR_ALL);
+			midiEditor = mouseInfo.GetMidiEditor();
 		}
 
-		RefreshToolbar(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED"));
-		RefreshToolbar(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_50_PX"));
-		RefreshToolbar(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_100_PX"));
-		RefreshToolbar(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_150_PX"));
-		RefreshToolbar(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_200_PX"));
-		RefreshToolbar(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_250_PX"));
-		RefreshToolbar(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_300_PX"));
-		RefreshToolbar(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_350_PX"));
-		RefreshToolbar(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_400_PX"));
-		RefreshToolbar(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_450_PX"));
-		RefreshToolbar(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_500_PX"));
+		if (midiEditor && g_midiToggleHideCCLanes.Get()->Restore(midiEditor))
+			Undo_OnStateChangeEx2(NULL, __LOCALIZE("Restore hidden CC lanes", "sws_undo"), UNDO_STATE_ALL, -1);
+	}
+	else
+	{
+		void* midiEditor;
+		int laneToKeep;
+		if ((int)ct->user > 0)
+		{
+			midiEditor = MIDIEditor_GetActive();
+			laneToKeep = GetLastClickedVelLane(midiEditor);
+		}
+		else
+		{
+			BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_MIDI_EDITOR_ALL);
+			midiEditor = mouseInfo.GetMidiEditor();
+			mouseInfo.GetCCLane(&laneToKeep, NULL, NULL);
+		}
+
+		if (midiEditor && g_midiToggleHideCCLanes.Get()->Hide(midiEditor, laneToKeep, (abs((int)ct->user) == 1) ? -1 : abs((int)ct->user)))
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+	}
+
+	RefreshToolbar(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED"));
+	RefreshToolbar(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_50_PX"));
+	RefreshToolbar(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_100_PX"));
+	RefreshToolbar(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_150_PX"));
+	RefreshToolbar(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_200_PX"));
+	RefreshToolbar(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_250_PX"));
+	RefreshToolbar(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_300_PX"));
+	RefreshToolbar(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_350_PX"));
+	RefreshToolbar(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_400_PX"));
+	RefreshToolbar(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_450_PX"));
+	RefreshToolbar(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_500_PX"));
 }
 
 void ME_CCToEnvPoints (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)

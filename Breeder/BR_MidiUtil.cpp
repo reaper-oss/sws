@@ -805,7 +805,7 @@ double EffectiveMidiTakeStart (MediaItem_Take* take, bool ignoreMutedEvents, boo
 	return GetMediaItemInfo_Value(GetMediaItemTake_Item(take), "D_POSITION");
 }
 
-void SetMutedNotes (MediaItem_Take* take, vector<int>& muteStatus)
+void SetMutedNotes (MediaItem_Take* take, const vector<int>& muteStatus)
 {
 	int noteCount = muteStatus.size();
 	for (int i = 0; i < noteCount; ++i)
@@ -815,7 +815,7 @@ void SetMutedNotes (MediaItem_Take* take, vector<int>& muteStatus)
 	}
 }
 
-void SetSelectedNotes (MediaItem_Take* take, vector<int>& selectedNotes, bool unselectOthers)
+void SetSelectedNotes (MediaItem_Take* take, const vector<int>& selectedNotes, bool unselectOthers)
 {
 	int selectedCount = selectedNotes.size();
 	int selectedId = (selectedCount > 0) ? (0) : (1);

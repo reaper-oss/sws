@@ -464,6 +464,7 @@
 #define IDC_WOL_SLOT8S					1370
 #define IDC_WOL_OK						1371
 #define IDC_WOL_CLOSE					1372
+#define IDC_WOL_OPTIONS					1373
 
 
 // Next default values for new objects
@@ -472,7 +473,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        183
 #define _APS_NEXT_COMMAND_VALUE         40000
-#define _APS_NEXT_CONTROL_VALUE         1373
+#define _APS_NEXT_CONTROL_VALUE         1374
 #define _APS_NEXT_SYMED_VALUE           100
 #endif
 #endif

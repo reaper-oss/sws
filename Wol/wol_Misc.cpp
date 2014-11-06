@@ -39,6 +39,11 @@ static struct wol_Misc_Ini {
 	static const char* NoteVelocitiesSlotsMin[8];
 	static const char* NoteVelocitiesSlotsMax[8];
 	static const char* SelRandMidiNotesPercent[8];
+	static const char* EnableRealtimeRandomize;
+	static const char* EnableRealtimeNoteSelectionByVelInRange;
+	static const char* AddSelectedNotesByVelInRangeToSel;
+	static const char* EnableRealtimeRandomNoteSelectionPerc;
+	static const char* SelectRandomMidiNotesPercType;
 } wol_Misc_Ini;
 
 const char* wol_Misc_Ini::Section = "Misc";
@@ -154,6 +159,7 @@ void MoveEditCursorToNote(COMMAND_T* ct, int val, int valhw, int relmode, HWND h
 }
 
 //---------//
+#define CMD_RT_RANDMIDIVEL UserInputAndSlotsEditorWnd::CMD_OPTION_MIN
 
 const char* wol_Misc_Ini::RandomizerSlotsMin[8] = {
 	"RandomizerSlot1Min",
@@ -175,6 +181,7 @@ const char* wol_Misc_Ini::RandomizerSlotsMax[8] = {
 	"RandomizerSlot7Max",
 	"RandomizerSlot8Max",
 };
+const char* wol_Misc_Ini::EnableRealtimeRandomize = "EnableRealtimeRandomize";
 
 struct RandomizerSlots {
 	int min;
@@ -182,6 +189,7 @@ struct RandomizerSlots {
 };
 
 static RandomizerSlots g_RandomizerSlots[8];
+static bool g_realtimeRandomize = false;
 
 #define RANDMIDIVELWND_ID "WolRandMidiVelWnd"
 static SNM_WindowManager<RandomMidiVelWnd> g_RandMidiVelWndMgr(RANDMIDIVELWND_ID);
@@ -213,14 +221,14 @@ bool RandomizeSelectedMidiVelocities(int min, int max)
 	return false;
 }
 
-void OnCommandCallback_RandMidiVelWnd(int cmd, int* min, int* max)
+void OnCommandCallback_RandMidiVelWnd(int cmd, int* kn1, int* kn2)
 {
-	static string undoDesc;
+	static string undoDesc = "";
 	switch (cmd)
 	{
-	case (UserInputAndSlotsEditorWnd::CMD_USERANSWER + MB_OK):
+	case (UserInputAndSlotsEditorWnd::CMD_USERANSWER + IDOK):
 	{
-		if (RandomizeSelectedMidiVelocities(*min, *max))
+		if (RandomizeSelectedMidiVelocities(*kn1, *kn2))
 			Undo_OnStateChangeEx2(NULL, undoDesc.c_str(), UNDO_STATE_ALL, -1);
 		break;
 	}
@@ -231,26 +239,44 @@ void OnCommandCallback_RandMidiVelWnd(int cmd, int* min, int* max)
 	}
 	case CMD_SETUNDOSTR:
 	{
-		undoDesc = (const char*)min;
+		undoDesc = (const char*)kn1;
+		break;
+	}
+	case CMD_RT_RANDMIDIVEL:
+	{
+		g_realtimeRandomize = !g_realtimeRandomize;
+		SaveIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.EnableRealtimeRandomize, g_realtimeRandomize);
+		if (RandomMidiVelWnd* wnd = g_RandMidiVelWndMgr.Get())
+		{
+			wnd->EnableRealtimeNotify(g_realtimeRandomize);
+			wnd->SetOptionState(CMD_RT_RANDMIDIVEL, NULL, &g_realtimeRandomize);
+		}
+		break;
+	}
+	case UserInputAndSlotsEditorWnd::CMD_RT_KNOB1:
+	case UserInputAndSlotsEditorWnd::CMD_RT_KNOB2:
+	{
+		if (RandomizeSelectedMidiVelocities(*kn1, *kn2))
+			Undo_OnStateChangeEx2(NULL, undoDesc.c_str(), UNDO_STATE_ALL, -1);
 		break;
 	}
 	default:
 	{
 		if (cmd < 8)
 		{
-			if (min && max)
-			{
-				*min = g_RandomizerSlots[cmd/* - UserInputAndSlotsEditorWnd::CMD_LOAD*/].min;
-				*max = g_RandomizerSlots[cmd].max;
-			}
+			*kn1 = g_RandomizerSlots[cmd/* - UserInputAndSlotsEditorWnd::CMD_LOAD*/].min;
+			*kn2 = g_RandomizerSlots[cmd].max;
+			if (g_realtimeRandomize && RandomizeSelectedMidiVelocities(*kn1, *kn2))
+				Undo_OnStateChangeEx2(NULL, undoDesc.c_str(), UNDO_STATE_ALL, -1);
 		}
 		else if (cmd < 16 && cmd > 7)
 		{
-			SaveIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.RandomizerSlotsMin[cmd - UserInputAndSlotsEditorWnd::CMD_SAVE], *min);
-			SaveIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.RandomizerSlotsMax[cmd - UserInputAndSlotsEditorWnd::CMD_SAVE], *max);
-			g_RandomizerSlots[cmd - UserInputAndSlotsEditorWnd::CMD_SAVE].min = *min;
-			g_RandomizerSlots[cmd - UserInputAndSlotsEditorWnd::CMD_SAVE].max = *max;
+			SaveIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.RandomizerSlotsMin[cmd - UserInputAndSlotsEditorWnd::CMD_SAVE], *kn1);
+			SaveIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.RandomizerSlotsMax[cmd - UserInputAndSlotsEditorWnd::CMD_SAVE], *kn2);
+			g_RandomizerSlots[cmd - UserInputAndSlotsEditorWnd::CMD_SAVE].min = *kn1;
+			g_RandomizerSlots[cmd - UserInputAndSlotsEditorWnd::CMD_SAVE].max = *kn2;
 		}
+		break;
 	}
 	}
 }
@@ -258,11 +284,15 @@ void OnCommandCallback_RandMidiVelWnd(int cmd, int* min, int* max)
 RandomMidiVelWnd::RandomMidiVelWnd()
 	: UserInputAndSlotsEditorWnd(__LOCALIZE("SWS/wol-spk77 - Randomize midi velocities tool", "sws_DLG_182a"), __LOCALIZE("Random midi velocities tool", "sws_DLG_182a"), RANDMIDIVELWND_ID, SWSGetCommandID(RandomizeSelectedMidiVelocitiesTool))
 {
-	UseTwoKnobs();
+	SetupTwoKnobs();
 	SetupKnob1(1, 127, 64, 1, 12.0f, __LOCALIZE("Min value:", "sws_DLG_182a"), __LOCALIZE("", "sws_DLG_182a"), __LOCALIZE("1", "sws_DLG_182a"));
 	SetupKnob2(1, 127, 64, 127, 12.0f, __LOCALIZE("Max value:", "sws_DLG_182a"), __LOCALIZE("", "sws_DLG_182a"), __LOCALIZE("1", "sws_DLG_182a"));
 	SetupOnCommandCallback(OnCommandCallback_RandMidiVelWnd);
 	SetupOKText(__LOCALIZE("Randomize", "sws_DLG_182a"));
+	
+	SetupAddOption(CMD_RT_RANDMIDIVEL, true, g_realtimeRandomize, __LOCALIZE("Enable real time randomizing", "sws_DLG_182a"));
+
+	EnableRealtimeNotify(g_realtimeRandomize);
 }
 
 void RandomizeSelectedMidiVelocitiesTool(COMMAND_T* ct)
@@ -291,6 +321,9 @@ int IsRandomizeSelectedMidiVelocitiesOpen(COMMAND_T* ct)
 }
 
 //---------//
+#define CMD_RT_SELMIDINOTESBYVELINRANGE UserInputAndSlotsEditorWnd::CMD_OPTION_MIN
+#define CMD_ADDNOTESTOSEL CMD_RT_SELMIDINOTESBYVELINRANGE + 1
+#define CMD_ADDNOTESTONEWSEL CMD_ADDNOTESTOSEL + 1
 
 const char* wol_Misc_Ini::NoteVelocitiesSlotsMin[8] = {
 	"NoteVelocitiesSlot1Min",
@@ -312,6 +345,8 @@ const char* wol_Misc_Ini::NoteVelocitiesSlotsMax[8] = {
 	"NoteVelocitiesSlot7Max",
 	"NoteVelocitiesSlot8Max",
 };
+const char* wol_Misc_Ini::EnableRealtimeNoteSelectionByVelInRange = "EnableRealtimeNoteSelectionByVelInRange";
+const char* wol_Misc_Ini::AddSelectedNotesByVelInRangeToSel = "AddSelectedNotesByVelInRangeToSel";
 
 struct MidiVelocitiesSlots {
 	int min;
@@ -319,6 +354,8 @@ struct MidiVelocitiesSlots {
 };
 
 static MidiVelocitiesSlots g_MidiVelocitiesSlots[8];
+static bool g_realtimeNoteSelByVelInRange = false;
+static bool g_addNotesToSel = false;
 
 #define SELMIDINOTESBYVELINRANGEWND_ID "WolSelMidiNotesByVelInRangeWnd"
 static SNM_WindowManager<SelMidiNotesByVelInRangeWnd> g_SelMidiNotesByVelInRangeWndMgr(SELMIDINOTESBYVELINRANGEWND_ID);
@@ -358,20 +395,14 @@ static bool SelectMidiNotesByVelocityInRange(int min, int max, bool addToSelecti
 	return false;
 }
 
-void OnCommandCallback_SelMidiNotesByVelInRangeWnd(int cmd, int* min, int* max)
+void OnCommandCallback_SelMidiNotesByVelInRangeWnd(int cmd, int* kn1, int* kn2)
 {
-	static string undoDesc;
+	static string undoDesc = "";
 	switch (cmd)
 	{
-	case (UserInputAndSlotsEditorWnd::CMD_USERANSWER + IDYES):
+	case (UserInputAndSlotsEditorWnd::CMD_USERANSWER + IDOK):
 	{
-		if (SelectMidiNotesByVelocityInRange(*min, *max, true))
-			Undo_OnStateChangeEx2(NULL, undoDesc.c_str(), UNDO_STATE_ALL, -1);
-		break;
-	}
-	case (UserInputAndSlotsEditorWnd::CMD_USERANSWER + IDNO) :
-	{
-		if (SelectMidiNotesByVelocityInRange(*min, *max, false))
+		if (SelectMidiNotesByVelocityInRange(*kn1, *kn2, g_addNotesToSel))
 			Undo_OnStateChangeEx2(NULL, undoDesc.c_str(), UNDO_STATE_ALL, -1);
 		break;
 	}
@@ -382,26 +413,58 @@ void OnCommandCallback_SelMidiNotesByVelInRangeWnd(int cmd, int* min, int* max)
 	}
 	case CMD_SETUNDOSTR:
 	{
-		undoDesc = (const char*)min;
+		undoDesc = (const char*)kn1;
+		break;
+	}
+	case CMD_RT_SELMIDINOTESBYVELINRANGE:
+	{
+		g_realtimeNoteSelByVelInRange = !g_realtimeNoteSelByVelInRange;
+		SaveIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.EnableRealtimeNoteSelectionByVelInRange, g_realtimeNoteSelByVelInRange);
+		if (SelMidiNotesByVelInRangeWnd* wnd = g_SelMidiNotesByVelInRangeWndMgr.Get())
+		{
+			wnd->EnableRealtimeNotify(g_realtimeNoteSelByVelInRange);
+			wnd->SetOptionState(CMD_RT_SELMIDINOTESBYVELINRANGE, NULL, &g_realtimeNoteSelByVelInRange);
+		}
+		break;
+	}
+	case CMD_ADDNOTESTOSEL:
+	case CMD_ADDNOTESTONEWSEL:
+	{
+		g_addNotesToSel = (cmd == CMD_ADDNOTESTOSEL);
+		SaveIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.AddSelectedNotesByVelInRangeToSel, g_addNotesToSel);
+		if (SelMidiNotesByVelInRangeWnd* wnd = g_SelMidiNotesByVelInRangeWndMgr.Get())
+		{
+			bool checked = g_addNotesToSel;
+			wnd->SetOptionState(CMD_ADDNOTESTOSEL, NULL, &checked);
+			checked = !checked;
+			wnd->SetOptionState(CMD_ADDNOTESTONEWSEL, NULL, &checked);
+		}
+		break;
+	}
+	case UserInputAndSlotsEditorWnd::CMD_RT_KNOB1:
+	case UserInputAndSlotsEditorWnd::CMD_RT_KNOB2:
+	{
+		if (SelectMidiNotesByVelocityInRange(*kn1, *kn2, g_addNotesToSel))
+			Undo_OnStateChangeEx2(NULL, undoDesc.c_str(), UNDO_STATE_ALL, -1);
 		break;
 	}
 	default:
 	{
 		if (cmd < 8)
 		{
-			if (min && max)
-			{
-				*min = g_MidiVelocitiesSlots[cmd/* - UserInputAndSlotsEditorWnd::CMD_LOAD*/].min;
-				*max = g_MidiVelocitiesSlots[cmd].max;
-			}
+			*kn1 = g_MidiVelocitiesSlots[cmd/* - UserInputAndSlotsEditorWnd::CMD_LOAD*/].min;
+			*kn2 = g_MidiVelocitiesSlots[cmd].max;
+			if (g_realtimeNoteSelByVelInRange && SelectMidiNotesByVelocityInRange(*kn1, *kn2, g_addNotesToSel))
+				Undo_OnStateChangeEx2(NULL, undoDesc.c_str(), UNDO_STATE_ALL, -1);
 		}
 		else if (cmd < 16 && cmd > 7)
 		{
-			SaveIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.NoteVelocitiesSlotsMin[cmd - UserInputAndSlotsEditorWnd::CMD_SAVE], *min);
-			SaveIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.NoteVelocitiesSlotsMax[cmd - UserInputAndSlotsEditorWnd::CMD_SAVE], *max);
-			g_MidiVelocitiesSlots[cmd - UserInputAndSlotsEditorWnd::CMD_SAVE].min = *min;
-			g_MidiVelocitiesSlots[cmd - UserInputAndSlotsEditorWnd::CMD_SAVE].max = *max;
+			SaveIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.NoteVelocitiesSlotsMin[cmd - UserInputAndSlotsEditorWnd::CMD_SAVE], *kn1);
+			SaveIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.NoteVelocitiesSlotsMax[cmd - UserInputAndSlotsEditorWnd::CMD_SAVE], *kn2);
+			g_MidiVelocitiesSlots[cmd - UserInputAndSlotsEditorWnd::CMD_SAVE].min = *kn1;
+			g_MidiVelocitiesSlots[cmd - UserInputAndSlotsEditorWnd::CMD_SAVE].max = *kn2;
 		}
+		break;
 	}
 	}
 }
@@ -409,12 +472,18 @@ void OnCommandCallback_SelMidiNotesByVelInRangeWnd(int cmd, int* min, int* max)
 SelMidiNotesByVelInRangeWnd::SelMidiNotesByVelInRangeWnd()
 	: UserInputAndSlotsEditorWnd(__LOCALIZE("SWS/wol-spk77 - Select midi notes by velocities in range tool", "sws_DLG_182b"), __LOCALIZE("Select midi notes by velocities in range tool", "sws_DLG_182b"), SELMIDINOTESBYVELINRANGEWND_ID, SWSGetCommandID(SelectMidiNotesByVelocitiesInRangeTool))
 {
-	UseTwoKnobs();
+	SetupTwoKnobs();
 	SetupKnob1(1, 127, 64, 1, 12.0f, __LOCALIZE("Min velocity:", "sws_DLG_182b"), __LOCALIZE("", "sws_DLG_182b"), __LOCALIZE("1", "sws_DLG_182b"));
 	SetupKnob2(1, 127, 64, 127, 12.0f, __LOCALIZE("Max velocity:", "sws_DLG_182b"), __LOCALIZE("", "sws_DLG_182b"), __LOCALIZE("1", "sws_DLG_182b"));
 	SetupOnCommandCallback(OnCommandCallback_SelMidiNotesByVelInRangeWnd);
 	SetupOKText(__LOCALIZE("Select", "sws_DLG_182b"));
-	SetupQuestion(__LOCALIZE("Add notes to selection? If answer is no, the selection will be cleared", "sws_DLG_182b"), __LOCALIZE("SWS/wol-spk77 - Info", "sws_DLG_182b"), MB_YESNO);
+	
+	SetupAddOption(CMD_RT_SELMIDINOTESBYVELINRANGE, true, g_realtimeNoteSelByVelInRange, __LOCALIZE("Enable real time note selection", "sws_DLG_182b"));
+	SetupAddOption(UserInputAndSlotsEditorWnd::CMD_OPTION_MAX, true, false, SWS_SEPARATOR);
+	SetupAddOption(CMD_ADDNOTESTOSEL, true, g_addNotesToSel, __LOCALIZE("Add notes to selection", "sws_DLG_182b"));
+	SetupAddOption(CMD_ADDNOTESTONEWSEL, true, !g_addNotesToSel, __LOCALIZE("Clear selection", "sws_DLG_182b"));
+
+	EnableRealtimeNotify(g_realtimeNoteSelByVelInRange);
 }
 
 void SelectMidiNotesByVelocitiesInRangeTool(COMMAND_T* ct)
@@ -443,6 +512,10 @@ int IsSelectMidiNotesByVelocitiesInRangeOpen(COMMAND_T* ct)
 }
 
 //---------//
+#define CMD_RT_SELRANDMIDINOTESPERC UserInputAndSlotsEditorWnd::CMD_OPTION_MIN
+#define CMD_ADDTOSEL CMD_RT_SELRANDMIDINOTESPERC + 1
+#define CMD_CLEARSEL CMD_RT_SELRANDMIDINOTESPERC + 2
+#define CMD_AMONGSELNOTES CMD_RT_SELRANDMIDINOTESPERC + 3
 
 const char* wol_Misc_Ini::SelRandMidiNotesPercent[8] = {
 	"SelRandMidiNotesPercentSlot1",
@@ -454,8 +527,12 @@ const char* wol_Misc_Ini::SelRandMidiNotesPercent[8] = {
 	"SelRandMidiNotesPercentSlot7",
 	"SelRandMidiNotesPercentSlot8",
 };
+const char* wol_Misc_Ini::EnableRealtimeRandomNoteSelectionPerc = "EnableRealtimeRandomNoteSelectionPerc";
+const char* wol_Misc_Ini::SelectRandomMidiNotesPercType = "SelectRandomMidiNotesPercType";
 
 static UINT g_SelRandMidiNotesPercent[8];
+static bool g_realtimeRandomNoteSelPerc = false;
+static int g_selType = 0; //0 add to selection, 1 clear selection, 2 among selected notes
 
 #define SELRANDMIDINOTESPERCWND_ID "WolSelRandMidiNotesPercWnd"
 static SNM_WindowManager<SelRandMidiNotesPercWnd> g_SelRandMidiNotesPercWndMgr(SELRANDMIDINOTESPERCWND_ID);
@@ -484,26 +561,14 @@ static bool SelectRandomMidiNotesPercent(UINT perc, bool addToSelection, bool am
 	return false;
 }
 
-void OnCommandCallback_SelRandMidiNotesPercWnd(int cmd, int* min, int* max)
+void OnCommandCallback_SelRandMidiNotesPercWnd(int cmd, int* kn1, int* kn2)
 {
 	static string undoDesc;
 	switch (cmd)
 	{
-	case (UserInputAndSlotsEditorWnd::CMD_USERANSWER + IDYES) :
+	case (UserInputAndSlotsEditorWnd::CMD_USERANSWER + IDOK) :
 	{
-		if (SelectRandomMidiNotesPercent((UINT)*min, true, false))
-			Undo_OnStateChangeEx2(NULL, undoDesc.c_str(), UNDO_STATE_ALL, -1);
-		break;
-	}
-	case (UserInputAndSlotsEditorWnd::CMD_USERANSWER + IDNO) :
-	{
-		if (SelectRandomMidiNotesPercent((UINT)*min, false, false))
-			Undo_OnStateChangeEx2(NULL, undoDesc.c_str(), UNDO_STATE_ALL, -1);
-		break;
-	}
-	case (UserInputAndSlotsEditorWnd::CMD_USERANSWER + IDCANCEL) :
-	{
-		if (SelectRandomMidiNotesPercent((UINT)*min, false, true))
+		if (SelectRandomMidiNotesPercent((UINT)*kn1, (g_selType == 0 ? true : false), (g_selType == 2 ? true : false)))
 			Undo_OnStateChangeEx2(NULL, undoDesc.c_str(), UNDO_STATE_ALL, -1);
 		break;
 	}
@@ -514,21 +579,60 @@ void OnCommandCallback_SelRandMidiNotesPercWnd(int cmd, int* min, int* max)
 	}
 	case CMD_SETUNDOSTR:
 	{
-		undoDesc = (const char*)min;
+		undoDesc = (const char*)kn1;
+		break;
+	}
+	case CMD_RT_SELRANDMIDINOTESPERC:
+	{
+		g_realtimeRandomNoteSelPerc = !g_realtimeRandomNoteSelPerc;
+		SaveIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.EnableRealtimeRandomNoteSelectionPerc, g_realtimeRandomNoteSelPerc);
+		if (SelRandMidiNotesPercWnd* wnd = g_SelRandMidiNotesPercWndMgr.Get())
+		{
+			wnd->EnableRealtimeNotify(g_realtimeRandomNoteSelPerc);
+			wnd->SetOptionState(CMD_RT_SELRANDMIDINOTESPERC, NULL, &g_realtimeRandomNoteSelPerc);
+		}
+		break;
+	}
+	case CMD_ADDTOSEL:
+	case CMD_CLEARSEL:
+	case CMD_AMONGSELNOTES:
+	{
+		int _cmd = CMD_ADDTOSEL;
+		int res = cmd - _cmd;
+		g_selType = res/*cmd - CMD_ADDTOSEL*/;
+		SaveIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.SelectRandomMidiNotesPercType, g_selType);
+		if (SelRandMidiNotesPercWnd* wnd = g_SelRandMidiNotesPercWndMgr.Get())
+		{
+			bool checked = (g_selType == 0);
+			wnd->SetOptionState(CMD_ADDTOSEL, NULL, &checked);
+			checked = (g_selType == 1);
+			wnd->SetOptionState(CMD_CLEARSEL, NULL, &checked);
+			checked = (g_selType == 2);
+			wnd->SetOptionState(CMD_AMONGSELNOTES, NULL, &checked);
+		}
+		break;
+	}
+	case UserInputAndSlotsEditorWnd::CMD_RT_KNOB1:
+	case UserInputAndSlotsEditorWnd::CMD_RT_KNOB2:
+	{
+		if (SelectRandomMidiNotesPercent((UINT)*kn1, (g_selType == 0 ? true : false), (g_selType == 2 ? true : false)))
+			Undo_OnStateChangeEx2(NULL, undoDesc.c_str(), UNDO_STATE_ALL, -1);
 		break;
 	}
 	default:
 	{
 		if (cmd < 8)
 		{
-			if (min && max)
-				*min = g_SelRandMidiNotesPercent[cmd/* - UserInputAndSlotsEditorWnd::CMD_LOAD*/];
+			*kn1 = g_SelRandMidiNotesPercent[cmd/* - UserInputAndSlotsEditorWnd::CMD_LOAD*/];
+			if (g_realtimeRandomNoteSelPerc && SelectRandomMidiNotesPercent((UINT)*kn1, (g_selType == 0 ? true : false), (g_selType == 2 ? true : false)))
+				Undo_OnStateChangeEx2(NULL, undoDesc.c_str(), UNDO_STATE_ALL, -1);
 		}
 		else if (cmd < 16 && cmd > 7)
 		{
-			SaveIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.SelRandMidiNotesPercent[cmd - UserInputAndSlotsEditorWnd::CMD_SAVE], *min);
-			g_SelRandMidiNotesPercent[cmd - UserInputAndSlotsEditorWnd::CMD_SAVE] = (UINT)*min;
+			SaveIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.SelRandMidiNotesPercent[cmd - UserInputAndSlotsEditorWnd::CMD_SAVE], *kn1);
+			g_SelRandMidiNotesPercent[cmd - UserInputAndSlotsEditorWnd::CMD_SAVE] = (UINT)*kn1;
 		}
+		break;
 	}
 	}
 }
@@ -539,7 +643,15 @@ SelRandMidiNotesPercWnd::SelRandMidiNotesPercWnd()
 	SetupKnob1(1, 100, 50, 50, 12.0f, __LOCALIZE("Percent:", "sws_DLG_182c"), __LOCALIZE("%", "sws_DLG_182c"), __LOCALIZE("", "sws_DLG_182c"));
 	SetupOnCommandCallback(OnCommandCallback_SelRandMidiNotesPercWnd);
 	SetupOKText(__LOCALIZE("Select", "sws_DLG_182c"));
-	SetupQuestion(__LOCALIZE("Options:\n 'Yes' to add to selection\n 'No' for new selection\n 'Cancel' to select among selected notes.", "sws_DLG_182c"), __LOCALIZE("SWS/wol-spk77 - Info", "sws_DLG_182c"), MB_YESNOCANCEL);
+	//SetupQuestion(__LOCALIZE("Options:\n 'Yes' to add to selection\n 'No' for new selection\n 'Cancel' to select among selected notes.", "sws_DLG_182c"), __LOCALIZE("SWS/wol-spk77 - Info", "sws_DLG_182c"), MB_YESNOCANCEL);
+
+	SetupAddOption(CMD_RT_SELRANDMIDINOTESPERC, true, g_realtimeRandomNoteSelPerc, __LOCALIZE("Enable real time selection", "sws_DLG_182c"));
+	SetupAddOption(UserInputAndSlotsEditorWnd::CMD_OPTION_MAX, true, false, SWS_SEPARATOR);
+	SetupAddOption(CMD_ADDTOSEL, true, g_selType == 0, __LOCALIZE("Add notes to selection", "sws_DLG_182c"));
+	SetupAddOption(CMD_CLEARSEL, true, g_selType == 1, __LOCALIZE("Clear selection", "sws_DLG_182c"));
+	SetupAddOption(CMD_AMONGSELNOTES, true, g_selType == 2, __LOCALIZE("Select notes among selected notes", "sws_DLG_182c"));
+
+	EnableRealtimeNotify(g_realtimeRandomNoteSelPerc);
 }
 
 void SelectRandomMidiNotesTool(COMMAND_T* ct)
@@ -621,7 +733,13 @@ void wol_MiscInit()
 		g_MidiVelocitiesSlots[i].min = GetIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.NoteVelocitiesSlotsMin[i], 1);
 		g_MidiVelocitiesSlots[i].max = GetIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.NoteVelocitiesSlotsMax[i], 127);
 		g_SelRandMidiNotesPercent[i] = GetIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.SelRandMidiNotesPercent[i], 100);
-	}		
+	}
+
+	g_realtimeRandomize = GetIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.EnableRealtimeRandomize, false);
+	g_realtimeNoteSelByVelInRange = GetIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.EnableRealtimeNoteSelectionByVelInRange, false);
+	g_addNotesToSel = GetIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.AddSelectedNotesByVelInRangeToSel, true);
+	g_realtimeRandomNoteSelPerc = GetIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.EnableRealtimeRandomNoteSelectionPerc, false);
+	g_selType = GetIniSettings(wol_Misc_Ini.Section, wol_Misc_Ini.SelectRandomMidiNotesPercType, 0);
 
 	g_RandMidiVelWndMgr.Init();
 	g_SelMidiNotesByVelInRangeWndMgr.Init();

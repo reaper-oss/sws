@@ -102,26 +102,52 @@ int ShowWarningMessageBox(const char* msg, UINT uType = MB_OK, HWND hwnd = GetMa
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// User input
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-#define CMD_SETUNDOSTR 20
+#define CMD_SETUNDOSTR -1
+
+struct UserInputAndSlotsEditorOption
+{
+	UserInputAndSlotsEditorOption(int onCommandMsg = 0, bool optionEnabled = true, bool optionChecked = false, string optionName = "") : 
+		cmd(onCommandMsg), enabled(optionEnabled), checked(optionChecked), title(optionName) {}
+
+	int cmd; //CMD_OPTION_MIN...CMD_OPTION_MAX
+	bool enabled;
+	bool checked;
+	string title;
+};
+
 class UserInputAndSlotsEditorWnd : public SWS_DockWnd
 {
 public:
 	UserInputAndSlotsEditorWnd(const char* wndtitle, const char* title, const char* id, int cmdId);
 
-	void Update();
-	void UseTwoKnobs(bool two = true) { m_twoknobs = two; }
+	void SetupTwoKnobs(bool two = true) { m_twoknobs = two; }
 	void SetupKnob1(int min, int max, int center, int pos, double factor, const char* title, const char* suffix, const char* zerotext); //must be called in constructor
 	void SetupKnob2(int min, int max, int center, int pos, double factor, const char* title, const char* suffix, const char* zerotext); //must be called in constructor (two knobs only)
-	void SetupOnCommandCallback(void(*OnCommandCallback)(int cmd, int* min, int* max)); //must be called in constructor
+	void SetupOnCommandCallback(void(*OnCommandCallback)(int cmd, int* kn1, int* kn2)); //must be called in constructor
 	void SetupOKText(const char* text);
 	void SetupQuestion(const char* questiontxt, const char* questiontitle, UINT type);
+	bool SetupAddOption(int cmd, bool enabled, bool checked, string title);
+
+	bool SetOptionState(int cmd, const bool* enabled = NULL, const bool* checked = NULL, const string* title = NULL); //returns false if option not found
+	bool GetOptionState(int cmd, bool* enabled = NULL, bool* checked = NULL, string* title = NULL) const; //returns false if option not found
+	void EnableRealtimeNotify(bool en = true){ m_realtimenotify = en; }
+	bool IsRealtimeNotifyEnabled() const { return m_realtimenotify; }
 
 	enum
 	{
-		CMD_LOAD = 0,
-		CMD_SAVE = 8,
-		CMD_CLOSE = 30,
-		CMD_USERANSWER
+		CMD_OPTION_MIN = 100,
+		CMD_OPTION_MAX = 199
+	};
+
+	enum
+	{
+		CMD_LOAD = 0, //0...7 reserved
+		CMD_SAVE = 8, //8...16 reserved
+		CMD_CLOSE = 20,
+		CMD_RT_KNOB1,
+		CMD_RT_KNOB2,
+		CMD_OPTION = CMD_OPTION_MIN,
+		CMD_USERANSWER = CMD_OPTION_MAX + 1
 	};
 
 protected:
@@ -130,15 +156,21 @@ protected:
 	virtual void OnCommand(WPARAM wParam, LPARAM lParam);
 	virtual void DrawControls(LICE_IBitmap* bm, const RECT* r, int* tooltipHeight = NULL);
 	virtual INT_PTR OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
+	virtual bool ReprocessContextMenu() { return false; }
+	virtual HMENU OnContextMenu(int x, int y, bool* wantDefaultItems);
+	void Update();
 
-	void(*m_OnCommandCallback)(int cmd, int* min, int* max); //for single knob dialogs max is not used
+	void(*m_OnCommandCallback)(int cmd, int* kn1, int* kn2);
 
 	SNM_Knob m_kn1, m_kn2;
 	SNM_KnobCaption m_kn1Text, m_kn2Text;
 
 	HWND m_btnL, m_btnR;
 
-	bool m_twoknobs, m_kn1rdy, m_kn2rdy, m_cbrdy, m_askquestion;
+	bool m_twoknobs, m_kn1rdy, m_kn2rdy, m_cbrdy, m_askquestion, m_realtimenotify;
 	UINT m_questiontype;
 	string m_wndtitlebar, m_oktxt, m_questiontxt, m_questiontitle;
+	int m_kn1oldval, m_kn2oldval;
+
+	vector<UserInputAndSlotsEditorOption> m_options;
 };

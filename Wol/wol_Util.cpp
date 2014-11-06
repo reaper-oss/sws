@@ -319,10 +319,11 @@ int ShowWarningMessageBox(const char* msg, UINT uType, HWND hwnd)
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// User input
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-#define MSG_MIN    0xF000
-#define MSG_MINTXT 0xF001
-#define MSG_MAX    0xF002
-#define MSG_MAXTXT 0xF003
+#define MSG_KN1    0xF000
+#define MSG_KN1TXT 0xF001
+#define MSG_KN2    0xF002
+#define MSG_KN2TXT 0xF003
+#define MSG_OPTION 0xF004 
 
 UserInputAndSlotsEditorWnd::UserInputAndSlotsEditorWnd(const char* wndtitle, const char* title, const char* id, int cmdId)
 	: SWS_DockWnd(IDD_WOL_USRINSLTEDWND, title, id, cmdId)
@@ -331,7 +332,9 @@ UserInputAndSlotsEditorWnd::UserInputAndSlotsEditorWnd(const char* wndtitle, con
 	m_oktxt.clear();
 	m_questiontxt.clear();
 	m_questiontype = MB_OK;
-	m_twoknobs = m_kn1rdy = m_kn2rdy = m_cbrdy = m_askquestion = false;
+	m_twoknobs = m_kn1rdy = m_kn2rdy = m_cbrdy = m_askquestion = m_realtimenotify = false;
+	m_kn1oldval = m_kn2oldval = 0;
+	m_options.clear();
 
 	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();
@@ -363,7 +366,7 @@ void UserInputAndSlotsEditorWnd::SetupKnob2(int min, int max, int center, int po
 	m_kn2rdy = true;
 }
 
-void UserInputAndSlotsEditorWnd::SetupOnCommandCallback(void(*OnCommandCallback)(int cmd, int* min, int* max))
+void UserInputAndSlotsEditorWnd::SetupOnCommandCallback(void(*OnCommandCallback)(int cmd, int* kn1, int* kn2))
 {
 	m_OnCommandCallback = OnCommandCallback;
 
@@ -383,6 +386,65 @@ void UserInputAndSlotsEditorWnd::SetupQuestion(const char* questiontxt, const ch
 	m_questiontype = type;
 }
 
+//void UserInputAndSlotsEditorWnd::SetupOptions(vector<UserInputAndSlotsEditorOption>* options)
+//{
+//	if (options)
+//	{
+//		for (size_t i = 0; i < options->size(); ++i)
+//		{
+//			if (options->at(i).cmd >= CMD_OPTION_MIN && options->at(i).cmd <= CMD_OPTION_MAX)
+//				m_options.push_back(options->at(i));
+//		}
+//	}
+//}
+
+bool UserInputAndSlotsEditorWnd::SetupAddOption(int cmd, bool enabled, bool checked, string title)
+{
+	if (cmd >= CMD_OPTION_MIN && cmd <= CMD_OPTION_MAX)
+	{
+		UserInputAndSlotsEditorOption opt(cmd, enabled, checked, title);
+		m_options.push_back(opt);
+		return true;
+	}
+	return false;
+}
+
+bool UserInputAndSlotsEditorWnd::SetOptionState(int cmd, const bool* enabled, const bool* checked, const string* title)
+{
+	for (vector<UserInputAndSlotsEditorOption>::iterator opt = m_options.begin(); opt != m_options.end(); ++opt)
+	{
+		if (opt->cmd == cmd)
+		{
+			if (enabled)
+				opt->enabled = *enabled;
+			if (checked)
+				opt->checked = *checked;
+			if (title)
+				opt->title = *title;
+			return true;
+		}
+	}
+	return false;
+}
+
+bool UserInputAndSlotsEditorWnd::GetOptionState(int cmd, bool* enabled, bool* checked, string* title) const
+{
+	for (vector<UserInputAndSlotsEditorOption>::const_iterator opt = m_options.begin(); opt != m_options.end(); ++opt)
+	{
+		if (opt->cmd == cmd)
+		{
+			if (enabled)
+				*enabled = opt->enabled;
+			if (checked)
+				*checked = opt->checked;
+			if (title)
+				*title = opt->title;
+			return true;
+		}
+	}
+	return false;
+}
+
 void UserInputAndSlotsEditorWnd::OnInitDlg()
 {
 	if (!m_kn1rdy || !m_kn2rdy || !m_cbrdy)
@@ -391,19 +453,19 @@ void UserInputAndSlotsEditorWnd::OnInitDlg()
 	m_parentVwnd.SetRealParent(m_hwnd);
 	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
 
-	m_kn1.SetID(MSG_MIN);
+	m_kn1.SetID(MSG_KN1);
 	m_kn1Text.AddChild(&m_kn1);
 
-	m_kn1Text.SetID(MSG_MINTXT);
+	m_kn1Text.SetID(MSG_KN1TXT);
 	m_kn1Text.SetValue(m_kn1.GetSliderPosition());
 	m_parentVwnd.AddChild(&m_kn1Text);
 
 	if (m_twoknobs)
 	{
-		m_kn2.SetID(MSG_MAX);
+		m_kn2.SetID(MSG_KN2);
 		m_kn2Text.AddChild(&m_kn2);
 
-		m_kn2Text.SetID(MSG_MAXTXT);
+		m_kn2Text.SetID(MSG_KN2TXT);
 		m_kn2Text.SetValue(m_kn2.GetSliderPosition());
 		m_parentVwnd.AddChild(&m_kn2Text);
 	}
@@ -416,6 +478,9 @@ void UserInputAndSlotsEditorWnd::OnInitDlg()
 
 	if (m_oktxt.size())
 		SetWindowText(GetDlgItem(m_hwnd, IDC_WOL_OK), m_oktxt.c_str());
+
+	if (!m_options.size())
+		EnableWindow(GetDlgItem(m_hwnd, IDC_WOL_OPTIONS), FALSE);
 }
 
 void UserInputAndSlotsEditorWnd::OnDestroy()
@@ -485,10 +550,10 @@ void UserInputAndSlotsEditorWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 	case IDC_WOL_SLOT7L:
 	case IDC_WOL_SLOT8L:
 	{
-		int min = 0, max = 0;
-		m_OnCommandCallback(CMD_LOAD + LOWORD(wParam) - IDC_WOL_SLOT1L, &min, &max);
-		m_kn1Text.SetValue(min);
-		m_kn2Text.SetValue(max);
+		int kn1 = 0, kn2 = 0;
+		m_OnCommandCallback(CMD_LOAD + LOWORD(wParam) - IDC_WOL_SLOT1L, &kn1, &kn2);
+		m_kn1Text.SetValue(kn1);
+		m_kn2Text.SetValue(kn2);
 		Update();
 		break;
 	}
@@ -501,29 +566,66 @@ void UserInputAndSlotsEditorWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 	case IDC_WOL_SLOT7S:
 	case IDC_WOL_SLOT8S:
 	{
-		int min = m_kn1.GetSliderPosition(), max = m_kn2.GetSliderPosition();
-		m_OnCommandCallback(CMD_SAVE + LOWORD(wParam) - IDC_WOL_SLOT1S, &min, &max);
+		int kn1 = m_kn1.GetSliderPosition(), kn2 = m_kn2.GetSliderPosition();
+		m_OnCommandCallback(CMD_SAVE + LOWORD(wParam) - IDC_WOL_SLOT1S, &kn1, &kn2);
 		break;
 	}
 	case IDC_WOL_OK:
 	{
-		int min = m_kn1.GetSliderPosition(), max = m_kn2.GetSliderPosition();
+		int kn1 = m_kn1.GetSliderPosition(), kn2 = m_kn2.GetSliderPosition();
 		int answer = CMD_USERANSWER;
 		if (m_askquestion)
 			answer += MessageBox(m_hwnd, m_questiontxt.c_str(), m_questiontitle.c_str(), m_questiontype);
 		else
-			answer += MB_OK;
-		m_OnCommandCallback(answer, &min, &max);
+			answer += IDOK;
+		m_OnCommandCallback(answer, &kn1, &kn2);
 		break;
 	}
 	case IDC_WOL_CLOSE:
 	{
-		int min = m_kn1.GetSliderPosition(), max = m_kn2.GetSliderPosition();
-		m_OnCommandCallback(CMD_CLOSE, &min, &max);
+		int kn1 = m_kn1.GetSliderPosition(), kn2 = m_kn2.GetSliderPosition();
+		m_OnCommandCallback(CMD_CLOSE, &kn1, &kn2);
 		SendMessage(m_hwnd, WM_COMMAND, (WPARAM)IDCANCEL, (LPARAM)0);
 		break;
 	}
+	case IDC_WOL_OPTIONS:
+	{
+		RECT r;
+		GetWindowRect(GetDlgItem(m_hwnd, IDC_WOL_OPTIONS), &r);
+		SendMessage(m_hwnd, WM_CONTEXTMENU, 0, MAKELPARAM((UINT)(r.left), (UINT)(r.bottom + 1)));
+		break;
 	}
+	default:
+	{
+		int msg = LOWORD(wParam) - MSG_OPTION;
+		if (msg >= CMD_OPTION_MIN && msg <= CMD_OPTION_MAX)
+			m_OnCommandCallback(msg, NULL, NULL);
+		break;
+	}
+	}
+}
+
+HMENU UserInputAndSlotsEditorWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
+{
+	HMENU hMenu = NULL;
+
+	RECT r;
+	GetWindowRect(GetDlgItem(m_hwnd, IDC_WOL_OPTIONS), &r);
+	POINT p;
+	GetCursorPos(&p);
+	if (PtInRect(&r, p))
+	{
+		*wantDefaultItems = false;
+
+		if (m_options.size())
+		{
+			hMenu = CreatePopupMenu();
+
+			for (vector<UserInputAndSlotsEditorOption>::iterator opt = m_options.begin(); opt != m_options.end(); ++opt)
+				AddToMenu(hMenu, opt->title.c_str(), opt->cmd + MSG_OPTION, -1, false, (opt->enabled ? MFS_ENABLED : MFS_GRAYED) | (opt->checked ? MFS_CHECKED : MFS_UNCHECKED));
+		}
+	}
+	return hMenu;
 }
 
 INT_PTR UserInputAndSlotsEditorWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -532,21 +634,31 @@ INT_PTR UserInputAndSlotsEditorWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPA
 	{
 		switch (lParam)
 		{
-		case MSG_MIN:
+		case MSG_KN1:
 		{
 			m_kn1Text.SetValue(m_kn1.GetSliderPosition());
 			if (m_kn1.GetSliderPosition() > m_kn2.GetSliderPosition())
+				m_kn2Text.SetValue(m_kn1.GetSliderPosition());
+
+			int kn1 = m_kn1.GetSliderPosition(), kn2 = m_kn2.GetSliderPosition();
+			if (m_realtimenotify && kn1 != m_kn1oldval)
 			{
-				m_kn2Text.SetValue(m_kn2.GetSliderPosition());
+				m_kn1oldval = kn1;
+				m_OnCommandCallback(CMD_RT_KNOB1, &kn1, &kn2);
 			}
 			break;
 		}
-		case MSG_MAX:
+		case MSG_KN2:
 		{
 			m_kn2Text.SetValue(m_kn2.GetSliderPosition());
 			if (m_kn2.GetSliderPosition() < m_kn1.GetSliderPosition())
+				m_kn1Text.SetValue(m_kn2.GetSliderPosition());
+
+			int kn1 = m_kn1.GetSliderPosition(), kn2 = m_kn2.GetSliderPosition();
+			if (m_realtimenotify && kn2 != m_kn2oldval)
 			{
-				m_kn1Text.SetValue(m_kn1.GetSliderPosition());
+				m_kn2oldval = kn2;
+				m_OnCommandCallback(CMD_RT_KNOB2, &kn1, &kn2);
 			}
 			break;
 		}

@@ -333,6 +333,7 @@ UserInputAndSlotsEditorWnd::UserInputAndSlotsEditorWnd(const char* wndtitle, con
 	m_questiontxt.clear();
 	m_questiontype = MB_OK;
 	m_twoknobs = m_kn1rdy = m_kn2rdy = m_cbrdy = m_askquestion = m_realtimenotify = false;
+	m_linkknobs = true;
 	m_kn1oldval = m_kn2oldval = 0;
 	m_options.clear();
 
@@ -427,6 +428,45 @@ bool UserInputAndSlotsEditorWnd::SetOptionState(int cmd, const bool* enabled, co
 	return false;
 }
 
+bool UserInputAndSlotsEditorWnd::SetOptionStateEnable(int cmd, bool enabled)
+{
+	for (vector<UserInputAndSlotsEditorOption>::iterator opt = m_options.begin(); opt != m_options.end(); ++opt)
+	{
+		if (opt->cmd == cmd)
+		{
+			opt->enabled = enabled;
+			return true;
+		}
+	}
+	return false;
+}
+
+bool UserInputAndSlotsEditorWnd::SetOptionStateChecked(int cmd, bool checked)
+{
+	for (vector<UserInputAndSlotsEditorOption>::iterator opt = m_options.begin(); opt != m_options.end(); ++opt)
+	{
+		if (opt->cmd == cmd)
+		{
+			opt->checked = checked;
+			return true;
+		}
+	}
+	return false;
+}
+
+bool UserInputAndSlotsEditorWnd::SetOptionStateTitle(int cmd, string title)
+{
+	for (vector<UserInputAndSlotsEditorOption>::iterator opt = m_options.begin(); opt != m_options.end(); ++opt)
+	{
+		if (opt->cmd == cmd)
+		{
+			opt->title = title;
+			return true;
+		}
+	}
+	return false;
+}
+
 bool UserInputAndSlotsEditorWnd::GetOptionState(int cmd, bool* enabled, bool* checked, string* title) const
 {
 	for (vector<UserInputAndSlotsEditorOption>::const_iterator opt = m_options.begin(); opt != m_options.end(); ++opt)
@@ -460,7 +500,7 @@ void UserInputAndSlotsEditorWnd::OnInitDlg()
 	m_kn1Text.SetValue(m_kn1.GetSliderPosition());
 	m_parentVwnd.AddChild(&m_kn1Text);
 
-	if (m_twoknobs)
+	//if (m_twoknobs)
 	{
 		m_kn2.SetID(MSG_KN2);
 		m_kn2Text.AddChild(&m_kn2);
@@ -519,7 +559,7 @@ void UserInputAndSlotsEditorWnd::DrawControls(LICE_IBitmap* bm, const RECT* r, i
 	m_kn1Text.SetPosition(&r2);
 	m_kn1Text.SetVisible(true);
 
-	if (m_twoknobs)
+	//if (m_twoknobs)
 	{
 		r2.left = r2.top = r2.right = r2.bottom = 0;
 		m_kn2.SetFGColors(col, col);
@@ -533,7 +573,7 @@ void UserInputAndSlotsEditorWnd::DrawControls(LICE_IBitmap* bm, const RECT* r, i
 		r2.right += r2.left + 19;
 		r2.bottom += r2.top;
 		m_kn2Text.SetPosition(&r2);
-		m_kn2Text.SetVisible(true);
+		m_kn2Text.SetVisible(m_twoknobs);
 	}
 }
 
@@ -637,7 +677,7 @@ INT_PTR UserInputAndSlotsEditorWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPA
 		case MSG_KN1:
 		{
 			m_kn1Text.SetValue(m_kn1.GetSliderPosition());
-			if (m_kn1.GetSliderPosition() > m_kn2.GetSliderPosition())
+			if (m_linkknobs && (m_kn1.GetSliderPosition() > m_kn2.GetSliderPosition()))
 				m_kn2Text.SetValue(m_kn1.GetSliderPosition());
 
 			int kn1 = m_kn1.GetSliderPosition(), kn2 = m_kn2.GetSliderPosition();
@@ -651,7 +691,7 @@ INT_PTR UserInputAndSlotsEditorWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPA
 		case MSG_KN2:
 		{
 			m_kn2Text.SetValue(m_kn2.GetSliderPosition());
-			if (m_kn2.GetSliderPosition() < m_kn1.GetSliderPosition())
+			if (m_linkknobs && (m_kn2.GetSliderPosition() < m_kn1.GetSliderPosition()))
 				m_kn1Text.SetValue(m_kn2.GetSliderPosition());
 
 			int kn1 = m_kn1.GetSliderPosition(), kn2 = m_kn2.GetSliderPosition();
@@ -683,6 +723,37 @@ INT_PTR UserInputAndSlotsEditorWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPA
 void UserInputAndSlotsEditorWnd::Update()
 {
 	m_parentVwnd.RequestRedraw(NULL);
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/// Math
+///////////////////////////////////////////////////////////////////////////////////////////////////
+int GetMean(vector<int> v)
+{
+	if (!v.size())
+		return 0;
+
+	int sum = 0;
+	for (vector<int>::iterator i = v.begin(); i != v.end(); ++i)
+		sum += *i;
+	return sum / v.size();
+}
+
+int GetMedian(vector<int> v)
+{
+	size_t n = v.size() / 2;
+	if (v.size() % 2 == 0)
+	{
+		sort(v.begin(), v.end());
+		return (int)(((v[n - 1] + v[n]) / 2) + 0.5f);
+	}
+	else
+	{
+		nth_element(v.begin(), v.begin() + n, v.end());
+		return v[n];
+	}
 }
 
 

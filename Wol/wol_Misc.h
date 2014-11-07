@@ -60,6 +60,14 @@ public:
 	SelRandMidiNotesPercWnd();
 };
 
+void CompressSelectedMidiNotesVelocitiesTool(COMMAND_T* ct);
+int IsCompressSelectedMidiNotesVelocitiesOpen(COMMAND_T* ct);
+class CompressSelectedMidiNotesVelocitiesWnd : public UserInputAndSlotsEditorWnd
+{
+public:
+	CompressSelectedMidiNotesVelocitiesWnd();
+};
+
 void ScrollMixer(COMMAND_T* ct);
 
 

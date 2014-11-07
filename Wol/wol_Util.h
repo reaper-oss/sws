@@ -120,7 +120,10 @@ class UserInputAndSlotsEditorWnd : public SWS_DockWnd
 public:
 	UserInputAndSlotsEditorWnd(const char* wndtitle, const char* title, const char* id, int cmdId);
 
+	void Update();
+
 	void SetupTwoKnobs(bool two = true) { m_twoknobs = two; }
+	void SetupLinkKnobs(bool link = true) { m_linkknobs = link; }
 	void SetupKnob1(int min, int max, int center, int pos, double factor, const char* title, const char* suffix, const char* zerotext); //must be called in constructor
 	void SetupKnob2(int min, int max, int center, int pos, double factor, const char* title, const char* suffix, const char* zerotext); //must be called in constructor (two knobs only)
 	void SetupOnCommandCallback(void(*OnCommandCallback)(int cmd, int* kn1, int* kn2)); //must be called in constructor
@@ -129,6 +132,9 @@ public:
 	bool SetupAddOption(int cmd, bool enabled, bool checked, string title);
 
 	bool SetOptionState(int cmd, const bool* enabled = NULL, const bool* checked = NULL, const string* title = NULL); //returns false if option not found
+	bool SetOptionStateEnable(int cmd, bool enabled); //returns false if option not found
+	bool SetOptionStateChecked(int cmd, bool checked); //returns false if option not found
+	bool SetOptionStateTitle(int cmd, string title); //returns false if option not found
 	bool GetOptionState(int cmd, bool* enabled = NULL, bool* checked = NULL, string* title = NULL) const; //returns false if option not found
 	void EnableRealtimeNotify(bool en = true){ m_realtimenotify = en; }
 	bool IsRealtimeNotifyEnabled() const { return m_realtimenotify; }
@@ -158,7 +164,6 @@ protected:
 	virtual INT_PTR OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	virtual bool ReprocessContextMenu() { return false; }
 	virtual HMENU OnContextMenu(int x, int y, bool* wantDefaultItems);
-	void Update();
 
 	void(*m_OnCommandCallback)(int cmd, int* kn1, int* kn2);
 
@@ -167,10 +172,16 @@ protected:
 
 	HWND m_btnL, m_btnR;
 
-	bool m_twoknobs, m_kn1rdy, m_kn2rdy, m_cbrdy, m_askquestion, m_realtimenotify;
+	bool m_twoknobs, m_linkknobs, m_kn1rdy, m_kn2rdy, m_cbrdy, m_askquestion, m_realtimenotify;
 	UINT m_questiontype;
 	string m_wndtitlebar, m_oktxt, m_questiontxt, m_questiontitle;
 	int m_kn1oldval, m_kn2oldval;
 
 	vector<UserInputAndSlotsEditorOption> m_options;
 };
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/// Math
+///////////////////////////////////////////////////////////////////////////////////////////////////
+int GetMean(vector<int> v);
+int GetMedian(vector<int> v);

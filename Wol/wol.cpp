@@ -190,6 +190,32 @@ static COMMAND_T g_commandTable[] =
 		{ { DEFACCEL, "SWS/wol-spk77: Select random midi notes among selected notes, slot 7" }, "WOL_SELRANDMIDINOTESAMGSELS7", SelectRandomMidiNotesTool, NULL, 23 },
 		{ { DEFACCEL, "SWS/wol-spk77: Select random midi notes among selected notes, slot 8" }, "WOL_SELRANDMIDINOTESAMGSELS8", SelectRandomMidiNotesTool, NULL, 24 },
 
+		{ { DEFACCEL, "SWS/wol-spk77: Compress selected midi notes velocities tool" }, "WOL_COMPSELMIDINOTES", CompressSelectedMidiNotesVelocitiesTool, NULL, 0, IsCompressSelectedMidiNotesVelocitiesOpen },
+		{ { DEFACCEL, "SWS/wol-spk77: Compress selected midi notes velocities towards mean, slot 1" }, "WOL_COMPSELMIDINOTESMEANS1", CompressSelectedMidiNotesVelocitiesTool, NULL, 1 },
+		{ { DEFACCEL, "SWS/wol-spk77: Compress selected midi notes velocities towards mean, slot 2" }, "WOL_COMPSELMIDINOTESMEANS2", CompressSelectedMidiNotesVelocitiesTool, NULL, 2 },
+		{ { DEFACCEL, "SWS/wol-spk77: Compress selected midi notes velocities towards mean, slot 3" }, "WOL_COMPSELMIDINOTESMEANS3", CompressSelectedMidiNotesVelocitiesTool, NULL, 3 },
+		{ { DEFACCEL, "SWS/wol-spk77: Compress selected midi notes velocities towards mean, slot 4" }, "WOL_COMPSELMIDINOTESMEANS4", CompressSelectedMidiNotesVelocitiesTool, NULL, 4 },
+		{ { DEFACCEL, "SWS/wol-spk77: Compress selected midi notes velocities towards mean, slot 5" }, "WOL_COMPSELMIDINOTESMEANS5", CompressSelectedMidiNotesVelocitiesTool, NULL, 5 },
+		{ { DEFACCEL, "SWS/wol-spk77: Compress selected midi notes velocities towards mean, slot 6" }, "WOL_COMPSELMIDINOTESMEANS6", CompressSelectedMidiNotesVelocitiesTool, NULL, 6 },
+		{ { DEFACCEL, "SWS/wol-spk77: Compress selected midi notes velocities towards mean, slot 7" }, "WOL_COMPSELMIDINOTESMEANS7", CompressSelectedMidiNotesVelocitiesTool, NULL, 7 },
+		{ { DEFACCEL, "SWS/wol-spk77: Compress selected midi notes velocities towards mean, slot 8" }, "WOL_COMPSELMIDINOTESMEANS8", CompressSelectedMidiNotesVelocitiesTool, NULL, 8 },
+		{ { DEFACCEL, "SWS/wol-spk77: Compress selected midi notes velocities towards median, slot 1" }, "WOL_COMPSELMIDINOTESMEDIANS1", CompressSelectedMidiNotesVelocitiesTool, NULL, 9 },
+		{ { DEFACCEL, "SWS/wol-spk77: Compress selected midi notes velocities towards median, slot 2" }, "WOL_COMPSELMIDINOTESMEDIANS2", CompressSelectedMidiNotesVelocitiesTool, NULL, 10 },
+		{ { DEFACCEL, "SWS/wol-spk77: Compress selected midi notes velocities towards median, slot 3" }, "WOL_COMPSELMIDINOTESMEDIANS3", CompressSelectedMidiNotesVelocitiesTool, NULL, 11 },
+		{ { DEFACCEL, "SWS/wol-spk77: Compress selected midi notes velocities towards median, slot 4" }, "WOL_COMPSELMIDINOTESMEDIANS4", CompressSelectedMidiNotesVelocitiesTool, NULL, 12 },
+		{ { DEFACCEL, "SWS/wol-spk77: Compress selected midi notes velocities towards median, slot 5" }, "WOL_COMPSELMIDINOTESMEDIANS5", CompressSelectedMidiNotesVelocitiesTool, NULL, 13 },
+		{ { DEFACCEL, "SWS/wol-spk77: Compress selected midi notes velocities towards median, slot 6" }, "WOL_COMPSELMIDINOTESMEDIANS6", CompressSelectedMidiNotesVelocitiesTool, NULL, 14 },
+		{ { DEFACCEL, "SWS/wol-spk77: Compress selected midi notes velocities towards median, slot 7" }, "WOL_COMPSELMIDINOTESMEDIANS7", CompressSelectedMidiNotesVelocitiesTool, NULL, 15 },
+		{ { DEFACCEL, "SWS/wol-spk77: Compress selected midi notes velocities towards median, slot 8" }, "WOL_COMPSELMIDINOTESMEDIANS8", CompressSelectedMidiNotesVelocitiesTool, NULL, 16 },
+		{ { DEFACCEL, "SWS/wol-spk77: Compress selected midi notes velocities towards velocity, slot 1" }, "WOL_COMPSELMIDINOTESVELS1", CompressSelectedMidiNotesVelocitiesTool, NULL, 17 },
+		{ { DEFACCEL, "SWS/wol-spk77: Compress selected midi notes velocities towards velocity, slot 2" }, "WOL_COMPSELMIDINOTESVELS2", CompressSelectedMidiNotesVelocitiesTool, NULL, 18 },
+		{ { DEFACCEL, "SWS/wol-spk77: Compress selected midi notes velocities towards velocity, slot 3" }, "WOL_COMPSELMIDINOTESVELS3", CompressSelectedMidiNotesVelocitiesTool, NULL, 19 },
+		{ { DEFACCEL, "SWS/wol-spk77: Compress selected midi notes velocities towards velocity, slot 4" }, "WOL_COMPSELMIDINOTESVELS4", CompressSelectedMidiNotesVelocitiesTool, NULL, 20 },
+		{ { DEFACCEL, "SWS/wol-spk77: Compress selected midi notes velocities towards velocity, slot 5" }, "WOL_COMPSELMIDINOTESVELS5", CompressSelectedMidiNotesVelocitiesTool, NULL, 21 },
+		{ { DEFACCEL, "SWS/wol-spk77: Compress selected midi notes velocities towards velocity, slot 6" }, "WOL_COMPSELMIDINOTESVELS6", CompressSelectedMidiNotesVelocitiesTool, NULL, 22 },
+		{ { DEFACCEL, "SWS/wol-spk77: Compress selected midi notes velocities towards velocity, slot 7" }, "WOL_COMPSELMIDINOTESVELS7", CompressSelectedMidiNotesVelocitiesTool, NULL, 23 },
+		{ { DEFACCEL, "SWS/wol-spk77: Compress selected midi notes velocities towards velocity, slot 8" }, "WOL_COMPSELMIDINOTESVELS8", CompressSelectedMidiNotesVelocitiesTool, NULL, 24 },
+
 		///////////////////////////////////////////////////////////////////////////////////////////////////
 		// Mixer
 		///////////////////////////////////////////////////////////////////////////////////////////////////

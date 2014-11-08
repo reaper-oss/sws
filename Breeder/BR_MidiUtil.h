@@ -76,10 +76,10 @@ public:
 	/* Various MIDI editor view options */
 	MediaItem_Take* GetActiveTake ();
 	double GetStartPos ();            // can be ppq or time - depends on timebase
-	double GetHZoom ();               // also dependent on timebase settings
+	double GetHZoom ();               // can be ppq or time - depends on timebase
 	int GetPPQ ();
-	int GetVPos ();
-	int GetVZoom ();
+	int GetVPos ();                   // not really working for inline midi editor (can be 0 which means it's auto adjusted by take height, or is completely wrong if notes are hidden)
+	int GetVZoom ();                  // not really working for inline midi editor (can be 0 which means it's auto adjusted by take height, or is completely wrong if notes are hidden)
 	int GetNoteshow ();               // see BR_MidiNoteshow
 	int GetTimebase ();               // see BR_MidiTimeBase
 	int GetPianoRoll ();

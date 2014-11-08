@@ -280,9 +280,9 @@ static bool IsPointInArrange (const POINT& p, bool checkPointVisibilty = true, H
 
 static double PositionAtArrangePoint (POINT p, double* arrangeStart = NULL, double* arrangeEnd = NULL, double* hZoom = NULL)
 {
-	/* Does not check if point is in arrange, to make it work it *
-	*  it is enough to have p.x in arrange, p.y can be somewhere *
-	*  else like ruler etc...                                    */
+	/* Does not check if point is in arrange, to make it work, it *
+	*  is enough to have p.x in arrange, p.y can be somewhere     *
+	*  else like ruler etc...                                     */
 
 	HWND hwnd = GetArrangeWnd();
 	ScreenToClient(hwnd, &p);
@@ -888,6 +888,7 @@ bool BR_MouseInfo::GetContextMIDI (POINT p, HWND hwnd, BR_MouseInfo::MouseInfo& 
 		if (midiEditor.GetPianoRoll() == 0 || midiEditor.GetPianoRoll() == 1)
 			mouseInfo.pianoRollMode = midiEditor.GetPianoRoll();
 
+		// Make sure mouse is really in note editing area
 		if (cursorSegment == MIDI_WND_NOTEVIEW)
 		{
 			if      (p.x > (r.right - r.left - 1)) cursorSegment = MIDI_WND_UNKNOWN;
@@ -911,11 +912,13 @@ bool BR_MouseInfo::GetContextMIDI (POINT p, HWND hwnd, BR_MouseInfo::MouseInfo& 
 				}
 			}
 
+			// Check ruler
 			if (p.y < MIDI_RULER_H)
 			{
 				if      (cursorSegment == MIDI_WND_NOTEVIEW) mouseInfo.segment = "ruler";
 				else if (cursorSegment == MIDI_WND_KEYBOARD) mouseInfo.segment = "unknown";
 			}
+			// Check others
 			else
 			{
 				int viewHeight = r.bottom - r.top;
@@ -924,7 +927,7 @@ bool BR_MouseInfo::GetContextMIDI (POINT p, HWND hwnd, BR_MouseInfo::MouseInfo& 
 				for (int i = 0; i < midiEditor.CountCCLanes(); ++i)
 					ccFullHeight += midiEditor.GetCCLaneHeight (i);
 				if (cursorSegment == MIDI_WND_KEYBOARD)
-					ccFullHeight += SCROLLBAR_W - 3;   // envelope selector is not completely aligned with cc lane
+					ccFullHeight += SCROLLBAR_W - 3;   // envelope selector is not completely aligned with CC lane
 
 				// Over CC lanes
 				if (p.y > (viewHeight - ccFullHeight))
@@ -980,7 +983,7 @@ bool BR_MouseInfo::GetContextMIDI (POINT p, HWND hwnd, BR_MouseInfo::MouseInfo& 
 					else if (cursorSegment == MIDI_WND_NOTEVIEW) mouseInfo.segment = "notes";
 
 					// This is mouse Y position counting from the bottom - make sure it's not outside valid, drawable note range
-					int realMouseY = (128 * midiEditor.GetVZoom()) - (p.y - MIDI_RULER_H + midiEditor.GetVPos() * midiEditor.GetVZoom());
+					int realMouseY = (MIDI_RULER_H - p.y) - ((midiEditor.GetVPos() - 128) * midiEditor.GetVZoom());
 					if (realMouseY > 0)
 					{
 						bool processKeyboardSeparately = true;
@@ -1080,6 +1083,7 @@ bool BR_MouseInfo::GetContextMIDI (POINT p, HWND hwnd, BR_MouseInfo::MouseInfo& 
 		{
 			mouseInfo.segment = "unknown";
 		}
+
 		return true;
 	}
 	else
@@ -1185,21 +1189,15 @@ bool BR_MouseInfo::GetContextMIDIInline (BR_MouseInfo::MouseInfo& mouseInfo, int
 				mouseInfo.segment = "notes";
 
 			// Get note row
-			int realMouseY = (128 * midiEditor.GetVZoom()) - ((mouseY - editorOffsetY) + midiEditor.GetVPos() * midiEditor.GetVZoom()); // This is mouse Y position counting from the bottom - make sure it's not outside valid, drawable note range
-			if (realMouseY > 0)
+			int realMouseY = (editorOffsetY -mouseY) - ((midiEditor.GetVPos() - 128) * midiEditor.GetVZoom()); // Mouse Y position counting from the bottom
+			if (realMouseY > 0 && midiEditor.GetVZoom())
 			{
-				vector<int> visibleNoteRows = GetUsedNamedNotes(NULL, mouseInfo.take, midiEditor.GetNoteshow() != SHOW_ALL_NOTES, midiEditor.GetNoteshow() == HIDE_UNUSED_UNNAMED_NOTES, midiEditor.GetDrawChannel());
-
-				int noteRow = (realMouseY - 1) / midiEditor.GetVZoom();
-
 				if (midiEditor.GetNoteshow() == SHOW_ALL_NOTES)
-				{
-					mouseInfo.noteRow = noteRow;
-				}
+					mouseInfo.noteRow = (realMouseY - 1) / midiEditor.GetVZoom();
 				else
 				{
-					/* Due to API limitation, inline editor vertical zoom and vertical     *
-					*  position can't be known at all times so note row cannot be deducted */
+					/* Due to chunk values, inline editor vertical zoom and vertical position can't be known directly at all *
+					*  times so don't check note row  (it can probably get deduced, but we'll do this some other time)       */
 				}
 			}
 		}
@@ -1207,6 +1205,32 @@ bool BR_MouseInfo::GetContextMIDIInline (BR_MouseInfo::MouseInfo& mouseInfo, int
 		return true;
 	}
 	return false;
+}
+
+bool BR_MouseInfo::IsStretchMarkerVisible (MediaItem_Take* take, int id, double arrangeZoom)
+{
+	/* This checks if stretch marker is so close *
+	*  to item edge that REAPER hides it         */
+
+	bool visible = false;
+	if (MediaItem* item = GetMediaItemTake_Item(take))
+	{
+		double stretchMarkerPos;
+		GetTakeStretchMarker(take, id, &stretchMarkerPos, NULL);
+		stretchMarkerPos = ItemTimeToProjectTime(item, stretchMarkerPos);
+
+		double itemStart = GetMediaItemInfo_Value(item, "D_POSITION");
+		double itemEnd   = GetMediaItemInfo_Value(item, "D_LENGTH") + itemStart;
+		
+		int x0 = RoundToInt(itemStart * arrangeZoom);
+		int x2 = TruncToInt(itemEnd   * arrangeZoom);
+		int x1 = TruncToInt(stretchMarkerPos * arrangeZoom);
+		
+		if (CheckBounds(x1, x0, x2))
+			visible = true;
+	}
+
+	return visible;
 }
 
 int BR_MouseInfo::IsMouseOverStretchMarker (MediaItem* item, MediaItem_Take* take, int takeHeight, int takeOffset, int mouseDisplayX, int mouseY, double mousePos, double arrangeStart, double arrangeZoom)
@@ -1217,12 +1241,17 @@ int BR_MouseInfo::IsMouseOverStretchMarker (MediaItem* item, MediaItem_Take* tak
 	int y1  = takeOffset + (int)(takeHeight * 0.75);
 	int y0  = y1 - STRETCH_M_HIT_POINT;
 	int y2  = y1 + STRETCH_M_HIT_POINT + 1;
+
 	if (CheckBoundsEx(mouseY, y0, y2))
 	{
 		// Mouse is within stretch marker Y range, look for X axis of a closest stretch marker
 		int id = FindClosestStretchMarker(take, ProjectTimeToItemTime(item, mousePos));
 		if (id != -1)
 		{
+			int count = GetTakeNumStretchMarkers(take);
+			while (id < count && !this->IsStretchMarkerVisible(take, id, arrangeZoom))
+				id++;
+
 			double stretchMarkerPos;
 			GetTakeStretchMarker(take, id, &stretchMarkerPos, NULL);
 			stretchMarkerPos = ItemTimeToProjectTime(item, stretchMarkerPos) - arrangeStart; // convert to "displayed" time

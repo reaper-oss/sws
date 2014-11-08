@@ -1247,14 +1247,14 @@ int BR_LoudnessObject::CheckSetAudioData ()
 		audioData.samplerate   = samplerate;
 		audioData.volume       = volume;
 		audioData.pan          = pan;
-	    audioData.fadeInStart  = fadeInStart;
-	    audioData.fadeInEnd    = fadeInEnd;
-	    audioData.fadeInCurve  = fadeInCurve;
-	    audioData.fadeInShape  = fadeInShape;
-	    audioData.fadeOutStart = fadeOutStart;
-	    audioData.fadeOutEnd   = fadeOutEnd;
-	    audioData.fadeOutCurve = fadeOutCurve;
-	    audioData.fadeOutShape = fadeOutShape;
+		audioData.fadeInStart  = fadeInStart;
+		audioData.fadeInEnd    = fadeInEnd;
+		audioData.fadeInCurve  = fadeInCurve;
+		audioData.fadeInShape  = fadeInShape;
+		audioData.fadeOutStart = fadeOutStart;
+		audioData.fadeOutEnd   = fadeOutEnd;
+		audioData.fadeOutCurve = fadeOutCurve;
+		audioData.fadeOutShape = fadeOutShape;
 		audioData.volEnv       = volEnv;
 		audioData.volEnvPreFX  = volEnvPreFX;
 
@@ -1278,52 +1278,6 @@ BR_LoudnessObject::AudioData BR_LoudnessObject::GetAudioData ()
 {
 	SWS_SectionLock lock(&m_mutex);
 	return m_audioData;
-}
-
-MediaItem* BR_LoudnessObject::GetItem ()
-{
-	SWS_SectionLock lock(&m_mutex);
-	MediaItem_Take* take = this->GetTake();
-	if (take)
-		return GetMediaItemTake_Item(take);
-	else
-		return NULL;
-}
-
-MediaTrack* BR_LoudnessObject::GetTrack ()
-{
-	SWS_SectionLock lock(&m_mutex);
-	return m_track;
-}
-
-MediaItem_Take* BR_LoudnessObject::GetTake ()
-{
-	SWS_SectionLock lock(&m_mutex);
-	return m_take;
-}
-
-GUID BR_LoudnessObject::GetGuid()
-{
-	SWS_SectionLock lock(&m_mutex);
-	return m_guid;
-}
-
-void BR_LoudnessObject::SetTrack (MediaTrack* track)
-{
-	SWS_SectionLock lock(&m_mutex);
-	m_track = track;
-}
-
-void BR_LoudnessObject::SetTake (MediaItem_Take* take)
-{
-	SWS_SectionLock lock(&m_mutex);
-	m_take = take;
-}
-
-void BR_LoudnessObject::SetGuid(GUID guid)
-{
-	SWS_SectionLock lock(&m_mutex);
-	m_guid = guid;
 }
 
 void BR_LoudnessObject::SetRunning (bool running)
@@ -1482,6 +1436,52 @@ WDL_FastString BR_LoudnessObject::GetTrackName ()
 	}
 
 	return trackName;
+}
+
+MediaItem* BR_LoudnessObject::GetItem ()
+{
+	SWS_SectionLock lock(&m_mutex);
+	MediaItem_Take* take = this->GetTake();
+	if (take)
+		return GetMediaItemTake_Item(take);
+	else
+		return NULL;
+}
+
+MediaTrack* BR_LoudnessObject::GetTrack ()
+{
+	SWS_SectionLock lock(&m_mutex);
+	return m_track;
+}
+
+MediaItem_Take* BR_LoudnessObject::GetTake ()
+{
+	SWS_SectionLock lock(&m_mutex);
+	return m_take;
+}
+
+GUID BR_LoudnessObject::GetGuid ()
+{
+	SWS_SectionLock lock(&m_mutex);
+	return m_guid;
+}
+
+void BR_LoudnessObject::SetTrack (MediaTrack* track)
+{
+	SWS_SectionLock lock(&m_mutex);
+	m_track = track;
+}
+
+void BR_LoudnessObject::SetTake (MediaItem_Take* take)
+{
+	SWS_SectionLock lock(&m_mutex);
+	m_take = take;
+}
+
+void BR_LoudnessObject::SetGuid (GUID guid)
+{
+	SWS_SectionLock lock(&m_mutex);
+	m_guid = guid;
 }
 
 BR_LoudnessObject::AudioData::AudioData () :

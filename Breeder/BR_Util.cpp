@@ -1082,7 +1082,8 @@ static bool GetMediaItemFadeBezParms(int shape, double dir, bool isfadeout, doub
 		dir=0.0;
 	}
 
-	if (isfadeout) dir=-dir;
+	if (isfadeout)
+		dir=-dir;
 
 	bool linear=false;
 
@@ -1090,27 +1091,27 @@ static bool GetMediaItemFadeBezParms(int shape, double dir, bool isfadeout, doub
 	{
 		double w0=-dir;
 		double w1=1.0+dir;
-		if (shape == 1) ApplyDir(x, y, w0, w1, b4i, b1);
-		else if (shape == 2) ApplyDir(x, y, w0, w1, b1, b0);
+		if (shape == 1)      ApplyDir(x, y, w0, w1, b4i, b1);
+		else if (shape == 2) ApplyDir(x, y, w0, w1, b1,  b0);
 		else if (shape == 5) ApplyDir(x, y, w0, w1, b50, b5);
 		else if (shape == 6) ApplyDir(x, y, w0, w1, b60, b6);
 		else if (shape == 7) ApplyDir(x, y, w0, w1, b4i, b7);
-		else ApplyDir(x, y, w0, w1, b3, b0);
+		else                 ApplyDir(x, y, w0, w1, b3,  b0);
 	}
 	else if (dir > 0.0)
 	{
 		double w0=1.0-dir;
 		double w1=dir;
-		if (shape == 1) ApplyDir(x, y, w0, w1, b1, b4);
+		if (shape == 1)      ApplyDir(x, y, w0, w1, b1, b4);
 		else if (shape == 2) ApplyDir(x, y, w0, w1, b0, b2);
 		else if (shape == 5) ApplyDir(x, y, w0, w1, b5, b51);
 		else if (shape == 6) ApplyDir(x, y, w0, w1, b6, b61);
 		else if (shape == 7) ApplyDir(x, y, w0, w1, b7, b4);
-		else ApplyDir(x, y, w0, w1, b0, b4);
+		else                 ApplyDir(x, y, w0, w1, b0, b4);
 	}
 	else // dir == 0.0
 	{
-		if (shape == 1) AssignDir(x, y, b1);
+		if (shape == 1)      AssignDir(x, y, b1);
 		else if (shape == 5) AssignDir(x, y, b5);
 		else if (shape == 6) AssignDir(x, y, b6);
 		else if (shape == 7) AssignDir(x, y, b7);
@@ -1869,7 +1870,7 @@ void SetArrangeStart (double start)
 	si.fMask = SIF_ALL;
 	CoolSB_GetScrollInfo(GetArrangeWnd(), SB_HORZ, &si);
 
-	si.nPos = RoundToInt(start * GetHZoomLevel()); // OCD alert: GetSet_ArrangeView2() can sometimes be off for one pixel
+	si.nPos = RoundToInt(start * GetHZoomLevel()); // OCD alert: GetSet_ArrangeView2() can sometimes be off for one pixel (probably round vs trunc issue)
 	CoolSB_SetScrollInfo(GetArrangeWnd(), SB_HORZ, &si, true);
 	SendMessage(GetArrangeWnd(), WM_HSCROLL, SB_THUMBPOSITION, NULL);
 }

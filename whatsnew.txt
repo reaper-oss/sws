@@ -90,9 +90,9 @@ Added actions
  - SWS/wol-spk77: Randomize selected midi velocities tool
  - SWS/wol-spk77: Randomize selected midi velocities (8 slots)
  - SWS/wol-spk77: Select midi notes by velocities in range tool
- - SWS/wol-spk77: Select midi notes by velocities in range /(add to selection) (8 slots)
+ - SWS/wol-spk77: Select midi notes by velocities in range /(add to selection) (8 slots for each version)
  - SWS/wol-spk77: Select random midi notes tool
- - SWS/wol-spk77: Select random midi notes (8 slots, 3 versions)
+ - SWS/wol-spk77: Select random midi notes (8 slots for each version, 3 versions)
  - SWS/wol-spk77: Compress selected midi notes velocities tool
  - SWS/wol-spk77: Compress selected midi notes velocities towards mean/median/velocity (8 slots for each version)
 +MIDI editor:

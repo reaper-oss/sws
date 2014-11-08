@@ -500,15 +500,12 @@ void UserInputAndSlotsEditorWnd::OnInitDlg()
 	m_kn1Text.SetValue(m_kn1.GetSliderPosition());
 	m_parentVwnd.AddChild(&m_kn1Text);
 
-	//if (m_twoknobs)
-	{
-		m_kn2.SetID(MSG_KN2);
-		m_kn2Text.AddChild(&m_kn2);
+	m_kn2.SetID(MSG_KN2);
+	m_kn2Text.AddChild(&m_kn2);
 
-		m_kn2Text.SetID(MSG_KN2TXT);
-		m_kn2Text.SetValue(m_kn2.GetSliderPosition());
-		m_parentVwnd.AddChild(&m_kn2Text);
-	}
+	m_kn2Text.SetID(MSG_KN2TXT);
+	m_kn2Text.SetValue(m_kn2.GetSliderPosition());
+	m_parentVwnd.AddChild(&m_kn2Text);
 
 	m_btnL = GetDlgItem(m_hwnd, IDC_WOL_SLOT6S);
 	m_btnR = GetDlgItem(m_hwnd, IDC_WOL_SLOT7L);
@@ -559,22 +556,20 @@ void UserInputAndSlotsEditorWnd::DrawControls(LICE_IBitmap* bm, const RECT* r, i
 	m_kn1Text.SetPosition(&r2);
 	m_kn1Text.SetVisible(true);
 
-	//if (m_twoknobs)
-	{
-		r2.left = r2.top = r2.right = r2.bottom = 0;
-		m_kn2.SetFGColors(col, col);
-		SNM_SkinKnob(&m_kn2);
-		m_kn2Text.DrawText(NULL, &r2, DT_NOPREFIX | DT_CALCRECT);
-		GetWindowRect(m_btnR, &tmp);
-		ScreenToClient(m_hwnd, (LPPOINT)&tmp);
-		ScreenToClient(m_hwnd, ((LPPOINT)&tmp) + 1);
-		r2.left = tmp.left;
-		r2.top = tmp.bottom + 10;
-		r2.right += r2.left + 19;
-		r2.bottom += r2.top;
-		m_kn2Text.SetPosition(&r2);
-		m_kn2Text.SetVisible(m_twoknobs);
-	}
+	r2.left = r2.top = r2.right = r2.bottom = 0;
+	m_kn2.SetFGColors(col, col);
+	SNM_SkinKnob(&m_kn2);
+	m_kn2Text.DrawText(NULL, &r2, DT_NOPREFIX | DT_CALCRECT);
+	GetWindowRect(m_btnR, &tmp);
+	ScreenToClient(m_hwnd, (LPPOINT)&tmp);
+	ScreenToClient(m_hwnd, ((LPPOINT)&tmp) + 1);
+	r2.left = tmp.left;
+	r2.top = tmp.bottom + 10;
+	r2.right += r2.left + 19;
+	r2.bottom += r2.top;
+	m_kn2Text.SetPosition(&r2);
+	m_kn2Text.SetVisible(m_twoknobs);
+
 }
 
 void UserInputAndSlotsEditorWnd::OnCommand(WPARAM wParam, LPARAM lParam)

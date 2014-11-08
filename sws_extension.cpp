@@ -955,7 +955,7 @@ extern "C"
 				_snprintf(txt, sizeof(txt),
 					// keep the message on a single line (for the LangPack generator)
 					__LOCALIZE_VERFMT("The version of SWS extension you have installed is incompatible with your version of REAPER.\nYou probably have a REAPER version less than v%s installed.\nPlease install the latest version of REAPER from www.reaper.fm.","sws_mbox"),
-					"4.74"); // <- update compatible version here
+					"4.75"); // <- update compatible version here
 
 				MessageBox(Splash_GetWnd && Splash_GetWnd() ? Splash_GetWnd() : NULL, txt, __LOCALIZE("SWS - Version Incompatibility","sws_mbox"), MB_OK);
 			}

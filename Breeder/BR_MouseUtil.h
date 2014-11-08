@@ -110,7 +110,7 @@ public:
 	void* GetMidiEditor ();
 	bool  IsInlineMidi ();
 	bool  GetCCLane (int* ccLane, int* ccLaneVal, int* ccLaneId); // returns false if mouse is not over CC lane
-	int   GetNoteRow ();                                          // returns -1 if mouse is not over any note row
+	int   GetNoteRow ();                                          // returns -1 if mouse is not over any note row (sketchy when it comes to inline MIDI editor, see BR_MidiEditor)
 	int   GetPianoRollMode ();                                    // returns 0->normal, 1->named notes, -1->unknown
 	bool  SetDetectedCCLaneAsLastClicked ();                      // hacky! works only if MIDI editor/arrange state didn't change after the last update (it also briefly switches focus to MIDI editor/arrange...)
 
@@ -152,6 +152,7 @@ private:
 	void GetContext (const POINT& p);
 	bool GetContextMIDI (POINT p, HWND hwnd, BR_MouseInfo::MouseInfo& mouseInfo);
 	bool GetContextMIDIInline (BR_MouseInfo::MouseInfo& mouseInfo, int mouseDisplayX, int mouseY, int takeHeight, int takeOffset);
+	bool IsStretchMarkerVisible (MediaItem_Take* take, int id, double arrangeZoom);
 	int IsMouseOverStretchMarker (MediaItem* item, MediaItem_Take* take, int takeHeight, int takeOffset, int mouseDisplayX, int mouseY, double mousePos, double arrangeStart, double arrangeZoom);
 	int IsMouseOverEnvelopeLine (BR_Envelope& envelope, int drawableEnvHeight, int yOffset, int mouseDisplayX, int mouseY, double mousePos, double arrangeStart, double arrangeZoom, int* pointUnderMouse);
 	int IsMouseOverEnvelopeLineTrackLane (MediaTrack* track, int trackHeight, int trackOffset, list<TrackEnvelope*>& laneEnvs, int mouseDisplayX, int mouseY, double mousePos, double arrangeStart, double arrangeZoom, TrackEnvelope** trackEnvelope, int* pointUnderMouse);

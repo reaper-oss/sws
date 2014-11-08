@@ -93,13 +93,6 @@ private:
 	int CheckSetAudioData (); // call from the main thread only, returns 0->target doesn't exist anymore, 1->old accessor still valid, 2->accessor got updated
 	void SetAudioData (const AudioData& audioData);
 	AudioData GetAudioData ();
-	MediaItem* GetItem ();
-	MediaTrack* GetTrack ();
-	MediaItem_Take* GetTake ();	
-	GUID GetGuid();
-	void SetTrack (MediaTrack* track);
-	void SetTake (MediaItem_Take* take);
-	void SetGuid(GUID guid);
 	void SetRunning (bool running);
 	void SetProgress (double progress);
 	void SetAnalyzeData (double integrated, double range, double truePeak, double truePeakPos, double shortTermMax, double momentaryMax, const vector<double>& shortTermValues, const vector<double>& momentaryValues);
@@ -118,6 +111,13 @@ private:
 	HANDLE GetProcess ();
 	WDL_FastString GetTakeName ();
 	WDL_FastString GetTrackName ();
+	MediaItem* GetItem ();
+	MediaTrack* GetTrack ();
+	MediaItem_Take* GetTake ();
+	GUID GetGuid ();
+	void SetTrack (MediaTrack* track);
+	void SetTake (MediaItem_Take* take);
+	void SetGuid (GUID guid);
 	void operator= (const BR_LoudnessObject&);    // no need for assignment or copy constructor so disable
 	BR_LoudnessObject (const BR_LoudnessObject&); // for now! (it could destroy perfectly valid accessor)
 

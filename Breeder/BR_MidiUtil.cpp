@@ -97,11 +97,6 @@ m_valid          (false)
 {
 	m_valid        = this->Build();
 	m_ccLanesCount = (int)m_ccLanes.size();
-	if (m_valid)
-	{
-		m_timebase = 1;
-		m_hZoom = GetHZoomLevel();
-	}
 }
 
 MediaItem_Take* BR_MidiEditor::GetActiveTake ()
@@ -274,11 +269,11 @@ bool BR_MidiEditor::Build ()
 				if (ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "SOURCE", "CFGEDITVIEW", 0, -1, &lineView))
 				{
 					lp.parse(lineView.Get());
-					m_startPos = lp.gettoken_float(1);
-					m_hZoom    = lp.gettoken_float(2);
-					m_vPos     = (m_midiEditor) ? lp.gettoken_int(3) : lp.gettoken_int(7);
+					m_startPos = (m_midiEditor) ? lp.gettoken_float(1) : GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION");
+					m_hZoom    = (m_midiEditor) ? lp.gettoken_float(2) : GetHZoomLevel();
+					m_vPos     = (m_midiEditor) ? lp.gettoken_int(3) : lp.gettoken_int(7); 
 					m_vZoom    = (m_midiEditor) ? lp.gettoken_int(4) : lp.gettoken_int(6);
-				}
+				}							
 				else
 					return false;
 
@@ -302,7 +297,7 @@ bool BR_MidiEditor::Build ()
 					m_pianoroll    = lp.gettoken_int(6);
 					m_drawChannel  = lp.gettoken_int(9) - 1;
 					m_noteshow     = lp.gettoken_int(18);
-					m_timebase     = lp.gettoken_int(19);
+					m_timebase     = (m_midiEditor) ? lp.gettoken_int(19) : PROJECT_SYNC;
 				}
 				else
 					return false;

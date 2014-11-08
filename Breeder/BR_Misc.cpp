@@ -54,24 +54,24 @@ void SplitItemAtTempo (COMMAND_T* ct)
 		MediaItem* item = items.Get()[i];
 		if (!IsItemLocked(item))
 		{
-		double iStart = GetMediaItemInfo_Value(item, "D_POSITION");
-		double iEnd = iStart + GetMediaItemInfo_Value(item, "D_LENGTH");
-		double tPos = iStart - 1;
+			double iStart = GetMediaItemInfo_Value(item, "D_POSITION");
+			double iEnd = iStart + GetMediaItemInfo_Value(item, "D_LENGTH");
+			double tPos = iStart - 1;
 
-		// Split item currently in the loop
-		while (true)
-		{
-			item = SplitMediaItem(item, tPos);
-			if (!item) // split at nonexistent position?
-				item = items.Get()[i];
-				else
-					update = true;
+			// Split item currently in the loop
+			while (true)
+			{
+				item = SplitMediaItem(item, tPos);
+				if (!item) // split at nonexistent position?
+					item = items.Get()[i];
+					else
+						update = true;
 
-			tPos = TimeMap2_GetNextChangeTime(NULL, tPos);
-			if (tPos > iEnd || tPos == -1 )
-				break;
+				tPos = TimeMap2_GetNextChangeTime(NULL, tPos);
+				if (tPos > iEnd || tPos == -1 )
+					break;
+			}
 		}
-	}
 	}
 	if (update)
 	{
@@ -112,10 +112,10 @@ void MidiItemTempo (COMMAND_T* ct)
 			MediaItem* item = GetSelectedMediaItem(NULL, i);
 			if (!IsItemLocked(item))
 			{
-			items.push_back(BR_MidiItemTimePos(item, false));
-			SetMediaItemInfo_Value(item, "C_BEATATTACHMODE", 0);
+				items.push_back(BR_MidiItemTimePos(item, false));
+				SetMediaItemInfo_Value(item, "C_BEATATTACHMODE", 0);
+			}
 		}
-	}
 	}
 
 	PreventUIRefresh(1);
@@ -125,23 +125,23 @@ void MidiItemTempo (COMMAND_T* ct)
 		MediaItem* item = GetSelectedMediaItem(NULL, i);
 		if (!IsItemLocked(item))
 		{
-		double bpm; int num, den;
-		TimeMap_GetTimeSigAtTime(NULL, GetMediaItemInfo_Value(item, "D_POSITION"), &num, &den, &bpm);
-		if ((int)ct->user == 2)
-		{
-			BR_MidiItemTimePos timePos(item, false);
-			if (SetIgnoreTempo(item, !!(int)ct->user, bpm, num, den))
+			double bpm; int num, den;
+			TimeMap_GetTimeSigAtTime(NULL, GetMediaItemInfo_Value(item, "D_POSITION"), &num, &den, &bpm);
+			if ((int)ct->user == 2)
 			{
-				timePos.Restore(true);
+				BR_MidiItemTimePos timePos(item, false);
+				if (SetIgnoreTempo(item, !!(int)ct->user, bpm, num, den))
+				{
+					timePos.Restore(true);
+					update = true;
+				}
+			}
+			else
+			{
+				if (SetIgnoreTempo(item, !!(int)ct->user, bpm, num, den))
 					update = true;
 			}
 		}
-		else
-		{
-			if (SetIgnoreTempo(item, !!(int)ct->user, bpm, num, den))
-					update = true;
-		}
-	}
 	}
 
 	if (update)
@@ -394,12 +394,12 @@ void ToggleItemOnline (COMMAND_T* ct)
 		MediaItem* item = GetSelectedMediaItem(NULL, i);
 		if (!IsItemLocked(item))
 		{
-		for (int j = 0; j < CountTakes(item); ++j)
-		{
-			if (PCM_source* source = GetMediaItemTake_Source(GetMediaItemTake(item, j)))
-				source->SetAvailable(!source->IsAvailable());
+			for (int j = 0; j < CountTakes(item); ++j)
+			{
+				if (PCM_source* source = GetMediaItemTake_Source(GetMediaItemTake(item, j)))
+					source->SetAvailable(!source->IsAvailable());
+			}
 		}
-	}
 	}
 	UpdateArrange();
 }

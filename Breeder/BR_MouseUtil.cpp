@@ -45,6 +45,7 @@ const int ENV_HIT_POINT_LEFT           = 6; // envelope point doesn't always hav
 const int ENV_HIT_POINT_DOWN           = 6; // +1 because lower part is tracked starting 1 pixel below line (so when envelope is active, hit points appear the same)
 
 const int STRETCH_M_HIT_POINT          = 6;
+const int STRETCH_M_MIN_TAKE_HEIGHT    = 8;
 
 const int MIDI_RULER_H                 = 44;
 const int MIDI_LANE_DIVIDER_H          = 9;
@@ -1237,38 +1238,41 @@ int BR_MouseInfo::IsMouseOverStretchMarker (MediaItem* item, MediaItem_Take* tak
 {
 	int returnId = -1;
 
-	// Check mouse against Y axis
-	int y1  = takeOffset + (int)(takeHeight * 0.75);
-	int y0  = y1 - STRETCH_M_HIT_POINT;
-	int y2  = y1 + STRETCH_M_HIT_POINT + 1;
-
-	if (CheckBoundsEx(mouseY, y0, y2))
+	if (takeHeight >= STRETCH_M_MIN_TAKE_HEIGHT)
 	{
-		// Mouse is within stretch marker Y range, look for X axis of a closest stretch marker
-		int id = FindClosestStretchMarker(take, ProjectTimeToItemTime(item, mousePos));
-		if (id != -1)
+		// Check mouse against Y axis
+		int y1  = takeOffset + (int)(takeHeight * 0.75);
+		int y0  = y1 - STRETCH_M_HIT_POINT;
+		int y2  = y1 + STRETCH_M_HIT_POINT + 1;
+
+		if (CheckBoundsEx(mouseY, y0, y2))
 		{
-			int count = GetTakeNumStretchMarkers(take);
-			while (id < count && !this->IsStretchMarkerVisible(take, id, arrangeZoom))
-				id++;
-
-			double stretchMarkerPos;
-			GetTakeStretchMarker(take, id, &stretchMarkerPos, NULL);
-			stretchMarkerPos = ItemTimeToProjectTime(item, stretchMarkerPos) - arrangeStart; // convert to "displayed" time
-
-			if (stretchMarkerPos > 0)
+			// Mouse is within stretch marker Y range, look for X axis of a closest stretch marker
+			int id = FindClosestStretchMarker(take, ProjectTimeToItemTime(item, mousePos));
+			if (id != -1)
 			{
-				int x1 = RoundToInt(stretchMarkerPos * arrangeZoom);
-				int x0 = x1 - STRETCH_M_HIT_POINT;
-				int x2 = x1 + STRETCH_M_HIT_POINT + 1;
-				if (CheckBounds(mouseDisplayX, x0, x2))
-				{
-					// Find the X coordinates of a straight line connecting right and left side for current mouseY
-					int left  = FindXOnSegment(x0 - 1, y1, x1,     (mouseY < y1) ? y0 : y2, mouseY);
-					int right = FindXOnSegment(x2,     y1, x1 + 1, (mouseY < y1) ? y0 : y2, mouseY);
+				int count = GetTakeNumStretchMarkers(take);
+				while (id < count && !this->IsStretchMarkerVisible(take, id, arrangeZoom))
+					id++;
 
-					if (CheckBounds(mouseDisplayX, left, right))
-						returnId = id;
+				double stretchMarkerPos;
+				GetTakeStretchMarker(take, id, &stretchMarkerPos, NULL);
+				stretchMarkerPos = ItemTimeToProjectTime(item, stretchMarkerPos) - arrangeStart; // convert to "displayed" time
+
+				if (stretchMarkerPos > 0)
+				{
+					int x1 = RoundToInt(stretchMarkerPos * arrangeZoom);
+					int x0 = x1 - STRETCH_M_HIT_POINT;
+					int x2 = x1 + STRETCH_M_HIT_POINT + 1;
+					if (CheckBounds(mouseDisplayX, x0, x2))
+					{
+						// Find the X coordinates of a straight line connecting right and left side for current mouseY
+						int left  = FindXOnSegment(x0 - 1, y1, x1,     (mouseY < y1) ? y0 : y2, mouseY);
+						int right = FindXOnSegment(x2,     y1, x1 + 1, (mouseY < y1) ? y0 : y2, mouseY);
+
+						if (CheckBounds(mouseDisplayX, left, right))
+							returnId = id;
+					}
 				}
 			}
 		}

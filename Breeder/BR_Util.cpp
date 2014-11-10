@@ -630,7 +630,7 @@ bool TcpVis (MediaTrack* track)
 		}
 		else
 		{
-			if ((int)GetMediaTrackInfo_Value(track, "B_SHOWINTCP") == 0 || (int)GetMediaTrackInfo_Value(track, "I_WNDH") == 0)
+			if (!GetMediaTrackInfo_Value(track, "B_SHOWINTCP") || !GetMediaTrackInfo_Value(track, "I_WNDH"))
 				return false;
 			else
 				return true;
@@ -657,10 +657,11 @@ double GetSourceLengthPPQ (MediaItem_Take* take)
 {
 	if (take)
 	{
-		double itemStart  = GetMediaItemInfo_Value(GetMediaItemTake_Item(take), "D_POSITION");
-		double takeOffset = GetMediaItemTakeInfo_Value(take, "D_STARTOFFS");
-		double startPPQ   = MIDI_GetPPQPosFromProjTime(take, itemStart - takeOffset);
-		double endPPQ = MIDI_GetPPQPosFromProjTime(take, itemStart - takeOffset + GetMediaItemTake_Source(take)->GetLength());
+		double itemStart    = GetMediaItemInfo_Value(GetMediaItemTake_Item(take), "D_POSITION");
+		double takeOffset   = GetMediaItemTakeInfo_Value(take, "D_STARTOFFS");
+		double sourceLength = GetMediaItemTake_Source(take)->GetLength();
+		double startPPQ = MIDI_GetPPQPosFromProjTime(take, itemStart - takeOffset);
+		double endPPQ   = MIDI_GetPPQPosFromProjTime(take, itemStart - takeOffset + sourceLength);
 
 		return endPPQ - startPPQ;
 	}

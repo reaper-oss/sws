@@ -813,17 +813,17 @@ double BR_Envelope::NormalizedDisplayValue (double value)
 {
 	double min = this->LaneMinValue();
 	double max = this->LaneMaxValue();
-	double displayValue = SetToBounds(value, min, max);
+	value = SetToBounds(value, min, max);
 
 	if (this->Type() == PLAYRATE)
 	{
-		if (displayValue > 1)
-			return (2 + displayValue) / 6;      // original formula (max is always known so optimized): 0.5 + (displayValue - 1) / (max - 1) * 0.5
+		if (value > 1)
+			return (2 + value) / 6;      // original formula (max is always known so optimized): 0.5 + (value - 1) / (max - 1) * 0.5
 		else
-			return (displayValue - 0.1) / 1.8 ; // original formula (min is always known so optimized): (displayValue - min) / (1 - min) * 0.5;
+			return (value - 0.1) / 1.8 ; // original formula (min is always known so optimized): (value - min) / (1 - min) * 0.5;
 	}
 	else
-		return (displayValue - min) / (max - min);
+		return (value - min) / (max - min);
 }
 
 double BR_Envelope::RealDisplayValue (double normalizedValue)

@@ -770,7 +770,7 @@ static void UpdateTargetBpm (HWND hwnd, int doFirst, int doCursor, int doLast)
 	GetDlgItemText(hwnd, IDC_BR_ADJ_BPM_CUR_2, bpm2Cur, 128);
 	GetDlgItemText(hwnd, IDC_BR_ADJ_BPM_CUR_3, bpm3Cur, 128);
 
-	if (atof(bpm1Cur) == 0)
+	if (AltAtof(bpm1Cur) == 0)
 	{
 		sprintf(bpm1Cur, "%d", 0);
 		sprintf(bpm2Cur, "%d", 0);
@@ -778,40 +778,32 @@ static void UpdateTargetBpm (HWND hwnd, int doFirst, int doCursor, int doLast)
 	}
 	else
 	{
-		char bpmAdj[128]; GetDlgItemText(hwnd, IDC_BR_ADJ_BPM_VAL, bpmAdj, 128);
+		bool doPercent = !!IsDlgButtonChecked(hwnd, IDC_BR_ADJ_BPM_PERC_ENB);
+		char bpmAdj[128]; GetDlgItemText(hwnd, (doPercent ? IDC_BR_ADJ_BPM_PERC : IDC_BR_ADJ_BPM_VAL), bpmAdj, 128);
 		double bpm1Tar, bpm2Tar, bpm3Tar;
 
-		// Calculate target
-		if (IsDlgButtonChecked(hwnd, IDC_BR_ADJ_BPM_VAL_ENB))
+		if (doPercent)
+		{
+			bpm1Tar = (1 + AltAtof(bpmAdj)/100) * AltAtof(bpm1Cur);
+			bpm2Tar = (1 + AltAtof(bpmAdj)/100) * AltAtof(bpm2Cur);
+			bpm3Tar = (1 + AltAtof(bpmAdj)/100) * AltAtof(bpm3Cur);
+
+		}
+		else
 		{
 			bpm1Tar = AltAtof(bpmAdj) + AltAtof(bpm1Cur);
 			bpm2Tar = AltAtof(bpmAdj) + AltAtof(bpm2Cur);
 			bpm3Tar = AltAtof(bpmAdj) + AltAtof(bpm3Cur);
 		}
-		else
-		{
-			bpm1Tar = (1 + AltAtof(bpmAdj)/100) * AltAtof(bpm1Cur);
-			bpm2Tar = (1 + AltAtof(bpmAdj)/100) * AltAtof(bpm2Cur);
-			bpm3Tar = (1 + AltAtof(bpmAdj)/100) * AltAtof(bpm3Cur);
-		}
 
-		// Check values
-		if (bpm1Tar < MIN_BPM) {bpm1Tar = MIN_BPM;} else if (bpm1Tar > MAX_BPM) {bpm1Tar = MAX_BPM;}
-		if (bpm2Tar < MIN_BPM) {bpm2Tar = MIN_BPM;} else if (bpm2Tar > MAX_BPM) {bpm2Tar = MAX_BPM;}
-		if (bpm3Tar < MIN_BPM) {bpm3Tar = MIN_BPM;} else if (bpm3Tar > MAX_BPM) {bpm3Tar = MAX_BPM;}
-
-		sprintf(bpm1Cur, "%.6g", bpm1Tar);
-		sprintf(bpm2Cur, "%.6g", bpm2Tar);
-		sprintf(bpm3Cur, "%.6g", bpm3Tar);
+		sprintf(bpm1Cur, "%.6g", SetToBounds(bpm1Tar, (double)MIN_BPM, (double)MAX_BPM));
+		sprintf(bpm2Cur, "%.6g", SetToBounds(bpm2Tar, (double)MIN_BPM, (double)MAX_BPM));
+		sprintf(bpm3Cur, "%.6g", SetToBounds(bpm3Tar, (double)MIN_BPM, (double)MAX_BPM));
 	}
 
-	// Update target edit boxes
-	if (doFirst)
-		SetDlgItemText(hwnd, IDC_BR_ADJ_BPM_TAR_1, bpm1Cur);
-	if (doCursor)
-		SetDlgItemText(hwnd, IDC_BR_ADJ_BPM_TAR_2, bpm2Cur);
-	if (doLast)
-		SetDlgItemText(hwnd, IDC_BR_ADJ_BPM_TAR_3, bpm3Cur);
+	if (doFirst)  SetDlgItemText(hwnd, IDC_BR_ADJ_BPM_TAR_1, bpm1Cur);
+	if (doCursor) SetDlgItemText(hwnd, IDC_BR_ADJ_BPM_TAR_2, bpm2Cur);
+	if (doLast)   SetDlgItemText(hwnd, IDC_BR_ADJ_BPM_TAR_3, bpm3Cur);
 }
 
 static void UpdateCurrentBpm (HWND hwnd, const vector<int>& selectedPoints)

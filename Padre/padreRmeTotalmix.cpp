@@ -42,7 +42,7 @@ void RmeTotalmix(RmeTotalmixCmd cmd)
 	}
 
 	BYTE vkKey;
-	BYTE vkModKey = -1;
+	BYTE vkModKey = 0;
 	switch(cmd)
 	{
 		case eTOTALMIX_LOADUSER1 : case eTOTALMIX_LOADUSER2 : case eTOTALMIX_LOADUSER3 : case eTOTALMIX_LOADUSER4 :
@@ -70,11 +70,11 @@ void RmeTotalmix(RmeTotalmixCmd cmd)
 	HWND hForegroundWnd = GetForegroundWindow();
 	SetForegroundWindow(hFirefaceWnd);
 
-	if(vkModKey != -1)
+	if(vkModKey != 0)
 		keybd_event(vkModKey, 0, 0, 0);
 	keybd_event(vkKey, 0, 0, 0);
 	keybd_event(vkKey, 0, KEYEVENTF_KEYUP, 0);
-	if(vkModKey != -1)
+	if(vkModKey != 0)
 		keybd_event(vkModKey, 0, KEYEVENTF_KEYUP, 0);
 
 	SetForegroundWindow(hForegroundWnd);

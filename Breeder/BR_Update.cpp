@@ -394,7 +394,7 @@ unsigned WINAPI BR_SearchObject::StartSearch (void* searchObject)
 					char* token = strtok(buf, "\n");
 					while (token != NULL)
 					{
-						if (sscanf(token, "#define SWS_VERSION %.10d,%.10d,%.10d,%.10d", &versionO.maj, &versionO.min, &versionO.rev, &versionO.build) > 0)
+						if (sscanf(token, "#define SWS_VERSION %10d,%10d,%10d,%10d", &versionO.maj, &versionO.min, &versionO.rev, &versionO.build) > 0)
 							break;
 						token = strtok(NULL, "\n");
 					}
@@ -438,7 +438,7 @@ unsigned WINAPI BR_SearchObject::StartSearch (void* searchObject)
 					char* token = strtok(buf, "\n");
 					while (token != NULL)
 					{
-						if (sscanf(token, "#define SWS_VERSION %.10d,%.10d,%.10d,%.10d", &versionB.maj, &versionB.min, &versionB.rev, &versionB.build) > 0)
+						if (sscanf(token, "#define SWS_VERSION %10d,%10d,%10d,%10d", &versionB.maj, &versionB.min, &versionB.rev, &versionB.build) > 0)
 							break;
 						token = strtok(NULL, "\n");
 					}

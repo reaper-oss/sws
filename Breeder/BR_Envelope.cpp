@@ -309,13 +309,13 @@ void CursorToEnv1 (COMMAND_T* ct)
 	{
 		while (token != NULL)
 		{
-			if (sscanf(token, "PT %.20lf", &cTime))
+			if (sscanf(token, "PT %20lf", &cTime))
 			{
 				if (cTime > cursor)
 				{
 					// fake next point if it doesn't exist
 					token = strtok(NULL, "\n");
-					if (!sscanf(token, "PT %.20lf", &nTime))
+					if (!sscanf(token, "PT %20lf", &nTime))
 						nTime = cTime + 0.001;
 
 					found = true;
@@ -333,7 +333,7 @@ void CursorToEnv1 (COMMAND_T* ct)
 		double ppTime = -1;
 		while (token != NULL)
 		{
-			if (sscanf(token, "PT %.20lf", &cTime))
+			if (sscanf(token, "PT %20lf", &cTime))
 			{
 				if (cTime >= cursor)
 				{

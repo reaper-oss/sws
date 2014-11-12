@@ -2054,12 +2054,20 @@ void BR_ContextualToolbarsWnd::OnDestroy ()
 
 void BR_ContextualToolbarsWnd::GetMinSize (int* w, int* h)
 {
-	*w = 490;
-	#ifdef _WIN32
-		*h = 630;
-	#else
-		*h = 656;
-	#endif
+	static int height = -1;
+
+	if (height == -1)
+	{
+		RECT r;
+		GetWindowRect(GetDlgItem(m_hwnd, IDC_SAVE), &r);
+		height = abs(r.bottom - r.top); // abs because of OSX
+
+		ScreenToClient(m_hwnd, (LPPOINT)&r);
+		height += r.top + 4;
+	}
+
+	WritePtr(w, 490);
+	WritePtr(h, height);
 }
 
 int BR_ContextualToolbarsWnd::OnKey (MSG* msg, int iKeyState)

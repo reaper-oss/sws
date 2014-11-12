@@ -3589,8 +3589,8 @@ void BR_AnalyzeLoudnessWnd::OnDestroy ()
 
 void BR_AnalyzeLoudnessWnd::GetMinSize (int* w, int* h)
 {
-	*w = 327;
-	*h = 160;
+	WritePtr(w, 327);
+	WritePtr(h, 160);
 }
 
 int BR_AnalyzeLoudnessWnd::OnKey (MSG* msg, int iKeyState)

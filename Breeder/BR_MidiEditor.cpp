@@ -391,10 +391,7 @@ void ME_HideCCLanes (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 
 void ME_ToggleHideCCLanes (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
-
-	int toggleState = 0;
 	void* midiEditor = NULL;
-
 	if (g_midiToggleHideCCLanes.Get()->IsHidden())
 	{
 		if ((int)ct->user > 0)
@@ -408,10 +405,7 @@ void ME_ToggleHideCCLanes (COMMAND_T* ct, int val, int valhw, int relmode, HWND 
 		}
 
 		if (midiEditor && g_midiToggleHideCCLanes.Get()->Restore(midiEditor))
-		{
-			toggleState = 0;
 			Undo_OnStateChangeEx2(NULL, __LOCALIZE("Restore hidden CC lanes", "sws_undo"), UNDO_STATE_ALL, -1);
-		}
 	}
 	else
 	{
@@ -430,36 +424,33 @@ void ME_ToggleHideCCLanes (COMMAND_T* ct, int val, int valhw, int relmode, HWND 
 		}
 
 		if (midiEditor && validLane && g_midiToggleHideCCLanes.Get()->Hide(midiEditor, laneToKeep, (abs((int)ct->user) == 1) ? -1 : abs((int)ct->user)))
-		{
-			toggleState = 1;
 			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
-		}
 	}
 
 	if (midiEditor)
 	{
-		SetMIDIToolbarState(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED"),        toggleState);
-		SetMIDIToolbarState(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_50_PX"),  toggleState);
-		SetMIDIToolbarState(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_100_PX"), toggleState);
-		SetMIDIToolbarState(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_150_PX"), toggleState);
-		SetMIDIToolbarState(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_200_PX"), toggleState);
-		SetMIDIToolbarState(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_250_PX"), toggleState);
-		SetMIDIToolbarState(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_300_PX"), toggleState);
-		SetMIDIToolbarState(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_350_PX"), toggleState);
-		SetMIDIToolbarState(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_400_PX"), toggleState);
-		SetMIDIToolbarState(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_450_PX"), toggleState);
-		SetMIDIToolbarState(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_500_PX"), toggleState);
-		SetMIDIToolbarState(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE"),          toggleState);
-		SetMIDIToolbarState(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_50_PX"),    toggleState);
-		SetMIDIToolbarState(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_100_PX"),   toggleState);
-		SetMIDIToolbarState(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_150_PX"),   toggleState);
-		SetMIDIToolbarState(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_200_PX"),   toggleState);
-		SetMIDIToolbarState(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_250_PX"),   toggleState);
-		SetMIDIToolbarState(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_300_PX"),   toggleState);
-		SetMIDIToolbarState(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_350_PX"),   toggleState);
-		SetMIDIToolbarState(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_400_PX"),   toggleState);
-		SetMIDIToolbarState(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_450_PX"),   toggleState);
-		SetMIDIToolbarState(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_500_PX"),   toggleState);
+		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED"));
+		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_50_PX"));
+		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_100_PX"));
+		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_150_PX"));
+		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_200_PX"));
+		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_250_PX"));
+		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_300_PX"));
+		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_350_PX"));
+		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_400_PX"));
+		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_450_PX"));
+		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_500_PX"));
+		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE"));
+		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_50_PX"));
+		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_100_PX"));
+		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_150_PX"));
+		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_200_PX"));
+		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_250_PX"));
+		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_300_PX"));
+		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_350_PX"));
+		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_400_PX"));
+		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_450_PX"));
+		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_500_PX"));
 	}
 }
 

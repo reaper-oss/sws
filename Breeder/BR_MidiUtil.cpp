@@ -27,7 +27,6 @@
 ******************************************************************************/
 #include "stdafx.h"
 #include "BR_MidiUtil.h"
-#include "BR.h"
 #include "BR_MouseUtil.h"
 #include "BR_Util.h"
 #include "../SnM/SnM_Chunk.h"
@@ -888,17 +887,6 @@ void UnselectAllEvents (MediaItem_Take* take, int lane)
 			}
 		}
 	}
-}
-
-void SetMIDIToolbarState (int cmd, int toggleState)
-{
-	BR_SetGetCommandHook2Reentrancy(true, true);
-
-	MIDIEditor_LastFocused_OnCommand(cmd, false);
-	if (GetToggleCommandState(cmd) != toggleState)
-		MIDIEditor_LastFocused_OnCommand(cmd, false);
-
-	BR_SetGetCommandHook2Reentrancy(true, false);
 }
 
 bool AreAllNotesUnselected (MediaItem_Take* take)

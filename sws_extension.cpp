@@ -146,7 +146,7 @@ bool hookCommandProc2(KbdSectionInfo* sec, int cmdId, int val, int valhw, int re
 					sReentrantCmds.Add(cmd->id);
 					cmd->fakeToggle = !cmd->fakeToggle;
 
-					if (!BR_SetGetCommandHook2Reentrancy(false, false)) // needed for refreshing MIDI toolbar
+					if (!BR_SetGetCommandHook2Reentrancy(false, false)) // needed for refreshing MIDI toolbar (make sure it's called after changing toggle state)
 					{
 #ifndef BR_DEBUG_PERFORMANCE_ACTIONS
 						cmd->onAction(cmd, val, valhw, relmode, hwnd);

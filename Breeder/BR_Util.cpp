@@ -27,6 +27,7 @@
 ******************************************************************************/
 #include "stdafx.h"
 #include "BR_Util.h"
+#include "BR.h"
 #include "BR_EnvelopeUtil.h"
 #include "BR_MidiUtil.h"
 #include "../reaper/localize.h"
@@ -599,6 +600,25 @@ void GetSetFocus (bool set, HWND* hwnd, int* context)
 		WritePtr(hwnd,    GetFocus());
 		WritePtr(context, GetCursorContext2(true)); // last_valid_focus: example - select item and focus mixer. Pressing delete
 	}                                               // tells us context is still 1, but GetCursorContext2(false) would return 0
+}
+
+void RefreshToolbarAlt (int cmd)
+{
+	if (GetToggleCommandState2(SectionFromUniqueID(32060), cmd) != -1 || GetToggleCommandState2(SectionFromUniqueID(32061), cmd) != -1)
+	{
+		int toggleState = GetToggleCommandState(cmd);
+		BR_SetGetCommandHook2Reentrancy(true, true);
+
+		MIDIEditor_LastFocused_OnCommand(cmd, false);
+		if (GetToggleCommandState(cmd) != toggleState)
+			MIDIEditor_LastFocused_OnCommand(cmd, false);
+
+		BR_SetGetCommandHook2Reentrancy(true, false);
+	}
+	else
+	{
+		RefreshToolbar(cmd);
+	}
 }
 
 bool IsPlaying ()

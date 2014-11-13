@@ -636,6 +636,14 @@ int BR_CSurfExtended(int call, void* parm1, void* parm2, void* parm3)
 	return 0;
 }
 
+bool BR_SetGetCommandHook2Reentrancy (bool set, bool reentrancy)
+{
+	static bool s_reentrancy = false;
+
+	if (set) s_reentrancy = reentrancy;
+	return s_reentrancy;
+}
+
 const char* BR_GetIniFile ()
 {
 	static WDL_FastString s_iniPath;

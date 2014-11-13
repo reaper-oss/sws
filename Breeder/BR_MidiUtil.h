@@ -181,6 +181,7 @@ double EffectiveMidiTakeStart (MediaItem_Take* take, bool ignoreMutedEvents, boo
 void SetMutedNotes (MediaItem_Take* take, const vector<int>& muteStatus);
 void SetSelectedNotes (MediaItem_Take* take, const vector<int>& selectedNotes, bool unselectOthers);
 void UnselectAllEvents (MediaItem_Take* take, int lane);
+void SetMIDIToolbarState (int cmd, int toggleState);
 bool AreAllNotesUnselected (MediaItem_Take* take);
 bool IsMidi (MediaItem_Take* take, bool* inProject = NULL);
 bool IsOpenInInlineEditor (MediaItem_Take* take);

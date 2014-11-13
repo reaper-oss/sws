@@ -27,6 +27,7 @@
 ******************************************************************************/
 #include "stdafx.h"
 #include "BR_MidiUtil.h"
+#include "BR.h"
 #include "BR_MouseUtil.h"
 #include "BR_Util.h"
 #include "../SnM/SnM_Chunk.h"
@@ -271,9 +272,9 @@ bool BR_MidiEditor::Build ()
 					lp.parse(lineView.Get());
 					m_startPos = (m_midiEditor) ? lp.gettoken_float(1) : GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION");
 					m_hZoom    = (m_midiEditor) ? lp.gettoken_float(2) : GetHZoomLevel();
-					m_vPos     = (m_midiEditor) ? lp.gettoken_int(3) : lp.gettoken_int(7); 
+					m_vPos     = (m_midiEditor) ? lp.gettoken_int(3) : lp.gettoken_int(7);
 					m_vZoom    = (m_midiEditor) ? lp.gettoken_int(4) : lp.gettoken_int(6);
-				}							
+				}
 				else
 					return false;
 
@@ -887,6 +888,17 @@ void UnselectAllEvents (MediaItem_Take* take, int lane)
 			}
 		}
 	}
+}
+
+void SetMIDIToolbarState (int cmd, int toggleState)
+{
+	BR_SetGetCommandHook2Reentrancy(true, true);
+
+	MIDIEditor_LastFocused_OnCommand(cmd, false);
+	if (GetToggleCommandState(cmd) != toggleState)
+		MIDIEditor_LastFocused_OnCommand(cmd, false);
+
+	BR_SetGetCommandHook2Reentrancy(true, false);
 }
 
 bool AreAllNotesUnselected (MediaItem_Take* take)

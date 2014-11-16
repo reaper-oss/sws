@@ -78,6 +78,7 @@ Added actions
  - SWS/BR: Select TCP/MCP track under mouse cursor (Issue 124)
  - SWS/BR: Select envelope under mouse cursor (Issue 124)
  - SWS/BR: Select/Delete envelope point under mouse cursor (2 versions: selected envelope only and whatever envelope is under mouse cursor) (Issue 124)
+ - SWS/BR: Split selected items at stretch markers
  - SWS/wol: Select all tracks except folder parents
  - SWS: Toggle horizontal zoom to selected items/time selection
 +MIDI editor:

@@ -64,8 +64,8 @@ void SplitItemAtTempo (COMMAND_T* ct)
 				item = SplitMediaItem(item, tPos);
 				if (!item) // split at nonexistent position?
 					item = items.Get()[i];
-					else
-						update = true;
+				else
+					update = true;
 
 				tPos = TimeMap2_GetNextChangeTime(NULL, tPos);
 				if (tPos > iEnd || tPos == -1 )
@@ -76,8 +76,54 @@ void SplitItemAtTempo (COMMAND_T* ct)
 	if (update)
 	{
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
-	UpdateArrange();
+		UpdateArrange();
+	}
 }
+
+void SplitItemAtStretchMarkers (COMMAND_T* ct)
+{
+	WDL_TypedBuf<MediaItem*> items;
+	SWS_GetSelectedMediaItems(&items);
+	if (!items.GetSize() || IsLocked(ITEM_FULL))
+		return;
+
+	bool update = false;
+	for (int i = 0; i < items.GetSize(); ++i)
+	{
+		MediaItem* item = items.Get()[i];
+		if (!IsItemLocked(item))
+		{
+			MediaItem_Take* take = GetActiveTake(item);
+			double iStart = GetMediaItemInfo_Value(item, "D_POSITION");
+			double iEnd = iStart + GetMediaItemInfo_Value(item, "D_LENGTH");				
+			
+			vector<double> stretchMarkers;
+			for (int i = 0; i < GetTakeNumStretchMarkers(take); ++i)
+			{
+				double position;
+				GetTakeStretchMarker(take, i, &position, NULL);
+				stretchMarkers.push_back(position + iStart);
+			}
+			
+			for (size_t i = 0; i < stretchMarkers.size(); ++i)
+			{
+				double position = stretchMarkers[i];
+				if (position > iEnd)
+					break;
+
+				item = SplitMediaItem(item, position);
+				if (!item) // split at nonexistent position?
+					item = items.Get()[i];
+				else
+					update = true;
+			}
+		}
+	}
+	if (update)
+	{
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		UpdateArrange();
+	}
 }
 
 void MarkersAtTempo (COMMAND_T* ct)

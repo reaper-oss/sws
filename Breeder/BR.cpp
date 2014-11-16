@@ -391,6 +391,7 @@ static COMMAND_T g_commandTable[] =
 	* Misc                                                                        *
 	******************************************************************************/
 	{ { DEFACCEL, "SWS/BR: Split selected items at tempo markers" },                                                                                       "SWS_BRSPLITSELECTEDTEMPO",           SplitItemAtTempo},
+	{ { DEFACCEL, "SWS/BR: Split selected items at stretch markers" },                                                                                     "BR_SPLIT_SEL_ITEM_STRETCH_MARKERS",  SplitItemAtStretchMarkers},
 	{ { DEFACCEL, "SWS/BR: Create project markers from selected tempo markers" },                                                                          "BR_TEMPO_TO_MARKERS",                MarkersAtTempo},
 	{ { DEFACCEL, "SWS/BR: Disable \"Ignore project tempo\" for selected MIDI items" },                                                                    "BR_MIDI_PROJ_TEMPO_DIS",             MidiItemTempo, NULL, 0},
 	{ { DEFACCEL, "SWS/BR: Enable \"Ignore project tempo\" for selected MIDI items (use tempo at item's start)" },                                         "BR_MIDI_PROJ_TEMPO_ENB",             MidiItemTempo, NULL, 1},

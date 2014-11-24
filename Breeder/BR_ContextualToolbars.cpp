@@ -1521,7 +1521,7 @@ BR_ContextualToolbarsView::BR_ContextualToolbarsView (HWND hwndList, HWND hwndEd
 
 void BR_ContextualToolbarsView::GetItemText (SWS_ListItem* item, int iCol, char* str, int iStrMax)
 {
-	int context = (int)item;
+	INT_PTR context = (INT_PTR)item;
 	WritePtr(str, '\0');
 
 	if (iCol == COL_CONTEXT)
@@ -1634,7 +1634,7 @@ void BR_ContextualToolbarsView::GetItemList (SWS_ListItemList* pList)
 
 bool BR_ContextualToolbarsView::OnItemSelChanging (SWS_ListItem* item, bool bSel)
 {
-	if (int context = (int)item)
+	if (INT_PTR context = (INT_PTR)item)
 	{
 		if (BR_ContextualToolbar* toolbar = g_contextToolbarsWndManager.Get()->GetCurrentContextualToolbar())
 			return toolbar->IsContextValid(context) ? FALSE : TRUE;
@@ -1651,8 +1651,8 @@ int BR_ContextualToolbarsView::OnItemSort (SWS_ListItem* item1, SWS_ListItem* it
 {
 	if (item1 && item2)
 	{
-		double i1 = (int)item1;
-		double i2 = (int)item2;
+		double i1 = (INT_PTR)item1;
+		double i2 = (INT_PTR)item2;
 		return (i1 > i2) ? 1 : (i1 < i2) ? - 1 : 0; // don't allow sorting
 	}
 	return 0;
@@ -2089,7 +2089,7 @@ HMENU BR_ContextualToolbarsWnd::OnContextMenu (int x, int y, bool* wantDefaultIt
 {
 	HMENU menu = NULL;
 	int column;
-	if ((int)m_list->GetHitItem(x, y, &column))
+	if ((INT_PTR)m_list->GetHitItem(x, y, &column))
 	{
 		menu = CreatePopupMenu();
 		WritePtr(wantDefaultItems, false);
@@ -2103,7 +2103,7 @@ HMENU BR_ContextualToolbarsWnd::OnContextMenu (int x, int y, bool* wantDefaultIt
 			{
 				int x = 0;
 				bool inheritParent = false;
-				while (int selectedContext = (int)m_list->EnumSelected(&x))
+				while (INT_PTR selectedContext = (INT_PTR)m_list->EnumSelected(&x))
 				{
 					if (m_currentToolbar.CanContextInheritParent(selectedContext))
 					{
@@ -2118,7 +2118,7 @@ HMENU BR_ContextualToolbarsWnd::OnContextMenu (int x, int y, bool* wantDefaultIt
 			{
 				int x = 0;
 				bool followItem = true;
-				while (int selectedContext = (int)m_list->EnumSelected(&x))
+				while (INT_PTR selectedContext = (INT_PTR)m_list->EnumSelected(&x))
 				{
 					if (!m_currentToolbar.CanContextFollowItem(selectedContext))
 					{
@@ -2148,7 +2148,7 @@ void BR_ContextualToolbarsWnd::ContextMenuReturnId (int id)
 	if (id)
 	{
 		int x = 0;
-		while (int context = (int)m_list->EnumSelected(&x))
+		while (INT_PTR context = (INT_PTR)m_list->EnumSelected(&x))
 			m_currentToolbar.SetContext(context, id - 1); // id - 1 -> see this->OnContextMenu()
 		m_list->Update();
 	}

@@ -747,9 +747,6 @@ static DYN_COMMAND_T s_dynCmdTable[] =
 	{ "SWS/S&M: Exclusive toggle G%02d", "S&M_EXCL_TGL_G", ExclusiveToggle, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
 	{ "SWS/S&M: Exclusive toggle H%02d", "S&M_EXCL_TGL_H", ExclusiveToggle, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
 
-	{ "SWS/S&M: Restore displayed CC lanes, slot %02d", "S&M_SETCCLANES_ME", NULL, 8, SNM_MAX_DYN_ACTIONS, NULL, 32060, MESetCCLanes, },
-	{ "SWS/S&M: Save displayed CC lanes, slot %02d", "S&M_SAVECCLANES_ME", NULL, 8, SNM_MAX_DYN_ACTIONS, NULL, 32060, MESaveCCLanes, },
-
 //!WANT_LOCALIZE_1ST_STRING_END
 
 

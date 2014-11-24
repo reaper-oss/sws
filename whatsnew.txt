@@ -112,6 +112,8 @@ Fixes
  - Fixed save/restore arrange view actions not working on envelopes with high point count (Issue 660)
 +Fixed target BPM not updating when adjusting BPM by percent in Select and adjust tempo markers
 +OSX: Fixed "Unselect tempo markers" child dialog of "Select and adjust tempo markers". It got hidden behind other dialogs when it lost focus
++Issue 678: removed duplicate configurable actions in the S&M.ini file
++Issue 671 and issue 673: fixed Region Playlist misbehavior
 
 Other
 +Increased all SWS/BR slot actions to 8 slots

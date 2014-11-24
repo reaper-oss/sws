@@ -242,7 +242,7 @@ int EnumMarkerRegionById(ReaProject* _proj, int _id, bool* _isrgn, double* _pos,
 		const char* name2;
 		double pos2, end2;
 		bool isrgn = IsRegion(_id), isrgn2;
-		int  num=(_id&0x3FFFFFFF), x=0, num2, col2; 
+		int  num=(_id&0x3FFFFFFF), x=0, lastx=0, num2, col2;
 		while (x = EnumProjectMarkers3(_proj, x, &isrgn2, &pos2, &end2, &name2, &num2, &col2))
 		{
 			if (num == num2 && isrgn == isrgn2)
@@ -253,11 +253,12 @@ int EnumMarkerRegionById(ReaProject* _proj, int _id, bool* _isrgn, double* _pos,
 				if (_name)	*_name = name2;
 				if (_num)	*_num = num2;
 				if (_color)	*_color = col2;
-				return x;
+				return lastx;
 			}
+            lastx=x;
 		}
 	}
-	return 0;
+	return -1;
 }
 
 
@@ -313,10 +314,13 @@ int EnumMarkerRegionDescById(ReaProject* _proj, int _id, char* _descOut, int _ou
 		*_descOut = '\0';
 		double pos, end; int num; bool isrgn; const char* name;
 		int idx = EnumMarkerRegionById(_proj, _id, &isrgn, &pos, &end, &name, &num, NULL);
-		if (idx>0) GetMarkerRegionDesc(name, isrgn, num, pos, end, _flags, _wantNum, _wantName, _wantTime, _descOut, _outSz);
-		return idx;
+		if (idx>=0)
+        {
+            GetMarkerRegionDesc(name, isrgn, num, pos, end, _flags, _wantNum, _wantName, _wantTime, _descOut, _outSz);
+		    return idx;
+        }
 	}
-	return 0;
+	return -1;
 }
 
 // enumerates by index, see remarks above

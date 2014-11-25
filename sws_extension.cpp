@@ -639,6 +639,7 @@ extern "C"
 		IMPAPI(CSurf_GoEnd);
 		IMPAPI(CSurf_OnMuteChange);
 		IMPAPI(CSurf_OnPanChange);
+		IMPAPI(CSurf_OnPlayRateChange);
 		IMPAPI(CSurf_OnSelectedChange);
 		IMPAPI(CSurf_OnTrackSelection);
 		IMPAPI(CSurf_OnVolumeChange);
@@ -793,6 +794,8 @@ extern "C"
 		IMPAPI(MainThread_LockTracks);
 		IMPAPI(MainThread_UnlockTracks);
 		IMPAPI(MarkProjectDirty);
+		IMPAPI(Master_GetPlayRate);
+		IMPAPI(Master_GetPlayRateAtTime);
 		IMPAPI(MIDI_CountEvts);
 		IMPAPI(MIDI_DeleteCC);
 		IMPAPI(MIDI_DeleteEvt);
@@ -807,6 +810,8 @@ extern "C"
 		IMPAPI(MIDI_GetCC);
 		IMPAPI(MIDI_GetEvt);
 		IMPAPI(MIDI_GetNote);
+		IMPAPI(MIDI_GetPPQPos_EndOfMeasure);
+		IMPAPI(MIDI_GetPPQPos_StartOfMeasure);
 		IMPAPI(MIDI_GetPPQPosFromProjTime);
 		IMPAPI(MIDI_GetProjTimeFromPPQPos);
 		IMPAPI(MIDI_GetTextSysexEvt);

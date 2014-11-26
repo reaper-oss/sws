@@ -94,22 +94,27 @@ void SplitItemAtStretchMarkers (COMMAND_T* ct)
 		if (!IsItemLocked(item))
 		{
 			MediaItem_Take* take = GetActiveTake(item);
-			double iStart = GetMediaItemInfo_Value(item, "D_POSITION");
-			double iEnd = iStart + GetMediaItemInfo_Value(item, "D_LENGTH");				
+			double iStart        = GetMediaItemInfo_Value(item, "D_POSITION");
+			double iEnd          = GetMediaItemInfo_Value(item, "D_LENGTH") + iStart;
+			double playRate      = GetMediaItemTakeInfo_Value(take, "D_PLAYRATE");
 			
 			vector<double> stretchMarkers;
 			for (int i = 0; i < GetTakeNumStretchMarkers(take); ++i)
 			{
 				double position;
 				GetTakeStretchMarker(take, i, &position, NULL);
-				stretchMarkers.push_back(position + iStart);
+				position = (position / playRate) + iStart;
+				
+				if (position > iEnd)
+					break;
+				else
+					stretchMarkers.push_back(position);
 			}
 			
 			for (size_t i = 0; i < stretchMarkers.size(); ++i)
 			{
 				double position = stretchMarkers[i];
-				if (position > iEnd)
-					break;
+
 
 				item = SplitMediaItem(item, position);
 				if (!item) // split at nonexistent position?
@@ -142,6 +147,149 @@ void MarkersAtTempo (COMMAND_T* ct)
 	}
 	Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG);
 	PreventUIRefresh(-1);
+}
+
+void MarkersAtNotes (COMMAND_T* ct)
+{
+	if (IsLocked(MARKERS))
+		return;
+
+	PreventUIRefresh(1);
+
+	bool update = false;
+	for (int i = 0; i < CountSelectedMediaItems(NULL); ++i)
+	{
+		MediaItem* item      = GetSelectedMediaItem(NULL, i);
+		MediaItem_Take* take = GetActiveTake(item);
+		double itemStart =  GetMediaItemInfo_Value(item, "D_POSITION");
+		double itemEnd   = GetMediaItemInfo_Value(item, "D_POSITION") + GetMediaItemInfo_Value(item, "D_LENGTH");
+
+		// Due to possible tempo changes, always work with PPQ, never time
+		double itemStartPPQ = MIDI_GetPPQPosFromProjTime(take, itemStart);
+		double itemEndPPQ = MIDI_GetPPQPosFromProjTime(take, itemEnd);
+		double sourceLenPPQ = GetSourceLengthPPQ(take);
+
+		int noteCount = 0;
+		MIDI_CountEvts(take, &noteCount, NULL, NULL);
+		if (noteCount != 0)
+		{
+			update = true;
+			for (int j = 0; j < noteCount; ++j)
+			{
+				double position;
+				MIDI_GetNote(take, j, NULL, NULL, &position, NULL, NULL, NULL, NULL);
+				while (position <= itemEndPPQ) // in case source is looped
+				{
+					if (CheckBounds(position, itemStartPPQ, itemEndPPQ))
+						AddProjectMarker(NULL, false, MIDI_GetProjTimeFromPPQPos(take, position), 0, NULL, -1);
+					position += sourceLenPPQ;
+				}
+			}
+		}
+	}
+
+	if (update)
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
+	PreventUIRefresh(-1);
+}
+
+void MarkersAtStretchMarkers (COMMAND_T* ct)
+{
+	if (IsLocked(MARKERS))
+		return;
+
+	PreventUIRefresh(1);
+	bool update = false;
+	for (int i = 0; i < CountSelectedMediaItems(NULL); ++i)
+	{
+		MediaItem_Take* take = GetActiveTake(GetSelectedMediaItem(NULL, i));
+		double iStart     = GetMediaItemInfo_Value(GetSelectedMediaItem(NULL, i), "D_POSITION");
+		double iEnd       = GetMediaItemInfo_Value(GetSelectedMediaItem(NULL, i), "D_LENGTH") + iStart;
+		double playRate      = GetMediaItemTakeInfo_Value(take, "D_PLAYRATE");
+
+		for (int i = 0; i < GetTakeNumStretchMarkers(take); ++i)
+		{
+			double position;
+			GetTakeStretchMarker(take, i, &position, NULL);
+			position = (position / playRate) + iStart;
+			if (position <= iEnd && AddProjectMarker(NULL, false, position, 0, NULL, -1) != -1)
+				update = true;
+		}
+	}
+
+	if (update)
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
+	PreventUIRefresh(-1);
+}
+
+void MarkerAtMouse (COMMAND_T* ct)
+{
+	if (IsLocked(MARKERS))
+		return;
+
+	double position = PositionAtMouseCursor(true);
+	if (position != -1)
+	{
+		if ((int)ct->user == 1)
+			position = SnapToGrid(NULL, position);
+
+		if (AddProjectMarker(NULL, false, position, 0, NULL, -1) != -1)
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
+		UpdateArrange();
+	}
+}
+
+void MarkersRegionsAtItems (COMMAND_T* ct)
+{
+	if (!CountSelectedMediaItems(NULL) || ((int)ct->user == 0 && IsLocked(MARKERS)) || ((int)ct->user == 1 && IsLocked(REGIONS)))
+		return;
+
+	Undo_BeginBlock2(NULL);
+	PreventUIRefresh(1);
+
+	for (int i = 0; i < CountSelectedMediaItems(NULL); ++i)
+	{
+		MediaItem* item =  GetSelectedMediaItem(NULL, i);
+		double iStart = *(double*)GetSetMediaItemInfo(item, "D_POSITION", NULL);
+		double iEnd = iStart + *(double*)GetSetMediaItemInfo(item, "D_LENGTH", NULL);
+		char* pNotes = (char*)GetSetMediaItemInfo(item, "P_NOTES", NULL);
+
+		string notes(pNotes, strlen(pNotes)+1);
+		ReplaceAll(notes, "\r\n", " ");
+
+		if ((int)ct->user == 0)  // Markers
+			AddProjectMarker(NULL, false, iStart, 0, notes.c_str(), -1);
+		else                     // Regions
+			AddProjectMarker(NULL, true, iStart, iEnd, notes.c_str(), -1);
+	}
+
+	PreventUIRefresh(-1);
+	Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG);
+}
+
+void MoveClosestMarker (COMMAND_T* ct)
+{
+	if (IsLocked(MARKERS))
+		return;
+
+	double position;
+	if      (abs((int)ct->user) == 1) position = GetPlayPositionEx(NULL);
+	else if (abs((int)ct->user) == 2) position = GetCursorPositionEx(NULL);
+	else                              position = PositionAtMouseCursor(true);
+
+	if (position >= 0)
+	{
+		int id = FindClosestProjMarkerIndex(position);
+		if (id >= 0)
+		{
+			if ((int)ct->user < 0) position = SnapToGrid(NULL, position);
+			int markerId;
+			EnumProjectMarkers3(NULL, id, NULL, NULL, NULL, NULL, &markerId, NULL);
+
+			SetProjectMarkerByIndex(NULL, id, NULL, position, NULL, markerId, NULL, NULL);
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
+		}
+	}
 }
 
 void MidiItemTempo (COMMAND_T* ct)
@@ -236,146 +384,6 @@ void MidiItemTrim (COMMAND_T* ct)
 
 	if (update)
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
-}
-
-void MarkersAtNotes (COMMAND_T* ct)
-{
-	if (IsLocked(MARKERS))
-		return;
-
-	PreventUIRefresh(1);
-
-	bool update = false;
-	for (int i = 0; i < CountSelectedMediaItems(NULL); ++i)
-	{
-		MediaItem* item      = GetSelectedMediaItem(NULL, i);
-		MediaItem_Take* take = GetActiveTake(item);
-		double itemStart =  GetMediaItemInfo_Value(item, "D_POSITION");
-		double itemEnd   = GetMediaItemInfo_Value(item, "D_POSITION") + GetMediaItemInfo_Value(item, "D_LENGTH");
-
-		// Due to possible tempo changes, always work with PPQ, never time
-		double itemStartPPQ = MIDI_GetPPQPosFromProjTime(take, itemStart);
-		double itemEndPPQ = MIDI_GetPPQPosFromProjTime(take, itemEnd);
-		double sourceLenPPQ = GetSourceLengthPPQ(take);
-
-		int noteCount = 0;
-		MIDI_CountEvts(take, &noteCount, NULL, NULL);
-		if (noteCount != 0)
-		{
-			update = true;
-			for (int j = 0; j < noteCount; ++j)
-			{
-				double position;
-				MIDI_GetNote(take, j, NULL, NULL, &position, NULL, NULL, NULL, NULL);
-				while (position <= itemEndPPQ) // in case source is looped
-				{
-					if (CheckBounds(position, itemStartPPQ, itemEndPPQ))
-						AddProjectMarker(NULL, false, MIDI_GetProjTimeFromPPQPos(take, position), 0, NULL, -1);
-					position += sourceLenPPQ;
-				}
-			}
-		}
-	}
-
-	if (update)
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
-	PreventUIRefresh(-1);
-}
-
-void MarkersAtStretchMarkers (COMMAND_T* ct)
-{
-	if (IsLocked(MARKERS))
-		return;
-
-	PreventUIRefresh(1);
-	bool update = false;
-	for (int i = 0; i < CountSelectedMediaItems(NULL); ++i)
-	{
-		MediaItem_Take* take = GetActiveTake(GetSelectedMediaItem(NULL, i));
-
-		double itemPos = GetMediaItemInfo_Value(GetSelectedMediaItem(NULL, i), "D_POSITION");
-		for (int i = 0; i < GetTakeNumStretchMarkers(take); ++i)
-		{
-			double position;
-			GetTakeStretchMarker(take, i, &position, NULL);
-			if (AddProjectMarker(NULL, false, itemPos + position, 0, NULL, -1) != -1)
-				update = true;
-		}
-	}
-
-	if (update)
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
-	PreventUIRefresh(-1);
-}
-
-void MarkerAtMouse (COMMAND_T* ct)
-{
-	if (IsLocked(MARKERS))
-		return;
-
-	double position = PositionAtMouseCursor(true);
-	if (position != -1)
-	{
-		if ((int)ct->user == 1)
-			position = SnapToGrid(NULL, position);
-
-		if (AddProjectMarker(NULL, false, position, 0, NULL, -1) != -1)
-			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
-		UpdateArrange();
-	}
-}
-
-void MarkersRegionsAtItems (COMMAND_T* ct)
-{
-	if (!CountSelectedMediaItems(NULL) || ((int)ct->user == 0 && IsLocked(MARKERS)) || ((int)ct->user == 1 && IsLocked(REGIONS)))
-		return;
-
-	Undo_BeginBlock2(NULL);
-	PreventUIRefresh(1);
-
-	for (int i = 0; i < CountSelectedMediaItems(NULL); ++i)
-	{
-		MediaItem* item =  GetSelectedMediaItem(NULL, i);
-		double iStart = *(double*)GetSetMediaItemInfo(item, "D_POSITION", NULL);
-		double iEnd = iStart + *(double*)GetSetMediaItemInfo(item, "D_LENGTH", NULL);
-		char* pNotes = (char*)GetSetMediaItemInfo(item, "P_NOTES", NULL);
-
-		string notes(pNotes, strlen(pNotes)+1);
-		ReplaceAll(notes, "\r\n", " ");
-
-		if ((int)ct->user == 0)  // Markers
-			AddProjectMarker(NULL, false, iStart, 0, notes.c_str(), -1);
-		else                     // Regions
-			AddProjectMarker(NULL, true, iStart, iEnd, notes.c_str(), -1);
-	}
-
-	PreventUIRefresh(-1);
-	Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG);
-}
-
-void MoveClosestMarker (COMMAND_T* ct)
-{
-	if (IsLocked(MARKERS))
-		return;
-
-	double position;
-	if      (abs((int)ct->user) == 1) position = GetPlayPositionEx(NULL);
-	else if (abs((int)ct->user) == 2) position = GetCursorPositionEx(NULL);
-	else                              position = PositionAtMouseCursor(true);
-
-	if (position >= 0)
-	{
-		int id = FindClosestProjMarkerIndex(position);
-		if (id >= 0)
-		{
-			if ((int)ct->user < 0) position = SnapToGrid(NULL, position);
-			int markerId;
-			EnumProjectMarkers3(NULL, id, NULL, NULL, NULL, NULL, &markerId, NULL);
-
-			SetProjectMarkerByIndex(NULL, id, NULL, position, NULL, markerId, NULL, NULL);
-			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
-		}
-	}
 }
 
 void SnapFollowsGridVis (COMMAND_T* ct)

@@ -1,3 +1,8 @@
+Fixes
++These actions now work properly when item is trimmed or stretched:
+ - SWS/BR: Split selected items at stretch markers
+ - SWS/BR: Create project markers from stretch markers in selected items
+
 !v2.5.1 #0 pre-release build (November 24, 2014)
 <strong>REAPER v4.74+ is required!</strong>
 New API functions were introduced in this version, they enable various improvements in the SWS/S&M Extension.

@@ -51,6 +51,8 @@
 #define UTF8_BOX				"\xE2\x96\xA1"
 #define UTF8_BBOX				"\xE2\x96\xA0"
 #define UTF8_INFINITY			"\xE2\x88\x9E"
+#define UTF8_CHECKMARK          "\xE2\x9C\x93"
+#define UTF8_MULTIPLICATION     "\xE2\x9C\x95"
 
 // +IsSwsAction() to skip "SWS: ", "SWS/S&M: ", "SWS/FNG: ", etc...
 #define SWS_CMD_SHORTNAME(_ct)	(_ct ? GetLocalizedActionName(_ct->accel.desc) + IsSwsAction(_ct->accel.desc) : "")

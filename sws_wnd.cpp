@@ -752,22 +752,27 @@ SWS_ListView::SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn
 	char str[256];
 	GetPrivateProfileString(SWS_INI, m_cINIKey, cDefaults, str, 256, get_ini_file());
 	LineParser lp(false);
+
 	if (!lp.parse(str))
 	{
-		m_iSortCol = lp.gettoken_int(0);
-		iPos = 0;
-		for (int i = 0; i < m_iCols; i++)
+		int storedColCount = (lp.getnumtokens() - 1) / 2;
+		if (storedColCount == m_iCols || !lp.parse(cDefaults))
 		{
-			int iWidth = lp.gettoken_int(i*2+1);
-			if (iWidth)
+			m_iSortCol = lp.gettoken_int(0);
+			iPos = 0;
+			for (int i = 0; i < m_iCols; i++)
 			{
-				m_pCols[i].iWidth = lp.gettoken_int(i*2+1);
-				m_pCols[i].iPos = lp.gettoken_int(i*2+2);
-				iPos = m_pCols[i].iPos;
-			}
-			else if (m_pCols[i].iPos != -1) // new cols are invisible?
-			{
-				m_pCols[i].iPos = iPos++;
+				int iWidth = lp.gettoken_int(i*2+1);
+				if (iWidth)
+				{
+					m_pCols[i].iWidth = lp.gettoken_int(i*2+1);
+					m_pCols[i].iPos = lp.gettoken_int(i*2+2);
+					iPos = m_pCols[i].iPos;
+				}
+				else if (m_pCols[i].iPos != -1) // new cols are invisible?
+				{
+					m_pCols[i].iPos = iPos++;
+				}
 			}
 		}
 	}

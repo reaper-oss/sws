@@ -20,7 +20,7 @@ Thank you Cockos!
   - SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset x (8 presets) (added in all sections: Main, MIDI editor, etc...)
    - Note: Actions work as toggle switches. If any of the toolbars set up in Contextual toolbars dialog is visible, all of them will get closed - otherwise toolbar corresponding to context under mouse cursor will get loaded.
 +<strong>Feedback needed:</strong>
- - Note that while new contexts won't get added at this time (but fades and volume handles are planned) now is the time to help us. Any feedback, comments and criticism of current contexts hierarchy is highly welcome. For example, http://wiki.cockos.com/wiki/index.php/Contextual_toolbars_with_SWS#Special_cases:_item_stretch_markers_and_take_envelopes|this workaround| would definitely benefit from discussion. Don't hesitate to express your opinion on http://forum.cockos.com/showthread.php?t=70185|our pre-release topic.| Thanks!
+ - Note that while new contexts won't get added at this time (but fades and volume handles are planned) now is the time to help us. Any feedback, comments and criticism of current contexts hierarchy is highly welcome. For example, http://wiki.cockos.com/wiki/index.php/Contextual_toolbars_with_SWS#Special_cases:_item_stretch_markers_and_take_envelopes|this workaround| would definitely benefit from discussion. Don't hesitate to express your opinion on http://forum.cockos.com/showthread.php?t=150702|dedicated forum topic.| Thanks!
 
 Analyze and normalize loudness
 +Analyze loudness dialog:

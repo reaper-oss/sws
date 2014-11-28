@@ -346,19 +346,19 @@ void BR_LoudnessObject::GetColumnStr (int column, char* str, int strSz, int mode
 	{
 		case COL_ID:
 		{
-			_snprintf(str, strSz, "%d", g_analyzedObjects.Get()->Find(this) + 1);
+			_snprintfSafe(str, strSz, "%d", g_analyzedObjects.Get()->Find(this) + 1);
 		}
 		break;
 
 		case COL_TRACK:
 		{
-			_snprintf(str, strSz, "%s", (this->GetTrackName()).Get());
+			_snprintfSafe(str, strSz, "%s", (this->GetTrackName()).Get());
 		}
 		break;
 
 		case COL_TAKE:
 		{
-			_snprintf(str, strSz, "%s", (this->GetTakeName()).Get());
+			_snprintfSafe(str, strSz, "%s", (this->GetTakeName()).Get());
 		}
 		break;
 
@@ -368,9 +368,9 @@ void BR_LoudnessObject::GetColumnStr (int column, char* str, int strSz, int mode
 			this->GetAnalyzeData(NULL, &range, NULL, NULL, NULL, NULL, NULL, NULL);
 
 			if (range <= NEGATIVE_INF)
-				_snprintf(str, strSz, "%s", __localizeFunc("-inf", "vol", 0));
+				_snprintfSafe(str, strSz, "%s", __localizeFunc("-inf", "vol", 0));
 			else
-				_snprintf(str, strSz, "%.1lf %s", RoundToN(range, 1) , __LOCALIZE("LU", "sws_loudness"));
+				_snprintfSafe(str, strSz, "%.1lf %s", RoundToN(range, 1) , __LOCALIZE("LU", "sws_loudness"));
 		}
 		break;
 
@@ -380,9 +380,9 @@ void BR_LoudnessObject::GetColumnStr (int column, char* str, int strSz, int mode
 			this->GetAnalyzeData(NULL, NULL, &truePeak, NULL, NULL, NULL, NULL, NULL);
 
 			if (truePeak <= NEGATIVE_INF)
-				_snprintf(str, strSz, "%s", __localizeFunc("-inf", "vol", 0));
+				_snprintfSafe(str, strSz, "%s", __localizeFunc("-inf", "vol", 0));
 			else
-				_snprintf(str, strSz, "%.1lf %s", RoundToN(truePeak, 1), __LOCALIZE("dBTP", "sws_loudness"));
+				_snprintfSafe(str, strSz, "%.1lf %s", RoundToN(truePeak, 1), __LOCALIZE("dBTP", "sws_loudness"));
 		}
 		break;
 
@@ -399,9 +399,9 @@ void BR_LoudnessObject::GetColumnStr (int column, char* str, int strSz, int mode
 			const char* unit = (mode == 1) ? unitLU.Get() : __LOCALIZE("LUFS", "sws_loudness");
 
 			if (value <= NEGATIVE_INF)
-				_snprintf(str, strSz, "%s", __localizeFunc("-inf", "vol", 0));
+				_snprintfSafe(str, strSz, "%s", __localizeFunc("-inf", "vol", 0));
 			else
-				_snprintf(str, strSz, "%.1lf %s", RoundToN((mode == 1) ? g_pref.LUFStoLU(value) : value, 1), unit);
+				_snprintfSafe(str, strSz, "%.1lf %s", RoundToN((mode == 1) ? g_pref.LUFStoLU(value) : value, 1), unit);
 		}
 		break;
 	}
@@ -2266,6 +2266,7 @@ void BR_AnalyzeLoudnessWnd::AbortAnalyze ()
 	KillTimer(m_hwnd, ANALYZE_TIMER);
 	ShowWindow(GetDlgItem(m_hwnd, IDC_PROGRESS), SW_HIDE);
 	SendMessage(GetDlgItem(m_hwnd, IDC_PROGRESS), PBM_SETPOS, 0, 0);
+	EnableWindow(GetDlgItem(m_hwnd, IDC_ANALYZE), true);
 
 	// Make sure objects already in the list are NOT destroyed
 	for (int i = 0; i < m_analyzeQueue.GetSize(); ++i)
@@ -2284,6 +2285,7 @@ void BR_AnalyzeLoudnessWnd::AbortReanalyze ()
 	KillTimer(m_hwnd, REANALYZE_TIMER);
 	ShowWindow(GetDlgItem(m_hwnd, IDC_PROGRESS), SW_HIDE);
 	SendMessage(GetDlgItem(m_hwnd, IDC_PROGRESS), PBM_SETPOS, 0, 0);
+	EnableWindow(GetDlgItem(m_hwnd, IDC_ANALYZE), true);
 
 	m_reanalyzeQueue.Empty(false);
 	m_analyzeInProgress = false;
@@ -2906,7 +2908,7 @@ WDL_DLGRET BR_AnalyzeLoudnessWnd::NormalizeDialogProc (HWND hwnd, UINT uMsg, WPA
 			SendDlgItemMessage(hwnd, IDC_UNIT, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("LUFS", "sws_loudness"));
 			SendDlgItemMessage(hwnd, IDC_UNIT, CB_ADDSTRING, 0, (LPARAM)g_pref.GetFormatedLUString().Get());
 			SendDlgItemMessage(hwnd, IDC_UNIT, CB_SETCURSEL, unit, 0);
-			sprintf(tmp, "%.6g", value); SetDlgItemText(hwnd, IDC_VALUE, tmp);
+			_snprintfSafe(tmp, sizeof(tmp), "%.6g", value); SetDlgItemText(hwnd, IDC_VALUE, tmp);
 			SetFocus(GetDlgItem(hwnd, IDC_VALUE));
 			SendMessage(GetDlgItem(hwnd, IDC_VALUE), EM_SETSEL, 0, -1);
 
@@ -2936,7 +2938,7 @@ WDL_DLGRET BR_AnalyzeLoudnessWnd::NormalizeDialogProc (HWND hwnd, UINT uMsg, WPA
 						int unit = (int)SendDlgItemMessage(hwnd, IDC_UNIT, CB_GETCURSEL, 0, 0);
 						char value[256]; GetDlgItemText(hwnd, IDC_VALUE, value, sizeof(value));
 
-						sprintf(value, "%.6g", (unit == 1) ? g_pref.LUFStoLU(AltAtof(value)) : g_pref.LUtoLUFS(AltAtof(value)));
+						_snprintfSafe(value, sizeof(value), "%.6g", (unit == 1) ? g_pref.LUFStoLU(AltAtof(value)) : g_pref.LUtoLUFS(AltAtof(value)));
 						SetDlgItemText(hwnd, IDC_VALUE, value);
 					}
 				}
@@ -3090,6 +3092,7 @@ void BR_AnalyzeLoudnessWnd::OnCommand (WPARAM wParam, LPARAM lParam)
 				// Start timer which will analyze each object and finally update the list view
 				SendMessage(GetDlgItem(m_hwnd, IDC_PROGRESS), PBM_SETPOS, 0, 0);
 				ShowWindow(GetDlgItem(m_hwnd, IDC_PROGRESS), SW_SHOW);
+				EnableWindow(GetDlgItem(m_hwnd, IDC_ANALYZE), false);
 				SetTimer(m_hwnd, ANALYZE_TIMER, ANALYZE_TIMER_FREQ, NULL);
 			}
 		}
@@ -3116,6 +3119,7 @@ void BR_AnalyzeLoudnessWnd::OnCommand (WPARAM wParam, LPARAM lParam)
 				// Start timer which will analyze each object and finally update the list view
 				SendMessage(GetDlgItem(m_hwnd, IDC_PROGRESS), PBM_SETPOS, 0, 0);
 				ShowWindow(GetDlgItem(m_hwnd, IDC_PROGRESS), SW_SHOW);
+				EnableWindow(GetDlgItem(m_hwnd, IDC_ANALYZE), false);
 				SetTimer(m_hwnd, REANALYZE_TIMER, ANALYZE_TIMER_FREQ, NULL);
 			}
 		}
@@ -3432,6 +3436,7 @@ void BR_AnalyzeLoudnessWnd::OnTimer (WPARAM wParam)
 				m_analyzeInProgress = false;
 				ShowWindow(GetDlgItem(m_hwnd, IDC_PROGRESS), SW_HIDE);
 				SendMessage(GetDlgItem(m_hwnd, IDC_PROGRESS), PBM_SETPOS, 0, 0);
+				EnableWindow(GetDlgItem(m_hwnd, IDC_ANALYZE), true);
 				KillTimer(m_hwnd, ANALYZE_TIMER);
 				return;
 			}
@@ -3487,6 +3492,7 @@ void BR_AnalyzeLoudnessWnd::OnTimer (WPARAM wParam)
 				m_analyzeInProgress = false;
 				ShowWindow(GetDlgItem(m_hwnd, IDC_PROGRESS), SW_HIDE);
 				SendMessage(GetDlgItem(m_hwnd, IDC_PROGRESS), PBM_SETPOS, 0, 0);
+				EnableWindow(GetDlgItem(m_hwnd, IDC_ANALYZE), true);
 				KillTimer(m_hwnd, REANALYZE_TIMER);
 				return;
 			}
@@ -3616,9 +3622,9 @@ HMENU BR_AnalyzeLoudnessWnd::OnContextMenu (int x, int y, bool* wantDefaultItems
 			char menuEntry[512];
 			WDL_FastString unit = g_pref.GetFormatedLUString();
 			if (!strcmp(unit.Get(), __LOCALIZE("LU", "sws_loudness")))
-				_snprintf(menuEntry, sizeof(menuEntry), __LOCALIZE_VERFMT("Normalize to 0 %s (%g LUFS)", "sws_DLG_174"), unit.Get(), g_pref.LUtoLUFS(0));
+				_snprintfSafe(menuEntry, sizeof(menuEntry), __LOCALIZE_VERFMT("Normalize to 0 %s (%g LUFS)", "sws_DLG_174"), unit.Get(), g_pref.LUtoLUFS(0));
 			else
-				_snprintf(menuEntry, sizeof(menuEntry), __LOCALIZE_VERFMT("Normalize to 0 %s", "sws_DLG_174"), unit.Get());
+				_snprintfSafe(menuEntry, sizeof(menuEntry), __LOCALIZE_VERFMT("Normalize to 0 %s", "sws_DLG_174"), unit.Get());
 			AddToMenu(menu, menuEntry, NORMALIZE_TO_0LU, -1, false);
 		}
 		else
@@ -3820,7 +3826,7 @@ static WDL_DLGRET NormalizeCommandDialogProc (HWND hwnd, UINT uMsg, WPARAM wPara
 			SendDlgItemMessage(hwnd, IDC_UNIT, CB_ADDSTRING, 0, (LPARAM)g_pref.GetFormatedLUString().Get());
 			SendDlgItemMessage(hwnd, IDC_UNIT, CB_SETCURSEL, unit, 0);
 
-			sprintf(tmp, "%.6g", value); SetDlgItemText(hwnd, IDC_VALUE, tmp);
+			_snprintfSafe(tmp, sizeof(tmp), "%.6g", value); SetDlgItemText(hwnd, IDC_VALUE, tmp);
 			SetFocus(GetDlgItem(hwnd, IDC_VALUE));
 			SendMessage(GetDlgItem(hwnd, IDC_VALUE), EM_SETSEL, 0, -1);
 
@@ -3855,7 +3861,7 @@ static WDL_DLGRET NormalizeCommandDialogProc (HWND hwnd, UINT uMsg, WPARAM wPara
 						int unit = (int)SendDlgItemMessage(hwnd, IDC_UNIT, CB_GETCURSEL, 0, 0);
 						char value[256]; GetDlgItemText(hwnd, IDC_VALUE, value, sizeof(value));
 
-						sprintf(value, "%.6g", (unit == 1) ? g_pref.LUFStoLU(AltAtof(value)) : g_pref.LUtoLUFS(AltAtof(value)));
+						_snprintfSafe(value, sizeof(value), "%.6g", (unit == 1) ? g_pref.LUFStoLU(AltAtof(value)) : g_pref.LUtoLUFS(AltAtof(value)));
 						SetDlgItemText(hwnd, IDC_VALUE, value);
 					}
 				}

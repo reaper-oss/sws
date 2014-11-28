@@ -1,3 +1,7 @@
+Analyze and normalize loudness
++Analyze loudness dialog:
+ - Disable analyze button while analysis is progress
+
 Fixes
 +These actions now work properly when item is trimmed or stretched:
  - SWS/BR: Split selected items at stretch markers

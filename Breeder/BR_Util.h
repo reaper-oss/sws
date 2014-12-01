@@ -86,6 +86,7 @@ int FindClosestProjMarkerIndex (double position);
 double EndOfProject (bool markers, bool regions);
 double GetProjectSettingsTempo (int* num, int* den);
 double GetGridDivSafe (); // makes sure grid div is never over MAX_GRID_DIV
+double GetMidiOscVal (double min, double max, double step, double currentVal, int commandVal, int commandValhw, int commandRelmode);
 void InitTempoMap ();
 void ScrollToTrackIfNotInArrange (MediaTrack* track);
 void StartPlayback (double position);

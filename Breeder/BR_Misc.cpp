@@ -34,9 +34,21 @@
 #include "BR_Util.h"
 #include "../SnM/SnM.h"
 #include "../SnM/SnM_Chunk.h"
+#include "../SnM/SnM_Dlg.h"
 #include "../SnM/SnM_Util.h"
 #include "../Xenakios/XenakiosExts.h"
 #include "../reaper/localize.h"
+
+/******************************************************************************
+* Constants                                                                   *
+******************************************************************************/
+const char* const ADJUST_PLAYRATE_KEY  = "BR - AdjustPlayrate";
+const char* const ADJUST_PLAYRATE_WND  = "BR - AdjustPlayrateWnd";
+
+/******************************************************************************
+* Globals                                                                     *
+******************************************************************************/
+HWND g_adjustPlayrateWnd = NULL;
 
 /******************************************************************************
 * Commands: Misc                                                              *
@@ -97,20 +109,20 @@ void SplitItemAtStretchMarkers (COMMAND_T* ct)
 			double iStart        = GetMediaItemInfo_Value(item, "D_POSITION");
 			double iEnd          = GetMediaItemInfo_Value(item, "D_LENGTH") + iStart;
 			double playRate      = GetMediaItemTakeInfo_Value(take, "D_PLAYRATE");
-			
+
 			vector<double> stretchMarkers;
 			for (int i = 0; i < GetTakeNumStretchMarkers(take); ++i)
 			{
 				double position;
 				GetTakeStretchMarker(take, i, &position, NULL);
 				position = (position / playRate) + iStart;
-				
+
 				if (position > iEnd)
 					break;
 				else
 					stretchMarkers.push_back(position);
 			}
-			
+
 			for (size_t i = 0; i < stretchMarkers.size(); ++i)
 			{
 				double position = stretchMarkers[i];
@@ -683,6 +695,108 @@ void PreviewItemAtMouse (COMMAND_T* ct)
 }
 
 /******************************************************************************
+* Commands: Misc - Adjust playrate                                            *
+******************************************************************************/
+WDL_DLGRET AdjustPlayrateOptionsProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, uMsg, wParam, lParam))
+		return r;
+
+	static pair<double,pair<double,double> >* rangeValues;
+	switch(uMsg)
+	{
+		case WM_INITDIALOG:
+		{
+			rangeValues = (pair<double,pair<double,double> >*)lParam;
+
+			char tmp[128];
+			_snprintfSafe(tmp, sizeof(tmp), "%.6g", rangeValues->second.first);  SetDlgItemText(hwnd, IDC_EDIT1, tmp);
+			_snprintfSafe(tmp, sizeof(tmp), "%.6g", rangeValues->second.second); SetDlgItemText(hwnd, IDC_EDIT2, tmp);
+			_snprintfSafe(tmp, sizeof(tmp), "%.6g", rangeValues->first);         SetDlgItemText(hwnd, IDC_EDIT3, tmp);
+
+			RestoreWindowPos(hwnd, ADJUST_PLAYRATE_WND, false);
+			ShowWindow(hwnd, SW_SHOW);
+			SetFocus(hwnd);
+		}
+		break;
+
+		case WM_COMMAND:
+		{
+			switch(LOWORD(wParam))
+			{
+				case IDOK:
+				{
+					char tmp [256];
+					GetDlgItemText(hwnd, IDC_EDIT1, tmp, 128); rangeValues->second.first  = SetToBounds(AltAtof(tmp), 0.25, 4.0);
+					GetDlgItemText(hwnd, IDC_EDIT2, tmp, 128); rangeValues->second.second = SetToBounds(AltAtof(tmp), 0.25, 4.0);
+					GetDlgItemText(hwnd, IDC_EDIT3, tmp, 128); rangeValues->first         = SetToBounds(AltAtof(tmp), 0.00001, 4.0);
+
+					_snprintfSafe(tmp, sizeof(tmp), "%lf %lf %lf", rangeValues->first, rangeValues->second.first, rangeValues->second.second);
+					WritePrivateProfileString("SWS", ADJUST_PLAYRATE_KEY, tmp, get_ini_file());
+
+					DestroyWindow(hwnd);
+				}
+				break;
+
+				case IDCANCEL:
+				{
+					DestroyWindow(hwnd);
+				}
+				break;
+			}
+		}
+		break;
+
+		case WM_DESTROY:
+		{
+			SaveWindowPos(hwnd, ADJUST_PLAYRATE_WND);
+			g_adjustPlayrateWnd = NULL;
+		}
+		break;
+	}
+	return 0;
+}
+
+void AdjustPlayrate (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
+{
+	static pair<double,pair<double,double> > s_rangeValues;
+	static bool                              s_initRangeValues = true;
+
+	if (s_initRangeValues)
+	{
+		char tmp[256];
+		GetPrivateProfileString("SWS", ADJUST_PLAYRATE_KEY, "", tmp, sizeof(tmp), get_ini_file());
+
+		LineParser lp(false);
+		lp.parse(tmp);
+		s_rangeValues.first         = (lp.getnumtokens() > 0) ? SetToBounds(lp.gettoken_float(0), 0.01, 4.0) : 0.01;
+		s_rangeValues.second.first  = (lp.getnumtokens() > 1) ? SetToBounds(lp.gettoken_float(1), 0.25, 4.0) : 0.25;
+		s_rangeValues.second.second = (lp.getnumtokens() > 2) ? SetToBounds(lp.gettoken_float(2), 0.25,    4.0) : 4;
+
+		s_initRangeValues = false;
+	}
+
+	if ((int)ct->user == 0)
+	{
+		double playrate = Master_GetPlayRateAtTime(GetPlayPosition2Ex(NULL), NULL);
+		playrate = GetMidiOscVal(s_rangeValues.second.first, s_rangeValues.second.second, s_rangeValues.first, playrate, val, valhw, relmode);
+		CSurf_OnPlayRateChange(playrate);
+	}
+	else
+	{
+		if (!g_adjustPlayrateWnd)
+			g_adjustPlayrateWnd = CreateDialogParam(g_hInst, MAKEINTRESOURCE(IDD_BR_ADJUST_PLAYRATE), hwnd, AdjustPlayrateOptionsProc, (LPARAM)&s_rangeValues);
+		else
+		{
+			DestroyWindow(g_adjustPlayrateWnd);
+			g_adjustPlayrateWnd = NULL;
+		}
+
+		RefreshToolbar(NamedCommandLookup("_BR_ADJUST_PLAYRATE_MIDI"));
+	}
+}
+
+/******************************************************************************
 * Toggle states: Misc                                                         *
 ******************************************************************************/
 int IsSnapFollowsGridVisOn (COMMAND_T* ct)
@@ -701,4 +815,9 @@ int IsTrimNewVolPanEnvsOn (COMMAND_T* ct)
 {
 	int option; GetConfig("envtrimadjmode", option);
 	return (option == (int)ct->user);
+}
+
+int IsAdjustPlayrateOptionsVisible (COMMAND_T*)
+{
+	return !!g_adjustPlayrateWnd;
 }

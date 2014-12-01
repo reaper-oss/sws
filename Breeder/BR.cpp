@@ -540,6 +540,12 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Toggle preview media item under mouse through track and pause during preview (start from mouse cursor position)" },         "BR_TPREV_ITEM_PAUSE_CURSOR_TRACK_POS", PreviewItemAtMouse, NULL, 2322},
 
 	/******************************************************************************
+	* Misc - Media item preview                                                   *
+	******************************************************************************/
+	{ { DEFACCEL, "SWS/BR: Adjust playrate (MIDI CC only)" }, "BR_ADJUST_PLAYRATE_MIDI",         NULL, NULL, 0, NULL,                           0, AdjustPlayrate},
+	{ { DEFACCEL, "SWS/BR: Adjust playrate options..." },     "BR_ADJUST_PLAYRATE_MIDI_OPTIONS", NULL, NULL, 1, IsAdjustPlayrateOptionsVisible, 0, AdjustPlayrate},
+
+	/******************************************************************************
 	* Tempo - Grid                                                                *
 	******************************************************************************/
 	{ { DEFACCEL, "SWS/BR: Move closest tempo marker to mouse cursor (perform until shortcut released)" },      "BR_MOVE_CLOSEST_TEMPO_MOUSE", MoveGridToMouse, NULL, 0},

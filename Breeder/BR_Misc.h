@@ -60,8 +60,14 @@ void RestoreCursorPosSlot (COMMAND_T*);
 void PreviewItemAtMouse (COMMAND_T*);
 
 /******************************************************************************
+* Commands: Misc - Adjust playrate                                            *
+******************************************************************************/
+void AdjustPlayrate (COMMAND_T*, int, int, int, HWND);
+
+/******************************************************************************
 * Toggle states: Misc                                                         *
 ******************************************************************************/
 int IsSnapFollowsGridVisOn (COMMAND_T*);
 int IsTrimNewVolPanEnvsOn (COMMAND_T*);
 int IsPlaybackFollowingTempoChange (COMMAND_T*);
+int IsAdjustPlayrateOptionsVisible (COMMAND_T*);

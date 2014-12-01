@@ -1432,6 +1432,21 @@ BEGIN
     LTEXT           "px",IDC_STATIC,136,26,9,8
 END
 
+IDD_BR_ADJUST_PLAYRATE DIALOGEX 0, 0, 191, 72
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "SWS/BR - Adjust playrate options"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,59,51,72,14
+    PUSHBUTTON      "Cancel",IDCANCEL,134,51,50,14
+    EDITTEXT        IDC_EDIT1,82,7,43,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT2,139,7,43,14,ES_AUTOHSCROLL
+    LTEXT           "Playrate adjust range:",IDC_STATIC,7,9,73,8
+    LTEXT           "to",IDC_STATIC,128,9,8,8
+    LTEXT           "Relative mode increment step:",IDC_STATIC,7,29,98,8
+    EDITTEXT        IDC_EDIT3,109,27,75,14,ES_AUTOHSCROLL
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -2006,6 +2021,14 @@ BEGIN
         RIGHTMARGIN, 149
         TOPMARGIN, 7
         BOTTOMMARGIN, 57
+    END
+
+    IDD_BR_ADJUST_PLAYRATE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 184
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 65
     END
 END
 #endif    // APSTUDIO_INVOKED

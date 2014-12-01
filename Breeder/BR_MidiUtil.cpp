@@ -29,6 +29,7 @@
 #include "BR_MidiUtil.h"
 #include "BR_MouseUtil.h"
 #include "BR_Util.h"
+#include "../SnM/SnM.h"
 #include "../SnM/SnM_Chunk.h"
 #include "../reaper/localize.h"
 
@@ -36,20 +37,36 @@
 * BR_MidiEditor                                                               *
 ******************************************************************************/
 BR_MidiEditor::BR_MidiEditor () :
-m_take          (NULL),
-m_midiEditor    (MIDIEditor_GetActive()),
-m_startPos      (-1),
-m_hZoom         (-1),
-m_vPos          (-1),
-m_vZoom         (-1),
-m_noteshow      (-1),
-m_timebase      (-1),
-m_pianoroll     (-1),
-m_drawChannel   (-1),
-m_eventFilterCh (-1),
-m_ppq           (-1),
-m_lastLane      (-666),
-m_valid         (false)
+m_take                 (NULL),
+m_midiEditor           (MIDIEditor_GetActive()),
+m_startPos             (-1),
+m_hZoom                (-1),
+m_vPos                 (-1),
+m_vZoom                (-1),
+m_noteshow             (-1),
+m_timebase             (-1),
+m_pianoroll            (-1),
+m_drawChannel          (-1),
+m_ppq                  (-1),
+m_lastLane             (-666),
+m_filterChannel        (-1),
+m_filterEventType      (-1),
+m_filterEventParamLo   (-1),
+m_filterEventParamHi   (-1),
+m_filterEventValLo     (-1),
+m_filterEventValHi     (-1),
+m_filterEventPosRepeat (-1),
+m_filterEventPosLo     (-1),
+m_filterEventPosHi     (-1),
+m_filterEventLenLo     (-1),
+m_filterEventLenHi     (-1),
+m_filterEnabled        (false),
+m_filterInverted       (false),
+m_filterEventParam     (false),
+m_filterEventVal       (false),
+m_filterEventPos       (false),
+m_filterEventLen       (false),
+m_valid                (false)
 {
 	m_valid        = this->Build();
 	m_lastLane     = GetLastClickedVelLane(m_midiEditor);
@@ -57,21 +74,36 @@ m_valid         (false)
 }
 
 BR_MidiEditor::BR_MidiEditor (void* midiEditor) :
-m_take          (NULL),
-m_midiEditor    (midiEditor),
-m_startPos      (-1),
-m_hZoom         (-1),
-m_vPos          (-1),
-m_vZoom         (-1),
-m_noteshow      (-1),
-m_timebase      (-1),
-m_pianoroll     (-1),
-m_drawChannel   (-1),
-m_eventFilterCh (-1),
-m_ppq           (-1),
-m_lastLane      (-666),
-m_eventFilter   (false),
-m_valid         (false)
+m_take                 (NULL),
+m_midiEditor           (midiEditor),
+m_startPos             (-1),
+m_hZoom                (-1),
+m_vPos                 (-1),
+m_vZoom                (-1),
+m_noteshow             (-1),
+m_timebase             (-1),
+m_pianoroll            (-1),
+m_drawChannel          (-1),
+m_ppq                  (-1),
+m_lastLane             (-666),
+m_filterChannel        (-1),
+m_filterEventType      (-1),
+m_filterEventParamLo   (-1),
+m_filterEventParamHi   (-1),
+m_filterEventValLo     (-1),
+m_filterEventValHi     (-1),
+m_filterEventPosRepeat (-1),
+m_filterEventPosLo     (-1),
+m_filterEventPosHi     (-1),
+m_filterEventLenLo     (-1),
+m_filterEventLenHi     (-1),
+m_filterEnabled        (false),
+m_filterInverted       (false),
+m_filterEventParam     (false),
+m_filterEventVal       (false),
+m_filterEventPos       (false),
+m_filterEventLen       (false),
+m_valid                (false)
 {
 	m_valid        = this->Build();
 	m_lastLane     = GetLastClickedVelLane(m_midiEditor);
@@ -79,21 +111,36 @@ m_valid         (false)
 }
 
 BR_MidiEditor::BR_MidiEditor (MediaItem_Take* take) :
-m_take           (take),
-m_midiEditor     (NULL),
-m_startPos       (-1),
-m_hZoom          (-1),
-m_vPos           (-1),
-m_vZoom          (-1),
-m_noteshow       (-1),
-m_timebase       (-1),
-m_pianoroll      (-1),
-m_drawChannel    (-1),
-m_eventFilterCh  (-1),
-m_ppq            (-1),
-m_lastLane       (-666),
-m_eventFilter    (false),
-m_valid          (false)
+m_take                 (take),
+m_midiEditor           (NULL),
+m_startPos             (-1),
+m_hZoom                (-1),
+m_vPos                 (-1),
+m_vZoom                (-1),
+m_noteshow             (-1),
+m_timebase             (-1),
+m_pianoroll            (-1),
+m_drawChannel          (-1),
+m_ppq                  (-1),
+m_lastLane             (-666),
+m_filterChannel        (-1),
+m_filterEventType      (-1),
+m_filterEventParamLo   (-1),
+m_filterEventParamHi   (-1),
+m_filterEventValLo     (-1),
+m_filterEventValHi     (-1),
+m_filterEventPosRepeat (-1),
+m_filterEventPosLo     (-1),
+m_filterEventPosHi     (-1),
+m_filterEventLenLo     (-1),
+m_filterEventLenHi     (-1),
+m_filterEnabled        (false),
+m_filterInverted       (false),
+m_filterEventParam     (false),
+m_filterEventVal       (false),
+m_filterEventPos       (false),
+m_filterEventLen       (false),
+m_valid                (false)
 {
 	m_valid        = this->Build();
 	m_ccLanesCount = (int)m_ccLanes.size();
@@ -199,15 +246,73 @@ bool BR_MidiEditor::IsCCLaneVisible (int lane)
 	return false;
 }
 
+bool BR_MidiEditor::IsNoteVisible (MediaItem_Take* take, int id)
+{
+	bool visible = false;
+	if (take)
+	{
+		if (!m_filterEnabled)
+		{
+			visible = true;
+		}
+		else
+		{
+			double start, end;
+			int channel, velocity, pitch;
+			if (MIDI_GetNote(take, id, NULL, NULL, &start, &end, &channel, &pitch, &velocity))
+				visible = this->CheckVisibility(take, STATUS_NOTE_ON, start, end, channel, pitch, velocity);
+		}
+	}
+
+	return visible;
+}
+
+bool BR_MidiEditor::IsCCVisible (MediaItem_Take* take, int id)
+{
+	bool visible = false;
+	if (take)
+	{
+		if (!m_filterEnabled)
+		{
+			visible = true;
+		}
+		else
+		{
+			double position;
+			int chanMsg, channel, msg2, msg3;
+			if (MIDI_GetCC(take, id, NULL, NULL, &position, &chanMsg, &channel, &msg2, &msg3))
+				visible = this->CheckVisibility(take, chanMsg, position, 0, channel, msg2, msg3);
+		}
+	}
+
+	return visible;
+}
+
+bool BR_MidiEditor::IsSysVisible (MediaItem_Take* take, int id)
+{
+	bool visible = false;
+
+	if (take)
+	{
+		if (!m_filterEnabled)
+		{
+			visible = true;
+		}
+		else
+		{
+			double position;
+			if (MIDI_GetTextSysexEvt(take, id, NULL, NULL, &position, NULL, NULL, NULL))
+				visible = this->CheckVisibility(take, STATUS_SYS, position, 0, 0, 0, 0);
+		}
+	}
+
+	return visible;
+}
+
 bool BR_MidiEditor::IsChannelVisible (int channel)
 {
-	if (m_eventFilter)
-	{
-		if (m_eventFilterCh == 0)
-			return true;
-		else
-			return !!GetBit(m_eventFilterCh, channel);
-	}
+	if (m_filterEnabled)
+		return !!GetBit(((m_filterInverted) ? (~m_filterChannel) : (m_filterChannel)), channel);
 	else
 		return true;
 }
@@ -220,6 +325,51 @@ void* BR_MidiEditor::GetEditor ()
 bool BR_MidiEditor::IsValid ()
 {
 	return m_valid;
+}
+
+bool BR_MidiEditor::CheckVisibility (MediaItem_Take* take, int chanMsg, double position, double end, int channel, int param, int value)
+{
+	bool channelVis   = (chanMsg == STATUS_SYS) ? true : !!GetBit(m_filterChannel, channel);
+	bool eventTypeVis = (chanMsg == m_filterEventType || m_filterEventType == -1);
+
+	if (eventTypeVis)
+	{
+		if (chanMsg == STATUS_PITCH)
+			value =  (value << 7) | param;
+
+		bool paramVis = (!m_filterEventParam ? true : CheckBounds(param,           m_filterEventParamLo, m_filterEventParamHi));
+		bool valVis   = (!m_filterEventVal   ? true : CheckBounds(value,           m_filterEventValLo,   m_filterEventValHi));
+		bool lenVis   = (!m_filterEventLen   ? true : CheckBounds(end - position,  m_filterEventLenLo,   m_filterEventLenHi));
+		bool posVis   = (!m_filterEventPos   ? true : false);
+
+		if (!posVis)
+		{
+			double measureEnd   = GetEndOfMeasure(take, position);
+			double measureStart = GetStartOfMeasure(take, measureEnd);
+
+			/* Shrink measureStart and measureEnd to obey repeat rate */
+			if (m_filterEventPosRepeat != 0)
+			{
+				double tmp = measureStart + (m_filterEventPosRepeat * TruncToInt((position - measureStart) / m_filterEventPosRepeat));
+				if (tmp < measureEnd)
+					measureStart = tmp;
+
+				tmp = measureStart + m_filterEventPosRepeat;
+				if (tmp < measureEnd)
+					measureEnd = tmp;
+			}
+			double positionStart = measureStart + m_filterEventPosLo; if (positionStart > measureEnd) positionStart = measureEnd;
+			double positionEnd   = measureStart + m_filterEventPosHi; if (positionEnd   > measureEnd) positionEnd   = measureEnd;
+
+			posVis = (position < positionStart) ? false : ((position >= positionEnd) ? false : true);
+		}
+
+		eventTypeVis = paramVis && valVis && lenVis && posVis;
+	}
+
+	bool visible = (chanMsg == STATUS_SYS) ? (eventTypeVis) : (channelVis && eventTypeVis);
+	return ((m_filterInverted) != visible);
+
 }
 
 bool BR_MidiEditor::Build ()
@@ -245,7 +395,9 @@ bool BR_MidiEditor::Build ()
 				{
 					lp.parse(lineLane.Get());
 					m_ccLanes.push_back(lp.gettoken_int(1));
-					m_ccLanesHeight.push_back(lp.gettoken_int((m_midiEditor) ? 2 : 3));
+					m_ccLanesHeight.push_back(lp.gettoken_int(((m_midiEditor) ? 2 : 3)));
+					if (!m_midiEditor && m_ccLanesHeight.back() == 0)
+						m_ccLanesHeight.back() = INLINE_MIDI_LANE_DIVIDER_H; // sometimes REAPER will return 0 when lane is completely hidden, but divider will still be visible
 					lineLane.DeleteSub(0, lineLane.GetLength());
 				}
 
@@ -281,11 +433,23 @@ bool BR_MidiEditor::Build ()
 				if (ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "SOURCE", "EVTFILTER", 0, -1, &lineFilter))
 				{
 					lp.parse(lineFilter.Get());
-					m_eventFilterCh     = lp.gettoken_int(1);
-					m_eventFilter       = !!GetBit(lp.gettoken_int(7), 0);
-
-					if (!!GetBit(lp.gettoken_int(7), 2)) // invert filter if needed
-						m_eventFilterCh = ~m_eventFilterCh;
+					m_filterEnabled        = !!GetBit(lp.gettoken_int(7), 0);
+					m_filterInverted       = !!GetBit(lp.gettoken_int(7), 2);
+					m_filterChannel        = lp.gettoken_int(1);
+					m_filterEventType      = lp.gettoken_int(2);
+					m_filterEventParam     = !!lp.gettoken_int(16);
+					m_filterEventVal       = !!lp.gettoken_int(8);
+					m_filterEventPos       = !!lp.gettoken_int(14);
+					m_filterEventLen       = !!lp.gettoken_int(9);
+					m_filterEventParamLo   = lp.gettoken_int(17);
+					m_filterEventParamHi   = lp.gettoken_int(18);
+					m_filterEventValLo     = lp.gettoken_int(4);
+					m_filterEventValHi     = lp.gettoken_int(5);
+					m_filterEventPosRepeat = lp.gettoken_float(15);
+					m_filterEventPosLo     = lp.gettoken_float(12);
+					m_filterEventPosHi     = lp.gettoken_float(13);
+					m_filterEventLenLo     = lp.gettoken_float(10);
+					m_filterEventLenHi     = lp.gettoken_float(11);
 				}
 				else
 					return false;
@@ -294,13 +458,27 @@ bool BR_MidiEditor::Build ()
 				if (ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "SOURCE", "CFGEDIT", 0, -1, &lineProp))
 				{
 					lp.parse(lineProp.Get());
-					m_pianoroll    = lp.gettoken_int(6);
+					m_pianoroll    = (m_midiEditor) ? lp.gettoken_int(6) : 0; // inline midi editor doesn't have piano roll modes
 					m_drawChannel  = lp.gettoken_int(9) - 1;
 					m_noteshow     = lp.gettoken_int(18);
 					m_timebase     = (m_midiEditor) ? lp.gettoken_int(19) : PROJECT_SYNC;
 				}
 				else
 					return false;
+
+				// A few "corrections" for easier manipulation afterwards
+				if (m_filterChannel == 0)     m_filterChannel = ~m_filterChannel;
+				if (m_filterEventParamLo < 0) m_filterEventParamLo = 0;
+				if (m_filterEventParamHi < 0) m_filterEventParamHi = INT_MAX;
+				if (m_filterEventValLo   < 0) m_filterEventValLo   = 0;
+				if (m_filterEventValHi   < 0) m_filterEventValHi   = INT_MAX;
+				if (m_filterEventPosLo   < 0) m_filterEventPosLo   = 0;
+				if (m_filterEventPosHi   < 0) m_filterEventPosHi   = INT_MAX;
+				m_filterEventLenLo     = (m_filterEventLenLo     < 0) ? (0)       : (m_ppq * 4 * m_filterEventLenLo);
+				m_filterEventLenHi     = (m_filterEventLenHi     < 0) ? (INT_MAX) : (m_ppq * 4 * m_filterEventLenHi);
+				m_filterEventPosLo     = (m_filterEventPosLo     < 0) ? (0)       : (m_ppq * 4 * m_filterEventPosLo);
+				m_filterEventPosHi     = (m_filterEventPosHi     < 0) ? (INT_MAX) : (m_ppq * 4 * m_filterEventPosHi);
+				m_filterEventPosRepeat = (m_filterEventPosRepeat < 0) ? (0)       : (m_ppq * 4 * m_filterEventPosRepeat);
 
 				return true;
 			}
@@ -362,7 +540,7 @@ void BR_MidiItemTimePos::Restore (bool clearCurrentEvents /*=true*/, double offs
 			if (MIDI_CountEvts(take, &noteCount, &ccCount, &textCount))
 			{
 				for (int i = 0; i < noteCount; ++i) MIDI_DeleteNote(take, 0);
-				for (int i = 0; i < ccCount; ++i)   MIDI_DeleteCC(take, 0);
+				for (int i = 0; i < ccCount;   ++i) MIDI_DeleteCC(take, 0);
 				for (int i = 0; i < textCount; ++i) MIDI_DeleteTextSysexEvt(take, 0);
 			}
 		}
@@ -542,15 +720,13 @@ set<int> GetUsedCCLanes (void* midiEditor, int detect14bit)
 		for (int id = 0; id < ccCount; ++id)
 		{
 			int chanMsg, chan, msg2;
-			MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, &chan, &msg2, NULL);
-
-			if (!editor.IsChannelVisible(chan))
+			if (!MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, &chan, &msg2, NULL) || !editor.IsCCVisible(take, id))
 				continue;
 
-			if      (chanMsg == 0xC0) usedCC.insert(CC_PROGRAM);
-			else if (chanMsg == 0xD0) usedCC.insert(CC_CHANNEL_PRESSURE);
-			else if (chanMsg == 0xE0) usedCC.insert(CC_PITCH);
-			else if (chanMsg == 0xB0)
+			if      (chanMsg == STATUS_PROGRAM)          usedCC.insert(CC_PROGRAM);
+			else if (chanMsg == STATUS_CHANNEL_PRESSURE) usedCC.insert(CC_CHANNEL_PRESSURE);
+			else if (chanMsg == STATUS_PITCH)            usedCC.insert(CC_PITCH);
+			else if (chanMsg == STATUS_CC)
 			{
 				if (msg2 > 63 || detect14bit == 0)
 					usedCC.insert(msg2);
@@ -568,10 +744,12 @@ set<int> GetUsedCCLanes (void* midiEditor, int detect14bit)
 							double pos;
 							MIDI_GetCC(take, id, NULL, NULL, &pos, NULL, NULL, NULL, NULL);
 
-							double nextPos;
-							int nextChanMsg, nextChan, nextMsg2;
-							while (MIDI_GetCC(take, ++tmpId, NULL, NULL, &nextPos, &nextChanMsg, &nextChan, &nextMsg2, NULL))
+							while (true)
 							{
+								double nextPos;
+								int nextChanMsg, nextChan, nextMsg2;
+								MIDI_GetCC(take, ++tmpId, NULL, NULL, &nextPos, &nextChanMsg, &nextChan, &nextMsg2, NULL);
+
 								if (nextPos > pos)
 								{
 									if (detect14bit == 2)
@@ -582,7 +760,7 @@ set<int> GetUsedCCLanes (void* midiEditor, int detect14bit)
 									break;
 								}
 
-								if (nextChanMsg == 0xB0 && msg2 == nextMsg2 - 32 && chan == nextChan)
+								if (nextChanMsg == STATUS_CC && msg2 == nextMsg2 - 32 && chan == nextChan)
 								{
 									usedCC.insert(msg2 + CC_14BIT_START);
 									break;
@@ -607,17 +785,19 @@ set<int> GetUsedCCLanes (void* midiEditor, int detect14bit)
 							double pos;
 							MIDI_GetCC(take, id, NULL, NULL, &pos, NULL, NULL, NULL, NULL);
 
-							double prevPos;
-							int prevChanMsg, prevChan, prevMsg2;
-							while (MIDI_GetCC(take, --tmpId, NULL, NULL, &prevPos, &prevChanMsg, &prevChan, &prevMsg2, NULL))
+							while (true)
 							{
+								double prevPos;
+								int prevChanMsg, prevChan, prevMsg2;
+								MIDI_GetCC(take, --tmpId, NULL, NULL, &prevPos, &prevChanMsg, &prevChan, &prevMsg2, NULL);
 								if (prevPos < pos)
 								{
 									if (detect14bit == 2)
 										usedCC.insert(msg2);
 									break;
 								}
-								if (prevChanMsg == 0xB0 && msg2 == prevMsg2 + 32 && chan == prevChan)
+
+								if (prevChanMsg == STATUS_CC && msg2 == prevMsg2 + 32 && chan == prevChan)
 									break;
 							}
 						}
@@ -627,6 +807,7 @@ set<int> GetUsedCCLanes (void* midiEditor, int detect14bit)
 				}
 			}
 		}
+
 		if (detect14bit == 2)
 		{
 			for (set<int>::iterator it = unpairedMSB.begin(); it != unpairedMSB.end(); ++it)
@@ -634,7 +815,7 @@ set<int> GetUsedCCLanes (void* midiEditor, int detect14bit)
 				if (usedCC.find(*it + CC_14BIT_START) != usedCC.end())
 				{
 					usedCC.erase(*it + CC_14BIT_START);
-					usedCC.insert(*it + 32);             // MSB is already there, LSB doesn't have to be so add it
+					usedCC.insert(*it + 32);            // MSB is already there, LSB doesn't have to be so add it
 				}
 			}
 		}
@@ -710,7 +891,7 @@ double EffectiveMidiTakeLength (MediaItem_Take* take, bool ignoreMutedEvents, bo
 			}
 		}
 
-		for (int i = ccCount-1 ; i >= 0; --i)
+		for (int i = ccCount - 1; i >= 0; --i)
 		{
 			bool muted; double pos;
 			MIDI_GetCC(take, i, NULL, &muted, &pos, NULL, NULL, NULL, NULL);
@@ -792,12 +973,36 @@ double EffectiveMidiTakeStart (MediaItem_Take* take, bool ignoreMutedEvents, boo
 		{
 			if (!validNote) noteStart = (validSys) ? sysStart : ccStart;
 			if (!validCC)   ccStart   = (validSys) ? sysStart : noteStart;
-			if (!validSys)  sysStart  = (ccStart)  ? ccStart : noteStart;
+			if (!validSys)  sysStart  = (ccStart)  ? ccStart  : noteStart;
 
 			return MIDI_GetProjTimeFromPPQPos(take, min(min(noteStart, ccStart), sysStart));
 		}
 	}
 	return GetMediaItemInfo_Value(GetMediaItemTake_Item(take), "D_POSITION");
+}
+
+double GetStartOfMeasure (MediaItem_Take* take, double ppqPos)
+{
+	if (take)
+	{
+		int measure;
+		if (TimeMap2_timeToBeats(NULL, MIDI_GetProjTimeFromPPQPos(take, ppqPos), &measure, NULL, NULL, NULL) < SNM_FUDGE_FACTOR && measure > 0)
+			--measure;
+		return MIDI_GetPPQPosFromProjTime(take, TimeMap2_beatsToTime(NULL, 0, &measure));
+	}
+	return -1;
+}
+
+double GetEndOfMeasure (MediaItem_Take* take, double ppqPos)
+{
+	if (take)
+	{
+		int measure;
+		TimeMap2_timeToBeats(NULL, MIDI_GetProjTimeFromPPQPos(take, ppqPos), &measure, NULL, NULL, NULL);
+		++measure;
+		return MIDI_GetPPQPosFromProjTime(take, TimeMap2_beatsToTime(NULL, 0, &measure));
+	}
+	return -1;
 }
 
 void SetMutedNotes (MediaItem_Take* take, const vector<int>& muteStatus)
@@ -840,15 +1045,16 @@ void UnselectAllEvents (MediaItem_Take* take, int lane)
 			while ((id = MIDI_EnumSelCC(take, id)) != -1)
 			{
 				int cc, chanMsg;
-				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, NULL, &cc, NULL) && chanMsg == 0xB0 && cc == lane)
+				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, NULL, &cc, NULL) && chanMsg == STATUS_CC && cc == lane)
 					MIDI_SetCC(take, id, &g_bFalse, NULL, NULL, NULL, NULL, NULL, NULL);
 			}
 		}
 		else if (lane == CC_PROGRAM || lane == CC_CHANNEL_PRESSURE || lane == CC_PITCH || lane == CC_BANK_SELECT)
 		{
-			if (lane == CC_BANK_SELECT) lane = CC_PROGRAM;
+			if (lane == CC_BANK_SELECT)
+				lane = CC_PROGRAM;
 
-			int type = (lane == CC_PROGRAM) ? (0xC0) : (lane == CC_CHANNEL_PRESSURE ? 0xD0 : 0xE0);
+			int type = (lane == CC_PROGRAM) ? (STATUS_PROGRAM) : ((lane == CC_CHANNEL_PRESSURE) ? STATUS_CHANNEL_PRESSURE : STATUS_PITCH);
 			int id = -1;
 			while ((id = MIDI_EnumSelCC(take, id)) != -1)
 			{
@@ -882,7 +1088,7 @@ void UnselectAllEvents (MediaItem_Take* take, int lane)
 			while ((id = MIDI_EnumSelCC(take, id)) != -1)
 			{
 				int cc, chanMsg;
-				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, NULL, &cc, NULL) && chanMsg == 0xB0 && (cc == cc1 || cc == cc2))
+				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, NULL, &cc, NULL) && chanMsg == STATUS_CC && (cc == cc1 || cc == cc2))
 					MIDI_SetCC(take, id, &g_bFalse, NULL, NULL, NULL, NULL, NULL, NULL);
 			}
 		}
@@ -948,6 +1154,57 @@ bool IsVelLaneValid (int lane)
 		return true;
 	else
 		return false;
+}
+
+int FindFirstSelectedNote (MediaItem_Take* take, BR_MidiEditor* midiEditorFilterSettings)
+{
+	int id = -1;
+	int foundId = -1;
+	while ((id = MIDI_EnumSelNotes(take, id)) != -1)
+	{
+		double position; int channel;
+		MIDI_GetNote(take, id, NULL, NULL, &position, NULL, &channel, NULL, NULL);
+		if (midiEditorFilterSettings)
+		{
+			if (midiEditorFilterSettings->IsNoteVisible(take, id))
+			{
+				foundId = id;
+				break;
+			}
+		}
+		else
+		{
+			foundId = id;
+			break;
+		}
+	}
+	return foundId;
+}
+
+int FindFirstSelectedCC (MediaItem_Take* take, BR_MidiEditor* midiEditorFilterSettings)
+{
+	int id = -1;
+	int foundId = -1;
+	while ((id = MIDI_EnumSelCC(take, id)) != -1)
+	{
+		double position; int channel;
+		MIDI_GetCC(take, id, NULL, NULL, &position, &channel, NULL, NULL, NULL);
+
+		if (midiEditorFilterSettings)
+		{
+			if (midiEditorFilterSettings->IsCCVisible(take, id))
+			{
+				foundId = id;
+				break;
+			}
+		}
+		else
+		{
+			foundId = id;
+			break;
+		}
+	}
+	return foundId;
 }
 
 int GetMIDIFilePPQ (const char* fp)

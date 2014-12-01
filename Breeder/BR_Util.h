@@ -38,8 +38,8 @@ const double PAN_DELTA    = 0.001;
 /******************************************************************************
 * Macros                                                                      *
 ******************************************************************************/
-#define SKIP(counter, count)   {(counter)+=(count); continue;}
-#define BINARY(x)              BinaryToDecimal(#x)
+#define SKIP(counter, count) {(counter)+=(count); continue;}
+#define BINARY(x)            BinaryToDecimal(#x)
 
 /******************************************************************************
 * Miscellaneous                                                               *

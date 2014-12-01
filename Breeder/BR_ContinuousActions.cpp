@@ -120,7 +120,6 @@ static void SetTooltip (const char* text, POINT* p)
 
 static LRESULT CALLBACK ArrangeWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-
 	if (uMsg == WM_SETCURSOR && g_actionInProgress && g_actionInProgress->SetMouseCursor)
 	{
 		if (HCURSOR cursor = g_actionInProgress->SetMouseCursor(BR_ContinuousAction::ARRANGE))

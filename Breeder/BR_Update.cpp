@@ -285,7 +285,7 @@ void VersionCheckDialog (HWND hwnd)
 void GetStartupSearchOptions (bool* official, bool* beta, unsigned int* lastTime)
 {
 	char tmp[256];
-	GetPrivateProfileString("SWS", STARTUP_VERSION_KEY, "", tmp, 256, get_ini_file());
+	GetPrivateProfileString("SWS", STARTUP_VERSION_KEY, "", tmp, sizeof(tmp), get_ini_file());
 
 	LineParser lp(false);
 	lp.parse(tmp);
@@ -299,7 +299,7 @@ void SetStartupSearchOptions (bool official, bool beta, unsigned int lastTime)
 	char tmp[256];
 	if (lastTime == 0) // lastTime = 0 will prevent overwriting current lastTime
 	{
-		GetPrivateProfileString("SWS", STARTUP_VERSION_KEY, "", tmp, 256, get_ini_file());
+		GetPrivateProfileString("SWS", STARTUP_VERSION_KEY, "", tmp, sizeof(tmp), get_ini_file());
 		LineParser lp(false);
 		lp.parse(tmp);
 		lastTime = lp.gettoken_uint(2);

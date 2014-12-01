@@ -64,6 +64,34 @@ enum BR_MidiVelLanes
 };
 
 /******************************************************************************
+* MIDI status bytes - purely for readability                                  *
+******************************************************************************/
+enum BR_MidiStatusBytes
+{
+	STATUS_NOTE_ON          = 0x90,
+	STATUS_POLY_PRESSURE    = 0xA0,
+	STATUS_CC               = 0xB0,
+	STATUS_PROGRAM          = 0xC0,
+	STATUS_CHANNEL_PRESSURE = 0xD0,
+	STATUS_PITCH            = 0xE0,
+	STATUS_SYS              = 0xF0
+};
+
+/******************************************************************************
+* Various constants related to position and dimension of MIDI editor elements *
+******************************************************************************/
+const int MIDI_RULER_H                 = 44;
+const int MIDI_LANE_DIVIDER_H          = 9;
+const int MIDI_LANE_TOP_GAP            = 4;
+const int MIDI_BLACK_KEYS_W            = 73;
+
+const int INLINE_MIDI_MIN_H            = 32;
+const int INLINE_MIDI_MIN_NOTEVIEW_H   = 24;
+const int INLINE_MIDI_LANE_DIVIDER_H   = 6;
+const int INLINE_MIDI_KEYBOARD_W       = 12;
+const int INLINE_MIDI_TOP_BAR_H        = 17;
+
+/******************************************************************************
 * Class for managing normal or inline MIDI editor (read-only for now)         *
 ******************************************************************************/
 class BR_MidiEditor
@@ -94,6 +122,9 @@ public:
 	bool IsCCLaneVisible (int lane);
 
 	/* Event filter */
+	bool IsNoteVisible (MediaItem_Take* take, int id);
+	bool IsCCVisible (MediaItem_Take* take, int id);
+	bool IsSysVisible (MediaItem_Take* take, int id);
 	bool IsChannelVisible (int channel);
 
 	/* Misc */
@@ -104,14 +135,17 @@ public:
 
 private:
 	bool Build ();
+	bool CheckVisibility (MediaItem_Take* take, int chanMsg, double position, double end, int channel, int param, int value);
 
 	MediaItem_Take* m_take;
 	void* m_midiEditor;
 	double m_startPos, m_hZoom;
-	int m_vPos, m_vZoom, m_noteshow, m_timebase, m_pianoroll, m_drawChannel, m_eventFilterCh, m_ccLanesCount, m_ppq, m_lastLane;
+	int m_vPos, m_vZoom, m_noteshow, m_timebase, m_pianoroll, m_drawChannel, m_ccLanesCount, m_ppq, m_lastLane;
+	int m_filterChannel, m_filterEventType, m_filterEventParamLo, m_filterEventParamHi, m_filterEventValLo, m_filterEventValHi;
+	double m_filterEventPosRepeat, m_filterEventPosLo, m_filterEventPosHi, m_filterEventLenLo, m_filterEventLenHi;
+	bool m_filterEnabled, m_filterInverted, m_filterEventParam, m_filterEventVal, m_filterEventPos, m_filterEventLen;
+	bool m_valid;
 	vector<int> m_ccLanes, m_ccLanesHeight;
-	bool m_eventFilter, m_valid;
-
 };
 
 /******************************************************************************
@@ -178,6 +212,8 @@ vector<int> MuteSelectedNotes (MediaItem_Take* take); // returns previous mute s
 set<int> GetUsedCCLanes (void* midiEditor, int detect14bit); // detect14bit: 0-> don't detect 14-bit, 1->detect partial 14-bit (count both 14 bit lanes and their counterparts) 2->detect full 14-bit (detect only if all CCs that make it have exactly same time positions)
 double EffectiveMidiTakeLength (MediaItem_Take* take, bool ignoreMutedEvents, bool ignoreTextEvents);
 double EffectiveMidiTakeStart (MediaItem_Take* take, bool ignoreMutedEvents, bool ignoreTextEvents);
+double GetStartOfMeasure (MediaItem_Take* take, double ppqPos); // working versions of MIDI_GetPPQPos_StartOfMeasure
+double GetEndOfMeasure (MediaItem_Take* take, double ppqPos);   // and MIDI_GetPPQPos_EndOfMeasure
 void SetMutedNotes (MediaItem_Take* take, const vector<int>& muteStatus);
 void SetSelectedNotes (MediaItem_Take* take, const vector<int>& selectedNotes, bool unselectOthers);
 void UnselectAllEvents (MediaItem_Take* take, int lane);
@@ -186,6 +222,8 @@ bool IsMidi (MediaItem_Take* take, bool* inProject = NULL);
 bool IsOpenInInlineEditor (MediaItem_Take* take);
 bool IsMidiNoteBlack (int note);
 bool IsVelLaneValid (int lane);
+int FindFirstSelectedNote (MediaItem_Take* take, BR_MidiEditor* midiEditorFilterSettings); // Pass midiEditorFilterSettings in case you
+int FindFirstSelectedCC   (MediaItem_Take* take, BR_MidiEditor* midiEditorFilterSettings); // want to check events through MIDI filter
 int GetMIDIFilePPQ (const char* fp);
 int GetLastClickedVelLane (void* midiEditor);
 int MapVelLaneToReaScriptCC (int lane); // CC format follows ReaScript scheme: 0-127=CC, 0x100|(0-31)=14-bit CC, 0x200=velocity, 0x201=pitch,

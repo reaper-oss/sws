@@ -39,9 +39,9 @@
 /******************************************************************************
 * Globals                                                                     *
 ******************************************************************************/
-static bool g_convertMarkersToTempoDialog = false;
-static bool g_selectAdjustTempoDialog = false;
-static bool g_tempoShapeDialog = false;
+static HWND g_convertMarkersToTempoWnd = NULL;
+static HWND g_selectAdjustTempoWnd = NULL;
+static HWND g_tempoShapeWnd = NULL;
 
 /******************************************************************************
 * Continuous action: move grid to mouse cursor                                *
@@ -1433,9 +1433,7 @@ void OpenTempoWiki (COMMAND_T*)
 ******************************************************************************/
 void ConvertMarkersToTempoDialog (COMMAND_T* ct)
 {
-	static HWND s_hwnd = NULL;
-
-	if (!s_hwnd)
+	if (!g_convertMarkersToTempoWnd)
 	{
 		// Detect timebase
 		bool cancel = false;
@@ -1448,31 +1446,28 @@ void ConvertMarkersToTempoDialog (COMMAND_T* ct)
 		}
 
 		if (!cancel)
-			s_hwnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_BR_MARKERS_TO_TEMPO), g_hwndParent, ConvertMarkersToTempoProc);
+			g_convertMarkersToTempoWnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_BR_MARKERS_TO_TEMPO), g_hwndParent, ConvertMarkersToTempoProc);
 	}
 	else
 	{
-		DestroyWindow(s_hwnd);
-		s_hwnd = NULL;
+		DestroyWindow(g_convertMarkersToTempoWnd);
+		g_convertMarkersToTempoWnd = NULL;
 	}
 
-	g_convertMarkersToTempoDialog = !!s_hwnd;
+
 	RefreshToolbar(NamedCommandLookup("_SWS_BRCONVERTMARKERSTOTEMPO"));
 }
 
 void SelectAdjustTempoDialog (COMMAND_T* ct)
 {
-	static HWND s_hwnd = NULL;
-
-	if (!s_hwnd)
-		s_hwnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_BR_SELECT_ADJUST_TEMPO), g_hwndParent, SelectAdjustTempoProc);
+	if (!g_selectAdjustTempoWnd)
+		g_selectAdjustTempoWnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_BR_SELECT_ADJUST_TEMPO), g_hwndParent, SelectAdjustTempoProc);
 	else
 	{
-		DestroyWindow(s_hwnd);
-		s_hwnd = NULL;
+		DestroyWindow(g_selectAdjustTempoWnd);
+		g_selectAdjustTempoWnd = NULL;
 	}
 
-	g_selectAdjustTempoDialog = !!s_hwnd;
 	RefreshToolbar(NamedCommandLookup("_SWS_BRADJUSTSELTEMPO"));
 }
 
@@ -1483,31 +1478,27 @@ void RandomizeTempoDialog (COMMAND_T* ct)
 
 void TempoShapeOptionsDialog (COMMAND_T* ct)
 {
-	static HWND s_hwnd = NULL;
-
-	if (!s_hwnd)
-		s_hwnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_BR_TEMPO_SHAPE_OPTIONS), g_hwndParent, TempoShapeOptionsProc);
+	if (!g_tempoShapeWnd)
+		g_tempoShapeWnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_BR_TEMPO_SHAPE_OPTIONS), g_hwndParent, TempoShapeOptionsProc);
 	else
 	{
-		DestroyWindow(s_hwnd);
-		s_hwnd = NULL;
+		DestroyWindow(g_tempoShapeWnd);
+		g_tempoShapeWnd = NULL;
 	}
-
-	g_tempoShapeDialog = !!s_hwnd;
 	RefreshToolbar(NamedCommandLookup("_BR_TEMPO_SHAPE_OPTIONS"));
 }
 
 int IsConvertMarkersToTempoVisible (COMMAND_T* ct)
 {
-	return g_convertMarkersToTempoDialog;
+	return !!g_convertMarkersToTempoWnd;
 }
 
 int IsSelectAdjustTempoVisible (COMMAND_T* ct)
 {
-	return g_selectAdjustTempoDialog;
+	return !!g_selectAdjustTempoWnd;
 }
 
 int IsTempoShapeOptionsVisible (COMMAND_T* ct)
 {
-	return g_tempoShapeDialog;
+	return !!g_tempoShapeWnd;
 }

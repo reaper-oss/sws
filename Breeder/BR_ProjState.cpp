@@ -34,7 +34,7 @@
 #include "../SnM/SnM_Chunk.h"
 
 /******************************************************************************
-* Project state keys                                                          *
+* Constants                                                                   *
 ******************************************************************************/
 const char* const ENVELOPE_SEL    = "<BR_ENV_SEL_SLOT";
 const char* const CURSOR_POS      = "<BR_CURSOR_POS";
@@ -354,7 +354,12 @@ m_ppq        (960)
 	{
 		if (!strcmp(lp.gettoken_str(0), "E"))
 		{
-			BR_MidiCCEvents::Event event(lp.gettoken_float(1), lp.gettoken_int(2), lp.gettoken_int(3), lp.gettoken_int(4), !!lp.gettoken_int(5));
+			BR_MidiCCEvents::Event event(lp.gettoken_float(1),
+			                             lp.gettoken_int(2),
+			                             lp.gettoken_int(3),
+			                             lp.gettoken_int(4),
+			                             !!lp.gettoken_int(5)
+			                            );
 			m_events.push_back(event);
 		}
 		else if (!strcmp(lp.gettoken_str(0), "SOURCE_LANE"))
@@ -376,7 +381,14 @@ void BR_MidiCCEvents::SaveState (ProjectStateContext* ctx)
 	ctx->AddLine("%s %d",   "SOURCE_LANE",   m_sourceLane);
 	ctx->AddLine("%s %d",   "PPQ",           m_ppq);
 	for (size_t i = 0; i < m_events.size(); ++i)
-		ctx->AddLine("E %lf %d %d %d %d", m_events[i].positionPPQ, m_events[i].channel, m_events[i].msg2, m_events[i].msg3, (int)m_events[i].mute);
+		ctx->AddLine("E %lf %d %d %d %d",
+		             m_events[i].positionPPQ,
+		             m_events[i].channel,
+		             m_events[i].msg2,
+		             m_events[i].msg3,
+		             (int)m_events[i].mute
+		            );
+
 	ctx->AddLine(">");
 }
 
@@ -391,8 +403,8 @@ bool BR_MidiCCEvents::Restore (BR_MidiEditor& midiEditor, int lane, bool allVisi
 	bool update = false;
 	if (m_events.size() && midiEditor.IsValid())
 	{
-		MediaItem_Take* take     = midiEditor.GetActiveTake();
-		MediaItem*      item     = GetMediaItemTake_Item(take);
+		MediaItem_Take* take = midiEditor.GetActiveTake();
+		MediaItem*      item = GetMediaItemTake_Item(take);
 
 		set<int> lanesToProcess;
 		if (allVisible)
@@ -420,7 +432,12 @@ bool BR_MidiCCEvents::Restore (BR_MidiEditor& midiEditor, int lane, bool allVisi
 		{
 			int targetLane           = *i;
 			int targetLane2          = targetLane;
-			if (!midiEditor.IsCCLaneVisible(targetLane) || targetLane == CC_TEXT_EVENTS || targetLane == CC_SYSEX || targetLane == CC_BANK_SELECT || targetLane == CC_VELOCITY)
+			if (!midiEditor.IsCCLaneVisible(targetLane) ||
+			    targetLane == CC_TEXT_EVENTS            ||
+			    targetLane == CC_SYSEX                  ||
+			    targetLane == CC_BANK_SELECT            ||
+			    targetLane == CC_VELOCITY
+			)
 				continue;
 
 			double insertionStartPPQ = MIDI_GetPPQPosFromProjTime(take, GetCursorPositionEx(NULL));
@@ -479,7 +496,7 @@ bool BR_MidiCCEvents::Restore (BR_MidiEditor& midiEditor, int lane, bool allVisi
 			bool do14bit    = (targetLane >= CC_14BIT_START)                                  ? true : false;
 			bool reverseMsg = (targetLane == CC_PROGRAM || targetLane == CC_CHANNEL_PRESSURE) ? true : false;
 			bool doMsg2     = (!do14bit && !CheckBounds(targetLane, 0, 127))                  ? true : false;
-			int type        = (targetLane == CC_PROGRAM) ? (0xC0) : (targetLane == CC_CHANNEL_PRESSURE ? 0xD0 : (targetLane == CC_PITCH ? 0xE0 : 0xB0));
+			int type        = (targetLane == CC_PROGRAM) ? (STATUS_PROGRAM) : (targetLane == CC_CHANNEL_PRESSURE ? STATUS_CHANNEL_PRESSURE : (targetLane == CC_PITCH ? STATUS_PITCH : STATUS_CC));
 
 			targetLane  = (do14bit) ? targetLane - CC_14BIT_START : targetLane;
 			targetLane2 = (do14bit) ? targetLane + 32             : targetLane2;
@@ -501,8 +518,10 @@ bool BR_MidiCCEvents::Restore (BR_MidiEditor& midiEditor, int lane, bool allVisi
 							  positionPPQ,
 							  type,
 							  midiEditor.IsChannelVisible(m_events[i].channel) ? m_events[i].channel : midiEditor.GetDrawChannel(),
-							  (!doMsg2)    ? targetLane       : reverseMsg ? m_events[i].msg3    : m_events[i].msg2,
-							  (reverseMsg) ? m_events[i].msg2 : m_events[i].msg3);
+							  (!doMsg2)    ? targetLane       : (reverseMsg ? m_events[i].msg3 : m_events[i].msg2),
+							  (reverseMsg) ? m_events[i].msg2 : m_events[i].msg3
+				);
+
 				if (do14bit)
 				{
 					MIDI_InsertCC(take,
@@ -512,7 +531,8 @@ bool BR_MidiCCEvents::Restore (BR_MidiEditor& midiEditor, int lane, bool allVisi
 								  type,
 								  midiEditor.IsChannelVisible(m_events[i].channel) ? m_events[i].channel : midiEditor.GetDrawChannel(),
 								  targetLane2,
-								  m_events[i].msg2);
+								  m_events[i].msg2
+					);
 				}
 			}
 
@@ -542,14 +562,13 @@ bool BR_MidiCCEvents::SaveEvents (BR_MidiEditor& midiEditor, int lane)
 		MediaItem_Take* take = midiEditor.GetActiveTake();
 		vector<BR_MidiCCEvents::Event> events;
 
-		// Normal CC lanes
 		if ((lane >= 0 && lane <= 127))
 		{
 			int id = -1;
 			while ((id = MIDI_EnumSelCC(take, id)) != -1)
 			{
 				int cc, chanMsg;
-				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, NULL, &cc, NULL) && chanMsg == 0xB0 && cc == lane)
+				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, NULL, &cc, NULL) && chanMsg == STATUS_CC && cc == lane)
 				{
 					BR_MidiCCEvents::Event event;
 					MIDI_GetCC(take, id, NULL, &event.mute, &event.positionPPQ, NULL, &event.channel, NULL, &event.msg3);
@@ -557,15 +576,13 @@ bool BR_MidiCCEvents::SaveEvents (BR_MidiEditor& midiEditor, int lane)
 				}
 			}
 		}
-
-		// Pitch
 		else if (lane == CC_PITCH)
 		{
 			int id = -1;
 			while ((id = MIDI_EnumSelCC(take, id)) != -1)
 			{
 				int chanMsg;
-				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, NULL, NULL, NULL) && chanMsg == 0xE0)
+				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, NULL, NULL, NULL) && chanMsg == STATUS_PITCH)
 				{
 					BR_MidiCCEvents::Event event;
 					MIDI_GetCC(take, id, NULL, &event.mute, &event.positionPPQ, NULL, &event.channel, &event.msg2, &event.msg3);
@@ -573,15 +590,13 @@ bool BR_MidiCCEvents::SaveEvents (BR_MidiEditor& midiEditor, int lane)
 				}
 			}
 		}
-
-		// Program and channel pressure
 		else if (lane == CC_PROGRAM || lane == CC_CHANNEL_PRESSURE)
 		{
 			int id = -1;
 			while ((id = MIDI_EnumSelCC(take, id)) != -1)
 			{
 				int chanMsg;
-				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, NULL, NULL, NULL) && chanMsg == ((lane == CC_PROGRAM) ? 0xC0 : 0xD0))
+				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, NULL, NULL, NULL) && chanMsg == ((lane == CC_PROGRAM) ? STATUS_PROGRAM : STATUS_CHANNEL_PRESSURE))
 				{
 					BR_MidiCCEvents::Event event;
 					MIDI_GetCC(take, id, NULL, &event.mute, &event.positionPPQ, NULL, &event.channel, &event.msg3, &event.msg2); // messages are reversed
@@ -589,8 +604,6 @@ bool BR_MidiCCEvents::SaveEvents (BR_MidiEditor& midiEditor, int lane)
 				}
 			}
 		}
-
-		// Velocity
 		else if (lane == CC_VELOCITY)
 		{
 			int id = -1;
@@ -601,8 +614,6 @@ bool BR_MidiCCEvents::SaveEvents (BR_MidiEditor& midiEditor, int lane)
 				events.push_back(event);
 			}
 		}
-
-		// 14 bit CC lanes
 		else if (lane >= CC_14BIT_START)
 		{
 			int id = -1;
@@ -611,7 +622,7 @@ bool BR_MidiCCEvents::SaveEvents (BR_MidiEditor& midiEditor, int lane)
 			while ((id = MIDI_EnumSelCC(take, id)) != -1)
 			{
 				int cc, chanMsg;
-				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, NULL, &cc, NULL) && chanMsg == 0xB0 && cc == cc1)
+				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, NULL, &cc, NULL) && chanMsg == STATUS_CC && cc == cc1)
 				{
 					BR_MidiCCEvents::Event event;
 					MIDI_GetCC(take, id, NULL, &event.mute, &event.positionPPQ, NULL, &event.channel, NULL, &event.msg3);
@@ -624,7 +635,7 @@ bool BR_MidiCCEvents::SaveEvents (BR_MidiEditor& midiEditor, int lane)
 						MIDI_GetCC(take, tmpId, NULL, NULL, &pos, &chanMsg2, &channel, &cc, &value);
 						if (pos > event.positionPPQ)
 							break;
-						if (chanMsg2 == 0xB0 && cc == cc2 && channel == events.back().channel)
+						if (chanMsg2 == STATUS_CC && cc == cc2 && channel == events.back().channel)
 						{
 							events.back().msg2 = value;
 							break;
@@ -803,7 +814,6 @@ bool BR_MidiToggleCCLane::Restore (void* midiEditor)
 							}
 						}
 					}
-
 				}
 			}
 		}

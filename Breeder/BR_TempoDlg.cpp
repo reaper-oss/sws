@@ -35,13 +35,7 @@
 #include "../reaper/localize.h"
 
 /******************************************************************************
-* Globals                                                                     *
-******************************************************************************/
-static double g_tempoShapeSplitRatio = -1;
-static int g_tempoShapeSplitMiddle = -1;
-
-/******************************************************************************
-* Dialog state keys                                                           *
+* Constants                                                                   *
 ******************************************************************************/
 const char* const SHAPE_KEY   = "BR - ChangeTempoShape";
 const char* const SHAPE_WND   = "BR - ChangeTempoShape WndPos";
@@ -53,6 +47,12 @@ const char* const SEL_ADJ_KEY = "BR - SelectAdjustTempo";
 const char* const SEL_ADJ_WND = "BR - SelectAdjustTempo WndPos";
 const char* const UNSEL_KEY   = "BR - DeselectNthTempo";
 const char* const UNSEL_WND   = "BR - DeselectNthTempo WndPos";
+
+/******************************************************************************
+* Globals                                                                     *
+******************************************************************************/
+static double g_tempoShapeSplitRatio  = -1;
+static int    g_tempoShapeSplitMiddle = -1;
 
 /******************************************************************************
 * Convert project markers to tempo markers                                    *
@@ -289,7 +289,7 @@ static void SaveOptionsConversion (HWND hwnd)
 static void LoadOptionsConversion (int& markers, int& num, int& den, int& removeMarkers, int& timeSel, int& gradual, int& split, char* splitRatio, int splitRatioSz)
 {
 	char tmp[512];
-	GetPrivateProfileString("SWS", CONVERT_KEY, "", tmp, 256, get_ini_file());
+	GetPrivateProfileString("SWS", CONVERT_KEY, "", tmp, sizeof(tmp), get_ini_file());
 
 	LineParser lp(false);
 	lp.parse(tmp);
@@ -341,9 +341,9 @@ WDL_DLGRET ConvertMarkersToTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 			int markers, num, den, removeMarkers, timeSel, gradual, split;
 			char eNum[128], eDen[128] , eMarkers[128], splitRatio[128];
 			LoadOptionsConversion(markers, num, den, removeMarkers, timeSel, gradual, split, splitRatio, sizeof(splitRatio));
-			sprintf(eNum, "%d", num);
-			sprintf(eDen, "%d", den);
-			sprintf(eMarkers, "%d", markers);
+			_snprintfSafe(eNum,     sizeof(eNum),     "%d", num);
+			_snprintfSafe(eDen,     sizeof(eDen),     "%d", den);
+			_snprintfSafe(eMarkers, sizeof(eMarkers), "%d", markers);
 
 			// Set controls
 			SetDlgItemText(hwnd, IDC_BR_CON_MARKERS, eMarkers);
@@ -426,9 +426,9 @@ WDL_DLGRET ConvertMarkersToTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 					bool split = !!IsDlgButtonChecked(hwnd, IDC_BR_CON_SPLIT);
 
 					// Update edit boxes and dropdown to show "atoied" value
-					sprintf(eNum, "%d", num);
-					sprintf(eDen, "%d", den);
-					sprintf(eMarkers, "%d", markers);
+					_snprintfSafe(eNum,     sizeof(eNum),     "%d", num);
+					_snprintfSafe(eDen,     sizeof(eDen),     "%d", den);
+					_snprintfSafe(eMarkers, sizeof(eMarkers), "%d", markers);
 					SetDlgItemText(hwnd, IDC_BR_CON_NUM, eNum);
 					SetDlgItemText(hwnd, IDC_BR_CON_DEN, eDen);
 					SetDlgItemText(hwnd, IDC_BR_CON_MARKERS, eMarkers);
@@ -772,9 +772,9 @@ static void UpdateTargetBpm (HWND hwnd, int doFirst, int doCursor, int doLast)
 
 	if (AltAtof(bpm1Cur) == 0)
 	{
-		sprintf(bpm1Cur, "%d", 0);
-		sprintf(bpm2Cur, "%d", 0);
-		sprintf(bpm3Cur, "%d", 0);
+		_snprintfSafe(bpm1Cur, sizeof(bpm1Cur), "%d", 0);
+		_snprintfSafe(bpm2Cur, sizeof(bpm2Cur), "%d", 0);
+		_snprintfSafe(bpm3Cur, sizeof(bpm3Cur), "%d", 0);
 	}
 	else
 	{
@@ -796,9 +796,9 @@ static void UpdateTargetBpm (HWND hwnd, int doFirst, int doCursor, int doLast)
 			bpm3Tar = AltAtof(bpmAdj) + AltAtof(bpm3Cur);
 		}
 
-		sprintf(bpm1Cur, "%.6g", SetToBounds(bpm1Tar, (double)MIN_BPM, (double)MAX_BPM));
-		sprintf(bpm2Cur, "%.6g", SetToBounds(bpm2Tar, (double)MIN_BPM, (double)MAX_BPM));
-		sprintf(bpm3Cur, "%.6g", SetToBounds(bpm3Tar, (double)MIN_BPM, (double)MAX_BPM));
+		_snprintfSafe(bpm1Cur, sizeof(bpm1Cur), "%.6g", SetToBounds(bpm1Tar, (double)MIN_BPM, (double)MAX_BPM));
+		_snprintfSafe(bpm2Cur, sizeof(bpm2Cur), "%.6g", SetToBounds(bpm2Tar, (double)MIN_BPM, (double)MAX_BPM));
+		_snprintfSafe(bpm3Cur, sizeof(bpm3Cur), "%.6g", SetToBounds(bpm3Tar, (double)MIN_BPM, (double)MAX_BPM));
 	}
 
 	if (doFirst)  SetDlgItemText(hwnd, IDC_BR_ADJ_BPM_TAR_1, bpm1Cur);
@@ -818,9 +818,9 @@ static void UpdateCurrentBpm (HWND hwnd, const vector<int>& selectedPoints)
 		GetTempoTimeSigMarker(NULL, selectedPoints.back(), NULL, NULL, NULL, &bpmLast, NULL, NULL, NULL);
 	}
 	TimeMap_GetTimeSigAtTime(NULL, GetCursorPositionEx(NULL), NULL, NULL, &bpmCursor);
-	sprintf(eBpmFirst, "%.6g", bpmFirst);
-	sprintf(eBpmCursor, "%.6g", bpmCursor);
-	sprintf(eBpmLast, "%.6g", bpmLast);
+	_snprintfSafe(eBpmFirst,  sizeof(eBpmFirst),  "%.6g", bpmFirst);
+	_snprintfSafe(eBpmCursor, sizeof(eBpmCursor), "%.6g", bpmCursor);
+	_snprintfSafe(eBpmLast,   sizeof(eBpmLast),   "%.6g", bpmLast);
 
 	GetDlgItemText(hwnd, IDC_BR_ADJ_BPM_CUR_1, eBpmFirstChk, 128);
 	GetDlgItemText(hwnd, IDC_BR_ADJ_BPM_CUR_2, eBpmCursorChk, 128);
@@ -853,10 +853,10 @@ static void UpdateSelectionFields (HWND hwnd)
 	int den = atoi(eDen); if (den < MIN_SIG){den = MIN_SIG;} else if (den > MAX_SIG){den = MAX_SIG;}
 
 	// Update edit boxes with "atoied/atofed" values
-	sprintf(eBpmStart, "%.19g", bpmStart);
-	sprintf(eBpmEnd, "%.19g", bpmEnd);
-	sprintf(eNum, "%d", num);
-	sprintf(eDen, "%d", den);
+	_snprintfSafe(eBpmStart, sizeof(eBpmStart), "%.19g", bpmStart);
+	_snprintfSafe(eBpmEnd,   sizeof(eBpmEnd),   "%.19g", bpmEnd);
+	_snprintfSafe(eNum,      sizeof(eNum),      "%d", num);
+	_snprintfSafe(eDen,      sizeof(eDen),      "%d", den);
 	SetDlgItemText(hwnd, IDC_BR_SEL_BPM_START, eBpmStart);
 	SetDlgItemText(hwnd, IDC_BR_SEL_BPM_END, eBpmEnd);
 	SetDlgItemText(hwnd, IDC_BR_SEL_SIG_NUM, eNum);
@@ -928,8 +928,8 @@ static void AdjustTempoCase (HWND hwnd)
 
 	// Update edit boxes
 	UpdateTargetBpm(hwnd, 1, 1, 1);
-	sprintf(eBpmVal, "%.6g", bpmVal);
-	sprintf(eBpmPerc, "%.6g", bpmPerc);
+	_snprintfSafe(eBpmVal,  sizeof(eBpmVal),  "%.6g", bpmVal);
+	_snprintfSafe(eBpmPerc, sizeof(eBpmPerc), "%.6g", bpmPerc);
 	SetDlgItemText(hwnd, IDC_BR_ADJ_BPM_VAL, eBpmVal);
 	SetDlgItemText(hwnd, IDC_BR_ADJ_BPM_PERC, eBpmPerc);
 
@@ -985,7 +985,7 @@ static void SaveOptionsSelAdj (HWND hwnd)
 static void LoadOptionsSelAdj (double& bpmStart, double& bpmEnd, int& num, int& den, int& bpmEnb, int& sigEnb, int& timeSel, int& shape, int& type, int& selPref, int& invertPref, int& adjustType, int& adjustShape)
 {
 	char tmp[512];
-	GetPrivateProfileString("SWS", SEL_ADJ_KEY, "", tmp, 256, get_ini_file());
+	GetPrivateProfileString("SWS", SEL_ADJ_KEY, "", tmp, sizeof(tmp), get_ini_file());
 
 	LineParser lp(false);
 	lp.parse(tmp);
@@ -1077,7 +1077,7 @@ static void SaveOptionsUnselectNth (HWND hwnd)
 static void LoadOptionsUnselectNth (int& Nth, int& criteria)
 {
 	char tmp[512];
-	GetPrivateProfileString("SWS", UNSEL_KEY, "", tmp, 256, get_ini_file());
+	GetPrivateProfileString("SWS", UNSEL_KEY, "", tmp, sizeof(tmp), get_ini_file());
 
 	LineParser lp(false);
 	lp.parse(tmp);
@@ -1203,14 +1203,14 @@ WDL_DLGRET SelectAdjustTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			char eBpmStart[128], eBpmEnd[128], eNum[128], eDen[128];
 			int num, den, bpmEnb, sigEnb, timeSel, shape, type, selPref, invertPref, adjustType, adjustShape;
 			LoadOptionsSelAdj(bpmStart, bpmEnd, num, den, bpmEnb, sigEnb, timeSel, shape, type, selPref, invertPref, adjustType, adjustShape);
-			sprintf(eBpmStart, "%.6g", bpmStart);
-			sprintf(eBpmEnd, "%.6g", bpmEnd);
-			sprintf(eNum, "%d", num);
-			sprintf(eDen, "%d", den);
+			_snprintfSafe(eBpmStart, sizeof(eBpmStart), "%.6g", bpmStart);
+			_snprintfSafe(eBpmEnd,   sizeof(eBpmEnd),   "%.6g", bpmEnd);
+			_snprintfSafe(eNum,      sizeof(eNum),      "%d", num);
+			_snprintfSafe(eDen,      sizeof(eDen),      "%d", den);
 
 			char bpmCursor[128]; double effBpmCursor;
 			TimeMap_GetTimeSigAtTime(NULL, GetCursorPositionEx(NULL), NULL, NULL, &effBpmCursor);
-			sprintf(bpmCursor, "%.6g", effBpmCursor);
+			_snprintfSafe(bpmCursor, sizeof(bpmCursor), "%.6g", effBpmCursor);
 
 			// Set controls
 			SetDlgItemText(hwnd, IDC_BR_SEL_BPM_START, eBpmStart);
@@ -1377,8 +1377,8 @@ WDL_DLGRET SelectAdjustTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 						else
 							bpmPerc = 0;
 
-						sprintf(bpmTar, "%.6g", bpmVal);
-						sprintf(bpmCur, "%.6g", bpmPerc);
+						_snprintfSafe(bpmTar, sizeof(bpmTar), "%.6g", bpmVal);
+						_snprintfSafe(bpmCur, sizeof(bpmCur), "%.6g", bpmPerc);
 						SetDlgItemText(hwnd, IDC_BR_ADJ_BPM_VAL, bpmTar);
 						SetDlgItemText(hwnd, IDC_BR_ADJ_BPM_PERC, bpmCur);
 						UpdateTargetBpm(hwnd, 0, 1, 1);
@@ -1401,8 +1401,8 @@ WDL_DLGRET SelectAdjustTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 						else
 							bpmPerc = 0;
 
-						sprintf(bpmTar, "%.6g", bpmVal);
-						sprintf(bpmCur, "%.6g", bpmPerc);
+						_snprintfSafe(bpmTar, sizeof(bpmTar), "%.6g", bpmVal);
+						_snprintfSafe(bpmCur, sizeof(bpmCur), "%.6g", bpmPerc);
 						SetDlgItemText(hwnd, IDC_BR_ADJ_BPM_VAL, bpmTar);
 						SetDlgItemText(hwnd, IDC_BR_ADJ_BPM_PERC, bpmCur);
 						UpdateTargetBpm(hwnd, 1, 0, 1);
@@ -1425,8 +1425,8 @@ WDL_DLGRET SelectAdjustTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 						else
 							bpmPerc = 0;
 
-						sprintf(bpmTar, "%.6g", bpmVal);
-						sprintf(bpmCur, "%.6g", bpmPerc);
+						_snprintfSafe(bpmTar, sizeof(bpmTar), "%.6g", bpmVal);
+						_snprintfSafe(bpmCur, sizeof(bpmCur), "%.6g", bpmPerc);
 						SetDlgItemText(hwnd, IDC_BR_ADJ_BPM_VAL, bpmTar);
 						SetDlgItemText(hwnd, IDC_BR_ADJ_BPM_PERC, bpmCur);
 						UpdateTargetBpm(hwnd, 1, 1, 0);
@@ -1585,7 +1585,7 @@ static void SaveOptionsRandomizeTempo (HWND hwnd)
 static void LoadOptionsRandomizeTempo (double& min, double& max, int& unit, double& minLimit, double& maxLimit, int& unitLimit, int& limit)
 {
 	char tmp[512];
-	GetPrivateProfileString("SWS", RAND_KEY, "", tmp, 256, get_ini_file());
+	GetPrivateProfileString("SWS", RAND_KEY, "", tmp, sizeof(tmp), get_ini_file());
 
 	LineParser lp(false);
 	lp.parse(tmp);
@@ -1645,10 +1645,10 @@ WDL_DLGRET RandomizeTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 			char eMin[128], eMax[128], eMinLimit[128], eMaxLimit[128];
 			int unit, unitLimit, limit;
 			LoadOptionsRandomizeTempo (min, max, unit, minLimit, maxLimit, unitLimit, limit);
-			sprintf(eMin, "%.19g", min);
-			sprintf(eMax, "%.19g", max);
-			sprintf(eMinLimit, "%.19g", minLimit);
-			sprintf(eMaxLimit, "%.19g", maxLimit);
+			_snprintfSafe(eMin,      sizeof(eMin),      "%.19g", min);
+			_snprintfSafe(eMax,      sizeof(eMax),      "%.19g", max);
+			_snprintfSafe(eMinLimit, sizeof(eMinLimit), "%.19g", minLimit);
+			_snprintfSafe(eMaxLimit, sizeof(eMaxLimit), "%.19g", maxLimit);
 
 			// Set controls
 			SetDlgItemText(hwnd, IDC_BR_RAND_MIN, eMin);
@@ -1722,10 +1722,10 @@ WDL_DLGRET RandomizeTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 					int unitLimit = (int)SendDlgItemMessage(hwnd, IDC_BR_RAND_LIMIT_UNIT, CB_GETCURSEL, 0, 0);
 
 					// Update edit boxes with "atofed" values
-					sprintf(eMin, "%.19g", min);
-					sprintf(eMax, "%.19g", max);
-					sprintf(eMinLimit, "%.19g", minLimit);
-					sprintf(eMaxLimit, "%.19g", maxLimit);
+					_snprintfSafe(eMin,      sizeof(eMin),      "%.19g", min);
+					_snprintfSafe(eMax,      sizeof(eMax),      "%.19g", max);
+					_snprintfSafe(eMinLimit, sizeof(eMinLimit), "%.19g", minLimit);
+					_snprintfSafe(eMaxLimit, sizeof(eMaxLimit), "%.19g", maxLimit);
 					SetDlgItemText(hwnd, IDC_BR_RAND_MIN, eMin);
 					SetDlgItemText(hwnd, IDC_BR_RAND_MAX, eMax);
 					SetDlgItemText(hwnd, IDC_BR_RAND_LIMIT_MIN, eMinLimit);
@@ -1787,7 +1787,7 @@ static void SaveOptionsTempoShape (HWND hwnd)
 static void LoadOptionsTempoShape (int& split, char* splitRatio, int splitRatioSz)
 {
 	char tmp[512];
-	GetPrivateProfileString("SWS", SHAPE_KEY, "", tmp, 256, get_ini_file());
+	GetPrivateProfileString("SWS", SHAPE_KEY, "", tmp, sizeof(tmp), get_ini_file());
 
 	LineParser lp(false);
 	lp.parse(tmp);

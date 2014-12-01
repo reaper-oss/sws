@@ -36,6 +36,7 @@
 #include "../Fingers/RprMidiCCLane.h"
 #include "../SnM/SnM_Chunk.h"
 #include "../SnM/SnM_Track.h"
+#include "../SnM/SnM_Util.h"
 #include "../reaper/localize.h"
 
 /******************************************************************************
@@ -252,7 +253,7 @@ void ME_CCEventAtEditCursor (COMMAND_T* ct, int val, int valhw, int relmode, HWN
 				else
 				{
 					bool do14bit    = (lane >= CC_14BIT_START) ? true : false;
-					int type        = (lane == CC_PROGRAM) ? (0xC0) : (lane == CC_CHANNEL_PRESSURE ? 0xD0 : (lane == CC_PITCH ? 0xE0 : 0xB0));
+					int type        = (lane == CC_PROGRAM) ? (STATUS_PROGRAM) : (lane == CC_CHANNEL_PRESSURE ? STATUS_CHANNEL_PRESSURE : (lane == CC_PITCH ? STATUS_PITCH : STATUS_CC));
 					int channel     = MIDIEditor_GetSetting_int(mouseInfo.GetMidiEditor(), "default_note_chan");
 					int msg2        = CheckBounds(lane, 0, 127) ? ((value >> 7) | 0) : (value & 0x7F);
 					int msg3        = CheckBounds(lane, 0, 127) ? (value & 0x7F)     : ((value >> 7) | 0);
@@ -377,7 +378,7 @@ void ME_HideCCLanes (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 					if (firstPos && laneCount == 0)
 					{
 							char newLane[512] = "";
-							if (_snprintf(newLane, sizeof(newLane), "VELLANE -1 0 0\n"))
+							if (_snprintfSafe(newLane, sizeof(newLane), "VELLANE -1 0 0\n"))
 								ptk.GetChunk()->Insert(newLane, firstPos);
 					}
 
@@ -476,13 +477,12 @@ void ME_CCToEnvPoints (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd
 	{
 		int chanMsg, channel, msg2, msg3;
 		double ppqPos;
-		if (MIDI_GetCC(take, id, NULL, NULL, &ppqPos, &chanMsg, &channel, &msg2, &msg3) && midiEditor.IsChannelVisible(channel))
+		if (MIDI_GetCC(take, id, NULL, NULL, &ppqPos, &chanMsg, &channel, &msg2, &msg3) && midiEditor.IsCCVisible(take, id))
 		{
 			double value = -1;
 			double max = -1;
 
-			// Normal CC
-			if (chanMsg == 0xB0)
+			if (chanMsg == STATUS_CC)
 			{
 				if (ppqPos != ppqPosLast)
 					processed14BitIds.clear();
@@ -504,7 +504,7 @@ void ME_CCToEnvPoints (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd
 								MIDI_GetCC(take, tmpId, NULL, NULL, &ppqPos2, &chanMsg2, &channel2, &nextMsg2, &nextMsg3);
 								if (ppqPos2 > ppqPos)
 									break;
-								if (chanMsg2 == 0xB0 && msg2 == nextMsg2 - 32 && channel == channel2)
+								if (chanMsg2 == STATUS_CC && msg2 == nextMsg2 - 32 && channel == channel2)
 								{
 									value = (double)((msg3 << 7) | nextMsg3);
 									max   = 16383;
@@ -518,14 +518,12 @@ void ME_CCToEnvPoints (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd
 
 				ppqPosLast = ppqPos;
 			}
-			// Pitch
-			else if (chanMsg == 0xE0)
+			else if (chanMsg == STATUS_PITCH)
 			{
 				value = (double)((msg3 << 7) | msg2);
 				max   = 16383;
 			}
-			// Program and channel pressure
-			else if (chanMsg == 0xC0 || chanMsg == 0xD0)
+			else if (chanMsg == STATUS_PROGRAM || chanMsg == STATUS_CHANNEL_PRESSURE)
 			{
 				value = (double)(msg2);
 				max   = 127;
@@ -547,7 +545,7 @@ void ME_CCToEnvPoints (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd
 	{
 		int channel, velocity;
 		double ppqPos;
-		if (MIDI_GetNote(take, id, NULL, NULL, &ppqPos, NULL, &channel, NULL, &velocity) && midiEditor.IsChannelVisible(channel))
+		if (MIDI_GetNote(take, id, NULL, NULL, &ppqPos, NULL, &channel, NULL, &velocity) && midiEditor.IsNoteVisible(take, id))
 		{
 			double newValue = TranslateRange(velocity, 1, 127, envelope.LaneMinValue(), envelope.LaneMaxValue());
 			double position = MIDI_GetProjTimeFromPPQPos(take, ppqPos);

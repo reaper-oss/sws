@@ -47,17 +47,6 @@ const int ENV_HIT_POINT_DOWN           = 6; // +1 because lower part is tracked 
 const int STRETCH_M_HIT_POINT          = 6;
 const int STRETCH_M_MIN_TAKE_HEIGHT    = 8;
 
-const int MIDI_RULER_H                 = 44;
-const int MIDI_LANE_DIVIDER_H          = 9;
-const int MIDI_LANE_TOP_GAP            = 4;
-const int MIDI_BLACK_KEYS_W            = 73;
-
-const int INLINE_MIDI_MIN_H            = 32;
-const int INLINE_MIDI_MIN_NOTEVIEW_H   = 24;
-const int INLINE_MIDI_KEYBOARD_W       = 12;
-const int INLINE_MIDI_LANE_DIVIDER_H   = 6;
-const int INLINE_MIDI_TOP_BAR_H        = 17;
-
 // Not tied to Reaper, purely for readability
 const int MIDI_WND_NOTEVIEW     = 1;
 const int MIDI_WND_KEYBOARD     = 2;
@@ -1222,11 +1211,11 @@ bool BR_MouseInfo::IsStretchMarkerVisible (MediaItem_Take* take, int id, double 
 
 		double itemStart = GetMediaItemInfo_Value(item, "D_POSITION");
 		double itemEnd   = GetMediaItemInfo_Value(item, "D_LENGTH") + itemStart;
-		
+
 		int x0 = RoundToInt(itemStart * arrangeZoom);
 		int x2 = TruncToInt(itemEnd   * arrangeZoom);
 		int x1 = TruncToInt(stretchMarkerPos * arrangeZoom);
-		
+
 		if (CheckBounds(x1, x0, x2))
 			visible = true;
 	}

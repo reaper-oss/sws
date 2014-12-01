@@ -518,6 +518,35 @@ double GetGridDivSafe ()
 		return gridDiv;
 }
 
+double GetMidiOscVal (double min, double max, double step, double currentVal, int commandVal, int commandValhw, int commandRelmode)
+{
+	double returnVal = currentVal;
+
+	// 14-bit resolution (MIDI pitch...OSC doesn't seem to work)
+	if (commandValhw >= 0)
+	{
+		returnVal = TranslateRange(SetToBounds((double)(commandValhw | commandVal << 7), 0.0, 16383.0), 0, 16383, min, max);
+	}
+	// MIDI
+	else if (commandValhw == -1 && commandVal >= 0 && commandVal < 128)
+	{
+		// Absolute mode
+		if (!commandRelmode)
+			returnVal = TranslateRange(commandVal, 0, 127, min, max);
+		// Relative modes
+		else
+		{
+			if      (commandRelmode == 1) {if (commandVal >= 0x40) commandVal |= ~0x3f;}               // sign extend if 0x40 set
+			else if (commandRelmode == 2) {commandVal -= 0x40;}                                        // offset by 0x40
+			else if (commandRelmode == 3) {if (commandVal &  0x40) commandVal =- (commandVal & 0x3f);} // 0x40 is sign bit
+			else                                                   commandVal = 0;
+
+			returnVal = currentVal + (commandVal * step);
+		}
+	}
+	return SetToBounds(returnVal, min, max);
+}
+
 void InitTempoMap ()
 {
 	if (!CountTempoTimeSigMarkers(NULL))
@@ -972,7 +1001,8 @@ bool SetMediaSourceProperties (MediaItem_Take* take, bool section, double start,
 				if (ProjectStateContext* ctx = ProjectCreateMemCtx(&hb))
 				{
 					memcpy(p, sourceStr.Get(), sourceStr.GetLength());
-					newSource->LoadState("<SOURCE SECTION", ctx);
+					WDL_String firstLine; firstLine.AppendFormatted(256, "%s", "<SOURCE SECTION");
+					newSource->LoadState(firstLine.Get(), ctx);
 					delete ctx;
 				}
 				else
@@ -2452,7 +2482,7 @@ void BoundToRect (RECT& boundingRect, RECT* r)
 		}
 	}
 
-	EnsureNotCompletelyOffscreen(&r); // just in case
+	EnsureNotCompletelyOffscreen(r); // just in case
 }
 
 /******************************************************************************

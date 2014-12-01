@@ -1829,7 +1829,7 @@ TrackEnvelope* GetVolEnvPreFX (MediaTrack* track)
 
 TrackEnvelope* GetTakeEnv (MediaItem_Take* take, BR_EnvType envelope)
 {
-	char* envName = NULL;
+	const char* envName = NULL;
 	if      (envelope == VOLUME) envName = "Volume";
 	else if (envelope == PAN)    envName = "Pan";
 	else if (envelope == MUTE)   envName = "Mute";

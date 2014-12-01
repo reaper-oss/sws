@@ -1,3 +1,26 @@
+Contextual toolbars
++Contextual toolbars dialog:
+ - Added support for auto close:
+  - If enabled, toolbar will automatically get closed after pressing any of it's buttons
+  - Option exists separately for each context. To enable or disable the option, right-click or double click the <i>Auto close</i> column in the context list
+  - Note that you can't set the option if context doesn't have a toolbar assigned to it
+ - Added support for custom positioning of the toolbar:
+  - There are two separate ways to set custom positioning of the toolbar:
+   - Position override found in <i>Options</i> under group <i>All</i>. Enable to set where you want <b>all the toolbars</b> to appear in relation to mouse cursor.
+   - Position offset that can be set up separately for each context. To set the option, right-click or double click the <i>Position offset</i> column in context list and type desired offset values
+  - Setting one option doesn't exclude the other, they are cumulative.
+  - If toolbar position is managed by Contextual toolbars, toolbar will never get displayed out of monitor bounds
+  - Note that you can't set the option if context doesn't have a toolbar assigned to it
+ -Other:
+  - Previously, you always had to right-click the context list to edit it, now it's also possible to edit it by double clicking the cell
++Other:
+ - Toolbars that are set to be <i>always on top</i> don't hide the tooltip anymore. Note that this works only for toolbars loaded by Contextual toolbars, the issue where REAPER hides tooltip behind pinned toolbar still exists and is reported http://forum.cockos.com/project.php?issueid=5199|here|
+ - Renamed the actions <i>SWS/BR: <b>Exclusive toggle</b> contextual toolbar under mouse cursor, preset x</i> to <i>SWS/BR: <b>Open/close</b> contextual toolbar under mouse cursor, preset x</i>
+ - Removed <i>Named notes mode</i> context from <i>Inline MIDI editor</i> group. It's currently not supported by REAPER and was mistakenly put there in the first place
++Added actions:
+ - SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset x (added in all sections: Main, MIDI editor, etc...)
+  - Note: unlike other actions which simply close all toolbars if at least one of them is open, this will always open the contextual toolbar if valid toolbar is found for the context under mouse cursor. If found toolbar is already visible or no toolbar has been found, all toolbars will get closed
+
 Analyze and normalize loudness
 +Analyze loudness dialog:
  - Disable analyze button while analysis is progress

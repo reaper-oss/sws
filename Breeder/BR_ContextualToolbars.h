@@ -34,8 +34,20 @@ class BR_MouseInfo;
 ******************************************************************************/
 enum BR_ToolbarContexts
 {
-	CONTEXT_START = 1,             // make sure first enumerator is always 1, since they
-	TRANSPORT     = CONTEXT_START, // are stored in the list view where 0 means invalid item
+	/* If adding new context group make sure to update IsContextValid() in   *
+	* BR_ContextualToolbar                                                   *
+	*                                                                        *
+	* If adding new context or removing existing one from the existing group *
+	* update UpdateInternals(), GetContextFromIniIndex() and any other       *
+	* detection function in BR_ContextualToolbar. You also need to update    *
+	* GetItemText() in BR_ContextualToolbarsView                             *
+	*                                                                        *
+	* If removing existing context, also increase REMOVED_CONTEXTS           */
+
+	CONTEXT_START  = 0,
+	UNUSED_CONTEXT = CONTEXT_START - 1,
+
+	TRANSPORT     = CONTEXT_START,
 	END_TRANSPORT,
 
 	RULER,
@@ -102,11 +114,11 @@ enum BR_ToolbarContexts
 
 	INLINE_MIDI_EDITOR,
 	INLINE_MIDI_EDITOR_PIANO,
-	INLINE_MIDI_EDITOR_PIANO_NAMED,
 	INLINE_MIDI_EDITOR_NOTES,
 	INLINE_MIDI_EDITOR_CC_LANE,
 
-	CONTEXT_COUNT
+	CONTEXT_COUNT,
+	REMOVED_CONTEXTS = 1
 };
 
 /******************************************************************************
@@ -123,7 +135,7 @@ public:
 	bool                  operator!= (const BR_ContextualToolbar& contextualToolbar);
 
 	/* Toggle appropriate toolbar under mouse cursor */
-	void LoadToolbar ();
+	void LoadToolbar (bool exclusive);
 
 	/* Get toolbar info */
 	int CountToolbars ();
@@ -133,8 +145,8 @@ public:
 	bool IsFirstMidiToolbar (int toolbarId);
 
 	/* Get and set toolbar info for specific context (for list of contexts see BR_ToolbarContexts) */
-	bool SetContext (int context, int toolbarId);
-	bool GetContext (int context, int* toolbarId);
+	bool SetContext (int context, int* toolbarId, bool* autoClose, int* positionOffsetX, int* positionOffsetY);
+	bool GetContext (int context, int* toolbarId, bool* autoclose, int* positionOffsetX, int* positionOffsetY);
 
 	/* Check contexts for various types */
 	bool IsContextValid (int context);          // Check if context is nonexistent or something like END_ARRANGE etc...
@@ -142,8 +154,8 @@ public:
 	bool CanContextFollowItem (int context);    // Check if context can follow item contexts
 
 	/* Get and set options for toolbar loading */
-	void SetOptionsAll (int* focus, int* topmost);
-	void GetOptionsAll (int* focus, int* topmost);
+	void SetOptionsAll (int* focus, int* topmost, int* position);
+	void GetOptionsAll (int* focus, int* topmost, int* position);
 	void SetOptionsTcp (int* track, int* envelope);
 	void GetOptionsTcp (int* track, int* envelope);
 	void SetOptionsMcp (int* track);
@@ -156,16 +168,19 @@ public:
 	void GetOptionsInline (int* item, int* setCCLaneAsClicked);
 
 	/* For serializing */
-	void ExportConfig (char* contexts, int contextsSz, char* options, int optionsSz);
-	void ImportConfig (const char* contexts, const char* options);
+	void ExportConfig (WDL_FastString& contextToolbars, WDL_FastString& contextAutoClose, WDL_FastString& contextPosition, WDL_FastString& options);
+	void ImportConfig (const char* contextToolbars, const char* contextAutoClose, const char* contextPosition, const char* options);
 
 private:
+	struct ContextInfo
+	{
+		int mouseAction, toggleAction, positionOffsetX, positionOffsetY;
+		bool autoClose;
+		ContextInfo ();
+	};
 	struct Options
 	{
-		int focus;
-		int topmost;
-		int tcpTrack, tcpEnvelope;
-		int mcpTrack;
+		int focus, position, topmost, tcpTrack, tcpEnvelope, mcpTrack;
 		int arrangeTrack, arrangeItem, arrangeStretchMarker, arrangeTakeEnvelope, arrangeTrackEnvelope, arrangeActTake;
 		int midiSetCCLane;
 		int inlineItem, inlineSetCCLane;
@@ -178,24 +193,28 @@ private:
 		TrackEnvelope* envelopeToSelect;
 		MediaItem* itemToSelect;
 		MediaItem* takeParent;
-		int takeIdToActivate;
-		int focusContext;
-		bool setFocus;
-		bool clearTrackSelection;
-		bool clearItemSelection;
-		bool setCCLaneAsClicked;
+		int takeIdToActivate, focusContext, positionOffsetX, positionOffsetY, positionOrientation;
+		bool positionOverride, setFocus, clearTrackSelection, clearItemSelection, setCCLaneAsClicked, autoCloseToolbar, makeTopMost;
 		ExecuteOnToolbarLoad ();
 	};
 	struct ToolbarWndData
 	{
 		HWND hwnd;
 		WNDPROC wndProc;
+		bool keepOnTop, autoClose;
+		int toggleAction;
 		#ifndef _WIN32
 			int level;
 		#endif;
+		ToolbarWndData ();
 	};
 	enum ToolbarActions
 	{
+		/* If adding or removing new actions       *
+		*  make sure to update GetReaperToolbar(), *
+		*  TranslateAction(), IsFirstToolbar(),    *
+		*  and IsFirstMidiToolbar()                */
+
 		DO_NOTHING            = 0xF001,
 		INHERIT_PARENT        = 0xF002,
 		FOLLOW_ITEM_CONTEXT   = 0xF003,
@@ -227,13 +246,10 @@ private:
 		TOOLBAR_COUNT         = 15
 	};
 
-	void UpdateInternals (); // call every time contexts change
-	void SetToolbarAlwaysOnTop (int toolbarId);
-	void CloseAllAssignedToolbars ();
-	bool AreAssignedToolbarsOpened ();
-	bool GetReaperToolbar (int id, int* mouseAction, int* toggleAction, char* toolbarName, int toolbarNameSz); // id is 0-based, returns false if toolbar doesn't exist
-	bool IsToolbarAction (int action);                                                                         // returns false in case action is something like DO_NOTHING etc..
-	int GetToolbarId (int mouseAction);
+	/* Call every time contexts change */
+	void UpdateInternals ();
+
+	/* Find context under mouse cursor */
 	int FindRulerToolbar      (BR_MouseInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad);
 	int FindTransportToolbar  (BR_MouseInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad);
 	int FindTcpToolbar        (BR_MouseInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad);
@@ -241,14 +257,53 @@ private:
 	int FindArrangeToolbar    (BR_MouseInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad);
 	int FindMidiToolbar       (BR_MouseInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad);
 	int FindInlineMidiToolbar (BR_MouseInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad);
-	static LRESULT CALLBACK ToolbarWndCallback (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
+	/* Execute options, returns true if undo point is needed */
+	bool SelectTrack           (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad);
+	bool SelectItem            (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad);
+	bool SelectEnvelope        (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad);
+	bool ActivateTake          (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad);
+	void SetFocus              (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad);
+	void SetCCLaneClicked      (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad, BR_MouseInfo& mouseInfo);
+	void RepositionToolbar     (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad, HWND toolbarHwnd);
+	void SetToolbarAlwaysOnTop (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad, HWND toolbarHwnd, int toggleAction);
+	void SetToolbarAutoClose   (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad, HWND toolbarHwnd, int toggleAction);
+
+	/* Set and get info for various contexts */
+	int GetMouseAction (int context);
+	int GetToggleAction (int context);
+	int GetPositionOffsetX (int context);
+	int GetPositionOffsetY (int context);
+	bool GetAutoClose (int context);
+	void SetMouseAction (int context, int mouseAction);
+	void SetToggleAction (int context, int toggleAction);
+	void SetPositionOffset (int context, int x, int y);
+	void SetAutoClose (int context, bool autoClose);
+
+	/* Used for serializing data */
+	int TranslateAction (int mouseAction, bool toIni);
+	int GetContextFromIniIndex (int index);
+
+	/* Get toolbar info */
+	bool GetReaperToolbar (int id, int* mouseAction, int* toggleAction, char* toolbarName, int toolbarNameSz); // id is 0-based, returns false if toolbar doesn't exist
+	bool IsToolbarAction (int action);                                                                         // returns false in case action is something like DO_NOTHING etc..
+	int GetToolbarId (int mouseAction);
+
+	/* Toolbar manipulation */
+	HWND GetFloatingToolbarHwnd (int mouseAction);
+	void CloseAllAssignedToolbars ();
+	bool AreAssignedToolbarsOpened ();
+
+	/* Ensures that toolbar is always on top or auto closed on button press */
+	static LRESULT CALLBACK ToolbarWndCallback (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+	static void TooltipTimer ();
+
+	BR_ContextualToolbar::ContextInfo m_contexts[CONTEXT_COUNT];
 	BR_ContextualToolbar::Options m_options;
-	int m_mouseActions[CONTEXT_COUNT];
-	int m_toggleActions[CONTEXT_COUNT];
 	int m_mode;
 	set<int> m_activeContexts;
-	static WDL_PtrList<BR_ContextualToolbar::ToolbarWndData> m_topToolbars;
+	static WDL_PtrList<BR_ContextualToolbar::ToolbarWndData> m_callbackToolbars;
+	static bool tooltipTimerActive;
 };
 
 /******************************************************************************
@@ -265,8 +320,7 @@ public:
 	void                  SetContextualToolbar (int id, BR_ContextualToolbar& contextualToolbars);
 
 private:
-	WDL_FastString GetContextKey (int id);
-	WDL_FastString GetOptionsKey (int id);
+	WDL_FastString GetKeyForPreset(const char* key, int id);
 	static WDL_PtrList<BR_ContextualToolbar> m_contextualToolbars;
 };
 
@@ -282,6 +336,7 @@ protected:
 	virtual void GetItemText (SWS_ListItem* item, int iCol, char* str, int iStrMax);
 	virtual void GetItemList (SWS_ListItemList* pList);
 	virtual bool OnItemSelChanging (SWS_ListItem* item, bool bSel);
+	virtual void OnItemDblClk (SWS_ListItem* item, int iCol);
 	virtual bool HideGridLines ();
 	virtual int OnItemSort (SWS_ListItem* item1, SWS_ListItem* item2);
 };
@@ -297,10 +352,12 @@ public:
 
 	void Update ();
 	bool CheckForModificationsAndSave (bool onClose);
+	bool GetPositionOffsetFromUser (int& x, int&y);
 	BR_ContextualToolbar* GetCurrentContextualToolbar ();
 	WDL_FastString GetPresetName (int preset);
 
 protected:
+	static WDL_DLGRET PositionOffsetDialogProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	virtual void OnInitDlg ();
 	virtual void OnCommand (WPARAM wParam, LPARAM lParam);
 	virtual bool CloseOnCancel ();
@@ -315,6 +372,7 @@ protected:
 	BR_ContextualToolbarsView* m_list;
 	BR_ContextualToolbar m_currentToolbar;
 	int m_currentPreset;
+	int m_contextMenuCol;
 };
 
 /******************************************************************************

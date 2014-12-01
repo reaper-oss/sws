@@ -202,6 +202,8 @@ HWND GetPianoView (void* midiEditor);
 MediaTrack* HwndToTrack (HWND hwnd, int* hwndContext);  // context: 0->unknown, 1->TCP, 2->MCP (works even if hwnd is not a track but something else in mcp/tcp)
 TrackEnvelope* HwndToEnvelope (HWND hwnd);
 void CenterDialog (HWND hwnd, HWND target, HWND zOrder);
+void GetMonitorRectFromPoint (const POINT& p, RECT* r);
+void BoundToRect (RECT& boundingRect, RECT* r);
 
 /******************************************************************************
 * Theming                                                                     *

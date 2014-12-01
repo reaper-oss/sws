@@ -2394,6 +2394,67 @@ void CenterDialog (HWND hwnd, HWND target, HWND zOrder)
 	SetWindowPos(hwnd, zOrder, r.left, r.top, 0, 0, SWP_NOSIZE);
 }
 
+void GetMonitorRectFromPoint (const POINT& p, RECT* r)
+{
+	if (!r)
+		return;
+
+	#ifdef _WIN32
+		if (HMONITOR monitor = MonitorFromPoint(p, MONITOR_DEFAULTTONEAREST))
+		{
+			MONITORINFO monitorInfo = {sizeof(MONITORINFO)};
+			GetMonitorInfo(monitor, &monitorInfo);
+			*r = monitorInfo.rcWork;
+		}
+		else
+		{
+			r->top  = 0;
+			r->left = 0;
+			r->right = 800;
+			r->left  = 600;
+		}
+	#else
+		RECT pRect = {p.x, p.y, p.x, p.y};
+		SWELL_GetViewPort(r, &pRect, false);
+	#endif
+}
+
+void BoundToRect (RECT& boundingRect, RECT* r)
+{
+	if (!r)
+		return;
+
+	if (r->top < boundingRect.top || r->bottom > boundingRect.bottom || r->left < boundingRect.left || r->right > boundingRect.right)
+	{
+		int w = r->right  - r->left;
+		int h = r->bottom - r->top;
+
+		if (r->top < boundingRect.top)
+		{
+			r->top    = boundingRect.top;
+			r->bottom = boundingRect.top + h;
+		}
+		else if (r->bottom > boundingRect.bottom)
+		{
+			r->bottom = boundingRect.bottom;
+			r->top    = boundingRect.bottom - h;
+		}
+
+		if (r->left < boundingRect.left)
+		{
+			r->left  = boundingRect.left;
+			r->right = boundingRect.left + w;
+		}
+		else if (r->right > boundingRect.right)
+		{
+			r->right = boundingRect.right;
+			r->left  = boundingRect.right - w;
+		}
+	}
+
+	EnsureNotCompletelyOffscreen(&r); // just in case
+}
+
 /******************************************************************************
 * Theming                                                                     *
 ******************************************************************************/

@@ -87,6 +87,7 @@
 #define IDD_BR_LOUDNESS_PREF            179
 #define IDD_BR_LOUDNESS_EXPORT_FORMAT   180
 #define IDD_BR_CONTEXTUAL_TOOLBARS      181
+#define IDD_BR_CONTEXTUAL_TOOLBARS_POS  182
 #define IDB_UP                          500
 #define IDB_DOWN                        501
 #define IDC_BUTTON1                     1000
@@ -439,12 +440,15 @@
 #define IDC_MIDI_BOX                    1346
 #define IDC_MIDI_CC_LANE_CLICKED        1347
 #define IDC_INLINE_BOX                  1348
-#define IDC_INLINE_ITEM                 1359
+#define IDC_INLINE_ITEM                 1349
 #define IDC_INLINE_ITEM_COMBO           1350
 #define IDC_INLINE_CC_LANE_CLICKED      1351
 #define IDC_HELP_WIKI                   1352
 #define IDC_ARG_STRETCH                 1353
 #define IDC_ARG_STRETCH_COMBO           1354
+#define IDC_ALL_POS                     1355
+#define IDC_ALL_POS_H_COMBO             1356
+#define IDC_ALL_POS_V_COMBO             1357
 
 // Next default values for new objects
 // 
@@ -452,7 +456,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        182
 #define _APS_NEXT_COMMAND_VALUE         40000
-#define _APS_NEXT_CONTROL_VALUE         1353
+#define _APS_NEXT_CONTROL_VALUE         1358
 #define _APS_NEXT_SYMED_VALUE           100
 #endif
 #endif

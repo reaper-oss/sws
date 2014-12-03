@@ -2449,7 +2449,7 @@ void GetMonitorRectFromPoint (const POINT& p, RECT* r)
 	#endif
 }
 
-void BoundToRect (RECT& boundingRect, RECT* r)
+void BoundToRect (const RECT& boundingRect, RECT* r)
 {
 	if (!r)
 		return;

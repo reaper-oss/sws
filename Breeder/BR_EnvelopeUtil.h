@@ -153,7 +153,7 @@ public:
 	double RealDisplayValue (double normalizedValue); // Convert normalized display value in range 0.0 - 1.0 to real envelope value
 	double SnapValue (double value);                  // Snaps value to current settings (only relevant for take pitch envelope)
 	void GetSelectedPointsExtrema (double* minimum, double* maximum);
-	bool GetPointsInTimeSelection (int* startId, int* endId, double* tStart = NULL, double* tEnd = NULL); // Presumes points are sorted, returns false if there is there is no time selection (if there are no points in time selection, both ids will be -1)
+	bool GetPointsInTimeSelection (int* startId, int* endId, double* tStart = NULL, double* tEnd = NULL); // Presumes points are sorted, returns false if there is no time selection (if there are no points in time selection, both ids will be -1)
 
 	/* Miscellaneous */
 	bool VisibleInArrange (int* envHeight, int* yOffset, bool cacheValues = false); // Is part of the envelope visible in arrange (height calculation can be intensive (envelopes in track lane), use cacheValues if situation allows)

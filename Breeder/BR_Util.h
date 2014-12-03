@@ -204,7 +204,7 @@ MediaTrack* HwndToTrack (HWND hwnd, int* hwndContext);  // context: 0->unknown, 
 TrackEnvelope* HwndToEnvelope (HWND hwnd);
 void CenterDialog (HWND hwnd, HWND target, HWND zOrder);
 void GetMonitorRectFromPoint (const POINT& p, RECT* r);
-void BoundToRect (RECT& boundingRect, RECT* r);
+void BoundToRect (const RECT& boundingRect, RECT* r);
 
 /******************************************************************************
 * Theming                                                                     *

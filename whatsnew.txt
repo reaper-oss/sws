@@ -29,7 +29,7 @@ Added actions
 +Main:
  - SWS/BR: Adjust playrate (MIDI CC only)
  - SWS/BR: Adjust playrate options...
-  - Note: These two actions work in tandem. The first action changes playrate so you can automate it.The second actions opens the dialog where you can set automatable playrate range. Also note that due to the API problems, actions can't respond to OSC, but in this case it shouldn't matter since you can configure REAPER OSC to manage playrate.
+  - Note: These two actions work in tandem. The first action changes playrate so you can automate it.The second action opens the dialog where you can set automatable playrate range. Also note that due to the API problems, actions can't respond to OSC, but in this case it shouldn't matter since you can configure REAPER OSC to manage playrate.
 
 Fixes
 +These actions now work properly when item is trimmed or stretched:

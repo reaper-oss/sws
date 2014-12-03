@@ -70,8 +70,8 @@ static SWS_LVColumn g_cols[] =
 {
 	{163, 0, "Context"},
 	{105, 0, "Toolbar"},
-	{62, 0, "Auto close"},
-	{81, 0, "Position offset"},
+	{62,  0, "Auto close"},
+	{81,  0, "Position offset"},
 };
 
 enum
@@ -522,7 +522,7 @@ void BR_ContextualToolbar::ExportConfig (WDL_FastString& contextToolbars, WDL_Fa
 	contextAutoClose.DeleteSub(contextAutoClose.GetLength() - 1, 1);
 	contextPosition.DeleteSub(contextPosition.GetLength()   - 1, 1);
 
-	options.AppendFormatted(512,
+	options.AppendFormatted(1024,
 	                        "%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d",
 	                        m_options.focus,
 	                        m_options.topmost,
@@ -561,7 +561,7 @@ void BR_ContextualToolbar::ImportConfig (const char* contextToolbars, const char
 			if (mouseAction == FOLLOW_ITEM_CONTEXT && !this->CanContextFollowItem(context))
 				mouseAction = (this->CanContextInheritParent(context) ? INHERIT_PARENT : DO_NOTHING);
 			else if (mouseAction == INHERIT_PARENT      && !this->CanContextInheritParent(context))
-				mouseAction = (this->CanContextInheritParent(context) ? INHERIT_PARENT : DO_NOTHING);
+				mouseAction = DO_NOTHING;
 
 			int toggleAction;
 			this->GetReaperToolbar(this->GetToolbarId(mouseAction), NULL, &toggleAction, NULL, NULL);

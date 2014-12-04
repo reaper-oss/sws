@@ -46,6 +46,9 @@ static HWND                             g_tooltipWnd       = NULL;
 static LICE_SysBitmap*                  g_tooltipBm        = NULL;
 static int                              g_tooltips         = -1;
 
+static int                              g_continuousCmdLo  = -1;
+static int                              g_continuousCmdHi  = -1;
+
 /******************************************************************************
 * Tooltip and mouse cursor mechanism                                          *
 ******************************************************************************/
@@ -317,6 +320,8 @@ bool ContinuousActionRegister (BR_ContinuousAction* action)
 	if (action && kbd_getTextFromCmd(action->cmd, NULL) && g_actions.FindSorted(action, &CompareActionsByCmd) == -1)
 	{
 		g_actions.InsertSorted(action, &CompareActionsByCmd);
+		g_continuousCmdLo = g_actions.Get(0)->cmd;
+		g_continuousCmdHi = g_actions.Get(g_actions.GetSize() - 1)->cmd;
 		return true;
 	}
 	else
@@ -337,21 +342,24 @@ int  ContinuousActionTooltips ()
 
 bool ContinuousActionHook (int cmd, int flag)
 {
-	BR_ContinuousAction key(cmd, NULL, NULL, NULL, NULL);
-	int id = g_actions.FindSorted(&key, &CompareActionsByCmd);
-	if (id != -1)
+	if (cmd >= g_continuousCmdLo && cmd <= g_continuousCmdHi) // instead of searching the list every time, first check if cmd even within range of the list
 	{
-		if (!g_actionInProgress)
+		BR_ContinuousAction key(cmd, NULL, NULL, NULL, NULL);
+		int id = g_actions.FindSorted(&key, &CompareActionsByCmd);
+		if (id != -1)
 		{
-			if (ContinuousActionInit(true, cmd, g_actions.Get(id)))
-				return false; // all good, let it execute from the shortcut the first time
+			if (!g_actionInProgress)
+			{
+				if (ContinuousActionInit(true, cmd, g_actions.Get(id)))
+					return false; // all good, let it execute from the shortcut the first time
+				else
+					return true;
+			}
 			else
-				return true;
-		}
-		else
-		{
-			if (flag == ACTION_FLAG && g_actionInProgress->cmd == cmd) return false; // continuous action called from timer, let it pass
-			else                                                       return true;
+			{
+				if (flag == ACTION_FLAG && g_actionInProgress->cmd == cmd) return false; // continuous action called from timer, let it pass
+				else                                                       return true;
+			}
 		}
 	}
 	return false;

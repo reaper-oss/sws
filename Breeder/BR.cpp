@@ -129,12 +129,10 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 8" }, "BR_ME_EXC_CONTEXTUAL_TOOLBAR_08", NULL, NULL, -8, NULL, 32060, ToggleContextualToolbar},
 	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 8" }, "BR_ML_EXC_CONTEXTUAL_TOOLBAR_08", NULL, NULL, -8, NULL, 32061, ToggleContextualToolbar},
 	{ { DEFACCEL, "SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 8" }, "BR_MI_EXC_CONTEXTUAL_TOOLBAR_08", NULL, NULL, -8, NULL, 32062, ToggleContextualToolbar},
+
 	/******************************************************************************
 	* Envelopes - Misc                                                            *
 	******************************************************************************/
-	{ { DEFACCEL, "SWS/BR: Set closest envelope point's value to mouse cursor (perform until shortcut released)" },           "BR_ENV_PT_VAL_CLOSEST_MOUSE",        SetEnvPointMouseValue, NULL, 0},
-	{ { DEFACCEL, "SWS/BR: Set closest left side envelope point's value to mouse cursor (perform until shortcut released)" }, "BR_ENV_PT_VAL_CLOSEST_LEFT_MOUSE",   SetEnvPointMouseValue, NULL, 1},
-
 	{ { DEFACCEL, "SWS/BR: Move edit cursor to next envelope point" },                                                        "SWS_BRMOVEEDITTONEXTENV",            CursorToEnv1, NULL, 1},
 	{ { DEFACCEL, "SWS/BR: Move edit cursor to next envelope point and select it" },                                          "SWS_BRMOVEEDITSELNEXTENV",           CursorToEnv1, NULL, 2},
 	{ { DEFACCEL, "SWS/BR: Move edit cursor to next envelope point and add to selection" },                                   "SWS_BRMOVEEDITTONEXTENVADDSELL",     CursorToEnv2, NULL, 1},
@@ -548,11 +546,6 @@ static COMMAND_T g_commandTable[] =
 	/******************************************************************************
 	* Tempo - Grid                                                                *
 	******************************************************************************/
-	{ { DEFACCEL, "SWS/BR: Move closest tempo marker to mouse cursor (perform until shortcut released)" },      "BR_MOVE_CLOSEST_TEMPO_MOUSE", MoveGridToMouse, NULL, 0},
-
-	{ { DEFACCEL, "SWS/BR: Move closest grid line to mouse cursor (perform until shortcut released)" },         "BR_MOVE_GRID_TO_MOUSE",       MoveGridToMouse, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Move closest measure grid line to mouse cursor (perform until shortcut released)" }, "BR_MOVE_M_GRID_TO_MOUSE",     MoveGridToMouse, NULL, 2},
-
 	{ { DEFACCEL, "SWS/BR: Move closest grid line to edit cursor" },                                            "BR_MOVE_GRID_TO_EDIT_CUR",    MoveGridToEditPlayCursor, NULL, 0},
 	{ { DEFACCEL, "SWS/BR: Move closest grid line to play cursor" },                                            "BR_MOVE_GRID_TO_PLAY_CUR",    MoveGridToEditPlayCursor, NULL, 1},
 	{ { DEFACCEL, "SWS/BR: Move closest measure grid line to edit cursor" },                                    "BR_MOVE_M_GRID_TO_EDIT_CUR",  MoveGridToEditPlayCursor, NULL, 2},
@@ -629,29 +622,48 @@ static COMMAND_T g_commandTable[] =
 
 	{ {}, LAST_COMMAND, },
 };
-//!WANT_LOCALIZE_1ST_STRING_END
 
-static void InitContinuousActions ()
+// Separate so their cmds are consequential to optimize command hook (see ContinuousActionHook())
+static COMMAND_T g_continuousCommandTable[] =
 {
-	MoveGridToMouseInit();
-	SetEnvPointMouseValueInit();
-}
+	/******************************************************************************
+	* Envelopes - Misc                                                            *
+	******************************************************************************/
+	{ { DEFACCEL, "SWS/BR: Set closest envelope point's value to mouse cursor (perform until shortcut released)" },           "BR_ENV_PT_VAL_CLOSEST_MOUSE",      SetEnvPointMouseValue, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Set closest left side envelope point's value to mouse cursor (perform until shortcut released)" }, "BR_ENV_PT_VAL_CLOSEST_LEFT_MOUSE", SetEnvPointMouseValue, NULL, 1},
+
+	/******************************************************************************
+	* Tempo - Grid                                                                *
+	******************************************************************************/
+	{ { DEFACCEL, "SWS/BR: Move closest tempo marker to mouse cursor (perform until shortcut released)" },      "BR_MOVE_CLOSEST_TEMPO_MOUSE", MoveGridToMouse, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Move closest grid line to mouse cursor (perform until shortcut released)" },         "BR_MOVE_GRID_TO_MOUSE",       MoveGridToMouse, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Move closest measure grid line to mouse cursor (perform until shortcut released)" }, "BR_MOVE_M_GRID_TO_MOUSE",     MoveGridToMouse, NULL, 2},
+
+	{ {}, LAST_COMMAND, },
+};
+
+//!WANT_LOCALIZE_1ST_STRING_END
 
 int BR_Init ()
 {
 	SWSRegisterCommands(g_commandTable);
-	InitContinuousActions (); // call after registering all actions
+	SWSRegisterCommands(g_continuousCommandTable);
 
+	// Register continuous actions - call after registering all actions
+	MoveGridToMouseInit();
+	SetEnvPointMouseValueInit();
+
+	// Other
 	ContextualToolbarsInit();
 	LoudnessInit();
 	ProjStateInit();
 	VersionCheckInit();
+
 	return 1;
 }
 
 void BR_Exit ()
 {
-	ContextualToolbarsExit();
 	LoudnessExit();
 }
 

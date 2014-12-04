@@ -181,24 +181,24 @@ static void ShowOnlyTopCCLane(int flag, void *data)
 
 static void CycleThroughMidiLanes(COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
-	CycleThroughMidiLanes(0, &ct->user);
+	CycleThroughMidiLanes(UNDO_STATE_ITEMS, &ct->user);
 	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 }
 
 static void ShowUsedCCLanes(COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
-	ShowUsedCCLanes(0, &ct->user);
+	ShowUsedCCLanes(UNDO_STATE_ITEMS, &ct->user);
 	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 }
 
 static void HideUnusedCCLanes(COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
-	HideUnusedCCLanes(0, &ct->user);
+	HideUnusedCCLanes(UNDO_STATE_ITEMS, &ct->user);
 	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 }
 
 static void ShowOnlyTopCCLane(COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
-	ShowOnlyTopCCLane(0, &ct->user);
+	ShowOnlyTopCCLane(UNDO_STATE_ITEMS, &ct->user);
 	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 }

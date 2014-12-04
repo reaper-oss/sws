@@ -10,10 +10,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -56,7 +56,7 @@ void DoRemapItemPositions(bool bRestorePos)
 		if (dPos > dMaxTime)
 			dMaxTime = dPos;
 	}
-	
+
 	for (int i = 0; i < items.GetSize(); i++)
 	{
 		double dNormalizedTime = (1.0 / (dMaxTime - dMinTime)) * (g_itemposremap_params.dStoredPositions[i] - dMinTime);
@@ -64,14 +64,14 @@ void DoRemapItemPositions(bool bRestorePos)
 		if (g_itemposremap_params.dCurve >= 1.0)
 			dShapedVal = pow(dNormalizedTime, g_itemposremap_params.dCurve);
 		else
-			dShapedVal = 1.0 - pow(dNormalizedTime, 1.0 / g_itemposremap_params.dCurve); 
-		
+			dShapedVal = 1.0 - pow(dNormalizedTime, 1.0 / g_itemposremap_params.dCurve);
+
 		double dNewPos;
 		if (!bRestorePos)
 			dNewPos = dShapedVal * (dMaxTime - dMinTime) + dMinTime;
 		else
 			dNewPos = g_itemposremap_params.dStoredPositions[i];
-						
+
 		GetSetMediaItemInfo(items.Get()[i], "D_POSITION", &dNewPos);
 	}
 }
@@ -211,16 +211,16 @@ void DoRubberBandProcessing()
 {
 	char ExeLine[2048];
 	double PitchFactor=pow(2.0,g_RubberBandParams.PitchSemis/12.0);
-	
-	
+
+
 	MediaTrack* MunRaita;
 	MediaItem* CurItem;
 	MediaItem_Take* CurTake;
 	PCM_source *ThePCMSource;
 	int numItems=666;
-	
+
 	bool ItemSelected=false;
-	
+
 	bool NewSelectedStatus=false;
 	bool FirstSelFound=false;
 	Undo_BeginBlock();
@@ -240,10 +240,10 @@ void DoRubberBandProcessing()
 				if (GetMediaItemNumTakes(CurItem)>0)
 				{
 					CurTake=GetMediaItemTake(CurItem,-1);
-				
+
 					double NewVol=1.0;
-					FirstSelFound=true;				
-					
+					FirstSelFound=true;
+
 					ThePCMSource=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
 					if (!ThePCMSource || !ThePCMSource->GetFileName())
 						break;
@@ -255,14 +255,14 @@ void DoRubberBandProcessing()
 					char OrigFullFileName[1024];
 					strcpy(OrigFullFileName, ThePCMSource->GetFileName());
 					ExtractFileNameEx(OrigFullFileName,OriginalSourceFileName,true);
-					
-					for (int x = 1; x < 1000; x ++) 
+
+					for (int x = 1; x < 1000; x ++)
 					{
 						sprintf(RenderOutName,"%s\\%s %03d.wav",ProjectPath, OriginalSourceFileName,x);
 						if (!FileExists(RenderOutName))
 							break;
 					}
-					
+
 					sprintf(ExeLine,"%s\\Plugins\\rubberband.exe -c%d -t%f -f%f \"%s\" \"%s\"",GetExePath(),g_RubberBandParams.Mode,
 						g_RubberBandParams.StretchFactor,PitchFactor,ThePCMSource->GetFileName(),RenderOutName);
 					STARTUPINFO          si = { sizeof(si) };
@@ -272,7 +272,7 @@ void DoRubberBandProcessing()
 						DWORD TheResult;
 						// optionally wait for process to finish
 						TheResult=WaitForSingleObject(pi.hProcess, 60000); // max 60 seconds to wait for processing to complete
-						if (TheResult==WAIT_TIMEOUT) 
+						if (TheResult==WAIT_TIMEOUT)
 						{
 							// RubberBand processed too long
 							//CsoundSuccesfull=false;
@@ -296,7 +296,7 @@ void DoRubberBandProcessing()
 						//GetSetMediaItemInfo(CurItem,"I_CURTAKE",&LastTake);
 						//GetSetMediaItemInfo(CurItem,"D_LENGTH",&OutDur);
 						char BetterTakeName[512];
-						
+
 						sprintf(BetterTakeName,"%s_RB_%d_%.2fx_%.2fsemitones",OldTakeName,g_RubberBandParams.Mode, g_RubberBandParams.StretchFactor,g_RubberBandParams.PitchSemis);
 						GetSetMediaItemTakeInfo(NewMediaTake,"P_NAME",BetterTakeName);
 						GetSetMediaItemInfo(CurItem,"I_CURTAKE",&LastTakeIndex);
@@ -355,7 +355,7 @@ WDL_DLGRET RubberBandDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 				}
 			}
 			break;
-	}		
+	}
 	return 0;
 }
 #endif
@@ -372,7 +372,7 @@ void DoShowRubberbandDlg(COMMAND_T*)
 		g_RubberBandParams.StretchFactor=1.0;
 	}
 
-	DialogBox(g_hInst,MAKEINTRESOURCE(IDD_RUBBERBAND), g_hwndParent, RubberBandDlgProc);	
+	DialogBox(g_hInst,MAKEINTRESOURCE(IDD_RUBBERBAND), g_hwndParent, RubberBandDlgProc);
 #else
 	MessageBox(g_hwndParent, __LOCALIZE("Not supported on OSX, sorry!", "sws_mbox"), __LOCALIZE("SWS - Error", "sws_mbox"), MB_OK);
 #endif
@@ -384,8 +384,8 @@ struct t_cuestruct
 	double EndTime;
 };
 
-bool MyCueSortFunction (t_cuestruct a,t_cuestruct b) 
-{ 
+bool MyCueSortFunction (t_cuestruct a,t_cuestruct b)
+{
 	if (a.StartTime<b.StartTime) return true;
 	return false;
 }
@@ -395,7 +395,7 @@ void DoItemCueTransform(bool donextcue, int ToCueIndex, bool PreserveItemLen=fal
 {
 	t_cuestruct NewCueStruct;
 	vector<t_cuestruct> VecItemCues;
-	
+
 	MediaItem *CurItem;
 	MediaItem_Take *CurTake;
 	MediaTrack* CurTrack;
@@ -452,7 +452,7 @@ void DoItemCueTransform(bool donextcue, int ToCueIndex, bool PreserveItemLen=fal
 							VecItemCues[idiot].EndTime=VecItemCues[idiot+1].StartTime;
 								else VecItemCues[idiot].EndTime=TakeSource->GetLength();
 						}
-						
+
 						int CurrentCueIndex=0;
 						double MediaOffset=*(double*)GetSetMediaItemTakeInfo(CurTake,"D_STARTOFFS",NULL);
 						MediaOffset=MediaOffset;
@@ -467,7 +467,7 @@ void DoItemCueTransform(bool donextcue, int ToCueIndex, bool PreserveItemLen=fal
 						int NewCueIndex=0;
 						if (ToCueIndex==-1) // -1 for next/previous cue
 						{
-						
+
 							if (donextcue==true)
 							{
 								NewCueIndex=CurrentCueIndex+1;
@@ -483,7 +483,7 @@ void DoItemCueTransform(bool donextcue, int ToCueIndex, bool PreserveItemLen=fal
 						{
 							NewCueIndex=rand() % VecItemCues.size();
 						}
-						if (ToCueIndex>=0 && ToCueIndex<(int)VecItemCues.size()) 
+						if (ToCueIndex>=0 && ToCueIndex<(int)VecItemCues.size())
 							NewCueIndex=ToCueIndex;
 						double NewTimeA=VecItemCues[NewCueIndex].StartTime;
 						//if (RespectSnap)
@@ -496,9 +496,9 @@ void DoItemCueTransform(bool donextcue, int ToCueIndex, bool PreserveItemLen=fal
 						if (!PreserveItemLen)
 							GetSetMediaItemInfo(CurItem,"D_LENGTH",&NewLength);
 						GetSetMediaItemTakeInfo(CurTake,"D_STARTOFFS",&NewTimeA);
-						
+
 					}
-				}	
+				}
 			}
 		}
 	}
@@ -514,7 +514,7 @@ void DoSwitchItemToNextCue(COMMAND_T*)
 
 void DoSwitchItemToPreviousCue(COMMAND_T*)
 {
-	DoItemCueTransform(false,-1);	
+	DoItemCueTransform(false,-1);
 }
 
 void DoSwitchItemToNextCuePresvLen(COMMAND_T*)
@@ -524,22 +524,22 @@ void DoSwitchItemToNextCuePresvLen(COMMAND_T*)
 
 void DoSwitchItemToPreviousCuePresvLen(COMMAND_T*)
 {
-	DoItemCueTransform(false,-1,true);	
+	DoItemCueTransform(false,-1,true);
 }
 
 void DoSwitchItemToFirstCue(COMMAND_T*)
 {
-	DoItemCueTransform(false,0);	
+	DoItemCueTransform(false,0);
 }
 
 void DoSwitchItemToRandomCue(COMMAND_T*)
 {
-	DoItemCueTransform(false,-2);	
+	DoItemCueTransform(false,-2);
 }
 
 void DoSwitchItemToRandomCuePresvLen(COMMAND_T*)
 {
-	DoItemCueTransform(false,-2,true);	
+	DoItemCueTransform(false,-2,true);
 }
 
 typedef struct
@@ -612,7 +612,7 @@ void DoRecallSelectedTakes(COMMAND_T* ct)
 			CurItem=g_VecItemStates[i].ReaperItem;
 			GetSetMediaItemInfo(CurItem,"B_UISEL",&Dummybool);
 			GetSetMediaItemInfo(CurItem,"I_CURTAKE",&TakeIndex);
-		}	
+		}
 	}
 	UpdateTimeline();
 	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);
@@ -642,7 +642,7 @@ void DoDeleteItemAndMedia(COMMAND_T*)
 					{
 						char buf[2000];
 						sprintf(buf,__LOCALIZE_VERFMT("Do you really want to immediately delete file (NO UNDO) %s?","sws_mbox"),CurPCM->GetFileName());
-						
+
 						int rc=MessageBox(g_hwndParent,buf,__LOCALIZE("Xenakios - Info","sws_mbox"),MB_OKCANCEL);
 						if (rc==IDOK)
 						{
@@ -722,7 +722,7 @@ void DoDelSelItemAndSendActiveTakeMediaToRecycler(COMMAND_T*)
 		}
 	}
 	Main_OnCommand(40006,0); // remove selected items
-	Main_OnCommand(40101,0); // set all media online	
+	Main_OnCommand(40101,0); // set all media online
 }
 
 void DoNukeTakeAndSourceMedia(COMMAND_T*)
@@ -747,7 +747,7 @@ void DoNukeTakeAndSourceMedia(COMMAND_T*)
 				{
 					char buf[2000];
 					sprintf(buf,__LOCALIZE_VERFMT("Do you really want to immediately delete file (NO UNDO) %s?","sws_mbox"),CurPCM->GetFileName());
-					
+
 					int rc=MessageBox(g_hwndParent,buf,__LOCALIZE("Xenakios - Info","sws_mbox"),MB_OKCANCEL);
 					if (rc==IDOK)
 					{
@@ -765,7 +765,7 @@ void DoNukeTakeAndSourceMedia(COMMAND_T*)
 		}
 	}
 	Main_OnCommand(40129,0); // remove active takes of items
-	Main_OnCommand(40101,0); // set all media online	
+	Main_OnCommand(40101,0); // set all media online
 }
 
 void DoDeleteActiveTakeAndRecycleSourceMedia(COMMAND_T*)
@@ -787,7 +787,7 @@ void DoDeleteActiveTakeAndRecycleSourceMedia(COMMAND_T*)
 				PCM_source *CurPCM=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
 				if (CurPCM && CurPCM->GetFileName() && FileExists(CurPCM->GetFileName()))
 				{
-					SendFileToRecycleBin(CurPCM->GetFileName());	
+					SendFileToRecycleBin(CurPCM->GetFileName());
 					char fileName[512];
 					strcpy(fileName, CurPCM->GetFileName());
 					char* pEnd = fileName + strlen(fileName);
@@ -800,7 +800,7 @@ void DoDeleteActiveTakeAndRecycleSourceMedia(COMMAND_T*)
 		}
 	}
 	Main_OnCommand(40129,0); // remove active takes of items
-	Main_OnCommand(40101,0); // set all media online	
+	Main_OnCommand(40101,0); // set all media online
 }
 
 void DoSelectFirstItemInSelectedTrack(COMMAND_T*)
@@ -1003,7 +1003,7 @@ void DoItemPlayrate2Pitch(COMMAND_T* ct)
 		}
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_ITEMS,-1);	
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_ITEMS,-1);
 }
 
 
@@ -1107,7 +1107,7 @@ WDL_DLGRET ItemSpreadDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 
 void DoShowSpreadItemsDlg(COMMAND_T*)
 {
-	DialogBox(g_hInst,MAKEINTRESOURCE(IDD_SPREADITEMS), g_hwndParent, ItemSpreadDlgProc);	
+	DialogBox(g_hInst,MAKEINTRESOURCE(IDD_SPREADITEMS), g_hwndParent, ItemSpreadDlgProc);
 }
 
 struct t_item_solostate
@@ -1125,7 +1125,7 @@ void DoTogSelItemsRandomly(bool isrestore,double togprob)
 	for (i=0;i<(int)g_vectogSelItems.size();i++)
 	{
 		bool uisel=false;
-		
+
 		if (isrestore) uisel=true;
 		if (!isrestore)
 		{
@@ -1141,7 +1141,7 @@ WDL_DLGRET TogItemsSelDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 	static bool Applied=false;
 	char tbuf[200];
 	static stringstream dlgSS;
-	
+
 	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, Message, wParam, lParam))
 		return r;
 
@@ -1177,14 +1177,14 @@ WDL_DLGRET TogItemsSelDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 	}
 	if (Message==WM_COMMAND && LOWORD(wParam)==IDOK)
 	{
-		if (!Applied) 
+		if (!Applied)
 		{
 			GetDlgItemText(hwnd,IDC_EDIT1,tbuf,199);
 			g_itemseltogprob=atof(tbuf)/100.0;
 			if (g_itemseltogprob<0.0) g_itemseltogprob=0.0;
 			if (g_itemseltogprob>1.0) g_itemseltogprob=1.0;
 			DoTogSelItemsRandomly(false,g_itemseltogprob);
-			UpdateTimeline();	
+			UpdateTimeline();
 		}
 		EndDialog(hwnd,0);
 		return 0;
@@ -1194,7 +1194,7 @@ WDL_DLGRET TogItemsSelDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 
 void DoToggleSelectedItemsRndDlg(COMMAND_T*)
 {
-	DialogBox(g_hInst,MAKEINTRESOURCE(IDD_TOGSELRAND), g_hwndParent, TogItemsSelDlgProc);	
+	DialogBox(g_hInst,MAKEINTRESOURCE(IDD_TOGSELRAND), g_hwndParent, TogItemsSelDlgProc);
 }
 
 void SlipItemKeyUpHandler()
@@ -1269,7 +1269,7 @@ void ReplaceItemSourceFileFromFolder(bool askforFolder,int mode,int param,bool o
 		string newsrcfn;
 		// get source file's directory, find it's media files...
 		string srcfn(src->GetFileName());
-		
+
 		fncompns.clear();
 		SplitFileNameComponents(srcfn,fncompns);
 		foundfiles.clear();
@@ -1280,14 +1280,14 @@ void ReplaceItemSourceFileFromFolder(bool askforFolder,int mode,int param,bool o
 		for (j=0;j<(int)foundfiles.size();j++)
 		{
 			string temps;
-		
+
 			temps.assign(RemoveDoubleBackSlashes(foundfiles[j]));
 			foundfiles[j].assign(temps);
 			if (foundfiles[j].compare(srcfn)==0)
 			{
 				fileindx=j;
 				//break;
-			}	
+			}
 		}
 		if (fileindx>=0)
 		{
@@ -1444,7 +1444,7 @@ void DoShuffleItemOrder2(COMMAND_T* ct)
 	}
 }
 
-bool MySortItemsByTimeFunc (MediaItem* i,MediaItem* j) 
+bool MySortItemsByTimeFunc (MediaItem* i,MediaItem* j)
 {
 	double timea=*(double*)GetSetMediaItemInfo(i,"D_POSITION",0);
 	double timeb=*(double*)GetSetMediaItemInfo(i,"D_POSITION",0);
@@ -1475,7 +1475,7 @@ void DoCreateMarkersFromSelItems1(COMMAND_T* ct)
 			AddProjectMarker(NULL, false, itempos, 0.0, fncomps.size()>1 ? fncomps[1].c_str() : "", -1);
 		}
 
-		Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL);
+		Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG);
 
     PreventUIRefresh(-1);
 	}

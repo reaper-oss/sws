@@ -225,7 +225,7 @@ static void ConvertMarkersToTempo (int markers, int num, int den, bool removeMar
 	}
 
 	UpdateTimeline();
-	Undo_EndBlock2 (NULL, __LOCALIZE("Convert project markers to tempo markers","sws_undo"), UNDO_STATE_ALL);
+	Undo_EndBlock2(NULL, __LOCALIZE("Convert project markers to tempo markers","sws_undo"), UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG);
 
 	if (exceed != 0)
 		MessageBox(g_hwndParent, __LOCALIZE("Some of the created tempo markers have a BPM over 960. If you try to edit them, they will revert back to 960 or lower.\n\nIt is recommended that you undo, edit project markers and try again.", "sws_DLG_166"),__LOCALIZE("SWS/BR - Warning", "sws_mbox"), MB_OK);
@@ -951,7 +951,7 @@ static void AdjustTempoCase (HWND hwnd)
 	{
 		Undo_BeginBlock2(NULL);
 		AdjustTempo(mode, bpm, shape);
-		Undo_EndBlock2(NULL, __LOCALIZE("Adjust selected tempo markers","sws_undo"), UNDO_STATE_ALL);
+		Undo_EndBlock2(NULL, __LOCALIZE("Adjust selected tempo markers","sws_undo"), UNDO_STATE_TRACKCFG);
 
 	}
 }
@@ -1144,7 +1144,7 @@ WDL_DLGRET UnselectNthProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						SelectTempoCase(GetParent(hwnd), 1, Nth);
 					else
 						SelectTempo(2, Nth, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-					Undo_EndBlock2(NULL, __LOCALIZE("Unselect tempo markers","sws_undo"), UNDO_STATE_ALL);
+					Undo_EndBlock2(NULL, __LOCALIZE("Unselect tempo markers","sws_undo"), UNDO_STATE_TRACKCFG);
 				}
 				break;
 
@@ -1285,7 +1285,7 @@ WDL_DLGRET SelectAdjustTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					Undo_BeginBlock2(NULL);
 					UpdateSelectionFields(hwnd);
 					SelectTempoCase(hwnd, 0, 0);
-					Undo_EndBlock2(NULL, __LOCALIZE("Select tempo markers","sws_undo"), UNDO_STATE_ALL);
+					Undo_EndBlock2(NULL, __LOCALIZE("Select tempo markers","sws_undo"), UNDO_STATE_TRACKCFG);
 				}
 				break;
 
@@ -1294,7 +1294,7 @@ WDL_DLGRET SelectAdjustTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					Undo_BeginBlock2(NULL);
 					UpdateSelectionFields(hwnd);
 					SelectTempoCase(hwnd, 1, 0);
-					Undo_EndBlock2(NULL, __LOCALIZE("Unselect tempo markers","sws_undo"), UNDO_STATE_ALL);
+					Undo_EndBlock2(NULL, __LOCALIZE("Unselect tempo markers","sws_undo"), UNDO_STATE_TRACKCFG);
 				}
 				break;
 
@@ -1306,7 +1306,7 @@ WDL_DLGRET SelectAdjustTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 						SelectTempo(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 					else
 						SelectTempoCase(hwnd, 2, 0);
-					Undo_EndBlock2(NULL, __LOCALIZE("Invert selection of tempo markers","sws_undo"), UNDO_STATE_ALL);
+					Undo_EndBlock2(NULL, __LOCALIZE("Invert selection of tempo markers","sws_undo"), UNDO_STATE_TRACKCFG);
 				}
 				break;
 
@@ -1315,7 +1315,7 @@ WDL_DLGRET SelectAdjustTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					Undo_BeginBlock2(NULL);
 					UpdateSelectionFields(hwnd);
 					SelectTempo(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-					Undo_EndBlock2(NULL, __LOCALIZE("Unselect tempo markers","sws_undo"), UNDO_STATE_ALL);
+					Undo_EndBlock2(NULL, __LOCALIZE("Unselect tempo markers","sws_undo"), UNDO_STATE_TRACKCFG);
 				}
 				break;
 
@@ -1739,7 +1739,7 @@ WDL_DLGRET RandomizeTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 				case IDOK:
 				{
 					SetConfig("undomask", s_undoMask); // treat undo behavior of edit cursor per user preference
-					Undo_OnStateChangeEx2(NULL, __LOCALIZE("Randomize selected tempo markers", "sws_undo"), UNDO_STATE_ALL, -1);
+					Undo_OnStateChangeEx2(NULL, __LOCALIZE("Randomize selected tempo markers", "sws_undo"), UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);
 					EndDialog(hwnd, 0);
 				}
 				break;

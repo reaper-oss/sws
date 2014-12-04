@@ -87,7 +87,7 @@ void SplitItemAtTempo (COMMAND_T* ct)
 	}
 	if (update)
 	{
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 		UpdateArrange();
 	}
 }
@@ -138,7 +138,7 @@ void SplitItemAtStretchMarkers (COMMAND_T* ct)
 	}
 	if (update)
 	{
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 		UpdateArrange();
 	}
 }
@@ -351,7 +351,7 @@ void MidiItemTempo (COMMAND_T* ct)
 	}
 
 	if (update)
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 	PreventUIRefresh(-1);
 }
 
@@ -548,7 +548,7 @@ void SelectTrackUnderMouse (COMMAND_T* ct)
 		if ((int)GetMediaTrackInfo_Value(mouseInfo.GetTrack(), "I_SELECTED") == 0)
 		{
 			SetMediaTrackInfo_Value(mouseInfo.GetTrack(), "I_SELECTED", 1);
-			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 		}
 	}
 }

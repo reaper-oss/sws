@@ -73,9 +73,9 @@ static bool EnvMouseInit (bool init)
 	return initSuccessful;
 }
 
-static bool EnvMouseUndo ()
+static int EnvMouseUndo ()
 {
-	return g_envMouseDidOnce;
+	return (g_envMouseDidOnce) ? (UNDO_STATE_TRACKCFG) : (0);
 }
 
 static HCURSOR EnvMouseCursor (int window)
@@ -404,7 +404,7 @@ void CursorToEnv1 (COMMAND_T* ct)
 		}
 
 		SetEditCurPos(cTime + takeEnvStartPos, true, false);
-		Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL);
+		Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG);
 	}
 	FreeHeapPtr(envState);
 }
@@ -439,7 +439,7 @@ void CursorToEnv2 (COMMAND_T* ct)
 
 		SetEditCurPos(targetPos, true, false);
 		envelope.Commit();
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);
 	}
 }
 
@@ -467,7 +467,7 @@ void SelNextPrevEnvPoint (COMMAND_T* ct)
 			envelope.GetPoint(((int)ct->user > 0) ? (id-1) : (id+1), &prevPos, NULL, NULL, NULL);
 			MoveArrangeToTarget(pos, prevPos);
 
-			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 		}
 	}
 }
@@ -500,7 +500,7 @@ void ExpandEnvSel (COMMAND_T* ct)
 	{
 		if (envelope.CountConseq() == 1)
 			envelope.MoveArrangeToPoint (id, ((int)ct->user > 0) ? (id-1) : (id+1));
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 	}
 }
 
@@ -520,7 +520,7 @@ void ExpandEnvSelEnd (COMMAND_T* ct)
 	if (envelope.Commit())
 	{
 		envelope.MoveArrangeToPoint(id, ((int)ct->user > 0) ? (id-1) : (id+1));
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 	}
 }
 
@@ -552,7 +552,7 @@ void ShrinkEnvSel (COMMAND_T* ct)
 	{
 		if (envelope.CountConseq() == 1)
 			envelope.MoveArrangeToPoint (((int)ct->user > 0) ? (id-1) : (id+1), id);
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 	}
 }
 
@@ -572,7 +572,7 @@ void ShrinkEnvSelEnd (COMMAND_T* ct)
 	if (envelope.Commit())
 	{
 		envelope.MoveArrangeToPoint (((int)ct->user > 0) ? (id-1) : (id+1), id);
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 	}
 }
 
@@ -691,7 +691,7 @@ void EnvPointsGrid (COMMAND_T* ct)
 	}
 
 	if (envelope.Commit())
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 }
 
 void CreateEnvPointsGrid (COMMAND_T* ct)
@@ -776,7 +776,7 @@ void CreateEnvPointsGrid (COMMAND_T* ct)
 
 
 	if (envelope.Commit())
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 }
 
 void ShiftEnvSelection (COMMAND_T* ct)
@@ -805,7 +805,7 @@ void ShiftEnvSelection (COMMAND_T* ct)
 	}
 
 	if (envelope.Commit())
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 }
 
 void PeaksDipsEnv (COMMAND_T* ct)
@@ -837,7 +837,7 @@ void PeaksDipsEnv (COMMAND_T* ct)
 	}
 
 	if (envelope.Commit())
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 }
 
 void SelEnvTimeSel (COMMAND_T* ct)
@@ -868,7 +868,7 @@ void SelEnvTimeSel (COMMAND_T* ct)
 		}
 	}
 	if (envelope.Commit())
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 }
 
 void SetEnvValToNextPrev (COMMAND_T* ct)
@@ -904,7 +904,7 @@ void SetEnvValToNextPrev (COMMAND_T* ct)
 	}
 
 	if (envelope.Commit())
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 }
 
 void MoveEnvPointToEditCursor (COMMAND_T* ct)
@@ -957,7 +957,7 @@ void MoveEnvPointToEditCursor (COMMAND_T* ct)
 		{
 			envelope.SetPoint(id, &cursor, NULL, NULL, NULL, true);
 			if (envelope.Commit())
-				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 		}
 	}
 }
@@ -1024,7 +1024,7 @@ void Insert2EnvPointsTimeSelection (COMMAND_T* ct)
 	PreventUIRefresh(-1);
 
 	if (update)
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
 }
 
 void FitEnvPointsToTimeSel (COMMAND_T* ct)
@@ -1064,7 +1064,7 @@ void FitEnvPointsToTimeSel (COMMAND_T* ct)
 	}
 
 	if (envelope.Commit())
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 }
 
 void CreateEnvPointMouse (COMMAND_T* ct)
@@ -1093,14 +1093,14 @@ void CreateEnvPointMouse (COMMAND_T* ct)
 				if (SetTempoTimeSigMarker(NULL, -1, position, -1, -1, value, 0, 0, !envelope.GetDefaultShape()))
 				{
 					UpdateTimeline();
-					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);
 				}
 			}
 			else
 			{
 				envelope.CreatePoint(envelope.CountPoints(), position, value, envelope.GetDefaultShape(), 0, false, true);
 				if (envelope.Commit())
-					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 			}
 		}
 	}
@@ -1122,7 +1122,7 @@ void IncreaseDecreaseVolEnvPoints (COMMAND_T* ct)
 			}
 		}
 		if (envelope.Commit())
-			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 	}
 }
 void SelectEnvelopeUnderMouse (COMMAND_T* ct)
@@ -1161,7 +1161,7 @@ void SelectDeleteEnvPointUnderMouse (COMMAND_T* ct)
 			}
 
 			if (envelope.Commit())
-				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
 		}
 	}
 }
@@ -1205,7 +1205,7 @@ void RestoreEnvSelSlot (COMMAND_T* ct)
 			if (slot == g_envSel.Get()->Get(i)->GetSlot())
 			{
 				if (g_envSel.Get()->Get(i)->Restore(envelope))
-					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
 				break;
 			}
 		}
@@ -1248,7 +1248,7 @@ void ShowActiveTrackEnvOnly (COMMAND_T* ct)
 
 	envelope.Commit(true);
 	PreventUIRefresh(-1);
-	Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL);
+	Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG);
 }
 
 void ShowLastAdjustedSendEnv (COMMAND_T* ct)
@@ -1261,7 +1261,7 @@ void ShowLastAdjustedSendEnv (COMMAND_T* ct)
 	if (track)
 	{
 		if (ToggleShowSendEnvelope(track, sendId, type))
-			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
 	}
 }
 
@@ -1314,7 +1314,7 @@ void ShowHideFxEnv (COMMAND_T* ct)
 		}
 	}
 	if (update)
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
 	PreventUIRefresh(-1);
 }
 
@@ -1359,7 +1359,6 @@ void ShowHideSendEnv (COMMAND_T* ct)
 			hide = false;
 	}
 
-
 	// Set new visibility
 	PreventUIRefresh(1);
 	bool update = false;
@@ -1399,6 +1398,6 @@ void ShowHideSendEnv (COMMAND_T* ct)
 	}
 
 	if (update)
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 	PreventUIRefresh(-1);
 }

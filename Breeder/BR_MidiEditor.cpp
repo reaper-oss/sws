@@ -265,7 +265,7 @@ void ME_CCEventAtEditCursor (COMMAND_T* ct, int val, int valhw, int relmode, HWN
 					if (do14bit)
 						MIDI_InsertCC(take, true, false, positionPPQ, type, channel, targetLane2, msg2);
 
-					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 				}
 			}
 		}
@@ -310,16 +310,13 @@ void ME_ShowUsedCCLanesDetect14Bit (COMMAND_T* ct, int val, int valhw, int relmo
 				laneView->append(-1, 0);
 
 			delete laneView;
-			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 		}
 	}
 }
 
 void ME_HideCCLanes (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
-
-
-
 	int laneToProcess;
 	void* midiEditor;
 	if ((int)ct->user > 0)
@@ -383,7 +380,7 @@ void ME_HideCCLanes (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 					}
 
 					if (p.ReplaceTake(tkPos, tklen, ptk.GetChunk()))
-						Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+						Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 				}
 			}
 		}
@@ -406,7 +403,7 @@ void ME_ToggleHideCCLanes (COMMAND_T* ct, int val, int valhw, int relmode, HWND 
 		}
 
 		if (midiEditor && g_midiToggleHideCCLanes.Get()->Restore(midiEditor))
-			Undo_OnStateChangeEx2(NULL, __LOCALIZE("Restore hidden CC lanes", "sws_undo"), UNDO_STATE_ALL, -1);
+			Undo_OnStateChangeEx2(NULL, __LOCALIZE("Restore hidden CC lanes", "sws_undo"), UNDO_STATE_ITEMS, -1);
 	}
 	else
 	{
@@ -425,7 +422,7 @@ void ME_ToggleHideCCLanes (COMMAND_T* ct, int val, int valhw, int relmode, HWND 
 		}
 
 		if (midiEditor && validLane && g_midiToggleHideCCLanes.Get()->Hide(midiEditor, laneToKeep, (abs((int)ct->user) == 1) ? -1 : abs((int)ct->user)))
-			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 	}
 
 	if (midiEditor)
@@ -555,7 +552,7 @@ void ME_CCToEnvPoints (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd
 	}
 
 	if (update && envelope.Commit())
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 }
 
 void ME_SaveCursorPosSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
@@ -594,7 +591,7 @@ void ME_RestoreNoteSelSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWND
 			if (slot == g_midiNoteSel.Get()->Get(i)->GetSlot())
 			{
 				if (g_midiNoteSel.Get()->Get(i)->Restore(take))
-					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 				break;
 			}
 		}
@@ -660,7 +657,7 @@ void ME_RestoreCCEventsSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWN
 				if (lane != CC_TEXT_EVENTS && lane != CC_SYSEX && lane != CC_BANK_SELECT && lane != CC_VELOCITY)
 				{
 					if (g_midiCCEvents.Get()->Get(i)->Restore(editor, lane, false))
-						Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+						Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 				}
 				else
 					MessageBox((HWND)editor.GetEditor(), __LOCALIZE("Can't restore to velocity, text, sysex and bank select lanes","sws_mbox"), __LOCALIZE("SWS/BR - Warning","sws_mbox"), MB_OK);
@@ -681,7 +678,7 @@ void ME_RestoreCCEvents2Slot (COMMAND_T* ct, int val, int valhw, int relmode, HW
 			if (slot == g_midiCCEvents.Get()->Get(i)->GetSlot())
 			{
 				if (g_midiCCEvents.Get()->Get(i)->Restore(midiEditor, 0, true))
-					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 				break;
 			}
 		}

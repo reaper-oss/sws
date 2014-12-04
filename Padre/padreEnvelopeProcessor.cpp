@@ -10,10 +10,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -548,7 +548,7 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::processPoints(char* envState, st
 	}
 
 //	FreeHeapPtr(envState);
-//	
+//
 //	if(GetSetObjectState(envelope, newState.c_str()))
 //		return eERRORCODE_UNKNOWN;
 //Undo_OnStateChangeEx("Envelope Processor", UNDO_STATE_ALL, -1);
@@ -669,7 +669,7 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateSelectedTrackEnvLfo()
 	ErrorCode res = generateTrackLfo(envelope, dStartPos, dEndPos, _parameters.waveParams, _parameters.precision);
 //UpdateTimeline();
 
-	Undo_EndBlock2(NULL, __LOCALIZE("Track envelope LFO","sws_undo"), UNDO_STATE_ALL);
+	Undo_EndBlock2(NULL, __LOCALIZE("Track envelope LFO","sws_undo"), UNDO_STATE_TRACKCFG);
 	return res;
 }
 
@@ -846,7 +846,7 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateSelectedTakesLfo()
 
 	//Undo_OnStateChangeEx("Item Envelope LFO", UNDO_STATE_ALL, -1);
 //	UpdateTimeline();
-	Undo_EndBlock2(NULL, __LOCALIZE("Take envelope LFO","sws_undo"), UNDO_STATE_ALL);
+	Undo_EndBlock2(NULL, __LOCALIZE("Take envelope LFO","sws_undo"), UNDO_STATE_TRACKCFG);
 
 	return eERRORCODE_OK;
 }
@@ -991,7 +991,7 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::processSelectedTrackEnv()
 /* JFB "recursive" undo point, enabled at top level
 	Undo_OnStateChangeEx("Envelope Processor", UNDO_STATE_ALL, -1);
 */
-	Undo_EndBlock2(NULL, __LOCALIZE("Track envelope processor","sws_undo"), UNDO_STATE_ALL);
+	Undo_EndBlock2(NULL, __LOCALIZE("Track envelope processor","sws_undo"), UNDO_STATE_TRACKCFG);
 	return res;
 }
 
@@ -1023,7 +1023,7 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::processSelectedTakes()
 
 	//Undo_OnStateChangeEx("Item Envelope LFO", UNDO_STATE_ALL, -1);
 //	UpdateTimeline();
-	Undo_EndBlock2(NULL, __LOCALIZE("Take envelope processor","sws_undo"), UNDO_STATE_ALL);
+	Undo_EndBlock2(NULL, __LOCALIZE("Take envelope processor","sws_undo"), UNDO_STATE_TRACKCFG);
 
 	return eERRORCODE_OK;
 }

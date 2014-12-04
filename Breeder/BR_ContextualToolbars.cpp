@@ -247,7 +247,7 @@ void BR_ContextualToolbar::LoadToolbar (bool exclusive)
 					else if (!undoTrack &&  undoItem &&  undoTake) undoMsg = __LOCALIZE("Change active take and media item selection", "sws_undo");
 					else if ( undoTrack &&  undoItem &&  undoTake) undoMsg = __LOCALIZE("Change active take, track and media item selection", "sws_undo");
 
-					if (undoMsg) Undo_OnStateChangeEx2(NULL, undoMsg, UNDO_STATE_ALL, -1);
+					if (undoMsg) Undo_OnStateChangeEx2(NULL, undoMsg, UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS | UNDO_STATE_MISCCFG, -1);
 				}
 
 				UpdateArrange();

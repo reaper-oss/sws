@@ -10,10 +10,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -102,7 +102,7 @@ void DeleteAllMarkers()
 void DeleteAllMarkers(COMMAND_T* ct)
 {
 	DeleteAllMarkers();
-	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
 	g_pMarkerList->Update();
 }
 
@@ -126,7 +126,7 @@ void DeleteAllRegions()
 void DeleteAllRegions(COMMAND_T* ct)
 {
 	DeleteAllRegions();
-	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
 	g_pMarkerList->Update();
 }
 
@@ -146,7 +146,7 @@ void RenumberIds(COMMAND_T* ct)
 	}
 	g_pMarkerList->Update();
 	UpdateTimeline();
-	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
 }
 
 void RenumberRegions(COMMAND_T* ct)
@@ -165,7 +165,7 @@ void RenumberRegions(COMMAND_T* ct)
 	}
 	g_pMarkerList->Update();
 	UpdateTimeline();
-	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
 }
 
 void SelNextRegion(COMMAND_T*)
@@ -353,7 +353,7 @@ void RegionsToMarkers(COMMAND_T*)
 	for(int i = 0, c = markers.GetSize(); i < c; i++)
 	{
 		MarkerItem *pm = markers.Get(i);
-		
+
 		if(pm->IsRegion())
 		{
 			pm->SetReg(false);

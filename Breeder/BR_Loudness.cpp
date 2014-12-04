@@ -2029,11 +2029,11 @@ static WDL_DLGRET NormalizeProgressProc (HWND hwnd, UINT uMsg, WPARAM wParam, LP
 					if (undoTrack || undoItem)
 					{
 						if (undoTrack && !undoItem)
-							Undo_OnStateChangeEx2(NULL, __LOCALIZE("Normalize track loudness", "sws_undo"), UNDO_STATE_ALL, -1);
+							Undo_OnStateChangeEx2(NULL, __LOCALIZE("Normalize track loudness", "sws_undo"), UNDO_STATE_TRACKCFG, -1);
 						else if (!undoTrack && undoItem)
-							Undo_OnStateChangeEx2(NULL, __LOCALIZE("Normalize item loudness", "sws_undo"), UNDO_STATE_ALL, -1);
+							Undo_OnStateChangeEx2(NULL, __LOCALIZE("Normalize item loudness", "sws_undo"), UNDO_STATE_ITEMS, -1);
 						else
-							Undo_OnStateChangeEx2(NULL, __LOCALIZE("Normalize item and track loudness", "sws_undo"), UNDO_STATE_ALL, -1);
+							Undo_OnStateChangeEx2(NULL, __LOCALIZE("Normalize item and track loudness", "sws_undo"), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS, -1);
 					}
 
 					s_normalizeData->normalized = true;
@@ -3182,7 +3182,7 @@ void BR_AnalyzeLoudnessWnd::OnCommand (WPARAM wParam, LPARAM lParam)
 				}
 
 				if (update && envelope.Commit())
-					Undo_OnStateChangeEx2(NULL, __LOCALIZE("Draw loudness graph in active envelope", "sws_undo"), UNDO_STATE_ALL, -1);
+					Undo_OnStateChangeEx2(NULL, __LOCALIZE("Draw loudness graph in active envelope", "sws_undo"), UNDO_STATE_TRACKCFG, -1);
 			}
 		}
 		break;

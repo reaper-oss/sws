@@ -73,9 +73,9 @@ static bool MoveGridInit (bool init)
 	return initSuccessful;
 }
 
-static bool MoveGridDoUndo ()
+static int MoveGridDoUndo ()
 {
-	return g_movedGridOnce;
+	return (g_movedGridOnce) ? (UNDO_STATE_TRACKCFG) : (0);
 }
 
 static HCURSOR MoveGridCursor (int window)
@@ -328,7 +328,7 @@ void MoveGridToEditPlayCursor (COMMAND_T* ct)
 				// Restore edit cursor only if moving to it
 				if ((int)ct->user != 1 && (int)ct->user != 3)
 					SetEditCurPos2(NULL, cursor, false, false);
-				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 			}
 			PreventUIRefresh(-1);
 		}
@@ -398,7 +398,7 @@ void MoveTempo (COMMAND_T* ct)
 	{
 		if ((int)ct->user == 3)
 			SetEditCurPos2(NULL, cursor, false, false); // always keep cursor position when moving to closest tempo marker
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 	}
 	PreventUIRefresh(-1);
 
@@ -735,7 +735,7 @@ void EditTempo (COMMAND_T* ct)
 
 	// Commit changes
 	if (tempoMap.Commit())
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 
 	// Warn user if some points weren't processed
 	static bool s_warnUser = true;
@@ -909,7 +909,7 @@ void EditTempoGradual (COMMAND_T* ct)
 
 	// Commit changes
 	if (tempoMap.Commit())
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 
 	// Warn user if some points weren't processed
 	static bool s_warnUser = true;
@@ -1090,7 +1090,7 @@ void DeleteTempo (COMMAND_T* ct)
 
 	// Commit changes
 	if (tempoMap.Commit())
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 
 	// Warn user if some points weren't processed
 	static bool s_warnUser = true;
@@ -1185,7 +1185,7 @@ void DeleteTempoPreserveItems (COMMAND_T* ct)
 	{
 		for (size_t i = 0; i < items.size(); ++i)
 			items[i].Restore();
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS, -1);
 	}
 	PreventUIRefresh(-1);
 }
@@ -1230,7 +1230,7 @@ void TempoAtGrid (COMMAND_T* ct)
 		}
 	}
 	tempoMap.Commit();
-	Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL);
+	Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG);
 }
 
 void TempoShapeLinear (COMMAND_T* ct)
@@ -1306,7 +1306,7 @@ void TempoShapeLinear (COMMAND_T* ct)
 
 	// Commit changes
 	if (tempoMap.Commit())
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 
 	// Warn user if some points weren't processed
 	static bool s_warnUser = true;
@@ -1409,7 +1409,7 @@ void TempoShapeSquare (COMMAND_T* ct)
 
 	// Commit changes
 	if (tempoMap.Commit())
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 
 	// Warn user if some points weren't processed
 	static bool s_warnUser = true;

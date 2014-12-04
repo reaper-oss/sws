@@ -212,7 +212,7 @@ void DoNudgeSamples(COMMAND_T* ct)
 		}
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 }
 
 void DoSplitItemsAtTransients(COMMAND_T* ct)

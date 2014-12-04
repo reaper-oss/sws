@@ -330,8 +330,12 @@ bool ContinuousActionRegister (BR_ContinuousAction* action)
 
 void ContinuousActionStopAll ()
 {
-	if (g_actionInProgress && g_actionInProgress->DoUndo && g_actionInProgress->DoUndo())
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(SWSGetCommandByID(g_actionInProgress->cmd)), UNDO_STATE_ALL, -1);
+	if (g_actionInProgress && g_actionInProgress->DoUndo)
+	{
+		int undoFlag = g_actionInProgress->DoUndo();
+		if (undoFlag != 0)
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(SWSGetCommandByID(g_actionInProgress->cmd)), undoFlag, -1);
+	}
 	ContinuousActionInit(false, 0, NULL);
 }
 

@@ -135,7 +135,7 @@ void DoToggleTakesNormalize(COMMAND_T* ct)
 	{
 		Undo_BeginBlock2(NULL);
 		Main_OnCommand(40108, 0); // normalize items
-		Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL);
+		Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS | UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG);
 		UpdateTimeline();
 	}
 	delete TheTakes;
@@ -686,8 +686,8 @@ void DoShuffleSelectTakesInItems(COMMAND_T* ct)
 		MediaItem* item = GetSelectedMediaItem(NULL, i);
 		int takeCount = CountTakes(item);
 		if (takeCount > 1)
-		{			
-			int id = *(int*)GetSetMediaItemInfo(item,"I_CURTAKE",NULL);			
+		{
+			int id = *(int*)GetSetMediaItemInfo(item,"I_CURTAKE",NULL);
 			--takeCount; // for MTRand
 
 			static int prevId = id;
@@ -702,7 +702,7 @@ void DoShuffleSelectTakesInItems(COMMAND_T* ct)
 
 			prevId = newId;
 
-			GetSetMediaItemInfo(item,"I_CURTAKE",&newId);			
+			GetSetMediaItemInfo(item,"I_CURTAKE",&newId);
 		}
 	}
 	UpdateArrange();

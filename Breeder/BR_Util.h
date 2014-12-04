@@ -30,10 +30,10 @@
 /******************************************************************************
 * Constants                                                                   *
 ******************************************************************************/
-const int SCROLLBAR_W     = 17;
-const int NEGATIVE_INF    = -150;
-const double VOLUME_DELTA = 0.0000000000001;
-const double PAN_DELTA    = 0.001;
+const int SCROLLBAR_W          = 17;
+const int NEGATIVE_INF         = -150;
+const double VOLUME_DELTA      = 0.0000000000001;
+const double PAN_DELTA         = 0.001;
 
 /******************************************************************************
 * Macros                                                                      *

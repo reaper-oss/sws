@@ -3046,7 +3046,7 @@ void AWSelChilOrSelItems(COMMAND_T* t)
 
 	UpdateArrange();
 
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS | UNDO_STATE_TRACKCFG, -1);
 }
 
 void AWSelTracksPanMode(int mode)

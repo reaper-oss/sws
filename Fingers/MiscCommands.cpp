@@ -77,6 +77,7 @@ static void SelectMutedMidiNotes(int flag, void *data)
 static void SelectMutedMidiNotes(COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
 	SelectMutedMidiNotes(UNDO_STATE_ITEMS, &ct->user);
+	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 }
 
 static void SelectAllNearestEditCursor(int flag, void *data)

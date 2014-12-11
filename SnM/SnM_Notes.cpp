@@ -1101,67 +1101,90 @@ void NotesMarkerRegionListener::NotifyMarkerRegionUpdate(int _updateFlags)
 
 bool ImportSubRipFile(const char* _fn)
 {
-	bool ok = false;
-	double firstPos = -1.0;
+    bool ok = false;
+    double firstPos = -1.0;
+    
+    int p1[4], p2[4]; // Matthieu
+    
+    // no need to check extension here, it's done for us
+    if (FILE* f = fopenUTF8(_fn, "rt"))
+    {
+        char buf[1024];
+        while(fgets(buf, sizeof(buf), f) && *buf)
+        {
+            if (int num = atoi(buf))
+            {
+                if (fgets(buf, sizeof(buf), f) && *buf)
+                {
+                    if (sscanf(buf, "%d:%d:%d,%d --> %d:%d:%d,%d", 
+                        &p1[0], &p1[1], &p1[2], &p1[3], 
+                        &p2[0], &p2[1], &p2[2], &p2[3]) != 8)
+                    {
+                        break;
+                    }
 
-	// no need to check extension here, it's done for us
-	if (FILE* f = fopenUTF8(_fn, "rt"))
-	{
-		char buf[1024];
-		while(fgets(buf, sizeof(buf), f) && *buf)
-		{
-			if (int num = atoi(buf))
-			{
-				if (fgets(buf, sizeof(buf), f) && *buf)
-				{
-					int p1[4], p2[4];
-					if (sscanf(buf, "%d:%d:%d,%d --> %d:%d:%d,%d", 
-						&p1[0], &p1[1], &p1[2], &p1[3], 
-						&p2[0], &p2[1], &p2[2], &p2[3]) != 8)
-					{
-						break;
-					}
+                    WDL_FastString notes;
+                    while (fgets(buf, sizeof(buf), f) && *buf) {
+                        if (buf[0] == '\n') break;
+                        notes.Append(buf);
+                    }
+                    // Lorine & Matthieu & X-Raym =>
+                    const char* tmp;
+                    
+                    if (num >= 0)
+                    {
+                    	tmp = notes.Get();
+                    }
+                    
+                    // A temporary string is created by copying the const variable (a const variable cannot be modified)
+                    std::string region_name_tmp = std::string(tmp);
+                    // As long as we find line breaks (if find() doesn't find anything, then find returns std::string::npos)
+                    int pos = 0;
+                    while ((pos = region_name_tmp.find('\n', pos)) != std::string::npos)
+                    {
+                    	// We replace line breaks by spaces
+                    	region_name_tmp.replace(pos, 1, " ");
+                    }
+                    // We put back the string in a const char* (may be useless, but if it were to be used again in the code it will be better that way)
+                    const char* region_name;
+                    region_name = region_name_tmp.c_str();
+                    
+                    if (_snprintfStrict(buf, sizeof(buf), region_name, num) <= 0)
+                    // <= Lorine & Matthieu & X-Raym
 
-					WDL_FastString notes;
-					while (fgets(buf, sizeof(buf), f) && *buf) {
-						if (buf[0] == '\n') break;
-						notes.Append(buf);
-					}
+                        *buf = '\0';
 
-					if (_snprintfStrict(buf, sizeof(buf), "Subtitle #%d", num) <= 0)
-						*buf = '\0';
+                    num = AddProjectMarker(NULL, true, 
+                        p1[0]*3600 + p1[1]*60 + p1[2] + double(p1[3])/1000, 
+                        p2[0]*3600 + p2[1]*60 + p2[2] + double(p2[3])/1000, 
+                        buf, num);
 
-					num = AddProjectMarker(NULL, true, 
-						p1[0]*3600 + p1[1]*60 + p1[2] + double(p1[3])/1000, 
-						p2[0]*3600 + p2[1]*60 + p2[2] + double(p2[3])/1000, 
-						buf, num);
+                    if (num >= 0)
+                    {
+                        ok = true; // region added (at least)
 
-					if (num >= 0)
-					{
-						ok = true; // region added (at least)
+                        if (firstPos < 0.0)
+                            firstPos = p1[0]*3600 + p1[1]*60 + p1[2] + double(p1[3])/1000;
 
-						if (firstPos < 0.0)
-							firstPos = p1[0]*3600 + p1[1]*60 + p1[2] + double(p1[3])/1000;
-
-						int id = MakeMarkerRegionId(num, true);
-						if (id > 0) // add the sub, no duplicate mgmt..
-							g_pRegionSubs.Get()->Add(new SNM_RegionSubtitle(id, notes.Get()));
-					}
-				}
-				else
-					break;
-			}
-		}
-		fclose(f);
-	}
-	
-	if (ok)
-	{
-		UpdateTimeline(); // redraw the ruler (andd arrange view)
-		if (firstPos > 0.0)
-			SetEditCurPos2(NULL, firstPos, true, false);
-	}
-	return ok;
+                        int id = MakeMarkerRegionId(num, true);
+                        if (id > 0) // add the sub, no duplicate mgmt..
+                            g_pRegionSubs.Get()->Add(new SNM_RegionSubtitle(id, notes.Get()));
+                    }
+                }
+                else
+                    break;
+            }
+        }
+        fclose(f);
+    }
+    
+    if (ok)
+    {
+        UpdateTimeline(); // redraw the ruler (andd arrange view)
+        if (firstPos > 0.0)
+            SetEditCurPos2(NULL, firstPos, true, false);
+    }
+    return ok;
 }
 
 void ImportSubTitleFile(COMMAND_T* _ct)

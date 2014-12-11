@@ -1,3 +1,6 @@
+!v2.5.0 #1 featured build (December 11, 2014)
++Resources: fixed lost bookmarks [p=1440002]
+
 !v2.5 featured build (November 24, 2014)
 <strong>REAPER v4.70+ is required!</strong>
 New API functions were introduced in this version, they enable various improvements in the SWS/S&M Extension.

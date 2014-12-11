@@ -3327,7 +3327,7 @@ void ResourcesExit()
 	{
 		if (i >= SNM_NUM_DEFAULT_SLOTS)
 		{
-			iniStr.SetFormatted(8192, "%s=\"%s,%s,%s\"\n",
+			iniStr.AppendFormatted(8192, "%s=\"%s,%s,%s\"\n",
 				iniSections.Get(i)->Get(),
 				g_SNM_ResSlots.Get(i)->GetResourceDir(),
 				g_SNM_ResSlots.Get(i)->GetName(),

@@ -1,3 +1,4 @@
+!v2.5.2 #0 pre-release build (December 11, 2014)
 Contextual toolbars
 +Contextual toolbars dialog:
  - Added support for auto close:
@@ -32,6 +33,7 @@ Added actions
   - Note: These two actions work in tandem. The first action changes playrate so you can automate it.The second action opens the dialog where you can set automatable playrate range. Also note that due to the API problems, actions can't respond to OSC, but in this case it shouldn't matter since you can configure REAPER OSC to manage playrate.
 
 Fixes
++Resources: fixed lost bookmarks [p=1440002]
 +These actions now work properly when item is trimmed or stretched:
  - SWS/BR: Split selected items at stretch markers
  - SWS/BR: Create project markers from stretch markers in selected items

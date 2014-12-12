@@ -1126,17 +1126,19 @@ bool ImportSubRipFile(const char* _fn)
 
 					WDL_FastString notes;
 					while (fgets(buf, sizeof(buf), f) && *buf) {
-						if (buf[0] == '\n') break;
+						if (*buf == '\r' || *buf == '\n') break;
 						notes.Append(buf);
 					}
+          
+					WDL_String name(notes.Get());
+					char *p=name.Get()-1;
+					while (*p++) if (*p == '\r' || *p == '\n') *p=' ';
+					name.Ellipsize(0, 64-4); // 64 = native max name length for mkr/rgn
 
-					if (_snprintfStrict(buf, sizeof(buf), "Subtitle #%d", num) <= 0)
-						*buf = '\0';
-
-					num = AddProjectMarker(NULL, true, 
+					num = AddProjectMarker(NULL, true,
 						p1[0]*3600 + p1[1]*60 + p1[2] + double(p1[3])/1000, 
 						p2[0]*3600 + p2[1]*60 + p2[2] + double(p2[3])/1000, 
-						buf, num);
+						name.Get(), num);
 
 					if (num >= 0)
 					{

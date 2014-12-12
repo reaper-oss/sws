@@ -1030,12 +1030,14 @@ bool GetStringFromNotesChunk(WDL_FastString* _notesIn, char* _bufOut, int _bufOu
 		int j=0;
 		while (pNotes[i] && j < _bufOutSz)
 		{
-			if (pNotes[i] != '|' || pNotes[i-1] != '\n') // i is >0 here
-				_bufOut[j++] = pNotes[i];
+			if (pNotes[i] != '\r' && pNotes[i] != '\n')
+			{
+        _bufOut[j++] = (pNotes[i]=='|'&&pNotes[i-1]=='\n' ? '\n' : pNotes[i]); // i is >0 here
+			}
 			i++;
 		}
-		if (j>=3 && !strcmp(_bufOut+j-3, "\n>\n")) // remove trailing "\n>\n"
-			_bufOut[j-3] = '\0'; 
+		if (j>=1 && !strcmp(_bufOut+j-1, ">")) // remove trailing ">", if any
+			_bufOut[j-1] = '\0';
 	}
 	return true;
 }

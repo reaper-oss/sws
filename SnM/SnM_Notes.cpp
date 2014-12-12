@@ -1142,9 +1142,12 @@ bool ImportSubRipFile(const char* _fn)
 					}
           
 					WDL_String name(notes.Get());
-					char *p=name.Get()-1;
-					while (*p++) if (*p == '\r' || *p == '\n') *p=' ';
-					name.Ellipsize(0, 64-4); // 64 = native max name length for mkr/rgn
+					char *p=name.Get();
+					while (*p) {
+						if (*p == '\r' || *p == '\n') *p=' ';
+						p++;
+					}
+					name.Ellipsize(0, 64); // 64 = native max mkr/rgn name length
 
 					num = AddProjectMarker(NULL, true,
 						p1[0]*3600 + p1[1]*60 + p1[2] + double(p1[3])/1000, 

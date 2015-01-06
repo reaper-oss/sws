@@ -3291,44 +3291,8 @@
 					Name="libebur128"
 					>
 					<File
-						RelativePath=".\libebur128\ebur128.c"
+						RelativePath=".\libebur128\ebur128.cpp"
 						>
-						<FileConfiguration
-							Name="Release|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="0"
-								WarningLevel="2"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Release|x64"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="0"
-								WarningLevel="2"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Test|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="0"
-								WarningLevel="2"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Test|x64"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="0"
-								WarningLevel="2"
-							/>
-						</FileConfiguration>
 					</File>
 					<File
 						RelativePath=".\libebur128\ebur128.h"
@@ -3624,6 +3588,14 @@
 				RelativePath=".\Breeder\BR.h"
 				>
 			</File>
+				<File
+				RelativePath=".\Breeder\BR_ContextualToolbars.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Breeder\BR_ContextualToolbars.h"
+				>
+			</File>
 			<File
 				RelativePath=".\Breeder\BR_ContinuousActions.cpp"
 				>
@@ -3641,11 +3613,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Breeder\BR_EnvTools.cpp"
+				RelativePath=".\Breeder\BR_EnvelopeUtil.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Breeder\BR_EnvTools.h"
+				RelativePath=".\Breeder\BR_EnvelopeUtil.h"
 				>
 			</File>
 			<File
@@ -3665,11 +3637,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Breeder\BR_MidiTools.cpp"
+				RelativePath=".\Breeder\BR_MidiUtil.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Breeder\BR_MidiTools.h"
+				RelativePath=".\Breeder\BR_MidiUtil.h"
 				>
 			</File>
 			<File
@@ -3678,6 +3650,14 @@
 			</File>
 			<File
 				RelativePath=".\Breeder\BR_Misc.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Breeder\BR_MouseUtil.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Breeder\BR_MouseUtil.h"
 				>
 			</File>
 			<File
@@ -3746,6 +3726,14 @@
 			</File>
 			<File
 				RelativePath=".\Wol\wol.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Wol\wol_Util.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Wol\wol_Util.h"
 				>
 			</File>
 			<File

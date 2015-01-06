@@ -121,23 +121,23 @@ static WDL_DLGRET DialogProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, uMsg, wParam, lParam))
 		return r;
 
-	static BR_SearchObject* searchObject = NULL;
+	static BR_SearchObject* s_searchObject = NULL;
 	#ifndef _WIN32
-		static bool positionSet = false;
+		static bool s_positionSet = false;
 	#endif
 
 	switch(uMsg)
 	{
 		case WM_INITDIALOG:
 		{
-			searchObject = (BR_SearchObject*)lParam;
-			SetVersionMessage(hwnd, searchObject);
+			s_searchObject = (BR_SearchObject*)lParam;
+			SetVersionMessage(hwnd, s_searchObject);
 			SetTimer(hwnd, 1, 100, NULL);
 
 			#ifdef _WIN32
 				CenterDialog(hwnd, GetParent(hwnd), HWND_TOPMOST);
 			#else
-				positionSet = false;
+				s_positionSet = false;
 			#endif
 		}
 		break;
@@ -147,9 +147,9 @@ static WDL_DLGRET DialogProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			{
 				// SetWindowPos doesn't seem to work in WM_INITDIALOG on OSX
 				// when creating a dialog with DialogBox so call here
-				if (!positionSet)
+				if (!s_positionSet)
 					CenterDialog(hwnd, GetParent(hwnd), HWND_TOPMOST);
-				positionSet = true;
+				s_positionSet = true;
 			}
 			break;
 		#endif
@@ -160,18 +160,18 @@ static WDL_DLGRET DialogProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			{
 				case IDC_BR_VER_DOWNLOAD:
 				{
-					if (searchObject->GetStatus(NULL, NULL) == NO_CONNECTION)
+					if (s_searchObject->GetStatus(NULL, NULL) == NO_CONNECTION)
 					{
-						searchObject->RestartSearch();
-						SetVersionMessage(hwnd, searchObject);
+						s_searchObject->RestartSearch();
+						SetVersionMessage(hwnd, s_searchObject);
 						SetTimer(hwnd, 1, 100, NULL);
 					}
-					if (searchObject->GetStatus(NULL, NULL) == OFFICIAL_AVAILABLE)
+					if (s_searchObject->GetStatus(NULL, NULL) == OFFICIAL_AVAILABLE)
 					{
 						ShellExecute(NULL, "open", SWS_URL_DOWNLOAD, NULL, NULL, SW_SHOWNORMAL);
 						EndDialog(hwnd, 0);
 					}
-					else if (searchObject->GetStatus(NULL, NULL) == BETA_AVAILABLE)
+					else if (s_searchObject->GetStatus(NULL, NULL) == BETA_AVAILABLE)
 					{
 						ShellExecute(NULL, "open", SWS_URL_BETA_DOWNLOAD, NULL, NULL, SW_SHOWNORMAL);
 						EndDialog(hwnd, 0);
@@ -204,11 +204,11 @@ static WDL_DLGRET DialogProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 		case WM_TIMER:
 		{
-			SendMessage(GetDlgItem(hwnd, IDC_BR_VER_PROGRESS), PBM_SETPOS, (int)(searchObject->GetProgress() * 100.0), 0);
+			SendMessage(GetDlgItem(hwnd, IDC_BR_VER_PROGRESS), PBM_SETPOS, (int)(s_searchObject->GetProgress() * 100.0), 0);
 
-			if (searchObject->GetStatus(NULL, NULL) != SEARCH_INITIATED)
+			if (s_searchObject->GetStatus(NULL, NULL) != SEARCH_INITIATED)
 			{
-				SetVersionMessage(hwnd, searchObject);
+				SetVersionMessage(hwnd, s_searchObject);
 				KillTimer(hwnd, 1);
 			}
 		}
@@ -217,7 +217,7 @@ static WDL_DLGRET DialogProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		case WM_DESTROY:
 		{
 			KillTimer(hwnd, 1);
-			searchObject = NULL;
+			s_searchObject = NULL;
 		}
 		break;
 	}
@@ -229,17 +229,17 @@ static WDL_DLGRET DialogProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 ******************************************************************************/
 static void StartupSearch ()
 {
-	static BR_SearchObject* searchObject = new (nothrow) BR_SearchObject(true);
+	static BR_SearchObject* s_searchObject = new (nothrow) BR_SearchObject(true);
 
-	if (searchObject)
+	if (s_searchObject)
 	{
-		int status = searchObject->GetStatus(NULL, NULL);
+		int status = s_searchObject->GetStatus(NULL, NULL);
 		if (status != SEARCH_INITIATED)
 		{
 			if (status == OFFICIAL_AVAILABLE || status == BETA_AVAILABLE || status == BOTH_AVAILABLE)
-				DialogBoxParam(g_hInst, MAKEINTRESOURCE(IDD_BR_VERSION), g_hwndParent, DialogProc, (LPARAM)searchObject);
-			delete searchObject;
-			searchObject = NULL;
+				DialogBoxParam(g_hInst, MAKEINTRESOURCE(IDD_BR_VERSION), g_hwndParent, DialogProc, (LPARAM)s_searchObject);
+			delete s_searchObject;
+			s_searchObject = NULL;
 		}
 	}
 	else
@@ -284,13 +284,14 @@ void VersionCheckDialog (HWND hwnd)
 
 void GetStartupSearchOptions (bool* official, bool* beta, unsigned int* lastTime)
 {
-	char tmp[256]; int tempO, tempB; unsigned int tempT;
-	GetPrivateProfileString("SWS", STARTUP_VERSION_KEY, "1 0 0", tmp, 256, get_ini_file());
-	sscanf(tmp, "%d %d %u", &tempO, &tempB, &tempT);
+	char tmp[256];
+	GetPrivateProfileString("SWS", STARTUP_VERSION_KEY, "", tmp, sizeof(tmp), get_ini_file());
 
-	WritePtr(official, !!tempO);
-	WritePtr(beta,     !!tempB);
-	WritePtr(lastTime, tempT  );
+	LineParser lp(false);
+	lp.parse(tmp);
+	WritePtr(official, (lp.getnumtokens() > 0) ? !!lp.gettoken_int(0) : true);
+	WritePtr(beta,     (lp.getnumtokens() > 1) ? !!lp.gettoken_int(1) : false);
+	WritePtr(lastTime, lp.gettoken_uint(2));
 }
 
 void SetStartupSearchOptions (bool official, bool beta, unsigned int lastTime)
@@ -298,8 +299,10 @@ void SetStartupSearchOptions (bool official, bool beta, unsigned int lastTime)
 	char tmp[256];
 	if (lastTime == 0) // lastTime = 0 will prevent overwriting current lastTime
 	{
-		GetPrivateProfileString("SWS", STARTUP_VERSION_KEY, "1 0 0", tmp, 256, get_ini_file());
-		sscanf(tmp, "%*d %*d %u", &lastTime);
+		GetPrivateProfileString("SWS", STARTUP_VERSION_KEY, "", tmp, sizeof(tmp), get_ini_file());
+		LineParser lp(false);
+		lp.parse(tmp);
+		lastTime = lp.gettoken_uint(2);
 	}
 	_snprintfSafe(tmp, sizeof(tmp), "%d %d %u", !!official, !!beta, lastTime);
 	WritePrivateProfileString("SWS", STARTUP_VERSION_KEY, tmp, get_ini_file());
@@ -352,7 +355,12 @@ unsigned WINAPI BR_SearchObject::StartSearch (void* searchObject)
 	JNL::open_socketlib();
 
 	BR_Version versionL;
-	sscanf(SWS_VERSION_STR, "%d,%d,%d,%d", &versionL.maj, &versionL.min, &versionL.rev, &versionL.build);
+	LineParser lp(false);
+	lp.parse(SWS_VERSION_STR);
+	versionL.maj   = lp.gettoken_int(0);
+	versionL.min   = lp.gettoken_int(1);
+	versionL.rev   = lp.gettoken_int(2);
+	versionL.build = lp.gettoken_int(3);
 
 	// When searching by user request, lookup both official and beta
 	bool searchO = true, searchB = true;
@@ -386,7 +394,7 @@ unsigned WINAPI BR_SearchObject::StartSearch (void* searchObject)
 					char* token = strtok(buf, "\n");
 					while (token != NULL)
 					{
-						if (sscanf(token, "#define SWS_VERSION %d,%d,%d,%d", &versionO.maj, &versionO.min, &versionO.rev, &versionO.build) > 0)
+						if (sscanf(token, "#define SWS_VERSION %10d,%10d,%10d,%10d", &versionO.maj, &versionO.min, &versionO.rev, &versionO.build) > 0)
 							break;
 						token = strtok(NULL, "\n");
 					}
@@ -430,7 +438,7 @@ unsigned WINAPI BR_SearchObject::StartSearch (void* searchObject)
 					char* token = strtok(buf, "\n");
 					while (token != NULL)
 					{
-						if (sscanf(token, "#define SWS_VERSION %d,%d,%d,%d", &versionB.maj, &versionB.min, &versionB.rev, &versionB.build) > 0)
+						if (sscanf(token, "#define SWS_VERSION %10d,%10d,%10d,%10d", &versionB.maj, &versionB.min, &versionB.rev, &versionB.build) > 0)
 							break;
 						token = strtok(NULL, "\n");
 					}

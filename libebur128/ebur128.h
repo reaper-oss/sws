@@ -1,4 +1,29 @@
-/* See COPYING file for copyright and license details. */
+/* BR: This is modified libebur128 v1.0.1. for usage in SWS. Modifications are   *
+*  related to the usage of REAPER resampler (instead of speex resampler) and     *
+*  position of true/sample peak                                                  *
+*                                                                                *
+*                                                                                *
+*  Original license follows:                                                     *
+*                                                                                *
+*  Copyright (c) 2011 Jan Kokemüller                                             *
+*                                                                                *
+*  Permission is hereby granted, free of charge, to any person obtaining a copy  *
+*  of this software and associated documentation files (the "Software"), to deal *
+*  in the Software without restriction, including without limitation the rights  *
+*  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell     *
+*  copies of the Software, and to permit persons to whom the Software is         *
+*  furnished to do so, subject to the following conditions:                      *
+*                                                                                *
+*  The above copyright notice and this permission notice shall be included in    *
+*  all copies or substantial portions of the Software.                           *
+*                                                                                *
+*  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR    *
+*  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,      *
+*  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE   *
+*  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER        *
+*  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, *
+*  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN     *
+*  THE SOFTWARE.                                                                 */
 
 #ifndef EBUR128_H_
 #define EBUR128_H_
@@ -7,10 +32,6 @@
  *  \brief libebur128 - a library for loudness measurement according to
  *         the EBU R128 standard.
  */
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #define EBUR128_VERSION_MAJOR 1
 #define EBUR128_VERSION_MINOR 0
@@ -51,7 +72,7 @@ enum mode {
   EBUR128_MODE_M           = (1 << 0),
   /** can call ebur128_loudness_shortterm */
   EBUR128_MODE_S           = (1 << 1) | EBUR128_MODE_M,
-  /** can call ebur128_gated_loudness_* */
+   /** can call ebur128_loudness_global_* */
   EBUR128_MODE_I           = (1 << 2) | EBUR128_MODE_M,
   /** can call ebur128_loudness_range */
   EBUR128_MODE_LRA         = (1 << 3) | EBUR128_MODE_S,
@@ -248,6 +269,7 @@ int ebur128_loudness_range_multiple(ebur128_state** sts,
  *  @param st library state
  *  @param channel_number channel to analyse
  *  @param out maximum sample peak in float format (1.0 is 0 dBFS)
+ *  @param pos time position of maximum sample peak
  *  @return
  *    - EBUR128_SUCCESS on success.
  *    - EBUR128_ERROR_INVALID_MODE if mode "EBUR128_MODE_SAMPLE_PEAK" has not
@@ -256,7 +278,7 @@ int ebur128_loudness_range_multiple(ebur128_state** sts,
  */
 int ebur128_sample_peak(ebur128_state* st,
                         unsigned int channel_number,
-                        double* out);
+                        double* out, double* pos);
 
 /** \brief Get maximum true peak of selected channel in float format.
  *
@@ -271,6 +293,7 @@ int ebur128_sample_peak(ebur128_state* st,
  *  @param st library state
  *  @param channel_number channel to analyse
  *  @param out maximum true peak in float format (1.0 is 0 dBFS)
+ *  @param pos time position of maximum true peak
  *  @return
  *    - EBUR128_SUCCESS on success.
  *    - EBUR128_ERROR_INVALID_MODE if mode "EBUR128_MODE_TRUE_PEAK" has not
@@ -279,10 +302,6 @@ int ebur128_sample_peak(ebur128_state* st,
  */
 int ebur128_true_peak(ebur128_state* st,
                       unsigned int channel_number,
-                      double* out);
-
-#ifdef __cplusplus
-}
-#endif
+                      double* out, double* pos);
 
 #endif  /* EBUR128_H_ */

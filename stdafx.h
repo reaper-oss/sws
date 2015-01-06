@@ -68,6 +68,7 @@
 #include <set>
 #include <numeric>
 #include <ctime>
+#include <limits>
 
 #pragma warning(disable : 4996) // POSIX deprecation warnings
 #pragma warning(disable : 4267) // size_t to int warnings
@@ -85,6 +86,8 @@
 #include "../WDL/assocarray.h"
 #include "../WDL/win32_utf8.h"
 #include "../WDL/lineparse.h"
+#include "../WDL/MersenneTwister.h"
+#include "../WDL/fileread.h"
 #pragma warning(default : 4996)
 #pragma warning(default : 4267)
 #pragma warning(default : 4244)

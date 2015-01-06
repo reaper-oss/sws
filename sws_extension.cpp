@@ -145,7 +145,15 @@ bool hookCommandProc2(KbdSectionInfo* sec, int cmdId, int val, int valhw, int re
 				{
 					sReentrantCmds.Add(cmd->id);
 					cmd->fakeToggle = !cmd->fakeToggle;
-					cmd->onAction(cmd, val, valhw, relmode, hwnd);
+
+					if (!BR_SetGetCommandHook2Reentrancy(false, false)) // needed for refreshing MIDI toolbar (make sure it's called after changing toggle state)
+					{
+#ifndef BR_DEBUG_PERFORMANCE_ACTIONS
+						cmd->onAction(cmd, val, valhw, relmode, hwnd);
+#else
+						CommandTimer(cmd, val, valhw, relmode, hwnd, true);
+#endif
+					}
 					sReentrantCmds.Delete(sReentrantCmds.Find(cmd->id));
 					return true;
 				}
@@ -379,16 +387,18 @@ int IsSwsAction(const char* _actionName)
 
 HMENU SWSCreateMenuFromCommandTable(COMMAND_T pCommands[], HMENU hMenu, int* iIndex)
 {
-	if (!hMenu)
-		hMenu = CreatePopupMenu();
 	int i = 0;
 	if (iIndex)
 		i = *iIndex;
 
 	while (pCommands[i].id != LAST_COMMAND && pCommands[i].id != SWS_ENDSUBMENU)
 	{
-		if (const char* name = pCommands[i].menuText)
+	const char* name = pCommands[i].menuText;
+		if (name && *name)
 		{
+	  if (!hMenu)
+		hMenu = CreatePopupMenu();
+
 			if (pCommands[i].id == SWS_STARTSUBMENU)
 			{
 				i++;
@@ -499,7 +509,12 @@ public:
 	void SetSurfaceMute(MediaTrack *tr, bool mute)		{ ScheduleTracklistUpdate(); UpdateTrackMute(); }
 	void SetSurfaceSolo(MediaTrack *tr, bool solo)		{ ScheduleTracklistUpdate(); UpdateTrackSolo(); }
 	void SetSurfaceRecArm(MediaTrack *tr, bool arm)		{ ScheduleTracklistUpdate(); UpdateTrackArm(); }
-	int Extended(int call, void *parm1, void *parm2, void *parm3) { return SNM_CSurfExtended(call, parm1, parm2, parm3); }
+	int Extended(int call, void *parm1, void *parm2, void *parm3)
+	{
+		BR_CSurfExtended(call, parm1, parm2, parm3);
+		SNM_CSurfExtended(call, parm1, parm2, parm3);
+		return 0;
+	}
 };
 
 // WDL Stuff
@@ -607,6 +622,7 @@ extern "C"
 		IMPAPI(CoolSB_SetScrollInfo);
 		IMPAPI(CountActionShortcuts);
 		IMPAPI(CountMediaItems);
+		IMPAPI(CountProjectMarkers);
 		IMPAPI(CountSelectedMediaItems);
 		IMPAPI(CountSelectedTracks);
 		IMPAPI(CountTakes);
@@ -623,6 +639,7 @@ extern "C"
 		IMPAPI(CSurf_GoEnd);
 		IMPAPI(CSurf_OnMuteChange);
 		IMPAPI(CSurf_OnPanChange);
+		IMPAPI(CSurf_OnPlayRateChange);
 		IMPAPI(CSurf_OnSelectedChange);
 		IMPAPI(CSurf_OnTrackSelection);
 		IMPAPI(CSurf_OnVolumeChange);
@@ -666,11 +683,13 @@ extern "C"
 		IMPAPI(GetContextMenu);
 		IMPAPI(GetCurrentProjectInLoadSave);
 		IMPAPI(GetCursorContext);
+		IMPAPI(GetCursorContext2);
 		IMPAPI(GetCursorPosition);
 		IMPAPI(GetCursorPositionEx);
 		IMPAPI(GetEnvelopeName);
 		IMPAPI(GetExePath);
 		IMPAPI(GetFocusedFX);
+		IMPAPI(GetGlobalAutomationOverride);
 		IMPAPI(GetHZoomLevel);
 		IMPAPI(GetIconThemePointer);
 		IMPAPI(GetIconThemeStruct);
@@ -691,6 +710,7 @@ extern "C"
 		IMPAPI(GetMediaItemTake_Source);
 		IMPAPI(GetMediaItemTake_Track);
 		IMPAPI(GetMediaItemTakeInfo_Value);
+		IMPAPI(GetMediaItemTrack);
 		IMPAPI(GetMediaSourceFileName);
 		IMPAPI(GetMediaSourceType);
 		IMPAPI(GetMediaTrackInfo_Value);
@@ -748,6 +768,7 @@ extern "C"
 		IMPAPI(GetTrackMediaItem);
 		IMPAPI(GetTrackMIDINoteNameEx);
 		IMPAPI(GetTrackNumMediaItems);
+		IMPAPI(GetTrackNumSends);
 		IMPAPI(GetTrackUIVolPan);
 		IMPAPI(GetUserInputs);
 		IMPAPI(get_config_var);
@@ -773,6 +794,8 @@ extern "C"
 		IMPAPI(MainThread_LockTracks);
 		IMPAPI(MainThread_UnlockTracks);
 		IMPAPI(MarkProjectDirty);
+		IMPAPI(Master_GetPlayRate);
+		IMPAPI(Master_GetPlayRateAtTime);
 		IMPAPI(MIDI_CountEvts);
 		IMPAPI(MIDI_DeleteCC);
 		IMPAPI(MIDI_DeleteEvt);
@@ -787,6 +810,8 @@ extern "C"
 		IMPAPI(MIDI_GetCC);
 		IMPAPI(MIDI_GetEvt);
 		IMPAPI(MIDI_GetNote);
+		IMPAPI(MIDI_GetPPQPos_EndOfMeasure);
+		IMPAPI(MIDI_GetPPQPos_StartOfMeasure);
 		IMPAPI(MIDI_GetPPQPosFromProjTime);
 		IMPAPI(MIDI_GetProjTimeFromPPQPos);
 		IMPAPI(MIDI_GetTextSysexEvt);
@@ -836,6 +861,7 @@ extern "C"
 		IMPAPI(RemoveXPStyle);
 #endif
 		IMPAPI(RenderFileSection);
+		IMPAPI(Resample_EnumModes);
 		IMPAPI(Resampler_Create);
 		IMPAPI(ReverseNamedCommandLookup);
 		IMPAPI(screenset_register);
@@ -846,8 +872,10 @@ extern "C"
 		IMPAPI(SendLocalOscMessage);
 		IMPAPI(SetActiveTake)
 		IMPAPI(SetCurrentBPM);
+		IMPAPI(SetCursorContext);
 		IMPAPI(SetEditCurPos);
 		IMPAPI(SetEditCurPos2);
+		IMPAPI(SetGlobalAutomationOverride);
 		IMPAPI(SetMediaItemInfo_Value);
 		IMPAPI(SetMediaItemLength);
 		IMPAPI(SetMediaItemPosition);
@@ -865,6 +893,8 @@ extern "C"
 		IMPAPI(SetTempoTimeSigMarker);
 		IMPAPI(SetTakeStretchMarker);
 		IMPAPI(SetTrackSelected);
+		IMPAPI(SetTrackSendUIPan);
+		IMPAPI(SetTrackSendUIVol);
 		IMPAPI(ShowActionList);
 		IMPAPI(ShowConsoleMsg);
 		IMPAPI(ShowMessageBox);
@@ -934,7 +964,7 @@ extern "C"
 				_snprintf(txt, sizeof(txt),
 					// keep the message on a single line (for the LangPack generator)
 					__LOCALIZE_VERFMT("The version of SWS extension you have installed is incompatible with your version of REAPER.\nYou probably have a REAPER version less than v%s installed.\nPlease install the latest version of REAPER from www.reaper.fm.","sws_mbox"),
-					"4.7"); // <- update compatible version here
+					"4.75"); // <- update compatible version here
 
 				MessageBox(Splash_GetWnd && Splash_GetWnd() ? Splash_GetWnd() : NULL, txt, __LOCALIZE("SWS - Version Incompatibility","sws_mbox"), MB_OK);
 			}
@@ -953,9 +983,9 @@ extern "C"
 		// hookcommand2 must be registered before hookcommand
 		if (!rec->Register("hookcommand2", (void*)hookCommandProc2))
 		{
-/*JFB!!! make it tolerant for the moment: 4.62pre7+ needed
+
 			ERR_RETURN("hookcommand error\n")
-*/
+
 		}
 
 		if (!rec->Register("hookcommand", (void*)hookCommandProc))
@@ -1006,7 +1036,7 @@ extern "C"
 			ERR_RETURN("Breeder init error\n")
 		if (!WOL_Init())
 			ERR_RETURN("Wol init error\n")
-		if (!SNM_Init(rec)) // keep it as the last init (for cyle actions)
+		if (!SNM_Init(rec)) // keep it as the last init (for cycle actions)
 			ERR_RETURN("S&M init error\n")
 
 		if (!rec->Register("hookcustommenu", (void*)swsMenuHook))

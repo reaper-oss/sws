@@ -44,7 +44,6 @@
 #define LAST_COMMAND			((char*)(INT_PTR)-1)
 #define SWS_STARTSUBMENU		((char*)(INT_PTR)-2)
 #define SWS_ENDSUBMENU			((char*)(INT_PTR)-3)
-#define MINTRACKHEIGHT			24
 #define DEFACCEL				{ 0, 0, 0 }
 
 #define UTF8_BULLET				"\xE2\x80\xA2"
@@ -52,6 +51,8 @@
 #define UTF8_BOX				"\xE2\x96\xA1"
 #define UTF8_BBOX				"\xE2\x96\xA0"
 #define UTF8_INFINITY			"\xE2\x88\x9E"
+#define UTF8_CHECKMARK          "\xE2\x9C\x93"
+#define UTF8_MULTIPLICATION     "\xE2\x9C\x95"
 
 // +IsSwsAction() to skip "SWS: ", "SWS/S&M: ", "SWS/FNG: ", etc...
 #define SWS_CMD_SHORTNAME(_ct)	(_ct ? GetLocalizedActionName(_ct->accel.desc) + IsSwsAction(_ct->accel.desc) : "")
@@ -158,6 +159,7 @@ extern bool g_bTrue;
 extern bool g_bFalse;
 extern int g_iFirstCommand;
 extern int g_iLastCommand;
+extern MTRand g_MTRand;
 
 // Stuff to do in swell someday
 #ifndef _WIN32
@@ -220,6 +222,7 @@ BOOL IsCommCtrlVersion6();
 void SaveWindowPos(HWND hwnd, const char* cKey);
 void RestoreWindowPos(HWND hwnd, const char* cKey, bool bRestoreSize = true);
 void SetWindowPosAtMouse(HWND hwnd);
+void SWS_ShowTextScrollbar(HWND hwnd, bool show);
 
 MediaTrack* GetFirstSelectedTrack();
 int NumSelTracks();

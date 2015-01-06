@@ -51,8 +51,15 @@
 #include "../reaper/localize.h"
 
 
-void Noop(COMMAND_T* _ct) {}
+void Noop(COMMAND_T* _ct) {
+}
 
+void Noop2(COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd)
+{
+	WDL_FastString str;
+  str.SetFormatted(512, "Noop2: _val=%d, _valhw=%d, _relmode=%d\r\n", _val, _valhw, _relmode, _valhw|(_val<<7));
+	ShowConsoleMsg(str.Get());
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // S&M actions (main section)
@@ -61,7 +68,8 @@ void Noop(COMMAND_T* _ct) {}
 static COMMAND_T s_cmdTable[] =
 {
 
-//	{ { DEFACCEL, "SWS/S&M: [Internal] QuickTest" }, "S&M_QUICKTEST", Noop, NULL, },
+//	{ { DEFACCEL, "SWS/S&M: [Internal] QuickTest1" }, "S&M_QUICKTEST1", Noop, NULL, },
+//	{ { DEFACCEL, "SWS/S&M: [Internal] QuickTest2" }, "S&M_QUICKTEST2", NULL, NULL, 0, NULL, 0, Noop2, },
 
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
@@ -738,9 +746,6 @@ static DYN_COMMAND_T s_dynCmdTable[] =
 	{ "SWS/S&M: Exclusive toggle F%02d", "S&M_EXCL_TGL_F", ExclusiveToggle, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
 	{ "SWS/S&M: Exclusive toggle G%02d", "S&M_EXCL_TGL_G", ExclusiveToggle, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
 	{ "SWS/S&M: Exclusive toggle H%02d", "S&M_EXCL_TGL_H", ExclusiveToggle, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
-
-	{ "SWS/S&M: Restore displayed CC lanes, slot %02d", "S&M_SETCCLANES_ME", NULL, 8, SNM_MAX_DYN_ACTIONS, NULL, 32060, MESetCCLanes, },
-	{ "SWS/S&M: Save displayed CC lanes, slot %02d", "S&M_SAVECCLANES_ME", NULL, 8, SNM_MAX_DYN_ACTIONS, NULL, 32060, MESaveCCLanes, },
 
 //!WANT_LOCALIZE_1ST_STRING_END
 

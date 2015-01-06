@@ -37,7 +37,7 @@
 * Used in command hook in sws_extension.cpp. If BR_DEBUG_PERFORMANCE_ACTIONS  *
 * is defined the execution time of SWS actions gets printed to the console    *
 *******************************************************************************/
-void CommandTimer (COMMAND_T* ct);
+void CommandTimer (COMMAND_T* ct, int val = 0, int valhw = 0, int relmode = 0, HWND hwnd = NULL, bool commandHook2 = false);
 
 /******************************************************************************
 * Creating the object starts the timer. When the object goes out of scope,    *
@@ -70,5 +70,3 @@ public:
 		#endif
 #endif
 };
-
-

@@ -28,7 +28,8 @@
 #include "stdafx.h"
 #include "BR_Envelope.h"
 #include "BR_ContinuousActions.h"
-#include "BR_EnvTools.h"
+#include "BR_EnvelopeUtil.h"
+#include "BR_MouseUtil.h"
 #include "BR_ProjState.h"
 #include "BR_Util.h"
 #include "../reaper/localize.h"
@@ -49,7 +50,7 @@ static bool EnvMouseInit (bool init)
 	{
 		GetConfig("undomask", s_editCursorUndo);
 		g_envMouseEnvelope = new (nothrow) BR_Envelope(GetSelectedEnvelope(NULL));
-		initSuccessful = g_envMouseEnvelope && g_envMouseEnvelope->Count() && PositionAtMouseCursor(false) != -1;
+		initSuccessful = g_envMouseEnvelope && g_envMouseEnvelope->CountPoints() && PositionAtMouseCursor(false) != -1;
 
 		if (initSuccessful)
 			SetConfig("undomask", ClearBit(s_editCursorUndo, 3));
@@ -72,19 +73,19 @@ static bool EnvMouseInit (bool init)
 	return initSuccessful;
 }
 
-static bool EnvMouseUndo ()
+static int EnvMouseUndo ()
 {
-	return g_envMouseDidOnce;
+	return (g_envMouseDidOnce) ? (UNDO_STATE_TRACKCFG) : (0);
 }
 
 static HCURSOR EnvMouseCursor (int window)
 {
-	static HCURSOR cursor = NULL;
-	if (!cursor)
-		cursor = LoadCursor(NULL, IDC_SIZENS);
+	static HCURSOR s_cursor = NULL;
+	if (!s_cursor)
+		s_cursor = LoadCursor(NULL, IDC_SIZENS);
 
 	if (window == BR_ContinuousAction::ARRANGE || window == BR_ContinuousAction::RULER)
-		return cursor;
+		return s_cursor;
 	else
 		return NULL;
 }
@@ -111,8 +112,8 @@ static WDL_FastString EnvMouseTooltip (int window)
 			else
 				g_envMouseEnvelope->GetPoint((g_envMouseMode == 0) ? g_envMouseEnvelope->FindClosest(position) : g_envMouseEnvelope->FindPrevious(position), &position, NULL, NULL, NULL);
 
-			static const char* format = __localizeFunc("Envelope: %s\n%s at %s", "tooltip", 0);
-			tooltip.AppendFormatted(512, format, (g_envMouseEnvelope->GetName()).Get(), (g_envMouseEnvelope->FormatValue(value)).Get(), FormatTime(position).Get());
+			static const char* s_format = __localizeFunc("Envelope: %s\n%s at %s", "tooltip", 0);
+			tooltip.AppendFormatted(512, s_format, (g_envMouseEnvelope->GetName()).Get(), (g_envMouseEnvelope->FormatValue(value)).Get(), FormatTime(position).Get());
 		}
 
 	}
@@ -126,32 +127,39 @@ void SetEnvPointMouseValueInit ()
 }
 
 /******************************************************************************
-* Commands                                                                    *
+* Commands: Envelopes - Misc                                                  *
 ******************************************************************************/
 void SetEnvPointMouseValue (COMMAND_T* ct)
 {
-	static int    lastEndId       = -1;
-	static double lastEndPosition = -1;
-	static double lastEndNormVal  = -1;
+	static int    s_lastEndId       = -1;
+	static double s_lastEndPosition = -1;
+	static double s_lastEndNormVal  = -1;
 
 	// Action called for the first time
 	if (g_envMouseMode == -666)
 	{
-		lastEndId       = -1;
-		lastEndPosition = -1;
-		lastEndNormVal  = -1;
+		s_lastEndId       = -1;
+		s_lastEndPosition = -1;
+		s_lastEndNormVal  = -1;
 		g_envMouseMode  = (int)ct->user;
+
+		// BR_Envelope does check for locking but we're also using tempo API here so check manually
+		if (g_envMouseEnvelope->IsLocked())
+		{
+			ContinuousActionStopAll();
+			return;
+		}
 	}
 
 	// Check envelope is visible
-	int envHeight, envY;
-	if (!g_envMouseEnvelope->VisibleInArrange(&envHeight, &envY, true)) // caching values is not 100% correct, but we don't expect for envelope lane height to change during the action
-		return;                                                         // and it can speed things if dealing with big envelope that's in track lane (quite possible with tempo map)
+	int envHeight, envY;                                                // caching values is not 100% correct, but we don't expect for envelope lane height to change during the action
+	if (!g_envMouseEnvelope->VisibleInArrange(&envHeight, &envY, true)) // and it can speed things if dealing with big envelope that's in track lane (quite possible with tempo map)
+		return;
 
 	// Get mouse positions
 	int yOffset; bool overRuler;
 	double endPosition   = PositionAtMouseCursor(true, false, &yOffset, &overRuler);
-	double startPosition = (lastEndPosition == -1) ? (endPosition) : (lastEndPosition);
+	double startPosition = (s_lastEndPosition == -1) ? (endPosition) : (s_lastEndPosition);
 	if (endPosition == -1)
 	{
 		ContinuousActionStopAll();
@@ -161,23 +169,23 @@ void SetEnvPointMouseValue (COMMAND_T* ct)
 	// Get normalized mouse values
 	yOffset = (overRuler) ? envY : SetToBounds(yOffset, envY, envY + envHeight);
 	double endNormVal   = ((double)envHeight + (double)envY - (double)yOffset) / (double)envHeight;
-	double startNormVal = (lastEndPosition == -1) ? (endNormVal) : (lastEndNormVal);
+	double startNormVal = (s_lastEndPosition == -1) ? (endNormVal) : (s_lastEndNormVal);
 
 	// Find all the point over which mouse passed
 	int startId = -1;
 	int endId   = -1;
 	if ((int)ct->user == 0)
 	{
-		if (lastEndId == -1)
+		if (s_lastEndId == -1)
 			startId = (g_envMouseEnvelope->IsTempo()) ? FindClosestTempoMarker(startPosition) : g_envMouseEnvelope->FindClosest(startPosition);
 		else
-			startId = lastEndId;
+			startId = s_lastEndId;
 
 		endId  = (g_envMouseEnvelope->IsTempo()) ? FindClosestTempoMarker(endPosition) : g_envMouseEnvelope->FindClosest(endPosition);
 	}
 	else
 	{
-		if (lastEndId == -1)
+		if (s_lastEndId == -1)
 		{
 			startId = (g_envMouseEnvelope->IsTempo()) ? FindPreviousTempoMarker(startPosition) : g_envMouseEnvelope->FindPrevious(startPosition);
 			double nextPos;
@@ -188,7 +196,7 @@ void SetEnvPointMouseValue (COMMAND_T* ct)
 		}
 		else
 		{
-			startId = lastEndId;
+			startId = s_lastEndId;
 		}
 
 		endId = (g_envMouseEnvelope->IsTempo()) ? FindPreviousTempoMarker(endPosition) : g_envMouseEnvelope->FindPrevious(endPosition);
@@ -276,9 +284,9 @@ void SetEnvPointMouseValue (COMMAND_T* ct)
 			swap(endPosition, startPosition);
 			swap(endNormVal,  startNormVal);
 		}
-		lastEndId       = endId;
-		lastEndPosition = endPosition;
-		lastEndNormVal  = endNormVal;
+		s_lastEndId       = endId;
+		s_lastEndPosition = endPosition;
+		s_lastEndNormVal  = endNormVal;
 	}
 }
 
@@ -301,13 +309,13 @@ void CursorToEnv1 (COMMAND_T* ct)
 	{
 		while (token != NULL)
 		{
-			if (sscanf(token, "PT %lf", &cTime))
+			if (sscanf(token, "PT %20lf", &cTime))
 			{
 				if (cTime > cursor)
 				{
 					// fake next point if it doesn't exist
 					token = strtok(NULL, "\n");
-					if (!sscanf(token, "PT %lf", &nTime))
+					if (!sscanf(token, "PT %20lf", &nTime))
 						nTime = cTime + 0.001;
 
 					found = true;
@@ -325,7 +333,7 @@ void CursorToEnv1 (COMMAND_T* ct)
 		double ppTime = -1;
 		while (token != NULL)
 		{
-			if (sscanf(token, "PT %lf", &cTime))
+			if (sscanf(token, "PT %20lf", &cTime))
 			{
 				if (cTime >= cursor)
 				{
@@ -368,7 +376,7 @@ void CursorToEnv1 (COMMAND_T* ct)
 		Undo_BeginBlock2(NULL);
 
 		// Select point
-		if ((int)ct->user == -2 || (int)ct->user == 2 )
+		if (((int)ct->user == -2 || (int)ct->user == 2) && !IsLocked(TRACK_ENV))
 		{
 			PreventUIRefresh(1);
 
@@ -396,7 +404,7 @@ void CursorToEnv1 (COMMAND_T* ct)
 		}
 
 		SetEditCurPos(cTime + takeEnvStartPos, true, false);
-		Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL);
+		Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG);
 	}
 	FreeHeapPtr(envState);
 }
@@ -404,7 +412,7 @@ void CursorToEnv1 (COMMAND_T* ct)
 void CursorToEnv2 (COMMAND_T* ct)
 {
 	BR_Envelope envelope(GetSelectedEnvelope(NULL));
-	if (!envelope.Count())
+	if (!envelope.CountPoints())
 		return;
 
 	int id;
@@ -429,10 +437,9 @@ void CursorToEnv2 (COMMAND_T* ct)
 				break;
 		}
 
-		Undo_BeginBlock2(NULL);
 		SetEditCurPos(targetPos, true, false);
 		envelope.Commit();
-		Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);
 	}
 }
 
@@ -460,7 +467,7 @@ void SelNextPrevEnvPoint (COMMAND_T* ct)
 			envelope.GetPoint(((int)ct->user > 0) ? (id-1) : (id+1), &prevPos, NULL, NULL, NULL);
 			MoveArrangeToTarget(pos, prevPos);
 
-			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 		}
 	}
 }
@@ -493,7 +500,7 @@ void ExpandEnvSel (COMMAND_T* ct)
 	{
 		if (envelope.CountConseq() == 1)
 			envelope.MoveArrangeToPoint (id, ((int)ct->user > 0) ? (id-1) : (id+1));
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 	}
 }
 
@@ -513,7 +520,7 @@ void ExpandEnvSelEnd (COMMAND_T* ct)
 	if (envelope.Commit())
 	{
 		envelope.MoveArrangeToPoint(id, ((int)ct->user > 0) ? (id-1) : (id+1));
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 	}
 }
 
@@ -545,7 +552,7 @@ void ShrinkEnvSel (COMMAND_T* ct)
 	{
 		if (envelope.CountConseq() == 1)
 			envelope.MoveArrangeToPoint (((int)ct->user > 0) ? (id-1) : (id+1), id);
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 	}
 }
 
@@ -565,8 +572,211 @@ void ShrinkEnvSelEnd (COMMAND_T* ct)
 	if (envelope.Commit())
 	{
 		envelope.MoveArrangeToPoint (((int)ct->user > 0) ? (id-1) : (id+1), id);
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 	}
+}
+
+void EnvPointsGrid (COMMAND_T* ct)
+{
+	BR_Envelope envelope(GetSelectedEnvelope(NULL));
+	if (!envelope.CountPoints())
+		return;
+
+	// Get options and the range to work on
+	bool timeSel      = !!GetBit((int)ct->user, 0);
+	bool deletePoints = !!GetBit((int)ct->user, 1);
+	bool unselect     = !!GetBit((int)ct->user, 2);
+	bool onGrid       = !!GetBit((int)ct->user, 3);
+
+	int startId, endId;
+	if (!timeSel || !envelope.GetPointsInTimeSelection(&startId, &endId))
+	{
+		startId = 0;
+		endId   = envelope.CountPoints()-1;
+	}
+	else if (!envelope.ValidateId(startId) || !envelope.ValidateId(endId))
+		return;
+
+	if (unselect)
+		envelope.UnselectAll();
+
+	// Select/insert or save for deletion all the points satisfying criteria
+	double grid = -1, nextGrid = -1;
+	vector<pair<int, int> > pointsToDelete; // store start and end of consequential points
+	for (int i = startId ; i <= endId; ++i)
+	{
+		double position;
+		envelope.GetPoint(i, &position, NULL, NULL, NULL);
+
+		while (position > nextGrid)
+		{
+			grid     = GetNextGridDiv(position - (MAX_GRID_DIV/2));
+			nextGrid = GetNextGridDiv(grid);
+		}
+
+		bool doesPointPass = (onGrid) ? (IsEqual(position, grid, MIN_ENV_DIST)  ||  IsEqual(position, nextGrid, MIN_ENV_DIST))
+									  : (!IsEqual(position, grid, MIN_ENV_DIST) && !IsEqual(position, nextGrid, MIN_ENV_DIST));
+
+		if (doesPointPass)
+		{
+			if (deletePoints)
+			{
+				if (pointsToDelete.size() == 0 || pointsToDelete.back().second != i -1)
+				{
+					pair<int, int> newPair(i, i);
+					pointsToDelete.push_back(newPair);
+				}
+				pointsToDelete.back().second = i;
+
+			}
+			else
+				envelope.SetSelection(i, true);
+		}
+	}
+
+	// Readjust tempo points
+	if (deletePoints && pointsToDelete.size() > 0)
+	{
+		int timeBase; GetConfig("tempoenvtimelock", timeBase);
+		if ((envelope.IsTempo() && timeBase != 0))
+		{
+			double offset = 0;
+			for (size_t i = 0; i < pointsToDelete.size(); ++i)
+			{
+				int conseqStart = pointsToDelete[i].first;
+				int conseqEnd   = pointsToDelete[i].second;
+				if (conseqStart == 0 && (++conseqStart > conseqEnd)) continue; // skip first point
+
+				double t0, t1, b0, b1; int s0;
+				envelope.GetPoint(conseqStart - 1, &t0, &b0, &s0, NULL);
+
+				if (envelope.GetPoint(conseqEnd + 1, &t1, &b1, NULL, NULL))
+				{
+					t0 -= offset; // last unselected point before next selection - readjust position to original (earlier iterations moved it)
+
+					int startMeasure, endMeasure, num, den;
+					double startBeats = TimeMap2_timeToBeats(NULL, t0, &startMeasure, &num, NULL, &den);
+					double endBeats   = TimeMap2_timeToBeats(NULL, t1, &endMeasure, NULL, NULL, NULL);
+					double beatCount = endBeats - startBeats + num * (endMeasure - startMeasure);
+
+					if (s0 == SQUARE)
+						offset += (t0 + (240*beatCount) / (den * b0))        - t1;  // num and den can be different due to some time signatures being scheduled for deletion but reaper does it in the same manner so leave it
+					else
+						offset += (t0 + (480*beatCount) / (den * (b0 + b1))) - t1;
+
+					int nextPoint = (i == pointsToDelete.size() - 1) ? envelope.CountPoints() : pointsToDelete[i+1].first;
+					while (++conseqEnd < nextPoint)
+					{
+						double t;
+						envelope.GetPoint(conseqEnd, &t, NULL, NULL, NULL);
+						t += offset;
+						envelope.SetPoint(conseqEnd, &t, NULL, NULL, NULL);
+					}
+				}
+			}
+		}
+
+		int idOffset = 0;
+		for (size_t i = 0; i < pointsToDelete.size(); ++i)
+		{
+			int conseqStart = pointsToDelete[i].first;
+			int conseqEnd   = pointsToDelete[i].second;
+			if (envelope.IsTempo() && conseqStart == 0 && (++conseqStart > conseqEnd)) continue; // skip first tempo point
+
+			conseqStart -= idOffset;
+			conseqEnd   -= idOffset;
+			if (envelope.DeletePoints(conseqStart, conseqEnd))
+				idOffset += conseqEnd - conseqStart + 1;
+		}
+	}
+
+	if (envelope.Commit())
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
+}
+
+void CreateEnvPointsGrid (COMMAND_T* ct)
+{
+	BR_Envelope envelope(GetSelectedEnvelope(NULL));
+	if (!envelope.CountPoints())
+		return;
+
+	bool timeSel = ((int)ct->user == 1) ? true : false;
+	int startId, endId;
+	double tStart, tEnd;
+	if (!timeSel || !envelope.GetPointsInTimeSelection(&startId, &endId, &tStart, &tEnd))
+	{
+		startId = 0;
+		endId   = envelope.CountPoints()-1;
+		tStart  = 0;
+		tEnd    = EndOfProject(true, true);
+	}
+	else
+	{
+		if (!envelope.ValidateId(startId))
+		{
+			int newId = envelope.FindPrevious(tStart);
+			startId = (envelope.ValidateId(newId)) ? (newId) : (0);
+		}
+		endId = (envelope.ValidateId(endId)) ? (endId) : (startId);
+	}
+
+	vector<double> position, value, bezier;
+	vector<int> shape;
+	bool doPointsBeforeFirstPoint = true;
+	for (int i = startId; i <= endId; ++i)
+	{
+		double t0, t1, v0, b0; int s0;
+
+		envelope.GetPoint(i, &t0, &v0, &s0, &b0);
+		if (!envelope.GetPoint(i+1, &t1, NULL, NULL, NULL))
+			t1 = tEnd;
+		else
+			t1 = (t1 < tEnd) ? t1 : tEnd;
+
+		// If first point is not right at the start, make sure points are created before it
+		if (i == startId)
+		{
+			if (t0 > tStart && doPointsBeforeFirstPoint)
+			{
+				t1 = t0;
+				t0 = 0;
+				s0 = envelope.GetDefaultShape();
+				b0 = 0;
+				--i; // make loop process first point one more time, creating points AFTER first point
+			}
+			doPointsBeforeFirstPoint = false;
+		}
+
+		double previousGridLine = t0;
+		double gridLine = t0;
+		while (true)
+		{
+			while (gridLine < previousGridLine + MAX_GRID_DIV)
+				gridLine = GetNextGridDiv(gridLine + (MAX_GRID_DIV/2));
+
+			// Make sure points are created after time selection only
+			if (gridLine >= tStart)
+			{
+				if (gridLine < t1 - (MAX_GRID_DIV/2))
+				{
+					position.push_back(gridLine);
+					value.push_back(envelope.ValueAtPosition(gridLine)); // ValueAtPosition is much more faster when dealing with sorted
+					shape.push_back(s0);                                 // points and inserting points will make envelope unsorted
+					bezier.push_back(b0);
+				}
+				else
+					break;
+			}
+			previousGridLine = gridLine;
+		}
+	}
+
+	for (size_t i = 0; i < position.size(); ++i)
+		envelope.CreatePoint(envelope.CountPoints(), position[i], value[i], shape[i], bezier[i], false, true);
+
+
+	if (envelope.Commit())
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 }
 
 void ShiftEnvSelection (COMMAND_T* ct)
@@ -595,19 +805,19 @@ void ShiftEnvSelection (COMMAND_T* ct)
 	}
 
 	if (envelope.Commit())
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 }
 
 void PeaksDipsEnv (COMMAND_T* ct)
 {
 	BR_Envelope envelope(GetSelectedEnvelope(NULL));
-	if (!envelope.Count())
+	if (!envelope.CountPoints())
 		return;
 
 	if ((int)ct->user == -2 || (int)ct->user == 2)
 		envelope.UnselectAll();
 
-	for (int i = 1; i < envelope.Count()-1 ; ++i)
+	for (int i = 1; i < envelope.CountPoints()-1 ; ++i)
 	{
 		double v0, v1, v2;
 		envelope.GetPoint(i-1, NULL, &v0, NULL, NULL);
@@ -627,7 +837,7 @@ void PeaksDipsEnv (COMMAND_T* ct)
 	}
 
 	if (envelope.Commit())
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 }
 
 void SelEnvTimeSel (COMMAND_T* ct)
@@ -638,10 +848,10 @@ void SelEnvTimeSel (COMMAND_T* ct)
 		return;
 
 	BR_Envelope envelope(GetSelectedEnvelope(NULL));
-	if (!envelope.Count())
+	if (!envelope.CountPoints())
 		return;
 
-	for (int i = 0; i < envelope.Count() ; ++i)
+	for (int i = 0; i < envelope.CountPoints() ; ++i)
 	{
 		double point;
 		envelope.GetPoint(i, &point, NULL, NULL, NULL);
@@ -658,7 +868,7 @@ void SelEnvTimeSel (COMMAND_T* ct)
 		}
 	}
 	if (envelope.Commit())
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 }
 
 void SetEnvValToNextPrev (COMMAND_T* ct)
@@ -694,7 +904,7 @@ void SetEnvValToNextPrev (COMMAND_T* ct)
 	}
 
 	if (envelope.Commit())
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 }
 
 void MoveEnvPointToEditCursor (COMMAND_T* ct)
@@ -703,7 +913,7 @@ void MoveEnvPointToEditCursor (COMMAND_T* ct)
 	int id = -1;
 
 	BR_Envelope envelope(GetSelectedEnvelope(NULL));
-	if (!envelope.Count())
+	if (!envelope.CountPoints())
 		return;
 
 	// Find closest
@@ -747,45 +957,74 @@ void MoveEnvPointToEditCursor (COMMAND_T* ct)
 		{
 			envelope.SetPoint(id, &cursor, NULL, NULL, NULL, true);
 			if (envelope.Commit())
-				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 		}
 	}
 }
 
 void Insert2EnvPointsTimeSelection (COMMAND_T* ct)
 {
+	bool selEnvOnly   = ((int)ct->user == 0) ? true : false;
+	bool selTrackOnly = ((int)ct->user == 2) ? true : false;
+
 	double tStart, tEnd;
 	GetSet_LoopTimeRange2(NULL, false, false, &tStart, &tEnd, false);
 
 	if (tStart + MIN_ENV_DIST >= tEnd)
 		return;
 
-	BR_Envelope envelope(GetSelectedEnvelope(NULL));
-	int startId = envelope.Find(tStart, MIN_ENV_DIST);
-	int endId   = envelope.Find(tEnd, MIN_ENV_DIST);
-	int defaultShape = envelope.DefaultShape();
-	envelope.UnselectAll();
+	bool update = false;
 
-	// Create left-side point only if surrounding points are not too close, otherwise just move existing
-	if (envelope.ValidateId(startId))
+	PreventUIRefresh(1);
+	int trackCount = (selEnvOnly) ? (1) : (GetNumTracks() + 1);
+	for (int i = 0; i < trackCount; i++)
 	{
-		if (envelope.SetPoint(startId, &tStart, NULL, &defaultShape, 0, true))
-			envelope.SetSelection(startId, true);
-	}
-	else
-		envelope.CreatePoint(envelope.Count(), tStart, envelope.ValueAtPosition(tStart), defaultShape, 0, true, true);
+		MediaTrack* track = CSurf_TrackFromID(i, false);
+		if (selTrackOnly && !(int)GetMediaTrackInfo_Value(track, "I_SELECTED"))
+			track = NULL;
 
-	// Create right-side point only if surrounding points are not too close, otherwise just move existing
-	if (envelope.ValidateId(endId))
-	{
-		if (envelope.SetPoint(endId, &tEnd, NULL, &defaultShape, 0, true))
-			envelope.SetSelection(endId, true);
-	}
-	else
-		envelope.CreatePoint(envelope.Count(), tEnd, envelope.ValueAtPosition(tEnd), defaultShape, 0, true, true);
+		if (track)
+		{
+			int envelopeCount = selEnvOnly ? 1: CountTrackEnvelopes(track);
+			for (int j = 0; j < envelopeCount; ++j)
+			{
+				BR_Envelope envelope(selEnvOnly ? GetSelectedEnvelope(NULL) : GetTrackEnvelope(track, j));
 
-	if (envelope.Commit())
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+				if (envelope.IsVisible())
+				{
+					int startId = envelope.Find(tStart, MIN_ENV_DIST);
+					int endId   = envelope.Find(tEnd, MIN_ENV_DIST);
+					int defaultShape = envelope.GetDefaultShape();
+					envelope.UnselectAll();
+
+					// Create left-side point only if surrounding points are not too close, otherwise just move existing
+					if (envelope.ValidateId(startId))
+					{
+						if (envelope.SetPoint(startId, &tStart, NULL, &defaultShape, 0, true))
+							envelope.SetSelection(startId, true);
+					}
+					else
+						envelope.CreatePoint(envelope.CountPoints(), tStart, envelope.ValueAtPosition(tStart), defaultShape, 0, true, true);
+
+					// Create right-side point only if surrounding points are not too close, otherwise just move existing
+					if (envelope.ValidateId(endId))
+					{
+						if (envelope.SetPoint(endId, &tEnd, NULL, &defaultShape, 0, true))
+							envelope.SetSelection(endId, true);
+					}
+					else
+						envelope.CreatePoint(envelope.CountPoints(), tEnd, envelope.ValueAtPosition(tEnd), defaultShape, 0, true, true);
+
+					if (envelope.Commit())
+						update = true;
+				}
+			}
+		}
+	}
+	PreventUIRefresh(-1);
+
+	if (update)
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
 }
 
 void FitEnvPointsToTimeSel (COMMAND_T* ct)
@@ -825,41 +1064,7 @@ void FitEnvPointsToTimeSel (COMMAND_T* ct)
 	}
 
 	if (envelope.Commit())
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
-}
-
-void ShowActiveTrackEnvOnly (COMMAND_T* ct)
-{
-	TrackEnvelope* env = GetSelectedTrackEnvelope(NULL);
-	if (!env || ((int)ct->user == 1 && !CountSelectedTracks(NULL)))
-		return;
-	BR_Envelope envelope(env);
-
-	Undo_BeginBlock2(NULL);
-
-	// If envelope has only one point, Reaper will not show it after hiding all
-	// envelopes and committing with vis = 1, so we create another artificial point
-	bool flag = false;
-	if (envelope.Count() <= 1)
-	{
-		int id = envelope.Count() - 1;
-		double position, value; int shape;
-		envelope.GetPoint(id, &position, &value, &shape, NULL);
-		envelope.CreatePoint(id+1, position+1, value, shape, 0, false);
-		envelope.Commit();
-		flag = true;
-	}
-
-	if ((int)ct->user == 0)
-		Main_OnCommand(41150, 0); // hide all
-	else
-		Main_OnCommand(40889 ,0); // hide for selected tracks
-
-	if (flag)
-		envelope.DeletePoint(envelope.Count()-1);
-
-	envelope.Commit(true);
-	Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 }
 
 void CreateEnvPointMouse (COMMAND_T* ct)
@@ -876,7 +1081,7 @@ void CreateEnvPointMouse (COMMAND_T* ct)
 			return;
 	}
 
-	if (position != -1 && envelope.VisibleInArrange())
+	if (position != -1 && envelope.VisibleInArrange(NULL, NULL))
 	{
 		position = SnapToGrid(NULL, position);
 		double fudgeFactor = (envelope.IsTempo()) ? (MIN_TEMPO_DIST) : (MIN_ENV_DIST);
@@ -885,19 +1090,92 @@ void CreateEnvPointMouse (COMMAND_T* ct)
 			double value = envelope.ValueAtPosition(position);
 			if (envelope.IsTempo())
 			{
-				if (SetTempoTimeSigMarker(NULL, -1, position, -1, -1, value, 0, 0, !envelope.DefaultShape()))
+				if (SetTempoTimeSigMarker(NULL, -1, position, -1, -1, value, 0, 0, !envelope.GetDefaultShape()))
 				{
 					UpdateTimeline();
-					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);
 				}
 			}
 			else
 			{
-				envelope.CreatePoint(envelope.Count(), position, value, envelope.DefaultShape(), 0, false, true);
+				envelope.CreatePoint(envelope.CountPoints(), position, value, envelope.GetDefaultShape(), 0, false, true);
 				if (envelope.Commit())
-					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 			}
 		}
+	}
+}
+
+void IncreaseDecreaseVolEnvPoints (COMMAND_T* ct)
+{
+	BR_Envelope envelope (GetSelectedEnvelope(NULL));
+	if (envelope.CountSelected() > 0 && (envelope.Type() == VOLUME || envelope.Type() == VOLUME_PREFX))
+	{
+		double trim = DB2VAL(((double)ct->user) / 10);
+		for (int i = 0; i < envelope.CountSelected(); ++i)
+		{
+			double value;
+			if (envelope.GetPoint(envelope.GetSelected(i), NULL, &value, NULL, NULL))
+			{
+				value = SetToBounds(value * trim, envelope.LaneMinValue(), envelope.LaneMaxValue());
+				envelope.SetPoint(envelope.GetSelected(i), NULL, &value, NULL, NULL);
+			}
+		}
+		if (envelope.Commit())
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
+	}
+}
+void SelectEnvelopeUnderMouse (COMMAND_T* ct)
+{
+	BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_MCP_TCP | BR_MouseInfo::MODE_ARRANGE);
+
+	if ((!strcmp(mouseInfo.GetWindow(),  "tcp")       && !strcmp(mouseInfo.GetSegment(), "envelope"))   ||
+		(!strcmp(mouseInfo.GetWindow(),  "arrange")   && !strcmp(mouseInfo.GetSegment(), "envelope"))   ||
+		(!strcmp(mouseInfo.GetDetails(), "env_point") || !strcmp(mouseInfo.GetSegment(), "env_segment"))
+	)
+	{
+		if (mouseInfo.GetEnvelope() && mouseInfo.GetEnvelope() != GetSelectedEnvelope(NULL))
+		{
+			SetCursorContext(2, mouseInfo.GetEnvelope());
+			UpdateArrange();
+		}
+	}
+}
+
+void SelectDeleteEnvPointUnderMouse (COMMAND_T* ct)
+{
+	BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_ARRANGE_ALL);
+	if (!strcmp(mouseInfo.GetDetails(), "env_point"))
+	{
+		if (mouseInfo.GetEnvelope() && (abs((int)ct->user) == 2 || (abs((int)ct->user) == 1 && mouseInfo.GetEnvelope() == GetSelectedEnvelope(NULL))))
+		{
+			BR_Envelope envelope(mouseInfo.GetEnvelope(), false);
+
+			if ((int)ct->user > 0 && !envelope.GetSelection(mouseInfo.GetEnvelopePoint()))
+				envelope.SetSelection(mouseInfo.GetEnvelopePoint(), true);
+			else if ((int)ct->user < 0)
+			{
+				envelope.DeletePoint(mouseInfo.GetEnvelopePoint());
+				if (envelope.CountPoints() == 0) // in case there are no more points left, envelope will get removed - so insert default point back
+					envelope.CreatePoint(0, 0, envelope.CenterValue(), envelope.GetDefaultShape(), 0, false); // position = 0 is why we created BR_Envelope with !takeEnvelopesUseProjectTime
+			}
+
+			if (envelope.Commit())
+				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
+		}
+	}
+}
+
+void UnselectEnvelope (COMMAND_T* ct)
+{
+	if (GetSelectedEnvelope(NULL))
+	{
+		HWND hwnd; int context;
+		GetSetFocus(false, &hwnd, &context);
+
+		SetCursorContext(2, NULL);
+		GetSetFocus(true, &hwnd, &context);
+		UpdateArrange();
 	}
 }
 
@@ -926,10 +1204,200 @@ void RestoreEnvSelSlot (COMMAND_T* ct)
 		{
 			if (slot == g_envSel.Get()->Get(i)->GetSlot())
 			{
-				g_envSel.Get()->Get(i)->Restore(envelope);
-				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+				if (g_envSel.Get()->Get(i)->Restore(envelope))
+					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
 				break;
 			}
 		}
 	}
+}
+
+/******************************************************************************
+* Commands: Envelopes - Visibility                                            *
+******************************************************************************/
+void ShowActiveTrackEnvOnly (COMMAND_T* ct)
+{
+	TrackEnvelope* env = GetSelectedTrackEnvelope(NULL);
+	if ((int)ct->user == 1 && !CountSelectedTracks(NULL))
+		return;
+	BR_Envelope envelope(env);
+
+	Undo_BeginBlock2(NULL);
+
+	// If envelope has only one point, Reaper will not show it after hiding all
+	// envelopes and committing with vis = 1, so we create another artificial point
+	bool flag = false;
+	if (envelope.CountPoints() <= 1)
+	{
+		int id = envelope.CountPoints() - 1;
+		double position, value; int shape;
+		envelope.GetPoint(id, &position, &value, &shape, NULL);
+		envelope.CreatePoint(id+1, position+1, value, shape, 0, false);
+		envelope.Commit();
+		flag = true;
+	}
+
+	PreventUIRefresh(1);
+	if ((int)ct->user == 0)
+		Main_OnCommand(41150, 0); // hide all
+	else
+		Main_OnCommand(40889 ,0); // hide for selected tracks
+
+	if (flag)
+		envelope.DeletePoint(envelope.CountPoints()-1);
+
+	envelope.Commit(true);
+	PreventUIRefresh(-1);
+	Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG);
+}
+
+void ShowLastAdjustedSendEnv (COMMAND_T* ct)
+{
+	MediaTrack* track; int sendId, type;
+	GetSetLastAdjustedSend(false, &track, &sendId, &type);
+	if      ((int)ct->user == 1) type = VOLUME;
+	else if ((int)ct->user == 2) type = PAN;
+
+	if (track)
+	{
+		if (ToggleShowSendEnvelope(track, sendId, type))
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
+	}
+}
+
+void ShowHideFxEnv (COMMAND_T* ct)
+{
+	bool hide       = !!GetBit((int)ct->user, 0);
+	bool activeOnly = !!GetBit((int)ct->user, 1);
+	bool toggle     = !!GetBit((int)ct->user, 2);
+
+	// Get envelopes
+	WDL_PtrList_DeleteOnDestroy<BR_Envelope> envelopes;
+	for (int i = 0; i < CountSelectedTracks(NULL); ++i)
+	{
+		MediaTrack* track = GetSelectedTrack(NULL, i);
+		for (int j = 0; j < CountTrackEnvelopes(track); ++j)
+		{
+			TrackEnvelope* envPtr = GetTrackEnvelope(track, j);
+			if (GetEnvType(envPtr, NULL) == PARAMETER)
+				envelopes.Add(new BR_Envelope(envPtr));
+		}
+	}
+
+	// In case of toggle, check visibility status
+	if (toggle)
+	{
+		bool allVisible = true;
+		for (int i = 0; i < envelopes.GetSize(); ++i)
+		{
+			BR_Envelope* envelope = envelopes.Get(i);
+			if ((!activeOnly || activeOnly == envelope->IsActive()) && !envelope->IsVisible())
+			{
+				allVisible = false;
+				break;
+			}
+		}
+		hide = (allVisible) ? true : false;
+	}
+
+	// Set new visibility
+	PreventUIRefresh(1);
+	bool update = false;
+	for (int i = 0; i < envelopes.GetSize(); ++i)
+	{
+		BR_Envelope* envelope = envelopes.Get(i);
+		if (hide == envelope->IsVisible() && (!activeOnly || activeOnly == envelope->IsActive()))
+		{
+			envelope->SetVisible(!hide);
+			envelope->Commit(true);
+			update = true;
+		}
+	}
+	if (update)
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
+	PreventUIRefresh(-1);
+}
+
+void ShowHideSendEnv (COMMAND_T* ct)
+{
+	bool hide       = !!GetBit((int)ct->user, 0);
+	bool activeOnly = !!GetBit((int)ct->user, 1);
+	bool toggle     = !!GetBit((int)ct->user, 2);
+	int mode        = (GetBit((int)ct->user, 3) ? VOLUME : 0) | (GetBit((int)ct->user, 4) ? PAN : 0) | (GetBit((int)ct->user, 5) ? MUTE : 0);
+
+	// Get envelopes
+	WDL_PtrList_DeleteOnDestroy<BR_Envelope> envelopes;
+	for (int i = 0; i < CountSelectedTracks(NULL); ++i)
+	{
+		MediaTrack* track = GetSelectedTrack(NULL, i);
+		for (int j = 0; j < CountTrackEnvelopes(track); ++j)
+		{
+			bool send = false;
+			if ((mode & GetEnvType(GetTrackEnvelope(track, j), &send)) && send)
+				envelopes.Add(new BR_Envelope(track, j));
+		}
+	}
+
+	// In case of toggle, check visibility status
+	if (toggle)
+	{
+		if (envelopes.GetSize())
+		{
+			bool allVisible = true;
+			for (int i = 0; i < envelopes.GetSize(); ++i)
+			{
+				BR_Envelope* envelope = envelopes.Get(i);
+				if ((!activeOnly || activeOnly == envelope->IsActive()) && !envelope->IsVisible())
+				{
+					allVisible = false;
+					break;
+				}
+			}
+			hide = (allVisible) ? true : false;
+		}
+		else
+			hide = false;
+	}
+
+	// Set new visibility
+	PreventUIRefresh(1);
+	bool update = false;
+	if (!hide && !activeOnly)
+	{
+		vector<MediaTrack*> selectedTracks;
+		for (int i = 0; i < CountSelectedTracks(NULL); ++i)
+			selectedTracks.push_back(GetSelectedTrack(NULL, i));
+		update = ShowSendEnvelopes(selectedTracks, mode);
+	}
+	else
+	{
+		for (int i = 0; i < envelopes.GetSize(); ++i)
+		{
+			BR_Envelope* envelope = envelopes.Get(i);
+
+			if (hide == envelope->IsVisible() && envelope->IsActive())
+			{
+				envelope->SetVisible(!hide);
+				if (!envelope->IsVisible() && envelope->CountPoints() <= 1)
+				{
+					double value;
+					if (envelope->GetPoint(0, NULL, &value, NULL, NULL) && GetCurrentAutomationMode(envelope->GetParent()) != 0)
+					{
+						if      (envelope->Type() == VOLUME) SetTrackSendUIVol(envelope->GetParent(), envelope->GetSendId(), value, 0); // don't do mute (reaper skips it too)
+						else if (envelope->Type() == PAN)    SetTrackSendUIPan(envelope->GetParent(), envelope->GetSendId(), -value, 0);
+					}
+
+					envelope->DeletePoint(0);   // this will completely destroy the envelope (Reaper
+					envelope->SetActive(false); // does the same things when hiding envelopes)
+				}
+
+				envelope->Commit(true);
+				update = true;
+			}
+		}
+	}
+
+	if (update)
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
+	PreventUIRefresh(-1);
 }

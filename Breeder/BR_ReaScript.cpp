@@ -27,53 +27,51 @@
 ******************************************************************************/
 #include "stdafx.h"
 #include "BR_ReaScript.h"
-#include "BR_EnvTools.h"
-#include "BR_MidiTools.h"
+#include "BR_EnvelopeUtil.h"
+#include "BR_MidiUtil.h"
+#include "BR_MouseUtil.h"
 #include "BR_Util.h"
 #include "../SnM/SnM_Chunk.h"
-#include "../SnM/SnM_Item.h"
 #include "../SnM/SnM_Util.h"
 
 /******************************************************************************
 * Globals                                                                     *
 ******************************************************************************/
-static BR_MouseContextInfo g_mouseInfo;
+static BR_MouseInfo g_mouseInfo(BR_MouseInfo::MODE_ALL, false);
 
 /******************************************************************************
 * ReaScript export                                                            *
 ******************************************************************************/
-void* BR_EnvAlloc (TrackEnvelope* envelope, bool takeEnvelopesUseProjectTime)
+BR_Envelope* BR_EnvAlloc (TrackEnvelope* envelope, bool takeEnvelopesUseProjectTime)
 {
 	if (envelope)
-		return (void*)(new (nothrow) BR_Envelope(envelope, takeEnvelopesUseProjectTime));
+		return new (nothrow) BR_Envelope(envelope, takeEnvelopesUseProjectTime);
 	else
 		return NULL;
 }
 
-int BR_EnvCountPoints (void* envelope)
+int BR_EnvCountPoints (BR_Envelope* envelope)
 {
 	if (envelope)
-		return ((BR_Envelope*)envelope)->Count();
+		return envelope->CountPoints();
 	else
 		return 0;
 }
 
-bool BR_EnvDeletePoint (void* envelope, int id)
+bool BR_EnvDeletePoint (BR_Envelope* envelope, int id)
 {
 	if (envelope)
-		return ((BR_Envelope*)envelope)->DeletePoint(id);
+		return envelope->DeletePoint(id);
 	else
 		return false;
 }
 
-int BR_EnvFind (void* envelope, double position, double delta)
+int BR_EnvFind (BR_Envelope* envelope, double position, double delta)
 {
 	if (envelope)
 	{
-		BR_Envelope* env = (BR_Envelope*)envelope;
-		int id = env->Find(position, delta);
-
-		if (env->ValidateId(id))
+		int id = envelope->Find(position, delta);
+		if (envelope->ValidateId(id))
 			return id;
 		else
 			return -1;
@@ -82,14 +80,12 @@ int BR_EnvFind (void* envelope, double position, double delta)
 		return -1;
 }
 
-int BR_EnvFindNext (void* envelope, double position)
+int BR_EnvFindNext (BR_Envelope* envelope, double position)
 {
 	if (envelope)
 	{
-		BR_Envelope* env = (BR_Envelope*)envelope;
-		int id = env->FindNext(position);
-
-		if (env->ValidateId(id))
+		int id = envelope->FindNext(position);
+		if (envelope->ValidateId(id))
 			return id;
 		else
 			return -1;
@@ -98,14 +94,12 @@ int BR_EnvFindNext (void* envelope, double position)
 		return -1;
 }
 
-int BR_EnvFindPrevious (void* envelope, double position)
+int BR_EnvFindPrevious (BR_Envelope* envelope, double position)
 {
 	if (envelope)
 	{
-		BR_Envelope* env = (BR_Envelope*)envelope;
-		int id = env->FindPrevious(position);
-
-		if (env->ValidateId(id))
+		int id = envelope->FindPrevious(position);
+		if (envelope->ValidateId(id))
 			return id;
 		else
 			return -1;
@@ -114,12 +108,11 @@ int BR_EnvFindPrevious (void* envelope, double position)
 		return -1;
 }
 
-bool BR_EnvFree (void* envelope, bool commit)
+bool BR_EnvFree (BR_Envelope* envelope, bool commit)
 {
 	if (envelope)
 	{
-		bool commited = (commit) ? ((BR_Envelope*)envelope)->Commit() : false;
-
+		bool commited = (commit) ? envelope->Commit() : false;
 		delete envelope;
 		return commited;
 	}
@@ -127,54 +120,49 @@ bool BR_EnvFree (void* envelope, bool commit)
 		return false;
 }
 
-MediaItem_Take* BR_EnvGetParentTake (void* envelope)
+MediaItem_Take* BR_EnvGetParentTake (BR_Envelope* envelope)
 {
 	if (envelope)
-		return ((BR_Envelope*)envelope)->GetTake();
+		return envelope->GetTake();
 	else
 		return NULL;
 }
 
-MediaTrack* BR_EnvGetParentTrack (void* envelope)
+MediaTrack* BR_EnvGetParentTrack (BR_Envelope* envelope)
 {
 	if (envelope)
 	{
-		BR_Envelope* env = (BR_Envelope*)envelope;
-		if (env->IsTakeEnvelope())
+		if (envelope->IsTakeEnvelope())
 			return NULL;
 		else
-			return env->GetParent();
+			return envelope->GetParent();
 	}
 	return NULL;
 }
-bool BR_EnvGetPoint (void* envelope, int id, double* position, double* value, int* shape, bool* selected, double* bezier)
+bool BR_EnvGetPoint (BR_Envelope* envelope, int id, double* position, double* value, int* shape, bool* selected, double* bezier)
 {
 	if (envelope)
 	{
-		BR_Envelope* env = (BR_Envelope*)envelope;
-
-		WritePtr(selected, env->GetSelection(id));
-		return env->GetPoint(id, position, value, shape, bezier);
+		WritePtr(selected, envelope->GetSelection(id));
+		return envelope->GetPoint(id, position, value, shape, bezier);
 	}
 	else
 		return false;
 }
 
-void BR_EnvGetProperties (void* envelope, bool* active, bool* visible, bool* armed, bool* inLane, int* laneHeight, int* defaultShape, double* minValue, double* maxValue, double* centerValue, int* type)
+void BR_EnvGetProperties (BR_Envelope* envelope, bool* active, bool* visible, bool* armed, bool* inLane, int* laneHeight, int* defaultShape, double* minValue, double* maxValue, double* centerValue, int* type)
 {
 	if (envelope)
 	{
-		BR_Envelope* env = (BR_Envelope*)envelope;
-
-		WritePtr(active,       env->IsActive());
-		WritePtr(visible,      env->IsVisible());
-		WritePtr(armed,        env->IsArmed());
-		WritePtr(inLane,       env->IsInLane());
-		WritePtr(laneHeight,   env->LaneHeight());
-		WritePtr(defaultShape, env->DefaultShape());
-		WritePtr(minValue,     env->MinValue());
-		WritePtr(maxValue,     env->MaxValue());
-		WritePtr(centerValue,  env->CenterValue());
+		WritePtr(active,       envelope->IsActive());
+		WritePtr(visible,      envelope->IsVisible());
+		WritePtr(armed,        envelope->IsArmed());
+		WritePtr(inLane,       envelope->IsInLane());
+		WritePtr(laneHeight,   envelope->GetLaneHeight());
+		WritePtr(defaultShape, envelope->GetDefaultShape());
+		WritePtr(minValue,     envelope->MinValue());
+		WritePtr(maxValue,     envelope->MaxValue());
+		WritePtr(centerValue,  envelope->CenterValue());
 
 		if (type)
 		{
@@ -208,34 +196,32 @@ void BR_EnvGetProperties (void* envelope, bool* active, bool* visible, bool* arm
 	}
 }
 
-bool BR_EnvSetPoint (void* envelope, int id, double position, double value, int shape, bool selected, double bezier)
+bool BR_EnvSetPoint (BR_Envelope* envelope, int id, double position, double value, int shape, bool selected, double bezier)
 {
 	if (envelope)
-		return ((BR_Envelope*)envelope)->SetCreateSortedPoint(id, position, value, shape, bezier, selected);
+		return envelope->SetCreateSortedPoint(id, position, value, shape, bezier, selected);
 	else
 		return false;
 }
 
-void BR_EnvSetProperties (void* envelope, bool active, bool visible, bool armed, bool inLane, int laneHeight, int defaultShape)
+void BR_EnvSetProperties (BR_Envelope* envelope, bool active, bool visible, bool armed, bool inLane, int laneHeight, int defaultShape)
 {
 	if (envelope)
 	{
-		BR_Envelope* env = (BR_Envelope*)envelope;
-
-		env->SetActive(active);
-		env->SetVisible(visible);
-		env->SetArmed(armed);
-		env->SetInLane(inLane);
-		env->SetLaneHeight(laneHeight);
+		envelope->SetActive(active);
+		envelope->SetVisible(visible);
+		envelope->SetArmed(armed);
+		envelope->SetInLane(inLane);
+		envelope->SetLaneHeight(laneHeight);
 		if (defaultShape >= 0 && defaultShape <= 5)
-			env->SetDefaultShape(defaultShape);
+			envelope->SetDefaultShape(defaultShape);
 	}
 }
 
-double BR_EnvValueAtPos (void* envelope, double position)
+double BR_EnvValueAtPos (BR_Envelope* envelope, double position)
 {
 	if (envelope)
-		return ((BR_Envelope*)envelope)->ValueAtPosition(position);
+		return envelope->ValueAtPosition(position);
 	else
 		return 0;
 }
@@ -247,51 +233,73 @@ bool BR_GetMediaSourceProperties (MediaItem_Take* take, bool* section, double* s
 
 void BR_GetMouseCursorContext (char* window, char* segment, char* details, int char_sz)
 {
-	const char* _window;
-	const char* _segment;
-	const char* _details;
-	GetMouseCursorContext(&_window, &_segment, &_details, &g_mouseInfo);
+	g_mouseInfo.Update();
 
-	if (window)  _snprintfSafe(window,  char_sz-1, "%s", _window);
-	if (segment) _snprintfSafe(segment, char_sz-1, "%s", _segment);
-	if (details) _snprintfSafe(details, char_sz-1, "%s", _details);
+	if (window)  _snprintfSafe(window,  char_sz-1, "%s", g_mouseInfo.GetWindow());
+	if (segment) _snprintfSafe(segment, char_sz-1, "%s", g_mouseInfo.GetSegment());
+	if (details) _snprintfSafe(details, char_sz-1, "%s", g_mouseInfo.GetDetails());
 }
 
 TrackEnvelope* BR_GetMouseCursorContext_Envelope (bool* takeEnvelope)
 {
-	WritePtr(takeEnvelope, g_mouseInfo.takeEnvelope);
-	return g_mouseInfo.envelope;
+	WritePtr(takeEnvelope, g_mouseInfo.IsTakeEnvelope());
+	return g_mouseInfo.GetEnvelope();
 }
 
 MediaItem* BR_GetMouseCursorContext_Item ()
 {
-	return g_mouseInfo.item;
+	return g_mouseInfo.GetItem();
 }
 
 void* BR_GetMouseCursorContext_MIDI (bool* inlineEditor, int* noteRow, int* ccLane, int* ccLaneVal, int* ccLaneId)
 {
-	WritePtr(inlineEditor, g_mouseInfo.midiInlineEditor);
-	WritePtr(noteRow,      g_mouseInfo.noteRow);
-	WritePtr(ccLane,       MapVelLaneToReaScriptCC(g_mouseInfo.ccLane));
-	WritePtr(ccLaneVal,    g_mouseInfo.ccLaneVal);
-	WritePtr(ccLaneId,     g_mouseInfo.ccLaneId);
+	if (g_mouseInfo.GetNoteRow() == -1)
+		WritePtr(noteRow, -1);
+	else
+		WritePtr(noteRow, g_mouseInfo.GetNoteRow());
 
-	return g_mouseInfo.midiEditor;
+	if (g_mouseInfo.GetCCLane(NULL, NULL, NULL))
+	{
+		g_mouseInfo.GetCCLane(ccLane, ccLaneVal, ccLaneId);
+		WritePtr(ccLane, MapVelLaneToReaScriptCC(*ccLane));
+	}
+	else
+	{
+		WritePtr(ccLane,    -1);
+		WritePtr(ccLaneVal, -1);
+		WritePtr(ccLaneId,  -1);
+	}
+
+	WritePtr(inlineEditor, g_mouseInfo.IsInlineMidi());
+	return g_mouseInfo.GetMidiEditor();
 }
 
 double BR_GetMouseCursorContext_Position ()
 {
-	return g_mouseInfo.position;
+	double position = g_mouseInfo.GetPosition();
+	if (position == -1)
+		return -1;
+	else
+		return position;
+}
+
+int BR_GetMouseCursorContext_StretchMarker ()
+{
+	int id = g_mouseInfo.GetStretchMarker();
+	if (id == -1)
+		return -1;
+	else
+		return id;
 }
 
 MediaItem_Take* BR_GetMouseCursorContext_Take ()
 {
-	return g_mouseInfo.take;
+	return g_mouseInfo.GetTake();
 }
 
 MediaTrack* BR_GetMouseCursorContext_Track ()
 {
-	return g_mouseInfo.track;
+	return g_mouseInfo.GetTrack();
 }
 
 MediaItem* BR_ItemAtMouseCursor (double* position)
@@ -307,7 +315,7 @@ bool BR_MIDI_CCLaneReplace (void* midiEditor, int laneId, int newCC)
 	if (take && IsVelLaneValid(newLane))
 	{
 		MediaItem* item = GetMediaItemTake_Item(take);
-		int takeId = GetTakeIndex(item, take);
+		int takeId = GetTakeId(take, item);
 		if (takeId >= 0)
 		{
 			SNM_TakeParserPatcher p(item, CountTakes(item));
@@ -337,7 +345,7 @@ bool BR_MIDI_CCLaneRemove (void* midiEditor, int laneId)
 	if (take)
 	{
 		MediaItem* item = GetMediaItemTake_Item(take);
-		int takeId = GetTakeIndex(item, take);
+		int takeId = GetTakeId(take, item);
 		if (takeId >= 0)
 		{
 			SNM_TakeParserPatcher p(item, CountTakes(item));
@@ -360,7 +368,7 @@ bool BR_MIDI_CCLaneRemove (void* midiEditor, int laneId)
 
 double BR_PositionAtMouseCursor (bool checkRuler)
 {
-	return PositionAtMouseCursor(checkRuler);
+	return PositionAtMouseCursor(checkRuler, true);
 }
 
 bool BR_SetMediaSourceProperties (MediaItem_Take* take, bool section, double start, double length, double fade, bool reverse)

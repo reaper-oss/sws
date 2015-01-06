@@ -7,7 +7,7 @@
 #include "RprMidiCCLane.h"
 #include "RprMidiEvent.h"
 #include "RprMidiTake.h"
-#include "../Breeder/BR_MidiTools.h"
+#include "../Breeder/BR_MidiUtil.h"
 
 static const int defaultHeight = 67;
 
@@ -29,7 +29,7 @@ void MidiLaneCommands::Init()
     RprCommand::registerCommand("SWS/FNG: Show only used CC lanes in active MIDI editor", "FNG_SHOW_USED_CC_LANES", &ShowUsedCCLanes, UNDO_STATE_ITEMS);
     RprCommand::registerCommand("SWS/FNG: Hide unused CC lanes in active MIDI editor", "FNG_HIDE_UNUSED_CC_LANES", &HideUnusedCCLanes, UNDO_STATE_ITEMS);
     RprCommand::registerCommand("SWS/FNG: Show only top CC lane in active MIDI editor", "FNG_TOP_CC_LANE", &ShowOnlyTopCCLane, UNDO_STATE_ITEMS);
-	
+
 	// BR: rather crude (not following how Fingers did it, but is simple, works and should be easily changeable in case Fingers decides to upgrade his RprCommand class)
 	static COMMAND_T g_commandTable[] =
 	{
@@ -125,7 +125,7 @@ static bool hasEventsofType(const RprMidiTakePtr &midiTake, int cc)
 static void ShowUsedCCLanes(int flag, void *data)
 {
 	RprMidiCCLanePtr laneView = RprMidiCCLane::createFromMidiEditor();
-	set<int> usedCC = GetUsedCCLanes(MIDIEditor_GetTake(MIDIEditor_GetActive()), 0); // faster than RprMidiTake::createFromMidiEditor(true);
+	set<int> usedCC = GetUsedCCLanes(MIDIEditor_GetActive(), 0); // faster than RprMidiTake::createFromMidiEditor(true);
 
 	 /* remove ununsed lanes */
 	for (int i = 0; i < laneView->countShown(); ++i)
@@ -159,7 +159,7 @@ static void ShowUsedCCLanes(int flag, void *data)
 static void HideUnusedCCLanes(int flag, void *data)
 {
     RprMidiCCLanePtr laneView = RprMidiCCLane::createFromMidiEditor();
-	set<int> usedCC = GetUsedCCLanes(MIDIEditor_GetTake(MIDIEditor_GetActive()), 1);
+	set<int> usedCC = GetUsedCCLanes(MIDIEditor_GetActive(), 1);
 
 	for(int i = 0; i < laneView->countShown(); ++i) {
 		if (usedCC.find(laneView->getIdAt(i)) == usedCC.end())
@@ -181,24 +181,24 @@ static void ShowOnlyTopCCLane(int flag, void *data)
 
 static void CycleThroughMidiLanes(COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
-	CycleThroughMidiLanes(0, &ct->user);
+	CycleThroughMidiLanes(UNDO_STATE_ITEMS, &ct->user);
 	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 }
 
 static void ShowUsedCCLanes(COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
-	ShowUsedCCLanes(0, &ct->user);
+	ShowUsedCCLanes(UNDO_STATE_ITEMS, &ct->user);
 	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 }
 
 static void HideUnusedCCLanes(COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
-	HideUnusedCCLanes(0, &ct->user);
+	HideUnusedCCLanes(UNDO_STATE_ITEMS, &ct->user);
 	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 }
 
 static void ShowOnlyTopCCLane(COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
-	ShowOnlyTopCCLane(0, &ct->user);
+	ShowOnlyTopCCLane(UNDO_STATE_ITEMS, &ct->user);
 	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 }

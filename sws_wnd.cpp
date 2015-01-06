@@ -10,10 +10,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -27,18 +27,19 @@
 
 
 /* From askjf.com:
-    * It's often the easiest to build your application out of plain dialog (DialogBoxParam() or CreateDialogParam())
-    * Use Get/SetWindowLong(hwnd,GWL_USERDATA) (or GWLP_USERDATA for x64) for "this" pointers, if an object owns the dialog. Set it in WM_INITDIALOG, and get it for other messages.
-    * On the same token, when the owner object has a dialog, it's good to do the following:
-          o The object's constructor sets m_hwnd to 0.
-          o The object's destructor does if (m_hwnd) DestroyWindow(m_hwnd);
-          o WM_INITDIALOG sets this->m_hwnd to hwndDlg
-          o WM_DESTROY clears this->m_hwnd to 0
+	* It's often the easiest to build your application out of plain dialog (DialogBoxParam() or CreateDialogParam())
+	* Use Get/SetWindowLong(hwnd,GWL_USERDATA) (or GWLP_USERDATA for x64) for "this" pointers, if an object owns the dialog. Set it in WM_INITDIALOG, and get it for other messages.
+	* On the same token, when the owner object has a dialog, it's good to do the following:
+		  o The object's constructor sets m_hwnd to 0.
+		  o The object's destructor does if (m_hwnd) DestroyWindow(m_hwnd);
+		  o WM_INITDIALOG sets this->m_hwnd to hwndDlg
+		  o WM_DESTROY clears this->m_hwnd to 0
 */
 
 #include "stdafx.h"
 #include "./SnM/SnM.h"
 #include "./SnM/SnM_Dlg.h"
+#include "./Breeder/BR_Util.h"
 #include "./reaper/localize.h"
 #ifndef _WIN32
 #include "../WDL/swell/swell-dlggen.h"
@@ -141,7 +142,7 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		// theme list views
 		for (int i=0; i < m_pLists.GetSize(); i++)
 			if (SWS_ListView* lv = m_pLists.Get(i))
-				if (ListView_HookThemeColorsMessage(m_hwnd, uMsg, lParam, lv->GetOldColors(), GetWindowLong(lv->GetHWND(),GWL_ID), 0, lv->GetColumnCount()))
+				if (ListView_HookThemeColorsMessage(m_hwnd, uMsg, lParam, lv->GetOldColors(), GetWindowLong(lv->GetHWND(),GWL_ID), 0, lv->HideGridLines() ? 0 :lv->GetColumnCount()))
 					return 1;
 		// theme other ctrls
 		if (INT_PTR r = SNM_HookThemeColorsMessage(m_hwnd, uMsg, wParam, lParam, false))
@@ -156,7 +157,7 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 			// Call derived class initialization
 			OnInitDlg();
-			
+
 			if (SWS_THEMING)
 			{
 				for (int i=0; i<m_pLists.GetSize(); i++)
@@ -234,11 +235,13 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				if (m_pLists.Get(i)->DoColumnMenu(x, y))
 					return 0;
 			}
-			
+
 			// SWS issue 373 - removed code from here that removed all but one selection on right click on OSX
 
 			bool wantDefaultItems = true;
 			HMENU hMenu = OnContextMenu(x, y, &wantDefaultItems);
+			int dockId   = 0; // when NotifyOnContextMenu() returns false user could have put anything in there, so we'll just find unused menu ids not to interfere
+			int cancelId = 0;
 			if (wantDefaultItems)
 			{
 				if (!hMenu)
@@ -249,14 +252,24 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				// Add std menu items
 				char str[128];
 				if (_snprintf(str, sizeof(str), __LOCALIZE_VERFMT("Dock %s in Docker","sws_menu"), m_wndTitle.Get()) > 0)
-					AddToMenu(hMenu, str, DOCK_MSG);
-
+				{
+					if (!NotifyOnContextMenu())
+						dockId = GetUnusedMenuId(hMenu);
+					else
+						dockId = DOCK_MSG;
+					AddToMenu(hMenu, str, dockId);
+				}
 				// Check dock state
 				if ((m_state.state & 2))
-					CheckMenuItem(hMenu, DOCK_MSG, MF_BYCOMMAND | MF_CHECKED);
-				AddToMenu(hMenu, __LOCALIZE("Close window","sws_menu"), IDCANCEL);
+					CheckMenuItem(hMenu, GetMenuItemCount(hMenu) - 1, MF_BYCOMMAND | MF_CHECKED);
+
+				if (!NotifyOnContextMenu())
+					cancelId = GetUnusedMenuId(hMenu);
+				else
+					cancelId = IDCANCEL;
+				AddToMenu(hMenu, __LOCALIZE("Close window","sws_menu"), cancelId);
 			}
-			
+
 			if (hMenu)
 			{
 				if (x == -1 || y == -1)
@@ -266,9 +279,19 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 					x = r.left;
 					y = r.top;
 				}
-				kbd_reprocessMenu(hMenu, NULL);
-				TrackPopupMenu(hMenu, 0, x, y, 0, m_hwnd, NULL);
+				if (ReprocessContextMenu())
+					kbd_reprocessMenu(hMenu, NULL);
+
+				int id = TrackPopupMenu(hMenu, NotifyOnContextMenu() ? 0 : (TPM_RETURNCMD | TPM_NONOTIFY), x, y, 0, m_hwnd, NULL);
 				DestroyMenu(hMenu);
+
+				if (!NotifyOnContextMenu())
+				{
+					if (wantDefaultItems && (id == dockId || id == cancelId))
+						SendMessage(m_hwnd, WM_COMMAND, (id == dockId) ?  DOCK_MSG : IDCANCEL, 0);
+					else
+						ContextMenuReturnId(id);
+				}
 			}
 			break;
 		}
@@ -281,8 +304,11 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 					break;
 				case IDCANCEL:
 				case IDOK:
-					m_bUserClosed = true;
-					DestroyWindow(m_hwnd);
+					if (wParam == IDOK || (wParam == IDCANCEL && CloseOnCancel()))
+					{
+						m_bUserClosed = true;
+						DestroyWindow(m_hwnd);
+					}
 					break;
 			}
 			break;
@@ -401,7 +427,7 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 		case WM_LBUTTONDOWN:
 			KillTooltip(true);
-			SetFocus(m_hwnd); 
+			SetFocus(m_hwnd);
 			if (OnMouseDown(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)) > 0 ||
 				m_parentVwnd.OnMouseDown(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)) > 0)
 			{
@@ -612,8 +638,8 @@ void SWS_DockWnd::LoadState(const char* cStateBuf, int iLen)
 
 	if (m_state.state & 1)
 	{
-		if (SWS_IsWindow(m_hwnd) && 
-			((bDocked != ((m_state.state & 2) == 2)) || 
+		if (SWS_IsWindow(m_hwnd) &&
+			((bDocked != ((m_state.state & 2) == 2)) ||
 			(bDocked && DockIsChildOfDock(m_hwnd, NULL) != m_state.whichdock)))
 		{
 			// If the window's already open, but the dock state or docker # has changed,
@@ -726,22 +752,27 @@ SWS_ListView::SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn
 	char str[256];
 	GetPrivateProfileString(SWS_INI, m_cINIKey, cDefaults, str, 256, get_ini_file());
 	LineParser lp(false);
+
 	if (!lp.parse(str))
 	{
-		m_iSortCol = lp.gettoken_int(0);
-		iPos = 0;
-		for (int i = 0; i < m_iCols; i++)
+		int storedColCount = (lp.getnumtokens() - 1) / 2;
+		if (storedColCount == m_iCols || !lp.parse(cDefaults))
 		{
-			int iWidth = lp.gettoken_int(i*2+1);
-			if (iWidth)
+			m_iSortCol = lp.gettoken_int(0);
+			iPos = 0;
+			for (int i = 0; i < m_iCols; i++)
 			{
-				m_pCols[i].iWidth = lp.gettoken_int(i*2+1);
-				m_pCols[i].iPos = lp.gettoken_int(i*2+2);
-				iPos = m_pCols[i].iPos;
-			}
-			else if (m_pCols[i].iPos != -1) // new cols are invisible?
-			{
-				m_pCols[i].iPos = iPos++;
+				int iWidth = lp.gettoken_int(i*2+1);
+				if (iWidth)
+				{
+					m_pCols[i].iWidth = lp.gettoken_int(i*2+1);
+					m_pCols[i].iPos = lp.gettoken_int(i*2+2);
+					iPos = m_pCols[i].iPos;
+				}
+				else if (m_pCols[i].iPos != -1) // new cols are invisible?
+				{
+					m_pCols[i].iPos = iPos++;
+				}
 			}
 		}
 	}
@@ -759,7 +790,7 @@ SWS_ListView::SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn
 	// Create the tooltip window (if it's necessary)
 	if (bTooltips)
 	{
-		m_hwndTooltip = CreateWindowEx(WS_EX_TOPMOST, TOOLTIPS_CLASS, NULL, WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP,                
+		m_hwndTooltip = CreateWindowEx(WS_EX_TOPMOST, TOOLTIPS_CLASS, NULL, WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP,
 			CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, m_hwndList, NULL, g_hInst, NULL );
 		SetWindowPos(m_hwndTooltip, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 	}
@@ -769,7 +800,7 @@ SWS_ListView::SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn
 	// default list view props (might be overrided in SWS_DockWnd::WndProc() for optional grid line theming)
 	ListView_SetExtendedListViewStyleEx(hwndList, LVS_EX_HEADERDRAGDROP, LVS_EX_HEADERDRAGDROP);
 #endif
-	
+
 	ShowColumns();
 
 	// Need to call Update(); when ready elsewhere
@@ -819,7 +850,7 @@ SWS_ListItem* SWS_ListView::EnumSelected(int* i, int iOffset)
 	{
 		li.iItem = (*i)++;
 		ListView_GetItem(m_hwndList, &li);
-		if (li.state) 
+		if (li.state)
 		{
 			if ((iOffset != 0) && (((*i - 1) + iOffset) >= 0) && (((*i - 1) + iOffset) < ListView_GetItemCount(m_hwndList)))  //sanitizing
 			{
@@ -832,6 +863,16 @@ SWS_ListItem* SWS_ListView::EnumSelected(int* i, int iOffset)
 	return NULL;
 }
 
+int SWS_ListView::CountSelected ()
+{
+	int selCount = 0;
+	int x = 0;
+	while (this->EnumSelected(&x))
+		++selCount;
+
+	return selCount;
+}
+
 bool SWS_ListView::SelectByItem(SWS_ListItem* _item, bool bSelectOnly, bool bEnsureVisible)
 {
 	if (_item)
@@ -839,7 +880,7 @@ bool SWS_ListView::SelectByItem(SWS_ListItem* _item, bool bSelectOnly, bool bEns
 		for (int i = 0; i < GetListItemCount(); i++)
 		{
 			SWS_ListItem* item = GetListItem(i);
-			if (item == _item) 
+			if (item == _item)
 			{
 				if (bSelectOnly)
 					ListView_SetItemState(m_hwndList, -1, 0, LVIS_SELECTED);
@@ -870,7 +911,7 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 			m_dwSavedSelTime = GetTickCount();
 			m_bShiftSel = GetAsyncKeyState(VK_SHIFT) & 0x8000 ? true : false;
 		}
-		
+
 		int iRet = OnItemSelChanging(GetListItem(s->iItem), s->uNewState & LVIS_SELECTED ? true : false);
 		SetWindowLongPtr(GetParent(m_hwndList), DWLP_MSGRESULT, iRet);
 		return iRet;
@@ -904,7 +945,7 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 				OnItemSelChanged(item, iState);
 			}
 		}
-	
+
 		if (m_pClickedItem)
 		{
 			OnItemBtnClk(m_pClickedItem, m_iClickedCol, m_iClickedKeys);
@@ -918,7 +959,7 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 		// Ignore clicks if editing (SWELL sends an extra NM_CLICK after NM_DBLCLK)
 		if (m_iEditingItem != -1)
 			return 0;
-		
+
 		int iDataCol = DisplayToDataCol(s->iSubItem);
 #ifdef _WIN32
 		int iKeys = ((NMITEMACTIVATE*)lParam)->uKeyFlags;
@@ -963,11 +1004,11 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 			// 3 - more than one item is selected, user clicked a selected one
 			//     Call OnBtnClk now.  LVN_CHANGE is called later, and change the selection
 			//     back to where it should be in that handler
-			
+
 			int iState;
 			SWS_ListItem* item = GetListItem(s->iItem, &iState);
 			m_iClickedKeys = iKeys;
-			
+
 			// Case 1:
 			if (!(iState & LVIS_SELECTED))
 			{
@@ -976,7 +1017,7 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 				m_iClickedKeys &= (LVKF_ALT | LVKF_CONTROL); // Ignore shift later
 				return 0;
 			}
-		
+
 			if (ListView_GetSelectedCount(m_hwndList) == 1)
 			{	// Case 2:
 				OnItemBtnClk(item, iDataCol, m_iClickedKeys);
@@ -996,7 +1037,7 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 	else if (s->hdr.code == NM_DBLCLK && s->iItem >= 0)
 	{
 		int iDataCol = DisplayToDataCol(s->iSubItem);
-		if (iDataCol >= 0 && iDataCol < m_iCols && m_pCols[iDataCol].iType & 1 && 
+		if (iDataCol >= 0 && iDataCol < m_iCols && m_pCols[iDataCol].iType & 1 &&
 			IsEditListItemAllowed(GetListItem(s->iItem), iDataCol))
 		{
 			EditListItem(s->iItem, iDataCol);
@@ -1044,7 +1085,7 @@ void SWS_ListView::OnDestroy()
 	for (int i = 0; i < m_iCols; i++)
 		if (m_pCols[i].iPos != -1)
 			m_pCols[i].iPos = cols[iCols++];
-		
+
 	char str[256];
 	sprintf(str, "%d", m_iSortCol);
 
@@ -1099,7 +1140,7 @@ int SWS_ListView::EditingKeyHandler(MSG *msg)
 			EditListItemEnd(true);
 			return 1;
 		}
-		
+
 		// All other keystrokes when editing should go to the control, not to SWS_DockWnd or Reaper
 		// Fixes bug where the delete key when editing would delete the line, but it would still exist temporarily
 		return -1;
@@ -1382,7 +1423,7 @@ SWS_ListItem* SWS_ListView::GetHitItem(int x, int y, int* iCol)
 			*iCol = ht.iSubItem != -1 ? DisplayToDataCol(ht.iSubItem) : 0; // iCol != -1 means "header", set 0 for "unknown column"
 		return NULL;
 	}
-	else if (iItem >= 0 
+	else if (iItem >= 0
 #ifdef _WIN32 //JFB added: other "no mans land" but ListView_IsItemVisible() is not part of SWELL!
 		&& ListView_IsItemVisible(m_hwndList, iItem)
 #endif
@@ -1536,7 +1577,7 @@ int SWS_ListView::OnItemSort(SWS_ListItem* item1, SWS_ListItem* item2)
 	}
 	else
 		iRet = _stricmp(str1, str2);
-	
+
 	if (m_iSortCol < 0)
 		return -iRet;
 	else
@@ -1582,6 +1623,7 @@ void SWS_ListView::Sort()
 	if (m_iSortCol < 0)
 		iCol = -iCol;
 	SetListviewColumnArrows(iCol);
+	OnItemSortEnd();
 }
 
 void SWS_ListView::SetListviewColumnArrows(int iSortCol)
@@ -1604,9 +1646,9 @@ void SWS_ListView::SetListviewColumnArrows(int iSortCol)
 		if (IsCommCtrlVersion6())
 		{
 			if (iSortCol == i+1)
-                hi.fmt |= HDF_SORTUP;
+				hi.fmt |= HDF_SORTUP;
 			else if (-iSortCol == i+1)
-                hi.fmt |= HDF_SORTDOWN;
+				hi.fmt |= HDF_SORTDOWN;
 		}
 		else
 		{
@@ -1664,7 +1706,7 @@ int SWS_ListView::sListCompare(LPARAM lParam1, LPARAM lParam2, LPARAM lSortParam
 ///////////////////////////////////////////////////////////////////////////////
 
 // From http://askjf.com/index.php?q=1609s
-// mod: clamp grid lines to nb of displayed rows + GUI glitch fix for SWS_ListView 
+// mod: clamp grid lines to nb of displayed rows + GUI glitch fix for SWS_ListView
 //      before mod: http://stash.reaper.fm/11297/fixed_glitch.gif
 //      after mod:  http://stash.reaper.fm/11298/fixed_glitch2.gif
 #ifdef _WIN32
@@ -1680,68 +1722,68 @@ void DrawListCustomGridLines(HWND hwnd, HDC hdc, RECT br, int color, int ncol)
   HGDIOBJ oldObj = SelectObject(hdc,pen);
   for(i=0;i<ncol;i++)
   {
-    RECT r;
-    if (!ListView_GetSubItemRect(hwnd,0,i,LVIR_BOUNDS,&r) && i) break;
-    r.left--;
-    r.right--;
-    if (!i)
-    {
-      int h =r.bottom-r.top;
+	RECT r;
+	if (!ListView_GetSubItemRect(hwnd,0,i,LVIR_BOUNDS,&r) && i) break;
+	r.left--;
+	r.right--;
+	if (!i)
+	{
+	  int h =r.bottom-r.top;
 /* JFB commented: cannot be 0 here, i.e. no grid lines when the list is empty --->
-      if (!ListView_GetItemCount(hwnd)) 
-      {
-        r.top = 0;
-        HWND head=ListView_GetHeader(hwnd);
-        if (head)
-        {
-          GetWindowRect(head,&r);
-          r.top=r.bottom-r.top;
-        }
-        h=17;// todo getsystemmetrics
-      }
+	  if (!ListView_GetItemCount(hwnd))
+	  {
+		r.top = 0;
+		HWND head=ListView_GetHeader(hwnd);
+		if (head)
+		{
+		  GetWindowRect(head,&r);
+		  r.top=r.bottom-r.top;
+		}
+		h=17;// todo getsystemmetrics
+	  }
 <--- */
-      if (h>0)
-      {
+	  if (h>0)
+	  {
 //JFB mod --->
-        int row=0;
-        while (r.top < br.bottom && row++ <= cnt)
+		int row=0;
+		while (r.top < br.bottom && row++ <= cnt)
 //        while (r.top < br.bottom)
 // <---
-        {
-          if (r.top >= br.top)
-          {
-            MoveToEx(hdc,br.left,r.top,NULL);
-            LineTo(hdc,br.right,r.top);
+		{
+		  if (r.top >= br.top)
+		  {
+			MoveToEx(hdc,br.left,r.top,NULL);
+			LineTo(hdc,br.right,r.top);
 //JFB? use LineTo(hdc,r.right,r.top) instead? ^^
-          }
-          r.top +=h;
-        }
-      }
-    }
-    else if (r.right >= br.left && r.left < br.right)
-    {
+		  }
+		  r.top +=h;
+		}
+	  }
+	}
+	else if (r.right >= br.left && r.left < br.right)
+	{
 /*JFB commented: i==0 is impossible here
-      if (i)
+	  if (i)
 */
-      {
+	  {
 /*JFB commented: fix for missing grid lines (i.e. paint both right & left vertical lines in case some columns have been moved/hidden)
 //               could be improved using SWS_ListView..
-        if (i==1)
+		if (i==1)
 */
-        {
-          MoveToEx(hdc,r.left,br.top,NULL);
+		{
+		  MoveToEx(hdc,r.left,br.top,NULL);
 //JFB mod --->
-          LineTo(hdc,r.left,min(br.bottom, r.top+(r.bottom-r.top)*cnt));
+		  LineTo(hdc,r.left,min(br.bottom, r.top+(r.bottom-r.top)*cnt));
 //          LineTo(hdc,r.left,br.bottom);
 // <---
-        }
+		}
 		MoveToEx(hdc,r.right,br.top,NULL);
 //JFB mod --->
-        LineTo(hdc,r.right,min(br.bottom, r.top+(r.bottom-r.top)*cnt));
+		LineTo(hdc,r.right,min(br.bottom, r.top+(r.bottom-r.top)*cnt));
 //        LineTo(hdc,r.right,br.bottom);
 // <---
-      }
-    }
+	  }
+	}
   }
   SelectObject(hdc,oldObj);
   DeleteObject(pen);
@@ -1760,161 +1802,161 @@ bool ListView_HookThemeColorsMessage(HWND hwndDlg, int uMsg, LPARAM lParam, int 
   // if whichTheme&1, is tree view
   switch (uMsg)
   {
-    case WM_PAINT:
-      {
-        int c1=RGB(255,255,255);
-        int c2=RGB(0,0,0);
-        int c3=RGB(224,224,224);
+	case WM_PAINT:
+	  {
+		int c1=RGB(255,255,255);
+		int c2=RGB(0,0,0);
+		int c3=RGB(224,224,224);
 
 #ifndef _WIN32
-        int selcols[4];
-        selcols[0]=ctheme->genlist_sel[0];
-        selcols[1]=ctheme->genlist_sel[1];
-        selcols[2]=ctheme->genlist_selinactive[0];
-        selcols[3]=ctheme->genlist_selinactive[1];
+		int selcols[4];
+		selcols[0]=ctheme->genlist_sel[0];
+		selcols[1]=ctheme->genlist_sel[1];
+		selcols[2]=ctheme->genlist_selinactive[0];
+		selcols[3]=ctheme->genlist_selinactive[1];
 #endif
-        if ((whichTheme&~1) == 0)
-        {
-          c1 = ctheme->genlist_bg;
-          c2 = ctheme->genlist_fg;
-          c3 = ctheme->genlist_gridlines;
-        }
-        if (cstate[0] != c1 || cstate[1] != c2 || cstate[2] != c3
+		if ((whichTheme&~1) == 0)
+		{
+		  c1 = ctheme->genlist_bg;
+		  c2 = ctheme->genlist_fg;
+		  c3 = ctheme->genlist_gridlines;
+		}
+		if (cstate[0] != c1 || cstate[1] != c2 || cstate[2] != c3
 #ifndef _WIN32
-            || memcmp(selcols,cstate+3,4*sizeof(int))
+			|| memcmp(selcols,cstate+3,4*sizeof(int))
 #endif
-            )
-        {
-          cstate[0]=c1;
-          cstate[1]=c2;
-          cstate[2]=c3;
-          HWND h = GetDlgItem(hwndDlg,listID);
+			)
+		{
+		  cstate[0]=c1;
+		  cstate[1]=c2;
+		  cstate[2]=c3;
+		  HWND h = GetDlgItem(hwndDlg,listID);
 #ifndef _WIN32
-          memcpy(cstate+3,selcols,4*sizeof(int));
-          if (h) ListView_SetSelColors(h,selcols,4);
+		  memcpy(cstate+3,selcols,4*sizeof(int));
+		  if (h) ListView_SetSelColors(h,selcols,4);
 #endif
-          if (h)
-          {
-            if (whichTheme&1)
-            {
-              TreeView_SetBkColor(h,c1);
-              TreeView_SetTextColor(h,c2);
-            }
-            else
-            {
-              ListView_SetBkColor(h,c1);
-              ListView_SetTextBkColor(h,c1);
-              ListView_SetTextColor(h,c2);
+		  if (h)
+		  {
+			if (whichTheme&1)
+			{
+			  TreeView_SetBkColor(h,c1);
+			  TreeView_SetTextColor(h,c2);
+			}
+			else
+			{
+			  ListView_SetBkColor(h,c1);
+			  ListView_SetTextBkColor(h,c1);
+			  ListView_SetTextColor(h,c2);
 #ifndef _WIN32
-              ListView_SetGridColor(h,c3);
+			  ListView_SetGridColor(h, wantGridForColumns ? c3 : c1);
 #endif
-            }
-          }
-        }
-      }
-    break;
-    case WM_CREATE:
-    case WM_INITDIALOG:
-      memset(cstate,0,sizeof(cstate));
-    break;
+			}
+		  }
+		}
+	  }
+	break;
+	case WM_CREATE:
+	case WM_INITDIALOG:
+	  memset(cstate,0,sizeof(cstate));
+	break;
 #ifdef _WIN32
-    case WM_NOTIFY:
-      if (lParam)
-      {
-        NMHDR *hdr = (NMHDR *)lParam;
-        bool wantThemedSelState=true;
-        if (hdr->idFrom == listID) switch (hdr->code)
-        {
-          case NM_CUSTOMDRAW:
-            if (whichTheme&1)
-            {
-              LPNMTVCUSTOMDRAW lptvcd = (LPNMTVCUSTOMDRAW)lParam;
-              if (wantThemedSelState) switch(lptvcd->nmcd.dwDrawStage) 
-              {
-                case CDDS_PREPAINT:
-                  SetWindowLongPtr(hwndDlg,DWLP_MSGRESULT,CDRF_NOTIFYITEMDRAW);
-                return true;      
-                case CDDS_ITEMPREPAINT:
-                  if (wantThemedSelState&&lptvcd->nmcd.dwItemSpec)
-                  {              
-                    TVITEM tvi={TVIF_HANDLE|TVIF_STATE ,(HTREEITEM)lptvcd->nmcd.dwItemSpec};
-                    TreeView_GetItem(hdr->hwndFrom,&tvi);
-                    if(tvi.state&(TVIS_SELECTED|TVIS_DROPHILITED))
-                    {
-                      int bg1=ctheme->genlist_sel[0];
-                      int bg2=ctheme->genlist_selinactive[0];
-                      int fg1=ctheme->genlist_sel[1];
-                      int fg2=ctheme->genlist_selinactive[1];
+	case WM_NOTIFY:
+	  if (lParam)
+	  {
+		NMHDR *hdr = (NMHDR *)lParam;
+		bool wantThemedSelState=true;
+		if (hdr->idFrom == listID) switch (hdr->code)
+		{
+		  case NM_CUSTOMDRAW:
+			if (whichTheme&1)
+			{
+			  LPNMTVCUSTOMDRAW lptvcd = (LPNMTVCUSTOMDRAW)lParam;
+			  if (wantThemedSelState) switch(lptvcd->nmcd.dwDrawStage)
+			  {
+				case CDDS_PREPAINT:
+				  SetWindowLongPtr(hwndDlg,DWLP_MSGRESULT,CDRF_NOTIFYITEMDRAW);
+				return true;
+				case CDDS_ITEMPREPAINT:
+				  if (wantThemedSelState&&lptvcd->nmcd.dwItemSpec)
+				  {
+					TVITEM tvi={TVIF_HANDLE|TVIF_STATE ,(HTREEITEM)lptvcd->nmcd.dwItemSpec};
+					TreeView_GetItem(hdr->hwndFrom,&tvi);
+					if(tvi.state&(TVIS_SELECTED|TVIS_DROPHILITED))
+					{
+					  int bg1=ctheme->genlist_sel[0];
+					  int bg2=ctheme->genlist_selinactive[0];
+					  int fg1=ctheme->genlist_sel[1];
+					  int fg2=ctheme->genlist_selinactive[1];
 
-                      bool active = (tvi.state&TVIS_DROPHILITED) || GetFocus()==hdr->hwndFrom;
-                      lptvcd->clrText = active ? fg1 : fg2;
-                      lptvcd->clrTextBk = active ? bg1 : bg2;
-                      lptvcd->nmcd.uItemState &= ~CDIS_SELECTED;
-                    }
-                    SetWindowLongPtr(hwndDlg,DWLP_MSGRESULT,0);
-                    return true;
-                  }
-                break;
-              }
-            }
-            else if (wantGridForColumns||wantThemedSelState)
-            {
-              LPNMLVCUSTOMDRAW lplvcd = (LPNMLVCUSTOMDRAW)lParam;
-              switch(lplvcd->nmcd.dwDrawStage) 
-              {
-                case CDDS_PREPAINT:
-                  SetWindowLongPtr(hwndDlg,DWLP_MSGRESULT,(wantGridForColumns?CDRF_NOTIFYPOSTPAINT:0)|
-                                                          (wantThemedSelState?CDRF_NOTIFYITEMDRAW:0));
-                return true;      
-                case CDDS_ITEMPREPAINT:
-                  if (wantThemedSelState)
-                  {
-                    int s = ListView_GetItemState(hdr->hwndFrom, (int)lplvcd->nmcd.dwItemSpec, LVIS_SELECTED|LVIS_FOCUSED);
-                    if(s&LVIS_SELECTED)
-                    {
-                      int bg1=ctheme->genlist_sel[0];
-                      int bg2=ctheme->genlist_selinactive[0];
-                      int fg1=ctheme->genlist_sel[1];
-                      int fg2=ctheme->genlist_selinactive[1];
+					  bool active = (tvi.state&TVIS_DROPHILITED) || GetFocus()==hdr->hwndFrom;
+					  lptvcd->clrText = active ? fg1 : fg2;
+					  lptvcd->clrTextBk = active ? bg1 : bg2;
+					  lptvcd->nmcd.uItemState &= ~CDIS_SELECTED;
+					}
+					SetWindowLongPtr(hwndDlg,DWLP_MSGRESULT,0);
+					return true;
+				  }
+				break;
+			  }
+			}
+			else if (wantGridForColumns||wantThemedSelState)
+			{
+			  LPNMLVCUSTOMDRAW lplvcd = (LPNMLVCUSTOMDRAW)lParam;
+			  switch(lplvcd->nmcd.dwDrawStage)
+			  {
+				case CDDS_PREPAINT:
+				  SetWindowLongPtr(hwndDlg,DWLP_MSGRESULT,(wantGridForColumns?CDRF_NOTIFYPOSTPAINT:0)|
+														  (wantThemedSelState?CDRF_NOTIFYITEMDRAW:0));
+				return true;
+				case CDDS_ITEMPREPAINT:
+				  if (wantThemedSelState)
+				  {
+					int s = ListView_GetItemState(hdr->hwndFrom, (int)lplvcd->nmcd.dwItemSpec, LVIS_SELECTED|LVIS_FOCUSED);
+					if(s&LVIS_SELECTED)
+					{
+					  int bg1=ctheme->genlist_sel[0];
+					  int bg2=ctheme->genlist_selinactive[0];
+					  int fg1=ctheme->genlist_sel[1];
+					  int fg2=ctheme->genlist_selinactive[1];
 
-                      bool active = GetFocus()==hdr->hwndFrom;
-                      lplvcd->clrText = active ? fg1 : fg2;
-                      lplvcd->clrTextBk = active ? bg1 : bg2;
-                      lplvcd->nmcd.uItemState &= ~CDIS_SELECTED;
-                    }
-                    if (s&LVIS_FOCUSED)
-                    {
+					  bool active = GetFocus()==hdr->hwndFrom;
+					  lplvcd->clrText = active ? fg1 : fg2;
+					  lplvcd->clrTextBk = active ? bg1 : bg2;
+					  lplvcd->nmcd.uItemState &= ~CDIS_SELECTED;
+					}
+					if (s&LVIS_FOCUSED)
+					{
 /*JFB commented (does not compile)
-                      // todo: theme option for colors for focus state as well?
-                      if (0 && GetFocus()==hdr->hwndFrom)
-                      {
-                        lplvcd->clrText = BrightenColorSlightly(lplvcd->clrText);
-                        lplvcd->clrTextBk = BrightenColorSlightly(lplvcd->clrTextBk);
-                      }
+					  // todo: theme option for colors for focus state as well?
+					  if (0 && GetFocus()==hdr->hwndFrom)
+					  {
+						lplvcd->clrText = BrightenColorSlightly(lplvcd->clrText);
+						lplvcd->clrTextBk = BrightenColorSlightly(lplvcd->clrTextBk);
+					  }
 */
-                      lplvcd->nmcd.uItemState &= ~CDIS_FOCUS;
-                    }
-                    SetWindowLongPtr(hwndDlg,DWLP_MSGRESULT,0);
-                    return true;
-                  }
-                break;
-                case CDDS_POSTPAINT:
-                  if (wantGridForColumns)
-                  {
-                    int c1 = ctheme->genlist_gridlines;
-                    int c2 = ctheme->genlist_bg;
-                    if (c1 != c2)
-                    {
-                      DrawListCustomGridLines(hdr->hwndFrom,lplvcd->nmcd.hdc,lplvcd->nmcd.rc,c1,wantGridForColumns);
-                    }
-                  }
-                  SetWindowLongPtr(hwndDlg,DWLP_MSGRESULT,0);
-                return true;
-              }
-            }
-          break;
-        }
-      }
+					  lplvcd->nmcd.uItemState &= ~CDIS_FOCUS;
+					}
+					SetWindowLongPtr(hwndDlg,DWLP_MSGRESULT,0);
+					return true;
+				  }
+				break;
+				case CDDS_POSTPAINT:
+				  if (wantGridForColumns)
+				  {
+					int c1 = ctheme->genlist_gridlines;
+					int c2 = ctheme->genlist_bg;
+					if (c1 != c2)
+					{
+					  DrawListCustomGridLines(hdr->hwndFrom,lplvcd->nmcd.hdc,lplvcd->nmcd.rc,c1,wantGridForColumns);
+					}
+				  }
+				  SetWindowLongPtr(hwndDlg,DWLP_MSGRESULT,0);
+				return true;
+			  }
+			}
+		  break;
+		}
+	  }
 #endif
   }
   return false;
@@ -1924,73 +1966,73 @@ bool ListView_HookThemeColorsMessage(HWND hwndDlg, int uMsg, LPARAM lParam, int 
 void DrawTooltipForPoint(LICE_IBitmap *bm, POINT mousePt, RECT *wndr, const char *text)
 {
   if (!bm || !text || !text[0])
-    return;
+	return;
 
-    static LICE_CachedFont tmpfont;
-    if (!tmpfont.GetHFont())
-    {
+	static LICE_CachedFont tmpfont;
+	if (!tmpfont.GetHFont())
+	{
 //JFB mod: font size/name + optional ClearType rendering --->
 /*
-      bool doOutLine = true;
-      LOGFONT lf =
-      {
-          14,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
-            OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,
-        #ifdef _WIN32
-          "MS Shell Dlg"
-        #else
-        "Arial"
-        #endif
-      };
-      tmpfont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT);
+	  bool doOutLine = true;
+	  LOGFONT lf =
+	  {
+		  14,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
+			OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,
+		#ifdef _WIN32
+		  "MS Shell Dlg"
+		#else
+		"Arial"
+		#endif
+	  };
+	  tmpfont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT);
 */
-      LOGFONT lf = {SNM_FONT_HEIGHT,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
-        OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SNM_FONT_NAME
-      };
+	  LOGFONT lf = {SNM_FONT_HEIGHT,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
+		OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SNM_FONT_NAME
+	  };
 #ifndef _SNM_SWELL_ISSUES
-     tmpfont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT|(g_SNM_ClearType?LICE_FONT_FLAG_FORCE_NATIVE:0));
+	 tmpfont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT|(g_SNM_ClearType?LICE_FONT_FLAG_FORCE_NATIVE:0));
 #else
-     tmpfont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT); // SWELL issue: native font rendering won't draw multiple lines
+	 tmpfont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT); // SWELL issue: native font rendering won't draw multiple lines
 #endif
 //JFB <---
-    }
-    tmpfont.SetBkMode(TRANSPARENT);
-    LICE_pixel col1 = LICE_RGBA(0,0,0,255);
+	}
+	tmpfont.SetBkMode(TRANSPARENT);
+	LICE_pixel col1 = LICE_RGBA(0,0,0,255);
 //JFB mod: same tooltip color than REAPER --->
 //    LICE_pixel col2 = LICE_RGBA(255,255,192,255);
-    LICE_pixel col2 = LICE_RGBA(255,255,225,255);
+	LICE_pixel col2 = LICE_RGBA(255,255,225,255);
 // <---
 
-    tmpfont.SetTextColor(col1);
-    RECT r={0,};
-    tmpfont.DrawText(bm,text,-1,&r,DT_CALCRECT);
+	tmpfont.SetTextColor(col1);
+	RECT r={0,};
+	tmpfont.DrawText(bm,text,-1,&r,DT_CALCRECT);
 
-    int xo = min(max(mousePt.x,wndr->left),wndr->right);
-    int yo = min(max(mousePt.y + 24,wndr->top),wndr->bottom);
+	int xo = min(max(mousePt.x,wndr->left),wndr->right);
+	int yo = min(max(mousePt.y + 24,wndr->top),wndr->bottom);
 
-    if (yo + r.bottom > wndr->bottom-4) // too close to bottom, move up if possible
-    {
-      if (mousePt.y - r.bottom - 12 >= wndr->top)
-        yo = mousePt.y - r.bottom - 12;
-      else
-        yo = wndr->bottom - 4 - r.bottom;
+	if (yo + r.bottom > wndr->bottom-4) // too close to bottom, move up if possible
+	{
+	  if (mousePt.y - r.bottom - 12 >= wndr->top)
+		yo = mousePt.y - r.bottom - 12;
+	  else
+		yo = wndr->bottom - 4 - r.bottom;
 
 //JFB added: (try to) prevent hidden tooltip behind the mouse pointer --->
-      xo += 15;
+	  xo += 15;
 // <---
-    }
+	}
 
-    if (xo + r.right > wndr->right - 4)
-      xo = wndr->right - 4 - r.right;
+	if (xo + r.right > wndr->right - 4)
+	  xo = wndr->right - 4 - r.right;
 
-    r.left += xo;
-    r.top += yo;
-    r.right += xo;
-    r.bottom += yo;
-    
-    int border = 3;
-    LICE_FillRect(bm,r.left-border,r.top-border,r.right-r.left+border*2,r.bottom-r.top+border*2,col2,1.0f,LICE_BLIT_MODE_COPY);
-    LICE_DrawRect(bm,r.left-border,r.top-border,r.right-r.left+border*2,r.bottom-r.top+border*2,col1,1.0f,LICE_BLIT_MODE_COPY);
-    
-    tmpfont.DrawText(bm,text,-1,&r,0);
+	r.left += xo;
+	r.top += yo;
+	r.right += xo;
+	r.bottom += yo;
+
+	int border = 3;
+	LICE_FillRect(bm,r.left-border,r.top-border,r.right-r.left+border*2,r.bottom-r.top+border*2,col2,1.0f,LICE_BLIT_MODE_COPY);
+	LICE_DrawRect(bm,r.left-border,r.top-border,r.right-r.left+border*2,r.bottom-r.top+border*2,col1,1.0f,LICE_BLIT_MODE_COPY);
+
+	tmpfont.DrawText(bm,text,-1,&r,0);
 }

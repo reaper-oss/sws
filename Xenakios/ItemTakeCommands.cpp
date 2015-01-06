@@ -135,7 +135,7 @@ void DoToggleTakesNormalize(COMMAND_T* ct)
 	{
 		Undo_BeginBlock2(NULL);
 		Main_OnCommand(40108, 0); // normalize items
-		Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL);
+		Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS | UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG);
 		UpdateTimeline();
 	}
 	delete TheTakes;
@@ -684,18 +684,25 @@ void DoShuffleSelectTakesInItems(COMMAND_T* ct)
 	for (int i = 0; i < CountSelectedMediaItems (NULL); ++i)
 	{
 		MediaItem* item = GetSelectedMediaItem(NULL, i);
-		int takes = CountTakes(item);
-		if (takes > 1)
+		int takeCount = CountTakes(item);
+		if (takeCount > 1)
 		{
-			static int prevId = 0;
-			static int prevprevId = -1;
 			int id = *(int*)GetSetMediaItemInfo(item,"I_CURTAKE",NULL);
-			int newId = id;
-			while (id == newId || (takes < 3 ? false : newId == prevId) || (takes < 4 ? false : newId == prevprevId))
-				newId = rand() % takes;
-			GetSetMediaItemInfo(item,"I_CURTAKE",&newId);
-			prevprevId = prevId;
+			--takeCount; // for MTRand
+
+			static int prevId = id;
+			int newId = prevId;
+			if (takeCount != 1)
+			{
+				while (newId == prevId)
+					newId = g_MTRand.randInt(takeCount);
+			}
+			else
+				newId = g_MTRand.randInt(takeCount);
+
 			prevId = newId;
+
+			GetSetMediaItemInfo(item,"I_CURTAKE",&newId);
 		}
 	}
 	UpdateArrange();

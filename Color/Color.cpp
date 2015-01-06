@@ -10,10 +10,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -78,7 +78,7 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 #endif
 	if (INT_PTR r = SNM_HookThemeColorsMessage(hwndDlg, uMsg, wParam, lParam))
 		return r;
-	
+
 	switch (uMsg)
 	{
 		case WM_INITDIALOG:
@@ -109,7 +109,7 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			if (iSettingColor != -1 && GetChosenColor(&cr))
 			{
 				switch (iSettingColor)
-				{	
+				{
 				case 0:
 					g_crGradStart = cr;
 					break;
@@ -258,7 +258,7 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 							RedrawWindow(hwndDlg, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
 #else
 							InvalidateRect(hwndDlg, NULL, 0);
-#endif							
+#endif
 						}
 					}
 				}
@@ -661,7 +661,7 @@ void RandomColorAll(COMMAND_T*)
 				}
 			}
 			UpdateTimeline();
-			Undo_EndBlock(__LOCALIZE("Set selected track(s)/item(s) to one random color","sws_undo"), UNDO_STATE_ALL);
+			Undo_EndBlock(__LOCALIZE("Set selected track(s)/item(s) to one random color","sws_undo"), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS);
 			return;
 		}
 	}
@@ -670,7 +670,7 @@ void RandomColorAll(COMMAND_T*)
 }
 
 void CustomColorAll(COMMAND_T*)
-{	
+{
 	// Get the first selected track
 	for (int i = 1; i <= GetNumTracks(); i++)
 	{
@@ -692,7 +692,7 @@ void CustomColorAll(COMMAND_T*)
 				}
 			}
 			UpdateTimeline();
-			Undo_EndBlock(__LOCALIZE("Set selected track(s)/item(s) to custom color","sws_undo"), UNDO_STATE_ALL);
+			Undo_EndBlock(__LOCALIZE("Set selected track(s)/item(s) to custom color","sws_undo"), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS);
 			return;
 		}
 	}
@@ -737,7 +737,7 @@ void RecRedRuler(COMMAND_T*)
 {
 	g_bRecRedRuler = !g_bRecRedRuler;
 	if (g_bRecRedRuler) plugin_register("timer", (void*)ColorTimer);
-	else                plugin_register("-timer",(void*)ColorTimer);  
+	else                plugin_register("-timer",(void*)ColorTimer);
 	WritePrivateProfileString(SWS_INI, RECREDRULER_KEY, g_bRecRedRuler ? "1" : "0", get_ini_file());
 }
 
@@ -836,7 +836,7 @@ void ItemGradient(COMMAND_T* = NULL)
 {
 	int iCurPos = 0;
 	int iNumSel = 0;
-	// First, must count the number of selected items 
+	// First, must count the number of selected items
 	for (int i = 1; i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
@@ -972,7 +972,7 @@ void TakeOrderedCol(COMMAND_T* = NULL)
 }
 
 //!WANT_LOCALIZE_SWS_CMD_TABLE_BEGIN:sws_actions
-static COMMAND_T g_commandTable[] = 
+static COMMAND_T g_commandTable[] =
 {
 	{ { DEFACCEL, "SWS: Open color management window" },                          "SWSCOLORWND",			ShowColorDialog,	"Show color management", },
 	{ { DEFACCEL, "SWS: Toggle ruler red while recording" },                      "SWS_RECREDRULER",		RecRedRuler,		"Enable red ruler while recording (SWS)", 0, RecRedRulerEnabled },
@@ -1011,7 +1011,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Set selected item(s) to color white" },	                  "SWS_WHITEITEM",			WhiteItem,			NULL, },
 	{ { DEFACCEL, "SWS: Set selected item(s) to color black" },	                  "SWS_BLACKITEM",			BlackItem,			NULL, },
 	{ { DEFACCEL, "SWS: Set selected item(s) to next custom color" },             "SWS_COLITEMNEXTCUST",	ColorItemNextCust,	NULL, },
-	
+
 	// Start of menu!!
 	{ { DEFACCEL, "SWS: Set selected item(s) to one random custom color" },       "SWS_ITEMRANDCOL",		ItemRandomCol,		"Set to one random custom color", },
 	{ { DEFACCEL, "SWS: Set selected item(s) to random custom color(s)" },        "SWS_ITEMRANDCOLS",		ItemRandomCols,		"Set to random custom color(s)", },
@@ -1040,7 +1040,7 @@ static COMMAND_T g_commandTable[] =
 
 	{ { DEFACCEL, "SWS: Set selected track(s)/item(s) to one random color" },     "SWS_RANDOMCOLALL",		RandomColorAll,		NULL, },
 	{ { DEFACCEL, "SWS: Set selected track(s)/item(s) to custom color..." },      "SWS_CUSTOMCOLALL",		CustomColorAll,		NULL, },
-	
+
 	{ { DEFACCEL, "SWS: Set takes in selected item(s) to random custom color(s)"},"SWS_TAKESRANDCOLS",		TakeRandomCols,		NULL, },
 	{ { DEFACCEL, "SWS: Set takes in selected item(s) to color gradient"},		  "SWS_TAKEGRAD",			TakeGradient,		NULL, },
 	{ { DEFACCEL, "SWS: Set takes in selected item(s) to ordered custom colors"}, "SWS_TAKEORDCOL",			TakeOrderedCol,		NULL, },
@@ -1115,16 +1115,16 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 		static WDL_PtrList<void> pBitmaps;
 		HDC hdcScreen = NULL;
 		HDC hDC = NULL;
-		
+
 		if (pBitmaps.GetSize() == 0)
 		{
-			hdcScreen = CreateDC("DISPLAY", NULL, NULL, NULL); 
+			hdcScreen = CreateDC("DISPLAY", NULL, NULL, NULL);
 			int s = GetSystemMetrics(SM_CYMENUCHECK);
 			UpdateCustomColors();
 			for (int i = 0; i < 16; i++)
 				pBitmaps.Add(CreateCompatibleBitmap(hdcScreen, s+3, s));
 		}
-		
+
 		int iCommand1 = SWSGetCommandID(TrackCustCol, 0);
 		int iCommand2 = SWSGetCommandID(ItemCustCol, 0);
 

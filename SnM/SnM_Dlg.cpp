@@ -29,6 +29,7 @@
 #include "SnM.h"
 #include "SnM_Dlg.h"
 #include "SnM_Util.h"
+#include "../Breeder/BR_Util.h"
 #include "../reaper/localize.h"
 #include "../Prompt.h"
 
@@ -205,6 +206,7 @@ WDL_DLGRET SNM_HookThemeColorsMessage(HWND _hwnd, UINT _uMsg, WPARAM _wParam, LP
 			case WM_INITDIALOG :
 				// remove XP style on some child ctrls (cannot be themed otherwise)
 				EnumChildWindows(_hwnd, EnumRemoveXPStyles, 0);
+				SetWndIcon(_hwnd);
 				return 0;
 #endif
 			case WM_CTLCOLOREDIT:

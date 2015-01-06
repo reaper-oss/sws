@@ -10,10 +10,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -144,11 +144,11 @@ void DoNudgeItemsBeatsBased(bool UseConf, bool Positive, double theNudgeAmount)
 {
 	MediaTrack* MunRaita;
 	MediaItem* CurItem;
-	
+
 	int numItems;
 	double NudgeAmount=g_command_params.ItemPosNudgeBeats;
 	bool ItemSelected=false;
-	
+
 	int i;
 	int j;
 	for (i=0;i<GetNumTracks();i++)
@@ -175,7 +175,7 @@ void DoNudgeItemsBeatsBased(bool UseConf, bool Positive, double theNudgeAmount)
 					NewPosBeats=OldPosBeats+NudgeAmount; else NewPosBeats=OldPosBeats-NudgeAmount;
 				NewPos=TimeMap_QNToTime(NewPosBeats);
 				GetSetMediaItemInfo(MediaItemsOnTrack[j],"D_POSITION",&NewPos);
-			} 
+			}
 		}
 		delete[] MediaItemsOnTrack;
 	}
@@ -212,7 +212,7 @@ void DoNudgeSamples(COMMAND_T* ct)
 		}
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 }
 
 void DoSplitItemsAtTransients(COMMAND_T* ct)
@@ -220,7 +220,7 @@ void DoSplitItemsAtTransients(COMMAND_T* ct)
 	MediaTrack* MunRaita;
 	MediaItem* CurItem;
 	bool ItemSelected=false;
-	
+
 	int ItemCounter=0;
 	int numItems=CountSelectedMediaItems(NULL);
 	MediaItem** MediaItemsInProject = new MediaItem*[numItems];
@@ -229,7 +229,7 @@ void DoSplitItemsAtTransients(COMMAND_T* ct)
 	{
 		MunRaita = CSurf_TrackFromID(i+1,FALSE);
 		int numItemsTrack=GetTrackNumMediaItems(MunRaita);
-			
+
 		for (j=0;j<numItemsTrack;j++)
 		{
 			CurItem = GetTrackMediaItem(MunRaita,j);
@@ -241,7 +241,7 @@ void DoSplitItemsAtTransients(COMMAND_T* ct)
 				//if (ItemCounter>0 && CurrentPos<MinTime) MinTime=CurrentPos;
 				MediaItemsInProject[ItemCounter]=CurItem;
 				ItemCounter++;
-			}		
+			}
 		}
 	}
 
@@ -264,15 +264,15 @@ void DoSplitItemsAtTransients(COMMAND_T* ct)
 			Main_OnCommand(40375,0); // go to next transient in item
 			Main_OnCommand(40012,0); // split at edit cursor
 			CurPos=GetCursorPosition();
-			
+
 			if (LastCurPos==CurPos)
 				NumSplits++;
-				
-			if (NumSplits>3) // we will believe after 3 futile iterations that this IS the last transient of the item 
+
+			if (NumSplits>3) // we will believe after 3 futile iterations that this IS the last transient of the item
 				break;
 		}
 	}
-	
+
 	delete[] MediaItemsInProject;
 	//adjustZoom(CurrentHZoom, 0, false, -1);
 	UpdateTimeline();
@@ -283,7 +283,7 @@ void DoNudgeItemVols(bool UseConf,bool Positive,double TheNudgeAmount)
 {
 	MediaTrack* MunRaita;
 	MediaItem* CurItem;
-	
+
 	int numItems;
 	double NudgeAmount=g_command_params.ItemVolumeNudge;
 	bool ItemSelected=false;
@@ -308,9 +308,9 @@ void DoNudgeItemVols(bool UseConf,bool Positive,double TheNudgeAmount)
 				if (NewVol>-144.0)
 					NewVolGain=exp(NewVol*0.115129254);
 				else
-					NewVolGain=0;					
+					NewVolGain=0;
 				GetSetMediaItemInfo(CurItem,"D_VOL",&NewVolGain);
-			} 
+			}
 		}
 	}
 	Undo_OnStateChangeEx(__LOCALIZE("Nudge item volume","sws_undo"),4,-1);
@@ -346,8 +346,8 @@ void DoNudgeTakeVols(bool UseConf,bool Positive,double TheNudgeAmount)
 		double NewVolGain;
 		if (NewVol>-144.0)
 			NewVolGain=exp(NewVol*0.115129254);
-			else NewVolGain=0;					
-		GetSetMediaItemTakeInfo(CurTake,"D_VOL",&NewVolGain);	
+			else NewVolGain=0;
+		GetSetMediaItemTakeInfo(CurTake,"D_VOL",&NewVolGain);
 	}
 	Undo_OnStateChangeEx(__LOCALIZE("Nudge take volume","sws_undo"),4,-1);
 	UpdateTimeline();
@@ -376,7 +376,7 @@ void DoResetTakeVol(COMMAND_T* ct)
 {
 	vector<MediaItem_Take*> ProjectTakes;
 	XenGetProjectTakes(ProjectTakes,true,true);
-	int i; 
+	int i;
 	double NewVol=1.0;
 	for (i=0;i<(int)ProjectTakes.size();i++)
 		GetSetMediaItemTakeInfo(ProjectTakes[i],"D_VOL",&NewVol);
@@ -439,7 +439,7 @@ void DoCSoundPvoc()
 	MediaItem_Take* CurTake;
 	PCM_source *ThePCMSource;
 	int numItems;
-	
+
 	bool ItemSelected=false;
 	bool FirstSelFound=false;
 	int i, j;
@@ -457,9 +457,9 @@ void DoCSoundPvoc()
 				{
 					CurTake=GetMediaItemTake(CurItem,-1);
 					ThePCMSource=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
-					FirstSelFound = (ThePCMSource && ThePCMSource->GetFileName());				
+					FirstSelFound = (ThePCMSource && ThePCMSource->GetFileName());
 				}
-			} 
+			}
 			if (FirstSelFound)
 				break;
 		}
@@ -469,7 +469,7 @@ void DoCSoundPvoc()
 
 	double StretchFact=g_last_PVOC_Params.StretchFact;
 	double PitchFact=pow(2.0,g_last_PVOC_Params.Transpose/12.0);
-	
+
 	STARTUPINFO          si = { sizeof(si) };
 	PROCESS_INFORMATION  pi;
 	//char                 szExe[] = "cmd.exe";
@@ -482,10 +482,10 @@ void DoCSoundPvoc()
 	strcpy(CsAnalFilePath, ProjectPath);
 	// fJvCreateProcess.CommandLine:='csound -U pvanal -n'+inttostr(fWindowsize)+' -d0.0 "'+FInputFile +'" "'+FAnalysisFileName+'"';
 	double ItemLen=*(double*)GetSetMediaItemInfo(CurItem,"D_LENGTH",NULL);
-	double OutDur=StretchFact*ItemLen; 
+	double OutDur=StretchFact*ItemLen;
 	//CsCMDline="csound -U pvanal -n4096 -d0.0 "" ""PVOCTestFile1.pvx""";
 	// -b media offset -d dur to analyze
-	
+
 	//PCM_source *ThePCMSource=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
 	int SourceChans=ThePCMSource->GetNumChannels();
 	double MediaOffset=*(double*)GetSetMediaItemTakeInfo(CurTake,"D_STARTOFFS",NULL);
@@ -501,7 +501,7 @@ void DoCSoundPvoc()
 		DWORD TheResult;
 		// optionally wait for process to finish
 		TheResult=WaitForSingleObject(pi.hProcess, 30000); // we will consider over 30 seconds too long time to take for the analysis
-		if (TheResult==WAIT_TIMEOUT) 
+		if (TheResult==WAIT_TIMEOUT)
 		{
 			CsoundSuccesfull=false;
 		}
@@ -509,17 +509,17 @@ void DoCSoundPvoc()
 		CloseHandle(pi.hProcess);
 		CloseHandle(pi.hThread);
 		//CsCMDline="csound --omacro:STRETCHFACT=2.0 --smacro:OUTDUR=12.5 --omacro:PITCHFACT=1.0 -o""C:/ReaperPlugins/koe1.wav"" ""C:/ReaperPlugins/pieru1.csd""";
-		
+
 		char buf[2048];
-		
+
 		int x;
-		for (x = 1; x < 1000; x ++) 
+		for (x = 1; x < 1000; x ++)
 		{
 			GetProjectPath(ProjectPath,1024);
 			sprintf(buf,"\\PVOCrender %03d.wav",x);
 			strcat(ProjectPath,buf);
 			if (!FileExists(ProjectPath))
-			{ 
+			{
 				break;
 			}
 		}
@@ -534,7 +534,7 @@ void DoCSoundPvoc()
 		{
 			// optionally wait for process to finish
 			TheResult=WaitForSingleObject(pi.hProcess, 120000); // 120 seconds should be enough we are stuck with csound processing
-			if (TheResult==WAIT_TIMEOUT) 
+			if (TheResult==WAIT_TIMEOUT)
 			{
 				CsoundSuccesfull=false;
 			}
@@ -561,7 +561,7 @@ void DoCSoundPvoc()
 				Main_OnCommand(40047,0); // build any missing peaks
 				SetForegroundWindow(g_hwndParent);
 				Undo_OnStateChangeEx(__LOCALIZE("Phase vocode item as new take","sws_undo"),4,-1);
-			} 
+			}
 			else
 				MessageBox(g_hwndParent, __LOCALIZE("Csound processed too long!","sws_mbox"), __LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 		}
@@ -579,7 +579,7 @@ WDL_DLGRET CSPVOCItemDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
         case WM_INITDIALOG:
 		{
 			char TextBuf[32];
-			
+
 			sprintf(TextBuf,"%.2f",g_last_PVOC_Params.StretchFact);
 			SetDlgItemText(hwnd, IDC_EDIT1, TextBuf);
 			sprintf(TextBuf,"%.2f",g_last_PVOC_Params.Transpose);
@@ -636,7 +636,7 @@ void DoShowPVocDlg(COMMAND_T*)
 #endif
 }
 
-typedef struct 
+typedef struct
 {
 	double dScaling;
 	double dLengthScaling;
@@ -683,16 +683,16 @@ void DoScaleItemPosStatic2(double dTheScaling, double dTheLengthScaling, bool bR
 				dNewPos = (g_StoredPositions[iItem] - dMinTime) * dPositionScalingFactor + dMinTime;
 				dNewLen = g_StoredLengths[iItem] * dLenScalingFactor;
 			}
-			else 
-			{ 
+			else
+			{
 				dNewPos = g_StoredPositions[iItem];
 				dNewLen = g_StoredLengths[iItem];
 			}
 			iItem++;
-						
+
 			GetSetMediaItemInfo(items.Get()[j], "D_POSITION", &dNewPos);
 			GetSetMediaItemInfo(items.Get()[j], "D_LENGTH",   &dNewLen);
-		} 
+		}
 	}
 }
 
@@ -839,7 +839,7 @@ void DoScaleItemPosStaticDlg(COMMAND_T*)
 	delete[] g_StoredLengths;
 }
 
-typedef struct 
+typedef struct
 {
 	double RandRange;
 } t_itemposrandparams;
@@ -851,11 +851,11 @@ bool g_RandItemPosFirstRun = true;
 void DoRandomizePositions2(int obeyGroup)
 {
 	double dSpread = g_last_RandomizeItemPosParams.RandRange;
-	
+
 	if (obeyGroup == 0)
 	{
 		for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
-		{		
+		{
 			MediaItem* mi = GetSelectedMediaItem(NULL, i);
 			double dItemPos = *(double*)GetSetMediaItemInfo(mi, "D_POSITION", NULL);
 			dItemPos += -dSpread + (2.0/RAND_MAX)*rand()*dSpread;
@@ -867,12 +867,11 @@ void DoRandomizePositions2(int obeyGroup)
 	{
 		WDL_TypedBuf <int> processed;
 		for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
-		{	
+		{
 			MediaItem* mi = GetSelectedMediaItem(NULL, i);
 			double posDiff = -dSpread + (2.0/RAND_MAX)*rand()*dSpread;
 			int group = *(int*)GetSetMediaItemInfo(mi, "I_GROUPID", NULL);
-			bool done = false;
-			
+
 			if (group != 0 && processed.Find(group) == -1)
 			{
 				for (int j = 0; j < CountMediaItems(NULL); j++)
@@ -889,7 +888,7 @@ void DoRandomizePositions2(int obeyGroup)
 				processed.Resize(pos + 1);
 				processed.Get()[pos] = group;
 			}
-	
+
 			else if (group == 0)
 			{
 				double dItemPos = *(double*)GetSetMediaItemInfo(mi, "D_POSITION", NULL);
@@ -912,7 +911,7 @@ WDL_DLGRET RandomizeItemPosDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARA
         case WM_INITDIALOG:
 		{
 			char TextBuf[32];
-			
+
 			sprintf(TextBuf,"%.2f",g_last_RandomizeItemPosParams.RandRange);
 			SetDlgItemText(hwnd, IDC_EDIT1, TextBuf);
 			CheckDlgButton(hwnd, IDC_CHECK1, !!g_last_RandomizeItemsPosGroup);
@@ -928,7 +927,7 @@ WDL_DLGRET RandomizeItemPosDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARA
 					char textbuf[100];
 					GetDlgItemText(hwnd,IDC_EDIT1,textbuf,100);
 					g_last_RandomizeItemPosParams.RandRange=atof(textbuf);
-					g_last_RandomizeItemsPosGroup = IsDlgButtonChecked(hwnd, IDC_CHECK1); 
+					g_last_RandomizeItemsPosGroup = IsDlgButtonChecked(hwnd, IDC_CHECK1);
 					if (g_last_RandomizeItemsPosGroup == 0)
 						DoRandomizePositions2(0);
 					else
@@ -953,7 +952,7 @@ void DoRandomizePositionsDlg(COMMAND_T*)
 		g_last_RandomizeItemsPosGroup = 1;
 		g_RandItemPosFirstRun=false;
 
-		
+
 	}
 	DialogBox(g_hInst, MAKEINTRESOURCE(IDD_RANDTEMPOS), g_hwndParent, RandomizeItemPosDlgProc);
 }
@@ -986,17 +985,17 @@ void CreateAutomationData()
 	strcpy(LineBuf, "<ENVPTS");
 	//
 	//strcat(FullBuf,LineBuf);
-	
+
 	int Perse=(int)strlen(LineBuf);
 	int i=0;
 	for (i=0;i<Perse;i++) g_ClipBFullBuf[i]=LineBuf[i];
-	
+
 	j=j+Perse;
 	g_ClipBFullBuf[j+1]='\0';
 	j++;
 	double TimeSelStart;
 	double TimeSelEnd;
-	
+
 	GetSet_LoopTimeRange(false,false,&TimeSelStart,&TimeSelEnd,false);
 	SetEditCurPos(TimeSelStart,false,false);
 	double GenRange=TimeSelEnd-TimeSelStart;
@@ -1013,12 +1012,12 @@ void CreateAutomationData()
 			PTValue=g_AutoGenParams.MinValue+((1.0/RAND_MAX)*rand()*(RandRange));
 		}
 		int PTSel=0;
-		int PTShape=g_AutoGenParams.PointShape;		
+		int PTShape=g_AutoGenParams.PointShape;
 		sprintf(LineBuf,"  PT %f %f %d %d",PTTime,PTValue,PTShape,PTSel);
 		Perse=(int)strlen(LineBuf);
 		int k;
-		for (k=0;k<Perse;k++) 
-		{ 
+		for (k=0;k<Perse;k++)
+		{
 			g_ClipBFullBuf[j+k]=LineBuf[k];
 			//j++;
 		}
@@ -1028,17 +1027,17 @@ void CreateAutomationData()
 		if (j>500000)
 			MessageBox(g_hwndParent, __LOCALIZE("Too much into clipboard buffer!","sws_mbox"), __LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 		//strncat(FullBuf,LineBuf,256);
-		
+
 	}
 	strcpy(LineBuf,">");
-	
+
 	Perse=(int)strlen(LineBuf);
 	//for (i=0;i<Perse;i++) FullBuf[i+j]=LineBuf[i];
 	g_ClipBFullBuf[j]='>';
 	//j=j+Perse;
 	g_ClipBFullBuf[j+1]='\0';
 	g_ClipBFullBuf[j+2]='\0';
-	
+
 	//strncat(FullBuf,LineBuf,256);
 	//j=j+strlen(LineBuf)+1;
 
@@ -1061,7 +1060,7 @@ void CreateAutomationData()
 		GlobalUnlock(clipbuffer);
 		SetClipboardData(rmformat,clipbuffer);
 		CloseClipboard();
-		
+
 		//
 		Main_OnCommand(40058,0); // paste
 		GlobalFree(clipbuffer);
@@ -1243,7 +1242,7 @@ void TakeMixerResetTakes(bool ResetVol=false,bool ResetPan=false)
 			GetSetMediaItemTakeInfo(CurTake,"D_PAN",&NewPan);
 	}
 	int SliPos;
-	
+
 	for (int i = 0; i < g_TakeMixerState.NumTakes; i++)
 	{
 		SliPos=(int)(1000.0/2*1.0);
@@ -1252,7 +1251,7 @@ void TakeMixerResetTakes(bool ResetVol=false,bool ResetPan=false)
 		double PanPos;
 		PanPos=1.0;
 		SliPos=(int)(1000.0/2*PanPos);
-		if (ResetPan==true)	
+		if (ResetPan==true)
 			SendMessage(g_TakeMixerState.g_hPanSliders[i],TBM_SETPOS,(WPARAM) (BOOL)true,SliPos);
 	}
 }
@@ -1284,20 +1283,20 @@ WDL_DLGRET TakeMixerDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 #endif
 			for (int i=0;i<g_TakeMixerState.NumTakes;i++)
 			{
-#ifdef _WIN32				
+#ifdef _WIN32
 				sprintf(textbuf,"TAKESTATIC_%d",i+1);
-				g_TakeMixerState.g_hNumLabels[i] = CreateWindowEx(WS_EX_LEFT, WC_STATIC, textbuf, 
+				g_TakeMixerState.g_hNumLabels[i] = CreateWindowEx(WS_EX_LEFT, WC_STATIC, textbuf,
 				WS_CHILD | WS_VISIBLE,
 				45+(1+i)*50, 20, 40, 20, hwnd, NULL, g_hInst, NULL);
-				
+
 				sprintf(textbuf,"VOLSLIDER_%d",i+1);
-				g_TakeMixerState.g_hVolSliders[i] = CreateWindowEx(WS_EX_LEFT, "REAPERvfader", textbuf, 
-				WS_CHILD | WS_VISIBLE | TBS_VERT, 
+				g_TakeMixerState.g_hVolSliders[i] = CreateWindowEx(WS_EX_LEFT, "REAPERvfader", textbuf,
+				WS_CHILD | WS_VISIBLE | TBS_VERT,
 				40+(1+i)*50, 90, 30, 120, hwnd, NULL, g_hInst, NULL);
-				
+
 				sprintf(textbuf,"PANSLIDER_%d",i+1);
 				g_TakeMixerState.g_hPanSliders[i] = CreateWindowEx(WS_EX_LEFT, "REAPERhfader", textbuf,
-				WS_CHILD | WS_VISIBLE | TBS_HORZ, 
+				WS_CHILD | WS_VISIBLE | TBS_HORZ,
 				33+(1+i)*50, 55, 45, 25, hwnd, NULL, g_hInst, NULL);
 				SendMessage(g_TakeMixerState.g_hNumLabels[i],WM_SETFONT, (WPARAM)hFont, 0);
 #else
@@ -1312,8 +1311,8 @@ WDL_DLGRET TakeMixerDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 				SendMessage(g_TakeMixerState.g_hPanSliders[i],TBM_SETTIC,0,500);
 			}
 #ifdef _WIN32
-			g_TakeMixerState.g_hItemVolSlider = CreateWindowEx(WS_EX_LEFT, "REAPERvfader", "ITEMVOLSLIDER", 
-			WS_CHILD | WS_VISIBLE | TBS_VERT, 
+			g_TakeMixerState.g_hItemVolSlider = CreateWindowEx(WS_EX_LEFT, "REAPERvfader", "ITEMVOLSLIDER",
+			WS_CHILD | WS_VISIBLE | TBS_VERT,
 			40, 90, 30, 120, hwnd, NULL, g_hInst, NULL);
 #else
 			g_TakeMixerState.g_hItemVolSlider = SWELL_MakeControl("DLGFADER1", 666, "REAPERhfader", 0, 12, 50, 20, 80, 0);
@@ -1388,7 +1387,7 @@ WDL_DLGRET TakeMixerDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 void DoShowTakeMixerDlg(COMMAND_T*)
 {
 	g_TargetItem = NULL;
-	
+
 	if (CountSelectedMediaItems(NULL) != 1) {
 		MessageBox(g_hwndParent, __LOCALIZE("Please select only one item","sws_mbox"), __LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 		return;
@@ -1467,13 +1466,13 @@ void DoHoldKeyTest2(COMMAND_T*)
 	{
 		DoSplitAndChangeLen(true);
 		g_PrevEditCursorPos=EditCurPos;
-	} 
+	}
 }
 
 void DoInsertMediaFromClipBoard(COMMAND_T*)
 {
 #ifdef _WIN32
-	if (OpenClipboard(g_hwndParent)) 
+	if (OpenClipboard(g_hwndParent))
 	{
 		char clipstring[4096] = "";
 		HANDLE hData = GetClipboardData(CF_TEXT);
@@ -1526,7 +1525,7 @@ void ConstructItemDatabase()
 	int NumItems = 0;
 	for (int i = 0; i < GetNumTracks(); i++)
 		NumItems += GetTrackNumMediaItems(CSurf_TrackFromID(i+1, false));
-	
+
 	g_Project_Items = new t_reaper_item[NumItems];
 	g_NumProjectItems = NumItems;
 	int ItemCounter = 0;
@@ -1546,7 +1545,7 @@ void ConstructItemDatabase()
 				g_Project_Items[ItemCounter].Takes[k] = GetMediaItemTake(CurItem, k);
 
 			ItemCounter++;
-		} 
+		}
 	}
 }
 
@@ -1563,7 +1562,7 @@ void TokenizeString(const string& str, vector<string>& tokens, const string& del
 		string tulos;
 		tulos=str.substr(lastPos, pos - lastPos);
 		tokens.push_back(str.substr(lastPos, pos - lastPos));
-		
+
         // Skip delimiters.  Note the "not_of"
         lastPos = str.find_first_not_of(delimiters, pos);
         // Find next "non-delimiter"
@@ -1598,7 +1597,7 @@ int PerformTakeSearch(char *SearchString)
 			int NumTokenMatches=0;
 			for (tokenCount=0;tokenCount<(int)filtertokens.size();tokenCount++)
 			{
-				if (MyString.find(filtertokens[tokenCount],0)!=string::npos) 
+				if (MyString.find(filtertokens[tokenCount],0)!=string::npos)
 					NumTokenMatches++;
 				else
 					break; // any mismatch makes more work redundant
@@ -1650,7 +1649,7 @@ WDL_DLGRET TakeFinderDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 					int NumMatches=PerformTakeSearch(labtxt);
 					sprintf(labtxt,__LOCALIZE_VERFMT("Found %d matching items","sws_DLG_130"),NumMatches);
 					SetDlgItemText(hwnd,IDC_STATIC1,labtxt);
-					if (NumMatches>0) 
+					if (NumMatches>0)
 					{
 						Main_OnCommand(40290,0); // time selection to selected items
 						Main_OnCommand(40031,0); // zoom to time selection
@@ -1681,7 +1680,7 @@ void DoSearchTakesDLG(COMMAND_T*)
 void DoMoveCurConfPixRight(COMMAND_T*)		{ for (int i=0; i < g_command_params.PixAmount; i++) Main_OnCommand(40105,0); }
 void DoMoveCurConfPixLeft(COMMAND_T*)		{ for (int i=0; i < g_command_params.PixAmount; i++) Main_OnCommand(40104,0); }
 void DoMoveCurConfPixRightCts(COMMAND_T*)	{ for (int i=0; i < g_command_params.PixAmount; i++) Main_OnCommand(40103,0); }
-void DoMoveCurConfPixLeftCts(COMMAND_T*)	{ for (int i=0; i < g_command_params.PixAmount; i++) Main_OnCommand(40102,0); }	
+void DoMoveCurConfPixLeftCts(COMMAND_T*)	{ for (int i=0; i < g_command_params.PixAmount; i++) Main_OnCommand(40102,0); }
 
 void DoMoveCurConfSecsLeft(COMMAND_T*)
 {
@@ -1697,10 +1696,10 @@ double g_StoreEditCurPos=0.0;
 
 void DoStoreEditCursorPosition(COMMAND_T*)
 {
-	g_StoreEditCurPos=GetCursorPosition();	
+	g_StoreEditCurPos=GetCursorPosition();
 }
 
 void DoRecallEditCursorPosition(COMMAND_T*)
 {
-	SetEditCurPos(g_StoreEditCurPos,false,false);	
+	SetEditCurPos(g_StoreEditCurPos,false,false);
 }

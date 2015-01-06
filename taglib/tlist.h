@@ -227,6 +227,11 @@ namespace TagLib {
      */
     bool operator==(const List<T> &l) const;
 
+#ifndef DO_NOT_DOCUMENT
+    template <class TP> class ListPrivate;
+    ListPrivate<T> *d;
+#endif
+
   protected:
     /*
      * If this List is being shared via implicit sharing, do a deep copy of the
@@ -234,12 +239,6 @@ namespace TagLib {
      * non-const subclass members.
      */
     void detach();
-
-  private:
-#ifndef DO_NOT_DOCUMENT
-    template <class TP> class ListPrivate;
-    ListPrivate<T> *d;
-#endif
   };
 
 }

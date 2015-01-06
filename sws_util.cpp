@@ -38,6 +38,7 @@ int  g_i1 = 1;
 int  g_i2 = 2;
 bool g_bTrue  = true;
 bool g_bFalse = false;
+MTRand g_MTRand;
 #ifndef _WIN32
 const GUID GUID_NULL = { 0, 0, 0, "\0\0\0\0\0\0\0" };
 #endif
@@ -120,7 +121,18 @@ void SetWindowPosAtMouse(HWND hwnd)
 	SetWindowPos(hwnd, NULL, r.left, r.top, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
-#ifndef _WIN32
+#ifdef _WIN32
+
+void SWS_ShowTextScrollbar(HWND hwnd, bool show)
+{
+	DWORD dwStyle = GetWindowLong(hwnd, GWL_STYLE);
+	if (!show) dwStyle &= ~WS_HSCROLL;
+	else dwStyle |= WS_HSCROLL;
+	SetWindowLong(hwnd, GWL_STYLE, dwStyle);
+}
+
+#elif defined(__APPLE__)
+
 int GetMenuString(HMENU hMenu, UINT uIDItem, char* lpString, int nMaxCount, UINT uFlag)
 {
 	if (hMenu && lpString)
@@ -145,6 +157,7 @@ int GetMenuString(HMENU hMenu, UINT uIDItem, char* lpString, int nMaxCount, UINT
 	}
 	return 0;
 }
+
 #endif
 
 MediaTrack* GetFirstSelectedTrack()

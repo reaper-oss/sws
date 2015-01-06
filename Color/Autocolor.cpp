@@ -10,10 +10,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -57,7 +57,7 @@ enum { AC_ANY=0, AC_UNNAMED, AC_FOLDER, AC_CHILDREN, AC_RECEIVE, AC_MASTER, NUM_
 enum { AC_RGNANY=0, AC_RGNUNNAMED, NUM_RGNFILTERTYPES };
 enum { AC_CUSTOM, AC_GRADIENT, AC_RANDOM, AC_NONE, AC_PARENT, AC_IGNORE, NUM_COLORTYPES };
 enum { COL_ID=0, COL_TYPE, COL_FILTER, COL_COLOR, COL_ICON, COL_COUNT };
-enum { AC_TRACK=0, AC_MARKER, AC_REGION, NUM_TYPETYPES }; // keep this order and 2^ values 
+enum { AC_TRACK=0, AC_MARKER, AC_REGION, NUM_TYPETYPES }; // keep this order and 2^ values
                                                           // (values used as masks => adding a 4th type would require another solution)
 
 // Larger allocs for localized strings..
@@ -79,7 +79,7 @@ static bool g_bACMEnabled = false;
 static bool g_bAIEnabled = false;
 static WDL_String g_ACIni;
 
-// Register to marker/region updates 
+// Register to marker/region updates
 class AC_MarkerRegionListener : public SNM_MarkerRegionListener {
 public:
 	AC_MarkerRegionListener() : SNM_MarkerRegionListener() {}
@@ -96,10 +96,10 @@ bool ACRegisterUnregisterToMarkerRegionUpdates()
 		for (int i = 0; i < g_pACItems.GetSize(); i++)
 			if (SWS_RuleItem* rule = (SWS_RuleItem*)g_pACItems.Get(i))
 				if ((g_bACMEnabled && rule->m_type == AC_MARKER) || (g_bACREnabled && rule->m_type == AC_REGION)) {
-					RegisterToMarkerRegionUpdates(&g_mkrRgnListener); 
+					RegisterToMarkerRegionUpdates(&g_mkrRgnListener);
 					return true; // do not use the above returned value
 				}
-	UnregisterToMarkerRegionUpdates(&g_mkrRgnListener); 
+	UnregisterToMarkerRegionUpdates(&g_mkrRgnListener);
 	return false; // do not use the above returned value
 }
 
@@ -405,7 +405,7 @@ void SWS_AutoColorWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			{
 				char filename[BUFFER_SIZE], dir[32];
 				sprintf(dir,"Data%ctrack_icons",PATH_SLASH_CHAR);
-				if (BrowseResourcePath(__LOCALIZE("Load icon","sws_DLG_115"), dir, "PNG files (*.PNG)\0*.PNG\0ICO files (*.ICO)\0*.ICO\0JPEG files (*.JPG)\0*.JPG\0BMP files (*.BMP)\0*.BMP\0PCX files (*.PCX)\0*.PCX\0", 
+				if (BrowseResourcePath(__LOCALIZE("Load icon","sws_DLG_115"), dir, "PNG files (*.PNG)\0*.PNG\0ICO files (*.ICO)\0*.ICO\0JPEG files (*.JPG)\0*.JPG\0BMP files (*.BMP)\0*.BMP\0PCX files (*.PCX)\0*.PCX\0",
 					filename, BUFFER_SIZE))
 					item->m_icon.Set(filename);
 			}
@@ -491,7 +491,7 @@ INT_PTR SWS_AutoColorWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam
 		LPDRAWITEMSTRUCT pDI = (LPDRAWITEMSTRUCT)lParam;
 		if (pDI->CtlID == IDC_COLOR)
 		{
-			// Dialog-box background grey for no selection, or multiple colors in selection	
+			// Dialog-box background grey for no selection, or multiple colors in selection
 			// Doesn't account for the "special colors" because they're less than zero and get trapped
 			// out below anyway.
 			int col = -1;
@@ -674,7 +674,7 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 			}
 			else
 				pACTrack = g_pACTracks.Get()->Add(new SWS_RuleTrack(tr));
-			
+
 			// Do the track rule matching
 			if (bColor || bIcon)
 			{
@@ -692,7 +692,7 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 					}
 					else if (strcmp(rule->m_str_filter.Get(), cFilterTypes[AC_CHILDREN]) == 0)
 					{
-						temp = CSurf_TrackFromID(0, false); // JFB fix: 'temp' could be out of sync 
+						temp = CSurf_TrackFromID(0, false); // JFB fix: 'temp' could be out of sync
 						if (GetFolderDepth(tr, NULL, &temp) >= 1)
 							bMatch = true;
 					}
@@ -783,13 +783,13 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 								if (bForce || iconChunkPos == 0 || strcmp(pIconLine, pACTrack->m_icon.Get()) == 0)
 								{
 									if (rule->m_icon.GetLength())
-										sprintf(pIconLine, "TRACKIMGFN \"%s\"\n", rule->m_icon.Get());	
+										sprintf(pIconLine, "TRACKIMGFN \"%s\"\n", rule->m_icon.Get());
 									else // The code as written will never hit this case, as empty m_icon means "ignore"
 										*pIconLine = 0;
 
 									if (iconChunkPos > 0)
 										p.ReplaceLine(--iconChunkPos, pIconLine);
-									else 
+									else
 										p.InsertAfterBefore(0, pIconLine, "TRACK", "FX", 1, 0, "TRACKID");
 								}
 							}
@@ -800,7 +800,7 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 				}
 			}
 		}
-		
+
 		// Handle gradients
 		for (int i = 0; i < gradientTracks.GetSize(); i++)
 		{
@@ -868,7 +868,7 @@ void AutoColorTrack(bool bForce)
 				GetSetMediaTrackInfo(pACTrack->m_pTr, "I_CUSTOMCOLOR", &g_i0);
 			pACTrack->m_col = 0;
 		}
-		
+
 		if (bDoIcons && !pACTrack->m_bIconed && *pACTrack->m_icon.Get())
 		{	// There's an icon set, but there shouldn't be!
 			SNM_ChunkParserPatcher p(pACTrack->m_pTr); // Yay for the patcher
@@ -897,7 +897,7 @@ void ApplyColorRuleToMarkerRegion(SWS_RuleItem* _rule, int _flags)
 
 	double pos, end;
 	int x=0, num, color;
-	bool isRgn, update=false;
+	bool isRgn;
 	const char* name;
 
 	PreventUIRefresh(1);
@@ -905,21 +905,18 @@ void ApplyColorRuleToMarkerRegion(SWS_RuleItem* _rule, int _flags)
 	{
 		while (x = EnumProjectMarkers3(NULL, x, &isRgn, &pos, &end, &name, &num, &color))
 		{
-			if ((!strcmp(cFilterTypes[AC_RGNANY], _rule->m_str_filter.Get()) || 
+			if ((!strcmp(cFilterTypes[AC_RGNANY], _rule->m_str_filter.Get()) ||
 				(!strcmp(cFilterTypes[AC_RGNUNNAMED], _rule->m_str_filter.Get()) && (!name || !*name)) ||
 				(name && stristr(name, _rule->m_str_filter.Get())))
 				&&
-				((_flags&AC_REGION && isRgn && _rule->m_type==AC_REGION) || 
+				((_flags&AC_REGION && isRgn && _rule->m_type==AC_REGION) ||
 				(_flags&AC_MARKER && !isRgn && _rule->m_type==AC_MARKER)))
 			{
-				update |= SetProjectMarkerByIndex(NULL, x-1, isRgn, pos, end, num, NULL, _rule->m_color==-AC_NONE-1 ? (isRgn?ct->marker:ct->region) : _rule->m_color | 0x1000000);
+				SetProjectMarkerByIndex(NULL, x-1, isRgn, pos, end, num, NULL, _rule->m_color==-AC_NONE-1 ? (isRgn?ct->marker:ct->region) : _rule->m_color | 0x1000000);
 			}
 		}
 	}
 	PreventUIRefresh(-1);
-
-	if (update)
-		UpdateTimeline();
 }
 
 void AutoColorMarkerRegion(bool _force, int _flags)
@@ -937,16 +934,12 @@ void AutoColorMarkerRegion(bool _force, int _flags)
 
 	if (newFlags)
 	{
-		if (PreventUIRefresh)
-			PreventUIRefresh(1);
+    PreventUIRefresh(1);
 
 		for (int i=g_pACItems.GetSize()-1; i>=0; i--) // reverse to obey priority
 			ApplyColorRuleToMarkerRegion(g_pACItems.Get(i), newFlags);
 
-		if (PreventUIRefresh)
-			PreventUIRefresh(-1);
-
-		UpdateTimeline();
+    PreventUIRefresh(-1);
 	}
 
 	bRecurse = false;
@@ -1060,7 +1053,7 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 static project_config_extension_t g_projectconfig = { ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL };
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
-static COMMAND_T g_commandTable[] = 
+static COMMAND_T g_commandTable[] =
 {
 	{ { DEFACCEL, "SWS: Open auto color/icon window" },				"SWSAUTOCOLOR_OPEN",		OpenAutoColor,		"SWS Auto color/icon",			0, IsAutoColorOpen },
 	{ { DEFACCEL, "SWS: Toggle auto track coloring enable" },		"SWSAUTOCOLOR_ENABLE",		EnableAutoColor,	"Enable auto track coloring",	0, IsAutoColorEnabled },
@@ -1113,7 +1106,7 @@ int AutoColorInit()
 			g_pACItems.Add(new SWS_RuleItem(lp.gettoken_int(0), lp.gettoken_str(1), lp.gettoken_int(2), lp.gettoken_str(3)));
 		else if(!lp.parse(str) && lp.getnumtokens() == 3) //Reformat old format Autocolor line to new format (i.e. region + marker)
 			g_pACItems.Add(new SWS_RuleItem(AC_TRACK, lp.gettoken_str(0), lp.gettoken_int(1), lp.gettoken_str(2)));
-	}	
+	}
 
 	if (bUpgrade)
 	{	// Remove old stuff

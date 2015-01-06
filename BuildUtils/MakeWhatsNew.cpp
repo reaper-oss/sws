@@ -194,7 +194,7 @@ int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML, const c
 				int iIssue = atol(&cBuf[iPos+6]);
 				if (iIssue != 0)
 				{
-					fprintf(pOut, "<a href=\"http://code.google.com/p/sws-extension/issues/detail?id=%d\">%cssue %d</a>", iIssue, cBuf[iPos], iIssue);
+					fprintf(pOut, "<a href=\"https://github.com/Jeff0S/sws/issues/%d\">%cssue %d</a>", iIssue, cBuf[iPos], iIssue);
 					iPos += 6;
 					while (isalnum(cBuf[iPos++]));
 					iPos--;

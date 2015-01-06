@@ -2828,7 +2828,7 @@ void AWCascadeInputs(COMMAND_T* t)
 			SetMediaTrackInfo_Value(track, "I_RECINPUT", iTrack+inputOffset-1);
 		}
 	}
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
 
 }
 
@@ -2902,7 +2902,7 @@ void AWSplitXFadeLeft(COMMAND_T* t)
 	*(int*)(GetConfigVar("splitautoxfade")) = fadeStateStore;
 
 	UpdateArrange();
-	Undo_EndBlock(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL);
+	Undo_EndBlock(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS);
 }
 
 
@@ -2919,7 +2919,7 @@ void AWSelTracksTimebaseTime(COMMAND_T* t)
 		SetMediaTrackInfo_Value(tr, "C_BEATATTACHMODE", 0);
 	}
 	UpdateTrackTimebaseToolbar();
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
 }
 
 
@@ -2956,7 +2956,7 @@ void AWSelTracksTimebaseBeatPos(COMMAND_T* t)
 		SetMediaTrackInfo_Value(tr, "C_BEATATTACHMODE", 2);
 	}
 	UpdateTrackTimebaseToolbar();
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
 }
 
 
@@ -2989,7 +2989,7 @@ void AWSelTracksTimebaseBeatAll(COMMAND_T* t)
 		SetMediaTrackInfo_Value(tr, "C_BEATATTACHMODE", 1);
 	}
 	UpdateTrackTimebaseToolbar();
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
 }
 
 
@@ -3046,7 +3046,7 @@ void AWSelChilOrSelItems(COMMAND_T* t)
 
 	UpdateArrange();
 
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS | UNDO_STATE_TRACKCFG, -1);
 }
 
 void AWSelTracksPanMode(int mode)
@@ -3076,25 +3076,25 @@ void AWSelTracksPanLaw(int j)
 void AWSelTracksPanBalanceNew(COMMAND_T* t)
 {
 	AWSelTracksPanMode(3);
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
 }
 
 void AWSelTracksPanBalanceOld(COMMAND_T* t)
 {
 	AWSelTracksPanMode(0);
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
 }
 
 void AWSelTracksPanStereoPan(COMMAND_T* t)
 {
 	AWSelTracksPanMode(5);
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
 }
 
 void AWSelTracksPanDualPan(COMMAND_T* t)
 {
 	AWSelTracksPanMode(6);
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
 }
 
 
@@ -3113,13 +3113,13 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/AW: Remove overlaps in selected items preserving item starts" },                                 "SWS_AWFIXOVERLAPS",                AWFixOverlaps, },
 
 	// Transport Actions
-	{ { DEFACCEL, "SWS/AW: Record Conditional (normal or time sel only)" },                                                             "SWS_AWRECORDCOND",                 AWRecordConditional, },
-	{ { DEFACCEL, "SWS/AW: Record Conditional (normal, time sel or item sel)" },                                                        "SWS_AWRECORDCOND2",                AWRecordConditional2, },
-	{ { DEFACCEL, "SWS/AW: Toggle auto group newly recorded items" },                                                                   "SWS_AWAUTOGROUPTOG",               AWToggleAutoGroup, NULL, 0, AWIsAutoGroupEnabled},
-	{ { DEFACCEL, "SWS/AW: Record (automatically group simultaneously recorded items)" },                                               "SWS_AWRECORDGROUP",                AWRecordAutoGroup, },
-	{ { DEFACCEL, "SWS/AW: Record Conditional (normal or time sel only, automatically group simultaneously recorded items)" },          "SWS_AWRECORDCONDGROUP",            AWRecordConditionalAutoGroup, },
-	{ { DEFACCEL, "SWS/AW: Record Conditional (normal/time sel/item sel, automatically group simultaneously recorded items)" },         "SWS_AWRECORDCONDGROUP2",           AWRecordConditionalAutoGroup2, },
-	{ { DEFACCEL, "SWS/AW: Play/Stop (automatically group simultaneously recorded items)" },                                            "SWS_AWPLAYSTOPGRP",                AWPlayStopAutoGroup, },
+	{ { DEFACCEL, "SWS/AW: Record Conditional (normal or time selection only)" },                                                             "SWS_AWRECORDCOND",                 AWRecordConditional, },
+	{ { DEFACCEL, "SWS/AW: Record Conditional (normal, time selection or item selection)" },                                                  "SWS_AWRECORDCOND2",                AWRecordConditional2, },
+	{ { DEFACCEL, "SWS/AW: Toggle auto group newly recorded items" },                                                                         "SWS_AWAUTOGROUPTOG",               AWToggleAutoGroup, NULL, 0, AWIsAutoGroupEnabled},
+	{ { DEFACCEL, "SWS/AW: Record (automatically group simultaneously recorded items)" },                                                     "SWS_AWRECORDGROUP",                AWRecordAutoGroup, },
+	{ { DEFACCEL, "SWS/AW: Record Conditional (normal or time selection only, automatically group simultaneously recorded items)" },          "SWS_AWRECORDCONDGROUP",            AWRecordConditionalAutoGroup, },
+	{ { DEFACCEL, "SWS/AW: Record Conditional (normal/time selection/item selection, automatically group simultaneously recorded items)" },   "SWS_AWRECORDCONDGROUP2",           AWRecordConditionalAutoGroup2, },
+	{ { DEFACCEL, "SWS/AW: Play/Stop (automatically group simultaneously recorded items)" },                                                  "SWS_AWPLAYSTOPGRP",                AWPlayStopAutoGroup, },
 
 	// Misc Item Actions
 	{ { DEFACCEL, "SWS/AW: Select from cursor to end of project (items and time selection)" },          "SWS_AWSELTOEND",                   AWSelectToEnd, },

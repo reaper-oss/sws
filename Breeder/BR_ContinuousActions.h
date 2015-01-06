@@ -38,11 +38,11 @@
 ******************************************************************************/
 struct BR_ContinuousAction
 {
-	BR_ContinuousAction(int cmd, bool (*Init)(bool) = NULL, bool (*DoUndo)() = NULL, HCURSOR (*SetMouseCursor)(int) = NULL, WDL_FastString (*SetTooltip)(int) = NULL)
+	BR_ContinuousAction(int cmd, bool (*Init)(bool) = NULL, int (*DoUndo)() = NULL, HCURSOR (*SetMouseCursor)(int) = NULL, WDL_FastString (*SetTooltip)(int) = NULL)
 	: cmd(cmd), Init(Init), DoUndo(DoUndo), SetMouseCursor(SetMouseCursor), SetTooltip(SetTooltip) {}
 
 	bool           (*Init)(bool init);            // called on start with init = true and on shortcut release with init = false. Return false to abort init.
-	bool           (*DoUndo)();                   // called when shortcut is released, return true to create undo point. If NULL, no undo point will get created
+	int            (*DoUndo)();                   // called when shortcut is released, return undo flag to create undo point (or 0 for no undo point). If NULL, no undo point will get created
 	HCURSOR        (*SetMouseCursor)(int window); // called when setting cursor for each window, return NULL to skip
 	WDL_FastString (*SetTooltip)(int window);     // called when setting cursor tooltip, return empty string to remove existing tooltip
 	const int cmd;                                // cmd of the action to be made continuous

@@ -28,8 +28,9 @@
 #include "stdafx.h"
 #include "BR_Tempo.h"
 #include "BR_ContinuousActions.h"
-#include "BR_EnvTools.h"
-#include "BR_MidiTools.h"
+#include "BR_EnvelopeUtil.h"
+#include "BR_MidiUtil.h"
+#include "BR_MouseUtil.h"
 #include "BR_TempoDlg.h"
 #include "BR_Util.h"
 #include "../SnM/SnM_Util.h"
@@ -38,9 +39,9 @@
 /******************************************************************************
 * Globals                                                                     *
 ******************************************************************************/
-static bool g_convertMarkersToTempoDialog = false;
-static bool g_selectAdjustTempoDialog = false;
-static bool g_tempoShapeDialog = false;
+static HWND g_convertMarkersToTempoWnd = NULL;
+static HWND g_selectAdjustTempoWnd = NULL;
+static HWND g_tempoShapeWnd = NULL;
 
 /******************************************************************************
 * Continuous action: move grid to mouse cursor                                *
@@ -72,32 +73,25 @@ static bool MoveGridInit (bool init)
 	return initSuccessful;
 }
 
-static bool MoveGridDoUndo ()
+static int MoveGridDoUndo ()
 {
-	return g_movedGridOnce;
+	return (g_movedGridOnce) ? (UNDO_STATE_TRACKCFG) : (0);
 }
 
 static HCURSOR MoveGridCursor (int window)
 {
-	static HCURSOR cursor = NULL;
-	if (!cursor)
-		cursor = LoadCursor(NULL, IDC_SIZEWE);
+	static HCURSOR s_cursor = NULL;
+	if (!s_cursor)
+		s_cursor = LoadCursor(NULL, IDC_SIZEWE);
 
 	if (window == BR_ContinuousAction::ARRANGE || window == BR_ContinuousAction::RULER)
-		return cursor;
+		return s_cursor;
 	else
 		return NULL;
 }
 
-void MoveGridToMouseInit ()
-{
-	ContinuousActionRegister(new BR_ContinuousAction(NamedCommandLookup("_BR_MOVE_GRID_TO_MOUSE"),       &MoveGridInit, &MoveGridDoUndo, &MoveGridCursor));
-	ContinuousActionRegister(new BR_ContinuousAction(NamedCommandLookup("_BR_MOVE_M_GRID_TO_MOUSE"),     &MoveGridInit, &MoveGridDoUndo, &MoveGridCursor));
-	ContinuousActionRegister(new BR_ContinuousAction(NamedCommandLookup("_BR_MOVE_CLOSEST_TEMPO_MOUSE"), &MoveGridInit, &MoveGridDoUndo, &MoveGridCursor));
-}
-
 /******************************************************************************
-* Commands                                                                    *
+* Misc                                                                        *
 ******************************************************************************/
 static bool MoveTempo (BR_Envelope& tempoMap, int id, double timeDiff)
 {
@@ -111,10 +105,7 @@ static bool MoveTempo (BR_Envelope& tempoMap, int id, double timeDiff)
 	bool P3 = tempoMap.GetPoint(id+1, &t3, &b3, NULL, NULL);
 	double Nt2 = t2+timeDiff;
 
-	///// CALCULATE BPM VALUES /////
-	////////////////////////////////
-
-	// Current point
+	// Calculate new value for current point
 	if (P3)
 	{
 		if (s2 == SQUARE)
@@ -128,7 +119,7 @@ static bool MoveTempo (BR_Envelope& tempoMap, int id, double timeDiff)
 		t3 = Nt2 + 1; // t3 is faked so it can pass legality check
 	}
 
-	// Previous point
+	// Calculate new value for previous point
 	if (s1 == SQUARE)
 		Nb1 = b1*(t2-t1) / (Nt2-t1);
 	else
@@ -140,10 +131,7 @@ static bool MoveTempo (BR_Envelope& tempoMap, int id, double timeDiff)
 	if ((Nt2-t1) < MIN_TEMPO_DIST || (t3 - Nt2) < MIN_TEMPO_DIST)
 		return false;
 
-	///// CHECK POINTS BEFORE PREVIOUS POINT /////
-	/////////////////////////////////////////////
-
-	// Go through points backwards and get new values for linear points
+	// Go through points backwards and get new values for linear points (if needed)
 	vector<double> prevBpm;
 	bool possible = true;
 	int direction = 1;
@@ -168,39 +156,46 @@ static bool MoveTempo (BR_Envelope& tempoMap, int id, double timeDiff)
 	if (!possible)
 		return false;
 
-	///// SET NEW BPM VALUES /////
-	/////////////////////////////
-
-	// Points before previous (if needed)
+	// Set points before previous (if needed)
 	for (size_t i = 0; i < prevBpm.size(); ++i)
 		tempoMap.SetPoint(id-2-i, NULL, &prevBpm[i], NULL, NULL);
 
-	// Previous point
+	// Set previous point
 	tempoMap.SetPoint(id-1, NULL, &Nb1, NULL, NULL);
 
-	// Selected point
+	// Set current point
 	tempoMap.SetPoint(id, &Nt2, &Nb2, NULL, NULL);
 
 	return true;
 }
 
+/******************************************************************************
+* Commands: Tempo - Grid                                                      *
+******************************************************************************/
+void MoveGridToMouseInit ()
+{
+	ContinuousActionRegister(new BR_ContinuousAction(NamedCommandLookup("_BR_MOVE_GRID_TO_MOUSE"),       &MoveGridInit, &MoveGridDoUndo, &MoveGridCursor));
+	ContinuousActionRegister(new BR_ContinuousAction(NamedCommandLookup("_BR_MOVE_M_GRID_TO_MOUSE"),     &MoveGridInit, &MoveGridDoUndo, &MoveGridCursor));
+	ContinuousActionRegister(new BR_ContinuousAction(NamedCommandLookup("_BR_MOVE_CLOSEST_TEMPO_MOUSE"), &MoveGridInit, &MoveGridDoUndo, &MoveGridCursor));
+}
+
 void MoveGridToMouse (COMMAND_T* ct)
 {
-	static int    lockedId = -1;
-	static double lastPosition = 0;
+	static int    s_lockedId = -1;
+	static double s_lastPosition = 0;
 
 	// Action called for the first time: reset variables and cache tempo map for future calls
 	if (!g_moveGridTempoMap)
 	{
-		lockedId = -1;
-		lastPosition = 0;
+		s_lockedId = -1;
+		s_lastPosition = 0;
 
 		// Make sure tempo map already has at least one point created (for some reason it won't work if creating it directly in chunk)
 		if ((int)ct->user != 0) // do it only if not moving tempo marker
 			InitTempoMap();
 
 		g_moveGridTempoMap = new (nothrow) BR_Envelope(GetTempoEnv());
-		if (!g_moveGridTempoMap || !g_moveGridTempoMap->Count())
+		if (!g_moveGridTempoMap || !g_moveGridTempoMap->CountPoints() || g_moveGridTempoMap->IsLocked())
 		{
 			ContinuousActionStopAll();
 			return;
@@ -219,7 +214,7 @@ void MoveGridToMouse (COMMAND_T* ct)
 		// Move action was already called so use data from the previous move
 		if (g_movedGridOnce)
 		{
-			tDiff = mousePosition - lastPosition;
+			tDiff = mousePosition - s_lastPosition;
 		}
 
 		// Find or create tempo marker to move
@@ -231,7 +226,7 @@ void MoveGridToMouse (COMMAND_T* ct)
 			// Find closest grid tempo marker
 			if ((int)ct->user == 1 || (int)ct->user == 2)
 			{
-				grid = ((int)ct->user == 1) ? (GetClosestGrid(mousePosition)) : (GetClosestMeasureGrid(mousePosition));
+				grid = ((int)ct->user == 1) ? (GetClosestGridLine(mousePosition)) : (GetClosestMeasureGridLine(mousePosition));
 				targetId = g_moveGridTempoMap->Find(grid, MIN_TEMPO_DIST);
 			}
 			// Find closest tempo marker
@@ -256,30 +251,30 @@ void MoveGridToMouse (COMMAND_T* ct)
 			// Can't move first tempo marker so ignore this move action and wait for valid mouse position
 			if (targetId != 0)
 			{
-				lockedId = targetId;
+				s_lockedId = targetId;
 				tDiff = mousePosition - grid;
 			}
 		}
 	}
 
 	// Move grid and commit changes
-	if (tDiff != 0 && lockedId >= 0)
+	if (tDiff != 0 && s_lockedId >= 0)
 	{
 		// Warn user if tempo marker couldn't get processed
-		if (!g_moveGridTempoMap || !MoveTempo(*g_moveGridTempoMap, lockedId, tDiff))
+		if (!g_moveGridTempoMap || !MoveTempo(*g_moveGridTempoMap, s_lockedId, tDiff))
 		{
 			static bool s_warnUser = true;
 			if (s_warnUser)
 			{
 				ContinuousActionStopAll ();
-				int userAnswer = ShowMessageBox(__LOCALIZE("Moving grid failed because some tempo markers would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), __LOCALIZE("SWS - Warning", "sws_mbox"), 4);
-				if (userAnswer == 7)
+				int userAnswer = MessageBox(g_hwndParent, __LOCALIZE("Moving grid failed because some tempo markers would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), __LOCALIZE("SWS/BR - Warning", "sws_mbox"), MB_YESNO);
+				if (userAnswer == IDNO)
 					s_warnUser = false;
 			}
 		}
 		else
 		{
-			lastPosition = mousePosition;
+			s_lastPosition = mousePosition;
 			g_moveGridTempoMap->Commit();
 			g_movedGridOnce = true;
 		}
@@ -294,23 +289,20 @@ void MoveGridToEditPlayCursor (COMMAND_T* ct)
 	// Make sure tempo map already has at least one point created (for some reason it won't work if creating it directly in chunk)
 	InitTempoMap();
 	BR_Envelope tempoMap(GetTempoEnv());
-	if (!tempoMap.Count())
+	if (!tempoMap.CountPoints())
 		return;
 
-	// Set preferences to prevent play cursor from jumping
-	int seekmodes = 0;
+	// Prevent play cursor from jumping
+	int seekmodes; GetConfig("seekmodes", seekmodes);
 	if ((int)ct->user == 1 || (int)ct->user == 3)
-	{
-		GetConfig("seekmodes", seekmodes);
 		SetConfig("seekmodes", ClearBit(seekmodes, 5));
-	}
 
 	// Find closest grid
 	double grid = 0;
-	if      ((int)ct->user == 0 || (int)ct->user == 1) grid = GetClosestGrid(cursor);
-	else if ((int)ct->user == 2 || (int)ct->user == 3) grid = GetClosestMeasureGrid(cursor);
-	else if ((int)ct->user == 4)                       grid = GetClosestLeftSideGrid(cursor);
-	else                                               grid = GetClosestRightSideGrid(cursor);
+	if      ((int)ct->user == 0 || (int)ct->user == 1) grid = GetClosestGridLine(cursor);
+	else if ((int)ct->user == 2 || (int)ct->user == 3) grid = GetClosestMeasureGridLine(cursor);
+	else if ((int)ct->user == 4)                       grid = GetClosestLeftSideGridLine(cursor);
+	else                                               grid = GetClosestRightSideGridLine(cursor);
 	int targetId = tempoMap.Find(grid, MIN_TEMPO_DIST);
 
 	// No tempo marker on grid, create it
@@ -336,31 +328,32 @@ void MoveGridToEditPlayCursor (COMMAND_T* ct)
 				// Restore edit cursor only if moving to it
 				if ((int)ct->user != 1 && (int)ct->user != 3)
 					SetEditCurPos2(NULL, cursor, false, false);
-				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 			}
 			PreventUIRefresh(-1);
 		}
 		else
 		{
 			static bool s_warnUser = true;
-			if (s_warnUser)
+			if (s_warnUser && !tempoMap.IsLocked()) // won't warn if locked
 			{
-				int userAnswer = ShowMessageBox(__LOCALIZE("Moving grid failed because some tempo markers would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), __LOCALIZE("SWS - Warning", "sws_mbox"), 4);
-				if (userAnswer == 7)
+				int userAnswer = MessageBox(g_hwndParent, __LOCALIZE("Moving grid failed because some tempo markers would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), __LOCALIZE("SWS/BR - Warning", "sws_mbox"), MB_YESNO);
+				if (userAnswer == IDNO)
 					s_warnUser = false;
 			}
 		}
 	}
 
-	// Restore preferences
-	if ((int)ct->user == 1 || (int)ct->user == 3)
-		SetConfig("seekmodes", seekmodes);
+	SetConfig("seekmodes", seekmodes);
 }
 
+/******************************************************************************
+* Commands: Tempo - Misc                                                      *
+******************************************************************************/
 void MoveTempo (COMMAND_T* ct)
 {
 	BR_Envelope tempoMap(GetTempoEnv());
-	if (!tempoMap.Count())
+	if (!tempoMap.CountPoints())
 		return;
 	double cursor = GetCursorPositionEx(NULL);
 	double tDiff = 0;
@@ -405,18 +398,18 @@ void MoveTempo (COMMAND_T* ct)
 	{
 		if ((int)ct->user == 3)
 			SetEditCurPos2(NULL, cursor, false, false); // always keep cursor position when moving to closest tempo marker
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 	}
 	PreventUIRefresh(-1);
 
 	// Warn user if some points weren't processed
 	static bool s_warnUser = true;
-	if (s_warnUser && skipped != 0)
+	if (s_warnUser && skipped != 0 && !tempoMap.IsLocked()) // won't warn if locked
 	{
 		char buffer[512];
 		_snprintfSafe(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
-		int userAnswer = ShowMessageBox(buffer, __LOCALIZE("SWS - Warning", "sws_mbox"), 4);
-		if (userAnswer == 7)
+		int userAnswer = MessageBox(g_hwndParent, buffer, __LOCALIZE("SWS/BR - Warning", "sws_mbox"), MB_YESNO);
+		if (userAnswer == IDNO)
 			s_warnUser = false;
 	}
 }
@@ -742,16 +735,16 @@ void EditTempo (COMMAND_T* ct)
 
 	// Commit changes
 	if (tempoMap.Commit())
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 
 	// Warn user if some points weren't processed
 	static bool s_warnUser = true;
-	if (s_warnUser && skipped != 0 && tempoMap.CountSelected() > 1)
+	if (s_warnUser && skipped != 0 && tempoMap.CountSelected() > 1 && !tempoMap.IsLocked()) // won't warn if locked
 	{
 		char buffer[512];
 		_snprintfSafe(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
-		int userAnswer = ShowMessageBox(buffer, __LOCALIZE("SWS - Warning", "sws_mbox"), 4);
-		if (userAnswer == 7)
+		int userAnswer = MessageBox(g_hwndParent ,buffer, __LOCALIZE("SWS/BR - Warning", "sws_mbox"), MB_YESNO);
+		if (userAnswer == IDNO)
 			s_warnUser = false;
 	}
 }
@@ -916,16 +909,16 @@ void EditTempoGradual (COMMAND_T* ct)
 
 	// Commit changes
 	if (tempoMap.Commit())
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 
 	// Warn user if some points weren't processed
 	static bool s_warnUser = true;
-	if (s_warnUser && skipped != 0 && tempoMap.CountSelected() > 1 )
+	if (s_warnUser && skipped != 0 && tempoMap.CountSelected() > 1 && !tempoMap.IsLocked()) // won't warn if locked
 	{
 		char buffer[512];
 		_snprintfSafe(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
-		int userAnswer = ShowMessageBox(buffer, __LOCALIZE("SWS - Warning", "sws_mbox"), 4);
-		if (userAnswer == 7)
+		int userAnswer = MessageBox(g_hwndParent ,buffer, __LOCALIZE("SWS/BR - Warning", "sws_mbox"), MB_YESNO);
+		if (userAnswer == IDNO)
 			s_warnUser = false;
 	}
 }
@@ -1097,16 +1090,16 @@ void DeleteTempo (COMMAND_T* ct)
 
 	// Commit changes
 	if (tempoMap.Commit())
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 
 	// Warn user if some points weren't processed
 	static bool s_warnUser = true;
-	if (s_warnUser && skipped != 0)
+	if (s_warnUser && skipped != 0 && !tempoMap.IsLocked()) // won't warn if locked
 	{
 		char buffer[512];
 		_snprintfSafe(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
-		int userAnswer = ShowMessageBox(buffer, __LOCALIZE("SWS - Warning", "sws_mbox"), 4);
-		if (userAnswer == 7)
+		int userAnswer = MessageBox(g_hwndParent, buffer, __LOCALIZE("SWS/BR - Warning", "sws_mbox"), MB_YESNO);
+		if (userAnswer == IDNO)
 			s_warnUser = false;
 	}
 }
@@ -1114,8 +1107,8 @@ void DeleteTempo (COMMAND_T* ct)
 void DeleteTempoPreserveItems (COMMAND_T* ct)
 {
 	BR_Envelope tempoMap(GetTempoEnv());
-	if (!tempoMap.CountSelected())
-		return;
+	if (!tempoMap.CountSelected() || tempoMap.IsLocked()) // BR_Envelope does check for locking, but since
+		return;                                                                                  // we're dealing with items too check here
 
 	// Get items' position info and set their timebase to time
 	vector<BR_MidiItemTimePos> items;
@@ -1135,47 +1128,42 @@ void DeleteTempoPreserveItems (COMMAND_T* ct)
 		}
 	}
 
-	// Readjust unselected tempo markers
-	double offset = 0;
-	for (int i = 0; i < tempoMap.CountConseq(); ++i)
+	// Readjust unselected tempo markers if needed
+	int timeBase; GetConfig("tempoenvtimelock", timeBase);
+	if (timeBase != 0)
 	{
-		int startId, endId;
-		tempoMap.GetConseq (i, &startId, &endId);
-
-		if (endId == tempoMap.Count()-1) continue;         // no points after selection, nothing to adjust
-		if (startId == 0 && (++startId > endId)) continue; // skip first point
-
-		// Get musical length of selection
-		double musicalLen = 0;
-		for (int i = startId - 1; i <= endId; ++i )
+		double offset = 0;
+		for (int i = 0; i < tempoMap.CountConseq(); ++i)
 		{
+			int startId, endId;
+			tempoMap.GetConseq(i, &startId, &endId);
+			if (startId == 0 && (++startId > endId)) continue; // skip first point
+
 			double t0, t1, b0, b1; int s0;
-			tempoMap.GetPoint(i,   &t0, &b0, &s0, NULL);
-			tempoMap.GetPoint(i+1, &t1, &b1, NULL, NULL);
-			if (i == startId-1) t0 -= offset; // readjust position to original (earlier iterations moved it)
+			tempoMap.GetPoint(startId - 1, &t0, &b0, &s0, NULL);
 
-			if (s0 == SQUARE)
-				musicalLen += (t1-t0) * b0 / 240;
-			else
-				musicalLen += (t1-t0) * (b0+b1) / 480;
-		}
+			if (tempoMap.GetPoint(endId + 1, &t1, &b1, NULL, NULL))
+			{
+				t0 -= offset; // last unselected point before next selection - readjust position to original (earlier iterations moved it)
 
-		// Readjust points after selection
-		double t0, t1, b0, b1; int s0;
-		tempoMap.GetPoint(startId - 1, &t0, &b0, &s0, NULL);
-		tempoMap.GetPoint(endId   + 1, &t1, &b1, NULL, NULL);
+				int startMeasure, endMeasure, num, den;
+				double startBeats = TimeMap2_timeToBeats(NULL, t0, &startMeasure, &num, NULL, &den);
+				double endBeats   = TimeMap2_timeToBeats(NULL, t1, &endMeasure, NULL, NULL, NULL);
+				double beatCount = endBeats - startBeats + num * (endMeasure - startMeasure);
 
-		if (s0 == SQUARE)
-			offset = (t0 + (240*musicalLen) / b0) - t1;
-		else
-			offset = (t0 + (480*musicalLen) / (b0 + b1)) - t1;
+				if (s0 == SQUARE)
+					offset += (t0 + (240*beatCount) / (den * b0))        - t1;  // num and den can actually be different because some of tempo markers with time signatures
+				else                                                            // could have been scheduled for deletion but reaper does it in the same manner so leave it
+					offset += (t0 + (480*beatCount) / (den * (b0 + b1))) - t1;
 
-		while (!tempoMap.GetSelection(++endId) && endId < tempoMap.Count())
-		{
-			double t;
-			tempoMap.GetPoint(endId, &t, NULL, NULL, NULL);
-			t += offset;
-			tempoMap.SetPoint (endId, &t, NULL, NULL, NULL);
+				while (!tempoMap.GetSelection(++endId) && endId < tempoMap.CountPoints())
+				{
+					double t;
+					tempoMap.GetPoint(endId, &t, NULL, NULL, NULL);
+					t += offset;
+					tempoMap.SetPoint(endId, &t, NULL, NULL, NULL);
+				}
+			}
 		}
 	}
 
@@ -1193,26 +1181,23 @@ void DeleteTempoPreserveItems (COMMAND_T* ct)
 
 	// Commit tempo map and restore position info
 	PreventUIRefresh(1);
-	if (tempoMap.Commit(false))
+	if (tempoMap.Commit())
 	{
 		for (size_t i = 0; i < items.size(); ++i)
 			items[i].Restore();
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS, -1);
 	}
 	PreventUIRefresh(-1);
 }
 
 void TempoAtGrid (COMMAND_T* ct)
 {
-	// Get tempo map and grid
 	BR_Envelope tempoMap(GetTempoEnv());
 	if (!tempoMap.CountSelected())
 		return;
-	double grid; GetConfig("projgriddiv", grid);
 
-	// Loop through selected points
 	Undo_BeginBlock2(NULL);
-	int count = tempoMap.Count()-1;
+	int count = tempoMap.CountPoints()-1;
 	for (int i = 0; i < tempoMap.CountSelected(); ++i)
 	{
 		// Get tempo points
@@ -1234,30 +1219,18 @@ void TempoAtGrid (COMMAND_T* ct)
 		if (s0 == SQUARE)
 			b1 = b0;
 
-		// Grid diving starts again from the start of the measure in which tempo marker is so we need to calculate
-		// the offset between where grid line really is and where it would be if we just divided QN with grid spacing.
-		double beat; int measure; GetTempoTimeSigMarker(NULL, id, NULL, &measure, &beat, NULL, NULL, NULL, NULL);
-		double offset =  grid - fmod(TimeMap_timeToQN(TimeMap2_beatsToTime(0, 0, &measure)), grid);
-
-		// Find first grid line and then loop through the rest creating tempo points
-		double pGridLn = t0, gridLn = TimeMap_timeToQN(t0);
-		gridLn = TimeMap_QNToTime(gridLn-offset - fmod(gridLn,grid)); // it can be before tempo point but next while should correct that
+		double gridLine = t0;
 		while (true)
 		{
-			// Search for the next grid line
-			while (gridLn < pGridLn + MAX_GRID_DIV) // MAX_GRID_DIV acts as safety net to prevent accidental multiple points around grid lines/tempo points
-				gridLn = TimeMap_QNToTime(TimeMap_timeToQN(gridLn) + grid);
-
-			// Create points until the next point
-			if (gridLn < t1 - MAX_GRID_DIV)
-				tempoMap.CreatePoint(tempoMap.Count(), gridLn, TempoAtPosition(b0, b1, t0, t1, gridLn), s0, 0, false);
+			gridLine = GetNextGridDiv(gridLine);
+			if (gridLine < t1 - (MIN_GRID_DIST/2))
+				tempoMap.CreatePoint(tempoMap.CountPoints(), gridLine, TempoAtPosition(b0, b1, t0, t1, gridLine), s0, 0, false);
 			else
 				break;
-			pGridLn = gridLn;
 		}
 	}
 	tempoMap.Commit();
-	Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL);
+	Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG);
 }
 
 void TempoShapeLinear (COMMAND_T* ct)
@@ -1273,7 +1246,7 @@ void TempoShapeLinear (COMMAND_T* ct)
 
 	// Loop through selected points and perform BPM calculations
 	int skipped = 0;
-	int count = tempoMap.Count()-1;
+	int count = tempoMap.CountPoints()-1;
 	for (int i = 0; i < tempoMap.CountSelected(); ++i)
 	{
 		int id = tempoMap.GetSelected(i);
@@ -1305,7 +1278,7 @@ void TempoShapeLinear (COMMAND_T* ct)
 			{
 				// Check if value and position is legal, if not, skip
 				if (bpm>=MIN_BPM && bpm<=MAX_BPM && (position-t0)>=MIN_TEMPO_DIST && (t1-position)>=MIN_TEMPO_DIST)
-					tempoMap.CreatePoint(tempoMap.Count(), position, bpm, LINEAR, 0, false);
+					tempoMap.CreatePoint(tempoMap.CountPoints(), position, bpm, LINEAR, 0, false);
 				else
 					SKIP(skipped, 1);
 			}
@@ -1319,8 +1292,8 @@ void TempoShapeLinear (COMMAND_T* ct)
 				// Check if value and position is legal, if not, skip
 				if (bpm1>=MIN_BPM && bpm1<=MAX_BPM && bpm2>=MIN_BPM && bpm2<=MAX_BPM && (position1-t0)>=MIN_TEMPO_DIST && (position2-position1)>=MIN_TEMPO_DIST && (t1-position2)>=MIN_TEMPO_DIST)
 				{
-					tempoMap.CreatePoint(tempoMap.Count(), position1, bpm1, LINEAR, 0, false);
-					tempoMap.CreatePoint(tempoMap.Count(), position2, bpm2, LINEAR, 0, false);
+					tempoMap.CreatePoint(tempoMap.CountPoints(), position1, bpm1, LINEAR, 0, false);
+					tempoMap.CreatePoint(tempoMap.CountPoints(), position2, bpm2, LINEAR, 0, false);
 				}
 				else
 					SKIP(skipped, 1);
@@ -1333,16 +1306,16 @@ void TempoShapeLinear (COMMAND_T* ct)
 
 	// Commit changes
 	if (tempoMap.Commit())
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 
 	// Warn user if some points weren't processed
 	static bool s_warnUser = true;
-	if (s_warnUser && skipped != 0)
+	if (s_warnUser && skipped != 0 && !tempoMap.IsLocked()) // won't warn if locked
 	{
 		char buffer[512];
 		_snprintfSafe(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
-		int userAnswer = ShowMessageBox(buffer, __LOCALIZE("SWS - Warning", "sws_mbox"), 4);
-		if (userAnswer == 7)
+		int userAnswer = MessageBox(g_hwndParent, buffer, __LOCALIZE("SWS/BR - Warning", "sws_mbox"), MB_YESNO);
+		if (userAnswer == IDNO)
 			s_warnUser = false;
 	}
 }
@@ -1360,7 +1333,7 @@ void TempoShapeSquare (COMMAND_T* ct)
 
 	// Loop through selected points and perform BPM calculations
 	int skipped = 0;
-	int count = tempoMap.Count()-1;
+	int count = tempoMap.CountPoints()-1;
 	for (int i = 0; i < tempoMap.CountSelected(); ++i)
 	{
 		int id = tempoMap.GetSelected(i);
@@ -1409,7 +1382,7 @@ void TempoShapeSquare (COMMAND_T* ct)
 			if (!split)
 			{
 				if (bpm<= MAX_BPM && bpm>=MIN_BPM && (position-t0)>=MIN_TEMPO_DIST && (t1-position)>=MIN_TEMPO_DIST)
-					tempoMap.CreatePoint(tempoMap.Count(), position, bpm, LINEAR, 0, false);
+					tempoMap.CreatePoint(tempoMap.CountPoints(), position, bpm, LINEAR, 0, false);
 				else
 					SKIP(skipped, 1);
 			}
@@ -1422,8 +1395,8 @@ void TempoShapeSquare (COMMAND_T* ct)
 
 				if (bpm1>=MIN_BPM && bpm1<=MAX_BPM && bpm2>=MIN_BPM && bpm2<=MAX_BPM && (position1-t0)>=MIN_TEMPO_DIST && (position2-position1)>=MIN_TEMPO_DIST && (t1-position2)>=MIN_TEMPO_DIST)
 				{
-					tempoMap.CreatePoint(tempoMap.Count(), position1, bpm1, LINEAR, 0, false);
-					tempoMap.CreatePoint(tempoMap.Count(), position2, bpm2, LINEAR, 0, false);
+					tempoMap.CreatePoint(tempoMap.CountPoints(), position1, bpm1, LINEAR, 0, false);
+					tempoMap.CreatePoint(tempoMap.CountPoints(), position2, bpm2, LINEAR, 0, false);
 				}
 				else
 					SKIP(skipped, 1);
@@ -1436,117 +1409,96 @@ void TempoShapeSquare (COMMAND_T* ct)
 
 	// Commit changes
 	if (tempoMap.Commit())
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 
 	// Warn user if some points weren't processed
 	static bool s_warnUser = true;
-	if (s_warnUser && skipped != 0)
+	if (s_warnUser && skipped != 0 && !tempoMap.IsLocked()) // won't warn if locked
 	{
 		char buffer[512];
 		_snprintfSafe(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
-		int userAnswer = ShowMessageBox(buffer, __LOCALIZE("SWS - Warning", "sws_mbox"), 4);
-		if (userAnswer == 7)
+		int userAnswer = MessageBox(g_hwndParent, buffer, __LOCALIZE("SWS/BR - Warning", "sws_mbox"), MB_YESNO);
+		if (userAnswer == IDNO)
 			s_warnUser = false;
 	}
+}
+
+void OpenTempoWiki (COMMAND_T*)
+{
+	ShellExecute(NULL, "open", "http://wiki.cockos.com/wiki/index.php/Tempo_manipulation_with_SWS", NULL, NULL, SW_SHOWNORMAL);
 }
 
 /******************************************************************************
 * Dialogs                                                                     *
 ******************************************************************************/
-void ConvertMarkersToTempoDialog (COMMAND_T* = NULL)
+void ConvertMarkersToTempoDialog (COMMAND_T* ct)
 {
-	static HWND hwnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_BR_MARKERS_TO_TEMPO), g_hwndParent, ConvertMarkersToTempoProc);
-
-	if (g_convertMarkersToTempoDialog)
-	{
-		KillTimer(hwnd, 1);
-		ShowWindow(hwnd, SW_HIDE);
-		g_convertMarkersToTempoDialog = false;
-	}
-
-	else
+	if (!g_convertMarkersToTempoWnd)
 	{
 		// Detect timebase
 		bool cancel = false;
 		int timebase; GetConfig("itemtimelock", timebase);
 		if (timebase)
 		{
-			int answer = MessageBox(g_hwndParent, __LOCALIZE("Project timebase is not set to time. Do you want to set it now?","sws_DLG_166"), __LOCALIZE("SWS - Warning","sws_mbox"), MB_YESNOCANCEL);
-			if (answer == 6)
-				SetConfig("itemtimelock", 0);
-			if (answer == 2)
-				cancel = true;
+			int answer = MessageBox(g_hwndParent, __LOCALIZE("Project timebase is not set to time. Do you want to set it now?","sws_DLG_166"), __LOCALIZE("SWS/BR - Warning", "sws_mbox"), MB_YESNOCANCEL);
+			if      (answer == 6) SetConfig("itemtimelock", 0);
+			else if (answer == 2) cancel = true;
 		}
 
 		if (!cancel)
-		{
-			SetTimer(hwnd, 1, 100, NULL);
-			ShowWindow(hwnd, SW_SHOW);
-			SetFocus(hwnd);
-			g_convertMarkersToTempoDialog = true;
-		}
-	}
-	RefreshToolbar(SWSGetCommandID(ConvertMarkersToTempoDialog));
-}
-
-void SelectAdjustTempoDialog (COMMAND_T* = NULL)
-{
-	static HWND hwnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_BR_SELECT_ADJUST_TEMPO), g_hwndParent, SelectAdjustTempoProc);
-
-	if (g_selectAdjustTempoDialog)
-	{
-		KillTimer(hwnd, 1);
-		UnselectNthDialog(false, hwnd); // hide child dialog
-		ShowWindow(hwnd, SW_HIDE);
-		g_selectAdjustTempoDialog = false;
+			g_convertMarkersToTempoWnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_BR_MARKERS_TO_TEMPO), g_hwndParent, ConvertMarkersToTempoProc);
 	}
 	else
 	{
-		SetTimer(hwnd, 1, 500, NULL);
-		ShowWindow(hwnd, SW_SHOW);
-		SetFocus(hwnd);
-		g_selectAdjustTempoDialog = true;
+		DestroyWindow(g_convertMarkersToTempoWnd);
+		g_convertMarkersToTempoWnd = NULL;
 	}
-	RefreshToolbar(SWSGetCommandID(SelectAdjustTempoDialog));
+
+
+	RefreshToolbar(NamedCommandLookup("_SWS_BRCONVERTMARKERSTOTEMPO"));
 }
 
-void RandomizeTempoDialog (COMMAND_T* = NULL)
+void SelectAdjustTempoDialog (COMMAND_T* ct)
+{
+	if (!g_selectAdjustTempoWnd)
+		g_selectAdjustTempoWnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_BR_SELECT_ADJUST_TEMPO), g_hwndParent, SelectAdjustTempoProc);
+	else
+	{
+		DestroyWindow(g_selectAdjustTempoWnd);
+		g_selectAdjustTempoWnd = NULL;
+	}
+
+	RefreshToolbar(NamedCommandLookup("_SWS_BRADJUSTSELTEMPO"));
+}
+
+void RandomizeTempoDialog (COMMAND_T* ct)
 {
 	DialogBox(g_hInst, MAKEINTRESOURCE(IDD_BR_RANDOMIZE_TEMPO), g_hwndParent, RandomizeTempoProc);
 }
 
-void TempoShapeOptionsDialog (COMMAND_T* = NULL)
+void TempoShapeOptionsDialog (COMMAND_T* ct)
 {
-	static HWND hwnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_BR_TEMPO_SHAPE_OPTIONS), g_hwndParent, TempoShapeOptionsProc);
-
-	if (g_tempoShapeDialog)
-	{
-		ShowWindow(hwnd, SW_HIDE);
-		g_tempoShapeDialog = false;
-	}
+	if (!g_tempoShapeWnd)
+		g_tempoShapeWnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_BR_TEMPO_SHAPE_OPTIONS), g_hwndParent, TempoShapeOptionsProc);
 	else
 	{
-		ShowWindow(hwnd, SW_SHOW);
-		SetFocus(hwnd);
-		g_tempoShapeDialog = true;
+		DestroyWindow(g_tempoShapeWnd);
+		g_tempoShapeWnd = NULL;
 	}
-	RefreshToolbar(SWSGetCommandID(TempoShapeOptionsDialog));
+	RefreshToolbar(NamedCommandLookup("_BR_TEMPO_SHAPE_OPTIONS"));
 }
 
-/******************************************************************************
-* Toggle states                                                               *
-******************************************************************************/
-int IsConvertMarkersToTempoVisible (COMMAND_T* = NULL)
+int IsConvertMarkersToTempoVisible (COMMAND_T* ct)
 {
-	return g_convertMarkersToTempoDialog;
+	return !!g_convertMarkersToTempoWnd;
 }
 
-int IsSelectAdjustTempoVisible (COMMAND_T* = NULL)
+int IsSelectAdjustTempoVisible (COMMAND_T* ct)
 {
-	return g_selectAdjustTempoDialog;
+	return !!g_selectAdjustTempoWnd;
 }
 
-int IsTempoShapeOptionsVisible (COMMAND_T* = NULL)
+int IsTempoShapeOptionsVisible (COMMAND_T* ct)
 {
-	return g_tempoShapeDialog;
+	return !!g_tempoShapeWnd;
 }

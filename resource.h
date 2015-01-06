@@ -79,11 +79,16 @@
 #define IDD_BR_RANDOMIZE_TEMPO          171
 #define IDD_BR_VERSION                  172
 #define IDD_PROMPT_OPTION               173
-#define IDD_BR_ANALYZE_LOUDNESS         174
-#define IDD_BR_NORMALIZE_LOUDNESS       175
-#define IDD_BR_NORMALIZE_LOUDNESS_USER  176
-#define IDD_BR_GRAPH_LOUDNESS           177
+#define IDD_BR_LOUDNESS_ANALYZER        174
+#define IDD_BR_LOUDNESS_ANALYZER_NORM   175
+#define IDD_BR_LOUDNESS_NORM_PROGRESS   176
+#define IDD_BR_LOUDNESS_NORMALIZE       177
 #define IDD_BR_TOOLTIP                  178
+#define IDD_BR_LOUDNESS_PREF            179
+#define IDD_BR_LOUDNESS_EXPORT_FORMAT   180
+#define IDD_BR_CONTEXTUAL_TOOLBARS      181
+#define IDD_BR_CONTEXTUAL_TOOLBARS_POS  182
+#define IDD_BR_ADJUST_PLAYRATE          183
 #define IDB_UP                          500
 #define IDB_DOWN                        501
 #define IDC_BUTTON1                     1000
@@ -396,14 +401,63 @@
 #define IDC_CANCEL                      1306
 #define IDC_MIN                         1307
 #define IDC_MAX                         1308
+#define IDC_PROJ_LU                     1309
+#define IDC_GLOBAL_LU                   1310
+#define IDC_ENB_PROJ_LU                 1311
+#define IDC_LU_FORMAT                   1312
+#define IDC_TARGET                      1313
+#define IDC_ENB_PROJ_GRAPH              1314
+#define IDC_UNIT                        1315
+#define IDC_VALUE                       1316
+#define IDC_MIN_PROJ                    1317
+#define IDC_MAX_PROJ                    1318
+#define IDC_WILDCARDS                   1319
+#define IDC_FORMAT                      1320
+#define IDC_FORMAT_STATIC               1321
+#define IDC_PREVIEW_STATIC              1322
+#define IDC_PRESET                      1323
+#define IDC_ALL_BOX                     1324
+#define IDC_ALL_FOCUS                   1325
+#define IDC_ALL_FOCUS_COMBO             1326
+#define IDC_ALL_TOPMOST                 1327
+#define IDC_TCP_BOX                     1328
+#define IDC_TCP_TRACK                   1329
+#define IDC_TCP_TRACK_COMBO             1330
+#define IDC_TCP_ENV                     1331
+#define IDC_TCP_ENV_COMBO               1332
+#define IDC_MCP_BOX                     1333
+#define IDC_MCP_TRACK                   1334
+#define IDC_MCP_TRACK_COMBO             1335
+#define IDC_ARG_BOX                     1336
+#define IDC_ARG_TRACK                   1337
+#define IDC_ARG_TRACK_COMBO             1338
+#define IDC_ARG_ITEM                    1339
+#define IDC_ARG_ITEM_COMBO              1340
+#define IDC_ARG_TRACK_ENV               1341
+#define IDC_ARG_TRACK_ENV_COMBO         1342
+#define IDC_ARG_TAKE_ENV                1343
+#define IDC_ARG_TAKE_ENV_COMBO          1344
+#define IDC_ARG_TAKE_ACTIVATE           1345
+#define IDC_MIDI_BOX                    1346
+#define IDC_MIDI_CC_LANE_CLICKED        1347
+#define IDC_INLINE_BOX                  1348
+#define IDC_INLINE_ITEM                 1349
+#define IDC_INLINE_ITEM_COMBO           1350
+#define IDC_INLINE_CC_LANE_CLICKED      1351
+#define IDC_HELP_WIKI                   1352
+#define IDC_ARG_STRETCH                 1353
+#define IDC_ARG_STRETCH_COMBO           1354
+#define IDC_ALL_POS                     1355
+#define IDC_ALL_POS_H_COMBO             1356
+#define IDC_ALL_POS_V_COMBO             1357
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        179
+#define _APS_NEXT_RESOURCE_VALUE        184
 #define _APS_NEXT_COMMAND_VALUE         40000
-#define _APS_NEXT_CONTROL_VALUE         1309
+#define _APS_NEXT_CONTROL_VALUE         1358
 #define _APS_NEXT_SYMED_VALUE           100
 #endif
 #endif

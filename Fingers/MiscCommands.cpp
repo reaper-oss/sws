@@ -76,7 +76,8 @@ static void SelectMutedMidiNotes(int flag, void *data)
 
 static void SelectMutedMidiNotes(COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
-	SelectMutedMidiNotes(0, &ct->user);
+	SelectMutedMidiNotes(UNDO_STATE_ITEMS, &ct->user);
+	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 }
 
 static void SelectAllNearestEditCursor(int flag, void *data)
@@ -110,7 +111,7 @@ static void SelectAllNearestEditCursor(int flag, void *data)
 
 static void SelectAllNearestEditCursor(COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
-	SelectAllNearestEditCursor(0, &ct->user);
+	SelectAllNearestEditCursor(UNDO_STATE_ITEMS, &ct->user);
 	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 }
 static bool sortMidiPositions(const RprMidiNote *lhs, const RprMidiNote *rhs)

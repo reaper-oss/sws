@@ -550,7 +550,7 @@
     <ClInclude Include="Breeder\BR_Envelope.h">
       <Filter>Breeder</Filter>
     </ClInclude>
-    <ClInclude Include="Breeder\BR_EnvTools.h">
+    <ClInclude Include="Breeder\BR_EnvelopeUtil.h">
       <Filter>Breeder</Filter>
     </ClInclude>
     <ClInclude Include="Breeder\BR_Loudness.h">
@@ -559,7 +559,7 @@
     <ClInclude Include="Breeder\BR_MidiEditor.h">
       <Filter>Breeder</Filter>
     </ClInclude>
-    <ClInclude Include="Breeder\BR_MidiTools.h">
+    <ClInclude Include="Breeder\BR_MidiUtil.h">
       <Filter>Breeder</Filter>
     </ClInclude>
     <ClInclude Include="Breeder\BR_Misc.h">
@@ -596,6 +596,15 @@
       <Filter>Wol</Filter>
     </ClInclude>
     <ClInclude Include="Breeder\BR_ContinuousActions.h">
+      <Filter>Breeder</Filter>
+    </ClInclude>
+    <ClInclude Include="Wol\wol_Util.h">
+      <Filter>Wol</Filter>
+    </ClInclude>
+    <ClInclude Include="Breeder\BR_MouseUtil.h">
+      <Filter>Breeder</Filter>
+    </ClInclude>
+    <ClInclude Include="Breeder\BR_ContextualToolbars.h">
       <Filter>Breeder</Filter>
     </ClInclude>
   </ItemGroup>
@@ -1055,9 +1064,6 @@
     <ClCompile Include="Utility\Base64.cpp">
       <Filter>Core\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="libebur128\ebur128.c">
-      <Filter>Core\Utils\libebur128</Filter>
-    </ClCompile>
     <ClCompile Include="ObjectState\ObjectState.cpp">
       <Filter>Core\Chunk Processing</Filter>
     </ClCompile>
@@ -1154,7 +1160,7 @@
     <ClCompile Include="Breeder\BR_Envelope.cpp">
       <Filter>Breeder</Filter>
     </ClCompile>
-    <ClCompile Include="Breeder\BR_EnvTools.cpp">
+    <ClCompile Include="Breeder\BR_EnvelopeUtil.cpp">
       <Filter>Breeder</Filter>
     </ClCompile>
     <ClCompile Include="Breeder\BR_Loudness.cpp">
@@ -1163,7 +1169,7 @@
     <ClCompile Include="Breeder\BR_MidiEditor.cpp">
       <Filter>Breeder</Filter>
     </ClCompile>
-    <ClCompile Include="Breeder\BR_MidiTools.cpp">
+    <ClCompile Include="Breeder\BR_MidiUtil.cpp">
       <Filter>Breeder</Filter>
     </ClCompile>
     <ClCompile Include="Breeder\BR_Misc.cpp">
@@ -1197,6 +1203,18 @@
       <Filter>Wol</Filter>
     </ClCompile>
     <ClCompile Include="Breeder\BR_ContinuousActions.cpp">
+      <Filter>Breeder</Filter>
+    </ClCompile>
+    <ClCompile Include="libebur128\ebur128.cpp">
+      <Filter>Core\Utils\libebur128</Filter>
+    </ClCompile>
+    <ClCompile Include="Wol\wol_Util.cpp">
+      <Filter>Wol</Filter>
+    </ClCompile>
+    <ClCompile Include="Breeder\BR_MouseUtil.cpp">
+      <Filter>Breeder</Filter>
+    </ClCompile>
+    <ClCompile Include="Breeder\BR_ContextualToolbars.cpp">
       <Filter>Breeder</Filter>
     </ClCompile>
   </ItemGroup>

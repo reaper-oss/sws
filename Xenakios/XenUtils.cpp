@@ -203,7 +203,7 @@ bool BrowseForSaveFile(const char *text, const char *initialdir, const char *ini
 		return false;	
 }
 
-static int CALLBACK WINAPI BrowseForDirectoryCallbackProc( HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
+static int CALLBACK BrowseForDirectoryCallbackProc( HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
 {
 	switch (uMsg)
 	{

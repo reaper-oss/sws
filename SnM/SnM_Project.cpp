@@ -124,8 +124,6 @@ bool InsertSilence(const char* _undoTitle, double _pos, double _len)
 
 		PreventUIRefresh(-1);
 
-		UpdateTimeline(); // ruler + arrange
-
 		if (_undoTitle)
 			Undo_EndBlock2(NULL, _undoTitle, UNDO_STATE_ALL);
 		return true;

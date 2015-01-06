@@ -1,2 +1,2 @@
-#define SWS_VERSION 2,5,0,1
-#define SWS_VERSION_STR "2, 5, 0, 1\0"
+#define SWS_VERSION 2,6,0,0
+#define SWS_VERSION_STR "2, 6, 0, 0\0"

@@ -55,7 +55,8 @@
 #define NOTES_INI_SEC				"Notes"
 #define MAX_HELP_LENGTH				(64*1024) //JFB! instead of MAX_INI_SECTION (too large)
 #define SET_ACTION_HELP_FILE_MSG	0xF001
-#define UPDATE_TIMER				1
+#define WRAP_MSG                  0xF002
+#define UPDATE_TIMER              1
 
 enum {
   BTNID_LOCK=2000, //JFB would be great to have _APS_NEXT_CONTROL_VALUE *always* defined
@@ -88,6 +89,7 @@ char g_lastImportSubFn[SNM_MAX_PATH] = "";
 char g_lastExportSubFn[SNM_MAX_PATH] = "";
 char g_actionHelpFn[SNM_MAX_PATH] = "";
 char g_notesBigFontName[64] = SNM_DYN_FONT_NAME;
+bool g_wrapText=false;
 
 // used for action help updates tracking
 //JFB TODO: cleanup when we'll be able to access all sections & custom ids
@@ -127,6 +129,8 @@ NotesWnd::~NotesWnd()
 
 void NotesWnd::OnInitDlg()
 {
+  SWS_ShowTextScrollbar(GetDlgItem(m_hwnd, IDC_EDIT), !g_wrapText);
+  
 	m_resize.init_item(IDC_EDIT, 0.0, 0.0, 1.0, 1.0);
 	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_EDIT), GWLP_USERDATA, 0xdeadf00b);
 
@@ -264,6 +268,13 @@ void NotesWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case SET_ACTION_HELP_FILE_MSG:
 			SetActionHelpFilename(NULL);
 			break;
+		case WRAP_MSG:
+    {
+      g_wrapText = !g_wrapText;
+      SWS_ShowTextScrollbar(GetDlgItem(m_hwnd, IDC_EDIT), !g_wrapText);
+      SendMessage(m_hwnd, WM_SIZE, 0xf00b, 0);
+			break;
+    }
 		case BTNID_LOCK:
 			if (!HIWORD(wParam))
 				ToggleLock();
@@ -309,13 +320,13 @@ bool NotesWnd::IsActive(bool bWantEdit) {
 
 HMENU NotesWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 {
+  HMENU hMenu = CreatePopupMenu();
+  AddToMenu(hMenu, __LOCALIZE("Wrap text","sws_DLG_152"), WRAP_MSG, -1, false, g_wrapText ? MFS_CHECKED : MFS_UNCHECKED);
 	if (g_notesType == SNM_NOTES_ACTION_HELP)
 	{
-		HMENU hMenu = CreatePopupMenu();
 		AddToMenu(hMenu, __LOCALIZE("Set action help file...","sws_DLG_152"), SET_ACTION_HELP_FILE_MSG);
-		return hMenu;
 	}
-	return NULL;
+  return hMenu;
 }
 
 // OSX fix/workaround (SWELL bug?)
@@ -482,17 +493,17 @@ void NotesWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeig
 
 				case SNM_NOTES_MKR_NAME:
 				case SNM_NOTES_MKR_SUB:
-					if (g_lastMarkerRegionId <= 0 || !EnumMarkerRegionDescById(NULL, g_lastMarkerRegionId, str, sizeof(str), SNM_MARKER_MASK, true, g_notesType==SNM_NOTES_MKR_SUB, true) || !*str)
+					if (g_lastMarkerRegionId <= 0 || EnumMarkerRegionDescById(NULL, g_lastMarkerRegionId, str, sizeof(str), SNM_MARKER_MASK, true, g_notesType==SNM_NOTES_MKR_SUB, true)<0 || !*str)
 						lstrcpyn(str, __LOCALIZE("No marker at play/edit cursor!","sws_DLG_152"), sizeof(str));
 					break;
 				case SNM_NOTES_RGN_NAME:
 				case SNM_NOTES_RGN_SUB:
-					if (g_lastMarkerRegionId <= 0 || !EnumMarkerRegionDescById(NULL, g_lastMarkerRegionId, str, sizeof(str), SNM_REGION_MASK, true, g_notesType==SNM_NOTES_RGN_SUB, true) || !*str)
+					if (g_lastMarkerRegionId <= 0 || EnumMarkerRegionDescById(NULL, g_lastMarkerRegionId, str, sizeof(str), SNM_REGION_MASK, true, g_notesType==SNM_NOTES_RGN_SUB, true)<0 || !*str)
 						lstrcpyn(str, __LOCALIZE("No region at play/edit cursor!","sws_DLG_152"), sizeof(str));
 					break;
 				case SNM_NOTES_MKRRGN_NAME:
 				case SNM_NOTES_MKRRGN_SUB:
-					if (g_lastMarkerRegionId <= 0 || !EnumMarkerRegionDescById(NULL, g_lastMarkerRegionId, str, sizeof(str), SNM_MARKER_MASK|SNM_REGION_MASK, true, g_notesType==SNM_NOTES_MKRRGN_SUB, true) || !*str)
+					if (g_lastMarkerRegionId <= 0 || EnumMarkerRegionDescById(NULL, g_lastMarkerRegionId, str, sizeof(str), SNM_MARKER_MASK|SNM_REGION_MASK, true, g_notesType==SNM_NOTES_MKRRGN_SUB, true)<0 || !*str)
 						lstrcpyn(str, __LOCALIZE("No marker or region at play/edit cursor!","sws_DLG_152"), sizeof(str));
 					break;
 
@@ -665,7 +676,7 @@ void NotesWnd::SaveCurrentMkrRgnNameOrSub(int _type, bool _wantUndo)
 		if (_type>=SNM_NOTES_MKR_NAME && _type<=SNM_NOTES_MKRRGN_NAME)
 		{
 			double pos, end; int num, color; bool isRgn;
-			if (EnumMarkerRegionById(NULL, g_lastMarkerRegionId, &isRgn, &pos, &end, NULL, &num, &color))
+			if (EnumMarkerRegionById(NULL, g_lastMarkerRegionId, &isRgn, &pos, &end, NULL, &num, &color)>=0)
 			{
 				ShortenStringToFirstRN(g_lastText);
 
@@ -1030,12 +1041,14 @@ bool GetStringFromNotesChunk(WDL_FastString* _notesIn, char* _bufOut, int _bufOu
 		int j=0;
 		while (pNotes[i] && j < _bufOutSz)
 		{
-			if (pNotes[i] != '|' || pNotes[i-1] != '\n') // i is >0 here
-				_bufOut[j++] = pNotes[i];
+			if (pNotes[i] != '\r' && pNotes[i] != '\n')
+			{
+        _bufOut[j++] = (pNotes[i]=='|'&&pNotes[i-1]=='\n' ? '\n' : pNotes[i]); // i is >0 here
+			}
 			i++;
 		}
-		if (j>=3 && !strcmp(_bufOut+j-3, "\n>\n")) // remove trailing "\n>\n"
-			_bufOut[j-3] = '\0'; 
+		if (j>=1 && !strcmp(_bufOut+j-1, ">")) // remove trailing ">", if any
+			_bufOut[j-1] = '\0';
 	}
 	return true;
 }
@@ -1124,17 +1137,22 @@ bool ImportSubRipFile(const char* _fn)
 
 					WDL_FastString notes;
 					while (fgets(buf, sizeof(buf), f) && *buf) {
-						if (buf[0] == '\n') break;
+						if (*buf == '\r' || *buf == '\n') break;
 						notes.Append(buf);
 					}
+          
+					WDL_String name(notes.Get());
+					char *p=name.Get();
+					while (*p) {
+						if (*p == '\r' || *p == '\n') *p=' ';
+						p++;
+					}
+					name.Ellipsize(0, 64); // 64 = native max mkr/rgn name length
 
-					if (_snprintfStrict(buf, sizeof(buf), "Subtitle #%d", num) <= 0)
-						*buf = '\0';
-
-					num = AddProjectMarker(NULL, true, 
+					num = AddProjectMarker(NULL, true,
 						p1[0]*3600 + p1[1]*60 + p1[2] + double(p1[3])/1000, 
 						p2[0]*3600 + p2[1]*60 + p2[2] + double(p2[3])/1000, 
-						buf, num);
+						name.Get(), num);
 
 					if (num >= 0)
 					{
@@ -1406,6 +1424,7 @@ int NotesInit()
 	g_notesType = GetPrivateProfileInt(NOTES_INI_SEC, "Type", 0, g_SNM_IniFn.Get());
 	g_locked = (GetPrivateProfileInt(NOTES_INI_SEC, "Lock", 0, g_SNM_IniFn.Get()) == 1);
 	GetPrivateProfileString(NOTES_INI_SEC, "BigFontName", SNM_DYN_FONT_NAME, g_notesBigFontName, sizeof(g_notesBigFontName), g_SNM_IniFn.Get());
+  g_wrapText=(GetPrivateProfileInt(NOTES_INI_SEC, "WrapText", 0, g_SNM_IniFn.Get()) == 1);
 
 	// get the action help filename
 	char defaultHelpFn[SNM_MAX_PATH] = "";
@@ -1429,6 +1448,7 @@ void NotesExit()
 		WritePrivateProfileString(NOTES_INI_SEC, "Type", tmp, g_SNM_IniFn.Get()); 
 	WritePrivateProfileString(NOTES_INI_SEC, "Lock", g_locked?"1":"0", g_SNM_IniFn.Get()); 
 	WritePrivateProfileString(NOTES_INI_SEC, "BigFontName", g_notesBigFontName, g_SNM_IniFn.Get());
+	WritePrivateProfileString(NOTES_INI_SEC, "WrapText", g_wrapText?"1":"0", g_SNM_IniFn.Get());
 
 	// save the action help filename
 	WDL_FastString escapedStr;

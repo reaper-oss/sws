@@ -157,14 +157,14 @@ int RegionPlaylist::IsInPlaylist(double _pos, bool _repeat, int _startWith)
 	double rgnpos, rgnend;
 	for (int i=_startWith; i<GetSize(); i++)
 		if (RgnPlaylistItem* plItem = Get(i))
-			if (plItem->m_rgnId>0 && plItem->m_cnt!=0 && EnumMarkerRegionById(NULL, plItem->m_rgnId, NULL, &rgnpos, &rgnend, NULL, NULL, NULL))
+			if (plItem->m_rgnId>0 && plItem->m_cnt!=0 && EnumMarkerRegionById(NULL, plItem->m_rgnId, NULL, &rgnpos, &rgnend, NULL, NULL, NULL)>=0)
 				if (_pos >= rgnpos && _pos <= rgnend)
 					return i;
 	// 2nd try
 	if (_repeat)
 		for (int i=0; i<_startWith; i++)
 			if (RgnPlaylistItem* plItem = Get(i))
-				if (plItem->m_rgnId>0 && plItem->m_cnt!=0 && EnumMarkerRegionById(NULL, plItem->m_rgnId, NULL, &rgnpos, &rgnend, NULL, NULL, NULL))
+				if (plItem->m_rgnId>0 && plItem->m_cnt!=0 && EnumMarkerRegionById(NULL, plItem->m_rgnId, NULL, &rgnpos, &rgnend, NULL, NULL, NULL)>=0)
 					if (_pos >= rgnpos && _pos <= rgnend)
 						return i;
 	return -1;
@@ -175,7 +175,7 @@ int RegionPlaylist::IsInfinite()
 	int num;
 	for (int i=0; i<GetSize(); i++)
 		if (RgnPlaylistItem* plItem = Get(i))
-			if (plItem->m_rgnId>0 && plItem->m_cnt<0 && EnumMarkerRegionById(NULL, plItem->m_rgnId, NULL, NULL, NULL, NULL, &num, NULL))
+			if (plItem->m_rgnId>0 && plItem->m_cnt<0 && EnumMarkerRegionById(NULL, plItem->m_rgnId, NULL, NULL, NULL, NULL, &num, NULL)>=0)
 				return num;
 	return -1;
 }
@@ -190,7 +190,7 @@ double RegionPlaylist::GetLength()
 		double rgnpos, rgnend;
 		if (RgnPlaylistItem* plItem = Get(i))
 		{
-			if (plItem->m_rgnId>0 && plItem->m_cnt!=0 && EnumMarkerRegionById(NULL, plItem->m_rgnId, NULL, &rgnpos, &rgnend, NULL, NULL, NULL)) {
+			if (plItem->m_rgnId>0 && plItem->m_cnt!=0 && EnumMarkerRegionById(NULL, plItem->m_rgnId, NULL, &rgnpos, &rgnend, NULL, NULL, NULL)>=0) {
 				infinite |= plItem->m_cnt<0;
 				length += ((rgnend-rgnpos) * abs(plItem->m_cnt));
 			}
@@ -208,7 +208,7 @@ int RegionPlaylist::GetNestedMarkerRegion()
 		{
 			double rgnpos, rgnend;
 			int num, rgnidx = EnumMarkerRegionById(NULL, plItem->m_rgnId, NULL, &rgnpos, &rgnend, NULL, &num, NULL);
-			if (rgnidx>0)
+			if (rgnidx>=0)
 			{
 				int x=0, lastx=0; double dPos, dEnd; bool isRgn;
 				while (x = EnumProjectMarkers2(NULL, x, &isRgn, &dPos, &dEnd, NULL, NULL))
@@ -240,7 +240,7 @@ int RegionPlaylist::GetGreaterMarkerRegion(double _pos)
 		if (RgnPlaylistItem* plItem = Get(i))
 		{
 			double rgnpos; int num;
-			if (EnumMarkerRegionById(NULL, plItem->m_rgnId, NULL, &rgnpos, NULL, NULL, &num, NULL) && rgnpos>_pos)
+			if (EnumMarkerRegionById(NULL, plItem->m_rgnId, NULL, &rgnpos, NULL, NULL, &num, NULL)>=0 && rgnpos>_pos)
 				return num;
 		}
 	return -1;
@@ -316,7 +316,7 @@ void RegionPlaylistView::GetItemText(SWS_ListItem* item, int iCol, char* str, in
 				break;
 			}
 			case COL_RGN_NAME:
-				if (!EnumMarkerRegionDescById(NULL, pItem->m_rgnId, str, iStrMax, SNM_REGION_MASK, false, true, false) /* && *str */)
+				if (EnumMarkerRegionDescById(NULL, pItem->m_rgnId, str, iStrMax, SNM_REGION_MASK, false, true, false)<0 /* && *str */)
 					lstrcpyn(str, __LOCALIZE("Unknown region","sws_DLG_165"), iStrMax);
 				break;
 			case COL_RGN_COUNT:
@@ -327,19 +327,19 @@ void RegionPlaylistView::GetItemText(SWS_ListItem* item, int iCol, char* str, in
 				break;
 			case COL_RGN_START: {
 				double pos;
-				if (EnumMarkerRegionById(NULL, pItem->m_rgnId, NULL, &pos, NULL, NULL, NULL, NULL))
+				if (EnumMarkerRegionById(NULL, pItem->m_rgnId, NULL, &pos, NULL, NULL, NULL, NULL)>=0)
 					format_timestr_pos(pos, str, iStrMax, -1);
 				break;
 			}
 			case COL_RGN_END: {
 				double end;
-				if (EnumMarkerRegionById(NULL, pItem->m_rgnId, NULL, NULL, &end, NULL, NULL, NULL))
+				if (EnumMarkerRegionById(NULL, pItem->m_rgnId, NULL, NULL, &end, NULL, NULL, NULL)>=0)
 					format_timestr_pos(end, str, iStrMax, -1);
 				break;
 			}
 			case COL_RGN_LEN: {
 				double pos, end;
-				if (EnumMarkerRegionById(NULL, pItem->m_rgnId, NULL, &pos, &end, NULL, NULL, NULL))
+				if (EnumMarkerRegionById(NULL, pItem->m_rgnId, NULL, &pos, &end, NULL, NULL, NULL)>=0)
 					format_timestr_len(end-pos, str, iStrMax, pos, -1);
 				break;
 			}
@@ -375,7 +375,7 @@ void RegionPlaylistView::SetItemText(SWS_ListItem* item, int iCol, const char* s
 			case COL_RGN_NAME:
 			{
 				bool isrgn; double pos, end; int num, col;
-				if (str && *str && EnumMarkerRegionById(NULL, pItem->m_rgnId, &isrgn, &pos, &end, NULL, &num, &col))
+				if (str && *str && EnumMarkerRegionById(NULL, pItem->m_rgnId, &isrgn, &pos, &end, NULL, &num, &col)>=0)
 					SNM_SetProjectMarker(NULL, num, isrgn, pos, end, str, col ? col | 0x1000000 : 0); // update notified back through PlaylistMarkerRegionListener
 				break;
 			}
@@ -1362,7 +1362,7 @@ bool SeekItem(int _plId, int _nextItemId, int _curItemId)
 		else if (RgnPlaylistItem* next = pl->Get(_nextItemId))
 		{
 			double a, b;
-			if (EnumMarkerRegionById(NULL, next->m_rgnId, NULL, &a, &b, NULL, NULL, NULL))
+			if (EnumMarkerRegionById(NULL, next->m_rgnId, NULL, &a, &b, NULL, NULL, NULL)>=0)
 			{
 				g_playNext = _nextItemId;
 				g_playCur = _plId==g_playPlaylist ? g_playCur : _curItemId;
@@ -1796,7 +1796,7 @@ void AppendPasteCropPlaylist(RegionPlaylist* _playlist, int _mode)
 		if (RgnPlaylistItem* plItem = _playlist->Get(i))
 		{
 			int rgnnum, rgncol=0; double rgnpos, rgnend; const char* rgnname;
-			if (EnumMarkerRegionById(NULL, plItem->m_rgnId, NULL, &rgnpos, &rgnend, &rgnname, &rgnnum, &rgncol))
+			if (EnumMarkerRegionById(NULL, plItem->m_rgnId, NULL, &rgnpos, &rgnend, &rgnname, &rgnnum, &rgncol)>=0)
 			{
 				WDL_PtrList<void> itemsToKeep;
 				if (GetItemsInInterval(&itemsToKeep, rgnpos, rgnend, false))
@@ -1868,7 +1868,7 @@ void AppendPasteCropPlaylist(RegionPlaylist* _playlist, int _mode)
 		SetEditCurPos2(NULL, endPos, true, false);
 
 		PreventUIRefresh(-1);
-		UpdateTimeline(); // ruler+arrange
+
 		Undo_EndBlock2(NULL, _mode==2 ? __LOCALIZE("Append playlist to project","sws_undo") : __LOCALIZE("Paste playlist at edit cursor","sws_undo"), UNDO_STATE_ALL);
 		return;
 	}
@@ -1909,7 +1909,7 @@ void AppendPasteCropPlaylist(RegionPlaylist* _playlist, int _mode)
 		SetEditCurPos2(NULL, 0.0, true, false);
 
 		PreventUIRefresh(-1);
-		UpdateTimeline();
+
 		Undo_EndBlock2(NULL, __LOCALIZE("Crop project to playlist","sws_undo"), UNDO_STATE_ALL);
 
 		if (RegionPlaylistWnd* w = g_rgnplWndMgr.Get()) {

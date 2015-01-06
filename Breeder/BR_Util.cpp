@@ -27,9 +27,11 @@
 ******************************************************************************/
 #include "stdafx.h"
 #include "BR_Util.h"
-#include "BR_EnvTools.h"
-#include "BR_MidiTools.h"
+#include "BR.h"
+#include "BR_EnvelopeUtil.h"
+#include "BR_MidiUtil.h"
 #include "../reaper/localize.h"
+#include "../SnM/SnM.h"
 #include "../SnM/SnM_Chunk.h"
 #include "../SnM/SnM_Dlg.h"
 #include "../SnM/SnM_Item.h"
@@ -45,35 +47,167 @@ const int TCP_MASTER_GAP             = 5;
 const int ENV_GAP                    = 4;    // bottom gap may seem like 3 when selected, but that
 const int ENV_LINE_WIDTH             = 1;    // first pixel is used to "bold" selected envelope
 
-const int ENV_HIT_POINT              = 5;
-const int ENV_HIT_POINT_LEFT         = 6;    // envelope point doesn't always have middle pixel so hit point is different for one side
-const int ENV_HIT_POINT_DOWN         = 6;    // +1 because lower part is tracked starting 1 pixel below line (so when envelope is active, hit points appear the same)
-
 const int TAKE_MIN_HEIGHT_COUNT      = 10;
 const int TAKE_MIN_HEIGHT_HIGH       = 12;   // min height when take count <= TAKE_MIN_HEIGHT_COUNT
 const int TAKE_MIN_HEIGHT_LOW        = 6;    // min height when take count >  TAKE_MIN_HEIGHT_COUNT
 
-const int MIDI_RULER_H               = 36;
-const int MIDI_LANE_DIVIDER_H        = 9;
-const int MIDI_LANE_TOP_GAP          = 4;
-const int MIDI_BLACK_KEYS_W          = 73;
-
-const int INLINE_MIDI_MIN_H          = 32;
-const int INLINE_MIDI_MIN_NOTEVIEW_H = 24;
-const int INLINE_MIDI_KEYBOARD_W     = 12;
-const int INLINE_MIDI_LANE_DIVIDER_H = 6;
-const int INLINE_MIDI_TOP_BAR_H      = 17;
-
 const int PROJ_CONTEXT_LINE          = 4096; // same length used by ProjectContext
-
-// Not tied to Reaper, purely for readability
-const int MIDI_WND_NOTEVIEW     = 1;
-const int MIDI_WND_KEYBOARD     = 2;
-const int MIDI_WND_UNKNOWN      = 3;
 
 /******************************************************************************
 * Miscellaneous                                                               *
 ******************************************************************************/
+vector<int> GetDigits (int val)
+{
+	int count = (int)(log10((float)val)) + 1;
+
+	vector<int> digits;
+	digits.resize(count);
+
+	for (int i = count-1; i >= 0; --i)
+	{
+		digits[i] = GetLastDigit(val);
+		val /= 10;
+	}
+	return digits;
+}
+
+set<int> GetAllMenuIds (HMENU hMenu)
+{
+	set<int> menuIds;
+
+	int count = GetMenuItemCount(hMenu);
+	for (int i = 0; i < count; ++i)
+	{
+		if (HMENU subMenu = GetSubMenu(hMenu, i))
+		{
+			set<int> subMenuIds = GetAllMenuIds(subMenu);
+			menuIds.insert(subMenuIds.begin(), subMenuIds.end());
+		}
+		else
+		{
+			menuIds.insert(GetMenuItemID(hMenu, i));
+		}
+	}
+
+	return menuIds;
+}
+
+int GetUnusedMenuId (HMENU hMenu)
+{
+	set<int> menuIds = GetAllMenuIds(hMenu);
+	int unusedId = 0;
+
+	if (menuIds.empty())
+	{
+		unusedId = 1;
+	}
+	else
+	{
+		int last = *menuIds.rbegin();
+		if (last < (std::numeric_limits<int>::max)()) // () outside is due to max() macro!
+		{
+			if (last < 0)
+				unusedId = 1;
+			else
+				unusedId = last + 1;
+		}
+		else
+		{
+			for (set<int>::iterator it = menuIds.begin(); it != menuIds.end(); ++it)
+			{
+				if (++it != menuIds.end())
+				{
+					int first = *it;
+					int last  = *(++it);
+
+					bool found = false;
+					if (last > 0 && last - first > 1)
+					{
+						while (first != last)
+						{
+							++first;
+							if (first > 0 && first != last)
+							{
+								unusedId = first;
+								found = true;
+								break;
+							}
+						}
+					}
+					if (found)
+						break;
+				}
+			}
+		}
+	}
+
+	return unusedId;
+}
+
+int RoundToInt (double val)
+{
+	if (val < 0)
+		return (int)(val - 0.5);
+	else
+		return (int)(val + 0.5);
+}
+
+int TruncToInt (double val)
+{
+	return (int)val;
+}
+
+int GetBit (int val, int pos)
+{
+	return (val & 1 << pos) != 0;
+}
+
+int SetBit (int val, int pos, bool set)
+{
+	if (set) return SetBit(val, pos);
+	else     return ClearBit(val, pos);
+}
+
+int SetBit (int val, int pos)
+{
+	return val | 1 << pos;
+}
+
+int ClearBit (int val, int pos)
+{
+	return val & ~(1 << pos);
+}
+
+int ToggleBit (int val, int pos)
+{
+	return val ^= 1 << pos;
+}
+
+int GetFirstDigit (int val)
+{
+	val = abs(val);
+	while (val >= 10)
+		val /= 10;
+	return val;
+}
+
+int GetLastDigit (int val)
+{
+	return abs(val) % 10;
+}
+
+int BinaryToDecimal (const char* binaryString)
+{
+	int base10 = 0;
+	for (size_t i = 0; i < strlen(binaryString); ++i)
+	{
+		int digit = binaryString[i] - '0';
+		if (digit == 0 || digit == 1)
+			base10 = base10 << 1 | digit;
+	}
+	return base10;
+}
+
 bool IsFraction (char* str, double& convertedFraction)
 {
 	int size = strlen(str);
@@ -105,10 +239,20 @@ double AltAtof (char* str)
 	return atof(str);
 }
 
+double Trunc (double val)
+{
+	return (val < 0) ? ceil(val) : floor(val);
+}
+
+double Round (double val)
+{
+	return (double)(int)(val + ((val < 0) ? (-0.5) : (0.5)));
+}
+
 double RoundToN (double val, double n)
 {
 	double shift = pow(10.0, n);
-	return Round(val*shift) / shift;
+	return RoundToInt(val * shift) / shift;
 }
 
 double TranslateRange (double value, double oldMin, double oldMax, double newMin, double newMax)
@@ -139,97 +283,9 @@ void AppendLine (WDL_FastString& str, const char* line)
 	str.Append("\n");
 }
 
-int Round (double val)
-{
-	if (val < 0)
-		return (int)(val - 0.5);
-	else
-		return (int)(val + 0.5);
-}
-
-int GetBit (int val, int pos)
-{
-	return (val & 1 << pos) != 0;
-}
-
-int SetBit (int val, int pos)
-{
-	return val | 1 << pos;
-}
-
-int ToggleBit (int val, int pos)
-{
-	return val ^= 1 << pos;
-}
-
-int ClearBit (int val, int pos)
-{
-	return val & ~(1 << pos);
-}
-
-int GetFirstDigit (int val)
-{
-	val = abs(val);
-	while (val >= 10)
-		val /= 10;
-	return val;
-}
-
-int GetLastDigit (int val)
-{
-	return abs(val) % 10;
-}
-
-vector<int> GetDigits (int val)
-{
-	int count = (int)(log10((float)val)) + 1;
-
-	vector<int> digits;
-	digits.resize(count);
-
-	for (int i = count-1; i >= 0; --i)
-	{
-		digits[i] = GetLastDigit(val);
-		val /= 10;
-	}
-	return digits;
-}
-
-WDL_FastString GetSourceChunk (PCM_source* source)
-{
-	WDL_FastString sourceStr;
-	if (source)
-	{
-		WDL_HeapBuf hb;
-		if (ProjectStateContext* ctx = ProjectCreateMemCtx(&hb))
-		{
-			source->SaveState(ctx);
-
-			sourceStr.AppendFormatted(PROJ_CONTEXT_LINE, "%s%s\n", "<SOURCE ", source->GetType());
-			char line[PROJ_CONTEXT_LINE];
-			while(!ctx->GetLine(line, sizeof(line)))
-				AppendLine(sourceStr, line);
-			sourceStr.Append( ">");
-
-			delete ctx;
-		}
-	}
-	return sourceStr;
-}
-
 /******************************************************************************
 * General                                                                     *
 ******************************************************************************/
-vector<MediaItem*> GetSelItems (MediaTrack* track)
-{
-	vector<MediaItem*> items;
-	int count = CountTrackMediaItems(track);
-	for (int i = 0; i < count ; ++i)
-		if (*(bool*)GetSetMediaItemInfo(GetTrackMediaItem(track, i), "B_UISEL", NULL))
-			items.push_back(GetTrackMediaItem(track, i));
-	return items;
-}
-
 vector<double> GetProjectMarkers (bool timeSel, double delta /*=0*/)
 {
 	double tStart, tEnd;
@@ -267,6 +323,14 @@ vector<double> GetProjectMarkers (bool timeSel, double delta /*=0*/)
 	return markers;
 }
 
+WDL_FastString GetReaperMenuIniPath ()
+{
+	static WDL_FastString s_iniPath;
+	if (s_iniPath.GetLength() == 0)
+		s_iniPath.SetFormatted(SNM_MAX_PATH, "%s/reaper-menu.ini", GetResourcePath());
+	return s_iniPath;
+}
+
 WDL_FastString FormatTime (double position, int mode /*=-1*/)
 {
 	WDL_FastString string;
@@ -291,128 +355,114 @@ WDL_FastString FormatTime (double position, int mode /*=-1*/)
 	return string;
 }
 
-int GetTakeId (MediaItem_Take* take, MediaItem* item /*= NULL*/)
+int GetEffectiveTakeId (MediaItem_Take* take, MediaItem* item, int id, int* effectiveTakeCount)
 {
-	item = (item) ? item : GetMediaItemTake_Item(take);
+	MediaItem*      validItem = (item) ? (item) : (GetMediaItemTake_Item(take));
+	MediaItem_Take* validTake = (take) ? (take) : (GetTake(validItem, id));
 
-	for (int i = 0; i < CountTakes(item); ++i)
+	int count = CountTakes(validItem);
+	int effectiveCount = 0;
+	int effectiveId = -1;
+
+	// Empty takes not displayed
+	int emptyLanes; GetConfig("takelanes", emptyLanes);
+	if (GetBit(emptyLanes, 2))
 	{
-		if (GetTake(item, 0) == take)
-			return i;
+		for (int i = 0; i < count; ++i)
+		{
+			if (MediaItem_Take* currentTake = GetTake(validItem, i))
+			{
+				if (currentTake == validTake)
+					effectiveId = effectiveCount;
+				++effectiveCount;
+			}
+		}
 	}
-	return -1;
-}
-
-double GetClosestGrid (double position)
-{
-	int snap; GetConfig("projshowgrid", snap);
-	SetConfig("projshowgrid", ClearBit(snap, 8));
-
-	double grid = SnapToGrid(NULL, position);
-	SetConfig("projshowgrid", snap);
-	return grid;
-}
-
-double GetClosestMeasureGrid (double position)
-{
-	double gridDiv; GetConfig("projgriddiv", gridDiv);
-
-	double gridLine = 0;
-	if (gridDiv/4 < 1)
-	{
-		SetConfig("projgriddiv", 4);
-		gridLine = GetClosestGrid(position);
-		SetConfig("projgriddiv", gridDiv);
-	}
+	// Empty takes displayed
 	else
 	{
-		gridLine = GetClosestGrid(position);
+		if (take)
+		{
+			for (int i = 0; i < count; ++i)
+			{
+				if (GetTake(validItem, i) == validTake)
+				{
+					effectiveId = i;
+					break;
+				}
+			}
+		}
+		else
+		{
+			effectiveId = id;
+		}
+
+		effectiveCount = count;
 	}
-	return gridLine;
+
+	WritePtr(effectiveTakeCount, effectiveCount);
+	return effectiveId;
 }
 
-double GetClosestLeftSideGrid (double position)
+int GetEffectiveCompactLevel (MediaTrack* track)
 {
-	double grid = GetClosestGrid(position);
-	if (position >= grid)
-		return grid;
-
-	double gridDiv; GetConfig("projgriddiv", gridDiv);
-	int minGridPx; GetConfig("projgridmin", minGridPx);
-	double hZoom = GetHZoomLevel();
-
-	if (gridDiv/4 < 1)
+	int compact = 0;
+	MediaTrack* parent = track;
+	while (parent = (MediaTrack*)GetSetMediaTrackInfo(parent, "P_PARTRACK", NULL))
 	{
-		double beats; int denom;
-		TimeMap2_timeToBeats(NULL, grid, NULL, NULL, &beats, &denom);
-		gridDiv *= (double)denom/4;
-
-		double leftSideGrid  = TimeMap2_beatsToTime(NULL, beats - gridDiv, NULL);
-		while ((grid - leftSideGrid) * hZoom < minGridPx)
+		int tmp = (int)GetMediaTrackInfo_Value(parent, "I_FOLDERCOMPACT");
+		if (tmp > compact)
 		{
-			gridDiv *= 2;
-			leftSideGrid = TimeMap2_beatsToTime(NULL, beats - gridDiv, NULL);
+			compact = tmp;
+			if (compact == 2)
+				break;
 		}
-		return leftSideGrid;
 	}
-	else
-	{
-		gridDiv = (int)gridDiv/4;
-		int measure;
-		TimeMap2_timeToBeats(NULL, grid, &measure, NULL, NULL, NULL);
-
-		measure -= (int)gridDiv;
-		double leftSideGrid  = TimeMap2_beatsToTime(NULL, 0, &measure);
-		while ((grid - leftSideGrid) * hZoom < minGridPx)
-		{
-			measure -= (int)gridDiv;
-			leftSideGrid  = TimeMap2_beatsToTime(NULL, 0, &measure);
-			gridDiv *= 2;
-		}
-		return leftSideGrid;
-	}
+	return compact;
 }
 
-double GetClosestRightSideGrid (double position)
+int FindClosestProjMarkerIndex (double position)
 {
-	double grid = GetClosestGrid(position);
-	if (position <= grid)
-		return grid;
+	int first = 0;
+	int last  = CountProjectMarkers(NULL, NULL, NULL);
+	if (last < 0)
+		return -1;
 
-	double gridDiv; GetConfig("projgriddiv", gridDiv);
-	int minGridPx; GetConfig("projgridmin", minGridPx);
-	double hZoom = GetHZoomLevel();
-
-	if (gridDiv/4 < 1)
+	// Find previous marker/region
+	while (first != last)
 	{
-		double beats; int denom;
-		TimeMap2_timeToBeats(NULL, grid, NULL, NULL, &beats, &denom);
-		gridDiv *= (double)denom/4;
+		int mid = (first + last) /2;
+		double currentPos; EnumProjectMarkers3(NULL, mid, NULL, &currentPos, NULL, NULL, NULL, NULL);
 
-		double rightSideGrid = TimeMap2_beatsToTime(NULL, beats + gridDiv, NULL);
-		while ((rightSideGrid - grid) * hZoom < minGridPx)
-		{
-			gridDiv *= 2;
-			rightSideGrid = TimeMap2_beatsToTime(NULL, beats + gridDiv, NULL);
-		}
-		return rightSideGrid;
+		if (currentPos < position) first = mid + 1;
+		else                       last  = mid;
 	}
-	else
+	int prevId = first - ((first == 0) ? 0 : 1);
+
+	// Make sure we get marker index, not region
+	int id = prevId + 1; bool region; double prevPosition;
+	while (EnumProjectMarkers3(NULL, --id, &region, &prevPosition, NULL, NULL, NULL, NULL))
 	{
-		gridDiv = (int)gridDiv/4;
-		int measure;
-		TimeMap2_timeToBeats(NULL, grid, &measure, NULL, NULL, NULL);
-
-		measure += (int)gridDiv;
-		double rightSideGrid = TimeMap2_beatsToTime(NULL, 0, &measure);
-		while ((rightSideGrid - grid) * hZoom < minGridPx)
-		{
-			measure += (int)gridDiv;
-			rightSideGrid = TimeMap2_beatsToTime(NULL, 0, &measure);
-			gridDiv *= 2;
-		}
-		return rightSideGrid;
+		if (!region)
+			break;
 	}
+	if (id < 0)
+		return -1;
+
+	// Check against next marker
+	int nextId = prevId;
+	double nextPosition;
+	while (EnumProjectMarkers3(NULL, ++nextId, &region, &nextPosition, NULL, NULL, NULL, NULL))
+	{
+		if (!region)
+		{
+			if (abs(nextPosition - position) < abs(position - prevPosition)) id = nextId;
+			if (id >= CountProjectMarkers(NULL, NULL, NULL))                 id = -1;
+			break;
+		}
+	}
+
+	return id;
 }
 
 double EndOfProject (bool markers, bool regions)
@@ -455,18 +505,46 @@ double GetProjectSettingsTempo (int* num, int* den)
 	return bpm/_den*4;
 }
 
-double GetSourceLengthPPQ (MediaItem_Take* take)
+double GetGridDivSafe ()
 {
-	if (take)
+	double gridDiv;
+	GetConfig("projgriddiv", gridDiv);
+	if (gridDiv < MAX_GRID_DIV)
 	{
-		double itemStart  = GetMediaItemInfo_Value(GetMediaItemTake_Item(take), "D_POSITION");
-		double takeOffset = GetMediaItemTakeInfo_Value(take, "D_STARTOFFS");
-		double startPPQ   = MIDI_GetPPQPosFromProjTime(take, itemStart - takeOffset);
-		double endPPQ = MIDI_GetPPQPosFromProjTime(take, itemStart - takeOffset + GetMediaItemTake_Source(take)->GetLength());
-
-		return endPPQ - startPPQ;
+		SetConfig("projgriddiv", MAX_GRID_DIV);
+		return MAX_GRID_DIV;
 	}
-	return 0;
+	else
+		return gridDiv;
+}
+
+double GetMidiOscVal (double min, double max, double step, double currentVal, int commandVal, int commandValhw, int commandRelmode)
+{
+	double returnVal = currentVal;
+
+	// 14-bit resolution (MIDI pitch...OSC doesn't seem to work)
+	if (commandValhw >= 0)
+	{
+		returnVal = TranslateRange(SetToBounds((double)(commandValhw | commandVal << 7), 0.0, 16383.0), 0, 16383, min, max);
+	}
+	// MIDI
+	else if (commandValhw == -1 && commandVal >= 0 && commandVal < 128)
+	{
+		// Absolute mode
+		if (!commandRelmode)
+			returnVal = TranslateRange(commandVal, 0, 127, min, max);
+		// Relative modes
+		else
+		{
+			if      (commandRelmode == 1) {if (commandVal >= 0x40) commandVal |= ~0x3f;}               // sign extend if 0x40 set
+			else if (commandRelmode == 2) {commandVal -= 0x40;}                                        // offset by 0x40
+			else if (commandRelmode == 3) {if (commandVal &  0x40) commandVal =- (commandVal & 0x3f);} // 0x40 is sign bit
+			else                                                   commandVal = 0;
+
+			returnVal = currentVal + (commandVal * step);
+		}
+	}
+	return SetToBounds(returnVal, min, max);
 }
 
 void InitTempoMap ()
@@ -514,6 +592,234 @@ void StartPlayback (double position)
 	PreventUIRefresh(-1);
 }
 
+void GetSetLastAdjustedSend (bool set, MediaTrack** track, int* sendId, int* type)
+{
+	static MediaTrack* lastTrack = NULL;
+	static int         lastId    = -1;
+	static int         lastType  = UNKNOWN;
+
+	if (set)
+	{
+		lastTrack = *track;
+		lastId    = *sendId;
+		lastType  = *type;
+	}
+	else
+	{
+		WritePtr(track, lastTrack);
+		WritePtr(sendId, lastId);
+		WritePtr(type,   lastType);
+	}
+}
+
+void GetSetFocus (bool set, HWND* hwnd, int* context)
+{
+	if (set)
+	{
+		if (context) // context first (it may refocus main window)
+		{
+			TrackEnvelope* envelope = GetSelectedEnvelope(NULL);
+			SetCursorContext((*context == 2 && !envelope) ? 1 : *context, (*context == 2) ? envelope : NULL);
+		}
+		if (hwnd)
+			SetFocus(*hwnd);
+	}
+	else
+	{
+		WritePtr(hwnd,    GetFocus());
+		WritePtr(context, GetCursorContext2(true)); // last_valid_focus: example - select item and focus mixer. Pressing delete
+	}                                               // tells us context is still 1, but GetCursorContext2(false) would return 0
+}
+
+void RefreshToolbarAlt (int cmd)
+{
+	if (GetToggleCommandState2(SectionFromUniqueID(32060), cmd) != -1 || GetToggleCommandState2(SectionFromUniqueID(32061), cmd) != -1)
+	{
+		int toggleState = GetToggleCommandState(cmd);
+		BR_SetGetCommandHook2Reentrancy(true, true);
+
+		MIDIEditor_LastFocused_OnCommand(cmd, false);
+		if (GetToggleCommandState(cmd) != toggleState)
+			MIDIEditor_LastFocused_OnCommand(cmd, false);
+
+		BR_SetGetCommandHook2Reentrancy(true, false);
+	}
+	else
+	{
+		RefreshToolbar(cmd);
+	}
+}
+
+bool IsPlaying ()
+{
+	return (GetPlayStateEx(NULL) & 1) == 1;
+}
+
+bool IsPaused ()
+{
+	return (GetPlayStateEx(NULL) & 2) == 2;
+}
+
+bool IsRecording ()
+{
+	return (GetPlayStateEx(NULL) & 4) == 4;
+}
+
+bool TcpVis (MediaTrack* track)
+{
+	if (track)
+	{
+		if ((GetMasterTrack(NULL) == track))
+		{
+			int master; GetConfig("showmaintrack", master);
+			if (master == 0 || (int)GetMediaTrackInfo_Value(track, "I_WNDH") == 0)
+				return false;
+			else
+				return true;
+		}
+		else
+		{
+			if (!GetMediaTrackInfo_Value(track, "B_SHOWINTCP") || !GetMediaTrackInfo_Value(track, "I_WNDH"))
+				return false;
+			else
+				return true;
+		}
+	}
+	else
+		return false;
+}
+
+/******************************************************************************
+* Items                                                                       *
+******************************************************************************/
+vector<MediaItem*> GetSelItems (MediaTrack* track)
+{
+	vector<MediaItem*> items;
+	int count = CountTrackMediaItems(track);
+	for (int i = 0; i < count ; ++i)
+		if (*(bool*)GetSetMediaItemInfo(GetTrackMediaItem(track, i), "B_UISEL", NULL))
+			items.push_back(GetTrackMediaItem(track, i));
+	return items;
+}
+
+double GetSourceLengthPPQ (MediaItem_Take* take)
+{
+	if (take)
+	{
+		double itemStart    = GetMediaItemInfo_Value(GetMediaItemTake_Item(take), "D_POSITION");
+		double takeOffset   = GetMediaItemTakeInfo_Value(take, "D_STARTOFFS");
+		double sourceLength = GetMediaItemTake_Source(take)->GetLength();
+		double startPPQ = MIDI_GetPPQPosFromProjTime(take, itemStart - takeOffset);
+		double endPPQ   = MIDI_GetPPQPosFromProjTime(take, itemStart - takeOffset + sourceLength);
+
+		return endPPQ - startPPQ;
+	}
+	return 0;
+}
+
+double ProjectTimeToItemTime (MediaItem* item, double projTime)
+{
+	if (item)
+		 return projTime - GetMediaItemInfo_Value(item, "D_POSITION");
+	else
+		return projTime;
+}
+
+double ItemTimeToProjectTime (MediaItem* item, double itemTime)
+{
+	if (item)
+		 return GetMediaItemInfo_Value(item, "D_POSITION") + itemTime;
+	else
+		return itemTime;
+}
+
+int GetTakeId (MediaItem_Take* take, MediaItem* item /*= NULL*/)
+{
+	item = (item) ? item : GetMediaItemTake_Item(take);
+
+	for (int i = 0; i < CountTakes(item); ++i)
+	{
+		if (GetTake(item, 0) == take)
+			return i;
+	}
+	return -1;
+}
+
+int GetTakeType (MediaItem_Take* take)
+{
+	int returnType = -1;
+	if (take)
+	{
+		PCM_source* source = GetMediaItemTake_Source(take);
+		source = (!strcmp(source->GetType(), "SECTION")) ? (source->GetSource()) : (source);
+		if (source)
+		{
+			const char* type = source->GetType();
+
+			if (!strcmp(type, "MIDIPOOL") || !strcmp(type, "MIDI"))
+				returnType = 1;
+			else if (!strcmp(type, "VIDEO"))
+				returnType = 2;
+			else if (!strcmp(type, "CLICK"))
+				returnType = 3;
+			else if (!strcmp(type, "LTC"))
+				returnType = 4;
+			else if (!strcmp(type, "RPP_PROJECT"))
+				returnType = 5;
+			else if (strcmp(type, ""))
+				returnType = 0;
+		}
+	}
+	return returnType;
+}
+
+bool SetIgnoreTempo (MediaItem* item, bool ignoreTempo, double bpm, int num, int den)
+{
+	bool midiFound = false;
+	for (int i = 0; i < CountTakes(item); ++i)
+	{
+		if (IsMidi(GetMediaItemTake(item, i)))
+		{
+			midiFound = true;
+			break;
+		}
+	}
+	if (!midiFound)
+		return false;
+
+	WDL_FastString newState;
+	char* chunk = GetSetObjectState(item, "");
+	bool stateChanged = false;
+
+	char* token = strtok(chunk, "\n");
+	while (token != NULL)
+	{
+		if (!strncmp(token, "IGNTEMPO ", sizeof("IGNTEMPO ") - 1))
+		{
+			if (ignoreTempo)
+				newState.AppendFormatted(256, "IGNTEMPO %d %.14lf %d %d\n", 1, bpm, num, den);
+			else
+			{
+				LineParser lp(false);
+				lp.parse(token);
+				newState.AppendFormatted(256, "IGNTEMPO %d %.14lf %d %d\n", 0, lp.gettoken_float(2), lp.gettoken_int(3), lp.gettoken_int(4));
+			}
+			stateChanged = true;
+		}
+		else
+		{
+			AppendLine(newState, token);
+		}
+		token = strtok(NULL, "\n");
+	}
+
+	if (stateChanged)
+		GetSetObjectState(item, newState.Get());
+	FreeHeapPtr(chunk);
+
+	return stateChanged;
+}
+
 bool DoesItemHaveMidiEvents (MediaItem* item)
 {
 	for (int i = 0; i < CountTakes(item); ++i)
@@ -547,40 +853,6 @@ bool TrimItem (MediaItem* item, double start, double end)
 		return true;
 	}
 	return false;
-}
-
-bool IsPlaying ()
-{
-	return (GetPlayStateEx(NULL) & 1) == 1;
-}
-
-bool IsPaused ()
-{
-	return (GetPlayStateEx(NULL) & 2) == 2;
-}
-
-bool IsRecording ()
-{
-	return (GetPlayStateEx(NULL) & 4) == 4;
-}
-
-bool TcpVis (MediaTrack* track)
-{
-	if ((GetMasterTrack(NULL) == track))
-	{
-		int master; GetConfig("showmaintrack", master);
-		if (master == 0 || (int)GetMediaTrackInfo_Value(track, "I_WNDH") == 0)
-			return false;
-		else
-			return true;
-	}
-	else
-	{
-		if ((int)GetMediaTrackInfo_Value(track, "B_SHOWINTCP") == 0 || (int)GetMediaTrackInfo_Value(track, "I_WNDH") == 0)
-			return false;
-		else
-			return true;
-	}
 }
 
 bool GetMediaSourceProperties (MediaItem_Take* take, bool* section, double* start, double* length, double* fade, bool* reverse)
@@ -729,7 +1001,8 @@ bool SetMediaSourceProperties (MediaItem_Take* take, bool section, double start,
 				if (ProjectStateContext* ctx = ProjectCreateMemCtx(&hb))
 				{
 					memcpy(p, sourceStr.Get(), sourceStr.GetLength());
-					newSource->LoadState("<SOURCE SECTION", ctx);
+					WDL_String firstLine; firstLine.AppendFormatted(256, "%s", "<SOURCE SECTION");
+					newSource->LoadState(firstLine.Get(), ctx);
 					delete ctx;
 				}
 				else
@@ -775,276 +1048,590 @@ bool SetTakeSourceFromFile (MediaItem_Take* take, const char* filename, bool inP
 	return false;
 }
 
+WDL_FastString GetSourceChunk (PCM_source* source)
+{
+	WDL_FastString sourceStr;
+	if (source)
+	{
+		WDL_HeapBuf hb;
+		if (ProjectStateContext* ctx = ProjectCreateMemCtx(&hb))
+		{
+			source->SaveState(ctx);
+
+			sourceStr.AppendFormatted(PROJ_CONTEXT_LINE, "%s%s\n", "<SOURCE ", source->GetType());
+			char line[PROJ_CONTEXT_LINE];
+			while(!ctx->GetLine(line, sizeof(line)))
+				AppendLine(sourceStr, line);
+			sourceStr.Append( ">");
+
+			delete ctx;
+		}
+	}
+	return sourceStr;
+}
+
 /******************************************************************************
-* Height helpers                                                              *
+* Fades                                                                       *
 ******************************************************************************/
-static void GetTrackGap (int trackHeight, int* top, int* bottom)
+#include "../../WDL/lice/lice_bezier.h"
+
+static void AssignDir(double* x, double* y, const double* b)
 {
-	/* Calculates the part above the item where buttons and labels *
-	*  reside and gets us user setting for the bottom gap          */
+	/* Code bits courtesy of Cockos, http://askjf.com/index.php?q=2967s */
 
-	if (top)
-	{
-		int label; GetConfig("labelitems2", label);
-		//   draw mode        ||   name                 pitch,              gain (opposite)
-		if (!GetBit(label, 3) || (!GetBit(label, 0) && !GetBit(label, 2) && GetBit(label, 4)))
-			*top = 0;
-		else
-		{
-			int labelH = abs(SNM_GetColorTheme()->mediaitem_font.lfHeight) * 11/8;
-			int labelMinH; GetConfig("itemlabel_minheight", labelMinH);
-
-			if (trackHeight - labelH < labelMinH)
-			{
-				*top = 0;
-			}
-			else
-			{
-				// draw label inside item if it's making item too short
-				if (GetBit(label, 5) && trackHeight - labelH < ITEM_LABEL_MIN_HEIGHT)
-					*top = 0;
-				else
-					*top = labelH;
-			}
-		}
-	}
-	if (bottom)
-		GetConfig("trackitemgap", *bottom);
+	x[1]=b[0];
+	y[1]=b[1];
+	x[2]=b[2];
+	y[2]=b[3];
 }
 
-static int GetEffectiveCompactLevel (MediaTrack* track)
+static void ApplyDir(double* x, double* y, double w0, double w1, const double* b0, const double* b1)
 {
-	/* Real compact level is determined by the highest compact level *
-	*  of any successive parent - important for determining height   *
-	*  of the track                                                  */
+	/* Code bits courtesy of Cockos, http://askjf.com/index.php?q=2967s */
 
-	int compact = 0;
-	MediaTrack* parent = track;
-	while (parent = (MediaTrack*)GetSetMediaTrackInfo(parent, "P_PARTRACK", NULL))
-	{
-		int tmp = (int)GetMediaTrackInfo_Value(parent, "I_FOLDERCOMPACT");
-		if (tmp > compact)
-		{
-			compact = tmp;
-			if (compact == 2)
-				break;
-		}
-	}
-	return compact;
+	x[1]=w0*b0[0]+w1*b1[0];
+	y[1]=w0*b0[1]+w1*b1[1];
+	x[2]=w0*b0[2]+w1*b1[2];
+	y[2]=w0*b0[3]+w1*b1[3];
 }
 
-static int GetMinTakeHeight (MediaTrack* track, int takeCount, int trackHeight, int itemHeight)
+static bool GetMediaItemFadeBezParms(int shape, double dir, bool isfadeout, double* x, double* y)
 {
-	/* Take lanes have minimum height, after which they are hidden and *
-	*  and only active take is displayed. This height is determined on *
-	*  per track basis                                                 */
+	/* Code bits courtesy of Cockos, http://askjf.com/index.php?q=2967s *
+	*                                                                   *
+	*  x[4], y[4] .. returns true if the fade is linear                 */
 
-	int trackTop, trackBottom;
-	GetTrackGap(trackHeight, &trackTop, &trackBottom);
+	static const double b0[4] = { 0.5, 0.5, 0.5, 0.5 };
+	static const double b1[4] = { 0.25, 0.5, 0.625, 1.0 };
+	static const double b2[4] = { 0.375, 0.0, 0.75, 0.5 };
+	static const double b3[4] = { 0.25, 1.0, 0.5, 1.0 };
+	static const double b4[4] = { 0.5, 0.0, 0.75, 0.0 };
+	static const double b5[4] = { 0.375, 0.0, 0.625, 1.0 };
+	static const double b6[4] = { 0.875, 0.0, 0.125, 1.0 };
+	static const double b7[4] = { 0.25, 0.375, 0.625, 1.0 };
 
-	int overlappingItems; GetConfig("projtakelane", overlappingItems);
-	if (GetBit(overlappingItems, 1))
+	static const double b4i[4] = { 0.0, 1.0, 0.125, 1.0 };
+	static const double b50[4] = { 0.25, 0.25, 0.25, 1.0 };
+	static const double b51[4] = { 0.75, 0.0, 0.75, 0.75 };
+	static const double b60[4] = { 0.375, 0.25, 0.0, 1.0 };
+	static const double b61[4] = { 1.0, 0.0, 0.625, 0.75 };
+
+	if (!isfadeout)
 	{
-		if (itemHeight == (trackHeight - trackTop - trackBottom))
-			overlappingItems = 0;
-	}
-	else
-		overlappingItems = 0;
-
-	int takeH;
-	if (*(bool*)GetSetMediaTrackInfo(track, "B_FREEMODE", NULL) || overlappingItems)
-	{
-		int maxTakeH = (trackHeight - trackTop - trackBottom) / takeCount; // max take height when item occupies the whole track lane
-
-		// If max take height is over limits, reaper lets takes get
-		// resized to 1 px in FIPM or when in overlapping lane
-		if (takeCount > TAKE_MIN_HEIGHT_COUNT)
-		{
-			if (maxTakeH < TAKE_MIN_HEIGHT_LOW)
-				takeH = TAKE_MIN_HEIGHT_LOW;
-			else
-				takeH = 1;
-		}
-		else
-		{
-			if (maxTakeH < TAKE_MIN_HEIGHT_HIGH)
-				takeH = TAKE_MIN_HEIGHT_HIGH;
-			else
-				takeH = 1;
-		}
+		x[0]=y[0]=0.0;
+		x[3]=y[3]=1.0;
 	}
 	else
 	{
-		if (takeCount > TAKE_MIN_HEIGHT_COUNT)
-			takeH = TAKE_MIN_HEIGHT_LOW;
-		else
-			takeH = TAKE_MIN_HEIGHT_HIGH;
+		x[0]=y[3]=0.0;
+		x[3]=y[0]=1.0;
 	}
 
-	return takeH;
-}
-
-static int GetEffectiveTakeId (MediaItem_Take* take, MediaItem* item, int id, int* effectiveTakeCount)
-{
-	/* Since empty takes could be hidden, displayed id and real id can *
-	*  differ which is important when determining take heights         */
-
-	MediaItem*      validItem = (item) ? (item) : (GetMediaItemTake_Item(take));
-	MediaItem_Take* validTake = (take) ? (take) : (GetTake(validItem, id));
-
-	int count = CountTakes(validItem);
-	int effectiveCount = 0;
-	int effectiveId = -1;
-
-	// Empty takes not displayed
-	int emptyLanes; GetConfig("takelanes", emptyLanes);
-	if (GetBit(emptyLanes, 2))
+	if (shape < 0 || shape >= 8)
 	{
-		for (int i = 0; i < count; ++i)
+		shape=0;
+		dir=0.0;
+	}
+
+	if (isfadeout)
+		dir=-dir;
+
+	bool linear=false;
+
+	if (dir < 0.0)
+	{
+		double w0=-dir;
+		double w1=1.0+dir;
+		if (shape == 1)      ApplyDir(x, y, w0, w1, b4i, b1);
+		else if (shape == 2) ApplyDir(x, y, w0, w1, b1,  b0);
+		else if (shape == 5) ApplyDir(x, y, w0, w1, b50, b5);
+		else if (shape == 6) ApplyDir(x, y, w0, w1, b60, b6);
+		else if (shape == 7) ApplyDir(x, y, w0, w1, b4i, b7);
+		else                 ApplyDir(x, y, w0, w1, b3,  b0);
+	}
+	else if (dir > 0.0)
+	{
+		double w0=1.0-dir;
+		double w1=dir;
+		if (shape == 1)      ApplyDir(x, y, w0, w1, b1, b4);
+		else if (shape == 2) ApplyDir(x, y, w0, w1, b0, b2);
+		else if (shape == 5) ApplyDir(x, y, w0, w1, b5, b51);
+		else if (shape == 6) ApplyDir(x, y, w0, w1, b6, b61);
+		else if (shape == 7) ApplyDir(x, y, w0, w1, b7, b4);
+		else                 ApplyDir(x, y, w0, w1, b0, b4);
+	}
+	else // dir == 0.0
+	{
+		if (shape == 1)      AssignDir(x, y, b1);
+		else if (shape == 5) AssignDir(x, y, b5);
+		else if (shape == 6) AssignDir(x, y, b6);
+		else if (shape == 7) AssignDir(x, y, b7);
+		else
 		{
-			if (MediaItem_Take* currentTake = GetTake(validItem, i))
-			{
-				if (currentTake == validTake)
-					effectiveId = effectiveCount;
-				++effectiveCount;
-			}
+			AssignDir(x, y, b0);
+			linear=true;
 		}
 	}
-	// Empty takes displayed
+
+	if (isfadeout && !linear)
+	{
+		double ox1=x[1];
+		double ox2=x[2];
+		x[1]=1.0-ox2;
+		x[2]=1.0-ox1;
+		swap(y[1], y[2]);
+	}
+
+	return linear;
+}
+
+double GetNormalizedFadeValue (double position, double fadeStart, double fadeEnd, int fadeShape, double fadeCurve, bool isFadeOut)
+{
+	if (position < fadeStart)
+		return (isFadeOut) ? 1 : 0;
+	else if (position > fadeEnd)
+		return (isFadeOut) ? 0 : 1;
 	else
 	{
-		if (take)
+		double x[4], y[4];
+		GetMediaItemFadeBezParms(fadeShape, fadeCurve, isFadeOut, x, y);
+
+		double t = (position - fadeStart) / (fadeEnd - fadeStart);
+		return LICE_CBezier_GetY(x[0], x[1], x[2], x[3], y[0], y[1], y[2], y[3], t);
+	}
+}
+
+double GetEffectiveFadeLength (MediaItem* item, bool isFadeOut, int* fadeShape /*= NULL*/, double* fadeCurve /*= NULL*/)
+{
+	if (item)
+	{
+		WritePtr(fadeShape, ((isFadeOut) ? (int)GetMediaItemInfo_Value(item, "C_FADEOUTSHAPE") : (int)GetMediaItemInfo_Value(item, "C_FADEINSHAPE")));
+		WritePtr(fadeCurve, ((isFadeOut) ?       GetMediaItemInfo_Value(item, "D_FADEOUTDIR")  :      GetMediaItemInfo_Value(item, "D_FADEINDIR")));
+
+		double fadeLength = GetMediaItemInfo_Value(item, ((isFadeOut) ? "D_FADEOUTLEN_AUTO" : "D_FADEINLEN_AUTO"));
+		return (fadeLength > 0) ? fadeLength : GetMediaItemInfo_Value(item, ((isFadeOut) ? "D_FADEOUTLEN" : "D_FADEINLEN"));
+	}
+	else
+	{
+		WritePtr(fadeShape, 0);
+		WritePtr(fadeCurve, 0.0);
+		return 0;
+	}
+}
+
+/******************************************************************************
+* Stretch markers                                                             *
+******************************************************************************/
+int FindPreviousStretchMarker (MediaItem_Take* take, double position)
+{
+	int first = 0;
+	int last = GetTakeNumStretchMarkers(take);
+
+	while (first != last)
+	{
+		int mid = (first + last) / 2;
+		double currentPos; GetTakeStretchMarker(take, mid, &currentPos, NULL);
+
+		if (currentPos < position) first = mid + 1;
+		else                       last  = mid;
+
+	}
+	return first - 1;
+}
+
+int FindNextStretchMarker (MediaItem_Take* take, double position)
+{
+	int first = 0;
+	int last = GetTakeNumStretchMarkers(take);
+	int count = last;
+
+	while (first != last)
+	{
+		int mid = (first + last) /2;
+		double currentPos; GetTakeStretchMarker(take, mid, &currentPos, NULL);
+
+		if (position >= currentPos) first = mid + 1;
+		else                        last  = mid;
+
+	}
+	return (first < count) ? first: -1;
+}
+
+int FindClosestStretchMarker (MediaItem_Take* take, double position)
+{
+	int prevId = FindPreviousStretchMarker(take, position);
+	int nextId = prevId + 1;
+
+	int count = GetTakeNumStretchMarkers(take);
+	if (prevId == -1)
+	{
+		return (nextId < count) ? nextId : -1;
+	}
+	else
+	{
+		if (nextId < count)
 		{
-			for (int i = 0; i < count; ++i)
-			{
-				if (GetTake(validItem, i) == validTake)
-				{
-					effectiveId = i;
-					break;
-				}
-			}
+
+			double prevPos, nextPos;
+			GetTakeStretchMarker(take, prevId, &prevPos, NULL);
+			GetTakeStretchMarker(take, nextId, &nextPos, NULL);
+			double len1 = position - prevPos;
+			double len2 = nextPos - position;
+
+			if (len1 >= len2)
+				return nextId;
+			else
+				return prevId;
 		}
 		else
 		{
-			effectiveId = id;
+			return prevId;
 		}
-
-		effectiveCount = count;
 	}
-
-	WritePtr(effectiveTakeCount, effectiveCount);
-	return effectiveId;
 }
 
-static bool IsLastTakeTooTall (int itemHeight, int averageTakeHeight, int effectiveTakeCount, int* lastTakeHeight)
+int FindStretchMarker (MediaItem_Take* take, double position, double surroundingRange /*= 0*/)
 {
-	/* When placing takes into item, reaper just divides item height by number of takes *
-	*  losing division reminder - last take gets all of those reminders. However, if    *
-	*  it ends up to tall (>= 1.5 of average take height) it gets cropped               */
+	int count = GetTakeNumStretchMarkers(take);
+	if (count == 0)
+		return -1;
 
-	int lastTakeH = itemHeight - averageTakeHeight * (effectiveTakeCount - 1);
-	if (lastTakeH < (int)(averageTakeHeight * 1.5))
+	int prevId = FindPreviousStretchMarker(take, position);
+	int nextId = prevId + 1;
+
+	double prevPos, nextPos;
+	GetTakeStretchMarker(take, prevId, &prevPos, NULL);
+	GetTakeStretchMarker(take, nextId, &nextPos, NULL);
+
+	double distanceFromPrev = (CheckBounds(prevId, 0, count-1)) ? (position - prevPos) : (abs(surroundingRange) + 1);
+	double distanceFromNext = (CheckBounds(nextId, 0, count-1)) ? (nextPos - position) : (abs(surroundingRange) + 1);
+
+	int id = -1;
+	if (distanceFromPrev <= distanceFromNext)
 	{
-		WritePtr(lastTakeHeight, lastTakeH);
+		if (distanceFromPrev <= surroundingRange)
+			id = prevId;
+	}
+	else
+	{
+		if (distanceFromNext <= surroundingRange)
+			id = nextId;
+	}
+	return (id < count) ? id : -1;
+}
+
+/******************************************************************************
+* Grid                                                                        *
+******************************************************************************/
+double GetNextGridDiv (double position)
+{
+	/* This got a tiny bit complicated, but we're trying to replicate        *
+	*  REAPER behavior as closely as possible...I guess the ultimate test    *
+	*  would be inserting a bunch of really strange time signatures coupled  *
+	*  with possibly even stranger grid divisions, things any sane person    *
+	*  would never use - like 11/7 with grid division of 2/13...haha. As it  *
+	*  stands now, at REAPER v4.7, this function handles it all              */
+
+	// Grid dividing starts again from the measure in which tempo marker is so find location of first measure grid (obvious if grid division spans more measures)
+	int gridDivStartTempo = FindPreviousTempoMarker(position);
+	double gridDivStart;
+	if (gridDivStartTempo >= 0)
+	{
+		if (GetTempoTimeSigMarker(NULL, gridDivStartTempo + 1, &gridDivStart, NULL, NULL, NULL, NULL, NULL, NULL))
+		{
+			if (gridDivStart > position)
+				GetTempoTimeSigMarker(NULL, gridDivStartTempo, &gridDivStart, NULL, NULL, NULL, NULL, NULL, NULL);
+			else
+				gridDivStartTempo += 1;
+		}
+		else
+			GetTempoTimeSigMarker(NULL, gridDivStartTempo, &gridDivStart, NULL, NULL, NULL, NULL, NULL, NULL);
+	}
+	else
+	{
+		gridDivStart = 0;
+		gridDivStartTempo = 0; // if position is right at project start this would be -1 even if first tempo marker exists
+	}
+
+	// Get grid division translated into current time signature
+	int gridDivStartMeasure, num, den;
+	TimeMap2_timeToBeats(0, gridDivStart, &gridDivStartMeasure, &num, NULL, &den);
+	double gridDiv = GetGridDivSafe();
+	gridDiv = (den*gridDiv) / 4;
+
+	// How much measures must pass for grid diving to start anew? (again, obvious when grid division spans more measures)
+	int measureStep = (int)(gridDiv/num);
+	if (measureStep == 0) measureStep = 1;
+
+	// Find closest measure to our position, where grid diving starts again
+	int positionMeasure;
+	TimeMap2_timeToBeats(0, position, &positionMeasure, NULL, NULL, NULL);
+	gridDivStartMeasure += (int)((positionMeasure - gridDivStartMeasure) / measureStep) * measureStep;
+	gridDivStart = TimeMap2_beatsToTime(0, 0, &gridDivStartMeasure);
+
+	// Finally find next grid position (different cases for measures and beats)
+	double nextGridPosition;
+	if (gridDiv > num)
+	{
+		int gridDivEndMeasure = gridDivStartMeasure + measureStep;
+		double gridDivEnd = TimeMap2_beatsToTime(0, 0, &gridDivEndMeasure);
+
+		// Same as before, existing tempo markers can move end measure grid (where our next grid should be) so find if that's the case
+		if (measureStep > 1)
+		{
+			double tempoPosition;
+			while (GetTempoTimeSigMarker(NULL, ++gridDivStartTempo, &tempoPosition, NULL, NULL, NULL, NULL, NULL, NULL) && tempoPosition <= gridDivEnd)
+			{
+				int currentMeasure;
+				TimeMap2_timeToBeats(0, tempoPosition, &currentMeasure, NULL, NULL, NULL);
+
+				gridDivEndMeasure = currentMeasure + ((currentMeasure == positionMeasure) ? (measureStep) : (0));
+				gridDivEnd = TimeMap2_beatsToTime(0, 0, &gridDivEndMeasure);
+			}
+		}
+
+		nextGridPosition = TimeMap2_beatsToTime(0, 0, &gridDivEndMeasure);
+	}
+	else
+	{
+		double positionBeats = TimeMap2_timeToBeats(0, position, NULL, NULL, NULL, NULL) - TimeMap2_timeToBeats(0, gridDivStart, NULL, NULL, NULL, NULL);
+		double nextGridBeats = (int)((positionBeats + gridDiv) / gridDiv) * gridDiv;
+		while (abs(nextGridBeats - positionBeats) < 1E-6) nextGridBeats += gridDiv; // rounding errors, yuck...
+
+		nextGridPosition = TimeMap2_beatsToTime(0, nextGridBeats, &gridDivStartMeasure);
+
+		// Check it didn't pass over into next measure
+		int gridDivEndMeasure = gridDivStartMeasure + measureStep;
+		double gridDivEnd     = TimeMap2_beatsToTime(0, 0, &gridDivEndMeasure);
+		if (nextGridPosition > gridDivEnd)
+			nextGridPosition = gridDivEnd;
+	}
+
+	// Not so perfect fix for this issue: http://forum.cockos.com/project.php?issueid=5263
+	if (nextGridPosition < position)
+	{
+		double gridDiv = GetGridDivSafe();
+
+		double tempoPosition, beat; int measure; GetTempoTimeSigMarker(NULL, gridDivStartTempo, &tempoPosition, &measure, &beat, NULL, NULL, NULL, NULL);
+		double offset =  gridDiv - fmod(TimeMap_timeToQN(TimeMap2_beatsToTime(0, 0, &measure)), gridDiv);
+
+		double gridLn = TimeMap_timeToQN(tempoPosition);
+		gridLn = TimeMap_QNToTime(gridLn - offset - fmod(gridLn, gridDiv));
+		while (gridLn < position + (MIN_GRID_DIST/2))
+			gridLn = TimeMap_QNToTime(TimeMap_timeToQN(gridLn) + gridDiv);
+
+		nextGridPosition = gridLn;
+	}
+
+	return nextGridPosition;
+}
+
+double GetClosestGridLine (double position)
+{
+	/* All other GridLine (but not GridDiv) functions   *
+	*  are depending on this, but it appears SnapToGrid *
+	*  is broken in certain non-real-world testing      *
+	*  situations, so it should probably we rewritten   *
+	*  using the stuff from GetNextGridDiv()            */
+
+	int snap; GetConfig("projshowgrid", snap);
+	SetConfig("projshowgrid", ClearBit(snap, 8));
+
+	double grid = SnapToGrid(NULL, position);
+	SetConfig("projshowgrid", snap);
+	return grid;
+}
+
+double GetClosestMeasureGridLine (double position)
+{
+	double gridDiv = GetGridDivSafe();
+	int num, den; TimeMap_GetTimeSigAtTime(0, position, &num, &den, NULL);
+
+	double gridLine = 0;
+	if ((den*gridDiv) / 4 < num)
+	{
+		SetConfig("projgriddiv", 4*(double)num/(double)den); // temporarily set grid div to full measure of current time signature
+		gridLine = GetClosestGridLine(position);
+		SetConfig("projgriddiv", gridDiv);
+	}
+	else
+	{
+		gridLine = GetClosestGridLine(position);
+	}
+	return gridLine;
+}
+
+double GetClosestLeftSideGridLine (double position)
+{
+	double grid = GetClosestGridLine(position);
+	if (position >= grid)
+		return grid;
+
+	double gridDiv = GetGridDivSafe();
+	int minGridPx; GetConfig("projgridmin", minGridPx);
+	double hZoom = GetHZoomLevel();
+
+	int num, den; TimeMap_GetTimeSigAtTime(0, position, &num, &den, NULL);
+
+	if ((den*gridDiv) / 4 < num)
+	{
+		double beats; int denom;
+		TimeMap2_timeToBeats(NULL, grid, NULL, NULL, &beats, &denom);
+		gridDiv *= (double)denom/4;
+
+		double leftSideGrid  = TimeMap2_beatsToTime(NULL, beats - gridDiv, NULL);
+		while ((grid - leftSideGrid) * hZoom < minGridPx)
+		{
+			gridDiv *= 2;
+			leftSideGrid = TimeMap2_beatsToTime(NULL, beats - gridDiv, NULL);
+		}
+		return leftSideGrid;
+	}
+	else
+	{
+		gridDiv = (int)gridDiv/4;
+		int measure;
+		TimeMap2_timeToBeats(NULL, grid, &measure, NULL, NULL, NULL);
+
+		measure -= (int)gridDiv;
+		double leftSideGrid  = TimeMap2_beatsToTime(NULL, 0, &measure);
+		while ((grid - leftSideGrid) * hZoom < minGridPx)
+		{
+			measure -= (int)gridDiv;
+			leftSideGrid  = TimeMap2_beatsToTime(NULL, 0, &measure);
+			gridDiv *= 2;
+		}
+		return leftSideGrid;
+	}
+}
+
+double GetClosestRightSideGridLine (double position)
+{
+	double grid = GetClosestGridLine(position);
+	if (position <= grid)
+		return grid;
+
+	double gridDiv = GetGridDivSafe();
+	int minGridPx; GetConfig("projgridmin", minGridPx);
+	double hZoom = GetHZoomLevel();
+
+	int num, den; TimeMap_GetTimeSigAtTime(0, position, &num, &den, NULL);
+
+	if ((den*gridDiv) / 4 < num)
+	{
+		double beats; int denom;
+		TimeMap2_timeToBeats(NULL, grid, NULL, NULL, &beats, &denom);
+		gridDiv *= (double)denom/4;
+
+		double rightSideGrid = TimeMap2_beatsToTime(NULL, beats + gridDiv, NULL);
+		while ((rightSideGrid - grid) * hZoom < minGridPx)
+		{
+			gridDiv *= 2;
+			rightSideGrid = TimeMap2_beatsToTime(NULL, beats + gridDiv, NULL);
+		}
+		return rightSideGrid;
+	}
+	else
+	{
+		gridDiv = (int)gridDiv/4;
+		int measure;
+		TimeMap2_timeToBeats(NULL, grid, &measure, NULL, NULL, NULL);
+
+		measure += (int)gridDiv;
+		double rightSideGrid = TimeMap2_beatsToTime(NULL, 0, &measure);
+		while ((rightSideGrid - grid) * hZoom < minGridPx)
+		{
+			measure += (int)gridDiv;
+			rightSideGrid = TimeMap2_beatsToTime(NULL, 0, &measure);
+			gridDiv *= 2;
+		}
+		return rightSideGrid;
+	}
+}
+
+/******************************************************************************
+* Locking                                                                     *
+******************************************************************************/
+bool IsLockingActive ()
+{
+	int projSelLock; GetConfig("projsellock", projSelLock);
+	return !!GetBit(projSelLock, 14);
+}
+
+bool IsLocked (int lockElements)
+{
+	int projSelLock; GetConfig("projsellock", projSelLock);
+
+	if (!GetBit(projSelLock, 14))
 		return false;
-	}
 	else
-	{
-		WritePtr(lastTakeHeight, averageTakeHeight);
-		return true;
-	}
+		return ((projSelLock & lockElements) == lockElements);
+}
+
+bool IsItemLocked (MediaItem* item)
+{
+	char itemLock = (char)GetMediaItemInfo_Value(item, "C_LOCK");
+	return (itemLock & 1);
 }
 
 /******************************************************************************
 * Height                                                                      *
 ******************************************************************************/
-static int GetItemHeight (MediaItem* item, int* offsetY, int trackHeight)
+int GetTrackHeightFromVZoomIndex (MediaTrack* track, int vZoom)
 {
-	/* Reaper takes into account FIPM and overlapping media item lanes *
-	/* so no gotchas here besides track height checking since I_LASTH  *
-	/* might return wrong value when track height is 0                 */
-
-	if (trackHeight == 0)
-		return 0;
-
-	// Supplied offsetY MUST hold item's track offset
-	if (offsetY) *offsetY = *offsetY + *(int*)GetSetMediaItemInfo(item, "I_LASTY", NULL);
-	return *(int*)GetSetMediaItemInfo(item, "I_LASTH", NULL);
-}
-
-static int GetTakeHeight (MediaItem_Take* take, MediaItem* item, int id, int* offsetY, bool averagedLast, int trackHeight, int trackOffset)
-{
-	/* Calculates take height using all the input variables. Exists as *
-	*  a separate function since sometimes trackHeight and trackOffset *
-	*  will be known prior to calling this, so let the caller optimize *
-	*  to prevent calculating the same thing twice                     */
-
-	// Function is for internal use, so it isn't possible to have both take and item valid, but opposite must be checked
-	if (!take && !item)
+	int height = 0;
+	if (track)
 	{
-		WritePtr(offsetY, 0);
-		return 0;
-	}
-	MediaItem_Take* validTake = (take) ? (take) : (GetTake(item, id));
-	MediaItem*      validItem = (item) ? (item) : (GetMediaItemTake_Item(take));
-	MediaTrack*     track     = GetMediaItem_Track(validItem);
+		IconTheme* theme = SNM_GetIconTheme();
 
-	// This gets us the offset to start of the item
-	int takeOffset = trackOffset;
-	int itemH = GetItemHeight(validItem, &takeOffset, trackHeight);
-
-	int takeLanes; GetConfig("projtakelane", takeLanes);
-	int takeH = 0;
-
-	// Take lanes displayed
-	if (GetBit(takeLanes, 0))
-	{
-		int effTakeCount;
-		int effTakeId = GetEffectiveTakeId(take, item, id, &effTakeCount); // using original pointers on purpose here
-		takeH = itemH / effTakeCount; // average take height
-
-		if (takeH < GetMinTakeHeight(track, effTakeCount, trackHeight, itemH))
+		int compact = GetEffectiveCompactLevel(track);
+		if (compact == 2)      height = theme->tcp_supercollapsed_height; // Compacted track is not affected by vertical
+		else if (compact == 1) height = theme->tcp_small_height;          // zoom if there is no height override
+		else
 		{
-			if (GetActiveTake(validItem) == validTake)
-				takeH = itemH;
+			if (vZoom <= 4)
+			{
+				int fullArm; GetConfig("zoomshowarm", fullArm);
+				int armed =  (int)GetMediaTrackInfo_Value(track, "I_RECARM");
+
+				if ((GetMasterTrack(NULL) == track)) height = theme->tcp_master_min_height;
+				else if (fullArm && armed)           height = theme->tcp_full_height;
+				else if (vZoom == 0)                 height = theme->tcp_small_height;
+				else if (vZoom == 1)                 height = (theme->tcp_small_height + theme->tcp_medium_height) / 2;
+				else if (vZoom == 2)                 height = theme->tcp_medium_height;
+				else if (vZoom == 3)                 height = (theme->tcp_medium_height + theme->tcp_full_height) / 2;
+				else if (vZoom == 4)                 height = theme->tcp_full_height;
+			}
 			else
-				takeH = 0;
-		}
-		else
-		{
-			if (effTakeId >= 0)
-				takeOffset = takeOffset + takeH * effTakeId;
+			{
+				// Get max and min height
+				RECT r; GetClientRect(GetArrangeWnd(), &r);
+				int maxHeight = r.bottom - r.top;
+				int minHeight = theme->tcp_full_height;
 
-			// Last take gets leftover pixels from integer division
-			if (!averagedLast && (effTakeId == effTakeCount - 1))
-				IsLastTakeTooTall(itemH, takeH, effTakeCount, &takeH);
+				// Calculate track height (method stolen from Zoom.cpp - Thanks Tim!)
+				int normalizedZoom = (vZoom < 30) ? (vZoom - 4) : (30 + 3*(vZoom - 30) - 4);
+				height = minHeight + ((maxHeight-minHeight)*normalizedZoom) / 56;
+			}
 		}
 	}
-	// Take lanes not displayed
-	else
-	{
-		if (GetActiveTake(validItem) == validTake)
-			takeH = itemH;
-		else
-			takeH = 0;
-	}
-
-	WritePtr(offsetY, takeOffset);
-	return takeH;
+	return height;
 }
 
-static int GetTakeHeight (MediaItem_Take* take, MediaItem* item, int id, int* offsetY, bool averagedLast)
+int GetEnvHeightFromTrackHeight (int trackHeight)
 {
-	MediaItem* validItem = (item) ? (item) : (GetMediaItemTake_Item(take));
-	int trackOffset;
-	int trackHeight = GetTrackHeight(GetMediaItem_Track(validItem), &trackOffset);
-	return GetTakeHeight (take, item, id, offsetY, averagedLast, trackHeight, trackOffset);
+	int height = TruncToInt((double)trackHeight * 0.75);
+
+	int minHeight = SNM_GetIconTheme()->envcp_min_height;
+	if (height < minHeight)
+		height = minHeight;
+
+	return height;
 }
 
 int GetTrackHeight (MediaTrack* track, int* offsetY, int* topGap /*=NULL*/, int* bottomGap /*=NULL*/)
 {
 	bool master = (GetMasterTrack(NULL) == track) ? (true) : (false);
-	IconTheme* theme = SNM_GetIconTheme();
 
 	// Get track's start Y coordinate
 	if (offsetY)
@@ -1069,45 +1656,14 @@ int GetTrackHeight (MediaTrack* track, int* offsetY, int* topGap /*=NULL*/, int*
 
 	int compact = GetEffectiveCompactLevel(track); // Track can't get resized at compact 2 and "I_HEIGHTOVERRIDE" could return
 	if (compact == 2)                              // wrong value if track was resized prior to compacting so return here
-		return theme->tcp_supercollapsed_height;
+		return SNM_GetIconTheme()->tcp_supercollapsed_height;
 
 	// Get track height
 	int height = (int)GetMediaTrackInfo_Value(track, "I_HEIGHTOVERRIDE");
 	if (height == 0)
 	{
-		// Compacted track is not affected by all the zoom settings if there is no height override
-		if (compact == 1)
-			height = theme->tcp_small_height;
-		else
-		{
-			// Get track height from vertical zoom
-			int verticalZoom;
-			GetConfig("vzoom2", verticalZoom);
-			if (verticalZoom <= 4)
-			{
-				int fullArm; GetConfig("zoomshowarm", fullArm);
-				int armed =  (int)GetMediaTrackInfo_Value(track, "I_RECARM");
-
-				if (master)                 height = theme->tcp_master_min_height;
-				else if (fullArm && armed)  height = theme->tcp_full_height;
-				else if (verticalZoom == 0) height = theme->tcp_small_height;
-				else if (verticalZoom == 1) height = (theme->tcp_small_height + theme->tcp_medium_height) / 2;
-				else if (verticalZoom == 2) height = theme->tcp_medium_height;
-				else if (verticalZoom == 3) height = (theme->tcp_medium_height + theme->tcp_full_height) / 2;
-				else if (verticalZoom == 4) height = theme->tcp_full_height;
-			}
-			else
-			{
-				// Get max and min height
-				RECT r; GetClientRect(GetArrangeWnd(), &r);
-				int maxHeight = r.bottom - r.top;
-				int minHeight = theme->tcp_full_height;
-
-				// Calculate track height (method stolen from Zoom.cpp - Thanks Tim!)
-				int normalizedZoom = (verticalZoom < 30) ? (verticalZoom - 4) : (30 + 3*(verticalZoom - 30) - 4);
-				height = minHeight + ((maxHeight-minHeight)*normalizedZoom) / 56;
-			}
-		}
+		int vZoom; GetConfig("vzoom2", vZoom);
+		height = GetTrackHeightFromVZoomIndex(track, vZoom);
 	}
 	else
 	{
@@ -1125,6 +1681,8 @@ int GetTrackHeight (MediaTrack* track, int* offsetY, int* topGap /*=NULL*/, int*
 		// minimum, but I_HEIGHTOVERRIDE doesn't get updated)
 		else
 		{
+			IconTheme* theme = SNM_GetIconTheme();
+
 			if (master)
 			{
 				if (height < theme->tcp_master_min_height)
@@ -1145,8 +1703,9 @@ int GetTrackHeight (MediaTrack* track, int* offsetY, int* topGap /*=NULL*/, int*
 
 int GetItemHeight (MediaItem* item, int* offsetY)
 {
-	int trackH = GetTrackHeight(GetMediaItem_Track(item), offsetY);
-	return GetItemHeight(item, offsetY, trackH);
+	int trackOffsetY;
+	int trackH = GetTrackHeight(GetMediaItem_Track(item), &trackOffsetY);
+	return GetItemHeight(item, offsetY, trackH, trackOffsetY);
 }
 
 int GetTakeHeight (MediaItem_Take* take, int* offsetY)
@@ -1202,34 +1761,37 @@ int GetTrackEnvHeight (TrackEnvelope* envelope, int* offsetY, bool drawableRange
 	list<TrackEnvelope*> checkedEnvs;
 
 	bool found = false;
-	int envelopeId = GetEnvId (envelope, track);
+	int envelopeId = GetEnvId(envelope, track);
 	int count = CountTrackEnvelopes(track);
 	for (int i = 0; i < count; ++i)
 	{
 		LONG_PTR hwndData = GetWindowLongPtr(hwnd, GWLP_USERDATA);
 		if ((MediaTrack*)hwndData == nextTrack)
 			break;
-		TrackEnvelope* currentEnvelope = (TrackEnvelope*)hwndData;
 
-		if (currentEnvelope == envelope)
+		if (TrackEnvelope* currentEnvelope = HwndToEnvelope(hwnd))
 		{
-			RECT r; GetClientRect(hwnd, &r);
-			envHeight = r.bottom - r.top - ((drawableRangeOnly) ? 2*ENV_GAP : 0);
-			envOffset = trackOffset + trackHeight + envOffset + ((drawableRangeOnly) ? ENV_GAP : 0);
-			found = true;
-		}
-		else
-		{
-			// In certain cases (depending if user scrolled up or down), envelope
-			// hwnds (got by GW_HWNDNEXT) won't be in order they are drawn, so make
-			// sure requested envelope is drawn under envelope currently in loop
-			if (envelopeId > GetEnvId(currentEnvelope, track))
+			if (currentEnvelope == envelope)
 			{
 				RECT r; GetClientRect(hwnd, &r);
-				envOffset += r.bottom-r.top;
+				envHeight = r.bottom - r.top - ((drawableRangeOnly) ? 2*ENV_GAP : 0);
+				envOffset = trackOffset + trackHeight + envOffset + ((drawableRangeOnly) ? ENV_GAP : 0);
+				found = true;
 			}
-			checkedEnvs.push_back(currentEnvelope);
+			else
+			{
+				// In certain cases (depending if user scrolled up or down), envelope
+				// hwnds (got by GW_HWNDNEXT) won't be in order they are drawn, so make
+				// sure requested envelope is drawn under envelope currently in loop
+				if (envelopeId > GetEnvId(currentEnvelope, track))
+				{
+					RECT r; GetClientRect(hwnd, &r);
+					envOffset += r.bottom-r.top;
+				}
+				checkedEnvs.push_back(currentEnvelope);
+			}
 		}
+
 		hwnd = GetWindow(hwnd, GW_HWNDNEXT);
 	}
 
@@ -1326,329 +1888,8 @@ int GetTrackEnvHeight (TrackEnvelope* envelope, int* offsetY, bool drawableRange
 }
 
 /******************************************************************************
-* Helpers for getting TCP/Arrange elements from Y                             *
-******************************************************************************/
-static MediaTrack* GetTrackAreaFromY (int y, int* offset)
-{
-	/* Check if Y is in some TCP track or it's envelopes, *
-	*  returned offset is always for returned track       */
-
-	MediaTrack* master = GetMasterTrack(NULL);
-	MediaTrack* track = NULL;
-
-	int trackEnd = 0;
-	int trackOffset = 0;
-	for (int i = 0; i <= GetNumTracks(); ++i)
-	{
-		MediaTrack* currentTrack = CSurf_TrackFromID(i, false);
-		int height = *(int*)GetSetMediaTrackInfo(currentTrack, "I_WNDH", NULL);
-		if (currentTrack == master && TcpVis(master))
-			height += TCP_MASTER_GAP;
-		trackEnd += height;
-
-		if (y >= trackOffset && y < trackEnd)
-		{
-			track = currentTrack;
-			break;
-		}
-		trackOffset += height;
-	}
-
-	WritePtr(offset, (track) ? (trackOffset) : (0));
-	return track;
-}
-
-static MediaTrack* GetTrackFromY (int y, int* trackHeight, int* offset)
-{
-	int trackOffset = 0;
-	int trackH = 0;
-	MediaTrack* track = GetTrackAreaFromY(y, &trackOffset);
-	if (track)
-	{
-		trackH = GetTrackHeight(track, NULL);
-		if (y < trackOffset || y >= trackOffset + trackH)
-			track = NULL;
-	}
-
-	WritePtr(trackHeight, (track) ? (trackH)      : (0));
-	WritePtr(offset,      (track) ? (trackOffset) : (0));
-	return track;
-}
-
-static MediaItem_Take* GetTakeFromItemY (MediaItem* item, int itemY, MediaTrack* track, int trackHeight)
-{
-	/* Does not check if Y is within the item, caller should handle that */
-
-	if (!CountTakes(item))
-		return NULL;
-
-	MediaItem_Take* take = NULL;
-	int takeLanes;
-	GetConfig("projtakelane", takeLanes);
-
-	// Take lanes displayed
-	if (GetBit(takeLanes, 0))
-	{
-		int itemH = GetItemHeight(item, NULL, trackHeight);
-		int effTakeCount;
-		GetEffectiveTakeId(NULL, item, 0, &effTakeCount);
-		int takeH = itemH / effTakeCount; // average take height
-
-		if (takeH < GetMinTakeHeight(track, effTakeCount, trackHeight, itemH))
-			take = GetActiveTake(item);
-		else
-		{
-			int takeCount = CountTakes(item);
-			int effTakeId = 0;
-
-			// No hidden empty takes
-			if (effTakeCount == takeCount)
-			{
-				int id = itemY / takeH;
-				if (id > takeCount-1) // last take might be taller
-					id = takeCount-1;
-
-				take = GetTake(item, id);
-				effTakeId = id;
-			}
-			// Empty takes hidden
-			else
-			{
-				int visibleTakes = 0;
-				for (int i = 0; i < takeCount; ++i)
-				{
-					if (MediaItem_Take* currentTake = GetTake(item, i))
-					{
-						int yStart = visibleTakes * takeH;
-						int yEnd = yStart + ((i == takeCount-1) ? (takeH*2) : (takeH)); // last take might be taller
-						if (itemY > yStart && itemY <= yEnd)
-						{
-							take = currentTake;
-							break;
-						}
-						++visibleTakes;
-					}
-				}
-				effTakeId = visibleTakes;
-			}
-
-			// If last take, check it's not cropped
-			if (effTakeId == effTakeCount - 1 && IsLastTakeTooTall(itemH, takeH, effTakeCount, NULL))
-				if (itemY > takeH * effTakeCount) // take cropped - check Y is not outside it
-					take = NULL;
-		}
-	}
-	// Take lanes not displayed
-	else
-		take = GetActiveTake(item);
-
-	return take;
-}
-
-static MediaItem* GetItemFromY (int y, double position, MediaItem_Take** take)
-{
-	int trackH, offset;
-	MediaTrack* track = GetTrackFromY(y, &trackH, &offset);
-	MediaItem* item = NULL;
-	int itemYStart = 0;
-
-	double iStartLast = GetMediaItemInfo_Value(GetTrackMediaItem(track, 0), "D_POSITION");
-	int count = CountTrackMediaItems(track);
-	for (int i = 0; i < count ; ++i)
-	{
-		MediaItem* currentItem = GetTrackMediaItem(track, i);
-		double iStart = GetMediaItemInfo_Value(currentItem, "D_POSITION");
-		double iEnd = GetMediaItemInfo_Value(currentItem, "D_LENGTH") + iStart;
-
-		if (position >= iStart && position <= iEnd)
-		{
-			if (iStart >= iStartLast)
-			{
-				int yStart = offset;                                             // due to FIMP/overlapping items in lanes, check every
-				int yEnd = GetItemHeight(currentItem, &yStart, trackH) + yStart; // item - last one closest to cursor and whose height
-				if (y > yStart && y < yEnd)                                      // overlaps with cursor Y position is the correct one
-				{
-					item = currentItem;
-					itemYStart = yStart;
-				}
-
-			}
-			iStartLast = iStart;
-		}
-	}
-
-	WritePtr(take, GetTakeFromItemY(item, y-itemYStart, track, trackH));
-	return item;
-}
-
-static bool SortEnvHeightsById (const pair<int,int>& left, const pair<int,int>& right)
-{
-	return left.second < right.second;
-}
-
-static void GetTrackOrEnvelopeFromY (int y, TrackEnvelope** _envelope, MediaTrack** _track, list<TrackEnvelope*>& envelopes, int* height, int* offset)
-{
-	/* If Y is at track get track pointer and all envelopes that have  *
-	*  control panels in TCP. If Y is at envelope get the envelope and *
-	*  it's track. Height and offset are returned for element under Y  *
-	*                                                                  *
-	*  The purpose of list of all envelopes in lanes is to skip        *
-	*  checking their visibility via chunk parsing (expensive!)        */
-
-	int elementOffset = 0;
-	int elementHeight = 0;
-	MediaTrack* track = GetTrackAreaFromY(y, &elementOffset);
-	TrackEnvelope* envelope = NULL;
-	if (track)
-	{
-		elementHeight = GetTrackHeight(track, NULL);
-		vector<pair<int,int> > envHeights;
-		bool yInTrack = (y < elementOffset + elementHeight) ? true : false;
-
-		// Get first envelope's lane hwnd and cycle through the rest
-		HWND hwnd = GetWindow(GetTcpTrackWnd(track), GW_HWNDNEXT);
-		MediaTrack* nextTrack = CSurf_TrackFromID(1 + CSurf_TrackToID(track, false), false);
-		int count = CountTrackEnvelopes(track);
-		for (int i = 0; i < count; ++i)
-		{
-			LONG_PTR hwndData = GetWindowLongPtr(hwnd, GWLP_USERDATA);
-			if ((MediaTrack*)hwndData == nextTrack)
-				break;
-
-			if (yInTrack)
-				envelopes.push_back((TrackEnvelope*)hwndData);
-			else
-			{
-				RECT r; GetClientRect(hwnd, &r);
-				int envHeight = r.bottom - r.top;
-				int envId = GetEnvId((TrackEnvelope*)hwndData, track);
-				envHeights.push_back(make_pair(envHeight, envId));
-			}
-
-			hwnd = GetWindow(hwnd, GW_HWNDNEXT);
-		}
-
-		if (!yInTrack)
-		{
-			// Envelopes hwnds don't have to be in order they are drawn so need to sort them by id before searching
-			std::sort(envHeights.begin(), envHeights.end(), SortEnvHeightsById);
-			int envelopeStart = elementOffset + elementHeight;
-			for (size_t i = 0; i < envHeights.size(); ++i)
-			{
-				int envelopeEnd = envelopeStart + envHeights[i].first;
-				if (y >= envelopeStart && y < envelopeEnd)
-				{
-					envelope = GetTrackEnvelope(track, envHeights[i].second);
-					elementHeight = envHeights[i].first;
-					elementOffset = envelopeStart;
-					break;
-				}
-				envelopeStart += envHeights[i].first;
-			}
-		}
-	}
-
-	WritePtr(_envelope, envelope);
-	WritePtr(_track,    track);
-	WritePtr(height,    elementHeight);
-	WritePtr(offset,    elementOffset);
-}
-
-/******************************************************************************
 * Arrange                                                                     *
 ******************************************************************************/
-static bool IsPointInArrange (POINT* p, bool checkPointVisibilty = true, HWND* wndFromPoint = NULL)
-{
-	/* Check if point is in arrange. Since WindowFromPoint is sometimes     *
-	*  called before this function, caller can choose not to check it but   *
-	*  only if point's coordinates are in arrange (disregarding scrollbars) */
-
-	HWND hwnd = GetArrangeWnd();
-	RECT r; GetWindowRect(hwnd, &r);
-	#ifdef _WIN32
-		r.right  -= SCROLLBAR_W + 1;
-		r.bottom -= SCROLLBAR_W + 1;
-	#else
-		r.right  -= SCROLLBAR_W;
-		if (r.top > r.bottom)
-		{
-			swap(r.top, r.bottom);
-			r.top += SCROLLBAR_W;
-		}
-		else
-			r.bottom -= SCROLLBAR_W;
-	#endif
-
-	bool pointInArrange = p->x >= r.left && p->x <= r.right && p->y >= r.top && p->y <= r.bottom;
-
-	if (checkPointVisibilty)
-	{
-		if (pointInArrange)
-		{
-			HWND hwndPt = WindowFromPoint(*p);
-			WritePtr(wndFromPoint, hwndPt);
-			if (hwnd == hwndPt)
-				return true;
-			else
-				return false;
-		}
-		else
-		{
-			WritePtr(wndFromPoint, WindowFromPoint(*p));
-			return false;
-		}
-	}
-	else
-	{
-		WritePtr(wndFromPoint, WindowFromPoint(*p));
-		return pointInArrange;
-	}
-}
-
-static double PositionAtArrangePoint (POINT p, double* arrangeStart = NULL, double* arrangeEnd = NULL, double* hZoom = NULL)
-{
-	/* Does not check if point is in arrange, to make it work it *
-	*  it is enough to have p.x in arrange, p.y can be somewhere *
-	*  else like ruler etc...                                    */
-
-	HWND hwnd = GetArrangeWnd();
-	ScreenToClient(hwnd, &p);
-
-	double start, end;
-	RECT r; GetWindowRect(hwnd, &r);
-	GetSet_ArrangeView2(NULL, false, r.left, r.right-SCROLLBAR_W, &start, &end);
-	GetClientRect(hwnd, &r);
-	double zoom = GetHZoomLevel();
-
-	WritePtr(arrangeStart, start);
-	WritePtr(arrangeEnd, end);
-	WritePtr(hZoom, zoom);
-	return start  + (r.left + p.x) / zoom;
-}
-
-static int TranslatePointToArrangeScrollY (POINT p)
-{
-	/* returns real, scrollbar Y, not displayed Y */
-
-	HWND hwnd = GetArrangeWnd();
-	ScreenToClient(hwnd, &p);
-
-	SCROLLINFO si = { sizeof(SCROLLINFO), };
-	si.fMask = SIF_ALL;
-	CoolSB_GetScrollInfo(hwnd, SB_VERT, &si);
-
-	return (int)p.y + si.nPos;
-}
-
-static int TranslatePointToArrangeX (POINT p)
-{
-	/* returns displayed X, not real, scrollbar X */
-
-	HWND hwnd = GetArrangeWnd();
-	ScreenToClient(hwnd, &p);
-	return (int)p.x;
-}
-
 void MoveArrange (double amountTime)
 {
 	RECT r;
@@ -1676,14 +1917,13 @@ void CenterArrange (double position)
 
 void SetArrangeStart (double start)
 {
-	RECT r;
-	double startTime, endTime;
-	GetWindowRect(GetArrangeWnd(), &r);
+	SCROLLINFO si = { sizeof(SCROLLINFO), };
+	si.fMask = SIF_ALL;
+	CoolSB_GetScrollInfo(GetArrangeWnd(), SB_HORZ, &si);
 
-	GetSet_ArrangeView2(NULL, false, r.left, r.right-SCROLLBAR_W, &startTime, &endTime);
-	endTime = start + (endTime - startTime);
-	startTime = start;
-	GetSet_ArrangeView2(NULL, true, r.left, r.right-SCROLLBAR_W, &startTime, &endTime);
+	si.nPos = RoundToInt(start * GetHZoomLevel()); // OCD alert: GetSet_ArrangeView2() can sometimes be off for one pixel (probably round vs trunc issue)
+	CoolSB_SetScrollInfo(GetArrangeWnd(), SB_HORZ, &si, true);
+	SendMessage(GetArrangeWnd(), WM_HSCROLL, SB_THUMBPOSITION, NULL);
 }
 
 void MoveArrangeToTarget (double target, double reference)
@@ -1877,9 +2117,9 @@ HWND FindReaperWndByTitle (const char* name)
 
 HWND GetArrangeWnd ()
 {
-	static HWND hwnd = NULL; /* More efficient and Justin says it's safe: http://askjf.com/index.php?q=2653s */
+	static HWND s_hwnd = NULL; /* More efficient and Justin says it's safe: http://askjf.com/index.php?q=2653s */
 
-	if (!hwnd)
+	if (!s_hwnd)
 	{
 		#ifdef _WIN32
 			if (IsLocalized())
@@ -1894,7 +2134,7 @@ HWND GetArrangeWnd ()
 					GetClassName(wnd, buf, sizeof(buf));
 					if (!strcmp(buf, "REAPERTrackListWindow"))
 					{
-						hwnd = wnd;
+						s_hwnd = wnd;
 						break;
 					}
 					wnd = SearchChildren(preparedName, g_hwndParent, wnd);
@@ -1902,19 +2142,19 @@ HWND GetArrangeWnd ()
 			}
 			else
 			{
-				hwnd = FindWindowEx(g_hwndParent, 0, "REAPERTrackListWindow", __localizeFunc("trackview", "DLG_102", 0));
+				s_hwnd = FindWindowEx(g_hwndParent, 0, "REAPERTrackListWindow", __localizeFunc("trackview", "DLG_102", 0));
 			}
 		#else
 			return GetWindow(g_hwndParent, GW_CHILD);
 		#endif
 	}
-	return hwnd;
+	return s_hwnd;
 }
 
 HWND GetRulerWndAlt ()
 {
-	static HWND hwnd = NULL; /* More efficient and Justin says it's safe: http://askjf.com/index.php?q=2653s */
-	if (!hwnd)
+	static HWND s_hwnd = NULL; /* More efficient and Justin says it's safe: http://askjf.com/index.php?q=2653s */
+	if (!s_hwnd)
 	{
 		#ifdef _WIN32
 			if (IsLocalized())
@@ -1929,7 +2169,7 @@ HWND GetRulerWndAlt ()
 					GetClassName(wnd, buf, sizeof(buf));
 					if (!strcmp(buf, "REAPERTimeDisplay"))
 					{
-						hwnd = wnd;
+						s_hwnd = wnd;
 						break;
 					}
 					wnd = SearchChildren(preparedName, g_hwndParent, wnd);
@@ -1937,27 +2177,27 @@ HWND GetRulerWndAlt ()
 			}
 			else
 			{
-				hwnd = FindWindowEx(g_hwndParent, 0, "REAPERTimeDisplay", __localizeFunc("timeline", "DLG_102", 0));
+				s_hwnd = FindWindowEx(g_hwndParent, 0, "REAPERTimeDisplay", __localizeFunc("timeline", "DLG_102", 0));
 			}
 		#else
 			return GetWindow(GetArrangeWnd(), GW_HWNDNEXT);
 		#endif
 	}
-	return hwnd;
+	return s_hwnd;
 }
 
 HWND GetTransportWnd ()
 {
-	static char* name = NULL;
-	if (!name)
-		AllocPreparedString(__localizeFunc("Transport", "DLG_188", 0), &name);
+	static char* s_name = NULL;
+	if (!s_name)
+		AllocPreparedString(__localizeFunc("Transport", "DLG_188", 0), &s_name);
 
-	if (name)
+	if (s_name)
 	{
-		HWND hwnd = FindInReaper(name);
-		if (!hwnd) hwnd = FindInReaperDockers(name);
-		if (!hwnd) hwnd = FindInFloatingDockers(name);
-		if (!hwnd) hwnd = FindFloating(name); // transport can't float by itself but search in case this changes in the future
+		HWND hwnd = FindInReaper(s_name);
+		if (!hwnd) hwnd = FindInReaperDockers(s_name);
+		if (!hwnd) hwnd = FindInFloatingDockers(s_name);
+		if (!hwnd) hwnd = FindFloating(s_name); // transport can't float by itself but search in case this changes in the future
 		return hwnd;
 	}
 	return NULL;
@@ -1965,26 +2205,26 @@ HWND GetTransportWnd ()
 
 HWND GetMixerWnd ()
 {
-	static char* name = NULL;
-	if (!name)
-		AllocPreparedString(__localizeFunc("Mixer", "DLG_151", 0), &name);
-	return FindReaperWndByPreparedString(name);
+	static char* s_name = NULL;
+	if (!s_name)
+		AllocPreparedString(__localizeFunc("Mixer", "DLG_151", 0), &s_name);
+	return FindReaperWndByPreparedString(s_name);
 }
 
 HWND GetMixerMasterWnd ()
 {
-	static char* name = NULL;
-	if (!name)
-		AllocPreparedString(__localizeFunc("Mixer Master", "mixer", 0), &name);
-	return FindReaperWndByPreparedString(name);
+	static char* s_name = NULL;
+	if (!s_name)
+		AllocPreparedString(__localizeFunc("Mixer Master", "mixer", 0), &s_name);
+	return FindReaperWndByPreparedString(s_name);
 }
 
 HWND GetMediaExplorerWnd ()
 {
-	static char* name = NULL;
-	if (!name)
-		AllocPreparedString(__localizeFunc("Media Explorer", "explorer", 0), &name);
-	return FindReaperWndByPreparedString(name);
+	static char* s_name = NULL;
+	if (!s_name)
+		AllocPreparedString(__localizeFunc("Media Explorer", "explorer", 0), &s_name);
+	return FindReaperWndByPreparedString(s_name);
 }
 
 HWND GetMcpWnd ()
@@ -2004,8 +2244,8 @@ HWND GetMcpWnd ()
 
 HWND GetTcpWnd ()
 {
-	static HWND hwnd = NULL;
-	if (!hwnd)
+	static HWND s_hwnd = NULL;
+	if (!s_hwnd)
 	{
 		MediaTrack* track = GetTrack(NULL, 0);
 		MediaTrack* master = GetMasterTrack(NULL);
@@ -2032,7 +2272,7 @@ HWND GetTcpWnd ()
 				{
 					if ((MediaTrack*)GetWindowLongPtr(trackHwnd, GWLP_USERDATA) == firstTrack)
 					{
-						hwnd = tcpHwnd;
+						s_hwnd = tcpHwnd;
 						found = true;
 					}
 					trackHwnd = FindWindowEx(tcpHwnd, trackHwnd, NULL, "");
@@ -2049,7 +2289,7 @@ HWND GetTcpWnd ()
 			Main_OnCommandEx(40075, 0, NULL);
 		}
 	}
-	return hwnd;
+	return s_hwnd;
 }
 
 HWND GetTcpTrackWnd (MediaTrack* track)
@@ -2070,16 +2310,16 @@ HWND GetNotesView (void* midiEditor)
 	if (MIDIEditor_GetMode(midiEditor) != -1)
 	{
 		#ifdef _WIN32
-			static char* name  = (IsLocalized()) ? (NULL) : (const_cast<char*>(__localizeFunc("midiview", "midi_DLG_102", 0)));
+			static char* s_name  = (IsLocalized()) ? (NULL) : (const_cast<char*>(__localizeFunc("midiview", "midi_DLG_102", 0)));
 
 			if (IsLocalized())
 			{
-				if (!name)
-					AllocPreparedString(__localizeFunc("midiview", "midi_DLG_102", 0),&name);
-				return SearchChildren(name,  (HWND)midiEditor);
+				if (!s_name)
+					AllocPreparedString(__localizeFunc("midiview", "midi_DLG_102", 0),&s_name);
+				return SearchChildren(s_name,  (HWND)midiEditor);
 			}
 			else
-				return FindWindowEx((HWND)midiEditor, NULL, NULL , name);
+				return FindWindowEx((HWND)midiEditor, NULL, NULL , s_name);
 		#else
 			return GetWindow(GetWindow((HWND)midiEditor, GW_CHILD), GW_HWNDNEXT);
 		#endif
@@ -2093,16 +2333,16 @@ HWND GetPianoView (void* midiEditor)
 	if (MIDIEditor_GetMode(midiEditor) != -1)
 	{
 		#ifdef _WIN32
-			static char* name  = (IsLocalized()) ? (NULL) : (const_cast<char*>(__localizeFunc("midipianoview", "midi_DLG_102", 0)));
+			static char* s_name  = (IsLocalized()) ? (NULL) : (const_cast<char*>(__localizeFunc("midipianoview", "midi_DLG_102", 0)));
 
 			if (IsLocalized())
 			{
-				if (!name)
-					AllocPreparedString(__localizeFunc("midipianoview", "midi_DLG_102", 0),&name);
-				return SearchChildren(name,  (HWND)midiEditor);
+				if (!s_name)
+					AllocPreparedString(__localizeFunc("midipianoview", "midi_DLG_102", 0),&s_name);
+				return SearchChildren(s_name,  (HWND)midiEditor);
 			}
 			else
-				return FindWindowEx((HWND)midiEditor, NULL, NULL , name);
+				return FindWindowEx((HWND)midiEditor, NULL, NULL , s_name);
 		#else
 			return GetWindow((HWND)midiEditor, GW_CHILD);
 		#endif
@@ -2120,9 +2360,9 @@ MediaTrack* HwndToTrack (HWND hwnd, int* hwndContext)
 	if (!track)
 	{
 		HWND tcp = GetTcpWnd();
-		if (hwndParent == tcp)                                                             // hwnd is a track
+		if (hwndParent == tcp)                                               // hwnd is a track
 			track = (MediaTrack*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-		else if (GetParent(hwndParent) == tcp)                                             // hwnd is vu meter inside track
+		else if (GetParent(hwndParent) == tcp)                               // hwnd is vu meter inside track
 			track = (MediaTrack*)GetWindowLongPtr(hwndParent, GWLP_USERDATA);
 
 		if (track)
@@ -2184,907 +2424,65 @@ void CenterDialog (HWND hwnd, HWND target, HWND zOrder)
 	SetWindowPos(hwnd, zOrder, r.left, r.top, 0, 0, SWP_NOSIZE);
 }
 
-/******************************************************************************
-* Mouse cursor                                                                *
-******************************************************************************/
-BR_MouseContextInfo::BR_MouseContextInfo()
+void GetMonitorRectFromPoint (const POINT& p, RECT* r)
 {
-	/* Note: other parts of the code rely on these *
-	*  default values. Be careful if changing them */
+	if (!r)
+		return;
 
-	track        = NULL;
-	item         = NULL;
-	take         = NULL;
-	envelope     = NULL;
-	midiEditor   = NULL;
-	takeEnvelope = midiInlineEditor = false;
-	position     = -1;
-	noteRow      = ccLaneVal = ccLaneId = -1;
-	ccLane       = -2; // because -1 stands for velocity lane
-}
-
-static int IsMouseOverEnvelopeLine (BR_Envelope& envelope, int drawableEnvHeight, int yOffset, int mouseY, int mouseX, double mousePos, double arrangeStart, double arrangeZoom)
-{
-	/* mouseX is displayed X, not taking scrollbars into account. mouseY on the  *
-	*  other hand has to take scrollbar position into account                    *
-	*                                                                            *
-	*  Return values: 0 -> no hit, 1 -> over point, 2 - > over segment           */
-
-	int mouseHit = 0;
-
-	// Check if mouse is in drawable part of envelope lane where line resides
-	if (mouseY >= yOffset && mouseY < yOffset + drawableEnvHeight)
-	{
-		double mousePosLeft = mousePos - 1/arrangeZoom * ENV_HIT_POINT*2;
-		double mousePosRight = mousePos + 1/arrangeZoom * ENV_HIT_POINT*2;
-
-		int prevId = envelope.FindPrevious(mousePos);
-		int nextId = prevId + 1;
-
-		int tempoHit = (envelope.IsTempo()) ? (ENV_HIT_POINT) : (0); // for some reason, tempo points have double up/down hit area
-		bool found = false;
-
-		// Check surrounding points first - they take priority over segment
-		if (!found)
+	#ifdef _WIN32
+		if (HMONITOR monitor = MonitorFromPoint(p, MONITOR_DEFAULTTONEAREST))
 		{
-			// Check all the points around mouse cursor position
-			// gotcha: since point can be partially visible even when it's position is not within arrange start/end we don't check if within bounds
-			double prevPos;
-			while (envelope.GetPoint(prevId, &prevPos, NULL, NULL, NULL) && CheckBounds(prevPos, mousePosLeft, mousePosRight))
-			{
-				int x = Round(arrangeZoom * (prevPos - arrangeStart));
-				int y = yOffset + drawableEnvHeight - Round(envelope.NormalizedDisplayValue(prevId) * drawableEnvHeight);
-				if (CheckBounds(mouseX, x - ENV_HIT_POINT, x + ENV_HIT_POINT_LEFT) && CheckBounds(mouseY, y - ENV_HIT_POINT - tempoHit, y + ENV_HIT_POINT_DOWN + tempoHit))
-				{
-					mouseHit = 1;
-					found = true;
-					break;
-				}
-				--prevId;
-			}
-		}
-		if (!found)
-		{
-			double nextPos;
-			while (envelope.GetPoint(nextId, &nextPos, NULL, NULL, NULL) && CheckBounds(nextPos, mousePosLeft, mousePosRight))
-			{
-				int x = Round(arrangeZoom * (nextPos - arrangeStart));
-				int y = yOffset + drawableEnvHeight - Round(envelope.NormalizedDisplayValue(nextId) * drawableEnvHeight);
-				if (CheckBounds(mouseX, x - ENV_HIT_POINT, x + ENV_HIT_POINT_LEFT) && CheckBounds(mouseY, y - ENV_HIT_POINT - tempoHit, y + ENV_HIT_POINT_DOWN + tempoHit))
-				{
-					mouseHit = 1;
-					found = true;
-					break;
-				}
-				++nextId;
-			}
-		}
-
-		// Not over points, check segment
-		if (!found)
-		{
-			double mouseValue = envelope.ValueAtPosition(mousePos);
-			int x = Round(arrangeZoom * (mousePos - arrangeStart));
-			int y = yOffset + drawableEnvHeight - Round(envelope.NormalizedDisplayValue(mouseValue) * drawableEnvHeight);
-			if (CheckBounds(mouseX, x - ENV_HIT_POINT, x + ENV_HIT_POINT) && CheckBounds(mouseY, y - ENV_HIT_POINT, y + ENV_HIT_POINT_DOWN))
-			{
-				mouseHit = 2;
-			}
-		}
-	}
-	return mouseHit;
-}
-
-static int IsMouseOverEnvelopeLineTrackLane (MediaTrack* track, int trackHeight, int trackOffset, list<TrackEnvelope*>& laneEnvs, int mouseY, int mouseX, double mousePos, double arrangeStart, double arrangeZoom, TrackEnvelope** trackEnvelope)
-{
-	/* laneEnv list should hold all track envelopes that have their own lane so *
-	*  we don't have to check for their visibility in track lane (chunks are    *
-	*  expensive). Also note that laneEnvs WILL get modified during the process *
-	*                                                                           *
-	*  MouseX is displayed X, not taking scrollbars into account. MouseY on the *
-	*  other hand has to take scrollbar position into account                   *
-	*                                                                           *
-	*  Return values: 0 -> no hit, 1 -> over point, 2 - > over segment          *
-	*  If there is a hit, trackEnvelope will hold envelope                      */
-
-	int mouseHit = 0;
-	TrackEnvelope* envelopeUnderMouse = NULL;
-
-	// Get all track envelopes that appear in track lane
-	vector<TrackEnvelope*> trackLaneEnvs;
-	int count = CountTrackEnvelopes(track);
-	for (int i = 0; i < count; ++i)
-	{
-		TrackEnvelope* envelope = GetTrackEnvelope(track, i);
-		std::list<TrackEnvelope*>::iterator it = find(laneEnvs.begin(), laneEnvs.end(), envelope);
-		if (it != laneEnvs.end())
-		{
-			laneEnvs.erase(it);
-			continue;
-		}
-
-		if (EnvVis(envelope, NULL))
-			trackLaneEnvs.push_back(envelope);
-	}
-
-	// Find envelope lane in track lane at mouse cursor and check mouse cursor against it
-	int overlapLimit,trackGapTop, trackGapBottom;
-	GetConfig("env_ol_minh", overlapLimit);
-	GetTrackGap(trackHeight, &trackGapTop, &trackGapBottom);
-
-	int envLaneFull = trackHeight - trackGapTop - trackGapBottom;
-	int envLaneCount = (int)trackLaneEnvs.size();
-	if (envLaneCount > 0)
-	{
-		bool envelopesOverlapping = (overlapLimit >= 0 && envLaneFull / envLaneCount < overlapLimit) ? (true) : (false);
-
-		// Each envelope has it's own lane, find the right one
-		if (!envelopesOverlapping)
-		{
-			int envLaneH = envLaneFull / envLaneCount;
-			int envHeight = envLaneH - 2*ENV_GAP;
-			if (envHeight > ENV_LINE_WIDTH)
-			{
-				for (int i = 0; i < envLaneCount; ++i)
-				{
-					int envelopeStart = trackOffset + trackGapTop + envLaneH * i;
-					int envelopeEnd = envelopeStart + envLaneH;
-					if (mouseY >= envelopeStart && mouseY < envelopeEnd)
-					{
-						int envOffset = trackOffset + trackGapTop + i*envLaneH + ENV_GAP;
-						BR_Envelope envelope(trackLaneEnvs[i]);
-
-						mouseHit = IsMouseOverEnvelopeLine(envelope, envHeight, envOffset, mouseY, mouseX, mousePos, arrangeStart, arrangeZoom);
-						if (mouseHit != 0)
-							envelopeUnderMouse = envelope.GetPointer();
-						break;
-					}
-				}
-			}
-		}
-		// Envelopes are overlapping each other, search them all
-		else
-		{
-			int envHeight = envLaneFull - 2*ENV_GAP;
-			if (envHeight > ENV_LINE_WIDTH)
-			{
-				for (int i = 0; i < envLaneCount; ++i)
-				{
-					int envOffset = trackOffset + trackGapTop + ENV_GAP;
-					BR_Envelope envelope(trackLaneEnvs[i]);
-
-					mouseHit = IsMouseOverEnvelopeLine(envelope, envHeight, envOffset, mouseY, mouseX, mousePos, arrangeStart, arrangeZoom);
-					if (mouseHit != 0)
-					{
-						envelopeUnderMouse = envelope.GetPointer();
-						break;
-					}
-				}
-			}
-		}
-	}
-
-	WritePtr(trackEnvelope, envelopeUnderMouse);
-	return mouseHit;
-}
-
-static int IsMouseOverEnvelopeLineTake (MediaItem_Take* take, int takeHeight, int takeOffset, int mouseY, int mouseX, double mousePos, double arrangeStart, double arrangeZoom, TrackEnvelope** trackEnvelope)
-{
-	/* MouseX is displayed X, not taking  scrollbars into account. MouseY on the *
-	*  other hand has to take scrollbar position into account                    *
-	*                                                                            *
-	*  Return values: 0 -> no hit, 1 -> over point, 2 - > over segment           *
-	*  If there is a hit, trackEnvelope will hold envelope                       */
-
-	int mouseHit = 0;
-	TrackEnvelope* envelopeUnderMouse = NULL;
-
-	takeHeight -= 2*ENV_GAP;
-	takeOffset += ENV_GAP;
-
-	for (int i = 0; i < 4; ++i)
-	{
-		BR_EnvType type = VOLUME;    // gotcha: the order is important (it is the same reaper uses)
-		if      (i == 1) type = PAN;
-		else if (i == 2) type = MUTE;
-		else if (i == 3) type = PITCH;
-
-		BR_Envelope envelope(take, type);
-		if (envelope.IsVisible())
-			mouseHit = IsMouseOverEnvelopeLine(envelope, takeHeight, takeOffset, mouseY, mouseX, mousePos, arrangeStart, arrangeZoom);
-
-		if (mouseHit != 0)
-		{
-			envelopeUnderMouse = envelope.GetPointer();
-			break;
-		}
-	}
-
-	WritePtr(trackEnvelope, envelopeUnderMouse);
-	return mouseHit;
-}
-
-static int GetRulerLaneHeight (int rulerH, int lane)
-{
-	/* lane: 0 -> regions  *
-	*        1 -> markers  *
-	*        2 -> tempo    *
-	*        3 -> timeline */
-
-	int markers = Round((double)rulerH/6);
-	int timeline = Round((double)rulerH/2)-2;
-
-	if (lane == 0)
-		return rulerH - markers*2 - timeline;
-	if (lane == 1 || lane == 2)
-		return markers;
-	if (lane == 3)
-		return timeline;
-	return 0;
-}
-
-static int IsHwndMidiEditor (HWND hwnd, void** midiEditor, HWND* subView)
-{
-	int status = 0;
-
-	if (MIDIEditor_GetMode(hwnd) != -1)
-	{
-		status = MIDI_WND_UNKNOWN;
-		WritePtr(midiEditor, (void*)hwnd);
-		WritePtr(subView, (HWND)NULL);
-	}
-	else
-	{
-		while (hwnd)
-		{
-			HWND subWnd = hwnd;
-			hwnd = GetParent(hwnd);
-			if (MIDIEditor_GetMode(hwnd) != -1)
-			{
-				WritePtr(midiEditor, (void*)hwnd);
-				WritePtr(subView, subWnd);
-
-				if      (subWnd == GetNotesView((void*)hwnd)) { status = MIDI_WND_NOTEVIEW; break;}
-				else if (subWnd == GetPianoView((void*)hwnd)) { status = MIDI_WND_KEYBOARD; break;}
-				else                                          { status = MIDI_WND_UNKNOWN;  break;}
-			}
-		}
-	}
-	return status;
-}
-
-static bool GetMouseCursorContextMidi (HWND hwnd, POINT p, BR_MouseContextInfo& info, const char** window, const char** segment, const char** details)
-{
-	HWND segmentHwnd = NULL;
-	if (int cursorSegment = IsHwndMidiEditor(hwnd, &info.midiEditor, &segmentHwnd))
-	{
-		WritePtr(window, "midi_editor");
-		ScreenToClient(segmentHwnd, &p);
-		RECT r; GetClientRect(segmentHwnd, &r);
-
-		if (cursorSegment == MIDI_WND_NOTEVIEW)
-		{
-			if      (p.x > (r.right - r.left - 1)) cursorSegment = MIDI_WND_UNKNOWN;
-			else if (p.y > (r.bottom - r.top - 1)) cursorSegment = MIDI_WND_UNKNOWN;
-		}
-
-		if (cursorSegment == MIDI_WND_NOTEVIEW || cursorSegment == MIDI_WND_KEYBOARD)
-		{
-			BR_MidiEditor midiEditor(info.midiEditor);
-			if (!midiEditor.IsValid())
-				return false;
-
-			// Get mouse cursor time position
-			if (cursorSegment == MIDI_WND_NOTEVIEW)
-			{
-				if (midiEditor.GetTimebase() == PROJECT_BEATS || midiEditor.GetTimebase() == SOURCE_BEATS)
-				{
-					double ppqPos = midiEditor.GetStartPos() + ((r.left + p.x) / midiEditor.GetHZoom());
-					info.position = MIDI_GetProjTimeFromPPQPos(midiEditor.GetActiveTake(), ppqPos);
-				}
-				else
-				{
-					double timePos = MIDI_GetProjTimeFromPPQPos(midiEditor.GetActiveTake(), midiEditor.GetStartPos()) + ((r.left + p.x) / midiEditor.GetHZoom());
-					info.position = timePos;
-				}
-			}
-
-			if (p.y < MIDI_RULER_H)
-			{
-				if      (cursorSegment == MIDI_WND_NOTEVIEW) WritePtr(segment, "ruler");
-				else if (cursorSegment == MIDI_WND_KEYBOARD) WritePtr(segment, "unknown");
-			}
-			else
-			{
-				int viewHeight = r.bottom - r.top;
-				int ccFullHeight = 0;
-
-				for (int i = 0; i < midiEditor.CountCCLanes(); ++i)
-					ccFullHeight += midiEditor.GetCCLaneHeight (i);
-				if (cursorSegment == MIDI_WND_KEYBOARD)
-					ccFullHeight += SCROLLBAR_W - 3;   // envelope selector is not completely aligned with cc lane
-
-				// Over CC lanes
-				if (p.y > (viewHeight - ccFullHeight))
-				{
-					WritePtr(segment, "cc_lane");
-
-					if      (cursorSegment == MIDI_WND_NOTEVIEW) WritePtr(details, "cc_lane");
-					else if (cursorSegment == MIDI_WND_KEYBOARD) WritePtr(details, "cc_selector");
-
-					// Get CC lane number
-					int ccStart = viewHeight - ccFullHeight + ((cursorSegment == MIDI_WND_KEYBOARD) ? (1) : (0));
-					for (int i = 0; i < midiEditor.CountCCLanes(); ++i)
-					{
-						int ccEnd = ccStart + midiEditor.GetCCLaneHeight(i);
-						if (i == midiEditor.CountCCLanes() - 1)
-							ccEnd += (cursorSegment == MIDI_WND_KEYBOARD) ? (SCROLLBAR_W) : (0);
-
-						if (p.y >= ccStart && p.y < ccEnd)
-						{
-							info.ccLane = midiEditor.GetCCLane(i);
-							info.ccLaneId = i;
-
-							// Get CC value at Y position
-							if (cursorSegment == MIDI_WND_NOTEVIEW)
-							{
-								ccStart += MIDI_LANE_DIVIDER_H;
-								if (p.y >= ccStart)
-								{
-									int mouse = ccEnd - p.y;
-									int laneHeight = ccEnd - ccStart;
-									double steps = (info.ccLane == CC_PITCH || info.ccLane >= CC_14BIT_START) ? (16383) : (128);
-									info.ccLaneVal = (int)(steps / laneHeight * mouse);
-									if (steps == 128 && info.ccLaneVal == 128)
-										info.ccLaneVal = 127;
-								}
-							}
-							break;
-						}
-						else
-						{
-							ccStart = ccEnd;
-						}
-					}
-				}
-
-				// Over note view/keyboard
-				else
-				{
-					if      (cursorSegment == MIDI_WND_KEYBOARD) WritePtr(segment, "piano");
-					else if (cursorSegment == MIDI_WND_NOTEVIEW) WritePtr(segment, "notes");
-
-					// This is mouse Y position counting from the bottom - make sure it's not outside valid, drawable note range
-					int realMouseY = (128 * midiEditor.GetVZoom()) - (p.y - MIDI_RULER_H + midiEditor.GetVPos() * midiEditor.GetVZoom());
-					if (realMouseY > 0)
-					{
-						bool processKeyboardSeparately = true;
-						vector<int> visibleNoteRows = GetUsedNamedNotes(info.midiEditor, NULL, midiEditor.GetNoteshow() != SHOW_ALL_NOTES, midiEditor.GetNoteshow() == HIDE_UNUSED_UNNAMED_NOTES, midiEditor.GetDrawChannel());
-
-						if (cursorSegment == MIDI_WND_NOTEVIEW)
-							processKeyboardSeparately = false;
-						else if ((midiEditor.GetPianoRoll() != 0) || (midiEditor.GetNoteshow() != SHOW_ALL_NOTES && visibleNoteRows.size()))
-							processKeyboardSeparately = false;
-
-						if (!processKeyboardSeparately)
-						{
-							int noteRow = (realMouseY - 1) / midiEditor.GetVZoom();
-
-							if (midiEditor.GetNoteshow() == SHOW_ALL_NOTES)
-							{
-								info.noteRow = noteRow;
-							}
-							else
-							{
-								int firstNoteRow = 128 - (int)visibleNoteRows.size();
-								if (noteRow >= firstNoteRow)
-									info.noteRow = visibleNoteRows[noteRow - firstNoteRow];
-							}
-						}
-						else
-						{
-							int noteRow = (realMouseY) / midiEditor.GetVZoom();
-							bool doWhiteKeys = (p.x < MIDI_BLACK_KEYS_W) ? (false) : (true);
-
-							if (!doWhiteKeys && IsMidiNoteBlack(noteRow))
-								info.noteRow = noteRow;
-							else
-								doWhiteKeys = true;
-
-							if (doWhiteKeys)
-							{
-								int octave = noteRow / 12;
-								int octaveStart = octave * midiEditor.GetVZoom() * 12;
-
-								// First part of the octave (C D E)
-								if (realMouseY >= octaveStart && realMouseY < (octaveStart + midiEditor.GetVZoom() * 5))
-								{
-									int fullHeight = midiEditor.GetVZoom() * 5;
-									int keyHeight = fullHeight / 3;
-
-									int leftOver = 0;
-									if      ((fullHeight % 3) == 1) leftOver = 0 | 1;
-									else if ((fullHeight % 3) == 2) leftOver = 0 | 3;
-
-									int keyStart = octaveStart;
-									for (int i = 0; i < 3; ++i)
-									{
-										int keyEnd = keyStart + keyHeight + GetBit(leftOver, i) + ((i == 0) ? (1) : (0));
-
-										if (realMouseY >= keyStart && realMouseY < keyEnd)
-										{
-											info.noteRow = (octave * 12) + (i * 2);
-											break;
-										}
-										else
-											keyStart = keyEnd;
-									}
-								}
-								// Second part of the octave (F G A H)
-								else
-								{
-									int fullHeight = midiEditor.GetVZoom() * 7;
-									int keyHeight = fullHeight / 4;
-
-									int leftOver = 0;
-									if      ((fullHeight % 4) == 1) leftOver = 0 | 1;
-									else if ((fullHeight % 4) == 2) leftOver = 0 | 5;
-									else if ((fullHeight % 4) == 3) leftOver = 0 | 7;
-
-									int keyStart = octaveStart + midiEditor.GetVZoom() * 5;
-									for (int i = 0; i < 4; ++i)
-									{
-										int keyEnd = keyStart + keyHeight + GetBit(leftOver, i) + ((i == 0) ? (1) : (0));
-
-										if (realMouseY >= keyStart && realMouseY < keyEnd)
-										{
-											info.noteRow = (octave * 12) + (i * 2) + 5;
-											break;
-										}
-										else
-											keyStart = keyEnd;
-									}
-								}
-							}
-						}
-
-
-					}
-				}
-			}
+			MONITORINFO monitorInfo = {sizeof(MONITORINFO)};
+			GetMonitorInfo(monitor, &monitorInfo);
+			*r = monitorInfo.rcWork;
 		}
 		else
 		{
-			WritePtr(segment, "unknown");
+			r->top  = 0;
+			r->left = 0;
+			r->right = 800;
+			r->left  = 600;
 		}
-		return true;
-	}
-	else
-	{
-		return false;
-	}
+	#else
+		RECT pRect = {p.x, p.y, p.x, p.y};
+		SWELL_GetViewPort(r, &pRect, false);
+	#endif
 }
 
-static bool GetMouseCursorContextMidiInline (BR_MouseContextInfo& info, const char** window, const char** segment, const char** details, int mouseY, int mouseX, int takeHeight, int takeOffset)
+void BoundToRect (const RECT& boundingRect, RECT* r)
 {
-	/* MouseX is displayed X, not taking  scrollbars into account. MouseY on the *
-	*  other hand has to take scrollbar position into account                    *
-	*                                                                            *
-	*  Return false is there isn't inline CC lane, note row or keyboard under    *
-	*  mouse cursor                                                              */
+	if (!r)
+		return;
 
-	if (takeHeight < INLINE_MIDI_MIN_H)
-		return false;
-
-	bool topBar       = (takeHeight - INLINE_MIDI_TOP_BAR_H < INLINE_MIDI_MIN_H) ? false : true;
-	int editorOffsetY = takeOffset + ((topBar) ? INLINE_MIDI_TOP_BAR_H : 0);
-	int editorHeight  = takeHeight - ((topBar) ? INLINE_MIDI_TOP_BAR_H : 0);
-
-	if (mouseY < editorOffsetY || mouseY > takeOffset + takeHeight)
-		return false;
-
-	BR_MidiEditor midiEditor(info.take);
-	if (midiEditor.IsValid())
+	if (r->top < boundingRect.top || r->bottom > boundingRect.bottom || r->left < boundingRect.left || r->right > boundingRect.right)
 	{
-		WritePtr(window, "midi_editor");
-		info.midiInlineEditor = true;
+		int w = r->right  - r->left;
+		int h = r->bottom - r->top;
 
-		// Get heights of various elements
-		int ccFullHeight = 0;
-		for (int i = 0; i < midiEditor.CountCCLanes(); ++i)
-			ccFullHeight +=midiEditor.GetCCLaneHeight(i);
-
-		int pianoRollFullHeight = editorHeight - ccFullHeight;
-		if (pianoRollFullHeight < INLINE_MIDI_MIN_NOTEVIEW_H)
+		if (r->top < boundingRect.top)
 		{
-			pianoRollFullHeight += ccFullHeight;
-			ccFullHeight = 0;
+			r->top    = boundingRect.top;
+			r->bottom = boundingRect.top + h;
+		}
+		else if (r->bottom > boundingRect.bottom)
+		{
+			r->bottom = boundingRect.bottom;
+			r->top    = boundingRect.bottom - h;
 		}
 
-		// Over CC lanes
-		if (mouseY > editorOffsetY + pianoRollFullHeight)
+		if (r->left < boundingRect.left)
 		{
-			WritePtr(segment, "cc_lane");
-			WritePtr(details, "cc_lane");
-
-			// Get CC lane number
-			int ccStart = editorOffsetY + pianoRollFullHeight;
-			for (int i = 0; i < midiEditor.CountCCLanes(); ++i)
-			{
-				int ccEnd = ccStart + midiEditor.GetCCLaneHeight(i);
-
-				if (mouseY >= ccStart && mouseY < ccEnd)
-				{
-					info.ccLane = midiEditor.GetCCLane(i);
-					info.ccLaneId = i;
-
-					// Get CC value at Y position
-					ccStart += INLINE_MIDI_LANE_DIVIDER_H;
-					if (mouseY >= ccStart)
-					{
-						int mouse = ccEnd - mouseY;
-						int laneHeight = ccEnd - ccStart;
-						double steps = (info.ccLane == CC_PITCH || info.ccLane >= CC_14BIT_START) ? (16383) : (128);
-						info.ccLaneVal = (int)(steps / laneHeight * mouse);
-						if (steps == 128 && info.ccLaneVal == 128)
-							info.ccLaneVal = 127;
-					}
-					break;
-				}
-				else
-				{
-					ccStart = ccEnd;
-				}
-			}
+			r->left  = boundingRect.left;
+			r->right = boundingRect.left + w;
 		}
-
-		// Over note view / keyboard
-		else
+		else if (r->right > boundingRect.right)
 		{
-			// Check if mouse is over keyboard or notes view
-			RECT r; GetWindowRect(GetArrangeWnd(), &r);
-			double arrangeStartTime, arrangeEndTime;
-			double itemStartTime = GetMediaItemInfo_Value(info.item, "D_POSITION");
-			double itemEndTime   = GetMediaItemInfo_Value(info.item, "D_LENGTH") + itemStartTime;
-			GetSet_ArrangeView2(NULL, false, r.left, r.right-SCROLLBAR_W, &arrangeStartTime, &arrangeEndTime);
-
-			int itemStartX = (itemStartTime <= arrangeStartTime) ? (0)                                                                  : ((int)((itemStartTime - arrangeStartTime) * midiEditor.GetHZoom()));
-			int itemEndX   = (itemEndTime   >  arrangeEndTime  ) ? ((int)((arrangeEndTime - arrangeStartTime) * midiEditor.GetHZoom())) : ((int)((itemEndTime   - arrangeStartTime) * midiEditor.GetHZoom()));
-
-			bool pianoVisible = (itemEndX - itemStartX - INLINE_MIDI_KEYBOARD_W > INLINE_MIDI_KEYBOARD_W) ? (true) : (false);
-			if (mouseX >= itemStartX && mouseX < itemStartX + INLINE_MIDI_KEYBOARD_W)
-				WritePtr(segment, (pianoVisible) ? ("piano") : ("notes"));
-			else
-				WritePtr(segment, "notes");
-
-			// Get note row
-			int realMouseY = (128 * midiEditor.GetVZoom()) - ((mouseY - editorOffsetY) + midiEditor.GetVPos() * midiEditor.GetVZoom()); // This is mouse Y position counting from the bottom - make sure it's not outside valid, drawable note range
-			if (realMouseY > 0)
-			{
-				vector<int> visibleNoteRows = GetUsedNamedNotes(NULL, info.take, midiEditor.GetNoteshow() != SHOW_ALL_NOTES, midiEditor.GetNoteshow() == HIDE_UNUSED_UNNAMED_NOTES, midiEditor.GetDrawChannel());
-
-				int noteRow = (realMouseY - 1) / midiEditor.GetVZoom();
-
-				if (midiEditor.GetNoteshow() == SHOW_ALL_NOTES)
-				{
-					info.noteRow = noteRow;
-				}
-				else
-				{
-					/* Since we can't known inline editor vertical zoom and vertical *
-					*  position at all times we currently can't support this         */
-				}
-			}
-		}
-
-		return true;
-	}
-	return false;
-}
-
-void GetMouseCursorContext (const char** window, const char** segment, const char** details, BR_MouseContextInfo* info)
-{
-	// Return values:
-	/*********************************************************************
-	| window       | segment       | details                             |
-	|______________|_______________|_____________________________________|
-	| unknown      | ""            | ""                                  |
-	|______________|_______________|_____________________________________|
-	| ruler        | region_lane   | ""                                  |
-	|              | marker_lane   | ""                                  |
-	|              | tempo_lane    | ""                                  |
-	|              | timeline      | ""                                  |
-	|______________|_______________|_____________________________________|
-	| transport    | ""            | ""                                  |
-	|______________|_______________|_____________________________________|
-	| tcp          | track         | ""                                  |
-	|              | envelope      | ""                                  |
-	|              | empty         | ""                                  |
-	|______________|_______________|_____________________________________|
-	| mcp          | track         | ""                                  |
-	|              | empty         | ""                                  |
-	|______________|_______________|_____________________________________|
-	| arrange      | track         | item, env_point, env_segment, empty |
-	|              | envelope      | env_point, env_segment, empty       |
-	|              | empty         | ""                                  |
-	|______________|_______________|_____________________________________|
-	| midi_editor  | unknown       | ""                                  |
-	|              | ruler         | ""                                  |
-	|              | piano         | ""                                  |
-	|              | notes         | ""                                  |
-	|              | cc_lane       | cc_selector, cc_lane                |
-	*********************************************************************/
-
-	POINT p; GetCursorPos(&p);
-	double arrangeStart, arrangeEnd, arrangeZoom;
-	double mousePos = PositionAtArrangePoint(p, &arrangeStart, &arrangeEnd, &arrangeZoom);
-	int mouseX = TranslatePointToArrangeX(p);
-	HWND hwnd = WindowFromPoint(p);
-
-	const char* returnWindow  = "unknown";
-	const char* returnSegment = "";
-	const char* returnDetails = "";
-	BR_MouseContextInfo returnInfo;
-
-	bool found = false;
-
-	// Ruler
-	if (!found)
-	{
-		HWND ruler = GetRulerWndAlt();
-		if (ruler == hwnd)
-		{
-			returnWindow = "ruler";
-			ScreenToClient(ruler, &p);
-			RECT r; GetClientRect(ruler, &r);
-
-			int rulerH = r.bottom-r.top;
-			int limitL = 0;
-			int limitH = 0;
-			for (int i = 0; i < 4; ++i)
-			{
-				if (i == 0)      {limitL = limitH; limitH += GetRulerLaneHeight(rulerH, i); returnSegment = "region_lane";  }
-				else if (i == 1) {limitL = limitH; limitH += GetRulerLaneHeight(rulerH, i); returnSegment = "marker_lane";  }
-				else if (i == 2) {limitL = limitH; limitH += GetRulerLaneHeight(rulerH, i); returnSegment = "tempo_lane";   }
-				else if (i == 3) {limitL = limitH; limitH += GetRulerLaneHeight(rulerH, i); returnSegment = "timeline";     }
-
-				if (p.y >= limitL && p.y < limitH )
-					break;
-			}
-			returnInfo.position = mousePos;
-			found = true;
+			r->right = boundingRect.right;
+			r->left  = boundingRect.right - w;
 		}
 	}
 
-	// Transport
-	if (!found)
-	{
-		HWND transport = GetTransportWnd();
-		if (transport == hwnd || transport == GetParent(hwnd)) // mouse may be over time status, child of transport
-		{
-			returnWindow = "transport";
-			found = true;
-		}
-	}
-
-	// MCP and TCP
-	if (!found)
-	{
-		int context;
-		if (returnInfo.track = HwndToTrack(hwnd, &context))
-		{
-			returnWindow = (context == 1) ? "tcp" : "mcp";
-			returnSegment = "track";
-			found = true;
-		}
-		else if (returnInfo.envelope = HwndToEnvelope(hwnd))
-		{
-			returnWindow = "tcp";
-			returnSegment = "envelope";
-			found = true;
-		}
-		else if (context != 0)
-		{
-			returnWindow = (context == 1) ? "tcp" : "mcp";
-			returnSegment = "empty";
-			found = true;
-		}
-	}
-
-	// Arrange
-	if (!found)
-	{
-		if (hwnd == GetArrangeWnd() && IsPointInArrange(&p, false))
-		{
-			returnWindow = "arrange";
-			returnInfo.position = mousePos;
-
-			int mouseY = TranslatePointToArrangeScrollY(p);
-			list<TrackEnvelope*> laneEnvs;
-			int height, offset;
-			GetTrackOrEnvelopeFromY(mouseY, &returnInfo.envelope, &returnInfo.track, laneEnvs, &height, &offset);
-
-			// Mouse cursor is in envelope lane
-			if (returnInfo.envelope)
-			{
-				returnSegment = "envelope";
-
-				BR_Envelope envelope(returnInfo.envelope);
-				int trackEnvHit = IsMouseOverEnvelopeLine(envelope, height-2*ENV_GAP, offset+ENV_GAP, mouseY, mouseX, mousePos, arrangeStart, arrangeZoom);
-				if (trackEnvHit == 1)
-					returnDetails = "env_point";
-				else if (trackEnvHit == 2)
-					returnDetails = "env_segment";
-				else
-					returnDetails = "empty";
-
-				returnInfo.track = NULL;
-			}
-
-			// Mouse cursor is in track lane
-			else if (returnInfo.track)
-			{
-				returnSegment = "track";
-
-				// Check track lane for track envelope and item/take under mouse
-				int trackEnvHit = IsMouseOverEnvelopeLineTrackLane (returnInfo.track, height, offset, laneEnvs, mouseY, mouseX, mousePos, arrangeStart, arrangeZoom, &returnInfo.envelope);
-				returnInfo.item = GetItemFromY(mouseY, mousePos, &returnInfo.take);
-
-				// Check track lane for take envelope
-				int takeEnvHit = 0;
-				if (trackEnvHit == 0 && returnInfo.take)
-				{
-					int takeOffset;
-					int takeHeight = GetTakeHeight(returnInfo.take, NULL, 0, &takeOffset, true, height, offset);
-					takeEnvHit = IsMouseOverEnvelopeLineTake(returnInfo.take, takeHeight, takeOffset, mouseY, mouseX, mousePos, arrangeStart, arrangeZoom, &returnInfo.envelope);
-				}
-
-				// Track envelope takes priority
-				if (trackEnvHit != 0)
-				{
-					if (trackEnvHit == 1)
-						returnDetails = "env_point";
-					else if (trackEnvHit == 2)
-						returnDetails = "env_segment";
-				}
-
-				// Item and take envelope next
-				else if (returnInfo.item)
-				{
-					// Take envelope takes priority
-					if (takeEnvHit != 0)
-					{
-						if (takeEnvHit == 1)
-							returnDetails = "env_point";
-						else if (takeEnvHit == 2)
-							returnDetails = "env_segment";
-						returnInfo.takeEnvelope = true;
-					}
-					else
-					{
-						if (IsOpenInInlineEditor(returnInfo.take))
-						{
-							int takeOffset;
-							int takeHeight = GetTakeHeight(returnInfo.take, NULL, GetTakeId(returnInfo.take), &takeOffset, false, height, offset);
-							if (!GetMouseCursorContextMidiInline(returnInfo, &returnWindow, &returnSegment, &returnDetails, mouseY, mouseX, takeHeight, takeOffset))
-								returnDetails = "item";
-						}
-						else
-						{
-							returnDetails = "item";
-						}
-					}
-				}
-
-				// No items, no envelopes, no nothing
-				else
-					returnDetails = "empty";
-			}
-			// Mouse cursor is in empty arrange space
-			else
-				returnSegment = "empty";
-
-			found = true;
-		}
-	}
-
-	// MIDI editor
-	if (!found)
-		GetMouseCursorContextMidi(hwnd, p, returnInfo, &returnWindow, &returnSegment, &returnDetails);
-
-	WritePtr(window,  returnWindow);
-	WritePtr(segment, returnSegment);
-	WritePtr(details, returnDetails);
-	WritePtr(info,    returnInfo);
-}
-
-double PositionAtMouseCursor (bool checkRuler, bool checkCursorVisibility /*=true*/, int* yOffset /*=NULL*/, bool* overRuler /*= NULL*/)
-{
-	POINT p; HWND hwnd;
-	GetCursorPos(&p);
-	if (IsPointInArrange(&p, checkCursorVisibility, &hwnd))
-	{
-		WritePtr(yOffset, TranslatePointToArrangeScrollY(p));
-		WritePtr(overRuler, false);
-		return PositionAtArrangePoint(p);
-	}
-	else if (checkRuler && GetRulerWndAlt() == hwnd)
-	{
-		WritePtr(overRuler, true);
-		double position = PositionAtArrangePoint(p);
-		if (yOffset)
-		{
-			ScreenToClient(hwnd, &p);
-			*yOffset = (int)p.y;
-		}
-		return position;
-	}
-	else
-	{
-		WritePtr(yOffset, -1);
-		WritePtr(overRuler, false);
-		return -1;
-	}
-}
-
-MediaItem* ItemAtMouseCursor (double* position)
-{
-	POINT p; GetCursorPos(&p);
-	if (IsPointInArrange(&p))
-	{
-		int y = TranslatePointToArrangeScrollY(p);
-		double pos = PositionAtArrangePoint(p);
-
-		WritePtr(position, pos);
-		return GetItemFromY(y, pos, NULL);
-	}
-	WritePtr(position, -1.0);
-	return NULL;
-}
-
-MediaItem_Take* TakeAtMouseCursor (double* position)
-{
-	POINT p; GetCursorPos(&p);
-	if (IsPointInArrange(&p))
-	{
-		MediaItem_Take* take = NULL;
-		int y = TranslatePointToArrangeScrollY(p);
-		double pos = PositionAtArrangePoint(p);
-
-		WritePtr(position, pos);
-		GetItemFromY(y, pos, &take);
-		return take;
-	}
-	WritePtr(position, -1.0);
-	return NULL;
-}
-
-MediaTrack* TrackAtMouseCursor (int* context, double* position)
-{
-	POINT p; GetCursorPos(&p);
-	HWND hwnd = WindowFromPoint(p);
-	MediaTrack* track = NULL;
-	int trackContext = -1;
-	double cursorPosition = -1;
-
-	// Check TCP/MCP
-	int tcp;
-	track = HwndToTrack(hwnd, &tcp);
-	if (track)
-		trackContext = (tcp == 1) ? (0) : (1);
-
-	// Nothing in TCP/MCP, check arrange
-	if (!track && hwnd == GetArrangeWnd() && IsPointInArrange(&p, false))
-	{
-		track = GetTrackFromY(TranslatePointToArrangeScrollY(p), NULL, NULL);
-		if (track)
-			trackContext = 2;
-		cursorPosition = PositionAtArrangePoint(p);
-	}
-
-	WritePtr(context, trackContext);
-	WritePtr(position, cursorPosition);
-	return track;
+	EnsureNotCompletelyOffscreen(r); // just in case
 }
 
 /******************************************************************************
@@ -3094,28 +2492,28 @@ void DrawTooltip (LICE_IBitmap* bm, const char* text)
 {
 	if (bm)
 	{
-		static LICE_CachedFont* font = NULL;
-		if (!font)
+		static LICE_CachedFont* s_font = NULL;
+		if (!s_font)
 		{
 			if (HFONT ttFont = (HFONT)SendMessage(GetTooltipWindow(),WM_GETFONT,0,0))
 			{
-				if (font = new (nothrow) LICE_CachedFont())
+				if (s_font = new (nothrow) LICE_CachedFont())
 				{
 					#ifdef _WIN32
-						font->SetFromHFont(ttFont, LICE_FONT_FLAG_OWNS_HFONT|LICE_FONT_FLAG_FORCE_NATIVE);
+						s_font->SetFromHFont(ttFont, LICE_FONT_FLAG_OWNS_HFONT|LICE_FONT_FLAG_FORCE_NATIVE);
 					#else
-						font->SetFromHFont(ttFont, LICE_FONT_FLAG_OWNS_HFONT);
+						s_font->SetFromHFont(ttFont, LICE_FONT_FLAG_OWNS_HFONT);
 					#endif
-					font->SetBkMode(TRANSPARENT);
-					font->SetTextColor(LICE_RGBA(0, 0, 0, 255));
+					s_font->SetBkMode(TRANSPARENT);
+					s_font->SetTextColor(LICE_RGBA(0, 0, 0, 255));
 				}
 			}
 		}
 
-		if (font)
+		if (s_font)
 		{
 			RECT r = {0, 0, 0, 0};
-			font->DrawText(NULL, text, -1, &r, DT_CALCRECT);
+			s_font->DrawText(NULL, text, -1, &r, DT_CALCRECT);
 			bm->resize(r.right + 8, r.bottom + 2);
 
 			#ifdef _WIN32
@@ -3129,7 +2527,7 @@ void DrawTooltip (LICE_IBitmap* bm, const char* text)
 			r.right  += 3;
 			r.bottom += 1;
 			r.top    += 1;
-			font->DrawText(bm, text, -1, &r, 0);
+			s_font->DrawText(bm, text, -1, &r, 0);
 		}
 	}
 }
@@ -3143,6 +2541,22 @@ void ThemeListViewOnInit (HWND list)
 	}
 }
 
+void SetWndIcon (HWND hwnd)
+{
+	#ifdef _WIN32
+		static HICON s_icon = NULL;
+		if (!s_icon)
+		{
+			wchar_t path[SNM_MAX_PATH];
+			if (GetModuleFileNameW(NULL, path, sizeof(path)/sizeof(wchar_t)))
+				s_icon = ExtractIconW(g_hInst, path, 0); // WM_GETICON isn't working so use this instead
+		}
+
+		if (s_icon)
+			SendMessage(hwnd, WM_SETICON, ICON_SMALL, (LPARAM)s_icon);
+	#endif
+}
+
 bool ThemeListViewInProc (HWND hwnd, int uMsg, LPARAM lParam, HWND list, bool grid)
 {
 	if (SWS_THEMING)
@@ -3153,4 +2567,198 @@ bool ThemeListViewInProc (HWND hwnd, int uMsg, LPARAM lParam, HWND list, bool gr
 			return true;
 	}
 	return false;
+}
+
+/******************************************************************************
+* Height helpers (mostly for optimization, exposed here for BR_MouseUtil)     *
+******************************************************************************/
+void GetTrackGap (int trackHeight, int* top, int* bottom)
+{
+	/* Calculates the part above the item where buttons and labels *
+	*  reside and retrieves user setting for the bottom gap        */
+
+	if (top)
+	{
+		int label; GetConfig("labelitems2", label);
+		//   draw mode        ||   name                 pitch,              gain (opposite)
+		if (!GetBit(label, 3) || (!GetBit(label, 0) && !GetBit(label, 2) && GetBit(label, 4)))
+			*top = 0;
+		else
+		{
+			int labelH = abs(SNM_GetColorTheme()->mediaitem_font.lfHeight) * 11/8;
+			int labelMinH; GetConfig("itemlabel_minheight", labelMinH);
+
+			if (trackHeight - labelH < labelMinH)
+			{
+				*top = 0;
+			}
+			else
+			{
+				// draw label inside item if it's making item too short
+				if (GetBit(label, 5) && trackHeight - labelH < ITEM_LABEL_MIN_HEIGHT)
+					*top = 0;
+				else
+					*top = labelH;
+			}
+		}
+	}
+	if (bottom)
+		GetConfig("trackitemgap", *bottom);
+}
+
+bool IsLastTakeTooTall (int itemHeight, int averageTakeHeight, int effectiveTakeCount, int* lastTakeHeight)
+{
+	/* When placing takes into item, REAPER just divides item height by number of takes *
+	*  losing division reminder - last take gets all of those reminders. However, if    *
+	*  it ends up to tall (>= 1.5 of average take height) it gets cropped               */
+
+	int lastTakeH = itemHeight - averageTakeHeight * (effectiveTakeCount - 1);
+	if (lastTakeH < (int)(averageTakeHeight * 1.5))
+	{
+		WritePtr(lastTakeHeight, lastTakeH);
+		return false;
+	}
+	else
+	{
+		WritePtr(lastTakeHeight, averageTakeHeight);
+		return true;
+	}
+}
+
+int GetItemHeight (MediaItem* item, int* offsetY, int trackHeight, int trackOffsetY)
+{
+	/* Reaper takes into account FIPM and overlapping media item lanes *
+	/* so no gotchas here besides track height checking since I_LASTH  *
+	/* might return wrong value when track height is 0                 */
+
+	if (trackHeight == 0 || !item)
+	{
+		WritePtr(offsetY, !item ? 0 : trackOffsetY);
+		return 0;
+	}
+
+	WritePtr(offsetY, trackOffsetY + *(int*)GetSetMediaItemInfo(item, "I_LASTY", NULL));
+	return *(int*)GetSetMediaItemInfo(item, "I_LASTH", NULL);
+}
+
+int GetMinTakeHeight (MediaTrack* track, int takeCount, int trackHeight, int itemHeight)
+{
+	/* Take lanes have minimum height, after which they are hidden and *
+	*  and only active take is displayed. This height is determined on *
+	*  per track basis                                                 */
+
+	if (!track)
+		return 0;
+
+	int trackTop, trackBottom;
+	GetTrackGap(trackHeight, &trackTop, &trackBottom);
+
+	int overlappingItems; GetConfig("projtakelane", overlappingItems);
+	if (GetBit(overlappingItems, 1))
+	{
+		if (itemHeight == (trackHeight - trackTop - trackBottom))
+			overlappingItems = 0;
+	}
+	else
+		overlappingItems = 0;
+
+	int takeH;
+	if (*(bool*)GetSetMediaTrackInfo(track, "B_FREEMODE", NULL) || overlappingItems)
+	{
+		int maxTakeH = (trackHeight - trackTop - trackBottom) / takeCount; // max take height when item occupies the whole track lane
+
+		// If max take height is over limits, reaper lets takes get
+		// resized to 1 px in FIPM or when in overlapping lane
+		if (takeCount > TAKE_MIN_HEIGHT_COUNT)
+		{
+			if (maxTakeH < TAKE_MIN_HEIGHT_LOW)
+				takeH = TAKE_MIN_HEIGHT_LOW;
+			else
+				takeH = 1;
+		}
+		else
+		{
+			if (maxTakeH < TAKE_MIN_HEIGHT_HIGH)
+				takeH = TAKE_MIN_HEIGHT_HIGH;
+			else
+				takeH = 1;
+		}
+	}
+	else
+	{
+		if (takeCount > TAKE_MIN_HEIGHT_COUNT)
+			takeH = TAKE_MIN_HEIGHT_LOW;
+		else
+			takeH = TAKE_MIN_HEIGHT_HIGH;
+	}
+
+	return takeH;
+}
+
+int GetTakeHeight (MediaItem_Take* take, MediaItem* item, int id, int* offsetY, bool averagedLast)
+{
+	MediaItem* validItem = (item) ? (item) : (GetMediaItemTake_Item(take));
+	int trackOffset;
+	int trackHeight = GetTrackHeight(GetMediaItem_Track(validItem), &trackOffset);
+	return GetTakeHeight(take, item, id, offsetY, averagedLast, trackHeight, trackOffset);
+}
+
+int GetTakeHeight (MediaItem_Take* take, MediaItem* item, int id, int* offsetY, bool averagedLast, int trackHeight, int trackOffset)
+{
+	/* Calculates take height using all the input variables. Exists as *
+	*  a separate function since sometimes trackHeight and trackOffset *
+	*  will be known prior to calling this, so let the caller optimize *
+	*  to prevent calculating the same thing twice                     */
+
+	if ((!take && !item) || (take && item))
+	{
+		WritePtr(offsetY, 0);
+		return 0;
+	}
+	MediaItem_Take* validTake = (take) ? (take) : (GetTake(item, id));
+	MediaItem*      validItem = (item) ? (item) : (GetMediaItemTake_Item(take));
+	MediaTrack*     track     = GetMediaItem_Track(validItem);
+
+	// This gets us the offset to start of the item
+	int takeOffset = trackOffset;
+	int itemH = GetItemHeight(validItem, &takeOffset, trackHeight, takeOffset);
+
+	int takeLanes; GetConfig("projtakelane", takeLanes);
+	int takeH = 0;
+
+	// Take lanes displayed
+	if (GetBit(takeLanes, 0))
+	{
+		int effTakeCount;
+		int effTakeId = GetEffectiveTakeId(take, item, id, &effTakeCount); // using original pointers on purpose here
+		takeH = itemH / effTakeCount; // average take height
+
+		if (takeH < GetMinTakeHeight(track, effTakeCount, trackHeight, itemH))
+		{
+			if (GetActiveTake(validItem) == validTake)
+				takeH = itemH;
+			else
+				takeH = 0;
+		}
+		else
+		{
+			if (effTakeId >= 0)
+				takeOffset = takeOffset + takeH * effTakeId;
+
+			// Last take gets leftover pixels from integer division
+			if (!averagedLast && (effTakeId == effTakeCount - 1))
+				IsLastTakeTooTall(itemH, takeH, effTakeCount, &takeH);
+		}
+	}
+	// Take lanes not displayed
+	else
+	{
+		if (GetActiveTake(validItem) == validTake)
+			takeH = itemH;
+		else
+			takeH = 0;
+	}
+
+	WritePtr(offsetY, takeOffset);
+	return takeH;
 }

@@ -27,16 +27,22 @@
 ******************************************************************************/
 #pragma once
 
+#include "BR_MidiUtil.h"
+
 class BR_EnvSel;
 class BR_CursorPos;
 class BR_MidiNoteSel;
+class BR_MidiCCEvents;
+class BR_MidiToggleCCLane;
 
 /******************************************************************************
 * Globals                                                                     *
 ******************************************************************************/
-extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_EnvSel> >      g_envSel;
-extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_CursorPos> >   g_cursorPos;
-extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_MidiNoteSel> > g_midiNoteSel;
+extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_EnvSel> >           g_envSel;
+extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_CursorPos> >        g_cursorPos;
+extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_MidiNoteSel> >      g_midiNoteSel;
+extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_MidiCCEvents> >     g_midiCCEvents;
+extern SWSProjConfig<BR_MidiToggleCCLane>                               g_midiToggleHideCCLanes;
 
 /******************************************************************************
 * Call on startup to register state saving functionality                      *
@@ -53,8 +59,9 @@ public:
 	BR_EnvSel (int slot, ProjectStateContext* ctx);
 	void SaveState (ProjectStateContext* ctx);
 	void Save (TrackEnvelope* envelope);
-	void Restore (TrackEnvelope* envelope);
+	bool Restore (TrackEnvelope* envelope);
 	int  GetSlot ();
+
 private:
 	int m_slot;
 	vector<int> m_selection;
@@ -70,8 +77,9 @@ public:
 	BR_CursorPos (int slot, ProjectStateContext* ctx);
 	void SaveState (ProjectStateContext* ctx);
 	void Save ();
-	void Restore ();
+	bool Restore ();
 	int  GetSlot ();
+
 private:
 	int m_slot;
 	double m_position;
@@ -87,9 +95,56 @@ public:
 	BR_MidiNoteSel (int slot, ProjectStateContext* ctx);
 	void SaveState (ProjectStateContext* ctx);
 	void Save (MediaItem_Take* take);
-	void Restore (MediaItem_Take* take);
+	bool Restore (MediaItem_Take* take);
 	int  GetSlot ();
+
 private:
 	int m_slot;
 	vector<int> m_selection;
+};
+
+/******************************************************************************
+* MIDI saved CC events state                                                  *
+******************************************************************************/
+class BR_MidiCCEvents
+{
+public:
+	BR_MidiCCEvents (int slot, BR_MidiEditor& midiEditor, int lane);
+	BR_MidiCCEvents (int slot, ProjectStateContext* ctx);
+	void SaveState (ProjectStateContext* ctx);
+	void Save (BR_MidiEditor& midiEditor, int lane);
+	bool Restore (BR_MidiEditor& midiEditor, int lane, bool allVisible);
+	int  GetSlot ();
+
+private:
+	struct Event
+	{
+		double positionPPQ;
+		int channel, msg2, msg3;
+		bool mute;
+		Event ();
+		Event (double positionPPQ, int channel, int msg2, int msg3, bool mute);
+	};
+
+	bool SaveEvents (BR_MidiEditor& midiEditor, int lane);
+
+	int m_slot, m_sourceLane, m_ppq;
+	vector<BR_MidiCCEvents::Event> m_events;
+};
+
+/******************************************************************************
+* MIDI toggle hide CC lanes                                                   *
+******************************************************************************/
+class BR_MidiToggleCCLane
+{
+public:
+	BR_MidiToggleCCLane ();
+	void SaveState (ProjectStateContext* ctx);
+	void LoadState (ProjectStateContext* ctx);
+	bool Hide (void* midiEditor, int laneToKeep, int editorHeight = -1, int inlineHeight = -1);
+	bool Restore (void* midiEditor);
+	bool IsHidden ();
+
+private:
+	vector<WDL_FastString> m_ccLanes;
 };

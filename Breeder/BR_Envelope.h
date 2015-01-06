@@ -28,7 +28,7 @@
 #pragma once
 
 /******************************************************************************
-* Commands                                                                    *
+* Commands: Envelopes - Misc                                                  *
 ******************************************************************************/
 void SetEnvPointMouseValueInit ();
 void SetEnvPointMouseValue (COMMAND_T*);
@@ -39,6 +39,8 @@ void ExpandEnvSel (COMMAND_T*);
 void ExpandEnvSelEnd (COMMAND_T*);
 void ShrinkEnvSel (COMMAND_T*);
 void ShrinkEnvSelEnd (COMMAND_T*);
+void EnvPointsGrid (COMMAND_T*);
+void CreateEnvPointsGrid (COMMAND_T*);
 void ShiftEnvSelection (COMMAND_T*);
 void PeaksDipsEnv (COMMAND_T*);
 void SelEnvTimeSel (COMMAND_T*);
@@ -46,7 +48,18 @@ void SetEnvValToNextPrev (COMMAND_T*);
 void MoveEnvPointToEditCursor (COMMAND_T*);
 void Insert2EnvPointsTimeSelection (COMMAND_T*);
 void FitEnvPointsToTimeSel (COMMAND_T*);
-void ShowActiveTrackEnvOnly (COMMAND_T*);
 void CreateEnvPointMouse (COMMAND_T*);
+void IncreaseDecreaseVolEnvPoints (COMMAND_T*);
+void SelectEnvelopeUnderMouse (COMMAND_T*);
+void SelectDeleteEnvPointUnderMouse (COMMAND_T*);
+void UnselectEnvelope (COMMAND_T*);
 void SaveEnvSelSlot (COMMAND_T*);
 void RestoreEnvSelSlot (COMMAND_T*);
+
+/******************************************************************************
+* Commands: Envelopes - Visibility                                            *
+******************************************************************************/
+void ShowActiveTrackEnvOnly (COMMAND_T*);
+void ShowLastAdjustedSendEnv (COMMAND_T*);
+void ShowHideFxEnv (COMMAND_T*);
+void ShowHideSendEnv (COMMAND_T*);

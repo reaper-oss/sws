@@ -28,7 +28,7 @@
 #include "stdafx.h"
 #include "BR_Timer.h"
 
-void CommandTimer (COMMAND_T* ct)
+void CommandTimer (COMMAND_T* ct, int val /*= 0*/, int valhw /*= 0*/, int relmode /*= 0*/, HWND hwnd /*= NULL*/, bool commandHook2 /*= false*/)
 {
 	#ifdef WIN32
 		LARGE_INTEGER ticks, start, end;
@@ -39,7 +39,10 @@ void CommandTimer (COMMAND_T* ct)
 		gettimeofday(&start, NULL);
 	#endif
 
-	ct->doCommand(ct);
+	if (commandHook2)
+		ct->onAction(ct, val, valhw, relmode, hwnd);
+	else
+		ct->doCommand(ct);
 
 	#ifdef WIN32
 		QueryPerformanceCounter(&end);
@@ -49,11 +52,8 @@ void CommandTimer (COMMAND_T* ct)
 		int msTime = (int)((double)(end.tv_sec - start.tv_sec) * 1000 + (double)(end.tv_usec - start.tv_usec) / 1000 + 0.5);
 	#endif
 
-	int cmd = ct->accel.accel.cmd;
-	const char* name = kbd_getTextFromCmd(cmd, NULL);
-
 	WDL_FastString string;
-	string.AppendFormatted(256, "%d ms to execute: %s\n", msTime, name);
+	string.AppendFormatted(256, "%d ms to execute: %s\n", msTime, ct->accel.desc);
 	ShowConsoleMsg(string.Get());
 }
 

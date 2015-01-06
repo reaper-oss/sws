@@ -1,20 +1,37 @@
-/* See COPYING file for copyright and license details. */
+/* BR: This is modified libebur128 v1.0.1. for usage in SWS. Modifications are   *
+*  related to the usage of REAPER resampler (instead of speex resampler) and     *
+*  position of true/sample peak                                                  *
+*                                                                                *
+*                                                                                *
+*  Original license follows:                                                     *
+*                                                                                *
+*  Copyright (c) 2011 Jan Kokemüller                                             *
+*                                                                                *
+*  Permission is hereby granted, free of charge, to any person obtaining a copy  *
+*  of this software and associated documentation files (the "Software"), to deal *
+*  in the Software without restriction, including without limitation the rights  *
+*  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell     *
+*  copies of the Software, and to permit persons to whom the Software is         *
+*  furnished to do so, subject to the following conditions:                      *
+*                                                                                *
+*  The above copyright notice and this permission notice shall be included in    *
+*  all copies or substantial portions of the Software.                           *
+*                                                                                *
+*  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR    *
+*  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,      *
+*  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE   *
+*  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER        *
+*  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, *
+*  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN     *
+*  THE SOFTWARE.                                                                 */
 
+#include "stdafx.h"
 #include "ebur128.h"
-
-#include <float.h>
-#include <limits.h>
 #define _USE_MATH_DEFINES
-#include <math.h> /* You may have to define _USE_MATH_DEFINES if you use MSVC */
-#include <stdio.h>
-#include <stdlib.h>
-
-/* This can be replaced by any BSD-like queue implementation. */
+#include <math.h>
 #include "queue/sys/queue.h"
+#include "../reaper/localize.h"
 
-#ifdef USE_SPEEX_RESAMPLER
-  #include <speex/speex_resampler.h>
-#endif
 
 #define CHECK_ERROR(condition, errorcode, goto_point)                          \
   if ((condition)) {                                                           \
@@ -38,7 +55,7 @@ struct ebur128_state_internal {
   /** How many frames are needed for a gating block. Will correspond to 400ms
    *  of audio at initialization, and 100ms after the first block (75% overlap
    *  as specified in the 2011 revision of BS1770). */
-  unsigned long needed_frames;
+ size_t needed_frames;
   /** The channel map. Has as many elements as there are channels. */
   int* channel_map;
   /** How many samples fit in 100ms (rounded). */
@@ -60,16 +77,18 @@ struct ebur128_state_internal {
   size_t short_term_frame_counter;
   /** Maximum sample peak, one per channel */
   double* sample_peak;
+  size_t* sample_peak_frame;
+  size_t  sample_peak_frame_count;
   /** Maximum true peak, one per channel */
   double* true_peak;
-#ifdef USE_SPEEX_RESAMPLER
-  SpeexResamplerState* resampler;
-#endif
+  size_t* true_peak_frame;
+  size_t  true_peak_frame_count;
+
+  REAPER_Resample_Interface* resampler;
   size_t oversample_factor;
-  float* resampler_buffer_input;
-  size_t resampler_buffer_input_frames;
-  float* resampler_buffer_output;
-  size_t resampler_buffer_output_frames;
+  ReaSample* resampler_buffer_input;
+  ReaSample* resampler_buffer_output;
+  size_t     resampler_buffer_output_frames;
 };
 
 static double relative_gate = -10.0;
@@ -165,7 +184,6 @@ static int ebur128_init_channel_map(ebur128_state* st) {
   return EBUR128_SUCCESS;
 }
 
-#ifdef USE_SPEEX_RESAMPLER
 static int ebur128_init_resampler(ebur128_state* st) {
   int errcode = EBUR128_SUCCESS;
 
@@ -180,55 +198,65 @@ static int ebur128_init_resampler(ebur128_state* st) {
     st->d->resampler = NULL;
   }
 
-  st->d->resampler_buffer_input_frames = st->d->samples_in_100ms * 4;
-  st->d->resampler_buffer_input = malloc(st->d->resampler_buffer_input_frames *
-                                      st->channels *
-                                      sizeof(float));
-  CHECK_ERROR(!st->d->resampler_buffer_input, EBUR128_ERROR_NOMEM, exit)
-
-  st->d->resampler_buffer_output_frames =
-                                    st->d->resampler_buffer_input_frames *
-                                    st->d->oversample_factor;
-  st->d->resampler_buffer_output = malloc
-                                      (st->d->resampler_buffer_output_frames *
-                                       st->channels *
-                                       sizeof(float));
-  CHECK_ERROR(!st->d->resampler_buffer_output, EBUR128_ERROR_NOMEM, free_input)
-
-  st->d->resampler = speex_resampler_init
-                 ((spx_uint32_t) st->channels,
-                  (spx_uint32_t) st->samplerate,
-                  (spx_uint32_t) (st->samplerate * st->d->oversample_factor),
-                  8, NULL);
+  size_t resampler_buffer_input_frames  = st->d->samples_in_100ms * 4;
+  st->d->resampler_buffer_output_frames = resampler_buffer_input_frames * st->d->oversample_factor;
+  st->d->resampler_buffer_output        = (ReaSample*)calloc(st->d->resampler_buffer_output_frames *
+                                                              st->channels,
+                                                              sizeof(ReaSample));
+  st->d->resampler = Resampler_Create();
   CHECK_ERROR(!st->d->resampler, EBUR128_ERROR_NOMEM, free_output)
+
+  static int  resamplerMode = 0;
+  static bool foundResamplerMode = false;
+  if (!foundResamplerMode)
+  {
+    while (true)
+    {
+      const char* targetMode = __localizeFunc("Good (64pt Sinc)", "resample", 0);
+      const char* currentMode = Resample_EnumModes(resamplerMode);
+
+      if (!targetMode || !currentMode)
+      {
+        resamplerMode = -1; // default to project default in case our mode hasn't been found
+        foundResamplerMode = true;
+        break;
+      }
+      else if (!strcmp(targetMode, currentMode))
+      {
+        foundResamplerMode = true;
+        break;
+      }
+      ++resamplerMode;
+    }
+  }
+
+  st->d->resampler->Extended(RESAMPLE_EXT_SETFEEDMODE,(void*)(INT_PTR)1,0,0);
+  st->d->resampler->Extended(RESAMPLE_EXT_SETRSMODE,(void*)(INT_PTR)resamplerMode,0,0);
+  st->d->resampler->SetRates((double)st->samplerate, (double)(st->samplerate * st->d->oversample_factor));
 
   return errcode;
 
 free_output:
   free(st->d->resampler_buffer_output);
   st->d->resampler_buffer_output = NULL;
-free_input:
-  free(st->d->resampler_buffer_input);
-  st->d->resampler_buffer_input = NULL;
-exit:
   return errcode;
 }
 
 static void ebur128_destroy_resampler(ebur128_state* st) {
-  free(st->d->resampler_buffer_input);
-  st->d->resampler_buffer_input = NULL;
+
+  delete st->d->resampler;
   free(st->d->resampler_buffer_output);
-  st->d->resampler_buffer_output = NULL;
-  speex_resampler_destroy(st->d->resampler);
   st->d->resampler = NULL;
+  st->d->resampler_buffer_input  = NULL;
+  st->d->resampler_buffer_output = NULL;
 }
-#endif
 
 void ebur128_get_version(int* major, int* minor, int* patch) {
   *major = EBUR128_VERSION_MAJOR;
   *minor = EBUR128_VERSION_MINOR;
   *patch = EBUR128_VERSION_PATCH;
 }
+
 
 ebur128_state* ebur128_init(unsigned int channels,
                             unsigned long samplerate,
@@ -250,9 +278,21 @@ ebur128_state* ebur128_init(unsigned int channels,
   CHECK_ERROR(!st->d->sample_peak, 0, free_channel_map)
   st->d->true_peak = (double*) malloc(channels * sizeof(double));
   CHECK_ERROR(!st->d->true_peak, 0, free_sample_peak)
+  st->d->sample_peak_frame_count = 0;
+
+  st->d->sample_peak_frame = (size_t*) malloc(channels * sizeof(size_t));
+  CHECK_ERROR(!st->d->sample_peak_frame, 0, free_true_peak)
+  st->d->true_peak_frame = (size_t*) malloc(channels * sizeof(size_t));
+  CHECK_ERROR(!st->d->true_peak_frame, 0, free_sample_peak_frame)
+  st->d->true_peak_frame_count = 0;
+
   for (i = 0; i < channels; ++i) {
     st->d->sample_peak[i] = 0.0;
     st->d->true_peak[i] = 0.0;
+
+    st->d->sample_peak_frame[i] = 0;
+    st->d->true_peak_frame[i] = 0;
+
   }
 
   st->d->use_histogram = mode & EBUR128_MODE_HISTOGRAM ? 1 : 0;
@@ -265,16 +305,16 @@ ebur128_state* ebur128_init(unsigned int channels,
   } else if ((mode & EBUR128_MODE_M) == EBUR128_MODE_M) {
     st->d->audio_data_frames = st->d->samples_in_100ms * 4;
   } else {
-    return NULL;
+    goto free_sample_peak_frame;
   }
   st->d->audio_data = (double*) malloc(st->d->audio_data_frames *
                                        st->channels *
                                        sizeof(double));
-  CHECK_ERROR(!st->d->audio_data, 0, free_true_peak)
+  CHECK_ERROR(!st->d->audio_data, 0, free_true_peak_frame)
   ebur128_init_filter(st);
 
   if (st->d->use_histogram) {
-    st->d->block_energy_histogram = malloc(1000 * sizeof(unsigned long));
+    st->d->block_energy_histogram = (unsigned long*)malloc(1000 * sizeof(unsigned long));
     CHECK_ERROR(!st->d->block_energy_histogram, 0, free_audio_data)
     for (i = 0; i < 1000; ++i) {
       st->d->block_energy_histogram[i] = 0;
@@ -283,7 +323,7 @@ ebur128_state* ebur128_init(unsigned int channels,
     st->d->block_energy_histogram = NULL;
   }
   if (st->d->use_histogram) {
-    st->d->short_term_block_energy_histogram = malloc(1000 * sizeof(unsigned long));
+    st->d->short_term_block_energy_histogram = (unsigned long*)malloc(1000 * sizeof(unsigned long));
     CHECK_ERROR(!st->d->short_term_block_energy_histogram, 0, free_block_energy_histogram)
     for (i = 0; i < 1000; ++i) {
       st->d->short_term_block_energy_histogram[i] = 0;
@@ -295,10 +335,8 @@ ebur128_state* ebur128_init(unsigned int channels,
   SLIST_INIT(&st->d->short_term_block_list);
   st->d->short_term_frame_counter = 0;
 
-#ifdef USE_SPEEX_RESAMPLER
   result = ebur128_init_resampler(st);
   CHECK_ERROR(result, 0, free_short_term_block_energy_histogram)
-#endif
 
   /* the first block needs 400ms of audio data */
   st->d->needed_frames = st->d->samples_in_100ms * 4;
@@ -326,6 +364,10 @@ free_block_energy_histogram:
   free(st->d->block_energy_histogram);
 free_audio_data:
   free(st->d->audio_data);
+free_true_peak_frame:
+  free(st->d->true_peak_frame);
+free_sample_peak_frame:
+  free(st->d->sample_peak_frame);
 free_true_peak:
   free(st->d->true_peak);
 free_sample_peak:
@@ -347,7 +389,9 @@ void ebur128_destroy(ebur128_state** st) {
   free((*st)->d->audio_data);
   free((*st)->d->channel_map);
   free((*st)->d->sample_peak);
+  free((*st)->d->sample_peak_frame);
   free((*st)->d->true_peak);
+  free((*st)->d->true_peak_frame);
   while (!SLIST_EMPTY(&(*st)->d->block_list)) {
     entry = SLIST_FIRST(&(*st)->d->block_list);
     SLIST_REMOVE_HEAD(&(*st)->d->block_list, entries);
@@ -358,49 +402,41 @@ void ebur128_destroy(ebur128_state** st) {
     SLIST_REMOVE_HEAD(&(*st)->d->short_term_block_list, entries);
     free(entry);
   }
-#ifdef USE_SPEEX_RESAMPLER
+
   ebur128_destroy_resampler(*st);
-#endif
 
   free((*st)->d);
   free(*st);
   *st = NULL;
 }
 
-static int ebur128_use_speex_resampler(ebur128_state* st) {
-#ifdef USE_SPEEX_RESAMPLER
+static int ebur128_use_resampler(ebur128_state* st) {
   return ((st->mode & EBUR128_MODE_TRUE_PEAK) == EBUR128_MODE_TRUE_PEAK);
-#else
-  (void) st;
-  return 0;
-#endif
 }
 
 static void ebur128_check_true_peak(ebur128_state* st, size_t frames) {
-#ifdef USE_SPEEX_RESAMPLER
-  size_t c, i;
-  spx_uint32_t in_len = (spx_uint32_t) frames;
-  spx_uint32_t out_len = (spx_uint32_t) st->d->resampler_buffer_output_frames;
-  speex_resampler_process_interleaved_float(
-                      st->d->resampler,
-                      st->d->resampler_buffer_input,  &in_len,
-                      st->d->resampler_buffer_output, &out_len);
-  for (c = 0; c < st->channels; ++c) {
-    for (i = 0; i < out_len; ++i) {
+
+  size_t out_len = st->d->resampler->ResampleOut(st->d->resampler_buffer_output,
+                                                 frames,
+                                                 st->d->resampler_buffer_output_frames,
+                                                 st->channels);
+  for (size_t c = 0; c < st->channels; ++c) {
+    for (size_t i = 0; i < out_len; ++i) {
       if (st->d->resampler_buffer_output[i * st->channels + c] >
                                                          st->d->true_peak[c]) {
         st->d->true_peak[c] =
             st->d->resampler_buffer_output[i * st->channels + c];
+        st->d->true_peak_frame[c] = st->d->true_peak_frame_count + i;
       } else if (-st->d->resampler_buffer_output[i * st->channels + c] >
                                                          st->d->true_peak[c]) {
         st->d->true_peak[c] =
            -st->d->resampler_buffer_output[i * st->channels + c];
+        st->d->true_peak_frame[c] = st->d->true_peak_frame_count + i;
       }
+
     }
   }
-#else
-  (void) st; (void) frames;
-#endif
+  st->d->true_peak_frame_count += out_len;
 }
 
 #ifdef __SSE2_MATH__
@@ -411,7 +447,7 @@ static void ebur128_check_true_peak(ebur128_state* st, size_t frames) {
 #define TURN_OFF_FTZ _mm_setcsr(mxcsr);
 #define FLUSH_MANUALLY
 #else
-//#warning "manual FTZ is being used, please enable SSE2 (-msse2 -mfpmath=sse)" /* disabled for SWS */
+//#warning "manual FTZ is being used, please enable SSE2 (-msse2 -mfpmath=sse)" /* BR: disabled for SWS */
 #define TURN_ON_FTZ
 #define TURN_OFF_FTZ
 #define FLUSH_MANUALLY \
@@ -434,22 +470,32 @@ static void ebur128_filter_##type(ebur128_state* st, const type* src,          \
   if ((st->mode & EBUR128_MODE_SAMPLE_PEAK) == EBUR128_MODE_SAMPLE_PEAK) {     \
     for (c = 0; c < st->channels; ++c) {                                       \
       double max = 0.0;                                                        \
+      size_t max_frame = 0;                                                    \
       for (i = 0; i < frames; ++i) {                                           \
         if (src[i * st->channels + c] > max) {                                 \
-          max =        src[i * st->channels + c];                              \
+          max       = src[i * st->channels + c];                               \
+          max_frame = st->d->sample_peak_frame_count + i;                      \
         } else if (-src[i * st->channels + c] > max) {                         \
-          max = -1.0 * src[i * st->channels + c];                              \
+          max       = -1.0 * src[i * st->channels + c];                        \
+          max_frame = st->d->sample_peak_frame_count + i;                      \
         }                                                                      \
       }                                                                        \
       max /= scaling_factor;                                                   \
-      if (max > st->d->sample_peak[c]) st->d->sample_peak[c] = max;            \
+      if (max > st->d->sample_peak[c]) {                                       \
+        st->d->sample_peak[c] = max;                                           \
+        st->d->sample_peak_frame[c] = max_frame;                               \
+      }                                                                        \
     }                                                                          \
   }                                                                            \
-  if (ebur128_use_speex_resampler(st)) {                                       \
+  st->d->sample_peak_frame_count += frames;                                    \
+  if (ebur128_use_resampler(st)) {                                             \
+    st->d->resampler->ResamplePrepare(frames,                                  \
+                                      st->channels,                            \
+                                      &st->d->resampler_buffer_input);         \
     for (c = 0; c < st->channels; ++c) {                                       \
       for (i = 0; i < frames; ++i) {                                           \
         st->d->resampler_buffer_input[i * st->channels + c] =                  \
-                      (float) (src[i * st->channels + c] / scaling_factor);    \
+                      (ReaSample) (src[i * st->channels + c] / scaling_factor);\
       }                                                                        \
     }                                                                          \
     ebur128_check_true_peak(st, frames);                                       \
@@ -590,26 +636,36 @@ int ebur128_change_parameters(ebur128_state* st,
   if (channels != st->channels) {
     unsigned int i;
 
-    free(st->d->channel_map); st->d->channel_map = NULL;
-    free(st->d->sample_peak); st->d->sample_peak = NULL;
-    free(st->d->true_peak);   st->d->true_peak = NULL;
+    free(st->d->channel_map);       st->d->channel_map = NULL;
+    free(st->d->sample_peak);       st->d->sample_peak = NULL;
+    free(st->d->sample_peak_frame); st->d->sample_peak_frame = NULL;
+    free(st->d->true_peak);         st->d->true_peak = NULL;
+    free(st->d->true_peak_frame);   st->d->true_peak_frame = NULL;
     st->channels = channels;
 
-#ifdef USE_SPEEX_RESAMPLER
     ebur128_destroy_resampler(st);
     ebur128_init_resampler(st);
-#endif
 
     errcode = ebur128_init_channel_map(st);
     CHECK_ERROR(errcode, EBUR128_ERROR_NOMEM, exit)
 
     st->d->sample_peak = (double*) malloc(channels * sizeof(double));
     CHECK_ERROR(!st->d->sample_peak, EBUR128_ERROR_NOMEM, exit)
+    st->d->sample_peak_frame = (size_t*) malloc(channels * sizeof(size_t));
+    CHECK_ERROR(!st->d->sample_peak_frame, EBUR128_ERROR_NOMEM, exit)
+    st->d->sample_peak_frame_count = 0;
+
     st->d->true_peak = (double*) malloc(channels * sizeof(double));
     CHECK_ERROR(!st->d->true_peak, EBUR128_ERROR_NOMEM, exit)
+    st->d->true_peak_frame = (size_t*) malloc(channels * sizeof(size_t));
+    CHECK_ERROR(!st->d->true_peak_frame, EBUR128_ERROR_NOMEM, exit)
+    st->d->true_peak_frame_count = 0;
+
     for (i = 0; i < channels; ++i) {
       st->d->sample_peak[i] = 0.0;
       st->d->true_peak[i] = 0.0;
+      st->d->sample_peak_frame[i] = 0;
+      st->d->true_peak_frame[i] = 0;
     }
   }
   if (samplerate != st->samplerate) {
@@ -971,20 +1027,20 @@ int ebur128_loudness_range(ebur128_state* st, double* out) {
 
 int ebur128_sample_peak(ebur128_state* st,
                         unsigned int channel_number,
-                        double* out) {
+                        double* out, double* pos) {
   if ((st->mode & EBUR128_MODE_SAMPLE_PEAK) != EBUR128_MODE_SAMPLE_PEAK) {
     return EBUR128_ERROR_INVALID_MODE;
   } else if (channel_number >= st->channels) {
     return EBUR128_ERROR_INVALID_CHANNEL_INDEX;
   }
   *out = st->d->sample_peak[channel_number];
+  *pos = (double)st->d->sample_peak_frame[channel_number] / (double)st->samplerate;
   return EBUR128_SUCCESS;
 }
 
-#ifdef USE_SPEEX_RESAMPLER
 int ebur128_true_peak(ebur128_state* st,
                       unsigned int channel_number,
-                      double* out) {
+                      double* out, double* pos) {
   if ((st->mode & EBUR128_MODE_TRUE_PEAK) != EBUR128_MODE_TRUE_PEAK) {
     return EBUR128_ERROR_INVALID_MODE;
   } else if (channel_number >= st->channels) {
@@ -993,6 +1049,10 @@ int ebur128_true_peak(ebur128_state* st,
   *out = st->d->true_peak[channel_number] > st->d->sample_peak[channel_number]
        ? st->d->true_peak[channel_number]
        : st->d->sample_peak[channel_number];
+
+  *pos = st->d->true_peak[channel_number] > st->d->sample_peak[channel_number]
+       ? (double)st->d->true_peak_frame[channel_number] / (double)(st->samplerate * st->d->oversample_factor)
+       : (double)st->d->sample_peak_frame[channel_number] / (double)st->samplerate;
+
   return EBUR128_SUCCESS;
 }
-#endif

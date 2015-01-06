@@ -10,10 +10,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -509,7 +509,7 @@ void InputMatch(COMMAND_T* ct)
 }
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
-static COMMAND_T g_commandTable[] = 
+static COMMAND_T g_commandTable[] =
 {
 	// Master/parent send
 	{ { DEFACCEL, "SWS: Enable master/parent send on selected track(s)" },		"SWS_ENMPSEND",		EnableMPSend,		},
@@ -578,14 +578,14 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Delete track(s) with children (prompt)" },				"SWS_DELTRACKCHLD",	DelTracksChild,		},
 
 	// Name
-	{ { DEFACCEL, "SWS: Name sel track(s) like first sel item on track" },		"SWS_NAMETKLIKEITEM",  NameTrackLikeItem,	},
-	{ { DEFACCEL, "SWS: Name sel track(s) like first sel item in project" },	"SWS_NAMETKLIKEFIRST", NameTrackLikeFirstItem,	},
+	{ { DEFACCEL, "SWS: Set track name from first selected item on track" },    "SWS_NAMETKLIKEITEM",  NameTrackLikeItem,	},
+	{ { DEFACCEL, "SWS: Set track name from first selected item in project" },	"SWS_NAMETKLIKEFIRST", NameTrackLikeFirstItem,	},
 
 	// Solo
 	{ { DEFACCEL, "SWS: Toolbar solo toggle" },									"SWS_SOLOTOGGLE", SoloToggle, NULL, (INT_PTR)"I_SOLO", CheckTrackParam, },
 
 	// Inputs
-	{ { DEFACCEL, "SWS: Set all sel tracks inputs to match first sel track" },	"SWS_INPUTMATCH", InputMatch, },
+	{ { DEFACCEL, "SWS: Set all selected tracks inputs to match first selected track" },	"SWS_INPUTMATCH", InputMatch, },
 
 	// Mute
 	{ { DEFACCEL, "SWS: Toolbar mute toggle" },									"SWS_MUTETOGGLE", MuteToggle, NULL, (INT_PTR)"B_MUTE", CheckTrackParam, },

@@ -25,8 +25,9 @@
 /
 ******************************************************************************/
 
-
 #pragma once
+
+#ifdef SWS_DEPRECEATED // BR: use BR_Envelope and height stuff from BR_Util.h instead
 
 #define ENV_HEIGHT_MULTIPLIER 0.75
 #define ENV_MAX_SIZE 16384
@@ -59,3 +60,5 @@ public:
 private:
 	MediaTrack* m_pTr;
 };
+
+#endif

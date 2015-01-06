@@ -10,10 +10,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -144,17 +144,17 @@ void SafeTiemSel(COMMAND_T*)
 }
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
-static COMMAND_T g_commandTable[] = 
+static COMMAND_T g_commandTable[] =
 {
-	{ { DEFACCEL, "SWS: Copy items/tracks/env, obeying time sel" },						"SWS_SMARTCOPY",	SmartCopy, NULL, },
-	{ { DEFACCEL, "SWS: Cut items/tracks/env, obeying time sel" },						"SWS_SMARTCUT",		SmartCut, NULL, },
-	{ { DEFACCEL, "SWS: Remove items/tracks/env, obeying time sel" },					"SWS_SMARTREMOVE",	SmartRemove, NULL, },
-	{ { DEFACCEL, "SWS: Split items at time sel (if exists), else at edit cursor" },	"SWS_SMARTSPLIT",	SmartSplit, NULL, },
-	{ { DEFACCEL, "SWS: Split items at time sel, edit cursor, or mouse cursor" },		"SWS_TRIPLESPLIT",	TripleSplit, NULL, },
-	{ { DEFACCEL, "SWS: Unselect all items/tracks/env points (depending on focus)" },	"SWS_SMARTUNSEL",	SmartUnsel, NULL, },
-	{ { DEFACCEL, "SWS: Unselect all items/tracks/env points" },						"SWS_UNSELALL",		UnselAll, NULL, },
-	{ { DEFACCEL, "SWS: Set time sel to sel item(s) if no current time sel" },			"SWS_SAFETIMESEL",	SafeTiemSel, NULL, },
-	
+	{ { DEFACCEL, "SWS: Copy items/tracks/env (obey time selection)" },							"SWS_SMARTCOPY",	SmartCopy, NULL, },
+	{ { DEFACCEL, "SWS: Cut items/tracks/env (obey time selection)" },							"SWS_SMARTCUT",		SmartCut, NULL, },
+	{ { DEFACCEL, "SWS: Remove items/tracks/env, (obey time selection)" },						"SWS_SMARTREMOVE",	SmartRemove, NULL, },
+	{ { DEFACCEL, "SWS: Split items at time selection (if exists), else at edit cursor" },		"SWS_SMARTSPLIT",	SmartSplit, NULL, },
+	{ { DEFACCEL, "SWS: Split items at time selection, edit cursor, or mouse cursor" },			"SWS_TRIPLESPLIT",	TripleSplit, NULL, },
+	{ { DEFACCEL, "SWS: Unselect all items/tracks/env points (depending on focus)" },			"SWS_SMARTUNSEL",	SmartUnsel, NULL, },
+	{ { DEFACCEL, "SWS: Unselect all items/tracks/env points" },								"SWS_UNSELALL",		UnselAll, NULL, },
+	{ { DEFACCEL, "SWS: Set time selection to selected items (skip if time selection exists)" },"SWS_SAFETIMESEL",	SafeTiemSel, NULL, },
+
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 //!WANT_LOCALIZE_1ST_STRING_END

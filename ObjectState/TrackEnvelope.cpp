@@ -29,6 +29,8 @@
 #include "stdafx.h"
 #include "TrackEnvelope.h"
 
+#ifdef SWS_DEPRECEATED
+
 SWS_TrackEnvelope::SWS_TrackEnvelope(TrackEnvelope* te):m_pTe(te), m_bLoaded(false), m_iHeightOverride(0), m_cEnv(NULL), m_bVis(false)
 {
 }
@@ -89,8 +91,8 @@ int SWS_TrackEnvelope::GetHeight(int iTrackHeight)
 	else
 	{
 		iTrackHeight = (int)(iTrackHeight * ENV_HEIGHT_MULTIPLIER);
-		if (iTrackHeight < MINTRACKHEIGHT)
-			iTrackHeight = MINTRACKHEIGHT;
+		if (iTrackHeight < SNM_GetIconTheme()->envcp_min_height)
+			iTrackHeight =  SNM_GetIconTheme()->envcp_min_height;
 		return iTrackHeight;
 	}
 }
@@ -159,3 +161,5 @@ int SWS_TrackEnvelopes::GetLanesHeight(int iTrackHeight)
 	}
 	return iHeight;
 }
+
+#endif

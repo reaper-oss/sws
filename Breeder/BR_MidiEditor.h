@@ -33,13 +33,29 @@
 void MidiTakePreviewPlayState (bool play, bool rec);
 
 /******************************************************************************
-* Commands                                                                    *
+* Commands: MIDI editor - Item preview                                        *
 ******************************************************************************/
 void ME_StopMidiTakePreview (COMMAND_T*, int, int, int, HWND);
 void ME_PreviewActiveTake (COMMAND_T*, int, int, int, HWND);
+
+/******************************************************************************
+* Commands: MIDI editor - Misc                                                *
+******************************************************************************/
 void ME_PlaybackAtMouseCursor (COMMAND_T*, int, int, int, HWND);
+void ME_CCEventAtEditCursor (COMMAND_T*, int, int, int, HWND);
 void ME_ShowUsedCCLanesDetect14Bit (COMMAND_T*, int, int, int, HWND);
+void ME_HideCCLanes (COMMAND_T*, int, int, int, HWND);
+void ME_ToggleHideCCLanes (COMMAND_T*, int, int, int, HWND);
+void ME_CCToEnvPoints (COMMAND_T*, int, int, int, HWND);
 void ME_SaveCursorPosSlot (COMMAND_T*, int, int, int, HWND);
 void ME_RestoreCursorPosSlot (COMMAND_T*, int, int, int, HWND);
 void ME_SaveNoteSelSlot (COMMAND_T*, int, int, int, HWND);
 void ME_RestoreNoteSelSlot (COMMAND_T*, int, int, int, HWND);
+void ME_SaveCCEventsSlot (COMMAND_T*, int, int, int, HWND);
+void ME_RestoreCCEventsSlot (COMMAND_T*, int, int, int, HWND);
+void ME_RestoreCCEvents2Slot (COMMAND_T*, int, int, int, HWND);
+
+/******************************************************************************
+* Toggle states: MIDI editor - Misc                                           *
+******************************************************************************/
+int ME_IsToggleHideCCLanesOn (COMMAND_T*);

@@ -312,7 +312,7 @@ void SetTrackToFirstUnusedGroup(COMMAND_T* _ct) {
 // Track folders
 ///////////////////////////////////////////////////////////////////////////////
 
-int GetTrackDepth(MediaTrack* _tr)
+int SNM_GetTrackDepth(MediaTrack* _tr)
 {
 	int depth = 0;
 	for (int i=1; i <= GetNumTracks(); i++) // skip master
@@ -385,14 +385,14 @@ void SetTracksFolderState(COMMAND_T* _ct)
 			int curState = *(int*)GetSetMediaTrackInfo(tr, "I_FOLDERDEPTH", NULL);
 			if ((int)_ct->user == -1) // last in folder?
 			{
-				if (GetTrackDepth(tr)>0)
+				if (SNM_GetTrackDepth(tr)>0)
 					newState = curState<0 ? curState-1 : -1;
 				else
 					newState = curState;
 			}
 			else if ((int)_ct->user == -2) // very last in folder?
 			{
-				int depth = GetTrackDepth(tr);
+				int depth = SNM_GetTrackDepth(tr);
 				if (depth>0)
 					newState = depth * (-1);
 				else

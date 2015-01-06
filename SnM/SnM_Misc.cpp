@@ -198,6 +198,9 @@ void ULT_SetMediaItemNote(MediaItem* _item, char* _str) {
 		GetSetMediaItemInfo(_item, "P_NOTES", _str);
 }
 
+MediaItem_Take* SNM_GetMIDIEditorActiveTake() {
+  return MIDIEditor_GetTake(MIDIEditor_GetActive());
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Toolbars auto refresh option

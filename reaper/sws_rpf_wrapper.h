@@ -28,8 +28,7 @@
 // reaper_plugin_functions.h (rpf) needs a little help, so instead of modifying
 // the file directly, and needing to remodify with each rebuild of the file,
 // fix some things here.
-
-#ifdef REAPERAPI_DECL
+#ifdef REAPERAPI_IMPLEMENT
 #define REAPER_EXTRA_API_DECL
 #else
 #define REAPER_EXTRA_API_DECL extern

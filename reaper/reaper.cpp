@@ -26,7 +26,7 @@
 ******************************************************************************/
 
 
-// Sole purpose is to just include sws_rpf_wrapper.h with REAPERAPI_DECL defined
-#define REAPERAPI_DECL
+// Sole purpose is to just include sws_rpf_wrapper.h with REAPERAPI_IMPLEMENT defined
+#define REAPERAPI_IMPLEMENT
 #include "reaper_plugin.h"
 #include "sws_rpf_wrapper.h"

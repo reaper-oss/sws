@@ -38,7 +38,7 @@
 ******************************************************************************/
 BR_MidiEditor::BR_MidiEditor () :
 m_take                 (NULL),
-m_midiEditor           (MIDIEditor_GetActive()),
+m_midiEditor           (SWS_MIDIEditor_GetActive()),
 m_startPos             (-1),
 m_hZoom                (-1),
 m_vPos                 (-1),
@@ -374,7 +374,7 @@ bool BR_MidiEditor::CheckVisibility (MediaItem_Take* take, int chanMsg, double p
 
 bool BR_MidiEditor::Build ()
 {
-	m_take = (m_midiEditor) ? MIDIEditor_GetTake(m_midiEditor) : m_take;
+	m_take = (m_midiEditor) ? SWS_MIDIEditor_GetTake(m_midiEditor) : m_take;
 
 	if (m_take)
 	{
@@ -571,7 +571,7 @@ void BR_MidiItemTimePos::MidiTake::NoteEvent::InsertEvent (MediaItem_Take* take,
 {
 	double posPPQ = MIDI_GetPPQPosFromProjTime(take, pos + offset);
 	double endPPQ = MIDI_GetPPQPosFromProjTime(take, end + offset);
-	MIDI_InsertNote(take, selected, muted, posPPQ, endPPQ, chan, pitch, vel);
+	MIDI_InsertNote(take, selected, muted, posPPQ, endPPQ, chan, pitch, vel, NULL);
 }
 
 BR_MidiItemTimePos::MidiTake::CCEvent::CCEvent (MediaItem_Take* take, int id)
@@ -633,7 +633,7 @@ vector<int> GetUsedNamedNotes (void* midiEditor, MediaItem_Take* take, bool used
 	*  but without resetting note view settings, view won't get updated   */
 
 	vector<int> allNotesStatus(127, 0);
-	MediaItem_Take* midiTake = (midiEditor) ? MIDIEditor_GetTake(midiEditor) : take;
+	MediaItem_Take* midiTake = (midiEditor) ? SWS_MIDIEditor_GetTake(midiEditor) : take;
 
 	if (named)
 	{
@@ -699,7 +699,7 @@ vector<int> MuteSelectedNotes (MediaItem_Take* take)
 			if (!selected)
 			{
 				muted = true;
-				MIDI_SetNote(take, i, NULL, &muted, NULL, NULL, NULL, NULL, NULL);
+				MIDI_SetNote(take, i, NULL, &muted, NULL, NULL, NULL, NULL, NULL, NULL);
 			}
 		}
 	}
@@ -708,7 +708,7 @@ vector<int> MuteSelectedNotes (MediaItem_Take* take)
 
 set<int> GetUsedCCLanes (void* midiEditor, int detect14bit)
 {
-	MediaItem_Take* take = MIDIEditor_GetTake(midiEditor);
+	MediaItem_Take* take = SWS_MIDIEditor_GetTake(midiEditor);
 	set<int> usedCC;
 
 	int noteCount, ccCount, sysCount;
@@ -1011,7 +1011,7 @@ void SetMutedNotes (MediaItem_Take* take, const vector<int>& muteStatus)
 	for (int i = 0; i < noteCount; ++i)
 	{
 		bool muted = !!muteStatus[i];
-		MIDI_SetNote(take, i, NULL, &muted, NULL, NULL, NULL, NULL, NULL);
+		MIDI_SetNote(take, i, NULL, &muted, NULL, NULL, NULL, NULL, NULL, NULL);
 	}
 }
 
@@ -1031,7 +1031,7 @@ void SetSelectedNotes (MediaItem_Take* take, const vector<int>& selectedNotes, b
 			++selectedId;
 		}
 
-		MIDI_SetNote(take, i, ((unselectOthers) ? (&selected) : ((&selected) ? &selected : NULL)), NULL, NULL, NULL, NULL, NULL, NULL);
+		MIDI_SetNote(take, i, ((unselectOthers) ? (&selected) : ((&selected) ? &selected : NULL)), NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 	}
 }
 
@@ -1046,7 +1046,7 @@ void UnselectAllEvents (MediaItem_Take* take, int lane)
 			{
 				int cc, chanMsg;
 				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, NULL, &cc, NULL) && chanMsg == STATUS_CC && cc == lane)
-					MIDI_SetCC(take, id, &g_bFalse, NULL, NULL, NULL, NULL, NULL, NULL);
+					MIDI_SetCC(take, id, &g_bFalse, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 			}
 		}
 		else if (lane == CC_PROGRAM || lane == CC_CHANNEL_PRESSURE || lane == CC_PITCH || lane == CC_BANK_SELECT)
@@ -1060,14 +1060,14 @@ void UnselectAllEvents (MediaItem_Take* take, int lane)
 			{
 				int chanMsg;
 				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, NULL, NULL, NULL) && chanMsg == type)
-					MIDI_SetCC(take, id, &g_bFalse, NULL, NULL, NULL, NULL, NULL, NULL);
+					MIDI_SetCC(take, id, &g_bFalse, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 			}
 		}
 		else if (lane == CC_VELOCITY)
 		{
 			int id = -1;
 			while ((id = MIDI_EnumSelNotes(take, id)) != -1)
-				MIDI_SetNote(take, id, &g_bFalse, NULL, NULL, NULL, NULL, NULL, NULL);
+				MIDI_SetNote(take, id, &g_bFalse, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 		}
 		else if (lane == CC_TEXT_EVENTS || lane == CC_SYSEX)
 		{
@@ -1076,7 +1076,7 @@ void UnselectAllEvents (MediaItem_Take* take, int lane)
 			{
 				int type = 0;
 				if (MIDI_GetTextSysexEvt(take, id, NULL, NULL, NULL, &type, NULL, NULL) && ((lane == CC_SYSEX && type == -1) || (lane == CC_TEXT_EVENTS && type != -1)))
-					MIDI_SetTextSysexEvt(take, id, &g_bFalse, NULL, NULL, NULL, NULL, NULL);
+					MIDI_SetTextSysexEvt(take, id, &g_bFalse, NULL, NULL, NULL, NULL, NULL, NULL);
 			}
 		}
 		else if (lane >= CC_14BIT_START)
@@ -1089,7 +1089,7 @@ void UnselectAllEvents (MediaItem_Take* take, int lane)
 			{
 				int cc, chanMsg;
 				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, NULL, &cc, NULL) && chanMsg == STATUS_CC && (cc == cc1 || cc == cc2))
-					MIDI_SetCC(take, id, &g_bFalse, NULL, NULL, NULL, NULL, NULL, NULL);
+					MIDI_SetCC(take, id, &g_bFalse, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 			}
 		}
 	}
@@ -1224,7 +1224,7 @@ int GetMIDIFilePPQ (const char* fp)
 
 int GetLastClickedVelLane (void* midiEditor)
 {
-	int cc = MIDIEditor_GetSetting_int(midiEditor, "last_clicked_cc_lane");
+	int cc = SWS_MIDIEditor_GetSetting_int(midiEditor, "last_clicked_cc_lane");
 	if (cc == -1)
 		return -666;
 	else

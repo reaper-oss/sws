@@ -2307,7 +2307,7 @@ HWND GetTcpTrackWnd (MediaTrack* track)
 
 HWND GetNotesView (void* midiEditor)
 {
-	if (MIDIEditor_GetMode(midiEditor) != -1)
+	if (SWS_MIDIEditor_GetMode(midiEditor) != -1)
 	{
 		#ifdef _WIN32
 			static char* s_name  = (IsLocalized()) ? (NULL) : (const_cast<char*>(__localizeFunc("midiview", "midi_DLG_102", 0)));
@@ -2330,7 +2330,7 @@ HWND GetNotesView (void* midiEditor)
 
 HWND GetPianoView (void* midiEditor)
 {
-	if (MIDIEditor_GetMode(midiEditor) != -1)
+	if (SWS_MIDIEditor_GetMode(midiEditor) != -1)
 	{
 		#ifdef _WIN32
 			static char* s_name  = (IsLocalized()) ? (NULL) : (const_cast<char*>(__localizeFunc("midipianoview", "midi_DLG_102", 0)));

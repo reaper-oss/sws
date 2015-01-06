@@ -717,9 +717,9 @@ void BR_MidiToggleCCLane::LoadState (ProjectStateContext* ctx)
 bool BR_MidiToggleCCLane::Hide (void* midiEditor, int laneToKeep, int editorHeight /*= -1*/, int inlineHeight /*= -1*/)
 {
 	bool update = false;
-	if (m_ccLanes.size() == 0 && MIDIEditor_GetMode(midiEditor) != -1)
+	if (m_ccLanes.size() == 0 && SWS_MIDIEditor_GetMode(midiEditor) != -1)
 	{
-		if (MediaItem_Take* take = MIDIEditor_GetTake(midiEditor))
+		if (MediaItem_Take* take = SWS_MIDIEditor_GetTake(midiEditor))
 		{
 			MediaItem* item = GetMediaItemTake_Item(take);
 			int takeId = GetTakeId(take, item);
@@ -783,9 +783,9 @@ bool BR_MidiToggleCCLane::Hide (void* midiEditor, int laneToKeep, int editorHeig
 bool BR_MidiToggleCCLane::Restore (void* midiEditor)
 {
 	bool update = false;
-	if (m_ccLanes.size() != 0 && MIDIEditor_GetMode(midiEditor) != -1)
+	if (m_ccLanes.size() != 0 && SWS_MIDIEditor_GetMode(midiEditor) != -1)
 	{
-		if (MediaItem_Take* take = MIDIEditor_GetTake(midiEditor))
+		if (MediaItem_Take* take = SWS_MIDIEditor_GetTake(midiEditor))
 		{
 			MediaItem* item = GetMediaItemTake_Item(take);
 			int takeId = GetTakeId(take, item);

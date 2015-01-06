@@ -125,7 +125,7 @@ static bool hasEventsofType(const RprMidiTakePtr &midiTake, int cc)
 static void ShowUsedCCLanes(int flag, void *data)
 {
 	RprMidiCCLanePtr laneView = RprMidiCCLane::createFromMidiEditor();
-	set<int> usedCC = GetUsedCCLanes(MIDIEditor_GetActive(), 0); // faster than RprMidiTake::createFromMidiEditor(true);
+	set<int> usedCC = GetUsedCCLanes(SWS_MIDIEditor_GetActive(), 0); // faster than RprMidiTake::createFromMidiEditor(true);
 
 	 /* remove ununsed lanes */
 	for (int i = 0; i < laneView->countShown(); ++i)
@@ -159,7 +159,7 @@ static void ShowUsedCCLanes(int flag, void *data)
 static void HideUnusedCCLanes(int flag, void *data)
 {
     RprMidiCCLanePtr laneView = RprMidiCCLane::createFromMidiEditor();
-	set<int> usedCC = GetUsedCCLanes(MIDIEditor_GetActive(), 1);
+	set<int> usedCC = GetUsedCCLanes(SWS_MIDIEditor_GetActive(), 1);
 
 	for(int i = 0; i < laneView->countShown(); ++i) {
 		if (usedCC.find(laneView->getIdAt(i)) == usedCC.end())

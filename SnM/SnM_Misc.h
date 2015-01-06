@@ -47,6 +47,7 @@ double SNM_GetDoubleConfigVar(const char* _varName, double _errVal);
 bool SNM_SetDoubleConfigVar(const char* _varName, double _newVal);
 const char* ULT_GetMediaItemNote(MediaItem* _item);
 void ULT_SetMediaItemNote(MediaItem* _item, char* _str);
+MediaItem_Take* SNM_GetMIDIEditorActiveTake();
 
 // toolbar auto refresh
 void EnableToolbarsAutoRefesh(COMMAND_T*);

@@ -38,7 +38,7 @@
 ******************************************************************************/
 BR_MidiEditor::BR_MidiEditor () :
 m_take                 (NULL),
-m_midiEditor           (MIDIEditor_GetActive()),
+m_midiEditor           (SWS_MIDIEditor_GetActive()),
 m_startPos             (-1),
 m_hZoom                (-1),
 m_vPos                 (-1),
@@ -374,7 +374,7 @@ bool BR_MidiEditor::CheckVisibility (MediaItem_Take* take, int chanMsg, double p
 
 bool BR_MidiEditor::Build ()
 {
-	m_take = (m_midiEditor) ? MIDIEditor_GetTake(m_midiEditor) : m_take;
+	m_take = (m_midiEditor) ? SWS_MIDIEditor_GetTake(m_midiEditor) : m_take;
 
 	if (m_take)
 	{
@@ -633,7 +633,7 @@ vector<int> GetUsedNamedNotes (void* midiEditor, MediaItem_Take* take, bool used
 	*  but without resetting note view settings, view won't get updated   */
 
 	vector<int> allNotesStatus(127, 0);
-	MediaItem_Take* midiTake = (midiEditor) ? MIDIEditor_GetTake(midiEditor) : take;
+	MediaItem_Take* midiTake = (midiEditor) ? SWS_MIDIEditor_GetTake(midiEditor) : take;
 
 	if (named)
 	{
@@ -708,7 +708,7 @@ vector<int> MuteSelectedNotes (MediaItem_Take* take)
 
 set<int> GetUsedCCLanes (void* midiEditor, int detect14bit)
 {
-	MediaItem_Take* take = MIDIEditor_GetTake(midiEditor);
+	MediaItem_Take* take = SWS_MIDIEditor_GetTake(midiEditor);
 	set<int> usedCC;
 
 	int noteCount, ccCount, sysCount;
@@ -1224,7 +1224,7 @@ int GetMIDIFilePPQ (const char* fp)
 
 int GetLastClickedVelLane (void* midiEditor)
 {
-	int cc = MIDIEditor_GetSetting_int(midiEditor, "last_clicked_cc_lane");
+	int cc = SWS_MIDIEditor_GetSetting_int(midiEditor, "last_clicked_cc_lane");
 	if (cc == -1)
 		return -666;
 	else

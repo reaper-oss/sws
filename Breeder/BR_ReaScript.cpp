@@ -309,7 +309,7 @@ MediaItem* BR_ItemAtMouseCursor (double* position)
 
 bool BR_MIDI_CCLaneReplace (void* midiEditor, int laneId, int newCC)
 {
-	MediaItem_Take* take = MIDIEditor_GetTake(midiEditor);
+	MediaItem_Take* take = SWS_MIDIEditor_GetTake(midiEditor);
 	int newLane = MapReaScriptCCToVelLane(newCC);
 
 	if (take && IsVelLaneValid(newLane))
@@ -340,7 +340,7 @@ bool BR_MIDI_CCLaneReplace (void* midiEditor, int laneId, int newCC)
 
 bool BR_MIDI_CCLaneRemove (void* midiEditor, int laneId)
 {
-	MediaItem_Take* take = MIDIEditor_GetTake(midiEditor);
+	MediaItem_Take* take = SWS_MIDIEditor_GetTake(midiEditor);
 
 	if (take)
 	{

@@ -115,10 +115,10 @@ RprNode *RprMidiCCLane::RprMidiLane::toReaper()
 
 RprMidiCCLanePtr RprMidiCCLane::createFromMidiEditor(bool readOnly)
 {
-    void *midiEditor = MIDIEditor_GetActive();
+    void *midiEditor = SWS_MIDIEditor_GetActive();
     if(midiEditor == NULL)
         throw RprLibException(__LOCALIZE("No active MIDI editor","sws_mbox"), true);
-    RprTake take(MIDIEditor_GetTake(midiEditor));
+    RprTake take(SWS_MIDIEditor_GetTake(midiEditor));
     RprMidiCCLanePtr laneViewPtr(new RprMidiCCLane(take, readOnly));
     return laneViewPtr;
 }

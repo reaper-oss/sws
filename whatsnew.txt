@@ -1,5 +1,6 @@
-REAPER v5 (pre-release) support
+REAPER v5 preliminary support
 +ReaScript function export to EEL and LUA
++Fixed action selection broken in various places (e.g. Cycle Action editor)
 
 Notes window
 +Added "Wrap text" option in the context menu

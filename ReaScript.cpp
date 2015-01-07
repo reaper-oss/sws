@@ -35,6 +35,7 @@
 #include "Fingers/RprMidiTake.h"
 #include "Breeder/BR_ReaScript.h"
 
+#include "reascript_lua_eel.h"
 
 // Important:
 // keep APIFUNC() and the 6 first fields of the struct "APIdef" as they are defined:
@@ -44,12 +45,14 @@
 // See http://code.google.com/p/sws-extension/issues/detail?id=432
 
 
-#define APIFUNC(x) (void*)x,#x,"API_" #x "","APIdef_" #x ""
+#define APIFUNC(x) (void*)x,#x,(void*)__luaeel_ ## x,"APIvararg_" #x "","API_" #x "","APIdef_" #x ""
 
 typedef struct APIdef
 {
 	void* func;
 	const char* func_name;
+	void* func_vararg;
+	const char* regkey_vararg;
 	const char* regkey_func;
 	const char* regkey_def;
 	const char* ret_val;
@@ -149,7 +152,13 @@ bool RegisterExportedFuncs(reaper_plugin_info_t* _rec)
 	bool ok = (_rec!=NULL);
 	int i=-1;
 	while (ok && g_apidefs[++i].func)
+	{
 		ok &= (_rec->Register(g_apidefs[i].regkey_func, g_apidefs[i].func) != 0);
+		if (g_apidefs[i].func_vararg)
+		{
+			ok &= (_rec->Register(g_apidefs[i].regkey_vararg, g_apidefs[i].func_vararg) != 0);
+		}
+	}
 	return ok;
 }
 

@@ -1,3 +1,6 @@
+REAPER v5 (pre-release) support
++ReaScript function export to EEL and LUA
+
 Notes window
 +Added "Wrap text" option in the context menu
 +Import SubRip file: name regions with subtitles content  

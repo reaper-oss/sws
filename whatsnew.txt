@@ -1,5 +1,5 @@
 !v2.6.1 #0 pre-release build (January 7, 2015)
-<strong>REAPER v5.0pre3+ is required!</strong>
+<strong>REAPER v5.0pre4+ is required!</strong>
 
 REAPER 5 preliminary support
 +ReaScript function export to EEL and LUA

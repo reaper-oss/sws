@@ -740,6 +740,7 @@ extern "C"
 		IMPAPI(GetSetEnvelopeState);
 		IMPAPI(GetSetMediaItemInfo);
 		IMPAPI(GetSetMediaItemTakeInfo);
+		IMPAPI(GetMediaSourceLength); // > v5.0pre3
 		IMPAPI(GetSetMediaTrackInfo);
 		IMPAPI(GetSetObjectState);
 		IMPAPI(GetSetObjectState2);
@@ -964,7 +965,7 @@ extern "C"
 				_snprintf(txt, sizeof(txt),
 					// keep the message on a single line (for the LangPack generator)
 					__LOCALIZE_VERFMT("The version of SWS extension you have installed is incompatible with your version of REAPER.\nYou probably have a REAPER version less than v%s installed.\nPlease install the latest version of REAPER from www.reaper.fm.","sws_mbox"),
-					"4.75"); // <- update compatible version here
+					"5.0pre3"); // <- update compatible version here
 
 				MessageBox(Splash_GetWnd && Splash_GetWnd() ? Splash_GetWnd() : NULL, txt, __LOCALIZE("SWS - Version Incompatibility","sws_mbox"), MB_OK);
 			}

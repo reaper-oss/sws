@@ -1,3 +1,5 @@
+<strong>REAPER v5.0pre6+ is required!</strong> (this REAPER version supports SWS functions exported to EEL and Lua)
+
 Fixes:
 +REAPER 5/Windows OS: fixed crash vs unsupported REAPER versions
 +Hardened SWS initialization, display error messages
@@ -6,7 +8,7 @@ Fixes:
 <strong>REAPER v5.0pre4+ is required!</strong>
 
 REAPER 5 preliminary support
-+ReaScript function export to EEL and LUA
++ReaScript function export to EEL and Lua
 +Fixed action selection broken in various places (e.g. Cycle Action editor)
 
 !v2.6.0 #0 featured build (January 7, 2015)

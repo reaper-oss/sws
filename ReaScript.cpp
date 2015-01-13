@@ -67,6 +67,10 @@ typedef struct APIdef
 ///////////////////////////////////////////////////////////////////////////////
 // Add the functions you want to export here (+ related #include on top)
 // Make sure function names have a prefix like "SWS_", "FNG_", etc..
+// When documenting API function parameters:
+//  - if a (char*,int) pair is encountered, name them buf, buf_sz
+//  - if a (const char*,int) pair is encountered, buf, buf_sz as well
+//  - if a lone basicType *, use varNameOut or varNameIn or varNameInOptional (if last parameter(s))
 ///////////////////////////////////////////////////////////////////////////////
 
 APIdef g_apidefs[] =

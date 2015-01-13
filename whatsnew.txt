@@ -1,3 +1,7 @@
+Fixes:
++REAPER 5/Windows OS: fixed crash vs unsupported REAPER versions
++Hardened SWS initialization, display error messages
+
 !v2.6.1 #0 pre-release build (January 7, 2015)
 <strong>REAPER v5.0pre4+ is required!</strong>
 

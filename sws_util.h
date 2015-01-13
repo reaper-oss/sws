@@ -27,9 +27,6 @@
 
 #pragma once
 
-#define IMPAPI(x)				if (!((*((void **)&(x)) = (void *)rec->GetFunc(#x)))) errcnt++;
-#define IMPVAR(x,nm)			if (!((*(void **)&(x)) = get_config_var(nm,&sztmp)) || sztmp != sizeof(*x)) errcnt++;
-
 #define SWS_URL					"http://www.standingwaterstudios.com/reaper"
 #define SWS_URL_DOWNLOAD		SWS_URL
 #define SWS_URL_VERSION_H		"http://sws.mj-s.com/download/featured/version.h"

@@ -216,7 +216,7 @@ int IsToolbarsAutoRefeshEnabled(COMMAND_T* _ct) {
 	return g_SNM_ToolbarRefresh;
 }
 
-void RefreshToolbars()
+void SNM_RefreshToolbars()
 {
 	// offscreen item sel. buttons
 	for (int i=0; i<SNM_ITEM_SEL_COUNT; i++)
@@ -244,7 +244,7 @@ void AutoRefreshToolbarRun()
 		}
 		if (GetTickCount() > g_toolbarRefreshTime) {
 			g_toolbarRefreshTime = GetTickCount() + g_SNM_ToolbarRefreshFreq; // custom freq (from S&M.ini)
-			RefreshToolbars();
+			SNM_RefreshToolbars();
 		}
 	}
 }

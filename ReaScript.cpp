@@ -70,7 +70,14 @@ typedef struct APIdef
 // When documenting API function parameters:
 //  - if a (char*,int) pair is encountered, name them buf, buf_sz
 //  - if a (const char*,int) pair is encountered, buf, buf_sz as well
-//  - if a lone basicType *, use varNameOut or varNameIn or varNameInOptional (if last parameter(s))
+//  - if a lone basicType *, use varNameOut or varNameIn or
+//    varNameInOptional (if last parameter(s))
+// At the moment (REAPER v5pre6) the supported parameter types are:
+//  - int, int*, bool, bool*, double, double*, char*, const char*
+//  - AnyStructOrClass* (handled as an opaque pointer)
+// At the moment (REAPER v5pre6) the supported return types are:
+//  - int, bool, double, const char*
+//  - AnyStructOrClass* (handled as an opaque pointer)
 ///////////////////////////////////////////////////////////////////////////////
 
 APIdef g_apidefs[] =

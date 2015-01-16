@@ -1,3 +1,4 @@
+!v2.6.2 #0 pre-release build (January 16, 2015)
 <strong>REAPER v5.0pre6+ is required!</strong> (this REAPER version supports SWS functions exported to EEL and Lua)
 
 Fixes:

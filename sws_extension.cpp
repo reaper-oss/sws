@@ -710,6 +710,7 @@ extern "C"
 		IMPAPI(GetLastTouchedTrack);
 		IMPAPI(GetMainHwnd);
 		IMPAPI(GetMasterMuteSoloFlags);
+		IMPAPI(GetMasterTrackVisibility);
 		IMPAPI(GetMasterTrack);
 		IMPAPI(GetMediaItem);
 		IMPAPI(GetMediaItem_Track);
@@ -889,6 +890,7 @@ extern "C"
 		IMPAPI(SetEditCurPos);
 		IMPAPI(SetEditCurPos2);
 		IMPAPI(SetGlobalAutomationOverride);
+		IMPAPI(SetMasterTrackVisibility);
 		IMPAPI(SetMediaItemInfo_Value);
 		IMPAPI(SetMediaItemLength);
 		IMPAPI(SetMediaItemPosition);

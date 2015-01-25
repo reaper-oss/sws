@@ -81,7 +81,7 @@ enum BR_MidiStatusBytes
 /******************************************************************************
 * Various constants related to position and dimension of MIDI editor elements *
 ******************************************************************************/
-const int MIDI_RULER_H                 = 44;
+const int MIDI_RULER_H                 = 64;
 const int MIDI_LANE_DIVIDER_H          = 9;
 const int MIDI_LANE_TOP_GAP            = 4;
 const int MIDI_BLACK_KEYS_W            = 73;

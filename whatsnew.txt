@@ -1,3 +1,5 @@
+<strong>REAPER v5.0pre8+ is required!</strong>
+
 Contextual toolbars
 +Fixed toolbars not loading in certain instances if some tracks are hidden from TCP (this also probably fixes some other issues)
 

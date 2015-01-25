@@ -597,7 +597,7 @@ extern "C"
 			OK_RETURN("Exiting SWS.")
 		}
 
-    
+
 		int errcnt=0; // IMPAPI failed if >0
 		WDL_String errmsg;
 
@@ -632,6 +632,7 @@ extern "C"
 		IMPAPI(CoolSB_GetScrollInfo);
 		IMPAPI(CoolSB_SetScrollInfo);
 		IMPAPI(CountActionShortcuts);
+	IMPAPI(CountEnvelopePoints); // v5pre4+
 		IMPAPI(CountMediaItems);
 		IMPAPI(CountProjectMarkers);
 		IMPAPI(CountSelectedMediaItems);
@@ -657,6 +658,8 @@ extern "C"
 		IMPAPI(CSurf_OnWidthChange);
 		IMPAPI(CSurf_TrackFromID);
 		IMPAPI(CSurf_TrackToID);
+		IMPAPI(DB2SLIDER);
+	IMPAPI(DeleteEnvelopePointRange); // v5pre5+
 		IMPAPI(DeleteActionShortcut);
 		IMPAPI(DeleteProjectMarker);
 		IMPAPI(DeleteProjectMarkerByIndex);
@@ -678,6 +681,7 @@ extern "C"
 		IMPAPI(EnumProjectMarkers2);
 		IMPAPI(EnumProjectMarkers3);
 		IMPAPI(EnumProjects);
+	IMPAPI(Envelope_SortPoints); // v5pre4+
 		IMPAPI(file_exists);
 		IMPAPI(format_timestr);
 		IMPAPI(format_timestr_pos);
@@ -699,7 +703,9 @@ extern "C"
 		IMPAPI(GetCursorPositionEx);
 		IMPAPI(GetEnvelopeName);
 		IMPAPI(GetExePath);
+	IMPAPI(GetEnvelopePoint); // v5pre4
 		IMPAPI(GetFocusedFX);
+	IMPAPI(GetFXEnvelope); // v5pre5+
 		IMPAPI(GetGlobalAutomationOverride);
 		IMPAPI(GetHZoomLevel);
 		IMPAPI(GetIconThemePointer);
@@ -752,7 +758,7 @@ extern "C"
 		IMPAPI(GetSetEnvelopeState);
 		IMPAPI(GetSetMediaItemInfo);
 		IMPAPI(GetSetMediaItemTakeInfo);
-		IMPAPI(GetMediaSourceLength); // v5.0pre3+
+	IMPAPI(GetMediaSourceLength); // v5.0pre3+
 		IMPAPI(GetSetMediaTrackInfo);
 		IMPAPI(GetSetObjectState);
 		IMPAPI(GetSetObjectState2);
@@ -784,7 +790,7 @@ extern "C"
 		IMPAPI(GetTrackNumSends);
 		IMPAPI(GetTrackUIVolPan);
 		IMPAPI(GetUserInputs);
-    IMPAPI(GetVolumeEnvelopeScaling); // v5pre6+
+	IMPAPI(GetVolumeEnvelopeScaling); // v5pre6+
 		IMPAPI(get_config_var);
 		IMPAPI(get_ini_file);
 		IMPAPI(GR_SelectColor);
@@ -792,6 +798,7 @@ extern "C"
 		IMPAPI(guidToString);
 		IMPAPI(Help_Set);
 		IMPAPI(InsertMedia);
+	IMPAPI(InsertEnvelopePoint); // v5pre4+
 		IMPAPI(InsertTrackAtIndex);
 		IMPAPI(IsMediaExtension);
 		IMPAPI(kbd_enumerateActions);
@@ -871,6 +878,7 @@ extern "C"
 		IMPAPI(projectconfig_var_addr);
 		IMPAPI(projectconfig_var_getoffs);
 		IMPAPI(RefreshToolbar);
+	IMPAPI(RefreshToolbar2); // v5pre8+
 #ifdef _WIN32
 		IMPAPI(RemoveXPStyle);
 #endif
@@ -889,6 +897,7 @@ extern "C"
 		IMPAPI(SetCursorContext);
 		IMPAPI(SetEditCurPos);
 		IMPAPI(SetEditCurPos2);
+	IMPAPI(SetEnvelopePoint); // v5pre4+
 		IMPAPI(SetGlobalAutomationOverride);
 		IMPAPI(SetMasterTrackVisibility);
 		IMPAPI(SetMediaItemInfo_Value);
@@ -913,6 +922,7 @@ extern "C"
 		IMPAPI(ShowActionList);
 		IMPAPI(ShowConsoleMsg);
 		IMPAPI(ShowMessageBox);
+		IMPAPI(SLIDER2DB);
 		IMPAPI(SnapToGrid);
 		IMPAPI(Splash_GetWnd);
 		IMPAPI(SplitMediaItem);
@@ -1084,7 +1094,7 @@ extern "C"
 			MessageBox(Splash_GetWnd&&Splash_GetWnd()?Splash_GetWnd():NULL, errmsg.Get(), __LOCALIZE("SWS - Error","sws_mbox"), MB_OK);
 			OK_RETURN("SWS Extension initialization failed.");
 		}
-    
+
 		OK_RETURN("SWS Extension successfully loaded.");
 	}
 };   // end extern C

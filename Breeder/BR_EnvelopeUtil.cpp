@@ -785,32 +785,62 @@ double BR_Envelope::NormalizedDisplayValue (double value)
 	double max = this->LaneMaxValue();
 	value = SetToBounds(value, min, max);
 
+	double displayValue = 0;
 	if (this->Type() == PLAYRATE)
 	{
 		if (value > 1)
-			return (2 + value) / 6;      // original formula (max is always known so optimized): 0.5 + (value - 1) / (max - 1) * 0.5
+			displayValue = (2 + value) / 6;      // original formula (max is always known so optimized): 0.5 + (value - 1) / (max - 1) * 0.5
 		else
-			return (value - 0.1) / 1.8 ; // original formula (min is always known so optimized): (value - min) / (1 - min) * 0.5;
+			displayValue = (value - 0.1) / 1.8 ; // original formula (min is always known so optimized): (value - min) / (1 - min) * 0.5;
+	}
+	else if ((this->Type() == VOLUME || this->Type() == VOLUME_PREFX) && this->IsVolScaledToFader())
+	{
+		double sliderMin, sliderMax;
+		GetConfig("sliderminv", sliderMin); SetConfig("sliderminv", VAL2DB(min));
+		GetConfig("slidermaxv", sliderMax); SetConfig("slidermaxv", VAL2DB(max));
+
+		displayValue = SetToBounds(DB2SLIDER(VAL2DB(value)) / 1000, 0.0, 1.0);
+		SetConfig("sliderminv", sliderMin);
+		SetConfig("slidermaxv", sliderMax);
 	}
 	else
-		return (value - min) / (max - min);
+	{
+		displayValue = (value - min) / (max - min);
+	}
+
+	return displayValue;
 }
 
-double BR_Envelope::RealDisplayValue (double normalizedValue)
+double BR_Envelope::RealValue (double normalizedDisplayValue)
 {
 	double min = this->LaneMinValue();
 	double max = this->LaneMaxValue();
-	normalizedValue = SetToBounds(normalizedValue, 0.0, 1.0);
+	normalizedDisplayValue = SetToBounds(normalizedDisplayValue, 0.0, 1.0);
 
+	double realValue = 0;
 	if (this->Type() == PLAYRATE)
 	{
-		if (normalizedValue > 0.5)
-			return 6 * normalizedValue - 2;     // see BR_Envelope::NormalizedDisplayValue() for original formula
+		if (normalizedDisplayValue > 0.5)
+			realValue = 6 * normalizedDisplayValue - 2;     // see BR_Envelope::NormalizedDisplayValue() for original formula
 		else
-			return 1.8 * normalizedValue + 0.1;
+			realValue = 1.8 * normalizedDisplayValue + 0.1;
+	}
+	else if ((this->Type() == VOLUME || this->Type() == VOLUME_PREFX) && this->IsVolScaledToFader())
+	{
+		double sliderMin, sliderMax;
+		GetConfig("sliderminv", sliderMin); SetConfig("sliderminv", VAL2DB(min));
+		GetConfig("slidermaxv", sliderMax); SetConfig("slidermaxv", VAL2DB(max));
+
+		realValue = SetToBounds(DB2VAL(SLIDER2DB(normalizedDisplayValue * 1000)), min, max);
+		SetConfig("sliderminv", sliderMin);
+		SetConfig("slidermaxv", sliderMax);
 	}
 	else
-		return min + normalizedValue * (max - min);
+	{
+		realValue = min + normalizedDisplayValue * (max - min);
+	}
+
+	return realValue;
 }
 
 double BR_Envelope::SnapValue (double value)
@@ -1398,7 +1428,7 @@ bool BR_Envelope::Commit (bool force /*=false*/)
 		{
 			PreventUIRefresh(1);
 
-			// If properties were changed, first commit chunk with properties only and one point (one point prevents REAPER 
+			// If properties were changed, first commit chunk with properties only and one point (one point prevents REAPER
 			// from removing envelope competely) (creating points later using API instead of supplying full chunk is faster)
 			bool firstPointDone = false;
 			if (m_properties.changed)
@@ -1422,7 +1452,7 @@ bool BR_Envelope::Commit (bool force /*=false*/)
 				else                  startTime = 0;
 				if (currentCount > 0) GetEnvelopePoint(m_envelope, currentCount - 1, &endTime,   NULL, NULL, NULL, NULL);
 				else                  endTime = 0;
-				
+
 				startTime -= 1;
 				endTime   += 1;
 				DeleteEnvelopePointRange(m_envelope, startTime, endTime);

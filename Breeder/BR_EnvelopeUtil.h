@@ -82,7 +82,7 @@ struct BR_EnvPoint
 	double bezier;
 	bool selected;
 	int shape;
-	int sig;	
+	int sig;
 	int partial;
 
 	BR_EnvPoint ();
@@ -150,7 +150,7 @@ public:
 	/* Points properties */
 	double ValueAtPosition (double position);         // Using find functionality, so efficiency may vary (see comment about Find())
 	double NormalizedDisplayValue (double value);     // Convert point value to 0.0 - 1.0 range as displayed in arrange
-	double RealDisplayValue (double normalizedValue); // Convert normalized display value in range 0.0 - 1.0 to real envelope value
+	double RealValue (double normalizedDisplayValue); // Convert normalized display value in range 0.0 - 1.0 to real envelope value
 	double SnapValue (double value);                  // Snaps value to current settings (only relevant for take pitch envelope)
 	void GetSelectedPointsExtrema (double* minimum, double* maximum);
 	bool GetPointsInTimeSelection (int* startId, int* endId, double* tStart = NULL, double* tEnd = NULL); // Presumes points are sorted, returns false if there is no time selection (if there are no points in time selection, both ids will be -1)
@@ -206,7 +206,7 @@ private:
 	int FindPrevious (double position, double offset); // offset of take envelopes has to be tracked
 	void Build (bool takeEnvelopesUseProjectTime);
 	void UpdateConsequential ();
-	void FillFxInfo ();     
+	void FillFxInfo ();
 	void FillProperties () const; //to make operator== const (yes, m_properties does get modified but only if not cached already)
 	WDL_FastString GetProperties ();
 	TrackEnvelope* m_envelope;

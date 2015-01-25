@@ -105,8 +105,8 @@ static WDL_FastString EnvMouseTooltip (int window)
 			g_envMouseEnvelope->VisibleInArrange(&envHeight, &envY, true);
 			yOffset = (overRuler) ? envY : SetToBounds(yOffset, envY, envY + envHeight);
 
-			double normalizedValue = ((double)envHeight + (double)envY - (double)yOffset) / (double)envHeight;
-			double value = g_envMouseEnvelope->SnapValue(g_envMouseEnvelope->RealDisplayValue(normalizedValue));
+			double displayValue = ((double)envHeight + (double)envY - (double)yOffset) / (double)envHeight;
+			double value = g_envMouseEnvelope->SnapValue(g_envMouseEnvelope->RealValue(displayValue));
 			if (g_envMouseEnvelope->IsTempo())
 				GetTempoTimeSigMarker(NULL, (g_envMouseMode == 0) ? FindClosestTempoMarker(position) : FindPreviousTempoMarker(position), &position, NULL, NULL, NULL, NULL, NULL, NULL);
 			else
@@ -168,8 +168,8 @@ void SetEnvPointMouseValue (COMMAND_T* ct)
 
 	// Get normalized mouse values
 	yOffset = (overRuler) ? envY : SetToBounds(yOffset, envY, envY + envHeight);
-	double endNormVal   = ((double)envHeight + (double)envY - (double)yOffset) / (double)envHeight;
-	double startNormVal = (s_lastEndPosition == -1) ? (endNormVal) : (s_lastEndNormVal);
+	double endDisplayVal   = ((double)envHeight + (double)envY - (double)yOffset) / (double)envHeight;
+	double startDisplayVal = (s_lastEndPosition == -1) ? (endDisplayVal) : (s_lastEndNormVal);
 
 	// Find all the point over which mouse passed
 	int startId = -1;
@@ -214,8 +214,8 @@ void SetEnvPointMouseValue (COMMAND_T* ct)
 		if (endId < startId)
 		{
 			swap(endId, startId);
-			swap(endPosition, startPosition);
-			swap(endNormVal,  startNormVal);
+			swap(endPosition,   startPosition);
+			swap(endDisplayVal, startDisplayVal);
 			oppositeDirection = true;
 		}
 
@@ -242,14 +242,14 @@ void SetEnvPointMouseValue (COMMAND_T* ct)
 			// Find new value
 			double value = 0;
 			if  (i == startId)
-				value = g_envMouseEnvelope->RealDisplayValue(startNormVal);
+				value = g_envMouseEnvelope->RealValue(startDisplayVal);
 			else if (i == endId)
-				value = g_envMouseEnvelope->RealDisplayValue(endNormVal);
+				value = g_envMouseEnvelope->RealValue(endDisplayVal);
 			else
 			{
 				double t = (currentPointPos - startPosition) / (endPosition - startPosition);
-				double currentNormVal = startNormVal + (endNormVal - startNormVal) * t;
-				value = g_envMouseEnvelope->RealDisplayValue(currentNormVal);
+				double currentDisplayVal = startDisplayVal + (endDisplayVal - startDisplayVal) * t;
+				value = g_envMouseEnvelope->RealValue(currentDisplayVal);
 			}
 
 			// Update current point
@@ -281,12 +281,12 @@ void SetEnvPointMouseValue (COMMAND_T* ct)
 		if (oppositeDirection)
 		{
 			swap(endId, startId);
-			swap(endPosition, startPosition);
-			swap(endNormVal,  startNormVal);
+			swap(endPosition,   startPosition);
+			swap(endDisplayVal, startDisplayVal);
 		}
 		s_lastEndId       = endId;
 		s_lastEndPosition = endPosition;
-		s_lastEndNormVal  = endNormVal;
+		s_lastEndNormVal  = endDisplayVal;
 	}
 }
 

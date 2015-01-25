@@ -34,25 +34,35 @@
 /******************************************************************************
 * BR_EnvPoint                                                                 *
 ******************************************************************************/
+BR_EnvPoint::BR_EnvPoint () :
+position (0),
+value    (0),
+bezier   (0),
+selected (false),
+shape    (0),
+sig      (0),
+partial  (0)
+{
+}
 BR_EnvPoint::BR_EnvPoint (double position) :
 position (position),
 value    (0),
+bezier   (0),
+selected (false),
 shape    (0),
 sig      (0),
-selected (0),
-partial  (0),
-bezier   (0)
+partial  (0)
 {
 }
 
-BR_EnvPoint::BR_EnvPoint (double position, double value, int shape, int sig, int selected, int partial, double bezier) :
+BR_EnvPoint::BR_EnvPoint (double position, double value, int shape, int sig, bool selected, int partial, double bezier) :
 position (position),
 value    (value),
+bezier   (bezier),
+selected (selected),
 shape    (shape),
 sig      (sig),
-selected (selected),
-partial  (partial),
-bezier   (bezier)
+partial  (partial)
 {
 }
 
@@ -66,7 +76,7 @@ bool BR_EnvPoint::ReadLine (const LineParser& lp)
 		this->value    = lp.gettoken_float(2);
 		this->shape    = lp.gettoken_int(3);
 		this->sig      = lp.gettoken_int(4);
-		this->selected = lp.gettoken_int(5);
+		this->selected = !!lp.gettoken_int(5);
 		this->partial  = lp.gettoken_int(6);
 		this->bezier   = lp.gettoken_float(7);
 		return true;
@@ -83,7 +93,7 @@ void BR_EnvPoint::Append (WDL_FastString& string)
 		this->value,
 		this->shape,
 		this->sig,
-		this->selected,
+		this->selected ? 1 : 0,
 		this->partial,
 		this->bezier
 	);
@@ -111,8 +121,8 @@ m_yOffset       (-1)
 
 BR_Envelope::BR_Envelope (TrackEnvelope* envelope, bool takeEnvelopesUseProjectTime /*=true*/) :
 m_envelope      (envelope),
+m_parent        (GetEnvParent(m_envelope)),
 m_take          (NULL),
-m_parent        (NULL),
 m_tempoMap      (envelope == GetTempoEnv()),
 m_update        (false),
 m_sorted        (true),
@@ -122,24 +132,15 @@ m_countConseq   (-1),
 m_height        (-1),
 m_yOffset       (-1)
 {
-	if (m_envelope)
-	{
-		char* envState = GetSetObjectState(m_envelope, "");
-		if (!strncmp(envState, "<TRACK_ENVELOPE_UNKNOWN", sizeof("<TRACK_ENVELOPE_UNKNOWN")-1))
-			m_take = GetTakeEnvParent(m_envelope, &m_takeEnvType);
-		this->ParseState(envState, strlen(envState));
-		FreeHeapPtr(envState);
-	}
-
-	m_count    = (int)m_points.size();
-	m_countSel = (int)m_pointsSel.size();
-	if (takeEnvelopesUseProjectTime && m_take) m_takeEnvOffset = GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION");
+	if (!m_parent)
+		m_take = GetTakeEnvParent(m_envelope, &m_takeEnvType);
+	this->Build(takeEnvelopesUseProjectTime);
 }
 
 BR_Envelope::BR_Envelope (MediaTrack* track, int envelopeId, bool takeEnvelopesUseProjectTime /*=true*/) :
 m_envelope      (GetTrackEnvelope(track, envelopeId)),
-m_take          (NULL),
 m_parent        (track),
+m_take          (NULL),
 m_tempoMap      (m_envelope == GetTempoEnv()),
 m_update        (false),
 m_sorted        (true),
@@ -149,22 +150,13 @@ m_countConseq   (-1),
 m_height        (-1),
 m_yOffset       (-1)
 {
-	if (m_envelope)
-	{
-		char* envState = GetSetObjectState(m_envelope, "");
-		this->ParseState(envState, strlen(envState));
-		FreeHeapPtr(envState);
-	}
-
-	m_count    = (int)m_points.size();
-	m_countSel = (int)m_pointsSel.size();
-	if (takeEnvelopesUseProjectTime && m_take) m_takeEnvOffset = GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION");
+	this->Build(takeEnvelopesUseProjectTime);
 }
 
 BR_Envelope::BR_Envelope (MediaItem_Take* take, BR_EnvType envType, bool takeEnvelopesUseProjectTime /*=true*/) :
 m_envelope      (GetTakeEnv(take, envType)),
-m_take          (take),
 m_parent        (NULL),
+m_take          (take),
 m_tempoMap      (false),
 m_update        (false),
 m_sorted        (true),
@@ -174,39 +166,29 @@ m_countConseq   (-1),
 m_height        (-1),
 m_yOffset       (-1)
 {
-	if (m_envelope)
-	{
-		char* envState = GetSetObjectState(m_envelope, "");
-		this->ParseState(envState, strlen(envState));
-		FreeHeapPtr(envState);
-	}
-
-	m_count    = (int)m_points.size();
-	m_countSel = (int)m_pointsSel.size();
-	if (takeEnvelopesUseProjectTime && m_take) m_takeEnvOffset = GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION");
+	this->Build(takeEnvelopesUseProjectTime);
 }
 
 BR_Envelope::BR_Envelope (const BR_Envelope& envelope) :
-m_envelope      (envelope.m_envelope),
-m_take          (envelope.m_take),
-m_parent        (envelope.m_parent),
-m_tempoMap      (envelope.m_tempoMap),
-m_update        (envelope.m_update),
-m_sorted        (envelope.m_sorted),
-m_takeEnvOffset (envelope.m_takeEnvOffset),
-m_takeEnvType   (envelope.m_takeEnvType),
-m_countConseq   (envelope.m_countConseq),
-m_height        (envelope.m_height),
-m_yOffset       (envelope.m_yOffset),
-m_count         (envelope.m_count),
-m_countSel      (envelope.m_countSel),
-m_points        (envelope.m_points),
-m_pointsSel     (envelope.m_pointsSel),
-m_pointsConseq  (envelope.m_pointsConseq),
-m_chunkStart    (envelope.m_chunkStart),
-m_chunkEnd      (envelope.m_chunkEnd),
-m_envName       (envelope.m_envName),
-m_properties    (envelope.m_properties)
+m_envelope        (envelope.m_envelope),
+m_take            (envelope.m_take),
+m_parent          (envelope.m_parent),
+m_tempoMap        (envelope.m_tempoMap),
+m_update          (envelope.m_update),
+m_sorted          (envelope.m_sorted),
+m_takeEnvOffset   (envelope.m_takeEnvOffset),
+m_takeEnvType     (envelope.m_takeEnvType),
+m_countConseq     (envelope.m_countConseq),
+m_height          (envelope.m_height),
+m_yOffset         (envelope.m_yOffset),
+m_count           (envelope.m_count),
+m_countSel        (envelope.m_countSel),
+m_points          (envelope.m_points),
+m_pointsSel       (envelope.m_pointsSel),
+m_pointsConseq    (envelope.m_pointsConseq),
+m_chunkProperties (envelope.m_chunkProperties),
+m_envName         (envelope.m_envName),
+m_properties      (envelope.m_properties)
 {
 }
 
@@ -236,8 +218,8 @@ BR_Envelope& BR_Envelope::operator= (const BR_Envelope& envelope)
 	m_pointsSel     = envelope.m_pointsSel;
 	m_pointsConseq  = envelope.m_pointsConseq;
 	m_properties    = envelope.m_properties;
-	m_chunkStart.Set(&envelope.m_chunkStart);
-	m_chunkEnd.Set(&envelope.m_chunkEnd);
+
+	m_chunkProperties.Set(&envelope.m_chunkProperties);
 	m_envName.Set(&envelope.m_envName);
 
 	return *this;
@@ -304,9 +286,9 @@ bool BR_Envelope::SetPoint (int id, double* position, double* value, int* shape,
 			WritePtr(value, this->SnapValue(*value));
 
 		if (position) m_points[id].position = *position - m_takeEnvOffset;
-		ReadPtr(value,    m_points[id].value);
-		ReadPtr(shape,    m_points[id].shape);
-		ReadPtr(bezier,   m_points[id].bezier);
+		ReadPtr(value,  m_points[id].value);
+		ReadPtr(shape,  m_points[id].shape);
+		ReadPtr(bezier, m_points[id].bezier);
 
 		m_update = true;
 		if (position) m_sorted = false;
@@ -411,8 +393,8 @@ bool BR_Envelope::GetTimeSig (int id, bool* sig, bool* partial, int* num, int* d
 				effDen = effectiveTimeSig >> 16;  // den is high 16 bits
 			}
 
-			WritePtr(num,     effNum);
-			WritePtr(den,     effDen);
+			WritePtr(num, effNum);
+			WritePtr(den, effDen);
 		}
 		return true;
 	}
@@ -840,10 +822,10 @@ double BR_Envelope::SnapValue (double value)
 
 		if      (mode == 0) return value;
 		else if (mode == 1) return Round(value);             // 1 semitone
-		else if (mode == 2) return Round(value * 2) / 2;     // 50 cent
-		else if (mode == 3) return Round(value * 4) / 4;     // 25 cent
-		else if (mode == 4) return Round(value * 10) / 10;   // 10 cent
-		else if (mode == 5) return Round(value * 20) / 20;   // 5  cent
+		else if (mode == 2) return Round(value * 2)   / 2;   // 50 cent
+		else if (mode == 3) return Round(value * 4)   / 4;   // 25 cent
+		else if (mode == 4) return Round(value * 10)  / 10;  // 10 cent
+		else if (mode == 5) return Round(value * 20)  / 20;  // 5  cent
 		else                return Round(value * 100) / 100; // 1 cents
 	}
 	else
@@ -971,7 +953,7 @@ bool BR_Envelope::VisibleInArrange (int* envHeight, int* yOffset, bool cacheValu
 		}
 
 		WritePtr(envHeight, m_height);
-		WritePtr(yOffset, m_yOffset);
+		WritePtr(yOffset,   m_yOffset);
 
 		int envelopeEnd = m_yOffset + m_height;
 		int pageEnd = si.nPos + (int)si.nPage + SCROLLBAR_W;
@@ -1326,9 +1308,9 @@ double BR_Envelope::LaneMinValue ()
 void BR_Envelope::SetActive (bool active)
 {
 	this->FillProperties();
-	m_properties.active = active;
+	m_properties.active  = active;
 	m_properties.changed = true;
-	m_update = true;
+	m_update             = true;
 }
 
 void BR_Envelope::SetVisible (bool visible)
@@ -1336,7 +1318,7 @@ void BR_Envelope::SetVisible (bool visible)
 	this->FillProperties();
 	m_properties.visible = visible;
 	m_properties.changed = true;
-	m_update = true;
+	m_update             = true;
 }
 
 void BR_Envelope::SetInLane (bool lane)
@@ -1344,34 +1326,34 @@ void BR_Envelope::SetInLane (bool lane)
 	if (!this->IsTakeEnvelope())
 	{
 		this->FillProperties();
-		m_properties.lane = lane;
+		m_properties.lane    = lane;
 		m_properties.changed = true;
-		m_update = true;
+		m_update             = true;
 	}
 }
 
 void BR_Envelope::SetArmed (bool armed)
 {
 	this->FillProperties();
-	m_properties.armed = armed;
+	m_properties.armed   = armed;
 	m_properties.changed = true;
-	m_update = true;
+	m_update             = true;
 }
 
 void BR_Envelope::SetLaneHeight (int height)
 {
 	this->FillProperties();
-	m_properties.height = height;
+	m_properties.height  = height;
 	m_properties.changed = true;
-	m_update = true;
+	m_update             = true;
 }
 
 void BR_Envelope::SetDefaultShape (int shape)
 {
 	this->FillProperties();
-	m_properties.shape = shape;
+	m_properties.shape   = shape;
 	m_properties.changed = true;
-	m_update = true;
+	m_update             = true;
 }
 
 void BR_Envelope::SetVolScaleToFader (bool faderScale)
@@ -1381,7 +1363,7 @@ void BR_Envelope::SetVolScaleToFader (bool faderScale)
 	{
 		m_properties.volType = faderScale ? 1 : 0;
 		m_properties.changed = true;
-		m_update = true;
+		m_update             = true;
 	}
 }
 
@@ -1393,26 +1375,72 @@ bool BR_Envelope::Commit (bool force /*=false*/)
 		int envClickSegMode; GetConfig("envclicksegmode", envClickSegMode);
 		SetConfig("envclicksegmode", ClearBit(envClickSegMode, 6));
 
-		WDL_FastString chunkStart = (m_properties.changed) ? this->GetProperties() : m_chunkStart;
-		for (vector<BR_EnvPoint>::iterator i = m_points.begin(); i != m_points.end() ; ++i)
-			i->Append(chunkStart);
-		chunkStart.Append(m_chunkEnd.Get());
-
-		if (this->IsTakeEnvelope()) // cast: FastString is faster/we're done with the object anyway
-			GetSetEnvelopeState(m_envelope, const_cast<char*>(chunkStart.Get()), 0);
-		else
-			GetSetObjectState(m_envelope, chunkStart.Get());
-
-		// UpdateTimeline() doesn't work when setting chunk with edited values
+		// Need to commit whole chunk
 		if (m_tempoMap)
 		{
-			double t, b; int n, d; bool s;
-			GetTempoTimeSigMarker(NULL, 0, &t, NULL, NULL, &b, &n, &d, &s);
-			SetTempoTimeSigMarker(NULL, 0, t, -1, -1, b, n, d, s);
-			UpdateTimeline();
+			WDL_FastString chunkStart = this->GetProperties();
+			for (vector<BR_EnvPoint>::iterator i = m_points.begin(); i != m_points.end(); ++i)
+				i->Append(chunkStart);
+			chunkStart.Append(">");
+			GetSetObjectState(m_envelope, chunkStart.Get());
+
+			// UpdateTimeline() doesn't work when setting chunk with edited values
+			if (m_tempoMap)
+			{
+				double t, b; int n, d; bool s;
+				GetTempoTimeSigMarker(NULL, 0, &t, NULL, NULL, &b, &n, &d, &s);
+				SetTempoTimeSigMarker(NULL, 0, t, -1, -1, b, n, d, s);
+				UpdateTimeline();
+			}
+		}
+		// We can update through API (faster)
+		else
+		{
+			PreventUIRefresh(1);
+
+			// If properties were changed, first commit chunk with properties only and one point (one point prevents REAPER 
+			// from removing envelope competely) (creating points later using API instead of supplying full chunk is faster)
+			bool firstPointDone = false;
+			if (m_properties.changed)
+			{
+				WDL_FastString chunkStart = this->GetProperties();
+				if (m_count > 0)
+				{
+					m_points[0].Append(chunkStart);
+					firstPointDone = true;
+				}
+				chunkStart.Append(">");
+				GetSetObjectState(m_envelope, chunkStart.Get());
+			}
+
+			// Delete excess points
+			int currentCount = CountEnvelopePoints(m_envelope);
+			if (currentCount > m_count)
+			{
+				double startTime, endTime;
+				if (m_count      > 0) GetEnvelopePoint(m_envelope, m_count      - 1, &startTime, NULL, NULL, NULL, NULL);
+				else                  startTime = 0;
+				if (currentCount > 0) GetEnvelopePoint(m_envelope, currentCount - 1, &endTime,   NULL, NULL, NULL, NULL);
+				else                  endTime = 0;
+				
+				startTime -= 1;
+				endTime   += 1;
+				DeleteEnvelopePointRange(m_envelope, startTime, endTime);
+			}
+
+			// Edit/insert cached points
+			currentCount = CountEnvelopePoints(m_envelope);
+			for (int i = firstPointDone ? 1 : 0; i < currentCount; ++i)
+				SetEnvelopePoint(m_envelope, i, &m_points[i].position, &m_points[i].value, &m_points[i].shape, &m_points[i].bezier, &m_points[i].selected, &g_bTrue);
+			for (int i = currentCount; i < m_count; ++i)
+				InsertEnvelopePoint(m_envelope, m_points[i].position, m_points[i].value, m_points[i].shape, m_points[i].bezier, m_points[i].selected, &g_bTrue);
+			Envelope_SortPoints(m_envelope);
+
+			PreventUIRefresh(-1);
 		}
 
 		SetConfig("envclicksegmode", envClickSegMode);
+		UpdateArrange();
 		m_update = false;
 		return true;
 	}
@@ -1541,45 +1569,57 @@ int BR_Envelope::FindPrevious (double position, double offset)
 	}
 }
 
-void BR_Envelope::ParseState (char* envState, size_t size)
+void BR_Envelope::Build (bool takeEnvelopesUseProjectTime)
 {
-	if (m_tempoMap)
+	if (m_envelope)
 	{
-		int count = CountTempoTimeSigMarkers(NULL);
+		int count = CountEnvelopePoints(m_envelope);
 		m_points.reserve(count);
 		m_pointsSel.reserve(count);
-	}
-	else
-	{
-		m_points.reserve(size/25);
-		m_pointsSel.reserve(size/25);
-	}
 
-	char* token = strtok(envState, "\n");
-	LineParser lp(false);
-	bool start = false;
-	int id = -1;
-	while (token != NULL)
-	{
-		lp.parse(token);
-		BR_EnvPoint point;
-		if (point.ReadLine(lp))
+		// Since information on partial measures is missing from the API, we need to parse the chunk for tempo map
+		if (m_tempoMap)
 		{
-			++id;
-			start = true;
-			m_points.push_back(point);
-			if (point.selected == 1)
-				m_pointsSel.push_back(id);
+			char* envState = GetSetObjectState(m_envelope, "");
+			char* token = strtok(envState, "\n");
+			LineParser lp(false);
+			bool start = false;
+			int id = -1;
+			while (token != NULL)
+			{
+				lp.parse(token);
+				BR_EnvPoint point;
+				if (point.ReadLine(lp))
+				{
+					++id;
+					start = true;
+					m_points.push_back(point);
+					if (point.selected == 1)
+						m_pointsSel.push_back(id);
+				}
+				else if (!start)
+					AppendLine(m_chunkProperties, token);
+				token = strtok(NULL, "\n");
+			}
+			FreeHeapPtr(envState);
 		}
 		else
 		{
-			if (!start)
-				AppendLine(m_chunkStart, token);
-			else
-				AppendLine(m_chunkEnd, token);
+			for (int i = 0; i < count; ++i)
+			{
+				BR_EnvPoint point;
+				GetEnvelopePoint(m_envelope, i, &point.position, &point.value, &point.shape, &point.bezier, &point.selected);
+
+				m_points.push_back(point);
+				if (point.selected) m_pointsSel.push_back(i);
+			}
 		}
-		token = strtok(NULL, "\n");
 	}
+
+	m_count    = (int)m_points.size();
+	m_countSel = (int)m_pointsSel.size();
+	if (takeEnvelopesUseProjectTime && m_take)
+		m_takeEnvOffset = GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION");
 }
 
 void BR_Envelope::UpdateConsequential ()
@@ -1640,17 +1680,31 @@ void BR_Envelope::FillProperties () const
 {
 	if (!m_properties.filled)
 	{
-		size_t size = m_chunkStart.GetLength()+1;
-		char* chunk = new (nothrow) char[size];
-		if (chunk != NULL)
+		char* chunk    = NULL;
+		bool freeChunk = false;
+		if (m_chunkProperties.GetLength())
 		{
-			memcpy(chunk, m_chunkStart.Get(), size);
+			size_t size = m_chunkProperties.GetLength()+1;
+			if (chunk = new (nothrow) char[size])
+				memcpy(chunk, m_chunkProperties.Get(), size);
+		}
+		else
+		{
+			chunk = GetSetObjectState(m_envelope, "");
+			freeChunk = true;
+		}
 
+		if (chunk)
+		{
 			LineParser lp(false);
 			char* token = strtok(chunk, "\n");
 			while (token != NULL)
 			{
-				if (!strncmp(token, "ACT ", sizeof("ACT ")-1))
+				if (!strncmp(token, "PT ", sizeof("PT ")-1))
+				{
+					break;
+				}
+				else if (!strncmp(token, "ACT ", sizeof("ACT ")-1))
 				{
 					lp.parse(token);
 					m_properties.active = lp.gettoken_int(1);
@@ -1776,7 +1830,9 @@ void BR_Envelope::FillProperties () const
 
 				token = strtok(NULL, "\n");
 			}
-			delete [] chunk;
+
+			if (freeChunk) FreeHeapPtr(chunk);
+			else           delete [] chunk;
 			m_properties.filled = true;
 		}
 	}
@@ -1784,15 +1840,30 @@ void BR_Envelope::FillProperties () const
 
 WDL_FastString BR_Envelope::GetProperties ()
 {
-	WDL_FastString properties;
-	properties.AppendFormatted(256, "%s\n", m_properties.paramType.Get());
-	properties.AppendFormatted(256, "ACT %d\n", m_properties.active);
-	properties.AppendFormatted(256, "VIS %d %d %lf\n", m_properties.visible, m_properties.lane, m_properties.visUnknown);
-	properties.AppendFormatted(256, "LANEHEIGHT %d %d\n", m_properties.height, m_properties.heightUnknown);
-	properties.AppendFormatted(256, "ARM %d\n", m_properties.armed);
-	properties.AppendFormatted(256, "DEFSHAPE %d %d %d\n", m_properties.shape, m_properties.shapeUnknown1, m_properties.shapeUnknown2);
-	if (m_properties.volType != 0) properties.AppendFormatted(256, "VOLTYPE %d\n", m_properties.volType);
-	return properties;
+	if (m_properties.filled)
+	{
+		WDL_FastString properties;
+		properties.AppendFormatted(256, "%s\n", m_properties.paramType.Get());
+		properties.AppendFormatted(256, "ACT %d\n", m_properties.active);
+		properties.AppendFormatted(256, "VIS %d %d %lf\n", m_properties.visible, m_properties.lane, m_properties.visUnknown);
+		properties.AppendFormatted(256, "LANEHEIGHT %d %d\n", m_properties.height, m_properties.heightUnknown);
+		properties.AppendFormatted(256, "ARM %d\n", m_properties.armed);
+		properties.AppendFormatted(256, "DEFSHAPE %d %d %d\n", m_properties.shape, m_properties.shapeUnknown1, m_properties.shapeUnknown2);
+		if (m_properties.volType != 0) properties.AppendFormatted(256, "VOLTYPE %d\n", m_properties.volType);
+		return properties;
+	}
+	else
+	{
+		if (m_chunkProperties.GetLength() == 0)
+		{
+			this->FillProperties();
+			return this->GetProperties();
+		}
+		else
+		{
+			return m_chunkProperties;
+		}
+	}
 }
 
 BR_Envelope::EnvProperties::EnvProperties () :
@@ -2371,23 +2442,23 @@ int GetEnvType (TrackEnvelope* envelope, bool* isSend)
 
 	int type  = PARAMETER;
 	bool send = false;
-	if      (!strcmp(name, volumePreFX)) type = VOLUME_PREFX;
-	else if (!strcmp(name, panPreFX))    type = PAN_PREFX;
-	else if (!strcmp(name, widthPreFX))  type = WIDTH_PREFX;
-	else if (!strcmp(name, volume))      type = VOLUME;
-	else if (!strcmp(name, pan))         type = PAN;
-	else if (!strcmp(name, width))       type = WIDTH;
-	else if (!strcmp(name, mute))        type = MUTE;
+	if      (!strcmp(name, volumePreFX)) {type = VOLUME_PREFX;       }
+	else if (!strcmp(name, panPreFX))    {type = PAN_PREFX;          }
+	else if (!strcmp(name, widthPreFX))  {type = WIDTH_PREFX;        }
+	else if (!strcmp(name, volume))      {type = VOLUME;             }
+	else if (!strcmp(name, pan))         {type = PAN;                }
+	else if (!strcmp(name, width))       {type = WIDTH;              }
+	else if (!strcmp(name, mute))        {type = MUTE;               }
 	else if (!strcmp(name, sendVolume))  {type = VOLUME; send = true;}
 	else if (!strcmp(name, sendPan))     {type = PAN;    send = true;}
 	else if (!strcmp(name, sendMute))    {type = MUTE;   send = true;}
-	else if (!strcmp(name, takePitch))   type = PITCH;
-	else if (!strcmp(name, takeVolume))  type = VOLUME;
-	else if (!strcmp(name, takePan))     type = PAN;
-	else if (!strcmp(name, takeMute))    type = MUTE;
-	else if (!strcmp(name, playrate))    type = PLAYRATE;
-	else if (!strcmp(name, tempo))       type = TEMPO;
-	else                                 type = PARAMETER;
+	else if (!strcmp(name, takePitch))   {type = PITCH;              }
+	else if (!strcmp(name, takeVolume))  {type = VOLUME;             }
+	else if (!strcmp(name, takePan))     {type = PAN;                }
+	else if (!strcmp(name, takeMute))    {type = MUTE;               }
+	else if (!strcmp(name, playrate))    {type = PLAYRATE;           }
+	else if (!strcmp(name, tempo))       {type = TEMPO;              }
+	else                                 {type = PARAMETER;          }
 
 	WritePtr(isSend, send);
 	return type;

@@ -80,14 +80,14 @@ struct BR_EnvPoint
 	double position;
 	double value;
 	double bezier;
+	bool selected;
 	int shape;
-	int sig;
-	int selected;
+	int sig;	
 	int partial;
 
-	BR_EnvPoint () {}
+	BR_EnvPoint ();
 	BR_EnvPoint (double position);
-	BR_EnvPoint (double position, double value, int shape, int sig, int selected, int partial, double bezier);
+	BR_EnvPoint (double position, double value, int shape, int sig, bool selected, int partial, double bezier);
 	bool ReadLine (const LineParser& lp);
 	void Append (WDL_FastString& string);
 
@@ -204,14 +204,14 @@ private:
 	int LastPointAtPos (int id);
 	int FindNext (double position, double offset);     // used for internal stuff since position
 	int FindPrevious (double position, double offset); // offset of take envelopes has to be tracked
-	void ParseState (char* envState, size_t size);
+	void Build (bool takeEnvelopesUseProjectTime);
 	void UpdateConsequential ();
 	void FillFxInfo ();     
 	void FillProperties () const; //to make operator== const (yes, m_properties does get modified but only if not cached already)
 	WDL_FastString GetProperties ();
 	TrackEnvelope* m_envelope;
-	MediaItem_Take* m_take;
 	MediaTrack* m_parent;
+	MediaItem_Take* m_take;
 	bool m_tempoMap;
 	bool m_update;
 	bool m_sorted;
@@ -225,8 +225,7 @@ private:
 	vector<BR_EnvPoint> m_points;
 	vector<int> m_pointsSel;
 	vector<IdPair> m_pointsConseq;
-	WDL_FastString m_chunkStart;
-	WDL_FastString m_chunkEnd;
+	WDL_FastString m_chunkProperties;
 	WDL_FastString m_envName;
 	struct EnvProperties
 	{
@@ -245,7 +244,7 @@ private:
 		EnvProperties ();
 		EnvProperties (const EnvProperties& properties);
 		EnvProperties& operator=  (const EnvProperties& properties);
-	} mutable m_properties; // because FillProperties must be const (to make operator== const) but still be able to change m_properties
+	} mutable m_properties; // access through separate class methods (they make sure data is read and written correctly) - mutable because FillProperties must be const (to make operator== const) but still be able to change m_properties
 };
 
 /******************************************************************************

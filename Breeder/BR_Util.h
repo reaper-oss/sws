@@ -35,6 +35,11 @@ const int NEGATIVE_INF    = -150;
 const double VOLUME_DELTA = 0.0000000000001;
 const double PAN_DELTA    = 0.001;
 
+const int SECTION_MIDI_EDITOR    = 32060;
+const int SECTION_MIDI_LIST      = 32061;
+const int SECTION_MIDI_INLINE    = 32062;
+const int SECTION_MEDIA_EXPLORER = 32063;
+
 /******************************************************************************
 * Macros                                                                      *
 ******************************************************************************/
@@ -92,7 +97,6 @@ void ScrollToTrackIfNotInArrange (MediaTrack* track);
 void StartPlayback (double position);
 void GetSetLastAdjustedSend (bool set, MediaTrack** track, int* sendId, int* type); // for type see BR_EnvType (works only for volume and pan, not mute)
 void GetSetFocus (bool set, HWND* hwnd, int* context);
-void RefreshToolbarAlt (int cmd); // works with MIDI toolbars unlike RefreshToolbarAlt()
 bool IsPlaying ();
 bool IsPaused ();
 bool IsRecording ();

@@ -1,7 +1,7 @@
 /******************************************************************************
 / BR_MidiEditor.cpp
 /
-/ Copyright (c) 2014 Dominik Martin Drzic
+/ Copyright (c) 2014-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
 / https://code.google.com/p/sws-extension
 /
@@ -427,28 +427,28 @@ void ME_ToggleHideCCLanes (COMMAND_T* ct, int val, int valhw, int relmode, HWND 
 
 	if (midiEditor)
 	{
-		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED"));
-		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_50_PX"));
-		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_100_PX"));
-		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_150_PX"));
-		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_200_PX"));
-		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_250_PX"));
-		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_300_PX"));
-		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_350_PX"));
-		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_400_PX"));
-		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_450_PX"));
-		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_500_PX"));
-		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE"));
-		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_50_PX"));
-		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_100_PX"));
-		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_150_PX"));
-		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_200_PX"));
-		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_250_PX"));
-		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_300_PX"));
-		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_350_PX"));
-		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_400_PX"));
-		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_450_PX"));
-		RefreshToolbarAlt(NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_500_PX"));
+		RefreshToolbar2(SECTION_MIDI_EDITOR, NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED")       );
+		RefreshToolbar2(SECTION_MIDI_EDITOR, NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_50_PX") );
+		RefreshToolbar2(SECTION_MIDI_EDITOR, NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_100_PX"));
+		RefreshToolbar2(SECTION_MIDI_EDITOR, NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_150_PX"));
+		RefreshToolbar2(SECTION_MIDI_EDITOR, NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_200_PX"));
+		RefreshToolbar2(SECTION_MIDI_EDITOR, NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_250_PX"));
+		RefreshToolbar2(SECTION_MIDI_EDITOR, NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_300_PX"));
+		RefreshToolbar2(SECTION_MIDI_EDITOR, NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_350_PX"));
+		RefreshToolbar2(SECTION_MIDI_EDITOR, NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_400_PX"));
+		RefreshToolbar2(SECTION_MIDI_EDITOR, NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_450_PX"));
+		RefreshToolbar2(SECTION_MIDI_EDITOR, NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_LAST_CLICKED_500_PX"));
+		RefreshToolbar2(SECTION_MIDI_EDITOR, NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE")         );
+		RefreshToolbar2(SECTION_MIDI_EDITOR, NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_50_PX")   );
+		RefreshToolbar2(SECTION_MIDI_EDITOR, NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_100_PX")  );
+		RefreshToolbar2(SECTION_MIDI_EDITOR, NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_150_PX")  );
+		RefreshToolbar2(SECTION_MIDI_EDITOR, NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_200_PX")  );
+		RefreshToolbar2(SECTION_MIDI_EDITOR, NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_250_PX")  );
+		RefreshToolbar2(SECTION_MIDI_EDITOR, NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_300_PX")  );
+		RefreshToolbar2(SECTION_MIDI_EDITOR, NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_350_PX")  );
+		RefreshToolbar2(SECTION_MIDI_EDITOR, NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_400_PX")  );
+		RefreshToolbar2(SECTION_MIDI_EDITOR, NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_450_PX")  );
+		RefreshToolbar2(SECTION_MIDI_EDITOR, NamedCommandLookup("_BR_ME_TOGGLE_HIDE_ALL_NO_MOUSE_LANE_500_PX")  );
 	}
 }
 

@@ -10,10 +10,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -30,7 +30,7 @@
 #define SWS_URL					"http://www.standingwaterstudios.com/reaper"
 #define SWS_URL_DOWNLOAD		SWS_URL
 #define SWS_URL_VERSION_H		"http://sws.mj-s.com/download/featured/version.h"
-#define SWS_URL_BETA_DOWNLOAD	SWS_URL
+#define SWS_URL_BETA_DOWNLOAD	"http://sws.mj-s.com/download/pre-release/"
 #define SWS_URL_BETA_VERSION_H	"http://sws.mj-s.com/download/pre-release/version.h"
 #define SWS_URL_HELP_DIR		"http://sws.mj-s.com" // e.g. SWS_URL_HELP"/reaconsole.php"
 
@@ -123,7 +123,7 @@ public:
 	void Empty()
 	{
 		m_projects.Empty(false);
-		m_data.Empty(true); 
+		m_data.Empty(true);
 	}
 	void Cleanup()
 	{

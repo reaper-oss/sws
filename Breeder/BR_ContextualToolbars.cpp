@@ -298,7 +298,7 @@ bool BR_ContextualToolbar::IsFirstToolbar (int toolbarId)
 {
 	int mouseAction;
 	if (this->GetReaperToolbar(toolbarId, &mouseAction, NULL, NULL, 0))
-		return (mouseAction == TOOLBAR_1_MOUSE) ? true : false;
+		return (mouseAction == TOOLBAR_01_MOUSE) ? true : false;
 	return false;
 }
 
@@ -306,7 +306,7 @@ bool BR_ContextualToolbar::IsFirstMidiToolbar (int toolbarId)
 {
 	int mouseAction;
 	if (this->GetReaperToolbar(toolbarId, &mouseAction, NULL, NULL, 0))
-		return (mouseAction == MIDI_TOOLBAR_1_MOUSE) ? true : false;
+		return (mouseAction == MIDI_TOOLBAR_01_MOUSE) ? true : false;
 	return false;
 }
 
@@ -374,11 +374,11 @@ bool BR_ContextualToolbar::IsContextValid (int context)
 	if (context >= CONTEXT_START && context < CONTEXT_COUNT)
 	{
 		if (context != END_TRANSPORT   &&
-			context != END_RULER       &&
-			context != END_TCP         &&
-			context != END_MCP         &&
-			context != END_ARRANGE     &&
-			context != END_MIDI_EDITOR
+		    context != END_RULER       &&
+		    context != END_TCP         &&
+		    context != END_MCP         &&
+		    context != END_ARRANGE     &&
+		    context != END_MIDI_EDITOR
 		)
 		{
 			return true;
@@ -392,12 +392,12 @@ bool BR_ContextualToolbar::CanContextInheritParent (int context)
 	if (this->IsContextValid(context))
 	{
 		if (context == TRANSPORT          ||
-			context == RULER              ||
-			context == TCP                ||
-			context == MCP                ||
-			context == ARRANGE            ||
-			context == MIDI_EDITOR        ||
-			context == INLINE_MIDI_EDITOR
+		    context == RULER              ||
+		    context == TCP                ||
+		    context == MCP                ||
+		    context == ARRANGE            ||
+		    context == MIDI_EDITOR        ||
+		    context == INLINE_MIDI_EDITOR
 		)
 		{
 			return false;
@@ -415,11 +415,11 @@ bool BR_ContextualToolbar::CanContextFollowItem (int context)
 	if (this->IsContextValid(context))
 	{
 		if (context == ARRANGE_TRACK_ITEM_STRETCH_MARKER  ||
-			context == ARRANGE_TRACK_TAKE_ENVELOPE        ||
-			context == ARRANGE_TRACK_TAKE_ENVELOPE_VOLUME ||
-			context == ARRANGE_TRACK_TAKE_ENVELOPE_PAN    ||
-			context == ARRANGE_TRACK_TAKE_ENVELOPE_MUTE   ||
-			context == ARRANGE_TRACK_TAKE_ENVELOPE_PITCH
+		    context == ARRANGE_TRACK_TAKE_ENVELOPE        ||
+		    context == ARRANGE_TRACK_TAKE_ENVELOPE_VOLUME ||
+		    context == ARRANGE_TRACK_TAKE_ENVELOPE_PAN    ||
+		    context == ARRANGE_TRACK_TAKE_ENVELOPE_MUTE   ||
+		    context == ARRANGE_TRACK_TAKE_ENVELOPE_PITCH
 		)
 		{
 			return true;
@@ -1386,22 +1386,34 @@ int BR_ContextualToolbar::TranslateAction (int mouseAction, bool toIni)
 	{
 		switch (mouseAction)
 		{
-			case DO_NOTHING:           return 1;
-			case INHERIT_PARENT:       return 2;
-			case FOLLOW_ITEM_CONTEXT:  return 3;
-			case TOOLBAR_1_MOUSE:      return 4;
-			case TOOLBAR_2_MOUSE:      return 5;
-			case TOOLBAR_3_MOUSE:      return 6;
-			case TOOLBAR_4_MOUSE:      return 7;
-			case TOOLBAR_5_MOUSE:      return 8;
-			case TOOLBAR_6_MOUSE:      return 9;
-			case TOOLBAR_7_MOUSE:      return 10;
-			case TOOLBAR_8_MOUSE:      return 11;
-			case MIDI_TOOLBAR_1_MOUSE: return 12;
-			case MIDI_TOOLBAR_2_MOUSE: return 13;
-			case MIDI_TOOLBAR_3_MOUSE: return 14;
-			case MIDI_TOOLBAR_4_MOUSE: return 15;
-			default:                   return 1;
+			case DO_NOTHING:            return 1;
+			case INHERIT_PARENT:        return 2;
+			case FOLLOW_ITEM_CONTEXT:   return 3;
+			case TOOLBAR_01_MOUSE:      return 4;
+			case TOOLBAR_02_MOUSE:      return 5;
+			case TOOLBAR_03_MOUSE:      return 6;
+			case TOOLBAR_04_MOUSE:      return 7;
+			case TOOLBAR_05_MOUSE:      return 8;
+			case TOOLBAR_06_MOUSE:      return 9;
+			case TOOLBAR_07_MOUSE:      return 10;
+			case TOOLBAR_08_MOUSE:      return 11;
+			case TOOLBAR_09_MOUSE:      return 16;
+			case TOOLBAR_10_MOUSE:      return 17;
+			case TOOLBAR_11_MOUSE:      return 18;
+			case TOOLBAR_12_MOUSE:      return 19;
+			case TOOLBAR_13_MOUSE:      return 20;
+			case TOOLBAR_14_MOUSE:      return 21;
+			case TOOLBAR_15_MOUSE:      return 22;
+			case TOOLBAR_16_MOUSE:      return 23;
+			case MIDI_TOOLBAR_01_MOUSE: return 12;
+			case MIDI_TOOLBAR_02_MOUSE: return 13;
+			case MIDI_TOOLBAR_03_MOUSE: return 14;
+			case MIDI_TOOLBAR_04_MOUSE: return 15;
+			case MIDI_TOOLBAR_05_MOUSE: return 24;
+			case MIDI_TOOLBAR_06_MOUSE: return 25;
+			case MIDI_TOOLBAR_07_MOUSE: return 26;
+			case MIDI_TOOLBAR_08_MOUSE: return 27;
+			default:                    return 1;
 		}
 	}
 	else
@@ -1411,18 +1423,30 @@ int BR_ContextualToolbar::TranslateAction (int mouseAction, bool toIni)
 			case 1:  return DO_NOTHING;
 			case 2:  return INHERIT_PARENT;
 			case 3:  return FOLLOW_ITEM_CONTEXT;
-			case 4:  return TOOLBAR_1_MOUSE;
-			case 5:  return TOOLBAR_2_MOUSE;
-			case 6:  return TOOLBAR_3_MOUSE;
-			case 7:  return TOOLBAR_4_MOUSE;
-			case 8:  return TOOLBAR_5_MOUSE;
-			case 9:  return TOOLBAR_6_MOUSE;
-			case 10: return TOOLBAR_7_MOUSE;
-			case 11: return TOOLBAR_8_MOUSE;
-			case 12: return MIDI_TOOLBAR_1_MOUSE;
-			case 13: return MIDI_TOOLBAR_2_MOUSE;
-			case 14: return MIDI_TOOLBAR_3_MOUSE;
-			case 15: return MIDI_TOOLBAR_4_MOUSE;
+			case 4:  return TOOLBAR_01_MOUSE;
+			case 5:  return TOOLBAR_02_MOUSE;
+			case 6:  return TOOLBAR_03_MOUSE;
+			case 7:  return TOOLBAR_04_MOUSE;
+			case 8:  return TOOLBAR_05_MOUSE;
+			case 9:  return TOOLBAR_06_MOUSE;
+			case 10: return TOOLBAR_07_MOUSE;
+			case 11: return TOOLBAR_08_MOUSE;
+			case 12: return MIDI_TOOLBAR_01_MOUSE;
+			case 13: return MIDI_TOOLBAR_02_MOUSE;
+			case 14: return MIDI_TOOLBAR_03_MOUSE;
+			case 15: return MIDI_TOOLBAR_04_MOUSE;
+			case 16: return TOOLBAR_09_MOUSE;
+			case 17: return TOOLBAR_10_MOUSE;
+			case 18: return TOOLBAR_11_MOUSE;
+			case 19: return TOOLBAR_12_MOUSE;
+			case 20: return TOOLBAR_13_MOUSE;
+			case 21: return TOOLBAR_14_MOUSE;
+			case 22: return TOOLBAR_15_MOUSE;
+			case 23: return TOOLBAR_16_MOUSE;
+			case 24: return MIDI_TOOLBAR_05_MOUSE;
+			case 25: return MIDI_TOOLBAR_06_MOUSE;
+			case 26: return MIDI_TOOLBAR_07_MOUSE;
+			case 27: return MIDI_TOOLBAR_08_MOUSE;
 			default: return DO_NOTHING;
 		}
 	}
@@ -1461,111 +1485,63 @@ bool BR_ContextualToolbar::GetReaperToolbar (int id, int* mouseAction, int* togg
 {
 	if (id >= 0 && id < TOOLBAR_COUNT)
 	{
-		if (id == 0)
+		if      (id == 0)  {WritePtr(mouseAction, (int)DO_NOTHING);            WritePtr(toggleAction, (int)DO_NOTHING);}
+		else if (id == 1)  {WritePtr(mouseAction, (int)INHERIT_PARENT);        WritePtr(toggleAction, (int)INHERIT_PARENT);}
+		else if (id == 2)  {WritePtr(mouseAction, (int)FOLLOW_ITEM_CONTEXT);   WritePtr(toggleAction, (int)FOLLOW_ITEM_CONTEXT);}
+		else if (id == 3)  {WritePtr(mouseAction, (int)TOOLBAR_01_MOUSE);      WritePtr(toggleAction, (int)TOOLBAR_01_TOGGLE);}
+		else if (id == 4)  {WritePtr(mouseAction, (int)TOOLBAR_02_MOUSE);      WritePtr(toggleAction, (int)TOOLBAR_02_TOGGLE);}
+		else if (id == 5)  {WritePtr(mouseAction, (int)TOOLBAR_03_MOUSE);      WritePtr(toggleAction, (int)TOOLBAR_03_TOGGLE);}
+		else if (id == 6)  {WritePtr(mouseAction, (int)TOOLBAR_04_MOUSE);      WritePtr(toggleAction, (int)TOOLBAR_04_TOGGLE);}
+		else if (id == 7)  {WritePtr(mouseAction, (int)TOOLBAR_05_MOUSE);      WritePtr(toggleAction, (int)TOOLBAR_05_TOGGLE);}
+		else if (id == 8)  {WritePtr(mouseAction, (int)TOOLBAR_06_MOUSE);      WritePtr(toggleAction, (int)TOOLBAR_06_TOGGLE);}
+		else if (id == 9)  {WritePtr(mouseAction, (int)TOOLBAR_07_MOUSE);      WritePtr(toggleAction, (int)TOOLBAR_07_TOGGLE);}
+		else if (id == 10) {WritePtr(mouseAction, (int)TOOLBAR_08_MOUSE);      WritePtr(toggleAction, (int)TOOLBAR_08_TOGGLE);}
+		else if (id == 11) {WritePtr(mouseAction, (int)TOOLBAR_09_MOUSE);      WritePtr(toggleAction, (int)TOOLBAR_09_TOGGLE);}
+		else if (id == 12) {WritePtr(mouseAction, (int)TOOLBAR_10_MOUSE);      WritePtr(toggleAction, (int)TOOLBAR_10_TOGGLE);}
+		else if (id == 13) {WritePtr(mouseAction, (int)TOOLBAR_11_MOUSE);      WritePtr(toggleAction, (int)TOOLBAR_11_TOGGLE);}
+		else if (id == 14) {WritePtr(mouseAction, (int)TOOLBAR_12_MOUSE);      WritePtr(toggleAction, (int)TOOLBAR_12_TOGGLE);}
+		else if (id == 15) {WritePtr(mouseAction, (int)TOOLBAR_13_MOUSE);      WritePtr(toggleAction, (int)TOOLBAR_13_TOGGLE);}
+		else if (id == 16) {WritePtr(mouseAction, (int)TOOLBAR_14_MOUSE);      WritePtr(toggleAction, (int)TOOLBAR_14_TOGGLE);}
+		else if (id == 17) {WritePtr(mouseAction, (int)TOOLBAR_15_MOUSE);      WritePtr(toggleAction, (int)TOOLBAR_15_TOGGLE);}
+		else if (id == 18) {WritePtr(mouseAction, (int)TOOLBAR_16_MOUSE);      WritePtr(toggleAction, (int)TOOLBAR_16_TOGGLE);}
+		else if (id == 19) {WritePtr(mouseAction, (int)MIDI_TOOLBAR_01_MOUSE); WritePtr(toggleAction, (int)MIDI_TOOLBAR_01_TOGGLE);}
+		else if (id == 20) {WritePtr(mouseAction, (int)MIDI_TOOLBAR_02_MOUSE); WritePtr(toggleAction, (int)MIDI_TOOLBAR_02_TOGGLE);}
+		else if (id == 21) {WritePtr(mouseAction, (int)MIDI_TOOLBAR_03_MOUSE); WritePtr(toggleAction, (int)MIDI_TOOLBAR_03_TOGGLE);}
+		else if (id == 22) {WritePtr(mouseAction, (int)MIDI_TOOLBAR_04_MOUSE); WritePtr(toggleAction, (int)MIDI_TOOLBAR_04_TOGGLE);}
+		else if (id == 23) {WritePtr(mouseAction, (int)MIDI_TOOLBAR_05_MOUSE); WritePtr(toggleAction, (int)MIDI_TOOLBAR_05_TOGGLE);}
+		else if (id == 24) {WritePtr(mouseAction, (int)MIDI_TOOLBAR_06_MOUSE); WritePtr(toggleAction, (int)MIDI_TOOLBAR_06_TOGGLE);}
+		else if (id == 25) {WritePtr(mouseAction, (int)MIDI_TOOLBAR_07_MOUSE); WritePtr(toggleAction, (int)MIDI_TOOLBAR_07_TOGGLE);}
+		else if (id == 26) {WritePtr(mouseAction, (int)MIDI_TOOLBAR_08_MOUSE); WritePtr(toggleAction, (int)MIDI_TOOLBAR_08_TOGGLE);}
+
+		if (toolbarName)
 		{
-			WritePtr(mouseAction, (int)DO_NOTHING);
-			WritePtr(toggleAction, (int)DO_NOTHING);
-			if (toolbarName)
-				_snprintfSafe(toolbarName, toolbarNameSz, "%s", __LOCALIZE("Do nothing", "sws_DLG_181"));
+			if (id >= 0 && id <= 2)
+			{
+				if      (id == 0) _snprintfSafe(toolbarName, toolbarNameSz, "%s", __LOCALIZE("Do nothing", "sws_DLG_181"));
+				else if (id == 1) _snprintfSafe(toolbarName, toolbarNameSz, "%s", __LOCALIZE("Inherit parent", "sws_DLG_181"));
+				else if (id == 2) _snprintfSafe(toolbarName, toolbarNameSz, "%s", __LOCALIZE("Follow item context", "sws_DLG_181"));
+			}
+			else
+			{
+				bool midiToolbar = (id >= 19 && id <= 26) ? (true)    : (false);
+				int toolbarId    = (id >= 19 && id <= 26) ? (id - 18) : (id - 2);
+
+				WDL_FastString defaultName, section;
+				if (midiToolbar)
+				{
+					section.AppendFormatted(512, "%s %d", "Floating MIDI toolbar", toolbarId);
+					defaultName.AppendFormatted(512, "%s %d", "MIDI", toolbarId);
+				}
+				else
+				{
+					section.AppendFormatted(512, "%s %d", "Floating toolbar", toolbarId);
+					defaultName.AppendFormatted(512, "%s %d", "Toolbar", toolbarId);
+				}
+
+				GetPrivateProfileString(section.Get(), "title", __localizeFunc(defaultName.Get(), "MENU_349", 0), toolbarName, toolbarNameSz, GetReaperMenuIniPath().Get());
+			}
 		}
-		else if (id == 1)
-		{
-			WritePtr(mouseAction,  (int)INHERIT_PARENT);
-			WritePtr(toggleAction, (int)INHERIT_PARENT);
-			if (toolbarName)
-				_snprintfSafe(toolbarName, toolbarNameSz, "%s", __LOCALIZE("Inherit parent", "sws_DLG_181"));
-		}
-		else if (id == 2)
-		{
-			WritePtr(mouseAction,  (int)FOLLOW_ITEM_CONTEXT);
-			WritePtr(toggleAction, (int)FOLLOW_ITEM_CONTEXT);
-			if (toolbarName)
-				_snprintfSafe(toolbarName, toolbarNameSz, "%s", __LOCALIZE("Follow item context", "sws_DLG_181"));
-		}
-		else if (id == 3)
-		{
-			WritePtr(mouseAction, (int)TOOLBAR_1_MOUSE);
-			WritePtr(toggleAction, (int)TOOLBAR_1_TOGGLE);
-			if (toolbarName)
-				GetPrivateProfileString("Floating toolbar 1", "title", __localizeFunc("Toolbar 1", "MENU_349", 0), toolbarName, toolbarNameSz, GetReaperMenuIniPath().Get());
-		}
-		else if (id == 4)
-		{
-			WritePtr(mouseAction, (int)TOOLBAR_2_MOUSE);
-			WritePtr(toggleAction, (int)TOOLBAR_2_TOGGLE);
-			if (toolbarName)
-				GetPrivateProfileString("Floating toolbar 2", "title", __localizeFunc("Toolbar 2", "MENU_349", 0), toolbarName, toolbarNameSz, GetReaperMenuIniPath().Get());
-		}
-		else if (id == 5)
-		{
-			WritePtr(mouseAction, (int)TOOLBAR_3_MOUSE);
-			WritePtr(toggleAction, (int)TOOLBAR_3_TOGGLE);
-			if (toolbarName)
-				GetPrivateProfileString("Floating toolbar 3", "title", __localizeFunc("Toolbar 3", "MENU_349", 0), toolbarName, toolbarNameSz, GetReaperMenuIniPath().Get());
-		}
-		else if (id == 6)
-		{
-			WritePtr(mouseAction, (int)TOOLBAR_4_MOUSE);
-			WritePtr(toggleAction, (int)TOOLBAR_4_TOGGLE);
-			if (toolbarName)
-				GetPrivateProfileString("Floating toolbar 4", "title", __localizeFunc("Toolbar 4", "MENU_349", 0), toolbarName, toolbarNameSz, GetReaperMenuIniPath().Get());
-		}
-		else if (id == 7)
-		{
-			WritePtr(mouseAction, (int)TOOLBAR_5_MOUSE);
-			WritePtr(toggleAction, (int)TOOLBAR_5_TOGGLE);
-			if (toolbarName)
-				GetPrivateProfileString("Floating toolbar 5", "title", __localizeFunc("Toolbar 5", "MENU_349", 0), toolbarName, toolbarNameSz, GetReaperMenuIniPath().Get());
-		}
-		else if (id == 8)
-		{
-			WritePtr(mouseAction, (int)TOOLBAR_6_MOUSE);
-			WritePtr(toggleAction, (int)TOOLBAR_6_TOGGLE);
-			if (toolbarName)
-				GetPrivateProfileString("Floating toolbar 6", "title", __localizeFunc("Toolbar 6", "MENU_349", 0), toolbarName, toolbarNameSz, GetReaperMenuIniPath().Get());
-		}
-		else if (id == 9)
-		{
-			WritePtr(mouseAction, (int)TOOLBAR_7_MOUSE);
-			WritePtr(toggleAction, (int)TOOLBAR_7_TOGGLE);
-			if (toolbarName)
-				GetPrivateProfileString("Floating toolbar 7", "title", __localizeFunc("Toolbar 7", "MENU_349", 0), toolbarName, toolbarNameSz, GetReaperMenuIniPath().Get());
-		}
-		else if (id == 10)
-		{
-			WritePtr(mouseAction, (int)TOOLBAR_8_MOUSE);
-			WritePtr(toggleAction, (int)TOOLBAR_8_TOGGLE);
-			if (toolbarName)
-				GetPrivateProfileString("Floating toolbar 8", "title", __localizeFunc("Toolbar 8", "MENU_349", 0), toolbarName, toolbarNameSz, GetReaperMenuIniPath().Get());
-		}
-		else if (id == 11)
-		{
-			WritePtr(mouseAction, (int)MIDI_TOOLBAR_1_MOUSE);
-			WritePtr(toggleAction, (int)MIDI_TOOLBAR_1_TOGGLE);
-			if (toolbarName)
-				GetPrivateProfileString("Floating MIDI Toolbar 1", "title", __localizeFunc("MIDI 1", "MENU_349", 0), toolbarName, toolbarNameSz, GetReaperMenuIniPath().Get());
-		}
-		else if (id == 12)
-		{
-			WritePtr(mouseAction, (int)MIDI_TOOLBAR_2_MOUSE);
-			WritePtr(toggleAction, (int)MIDI_TOOLBAR_2_TOGGLE);
-			if (toolbarName)
-				GetPrivateProfileString("Floating MIDI Toolbar 2", "title", __localizeFunc("MIDI 2", "MENU_349", 0), toolbarName, toolbarNameSz, GetReaperMenuIniPath().Get());
-		}
-		else if (id == 13)
-		{
-			WritePtr(mouseAction, (int)MIDI_TOOLBAR_3_MOUSE);
-			WritePtr(toggleAction, (int)MIDI_TOOLBAR_3_TOGGLE);
-			if (toolbarName)
-				GetPrivateProfileString("Floating MIDI Toolbar 3", "title", __localizeFunc("MIDI 3", "MENU_349", 0), toolbarName, toolbarNameSz, GetReaperMenuIniPath().Get());
-		}
-		else if (id == 14)
-		{
-			WritePtr(mouseAction, (int)MIDI_TOOLBAR_4_MOUSE);
-			WritePtr(toggleAction, (int)MIDI_TOOLBAR_4_TOGGLE);
-			if (toolbarName)
-				GetPrivateProfileString("Floating MIDI Toolbar 4", "title", __localizeFunc("MIDI 4", "MENU_349", 0), toolbarName, toolbarNameSz, GetReaperMenuIniPath().Get());
-		}
+
 		return true;
 	}
 
@@ -2532,7 +2508,6 @@ void BR_ContextualToolbarsWnd::OnCommand (WPARAM wParam, LPARAM lParam)
 			{
 				if (combo1) EnableWindow(GetDlgItem(m_hwnd, combo1), IsDlgButtonChecked(m_hwnd, checkBox));
 				if (combo2) EnableWindow(GetDlgItem(m_hwnd, combo2), IsDlgButtonChecked(m_hwnd, checkBox));
-
 
 				int option = 0;
 				option |= (!!IsDlgButtonChecked(m_hwnd, checkBox)) ? OPTION_ENABLED : 0;

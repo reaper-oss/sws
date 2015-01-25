@@ -14,6 +14,10 @@ Fixes:
  - Fixes related to hidden TCP tracks and actions that hide unselected tracks when zooming
  - Make sure zoomed tracks fill TCP completely when appropriate (related only to actions that minimize other tracks)
 
+Other:
++Various fixes for REAPER 5 compatibility (contextual toolbars)
+ - Note: Volume envelope fader scaling is still unsupported (in contextual toolbars)
+
 !v2.6.2 #0 pre-release build (January 16, 2015)
 <strong>REAPER v5.0pre6+ is required!</strong> (this REAPER version supports SWS functions exported to EEL and Lua)
 

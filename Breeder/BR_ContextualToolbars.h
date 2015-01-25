@@ -34,20 +34,20 @@ class BR_MouseInfo;
 ******************************************************************************/
 enum BR_ToolbarContexts
 {
-	/* If adding new context group make sure to update IsContextValid() in   *
-	* BR_ContextualToolbar                                                   *
-	*                                                                        *
-	* If adding new context or removing existing one from the existing group *
-	* update UpdateInternals(), GetContextFromIniIndex() and any other       *
-	* detection function in BR_ContextualToolbar. You also need to update    *
-	* GetItemText() in BR_ContextualToolbarsView                             *
-	*                                                                        *
-	* If removing existing context, also increase REMOVED_CONTEXTS           */
+	/* If adding new context group make sure to update IsContextValid() in    *
+	*  BR_ContextualToolbar                                                   *
+	*                                                                         *
+	*  If adding new context or removing existing one from the existing group *
+	*  update UpdateInternals(), GetContextFromIniIndex() and any other       *
+	*  detection function in BR_ContextualToolbar. You also need to update    *
+	*  GetItemText() in BR_ContextualToolbarsView                             *
+	*                                                                         *
+	*  If removing existing context, also increase REMOVED_CONTEXTS           */
 
 	CONTEXT_START  = 0,
 	UNUSED_CONTEXT = CONTEXT_START - 1,
 
-	TRANSPORT     = CONTEXT_START,
+	TRANSPORT      = CONTEXT_START,
 	END_TRANSPORT,
 
 	RULER,
@@ -210,40 +210,64 @@ private:
 	};
 	enum ToolbarActions
 	{
-		/* If adding or removing new actions       *
-		*  make sure to update GetReaperToolbar(), *
-		*  TranslateAction(), IsFirstToolbar(),    *
-		*  and IsFirstMidiToolbar()                */
+		/* If adding or removing new actions          *
+		*  make sure to update GetReaperToolbar(),    *
+		*  TranslateAction(), IsFirstToolbar(),       *
+		*  IsFirstMidiToolbar() and IsToolbarAction() */
 
-		DO_NOTHING            = 0xF001,
-		INHERIT_PARENT        = 0xF002,
-		FOLLOW_ITEM_CONTEXT   = 0xF003,
-		TOOLBAR_1_MOUSE       = 41111,
-		TOOLBAR_2_MOUSE       = 41112,
-		TOOLBAR_3_MOUSE       = 41113,
-		TOOLBAR_4_MOUSE       = 41114,
-		TOOLBAR_5_MOUSE       = 41655,
-		TOOLBAR_6_MOUSE       = 41656,
-		TOOLBAR_7_MOUSE       = 41657,
-		TOOLBAR_8_MOUSE       = 41658,
-		MIDI_TOOLBAR_1_MOUSE  = 41640,
-		MIDI_TOOLBAR_2_MOUSE  = 41641,
-		MIDI_TOOLBAR_3_MOUSE  = 41642,
-		MIDI_TOOLBAR_4_MOUSE  = 41643,
-		TOOLBAR_1_TOGGLE      = 41679,
-		TOOLBAR_2_TOGGLE      = 41680,
-		TOOLBAR_3_TOGGLE      = 41681,
-		TOOLBAR_4_TOGGLE      = 41682,
-		TOOLBAR_5_TOGGLE      = 41683,
-		TOOLBAR_6_TOGGLE      = 41684,
-		TOOLBAR_7_TOGGLE      = 41685,
-		TOOLBAR_8_TOGGLE      = 41686,
-		MIDI_TOOLBAR_1_TOGGLE = 41687,
-		MIDI_TOOLBAR_2_TOGGLE = 41688,
-		MIDI_TOOLBAR_3_TOGGLE = 41689,
-		MIDI_TOOLBAR_4_TOGGLE = 41690,
+		TOOLBAR_COUNT         = 27, // includes both toolbars and other entries (inherit parent etc...)
 
-		TOOLBAR_COUNT         = 15
+		DO_NOTHING            = 1,
+		INHERIT_PARENT        = 2,
+		FOLLOW_ITEM_CONTEXT   = 3,
+		TOOLBAR_01_MOUSE      = 41111,
+		TOOLBAR_02_MOUSE      = 41112,
+		TOOLBAR_03_MOUSE      = 41113,
+		TOOLBAR_04_MOUSE      = 41114,
+		TOOLBAR_05_MOUSE      = 41655,
+		TOOLBAR_06_MOUSE      = 41656,
+		TOOLBAR_07_MOUSE      = 41657,
+		TOOLBAR_08_MOUSE      = 41658,
+		TOOLBAR_09_MOUSE      = 41960,
+		TOOLBAR_10_MOUSE      = 41961,
+		TOOLBAR_11_MOUSE      = 41962,
+		TOOLBAR_12_MOUSE      = 41963,
+		TOOLBAR_13_MOUSE      = 41964,
+		TOOLBAR_14_MOUSE      = 41965,
+		TOOLBAR_15_MOUSE      = 41966,
+		TOOLBAR_16_MOUSE      = 41967,
+		MIDI_TOOLBAR_01_MOUSE = 41640,
+		MIDI_TOOLBAR_02_MOUSE = 41641,
+		MIDI_TOOLBAR_03_MOUSE = 41642,
+		MIDI_TOOLBAR_04_MOUSE = 41643,
+		MIDI_TOOLBAR_05_MOUSE = 41968,
+		MIDI_TOOLBAR_06_MOUSE = 41969,
+		MIDI_TOOLBAR_07_MOUSE = 41970,
+		MIDI_TOOLBAR_08_MOUSE = 41971,
+		TOOLBAR_01_TOGGLE     = 41679,
+		TOOLBAR_02_TOGGLE     = 41680,
+		TOOLBAR_03_TOGGLE     = 41681,
+		TOOLBAR_04_TOGGLE     = 41682,
+		TOOLBAR_05_TOGGLE     = 41683,
+		TOOLBAR_06_TOGGLE     = 41684,
+		TOOLBAR_07_TOGGLE     = 41685,
+		TOOLBAR_08_TOGGLE     = 41686,
+		TOOLBAR_09_TOGGLE     = 41936,
+		TOOLBAR_10_TOGGLE     = 41937,
+		TOOLBAR_11_TOGGLE     = 41938,
+		TOOLBAR_12_TOGGLE     = 41939,
+		TOOLBAR_13_TOGGLE     = 41940,
+		TOOLBAR_14_TOGGLE     = 41941,
+		TOOLBAR_15_TOGGLE     = 41942,
+		TOOLBAR_16_TOGGLE     = 41943,
+		MIDI_TOOLBAR_01_TOGGLE = 41687,
+		MIDI_TOOLBAR_02_TOGGLE = 41688,
+		MIDI_TOOLBAR_03_TOGGLE = 41689,
+		MIDI_TOOLBAR_04_TOGGLE = 41690,
+		MIDI_TOOLBAR_05_TOGGLE = 41944,
+		MIDI_TOOLBAR_06_TOGGLE = 41945,
+		MIDI_TOOLBAR_07_TOGGLE = 41946,
+		MIDI_TOOLBAR_08_TOGGLE = 41947
 	};
 
 	/* Call every time contexts change */

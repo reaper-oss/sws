@@ -1629,6 +1629,11 @@ int GetEnvHeightFromTrackHeight (int trackHeight)
 	return height;
 }
 
+int GetMasterTcpGap ()
+{
+	return TCP_MASTER_GAP;
+}
+
 int GetTrackHeight (MediaTrack* track, int* offsetY, int* topGap /*=NULL*/, int* bottomGap /*=NULL*/)
 {
 	bool master = (GetMasterTrack(NULL) == track) ? (true) : (false);
@@ -1765,7 +1770,7 @@ int GetTrackEnvHeight (TrackEnvelope* envelope, int* offsetY, bool drawableRange
 		else
 			nextTrack = CSurf_TrackFromID(1 + CSurf_TrackToID(nextTrack, false), false);
 	}
-	
+
 	list<TrackEnvelope*> checkedEnvs;
 	bool found = false;
 	int envelopeId = GetEnvId(envelope, track);

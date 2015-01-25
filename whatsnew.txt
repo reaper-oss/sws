@@ -1,6 +1,19 @@
 Contextual toolbars
 +Fixed toolbars not loading in certain instances if some tracks are hidden from TCP (this also probably fixes some other issues)
 
+Added actions
++Main:
+ - SWS: Zoom to selected items/tracks (ignore last track's envelope lanes)
+ - SWS: Vertical zoom to selected items/tracks (ignore last track's envelope lanes)
+ - SWS: Toggle zoom to selected tracks/items/time selection (ignore last track's envelope lanes)
+
+Fixes:
++Zooming functionality:
+ - Restored behavior of actions that zoom vertically to selected tracks/items so they include track envelopes of the last selected item/track (changed in v2.5.1 #0)
+ - Fixed problems with master track (reported http://forum.cockos.com/showpost.php?p=1458143&postcount=1725|here|)
+ - Fixes related to hidden TCP tracks and actions that hide unselected tracks when zooming
+ - Make sure zoomed tracks fill TCP completely when appropriate (related only to actions that minimize other tracks)
+
 !v2.6.2 #0 pre-release build (January 16, 2015)
 <strong>REAPER v5.0pre6+ is required!</strong> (this REAPER version supports SWS functions exported to EEL and Lua)
 

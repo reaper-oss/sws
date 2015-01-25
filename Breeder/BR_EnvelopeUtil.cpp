@@ -1110,7 +1110,21 @@ WDL_FastString BR_Envelope::FormatValue (double value)
 
 	else if (this->Type() == PARAMETER)
 	{
-		formatedValue.AppendFormatted(256, "%lf", value);
+		// TrackFX_FormatParamValue() unselects currently selected envelope: http://forum.cockos.com/showpost.php?p=1465316&postcount=113
+		TrackEnvelope* selectedEnv = GetSelectedEnvelope(NULL);
+		HWND hwnd; int context;
+		GetSetFocus (false, &hwnd, &context);
+
+		char tmp[256];
+		TrackFX_FormatParamValue(this->GetParent(), this->GetFxId(), this->GetParamId(), value, tmp, sizeof(tmp));
+
+		if (selectedEnv)
+		{
+			SetCursorContext(2, selectedEnv);
+			GetSetFocus(true, &hwnd, &context);
+		}
+		if (strlen(tmp) == 0) formatedValue.AppendFormatted(256, "%.2lf", value); // because TrackFX_FormatParamValue() only works with FX that support Cockos VST extensions.
+		else                  formatedValue.AppendFormatted(256, "%s", tmp);
 	}
 
 	return formatedValue;
@@ -1222,9 +1236,15 @@ int BR_Envelope::Type ()
 	return m_properties.type;
 }
 
-int BR_Envelope::ParamId ()
+int BR_Envelope::GetFxId ()
 {
-	this->FillProperties();
+	this->FillFxInfo();
+	return m_properties.fxId;
+}
+
+int BR_Envelope::GetParamId ()
+{
+	this->FillFxInfo();
 	return m_properties.paramId;
 }
 
@@ -1585,6 +1605,37 @@ void BR_Envelope::UpdateConsequential ()
 	}
 }
 
+void BR_Envelope::FillFxInfo ()
+{
+	if (m_properties.paramId == -2)
+	{
+		MediaTrack* track = this->GetParent();
+		bool found = false;
+
+		int fxCount = TrackFX_GetCount(track);
+		for (int i = 0; i < fxCount; ++i)
+		{
+			int paramCount = TrackFX_GetNumParams(track, i);
+			for (int j = 0; j < paramCount; ++j)
+			{
+				if (m_envelope == GetFXEnvelope(track, i, j, false))
+				{
+					m_properties.paramId = j;
+					m_properties.fxId    = i;
+					found                = true;
+					break;
+				}
+			}
+		}
+
+		if (!found)
+		{
+			m_properties.paramId = -1;
+			m_properties.fxId    = -1;
+		}
+	}
+}
+
 void BR_Envelope::FillProperties () const
 {
 	if (!m_properties.filled)
@@ -1637,7 +1688,6 @@ void BR_Envelope::FillProperties () const
 				else if (strstr(token, "PARMENV"))
 				{
 					lp.parse(token);
-					m_properties.paramId     = lp.gettoken_int(1);
 					m_properties.minValue    = lp.gettoken_float(2);
 					m_properties.maxValue    = lp.gettoken_float(3);
 					m_properties.centerValue = lp.gettoken_float(4);
@@ -1761,7 +1811,8 @@ type          (0),
 minValue      (0),
 maxValue      (0),
 centerValue   (0),
-paramId       (-1),
+paramId       (-2),
+fxId          (-2),
 filled        (false),
 changed       (false)
 {
@@ -1784,6 +1835,7 @@ minValue      (properties.minValue),
 maxValue      (properties.maxValue),
 centerValue   (properties.centerValue),
 paramId       (properties.paramId),
+fxId          (properties.fxId),
 filled        (properties.filled),
 changed       (properties.changed),
 paramType     (properties.paramType)
@@ -1811,6 +1863,7 @@ BR_Envelope::EnvProperties& BR_Envelope::EnvProperties::operator= (const EnvProp
 	maxValue      = properties.maxValue;
 	centerValue   = properties.centerValue;
 	paramId       = properties.paramId;
+	fxId          = properties.fxId;
 	filled        = properties.filled;
 	changed       = properties.changed;
 	paramType.Set(&properties.paramType);

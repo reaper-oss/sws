@@ -159,7 +159,7 @@ public:
 	bool VisibleInArrange (int* envHeight, int* yOffset, bool cacheValues = false); // Is part of the envelope visible in arrange (height calculation can be intensive (envelopes in track lane), use cacheValues if situation allows)
 	void MoveArrangeToPoint (int id, int referenceId);                              // Moves arrange horizontally if needed so point is visible
 	void SetTakeEnvelopeTimebase (bool useProjectTime);                             // By setting this to true, project time can be used everywhere when dealing with take envelopes. If take changes position, just call again.
-	WDL_FastString FormatValue (double value);                                      // Due to API limitation we can't known to which FX envelope belongs, so FX (non-native) envelopes won't get properly formated
+	WDL_FastString FormatValue (double value);
 	WDL_FastString GetName ();
 	MediaItem_Take* GetTake ();
 	MediaTrack* GetParent ();
@@ -176,9 +176,10 @@ public:
 	bool IsVolScaledToFader ();
 	int GetLaneHeight ();
 	int GetDefaultShape ();
-	int Type ();      // See BR_EnvType for types
-	int ParamId ();   // If FX envelope, get parameter id for it's FX, otherwise -1
-	int GetSendId (); // If send envelope, get send id for it's parent track, otherwise -1
+	int Type ();       // See BR_EnvType for types
+	int GetFxId ();    // returns -1 if not FX envelope
+	int GetParamId (); // returns -1 if not FX envelope
+	int GetSendId ();  // returns -1 if not send envelope, otherwise send id for it's parent track
 	double MinValue ();
 	double MaxValue ();
 	double CenterValue ();
@@ -205,7 +206,8 @@ private:
 	int FindPrevious (double position, double offset); // offset of take envelopes has to be tracked
 	void ParseState (char* envState, size_t size);
 	void UpdateConsequential ();
-	void FillProperties () const; // to make operator== const (yes, m_properties does get modified, but always according to chunk and only if not cached already)
+	void FillFxInfo ();     
+	void FillProperties () const; //to make operator== const (yes, m_properties does get modified but only if not cached already)
 	WDL_FastString GetProperties ();
 	TrackEnvelope* m_envelope;
 	MediaItem_Take* m_take;
@@ -237,7 +239,7 @@ private:
 		int volType;
 		int type;
 		double minValue, maxValue, centerValue;
-		int paramId;
+		int paramId, fxId;
 		bool filled, changed;
 		WDL_FastString paramType;
 		EnvProperties ();

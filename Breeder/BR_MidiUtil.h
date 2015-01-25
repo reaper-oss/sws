@@ -1,7 +1,7 @@
 /******************************************************************************
 / BR_MidiUtil.h
 /
-/ Copyright (c) 2014 Dominik Martin Drzic
+/ Copyright (c) 2014-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
 / https://code.google.com/p/sws-extension
 /
@@ -54,6 +54,7 @@ enum BR_MidiNoteshow
 enum BR_MidiVelLanes
 {
 	CC_VELOCITY         = -1,
+	CC_VELOCITY_OFF     = 167,
 	CC_PITCH            = 128,
 	CC_PROGRAM          = 129,
 	CC_CHANNEL_PRESSURE = 130,
@@ -226,5 +227,5 @@ int FindFirstSelectedNote (MediaItem_Take* take, BR_MidiEditor* midiEditorFilter
 int FindFirstSelectedCC   (MediaItem_Take* take, BR_MidiEditor* midiEditorFilterSettings); // want to check events through MIDI filter
 int GetMIDIFilePPQ (const char* fp);
 int GetLastClickedVelLane (void* midiEditor);
-int MapVelLaneToReaScriptCC (int lane); // CC format follows ReaScript scheme: 0-127=CC, 0x100|(0-31)=14-bit CC, 0x200=velocity, 0x201=pitch,
-int MapReaScriptCCToVelLane (int cc);   // 0x202=program, 0x203=channel pressure, 0x204=bank/program select, 0x205=text, 0x206=sysex
+int MapVelLaneToReaScriptCC (int lane); // CC format follows ReaScript scheme: 0-127=CC, 0x100|(0-31)=14-bit CC, 0x200=velocity, 0x201=off velocity,
+int MapReaScriptCCToVelLane (int cc);   // 0x202=pitch, 0x203=program, 0x204=channel pressure, 0x205=bank/program select, 0x206=text, 0x207=sysex

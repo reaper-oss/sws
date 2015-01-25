@@ -248,7 +248,7 @@ void ME_CCEventAtEditCursor (COMMAND_T* ct, int val, int valhw, int relmode, HWN
 			int lane, value;
 			if (mouseInfo.GetCCLane(&lane, &value, NULL) && value >= 0)
 			{
-				if (lane == CC_TEXT_EVENTS || lane == CC_SYSEX || lane == CC_BANK_SELECT || lane == CC_VELOCITY)
+				if (lane == CC_TEXT_EVENTS || lane == CC_SYSEX || lane == CC_BANK_SELECT || lane == CC_VELOCITY || lane == CC_VELOCITY_OFF)
 					MessageBox((HWND)mouseInfo.GetMidiEditor(), __LOCALIZE("Can't insert in velocity, text, sysex and bank select lanes","sws_mbox"), __LOCALIZE("SWS/BR - Warning","sws_mbox"), MB_OK);
 				else
 				{

@@ -22,7 +22,7 @@ Fixes:
 
 Other:
 +Optimized various envelope actions and ReaScript envelope functions using new envelope API (testing showed increase in performance up to x10) (not applicable to tempo envelope)
-+Various fixes for REAPER 5 compatibility (contextual toolbars, envelope actions)
++Various fixes for REAPER 5 compatibility (contextual toolbars, envelope actions, MIDI editor actions)
  - Note: Volume envelope fader scaling and item FX envelopes are still unsupported (in contextual toolbars and some envelope actions)
 
 !v2.6.2 #0 pre-release build (January 16, 2015)

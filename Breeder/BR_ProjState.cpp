@@ -1,7 +1,7 @@
 /******************************************************************************
 / BR_ProjState.cpp
 /
-/ Copyright (c) 2014 Dominik Martin Drzic
+/ Copyright (c) 2014-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
 / https://code.google.com/p/sws-extension
 /
@@ -436,7 +436,8 @@ bool BR_MidiCCEvents::Restore (BR_MidiEditor& midiEditor, int lane, bool allVisi
 			    targetLane == CC_TEXT_EVENTS            ||
 			    targetLane == CC_SYSEX                  ||
 			    targetLane == CC_BANK_SELECT            ||
-			    targetLane == CC_VELOCITY
+			    targetLane == CC_VELOCITY               ||
+			    targetLane == CC_VELOCITY_OFF
 			)
 				continue;
 
@@ -604,7 +605,7 @@ bool BR_MidiCCEvents::SaveEvents (BR_MidiEditor& midiEditor, int lane)
 				}
 			}
 		}
-		else if (lane == CC_VELOCITY)
+		else if (lane == CC_VELOCITY || lane == CC_VELOCITY_OFF)
 		{
 			int id = -1;
 			while ((id = MIDI_EnumSelNotes(take, id)) != -1)

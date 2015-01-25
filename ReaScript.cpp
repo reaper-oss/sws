@@ -35,7 +35,14 @@
 #include "Fingers/RprMidiTake.h"
 #include "Breeder/BR_ReaScript.h"
 
+#ifdef _WIN32
+#pragma warning(push, 0)
+#pragma warning(disable: 4800) // disable "forcing value to bool..." warnings
+#endif
 #include "reascript_vararg.h"
+#ifdef _WIN32
+#pragma warning(pop)
+#endif
 
 
 // Important, keep APIFUNC() as it is defined:

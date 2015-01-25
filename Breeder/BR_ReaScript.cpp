@@ -1,7 +1,7 @@
 /*****************************************************************************
 / BR_ReaScript.cpp
 /
-/ Copyright (c) 2014 Dominik Martin Drzic
+/ Copyright (c) 2014-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
 / https://code.google.com/p/sws-extension
 /
@@ -150,19 +150,20 @@ bool BR_EnvGetPoint (BR_Envelope* envelope, int id, double* position, double* va
 		return false;
 }
 
-void BR_EnvGetProperties (BR_Envelope* envelope, bool* active, bool* visible, bool* armed, bool* inLane, int* laneHeight, int* defaultShape, double* minValue, double* maxValue, double* centerValue, int* type)
+void BR_EnvGetProperties (BR_Envelope* envelope, bool* active, bool* visible, bool* armed, bool* inLane, int* laneHeight, int* defaultShape, double* minValue, double* maxValue, double* centerValue, int* type, bool* volFaderScaling)
 {
 	if (envelope)
 	{
-		WritePtr(active,       envelope->IsActive());
-		WritePtr(visible,      envelope->IsVisible());
-		WritePtr(armed,        envelope->IsArmed());
-		WritePtr(inLane,       envelope->IsInLane());
-		WritePtr(laneHeight,   envelope->GetLaneHeight());
-		WritePtr(defaultShape, envelope->GetDefaultShape());
-		WritePtr(minValue,     envelope->MinValue());
-		WritePtr(maxValue,     envelope->MaxValue());
-		WritePtr(centerValue,  envelope->CenterValue());
+		WritePtr(active,          envelope->IsActive());
+		WritePtr(visible,         envelope->IsVisible());
+		WritePtr(armed,           envelope->IsArmed());
+		WritePtr(inLane,          envelope->IsInLane());
+		WritePtr(laneHeight,      envelope->GetLaneHeight());
+		WritePtr(defaultShape,    envelope->GetDefaultShape());
+		WritePtr(minValue,        envelope->MinValue());
+		WritePtr(maxValue,        envelope->MaxValue());
+		WritePtr(centerValue,     envelope->CenterValue());
+		WritePtr(volFaderScaling, envelope->IsVolScaledToFader());
 
 		if (type)
 		{
@@ -184,15 +185,16 @@ void BR_EnvGetProperties (BR_Envelope* envelope, bool* active, bool* visible, bo
 	}
 	else
 	{
-		WritePtr(active,       false);
-		WritePtr(visible,      false);
-		WritePtr(armed,        false);
-		WritePtr(inLane,       false);
-		WritePtr(laneHeight,   0);
-		WritePtr(defaultShape, 0);
-		WritePtr(minValue,     0.0);
-		WritePtr(maxValue,     0.0);
-		WritePtr(centerValue,  0.0);
+		WritePtr(active,          false);
+		WritePtr(visible,         false);
+		WritePtr(armed,           false);
+		WritePtr(inLane,          false);
+		WritePtr(laneHeight,      0);
+		WritePtr(defaultShape,    0);
+		WritePtr(minValue,        0.0);
+		WritePtr(maxValue,        0.0);
+		WritePtr(centerValue,     0.0);
+		WritePtr(volFaderScaling, false);
 	}
 }
 
@@ -204,7 +206,7 @@ bool BR_EnvSetPoint (BR_Envelope* envelope, int id, double position, double valu
 		return false;
 }
 
-void BR_EnvSetProperties (BR_Envelope* envelope, bool active, bool visible, bool armed, bool inLane, int laneHeight, int defaultShape)
+void BR_EnvSetProperties (BR_Envelope* envelope, bool active, bool visible, bool armed, bool inLane, int laneHeight, int defaultShape, bool volFaderScaling)
 {
 	if (envelope)
 	{
@@ -213,6 +215,7 @@ void BR_EnvSetProperties (BR_Envelope* envelope, bool active, bool visible, bool
 		envelope->SetArmed(armed);
 		envelope->SetInLane(inLane);
 		envelope->SetLaneHeight(laneHeight);
+		envelope->SetVolScaleToFader(volFaderScaling);
 		if (defaultShape >= 0 && defaultShape <= 5)
 			envelope->SetDefaultShape(defaultShape);
 	}

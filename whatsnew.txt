@@ -7,6 +7,9 @@ Added actions
  - SWS: Vertical zoom to selected items/tracks (ignore last track's envelope lanes)
  - SWS: Toggle zoom to selected tracks/items/time selection (ignore last track's envelope lanes)
 
+ReaScript
++Updated BR_EnvGetProperties and BR_EnvSetProperties (volume envelope fader scaling support)
+
 Fixes:
 +Zooming functionality:
  - Restored behavior of actions that zoom vertically to selected tracks/items so they include track envelopes of the last selected item/track (changed in v2.5.1 #0)

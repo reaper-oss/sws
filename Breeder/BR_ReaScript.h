@@ -1,7 +1,7 @@
 /******************************************************************************
 / BR_ReaScript.h
 /
-/ Copyright (c) 2014 Dominik Martin Drzic
+/ Copyright (c) 2014-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
 / https://code.google.com/p/sws-extension
 /
@@ -42,9 +42,9 @@ bool            BR_EnvFree (BR_Envelope* envelope, bool commit);
 MediaItem_Take* BR_EnvGetParentTake (BR_Envelope* envelope);
 MediaTrack*     BR_EnvGetParentTrack (BR_Envelope* envelope);
 bool            BR_EnvGetPoint (BR_Envelope* envelope, int id, double* position, double* value, int* shape, bool* selected, double* bezier);
-void            BR_EnvGetProperties (BR_Envelope* envelope, bool* active, bool* visible, bool* armed, bool* inLane, int* laneHeight, int* defaultShape, double* minValue, double* maxValue, double* centerValue, int* type);
+void            BR_EnvGetProperties (BR_Envelope* envelope, bool* active, bool* visible, bool* armed, bool* inLane, int* laneHeight, int* defaultShape, double* minValue, double* maxValue, double* centerValue, int* type, bool* volFaderScaling);
 bool            BR_EnvSetPoint (BR_Envelope* envelope, int id, double position, double value, int shape, bool selected, double bezier);
-void            BR_EnvSetProperties (BR_Envelope* envelope, bool active, bool visible, bool armed, bool inLane, int laneHeight, int defaultShape);
+void            BR_EnvSetProperties (BR_Envelope* envelope, bool active, bool visible, bool armed, bool inLane, int laneHeight, int defaultShape, bool volFaderScaling);
 double          BR_EnvValueAtPos (BR_Envelope* envelope, double position);
 bool            BR_GetMediaSourceProperties (MediaItem_Take* take, bool* section, double* start, double* length, double* fade, bool* reverse);
 void            BR_GetMouseCursorContext (char* window, char* segment, char* details, int char_sz);

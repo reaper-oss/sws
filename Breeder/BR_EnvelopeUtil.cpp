@@ -1,7 +1,7 @@
 /******************************************************************************
 / BR_EnvelopeUtil.cpp
 /
-/ Copyright (c) 2013-2014 Dominik Martin Drzic
+/ Copyright (c) 2013-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
 / https://code.google.com/p/sws-extension
 /
@@ -245,37 +245,25 @@ BR_Envelope& BR_Envelope::operator= (const BR_Envelope& envelope)
 
 bool BR_Envelope::operator== (const BR_Envelope& envelope)
 {
-	if (this->m_tempoMap != envelope.m_tempoMap)
-		return false;
-	if (this->m_count    != envelope.m_count)
-		return false;
-	if (this->m_countSel != envelope.m_countSel)
-		return false;
+	if (this->m_tempoMap != envelope.m_tempoMap) return false;
+	if (this->m_count    != envelope.m_count)    return false;
+	if (this->m_countSel != envelope.m_countSel) return false;
 
-	if (this->m_properties.filled    == false)
-		this->FillProperties();
-	if (envelope.m_properties.filled == false)
-		envelope.FillProperties();
+	if (!this->m_properties.filled)    this->FillProperties();
+	if (!envelope.m_properties.filled) envelope.FillProperties();
 
 	if (this->m_properties.active != envelope.m_properties.active)
 		return false;
 
 	for (int i = 0 ; i < this->m_count; ++i)
 	{
-		if (this->m_points[i].position != envelope.m_points[i].position)
-			return false;
-		if (this->m_points[i].value    != envelope.m_points[i].value)
-			return false;
-		if (this->m_points[i].bezier   != envelope.m_points[i].bezier)
-			return false;
-		if (this->m_points[i].shape    != envelope.m_points[i].shape)
-			return false;
-		if (this->m_points[i].sig      != envelope.m_points[i].sig)
-			return false;
-		if (this->m_points[i].selected != envelope.m_points[i].selected)
-			return false;
-		if (this->m_points[i].partial  != envelope.m_points[i].partial)
-			return false;
+		if (this->m_points[i].position != envelope.m_points[i].position) return false;
+		if (this->m_points[i].value    != envelope.m_points[i].value)    return false;
+		if (this->m_points[i].bezier   != envelope.m_points[i].bezier)   return false;
+		if (this->m_points[i].shape    != envelope.m_points[i].shape)    return false;
+		if (this->m_points[i].sig      != envelope.m_points[i].sig)      return false;
+		if (this->m_points[i].selected != envelope.m_points[i].selected) return false;
+		if (this->m_points[i].partial  != envelope.m_points[i].partial)  return false;
 	}
 	return true;
 }
@@ -1210,6 +1198,12 @@ bool BR_Envelope::IsArmed ()
 	return !!m_properties.armed;
 }
 
+bool BR_Envelope::IsVolScaledToFader ()
+{
+	this->FillProperties();
+	return (m_properties.volType != 0);
+}
+
 int BR_Envelope::GetLaneHeight ()
 {
 	this->FillProperties();
@@ -1284,6 +1278,7 @@ double BR_Envelope::LaneMaxValue ()
 	{
 		int max; GetConfig("volenvrange", max);
 		if (max == 1) return 1;
+		else          return 2;
 	}
 	else if (this->Type() == PITCH)
 	{
@@ -1310,8 +1305,7 @@ double BR_Envelope::LaneMinValue ()
 
 void BR_Envelope::SetActive (bool active)
 {
-	if (!m_properties.filled)
-		this->FillProperties();
+	this->FillProperties();
 	m_properties.active = active;
 	m_properties.changed = true;
 	m_update = true;
@@ -1319,8 +1313,7 @@ void BR_Envelope::SetActive (bool active)
 
 void BR_Envelope::SetVisible (bool visible)
 {
-	if (!m_properties.filled)
-		this->FillProperties();
+	this->FillProperties();
 	m_properties.visible = visible;
 	m_properties.changed = true;
 	m_update = true;
@@ -1330,8 +1323,7 @@ void BR_Envelope::SetInLane (bool lane)
 {
 	if (!this->IsTakeEnvelope())
 	{
-		if (!m_properties.filled)
-			this->FillProperties();
+		this->FillProperties();
 		m_properties.lane = lane;
 		m_properties.changed = true;
 		m_update = true;
@@ -1340,8 +1332,7 @@ void BR_Envelope::SetInLane (bool lane)
 
 void BR_Envelope::SetArmed (bool armed)
 {
-	if (!m_properties.filled)
-		this->FillProperties();
+	this->FillProperties();
 	m_properties.armed = armed;
 	m_properties.changed = true;
 	m_update = true;
@@ -1349,8 +1340,7 @@ void BR_Envelope::SetArmed (bool armed)
 
 void BR_Envelope::SetLaneHeight (int height)
 {
-	if (!m_properties.filled)
-		this->FillProperties();
+	this->FillProperties();
 	m_properties.height = height;
 	m_properties.changed = true;
 	m_update = true;
@@ -1358,11 +1348,21 @@ void BR_Envelope::SetLaneHeight (int height)
 
 void BR_Envelope::SetDefaultShape (int shape)
 {
-	if (!m_properties.filled)
-		this->FillProperties();
+	this->FillProperties();
 	m_properties.shape = shape;
 	m_properties.changed = true;
 	m_update = true;
+}
+
+void BR_Envelope::SetVolScaleToFader (bool faderScale)
+{
+	this->FillProperties();
+	if (m_properties.type == VOLUME || m_properties.type == VOLUME_PREFX)
+	{
+		m_properties.volType = faderScale ? 1 : 0;
+		m_properties.changed = true;
+		m_update = true;
+	}
 }
 
 bool BR_Envelope::Commit (bool force /*=false*/)
@@ -1629,6 +1629,11 @@ void BR_Envelope::FillProperties () const
 					m_properties.shapeUnknown1 = lp.gettoken_int(2);
 					m_properties.shapeUnknown2 = lp.gettoken_int(3);
 				}
+				else if (!strncmp(token, "VOLTYPE ", sizeof("VOLTYPE ")-1))
+				{
+					lp.parse(token);
+					m_properties.volType = lp.gettoken_int(1);
+				}
 				else if (strstr(token, "PARMENV"))
 				{
 					lp.parse(token);
@@ -1736,6 +1741,7 @@ WDL_FastString BR_Envelope::GetProperties ()
 	properties.AppendFormatted(256, "LANEHEIGHT %d %d\n", m_properties.height, m_properties.heightUnknown);
 	properties.AppendFormatted(256, "ARM %d\n", m_properties.armed);
 	properties.AppendFormatted(256, "DEFSHAPE %d %d %d\n", m_properties.shape, m_properties.shapeUnknown1, m_properties.shapeUnknown2);
+	if (m_properties.volType != 0) properties.AppendFormatted(256, "VOLTYPE %d\n", m_properties.volType);
 	return properties;
 }
 
@@ -1750,6 +1756,7 @@ armed         (0),
 shape         (0),
 shapeUnknown1 (0),
 shapeUnknown2 (0),
+volType       (0),
 type          (0),
 minValue      (0),
 maxValue      (0),
@@ -1771,6 +1778,7 @@ armed         (properties.armed),
 shape         (properties.shape),
 shapeUnknown1 (properties.shapeUnknown1),
 shapeUnknown2 (properties.shapeUnknown2),
+volType       (properties.volType),
 type          (properties.type),
 minValue      (properties.minValue),
 maxValue      (properties.maxValue),
@@ -1797,6 +1805,7 @@ BR_Envelope::EnvProperties& BR_Envelope::EnvProperties::operator= (const EnvProp
 	shape         = properties.shape;
 	shapeUnknown1 = properties.shapeUnknown1;
 	shapeUnknown2 = properties.shapeUnknown2;
+	volType       = properties.volType;
 	type          = properties.type;
 	minValue      = properties.minValue;
 	maxValue      = properties.maxValue;

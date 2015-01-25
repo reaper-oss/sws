@@ -1,7 +1,7 @@
 /******************************************************************************
 / BR_EnvelopeUtil.h
 /
-/ Copyright (c) 2013-2014 Dominik Martin Drzic
+/ Copyright (c) 2013-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
 / https://code.google.com/p/sws-extension
 /
@@ -168,11 +168,12 @@ public:
 	/* Get envelope properties */
 	bool IsTempo ();
 	bool IsTakeEnvelope ();
-	bool IsLocked (); // Check lock settings for specific envelope type
+	bool IsLocked (); // Checks lock settings for specific envelope type
 	bool IsActive ();
 	bool IsVisible ();
 	bool IsInLane ();
 	bool IsArmed ();
+	bool IsVolScaledToFader ();
 	int GetLaneHeight ();
 	int GetDefaultShape ();
 	int Type ();      // See BR_EnvType for types
@@ -191,6 +192,7 @@ public:
 	void SetArmed (bool armed);
 	void SetLaneHeight (int height);
 	void SetDefaultShape (int shape);
+	void SetVolScaleToFader (bool faderScale);
 
 	/* Committing - does absolutely nothing if there are no edits or locking is turned on (unless forced) */
 	bool Commit (bool force = false);
@@ -232,6 +234,7 @@ private:
 		int height, heightUnknown;
 		int armed;
 		int shape, shapeUnknown1, shapeUnknown2;
+		int volType;
 		int type;
 		double minValue, maxValue, centerValue;
 		int paramId;

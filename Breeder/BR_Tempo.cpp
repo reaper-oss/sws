@@ -1,7 +1,7 @@
 /******************************************************************************
 / BR_Tempo.cpp
 /
-/ Copyright (c) 2013 Dominik Martin Drzic
+/ Copyright (c) 2013-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
 / https://code.google.com/p/sws-extension
 /
@@ -207,7 +207,7 @@ void MoveGridToMouse (COMMAND_T* ct)
 	double mousePosition = PositionAtMouseCursor(true);
 	if (mousePosition == -1)
 	{
-		ContinuousActionStopAll ();
+		ContinuousActionStopAll();
 	}
 	else
 	{

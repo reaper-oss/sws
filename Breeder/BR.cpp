@@ -1,7 +1,7 @@
 /*****************************************************************************
 / BR.cpp
 /
-/ Copyright (c) 2012-2014 Dominik Martin Drzic
+/ Copyright (c) 2012-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
 / https://code.google.com/p/sws-extension
 /
@@ -400,30 +400,30 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Save selected events in CC lane under mouse cursor, slot 6" },                                                 "BR_ME_SAVE_MOUSE_CC_SLOT_6",                   NULL, NULL, -6,  NULL, 32060, ME_SaveCCEventsSlot},
 	{ { DEFACCEL, "SWS/BR: Save selected events in CC lane under mouse cursor, slot 7" },                                                 "BR_ME_SAVE_MOUSE_CC_SLOT_7",                   NULL, NULL, -7,  NULL, 32060, ME_SaveCCEventsSlot},
 	{ { DEFACCEL, "SWS/BR: Save selected events in CC lane under mouse cursor, slot 8" },                                                 "BR_ME_SAVE_MOUSE_CC_SLOT_8",                   NULL, NULL, -8,  NULL, 32060, ME_SaveCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to last clicked CC lane in active item, slot 1" },                                     "BR_ME_RESTORE_CC_LAST_CL_SLOT_1",              NULL, NULL, 1,  NULL, 32060, ME_RestoreCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to last clicked CC lane in active item, slot 2" },                                     "BR_ME_RESTORE_CC_LAST_CL_SLOT_2",              NULL, NULL, 2,  NULL, 32060, ME_RestoreCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to last clicked CC lane in active item, slot 3" },                                     "BR_ME_RESTORE_CC_LAST_CL_SLOT_3",              NULL, NULL, 3,  NULL, 32060, ME_RestoreCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to last clicked CC lane in active item, slot 4" },                                     "BR_ME_RESTORE_CC_LAST_CL_SLOT_4",              NULL, NULL, 4,  NULL, 32060, ME_RestoreCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to last clicked CC lane in active item, slot 5" },                                     "BR_ME_RESTORE_CC_LAST_CL_SLOT_5",              NULL, NULL, 5,  NULL, 32060, ME_RestoreCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to last clicked CC lane in active item, slot 6" },                                     "BR_ME_RESTORE_CC_LAST_CL_SLOT_6",              NULL, NULL, 6,  NULL, 32060, ME_RestoreCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to last clicked CC lane in active item, slot 7" },                                     "BR_ME_RESTORE_CC_LAST_CL_SLOT_7",              NULL, NULL, 7,  NULL, 32060, ME_RestoreCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to last clicked CC lane in active item, slot 8" },                                     "BR_ME_RESTORE_CC_LAST_CL_SLOT_8",              NULL, NULL, 8,  NULL, 32060, ME_RestoreCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to CC lane under mouse cursor in active item, slot 1" },                               "BR_ME_RESTORE_CC_MOUSE_SLOT_1",                NULL, NULL, -1, NULL, 32060, ME_RestoreCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to CC lane under mouse cursor in active item, slot 2" },                               "BR_ME_RESTORE_CC_MOUSE_SLOT_2",                NULL, NULL, -2, NULL, 32060, ME_RestoreCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to CC lane under mouse cursor in active item, slot 3" },                               "BR_ME_RESTORE_CC_MOUSE_SLOT_3",                NULL, NULL, -3, NULL, 32060, ME_RestoreCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to CC lane under mouse cursor in active item, slot 4" },                               "BR_ME_RESTORE_CC_MOUSE_SLOT_4",                NULL, NULL, -4, NULL, 32060, ME_RestoreCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to CC lane under mouse cursor in active item, slot 5" },                               "BR_ME_RESTORE_CC_MOUSE_SLOT_5",                NULL, NULL, -5, NULL, 32060, ME_RestoreCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to CC lane under mouse cursor in active item, slot 6" },                               "BR_ME_RESTORE_CC_MOUSE_SLOT_6",                NULL, NULL, -6, NULL, 32060, ME_RestoreCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to CC lane under mouse cursor in active item, slot 7" },                               "BR_ME_RESTORE_CC_MOUSE_SLOT_7",                NULL, NULL, -7, NULL, 32060, ME_RestoreCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to CC lane under mouse cursor in active item, slot 8" },                               "BR_ME_RESTORE_CC_MOUSE_SLOT_8",                NULL, NULL, -8, NULL, 32060, ME_RestoreCCEventsSlot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to all visible CC lanes in active item, slot 1" },                                     "BR_ME_RESTORE_CC_ALL_VIS_SLOT_1",              NULL, NULL,  0, NULL, 32060, ME_RestoreCCEvents2Slot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to all visible CC lanes in active item, slot 2" },                                     "BR_ME_RESTORE_CC_ALL_VIS_SLOT_2",              NULL, NULL,  1, NULL, 32060, ME_RestoreCCEvents2Slot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to all visible CC lanes in active item, slot 3" },                                     "BR_ME_RESTORE_CC_ALL_VIS_SLOT_3",              NULL, NULL,  2, NULL, 32060, ME_RestoreCCEvents2Slot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to all visible CC lanes in active item, slot 4" },                                     "BR_ME_RESTORE_CC_ALL_VIS_SLOT_4",              NULL, NULL,  3, NULL, 32060, ME_RestoreCCEvents2Slot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to all visible CC lanes in active item, slot 5" },                                     "BR_ME_RESTORE_CC_ALL_VIS_SLOT_5",              NULL, NULL,  4, NULL, 32060, ME_RestoreCCEvents2Slot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to all visible CC lanes in active item, slot 6" },                                     "BR_ME_RESTORE_CC_ALL_VIS_SLOT_6",              NULL, NULL,  5, NULL, 32060, ME_RestoreCCEvents2Slot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to all visible CC lanes in active item, slot 7" },                                     "BR_ME_RESTORE_CC_ALL_VIS_SLOT_7",              NULL, NULL,  6, NULL, 32060, ME_RestoreCCEvents2Slot},
-	{ { DEFACCEL, "SWS/BR: Restore selected events to all visible CC lanes in active item, slot 8" },                                     "BR_ME_RESTORE_CC_ALL_VIS_SLOT_8",              NULL, NULL,  7, NULL, 32060, ME_RestoreCCEvents2Slot},
+	{ { DEFACCEL, "SWS/BR: Restore events to last clicked CC lane in active item, slot 1" },                                              "BR_ME_RESTORE_CC_LAST_CL_SLOT_1",              NULL, NULL, 1,  NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore events to last clicked CC lane in active item, slot 2" },                                              "BR_ME_RESTORE_CC_LAST_CL_SLOT_2",              NULL, NULL, 2,  NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore events to last clicked CC lane in active item, slot 3" },                                              "BR_ME_RESTORE_CC_LAST_CL_SLOT_3",              NULL, NULL, 3,  NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore events to last clicked CC lane in active item, slot 4" },                                              "BR_ME_RESTORE_CC_LAST_CL_SLOT_4",              NULL, NULL, 4,  NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore events to last clicked CC lane in active item, slot 5" },                                              "BR_ME_RESTORE_CC_LAST_CL_SLOT_5",              NULL, NULL, 5,  NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore events to last clicked CC lane in active item, slot 6" },                                              "BR_ME_RESTORE_CC_LAST_CL_SLOT_6",              NULL, NULL, 6,  NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore events to last clicked CC lane in active item, slot 7" },                                              "BR_ME_RESTORE_CC_LAST_CL_SLOT_7",              NULL, NULL, 7,  NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore events to last clicked CC lane in active item, slot 8" },                                              "BR_ME_RESTORE_CC_LAST_CL_SLOT_8",              NULL, NULL, 8,  NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore events to CC lane under mouse cursor in active item, slot 1" },                                        "BR_ME_RESTORE_CC_MOUSE_SLOT_1",                NULL, NULL, -1, NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore events to CC lane under mouse cursor in active item, slot 2" },                                        "BR_ME_RESTORE_CC_MOUSE_SLOT_2",                NULL, NULL, -2, NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore events to CC lane under mouse cursor in active item, slot 3" },                                        "BR_ME_RESTORE_CC_MOUSE_SLOT_3",                NULL, NULL, -3, NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore events to CC lane under mouse cursor in active item, slot 4" },                                        "BR_ME_RESTORE_CC_MOUSE_SLOT_4",                NULL, NULL, -4, NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore events to CC lane under mouse cursor in active item, slot 5" },                                        "BR_ME_RESTORE_CC_MOUSE_SLOT_5",                NULL, NULL, -5, NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore events to CC lane under mouse cursor in active item, slot 6" },                                        "BR_ME_RESTORE_CC_MOUSE_SLOT_6",                NULL, NULL, -6, NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore events to CC lane under mouse cursor in active item, slot 7" },                                        "BR_ME_RESTORE_CC_MOUSE_SLOT_7",                NULL, NULL, -7, NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore events to CC lane under mouse cursor in active item, slot 8" },                                        "BR_ME_RESTORE_CC_MOUSE_SLOT_8",                NULL, NULL, -8, NULL, 32060, ME_RestoreCCEventsSlot},
+	{ { DEFACCEL, "SWS/BR: Restore events to all visible CC lanes in active item, slot 1" },                                              "BR_ME_RESTORE_CC_ALL_VIS_SLOT_1",              NULL, NULL,  0, NULL, 32060, ME_RestoreCCEvents2Slot},
+	{ { DEFACCEL, "SWS/BR: Restore events to all visible CC lanes in active item, slot 2" },                                              "BR_ME_RESTORE_CC_ALL_VIS_SLOT_2",              NULL, NULL,  1, NULL, 32060, ME_RestoreCCEvents2Slot},
+	{ { DEFACCEL, "SWS/BR: Restore events to all visible CC lanes in active item, slot 3" },                                              "BR_ME_RESTORE_CC_ALL_VIS_SLOT_3",              NULL, NULL,  2, NULL, 32060, ME_RestoreCCEvents2Slot},
+	{ { DEFACCEL, "SWS/BR: Restore events to all visible CC lanes in active item, slot 4" },                                              "BR_ME_RESTORE_CC_ALL_VIS_SLOT_4",              NULL, NULL,  3, NULL, 32060, ME_RestoreCCEvents2Slot},
+	{ { DEFACCEL, "SWS/BR: Restore events to all visible CC lanes in active item, slot 5" },                                              "BR_ME_RESTORE_CC_ALL_VIS_SLOT_5",              NULL, NULL,  4, NULL, 32060, ME_RestoreCCEvents2Slot},
+	{ { DEFACCEL, "SWS/BR: Restore events to all visible CC lanes in active item, slot 6" },                                              "BR_ME_RESTORE_CC_ALL_VIS_SLOT_6",              NULL, NULL,  5, NULL, 32060, ME_RestoreCCEvents2Slot},
+	{ { DEFACCEL, "SWS/BR: Restore events to all visible CC lanes in active item, slot 7" },                                              "BR_ME_RESTORE_CC_ALL_VIS_SLOT_7",              NULL, NULL,  6, NULL, 32060, ME_RestoreCCEvents2Slot},
+	{ { DEFACCEL, "SWS/BR: Restore events to all visible CC lanes in active item, slot 8" },                                              "BR_ME_RESTORE_CC_ALL_VIS_SLOT_8",              NULL, NULL,  7, NULL, 32060, ME_RestoreCCEvents2Slot},
 
 	/******************************************************************************
 	* Misc                                                                        *
@@ -546,12 +546,12 @@ static COMMAND_T g_commandTable[] =
 	/******************************************************************************
 	* Tempo - Grid                                                                *
 	******************************************************************************/
-	{ { DEFACCEL, "SWS/BR: Move closest grid line to edit cursor" },                                            "BR_MOVE_GRID_TO_EDIT_CUR",    MoveGridToEditPlayCursor, NULL, 0},
-	{ { DEFACCEL, "SWS/BR: Move closest grid line to play cursor" },                                            "BR_MOVE_GRID_TO_PLAY_CUR",    MoveGridToEditPlayCursor, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Move closest measure grid line to edit cursor" },                                    "BR_MOVE_M_GRID_TO_EDIT_CUR",  MoveGridToEditPlayCursor, NULL, 2},
-	{ { DEFACCEL, "SWS/BR: Move closest measure grid line to play cursor" },                                    "BR_MOVE_M_GRID_TO_PLAY_CUR",  MoveGridToEditPlayCursor, NULL, 3},
-	{ { DEFACCEL, "SWS/BR: Move closest left side grid line to edit cursor" },                                  "BR_MOVE_L_GRID_TO_EDIT_CUR",  MoveGridToEditPlayCursor, NULL, 4},
-	{ { DEFACCEL, "SWS/BR: Move closest right side grid line to edit cursor" },                                 "BR_MOVE_R_GRID_TO_EDIT_CUR",  MoveGridToEditPlayCursor, NULL, 5},
+	{ { DEFACCEL, "SWS/BR: Move closest grid line to edit cursor" },            "BR_MOVE_GRID_TO_EDIT_CUR",   MoveGridToEditPlayCursor, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Move closest grid line to play cursor" },            "BR_MOVE_GRID_TO_PLAY_CUR",   MoveGridToEditPlayCursor, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Move closest measure grid line to edit cursor" },    "BR_MOVE_M_GRID_TO_EDIT_CUR", MoveGridToEditPlayCursor, NULL, 2},
+	{ { DEFACCEL, "SWS/BR: Move closest measure grid line to play cursor" },    "BR_MOVE_M_GRID_TO_PLAY_CUR", MoveGridToEditPlayCursor, NULL, 3},
+	{ { DEFACCEL, "SWS/BR: Move closest left side grid line to edit cursor" },  "BR_MOVE_L_GRID_TO_EDIT_CUR", MoveGridToEditPlayCursor, NULL, 4},
+	{ { DEFACCEL, "SWS/BR: Move closest right side grid line to edit cursor" }, "BR_MOVE_R_GRID_TO_EDIT_CUR", MoveGridToEditPlayCursor, NULL, 5},
 
 	/******************************************************************************
 	* Tempo - Misc                                                                *

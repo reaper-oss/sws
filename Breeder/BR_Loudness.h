@@ -1,7 +1,7 @@
 /******************************************************************************
 / BR_Loudness.h
 /
-/ Copyright (c) 2014 Dominik Martin Drzic
+/ Copyright (c) 2014-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
 / http://www.standingwaterstudios.com/reaper
 /
@@ -83,8 +83,6 @@ private:
 		int samplerate, channels, channelMode;
 		double audioStart, audioEnd;
 		double volume, pan;
-		double fadeInStart, fadeOutStart, fadeInEnd,  fadeOutEnd, fadeInCurve, fadeOutCurve;
-		int fadeInShape, fadeOutShape;
 		BR_Envelope volEnv, volEnvPreFX;
 		AudioData();
 	};

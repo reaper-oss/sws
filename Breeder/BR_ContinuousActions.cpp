@@ -1,7 +1,7 @@
 /******************************************************************************
 / BR_ContinuousActions.cpp
 /
-/ Copyright (c) 2014 Dominik Martin Drzic
+/ Copyright (c) 2014-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
 / https://code.google.com/p/sws-extension
 /
@@ -45,7 +45,6 @@ static WNDPROC                          g_rulerWndProc     = NULL;
 static HWND                             g_tooltipWnd       = NULL;
 static LICE_SysBitmap*                  g_tooltipBm        = NULL;
 static int                              g_tooltips         = -1;
-
 static int                              g_continuousCmdLo  = -1;
 static int                              g_continuousCmdHi  = -1;
 
@@ -346,7 +345,7 @@ int  ContinuousActionTooltips ()
 
 bool ContinuousActionHook (int cmd, int flag)
 {
-	if (cmd >= g_continuousCmdLo && cmd <= g_continuousCmdHi) // instead of searching the list every time, first check if cmd even within range of the list
+	if (cmd >= g_continuousCmdLo && cmd <= g_continuousCmdHi) // instead of searching the list every time, first check if cmd is even within range of the list
 	{
 		BR_ContinuousAction key(cmd, NULL, NULL, NULL, NULL);
 		int id = g_actions.FindSorted(&key, &CompareActionsByCmd);

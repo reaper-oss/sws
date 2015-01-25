@@ -1,7 +1,7 @@
 /******************************************************************************
 / BR_Envelope.cpp
 /
-/ Copyright (c) 2014 Dominik Martin Drzic
+/ Copyright (c) 2014-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
 / https://code.google.com/p/sws-extension
 /
@@ -1024,7 +1024,7 @@ void Insert2EnvPointsTimeSelection (COMMAND_T* ct)
 	PreventUIRefresh(-1);
 
 	if (update)
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG | UNDO_STATE_TRACKCFG, -1);
 }
 
 void FitEnvPointsToTimeSel (COMMAND_T* ct)

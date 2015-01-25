@@ -1,7 +1,7 @@
 /******************************************************************************
 / BR_Loudness.cpp
 /
-/ Copyright (c) 2014 Dominik Martin Drzic
+/ Copyright (c) 2014-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
 / http://www.standingwaterstudios.com/reaper
 /
@@ -34,6 +34,7 @@
 #include "../SnM/SnM.h"
 #include "../libebur128/ebur128.h"
 #include "../reaper/localize.h"
+#include "../../WDL/lice/lice.h"
 
 /******************************************************************************
 * Constants                                                                   *
@@ -64,36 +65,41 @@ const int EXPORT_FORMAT_RECENT_MAX      = 10;
 const int VERSION                       = 1;
 
 // Export format wildcards
-static const char* g_wildcards[][4] =
+struct WildCardList
 {
-	/*                          win tabs   osx tabs - there is probably a better way to do this but oh well...                  */
-	{"$id",                     "\t\t\t",    "\t\t\t\t\t",   __LOCALIZE("list view id in analyze loudness dialog", "sws_DLG_180")},
-	{"$integrated",             "\t\t",      "\t\t\t",       __LOCALIZE("integrated loudness", "sws_DLG_180")},
-	{"$range",                  "\t\t\t",    "\t\t\t\t",     __LOCALIZE("loudness range", "sws_DLG_180")},
-	{"$truepeak",               "\t\t",      "\t\t\t\t",     __LOCALIZE("true peak", "sws_DLG_180")},
-	{"$maxshort",               "\t\t",      "\t\t\t\t",     __LOCALIZE("maximum short-term loudness", "sws_DLG_180")},
-	{"$maxmomentary",           "\t\t",      "\t\t\t",       __LOCALIZE("maximum momentary loudness", "sws_DLG_180")},
-	{"$target",                 "\t\t\t",    "\t\t\t\t",     __LOCALIZE("in case track is analyzed, set track name, otherwise analyzed item name", "sws_DLG_180")},
-	{"$item",                   "\t\t\t",    "\t\t\t\t\t",   __LOCALIZE("name of the analyzed item", "sws_DLG_180")},
-	{"$track",                  "\t\t\t",    "\t\t\t\t",     __LOCALIZE("name of the analyzed track or parent track of the analyzed item", "sws_DLG_180")},
-	{"$targetnumber",           "\t\t",      "\t\t\t",       __LOCALIZE("in case track is analyzed, set track number, otherwise media item number on a track", "sws_DLG_180")},
-	{"$itemnumber",             "\t\t",      "\t\t\t",       __LOCALIZE("media item number in track - 1 for the first item on a track, 2 for the second...", "sws_DLG_180")},
-	{"$tracknumber",            "\t\t",      "\t\t\t",       __LOCALIZE("track number - 1 for the first track, 2 for the second...", "sws_DLG_180")},
-	{"$start",                  "\t\t\t",    "\t\t\t\t",     __LOCALIZE("project start time position of the analyzed audio", "sws_DLG_180")},
-	{"$end",                    "\t\t\t",    "\t\t\t\t\t",   __LOCALIZE("project end time position of the analyzed audio", "sws_DLG_180")},
-	{"$length",                 "\t\t\t",    "\t\t\t\t",     __LOCALIZE("time length of the analyzed audio", "sws_DLG_180")},
-	{"$truepeakpos",            "\t\t",      "\t\t\t",       __LOCALIZE("true peak time position (counting from audio start)", "sws_DLG_180")},
-	{"$maxshortpos",            "\t\t",      "\t\t\t",       __LOCALIZE("time position of maximum short-term loudness (counting from audio start)", "sws_DLG_180")},
-	{"$maxmomentarypos",        "\t",        "\t\t",         __LOCALIZE("time position of maximum momentary loudness (counting from audio start)", "sws_DLG_180")},
-	{"$truepeakposproj",        "\t\t",      "\t\t",         __LOCALIZE("true peak project time position", "sws_DLG_180")},
-	{"$maxshortposproj",        "\t\t",      "\t\t",         __LOCALIZE("project time position of maximum short-term loudness", "sws_DLG_180")},
-	{"$maxmomentaryposproj",    "\t",        "\t",           __LOCALIZE("project time position of maximum momentary loudness", "sws_DLG_180")},
-	{"$lureference",            "\t\t",      "\t\t\t",       __LOCALIZE("0 LU reference value set in global preferences", "sws_DLG_180")},
-	{"$luformat",               "\t\t\t",    "\t\t\t\t",     __LOCALIZE("LU unit format set in global preferences", "sws_DLG_180")},
-	{"$t",                      "\t\t\t",    "\t\t\t\t\t",   __LOCALIZE("inserts tab character (displayed as normal space in preview)", "sws_DLG_180")},
-	{"$n",                      "\t\t\t",    "\t\t\t\t\t",   __LOCALIZE("inserts newline (displayed as normal space in preview)", "sws_DLG_180")},
-	{"$$",                      "\t\t\t",    "\t\t\t\t\t",   __LOCALIZE("inserts $ character (normal $ works too, this is to prevent wildcard from being treated as wildcard)", "sws_DLG_180")},
-	{NULL,                      NULL,      NULL,         NULL},
+	const char* wildcard;
+	int osxTabs;
+	const char* desc;
+};
+static const WildCardList g_wildcards[] =
+{
+	{"$id",                  5, __LOCALIZE("list view id in analyze loudness dialog", "sws_DLG_180")},
+	{"$integrated",          3, __LOCALIZE("integrated loudness", "sws_DLG_180")},
+	{"$range",               4, __LOCALIZE("loudness range", "sws_DLG_180")},
+	{"$truepeak",            4, __LOCALIZE("true peak", "sws_DLG_180")},
+	{"$maxshort",            4, __LOCALIZE("maximum short-term loudness", "sws_DLG_180")},
+	{"$maxmomentary",        3, __LOCALIZE("maximum momentary loudness", "sws_DLG_180")},
+	{"$target",              4, __LOCALIZE("in case the track is analyzed, set track name, otherwise analyzed item name", "sws_DLG_180")},
+	{"$item",                5, __LOCALIZE("name of the analyzed item", "sws_DLG_180")},
+	{"$track",               4, __LOCALIZE("name of the analyzed track or parent track of the analyzed item", "sws_DLG_180")},
+	{"$targetnumber",        3, __LOCALIZE("in case the track is analyzed, set track number, otherwise media item number in track", "sws_DLG_180")},
+	{"$itemnumber",          3, __LOCALIZE("media item number in track - 1 for the first item on a track, 2 for the second...", "sws_DLG_180")},
+	{"$tracknumber",         3, __LOCALIZE("track number - 1 for the first track, 2 for the second...", "sws_DLG_180")},
+	{"$start",               4, __LOCALIZE("project start time position of the analyzed audio", "sws_DLG_180")},
+	{"$end",                 5, __LOCALIZE("project end time position of the analyzed audio", "sws_DLG_180")},
+	{"$length",              4, __LOCALIZE("time length of the analyzed audio", "sws_DLG_180")},
+	{"$truepeakpos",         3, __LOCALIZE("true peak time position (counting from audio start)", "sws_DLG_180")},
+	{"$maxshortpos",         3, __LOCALIZE("time position of maximum short-term loudness (counting from audio start)", "sws_DLG_180")},
+	{"$maxmomentarypos",     2, __LOCALIZE("time position of maximum momentary loudness (counting from audio start)", "sws_DLG_180")},
+	{"$truepeakposproj",     2, __LOCALIZE("true peak project time position", "sws_DLG_180")},
+	{"$maxshortposproj",     2, __LOCALIZE("project time position of maximum short-term loudness", "sws_DLG_180")},
+	{"$maxmomentaryposproj", 1, __LOCALIZE("project time position of maximum momentary loudness", "sws_DLG_180")},
+	{"$lureference",         3, __LOCALIZE("0 LU reference value set in global preferences", "sws_DLG_180")},
+	{"$luformat",            4, __LOCALIZE("LU unit format set in global preferences", "sws_DLG_180")},
+	{"$t",                   5, __LOCALIZE("inserts tab character (displayed as normal space in preview)", "sws_DLG_180")},
+	{"$n",                   5, __LOCALIZE("inserts newline (displayed as normal space in preview)", "sws_DLG_180")},
+	{"$$",                   5, __LOCALIZE("inserts $ character (normal $ works too, this is to prevent wildcard from being treated as wildcard)", "sws_DLG_180")},
+	{NULL,                   0, NULL},
 };
 
 // List view columns
@@ -965,8 +971,6 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 	bool doPan               = (data.channels > 1              && data.pan != 0)               ? (true) : (false); // tracks will always get false here (see CheckSetAudioData())
 	bool doVolEnv            = (data.volEnv.CountPoints()      && data.volEnv.IsActive())      ? (true) : (false);
 	bool doVolPreFXEnv       = (data.volEnvPreFX.CountPoints() && data.volEnvPreFX.IsActive()) ? (true) : (false);
-	bool doFadeIn            = !(data.fadeInStart  == data.fadeInEnd);
-	bool doFadeOut           = !(data.fadeOutStart == data.fadeOutEnd);
 	bool integratedOnly      = _this->GetIntegratedOnly();
 	bool doTruePeak          = _this->GetDoTruePeak();
 
@@ -1039,7 +1043,7 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 		double* buf = new double[bufSz];
 		GetAudioAccessorSamples(data.audio, data.samplerate, data.channels, currentTime, sampleCount, buf);
 
-		// Correct for volume, fade, and pan/volume envelopes
+		// Correct for volume and pan/volume envelopes
 		int currentChannel = 1;
 		double sampleTime = currentTime;
 		for (int j = 0; j < bufSz; ++j)
@@ -1061,10 +1065,6 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 				else if (data.pan < 0 && (currentChannel % 2 == 0))
 					adjust *= 1 + data.pan;
 			}
-
-			// Fades
-//			if (doFadeIn)  adjust *= GetNormalizedFadeValue(sampleTime, data.fadeInStart,  data.fadeInEnd,  data.fadeInShape,  data.fadeInCurve,  false);
-//			if (doFadeOut) adjust *= GetNormalizedFadeValue(sampleTime, data.fadeOutStart, data.fadeOutEnd, data.fadeOutShape, data.fadeOutCurve, true);
 
 			buf[j] *= adjust;
 
@@ -1183,15 +1183,6 @@ int BR_LoudnessObject::CheckSetAudioData ()
 	int channelMode = (this->GetTrack()) ? (0) : (*(int*)GetSetMediaItemTakeInfo(this->GetTake(), "I_CHANMODE", NULL));
 	int samplerate; GetConfig("projsrate", samplerate);
 
-	double fadeInStart  = 0;
-	double fadeOutStart = 0;
-	double fadeInEnd    = 0;
-	double fadeOutEnd   = 0;
-	double fadeInCurve  = 0;
-	double fadeOutCurve = 0;
-	int fadeInShape     = 0;
-	int fadeOutShape    = 0;
-
 	BR_Envelope volEnv, volEnvPreFX;
 	double volume = 0, pan = 0;
 	if (this->GetTrack())
@@ -1206,11 +1197,6 @@ int BR_LoudnessObject::CheckSetAudioData ()
 		volume = (*(double*)GetSetMediaItemTakeInfo(this->GetTake(), "D_VOL", NULL)) * (*(double*)GetSetMediaItemInfo(this->GetItem(), "D_VOL", NULL));
 		pan = *(double*)GetSetMediaItemTakeInfo(this->GetTake(), "D_PAN", NULL);
 		volEnv = BR_Envelope(this->GetTake(), VOLUME);
-
-//		fadeInEnd   = GetEffectiveFadeLength(this->GetItem(), false, &fadeInShape, &fadeInCurve);
-//		fadeInStart = 0;
-//		fadeOutEnd   = GetMediaItemInfo_Value(this->GetItem(), "D_LENGTH");
-//		fadeOutStart = fadeOutEnd - GetEffectiveFadeLength(this->GetItem(), true,  &fadeOutShape, &fadeOutCurve);
 	}
 
 	if (!this->GetAnalyzedStatus()                       ||
@@ -1221,14 +1207,6 @@ int BR_LoudnessObject::CheckSetAudioData ()
 	    channels     != audioData.channels               ||
 	    channelMode  != audioData.channelMode            ||
 	    samplerate   != audioData.samplerate             ||
-	    fadeInStart  != audioData.fadeInStart            ||
-	    fadeInEnd    != audioData.fadeInEnd              ||
-	    fadeInCurve  != audioData.fadeInCurve            ||
-	    fadeInShape  != audioData.fadeInShape            ||
-	    fadeOutStart != audioData.fadeOutStart           ||
-	    fadeOutEnd   != audioData.fadeOutEnd             ||
-	    fadeOutCurve != audioData.fadeOutCurve           ||
-	    fadeOutShape != audioData.fadeOutShape           ||
 	    fabs(volume - audioData.volume) >= VOLUME_DELTA  ||
 	    fabs(pan    - audioData.pan)    >= PAN_DELTA     ||
 	    volEnv       != audioData.volEnv                 ||
@@ -1247,14 +1225,6 @@ int BR_LoudnessObject::CheckSetAudioData ()
 		audioData.samplerate   = samplerate;
 		audioData.volume       = volume;
 		audioData.pan          = pan;
-		audioData.fadeInStart  = fadeInStart;
-		audioData.fadeInEnd    = fadeInEnd;
-		audioData.fadeInCurve  = fadeInCurve;
-		audioData.fadeInShape  = fadeInShape;
-		audioData.fadeOutStart = fadeOutStart;
-		audioData.fadeOutEnd   = fadeOutEnd;
-		audioData.fadeOutCurve = fadeOutCurve;
-		audioData.fadeOutShape = fadeOutShape;
 		audioData.volEnv       = volEnv;
 		audioData.volEnvPreFX  = volEnvPreFX;
 
@@ -1492,15 +1462,7 @@ channelMode  (0),
 audioStart   (0),
 audioEnd     (0),
 volume       (0),
-pan          (0),
-fadeInStart  (0),
-fadeOutStart (0),
-fadeInEnd    (0),
-fadeOutEnd   (0),
-fadeInCurve  (0),
-fadeOutCurve (0),
-fadeInShape  (0),
-fadeOutShape (0)
+pan          (0)
 {
 	memset(audioHash, 0, 128);
 }
@@ -2365,7 +2327,7 @@ void BR_AnalyzeLoudnessWnd::SaveRecentFormatPattern (WDL_FastString pattern)
 	bool patternNeedsSaving = false;
 
 	int x = 0;
-	while (const char* wildcard = g_wildcards[x++][0])
+	while (const char* wildcard = g_wildcards[x++].wildcard)
 	{
 		if (strstr(pattern.Get(), wildcard))
 		{
@@ -2712,19 +2674,53 @@ WDL_DLGRET BR_AnalyzeLoudnessWnd::ExportFormatDialogProc (HWND hwnd, UINT uMsg, 
 			WDL_FastString helpString;
 			helpString.Append(__LOCALIZE("All wildcards related to loudness measurements will follow list view formating (if integrated loudness is displayed as -23 LUFS that's exactly what $integrated will create).\r\n\r\nWildcards description:\r\n", "sws_DLG_180"));
 
-			int i = 0;
-			while (g_wildcards[i][0])
-			{
-				helpString.Append(g_wildcards[i][0]);
-				#ifdef _WIN32
-					helpString.Append(g_wildcards[i][1]);
-				#else
-					helpString.Append(g_wildcards[i][2]);
-				#endif
-				helpString.Append(g_wildcards[i][3]);
-				helpString.Append("\r\n");
-				++i;
-			}
+			#ifdef _WIN32
+				LICE_CachedFont font;
+				font.SetFromHFont((HFONT)SendMessage(GetDlgItem(hwnd, IDC_EDIT), WM_GETFONT, 0, 0), LICE_FONT_FLAG_FORCE_NATIVE);
+
+				// Get the length of the longest wildcard
+				int i = -1;
+				int maxLen = 0;
+				while (g_wildcards[++i].wildcard)
+				{
+					RECT r = {0, 0, 0, 0};
+					font.DrawText(NULL, g_wildcards[i].wildcard, -1, &r, DT_CALCRECT | DT_NOPREFIX | DT_EDITCONTROL);
+					if (maxLen < r.right) maxLen = r.right;
+				}
+
+				// Format help string so wildcards and their descriptions are vertically aligned
+				i = -1;
+				while (g_wildcards[++i].wildcard)
+				{
+					WDL_FastString string;
+					string.Append(g_wildcards[i].wildcard);
+
+					int currentLen = 0;
+					while (currentLen <= maxLen)
+					{
+						string.Append("\t");
+
+						RECT r = {0, 0, 0, 0};
+						font.DrawText(NULL, string.Get(), -1, &r, DT_CALCRECT | DT_NOPREFIX | DT_EDITCONTROL | DT_EXPANDTABS);
+						if (maxLen < r.right) currentLen = r.right;
+					}
+
+					helpString.Append(string.Get());
+					helpString.Append(g_wildcards[i].desc);
+					helpString.Append("\r\n");
+				}
+			#else
+				int i = -1;
+				while (g_wildcards[++i].wildcard)
+				{
+					helpString.Append(g_wildcards[i].wildcard);
+					for (int j = 0; j < g_wildcards[i].osxTabs; ++j)
+						helpString.Append("\t");
+					helpString.Append(g_wildcards[i].desc);
+					helpString.Append("\r\n");
+				}
+			#endif
+
 			SetWindowText(GetDlgItem(hwnd, IDC_EDIT), helpString.Get());
 			SetWindowText(GetDlgItem(hwnd, IDC_FORMAT), g_loudnessWndManager.Get()->m_properties.exportFormat.Get());
 			SendMessage(hwnd, WM_COMMAND, BR_AnalyzeLoudnessWnd::UPDATE_FORMAT_AND_PREVIEW, 0);
@@ -2819,7 +2815,7 @@ WDL_DLGRET BR_AnalyzeLoudnessWnd::ExportFormatDialogProc (HWND hwnd, UINT uMsg, 
 				int i = 0;
 
 				// Add wildcards
-				while (const char* wildcard = g_wildcards[i++][0])
+				while (const char* wildcard = g_wildcards[i++].wildcard)
 					AddToMenu(menu, wildcard, i);
 				AddToMenu(menu, SWS_SEPARATOR, 0);
 
@@ -2849,10 +2845,10 @@ WDL_DLGRET BR_AnalyzeLoudnessWnd::ExportFormatDialogProc (HWND hwnd, UINT uMsg, 
 
 						WDL_FastString newFormat;
 						newFormat.AppendFormatted(start, "%s", format);
-						newFormat.Append(g_wildcards[wildcard - 1][0]);
+						newFormat.Append(g_wildcards[wildcard - 1].wildcard);
 						newFormat.Append(format + end);
 
-						end = start + strlen(g_wildcards[wildcard - 1][0]);
+						end = start + strlen(g_wildcards[wildcard - 1].wildcard);
 						SetDlgItemText(hwnd, IDC_FORMAT, newFormat.Get());
 						SendMessage(GetDlgItem(hwnd, IDC_FORMAT), EM_SETSEL, end, end);
 					}

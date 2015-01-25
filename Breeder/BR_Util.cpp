@@ -37,21 +37,22 @@
 #include "../SnM/SnM_Item.h"
 #include "../SnM/SnM_Util.h"
 #include "../../WDL/lice/lice.h"
+#include "../../WDL/lice/lice_bezier.h"
 #include "../../WDL/projectcontext.h"
 
 /******************************************************************************
 * Constants                                                                   *
 ******************************************************************************/
-const int ITEM_LABEL_MIN_HEIGHT      = 28;
-const int TCP_MASTER_GAP             = 5;
-const int ENV_GAP                    = 4;    // bottom gap may seem like 3 when selected, but that
-const int ENV_LINE_WIDTH             = 1;    // first pixel is used to "bold" selected envelope
+const int ITEM_LABEL_MIN_HEIGHT = 28;
+const int TCP_MASTER_GAP        = 5;
+const int ENV_GAP               = 4;    // bottom gap may seem like 3 when selected, but that
+const int ENV_LINE_WIDTH        = 1;    // first pixel is used to "bold" selected envelope
 
-const int TAKE_MIN_HEIGHT_COUNT      = 10;
-const int TAKE_MIN_HEIGHT_HIGH       = 12;   // min height when take count <= TAKE_MIN_HEIGHT_COUNT
-const int TAKE_MIN_HEIGHT_LOW        = 6;    // min height when take count >  TAKE_MIN_HEIGHT_COUNT
+const int TAKE_MIN_HEIGHT_COUNT = 10;
+const int TAKE_MIN_HEIGHT_HIGH  = 12;   // min height when take count <= TAKE_MIN_HEIGHT_COUNT
+const int TAKE_MIN_HEIGHT_LOW   = 6;    // min height when take count >  TAKE_MIN_HEIGHT_COUNT
 
-const int PROJ_CONTEXT_LINE          = 4096; // same length used by ProjectContext
+const int PROJ_CONTEXT_LINE     = 4096; // same length used by ProjectContext
 
 /******************************************************************************
 * Miscellaneous                                                               *
@@ -1071,10 +1072,8 @@ WDL_FastString GetSourceChunk (PCM_source* source)
 }
 
 /******************************************************************************
-* Fades                                                                       *
+* Fades (not 100% accurate - http://askjf.com/index.php?q=2976s)              *
 ******************************************************************************/
-#include "../../WDL/lice/lice_bezier.h"
-
 static void AssignDir(double* x, double* y, const double* b)
 {
 	/* Code bits courtesy of Cockos, http://askjf.com/index.php?q=2967s */
@@ -2519,12 +2518,12 @@ void DrawTooltip (LICE_IBitmap* bm, const char* text)
 		static LICE_CachedFont* s_font = NULL;
 		if (!s_font)
 		{
-			if (HFONT ttFont = (HFONT)SendMessage(GetTooltipWindow(),WM_GETFONT,0,0))
+			if (HFONT ttFont = (HFONT)SendMessage(GetTooltipWindow(), WM_GETFONT, 0, 0))
 			{
 				if (s_font = new (nothrow) LICE_CachedFont())
 				{
 					#ifdef _WIN32
-						s_font->SetFromHFont(ttFont, LICE_FONT_FLAG_OWNS_HFONT|LICE_FONT_FLAG_FORCE_NATIVE);
+						s_font->SetFromHFont(ttFont, LICE_FONT_FLAG_OWNS_HFONT | LICE_FONT_FLAG_FORCE_NATIVE);
 					#else
 						s_font->SetFromHFont(ttFont, LICE_FONT_FLAG_OWNS_HFONT);
 					#endif

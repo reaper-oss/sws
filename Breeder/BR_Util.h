@@ -30,10 +30,10 @@
 /******************************************************************************
 * Constants                                                                   *
 ******************************************************************************/
-const int SCROLLBAR_W          = 17;
-const int NEGATIVE_INF         = -150;
-const double VOLUME_DELTA      = 0.0000000000001;
-const double PAN_DELTA         = 0.001;
+const int SCROLLBAR_W     = 17;
+const int NEGATIVE_INF    = -150;
+const double VOLUME_DELTA = 0.0000000000001;
+const double PAN_DELTA    = 0.001;
 
 /******************************************************************************
 * Macros                                                                      *
@@ -118,7 +118,7 @@ bool SetTakeSourceFromFile (MediaItem_Take* take, const char* filename, bool inP
 WDL_FastString GetSourceChunk (PCM_source* source);
 
 /******************************************************************************
-* Fades                                                                       *
+* Fades (not 100% accurate - http://askjf.com/index.php?q=2976s)              *
 ******************************************************************************/
 double GetNormalizedFadeValue (double position, double fadeStart, double fadeEnd, int fadeShape, double fadeCurve, bool isFadeOut);
 double GetEffectiveFadeLength (MediaItem* item, bool isFadeOut, int* fadeShape = NULL, double* fadeCurve = NULL);

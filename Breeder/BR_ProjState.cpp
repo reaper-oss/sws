@@ -430,8 +430,8 @@ bool BR_MidiCCEvents::Restore (BR_MidiEditor& midiEditor, int lane, bool allVisi
 		double moveOffsetPPQMax = -1;
 		for (set<int>::iterator i = lanesToProcess.begin(); i != lanesToProcess.end(); ++i)
 		{
-			int targetLane           = *i;
-			int targetLane2          = targetLane;
+			int targetLane  = *i;
+			int targetLane2 = targetLane;
 			if (!midiEditor.IsCCLaneVisible(targetLane) ||
 			    targetLane == CC_TEXT_EVENTS            ||
 			    targetLane == CC_SYSEX                  ||
@@ -513,25 +513,25 @@ bool BR_MidiCCEvents::Restore (BR_MidiEditor& midiEditor, int lane, bool allVisi
 				moveOffsetPPQ = posAddPPQ;
 
 				MIDI_InsertCC(take,
-							  true,
-							  m_events[i].mute,
-							  positionPPQ,
-							  type,
-							  midiEditor.IsChannelVisible(m_events[i].channel) ? m_events[i].channel : midiEditor.GetDrawChannel(),
-							  (!doMsg2)    ? targetLane       : (reverseMsg ? m_events[i].msg3 : m_events[i].msg2),
-							  (reverseMsg) ? m_events[i].msg2 : m_events[i].msg3
+				              true,
+				              m_events[i].mute,
+				              positionPPQ,
+				              type,
+				              midiEditor.IsChannelVisible(m_events[i].channel) ? m_events[i].channel : midiEditor.GetDrawChannel(),
+				              (!doMsg2)    ? targetLane       : (reverseMsg ? m_events[i].msg3 : m_events[i].msg2),
+				              (reverseMsg) ? m_events[i].msg2 : m_events[i].msg3
 				);
 
 				if (do14bit)
 				{
 					MIDI_InsertCC(take,
-								  true,
-								  m_events[i].mute,
-								  positionPPQ,
-								  type,
-								  midiEditor.IsChannelVisible(m_events[i].channel) ? m_events[i].channel : midiEditor.GetDrawChannel(),
-								  targetLane2,
-								  m_events[i].msg2
+					              true,
+					              m_events[i].mute,
+					              positionPPQ,
+					              type,
+					              midiEditor.IsChannelVisible(m_events[i].channel) ? m_events[i].channel : midiEditor.GetDrawChannel(),
+					              targetLane2,
+					              m_events[i].msg2
 					);
 				}
 			}

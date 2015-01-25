@@ -1,7 +1,7 @@
 /******************************************************************************
 / BR_ContextualToolbars.cpp
 /
-/ Copyright (c) 2014 Dominik Martin Drzic
+/ Copyright (c) 2014-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
 / https://code.google.com/p/sws-extension
 /
@@ -206,20 +206,31 @@ void BR_ContextualToolbar::LoadToolbar (bool exclusive)
 				executeOnToolbarLoad.positionOrientation  = ((m_options.position & OPTION_ENABLED) ? m_options.position : 0);
 				executeOnToolbarLoad.positionOverride     = (executeOnToolbarLoad.positionOffsetX != 0 || executeOnToolbarLoad.positionOffsetY != 0 || executeOnToolbarLoad.positionOrientation != 0);
 
+				PreventUIRefresh(1);
+
 				// Execute these options before showing toolbar (otherwise toolbar can end up behind mixer/MIDI editor etc... due to focus changes)
 				this->SetCCLaneClicked(executeOnToolbarLoad, mouseInfo);
 				this->SetFocus(executeOnToolbarLoad);
-				this->SelectEnvelope(executeOnToolbarLoad);
+				this->SelectEnvelope(executeOnToolbarLoad); // execute after focusing (since focus is tied to envelope selection)
 
 				// Toggle toolbar and set it up if needed
 				Main_OnCommand(mouseAction, 0);
-				if (executeOnToolbarLoad.makeTopMost  || executeOnToolbarLoad.positionOverride)
+				if (executeOnToolbarLoad.makeTopMost || executeOnToolbarLoad.positionOverride)
 				{
 					int toggleAction;
 					this->GetReaperToolbar(this->GetToolbarId(mouseAction), NULL, &toggleAction, NULL, NULL);
-					HWND toolbarHwnd = this->GetFloatingToolbarHwnd(mouseAction);
 
-					this->RepositionToolbar(executeOnToolbarLoad, toolbarHwnd);
+					bool inDocker;
+					HWND toolbarHwnd = this->GetFloatingToolbarHwnd(mouseAction, &inDocker);
+
+					HWND hwndToMove = toolbarHwnd;
+					if (inDocker)
+					{
+						while (hwndToMove && GetParent(hwndToMove) != g_hwndParent)
+							hwndToMove = GetParent(hwndToMove);
+					}
+
+					this->RepositionToolbar(executeOnToolbarLoad, hwndToMove);
 					this->SetToolbarAlwaysOnTop(executeOnToolbarLoad, toolbarHwnd, toggleAction);
 					this->SetToolbarAutoClose(executeOnToolbarLoad, toolbarHwnd, toggleAction);
 				}
@@ -250,6 +261,7 @@ void BR_ContextualToolbar::LoadToolbar (bool exclusive)
 					if (undoMsg) Undo_OnStateChangeEx2(NULL, undoMsg, UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS | UNDO_STATE_MISCCFG, -1);
 				}
 
+				PreventUIRefresh(-1);
 				UpdateArrange();
 			}
 		}
@@ -862,7 +874,6 @@ int BR_ContextualToolbar::FindMcpToolbar (BR_MouseInfo& mouseInfo, BR_Contextual
 
 int BR_ContextualToolbar::FindArrangeToolbar (BR_MouseInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad)
 {
-	bool focusEnvelope = false;
 	int context = -1;
 
 	// Empty arrange space
@@ -932,8 +943,6 @@ int BR_ContextualToolbar::FindArrangeToolbar (BR_MouseInfo& mouseInfo, BR_Contex
 				}
 			}
 		}
-
-		focusEnvelope = true;
 	}
 	// Stretch markers
 	else if (!strcmp(mouseInfo.GetSegment(), "track") && (!strcmp(mouseInfo.GetDetails(), "item_stretch_marker")))
@@ -1001,7 +1010,7 @@ int BR_ContextualToolbar::FindArrangeToolbar (BR_MouseInfo& mouseInfo, BR_Contex
 	{
 		executeOnToolbarLoad.setFocus     = true;
 		executeOnToolbarLoad.focusHwnd    = g_hwndParent;
-		executeOnToolbarLoad.focusContext = (focusEnvelope && GetSelectedEnvelope(NULL)) ? 2 : 1;
+		executeOnToolbarLoad.focusContext = (GetSelectedEnvelope(NULL) && !executeOnToolbarLoad.trackToSelect && !executeOnToolbarLoad.itemToSelect) ? 2 : 1;
 	}
 
 	if (context != -1 && this->GetMouseAction(context) == INHERIT_PARENT)
@@ -1583,15 +1592,21 @@ int BR_ContextualToolbar::GetToolbarId (int mouseAction)
 	return -1;
 }
 
-HWND BR_ContextualToolbar::GetFloatingToolbarHwnd (int mouseAction)
+HWND BR_ContextualToolbar::GetFloatingToolbarHwnd (int mouseAction, bool* inDocker)
 {
+	HWND hwnd = NULL;
+	bool docker = false;
 	int toolbarId = this->GetToolbarId(mouseAction);
 
 	char toolbarName[256];
 	if (this->GetReaperToolbar(toolbarId, NULL,NULL, toolbarName, sizeof(toolbarName)))
-		return FindReaperWndByTitle(toolbarName);
-	else
-		return NULL;
+	{
+		hwnd = FindReaperWndByTitle(toolbarName);
+		docker = GetParent(hwnd) != g_hwndParent;
+	}
+
+	WritePtr(inDocker, docker);
+	return hwnd;
 }
 
 void BR_ContextualToolbar::CloseAllAssignedToolbars ()
@@ -2618,18 +2633,22 @@ HMENU BR_ContextualToolbarsWnd::OnContextMenu (int x, int y, bool* wantDefaultIt
 			case COL_AUTOCLOSE:
 			{
 				int x = 0;
-				bool autoCloseEnabled = true;
+				int toolbarCount = 0;
+				int enabledCount = 0;
 				while (int* selectedContext = (int*)m_list->EnumSelected(&x))
 				{
-					int toolbarId;
-					bool autoClose;
-					if (m_currentToolbar.GetContext(*selectedContext, &toolbarId, &autoClose, NULL, NULL) && (!autoClose || m_currentToolbar.GetToolbarType(toolbarId) != 3))
+					int toolbarId; bool autoClose;
+					if (m_currentToolbar.GetContext(*selectedContext, &toolbarId, &autoClose, NULL, NULL))
 					{
-						autoCloseEnabled = false;
-						break;
+						if (m_currentToolbar.GetToolbarType(toolbarId) == 3)
+						{
+							++toolbarCount;
+							if (autoClose) ++enabledCount;
+						}
 					}
 				}
 
+				bool autoCloseEnabled = (toolbarCount > 0 && enabledCount == toolbarCount);
 				AddToMenu(menu, __LOCALIZE("Enable toolbar auto close", "sws_DLG_181"), (autoCloseEnabled ? 1 : 2), -1, false, (autoCloseEnabled ? MF_CHECKED : MF_UNCHECKED));
 			}
 			break;

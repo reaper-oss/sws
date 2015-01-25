@@ -2350,6 +2350,13 @@ int CountTrackEnvelopePanels (MediaTrack* track)
 		// Get first envelope's lane hwnd and cycle through the rest
 		HWND hwnd = GetWindow(GetTcpTrackWnd(track), GW_HWNDNEXT);
 		MediaTrack* nextTrack = CSurf_TrackFromID(1 + CSurf_TrackToID(track, false), false);
+		while (true)
+		{
+			if (!nextTrack || GetMediaTrackInfo_Value(nextTrack, "B_SHOWINTCP"))
+				break;
+			else
+				nextTrack = CSurf_TrackFromID(1 + CSurf_TrackToID(nextTrack, false), false);
+		}
 		list<TrackEnvelope*> checkedEnvs;
 
 		int fullEnvCount = CountTrackEnvelopes(track);
@@ -2363,7 +2370,10 @@ int CountTrackEnvelopePanels (MediaTrack* track)
 				++count;
 			else
 				break;
+
 			hwnd = GetWindow(hwnd, GW_HWNDNEXT);
+			if (!hwnd)
+				break;
 		}
 	}
 

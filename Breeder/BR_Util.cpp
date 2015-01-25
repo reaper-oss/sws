@@ -1,7 +1,7 @@
 /******************************************************************************
 / BR_Util.cpp
 /
-/ Copyright (c) 2013-2014 Dominik Martin Drzic
+/ Copyright (c) 2013-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
 / https://code.google.com/p/sws-extension
 /
@@ -1758,8 +1758,15 @@ int GetTrackEnvHeight (TrackEnvelope* envelope, int* offsetY, bool drawableRange
 	// Get first envelope's lane hwnd and cycle through the rest
 	HWND hwnd = GetWindow(GetTcpTrackWnd(track), GW_HWNDNEXT);
 	MediaTrack* nextTrack = CSurf_TrackFromID(1 + CSurf_TrackToID(track, false), false);
+	while (true)
+	{
+		if (!nextTrack || GetMediaTrackInfo_Value(nextTrack, "B_SHOWINTCP"))
+			break;
+		else
+			nextTrack = CSurf_TrackFromID(1 + CSurf_TrackToID(nextTrack, false), false);
+	}
+	
 	list<TrackEnvelope*> checkedEnvs;
-
 	bool found = false;
 	int envelopeId = GetEnvId(envelope, track);
 	int count = CountTrackEnvelopes(track);
@@ -1793,6 +1800,8 @@ int GetTrackEnvHeight (TrackEnvelope* envelope, int* offsetY, bool drawableRange
 		}
 
 		hwnd = GetWindow(hwnd, GW_HWNDNEXT);
+		if (!hwnd)
+			break;
 	}
 
 	// Envelope is either hidden or drawn in track lane
@@ -2248,15 +2257,25 @@ HWND GetTcpWnd ()
 	if (!s_hwnd)
 	{
 		MediaTrack* track = GetTrack(NULL, 0);
+		for (int i = 0; i < CountTracks(NULL); ++i)
+		{
+			MediaTrack* currentTrack = GetTrack(NULL, i);
+			if (GetMediaTrackInfo_Value(currentTrack, "B_SHOWINTCP") && GetMediaTrackInfo_Value(currentTrack, "I_WNDH") != 0)
+			{
+				track = currentTrack;
+				break;
+			}
+		}
 		MediaTrack* master = GetMasterTrack(NULL);
 		bool IsMasterVisible = TcpVis(master) ? true : false;
 
 		// Can't find TCP if there are no tracks in project, kinda silly to expect no tracks in a DAW but oh well... :)
 		MediaTrack* firstTrack = (IsMasterVisible) ? (master) : (track ? track : master);
+		int masterVis = 0;
 		if (!track && !IsMasterVisible)
 		{
 			PreventUIRefresh(1);
-			Main_OnCommandEx(40075, 0, NULL);
+			masterVis = SetMasterTrackVisibility(GetMasterTrackVisibility() | 1);
 		}
 
 		// TCP hierarchy: TCP owner -> TCP hwnd -> tracks
@@ -2286,7 +2305,7 @@ HWND GetTcpWnd ()
 		if (!track && !IsMasterVisible)
 		{
 			PreventUIRefresh(-1);
-			Main_OnCommandEx(40075, 0, NULL);
+			SetMasterTrackVisibility(masterVis);
 		}
 	}
 	return s_hwnd;

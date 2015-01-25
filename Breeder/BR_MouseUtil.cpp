@@ -1,7 +1,7 @@
 /******************************************************************************
 / BR_MouseUtil.cpp
 /
-/ Copyright (c) 2014 Dominik Martin Drzic
+/ Copyright (c) 2014-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
 / https://code.google.com/p/sws-extension
 /
@@ -1541,6 +1541,14 @@ void BR_MouseInfo::GetTrackOrEnvelopeFromY (int y, TrackEnvelope** _envelope, Me
 		// Get first envelope's lane hwnd and cycle through the rest
 		HWND hwnd = ::GetWindow(GetTcpTrackWnd(track), GW_HWNDNEXT);
 		MediaTrack* nextTrack = CSurf_TrackFromID(1 + CSurf_TrackToID(track, false), false);
+		while (true)
+		{
+			if (!nextTrack || GetMediaTrackInfo_Value(nextTrack, "B_SHOWINTCP"))
+				break;
+			else
+				nextTrack = CSurf_TrackFromID(1 + CSurf_TrackToID(nextTrack, false), false);
+		}
+
 		int count = CountTrackEnvelopes(track);
 		for (int i = 0; i < count; ++i)
 		{
@@ -1562,6 +1570,8 @@ void BR_MouseInfo::GetTrackOrEnvelopeFromY (int y, TrackEnvelope** _envelope, Me
 			}
 
 			hwnd = ::GetWindow(hwnd, GW_HWNDNEXT);
+			if (!hwnd)
+				break;
 		}
 
 		if (!yInTrack)

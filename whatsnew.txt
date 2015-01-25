@@ -1,3 +1,6 @@
+Contextual toolbars
++Fixed toolbars not loading in certain instances if some tracks are hidden from TCP (this also probably fixes some other issues)
+
 !v2.6.2 #0 pre-release build (January 16, 2015)
 <strong>REAPER v5.0pre6+ is required!</strong> (this REAPER version supports SWS functions exported to EEL and Lua)
 
@@ -15,7 +18,7 @@ REAPER 5 preliminary support
 !v2.6.0 #0 featured build (January 7, 2015)
 Notes window
 +Added "Wrap text" option in the context menu
-+Import SubRip file: name regions with subtitles content  
++Import SubRip file: name regions with subtitles content
 +Issue 686: fixed new lines added in subtitles when saving the project
 
 !v2.5.2 #0 pre-release build (December 11, 2014)
@@ -190,7 +193,7 @@ Other
 !v2.5 featured build (November 24, 2014)
 Notes window
 +Added "Wrap text" option in the context menu
-+Import SubRip file: name regions with subtitles content  
++Import SubRip file: name regions with subtitles content
 +Issue 686: fixed new lines added in subtitles when saving the project
 
 !v2.4.0 #10 pre-release build (July 11, 2014)

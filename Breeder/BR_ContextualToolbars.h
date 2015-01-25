@@ -1,7 +1,7 @@
 /******************************************************************************
 / BR_ContextualToolbars.h
 /
-/ Copyright (c) 2014 Dominik Martin Drzic
+/ Copyright (c) 2014-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
 / https://code.google.com/p/sws-extension
 /
@@ -290,7 +290,7 @@ private:
 	int GetToolbarId (int mouseAction);
 
 	/* Toolbar manipulation */
-	HWND GetFloatingToolbarHwnd (int mouseAction);
+	HWND GetFloatingToolbarHwnd (int mouseAction, bool* inDocker);
 	void CloseAllAssignedToolbars ();
 	bool AreAssignedToolbarsOpened ();
 

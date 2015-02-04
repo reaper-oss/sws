@@ -622,7 +622,10 @@ void ME_SaveCCEventsSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWND h
 			for (int i = 0; i < g_midiCCEvents.Get()->GetSize(); ++i)
 			{
 				if (slot == g_midiCCEvents.Get()->Get(i)->GetSlot())
-					return g_midiCCEvents.Get()->Get(i)->Save(editor, lane);
+				{
+					g_midiCCEvents.Get()->Get(i)->Save(editor, lane);
+					return;
+				}
 			}
 			g_midiCCEvents.Get()->Add(new BR_MidiCCEvents(slot, editor, lane));
 		}

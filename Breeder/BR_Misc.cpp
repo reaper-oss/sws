@@ -665,6 +665,66 @@ void RestoreCursorPosSlot (COMMAND_T* ct)
 	}
 }
 
+void SaveItemMuteStateSlot (COMMAND_T* ct)
+{
+	int  slot         = abs((int)ct->user) - 1;
+	bool selectedOnly = ((int)ct->user > 0);
+
+	for (int i = 0; i < g_itemMuteState.Get()->GetSize(); ++i)
+	{
+		if (slot == g_itemMuteState.Get()->Get(i)->GetSlot())
+			return g_itemMuteState.Get()->Get(i)->Save(selectedOnly);
+	}
+
+	g_itemMuteState.Get()->Add(new BR_ItemMuteState(slot, selectedOnly));
+}
+
+void RestoreItemMuteStateSlot (COMMAND_T* ct)
+{
+	int  slot         = abs((int)ct->user) - 1;
+	bool selectedOnly = ((int)ct->user > 0);
+
+	for (int i = 0; i < g_itemMuteState.Get()->GetSize(); ++i)
+	{
+		if (slot == g_itemMuteState.Get()->Get(i)->GetSlot())
+		{
+			if (g_itemMuteState.Get()->Get(i)->Restore(selectedOnly))
+				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
+			break;
+		}
+	}
+}
+
+void SaveTrackSoloMuteStateSlot (COMMAND_T* ct)
+{
+	int  slot         = abs((int)ct->user) - 1;
+	bool selectedOnly = ((int)ct->user > 0);
+
+	for (int i = 0; i < g_trackSoloMuteState.Get()->GetSize(); ++i)
+	{
+		if (slot == g_trackSoloMuteState.Get()->Get(i)->GetSlot())
+			return g_trackSoloMuteState.Get()->Get(i)->Save(selectedOnly);
+	}
+
+	g_trackSoloMuteState.Get()->Add(new BR_TrackSoloMuteState(slot, selectedOnly));
+}
+
+void RestoreTrackSoloMuteStateSlot (COMMAND_T* ct)
+{
+	int  slot         = abs((int)ct->user) - 1;
+	bool selectedOnly = ((int)ct->user > 0);
+
+	for (int i = 0; i < g_trackSoloMuteState.Get()->GetSize(); ++i)
+	{
+		if (slot == g_trackSoloMuteState.Get()->Get(i)->GetSlot())
+		{
+			if (g_trackSoloMuteState.Get()->Get(i)->Restore(selectedOnly))
+				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
+			break;
+		}
+	}
+}
+
 /******************************************************************************
 * Commands: Misc - Media item preview                                         *
 ******************************************************************************/

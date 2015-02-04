@@ -33,16 +33,20 @@ class BR_EnvSel;
 class BR_CursorPos;
 class BR_MidiNoteSel;
 class BR_MidiCCEvents;
+class BR_ItemMuteState;
+class BR_TrackSoloMuteState;
 class BR_MidiToggleCCLane;
 
 /******************************************************************************
 * Globals                                                                     *
 ******************************************************************************/
-extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_EnvSel> >           g_envSel;
-extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_CursorPos> >        g_cursorPos;
-extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_MidiNoteSel> >      g_midiNoteSel;
-extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_MidiCCEvents> >     g_midiCCEvents;
-extern SWSProjConfig<BR_MidiToggleCCLane>                               g_midiToggleHideCCLanes;
+extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_EnvSel> >             g_envSel;
+extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_CursorPos> >          g_cursorPos;
+extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_MidiNoteSel> >        g_midiNoteSel;
+extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_MidiCCEvents> >       g_midiCCEvents;
+extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_ItemMuteState> >      g_itemMuteState;
+extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_TrackSoloMuteState> > g_trackSoloMuteState;
+extern SWSProjConfig<BR_MidiToggleCCLane>                                 g_midiToggleHideCCLanes;
 
 /******************************************************************************
 * Call on startup to register state saving functionality                      *
@@ -112,24 +116,58 @@ public:
 	BR_MidiCCEvents (int slot, BR_MidiEditor& midiEditor, int lane);
 	BR_MidiCCEvents (int slot, ProjectStateContext* ctx);
 	void SaveState (ProjectStateContext* ctx);
-	void Save (BR_MidiEditor& midiEditor, int lane);
+	bool Save (BR_MidiEditor& midiEditor, int lane);
 	bool Restore (BR_MidiEditor& midiEditor, int lane, bool allVisible);
 	int  GetSlot ();
 
 private:
 	struct Event
 	{
-		double positionPPQ;
+		double positionPpq;
 		int channel, msg2, msg3;
 		bool mute;
 		Event ();
-		Event (double positionPPQ, int channel, int msg2, int msg3, bool mute);
+		Event (double positionPpq, int channel, int msg2, int msg3, bool mute);
 	};
-
-	bool SaveEvents (BR_MidiEditor& midiEditor, int lane);
 
 	int m_slot, m_sourceLane, m_ppq;
 	vector<BR_MidiCCEvents::Event> m_events;
+};
+
+/******************************************************************************
+* Item mute state                                                             *
+******************************************************************************/
+class BR_ItemMuteState
+{
+public:
+	BR_ItemMuteState (int slot, bool selectedOnly);
+	BR_ItemMuteState (int slot, ProjectStateContext* ctx);
+	void SaveState (ProjectStateContext* ctx);
+	void Save (bool selectedOnly);
+	bool Restore (bool selectedOnly);
+	int  GetSlot ();
+
+private:
+	int m_slot;
+	vector<pair<GUID,int> > m_items;
+};
+
+/******************************************************************************
+* Track solo/mute state                                                       *
+******************************************************************************/
+class BR_TrackSoloMuteState
+{
+public:
+	BR_TrackSoloMuteState (int slot, bool selectedOnly);
+	BR_TrackSoloMuteState (int slot, ProjectStateContext* ctx);
+	void SaveState (ProjectStateContext* ctx);
+	void Save (bool selectedOnly);
+	bool Restore (bool selectedOnly);
+	int  GetSlot ();
+
+private:
+	int m_slot;
+	vector<pair<GUID,pair<int,int> > > m_tracks;
 };
 
 /******************************************************************************

@@ -53,6 +53,10 @@ void PlaybackAtMouseCursor (COMMAND_T*);
 void SelectItemsByType (COMMAND_T*);
 void SaveCursorPosSlot (COMMAND_T*);
 void RestoreCursorPosSlot (COMMAND_T*);
+void SaveItemMuteStateSlot (COMMAND_T*);
+void RestoreItemMuteStateSlot (COMMAND_T*);
+void SaveTrackSoloMuteStateSlot (COMMAND_T*);
+void RestoreTrackSoloMuteStateSlot (COMMAND_T*);
 
 /******************************************************************************
 * Commands: Misc - Media item preview                                         *

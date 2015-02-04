@@ -2013,8 +2013,7 @@ void BR_ContextualToolbarsView::OnItemDblClk (SWS_ListItem* item, int iCol)
 					break;
 				}
 
-
-					listView->Update();
+				listView->Update();
 			}
 		}
 	}

@@ -119,6 +119,8 @@ bool TrimItem (MediaItem* item, double start, double end);
 bool GetMediaSourceProperties (MediaItem_Take* take, bool* section, double* start, double* length, double* fade, bool* reverse);
 bool SetMediaSourceProperties (MediaItem_Take* take, bool section, double start, double length, double fade, bool reverse);
 bool SetTakeSourceFromFile (MediaItem_Take* take, const char* filename, bool inProjectData, bool keepSourceProperties);
+GUID GetItemGuid (MediaItem* item);
+MediaItem* GuidToItem(const GUID* guid);
 WDL_FastString GetSourceChunk (PCM_source* source);
 
 /******************************************************************************

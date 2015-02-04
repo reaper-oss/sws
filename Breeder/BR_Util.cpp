@@ -1030,6 +1030,26 @@ bool SetTakeSourceFromFile (MediaItem_Take* take, const char* filename, bool inP
 	return false;
 }
 
+GUID GetItemGuid (MediaItem* item)
+{
+	if (item)
+		return (item) ? (*(GUID*)GetSetMediaItemInfo(item, "GUID", NULL)) : GUID_NULL;
+}
+
+MediaItem* GuidToItem(const GUID* guid)
+{
+	if (guid && !IsEqualGUID(*guid, GUID_NULL))
+	{
+		for (int i = 0; i < CountMediaItems(NULL); ++i)
+		{
+			MediaItem* item = GetMediaItem(NULL, i);
+			if (IsEqualGUID(*(GUID*)GetSetMediaItemInfo(item, "GUID", NULL), *guid))
+				return item;
+		}
+	}
+	return NULL;
+}
+
 WDL_FastString GetSourceChunk (PCM_source* source)
 {
 	WDL_FastString sourceStr;
@@ -1122,7 +1142,7 @@ static bool GetMediaItemFadeBezParms(int shape, double dir, bool isfadeout, doub
 	{
 		double w0=-dir;
 		double w1=1.0+dir;
-		if (shape == 1)      ApplyDir(x, y, w0, w1, b4i, b1);
+		if      (shape == 1) ApplyDir(x, y, w0, w1, b4i, b1);
 		else if (shape == 2) ApplyDir(x, y, w0, w1, b1,  b0);
 		else if (shape == 5) ApplyDir(x, y, w0, w1, b50, b5);
 		else if (shape == 6) ApplyDir(x, y, w0, w1, b60, b6);
@@ -1133,16 +1153,16 @@ static bool GetMediaItemFadeBezParms(int shape, double dir, bool isfadeout, doub
 	{
 		double w0=1.0-dir;
 		double w1=dir;
-		if (shape == 1)      ApplyDir(x, y, w0, w1, b1, b4);
+		if      (shape == 1) ApplyDir(x, y, w0, w1, b1, b4);
 		else if (shape == 2) ApplyDir(x, y, w0, w1, b0, b2);
 		else if (shape == 5) ApplyDir(x, y, w0, w1, b5, b51);
 		else if (shape == 6) ApplyDir(x, y, w0, w1, b6, b61);
 		else if (shape == 7) ApplyDir(x, y, w0, w1, b7, b4);
 		else                 ApplyDir(x, y, w0, w1, b0, b4);
 	}
-	else // dir == 0.0
+	else
 	{
-		if (shape == 1)      AssignDir(x, y, b1);
+		if      (shape == 1) AssignDir(x, y, b1);
 		else if (shape == 5) AssignDir(x, y, b5);
 		else if (shape == 6) AssignDir(x, y, b6);
 		else if (shape == 7) AssignDir(x, y, b7);
@@ -1186,7 +1206,7 @@ double GetEffectiveFadeLength (MediaItem* item, bool isFadeOut, int* fadeShape /
 	if (item)
 	{
 		WritePtr(fadeShape, ((isFadeOut) ? (int)GetMediaItemInfo_Value(item, "C_FADEOUTSHAPE") : (int)GetMediaItemInfo_Value(item, "C_FADEINSHAPE")));
-		WritePtr(fadeCurve, ((isFadeOut) ?       GetMediaItemInfo_Value(item, "D_FADEOUTDIR")  :      GetMediaItemInfo_Value(item, "D_FADEINDIR")));
+		WritePtr(fadeCurve, ((isFadeOut) ?      GetMediaItemInfo_Value(item, "D_FADEOUTDIR")   :      GetMediaItemInfo_Value(item, "D_FADEINDIR")));
 
 		double fadeLength = GetMediaItemInfo_Value(item, ((isFadeOut) ? "D_FADEOUTLEN_AUTO" : "D_FADEINLEN_AUTO"));
 		return (fadeLength > 0) ? fadeLength : GetMediaItemInfo_Value(item, ((isFadeOut) ? "D_FADEOUTLEN" : "D_FADEINLEN"));
@@ -1232,7 +1252,6 @@ int FindNextStretchMarker (MediaItem_Take* take, double position)
 
 		if (position >= currentPos) first = mid + 1;
 		else                        last  = mid;
-
 	}
 	return (first < count) ? first: -1;
 }
@@ -1251,7 +1270,6 @@ int FindClosestStretchMarker (MediaItem_Take* take, double position)
 	{
 		if (nextId < count)
 		{
-
 			double prevPos, nextPos;
 			GetTakeStretchMarker(take, prevId, &prevPos, NULL);
 			GetTakeStretchMarker(take, nextId, &nextPos, NULL);
@@ -1565,7 +1583,7 @@ int GetTrackHeightFromVZoomIndex (MediaTrack* track, int vZoom)
 		IconTheme* theme = SNM_GetIconTheme();
 
 		int compact = GetEffectiveCompactLevel(track);
-		if (compact == 2)      height = theme->tcp_supercollapsed_height; // Compacted track is not affected by vertical
+		if      (compact == 2) height = theme->tcp_supercollapsed_height; // Compacted track is not affected by vertical
 		else if (compact == 1) height = theme->tcp_small_height;          // zoom if there is no height override
 		else
 		{
@@ -2421,8 +2439,8 @@ void CenterDialog (HWND hwnd, HWND target, HWND zOrder)
 	int targW = r1.right - r1.left;
 	int targH = r1.bottom - r1.top;
 
-	r.left = r1.left + (targW-hwndW)/2;
-	r.top = r1.top + (targH-hwndH)/2;
+	r.left = (targW-hwndW) / 2 + r1.left;
+	r.top  = (targH-hwndH) / 2 + r1.top;
 
 	EnsureNotCompletelyOffscreen(&r);
 	SetWindowPos(hwnd, zOrder, r.left, r.top, 0, 0, SWP_NOSIZE);
@@ -2673,27 +2691,13 @@ int GetMinTakeHeight (MediaTrack* track, int takeCount, int trackHeight, int ite
 
 		// If max take height is over limits, reaper lets takes get
 		// resized to 1 px in FIPM or when in overlapping lane
-		if (takeCount > TAKE_MIN_HEIGHT_COUNT)
-		{
-			if (maxTakeH < TAKE_MIN_HEIGHT_LOW)
-				takeH = TAKE_MIN_HEIGHT_LOW;
-			else
-				takeH = 1;
-		}
-		else
-		{
-			if (maxTakeH < TAKE_MIN_HEIGHT_HIGH)
-				takeH = TAKE_MIN_HEIGHT_HIGH;
-			else
-				takeH = 1;
-		}
+		if (takeCount > TAKE_MIN_HEIGHT_COUNT) takeH = (maxTakeH < TAKE_MIN_HEIGHT_LOW)  ? TAKE_MIN_HEIGHT_LOW  : 1;
+		else                                   takeH = (maxTakeH < TAKE_MIN_HEIGHT_HIGH) ? TAKE_MIN_HEIGHT_HIGH : 1;
 	}
 	else
 	{
-		if (takeCount > TAKE_MIN_HEIGHT_COUNT)
-			takeH = TAKE_MIN_HEIGHT_LOW;
-		else
-			takeH = TAKE_MIN_HEIGHT_HIGH;
+		if (takeCount > TAKE_MIN_HEIGHT_COUNT) takeH = TAKE_MIN_HEIGHT_LOW;
+		else                                   takeH = TAKE_MIN_HEIGHT_HIGH;
 	}
 
 	return takeH;
@@ -2739,10 +2743,7 @@ int GetTakeHeight (MediaItem_Take* take, MediaItem* item, int id, int* offsetY, 
 
 		if (takeH < GetMinTakeHeight(track, effTakeCount, trackHeight, itemH))
 		{
-			if (GetActiveTake(validItem) == validTake)
-				takeH = itemH;
-			else
-				takeH = 0;
+			takeH = (GetActiveTake(validItem) == validTake) ? itemH : 0;
 		}
 		else
 		{

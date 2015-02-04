@@ -8,6 +8,8 @@ Added actions
  - SWS: Zoom to selected items/tracks (ignore last track's envelope lanes)
  - SWS: Vertical zoom to selected items/tracks (ignore last track's envelope lanes)
  - SWS: Toggle zoom to selected tracks/items/time selection (ignore last track's envelope lanes)
+ - SWS/BR: Save/Restore selected/all items' mute state, slot x (8 slots)
+ - SWS/BR: Save/Restore selected/all tracks' solo and mute state, slot x (8 slots)
 
 ReaScript
 +Updated BR_EnvGetProperties and BR_EnvSetProperties (volume envelope fader scaling support)

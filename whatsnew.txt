@@ -2,6 +2,7 @@
 
 Contextual toolbars
 +Fixed toolbars not loading in certain instances if some tracks are hidden from TCP (this also probably fixes some other issues)
++Fixed MIDI editor flickering when setting detected CC lane as last clicked
 
 Added actions
 +Main:

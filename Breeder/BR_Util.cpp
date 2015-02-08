@@ -617,12 +617,16 @@ void GetSetFocus (bool set, HWND* hwnd, int* context)
 {
 	if (set)
 	{
-		if (context) // context first (it may refocus main window)
+		HWND currentHwnd;                                   // check for current focus (using SetCursorContext() can focus arrange
+		int currentContext;                                 // and then SetFocus() can change it to midi editor which was already
+		GetSetFocus(false, &currentHwnd, &currentContext);  // focused, and will make it flicker due to the brief focus change
+
+		if (context && *context != currentContext) // context first (it may refocus main window)
 		{
 			TrackEnvelope* envelope = GetSelectedEnvelope(NULL);
 			SetCursorContext((*context == 2 && !envelope) ? 1 : *context, (*context == 2) ? envelope : NULL);
 		}
-		if (hwnd)
+		if (hwnd && *hwnd != currentHwnd)
 			SetFocus(*hwnd);
 	}
 	else

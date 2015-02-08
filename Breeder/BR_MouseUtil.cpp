@@ -574,9 +574,9 @@ bool BR_MouseInfo::SetDetectedCCLaneAsLastClicked ()
 				double itemEnd   = itemStart + GetMediaItemInfo_Value(m_mouseInfo.item, "D_LENGTH");
 				int itemStartPx = RoundToInt(itemStart * hZoom) - si.nPos; if (itemStartPx < 0)                         itemStartPx = 0;
 				int itemEndPx   = RoundToInt(itemEnd   * hZoom) - si.nPos; if (itemEndPx   > (int)(si.nPos + si.nPage)) itemEndPx = si.nPos + si.nPage;
-				m_ccLaneClickPoint.x = (itemStartPx + itemEndPx) / 2;
-
-				if (!CheckBounds((int)m_ccLaneClickPoint.x, itemStartPx, itemEndPx)) // REAPER gives priority to what's inside rather than edges (so if item's too short, edge hit-points won't stretch inside the item)
+				
+				m_ccLaneClickPoint.x = (itemStartPx + itemEndPx) / 2;                // REAPER gives priority to what's inside rather than edges 
+				if (!CheckBounds((int)m_ccLaneClickPoint.x, itemStartPx, itemEndPx)) // (so if item's too short, edge hit-points won't stretch inside the item)
 					hwnd = NULL;
 				else
 				{
@@ -600,7 +600,7 @@ bool BR_MouseInfo::SetDetectedCCLaneAsLastClicked ()
 				HWND captureHwnd = GetCapture();
 				SetCapture(hwnd);
 				SendMessage(hwnd, WM_LBUTTONDOWN, 0, MAKELPARAM((UINT)(m_ccLaneClickPoint.x), (UINT)(m_ccLaneClickPoint.y)));
-				SendMessage(hwnd, WM_LBUTTONUP, 0, MAKELPARAM((UINT)(m_ccLaneClickPoint.x), (UINT)(m_ccLaneClickPoint.y)));
+				SendMessage(hwnd, WM_LBUTTONUP,   0, MAKELPARAM((UINT)(m_ccLaneClickPoint.x), (UINT)(m_ccLaneClickPoint.y)));
 				ReleaseCapture();
 				SetCapture(captureHwnd);
 

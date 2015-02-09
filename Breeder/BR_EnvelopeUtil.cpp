@@ -109,6 +109,8 @@ m_parent        (NULL),
 m_tempoMap      (false),
 m_update        (false),
 m_sorted        (true),
+m_pointsEdited  (false),
+m_sampleRate    (-1),
 m_takeEnvOffset (0),
 m_takeEnvType   (UNKNOWN),
 m_count         (0),
@@ -126,6 +128,8 @@ m_take          (NULL),
 m_tempoMap      (envelope == GetTempoEnv()),
 m_update        (false),
 m_sorted        (true),
+m_pointsEdited  (false),
+m_sampleRate    (-1),
 m_takeEnvOffset (0),
 m_takeEnvType   (UNKNOWN),
 m_countConseq   (-1),
@@ -144,6 +148,8 @@ m_take          (NULL),
 m_tempoMap      (m_envelope == GetTempoEnv()),
 m_update        (false),
 m_sorted        (true),
+m_pointsEdited  (false),
+m_sampleRate    (-1),
 m_takeEnvOffset (0),
 m_takeEnvType   (UNKNOWN),
 m_countConseq   (-1),
@@ -160,6 +166,8 @@ m_take          (take),
 m_tempoMap      (false),
 m_update        (false),
 m_sorted        (true),
+m_pointsEdited  (false),
+m_sampleRate    (-1),
 m_takeEnvOffset (0),
 m_takeEnvType   (m_envelope ? envType : UNKNOWN),
 m_countConseq   (-1),
@@ -176,6 +184,8 @@ m_parent          (envelope.m_parent),
 m_tempoMap        (envelope.m_tempoMap),
 m_update          (envelope.m_update),
 m_sorted          (envelope.m_sorted),
+m_pointsEdited    (envelope.m_pointsEdited),
+m_sampleRate      (envelope.m_sampleRate),
 m_takeEnvOffset   (envelope.m_takeEnvOffset),
 m_takeEnvType     (envelope.m_takeEnvType),
 m_countConseq     (envelope.m_countConseq),
@@ -207,6 +217,8 @@ BR_Envelope& BR_Envelope::operator= (const BR_Envelope& envelope)
 	m_tempoMap      = envelope.m_tempoMap;
 	m_update        = envelope.m_update;
 	m_sorted        = envelope.m_sorted;
+	m_pointsEdited  = envelope.m_pointsEdited;
+	m_sampleRate    = envelope.m_sampleRate;
 	m_takeEnvOffset = envelope.m_takeEnvOffset;
 	m_takeEnvType   = envelope.m_takeEnvType;
 	m_countConseq   = envelope.m_countConseq;
@@ -291,7 +303,8 @@ bool BR_Envelope::SetPoint (int id, double* position, double* value, int* shape,
 		ReadPtr(bezier, m_points[id].bezier);
 
 		m_update = true;
-		if (position) m_sorted = false;
+		if (position)          m_sorted = false;
+		if (value || position) m_pointsEdited = true;
 		return true;
 	}
 	else
@@ -331,8 +344,9 @@ bool BR_Envelope::CreatePoint (int id, double position, double value, int shape,
 		m_points.insert(m_points.begin() + id, newPoint);
 
 		++m_count;
-		m_update = true;
-		m_sorted = false;
+		m_update       = true;
+		m_sorted       = false;
+		m_pointsEdited = true;
 		return true;
 	}
 	else
@@ -346,7 +360,8 @@ bool BR_Envelope::DeletePoint (int id)
 		m_points.erase(m_points.begin() + id);
 
 		--m_count;
-		m_update = true;
+		m_update       = true;
+		m_pointsEdited = true;
 		return true;
 	}
 	else
@@ -361,7 +376,8 @@ bool BR_Envelope::DeletePoints (int startId, int endId)
 	m_points.erase(m_points.begin() + startId, m_points.begin() + endId+1);
 
 	m_count -= endId - startId + 1;
-	m_update = true;
+	m_update       = true;
+	m_pointsEdited = true;
 	return true;
 }
 
@@ -418,6 +434,9 @@ bool BR_Envelope::SetTimeSig (int id, bool sig, bool partial, int num, int den)
 		m_points[id].sig = (sig) ? ((den << 16) + num) : (0);
 		m_points[id].partial = SetBit(m_points[id].partial, 0, sig);
 		m_points[id].partial = SetBit(m_points[id].partial, 2, partial);
+
+		m_update       = true;
+		m_pointsEdited = true;
 		return true;
 	}
 	else
@@ -435,7 +454,8 @@ bool BR_Envelope::SetCreateSortedPoint (int id, double position, double value, i
 		m_points.insert(m_points.begin() + id, newPoint);
 
 		++m_count;
-		m_update = true;
+		m_update       = true;
+		m_pointsEdited = true;
 		return true;
 	}
 	else if (this->ValidateId(id))
@@ -451,7 +471,8 @@ bool BR_Envelope::SetCreateSortedPoint (int id, double position, double value, i
 		m_points[id].bezier   = (m_points[id].shape == 5) ? bezier : 0;
 		m_points[id].selected = selected;
 
-		m_update = true;
+		m_update       = true;
+		m_pointsEdited = true;
 		return true;
 	}
 	else
@@ -690,93 +711,128 @@ int BR_Envelope::FindClosest (double position)
 	}
 }
 
-double BR_Envelope::ValueAtPosition (double position)
+double BR_Envelope::ValueAtPosition (double position, bool fastMode /*= false*/)
 {
 	position -= m_takeEnvOffset;
 	int	id = this->FindPrevious(position, 0);
 
-	// No previous point?
-	if (!this->ValidateId(id))
+	if (!m_pointsEdited && !fastMode)
 	{
-		int nextId = this->FindFirstPoint();
-		if (this->ValidateId(nextId))
-			return m_points[nextId].value;
-		else
-			return this->CenterValue();
+		if (m_sampleRate == -1)
+			GetConfig("projsrate", m_sampleRate);
+		double value;
+		Envelope_Evaluate(m_envelope, position, m_sampleRate, 1, &value, NULL, NULL, NULL); // slower then our way with high point count (probably because we use binary search while cockos uses linear) but more accurate
+
+		return (this->IsVolScaledToFader()) ? DEF_SLIDER2VAL(value) : value;
 	}
-
-	// No next point?
-	int nextId = (m_sorted) ? (id+1) : this->FindNext(m_points[id].position, 0);
-	if (!this->ValidateId(nextId))
-		return m_points[id].value;
-
-	// Position at the end of transition ?
-	if (m_points[nextId].position == position)
-		return m_points[this->LastPointAtPos(nextId)].value;
-
-	double t1 = m_points[id].position;
-	double t2 = m_points[nextId].position;
-	double v1 = m_points[id].value;
-	double v2 = m_points[nextId].value;
-
-	switch (m_points[id].shape)
+	else
 	{
-		case SQUARE:
+		// No previous point?
+		if (!this->ValidateId(id))
 		{
-			return v1;
+			int nextId = this->FindFirstPoint();
+			if (this->ValidateId(nextId))
+				return m_points[nextId].value;
+			else
+				return this->CenterValue();
 		}
 
-		case LINEAR:
+		// No next point?
+		int nextId = (m_sorted) ? (id+1) : this->FindNext(m_points[id].position, 0);
+		if (!this->ValidateId(nextId))
+			return m_points[id].value;
+
+		// Position at the end of transition ?
+		if (m_points[nextId].position == position)
+			return m_points[this->LastPointAtPos(nextId)].value;
+
+		// Everything else
+		double t1 = m_points[id].position;
+		double t2 = m_points[nextId].position;
+		double v1 = m_points[id].value;
+		double v2 = m_points[nextId].value;
+
+		bool faderMode = this->IsVolScaledToFader();
+		if (faderMode)
 		{
-			double t = (position - t1) / (t2 - t1);
-			return (!m_tempoMap) ? (v1 + (v2 - v1) * t) : TempoAtPosition(v1, v2, t1, t2, position);
+			v1 = this->NormalizedDisplayValue(v1);
+			v2 = this->NormalizedDisplayValue(v2);
 		}
 
-		case FAST_END:                                 // f(x) = x^3
+		double returnValue = 0;
+		switch (m_points[id].shape)
 		{
-			double t = (position - t1) / (t2 - t1);
-			return v1 + (v2 - v1) * pow(t, 3);
+			case SQUARE:
+			{
+				returnValue = v1;
+			}
+			break;
+
+			case LINEAR:
+			{
+				double t = (position - t1) / (t2 - t1);
+				returnValue = (!m_tempoMap) ? (v1 + (v2 - v1) * t) : TempoAtPosition(v1, v2, t1, t2, position);
+			}
+			break;
+
+			case FAST_END:                                 // f(x) = x^3
+			{
+				double t = (position - t1) / (t2 - t1);
+				returnValue =  v1 + (v2 - v1) * pow(t, 3);
+			}
+			break;
+
+			case FAST_START:                               // f(x) = 1 - (1 - x)^3
+			{
+				double t = (position - t1) / (t2 - t1);
+				returnValue =  v1 + (v2 - v1) * (1 - pow(1-t, 3));
+			}
+			break;
+
+			case SLOW_START_END:                           // f(x) = x^2 * (3-2x)
+			{
+				double t = (position - t1) / (t2 - t1);
+				returnValue =  v1 + (v2 - v1) * (pow(t, 2) * (3 - 2*t));
+			}
+			break;
+
+			case BEZIER:
+			{
+				int id0 = (m_sorted) ? (id-1)     : (this->FindPrevious(t1, 0));
+				int id3 = (m_sorted) ? (nextId+1) : (this->FindNext(t2, 0));
+				double t0 = (!this->ValidateId(id0)) ? (t1) : (m_points[id0].position);
+				double v0 = (!this->ValidateId(id0)) ? (v1) : (m_points[id0].value);
+				double t3 = (!this->ValidateId(id3)) ? (t2) : (m_points[id3].position);
+				double v3 = (!this->ValidateId(id3)) ? (v2) : (m_points[id3].value);
+				if (faderMode)
+				{
+					v0 = this->NormalizedDisplayValue(v0);
+					v3 = this->NormalizedDisplayValue(v3);
+				}
+
+				double x1, x2, y1, y2, empty;
+				LICE_Bezier_FindCardinalCtlPts(0.25, t0, t1, t2, v0, v1, v2, &empty, &x1, &empty, &y1);
+				LICE_Bezier_FindCardinalCtlPts(0.25, t1, t2, t3, v1, v2, v3, &x2, &empty, &y2, &empty);
+
+				double tension = m_points[id].bezier;
+				x1 += tension * ((tension > 0) ? (t2-x1) : (x1-t1));
+				x2 += tension * ((tension > 0) ? (t2-x2) : (x2-t1));
+				y1 -= tension * ((tension > 0) ? (y1-v1) : (v2-y1));
+				y2 -= tension * ((tension > 0) ? (y2-v1) : (v2-y2));
+
+				x1 = SetToBounds(x1, t1, t2);
+				x2 = SetToBounds(x2, t1, t2);
+				y1 = SetToBounds(y1, this->MinValue(), this->MaxValue());
+				y2 = SetToBounds(y2, this->MinValue(), this->MaxValue());
+				returnValue =  LICE_CBezier_GetY(t1, x1, x2, t2, v1, y1, y2, v2, position);
+			}
+			break;
 		}
 
-		case FAST_START:                               // f(x) = 1 - (1 - x)^3
-		{
-			double t = (position - t1) / (t2 - t1);
-			return v1 + (v2 - v1) * (1 - pow(1-t, 3));
-		}
-
-		case SLOW_START_END:                           // f(x) = x^2 * (3-2x)
-		{
-			double t = (position - t1) / (t2 - t1);
-			return v1 + (v2 - v1) * (pow(t, 2) * (3 - 2*t));
-		}
-
-		case BEZIER:
-		{
-			int id0 = (m_sorted) ? (id-1)     : (this->FindPrevious(t1, 0));
-			int id3 = (m_sorted) ? (nextId+1) : (this->FindNext(t2, 0));
-			double t0 = (!this->ValidateId(id0)) ? (t1) : (m_points[id0].position);
-			double v0 = (!this->ValidateId(id0)) ? (v1) : (m_points[id0].value);
-			double t3 = (!this->ValidateId(id3)) ? (t2) : (m_points[id3].position);
-			double v3 = (!this->ValidateId(id3)) ? (v2) : (m_points[id3].value);
-
-			double x1, x2, y1, y2, empty;
-			LICE_Bezier_FindCardinalCtlPts(0.25, t0, t1, t2, v0, v1, v2, &empty, &x1, &empty, &y1);
-			LICE_Bezier_FindCardinalCtlPts(0.25, t1, t2, t3, v1, v2, v3, &x2, &empty, &y2, &empty);
-
-			double tension = m_points[id].bezier;
-			x1 += tension * ((tension > 0) ? (t2-x1) : (x1-t1));
-			x2 += tension * ((tension > 0) ? (t2-x2) : (x2-t1));
-			y1 -= tension * ((tension > 0) ? (y1-v1) : (v2-y1));
-			y2 -= tension * ((tension > 0) ? (y2-v1) : (v2-y2));
-
-			x1 = SetToBounds(x1, t1, t2);
-			x2 = SetToBounds(x2, t1, t2);
-			y1 = SetToBounds(y1, this->MinValue(), this->MaxValue());
-			y2 = SetToBounds(y2, this->MinValue(), this->MaxValue());
-			return LICE_CBezier_GetY(t1, x1, x2, t2, v1, y1, y2, v2, position);
-		}
+		if (faderMode)
+			returnValue = this->RealValue(returnValue);
+		return returnValue;
 	}
-	return 0;
 }
 
 double BR_Envelope::NormalizedDisplayValue (double value)
@@ -795,13 +851,7 @@ double BR_Envelope::NormalizedDisplayValue (double value)
 	}
 	else if ((this->Type() == VOLUME || this->Type() == VOLUME_PREFX) && this->IsVolScaledToFader())
 	{
-		double sliderMin, sliderMax;
-		GetConfig("sliderminv", sliderMin); SetConfig("sliderminv", VAL2DB(min));
-		GetConfig("slidermaxv", sliderMax); SetConfig("slidermaxv", VAL2DB(max));
-
-		displayValue = SetToBounds(DB2SLIDER(VAL2DB(value)) / 1000, 0.0, 1.0);
-		SetConfig("sliderminv", sliderMin);
-		SetConfig("slidermaxv", sliderMax);
+		displayValue = SetToBounds(DEF_VAL2SLIDER(value) / DEF_VAL2SLIDER(max), 0.0, 1.0);
 	}
 	else
 	{
@@ -827,13 +877,7 @@ double BR_Envelope::RealValue (double normalizedDisplayValue)
 	}
 	else if ((this->Type() == VOLUME || this->Type() == VOLUME_PREFX) && this->IsVolScaledToFader())
 	{
-		double sliderMin, sliderMax;
-		GetConfig("sliderminv", sliderMin); SetConfig("sliderminv", VAL2DB(min));
-		GetConfig("slidermaxv", sliderMax); SetConfig("slidermaxv", VAL2DB(max));
-
-		realValue = SetToBounds(DB2VAL(SLIDER2DB(normalizedDisplayValue * 1000)), min, max);
-		SetConfig("sliderminv", sliderMin);
-		SetConfig("slidermaxv", sliderMax);
+		realValue = SetToBounds(DEF_SLIDER2VAL(normalizedDisplayValue * DEF_VAL2SLIDER(max)), min, max);
 	}
 	else
 	{
@@ -1226,8 +1270,8 @@ bool BR_Envelope::IsArmed ()
 
 bool BR_Envelope::IsVolScaledToFader ()
 {
-	this->FillProperties();
-	return (m_properties.volType != 0);
+	// no this->FillProperties() because we read it with API when constructing the object
+	return (m_properties.volType == 1);
 }
 
 int BR_Envelope::GetLaneHeight ()
@@ -1650,6 +1694,7 @@ void BR_Envelope::Build (bool takeEnvelopesUseProjectTime)
 	m_countSel = (int)m_pointsSel.size();
 	if (takeEnvelopesUseProjectTime && m_take)
 		m_takeEnvOffset = GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION");
+	m_properties.volType = (GetVolumeEnvelopeScaling(m_envelope) == 1) ? 1 : 0;
 }
 
 void BR_Envelope::UpdateConsequential ()
@@ -1853,6 +1898,13 @@ void BR_Envelope::FillProperties () const
 						m_properties.maxValue = 255;
 						m_properties.centerValue = 0;
 					}
+					else if (m_takeEnvType == PARAMETER)
+					{
+						lp.parse(token);
+						m_properties.minValue    = lp.gettoken_float(2);
+						m_properties.maxValue    = lp.gettoken_float(3);
+						m_properties.centerValue = lp.gettoken_float(4);
+					}
 
 					m_properties.type = m_takeEnvType;
 					m_properties.paramType.Set(token);
@@ -1998,7 +2050,7 @@ TrackEnvelope* GetTakeEnv (MediaItem_Take* take, BR_EnvType envelope)
 	else if (envelope == MUTE)   envName = "Mute";
 	else if (envelope == PITCH)  envName = "Pitch";
 
-	return SWS_GetTakeEnvelopeByName(take, envName);
+	return (envName) ? SWS_GetTakeEnvelopeByName(take, envName) : NULL;
 }
 
 MediaItem_Take* GetTakeEnvParent (TrackEnvelope* envelope, int* type)
@@ -2019,6 +2071,18 @@ MediaItem_Take* GetTakeEnvParent (TrackEnvelope* envelope, int* type)
 				else if (GetTakeEnv(take, PAN)    == envelope) returnType = PAN;
 				else if (GetTakeEnv(take, MUTE)   == envelope) returnType = MUTE;
 				else if (GetTakeEnv(take, PITCH)  == envelope) returnType = PITCH;
+				else
+				{
+					int envelopeCount = CountTakeEnvelopes(take);
+					for (int k = 0; k < envelopeCount; ++k)
+					{
+						if (GetTakeEnvelope(take, k) == envelope)
+						{
+							returnType = PARAMETER;
+							break;
+						}
+					}
+				}
 
 				if (returnType != UNKNOWN)
 				{

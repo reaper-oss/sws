@@ -1051,8 +1051,8 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 			double adjust = 1;
 
 			// Volume envelopes
-			if (doVolPreFXEnv) adjust *= data.volEnvPreFX.ValueAtPosition(sampleTime);
-			if (doVolEnv)      adjust *= data.volEnv.ValueAtPosition(sampleTime);
+			if (doVolPreFXEnv) adjust *= data.volEnvPreFX.ValueAtPosition(sampleTime, true);
+			if (doVolEnv)      adjust *= data.volEnv.ValueAtPosition(sampleTime, true);
 
 			// Volume fader
 			adjust *= data.volume;

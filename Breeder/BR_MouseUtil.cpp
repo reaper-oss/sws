@@ -1259,6 +1259,7 @@ int BR_MouseInfo::IsMouseOverEnvelopeLine (BR_Envelope& envelope, int drawableEn
 
 	int mouseHit = 0;
 	int pointId  = -1;
+
 	// Check if mouse is in drawable part of envelope lane where line resides
 	if (mouseY >= yOffset && mouseY < yOffset + drawableEnvHeight)
 	{
@@ -1355,14 +1356,14 @@ int BR_MouseInfo::IsMouseOverEnvelopeLineTrackLane (MediaTrack* track, int track
 	}
 
 	// Find envelope lane in track lane at mouse cursor and check mouse cursor against it
-	int overlapLimit,trackGapTop, trackGapBottom;
-	GetConfig("env_ol_minh", overlapLimit);
-	GetTrackGap(trackHeight, &trackGapTop, &trackGapBottom);
-
-	int envLaneFull = trackHeight - trackGapTop - trackGapBottom;
 	int envLaneCount = (int)trackLaneEnvs.size();
 	if (envLaneCount > 0)
 	{
+		int overlapLimit,trackGapTop, trackGapBottom;
+		GetConfig("env_ol_minh", overlapLimit);
+		GetTrackGap(trackHeight, &trackGapTop, &trackGapBottom);
+
+		int envLaneFull = trackHeight - trackGapTop - trackGapBottom;
 		bool envelopesOverlapping = (overlapLimit >= 0 && envLaneFull / envLaneCount < overlapLimit) ? (true) : (false);
 
 		// Each envelope has it's own lane, find the right one
@@ -1423,24 +1424,67 @@ int BR_MouseInfo::IsMouseOverEnvelopeLineTake (MediaItem_Take* take, int takeHei
 	int mouseHit = 0;
 	TrackEnvelope* envelopeUnderMouse = NULL;
 
-	takeHeight -= 2*ENV_GAP;
-	takeOffset += ENV_GAP;
-
-	for (int i = 0; i < 4; ++i)
+	// Get all visible take envelopes
+	vector<TrackEnvelope*> envelopes;
+	int count = CountTakeEnvelopes(take);
+	for (int i = 0; i < count; ++i)
 	{
-		BR_EnvType type = VOLUME;    // gotcha: the order is important (it is the same reaper uses)
-		if      (i == 1) type = PAN;
-		else if (i == 2) type = MUTE;
-		else if (i == 3) type = PITCH;
+		TrackEnvelope* envelope = GetTakeEnvelope(take, i);
+		if (EnvVis(envelope, NULL))
+			envelopes.push_back(envelope);
+	}
 
-		BR_Envelope envelope(take, type);
-		if (envelope.IsVisible())
-			mouseHit = this->IsMouseOverEnvelopeLine(envelope, takeHeight, takeOffset, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, pointUnderMouse);
+	// Find envelope under mouse cursor
+	int envelopeCount = (int)envelopes.size();
+	if (envelopeCount > 0)
+	{
+		int overlapLimit;
+		GetConfig("env_ol_minh", overlapLimit);
+		bool envelopesOverlapping = (overlapLimit >= 0 && takeHeight / envelopeCount < overlapLimit) ? (true) : (false);
 
-		if (mouseHit != 0)
+		// Each envelope has it's own lane, find the right one
+		if (!envelopesOverlapping)
 		{
-			envelopeUnderMouse = envelope.GetPointer();
-			break;
+			int envLaneH = takeHeight / envelopeCount;
+			int envHeight = envLaneH - 2*ENV_GAP;
+			if (envHeight > ENV_LINE_WIDTH)
+			{
+				for (int i = 0; i < envelopeCount; ++i)
+				{
+					int envelopeStart = takeOffset + ENV_GAP + envLaneH * i;
+					int envelopeEnd = envelopeStart + envLaneH;
+					if (mouseY >= envelopeStart && mouseY < envelopeEnd)
+					{
+						int envOffset = takeOffset + ENV_GAP + + envLaneH * i;
+						BR_Envelope envelope(envelopes[i]);
+
+						mouseHit = this->IsMouseOverEnvelopeLine(envelope, envHeight, envOffset, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, pointUnderMouse);
+						if (mouseHit != 0)
+							envelopeUnderMouse = envelope.GetPointer();
+						break;
+					}
+				}
+			}
+		}
+		// Envelopes are overlapping each other, search them all
+		else
+		{
+			int envHeight = takeHeight - 2*ENV_GAP;
+			if (envHeight > ENV_LINE_WIDTH)
+			{
+				for (int i = 0; i < envelopeCount; ++i)
+				{
+					int envOffset = takeOffset + ENV_GAP;
+					BR_Envelope envelope(envelopes[i]);
+
+					mouseHit = this->IsMouseOverEnvelopeLine(envelope, envHeight, envOffset, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, pointUnderMouse);
+					if (mouseHit != 0)
+					{
+						envelopeUnderMouse = envelope.GetPointer();
+						break;
+					}
+				}
+			}
 		}
 	}
 

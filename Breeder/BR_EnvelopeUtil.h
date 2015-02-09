@@ -148,10 +148,10 @@ public:
 	int FindClosest (double position);                       // note that caller needs to check if returned id exists
 
 	/* Points properties */
-	double ValueAtPosition (double position);         // Using find functionality, so efficiency may vary (see comment about Find())
-	double NormalizedDisplayValue (double value);     // Convert point value to 0.0 - 1.0 range as displayed in arrange
-	double RealValue (double normalizedDisplayValue); // Convert normalized display value in range 0.0 - 1.0 to real envelope value
-	double SnapValue (double value);                  // Snaps value to current settings (only relevant for take pitch envelope)
+	double ValueAtPosition (double position, bool fastMode = false); // fastMode will not use native API which is more accurate in some cases (noticed it with bezier curves), but much slower with high point count (accuracy difference should be minimal but still important when dealing with things like mouse detection where every pixel counts!)
+	double NormalizedDisplayValue (double value);                    // Convert point value to 0.0 - 1.0 range as displayed in arrange
+	double RealValue (double normalizedDisplayValue);                // Convert normalized display value in range 0.0 - 1.0 to real envelope value
+	double SnapValue (double value);                                 // Snaps value to current settings (only relevant for take pitch envelope)
 	void GetSelectedPointsExtrema (double* minimum, double* maximum);
 	bool GetPointsInTimeSelection (int* startId, int* endId, double* tStart = NULL, double* tEnd = NULL); // Presumes points are sorted, returns false if there is no time selection (if there are no points in time selection, both ids will be -1)
 
@@ -207,7 +207,7 @@ private:
 	void Build (bool takeEnvelopesUseProjectTime);
 	void UpdateConsequential ();
 	void FillFxInfo ();
-	void FillProperties () const; //to make operator== const (yes, m_properties does get modified but only if not cached already)
+	void FillProperties () const; // to make operator== const (yes, m_properties does get modified but only if not cached already)
 	WDL_FastString GetProperties ();
 	TrackEnvelope* m_envelope;
 	MediaTrack* m_parent;
@@ -215,7 +215,9 @@ private:
 	bool m_tempoMap;
 	bool m_update;
 	bool m_sorted;
+	bool m_pointsEdited;
 	double m_takeEnvOffset;
+	int m_sampleRate;
 	int m_takeEnvType;
 	int m_countConseq;
 	int m_height;

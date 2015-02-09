@@ -1,4 +1,4 @@
-<strong>REAPER v5.0pre8+ is required!</strong>
+<strong>REAPER v5.0pre12+ is required!</strong>
 
 Contextual toolbars
 +Fixed toolbars not loading in certain instances if some tracks are hidden from TCP (this also probably fixes some other issues)
@@ -28,7 +28,6 @@ Fixes:
 Other:
 +Optimized various envelope actions and ReaScript envelope functions using new envelope API (testing showed increase in performance up to x10) (not applicable to tempo envelope)
 +Various fixes for REAPER 5 compatibility (contextual toolbars, envelope actions, MIDI editor actions)
- - Note: Volume envelope fader scaling and item FX envelopes are still not supported 100% so be careful (in contextual toolbars and some envelope actions)
 
 !v2.6.2 #0 pre-release build (January 16, 2015)
 <strong>REAPER v5.0pre6+ is required!</strong> (this REAPER version supports SWS functions exported to EEL and Lua)

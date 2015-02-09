@@ -784,8 +784,8 @@ void CreateEnvPointsGrid (COMMAND_T* ct)
 				if (gridLine < t1 - (MAX_GRID_DIV/2))
 				{
 					position.push_back(gridLine);
-					value.push_back(envelope.ValueAtPosition(gridLine)); // ValueAtPosition is much more faster when dealing with sorted
-					shape.push_back(s0);                                 // points and inserting points will make envelope unsorted
+					value.push_back(envelope.ValueAtPosition(gridLine, true)); // ValueAtPosition can be much faster when dealing with sorted
+					shape.push_back(s0);                                       // points and inserting points will make envelope unsorted
 					bezier.push_back(b0);
 				}
 				else

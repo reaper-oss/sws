@@ -44,7 +44,6 @@
 * Constants                                                                   *
 ******************************************************************************/
 const int ITEM_LABEL_MIN_HEIGHT = 28;
-const int TCP_MASTER_GAP        = 5;
 const int ENV_GAP               = 4;    // bottom gap may seem like 3 when selected, but that
 const int ENV_LINE_WIDTH        = 1;    // first pixel is used to "bold" selected envelope
 
@@ -673,6 +672,11 @@ bool TcpVis (MediaTrack* track)
 	}
 	else
 		return false;
+}
+
+bool AreAllCoordsZero (RECT& r)
+{
+	return (r.bottom == 0 && r.left == 0 && r.right == 0 && r.top == 0);
 }
 
 /******************************************************************************

@@ -35,7 +35,6 @@
 * Constants                                                                   *
 ******************************************************************************/
 const int ITEM_LABEL_MIN_HEIGHT        = 28;
-const int TCP_MASTER_GAP               = 5;
 
 const int ENV_GAP                      = 4; // bottom gap may seem like 3 when selected, but that
 const int ENV_LINE_WIDTH               = 1; // first pixel is used to "bold" selected envelope
@@ -573,8 +572,8 @@ bool BR_MouseInfo::SetDetectedCCLaneAsLastClicked ()
 				double itemEnd   = itemStart + GetMediaItemInfo_Value(m_mouseInfo.item, "D_LENGTH");
 				int itemStartPx = RoundToInt(itemStart * hZoom) - si.nPos; if (itemStartPx < 0)                         itemStartPx = 0;
 				int itemEndPx   = RoundToInt(itemEnd   * hZoom) - si.nPos; if (itemEndPx   > (int)(si.nPos + si.nPage)) itemEndPx   = si.nPos + si.nPage;
-				
-				point.x = (itemStartPx + itemEndPx) / 2;                // REAPER gives priority to what's inside rather than edges 
+
+				point.x = (itemStartPx + itemEndPx) / 2;                // REAPER gives priority to what's inside rather than edges
 				if (!CheckBounds((int)point.x, itemStartPx, itemEndPx)) // (so if item's too short, edge hit-points won't stretch inside the item)
 					hwnd = NULL;
 				else

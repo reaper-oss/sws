@@ -31,6 +31,7 @@
 * Constants                                                                   *
 ******************************************************************************/
 const int SCROLLBAR_W     = 17;
+const int TCP_MASTER_GAP  = 5;
 const int NEGATIVE_INF    = -150;
 const double VOLUME_DELTA = 0.0000000000001;
 const double PAN_DELTA    = 0.001;
@@ -101,6 +102,7 @@ bool IsPlaying ();
 bool IsPaused ();
 bool IsRecording ();
 bool TcpVis (MediaTrack* track);
+bool AreAllCoordsZero (RECT& r);
 template <typename T> void GetConfig (const char* key, T& val) {val = *static_cast<T*>(GetConfigVar(key));}
 template <typename T> void SetConfig (const char* key, T  val) {*static_cast<T*>(GetConfigVar(key)) = val;}
 

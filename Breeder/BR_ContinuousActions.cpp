@@ -33,7 +33,8 @@
 /******************************************************************************
 * Constants                                                                   *
 ******************************************************************************/
-const int ACTION_FLAG = -666;
+const int ACTION_FLAG      = -666;
+const int TOOLTIP_X_OFFSET = 30;
 
 /******************************************************************************
 * Globals                                                                     *
@@ -78,7 +79,7 @@ static WDL_DLGRET TooltipWnd(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-static void SetTooltip (const char* text, POINT* p)
+static void SetTooltip (const char* text, POINT* p, RECT* bounds)
 {
 	if (text)
 	{
@@ -93,22 +94,40 @@ static void SetTooltip (const char* text, POINT* p)
 				static int s_yOffset = -27;
 			#endif
 
+			RECT r;
+			r.left = p->x + TOOLTIP_X_OFFSET;
+			r.top  = p->y + s_yOffset;
+
+			bool init = false;
 			if (!g_tooltipWnd)
 			{
 				g_tooltipWnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_BR_TOOLTIP), g_hwndParent, TooltipWnd);
 				SetWindowLongPtr(g_tooltipWnd,GWL_STYLE,GetWindowLongPtr(g_tooltipWnd,GWL_STYLE)&~WS_CAPTION);
-
-				EnableWindow(g_tooltipWnd, false);
-				DrawTooltip(g_tooltipBm, text);
-				SetWindowPos(g_tooltipWnd, HWND_TOPMOST, p->x + 30, p->y + s_yOffset, g_tooltipBm->getWidth(), g_tooltipBm->getHeight(), SWP_NOACTIVATE);
-				ShowWindow(g_tooltipWnd, SW_SHOWNOACTIVATE);
+				EnableWindow(g_tooltipWnd, false);				
+				init = true;
 			}
 			else
 			{
 				DrawTooltip(g_tooltipBm, text);
-				SetWindowPos(g_tooltipWnd, 0, p->x + 30, p->y + s_yOffset, g_tooltipBm->getWidth(), g_tooltipBm->getHeight(), SWP_NOACTIVATE|SWP_NOZORDER);
-				InvalidateRect(g_tooltipWnd, NULL, TRUE);
 			}
+
+			DrawTooltip(g_tooltipBm, text);
+			r.bottom = r.top  + g_tooltipBm->getHeight();
+			r.right  = r.left + g_tooltipBm->getWidth();
+			if (bounds)
+			{
+				// Move tooltip to left from mouse cursor if needed
+				if (r.right > bounds->right)
+				{
+					r.right = p->x - TOOLTIP_X_OFFSET;
+					r.left = r.right - g_tooltipBm->getWidth();
+				}
+				BoundToRect(*bounds, &r);
+			}
+
+			SetWindowPos(g_tooltipWnd, (init ? HWND_TOPMOST : 0), r.left, r.top, (r.right - r.left), (r.bottom - r.top), (SWP_NOACTIVATE | (init ? 0 : SWP_NOZORDER)));
+			if (init) ShowWindow(g_tooltipWnd, SW_SHOWNOACTIVATE);
+			else      InvalidateRect(g_tooltipWnd, NULL, TRUE);
 		}
 	}
 	else
@@ -132,16 +151,17 @@ static LRESULT CALLBACK ArrangeWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPA
 	}
 	else if (uMsg == WM_MOUSEMOVE && g_actionInProgress && g_actionInProgress->SetTooltip)
 	{
-		WDL_FastString tooltip = g_actionInProgress->SetTooltip(BR_ContinuousAction::ARRANGE);
+		RECT r = {0,0,0,0};
+		WDL_FastString tooltip = g_actionInProgress->SetTooltip(BR_ContinuousAction::ARRANGE, r);
 		if (tooltip.GetLength())
 		{
 			POINT p = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
 			ClientToScreen(hwnd, &p);
-			SetTooltip(tooltip.Get(), &p);
+			SetTooltip(tooltip.Get(), &p, (AreAllCoordsZero(r) ? NULL : &r));
 		}
 		else
 		{
-			SetTooltip(NULL, NULL);
+			SetTooltip(NULL, NULL, NULL);
 		}
 	}
 
@@ -160,16 +180,17 @@ static LRESULT CALLBACK RulerWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 	}
 	else if (uMsg == WM_MOUSEMOVE && g_actionInProgress && g_actionInProgress->SetTooltip)
 	{
-		WDL_FastString tooltip = g_actionInProgress->SetTooltip(BR_ContinuousAction::RULER);
+		RECT r = {0,0,0,0};
+		WDL_FastString tooltip = g_actionInProgress->SetTooltip(BR_ContinuousAction::RULER, r);
 		if (tooltip.GetLength())
 		{
 			POINT p = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
 			ClientToScreen(hwnd, &p);
-			SetTooltip(tooltip.Get(), &p);
+			SetTooltip(tooltip.Get(), &p, (AreAllCoordsZero(r) ? NULL : &r));
 		}
 		else
 		{
-			SetTooltip(NULL, NULL);
+			SetTooltip(NULL, NULL, NULL);
 		}
 	}
 	return g_rulerWndProc(hwnd, uMsg, wParam, lParam);
@@ -197,8 +218,8 @@ static void ContinuousActionTimer ()
 			POINT p;
 			GetCursorPos(&p);
 			HWND hwnd = WindowFromPoint(p);
-			if (hwnd != GetArrangeWnd() && hwnd != GetRulerWnd())
-				SetTooltip(NULL, NULL);
+			if (hwnd != GetArrangeWnd() && hwnd != GetRulerWnd() && hwnd != g_tooltipWnd)
+				SetTooltip(NULL, NULL, NULL);
 		}
 		Main_OnCommand(g_actionInProgress->cmd, ACTION_FLAG);
 	}
@@ -238,11 +259,12 @@ static bool ContinuousActionInit (bool init, int cmd, BR_ContinuousAction* actio
 				{
 					if (g_actionInProgress->SetTooltip)
 					{
-						WDL_FastString tooltip = g_actionInProgress->SetTooltip(BR_ContinuousAction::ARRANGE);
+						RECT r = {0,0,0,0};
+						WDL_FastString tooltip = g_actionInProgress->SetTooltip(BR_ContinuousAction::ARRANGE, r);
 						if (tooltip.GetLength())
 						{
 							POINT p; GetCursorPos(&p);
-							SetTooltip(tooltip.Get(), &p);
+							SetTooltip(tooltip.Get(), &p, (AreAllCoordsZero(r) ? NULL : &r));
 						}
 					}
 					g_arrangeWndProc = (WNDPROC)SetWindowLongPtr(GetArrangeWnd(), GWLP_WNDPROC, (LONG_PTR)ArrangeWndProc);
@@ -255,11 +277,12 @@ static bool ContinuousActionInit (bool init, int cmd, BR_ContinuousAction* actio
 				{
 					if (g_actionInProgress->SetTooltip)
 					{
-						WDL_FastString tooltip = g_actionInProgress->SetTooltip(BR_ContinuousAction::RULER);
+						RECT r = {0,0,0,0};
+						WDL_FastString tooltip = g_actionInProgress->SetTooltip(BR_ContinuousAction::RULER, r);
 						if (tooltip.GetLength())
 						{
 							POINT p; GetCursorPos(&p);
-							SetTooltip(tooltip.Get(), &p);
+							SetTooltip(tooltip.Get(), &p, (AreAllCoordsZero(r) ? NULL : &r));
 						}
 					}
 
@@ -298,7 +321,7 @@ static bool ContinuousActionInit (bool init, int cmd, BR_ContinuousAction* actio
 			g_rulerWndProc = NULL;
 		}
 
-		SetTooltip(NULL, NULL);
+		SetTooltip(NULL, NULL, NULL);
 
 		plugin_register("-accelerator", &s_accelerator);
 		plugin_register("-timer", (void*)ContinuousActionTimer);

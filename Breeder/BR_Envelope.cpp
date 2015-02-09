@@ -90,7 +90,7 @@ static HCURSOR EnvMouseCursor (int window)
 		return NULL;
 }
 
-static WDL_FastString EnvMouseTooltip (int window)
+static WDL_FastString EnvMouseTooltip (int window, RECT& bounds)
 {
 	WDL_FastString tooltip;
 
@@ -114,6 +114,30 @@ static WDL_FastString EnvMouseTooltip (int window)
 
 			static const char* s_format = __localizeFunc("Envelope: %s\n%s at %s", "tooltip", 0);
 			tooltip.AppendFormatted(512, s_format, (g_envMouseEnvelope->GetName()).Get(), (g_envMouseEnvelope->FormatValue(value)).Get(), FormatTime(position).Get());
+
+			static RECT s_bounds;
+			if (g_envMouseMode == -666) // action called for the first time, calculate bounding rect
+			{
+				HWND arrangeWnd = GetArrangeWnd();
+				GetWindowRect(arrangeWnd, &s_bounds);
+				s_bounds.right  -= SCROLLBAR_W;
+				s_bounds.bottom -= SCROLLBAR_W;
+
+				int arrangeEnd = 0;
+				if (TcpVis(GetMasterTrack(NULL)))
+					arrangeEnd += (int)GetMediaTrackInfo_Value(GetMasterTrack(NULL), "I_WNDH") + TCP_MASTER_GAP;
+				for (int i = 0; i < CountTracks(NULL); ++i)
+					arrangeEnd += TcpVis(GetTrack(NULL, i)) ? (int)GetMediaTrackInfo_Value(GetTrack(NULL, i), "I_WNDH") : 0;
+				
+				SCROLLINFO si = { sizeof(SCROLLINFO), };
+				si.fMask = SIF_ALL;
+				CoolSB_GetScrollInfo(arrangeWnd, SB_VERT, &si);
+
+				int pageEnd = si.nPos + si.nPage + SCROLLBAR_W + 1;
+				if (pageEnd > arrangeEnd)
+					s_bounds.bottom -= (pageEnd - arrangeEnd);
+			}
+			bounds = s_bounds;
 		}
 
 	}
@@ -122,8 +146,8 @@ static WDL_FastString EnvMouseTooltip (int window)
 
 void SetEnvPointMouseValueInit ()
 {
-	ContinuousActionRegister(new BR_ContinuousAction(NamedCommandLookup("_BR_ENV_PT_VAL_CLOSEST_MOUSE"),      &EnvMouseInit, &EnvMouseUndo, &EnvMouseCursor, EnvMouseTooltip));
-	ContinuousActionRegister(new BR_ContinuousAction(NamedCommandLookup("_BR_ENV_PT_VAL_CLOSEST_LEFT_MOUSE"), &EnvMouseInit, &EnvMouseUndo, &EnvMouseCursor, EnvMouseTooltip));
+	ContinuousActionRegister(new BR_ContinuousAction(NamedCommandLookup("_BR_ENV_PT_VAL_CLOSEST_MOUSE"),      &EnvMouseInit, &EnvMouseUndo, &EnvMouseCursor, &EnvMouseTooltip));
+	ContinuousActionRegister(new BR_ContinuousAction(NamedCommandLookup("_BR_ENV_PT_VAL_CLOSEST_LEFT_MOUSE"), &EnvMouseInit, &EnvMouseUndo, &EnvMouseCursor, &EnvMouseTooltip));
 }
 
 /******************************************************************************

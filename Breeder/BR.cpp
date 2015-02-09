@@ -41,6 +41,24 @@
 #include "../reaper/localize.h"
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
+static COMMAND_T g_continuousCommandTable[] =
+{
+	/******************************************************************************
+	* Envelopes - Misc                                                            *
+	******************************************************************************/
+	{ { DEFACCEL, "SWS/BR: Set closest envelope point's value to mouse cursor (perform until shortcut released)" },           "BR_ENV_PT_VAL_CLOSEST_MOUSE",      SetEnvPointMouseValue, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Set closest left side envelope point's value to mouse cursor (perform until shortcut released)" }, "BR_ENV_PT_VAL_CLOSEST_LEFT_MOUSE", SetEnvPointMouseValue, NULL, 1},
+
+	/******************************************************************************
+	* Tempo - Grid                                                                *
+	******************************************************************************/
+	{ { DEFACCEL, "SWS/BR: Move closest tempo marker to mouse cursor (perform until shortcut released)" },      "BR_MOVE_CLOSEST_TEMPO_MOUSE", MoveGridToMouse, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Move closest grid line to mouse cursor (perform until shortcut released)" },         "BR_MOVE_GRID_TO_MOUSE",       MoveGridToMouse, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Move closest measure grid line to mouse cursor (perform until shortcut released)" }, "BR_MOVE_M_GRID_TO_MOUSE",     MoveGridToMouse, NULL, 2},
+
+	{ {}, LAST_COMMAND, },
+};
+
 static COMMAND_T g_commandTable[] =
 {
 	/******************************************************************************
@@ -689,38 +707,14 @@ static COMMAND_T g_commandTable[] =
 
 	{ {}, LAST_COMMAND, },
 };
-
-// Separate so their cmds are consequential to optimize command hook (see ContinuousActionHook())
-static COMMAND_T g_continuousCommandTable[] =
-{
-	/******************************************************************************
-	* Envelopes - Misc                                                            *
-	******************************************************************************/
-	{ { DEFACCEL, "SWS/BR: Set closest envelope point's value to mouse cursor (perform until shortcut released)" },           "BR_ENV_PT_VAL_CLOSEST_MOUSE",      SetEnvPointMouseValue, NULL, 0},
-	{ { DEFACCEL, "SWS/BR: Set closest left side envelope point's value to mouse cursor (perform until shortcut released)" }, "BR_ENV_PT_VAL_CLOSEST_LEFT_MOUSE", SetEnvPointMouseValue, NULL, 1},
-
-	/******************************************************************************
-	* Tempo - Grid                                                                *
-	******************************************************************************/
-	{ { DEFACCEL, "SWS/BR: Move closest tempo marker to mouse cursor (perform until shortcut released)" },      "BR_MOVE_CLOSEST_TEMPO_MOUSE", MoveGridToMouse, NULL, 0},
-	{ { DEFACCEL, "SWS/BR: Move closest grid line to mouse cursor (perform until shortcut released)" },         "BR_MOVE_GRID_TO_MOUSE",       MoveGridToMouse, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Move closest measure grid line to mouse cursor (perform until shortcut released)" }, "BR_MOVE_M_GRID_TO_MOUSE",     MoveGridToMouse, NULL, 2},
-
-	{ {}, LAST_COMMAND, },
-};
 //!WANT_LOCALIZE_1ST_STRING_END
 
 int BR_Init ()
 {
 	SWSRegisterCommands(g_commandTable);
-	SWSRegisterCommands(g_continuousCommandTable);
 
-	// Register continuous actions - call after registering all actions
-	MoveGridToMouseInit();
-	SetEnvPointMouseValueInit();
-
-	// Other
 	ContextualToolbarsInit();
+	ContinuousActionsInit();
 	LoudnessInit();
 	ProjStateInit();
 	VersionCheckInit();
@@ -731,6 +725,15 @@ int BR_Init ()
 void BR_Exit ()
 {
 	LoudnessExit();
+}
+
+void BR_RegisterContinuousActions ()
+{
+	SWSRegisterCommands(g_continuousCommandTable);
+
+	// Call these only after registering commands (they expect for cmd to be valid at this point)
+	MoveGridToMouseInit();
+	SetEnvPointMouseValueInit();
 }
 
 bool BR_ActionHook (int cmd, int flag)

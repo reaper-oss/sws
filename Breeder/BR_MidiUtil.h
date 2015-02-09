@@ -85,12 +85,14 @@ const int MIDI_RULER_H                 = 64;
 const int MIDI_LANE_DIVIDER_H          = 9;
 const int MIDI_LANE_TOP_GAP            = 4;
 const int MIDI_BLACK_KEYS_W            = 73;
+const int MIDI_CC_LANE_CLICK_Y_OFFSET  = 5;
 
-const int INLINE_MIDI_MIN_H            = 32;
-const int INLINE_MIDI_MIN_NOTEVIEW_H   = 24;
-const int INLINE_MIDI_LANE_DIVIDER_H   = 6;
-const int INLINE_MIDI_KEYBOARD_W       = 12;
-const int INLINE_MIDI_TOP_BAR_H        = 17;
+const int INLINE_MIDI_MIN_H                  = 32;
+const int INLINE_MIDI_MIN_NOTEVIEW_H         = 24;
+const int INLINE_MIDI_LANE_DIVIDER_H         = 6;
+const int INLINE_MIDI_KEYBOARD_W             = 12;
+const int INLINE_MIDI_TOP_BAR_H              = 17;
+const int INLINE_MIDI_CC_LANE_CLICK_Y_OFFSET = 2;
 
 /******************************************************************************
 * Class for managing normal or inline MIDI editor (read-only for now)         *
@@ -120,6 +122,7 @@ public:
 	int GetCCLaneHeight (int idx);
 	int GetLastClickedCCLane ();
 	int FindCCLane (int lane);
+	int GetCCLanesFullheight (bool keyboardView);
 	bool IsCCLaneVisible (int lane);
 
 	/* Event filter */

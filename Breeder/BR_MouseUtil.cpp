@@ -418,7 +418,7 @@ MediaTrack* TrackAtMouseCursor (int* context, double* position)
 * BR_MouseInfo                                                                *
 ******************************************************************************/
 BR_MouseInfo::BR_MouseInfo (int mode /*= BR_MouseInfo::MODE_ALL*/, bool updateNow /*= true*/) :
-m_ccLaneClickPointHwnd (NULL)
+m_midiEditorPianoWnd (NULL)
 {
 	m_mode = mode;
 	if (updateNow)
@@ -437,7 +437,7 @@ void BR_MouseInfo::Update (const POINT* p /*=NULL*/)
 	else
 		GetCursorPos(&currentPoint);
 
-	m_ccLaneClickPointHwnd = NULL;
+	m_midiEditorPianoWnd = NULL;
 	this->GetContext(currentPoint);
 }
 
@@ -551,10 +551,8 @@ bool BR_MouseInfo::SetDetectedCCLaneAsLastClicked ()
 	{
 		if (m_mouseInfo.midiEditor || m_mouseInfo.inlineMidi)
 		{
-			// Save current focus and locking settings
-			HWND focusedHwnd;
-			int focusedContext;
-			GetSetFocus(false, &focusedHwnd, &focusedContext);
+			POINT point = m_ccLaneClickPoint;
+
 			int lockSettings; GetConfig("projsellock", lockSettings);
 			char itemLock = m_mouseInfo.inlineMidi ? (char)GetMediaItemInfo_Value(GetMediaItemTake_Item(m_mouseInfo.take), "C_LOCK") : 0;
 
@@ -566,17 +564,18 @@ bool BR_MouseInfo::SetDetectedCCLaneAsLastClicked ()
 				SCROLLINFO si = { sizeof(SCROLLINFO), };
 				si.fMask = SIF_ALL;
 				CoolSB_GetScrollInfo(hwnd, SB_VERT, &si);
-				m_ccLaneClickPoint.y -= si.nPos;
+				point.y -= si.nPos;
 
 				CoolSB_GetScrollInfo(hwnd, SB_HORZ, &si);
 				double hZoom = GetHZoomLevel();
+
 				double itemStart = GetMediaItemInfo_Value(m_mouseInfo.item, "D_POSITION");
 				double itemEnd   = itemStart + GetMediaItemInfo_Value(m_mouseInfo.item, "D_LENGTH");
 				int itemStartPx = RoundToInt(itemStart * hZoom) - si.nPos; if (itemStartPx < 0)                         itemStartPx = 0;
-				int itemEndPx   = RoundToInt(itemEnd   * hZoom) - si.nPos; if (itemEndPx   > (int)(si.nPos + si.nPage)) itemEndPx = si.nPos + si.nPage;
+				int itemEndPx   = RoundToInt(itemEnd   * hZoom) - si.nPos; if (itemEndPx   > (int)(si.nPos + si.nPage)) itemEndPx   = si.nPos + si.nPage;
 				
-				m_ccLaneClickPoint.x = (itemStartPx + itemEndPx) / 2;                // REAPER gives priority to what's inside rather than edges 
-				if (!CheckBounds((int)m_ccLaneClickPoint.x, itemStartPx, itemEndPx)) // (so if item's too short, edge hit-points won't stretch inside the item)
+				point.x = (itemStartPx + itemEndPx) / 2;                // REAPER gives priority to what's inside rather than edges 
+				if (!CheckBounds((int)point.x, itemStartPx, itemEndPx)) // (so if item's too short, edge hit-points won't stretch inside the item)
 					hwnd = NULL;
 				else
 				{
@@ -586,26 +585,18 @@ bool BR_MouseInfo::SetDetectedCCLaneAsLastClicked ()
 			}
 			else
 			{
-				hwnd = m_ccLaneClickPointHwnd ? m_ccLaneClickPointHwnd : GetPianoView(m_mouseInfo.midiEditor);
-				if (!m_ccLaneClickPointHwnd)
+				hwnd = m_midiEditorPianoWnd ? m_midiEditorPianoWnd : GetPianoView(m_mouseInfo.midiEditor);
+				if (!m_midiEditorPianoWnd)
 				{
 					RECT r; GetClientRect(hwnd, &r);
-					m_ccLaneClickPoint.x = r.left - r.right;
+					point.x = r.left - r.right;
 				}
 			}
 
 			// Simulate mouse click
 			if (hwnd)
 			{
-				HWND captureHwnd = GetCapture();
-				SetCapture(hwnd);
-				SendMessage(hwnd, WM_LBUTTONDOWN, 0, MAKELPARAM((UINT)(m_ccLaneClickPoint.x), (UINT)(m_ccLaneClickPoint.y)));
-				SendMessage(hwnd, WM_LBUTTONUP,   0, MAKELPARAM((UINT)(m_ccLaneClickPoint.x), (UINT)(m_ccLaneClickPoint.y)));
-				ReleaseCapture();
-				SetCapture(captureHwnd);
-
-				// And restore the focus back (not exactly nice (window may blink), but we have no alternative for now) :/
-				GetSetFocus(true, &focusedHwnd, &focusedContext);
+				SimulateMouseClick(hwnd, point, true);
 				if (m_mouseInfo.inlineMidi)
 				{
 					SetConfig("projsellock", lockSettings);
@@ -911,13 +902,8 @@ bool BR_MouseInfo::GetContextMIDI (POINT p, HWND hwnd, BR_MouseInfo::MouseInfo& 
 			// Check others
 			else
 			{
-				int viewHeight = r.bottom - r.top;
-				int ccFullHeight = 0;
-
-				for (int i = 0; i < midiEditor.CountCCLanes(); ++i)
-					ccFullHeight += midiEditor.GetCCLaneHeight (i);
-				if (cursorSegment == MIDI_WND_KEYBOARD)
-					ccFullHeight += SCROLLBAR_W - 3;   // envelope selector is not completely aligned with CC lane
+				int viewHeight = abs(r.bottom - r.top);
+				int ccFullHeight = midiEditor.GetCCLanesFullheight(cursorSegment == MIDI_WND_KEYBOARD);
 
 				// Over CC lanes
 				if (p.y > (viewHeight - ccFullHeight))
@@ -939,9 +925,9 @@ bool BR_MouseInfo::GetContextMIDI (POINT p, HWND hwnd, BR_MouseInfo::MouseInfo& 
 						{
 							mouseInfo.ccLane = midiEditor.GetCCLane(i);
 							mouseInfo.ccLaneId = i;
-							m_ccLaneClickPoint.y   = ccStart + 5;
-							m_ccLaneClickPoint.x   = (cursorSegment == MIDI_WND_KEYBOARD) ? (r.left - r.right) : 0;
-							m_ccLaneClickPointHwnd = (cursorSegment == MIDI_WND_KEYBOARD) ? segmentHwnd        : NULL;
+							m_ccLaneClickPoint.y = ccStart + MIDI_CC_LANE_CLICK_Y_OFFSET;
+							m_ccLaneClickPoint.x = (cursorSegment == MIDI_WND_KEYBOARD) ? (r.left - r.right) : 0;
+							m_midiEditorPianoWnd = (cursorSegment == MIDI_WND_KEYBOARD) ? segmentHwnd        : NULL;
 
 							// Get CC value at Y position
 							if (cursorSegment == MIDI_WND_NOTEVIEW)
@@ -1107,9 +1093,7 @@ bool BR_MouseInfo::GetContextMIDIInline (BR_MouseInfo::MouseInfo& mouseInfo, int
 			mouseInfo.pianoRollMode = midiEditor.GetPianoRoll();
 
 		// Get heights of various elements
-		int ccFullHeight = 0;
-		for (int i = 0; i < midiEditor.CountCCLanes(); ++i)
-			ccFullHeight +=midiEditor.GetCCLaneHeight(i);
+		int ccFullHeight = midiEditor.GetCCLanesFullheight(false);
 
 		int pianoRollFullHeight = editorHeight - ccFullHeight;
 		if (pianoRollFullHeight < INLINE_MIDI_MIN_NOTEVIEW_H)
@@ -1132,12 +1116,12 @@ bool BR_MouseInfo::GetContextMIDIInline (BR_MouseInfo::MouseInfo& mouseInfo, int
 
 				if (mouseY >= ccStart && mouseY < ccEnd)
 				{
-					mouseInfo.ccLane = midiEditor.GetCCLane(i);
+					mouseInfo.ccLane   = midiEditor.GetCCLane(i);
 					mouseInfo.ccLaneId = i;
 
-					m_ccLaneClickPoint.y   = ccStart + 2; // account for different hit-point
-					m_ccLaneClickPoint.x   = mouseDisplayX;
-					m_ccLaneClickPointHwnd = NULL;
+					m_ccLaneClickPoint.y = ccStart + INLINE_MIDI_CC_LANE_CLICK_Y_OFFSET;
+					m_ccLaneClickPoint.x = mouseDisplayX;
+					m_midiEditorPianoWnd = NULL;
 
 					// Get CC value at Y position
 					ccStart += INLINE_MIDI_LANE_DIVIDER_H;

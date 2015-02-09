@@ -316,6 +316,7 @@ static COMMAND_T g_commandTable[] =
 
 	{ { DEFACCEL, "SWS/BR: Insert CC event at edit cursor in CC lane under mouse cursor (active item only)" },                            "BR_ME_INSERT_CC_EDIT_CURSOR_MOUSE_LANE",       NULL, NULL, 0, NULL, SECTION_MIDI_EDITOR, ME_CCEventAtEditCursor},
 	{ { DEFACCEL, "SWS/BR: Show only used CC lanes (detect 14-bit)" },                                                                    "BR_ME_SHOW_USED_CC_14_BIT",                    NULL, NULL, 0, NULL, SECTION_MIDI_EDITOR, ME_ShowUsedCCLanesDetect14Bit},
+	{ { DEFACCEL, "SWS/BR: Create CC lane and make it last clicked" },                                                                    "BR_ME_CREATE_CC_LAST_CLICKED",                 NULL, NULL, 0, NULL, SECTION_MIDI_EDITOR, ME_CreateCCLaneLastClicked},
 
 	{ { DEFACCEL, "SWS/BR: Hide last clicked CC lane" },                                                                                  "BR_ME_HIDE_LAST_CLICKED_LANE",                 NULL, NULL, 1,   NULL,                     SECTION_MIDI_EDITOR, ME_HideCCLanes},
 	{ { DEFACCEL, "SWS/BR: Hide all CC lanes except last clicked CC lane" },                                                              "BR_ME_HIDE_ALL_NO_LAST_CLICKED",               NULL, NULL, 2,   NULL,                     SECTION_MIDI_EDITOR, ME_HideCCLanes},
@@ -707,7 +708,6 @@ static COMMAND_T g_continuousCommandTable[] =
 
 	{ {}, LAST_COMMAND, },
 };
-
 //!WANT_LOCALIZE_1ST_STRING_END
 
 int BR_Init ()

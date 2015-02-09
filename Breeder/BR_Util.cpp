@@ -1036,8 +1036,7 @@ bool SetTakeSourceFromFile (MediaItem_Take* take, const char* filename, bool inP
 
 GUID GetItemGuid (MediaItem* item)
 {
-	if (item)
-		return (item) ? (*(GUID*)GetSetMediaItemInfo(item, "GUID", NULL)) : GUID_NULL;
+	return (item) ? (*(GUID*)GetSetMediaItemInfo(item, "GUID", NULL)) : GUID_NULL;
 }
 
 MediaItem* GuidToItem(const GUID* guid)
@@ -2509,6 +2508,27 @@ void BoundToRect (const RECT& boundingRect, RECT* r)
 	}
 
 	EnsureNotCompletelyOffscreen(r); // just in case
+}
+
+void SimulateMouseClick (HWND hwnd, POINT point, bool keepCurrentFocus)
+{
+	if (hwnd)
+	{
+		HWND focusedHwnd;
+		int focusedContext;
+		if (keepCurrentFocus)
+			GetSetFocus(false, &focusedHwnd, &focusedContext);
+
+		HWND captureHwnd = GetCapture();
+		SetCapture(hwnd);
+		SendMessage(hwnd, WM_LBUTTONDOWN, 0, MAKELPARAM((UINT)(point.x), (UINT)(point.y)));
+		SendMessage(hwnd, WM_LBUTTONUP,   0, MAKELPARAM((UINT)(point.x), (UINT)(point.y)));
+		ReleaseCapture();
+		SetCapture(captureHwnd);
+
+		if (keepCurrentFocus)
+			GetSetFocus(true, &focusedHwnd, &focusedContext);
+	}
 }
 
 /******************************************************************************

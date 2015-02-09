@@ -164,6 +164,6 @@ private:
 
 	BR_MouseInfo::MouseInfo m_mouseInfo;
 	POINT m_ccLaneClickPoint;
-	HWND  m_ccLaneClickPointHwnd;
+	HWND  m_midiEditorPianoWnd;
 	int m_mode;
 };

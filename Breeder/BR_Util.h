@@ -212,6 +212,7 @@ TrackEnvelope* HwndToEnvelope (HWND hwnd);
 void CenterDialog (HWND hwnd, HWND target, HWND zOrder);
 void GetMonitorRectFromPoint (const POINT& p, RECT* r);
 void BoundToRect (const RECT& boundingRect, RECT* r);
+void SimulateMouseClick (HWND hwnd, POINT point, bool keepCurrentFocus);
 
 /******************************************************************************
 * Theming                                                                     *

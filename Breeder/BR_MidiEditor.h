@@ -44,6 +44,7 @@ void ME_PreviewActiveTake (COMMAND_T*, int, int, int, HWND);
 void ME_PlaybackAtMouseCursor (COMMAND_T*, int, int, int, HWND);
 void ME_CCEventAtEditCursor (COMMAND_T*, int, int, int, HWND);
 void ME_ShowUsedCCLanesDetect14Bit (COMMAND_T*, int, int, int, HWND);
+void ME_CreateCCLaneLastClicked (COMMAND_T*, int, int, int, HWND);
 void ME_HideCCLanes (COMMAND_T*, int, int, int, HWND);
 void ME_ToggleHideCCLanes (COMMAND_T*, int, int, int, HWND);
 void ME_CCToEnvPoints (COMMAND_T*, int, int, int, HWND);

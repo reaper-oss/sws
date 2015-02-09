@@ -236,6 +236,18 @@ int BR_MidiEditor::FindCCLane (int lane)
 	return id;
 }
 
+int BR_MidiEditor::GetCCLanesFullheight (bool keyboardView)
+{
+	int fullHeight = 0;
+	for (int i = 0; i < m_ccLanesCount; ++i)
+		fullHeight += m_ccLanesHeight[i];
+
+	if (m_midiEditor && keyboardView)
+		fullHeight += SCROLLBAR_W - 3;   // cc lane selector is not completely aligned with CC lane
+
+	return fullHeight;
+}
+
 bool BR_MidiEditor::IsCCLaneVisible (int lane)
 {
 	for (size_t i = 0; i < m_ccLanes.size(); ++i)

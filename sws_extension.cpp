@@ -634,6 +634,7 @@ extern "C"
 		IMPAPI(CountProjectMarkers);
 		IMPAPI(CountSelectedMediaItems);
 		IMPAPI(CountSelectedTracks);
+	IMPAPI(CountTakeEnvelopes) // v5pre12+
 		IMPAPI(CountTakes);
 		IMPAPI(CountTCPFXParms);
 		IMPAPI(CountTempoTimeSigMarkers);
@@ -656,6 +657,8 @@ extern "C"
 		IMPAPI(CSurf_TrackFromID);
 		IMPAPI(CSurf_TrackToID);
 		IMPAPI(DB2SLIDER);
+	IMPAPI(DEF_SLIDER2VAL); // v5pre12+
+	IMPAPI(DEF_VAL2SLIDER); // v5pre12+
 	IMPAPI(DeleteEnvelopePointRange); // v5pre5+
 		IMPAPI(DeleteActionShortcut);
 		IMPAPI(DeleteProjectMarker);
@@ -678,6 +681,7 @@ extern "C"
 		IMPAPI(EnumProjectMarkers2);
 		IMPAPI(EnumProjectMarkers3);
 		IMPAPI(EnumProjects);
+	IMPAPI(Envelope_Evaluate); // v5pre4+
 	IMPAPI(Envelope_SortPoints); // v5pre4+
 		IMPAPI(file_exists);
 		IMPAPI(format_timestr);
@@ -769,6 +773,7 @@ extern "C"
 		IMPAPI(GetSet_LoopTimeRange2);
 		IMPAPI(GetSubProjectFromSource);
 		IMPAPI(GetTake);
+	IMPAPI(GetTakeEnvelope); // v5pre12+
 		IMPAPI(GetTakeNumStretchMarkers);
 		IMPAPI(GetTCPFXParm);
 		IMPAPI(GetToggleCommandState);

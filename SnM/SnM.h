@@ -142,7 +142,7 @@
 
 #define SNM_MAX_PATH				2048
 #define SNM_MAX_HW_OUTS				8
-#define SNM_MAX_CC_LANE_ID			133
+#define SNM_MAX_CC_LANE_ID			167 // v5pre11
 #define SNM_MAX_CC_LANES_LEN		4096
 #define SNM_MAX_TRACK_GROUPS		32
 #define SNM_MAX_CUE_BUSS_CONFS		8

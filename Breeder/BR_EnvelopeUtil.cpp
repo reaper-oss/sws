@@ -44,6 +44,7 @@ sig      (0),
 partial  (0)
 {
 }
+
 BR_EnvPoint::BR_EnvPoint (double position) :
 position (position),
 value    (0),
@@ -716,14 +717,14 @@ double BR_Envelope::ValueAtPosition (double position, bool fastMode /*= false*/)
 	position -= m_takeEnvOffset;
 	int	id = this->FindPrevious(position, 0);
 
+	bool faderMode = this->IsVolScaledToFader();
 	if (!m_pointsEdited && !fastMode)
 	{
 		if (m_sampleRate == -1)
 			GetConfig("projsrate", m_sampleRate);
 		double value;
-		Envelope_Evaluate(m_envelope, position, m_sampleRate, 1, &value, NULL, NULL, NULL); // slower then our way with high point count (probably because we use binary search while cockos uses linear) but more accurate
-
-		return (this->IsVolScaledToFader()) ? DEF_SLIDER2VAL(value) : value;
+		Envelope_Evaluate(m_envelope, position, m_sampleRate, 1, &value, NULL, NULL, NULL); // slower than our way with high point count (probably because we use binary search while Cockos uses linear) but more accurate
+		return (faderMode) ? DEF_SLIDER2VAL(value) : value;
 	}
 	else
 	{
@@ -738,7 +739,7 @@ double BR_Envelope::ValueAtPosition (double position, bool fastMode /*= false*/)
 		}
 
 		// No next point?
-		int nextId = (m_sorted) ? (id+1) : this->FindNext(m_points[id].position, 0);
+		int nextId = (m_sorted) ? (id + 1) : this->FindNext(m_points[id].position, 0);
 		if (!this->ValidateId(nextId))
 			return m_points[id].value;
 
@@ -751,8 +752,6 @@ double BR_Envelope::ValueAtPosition (double position, bool fastMode /*= false*/)
 		double t2 = m_points[nextId].position;
 		double v1 = m_points[id].value;
 		double v2 = m_points[nextId].value;
-
-		bool faderMode = this->IsVolScaledToFader();
 		if (faderMode)
 		{
 			v1 = this->NormalizedDisplayValue(v1);
@@ -1032,7 +1031,6 @@ bool BR_Envelope::VisibleInArrange (int* envHeight, int* yOffset, bool cacheValu
 		int envelopeEnd = m_yOffset + m_height;
 		int pageEnd = si.nPos + (int)si.nPage + SCROLLBAR_W;
 
-
 		if (AreOverlappedEx(m_yOffset, envelopeEnd, si.nPos, pageEnd))
 		{
 			double arrangeStart, arrangeEnd;
@@ -1166,21 +1164,28 @@ WDL_FastString BR_Envelope::FormatValue (double value)
 
 	else if (this->Type() == PARAMETER)
 	{
-		// TrackFX_FormatParamValue() unselects currently selected envelope: http://forum.cockos.com/showpost.php?p=1465316&postcount=113
-		TrackEnvelope* selectedEnv = GetSelectedEnvelope(NULL);
-		HWND hwnd; int context;
-		GetSetFocus (false, &hwnd, &context);
-
-		char tmp[256];
-		TrackFX_FormatParamValue(this->GetParent(), this->GetFxId(), this->GetParamId(), value, tmp, sizeof(tmp));
-
-		if (selectedEnv)
+		if (m_take)
 		{
-			SetCursorContext(2, selectedEnv);
-			GetSetFocus(true, &hwnd, &context);
+			formatedValue.AppendFormatted(256, "%.2lf", value);
 		}
-		if (strlen(tmp) == 0) formatedValue.AppendFormatted(256, "%.2lf", value); // because TrackFX_FormatParamValue() only works with FX that support Cockos VST extensions.
-		else                  formatedValue.AppendFormatted(256, "%s", tmp);
+		else
+		{
+			// TrackFX_FormatParamValue() unselects currently selected envelope: http://forum.cockos.com/showpost.php?p=1465316&postcount=113
+			TrackEnvelope* selectedEnv = GetSelectedEnvelope(NULL);
+			HWND hwnd; int context;
+			GetSetFocus (false, &hwnd, &context);
+
+			char tmp[256];
+			TrackFX_FormatParamValue(this->GetParent(), this->GetFxId(), this->GetParamId(), value, tmp, sizeof(tmp));
+
+			if (selectedEnv)
+			{
+				SetCursorContext(2, selectedEnv);
+				GetSetFocus(true, &hwnd, &context);
+			}
+			if (strlen(tmp) == 0) formatedValue.AppendFormatted(256, "%.2lf", value); // because TrackFX_FormatParamValue() only works with FX that support Cockos VST extensions.
+			else                  formatedValue.AppendFormatted(256, "%s", tmp);
+		}
 	}
 
 	return formatedValue;

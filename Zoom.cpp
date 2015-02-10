@@ -194,7 +194,7 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers, bo
 	}
 	else
 	{
-		vector<vector<int>> envelopeHeights;
+		vector<vector<int> > envelopeHeights;
 		for (int i = 0; i < iNum; i++)
 		{
 			if (i+iFirst <= lastTrackId) // don't check envelope lanes height for the last track if includeEnvelopes == true
@@ -227,7 +227,7 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers, bo
 				{
 					int trackHeight = GetTrackHeightFromVZoomIndex(tr, iZoom);
 
-					if (i < envelopeHeights.size())
+					if (i < (int)envelopeHeights.size())
 					{
 						for (size_t j = 0; j < envelopeHeights[i].size(); j++)
 						{

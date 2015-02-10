@@ -103,7 +103,7 @@ static void SetTooltip (const char* text, POINT* p, RECT* bounds)
 			{
 				g_tooltipWnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_BR_TOOLTIP), g_hwndParent, TooltipWnd);
 				SetWindowLongPtr(g_tooltipWnd,GWL_STYLE,GetWindowLongPtr(g_tooltipWnd,GWL_STYLE)&~WS_CAPTION);
-				EnableWindow(g_tooltipWnd, false);				
+				EnableWindow(g_tooltipWnd, false);
 				init = true;
 			}
 			else

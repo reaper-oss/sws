@@ -737,7 +737,6 @@ m_slot (slot)
 		GUID guid;
 		stringToGuid(lp.gettoken_str(0), &guid);
 		pair<GUID,int> trackState;
-
 		trackState.first  = guid;
 		trackState.second = lp.gettoken_int(1);
 		m_items.push_back(trackState);
@@ -767,7 +766,9 @@ void BR_ItemMuteState::Save (bool selectedOnly)
 	for (int i = 0; i < count; ++i)
 	{
 		MediaItem* item = (selectedOnly) ? GetSelectedMediaItem(NULL, i) : GetMediaItem(NULL, i);
-		pair<GUID,int> trackState = {GetItemGuid(item), (int)GetMediaItemInfo_Value(item, "B_MUTE")};
+		pair<GUID,int> trackState;
+		trackState.first  = GetItemGuid(item);
+		trackState.second = (int)GetMediaItemInfo_Value(item, "B_MUTE");
 		m_items.push_back(trackState);
 	}
 	MarkProjectDirty(NULL);
@@ -819,7 +820,10 @@ m_slot (slot)
 
 		GUID guid;
 		stringToGuid(lp.gettoken_str(0), &guid);
-		pair<GUID,pair<int,int> > trackState = {guid, {lp.gettoken_int(1), lp.gettoken_int(2)}};
+		pair<GUID,pair<int,int> > trackState;
+		trackState.first         = guid;
+		trackState.second.first  = lp.gettoken_int(1);
+		trackState.second.second = lp.gettoken_int(2);
 		m_tracks.push_back(trackState);
 	}
 }
@@ -848,7 +852,10 @@ void BR_TrackSoloMuteState::Save (bool selectedOnly)
 	{
 		MediaTrack* track = (selectedOnly) ? GetSelectedTrack(NULL, i) : GetTrack(NULL, i);
 
-		pair<GUID,pair<int,int> > trackState = {*GetTrackGUID(track), {(int)GetMediaTrackInfo_Value(track, "B_MUTE"), (int)GetMediaTrackInfo_Value(track, "I_SOLO")}};
+		pair<GUID,pair<int,int> > trackState;
+		trackState.first         = *GetTrackGUID(track);
+		trackState.second.first  = (int)GetMediaTrackInfo_Value(track, "B_MUTE");
+		trackState.second.second = (int)GetMediaTrackInfo_Value(track, "I_SOLO");
 		m_tracks.push_back(trackState);
 	}
 	MarkProjectDirty(NULL);

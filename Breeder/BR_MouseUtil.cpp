@@ -34,17 +34,16 @@
 /******************************************************************************
 * Constants                                                                   *
 ******************************************************************************/
-const int ITEM_LABEL_MIN_HEIGHT        = 28;
+const int ITEM_LABEL_MIN_HEIGHT     = 28;
 
-const int ENV_GAP                      = 4; // bottom gap may seem like 3 when selected, but that
-const int ENV_LINE_WIDTH               = 1; // first pixel is used to "bold" selected envelope
+const int ENV_GAP                   = 4; // bottom gap may seem like 3 when selected, but that
+const int ENV_LINE_WIDTH            = 1; // first pixel is used to "bold" selected envelope
+const int ENV_HIT_POINT             = 5;
+const int ENV_HIT_POINT_LEFT        = 6; // envelope point doesn't always have middle pixel so hit point is different for one side
+const int ENV_HIT_POINT_DOWN        = 6; // +1 because lower part is tracked starting 1 pixel below line (so when envelope is active, hit points appear the same)
 
-const int ENV_HIT_POINT                = 5;
-const int ENV_HIT_POINT_LEFT           = 6; // envelope point doesn't always have middle pixel so hit point is different for one side
-const int ENV_HIT_POINT_DOWN           = 6; // +1 because lower part is tracked starting 1 pixel below line (so when envelope is active, hit points appear the same)
-
-const int STRETCH_M_HIT_POINT          = 6;
-const int STRETCH_M_MIN_TAKE_HEIGHT    = 8;
+const int STRETCH_M_HIT_POINT       = 6;
+const int STRETCH_M_MIN_TAKE_HEIGHT = 8;
 
 // Not tied to Reaper, purely for readability
 const int MIDI_WND_NOTEVIEW     = 1;

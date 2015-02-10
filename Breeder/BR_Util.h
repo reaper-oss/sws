@@ -193,6 +193,7 @@ void CenterArrange (double position);
 void SetArrangeStart (double start);
 void MoveArrangeToTarget (double target, double reference);
 bool IsOffScreen (double position);
+RECT GetDrawableArrangeArea ();
 
 /******************************************************************************
 * Window                                                                      *

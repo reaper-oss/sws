@@ -1045,12 +1045,12 @@ GUID GetItemGuid (MediaItem* item)
 
 MediaItem* GuidToItem(const GUID* guid)
 {
-	if (guid && !IsEqualGUID(*guid, GUID_NULL))
+	if (guid)
 	{
 		for (int i = 0; i < CountMediaItems(NULL); ++i)
 		{
 			MediaItem* item = GetMediaItem(NULL, i);
-			if (IsEqualGUID(*(GUID*)GetSetMediaItemInfo(item, "GUID", NULL), *guid))
+			if (GuidsEqual((GUID*)GetSetMediaItemInfo(item, "GUID", NULL), guid))
 				return item;
 		}
 	}
@@ -1969,6 +1969,48 @@ bool IsOffScreen (double position)
 		return false;
 }
 
+RECT GetDrawableArrangeArea ()
+{
+	RECT r;
+
+	HWND arrangeWnd = GetArrangeWnd();
+	GetWindowRect(arrangeWnd, &r);
+	#ifdef _WIN32
+		r.right  -= SCROLLBAR_W;
+		r.bottom -= SCROLLBAR_W;
+	#else
+		r.right  -= SCROLLBAR_W - 1;
+		r.bottom += SCROLLBAR_W + 2;
+	#endif
+
+	int arrangeEnd = 0;
+	if (TcpVis(GetMasterTrack(NULL)))
+		arrangeEnd += (int)GetMediaTrackInfo_Value(GetMasterTrack(NULL), "I_WNDH") + TCP_MASTER_GAP;
+	for (int i = 0; i < CountTracks(NULL); ++i)
+		arrangeEnd += TcpVis(GetTrack(NULL, i)) ? (int)GetMediaTrackInfo_Value(GetTrack(NULL, i), "I_WNDH") : 0;
+
+	SCROLLINFO si = { sizeof(SCROLLINFO), };
+	si.fMask = SIF_ALL;
+	CoolSB_GetScrollInfo(arrangeWnd, SB_VERT, &si);
+	#ifdef _WIN32
+		int pageEnd = si.nPos + si.nPage + SCROLLBAR_W + 1;
+	#else
+		int pageEnd = si.nPos + si.nPage + SCROLLBAR_W - 3;
+	#endif
+
+	if (pageEnd > arrangeEnd)
+	{
+		#ifdef _WIN32
+			r.bottom -= (pageEnd - arrangeEnd);
+		#else
+			if (r.top > r.bottom) r.bottom += (pageEnd - arrangeEnd);
+			else                  r.bottom -= (pageEnd - arrangeEnd);
+		#endif
+	}
+
+	return r;
+}
+
 /******************************************************************************
 * Window                                                                      *
 ******************************************************************************/
@@ -2483,31 +2525,37 @@ void BoundToRect (const RECT& boundingRect, RECT* r)
 	if (!r)
 		return;
 
-	if (r->top < boundingRect.top || r->bottom > boundingRect.bottom || r->left < boundingRect.left || r->right > boundingRect.right)
+	RECT tmp = boundingRect;
+	#ifndef _WIN32
+		if (tmp.top > tmp.bottom)
+			swap(tmp.top, tmp.bottom);
+	#endif
+
+	if (r->top < tmp.top || r->bottom > tmp.bottom || r->left < tmp.left || r->right > tmp.right)
 	{
 		int w = r->right  - r->left;
 		int h = r->bottom - r->top;
 
-		if (r->top < boundingRect.top)
+		if (r->top < tmp.top)
 		{
-			r->top    = boundingRect.top;
-			r->bottom = boundingRect.top + h;
+			r->top    = tmp.top;
+			r->bottom = tmp.top + h;
 		}
-		else if (r->bottom > boundingRect.bottom)
+		else if (r->bottom > tmp.bottom)
 		{
-			r->bottom = boundingRect.bottom;
-			r->top    = boundingRect.bottom - h;
+			r->bottom = tmp.bottom;
+			r->top    = tmp.bottom - h;
 		}
 
-		if (r->left < boundingRect.left)
+		if (r->left < tmp.left)
 		{
-			r->left  = boundingRect.left;
-			r->right = boundingRect.left + w;
+			r->left  = tmp.left;
+			r->right = tmp.left + w;
 		}
-		else if (r->right > boundingRect.right)
+		else if (r->right > tmp.right)
 		{
-			r->right = boundingRect.right;
-			r->left  = boundingRect.right - w;
+			r->right = tmp.right;
+			r->left  = tmp.right - w;
 		}
 	}
 

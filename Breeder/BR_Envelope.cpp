@@ -117,26 +117,7 @@ static WDL_FastString EnvMouseTooltip (int window, RECT& bounds)
 
 			static RECT s_bounds;
 			if (g_envMouseMode == -666) // action called for the first time, calculate bounding rect
-			{
-				HWND arrangeWnd = GetArrangeWnd();
-				GetWindowRect(arrangeWnd, &s_bounds);
-				s_bounds.right  -= SCROLLBAR_W;
-				s_bounds.bottom -= SCROLLBAR_W;
-
-				int arrangeEnd = 0;
-				if (TcpVis(GetMasterTrack(NULL)))
-					arrangeEnd += (int)GetMediaTrackInfo_Value(GetMasterTrack(NULL), "I_WNDH") + TCP_MASTER_GAP;
-				for (int i = 0; i < CountTracks(NULL); ++i)
-					arrangeEnd += TcpVis(GetTrack(NULL, i)) ? (int)GetMediaTrackInfo_Value(GetTrack(NULL, i), "I_WNDH") : 0;
-				
-				SCROLLINFO si = { sizeof(SCROLLINFO), };
-				si.fMask = SIF_ALL;
-				CoolSB_GetScrollInfo(arrangeWnd, SB_VERT, &si);
-
-				int pageEnd = si.nPos + si.nPage + SCROLLBAR_W + 1;
-				if (pageEnd > arrangeEnd)
-					s_bounds.bottom -= (pageEnd - arrangeEnd);
-			}
+				s_bounds = GetDrawableArrangeArea();
 			bounds = s_bounds;
 		}
 

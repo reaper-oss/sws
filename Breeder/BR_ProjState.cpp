@@ -589,7 +589,7 @@ bool BR_MidiCCEvents::Restore (BR_MidiEditor& midiEditor, int lane, bool allVisi
 			{
 				double itemEndPPQ   = MIDI_GetPPQPosFromProjTime(take, GetMediaItemInfo_Value(item, "D_POSITION") + GetMediaItemInfo_Value(item, "D_LENGTH"));
 				double itemStartPPQ = MIDI_GetPPQPosFromProjTime(take, GetMediaItemInfo_Value(item, "D_POSITION"));
-				if (CheckBounds(insertionStartPPQ, itemEndPPQ, itemStartPPQ))
+				if (!CheckBounds(insertionStartPPQ, itemStartPPQ, itemEndPPQ))
 					continue;
 
 				double sourceLenPPQ = GetSourceLengthPPQ(take);

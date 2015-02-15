@@ -453,7 +453,7 @@ void ME_HideCCLanes (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 					}
 
 					if (p.ReplaceTake(tkPos, tklen, ptk.GetChunk()))
-						Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
+						Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 				}
 			}
 		}
@@ -625,7 +625,7 @@ void ME_CCToEnvPoints (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd
 	}
 
 	if (update && envelope.Commit())
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS | UNDO_STATE_TRACKCFG, -1);
 }
 
 void ME_SaveCursorPosSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
@@ -664,7 +664,7 @@ void ME_RestoreNoteSelSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWND
 			if (slot == g_midiNoteSel.Get()->Get(i)->GetSlot())
 			{
 				if (g_midiNoteSel.Get()->Get(i)->Restore(take))
-					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
+					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 				break;
 			}
 		}
@@ -733,7 +733,7 @@ void ME_RestoreCCEventsSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWN
 				if (lane != CC_TEXT_EVENTS && lane != CC_SYSEX && lane != CC_BANK_SELECT && lane != CC_VELOCITY)
 				{
 					if (g_midiCCEvents.Get()->Get(i)->Restore(editor, lane, false))
-						Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
+						Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 				}
 				else
 					MessageBox((HWND)editor.GetEditor(), __LOCALIZE("Can't restore to velocity, text, sysex and bank select lanes","sws_mbox"), __LOCALIZE("SWS/BR - Warning","sws_mbox"), MB_OK);
@@ -754,7 +754,7 @@ void ME_RestoreCCEvents2Slot (COMMAND_T* ct, int val, int valhw, int relmode, HW
 			if (slot == g_midiCCEvents.Get()->Get(i)->GetSlot())
 			{
 				if (g_midiCCEvents.Get()->Get(i)->Restore(midiEditor, 0, true))
-					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
+					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 				break;
 			}
 		}

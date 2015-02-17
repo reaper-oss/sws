@@ -13,6 +13,7 @@ Added actions
  - SWS/BR: Save/Restore selected/all tracks' solo and mute state, slot x (8 slots)
 +MIDI editor:
  - SWS/BR: Create CC lane and make it last clicked
+ - SWS/BR: Copy selected CC events in active item to last clicked CC lane/lane under mouse cursor
 
 ReaScript
 +Updated BR_EnvGetProperties and BR_EnvSetProperties (volume envelope fader scaling support)

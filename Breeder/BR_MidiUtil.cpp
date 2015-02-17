@@ -68,9 +68,12 @@ m_filterEventPos       (false),
 m_filterEventLen       (false),
 m_valid                (false)
 {
-	m_valid        = this->Build();
-	m_lastLane     = GetLastClickedVelLane(m_midiEditor);
-	m_ccLanesCount = (int)m_ccLanes.size();
+	if (m_midiEditor && SWS_MIDIEditor_GetMode(m_midiEditor) != 1)
+	{
+		m_valid        = this->Build();
+		m_lastLane     = GetLastClickedVelLane(m_midiEditor);
+		m_ccLanesCount = (int)m_ccLanes.size();
+	}
 }
 
 BR_MidiEditor::BR_MidiEditor (void* midiEditor) :
@@ -105,9 +108,14 @@ m_filterEventPos       (false),
 m_filterEventLen       (false),
 m_valid                (false)
 {
-	m_valid        = this->Build();
-	m_lastLane     = GetLastClickedVelLane(m_midiEditor);
-	m_ccLanesCount = (int)m_ccLanes.size();
+	if (m_midiEditor && SWS_MIDIEditor_GetMode(m_midiEditor) != 1)
+	{
+		m_valid        = this->Build();
+		m_lastLane     = GetLastClickedVelLane(m_midiEditor);
+		m_ccLanesCount = (int)m_ccLanes.size();
+
+	
+	}
 }
 
 BR_MidiEditor::BR_MidiEditor (MediaItem_Take* take) :

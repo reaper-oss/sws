@@ -527,7 +527,7 @@ void ME_ToggleHideCCLanes (COMMAND_T* ct, int val, int valhw, int relmode, HWND 
 
 void ME_CCToEnvPoints (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
-	BR_MidiEditor midiEditor (SWS_MIDIEditor_GetActive());
+	BR_MidiEditor midiEditor(SWS_MIDIEditor_GetActive());
 	if (!midiEditor.IsValid() || !GetSelectedEnvelope(NULL))
 		return;
 
@@ -628,6 +628,64 @@ void ME_CCToEnvPoints (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS | UNDO_STATE_TRACKCFG, -1);
 }
 
+void ME_CopySelCCEventsToLane (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
+{
+	void* editor;
+	int lane;
+	if ((int)ct->user < 0)
+	{
+		BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_MIDI_EDITOR_ALL);
+		editor = (mouseInfo.GetCCLane(&lane, NULL, NULL)) ? mouseInfo.GetMidiEditor() : NULL;
+	}
+	else
+	{
+		editor = SWS_MIDIEditor_GetActive();
+		lane = GetLastClickedVelLane(editor);
+	}
+
+	BR_MidiEditor midiEditor(editor);
+	if (!midiEditor.IsValid())
+		return;
+
+	WDL_PtrList<BR_MidiCCEvents> events;
+	for (int i = 0; i < midiEditor.CountCCLanes(); ++i)
+		events.Add(new BR_MidiCCEvents(0, midiEditor, midiEditor.GetCCLane(i)));
+
+	bool update  = false;
+	if (lane != CC_TEXT_EVENTS && lane != CC_SYSEX && lane != CC_BANK_SELECT && lane != CC_VELOCITY && lane != CC_VELOCITY_OFF)
+	{
+		double insertPosition = -1;
+		for (int i = 0; i < events.GetSize(); ++i)
+		{
+			if (BR_MidiCCEvents* savedLane = events.Get(i))
+			{
+				if (savedLane->CountSavedEvents() > 0)
+				{
+					if (insertPosition == -1)
+						insertPosition = savedLane->GetSourcePpqStart();
+					else if (savedLane->GetSourcePpqStart() < insertPosition)
+						insertPosition = savedLane->GetSourcePpqStart();
+					update = true;
+				}
+			}
+		}
+
+		for (int i = 0; i < events.GetSize(); ++i)
+		{
+			if (BR_MidiCCEvents* savedLane = events.Get(i))
+			{
+				if (savedLane->CountSavedEvents() > 0 && savedLane->Restore(midiEditor, lane, false, insertPosition, false))
+					update = true;
+			}
+		}
+		if (update)
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
+	}
+	else
+		MessageBox((HWND)midiEditor.GetEditor(), __LOCALIZE("Can't copy to velocity, text, sysex and bank select lanes","sws_mbox"), __LOCALIZE("SWS/BR - Warning","sws_mbox"), MB_OK);
+
+}
+
 void ME_SaveCursorPosSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
 	SaveCursorPosSlot(ct);
@@ -723,6 +781,7 @@ void ME_RestoreCCEventsSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWN
 	}
 
 	BR_MidiEditor editor(midiEditor);
+	double editCursorPpq = MIDI_GetPPQPosFromProjTime(editor.GetActiveTake(), GetCursorPosition());
 	if (editor.IsValid())
 	{
 		int slot = abs((int)ct->user) - 1;
@@ -730,9 +789,9 @@ void ME_RestoreCCEventsSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWN
 		{
 			if (slot == g_midiCCEvents.Get()->Get(i)->GetSlot())
 			{
-				if (lane != CC_TEXT_EVENTS && lane != CC_SYSEX && lane != CC_BANK_SELECT && lane != CC_VELOCITY)
+				if (lane != CC_TEXT_EVENTS && lane != CC_SYSEX && lane != CC_BANK_SELECT && lane != CC_VELOCITY && lane != CC_VELOCITY_OFF)
 				{
-					if (g_midiCCEvents.Get()->Get(i)->Restore(editor, lane, false))
+					if (g_midiCCEvents.Get()->Get(i)->Restore(editor, lane, false, editCursorPpq))
 						Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 				}
 				else
@@ -746,6 +805,7 @@ void ME_RestoreCCEventsSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWN
 void ME_RestoreCCEvents2Slot (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
 	BR_MidiEditor midiEditor;
+	double editCursorPpq = MIDI_GetPPQPosFromProjTime(midiEditor.GetActiveTake(), GetCursorPosition());
 	if (midiEditor.IsValid())
 	{
 		int slot = (int)ct->user;
@@ -753,7 +813,7 @@ void ME_RestoreCCEvents2Slot (COMMAND_T* ct, int val, int valhw, int relmode, HW
 		{
 			if (slot == g_midiCCEvents.Get()->Get(i)->GetSlot())
 			{
-				if (g_midiCCEvents.Get()->Get(i)->Restore(midiEditor, 0, true))
+				if (g_midiCCEvents.Get()->Get(i)->Restore(midiEditor, 0, true, editCursorPpq))
 					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 				break;
 			}

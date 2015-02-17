@@ -117,8 +117,10 @@ public:
 	BR_MidiCCEvents (int slot, ProjectStateContext* ctx);
 	void SaveState (ProjectStateContext* ctx);
 	bool Save (BR_MidiEditor& midiEditor, int lane);
-	bool Restore (BR_MidiEditor& midiEditor, int lane, bool allVisible);
+	bool Restore (BR_MidiEditor& midiEditor, int lane, bool allVisible, double startPositionPppq, bool showWarningForInvalidLane = true);
 	int  GetSlot ();
+	int CountSavedEvents();
+	double GetSourcePpqStart (); 
 
 private:
 	struct Event
@@ -131,6 +133,7 @@ private:
 	};
 
 	int m_slot, m_sourceLane, m_ppq;
+	double m_sourcePpqStart;
 	vector<BR_MidiCCEvents::Event> m_events;
 };
 

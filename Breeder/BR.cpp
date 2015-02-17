@@ -369,6 +369,9 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Convert selected CC events to square envelope points in selected envelope (clear existing envelope points)" }, "BR_ME_CC_TO_ENV_SQUARE_CLEAR",                 NULL, NULL, -1, NULL, SECTION_MIDI_EDITOR, ME_CCToEnvPoints},
 	{ { DEFACCEL, "SWS/BR: Convert selected CC events to linear envelope points in selected envelope (clear existing envelope points)" }, "BR_ME_CC_TO_ENV_LINEAR_CLEAR",                 NULL, NULL, -2, NULL, SECTION_MIDI_EDITOR, ME_CCToEnvPoints},
 
+	{ { DEFACCEL, "SWS/BR: Copy selected CC events in active item to last clicked CC lane" },                                             "BR_ME_SEL_CC_TO_LAST_CLICKED_LANE",            NULL, NULL, 1, NULL,  SECTION_MIDI_EDITOR, ME_CopySelCCEventsToLane},
+	{ { DEFACCEL, "SWS/BR: Copy selected CC events in active item to CC lane under mouse cursor" },                                       "BR_ME_SEL_CC_TO_LANE_UNDER_MOUSE",             NULL, NULL, -1, NULL, SECTION_MIDI_EDITOR, ME_CopySelCCEventsToLane},
+
 	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 1" },                                                                          "BR_ME_SAVE_CURSOR_POS_SLOT_1",                 NULL, NULL, 0, NULL, SECTION_MIDI_EDITOR, ME_SaveCursorPosSlot},
 	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 2" },                                                                          "BR_ME_SAVE_CURSOR_POS_SLOT_2",                 NULL, NULL, 1, NULL, SECTION_MIDI_EDITOR, ME_SaveCursorPosSlot},
 	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 3" },                                                                          "BR_ME_SAVE_CURSOR_POS_SLOT_3",                 NULL, NULL, 2, NULL, SECTION_MIDI_EDITOR, ME_SaveCursorPosSlot},

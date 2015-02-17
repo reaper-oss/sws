@@ -372,9 +372,10 @@ int BR_MidiNoteSel::GetSlot ()
 * MIDI saved CC events state                                                  *
 ******************************************************************************/
 BR_MidiCCEvents::BR_MidiCCEvents (int slot, BR_MidiEditor& midiEditor, int lane) :
-m_slot       (slot),
-m_sourceLane (lane),
-m_ppq        (960)
+m_slot           (slot),
+m_sourceLane     (lane),
+m_ppq            (960),
+m_sourcePpqStart (-1)
 {
 	this->Save(midiEditor, m_sourceLane);
 }
@@ -382,7 +383,8 @@ m_ppq        (960)
 BR_MidiCCEvents::BR_MidiCCEvents (int slot, ProjectStateContext* ctx) :
 m_slot       (slot),
 m_sourceLane (0),
-m_ppq        (960)
+m_ppq        (960),
+m_sourcePpqStart (-1)
 {
 	char line[512];
 	LineParser lp(false);
@@ -419,7 +421,7 @@ void BR_MidiCCEvents::SaveState (ProjectStateContext* ctx)
 		ctx->AddLine("%s %d",   "SOURCE_LANE",   m_sourceLane);
 		ctx->AddLine("%s %d",   "PPQ",           m_ppq);
 		for (size_t i = 0; i < m_events.size(); ++i)
-			ctx->AddLine("E %lf %d %d %d %d",
+			ctx->AddLine("E %lf %d %d %d %d %d",
 			             m_events[i].positionPpq,
 			             m_events[i].channel,
 			             m_events[i].msg2,
@@ -438,17 +440,21 @@ bool BR_MidiCCEvents::Save (BR_MidiEditor& midiEditor, int lane)
 		MediaItem_Take* take = midiEditor.GetActiveTake();
 		vector<BR_MidiCCEvents::Event> events;
 
+		m_sourcePpqStart = -1;
 		if ((lane >= 0 && lane <= 127))
 		{
 			int id = -1;
+
 			while ((id = MIDI_EnumSelCC(take, id)) != -1)
 			{
 				int cc, chanMsg;
-				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, NULL, &cc, NULL) && chanMsg == STATUS_CC && cc == lane)
+				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, NULL, &cc, NULL) && midiEditor.IsCCVisible(take, id) && chanMsg == STATUS_CC && cc == lane)
 				{
 					BR_MidiCCEvents::Event event;
 					MIDI_GetCC(take, id, NULL, &event.mute, &event.positionPpq, NULL, &event.channel, NULL, &event.msg3);
 					events.push_back(event);
+					if (m_sourcePpqStart == -1)
+						m_sourcePpqStart = event.positionPpq;
 				}
 			}
 		}
@@ -458,11 +464,13 @@ bool BR_MidiCCEvents::Save (BR_MidiEditor& midiEditor, int lane)
 			while ((id = MIDI_EnumSelCC(take, id)) != -1)
 			{
 				int chanMsg;
-				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, NULL, NULL, NULL) && chanMsg == STATUS_PITCH)
+				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, NULL, NULL, NULL) && midiEditor.IsCCVisible(take, id) &&chanMsg == STATUS_PITCH)
 				{
 					BR_MidiCCEvents::Event event;
 					MIDI_GetCC(take, id, NULL, &event.mute, &event.positionPpq, NULL, &event.channel, &event.msg2, &event.msg3);
 					events.push_back(event);
+					if (m_sourcePpqStart == -1)
+						m_sourcePpqStart = event.positionPpq;
 				}
 			}
 		}
@@ -472,11 +480,13 @@ bool BR_MidiCCEvents::Save (BR_MidiEditor& midiEditor, int lane)
 			while ((id = MIDI_EnumSelCC(take, id)) != -1)
 			{
 				int chanMsg;
-				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, NULL, NULL, NULL) && chanMsg == ((lane == CC_PROGRAM) ? STATUS_PROGRAM : STATUS_CHANNEL_PRESSURE))
+				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, NULL, NULL, NULL) && midiEditor.IsCCVisible(take, id) && chanMsg == ((lane == CC_PROGRAM) ? STATUS_PROGRAM : STATUS_CHANNEL_PRESSURE))
 				{
 					BR_MidiCCEvents::Event event;
 					MIDI_GetCC(take, id, NULL, &event.mute, &event.positionPpq, NULL, &event.channel, &event.msg3, &event.msg2); // messages are reversed
 					events.push_back(event);
+					if (m_sourcePpqStart == -1)
+						m_sourcePpqStart = event.positionPpq;
 				}
 			}
 		}
@@ -486,8 +496,10 @@ bool BR_MidiCCEvents::Save (BR_MidiEditor& midiEditor, int lane)
 			while ((id = MIDI_EnumSelNotes(take, id)) != -1)
 			{
 				BR_MidiCCEvents::Event event;
-				MIDI_GetNote(take, id, NULL, &event.mute, &event.positionPpq, NULL, &event.channel, NULL, &event.msg3);
+				if(MIDI_GetNote(take, id, NULL, &event.mute, &event.positionPpq, NULL, &event.channel, NULL, &event.msg3) && midiEditor.IsNoteVisible(take, id));
 				events.push_back(event);
+				if (m_sourcePpqStart == -1)
+						m_sourcePpqStart = event.positionPpq;
 			}
 		}
 		else if (lane >= CC_14BIT_START)
@@ -498,11 +510,13 @@ bool BR_MidiCCEvents::Save (BR_MidiEditor& midiEditor, int lane)
 			while ((id = MIDI_EnumSelCC(take, id)) != -1)
 			{
 				int cc, chanMsg;
-				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, NULL, &cc, NULL) && chanMsg == STATUS_CC && cc == cc1)
+				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, NULL, &cc, NULL) && midiEditor.IsCCVisible(take, id) && chanMsg == STATUS_CC && cc == cc1)
 				{
 					BR_MidiCCEvents::Event event;
 					MIDI_GetCC(take, id, NULL, &event.mute, &event.positionPpq, NULL, &event.channel, NULL, &event.msg3);
 					events.push_back(event);
+					if (m_sourcePpqStart == -1)
+						m_sourcePpqStart = event.positionPpq;
 
 					int tmpId = id;
 					while ((tmpId = MIDI_EnumSelCC(take, tmpId)) != -1)
@@ -539,7 +553,7 @@ bool BR_MidiCCEvents::Save (BR_MidiEditor& midiEditor, int lane)
 	return false;
 }
 
-bool BR_MidiCCEvents::Restore (BR_MidiEditor& midiEditor, int lane, bool allVisible)
+bool BR_MidiCCEvents::Restore (BR_MidiEditor& midiEditor, int lane, bool allVisible, double startPositionPppq, bool showWarningForInvalidLane /*=true*/)
 {
 	bool update = false;
 	if (m_events.size() && midiEditor.IsValid())
@@ -695,6 +709,16 @@ bool BR_MidiCCEvents::Restore (BR_MidiEditor& midiEditor, int lane, bool allVisi
 int BR_MidiCCEvents::GetSlot ()
 {
 	return m_slot;
+}
+
+int BR_MidiCCEvents::CountSavedEvents ()
+{
+	return (int)m_events.size();
+}
+
+double BR_MidiCCEvents:: GetSourcePpqStart ()
+{
+	return m_sourcePpqStart;
 }
 
 BR_MidiCCEvents::Event::Event () :

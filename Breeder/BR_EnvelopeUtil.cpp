@@ -717,14 +717,15 @@ double BR_Envelope::ValueAtPosition (double position, bool fastMode /*= false*/)
 	position -= m_takeEnvOffset;
 	int	id = this->FindPrevious(position, 0);
 
-	bool faderMode = this->IsVolScaledToFader();
+	bool faderMode = this->IsScaledToFader();
 	if (!m_pointsEdited && !fastMode)
 	{
 		if (m_sampleRate == -1)
 			GetConfig("projsrate", m_sampleRate);
+		
 		double value;
 		Envelope_Evaluate(m_envelope, position, m_sampleRate, 1, &value, NULL, NULL, NULL); // slower than our way with high point count (probably because we use binary search while Cockos uses linear) but more accurate
-		return (faderMode) ? DEF_SLIDER2VAL(value) : value;
+		return ScaleFromEnvelopeMode(GetEnvelopeScalingMode(m_envelope), value);
 	}
 	else
 	{
@@ -848,9 +849,9 @@ double BR_Envelope::NormalizedDisplayValue (double value)
 		else
 			displayValue = (value - 0.1) / 1.8 ; // original formula (min is always known so optimized): (value - min) / (1 - min) * 0.5;
 	}
-	else if ((this->Type() == VOLUME || this->Type() == VOLUME_PREFX) && this->IsVolScaledToFader())
+	else if ((this->Type() == VOLUME || this->Type() == VOLUME_PREFX) && this->IsScaledToFader())
 	{
-		displayValue = SetToBounds(DEF_VAL2SLIDER(value) / DEF_VAL2SLIDER(max), 0.0, 1.0);
+		displayValue = SetToBounds(ScaleToEnvelopeMode(1,value) / ScaleToEnvelopeMode(1, max), 0.0, 1.0);
 	}
 	else
 	{
@@ -874,9 +875,9 @@ double BR_Envelope::RealValue (double normalizedDisplayValue)
 		else
 			realValue = 1.8 * normalizedDisplayValue + 0.1;
 	}
-	else if ((this->Type() == VOLUME || this->Type() == VOLUME_PREFX) && this->IsVolScaledToFader())
+	else if ((this->Type() == VOLUME || this->Type() == VOLUME_PREFX) && this->IsScaledToFader())
 	{
-		realValue = SetToBounds(DEF_SLIDER2VAL(normalizedDisplayValue * DEF_VAL2SLIDER(max)), min, max);
+		realValue = SetToBounds(ScaleFromEnvelopeMode(1, normalizedDisplayValue * ScaleToEnvelopeMode(1, max)), min, max);
 	}
 	else
 	{
@@ -1170,19 +1171,9 @@ WDL_FastString BR_Envelope::FormatValue (double value)
 		}
 		else
 		{
-			// TrackFX_FormatParamValue() unselects currently selected envelope: http://forum.cockos.com/showpost.php?p=1465316&postcount=113
-			TrackEnvelope* selectedEnv = GetSelectedEnvelope(NULL);
-			HWND hwnd; int context;
-			GetSetFocus (false, &hwnd, &context);
-
 			char tmp[256];
 			TrackFX_FormatParamValue(this->GetParent(), this->GetFxId(), this->GetParamId(), value, tmp, sizeof(tmp));
 
-			if (selectedEnv)
-			{
-				SetCursorContext(2, selectedEnv);
-				GetSetFocus(true, &hwnd, &context);
-			}
 			if (strlen(tmp) == 0) formatedValue.AppendFormatted(256, "%.2lf", value); // because TrackFX_FormatParamValue() only works with FX that support Cockos VST extensions.
 			else                  formatedValue.AppendFormatted(256, "%s", tmp);
 		}
@@ -1273,10 +1264,10 @@ bool BR_Envelope::IsArmed ()
 	return !!m_properties.armed;
 }
 
-bool BR_Envelope::IsVolScaledToFader ()
+bool BR_Envelope::IsScaledToFader ()
 {
 	// no this->FillProperties() because we read it with API when constructing the object
-	return (m_properties.volType == 1);
+	return (m_properties.faderMode == 1);
 }
 
 int BR_Envelope::GetLaneHeight ()
@@ -1435,14 +1426,15 @@ void BR_Envelope::SetDefaultShape (int shape)
 	m_update             = true;
 }
 
-void BR_Envelope::SetVolScaleToFader (bool faderScale)
+void BR_Envelope::SetScalingToFader (bool faderScaling)
 {
 	this->FillProperties();
 	if (m_properties.type == VOLUME || m_properties.type == VOLUME_PREFX)
 	{
-		m_properties.volType = faderScale ? 1 : 0;
-		m_properties.changed = true;
-		m_update             = true;
+		m_properties.faderMode = faderScaling ? 1 : 0;
+		m_properties.changed   = true;
+		m_pointsEdited         = true;
+		m_update               = true;
 	}
 }
 
@@ -1510,9 +1502,15 @@ bool BR_Envelope::Commit (bool force /*=false*/)
 			// Edit/insert cached points
 			currentCount = CountEnvelopePoints(m_envelope);
 			for (int i = firstPointDone ? 1 : 0; i < currentCount; ++i)
-				SetEnvelopePoint(m_envelope, i, &m_points[i].position, &m_points[i].value, &m_points[i].shape, &m_points[i].bezier, &m_points[i].selected, &g_bTrue);
+			{
+				double value = (m_properties.faderMode != 0) ? ScaleToEnvelopeMode(m_properties.faderMode, m_points[i].value) : m_points[i].value;
+				SetEnvelopePoint(m_envelope, i, &m_points[i].position, &value, &m_points[i].shape, &m_points[i].bezier, &m_points[i].selected, &g_bTrue);
+			}
 			for (int i = currentCount; i < m_count; ++i)
-				InsertEnvelopePoint(m_envelope, m_points[i].position, m_points[i].value, m_points[i].shape, m_points[i].bezier, m_points[i].selected, &g_bTrue);
+			{
+				double value = (m_properties.faderMode != 0) ? ScaleToEnvelopeMode(m_properties.faderMode, m_points[i].value) : m_points[i].value;
+				InsertEnvelopePoint(m_envelope, m_points[i].position, value, m_points[i].shape, m_points[i].bezier, m_points[i].selected, &g_bTrue);
+			}
 			Envelope_SortPoints(m_envelope);
 
 			PreventUIRefresh(-1);
@@ -1653,6 +1651,7 @@ void BR_Envelope::Build (bool takeEnvelopesUseProjectTime)
 	if (m_envelope)
 	{
 		int count = CountEnvelopePoints(m_envelope);
+		m_properties.faderMode = (GetEnvelopeScalingMode(m_envelope) == 1) ? 1 : 0;
 		m_points.reserve(count);
 		m_pointsSel.reserve(count);
 
@@ -1689,6 +1688,9 @@ void BR_Envelope::Build (bool takeEnvelopesUseProjectTime)
 				BR_EnvPoint point;
 				GetEnvelopePoint(m_envelope, i, &point.position, &point.value, &point.shape, &point.bezier, &point.selected);
 
+				if (m_properties.faderMode != 0)
+					point.value = ScaleFromEnvelopeMode(m_properties.faderMode, point.value);
+
 				m_points.push_back(point);
 				if (point.selected) m_pointsSel.push_back(i);
 			}
@@ -1699,7 +1701,6 @@ void BR_Envelope::Build (bool takeEnvelopesUseProjectTime)
 	m_countSel = (int)m_pointsSel.size();
 	if (takeEnvelopesUseProjectTime && m_take)
 		m_takeEnvOffset = GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION");
-	m_properties.volType = (GetVolumeEnvelopeScaling(m_envelope) == 1) ? 1 : 0;
 }
 
 void BR_Envelope::UpdateConsequential ()
@@ -1817,7 +1818,7 @@ void BR_Envelope::FillProperties () const
 				else if (!strncmp(token, "VOLTYPE ", sizeof("VOLTYPE ")-1))
 				{
 					lp.parse(token);
-					m_properties.volType = lp.gettoken_int(1);
+					m_properties.faderMode = lp.gettoken_int(1);
 				}
 				else if (strstr(token, "PARMENV"))
 				{
@@ -1936,7 +1937,7 @@ WDL_FastString BR_Envelope::GetProperties ()
 		properties.AppendFormatted(256, "LANEHEIGHT %d %d\n", m_properties.height, m_properties.heightUnknown);
 		properties.AppendFormatted(256, "ARM %d\n", m_properties.armed);
 		properties.AppendFormatted(256, "DEFSHAPE %d %d %d\n", m_properties.shape, m_properties.shapeUnknown1, m_properties.shapeUnknown2);
-		if (m_properties.volType != 0) properties.AppendFormatted(256, "VOLTYPE %d\n", m_properties.volType);
+		if (m_properties.faderMode != 0) properties.AppendFormatted(256, "VOLTYPE %d\n", 1);
 		return properties;
 	}
 	else
@@ -1964,7 +1965,7 @@ armed         (0),
 shape         (0),
 shapeUnknown1 (0),
 shapeUnknown2 (0),
-volType       (0),
+faderMode     (0),
 type          (0),
 minValue      (0),
 maxValue      (0),
@@ -1987,7 +1988,7 @@ armed         (properties.armed),
 shape         (properties.shape),
 shapeUnknown1 (properties.shapeUnknown1),
 shapeUnknown2 (properties.shapeUnknown2),
-volType       (properties.volType),
+faderMode     (properties.faderMode),
 type          (properties.type),
 minValue      (properties.minValue),
 maxValue      (properties.maxValue),
@@ -2015,7 +2016,7 @@ BR_Envelope::EnvProperties& BR_Envelope::EnvProperties::operator= (const EnvProp
 	shape         = properties.shape;
 	shapeUnknown1 = properties.shapeUnknown1;
 	shapeUnknown2 = properties.shapeUnknown2;
-	volType       = properties.volType;
+	faderMode     = properties.faderMode;
 	type          = properties.type;
 	minValue      = properties.minValue;
 	maxValue      = properties.maxValue;

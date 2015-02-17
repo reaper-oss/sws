@@ -112,7 +112,7 @@ public:
 	bool  GetCCLane (int* ccLane, int* ccLaneVal, int* ccLaneId); // returns false if mouse is not over CC lane
 	int   GetNoteRow ();                                          // returns -1 if mouse is not over any note row (sketchy when it comes to inline MIDI editor, see BR_MidiEditor)
 	int   GetPianoRollMode ();                                    // returns 0->normal, 1->named notes, -1->unknown
-	bool  SetDetectedCCLaneAsLastClicked ();                      // hacky! works only if MIDI editor/arrange state didn't change after the last update (it also briefly switches focus to MIDI editor/arrange...)
+	bool  SetDetectedCCLaneAsLastClicked ();                      // hacky! works only if MIDI editor/arrange state didn't change after last update (it also briefly switches focus to MIDI editor/arrange...)
 
 	// Both main window and MIDI editor
 	double GetPosition ();  // time position in arrange or MIDI ruler (returns -1 if not applicable)

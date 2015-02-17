@@ -36,6 +36,8 @@ const int NEGATIVE_INF    = -150;
 const double VOLUME_DELTA = 0.0000000000001;
 const double PAN_DELTA    = 0.001;
 
+const int SECTION_MAIN           = 0;
+const int SECTION_MAIN_ALT       = 100;
 const int SECTION_MIDI_EDITOR    = 32060;
 const int SECTION_MIDI_LIST      = 32061;
 const int SECTION_MIDI_INLINE    = 32062;

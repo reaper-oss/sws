@@ -173,7 +173,7 @@ public:
 	bool IsVisible ();
 	bool IsInLane ();
 	bool IsArmed ();
-	bool IsVolScaledToFader ();
+	bool IsScaledToFader ();
 	int GetLaneHeight ();
 	int GetDefaultShape ();
 	int Type ();       // See BR_EnvType for types
@@ -193,7 +193,7 @@ public:
 	void SetArmed (bool armed);
 	void SetLaneHeight (int height);
 	void SetDefaultShape (int shape);
-	void SetVolScaleToFader (bool faderScale);
+	void SetScalingToFader (bool faderScaling);
 
 	/* Committing - does absolutely nothing if there are no edits or locking is turned on (unless forced) */
 	bool Commit (bool force = false);
@@ -215,7 +215,7 @@ private:
 	bool m_tempoMap;
 	bool m_update;
 	bool m_sorted;
-	bool m_pointsEdited;
+	bool m_pointsEdited; // tells us if we can use Envelope_Evaluate() in this->ValueAtPosition()
 	double m_takeEnvOffset;
 	int m_sampleRate;
 	int m_takeEnvType;
@@ -237,7 +237,7 @@ private:
 		int height, heightUnknown;
 		int armed;
 		int shape, shapeUnknown1, shapeUnknown2;
-		int volType;
+		int faderMode;
 		int type;
 		double minValue, maxValue, centerValue;
 		int paramId, fxId;

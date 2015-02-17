@@ -42,8 +42,8 @@
 /******************************************************************************
 * Constants                                                                   *
 ******************************************************************************/
-const char* const ADJUST_PLAYRATE_KEY  = "BR - AdjustPlayrate";
-const char* const ADJUST_PLAYRATE_WND  = "BR - AdjustPlayrateWnd";
+const char* const ADJUST_PLAYRATE_KEY = "BR - AdjustPlayrate";
+const char* const ADJUST_PLAYRATE_WND = "BR - AdjustPlayrateWnd";
 
 /******************************************************************************
 * Globals                                                                     *

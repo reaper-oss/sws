@@ -1107,8 +1107,8 @@ void DeleteTempo (COMMAND_T* ct)
 void DeleteTempoPreserveItems (COMMAND_T* ct)
 {
 	BR_Envelope tempoMap(GetTempoEnv());
-	if (!tempoMap.CountSelected() || tempoMap.IsLocked()) // BR_Envelope does check for locking, but since
-		return;                                                                                  // we're dealing with items too check here
+	if (!tempoMap.CountSelected() || tempoMap.IsLocked()) // BR_Envelope does check for locking, but since we're dealing with items too check here
+		return;
 
 	// Get items' position info and set their timebase to time
 	vector<BR_MidiItemTimePos> items;

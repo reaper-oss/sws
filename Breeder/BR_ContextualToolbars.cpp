@@ -48,23 +48,6 @@ const char* const INI_KEY_POSITION          = "PositionOffsetPreset_";
 const char* const INI_KEY_CURRENT_PRESET    = "DlgPreset";
 const int PRESET_COUNT                      = 8;
 
-// Options flags (never change values - used for state saving to .ini)
-const int OPTION_ENABLED          = 0x1;
-const int SELECT_ITEM             = 0x2;
-const int SELECT_TRACK            = 0x4;
-const int SELECT_ENVELOPE         = 0x8;
-const int CLEAR_ITEM_SELECTION    = 0x10;
-const int CLEAR_TRACK_SELECTION   = 0x20;
-const int FOCUS_ALL               = 0x40;
-const int FOCUS_MAIN              = 0x80;
-const int FOCUS_MIDI              = 0x100;
-const int POSITION_H_LEFT         = 0x200;
-const int POSITION_H_MIDDLE       = 0x400;
-const int POSITION_H_RIGHT        = 0x800;
-const int POSITION_V_TOP          = 0x2000;
-const int POSITION_V_MIDDLE       = 0x4000;
-const int POSITION_V_BOTTOM       = 0x8000;
-
 // List view columns
 static SWS_LVColumn g_cols[] =
 {
@@ -82,6 +65,23 @@ enum
 	COL_POSITION,
 	COL_COUNT
 };
+
+// Options flags (never change values - used for state saving to .ini)
+const int OPTION_ENABLED         = 0x1;
+const int SELECT_ITEM            = 0x2;
+const int SELECT_TRACK           = 0x4;
+const int SELECT_ENVELOPE        = 0x8;
+const int CLEAR_ITEM_SELECTION   = 0x10;
+const int CLEAR_TRACK_SELECTION  = 0x20;
+const int FOCUS_ALL              = 0x40;
+const int FOCUS_MAIN             = 0x80;
+const int FOCUS_MIDI             = 0x100;
+const int POSITION_H_LEFT        = 0x200;
+const int POSITION_H_MIDDLE      = 0x400;
+const int POSITION_H_RIGHT       = 0x800;
+const int POSITION_V_TOP         = 0x2000;
+const int POSITION_V_MIDDLE      = 0x4000;
+const int POSITION_V_BOTTOM      = 0x8000;
 
 /******************************************************************************
 * Globals                                                                     *
@@ -198,7 +198,7 @@ void BR_ContextualToolbar::LoadToolbar (bool exclusive)
 				if (toolbarsOpen)
 					this->CloseAllAssignedToolbars();
 
-				// Fill in missing execution options
+				// Fill in missing execution options (these repeat for all contexts so no need to repeat it in every find function)
 				executeOnToolbarLoad.autoCloseToolbar     = GetAutoClose(context);
 				executeOnToolbarLoad.makeTopMost          = !!(m_options.topmost & OPTION_ENABLED);
 				executeOnToolbarLoad.positionOffsetX      = GetPositionOffsetX(context);

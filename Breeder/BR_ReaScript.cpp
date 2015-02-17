@@ -150,7 +150,7 @@ bool BR_EnvGetPoint (BR_Envelope* envelope, int id, double* position, double* va
 		return false;
 }
 
-void BR_EnvGetProperties (BR_Envelope* envelope, bool* active, bool* visible, bool* armed, bool* inLane, int* laneHeight, int* defaultShape, double* minValue, double* maxValue, double* centerValue, int* type, bool* volFaderScaling)
+void BR_EnvGetProperties (BR_Envelope* envelope, bool* active, bool* visible, bool* armed, bool* inLane, int* laneHeight, int* defaultShape, double* minValue, double* maxValue, double* centerValue, int* type, bool* faderScaling)
 {
 	if (envelope)
 	{
@@ -163,7 +163,7 @@ void BR_EnvGetProperties (BR_Envelope* envelope, bool* active, bool* visible, bo
 		WritePtr(minValue,        envelope->MinValue());
 		WritePtr(maxValue,        envelope->MaxValue());
 		WritePtr(centerValue,     envelope->CenterValue());
-		WritePtr(volFaderScaling, envelope->IsVolScaledToFader());
+		WritePtr(faderScaling,    envelope->IsScaledToFader());
 
 		if (type)
 		{
@@ -194,7 +194,7 @@ void BR_EnvGetProperties (BR_Envelope* envelope, bool* active, bool* visible, bo
 		WritePtr(minValue,        0.0);
 		WritePtr(maxValue,        0.0);
 		WritePtr(centerValue,     0.0);
-		WritePtr(volFaderScaling, false);
+		WritePtr(faderScaling,    false);
 	}
 }
 
@@ -206,7 +206,7 @@ bool BR_EnvSetPoint (BR_Envelope* envelope, int id, double position, double valu
 		return false;
 }
 
-void BR_EnvSetProperties (BR_Envelope* envelope, bool active, bool visible, bool armed, bool inLane, int laneHeight, int defaultShape, bool volFaderScaling)
+void BR_EnvSetProperties (BR_Envelope* envelope, bool active, bool visible, bool armed, bool inLane, int laneHeight, int defaultShape, bool faderScaling)
 {
 	if (envelope)
 	{
@@ -215,7 +215,7 @@ void BR_EnvSetProperties (BR_Envelope* envelope, bool active, bool visible, bool
 		envelope->SetArmed(armed);
 		envelope->SetInLane(inLane);
 		envelope->SetLaneHeight(laneHeight);
-		envelope->SetVolScaleToFader(volFaderScaling);
+		envelope->SetScalingToFader(faderScaling);
 		if (defaultShape >= 0 && defaultShape <= 5)
 			envelope->SetDefaultShape(defaultShape);
 	}

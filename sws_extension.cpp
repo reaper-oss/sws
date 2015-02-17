@@ -657,8 +657,6 @@ extern "C"
 		IMPAPI(CSurf_TrackFromID);
 		IMPAPI(CSurf_TrackToID);
 		IMPAPI(DB2SLIDER);
-	IMPAPI(DEF_SLIDER2VAL); // v5pre12+
-	IMPAPI(DEF_VAL2SLIDER); // v5pre12+
 	IMPAPI(DeleteEnvelopePointRange); // v5pre5+
 		IMPAPI(DeleteActionShortcut);
 		IMPAPI(DeleteProjectMarker);
@@ -703,8 +701,10 @@ extern "C"
 		IMPAPI(GetCursorPosition);
 		IMPAPI(GetCursorPositionEx);
 		IMPAPI(GetEnvelopeName);
-		IMPAPI(GetExePath);
 	IMPAPI(GetEnvelopePoint); // v5pre4
+	IMPAPI(GetEnvelopePointByTime) // v5pre4
+	IMPAPI(GetEnvelopeScalingMode); // v5pre13+
+		IMPAPI(GetExePath);
 		IMPAPI(GetFocusedFX);
 	IMPAPI(GetFXEnvelope); // v5pre5+
 		IMPAPI(GetGlobalAutomationOverride);
@@ -792,7 +792,6 @@ extern "C"
 		IMPAPI(GetTrackNumSends);
 		IMPAPI(GetTrackUIVolPan);
 		IMPAPI(GetUserInputs);
-	IMPAPI(GetVolumeEnvelopeScaling); // v5pre6+
 		IMPAPI(get_config_var);
 		IMPAPI(get_ini_file);
 		IMPAPI(GR_SelectColor);
@@ -888,6 +887,8 @@ extern "C"
 		IMPAPI(Resample_EnumModes);
 		IMPAPI(Resampler_Create);
 		IMPAPI(ReverseNamedCommandLookup);
+	IMPAPI(ScaleFromEnvelopeMode); // v5pre13+
+	IMPAPI(ScaleToEnvelopeMode); // v5pre13+
 		IMPAPI(screenset_register);
 		IMPAPI(screenset_registerNew);
 		IMPAPI(screenset_unregister);

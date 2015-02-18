@@ -421,7 +421,7 @@ void BR_MidiCCEvents::SaveState (ProjectStateContext* ctx)
 		ctx->AddLine("%s %d",   "SOURCE_LANE",   m_sourceLane);
 		ctx->AddLine("%s %d",   "PPQ",           m_ppq);
 		for (size_t i = 0; i < m_events.size(); ++i)
-			ctx->AddLine("E %lf %d %d %d %d %d",
+			ctx->AddLine("E %lf %d %d %d %d",
 			             m_events[i].positionPpq,
 			             m_events[i].channel,
 			             m_events[i].msg2,
@@ -496,7 +496,7 @@ bool BR_MidiCCEvents::Save (BR_MidiEditor& midiEditor, int lane)
 			while ((id = MIDI_EnumSelNotes(take, id)) != -1)
 			{
 				BR_MidiCCEvents::Event event;
-				if(MIDI_GetNote(take, id, NULL, &event.mute, &event.positionPpq, NULL, &event.channel, NULL, &event.msg3) && midiEditor.IsNoteVisible(take, id));
+				if (MIDI_GetNote(take, id, NULL, &event.mute, &event.positionPpq, NULL, &event.channel, NULL, &event.msg3) && midiEditor.IsNoteVisible(take, id))
 				events.push_back(event);
 				if (m_sourcePpqStart == -1)
 						m_sourcePpqStart = event.positionPpq;
@@ -596,21 +596,20 @@ bool BR_MidiCCEvents::Restore (BR_MidiEditor& midiEditor, int lane, bool allVisi
 			)
 				continue;
 
-			double insertionStartPPQ = MIDI_GetPPQPosFromProjTime(take, GetCursorPositionEx(NULL));
 			double takeStartPPQ, takeEndPPQ;
 
 			if (GetMediaItemInfo_Value(item, "B_LOOPSRC"))
 			{
 				double itemEndPPQ   = MIDI_GetPPQPosFromProjTime(take, GetMediaItemInfo_Value(item, "D_POSITION") + GetMediaItemInfo_Value(item, "D_LENGTH"));
 				double itemStartPPQ = MIDI_GetPPQPosFromProjTime(take, GetMediaItemInfo_Value(item, "D_POSITION"));
-				if (!CheckBounds(insertionStartPPQ, itemStartPPQ, itemEndPPQ))
+				if (!CheckBounds(startPositionPppq, itemStartPPQ, itemEndPPQ))
 					continue;
 
 				double sourceLenPPQ = GetSourceLengthPPQ(take);
-				int currentLoop = (int)((insertionStartPPQ - itemStartPPQ) / sourceLenPPQ);
+				int currentLoop = (int)((startPositionPppq - itemStartPPQ) / sourceLenPPQ);
 				int loopCount   = (int)((itemEndPPQ        - itemStartPPQ) / sourceLenPPQ);
 
-				insertionStartPPQ -= currentLoop * sourceLenPPQ; // when dealing with looped items, always insert at the first iteration of the loop
+				startPositionPppq -= currentLoop * sourceLenPPQ; // when dealing with looped items, always insert at the first iteration of the loop
 
 				if (currentLoop == loopCount)
 				{
@@ -637,7 +636,7 @@ bool BR_MidiCCEvents::Restore (BR_MidiEditor& midiEditor, int lane, bool allVisi
 				if (GetBit(midiVu, 14))
 				{
 					double itemEnd = itemStart + GetMediaItemInfo_Value(item, "D_LENGTH");
-					double newEnd  = MIDI_GetProjTimeFromPPQPos(take, insertionStartPPQ + m_events.back().positionPpq + 1);
+					double newEnd  = MIDI_GetProjTimeFromPPQPos(take, startPositionPppq + m_events.back().positionPpq + 1);
 					if (newEnd > itemEnd)
 						SetMediaItemInfo_Value(item, "D_LENGTH", newEnd - itemStart);
 				}
@@ -660,7 +659,7 @@ bool BR_MidiCCEvents::Restore (BR_MidiEditor& midiEditor, int lane, bool allVisi
 			for (size_t i = 0; i < m_events.size(); ++i)
 			{
 				double posAddPPQ = (ratioPPQ == 0) ? m_events[i].positionPpq : Round(m_events[i].positionPpq * ratioPPQ);
-				double positionPpq = insertionStartPPQ + posAddPPQ;
+				double positionPpq = startPositionPppq + posAddPPQ;
 
 				if (positionPpq < takeStartPPQ)
 					continue;

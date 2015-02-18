@@ -114,7 +114,7 @@ m_valid                (false)
 		m_lastLane     = GetLastClickedVelLane(m_midiEditor);
 		m_ccLanesCount = (int)m_ccLanes.size();
 
-	
+
 	}
 }
 
@@ -1254,19 +1254,19 @@ int GetLastClickedVelLane (void* midiEditor)
 int MapVelLaneToReaScriptCC (int lane)
 {
 	if (lane == CC_VELOCITY)        return 0x200;
-	if (lane == CC_VELOCITY_OFF)    return 0x201;
+	if (lane == CC_VELOCITY_OFF)    return 0x207;
 	if (lane >= 0   && lane <= 127) return lane;
-	if (lane >= 128 && lane <= 133)	return 0x200 | (lane + 2 & 0x7F);
-	if (lane >= 134 && lane <= 165) return 0x100 | (lane - CC_14BIT_START);
+	if (lane >= 128 && lane <= 133)	return 0x200 | (lane+1 & 0x7F);
+	if (lane >= 134 && lane <= 165) return 0x100 | (lane - 134);
 	else                            return -1;
 }
 
 int MapReaScriptCCToVelLane (int cc)
 {
 	if (cc == 0x200)                return CC_VELOCITY;
-	if (cc == 0x201)                return CC_VELOCITY_OFF;
+	if (cc == 0x207)                return CC_VELOCITY_OFF;
 	if (cc >= 0     && cc <= 127)   return cc;
-	if (cc >= 0x202 && cc <= 0x207) return cc - 386;
+	if (cc >= 0x201 && cc <= 0x206) return cc - 385;
 	if (cc >= 0x100 && cc <= 0x11F) return cc - 122;
 	else                            return -2;
 }

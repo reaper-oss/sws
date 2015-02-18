@@ -230,5 +230,5 @@ int FindFirstSelectedNote (MediaItem_Take* take, BR_MidiEditor* midiEditorFilter
 int FindFirstSelectedCC   (MediaItem_Take* take, BR_MidiEditor* midiEditorFilterSettings); // want to check events through MIDI filter
 int GetMIDIFilePPQ (const char* fp);
 int GetLastClickedVelLane (void* midiEditor);
-int MapVelLaneToReaScriptCC (int lane); // CC format follows ReaScript scheme: 0-127=CC, 0x100|(0-31)=14-bit CC, 0x200=velocity, 0x201=off velocity,
-int MapReaScriptCCToVelLane (int cc);   // 0x202=pitch, 0x203=program, 0x204=channel pressure, 0x205=bank/program select, 0x206=text, 0x207=sysex
+int MapVelLaneToReaScriptCC (int lane); // CC format follows ReaScript scheme: 0-127=CC, 0x100|(0-31)=14-bit CC, 0x200=velocity, 0x201=pitch,
+int MapReaScriptCCToVelLane (int cc);   // 0x202=program, 0x203=channel pressure, 0x204=bank/program select, 0x205=text, 0x206=sysex, 0x207=off velocity

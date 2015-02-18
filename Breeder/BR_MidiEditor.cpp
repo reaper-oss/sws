@@ -679,7 +679,7 @@ void ME_CopySelCCEventsToLane (COMMAND_T* ct, int val, int valhw, int relmode, H
 			}
 		}
 		if (update)
-			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 	}
 	else
 		MessageBox((HWND)midiEditor.GetEditor(), __LOCALIZE("Can't copy to velocity, text, sysex and bank select lanes","sws_mbox"), __LOCALIZE("SWS/BR - Warning","sws_mbox"), MB_OK);

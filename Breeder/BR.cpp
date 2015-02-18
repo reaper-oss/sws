@@ -41,24 +41,6 @@
 #include "../reaper/localize.h"
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
-static COMMAND_T g_continuousCommandTable[] =
-{
-	/******************************************************************************
-	* Envelopes - Misc                                                            *
-	******************************************************************************/
-	{ { DEFACCEL, "SWS/BR: Set closest envelope point's value to mouse cursor (perform until shortcut released)" },           "BR_ENV_PT_VAL_CLOSEST_MOUSE",      SetEnvPointMouseValue, NULL, 0},
-	{ { DEFACCEL, "SWS/BR: Set closest left side envelope point's value to mouse cursor (perform until shortcut released)" }, "BR_ENV_PT_VAL_CLOSEST_LEFT_MOUSE", SetEnvPointMouseValue, NULL, 1},
-
-	/******************************************************************************
-	* Tempo - Grid                                                                *
-	******************************************************************************/
-	{ { DEFACCEL, "SWS/BR: Move closest tempo marker to mouse cursor (perform until shortcut released)" },      "BR_MOVE_CLOSEST_TEMPO_MOUSE", MoveGridToMouse, NULL, 0},
-	{ { DEFACCEL, "SWS/BR: Move closest grid line to mouse cursor (perform until shortcut released)" },         "BR_MOVE_GRID_TO_MOUSE",       MoveGridToMouse, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Move closest measure grid line to mouse cursor (perform until shortcut released)" }, "BR_MOVE_M_GRID_TO_MOUSE",     MoveGridToMouse, NULL, 2},
-
-	{ {}, LAST_COMMAND, },
-};
-
 static COMMAND_T g_commandTable[] =
 {
 	/******************************************************************************
@@ -369,8 +351,8 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Convert selected CC events to square envelope points in selected envelope (clear existing envelope points)" }, "BR_ME_CC_TO_ENV_SQUARE_CLEAR",                 NULL, NULL, -1, NULL, SECTION_MIDI_EDITOR, ME_CCToEnvPoints},
 	{ { DEFACCEL, "SWS/BR: Convert selected CC events to linear envelope points in selected envelope (clear existing envelope points)" }, "BR_ME_CC_TO_ENV_LINEAR_CLEAR",                 NULL, NULL, -2, NULL, SECTION_MIDI_EDITOR, ME_CCToEnvPoints},
 
-	{ { DEFACCEL, "SWS/BR: Copy selected CC events in active item to last clicked CC lane" },                                             "BR_ME_SEL_CC_TO_LAST_CLICKED_LANE",            NULL, NULL, 1, NULL,  SECTION_MIDI_EDITOR, ME_CopySelCCEventsToLane},
-	{ { DEFACCEL, "SWS/BR: Copy selected CC events in active item to CC lane under mouse cursor" },                                       "BR_ME_SEL_CC_TO_LANE_UNDER_MOUSE",             NULL, NULL, -1, NULL, SECTION_MIDI_EDITOR, ME_CopySelCCEventsToLane},
+	{ { DEFACCEL, "SWS/BR: Copy selected CC events in active item to last clicked CC lane" },                                             "BR_ME_SEL_CC_TO_LAST_CLICKED_LANE",            NULL, NULL, 1,  NULL, SECTION_MIDI_EDITOR, ME_CopySelCCToLane},
+	{ { DEFACCEL, "SWS/BR: Copy selected CC events in active item to CC lane under mouse cursor" },                                       "BR_ME_SEL_CC_TO_LANE_UNDER_MOUSE",             NULL, NULL, -1, NULL, SECTION_MIDI_EDITOR, ME_CopySelCCToLane},
 
 	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 1" },                                                                          "BR_ME_SAVE_CURSOR_POS_SLOT_1",                 NULL, NULL, 0, NULL, SECTION_MIDI_EDITOR, ME_SaveCursorPosSlot},
 	{ { DEFACCEL, "SWS/BR: Save edit cursor position, slot 2" },                                                                          "BR_ME_SAVE_CURSOR_POS_SLOT_2",                 NULL, NULL, 1, NULL, SECTION_MIDI_EDITOR, ME_SaveCursorPosSlot},
@@ -632,7 +614,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Adjust playrate options..." },     "BR_ADJUST_PLAYRATE_MIDI_OPTIONS", NULL, NULL, 1, IsAdjustPlayrateOptionsVisible, 0, AdjustPlayrate},
 
 	/******************************************************************************
-	* Tempo - Grid                                                                *
+	* Tempo                                                                       *
 	******************************************************************************/
 	{ { DEFACCEL, "SWS/BR: Move closest grid line to edit cursor" },            "BR_MOVE_GRID_TO_EDIT_CUR",   MoveGridToEditPlayCursor, NULL, 0},
 	{ { DEFACCEL, "SWS/BR: Move closest grid line to play cursor" },            "BR_MOVE_GRID_TO_PLAY_CUR",   MoveGridToEditPlayCursor, NULL, 1},
@@ -641,9 +623,6 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Move closest left side grid line to edit cursor" },  "BR_MOVE_L_GRID_TO_EDIT_CUR", MoveGridToEditPlayCursor, NULL, 4},
 	{ { DEFACCEL, "SWS/BR: Move closest right side grid line to edit cursor" }, "BR_MOVE_R_GRID_TO_EDIT_CUR", MoveGridToEditPlayCursor, NULL, 5},
 
-	/******************************************************************************
-	* Tempo - Misc                                                                *
-	******************************************************************************/
 	{ { DEFACCEL, "SWS/BR: Move tempo marker forward 0.1 ms" },                                                               "SWS_BRMOVETEMPOFORWARD01",    MoveTempo, NULL, 1},
 	{ { DEFACCEL, "SWS/BR: Move tempo marker forward 1 ms" },                                                                 "SWS_BRMOVETEMPOFORWARD1",     MoveTempo, NULL, 10},
 	{ { DEFACCEL, "SWS/BR: Move tempo marker forward 10 ms" },                                                                "SWS_BRMOVETEMPOFORWARD10",    MoveTempo, NULL, 100},
@@ -732,9 +711,6 @@ void BR_Exit ()
 
 void BR_RegisterContinuousActions ()
 {
-	SWSRegisterCommands(g_continuousCommandTable);
-
-	// Call these only after registering commands (they expect for cmd to be valid at this point)
 	MoveGridToMouseInit();
 	SetEnvPointMouseValueInit();
 }

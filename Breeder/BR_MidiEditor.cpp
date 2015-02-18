@@ -339,11 +339,11 @@ void ME_CreateCCLaneLastClicked (COMMAND_T* ct, int val, int valhw, int relmode,
 				bool lanes[SNM_MAX_CC_LANE_ID + 1];
 				memset(&lanes, false, SNM_MAX_CC_LANE_ID + 1);
 
-				char lastLaneId[128] = "";				
+				char lastLaneId[128] = "";
 				int tkFirstPos = 0;
 				int laneCpt    = 0;
 				int pos = ptk.Parse(SNM_GET_CHUNK_CHAR, 1, "SOURCE", "VELLANE", laneCpt, 1, lastLaneId);
-				while (pos > 0) 
+				while (pos > 0)
 				{
 					if (!tkFirstPos) tkFirstPos = pos;
 					lanes[atoi(lastLaneId)] = true; // atoi: 0 on failure, lane 0 won't be used anyway..
@@ -353,7 +353,7 @@ void ME_CreateCCLaneLastClicked (COMMAND_T* ct, int val, int valhw, int relmode,
 				// Insert new lane
 				if (tkFirstPos > 0)
 				{
-					tkFirstPos--; 
+					tkFirstPos--;
 					int i = 1;
 					while (lanes[i] && i <= SNM_MAX_CC_LANE_ID)
 						i++;
@@ -369,7 +369,7 @@ void ME_CreateCCLaneLastClicked (COMMAND_T* ct, int val, int valhw, int relmode,
 	if (updated)
 	{
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
-		
+
 		BR_MidiEditor midiEditor(editor);
 		if (midiEditor.IsValid())
 		{
@@ -384,7 +384,7 @@ void ME_CreateCCLaneLastClicked (COMMAND_T* ct, int val, int valhw, int relmode,
 				SimulateMouseClick(hwnd, point, true);
 
 			}
-		}	
+		}
 	}
 }
 
@@ -628,7 +628,7 @@ void ME_CCToEnvPoints (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS | UNDO_STATE_TRACKCFG, -1);
 }
 
-void ME_CopySelCCEventsToLane (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
+void ME_CopySelCCToLane (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
 	void* editor;
 	int lane;

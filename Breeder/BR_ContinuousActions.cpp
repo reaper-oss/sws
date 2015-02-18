@@ -41,13 +41,29 @@ const int TOOLTIP_X_OFFSET = 30;
 ******************************************************************************/
 static WDL_PtrList<BR_ContinuousAction> g_actions;
 static BR_ContinuousAction*             g_actionInProgress = NULL;
+
 static WNDPROC                          g_arrangeWndProc   = NULL;
 static WNDPROC                          g_rulerWndProc     = NULL;
+
 static HWND                             g_tooltipWnd       = NULL;
 static LICE_SysBitmap*                  g_tooltipBm        = NULL;
 static int                              g_tooltips         = -1;
+
 static int                              g_continuousCmdLo  = -1;
 static int                              g_continuousCmdHi  = -1;
+
+/******************************************************************************
+* BR_ContinuousAction                                                         *
+******************************************************************************/
+BR_ContinuousAction::BR_ContinuousAction (COMMAND_T* ct, bool (*Init)(bool), int (*DoUndo)(), HCURSOR (*SetMouseCursor)(int), WDL_FastString (*SetTooltip)(int,bool*,RECT*)) :
+Init           (Init),
+DoUndo         (DoUndo),
+SetMouseCursor (SetMouseCursor),
+SetTooltip     (SetTooltip),
+cmd            ((ct->uniqueSectionId == SECTION_MAIN || ct->uniqueSectionId == SECTION_MAIN_ALT || ct->uniqueSectionId == SECTION_MIDI_EDITOR) ? SWSRegisterCmd(ct, __FILE__) : 0),
+section        (ct->uniqueSectionId)
+{
+}
 
 /******************************************************************************
 * Tooltip and mouse cursor mechanism                                          *
@@ -151,13 +167,13 @@ static LRESULT CALLBACK ArrangeWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPA
 	}
 	else if (uMsg == WM_MOUSEMOVE && g_actionInProgress && g_actionInProgress->SetTooltip)
 	{
-		RECT r = {0,0,0,0};
-		WDL_FastString tooltip = g_actionInProgress->SetTooltip(BR_ContinuousAction::ARRANGE, r);
+		bool setToBounds; RECT r;
+		WDL_FastString tooltip = g_actionInProgress->SetTooltip(BR_ContinuousAction::ARRANGE, &setToBounds, &r);
 		if (tooltip.GetLength())
 		{
 			POINT p = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
 			ClientToScreen(hwnd, &p);
-			SetTooltip(tooltip.Get(), &p, (AreAllCoordsZero(r) ? NULL : &r));
+			SetTooltip(tooltip.Get(), &p, (setToBounds ? &r : NULL));
 		}
 		else
 		{
@@ -180,13 +196,13 @@ static LRESULT CALLBACK RulerWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 	}
 	else if (uMsg == WM_MOUSEMOVE && g_actionInProgress && g_actionInProgress->SetTooltip)
 	{
-		RECT r = {0,0,0,0};
-		WDL_FastString tooltip = g_actionInProgress->SetTooltip(BR_ContinuousAction::RULER, r);
+		bool setToBounds; RECT r;
+		WDL_FastString tooltip = g_actionInProgress->SetTooltip(BR_ContinuousAction::RULER, &setToBounds, &r);
 		if (tooltip.GetLength())
 		{
 			POINT p = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
 			ClientToScreen(hwnd, &p);
-			SetTooltip(tooltip.Get(), &p, (AreAllCoordsZero(r) ? NULL : &r));
+			SetTooltip(tooltip.Get(), &p, (setToBounds ? &r : NULL));
 		}
 		else
 		{
@@ -202,6 +218,25 @@ static LRESULT CALLBACK RulerWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 static int CompareActionsByCmd (const BR_ContinuousAction** action1, const BR_ContinuousAction** action2)
 {
 	return (*action1)->cmd - (*action2)->cmd;
+}
+
+static int FindRegisteredActionByCmd (int cmd)
+{
+	int a = 0;
+	int c = g_actions.GetSize();
+	while (a != c)
+	{
+		int b = (a+c)/2;
+		int cmp = cmd - g_actions.Get(b)->cmd;
+		
+		if      (cmp > 0) a = b+1;
+		else if (cmp < 0) c = b;
+		else
+		{
+		  return b;
+		}
+	 }
+	return -1;
 }
 
 static void ContinuousActionTimer ()
@@ -259,12 +294,12 @@ static bool ContinuousActionInit (bool init, int cmd, BR_ContinuousAction* actio
 				{
 					if (g_actionInProgress->SetTooltip)
 					{
-						RECT r = {0,0,0,0};
-						WDL_FastString tooltip = g_actionInProgress->SetTooltip(BR_ContinuousAction::ARRANGE, r);
+						bool setToBounds; RECT r;
+						WDL_FastString tooltip = g_actionInProgress->SetTooltip(BR_ContinuousAction::ARRANGE, &setToBounds, &r);
 						if (tooltip.GetLength())
 						{
 							POINT p; GetCursorPos(&p);
-							SetTooltip(tooltip.Get(), &p, (AreAllCoordsZero(r) ? NULL : &r));
+							SetTooltip(tooltip.Get(), &p, (setToBounds ? &r : NULL));
 						}
 					}
 					g_arrangeWndProc = (WNDPROC)SetWindowLongPtr(GetArrangeWnd(), GWLP_WNDPROC, (LONG_PTR)ArrangeWndProc);
@@ -277,12 +312,12 @@ static bool ContinuousActionInit (bool init, int cmd, BR_ContinuousAction* actio
 				{
 					if (g_actionInProgress->SetTooltip)
 					{
-						RECT r = {0,0,0,0};
-						WDL_FastString tooltip = g_actionInProgress->SetTooltip(BR_ContinuousAction::RULER, r);
+						bool setToBounds; RECT r;
+						WDL_FastString tooltip = g_actionInProgress->SetTooltip(BR_ContinuousAction::RULER, &setToBounds, &r);
 						if (tooltip.GetLength())
 						{
 							POINT p; GetCursorPos(&p);
-							SetTooltip(tooltip.Get(), &p, (AreAllCoordsZero(r) ? NULL : &r));
+							SetTooltip(tooltip.Get(), &p, (setToBounds ? &r : NULL));
 						}
 					}
 
@@ -339,7 +374,7 @@ static bool ContinuousActionInit (bool init, int cmd, BR_ContinuousAction* actio
 ******************************************************************************/
 bool ContinuousActionRegister (BR_ContinuousAction* action)
 {
-	if (action && kbd_getTextFromCmd(action->cmd, NULL) && g_actions.FindSorted(action, &CompareActionsByCmd) == -1)
+	if (action && action->cmd != 0 && g_actions.FindSorted(action, &CompareActionsByCmd) == -1)
 	{
 		g_actions.InsertSorted(action, &CompareActionsByCmd);
 		g_continuousCmdLo = g_actions.Get(0)->cmd;
@@ -361,7 +396,7 @@ void ContinuousActionStopAll ()
 	ContinuousActionInit(false, 0, NULL);
 }
 
-int  ContinuousActionTooltips ()
+int ContinuousActionTooltips ()
 {
 	return g_tooltips;
 }
@@ -370,8 +405,7 @@ bool ContinuousActionHook (int cmd, int flag)
 {
 	if (cmd >= g_continuousCmdLo && cmd <= g_continuousCmdHi) // instead of searching the list every time, first check if cmd is even within range of the list
 	{
-		BR_ContinuousAction key(cmd, NULL, NULL, NULL, NULL);
-		int id = g_actions.FindSorted(&key, &CompareActionsByCmd);
+		int id = FindRegisteredActionByCmd(cmd);
 		if (id != -1)
 		{
 			if (!g_actionInProgress)

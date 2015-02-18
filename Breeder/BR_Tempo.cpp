@@ -44,53 +44,6 @@ static HWND g_selectAdjustTempoWnd = NULL;
 static HWND g_tempoShapeWnd = NULL;
 
 /******************************************************************************
-* Continuous action: move grid to mouse cursor                                *
-******************************************************************************/
-static BR_Envelope* g_moveGridTempoMap = NULL;
-static bool         g_movedGridOnce    = false;
-
-static bool MoveGridInit (bool init)
-{
-	static int s_editCursorUndo = 0;
-
-	bool initSuccessful = true;
-	if (init)
-	{
-		GetConfig("undomask", s_editCursorUndo);
-
-		initSuccessful = PositionAtMouseCursor(true) != -1;
-		if (initSuccessful)
-			SetConfig("undomask", ClearBit(s_editCursorUndo, 3));
-	}
-	else
-	{
-		SetConfig("undomask", s_editCursorUndo);
-		delete g_moveGridTempoMap;
-		g_moveGridTempoMap = NULL;
-	}
-
-	g_movedGridOnce = false;
-	return initSuccessful;
-}
-
-static int MoveGridDoUndo ()
-{
-	return (g_movedGridOnce) ? (UNDO_STATE_TRACKCFG) : (0);
-}
-
-static HCURSOR MoveGridCursor (int window)
-{
-	static HCURSOR s_cursor = NULL;
-	if (!s_cursor)
-		s_cursor = LoadCursor(NULL, IDC_SIZEWE);
-
-	if (window == BR_ContinuousAction::ARRANGE || window == BR_ContinuousAction::RULER)
-		return s_cursor;
-	else
-		return NULL;
-}
-
-/******************************************************************************
 * Misc                                                                        *
 ******************************************************************************/
 static bool MoveTempo (BR_Envelope& tempoMap, int id, double timeDiff)
@@ -170,16 +123,53 @@ static bool MoveTempo (BR_Envelope& tempoMap, int id, double timeDiff)
 }
 
 /******************************************************************************
-* Commands: Tempo - Grid                                                      *
+* Commands: Continuous actions                                                *
 ******************************************************************************/
-void MoveGridToMouseInit ()
+static BR_Envelope* g_moveGridTempoMap = NULL;
+static bool         g_movedGridOnce    = false;
+
+static bool MoveGridInit (bool init)
 {
-	ContinuousActionRegister(new BR_ContinuousAction(NamedCommandLookup("_BR_MOVE_GRID_TO_MOUSE"),       &MoveGridInit, &MoveGridDoUndo, &MoveGridCursor));
-	ContinuousActionRegister(new BR_ContinuousAction(NamedCommandLookup("_BR_MOVE_M_GRID_TO_MOUSE"),     &MoveGridInit, &MoveGridDoUndo, &MoveGridCursor));
-	ContinuousActionRegister(new BR_ContinuousAction(NamedCommandLookup("_BR_MOVE_CLOSEST_TEMPO_MOUSE"), &MoveGridInit, &MoveGridDoUndo, &MoveGridCursor));
+	static int s_editCursorUndo = 0;
+
+	bool initSuccessful = true;
+	if (init)
+	{
+		GetConfig("undomask", s_editCursorUndo);
+
+		initSuccessful = PositionAtMouseCursor(true) != -1;
+		if (initSuccessful)
+			SetConfig("undomask", ClearBit(s_editCursorUndo, 3));
+	}
+	else
+	{
+		SetConfig("undomask", s_editCursorUndo);
+		delete g_moveGridTempoMap;
+		g_moveGridTempoMap = NULL;
+	}
+
+	g_movedGridOnce = false;
+	return initSuccessful;
 }
 
-void MoveGridToMouse (COMMAND_T* ct)
+static int MoveGridDoUndo ()
+{
+	return (g_movedGridOnce) ? (UNDO_STATE_TRACKCFG) : (0);
+}
+
+static HCURSOR MoveGridCursor (int window)
+{
+	static HCURSOR s_cursor = NULL;
+	if (!s_cursor)
+		s_cursor = LoadCursor(NULL, IDC_SIZEWE);
+
+	if (window == BR_ContinuousAction::ARRANGE || window == BR_ContinuousAction::RULER)
+		return s_cursor;
+	else
+		return NULL;
+}
+
+static void MoveGridToMouse (COMMAND_T* ct)
 {
 	static int    s_lockedId = -1;
 	static double s_lastPosition = 0;
@@ -281,6 +271,22 @@ void MoveGridToMouse (COMMAND_T* ct)
 	}
 }
 
+void MoveGridToMouseInit ()
+{
+	//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
+	static COMMAND_T command1 = { { DEFACCEL, "SWS/BR: Move closest tempo marker to mouse cursor (perform until shortcut released)" },      "BR_MOVE_CLOSEST_TEMPO_MOUSE", MoveGridToMouse, NULL, 0};
+	static COMMAND_T command2 = { { DEFACCEL, "SWS/BR: Move closest grid line to mouse cursor (perform until shortcut released)" },         "BR_MOVE_GRID_TO_MOUSE",       MoveGridToMouse, NULL, 1};
+	static COMMAND_T command3 = { { DEFACCEL, "SWS/BR: Move closest measure grid line to mouse cursor (perform until shortcut released)" }, "BR_MOVE_M_GRID_TO_MOUSE",     MoveGridToMouse, NULL, 2};
+	//!WANT_LOCALIZE_1ST_STRING_END
+
+	ContinuousActionRegister(new BR_ContinuousAction(&command1, &MoveGridInit, &MoveGridDoUndo, &MoveGridCursor));
+	ContinuousActionRegister(new BR_ContinuousAction(&command2, &MoveGridInit, &MoveGridDoUndo, &MoveGridCursor));
+	ContinuousActionRegister(new BR_ContinuousAction(&command3, &MoveGridInit, &MoveGridDoUndo, &MoveGridCursor));
+}
+
+/******************************************************************************
+* Commands: Tempo                                                             *
+******************************************************************************/
 void MoveGridToEditPlayCursor (COMMAND_T* ct)
 {
 	// Find cursor immediately (in case of playback we want the most accurate position)
@@ -347,9 +353,6 @@ void MoveGridToEditPlayCursor (COMMAND_T* ct)
 	SetConfig("seekmodes", seekmodes);
 }
 
-/******************************************************************************
-* Commands: Tempo - Misc                                                      *
-******************************************************************************/
 void MoveTempo (COMMAND_T* ct)
 {
 	BR_Envelope tempoMap(GetTempoEnv());

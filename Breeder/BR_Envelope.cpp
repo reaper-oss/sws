@@ -35,7 +35,7 @@
 #include "../reaper/localize.h"
 
 /******************************************************************************
-* Continuous action: set envelope point value to mouse                        *
+* Commands: Continuous actions                                                *
 ******************************************************************************/
 static BR_Envelope* g_envMouseEnvelope = NULL;
 static bool         g_envMouseDidOnce  = false;
@@ -90,7 +90,7 @@ static HCURSOR EnvMouseCursor (int window)
 		return NULL;
 }
 
-static WDL_FastString EnvMouseTooltip (int window, RECT& bounds)
+static WDL_FastString EnvMouseTooltip (int window, bool* setToBounds, RECT* bounds)
 {
 	WDL_FastString tooltip;
 
@@ -118,23 +118,15 @@ static WDL_FastString EnvMouseTooltip (int window, RECT& bounds)
 			static RECT s_bounds;
 			if (g_envMouseMode == -666) // action called for the first time, calculate bounding rect
 				s_bounds = GetDrawableArrangeArea();
-			bounds = s_bounds;
+			WritePtr(bounds, s_bounds);
+			WritePtr(setToBounds, true);
 		}
 
 	}
 	return tooltip;
 }
 
-void SetEnvPointMouseValueInit ()
-{
-	ContinuousActionRegister(new BR_ContinuousAction(NamedCommandLookup("_BR_ENV_PT_VAL_CLOSEST_MOUSE"),      &EnvMouseInit, &EnvMouseUndo, &EnvMouseCursor, &EnvMouseTooltip));
-	ContinuousActionRegister(new BR_ContinuousAction(NamedCommandLookup("_BR_ENV_PT_VAL_CLOSEST_LEFT_MOUSE"), &EnvMouseInit, &EnvMouseUndo, &EnvMouseCursor, &EnvMouseTooltip));
-}
-
-/******************************************************************************
-* Commands: Envelopes - Misc                                                  *
-******************************************************************************/
-void SetEnvPointMouseValue (COMMAND_T* ct)
+static void SetEnvPointMouseValue (COMMAND_T* ct)
 {
 	static int    s_lastEndId       = -1;
 	static double s_lastEndPosition = -1;
@@ -295,6 +287,20 @@ void SetEnvPointMouseValue (COMMAND_T* ct)
 	}
 }
 
+void SetEnvPointMouseValueInit ()
+{
+	//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
+	static COMMAND_T command1 = { { DEFACCEL, "SWS/BR: Set closest envelope point's value to mouse cursor (perform until shortcut released)" },           "BR_ENV_PT_VAL_CLOSEST_MOUSE",      SetEnvPointMouseValue, NULL, 0};
+	static COMMAND_T command2 = { { DEFACCEL, "SWS/BR: Set closest left side envelope point's value to mouse cursor (perform until shortcut released)" }, "BR_ENV_PT_VAL_CLOSEST_LEFT_MOUSE", SetEnvPointMouseValue, NULL, 1};
+	//!WANT_LOCALIZE_1ST_STRING_END
+
+	ContinuousActionRegister(new BR_ContinuousAction(&command1, &EnvMouseInit, &EnvMouseUndo, &EnvMouseCursor, &EnvMouseTooltip));
+	ContinuousActionRegister(new BR_ContinuousAction(&command2, &EnvMouseInit, &EnvMouseUndo, &EnvMouseCursor, &EnvMouseTooltip));
+}
+
+/******************************************************************************
+* Commands: Envelopes - Misc                                                  *
+******************************************************************************/
 void CursorToEnv1 (COMMAND_T* ct)
 {
 	TrackEnvelope* envelope = GetSelectedEnvelope(NULL);

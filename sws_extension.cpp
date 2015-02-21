@@ -92,13 +92,13 @@ bool hookCommandProc(int iCmd, int flag)
 	if (iCmd == 1013 && !RecordInputCheck())
 		return true;
 
-	// For continuous actions
-	if (BR_ActionHook(iCmd, flag))
-		return true;
-
 	// Ignore commands that don't have anything to do with us from this point forward
 	if (COMMAND_T* cmd = SWSGetCommandByID(iCmd))
 	{
+		// For continuous actions
+		if (BR_ActionHook(iCmd, flag, NULL))
+			return true;
+
 		if (!cmd->uniqueSectionId && cmd->accel.accel.cmd==iCmd && cmd->doCommand)
 		{
 			if (sReentrantCmds.Find(cmd->id)<0)
@@ -142,6 +142,10 @@ bool hookCommandProc2(KbdSectionInfo* sec, int cmdId, int val, int valhw, int re
 
 			if (cmd->onAction)
 			{
+				// For continuous actions
+				if (BR_ActionHook(cmdId, relmode, hwnd))
+					return true;
+
 				if (sReentrantCmds.Find(cmd->id)<0)
 				{
 					sReentrantCmds.Add(cmd->id);

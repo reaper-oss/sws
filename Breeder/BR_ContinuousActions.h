@@ -34,7 +34,11 @@
 *                                                                             *
 * To make action continuous create BR_ContinuousAction object and register it *
 * with ContinuousActionRegister().                                            *
-* Note: works only with Main section actions for now                          *
+*                                                                             *
+* Note: Works only with Main and MIDI editor section. Also note that on OSX   *
+* actions registered in MIDI editor section will focus arrange for the        *
+* duration of the action (needed to catch any key up messages that stop the   *
+* action execution.                                                           *
 *                                                                             *
 * For examples see BR_Tempo.cpp or BR_Envelope.cpp                            *
 ******************************************************************************/
@@ -42,18 +46,21 @@ struct BR_ContinuousAction
 {
 public:
 	BR_ContinuousAction (COMMAND_T* ct, bool (*Init)(bool) = NULL, int (*DoUndo)() = NULL, HCURSOR (*SetMouseCursor)(int) = NULL, WDL_FastString (*SetTooltip)(int,bool*,RECT*) = NULL);
-	
+
 	bool           (*Init)(bool init);                                         // called on start with init = true and on shortcut release with init = false. Return false to abort init.
 	int            (*DoUndo)();                                                // called when shortcut is released, return undo flag to create undo point (or 0 for no undo point). If NULL, no undo point will get created
 	HCURSOR        (*SetMouseCursor)(int window);                              // called when setting cursor for each window, return NULL to skip
 	WDL_FastString (*SetTooltip)(int window, bool* setToBounds, RECT* bounds); // called when setting cursor tooltip, return empty string to remove existing tooltip
 	const int cmd;                                                             // cmd of the continuous action
 	const int section;                                                         // section in which continuous action is registered
-	
+
 	enum Window
 	{
 		RULER,
-		ARRANGE
+		ARRANGE,
+		MIDI_EDITOR_ALL,
+		MIDI_NOTES_VIEW,
+		MIDI_PIANO
 	};
 };
 
@@ -64,7 +71,7 @@ int  ContinuousActionTooltips ();                            // get current tool
 /******************************************************************************
 * Call from the action hook and swallow action if it returns true             *
 ******************************************************************************/
-bool ContinuousActionHook (int cmd, int flag);
+bool ContinuousActionHook (int cmd, int flag, HWND hwnd);
 
 /******************************************************************************
 * Put all continuous actions init functions here so their cmds end up         *

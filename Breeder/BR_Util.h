@@ -100,6 +100,7 @@ void ScrollToTrackIfNotInArrange (MediaTrack* track);
 void StartPlayback (double position);
 void GetSetLastAdjustedSend (bool set, MediaTrack** track, int* sendId, int* type); // for type see BR_EnvType (works only for volume and pan, not mute)
 void GetSetFocus (bool set, HWND* hwnd, int* context);
+void SetAllCoordsToZero (RECT* r);
 bool IsPlaying ();
 bool IsPaused ();
 bool IsRecording ();

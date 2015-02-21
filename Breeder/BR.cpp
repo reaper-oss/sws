@@ -713,11 +713,12 @@ void BR_RegisterContinuousActions ()
 {
 	MoveGridToMouseInit();
 	SetEnvPointMouseValueInit();
+	ContinuousTestInit();
 }
 
-bool BR_ActionHook (int cmd, int flag)
+bool BR_ActionHook (int cmd, int flag, HWND hwnd)
 {
-	return ContinuousActionHook(cmd, flag);
+	return ContinuousActionHook(cmd, flag, hwnd);
 }
 
 void BR_CSurfSetPlayState (bool play, bool pause, bool rec)

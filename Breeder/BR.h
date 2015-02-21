@@ -30,7 +30,7 @@
 int         BR_Init ();
 void        BR_Exit ();
 void        BR_RegisterContinuousActions ();
-bool        BR_ActionHook (int cmd, int flag);
+bool        BR_ActionHook (int cmd, int flag, HWND hwnd);
 void        BR_CSurfSetPlayState (bool play, bool pause, bool rec);
 int         BR_CSurfExtended (int call, void* parm1, void* parm2, void* parm3);
 const char* BR_GetIniFile ();

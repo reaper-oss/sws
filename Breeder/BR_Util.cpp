@@ -635,6 +635,17 @@ void GetSetFocus (bool set, HWND* hwnd, int* context)
 	}                                               // tells us context is still 1, but GetCursorContext2(false) would return 0
 }
 
+void SetAllCoordsToZero (RECT* r)
+{
+	if (r)
+	{
+		r->top    = 0;
+		r->bottom = 0;
+		r->left   = 0;
+		r->right  = 0;
+	}
+}
+
 bool IsPlaying ()
 {
 	return (GetPlayStateEx(NULL) & 1) == 1;

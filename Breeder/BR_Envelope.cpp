@@ -40,6 +40,7 @@
 static BR_Envelope* g_envMouseEnvelope = NULL;
 static bool         g_envMouseDidOnce  = false;
 static int          g_envMouseMode     = -666;
+static RECT         g_envMouseBounds;
 
 static bool EnvMouseInit (bool init)
 {
@@ -60,12 +61,14 @@ static bool EnvMouseInit (bool init)
 			g_envMouseEnvelope = NULL;
 		}
 		GetConfig("undomask", s_editCursorUndo);
+		SetAllCoordsToZero(&g_envMouseBounds);
 	}
 	else
 	{
 		SetConfig("undomask", s_editCursorUndo);
 		delete g_envMouseEnvelope;
 		g_envMouseEnvelope = NULL;
+		SetAllCoordsToZero(&g_envMouseBounds);
 	}
 
 	g_envMouseDidOnce = false;
@@ -115,13 +118,11 @@ static WDL_FastString EnvMouseTooltip (int window, bool* setToBounds, RECT* boun
 			static const char* s_format = __localizeFunc("Envelope: %s\n%s at %s", "tooltip", 0);
 			tooltip.AppendFormatted(512, s_format, (g_envMouseEnvelope->GetName()).Get(), (g_envMouseEnvelope->FormatValue(value)).Get(), FormatTime(position).Get());
 
-			static RECT s_bounds;
-			if (g_envMouseMode == -666) // action called for the first time, calculate bounding rect
-				s_bounds = GetDrawableArrangeArea();
-			WritePtr(bounds, s_bounds);
+			if (AreAllCoordsZero(g_envMouseBounds))
+				g_envMouseBounds = GetDrawableArrangeArea();
+			WritePtr(bounds,      g_envMouseBounds);
 			WritePtr(setToBounds, true);
 		}
-
 	}
 	return tooltip;
 }

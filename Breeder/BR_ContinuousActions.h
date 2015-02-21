@@ -38,7 +38,7 @@
 * Note: Works only with Main and MIDI editor section. Also note that on OSX   *
 * actions registered in MIDI editor section will focus arrange for the        *
 * duration of the action (needed to catch any key up messages that stop the   *
-* action execution.                                                           *
+* action execution.)                                                          *
 *                                                                             *
 * For examples see BR_Tempo.cpp or BR_Envelope.cpp                            *
 ******************************************************************************/
@@ -52,13 +52,12 @@ public:
 	HCURSOR        (*SetMouseCursor)(int window);                              // called when setting cursor for each window, return NULL to skip
 	WDL_FastString (*SetTooltip)(int window, bool* setToBounds, RECT* bounds); // called when setting cursor tooltip, return empty string to remove existing tooltip
 	const int cmd;                                                             // cmd of the continuous action
-	const int section;                                                         // section in which continuous action is registered
+	const int section;                                                         // section in which the continuous action is registered
 
 	enum Window
 	{
-		RULER,
-		ARRANGE,
-		MIDI_EDITOR_ALL,
+		MAIN_RULER,
+		MAIN_ARRANGE,
 		MIDI_NOTES_VIEW,
 		MIDI_PIANO
 	};

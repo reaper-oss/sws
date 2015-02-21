@@ -87,7 +87,7 @@ static HCURSOR EnvMouseCursor (int window)
 	if (!s_cursor)
 		s_cursor = LoadCursor(NULL, IDC_SIZENS);
 
-	if (window == BR_ContinuousAction::ARRANGE || window == BR_ContinuousAction::RULER)
+	if (window == BR_ContinuousAction::MAIN_ARRANGE || window == BR_ContinuousAction::MAIN_RULER)
 		return s_cursor;
 	else
 		return NULL;
@@ -99,7 +99,7 @@ static WDL_FastString EnvMouseTooltip (int window, bool* setToBounds, RECT* boun
 
 	if (g_envMouseEnvelope && !GetBit(ContinuousActionTooltips(), 0))
 	{
-		if (window == BR_ContinuousAction::ARRANGE || window == BR_ContinuousAction::RULER)
+		if (window == BR_ContinuousAction::MAIN_ARRANGE || window == BR_ContinuousAction::MAIN_RULER)
 		{
 			int envHeight, envY, yOffset;
 			bool overRuler;

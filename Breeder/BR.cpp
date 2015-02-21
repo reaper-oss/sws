@@ -713,7 +713,6 @@ void BR_RegisterContinuousActions ()
 {
 	MoveGridToMouseInit();
 	SetEnvPointMouseValueInit();
-	ContinuousTestInit();
 }
 
 bool BR_ActionHook (int cmd, int flag, HWND hwnd)

@@ -163,7 +163,7 @@ static HCURSOR MoveGridCursor (int window)
 	if (!s_cursor)
 		s_cursor = LoadCursor(NULL, IDC_SIZEWE);
 
-	if (window == BR_ContinuousAction::ARRANGE || window == BR_ContinuousAction::RULER)
+	if (window == BR_ContinuousAction::MAIN_ARRANGE || window == BR_ContinuousAction::MAIN_RULER)
 		return s_cursor;
 	else
 		return NULL;

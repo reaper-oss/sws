@@ -225,8 +225,8 @@ static LRESULT CALLBACK GenericWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPA
 	int window      = 0;
 	WNDPROC wndProc = NULL;
 
-	if      (hwnd == GetArrangeWnd()) {window = BR_ContinuousAction::ARRANGE;         wndProc = g_arrangeWndProc;}
-	else if (hwnd == GetRulerWnd())   {window = BR_ContinuousAction::RULER;           wndProc = g_rulerWndProc;}
+	if      (hwnd == GetArrangeWnd()) {window = BR_ContinuousAction::MAIN_ARRANGE;    wndProc = g_arrangeWndProc;}
+	else if (hwnd == GetRulerWnd())   {window = BR_ContinuousAction::MAIN_RULER;      wndProc = g_rulerWndProc;}
 	else if (hwnd == g_notesWnd)      {window = BR_ContinuousAction::MIDI_NOTES_VIEW; wndProc = g_notesWndProc;}
 	else if (hwnd == g_pianoWnd)      {window = BR_ContinuousAction::MIDI_PIANO;      wndProc = g_pianoWndProc;}
 
@@ -490,7 +490,7 @@ static bool ContinuousActionInit (bool init, int cmd, HWND hwnd, BR_ContinuousAc
 }
 
 /******************************************************************************
-* Functions for usage by continuous actions                                   *
+* Functions for client usage exposed in the header                            *
 *                                                                             *
 * Just one gotcha here - when registering actions, they are stored in a       *
 * sorted manner using their cmds so in the action hook we can do 2            *

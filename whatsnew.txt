@@ -11,9 +11,15 @@ Added actions
  - SWS: Toggle zoom to selected tracks/items/time selection (ignore last track's envelope lanes)
  - SWS/BR: Save/Restore selected/all items' mute state, slot x (8 slots)
  - SWS/BR: Save/Restore selected/all tracks' solo and mute state, slot x (8 slots)
+ - SWS/BR: Play from mouse cursor position (perform until shortcut released)
+ - SWS/BR: Play from mouse cursor position and solo track under mouse for the duration (perform until shortcut released)
+ - SWS/BR: Play from mouse cursor position and solo item and track under mouse for the duration (perform until shortcut released)
 +MIDI editor:
  - SWS/BR: Create CC lane and make it last clicked
  - SWS/BR: Copy selected CC events in active item to last clicked CC lane/lane under mouse cursor
+ - SWS/BR: Play from mouse cursor position (perform until shortcut released)
+ - SWS/BR: Play from mouse cursor position and solo active item's track for the duration (perform until shortcut released)
+ - SWS/BR: Play from mouse cursor position and solo active item for the duration (perform until shortcut released)
 
 ReaScript
 +Updated BR_EnvGetProperties and BR_EnvSetProperties (volume envelope fader scaling support)

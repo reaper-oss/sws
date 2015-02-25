@@ -27,6 +27,7 @@
 ******************************************************************************/
 #include "stdafx.h"
 #include "BR_Misc.h"
+#include "BR_ContinuousActions.h"
 #include "BR_EnvelopeUtil.h"
 #include "BR_MidiUtil.h"
 #include "BR_MouseUtil.h"
@@ -49,6 +50,210 @@ const char* const ADJUST_PLAYRATE_WND = "BR - AdjustPlayrateWnd";
 * Globals                                                                     *
 ******************************************************************************/
 HWND g_adjustPlayrateWnd = NULL;
+
+/******************************************************************************
+* Commands: Mis continuous actions                                            *
+******************************************************************************/
+static bool g_mousePlaybackRestorePlayState = false;
+
+static void MousePlaybackPlayState (bool play, bool pause, bool rec)
+{
+	g_mousePlaybackRestorePlayState = false;
+}
+
+static bool MousePlaybackInit (COMMAND_T* ct, bool init)
+{
+	static double s_playPos  = -1;
+	static double s_pausePos = -1;
+	static vector<pair<GUID,int> >* s_trackSoloMuteState = NULL;
+	static vector<pair<GUID,int> >* s_itemMuteState      = NULL;
+
+	if (init)
+	{
+		if (IsRecording())
+			return false;
+
+		BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_ARRANGE                                  |
+		                       BR_MouseInfo::MODE_RULER                                    |
+							   BR_MouseInfo::MODE_MIDI_EDITOR                              |
+							   BR_MouseInfo::MODE_IGNORE_ALL_TRACK_LANE_ELEMENTS_BUT_ITEMS |
+							   BR_MouseInfo::MODE_IGNORE_ENVELOPE_LANE_SEGMENT);
+
+		if (mouseInfo.GetPosition() == -1)
+			return false;
+
+		// Get info on which item and track to solo
+		MediaItem*  itemToSolo  = NULL;
+		MediaTrack* trackToSolo = NULL;
+
+		if ((int)ct->user != 0)
+		{
+			if (!strcmp(mouseInfo.GetWindow(), "arrange") || !strcmp(mouseInfo.GetWindow(), "ruler"))
+			{
+				itemToSolo  = mouseInfo.GetItem();
+				trackToSolo = mouseInfo.GetTrack();
+			}
+			else if (!strcmp(mouseInfo.GetWindow(), "midi_editor") && mouseInfo.GetMidiEditor())
+			{
+				itemToSolo  = GetMediaItemTake_Item(SWS_MIDIEditor_GetTake(mouseInfo.GetMidiEditor()));
+				trackToSolo = GetMediaItem_Track(itemToSolo);
+			}
+
+			if ((int)ct->user != 2)
+				itemToSolo = NULL;
+		}
+
+		PreventUIRefresh(1);
+
+		// Solo track
+		if (trackToSolo)
+		{
+			if (s_trackSoloMuteState)
+				delete s_trackSoloMuteState;
+
+			s_trackSoloMuteState = new vector<pair<GUID,int> >;
+			if (!s_trackSoloMuteState)
+				return false;
+
+			int count = CountTracks(NULL);
+			for (int i = 0; i < count; ++i)
+			{
+				MediaTrack* track = GetTrack(NULL, i);
+				int solo = (int)GetMediaTrackInfo_Value(track, "I_SOLO");
+				int mute = (int)GetMediaTrackInfo_Value(track, "B_MUTE");
+				if (solo != 0 || mute != 0 || track == trackToSolo)
+				{
+					pair<GUID,int> trackState;
+					trackState.first  = *GetTrackGUID(track);
+					trackState.second = solo << 8 | mute;
+					s_trackSoloMuteState->push_back(trackState);
+
+					SetMediaTrackInfo_Value(track, "I_SOLO", ((track == trackToSolo) ? 1 : 0));
+					SetMediaTrackInfo_Value(track, "B_MUTE", 0);
+				}
+			}
+		}
+
+		// Mute all items in soloed track except itemToSolo
+		if (itemToSolo && trackToSolo)
+		{
+			if (s_itemMuteState)
+				delete s_itemMuteState;
+
+			s_itemMuteState = new vector<pair<GUID,int> >;
+			if (!s_itemMuteState)
+				return false;
+
+			int count = CountTrackMediaItems(trackToSolo);
+			for (int i = 0; i < count; ++i)
+			{
+				MediaItem* item = GetTrackMediaItem(trackToSolo, i);
+				int mute = (int)GetMediaItemInfo_Value(item, "B_MUTE");
+				if (mute == 0 || item == itemToSolo)
+				{
+					pair<GUID,int> itemState;
+					itemState.first  = GetItemGuid(item);
+					itemState.second = mute;
+					s_itemMuteState->push_back(itemState);
+
+					SetMediaItemInfo_Value(item, "B_MUTE", ((item == itemToSolo) ? 0 : 1));
+				}
+			}
+		}
+
+		PreventUIRefresh(-1);
+
+		s_playPos  = (IsPlaying()) ? GetPlayPositionEx(NULL)   : -1;
+		s_pausePos = (IsPaused())  ? GetCursorPositionEx(NULL) : -1;
+		g_mousePlaybackRestorePlayState = true;
+
+		StartPlayback(mouseInfo.GetPosition());
+		RegisterCsurfPlayState(true, MousePlaybackPlayState); // register Csurf after starting playback
+		return true;
+	}
+	else
+	{
+		PreventUIRefresh(1);
+
+		// Restore tracks' solo and mute state
+		if (s_trackSoloMuteState)
+		{
+			for (int i = 0; i < s_trackSoloMuteState->size(); ++i)
+			{
+				if (MediaTrack* track = GuidToTrack(&s_trackSoloMuteState->at(i).first))
+				{
+					SetMediaTrackInfo_Value(track, "I_SOLO", s_trackSoloMuteState->at(i).second >> 8);
+					SetMediaTrackInfo_Value(track, "B_MUTE", s_trackSoloMuteState->at(i).second &  0xF);
+				}
+			}
+		}
+
+		// Restore items' mute state
+		if (s_itemMuteState)
+		{
+			for (int i = 0; i < s_itemMuteState->size(); ++i)
+			{
+				if (MediaItem* item = GuidToItem(&s_itemMuteState->at(i).first))
+					SetMediaItemInfo_Value(item, "B_MUTE", s_itemMuteState->at(i).second);
+			}
+		}
+
+		RegisterCsurfPlayState(false, MousePlaybackPlayState); // deregister Csurf before setting playstate
+		if (g_mousePlaybackRestorePlayState)
+		{
+			if (s_playPos != -1)
+			{
+				StartPlayback(s_playPos);
+			}
+			else if (s_pausePos != -1)
+			{
+				OnPauseButton();
+				SetEditCurPos(s_pausePos, true, false);
+			}
+			else
+			{
+				OnStopButton();
+			}
+		}
+		PreventUIRefresh(-1);
+
+
+		delete s_trackSoloMuteState;
+		delete s_itemMuteState;
+		s_trackSoloMuteState = NULL;
+		s_itemMuteState      = NULL;
+		g_mousePlaybackRestorePlayState = true;
+		s_playPos  = -1;
+		s_pausePos = -1;
+		return true;
+	}
+}
+
+static void MousePlayback (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
+{
+}
+
+void PlaybackAtMouseCursorInit ()
+{
+	//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
+	static COMMAND_T s_commandTable[] =
+	{
+		{ { DEFACCEL, "SWS/BR: Play from mouse cursor position (perform until shortcut released)" },                                                     "BR_CONT_PLAY_MOUSE",               NULL, NULL, 0, NULL, SECTION_MAIN, MousePlayback},
+		{ { DEFACCEL, "SWS/BR: Play from mouse cursor position and solo track under mouse for the duration (perform until shortcut released)" },         "BR_CONT_PLAY_MOUSE_SOLO_TRACK",    NULL, NULL, 1, NULL, SECTION_MAIN, MousePlayback},
+		{ { DEFACCEL, "SWS/BR: Play from mouse cursor position and solo item and track under mouse for the duration (perform until shortcut released)" },"BR_CONT_PLAY_MOUSE_SOLO_ITEM",     NULL, NULL, 2, NULL, SECTION_MAIN, MousePlayback},
+
+		{ { DEFACCEL, "SWS/BR: Play from mouse cursor position (perform until shortcut released)" },                                               "BR_ME_CONT_PLAY_MOUSE",            NULL, NULL, 0, NULL, SECTION_MIDI_EDITOR, MousePlayback},
+		{ { DEFACCEL, "SWS/BR: Play from mouse cursor position and solo active item's track for the duration (perform until shortcut released)" }, "BR_ME_CONT_PLAY_MOUSE_SOLO_TRACK", NULL, NULL, 1, NULL, SECTION_MIDI_EDITOR, MousePlayback},
+		{ { DEFACCEL, "SWS/BR: Play from mouse cursor position and solo active item for the duration (perform until shortcut released)" },         "BR_ME_CONT_PLAY_MOUSE_SOLO_ITEM",  NULL, NULL, 2, NULL, SECTION_MIDI_EDITOR, MousePlayback},
+
+		{ {}, LAST_COMMAND}
+	};
+	//!WANT_LOCALIZE_1ST_STRING_END
+
+	int i = -1;
+	while (s_commandTable[++i].id != LAST_COMMAND)
+		ContinuousActionRegister(new BR_ContinuousAction(&s_commandTable[i], &MousePlaybackInit));
+}
 
 /******************************************************************************
 * Commands: Misc                                                              *
@@ -173,7 +378,7 @@ void MarkersAtNotes (COMMAND_T* ct)
 	{
 		MediaItem* item      = GetSelectedMediaItem(NULL, i);
 		MediaItem_Take* take = GetActiveTake(item);
-		double itemStart =  GetMediaItemInfo_Value(item, "D_POSITION");
+		double itemStart = GetMediaItemInfo_Value(item, "D_POSITION");
 		double itemEnd   = GetMediaItemInfo_Value(item, "D_POSITION") + GetMediaItemInfo_Value(item, "D_LENGTH");
 
 		// Due to possible tempo changes, always work with PPQ, never time
@@ -525,10 +730,10 @@ void ItemSourcePathToClipBoard (COMMAND_T* ct)
 
 void DeleteTakeUnderMouse (COMMAND_T* ct)
 {
-	BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_ARRANGE);
+	BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_ARRANGE | BR_MouseInfo::MODE_IGNORE_ENVELOPE_LANE_SEGMENT);
 
-	// Don't differentiate between things within the item, but ignore any envelopes
-	if (!strcmp(mouseInfo.GetWindow(), "arrange") && !strcmp(mouseInfo.GetSegment(), "track") && mouseInfo.GetItem() && !mouseInfo.GetEnvelope())
+	// Don't differentiate between things within the item, but ignore any track lane envelopes
+	if (!strcmp(mouseInfo.GetWindow(), "arrange") && !strcmp(mouseInfo.GetSegment(), "track") && mouseInfo.GetItem() && (!mouseInfo.GetEnvelope() || mouseInfo.IsTakeEnvelope()))
 	{
 		if (CountTakes(mouseInfo.GetItem()) > 1 && !IsItemLocked(mouseInfo.GetItem()) && !IsLocked(ITEM_FULL))
 		{
@@ -877,7 +1082,7 @@ int IsTrimNewVolPanEnvsOn (COMMAND_T* ct)
 	return (option == (int)ct->user);
 }
 
-int IsAdjustPlayrateOptionsVisible (COMMAND_T*)
+int IsAdjustPlayrateOptionsVisible (COMMAND_T* ct)
 {
 	return !!g_adjustPlayrateWnd;
 }

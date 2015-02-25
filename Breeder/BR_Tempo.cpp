@@ -123,12 +123,12 @@ static bool MoveTempo (BR_Envelope& tempoMap, int id, double timeDiff)
 }
 
 /******************************************************************************
-* Commands: Continuous actions                                                *
+* Commands: Tempo continuous actions                                          *
 ******************************************************************************/
 static BR_Envelope* g_moveGridTempoMap = NULL;
 static bool         g_movedGridOnce    = false;
 
-static bool MoveGridInit (bool init)
+static bool MoveGridInit (COMMAND_T* ct, bool init)
 {
 	static int s_editCursorUndo = 0;
 
@@ -136,7 +136,6 @@ static bool MoveGridInit (bool init)
 	if (init)
 	{
 		GetConfig("undomask", s_editCursorUndo);
-
 		initSuccessful = PositionAtMouseCursor(true) != -1;
 		if (initSuccessful)
 			SetConfig("undomask", ClearBit(s_editCursorUndo, 3));
@@ -152,12 +151,12 @@ static bool MoveGridInit (bool init)
 	return initSuccessful;
 }
 
-static int MoveGridDoUndo ()
+static int MoveGridDoUndo (COMMAND_T* ct)
 {
 	return (g_movedGridOnce) ? (UNDO_STATE_TRACKCFG) : (0);
 }
 
-static HCURSOR MoveGridCursor (int window)
+static HCURSOR MoveGridCursor (COMMAND_T* ct, int window)
 {
 	static HCURSOR s_cursor = NULL;
 	if (!s_cursor)
@@ -274,14 +273,18 @@ static void MoveGridToMouse (COMMAND_T* ct)
 void MoveGridToMouseInit ()
 {
 	//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
-	static COMMAND_T command1 = { { DEFACCEL, "SWS/BR: Move closest tempo marker to mouse cursor (perform until shortcut released)" },      "BR_MOVE_CLOSEST_TEMPO_MOUSE", MoveGridToMouse, NULL, 0};
-	static COMMAND_T command2 = { { DEFACCEL, "SWS/BR: Move closest grid line to mouse cursor (perform until shortcut released)" },         "BR_MOVE_GRID_TO_MOUSE",       MoveGridToMouse, NULL, 1};
-	static COMMAND_T command3 = { { DEFACCEL, "SWS/BR: Move closest measure grid line to mouse cursor (perform until shortcut released)" }, "BR_MOVE_M_GRID_TO_MOUSE",     MoveGridToMouse, NULL, 2};
+	static COMMAND_T s_commandTable[] =
+	{
+		{ { DEFACCEL, "SWS/BR: Move closest tempo marker to mouse cursor (perform until shortcut released)" },      "BR_MOVE_CLOSEST_TEMPO_MOUSE", MoveGridToMouse, NULL, 0},
+		{ { DEFACCEL, "SWS/BR: Move closest grid line to mouse cursor (perform until shortcut released)" },         "BR_MOVE_GRID_TO_MOUSE",       MoveGridToMouse, NULL, 1},
+		{ { DEFACCEL, "SWS/BR: Move closest measure grid line to mouse cursor (perform until shortcut released)" }, "BR_MOVE_M_GRID_TO_MOUSE",     MoveGridToMouse, NULL, 2},
+		{ {}, LAST_COMMAND}
+	};
 	//!WANT_LOCALIZE_1ST_STRING_END
 
-	ContinuousActionRegister(new BR_ContinuousAction(&command1, &MoveGridInit, &MoveGridDoUndo, &MoveGridCursor));
-	ContinuousActionRegister(new BR_ContinuousAction(&command2, &MoveGridInit, &MoveGridDoUndo, &MoveGridCursor));
-	ContinuousActionRegister(new BR_ContinuousAction(&command3, &MoveGridInit, &MoveGridDoUndo, &MoveGridCursor));
+	int i = -1;
+	while(s_commandTable[++i].id != LAST_COMMAND)
+		ContinuousActionRegister(new BR_ContinuousAction(&s_commandTable[i], &MoveGridInit, &MoveGridDoUndo, &MoveGridCursor));
 }
 
 /******************************************************************************

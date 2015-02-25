@@ -28,7 +28,7 @@
 #pragma once
 
 /******************************************************************************
-* Commands: Continuous actions                                                *
+* Commands: Tempo continuous actions                                          *
 ******************************************************************************/
 void MoveGridToMouseInit ();
 

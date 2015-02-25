@@ -28,7 +28,7 @@
 #pragma once
 
 /******************************************************************************
-* Commands: Continuous actions                                                *
+* Commands: Envelope continuous actions                                       *
 ******************************************************************************/
 void SetEnvPointMouseValueInit ();
 

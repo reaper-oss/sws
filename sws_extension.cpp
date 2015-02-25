@@ -96,7 +96,7 @@ bool hookCommandProc(int iCmd, int flag)
 	if (COMMAND_T* cmd = SWSGetCommandByID(iCmd))
 	{
 		// For continuous actions
-		if (BR_ActionHook(iCmd, flag, NULL))
+		if (BR_ActionHook(cmd, flag, NULL))
 			return true;
 
 		if (!cmd->uniqueSectionId && cmd->accel.accel.cmd==iCmd && cmd->doCommand)
@@ -143,7 +143,7 @@ bool hookCommandProc2(KbdSectionInfo* sec, int cmdId, int val, int valhw, int re
 			if (cmd->onAction)
 			{
 				// For continuous actions
-				if (BR_ActionHook(cmdId, relmode, hwnd))
+				if (BR_ActionHook(cmd, relmode, hwnd))
 					return true;
 
 				if (sReentrantCmds.Find(cmd->id)<0)

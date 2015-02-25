@@ -35,53 +35,29 @@
 #include "../reaper/localize.h"
 
 /******************************************************************************
-* Commands: Continuous actions                                                *
+* Commands: Envelope continuous actions                                       *
 ******************************************************************************/
 static BR_Envelope* g_envMouseEnvelope = NULL;
 static bool         g_envMouseDidOnce  = false;
-static int          g_envMouseMode     = -666;
 static RECT         g_envMouseBounds;
 
-static bool EnvMouseInit (bool init)
+static bool EnvMouseInit (COMMAND_T* ct, bool init)
 {
-	static int s_editCursorUndo = 0;
-
-	bool initSuccessful = true;
-	if (init)
-	{
-		GetConfig("undomask", s_editCursorUndo);
-		g_envMouseEnvelope = new (nothrow) BR_Envelope(GetSelectedEnvelope(NULL));
-		initSuccessful = g_envMouseEnvelope && g_envMouseEnvelope->CountPoints() && PositionAtMouseCursor(false) != -1;
-
-		if (initSuccessful)
-			SetConfig("undomask", ClearBit(s_editCursorUndo, 3));
-		else
-		{
-			delete g_envMouseEnvelope;
-			g_envMouseEnvelope = NULL;
-		}
-		GetConfig("undomask", s_editCursorUndo);
-		SetAllCoordsToZero(&g_envMouseBounds);
-	}
-	else
-	{
-		SetConfig("undomask", s_editCursorUndo);
+	if (!init)
 		delete g_envMouseEnvelope;
-		g_envMouseEnvelope = NULL;
-		SetAllCoordsToZero(&g_envMouseBounds);
-	}
 
+	g_envMouseEnvelope = NULL;
 	g_envMouseDidOnce = false;
-	g_envMouseMode    = -666;
-	return initSuccessful;
+	SetAllCoordsToZero(&g_envMouseBounds);
+	return true;
 }
 
-static int EnvMouseUndo ()
+static int EnvMouseUndo (COMMAND_T* ct)
 {
 	return (g_envMouseDidOnce) ? (UNDO_STATE_TRACKCFG) : (0);
 }
 
-static HCURSOR EnvMouseCursor (int window)
+static HCURSOR EnvMouseCursor (COMMAND_T* ct, int window)
 {
 	static HCURSOR s_cursor = NULL;
 	if (!s_cursor)
@@ -93,7 +69,7 @@ static HCURSOR EnvMouseCursor (int window)
 		return NULL;
 }
 
-static WDL_FastString EnvMouseTooltip (int window, bool* setToBounds, RECT* bounds)
+static WDL_FastString EnvMouseTooltip (COMMAND_T* ct, int window, bool* setToBounds, RECT* bounds)
 {
 	WDL_FastString tooltip;
 
@@ -109,11 +85,12 @@ static WDL_FastString EnvMouseTooltip (int window, bool* setToBounds, RECT* boun
 			yOffset = (overRuler) ? envY : SetToBounds(yOffset, envY, envY + envHeight);
 
 			double displayValue = ((double)envHeight + (double)envY - (double)yOffset) / (double)envHeight;
-			double value = g_envMouseEnvelope->SnapValue(g_envMouseEnvelope->RealValue(displayValue));
+			double value        = g_envMouseEnvelope->SnapValue(g_envMouseEnvelope->RealValue(displayValue));
+
 			if (g_envMouseEnvelope->IsTempo())
-				GetTempoTimeSigMarker(NULL, (g_envMouseMode == 0) ? FindClosestTempoMarker(position) : FindPreviousTempoMarker(position), &position, NULL, NULL, NULL, NULL, NULL, NULL);
+				GetTempoTimeSigMarker(NULL, ((int)ct->user == 0)  ? FindClosestTempoMarker(position) : FindPreviousTempoMarker(position), &position, NULL, NULL, NULL, NULL, NULL, NULL);
 			else
-				g_envMouseEnvelope->GetPoint((g_envMouseMode == 0) ? g_envMouseEnvelope->FindClosest(position) : g_envMouseEnvelope->FindPrevious(position), &position, NULL, NULL, NULL);
+				g_envMouseEnvelope->GetPoint(((int)ct->user == 0) ? g_envMouseEnvelope->FindClosest(position) : g_envMouseEnvelope->FindPrevious(position), &position, NULL, NULL, NULL);
 
 			static const char* s_format = __localizeFunc("Envelope: %s\n%s at %s", "tooltip", 0);
 			tooltip.AppendFormatted(512, s_format, (g_envMouseEnvelope->GetName()).Get(), (g_envMouseEnvelope->FormatValue(value)).Get(), FormatTime(position).Get());
@@ -134,15 +111,15 @@ static void SetEnvPointMouseValue (COMMAND_T* ct)
 	static double s_lastEndNormVal  = -1;
 
 	// Action called for the first time
-	if (g_envMouseMode == -666)
+	if (!g_envMouseEnvelope)
 	{
 		s_lastEndId       = -1;
 		s_lastEndPosition = -1;
 		s_lastEndNormVal  = -1;
-		g_envMouseMode  = (int)ct->user;
+		g_envMouseEnvelope = new (nothrow) BR_Envelope(GetSelectedEnvelope(NULL));
 
 		// BR_Envelope does check for locking but we're also using tempo API here so check manually
-		if (g_envMouseEnvelope->IsLocked())
+		if (!g_envMouseEnvelope || g_envMouseEnvelope->CountPoints() <= 0 || PositionAtMouseCursor(false) == -1 || g_envMouseEnvelope->IsLocked())
 		{
 			ContinuousActionStopAll();
 			return;
@@ -217,6 +194,11 @@ static void SetEnvPointMouseValue (COMMAND_T* ct)
 			oppositeDirection = true;
 		}
 
+
+		int envClickSegMode; GetConfig("envclicksegmode", envClickSegMode);
+		int editCursorUndo;  GetConfig("undomask",        editCursorUndo);
+		SetConfig("undomask",        ClearBit(editCursorUndo, 3));  // prevent edit cursor undo
+		SetConfig("envclicksegmode", ClearBit(envClickSegMode, 6)); // prevent reselection
 		bool pointsMoved = false;
 		for (int i = startId; i <= endId; ++i)
 		{
@@ -267,6 +249,9 @@ static void SetEnvPointMouseValue (COMMAND_T* ct)
 			}
 		}
 
+		SetConfig("undomask",        editCursorUndo);
+		SetConfig("envclicksegmode", envClickSegMode);
+
 		if (pointsMoved)
 		{
 			if (g_envMouseEnvelope->IsTempo()) UpdateTimeline();
@@ -291,12 +276,17 @@ static void SetEnvPointMouseValue (COMMAND_T* ct)
 void SetEnvPointMouseValueInit ()
 {
 	//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
-	static COMMAND_T command1 = { { DEFACCEL, "SWS/BR: Set closest envelope point's value to mouse cursor (perform until shortcut released)" },           "BR_ENV_PT_VAL_CLOSEST_MOUSE",      SetEnvPointMouseValue, NULL, 0};
-	static COMMAND_T command2 = { { DEFACCEL, "SWS/BR: Set closest left side envelope point's value to mouse cursor (perform until shortcut released)" }, "BR_ENV_PT_VAL_CLOSEST_LEFT_MOUSE", SetEnvPointMouseValue, NULL, 1};
+	static COMMAND_T s_commandTable[] =
+	{
+		{ { DEFACCEL, "SWS/BR: Set closest envelope point's value to mouse cursor (perform until shortcut released)" },           "BR_ENV_PT_VAL_CLOSEST_MOUSE",      SetEnvPointMouseValue, NULL, 0},
+		{ { DEFACCEL, "SWS/BR: Set closest left side envelope point's value to mouse cursor (perform until shortcut released)" }, "BR_ENV_PT_VAL_CLOSEST_LEFT_MOUSE", SetEnvPointMouseValue, NULL, 1},
+		{ {}, LAST_COMMAND}
+	};
 	//!WANT_LOCALIZE_1ST_STRING_END
 
-	ContinuousActionRegister(new BR_ContinuousAction(&command1, &EnvMouseInit, &EnvMouseUndo, &EnvMouseCursor, &EnvMouseTooltip));
-	ContinuousActionRegister(new BR_ContinuousAction(&command2, &EnvMouseInit, &EnvMouseUndo, &EnvMouseCursor, &EnvMouseTooltip));
+	int i = -1;
+	while (s_commandTable[++i].id != LAST_COMMAND)
+		ContinuousActionRegister(new BR_ContinuousAction(&s_commandTable[i], &EnvMouseInit, &EnvMouseUndo, &EnvMouseCursor, &EnvMouseTooltip));
 }
 
 /******************************************************************************
@@ -1139,7 +1129,7 @@ void IncreaseDecreaseVolEnvPoints (COMMAND_T* ct)
 }
 void SelectEnvelopeUnderMouse (COMMAND_T* ct)
 {
-	BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_MCP_TCP | BR_MouseInfo::MODE_ARRANGE);
+	BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_MCP_TCP | BR_MouseInfo::MODE_ARRANGE | BR_MouseInfo::MODE_IGNORE_ENVELOPE_LANE_SEGMENT);
 
 	if ((!strcmp(mouseInfo.GetWindow(),  "tcp")       && !strcmp(mouseInfo.GetSegment(), "envelope"))   ||
 		(!strcmp(mouseInfo.GetWindow(),  "arrange")   && !strcmp(mouseInfo.GetSegment(), "envelope"))   ||
@@ -1156,7 +1146,7 @@ void SelectEnvelopeUnderMouse (COMMAND_T* ct)
 
 void SelectDeleteEnvPointUnderMouse (COMMAND_T* ct)
 {
-	BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_ARRANGE_ALL);
+	BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_ARRANGE);
 	if (!strcmp(mouseInfo.GetDetails(), "env_point"))
 	{
 		if (mouseInfo.GetEnvelope() && (abs((int)ct->user) == 2 || (abs((int)ct->user) == 1 && mouseInfo.GetEnvelope() == GetSelectedEnvelope(NULL))))

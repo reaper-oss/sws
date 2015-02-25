@@ -35,24 +35,25 @@
 * To make action continuous create BR_ContinuousAction object and register it *
 * with ContinuousActionRegister().                                            *
 *                                                                             *
-* Note: Works only with Main and MIDI editor section. Also note that on OSX   *
-* actions registered in MIDI editor section will focus arrange for the        *
-* duration of the action (needed to catch any key up messages that stop the   *
-* action execution.)                                                          *
-*                                                                             *
+* Note: works only with Main and MIDI editor section and only one continuous  *
+* action may be executing at all times                                        *
 * For examples see BR_Tempo.cpp or BR_Envelope.cpp                            *
 ******************************************************************************/
 struct BR_ContinuousAction
 {
 public:
-	BR_ContinuousAction (COMMAND_T* ct, bool (*Init)(bool) = NULL, int (*DoUndo)() = NULL, HCURSOR (*SetMouseCursor)(int) = NULL, WDL_FastString (*SetTooltip)(int,bool*,RECT*) = NULL);
+	BR_ContinuousAction (COMMAND_T* ct,
+	                     bool           (*Init)      (COMMAND_T*,bool)            = NULL,
+	                     int            (*DoUndo)    (COMMAND_T*)                 = NULL,
+	                     HCURSOR        (*SetMouse)  (COMMAND_T*,int)             = NULL,
+	                     WDL_FastString (*SetTooltip)(COMMAND_T*,int,bool*,RECT*) = NULL
+	);
 
-	bool           (*Init)(bool init);                                         // called on start with init = true and on shortcut release with init = false. Return false to abort init.
-	int            (*DoUndo)();                                                // called when shortcut is released, return undo flag to create undo point (or 0 for no undo point). If NULL, no undo point will get created
-	HCURSOR        (*SetMouseCursor)(int window);                              // called when setting cursor for each window, return NULL to skip
-	WDL_FastString (*SetTooltip)(int window, bool* setToBounds, RECT* bounds); // called when setting cursor tooltip, return empty string to remove existing tooltip
-	const int cmd;                                                             // cmd of the continuous action
-	const int section;                                                         // section in which the continuous action is registered
+	bool           (*Init)      (COMMAND_T* ct, bool init);                                   // called on start with init = true and on shortcut release with init = false. Return false to abort init.
+	int            (*DoUndo)    (COMMAND_T* ct);                                              // called when shortcut is released, return undo flag to create undo point (or 0 for no undo point). If NULL, no undo point will get created
+	HCURSOR        (*SetMouse)  (COMMAND_T* ct, int window);                                  // called when setting cursor for each window, return NULL to skip
+	WDL_FastString (*SetTooltip)(COMMAND_T* ct, int window, bool* setToBounds, RECT* bounds); // called when setting cursor tooltip, return empty string to remove existing tooltip
+	COMMAND_T* ct;
 
 	enum Window
 	{
@@ -70,7 +71,7 @@ int  ContinuousActionTooltips ();                            // get current tool
 /******************************************************************************
 * Call from the action hook and swallow action if it returns true             *
 ******************************************************************************/
-bool ContinuousActionHook (int cmd, int flag, HWND hwnd);
+bool ContinuousActionHook (COMMAND_T* ct, int flagOrRelmode, HWND hwnd);
 
 /******************************************************************************
 * Put all continuous actions init functions here so their cmds end up         *

@@ -31,6 +31,22 @@
 #include "../../WDL/lice/lice.h"
 
 /******************************************************************************
+* Enable keyboard accelerator workaround                                      *
+* More details here: http://askjf.com/index.php?q=3108s                       *
+*                                                                             *
+* In short, on windows we can register keyboard hook so no problem here. But  *
+* on OSX there's no concept of keyboard hook so the only thing that we can do *
+* is focus arrange for the duration of the action to receive key up message.  *
+* This is not such a big deal for continuous actions registered in Main       *
+* section since arrange should already be focused. However, for actions       *
+* registered in MIDI editor this does pose a problem. Thankfully, Justin has  *
+* reveled an undocumented API trick to overcome this. But since he also warns *
+* us that the behavior may change in the future I'm leaving my workaround     *
+* here - to enable it, simply undef BR_USE_PRE_HOOK_ACCEL                     *
+******************************************************************************/
+#define BR_USE_PRE_HOOK_ACCEL
+
+/******************************************************************************
 * Constants                                                                   *
 ******************************************************************************/
 const int ACTION_FLAG      = -666;
@@ -58,64 +74,59 @@ static LICE_SysBitmap*                  g_tooltipBm            = NULL;
 static int                              g_tooltips             = -1;
 static bool                             g_removedNativeTooltip = false;
 
-#ifdef _WIN32
-static HHOOK g_keyboardHook = NULL;
-#else
-static HWND g_midiEditorLastFocusedWnd = NULL;
+#ifndef BR_USE_PRE_HOOK_ACCEL
+	#ifdef _WIN32
+	static HHOOK g_keyboardHook = NULL;
+	#else
+	static HWND g_midiEditorLastFocusedWnd = NULL;
+	#endif
 #endif
 
 /******************************************************************************
 * BR_ContinuousAction and it's and some functions to deal with it             *
 ******************************************************************************/
-BR_ContinuousAction::BR_ContinuousAction (COMMAND_T* ct, bool (*Init)(bool), int (*DoUndo)(), HCURSOR (*SetMouseCursor)(int), WDL_FastString (*SetTooltip)(int,bool*,RECT*)) :
-Init           (Init),
-DoUndo         (DoUndo),
-SetMouseCursor (SetMouseCursor),
-SetTooltip     (SetTooltip),
-cmd            ((ct->uniqueSectionId == SECTION_MAIN || ct->uniqueSectionId == SECTION_MAIN_ALT || ct->uniqueSectionId == SECTION_MIDI_EDITOR) ? SWSRegisterCmd(ct, __FILE__) : 0),
-section        (ct->uniqueSectionId)
+BR_ContinuousAction::BR_ContinuousAction (COMMAND_T* ct, bool (*Init)(COMMAND_T*,bool), int (*DoUndo)(COMMAND_T*), HCURSOR (*SetMouse)(COMMAND_T*,int), WDL_FastString (*SetTooltip)(COMMAND_T*,int,bool*,RECT*)) :
+Init       (Init),
+DoUndo     (DoUndo),
+SetMouse   (SetMouse),
+SetTooltip (SetTooltip),
+ct         (ct)
 {
+	if (ct->uniqueSectionId == SECTION_MAIN || ct->uniqueSectionId == SECTION_MAIN_ALT || ct->uniqueSectionId == SECTION_MIDI_EDITOR)
+		SWSRegisterCmd(ct, __FILE__);
+	else
+		ct->accel.accel.cmd = 0;
 }
 
 static int CompareActionsByCmd (const BR_ContinuousAction** action1, const BR_ContinuousAction** action2)
 {
-	return (*action1)->cmd - (*action2)->cmd;
+	return (*action1)->ct->accel.accel.cmd - (*action2)->ct->accel.accel.cmd;
 }
 
-static int FindActionFromCmd (WDL_PtrList<BR_ContinuousAction>* actionList, int cmd)
+static int FindActionFromCmd (const WDL_PtrList<BR_ContinuousAction>& actionList, int cmd)
 {
 	int a = 0;
-	int c = actionList->GetSize();
+	int c = actionList.GetSize();
 	while (a != c)
 	{
-		int b = (a+c)/2;
-		int cmp = cmd - actionList->Get(b)->cmd;
-
+		int b   = (a+c)/2;
+		int cmp = cmd - actionList.Get(b)->ct->accel.accel.cmd;
 		if      (cmp > 0) a = b+1;
 		else if (cmp < 0) c = b;
-		else
-		{
-		  return b;
-		}
-	 }
+		else              return b;
+	}
 	return -1;
 }
 
 /******************************************************************************
 * Tooltip drawing, mouse cursor and key release detection mechanism           *
 *                                                                             *
-* Tooltip is drawn as topmost windows and other wndProc functions watch for   *
-* mouse move messages to move tooltip window.                                 *
-* These wndProc functions also change mouse cursor if needed.                 *
+* Tooltip is drawn as topmost window and GenericWndProc() watches for mouse   *
+* move messages to move tooltip window.                                       *
+* GenericWndProc() also change mouse cursor if needed.                        *
 *                                                                             *
-* Regarding detection of key up messages (which tell us to terminate action   *
-* execution), we register keyboard accelerator with REAPER which only works   *
-* for the main window.                                                        *
-* On windows we also register keyboard process so we can check for key up     *
-* messages in all windows (since we can't do that on OSX that means that      *
-* while the continuous actions is active, we need to focus arrange to catch   *
-* any key up message and reset focus back once the action                     *
-* execution has been stopped                                                  *
+* Regarding detection of key up messages (which tell us to terminate the      *
+* executing action), we register pre-hook keyboard accelerator with REAPER    *
 ******************************************************************************/
 static WDL_DLGRET TooltipWnd (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -140,7 +151,6 @@ static WDL_DLGRET TooltipWnd (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		}
 		break;
 	}
-
 	return 0;
 }
 
@@ -170,10 +180,6 @@ static void SetTooltip (const char* text, POINT* p, bool setToBounds, RECT* boun
 				SetWindowLongPtr(g_tooltipWnd,GWL_STYLE,GetWindowLongPtr(g_tooltipWnd,GWL_STYLE)&~WS_CAPTION);
 				EnableWindow(g_tooltipWnd, false);
 				init = true;
-			}
-			else
-			{
-				DrawTooltip(g_tooltipBm, text);
 			}
 
 			DrawTooltip(g_tooltipBm, text);
@@ -248,7 +254,7 @@ static LRESULT CALLBACK GenericWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPA
 		if (drawTooltip)
 		{
 			bool setToBounds = false; RECT r;
-			WDL_FastString tooltip = g_actionInProgress->SetTooltip(window, &setToBounds, &r);
+			WDL_FastString tooltip = g_actionInProgress->SetTooltip(g_actionInProgress->ct, window, &setToBounds, &r);
 			if (tooltip.GetLength())
 			{
 				POINT p = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
@@ -262,9 +268,9 @@ static LRESULT CALLBACK GenericWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPA
 			}
 		}
 	}
-	else if (uMsg == WM_SETCURSOR && g_actionInProgress && g_actionInProgress->SetMouseCursor)
+	else if (uMsg == WM_SETCURSOR && g_actionInProgress && g_actionInProgress->SetMouse)
 	{
-		if (HCURSOR cursor = g_actionInProgress->SetMouseCursor(window))
+		if (HCURSOR cursor = g_actionInProgress->SetMouse(g_actionInProgress->ct, window))
 		{
 			SetCursor(cursor);
 			return 1; // without this SetCursor won't work on OSX
@@ -279,15 +285,18 @@ static int TranslateAccel (MSG* msg, accelerator_register_t* ctx)
 	if (msg->message == WM_KEYUP || msg->message == WM_SYSKEYUP)
 		ContinuousActionStopAll();
 
-	// On OSX, we focus arrange for the duration of the action so we need to eat all keystrokes because they will get forwarded to arrange and
-	// may end up running something that the user didn't want to run in the first place (see ContinuousActionTimer() and ContinuousActionInit())
-	#ifndef _WIN32
-		if (g_actionInProgress && g_actionInProgress->section == SECTION_MIDI_EDITOR)
-			return 1; // eat the keystroke
+	#ifndef BR_USE_PRE_HOOK_ACCEL
+		// On OSX, we focus arrange for the duration of the action so we need to eat all keystrokes because they will get forwarded to arrange and
+		// may end up running something that the user didn't want to run in the first place (see ContinuousActionTimer() and ContinuousActionInit())
+		#ifndef _WIN32
+			if (g_actionInProgress && g_actionInProgress->section == SECTION_MIDI_EDITOR)
+				return 1;
+		#endif
 	#endif
 	return 0;
 }
 
+#ifndef BR_USE_PRE_HOOK_ACCEL
 #ifdef _WIN32
 static LRESULT CALLBACK KeyboardProc (int code, WPARAM wParam, LPARAM lParam)
 {
@@ -296,33 +305,31 @@ static LRESULT CALLBACK KeyboardProc (int code, WPARAM wParam, LPARAM lParam)
 	return CallNextHookEx(g_keyboardHook, code, wParam, lParam);
 }
 #endif
+#endif
 
 /******************************************************************************
 * Command timer and init functions that starts and stops the whole show       *
-*                                                                             *
-* Timer executes the command every so often and it also watches for the focus *
-* so we don't loose the keyboard input which we need to watch our to detect   *
-* key up messages to stop the action execution                                *
-* Init function registers the timer, window procedures, keyboard hooks etc... *
 ******************************************************************************/
 static void ContinuousActionTimer ()
 {
 	if (g_actionInProgress)
 	{
 		// Check MIDI editor is still valid
-		if (g_actionInProgress->section == SECTION_MIDI_EDITOR && (!g_midiEditorWnd || MIDIEditor_GetMode(g_midiEditorWnd) != 0))
+		if (g_actionInProgress->ct->uniqueSectionId == SECTION_MIDI_EDITOR && (!g_midiEditorWnd || MIDIEditor_GetMode(g_midiEditorWnd) != 0))
 		{
 			ContinuousActionStopAll();
 			return;
 		}
 
-		// Don't let other windows steal our keyboard accelerator (on windows we registered keyboard hook so no need to worry about this, see TranslateAccel() and ContinuousActionInit())
-		#ifndef _WIN32
-			TrackEnvelope* envelope = GetSelectedEnvelope(NULL);
-			SetCursorContext(envelope ? 2 : 1, envelope);
+		#ifndef BR_USE_PRE_HOOK_ACCEL
+			// Don't let other windows steal our keyboard accelerator (on windows we registered keyboard hook so no need to worry about this, see TranslateAccel() and ContinuousActionInit())
+			#ifndef _WIN32
+				TrackEnvelope* envelope = GetSelectedEnvelope(NULL);
+				SetCursorContext(envelope ? 2 : 1, envelope);
+			#endif
 		#endif
 
-		// Make sure tooltip is not displayed if mouse is over unknown window (tooltip can only follow mouse movements in windows which have our window processes registered)
+		// Make sure tooltip is not displayed if mouse is over unknown window (tooltip can only follow mouse movements in windows which have our window procedure registered)
 		if (g_actionInProgress->SetTooltip)
 		{
 			POINT p;
@@ -333,27 +340,26 @@ static void ContinuousActionTimer ()
 		}
 
 		// Run the action with our custom flag (ContinuousActionHook() checks for it to know if it should swallow the action in the hook)
-		if (g_actionInProgress->section == SECTION_MIDI_EDITOR)
+		if (g_actionInProgress->ct->uniqueSectionId == SECTION_MIDI_EDITOR)
 		{
 			int relmode = ACTION_FLAG;
-			int cmd     = g_actionInProgress->cmd;
+			int cmd     = g_actionInProgress->ct->accel.accel.cmd;
 			kbd_RunCommandThroughHooks(SectionFromUniqueID(SECTION_MIDI_EDITOR), &cmd, NULL, NULL, &relmode, g_midiEditorWnd);
 		}
 		else
-			Main_OnCommand(g_actionInProgress->cmd, ACTION_FLAG);
+			Main_OnCommand(g_actionInProgress->ct->accel.accel.cmd, ACTION_FLAG);
 	}
 }
 
-static bool ContinuousActionInit (bool init, int cmd, HWND hwnd, BR_ContinuousAction* action)
+static bool ContinuousActionInit (bool init, COMMAND_T* ct, HWND hwnd, BR_ContinuousAction* action)
 {
 	static accelerator_register_t s_accelerator = { TranslateAccel, TRUE, NULL };
 
 	// Stop any running action in progress if needed
-	if (init && g_actionInProgress)
-		ContinuousActionInit(false, 0, NULL, NULL);
+	if (init && g_actionInProgress) ContinuousActionInit(false, 0, NULL, NULL);
 
-	// Make sure supplied continuous actions and hwnd is valid
-	if (!action || (action->section == SECTION_MIDI_EDITOR && MIDIEditor_GetMode(hwnd) != 0))
+	// Make sure supplied continuous action and hwnd is valid
+	if (!action || (action->ct->uniqueSectionId == SECTION_MIDI_EDITOR && MIDIEditor_GetMode(hwnd) != 0))
 		init = false;
 	bool initSuccessful = init;
 
@@ -364,18 +370,20 @@ static bool ContinuousActionInit (bool init, int cmd, HWND hwnd, BR_ContinuousAc
 		GetConfig("tooltips", g_tooltips);
 		g_actionInProgress     = action;
 		g_removedNativeTooltip = false;
-		g_midiEditorWnd        = (action->section == SECTION_MIDI_EDITOR) ? hwnd                                 : NULL;
-		g_notesWnd             = (g_midiEditorWnd)                        ? GetNotesView((void*)g_midiEditorWnd) : NULL;
-		g_pianoWnd             = (g_midiEditorWnd)                        ? GetPianoView((void*)g_midiEditorWnd) : NULL;
+		g_midiEditorWnd        = (action && action->ct->uniqueSectionId == SECTION_MIDI_EDITOR) ? hwnd                                 : NULL;
+		g_notesWnd             = (g_midiEditorWnd)                                              ? GetNotesView((void*)g_midiEditorWnd) : NULL;
+		g_pianoWnd             = (g_midiEditorWnd)                                              ? GetPianoView((void*)g_midiEditorWnd) : NULL;
 		g_registeredWindows.clear();
-		#ifndef _WIN32
-			if (g_midiEditorWnd)
-				g_midiEditorLastFocusedWnd = GetFocus();
+		#ifndef BR_USE_PRE_HOOK_ACCEL
+			#ifndef _WIN32
+				if (g_midiEditorWnd)
+					g_midiEditorLastFocusedWnd = GetFocus();
+			#endif
 		#endif
 
 		// Let the action know we're starting
-		if (g_actionInProgress->Init)
-			initSuccessful = g_actionInProgress->Init(true);
+		if (g_actionInProgress && g_actionInProgress->Init)
+			initSuccessful = g_actionInProgress->Init(g_actionInProgress->ct, true);
 
 		// Action says everything is ok
 		if (initSuccessful)
@@ -393,27 +401,31 @@ static bool ContinuousActionInit (bool init, int cmd, HWND hwnd, BR_ContinuousAc
 				if (*wndProc == NULL && hwnd)
 				{
 					*wndProc = (WNDPROC)SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)GenericWndProc);
-					if (g_actionInProgress->SetMouseCursor)
+					if (g_actionInProgress && g_actionInProgress->SetMouse)
 						SendMessage(hwnd, WM_SETCURSOR, (WPARAM)hwnd, 0);
 					g_registeredWindows.push_back(hwnd);
 				}
 			}
 
 			// Register keyboard accelerator that watches for key up messages in main window and timer that will execute the action
-			if (!plugin_register("accelerator", &s_accelerator) || !plugin_register("timer", (void*)ContinuousActionTimer))
-				initSuccessful = false;
-
-			// On windows we register keyboard hook so we can catch key up messages in all windows so we don't have to worry about focus issues
-			#ifdef _WIN32
-				if (initSuccessful)
-				{
-					g_keyboardHook = SetWindowsHookEx(WH_KEYBOARD, (HOOKPROC)KeyboardProc, NULL, GetCurrentThreadId());
-					if (!g_keyboardHook) initSuccessful = false;
-				}
+			#ifndef BR_USE_PRE_HOOK_ACCEL
+				if (!plugin_register("accelerator", &s_accelerator) || !plugin_register("timer", (void*)ContinuousActionTimer))
+					initSuccessful = false;
+				// On windows we register keyboard hook to catch key up messages in all windows so we don't have to worry about focus issues
+				#ifdef _WIN32
+					if (initSuccessful)
+					{
+						g_keyboardHook = SetWindowsHookEx(WH_KEYBOARD, (HOOKPROC)KeyboardProc, NULL, GetCurrentThreadId());
+						if (!g_keyboardHook) initSuccessful = false;
+					}
+				#endif
+			#else
+				if (!plugin_register("<accelerator", &s_accelerator) || !plugin_register("timer", (void*)ContinuousActionTimer))
+					initSuccessful = false;
 			#endif
 
 			// Make sure tooltip is draw immediately (WM_MOUSEMOVE message won't get sent until the mouse moves again, see GenericWndProc())
-			if (g_actionInProgress->SetTooltip)
+			if (g_actionInProgress && g_actionInProgress->SetTooltip)
 			{
 				POINT p; GetCursorPos(&p);
 				SetCursorPos(p.x, p.y);
@@ -456,19 +468,25 @@ static bool ContinuousActionInit (bool init, int cmd, HWND hwnd, BR_ContinuousAc
 		g_removedNativeTooltip = false;
 
 		// Deregister timer and keyboard accelerator/hook
-		plugin_register("-accelerator", &s_accelerator);
 		plugin_register("-timer", (void*)ContinuousActionTimer);
-		#ifdef _WIN32
-			UnhookWindowsHookEx(g_keyboardHook);
-			g_keyboardHook  = NULL;
+		#ifndef BR_USE_PRE_HOOK_ACCEL
+			plugin_register("-accelerator", &s_accelerator);
+			#ifdef _WIN32
+				UnhookWindowsHookEx(g_keyboardHook);
+				g_keyboardHook  = NULL;
+			#endif
+		#else
+			plugin_register("-accelerator", &s_accelerator); // gotcha: while we do register with "<accelerator", we deregister with "-accelerator"
 		#endif
 
 		// Restore focus back in case of MIDI editor on OSX
-		#ifndef _WIN32
-			if (g_midiEditorLastFocusedWnd)
-				SetFocus(g_midiEditorLastFocusedWnd);
-			else if (g_actionInProgress && g_actionInProgress->section == SECTION_MIDI_EDITOR)
-				SetFocus(g_midiEditorWnd);
+		#ifndef BR_USE_PRE_HOOK_ACCEL
+			#ifndef _WIN32
+				if (g_midiEditorLastFocusedWnd)
+					SetFocus(g_midiEditorLastFocusedWnd);
+				else if (g_actionInProgress && g_actionInProgress->section == SECTION_MIDI_EDITOR)
+					SetFocus(g_midiEditorWnd);
+			#endif
 		#endif
 
 		// Reset variables
@@ -476,13 +494,15 @@ static bool ContinuousActionInit (bool init, int cmd, HWND hwnd, BR_ContinuousAc
 		g_notesWnd      = NULL;
 		g_pianoWnd      = NULL;
 		g_registeredWindows.clear();
-		#ifndef _WIN32
-			g_midiEditorLastFocusedWnd = NULL;
+		#ifndef BR_USE_PRE_HOOK_ACCEL
+			#ifndef _WIN32
+				g_midiEditorLastFocusedWnd = NULL;
+			#endif
 		#endif
 
 		// Let continuous action know we're done
 		if (g_actionInProgress && g_actionInProgress->Init)
-			g_actionInProgress->Init(false);
+			g_actionInProgress->Init(g_actionInProgress->ct, false);
 		g_actionInProgress = NULL;
 	}
 
@@ -500,11 +520,11 @@ static bool ContinuousActionInit (bool init, int cmd, HWND hwnd, BR_ContinuousAc
 ******************************************************************************/
 bool ContinuousActionRegister (BR_ContinuousAction* action)
 {
-	if (action && action->cmd > 0 && g_actions.FindSorted(action, &CompareActionsByCmd) == -1)
+	if (action && action->ct->accel.accel.cmd > 0 && g_actions.FindSorted(action, &CompareActionsByCmd) == -1)
 	{
 		g_actions.InsertSorted(action, &CompareActionsByCmd);
-		g_continuousCmdLo = g_actions.Get(0)->cmd;
-		g_continuousCmdHi = g_actions.Get(g_actions.GetSize() - 1)->cmd;
+		g_continuousCmdLo = g_actions.Get(0)->ct->accel.accel.cmd;
+		g_continuousCmdHi = g_actions.Get(g_actions.GetSize() - 1)->ct->accel.accel.cmd;
 		return true;
 	}
 	else
@@ -515,9 +535,9 @@ void ContinuousActionStopAll ()
 {
 	if (g_actionInProgress && g_actionInProgress->DoUndo)
 	{
-		int undoFlag = g_actionInProgress->DoUndo();
+		int undoFlag = g_actionInProgress->DoUndo(g_actionInProgress->ct);
 		if (undoFlag != 0)
-			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(SWSGetCommandByID(g_actionInProgress->cmd)), undoFlag, -1);
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(SWSGetCommandByID(g_actionInProgress->ct->accel.accel.cmd)), undoFlag, -1);
 	}
 	ContinuousActionInit(false, 0, NULL, NULL);
 }
@@ -527,14 +547,15 @@ int ContinuousActionTooltips ()
 	return g_tooltips;
 }
 
-bool ContinuousActionHook (int cmd, int flag, HWND hwnd)
+bool ContinuousActionHook (COMMAND_T* ct, int flagOrRelmode, HWND hwnd)
 {
 	bool swallow = false;
+	int cmd = ct->accel.accel.cmd;
 	if (cmd >= g_continuousCmdLo && cmd <= g_continuousCmdHi) // instead of searching the list every time, first check if cmd is even within range of the list
 	{
 		// Check if the action is continuous and then let it pass if it was sent for the first time or when run through timer
-		if (BR_ContinuousAction* action = g_actions.Get(FindActionFromCmd(&g_actions, cmd)))
-			swallow = (g_actionInProgress) ? (flag != ACTION_FLAG || g_actionInProgress->cmd != cmd) : (!ContinuousActionInit(true, cmd, hwnd, action));
+		if (BR_ContinuousAction* action = g_actions.Get(FindActionFromCmd(g_actions, cmd)))
+			swallow = (g_actionInProgress) ? (flagOrRelmode != ACTION_FLAG || g_actionInProgress->ct->accel.accel.cmd != cmd) : (!ContinuousActionInit(true, ct, hwnd, action));
 	}
 	return swallow;
 }

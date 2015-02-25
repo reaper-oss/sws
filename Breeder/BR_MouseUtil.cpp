@@ -730,7 +730,7 @@ void BR_MouseInfo::GetContext (const POINT& p)
 						mouseInfo.segment = "envelope";
 
 						int trackEnvHit = 0;
-						if ((m_mode & BR_MouseInfo::MODE_ALL) || (m_mode & BR_MouseInfo::MODE_ENV_LANE_DO_SEGMENT))
+						if (!(m_mode & BR_MouseInfo::MODE_IGNORE_ENVELOPE_LANE_SEGMENT))
 						{
 							BR_Envelope envelope(mouseInfo.envelope);
 							trackEnvHit = this->IsMouseOverEnvelopeLine(envelope, height-2*ENV_GAP, offset+ENV_GAP, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, &mouseInfo.envPointId);
@@ -739,38 +739,41 @@ void BR_MouseInfo::GetContext (const POINT& p)
 						if      (trackEnvHit == 1) mouseInfo.details = "env_point";
 						else if (trackEnvHit == 2) mouseInfo.details = "env_segment";
 						else                       mouseInfo.details = "empty";
-						mouseInfo.track = NULL;
 					}
 
 					// Mouse cursor is in track lane
 					else if (mouseInfo.track)
 					{
 						mouseInfo.segment = "track";
-
-						// Check track lane for track envelope and item/take under mouse
-						int trackEnvHit = (IsLocked(TRACK_ENV)) ? 0 : this->IsMouseOverEnvelopeLineTrackLane(mouseInfo.track, height, offset, laneEnvs, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, &mouseInfo.envelope, &mouseInfo.envPointId);
 						mouseInfo.item = GetItemFromY(mouseY, mousePos, &mouseInfo.take, &mouseInfo.takeId);
-
-						MediaItem_Take* activeTake = GetActiveTake(mouseInfo.item);
-
-						// Check track lane for take envelope (only if take is active - REAPER doesn't allow editing of envelopes of inactive takes)
-						int takeEnvHit = 0;
-						int takeHeight = -666;
-						int takeOffset = -666;
-						if (trackEnvHit == 0 && mouseInfo.take && activeTake == mouseInfo.take && !IsLocked(TAKE_ENV))
-						{
-							if (takeHeight == -666)
-								takeHeight = GetTakeHeight(mouseInfo.take, NULL, 0, &takeOffset, true, height, offset);
-							takeEnvHit = this->IsMouseOverEnvelopeLineTake(mouseInfo.take, takeHeight, takeOffset, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, &mouseInfo.envelope, &mouseInfo.envPointId);
-						}
-
-						// Check for stretch markers (again, only active take)
+						
+						int trackEnvHit      = 0;
+						int takeEnvHit       = 0;
 						int stretchMarkerHit = -1;
-						if (trackEnvHit == 0 && takeEnvHit == 0 && mouseInfo.take && activeTake == mouseInfo.take && !IsLocked(STRETCH_MARKERS) && !IsItemLocked(mouseInfo.item) && !IsLocked(ITEM_FULL))
+						if (!(m_mode & BR_MouseInfo::MODE_IGNORE_ALL_TRACK_LANE_ELEMENTS_BUT_ITEMS))
 						{
-							if (takeHeight == -666)
-								takeHeight = GetTakeHeight(mouseInfo.take, NULL, 0, &takeOffset, true, height, offset);
-							stretchMarkerHit = this->IsMouseOverStretchMarker(mouseInfo.item, mouseInfo.take, takeHeight, takeOffset, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom);
+							// Check track lane for track envelope
+							MediaItem_Take* activeTake = GetActiveTake(mouseInfo.item);
+							trackEnvHit = (IsLocked(TRACK_ENV)) ? 0 : this->IsMouseOverEnvelopeLineTrackLane(mouseInfo.track, height, offset, laneEnvs, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, &mouseInfo.envelope, &mouseInfo.envPointId);
+
+							// Check track lane for take envelope (only if take is active - REAPER doesn't allow editing of envelopes of inactive takes)
+							int takeHeight = -666;
+							int takeOffset = -666;
+							if (trackEnvHit == 0 && mouseInfo.take && activeTake == mouseInfo.take && !IsLocked(TAKE_ENV))
+							{
+								if (takeHeight == -666)
+									takeHeight = GetTakeHeight(mouseInfo.take, NULL, 0, &takeOffset, true, height, offset);
+								takeEnvHit = this->IsMouseOverEnvelopeLineTake(mouseInfo.take, takeHeight, takeOffset, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, &mouseInfo.envelope, &mouseInfo.envPointId);
+							}
+
+							// Check for stretch markers (again, only active take)
+							stretchMarkerHit = -1;
+							if (trackEnvHit == 0 && takeEnvHit == 0 && mouseInfo.take && activeTake == mouseInfo.take && !IsLocked(STRETCH_MARKERS) && !IsItemLocked(mouseInfo.item) && !IsLocked(ITEM_FULL))
+							{
+								if (takeHeight == -666)
+									takeHeight = GetTakeHeight(mouseInfo.take, NULL, 0, &takeOffset, true, height, offset);
+								stretchMarkerHit = this->IsMouseOverStretchMarker(mouseInfo.item, mouseInfo.take, takeHeight, takeOffset, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom);
+							}
 						}
 
 						// Track envelope takes priority

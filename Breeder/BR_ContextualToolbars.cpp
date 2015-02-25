@@ -737,6 +737,8 @@ void BR_ContextualToolbar::UpdateInternals ()
 	context = INLINE_MIDI_EDITOR_PIANO;           if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_MIDI_INLINE; m_activeContexts.insert(context);}
 	context = INLINE_MIDI_EDITOR_NOTES;           if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_MIDI_INLINE; m_activeContexts.insert(context);}
 	context = INLINE_MIDI_EDITOR_CC_LANE;         if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_MIDI_INLINE; m_activeContexts.insert(context);}
+
+	m_mode |= BR_MouseInfo::MODE_IGNORE_ENVELOPE_LANE_SEGMENT;
 }
 
 int BR_ContextualToolbar::FindRulerToolbar (BR_MouseInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad)
@@ -937,7 +939,7 @@ int BR_ContextualToolbar::FindArrangeToolbar (BR_MouseInfo& mouseInfo, BR_Contex
 				if ((m_options.arrangeTrackEnvelope & OPTION_ENABLED))
 				{
 					if ((m_options.arrangeTrackEnvelope & SELECT_ENVELOPE)) executeOnToolbarLoad.envelopeToSelect = mouseInfo.GetEnvelope();
-					if ((m_options.arrangeTrackEnvelope & SELECT_TRACK))    executeOnToolbarLoad.trackToSelect    = mouseInfo.GetTrack() ? mouseInfo.GetTrack() : GetEnvParent(mouseInfo.GetEnvelope());
+					if ((m_options.arrangeTrackEnvelope & SELECT_TRACK))    executeOnToolbarLoad.trackToSelect    = mouseInfo.GetTrack();
 
 					executeOnToolbarLoad.clearTrackSelection = !!(m_options.arrangeTrackEnvelope & CLEAR_TRACK_SELECTION);
 				}

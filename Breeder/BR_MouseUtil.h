@@ -97,7 +97,7 @@ public:
 	const char* GetDetails ();
 
 	// Main window
-	MediaTrack*     GetTrack ();
+	MediaTrack*     GetTrack (); // if mouse is over envelope, returns envelope parent
 	MediaItem*      GetItem ();  // returns item even if mouse is over some other track element
 	MediaItem_Take* GetTake();
 	TrackEnvelope*  GetEnvelope ();
@@ -120,16 +120,18 @@ public:
 	// Use these in constructor and SetMode() to optimize things if possible
 	enum Modes
 	{
-		MODE_ALL                 = 0x1,
-		MODE_RULER               = 0x2,
-		MODE_TRANSPORT           = 0x4,
-		MODE_MCP_TCP             = 0x8,
-		MODE_ARRANGE             = 0x10,
-		MODE_ENV_LANE_DO_SEGMENT = 0x20, // valid only in tandem with MODE_ARRANGE. Set it to look for envelope points/segments in envelope lane (track lane gets checked always)
-		MODE_MIDI_EDITOR         = 0x40,
-		MODE_MIDI_INLINE         = 0x80,
-		MODE_MIDI_EDITOR_ALL     = MODE_MIDI_EDITOR | MODE_MIDI_INLINE,
-		MODE_ARRANGE_ALL         = MODE_ARRANGE | MODE_ENV_LANE_DO_SEGMENT
+		MODE_ALL             = 0x1,
+		MODE_RULER           = 0x2,
+		MODE_TRANSPORT       = 0x4,
+		MODE_MCP_TCP         = 0x8,
+		MODE_ARRANGE         = 0x10,
+		MODE_MIDI_EDITOR     = 0x20,
+		MODE_MIDI_INLINE     = 0x40,
+		MODE_MIDI_EDITOR_ALL = MODE_MIDI_EDITOR | MODE_MIDI_INLINE,
+
+		// More optimization for MODE_ARRANGE or MODE_ALL
+		MODE_IGNORE_ALL_TRACK_LANE_ELEMENTS_BUT_ITEMS = 0x80,
+		MODE_IGNORE_ENVELOPE_LANE_SEGMENT             = 0x100
 	};
 
 private:

@@ -151,8 +151,9 @@ public:
 	int  GetSlot ();
 
 private:
+	struct MuteState{GUID guid; int mute;};
 	int m_slot;
-	vector<pair<GUID,int> > m_items;
+	vector<MuteState> m_items;
 };
 
 /******************************************************************************
@@ -169,8 +170,10 @@ public:
 	int  GetSlot ();
 
 private:
+	struct SoloMuteState{GUID guid; int solo, mute;};
 	int m_slot;
-	vector<pair<GUID,pair<int,int> > > m_tracks;
+	vector<BR_TrackSoloMuteState::SoloMuteState> m_tracks;
+	
 };
 
 /******************************************************************************

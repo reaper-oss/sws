@@ -51,7 +51,50 @@ static bool g_itemPreviewPaused = false;
 * MIDI take preview - separate from arrange preview so they don't exclude     *
 * each other out                                                              *
 ******************************************************************************/
-static void MidiTakePreviewTimer ();
+static void MidiTakePreview (int, MediaItem_Take*, MediaTrack*, double, double, double, bool);
+
+static void MidiTakePreviewPlayState (bool play, bool pause, bool rec)
+{
+	if (!play || rec || (g_itemPreviewPaused && play))
+		MidiTakePreview(0, NULL, NULL, 0, 0, 0, false);
+}
+
+static void MidiTakePreviewTimer ()
+{
+	if (g_itemPreviewPlaying)
+	{
+		#ifdef _WIN32
+			EnterCriticalSection(&g_ItemPreview.cs);
+		#else
+			pthread_mutex_lock(&g_ItemPreview.mutex);
+		#endif
+
+		// Have we reached the end?
+		if (g_ItemPreview.curpos >= g_ItemPreview.src->GetLength())
+		{
+			#ifdef _WIN32
+				LeaveCriticalSection(&g_ItemPreview.cs);
+			#else
+				pthread_mutex_unlock(&g_ItemPreview.mutex);
+			#endif
+			MidiTakePreview(0, NULL, NULL, 0, 0, 0, false);
+			plugin_register("-timer",(void*)MidiTakePreviewTimer);
+		}
+		else
+		{
+			#ifdef _WIN32
+				LeaveCriticalSection(&g_ItemPreview.cs);
+			#else
+				pthread_mutex_unlock(&g_ItemPreview.mutex);
+			#endif
+		}
+	}
+	else
+	{
+		plugin_register("-timer",(void*)MidiTakePreviewTimer);
+	}
+}
+
 static void MidiTakePreview (int mode, MediaItem_Take* take, MediaTrack* track, double volume, double startOffset, double measureSync, bool pauseDuringPrev)
 {
 	/* mode: 0 -> stop   *
@@ -60,6 +103,8 @@ static void MidiTakePreview (int mode, MediaItem_Take* take, MediaTrack* track, 
 
 	if (IsRecording()) // Reaper won't preview anything during recording but extension will still think preview is in progress (could disrupt toggle states and send unneeded CC123)
 		return;
+
+	RegisterCsurfPlayState(false, MidiTakePreviewPlayState);
 
 	if (g_itemPreviewPlaying)
 	{
@@ -82,9 +127,12 @@ static void MidiTakePreview (int mode, MediaItem_Take* take, MediaTrack* track, 
 				OnPauseButton();
 			g_itemPreviewPaused = false;
 		}
+
+		if (mode == 2)
+			return;
 	}
 
-	if (mode == 0 || mode == 2)
+	if (mode == 0)
 		return;
 
 	if (take)
@@ -131,7 +179,10 @@ static void MidiTakePreview (int mode, MediaItem_Take* take, MediaTrack* track, 
 				g_itemPreviewPlaying = !!PlayPreviewEx(&g_ItemPreview, (measureSync) ? (1) : (0), measureSync);
 
 			if (g_itemPreviewPlaying)
+			{
 				plugin_register("timer",(void*)MidiTakePreviewTimer);
+				RegisterCsurfPlayState(true, MidiTakePreviewPlayState);
+			}
 			else
 				delete g_ItemPreview.src;
 		}
@@ -139,48 +190,6 @@ static void MidiTakePreview (int mode, MediaItem_Take* take, MediaTrack* track, 
 		SetActiveTake(oldTake);
 		GetSetMediaItemInfo(item, "B_MUTE", &itemMuteState);
 	}
-}
-
-static void MidiTakePreviewTimer ()
-{
-	if (g_itemPreviewPlaying)
-	{
-		#ifdef _WIN32
-			EnterCriticalSection(&g_ItemPreview.cs);
-		#else
-			pthread_mutex_lock(&g_ItemPreview.mutex);
-		#endif
-
-		// Have we reached the end?
-		if (g_ItemPreview.curpos >= g_ItemPreview.src->GetLength())
-		{
-			#ifdef _WIN32
-				LeaveCriticalSection(&g_ItemPreview.cs);
-			#else
-				pthread_mutex_unlock(&g_ItemPreview.mutex);
-			#endif
-			MidiTakePreview(0, NULL, NULL, 0, 0, 0, false);
-			plugin_register("-timer",(void*)MidiTakePreviewTimer);
-		}
-		else
-		{
-			#ifdef _WIN32
-				LeaveCriticalSection(&g_ItemPreview.cs);
-			#else
-				pthread_mutex_unlock(&g_ItemPreview.mutex);
-			#endif
-		}
-	}
-	else
-	{
-		plugin_register("-timer",(void*)MidiTakePreviewTimer);
-	}
-}
-
-void MidiTakePreviewPlayState (bool play, bool rec)
-{
-	if (g_itemPreviewPlaying && (!play || rec || (g_itemPreviewPaused && play)))
-		MidiTakePreview(0, NULL, NULL, 0, 0, 0, false);
 }
 
 /******************************************************************************
@@ -651,9 +660,10 @@ void ME_CopySelCCToLane (COMMAND_T* ct, int val, int valhw, int relmode, HWND hw
 	for (int i = 0; i < midiEditor.CountCCLanes(); ++i)
 		events.Add(new BR_MidiCCEvents(0, midiEditor, midiEditor.GetCCLane(i)));
 
-	bool update  = false;
 	if (lane != CC_TEXT_EVENTS && lane != CC_SYSEX && lane != CC_BANK_SELECT && lane != CC_VELOCITY && lane != CC_VELOCITY_OFF)
 	{
+		bool update  = false;
+
 		double insertPosition = -1;
 		for (int i = 0; i < events.GetSize(); ++i)
 		{

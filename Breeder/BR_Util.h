@@ -101,6 +101,7 @@ void StartPlayback (double position);
 void GetSetLastAdjustedSend (bool set, MediaTrack** track, int* sendId, int* type); // for type see BR_EnvType (works only for volume and pan, not mute)
 void GetSetFocus (bool set, HWND* hwnd, int* context);
 void SetAllCoordsToZero (RECT* r);
+void RegisterCsurfPlayState (bool set, void (*CSurfPlayState)(bool,bool,bool), const vector<void(*)(bool,bool,bool)>** registeredFunctions = NULL, bool cleanup = false);
 bool IsPlaying ();
 bool IsPaused ();
 bool IsRecording ();

@@ -497,9 +497,11 @@ bool BR_MidiCCEvents::Save (BR_MidiEditor& midiEditor, int lane)
 			{
 				BR_MidiCCEvents::Event event;
 				if (MIDI_GetNote(take, id, NULL, &event.mute, &event.positionPpq, NULL, &event.channel, NULL, &event.msg3) && midiEditor.IsNoteVisible(take, id))
-				events.push_back(event);
-				if (m_sourcePpqStart == -1)
+				{
+					events.push_back(event);
+					if (m_sourcePpqStart == -1)
 						m_sourcePpqStart = event.positionPpq;
+				}
 			}
 		}
 		else if (lane >= CC_14BIT_START)
@@ -757,11 +759,11 @@ m_slot (slot)
 		if (!strcmp(lp.gettoken_str(0), ">"))
 			break;
 
-		GUID guid;
-		stringToGuid(lp.gettoken_str(0), &guid);
-		pair<GUID,int> trackState;
-		trackState.first  = guid;
-		trackState.second = lp.gettoken_int(1);
+		GUID guid;stringToGuid(lp.gettoken_str(0), &guid);
+
+		BR_ItemMuteState::MuteState trackState;
+		trackState.guid = guid;
+		trackState.mute = lp.gettoken_int(1);
 		m_items.push_back(trackState);
 	}
 }
@@ -774,8 +776,8 @@ void BR_ItemMuteState::SaveState (ProjectStateContext* ctx)
 		for (size_t i = 0; i < m_items.size(); ++i)
 		{
 			char guid[64];
-			guidToString(&m_items[i].first, guid);
-			ctx->AddLine("%s %d", guid, m_items[i].second);
+			guidToString(&m_items[i].guid, guid);
+			ctx->AddLine("%s %d", guid, m_items[i].mute);
 		}
 		ctx->AddLine(">");
 	}
@@ -789,9 +791,10 @@ void BR_ItemMuteState::Save (bool selectedOnly)
 	for (int i = 0; i < count; ++i)
 	{
 		MediaItem* item = (selectedOnly) ? GetSelectedMediaItem(NULL, i) : GetMediaItem(NULL, i);
-		pair<GUID,int> trackState;
-		trackState.first  = GetItemGuid(item);
-		trackState.second = (int)GetMediaItemInfo_Value(item, "B_MUTE");
+
+		BR_ItemMuteState::MuteState trackState;
+		trackState.guid = GetItemGuid(item);
+		trackState.mute = (int)GetMediaItemInfo_Value(item, "B_MUTE");
 		m_items.push_back(trackState);
 	}
 	MarkProjectDirty(NULL);
@@ -803,11 +806,11 @@ bool BR_ItemMuteState::Restore (bool selectedOnly)
 	bool update = false;
 	for (size_t i = 0; i < m_items.size(); ++i)
 	{
-		if (MediaItem* item = GuidToItem(&m_items[i].first))
+		if (MediaItem* item = GuidToItem(&m_items[i].guid))
 		{
 			if (!selectedOnly || (selectedOnly && GetMediaItemInfo_Value(item, "B_UISEL") != 0))
 			{
-				SetMediaItemInfo_Value(item, "B_MUTE", m_items[i].second);
+				SetMediaItemInfo_Value(item, "B_MUTE", m_items[i].mute);
 				update = true;
 			}
 		}
@@ -841,12 +844,12 @@ m_slot (slot)
 		if (!strcmp(lp.gettoken_str(0), ">"))
 			break;
 
-		GUID guid;
-		stringToGuid(lp.gettoken_str(0), &guid);
-		pair<GUID,pair<int,int> > trackState;
-		trackState.first         = guid;
-		trackState.second.first  = lp.gettoken_int(1);
-		trackState.second.second = lp.gettoken_int(2);
+		GUID guid; stringToGuid(lp.gettoken_str(0), &guid);
+
+		BR_TrackSoloMuteState::SoloMuteState trackState;
+		trackState.guid = guid;
+		trackState.solo = lp.gettoken_int(1);
+		trackState.mute = lp.gettoken_int(2);
 		m_tracks.push_back(trackState);
 	}
 }
@@ -859,8 +862,8 @@ void BR_TrackSoloMuteState::SaveState (ProjectStateContext* ctx)
 		for (size_t i = 0; i < m_tracks.size(); ++i)
 		{
 			char guid[64];
-			guidToString(&m_tracks[i].first, guid);
-			ctx->AddLine("%s %d %d", guid, m_tracks[i].second.first, m_tracks[i].second.second);
+			guidToString(&m_tracks[i].guid, guid);
+			ctx->AddLine("%s %d %d", guid, m_tracks[i].guid, m_tracks[i].solo, m_tracks[i].mute);
 		}
 		ctx->AddLine(">");
 	}
@@ -875,10 +878,10 @@ void BR_TrackSoloMuteState::Save (bool selectedOnly)
 	{
 		MediaTrack* track = (selectedOnly) ? GetSelectedTrack(NULL, i) : GetTrack(NULL, i);
 
-		pair<GUID,pair<int,int> > trackState;
-		trackState.first         = *GetTrackGUID(track);
-		trackState.second.first  = (int)GetMediaTrackInfo_Value(track, "B_MUTE");
-		trackState.second.second = (int)GetMediaTrackInfo_Value(track, "I_SOLO");
+		BR_TrackSoloMuteState::SoloMuteState trackState;
+		trackState.guid = *GetTrackGUID(track);
+		trackState.solo = (int)GetMediaTrackInfo_Value(track, "I_SOLO");
+		trackState.mute = (int)GetMediaTrackInfo_Value(track, "B_MUTE");
 		m_tracks.push_back(trackState);
 	}
 	MarkProjectDirty(NULL);
@@ -890,12 +893,12 @@ bool BR_TrackSoloMuteState::Restore (bool selectedOnly)
 	bool update = false;
 	for (size_t i = 0; i < m_tracks.size(); ++i)
 	{
-		if (MediaTrack* track = GuidToTrack(&m_tracks[i].first))
+		if (MediaTrack* track = GuidToTrack(&m_tracks[i].guid))
 		{
 			if (!selectedOnly || (selectedOnly && GetMediaTrackInfo_Value(track, "I_SELECTED") != 0))
 			{
-				SetMediaTrackInfo_Value(track, "B_MUTE", m_tracks[i].second.first);
-				SetMediaTrackInfo_Value(track, "I_SOLO", m_tracks[i].second.second);
+				SetMediaTrackInfo_Value(track, "I_SOLO", m_tracks[i].solo);
+				SetMediaTrackInfo_Value(track, "B_MUTE", m_tracks[i].mute);
 				update = true;
 			}
 		}

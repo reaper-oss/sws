@@ -646,6 +646,54 @@ void SetAllCoordsToZero (RECT* r)
 	}
 }
 
+void RegisterCsurfPlayState (bool set, void (*CSurfPlayState)(bool,bool,bool), const vector<void(*)(bool,bool,bool)>** registeredFunctions /*= NULL*/, bool cleanup /*= false*/)
+{
+	static vector<void(*)(bool,bool,bool)> s_functions;
+
+	if (CSurfPlayState)
+	{
+		if (set)
+		{
+			bool found = false;
+			for (int i = 0; i < s_functions.size(); ++i)
+			{
+				if (s_functions[i] == CSurfPlayState)
+				{
+					found = true;
+					break;
+				}
+			}
+			if (!found)
+				s_functions.push_back(CSurfPlayState);
+		}
+		else
+		{
+			for (int i = 0; i < s_functions.size(); ++i)
+			{
+				if (s_functions[i] == CSurfPlayState)
+					s_functions[i] = NULL;
+			}
+		}
+	}
+
+	// Because CSurfPlayState can remove itself from vector (and mess stuff up in BR_CSurfSetPlayState when iterating over all stored functions), instead of deleting
+	// functions from vector as soon as they are deregistered, we set them to NULL and erase afterward from BR_CSurfSetPlayState once we called all of them
+	if (cleanup)
+	{
+		for (int i = 0; i < s_functions.size(); ++i)
+		{
+			if (s_functions[i] == NULL)
+			{
+				s_functions.erase(s_functions.begin() + i);
+				--i;
+			}
+		}
+	}
+
+	if (registeredFunctions)
+		*registeredFunctions = &s_functions;
+}
+
 bool IsPlaying ()
 {
 	return (GetPlayStateEx(NULL) & 1) == 1;

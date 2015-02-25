@@ -1869,50 +1869,20 @@ void BR_Envelope::FillProperties () const
 					m_properties.type = PLAYRATE;
 					m_properties.paramType.Set(token);
 				}
+				else if (strstr(token, "PITCHENV"))
+				{
+					m_properties.minValue = -255;
+					m_properties.maxValue = 255;
+					m_properties.centerValue = 0;
+					m_properties.type = PITCH;
+					m_properties.paramType.Set(token);
+				}
 				else if (strstr(token, "TEMPOENV"))
 				{
 					m_properties.minValue = MIN_BPM;
 					m_properties.maxValue = MAX_BPM;
 					m_properties.centerValue = GetProjectSettingsTempo(NULL, NULL);
 					m_properties.type = TEMPO;
-					m_properties.paramType.Set(token);
-				}
-				else if (m_take && strstr(token, "TRACK_ENVELOPE_UNKNOWN"))
-				{
-					if (m_takeEnvType == VOLUME)
-					{
-						m_properties.minValue = 0;
-						m_properties.maxValue = 2;
-						m_properties.centerValue = 1;
-					}
-					else if (m_takeEnvType == PAN)
-					{
-						m_properties.minValue = -1;
-						m_properties.maxValue = 1;
-						m_properties.centerValue = 0;
-
-					}
-					else if (m_takeEnvType == MUTE)
-					{
-						m_properties.minValue = 0;
-						m_properties.maxValue = 1;
-						m_properties.centerValue = 0.5;
-					}
-					else if (m_takeEnvType == PITCH)
-					{
-						m_properties.minValue = -255;
-						m_properties.maxValue = 255;
-						m_properties.centerValue = 0;
-					}
-					else if (m_takeEnvType == PARAMETER)
-					{
-						lp.parse(token);
-						m_properties.minValue    = lp.gettoken_float(2);
-						m_properties.maxValue    = lp.gettoken_float(3);
-						m_properties.centerValue = lp.gettoken_float(4);
-					}
-
-					m_properties.type = m_takeEnvType;
 					m_properties.paramType.Set(token);
 				}
 

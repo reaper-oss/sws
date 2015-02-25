@@ -1170,7 +1170,7 @@ bool IsMidiNoteBlack (int note)
 
 bool IsVelLaneValid (int lane)
 {
-	if (lane >= -1 && lane <= 165)
+	if (lane >= CC_VELOCITY && lane <= CC_VELOCITY_OFF)
 		return true;
 	else
 		return false;

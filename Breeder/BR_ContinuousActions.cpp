@@ -479,8 +479,8 @@ static bool ContinuousActionInit (bool init, COMMAND_T* ct, HWND hwnd, BR_Contin
 			plugin_register("-accelerator", &s_accelerator); // gotcha: while we do register with "<accelerator", we deregister with "-accelerator"
 		#endif
 
-		// Restore focus back in case of MIDI editor on OSX
 		#ifndef BR_USE_PRE_HOOK_ACCEL
+			// Restore focus back in case of MIDI editor on OSX
 			#ifndef _WIN32
 				if (g_midiEditorLastFocusedWnd)
 					SetFocus(g_midiEditorLastFocusedWnd);

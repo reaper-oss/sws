@@ -655,7 +655,7 @@ void RegisterCsurfPlayState (bool set, void (*CSurfPlayState)(bool,bool,bool), c
 		if (set)
 		{
 			bool found = false;
-			for (int i = 0; i < s_functions.size(); ++i)
+			for (size_t i = 0; i < s_functions.size(); ++i)
 			{
 				if (s_functions[i] == CSurfPlayState)
 				{
@@ -668,7 +668,7 @@ void RegisterCsurfPlayState (bool set, void (*CSurfPlayState)(bool,bool,bool), c
 		}
 		else
 		{
-			for (int i = 0; i < s_functions.size(); ++i)
+			for (size_t i = 0; i < s_functions.size(); ++i)
 			{
 				if (s_functions[i] == CSurfPlayState)
 					s_functions[i] = NULL;
@@ -680,7 +680,7 @@ void RegisterCsurfPlayState (bool set, void (*CSurfPlayState)(bool,bool,bool), c
 	// functions from vector as soon as they are deregistered, we set them to NULL and erase afterward from BR_CSurfSetPlayState once we called all of them
 	if (cleanup)
 	{
-		for (int i = 0; i < s_functions.size(); ++i)
+		for (size_t i = 0; i < s_functions.size(); ++i)
 		{
 			if (s_functions[i] == NULL)
 			{

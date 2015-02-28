@@ -746,7 +746,7 @@ void BR_MouseInfo::GetContext (const POINT& p)
 					{
 						mouseInfo.segment = "track";
 						mouseInfo.item = GetItemFromY(mouseY, mousePos, &mouseInfo.take, &mouseInfo.takeId);
-						
+
 						int trackEnvHit      = 0;
 						int takeEnvHit       = 0;
 						int stretchMarkerHit = -1;

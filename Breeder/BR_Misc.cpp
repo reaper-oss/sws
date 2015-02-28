@@ -178,7 +178,7 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 		// Restore tracks' solo and mute state
 		if (s_trackSoloMuteState)
 		{
-			for (int i = 0; i < s_trackSoloMuteState->size(); ++i)
+			for (size_t i = 0; i < s_trackSoloMuteState->size(); ++i)
 			{
 				if (MediaTrack* track = GuidToTrack(&s_trackSoloMuteState->at(i).first))
 				{
@@ -191,7 +191,7 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 		// Restore items' mute state
 		if (s_itemMuteState)
 		{
-			for (int i = 0; i < s_itemMuteState->size(); ++i)
+			for (size_t i = 0; i < s_itemMuteState->size(); ++i)
 			{
 				if (MediaItem* item = GuidToItem(&s_itemMuteState->at(i).first))
 					SetMediaItemInfo_Value(item, "B_MUTE", s_itemMuteState->at(i).second);

@@ -120,7 +120,7 @@ public:
 	bool Restore (BR_MidiEditor& midiEditor, int lane, bool allVisible, double startPositionPppq, bool showWarningForInvalidLane = true);
 	int  GetSlot ();
 	int CountSavedEvents();
-	double GetSourcePpqStart (); 
+	double GetSourcePpqStart ();
 
 private:
 	struct Event
@@ -173,7 +173,7 @@ private:
 	struct SoloMuteState{GUID guid; int solo, mute;};
 	int m_slot;
 	vector<BR_TrackSoloMuteState::SoloMuteState> m_tracks;
-	
+
 };
 
 /******************************************************************************

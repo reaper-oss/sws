@@ -218,6 +218,7 @@ double EffectiveMidiTakeLength (MediaItem_Take* take, bool ignoreMutedEvents, bo
 double EffectiveMidiTakeStart (MediaItem_Take* take, bool ignoreMutedEvents, bool ignoreTextEvents);
 double GetStartOfMeasure (MediaItem_Take* take, double ppqPos); // working versions of MIDI_GetPPQPos_StartOfMeasure
 double GetEndOfMeasure (MediaItem_Take* take, double ppqPos);   // and MIDI_GetPPQPos_EndOfMeasure
+double GetOriginalPpqPos (MediaItem_Take* take, double ppqPos, bool* loopedItem, double* posVisInsertStartPpq, double* posVisInsertEndPpq); // insert start/end are used to check if event can be inserted at returned pos and be visible at the loop iteration where ppqPos is located
 void SetMutedNotes (MediaItem_Take* take, const vector<int>& muteStatus);
 void SetSelectedNotes (MediaItem_Take* take, const vector<int>& selectedNotes, bool unselectOthers);
 void UnselectAllEvents (MediaItem_Take* take, int lane);

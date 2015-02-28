@@ -1025,6 +1025,69 @@ double GetEndOfMeasure (MediaItem_Take* take, double ppqPos)
 	return -1;
 }
 
+double GetOriginalPpqPos (MediaItem_Take* take, double ppqPos, bool* loopedItem, double* posVisInsertStartPpq, double* posVisInsertEndPpq)
+{
+	double returnPos = 0;
+	MediaItem* item = GetMediaItemTake_Item(take);
+	if (!take || !item)
+	{
+		WritePtr(loopedItem,          false);
+		WritePtr(posVisInsertStartPpq, 0.0);
+		WritePtr(posVisInsertEndPpq,   0.0);
+	}
+	else
+	{
+		double itemStart = GetMediaItemInfo_Value(item, "D_POSITION");
+		double itemEnd   = itemStart + GetMediaItemInfo_Value(item, "D_LENGTH");
+
+		if (GetMediaItemInfo_Value(item, "B_LOOPSRC") == 0)
+		{
+			WritePtr(loopedItem,           false);
+			WritePtr(posVisInsertStartPpq, MIDI_GetPPQPosFromProjTime(take, itemStart));
+			WritePtr(posVisInsertEndPpq,   MIDI_GetPPQPosFromProjTime(take, itemEnd));
+			returnPos = ppqPos;
+		}
+		else
+		{
+			WritePtr(loopedItem, true);
+
+			double visibleItemStartPpq = MIDI_GetPPQPosFromProjTime(take, itemStart);
+			double visibleItemEndPpq   = MIDI_GetPPQPosFromProjTime(take, itemEnd);
+			double sourceLenPpq = GetSourceLengthPPQ(take);
+
+			// Deduct take offset to get correct current loop iteration
+			double itemStartPpq = MIDI_GetPPQPosFromProjTime(take, itemStart - GetMediaItemTakeInfo_Value(take, "D_STARTOFFS"));
+			int currentLoop = (int)((ppqPos  - itemStartPpq) / sourceLenPpq);
+			int loopCount   = (int)((visibleItemEndPpq - visibleItemStartPpq) / sourceLenPpq);
+
+			returnPos = (ppqPos >= visibleItemStartPpq) ? (ppqPos - (currentLoop * sourceLenPpq)) : ppqPos;
+
+			if (ppqPos > visibleItemEndPpq)                            // position after item end
+			{
+				WritePtr(posVisInsertStartPpq, 0.0);
+				WritePtr(posVisInsertEndPpq,   0.0);
+			}
+			else if (ppqPos < visibleItemStartPpq || currentLoop == 0) // position in first loop iteration or before it
+			{
+				WritePtr(posVisInsertStartPpq, visibleItemStartPpq);
+				WritePtr(posVisInsertEndPpq,   (visibleItemEndPpq - visibleItemStartPpq >= sourceLenPpq) ? itemStartPpq + sourceLenPpq : visibleItemEndPpq);
+			}
+			else if (currentLoop == loopCount)                        // position in last loop iteration
+			{
+				WritePtr(posVisInsertStartPpq, itemStartPpq);
+				WritePtr(posVisInsertEndPpq,   itemStartPpq + (visibleItemEndPpq - (currentLoop * sourceLenPpq)));
+			}
+			else                                                     // position in other loop iterations
+			{
+				WritePtr(posVisInsertStartPpq, itemStartPpq);
+				WritePtr(posVisInsertEndPpq,   itemStartPpq + sourceLenPpq);
+			}
+		}
+	}
+
+	return returnPos;
+}
+
 void SetMutedNotes (MediaItem_Take* take, const vector<int>& muteStatus)
 {
 	int noteCount = muteStatus.size();

@@ -584,7 +584,7 @@ bool BR_MidiCCEvents::Restore (BR_MidiEditor& midiEditor, int lane, bool allVisi
 		else
 			lanesToProcess.insert(lane);
 
-		double moveOffsetPPQMax = -1;
+		double moveOffsetMaxPPQ = -1;
 		for (set<int>::iterator i = lanesToProcess.begin(); i != lanesToProcess.end(); ++i)
 		{
 			int targetLane  = *i;
@@ -598,57 +598,29 @@ bool BR_MidiCCEvents::Restore (BR_MidiEditor& midiEditor, int lane, bool allVisi
 			)
 				continue;
 
-			double takeStartPPQ, takeEndPPQ;
+			double startLimitPPQ, endLimitPPQ;
+			bool loopedItem;
+			startPositionPppq = GetOriginalPpqPos(take, startPositionPppq,  &loopedItem, &startLimitPPQ, &endLimitPPQ);
 
-			if (GetMediaItemInfo_Value(item, "B_LOOPSRC"))
+			if (!loopedItem)
 			{
-				double itemEndPPQ   = MIDI_GetPPQPosFromProjTime(take, GetMediaItemInfo_Value(item, "D_POSITION") + GetMediaItemInfo_Value(item, "D_LENGTH"));
-				double itemStartPPQ = MIDI_GetPPQPosFromProjTime(take, GetMediaItemInfo_Value(item, "D_POSITION"));
-				if (!CheckBounds(startPositionPppq, itemStartPPQ, itemEndPPQ))
-					continue;
-
-				double sourceLenPPQ = GetSourceLengthPPQ(take);
-				int currentLoop = (int)((startPositionPppq - itemStartPPQ) / sourceLenPPQ);
-				int loopCount   = (int)((itemEndPPQ        - itemStartPPQ) / sourceLenPPQ);
-
-				startPositionPppq -= currentLoop * sourceLenPPQ; // when dealing with looped items, always insert at the first iteration of the loop
-
-				if (currentLoop == loopCount)
-				{
-					takeStartPPQ = itemStartPPQ;
-					takeEndPPQ   = itemStartPPQ + (itemEndPPQ - (currentLoop * sourceLenPPQ));
-				}
-				else if (currentLoop == 0)
-				{
-					takeStartPPQ = itemStartPPQ;
-					takeEndPPQ   = (itemEndPPQ - itemStartPPQ >= sourceLenPPQ) ? sourceLenPPQ : itemEndPPQ;
-				}
-				else
-				{
-					takeStartPPQ = itemStartPPQ;
-					takeEndPPQ   = itemStartPPQ + sourceLenPPQ;
-				}
-			}
-			else
-			{
-				double itemStart = GetMediaItemInfo_Value(item, "D_POSITION");
-
 				// Extend item if needed
 				int midiVu; GetConfig("midivu", midiVu);
 				if (GetBit(midiVu, 14))
 				{
+					double itemStart = GetMediaItemInfo_Value(item, "D_POSITION");
 					double itemEnd = itemStart + GetMediaItemInfo_Value(item, "D_LENGTH");
+
 					double newEnd  = MIDI_GetProjTimeFromPPQPos(take, startPositionPppq + m_events.back().positionPpq + 1);
 					if (newEnd > itemEnd)
 						SetMediaItemInfo_Value(item, "D_LENGTH", newEnd - itemStart);
-				}
 
-				takeStartPPQ = MIDI_GetPPQPosFromProjTime(take, itemStart);
-				takeEndPPQ   = MIDI_GetPPQPosFromProjTime(take, itemStart + GetMediaItemInfo_Value(item, "D_LENGTH"));
+					startLimitPPQ = MIDI_GetPPQPosFromProjTime(take, itemStart);
+					endLimitPPQ   = MIDI_GetPPQPosFromProjTime(take, itemStart + GetMediaItemInfo_Value(item, "D_LENGTH"));
+				}
 			}
 
 			// Restore events
-			UnselectAllEvents(take, targetLane);
 			double ratioPPQ = (double)midiEditor.GetPPQ() / (double)m_ppq;
 			bool do14bit    = (targetLane >= CC_14BIT_START)                                  ? true : false;
 			bool reverseMsg = (targetLane == CC_PROGRAM || targetLane == CC_CHANNEL_PRESSURE) ? true : false;
@@ -658,16 +630,24 @@ bool BR_MidiCCEvents::Restore (BR_MidiEditor& midiEditor, int lane, bool allVisi
 			targetLane  = (do14bit) ? targetLane - CC_14BIT_START : targetLane;
 			targetLane2 = (do14bit) ? targetLane + 32             : targetLane2;
 			double moveOffsetPPQ = -1;
+			bool insertedOneEvent = false;
 			for (size_t i = 0; i < m_events.size(); ++i)
 			{
 				double posAddPPQ = (ratioPPQ == 0) ? m_events[i].positionPpq : Round(m_events[i].positionPpq * ratioPPQ);
 				double positionPpq = startPositionPppq + posAddPPQ;
 
-				if (positionPpq < takeStartPPQ)
+				if (positionPpq < startLimitPPQ)
 					continue;
-				if (positionPpq > takeEndPPQ)
+				if (positionPpq > endLimitPPQ)
 					break;
 				moveOffsetPPQ = posAddPPQ;
+
+				// Make sure events are unselected only when we know at least new one event will get inserted
+				if (!insertedOneEvent)
+				{
+					insertedOneEvent = true;
+					UnselectAllEvents(take, targetLane);
+				}
 
 				MIDI_InsertCC(take,
 				              true,
@@ -693,14 +673,14 @@ bool BR_MidiCCEvents::Restore (BR_MidiEditor& midiEditor, int lane, bool allVisi
 				}
 			}
 
-			if (moveOffsetPPQ != -1 && moveOffsetPPQ > moveOffsetPPQMax)
-				moveOffsetPPQMax = moveOffsetPPQ;
+			if (moveOffsetPPQ != -1 && moveOffsetPPQ > moveOffsetMaxPPQ)
+				moveOffsetMaxPPQ = moveOffsetPPQ;
 		}
 
-		if (moveOffsetPPQMax != -1)
+		if (moveOffsetMaxPPQ != -1)
 		{
 			update = true;
-			double newPosPPQ = Trunc(moveOffsetPPQMax + MIDI_GetPPQPosFromProjTime(take, GetCursorPositionEx(NULL))); // trunc because reaper creates events exactly on ppq
+			double newPosPPQ = Trunc(moveOffsetMaxPPQ + MIDI_GetPPQPosFromProjTime(take, GetCursorPositionEx(NULL))); // trunc because reaper creates events exactly on ppq
 			SetEditCurPos(MIDI_GetProjTimeFromPPQPos(take, newPosPPQ), true, false);
 		}
 	}
@@ -717,7 +697,7 @@ int BR_MidiCCEvents::CountSavedEvents ()
 	return (int)m_events.size();
 }
 
-double BR_MidiCCEvents:: GetSourcePpqStart ()
+double BR_MidiCCEvents::GetSourcePpqStart ()
 {
 	return m_sourcePpqStart;
 }

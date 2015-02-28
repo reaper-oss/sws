@@ -253,7 +253,10 @@ void ME_CCEventAtEditCursor (COMMAND_T* ct, int val, int valhw, int relmode, HWN
 	{
 		if (MediaItem_Take* take = SWS_MIDIEditor_GetTake(mouseInfo.GetMidiEditor()))
 		{
-			double positionPPQ = MIDI_GetPPQPosFromProjTime(take, GetCursorPositionEx(NULL));
+			double startLimit, endLimit;
+			double positionPPQ = GetOriginalPpqPos(take, MIDI_GetPPQPosFromProjTime(take, GetCursorPositionEx(NULL)), NULL, &startLimit, &endLimit);
+			if (!CheckBounds(positionPPQ, startLimit, endLimit))
+				return;
 
 			int lane, value;
 			if (mouseInfo.GetCCLane(&lane, &value, NULL) && value >= 0)
@@ -610,10 +613,26 @@ void ME_CCToEnvPoints (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd
 
 			if (value != -1)
 			{
+				MediaItem* item = GetMediaItemTake_Item(take);
+				double itemStart = GetMediaItemInfo_Value(item, "D_POSITION");
+				double itemEnd   = itemStart + GetMediaItemInfo_Value(item, "D_LENGTH");
+				double sourceLenPpq = GetSourceLengthPPQ(take);
+
 				double newValue = TranslateRange(value, 0, max, envelope.LaneMinValue(), envelope.LaneMaxValue());
-				double position = MIDI_GetProjTimeFromPPQPos(take, ppqPos);
-				if (envelope.CreatePoint(envelope.CountPoints(), position, newValue, shape, 0, false, true))
-					update = true;
+				while (true)
+				{
+					double position = MIDI_GetProjTimeFromPPQPos(take, ppqPos);
+					if (CheckBounds(position, itemStart, itemEnd))
+					{
+						if (envelope.CreatePoint(envelope.CountPoints(), MIDI_GetProjTimeFromPPQPos(take, ppqPos), newValue, shape, 0, false, true))
+							update = true;
+					}
+					else if (position > itemEnd)
+					{
+						break;
+					}
+					ppqPos += sourceLenPpq;
+				}
 			}
 		}
 	}
@@ -626,10 +645,26 @@ void ME_CCToEnvPoints (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd
 		double ppqPos;
 		if (MIDI_GetNote(take, id, NULL, NULL, &ppqPos, NULL, &channel, NULL, &velocity) && midiEditor.IsNoteVisible(take, id))
 		{
+			MediaItem* item = GetMediaItemTake_Item(take);
+			double itemStart = GetMediaItemInfo_Value(item, "D_POSITION");
+			double itemEnd   = itemStart + GetMediaItemInfo_Value(item, "D_LENGTH");
+			double sourceLenPpq = GetSourceLengthPPQ(take);
+
 			double newValue = TranslateRange(velocity, 1, 127, envelope.LaneMinValue(), envelope.LaneMaxValue());
-			double position = MIDI_GetProjTimeFromPPQPos(take, ppqPos);
-			if (envelope.CreatePoint(envelope.CountPoints(), position, newValue, shape, 0, false, true))
-				update = true;
+			while (true)
+			{
+				double position = MIDI_GetProjTimeFromPPQPos(take, ppqPos);
+				if (CheckBounds(position, itemStart, itemEnd))
+				{
+					if (envelope.CreatePoint(envelope.CountPoints(), position, newValue, shape, 0, false, true))
+						update = true;
+				}
+				else if (position > itemEnd)
+				{
+					break;
+				}
+				ppqPos += sourceLenPpq;
+			}
 		}
 	}
 
@@ -693,7 +728,6 @@ void ME_CopySelCCToLane (COMMAND_T* ct, int val, int valhw, int relmode, HWND hw
 	}
 	else
 		MessageBox((HWND)midiEditor.GetEditor(), __LOCALIZE("Can't copy to velocity, text, sysex and bank select lanes","sws_mbox"), __LOCALIZE("SWS/BR - Warning","sws_mbox"), MB_OK);
-
 }
 
 void ME_SaveCursorPosSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)

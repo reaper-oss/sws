@@ -722,7 +722,7 @@ double BR_Envelope::ValueAtPosition (double position, bool fastMode /*= false*/)
 	{
 		if (m_sampleRate == -1)
 			GetConfig("projsrate", m_sampleRate);
-		
+
 		double value;
 		Envelope_Evaluate(m_envelope, position, m_sampleRate, 1, &value, NULL, NULL, NULL); // slower than our way with high point count (probably because we use binary search while Cockos uses linear) but more accurate
 		return ScaleFromEnvelopeMode(GetEnvelopeScalingMode(m_envelope), value);
@@ -1174,7 +1174,7 @@ WDL_FastString BR_Envelope::FormatValue (double value)
 			char tmp[256];
 			TrackFX_FormatParamValue(this->GetParent(), this->GetFxId(), this->GetParamId(), value, tmp, sizeof(tmp));
 
-			if (strlen(tmp) == 0) formatedValue.AppendFormatted(256, "%.2lf", value); // because TrackFX_FormatParamValue() only works with FX that support Cockos VST extensions.
+			if (strlen(tmp) == 0) formatedValue.AppendFormatted(256, this->IsTakeEnvelope() ? "%.4lf": "%.2lf", value); // because TrackFX_FormatParamValue() only works with FX that support Cockos VST extensions.
 			else                  formatedValue.AppendFormatted(256, "%s", tmp);
 		}
 	}

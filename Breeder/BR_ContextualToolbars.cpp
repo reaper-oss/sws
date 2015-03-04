@@ -1634,9 +1634,18 @@ LRESULT CALLBACK BR_ContextualToolbar::ToolbarWndCallback (HWND hwnd, UINT uMsg,
 				}
 			}
 		}
-		else if (uMsg == WM_SETFOCUS)
+		else if (uMsg == WM_ACTIVATE)
 		{
-			toolbarWndData->lastFocusedHwnd = (HWND)wParam;
+			if (LOWORD(wParam) != WA_INACTIVE)
+			{
+				if (!toolbarWndData->lastFocusedHwnd)
+					toolbarWndData->lastFocusedHwnd = (HWND)lParam;
+			}
+			else
+			{
+				if (IsWindowVisible(hwnd))
+					toolbarWndData->lastFocusedHwnd = NULL;
+			}
 		}
 		else if (uMsg == WM_DESTROY)
 		{

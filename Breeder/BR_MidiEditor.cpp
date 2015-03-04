@@ -167,7 +167,6 @@ static void MidiTakePreview (int mode, MediaItem_Take* take, MediaTrack* track, 
 			g_ItemPreview.volume        = volume;
 			g_ItemPreview.preview_track = track;
 
-
 			// Pause before preview otherwise MidiTakePreviewPlayState will stop it
 			g_itemPreviewPaused = pauseDuringPrev;
 			if (g_itemPreviewPaused && IsPlaying() && !IsPaused())
@@ -418,7 +417,7 @@ void ME_HideCCLanes (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 
 	if (midiEditor)
 	{
-		MediaItem_Take* take = MIDIEditor_GetTake(MIDIEditor_GetActive());
+		MediaItem_Take* take = SWS_MIDIEditor_GetTake(midiEditor);
 		if (take)
 		{
 			MediaItem* item = GetMediaItemTake_Item(take);
@@ -459,9 +458,9 @@ void ME_HideCCLanes (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 					// Make sure at least one vellane is left
 					if (firstPos && laneCount == 0)
 					{
-							char newLane[512] = "";
-							if (_snprintfSafe(newLane, sizeof(newLane), "VELLANE -1 0 0\n"))
-								ptk.GetChunk()->Insert(newLane, firstPos);
+						char newLane[512] = "";
+						if (_snprintfSafe(newLane, sizeof(newLane), "VELLANE -1 0 0\n"))
+							ptk.GetChunk()->Insert(newLane, firstPos);
 					}
 
 					if (p.ReplaceTake(tkPos, tklen, ptk.GetChunk()))

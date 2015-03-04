@@ -330,10 +330,7 @@ void SplitItemAtStretchMarkers (COMMAND_T* ct)
 
 			for (size_t i = 0; i < stretchMarkers.size(); ++i)
 			{
-				double position = stretchMarkers[i];
-
-
-				item = SplitMediaItem(item, position);
+				item = SplitMediaItem(item, stretchMarkers[i]);
 				if (!item) // split at nonexistent position?
 					item = items.Get()[i];
 				else

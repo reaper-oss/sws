@@ -75,7 +75,7 @@ bool ContinuousActionHook (COMMAND_T* ct, int flagOrRelmode, HWND hwnd);
 
 /******************************************************************************
 * Put all continuous actions init functions here so their cmds end up         *
-* consequential (to optimize command hook (see ContinuousActionHook())        *
+* consequential (to optimize command hook - see ContinuousActionHook())       *
 ******************************************************************************/
 inline void ContinuousActionsInit ()
 {

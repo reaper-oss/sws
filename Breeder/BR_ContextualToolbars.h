@@ -200,6 +200,7 @@ private:
 	struct ToolbarWndData
 	{
 		HWND hwnd;
+		HWND lastFocusedHwnd;
 		WNDPROC wndProc;
 		bool keepOnTop, autoClose;
 		int toggleAction;
@@ -290,8 +291,7 @@ private:
 	void SetFocus              (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad);
 	void SetCCLaneClicked      (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad, BR_MouseInfo& mouseInfo);
 	void RepositionToolbar     (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad, HWND toolbarHwnd);
-	void SetToolbarAlwaysOnTop (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad, HWND toolbarHwnd, int toggleAction);
-	void SetToolbarAutoClose   (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad, HWND toolbarHwnd, int toggleAction);
+	void SetToolbarWndProc (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad, HWND toolbarHwnd, int toggleAction);
 
 	/* Set and get info for various contexts */
 	int GetMouseAction (int context);

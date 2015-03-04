@@ -1,8 +1,12 @@
 <strong>REAPER v5.0pre14b+ is required!</strong>
 
 Contextual toolbars
-+Fixed toolbars not loading in certain instances if some tracks are hidden from TCP (this also probably fixes some other issues)
-+Fixed MIDI editor flickering when setting detected CC lane as last clicked
++Fixes:
+ - Fixed toolbars not loading in certain instances if some tracks are hidden from TCP (this also probably fixes some other issues)
+ - Fixed MIDI editor flickering when setting detected CC lane as last clicked
++Other:
+ - Toolbar is always shown within monitor bounds (previously, this was the case only if toolbar had position override/offset set)
+ - When closing toolbar, restore focus to last focused window
 
 Added actions
 +Main:

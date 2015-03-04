@@ -215,25 +215,24 @@ void BR_ContextualToolbar::LoadToolbar (bool exclusive)
 
 				// Toggle toolbar and set it up if needed
 				Main_OnCommand(mouseAction, 0);
-				if (executeOnToolbarLoad.makeTopMost || executeOnToolbarLoad.positionOverride)
+
+				// Find toolbar hwnd to manage (in case toolbar is docked in toolbar docker)
+				bool inDocker;
+				HWND toolbarHwnd = this->GetFloatingToolbarHwnd(mouseAction, &inDocker);
+				HWND hwndToMove = toolbarHwnd;
+				if (inDocker)
 				{
-					int toggleAction;
-					this->GetReaperToolbar(this->GetToolbarId(mouseAction), NULL, &toggleAction, NULL, NULL);
-
-					bool inDocker;
-					HWND toolbarHwnd = this->GetFloatingToolbarHwnd(mouseAction, &inDocker);
-
-					HWND hwndToMove = toolbarHwnd;
-					if (inDocker)
-					{
-						while (hwndToMove && GetParent(hwndToMove) != g_hwndParent)
-							hwndToMove = GetParent(hwndToMove);
-					}
-
-					this->RepositionToolbar(executeOnToolbarLoad, hwndToMove);
-					this->SetToolbarAlwaysOnTop(executeOnToolbarLoad, toolbarHwnd, toggleAction);
-					this->SetToolbarAutoClose(executeOnToolbarLoad, toolbarHwnd, toggleAction);
+					while (hwndToMove && GetParent(hwndToMove) != g_hwndParent)
+						hwndToMove = GetParent(hwndToMove);
 				}
+
+				// Make sure toolbar is not out of monitor bounds (also reposition if allowed by preferences)
+				this->RepositionToolbar(executeOnToolbarLoad, hwndToMove);
+
+				// Set up toolbar window process for various options
+				int toggleAction;
+				this->GetReaperToolbar(this->GetToolbarId(mouseAction), NULL, &toggleAction, NULL, NULL);
+				this->SetToolbarWndProc(executeOnToolbarLoad, toolbarHwnd, toggleAction);
 
 				// Continue executing options
 				bool undoTrack = this->SelectTrack(executeOnToolbarLoad);
@@ -663,11 +662,12 @@ makeTopMost         (false)
 }
 
 BR_ContextualToolbar::ToolbarWndData::ToolbarWndData () :
-hwnd         (NULL),
-wndProc      (NULL),
-keepOnTop    (false),
-autoClose    (false),
-toggleAction (-1)
+hwnd            (NULL),
+lastFocusedHwnd (NULL),
+wndProc         (NULL),
+keepOnTop       (false),
+autoClose       (false),
+toggleAction    (-1)
 {
 	#ifndef _WIN32
 		level = 0;
@@ -1196,10 +1196,11 @@ void BR_ContextualToolbar::SetCCLaneClicked (BR_ContextualToolbar::ExecuteOnTool
 
 void BR_ContextualToolbar::RepositionToolbar (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad, HWND toolbarHwnd)
 {
+	RECT r;  GetWindowRect(toolbarHwnd, &r);
+	POINT p; GetCursorPos(&p);
+
 	if (toolbarHwnd && executeOnToolbarLoad.positionOverride)
 	{
-		RECT r;  GetWindowRect(toolbarHwnd, &r);
-		POINT p; GetCursorPos(&p);
 		int h = r.bottom - r.top;
 		int w = r.right  - r.left;
 
@@ -1229,17 +1230,17 @@ void BR_ContextualToolbar::RepositionToolbar (BR_ContextualToolbar::ExecuteOnToo
 
 		r.right  = r.left + w;
 		r.bottom = r.top  + h;
-
-		RECT screen;
-		GetMonitorRectFromPoint(p, &screen);
-		BoundToRect(screen, &r);
-		SetWindowPos(toolbarHwnd, NULL, r.left, r.top, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE);
 	}
+
+	RECT screen;
+	GetMonitorRectFromPoint(p, &screen);
+	BoundToRect(screen, &r);
+	SetWindowPos(toolbarHwnd, NULL, r.left, r.top, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE);
 }
 
-void BR_ContextualToolbar::SetToolbarAlwaysOnTop (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad, HWND toolbarHwnd, int toggleAction)
+void BR_ContextualToolbar::SetToolbarWndProc (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad, HWND toolbarHwnd, int toggleAction)
 {
-	if (toolbarHwnd && executeOnToolbarLoad.makeTopMost)
+	if (toolbarHwnd)
 	{
 		// Check if toolbar is already assigned callback
 		int id = -1;
@@ -1252,86 +1253,41 @@ void BR_ContextualToolbar::SetToolbarAlwaysOnTop (BR_ContextualToolbar::ExecuteO
 			}
 		}
 
-		if (id == -1 || !m_callbackToolbars.Get(id)->keepOnTop)
+		// Assign callback or just enable functionality if already has callback
+		BR_ContextualToolbar::ToolbarWndData* toolbarWndData  = NULL;
+		if (id == -1)
 		{
-			// Assign callback or just enable functionality if already has callback
-			BR_ContextualToolbar::ToolbarWndData* toolbarWndData  = NULL;
-			if (id == -1)
+			if (toolbarWndData = m_callbackToolbars.Add(new BR_ContextualToolbar::ToolbarWndData))
 			{
-				if (toolbarWndData = m_callbackToolbars.Add(new BR_ContextualToolbar::ToolbarWndData))
+				if (WNDPROC wndProc = (WNDPROC)SetWindowLongPtr(toolbarHwnd, GWLP_WNDPROC, (LONG_PTR)BR_ContextualToolbar::ToolbarWndCallback))
 				{
-					if (WNDPROC wndProc = (WNDPROC)SetWindowLongPtr(toolbarHwnd, GWLP_WNDPROC, (LONG_PTR)BR_ContextualToolbar::ToolbarWndCallback))
-					{
-						toolbarWndData->hwnd         = toolbarHwnd;
-						toolbarWndData->wndProc      = wndProc;
-						toolbarWndData->keepOnTop    = true;
-						toolbarWndData->toggleAction = toggleAction;
-					}
-					else
-					{
-						m_callbackToolbars.Delete(m_callbackToolbars.GetSize() - 1, true);
-						toolbarWndData = NULL;
-					}
+					toolbarWndData->hwnd         = toolbarHwnd;
+					toolbarWndData->wndProc      = wndProc;
+					toolbarWndData->keepOnTop    = executeOnToolbarLoad.makeTopMost;
+					toolbarWndData->autoClose    = executeOnToolbarLoad.autoCloseToolbar;
+					toolbarWndData->toggleAction = toggleAction;
+				}
+				else
+				{
+					m_callbackToolbars.Delete(m_callbackToolbars.GetSize() - 1, true);
+					toolbarWndData = NULL;
 				}
 			}
-			else if (toolbarWndData = m_callbackToolbars.Get(id))
-			{
-				toolbarWndData->keepOnTop = true;
-			}
-
-			// Make it always on top
-			if (toolbarWndData)
-			{
-				#ifdef _WIN32
-					SetWindowPos(toolbarWndData->hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-				#else
-					toolbarWndData->level = SWELL_SetWindowLevel(toolbarWndData->hwnd, 25); // NSStatusWindowLevel
-				#endif
-			}
 		}
-	}
-}
-
-void BR_ContextualToolbar::SetToolbarAutoClose (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad, HWND toolbarHwnd, int toggleAction)
-{
-	if (toolbarHwnd && executeOnToolbarLoad.autoCloseToolbar)
-	{
-		// Check if toolbar is already assigned callback
-		int id = -1;
-		for (int i = 0; i < m_callbackToolbars.GetSize(); ++i)
+		else if (toolbarWndData = m_callbackToolbars.Get(id))
 		{
-			if (m_callbackToolbars.Get(i)->hwnd == toolbarHwnd)
-			{
-				id = i;
-				break;
-			}
+			toolbarWndData->keepOnTop = executeOnToolbarLoad.makeTopMost;
+			toolbarWndData->autoClose = executeOnToolbarLoad.autoCloseToolbar;
 		}
 
-		if (id == -1 || !m_callbackToolbars.Get(id)->autoClose)
+		// Make it always on top
+		if (toolbarWndData && toolbarWndData->keepOnTop)
 		{
-			// Assign callback or just enable functionality if already has callback
-			if (id == -1)
-			{
-				if (BR_ContextualToolbar::ToolbarWndData* toolbarWndData = m_callbackToolbars.Add(new BR_ContextualToolbar::ToolbarWndData))
-				{
-					if (WNDPROC wndProc = (WNDPROC)SetWindowLongPtr(toolbarHwnd, GWLP_WNDPROC, (LONG_PTR)BR_ContextualToolbar::ToolbarWndCallback))
-					{
-						toolbarWndData->hwnd         = toolbarHwnd;
-						toolbarWndData->wndProc      = wndProc;
-						toolbarWndData->autoClose    = true;
-						toolbarWndData->toggleAction = toggleAction;
-					}
-					else
-					{
-						m_callbackToolbars.Delete(m_callbackToolbars.GetSize() - 1, true);
-						toolbarWndData = NULL;
-					}
-				}
-			}
-			else if (BR_ContextualToolbar::ToolbarWndData* toolbarWndData = m_callbackToolbars.Get(id))
-			{
-				toolbarWndData->autoClose = true;
-			}
+			#ifdef _WIN32
+				SetWindowPos(toolbarWndData->hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+			#else
+				toolbarWndData->level = SWELL_SetWindowLevel(toolbarWndData->hwnd, 25); // NSStatusWindowLevel
+			#endif
 		}
 	}
 }
@@ -1678,9 +1634,15 @@ LRESULT CALLBACK BR_ContextualToolbar::ToolbarWndCallback (HWND hwnd, UINT uMsg,
 				}
 			}
 		}
+		else if (uMsg == WM_SETFOCUS)
+		{
+			toolbarWndData->lastFocusedHwnd = (HWND)wParam;
+		}
 		else if (uMsg == WM_DESTROY)
 		{
 			SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)wndProc);
+			if (toolbarWndData->lastFocusedHwnd)
+				::SetFocus(toolbarWndData->lastFocusedHwnd);
 			m_callbackToolbars.Delete(id, true);
 		}
 

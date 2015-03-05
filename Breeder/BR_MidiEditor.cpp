@@ -201,7 +201,8 @@ void ME_StopMidiTakePreview (COMMAND_T* ct, int val, int valhw, int relmode, HWN
 
 void ME_PreviewActiveTake (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
-	if (MediaItem_Take* take = MIDIEditor_GetTake(MIDIEditor_GetActive()))
+	void* midiEditor = MIDIEditor_GetActive();
+	if (MediaItem_Take* take = SWS_MIDIEditor_GetTake(midiEditor))
 	{
 		MediaItem* item = GetMediaItemTake_Item(take);
 
@@ -227,9 +228,31 @@ void ME_PreviewActiveTake (COMMAND_T* ct, int val, int valhw, int relmode, HWND 
 		}
 
 		vector<int> muteState;
-		if (selNotes == 2 && !AreAllNotesUnselected(take))
-			muteState = MuteSelectedNotes(take);
-
+		if (selNotes == 2)
+		{
+			if (!AreAllNotesUnselected(take))
+			{
+				muteState = MuteUnselectedNotes(take);
+				if (type != 2)
+				{
+					BR_MidiEditor editor(midiEditor);
+					double time;
+					MIDI_GetNote(take, FindFirstSelectedNote(take, &editor), NULL, NULL, &time, NULL, NULL, NULL, NULL);
+					start = MIDI_GetProjTimeFromPPQPos(take, time) - GetMediaItemInfo_Value(item, "D_POSITION");
+				}
+			}
+			else if (type != 2)
+			{
+				BR_MidiEditor editor(midiEditor);
+				int id = FindFirstNote(take, &editor);
+				if (id != -1)
+				{
+					double time;
+					MIDI_GetNote(take, id, NULL, NULL, &time, NULL, NULL, NULL, NULL);
+					start = MIDI_GetProjTimeFromPPQPos(take, time) - GetMediaItemInfo_Value(item, "D_POSITION");
+				}
+			}
+		}
 		MidiTakePreview(toggle, take, track, volume, start, measure, pausePlay);
 
 		if (muteState.size() > 0)

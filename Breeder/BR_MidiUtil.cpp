@@ -704,7 +704,7 @@ vector<int> GetSelectedNotes (MediaItem_Take* take)
 	return selectedNotes;
 }
 
-vector<int> MuteSelectedNotes (MediaItem_Take* take)
+vector<int> MuteUnselectedNotes (MediaItem_Take* take)
 {
 	vector<int> muteStatus;
 
@@ -717,10 +717,7 @@ vector<int> MuteSelectedNotes (MediaItem_Take* take)
 			MIDI_GetNote(take, i, &selected, &muted, NULL, NULL, NULL, NULL, NULL);
 			muteStatus.push_back((int)muted);
 			if (!selected)
-			{
-				muted = true;
-				MIDI_SetNote(take, i, NULL, &muted, NULL, NULL, NULL, NULL, NULL, NULL);
-			}
+				MIDI_SetNote(take, i, NULL, &g_bTrue, NULL, NULL, NULL, NULL, NULL, NULL);
 		}
 	}
 	return muteStatus;
@@ -1245,8 +1242,6 @@ int FindFirstSelectedNote (MediaItem_Take* take, BR_MidiEditor* midiEditorFilter
 	int foundId = -1;
 	while ((id = MIDI_EnumSelNotes(take, id)) != -1)
 	{
-		double position; int channel;
-		MIDI_GetNote(take, id, NULL, NULL, &position, NULL, &channel, NULL, NULL);
 		if (midiEditorFilterSettings)
 		{
 			if (midiEditorFilterSettings->IsNoteVisible(take, id))
@@ -1270,9 +1265,6 @@ int FindFirstSelectedCC (MediaItem_Take* take, BR_MidiEditor* midiEditorFilterSe
 	int foundId = -1;
 	while ((id = MIDI_EnumSelCC(take, id)) != -1)
 	{
-		double position; int channel;
-		MIDI_GetCC(take, id, NULL, NULL, &position, &channel, NULL, NULL, NULL);
-
 		if (midiEditorFilterSettings)
 		{
 			if (midiEditorFilterSettings->IsCCVisible(take, id))
@@ -1288,6 +1280,30 @@ int FindFirstSelectedCC (MediaItem_Take* take, BR_MidiEditor* midiEditorFilterSe
 		}
 	}
 	return foundId;
+}
+
+int FindFirstNote (MediaItem_Take* take, BR_MidiEditor* midiEditorFilterSettings)
+{
+	int foundId = -1;
+	int count; MIDI_CountEvts(take, &count, NULL, NULL);
+	for (int i = 0; i < count; ++i)
+	{
+		if (midiEditorFilterSettings)
+		{
+			if (midiEditorFilterSettings->IsNoteVisible(take, i))
+			{
+				foundId = i;
+				break;
+			}
+		}
+		else
+		{
+			foundId = i;
+			break;
+		}
+	}
+	return foundId;
+
 }
 
 int GetMIDIFilePPQ (const char* fp)

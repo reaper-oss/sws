@@ -31,7 +31,7 @@ ReaScript
 Fixes:
 +SWS/BR:Set closest envelope point's value to mouse cursor now properly formats tooltip value for FX envelopes
 +Fixed certain SWS/BR actions in MIDI editor so they work properly with looped MIDI items
-+Fixed SWS/BR preview active actions in MIDI editor not working right in certain cases
++Fixed SWS/BR preview active item actions in MIDI editor not working right in certain cases
 +Zooming functionality:
  - Restored behavior of actions that zoom vertically to selected tracks/items so they include track envelopes of the last selected item/track (changed in v2.5.1 #0)
  - Fixed problems with master track (reported http://forum.cockos.com/showpost.php?p=1458143&postcount=1725|here|)

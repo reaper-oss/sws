@@ -1,3 +1,4 @@
+!v2.6.3 #0 pre-release build (March 12, 2015)
 <strong>REAPER v5.0pre14b+ is required!</strong>
 
 Contextual toolbars

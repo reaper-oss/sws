@@ -260,11 +260,13 @@ int PromptForInteger(const char* _title, const char* _what, int _min, int _max, 
 		{
 			nb = atoi(reply); // 0 on error
 			if (nb >= _min && nb <= _max)
+			{
 				return (nb-1);
+			}
 			else
 			{
 				nb = -1;
-				str.SetFormatted(128, "Please enter a value in [%d; %d].", _min, _max);
+				str.SetFormatted(128, __LOCALIZE_VERFMT("Please enter a value in [%d; %d].","sws_mbox"), _min, _max);
 				MessageBox(GetMainHwnd(), str.Get(), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
 			}
 		}

@@ -939,7 +939,9 @@ extern "C"
 		IMPAPI(TimeMap_GetDividedBpmAtTime);
 		IMPAPI(TimeMap_GetTimeSigAtTime);
 		IMPAPI(TimeMap_QNToTime);
+		IMPAPI(TimeMap_QNToTime_abs);
 		IMPAPI(TimeMap_timeToQN);
+		IMPAPI(TimeMap_timeToQN_abs);
 		IMPAPI(TimeMap2_beatsToTime);
 		IMPAPI(TimeMap2_GetDividedBpmAtTime);
 		IMPAPI(TimeMap2_GetNextChangeTime);

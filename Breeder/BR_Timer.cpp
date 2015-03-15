@@ -58,13 +58,21 @@ void CommandTimer (COMMAND_T* ct, int val /*= 0*/, int valhw /*= 0*/, int relmod
 }
 
 #ifdef BR_DEBUG_PERFORMANCE_TIMER
-	BR_Timer::BR_Timer (const char* message, bool autoPrint /*= true*/) : m_message(message), m_autoPrint(autoPrint), m_paused(false)
+	BR_Timer::BR_Timer (const char* message, bool autoPrint /*= true*/, bool autoStart /*= true*/) : m_message(message), m_autoPrint(autoPrint), m_paused(!autoStart)
 	{
-		#ifdef WIN32
-			QueryPerformanceCounter(&m_start);
-		#else
-			gettimeofday(&m_start, NULL);
-		#endif
+		if (autoStart)
+		{
+			#ifdef WIN32
+				QueryPerformanceCounter(&m_start);
+			#else
+				gettimeofday(&m_start, NULL);
+			#endif
+		}
+		else
+		{
+			this->Pause();
+			this->Reset();
+		}
 	}
 
 	BR_Timer::~BR_Timer ()

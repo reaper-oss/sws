@@ -208,7 +208,6 @@ static MediaItem* GetItemFromY (int y, double position, MediaItem_Take** take, i
 					item = currentItem;
 					itemYStart = yStart;
 				}
-
 			}
 			iStartLast = iStart;
 		}
@@ -572,9 +571,11 @@ bool BR_MouseInfo::SetDetectedCCLaneAsLastClicked ()
 				int itemStartPx = RoundToInt(itemStart * hZoom) - si.nPos; if (itemStartPx < 0)                         itemStartPx = 0;
 				int itemEndPx   = RoundToInt(itemEnd   * hZoom) - si.nPos; if (itemEndPx   > (int)(si.nPos + si.nPage)) itemEndPx   = si.nPos + si.nPage;
 
-				point.x = (itemStartPx + itemEndPx) / 2;                // REAPER gives priority to what's inside rather than edges
-				if (!CheckBounds((int)point.x, itemStartPx, itemEndPx)) // (so if item's too short, edge hit-points won't stretch inside the item)
+				// REAPER gives priority to what's inside rather than the edges (so if item's too short, edge hit-points won't stretch inside the item)
+				if (!CheckBounds((int)((itemStartPx + itemEndPx) / 2), itemStartPx, itemEndPx))
+				{
 					hwnd = NULL;
+				}
 				else
 				{
 					SetConfig("projsellock", 23492); // lock item edges, fades, volume handles, stretch markers, item movement, take and track envelopes

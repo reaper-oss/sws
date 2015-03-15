@@ -30,8 +30,8 @@
 /******************************************************************************
 * Constants                                                                   *
 ******************************************************************************/
-const int    MIN_BPM        = 1;
-const int    MAX_BPM        = 960;
+const double MIN_BPM        = 1;
+const double MAX_BPM        = 960;
 const int    MIN_SIG        = 1;
 const int    MAX_SIG        = 255;
 const double MIN_TEMPO_DIST = 0.001;
@@ -70,34 +70,6 @@ enum BR_EnvType
 	PLAYRATE     = 0x200,
 	TEMPO        = 0x400,
 	PARAMETER    = 0x800
-};
-
-/******************************************************************************
-* Envelope point class, mostly used internally by BR_Envelope                 *
-******************************************************************************/
-struct BR_EnvPoint
-{
-	double position;
-	double value;
-	double bezier;
-	bool selected;
-	int shape;
-	int sig;
-	int partial;
-
-	BR_EnvPoint ();
-	BR_EnvPoint (double position);
-	BR_EnvPoint (double position, double value, int shape, int sig, bool selected, int partial, double bezier);
-	bool ReadLine (const LineParser& lp);
-	void Append (WDL_FastString& string);
-
-	struct ComparePoints
-	{
-		bool operator() (const BR_EnvPoint& first, const BR_EnvPoint& second)
-		{
-			return (first.position < second.position);
-		}
-	};
 };
 
 /******************************************************************************
@@ -199,7 +171,56 @@ public:
 	bool Commit (bool force = false);
 
 private:
-	struct IdPair { int first, second; };
+	struct IdPair
+	{
+		int first, second;
+	};
+
+	struct EnvProperties
+	{
+		int active;
+		int visible, lane, visUnknown;
+		int height, heightUnknown;
+		int armed;
+		int shape, shapeUnknown1, shapeUnknown2;
+		int faderMode;
+		int type;
+		double minValue, maxValue, centerValue;
+		int paramId, fxId;
+		bool filled, changed;
+		WDL_FastString paramType;
+		EnvProperties ();
+		EnvProperties (const EnvProperties& properties);
+		EnvProperties& operator=  (const EnvProperties& properties);
+	} mutable m_properties; // access through separate class methods (they make sure data is read and written correctly) - mutable because FillProperties must be const (to make operator== const) but still be able to change m_properties
+
+	struct BR_EnvPoint
+	{
+		double position;
+		double value;
+		double bezier;
+		bool selected;
+		int shape;
+		int sig;
+		int partial;
+		unsigned int metronome1;
+		unsigned int metronome2;
+		WDL_FastString tempoStr;
+
+		BR_EnvPoint ();
+		BR_EnvPoint (double position);
+		BR_EnvPoint (double position, double value, int shape, int sig, bool selected, int partial, double bezier);
+		bool ReadLine (const LineParser& lp); // use only once per object (for efficiency, tempoStr is never deleted, only appended too)
+		void Append (WDL_FastString& string, bool tempoPoint);
+		struct ComparePoints
+		{
+			bool operator() (const BR_EnvPoint& first, const BR_EnvPoint& second)
+			{
+				return (first.position < second.position);
+			}
+		};
+	};
+
 	int FindFirstPoint ();
 	int LastPointAtPos (int id);
 	int FindNext (double position, double offset);     // used for internal stuff since position
@@ -229,24 +250,6 @@ private:
 	vector<IdPair> m_pointsConseq;
 	WDL_FastString m_chunkProperties;
 	WDL_FastString m_envName;
-	struct EnvProperties
-	{
-		int active;
-		int visible, lane;
-		double visUnknown;
-		int height, heightUnknown;
-		int armed;
-		int shape, shapeUnknown1, shapeUnknown2;
-		int faderMode;
-		int type;
-		double minValue, maxValue, centerValue;
-		int paramId, fxId;
-		bool filled, changed;
-		WDL_FastString paramType;
-		EnvProperties ();
-		EnvProperties (const EnvProperties& properties);
-		EnvProperties& operator=  (const EnvProperties& properties);
-	} mutable m_properties; // access through separate class methods (they make sure data is read and written correctly) - mutable because FillProperties must be const (to make operator== const) but still be able to change m_properties
 };
 
 /******************************************************************************

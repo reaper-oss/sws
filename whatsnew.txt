@@ -1,3 +1,6 @@
+Fixes
++Preserve metronome patterns when editing tempo envelope with various actions and dialogs
+
 !v2.6.3 #0 pre-release build (March 12, 2015)
 <strong>REAPER v5.0pre14b+ is required!</strong>
 
@@ -29,7 +32,7 @@ Added actions
 ReaScript
 +Updated BR_EnvGetProperties and BR_EnvSetProperties (volume envelope fader scaling support)
 
-Fixes:
+Fixes
 +SWS/BR:Set closest envelope point's value to mouse cursor now properly formats tooltip value for FX envelopes
 +Fixed certain SWS/BR actions in MIDI editor so they work properly with looped MIDI items
 +Fixed SWS/BR preview active item actions in MIDI editor not working right in certain cases

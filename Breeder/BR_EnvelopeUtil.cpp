@@ -32,75 +32,6 @@
 #include "../reaper/localize.h"
 
 /******************************************************************************
-* BR_EnvPoint                                                                 *
-******************************************************************************/
-BR_EnvPoint::BR_EnvPoint () :
-position (0),
-value    (0),
-bezier   (0),
-selected (false),
-shape    (0),
-sig      (0),
-partial  (0)
-{
-}
-
-BR_EnvPoint::BR_EnvPoint (double position) :
-position (position),
-value    (0),
-bezier   (0),
-selected (false),
-shape    (0),
-sig      (0),
-partial  (0)
-{
-}
-
-BR_EnvPoint::BR_EnvPoint (double position, double value, int shape, int sig, bool selected, int partial, double bezier) :
-position (position),
-value    (value),
-bezier   (bezier),
-selected (selected),
-shape    (shape),
-sig      (sig),
-partial  (partial)
-{
-}
-
-bool BR_EnvPoint::ReadLine (const LineParser& lp)
-{
-	if (strcmp(lp.gettoken_str(0), "PT"))
-		return false;
-	else
-	{
-		this->position = lp.gettoken_float(1);
-		this->value    = lp.gettoken_float(2);
-		this->shape    = lp.gettoken_int(3);
-		this->sig      = lp.gettoken_int(4);
-		this->selected = !!lp.gettoken_int(5);
-		this->partial  = lp.gettoken_int(6);
-		this->bezier   = lp.gettoken_float(7);
-		return true;
-	}
-}
-
-void BR_EnvPoint::Append (WDL_FastString& string)
-{
-	string.AppendFormatted
-	(
-		256,
-		"PT %.12lf %.10lf %d %d %d %d %.8lf\n",
-		this->position,
-		this->value,
-		this->shape,
-		this->sig,
-		this->selected ? 1 : 0,
-		this->partial,
-		this->bezier
-	);
-}
-
-/******************************************************************************
 * BR_Envelope                                                                 *
 ******************************************************************************/
 BR_Envelope::BR_Envelope () :
@@ -1378,17 +1309,25 @@ double BR_Envelope::LaneMinValue ()
 void BR_Envelope::SetActive (bool active)
 {
 	this->FillProperties();
-	m_properties.active  = active;
-	m_properties.changed = true;
-	m_update             = true;
+
+	if (!!m_properties.active != active)
+	{
+		m_properties.active  = active;
+		m_properties.changed = true;
+		m_update             = true;
+	}
 }
 
 void BR_Envelope::SetVisible (bool visible)
 {
 	this->FillProperties();
-	m_properties.visible = visible;
-	m_properties.changed = true;
-	m_update             = true;
+
+	if (!!m_properties.visible != visible)
+	{
+		m_properties.visible = visible;
+		m_properties.changed = true;
+		m_update             = true;
+	}
 }
 
 void BR_Envelope::SetInLane (bool lane)
@@ -1396,34 +1335,46 @@ void BR_Envelope::SetInLane (bool lane)
 	if (!this->IsTakeEnvelope())
 	{
 		this->FillProperties();
-		m_properties.lane    = lane;
-		m_properties.changed = true;
-		m_update             = true;
+		if (!!m_properties.lane != lane)
+		{
+			m_properties.lane    = lane;
+			m_properties.changed = true;
+			m_update             = true;
+		}
 	}
 }
 
 void BR_Envelope::SetArmed (bool armed)
 {
 	this->FillProperties();
-	m_properties.armed   = armed;
-	m_properties.changed = true;
-	m_update             = true;
+	if (!!m_properties.armed != armed)
+	{
+		m_properties.armed   = armed;
+		m_properties.changed = true;
+		m_update             = true;
+	}
 }
 
 void BR_Envelope::SetLaneHeight (int height)
 {
 	this->FillProperties();
-	m_properties.height  = height;
-	m_properties.changed = true;
-	m_update             = true;
+	if (m_properties.height != height)
+	{
+		m_properties.height  = height;
+		m_properties.changed = true;
+		m_update             = true;
+	}
 }
 
 void BR_Envelope::SetDefaultShape (int shape)
 {
 	this->FillProperties();
-	m_properties.shape   = shape;
-	m_properties.changed = true;
-	m_update             = true;
+	if (m_properties.shape != shape)
+	{
+		m_properties.shape   = shape;
+		m_properties.changed = true;
+		m_update             = true;
+	}
 }
 
 void BR_Envelope::SetScalingToFader (bool faderScaling)
@@ -1431,10 +1382,13 @@ void BR_Envelope::SetScalingToFader (bool faderScaling)
 	this->FillProperties();
 	if (m_properties.type == VOLUME || m_properties.type == VOLUME_PREFX)
 	{
-		m_properties.faderMode = faderScaling ? 1 : 0;
-		m_properties.changed   = true;
-		m_pointsEdited         = true;
-		m_update               = true;
+		if (!!m_properties.faderMode != faderScaling)
+		{
+			m_properties.faderMode = faderScaling ? 1 : 0;
+			m_properties.changed   = true;
+			m_pointsEdited         = true;
+			m_update               = true;
+		}
 	}
 }
 
@@ -1451,7 +1405,7 @@ bool BR_Envelope::Commit (bool force /*=false*/)
 		{
 			WDL_FastString chunkStart = this->GetProperties();
 			for (vector<BR_EnvPoint>::iterator i = m_points.begin(); i != m_points.end(); ++i)
-				i->Append(chunkStart);
+				i->Append(chunkStart, true);
 			chunkStart.Append(">");
 			GetSetObjectState(m_envelope, chunkStart.Get());
 
@@ -1477,7 +1431,7 @@ bool BR_Envelope::Commit (bool force /*=false*/)
 				WDL_FastString chunkStart = this->GetProperties();
 				if (m_count > 0)
 				{
-					m_points[0].Append(chunkStart);
+					m_points[0].Append(chunkStart, false);
 					firstPointDone = true;
 				}
 				chunkStart.Append(">");
@@ -1795,7 +1749,7 @@ void BR_Envelope::FillProperties () const
 					lp.parse(token);
 					m_properties.visible    = lp.gettoken_int(1);
 					m_properties.lane       = lp.gettoken_int(2);
-					m_properties.visUnknown = lp.gettoken_float(3);
+					m_properties.visUnknown = lp.gettoken_int(3);
 				}
 				else if (!strncmp(token, "LANEHEIGHT ", sizeof("LANEHEIGHT ")-1))
 				{
@@ -1903,7 +1857,7 @@ WDL_FastString BR_Envelope::GetProperties ()
 		WDL_FastString properties;
 		properties.AppendFormatted(256, "%s\n", m_properties.paramType.Get());
 		properties.AppendFormatted(256, "ACT %d\n", m_properties.active);
-		properties.AppendFormatted(256, "VIS %d %d %lf\n", m_properties.visible, m_properties.lane, m_properties.visUnknown);
+		properties.AppendFormatted(256, "VIS %d %d %d\n", m_properties.visible, m_properties.lane, m_properties.visUnknown);
 		properties.AppendFormatted(256, "LANEHEIGHT %d %d\n", m_properties.height, m_properties.heightUnknown);
 		properties.AppendFormatted(256, "ARM %d\n", m_properties.armed);
 		properties.AppendFormatted(256, "DEFSHAPE %d %d %d\n", m_properties.shape, m_properties.shapeUnknown1, m_properties.shapeUnknown2);
@@ -1998,6 +1952,103 @@ BR_Envelope::EnvProperties& BR_Envelope::EnvProperties::operator= (const EnvProp
 	paramType.Set(&properties.paramType);
 
 	return *this;
+}
+
+BR_Envelope::BR_EnvPoint::BR_EnvPoint () :
+position (0),
+value    (0),
+bezier   (0),
+selected (false),
+shape    (0),
+sig      (0),
+partial  (0),
+metronome1 (0),
+metronome2 (0)
+{
+}
+
+BR_Envelope::BR_EnvPoint::BR_EnvPoint (double position) :
+position (position),
+value    (0),
+bezier   (0),
+selected (false),
+shape    (0),
+sig      (0),
+partial  (0),
+metronome1 (0),
+metronome2 (0)
+{
+}
+
+BR_Envelope::BR_EnvPoint::BR_EnvPoint (double position, double value, int shape, int sig, bool selected, int partial, double bezier) :
+position   (position),
+value      (value),
+bezier     (bezier),
+selected   (selected),
+shape      (shape),
+sig        (sig),
+partial    (partial),
+metronome1 (0),
+metronome2 (0)
+{
+}
+
+bool BR_Envelope::BR_EnvPoint::ReadLine (const LineParser& lp)
+{
+	if (strcmp(lp.gettoken_str(0), "PT"))
+		return false;
+	else
+	{
+		this->position   = lp.gettoken_float(1);
+		this->value      = lp.gettoken_float(2);
+		this->shape      = lp.gettoken_int(3);
+		this->sig        = lp.gettoken_int(4);
+		this->selected   = !!lp.gettoken_int(5);
+		this->partial    = lp.gettoken_int(6);
+		this->bezier     = lp.gettoken_float(7);
+		this->metronome1 = lp.gettoken_uint(9);
+		this->metronome2 = lp.gettoken_uint(10);
+		tempoStr.Append(lp.gettoken_str(8));
+
+		return true;
+	}
+}
+
+void BR_Envelope::BR_EnvPoint::Append (WDL_FastString& string, bool tempoPoint)
+{
+	if (tempoPoint)
+	{
+		string.AppendFormatted
+		(
+			256,
+			"PT %.12lf %.10lf %d %d %d %d %.8lf \"%s\" %u %u\n",
+			this->position,
+			this->value,
+			this->shape,
+			this->sig,
+			this->selected ? 1 : 0,
+			this->partial,
+			this->bezier,
+			this->tempoStr.Get(),
+			this->metronome1,
+			this->metronome2
+		);
+	}
+	else
+	{
+		string.AppendFormatted
+		(
+			256,
+			"PT %.12lf %.10lf %d %d %d %d %.8lf\n",
+			this->position,
+			this->value,
+			this->shape,
+			this->sig,
+			this->selected ? 1 : 0,
+			this->partial,
+			this->bezier
+		);
+	}
 }
 
 /******************************************************************************

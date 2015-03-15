@@ -2,6 +2,9 @@ Fixes
 +Preserve metronome patterns when editing tempo envelope with various actions and dialogs
 +Fixed non-selectable radio buttons in SWS/BR: Select and adjust tempo markers... dialog
 
+Other
++Added ability to select only partial time signatures with SWS/BR: Select and adjust tempo markers...
+
 !v2.6.3 #0 pre-release build (March 12, 2015)
 <strong>REAPER v5.0pre14b+ is required!</strong>
 

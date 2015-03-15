@@ -533,7 +533,7 @@ static void SelectTempo (int mode, int Nth, int timeSel, int bpm, double bpmStar
 	         ---> bpm     ---> 0 to ignore BPM, 1 to compare with bpmStart and bpmEnd
 	         ---> shape   ---> 0 for all, 1 for square, 2 for linear
 	         ---> sig     ---> 0 to ignore sig, if 1 num and den need to be specified
-	         ---> type    ---> 0 for all, 1 for tempo markers only, 2 for time signature only
+	         ---> type    ---> 0 for all, 1 for tempo markers only, 2 for time signature only, 3 for partial time signature only
 	*/
 
 	int currentNth = 1;
@@ -572,9 +572,9 @@ static void SelectTempo (int mode, int Nth, int timeSel, int bpm, double bpmStar
 
 			double value, position;
 			int pointShape;
-			bool hasTimeSig;
+			bool hasTimeSig, isPartialSigEnabled;
 			tempoMap.GetPoint(i, &position, &value, &pointShape, NULL);
-			tempoMap.GetTimeSig(i, &hasTimeSig, NULL, NULL, NULL);
+			tempoMap.GetTimeSig(i, &hasTimeSig, &isPartialSigEnabled, NULL, NULL);
 
 			if (selectPt && bpm)
 			{
@@ -601,9 +601,28 @@ static void SelectTempo (int mode, int Nth, int timeSel, int bpm, double bpmStar
 			}
 			if (selectPt && type)
 			{
-				selectPt = !hasTimeSig;
-				if (type == 2)
-					selectPt = !selectPt;
+				if (type == 1)
+				{
+					selectPt = !hasTimeSig;
+				}
+				else if (type == 2)
+				{
+					selectPt = hasTimeSig;
+				}
+				else if (type == 3)
+				{
+					selectPt = false;
+					if (hasTimeSig && isPartialSigEnabled)
+					{
+						double prevPosition;						
+						if (tempoMap.GetPoint(i - 1, &prevPosition, NULL , NULL, NULL))
+						{
+							double absQN = TimeMap_timeToQN_abs(NULL, position) - TimeMap_timeToQN_abs(NULL, prevPosition);
+							double QN    = TimeMap_timeToQN(position) - TimeMap_timeToQN(prevPosition);
+							selectPt = abs(absQN - QN) > 0.00001;
+						}
+					}
+				}
 			}
 
 			/* Depending on the mode, designate point for selection/unselection */
@@ -959,7 +978,7 @@ static void LoadOptionsSelAdj (double& bpmStart, double& bpmEnd, int& num, int& 
 		timeSel = 0;
 	if (shape < 0 || shape > 2)
 		shape = 0;
-	if (type < 0 || type > 2)
+	if (type < 0 || type > 3)
 		type = 0;
 	if (selPref != 0 && selPref != 1)
 		selPref = 1;
@@ -1130,12 +1149,13 @@ WDL_DLGRET SelectAdjustTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_BR_SEL_TYPE));
 			SendDlgItemMessage(hwnd, IDC_BR_SEL_TYPE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("All","sws_DLG_167"));
-			SendDlgItemMessage(hwnd, IDC_BR_SEL_TYPE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Tempo markers","sws_DLG_167"));
-			SendDlgItemMessage(hwnd, IDC_BR_SEL_TYPE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Time signature markers","sws_DLG_167"));
+			SendDlgItemMessage(hwnd, IDC_BR_SEL_TYPE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Tempo marker","sws_DLG_167"));
+			SendDlgItemMessage(hwnd, IDC_BR_SEL_TYPE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Time signature","sws_DLG_167"));
+			SendDlgItemMessage(hwnd, IDC_BR_SEL_TYPE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Partial time signature","sws_DLG_167"));
 
 			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_BR_ADJ_SHAPE));
 			SendDlgItemMessage(hwnd, IDC_BR_ADJ_SHAPE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Preserve","sws_DLG_167"));
-			SendDlgItemMessage(hwnd, IDC_BR_ADJ_SHAPE,CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Invert","sws_DLG_167"));
+			SendDlgItemMessage(hwnd, IDC_BR_ADJ_SHAPE,CB_ADDSTRING,  0, (LPARAM)__LOCALIZE("Invert","sws_DLG_167"));
 			SendDlgItemMessage(hwnd, IDC_BR_ADJ_SHAPE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Linear","sws_DLG_167"));
 			SendDlgItemMessage(hwnd, IDC_BR_ADJ_SHAPE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Square","sws_DLG_167"));
 

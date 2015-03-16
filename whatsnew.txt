@@ -3,6 +3,13 @@ Added actions
  - SWS/BR: Select all partial time signature markers
  - SWS/BR: Reset position of selected partial time signature markers
  - SWS/BR: Snap position of selected partial time signature markers to closest grid division
+ - SWS/BR: Play from edit cursor position (perform until shortcut released)
+ - SWS/BR: Play from edit cursor position and solo track under mouse for the duration (perform until shortcut released)
+ - SWS/BR: Play from edit cursor position and solo item and track under mouse for the duration (perform until shortcut released)
++MIDI editor:
+ - SWS/BR: Play from edit cursor position (perform until shortcut released)
+ - SWS/BR: Play from edit cursor position and solo active item's track for the duration (perform until shortcut released)
+ - SWS/BR: Play from edit cursor position and solo active item for the duration (perform until shortcut released)
 
 Fixes
 +Preserve metronome patterns when editing tempo envelope with various actions and dialogs

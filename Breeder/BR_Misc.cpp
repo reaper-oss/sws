@@ -86,7 +86,7 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 		MediaItem*  itemToSolo  = NULL;
 		MediaTrack* trackToSolo = NULL;
 
-		if ((int)ct->user != 0)
+		if (abs((int)ct->user) != 1)
 		{
 			if (!strcmp(mouseInfo.GetWindow(), "arrange") || !strcmp(mouseInfo.GetWindow(), "ruler"))
 			{
@@ -99,7 +99,7 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 				trackToSolo = GetMediaItem_Track(itemToSolo);
 			}
 
-			if ((int)ct->user != 2)
+			if (abs((int)ct->user) != 3)
 				itemToSolo = NULL;
 		}
 
@@ -167,7 +167,7 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 		s_pausePos = (IsPaused())  ? GetCursorPositionEx(NULL) : -1;
 		g_mousePlaybackRestorePlayState = true;
 
-		StartPlayback(mouseInfo.GetPosition());
+		StartPlayback(((int)ct->user < 0) ? GetCursorPositionEx(NULL) : mouseInfo.GetPosition());
 		RegisterCsurfPlayState(true, MousePlaybackPlayState); // register Csurf after starting playback
 		return true;
 	}
@@ -238,13 +238,21 @@ void PlaybackAtMouseCursorInit ()
 	//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 	static COMMAND_T s_commandTable[] =
 	{
-		{ { DEFACCEL, "SWS/BR: Play from mouse cursor position (perform until shortcut released)" },                                                     "BR_CONT_PLAY_MOUSE",               NULL, NULL, 0, NULL, SECTION_MAIN, MousePlayback},
-		{ { DEFACCEL, "SWS/BR: Play from mouse cursor position and solo track under mouse for the duration (perform until shortcut released)" },         "BR_CONT_PLAY_MOUSE_SOLO_TRACK",    NULL, NULL, 1, NULL, SECTION_MAIN, MousePlayback},
-		{ { DEFACCEL, "SWS/BR: Play from mouse cursor position and solo item and track under mouse for the duration (perform until shortcut released)" },"BR_CONT_PLAY_MOUSE_SOLO_ITEM",     NULL, NULL, 2, NULL, SECTION_MAIN, MousePlayback},
+		{ { DEFACCEL, "SWS/BR: Play from mouse cursor position (perform until shortcut released)" },                                                      "BR_CONT_PLAY_MOUSE",            NULL, NULL, 1, NULL, SECTION_MAIN, MousePlayback},
+		{ { DEFACCEL, "SWS/BR: Play from mouse cursor position and solo track under mouse for the duration (perform until shortcut released)" },          "BR_CONT_PLAY_MOUSE_SOLO_TRACK", NULL, NULL, 2, NULL, SECTION_MAIN, MousePlayback},
+		{ { DEFACCEL, "SWS/BR: Play from mouse cursor position and solo item and track under mouse for the duration (perform until shortcut released)" }, "BR_CONT_PLAY_MOUSE_SOLO_ITEM",  NULL, NULL, 3, NULL, SECTION_MAIN, MousePlayback},
 
-		{ { DEFACCEL, "SWS/BR: Play from mouse cursor position (perform until shortcut released)" },                                               "BR_ME_CONT_PLAY_MOUSE",            NULL, NULL, 0, NULL, SECTION_MIDI_EDITOR, MousePlayback},
-		{ { DEFACCEL, "SWS/BR: Play from mouse cursor position and solo active item's track for the duration (perform until shortcut released)" }, "BR_ME_CONT_PLAY_MOUSE_SOLO_TRACK", NULL, NULL, 1, NULL, SECTION_MIDI_EDITOR, MousePlayback},
-		{ { DEFACCEL, "SWS/BR: Play from mouse cursor position and solo active item for the duration (perform until shortcut released)" },         "BR_ME_CONT_PLAY_MOUSE_SOLO_ITEM",  NULL, NULL, 2, NULL, SECTION_MIDI_EDITOR, MousePlayback},
+		{ { DEFACCEL, "SWS/BR: Play from edit cursor position (perform until shortcut released)" },                                                       "BR_CONT_PLAY_EDIT",             NULL, NULL, -1, NULL, SECTION_MAIN, MousePlayback},
+		{ { DEFACCEL, "SWS/BR: Play from edit cursor position and solo track under mouse for the duration (perform until shortcut released)" },           "BR_CONT_PLAY_EDIT_SOLO_TRACK",  NULL, NULL, -2, NULL, SECTION_MAIN, MousePlayback},
+		{ { DEFACCEL, "SWS/BR: Play from edit cursor position and solo item and track under mouse for the duration (perform until shortcut released)" },  "BR_CONT_PLAY_EDIT_SOLO_ITEM",   NULL, NULL, -3, NULL, SECTION_MAIN, MousePlayback},
+
+		{ { DEFACCEL, "SWS/BR: Play from mouse cursor position (perform until shortcut released)" },                                               "BR_ME_CONT_PLAY_MOUSE",            NULL, NULL, 1, NULL, SECTION_MIDI_EDITOR, MousePlayback},
+		{ { DEFACCEL, "SWS/BR: Play from mouse cursor position and solo active item's track for the duration (perform until shortcut released)" }, "BR_ME_CONT_PLAY_MOUSE_SOLO_TRACK", NULL, NULL, 2, NULL, SECTION_MIDI_EDITOR, MousePlayback},
+		{ { DEFACCEL, "SWS/BR: Play from mouse cursor position and solo active item for the duration (perform until shortcut released)" },         "BR_ME_CONT_PLAY_MOUSE_SOLO_ITEM",  NULL, NULL, 3, NULL, SECTION_MIDI_EDITOR, MousePlayback},
+
+		{ { DEFACCEL, "SWS/BR: Play from edit cursor position (perform until shortcut released)" },                                                "BR_ME_CONT_PLAY_EDIT",             NULL, NULL, -1, NULL, SECTION_MIDI_EDITOR, MousePlayback},
+		{ { DEFACCEL, "SWS/BR: Play from edit cursor position and solo active item's track for the duration (perform until shortcut released)" },  "BR_ME_CONT_PLAY_EDIT_SOLO_TRACK",  NULL, NULL, -2, NULL, SECTION_MIDI_EDITOR, MousePlayback},
+		{ { DEFACCEL, "SWS/BR: Play from edit cursor position and solo active item for the duration (perform until shortcut released)" },          "BR_ME_CONT_PLAY_EDIT_SOLO_ITEM",   NULL, NULL, -3, NULL, SECTION_MIDI_EDITOR, MousePlayback},
 
 		{ {}, LAST_COMMAND}
 	};

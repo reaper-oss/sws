@@ -32,7 +32,9 @@
 
 /******************************************************************************
 * Enable keyboard accelerator workaround                                      *
-* More details here: http://askjf.com/index.php?q=3108s                       *
+* More details here:                                                          *
+* http://askjf.com/index.php?q=3108s                                          *
+* http://askjf.com/index.php?q=3110s                                          *
 *                                                                             *
 * In short, on windows we can register keyboard hook so no problem here. But  *
 * on OSX there's no concept of keyboard hook so the only thing that we can do *
@@ -43,6 +45,11 @@
 * reveled an undocumented API trick to overcome this. But since he also warns *
 * us that the behavior may change in the future I'm leaving my workaround     *
 * here - to enable it, simply undef BR_USE_PRE_HOOK_ACCEL                     *
+*                                                                             *
+* Addendum: it seems even pre-hook accelerator doesn't work when some other   *
+* window has the focus (apart from MIDI editor or main window..like Mixer     *
+* etc...) so we still have to register windows keyboard hook and reset focus  *
+* to main window on OSX for main section actions                              *
 ******************************************************************************/
 #define BR_USE_PRE_HOOK_ACCEL
 
@@ -74,11 +81,12 @@ static LICE_SysBitmap*                  g_tooltipBm            = NULL;
 static int                              g_tooltips             = -1;
 static bool                             g_removedNativeTooltip = false;
 
-#ifndef BR_USE_PRE_HOOK_ACCEL
-	#ifdef _WIN32
+#ifdef _WIN32
 	static HHOOK g_keyboardHook = NULL;
-	#else
-	static HWND g_midiEditorLastFocusedWnd = NULL;
+#endif
+#ifndef BR_USE_PRE_HOOK_ACCEL
+	#ifndef _WIN32
+		static HWND g_midiEditorLastFocusedWnd = NULL;
 	#endif
 #endif
 
@@ -296,7 +304,6 @@ static int TranslateAccel (MSG* msg, accelerator_register_t* ctx)
 	return 0;
 }
 
-#ifndef BR_USE_PRE_HOOK_ACCEL
 #ifdef _WIN32
 static LRESULT CALLBACK KeyboardProc (int code, WPARAM wParam, LPARAM lParam)
 {
@@ -304,7 +311,6 @@ static LRESULT CALLBACK KeyboardProc (int code, WPARAM wParam, LPARAM lParam)
 		ContinuousActionStopAll();
 	return CallNextHookEx(g_keyboardHook, code, wParam, lParam);
 }
-#endif
 #endif
 
 /******************************************************************************
@@ -320,6 +326,13 @@ static void ContinuousActionTimer ()
 			ContinuousActionStopAll();
 			return;
 		}
+
+		#ifndef _WIN32
+			// Make sure other windows like mixer/big clock etc...don't have the focus otherwise pre-hook keyboard accelerator won't work (even if they're docked in main window)...this is
+			// only really relevant for SWS/BR: Play from edit cursor position actions since they can get run from Mixer too (other actions don't work out of the arrange for now)
+			if (g_actionInProgress->ct->uniqueSectionId != SECTION_MIDI_EDITOR)
+				SetFocus(g_hwndParent);
+		#endif
 
 		#ifndef BR_USE_PRE_HOOK_ACCEL
 			// Don't let other windows steal our keyboard accelerator (on windows we registered keyboard hook so no need to worry about this, see TranslateAccel() and ContinuousActionInit())
@@ -411,17 +424,23 @@ static bool ContinuousActionInit (bool init, COMMAND_T* ct, HWND hwnd, BR_Contin
 			#ifndef BR_USE_PRE_HOOK_ACCEL
 				if (!plugin_register("accelerator", &s_accelerator) || !plugin_register("timer", (void*)ContinuousActionTimer))
 					initSuccessful = false;
-				// On windows we register keyboard hook to catch key up messages in all windows so we don't have to worry about focus issues
-				#ifdef _WIN32
-					if (initSuccessful)
-					{
-						g_keyboardHook = SetWindowsHookEx(WH_KEYBOARD, (HOOKPROC)KeyboardProc, NULL, GetCurrentThreadId());
-						if (!g_keyboardHook) initSuccessful = false;
-					}
-				#endif
 			#else
-				if (!plugin_register("<accelerator", &s_accelerator) || !plugin_register("timer", (void*)ContinuousActionTimer))
-					initSuccessful = false;
+				#ifdef _WIN32
+					if (!plugin_register("timer", (void*)ContinuousActionTimer))
+						initSuccessful = false;
+				#else
+					if (!plugin_register("<accelerator", &s_accelerator) || !plugin_register("timer", (void*)ContinuousActionTimer))
+						initSuccessful = false;
+				#endif
+			#endif
+
+			// On windows we register keyboard hook to (because REAPER's pre-hook accelerator doesn't work if some other window apart from MIDI editor or main window has the focus (Mixer, Big Clock etc...))
+			#ifdef _WIN32
+				if (initSuccessful)
+				{
+					g_keyboardHook = SetWindowsHookEx(WH_KEYBOARD, (HOOKPROC)KeyboardProc, NULL, GetCurrentThreadId());
+					if (!g_keyboardHook) initSuccessful = false;
+				}
 			#endif
 
 			// Make sure tooltip is draw immediately (WM_MOUSEMOVE message won't get sent until the mouse moves again, see GenericWndProc())
@@ -468,13 +487,10 @@ static bool ContinuousActionInit (bool init, COMMAND_T* ct, HWND hwnd, BR_Contin
 		g_removedNativeTooltip = false;
 
 		// Deregister timer and keyboard accelerator/hook
-		plugin_register("-timer", (void*)ContinuousActionTimer);
-		#ifndef BR_USE_PRE_HOOK_ACCEL
-			plugin_register("-accelerator", &s_accelerator);
-			#ifdef _WIN32
-				UnhookWindowsHookEx(g_keyboardHook);
-				g_keyboardHook  = NULL;
-			#endif
+		plugin_register("-timer", (void*)ContinuousActionTimer);		
+		#ifdef _WIN32
+			UnhookWindowsHookEx(g_keyboardHook);
+			g_keyboardHook = NULL;
 		#else
 			plugin_register("-accelerator", &s_accelerator); // gotcha: while we do register with "<accelerator", we deregister with "-accelerator"
 		#endif

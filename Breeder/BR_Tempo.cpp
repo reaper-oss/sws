@@ -234,7 +234,7 @@ static void MoveGridToMouse (COMMAND_T* ct)
 				int prevId = g_moveGridTempoMap->FindPrevious(grid);
 				int shape; g_moveGridTempoMap->GetPoint(prevId, NULL, NULL, &shape, NULL);
 				g_moveGridTempoMap->CreatePoint(prevId+1, grid, g_moveGridTempoMap->ValueAtPosition(grid), shape, 0, false);
-				targetId = prevId+1;
+				targetId = prevId + 1;
 			}
 
 			// Can't move first tempo marker so ignore this move action and wait for valid mouse position
@@ -1237,6 +1237,86 @@ void TempoAtGrid (COMMAND_T* ct)
 	}
 	tempoMap.Commit();
 	Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG);
+}
+
+void SelectMovePartialTimeSig (COMMAND_T* ct)
+{
+	PreventUIRefresh(1);
+
+	int tempoTimeBase; GetConfig("tempoenvtimelock", tempoTimeBase); // always work with tempo timbase beats 
+	SetConfig("tempoenvtimelock", 1);                                // when running these actions
+
+	bool update = false;
+	BR_Envelope tempoMap(GetTempoEnv());
+	for (int i = 1; i < tempoMap.CountPoints(); ++i) // skip first
+	{
+		double partialDiff = 0;
+		bool timeSig, partial;
+		if (tempoMap.GetTimeSig(i, &timeSig, &partial, NULL, NULL) && timeSig && partial)
+		{
+			double position, prevPosition;
+			GetTempoTimeSigMarker(NULL, i,     &position,     NULL, NULL, NULL, NULL, NULL, NULL); // don't get/set position through BR_Envelope
+			GetTempoTimeSigMarker(NULL, i - 1, &prevPosition, NULL, NULL, NULL, NULL, NULL, NULL); // since tempo map may get changed during the loop
+
+			double absQN = TimeMap_timeToQN_abs(NULL, position) - TimeMap_timeToQN_abs(NULL, prevPosition);
+			double QN    = TimeMap_timeToQN(position)           - TimeMap_timeToQN(prevPosition);
+			partialDiff = absQN - QN;
+		}
+
+
+		if ((int)ct->user == 0)
+		{
+			if (abs(partialDiff) > MIN_TIME_SIG_PARTIAL_DIFF)
+				tempoMap.SetSelection(i, true);
+			else
+				tempoMap.SetSelection(i, false);
+		}
+		else if ((int)ct->user == 1)
+		{
+			if (abs(partialDiff) > MIN_TIME_SIG_PARTIAL_DIFF && tempoMap.GetSelection(i))
+			{
+				double beat, bpm;
+				int measure, num, den;
+				bool linear;
+				GetTempoTimeSigMarker(NULL, i, NULL, &measure, &beat, &bpm, &num, &den, &linear);
+				SetTempoTimeSigMarker(NULL, i, -1, measure, 0, bpm, num, den, linear);
+				update = true;
+			}
+		}
+		else
+		{
+			if (abs(partialDiff) > MIN_TIME_SIG_PARTIAL_DIFF && tempoMap.GetSelection(i))
+			{
+				double position, bpm, beat;
+				int measure, num, den;
+				bool linear;
+				GetTempoTimeSigMarker(NULL, i, &position, &measure, &beat, &bpm, &num, &den, &linear);
+				double positionAbsQN = TimeMap_timeToQN_abs(NULL, position);
+
+				SetTempoTimeSigMarker(NULL, i, -1, measure, 0, bpm, num, den, linear); // first reset partial time sig to original position
+
+				position = TimeMap_QNToTime_abs(NULL, positionAbsQN);
+				double nextGridDiv = GetNextGridDiv(position);
+				double prevGridDiv = TimeMap_QNToTime(TimeMap_timeToQN(nextGridDiv) - GetGridDivSafe());
+
+				double prevPosition;
+				GetTempoTimeSigMarker(NULL, i - 1, &prevPosition, NULL, NULL, NULL, NULL, NULL, NULL);
+
+				double closestGridDiv = CheckBounds(prevGridDiv, prevPosition, prevPosition + MIN_GRID_DIST) ?  nextGridDiv : GetClosestVal(position, prevGridDiv, nextGridDiv);
+				beat = TimeMap2_timeToBeats(NULL, closestGridDiv, &measure, NULL, NULL, NULL);
+				SetTempoTimeSigMarker(NULL, i, -1, measure, beat, bpm, num, den, linear);
+
+				update = true;
+			}
+		}
+	}
+
+	SetConfig("tempoenvtimelock", tempoTimeBase);
+	if (tempoMap.Commit() || update)
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
+
+	PreventUIRefresh(-1);
+	UpdateTimeline();
 }
 
 void TempoShapeLinear (COMMAND_T* ct)

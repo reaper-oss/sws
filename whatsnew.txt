@@ -1,3 +1,9 @@
+Added actions
++Main:
+ - SWS/BR: Select all partial time signature markers
+ - SWS/BR: Reset position of selected partial time signature markers
+ - SWS/BR: Snap position of selected partial time signature markers to closest grid division
+
 Fixes
 +Preserve metronome patterns when editing tempo envelope with various actions and dialogs
 +Fixed non-selectable radio buttons in SWS/BR: Select and adjust tempo markers... dialog

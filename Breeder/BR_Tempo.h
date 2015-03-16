@@ -42,6 +42,7 @@ void EditTempoGradual (COMMAND_T*);
 void DeleteTempo (COMMAND_T*);
 void DeleteTempoPreserveItems (COMMAND_T*);
 void TempoAtGrid (COMMAND_T*);
+void SelectMovePartialTimeSig (COMMAND_T*);
 void TempoShapeLinear (COMMAND_T*);
 void TempoShapeSquare (COMMAND_T*);
 void OpenTempoWiki (COMMAND_T*);

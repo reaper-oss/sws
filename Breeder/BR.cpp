@@ -677,6 +677,10 @@ static COMMAND_T g_commandTable[] =
 
 	{ { DEFACCEL, "SWS/BR: Create tempo markers at grid after every selected tempo marker" },                                 "BR_TEMPO_GRID",               TempoAtGrid},
 
+	{ { DEFACCEL, "SWS/BR: Select all partial time signature markers" },                                                      "BR_PART_TIME_SIG_SEL",        SelectMovePartialTimeSig, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Reset position of selected partial time signature markers" },                                      "BR_PART_TIME_SIG_RESET",      SelectMovePartialTimeSig, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Snap position of selected partial time signature markers to closest grid division" },              "BR_PART_TIME_SIG_SNAP_GRID",  SelectMovePartialTimeSig, NULL, 2},
+
 	{ { DEFACCEL, "SWS/BR: Tempo help..." },                                                                                  "BR_TEMPO_HELP_WIKI",          OpenTempoWiki},
 
 	{ { DEFACCEL, "SWS/BR: Convert project markers to tempo markers..." },                                                    "SWS_BRCONVERTMARKERSTOTEMPO", ConvertMarkersToTempoDialog, NULL, 0, IsConvertMarkersToTempoVisible},

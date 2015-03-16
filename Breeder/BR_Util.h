@@ -81,6 +81,7 @@ template <typename T> bool CheckBounds   (T val, T min, T max)    {if (min > max
 template <typename T> bool CheckBoundsEx (T val, T min, T max)    {if (min > max) swap(min, max); if (val <= min) return false; if (val >= max) return false; return true;}
 template <typename T> T    SetToBounds   (T val, T min, T max)    {if (min > max) swap(min, max); if (val < min)  return min;   if (val > max)  return max;   return val;}
 template <typename T> T    IsEqual (T a, T b, T epsilon) {epsilon = abs(epsilon); return CheckBounds(a, b - epsilon, b + epsilon);}
+template <typename T> T    GetClosestVal (T val, T targetVal1, T targetVal2) {if (abs(targetVal1 - val) <= abs(targetVal2 - val)) return targetVal1; else return targetVal2;}
 
 /******************************************************************************
 * General                                                                     *
@@ -147,6 +148,7 @@ int FindStretchMarker (MediaItem_Take* take, double position, double surrounding
 * Grid                                                                        *
 ******************************************************************************/
 double GetNextGridDiv (double position); // unlike other functions, this one doesn't care about grid visibility
+double GetPrevGridDiv (double position);
 double GetClosestGridLine (double position);
 double GetClosestMeasureGridLine (double position);
 double GetClosestLeftSideGridLine (double position);

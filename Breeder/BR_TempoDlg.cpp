@@ -614,12 +614,12 @@ static void SelectTempo (int mode, int Nth, int timeSel, int bpm, double bpmStar
 					selectPt = false;
 					if (hasTimeSig && isPartialSigEnabled)
 					{
-						double prevPosition;						
+						double prevPosition;
 						if (tempoMap.GetPoint(i - 1, &prevPosition, NULL , NULL, NULL))
 						{
 							double absQN = TimeMap_timeToQN_abs(NULL, position) - TimeMap_timeToQN_abs(NULL, prevPosition);
-							double QN    = TimeMap_timeToQN(position) - TimeMap_timeToQN(prevPosition);
-							selectPt = abs(absQN - QN) > 0.00001;
+							double QN    = TimeMap_timeToQN(position)           - TimeMap_timeToQN(prevPosition);
+							selectPt = abs(absQN - QN) > MIN_TIME_SIG_PARTIAL_DIFF;
 						}
 					}
 				}

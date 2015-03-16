@@ -30,14 +30,15 @@
 /******************************************************************************
 * Constants                                                                   *
 ******************************************************************************/
-const double MIN_BPM        = 1;
-const double MAX_BPM        = 960;
-const int    MIN_SIG        = 1;
-const int    MAX_SIG        = 255;
-const double MIN_TEMPO_DIST = 0.001;
-const double MIN_ENV_DIST   = 0.000001;
-const double MIN_GRID_DIST  = 0.00097;         // 1/256 at 960 BPM (can't set it to more than 1/256 in grid settings, but other actions like Adjust grid by 1/2 can)
-const double MAX_GRID_DIV   = 1.0 / 256.0 * 4; // 1/256 because things can get broken after that (http://forum.cockos.com/project.php?issueid=5263)
+const double MIN_BPM                   = 1;
+const double MAX_BPM                   = 960;
+const int    MIN_SIG                   = 1;
+const int    MAX_SIG                   = 255;
+const double MIN_TEMPO_DIST            = 0.001;
+const double MIN_TIME_SIG_PARTIAL_DIFF = 0.00001;
+const double MIN_ENV_DIST              = 0.000001;
+const double MIN_GRID_DIST             = 0.00097;         // 1/256 at 960 BPM (can't set it to more than 1/256 in grid settings, but other actions like Adjust grid by 1/2 can)
+const double MAX_GRID_DIV              = 1.0 / 256.0 * 4; // 1/256 because things can get broken after that (http://forum.cockos.com/project.php?issueid=5263)
 
 /******************************************************************************
 * Envelope shapes - this is how Reaper stores point shapes internally         *

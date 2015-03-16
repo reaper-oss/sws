@@ -255,8 +255,11 @@ bool BR_Envelope::SetSelection (int id, bool selected)
 {
 	if (this->ValidateId(id))
 	{
-		m_points[id].selected = selected;
-		m_update = true;
+		if (m_points[id].selected != selected)
+		{
+			m_points[id].selected = selected;
+			m_update = true;
+		}
 		return true;
 	}
 	else
@@ -631,15 +634,7 @@ int BR_Envelope::FindClosest (double position)
 		if (!this->ValidateId(nextId))
 			return prevId;
 		else
-		{
-			double len1 = position - (m_points[prevId].position + m_takeEnvOffset);
-			double len2 = (m_points[nextId].position + m_takeEnvOffset) - position;
-
-			if (len1 >= len2)
-				return nextId;
-			else
-				return prevId;
-		}
+			return GetClosestVal(position, m_points[prevId].position + m_takeEnvOffset, m_points[nextId].position + m_takeEnvOffset);
 	}
 }
 
@@ -2691,13 +2686,8 @@ int FindClosestTempoMarker (double position)
 			GetTempoTimeSigMarker(NULL, prevId, &prevPos, NULL, NULL, NULL, NULL, NULL, NULL);
 			GetTempoTimeSigMarker(NULL, nextId, &nextPos, NULL, NULL, NULL, NULL, NULL, NULL);
 
-			double len1 = position - prevPos;
-			double len2 = nextPos - position;
-
-			if (len1 >= len2)
-				return nextId;
-			else
-				return prevId;
+			if (GetClosestVal(position, prevPos, nextPos) == prevPos) return prevId;
+			else                                                      return nextId;
 		}
 		else
 		{

@@ -1232,10 +1232,13 @@ void BR_ContextualToolbar::RepositionToolbar (BR_ContextualToolbar::ExecuteOnToo
 		r.bottom = r.top  + h;
 	}
 
-	RECT screen;
-	GetMonitorRectFromPoint(p, &screen);
-	BoundToRect(screen, &r);
-	SetWindowPos(toolbarHwnd, NULL, r.left, r.top, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE);
+	if (toolbarHwnd)
+	{
+		RECT screen;
+		GetMonitorRectFromPoint(p, &screen);
+		BoundToRect(screen, &r);
+		SetWindowPos(toolbarHwnd, NULL, r.left, r.top, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE);
+	}
 }
 
 void BR_ContextualToolbar::SetToolbarWndProc (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad, HWND toolbarHwnd, int toggleAction)

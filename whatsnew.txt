@@ -14,6 +14,7 @@ Added actions
 Fixes
 +Preserve metronome patterns when editing tempo envelope with various actions and dialogs
 +Fixed non-selectable radio buttons in SWS/BR: Select and adjust tempo markers... dialog
++Don't change solo state of tracks if mouse is over master track when running certain "perform until shortcut released" playback actions
 
 Other
 +Added ability to select only partial time signatures with SWS/BR: Select and adjust tempo markers...

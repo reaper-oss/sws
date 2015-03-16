@@ -1339,7 +1339,7 @@ int FindClosestStretchMarker (MediaItem_Take* take, double position)
 			double prevPos, nextPos;
 			GetTakeStretchMarker(take, prevId, &prevPos, NULL);
 			GetTakeStretchMarker(take, nextId, &nextPos, NULL);
-			return GetClosestVal(position, nextPos, prevPos);
+			return (GetClosestVal(position, nextPos, prevPos) == nextPos) ? nextId : prevId;
 		}
 		else
 		{

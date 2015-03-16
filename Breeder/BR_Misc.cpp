@@ -77,9 +77,10 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 		                       BR_MouseInfo::MODE_RULER                                    |
 							   BR_MouseInfo::MODE_MIDI_EDITOR                              |
 							   BR_MouseInfo::MODE_IGNORE_ALL_TRACK_LANE_ELEMENTS_BUT_ITEMS |
-							   BR_MouseInfo::MODE_IGNORE_ENVELOPE_LANE_SEGMENT);
+							   BR_MouseInfo::MODE_IGNORE_ENVELOPE_LANE_SEGMENT             |
+							   (((int)ct->user < -1) ? BR_MouseInfo::MODE_MCP_TCP : 0));
 
-		if (mouseInfo.GetPosition() == -1)
+		if ((int)ct->user > 0 && mouseInfo.GetPosition() == -1)
 			return false;
 
 		// Get info on which item and track to solo
@@ -88,19 +89,22 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 
 		if (abs((int)ct->user) != 1)
 		{
-			if (!strcmp(mouseInfo.GetWindow(), "arrange") || !strcmp(mouseInfo.GetWindow(), "ruler"))
-			{
-				itemToSolo  = mouseInfo.GetItem();
-				trackToSolo = mouseInfo.GetTrack();
-			}
-			else if (!strcmp(mouseInfo.GetWindow(), "midi_editor") && mouseInfo.GetMidiEditor())
+			if (!strcmp(mouseInfo.GetWindow(), "midi_editor") && mouseInfo.GetMidiEditor())
 			{
 				itemToSolo  = GetMediaItemTake_Item(SWS_MIDIEditor_GetTake(mouseInfo.GetMidiEditor()));
 				trackToSolo = GetMediaItem_Track(itemToSolo);
 			}
+			else
+			{
+				itemToSolo  = mouseInfo.GetItem();
+				trackToSolo = mouseInfo.GetTrack();
+			}
 
 			if (abs((int)ct->user) != 3)
 				itemToSolo = NULL;
+
+			if (trackToSolo == GetMasterTrack(NULL))
+				trackToSolo = NULL;
 		}
 
 		PreventUIRefresh(1);

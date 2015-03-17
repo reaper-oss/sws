@@ -50,6 +50,7 @@ void SelEnvTimeSel (COMMAND_T*);
 void SetEnvValToNextPrev (COMMAND_T*);
 void MoveEnvPointToEditCursor (COMMAND_T*);
 void Insert2EnvPointsTimeSelection (COMMAND_T*);
+void CopyEnvPoints (COMMAND_T*);
 void FitEnvPointsToTimeSel (COMMAND_T*);
 void CreateEnvPointMouse (COMMAND_T*);
 void IncreaseDecreaseVolEnvPoints (COMMAND_T*);

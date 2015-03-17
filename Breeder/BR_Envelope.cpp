@@ -1029,6 +1029,119 @@ void Insert2EnvPointsTimeSelection (COMMAND_T* ct)
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG | UNDO_STATE_TRACKCFG, -1);
 }
 
+void CopyEnvPoints (COMMAND_T* ct)
+{
+	BR_Envelope envelope(GetSelectedEnvelope(NULL));
+	
+	bool recordArm  = !!GetBit((int)ct->user, 0);
+	bool doTimeSel  = !!GetBit((int)ct->user, 1);
+	bool fromCursor = !!GetBit((int)ct->user, 2);
+
+	double startTime = 0;
+	double endTime   = 0;
+	vector<int> idsToCopy;
+
+	if (doTimeSel)
+	{
+		double tStart, tEnd;
+		GetSet_LoopTimeRange2(NULL, false, false, &tStart, &tEnd, false);
+
+		if (tStart != tEnd)
+		{
+			int startId = envelope.FindPrevious(tStart) + 1;
+			int endId   = envelope.FindNext(tEnd)       - 1;
+
+			if (envelope.ValidateId(startId) && envelope.ValidateId(endId))
+			{
+				for (int i = startId; i <= endId; ++i)
+					idsToCopy.push_back(i);
+			}
+		}
+		startTime = tStart;
+		endTime   = tEnd;
+	}
+	else
+	{
+		for (int i = 0; i < envelope.CountSelected(); ++i)
+			idsToCopy.push_back(envelope.GetSelected(i));
+
+		if (idsToCopy.size())
+		{
+			envelope.GetPoint(idsToCopy.front(), &startTime, NULL, NULL, NULL);
+			envelope.GetPoint(idsToCopy.back(),  &endTime,   NULL, NULL, NULL);
+		}
+	}
+
+	if (idsToCopy.size() == 0)
+		return;
+
+	double positionOffset = 0;
+	if (fromCursor)
+	{
+		double position;
+		envelope.GetPoint(idsToCopy.front(), &position, NULL, NULL, NULL);
+		positionOffset = GetCursorPositionEx(NULL) - position;
+
+		startTime += positionOffset;
+		endTime   += positionOffset;
+	}
+
+	PreventUIRefresh(1);
+	bool update = false;
+	bool triedToCopyToTempo = false;
+	for (int i = -1; i < CountSelectedTracks(NULL); ++i)
+	{
+		MediaTrack* track = NULL;
+		if (i == -1 && *(int*)GetSetMediaTrackInfo(GetMasterTrack(NULL), "I_SELECTED", NULL))
+			track = GetMasterTrack(NULL);
+		else
+			track = GetSelectedTrack(NULL, i);
+
+		for (int j = 0; j < CountTrackEnvelopes(track); ++j)
+		{
+			TrackEnvelope* envPtr = GetTrackEnvelope(track, j);
+			if ((positionOffset != 0 || envPtr != envelope.GetPointer()) && envPtr != GetTempoEnv())
+			{
+				BR_Envelope targetEnv (envPtr);
+
+				if (targetEnv.IsVisible() && (!recordArm || recordArm && targetEnv.IsArmed()))
+				{
+					targetEnv.UnselectAll();
+					targetEnv.DeletePointsInRange(startTime, endTime);
+
+					double sourceMin = envelope.LaneMinValue();
+					double sourceMax = envelope.LaneMaxValue();
+					double targetMin = targetEnv.LaneMinValue();
+					double targetMax = targetEnv.LaneMaxValue();
+
+					for (size_t h = 0; h < idsToCopy.size(); ++h)
+					{
+						double position, value, bezier;
+						int shape;
+						envelope.GetPoint(idsToCopy[h], &position, &value, &shape, &bezier);
+						targetEnv.CreatePoint(targetEnv.CountPoints(), position + positionOffset, TranslateRange(value, sourceMin, sourceMax, targetMin, targetMax), shape, bezier, true, true, false);
+					}
+					if (targetEnv.Commit())
+						update = true;
+				}
+			}
+			else if (envPtr == GetTempoEnv())
+			{
+				BR_Envelope tempoMap(envPtr);
+				if (tempoMap.IsVisible() && !recordArm)
+					triedToCopyToTempo = true;
+			}
+		}
+	}
+	PreventUIRefresh(-1);
+
+	if (update)
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
+
+	if (triedToCopyToTempo)
+		MessageBox(g_hwndParent, __LOCALIZE("Can't copy to tempo envelope", "sws_mbox"), __LOCALIZE("SWS/BR - Warning", "sws_mbox"), MB_OK);
+}
+
 void FitEnvPointsToTimeSel (COMMAND_T* ct)
 {
 	double tStart, tEnd;

@@ -3,8 +3,8 @@ Added actions
  - SWS/BR: Select all partial time signature markers
  - SWS/BR: Reset position of selected partial time signature markers
  - SWS/BR: Snap position of selected partial time signature markers to closest grid division
- - SWS/BR: Copy selected points in selected envelope to all (record-armed) envelopes in selected tracks (2 versions: direct copy and at edit cursor)
- - SWS/BR: Copy points in time selection in selected envelope to all (recorded-armed) envelopes in selected tracks (2 versions: direct copy and at edit cursor)
+ - SWS/BR: Copy selected points in selected envelope to all visible (record-armed) envelopes in selected tracks (2 versions: direct copy and at edit cursor)
+ - SWS/BR: Copy points in time selection in selected envelope to all visible (recorded-armed) envelopes in selected tracks (2 versions: direct copy and at edit cursor)
  - SWS/BR: Play from edit cursor position (perform until shortcut released)
  - SWS/BR: Play from edit cursor position and solo track under mouse for the duration (perform until shortcut released)
  - SWS/BR: Play from edit cursor position and solo item and track under mouse for the duration (perform until shortcut released)

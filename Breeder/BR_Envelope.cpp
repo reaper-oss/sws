@@ -1127,6 +1127,7 @@ void IncreaseDecreaseVolEnvPoints (COMMAND_T* ct)
 			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 	}
 }
+
 void SelectEnvelopeUnderMouse (COMMAND_T* ct)
 {
 	BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_MCP_TCP | BR_MouseInfo::MODE_ARRANGE | BR_MouseInfo::MODE_IGNORE_ENVELOPE_LANE_SEGMENT);
@@ -1281,7 +1282,7 @@ void ShowHideFxEnv (COMMAND_T* ct)
 		for (int j = 0; j < CountTrackEnvelopes(track); ++j)
 		{
 			TrackEnvelope* envPtr = GetTrackEnvelope(track, j);
-			if (GetEnvType(envPtr, NULL) == PARAMETER)
+			if (GetEnvType(envPtr, NULL, NULL) == PARAMETER)
 				envelopes.Add(new BR_Envelope(envPtr));
 		}
 	}
@@ -1334,8 +1335,9 @@ void ShowHideSendEnv (COMMAND_T* ct)
 		MediaTrack* track = GetSelectedTrack(NULL, i);
 		for (int j = 0; j < CountTrackEnvelopes(track); ++j)
 		{
-			bool send = false;
-			if ((mode & GetEnvType(GetTrackEnvelope(track, j), &send)) && send)
+			bool send   = false;
+			bool hwSend = false;
+			if ((mode & GetEnvType(GetTrackEnvelope(track, j), &send, &hwSend)) && (send || hwSend))
 				envelopes.Add(new BR_Envelope(track, j));
 		}
 	}
@@ -1383,9 +1385,10 @@ void ShowHideSendEnv (COMMAND_T* ct)
 				if (!envelope->IsVisible() && envelope->CountPoints() <= 1)
 				{
 					double value;
-					if (envelope->GetPoint(0, NULL, &value, NULL, NULL) && GetCurrentAutomationMode(envelope->GetParent()) != 0)
+					int trimMode; GetConfig("envtrimadjmode", trimMode);
+					if (envelope->GetPoint(0, NULL, &value, NULL, NULL) && (trimMode == 0 || (trimMode == 1 && GetCurrentAutomationMode(envelope->GetParent()) != 0)))
 					{
-						if      (envelope->Type() == VOLUME) SetTrackSendUIVol(envelope->GetParent(), envelope->GetSendId(), value, 0); // don't do mute (reaper skips it too)
+						if      (envelope->Type() == VOLUME) SetTrackSendUIVol(envelope->GetParent(), envelope->GetSendId(), value, 0); // don't do mute (REAPER skips it too)
 						else if (envelope->Type() == PAN)    SetTrackSendUIPan(envelope->GetParent(), envelope->GetSendId(), -value, 0);
 					}
 

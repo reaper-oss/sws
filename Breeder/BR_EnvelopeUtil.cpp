@@ -634,7 +634,11 @@ int BR_Envelope::FindClosest (double position)
 		if (!this->ValidateId(nextId))
 			return prevId;
 		else
-			return GetClosestVal(position, m_points[prevId].position + m_takeEnvOffset, m_points[nextId].position + m_takeEnvOffset);
+		{
+			double prevPos = m_points[prevId].position + m_takeEnvOffset;
+			double nextPos = m_points[nextId].position + m_takeEnvOffset;
+			return (GetClosestVal(position, prevPos, nextPos) == prevPos) ? prevId : nextId;
+		}
 	}
 }
 
@@ -1235,12 +1239,26 @@ int BR_Envelope::GetSendId ()
 		MediaTrack* track    = this->GetParent();
 		const char* sendType = (this->Type() == VOLUME) ? ("<VOLENV") : ((this->Type() == PAN) ? ("<PANENV") : ("<MUTEENV"));
 
+		// Check normal sends first
 		for (int i = 0; i < GetTrackNumSends(track, 0); ++i)
 		{
 			if (m_envelope == (TrackEnvelope*)GetSetTrackSendInfo(track, 0, i, "P_ENV", (void*)sendType))
 			{
-				id = i;
+				id = i + GetTrackNumSends(track, 1);
 				break;
+			}
+		}
+
+		// Hardware sends if nothing has been found
+		if (id == -1)
+		{
+			for (int i = 0; i < GetTrackNumSends(track, 1); ++i)
+			{
+				if (m_envelope == (TrackEnvelope*)GetSetTrackSendInfo(track, 1, i, "P_ENV", (void*)sendType))
+				{
+					id = i;
+					break;
+				}
 			}
 		}
 	}
@@ -1783,7 +1801,7 @@ void BR_Envelope::FillProperties () const
 					m_properties.minValue = 0;
 					m_properties.maxValue = 2;
 					m_properties.centerValue = 1;
-					m_properties.type = (strstr(token, "AUXVOLENV") || strstr(token, "VOLENV2")) ? VOLUME : VOLUME_PREFX;
+					m_properties.type = (strstr(token, "AUXVOLENV") || strstr(token, "VOLENV2") || strstr(token, "HWVOLENV")) ? VOLUME : VOLUME_PREFX;
 					m_properties.paramType.Set(token);
 				}
 				else if (strstr(token, "PANENV"))
@@ -1791,7 +1809,7 @@ void BR_Envelope::FillProperties () const
 					m_properties.minValue = -1;
 					m_properties.maxValue = 1;
 					m_properties.centerValue = 0;
-					m_properties.type = (strstr(token, "AUXPANENV") || strstr(token, "PANENV2")) ? PAN : PAN_PREFX;
+					m_properties.type = (strstr(token, "AUXPANENV") || strstr(token, "PANENV2") || strstr(token, "HWPANENV")) ? PAN : PAN_PREFX;
 					m_properties.paramType.Set(token);
 				}
 				else if (strstr(token, "WIDTHENV"))
@@ -2157,7 +2175,7 @@ vector<int> GetSelPoints (TrackEnvelope* envelope)
 	return selectedPoints;
 }
 
-WDL_FastString ConstructReceiveEnv (int type, double firstPointValue)
+WDL_FastString ConstructReceiveEnv (int type, double firstPointValue, bool hardwareSend)
 {
 	WDL_FastString envelope;
 
@@ -2168,9 +2186,9 @@ WDL_FastString ConstructReceiveEnv (int type, double firstPointValue)
 	int envLanes;    GetConfig("envlanes", envLanes);
 	int defShape = (type == MUTE) ? SQUARE : GetDefaultPointShape();
 
-	if      (type == VOLUME) AppendLine(envelope, "<AUXVOLENV");
-	else if (type == PAN)    AppendLine(envelope, "<AUXPANENV");
-	else if (type == MUTE)   AppendLine(envelope, "<AUXMUTEENV");
+	if      (type == VOLUME) (hardwareSend) ? AppendLine(envelope, "<HWVOLENV")  : AppendLine(envelope, "<AUXVOLENV");
+	else if (type == PAN)    (hardwareSend) ? AppendLine(envelope, "<HWPANENV")  : AppendLine(envelope, "<AUXPANENV");
+	else if (type == MUTE)   (hardwareSend) ? AppendLine(envelope, "<HWMUTEENV") : AppendLine(envelope, "<AUXMUTEENV");
 
 	envelope.AppendFormatted(128, "%s %d\n",             "ACT", 1);
 	envelope.AppendFormatted(128, "%s %d %d %d\n",       "VIS", 1, GetBit(envLanes, 0), 1);
@@ -2185,34 +2203,40 @@ WDL_FastString ConstructReceiveEnv (int type, double firstPointValue)
 
 bool ToggleShowSendEnvelope (MediaTrack* track, int sendId, int type)
 {
-
-	MediaTrack* receiveTrack = (MediaTrack*)GetSetTrackSendInfo(track, 0, sendId, "P_DESTTRACK", NULL);
+	bool hwSend = (sendId < GetTrackNumSends(track, 1));
+	MediaTrack* receiveTrack = hwSend ? track : (MediaTrack*)GetSetTrackSendInfo(track, 0, sendId, "P_DESTTRACK", NULL);
 
 	bool update = false;
 	if (receiveTrack && (type == VOLUME || type == PAN || type == MUTE))
 	{
 		int sendTrackId = CSurf_TrackToID(track, false) - 1; // -1 so it's the same id receives use
 
-		int sendNum = 0; // in case there are multiple sends to same receive track
-		for (int i = 0; i < GetTrackNumSends(track, 0); ++i)
-		{
-			if (i > sendId)
-				break;
+		// In case there are multiple sends to same receive track (or multiple hardware sends from the same track)
+		int sendNum = 0;
 
-			if ((MediaTrack*)GetSetTrackSendInfo(track, 0, i, "P_DESTTRACK", NULL) == receiveTrack)
-				++sendNum;
+		if (hwSend)
+		{
+			sendNum = sendId + 1;
+		}
+		else
+		{
+			for (int i = 0; i < GetTrackNumSends(track, 0); ++i)
+			{
+				if (i > sendId)
+					break;
+				if ((MediaTrack*)GetSetTrackSendInfo(track, 0, i, "P_DESTTRACK", NULL) == receiveTrack)
+					++sendNum;
+			}
 		}
 
-		bool stateUpdated = false;
 		WDL_FastString newState;
 		char* trackState = GetSetObjectState(receiveTrack, "");
-
+		bool stateUpdated = false;
 		if (trackState)
 		{
+			LineParser lp(false);
 			int blockCount = 0;
 			int currentSendNum = 0;
-
-			LineParser lp(false);
 			char* token = strtok(trackState, "\n");
 			while (token != NULL)
 			{
@@ -2220,7 +2244,7 @@ bool ToggleShowSendEnvelope (MediaTrack* track, int sendId, int type)
 				if      (lp.gettoken_str(0)[0] == '<')  ++blockCount;
 				else if (lp.gettoken_str(0)[0] == '>')  --blockCount;
 
-				if (blockCount == 1 && !strcmp(lp.gettoken_str(0), "AUXRECV") && lp.gettoken_int(1) == sendTrackId)
+				if (blockCount == 1 && ((!hwSend && !strcmp(lp.gettoken_str(0), "AUXRECV") && lp.gettoken_int(1) == sendTrackId) || (hwSend && !strcmp(lp.gettoken_str(0), "HWOUT"))))
 				{
 					++currentSendNum;
 					if (currentSendNum == sendNum)
@@ -2233,34 +2257,44 @@ bool ToggleShowSendEnvelope (MediaTrack* track, int sendId, int type)
 						WDL_FastString receiveLine, volEnv, panEnv, muteEnv;
 						receiveLine.Set(token);
 
+						int    pointCount     = 0;
+						double firstPointVal  = 0;
+						bool   envelopeHidden = false;
+
 						token = strtok(NULL, "\n");
 						while (token != NULL)
 						{
 							lp.parse(token);
-							if (!strcmp(lp.gettoken_str(0), "<AUXVOLENV") || !strcmp(lp.gettoken_str(0), "<AUXPANENV") || !strcmp(lp.gettoken_str(0), "<AUXMUTEENV"))
+							if ((!hwSend && (!strcmp(lp.gettoken_str(0), "<AUXVOLENV") || !strcmp(lp.gettoken_str(0), "<AUXPANENV") || !strcmp(lp.gettoken_str(0), "<AUXMUTEENV"))) ||
+							    ( hwSend && (!strcmp(lp.gettoken_str(0), "<HWVOLENV")  || !strcmp(lp.gettoken_str(0), "<HWPANENV")  || !strcmp(lp.gettoken_str(0), "<HWMUTEENV"))))
 							{
 								WDL_FastString* currentEnvState = NULL;
-								int currentEnvType = 0;
+								int currentEnv = 0;
 
-								if      (!strcmp(lp.gettoken_str(0), "<AUXVOLENV"))  {currentEnvType = VOLUME; currentEnvState = &volEnv;}
-								else if (!strcmp(lp.gettoken_str(0), "<AUXPANENV"))  {currentEnvType = PAN;    currentEnvState = &panEnv;}
-								else if (!strcmp(lp.gettoken_str(0), "<AUXMUTEENV")) {currentEnvType = MUTE;   currentEnvState = &muteEnv;}
+								if      (!strcmp(lp.gettoken_str(0), "<AUXVOLENV")  || !strcmp(lp.gettoken_str(0), "<HWVOLENV"))  {currentEnv = VOLUME; currentEnvState = &volEnv;}
+								else if (!strcmp(lp.gettoken_str(0), "<AUXPANENV")  || !strcmp(lp.gettoken_str(0), "<HWPANENV"))  {currentEnv = PAN;    currentEnvState = &panEnv;}
+								else if (!strcmp(lp.gettoken_str(0), "<AUXMUTEENV") || !strcmp(lp.gettoken_str(0), "<HWMUTEENV")) {currentEnv = MUTE;   currentEnvState = &muteEnv;}
 
 								// Save current send envelope
 								while (token != NULL)
 								{
 									lp.parse(token);
 
-									if (!strcmp(lp.gettoken_str(0), "VIS") && (currentEnvType == type))
+									if (!strcmp(lp.gettoken_str(0), "VIS") && (type & currentEnv))
 									{
 										for (int i = 0; i < lp.getnumtokens(); ++i)
 										{
 											if (i == 1)
 											{
 												if (lp.gettoken_int(1) == 0)
+												{
 													currentEnvState->Append("1");
+												}
 												else
+												{
 													currentEnvState->Append("0");
+													envelopeHidden = true;
+												}
 												stateUpdated = true;
 											}
 											else
@@ -2271,7 +2305,15 @@ bool ToggleShowSendEnvelope (MediaTrack* track, int sendId, int type)
 										currentEnvState->Append("\n");
 									}
 									else
+									{
+										if (!strcmp(lp.gettoken_str(0), "PT") && (type & currentEnv))
+										{
+											++pointCount;
+											if (pointCount == 1)
+												firstPointVal = lp.gettoken_float(2);
+										}
 										AppendLine(*currentEnvState, token);
+									}
 
 									if (lp.gettoken_str(0)[0] == '>')
 										break;
@@ -2281,48 +2323,74 @@ bool ToggleShowSendEnvelope (MediaTrack* track, int sendId, int type)
 							}
 							else
 								break;
-
 							token = strtok(NULL, "\n");
 						}
 
 						bool trim = false;
 						int trimMode; GetConfig("envtrimadjmode", trimMode);
-						if (trimMode == 0 || (trimMode == 1 && GetCurrentAutomationMode(CSurf_TrackFromID(sendTrackId + 1, false)) != 0))
+						if (trimMode == 0 || (trimMode == 1 && GetCurrentAutomationMode(hwSend ? track : CSurf_TrackFromID(sendTrackId + 1, false)) != 0))
 						{
 							trim = true;
-
 							WDL_FastString newReceiveLine;
 							lp.parse(receiveLine.Get());
 							for (int i = 0; i < lp.getnumtokens(); ++i)
 							{
-								if      (i == 3 && (type == VOLUME) && !volEnv.GetLength())  newReceiveLine.Append("1");
-								else if (i == 4 && (type == PAN)    && !panEnv.GetLength())  newReceiveLine.Append("0");
-								else                                                         newReceiveLine.Append(lp.gettoken_str(i));
+								if (i == 3 && (type & VOLUME))
+								{
+									if (pointCount <= 1 && envelopeHidden)
+										newReceiveLine.AppendFormatted(256, "%lf", firstPointVal);
+									else if (!volEnv.GetLength())
+										newReceiveLine.Append("1");
+									else
+										newReceiveLine.Append(lp.gettoken_str(i));
+								}
+								else if (i == 4 && (type & PAN))
+								{
+									if (pointCount <= 1 && envelopeHidden)
+										newReceiveLine.AppendFormatted(256, "%lf", -firstPointVal);
+									else if (!panEnv.GetLength())
+										newReceiveLine.Append("0");
+									else
+										newReceiveLine.Append(lp.gettoken_str(i));
+								}
+								else
+								{
+									newReceiveLine.Append(lp.gettoken_str(i));
+								}
 
 								newReceiveLine.Append(" ");
 							}
 							newReceiveLine.Append("\n");
-
-							AppendLine(newState, newReceiveLine.Get());
+							newState.Append(newReceiveLine.Get());
 						}
 						else
-							AppendLine(newState, receiveLine.Get());
+							newState.Append(receiveLine.Get());
 
-						if ((type == VOLUME) && !volEnv.GetLength())  {volEnv  = ConstructReceiveEnv(VOLUME, trim ? sendVolume : 1); stateUpdated = true;}
-						if ((type == PAN)    && !panEnv.GetLength())  {panEnv  = ConstructReceiveEnv(PAN,    trim ? sendPan : 0);    stateUpdated = true;}
-						if ((type == MUTE)   && !muteEnv.GetLength()) {muteEnv = ConstructReceiveEnv(MUTE,   sendMute);              stateUpdated = true;}
+						if ((type & VOLUME) && !volEnv.GetLength())  {volEnv  = ConstructReceiveEnv(VOLUME, trim ? sendVolume : 1, hwSend); stateUpdated = true;}
+						if ((type & PAN)    && !panEnv.GetLength())  {panEnv  = ConstructReceiveEnv(PAN,    trim ? sendPan : 0,    hwSend); stateUpdated = true;}
+						if ((type & MUTE)   && !muteEnv.GetLength()) {muteEnv = ConstructReceiveEnv(MUTE,   sendMute,              hwSend); stateUpdated = true;}
 
-						if (volEnv.GetLength())  newState.Append(volEnv.Get());
-						if (panEnv.GetLength())  newState.Append(panEnv.Get());
-						if (muteEnv.GetLength()) newState.Append(muteEnv.Get());
+						if (volEnv.GetLength()  && (!(type & VOLUME) || (!envelopeHidden || (envelopeHidden && pointCount >= 2))))
+							newState.Append(volEnv.Get());
+						if (panEnv.GetLength()  && (!(type & PAN)    || (!envelopeHidden || (envelopeHidden && pointCount >= 2))))
+							newState.Append(panEnv.Get());
+						if (muteEnv.GetLength() && (!(type & MUTE)   || (!envelopeHidden || (envelopeHidden && pointCount >= 2))))
+							newState.Append(muteEnv.Get());
+					}
+					else
+					{
+						AppendLine(newState, token);
+						token = strtok(NULL, "\n");
 					}
 				}
-
-				AppendLine(newState, token);
-				token = strtok(NULL, "\n");
+				else
+				{
+					AppendLine(newState, token);
+					token = strtok(NULL, "\n");
+				}
 			}
 		}
-
+		
 		if (stateUpdated)
 		{
 			GetSetObjectState(receiveTrack, newState.Get());
@@ -2348,25 +2416,27 @@ bool ShowSendEnvelopes (vector<MediaTrack*>& tracks, int envelopes)
 		if (id > 0)
 		{
 			trackIds.insert(id - 1);  // -1 so it's the same id receives use
-
 			for (int j = 0; j < GetTrackNumSends(track, 0); ++j)
 				receiveTracks.push_back((MediaTrack*)GetSetTrackSendInfo(track, 0, j, "P_DESTTRACK", NULL));
 		}
+
 	}
-	if (trackIds.size() == 0)
-		return false;
 
+	// For hardware sends
+	size_t receivesStop = receiveTracks.size() - 1;
+	for (size_t i = 0; i < tracks.size(); ++i)
+		receiveTracks.push_back(tracks[i]);
 
-	int trimMode; GetConfig("envtrimadjmode", trimMode);
 	bool update = false;
-
 	for (size_t i = 0; i < receiveTracks.size(); i++)
 	{
 		if (MediaTrack* track = receiveTracks[i])
 		{
+			bool hwSend = (i > receivesStop);
 			bool stateUpdated = false;
 			WDL_FastString newState;
 
+			// Parse chunk and rewrite it in newState
 			char* trackState = GetSetObjectState(track, "");
 			if (trackState)
 			{
@@ -2380,7 +2450,7 @@ bool ShowSendEnvelopes (vector<MediaTrack*>& tracks, int envelopes)
 					if      (lp.gettoken_str(0)[0] == '<')  ++blockCount;
 					else if (lp.gettoken_str(0)[0] == '>')  --blockCount;
 
-					if (blockCount == 1 && !strcmp(lp.gettoken_str(0), "AUXRECV") && trackIds.find(lp.gettoken_int(1)) != trackIds.end())
+					if (blockCount == 1 && ((!strcmp(lp.gettoken_str(0), "HWOUT") && hwSend) || (!strcmp(lp.gettoken_str(0), "AUXRECV") && !hwSend && trackIds.find(lp.gettoken_int(1)) != trackIds.end())))
 					{
 						int sendTrackId   = lp.gettoken_int(1);
 						double sendVolume = lp.gettoken_float(3);
@@ -2394,14 +2464,15 @@ bool ShowSendEnvelopes (vector<MediaTrack*>& tracks, int envelopes)
 						while (token != NULL)
 						{
 							lp.parse(token);
-							if (!strcmp(lp.gettoken_str(0), "<AUXVOLENV") || !strcmp(lp.gettoken_str(0), "<AUXPANENV") || !strcmp(lp.gettoken_str(0), "<AUXMUTEENV"))
+							if ((!hwSend && (!strcmp(lp.gettoken_str(0), "<AUXVOLENV") || !strcmp(lp.gettoken_str(0), "<AUXPANENV") || !strcmp(lp.gettoken_str(0), "<AUXMUTEENV"))) ||
+							    ( hwSend && (!strcmp(lp.gettoken_str(0), "<HWVOLENV")  || !strcmp(lp.gettoken_str(0), "<HWPANENV")  || !strcmp(lp.gettoken_str(0), "<HWMUTEENV"))))
 							{
 								WDL_FastString* currentEnvState = NULL;
 								int currentEnv = 0;
 
-								if      (!strcmp(lp.gettoken_str(0), "<AUXVOLENV"))  {currentEnv = VOLUME; currentEnvState = &volEnv;}
-								else if (!strcmp(lp.gettoken_str(0), "<AUXPANENV"))  {currentEnv = PAN;    currentEnvState = &panEnv;}
-								else if (!strcmp(lp.gettoken_str(0), "<AUXMUTEENV")) {currentEnv = MUTE;   currentEnvState = &muteEnv;}
+								if      (!strcmp(lp.gettoken_str(0), "<AUXVOLENV")  || !strcmp(lp.gettoken_str(0), "<HWVOLENV"))  {currentEnv = VOLUME; currentEnvState = &volEnv;}
+								else if (!strcmp(lp.gettoken_str(0), "<AUXPANENV")  || !strcmp(lp.gettoken_str(0), "<HWPANENV"))  {currentEnv = PAN;    currentEnvState = &panEnv;}
+								else if (!strcmp(lp.gettoken_str(0), "<AUXMUTEENV") || !strcmp(lp.gettoken_str(0), "<HWMUTEENV")) {currentEnv = MUTE;   currentEnvState = &muteEnv;}
 
 								// Save current send envelope
 								while (token != NULL)
@@ -2436,15 +2507,14 @@ bool ShowSendEnvelopes (vector<MediaTrack*>& tracks, int envelopes)
 							}
 							else
 								break;
-
 							token = strtok(NULL, "\n");
 						}
 
 						bool trim = false;
-						if (trimMode == 0 || (trimMode == 1 && GetCurrentAutomationMode(CSurf_TrackFromID(sendTrackId + 1, false)) != 0))
+						int trimMode; GetConfig("envtrimadjmode", trimMode);
+						if (trimMode == 0 || (trimMode == 1 && GetCurrentAutomationMode(hwSend ? track : CSurf_TrackFromID(sendTrackId + 1, false)) != 0))
 						{
 							trim = true;
-
 							WDL_FastString newReceiveLine;
 							lp.parse(receiveLine.Get());
 							for (int i = 0; i < lp.getnumtokens(); ++i)
@@ -2457,22 +2527,24 @@ bool ShowSendEnvelopes (vector<MediaTrack*>& tracks, int envelopes)
 							}
 							newReceiveLine.Append("\n");
 
-							AppendLine(newState, newReceiveLine.Get());
+							newState.Append(newReceiveLine.Get());
 						}
 						else
-							AppendLine(newState, receiveLine.Get());
+							newState.Append(receiveLine.Get());
 
-						if ((envelopes & VOLUME) && !volEnv.GetLength())  {volEnv  = ConstructReceiveEnv(VOLUME, trim ? sendVolume : 1); stateUpdated = true;}
-						if ((envelopes & PAN)    && !panEnv.GetLength())  {panEnv  = ConstructReceiveEnv(PAN,    trim ? sendPan : 0);    stateUpdated = true;}
-						if ((envelopes & MUTE)   && !muteEnv.GetLength()) {muteEnv = ConstructReceiveEnv(MUTE,   sendMute);              stateUpdated = true;}
+						if ((envelopes & VOLUME) && !volEnv.GetLength())  {volEnv  = ConstructReceiveEnv(VOLUME, trim ? sendVolume : 1, hwSend); stateUpdated = true;}
+						if ((envelopes & PAN)    && !panEnv.GetLength())  {panEnv  = ConstructReceiveEnv(PAN,    trim ? sendPan : 0,    hwSend); stateUpdated = true;}
+						if ((envelopes & MUTE)   && !muteEnv.GetLength()) {muteEnv = ConstructReceiveEnv(MUTE,   sendMute,              hwSend); stateUpdated = true;}
 
 						if (volEnv.GetLength())  newState.Append(volEnv.Get());
 						if (panEnv.GetLength())  newState.Append(panEnv.Get());
 						if (muteEnv.GetLength()) newState.Append(muteEnv.Get());
 					}
-
-					AppendLine(newState, token);
-					token = strtok(NULL, "\n");
+					else
+					{
+						AppendLine(newState, token);
+						token = strtok(NULL, "\n");
+					}
 				}
 			}
 
@@ -2534,49 +2606,57 @@ int GetDefaultPointShape ()
 	return defEnvs >> 16;
 }
 
-int GetEnvType (TrackEnvelope* envelope, bool* isSend)
+int GetEnvType (TrackEnvelope* envelope, bool* isSend, bool* isHwSend)
 {
-	static const char* volumePreFX = __localizeFunc("Volume (Pre-FX)", "envname", 0);
-	static const char* panPreFX    = __localizeFunc("Pan (Pre-FX)", "envname", 0);
-	static const char* widthPreFX  = __localizeFunc("Width (Pre-FX)", "envname", 0);
-	static const char* volume      = __localizeFunc("Volume", "envname", 0);
-	static const char* pan         = __localizeFunc("Pan", "envname", 0);
-	static const char* width       = __localizeFunc("Width", "envname", 0);
-	static const char* mute        = __localizeFunc("Mute", "envname", 0);
-	static const char* sendVolume  = __localizeFunc("Send Volume", "envname", 0);
-	static const char* sendPan     = __localizeFunc("Send Pan", "envname", 0);
-	static const char* sendMute    = __localizeFunc("Send Mute", "envname", 0);
-	static const char* takePitch   = __localizeFunc("Pitch", "item", 0);
-	static const char* takeVolume  = __localizeFunc("Volume", "item", 0);
-	static const char* takePan     = __localizeFunc("Pan", "item", 0);
-	static const char* takeMute    = __localizeFunc("Mute", "item", 0);
-	static const char* playrate    = __localizeFunc("Playrate", "env", 0);
-	static const char* tempo       = __localizeFunc("Tempo map", "env", 0);
+	static const char* volumePreFX     = __localizeFunc("Volume (Pre-FX)", "envname", 0);
+	static const char* panPreFX        = __localizeFunc("Pan (Pre-FX)", "envname", 0);
+	static const char* widthPreFX      = __localizeFunc("Width (Pre-FX)", "envname", 0);
+	static const char* volume          = __localizeFunc("Volume", "envname", 0);
+	static const char* pan             = __localizeFunc("Pan", "envname", 0);
+	static const char* width           = __localizeFunc("Width", "envname", 0);
+	static const char* mute            = __localizeFunc("Mute", "envname", 0);
+	static const char* sendHardVolume  = __localizeFunc("Audio Hardware Output: Volume", "envname", 0);
+	static const char* sendHardPan     = __localizeFunc("Audio Hardware Output: Pan", "envname", 0);
+	static const char* sendHardMute    = __localizeFunc("Audio Hardware Output: Mute", "envname", 0);
+	static const char* sendVolume      = __localizeFunc("Send Volume", "envname", 0);
+	static const char* sendPan         = __localizeFunc("Send Pan", "envname", 0);
+	static const char* sendMute        = __localizeFunc("Send Mute", "envname", 0);
+	static const char* takePitch       = __localizeFunc("Pitch", "item", 0);
+	static const char* takeVolume      = __localizeFunc("Volume", "item", 0);
+	static const char* takePan         = __localizeFunc("Pan", "item", 0);
+	static const char* takeMute        = __localizeFunc("Mute", "item", 0);
+	static const char* playrate        = __localizeFunc("Playrate", "env", 0);
+	static const char* tempo           = __localizeFunc("Tempo map", "env", 0);
 
 	char name[512];
 	GetEnvelopeName(envelope, name, sizeof(name));
 
 	int type  = PARAMETER;
-	bool send = false;
-	if      (!strcmp(name, volumePreFX)) {type = VOLUME_PREFX;       }
-	else if (!strcmp(name, panPreFX))    {type = PAN_PREFX;          }
-	else if (!strcmp(name, widthPreFX))  {type = WIDTH_PREFX;        }
-	else if (!strcmp(name, volume))      {type = VOLUME;             }
-	else if (!strcmp(name, pan))         {type = PAN;                }
-	else if (!strcmp(name, width))       {type = WIDTH;              }
-	else if (!strcmp(name, mute))        {type = MUTE;               }
-	else if (!strcmp(name, sendVolume))  {type = VOLUME; send = true;}
-	else if (!strcmp(name, sendPan))     {type = PAN;    send = true;}
-	else if (!strcmp(name, sendMute))    {type = MUTE;   send = true;}
-	else if (!strcmp(name, takePitch))   {type = PITCH;              }
-	else if (!strcmp(name, takeVolume))  {type = VOLUME;             }
-	else if (!strcmp(name, takePan))     {type = PAN;                }
-	else if (!strcmp(name, takeMute))    {type = MUTE;               }
-	else if (!strcmp(name, playrate))    {type = PLAYRATE;           }
-	else if (!strcmp(name, tempo))       {type = TEMPO;              }
-	else                                 {type = PARAMETER;          }
+	bool send   = false;
+	bool hwSend = false;
+	if      (!strcmp(name, volumePreFX))    {type = VOLUME_PREFX;         }
+	else if (!strcmp(name, panPreFX))       {type = PAN_PREFX;            }
+	else if (!strcmp(name, widthPreFX))     {type = WIDTH_PREFX;          }
+	else if (!strcmp(name, volume))         {type = VOLUME;               }
+	else if (!strcmp(name, pan))            {type = PAN;                  }
+	else if (!strcmp(name, width))          {type = WIDTH;                }
+	else if (!strcmp(name, mute))           {type = MUTE;                 }
+	else if (!strcmp(name, sendVolume))     {type = VOLUME; send = true;  }
+	else if (!strcmp(name, sendPan))        {type = PAN;    send = true;  }
+	else if (!strcmp(name, sendMute))       {type = MUTE;   send = true;  }
+	else if (!strcmp(name, sendHardVolume)) {type = VOLUME; hwSend = true;}
+	else if (!strcmp(name, sendHardPan))    {type = PAN;    hwSend = true;}
+	else if (!strcmp(name, sendHardMute))   {type = MUTE;   hwSend = true;}
+	else if (!strcmp(name, takePitch))      {type = PITCH;                }
+	else if (!strcmp(name, takeVolume))     {type = VOLUME;               }
+	else if (!strcmp(name, takePan))        {type = PAN;                  }
+	else if (!strcmp(name, takeMute))       {type = MUTE;                 }
+	else if (!strcmp(name, playrate))       {type = PLAYRATE;             }
+	else if (!strcmp(name, tempo))          {type = TEMPO;                }
+	else                                    {type = PARAMETER;            }
 
-	WritePtr(isSend, send);
+	WritePtr(isSend,   send);
+	WritePtr(isHwSend, hwSend);
 	return type;
 }
 
@@ -2686,8 +2766,7 @@ int FindClosestTempoMarker (double position)
 			GetTempoTimeSigMarker(NULL, prevId, &prevPos, NULL, NULL, NULL, NULL, NULL, NULL);
 			GetTempoTimeSigMarker(NULL, nextId, &nextPos, NULL, NULL, NULL, NULL, NULL, NULL);
 
-			if (GetClosestVal(position, prevPos, nextPos) == prevPos) return prevId;
-			else                                                      return nextId;
+			return (GetClosestVal(position, prevPos, nextPos) == prevPos) ? prevId : nextId;
 		}
 		else
 		{

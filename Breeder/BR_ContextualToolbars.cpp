@@ -806,7 +806,7 @@ int BR_ContextualToolbar::FindTcpToolbar (BR_MouseInfo& mouseInfo,  BR_Contextua
 	{
 		context = TCP_ENVELOPE;
 
-		int type = GetEnvType(mouseInfo.GetEnvelope(), false);
+		int type = GetEnvType(mouseInfo.GetEnvelope(), NULL, NULL);
 		if      (type == VOLUME || type == VOLUME_PREFX) context = (this->GetMouseAction(TCP_ENVELOPE_VOLUME)   == INHERIT_PARENT) ? TCP_ENVELOPE : TCP_ENVELOPE_VOLUME;
 		else if (type == PAN    || type == PAN_PREFX)    context = (this->GetMouseAction(TCP_ENVELOPE_PAN)      == INHERIT_PARENT) ? TCP_ENVELOPE : TCP_ENVELOPE_PAN;
 		else if (type == WIDTH  || type == WIDTH_PREFX)  context = (this->GetMouseAction(TCP_ENVELOPE_WIDTH)    == INHERIT_PARENT) ? TCP_ENVELOPE : TCP_ENVELOPE_WIDTH;
@@ -901,7 +901,7 @@ int BR_ContextualToolbar::FindArrangeToolbar (BR_MouseInfo& mouseInfo, BR_Contex
 		if (mouseInfo.IsTakeEnvelope())
 		{
 			context  = ARRANGE_TRACK_TAKE_ENVELOPE;
-			int type = GetEnvType(mouseInfo.GetEnvelope(), false);
+			int type = GetEnvType(mouseInfo.GetEnvelope(), NULL, NULL);
 
 			if      (type == VOLUME || type == VOLUME_PREFX) context = (this->GetMouseAction(ARRANGE_TRACK_TAKE_ENVELOPE_VOLUME) == INHERIT_PARENT) ? ARRANGE_TRACK_TAKE_ENVELOPE : ARRANGE_TRACK_TAKE_ENVELOPE_VOLUME;
 			else if (type == PAN    || type == PAN_PREFX)    context = (this->GetMouseAction(ARRANGE_TRACK_TAKE_ENVELOPE_PAN)    == INHERIT_PARENT) ? ARRANGE_TRACK_TAKE_ENVELOPE : ARRANGE_TRACK_TAKE_ENVELOPE_PAN;
@@ -923,7 +923,7 @@ int BR_ContextualToolbar::FindArrangeToolbar (BR_MouseInfo& mouseInfo, BR_Contex
 		else
 		{
 			context  = ARRANGE_ENVELOPE_TRACK;
-			int type = GetEnvType(mouseInfo.GetEnvelope(), false);
+			int type = GetEnvType(mouseInfo.GetEnvelope(), NULL, NULL);
 
 			if      (type == VOLUME || type == VOLUME_PREFX) context = (this->GetMouseAction(ARRANGE_ENVELOPE_TRACK_VOLUME)   == INHERIT_PARENT) ? ARRANGE_ENVELOPE_TRACK : ARRANGE_ENVELOPE_TRACK_VOLUME;
 			else if (type == PAN    || type == PAN_PREFX)    context = (this->GetMouseAction(ARRANGE_ENVELOPE_TRACK_PAN)      == INHERIT_PARENT) ? ARRANGE_ENVELOPE_TRACK : ARRANGE_ENVELOPE_TRACK_PAN;

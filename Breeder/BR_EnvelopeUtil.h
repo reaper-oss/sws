@@ -263,14 +263,14 @@ TrackEnvelope* GetTakeEnv (MediaItem_Take* take, BR_EnvType envelope);
 MediaItem_Take* GetTakeEnvParent (TrackEnvelope* envelope, int* type); // for type see BR_EnvType
 MediaTrack* GetEnvParent (TrackEnvelope* envelope);
 vector<int> GetSelPoints (TrackEnvelope* envelope);
-WDL_FastString ConstructReceiveEnv (int type, double firstPointValue); // for type see BR_EnvType
-bool ToggleShowSendEnvelope (MediaTrack* track, int sendId, int type); // for type see BR_EnvType
-bool ShowSendEnvelopes (vector<MediaTrack*>& tracks, int envelopes);   // envelopes is a bitmask (see BR_EnvType)
+WDL_FastString ConstructReceiveEnv (int type, double firstPointValue, bool hardwareSend); // for type see BR_EnvType
+bool ToggleShowSendEnvelope (MediaTrack* track, int sendId, int type);                    // for type see BR_EnvType
+bool ShowSendEnvelopes (vector<MediaTrack*>& tracks, int envelopes);                      // envelopes is a bitmask (see BR_EnvType)
 bool EnvVis (TrackEnvelope* envelope, bool* lane);
 int GetEnvId (TrackEnvelope* envelope, MediaTrack* parent = NULL);
-int GetDefaultPointShape ();                                      // see BR_EnvShape for return values;
-int GetEnvType (TrackEnvelope* envelope, bool* isSend);           // for return type see BR_EnvType (note: function relies on envelope names, localization could theoretically break it)
-int GetCurrentAutomationMode (MediaTrack* track);                 // takes global override into account
+int GetDefaultPointShape ();                                            // see BR_EnvShape for return values;
+int GetEnvType (TrackEnvelope* envelope, bool* isSend, bool* isHwSend); // for return type see BR_EnvType (note: function relies on envelope names, localization could theoretically break it)
+int GetCurrentAutomationMode (MediaTrack* track);                       // takes global override into account
 int CountTrackEnvelopePanels (MediaTrack* track);
 
 /******************************************************************************

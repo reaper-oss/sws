@@ -193,9 +193,9 @@ const char* ULT_GetMediaItemNote(MediaItem* _item) {
 	return "";
 }
 
-void ULT_SetMediaItemNote(MediaItem* _item, char* _str) {
+void ULT_SetMediaItemNote(MediaItem* _item, const char* _str) {
 	if (_str && _item)
-		GetSetMediaItemInfo(_item, "P_NOTES", _str);
+		GetSetMediaItemInfo(_item, "P_NOTES", (char*)_str);
 }
 
 MediaItem_Take* SNM_GetMIDIEditorActiveTake() {

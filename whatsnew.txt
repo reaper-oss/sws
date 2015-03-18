@@ -18,6 +18,7 @@ Fixes
 +Fixed non-selectable radio buttons in SWS/BR: Select and adjust tempo markers... dialog
 +Don't change solo state of tracks if mouse is over master track when running certain "perform until shortcut released" playback actions
 +Fixed various SWS/BR actions so they work properly with hardware sends envelopes
++ReaScript: fixed ULT_SetMediaItemNote
 
 Other
 +Added ability to select only partial time signatures with SWS/BR: Select and adjust tempo markers...

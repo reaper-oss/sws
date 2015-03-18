@@ -664,6 +664,43 @@ void FocusArrangeTracks (COMMAND_T* ct)
 		SetCursorContext(0, NULL);
 }
 
+void MoveActiveWndToMouse (COMMAND_T* ct)
+{
+	if (HWND hwnd = GetForegroundWindow())
+	{
+		#ifndef _WIN32
+			if (hwnd == GetArrangeWnd() || hwnd == GetRulerWndAlt() || hwnd == GetTcpWnd())
+				hwnd = g_hwndParent;
+
+			if (hwnd != g_hwndParent)
+			{
+				while (GetParent(hwnd) != g_hwndParent && hwnd)
+					hwnd =  GetParent(hwnd);
+				if (!hwnd)
+					return;
+
+				bool floating;
+				int result = DockIsChildOfDock(hwnd, &floating);
+				if (result != -1 && !floating)
+					hwnd = g_hwndParent;
+			}
+		#endif
+
+		RECT r;  GetWindowRect(hwnd, &r);
+		POINT p; GetCursorPos(&p);
+
+		int horz = GetBit((int)ct->user, 2) * ((GetBit((int)ct->user, 3)) ? 1 : -1);
+		int vert = GetBit((int)ct->user, 0) * ((GetBit((int)ct->user, 1)) ? 1 : -1);
+		CenterOnPoint(&r, p, horz, vert, 0, 0);
+
+		RECT screen;
+		GetMonitorRectFromPoint(p, &screen);
+		BoundToRect(screen, &r);
+
+		SetWindowPos(hwnd, NULL, r.left, r.top, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE);
+	}
+}
+
 void ToggleItemOnline (COMMAND_T* ct)
 {
 	if (IsLocked(ITEM_FULL))

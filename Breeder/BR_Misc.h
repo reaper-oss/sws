@@ -50,6 +50,7 @@ void TrimNewVolPanEnvs (COMMAND_T*);
 void PlaybackFollowsTempoChange (COMMAND_T*);
 void CycleRecordModes (COMMAND_T*);
 void FocusArrangeTracks (COMMAND_T*);
+void MoveActiveWndToMouse (COMMAND_T*);
 void ToggleItemOnline (COMMAND_T*);
 void ItemSourcePathToClipBoard (COMMAND_T*);
 void DeleteTakeUnderMouse (COMMAND_T*);

@@ -2615,6 +2615,39 @@ void BoundToRect (const RECT& boundingRect, RECT* r)
 	EnsureNotCompletelyOffscreen(r); // just in case
 }
 
+void CenterOnPoint (RECT* rect, const POINT& point, int horz, int vert, int xOffset, int yOffset)
+{
+	if (!rect)
+		return;
+
+	int h = rect->bottom - rect->top;
+	int w = rect->right  - rect->left;
+
+	if      (horz == -1) rect->left = point.x - w;
+	else if (horz ==  0) rect->left = point.x - (w/2);
+	else if (horz ==  1) rect->left = point.x;
+
+	#ifdef _WIN32
+		if      (vert == -1) rect->top = point.y;
+		else if (vert ==  0) rect->top = point.y - (h/2);
+		else if (vert ==  1) rect->top = point.y - h;
+	#else
+		if      (vert == -1) rect->top = point.y - h;
+		else if (vert == 0) rect->top = point.y - (h/2);
+		else                rect->top = point.y;
+	#endif
+	
+	#ifdef _WIN32
+		rect->top  += yOffset;
+	#else
+		rect->top  -= yOffset;
+	#endif
+	rect->left += xOffset;
+	
+	rect->right  = rect->left + w;
+	rect->bottom = rect->top  + h;
+}
+
 void SimulateMouseClick (HWND hwnd, POINT point, bool keepCurrentFocus)
 {
 	if (hwnd)

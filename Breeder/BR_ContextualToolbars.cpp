@@ -1196,44 +1196,26 @@ void BR_ContextualToolbar::SetCCLaneClicked (BR_ContextualToolbar::ExecuteOnTool
 
 void BR_ContextualToolbar::RepositionToolbar (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad, HWND toolbarHwnd)
 {
-	RECT r;  GetWindowRect(toolbarHwnd, &r);
-	POINT p; GetCursorPos(&p);
-
-	if (toolbarHwnd && executeOnToolbarLoad.positionOverride)
-	{
-		int h = r.bottom - r.top;
-		int w = r.right  - r.left;
-
-		if (executeOnToolbarLoad.positionOrientation != 0)
-		{
-			if      ((executeOnToolbarLoad.positionOrientation & POSITION_H_RIGHT))  r.left = p.x;
-			else if ((executeOnToolbarLoad.positionOrientation & POSITION_H_MIDDLE)) r.left = p.x - (w/2);
-			else if ((executeOnToolbarLoad.positionOrientation & POSITION_H_LEFT))   r.left = p.x - w;
-
-			#ifdef _WIN32
-				if      ((executeOnToolbarLoad.positionOrientation & POSITION_V_BOTTOM)) r.top = p.y;
-				else if ((executeOnToolbarLoad.positionOrientation & POSITION_V_MIDDLE)) r.top = p.y - (h/2);
-				else if ((executeOnToolbarLoad.positionOrientation & POSITION_V_TOP))    r.top = p.y - h;
-			#else
-				if      ((executeOnToolbarLoad.positionOrientation & POSITION_V_BOTTOM)) r.top = p.y - h;
-				else if ((executeOnToolbarLoad.positionOrientation & POSITION_V_MIDDLE)) r.top = p.y - (h/2);
-				else if ((executeOnToolbarLoad.positionOrientation & POSITION_V_TOP))    r.top = p.y;
-			#endif
-		}
-
-		#ifdef _WIN32
-			r.top  += executeOnToolbarLoad.positionOffsetY;
-		#else
-			r.top  -= executeOnToolbarLoad.positionOffsetY;
-		#endif
-		r.left += executeOnToolbarLoad.positionOffsetX;
-
-		r.right  = r.left + w;
-		r.bottom = r.top  + h;
-	}
-
 	if (toolbarHwnd)
 	{
+		RECT r;  GetWindowRect(toolbarHwnd, &r);
+		POINT p; GetCursorPos(&p); 
+		if (executeOnToolbarLoad.positionOverride)
+		{
+			int vert = -666;
+			int horz = -666;
+		
+			if      ((executeOnToolbarLoad.positionOrientation & POSITION_H_RIGHT))  horz = 1;
+			else if ((executeOnToolbarLoad.positionOrientation & POSITION_H_MIDDLE)) horz = 0;
+			else if ((executeOnToolbarLoad.positionOrientation & POSITION_H_LEFT))   horz = -1;
+	
+			if      ((executeOnToolbarLoad.positionOrientation & POSITION_V_BOTTOM)) vert = -1;
+			else if ((executeOnToolbarLoad.positionOrientation & POSITION_V_MIDDLE)) vert = 0;
+			else if ((executeOnToolbarLoad.positionOrientation & POSITION_V_TOP))    vert = 1;
+
+			CenterOnPoint(&r, p, horz, vert, executeOnToolbarLoad.positionOffsetX, executeOnToolbarLoad.positionOffsetY);
+		}
+		
 		RECT screen;
 		GetMonitorRectFromPoint(p, &screen);
 		BoundToRect(screen, &r);

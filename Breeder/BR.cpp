@@ -471,8 +471,20 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Set \"Apply trim when adding volume/pan envelopes\" to \"Never\"" },                                                            "BR_OPTIONS_ENV_TRIM_NEVER",          TrimNewVolPanEnvs, NULL, 2, IsTrimNewVolPanEnvsOn},
 
 	{ { DEFACCEL, "SWS/BR: Cycle through record modes" },                                                                                                  "BR_CYCLE_RECORD_MODES",              CycleRecordModes},
+
 	{ { DEFACCEL, "SWS/BR: Focus arrange" },                                                                                                               "BR_FOCUS_ARRANGE_WND",               FocusArrangeTracks, NULL, 0},
 	{ { DEFACCEL, "SWS/BR: Focus tracks" },                                                                                                                "BR_FOCUS_TRACKS",                    FocusArrangeTracks, NULL, 1},
+
+	{ { DEFACCEL, "SWS/BR: Move active floating window to mouse cursor (horizontal: left, vertical: bottom)" },                                            "BR_MOVE_WINDOW_TO_MOUSE_H_L_V_B",    MoveActiveWndToMouse, NULL, BINARY(0101)},
+	{ { DEFACCEL, "SWS/BR: Move active floating window to mouse cursor (horizontal: left, vertical: middle)" },                                            "BR_MOVE_WINDOW_TO_MOUSE_H_L_V_M",    MoveActiveWndToMouse, NULL, BINARY(0100)},
+	{ { DEFACCEL, "SWS/BR: Move active floating window to mouse cursor (horizontal: left, vertical: top)" },                                               "BR_MOVE_WINDOW_TO_MOUSE_H_L_V_T",    MoveActiveWndToMouse, NULL, BINARY(0111)},
+	{ { DEFACCEL, "SWS/BR: Move active floating window to mouse cursor (horizontal: middle, vertical: bottom)" },                                          "BR_MOVE_WINDOW_TO_MOUSE_H_M_V_B",    MoveActiveWndToMouse, NULL, BINARY(0001)},
+	{ { DEFACCEL, "SWS/BR: Move active floating window to mouse cursor (horizontal: middle, vertical: middle)" },                                          "BR_MOVE_WINDOW_TO_MOUSE_H_M_V_M",    MoveActiveWndToMouse, NULL, BINARY(0000)},
+	{ { DEFACCEL, "SWS/BR: Move active floating window to mouse cursor (horizontal: middle, vertical: top)" },                                             "BR_MOVE_WINDOW_TO_MOUSE_H_M_V_T",    MoveActiveWndToMouse, NULL, BINARY(0011)},
+	{ { DEFACCEL, "SWS/BR: Move active floating window to mouse cursor (horizontal: right, vertical: bottom)" },                                           "BR_MOVE_WINDOW_TO_MOUSE_H_R_V_B",    MoveActiveWndToMouse, NULL, BINARY(1101)},
+	{ { DEFACCEL, "SWS/BR: Move active floating window to mouse cursor (horizontal: right, vertical: middle)" },                                           "BR_MOVE_WINDOW_TO_MOUSE_H_R_V_M",    MoveActiveWndToMouse, NULL, BINARY(1100)},
+	{ { DEFACCEL, "SWS/BR: Move active floating window to mouse cursor (horizontal: right, vertical: top)" },                                              "BR_MOVE_WINDOW_TO_MOUSE_H_R_V_T",    MoveActiveWndToMouse, NULL, BINARY(1111)},
+
 	{ { DEFACCEL, "SWS/BR: Toggle media item online/offline" },                                                                                            "BR_TOGGLE_ITEM_ONLINE",              ToggleItemOnline},
 	{ { DEFACCEL, "SWS/BR: Copy take media source file path of selected items to clipboard" },                                                             "BR_TSOURCE_PATH_TO_CLIPBOARD",       ItemSourcePathToClipBoard},
 

@@ -995,7 +995,7 @@ extern "C"
 			char txt[1024]="";
 			_snprintf(txt, sizeof(txt),
 					// keep the message on a single line (for the LangPack generator)
-					__LOCALIZE_VERFMT("The version of SWS extension you have installed is incompatible with your version of REAPER.\nYou probably have a REAPER version less than v%s installed.\nPlease install the latest version of REAPER from www.reaper.fm.","sws_mbox"),
+					__LOCALIZE_VERFMT("The version of SWS extension you have installed is incompatible with your version of REAPER.\nYou probably have a REAPER version less than %s installed.\nPlease install the latest version of REAPER from www.reaper.fm.","sws_mbox"),
 					"v5.0pre14"); // <- update compatible version here
 			ERR_RETURN(txt)
 		}

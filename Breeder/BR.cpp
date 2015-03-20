@@ -222,6 +222,9 @@ static COMMAND_T g_commandTable[] =
 
 	{ { DEFACCEL, "SWS/BR: Unselect envelope" },                                                                                                                     "BR_UNSEL_ENV",                       UnselectEnvelope, NULL, 0},
 
+	{ { DEFACCEL, "SWS/BR: Apply next action to all visible envelopes in selected tracks" },                                                                         "BR_NEXT_CMD_ON_SEL_TR_ALL_VIS_ENVS", ApplyNextCmdToMultiEnvelopes, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Apply next action to all visible record-armed envelopes in selected tracks" },                                                            "BR_NEXT_CMD_ON_SEL_TR_ALL_REC_ENVS", ApplyNextCmdToMultiEnvelopes, NULL, 1},
+
 	{ { DEFACCEL, "SWS/BR: Save envelope point selection, slot 1" },                                                                                                 "BR_SAVE_ENV_SEL_SLOT_1",             SaveEnvSelSlot, NULL, 0},
 	{ { DEFACCEL, "SWS/BR: Save envelope point selection, slot 2" },                                                                                                 "BR_SAVE_ENV_SEL_SLOT_2",             SaveEnvSelSlot, NULL, 1},
 	{ { DEFACCEL, "SWS/BR: Save envelope point selection, slot 3" },                                                                                                 "BR_SAVE_ENV_SEL_SLOT_3",             SaveEnvSelSlot, NULL, 2},
@@ -742,7 +745,41 @@ void BR_RegisterContinuousActions ()
 	MoveGridToMouseInit();
 }
 
-bool BR_ActionHook (COMMAND_T* ct, int flagOrRelmode, HWND hwnd)
+int BR_GetSetActionToApply (bool set, int cmd)
+{
+	static int s_cmd = 0;
+	if (set)
+		s_cmd = cmd;
+	return s_cmd;
+}
+
+bool BR_GlobalActionHook (int cmd, int val, int valhw, int relmode, HWND hwnd)
+{
+	static COMMAND_T* s_cmd1 = SWSGetCommandByID(NamedCommandLookup("_BR_NEXT_CMD_ON_SEL_TR_ALL_VIS_ENVS"));
+	static COMMAND_T* s_cmd2 = SWSGetCommandByID(NamedCommandLookup("_BR_NEXT_CMD_ON_SEL_TR_ALL_REC_ENVS"));
+	static COMMAND_T* s_actionToRun = NULL;
+
+	bool swallow = false;
+	if (cmd == s_cmd1->accel.accel.cmd || cmd == s_cmd2->accel.accel.cmd)
+	{
+		s_actionToRun = SWSGetCommandByID(cmd);
+		swallow = true;
+	}
+	else if (s_actionToRun)
+	{
+		BR_GetSetActionToApply(true, cmd);
+		if (s_actionToRun->doCommand)
+			s_actionToRun->doCommand(s_actionToRun);
+		else if (s_actionToRun->onAction)
+			s_actionToRun->onAction(s_actionToRun, val, valhw, relmode, hwnd);
+		s_actionToRun = NULL;
+		BR_GetSetActionToApply(true, 0);
+		swallow = true;
+	}
+	return swallow;
+}
+
+bool BR_SwsActionHook (COMMAND_T* ct, int flagOrRelmode, HWND hwnd)
 {
 	return ContinuousActionHook(ct, flagOrRelmode, hwnd);
 }

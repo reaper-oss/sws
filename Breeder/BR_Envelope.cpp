@@ -1295,6 +1295,51 @@ void UnselectEnvelope (COMMAND_T* ct)
 	}
 }
 
+void ApplyNextCmdToMultiEnvelopes (COMMAND_T* ct)
+{
+	TrackEnvelope* selectedEnvelope = GetSelectedEnvelope(NULL);
+	int cmd = BR_GetSetActionToApply(false, 0);
+	if (cmd == 0)
+		return;
+
+	bool recordArm = ((int)ct->user == 1);
+	bool updated   = false;
+	PreventUIRefresh(1);
+	Undo_BeginBlock2(NULL);
+	for (int i = -1; i < CountSelectedTracks(NULL); ++i)
+	{
+		MediaTrack* track = NULL;
+		if (i == -1 && *(int*)GetSetMediaTrackInfo(GetMasterTrack(NULL), "I_SELECTED", NULL))
+			track = GetMasterTrack(NULL);
+		else
+			track = GetSelectedTrack(NULL, i);
+
+		for (int j = 0; j < CountTrackEnvelopes(track); ++j)
+		{
+			BR_Envelope envelope(GetTrackEnvelope(track, j));
+			if (envelope.IsVisible() && (!recordArm || recordArm && envelope.IsArmed()))
+			{
+				SetCursorContext(2, envelope.GetPointer());
+				updated = true;
+				Main_OnCommand(cmd, 0);
+			}
+		}
+
+	}
+	if (updated)
+	{
+		if (selectedEnvelope)
+			SetCursorContext(2, selectedEnvelope);
+		else
+			SetCursorContext(1, NULL);
+	}
+	PreventUIRefresh(-1);
+
+	WDL_FastString undoMsg;
+	undoMsg.AppendFormatted(256, "%s %s", (((int)ct->user == 0) ? __LOCALIZE("Apply to visible envelopes of selected tracks:", "sws_undo") : __LOCALIZE("Apply to visible record-armed envelopes of selected tracks:", "sws_undo")), kbd_getTextFromCmd(cmd, NULL));
+	Undo_EndBlock2(NULL, undoMsg.Get(), UNDO_STATE_ALL);	
+}
+
 void SaveEnvSelSlot (COMMAND_T* ct)
 {
 	if (TrackEnvelope* envelope = GetSelectedEnvelope(NULL))

@@ -96,7 +96,7 @@ bool hookCommandProc(int iCmd, int flag)
 	if (COMMAND_T* cmd = SWSGetCommandByID(iCmd))
 	{
 		// For continuous actions
-		if (BR_ActionHook(cmd, flag, NULL))
+		if (BR_SwsActionHook(cmd, flag, NULL))
 			return true;
 
 		if (!cmd->uniqueSectionId && cmd->accel.accel.cmd==iCmd && cmd->doCommand)
@@ -130,6 +130,9 @@ bool hookCommandProc2(KbdSectionInfo* sec, int cmdId, int val, int valhw, int re
 {
 	static WDL_PtrList<const char> sReentrantCmds;
 
+	if (BR_GlobalActionHook(cmdId, val, valhw, relmode, hwnd))
+		return true;
+
 	// Ignore commands that don't have anything to do with us from this point forward
 	if (COMMAND_T* cmd = SWSGetCommandByID(cmdId))
 	{
@@ -143,7 +146,7 @@ bool hookCommandProc2(KbdSectionInfo* sec, int cmdId, int val, int valhw, int re
 			if (cmd->onAction)
 			{
 				// For continuous actions
-				if (BR_ActionHook(cmd, relmode, hwnd))
+				if (BR_SwsActionHook(cmd, relmode, hwnd))
 					return true;
 
 				if (sReentrantCmds.Find(cmd->id)<0)

@@ -142,7 +142,7 @@ protected:
 	void DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight = NULL);
 	int OnMouseDown(int xpos, int ypos);
 	bool OnMouseUp(int xpos, int ypos);
-	virtual void RefreshWndToolbar();
+	void RefreshWndToolbar();
 	int m_cfgId;
 	SNM_FiveMonitors m_mons;
 	SNM_DynSizedText m_txtMon[5];

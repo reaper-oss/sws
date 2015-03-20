@@ -50,8 +50,8 @@
 #define CELL_EDIT_TIMEOUT	50
 #define TOOLTIP_TIMER		0x1001
 #define TOOLTIP_TIMEOUT		350
-#define TOOLBAR_TIMER       0x1002
-#define TOOLBAR_TIMEOUT     50
+#define TOOLBAR_TIMER		0x1002
+#define TOOLBAR_TIMEOUT		50
 
 
 SWS_DockWnd::SWS_DockWnd(int iResource, const char* cWndTitle, const char* cId, int iCmdID)
@@ -154,7 +154,7 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	// Since there are no virtual functions for WM_SHOWWINDOW, let them get passed on just in case
 	if (uMsg == WM_SHOWWINDOW)
 	{		
-		m_toolbarState = (wParam == TRUE); // when closing another docked wnd, another may get shown but calling Refresh here won't work so we'll call it from the timer instead
+		m_toolbarState = (wParam == TRUE); // when closing another docked wnd, some other (which may be SWS_DockWnd) may get shown but calling Refresh here won't work so we'll call it from the timer instead
 		if (GetToggleCommandState(m_iCmdID) != -1)
 			SetTimer(m_hwnd, TOOLBAR_TIMER, TOOLBAR_TIMEOUT, NULL);
 	}

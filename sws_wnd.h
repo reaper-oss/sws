@@ -182,8 +182,7 @@ public:
 	virtual bool IsActive(bool bWantEdit = false);
 	bool IsDocked() { return (m_state.state & 2) == 2; }
 	bool IsValidWindow() { return SWS_IsWindow(m_hwnd) ? true : false; }
-	bool IsWndVisible() {return IsValidWindow() && IsWindowVisible(m_hwnd);}
-	virtual void RefreshWndToolbar() {RefreshToolbar(m_iCmdID);} // the only reason for this are S&M windows which have multiple actions to toggle it
+	bool IsWndVisible() {return IsValidWindow() && IsWindowVisible(m_hwnd);}	
 	HWND GetHWND() { return m_hwnd; }
 	WDL_VWnd* GetParentVWnd() { return &m_parentVwnd; }
 	WDL_VWnd_Painter* GetVWndPainter() { return &m_vwnd_painter; }
@@ -223,6 +222,7 @@ protected:
 	virtual bool OnMouseMove(int xpos, int ypos) { return false; }
 	virtual bool OnMouseUp(int xpos, int ypos) { return false; }
 	virtual INT_PTR OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam) { return 0; }
+	virtual void RefreshWndToolbar() {RefreshToolbar(m_iCmdID);} // the only reason for this are S&M windows which have multiple actions to toggle the same wnd
 
 	// Functions for derived classes to load/save some view information (for startup/screensets)
 	virtual int SaveView(char* cViewBuf, int iLen) { return 0; } // return num of chars in state (if cViewBuf == NULL, ret # of bytes needed)

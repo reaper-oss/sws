@@ -1032,7 +1032,7 @@ void Insert2EnvPointsTimeSelection (COMMAND_T* ct)
 void CopyEnvPoints (COMMAND_T* ct)
 {
 	BR_Envelope envelope(GetSelectedEnvelope(NULL));
-	
+
 	bool recordArm  = !!GetBit((int)ct->user, 0);
 	bool doTimeSel  = !!GetBit((int)ct->user, 1);
 	bool fromCursor = !!GetBit((int)ct->user, 2);
@@ -1297,13 +1297,23 @@ void UnselectEnvelope (COMMAND_T* ct)
 
 void ApplyNextCmdToMultiEnvelopes (COMMAND_T* ct)
 {
-	TrackEnvelope* selectedEnvelope = GetSelectedEnvelope(NULL);
 	int cmd = BR_GetSetActionToApply(false, 0);
 	if (cmd == 0)
 		return;
 
-	bool recordArm = ((int)ct->user == 1);
+	if ((int)ct->user < 0)
+	{
+		if (GetSelectedTrackEnvelope(NULL))
+		{
+			Main_OnCommand(cmd, 0);
+			return;
+		}
+	}
+
+	TrackEnvelope* selectedEnvelope = GetSelectedEnvelope(NULL);
+	bool recordArm = (abs((int)ct->user) == 2);
 	bool updated   = false;
+
 	PreventUIRefresh(1);
 	Undo_BeginBlock2(NULL);
 	for (int i = -1; i < CountSelectedTracks(NULL); ++i)
@@ -1337,7 +1347,7 @@ void ApplyNextCmdToMultiEnvelopes (COMMAND_T* ct)
 
 	WDL_FastString undoMsg;
 	undoMsg.AppendFormatted(256, "%s %s", (((int)ct->user == 0) ? __LOCALIZE("Apply to visible envelopes of selected tracks:", "sws_undo") : __LOCALIZE("Apply to visible record-armed envelopes of selected tracks:", "sws_undo")), kbd_getTextFromCmd(cmd, NULL));
-	Undo_EndBlock2(NULL, undoMsg.Get(), UNDO_STATE_ALL);	
+	Undo_EndBlock2(NULL, undoMsg.Get(), UNDO_STATE_ALL);
 }
 
 void SaveEnvSelSlot (COMMAND_T* ct)

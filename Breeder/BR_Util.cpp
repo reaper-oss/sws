@@ -2636,14 +2636,14 @@ void CenterOnPoint (RECT* rect, const POINT& point, int horz, int vert, int xOff
 		else if (vert == 0) rect->top = point.y - (h/2);
 		else                rect->top = point.y;
 	#endif
-	
+
 	#ifdef _WIN32
 		rect->top  += yOffset;
 	#else
 		rect->top  -= yOffset;
 	#endif
 	rect->left += xOffset;
-	
+
 	rect->right  = rect->left + w;
 	rect->bottom = rect->top  + h;
 }

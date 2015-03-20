@@ -92,6 +92,9 @@ bool hookCommandProc(int iCmd, int flag)
 	if (iCmd == 1013 && !RecordInputCheck())
 		return true;
 
+	if (BR_GlobalActionHook(iCmd, 0, 0, 0, 0))
+		return true;
+
 	// Ignore commands that don't have anything to do with us from this point forward
 	if (COMMAND_T* cmd = SWSGetCommandByID(iCmd))
 	{

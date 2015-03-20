@@ -222,8 +222,10 @@ static COMMAND_T g_commandTable[] =
 
 	{ { DEFACCEL, "SWS/BR: Unselect envelope" },                                                                                                                     "BR_UNSEL_ENV",                       UnselectEnvelope, NULL, 0},
 
-	{ { DEFACCEL, "SWS/BR: Apply next action to all visible envelopes in selected tracks" },                                                                         "BR_NEXT_CMD_ON_SEL_TR_ALL_VIS_ENVS", ApplyNextCmdToMultiEnvelopes, NULL, 0},
-	{ { DEFACCEL, "SWS/BR: Apply next action to all visible record-armed envelopes in selected tracks" },                                                            "BR_NEXT_CMD_ON_SEL_TR_ALL_REC_ENVS", ApplyNextCmdToMultiEnvelopes, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Apply next action to all visible envelopes in selected tracks" },                                                                         "BR_NEXT_CMD_SEL_TK_VIS_ENVS",        ApplyNextCmdToMultiEnvelopes, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Apply next action to all visible record-armed envelopes in selected tracks" },                                                            "BR_NEXT_CMD_SEL_TK_REC_ENVS",        ApplyNextCmdToMultiEnvelopes, NULL, 2},
+	{ { DEFACCEL, "SWS/BR: Apply next action to all visible envelopes in selected tracks if there is no track envelope selected" },                                  "BR_NEXT_CMD_SEL_TK_VIS_ENVS_NOSEL",  ApplyNextCmdToMultiEnvelopes, NULL, -1},
+	{ { DEFACCEL, "SWS/BR: Apply next action to all visible record-armed envelopes in selected tracks if there is no track envelope selected" },                     "BR_NEXT_CMD_SEL_TK_REC_ENVS_NOSEL",  ApplyNextCmdToMultiEnvelopes, NULL, -2},
 
 	{ { DEFACCEL, "SWS/BR: Save envelope point selection, slot 1" },                                                                                                 "BR_SAVE_ENV_SEL_SLOT_1",             SaveEnvSelSlot, NULL, 0},
 	{ { DEFACCEL, "SWS/BR: Save envelope point selection, slot 2" },                                                                                                 "BR_SAVE_ENV_SEL_SLOT_2",             SaveEnvSelSlot, NULL, 1},
@@ -755,25 +757,40 @@ int BR_GetSetActionToApply (bool set, int cmd)
 
 bool BR_GlobalActionHook (int cmd, int val, int valhw, int relmode, HWND hwnd)
 {
-	static COMMAND_T* s_cmd1 = SWSGetCommandByID(NamedCommandLookup("_BR_NEXT_CMD_ON_SEL_TR_ALL_VIS_ENVS"));
-	static COMMAND_T* s_cmd2 = SWSGetCommandByID(NamedCommandLookup("_BR_NEXT_CMD_ON_SEL_TR_ALL_REC_ENVS"));
 	static COMMAND_T* s_actionToRun = NULL;
+	static int  s_lowCmd  = 0;
+	static int  s_highCmd = 0;
+	static set<int> s_actions;
+
+	static bool s_init = false;
+	if (!s_init)
+	{
+		s_actions.insert(NamedCommandLookup("_BR_NEXT_CMD_SEL_TK_VIS_ENVS"));
+		s_actions.insert(NamedCommandLookup("_BR_NEXT_CMD_SEL_TK_REC_ENVS"));
+		s_actions.insert(NamedCommandLookup("_BR_NEXT_CMD_SEL_TK_VIS_ENVS_NOSEL"));
+		s_actions.insert(NamedCommandLookup("_BR_NEXT_CMD_SEL_TK_REC_ENVS_NOSEL"));
+		s_lowCmd  = (s_actions.size() > 0) ? *s_actions.begin()  : 0;
+		s_highCmd = (s_actions.size() > 0) ? *s_actions.rbegin() : 0;
+		s_init = true;
+	}
 
 	bool swallow = false;
-	if (cmd == s_cmd1->accel.accel.cmd || cmd == s_cmd2->accel.accel.cmd)
+	if (cmd >= s_lowCmd && cmd <= s_highCmd && s_actions.find(cmd) != s_actions.end())
 	{
 		s_actionToRun = SWSGetCommandByID(cmd);
 		swallow = true;
 	}
 	else if (s_actionToRun)
 	{
+		COMMAND_T* runningAction = s_actionToRun;
+		s_actionToRun = NULL; // due to reentrancy, mark this as NULL before running the command
+
 		BR_GetSetActionToApply(true, cmd);
-		if (s_actionToRun->doCommand)
-			s_actionToRun->doCommand(s_actionToRun);
-		else if (s_actionToRun->onAction)
-			s_actionToRun->onAction(s_actionToRun, val, valhw, relmode, hwnd);
-		s_actionToRun = NULL;
-		BR_GetSetActionToApply(true, 0);
+		if (runningAction->doCommand)
+			runningAction->doCommand(runningAction);
+		else if (runningAction->onAction)
+			runningAction->onAction(runningAction, val, valhw, relmode, hwnd);
+			BR_GetSetActionToApply(true, 0);
 		swallow = true;
 	}
 	return swallow;

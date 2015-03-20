@@ -2,6 +2,8 @@ Added actions
 +Main:
  - SWS/BR: Apply next action to all visible envelopes in selected tracks
  - SWS/BR: Apply next action to all visible record-armed envelopes in selected tracks
+ - SWS/BR: Apply next action to all visible envelopes in selected tracks if there is no track envelope selected
+ - SWS/BR: Apply next action to all visible record-armed envelopes in selected tracks if there is no track envelope selected
  - SWS/BR: Copy selected points in selected envelope to all visible (record-armed) envelopes in selected tracks (2 versions: direct copy and at edit cursor)
  - SWS/BR: Copy points in time selection in selected envelope to all visible (recorded-armed) envelopes in selected tracks (2 versions: direct copy and at edit cursor)
  - SWS/BR: Select all partial time signature markers

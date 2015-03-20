@@ -20,6 +20,7 @@ Fixes
 +Don't change solo state of tracks if mouse is over master track when running certain "perform until shortcut released" playback actions
 +Fixed various SWS/BR actions so they work properly with hardware sends envelopes
 +ReaScript: fixed ULT_SetMediaItemNote
++When checking for modifications in contextual toolbars dialog (in case of closing or switching unsaved preset) also check position offset and auto close properties
 
 Other
 +Added ability to select only partial time signatures with SWS/BR: Select and adjust tempo markers...

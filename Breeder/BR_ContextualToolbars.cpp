@@ -131,8 +131,11 @@ bool BR_ContextualToolbar::operator== (const BR_ContextualToolbar& contextualToo
 			continue;
 		else
 		{
-			if (contextualToolbar.m_contexts[i].mouseAction  != m_contexts[i].mouseAction)  return false;
-		    if (contextualToolbar.m_contexts[i].toggleAction != m_contexts[i].toggleAction) return false;
+			if (contextualToolbar.m_contexts[i].mouseAction     != m_contexts[i].mouseAction)     return false;
+		    if (contextualToolbar.m_contexts[i].toggleAction    != m_contexts[i].toggleAction)    return false;
+		    if (contextualToolbar.m_contexts[i].positionOffsetX != m_contexts[i].positionOffsetX) return false;
+		    if (contextualToolbar.m_contexts[i].positionOffsetY != m_contexts[i].positionOffsetY) return false;
+		    if (contextualToolbar.m_contexts[i].autoClose       != m_contexts[i].autoClose)       return false;
 		}
 	}
 	if (contextualToolbar.m_options.focus                != m_options.focus)                return false;
@@ -1199,23 +1202,23 @@ void BR_ContextualToolbar::RepositionToolbar (BR_ContextualToolbar::ExecuteOnToo
 	if (toolbarHwnd)
 	{
 		RECT r;  GetWindowRect(toolbarHwnd, &r);
-		POINT p; GetCursorPos(&p); 
+		POINT p; GetCursorPos(&p);
 		if (executeOnToolbarLoad.positionOverride)
 		{
 			int vert = -666;
 			int horz = -666;
-		
+
 			if      ((executeOnToolbarLoad.positionOrientation & POSITION_H_RIGHT))  horz = 1;
 			else if ((executeOnToolbarLoad.positionOrientation & POSITION_H_MIDDLE)) horz = 0;
 			else if ((executeOnToolbarLoad.positionOrientation & POSITION_H_LEFT))   horz = -1;
-	
+
 			if      ((executeOnToolbarLoad.positionOrientation & POSITION_V_BOTTOM)) vert = -1;
 			else if ((executeOnToolbarLoad.positionOrientation & POSITION_V_MIDDLE)) vert = 0;
 			else if ((executeOnToolbarLoad.positionOrientation & POSITION_V_TOP))    vert = 1;
 
 			CenterOnPoint(&r, p, horz, vert, executeOnToolbarLoad.positionOffsetX, executeOnToolbarLoad.positionOffsetY);
 		}
-		
+
 		RECT screen;
 		GetMonitorRectFromPoint(p, &screen);
 		BoundToRect(screen, &r);

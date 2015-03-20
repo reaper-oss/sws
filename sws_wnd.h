@@ -182,6 +182,8 @@ public:
 	virtual bool IsActive(bool bWantEdit = false);
 	bool IsDocked() { return (m_state.state & 2) == 2; }
 	bool IsValidWindow() { return SWS_IsWindow(m_hwnd) ? true : false; }
+	bool IsWndVisible() {return IsValidWindow() && IsWindowVisible(m_hwnd);}
+	virtual void RefreshWndToolbar() {RefreshToolbar(m_iCmdID);} // the only reason for this are S&M windows which have multiple actions to toggle it
 	HWND GetHWND() { return m_hwnd; }
 	WDL_VWnd* GetParentVWnd() { return &m_parentVwnd; }
 	WDL_VWnd_Painter* GetVWndPainter() { return &m_vwnd_painter; }
@@ -248,6 +250,7 @@ protected:
 	POINT m_tooltip_pt;
 
 private:
+	bool m_toolbarState;
 	static INT_PTR WINAPI sWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	static int keyHandler(MSG *msg, accelerator_register_t *ctx);
 };

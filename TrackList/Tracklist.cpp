@@ -806,7 +806,7 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 
 int TrackListWindowEnabled(COMMAND_T*)
 {
-	return g_pList->IsValidWindow();
+	return g_pList->IsWndVisible();
 }
 
 static project_config_extension_t g_projectconfig = { ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL };

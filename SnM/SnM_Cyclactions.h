@@ -107,6 +107,7 @@ protected:
 	void AddResetMenu(HMENU _menu);
 	int OnKey(MSG* msg, int iKeyState);
 	void DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight = NULL);
+	virtual void RefreshWndToolbar ();
 	virtual void GetMinSize(int* _w, int* _h) { *_w=180; *_h=140; }
 
 	WDL_VirtualComboBox m_cbSection;

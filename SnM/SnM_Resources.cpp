@@ -2263,6 +2263,16 @@ bool ResourcesWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bu
 	return false;
 }
 
+void ResourcesWnd::RefreshWndToolbar()
+{
+	RefreshToolbar(NamedCommandLookup("_S&M_SHOW_RESOURCES_VIEW"));
+	RefreshToolbar(NamedCommandLookup("_S&M_SHOWFXCHAINSLOTS"));
+	RefreshToolbar(NamedCommandLookup("_S&M_SHOW_RESVIEW_IMAGE"));
+	RefreshToolbar(NamedCommandLookup("_S&M_SHOW_RESVIEW_MEDIA"));
+	RefreshToolbar(NamedCommandLookup("_S&M_SHOW_RESVIEW_PRJ_TEMPLATES"));
+	RefreshToolbar(NamedCommandLookup("_S&M_SHOW_RESVIEW_THEME"));
+	RefreshToolbar(NamedCommandLookup("_S&M_SHOW_RESVIEW_TR_TEMPLATES"));
+}
 void ResourcesWnd::ClearListSelection()
 {
 	SWS_ListView* lv = GetListView();
@@ -3428,7 +3438,7 @@ void OpenResources(COMMAND_T* _ct)
 
 int IsResourcesDisplayed(COMMAND_T* _ct) {
 	if (ResourcesWnd* w = g_resWndMgr.Get())
-		return w->IsValidWindow();
+		return w->IsWndVisible();
 	return 0;
 }
 
@@ -3591,7 +3601,7 @@ void ClearImageWnd(COMMAND_T*) {
 int IsImageWndDisplayed(COMMAND_T*)
 {
 	if (ImageWnd* w = g_imgWndMgr.Get())
-		return w->IsValidWindow();
+		return w->IsWndVisible();
 	return 0;
 }
 

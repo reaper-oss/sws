@@ -729,7 +729,7 @@ void RunConsoleCommand(COMMAND_T* ct)
 }
 
 int IsConsoleDisplayed(COMMAND_T*) {
-	return (g_pConsoleWnd && g_pConsoleWnd->IsValidWindow());
+	return (g_pConsoleWnd && g_pConsoleWnd->IsWndVisible());
 }
 
 void EditCustomCommands(COMMAND_T*)

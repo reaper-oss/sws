@@ -111,7 +111,7 @@ void ShowGrooveDialog(int flags, void *data)
 int IsGrooveDialogOpen()
 {
     GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
-    return me->GetGrooveDialog()->IsValidWindow();
+    return me->GetGrooveDialog()->IsWndVisible();
 }
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions

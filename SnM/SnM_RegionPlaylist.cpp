@@ -2153,7 +2153,7 @@ void OpenRegionPlaylist(COMMAND_T*)
 
 int IsRegionPlaylistDisplayed(COMMAND_T*){
 	if (RegionPlaylistWnd* w = g_rgnplWndMgr.Get())
-		return w->IsValidWindow();
+		return w->IsWndVisible();
 	return 0;
 }
 

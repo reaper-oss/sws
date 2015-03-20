@@ -968,7 +968,7 @@ void ApplyAutoColor(COMMAND_T*)
 	AutoColorMarkerRegion(true);
 }
 
-int IsAutoColorOpen(COMMAND_T*)		{ return g_pACWnd->IsValidWindow(); }
+int IsAutoColorOpen(COMMAND_T*)		{ return g_pACWnd->IsWndVisible(); }
 int IsAutoIconEnabled(COMMAND_T*)	{ return g_bAIEnabled; }
 
 int IsAutoColorEnabled(COMMAND_T* ct)

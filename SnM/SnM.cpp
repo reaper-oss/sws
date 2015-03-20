@@ -219,7 +219,7 @@ static COMMAND_T s_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Show project startup action" }, "S&M_SHOW_PRJ_ACTION", ShowProjectStartupAction, NULL, },
 
 	// Images ------------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Open/close image window" }, "S&M_OPEN_IMAGEVIEW", OpenImageWnd, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Open/close image window" }, "S&M_OPEN_IMAGEVIEW", OpenImageWnd, NULL, 0, IsImageWndDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Clear image window" }, "S&M_CLR_IMAGEVIEW", ClearImageWnd, NULL, },
 
 	// Resources --------------------------------------------------------

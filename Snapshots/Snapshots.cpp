@@ -1057,7 +1057,7 @@ int IsSnapParamEn(COMMAND_T* ct)
 
 int SnapshotsWindowEnabled(COMMAND_T*)
 {
-	return g_pSSWnd->IsValidWindow();
+	return g_pSSWnd->IsWndVisible();
 }
 
 void CopyCurSnapshot(COMMAND_T*)

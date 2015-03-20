@@ -3988,7 +3988,7 @@ int IsNormalizeLoudnessVisible (COMMAND_T* ct)
 int IsAnalyzeLoudnessVisible (COMMAND_T* ct)
 {
 	if (BR_AnalyzeLoudnessWnd* dialog = g_loudnessWndManager.Get())
-		return dialog->IsValidWindow();
+		return dialog->IsWndVisible();
 	return 0;
 }
 

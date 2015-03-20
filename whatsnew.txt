@@ -21,9 +21,11 @@ Fixes
 +Fixed various SWS/BR actions so they work properly with hardware sends envelopes
 +ReaScript: fixed ULT_SetMediaItemNote
 +When checking for modifications in contextual toolbars dialog (in case of closing or switching unsaved preset) also check position offset and auto close properties
++SWS/S&M: Open/close image window now reports it's state
 
 Other
 +Added ability to select only partial time signatures with SWS/BR: Select and adjust tempo markers...
++Toolbar state of all docked SWS dialogs will be set to ON only when the window is visible in the docker (same behavior REAPER is using for it's own docked dialogs)
 
 !v2.6.3 #0 pre-release build (March 12, 2015)
 <strong>REAPER v5.0pre14b+ is required!</strong>

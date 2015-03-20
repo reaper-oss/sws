@@ -655,7 +655,7 @@ void OpenFind(COMMAND_T*)
 int IsFindDisplayed(COMMAND_T*)
 {
 	if (FindWnd* w = g_findWndMgr.Get())
-		return w->IsValidWindow();
+		return w->IsWndVisible();
 	return 0;
 }
 

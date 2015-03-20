@@ -158,7 +158,7 @@ void OpenProjectList(COMMAND_T*)
 
 int ProjectListEnabled(COMMAND_T*)
 {
-	return g_pProjList->IsValidWindow();
+	return g_pProjList->IsWndVisible();
 }
 
 void ProjectListUpdate()

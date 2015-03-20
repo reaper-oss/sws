@@ -2025,7 +2025,7 @@ void OpenLiveConfig(COMMAND_T*)
 
 int IsLiveConfigDisplayed(COMMAND_T*) {
 	if (LiveConfigsWnd* w = g_lcWndMgr.Get())
-		return w->IsValidWindow();
+		return w->IsWndVisible();
 	return 0;
 }
 
@@ -2863,6 +2863,14 @@ bool LiveConfigMonitorWnd::OnMouseUp(int _xpos, int _ypos)
 	return true;
 }
 
+void LiveConfigMonitorWnd::RefreshWndToolbar ()
+{
+	RefreshToolbar(NamedCommandLookup("_S&M_OPEN_LIVECFG_MONITOR1"));
+	RefreshToolbar(NamedCommandLookup("_S&M_OPEN_LIVECFG_MONITOR2"));
+	RefreshToolbar(NamedCommandLookup("_S&M_OPEN_LIVECFG_MONITOR3"));
+	RefreshToolbar(NamedCommandLookup("_S&M_OPEN_LIVECFG_MONITOR4"));
+}
+
 void OpenLiveConfigMonitorWnd(int _idx)
 {
 	if (_idx>=0 && _idx<SNM_LIVECFG_NB_CONFIGS)
@@ -2879,7 +2887,7 @@ int IsLiveConfigMonitorWndDisplayed(COMMAND_T* _ct)
 	int wndId = (int)_ct->user;
 	if (wndId>=0 && wndId<SNM_LIVECFG_NB_CONFIGS)
 		if (LiveConfigMonitorWnd* w = g_monWndsMgr.Get(wndId))
-			return w->IsValidWindow();
+			return w->IsWndVisible();
 	return 0;
 }
 

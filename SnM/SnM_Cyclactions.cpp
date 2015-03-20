@@ -2406,6 +2406,13 @@ void CyclactionWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _toolti
 	m_tinyLRbtns.SetVisible(true);
 }
 
+void CyclactionWnd::RefreshWndToolbar ()
+{
+	RefreshToolbar(NamedCommandLookup("_S&M_CYCLEDITOR"));
+	RefreshToolbar(NamedCommandLookup("_S&M_CYCLEDITOR_ME_LIST"));
+	RefreshToolbar(NamedCommandLookup("_S&M_CYCLEDITOR_ME_PIANO"));
+}
+
 void CyclactionWnd::AddImportExportMenu(HMENU _menu, bool _wantReset)
 {
 	char buf[128] = "";
@@ -2733,7 +2740,7 @@ void OpenCyclaction(COMMAND_T* _ct)
 int IsCyclactionDisplayed(COMMAND_T*)
 {
 	if (CyclactionWnd* w = g_caWndMgr.Get())
-		return w->IsValidWindow();
+		return w->IsWndVisible();
 	return 0;
 }
 

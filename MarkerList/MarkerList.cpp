@@ -655,7 +655,7 @@ void ExportFormat(COMMAND_T*)
 
 int MarkerListEnabled(COMMAND_T*)
 {
-	return g_pMarkerList->IsValidWindow();
+	return g_pMarkerList->IsWndVisible();
 }
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions

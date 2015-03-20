@@ -2759,6 +2759,6 @@ void ToggleContextualToolbar (COMMAND_T* ct, int val, int valhw, int relmode, HW
 int IsContextualToolbarsOptionsVisible (COMMAND_T* ct)
 {
 	if (BR_ContextualToolbarsWnd* dialog = g_contextToolbarsWndManager.Get())
-		return dialog->IsValidWindow();
+		return dialog->IsWndVisible();
 	return 0;
 }

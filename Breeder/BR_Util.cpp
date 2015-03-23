@@ -1128,9 +1128,9 @@ WDL_FastString GetSourceChunk (PCM_source* source)
 
 			sourceStr.AppendFormatted(PROJ_CONTEXT_LINE, "%s%s\n", "<SOURCE ", source->GetType());
 			char line[PROJ_CONTEXT_LINE];
-			while(!ctx->GetLine(line, sizeof(line)))
+			while (!ctx->GetLine(line, sizeof(line)))
 				AppendLine(sourceStr, line);
-			sourceStr.Append( ">");
+			sourceStr.Append(">");
 
 			delete ctx;
 		}

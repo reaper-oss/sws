@@ -635,7 +635,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Toggle preview media item under mouse through track and pause during preview (start from mouse cursor position)" },         "BR_TPREV_ITEM_PAUSE_CURSOR_TRACK_POS", PreviewItemAtMouse, NULL, 2322},
 
 	/******************************************************************************
-	* Misc - Media item preview                                                   *
+	* Misc - Adjust playrate                                                      *
 	******************************************************************************/
 	{ { DEFACCEL, "SWS/BR: Adjust playrate (MIDI CC only)" }, "BR_ADJUST_PLAYRATE_MIDI",         NULL, NULL, 0, NULL,                           0, AdjustPlayrate},
 	{ { DEFACCEL, "SWS/BR: Adjust playrate options..." },     "BR_ADJUST_PLAYRATE_MIDI_OPTIONS", NULL, NULL, 1, IsAdjustPlayrateOptionsVisible, 0, AdjustPlayrate},
@@ -758,9 +758,9 @@ int BR_GetSetActionToApply (bool set, int cmd)
 bool BR_GlobalActionHook (int cmd, int val, int valhw, int relmode, HWND hwnd)
 {
 	static COMMAND_T* s_actionToRun = NULL;
-	static int  s_lowCmd  = 0;
-	static int  s_highCmd = 0;
-	static set<int> s_actions;
+	static int        s_lowCmd  = 0;
+	static int        s_highCmd = 0;
+	static set<int>   s_actions;
 
 	static bool s_init = false;
 	if (!s_init)
@@ -780,17 +780,16 @@ bool BR_GlobalActionHook (int cmd, int val, int valhw, int relmode, HWND hwnd)
 		s_actionToRun = SWSGetCommandByID(cmd);
 		swallow = true;
 	}
-	else if (s_actionToRun)
+	else if (s_actionToRun && BR_GetSetActionToApply(false, 0) != 0)
 	{
-		COMMAND_T* runningAction = s_actionToRun;
+		COMMAND_T* actionToRun = s_actionToRun;
 		s_actionToRun = NULL; // due to reentrancy, mark this as NULL before running the command
 
 		BR_GetSetActionToApply(true, cmd);
-		if (runningAction->doCommand)
-			runningAction->doCommand(runningAction);
-		else if (runningAction->onAction)
-			runningAction->onAction(runningAction, val, valhw, relmode, hwnd);
-			BR_GetSetActionToApply(true, 0);
+		if      (actionToRun->doCommand) actionToRun->doCommand(actionToRun);
+		else if (actionToRun->onAction)  actionToRun->onAction(actionToRun, val, valhw, relmode, hwnd);
+		BR_GetSetActionToApply(true, 0);
+
 		swallow = true;
 	}
 	return swallow;

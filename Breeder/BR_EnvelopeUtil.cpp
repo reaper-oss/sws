@@ -235,8 +235,8 @@ bool BR_Envelope::SetPoint (int id, double* position, double* value, int* shape,
 		ReadPtr(bezier, m_points[id].bezier);
 
 		m_update = true;
-		if (position)          m_sorted = false;
-		if (value || position) m_pointsEdited = true;
+		if (position) m_sorted = false;
+		m_pointsEdited = true;
 		return true;
 	}
 	else
@@ -506,8 +506,7 @@ void BR_Envelope::DeletePointsInRange (double start, double end)
 
 		if (!this->ValidateId(endId))
 			endId = m_count -1;
-		if (this->DeletePoints(startId, endId))
-			m_update = true;
+		this->DeletePoints(startId, endId);
 	}
 	else
 	{
@@ -516,7 +515,8 @@ void BR_Envelope::DeletePointsInRange (double start, double end)
 			if (i->position >= start && i->position <= end)
 			{
 				i = m_points.erase(i);
-				m_update = true;
+				m_update       = true;
+				m_pointsEdited = true;
 			}
 			else
 				++i;
@@ -1437,7 +1437,7 @@ bool BR_Envelope::Commit (bool force /*=false*/)
 			PreventUIRefresh(1);
 
 			// If properties were changed, first commit chunk with properties only and one point (one point prevents REAPER
-			// from removing envelope competely) (creating points later using API instead of supplying full chunk is faster)
+			// from removing envelope completely) (creating points later using API instead of supplying full chunk is faster)
 			bool firstPointDone = false;
 			if (m_properties.changed)
 			{
@@ -1485,7 +1485,8 @@ bool BR_Envelope::Commit (bool force /*=false*/)
 
 		SetConfig("envclicksegmode", envClickSegMode);
 		UpdateArrange();
-		m_update = false;
+		m_update       = false;
+		m_pointsEdited = false;
 		return true;
 	}
 	return false;
@@ -2390,7 +2391,7 @@ bool ToggleShowSendEnvelope (MediaTrack* track, int sendId, int type)
 				}
 			}
 		}
-		
+
 		if (stateUpdated)
 		{
 			GetSetObjectState(receiveTrack, newState.Get());

@@ -2135,12 +2135,12 @@ static HWND SearchChildren (const char* name, HWND hwnd, HWND startHwnd = NULL)
 static HWND SearchFloatingDockers (const char* name, const char* dockerName)
 {
 	HWND docker = FindWindowEx(NULL, NULL, NULL, dockerName);
-	while(docker)
+	while (docker)
 	{
 		if (GetParent(docker) == g_hwndParent)
 		{
 			HWND insideDocker = FindWindowEx(docker, NULL, NULL, "REAPER_dock");
-			while(insideDocker)
+			while (insideDocker)
 			{
 				if (HWND w = SearchChildren(name, insideDocker))
 					return w;
@@ -2183,12 +2183,12 @@ static HWND FindInReaperDockers (const char* name)
 	return NULL;
 }
 
-static HWND FindFloating (const char* name)
+static HWND FindFloating (const char* name, bool checkForNoCaption = false)
 {
 	HWND hwnd = SearchChildren(name, NULL);
 	while (hwnd)
 	{
-		if (GetParent(hwnd) == g_hwndParent)
+		if (GetParent(hwnd) == g_hwndParent && (!checkForNoCaption || (checkForNoCaption && !(GetWindowLongPtr(hwnd, GWL_STYLE) & WS_CAPTION))))
 			return hwnd;
 		hwnd = SearchChildren(name, NULL, hwnd);
 	}
@@ -2213,7 +2213,7 @@ static HWND FindReaperWndByPreparedString (const char* name)
 	return NULL;
 }
 
-HWND FindReaperWndByTitle (const char* name)
+HWND FindReaperWndByName (const char* name)
 {
 	#ifdef _WIN32
 		if (IsLocalized())
@@ -2226,6 +2226,29 @@ HWND FindReaperWndByTitle (const char* name)
 	#endif
 		{
 			return FindReaperWndByPreparedString(name);
+		}
+}
+
+HWND FindFloatingToolbarWndByName (const char* toolbarName)
+{
+	int customMenu; GetConfig("custommenu", customMenu);
+	bool checkForNoCaption = !!GetBit(customMenu, 8);
+
+	#ifdef _WIN32
+		if (IsLocalized())
+		{
+			char preparedName[2048];
+			PrepareLocalizedString(toolbarName, preparedName, sizeof(preparedName));
+			HWND hwnd = FindFloating(preparedName, checkForNoCaption);
+			if (!hwnd) hwnd = FindInFloatingDockers(preparedName);
+			return hwnd;
+		}
+		else
+	#endif
+		{
+			HWND hwnd = FindFloating(toolbarName, checkForNoCaption);
+			if (!hwnd) hwnd = FindInFloatingDockers(toolbarName);
+			return hwnd;
 		}
 }
 

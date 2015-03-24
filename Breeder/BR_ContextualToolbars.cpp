@@ -1523,7 +1523,7 @@ HWND BR_ContextualToolbar::GetFloatingToolbarHwnd (int mouseAction, bool* inDock
 	char toolbarName[256];
 	if (this->GetReaperToolbar(toolbarId, NULL,NULL, toolbarName, sizeof(toolbarName)))
 	{
-		hwnd = FindReaperWndByTitle(toolbarName);
+		hwnd = FindFloatingToolbarWndByName(toolbarName);
 		docker = GetParent(hwnd) != g_hwndParent;
 	}
 

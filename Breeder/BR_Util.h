@@ -204,7 +204,8 @@ RECT GetDrawableArrangeArea ();
 /******************************************************************************
 * Window                                                                      *
 ******************************************************************************/
-HWND FindReaperWndByTitle (const char* name);
+HWND FindReaperWndByName (const char* name);
+HWND FindFloatingToolbarWndByName (const char* toolbarName);
 HWND GetArrangeWnd ();
 HWND GetRulerWndAlt ();
 HWND GetTransportWnd ();

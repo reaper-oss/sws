@@ -675,7 +675,7 @@ void MoveActiveWndToMouse (COMMAND_T* ct)
 			if (hwnd != g_hwndParent)
 			{
 				while (GetParent(hwnd) != g_hwndParent && hwnd)
-					hwnd =  GetParent(hwnd);
+					hwnd = GetParent(hwnd);
 				if (!hwnd)
 					return;
 

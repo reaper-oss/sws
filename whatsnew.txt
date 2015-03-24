@@ -1,9 +1,7 @@
 Added actions
 +Main:
- - SWS/BR: Apply next action to all visible envelopes in selected tracks
- - SWS/BR: Apply next action to all visible record-armed envelopes in selected tracks
- - SWS/BR: Apply next action to all visible envelopes in selected tracks if there is no track envelope selected
- - SWS/BR: Apply next action to all visible record-armed envelopes in selected tracks if there is no track envelope selected
+ - SWS/BR: Apply next action to all visible (record-armed) envelopes in selected tracks
+ - SWS/BR: Apply next action to all visible (record-armed) envelopes in selected tracks if there is no track envelope selected
  - SWS/BR: Copy selected points in selected envelope to all visible (record-armed) envelopes in selected tracks (2 versions: direct copy and at edit cursor)
  - SWS/BR: Copy points in time selection in selected envelope to all visible (recorded-armed) envelopes in selected tracks (2 versions: direct copy and at edit cursor)
  - SWS/BR: Select all partial time signature markers
@@ -24,12 +22,12 @@ Fixes
 +Don't change solo state of tracks if mouse is over master track when running certain "perform until shortcut released" playback actions
 +Fixed various SWS/BR actions so they work properly with hardware sends envelopes
 +ReaScript: fixed ULT_SetMediaItemNote
-+When checking for modifications in contextual toolbars dialog (in case of closing or switching unsaved preset) also check position offset and auto close properties
++When checking for modifications in contextual toolbars dialog (in case of closing the dialog or switching from the unsaved preset) also check position offset and auto close properties
 +SWS/S&M: Open/close image window now reports it's state
 
 Other
 +Added ability to select only partial time signatures with SWS/BR: Select and adjust tempo markers...
-+Toolbar state of all docked SWS dialogs will be set to ON only when the window is visible in the docker (same behavior REAPER is using for it's own docked dialogs)
++Toolbar state of all docked SWS dialogs will be set to ON only when the window is visible in the docker (same behavior REAPER is using for its own docked dialogs)
 
 !v2.6.3 #0 pre-release build (March 12, 2015)
 <strong>REAPER v5.0pre14b+ is required!</strong>

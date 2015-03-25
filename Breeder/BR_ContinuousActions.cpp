@@ -185,7 +185,7 @@ static void SetTooltip (const char* text, POINT* p, bool setToBounds, RECT* boun
 			if (!g_tooltipWnd)
 			{
 				g_tooltipWnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_BR_TOOLTIP), (g_midiEditorWnd ? g_midiEditorWnd : g_hwndParent), TooltipWnd);
-				SetWindowLongPtr(g_tooltipWnd,GWL_STYLE,GetWindowLongPtr(g_tooltipWnd,GWL_STYLE)&~WS_CAPTION);
+				SetWindowLongPtr(g_tooltipWnd, GWL_STYLE, GetWindowLongPtr(g_tooltipWnd,GWL_STYLE)&~WS_CAPTION);
 				EnableWindow(g_tooltipWnd, false);
 				init = true;
 			}
@@ -487,7 +487,7 @@ static bool ContinuousActionInit (bool init, COMMAND_T* ct, HWND hwnd, BR_Contin
 		g_removedNativeTooltip = false;
 
 		// Deregister timer and keyboard accelerator/hook
-		plugin_register("-timer", (void*)ContinuousActionTimer);		
+		plugin_register("-timer", (void*)ContinuousActionTimer);
 		#ifdef _WIN32
 			UnhookWindowsHookEx(g_keyboardHook);
 			g_keyboardHook = NULL;

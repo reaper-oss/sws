@@ -127,7 +127,7 @@ bool GetMediaSourceProperties (MediaItem_Take* take, bool* section, double* star
 bool SetMediaSourceProperties (MediaItem_Take* take, bool section, double start, double length, double fade, bool reverse);
 bool SetTakeSourceFromFile (MediaItem_Take* take, const char* filename, bool inProjectData, bool keepSourceProperties);
 GUID GetItemGuid (MediaItem* item);
-MediaItem* GuidToItem(const GUID* guid);
+MediaItem* GuidToItem (const GUID* guid, ReaProject* proj = NULL);
 WDL_FastString GetSourceChunk (PCM_source* source);
 
 /******************************************************************************

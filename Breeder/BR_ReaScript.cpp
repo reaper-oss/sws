@@ -139,33 +139,33 @@ MediaTrack* BR_EnvGetParentTrack (BR_Envelope* envelope)
 	}
 	return NULL;
 }
-bool BR_EnvGetPoint (BR_Envelope* envelope, int id, double* position, double* value, int* shape, bool* selected, double* bezier)
+bool BR_EnvGetPoint (BR_Envelope* envelope, int id, double* positionOut, double* valueOut, int* shapeOut, bool* selectedOut, double* bezierOut)
 {
 	if (envelope)
 	{
-		WritePtr(selected, envelope->GetSelection(id));
-		return envelope->GetPoint(id, position, value, shape, bezier);
+		WritePtr(selectedOut, envelope->GetSelection(id));
+		return envelope->GetPoint(id, positionOut, valueOut, shapeOut, bezierOut);
 	}
 	else
 		return false;
 }
 
-void BR_EnvGetProperties (BR_Envelope* envelope, bool* active, bool* visible, bool* armed, bool* inLane, int* laneHeight, int* defaultShape, double* minValue, double* maxValue, double* centerValue, int* type, bool* faderScaling)
+void BR_EnvGetProperties (BR_Envelope* envelope, bool* activeOut, bool* visibleOut, bool* armedOut, bool* inLaneOut, int* laneHeightOut, int* defaultShapeOut, double* minValueOut, double* maxValueOut, double* centerValueOut, int* typeOut, bool* faderScalingOut)
 {
 	if (envelope)
 	{
-		WritePtr(active,          envelope->IsActive());
-		WritePtr(visible,         envelope->IsVisible());
-		WritePtr(armed,           envelope->IsArmed());
-		WritePtr(inLane,          envelope->IsInLane());
-		WritePtr(laneHeight,      envelope->GetLaneHeight());
-		WritePtr(defaultShape,    envelope->GetDefaultShape());
-		WritePtr(minValue,        envelope->MinValue());
-		WritePtr(maxValue,        envelope->MaxValue());
-		WritePtr(centerValue,     envelope->CenterValue());
-		WritePtr(faderScaling,    envelope->IsScaledToFader());
+		WritePtr(activeOut,          envelope->IsActive());
+		WritePtr(visibleOut,         envelope->IsVisible());
+		WritePtr(armedOut,           envelope->IsArmed());
+		WritePtr(inLaneOut,          envelope->IsInLane());
+		WritePtr(laneHeightOut,      envelope->GetLaneHeight());
+		WritePtr(defaultShapeOut,    envelope->GetDefaultShape());
+		WritePtr(minValueOut,        envelope->MinValue());
+		WritePtr(maxValueOut,        envelope->MaxValue());
+		WritePtr(centerValueOut,     envelope->CenterValue());
+		WritePtr(faderScalingOut,    envelope->IsScaledToFader());
 
-		if (type)
+		if (typeOut)
 		{
 			int value = -1;
 			if      (value == VOLUME)       value = 0;
@@ -180,21 +180,21 @@ void BR_EnvGetProperties (BR_Envelope* envelope, bool* active, bool* visible, bo
 			else if (value == TEMPO)        value = 9;
 			else if (value == PARAMETER)    value = 10;
 
-			*type = value;
+			*typeOut = value;
 		}
 	}
 	else
 	{
-		WritePtr(active,          false);
-		WritePtr(visible,         false);
-		WritePtr(armed,           false);
-		WritePtr(inLane,          false);
-		WritePtr(laneHeight,      0);
-		WritePtr(defaultShape,    0);
-		WritePtr(minValue,        0.0);
-		WritePtr(maxValue,        0.0);
-		WritePtr(centerValue,     0.0);
-		WritePtr(faderScaling,    false);
+		WritePtr(activeOut,          false);
+		WritePtr(visibleOut,         false);
+		WritePtr(armedOut,           false);
+		WritePtr(inLaneOut,          false);
+		WritePtr(laneHeightOut,      0);
+		WritePtr(defaultShapeOut,    0);
+		WritePtr(minValueOut,        0.0);
+		WritePtr(maxValueOut,        0.0);
+		WritePtr(centerValueOut,     0.0);
+		WritePtr(faderScalingOut,    false);
 	}
 }
 
@@ -228,24 +228,83 @@ double BR_EnvValueAtPos (BR_Envelope* envelope, double position)
 	else
 		return 0;
 }
-
-bool BR_GetMediaSourceProperties (MediaItem_Take* take, bool* section, double* start, double* length, double* fade, bool* reverse)
+MediaItem* BR_GetMediaItemByGUID (ReaProject* project, const char* guidStringIn)
 {
-	return GetMediaSourceProperties(take, section, start, length, fade, reverse);
+	if (guidStringIn)
+	{
+		GUID guid;
+		stringToGuid(guidStringIn, &guid);
+		return GuidToItem(&guid, project);
+	}
+	else
+		return NULL;
+}
+void BR_GetMediaItemGUID (MediaItem* item, char* bufOut, int buf_sz)
+{
+	if (bufOut)
+	{
+		char guid[64];
+		if (item) guidToString((GUID*)GetSetMediaItemInfo(item, "GUID", NULL), guid);
+		else      guidToString(&GUID_NULL, guid);
+		_snprintfSafe(bufOut,  buf_sz-1, "%s", guid);
+	}
 }
 
-void BR_GetMouseCursorContext (char* window, char* segment, char* details, int char_sz)
+void BR_GetMediaItemTakeGUID (MediaItem_Take* take, char* bufOut, int buf_sz)
+{
+	if (bufOut)
+	{
+		char guid[64];
+		if (take) guidToString((GUID*)GetSetMediaItemTakeInfo(take, "GUID", NULL), guid);
+		else      guidToString(&GUID_NULL, guid);
+		_snprintfSafe(bufOut,  buf_sz-1, "%s", guid);
+	}
+}
+
+bool BR_GetMediaSourceProperties (MediaItem_Take* take, bool* sectionOut, double* startOut, double* lengthOut, double* fadeOut, bool* reverseOut)
+{
+	return GetMediaSourceProperties(take, sectionOut, startOut, lengthOut, fadeOut, reverseOut);
+}
+
+MediaTrack* BR_GetMediaTrackByGUID (ReaProject* project, const char* guidStringIn)
+{
+	if (guidStringIn)
+	{
+		GUID guid;
+		stringToGuid(guidStringIn, &guid);
+		for (int i = 0; i < CountTracks(project); ++i)
+		{
+			MediaTrack* track = GetTrack(project, i);
+			if (GuidsEqual(&guid, TrackToGuid(track)))
+				return track;
+		}
+	}
+	return NULL;
+}
+
+void BR_GetMediaTrackGUID (MediaTrack* track, char* bufOut, int buf_sz)
+{
+	if (bufOut)
+	{
+		char guid[64];
+		if (track) guidToString(TrackToGuid(track), guid);
+		else       guidToString(&GUID_NULL, guid);
+		_snprintfSafe(bufOut,  buf_sz-1, "%s", guid);
+	}
+}
+
+void BR_GetMouseCursorContext (char* windowOut, char* segmentOut, char* detailsOut, int buf_sz)
 {
 	g_mouseInfo.Update();
 
-	if (window)  _snprintfSafe(window,  char_sz-1, "%s", g_mouseInfo.GetWindow());
-	if (segment) _snprintfSafe(segment, char_sz-1, "%s", g_mouseInfo.GetSegment());
-	if (details) _snprintfSafe(details, char_sz-1, "%s", g_mouseInfo.GetDetails());
+	if (windowOut)  _snprintfSafe(windowOut,  buf_sz-1, "%s", g_mouseInfo.GetWindow());
+	if (segmentOut) _snprintfSafe(segmentOut, buf_sz-1, "%s", g_mouseInfo.GetSegment());
+	if (detailsOut) _snprintfSafe(detailsOut, buf_sz-1, "%s", g_mouseInfo.GetDetails());
 }
 
-TrackEnvelope* BR_GetMouseCursorContext_Envelope (bool* takeEnvelope)
+TrackEnvelope* BR_GetMouseCursorContext_Envelope (bool* takeEnvelopeOut)
 {
-	WritePtr(takeEnvelope, g_mouseInfo.IsTakeEnvelope());
+	WritePtr(takeEnvelopeOut, g_mouseInfo.IsTakeEnvelope());
 	return g_mouseInfo.GetEnvelope();
 }
 
@@ -254,26 +313,26 @@ MediaItem* BR_GetMouseCursorContext_Item ()
 	return g_mouseInfo.GetItem();
 }
 
-void* BR_GetMouseCursorContext_MIDI (bool* inlineEditor, int* noteRow, int* ccLane, int* ccLaneVal, int* ccLaneId)
+void* BR_GetMouseCursorContext_MIDI (bool* inlineEditorOut, int* noteRowOut, int* ccLaneOut, int* ccLaneValOut, int* ccLaneIdOut)
 {
 	if (g_mouseInfo.GetNoteRow() == -1)
-		WritePtr(noteRow, -1);
+		WritePtr(noteRowOut, -1);
 	else
-		WritePtr(noteRow, g_mouseInfo.GetNoteRow());
+		WritePtr(noteRowOut, g_mouseInfo.GetNoteRow());
 
 	if (g_mouseInfo.GetCCLane(NULL, NULL, NULL))
 	{
-		g_mouseInfo.GetCCLane(ccLane, ccLaneVal, ccLaneId);
-		WritePtr(ccLane, MapVelLaneToReaScriptCC(*ccLane));
+		g_mouseInfo.GetCCLane(ccLaneOut, ccLaneValOut, ccLaneIdOut);
+		WritePtr(ccLaneOut, MapVelLaneToReaScriptCC(*ccLaneOut));
 	}
 	else
 	{
-		WritePtr(ccLane,    -1);
-		WritePtr(ccLaneVal, -1);
-		WritePtr(ccLaneId,  -1);
+		WritePtr(ccLaneOut,    -1);
+		WritePtr(ccLaneValOut, -1);
+		WritePtr(ccLaneIdOut,  -1);
 	}
 
-	WritePtr(inlineEditor, g_mouseInfo.IsInlineMidi());
+	WritePtr(inlineEditorOut, g_mouseInfo.IsInlineMidi());
 	return g_mouseInfo.GetMidiEditor();
 }
 
@@ -305,14 +364,14 @@ MediaTrack* BR_GetMouseCursorContext_Track ()
 	return g_mouseInfo.GetTrack();
 }
 
-MediaItem* BR_ItemAtMouseCursor (double* position)
+MediaItem* BR_ItemAtMouseCursor (double* positionOut)
 {
-	return ItemAtMouseCursor(position);
+	return ItemAtMouseCursor(positionOut);
 }
 
-bool BR_MIDI_CCLaneReplace (void* midiEditor, int laneId, int newCC)
+bool BR_MIDI_CCLaneReplace (HWND midiEditor, int laneId, int newCC)
 {
-	MediaItem_Take* take = SWS_MIDIEditor_GetTake(midiEditor);
+	MediaItem_Take* take = MIDIEditor_GetTake(midiEditor);
 	int newLane = MapReaScriptCCToVelLane(newCC);
 
 	if (take && IsVelLaneValid(newLane))
@@ -341,9 +400,9 @@ bool BR_MIDI_CCLaneReplace (void* midiEditor, int laneId, int newCC)
 	return false;
 }
 
-bool BR_MIDI_CCLaneRemove (void* midiEditor, int laneId)
+bool BR_MIDI_CCLaneRemove (HWND midiEditor, int laneId)
 {
-	MediaItem_Take* take = SWS_MIDIEditor_GetTake(midiEditor);
+	MediaItem_Take* take = MIDIEditor_GetTake(midiEditor);
 
 	if (take)
 	{
@@ -379,22 +438,22 @@ bool BR_SetMediaSourceProperties (MediaItem_Take* take, bool section, double sta
 	return SetMediaSourceProperties(take, section, start, length, fade, reverse);
 }
 
-bool BR_SetTakeSourceFromFile (MediaItem_Take* take, const char* filename, bool inProjectData)
+bool BR_SetTakeSourceFromFile (MediaItem_Take* take, const char* filenameIn, bool inProjectData)
 {
-	return SetTakeSourceFromFile(take, filename, inProjectData, false);
+	return SetTakeSourceFromFile(take, filenameIn, inProjectData, false);
 }
 
-bool BR_SetTakeSourceFromFile2 (MediaItem_Take* take, const char* filename, bool inProjectData, bool keepSourceProperties)
+bool BR_SetTakeSourceFromFile2 (MediaItem_Take* take, const char* filenameIn, bool inProjectData, bool keepSourceProperties)
 {
-	return SetTakeSourceFromFile(take, filename, inProjectData, keepSourceProperties);
+	return SetTakeSourceFromFile(take, filenameIn, inProjectData, keepSourceProperties);
 }
 
-MediaItem_Take* BR_TakeAtMouseCursor (double* position)
+MediaItem_Take* BR_TakeAtMouseCursor (double* positionOut)
 {
-	return TakeAtMouseCursor(position);
+	return TakeAtMouseCursor(positionOut);
 }
 
-MediaTrack* BR_TrackAtMouseCursor (int* context, double* position)
+MediaTrack* BR_TrackAtMouseCursor (int* contextOut, double* positionOut)
 {
-	return TrackAtMouseCursor(context, position);
+	return TrackAtMouseCursor(contextOut, positionOut);
 }

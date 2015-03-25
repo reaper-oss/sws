@@ -16,6 +16,14 @@ Added actions
  - SWS/BR: Play from edit cursor position and solo active item's track for the duration (perform until shortcut released)
  - SWS/BR: Play from edit cursor position and solo active item for the duration (perform until shortcut released)
 
+ReaScript
++Added functions to convert track/item/take from and to GUID:
+ - BR_GetMediaItemByGUID
+ - BR_GetMediaItemGUID
+ - BR_GetMediaItemTakeGUID (function to get take from GUID already exists, see SNM_GetMediaItemTakeByGUID)
+ - BR_GetMediaTrackByGUID
+ - BR_GetMediaTrackGUID
+
 Fixes
 +Preserve metronome patterns when editing tempo envelope with various actions and dialogs
 +Fixed non-selectable radio buttons in SWS/BR: Select and adjust tempo markers... dialog

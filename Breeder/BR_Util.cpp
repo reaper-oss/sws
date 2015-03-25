@@ -1102,13 +1102,13 @@ GUID GetItemGuid (MediaItem* item)
 	return (item) ? (*(GUID*)GetSetMediaItemInfo(item, "GUID", NULL)) : GUID_NULL;
 }
 
-MediaItem* GuidToItem(const GUID* guid)
+MediaItem* GuidToItem (const GUID* guid, ReaProject* proj /*=NULL*/)
 {
 	if (guid)
 	{
-		for (int i = 0; i < CountMediaItems(NULL); ++i)
+		for (int i = 0; i < CountMediaItems(proj); ++i)
 		{
-			MediaItem* item = GetMediaItem(NULL, i);
+			MediaItem* item = GetMediaItem(proj, i);
 			if (GuidsEqual((GUID*)GetSetMediaItemInfo(item, "GUID", NULL), guid))
 				return item;
 		}

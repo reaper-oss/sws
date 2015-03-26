@@ -866,6 +866,7 @@ extern "C"
 		IMPAPI(mkvolstr);
 		IMPAPI(MoveEditCursor);
 		IMPAPI(MoveMediaItemToTrack);
+		IMPAPI(OnColorThemeOpenFile); // v5.0pre21+
 		IMPAPI(OnPauseButton);
 		IMPAPI(OnPlayButton);
 		IMPAPI(OnStopButton);

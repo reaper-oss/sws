@@ -1,3 +1,5 @@
+<strong>REAPER v5.0pre21+ is required!</strong>
+
 Added actions
 +Main:
  - SWS/BR: Apply next action to all visible (record-armed) envelopes in selected tracks

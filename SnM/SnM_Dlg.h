@@ -88,7 +88,7 @@ public:
 		if (m_wnd)
 		{
 			DELETE_NULL(m_wnd); // also unregisters screenset callbacks..
-			screenset_registerNew((char*)m_id.Get(), SNM_ScreensetCallback, this);
+//			screenset_registerNew((char*)m_id.Get(), SNM_ScreensetCallback, this);
 		}
 	}
 

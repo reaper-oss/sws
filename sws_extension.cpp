@@ -329,6 +329,11 @@ COMMAND_T* SWSUnregisterCmd(int id)
 	return NULL;
 }
 
+void UnregisterAllCmds() {
+	for (int i=g_iFirstCommand; i<=g_iLastCommand; i++)
+		SWSUnregisterCmd(i);
+}
+
 #ifdef ACTION_DEBUG
 void ActionsList(COMMAND_T*)
 {
@@ -574,13 +579,37 @@ void WDL_STYLE_ScaleImageCoords(int *x, int *y) { }
 
 // Main DLL entry point
 
-#define IMPAPI(x)       if (!errcnt && !errmsg.GetLength() && !((*((void **)&(x)) = (void *)rec->GetFunc(#x)))) errcnt++;
+void ErrMsg(WDL_String* errmsg, int funcmapErrCnt)
+{
+	if (IsREAPER && IsREAPER() && errmsg->GetLength())
+	{
+		if (!funcmapErrCnt)
+		{
+			// reversed insertion
+			errmsg->Insert(" ", 0);
+			errmsg->Insert(__LOCALIZE("Hint:","sws_mbox"), 0);
+			errmsg->Insert("\r\n", 0);
+			errmsg->Insert("\r\n", 0);
+			errmsg->Insert(__LOCALIZE("Some features of the SWS Extension might not function as expected!","sws_mbox"), 0);
+#ifdef __APPLE__
+			errmsg->Insert(" ", 0);
+#else
+			errmsg->Insert("\r\n", 0);
+#endif
+			errmsg->Insert(__LOCALIZE("An error occured during the SWS extension initialization.","sws_mbox"), 0);
+		}
+		MessageBox(Splash_GetWnd&&Splash_GetWnd()?Splash_GetWnd():NULL, errmsg->Get(), __LOCALIZE("SWS - Error","sws_mbox"), MB_OK);
+	}
+}
 
-#define ERR_RETURN(a)   { errmsg.Append(a); /*return 0;*/ } // returning 0 makes REAPER unloading us which crashes SWS on Win
+#define IMPAPI(x)       if (!errcnt && !errmsg.GetLength() && !((*((void **)&(x)) = (void *)rec->GetFunc(#x)))) errcnt++;
+#define ERR_RETURN(a)   { errmsg.Append(a); ErrMsg(&errmsg, errcnt); goto error; } // returning 0 makes REAPER unloading us which crashes SWS on Win
 #define OK_RETURN(a)    { return 1; }
 
 //#define ERR_RETURN(a) { FILE* f = fopen("c:\\swserror.txt", "a"); if (f) { fprintf(f, a); fprintf(f, "\n"); fclose(f); } /* return 0; */ }
 //#define OK_RETURN(a)  { FILE* f = fopen("c:\\swserror.txt", "a"); if (f) { fprintf(f, a); fprintf(f, "\n"); fclose(f); } return 1; }
+
+SWSTimeSlice* g_ts=NULL;
 
 extern "C"
 {
@@ -588,20 +617,36 @@ extern "C"
 	{
 		if (!rec)
 		{
-			if (g_bInitDone)
+error:
+			UnregisterAllCmds();
+			plugin_register("-hookcommand2", (void*)hookCommandProc2);
+			plugin_register("-hookcommand", (void*)hookCommandProc);
+//			plugin_register("-hookpostcommand", (void*)hookPostCommandProc))
+			plugin_register("-toggleaction", (void*)toggleActionHook);
+			plugin_register("-hookcustommenu", (void*)swsMenuHook);
+			if (g_ts) plugin_register("-csurf_inst", g_ts);
+			plugin_register("-accel_section",(void*)SNM_GetMySection());
+			UnregisterExportedFuncs();
+
+			if (g_bInitDone) // no granularity here, but it'd be an internal error anyway
 			{
+				ColorExit();
+				AutorenderExit();
 				SnapshotsExit();
 				TrackListExit();
 				MarkerListExit();
 				AutoColorExit();
 				ProjectListExit();
+				ProjectMgrExit();
+				XenakiosExit();
 				ConsoleExit();
+				FreezeExit();
 				MiscExit();
 				PadreExit();
 				SNM_Exit();
 				BR_Exit();
 			}
-			OK_RETURN("Exiting SWS.")
+			return 0; 
 		}
 
 
@@ -613,6 +658,17 @@ extern "C"
 
 		if (!errmsg.GetLength() && !rec->GetFunc)
 			ERR_RETURN("Null rec->GetFunc ptr.")
+
+		// check for dupe/clone
+		if (!errmsg.GetLength())
+		{
+			int(*SNM_GetIntConfigVar)(const char* varname, int errvalue);
+			if ((*((void **)&(SNM_GetIntConfigVar)) = (void *)rec->GetFunc("SNM_GetIntConfigVar")))
+			{
+				ERR_RETURN("Several versions of the SWS extension (or SWS clones) are installed.")
+			}
+		}
+
 
 #ifdef _SWS_LOCALIZATION
 		if (!errmsg.GetLength())
@@ -1007,14 +1063,6 @@ extern "C"
 			ERR_RETURN(txt)
 		}
 
-		// check for dupe/clone before registering any new action
-		if (!errmsg.GetLength())
-		{
-			int(*SNM_GetIntConfigVar)(const char* varname, int errvalue);
-			if ((*((void **)&(SNM_GetIntConfigVar)) = (void *)rec->GetFunc("SNM_GetIntConfigVar")))
-				ERR_RETURN("Several versions of the SWS extension (or SWS clones) are installed.")
-		}
-
 		// hookcommand2 must be registered before hookcommand
 		if (!errmsg.GetLength() && !rec->Register("hookcommand2", (void*)hookCommandProc2))
 			ERR_RETURN("hookcommand2 error.")
@@ -1074,43 +1122,21 @@ extern "C"
 		{
 			g_bInitDone=true; // above specific inits went well
 
-			SWSTimeSlice* ts = new SWSTimeSlice();
-			if (!rec->Register("csurf_inst", ts))
+			g_ts = new SWSTimeSlice();
+			if (!rec->Register("csurf_inst", g_ts))
 			{
-				delete ts;
+				delete g_ts;
 				ERR_RETURN("TimeSlice init error.")
 			}
 		}
 
 		if (!errmsg.GetLength() && !rec->Register("hookcustommenu", (void*)swsMenuHook))
 			ERR_RETURN("Menu hook error.")
-		AddExtensionsMainMenu();
 
 		if (!errmsg.GetLength() && (!RegisterExportedFuncs(rec) || !RegisterExportedAPI(rec)))
 			ERR_RETURN("Reascript export failed.");
 
-
-		if (IsREAPER && IsREAPER() && errmsg.GetLength())
-		{
-			if (!errcnt)
-			{
-				// reversed insertion
-				errmsg.Insert(" ", 0);
-				errmsg.Insert(__LOCALIZE("Hint:","sws_mbox"), 0);
-				errmsg.Insert("\r\n", 0);
-				errmsg.Insert("\r\n", 0);
-				errmsg.Insert(__LOCALIZE("Some features of the SWS Extension might not function as expected!","sws_mbox"), 0);
-#ifdef __APPLE__
-				errmsg.Insert(" ", 0);
-#else
-				errmsg.Insert("\r\n", 0);
-#endif
-				errmsg.Insert(__LOCALIZE("An error occured during the SWS extension initialization.","sws_mbox"), 0);
-			}
-			MessageBox(Splash_GetWnd&&Splash_GetWnd()?Splash_GetWnd():NULL, errmsg.Get(), __LOCALIZE("SWS - Error","sws_mbox"), MB_OK);
-			OK_RETURN("SWS Extension initialization failed.");
-		}
-
+		AddExtensionsMainMenu();
 		OK_RETURN("SWS Extension successfully loaded.");
 	}
 };   // end extern C

@@ -277,5 +277,6 @@ int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML, const c
 
 // Functions export to reascript and c++ plugins, Reascript.cpp
 bool RegisterExportedFuncs(reaper_plugin_info_t* _rec);
+void UnregisterExportedFuncs();
 bool RegisterExportedAPI(reaper_plugin_info_t* _rec);
 

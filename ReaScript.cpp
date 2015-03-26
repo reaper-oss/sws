@@ -183,6 +183,17 @@ bool RegisterExportedFuncs(reaper_plugin_info_t* _rec)
 	return ok;
 }
 
+void UnregisterExportedFuncs()
+{
+ 	char tmp[512];
+	int i=-1;
+	while (g_apidefs[++i].func)
+	{
+		_snprintf(tmp, sizeof(tmp), "-%s", g_apidefs[i].regkey_func);
+		plugin_register(tmp, g_apidefs[i].func);
+	}
+}
+
 bool RegisterExportedAPI(reaper_plugin_info_t* _rec)
 {
 	bool ok = (_rec!=NULL);

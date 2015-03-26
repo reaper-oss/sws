@@ -393,7 +393,7 @@ void MarkersAtNotes (COMMAND_T* ct)
 		// Due to possible tempo changes, always work with PPQ, never time
 		double itemStartPPQ = MIDI_GetPPQPosFromProjTime(take, itemStart);
 		double itemEndPPQ = MIDI_GetPPQPosFromProjTime(take, itemEnd);
-		double sourceLenPPQ = GetSourceLengthPPQ(take);
+		double sourceLenPPQ = GetMidiSourceLengthPPQ(take);
 
 		int noteCount = 0;
 		MIDI_CountEvts(take, &noteCount, NULL, NULL);

@@ -25,6 +25,9 @@ ReaScript
  - BR_GetMediaItemTakeGUID (function to get take from GUID already exists, see SNM_GetMediaItemTakeByGUID)
  - BR_GetMediaTrackByGUID
  - BR_GetMediaTrackGUID
++Added some other functions:
+ - BR_GetMidiSourceLenPPQ
+ - BR_IsTakeMidi
 
 Fixes
 +Notes/Windows OS: fixed "wrap text" option (Issue 690)

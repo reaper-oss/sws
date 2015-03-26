@@ -228,36 +228,49 @@ double BR_EnvValueAtPos (BR_Envelope* envelope, double position)
 	else
 		return 0;
 }
-MediaItem* BR_GetMediaItemByGUID (ReaProject* project, const char* guidStringIn)
+
+double BR_GetMidiSourceLenPPQ (MediaItem_Take* take)
+{
+	double length = -1;
+	if (take)
+	{
+		bool isMidi = false;
+		length = GetMidiSourceLengthPPQ(take, &isMidi);
+		if (!isMidi) length = -1;
+	}
+	return length;
+}
+
+MediaItem* BR_GetMediaItemByGUID (ReaProject* proj, const char* guidStringIn)
 {
 	if (guidStringIn)
 	{
 		GUID guid;
 		stringToGuid(guidStringIn, &guid);
-		return GuidToItem(&guid, project);
+		return GuidToItem(&guid, proj);
 	}
 	else
 		return NULL;
 }
-void BR_GetMediaItemGUID (MediaItem* item, char* bufOut, int buf_sz)
+void BR_GetMediaItemGUID (MediaItem* item, char* guidStringOut, int guidStringOut_sz)
 {
-	if (bufOut)
+	if (guidStringOut)
 	{
 		char guid[64];
 		if (item) guidToString((GUID*)GetSetMediaItemInfo(item, "GUID", NULL), guid);
 		else      guidToString(&GUID_NULL, guid);
-		_snprintfSafe(bufOut,  buf_sz-1, "%s", guid);
+		_snprintfSafe(guidStringOut, guidStringOut_sz-1, "%s", guid);
 	}
 }
 
-void BR_GetMediaItemTakeGUID (MediaItem_Take* take, char* bufOut, int buf_sz)
+void BR_GetMediaItemTakeGUID (MediaItem_Take* take, char* guidStringOut, int guidStringOut_sz)
 {
-	if (bufOut)
+	if (guidStringOut)
 	{
 		char guid[64];
 		if (take) guidToString((GUID*)GetSetMediaItemTakeInfo(take, "GUID", NULL), guid);
 		else      guidToString(&GUID_NULL, guid);
-		_snprintfSafe(bufOut,  buf_sz-1, "%s", guid);
+		_snprintfSafe(guidStringOut,  guidStringOut_sz-1, "%s", guid);
 	}
 }
 
@@ -266,15 +279,15 @@ bool BR_GetMediaSourceProperties (MediaItem_Take* take, bool* sectionOut, double
 	return GetMediaSourceProperties(take, sectionOut, startOut, lengthOut, fadeOut, reverseOut);
 }
 
-MediaTrack* BR_GetMediaTrackByGUID (ReaProject* project, const char* guidStringIn)
+MediaTrack* BR_GetMediaTrackByGUID (ReaProject* proj, const char* guidStringIn)
 {
 	if (guidStringIn)
 	{
 		GUID guid;
 		stringToGuid(guidStringIn, &guid);
-		for (int i = 0; i < CountTracks(project); ++i)
+		for (int i = 0; i < CountTracks(proj); ++i)
 		{
-			MediaTrack* track = GetTrack(project, i);
+			MediaTrack* track = GetTrack(proj, i);
 			if (GuidsEqual(&guid, TrackToGuid(track)))
 				return track;
 		}
@@ -282,24 +295,24 @@ MediaTrack* BR_GetMediaTrackByGUID (ReaProject* project, const char* guidStringI
 	return NULL;
 }
 
-void BR_GetMediaTrackGUID (MediaTrack* track, char* bufOut, int buf_sz)
+void BR_GetMediaTrackGUID (MediaTrack* track, char* guidStringOut, int guidStringOut_sz)
 {
-	if (bufOut)
+	if (guidStringOut)
 	{
 		char guid[64];
 		if (track) guidToString(TrackToGuid(track), guid);
 		else       guidToString(&GUID_NULL, guid);
-		_snprintfSafe(bufOut,  buf_sz-1, "%s", guid);
+		_snprintfSafe(guidStringOut, guidStringOut_sz-1, "%s", guid);
 	}
 }
 
-void BR_GetMouseCursorContext (char* windowOut, char* segmentOut, char* detailsOut, int buf_sz)
+void BR_GetMouseCursorContext (char* windowOut, int windowOut_sz, char* segmentOut, int segmentOut_sz, char* detailsOut, int detailsOut_sz)
 {
 	g_mouseInfo.Update();
 
-	if (windowOut)  _snprintfSafe(windowOut,  buf_sz-1, "%s", g_mouseInfo.GetWindow());
-	if (segmentOut) _snprintfSafe(segmentOut, buf_sz-1, "%s", g_mouseInfo.GetSegment());
-	if (detailsOut) _snprintfSafe(detailsOut, buf_sz-1, "%s", g_mouseInfo.GetDetails());
+	if (windowOut)  _snprintfSafe(windowOut,  windowOut_sz -1, "%s", g_mouseInfo.GetWindow());
+	if (segmentOut) _snprintfSafe(segmentOut, segmentOut_sz-1, "%s", g_mouseInfo.GetSegment());
+	if (detailsOut) _snprintfSafe(detailsOut, detailsOut_sz-1, "%s", g_mouseInfo.GetDetails());
 }
 
 TrackEnvelope* BR_GetMouseCursorContext_Envelope (bool* takeEnvelopeOut)
@@ -367,6 +380,11 @@ MediaTrack* BR_GetMouseCursorContext_Track ()
 MediaItem* BR_ItemAtMouseCursor (double* positionOut)
 {
 	return ItemAtMouseCursor(positionOut);
+}
+
+bool BR_IsTakeMidi (MediaItem_Take* take, bool* inProjectMidiOut)
+{
+	return IsMidi(take, inProjectMidiOut);
 }
 
 bool BR_MIDI_CCLaneReplace (HWND midiEditor, int laneId, int newCC)

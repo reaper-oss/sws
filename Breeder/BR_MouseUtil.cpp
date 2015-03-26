@@ -68,7 +68,7 @@ static MediaTrack* GetTrackAreaFromY (int y, int* offset)
 		MediaTrack* currentTrack = CSurf_TrackFromID(i, false);
 		int height = *(int*)GetSetMediaTrackInfo(currentTrack, "I_WNDH", NULL);
 		if (currentTrack == master && TcpVis(master))
-			height += TCP_MASTER_GAP;
+			height += GetMasterTcpGap();
 		trackEnd += height;
 
 		if (y >= trackOffset && y < trackEnd)

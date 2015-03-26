@@ -27,6 +27,7 @@ ReaScript
  - BR_GetMediaTrackGUID
 
 Fixes
++Notes/Windows OS: fixed "wrap text" option (Issue 690)
 +Preserve metronome patterns when editing tempo envelope with various actions and dialogs
 +Fixed non-selectable radio buttons in SWS/BR: Select and adjust tempo markers... dialog
 +Don't change solo state of tracks if mouse is over master track when running certain "perform until shortcut released" playback actions

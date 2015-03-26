@@ -108,6 +108,7 @@ public:
 	void SetType(int _type);
 	void SetText(const char* _str, bool _addRN = true);
 	void RefreshGUI();
+	void SetWrapText(bool _wrap, bool _isInit=false);
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 	void GetMinSize(int* _w, int* _h) { *_w=MIN_DOCKWND_WIDTH; *_h=140; }
 	void ToggleLock();

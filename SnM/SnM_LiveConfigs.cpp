@@ -686,6 +686,14 @@ LiveConfigsWnd::LiveConfigsWnd()
 	Init();
 }
 
+LiveConfigsWnd::~LiveConfigsWnd()
+{
+	m_vwndCC.RemoveAllChildren(false);
+	m_vwndCC.SetRealParent(NULL);
+	m_vwndFade.RemoveAllChildren(false);
+	m_vwndFade.SetRealParent(NULL);
+}
+
 void LiveConfigsWnd::OnInitDlg()
 {
 	m_resize.init_item(IDC_LIST, 0.0, 0.0, 1.0, 1.0);
@@ -758,7 +766,9 @@ void LiveConfigsWnd::OnDestroy()
 	m_cbConfig.Empty();
 	m_cbInputTr.Empty();
 	m_vwndCC.RemoveAllChildren(false);
+	m_vwndCC.SetRealParent(NULL);
 	m_vwndFade.RemoveAllChildren(false);
+	m_vwndFade.SetRealParent(NULL);
 }
 
 void LiveConfigsWnd::FillComboInputTrack()
@@ -2011,8 +2021,8 @@ int LiveConfigInit()
 
 void LiveConfigExit()
 {
+	plugin_register("-projectconfig", &s_projectconfig);
 	WritePrivateProfileString("LiveConfigs", "BigFontName", g_lcBigFontName, g_SNM_IniFn.Get());
-
 	g_lcWndMgr.Delete();
 	g_monWndsMgr.DeleteAll();
 }
@@ -2744,6 +2754,12 @@ LiveConfigMonitorWnd::LiveConfigMonitorWnd(int _cfgId)
 	Init();
 }
 
+LiveConfigMonitorWnd::~LiveConfigMonitorWnd()
+{
+	m_mons.RemoveAllChildren(false);
+	m_mons.SetRealParent(NULL);
+}
+
 void LiveConfigMonitorWnd::OnInitDlg()
 {
 	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
@@ -2774,6 +2790,7 @@ void LiveConfigMonitorWnd::OnInitDlg()
 
 void LiveConfigMonitorWnd::OnDestroy() {
 	m_mons.RemoveAllChildren(false);
+	m_mons.SetRealParent(NULL);
 }
 
 INT_PTR LiveConfigMonitorWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)

@@ -737,7 +737,9 @@ int BR_Init ()
 
 void BR_Exit ()
 {
+	ContextualToolbarsExit();
 	LoudnessExit();
+	ProjStateExit();
 }
 
 void BR_RegisterContinuousActions ()

@@ -1111,3 +1111,8 @@ int AutorenderInit(){
 		return 0;
 	return 1;
 }
+
+void AutorenderExit()
+{
+	plugin_register("-projectconfig",&g_projectconfig);
+}

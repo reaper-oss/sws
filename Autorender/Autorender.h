@@ -27,3 +27,4 @@
 #pragma once
 
 int AutorenderInit();
+void AutorenderExit();

@@ -91,5 +91,6 @@ int MiscInit()
 
 void MiscExit()
 {
+	EditCursorExit();
 	ZoomExit();
 }

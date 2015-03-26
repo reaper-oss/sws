@@ -58,7 +58,8 @@ void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND
 void SetProjectStartupAction(COMMAND_T*);
 void ClearProjectStartupAction(COMMAND_T*);
 void ShowProjectStartupAction(COMMAND_T*);
-int ReaProjectInit();
+int SNM_ProjectInit();
+void SNM_ProjectExit();
 
 void InsertSilence(COMMAND_T*);
 void OpenProjectPathInExplorerFinder(COMMAND_T*);

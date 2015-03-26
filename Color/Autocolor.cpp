@@ -1155,6 +1155,7 @@ void AutoColorSaveState()
 
 void AutoColorExit()
 {
+	plugin_register("-projectconfig",&g_projectconfig);
 	UnregisterToMarkerRegionUpdates(&g_mkrRgnListener);
 	AutoColorSaveState();
 	delete g_pACWnd;

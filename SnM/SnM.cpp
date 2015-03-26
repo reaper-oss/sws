@@ -1296,7 +1296,7 @@ int SNM_Init(reaper_plugin_info_t* _rec)
 	FindInit();
 	ImageInit();
 	RegionPlaylistInit();
-	ReaProjectInit();
+	SNM_ProjectInit();
 	CyclactionInit();
 
 	// callback when REAPER is fully initialized 
@@ -1313,7 +1313,12 @@ void SNM_Exit()
 	FindExit();
 	ImageExit();
 	RegionPlaylistExit();
+	SNM_ProjectExit();
 	CyclactionExit();
 	SNM_UIExit();
 	IniFileExit();
+	plugin_register("-accel_section",(void*)SNM_GetMySection());
+#ifdef _SNM_MISC
+	plugin_register("-hookcustommenu", (void*)SNM_Menuhook);
+#endif
 }

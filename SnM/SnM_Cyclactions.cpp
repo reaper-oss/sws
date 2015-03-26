@@ -1879,6 +1879,12 @@ CyclactionWnd::CyclactionWnd()
 	Init();
 }
 
+CyclactionWnd::~CyclactionWnd()
+{
+	m_tinyLRbtns.RemoveAllChildren(false);
+	m_tinyLRbtns.SetRealParent(NULL);
+}
+
 void CyclactionWnd::Update(bool _updateListViews)
 {
 	if (_updateListViews)
@@ -1961,6 +1967,7 @@ void CyclactionWnd::OnDestroy()
 */
 	m_cbSection.Empty();
 	m_tinyLRbtns.RemoveAllChildren(false);
+	m_tinyLRbtns.SetRealParent(NULL);
 }
 
 void CyclactionWnd::OnResize() 
@@ -2724,7 +2731,9 @@ int CyclactionInit()
 	return 1;
 }
 
-void CyclactionExit() {
+void CyclactionExit()
+{
+	plugin_register("-projectconfig", &s_projectconfig);
 	WritePrivateProfileString("Cyclactions", "Undos", g_undos ? "1" : "0", g_SNM_IniFn.Get());
 	g_caWndMgr.Delete();
 }

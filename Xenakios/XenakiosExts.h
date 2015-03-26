@@ -198,7 +198,9 @@ void DoRenameMarkersWithAscendingNumbers(COMMAND_T*);
 int IsStopAtEndOfTimeSel(COMMAND_T*);
 void DoToggleSTopAtEndOfTimeSel(COMMAND_T*);
 extern WDL_String g_XenIniFilename;
+
 int XenakiosInit();
+void XenakiosExit();
 
 //===========================================================
 // MediaDialog.cpp

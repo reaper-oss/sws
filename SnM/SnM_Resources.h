@@ -124,6 +124,8 @@ class ResourcesWnd : public SWS_DockWnd
 {
 public:
 	ResourcesWnd();
+	virtual ~ResourcesWnd();
+
 	void SetType(int _type);
 	int SetType(const char* _name);
 	void Update();

@@ -94,6 +94,8 @@ class CyclactionWnd : public SWS_DockWnd
 {
 public:
 	CyclactionWnd();
+	virtual ~CyclactionWnd();
+
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 	void Update(bool _updateListViews=true);
 	void UpdateSection(int _newSection);

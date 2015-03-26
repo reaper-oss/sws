@@ -52,6 +52,7 @@ extern SWSProjConfig<BR_MidiToggleCCLane>                                 g_midi
 * Call on startup to register state saving functionality                      *
 ******************************************************************************/
 int ProjStateInit ();
+void ProjStateExit ();
 
 /******************************************************************************
 * Envelope selection state                                                    *

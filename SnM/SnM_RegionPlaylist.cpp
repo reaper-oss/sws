@@ -561,6 +561,14 @@ RegionPlaylistWnd::RegionPlaylistWnd()
 	Init();
 }
 
+RegionPlaylistWnd::~RegionPlaylistWnd()
+{
+	m_mons.RemoveAllChildren(false);
+	m_mons.SetRealParent(NULL);
+	m_btnsAddDel.RemoveAllChildren(false);
+	m_btnsAddDel.SetRealParent(NULL);
+}
+
 void RegionPlaylistWnd::OnInitDlg()
 {
 	m_resize.init_item(IDC_LIST, 0.0, 0.0, 1.0, 1.0);
@@ -623,7 +631,9 @@ void RegionPlaylistWnd::OnDestroy()
 	UnregisterToMarkerRegionUpdates(&m_mkrRgnListener);
 	m_cbPlaylist.Empty();
 	m_mons.RemoveAllChildren(false);
+	m_mons.SetRealParent(NULL);
 	m_btnsAddDel.RemoveAllChildren(false);
+	m_btnsAddDel.SetRealParent(NULL);
 }
 
 // _flags: &1=fast update, normal/full update otherwise
@@ -2125,6 +2135,8 @@ int RegionPlaylistInit()
 
 void RegionPlaylistExit()
 {
+	plugin_register("-projectconfig", &s_projectconfig);
+
 	// save prefs
 	WritePrivateProfileString("RegionPlaylist", "MonitorMode", g_monitorMode?"1":"0", g_SNM_IniFn.Get()); 
 	WritePrivateProfileString("RegionPlaylist", "Repeat", g_repeatPlaylist?"1":"0", g_SNM_IniFn.Get()); 

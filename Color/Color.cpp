@@ -1193,3 +1193,9 @@ int ColorInit()
 
 	return 1;
 }
+
+void ColorExit()
+{
+	plugin_register("-hookcustommenu", (void*)menuhook);
+	plugin_register("-timer", (void*)ColorTimer);
+}

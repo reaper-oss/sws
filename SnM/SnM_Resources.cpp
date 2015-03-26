@@ -1022,6 +1022,12 @@ ResourcesWnd::ResourcesWnd()
 	Init();
 }
 
+ResourcesWnd::~ResourcesWnd()
+{
+	m_btnsAddDel.RemoveAllChildren(false);
+	m_btnsAddDel.SetRealParent(NULL);
+}
+
 void ResourcesWnd::OnInitDlg()
 {
 	m_resize.init_item(IDC_LIST, 0.0, 0.0, 1.0, 1.0);
@@ -1089,6 +1095,7 @@ void ResourcesWnd::OnDestroy()
 	m_cbType.Empty();
 	m_cbDblClickType.Empty();
 	m_btnsAddDel.RemoveAllChildren(false);
+	m_btnsAddDel.SetRealParent(NULL);
 }
 
 void ResourcesWnd::SetType(int _type)
@@ -3323,6 +3330,8 @@ int ResourcesInit()
 
 void ResourcesExit()
 {
+	plugin_register("-projectconfig", &s_projectconfig);
+
 	WDL_FastString iniStr, escapedStr;
 	WDL_PtrList_DeleteOnDestroy<WDL_FastString> iniSections;
 	GetIniSectionNames(&iniSections);

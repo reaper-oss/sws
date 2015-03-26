@@ -99,6 +99,7 @@ protected:
 class LiveConfigsWnd : public SWS_DockWnd {
 public:
 	LiveConfigsWnd();
+	virtual ~LiveConfigsWnd();
 	void Update();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 	void GetMinSize(int* _w, int* _h) { *_w=156; *_h=140; }
@@ -134,6 +135,8 @@ void UpdateMonitoring(int _cfgId, int _whatFlags, int _commitFlags, int _flags =
 class LiveConfigMonitorWnd : public SWS_DockWnd {
 public:
 	LiveConfigMonitorWnd(int _cfgId = -1); // default constructor not used, just to compil SNM_DynWindowManager..
+	virtual ~LiveConfigMonitorWnd();
+
 	SNM_FiveMonitors* GetMonitors() { return &m_mons; }
 protected:
 	void OnInitDlg();

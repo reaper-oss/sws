@@ -204,10 +204,16 @@ static void BeginLoadProjectState (bool isUndo, project_config_extension_t *reg)
 	g_midiCCEvents.Cleanup();
 }
 
+static project_config_extension_t s_projectconfig = {ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL};
+
 int ProjStateInit ()
 {
-	static project_config_extension_t s_projectconfig = {ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL};
 	return plugin_register("projectconfig", &s_projectconfig);
+}
+
+void ProjStateExit ()
+{
+	plugin_register("-projectconfig", &s_projectconfig);
 }
 
 /******************************************************************************

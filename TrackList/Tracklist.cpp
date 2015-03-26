@@ -40,7 +40,7 @@
 #define MAJORADJUST false
 	
 // Globals
-static SWS_TrackListWnd* g_pList;
+SWS_TrackListWnd* g_pList;
 
 // Prototypes
 void OpenTrackList(COMMAND_T* = NULL);
@@ -864,6 +864,7 @@ int TrackListInit()
 
 void TrackListExit()
 {
+	plugin_register("-projectconfig",&g_projectconfig);
 	delete g_pList;
 }
 

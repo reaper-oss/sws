@@ -428,3 +428,9 @@ int ProjectMgrInit()
 
 	return 1;
 }
+
+void ProjectMgrExit()
+{
+	plugin_register("-projectconfig",&g_projectconfig);
+	plugin_register("-hookcustommenu", (void*)menuhook);
+}

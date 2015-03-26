@@ -752,5 +752,6 @@ int MarkerListInit()
 
 void MarkerListExit()
 {
+	plugin_register("-projectconfig",&g_projectconfig);
 	delete g_pMarkerList;
 }

@@ -28,3 +28,4 @@
 #pragma once
 
 int FreezeInit();
+void FreezeExit();

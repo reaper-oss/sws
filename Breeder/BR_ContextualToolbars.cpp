@@ -86,7 +86,7 @@ const int POSITION_V_BOTTOM      = 0x8000;
 /******************************************************************************
 * Globals                                                                     *
 ******************************************************************************/
-static SNM_WindowManager<BR_ContextualToolbarsWnd> g_contextToolbarsWndManager(CONTEXT_TOOLBARS_WND);
+SNM_WindowManager<BR_ContextualToolbarsWnd> g_contextToolbarsWndManager(CONTEXT_TOOLBARS_WND);
 static BR_ContextualToolbarsManager                g_toolbarsManager;
 static int                                         g_listViewContexts[CONTEXT_COUNT];
 

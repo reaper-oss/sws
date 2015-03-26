@@ -697,6 +697,11 @@ WDL_String g_XenIniFilename;
 #define XEN_INIFILE_NEW "%s/Xenakios_Commands.ini"
 #endif
 
+void XenakiosExit()
+{
+	plugin_register("-projectconfig",&xen_reftrack_pcreg);
+}
+
 int XenakiosInit()
 {
 	if(!plugin_register("projectconfig",&xen_reftrack_pcreg))

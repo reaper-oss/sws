@@ -333,8 +333,12 @@ static project_config_extension_t s_projectconfig = {
 	ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL
 };
 
-int ReaProjectInit() {
+int SNM_ProjectInit() {
 	return plugin_register("projectconfig", &s_projectconfig);
+}
+
+void SNM_ProjectExit() {
+	plugin_register("-projectconfig", &s_projectconfig);
 }
 
 

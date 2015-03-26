@@ -96,6 +96,13 @@ void GrooveTemplateHandler::Init(reaper_plugin_info_t *rec)
     me->mGrooveDialog = new GrooveDialog();
 }
 
+void GrooveTemplateHandler::Exit()
+{
+    GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
+    plugin_register("-projectconfig", &me->grooveMarkersHelper);
+    delete me->mGrooveDialog;
+}
+
 void GrooveTemplateHandler::showGrooveDialog()
 {
     GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();

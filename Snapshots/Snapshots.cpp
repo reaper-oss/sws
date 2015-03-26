@@ -1243,6 +1243,9 @@ int SnapshotsInit()
 
 void SnapshotsExit()
 {
+	plugin_register("-projectconfig",&g_projectconfig);
+	plugin_register("-hookcustommenu", (void*)menuhook);
+
 	char buf[64];
 	sprintf(buf, "%d", g_nbRecallPref);
 	WritePrivateProfileString(SWS_INI, "DefaultNbSnapsRecall", buf, get_ini_file());

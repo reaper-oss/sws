@@ -173,7 +173,7 @@ const int UPDATE_TIMER_FREQ  = 200;
 /******************************************************************************
 * Globals                                                                     *
 ******************************************************************************/
-static SNM_WindowManager<BR_AnalyzeLoudnessWnd>                       g_loudnessWndManager(LOUDNESS_WND);
+SNM_WindowManager<BR_AnalyzeLoudnessWnd>                       g_loudnessWndManager(LOUDNESS_WND);
 static SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_LoudnessObject> > g_analyzedObjects;
 static HWND                                                           g_normalizeWnd = NULL;
 
@@ -3767,11 +3767,11 @@ void BR_AnalyzeLoudnessWnd::Properties::Save ()
 /******************************************************************************
 * Loudness init/exit                                                          *
 ******************************************************************************/
+static project_config_extension_t s_projectconfig = {ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL};
+
 int LoudnessInit ()
 {
-	static project_config_extension_t s_projectconfig = {ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL};
 	plugin_register("projectconfig", &s_projectconfig);
-
 	g_pref.LoadGlobalPref();
 	g_loudnessWndManager.Init();
 	return 1;
@@ -3779,6 +3779,7 @@ int LoudnessInit ()
 
 void LoudnessExit ()
 {
+	plugin_register("-projectconfig", &s_projectconfig);
 	g_loudnessWndManager.Delete();
 	g_pref.SaveGlobalPref();
 }

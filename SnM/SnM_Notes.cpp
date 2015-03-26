@@ -1546,6 +1546,8 @@ int NotesInit()
 
 void NotesExit()
 {
+	plugin_register("-projectconfig", &s_projectconfig);
+
 	char tmp[4] = "";
 	if (_snprintfStrict(tmp, sizeof(tmp), "%d", g_notesType) > 0)
 		WritePrivateProfileString(NOTES_INI_SEC, "Type", tmp, g_SNM_IniFn.Get()); 

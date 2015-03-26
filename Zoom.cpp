@@ -1651,6 +1651,9 @@ int ZoomInit()
 
 void ZoomExit()
 {
+	plugin_register("-accelerator",&g_ar);
+	plugin_register("-projectconfig",&g_projectconfig);
+
 	// Write the zoom prefs
 	char str[32];
 	sprintf(str, "%d", (g_bMidMouseButton ? 1 : 0) + (g_bItemZoom ? 2 : 0) + (g_bUndoZoom ? 4 : 0) +

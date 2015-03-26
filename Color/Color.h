@@ -34,4 +34,5 @@ void UpdateCustomColors();
 bool AllBlack();
 COLORREF CalcGradient(COLORREF crStart, COLORREF crEnd, double dPos);
 int ColorInit();
+void ColorExit();
 void ShowColorDialog(COMMAND_T* = NULL);

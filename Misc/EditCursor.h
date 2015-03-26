@@ -29,3 +29,4 @@
 
 void EditCursorSlice();
 int EditCursorInit();
+void EditCursorExit();

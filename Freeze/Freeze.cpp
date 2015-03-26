@@ -374,3 +374,8 @@ int FreezeInit()
 
 	return 1;
 }
+
+void FreezeExit()
+{
+	plugin_register("-projectconfig",&g_projectconfig);
+}

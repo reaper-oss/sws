@@ -200,3 +200,8 @@ int EditCursorInit()
 		return 0;
 	return 1;
 }
+
+void EditCursorExit()
+{
+	plugin_register("-projectconfig",&g_projectconfig);
+}

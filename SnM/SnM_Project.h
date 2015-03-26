@@ -55,14 +55,6 @@ protected:
 
 void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
 
-class StartupProjectActionJob : public ScheduledJob {
-public:
-	StartupProjectActionJob(int _cmdId) : m_cmdId(_cmdId), ScheduledJob(SNM_SCHEDJOB_PRJ_ACTION, 1000) {}
-protected:
-	void Perform() { if (m_cmdId) Main_OnCommand(m_cmdId, 0); }
-	int m_cmdId;
-};
-
 void SetProjectStartupAction(COMMAND_T*);
 void ClearProjectStartupAction(COMMAND_T*);
 void ShowProjectStartupAction(COMMAND_T*);

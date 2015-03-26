@@ -187,8 +187,7 @@ void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND
 
 ///////////////////////////////////////////////////////////////////////////////
 // Project startup action
-// Based on a registered timer so that everything has been initialized before
-// triggering the startup action (useful on REAPER launch)
+// Based on a registered timer so that everything has been initialized
 ///////////////////////////////////////////////////////////////////////////////
 
 SWSProjConfig<WDL_FastString> g_prjActions;
@@ -200,13 +199,7 @@ void OnTriggerActionTimer()
 
 	if (int cmdId = NamedCommandLookup(g_prjActions.Get()->Get()))
 	{
-		// specific case for "load theme" actions (~1s delay)
-		if (strstr(g_prjActions.Get()->Get(), "S&M_LOAD_THEME"))
-			ScheduledJob::Schedule(new StartupProjectActionJob(cmdId));
-
-		// standard case, faster
-		else
-			Main_OnCommand(cmdId, 0);
+		Main_OnCommand(cmdId, 0);
 #ifdef _SNM_DEBUG
 		OutputDebugString("OnTriggerActionTimer() - Performed startup action '");
 		OutputDebugString(g_prjActions.Get()->Get());

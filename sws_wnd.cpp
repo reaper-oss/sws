@@ -87,6 +87,12 @@ SWS_DockWnd::~SWS_DockWnd()
 	plugin_register("-accelerator", &m_ar);
 	if (m_id.GetLength())
 		screenset_unregister((char*)m_id.Get());
+
+	if (m_hwnd)
+	{
+		m_bSaveStateOnDestroy = false;
+		DestroyWindow(m_hwnd);
+	}
 }
 
 void SWS_DockWnd::Show(bool bToggle, bool bActivate)
@@ -372,10 +378,10 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			KillTimer(m_hwnd, CELL_EDIT_TIMER);
 			KillTooltip();
 
-			OnDestroy();
-
 			m_parentVwnd.RemoveAllChildren(false);
 			m_parentVwnd.SetRealParent(NULL);
+
+			OnDestroy();
 
 			for (int i=0; i < m_pLists.GetSize(); i++)
 				m_pLists.Get(i)->OnDestroy();

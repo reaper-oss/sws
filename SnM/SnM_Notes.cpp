@@ -272,7 +272,8 @@ void NotesWnd::OnCommand(WPARAM wParam, LPARAM lParam)
     {
       g_wrapText = !g_wrapText;
       SWS_ShowTextScrollbar(GetDlgItem(m_hwnd, IDC_EDIT), !g_wrapText);
-      SendMessage(m_hwnd, WM_SIZE, 0xf00b, 0);
+      SendMessage(m_hwnd, WM_COMMAND, IDCANCEL, 0);
+      ScheduledJob::Schedule(new ReopenNotesJob());
 			break;
     }
 		case BTNID_LOCK:
@@ -336,6 +337,11 @@ void OSXForceTxtChangeJob::Perform() {
 		SendMessage(w->GetHWND(), WM_COMMAND, MAKEWPARAM(IDC_EDIT, EN_CHANGE), 0);
 }
 #endif
+
+void ReopenNotesJob::Perform() {
+	if (NotesWnd* w = g_notesWndMgr.Get()) w->Show(false, true);
+}
+
 
 // returns: 
 // -1 = catch and send to the control 

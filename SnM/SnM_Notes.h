@@ -77,7 +77,6 @@ protected:
 	void Perform();
 };
 
-// OSX fix/workaround (SWELL bug?)
 #ifdef _SNM_SWELL_ISSUES
 class OSXForceTxtChangeJob : public ScheduledJob {
 public:
@@ -86,6 +85,13 @@ protected:
 	void Perform();
 };
 #endif
+
+class ReopenNotesJob : public ScheduledJob {
+public:
+	ReopenNotesJob() : ScheduledJob(SNM_SCHEDJOB_REOPEN_NOTES, 50) {}
+protected:
+	void Perform();
+};
 
 class NotesMarkerRegionListener : public SNM_MarkerRegionListener {
 public:

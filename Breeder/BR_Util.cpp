@@ -43,6 +43,7 @@
 /******************************************************************************
 * Constants                                                                   *
 ******************************************************************************/
+const int TCP_MASTER_GAP        = 5;
 const int ITEM_LABEL_MIN_HEIGHT = 28;
 const int ENV_GAP               = 4;    // bottom gap may seem like 3 when selected, but that
 const int ENV_LINE_WIDTH        = 1;    // first pixel is used to "bold" selected envelope
@@ -751,25 +752,10 @@ vector<MediaItem*> GetSelItems (MediaTrack* track)
 	return items;
 }
 
-double GetSourceLengthPPQ (MediaItem_Take* take)
-{
-	if (take)
-	{
-		double itemStart    = GetMediaItemInfo_Value(GetMediaItemTake_Item(take), "D_POSITION");
-		double takeOffset   = GetMediaItemTakeInfo_Value(take, "D_STARTOFFS");
-		double sourceLength = GetMediaItemTake_Source(take)->GetLength();
-		double startPPQ = MIDI_GetPPQPosFromProjTime(take, itemStart - takeOffset);
-		double endPPQ   = MIDI_GetPPQPosFromProjTime(take, itemStart - takeOffset + sourceLength);
-
-		return endPPQ - startPPQ;
-	}
-	return 0;
-}
-
 double ProjectTimeToItemTime (MediaItem* item, double projTime)
 {
 	if (item)
-		 return projTime - GetMediaItemInfo_Value(item, "D_POSITION");
+		return projTime - GetMediaItemInfo_Value(item, "D_POSITION");
 	else
 		return projTime;
 }
@@ -777,7 +763,7 @@ double ProjectTimeToItemTime (MediaItem* item, double projTime)
 double ItemTimeToProjectTime (MediaItem* item, double itemTime)
 {
 	if (item)
-		 return GetMediaItemInfo_Value(item, "D_POSITION") + itemTime;
+		return GetMediaItemInfo_Value(item, "D_POSITION") + itemTime;
 	else
 		return itemTime;
 }
@@ -1708,7 +1694,7 @@ int GetTrackHeight (MediaTrack* track, int* offsetY, int* topGap /*=NULL*/, int*
 				for (int i = 0; i < count; ++i)
 					offset += (int)GetMediaTrackInfo_Value(GetTrack(NULL, i), "I_WNDH"); // I_WNDH counts both track lane and any visible envelope lanes
 				if (TcpVis(GetMasterTrack(NULL)))
-					offset += (int)GetMediaTrackInfo_Value(GetMasterTrack(NULL), "I_WNDH") + TCP_MASTER_GAP;
+					offset += (int)GetMediaTrackInfo_Value(GetMasterTrack(NULL), "I_WNDH") + GetMasterTcpGap();
 			}
 		}
 		*offsetY = offset;
@@ -2038,7 +2024,7 @@ RECT GetDrawableArrangeArea ()
 
 	int arrangeEnd = 0;
 	if (TcpVis(GetMasterTrack(NULL)))
-		arrangeEnd += (int)GetMediaTrackInfo_Value(GetMasterTrack(NULL), "I_WNDH") + TCP_MASTER_GAP;
+		arrangeEnd += (int)GetMediaTrackInfo_Value(GetMasterTrack(NULL), "I_WNDH") + GetMasterTcpGap();
 	for (int i = 0; i < CountTracks(NULL); ++i)
 		arrangeEnd += TcpVis(GetTrack(NULL, i)) ? (int)GetMediaTrackInfo_Value(GetTrack(NULL, i), "I_WNDH") : 0;
 

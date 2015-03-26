@@ -889,7 +889,7 @@ double EffectiveMidiTakeLength (MediaItem_Take* take, bool ignoreMutedEvents, bo
 		double takeStartPPQ  = MIDI_GetPPQPosFromProjTime(take, takeStartTime);
 		double takeEndPPQ    = MIDI_GetPPQPosFromProjTime(take, takeStartTime + GetMediaItemInfo_Value(GetMediaItemTake_Item(take), "D_LENGTH"));
 		double takeLenPPQ    = takeEndPPQ - takeStartPPQ;
-		double sourceLenPPQ  = GetSourceLengthPPQ(take);
+		double sourceLenPPQ  = GetMidiSourceLengthPPQ(take);
 
 		int loopCount = (int)(takeLenPPQ/sourceLenPPQ) + (!fmod(takeLenPPQ, sourceLenPPQ) ? (-1) : (0));
 		double effectiveTakeEndPPQ = takeStartPPQ;
@@ -1022,6 +1022,26 @@ double GetEndOfMeasure (MediaItem_Take* take, double ppqPos)
 	return -1;
 }
 
+double GetMidiSourceLengthPPQ (MediaItem_Take* take, bool* isMidiSource /*=NULL*/)
+{
+	bool   isMidi = false;
+	double length = 0;
+	if (take && IsMidi(take))
+	{
+		double itemStart    = GetMediaItemInfo_Value(GetMediaItemTake_Item(take), "D_POSITION");
+		double takeOffset   = GetMediaItemTakeInfo_Value(take, "D_STARTOFFS");
+		double sourceLength = GetMediaItemTake_Source(take)->GetLength();
+		double startPPQ = MIDI_GetPPQPosFromProjTime(take, itemStart - takeOffset);
+		double endPPQ   = MIDI_GetPPQPosFromProjTime(take, itemStart - takeOffset + sourceLength);
+
+		isMidi = true;
+		length = endPPQ - startPPQ;
+	}
+
+	WritePtr(isMidiSource, isMidi);
+	return length;
+}
+
 double GetOriginalPpqPos (MediaItem_Take* take, double ppqPos, bool* loopedItem, double* posVisInsertStartPpq, double* posVisInsertEndPpq)
 {
 	double returnPos = 0;
@@ -1050,7 +1070,7 @@ double GetOriginalPpqPos (MediaItem_Take* take, double ppqPos, bool* loopedItem,
 
 			double visibleItemStartPpq = MIDI_GetPPQPosFromProjTime(take, itemStart);
 			double visibleItemEndPpq   = MIDI_GetPPQPosFromProjTime(take, itemEnd);
-			double sourceLenPpq = GetSourceLengthPPQ(take);
+			double sourceLenPpq = GetMidiSourceLengthPPQ(take);
 
 			// Deduct take offset to get correct current loop iteration
 			double itemStartPpq = MIDI_GetPPQPosFromProjTime(take, itemStart - GetMediaItemTakeInfo_Value(take, "D_STARTOFFS"));
@@ -1196,10 +1216,7 @@ bool IsMidi (MediaItem_Take* take, bool* inProject /*= NULL*/)
 			if (inProject)
 			{
 				const char* fileName = source->GetFileName();
-				if (fileName && !strcmp(fileName, ""))
-					*inProject = true;
-				else
-					*inProject = false;
+				*inProject = (fileName && !strcmp(fileName, ""));
 			}
 			return true;
 		}
@@ -1303,7 +1320,6 @@ int FindFirstNote (MediaItem_Take* take, BR_MidiEditor* midiEditorFilterSettings
 		}
 	}
 	return foundId;
-
 }
 
 int GetMIDIFilePPQ (const char* fp)

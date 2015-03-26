@@ -638,7 +638,7 @@ void ME_CCToEnvPoints (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd
 				MediaItem* item = GetMediaItemTake_Item(take);
 				double itemStart = GetMediaItemInfo_Value(item, "D_POSITION");
 				double itemEnd   = itemStart + GetMediaItemInfo_Value(item, "D_LENGTH");
-				double sourceLenPpq = GetSourceLengthPPQ(take);
+				double sourceLenPpq = GetMidiSourceLengthPPQ(take);
 
 				double newValue = TranslateRange(value, 0, max, envelope.LaneMinValue(), envelope.LaneMaxValue());
 				while (true)
@@ -670,7 +670,7 @@ void ME_CCToEnvPoints (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd
 			MediaItem* item = GetMediaItemTake_Item(take);
 			double itemStart = GetMediaItemInfo_Value(item, "D_POSITION");
 			double itemEnd   = itemStart + GetMediaItemInfo_Value(item, "D_LENGTH");
-			double sourceLenPpq = GetSourceLengthPPQ(take);
+			double sourceLenPpq = GetMidiSourceLengthPPQ(take);
 
 			double newValue = TranslateRange(velocity, 1, 127, envelope.LaneMinValue(), envelope.LaneMaxValue());
 			while (true)

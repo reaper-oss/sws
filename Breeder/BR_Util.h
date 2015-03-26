@@ -31,7 +31,6 @@
 * Constants                                                                   *
 ******************************************************************************/
 const int SCROLLBAR_W     = 17;
-const int TCP_MASTER_GAP  = 5;
 const int NEGATIVE_INF    = -150;
 const double VOLUME_DELTA = 0.0000000000001;
 const double PAN_DELTA    = 0.001;
@@ -115,7 +114,6 @@ template <typename T> void SetConfig (const char* key, T  val) {*static_cast<T*>
 * Items                                                                       *
 ******************************************************************************/
 vector<MediaItem*> GetSelItems (MediaTrack* track);
-double GetSourceLengthPPQ (MediaItem_Take* take);
 double ProjectTimeToItemTime (MediaItem* item, double projTime);
 double ItemTimeToProjectTime (MediaItem* item, double itemTime);
 int GetTakeId (MediaItem_Take* take, MediaItem* item = NULL);
@@ -181,7 +179,7 @@ bool IsItemLocked (MediaItem* item);
 * Height                                                                      *
 ******************************************************************************/
 int GetTrackHeightFromVZoomIndex (MediaTrack* track, int vZoom); // also takes track compacting into account
-int GetEnvHeightFromTrackHeight (int trackHeight);               // what is envelope height in case it's height override is 0 ?
+int GetEnvHeightFromTrackHeight (int trackHeight);               // what is envelope height in case its height override is 0 ?
 int GetMasterTcpGap ();
 int GetTrackHeight (MediaTrack* track, int* offsetY, int* topGap = NULL, int* bottomGap = NULL);
 int GetItemHeight (MediaItem* item, int* offsetY);

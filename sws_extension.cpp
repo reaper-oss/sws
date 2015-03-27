@@ -627,7 +627,6 @@ error:
 				plugin_register("-toggleaction", (void*)toggleActionHook);
 				plugin_register("-hookcustommenu", (void*)swsMenuHook);
 				if (g_ts) plugin_register("-csurf_inst", g_ts);
-				plugin_register("-accel_section",(void*)SNM_GetMySection());
 				UnregisterExportedFuncs();
 			}
 

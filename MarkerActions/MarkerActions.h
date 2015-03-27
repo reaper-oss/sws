@@ -30,3 +30,4 @@
 #include "stdafx.h"
 
 int MarkerActionsInit();
+void MarkerActionsExit();

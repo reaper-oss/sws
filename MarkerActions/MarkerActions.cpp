@@ -223,3 +223,9 @@ int MarkerActionsInit()
 	if (g_bMAEnabled) plugin_register("timer", (void*)MarkerActionTimer);
 	return 1;
 }
+
+void MarkerActionsExit()
+{
+	plugin_register("-timer",(void*)MarkerActionTimer);
+}
+

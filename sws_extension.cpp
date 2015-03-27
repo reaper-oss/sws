@@ -640,6 +640,7 @@ error:
 				SnapshotsExit();
 				TrackListExit();
 				MarkerListExit();
+				MarkerActionsExit();
 				AutoColorExit();
 				ProjectListExit();
 				ProjectMgrExit();

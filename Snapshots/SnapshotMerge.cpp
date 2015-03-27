@@ -429,6 +429,7 @@ INT_PTR WINAPI mergeWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 			delete mv;
 			mv = NULL;
 			g_mergeItems.Empty(true);
+			resize.init(NULL);
 			break;
 	}
 	return 0;

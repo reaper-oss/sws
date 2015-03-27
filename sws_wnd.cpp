@@ -370,6 +370,8 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 			OnDestroy();
 
+			m_resize.init(NULL);
+
 			for (int i=0; i < m_pLists.GetSize(); i++)
 				m_pLists.Get(i)->OnDestroy();
 

@@ -618,15 +618,18 @@ extern "C"
 		if (!rec)
 		{
 error:
-			UnregisterAllCmds();
-			plugin_register("-hookcommand2", (void*)hookCommandProc2);
-			plugin_register("-hookcommand", (void*)hookCommandProc);
-//			plugin_register("-hookpostcommand", (void*)hookPostCommandProc))
-			plugin_register("-toggleaction", (void*)toggleActionHook);
-			plugin_register("-hookcustommenu", (void*)swsMenuHook);
-			if (g_ts) plugin_register("-csurf_inst", g_ts);
-			plugin_register("-accel_section",(void*)SNM_GetMySection());
-			UnregisterExportedFuncs();
+			if (plugin_register)
+			{
+				UnregisterAllCmds();
+				plugin_register("-hookcommand2", (void*)hookCommandProc2);
+				plugin_register("-hookcommand", (void*)hookCommandProc);
+//				plugin_register("-hookpostcommand", (void*)hookPostCommandProc))
+				plugin_register("-toggleaction", (void*)toggleActionHook);
+				plugin_register("-hookcustommenu", (void*)swsMenuHook);
+				if (g_ts) plugin_register("-csurf_inst", g_ts);
+				plugin_register("-accel_section",(void*)SNM_GetMySection());
+				UnregisterExportedFuncs();
+			}
 
 			if (g_bInitDone) // no granularity here, but it'd be an internal error anyway
 			{
@@ -676,7 +679,8 @@ error:
 #endif
 
 
-		IMPAPI(IsREAPER); // must be tested first
+		IMPAPI(plugin_register); // keep those first
+		IMPAPI(IsREAPER);
 
 		IMPAPI(AddExtensionsMainMenu);
 		IMPAPI(AddMediaItemToTrack);
@@ -941,7 +945,6 @@ error:
 		IMPAPI(PlayTrackPreview2Ex);
 		IMPAPI(plugin_getFilterList);
 		IMPAPI(plugin_getImportableProjectFilterList);
-		IMPAPI(plugin_register);
 		IMPAPI(PreventUIRefresh);
 		IMPAPI(projectconfig_var_addr);
 		IMPAPI(projectconfig_var_getoffs);

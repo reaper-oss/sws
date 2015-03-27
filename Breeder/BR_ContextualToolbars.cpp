@@ -618,6 +618,16 @@ void BR_ContextualToolbar::ImportConfig (const char* contextToolbars, const char
 void BR_ContextualToolbar::Cleaup ()
 {
 	plugin_register("-timer",(void*)BR_ContextualToolbar::TooltipTimer);
+
+	// Make sure all hooked windows procedures are removed
+	for (int i = 0; i < m_callbackToolbars.GetSize(); ++i)
+	{
+		HWND hwnd       = m_callbackToolbars.Get(i)->hwnd;
+		WNDPROC wndProc = m_callbackToolbars.Get(i)->wndProc;
+		if (hwnd && wndProc)
+			SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)wndProc);
+	}
+	m_callbackToolbars.EmptySafe(true);
 }
 
 BR_ContextualToolbar::ContextInfo::ContextInfo () :

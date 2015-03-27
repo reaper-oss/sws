@@ -848,7 +848,9 @@ int ConsoleInit()
 	return 1;
 }
 
-void ConsoleExit() {
+void ConsoleExit()
+{
+	plugin_register("-accelerator",&g_ar);
 	WritePrivateProfileString("SWS","CloseConsoleOnReturnKey",g_bCloseOnReturnPref?"1":"0",get_ini_file());
 	DELETE_NULL(g_pConsoleWnd);
 }

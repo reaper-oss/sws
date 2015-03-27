@@ -579,11 +579,13 @@ void WDL_STYLE_ScaleImageCoords(int *x, int *y) { }
 
 // Main DLL entry point
 
-void ErrMsg(WDL_String* errmsg, int funcmapErrCnt)
+#define COMPATIBLE_REAPER_VERSION "v5.0pre14"
+
+void ErrMsg(WDL_String* errmsg)
 {
 	if (IsREAPER && IsREAPER() && errmsg->GetLength())
 	{
-		if (!funcmapErrCnt)
+		if (!strstr(errmsg->Get(), COMPATIBLE_REAPER_VERSION))
 		{
 			// reversed insertion
 			errmsg->Insert(" ", 0);
@@ -603,7 +605,7 @@ void ErrMsg(WDL_String* errmsg, int funcmapErrCnt)
 }
 
 #define IMPAPI(x)       if (!errcnt && !errmsg.GetLength() && !((*((void **)&(x)) = (void *)rec->GetFunc(#x)))) errcnt++;
-#define ERR_RETURN(a)   { errmsg.Append(a); ErrMsg(&errmsg, errcnt); goto error; } // returning 0 makes REAPER unloading us which crashes SWS on Win
+#define ERR_RETURN(a)   { errmsg.Append(a); ErrMsg(&errmsg); goto error; }
 #define OK_RETURN(a)    { return 1; }
 
 //#define ERR_RETURN(a) { FILE* f = fopen("c:\\swserror.txt", "a"); if (f) { fprintf(f, a); fprintf(f, "\n"); fclose(f); } /* return 0; */ }
@@ -648,7 +650,7 @@ error:
 				SNM_Exit();
 				BR_Exit();
 			}
-			return 0; 
+			return 0; // makes REAPER unloading us
 		}
 
 
@@ -1061,7 +1063,7 @@ error:
 			_snprintf(txt, sizeof(txt),
 					// keep the message on a single line (for the LangPack generator)
 					__LOCALIZE_VERFMT("The version of SWS extension you have installed is incompatible with your version of REAPER.\nYou probably have a REAPER version less than %s installed.\nPlease install the latest version of REAPER from www.reaper.fm.","sws_mbox"),
-					"v5.0pre14"); // <- update compatible version here
+					COMPATIBLE_REAPER_VERSION);
 			ERR_RETURN(txt)
 		}
 

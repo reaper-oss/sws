@@ -583,7 +583,7 @@ void WDL_STYLE_ScaleImageCoords(int *x, int *y) { }
 
 void ErrMsg(WDL_String* errmsg)
 {
-	if (IsREAPER && IsREAPER() && errmsg->GetLength())
+	if ((!IsREAPER || IsREAPER()) && errmsg->GetLength()) // don't display any message if loaded from ReaMote
 	{
 		if (!strstr(errmsg->Get(), COMPATIBLE_REAPER_VERSION))
 		{

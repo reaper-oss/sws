@@ -49,6 +49,11 @@ const int BETA_AVAILABLE     =  2;
 const int BOTH_AVAILABLE     =  3;
 
 /******************************************************************************
+* Globals                                                                     *
+******************************************************************************/
+static BR_SearchObject* g_searchObject = NULL;
+
+/******************************************************************************
 * Dialog functionality                                                        *
 ******************************************************************************/
 static void SetVersionMessage (HWND hwnd, BR_SearchObject* searchObject)
@@ -229,17 +234,15 @@ static WDL_DLGRET DialogProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 ******************************************************************************/
 static void StartupSearch ()
 {
-	static BR_SearchObject* s_searchObject = new (nothrow) BR_SearchObject(true);
-
-	if (s_searchObject)
+	if (g_searchObject)
 	{
-		int status = s_searchObject->GetStatus(NULL, NULL);
+		int status = g_searchObject->GetStatus(NULL, NULL);
 		if (status != SEARCH_INITIATED)
 		{
 			if (status == OFFICIAL_AVAILABLE || status == BETA_AVAILABLE || status == BOTH_AVAILABLE)
-				DialogBoxParam(g_hInst, MAKEINTRESOURCE(IDD_BR_VERSION), g_hwndParent, DialogProc, (LPARAM)s_searchObject);
-			delete s_searchObject;
-			s_searchObject = NULL;
+				DialogBoxParam(g_hInst, MAKEINTRESOURCE(IDD_BR_VERSION), g_hwndParent, DialogProc, (LPARAM)g_searchObject);
+			delete g_searchObject;
+			g_searchObject = NULL;
 		}
 	}
 	else
@@ -257,10 +260,20 @@ void VersionCheckInit ()
 		unsigned int currentTime = (unsigned int)time(NULL);
 		if (currentTime - lastTime >= 86400 || currentTime - lastTime < 0)
 		{
-			SetStartupSearchOptions (official, beta, currentTime);
-			plugin_register("timer",(void*)StartupSearch); // timer starts only after project whole load
+			SetStartupSearchOptions(official, beta, currentTime);
+
+			g_searchObject = new (nothrow) BR_SearchObject(true);
+			plugin_register("timer",(void*)StartupSearch); // timer starts only after project gets loaded
 		}
 	}
+}
+
+void VersionCheckExit ()
+{
+	if (g_searchObject)
+		delete g_searchObject;
+	g_searchObject = NULL;
+	StartupSearch();
 }
 
 /******************************************************************************

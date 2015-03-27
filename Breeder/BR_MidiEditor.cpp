@@ -61,6 +61,8 @@ static void MidiTakePreviewPlayState (bool play, bool pause, bool rec)
 
 static void MidiTakePreviewTimer ()
 {
+	bool stopPreview = true;
+
 	if (g_itemPreviewPlaying)
 	{
 		#ifdef _WIN32
@@ -70,29 +72,17 @@ static void MidiTakePreviewTimer ()
 		#endif
 
 		// Have we reached the end?
-		if (g_ItemPreview.curpos >= g_ItemPreview.src->GetLength())
-		{
-			#ifdef _WIN32
-				LeaveCriticalSection(&g_ItemPreview.cs);
-			#else
-				pthread_mutex_unlock(&g_ItemPreview.mutex);
-			#endif
-			MidiTakePreview(0, NULL, NULL, 0, 0, 0, false);
-			plugin_register("-timer",(void*)MidiTakePreviewTimer);
-		}
-		else
-		{
-			#ifdef _WIN32
-				LeaveCriticalSection(&g_ItemPreview.cs);
-			#else
-				pthread_mutex_unlock(&g_ItemPreview.mutex);
-			#endif
-		}
+		stopPreview = (g_ItemPreview.curpos >= g_ItemPreview.src->GetLength());
+
+		#ifdef _WIN32
+			LeaveCriticalSection(&g_ItemPreview.cs);
+		#else
+			pthread_mutex_unlock(&g_ItemPreview.mutex);
+		#endif
 	}
-	else
-	{
-		plugin_register("-timer",(void*)MidiTakePreviewTimer);
-	}
+
+	if (stopPreview)
+		MidiTakePreview(0, NULL, NULL, 0, 0, 0, false);
 }
 
 static void MidiTakePreview (int mode, MediaItem_Take* take, MediaTrack* track, double volume, double startOffset, double measureSync, bool pauseDuringPrev)
@@ -101,11 +91,8 @@ static void MidiTakePreview (int mode, MediaItem_Take* take, MediaTrack* track, 
 	*        1 -> start  *
 	*        2 -> toggle */
 
-	if (IsRecording()) // Reaper won't preview anything during recording but extension will still think preview is in progress (could disrupt toggle states and send unneeded CC123)
-		return;
-
+	// First stop any ongoing preview
 	RegisterCsurfPlayState(false, MidiTakePreviewPlayState);
-
 	if (g_itemPreviewPlaying)
 	{
 		if (g_ItemPreview.preview_track)
@@ -119,6 +106,7 @@ static void MidiTakePreview (int mode, MediaItem_Take* take, MediaTrack* track, 
 		}
 
 		g_itemPreviewPlaying = false;
+		plugin_register("-timer",(void*)MidiTakePreviewTimer);
 		delete g_ItemPreview.src;
 
 		if (g_itemPreviewPaused && mode != 1) // requesting new preview while old one is still playing shouldn't unpause playback
@@ -128,11 +116,13 @@ static void MidiTakePreview (int mode, MediaItem_Take* take, MediaTrack* track, 
 			g_itemPreviewPaused = false;
 		}
 
+		// Toggled preview off...treat it as stop
 		if (mode == 2)
-			return;
+			mode = 0;
 	}
 
-	if (mode == 0)
+	// About IsRecording: REAPER won't preview anything during recording but extension will still think preview is in progress if we let it continue here
+	if (mode == 0 || IsRecording())
 		return;
 
 	if (take)

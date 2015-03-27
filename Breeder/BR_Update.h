@@ -28,9 +28,10 @@
 #pragma once
 
 /******************************************************************************
-* Call on startup to initiate search                                          *
+* Version check init/exit                                                     *
 ******************************************************************************/
 void VersionCheckInit ();
+void VersionCheckExit ();
 
 /******************************************************************************
 * Command and preferences (used from About dialog)                            *

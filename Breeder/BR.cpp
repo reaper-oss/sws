@@ -738,8 +738,11 @@ int BR_Init ()
 void BR_Exit ()
 {
 	ContextualToolbarsExit();
+	ContinuousActionsExit ();
 	LoudnessExit();
 	ProjStateExit();
+	VersionCheckExit();
+	ME_StopMidiTakePreview(NULL, 0, 0, 0, NULL); // in case any kind of preview is happening right now, make sure it's stopped
 }
 
 void BR_RegisterContinuousActions ()

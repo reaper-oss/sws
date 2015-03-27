@@ -69,9 +69,10 @@ void ContinuousActionStopAll ();                             // call from contin
 int  ContinuousActionTooltips ();                            // get current tooltips options (they get changed during continuous action so GetConfig() is useless)
 
 /******************************************************************************
-* Call from the action hook and swallow action if it returns true             *
+* Misc stuff needed for continuous actions to work properly                   *
 ******************************************************************************/
-bool ContinuousActionHook (COMMAND_T* ct, int flagOrRelmode, HWND hwnd);
+bool ContinuousActionHook (COMMAND_T* ct, int flagOrRelmode, HWND hwnd); // call from the action hook and swallow action if it returns true
+void ContinuousActionsExit ();                                           // call when unloading extension to make sure everything is cleaned up
 
 /******************************************************************************
 * Put all continuous actions init functions here so their cmds end up         *

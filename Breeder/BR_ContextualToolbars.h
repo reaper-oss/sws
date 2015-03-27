@@ -171,6 +171,9 @@ public:
 	void ExportConfig (WDL_FastString& contextToolbars, WDL_FastString& contextAutoClose, WDL_FastString& contextPosition, WDL_FastString& options);
 	void ImportConfig (const char* contextToolbars, const char* contextAutoClose, const char* contextPosition, const char* options);
 
+	/* Call when unloading extension to make sure everything is cleaned up properly */
+	static void Cleaup ();
+
 private:
 	struct ContextInfo
 	{

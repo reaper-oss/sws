@@ -615,6 +615,11 @@ void BR_ContextualToolbar::ImportConfig (const char* contextToolbars, const char
 	this->UpdateInternals();
 }
 
+void BR_ContextualToolbar::Cleaup ()
+{
+	plugin_register("-timer",(void*)BR_ContextualToolbar::TooltipTimer);
+}
+
 BR_ContextualToolbar::ContextInfo::ContextInfo () :
 mouseAction     (DO_NOTHING),
 toggleAction    (DO_NOTHING),
@@ -2729,6 +2734,7 @@ int ContextualToolbarsInit ()
 void ContextualToolbarsExit ()
 {
 	g_contextToolbarsWndManager.Delete();
+	BR_ContextualToolbar::Cleaup();
 }
 
 /******************************************************************************

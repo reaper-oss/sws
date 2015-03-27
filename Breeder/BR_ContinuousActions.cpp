@@ -575,3 +575,8 @@ bool ContinuousActionHook (COMMAND_T* ct, int flagOrRelmode, HWND hwnd)
 	}
 	return swallow;
 }
+
+void ContinuousActionsExit ()
+{
+	ContinuousActionStopAll();
+}

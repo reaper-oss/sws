@@ -378,7 +378,7 @@ bool BR_Envelope::SetTimeSig (int id, bool sig, bool partial, int num, int den)
 		return false;
 }
 
-bool BR_Envelope::SetCreateSortedPoint (int id, double position, double value, int shape, double bezier, bool selected)
+bool BR_Envelope::SetCreatePoint (int id, double position, double value, int shape, double bezier, bool selected)
 {
 	position -= m_takeEnvOffset;
 
@@ -386,7 +386,7 @@ bool BR_Envelope::SetCreateSortedPoint (int id, double position, double value, i
 	{
 		id = this->FindNext(position, 0);
 		BR_EnvPoint newPoint(position, value, (shape < 0 || shape > 5) ? this->GetDefaultShape() : shape, 0, selected, 0, (shape == 5) ? bezier : 0);
-		m_points.insert(m_points.begin() + id, newPoint);
+		m_points.insert(m_points.begin() + m_count, newPoint);
 
 		++m_count;
 		m_update       = true;
@@ -395,7 +395,7 @@ bool BR_Envelope::SetCreateSortedPoint (int id, double position, double value, i
 	}
 	else if (this->ValidateId(id))
 	{
-		if ((this->ValidateId(id-1) && position < m_points[id-1].position) || (this->ValidateId(id+1) && position  > m_points[id+1].position))
+		if ((this->ValidateId(id-1) && position < m_points[id-1].position) || (this->ValidateId(id+1) && position > m_points[id+1].position))
 			m_sorted = false;
 
 		if (shape >= 0 && shape <= 5)

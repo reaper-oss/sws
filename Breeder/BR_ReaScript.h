@@ -45,6 +45,7 @@ bool            BR_EnvGetPoint (BR_Envelope* envelope, int id, double* positionO
 void            BR_EnvGetProperties (BR_Envelope* envelope, bool* activeOut, bool* visibleOut, bool* armedOut, bool* inLaneOut, int* laneHeightOut, int* defaultShapeOut, double* minValueOut, double* maxValueOut, double* centerValueOut, int* typeOut, bool* faderScalingOut);
 bool            BR_EnvSetPoint (BR_Envelope* envelope, int id, double position, double value, int shape, bool selected, double bezier);
 void            BR_EnvSetProperties (BR_Envelope* envelope, bool active, bool visible, bool armed, bool inLane, int laneHeight, int defaultShape, bool faderScaling);
+void            BR_EnvSortPoints (BR_Envelope* envelope);
 double          BR_EnvValueAtPos (BR_Envelope* envelope, double position);
 double          BR_GetMidiSourceLenPPQ (MediaItem_Take* take);
 MediaItem*      BR_GetMediaItemByGUID (ReaProject* proj, const char* guidStringIn);

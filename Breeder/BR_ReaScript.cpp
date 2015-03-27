@@ -139,6 +139,7 @@ MediaTrack* BR_EnvGetParentTrack (BR_Envelope* envelope)
 	}
 	return NULL;
 }
+
 bool BR_EnvGetPoint (BR_Envelope* envelope, int id, double* positionOut, double* valueOut, int* shapeOut, bool* selectedOut, double* bezierOut)
 {
 	if (envelope)
@@ -201,7 +202,7 @@ void BR_EnvGetProperties (BR_Envelope* envelope, bool* activeOut, bool* visibleO
 bool BR_EnvSetPoint (BR_Envelope* envelope, int id, double position, double value, int shape, bool selected, double bezier)
 {
 	if (envelope)
-		return envelope->SetCreateSortedPoint(id, position, value, shape, bezier, selected);
+		return envelope->SetCreatePoint(id, position, value, shape, bezier, selected);
 	else
 		return false;
 }
@@ -219,6 +220,12 @@ void BR_EnvSetProperties (BR_Envelope* envelope, bool active, bool visible, bool
 		if (defaultShape >= 0 && defaultShape <= 5)
 			envelope->SetDefaultShape(defaultShape);
 	}
+}
+
+void BR_EnvSortPoints (BR_Envelope* envelope)
+{
+	if (envelope)
+		envelope->Sort();
 }
 
 double BR_EnvValueAtPos (BR_Envelope* envelope, double position)

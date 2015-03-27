@@ -49,7 +49,7 @@ extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_TrackSoloMuteState> > g_trac
 extern SWSProjConfig<BR_MidiToggleCCLane>                                 g_midiToggleHideCCLanes;
 
 /******************************************************************************
-* Call on startup to register state saving functionality                      *
+* Project state init/exit                                                     *
 ******************************************************************************/
 int ProjStateInit ();
 void ProjStateExit ();

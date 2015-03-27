@@ -28,6 +28,7 @@ ReaScript
 +Added some other functions:
  - BR_GetMidiSourceLenPPQ
  - BR_IsTakeMidi
+ - BR_EnvSortPoints
 
 Fixes
 +Notes/Windows OS: fixed "wrap text" option (Issue 690)

@@ -56,7 +56,7 @@ SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_TrackSoloMuteState> > g_trackSoloMu
 SWSProjConfig<BR_MidiToggleCCLane>                                 g_midiToggleHideCCLanes;
 
 /******************************************************************************
-* Project state saving functionality                                          *
+* Project state init/exit                                                     *
 ******************************************************************************/
 static bool ProcessExtensionLine (const char *line, ProjectStateContext *ctx, bool isUndo, project_config_extension_t *reg)
 {

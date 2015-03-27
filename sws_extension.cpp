@@ -648,6 +648,7 @@ error:
 				ConsoleExit();
 				FreezeExit();
 				MiscExit();
+				FNGExtensionExit();
 				PadreExit();
 				SNM_Exit();
 				BR_Exit();

@@ -280,7 +280,7 @@ HWND replacecontrol(HWND h,const int idc,FNCHANGESTYLE fnchange)
   if(!IsWindow(hwnd)) return 0;
 
   prev    = GetWindow(hwnd,GW_HWNDPREV);
-  hinst   = (HINSTANCE)GetWindowLong(hwnd,GWL_HINSTANCE);
+  hinst   = (HINSTANCE)GetWindowLongPtr(hwnd,GWLP_HINSTANCE);
   style   = GetWindowLong(hwnd,GWL_STYLE);
   exstyle = GetWindowLong(hwnd,GWL_EXSTYLE);
   focus   = hwnd == GetFocus();

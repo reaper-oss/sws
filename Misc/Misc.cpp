@@ -83,8 +83,6 @@ int MiscInit()
 		return 0;
 	if (!TrackSelInit())
 		return 0;
-	if (!ZoomInit())
-		return 0;
 	
 	return 1;
 }

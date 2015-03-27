@@ -28,6 +28,6 @@
 #pragma once
 
 void ZoomSlice();
-int ZoomInit();
+int ZoomInit(bool hookREAPERWndProcs);
 void ZoomExit();
 void ZoomToSelItems(COMMAND_T* = NULL);

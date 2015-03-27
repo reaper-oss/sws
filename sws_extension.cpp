@@ -626,7 +626,7 @@ error:
 				UnregisterAllCmds();
 				plugin_register("-hookcommand2", (void*)hookCommandProc2);
 				plugin_register("-hookcommand", (void*)hookCommandProc);
-//				plugin_register("-hookpostcommand", (void*)hookPostCommandProc))
+//				plugin_register("-hookpostcommand", (void*)hookPostCommandProc);
 				plugin_register("-toggleaction", (void*)toggleActionHook);
 				plugin_register("-hookcustommenu", (void*)swsMenuHook);
 				if (g_ts) plugin_register("-csurf_inst", g_ts);
@@ -1120,6 +1120,8 @@ error:
 			ERR_RETURN("Xenakios init error.")
 		if (!errmsg.GetLength() && !MiscInit())
 			ERR_RETURN("Misc init error.")
+		if (!errmsg.GetLength() && !ZoomInit(false))
+			ERR_RETURN("Zoom init error.")
 		if(!errmsg.GetLength() && !FNGExtensionInit())
 			ERR_RETURN("Fingers init error.")
 		if (!errmsg.GetLength() && !PadreInit())
@@ -1152,10 +1154,11 @@ error:
 		if (!errmsg.GetLength() && !rec->Register("hookcustommenu", (void*)swsMenuHook))
 			ERR_RETURN("Menu hook error.")
 
-		if (!errmsg.GetLength() && (!RegisterExportedFuncs(rec) || !RegisterExportedAPI(rec)))
+    if (!errmsg.GetLength() && (!RegisterExportedFuncs(rec) || !RegisterExportedAPI(rec)))
 			ERR_RETURN("Reascript export failed.");
 
 		AddExtensionsMainMenu();
+		ZoomInit(true); // touchy! only hook REAPER window procs at the very end, i.e. only if everything else went well
 		OK_RETURN("SWS Extension successfully loaded.");
 	}
 };   // end extern C

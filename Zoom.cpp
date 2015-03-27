@@ -1601,20 +1601,22 @@ static accelerator_register_t g_ar = { translateAccel, TRUE, NULL };
 
 #define ZOOMPREFS_KEY "ZoomPrefs"
 #define DRAGZOOMSCALE_KEY "DragZoomScale"
-int ZoomInit()
+int ZoomInit(bool hookREAPERWndProcs)
 {
+	if (hookREAPERWndProcs)
+	{
+		HWND hTrackView = GetTrackWnd();
+		if (hTrackView) g_ReaperTrackWndProc = (WNDPROC)SetWindowLongPtr(hTrackView, GWLP_WNDPROC, (LONG_PTR)ZoomWndProc);
+		HWND hRuler = GetRulerWnd();
+		if (hRuler) g_ReaperRulerWndProc = (WNDPROC)SetWindowLongPtr(hRuler, GWLP_WNDPROC, (LONG_PTR)DragZoomWndProc);
+		return 1;
+	}
+
 	if (!plugin_register("accelerator",&g_ar))
 		return 0;
 	SWSRegisterCommands(g_commandTable);
 	if (!plugin_register("projectconfig",&g_projectconfig))
 		return 0;
-	// Init the zoom tool
-	HWND hTrackView = GetTrackWnd();
-	if (hTrackView)
-		g_ReaperTrackWndProc = (WNDPROC)SetWindowLongPtr(hTrackView, GWLP_WNDPROC, (LONG_PTR)ZoomWndProc);
-	HWND hRuler = GetRulerWnd();
-	if (hRuler)
-		g_ReaperRulerWndProc = (WNDPROC)SetWindowLongPtr(hRuler, GWLP_WNDPROC, (LONG_PTR)DragZoomWndProc);
 
 #ifdef _WIN32
 	g_hZoomInCur   = LoadCursor(g_hInst, MAKEINTRESOURCE(IDC_ZOOMIN));

@@ -298,6 +298,7 @@ void DoSpreadSelItemsOver4Tracks(COMMAND_T*);
 void DoShowSpreadItemsDlg(COMMAND_T*);
 void DoToggleSelectedItemsRndDlg(COMMAND_T*);
 void InitUndoKeyUpHandler01();
+void RemoveUndoKeyUpHandler01();
 void DoSlipItemContentsOneSampleLeft(COMMAND_T*);
 void DoSlipItemContentsOneSampleRight(COMMAND_T*);
 void DoReplaceItemFileWithNextInFolder(COMMAND_T*);

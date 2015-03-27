@@ -702,6 +702,7 @@ void XenakiosExit()
 	plugin_register("-projectconfig",&xen_reftrack_pcreg);
 	plugin_register("-timer", (void*)PlayItemsOnceTimer);
 	plugin_register("-timer",(void*)ItemPreviewTimer);
+	RemoveUndoKeyUpHandler01();
 }
 
 int XenakiosInit()

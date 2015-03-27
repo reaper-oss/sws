@@ -1224,6 +1224,11 @@ void InitUndoKeyUpHandler01()
 	plugin_register("accelerator",&g_myundoacreg);
 }
 
+void RemoveUndoKeyUpHandler01()
+{
+	plugin_register("-accelerator",&g_myundoacreg);
+}
+
 void DoSlipItemContents(int timebase,double amount,bool slipalltakes)
 {
 	if (!g_KeyUpUndoHandler) g_KeyUpUndoHandler=SlipItemKeyUpHandler;

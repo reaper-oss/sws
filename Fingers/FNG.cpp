@@ -10,14 +10,14 @@
 #include "MidiLaneCommands.h"
 
 
-int FNGExtensionInit(REAPER_PLUGIN_HINSTANCE hInstance, reaper_plugin_info_t *rec)
+int FNGExtensionInit()
 {
     std::srand((unsigned int)time(NULL));
     EnvelopeCommands::Init();
     MediaItemCommands::Init();
     MiscCommands::Init();
     GrooveCommands::Init();
-    GrooveTemplateHandler::Init(rec);
+    GrooveTemplateHandler::Init();
     MidiLaneCommands::Init();
 
     return 1;

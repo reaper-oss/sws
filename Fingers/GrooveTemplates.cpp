@@ -86,13 +86,13 @@ static bool GetGrooveBeatPosition(double currentBeatPosition, double maxBeatDist
     return true;
 }
 
-void GrooveTemplateHandler::Init(reaper_plugin_info_t *rec)
+void GrooveTemplateHandler::Init()
 {
     GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
     me->grooveMarkersHelper.BeginLoadProjectState = GrooveTemplateHandler::BeginLoadProjectState;
     me->grooveMarkersHelper.ProcessExtensionLine = GrooveTemplateHandler::ProcessExtensionLine;
     me->grooveMarkersHelper.SaveExtensionConfig = GrooveTemplateHandler::SaveGrooveMarkers;
-    rec->Register("projectconfig", &me->grooveMarkersHelper);
+    plugin_register("projectconfig", &me->grooveMarkersHelper);
     me->mGrooveDialog = new GrooveDialog();
 }
 

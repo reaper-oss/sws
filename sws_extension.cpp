@@ -1118,7 +1118,7 @@ error:
 			ERR_RETURN("Xenakios init error.")
 		if (!errmsg.GetLength() && !MiscInit())
 			ERR_RETURN("Misc init error.")
-		if(!errmsg.GetLength() && !FNGExtensionInit(hInstance, rec))
+		if(!errmsg.GetLength() && !FNGExtensionInit())
 			ERR_RETURN("Fingers init error.")
 		if (!errmsg.GetLength() && !PadreInit())
 			ERR_RETURN("Padre init error.")

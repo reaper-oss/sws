@@ -1321,4 +1321,5 @@ void SNM_Exit()
 #ifdef _SNM_MISC
 	plugin_register("-hookcustommenu", (void*)SNM_Menuhook);
 #endif
+	plugin_register("-timer",(void*)OnInitTimer);
 }

@@ -339,6 +339,7 @@ int SNM_ProjectInit() {
 
 void SNM_ProjectExit() {
 	plugin_register("-projectconfig", &s_projectconfig);
+	plugin_register("-timer",(void*)OnTriggerActionTimer);
 }
 
 

@@ -399,6 +399,14 @@ SWS_SnapshotsWnd::SWS_SnapshotsWnd()
 	Init();
 }
 
+SWS_SnapshotsWnd::~SWS_SnapshotsWnd()
+{
+#ifdef _SNAP_TINY_BUTTONS
+	m_tinyLRbtns.RemoveAllChildren(false);
+	m_tinyLRbtns.SetRealParent(NULL);
+#endif
+}
+
 void SWS_SnapshotsWnd::Update()
 {
 	static bool bRecurseCheck = false;
@@ -802,6 +810,7 @@ void SWS_SnapshotsWnd::OnDestroy()
 
 #ifdef _SNAP_TINY_BUTTONS
 	m_tinyLRbtns.RemoveAllChildren(false);
+	m_tinyLRbtns.SetRealParent(NULL);
 #endif
 }
 

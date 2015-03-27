@@ -53,6 +53,8 @@ class SWS_SnapshotsWnd : public SWS_DockWnd
 {
 public:
 	SWS_SnapshotsWnd();
+	virtual ~SWS_SnapshotsWnd();
+
 	void Update();
 	void RenameCurrent();
 	void SetFilterType(int iType) { m_iSelType = iType; }

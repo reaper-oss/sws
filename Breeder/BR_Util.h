@@ -146,7 +146,6 @@ int FindStretchMarker (MediaItem_Take* take, double position, double surrounding
 * Grid                                                                        *
 ******************************************************************************/
 double GetNextGridDiv (double position); // unlike other functions, this one doesn't care about grid visibility
-double GetPrevGridDiv (double position);
 double GetClosestGridLine (double position);
 double GetClosestMeasureGridLine (double position);
 double GetClosestLeftSideGridLine (double position);

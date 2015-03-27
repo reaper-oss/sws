@@ -50,7 +50,10 @@ enum BR_EnvShape
 	SLOW_START_END = 2,
 	FAST_START     = 3,
 	FAST_END       = 4,
-	BEZIER         = 5
+	BEZIER         = 5,
+
+	MIN_SHAPE      = LINEAR,
+	MAX_SHAPE      = BEZIER
 };
 
 /******************************************************************************
@@ -99,7 +102,7 @@ public:
 	bool DeletePoints (int startId, int endId);
 	bool GetTimeSig (int id, bool* sig, bool* partial, int* num, int* den);
 	bool SetTimeSig (int id, bool sig, bool partial, int num, int den);
-	bool SetCreatePoint (int id, double position, double value, int shape, double bezier, bool selected); // for ReaScript export (id = -1 will create new point)
+	bool SetCreatePoint (int id, double position, double value, int shape, double bezier, bool selected); // for ReaScript export (id = -1 will create new point, performs additional safety checks)
 
 	/* Selected points (never updated when editing, use UpdateSelected() if needed) */
 	void UnselectAll ();

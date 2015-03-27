@@ -268,8 +268,11 @@ bool BR_Envelope::SetSelection (int id, bool selected)
 
 bool BR_Envelope::CreatePoint (int id, double position, double value, int shape, double bezier, bool selected, bool checkPosition /*=false*/, bool snapValue /*= false*/)
 {
-	if (this->ValidateId(id) || id == m_count)
-	{
+	if (this->ValidateId(id) || id >= m_count)
+	{	
+		if (id >= m_count)
+			id = m_count;
+
 		position -= m_takeEnvOffset;
 
 		if (this->IsTakeEnvelope() && checkPosition && !CheckBounds(position, 0.0, GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_LENGTH")))
@@ -384,26 +387,31 @@ bool BR_Envelope::SetCreatePoint (int id, double position, double value, int sha
 
 	if (id == -1)
 	{
-		id = this->FindNext(position, 0);
-		BR_EnvPoint newPoint(position, value, (shape < 0 || shape > 5) ? this->GetDefaultShape() : shape, 0, selected, 0, (shape == 5) ? bezier : 0);
+		BR_EnvPoint newPoint(position, value, (shape < MIN_SHAPE || shape > MAX_SHAPE) ? this->GetDefaultShape() : shape, 0, selected, 0, (shape == 5) ? bezier : 0);
 		m_points.insert(m_points.begin() + m_count, newPoint);
 
 		++m_count;
 		m_update       = true;
 		m_pointsEdited = true;
+		if (m_sorted && this->ValidateId(m_count - 2) && position < m_points[m_count - 2].position)
+			m_sorted = false;
+
 		return true;
 	}
 	else if (this->ValidateId(id))
 	{
-		if ((this->ValidateId(id-1) && position < m_points[id-1].position) || (this->ValidateId(id+1) && position > m_points[id+1].position))
-			m_sorted = false;
+		if (m_sorted)
+		{
+			if ((this->ValidateId(id-1) && position < m_points[id-1].position) || (this->ValidateId(id+1) && position > m_points[id+1].position))
+				m_sorted = false;
+		}
 
-		if (shape >= 0 && shape <= 5)
+		if (shape >= MIN_SHAPE && shape <= MAX_SHAPE)
 			m_points[id].shape = shape;
 
 		m_points[id].position = position;
 		m_points[id].value    = value;
-		m_points[id].bezier   = (m_points[id].shape == 5) ? bezier : 0;
+		m_points[id].bezier   = (m_points[id].shape == BEZIER) ? bezier : 0;
 		m_points[id].selected = selected;
 
 		m_update       = true;

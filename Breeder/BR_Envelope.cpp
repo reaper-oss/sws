@@ -146,7 +146,7 @@ static void SetEnvPointMouseValue (COMMAND_T* ct)
 	double endDisplayVal   = ((double)envHeight + (double)envY - (double)yOffset) / (double)envHeight;
 	double startDisplayVal = (s_lastEndPosition == -1) ? (endDisplayVal) : (s_lastEndNormVal);
 
-	// Find all the point over which mouse passed
+	// Find all the points over which mouse passed
 	int startId = -1;
 	int endId   = -1;
 	if ((int)ct->user == 0)
@@ -194,11 +194,11 @@ static void SetEnvPointMouseValue (COMMAND_T* ct)
 			oppositeDirection = true;
 		}
 
-
 		int envClickSegMode; GetConfig("envclicksegmode", envClickSegMode);
 		int editCursorUndo;  GetConfig("undomask",        editCursorUndo);
 		SetConfig("undomask",        ClearBit(editCursorUndo, 3));  // prevent edit cursor undo
 		SetConfig("envclicksegmode", ClearBit(envClickSegMode, 6)); // prevent reselection
+
 		bool pointsMoved = false;
 		for (int i = startId; i <= endId; ++i)
 		{

@@ -1066,10 +1066,10 @@ error:
 			{
 				WDL_FastString dir1, dir2;
 #ifdef _WIN32
-				dir1.SetFormatted(2048, "%s\\%s", GetExePath ? GetExePath() : "<REAPER_installation_folder>", "Plugins");
-				dir2.SetFormatted(2048, "%s\\%s", GetResourcePath ? GetResourcePath() : "<REAPER_resources_folder>", "UserPlugins");
+				dir1.SetFormatted(2048, "%s\\%s", GetExePath(), "Plugins");
+				dir2.SetFormatted(2048, "%s\\%s", GetResourcePath(), "UserPlugins");
 #else
-				dir1.SetFormatted(2048, "%s/%s", GetResourcePath ? GetResourcePath() : "~/Library/Application Support/REAPER", "UserPlugins");
+				dir1.SetFormatted(2048, "%s/%s", GetResourcePath(), "UserPlugins");
 				dir2.Set("/Library/Application Support/REAPER/UserPlugins");
 #endif
         

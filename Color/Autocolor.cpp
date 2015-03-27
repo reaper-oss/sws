@@ -70,7 +70,7 @@ static const char cColorTypes[][32] = { "Custom", "Gradient", "Random", "None", 
 
 
 // Globals
-static SWS_AutoColorWnd* g_pACWnd = NULL;
+SWS_AutoColorWnd* g_pACWnd = NULL;
 static WDL_PtrList<SWS_RuleItem> g_pACItems;
 static SWSProjConfig<WDL_PtrList<SWS_RuleTrack> > g_pACTracks;
 static bool g_bACEnabled = false;
@@ -1158,5 +1158,5 @@ void AutoColorExit()
 	plugin_register("-projectconfig",&g_projectconfig);
 	UnregisterToMarkerRegionUpdates(&g_mkrRgnListener);
 	AutoColorSaveState();
-	delete g_pACWnd;
+	DELETE_NULL(g_pACWnd);
 }

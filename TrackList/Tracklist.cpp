@@ -40,7 +40,7 @@
 #define MAJORADJUST false
 	
 // Globals
-SWS_TrackListWnd* g_pList;
+SWS_TrackListWnd* g_pList=NULL;
 
 // Prototypes
 void OpenTrackList(COMMAND_T* = NULL);
@@ -865,7 +865,7 @@ int TrackListInit()
 void TrackListExit()
 {
 	plugin_register("-projectconfig",&g_projectconfig);
-	delete g_pList;
+	DELETE_NULL(g_pList);
 }
 
 static bool AddFXSubMenu(HMENU *submenu, MediaTrack *track)

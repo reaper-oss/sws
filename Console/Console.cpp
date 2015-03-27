@@ -39,7 +39,7 @@
 #include "Console.h"
 
 
-static ReaConsoleWnd* g_pConsoleWnd = NULL;
+ReaConsoleWnd* g_pConsoleWnd = NULL;
 static WDL_TypedBuf<int> g_selTracks;
 static char g_cLastKey = 0;
 static DWORD g_dwLastKeyMsg = 0;

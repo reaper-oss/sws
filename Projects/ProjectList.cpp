@@ -176,5 +176,5 @@ int ProjectListInit()
 
 void ProjectListExit()
 {
-	delete g_pProjList;
+	DELETE_NULL(g_pProjList);
 }

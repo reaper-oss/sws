@@ -67,7 +67,7 @@ public:
 
 // Globals
 static SWSProjConfig<ProjSnapshot> g_ss;
-static SWS_SnapshotsWnd* g_pSSWnd;
+SWS_SnapshotsWnd* g_pSSWnd=NULL;
 void PasteSnapshot(COMMAND_T*);
 void MergeSnapshot(Snapshot* ss);
 

@@ -27,6 +27,7 @@
 
 
 #include "stdafx.h"
+#include "version.h"
 #include "Console/Console.h"
 #include "Freeze/Freeze.h"
 #include "MarkerActions/MarkerActions.h"
@@ -579,13 +580,15 @@ void WDL_STYLE_ScaleImageCoords(int *x, int *y) { }
 
 // Main DLL entry point
 
-#define COMPATIBLE_REAPER_VERSION "v5.0pre14"
+#define COMPATIBLE_REAPER_VERSION "v5.0pre21"
+char g_sws_version[128]="";
+SWSTimeSlice* g_ts=NULL;
 
 void ErrMsg(WDL_String* errmsg)
 {
 	if ((!IsREAPER || IsREAPER()) && errmsg->GetLength()) // don't display any message if loaded from ReaMote
 	{
-		if (!strstr(errmsg->Get(), COMPATIBLE_REAPER_VERSION))
+		if (!strstr(errmsg->Get(), COMPATIBLE_REAPER_VERSION) && !strstr(errmsg->Get(), g_sws_version))
 		{
 			// reversed insertion
 			errmsg->Insert(" ", 0);
@@ -606,17 +609,15 @@ void ErrMsg(WDL_String* errmsg)
 
 #define IMPAPI(x)       if (!errcnt && !errmsg.GetLength() && !((*((void **)&(x)) = (void *)rec->GetFunc(#x)))) errcnt++;
 #define ERR_RETURN(a)   { errmsg.Append(a); ErrMsg(&errmsg); goto error; }
+#define ERR_RETURN2(a)  { errmsg.Append(a); ErrMsg(&errmsg); return 0; }
 #define OK_RETURN(a)    { return 1; }
-
-//#define ERR_RETURN(a) { FILE* f = fopen("c:\\swserror.txt", "a"); if (f) { fprintf(f, a); fprintf(f, "\n"); fclose(f); } /* return 0; */ }
-//#define OK_RETURN(a)  { FILE* f = fopen("c:\\swserror.txt", "a"); if (f) { fprintf(f, a); fprintf(f, "\n"); fclose(f); } return 1; }
-
-SWSTimeSlice* g_ts=NULL;
 
 extern "C"
 {
 	REAPER_PLUGIN_DLL_EXPORT int REAPER_PLUGIN_ENTRYPOINT(REAPER_PLUGIN_HINSTANCE hInstance, reaper_plugin_info_t *rec)
 	{
+		_snprintf(g_sws_version, sizeof(g_sws_version), "SWS v%d.%d.%d #%d", SWS_VERSION);
+
 		if (!rec)
 		{
 error:
@@ -663,22 +664,10 @@ error:
 		if (!errmsg.GetLength() && !rec->GetFunc)
 			ERR_RETURN("Null rec->GetFunc ptr.")
 
-		// check for dupe/clone
-		if (!errmsg.GetLength())
-		{
-			int(*SNM_GetIntConfigVar)(const char* varname, int errvalue);
-			if ((*((void **)&(SNM_GetIntConfigVar)) = (void *)rec->GetFunc("SNM_GetIntConfigVar")))
-			{
-				ERR_RETURN("Several versions of the SWS extension (or SWS clones) are installed.")
-			}
-		}
-
-
 #ifdef _SWS_LOCALIZATION
 		if (!errmsg.GetLength())
 			IMPORT_LOCALIZE_RPLUG(rec);
 #endif
-
 
 		IMPAPI(plugin_register); // keep those first
 		IMPAPI(IsREAPER);
@@ -1059,12 +1048,36 @@ error:
 
 		if (errcnt)
 		{
-			char txt[1024]="";
+			char txt[2048]="";
 			_snprintf(txt, sizeof(txt),
 					// keep the message on a single line (for the LangPack generator)
 					__LOCALIZE_VERFMT("The version of SWS extension you have installed is incompatible with your version of REAPER.\nYou probably have a REAPER version less than %s installed.\nPlease install the latest version of REAPER from www.reaper.fm.","sws_mbox"),
 					COMPATIBLE_REAPER_VERSION);
 			ERR_RETURN(txt)
+		}
+
+		// check for dupe/clone
+		if (!errmsg.GetLength())
+		{
+			int (*SNM_GetIntConfigVar)(const char* varname, int errvalue);
+			if ((*((void **)&(SNM_GetIntConfigVar)) = (void *)rec->GetFunc("SNM_GetIntConfigVar")))
+			{
+				WDL_FastString dir1, dir2;
+#ifdef _WIN32
+				dir1.SetFormatted(2048, "%s\\%s", GetExePath ? GetExePath() : "<REAPER_installation_folder>", "Plugins");
+				dir2.SetFormatted(2048, "%s\\%s", GetResourcePath ? GetResourcePath() : "<REAPER_resources_folder>", "UserPlugins");
+#else
+				dir1.SetFormatted(2048, "%s/%s", GetResourcePath ? GetResourcePath() : "~/Library/Application Support/REAPER", "UserPlugins");
+				dir2.Set("/Library/Application Support/REAPER/UserPlugins");
+#endif
+        
+				char txt[8192]="";
+				_snprintf(txt, sizeof(txt),
+                  // keep the message on a single line (for the LangPack generator)
+                  __LOCALIZE_VERFMT("Several versions of the SWS extension (or SWS clones) are installed, %s will not be loaded!\n\nPlease quit REAPER and uninstall the conflicting extension if it is older (see Main menu > Extensions > About SWS Extension).\n\nNote that REAPER will look for plugins in the following folders/order:\n%s\n%s","sws_mbox"),
+                  g_sws_version, dir1.Get(), dir2.Get());
+				ERR_RETURN2(txt) // ERR_RETURN2: do not unregister stuff of the conflicting plugin!
+			}
 		}
 
 		// hookcommand2 must be registered before hookcommand

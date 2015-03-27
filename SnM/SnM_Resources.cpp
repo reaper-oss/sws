@@ -2270,16 +2270,6 @@ bool ResourcesWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bu
 	return false;
 }
 
-void ResourcesWnd::RefreshWndToolbar()
-{
-	RefreshToolbar(NamedCommandLookup("_S&M_SHOW_RESOURCES_VIEW"));
-	RefreshToolbar(NamedCommandLookup("_S&M_SHOWFXCHAINSLOTS"));
-	RefreshToolbar(NamedCommandLookup("_S&M_SHOW_RESVIEW_IMAGE"));
-	RefreshToolbar(NamedCommandLookup("_S&M_SHOW_RESVIEW_MEDIA"));
-	RefreshToolbar(NamedCommandLookup("_S&M_SHOW_RESVIEW_PRJ_TEMPLATES"));
-	RefreshToolbar(NamedCommandLookup("_S&M_SHOW_RESVIEW_THEME"));
-	RefreshToolbar(NamedCommandLookup("_S&M_SHOW_RESVIEW_TR_TEMPLATES"));
-}
 void ResourcesWnd::ClearListSelection()
 {
 	SWS_ListView* lv = GetListView();

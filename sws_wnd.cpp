@@ -50,8 +50,6 @@
 #define CELL_EDIT_TIMEOUT	50
 #define TOOLTIP_TIMER		0x1001
 #define TOOLTIP_TIMEOUT		350
-#define TOOLBAR_TIMER		0x1002
-#define TOOLBAR_TIMEOUT		50
 
 
 SWS_DockWnd::SWS_DockWnd(int iResource, const char* cWndTitle, const char* cId, int iCmdID)
@@ -157,13 +155,10 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			return r;
 	}
 
-	// Since there are no virtual functions for WM_SHOWWINDOW, let them get passed on just in case
+	// Since there are no virtual functions for WM_SHOWWINDOW, let the message get passed on just in case
 	if (uMsg == WM_SHOWWINDOW)
-	{		
-		m_toolbarState = (wParam == TRUE); // when closing another docked wnd, some other (which may be SWS_DockWnd) may get shown but calling Refresh here won't work so we'll call it from the timer instead
-		if (GetToggleCommandState(m_iCmdID) != -1)
-			SetTimer(m_hwnd, TOOLBAR_TIMER, TOOLBAR_TIMEOUT, NULL);
-	}
+		RefreshToolbar(0);
+
 	switch (uMsg)
 	{
 		case WM_INITDIALOG:
@@ -225,14 +220,6 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 					m_tooltip_pt = p;
 					lstrcpyn(m_tooltip,buf,sizeof(m_tooltip));
 					InvalidateRect(m_hwnd,NULL,FALSE);
-				}
-			}
-			else if (wParam == TOOLBAR_TIMER)
-			{
-				if (!!GetToggleCommandState(m_iCmdID) == m_toolbarState)
-				{
-					this->RefreshWndToolbar();
-					KillTimer(m_hwnd, TOOLBAR_TIMER);
 				}
 			}
 			else
@@ -404,7 +391,7 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 #endif
 			m_pLists.Empty(true);
 			m_hwnd = NULL;
-			this->RefreshWndToolbar();
+			RefreshToolbar(0);
 			break;
 		case WM_PAINT:
 			if (!OnPaint() && m_parentVwnd.GetNumChildren())

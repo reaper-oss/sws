@@ -136,7 +136,6 @@ protected:
 	void OnResize();
 	void DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight = NULL);
 	bool GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOutSz);
-	void RefreshWndToolbar();
 
 	SNM_VirtualComboBox m_cbType;
 	WDL_VirtualIconButton m_btnLock;

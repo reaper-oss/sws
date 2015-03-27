@@ -149,7 +149,6 @@ protected:
 	void OnDroppedFiles(HDROP _h);
 	void DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight = NULL);
 	bool GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOutSz);
-	void RefreshWndToolbar();
 	virtual void GetMinSize(int* w, int* h) { *w=190; *h=140; }	
 
 	void AddSlot();

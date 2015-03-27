@@ -660,21 +660,6 @@ bool NotesWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOut
 	return false;
 }
 
-void NotesWnd::RefreshWndToolbar ()
-{
-	RefreshToolbar(NamedCommandLookup("_S&M_SHOW_NOTES_VIEW"));
-	RefreshToolbar(NamedCommandLookup("_S&M_ACTIONHELP"));
-	RefreshToolbar(NamedCommandLookup("_S&M_ITEMNOTES"));
-	RefreshToolbar(NamedCommandLookup("_S&M_MKR_NAMES"));
-	RefreshToolbar(NamedCommandLookup("_S&M_MKR_SUBTITLES"));
-	RefreshToolbar(NamedCommandLookup("_S&M_MARKERNAMES"));
-	RefreshToolbar(NamedCommandLookup("_S&M_MARKERSUBTITLES"));
-	RefreshToolbar(NamedCommandLookup("_S&M_SHOWNOTESHELP"));
-	RefreshToolbar(NamedCommandLookup("_S&M_RGN_NAMES"));
-	RefreshToolbar(NamedCommandLookup("_S&M_RGN_SUBTITLES"));
-	RefreshToolbar(NamedCommandLookup("_S&M_TRACKNOTES"));
-}
-
 void NotesWnd::ToggleLock()
 {
 	g_locked = !g_locked;

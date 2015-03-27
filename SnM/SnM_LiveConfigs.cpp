@@ -2880,14 +2880,6 @@ bool LiveConfigMonitorWnd::OnMouseUp(int _xpos, int _ypos)
 	return true;
 }
 
-void LiveConfigMonitorWnd::RefreshWndToolbar ()
-{
-	RefreshToolbar(NamedCommandLookup("_S&M_OPEN_LIVECFG_MONITOR1"));
-	RefreshToolbar(NamedCommandLookup("_S&M_OPEN_LIVECFG_MONITOR2"));
-	RefreshToolbar(NamedCommandLookup("_S&M_OPEN_LIVECFG_MONITOR3"));
-	RefreshToolbar(NamedCommandLookup("_S&M_OPEN_LIVECFG_MONITOR4"));
-}
-
 void OpenLiveConfigMonitorWnd(int _idx)
 {
 	if (_idx>=0 && _idx<SNM_LIVECFG_NB_CONFIGS)

@@ -222,7 +222,6 @@ protected:
 	virtual bool OnMouseMove(int xpos, int ypos) { return false; }
 	virtual bool OnMouseUp(int xpos, int ypos) { return false; }
 	virtual INT_PTR OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam) { return 0; }
-	virtual void RefreshWndToolbar() {RefreshToolbar(m_iCmdID);} // the only reason for this are S&M windows which have multiple actions to toggle the same wnd
 
 	// Functions for derived classes to load/save some view information (for startup/screensets)
 	virtual int SaveView(char* cViewBuf, int iLen) { return 0; } // return num of chars in state (if cViewBuf == NULL, ret # of bytes needed)
@@ -250,7 +249,6 @@ protected:
 	POINT m_tooltip_pt;
 
 private:
-	bool m_toolbarState;
 	static INT_PTR WINAPI sWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	static int keyHandler(MSG *msg, accelerator_register_t *ctx);
 };

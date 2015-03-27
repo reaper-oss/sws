@@ -742,6 +742,7 @@ void BR_Exit ()
 	LoudnessExit();
 	ProjStateExit();
 	VersionCheckExit();
+
 	ME_StopMidiTakePreview(NULL, 0, 0, 0, NULL); // in case any kind of preview is happening right now, make sure it's stopped
 }
 

@@ -703,6 +703,8 @@ void XenakiosExit()
 	plugin_register("-timer", (void*)PlayItemsOnceTimer);
 	plugin_register("-timer",(void*)ItemPreviewTimer);
 	RemoveUndoKeyUpHandler01();
+	DestroyWindow(g_hItemInspector);
+  g_hItemInspector=NULL;
 }
 
 int XenakiosInit()
@@ -726,7 +728,7 @@ int XenakiosInit()
 	g_filenames = new(WDL_PtrList<char>);
 
 	InitUndoKeyUpHandler01();
-	g_hItemInspector = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_ITEM_INSPECTOR), g_hwndParent, (DLGPROC)MyItemInspectorDlgProc);
+//	g_hItemInspector = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_ITEM_INSPECTOR), g_hwndParent, (DLGPROC)MyItemInspectorDlgProc);
 	if (g_hItemInspector != NULL)
 		ShowWindow(g_hItemInspector, SW_HIDE);
 

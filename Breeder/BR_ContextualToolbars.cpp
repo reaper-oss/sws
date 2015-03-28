@@ -824,7 +824,7 @@ int BR_ContextualToolbar::FindTcpToolbar (BR_MouseInfo& mouseInfo,  BR_Contextua
 	{
 		context = TCP_ENVELOPE;
 
-		int type = GetEnvType(mouseInfo.GetEnvelope(), NULL, NULL);
+		BR_EnvType type = GetEnvType(mouseInfo.GetEnvelope(), NULL, NULL);
 		if      (type == VOLUME || type == VOLUME_PREFX) context = (this->GetMouseAction(TCP_ENVELOPE_VOLUME)   == INHERIT_PARENT) ? TCP_ENVELOPE : TCP_ENVELOPE_VOLUME;
 		else if (type == PAN    || type == PAN_PREFX)    context = (this->GetMouseAction(TCP_ENVELOPE_PAN)      == INHERIT_PARENT) ? TCP_ENVELOPE : TCP_ENVELOPE_PAN;
 		else if (type == WIDTH  || type == WIDTH_PREFX)  context = (this->GetMouseAction(TCP_ENVELOPE_WIDTH)    == INHERIT_PARENT) ? TCP_ENVELOPE : TCP_ENVELOPE_WIDTH;
@@ -919,7 +919,7 @@ int BR_ContextualToolbar::FindArrangeToolbar (BR_MouseInfo& mouseInfo, BR_Contex
 		if (mouseInfo.IsTakeEnvelope())
 		{
 			context  = ARRANGE_TRACK_TAKE_ENVELOPE;
-			int type = GetEnvType(mouseInfo.GetEnvelope(), NULL, NULL);
+			BR_EnvType type = GetEnvType(mouseInfo.GetEnvelope(), NULL, NULL);
 
 			if      (type == VOLUME || type == VOLUME_PREFX) context = (this->GetMouseAction(ARRANGE_TRACK_TAKE_ENVELOPE_VOLUME) == INHERIT_PARENT) ? ARRANGE_TRACK_TAKE_ENVELOPE : ARRANGE_TRACK_TAKE_ENVELOPE_VOLUME;
 			else if (type == PAN    || type == PAN_PREFX)    context = (this->GetMouseAction(ARRANGE_TRACK_TAKE_ENVELOPE_PAN)    == INHERIT_PARENT) ? ARRANGE_TRACK_TAKE_ENVELOPE : ARRANGE_TRACK_TAKE_ENVELOPE_PAN;
@@ -941,7 +941,7 @@ int BR_ContextualToolbar::FindArrangeToolbar (BR_MouseInfo& mouseInfo, BR_Contex
 		else
 		{
 			context  = ARRANGE_ENVELOPE_TRACK;
-			int type = GetEnvType(mouseInfo.GetEnvelope(), NULL, NULL);
+			BR_EnvType type = GetEnvType(mouseInfo.GetEnvelope(), NULL, NULL);
 
 			if      (type == VOLUME || type == VOLUME_PREFX) context = (this->GetMouseAction(ARRANGE_ENVELOPE_TRACK_VOLUME)   == INHERIT_PARENT) ? ARRANGE_ENVELOPE_TRACK : ARRANGE_ENVELOPE_TRACK_VOLUME;
 			else if (type == PAN    || type == PAN_PREFX)    context = (this->GetMouseAction(ARRANGE_ENVELOPE_TRACK_PAN)      == INHERIT_PARENT) ? ARRANGE_ENVELOPE_TRACK : ARRANGE_ENVELOPE_TRACK_PAN;
@@ -1499,7 +1499,7 @@ bool BR_ContextualToolbar::GetReaperToolbar (int id, int* mouseAction, int* togg
 					defaultName.AppendFormatted(512, "%s %d", "Toolbar", toolbarId);
 				}
 
-				GetPrivateProfileString(section.Get(), "title", __localizeFunc(defaultName.Get(), "MENU_349", 0), toolbarName, toolbarNameSz, GetReaperMenuIniPath().Get());
+				GetPrivateProfileString(section.Get(), "title", __localizeFunc(defaultName.Get(), "MENU_349", 0), toolbarName, toolbarNameSz, GetReaperMenuIni());
 			}
 		}
 
@@ -1733,10 +1733,10 @@ BR_ContextualToolbar* BR_ContextualToolbarsManager::GetContextualToolbar (int id
 			char contextAutoClose[size];
 			char contextPosition[size];
 			char options[size];
-			GetPrivateProfileString(INI_SECTION, this->GetKeyForPreset(INI_KEY_CONTEXTS,  id).Get(), "", contextToolbars,  size, BR_GetIniFile());
-			GetPrivateProfileString(INI_SECTION, this->GetKeyForPreset(INI_KEY_AUTOCLOSE, id).Get(), "", contextAutoClose, size, BR_GetIniFile());
-			GetPrivateProfileString(INI_SECTION, this->GetKeyForPreset(INI_KEY_POSITION,  id).Get(), "", contextPosition,  size, BR_GetIniFile());
-			GetPrivateProfileString(INI_SECTION, this->GetKeyForPreset(INI_KEY_OPTIONS,   id).Get(), "", options,          size, BR_GetIniFile());
+			GetPrivateProfileString(INI_SECTION, this->GetKeyForPreset(INI_KEY_CONTEXTS,  id).Get(), "", contextToolbars,  size, GetIniFileBR());
+			GetPrivateProfileString(INI_SECTION, this->GetKeyForPreset(INI_KEY_AUTOCLOSE, id).Get(), "", contextAutoClose, size, GetIniFileBR());
+			GetPrivateProfileString(INI_SECTION, this->GetKeyForPreset(INI_KEY_POSITION,  id).Get(), "", contextPosition,  size, GetIniFileBR());
+			GetPrivateProfileString(INI_SECTION, this->GetKeyForPreset(INI_KEY_OPTIONS,   id).Get(), "", options,          size, GetIniFileBR());
 
 			contextualToolbar->ImportConfig(contextToolbars, contextAutoClose, contextPosition, options);
 		}
@@ -1757,10 +1757,10 @@ void BR_ContextualToolbarsManager::SetContextualToolbar (int id, BR_ContextualTo
 		WDL_FastString options;
 		currentContextualToolbar->ExportConfig(contextToolbars, contextAutoClose, contextPosition, options);
 
-		WritePrivateProfileString(INI_SECTION, this->GetKeyForPreset(INI_KEY_CONTEXTS,  id).Get(), contextToolbars.Get(),  BR_GetIniFile());
-		WritePrivateProfileString(INI_SECTION, this->GetKeyForPreset(INI_KEY_AUTOCLOSE, id).Get(), contextAutoClose.Get(), BR_GetIniFile());
-		WritePrivateProfileString(INI_SECTION, this->GetKeyForPreset(INI_KEY_POSITION, id).Get(),  contextPosition.Get(),  BR_GetIniFile());
-		WritePrivateProfileString(INI_SECTION, this->GetKeyForPreset(INI_KEY_OPTIONS, id).Get(),   options.Get(),          BR_GetIniFile());
+		WritePrivateProfileString(INI_SECTION, this->GetKeyForPreset(INI_KEY_CONTEXTS,  id).Get(), contextToolbars.Get(),  GetIniFileBR());
+		WritePrivateProfileString(INI_SECTION, this->GetKeyForPreset(INI_KEY_AUTOCLOSE, id).Get(), contextAutoClose.Get(), GetIniFileBR());
+		WritePrivateProfileString(INI_SECTION, this->GetKeyForPreset(INI_KEY_POSITION, id).Get(),  contextPosition.Get(),  GetIniFileBR());
+		WritePrivateProfileString(INI_SECTION, this->GetKeyForPreset(INI_KEY_OPTIONS, id).Get(),   options.Get(),          GetIniFileBR());
 	}
 }
 
@@ -2227,7 +2227,7 @@ BR_ContextualToolbar* BR_ContextualToolbarsWnd::GetCurrentContextualToolbar ()
 void BR_ContextualToolbarsWnd::OnInitDlg ()
 {
 	char currentPresetStr[64];
-	GetPrivateProfileString(INI_SECTION, INI_KEY_CURRENT_PRESET, "0", currentPresetStr, sizeof(currentPresetStr), BR_GetIniFile());
+	GetPrivateProfileString(INI_SECTION, INI_KEY_CURRENT_PRESET, "0", currentPresetStr, sizeof(currentPresetStr), GetIniFileBR());
 	m_currentPreset = atoi(currentPresetStr);
 	if (m_currentPreset < 0 || m_currentPreset > PRESET_COUNT)
 		m_currentPreset = 0;
@@ -2532,7 +2532,7 @@ void BR_ContextualToolbarsWnd::OnDestroy ()
 {
 	char currentPresetStr[512];
 	_snprintfSafe(currentPresetStr, sizeof(currentPresetStr), "%d", m_currentPreset);
-	WritePrivateProfileString(INI_SECTION, INI_KEY_CURRENT_PRESET, currentPresetStr, BR_GetIniFile());
+	WritePrivateProfileString(INI_SECTION, INI_KEY_CURRENT_PRESET, currentPresetStr, GetIniFileBR());
 }
 
 void BR_ContextualToolbarsWnd::GetMinSize (int* w, int* h)

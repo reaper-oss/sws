@@ -27,12 +27,26 @@
 ******************************************************************************/
 #pragma once
 
-int         BR_Init ();
-void        BR_Exit ();
-void        BR_RegisterContinuousActions ();
-int         BR_GetSetActionToApply (bool set, int cmd);
-bool        BR_GlobalActionHook (int cmd, int val, int valhw, int relmode, HWND hwnd);
-bool        BR_SwsActionHook (COMMAND_T* ct, int flagOrRelmode, HWND hwnd);
-void        BR_CSurfSetPlayState (bool play, bool pause, bool rec);
-int         BR_CSurfExtended (int call, void* parm1, void* parm2, void* parm3);
-const char* BR_GetIniFile ();
+/******************************************************************************
+* Command hook                                                                *
+******************************************************************************/
+bool BR_GlobalActionHook (int cmd, int val, int valhw, int relmode, HWND hwnd);
+bool BR_SwsActionHook (COMMAND_T* ct, int flagOrRelmode, HWND hwnd);
+int  BR_GetNextActionToApply ();
+
+/******************************************************************************
+* Csurf                                                                       *
+******************************************************************************/
+void BR_CSurfSetPlayState (bool play, bool pause, bool rec);
+int  BR_CSurfExtended (int call, void* parm1, void* parm2, void* parm3);
+
+/******************************************************************************
+* Continuous actions                                                          *
+******************************************************************************/
+void BR_RegisterContinuousActions ();
+
+/******************************************************************************
+* BR init/exit                                                                *
+******************************************************************************/
+int  BR_Init ();
+void BR_Exit ();

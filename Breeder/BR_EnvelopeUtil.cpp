@@ -36,20 +36,20 @@
 ******************************************************************************/
 BR_Envelope::BR_Envelope () :
 m_envelope      (NULL),
-m_take          (NULL),
 m_parent        (NULL),
+m_take          (NULL),
 m_tempoMap      (false),
 m_update        (false),
 m_sorted        (true),
 m_pointsEdited  (false),
-m_sampleRate    (-1),
 m_takeEnvOffset (0),
-m_takeEnvType   (UNKNOWN),
-m_count         (0),
-m_countSel      (0),
+m_sampleRate    (-1),
 m_countConseq   (-1),
 m_height        (-1),
-m_yOffset       (-1)
+m_yOffset       (-1),
+m_count         (0),
+m_countSel      (0),
+m_takeEnvType   (UNKNOWN)
 {
 }
 
@@ -61,12 +61,14 @@ m_tempoMap      (envelope == GetTempoEnv()),
 m_update        (false),
 m_sorted        (true),
 m_pointsEdited  (false),
-m_sampleRate    (-1),
 m_takeEnvOffset (0),
-m_takeEnvType   (UNKNOWN),
+m_sampleRate    (-1),
 m_countConseq   (-1),
 m_height        (-1),
-m_yOffset       (-1)
+m_yOffset       (-1),
+m_count         (0),
+m_countSel      (0),
+m_takeEnvType   (UNKNOWN)
 {
 	if (!m_parent)
 		m_take = GetTakeEnvParent(m_envelope, &m_takeEnvType);
@@ -81,12 +83,14 @@ m_tempoMap      (m_envelope == GetTempoEnv()),
 m_update        (false),
 m_sorted        (true),
 m_pointsEdited  (false),
-m_sampleRate    (-1),
 m_takeEnvOffset (0),
-m_takeEnvType   (UNKNOWN),
+m_sampleRate    (-1),
 m_countConseq   (-1),
 m_height        (-1),
-m_yOffset       (-1)
+m_yOffset       (-1),
+m_count         (0),
+m_countSel      (0),
+m_takeEnvType   (UNKNOWN)
 {
 	this->Build(takeEnvelopesUseProjectTime);
 }
@@ -99,38 +103,40 @@ m_tempoMap      (false),
 m_update        (false),
 m_sorted        (true),
 m_pointsEdited  (false),
-m_sampleRate    (-1),
 m_takeEnvOffset (0),
-m_takeEnvType   (m_envelope ? envType : UNKNOWN),
+m_sampleRate    (-1),
 m_countConseq   (-1),
 m_height        (-1),
-m_yOffset       (-1)
+m_yOffset       (-1),
+m_count         (0),
+m_countSel      (0),
+m_takeEnvType   (m_envelope ? envType : UNKNOWN)
 {
 	this->Build(takeEnvelopesUseProjectTime);
 }
 
 BR_Envelope::BR_Envelope (const BR_Envelope& envelope) :
 m_envelope        (envelope.m_envelope),
-m_take            (envelope.m_take),
 m_parent          (envelope.m_parent),
+m_take            (envelope.m_take),
 m_tempoMap        (envelope.m_tempoMap),
 m_update          (envelope.m_update),
 m_sorted          (envelope.m_sorted),
 m_pointsEdited    (envelope.m_pointsEdited),
-m_sampleRate      (envelope.m_sampleRate),
 m_takeEnvOffset   (envelope.m_takeEnvOffset),
-m_takeEnvType     (envelope.m_takeEnvType),
+m_sampleRate      (envelope.m_sampleRate),
 m_countConseq     (envelope.m_countConseq),
 m_height          (envelope.m_height),
 m_yOffset         (envelope.m_yOffset),
 m_count           (envelope.m_count),
 m_countSel        (envelope.m_countSel),
+m_takeEnvType     (envelope.m_takeEnvType),
 m_points          (envelope.m_points),
 m_pointsSel       (envelope.m_pointsSel),
 m_pointsConseq    (envelope.m_pointsConseq),
+m_properties      (envelope.m_properties),
 m_chunkProperties (envelope.m_chunkProperties),
-m_envName         (envelope.m_envName),
-m_properties      (envelope.m_properties)
+m_envName         (envelope.m_envName)
 {
 }
 
@@ -144,20 +150,20 @@ BR_Envelope& BR_Envelope::operator= (const BR_Envelope& envelope)
 		return *this;
 
 	m_envelope      = envelope.m_envelope;
-	m_take          = envelope.m_take;
 	m_parent        = envelope.m_parent;
+	m_take          = envelope.m_take;
 	m_tempoMap      = envelope.m_tempoMap;
 	m_update        = envelope.m_update;
 	m_sorted        = envelope.m_sorted;
 	m_pointsEdited  = envelope.m_pointsEdited;
-	m_sampleRate    = envelope.m_sampleRate;
 	m_takeEnvOffset = envelope.m_takeEnvOffset;
-	m_takeEnvType   = envelope.m_takeEnvType;
+	m_sampleRate    = envelope.m_sampleRate;
 	m_countConseq   = envelope.m_countConseq;
 	m_height        = envelope.m_height;
 	m_yOffset       = envelope.m_yOffset;
 	m_count         = envelope.m_count;
 	m_countSel      = envelope.m_countSel;
+	m_takeEnvType   = envelope.m_takeEnvType;
 	m_points        = envelope.m_points;
 	m_pointsSel     = envelope.m_pointsSel;
 	m_pointsConseq  = envelope.m_pointsConseq;
@@ -269,7 +275,7 @@ bool BR_Envelope::SetSelection (int id, bool selected)
 bool BR_Envelope::CreatePoint (int id, double position, double value, int shape, double bezier, bool selected, bool checkPosition /*=false*/, bool snapValue /*= false*/)
 {
 	if (this->ValidateId(id) || id >= m_count)
-	{	
+	{
 		if (id >= m_count)
 			id = m_count;
 
@@ -278,7 +284,7 @@ bool BR_Envelope::CreatePoint (int id, double position, double value, int shape,
 		if (this->IsTakeEnvelope() && checkPosition && !CheckBounds(position, 0.0, GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_LENGTH")))
 			return false;
 
-		BR_EnvPoint newPoint(position, (snapValue) ? (this->SnapValue(value)) : (value), shape, 0, selected, 0, bezier);
+		BR_Envelope::EnvPoint newPoint(position, (snapValue) ? (this->SnapValue(value)) : (value), shape, 0, selected, 0, bezier);
 		m_points.insert(m_points.begin() + id, newPoint);
 
 		++m_count;
@@ -387,7 +393,7 @@ bool BR_Envelope::SetCreatePoint (int id, double position, double value, int sha
 
 	if (id == -1)
 	{
-		BR_EnvPoint newPoint(position, value, (shape < MIN_SHAPE || shape > MAX_SHAPE) ? this->GetDefaultShape() : shape, 0, selected, 0, (shape == 5) ? bezier : 0);
+		BR_Envelope::EnvPoint newPoint(position, value, (shape < MIN_SHAPE || shape > MAX_SHAPE) ? this->GetDefaultShape() : shape, 0, selected, 0, (shape == 5) ? bezier : 0);
 		m_points.insert(m_points.begin() + m_count, newPoint);
 
 		++m_count;
@@ -518,7 +524,7 @@ void BR_Envelope::DeletePointsInRange (double start, double end)
 	}
 	else
 	{
-		for (vector<BR_EnvPoint>::iterator i = m_points.begin(); i != m_points.end();)
+		for (vector<BR_Envelope::EnvPoint>::iterator i = m_points.begin(); i != m_points.end();)
 		{
 			if (i->position >= start && i->position <= end)
 			{
@@ -546,7 +552,7 @@ void BR_Envelope::Sort ()
 {
 	if (!m_sorted)
 	{
-		stable_sort(m_points.begin(), m_points.end(), BR_EnvPoint::ComparePoints());
+		stable_sort(m_points.begin(), m_points.end(), BR_Envelope::EnvPoint::ComparePoints());
 		m_sorted = true;
 	}
 }
@@ -583,7 +589,7 @@ int BR_Envelope::Find (double position, double surroundingRange /*=0*/)
 	{
 		int prevId = (m_sorted) ? (this->FindPrevious(position, 0)) : (0);
 
-		for (vector<BR_EnvPoint>::iterator i = m_points.begin(); i != m_points.end() ; ++i)
+		for (vector<BR_Envelope::EnvPoint>::iterator i = m_points.begin(); i != m_points.end() ; ++i)
 		{
 			if (i->position == position)
 			{
@@ -1153,6 +1159,12 @@ TrackEnvelope* BR_Envelope::GetPointer ()
 	return m_envelope;
 }
 
+BR_EnvType BR_Envelope::Type ()
+{
+	this->FillProperties();
+	return m_properties.type;
+}
+
 bool BR_Envelope::IsTempo ()
 {
 	return m_tempoMap;
@@ -1218,12 +1230,6 @@ int BR_Envelope::GetDefaultShape ()
 {
 	this->FillProperties();
 	return m_properties.shape;
-}
-
-int BR_Envelope::Type ()
-{
-	this->FillProperties();
-	return m_properties.type;
 }
 
 int BR_Envelope::GetFxId ()
@@ -1425,7 +1431,7 @@ bool BR_Envelope::Commit (bool force /*=false*/)
 		if (m_tempoMap)
 		{
 			WDL_FastString chunkStart = this->GetProperties();
-			for (vector<BR_EnvPoint>::iterator i = m_points.begin(); i != m_points.end(); ++i)
+			for (vector<BR_Envelope::EnvPoint>::iterator i = m_points.begin(); i != m_points.end(); ++i)
 				i->Append(chunkStart, true);
 			chunkStart.Append(">");
 			GetSetObjectState(m_envelope, chunkStart.Get());
@@ -1511,7 +1517,7 @@ int BR_Envelope::FindFirstPoint ()
 	{
 		int id = 0;
 		double first = m_points[id].position;
-		for (vector<BR_EnvPoint>::iterator i = m_points.begin(); i != m_points.end() ; ++i)
+		for (vector<BR_Envelope::EnvPoint>::iterator i = m_points.begin(); i != m_points.end() ; ++i)
 			if (i->position < first)
 				id = (int)(i - m_points.begin());
 		return id;
@@ -1526,7 +1532,7 @@ int BR_Envelope::LastPointAtPos (int id)
 
 	if (m_sorted)
 	{
-		for (vector<BR_EnvPoint>::iterator i = id + m_points.begin(); i != m_points.end() ; ++i)
+		for (vector<BR_Envelope::EnvPoint>::iterator i = id + m_points.begin(); i != m_points.end() ; ++i)
 		{
 			if (i->position == position)
 				lastId = (int)(i - m_points.begin());
@@ -1536,7 +1542,7 @@ int BR_Envelope::LastPointAtPos (int id)
 	}
 	else
 	{
-		for (vector<BR_EnvPoint>::iterator i = m_points.begin(); i != m_points.end() ; ++i)
+		for (vector<BR_Envelope::EnvPoint>::iterator i = m_points.begin(); i != m_points.end() ; ++i)
 			if (i->position == position)
 				lastId = (int)(i - m_points.begin());
 	}
@@ -1550,15 +1556,15 @@ int BR_Envelope::FindNext (double position, double offset)
 
 	if (m_sorted)
 	{
-		BR_EnvPoint val(position);
-		return (int)(upper_bound(m_points.begin(), m_points.end(), val, BR_EnvPoint::ComparePoints()) - m_points.begin());
+		BR_Envelope::EnvPoint val(position);
+		return (int)(upper_bound(m_points.begin(), m_points.end(), val, BR_Envelope::EnvPoint::ComparePoints()) - m_points.begin());
 	}
 	else
 	{
 		int id = -1;
 		double nextPos = 0;
 		bool foundFirst = false;
-		for (vector<BR_EnvPoint>::iterator i = m_points.begin(); i != m_points.end() ; ++i)
+		for (vector<BR_Envelope::EnvPoint>::iterator i = m_points.begin(); i != m_points.end() ; ++i)
 		{
 			double currentPos = i->position;
 			if (currentPos > position)
@@ -1589,15 +1595,15 @@ int BR_Envelope::FindPrevious (double position, double offset)
 
 	if (m_sorted)
 	{
-		BR_EnvPoint val(position);
-		return (int)(lower_bound(m_points.begin(), m_points.end(), val, BR_EnvPoint::ComparePoints()) - m_points.begin())-1;
+		BR_Envelope::EnvPoint val(position);
+		return (int)(lower_bound(m_points.begin(), m_points.end(), val, BR_Envelope::EnvPoint::ComparePoints()) - m_points.begin())-1;
 	}
 	else
 	{
 		int id = -1;
 		double prevPos = 0;
 		bool foundFirst = false;
-		for (vector<BR_EnvPoint>::iterator i = m_points.begin(); i != m_points.end() ; ++i)
+		for (vector<BR_Envelope::EnvPoint>::iterator i = m_points.begin(); i != m_points.end() ; ++i)
 		{
 			double currentPos = i->position;
 			if (currentPos < position)
@@ -1642,7 +1648,7 @@ void BR_Envelope::Build (bool takeEnvelopesUseProjectTime)
 			while (token != NULL)
 			{
 				lp.parse(token);
-				BR_EnvPoint point;
+				BR_Envelope::EnvPoint point;
 				if (point.ReadLine(lp))
 				{
 					++id;
@@ -1661,7 +1667,7 @@ void BR_Envelope::Build (bool takeEnvelopesUseProjectTime)
 		{
 			for (int i = 0; i < count; ++i)
 			{
-				BR_EnvPoint point;
+				BR_Envelope::EnvPoint point;
 				GetEnvelopePoint(m_envelope, i, &point.position, &point.value, &point.shape, &point.bezier, &point.selected);
 
 				if (m_properties.faderMode != 0)
@@ -1912,7 +1918,7 @@ shape         (0),
 shapeUnknown1 (0),
 shapeUnknown2 (0),
 faderMode     (0),
-type          (0),
+type          (UNKNOWN),
 minValue      (0),
 maxValue      (0),
 centerValue   (0),
@@ -1976,7 +1982,7 @@ BR_Envelope::EnvProperties& BR_Envelope::EnvProperties::operator= (const EnvProp
 	return *this;
 }
 
-BR_Envelope::BR_EnvPoint::BR_EnvPoint () :
+BR_Envelope::EnvPoint::EnvPoint () :
 position (0),
 value    (0),
 bezier   (0),
@@ -1989,7 +1995,7 @@ metronome2 (0)
 {
 }
 
-BR_Envelope::BR_EnvPoint::BR_EnvPoint (double position) :
+BR_Envelope::EnvPoint::EnvPoint (double position) :
 position (position),
 value    (0),
 bezier   (0),
@@ -2002,7 +2008,7 @@ metronome2 (0)
 {
 }
 
-BR_Envelope::BR_EnvPoint::BR_EnvPoint (double position, double value, int shape, int sig, bool selected, int partial, double bezier) :
+BR_Envelope::EnvPoint::EnvPoint (double position, double value, int shape, int sig, bool selected, int partial, double bezier) :
 position   (position),
 value      (value),
 bezier     (bezier),
@@ -2015,7 +2021,7 @@ metronome2 (0)
 {
 }
 
-bool BR_Envelope::BR_EnvPoint::ReadLine (const LineParser& lp)
+bool BR_Envelope::EnvPoint::ReadLine (const LineParser& lp)
 {
 	if (strcmp(lp.gettoken_str(0), "PT"))
 		return false;
@@ -2036,7 +2042,7 @@ bool BR_Envelope::BR_EnvPoint::ReadLine (const LineParser& lp)
 	}
 }
 
-void BR_Envelope::BR_EnvPoint::Append (WDL_FastString& string, bool tempoPoint)
+void BR_Envelope::EnvPoint::Append (WDL_FastString& string, bool tempoPoint)
 {
 	if (tempoPoint)
 	{
@@ -2102,7 +2108,7 @@ TrackEnvelope* GetTakeEnv (MediaItem_Take* take, BR_EnvType envelope)
 	return (envName) ? SWS_GetTakeEnvelopeByName(take, envName) : NULL;
 }
 
-MediaItem_Take* GetTakeEnvParent (TrackEnvelope* envelope, int* type)
+MediaItem_Take* GetTakeEnvParent (TrackEnvelope* envelope, BR_EnvType* type)
 {
 	if (envelope)
 	{
@@ -2114,7 +2120,7 @@ MediaItem_Take* GetTakeEnvParent (TrackEnvelope* envelope, int* type)
 			for (int j = 0; j < takeCount; ++j)
 			{
 				MediaItem_Take* take = GetTake(item, j);
-				int returnType = UNKNOWN;
+				BR_EnvType returnType = UNKNOWN;
 
 				if      (GetTakeEnv(take, VOLUME) == envelope) returnType = VOLUME;
 				else if (GetTakeEnv(take, PAN)    == envelope) returnType = PAN;
@@ -2142,7 +2148,7 @@ MediaItem_Take* GetTakeEnvParent (TrackEnvelope* envelope, int* type)
 		}
 	}
 
-	WritePtr(type, (int)UNKNOWN);
+	WritePtr(type, UNKNOWN);
 	return NULL;
 }
 
@@ -2184,7 +2190,7 @@ vector<int> GetSelPoints (TrackEnvelope* envelope)
 	return selectedPoints;
 }
 
-WDL_FastString ConstructReceiveEnv (int type, double firstPointValue, bool hardwareSend)
+WDL_FastString ConstructReceiveEnv (BR_EnvType type, double firstPointValue, bool hardwareSend)
 {
 	WDL_FastString envelope;
 
@@ -2193,7 +2199,8 @@ WDL_FastString ConstructReceiveEnv (int type, double firstPointValue, bool hardw
 
 	int defAutoMode; GetConfig("defautomode", defAutoMode);
 	int envLanes;    GetConfig("envlanes", envLanes);
-	int defShape = (type == MUTE) ? SQUARE : GetDefaultPointShape();
+
+	BR_EnvShape defShape = (type == MUTE) ? SQUARE : GetDefaultPointShape();
 
 	if      (type == VOLUME) (hardwareSend) ? AppendLine(envelope, "<HWVOLENV")  : AppendLine(envelope, "<AUXVOLENV");
 	else if (type == PAN)    (hardwareSend) ? AppendLine(envelope, "<HWPANENV")  : AppendLine(envelope, "<AUXPANENV");
@@ -2210,7 +2217,7 @@ WDL_FastString ConstructReceiveEnv (int type, double firstPointValue, bool hardw
 	return envelope;
 }
 
-bool ToggleShowSendEnvelope (MediaTrack* track, int sendId, int type)
+bool ToggleShowSendEnvelope (MediaTrack* track, int sendId, BR_EnvType type)
 {
 	bool hwSend = (sendId < GetTrackNumSends(track, 1));
 	MediaTrack* receiveTrack = hwSend ? track : (MediaTrack*)GetSetTrackSendInfo(track, 0, sendId, "P_DESTTRACK", NULL);
@@ -2278,7 +2285,7 @@ bool ToggleShowSendEnvelope (MediaTrack* track, int sendId, int type)
 							    ( hwSend && (!strcmp(lp.gettoken_str(0), "<HWVOLENV")  || !strcmp(lp.gettoken_str(0), "<HWPANENV")  || !strcmp(lp.gettoken_str(0), "<HWMUTEENV"))))
 							{
 								WDL_FastString* currentEnvState = NULL;
-								int currentEnv = 0;
+								BR_EnvType currentEnv = UNKNOWN;
 
 								if      (!strcmp(lp.gettoken_str(0), "<AUXVOLENV")  || !strcmp(lp.gettoken_str(0), "<HWVOLENV"))  {currentEnv = VOLUME; currentEnvState = &volEnv;}
 								else if (!strcmp(lp.gettoken_str(0), "<AUXPANENV")  || !strcmp(lp.gettoken_str(0), "<HWPANENV"))  {currentEnv = PAN;    currentEnvState = &panEnv;}
@@ -2411,9 +2418,9 @@ bool ToggleShowSendEnvelope (MediaTrack* track, int sendId, int type)
 	return update;
 }
 
-bool ShowSendEnvelopes (vector<MediaTrack*>& tracks, int envelopes)
+bool ShowSendEnvelopes (vector<MediaTrack*>& tracks, BR_EnvType envelopeTypes)
 {
-	if (!(envelopes & MUTE) && !(envelopes & PAN) && !(envelopes & VOLUME))
+	if (!(envelopeTypes & MUTE) && !(envelopeTypes & PAN) && !(envelopeTypes & VOLUME))
 		return false;
 
 	set<int> trackIds;
@@ -2477,7 +2484,7 @@ bool ShowSendEnvelopes (vector<MediaTrack*>& tracks, int envelopes)
 							    ( hwSend && (!strcmp(lp.gettoken_str(0), "<HWVOLENV")  || !strcmp(lp.gettoken_str(0), "<HWPANENV")  || !strcmp(lp.gettoken_str(0), "<HWMUTEENV"))))
 							{
 								WDL_FastString* currentEnvState = NULL;
-								int currentEnv = 0;
+								BR_EnvType currentEnv = UNKNOWN;
 
 								if      (!strcmp(lp.gettoken_str(0), "<AUXVOLENV")  || !strcmp(lp.gettoken_str(0), "<HWVOLENV"))  {currentEnv = VOLUME; currentEnvState = &volEnv;}
 								else if (!strcmp(lp.gettoken_str(0), "<AUXPANENV")  || !strcmp(lp.gettoken_str(0), "<HWPANENV"))  {currentEnv = PAN;    currentEnvState = &panEnv;}
@@ -2488,7 +2495,7 @@ bool ShowSendEnvelopes (vector<MediaTrack*>& tracks, int envelopes)
 								{
 									lp.parse(token);
 
-									if (!strcmp(lp.gettoken_str(0), "VIS") && (envelopes & currentEnv))
+									if (!strcmp(lp.gettoken_str(0), "VIS") && (envelopeTypes & currentEnv))
 									{
 										for (int i = 0; i < lp.getnumtokens(); ++i)
 										{
@@ -2528,9 +2535,9 @@ bool ShowSendEnvelopes (vector<MediaTrack*>& tracks, int envelopes)
 							lp.parse(receiveLine.Get());
 							for (int i = 0; i < lp.getnumtokens(); ++i)
 							{
-								if      (i == 3 && (envelopes & VOLUME) && !volEnv.GetLength())  newReceiveLine.Append("1");
-								else if (i == 4 && (envelopes & PAN)    && !panEnv.GetLength())  newReceiveLine.Append("0");
-								else                                                             newReceiveLine.Append(lp.gettoken_str(i));
+								if      (i == 3 && (envelopeTypes & VOLUME) && !volEnv.GetLength()) newReceiveLine.Append("1");
+								else if (i == 4 && (envelopeTypes & PAN)    && !panEnv.GetLength()) newReceiveLine.Append("0");
+								else                                                                newReceiveLine.Append(lp.gettoken_str(i));
 
 								newReceiveLine.Append(" ");
 							}
@@ -2541,9 +2548,9 @@ bool ShowSendEnvelopes (vector<MediaTrack*>& tracks, int envelopes)
 						else
 							newState.Append(receiveLine.Get());
 
-						if ((envelopes & VOLUME) && !volEnv.GetLength())  {volEnv  = ConstructReceiveEnv(VOLUME, trim ? sendVolume : 1, hwSend); stateUpdated = true;}
-						if ((envelopes & PAN)    && !panEnv.GetLength())  {panEnv  = ConstructReceiveEnv(PAN,    trim ? sendPan : 0,    hwSend); stateUpdated = true;}
-						if ((envelopes & MUTE)   && !muteEnv.GetLength()) {muteEnv = ConstructReceiveEnv(MUTE,   sendMute,              hwSend); stateUpdated = true;}
+						if ((envelopeTypes & VOLUME) && !volEnv.GetLength())  {volEnv  = ConstructReceiveEnv(VOLUME, trim ? sendVolume : 1, hwSend); stateUpdated = true;}
+						if ((envelopeTypes & PAN)    && !panEnv.GetLength())  {panEnv  = ConstructReceiveEnv(PAN,    trim ? sendPan : 0,    hwSend); stateUpdated = true;}
+						if ((envelopeTypes & MUTE)   && !muteEnv.GetLength()) {muteEnv = ConstructReceiveEnv(MUTE,   sendMute,              hwSend); stateUpdated = true;}
 
 						if (volEnv.GetLength())  newState.Append(volEnv.Get());
 						if (panEnv.GetLength())  newState.Append(panEnv.Get());
@@ -2609,66 +2616,6 @@ int GetEnvId (TrackEnvelope* envelope, MediaTrack* parent /*= NULL*/)
 	return -1;
 }
 
-int GetDefaultPointShape ()
-{
-	int defEnvs; GetConfig("defenvs", defEnvs);
-	return defEnvs >> 16;
-}
-
-int GetEnvType (TrackEnvelope* envelope, bool* isSend, bool* isHwSend)
-{
-	static const char* volumePreFX     = __localizeFunc("Volume (Pre-FX)", "envname", 0);
-	static const char* panPreFX        = __localizeFunc("Pan (Pre-FX)", "envname", 0);
-	static const char* widthPreFX      = __localizeFunc("Width (Pre-FX)", "envname", 0);
-	static const char* volume          = __localizeFunc("Volume", "envname", 0);
-	static const char* pan             = __localizeFunc("Pan", "envname", 0);
-	static const char* width           = __localizeFunc("Width", "envname", 0);
-	static const char* mute            = __localizeFunc("Mute", "envname", 0);
-	static const char* sendHardVolume  = __localizeFunc("Audio Hardware Output: Volume", "envname", 0);
-	static const char* sendHardPan     = __localizeFunc("Audio Hardware Output: Pan", "envname", 0);
-	static const char* sendHardMute    = __localizeFunc("Audio Hardware Output: Mute", "envname", 0);
-	static const char* sendVolume      = __localizeFunc("Send Volume", "envname", 0);
-	static const char* sendPan         = __localizeFunc("Send Pan", "envname", 0);
-	static const char* sendMute        = __localizeFunc("Send Mute", "envname", 0);
-	static const char* takePitch       = __localizeFunc("Pitch", "item", 0);
-	static const char* takeVolume      = __localizeFunc("Volume", "item", 0);
-	static const char* takePan         = __localizeFunc("Pan", "item", 0);
-	static const char* takeMute        = __localizeFunc("Mute", "item", 0);
-	static const char* playrate        = __localizeFunc("Playrate", "env", 0);
-	static const char* tempo           = __localizeFunc("Tempo map", "env", 0);
-
-	char name[512];
-	GetEnvelopeName(envelope, name, sizeof(name));
-
-	int type  = PARAMETER;
-	bool send   = false;
-	bool hwSend = false;
-	if      (!strcmp(name, volumePreFX))    {type = VOLUME_PREFX;         }
-	else if (!strcmp(name, panPreFX))       {type = PAN_PREFX;            }
-	else if (!strcmp(name, widthPreFX))     {type = WIDTH_PREFX;          }
-	else if (!strcmp(name, volume))         {type = VOLUME;               }
-	else if (!strcmp(name, pan))            {type = PAN;                  }
-	else if (!strcmp(name, width))          {type = WIDTH;                }
-	else if (!strcmp(name, mute))           {type = MUTE;                 }
-	else if (!strcmp(name, sendVolume))     {type = VOLUME; send = true;  }
-	else if (!strcmp(name, sendPan))        {type = PAN;    send = true;  }
-	else if (!strcmp(name, sendMute))       {type = MUTE;   send = true;  }
-	else if (!strcmp(name, sendHardVolume)) {type = VOLUME; hwSend = true;}
-	else if (!strcmp(name, sendHardPan))    {type = PAN;    hwSend = true;}
-	else if (!strcmp(name, sendHardMute))   {type = MUTE;   hwSend = true;}
-	else if (!strcmp(name, takePitch))      {type = PITCH;                }
-	else if (!strcmp(name, takeVolume))     {type = VOLUME;               }
-	else if (!strcmp(name, takePan))        {type = PAN;                  }
-	else if (!strcmp(name, takeMute))       {type = MUTE;                 }
-	else if (!strcmp(name, playrate))       {type = PLAYRATE;             }
-	else if (!strcmp(name, tempo))          {type = TEMPO;                }
-	else                                    {type = PARAMETER;            }
-
-	WritePtr(isSend,   send);
-	WritePtr(isHwSend, hwSend);
-	return type;
-}
-
 int GetCurrentAutomationMode (MediaTrack* track)
 {
 	int override = GetGlobalAutomationOverride();
@@ -2716,6 +2663,66 @@ int CountTrackEnvelopePanels (MediaTrack* track)
 	}
 
 	return count;
+}
+
+BR_EnvShape GetDefaultPointShape ()
+{
+	int defEnvs; GetConfig("defenvs", defEnvs);
+	return static_cast<BR_EnvShape>(defEnvs >> 16);
+}
+
+BR_EnvType GetEnvType (TrackEnvelope* envelope, bool* isSend, bool* isHwSend)
+{
+	static const char* volumePreFX     = __localizeFunc("Volume (Pre-FX)", "envname", 0);
+	static const char* panPreFX        = __localizeFunc("Pan (Pre-FX)", "envname", 0);
+	static const char* widthPreFX      = __localizeFunc("Width (Pre-FX)", "envname", 0);
+	static const char* volume          = __localizeFunc("Volume", "envname", 0);
+	static const char* pan             = __localizeFunc("Pan", "envname", 0);
+	static const char* width           = __localizeFunc("Width", "envname", 0);
+	static const char* mute            = __localizeFunc("Mute", "envname", 0);
+	static const char* sendHardVolume  = __localizeFunc("Audio Hardware Output: Volume", "envname", 0);
+	static const char* sendHardPan     = __localizeFunc("Audio Hardware Output: Pan", "envname", 0);
+	static const char* sendHardMute    = __localizeFunc("Audio Hardware Output: Mute", "envname", 0);
+	static const char* sendVolume      = __localizeFunc("Send Volume", "envname", 0);
+	static const char* sendPan         = __localizeFunc("Send Pan", "envname", 0);
+	static const char* sendMute        = __localizeFunc("Send Mute", "envname", 0);
+	static const char* takePitch       = __localizeFunc("Pitch", "item", 0);
+	static const char* takeVolume      = __localizeFunc("Volume", "item", 0);
+	static const char* takePan         = __localizeFunc("Pan", "item", 0);
+	static const char* takeMute        = __localizeFunc("Mute", "item", 0);
+	static const char* playrate        = __localizeFunc("Playrate", "env", 0);
+	static const char* tempo           = __localizeFunc("Tempo map", "env", 0);
+
+	char name[512];
+	GetEnvelopeName(envelope, name, sizeof(name));
+
+	BR_EnvType type  = PARAMETER;
+	bool send   = false;
+	bool hwSend = false;
+	if      (!strcmp(name, volumePreFX))    {type = VOLUME_PREFX;         }
+	else if (!strcmp(name, panPreFX))       {type = PAN_PREFX;            }
+	else if (!strcmp(name, widthPreFX))     {type = WIDTH_PREFX;          }
+	else if (!strcmp(name, volume))         {type = VOLUME;               }
+	else if (!strcmp(name, pan))            {type = PAN;                  }
+	else if (!strcmp(name, width))          {type = WIDTH;                }
+	else if (!strcmp(name, mute))           {type = MUTE;                 }
+	else if (!strcmp(name, sendVolume))     {type = VOLUME; send = true;  }
+	else if (!strcmp(name, sendPan))        {type = PAN;    send = true;  }
+	else if (!strcmp(name, sendMute))       {type = MUTE;   send = true;  }
+	else if (!strcmp(name, sendHardVolume)) {type = VOLUME; hwSend = true;}
+	else if (!strcmp(name, sendHardPan))    {type = PAN;    hwSend = true;}
+	else if (!strcmp(name, sendHardMute))   {type = MUTE;   hwSend = true;}
+	else if (!strcmp(name, takePitch))      {type = PITCH;                }
+	else if (!strcmp(name, takeVolume))     {type = VOLUME;               }
+	else if (!strcmp(name, takePan))        {type = PAN;                  }
+	else if (!strcmp(name, takeMute))       {type = MUTE;                 }
+	else if (!strcmp(name, playrate))       {type = PLAYRATE;             }
+	else if (!strcmp(name, tempo))          {type = TEMPO;                }
+	else                                    {type = PARAMETER;            }
+
+	WritePtr(isSend,   send);
+	WritePtr(isHwSend, hwSend);
+	return type;
 }
 
 /******************************************************************************
@@ -2837,6 +2844,17 @@ double AverageProjTempo ()
 	}
 }
 
+double GetProjectSettingsTempo (int* num, int* den)
+{
+	int _den;
+	TimeMap_GetTimeSigAtTime(NULL, -1, num, &_den, NULL);
+	double bpm;
+	GetProjectTimeSignature2(NULL, &bpm, NULL);
+
+	WritePtr(den, _den);
+	return bpm/_den*4;
+}
+
 double TempoAtPosition (double startBpm, double endBpm, double startTime, double endTime, double targetTime)
 {
 	return startBpm + (endBpm-startBpm) / (endTime-startTime) * (targetTime-startTime);
@@ -2890,4 +2908,17 @@ void SplitMiddlePoint (double* time1, double* time2, double* bpm1, double* bpm2,
 	double val2 = f1 / (pos2-pos1) - val1;
 	WritePtr(time2, pos2);
 	WritePtr(bpm2, val2);
+}
+
+void InitTempoMap ()
+{
+	if (!CountTempoTimeSigMarkers(NULL))
+	{
+		PreventUIRefresh(1);
+		bool master = TcpVis(GetMasterTrack(NULL));
+		Main_OnCommand(41046, 0);              // Toggle show master tempo envelope
+		Main_OnCommand(41046, 0);
+		if (!master) Main_OnCommand(40075, 0); // Hide master if needed
+		PreventUIRefresh(-1);
+	}
 }

@@ -71,8 +71,8 @@ int  ContinuousActionTooltips ();                            // get current tool
 /******************************************************************************
 * Misc stuff needed for continuous actions to work properly                   *
 ******************************************************************************/
-bool ContinuousActionHook (COMMAND_T* ct, int flagOrRelmode, HWND hwnd); // call from the action hook and swallow action if it returns true
-void ContinuousActionsExit ();                                           // call when unloading extension to make sure everything is cleaned up
+bool ContinuousActionHook (COMMAND_T* ct, int cmd, int flagOrRelmode, HWND hwnd); // call from the action hook and swallow action if it returns true
+void ContinuousActionsExit ();                                                    // call when unloading extension to make sure everything is cleaned up
 
 /******************************************************************************
 * Put all continuous actions init functions here so their cmds end up         *
@@ -80,5 +80,5 @@ void ContinuousActionsExit ();                                           // call
 ******************************************************************************/
 inline void ContinuousActionsInit ()
 {
-	BR_RegisterContinuousActions();
+	BR_RegisterContinuousActions ();
 }

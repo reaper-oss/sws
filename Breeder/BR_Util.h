@@ -27,6 +27,8 @@
 ******************************************************************************/
 #pragma once
 
+#include "BR_EnvelopeUtil.h"
+
 /******************************************************************************
 * Constants                                                                   *
 ******************************************************************************/
@@ -51,25 +53,23 @@ const int SECTION_MEDIA_EXPLORER = 32063;
 /******************************************************************************
 * Miscellaneous                                                               *
 ******************************************************************************/
-vector<int> GetDigits (int val); // in 567 [0] = 5, [1] = 6 etc...
-set<int> GetAllMenuIds (HMENU hMenu);
-int GetUnusedMenuId (HMENU hMenu);
-int RoundToInt (double val);
-int TruncToInt (double val);
+vector<int> GetDigits (int val); // if val = 123, returns [0] = 1, [1] = 2 etc...
+int GetFirstDigit (int val);     // if val = 123, returns 1
+int GetLastDigit (int val);      // if val = 123, returns 3
+int BinaryToDecimal (const char* binaryString);
 int GetBit (int val, int pos);
 int SetBit (int val, int pos, bool set);
 int SetBit (int val, int pos);
 int ClearBit (int val, int pos);
 int ToggleBit (int val, int pos);
-int GetFirstDigit (int val);
-int GetLastDigit (int val);
-int BinaryToDecimal (const char* binaryString);
-bool IsFraction (char* str, double& convertedFraction);
-double AltAtof (char* str);
-double Trunc (double val);
+int RoundToInt (double val);
+int TruncToInt (double val);
 double Round (double val);
 double RoundToN (double val, double n);
+double Trunc (double val);
 double TranslateRange (double value, double oldMin, double oldMax, double newMin, double newMax);
+double AltAtof (char* str);
+bool IsFraction (char* str, double& convertedFraction);
 void ReplaceAll (string& str, string oldStr, string newStr);
 void AppendLine (WDL_FastString& str, const char* line);
 template <typename T> bool WritePtr (T* ptr, T val)  {if (ptr){*ptr = val; return true;} return false;}
@@ -85,23 +85,17 @@ template <typename T> T    GetClosestVal (T val, T targetVal1, T targetVal2) {if
 /******************************************************************************
 * General                                                                     *
 ******************************************************************************/
-vector<double> GetProjectMarkers (bool timeSel, double delta = 0);
-WDL_FastString GetReaperMenuIniPath ();
-WDL_FastString FormatTime (double position, int mode = -1);                                      // same as format_timestr_pos but handles "measures.beats + time" properly
-int GetEffectiveTakeId (MediaItem_Take* take, MediaItem* item, int id, int* effectiveTakeCount); // empty takes could be hidden, so displayed id and real id can differ (pass either take or item and take id)
-int GetEffectiveCompactLevel (MediaTrack* track);                                                // displayed compact level is determined by the highest compact level of any successive parent
+vector<double> GetProjectMarkers (bool timeSel, double timeSelDelta = 0);
+WDL_FastString FormatTime (double position, int mode = -1); // same as format_timestr_pos but handles "measures.beats + time" properly
+int GetEffectiveCompactLevel (MediaTrack* track);           // displayed compact level is determined by the highest compact level of any successive parent
 int FindClosestProjMarkerIndex (double position);
 double EndOfProject (bool markers, bool regions);
-double GetProjectSettingsTempo (int* num, int* den);
-double GetGridDivSafe (); // makes sure grid div is never over MAX_GRID_DIV
 double GetMidiOscVal (double min, double max, double step, double currentVal, int commandVal, int commandValhw, int commandRelmode);
-void InitTempoMap ();
-void ScrollToTrackIfNotInArrange (MediaTrack* track);
-void StartPlayback (double position);
-void GetSetLastAdjustedSend (bool set, MediaTrack** track, int* sendId, int* type); // for type see BR_EnvType (works only for volume and pan, not mute)
+void GetSetLastAdjustedSend (bool set, MediaTrack** track, int* sendId, BR_EnvType* type);
 void GetSetFocus (bool set, HWND* hwnd, int* context);
 void SetAllCoordsToZero (RECT* r);
 void RegisterCsurfPlayState (bool set, void (*CSurfPlayState)(bool,bool,bool), const vector<void(*)(bool,bool,bool)>** registeredFunctions = NULL, bool cleanup = false);
+void StartPlayback (double position);
 bool IsPlaying ();
 bool IsPaused ();
 bool IsRecording ();
@@ -111,12 +105,13 @@ template <typename T> void GetConfig (const char* key, T& val) {val = *static_ca
 template <typename T> void SetConfig (const char* key, T  val) {*static_cast<T*>(GetConfigVar(key)) = val;}
 
 /******************************************************************************
-* Items                                                                       *
+* Items and takes                                                             *
 ******************************************************************************/
 vector<MediaItem*> GetSelItems (MediaTrack* track);
 double ProjectTimeToItemTime (MediaItem* item, double projTime);
 double ItemTimeToProjectTime (MediaItem* item, double itemTime);
 int GetTakeId (MediaItem_Take* take, MediaItem* item = NULL);
+int GetEffectiveTakeId (MediaItem_Take* take, MediaItem* item, int id, int* effectiveTakeCount); // empty takes could be hidden, so displayed id and real id can differ (pass either take or item and take id)
 int GetTakeType (MediaItem_Take* take); // -1 = unknown, 0 = audio, 1 = MIDI, 2 = video, 3 = click, 4 = timecode generator, 5 = RPR project
 bool SetIgnoreTempo (MediaItem* item, bool ignoreTempo, double bpm, int num, int den);
 bool DoesItemHaveMidiEvents (MediaItem* item);
@@ -145,6 +140,7 @@ int FindStretchMarker (MediaItem_Take* take, double position, double surrounding
 /******************************************************************************
 * Grid                                                                        *
 ******************************************************************************/
+double GetGridDivSafe ();                // makes sure grid div is never over MAX_GRID_DIV
 double GetNextGridDiv (double position); // unlike other functions, this one doesn't care about grid visibility
 double GetClosestGridLine (double position);
 double GetClosestMeasureGridLine (double position);
@@ -195,6 +191,7 @@ void MoveArrange (double amountTime);
 void CenterArrange (double position);
 void SetArrangeStart (double start);
 void MoveArrangeToTarget (double target, double reference);
+void ScrollToTrackIfNotInArrange (MediaTrack* track);
 bool IsOffScreen (double position);
 RECT GetDrawableArrangeArea ();
 
@@ -221,6 +218,18 @@ void GetMonitorRectFromPoint (const POINT& p, RECT* r);
 void BoundToRect (const RECT& boundingRect, RECT* r);
 void CenterOnPoint (RECT* rect, const POINT& point, int horz, int ver, int xOffset, int yOffset); // horz -> -1 left, 0 center, 1 right ..... vert -> -1 bottom, 0 center, 1 top (every other value will mean to do nothing)
 void SimulateMouseClick (HWND hwnd, POINT point, bool keepCurrentFocus);
+
+/******************************************************************************
+* Menus                                                                       *
+******************************************************************************/
+set<int> GetAllMenuIds (HMENU hMenu);
+int GetUnusedMenuId (HMENU hMenu);
+
+/******************************************************************************
+* File paths                                                                  *
+******************************************************************************/
+const char* GetReaperMenuIni ();
+const char* GetIniFileBR ();
 
 /******************************************************************************
 * Theming                                                                     *

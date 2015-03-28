@@ -40,6 +40,107 @@
 #include "../SnM/SnM.h"
 #include "../reaper/localize.h"
 
+/******************************************************************************
+* Globals                                                                     *
+******************************************************************************/
+static COMMAND_T* g_nextActionApplyer = NULL;
+static int        g_nextActionToApply = 0;
+static int        g_nextActionLoCmd   = 0;
+static int        g_nextActionHiCmd   = 0;
+static set<int>   g_nextActionApplyers;
+
+/******************************************************************************
+* Command hook                                                                *
+******************************************************************************/
+bool BR_GlobalActionHook (int cmd, int val, int valhw, int relmode, HWND hwnd)
+{
+	if (g_nextActionApplyer)
+	{
+		COMMAND_T* nextActionApplyer = g_nextActionApplyer;
+		g_nextActionApplyer = NULL; // due to reentrancy, set as NULL before running the command
+
+		g_nextActionToApply = cmd;
+		if      (nextActionApplyer->doCommand) nextActionApplyer->doCommand(nextActionApplyer);
+		else if (nextActionApplyer->onAction)  nextActionApplyer->onAction(nextActionApplyer, val, valhw, relmode, hwnd);
+		g_nextActionToApply = 0;
+
+		return true;
+	}
+	return false;
+}
+
+bool BR_SwsActionHook (COMMAND_T* ct, int flagOrRelmode, HWND hwnd)
+{
+	int cmd = ct->accel.accel.cmd;
+
+	// Action applies next action
+	if (cmd >= g_nextActionLoCmd && cmd <= g_nextActionHiCmd && g_nextActionApplyers.find(cmd) != g_nextActionApplyers.end())
+	{
+		g_nextActionApplyer = SWSGetCommandByID(cmd);
+		return true;
+	}
+
+	// Action is continuous action
+	if (ContinuousActionHook(ct, cmd, flagOrRelmode, hwnd))
+		return true;
+
+	return false;
+}
+
+int BR_GetNextActionToApply ()
+{
+	return g_nextActionToApply;
+}
+
+/******************************************************************************
+* Csurf                                                                       *
+******************************************************************************/
+void BR_CSurfSetPlayState (bool play, bool pause, bool rec)
+{
+	static const vector<void(*)(bool,bool,bool)>* s_functions = NULL;
+	if (!s_functions) RegisterCsurfPlayState(false, NULL, &s_functions);
+
+	if (s_functions->size() > 0)
+	{
+		for (size_t i = 0; i < s_functions->size(); ++i)
+		{
+			if (void(*func)(bool,bool,bool) = s_functions->at(i))
+				func(play, pause, rec);
+		}
+		RegisterCsurfPlayState(false, NULL, NULL, true);
+	}
+}
+
+int BR_CSurfExtended(int call, void* parm1, void* parm2, void* parm3)
+{
+	if (call == CSURF_EXT_RESET)
+	{
+		LoudnessUpdate();
+	}
+	else if (call == CSURF_EXT_SETSENDVOLUME || call == CSURF_EXT_SETSENDPAN)
+	{
+		if (parm1 && parm2)
+		{
+			BR_EnvType type = (call == CSURF_EXT_SETSENDPAN) ? PAN : VOLUME;
+			GetSetLastAdjustedSend(true, (MediaTrack**)&parm1, (int*)parm2, &type);
+		}
+	}
+	return 0;
+}
+
+/******************************************************************************
+* Continuous actions                                                          *
+******************************************************************************/
+void BR_RegisterContinuousActions ()
+{
+	SetEnvPointMouseValueInit();
+	PlaybackAtMouseCursorInit ();
+	MoveGridToMouseInit();
+}
+
+/******************************************************************************
+* Commands                                                                    *
+******************************************************************************/
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] =
 {
@@ -725,6 +826,9 @@ static COMMAND_T g_commandTable[] =
 };
 //!WANT_LOCALIZE_1ST_STRING_END
 
+/******************************************************************************
+* BR init/exit                                                                *
+******************************************************************************/
 int BR_Init ()
 {
 	SWSRegisterCommands(g_commandTable);
@@ -734,6 +838,14 @@ int BR_Init ()
 	LoudnessInit();
 	ProjStateInit();
 	VersionCheckInit();
+
+	// Keep "apply next action" registration mechanism here (no need for separate module until more actions are added)
+	g_nextActionApplyers.insert(NamedCommandLookup("_BR_NEXT_CMD_SEL_TK_VIS_ENVS"));        // Make sure these actions are registered
+	g_nextActionApplyers.insert(NamedCommandLookup("_BR_NEXT_CMD_SEL_TK_REC_ENVS"));        // consequentially so their cmds end up
+	g_nextActionApplyers.insert(NamedCommandLookup("_BR_NEXT_CMD_SEL_TK_VIS_ENVS_NOSEL"));  // consequential to optimize BR_SwsActionHook
+	g_nextActionApplyers.insert(NamedCommandLookup("_BR_NEXT_CMD_SEL_TK_REC_ENVS_NOSEL"));
+	g_nextActionLoCmd  = (g_nextActionApplyers.size() > 0) ? *g_nextActionApplyers.begin()  : 0;
+	g_nextActionHiCmd = (g_nextActionApplyers.size() > 0) ? *g_nextActionApplyers.rbegin() : 0;
 
 	return 1;
 }
@@ -747,106 +859,4 @@ void BR_Exit ()
 	VersionCheckExit();
 
 	ME_StopMidiTakePreview(NULL, 0, 0, 0, NULL); // in case any kind of preview is happening right now, make sure it's stopped
-}
-
-void BR_RegisterContinuousActions ()
-{
-	SetEnvPointMouseValueInit();
-	PlaybackAtMouseCursorInit ();
-	MoveGridToMouseInit();
-}
-
-int BR_GetSetActionToApply (bool set, int cmd)
-{
-	static int s_cmd = 0;
-	if (set)
-		s_cmd = cmd;
-	return s_cmd;
-}
-
-bool BR_GlobalActionHook (int cmd, int val, int valhw, int relmode, HWND hwnd)
-{
-	static COMMAND_T* s_actionToRun = NULL;
-	static int        s_lowCmd  = 0;
-	static int        s_highCmd = 0;
-	static set<int>   s_actions;
-
-	static bool s_init = false;
-	if (!s_init)
-	{
-		s_actions.insert(NamedCommandLookup("_BR_NEXT_CMD_SEL_TK_VIS_ENVS"));
-		s_actions.insert(NamedCommandLookup("_BR_NEXT_CMD_SEL_TK_REC_ENVS"));
-		s_actions.insert(NamedCommandLookup("_BR_NEXT_CMD_SEL_TK_VIS_ENVS_NOSEL"));
-		s_actions.insert(NamedCommandLookup("_BR_NEXT_CMD_SEL_TK_REC_ENVS_NOSEL"));
-		s_lowCmd  = (s_actions.size() > 0) ? *s_actions.begin()  : 0;
-		s_highCmd = (s_actions.size() > 0) ? *s_actions.rbegin() : 0;
-		s_init = true;
-	}
-
-	bool swallow = false;
-	if (cmd >= s_lowCmd && cmd <= s_highCmd && s_actions.find(cmd) != s_actions.end())
-	{
-		s_actionToRun = SWSGetCommandByID(cmd);
-		swallow = true;
-	}
-	else if (s_actionToRun && BR_GetSetActionToApply(false, 0) != 0)
-	{
-		COMMAND_T* actionToRun = s_actionToRun;
-		s_actionToRun = NULL; // due to reentrancy, mark this as NULL before running the command
-
-		BR_GetSetActionToApply(true, cmd);
-		if      (actionToRun->doCommand) actionToRun->doCommand(actionToRun);
-		else if (actionToRun->onAction)  actionToRun->onAction(actionToRun, val, valhw, relmode, hwnd);
-		BR_GetSetActionToApply(true, 0);
-
-		swallow = true;
-	}
-	return swallow;
-}
-
-bool BR_SwsActionHook (COMMAND_T* ct, int flagOrRelmode, HWND hwnd)
-{
-	return ContinuousActionHook(ct, flagOrRelmode, hwnd);
-}
-
-void BR_CSurfSetPlayState (bool play, bool pause, bool rec)
-{
-	static const vector<void(*)(bool,bool,bool)>* s_functions = NULL;
-	if (!s_functions) RegisterCsurfPlayState(false, NULL, &s_functions);
-
-	if (s_functions->size() > 0)
-	{
-		for (size_t i = 0; i < s_functions->size(); ++i)
-		{
-			if (void(*func)(bool,bool,bool) = s_functions->at(i))
-				func(play, pause, rec);
-		}
-		RegisterCsurfPlayState(false, NULL, NULL, true);
-	}
-}
-
-int BR_CSurfExtended(int call, void* parm1, void* parm2, void* parm3)
-{
-	if (call == CSURF_EXT_RESET)
-	{
-		LoudnessUpdate();
-	}
-	else if (call == CSURF_EXT_SETSENDVOLUME || call == CSURF_EXT_SETSENDPAN)
-	{
-		if (parm1 && parm2)
-		{
-			int type = (call == CSURF_EXT_SETSENDPAN) ? PAN : VOLUME;
-			GetSetLastAdjustedSend(true, (MediaTrack**)&parm1, (int*)parm2, &type);
-		}
-	}
-	return 0;
-}
-
-const char* BR_GetIniFile ()
-{
-	static WDL_FastString s_iniPath;
-	if (s_iniPath.GetLength() == 0)
-		s_iniPath.SetFormatted(SNM_MAX_PATH, "%s/BR.ini", GetResourcePath());
-
-	return s_iniPath.Get();
 }

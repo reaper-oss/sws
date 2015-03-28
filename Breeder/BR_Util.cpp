@@ -72,90 +72,29 @@ vector<int> GetDigits (int val)
 	return digits;
 }
 
-set<int> GetAllMenuIds (HMENU hMenu)
+int GetFirstDigit (int val)
 {
-	set<int> menuIds;
-
-	int count = GetMenuItemCount(hMenu);
-	for (int i = 0; i < count; ++i)
-	{
-		if (HMENU subMenu = GetSubMenu(hMenu, i))
-		{
-			set<int> subMenuIds = GetAllMenuIds(subMenu);
-			menuIds.insert(subMenuIds.begin(), subMenuIds.end());
-		}
-		else
-		{
-			menuIds.insert(GetMenuItemID(hMenu, i));
-		}
-	}
-
-	return menuIds;
+	val = abs(val);
+	while (val >= 10)
+		val /= 10;
+	return val;
 }
 
-int GetUnusedMenuId (HMENU hMenu)
+int GetLastDigit (int val)
 {
-	set<int> menuIds = GetAllMenuIds(hMenu);
-	int unusedId = 0;
-
-	if (menuIds.empty())
-	{
-		unusedId = 1;
-	}
-	else
-	{
-		int last = *menuIds.rbegin();
-		if (last < (std::numeric_limits<int>::max)()) // () outside is due to max() macro!
-		{
-			if (last < 0)
-				unusedId = 1;
-			else
-				unusedId = last + 1;
-		}
-		else
-		{
-			for (set<int>::iterator it = menuIds.begin(); it != menuIds.end(); ++it)
-			{
-				if (++it != menuIds.end())
-				{
-					int first = *it;
-					int last  = *(++it);
-
-					bool found = false;
-					if (last > 0 && last - first > 1)
-					{
-						while (first != last)
-						{
-							++first;
-							if (first > 0 && first != last)
-							{
-								unusedId = first;
-								found = true;
-								break;
-							}
-						}
-					}
-					if (found)
-						break;
-				}
-			}
-		}
-	}
-
-	return unusedId;
+	return abs(val) % 10;
 }
 
-int RoundToInt (double val)
+int BinaryToDecimal (const char* binaryString)
 {
-	if (val < 0)
-		return (int)(val - 0.5);
-	else
-		return (int)(val + 0.5);
-}
-
-int TruncToInt (double val)
-{
-	return (int)val;
+	int base10 = 0;
+	for (size_t i = 0; i < strlen(binaryString); ++i)
+	{
+		int digit = binaryString[i] - '0';
+		if (digit == 0 || digit == 1)
+			base10 = base10 << 1 | digit;
+	}
+	return base10;
 }
 
 int GetBit (int val, int pos)
@@ -184,29 +123,48 @@ int ToggleBit (int val, int pos)
 	return val ^= 1 << pos;
 }
 
-int GetFirstDigit (int val)
+int RoundToInt (double val)
 {
-	val = abs(val);
-	while (val >= 10)
-		val /= 10;
-	return val;
+	if (val < 0)
+		return (int)(val - 0.5);
+	else
+		return (int)(val + 0.5);
 }
 
-int GetLastDigit (int val)
+int TruncToInt (double val)
 {
-	return abs(val) % 10;
+	return (int)val;
 }
 
-int BinaryToDecimal (const char* binaryString)
+double Round (double val)
 {
-	int base10 = 0;
-	for (size_t i = 0; i < strlen(binaryString); ++i)
-	{
-		int digit = binaryString[i] - '0';
-		if (digit == 0 || digit == 1)
-			base10 = base10 << 1 | digit;
-	}
-	return base10;
+	return (double)(int)(val + ((val < 0) ? (-0.5) : (0.5)));
+}
+
+double RoundToN (double val, double n)
+{
+	double shift = pow(10.0, n);
+	return RoundToInt(val * shift) / shift;
+}
+
+double Trunc (double val)
+{
+	return (val < 0) ? ceil(val) : floor(val);
+}
+
+double TranslateRange (double value, double oldMin, double oldMax, double newMin, double newMax)
+{
+	double oldRange = oldMax - oldMin;
+	double newRange = newMax - newMin;
+	double newValue = ((value - oldMin) * newRange / oldRange) + newMin;
+
+	return SetToBounds(newValue, newMin, newMax);
+}
+
+double AltAtof (char* str)
+{
+	replace(str, str+strlen(str), ',', '.' );
+	return atof(str);
 }
 
 bool IsFraction (char* str, double& convertedFraction)
@@ -234,37 +192,6 @@ bool IsFraction (char* str, double& convertedFraction)
 	}
 }
 
-double AltAtof (char* str)
-{
-	replace(str, str+strlen(str), ',', '.' );
-	return atof(str);
-}
-
-double Trunc (double val)
-{
-	return (val < 0) ? ceil(val) : floor(val);
-}
-
-double Round (double val)
-{
-	return (double)(int)(val + ((val < 0) ? (-0.5) : (0.5)));
-}
-
-double RoundToN (double val, double n)
-{
-	double shift = pow(10.0, n);
-	return RoundToInt(val * shift) / shift;
-}
-
-double TranslateRange (double value, double oldMin, double oldMax, double newMin, double newMax)
-{
-	double oldRange = oldMax - oldMin;
-	double newRange = newMax - newMin;
-	double newValue = ((value - oldMin) * newRange / oldRange) + newMin;
-
-	return SetToBounds(newValue, newMin, newMax);
-}
-
 void ReplaceAll (string& str, string oldStr, string newStr)
 {
 	if (oldStr.empty())
@@ -287,7 +214,7 @@ void AppendLine (WDL_FastString& str, const char* line)
 /******************************************************************************
 * General                                                                     *
 ******************************************************************************/
-vector<double> GetProjectMarkers (bool timeSel, double delta /*=0*/)
+vector<double> GetProjectMarkers (bool timeSel, double timeSelDelta /*=0*/)
 {
 	double tStart, tEnd;
 	GetSet_LoopTimeRange2(NULL, false, false, &tStart, &tEnd, false);
@@ -310,9 +237,9 @@ vector<double> GetProjectMarkers (bool timeSel, double delta /*=0*/)
 			{
 				if (timeSel)
 				{
-					if (pos > tEnd + delta)
+					if (pos > tEnd + timeSelDelta)
 						break;
-					if (pos >= tStart - delta)
+					if (pos >= tStart - timeSelDelta)
 						markers.push_back(pos);
 				}
 				else
@@ -322,14 +249,6 @@ vector<double> GetProjectMarkers (bool timeSel, double delta /*=0*/)
 		++i;
 	}
 	return markers;
-}
-
-WDL_FastString GetReaperMenuIniPath ()
-{
-	static WDL_FastString s_iniPath;
-	if (s_iniPath.GetLength() == 0)
-		s_iniPath.SetFormatted(SNM_MAX_PATH, "%s/reaper-menu.ini", GetResourcePath());
-	return s_iniPath;
 }
 
 WDL_FastString FormatTime (double position, int mode /*=-1*/)
@@ -354,55 +273,6 @@ WDL_FastString FormatTime (double position, int mode /*=-1*/)
 	}
 
 	return string;
-}
-
-int GetEffectiveTakeId (MediaItem_Take* take, MediaItem* item, int id, int* effectiveTakeCount)
-{
-	MediaItem*      validItem = (item) ? (item) : (GetMediaItemTake_Item(take));
-	MediaItem_Take* validTake = (take) ? (take) : (GetTake(validItem, id));
-
-	int count = CountTakes(validItem);
-	int effectiveCount = 0;
-	int effectiveId = -1;
-
-	// Empty takes not displayed
-	int emptyLanes; GetConfig("takelanes", emptyLanes);
-	if (GetBit(emptyLanes, 2))
-	{
-		for (int i = 0; i < count; ++i)
-		{
-			if (MediaItem_Take* currentTake = GetTake(validItem, i))
-			{
-				if (currentTake == validTake)
-					effectiveId = effectiveCount;
-				++effectiveCount;
-			}
-		}
-	}
-	// Empty takes displayed
-	else
-	{
-		if (take)
-		{
-			for (int i = 0; i < count; ++i)
-			{
-				if (GetTake(validItem, i) == validTake)
-				{
-					effectiveId = i;
-					break;
-				}
-			}
-		}
-		else
-		{
-			effectiveId = id;
-		}
-
-		effectiveCount = count;
-	}
-
-	WritePtr(effectiveTakeCount, effectiveCount);
-	return effectiveId;
 }
 
 int GetEffectiveCompactLevel (MediaTrack* track)
@@ -495,30 +365,6 @@ double EndOfProject (bool markers, bool regions)
 	return projEnd;
 }
 
-double GetProjectSettingsTempo (int* num, int* den)
-{
-	int _den;
-	TimeMap_GetTimeSigAtTime(NULL, -1, num, &_den, NULL);
-	double bpm;
-	GetProjectTimeSignature2(NULL, &bpm, NULL);
-
-	WritePtr(den, _den);
-	return bpm/_den*4;
-}
-
-double GetGridDivSafe ()
-{
-	double gridDiv;
-	GetConfig("projgriddiv", gridDiv);
-	if (gridDiv < MAX_GRID_DIV)
-	{
-		SetConfig("projgriddiv", MAX_GRID_DIV);
-		return MAX_GRID_DIV;
-	}
-	else
-		return gridDiv;
-}
-
 double GetMidiOscVal (double min, double max, double step, double currentVal, int commandVal, int commandValhw, int commandRelmode)
 {
 	double returnVal = currentVal;
@@ -548,56 +394,11 @@ double GetMidiOscVal (double min, double max, double step, double currentVal, in
 	return SetToBounds(returnVal, min, max);
 }
 
-void InitTempoMap ()
-{
-	if (!CountTempoTimeSigMarkers(NULL))
-	{
-		PreventUIRefresh(1);
-		bool master = TcpVis(GetMasterTrack(NULL));
-		Main_OnCommand(41046, 0);              // Toggle show master tempo envelope
-		Main_OnCommand(41046, 0);
-		if (!master) Main_OnCommand(40075, 0); // Hide master if needed
-		PreventUIRefresh(-1);
-	}
-}
-
-void ScrollToTrackIfNotInArrange (MediaTrack* track)
-{
-	int offsetY;
-	int height = GetTrackHeight(track, &offsetY);
-
-	HWND hwnd = GetArrangeWnd();
-	SCROLLINFO si = { sizeof(SCROLLINFO), };
-	si.fMask = SIF_ALL;
-	CoolSB_GetScrollInfo(hwnd, SB_VERT, &si);
-
-	int trackEnd = offsetY + height;
-	int pageEnd = si.nPos + (int)si.nPage + SCROLLBAR_W;
-
-	if (offsetY < si.nPos || trackEnd > pageEnd)
-	{
-		si.nPos = offsetY;
-		CoolSB_SetScrollInfo(hwnd, SB_VERT, &si, true);
-		SendMessage(hwnd, WM_VSCROLL, si.nPos << 16 | SB_THUMBPOSITION, NULL);
-	}
-}
-
-void StartPlayback (double position)
-{
-	double editCursor = GetCursorPositionEx(NULL);
-
-	PreventUIRefresh(1);
-	SetEditCurPos2(NULL, position, false, false);
-	OnPlayButton();
-	SetEditCurPos2(NULL, editCursor, false, false);
-	PreventUIRefresh(-1);
-}
-
-void GetSetLastAdjustedSend (bool set, MediaTrack** track, int* sendId, int* type)
+void GetSetLastAdjustedSend (bool set, MediaTrack** track, int* sendId, BR_EnvType* type)
 {
 	static MediaTrack* lastTrack = NULL;
 	static int         lastId    = -1;
-	static int         lastType  = UNKNOWN;
+	static BR_EnvType  lastType  = UNKNOWN;
 
 	if (set)
 	{
@@ -607,7 +408,7 @@ void GetSetLastAdjustedSend (bool set, MediaTrack** track, int* sendId, int* typ
 	}
 	else
 	{
-		WritePtr(track, lastTrack);
+		WritePtr(track,  lastTrack);
 		WritePtr(sendId, lastId);
 		WritePtr(type,   lastType);
 	}
@@ -695,6 +496,17 @@ void RegisterCsurfPlayState (bool set, void (*CSurfPlayState)(bool,bool,bool), c
 		*registeredFunctions = &s_functions;
 }
 
+void StartPlayback (double position)
+{
+	double editCursor = GetCursorPositionEx(NULL);
+
+	PreventUIRefresh(1);
+	SetEditCurPos2(NULL, position, false, false);
+	OnPlayButton();
+	SetEditCurPos2(NULL, editCursor, false, false);
+	PreventUIRefresh(-1);
+}
+
 bool IsPlaying ()
 {
 	return (GetPlayStateEx(NULL) & 1) == 1;
@@ -740,7 +552,7 @@ bool AreAllCoordsZero (RECT& r)
 }
 
 /******************************************************************************
-* Items                                                                       *
+* Items and takes                                                             *
 ******************************************************************************/
 vector<MediaItem*> GetSelItems (MediaTrack* track)
 {
@@ -778,6 +590,55 @@ int GetTakeId (MediaItem_Take* take, MediaItem* item /*= NULL*/)
 			return i;
 	}
 	return -1;
+}
+
+int GetEffectiveTakeId (MediaItem_Take* take, MediaItem* item, int id, int* effectiveTakeCount)
+{
+	MediaItem*      validItem = (item) ? (item) : (GetMediaItemTake_Item(take));
+	MediaItem_Take* validTake = (take) ? (take) : (GetTake(validItem, id));
+
+	int count = CountTakes(validItem);
+	int effectiveCount = 0;
+	int effectiveId = -1;
+
+	// Empty takes not displayed
+	int emptyLanes; GetConfig("takelanes", emptyLanes);
+	if (GetBit(emptyLanes, 2))
+	{
+		for (int i = 0; i < count; ++i)
+		{
+			if (MediaItem_Take* currentTake = GetTake(validItem, i))
+			{
+				if (currentTake == validTake)
+					effectiveId = effectiveCount;
+				++effectiveCount;
+			}
+		}
+	}
+	// Empty takes displayed
+	else
+	{
+		if (take)
+		{
+			for (int i = 0; i < count; ++i)
+			{
+				if (GetTake(validItem, i) == validTake)
+				{
+					effectiveId = i;
+					break;
+				}
+			}
+		}
+		else
+		{
+			effectiveId = id;
+		}
+
+		effectiveCount = count;
+	}
+
+	WritePtr(effectiveTakeCount, effectiveCount);
+	return effectiveId;
 }
 
 int GetTakeType (MediaItem_Take* take)
@@ -1367,6 +1228,19 @@ int FindStretchMarker (MediaItem_Take* take, double position, double surrounding
 /******************************************************************************
 * Grid                                                                        *
 ******************************************************************************/
+double GetGridDivSafe ()
+{
+	double gridDiv;
+	GetConfig("projgriddiv", gridDiv);
+	if (gridDiv < MAX_GRID_DIV)
+	{
+		SetConfig("projgriddiv", MAX_GRID_DIV);
+		return MAX_GRID_DIV;
+	}
+	else
+		return gridDiv;
+}
+
 double GetNextGridDiv (double position)
 {
 	/* This got a tiny bit complicated, but we're trying to replicate        *
@@ -1992,6 +1866,27 @@ void MoveArrangeToTarget (double target, double reference)
 			MoveArrange(target - reference);
 		else
 			CenterArrange(target);
+	}
+}
+
+void ScrollToTrackIfNotInArrange (MediaTrack* track)
+{
+	int offsetY;
+	int height = GetTrackHeight(track, &offsetY);
+
+	HWND hwnd = GetArrangeWnd();
+	SCROLLINFO si = { sizeof(SCROLLINFO), };
+	si.fMask = SIF_ALL;
+	CoolSB_GetScrollInfo(hwnd, SB_VERT, &si);
+
+	int trackEnd = offsetY + height;
+	int pageEnd = si.nPos + (int)si.nPage + SCROLLBAR_W;
+
+	if (offsetY < si.nPos || trackEnd > pageEnd)
+	{
+		si.nPos = offsetY;
+		CoolSB_SetScrollInfo(hwnd, SB_VERT, &si, true);
+		SendMessage(hwnd, WM_VSCROLL, si.nPos << 16 | SB_THUMBPOSITION, NULL);
 	}
 }
 
@@ -2676,6 +2571,102 @@ void SimulateMouseClick (HWND hwnd, POINT point, bool keepCurrentFocus)
 		if (keepCurrentFocus)
 			GetSetFocus(true, &focusedHwnd, &focusedContext);
 	}
+}
+
+/******************************************************************************
+* Menus                                                                       *
+******************************************************************************/
+set<int> GetAllMenuIds (HMENU hMenu)
+{
+	set<int> menuIds;
+
+	int count = GetMenuItemCount(hMenu);
+	for (int i = 0; i < count; ++i)
+	{
+		if (HMENU subMenu = GetSubMenu(hMenu, i))
+		{
+			set<int> subMenuIds = GetAllMenuIds(subMenu);
+			menuIds.insert(subMenuIds.begin(), subMenuIds.end());
+		}
+		else
+		{
+			menuIds.insert(GetMenuItemID(hMenu, i));
+		}
+	}
+
+	return menuIds;
+}
+
+int GetUnusedMenuId (HMENU hMenu)
+{
+	set<int> menuIds = GetAllMenuIds(hMenu);
+	int unusedId = 0;
+
+	if (menuIds.empty())
+	{
+		unusedId = 1;
+	}
+	else
+	{
+		int last = *menuIds.rbegin();
+		if (last < (std::numeric_limits<int>::max)()) // () outside is due to max() macro!
+		{
+			if (last < 0)
+				unusedId = 1;
+			else
+				unusedId = last + 1;
+		}
+		else
+		{
+			for (set<int>::iterator it = menuIds.begin(); it != menuIds.end(); ++it)
+			{
+				if (++it != menuIds.end())
+				{
+					int first = *it;
+					int last  = *(++it);
+
+					bool found = false;
+					if (last > 0 && last - first > 1)
+					{
+						while (first != last)
+						{
+							++first;
+							if (first > 0 && first != last)
+							{
+								unusedId = first;
+								found = true;
+								break;
+							}
+						}
+					}
+					if (found)
+						break;
+				}
+			}
+		}
+	}
+
+	return unusedId;
+}
+
+/******************************************************************************
+* File paths                                                                  *
+******************************************************************************/
+const char* GetReaperMenuIni ()
+{
+	static WDL_FastString s_iniPath;
+	if (s_iniPath.GetLength() == 0)
+		s_iniPath.SetFormatted(SNM_MAX_PATH, "%s/reaper-menu.ini", GetResourcePath());
+	return s_iniPath.Get();
+}
+
+const char* GetIniFileBR ()
+{
+	static WDL_FastString s_iniPath;
+	if (s_iniPath.GetLength() == 0)
+		s_iniPath.SetFormatted(SNM_MAX_PATH, "%s/BR.ini", GetResourcePath());
+
+	return s_iniPath.Get();
 }
 
 /******************************************************************************

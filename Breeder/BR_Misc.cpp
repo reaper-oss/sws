@@ -652,6 +652,8 @@ void ToggleDisplayItemLabels (COMMAND_T* ct)
 	char tmp[256];
 	_snprintfSafe(tmp, sizeof(tmp), "%d", option);
 	WritePrivateProfileString("reaper", "labelitems2", tmp, get_ini_file());
+
+	UpdateArrange();
 }
 
 void CycleRecordModes (COMMAND_T*)
@@ -1142,7 +1144,7 @@ int IsTrimNewVolPanEnvsOn (COMMAND_T* ct)
 int IsDisplayDisplayItemLabelsOn (COMMAND_T* ct)
 {
 	int option; GetConfig("labelitems2", option);
-	return GetBit(option, (int)ct->user);
+	return ((int)ct->user == 4) ? !GetBit(option, (int)ct->user) : GetBit(option, (int)ct->user);
 }
 
 int IsAdjustPlayrateOptionsVisible (COMMAND_T* ct)

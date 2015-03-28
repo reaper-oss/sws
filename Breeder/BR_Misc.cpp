@@ -643,6 +643,17 @@ void TrimNewVolPanEnvs (COMMAND_T* ct)
 	WritePrivateProfileString("reaper", "envtrimadjmode", tmp, get_ini_file());
 }
 
+void ToggleDisplayItemLabels (COMMAND_T* ct)
+{
+	int option; GetConfig("labelitems2", option);
+	option = ToggleBit(option, (int)ct->user);
+	SetConfig("labelitems2", option);
+
+	char tmp[256];
+	_snprintfSafe(tmp, sizeof(tmp), "%d", option);
+	WritePrivateProfileString("reaper", "labelitems2", tmp, get_ini_file());
+}
+
 void CycleRecordModes (COMMAND_T*)
 {
 	int mode; GetConfig("projrecmode", mode);
@@ -1126,6 +1137,12 @@ int IsTrimNewVolPanEnvsOn (COMMAND_T* ct)
 {
 	int option; GetConfig("envtrimadjmode", option);
 	return (option == (int)ct->user);
+}
+
+int IsDisplayDisplayItemLabelsOn (COMMAND_T* ct)
+{
+	int option; GetConfig("labelitems2", option);
+	return GetBit(option, (int)ct->user);
 }
 
 int IsAdjustPlayrateOptionsVisible (COMMAND_T* ct)

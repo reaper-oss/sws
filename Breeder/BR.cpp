@@ -474,6 +474,9 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Set \"Apply trim when adding volume/pan envelopes\" to \"Always\"" },                                                           "BR_OPTIONS_ENV_TRIM_ALWAYS",         TrimNewVolPanEnvs, NULL, 0, IsTrimNewVolPanEnvsOn},
 	{ { DEFACCEL, "SWS/BR: Set \"Apply trim when adding volume/pan envelopes\" to \"In read/write\"" },                                                    "BR_OPTIONS_ENV_TRIM_READWRITE",      TrimNewVolPanEnvs, NULL, 1, IsTrimNewVolPanEnvsOn},
 	{ { DEFACCEL, "SWS/BR: Set \"Apply trim when adding volume/pan envelopes\" to \"Never\"" },                                                            "BR_OPTIONS_ENV_TRIM_NEVER",          TrimNewVolPanEnvs, NULL, 2, IsTrimNewVolPanEnvsOn},
+	{ { DEFACCEL, "SWS/BR: Toggle \"Display media item take name\"" },                                                                                     "BR_OPTIONS_DISPLAY_ITEM_TAKE_NAME",  ToggleDisplayItemLabels, NULL, 0, IsDisplayDisplayItemLabelsOn},
+	{ { DEFACCEL, "SWS/BR: Toggle \"Display media item pitch/playrate if set\"" },                                                                         "BR_OPTIONS_DISPLAY_ITEM_PITCH_RATE", ToggleDisplayItemLabels, NULL, 2, IsDisplayDisplayItemLabelsOn},
+	{ { DEFACCEL, "SWS/BR: Toggle \"Display media item gain if set\"" },                                                                                   "BR_OPTIONS_DISPLAY_ITEM_GAIN",       ToggleDisplayItemLabels, NULL, 4, IsDisplayDisplayItemLabelsOn},
 
 	{ { DEFACCEL, "SWS/BR: Cycle through record modes" },                                                                                                  "BR_CYCLE_RECORD_MODES",              CycleRecordModes},
 

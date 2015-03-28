@@ -10,6 +10,9 @@ Added actions
  - SWS/BR: Reset position of selected partial time signature markers
  - SWS/BR: Snap position of selected partial time signature markers to closest grid line
  - SWS/BR: Move active floating window to mouse cursor (9 version with different horizontal and vertical positions in regards to mouse cursor)
+ - SWS/BR: Toggle "Display media item take name"
+ - SWS/BR: Toggle "Display media item pitch/playrate if set"
+ - SWS/BR: Toggle "Display media item gain if set"
  - SWS/BR: Play from edit cursor position (perform until shortcut released)
  - SWS/BR: Play from edit cursor position and solo track under mouse for the duration (perform until shortcut released)
  - SWS/BR: Play from edit cursor position and solo item and track under mouse for the duration (perform until shortcut released)

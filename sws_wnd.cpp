@@ -74,7 +74,7 @@ SWS_DockWnd::SWS_DockWnd(int iResource, const char* cWndTitle, const char* cId, 
 // setup yet.
 void SWS_DockWnd::Init()
 {
-	int iLen = sizeof(SWS_DockWnd_State) + SaveView(NULL, 0);
+	int iLen = sizeof(SWS_DockWnd_State);
 	char* cState = SWS_LoadDockWndStateBuf(m_id.Get(), iLen);
 	LoadState(cState, iLen);
 	delete [] cState;
@@ -592,8 +592,7 @@ int SWS_DockWnd::keyHandler(MSG* msg, accelerator_register_t* ctx)
 	return 0;
 }
 
-// *Local* function to save the state of the view.  This is the window size, position & dock state,
-// as well as any derived class view information from the function SaveView
+// *Local* function to save the state of the view: window size, position & dock state
 int SWS_DockWnd::SaveState(char* cStateBuf, int iMaxLen)
 {
 	if (SWS_IsWindow(m_hwnd))
@@ -614,19 +613,13 @@ int SWS_DockWnd::SaveState(char* cStateBuf, int iMaxLen)
 	if (cStateBuf)
 	{
 		memcpy(cStateBuf, &m_state, iLen);
-		iLen += SaveView(cStateBuf + iLen, iMaxLen - iLen);
-
 		for (int i = 0; i < iLen / (int)sizeof(int); i++)
 			REAPER_MAKELEINTMEM(&(((int*)cStateBuf)[i]));
 	}
-	else
-		iLen += SaveView(NULL, 0);
-
 	return iLen;
 }
 
-// *Local* function to restore view state.  This is the window size, position & dock state.
-// Also calls the derived class method LoadView.
+// *Local* function to restore view state: window size, position & dock state.
 // if both _stateBuf and _len are NULL, hide (see SDK)
 void SWS_DockWnd::LoadState(const char* cStateBuf, int iLen)
 {
@@ -636,15 +629,6 @@ void SWS_DockWnd::LoadState(const char* cStateBuf, int iLen)
 		SWS_SetDockWndState(cStateBuf, iLen, &m_state);
 	else
 		m_state.state &= ~1;
-
-	if (iLen > sizeof(SWS_DockWnd_State))
-	{
-		int iViewLen = iLen - sizeof(SWS_DockWnd_State);
-		char* pTemp = new char[iViewLen];
-		memcpy(pTemp, cStateBuf + sizeof(SWS_DockWnd_State), iViewLen);
-		LoadView(pTemp, iViewLen);
-		delete [] pTemp;
-	}
 
 	Dock_UpdateDockID((char*)m_id.Get(), m_state.whichdock);
 

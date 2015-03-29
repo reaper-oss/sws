@@ -223,10 +223,6 @@ protected:
 	virtual bool OnMouseUp(int xpos, int ypos) { return false; }
 	virtual INT_PTR OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam) { return 0; }
 
-	// Functions for derived classes to load/save some view information (for startup/screensets)
-	virtual int SaveView(char* cViewBuf, int iLen) { return 0; } // return num of chars in state (if cViewBuf == NULL, ret # of bytes needed)
-	virtual void LoadView(const char* cViewBuf, int iLen) {}
-
 	// Functions for WDL_VWnd-based GUIs
 	virtual void DrawControls(LICE_IBitmap* bm, const RECT* r, int* tooltipHeight = NULL) {}
 	virtual bool GetToolTipString(int xpos, int ypos, char* bufOut, int bufOutSz) { return false; }

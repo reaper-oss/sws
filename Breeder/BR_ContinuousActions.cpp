@@ -563,17 +563,19 @@ int ContinuousActionTooltips ()
 	return g_tooltips;
 }
 
-bool ContinuousActionHook (COMMAND_T* ct, int flagOrRelmode, HWND hwnd)
+bool ContinuousActionHook (COMMAND_T* ct, int cmd, int flagOrRelmode, HWND hwnd)
 {
-	bool swallow = false;
-	int cmd = ct->accel.accel.cmd;
 	if (cmd >= g_continuousCmdLo && cmd <= g_continuousCmdHi) // instead of searching the list every time, first check if cmd is even within range of the list
 	{
 		// Check if the action is continuous and then let it pass if it was sent for the first time or when run through timer
 		if (BR_ContinuousAction* action = g_actions.Get(FindActionFromCmd(g_actions, cmd)))
-			swallow = (g_actionInProgress) ? (flagOrRelmode != ACTION_FLAG || g_actionInProgress->ct->accel.accel.cmd != cmd) : (!ContinuousActionInit(true, ct, hwnd, action));
+		{
+			return (g_actionInProgress) 
+			       ? (flagOrRelmode != ACTION_FLAG || g_actionInProgress->ct->accel.accel.cmd != cmd)
+				   : (!ContinuousActionInit(true, ct, hwnd, action));
+		}
 	}
-	return swallow;
+	return false;
 }
 
 void ContinuousActionsExit ()

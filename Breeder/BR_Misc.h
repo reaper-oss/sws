@@ -47,6 +47,7 @@ void MidiItemTempo (COMMAND_T*);
 void MidiItemTrim (COMMAND_T*);
 void SnapFollowsGridVis (COMMAND_T*);
 void TrimNewVolPanEnvs (COMMAND_T*);
+void ToggleDisplayItemLabels (COMMAND_T*);
 void PlaybackFollowsTempoChange (COMMAND_T*);
 void CycleRecordModes (COMMAND_T*);
 void FocusArrangeTracks (COMMAND_T*);
@@ -79,5 +80,6 @@ void AdjustPlayrate (COMMAND_T*, int, int, int, HWND);
 ******************************************************************************/
 int IsSnapFollowsGridVisOn (COMMAND_T*);
 int IsTrimNewVolPanEnvsOn (COMMAND_T*);
+int IsDisplayDisplayItemLabelsOn (COMMAND_T*);
 int IsPlaybackFollowingTempoChange (COMMAND_T*);
 int IsAdjustPlayrateOptionsVisible (COMMAND_T*);

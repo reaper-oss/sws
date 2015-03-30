@@ -1243,7 +1243,7 @@ void SelectMovePartialTimeSig (COMMAND_T* ct)
 {
 	PreventUIRefresh(1);
 
-	int tempoTimeBase; GetConfig("tempoenvtimelock", tempoTimeBase); // always work with tempo timbase beats 
+	int tempoTimeBase; GetConfig("tempoenvtimelock", tempoTimeBase); // always work with tempo timbase beats
 	SetConfig("tempoenvtimelock", 1);                                // when running these actions
 
 	bool update = false;

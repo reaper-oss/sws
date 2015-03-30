@@ -26,6 +26,7 @@
 /
 ******************************************************************************/
 #include "stdafx.h"
+#include "BR.h"
 #include "BR_Envelope.h"
 #include "BR_ContinuousActions.h"
 #include "BR_EnvelopeUtil.h"
@@ -1297,7 +1298,7 @@ void UnselectEnvelope (COMMAND_T* ct)
 
 void ApplyNextCmdToMultiEnvelopes (COMMAND_T* ct)
 {
-	int cmd = BR_GetSetActionToApply(false, 0);
+	int cmd = BR_GetNextActionToApply();
 	if (cmd == 0)
 		return;
 
@@ -1424,7 +1425,9 @@ void ShowActiveTrackEnvOnly (COMMAND_T* ct)
 
 void ShowLastAdjustedSendEnv (COMMAND_T* ct)
 {
-	MediaTrack* track; int sendId, type;
+	MediaTrack* track;
+	int sendId;
+	BR_EnvType type = UNKNOWN;
 	GetSetLastAdjustedSend(false, &track, &sendId, &type);
 	if      ((int)ct->user == 1) type = VOLUME;
 	else if ((int)ct->user == 2) type = PAN;
@@ -1494,7 +1497,11 @@ void ShowHideSendEnv (COMMAND_T* ct)
 	bool hide       = !!GetBit((int)ct->user, 0);
 	bool activeOnly = !!GetBit((int)ct->user, 1);
 	bool toggle     = !!GetBit((int)ct->user, 2);
-	int mode        = (GetBit((int)ct->user, 3) ? VOLUME : 0) | (GetBit((int)ct->user, 4) ? PAN : 0) | (GetBit((int)ct->user, 5) ? MUTE : 0);
+
+	BR_EnvType mode = UNKNOWN;
+	if (GetBit((int)ct->user, 3)) mode = static_cast<BR_EnvType>(mode | VOLUME);
+	if (GetBit((int)ct->user, 4)) mode = static_cast<BR_EnvType>(mode | PAN);
+	if (GetBit((int)ct->user, 5)) mode = static_cast<BR_EnvType>(mode | MUTE);
 
 	// Get envelopes
 	WDL_PtrList_DeleteOnDestroy<BR_Envelope> envelopes;

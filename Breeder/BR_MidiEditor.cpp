@@ -379,7 +379,7 @@ void ME_CreateCCLaneLastClicked (COMMAND_T* ct, int val, int valhw, int relmode,
 				{
 					tkFirstPos--;
 					int i = 1;
-					while (lanes[i] && i <= SNM_MAX_CC_LANE_ID)
+					while (i <= SNM_MAX_CC_LANE_ID && lanes[i])
 						i++;
 					char newLane[SNM_MAX_CHUNK_LINE_LENGTH] = "";
 					if (_snprintfStrict(newLane, sizeof(newLane), "VELLANE %d 50 0\n", i) > 0)

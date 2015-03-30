@@ -75,6 +75,12 @@ foreach $fname (@$funclist)
   $fname eq "ValidatePtr" and next;
   $fname eq "GetAudioAccessorSamples" and next;
 
+  # remove this to test python export (if _TEST_REASCRIPT_EXPORT is #define'd in ReaScript.cpp) 
+  if ($fname =~ /^SNM_test/)
+  {
+    next;
+  }
+
   @inparms=();
   @proto=();
   @pack=();

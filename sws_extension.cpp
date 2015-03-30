@@ -580,44 +580,34 @@ void WDL_STYLE_ScaleImageCoords(int *x, int *y) { }
 
 // Main DLL entry point
 
-#define COMPATIBLE_REAPER_VERSION "v5.0pre21"
-char g_sws_version[128]="";
 SWSTimeSlice* g_ts=NULL;
 
-void ErrMsg(WDL_String* errmsg)
+void ErrMsg(const char* errmsg, bool wantblabla=true)
 {
-	if ((!IsREAPER || IsREAPER()) && errmsg->GetLength()) // don't display any message if loaded from ReaMote
+	if (errmsg && *errmsg && (!IsREAPER || IsREAPER())) // don't display any message if loaded from ReaMote
 	{
-		if (!strstr(errmsg->Get(), COMPATIBLE_REAPER_VERSION) && !strstr(errmsg->Get(), g_sws_version))
+		WDL_FastString msg(errmsg);
+		if (wantblabla)
 		{
 			// reversed insertion
-			errmsg->Insert(" ", 0);
-			errmsg->Insert(__LOCALIZE("Hint:","sws_mbox"), 0);
-			errmsg->Insert("\r\n", 0);
-			errmsg->Insert("\r\n", 0);
-			errmsg->Insert(__LOCALIZE("Some features of the SWS Extension might not function as expected!","sws_mbox"), 0);
-#ifdef __APPLE__
-			errmsg->Insert(" ", 0);
-#else
-			errmsg->Insert("\r\n", 0);
-#endif
-			errmsg->Insert(__LOCALIZE("An error occured during the SWS extension initialization.","sws_mbox"), 0);
+			msg.Insert(" ", 0);
+			msg.Insert(__LOCALIZE("Hint:","sws_mbox"), 0);
+			msg.Insert("\r\n", 0);
+			msg.Insert(__LOCALIZE("An error occured during the SWS extension initialization.","sws_mbox"), 0);
 		}
-		MessageBox(Splash_GetWnd&&Splash_GetWnd()?Splash_GetWnd():NULL, errmsg->Get(), __LOCALIZE("SWS - Error","sws_mbox"), MB_OK);
+		MessageBox(Splash_GetWnd&&Splash_GetWnd()?Splash_GetWnd():NULL, msg.Get(), __LOCALIZE("SWS - Error","sws_mbox"), MB_OK);
 	}
 }
 
-#define IMPAPI(x)       if (!errcnt && !errmsg.GetLength() && !((*((void **)&(x)) = (void *)rec->GetFunc(#x)))) errcnt++;
-#define ERR_RETURN(a)   { errmsg.Append(a); ErrMsg(&errmsg); goto error; }
-#define ERR_RETURN2(a)  { errmsg.Append(a); ErrMsg(&errmsg); return 0; }
-#define OK_RETURN(a)    { return 1; }
+#define IMPAPI(x)       if (!errcnt && !((*((void **)&(x)) = (void *)rec->GetFunc(#x)))) errcnt++;
+#define ERR_RETURN(a)   { ErrMsg(a); goto error; }
+#define ERR_RETURN1(a)  { ErrMsg(a,false); goto error; }
+#define ERR_RETURN2(a)  { ErrMsg(a,false); return 0; }
 
 extern "C"
 {
 	REAPER_PLUGIN_DLL_EXPORT int REAPER_PLUGIN_ENTRYPOINT(REAPER_PLUGIN_HINSTANCE hInstance, reaper_plugin_info_t *rec)
 	{
-		_snprintf(g_sws_version, sizeof(g_sws_version), "SWS v%d.%d.%d #%d", SWS_VERSION);
-
 		if (!rec)
 		{
 error:
@@ -658,17 +648,15 @@ error:
 
 
 		int errcnt=0; // IMPAPI failed if >0
-		WDL_String errmsg;
 
 		if (rec->caller_version != REAPER_PLUGIN_VERSION)
 			ERR_RETURN("Wrong REAPER_PLUGIN_VERSION!")
 
-		if (!errmsg.GetLength() && !rec->GetFunc)
+		if (!rec->GetFunc)
 			ERR_RETURN("Null rec->GetFunc ptr.")
 
 #ifdef _SWS_LOCALIZATION
-		if (!errmsg.GetLength())
-			IMPORT_LOCALIZE_RPLUG(rec);
+		IMPORT_LOCALIZE_RPLUG(rec);
 #endif
 
 		IMPAPI(plugin_register); // keep those first
@@ -1054,12 +1042,11 @@ error:
 			_snprintf(txt, sizeof(txt),
 					// keep the message on a single line (for the LangPack generator)
 					__LOCALIZE_VERFMT("The version of SWS extension you have installed is incompatible with your version of REAPER.\nYou probably have a REAPER version less than %s installed.\nPlease install the latest version of REAPER from www.reaper.fm.","sws_mbox"),
-					COMPATIBLE_REAPER_VERSION);
-			ERR_RETURN(txt)
+					"v5.0pre21"); // <-- update compatible version here
+			ERR_RETURN1(txt)
 		}
 
 		// check for dupe/clone
-		if (!errmsg.GetLength())
 		{
 			int (*SNM_GetIntConfigVar)(const char* varname, int errvalue);
 			if ((*((void **)&(SNM_GetIntConfigVar)) = (void *)rec->GetFunc("SNM_GetIntConfigVar")))
@@ -1076,72 +1063,72 @@ error:
 				char txt[8192]="";
 				_snprintf(txt, sizeof(txt),
                   // keep the message on a single line (for the LangPack generator)
-                  __LOCALIZE_VERFMT("Several versions of the SWS extension (or SWS clones) are installed, %s will not be loaded!\n\nPlease quit REAPER and uninstall the conflicting extension if it is older (see Main menu > Extensions > About SWS Extension).\n\nNote that REAPER will look for plugins in the following folders/order:\n%s\n%s","sws_mbox"),
-                  g_sws_version, dir1.Get(), dir2.Get());
+                  __LOCALIZE_VERFMT("Several versions of the SWS extension (or SWS clones) are installed, SWS v%d.%d.%d #%d will not be loaded!\n\nPlease quit REAPER and uninstall the conflicting extension if it is older (see Main menu > Extensions > About SWS Extension).\n\nNote that REAPER will look for plugins in the following folders/order:\n%s\n%s","sws_mbox"),
+                  SWS_VERSION, dir1.Get(), dir2.Get());
 				ERR_RETURN2(txt) // ERR_RETURN2: do not unregister stuff of the conflicting plugin!
 			}
 		}
 
 		// hookcommand2 must be registered before hookcommand
-		if (!errmsg.GetLength() && !rec->Register("hookcommand2", (void*)hookCommandProc2))
+		if (!rec->Register("hookcommand2", (void*)hookCommandProc2))
 			ERR_RETURN("hookcommand2 error.")
 
-		if (!errmsg.GetLength() && !rec->Register("hookcommand", (void*)hookCommandProc))
+		if (!rec->Register("hookcommand", (void*)hookCommandProc))
 			ERR_RETURN("hookcommand error.")
 
-		//if (!errmsg.GetLength() && !rec->Register("hookpostcommand", (void*)hookPostCommandProc))
+		//if (!rec->Register("hookpostcommand", (void*)hookPostCommandProc))
 		//	ERR_RETURN("hookpostcommand error.")
 
-		if (!errmsg.GetLength() && !rec->Register("toggleaction", (void*)toggleActionHook))
+		if (!rec->Register("toggleaction", (void*)toggleActionHook))
 			ERR_RETURN("Toggle action hook error.")
 
 		// Call plugin specific init
-		if (!errmsg.GetLength() && !AutoColorInit())
+		if (!AutoColorInit())
 			ERR_RETURN("Auto Color init error.")
-		if (!errmsg.GetLength() && !ColorInit())
+		if (!ColorInit())
 			ERR_RETURN("Color init error.")
-		if (!errmsg.GetLength() && !MarkerListInit())
+		if (!MarkerListInit())
 			ERR_RETURN("Marker list init error.")
-		if (!errmsg.GetLength() && !MarkerActionsInit())
+		if (!MarkerActionsInit())
 			ERR_RETURN("Marker action init error.")
-		if (!errmsg.GetLength() && !ConsoleInit())
+		if (!ConsoleInit())
 			ERR_RETURN("ReaConsole init error.")
-		if (!errmsg.GetLength() && !FreezeInit())
+		if (!FreezeInit())
 			ERR_RETURN("Freeze init error.")
-		if (!errmsg.GetLength() && !SnapshotsInit())
+		if (!SnapshotsInit())
 			ERR_RETURN("Snapshots init error.")
-		if (!errmsg.GetLength() && !TrackListInit())
+		if (!TrackListInit())
 			ERR_RETURN("Tracklist init error.")
-		if (!errmsg.GetLength() && !ProjectListInit())
+		if (!ProjectListInit())
 			ERR_RETURN("Project List init error.")
-		if (!errmsg.GetLength() && !ProjectMgrInit())
+		if (!ProjectMgrInit())
 			ERR_RETURN("Project Mgr init error.")
-		if (!errmsg.GetLength() && !XenakiosInit())
+		if (!XenakiosInit())
 			ERR_RETURN("Xenakios init error.")
-		if (!errmsg.GetLength() && !MiscInit())
+		if (!MiscInit())
 			ERR_RETURN("Misc init error.")
-		if (!errmsg.GetLength() && !ZoomInit(false))
+		if (!ZoomInit(false))
 			ERR_RETURN("Zoom init error.")
-		if(!errmsg.GetLength() && !FNGExtensionInit())
+		if(!FNGExtensionInit())
 			ERR_RETURN("Fingers init error.")
-		if (!errmsg.GetLength() && !PadreInit())
+		if (!PadreInit())
 			ERR_RETURN("Padre init error.")
-		if (!errmsg.GetLength() && !AboutBoxInit())
+		if (!AboutBoxInit())
 			ERR_RETURN("About box init error.")
-		if (!errmsg.GetLength() && !AutorenderInit())
+		if (!AutorenderInit())
 			ERR_RETURN("Autorender init error.")
-		if (!errmsg.GetLength() && !IXInit())
+		if (!IXInit())
 			ERR_RETURN("IX init error.")
-		if (!errmsg.GetLength() && !BR_Init())
+		if (!BR_Init())
 			ERR_RETURN("Breeder init error.")
-		if (!errmsg.GetLength() && !WOL_Init())
+		if (!WOL_Init())
 			ERR_RETURN("Wol init error.")
-		if (!errmsg.GetLength() && !SNM_Init(rec)) // keep it as the last init (for cycle actions)
+		if (!SNM_Init(rec)) // keep it as the last init (for cycle actions)
 			ERR_RETURN("S&M init error.")
 
-		if (!errmsg.GetLength())
+		// above specific inits went well
 		{
-			g_bInitDone=true; // above specific inits went well
+			g_bInitDone=true;
 
 			g_ts = new SWSTimeSlice();
 			if (!rec->Register("csurf_inst", g_ts))
@@ -1151,17 +1138,18 @@ error:
 			}
 		}
 
-		if (!errmsg.GetLength() && !rec->Register("hookcustommenu", (void*)swsMenuHook))
+		if (!rec->Register("hookcustommenu", (void*)swsMenuHook))
 			ERR_RETURN("Menu hook error.")
 
-    if (!errmsg.GetLength() && (!RegisterExportedFuncs(rec) || !RegisterExportedAPI(rec)))
+		if ((!RegisterExportedFuncs(rec) || !RegisterExportedAPI(rec)))
 			ERR_RETURN("Reascript export failed.");
 
 		AddExtensionsMainMenu();
 		ZoomInit(true); // touchy! only hook REAPER window procs at the very end, i.e. only if everything else went well
-		OK_RETURN("SWS Extension successfully loaded.");
+		return 1;
 	}
 };   // end extern C
+
 
 #ifndef _WIN32 // MAC resources
 #include "../WDL/swell/swell-dlggen.h"

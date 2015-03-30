@@ -55,8 +55,8 @@
 #define SWS_CMD_SHORTNAME(_ct)	(_ct ? GetLocalizedActionName(_ct->accel.desc) + IsSwsAction(_ct->accel.desc) : "")
 #define __ARRAY_SIZE(x)			(sizeof(x) / sizeof(x[0]))
 #define BOUNDED(x,lo,hi)		((x) < (lo) ? (lo) : (x) > (hi) ? (hi) : (x))
-#define FREE_NULL(p)			{free(p);p=0;}
-#define DELETE_NULL(p)			{delete(p); p=0;}
+#define FREE_NULL(p)			{free(p);p=NULL;}
+#define DELETE_NULL(p)			{delete(p); p=NULL;}
 #define STR_HELPER(x)			#x
 #define STR(x)					STR_HELPER(x)
 

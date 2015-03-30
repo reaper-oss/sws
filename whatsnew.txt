@@ -22,6 +22,7 @@ Added actions
  - SWS/BR: Play from edit cursor position and solo active item for the duration (perform until shortcut released)
 
 ReaScript
++Improved Python function wrappers (sws_python*.py)
 +Added functions to convert track/item/take from and to GUID:
  - BR_GetMediaItemByGUID
  - BR_GetMediaItemGUID

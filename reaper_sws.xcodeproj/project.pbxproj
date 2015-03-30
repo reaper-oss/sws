@@ -1563,7 +1563,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "php ../WDL/swell/mac_resgen.php sws_extension.rc";
+			shellScript = "php ../WDL/swell/mac_resgen.php sws_extension.rc\nphp reascript_vararg.php > reascript_vararg.h";
 		};
 /* End PBXShellScriptBuildPhase section */
 

@@ -13,6 +13,7 @@ if [ ! -d output ]; then
 fi
 # Build
 cd ..
+php reascript_vararg.php > reascript_vararg.h
 xcodebuild clean -configuration "Release x86_64"
 xcodebuild -configuration "Release x86_64"
 read -p "Check build results, then press enter to continue..."

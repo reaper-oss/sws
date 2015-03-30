@@ -619,7 +619,7 @@ error:
 //				plugin_register("-hookpostcommand", (void*)hookPostCommandProc);
 				plugin_register("-toggleaction", (void*)toggleActionHook);
 				plugin_register("-hookcustommenu", (void*)swsMenuHook);
-				if (g_ts) plugin_register("-csurf_inst", g_ts);
+				if (g_ts) { plugin_register("-csurf_inst", g_ts); DELETE_NULL(g_ts); }
 				UnregisterExportedFuncs();
 			}
 

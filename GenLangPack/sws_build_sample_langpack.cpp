@@ -222,6 +222,8 @@ void processRCfile(FILE *fp, const char *dirprefix)
     p=buf;
     if (sname[0]) while (*p == ' ' || *p == '\t') p++;
     char *first_tok = p;
+    if (!strncmp(first_tok,"CLASS",5) && isblank(first_tok[5]) && first_tok[6]=='\"') continue;
+
     while (*p && *p != '\t' && *p != ' ') p++;
     if (*p) *p++=0;
     while (*p == '\t' || *p == ' ') p++;
@@ -250,7 +252,25 @@ void processRCfile(FILE *fp, const char *dirprefix)
       if (*second_tok == '"')
       {
         int l = length_of_quoted_string(second_tok+1,true);
-        if (l>0) gotString(second_tok+1,l,sname);
+        if (l>0)
+        {
+          gotString(second_tok+1,l,sname);
+          
+          // OSX menu support: store a 2nd string w/o \tshortcuts, strip '&' too
+          // note: relies on length_of_quoted_string() pre-conversion above
+          if (depth && strstr(sname, "MENU_"))
+          {
+            int j=0;
+            char* m=second_tok+1;
+            for(;;)
+            {
+              if (!*m || (*m == '\\' && *(m+1)=='t') || (*m=='\"' && *(m-1)!='\\')) { buf[j]=0; break; }
+              if (*m != '&') buf[j++] = *m;
+              m++;
+            }
+            if (j!=l) gotString(buf,j,sname);
+          }
+        }
       }
     }
     else if (!strcmp(first_tok,"BEGIN")) 

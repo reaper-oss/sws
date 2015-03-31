@@ -227,7 +227,7 @@ bool SNM_TagMediaFile(const char *fn, const char* tag, const char* tagval)
 #ifdef _WIN32
   wchar_t* w_tag = WideCharPlz(tagval);
   if (w_tag && wcslen(w_tag) && !stricmp(tag, "artist")) { f.tag()->setArtist(w_tag); didsmthg=true; }
-  if (w_tag && wcslen(w_tag) && !stricmp(tag, "album")) { f.tag()->set Album(w_tag); didsmthg=true; }
+  if (w_tag && wcslen(w_tag) && !stricmp(tag, "album")) { f.tag()->setAlbum(w_tag); didsmthg=true; }
   if (w_tag && wcslen(w_tag) && !stricmp(tag, "genre")) { f.tag()->setGenre(w_tag); didsmthg=true; }
   if (w_tag && wcslen(w_tag) && !stricmp(tag, "comment")) {f.tag()->setComment(w_tag); didsmthg=true; }
   if (w_tag && !stricmp(tag, "title")) { f.tag()->setTitle(w_tag); didsmthg=true; }

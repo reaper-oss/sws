@@ -437,16 +437,6 @@ void OpenRenderPath(COMMAND_T *){
 	}
 }
 
-#ifdef _WIN32
-wchar_t* WideCharPlz( const char* inChar ){		
-	DWORD dwNum = MultiByteToWideChar(CP_UTF8, 0, inChar, -1, NULL, 0);
-	wchar_t *wChar;
-	wChar = new wchar_t[ dwNum ];
-	MultiByteToWideChar(CP_UTF8, 0, inChar, -1, wChar, dwNum );
-	return wChar;
-}
-#endif
-
 void ForceSaveAndLoad( WDL_FastString *str ){
 	Undo_OnStateChangeEx(__LOCALIZE("Autorender: Load project data","sws_undo"), UNDO_STATE_MISCCFG, -1);
 	Main_OnCommand( 40026, 0 ); //Save current project

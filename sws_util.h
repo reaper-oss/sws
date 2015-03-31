@@ -241,6 +241,7 @@ bool TrackMatchesGuid(MediaTrack* tr, const GUID* g);
 const char* stristr(const char* str1, const char* str2);
 
 #ifdef _WIN32
+wchar_t* WideCharPlz(const char* inChar);
 void dprintf(const char* format, ...);
 #else
 #define dprintf printf

@@ -23,6 +23,7 @@ Added actions
 
 ReaScript
 +Improved Python function wrappers (sws_python*.py)
++Added SNM_TagMediaFile: see https://taglib.github.io|TagLib| for supported tags types and supported media files
 +Added functions to convert track/item/take from and to GUID:
  - BR_GetMediaItemByGUID
  - BR_GetMediaItemGUID

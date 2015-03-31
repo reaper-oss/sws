@@ -125,6 +125,7 @@ APIdef g_apidefs[] =
 	{ APIFUNC(SNM_TieResourceSlotActions), "void", "int", "bookmarkId", "[S&M] Attach Resources slot actions to a given bookmark.", },
 	{ APIFUNC(SNM_AddTCPFXParm), "bool", "MediaTrack*,int,int", "tr,fxId,prmId", "[S&M] Add an FX parameter knob in the TCP. Returns false if nothing updated (invalid parameters, knob already present, etc..)", },
 	{ APIFUNC(SNM_GetMIDIEditorActiveTake), "MediaItem_Take*", "", "", "[S&M] Temorary, do not use! Workaround for broken MIDIEditor_GetActive in REAPER 5pre...", },
+	{ APIFUNC(SNM_TagMediaFile), "bool", "const char*,const char*,const char*", "fn,tag,tagval", "[S&M] Tag media files. For supported tag types and supported media files, see https://taglib.github.io. tag: \"artist\", \"album\", \"genre\", \"comment\", \"title\", or \"year\". When files are opened in REAPER, make sure to turn items offline before using this function. Returns false if nothing updated.", },
 
 	{ APIFUNC(FNG_AllocMidiTake), "RprMidiTake*", "MediaItem_Take*", "take", "[FNG] Allocate a RprMidiTake from a take pointer. Returns a NULL pointer if the take is not an in-project MIDI take", },
 	{ APIFUNC(FNG_FreeMidiTake), "void", "RprMidiTake*", "midiTake", "[FNG] Commit changes to MIDI take and free allocated memory", },

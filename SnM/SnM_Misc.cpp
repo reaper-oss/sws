@@ -203,10 +203,6 @@ void ULT_SetMediaItemNote(MediaItem* _item, const char* _str) {
 		GetSetMediaItemInfo(_item, "P_NOTES", (char*)_str);
 }
 
-MediaItem_Take* SNM_GetMIDIEditorActiveTake() {
-  return MIDIEditor_GetTake(MIDIEditor_GetActive());
-}
-
 bool SNM_TagMediaFile(const char *fn, const char* tag, const char* tagval)
 {
   if (!tag || !*tag || !tagval || !FileExists(fn)) return false;

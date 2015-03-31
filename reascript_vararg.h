@@ -161,11 +161,6 @@ static void* __vararg_SNM_AddTCPFXParm(void** arglist, int numparms)
   return (void*)(INT_PTR)SNM_AddTCPFXParm((MediaTrack*)arglist[0], (int)(INT_PTR)arglist[1], (int)(INT_PTR)arglist[2]);
 }
 
-static void* __vararg_SNM_GetMIDIEditorActiveTake(void** arglist, int numparms)
-{
-  return (void*)(INT_PTR)SNM_GetMIDIEditorActiveTake();
-}
-
 static void* __vararg_SNM_TagMediaFile(void** arglist, int numparms)
 {
   return (void*)(INT_PTR)SNM_TagMediaFile((const char*)arglist[0], (const char*)arglist[1], (const char*)arglist[2]);

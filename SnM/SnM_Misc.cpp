@@ -203,17 +203,21 @@ void ULT_SetMediaItemNote(MediaItem* _item, const char* _str) {
 		GetSetMediaItemInfo(_item, "P_NOTES", (char*)_str);
 }
 
-bool SNM_TagMediaFile(const char *fn, const char* tag, const char* tagval)
+bool IsSupportedMediaFileTag(const char* tag)
 {
-  if (!tag || !*tag || !tagval || !FileExists(fn)) return false;
-
-  if (stricmp(tag, "artist") && stricmp(tag, "album") &&
+  if (!tag || (stricmp(tag, "artist") && stricmp(tag, "album") &&
       stricmp(tag, "genre") && stricmp(tag, "comment") &&
       stricmp(tag, "title") && stricmp(tag, "year") &&
-      stricmp(tag, "track"))
+      stricmp(tag, "track")))
   {
     return false;
   }
+  return true;
+}
+
+bool SNM_TagMediaFile(const char *fn, const char* tag, const char* tagval)
+{
+  if (!tagval || !IsSupportedMediaFileTag(tag) || !FileExists(fn)) return false;
 
 #ifdef _WIN32
   wchar_t* w_fn = WideCharPlz(fn);
@@ -221,37 +225,35 @@ bool SNM_TagMediaFile(const char *fn, const char* tag, const char* tagval)
 #else
   TagLib::FileRef f(fn);
 #endif
-  if (f.isNull()) return false;
 
   bool didsmthg=false;
-#ifdef _WIN32
-  wchar_t* w_tag = WideCharPlz(tagval);
-  if (w_tag && wcslen(w_tag) && !stricmp(tag, "artist")) { f.tag()->setArtist(w_tag); didsmthg=true; }
-  if (w_tag && wcslen(w_tag) && !stricmp(tag, "album")) { f.tag()->setAlbum(w_tag); didsmthg=true; }
-  if (w_tag && wcslen(w_tag) && !stricmp(tag, "genre")) { f.tag()->setGenre(w_tag); didsmthg=true; }
-  if (w_tag && wcslen(w_tag) && !stricmp(tag, "comment")) {f.tag()->setComment(w_tag); didsmthg=true; }
-  if (w_tag && !stricmp(tag, "title")) { f.tag()->setTitle(w_tag); didsmthg=true; }
-  delete [] w_tag;
+  if (!f.isNull())
+  {
+#ifndef _WIN32
+    TagLib::String s(tagval, TagLib::String::UTF8);
 #else
-  TagLib::String s(tagval, TagLib::String::UTF8);
-  if (*tagval && !stricmp(tag, "artist")) { f.tag()->setArtist(s); didsmthg=true; }
-  if (*tagval && !stricmp(tag, "album")) { f.tag()->setAlbum(s); didsmthg=true; }
-  if (*tagval && !stricmp(tag, "genre")) { f.tag()->setGenre(s); didsmthg=true; }
-  if (*tagval && !stricmp(tag, "comment")) { f.tag()->setComment(s); didsmthg=true; }
-  if (!stricmp(tag, "title")) { f.tag()->setTitle(s); didsmthg=true; }
+    wchar_t* s = WideCharPlz(tagval);
+    if (s)
 #endif
-  if (!stricmp(tag, "year"))
-  {
-    int val=atoi(tagval);
-    if (val>0) { f.tag()->setYear(val); didsmthg=true; }
+    {
+      if (!stricmp(tag, "artist")) { f.tag()->setArtist(s); didsmthg=true; }
+      if (!stricmp(tag, "album")) { f.tag()->setAlbum(s); didsmthg=true; }
+      if (!stricmp(tag, "genre")) { f.tag()->setGenre(s); didsmthg=true; }
+      if (!stricmp(tag, "comment")) { f.tag()->setComment(s); didsmthg=true; }
+      if (!stricmp(tag, "title")) { f.tag()->setTitle(s); didsmthg=true; }
+    }
+    if (!stricmp(tag, "year") || !stricmp(tag, "track"))
+    {
+      int val=atoi(tagval);
+      if (val>0 || !*tagval)
+      {
+        if (!stricmp(tag, "year")) f.tag()->setYear(val);
+        else f.tag()->setTrack(val);
+        didsmthg=true;
+      }
+    }
+    if (didsmthg) f.save();
   }
-  if (!stricmp(tag, "track"))
-  {
-    int val=atoi(tagval);
-    if (val>0) { f.tag()->setTrack(val); didsmthg=true; }
-  }
-  
-  if (didsmthg) f.save();
 
 #ifdef _WIN32
   delete [] w_fn;

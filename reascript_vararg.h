@@ -171,6 +171,11 @@ static void* __vararg_SNM_TagMediaFile(void** arglist, int numparms)
   return (void*)(INT_PTR)SNM_TagMediaFile((const char*)arglist[0], (const char*)arglist[1], (const char*)arglist[2]);
 }
 
+static void* __vararg_SNM_ReadMediaFileTag(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)SNM_ReadMediaFileTag((const char*)arglist[0], (const char*)arglist[1], (char*)arglist[2], (int)(INT_PTR)arglist[3]);
+}
+
 static void* __vararg_FNG_AllocMidiTake(void** arglist, int numparms)
 {
   return (void*)(INT_PTR)FNG_AllocMidiTake((MediaItem_Take*)arglist[0]);

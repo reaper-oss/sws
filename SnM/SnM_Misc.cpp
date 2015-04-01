@@ -31,6 +31,7 @@
 #include "SnM_Item.h"
 #include "SnM_Misc.h"
 #include "SnM_Track.h"
+#include "SnM_Util.h"
 #ifdef _SNM_HOST_AW
 #include "../Misc/Adam.h"
 #endif
@@ -213,6 +214,43 @@ bool IsSupportedMediaFileTag(const char* tag)
     return false;
   }
   return true;
+}
+
+bool SNM_ReadMediaFileTag(const char *fn, const char* tag, char* tagval, int tagval_sz)
+{
+  if (!tagval || tagval_sz<=0 || !IsSupportedMediaFileTag(tag) || !FileExists(fn)) return false;
+
+#ifdef _WIN32
+  wchar_t* w_fn = WideCharPlz(fn);
+  TagLib::FileRef f(w_fn);
+#else
+  TagLib::FileRef f(fn);
+#endif
+  
+  bool didsmthg=false;
+  if (!f.isNull())
+  {
+    TagLib::String s;
+    if (!stricmp(tag, "artist")) { s=f.tag()->artist(); didsmthg=true; }
+    if (!stricmp(tag, "album")) { s=f.tag()->album(); didsmthg=true; }
+    if (!stricmp(tag, "genre")) { s=f.tag()->genre(); didsmthg=true; }
+    if (!stricmp(tag, "comment")) { s=f.tag()->comment(); didsmthg=true; }
+    if (!stricmp(tag, "title")) { s=f.tag()->title(); didsmthg=true; }
+    if (didsmthg)
+    {
+      lstrcpyn(tagval, s.toCString(true), tagval_sz);
+    }
+    else if (!stricmp(tag, "year") || !stricmp(tag, "track"))
+    {
+      int val = (int)(!stricmp(tag, "year") ? f.tag()->year() : f.tag()->track());
+      if (!val) { *tagval=0; didsmthg=true; }
+      else if (val>0) { _snprintfSafe(tagval, tagval_sz, "%d", val); didsmthg=true; }
+    }
+  }
+#ifdef _WIN32
+  delete [] w_fn;
+#endif
+  return didsmthg;
 }
 
 bool SNM_TagMediaFile(const char *fn, const char* tag, const char* tagval)

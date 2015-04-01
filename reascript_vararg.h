@@ -41,6 +41,11 @@ static void* __vararg_SNM_test7(void** arglist, int numparms)
   return p;
 }
 
+static void* __vararg_SNM_test8(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)SNM_test8((char*)arglist[0], (int)(INT_PTR)arglist[1], (const char*)arglist[2], (int)(INT_PTR)arglist[3], (int)(INT_PTR)arglist[4], (char*)arglist[5], (int)(INT_PTR)arglist[6], (int*)arglist[7]);
+}
+
 static void* __vararg_SNM_CreateFastString(void** arglist, int numparms)
 {
   return (void*)(INT_PTR)SNM_CreateFastString((const char*)arglist[0]);

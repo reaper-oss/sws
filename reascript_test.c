@@ -40,6 +40,8 @@ double SNM_test7(int i, int* a, double* b, bool* c, char* s, const char* cs)
   char buf[128]="";
   sprintf(buf, "---> %d\r\n", i);
   ShowConsoleMsg(buf);
+  sprintf(buf, "-------------> a = %d\r\n", a?*a:-1);
+  ShowConsoleMsg(buf);
   if (a) *a *= 2;
   if (b) *b *= 2.0;
   if (c) *c= !(*c);
@@ -49,4 +51,22 @@ double SNM_test7(int i, int* a, double* b, bool* c, char* s, const char* cs)
   sprintf(buf, "---> %s\r\n", cs?cs:"null prm");
   ShowConsoleMsg(buf);
   return 666.777;
+}
+const char* SNM_test8(char* buf1, int buf1_sz, const char* buf2, int buf2_sz, int i, char* buf3, int buf3_sz, int* iOptionalOut)
+{
+  char buf[128]="";
+  sprintf(buf, "---> %s\r\n", buf1);
+  ShowConsoleMsg(buf);
+  sprintf(buf, "---> %s\r\n", buf2);
+  ShowConsoleMsg(buf);
+  sprintf(buf, "---> %s\r\n", buf3);
+  ShowConsoleMsg(buf);
+  sprintf(buf, "---> %d\r\n", i);
+  ShowConsoleMsg(buf);
+  if (iOptionalOut) { sprintf(buf, "---> *iOptionalOut = %d\r\n", *iOptionalOut); *iOptionalOut=123456789; }
+  else strcpy(buf, "---> null iOptionalOut\r\n");
+  ShowConsoleMsg(buf);
+  if (buf1) lstrcpyn(buf1,"SNM_test8 new parm val for buf1",buf1_sz);
+  if (buf3) lstrcpyn(buf3,"SNM_test8 new parm val for buf3",buf3_sz);
+  return "SNM_test8";
 }

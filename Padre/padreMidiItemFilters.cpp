@@ -127,8 +127,6 @@ void MidiFilterTranspose::process(MIDI_event_t* evt, MIDI_eventlist* evts, int &
 			evt->midi_message[1] += _offset;
 			if(evt->midi_message[1]>127)
 				evt->midi_message[1] = 127;
-			if(evt->midi_message[1]<0)
-				evt->midi_message[1] = 0;
 		}
 		break;
 

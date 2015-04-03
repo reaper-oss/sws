@@ -1087,9 +1087,20 @@ void LoadCyclactions(bool _wantMsg, WDL_PtrList<Cyclaction>* _cyclactions = NULL
 					GetPrivateProfileString(GetCAIniSection(sec), buf, CA_EMPTY, actionBuf, sizeof(actionBuf), _iniFn ? _iniFn : g_SNM_CyclIniFn.Get());
 					
 					// upgrade?
-					if (*actionBuf && ver<CA_VERSION) {
+					if (*actionBuf && ver<CA_VERSION)
+					{
 						int i=-1;
-						while (actionBuf[++i]) { if (actionBuf[i]==CA_SEP_V1 || actionBuf[i]==CA_SEP_V2) actionBuf[i]=CA_SEP; }
+						while (actionBuf[++i])
+						{
+							if (actionBuf[i]==CA_SEP_V1
+#ifdef _WIN32 // file would be eff'd up on OSX anyway, too late...
+								|| actionBuf[i]==CA_SEP_V2
+#endif
+							)
+							{
+								actionBuf[i]=CA_SEP;
+							}
+						}
 					}
 
 					// import into _cyclactions
@@ -1283,7 +1294,7 @@ void Cyclaction::UpdateNameAndCmds()
 	{
 		// 1st token = cycle action name (#name = toggle action)
 		m_name.Set(*tok==CA_TGL1 || *tok==CA_TGL2 ? (const char*)tok+1 : tok);
-		while (tok = strtok(NULL, s_CA_SEP_STR))
+		while ((tok = strtok(NULL, s_CA_SEP_STR)))
 			m_cmds.Add(new WDL_FastString(tok));
 	}
 }

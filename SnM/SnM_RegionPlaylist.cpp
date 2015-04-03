@@ -211,7 +211,7 @@ int RegionPlaylist::GetNestedMarkerRegion()
 			if (rgnidx>=0)
 			{
 				int x=0, lastx=0; double dPos, dEnd; bool isRgn;
-				while (x = EnumProjectMarkers2(NULL, x, &isRgn, &dPos, &dEnd, NULL, NULL))
+				while ((x = EnumProjectMarkers2(NULL, x, &isRgn, &dPos, &dEnd, NULL, NULL)))
 				{
 					if (rgnidx != lastx)
 					{
@@ -902,7 +902,7 @@ void RegionPlaylistWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case ADD_ALL_REGIONS_MSG:
 		{
 			int x=0, y, num; bool isRgn, updt=false;
-			while (y = EnumProjectMarkers2(NULL, x, &isRgn, NULL, NULL, NULL, &num))
+			while ((y = EnumProjectMarkers2(NULL, x, &isRgn, NULL, NULL, NULL, &num)))
 			{
 				if (isRgn) {
 					RgnPlaylistItem* newItem = new RgnPlaylistItem(MakeMarkerRegionId(num, isRgn));
@@ -1791,11 +1791,11 @@ void AppendPasteCropPlaylist(RegionPlaylist* _playlist, int _mode)
 	// make sure some envelope options are enabled: move with items + add edge points
 	int oldOpt[2] = {-1,-1};
 	int* options[2] = {NULL,NULL};
-	if (options[0] = (int*)GetConfigVar("envattach")) {
+	if ((options[0] = (int*)GetConfigVar("envattach"))) {
 		oldOpt[0] = *options[0];
 		*options[0] = 1;
 	}
-	if (options[1] = (int*)GetConfigVar("env_reduce")) {
+	if ((options[1] = (int*)GetConfigVar("env_reduce"))) {
 		oldOpt[1] = *options[1];
 		*options[1] = 2;
 	}

@@ -88,7 +88,7 @@
 #define SET_TRACK_START_MSG			0xF300 // 255 track max -->
 #define SET_TRACK_END_MSG			0xF3FF // <--
 #define SET_PRESET_START_MSG		0xF400 // a bunch of presets -->
-#define SET_PRESET_END_MSG			0xFFFF // <--
+#define SET_PRESET_END_MSG			0xFFFE // <-- note: exclude very last LOWROD value to prevent compilation warning
 
 #define MAX_CC_DELAY				3000
 #define DEF_CC_DELAY				500
@@ -965,7 +965,7 @@ void LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				if (destIdx>=0)
 				{
 					for (int i=0; i<g_clipboardConfigs.GetSize() && (destIdx+i)<lc->m_ccConfs.GetSize(); i++)
-						if (item = lc->m_ccConfs.Get(destIdx+i))
+						if ((item = lc->m_ccConfs.Get(destIdx+i)))
 							if (LiveConfigItem* pasteItem = g_clipboardConfigs.Get(i))
 							{
 								item->Paste(pasteItem); // copy everything except the cc value

@@ -712,6 +712,7 @@ error:
 		IMPAPI(DeleteProjectMarker);
 		IMPAPI(DeleteProjectMarkerByIndex);
 		IMPAPI(DeleteTakeStretchMarkers);
+	IMPAPI(DeleteTempoTimeSigMarker); // v5pre4+
 		IMPAPI(DeleteTrack);
 		IMPAPI(DeleteTrackMediaItem);
 		IMPAPI(DestroyAudioAccessor);
@@ -893,6 +894,7 @@ error:
 		IMPAPI(MIDI_InsertTextSysexEvt);
 		IMPAPI(MIDI_SetCC);
 		IMPAPI(MIDI_SetEvt);
+	IMPAPI(MIDI_SetItemExtents); // v5.0pre (no data on exact build in whatsnew, but I'm pretty sure I never saw this in v4)
 		IMPAPI(MIDI_SetNote);
 		IMPAPI(MIDI_SetTextSysexEvt);
 		IMPAPI(MIDIEditor_GetActive);
@@ -906,7 +908,7 @@ error:
 		IMPAPI(mkvolstr);
 		IMPAPI(MoveEditCursor);
 		IMPAPI(MoveMediaItemToTrack);
-		IMPAPI(OnColorThemeOpenFile); // v5.0pre21+
+	IMPAPI(OnColorThemeOpenFile); // v5.0pre21+
 		IMPAPI(OnPauseButton);
 		IMPAPI(OnPlayButton);
 		IMPAPI(OnStopButton);
@@ -1059,7 +1061,7 @@ error:
 				dir1.SetFormatted(2048, "%s/%s", GetResourcePath(), "UserPlugins");
 				dir2.Set("/Library/Application Support/REAPER/UserPlugins");
 #endif
-        
+
 				char txt[8192]="";
 				_snprintf(txt, sizeof(txt),
                   // keep the message on a single line (for the LangPack generator)

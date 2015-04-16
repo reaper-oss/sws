@@ -294,12 +294,17 @@ static void* __vararg_BR_EnvValueAtPos(void** arglist, int numparms)
   return p;
 }
 
-static void* __vararg_BR_GetMidiSourceLenPPQ(void** arglist, int numparms)
+static void* __vararg_BR_GetClosestGridDivision(void** arglist, int numparms)
 {
   double* p =(double*)arglist[numparms-1];
-  double d = BR_GetMidiSourceLenPPQ((MediaItem_Take*)arglist[0]);
+  double d = BR_GetClosestGridDivision(arglist[0] ? *(double*)arglist[0] : 0.0);
   if (p) *p=d;
   return p;
+}
+
+static void* __vararg_BR_GetMediaItemImageResource(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)BR_GetMediaItemImageResource((MediaItem*)arglist[0], (char*)arglist[1], (int)(INT_PTR)arglist[2], (int*)arglist[3]);
 }
 
 static void* __vararg_BR_GetMediaItemByGUID(void** arglist, int numparms)
@@ -333,6 +338,14 @@ static void* __vararg_BR_GetMediaTrackGUID(void** arglist, int numparms)
 {
   BR_GetMediaTrackGUID((MediaTrack*)arglist[0], (char*)arglist[1], (int)(INT_PTR)arglist[2]);
   return NULL;
+}
+
+static void* __vararg_BR_GetMidiSourceLenPPQ(void** arglist, int numparms)
+{
+  double* p =(double*)arglist[numparms-1];
+  double d = BR_GetMidiSourceLenPPQ((MediaItem_Take*)arglist[0]);
+  if (p) *p=d;
+  return p;
 }
 
 static void* __vararg_BR_GetMouseCursorContext(void** arglist, int numparms)
@@ -379,6 +392,11 @@ static void* __vararg_BR_GetMouseCursorContext_Track(void** arglist, int numparm
   return (void*)(INT_PTR)BR_GetMouseCursorContext_Track();
 }
 
+static void* __vararg_BR_GetTakeFXCount(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)BR_GetTakeFXCount((MediaItem_Take*)arglist[0]);
+}
+
 static void* __vararg_BR_IsTakeMidi(void** arglist, int numparms)
 {
   return (void*)(INT_PTR)BR_IsTakeMidi((MediaItem_Take*)arglist[0], (bool*)arglist[1]);
@@ -405,6 +423,23 @@ static void* __vararg_BR_PositionAtMouseCursor(void** arglist, int numparms)
   double d = BR_PositionAtMouseCursor((bool)arglist[0]);
   if (p) *p=d;
   return p;
+}
+
+static void* __vararg_BR_SetArrangeView(void** arglist, int numparms)
+{
+  BR_SetArrangeView((ReaProject*)arglist[0], arglist[1] ? *(double*)arglist[1] : 0.0, arglist[2] ? *(double*)arglist[2] : 0.0);
+  return NULL;
+}
+
+static void* __vararg_BR_SetItemEdges(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)BR_SetItemEdges((MediaItem*)arglist[0], arglist[1] ? *(double*)arglist[1] : 0.0, arglist[2] ? *(double*)arglist[2] : 0.0);
+}
+
+static void* __vararg_BR_SetMediaItemImageResource(void** arglist, int numparms)
+{
+  BR_SetMediaItemImageResource((MediaItem*)arglist[0], (const char*)arglist[1], (int)(INT_PTR)arglist[2]);
+  return NULL;
 }
 
 static void* __vararg_BR_SetMediaSourceProperties(void** arglist, int numparms)

@@ -31,6 +31,7 @@
 #include "BR_MidiUtil.h"
 #include "BR_MouseUtil.h"
 #include "BR_Util.h"
+#include "../SnM/SnM.h"
 #include "../SnM/SnM_Chunk.h"
 #include "../SnM/SnM_Util.h"
 
@@ -228,24 +229,35 @@ void BR_EnvSortPoints (BR_Envelope* envelope)
 		envelope->Sort();
 }
 
+double  BR_GetClosestGridDivision (double position)
+{
+	return GetClosestGridDiv(position);
+}
+
+bool BR_GetMediaItemImageResource (MediaItem* item, char* imageOut, int imageOut_sz, int* imageFlagsOut)
+{
+	bool resourceFound = false;
+	if (item)
+	{		
+		SNM_ChunkParserPatcher p(item);
+	
+		char image[SNM_MAX_PATH]      = "";
+		char imageFlags[SNM_MAX_PATH] = "0";
+		resourceFound = !!p.Parse(SNM_GET_CHUNK_CHAR, 1, "ITEM", "RESOURCEFN", 0, 1, image, NULL, "VOLPAN");
+		p.Parse(SNM_GET_CHUNK_CHAR, 1, "ITEM", "IMGRESOURCEFLAGS", 0, 1, imageFlags, NULL, "VOLPAN");
+
+		if (imageOut && imageOut_sz > 0) _snprintfSafe(imageOut, imageOut_sz, "%s", image);
+		WritePtr(imageFlagsOut, atoi(imageFlags));
+	}
+	return resourceFound;
+}
+
 double BR_EnvValueAtPos (BR_Envelope* envelope, double position)
 {
 	if (envelope)
 		return envelope->ValueAtPosition(position);
 	else
 		return 0;
-}
-
-double BR_GetMidiSourceLenPPQ (MediaItem_Take* take)
-{
-	double length = -1;
-	if (take)
-	{
-		bool isMidi = false;
-		length = GetMidiSourceLengthPPQ(take, &isMidi);
-		if (!isMidi) length = -1;
-	}
-	return length;
 }
 
 MediaItem* BR_GetMediaItemByGUID (ReaProject* proj, const char* guidStringIn)
@@ -259,25 +271,26 @@ MediaItem* BR_GetMediaItemByGUID (ReaProject* proj, const char* guidStringIn)
 	else
 		return NULL;
 }
+
 void BR_GetMediaItemGUID (MediaItem* item, char* guidStringOut, int guidStringOut_sz)
 {
-	if (guidStringOut)
+	if (item && guidStringOut && guidStringOut_sz > 0)
 	{
 		char guid[64];
 		if (item) guidToString((GUID*)GetSetMediaItemInfo(item, "GUID", NULL), guid);
 		else      guidToString(&GUID_NULL, guid);
-		_snprintfSafe(guidStringOut, guidStringOut_sz-1, "%s", guid);
+		_snprintfSafe(guidStringOut, guidStringOut_sz, "%s", guid);
 	}
 }
 
 void BR_GetMediaItemTakeGUID (MediaItem_Take* take, char* guidStringOut, int guidStringOut_sz)
 {
-	if (guidStringOut)
+	if (take && guidStringOut && guidStringOut_sz > 0)
 	{
 		char guid[64];
 		if (take) guidToString((GUID*)GetSetMediaItemTakeInfo(take, "GUID", NULL), guid);
 		else      guidToString(&GUID_NULL, guid);
-		_snprintfSafe(guidStringOut,  guidStringOut_sz-1, "%s", guid);
+		_snprintfSafe(guidStringOut,  guidStringOut_sz, "%s", guid);
 	}
 }
 
@@ -304,22 +317,34 @@ MediaTrack* BR_GetMediaTrackByGUID (ReaProject* proj, const char* guidStringIn)
 
 void BR_GetMediaTrackGUID (MediaTrack* track, char* guidStringOut, int guidStringOut_sz)
 {
-	if (guidStringOut)
+	if (track && guidStringOut && guidStringOut_sz > 0)
 	{
 		char guid[64];
 		if (track) guidToString(TrackToGuid(track), guid);
 		else       guidToString(&GUID_NULL, guid);
-		_snprintfSafe(guidStringOut, guidStringOut_sz-1, "%s", guid);
+		_snprintfSafe(guidStringOut, guidStringOut_sz, "%s", guid);
 	}
+}
+
+double BR_GetMidiSourceLenPPQ (MediaItem_Take* take)
+{
+	double length = -1;
+	if (take)
+	{
+		bool isMidi = false;
+		length = GetMidiSourceLengthPPQ(take, &isMidi);
+		if (!isMidi) length = -1;
+	}
+	return length;
 }
 
 void BR_GetMouseCursorContext (char* windowOut, int windowOut_sz, char* segmentOut, int segmentOut_sz, char* detailsOut, int detailsOut_sz)
 {
 	g_mouseInfo.Update();
 
-	if (windowOut)  _snprintfSafe(windowOut,  windowOut_sz -1, "%s", g_mouseInfo.GetWindow());
-	if (segmentOut) _snprintfSafe(segmentOut, segmentOut_sz-1, "%s", g_mouseInfo.GetSegment());
-	if (detailsOut) _snprintfSafe(detailsOut, detailsOut_sz-1, "%s", g_mouseInfo.GetDetails());
+	if (windowOut  && windowOut_sz  > 0) _snprintfSafe(windowOut,  windowOut_sz,  "%s", g_mouseInfo.GetWindow());
+	if (segmentOut && segmentOut_sz > 0) _snprintfSafe(segmentOut, segmentOut_sz, "%s", g_mouseInfo.GetSegment());
+	if (detailsOut && detailsOut_sz > 0) _snprintfSafe(detailsOut, detailsOut_sz, "%s", g_mouseInfo.GetDetails());
 }
 
 TrackEnvelope* BR_GetMouseCursorContext_Envelope (bool* takeEnvelopeOut)
@@ -384,14 +409,47 @@ MediaTrack* BR_GetMouseCursorContext_Track ()
 	return g_mouseInfo.GetTrack();
 }
 
-MediaItem* BR_ItemAtMouseCursor (double* positionOut)
+int BR_GetTakeFXCount (MediaItem_Take* take)
 {
-	return ItemAtMouseCursor(positionOut);
+	return GetTakeFXCount(take);
 }
 
 bool BR_IsTakeMidi (MediaItem_Take* take, bool* inProjectMidiOut)
 {
 	return IsMidi(take, inProjectMidiOut);
+}
+
+MediaItem* BR_ItemAtMouseCursor (double* positionOut)
+{
+	return ItemAtMouseCursor(positionOut);
+}
+
+bool BR_MIDI_CCLaneRemove (HWND midiEditor, int laneId)
+{
+	MediaItem_Take* take = MIDIEditor_GetTake(midiEditor);
+
+	if (take)
+	{
+		MediaItem* item = GetMediaItemTake_Item(take);
+		int takeId = GetTakeId(take, item);
+		if (takeId >= 0)
+		{
+			SNM_TakeParserPatcher p(item, CountTakes(item));
+			WDL_FastString takeChunk;
+			int tkPos, tklen;
+			if (p.GetTakeChunk(takeId, &takeChunk, &tkPos, &tklen))
+			{
+				SNM_ChunkParserPatcher ptk(&takeChunk, false);
+
+				if (ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "SOURCE", "VELLANE", laneId, -1))
+				{
+					ptk.RemoveLine("SOURCE", "VELLANE", 1, laneId);
+					return p.ReplaceTake(tkPos, tklen, ptk.GetChunk());
+				}
+			}
+		}
+	}
+	return false;
 }
 
 bool BR_MIDI_CCLaneReplace (HWND midiEditor, int laneId, int newCC)
@@ -425,37 +483,129 @@ bool BR_MIDI_CCLaneReplace (HWND midiEditor, int laneId, int newCC)
 	return false;
 }
 
-bool BR_MIDI_CCLaneRemove (HWND midiEditor, int laneId)
-{
-	MediaItem_Take* take = MIDIEditor_GetTake(midiEditor);
-
-	if (take)
-	{
-		MediaItem* item = GetMediaItemTake_Item(take);
-		int takeId = GetTakeId(take, item);
-		if (takeId >= 0)
-		{
-			SNM_TakeParserPatcher p(item, CountTakes(item));
-			WDL_FastString takeChunk;
-			int tkPos, tklen;
-			if (p.GetTakeChunk(takeId, &takeChunk, &tkPos, &tklen))
-			{
-				SNM_ChunkParserPatcher ptk(&takeChunk, false);
-
-				if (ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "SOURCE", "VELLANE", laneId, -1))
-				{
-					ptk.RemoveLine("SOURCE", "VELLANE", 1, laneId);
-					return p.ReplaceTake(tkPos, tklen, ptk.GetChunk());
-				}
-			}
-		}
-	}
-	return false;
-}
-
 double BR_PositionAtMouseCursor (bool checkRuler)
 {
 	return PositionAtMouseCursor(checkRuler, true);
+}
+
+void BR_SetArrangeView (ReaProject* proj, double startPosition, double endPosition)
+{
+	RECT r; GetWindowRect(GetArrangeWnd(), &r);
+	GetSet_ArrangeView2(proj, true, r.left, r.right - SCROLLBAR_W, &startPosition, &endPosition);
+}
+
+bool BR_SetItemEdges (MediaItem* item, double startTime, double endTime)
+{
+	return TrimItem(item, startTime, endTime);
+}
+
+void BR_SetMediaItemImageResource (MediaItem* item, const char* imageIn, int imageFlags)
+{
+	if (item)
+	{		
+		char* itemState = GetSetObjectState(item, "");
+		char* token = strtok(itemState, "\n");
+
+		WDL_FastString newState;
+		LineParser lp(false);
+		
+		bool didImage      = !imageIn;
+		bool didImageFlags = false;
+		bool doImageFlags  = (!imageIn || (imageIn && strcmp(imageIn, "")));
+		bool commitTwice   = false; // in case image path is the same as one already set in the item, reaper will remove it in case we supply chunk with the same path (and sometimes we just want to change the flag)
+		bool skipCommit    = false;
+
+		int blockCount = 0;
+		while (token != NULL)
+		{
+			lp.parse(token);
+			if      (lp.gettoken_str(0)[0] == '<')  ++blockCount;
+			else if (lp.gettoken_str(0)[0] == '>')  --blockCount;
+
+			if (blockCount == 1)
+			{
+				if (!strcmp(lp.gettoken_str(0), "RESOURCEFN") && !didImage)
+				{
+					if (strcmp(imageIn, ""))
+					{
+						for (int i = 0; i < lp.getnumtokens(); ++i)
+						{
+							if (i == 1) newState.AppendFormatted(SNM_MAX_PATH + 2, "\"%s\"", imageIn);
+							else        newState.Append(lp.gettoken_str(i));
+							newState.Append(" ");
+						}
+						newState.Append("\n");
+
+						if (!strcmp(imageIn, lp.gettoken_str(1)))
+							commitTwice = true;
+					}
+					else
+					{
+						doImageFlags = false;
+					}
+
+
+					didImage = true;
+				}
+				else if (!strcmp(lp.gettoken_str(0), "IMGRESOURCEFLAGS") && !didImageFlags)
+				{
+					if (doImageFlags)
+					{
+						for (int i = 0; i < lp.getnumtokens(); ++i)
+						{
+							if (i == 1) newState.AppendFormatted(128, "%d", imageFlags);
+							else        newState.Append(lp.gettoken_str(i));
+							newState.Append(" ");
+						}
+						newState.Append("\n");
+
+						if (commitTwice && lp.gettoken_int(1) == imageFlags)
+							skipCommit = true;
+					}
+
+
+					didImageFlags = true;
+				}
+				else if (lp.gettoken_str(0)[0] == '>')
+				{
+					AppendLine(newState, token);
+
+					if (!didImage && strcmp(imageIn, ""))
+					{
+						newState.Append("RESOURCEFN \"");
+						newState.Append(imageIn);
+						newState.Append("\"");
+						newState.Append("\n");
+						didImage = true;
+					}
+
+					if (didImage && !didImageFlags && doImageFlags)
+					{
+						newState.Append("IMGRESOURCEFLAGS ");
+						newState.AppendFormatted(128, "%d", imageFlags);
+						newState.Append("\n");
+						didImageFlags = true;
+					}
+				}
+				else
+				{
+					AppendLine(newState, token);
+				}
+			}
+			else
+				AppendLine(newState, token);
+
+			token = strtok(NULL, "\n");
+		}
+
+		if (!skipCommit)
+		{
+			GetSetObjectState(item, newState.Get());
+			if (commitTwice)
+				GetSetObjectState(item, newState.Get());
+		}
+		FreeHeapPtr(itemState);
+	}
 }
 
 bool BR_SetMediaSourceProperties (MediaItem_Take* take, bool section, double start, double length, double fade, bool reverse)

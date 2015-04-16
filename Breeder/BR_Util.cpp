@@ -97,30 +97,30 @@ int BinaryToDecimal (const char* binaryString)
 	return base10;
 }
 
-int GetBit (int val, int pos)
+int GetBit (int val, int bit)
 {
-	return (val & 1 << pos) != 0;
+	return (val & 1 << bit) != 0;
 }
 
-int SetBit (int val, int pos, bool set)
+int SetBit (int val, int bit, bool set)
 {
-	if (set) return SetBit(val, pos);
-	else     return ClearBit(val, pos);
+	if (set) return SetBit(val, bit);
+	else     return ClearBit(val, bit);
 }
 
-int SetBit (int val, int pos)
+int SetBit (int val, int bit)
 {
-	return val | 1 << pos;
+	return val | 1 << bit;
 }
 
-int ClearBit (int val, int pos)
+int ClearBit (int val, int bit)
 {
-	return val & ~(1 << pos);
+	return val & ~(1 << bit);
 }
 
-int ToggleBit (int val, int pos)
+int ToggleBit (int val, int bit)
 {
-	return val ^= 1 << pos;
+	return val ^= 1 << bit;
 }
 
 int RoundToInt (double val)
@@ -586,7 +586,7 @@ int GetTakeId (MediaItem_Take* take, MediaItem* item /*= NULL*/)
 
 	for (int i = 0; i < CountTakes(item); ++i)
 	{
-		if (GetTake(item, 0) == take)
+		if (GetTake(item, i) == take)
 			return i;
 	}
 	return -1;
@@ -669,6 +669,25 @@ int GetTakeType (MediaItem_Take* take)
 	return returnType;
 }
 
+int GetTakeFXCount (MediaItem_Take* take)
+{
+	int count = 0;
+
+	MediaItem* item = GetMediaItemTake_Item(take);
+	int takeId = GetTakeId(take, item);
+	if (takeId >= 0)
+	{
+		SNM_TakeParserPatcher p(item, CountTakes(item));
+		WDL_FastString takeChunk;
+		if (p.GetTakeChunk(takeId, &takeChunk))
+		{
+			SNM_ChunkParserPatcher ptk(&takeChunk, false);
+			count = ptk.Parse(SNM_COUNT_KEYWORD, 1, "TAKEFX", "WAK");
+		}
+	}
+	return count;
+}
+
 bool SetIgnoreTempo (MediaItem* item, bool ignoreTempo, double bpm, int num, int den)
 {
 	bool midiFound = false;
@@ -728,10 +747,15 @@ bool DoesItemHaveMidiEvents (MediaItem* item)
 
 bool TrimItem (MediaItem* item, double start, double end)
 {
+	if (!item)
+		return false;
+
 	double newLen  = end - start;
 	double itemPos = GetMediaItemInfo_Value(item, "D_POSITION");
 	double itemLen = GetMediaItemInfo_Value(item, "D_LENGTH");
 
+	bool updateMidiSource = (newLen > itemLen && GetMediaItemInfo_Value(item, "B_LOOPSRC") == 0);
+	MediaItem_Take* activeTake = (updateMidiSource) ? GetActiveTake(item) : NULL;
 	if (start != itemPos || newLen != itemLen)
 	{
 		double startDif = start - itemPos;
@@ -743,9 +767,16 @@ bool TrimItem (MediaItem* item, double start, double end)
 			MediaItem_Take* take = GetTake(item, i);
 			double playrate = GetMediaItemTakeInfo_Value(take, "D_PLAYRATE");
 			double offset   = GetMediaItemTakeInfo_Value(take, "D_STARTOFFS");
-
 			SetMediaItemTakeInfo_Value(take, "D_STARTOFFS", offset + playrate*startDif);
+			if (updateMidiSource && IsMidi(take)) // this will make sure MIDI's source length is updated to higer value
+			{
+				SetActiveTake(take);
+				MIDI_SetItemExtents(item, TimeMap_timeToQN(start), TimeMap_timeToQN(end));
+			}
 		}
+		if (updateMidiSource)
+			SetActiveTake(activeTake);
+
 		return true;
 	}
 	return false;
@@ -1342,6 +1373,18 @@ double GetNextGridDiv (double position)
 	}
 
 	return nextGridPosition;
+}
+
+double GetClosestGridDiv (double position)
+{
+	double gridDiv = 0;
+	if (position > 0)
+	{
+		double prevGridDiv = GetPrevGridDiv(position);
+		if (position == GetNextGridDiv(prevGridDiv)) gridDiv = position;
+		else                                         gridDiv = GetClosestVal (position, prevGridDiv, GetNextGridDiv(position));
+	}
+	return gridDiv;
 }
 
 double GetPrevGridDiv (double position)

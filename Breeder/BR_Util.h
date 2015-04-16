@@ -57,11 +57,11 @@ vector<int> GetDigits (int val); // if val = 123, returns [0] = 1, [1] = 2 etc..
 int GetFirstDigit (int val);     // if val = 123, returns 1
 int GetLastDigit (int val);      // if val = 123, returns 3
 int BinaryToDecimal (const char* binaryString);
-int GetBit (int val, int pos);
-int SetBit (int val, int pos, bool set);
-int SetBit (int val, int pos);
-int ClearBit (int val, int pos);
-int ToggleBit (int val, int pos);
+int GetBit (int val, int bit);
+int SetBit (int val, int bit, bool set);
+int SetBit (int val, int bit);
+int ClearBit (int val, int bit);
+int ToggleBit (int val, int bit);
 int RoundToInt (double val);
 int TruncToInt (double val);
 double Round (double val);
@@ -113,6 +113,7 @@ double ItemTimeToProjectTime (MediaItem* item, double itemTime);
 int GetTakeId (MediaItem_Take* take, MediaItem* item = NULL);
 int GetEffectiveTakeId (MediaItem_Take* take, MediaItem* item, int id, int* effectiveTakeCount); // empty takes could be hidden, so displayed id and real id can differ (pass either take or item and take id)
 int GetTakeType (MediaItem_Take* take); // -1 = unknown, 0 = audio, 1 = MIDI, 2 = video, 3 = click, 4 = timecode generator, 5 = RPR project
+int GetTakeFXCount (MediaItem_Take* take);
 bool SetIgnoreTempo (MediaItem* item, bool ignoreTempo, double bpm, int num, int den);
 bool DoesItemHaveMidiEvents (MediaItem* item);
 bool TrimItem (MediaItem* item, double start, double end);
@@ -141,8 +142,9 @@ int FindStretchMarker (MediaItem_Take* take, double position, double surrounding
 * Grid                                                                        *
 ******************************************************************************/
 double GetGridDivSafe (); // makes sure grid div is never over MAX_GRID_DIV
-double GetNextGridDiv (double position); // unlike other functions, these
-double GetPrevGridDiv (double position); // don't care about grid visibility
+double GetNextGridDiv (double position);    // unlike other functions,
+double GetPrevGridDiv (double position);    // these don't care about
+double GetClosestGridDiv (double position); // grid visibility
 double GetClosestGridLine (double position);
 double GetClosestMeasureGridLine (double position);
 double GetClosestLeftSideGridLine (double position);

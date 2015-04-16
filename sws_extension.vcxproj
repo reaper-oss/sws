@@ -313,13 +313,17 @@ echo Copied to "$(REAPER64_DIR)\plugins\$(TargetFilename)"</Command>
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="downarrow.bmp" />
-    <None Include="uparrow.bmp" />
+    <None Include="Resources\Bitmap\downarrow.bmp" />
+    <None Include="Resources\Bitmap\uparrow.bmp" />
+    <None Include="Resources\Cursor\sws_env_pen_grid.cur" />
+    <None Include="Resources\Cursor\sws_env_pt_adj_vert.cur" />
+    <None Include="Resources\Cursor\sws_grid_warp.cur" />
+    <None Include="Resources\Cursor\sws_misc_speaker.cur" />
+    <None Include="Resources\Cursor\sws_zoom_drag.cur" />
+    <None Include="Resources\Cursor\sws_zoom_in.cur" />
+    <None Include="Resources\Cursor\sws_zoom_out.cur" />
+    <None Include="Resources\Cursor\sws_zoom_undo.cur" />
     <None Include="version.rc2" />
-    <None Include="zoomdrag.cur" />
-    <None Include="zoomin.cur" />
-    <None Include="zoomout.cur" />
-    <None Include="zoomundo.cur" />
     <None Include="whatsnew.txt" />
   </ItemGroup>
   <ItemGroup>

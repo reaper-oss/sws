@@ -2066,18 +2066,22 @@ END
 // Bitmap
 //
 
-IDB_UP                  BITMAP                  "uparrow.bmp"
-IDB_DOWN                BITMAP                  "downarrow.bmp"
+IDB_DOWN                BITMAP                  "Resources\\Bitmap\\downarrow.bmp"
+IDB_UP                  BITMAP                  "Resources\\Bitmap\\uparrow.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
 // Cursor
 //
 
-IDC_ZOOMIN              CURSOR                  "zoomin.cur"
-IDC_ZOOMOUT             CURSOR                  "zoomout.cur"
-IDC_ZOOMUNDO            CURSOR                  "zoomundo.cur"
-IDC_ZOOMDRAG            CURSOR                  "zoomdrag.cur"
+IDC_ENV_PEN_GRID        CURSOR                  "Resources\\Cursor\\sws_env_pen_grid.cur"
+IDC_ENV_PT_ADJ_VERT     CURSOR                  "Resources\\Cursor\\sws_env_pt_adj_vert.cur"
+IDC_GRID_WARP           CURSOR                  "Resources\\Cursor\\sws_grid_warp.cur"
+IDC_MISC_SPEAKER        CURSOR                  "Resources\\Cursor\\sws_misc_speaker.cur"
+IDC_ZOOM_DRAG           CURSOR                  "Resources\\Cursor\\sws_zoom_drag.cur"
+IDC_ZOOM_IN             CURSOR                  "Resources\\Cursor\\sws_zoom_in.cur"
+IDC_ZOOM_OUT            CURSOR                  "Resources\\Cursor\\sws_zoom_out.cur"
+IDC_ZOOM_UNDO           CURSOR                  "Resources\\Cursor\\sws_zoom_undo.cur"
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 
@@ -2089,7 +2093,8 @@ IDC_ZOOMDRAG            CURSOR                  "zoomdrag.cur"
 // Generated from the TEXTINCLUDE 3 resource.
 //
 #include "version.h"
-#include "version.rc2"
+#include "version.rc2"
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

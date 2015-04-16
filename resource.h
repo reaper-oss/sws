@@ -7,7 +7,7 @@
 #define IDD_MARKERLIST                  102
 #define IDD_SAVE                        103
 #define IDD_LOAD                        104
-#define IDC_ZOOMIN                      104
+#define IDC_ZOOM_IN                     104
 #define IDD_FORMAT                      105
 #define IDD_MACRODEBUG                  106
 #define IDD_COLOR                       107
@@ -56,9 +56,9 @@
 #define IDD_SNM_RESOURCES               150
 #define IDD_ZOOMPREFS                   151
 #define IDD_SNM_NOTES                   152
-#define IDC_ZOOMOUT                     152
+#define IDC_ZOOM_OUT                    152
 #define IDD_SNM_WAIT                    153
-#define IDC_ZOOMUNDO                    153
+#define IDC_ZOOM_UNDO                   153
 #define IDD_SNM_FIND                    154
 #define IDD_SNM_LIVE_CONFIGS            155
 #define IDD_AW_ITEM_SMOOTHING           156
@@ -66,7 +66,7 @@
 #define IDD_AUTORENDER_METADATA         158
 #define IDD_RECINPUTCHECK               159
 #define IDD_AUTORENDER_PREFERENCES      160
-#define IDC_ZOOMDRAG                    160
+#define IDC_ZOOM_DRAG                   160
 #define IDD_SNM_CYCLACTION              161
 #define IDD_SNM_IMAGE                   162
 #define IDD_IX_LABELDLG                 163
@@ -89,6 +89,10 @@
 #define IDD_BR_CONTEXTUAL_TOOLBARS      181
 #define IDD_BR_CONTEXTUAL_TOOLBARS_POS  182
 #define IDD_BR_ADJUST_PLAYRATE          183
+#define IDC_ENV_PEN_GRID                184
+#define IDC_GRID_WARP                   185
+#define IDC_ENV_PT_ADJ_VERT             186
+#define IDC_MISC_SPEAKER                187
 #define IDB_UP                          500
 #define IDB_DOWN                        501
 #define IDC_BUTTON1                     1000
@@ -455,7 +459,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        184
+#define _APS_NEXT_RESOURCE_VALUE        188
 #define _APS_NEXT_COMMAND_VALUE         40000
 #define _APS_NEXT_CONTROL_VALUE         1358
 #define _APS_NEXT_SYMED_VALUE           100

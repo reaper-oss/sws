@@ -380,10 +380,6 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 			<File
-				RelativePath=".\downarrow.bmp"
-				>
-			</File>
-			<File
 				RelativePath=".\resource.h"
 				>
 			</File>
@@ -392,29 +388,50 @@
 				>
 			</File>
 			<File
-				RelativePath=".\uparrow.bmp"
-				>
-			</File>
-			<File
 				RelativePath=".\version.rc2"
 				>
 			</File>
 			<File
-				RelativePath=".\zoomdrag.cur"
+				RelativePath=".\Resources\Bitmapdownarrow.bmp"
 				>
 			</File>
 			<File
-				RelativePath=".\zoomin.cur"
+				RelativePath=".\Resources\Bitmapuparrow.bmp"
 				>
 			</File>
 			<File
-				RelativePath=".\zoomout.cur"
+				RelativePath=".\Resources\Cursor\sws_env_pen_grid.cur"
 				>
 			</File>
 			<File
-				RelativePath=".\zoomundo.cur"
+				RelativePath=".\Resources\Cursor\sws_env_pt_adj_vert.cur"
 				>
 			</File>
+			<File
+				RelativePath=".\Resources\Cursor\sws_grid_warp.cur"
+				>
+			</File>
+			<File
+				RelativePath=".\Resources\Cursor\sws_misc_speaker.cur"
+				>
+			</File>
+			<File
+				RelativePath=".\Resources\Cursor\sws_zoom_drag.cur"
+				>
+			</File>
+			<File
+				RelativePath=".\Resources\Cursor\sws_zoom_in.cur"
+				>
+			</File>
+			<File
+				RelativePath=".\Resources\Cursor\sws_zoom_out.cur"
+				>
+			</File>
+			<File
+				RelativePath=".\Resources\Cursor\sws_zoom_undo.cur"
+				>
+			</File>
+
 		</Filter>
 		<Filter
 			Name="Xenakios"

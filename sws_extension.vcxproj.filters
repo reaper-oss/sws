@@ -617,22 +617,34 @@
     <None Include="version.rc2">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="zoomdrag.cur">
+    <None Include="Resources\Bitmap\downarrow.bmp">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="zoomin.cur">
+    <None Include="Resources\Bitmap\uparrow.bmp">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="zoomout.cur">
+    <None Include="Resources\Cursor\sws_env_pen_grid.cur">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="zoomundo.cur">
+    <None Include="Resources\Cursor\sws_env_pt_adj_vert.cur">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="downarrow.bmp">
+    <None Include="Resources\Cursor\sws_grid_warp.cur">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="uparrow.bmp">
+    <None Include="Resources\Cursor\sws_misc_speaker.cur">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\Cursor\sws_zoom_drag.cur">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\Cursor\sws_zoom_in.cur">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\Cursor\sws_zoom_out.cur">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\Cursor\sws_zoom_undo.cur">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="whatsnew.txt" />

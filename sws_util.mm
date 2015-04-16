@@ -1,7 +1,7 @@
 /******************************************************************************
 / sws_util.mm
 /
-/ Copyright (c) 2010 Tim Payne (SWS)
+/ Copyright (c) 2010 Tim Payne (SWS), Dominik Martin Drzic
 
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -9,10 +9,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -149,155 +149,285 @@ void EnableColumnResize(HWND h)
 	[v setAllowsColumnResizing:YES];
 }
 
-// This function MakeCursorFromData is (C) Cockos and is copied from WDL:swell-kb.mm
-static NSCursor* MakeCursorFromData(unsigned char* data, int hotspot_x, int hotspot_y)
+// Modified MakeCursorFromData from Cockos WDL (supports 32x32 unlike original function which supports 16x16)
+static NSCursor* SWS_MakeCursorFromData(unsigned char* data, int hotspot_x, int hotspot_y)
 {
   NSCursor *c=NULL;
-  NSBitmapImageRep* bmp = [[NSBitmapImageRep alloc] 
+  NSBitmapImageRep* bmp = [[NSBitmapImageRep alloc]
     initWithBitmapDataPlanes:0
-    pixelsWide:16
-    pixelsHigh:16
+    pixelsWide:32
+    pixelsHigh:32
     bitsPerSample:8
-    samplesPerPixel:2  
+    samplesPerPixel:2
     hasAlpha:YES
-    isPlanar:NO 
+    isPlanar:NO
     colorSpaceName:NSCalibratedWhiteColorSpace
-    bytesPerRow:(16*2)
-    bitsPerPixel:16]; 
-  
+    bytesPerRow:(32*2)
+    bitsPerPixel:16];
+
   if (bmp)
   {
     unsigned char* p = [bmp bitmapData];
     if (p)
-    {  
+    {
       int i;
-      for (i = 0; i < 16*16; ++i)
+      for (i = 0; i < 32*32; ++i)
       {
         // tried 4 bits per sample and memcpy, didn't work
         p[2*i] = (data[i]&0xF0) | data[i]>>4;
         p[2*i+1] = (data[i]<<4) | (data[i]&0xf);
       }
-  
+
       NSImage *img = [[NSImage alloc] init];
       if (img)
       {
-        [img addRepresentation:bmp];  
-        NSPoint hs = { hotspot_x, hotspot_y };
+        [img addRepresentation:bmp];
+        NSPoint hs = NSMakePoint(hotspot_x, hotspot_y);
         c = [[NSCursor alloc] initWithImage:img hotSpot:hs];
         [img release];
-      }   
+      }
     }
     [bmp release];
   }
   return c;
 }
 
-// Code here modified from Cockos WDL!
-// Supports all the zoom cursors:
-// IDC_ZOOMIN, IDC_ZOOMOUT, IDC_ZOOMUNDO, IDC_ZOOMDRAG
+// Modified LoadCursor from Cockos WDL
+// Supports these cursors:
+// IDC_GRID_WARP
+// IDC_ENV_PEN_GRID, IDC_ENV_PT_ADJ_VERT
+// IDC_MISC_SPEAKER
+// IDC_ZOOM_DRAG, IDC_ZOOM_IN, IDC_ZOOM_OUT, IDC_ZOOM_UNDO
 HCURSOR SWS_LoadCursor(int id)
 {
   // bytemaps are (white<<4)|(alpha)
   const unsigned char B = 0xF;
   const unsigned char W = 0xFF;
   //const unsigned char G = 0xF8;
-  
-  static NSCursor* carr[4] = { 0, 0, 0, 0 };
-  
+
+  static NSCursor* carr[8]; // set to NULL by compiler
+
   NSCursor** pc=0;
-  if (id == IDC_ZOOMIN) pc = &carr[0];
-  else if (id == IDC_ZOOMOUT) pc = &carr[1];
-  else if (id == IDC_ZOOMUNDO) pc = &carr[2];
-  else if (id == IDC_ZOOMDRAG) pc = &carr[3];
-  else return 0;
-  
+
+  int  index = 0;
+  bool found = false;
+
+
+  if (!found && id == IDC_ENV_PEN_GRID)    found = true; else if (!found) ++index;
+  if (!found && id == IDC_ENV_PT_ADJ_VERT) found = true; else if (!found) ++index;
+  if (!found && id == IDC_GRID_WARP)       found = true; else if (!found) ++index;
+  if (!found && id == IDC_MISC_SPEAKER)    found = true; else if (!found) ++index;
+  if (!found && id == IDC_ZOOM_DRAG)       found = true; else if (!found) ++index;
+  if (!found && id == IDC_ZOOM_IN)         found = true; else if (!found) ++index;
+  if (!found && id == IDC_ZOOM_OUT)        found = true; else if (!found) ++index;
+  if (!found && id == IDC_ZOOM_UNDO)       found = true; else if (!found) ++index;
+
+  if (!found)
+    return NULL;
+  pc = &carr[index];
+
   if (!(*pc))
   {
-    if (id == IDC_ZOOMIN)
+    if (id == IDC_ENV_PEN_GRID)
     {
-      static unsigned char p[16*16] = 
+      static unsigned char p[32*32] =
       {
-        0, 0, 0, 0, B, B, B, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, B, B, W, W, W, B, B, 0, 0, 0, 0, 0, 0, 0,
-        0, B, W, W, B, B, B, W, W, B, 0, 0, 0, 0, 0, 0,
-        0, B, W, B, B, W, B, B, W, B, 0, 0, 0, 0, 0, 0,
-        B, W, B, B, B, W, B, B, B, W, B, 0, 0, 0, 0, 0,
-        B, W, B, W, W, W, W, W, B, W, B, 0, 0, 0, 0, 0,
-        B, W, B, B, B, W, B, B, B, W, B, 0, 0, 0, 0, 0,
-        0, B, W, B, B, W, B, B, W, B, 0, 0, 0, 0, 0, 0,
-        0, B, W, W, B, B, B, W, W, B, 0, 0, 0, 0, 0, 0,
-        0, 0, B, B, W, W, W, B, B, W, B, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, B, B, B, 0, 0, B, W, B, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, B, W, B, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, B, W, B, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, B, 0,
+        0,0,0,0,0,0,0,0,0,0,0,0,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,B,W,B,0,0,0,B,0,0,B,0,0,B,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,B,W,W,B,B,0,0,B,0,0,B,0,0,B,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,B,W,W,B,B,0,0,0,B,0,0,B,0,0,B,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,B,W,W,B,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,B,W,W,B,B,0,0,0,0,0,B,0,0,B,0,0,B,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,B,W,W,B,B,0,0,0,0,0,0,B,0,0,B,0,0,B,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,B,W,W,B,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,B,W,W,B,B,0,0,0,0,0,0,0,0,B,0,0,B,0,0,B,0,0,0,0,0,0,0,0,
+        0,0,0,B,W,W,B,B,0,0,0,0,0,0,0,0,0,B,0,0,B,0,0,B,0,0,0,0,0,0,0,0,
+        0,0,B,B,W,B,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,B,B,B,B,0,0,0,0,0,0,0,0,0,0,0,B,0,0,B,0,0,B,0,0,0,0,0,0,0,0,
+        0,B,B,B,B,0,0,0,0,0,B,B,0,0,0,0,0,B,0,0,B,0,0,B,0,0,0,0,0,0,0,0,
+        0,B,B,0,0,0,0,0,B,B,0,0,B,B,0,0,0,B,0,0,B,0,0,B,0,0,0,0,0,0,0,0,
+        B,0,0,B,B,0,0,B,0,0,0,0,0,0,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,B,B,0,0,0,0,0,0,0,0,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
       };
-      *pc = MakeCursorFromData(p, 5, 5);
+        *pc = SWS_MakeCursorFromData(p, 2, 14);
     }
-    else if (id == IDC_ZOOMOUT)
+    else if (id == IDC_ENV_PT_ADJ_VERT)
     {
-      static unsigned char p[16*16] = 
+      static unsigned char p[32*32] =
       {
-        0, 0, 0, 0, B, B, B, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, B, B, W, W, W, B, B, 0, 0, 0, 0, 0, 0, 0,
-        0, B, W, W, B, B, B, W, W, B, 0, 0, 0, 0, 0, 0,
-        0, B, W, B, B, B, B, B, W, B, 0, 0, 0, 0, 0, 0,
-        B, W, B, B, B, B, B, B, B, W, B, 0, 0, 0, 0, 0,
-        B, W, B, W, W, W, W, W, B, W, B, 0, 0, 0, 0, 0,
-        B, W, B, B, B, B, B, B, B, W, B, 0, 0, 0, 0, 0,
-        0, B, W, B, B, B, B, B, W, B, 0, 0, 0, 0, 0, 0,
-        0, B, W, W, B, B, B, W, W, B, 0, 0, 0, 0, 0, 0,
-        0, 0, B, B, W, W, W, B, B, W, B, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, B, B, B, 0, 0, B, W, B, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, B, W, B, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, B, W, B, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, B, 0,
+        0,0,0,0,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,B,W,W,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,B,W,W,W,W,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        B,W,W,W,W,W,W,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        B,B,B,B,W,B,B,B,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,B,0,B,0,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,B,W,B,W,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,B,W,W,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,B,W,W,W,W,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,B,W,W,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,B,W,B,W,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,B,0,B,0,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        B,B,B,B,W,B,B,B,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        B,W,W,W,W,W,W,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,B,W,W,W,W,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,B,W,W,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
       };
-     *pc = MakeCursorFromData(p, 5, 5);   
+        *pc = SWS_MakeCursorFromData(p, 4, 12);
     }
-    else if (id == IDC_ZOOMUNDO)
+    else if (id == IDC_GRID_WARP)
     {
-      static unsigned char p[16*16] = 
+      static unsigned char p[32*32] =
       {
-        0, 0, 0, 0, B, B, B, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, B, B, W, W, W, B, B, 0, 0, 0, 0, 0, 0, 0,
-        0, B, W, W, B, B, B, W, W, B, 0, 0, 0, 0, 0, 0,
-        0, B, W, B, 0, 0, 0, B, W, B, 0, 0, 0, 0, 0, 0,
-        B, W, B, W, B, 0, B, W, B, W, B, 0, 0, 0, 0, 0,
-        B, W, B, W, B, 0, B, W, B, W, B, 0, 0, 0, 0, 0,
-        B, W, B, W, B, B, B, W, B, W, B, 0, 0, 0, 0, 0,
-        0, B, W, B, W, W, W, B, W, B, 0, 0, 0, 0, 0, 0,
-        0, B, W, W, B, B, B, W, W, B, 0, 0, 0, 0, 0, 0,
-        0, 0, B, B, W, W, W, B, B, W, B, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, B, B, B, 0, 0, B, W, B, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, B, W, B, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, B, W, B, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, B, 0,
+        0,0,0,0,0,0,0,0,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,B,B,0,0,0,B,0,0,0,B,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,B,W,B,0,0,0,B,0,0,0,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,B,W,W,B,B,B,B,B,B,B,B,B,W,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        B,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        B,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,B,W,W,B,B,B,B,B,B,B,B,B,W,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,B,W,B,0,0,0,B,0,0,0,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,B,B,0,0,0,B,0,0,0,B,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
       };
-      *pc = MakeCursorFromData(p, 5, 5);        
+        *pc = SWS_MakeCursorFromData(p, 8, 10);
     }
-    else if (id == IDC_ZOOMDRAG)
+    else if (id == IDC_MISC_SPEAKER)
     {
-      static unsigned char p[16*16] = 
+      static unsigned char p[32*32] =
       {
-        0, 0, 0, 0, B, B, B, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, B, B, W, W, W, B, B, 0, 0, 0, 0, 0, 0, 0,
-        0, B, W, W, B, B, B, W, W, B, 0, 0, 0, 0, 0, 0,
-        0, B, W, B, B, W, B, B, W, B, 0, 0, 0, 0, 0, 0,
-        B, W, B, B, W, W, W, B, B, W, B, 0, 0, 0, 0, 0,
-        B, W, B, B, B, B, B, B, B, W, B, 0, 0, 0, 0, 0,
-        B, W, B, B, W, W, W, B, B, W, B, 0, 0, 0, 0, 0,
-        0, B, W, B, B, W, B, B, W, B, 0, 0, 0, 0, 0, 0,
-        0, B, W, W, B, B, B, W, W, B, 0, 0, 0, 0, 0, 0,
-        0, 0, B, B, W, W, W, B, B, W, B, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, B, B, B, 0, 0, B, W, B, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, B, W, B, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, B, W, B, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, B, 0,
+        0,0,0,0,0,0,0,B,B,B,0,0,0,0,0,0,0,0,W,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,B,B,W,B,0,0,0,0,0,0,0,W,B,W,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,B,B,W,W,B,0,0,0,0,0,W,0,0,W,B,W,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,B,B,W,W,W,B,0,0,0,0,W,B,W,0,0,W,B,W,0,0,0,0,0,0,0,0,0,0,
+        B,B,B,B,B,W,W,W,W,B,0,0,W,0,0,W,B,W,0,W,B,W,0,0,0,0,0,0,0,0,0,0,
+        B,B,W,B,W,W,W,W,W,B,0,W,B,W,0,W,B,W,0,0,W,B,W,0,0,0,0,0,0,0,0,0,
+        B,B,W,B,W,W,W,W,W,B,0,0,W,B,W,0,W,B,W,0,W,B,W,0,0,0,0,0,0,0,0,0,
+        B,B,W,B,W,W,W,W,W,B,0,0,W,B,W,0,W,B,W,0,W,B,W,0,0,0,0,0,0,0,0,0,
+        B,B,W,B,W,W,W,W,W,B,0,0,W,B,W,0,W,B,W,0,W,B,W,0,0,0,0,0,0,0,0,0,
+        B,B,W,B,W,W,W,W,W,B,0,W,B,W,0,W,B,W,0,0,W,B,W,0,0,0,0,0,0,0,0,0,
+        B,B,B,B,B,W,W,W,W,B,0,0,W,0,0,W,B,W,0,W,B,W,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,B,B,W,W,W,B,0,0,0,0,W,B,W,0,0,W,B,W,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,B,B,W,W,B,0,0,0,0,0,W,0,0,W,B,W,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,B,B,W,B,0,0,0,0,0,0,0,W,B,W,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,B,B,B,0,0,0,0,0,0,0,0,W,0,0,0,0,0,0,0,0,0,0,0,0,0,
       };
-      *pc = MakeCursorFromData(p, 5, 5);        
+        *pc = SWS_MakeCursorFromData(p, 10, 7);
     }
-  }  
+    else if (id == IDC_ZOOM_DRAG)
+    {
+      static unsigned char p[32*32] =
+      {
+        0,0,0,0,B,B,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,B,B,W,W,W,B,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,B,W,W,B,B,B,W,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,B,W,B,B,W,B,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        B,W,B,B,W,W,W,B,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        B,W,B,B,B,B,B,B,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        B,W,B,B,W,W,W,B,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,B,W,B,B,W,B,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,B,W,W,B,B,B,W,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,B,B,W,W,W,B,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,B,B,B,0,0,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+      };
+      *pc = SWS_MakeCursorFromData(p, 5, 5);
+    }
+    else if (id == IDC_ZOOM_IN)
+    {
+      static unsigned char p[32*32] =
+      {
+        0,0,0,0,B,B,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,B,B,W,W,W,B,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,B,W,W,B,B,B,W,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,B,W,B,0,0,0,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        B,W,B,B,B,B,B,B,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        B,W,B,W,W,W,W,W,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        B,W,B,B,B,B,B,B,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,B,W,B,0,0,0,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,B,W,W,B,B,B,W,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,B,B,W,W,W,B,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,B,B,B,0,0,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+      };
+      *pc = SWS_MakeCursorFromData(p, 5, 5);
+    }
+    else if (id == IDC_ZOOM_OUT)
+    {
+      static unsigned char p[32*32] =
+      {
+        0,0,0,0,B,B,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,B,B,W,W,W,B,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,B,W,W,B,B,B,W,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,B,W,B,W,W,W,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        B,W,B,B,B,B,B,B,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        B,W,B,W,W,W,W,W,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        B,W,B,B,B,B,B,B,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,B,W,B,W,W,W,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,B,W,W,B,B,B,W,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,B,B,W,W,W,B,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,B,B,B,0,0,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+      };
+     *pc = SWS_MakeCursorFromData(p, 5, 5);
+    }
+    else if (id == IDC_ZOOM_UNDO)
+    {
+      static unsigned char p[32*32] =
+      {
+        0,0,0,0,B,B,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,B,B,W,W,W,B,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,B,W,W,B,B,B,W,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,B,W,B,0,0,0,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        B,W,B,W,B,0,B,W,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        B,W,B,W,B,0,B,W,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        B,W,B,W,B,B,B,W,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,B,W,B,W,W,W,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,B,W,W,B,B,B,W,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,B,B,W,W,W,B,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,B,B,B,0,0,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,B,W,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+      };
+      *pc = SWS_MakeCursorFromData(p, 5, 5);
+    }
+
+  }
   return (HCURSOR)*pc;
 }
 
@@ -339,12 +469,12 @@ int ListView_GetItemCountCast(HWND h)
 {
     if (!h) return 0;
 //    if (![(id)h isKindOfClass:[SWELL_ListView class]]) return 0;
-    
+
     SWELL_ListView *tv=(SWELL_ListView*)h;
     if (tv->m_lbMode || !(tv->style & LVS_OWNERDATA))
     {
         if (!tv->m_items) return 0;
-        
+
         return tv->m_items->GetSize();
     }
     return tv->ownermode_cnt;
@@ -357,16 +487,16 @@ bool ListView_GetItemCast(HWND h, LVITEM *item)
     item->state=0;
     if (!h) return false;
 //    if (![(id)h isKindOfClass:[SWELL_ListView class]]) return false;
-    
-    
+
+
     SWELL_ListView *tv=(SWELL_ListView*)h;
     if (tv->m_lbMode || !(tv->style & LVS_OWNERDATA))
     {
         if (!tv->m_items) return false;
-        
+
         SWELL_ListView_Row *row=tv->m_items->Get(item->iItem);
-        if (!row) return false;  
-        
+        if (!row) return false;
+
         if (item->mask & LVIF_PARAM) item->lParam=row->m_param;
         if (item->mask & LVIF_TEXT) if (item->pszText && item->cchTextMax>0)
         {
@@ -390,7 +520,7 @@ bool ListView_GetItemCast(HWND h, LVITEM *item)
         if ((item->stateMask&LVIS_SELECTED) && [tv isRowSelected:item->iItem]) item->state|=LVIS_SELECTED;
         if ((item->stateMask&LVIS_FOCUSED) && [tv selectedRow] == item->iItem) item->state|=LVIS_FOCUSED;
     }
-    
+
     return true;
 }
 
@@ -416,7 +546,7 @@ bool ListView_SetItemStateCast(HWND h, int ipos, int state, int statemask)
     if (!h) return false;
     SWELL_ListView *tv=(SWELL_ListView*)h;
     static int _is_doing_all;
-    
+
     if (ipos == -1)
     {
         int x;
@@ -428,7 +558,7 @@ bool ListView_SetItemStateCast(HWND h, int ipos, int state, int statemask)
         ListView_RedrawItemsCast(h,0,n-1);
         return true;
     }
-    
+
     if (tv->m_lbMode || !(tv->style & LVS_OWNERDATA))
     {
         if (!tv->m_items) return false;
@@ -467,10 +597,10 @@ bool ListView_SetItemStateCast(HWND h, int ipos, int state, int statemask)
         }
         else
         {
-            
+
         }
     }
-    
+
     if (!_is_doing_all)
     {
         if (didsel)
@@ -480,7 +610,7 @@ bool ListView_SetItemStateCast(HWND h, int ipos, int state, int statemask)
             {
                 __rent=1;
                 NMLISTVIEW nm={{(HWND)h,[tv tag],LVN_ITEMCHANGED},ipos,0,state,};
-                SendMessage(GetParent(h),WM_NOTIFY,[tv tag],(LPARAM)&nm);      
+                SendMessage(GetParent(h),WM_NOTIFY,[tv tag],(LPARAM)&nm);
                 __rent=0;
             }
         }
@@ -495,9 +625,9 @@ BOOL IsWindowEnabled(HWND hwnd)
     if (!hwnd) return FALSE;
     SWELL_BEGIN_TRY
     id bla=(id)hwnd;
-    
+
     if ([bla isKindOfClass:[NSWindow class]]) bla = [bla contentView];
-    
+
     if (bla && [bla respondsToSelector:@selector(isEnabled:)])
     {
         return [bla isEnabled] == YES ? TRUE : FALSE;
@@ -517,7 +647,7 @@ void SWS_ShowTextScrollbar(HWND hwnd, bool show)
 
     SWELL_TextView *tv=(SWELL_TextView*)hwnd;
     [tv setHorizontallyResizable:show?NO:YES];
-  
+
     NSScrollView *sc = [tv enclosingScrollView];
     [sc setHasHorizontalScroller:show?YES:NO];
 }

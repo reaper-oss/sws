@@ -1,5 +1,10 @@
 <strong>REAPER v5.0pre21+ is required!</strong>
 
+<strong>Custom mouse cursors</strong>
++From now on you can create custom mouse cursors to replace existing SWS cursors. All future updates in regards to this will be shown in what's new under <strong>Custom mouse cursors</strong> section to ease things for theme and cursor developers when new things are added or changed
++Current list of customizable mouse cursors can be found http://wiki.cockos.com/wiki/index.php/SWS_mouse_cursors|on Cockos wiki|
++Some SWS/BR actions got new cursors, but not to clog the changelog with all the details, see upper wiki link (big thanks to user http://forum.cockos.com/member.php?u=14505|EvilDragon| for help with speaker cursor and testing new cursors in general). Note that these cursors are not set in stone, if you think you could contribute better default cursors, let use know (you can do it on our dedicated http://forum.cockos.com/showthread.php?t=153702|forum topic|)
+
 Added actions
 +Main:
  - SWS/BR: Apply next action to all visible (record-armed) envelopes in selected tracks

@@ -1618,17 +1618,10 @@ int ZoomInit(bool hookREAPERWndProcs)
 	if (!plugin_register("projectconfig",&g_projectconfig))
 		return 0;
 
-#ifdef _WIN32
-	g_hZoomInCur   = LoadCursor(g_hInst, MAKEINTRESOURCE(IDC_ZOOMIN));
-	g_hZoomOutCur  = LoadCursor(g_hInst, MAKEINTRESOURCE(IDC_ZOOMOUT));
-	g_hZoomUndoCur = LoadCursor(g_hInst, MAKEINTRESOURCE(IDC_ZOOMUNDO));
-	g_hZoomDragCur = LoadCursor(g_hInst, MAKEINTRESOURCE(IDC_ZOOMDRAG));
-#else
-	g_hZoomInCur   = SWS_LoadCursor(IDC_ZOOMIN);
-	g_hZoomOutCur  = SWS_LoadCursor(IDC_ZOOMOUT);
-	g_hZoomUndoCur = SWS_LoadCursor(IDC_ZOOMUNDO);
-	g_hZoomDragCur = SWS_LoadCursor(IDC_ZOOMDRAG);
-#endif
+	g_hZoomInCur   = GetSwsMouseCursor(CURSOR_ZOOM_IN);
+	g_hZoomOutCur  = GetSwsMouseCursor(CURSOR_ZOOM_OUT);
+	g_hZoomUndoCur = GetSwsMouseCursor(CURSOR_ZOOM_UNDO);
+	g_hZoomDragCur = GetSwsMouseCursor(CURSOR_ZOOM_DRAG);
 
 	// Restore prefs
 	int iPrefs = GetPrivateProfileInt(SWS_INI, ZOOMPREFS_KEY, 0, get_ini_file());

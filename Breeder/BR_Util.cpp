@@ -1344,6 +1344,25 @@ double GetNextGridDiv (double position)
 	return nextGridPosition;
 }
 
+double GetPrevGridDiv (double position)
+{
+	if (position <= 0)
+		return 0;
+
+	// GetNextGridDiv is complicated enough, so let's not reinvent it here but reuse it (while less efficient than the real deal, it's really not that slower since GetNextGridDiv() is quite optimized)
+	double prevGridDivPos = TimeMap_QNToTime_abs(NULL, TimeMap_timeToQN_abs(NULL, position) - 1.5*GetGridDivSafe());
+	while (true)
+	{
+		double tmp = GetNextGridDiv(prevGridDivPos);
+		if (tmp >= position)
+			break;
+		else
+			prevGridDivPos = tmp;
+	}
+
+	return prevGridDivPos;
+}
+
 double GetClosestGridLine (double position)
 {
 	/* All other GridLine (but not GridDiv) functions   *
@@ -2751,6 +2770,72 @@ bool ThemeListViewInProc (HWND hwnd, int uMsg, LPARAM lParam, HWND list, bool gr
 			return true;
 	}
 	return false;
+}
+
+/******************************************************************************
+* Cursors                                                                     *
+******************************************************************************/
+HCURSOR GetSwsMouseCursor (BR_MouseCursor cursor)
+{
+	static HCURSOR s_cursors[CURSOR_COUNT]; // set to NULL by compiler
+
+	// Invalid cursor requested
+	if (cursor < 0 && cursor >= CURSOR_COUNT)
+		return NULL;
+
+	// Cursor not yet loaded
+	if (!s_cursors[cursor])
+	{
+		const char* cursorFile   = NULL; // this is SWS only cursor file
+		int         idc_resVal   = -1;   // in case cursor file hasn't been found, default to this resource
+
+
+		if      (cursor == CURSOR_ENV_PEN_GRID)    {idc_resVal = IDC_ENV_PEN_GRID;      cursorFile = "sws_env_pen_grid";}
+		else if (cursor == CURSOR_ENV_PT_ADJ_VERT) {idc_resVal = IDC_ENV_PT_ADJ_VERT;   cursorFile = "sws_env_pt_adj_vert";}
+		else if (cursor == CURSOR_GRID_WARP)       {idc_resVal = IDC_GRID_WARP;         cursorFile = "sws_grid_warp";}
+		else if (cursor == CURSOR_MISC_SPEAKER)    {idc_resVal = IDC_MISC_SPEAKER;      cursorFile = "sws_misc_speaker";}
+		else if (cursor == CURSOR_ZOOM_DRAG)       {idc_resVal = IDC_ZOOM_DRAG;         cursorFile = "sws_zoom_drag";}
+		else if (cursor == CURSOR_ZOOM_IN)         {idc_resVal = IDC_ZOOM_IN;           cursorFile = "sws_zoom_in";}
+		else if (cursor == CURSOR_ZOOM_OUT)        {idc_resVal = IDC_ZOOM_OUT;          cursorFile = "sws_zoom_out";}
+		else if (cursor == CURSOR_ZOOM_UNDO)       {idc_resVal = IDC_ZOOM_UNDO;         cursorFile = "sws_zoom_undo";}
+
+		// Check for custom cursor file first
+		if (cursorFile)
+		{
+			#ifdef _WIN32
+				wchar_t* resourcePathWide = WideCharPlz(GetResourcePath());
+				wchar_t* cursorFileWide   = WideCharPlz(cursorFile);
+
+				wstring cursorPath(resourcePathWide);
+				cursorPath.append(L"\\Cursors\\");
+				cursorPath.append(cursorFileWide);
+				cursorPath.append(L".cur");
+
+				DWORD fileAttributes = GetFileAttributesW(cursorPath.c_str());
+				if (fileAttributes != INVALID_FILE_ATTRIBUTES && !(fileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+					s_cursors[cursor] = LoadCursorFromFileW(cursorPath.c_str());
+
+				delete[] resourcePathWide;
+				delete[] cursorFileWide;
+			#else
+				WDL_FastString cursorPath;
+				cursorPath.SetFormatted(SNM_MAX_PATH, "%s/Cursors/%s.cur", GetResourcePath(), cursorFile);
+				if (file_exists(cursorPath.Get()))
+					s_cursors[cursor] = SWELL_LoadCursorFromFile(cursorPath.Get());
+			#endif
+		}
+
+		// No suitable file found, load default resource
+		if (!s_cursors[cursor] && idc_resVal != -1)
+		{
+			#ifdef _WIN32
+				s_cursors[cursor] = LoadCursor(g_hInst, MAKEINTRESOURCE(idc_resVal));
+			#else
+				s_cursors[cursor] = SWS_LoadCursor(idc_resVal);
+			#endif
+		}
+	}
+	return s_cursors[cursor];
 }
 
 /******************************************************************************

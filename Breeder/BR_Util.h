@@ -140,8 +140,9 @@ int FindStretchMarker (MediaItem_Take* take, double position, double surrounding
 /******************************************************************************
 * Grid                                                                        *
 ******************************************************************************/
-double GetGridDivSafe ();                // makes sure grid div is never over MAX_GRID_DIV
-double GetNextGridDiv (double position); // unlike other functions, this one doesn't care about grid visibility
+double GetGridDivSafe (); // makes sure grid div is never over MAX_GRID_DIV
+double GetNextGridDiv (double position); // unlike other functions, these
+double GetPrevGridDiv (double position); // don't care about grid visibility
 double GetClosestGridLine (double position);
 double GetClosestMeasureGridLine (double position);
 double GetClosestLeftSideGridLine (double position);
@@ -238,6 +239,24 @@ void DrawTooltip (LICE_IBitmap* bm, const char* text);
 void SetWndIcon (HWND hwnd); // win32 only
 void ThemeListViewOnInit (HWND list);
 bool ThemeListViewInProc (HWND hwnd, int uMsg, LPARAM lParam, HWND list, bool grid);
+
+/******************************************************************************
+* Cursors                                                                     *
+******************************************************************************/
+enum BR_MouseCursor
+{
+	CURSOR_ENV_PEN_GRID = 0,
+	CURSOR_ENV_PT_ADJ_VERT,
+	CURSOR_GRID_WARP,
+	CURSOR_MISC_SPEAKER,
+	CURSOR_ZOOM_DRAG,
+	CURSOR_ZOOM_IN,
+	CURSOR_ZOOM_OUT,
+	CURSOR_ZOOM_UNDO,
+
+	CURSOR_COUNT
+};
+HCURSOR GetSwsMouseCursor (BR_MouseCursor cursor);
 
 /******************************************************************************
 * Height helpers (exposed here for usage outside of BR_Util.h)                *

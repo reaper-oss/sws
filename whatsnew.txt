@@ -50,7 +50,6 @@ ReaScript
  - BR_SetItemEdges
  - BR_SetMediaItemImageResource
 
-
 Fixes
 +Notes/Windows OS: fixed "wrap text" option (Issue 690)
 +Autorender/OSX: fixed UTF8 issues with media file tags (Issue 670)
@@ -67,6 +66,7 @@ Fixes
 Other
 +Added ability to select only partial time signatures with SWS/BR: Select and adjust tempo markers...
 +Toolbar state of all docked SWS dialogs will be set to ON only when the window is visible in the docker (same behavior REAPER is using for its own docked dialogs)
++Compatibility fixes for new envelope max display options of +12db or +24db (introduced in REAPER v5.0pre21)
 
 !v2.6.3 #0 pre-release build (March 12, 2015)
 <strong>REAPER v5.0pre14b+ is required!</strong>

@@ -162,8 +162,8 @@ void BR_EnvGetProperties (BR_Envelope* envelope, bool* activeOut, bool* visibleO
 		WritePtr(inLaneOut,          envelope->IsInLane());
 		WritePtr(laneHeightOut,      envelope->GetLaneHeight());
 		WritePtr(defaultShapeOut,    envelope->GetDefaultShape());
-		WritePtr(minValueOut,        envelope->MinValue());
-		WritePtr(maxValueOut,        envelope->MaxValue());
+		WritePtr(minValueOut,        envelope->LaneMinValue());
+		WritePtr(maxValueOut,        envelope->LaneMaxValue());
 		WritePtr(centerValueOut,     envelope->CenterValue());
 		WritePtr(faderScalingOut,    envelope->IsScaledToFader());
 

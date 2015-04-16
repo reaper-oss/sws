@@ -776,7 +776,7 @@ double BR_Envelope::ValueAtPosition (double position, bool fastMode /*= false*/)
 				x2 = SetToBounds(x2, t1, t2);
 				y1 = SetToBounds(y1, this->MinValue(), this->MaxValue());
 				y2 = SetToBounds(y2, this->MinValue(), this->MaxValue());
-				returnValue =  LICE_CBezier_GetY(t1, x1, x2, t2, v1, y1, y2, v2, position);
+				returnValue = LICE_CBezier_GetY(t1, x1, x2, t2, v1, y1, y2, v2, position);
 			}
 			break;
 		}
@@ -1296,6 +1296,8 @@ double BR_Envelope::MinValue ()
 double BR_Envelope::MaxValue ()
 {
 	this->FillProperties();
+	if (this->Type() == VOLUME || this->Type() == VOLUME_PREFX)
+		return this->LaneMaxValue();
 	return m_properties.maxValue;
 }
 
@@ -1315,8 +1317,11 @@ double BR_Envelope::LaneMaxValue ()
 	else if (this->Type() == VOLUME || this->Type() == VOLUME_PREFX)
 	{
 		int max; GetConfig("volenvrange", max);
-		if (max == 1) return 1;
-		else          return 2;
+		if      (max == 3) return 1;
+		else if (max == 2) return 2;
+		else if (max == 6) return 4;
+		else if (max == 7) return 16;
+		else               return 2;
 	}
 	else if (this->Type() == PITCH)
 	{
@@ -1814,7 +1819,7 @@ void BR_Envelope::FillProperties () const
 				else if (strstr(token, "VOLENV"))
 				{
 					m_properties.minValue = 0;
-					m_properties.maxValue = 2;
+					m_properties.maxValue = 16;
 					m_properties.centerValue = 1;
 					m_properties.type = (strstr(token, "AUXVOLENV") || strstr(token, "VOLENV2") || strstr(token, "HWVOLENV")) ? VOLUME : VOLUME_PREFX;
 					m_properties.paramType.Set(token);

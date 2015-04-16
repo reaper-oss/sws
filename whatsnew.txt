@@ -7,6 +7,8 @@
 
 Added actions
 +Main:
+ - SWS/BR: Freehand draw envelope while snapping points to left side grid (perform until shortcut released)
+  - Note: also works with tempo map
  - SWS/BR: Apply next action to all visible (record-armed) envelopes in selected tracks
  - SWS/BR: Apply next action to all visible (record-armed) envelopes in selected tracks if there is no track envelope selected
  - SWS/BR: Copy selected points in selected envelope to all visible (record-armed) envelopes in selected tracks (2 versions: direct copy and at edit cursor)
@@ -51,7 +53,9 @@ Fixes
 +Fixed various SWS/BR actions so they work properly with hardware sends envelopes
 +ReaScript: fixed ULT_SetMediaItemNote
 +When checking for modifications in contextual toolbars dialog (in case of closing the dialog or switching from the unsaved preset) also check position offset and auto close properties
-+SWS/S&M: Open/close image window now reports it's state
++<em>SWS/S&M: Open/close image window</em> now reports it's state
++Fixed <em>SWS/BR: Delete tempo marker (preserve overall tempo and positions if possible)</em> not deleting moved partial time signature markers properly
++Fixed <em>SWS/BR: Set closest (left side) envelope point's value to mouse cursor (perform until shortcut released)</em> reseting position of moved partial time signature markers
 
 Other
 +Added ability to select only partial time signatures with SWS/BR: Select and adjust tempo markers...

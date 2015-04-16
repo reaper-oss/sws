@@ -312,19 +312,6 @@ bool BR_Envelope::DeletePoint (int id)
 		return false;
 }
 
-bool BR_Envelope::DeletePoints (int startId, int endId)
-{
-	if (!this->ValidateId(startId) || !this->ValidateId(endId))
-		return false;
-
-	m_points.erase(m_points.begin() + startId, m_points.begin() + endId+1);
-
-	m_count -= endId - startId + 1;
-	m_update       = true;
-	m_pointsEdited = true;
-	return true;
-}
-
 bool BR_Envelope::GetTimeSig (int id, bool* sig, bool* partial, int* num, int* den)
 {
 	if (this->ValidateId(id) && m_tempoMap)
@@ -430,6 +417,78 @@ bool BR_Envelope::SetCreatePoint (int id, double position, double value, int sha
 	}
 }
 
+int BR_Envelope::DeletePoints (int startId, int endId)
+{
+	if (endId < startId)
+		swap(startId, endId);
+
+	if (startId < 0)        startId = 0;
+	if (endId   >= m_count) endId = m_count - 1;
+	if (!this->ValidateId(startId) || !this->ValidateId(endId))
+		return 0;
+
+	m_points.erase(m_points.begin() + startId, m_points.begin() + endId+1);
+
+	m_count -= endId - startId + 1;
+	m_update       = true;
+	m_pointsEdited = true;
+	return (endId - startId + 1);
+}
+
+int BR_Envelope::DeletePointsInRange (double start, double end)
+{
+	start -= m_takeEnvOffset;
+	end   -= m_takeEnvOffset;
+
+	int pointsErased = 0;
+	if (m_sorted)
+	{
+		int startId = FindPrevious(start, 0);
+		while (startId < m_count)
+		{
+			if (this->ValidateId(startId) && m_points[startId].position >= start)
+				break;
+			else
+				++startId;
+		}
+		if (!this->ValidateId(startId))
+			return 0;
+
+		int endId = FindNext(end, 0);
+		while (endId >= 0)
+		{
+			if (this->ValidateId(endId) && m_points[endId].position <= end)
+				break;
+			else
+				--endId;
+		}
+		if (endId < startId)
+			return 0;
+
+		if (!this->ValidateId(endId))
+			endId = m_count -1;
+		pointsErased = this->DeletePoints(startId, endId);
+	}
+	else
+	{
+		for (vector<BR_Envelope::EnvPoint>::iterator i = m_points.begin(); i != m_points.end();)
+		{
+			if (i->position >= start && i->position <= end)
+			{
+				i = m_points.erase(i);
+				m_update       = true;
+				m_pointsEdited = true;
+				++pointsErased;
+			}
+			else
+				++i;
+		}
+	}
+
+	m_count = m_points.size();
+	return pointsErased;
+}
+
 void BR_Envelope::UnselectAll ()
 {
 	for (int i = 0; i < m_count; ++i)
@@ -487,57 +546,6 @@ bool BR_Envelope::ValidateId (int id)
 		return false;
 	else
 		return true;
-}
-
-void BR_Envelope::DeletePointsInRange (double start, double end)
-{
-	start -= m_takeEnvOffset;
-	end   -= m_takeEnvOffset;
-
-	if (m_sorted)
-	{
-		int startId = FindPrevious(start, 0);
-		while (startId < m_count)
-		{
-			if (this->ValidateId(startId) && m_points[startId].position >= start)
-				break;
-			else
-				++startId;
-		}
-		if (!this->ValidateId(startId))
-			return;
-
-		int endId = FindNext(end, 0);
-		while (endId >= 0)
-		{
-			if (this->ValidateId(endId) && m_points[endId].position <= end)
-				break;
-			else
-				--endId;
-		}
-		if (endId < startId)
-			return;
-
-		if (!this->ValidateId(endId))
-			endId = m_count -1;
-		this->DeletePoints(startId, endId);
-	}
-	else
-	{
-		for (vector<BR_Envelope::EnvPoint>::iterator i = m_points.begin(); i != m_points.end();)
-		{
-			if (i->position >= start && i->position <= end)
-			{
-				i = m_points.erase(i);
-				m_update       = true;
-				m_pointsEdited = true;
-			}
-			else
-				++i;
-		}
-	}
-
-	m_count = m_points.size();
 }
 
 void BR_Envelope::DeleteAllPoints ()
@@ -715,7 +723,7 @@ double BR_Envelope::ValueAtPosition (double position, bool fastMode /*= false*/)
 			case LINEAR:
 			{
 				double t = (position - t1) / (t2 - t1);
-				returnValue = (!m_tempoMap) ? (v1 + (v2 - v1) * t) : TempoAtPosition(v1, v2, t1, t2, position);
+				returnValue = (!m_tempoMap) ? (v1 + (v2 - v1) * t) : CalculateTempoAtPosition(v1, v2, t1, t2, position);
 			}
 			break;
 
@@ -1435,15 +1443,7 @@ bool BR_Envelope::Commit (bool force /*=false*/)
 				i->Append(chunkStart, true);
 			chunkStart.Append(">");
 			GetSetObjectState(m_envelope, chunkStart.Get());
-
-			// UpdateTimeline() doesn't work when setting chunk with edited values
-			if (m_tempoMap)
-			{
-				double t, b; int n, d; bool s;
-				GetTempoTimeSigMarker(NULL, 0, &t, NULL, NULL, &b, &n, &d, &s);
-				SetTempoTimeSigMarker(NULL, 0, t, -1, -1, b, n, d, s);
-				UpdateTimeline();
-			}
+			UpdateTempoTimeline();
 		}
 		// We can update through API (faster)
 		else
@@ -2821,6 +2821,13 @@ int FindTempoMarker (double position, double surroundingRange /*= 0*/)
 	return (id < count) ? id : -1;
 }
 
+double TempoAtPosition (double position)
+{
+	double bpm;
+	TimeMap_GetTimeSigAtTime(NULL, position, NULL, NULL, &bpm);
+	return bpm;
+}
+
 double AverageProjTempo ()
 {
 	if (int count = CountTempoTimeSigMarkers(NULL))
@@ -2838,9 +2845,7 @@ double AverageProjTempo ()
 	}
 	else
 	{
-		double b;
-		TimeMap_GetTimeSigAtTime(NULL, 0, NULL, NULL, &b);
-		return b;
+		return TempoAtPosition(0);
 	}
 }
 
@@ -2855,18 +2860,18 @@ double GetProjectSettingsTempo (int* num, int* den)
 	return bpm/_den*4;
 }
 
-double TempoAtPosition (double startBpm, double endBpm, double startTime, double endTime, double targetTime)
+double CalculateTempoAtPosition (double startBpm, double endBpm, double startTime, double endTime, double targetTime)
 {
 	return startBpm + (endBpm-startBpm) / (endTime-startTime) * (targetTime-startTime);
 }
 
-double MeasureAtPosition (double startBpm, double endBpm, double timeLen, double targetTime)
+double CalculateMeasureAtPosition (double startBpm, double endBpm, double timeLen, double targetTime)
 {
 	// Return number of measures counted from the musical position of startBpm
 	return targetTime * (targetTime * (endBpm-startBpm) + 2*timeLen*startBpm) / (480*timeLen);
 }
 
-double PositionAtMeasure (double startBpm, double endBpm, double timeLen, double targetMeasure)
+double CalculatePositionAtMeasure (double startBpm, double endBpm, double timeLen, double targetMeasure)
 {
 	// Return number of seconds counted from the time position of startBpm
 	double a = startBpm - endBpm;
@@ -2875,7 +2880,7 @@ double PositionAtMeasure (double startBpm, double endBpm, double timeLen, double
 	return c / (b + sqrt(pow(b,2) - a*c));  // more stable solution for quadratic equation
 }
 
-void FindMiddlePoint (double* middleTime, double* middleBpm, double measure, double startTime, double endTime, double startBpm, double endBpm)
+void CalculateMiddlePoint (double* middleTime, double* middleBpm, double measure, double startTime, double endTime, double startBpm, double endBpm)
 {
 	double f = 480 * (measure/2);
 	double a = startBpm - endBpm;
@@ -2888,11 +2893,11 @@ void FindMiddlePoint (double* middleTime, double* middleBpm, double measure, dou
 	WritePtr(middleBpm, bpm);                    // to it will make middle point land on the correct musical position
 }
 
-void SplitMiddlePoint (double* time1, double* time2, double* bpm1, double* bpm2, double splitRatio, double measure, double startTime, double middleTime, double endTime, double startBpm, double middleBpm, double endBpm)
+void CalculateSplitMiddlePoints (double* time1, double* time2, double* bpm1, double* bpm2, double splitRatio, double measure, double startTime, double middleTime, double endTime, double startBpm, double middleBpm, double endBpm)
 {
 	// First point
 	double temp = measure * (1-splitRatio) / 2;
-	double pos1 = PositionAtMeasure(startBpm, middleBpm, (middleTime-startTime), temp) + startTime;
+	double pos1 = CalculatePositionAtMeasure(startBpm, middleBpm, (middleTime-startTime), temp) + startTime;
 	double val1 = 480*temp / (pos1-startTime) - startBpm;
 	WritePtr(time1, pos1);
 	WritePtr(bpm1, val1);
@@ -2913,12 +2918,29 @@ void SplitMiddlePoint (double* time1, double* time2, double* bpm1, double* bpm2,
 void InitTempoMap ()
 {
 	if (!CountTempoTimeSigMarkers(NULL))
-	{
-		PreventUIRefresh(1);
-		bool master = TcpVis(GetMasterTrack(NULL));
-		Main_OnCommand(41046, 0);              // Toggle show master tempo envelope
-		Main_OnCommand(41046, 0);
-		if (!master) Main_OnCommand(40075, 0); // Hide master if needed
-		PreventUIRefresh(-1);
-	}
+		SetTempoTimeSigMarker(NULL, -1, 0, -1, -1, GetProjectSettingsTempo(NULL, NULL), 0, 0, false);
+}
+
+void RemoveTempoMap ()
+{	
+	// Using native API DeleteTempoTimeSigMarker() or DeleteEnvelopePointRange() won't remove first point (but BR_Envelope can do it since it uses chunks for tempo map)
+	BR_Envelope tempoMap(GetTempoEnv());
+	tempoMap.DeleteAllPoints();
+	tempoMap.SetVisible(false);
+	tempoMap.Commit(true);
+}
+
+void UpdateTempoTimeline ()
+{
+	double t, b; int n, d; bool s;
+	GetTempoTimeSigMarker(NULL, 0, &t, NULL, NULL, &b, &n, &d, &s);
+	SetTempoTimeSigMarker(NULL, 0, t, -1, -1, b, n, d, s);
+	UpdateTimeline();
+}
+
+void UnselectAllTempoMarkers ()
+{
+	TrackEnvelope* tempoEnv = GetTempoEnv();
+	for (int i = 0; i < CountEnvelopePoints(tempoEnv); ++i)
+		SetEnvelopePoint(tempoEnv, i, NULL, NULL, NULL, NULL, &g_bFalse, &g_bFalse);
 }

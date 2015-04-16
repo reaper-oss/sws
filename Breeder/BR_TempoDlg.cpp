@@ -174,7 +174,7 @@ static void ConvertMarkersToTempo (int markers, int num, int den, bool removeMar
 			if (i != linearPoints.size()-1)
 			{
 				double pos, bpm;
-				FindMiddlePoint(&pos, &bpm, measure, markerPositions[i], markerPositions[i+1], linearPoints[i], linearPoints[i+1]);
+				CalculateMiddlePoint(&pos, &bpm, measure, markerPositions[i], markerPositions[i+1], linearPoints[i], linearPoints[i+1]);
 
 				if (!split)
 				{
@@ -185,7 +185,7 @@ static void ConvertMarkersToTempo (int markers, int num, int den, bool removeMar
 				else
 				{
 					double pos1, pos2, bpm1, bpm2;
-					SplitMiddlePoint (&pos1, &pos2, &bpm1, &bpm2, splitRatio, measure, markerPositions[i], pos, markerPositions[i+1], linearPoints[i], bpm, linearPoints[i+1]);
+					CalculateSplitMiddlePoints(&pos1, &pos2, &bpm1, &bpm2, splitRatio, measure, markerPositions[i], pos, markerPositions[i+1], linearPoints[i], bpm, linearPoints[i+1]);
 
 					SetTempoTimeSigMarker(NULL, -1, pos1, -1, -1, bpm1, 0, 0, true);
 					SetTempoTimeSigMarker(NULL, -1, pos2, -1, -1, bpm2, 0, 0, true);
@@ -777,7 +777,7 @@ static void UpdateCurrentBpm (HWND hwnd, const vector<int>& selectedPoints)
 		GetTempoTimeSigMarker(NULL, selectedPoints.front(), NULL, NULL, NULL, &bpmFirst, NULL, NULL, NULL);
 		GetTempoTimeSigMarker(NULL, selectedPoints.back(), NULL, NULL, NULL, &bpmLast, NULL, NULL, NULL);
 	}
-	TimeMap_GetTimeSigAtTime(NULL, GetCursorPositionEx(NULL), NULL, NULL, &bpmCursor);
+	bpmCursor = TempoAtPosition(GetCursorPositionEx(NULL));
 	_snprintfSafe(eBpmFirst,  sizeof(eBpmFirst),  "%.6g", bpmFirst);
 	_snprintfSafe(eBpmCursor, sizeof(eBpmCursor), "%.6g", bpmCursor);
 	_snprintfSafe(eBpmLast,   sizeof(eBpmLast),   "%.6g", bpmLast);
@@ -1169,9 +1169,9 @@ WDL_DLGRET SelectAdjustTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			_snprintfSafe(eNum,      sizeof(eNum),      "%d", num);
 			_snprintfSafe(eDen,      sizeof(eDen),      "%d", den);
 
-			char bpmCursor[128]; double effBpmCursor;
-			TimeMap_GetTimeSigAtTime(NULL, GetCursorPositionEx(NULL), NULL, NULL, &effBpmCursor);
-			_snprintfSafe(bpmCursor, sizeof(bpmCursor), "%.6g", effBpmCursor);
+			double effBpmCursor = effBpmCursor = TempoAtPosition(GetCursorPositionEx(NULL));
+			char bpmCursor[128];
+			_snprintfSafe(bpmCursor, sizeof(bpmCursor), "%.6g", effBpmCursor);			
 
 			// Set controls
 			SetDlgItemText(hwnd, IDC_BR_SEL_BPM_START, eBpmStart);

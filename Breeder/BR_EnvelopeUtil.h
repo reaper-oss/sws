@@ -39,6 +39,7 @@ const double MIN_TIME_SIG_PARTIAL_DIFF = 0.00001;
 const double MIN_ENV_DIST              = 0.000001;
 const double MIN_GRID_DIST             = 0.00097;         // 1/256 at 960 BPM (can't set it to more than 1/256 in grid settings, but other actions like Adjust grid by 1/2 can)
 const double MAX_GRID_DIV              = 1.0 / 256.0 * 4; // 1/256 because things can get broken after that (http://forum.cockos.com/project.php?issueid=5263)
+const double GRID_DIV_DELTA            = 0.00000001;
 
 /******************************************************************************
 * Envelope shapes - this is how Reaper stores point shapes internally         *
@@ -99,10 +100,11 @@ public:
 	bool SetSelection (int id, bool selected);
 	bool CreatePoint (int id, double position, double value, int shape, double bezier, bool selected, bool checkPosition = false, bool snapValue = false);
 	bool DeletePoint (int id);
-	bool DeletePoints (int startId, int endId);
 	bool GetTimeSig (int id, bool* sig, bool* partial, int* num, int* den);
 	bool SetTimeSig (int id, bool sig, bool partial, int num, int den);
 	bool SetCreatePoint (int id, double position, double value, int shape, double bezier, bool selected); // for ReaScript export (id = -1 will create new point, performs additional safety checks)
+	int  DeletePoints (int startId, int endId);
+	int  DeletePointsInRange (double start, double end);
 
 	/* Selected points (never updated when editing, use UpdateSelected() if needed) */
 	void UnselectAll ();
@@ -114,7 +116,6 @@ public:
 
 	/* All points */
 	bool ValidateId (int id);
-	void DeletePointsInRange (double start, double end);
 	void DeleteAllPoints ();
 	void Sort ();                                            // Sort points by position
 	int CountPoints ();                                      // Count existing points
@@ -283,11 +284,15 @@ int FindPreviousTempoMarker (double position);
 int FindNextTempoMarker (double position);
 int FindClosestTempoMarker (double position);
 int FindTempoMarker (double position, double surroundingRange = 0);
+double TempoAtPosition (double position);
 double AverageProjTempo ();
 double GetProjectSettingsTempo (int* num, int* den);
-double TempoAtPosition (double startBpm, double endBpm, double startTime, double endTime, double targetTime);
-double MeasureAtPosition (double startBpm, double endBpm, double timeLen, double targetTime);
-double PositionAtMeasure (double startBpm, double endBpm, double timeLen, double targetMeasure);
-void FindMiddlePoint (double* middleTime, double* middleBpm, double measure, double startTime, double endTime, double startBpm, double endBpm);
-void SplitMiddlePoint (double* time1, double* time2, double* bpm1, double* bpm2, double splitRatio, double measure, double startTime, double middleTime, double endTime, double startBpm, double middleBpm, double endBpm);
-void InitTempoMap (); // will create undo points since the only way to make tempo map editable (it won't be until it has at least one tempo marker in it) is to use certain actions to show/hide it
+double CalculateTempoAtPosition (double startBpm, double endBpm, double startTime, double endTime, double targetTime);
+double CalculateMeasureAtPosition (double startBpm, double endBpm, double timeLen, double targetTime);
+double CalculatePositionAtMeasure (double startBpm, double endBpm, double timeLen, double targetMeasure);
+void CalculateMiddlePoint (double* middleTime, double* middleBpm, double measure, double startTime, double endTime, double startBpm, double endBpm);
+void CalculateSplitMiddlePoints (double* time1, double* time2, double* bpm1, double* bpm2, double splitRatio, double measure, double startTime, double middleTime, double endTime, double startBpm, double middleBpm, double endBpm);
+void InitTempoMap ();  // will make sure there's at least one point in tempo map (we can't manipulate tempo map's chunk (i.e. insert new points) if there isn't at least one point in tempo map)
+void RemoveTempoMap ();
+void UnselectAllTempoMarkers ();
+void UpdateTempoTimeline (); // UpdateTimeline() isn't enough after changing tempo points - call this instead

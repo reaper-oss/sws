@@ -233,6 +233,19 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 	}
 }
 
+static HCURSOR MousePlaybackCursor (COMMAND_T* ct, int window)
+{
+	switch (window)
+	{
+		case BR_ContinuousAction::MAIN_RULER:
+		case BR_ContinuousAction::MAIN_ARRANGE:
+		case BR_ContinuousAction::MIDI_NOTES_VIEW:
+		case BR_ContinuousAction::MIDI_PIANO:
+			return GetSwsMouseCursor(CURSOR_MISC_SPEAKER);
+	}
+	return NULL;
+}
+
 static void MousePlayback (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
 }
@@ -264,7 +277,7 @@ void PlaybackAtMouseCursorInit ()
 
 	int i = -1;
 	while (s_commandTable[++i].id != LAST_COMMAND)
-		ContinuousActionRegister(new BR_ContinuousAction(&s_commandTable[i], &MousePlaybackInit));
+		ContinuousActionRegister(new BR_ContinuousAction(&s_commandTable[i], MousePlaybackInit, NULL, MousePlaybackCursor, NULL));
 }
 
 /******************************************************************************

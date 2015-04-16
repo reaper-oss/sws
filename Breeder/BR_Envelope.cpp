@@ -60,12 +60,8 @@ static int EnvMouseUndo (COMMAND_T* ct)
 
 static HCURSOR EnvMouseCursor (COMMAND_T* ct, int window)
 {
-	static HCURSOR s_cursor = NULL;
-	if (!s_cursor)
-		s_cursor = LoadCursor(NULL, IDC_SIZENS);
-
 	if (window == BR_ContinuousAction::MAIN_ARRANGE || window == BR_ContinuousAction::MAIN_RULER)
-		return s_cursor;
+		return ((int)ct->user == 2) ? GetSwsMouseCursor(CURSOR_ENV_PEN_GRID) : GetSwsMouseCursor(CURSOR_ENV_PT_ADJ_VERT);
 	else
 		return NULL;
 }
@@ -107,16 +103,18 @@ static WDL_FastString EnvMouseTooltip (COMMAND_T* ct, int window, bool* setToBou
 
 static void SetEnvPointMouseValue (COMMAND_T* ct)
 {
-	static int    s_lastEndId       = -1;
-	static double s_lastEndPosition = -1;
-	static double s_lastEndNormVal  = -1;
+	static int    s_lastEndId           = -1;
+	static double s_lastEndPosition     = -1;
+	static double s_lastEndNormVal      = -1;
+	static bool   s_freehandInitDone    = false;
 
 	// Action called for the first time
 	if (!g_envMouseEnvelope)
 	{
-		s_lastEndId       = -1;
-		s_lastEndPosition = -1;
-		s_lastEndNormVal  = -1;
+		s_lastEndId        = -1;
+		s_lastEndPosition  = -1;
+		s_lastEndNormVal   = -1;
+		s_freehandInitDone = ((int)ct->user == 2) ? false : true;
 		g_envMouseEnvelope = new (nothrow) BR_Envelope(GetSelectedEnvelope(NULL));
 
 		// BR_Envelope does check for locking but we're also using tempo API here so check manually
@@ -126,6 +124,9 @@ static void SetEnvPointMouseValue (COMMAND_T* ct)
 			return;
 		}
 	}
+	bool pointsEdited     = false;
+	bool isTempo          = g_envMouseEnvelope->IsTempo();
+	TrackEnvelope* envPtr = g_envMouseEnvelope->GetPointer();
 
 	// Check envelope is visible
 	int envHeight, envY;                                                // caching values is not 100% correct, but we don't expect for envelope lane height to change during the action
@@ -135,39 +136,119 @@ static void SetEnvPointMouseValue (COMMAND_T* ct)
 	// Get mouse positions
 	int yOffset; bool overRuler;
 	double endPosition   = PositionAtMouseCursor(true, false, &yOffset, &overRuler);
-	double startPosition = (s_lastEndPosition == -1) ? (endPosition) : (s_lastEndPosition);
+	double startPosition = (s_lastEndPosition < 0) ? (endPosition) : (s_lastEndPosition);
 	if (endPosition == -1)
 	{
-		ContinuousActionStopAll();
+		// If mouse is over TCP, don't stop just yet...user might have just moved the mouse there while editing the envelope (unless action was called for the first time, then stop all always)
+		int context; TrackAtMouseCursor(&context, NULL);
+		if (s_lastEndPosition < 0 || context != 0)
+			ContinuousActionStopAll();
 		return;
+	}
+
+	// If calling for the first time when freehand drawing, unselect all points
+	if (!s_freehandInitDone)
+	{
+		if (isTempo) UnselectAllTempoMarkers();
+		else         g_envMouseEnvelope->UnselectAll();
+		s_freehandInitDone = true;
 	}
 
 	// Get normalized mouse values
 	yOffset = (overRuler) ? envY : SetToBounds(yOffset, envY, envY + envHeight);
 	double endDisplayVal   = ((double)envHeight + (double)envY - (double)yOffset) / (double)envHeight;
-	double startDisplayVal = (s_lastEndPosition == -1) ? (endDisplayVal) : (s_lastEndNormVal);
+	double startDisplayVal = (s_lastEndPosition < 0) ? (endDisplayVal) : (s_lastEndNormVal);
+
+	PreventUIRefresh(1);
+
+	// In case of freehand drawing, remove or add points (so we only have points on grid)...(because editing tempo points moves them, we will handle it afterwards)
+	if ((int)ct->user == 2 && !isTempo)
+	{
+		// Make sure start and end position are not reversed
+		double normStartPosition = startPosition;
+		double normEndPosition   = endPosition;
+		if (normEndPosition < normStartPosition)
+			swap(normEndPosition, normStartPosition);
+
+		// Get grid divisions
+		vector<double> savedGridDivs;
+		double gridDivPos = GetPrevGridDiv(GetNextGridDiv(normStartPosition)); // can't just do GetPrevGrid(normStartPosition) because if grid division is right at normStartPosition we would end up with grid division before startPosition
+		while (gridDivPos < normEndPosition)
+		{
+			savedGridDivs.push_back(gridDivPos);
+			gridDivPos = GetNextGridDiv(gridDivPos);
+		}
+
+		if (savedGridDivs.size() > 0)
+		{
+			// Get possible start point value before deleting points (but only if there are no points between first grid division and division before it)
+			double prevPointVal = -1;
+			double prevPointPos = -1;
+			double prevGridDivPos = GetPrevGridDiv(savedGridDivs.front());
+			if (prevGridDivPos != savedGridDivs.front())
+			{
+				double prevTempoPosition;
+				if (!g_envMouseEnvelope->GetPoint(g_envMouseEnvelope->FindNext(prevGridDivPos), &prevTempoPosition, NULL, NULL, NULL) || prevTempoPosition >= savedGridDivs.front() - GRID_DIV_DELTA)
+				{
+					if (!g_envMouseEnvelope->ValidateId(g_envMouseEnvelope->Find(prevGridDivPos, GRID_DIV_DELTA)))
+					{
+						prevPointVal = g_envMouseEnvelope->ValueAtPosition(prevGridDivPos);
+						prevPointPos = prevGridDivPos;
+					}
+				}
+			}
+
+			// Get possible end point value before deleting points (don't create end point if last grid division point is also last envelope point)
+			double nextPointVal = -1;
+			double nextPointPos = -1;
+			double nextGridDivPos = GetNextGridDiv(savedGridDivs.back());
+			if (!g_envMouseEnvelope->ValidateId(g_envMouseEnvelope->Find(nextGridDivPos, GRID_DIV_DELTA)))
+			{
+				if (g_envMouseEnvelope->ValidateId(g_envMouseEnvelope->FindNext(nextGridDivPos)))
+				{
+					nextPointVal = g_envMouseEnvelope->ValueAtPosition(savedGridDivs.back());
+					nextPointPos = nextGridDivPos;
+				}
+			}
+
+			// Delete all points between those grid divisions
+			g_envMouseEnvelope->DeletePointsInRange(savedGridDivs.front(), GetNextGridDiv(savedGridDivs.back()) - GRID_DIV_DELTA);
+
+			// Insert grid division points
+			if (prevPointPos != -1) g_envMouseEnvelope->CreatePoint(g_envMouseEnvelope->CountPoints(), prevPointPos, prevPointVal, g_envMouseEnvelope->GetDefaultShape(), 0, false, true, true);
+			if (nextPointPos != -1) g_envMouseEnvelope->CreatePoint(g_envMouseEnvelope->CountPoints(), nextPointPos, nextPointVal, g_envMouseEnvelope->GetDefaultShape(), 0, false, true, true);
+			for (size_t i = 0; i < savedGridDivs.size(); ++i)
+				g_envMouseEnvelope->CreatePoint(g_envMouseEnvelope->CountPoints(), savedGridDivs[i], 100, g_envMouseEnvelope->GetDefaultShape(), 0, true, true, true);
+
+			g_envMouseEnvelope->Sort();
+			pointsEdited = true;
+
+			// Since points are added/removed don't rely on previous end id but find it again
+			s_lastEndId = g_envMouseEnvelope->FindPrevious(startPosition);
+			double nextPos;
+			if (g_envMouseEnvelope->GetPoint(s_lastEndId+1, &nextPos, NULL, NULL, NULL) && nextPos == startPosition)
+				++s_lastEndId;
+		}
+	}
 
 	// Find all the points over which mouse passed
 	int startId = -1;
 	int endId   = -1;
 	if ((int)ct->user == 0)
 	{
-		if (s_lastEndId == -1)
-			startId = (g_envMouseEnvelope->IsTempo()) ? FindClosestTempoMarker(startPosition) : g_envMouseEnvelope->FindClosest(startPosition);
-		else
-			startId = s_lastEndId;
-
-		endId  = (g_envMouseEnvelope->IsTempo()) ? FindClosestTempoMarker(endPosition) : g_envMouseEnvelope->FindClosest(endPosition);
+		if (s_lastEndId < 0) startId = (isTempo) ? FindClosestTempoMarker(startPosition) : g_envMouseEnvelope->FindClosest(startPosition);
+		else                 startId = s_lastEndId;
+		endId  = (isTempo) ? FindClosestTempoMarker(endPosition) : g_envMouseEnvelope->FindClosest(endPosition);
 	}
 	else
 	{
-		if (s_lastEndId == -1)
+		if (s_lastEndId < 0)
 		{
-			startId = (g_envMouseEnvelope->IsTempo()) ? FindPreviousTempoMarker(startPosition) : g_envMouseEnvelope->FindPrevious(startPosition);
+			startId = (isTempo) ? FindPreviousTempoMarker(startPosition) : g_envMouseEnvelope->FindPrevious(startPosition);
 			double nextPos;
-			if (g_envMouseEnvelope->IsTempo() && GetTempoTimeSigMarker(NULL, startId, &nextPos, NULL, NULL, NULL, NULL, NULL, NULL) && nextPos == startPosition)
+			if (isTempo && GetTempoTimeSigMarker(NULL, startId, &nextPos, NULL, NULL, NULL, NULL, NULL, NULL) && nextPos == startPosition)
 				++startId;
-			else if (!g_envMouseEnvelope->IsTempo() && g_envMouseEnvelope->GetPoint(startId+1, &nextPos, NULL, NULL, NULL) && nextPos == startPosition)
+			else if (!isTempo && g_envMouseEnvelope->GetPoint(startId+1, &nextPos, NULL, NULL, NULL) && nextPos == startPosition)
 				++startId;
 		}
 		else
@@ -175,103 +256,325 @@ static void SetEnvPointMouseValue (COMMAND_T* ct)
 			startId = s_lastEndId;
 		}
 
-		endId = (g_envMouseEnvelope->IsTempo()) ? FindPreviousTempoMarker(endPosition) : g_envMouseEnvelope->FindPrevious(endPosition);
+		endId = (isTempo) ? FindPreviousTempoMarker(endPosition) : g_envMouseEnvelope->FindPrevious(endPosition);
 		double nextPos;
-		if (g_envMouseEnvelope->IsTempo() && GetTempoTimeSigMarker(NULL, endId, &nextPos, NULL, NULL, NULL, NULL, NULL, NULL) && nextPos == endPosition)
+		if (isTempo && GetTempoTimeSigMarker(NULL, endId, &nextPos, NULL, NULL, NULL, NULL, NULL, NULL) && nextPos == endPosition)
 			++endId;
-		else if (!g_envMouseEnvelope->IsTempo() && g_envMouseEnvelope->GetPoint(endId+1, &nextPos, NULL, NULL, NULL) && nextPos == endPosition)
+		else if (!isTempo && g_envMouseEnvelope->GetPoint(endId+1, &nextPos, NULL, NULL, NULL) && nextPos == endPosition)
 			++endId;
 	}
 
-	// Apply changes to all the points
-	if (g_envMouseEnvelope->ValidateId(startId) && g_envMouseEnvelope->ValidateId(endId))
+	// Prepare things before applying changes to envelope
+	bool oppositeDirection = false;
+	if (endId < startId || endPosition < startPosition)
 	{
-		bool oppositeDirection = false;
-		if (endId < startId)
-		{
-			swap(endId, startId);
-			swap(endPosition,   startPosition);
-			swap(endDisplayVal, startDisplayVal);
-			oppositeDirection = true;
-		}
+		swap(endId, startId);
+		swap(endPosition,   startPosition);
+		swap(endDisplayVal, startDisplayVal);
+		oppositeDirection = true;
+	}
+	double endPosQN = (isTempo) ? TimeMap_timeToQN_abs(NULL, endPosition) : 0;
 
-		int envClickSegMode; GetConfig("envclicksegmode", envClickSegMode);
-		int editCursorUndo;  GetConfig("undomask",        editCursorUndo);
-		SetConfig("undomask",        ClearBit(editCursorUndo, 3));  // prevent edit cursor undo
-		SetConfig("envclicksegmode", ClearBit(envClickSegMode, 6)); // prevent reselection
+	int envClickSegMode; GetConfig("envclicksegmode", envClickSegMode);
+	int editCursorUndo;  GetConfig("undomask",        editCursorUndo);
+	SetConfig("undomask",        ClearBit(editCursorUndo, 3));  // prevent edit cursor undo
+	SetConfig("envclicksegmode", ClearBit(envClickSegMode, 6)); // prevent reselection
 
-		bool pointsMoved = false;
-		for (int i = startId; i <= endId; ++i)
+	// In case of tempo freehand drawing we simultaneously add/remove points and edit them (because editing tempo map makes things move and me must not allow any changes to anything in front of mouse cursor)
+	if ((int)ct->user == 2 && isTempo)
+	{
+		// Get grid division info
+		vector<pair<double,double> > savedGridDivs;
+		double gridDivPos = GetPrevGridDiv(GetNextGridDiv(startPosition)); // can't just do GetPrevGrid(startPosition) because if grid division is right at startPosition we would end up with grid division before startPosition
+		double prevPointBpm = -1; // if there are no points between previous grid division and first grid
+		if (gridDivPos > 0)       // division at/after mouse, insert one more point on that previous grid division
 		{
-			// Get current point's position
-			double currentPointPos;
-			if (g_envMouseEnvelope->IsTempo())
+			double prevGridDivPos = GetPrevGridDiv(gridDivPos);
+			double position;
+			if (!GetTempoTimeSigMarker(NULL, FindNextTempoMarker(prevGridDivPos), &position, NULL, NULL, NULL, NULL, NULL, NULL) || position >= gridDivPos - GRID_DIV_DELTA)
 			{
-				GetTempoTimeSigMarker(NULL, i, &currentPointPos, NULL, NULL, NULL, NULL, NULL, NULL);
-
-				// If going forward, make sure edited tempo points do not come in front of mouse cursor (if so, leave them for the next action call)
-				if (!oppositeDirection && endId != startId && !CheckBounds(currentPointPos, startPosition, endPosition))
+				int id = FindTempoMarker(prevGridDivPos, GRID_DIV_DELTA);
+				if (id < 0 || id >= CountTempoTimeSigMarkers(NULL))
 				{
-					endId = i;
-					endPosition = currentPointPos;
-					break;
+					savedGridDivs.push_back(make_pair(prevGridDivPos, TimeMap_timeToQN_abs(NULL, prevGridDivPos)));
+					prevPointBpm = TempoAtPosition(prevGridDivPos);
 				}
 			}
-			else
-				g_envMouseEnvelope->GetPoint(i, &currentPointPos, NULL, NULL, NULL);
-
-			// Find new value
-			double value = 0;
-			if  (i == startId)
-				value = g_envMouseEnvelope->RealValue(startDisplayVal);
-			else if (i == endId)
-				value = g_envMouseEnvelope->RealValue(endDisplayVal);
-			else
-			{
-				double t = (currentPointPos - startPosition) / (endPosition - startPosition);
-				double currentDisplayVal = startDisplayVal + (endDisplayVal - startDisplayVal) * t;
-				value = g_envMouseEnvelope->RealValue(currentDisplayVal);
-			}
-
-			// Update current point
-			if (g_envMouseEnvelope->IsTempo())
-			{
-				int measure, num, den;
-				double beat;
-				bool linear;
-				GetTempoTimeSigMarker(NULL, i, NULL, &measure, &beat, NULL, &num, &den, &linear);
-				if (SetTempoTimeSigMarker(NULL, i, -1, measure, beat, value, num, den, linear))
-					pointsMoved = true;
-			}
-			else
-			{
-				if (g_envMouseEnvelope->SetPoint(i, NULL, &value, NULL, NULL, false, true))
-					pointsMoved = true;
-			}
 		}
-
-		SetConfig("undomask",        editCursorUndo);
-		SetConfig("envclicksegmode", envClickSegMode);
-
-		if (pointsMoved)
+		while (gridDivPos < endPosition)
 		{
-			if (g_envMouseEnvelope->IsTempo()) UpdateTimeline();
-			else                               g_envMouseEnvelope->Commit();
-
-			g_envMouseDidOnce = pointsMoved;
+			savedGridDivs.push_back(make_pair(gridDivPos, TimeMap_timeToQN_abs(NULL, gridDivPos)));
+			gridDivPos = GetNextGridDiv(gridDivPos);
 		}
 
-		// Swap values back before storing them
-		if (oppositeDirection)
+		// Iterate through all grid divisions and make sure points only exist on those divisions and nowhere else
+		int pointsAdded = 0;
+		bool breakEarly = false;
+		for (size_t i = 0; i < savedGridDivs.size(); ++i)
 		{
-			swap(endId, startId);
-			swap(endPosition,   startPosition);
-			swap(endDisplayVal, startDisplayVal);
+			// Get data about about this division
+			double gridDiv = TimeMap_QNToTime_abs(NULL, savedGridDivs[i].second);
+			double nextGridDivQN  = (i == savedGridDivs.size() - 1) ? TimeMap_timeToQN_abs(NULL, GetNextGridDiv(gridDiv)) : savedGridDivs[i+1].second;
+			double nextGridDivBpm = TempoAtPosition(TimeMap_QNToTime_abs(NULL, nextGridDivQN)); // need to get this here, before editing points
+
+			// Check if there's already an existing point on this grid division and calculate it's new value
+			int id = FindTempoMarker(gridDiv, GRID_DIV_DELTA);
+			double newVal;
+			bool selectPoint = true;
+			if (i == 0 && prevPointBpm != -1)
+			{
+				newVal      = prevPointBpm;
+				selectPoint = false;
+			}
+			else
+			{
+				double posForVal = (savedGridDivs[i].first < startPosition) ? startPosition : (savedGridDivs[i].first > endPosition) ? endPosition : savedGridDivs[i].first;
+				double newDisplayVal = (abs(endPosition - startPosition) == 0)
+				                     ? startDisplayVal
+				                     : startDisplayVal + (endDisplayVal - startDisplayVal) * ((posForVal - startPosition) / (endPosition - startPosition));
+				newVal = g_envMouseEnvelope->RealValue(newDisplayVal);
+			}
+
+			// Add or edit point on grid division
+			bool addedGridPoint = false;
+			if (id != -1)
+			{
+				int currentTempoCount = CountTempoTimeSigMarkers(NULL);
+				int num, den;
+				double position;
+				GetTempoTimeSigMarker(NULL, id, &position, NULL, NULL, NULL, &num, &den, NULL);
+				if (den != 0)
+				{
+					double positionQN = TimeMap_timeToQN_abs(NULL, position);
+					if (SetTempoTimeSigMarker(NULL, id, position, -1, -1, newVal, num, den, g_envMouseEnvelope->GetDefaultShape() == LINEAR))
+					{
+					    if (SetTempoTimeSigMarker(NULL, id, TimeMap_QNToTime_abs(NULL, positionQN), -1, -1, newVal, num, den, g_envMouseEnvelope->GetDefaultShape() == LINEAR))
+							pointsEdited = true;
+					}
+				}
+				else
+				{
+					int measure; double beats = TimeMap2_timeToBeats(NULL, gridDiv, &measure, NULL, NULL, NULL);
+					if (SetTempoTimeSigMarker(NULL, id, -1, measure, beats, newVal, 0, 0, g_envMouseEnvelope->GetDefaultShape() == LINEAR))
+						pointsEdited = true;
+				}
+
+				// Editing tempo markers can theoretically delete them if they end up too close - if that happens, we can't be sure of id, so search for it again
+				if (currentTempoCount != CountTempoTimeSigMarkers(NULL))
+					id = FindTempoMarker(TimeMap_QNToTime_abs(NULL, savedGridDivs[i].second), GRID_DIV_DELTA);
+			}
+			else
+			{
+				int measure; double beats = TimeMap2_timeToBeats(NULL, gridDiv, &measure, NULL, NULL, NULL);
+				if (SetTempoTimeSigMarker(NULL, -1, -1, measure, beats, newVal, 0, 0, g_envMouseEnvelope->GetDefaultShape() == LINEAR))
+				{
+					pointsEdited   = true;
+					addedGridPoint = true;
+					id = FindTempoMarker(TimeMap_QNToTime_abs(NULL, savedGridDivs[i].second), GRID_DIV_DELTA);
+				}
+			}
+
+			// Current grid division point was added/edited...do rest of the stuff
+			if (id != -1)
+			{
+				// Make sure grid division point is selected
+				if (addedGridPoint)
+				{
+					for (int j = CountTempoTimeSigMarkers(NULL) - 2; j >= id; --j) // adding points with SetTempoTimeSigMarker(id = -1) shifts selection, restore it back
+					{
+						bool selected;
+						GetEnvelopePoint(envPtr, j,   NULL, NULL, NULL, NULL, &selected);
+						SetEnvelopePoint(envPtr, j+1, NULL, NULL, NULL, NULL, &selected, NULL);
+					}
+				}
+				if (selectPoint) SetEnvelopePoint(envPtr, id, NULL, NULL, NULL, NULL, &g_bTrue, NULL);
+
+				// After setting grid division tempo marker make sure that grid division didn't end
+				// up out of current start/end range due to tempo point position change (if so, leave it for next iteration)
+				GetTempoTimeSigMarker(NULL, id, &gridDiv, NULL, NULL, NULL, NULL, NULL, NULL);
+				if (!oppositeDirection && endId != startId && !CheckBounds(gridDiv, startPosition - (GRID_DIV_DELTA * 2), endPosition + (GRID_DIV_DELTA * 2))) // GRID_DIV_DELTA in CheckBounds is important, due to rounding errors first gridDiv could be before startPosition by a really small
+				{                                                                                                                                              // amount and thus break processing on rest of the points in all function calls until mouse cursor changes movement direction
+					// In case grid division moved in front of endPosition and there are no tempo points after it, delete grid div point (we never insert right point after edited point if there are no points in front it)
+					if (id != 0 && gridDiv > endPosition && id == CountTempoTimeSigMarkers(NULL) - 1)
+					{
+						DeleteTempoTimeSigMarker(NULL, id);
+						--id;
+					}
+
+					endId        = (id > 0) ? (id - 1) : (0);
+					endPosQN     = savedGridDivs[i].second;
+					endPosition  = gridDiv;
+					double posForVal = (savedGridDivs[i].first < startPosition) ? startPosition : (savedGridDivs[i].first > endPosition) ? endPosition : savedGridDivs[i].first;
+					endDisplayVal = (abs(endPosition - startPosition) == 0)
+					              ? startDisplayVal
+					              : startDisplayVal + (endDisplayVal - startDisplayVal) * ((posForVal - startPosition) / (endPosition - startPosition));
+
+					pointsAdded = 0;   // breaking early with the right endId set, adding these points to endId later would screw everything
+					breakEarly = true; // but do not break; just yet since we need to make sure there is point at grid division after edited points
+				}
+
+				// Delete points between these two grid divisions (if breaking early, leave those for next function call)
+				int pointsDeleted = 0;
+				if (!breakEarly)
+				{
+					int count = CountTempoTimeSigMarkers(NULL);
+					for (int j = id + 1; j < count; ++j)
+					{
+						double position;
+						if (!GetTempoTimeSigMarker(NULL, j - pointsDeleted, &position, NULL, NULL, NULL, NULL, NULL, NULL) || TimeMap_timeToQN_abs(NULL, position) >= nextGridDivQN - GRID_DIV_DELTA)
+							break;
+						else
+						{
+							if (DeleteTempoTimeSigMarker(NULL, j - pointsDeleted))
+							{
+								int tempoCount = CountTempoTimeSigMarkers(NULL);
+								for (int h = j - pointsDeleted + 1; h < tempoCount ; ++h) // deleting points with DeleteTempoTimeSigMarker() shifts selection, restore it back
+								{
+									bool selected;
+									GetEnvelopePoint(envPtr, h,   NULL, NULL, NULL, NULL, &selected);
+									SetEnvelopePoint(envPtr, h-1, NULL, NULL, NULL, NULL, &selected, NULL);
+								}
+								++pointsDeleted;
+							}
+						}
+					}
+				}
+
+				// Make sure there is tempo marker at next grid division (but if there are no more tempo markers after current tempo marker, skip this)
+				double addedNextGridPoint = false;
+				if (id != CountTempoTimeSigMarkers(NULL) - 1)
+				{
+					int nextId = id + 1;
+
+					double nextPosition;
+					double nextGridDiv = TimeMap_QNToTime_abs(NULL, nextGridDivQN);
+					if (!GetTempoTimeSigMarker(NULL, nextId, &nextPosition, NULL, NULL, NULL, NULL, NULL, NULL) || !IsEqual(nextGridDiv, nextPosition, GRID_DIV_DELTA))
+					{
+						int nextMeasure;
+						double nextBeats = TimeMap2_timeToBeats(NULL, nextGridDiv, &nextMeasure, NULL, NULL, NULL);
+						if (SetTempoTimeSigMarker(NULL, -1, -1, nextMeasure, nextBeats, nextGridDivBpm, 0, 0, g_envMouseEnvelope->GetDefaultShape() == LINEAR))
+						{
+							pointsEdited       = true;
+							addedNextGridPoint = true;
+							for (int j = CountTempoTimeSigMarkers(NULL) - 2; j >= nextId; --j) // adding points with SetTempoTimeSigMarker(id = -1) shifts selection, restore it back
+							{
+								bool selected;
+								GetEnvelopePoint(envPtr, j,   NULL, NULL, NULL, NULL, &selected);
+								SetEnvelopePoint(envPtr, j+1, NULL, NULL, NULL, NULL, &selected, NULL);
+							}
+
+						}
+					}
+				}
+
+				// Account for all the added and removed points (if breaking early, endIs is already set at the right id, so skip this)
+				if (!breakEarly)
+				{
+					if (addedGridPoint)     ++pointsAdded;
+					if (addedNextGridPoint) ++pointsAdded;
+					pointsAdded -= pointsDeleted;
+				}
+
+				if (breakEarly)
+					break;
+			}
 		}
-		s_lastEndId       = endId;
-		s_lastEndPosition = endPosition;
-		s_lastEndNormVal  = endDisplayVal;
+		endId += pointsAdded;
 	}
+	// Just edit points (in case of normal envelope freehand drawing we already added/removed points so we just edit them here)
+	else
+	{
+		int pointCount = (isTempo) ? CountTempoTimeSigMarkers(NULL) : g_envMouseEnvelope->CountPoints();
+		if (CheckBoundsEx(startId, -1, pointCount) && CheckBoundsEx(endId, -1, pointCount))
+		{
+			// Change points values
+			for (int i = startId; i <= endId; ++i)
+			{
+				// Get current point's position
+				double currentPointPos;
+				if (isTempo)
+				{
+					GetTempoTimeSigMarker(NULL, i, &currentPointPos, NULL, NULL, NULL, NULL, NULL, NULL);
+
+					// If going forward, make sure edited tempo points do not come in front of mouse cursor (if so, leave them for the next action call)
+					if (!oppositeDirection && endId != startId && !CheckBounds(currentPointPos, startPosition, endPosition))
+					{
+						endId       = i;
+						endPosQN    = TimeMap_timeToQN_abs(NULL, currentPointPos);
+						endPosition = currentPointPos;
+						endDisplayVal = (i == startId)
+						              ? startDisplayVal
+						              : startDisplayVal + (endDisplayVal - startDisplayVal) * ((currentPointPos - startPosition) / (endPosition - startPosition));
+						break;
+					}
+				}
+				else
+					g_envMouseEnvelope->GetPoint(i, &currentPointPos, NULL, NULL, NULL);
+
+				// Update current point
+				double newDisplayVal = (i == startId)
+				                     ? startDisplayVal
+				                     : startDisplayVal + (endDisplayVal - startDisplayVal) * ((currentPointPos - startPosition) / (endPosition - startPosition));
+				double newValue = g_envMouseEnvelope->RealValue(newDisplayVal);
+				if (isTempo)
+				{
+					int measure, num, den; double position, beat; bool linear;
+					GetTempoTimeSigMarker(NULL, i, &position, &measure, &beat, NULL, &num, &den, &linear);
+					if (den != 0) // make sure any partial tempo markers don't loose their position
+					{
+						double positionQN = TimeMap_timeToQN_abs(NULL, position);
+						if (SetTempoTimeSigMarker(NULL, i, position, -1, -1, newValue, num, den, linear))
+						{
+							if (SetTempoTimeSigMarker(NULL, i, TimeMap_QNToTime_abs(NULL, positionQN), -1, -1, newValue, num, den, linear))
+								pointsEdited = true;
+						}
+					}
+					else
+					{
+						if (SetTempoTimeSigMarker(NULL, i, -1, measure, beat, newValue, num, den, linear))
+							pointsEdited = true;
+					}
+				}
+				else
+				{
+					if (g_envMouseEnvelope->SetPoint(i, NULL, &newValue, NULL, NULL, false, true))
+					{
+						pointsEdited = true;
+						if ((int)ct->user == 2) // in case of freehand drawing, selected edited point
+							g_envMouseEnvelope->SetSelection(i, true);
+					}
+				}
+			}
+		}
+	}
+
+	if (pointsEdited)
+	{
+		if (isTempo)
+		{
+			endPosition = TimeMap_QNToTime_abs(NULL, endPosQN);
+			UpdateTimeline();
+		}
+		else
+			g_envMouseEnvelope->Commit();
+		g_envMouseDidOnce = true;
+	}
+
+	SetConfig("undomask",        editCursorUndo);
+	SetConfig("envclicksegmode", envClickSegMode);
+
+	// Swap values back before storing them
+	if (oppositeDirection)
+	{
+		swap(endId, startId);
+		swap(endPosition,   startPosition);
+		swap(endDisplayVal, startDisplayVal);
+	}
+	s_lastEndId       = endId;
+	s_lastEndPosition = endPosition;
+	s_lastEndNormVal  = endDisplayVal;
+
+	PreventUIRefresh(-1);
 }
 
 void SetEnvPointMouseValueInit ()
@@ -279,15 +582,17 @@ void SetEnvPointMouseValueInit ()
 	//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 	static COMMAND_T s_commandTable[] =
 	{
-		{ { DEFACCEL, "SWS/BR: Set closest envelope point's value to mouse cursor (perform until shortcut released)" },           "BR_ENV_PT_VAL_CLOSEST_MOUSE",      SetEnvPointMouseValue, NULL, 0},
-		{ { DEFACCEL, "SWS/BR: Set closest left side envelope point's value to mouse cursor (perform until shortcut released)" }, "BR_ENV_PT_VAL_CLOSEST_LEFT_MOUSE", SetEnvPointMouseValue, NULL, 1},
+		{ { DEFACCEL, "SWS/BR: Set closest envelope point's value to mouse cursor (perform until shortcut released)" },             "BR_ENV_PT_VAL_CLOSEST_MOUSE",          SetEnvPointMouseValue, NULL, 0},
+		{ { DEFACCEL, "SWS/BR: Set closest left side envelope point's value to mouse cursor (perform until shortcut released)" },   "BR_ENV_PT_VAL_CLOSEST_LEFT_MOUSE",     SetEnvPointMouseValue, NULL, 1},
+		{ { DEFACCEL, "SWS/BR: Freehand draw envelope while snapping points to left side grid (perform until shortcut released)" }, "BR_CONT_ENV_FREEHAND_SNAP_GRID_MOUSE", SetEnvPointMouseValue, NULL, 2},
+
 		{ {}, LAST_COMMAND}
 	};
 	//!WANT_LOCALIZE_1ST_STRING_END
 
 	int i = -1;
 	while (s_commandTable[++i].id != LAST_COMMAND)
-		ContinuousActionRegister(new BR_ContinuousAction(&s_commandTable[i], &EnvMouseInit, &EnvMouseUndo, &EnvMouseCursor, &EnvMouseTooltip));
+		ContinuousActionRegister(new BR_ContinuousAction(&s_commandTable[i], EnvMouseInit, EnvMouseUndo, EnvMouseCursor, EnvMouseTooltip));
 }
 
 /******************************************************************************
@@ -617,20 +922,16 @@ void EnvPointsGrid (COMMAND_T* ct)
 			nextGrid = GetNextGridDiv(grid);
 		}
 
-		bool doesPointPass = (onGrid) ? (IsEqual(position, grid, MIN_ENV_DIST)  ||  IsEqual(position, nextGrid, MIN_ENV_DIST))
-									  : (!IsEqual(position, grid, MIN_ENV_DIST) && !IsEqual(position, nextGrid, MIN_ENV_DIST));
+		bool doesPointPass = (onGrid) ? (IsEqual(position, grid, GRID_DIV_DELTA)  ||  IsEqual(position, nextGrid, GRID_DIV_DELTA))
+									  : (!IsEqual(position, grid, GRID_DIV_DELTA) && !IsEqual(position, nextGrid, GRID_DIV_DELTA));
 
 		if (doesPointPass)
 		{
 			if (deletePoints)
 			{
 				if (pointsToDelete.size() == 0 || pointsToDelete.back().second != i -1)
-				{
-					pair<int, int> newPair(i, i);
-					pointsToDelete.push_back(newPair);
-				}
+					pointsToDelete.push_back(make_pair(i, i));
 				pointsToDelete.back().second = i;
-
 			}
 			else
 				envelope.SetSelection(i, true);

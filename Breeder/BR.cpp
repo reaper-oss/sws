@@ -840,12 +840,12 @@ int BR_Init ()
 	VersionCheckInit();
 
 	// Keep "apply next action" registration mechanism here (no need for separate module until more actions are added)
-	g_nextActionApplyers.insert(NamedCommandLookup("_BR_NEXT_CMD_SEL_TK_VIS_ENVS"));        // Make sure these actions are registered
-	g_nextActionApplyers.insert(NamedCommandLookup("_BR_NEXT_CMD_SEL_TK_REC_ENVS"));        // consequentially so their cmds end up
-	g_nextActionApplyers.insert(NamedCommandLookup("_BR_NEXT_CMD_SEL_TK_VIS_ENVS_NOSEL"));  // consequential to optimize BR_SwsActionHook
+	g_nextActionApplyers.insert(NamedCommandLookup("_BR_NEXT_CMD_SEL_TK_VIS_ENVS"));        // Make sure these actions are registered consequentially
+	g_nextActionApplyers.insert(NamedCommandLookup("_BR_NEXT_CMD_SEL_TK_REC_ENVS"));        // in g_commandTable, so their cmds end up consequential
+	g_nextActionApplyers.insert(NamedCommandLookup("_BR_NEXT_CMD_SEL_TK_VIS_ENVS_NOSEL"));  // to optimize BR_SwsActionHook
 	g_nextActionApplyers.insert(NamedCommandLookup("_BR_NEXT_CMD_SEL_TK_REC_ENVS_NOSEL"));
 	g_nextActionLoCmd  = (g_nextActionApplyers.size() > 0) ? *g_nextActionApplyers.begin()  : 0;
-	g_nextActionHiCmd = (g_nextActionApplyers.size() > 0) ? *g_nextActionApplyers.rbegin() : 0;
+	g_nextActionHiCmd  = (g_nextActionApplyers.size() > 0) ? *g_nextActionApplyers.rbegin() : 0;
 
 	return 1;
 }

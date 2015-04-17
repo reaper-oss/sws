@@ -454,6 +454,7 @@
 #define IDC_ALL_POS                     1355
 #define IDC_ALL_POS_H_COMBO             1356
 #define IDC_ALL_POS_V_COMBO             1357
+#define IDC_ALL_FOREGROUND              1358
 
 // Next default values for new objects
 // 
@@ -461,7 +462,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        188
 #define _APS_NEXT_COMMAND_VALUE         40000
-#define _APS_NEXT_CONTROL_VALUE         1358
+#define _APS_NEXT_CONTROL_VALUE         1359
 #define _APS_NEXT_SYMED_VALUE           100
 #endif
 #endif

@@ -154,8 +154,8 @@ public:
 	bool CanContextFollowItem (int context);    // Check if context can follow item contexts
 
 	/* Get and set options for toolbar loading */
-	void SetOptionsAll (int* focus, int* topmost, int* position);
-	void GetOptionsAll (int* focus, int* topmost, int* position);
+	void SetOptionsAll (int* focus, int* topmost, int* position, int* setToolbarToForeground);
+	void GetOptionsAll (int* focus, int* topmost, int* position, int* setToolbarToForeground);
 	void SetOptionsTcp (int* track, int* envelope);
 	void GetOptionsTcp (int* track, int* envelope);
 	void SetOptionsMcp (int* track);
@@ -183,7 +183,7 @@ private:
 	};
 	struct Options
 	{
-		int focus, position, topmost, tcpTrack, tcpEnvelope, mcpTrack;
+		int focus, setToolbarToForeground, position, topmost, tcpTrack, tcpEnvelope, mcpTrack;
 		int arrangeTrack, arrangeItem, arrangeStretchMarker, arrangeTakeEnvelope, arrangeTrackEnvelope, arrangeActTake;
 		int midiSetCCLane;
 		int inlineItem, inlineSetCCLane;
@@ -197,7 +197,7 @@ private:
 		MediaItem* itemToSelect;
 		MediaItem* takeParent;
 		int takeIdToActivate, focusContext, positionOffsetX, positionOffsetY, positionOrientation;
-		bool positionOverride, setFocus, clearTrackSelection, clearItemSelection, setCCLaneAsClicked, autoCloseToolbar, makeTopMost;
+		bool positionOverride, setFocus, clearTrackSelection, clearItemSelection, setCCLaneAsClicked, autoCloseToolbar, makeTopMost, setToolbarToForeground;
 		ExecuteOnToolbarLoad ();
 	};
 	struct ToolbarWndData
@@ -294,7 +294,7 @@ private:
 	void SetFocus              (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad);
 	void SetCCLaneClicked      (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad, BR_MouseInfo& mouseInfo);
 	void RepositionToolbar     (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad, HWND toolbarHwnd);
-	void SetToolbarWndProc (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad, HWND toolbarHwnd, int toggleAction);
+	void SetToolbarWndProc (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad, HWND toolbarHwnd, int toggleAction, HWND toolbarParent);
 
 	/* Set and get info for various contexts */
 	int GetMouseAction (int context);

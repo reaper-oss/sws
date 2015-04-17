@@ -6,9 +6,11 @@
 +Some SWS/BR actions got new cursors, but not to clog the changelog with all the details, see upper wiki link. Note that these cursors are not set in stone, if you think you could contribute better default cursors, let use know (you can do it on our dedicated http://forum.cockos.com/showthread.php?t=153702|forum topic|)
 
 Contextual toolbars
-+Fixes
- - Fixed various issues with toolbar window manipulation (set always on top, auto close, position offset/override) when toolbar had the same name as some other window (i.e. toolbar was named "Mixer")
++Contextual toolbars dialog:
  - When checking for modifications in contextual toolbars dialog (in case of closing the dialog or switching from the unsaved preset) also check position offset and auto close properties
+ - Added an option <em>Set toolbar to foreground</em>. When enabled, toolbar will be set to foreground (focused) every time it's shown. Disabled by default
+ +Fixes
+ - Fixed various issues with toolbar window manipulation (set always on top, auto close, position offset/override) when toolbar had the same name as some other window (i.e. toolbar was named "Mixer")
 
 Added actions
 +Main:

@@ -206,10 +206,10 @@ void ULT_SetMediaItemNote(MediaItem* _item, const char* _str) {
 
 bool IsSupportedMediaFileTag(const char* tag)
 {
-  if (!tag || (stricmp(tag, "artist") && stricmp(tag, "album") &&
-      stricmp(tag, "genre") && stricmp(tag, "comment") &&
-      stricmp(tag, "title") && stricmp(tag, "year") &&
-      stricmp(tag, "track")))
+  if (!tag || (_stricmp(tag, "artist") && _stricmp(tag, "album") &&
+      _stricmp(tag, "genre") && _stricmp(tag, "comment") &&
+      _stricmp(tag, "title") && _stricmp(tag, "year") &&
+      _stricmp(tag, "track")))
   {
     return false;
   }
@@ -231,18 +231,18 @@ bool SNM_ReadMediaFileTag(const char *fn, const char* tag, char* tagval, int tag
   if (!f.isNull())
   {
     TagLib::String s;
-    if (!stricmp(tag, "artist")) { s=f.tag()->artist(); didsmthg=true; }
-    if (!stricmp(tag, "album")) { s=f.tag()->album(); didsmthg=true; }
-    if (!stricmp(tag, "genre")) { s=f.tag()->genre(); didsmthg=true; }
-    if (!stricmp(tag, "comment")) { s=f.tag()->comment(); didsmthg=true; }
-    if (!stricmp(tag, "title")) { s=f.tag()->title(); didsmthg=true; }
+    if (!_stricmp(tag, "artist")) { s=f.tag()->artist(); didsmthg=true; }
+    if (!_stricmp(tag, "album")) { s=f.tag()->album(); didsmthg=true; }
+    if (!_stricmp(tag, "genre")) { s=f.tag()->genre(); didsmthg=true; }
+    if (!_stricmp(tag, "comment")) { s=f.tag()->comment(); didsmthg=true; }
+    if (!_stricmp(tag, "title")) { s=f.tag()->title(); didsmthg=true; }
     if (didsmthg)
     {
       lstrcpyn(tagval, s.toCString(true), tagval_sz);
     }
-    else if (!stricmp(tag, "year") || !stricmp(tag, "track"))
+    else if (!_stricmp(tag, "year") || !_stricmp(tag, "track"))
     {
-      int val = (int)(!stricmp(tag, "year") ? f.tag()->year() : f.tag()->track());
+      int val = (int)(!_stricmp(tag, "year") ? f.tag()->year() : f.tag()->track());
       if (!val) { *tagval=0; didsmthg=true; }
       else if (val>0) { _snprintfSafe(tagval, tagval_sz, "%d", val); didsmthg=true; }
     }
@@ -274,18 +274,18 @@ bool SNM_TagMediaFile(const char *fn, const char* tag, const char* tagval)
     if (s)
 #endif
     {
-      if (!stricmp(tag, "artist")) { f.tag()->setArtist(s); didsmthg=true; }
-      if (!stricmp(tag, "album")) { f.tag()->setAlbum(s); didsmthg=true; }
-      if (!stricmp(tag, "genre")) { f.tag()->setGenre(s); didsmthg=true; }
-      if (!stricmp(tag, "comment")) { f.tag()->setComment(s); didsmthg=true; }
-      if (!stricmp(tag, "title")) { f.tag()->setTitle(s); didsmthg=true; }
+      if (!_stricmp(tag, "artist")) { f.tag()->setArtist(s); didsmthg=true; }
+      if (!_stricmp(tag, "album")) { f.tag()->setAlbum(s); didsmthg=true; }
+      if (!_stricmp(tag, "genre")) { f.tag()->setGenre(s); didsmthg=true; }
+      if (!_stricmp(tag, "comment")) { f.tag()->setComment(s); didsmthg=true; }
+      if (!_stricmp(tag, "title")) { f.tag()->setTitle(s); didsmthg=true; }
     }
-    if (!stricmp(tag, "year") || !stricmp(tag, "track"))
+    if (!_stricmp(tag, "year") || !_stricmp(tag, "track"))
     {
       int val=atoi(tagval);
       if (val>0 || !*tagval)
       {
-        if (!stricmp(tag, "year")) f.tag()->setYear(val);
+        if (!_stricmp(tag, "year")) f.tag()->setYear(val);
         else f.tag()->setTrack(val);
         didsmthg=true;
       }

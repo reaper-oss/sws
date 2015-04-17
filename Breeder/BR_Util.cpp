@@ -2045,11 +2045,10 @@ static void AllocPreparedString (const char* name, char** destination)
 		}
 }
 
-static HWND SearchChildren (const char* name, HWND hwnd, HWND startHwnd = NULL)
+static HWND SearchChildren (const char* name, HWND hwnd, HWND startHwnd = NULL, bool windowHasNoChildren = false)
 {
 	/* FindWindowEx alternative that works with name prepared by *
 	*  PrepareLocalizedString() (relevant for win32 only)        */
-
 	#ifdef _WIN32
 		if (IsLocalized())
 		{
@@ -2062,7 +2061,10 @@ static HWND SearchChildren (const char* name, HWND hwnd, HWND startHwnd = NULL)
 				char wndName[2048];
 				GetWindowText(hwnd, wndName, sizeof(wndName));
 				if (!strcmp(wndName, name))
-					returnHwnd = hwnd;
+				{
+					if (!windowHasNoChildren || (windowHasNoChildren && !GetWindow(hwnd, GW_CHILD)))
+						returnHwnd = hwnd;
+				}
 			}
 			while ((hwnd = GetWindow(hwnd, GW_HWNDNEXT)) && !returnHwnd);
 
@@ -2071,11 +2073,17 @@ static HWND SearchChildren (const char* name, HWND hwnd, HWND startHwnd = NULL)
 		else
 	#endif
 		{
-			return FindWindowEx(hwnd, startHwnd, NULL , name);
+			HWND returnHwnd = startHwnd;
+			while (true)
+			{
+				returnHwnd = FindWindowEx(hwnd, returnHwnd, NULL, name);
+				if (!returnHwnd || !windowHasNoChildren || (windowHasNoChildren && !GetWindow(returnHwnd, GW_CHILD)))
+					return returnHwnd;
+			}
 		}
 }
 
-static HWND SearchFloatingDockers (const char* name, const char* dockerName)
+static HWND SearchFloatingDockers (const char* name, const char* dockerName, bool windowHasNoChildren = false)
 {
 	HWND docker = FindWindowEx(NULL, NULL, NULL, dockerName);
 	while (docker)
@@ -2085,7 +2093,7 @@ static HWND SearchFloatingDockers (const char* name, const char* dockerName)
 			HWND insideDocker = FindWindowEx(docker, NULL, NULL, "REAPER_dock");
 			while (insideDocker)
 			{
-				if (HWND w = SearchChildren(name, insideDocker))
+				if (HWND w = SearchChildren(name, insideDocker, NULL, windowHasNoChildren))
 					return w;
 				insideDocker = FindWindowEx(docker, insideDocker, NULL, "REAPER_dock");
 			}
@@ -2095,20 +2103,20 @@ static HWND SearchFloatingDockers (const char* name, const char* dockerName)
 	return NULL;
 }
 
-static HWND FindInFloatingDockers (const char* name)
+static HWND FindInFloatingDockers (const char* name, bool windowHasNoChildren = false)
 {
 	#ifdef _WIN32
-		HWND hwnd = SearchFloatingDockers(name, NULL);
+		HWND hwnd = SearchFloatingDockers(name, NULL, windowHasNoChildren);
 	#else
-		HWND hwnd = SearchFloatingDockers(name, __localizeFunc("Docker", "docker", 0));
+		HWND hwnd = SearchFloatingDockers(name, __localizeFunc("Docker", "docker", 0), windowHasNoChildren);
 		if (!hwnd)
 		{
 			WDL_FastString dockerName;
 			dockerName.AppendFormatted(256, "%s%s", name, __localizeFunc(" (docked)", "docker", 0));
-			hwnd = SearchFloatingDockers(name, dockerName.Get());
+			hwnd = SearchFloatingDockers(name, dockerName.Get(), windowHasNoChildren);
 		}
 		if (!hwnd)
-			hwnd = SearchFloatingDockers(name, __localizeFunc("Toolbar Docker", "docker", 0));
+			hwnd = SearchFloatingDockers(name, __localizeFunc("Toolbar Docker", "docker", 0), windowHasNoChildren);
 	#endif
 
 	return hwnd;
@@ -2126,14 +2134,19 @@ static HWND FindInReaperDockers (const char* name)
 	return NULL;
 }
 
-static HWND FindFloating (const char* name, bool checkForNoCaption = false)
+static HWND FindFloating (const char* name, bool checkForNoCaption = false, bool windowHasNoChildren = false)
 {
 	HWND hwnd = SearchChildren(name, NULL);
 	while (hwnd)
 	{
-		if (GetParent(hwnd) == g_hwndParent && (!checkForNoCaption || (checkForNoCaption && !(GetWindowLongPtr(hwnd, GWL_STYLE) & WS_CAPTION))))
-			return hwnd;
-		hwnd = SearchChildren(name, NULL, hwnd);
+		if (GetParent(hwnd) == g_hwndParent)
+		{
+			if ((!checkForNoCaption   || (checkForNoCaption   && !(GetWindowLongPtr(hwnd, GWL_STYLE) & WS_CAPTION))) &&
+				(!windowHasNoChildren || (windowHasNoChildren && !GetWindow(hwnd, GW_CHILD)))
+			)
+				return hwnd;
+		}
+			hwnd = SearchChildren(name, NULL, hwnd);
 	}
 	return NULL;
 }
@@ -2182,15 +2195,15 @@ HWND FindFloatingToolbarWndByName (const char* toolbarName)
 		{
 			char preparedName[2048];
 			PrepareLocalizedString(toolbarName, preparedName, sizeof(preparedName));
-			HWND hwnd = FindFloating(preparedName, checkForNoCaption);
-			if (!hwnd) hwnd = FindInFloatingDockers(preparedName);
+			HWND hwnd = FindFloating(preparedName, checkForNoCaption, true);
+			if (!hwnd) hwnd = FindInFloatingDockers(preparedName, true);
 			return hwnd;
 		}
 		else
 	#endif
 		{
-			HWND hwnd = FindFloating(toolbarName, checkForNoCaption);
-			if (!hwnd) hwnd = FindInFloatingDockers(toolbarName);
+			HWND hwnd = FindFloating(toolbarName, checkForNoCaption, true);
+			if (!hwnd) hwnd = FindInFloatingDockers(toolbarName, true);
 			return hwnd;
 		}
 }

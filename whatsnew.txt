@@ -5,6 +5,11 @@
 +Current list of customizable mouse cursors can be found http://wiki.cockos.com/wiki/index.php/SWS_mouse_cursors|on Cockos wiki|
 +Some SWS/BR actions got new cursors, but not to clog the changelog with all the details, see upper wiki link. Note that these cursors are not set in stone, if you think you could contribute better default cursors, let use know (you can do it on our dedicated http://forum.cockos.com/showthread.php?t=153702|forum topic|)
 
+Contextual toolbars
++Fixes
+ - Fixed various issues with toolbar window manipulation (set always on top, auto close, position offset/override) when toolbar had the same name as some other window (i.e. toolbar was named "Mixer")
+ - When checking for modifications in contextual toolbars dialog (in case of closing the dialog or switching from the unsaved preset) also check position offset and auto close properties
+
 Added actions
 +Main:
  - SWS/BR: Freehand draw envelope while snapping points to left side grid (perform until shortcut released)
@@ -58,14 +63,13 @@ Fixes
 +Don't change solo state of tracks if mouse is over master track when running certain "perform until shortcut released" playback actions
 +Fixed various SWS/BR actions so they work properly with hardware sends envelopes
 +ReaScript: fixed ULT_SetMediaItemNote
-+When checking for modifications in contextual toolbars dialog (in case of closing the dialog or switching from the unsaved preset) also check position offset and auto close properties
 +<em>SWS/S&M: Open/close image window</em> now reports it's state
 +Fixed <em>SWS/BR: Delete tempo marker (preserve overall tempo and positions if possible)</em> not deleting moved partial time signature markers properly
 +Fixed <em>SWS/BR: Set closest (left side) envelope point's value to mouse cursor (perform until shortcut released)</em> reseting position of moved partial time signature markers
 
 Other
 +Added ability to select only partial time signatures with SWS/BR: Select and adjust tempo markers...
-+Toolbar state of all docked SWS dialogs will be set to ON only when the window is visible in the docker (same behavior REAPER is using for its own docked dialogs)
++Toggle state of all docked SWS dialogs will be set to ON only when the window is visible in the docker (same behavior REAPER is using for its own docked dialogs)
 +Compatibility fixes for new envelope max display options of +12db or +24db (introduced in REAPER v5.0pre21)
 
 !v2.6.3 #0 pre-release build (March 12, 2015)

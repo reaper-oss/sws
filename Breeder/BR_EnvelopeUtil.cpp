@@ -2927,7 +2927,7 @@ void InitTempoMap ()
 }
 
 void RemoveTempoMap ()
-{	
+{
 	// Using native API DeleteTempoTimeSigMarker() or DeleteEnvelopePointRange() won't remove first point (but BR_Envelope can do it since it uses chunks for tempo map)
 	BR_Envelope tempoMap(GetTempoEnv());
 	tempoMap.DeleteAllPoints();

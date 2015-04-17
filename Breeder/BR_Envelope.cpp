@@ -441,7 +441,7 @@ static void SetEnvPointMouseValue (COMMAND_T* ct)
 				}
 
 				// Make sure there is tempo marker at next grid division (but if there are no more tempo markers after current tempo marker, skip this)
-				double addedNextGridPoint = false;
+				bool addedNextGridPoint = false;
 				if (id != CountTempoTimeSigMarkers(NULL) - 1)
 				{
 					int nextId = id + 1;

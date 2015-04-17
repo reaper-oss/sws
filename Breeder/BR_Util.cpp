@@ -2836,27 +2836,29 @@ HCURSOR GetSwsMouseCursor (BR_MouseCursor cursor)
 	static HCURSOR s_cursors[CURSOR_COUNT]; // set to NULL by compiler
 
 	// Invalid cursor requested
-	if (cursor < 0 && cursor >= CURSOR_COUNT)
-		return NULL;
-
-	// Cursor not yet loaded
-	if (!s_cursors[cursor])
+	if (cursor < 0 || cursor >= CURSOR_COUNT)
 	{
-		const char* cursorFile   = NULL; // this is SWS only cursor file
-		int         idc_resVal   = -1;   // in case cursor file hasn't been found, default to this resource
+		return NULL;
+	}
+	else
+	{
+		// Cursor not yet loaded
+		if (!s_cursors[cursor])
+		{
+			const char* cursorFile   = NULL; // this is SWS only cursor file
+			int         idc_resVal   = -1;   // in case cursor file hasn't been found, default to this resource
 
+			if      (cursor == CURSOR_ENV_PEN_GRID)    {idc_resVal = IDC_ENV_PEN_GRID;      cursorFile = "sws_env_pen_grid";}
+			else if (cursor == CURSOR_ENV_PT_ADJ_VERT) {idc_resVal = IDC_ENV_PT_ADJ_VERT;   cursorFile = "sws_env_pt_adj_vert";}
+			else if (cursor == CURSOR_GRID_WARP)       {idc_resVal = IDC_GRID_WARP;         cursorFile = "sws_grid_warp";}
+			else if (cursor == CURSOR_MISC_SPEAKER)    {idc_resVal = IDC_MISC_SPEAKER;      cursorFile = "sws_misc_speaker";}
+			else if (cursor == CURSOR_ZOOM_DRAG)       {idc_resVal = IDC_ZOOM_DRAG;         cursorFile = "sws_zoom_drag";}
+			else if (cursor == CURSOR_ZOOM_IN)         {idc_resVal = IDC_ZOOM_IN;           cursorFile = "sws_zoom_in";}
+			else if (cursor == CURSOR_ZOOM_OUT)        {idc_resVal = IDC_ZOOM_OUT;          cursorFile = "sws_zoom_out";}
+			else if (cursor == CURSOR_ZOOM_UNDO)       {idc_resVal = IDC_ZOOM_UNDO;         cursorFile = "sws_zoom_undo";}
 
-		if      (cursor == CURSOR_ENV_PEN_GRID)    {idc_resVal = IDC_ENV_PEN_GRID;      cursorFile = "sws_env_pen_grid";}
-		else if (cursor == CURSOR_ENV_PT_ADJ_VERT) {idc_resVal = IDC_ENV_PT_ADJ_VERT;   cursorFile = "sws_env_pt_adj_vert";}
-		else if (cursor == CURSOR_GRID_WARP)       {idc_resVal = IDC_GRID_WARP;         cursorFile = "sws_grid_warp";}
-		else if (cursor == CURSOR_MISC_SPEAKER)    {idc_resVal = IDC_MISC_SPEAKER;      cursorFile = "sws_misc_speaker";}
-		else if (cursor == CURSOR_ZOOM_DRAG)       {idc_resVal = IDC_ZOOM_DRAG;         cursorFile = "sws_zoom_drag";}
-		else if (cursor == CURSOR_ZOOM_IN)         {idc_resVal = IDC_ZOOM_IN;           cursorFile = "sws_zoom_in";}
-		else if (cursor == CURSOR_ZOOM_OUT)        {idc_resVal = IDC_ZOOM_OUT;          cursorFile = "sws_zoom_out";}
-		else if (cursor == CURSOR_ZOOM_UNDO)       {idc_resVal = IDC_ZOOM_UNDO;         cursorFile = "sws_zoom_undo";}
-
-		// Check for custom cursor file first
-		if (cursorFile)
+			// Check for custom cursor file first
+			if (cursorFile)
 		{
 			#ifdef _WIN32
 				wchar_t* resourcePathWide = WideCharPlz(GetResourcePath());
@@ -2881,17 +2883,18 @@ HCURSOR GetSwsMouseCursor (BR_MouseCursor cursor)
 			#endif
 		}
 
-		// No suitable file found, load default resource
-		if (!s_cursors[cursor] && idc_resVal != -1)
-		{
-			#ifdef _WIN32
-				s_cursors[cursor] = LoadCursor(g_hInst, MAKEINTRESOURCE(idc_resVal));
-			#else
-				s_cursors[cursor] = SWS_LoadCursor(idc_resVal);
-			#endif
+			// No suitable file found, load default resource
+			if (idc_resVal != -1 && !s_cursors[cursor])
+			{
+				#ifdef _WIN32
+					s_cursors[cursor] = LoadCursor(g_hInst, MAKEINTRESOURCE(idc_resVal));
+				#else
+					s_cursors[cursor] = SWS_LoadCursor(idc_resVal);
+				#endif
+			}
 		}
+		return s_cursors[cursor];
 	}
-	return s_cursors[cursor];
 }
 
 /******************************************************************************

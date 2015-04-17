@@ -315,11 +315,11 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Decrease selected envelope points by 5 db (volume envelope only)" },                                                                      "BR_DEC_VOL_ENV_PT_5db",              IncreaseDecreaseVolEnvPoints, NULL, -50},
 	{ { DEFACCEL, "SWS/BR: Decrease selected envelope points by 10 db (volume envelope only)" },                                                                     "BR_DEC_VOL_ENV_PT_10db",             IncreaseDecreaseVolEnvPoints, NULL, -100},
 
-	{ { DEFACCEL, "SWS/BR: Select envelope under mouse cursor" },                                                                                                    "BR_SEL_ENV_MOUSE",                   SelectEnvelopeUnderMouse, NULL, 0},
-	{ { DEFACCEL, "SWS/BR: Select envelope point under mouse cursor (selected envelope only)" },                                                                     "BR_SEL_ENV_PT_MOUSE_ACT_ENV_ONLY",   SelectDeleteEnvPointUnderMouse, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Select envelope point under mouse cursor" },                                                                                              "BR_SEL_ENV_PT_MOUSE",                SelectDeleteEnvPointUnderMouse, NULL, 2},
-	{ { DEFACCEL, "SWS/BR: Delete envelope point under mouse cursor (selected envelope only)" },                                                                     "BR_DEL_ENV_PT_MOUSE_ACT_ENV_ONLY",   SelectDeleteEnvPointUnderMouse, NULL, -1},
-	{ { DEFACCEL, "SWS/BR: Delete envelope point under mouse cursor" },                                                                                              "BR_DEL_ENV_PT_MOUSE",                SelectDeleteEnvPointUnderMouse, NULL, -2},
+	{ { DEFACCEL, "SWS/BR: Select envelope at mouse cursor" },                                                                                                       "BR_SEL_ENV_MOUSE",                   SelectEnvelopeUnderMouse, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Select envelope point at mouse cursor (selected envelope only)" },                                                                        "BR_SEL_ENV_PT_MOUSE_ACT_ENV_ONLY",   SelectDeleteEnvPointUnderMouse, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Select envelope point at mouse cursor" },                                                                                                 "BR_SEL_ENV_PT_MOUSE",                SelectDeleteEnvPointUnderMouse, NULL, 2},
+	{ { DEFACCEL, "SWS/BR: Delete envelope point at mouse cursor (selected envelope only)" },                                                                        "BR_DEL_ENV_PT_MOUSE_ACT_ENV_ONLY",   SelectDeleteEnvPointUnderMouse, NULL, -1},
+	{ { DEFACCEL, "SWS/BR: Delete envelope point at mouse cursor" },                                                                                                 "BR_DEL_ENV_PT_MOUSE",                SelectDeleteEnvPointUnderMouse, NULL, -2},
 
 	{ { DEFACCEL, "SWS/BR: Unselect envelope" },                                                                                                                     "BR_UNSEL_ENV",                       UnselectEnvelope, NULL, 0},
 

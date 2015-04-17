@@ -1171,7 +1171,7 @@ WDL_DLGRET SelectAdjustTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 			double effBpmCursor = effBpmCursor = TempoAtPosition(GetCursorPositionEx(NULL));
 			char bpmCursor[128];
-			_snprintfSafe(bpmCursor, sizeof(bpmCursor), "%.6g", effBpmCursor);			
+			_snprintfSafe(bpmCursor, sizeof(bpmCursor), "%.6g", effBpmCursor);
 
 			// Set controls
 			SetDlgItemText(hwnd, IDC_BR_SEL_BPM_START, eBpmStart);

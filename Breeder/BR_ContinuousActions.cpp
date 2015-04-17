@@ -570,7 +570,7 @@ bool ContinuousActionHook (COMMAND_T* ct, int cmd, int flagOrRelmode, HWND hwnd)
 		// Check if the action is continuous and then let it pass if it was sent for the first time or when run through timer
 		if (BR_ContinuousAction* action = g_actions.Get(FindActionFromCmd(g_actions, cmd)))
 		{
-			return (g_actionInProgress) 
+			return (g_actionInProgress)
 			       ? (flagOrRelmode != ACTION_FLAG || g_actionInProgress->ct->accel.accel.cmd != cmd)
 				   : (!ContinuousActionInit(true, ct, hwnd, action));
 		}

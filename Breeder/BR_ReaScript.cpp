@@ -238,9 +238,9 @@ bool BR_GetMediaItemImageResource (MediaItem* item, char* imageOut, int imageOut
 {
 	bool resourceFound = false;
 	if (item)
-	{		
+	{
 		SNM_ChunkParserPatcher p(item);
-	
+
 		char image[SNM_MAX_PATH]      = "";
 		char imageFlags[SNM_MAX_PATH] = "0";
 		resourceFound = !!p.Parse(SNM_GET_CHUNK_CHAR, 1, "ITEM", "RESOURCEFN", 0, 1, image, NULL, "VOLPAN");
@@ -502,13 +502,13 @@ bool BR_SetItemEdges (MediaItem* item, double startTime, double endTime)
 void BR_SetMediaItemImageResource (MediaItem* item, const char* imageIn, int imageFlags)
 {
 	if (item)
-	{		
+	{
 		char* itemState = GetSetObjectState(item, "");
 		char* token = strtok(itemState, "\n");
 
 		WDL_FastString newState;
 		LineParser lp(false);
-		
+
 		bool didImage      = !imageIn;
 		bool didImageFlags = false;
 		bool doImageFlags  = (!imageIn || (imageIn && strcmp(imageIn, "")));

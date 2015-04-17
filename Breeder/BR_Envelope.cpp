@@ -582,9 +582,9 @@ void SetEnvPointMouseValueInit ()
 	//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 	static COMMAND_T s_commandTable[] =
 	{
-		{ { DEFACCEL, "SWS/BR: Set closest envelope point's value to mouse cursor (perform until shortcut released)" },             "BR_ENV_PT_VAL_CLOSEST_MOUSE",          SetEnvPointMouseValue, NULL, 0},
-		{ { DEFACCEL, "SWS/BR: Set closest left side envelope point's value to mouse cursor (perform until shortcut released)" },   "BR_ENV_PT_VAL_CLOSEST_LEFT_MOUSE",     SetEnvPointMouseValue, NULL, 1},
-		{ { DEFACCEL, "SWS/BR: Freehand draw envelope while snapping points to left side grid (perform until shortcut released)" }, "BR_CONT_ENV_FREEHAND_SNAP_GRID_MOUSE", SetEnvPointMouseValue, NULL, 2},
+		{ { DEFACCEL, "SWS/BR: Set closest envelope point's value to mouse cursor (perform until shortcut released)" },                  "BR_ENV_PT_VAL_CLOSEST_MOUSE",          SetEnvPointMouseValue, NULL, 0},
+		{ { DEFACCEL, "SWS/BR: Set closest left side envelope point's value to mouse cursor (perform until shortcut released)" },        "BR_ENV_PT_VAL_CLOSEST_LEFT_MOUSE",     SetEnvPointMouseValue, NULL, 1},
+		{ { DEFACCEL, "SWS/BR: Freehand draw envelope while snapping points to left side grid line (perform until shortcut released)" }, "BR_CONT_ENV_FREEHAND_SNAP_GRID_MOUSE", SetEnvPointMouseValue, NULL, 2},
 
 		{ {}, LAST_COMMAND}
 	};

@@ -3,18 +3,18 @@
 <strong>Custom mouse cursors</strong>
 +From now on you can create custom mouse cursors to replace existing SWS cursors. All future updates in regards to this will be shown in what's new under <strong>Custom mouse cursors</strong> section to ease things for theme and cursor developers when new things are added or changed
 +Current list of customizable mouse cursors can be found http://wiki.cockos.com/wiki/index.php/SWS_mouse_cursors|on Cockos wiki|
-+Some SWS/BR actions got new cursors, but not to clog the changelog with all the details, see upper wiki link. Note that these cursors are not set in stone, if you think you could contribute better default cursors, let use know (you can do it on our dedicated http://forum.cockos.com/showthread.php?t=153702|forum topic|)
++Some SWS/BR actions got new cursors, but not to clog the change log with all the details, see upper wiki link. Note that these cursors are not set in stone, if you think you could contribute better default cursors, let us know (you can do it on our dedicated http://forum.cockos.com/showthread.php?t=153702|forum topic|)
 
 Contextual toolbars
 +Contextual toolbars dialog:
  - When checking for modifications in contextual toolbars dialog (in case of closing the dialog or switching from the unsaved preset) also check position offset and auto close properties
- - Added an option <em>Set toolbar to foreground</em>. When enabled, toolbar will be set to foreground (focused) every time it's shown. Disabled by default
- +Fixes
+ - Added an option to <em>Set toolbar to foreground</em>. When enabled, toolbar will be set to foreground (focused) every time it's shown. The option is disabled by default.
++Fixes
  - Fixed various issues with toolbar window manipulation (set always on top, auto close, position offset/override) when toolbar had the same name as some other window (i.e. toolbar was named "Mixer")
 
 Added actions
 +Main:
- - SWS/BR: Freehand draw envelope while snapping points to left side grid (perform until shortcut released)
+ - SWS/BR: Freehand draw envelope while snapping points to left side grid line (perform until shortcut released)
   - Note: also works with tempo map
  - SWS/BR: Apply next action to all visible (record-armed) envelopes in selected tracks
  - SWS/BR: Apply next action to all visible (record-armed) envelopes in selected tracks if there is no track envelope selected
@@ -70,7 +70,7 @@ Fixes
 +Fixed <em>SWS/BR: Set closest (left side) envelope point's value to mouse cursor (perform until shortcut released)</em> reseting position of moved partial time signature markers
 
 Other
-+Added ability to select only partial time signatures with SWS/BR: Select and adjust tempo markers...
++Added ability to select only partial time signatures with <em>SWS/BR: Select and adjust tempo markers...</em>
 +Toggle state of all docked SWS dialogs will be set to ON only when the window is visible in the docker (same behavior REAPER is using for its own docked dialogs)
 +Compatibility fixes for new envelope max display options of +12db or +24db (introduced in REAPER v5.0pre21)
 

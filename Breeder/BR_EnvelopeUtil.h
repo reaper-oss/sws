@@ -28,20 +28,6 @@
 #pragma once
 
 /******************************************************************************
-* Constants                                                                   *
-******************************************************************************/
-const double MIN_BPM                   = 1;
-const double MAX_BPM                   = 960;
-const int    MIN_SIG                   = 1;
-const int    MAX_SIG                   = 255;
-const double MIN_TEMPO_DIST            = 0.001;
-const double MIN_TIME_SIG_PARTIAL_DIFF = 0.00001;
-const double MIN_ENV_DIST              = 0.000001;
-const double MIN_GRID_DIST             = 0.00097;         // 1/256 at 960 BPM (can't set it to more than 1/256 in grid settings, but other actions like Adjust grid by 1/2 can)
-const double MAX_GRID_DIV              = 1.0 / 256.0 * 4; // 1/256 because things can get broken after that (http://forum.cockos.com/project.php?issueid=5263)
-const double GRID_DIV_DELTA            = 0.00000001;
-
-/******************************************************************************
 * Envelope shapes - this is how Reaper stores point shapes internally         *
 ******************************************************************************/
 enum BR_EnvShape
@@ -272,7 +258,7 @@ bool ToggleShowSendEnvelope (MediaTrack* track, int sendId, BR_EnvType type);
 bool ShowSendEnvelopes (vector<MediaTrack*>& tracks, BR_EnvType envelopeTypes);
 bool EnvVis (TrackEnvelope* envelope, bool* lane);
 int GetEnvId (TrackEnvelope* envelope, MediaTrack* parent = NULL);
-int GetCurrentAutomationMode (MediaTrack* track); // takes global override into account
+int GetEffectiveAutomationMode (MediaTrack* track); // takes global override into account
 int CountTrackEnvelopePanels (MediaTrack* track);
 BR_EnvShape GetDefaultPointShape ();
 BR_EnvType GetEnvType (TrackEnvelope* envelope, bool* isSend, bool* isHwSend); // note: relies on envelope names, localization could theoretically break it

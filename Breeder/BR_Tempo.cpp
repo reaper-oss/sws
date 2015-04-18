@@ -1287,10 +1287,8 @@ void SelectMovePartialTimeSig (COMMAND_T* ct)
 
 		if ((int)ct->user == 0)
 		{
-			if (abs(partialDiff) > MIN_TIME_SIG_PARTIAL_DIFF)
-				tempoMap.SetSelection(i, true);
-			else
-				tempoMap.SetSelection(i, false);
+			if (abs(partialDiff) > MIN_TIME_SIG_PARTIAL_DIFF) tempoMap.SetSelection(i, true);
+			else                                              tempoMap.SetSelection(i, false);
 		}
 		else if ((int)ct->user == 1)
 		{
@@ -1323,7 +1321,7 @@ void SelectMovePartialTimeSig (COMMAND_T* ct)
 				double prevPosition;
 				GetTempoTimeSigMarker(NULL, i - 1, &prevPosition, NULL, NULL, NULL, NULL, NULL, NULL);
 
-				double closestGridDiv = CheckBounds(prevGridDiv, prevPosition, prevPosition + MIN_GRID_DIST) ?  nextGridDiv : GetClosestVal(position, prevGridDiv, nextGridDiv);
+				double closestGridDiv = (prevGridDiv <= prevPosition) ? nextGridDiv : GetClosestVal(position, prevGridDiv, nextGridDiv);
 				beat = TimeMap2_timeToBeats(NULL, closestGridDiv, &measure, NULL, NULL, NULL);
 				SetTempoTimeSigMarker(NULL, i, -1, measure, beat, bpm, num, den, linear);
 

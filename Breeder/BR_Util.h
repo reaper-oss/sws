@@ -37,6 +37,17 @@ const int NEGATIVE_INF    = -150;
 const double VOLUME_DELTA = 0.0000000000001;
 const double PAN_DELTA    = 0.001;
 
+const double MIN_BPM                   = 1;
+const double MAX_BPM                   = 960;
+const int    MIN_SIG                   = 1;
+const int    MAX_SIG                   = 255;
+const double MIN_TEMPO_DIST            = 0.001;
+const double MIN_TIME_SIG_PARTIAL_DIFF = 0.00001;
+const double MIN_ENV_DIST              = 0.000001;
+const double MIN_GRID_DIST             = 0.00097;         // 1/256 at 960 BPM (can't set it to more than 1/256 in grid settings, (other actions like Adjust grid can, but things get broken then)
+const double MAX_GRID_DIV              = 1.0 / 256.0 * 4; // 1/256 because things can get broken after that (http://forum.cockos.com/project.php?issueid=5263)
+const double GRID_DIV_DELTA            = 0.00000001;
+
 const int SECTION_MAIN           = 0;
 const int SECTION_MAIN_ALT       = 100;
 const int SECTION_MIDI_EDITOR    = 32060;

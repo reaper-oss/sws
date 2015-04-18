@@ -28,7 +28,6 @@
 #include "stdafx.h"
 #include "BR_ContinuousActions.h"
 #include "BR_Util.h"
-#include "../../WDL/lice/lice.h"
 
 /******************************************************************************
 * Enable keyboard accelerator workaround                                      *

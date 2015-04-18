@@ -34,7 +34,6 @@
 #include "../SnM/SnM.h"
 #include "../libebur128/ebur128.h"
 #include "../reaper/localize.h"
-#include "../../WDL/lice/lice.h"
 
 /******************************************************************************
 * Constants                                                                   *

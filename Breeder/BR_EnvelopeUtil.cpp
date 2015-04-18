@@ -2349,7 +2349,7 @@ bool ToggleShowSendEnvelope (MediaTrack* track, int sendId, BR_EnvType type)
 
 						bool trim = false;
 						int trimMode; GetConfig("envtrimadjmode", trimMode);
-						if (trimMode == 0 || (trimMode == 1 && GetCurrentAutomationMode(hwSend ? track : CSurf_TrackFromID(sendTrackId + 1, false)) != 0))
+						if (trimMode == 0 || (trimMode == 1 && GetEffectiveAutomationMode(hwSend ? track : CSurf_TrackFromID(sendTrackId + 1, false)) != 0))
 						{
 							trim = true;
 							WDL_FastString newReceiveLine;
@@ -2533,7 +2533,7 @@ bool ShowSendEnvelopes (vector<MediaTrack*>& tracks, BR_EnvType envelopeTypes)
 
 						bool trim = false;
 						int trimMode; GetConfig("envtrimadjmode", trimMode);
-						if (trimMode == 0 || (trimMode == 1 && GetCurrentAutomationMode(hwSend ? track : CSurf_TrackFromID(sendTrackId + 1, false)) != 0))
+						if (trimMode == 0 || (trimMode == 1 && GetEffectiveAutomationMode(hwSend ? track : CSurf_TrackFromID(sendTrackId + 1, false)) != 0))
 						{
 							trim = true;
 							WDL_FastString newReceiveLine;
@@ -2621,13 +2621,10 @@ int GetEnvId (TrackEnvelope* envelope, MediaTrack* parent /*= NULL*/)
 	return -1;
 }
 
-int GetCurrentAutomationMode (MediaTrack* track)
+int GetEffectiveAutomationMode (MediaTrack* track)
 {
 	int override = GetGlobalAutomationOverride();
-	if (override == -1 || override == 5)
-		return (int)GetMediaTrackInfo_Value(track, "I_AUTOMODE");
-	else
-		return override;
+	return (override == -1 || override == 5) ? (int)GetMediaTrackInfo_Value(track, "I_AUTOMODE") : override;
 }
 
 int CountTrackEnvelopePanels (MediaTrack* track)

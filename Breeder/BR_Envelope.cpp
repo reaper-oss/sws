@@ -26,7 +26,6 @@
 /
 ******************************************************************************/
 #include "stdafx.h"
-#include "BR.h"
 #include "BR_Envelope.h"
 #include "BR_ContinuousActions.h"
 #include "BR_EnvelopeUtil.h"
@@ -663,7 +662,7 @@ void CursorToEnv1 (COMMAND_T* ct)
 		}
 
 		// Fix for a case when cursor is after the last point
-		if (!found && cursor > cTime )
+		if (!found && cursor > cTime)
 		{
 			found = true;
 			nTime = cTime;
@@ -758,10 +757,8 @@ void SelNextPrevEnvPoint (COMMAND_T* ct)
 		return;
 
 	int id;
-	if ((int)ct->user > 0)
-		id = envelope.GetSelected(envelope.CountSelected()-1) + 1;
-	else
-		id = envelope.GetSelected(0) - 1;
+	if ((int)ct->user > 0) id = envelope.GetSelected(envelope.CountSelected()-1) + 1;
+	else                   id = envelope.GetSelected(0) - 1;
 
 	if (envelope.ValidateId(id))
 	{
@@ -819,12 +816,10 @@ void ExpandEnvSelEnd (COMMAND_T* ct)
 		return;
 
 	int id;
-	if ((int)ct->user > 0)
-		id = envelope.GetSelected(envelope.CountSelected() - 1) + 1;
-	else
-		id = envelope.GetSelected(0) - 1;
-	envelope.SetSelection(id, true);
+	if ((int)ct->user > 0) id = envelope.GetSelected(envelope.CountSelected() - 1) + 1;
+	else                   id = envelope.GetSelected(0) - 1;
 
+	envelope.SetSelection(id, true);
 	if (envelope.Commit())
 	{
 		envelope.MoveArrangeToPoint(id, ((int)ct->user > 0) ? (id-1) : (id+1));
@@ -871,12 +866,10 @@ void ShrinkEnvSelEnd (COMMAND_T* ct)
 		return;
 
 	int id;
-	if ((int)ct->user > 0)
-		id = envelope.GetSelected(envelope.CountSelected() - 1);
-	else
-		id = envelope.GetSelected(0);
-	envelope.SetSelection(id, false);
+	if ((int)ct->user > 0) id = envelope.GetSelected(envelope.CountSelected() - 1);
+	else                   id = envelope.GetSelected(0);
 
+	envelope.SetSelection(id, false);
 	if (envelope.Commit())
 	{
 		envelope.MoveArrangeToPoint (((int)ct->user > 0) ? (id-1) : (id+1), id);
@@ -1095,7 +1088,7 @@ void ShiftEnvSelection (COMMAND_T* ct)
 		{
 			int id = envelope.GetSelected(i);
 			envelope.SetSelection(id-1, true);
-			envelope.SetSelection(id, false);
+			envelope.SetSelection(id,   false);
 		}
 	}
 	else
@@ -1104,7 +1097,7 @@ void ShiftEnvSelection (COMMAND_T* ct)
 		{
 			int id = envelope.GetSelected(i);
 			envelope.SetSelection(id+1, true);
-			envelope.SetSelection(id, false);
+			envelope.SetSelection(id,   false);
 		}
 	}
 
@@ -1240,11 +1233,10 @@ void MoveEnvPointToEditCursor (COMMAND_T* ct)
 		for (int i = 0; i < envelope.CountSelected(); ++i)
 		{
 			int currentId = envelope.GetSelected(i);
-
 			double currentPos;
 			envelope.GetPoint(currentId, &currentPos, NULL, NULL, NULL);
-			double len = abs(cursor - currentPos);
 
+			double len = abs(cursor - currentPos);
 			if (len < currentLen)
 			{
 				currentLen = len;
@@ -1862,7 +1854,7 @@ void ShowHideSendEnv (COMMAND_T* ct)
 				{
 					double value;
 					int trimMode; GetConfig("envtrimadjmode", trimMode);
-					if (envelope->GetPoint(0, NULL, &value, NULL, NULL) && (trimMode == 0 || (trimMode == 1 && GetCurrentAutomationMode(envelope->GetParent()) != 0)))
+					if (envelope->GetPoint(0, NULL, &value, NULL, NULL) && (trimMode == 0 || (trimMode == 1 && GetEffectiveAutomationMode(envelope->GetParent()) != 0)))
 					{
 						if      (envelope->Type() == VOLUME) SetTrackSendUIVol(envelope->GetParent(), envelope->GetSendId(), value, 0); // don't do mute (REAPER skips it too)
 						else if (envelope->Type() == PAN)    SetTrackSendUIPan(envelope->GetParent(), envelope->GetSendId(), -value, 0);

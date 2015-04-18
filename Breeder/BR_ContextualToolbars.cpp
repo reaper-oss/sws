@@ -30,7 +30,6 @@
 #include "BR_EnvelopeUtil.h"
 #include "BR_MouseUtil.h"
 #include "BR_Util.h"
-#include "BR.h"
 #include "../SnM/SnM_Dlg.h"
 #include "../SnM/SnM_Util.h"
 #include "../reaper/localize.h"

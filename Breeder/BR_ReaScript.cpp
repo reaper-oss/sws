@@ -197,6 +197,7 @@ void BR_EnvGetProperties (BR_Envelope* envelope, bool* activeOut, bool* visibleO
 		WritePtr(minValueOut,        0.0);
 		WritePtr(maxValueOut,        0.0);
 		WritePtr(centerValueOut,     0.0);
+		WritePtr(typeOut,            -1);
 		WritePtr(faderScalingOut,    false);
 	}
 }

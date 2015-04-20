@@ -169,7 +169,7 @@ void BR_EnvGetProperties (BR_Envelope* envelope, bool* activeOut, bool* visibleO
 
 		if (typeOut)
 		{
-			int value = -1;
+			int value = envelope->Type();
 			if      (value == VOLUME)       value = 0;
 			else if (value == VOLUME_PREFX) value = 1;
 			else if (value == PAN)          value = 2;
@@ -181,6 +181,7 @@ void BR_EnvGetProperties (BR_Envelope* envelope, bool* activeOut, bool* visibleO
 			else if (value == PLAYRATE)     value = 8;
 			else if (value == TEMPO)        value = 9;
 			else if (value == PARAMETER)    value = 10;
+			else                            value = -1;
 
 			*typeOut = value;
 		}

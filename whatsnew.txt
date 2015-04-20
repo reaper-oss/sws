@@ -38,6 +38,7 @@ Added actions
 
 ReaScript
 +Improved Python function wrappers (sws_python*.py)
++Fixed BR_EnvGetProperties not returning correct values for envelope types
 +Added media file tagging functions, see https://taglib.github.io|TagLib| for supported tags/files
  - SNM_TagMediaFile
  - SNM_ReadMediaFileTag

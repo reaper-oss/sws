@@ -1910,7 +1910,7 @@ void BR_ContextualToolbarsView::GetItemText (SWS_ListItem* item, int iCol, char*
 						else if (iCol == COL_AUTOCLOSE)
 						{
 							if (contextualToolbar->GetToolbarType(toolbarId) == 3)
-								_snprintfSafe(str, iStrMax, "%s", autoClose ? UTF8_CHECKMARK : "-");
+								_snprintfSafe(str, iStrMax, "%s", autoClose ? UTF8_CHECKMARK : UTF8_MULTIPLICATION);
 							else
 								_snprintfSafe(str, iStrMax, "%s", "-");
 						}

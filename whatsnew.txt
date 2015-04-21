@@ -9,7 +9,6 @@ Contextual toolbars
 +Contextual toolbars dialog:
  - When checking for modifications in contextual toolbars dialog (in case of closing the dialog or switching from the unsaved preset) also check position offset and auto close properties
  - Added an option to <em>Set toolbar to foreground</em>. When enabled, toolbar will be set to foreground (focused) every time it's shown. The option is disabled by default
- - Changed symbols in auto close column to make it more clear if auto close is disabled or enabled
 +Fixes
  - Fixed various issues with toolbar window manipulation (set always on top, auto close, position offset/override) when toolbar had the same name as some other window (i.e. toolbar was named "Mixer")
 

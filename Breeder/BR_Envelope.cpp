@@ -60,7 +60,7 @@ static int EnvMouseUndo (COMMAND_T* ct)
 static HCURSOR EnvMouseCursor (COMMAND_T* ct, int window)
 {
 	if (window == BR_ContinuousAction::MAIN_ARRANGE || window == BR_ContinuousAction::MAIN_RULER)
-		return ((int)ct->user == 2) ? GetSwsMouseCursor(CURSOR_ENV_PEN_GRID) : GetSwsMouseCursor(CURSOR_ENV_PT_ADJ_VERT);
+		return (abs((int)ct->user) == 3) ? GetSwsMouseCursor(CURSOR_ENV_PEN_GRID) : GetSwsMouseCursor(CURSOR_ENV_PT_ADJ_VERT);
 	else
 		return NULL;
 }
@@ -84,9 +84,9 @@ static WDL_FastString EnvMouseTooltip (COMMAND_T* ct, int window, bool* setToBou
 			double value        = g_envMouseEnvelope->SnapValue(g_envMouseEnvelope->RealValue(displayValue));
 
 			if (g_envMouseEnvelope->IsTempo())
-				GetTempoTimeSigMarker(NULL, ((int)ct->user == 0)  ? FindClosestTempoMarker(position) : FindPreviousTempoMarker(position), &position, NULL, NULL, NULL, NULL, NULL, NULL);
+				GetTempoTimeSigMarker(NULL, (abs((int)ct->user) == 1)  ? FindClosestTempoMarker(position) : FindPreviousTempoMarker(position), &position, NULL, NULL, NULL, NULL, NULL, NULL);
 			else
-				g_envMouseEnvelope->GetPoint(((int)ct->user == 0) ? g_envMouseEnvelope->FindClosest(position) : g_envMouseEnvelope->FindPrevious(position), &position, NULL, NULL, NULL);
+				g_envMouseEnvelope->GetPoint((abs((int)ct->user) == 1) ? g_envMouseEnvelope->FindClosest(position) : g_envMouseEnvelope->FindPrevious(position), &position, NULL, NULL, NULL);
 
 			static const char* s_format = __localizeFunc("Envelope: %s\n%s at %s", "tooltip", 0);
 			tooltip.AppendFormatted(512, s_format, (g_envMouseEnvelope->GetName()).Get(), (g_envMouseEnvelope->FormatValue(value)).Get(), FormatTime(position).Get());
@@ -107,13 +107,41 @@ static void SetEnvPointMouseValue (COMMAND_T* ct)
 	static double s_lastEndNormVal      = -1;
 	static bool   s_freehandInitDone    = false;
 
+	int user = abs((int)ct->user);
+
 	// Action called for the first time
 	if (!g_envMouseEnvelope)
 	{
 		s_lastEndId        = -1;
 		s_lastEndPosition  = -1;
 		s_lastEndNormVal   = -1;
-		s_freehandInitDone = ((int)ct->user == 2) ? false : true;
+		s_freehandInitDone = (user == 3) ? false : true;
+
+		if ((int)ct->user < 0)
+		{
+			TrackEnvelope* envelopeToSelect = NULL;
+
+			BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_ARRANGE | BR_MouseInfo::MODE_IGNORE_ENVELOPE_LANE_SEGMENT);
+			if ((!strcmp(mouseInfo.GetWindow(),  "arrange")   && !strcmp(mouseInfo.GetSegment(), "envelope"))   ||
+				(!strcmp(mouseInfo.GetDetails(), "env_point") || !strcmp(mouseInfo.GetSegment(), "env_segment"))
+			)
+				envelopeToSelect = mouseInfo.GetEnvelope();
+
+			if (envelopeToSelect)
+			{
+				if (envelopeToSelect != GetSelectedEnvelope(NULL))
+				{
+					SetCursorContext(2, envelopeToSelect);
+					UpdateArrange();
+				}
+			}
+			else
+			{
+				ContinuousActionStopAll();
+				return;
+			}
+		}
+
 		g_envMouseEnvelope = new (nothrow) BR_Envelope(GetSelectedEnvelope(NULL));
 
 		// BR_Envelope does check for locking but we're also using tempo API here so check manually
@@ -161,7 +189,7 @@ static void SetEnvPointMouseValue (COMMAND_T* ct)
 	PreventUIRefresh(1);
 
 	// In case of freehand drawing, remove or add points (so we only have points on grid)...(because editing tempo points moves them, we will handle it afterwards)
-	if ((int)ct->user == 2 && !isTempo)
+	if (user == 3 && !isTempo)
 	{
 		// Make sure start and end position are not reversed
 		double normStartPosition = startPosition;
@@ -233,7 +261,7 @@ static void SetEnvPointMouseValue (COMMAND_T* ct)
 	// Find all the points over which mouse passed
 	int startId = -1;
 	int endId   = -1;
-	if ((int)ct->user == 0)
+	if (user == 1)
 	{
 		if (s_lastEndId < 0) startId = (isTempo) ? FindClosestTempoMarker(startPosition) : g_envMouseEnvelope->FindClosest(startPosition);
 		else                 startId = s_lastEndId;
@@ -280,7 +308,7 @@ static void SetEnvPointMouseValue (COMMAND_T* ct)
 	SetConfig("envclicksegmode", ClearBit(envClickSegMode, 6)); // prevent reselection
 
 	// In case of tempo freehand drawing we simultaneously add/remove points and edit them (because editing tempo map makes things move and me must not allow any changes to anything in front of mouse cursor)
-	if ((int)ct->user == 2 && isTempo)
+	if (user == 3 && isTempo)
 	{
 		// Get grid division info
 		vector<pair<double,double> > savedGridDivs;
@@ -539,7 +567,7 @@ static void SetEnvPointMouseValue (COMMAND_T* ct)
 					if (g_envMouseEnvelope->SetPoint(i, NULL, &newValue, NULL, NULL, false, true))
 					{
 						pointsEdited = true;
-						if ((int)ct->user == 2) // in case of freehand drawing, selected edited point
+						if (user == 3) // in case of freehand drawing, selected edited point
 							g_envMouseEnvelope->SetSelection(i, true);
 					}
 				}
@@ -581,10 +609,13 @@ void SetEnvPointMouseValueInit ()
 	//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 	static COMMAND_T s_commandTable[] =
 	{
-		{ { DEFACCEL, "SWS/BR: Set closest envelope point's value to mouse cursor (perform until shortcut released)" },                  "BR_ENV_PT_VAL_CLOSEST_MOUSE",          SetEnvPointMouseValue, NULL, 0},
-		{ { DEFACCEL, "SWS/BR: Set closest left side envelope point's value to mouse cursor (perform until shortcut released)" },        "BR_ENV_PT_VAL_CLOSEST_LEFT_MOUSE",     SetEnvPointMouseValue, NULL, 1},
-		{ { DEFACCEL, "SWS/BR: Freehand draw envelope while snapping points to left side grid line (perform until shortcut released)" }, "BR_CONT_ENV_FREEHAND_SNAP_GRID_MOUSE", SetEnvPointMouseValue, NULL, 2},
+		{ { DEFACCEL, "SWS/BR: Set closest envelope point's value to mouse cursor (perform until shortcut released)" },                  "BR_ENV_PT_VAL_CLOSEST_MOUSE",          SetEnvPointMouseValue, NULL, 1},
+		{ { DEFACCEL, "SWS/BR: Set closest left side envelope point's value to mouse cursor (perform until shortcut released)" },        "BR_ENV_PT_VAL_CLOSEST_LEFT_MOUSE",     SetEnvPointMouseValue, NULL, 2},
+		{ { DEFACCEL, "SWS/BR: Freehand draw envelope while snapping points to left side grid line (perform until shortcut released)" }, "BR_CONT_ENV_FREEHAND_SNAP_GRID_MOUSE", SetEnvPointMouseValue, NULL, 3},
 
+		{ { DEFACCEL, "SWS/BR: Select envelope at mouse cursor and set closest envelope point's value to mouse cursor (perform until shortcut released)" },                  "BR_ENV_PT_VAL_CLOSEST_MOUSE_SEL_ENV",          SetEnvPointMouseValue, NULL, -1},
+		{ { DEFACCEL, "SWS/BR: Select envelope at mouse cursor and set closest left side envelope point's value to mouse cursor (perform until shortcut released)" },        "BR_ENV_PT_VAL_CLOSEST_LEFT_MOUSE_SEL_ENV",     SetEnvPointMouseValue, NULL, -2},
+		{ { DEFACCEL, "SWS/BR: Select envelope at mouse cursor and freehand draw envelope while snapping points to left side grid line (perform until shortcut released)" }, "BR_CONT_ENV_FREEHAND_SNAP_GRID_MOUSE_SEL_ENV", SetEnvPointMouseValue, NULL, -3},
 		{ {}, LAST_COMMAND}
 	};
 	//!WANT_LOCALIZE_1ST_STRING_END

@@ -15,7 +15,8 @@ Contextual toolbars
 Added actions
 +Main:
  - SWS/BR: Freehand draw envelope while snapping points to left side grid line (perform until shortcut released)
-  - Note: also works with tempo map
+  - Note: also works with tempo map (2 versions, one that draws on selected envelope and the other which draws on envelope at mouse cursor)
+ - SWS/BR: Select envelope at mouse cursor and set closest (left side) envelope point's value to mouse cursor (perform until shortcut released)
  - SWS/BR: Apply next action to all visible (record-armed) envelopes in selected tracks
  - SWS/BR: Apply next action to all visible (record-armed) envelopes in selected tracks if there is no track envelope selected
  - SWS/BR: Copy selected points in selected envelope to all visible (record-armed) envelopes in selected tracks (2 versions: direct copy and at edit cursor)

@@ -745,6 +745,15 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Adjust playrate options..." },     "BR_ADJUST_PLAYRATE_MIDI_OPTIONS", NULL, NULL, 1, IsAdjustPlayrateOptionsVisible, 0, AdjustPlayrate},
 
 	/******************************************************************************
+	* Misc - Title bar display options                                            *
+	******************************************************************************/
+	#ifdef _WIN32 // WM_SETTEXT is not implemented in SWELL (last checked REAPER v5.0pre27)
+	{ { DEFACCEL, "SWS/BR: Simplify main window title bar (show project name on the left)" },  "BR_MAIN_TITLE_BAR_SIMPLIFY_LEFT_PROJ_NAME",  SetTitleBarDisplayOptions, NULL, 0, IsTitleBarDisplayOptionOn},
+	{ { DEFACCEL, "SWS/BR: Simplify main window title bar (show project name on the right)" }, "BR_MAIN_TITLE_BAR_SIMPLIFY_RIGHT_PROJ_NAME", SetTitleBarDisplayOptions, NULL, 1, IsTitleBarDisplayOptionOn},
+	{ { DEFACCEL, "SWS/BR: Simplify main window title bar (show only project name)" },         "BR_MAIN_TITLE_BAR_SIMPLIFY_ONLY_PROJ_NAME",  SetTitleBarDisplayOptions, NULL, 2, IsTitleBarDisplayOptionOn},
+	#endif
+
+	/******************************************************************************
 	* Tempo                                                                       *
 	******************************************************************************/
 	{ { DEFACCEL, "SWS/BR: Move closest grid line to edit cursor" },            "BR_MOVE_GRID_TO_EDIT_CUR",   MoveGridToEditPlayCursor, NULL, 0},
@@ -836,6 +845,7 @@ int BR_Init ()
 	ContextualToolbarsInit();
 	ContinuousActionsInit();
 	LoudnessInit();
+	TitleBarDisplayOptionsInit(false);
 	ProjStateInit();
 	VersionCheckInit();
 
@@ -850,11 +860,18 @@ int BR_Init ()
 	return 1;
 }
 
+int BR_InitPost ()
+{
+	TitleBarDisplayOptionsInit(true);
+	return 1;
+}
+
 void BR_Exit ()
 {
 	ContextualToolbarsExit();
 	ContinuousActionsExit ();
 	LoudnessExit();
+	TitleBarDisplayOptionsExit();
 	ProjStateExit();
 	VersionCheckExit();
 

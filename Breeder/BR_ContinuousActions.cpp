@@ -244,7 +244,7 @@ static LRESULT CALLBACK GenericWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPA
 	else if (hwnd == g_pianoWnd)      {window = BR_ContinuousAction::MIDI_PIANO;      wndProc = g_pianoWndProc;}
 
 	if (!wndProc)
-		return 0;
+		return DefWindowProc(hwnd, uMsg, wParam, lParam);
 
 	if (uMsg == WM_MOUSEMOVE && g_actionInProgress && g_actionInProgress->SetTooltip)
 	{

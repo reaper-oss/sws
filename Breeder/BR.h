@@ -49,4 +49,5 @@ void BR_RegisterContinuousActions ();
 * BR init/exit                                                                *
 ******************************************************************************/
 int  BR_Init ();
+int  BR_InitPost ();
 void BR_Exit ();

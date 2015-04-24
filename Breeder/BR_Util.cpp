@@ -211,6 +211,22 @@ void AppendLine (WDL_FastString& str, const char* line)
 	str.Append("\n");
 }
 
+const char* strstr_last (const char* haystack, const char* needle)
+{
+	if (!haystack || !needle || *needle == '\0')
+		return haystack;
+
+	const char *result = NULL;
+	while (true)
+	{
+		const char *p = strstr(haystack, needle);
+		if (!p) break;
+		result   = p;
+		haystack = p + 1;
+	}
+	return result;
+}
+
 /******************************************************************************
 * General                                                                     *
 ******************************************************************************/
@@ -2833,8 +2849,6 @@ bool ThemeListViewInProc (HWND hwnd, int uMsg, LPARAM lParam, HWND list, bool gr
 ******************************************************************************/
 HCURSOR GetSwsMouseCursor (BR_MouseCursor cursor)
 {
-	static HCURSOR s_cursors[CURSOR_COUNT]; // set to NULL by compiler
-
 	// Invalid cursor requested
 	if (cursor < 0 || cursor >= CURSOR_COUNT)
 	{
@@ -2842,6 +2856,8 @@ HCURSOR GetSwsMouseCursor (BR_MouseCursor cursor)
 	}
 	else
 	{
+		static HCURSOR s_cursors[CURSOR_COUNT]; // set to NULL by compiler
+
 		// Cursor not yet loaded
 		if (!s_cursors[cursor])
 		{
@@ -2859,29 +2875,29 @@ HCURSOR GetSwsMouseCursor (BR_MouseCursor cursor)
 
 			// Check for custom cursor file first
 			if (cursorFile)
-		{
-			#ifdef _WIN32
-				wchar_t* resourcePathWide = WideCharPlz(GetResourcePath());
-				wchar_t* cursorFileWide   = WideCharPlz(cursorFile);
+			{
+				#ifdef _WIN32
+					wchar_t* resourcePathWide = WideCharPlz(GetResourcePath());
+					wchar_t* cursorFileWide   = WideCharPlz(cursorFile);
 
-				wstring cursorPath(resourcePathWide);
-				cursorPath.append(L"\\Cursors\\");
-				cursorPath.append(cursorFileWide);
-				cursorPath.append(L".cur");
+					wstring cursorPath(resourcePathWide);
+					cursorPath.append(L"\\Cursors\\");
+					cursorPath.append(cursorFileWide);
+					cursorPath.append(L".cur");
 
-				DWORD fileAttributes = GetFileAttributesW(cursorPath.c_str());
-				if (fileAttributes != INVALID_FILE_ATTRIBUTES && !(fileAttributes & FILE_ATTRIBUTE_DIRECTORY))
-					s_cursors[cursor] = LoadCursorFromFileW(cursorPath.c_str());
+					DWORD fileAttributes = GetFileAttributesW(cursorPath.c_str());
+					if (fileAttributes != INVALID_FILE_ATTRIBUTES && !(fileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+						s_cursors[cursor] = LoadCursorFromFileW(cursorPath.c_str());
 
-				delete[] resourcePathWide;
-				delete[] cursorFileWide;
-			#else
-				WDL_FastString cursorPath;
-				cursorPath.SetFormatted(SNM_MAX_PATH, "%s/Cursors/%s.cur", GetResourcePath(), cursorFile);
-				if (file_exists(cursorPath.Get()))
-					s_cursors[cursor] = SWELL_LoadCursorFromFile(cursorPath.Get());
-			#endif
-		}
+					delete[] resourcePathWide;
+					delete[] cursorFileWide;
+				#else
+					WDL_FastString cursorPath;
+					cursorPath.SetFormatted(SNM_MAX_PATH, "%s/Cursors/%s.cur", GetResourcePath(), cursorFile);
+					if (file_exists(cursorPath.Get()))
+						s_cursors[cursor] = SWELL_LoadCursorFromFile(cursorPath.Get());
+				#endif
+			}
 
 			// No suitable file found, load default resource
 			if (idc_resVal != -1 && !s_cursors[cursor])

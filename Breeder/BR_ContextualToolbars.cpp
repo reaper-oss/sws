@@ -1602,7 +1602,7 @@ LRESULT CALLBACK BR_ContextualToolbar::ToolbarWndCallback (HWND hwnd, UINT uMsg,
 
 	if (id == -1)
 	{
-		return 0;
+		return DefWindowProc(hwnd, uMsg, wParam, lParam);
 	}
 	else
 	{

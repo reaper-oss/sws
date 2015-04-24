@@ -28,7 +28,7 @@
 #pragma once
 
 /******************************************************************************
-* Commands: Mis continuous actions                                            *
+* Commands: Misc continuous actions                                           *
 ******************************************************************************/
 void PlaybackAtMouseCursorInit ();
 
@@ -76,6 +76,13 @@ void PreviewItemAtMouse (COMMAND_T*);
 void AdjustPlayrate (COMMAND_T*, int, int, int, HWND);
 
 /******************************************************************************
+* Commands: Misc - Title bar display options                                  *
+******************************************************************************/
+void TitleBarDisplayOptionsInit (bool hookWnd);
+void TitleBarDisplayOptionsExit ();
+void SetTitleBarDisplayOptions (COMMAND_T*);
+
+/******************************************************************************
 * Toggle states: Misc                                                         *
 ******************************************************************************/
 int IsSnapFollowsGridVisOn (COMMAND_T*);
@@ -83,3 +90,4 @@ int IsTrimNewVolPanEnvsOn (COMMAND_T*);
 int IsDisplayDisplayItemLabelsOn (COMMAND_T*);
 int IsPlaybackFollowingTempoChange (COMMAND_T*);
 int IsAdjustPlayrateOptionsVisible (COMMAND_T*);
+int IsTitleBarDisplayOptionOn (COMMAND_T*);

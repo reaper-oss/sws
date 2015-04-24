@@ -25,6 +25,7 @@ Added actions
  - SWS/BR: Reset position of selected partial time signature markers
  - SWS/BR: Snap position of selected partial time signature markers to closest grid line
  - SWS/BR: Move active floating window to mouse cursor (9 version with different horizontal and vertical positions in regards to mouse cursor)
+ - SWS/BR: Simplify main window title bar (3 mutually exclusive versions) (windows only, sorry OSX users)
  - SWS/BR: Toggle "Display media item take name"
  - SWS/BR: Toggle "Display media item pitch/playrate if set"
  - SWS/BR: Toggle "Display media item gain if set"

@@ -1064,9 +1064,9 @@ error:
 
 				char txt[8192]="";
 				_snprintf(txt, sizeof(txt),
-                  // keep the message on a single line (for the LangPack generator)
-                  __LOCALIZE_VERFMT("Several versions of the SWS extension (or SWS clones) are installed, SWS v%d.%d.%d #%d will not be loaded!\n\nPlease quit REAPER and uninstall the conflicting extension if it is older (see Main menu > Extensions > About SWS Extension).\n\nNote that REAPER will look for plugins in the following folders/order:\n%s\n%s","sws_mbox"),
-                  SWS_VERSION, dir1.Get(), dir2.Get());
+				// keep the message on a single line (for the LangPack generator)
+				__LOCALIZE_VERFMT("Several versions of the SWS extension (or SWS clones) are installed, SWS v%d.%d.%d #%d will not be loaded!\n\nPlease quit REAPER and uninstall the conflicting extension if it is older (see Main menu > Extensions > About SWS Extension).\n\nNote that REAPER will look for plugins in the following folders/order:\n%s\n%s","sws_mbox"),
+				SWS_VERSION, dir1.Get(), dir2.Get());
 				ERR_RETURN2(txt) // ERR_RETURN2: do not unregister stuff of the conflicting plugin!
 			}
 		}
@@ -1148,6 +1148,7 @@ error:
 
 		AddExtensionsMainMenu();
 		ZoomInit(true); // touchy! only hook REAPER window procs at the very end, i.e. only if everything else went well
+		BR_InitPost();  // same reason as above (wnd hooks)
 		return 1;
 	}
 };   // end extern C

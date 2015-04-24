@@ -83,6 +83,7 @@ double AltAtof (char* str);
 bool IsFraction (char* str, double& convertedFraction);
 void ReplaceAll (string& str, string oldStr, string newStr);
 void AppendLine (WDL_FastString& str, const char* line);
+const char* strstr_last (const char* haystack, const char* needle);
 template <typename T> bool WritePtr (T* ptr, T val)  {if (ptr){*ptr = val; return true;} return false;}
 template <typename T> bool ReadPtr  (T* ptr, T& val) {if (ptr){val = *ptr; return true;} return false;}
 template <typename T> bool AreOverlapped   (T x1, T x2, T y1, T y2) {if (x1 > x2) swap(x1, x2); if (y1 > y2) swap(y1, y2); return x1 <= y2 && y1 <= x2;}

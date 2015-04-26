@@ -68,6 +68,9 @@ foreach ($funcs as $name => &$rec)
     }
     $code .= $name . "(";
 
+    $parm_offs = 0;
+    $next_sz   = 0;
+    $lastreq   = 0;
     for ($x=0; $x < count($names); $x++)
     {
        $nm = trim($names[$x]);

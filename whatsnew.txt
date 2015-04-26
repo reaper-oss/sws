@@ -53,12 +53,18 @@ ReaScript
  - BR_EnvSortPoints
  - BR_GetClosestGridDivision
  - BR_GetMediaItemImageResource
+ - BR_GetMediaTrackFreezeCount
+ - BR_GetMediaTrackLayouts
+ - BR_GetMediaTrackSendInfo_Envelope
+ - BR_GetMediaTrackSendInfo_Track
  - BR_GetMidiSourceLenPPQ
+ - BR_GetSetTrackSendInfo
  - BR_GetTakeFXCount
  - BR_IsTakeMidi
  - BR_SetArrangeView
  - BR_SetItemEdges
  - BR_SetMediaItemImageResource
+ - BR_SetMediaTrackLayouts
 
 Fixes
 +Notes/Windows OS: fixed "wrap text" option (Issue 690)

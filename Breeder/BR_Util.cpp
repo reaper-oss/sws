@@ -291,23 +291,6 @@ WDL_FastString FormatTime (double position, int mode /*=-1*/)
 	return string;
 }
 
-int GetEffectiveCompactLevel (MediaTrack* track)
-{
-	int compact = 0;
-	MediaTrack* parent = track;
-	while (parent = (MediaTrack*)GetSetMediaTrackInfo(parent, "P_PARTRACK", NULL))
-	{
-		int tmp = (int)GetMediaTrackInfo_Value(parent, "I_FOLDERCOMPACT");
-		if (tmp > compact)
-		{
-			compact = tmp;
-			if (compact == 2)
-				break;
-		}
-	}
-	return compact;
-}
-
 int FindClosestProjMarkerIndex (double position)
 {
 	int first = 0;
@@ -538,6 +521,61 @@ bool IsRecording ()
 	return (GetPlayStateEx(NULL) & 4) == 4;
 }
 
+bool AreAllCoordsZero (RECT& r)
+{
+	return (r.bottom == 0 && r.left == 0 && r.right == 0 && r.top == 0);
+}
+
+/******************************************************************************
+* Tracks                                                                      *
+******************************************************************************/
+int GetEffectiveCompactLevel (MediaTrack* track)
+{
+	int compact = 0;
+	MediaTrack* parent = track;
+	while (parent = (MediaTrack*)GetSetMediaTrackInfo(parent, "P_PARTRACK", NULL))
+	{
+		int tmp = (int)GetMediaTrackInfo_Value(parent, "I_FOLDERCOMPACT");
+		if (tmp > compact)
+		{
+			compact = tmp;
+			if (compact == 2)
+				break;
+		}
+	}
+	return compact;
+}
+
+int GetTrackFreezeCount (MediaTrack* track)
+{
+	int freezeCount = 0;
+
+	if (track)
+	{
+		char* trackState = GetSetObjectState(track, "");
+		char* token = strtok(trackState, "\n");
+
+		WDL_FastString newState;
+		LineParser lp(false);
+
+		int blockCount = 0;
+		while (token != NULL)
+		{
+			lp.parse(token);
+
+			if (blockCount == 1 && !strcmp(lp.gettoken_str(0), "<FREEZE"))
+				++freezeCount;
+
+			if      (lp.gettoken_str(0)[0] == '<') ++blockCount;
+			else if (lp.gettoken_str(0)[0] == '>') --blockCount;
+			token = strtok(NULL, "\n");
+		}
+		FreeHeapPtr(trackState);
+	}	
+
+	return freezeCount;
+}
+
 bool TcpVis (MediaTrack* track)
 {
 	if (track)
@@ -560,11 +598,6 @@ bool TcpVis (MediaTrack* track)
 	}
 	else
 		return false;
-}
-
-bool AreAllCoordsZero (RECT& r)
-{
-	return (r.bottom == 0 && r.left == 0 && r.right == 0 && r.top == 0);
 }
 
 /******************************************************************************

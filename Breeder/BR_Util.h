@@ -99,7 +99,6 @@ template <typename T> T    GetClosestVal (T val, T targetVal1, T targetVal2) {if
 ******************************************************************************/
 vector<double> GetProjectMarkers (bool timeSel, double timeSelDelta = 0);
 WDL_FastString FormatTime (double position, int mode = -1); // same as format_timestr_pos but handles "measures.beats + time" properly
-int GetEffectiveCompactLevel (MediaTrack* track);           // displayed compact level is determined by the highest compact level of any successive parent
 int FindClosestProjMarkerIndex (double position);
 double EndOfProject (bool markers, bool regions);
 double GetMidiOscVal (double min, double max, double step, double currentVal, int commandVal, int commandValhw, int commandRelmode);
@@ -111,10 +110,16 @@ void StartPlayback (double position);
 bool IsPlaying ();
 bool IsPaused ();
 bool IsRecording ();
-bool TcpVis (MediaTrack* track);
 bool AreAllCoordsZero (RECT& r);
 template <typename T> void GetConfig (const char* key, T& val) {val = *static_cast<T*>(GetConfigVar(key));}
 template <typename T> void SetConfig (const char* key, T  val) {*static_cast<T*>(GetConfigVar(key)) = val;}
+
+/******************************************************************************
+* Tracks                                                                      *
+******************************************************************************/
+int GetEffectiveCompactLevel (MediaTrack* track);           // displayed compact level is determined by the highest compact level of any successive parent
+int GetTrackFreezeCount (MediaTrack* track);
+bool TcpVis (MediaTrack* track);
 
 /******************************************************************************
 * Items and takes                                                             *

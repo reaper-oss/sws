@@ -231,35 +231,17 @@ void BR_EnvSortPoints (BR_Envelope* envelope)
 		envelope->Sort();
 }
 
-double  BR_GetClosestGridDivision (double position)
-{
-	return GetClosestGridDiv(position);
-}
-
-bool BR_GetMediaItemImageResource (MediaItem* item, char* imageOut, int imageOut_sz, int* imageFlagsOut)
-{
-	bool resourceFound = false;
-	if (item)
-	{
-		SNM_ChunkParserPatcher p(item);
-
-		char image[SNM_MAX_PATH]      = "";
-		char imageFlags[SNM_MAX_PATH] = "0";
-		resourceFound = !!p.Parse(SNM_GET_CHUNK_CHAR, 1, "ITEM", "RESOURCEFN", 0, 1, image, NULL, "VOLPAN");
-		p.Parse(SNM_GET_CHUNK_CHAR, 1, "ITEM", "IMGRESOURCEFLAGS", 0, 1, imageFlags, NULL, "VOLPAN");
-
-		if (imageOut && imageOut_sz > 0) _snprintfSafe(imageOut, imageOut_sz, "%s", image);
-		WritePtr(imageFlagsOut, atoi(imageFlags));
-	}
-	return resourceFound;
-}
-
 double BR_EnvValueAtPos (BR_Envelope* envelope, double position)
 {
 	if (envelope)
 		return envelope->ValueAtPosition(position);
 	else
 		return 0;
+}
+
+double BR_GetClosestGridDivision (double position)
+{
+	return GetClosestGridDiv(position);
 }
 
 MediaItem* BR_GetMediaItemByGUID (ReaProject* proj, const char* guidStringIn)
@@ -283,6 +265,26 @@ void BR_GetMediaItemGUID (MediaItem* item, char* guidStringOut, int guidStringOu
 		else      guidToString(&GUID_NULL, guid);
 		_snprintfSafe(guidStringOut, guidStringOut_sz, "%s", guid);
 	}
+}
+
+bool BR_GetMediaItemImageResource (MediaItem* item, char* imageOut, int imageOut_sz, int* imageFlagsOut)
+{
+	bool resourceFound = false;
+	if (item)
+	{
+		SNM_ChunkParserPatcher p(item);
+		p.SetWantsMinimalState(true);
+
+		char image[SNM_MAX_PATH]      = "";
+		char imageFlags[SNM_MAX_PATH] = "0";
+
+		resourceFound =  !!p.Parse(SNM_GET_CHUNK_CHAR, 1, "ITEM", "RESOURCEFN",       0, 1, image,      NULL, "VOLPAN");
+		if (resourceFound) p.Parse(SNM_GET_CHUNK_CHAR, 1, "ITEM", "IMGRESOURCEFLAGS", 0, 1, imageFlags, NULL, "VOLPAN");
+
+		if (imageOut && imageOut_sz > 0) _snprintfSafe(imageOut, imageOut_sz, "%s", image);
+		WritePtr(imageFlagsOut, atoi(imageFlags));
+	}
+	return resourceFound;
 }
 
 void BR_GetMediaItemTakeGUID (MediaItem_Take* take, char* guidStringOut, int guidStringOut_sz)
@@ -317,6 +319,11 @@ MediaTrack* BR_GetMediaTrackByGUID (ReaProject* proj, const char* guidStringIn)
 	return NULL;
 }
 
+int BR_GetMediaTrackFreezeCount (MediaTrack* track)
+{
+	return GetTrackFreezeCount(track);
+}
+
 void BR_GetMediaTrackGUID (MediaTrack* track, char* guidStringOut, int guidStringOut_sz)
 {
 	if (track && guidStringOut && guidStringOut_sz > 0)
@@ -326,6 +333,52 @@ void BR_GetMediaTrackGUID (MediaTrack* track, char* guidStringOut, int guidStrin
 		else       guidToString(&GUID_NULL, guid);
 		_snprintfSafe(guidStringOut, guidStringOut_sz, "%s", guid);
 	}
+}
+
+void BR_GetMediaTrackLayouts (MediaTrack* track, char* mcpLayoutNameOut, int mcpLayoutNameOut_sz, char* tcpLayoutNameOut, int tcpLayoutNameOut_sz)
+{
+	bool nothingFound = true;
+
+	if (track && (mcpLayoutNameOut || tcpLayoutNameOut))
+	{
+		SNM_ChunkParserPatcher p(track);
+		p.SetWantsMinimalState(true);
+
+		WDL_FastString layoutsLine;
+		if (p.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "TRACK", "LAYOUTS", 0, 1, &layoutsLine))
+		{
+			LineParser lp(false);
+			lp.parse(layoutsLine.Get());
+			if (mcpLayoutNameOut && mcpLayoutNameOut_sz > 0) _snprintfSafe(mcpLayoutNameOut, mcpLayoutNameOut_sz, "%s", lp.gettoken_str(2));
+			if (tcpLayoutNameOut && tcpLayoutNameOut_sz > 0) _snprintfSafe(tcpLayoutNameOut, tcpLayoutNameOut_sz, "%s", lp.gettoken_str(1));
+
+			nothingFound = false;
+		}
+	}
+
+	if (nothingFound)
+	{
+		if (mcpLayoutNameOut && mcpLayoutNameOut_sz > 0) _snprintfSafe(mcpLayoutNameOut, mcpLayoutNameOut_sz, "%s", "");
+		if (tcpLayoutNameOut && tcpLayoutNameOut_sz > 0) _snprintfSafe(tcpLayoutNameOut, tcpLayoutNameOut_sz, "%s", "");
+	}
+}
+
+TrackEnvelope* BR_GetMediaTrackSendInfo_Envelope (MediaTrack* track, int category, int sendidx, int envelopeType)
+{
+	const char* sendType = (envelopeType == 0) ? ("<VOLENV") : (envelopeType == 1) ? ("<PANENV") : (envelopeType == 2) ? ("<MUTEENV") : NULL;
+	
+	if (sendType)
+		return (TrackEnvelope*)GetSetTrackSendInfo(track, category, sendidx, "P_ENV", (void*)sendType);
+	else
+		return NULL;
+}
+
+MediaTrack* BR_GetMediaTrackSendInfo_Track (MediaTrack* track, int category, int sendidx, int trackType)
+{	
+	if (trackType == 0 || trackType == 1)
+		return (MediaTrack*)GetSetTrackSendInfo(track, category, sendidx, ((trackType == 0) ? "P_SRCTRACK" : "P_DESTTRACK"), NULL);
+	else
+		return NULL;
 }
 
 double BR_GetMidiSourceLenPPQ (MediaItem_Take* take)
@@ -409,6 +462,82 @@ MediaItem_Take* BR_GetMouseCursorContext_Take ()
 MediaTrack* BR_GetMouseCursorContext_Track ()
 {
 	return g_mouseInfo.GetTrack();
+}
+
+double BR_GetSetTrackSendInfo (MediaTrack* track, int category, int sendidx, const char* parmname, bool setNewValue, double newValue)
+{
+	double returnValue = 0;
+	if (track)
+	{
+		if (setNewValue)
+		{			
+			if (!strcmp(parmname, "B_MUTE") || !strcmp(parmname, "B_PHASE") || !strcmp(parmname, "B_MONO"))
+			{
+				bool valueToSet = !!newValue;
+				GetSetTrackSendInfo(track, category, sendidx, parmname, (void*)&valueToSet);
+				returnValue = 1;
+			}
+			else if (!strcmp(parmname, "D_VOL") || !strcmp(parmname, "D_PAN") || !strcmp(parmname, "D_PANLAW"))
+			{
+				double valueToSet = (double)newValue;
+				GetSetTrackSendInfo(track, category, sendidx, parmname, (void*)&valueToSet);
+				returnValue = 1;
+			}
+			else if (!strcmp(parmname, "I_SENDMODE") || !strcmp(parmname, "I_SRCCHAN") || !strcmp(parmname, "I_DSTCHAN") || !strcmp(parmname, "I_MIDIFLAGS"))
+			{
+				int valueToSet = (int)newValue;
+				GetSetTrackSendInfo(track, category, sendidx, parmname, (void*)&valueToSet);
+				returnValue = 1;
+			}
+			else if (!strcmp(parmname, "I_MIDI_SRCCHAN") || !strcmp(parmname, "I_MIDI_DSTCHAN") || !strcmp(parmname, "I_MIDI_SRCBUS") || !strcmp(parmname, "I_MIDI_DSTBUS"))
+			{
+				if (void* sendInfo = GetSetTrackSendInfo(track, category, sendidx, "I_MIDIFLAGS", NULL))
+				{
+					int valueToSet = *(int*)sendInfo;
+					if      (newValue == -1)                      valueToSet |= 0x3FC01F;                                            // set all bits for source channel and bus to 1
+					else if (!strcmp(parmname, "I_MIDI_SRCCHAN")) valueToSet = (valueToSet & ~(0x1F))       | ((int)newValue);       // source chan is bits 0-4
+					else if (!strcmp(parmname, "I_MIDI_DSTCHAN")) valueToSet = (valueToSet & ~(0x1F << 5))  | ((int)newValue << 5);  // destination chan is bits 5-9
+					else if (!strcmp(parmname, "I_MIDI_SRCBUS"))  valueToSet = (valueToSet & ~(0xFF << 14)) | ((int)newValue << 14); // source MIDI bus is bits 14-21
+					else if (!strcmp(parmname, "I_MIDI_DSTBUS"))  valueToSet = (valueToSet & ~(0xFF << 22)) | ((int)newValue << 22); // destination MIDI bus is bits 22-29
+					GetSetTrackSendInfo(track, category, sendidx, "I_MIDIFLAGS", (void*)&valueToSet);
+				}
+			}
+		}
+		else
+		{
+			if (!strcmp(parmname, "I_MIDI_SRCCHAN") || !strcmp(parmname, "I_MIDI_DSTCHAN") || !strcmp(parmname, "I_MIDI_SRCBUS") || !strcmp(parmname, "I_MIDI_DSTBUS"))
+			{
+				if (void* sendInfo = GetSetTrackSendInfo(track, category, sendidx, "I_MIDIFLAGS", NULL))
+				{
+					int midiFlags = *(int*)sendInfo;
+					if      ((midiFlags & 31) == 31)              returnValue = -1;
+					else if (!strcmp(parmname, "I_MIDI_SRCCHAN")) returnValue = midiFlags         & 0x1F; // source chan is bits 0-4
+					else if (!strcmp(parmname, "I_MIDI_DSTCHAN")) returnValue = (midiFlags >> 5)  & 0x1F; // destination chan is bits 5-9
+					else if (!strcmp(parmname, "I_MIDI_SRCBUS"))  returnValue = (midiFlags >> 14) & 0xFF; // source MIDI bus is bits 14-21
+					else if (!strcmp(parmname, "I_MIDI_DSTBUS"))  returnValue = (midiFlags >> 22) & 0xFF; // destination MIDI bus is bits 22-29
+				}
+			}
+
+			else if (void* sendInfo = GetSetTrackSendInfo(track, category, sendidx, parmname, NULL))
+			{
+				if (!strcmp(parmname, "B_MUTE") || !strcmp(parmname, "B_PHASE") || !strcmp(parmname, "B_MONO"))
+				{
+					returnValue = (double)(*(bool*)sendInfo);
+				}
+				else if (!strcmp(parmname, "D_VOL") || !strcmp(parmname, "D_PAN") || !strcmp(parmname, "D_PANLAW"))
+				{
+					returnValue = *(double*)sendInfo;
+				}
+				else if (!strcmp(parmname, "I_SENDMODE") || !strcmp(parmname, "I_SRCCHAN") || !strcmp(parmname, "I_DSTCHAN"))
+				{
+					returnValue = (double)(*(int*)sendInfo);
+				}
+
+			}
+		}
+	}
+
+	return returnValue;
 }
 
 int BR_GetTakeFXCount (MediaItem_Take* take)
@@ -613,6 +742,104 @@ void BR_SetMediaItemImageResource (MediaItem* item, const char* imageIn, int ima
 bool BR_SetMediaSourceProperties (MediaItem_Take* take, bool section, double start, double length, double fade, bool reverse)
 {
 	return SetMediaSourceProperties(take, section, start, length, fade, reverse);
+}
+
+bool BR_SetMediaTrackLayouts (MediaTrack* track, const char* mcpLayoutNameIn, const char* tcpLayoutNameIn)
+{
+	bool updated = false;
+	if (track && (mcpLayoutNameIn || tcpLayoutNameIn))
+	{
+		char* trackState = GetSetObjectState(track, "");
+		char* token = strtok(trackState, "\n");
+
+		WDL_FastString newState;
+		LineParser lp(false);
+
+		int blockCount = 0;
+		bool didLayouts = false;
+		while (token != NULL)
+		{
+			lp.parse(token);
+			if      (lp.gettoken_str(0)[0] == '<')  ++blockCount;
+			else if (lp.gettoken_str(0)[0] == '>')  --blockCount;
+
+			if (blockCount == 1)
+			{
+				if (!strcmp(lp.gettoken_str(0), "LAYOUTS") && !didLayouts)
+				{
+					for (int i = 0; i < lp.getnumtokens(); ++i)
+					{
+						if (i == 1)
+						{
+							newState.AppendFormatted(512, "\"%s\"", (tcpLayoutNameIn ? tcpLayoutNameIn : lp.gettoken_str(i)));
+							if (tcpLayoutNameIn && strcmp(tcpLayoutNameIn, lp.gettoken_str(i)))
+								updated = true;
+						}
+						else if (i == 2)
+						{
+							newState.AppendFormatted(512, "\"%s\"", (mcpLayoutNameIn ? mcpLayoutNameIn : lp.gettoken_str(i)));
+							if (mcpLayoutNameIn && strcmp(mcpLayoutNameIn, lp.gettoken_str(i)))
+								updated = true;
+						}
+						else
+						{
+							newState.Append(lp.gettoken_str(i));
+						}
+						newState.Append(" ");
+					}
+					
+					newState.Append("\n");
+					didLayouts = true;
+				}
+				else
+				{
+					AppendLine(newState, token);
+				}
+			}
+			else if (blockCount == 0)
+			{
+				if (lp.gettoken_str(0)[0] == '>')
+				{
+					if (!didLayouts)
+					{
+						if ((tcpLayoutNameIn && strcmp(tcpLayoutNameIn, "")) || (mcpLayoutNameIn && strcmp(mcpLayoutNameIn, "")))
+							updated = true;
+
+						if (updated)
+						{
+							newState.Append("LAYOUTS ");
+
+							newState.Append("\"");
+							newState.Append((tcpLayoutNameIn ? tcpLayoutNameIn : ""));
+							newState.Append("\"");
+
+							newState.Append("\"");
+							newState.Append((mcpLayoutNameIn ? mcpLayoutNameIn : ""));
+							newState.Append("\"");
+
+							newState.Append("\n");
+						}
+					}
+					AppendLine(newState, token);
+				}
+				else
+				{
+					AppendLine(newState, token);
+				}
+			}
+			else
+			{
+				AppendLine(newState, token);
+			}
+
+			token = strtok(NULL, "\n");
+		}
+
+		if (updated)
+			GetSetObjectState(track, newState.Get());
+		FreeHeapPtr(trackState);
+	}
+	return updated;
 }
 
 bool BR_SetTakeSourceFromFile (MediaItem_Take* take, const char* filenameIn, bool inProjectData)

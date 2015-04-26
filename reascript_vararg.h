@@ -302,11 +302,6 @@ static void* __vararg_BR_GetClosestGridDivision(void** arglist, int numparms)
   return p;
 }
 
-static void* __vararg_BR_GetMediaItemImageResource(void** arglist, int numparms)
-{
-  return (void*)(INT_PTR)BR_GetMediaItemImageResource((MediaItem*)arglist[0], (char*)arglist[1], (int)(INT_PTR)arglist[2], (int*)arglist[3]);
-}
-
 static void* __vararg_BR_GetMediaItemByGUID(void** arglist, int numparms)
 {
   return (void*)(INT_PTR)BR_GetMediaItemByGUID((ReaProject*)arglist[0], (const char*)arglist[1]);
@@ -316,6 +311,11 @@ static void* __vararg_BR_GetMediaItemGUID(void** arglist, int numparms)
 {
   BR_GetMediaItemGUID((MediaItem*)arglist[0], (char*)arglist[1], (int)(INT_PTR)arglist[2]);
   return NULL;
+}
+
+static void* __vararg_BR_GetMediaItemImageResource(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)BR_GetMediaItemImageResource((MediaItem*)arglist[0], (char*)arglist[1], (int)(INT_PTR)arglist[2], (int*)arglist[3]);
 }
 
 static void* __vararg_BR_GetMediaItemTakeGUID(void** arglist, int numparms)
@@ -334,10 +334,31 @@ static void* __vararg_BR_GetMediaTrackByGUID(void** arglist, int numparms)
   return (void*)(INT_PTR)BR_GetMediaTrackByGUID((ReaProject*)arglist[0], (const char*)arglist[1]);
 }
 
+static void* __vararg_BR_GetMediaTrackFreezeCount(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)BR_GetMediaTrackFreezeCount((MediaTrack*)arglist[0]);
+}
+
 static void* __vararg_BR_GetMediaTrackGUID(void** arglist, int numparms)
 {
   BR_GetMediaTrackGUID((MediaTrack*)arglist[0], (char*)arglist[1], (int)(INT_PTR)arglist[2]);
   return NULL;
+}
+
+static void* __vararg_BR_GetMediaTrackLayouts(void** arglist, int numparms)
+{
+  BR_GetMediaTrackLayouts((MediaTrack*)arglist[0], (char*)arglist[1], (int)(INT_PTR)arglist[2], (char*)arglist[3], (int)(INT_PTR)arglist[4]);
+  return NULL;
+}
+
+static void* __vararg_BR_GetMediaTrackSendInfo_Envelope(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)BR_GetMediaTrackSendInfo_Envelope((MediaTrack*)arglist[0], (int)(INT_PTR)arglist[1], (int)(INT_PTR)arglist[2], (int)(INT_PTR)arglist[3]);
+}
+
+static void* __vararg_BR_GetMediaTrackSendInfo_Track(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)BR_GetMediaTrackSendInfo_Track((MediaTrack*)arglist[0], (int)(INT_PTR)arglist[1], (int)(INT_PTR)arglist[2], (int)(INT_PTR)arglist[3]);
 }
 
 static void* __vararg_BR_GetMidiSourceLenPPQ(void** arglist, int numparms)
@@ -390,6 +411,14 @@ static void* __vararg_BR_GetMouseCursorContext_Take(void** arglist, int numparms
 static void* __vararg_BR_GetMouseCursorContext_Track(void** arglist, int numparms)
 {
   return (void*)(INT_PTR)BR_GetMouseCursorContext_Track();
+}
+
+static void* __vararg_BR_GetSetTrackSendInfo(void** arglist, int numparms)
+{
+  double* p =(double*)arglist[numparms-1];
+  double d = BR_GetSetTrackSendInfo((MediaTrack*)arglist[0], (int)(INT_PTR)arglist[1], (int)(INT_PTR)arglist[2], (const char*)arglist[3], (bool)arglist[4], arglist[5] ? *(double*)arglist[5] : 0.0);
+  if (p) *p=d;
+  return p;
 }
 
 static void* __vararg_BR_GetTakeFXCount(void** arglist, int numparms)
@@ -445,6 +474,11 @@ static void* __vararg_BR_SetMediaItemImageResource(void** arglist, int numparms)
 static void* __vararg_BR_SetMediaSourceProperties(void** arglist, int numparms)
 {
   return (void*)(INT_PTR)BR_SetMediaSourceProperties((MediaItem_Take*)arglist[0], (bool)arglist[1], arglist[2] ? *(double*)arglist[2] : 0.0, arglist[3] ? *(double*)arglist[3] : 0.0, arglist[4] ? *(double*)arglist[4] : 0.0, (bool)arglist[5]);
+}
+
+static void* __vararg_BR_SetMediaTrackLayouts(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)BR_SetMediaTrackLayouts((MediaTrack*)arglist[0], (const char*)arglist[1], (const char*)arglist[2]);
 }
 
 static void* __vararg_BR_SetTakeSourceFromFile(void** arglist, int numparms)

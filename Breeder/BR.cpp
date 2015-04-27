@@ -116,6 +116,7 @@ int BR_CSurfExtended(int call, void* parm1, void* parm2, void* parm3)
 	if (call == CSURF_EXT_RESET)
 	{
 		LoudnessUpdate();
+		TitleBarDisplayOptionsInit(true, 2, true); // count should depend if project is modified or not (2 for non-modified, 1 for modified), but since GetProjectStateChangeCount() is broken we have to update it twice just in case
 	}
 	else if (call == CSURF_EXT_SETSENDVOLUME || call == CSURF_EXT_SETSENDPAN)
 	{
@@ -845,7 +846,7 @@ int BR_Init ()
 	ContextualToolbarsInit();
 	ContinuousActionsInit();
 	LoudnessInit();
-	TitleBarDisplayOptionsInit(false);
+	TitleBarDisplayOptionsInit(false, 0, false);
 	ProjStateInit();
 	VersionCheckInit();
 
@@ -862,7 +863,7 @@ int BR_Init ()
 
 int BR_InitPost ()
 {
-	TitleBarDisplayOptionsInit(true);
+	TitleBarDisplayOptionsInit(true, 1, false);
 	return 1;
 }
 

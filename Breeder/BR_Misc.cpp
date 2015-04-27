@@ -1136,9 +1136,25 @@ void AdjustPlayrate (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 /******************************************************************************
 * Commands: Misc - Title bar display options                                  *
 ******************************************************************************/
-static int            g_titleBarDisplayOptions = 0;
-static WNDPROC        g_titleBarOldWndProc     = NULL;
+static int            g_titleBarDisplayUpdateCount = 0;
+static int            g_titleBarDisplayOptions     = 0;
+static bool           g_titleBarDisplayProjConf    = false;
+static WNDPROC        g_titleBarOldWndProc         = NULL;
 static WDL_FastString g_titleBarDisplayOld;
+
+static void SaveExtensionConfig (ProjectStateContext *ctx, bool isUndo, project_config_extension_t *reg)
+{
+	if (isUndo) return;
+	TitleBarDisplayOptionsInit(true, 2, false); // 2 so it gets updated on save and once more when modified
+}
+
+static void BeginLoadProjectState (bool isUndo, project_config_extension_t *reg)
+{
+	if (isUndo) return;
+	TitleBarDisplayOptionsInit(true, 1, false);
+}
+
+static project_config_extension_t s_projectconfig = {NULL, SaveExtensionConfig, BeginLoadProjectState, NULL};
 
 static LRESULT CALLBACK TitleBarDisplayWndCallback (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -1177,7 +1193,16 @@ static LRESULT CALLBACK TitleBarDisplayWndCallback (HWND hwnd, UINT uMsg, WPARAM
 				SetWindowText(g_hwndParent, titleBar.Get());
 				g_titleBarDisplayOld.SetRaw((const char*)lParam, strlen((const char*)lParam));
 				s_reentry = false;
-				
+
+				// Unhook from window procedure not to waste resource unnecessarily (we rehook again on project load, project save or active tab change)
+				if (g_titleBarDisplayUpdateCount > 0)
+					--g_titleBarDisplayUpdateCount;
+				if (g_titleBarDisplayUpdateCount == 0 && g_titleBarOldWndProc && TitleBarDisplayWndCallback == (WNDPROC)GetWindowLongPtr(g_hwndParent, GWLP_WNDPROC)) // restore old proc only if no new wndproc wasn't set in the meantime)
+				{
+					SetWindowLongPtr(g_hwndParent, GWLP_WNDPROC, (LONG_PTR)g_titleBarOldWndProc);
+					g_titleBarOldWndProc = NULL;
+					g_titleBarDisplayUpdateCount = 0;
+				}
 				return 0;
 			}			
 		}
@@ -1185,7 +1210,7 @@ static LRESULT CALLBACK TitleBarDisplayWndCallback (HWND hwnd, UINT uMsg, WPARAM
 	return g_titleBarOldWndProc(hwnd, uMsg, wParam, lParam);
 }
 
-void TitleBarDisplayOptionsInit (bool hookWnd)
+void TitleBarDisplayOptionsInit (bool hookWnd, int updateCount, bool updateNow)
 {
 	if (!hookWnd)
 	{
@@ -1193,9 +1218,31 @@ void TitleBarDisplayOptionsInit (bool hookWnd)
 		GetPrivateProfileString("common", "titleBarDisplayOptions", "0", tmp, sizeof(tmp), GetIniFileBR());
 		g_titleBarDisplayOptions = atoi(tmp);
 	}
-	else if (g_titleBarDisplayOptions != 0 && !g_titleBarOldWndProc)
+	else
 	{
-		g_titleBarOldWndProc = (WNDPROC)SetWindowLongPtr(g_hwndParent, GWLP_WNDPROC, (LONG_PTR)TitleBarDisplayWndCallback);
+		if (g_titleBarDisplayOptions != 0 && !g_titleBarOldWndProc)
+		{
+			if (!g_titleBarDisplayProjConf)
+			{
+				plugin_register("projectconfig", &s_projectconfig);
+				g_titleBarDisplayProjConf = true;
+			}
+			g_titleBarOldWndProc = (WNDPROC)SetWindowLongPtr(g_hwndParent, GWLP_WNDPROC, (LONG_PTR)TitleBarDisplayWndCallback);
+		}
+
+		if (updateCount > g_titleBarDisplayUpdateCount)
+			g_titleBarDisplayUpdateCount = updateCount;
+
+		if (g_titleBarDisplayOptions != 0 && updateNow)
+		{
+			if (g_titleBarDisplayOld.GetLength() == 0)
+			{
+				char titleBarStr[4096] = "";
+				GetWindowText(g_hwndParent, (LPSTR)titleBarStr, sizeof(titleBarStr));
+				g_titleBarDisplayOld.SetRaw(titleBarStr, strlen(titleBarStr));
+			}
+			SetWindowText(g_hwndParent, (LPCTSTR)g_titleBarDisplayOld.Get());
+		}
 	}
 }
 
@@ -1208,6 +1255,9 @@ void TitleBarDisplayOptionsExit ()
 	if (g_titleBarOldWndProc)
 		SetWindowLongPtr(g_hwndParent, GWLP_WNDPROC, (LONG_PTR)g_titleBarOldWndProc);
 	g_titleBarOldWndProc = NULL;
+	g_titleBarDisplayUpdateCount = 0;
+
+	plugin_register("-projectconfig", &s_projectconfig);
 }
 
 void SetTitleBarDisplayOptions (COMMAND_T* ct)
@@ -1220,7 +1270,11 @@ void SetTitleBarDisplayOptions (COMMAND_T* ct)
 		{	
 			SetWindowLongPtr(g_hwndParent, GWLP_WNDPROC, (LONG_PTR)g_titleBarOldWndProc);
 			g_titleBarOldWndProc = NULL;
+			g_titleBarDisplayUpdateCount = 0;
 		}
+
+		plugin_register("-projectconfig", &s_projectconfig);
+		g_titleBarDisplayProjConf = false;
 
 		if (g_titleBarDisplayOld.GetLength() != 0)
 		{
@@ -1230,16 +1284,7 @@ void SetTitleBarDisplayOptions (COMMAND_T* ct)
 	}
 	else
 	{
-		if (!g_titleBarOldWndProc)
-			g_titleBarOldWndProc = (WNDPROC)SetWindowLongPtr(g_hwndParent, GWLP_WNDPROC, (LONG_PTR)TitleBarDisplayWndCallback);
-		
-		if (g_titleBarDisplayOld.GetLength() == 0)
-		{
-			char titleBarStr[4096] = "";
-			GetWindowText(g_hwndParent, (LPSTR)titleBarStr, sizeof(titleBarStr));
-			g_titleBarDisplayOld.SetRaw(titleBarStr, strlen(titleBarStr));
-		}
-		SetWindowText(g_hwndParent, (LPCTSTR)g_titleBarDisplayOld.Get());
+		TitleBarDisplayOptionsInit(true, 2, true); // count should depend if project is modified or not (2 for non-modified, 1 for modified), but since GetProjectStateChangeCount() is broken we have to update it twice just in case
 	}	
 }
 

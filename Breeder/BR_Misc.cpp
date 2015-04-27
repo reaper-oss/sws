@@ -1145,13 +1145,13 @@ static WDL_FastString g_titleBarDisplayOld;
 static void SaveExtensionConfig (ProjectStateContext *ctx, bool isUndo, project_config_extension_t *reg)
 {
 	if (isUndo) return;
-	TitleBarDisplayOptionsInit(true, 2, false); // 2 so it gets updated on save and once more when modified
+	TitleBarDisplayOptionsInit(true, 2, false, false); // 2 so it gets updated on save and once more when modified
 }
 
 static void BeginLoadProjectState (bool isUndo, project_config_extension_t *reg)
 {
 	if (isUndo) return;
-	TitleBarDisplayOptionsInit(true, 1, false);
+	TitleBarDisplayOptionsInit(true, 1, false, false);
 }
 
 static project_config_extension_t s_projectconfig = {NULL, SaveExtensionConfig, BeginLoadProjectState, NULL};
@@ -1210,7 +1210,7 @@ static LRESULT CALLBACK TitleBarDisplayWndCallback (HWND hwnd, UINT uMsg, WPARAM
 	return g_titleBarOldWndProc(hwnd, uMsg, wParam, lParam);
 }
 
-void TitleBarDisplayOptionsInit (bool hookWnd, int updateCount, bool updateNow)
+void TitleBarDisplayOptionsInit (bool hookWnd, int updateCount, bool updateNow, bool tabChange)
 {
 	if (!hookWnd)
 	{
@@ -1230,11 +1230,14 @@ void TitleBarDisplayOptionsInit (bool hookWnd, int updateCount, bool updateNow)
 			g_titleBarOldWndProc = (WNDPROC)SetWindowLongPtr(g_hwndParent, GWLP_WNDPROC, (LONG_PTR)TitleBarDisplayWndCallback);
 		}
 
-		if (updateCount > g_titleBarDisplayUpdateCount)
-			g_titleBarDisplayUpdateCount = updateCount;
+		if (g_titleBarDisplayOptions != 0) g_titleBarDisplayUpdateCount = (updateCount > g_titleBarDisplayUpdateCount) ? updateCount : g_titleBarDisplayUpdateCount;
+		else                               g_titleBarDisplayOptions = 0;
 
 		if (g_titleBarDisplayOptions != 0 && updateNow)
 		{
+			if (tabChange)
+				g_titleBarDisplayOld.DeleteSub(0, g_titleBarDisplayOld.GetLength());
+
 			if (g_titleBarDisplayOld.GetLength() == 0)
 			{
 				char titleBarStr[4096] = "";
@@ -1284,7 +1287,7 @@ void SetTitleBarDisplayOptions (COMMAND_T* ct)
 	}
 	else
 	{
-		TitleBarDisplayOptionsInit(true, 2, true); // count should depend if project is modified or not (2 for non-modified, 1 for modified), but since GetProjectStateChangeCount() is broken we have to update it twice just in case
+		TitleBarDisplayOptionsInit(true, 2, true, false); // count should depend if project is modified or not (2 for non-modified, 1 for modified), but since GetProjectStateChangeCount() is broken we have to update it twice just in case
 	}	
 }
 

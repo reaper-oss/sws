@@ -95,7 +95,9 @@ int BR_GetNextActionToApply ()
 /******************************************************************************
 * Csurf                                                                       *
 ******************************************************************************/
-void BR_CSurfSetPlayState (bool play, bool pause, bool rec)
+static bool s_cSurf_OnTrackSelectionCalled = false;
+
+void BR_CSurf_SetPlayState (bool play, bool pause, bool rec)
 {
 	static const vector<void(*)(bool,bool,bool)>* s_functions = NULL;
 	if (!s_functions) RegisterCsurfPlayState(false, NULL, &s_functions);
@@ -111,12 +113,26 @@ void BR_CSurfSetPlayState (bool play, bool pause, bool rec)
 	}
 }
 
-int BR_CSurfExtended(int call, void* parm1, void* parm2, void* parm3)
+void BR_CSurf_OnTrackSelection (MediaTrack* track)
+{
+	// ExecuteTrackSelAction() could call a script which uses GetLastTouchedTrack() API to see which track was last clicked, but last touched track is set after CSurf->OnTrackSelection() was called
+	s_cSurf_OnTrackSelectionCalled = true;
+}
+
+int BR_CSurf_Extended(int call, void* parm1, void* parm2, void* parm3)
 {
 	if (call == CSURF_EXT_RESET)
 	{
 		LoudnessUpdate();
 		TitleBarDisplayOptionsInit(true, 2, true, true); // count should depend if project is modified or not (2 for non-modified, 1 for modified), but since GetProjectStateChangeCount() is broken we have to update it twice just in case
+	}
+	else if (call == CSURF_EXT_SETLASTTOUCHEDTRACK)
+	{
+		if (s_cSurf_OnTrackSelectionCalled)
+		{
+			s_cSurf_OnTrackSelectionCalled = false;
+			ExecuteTrackSelAction();
+		}
 	}
 	else if (call == CSURF_EXT_SETSENDVOLUME || call == CSURF_EXT_SETSENDPAN)
 	{
@@ -755,6 +771,13 @@ static COMMAND_T g_commandTable[] =
 	#endif
 
 	/******************************************************************************
+	* Misc - Project track selection action                                       *
+	******************************************************************************/
+	{ { DEFACCEL, "SWS/BR: Project track selection action - Set..." },  "BR_PROJ_TRACK_SEL_ACTION_SET",   SetProjectTrackSelAction, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Project track selection action - Show..." }, "BR_PROJ_TRACK_SEL_ACTION_SHOW",  ShowProjectTrackSelAction, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Project track selection action - Clear..." },"BR_PROJ_TRACK_SEL_ACTION_CLEAR", ClearProjectTrackSelAction, NULL, 0},
+
+	/******************************************************************************
 	* Tempo                                                                       *
 	******************************************************************************/
 	{ { DEFACCEL, "SWS/BR: Move closest grid line to edit cursor" },            "BR_MOVE_GRID_TO_EDIT_CUR",   MoveGridToEditPlayCursor, NULL, 0},
@@ -843,12 +866,13 @@ int BR_Init ()
 {
 	SWSRegisterCommands(g_commandTable);
 
-	ContextualToolbarsInit();
-	ContinuousActionsInit();
-	LoudnessInit();
+	ContextualToolbarsInitExit(true);
+	ContinuousActionsInitExit(true);
+	LoudnessInitExit(true);
 	TitleBarDisplayOptionsInit(false, 0, false, false);
-	ProjStateInit();
-	VersionCheckInit();
+	ProjectTrackSelInitExit(true);
+	ProjStateInitExit(true);	
+	VersionCheckInitExit(true);
 
 	// Keep "apply next action" registration mechanism here (no need for separate module until more actions are added)
 	g_nextActionApplyers.insert(NamedCommandLookup("_BR_NEXT_CMD_SEL_TK_VIS_ENVS"));        // Make sure these actions are registered consequentially
@@ -869,12 +893,13 @@ int BR_InitPost ()
 
 void BR_Exit ()
 {
-	ContextualToolbarsExit();
-	ContinuousActionsExit ();
-	LoudnessExit();
+	ContextualToolbarsInitExit(false);
+	ContinuousActionsInitExit(false);
+	LoudnessInitExit(false);
 	TitleBarDisplayOptionsExit();
-	ProjStateExit();
-	VersionCheckExit();
+	ProjectTrackSelInitExit(false);
+	ProjStateInitExit(false);
+	VersionCheckInitExit(false);
 
 	ME_StopMidiTakePreview(NULL, 0, 0, 0, NULL); // in case any kind of preview is happening right now, make sure it's stopped
 }

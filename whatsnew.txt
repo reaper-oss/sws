@@ -29,6 +29,8 @@ Added actions
  - SWS/BR: Toggle "Display media item take name"
  - SWS/BR: Toggle "Display media item pitch/playrate if set"
  - SWS/BR: Toggle "Display media item gain if set"
+ - SWS/BR: Project track selection action - Set/Show/Clear...
+  - Note: action set with this should get called every time a track gets selected. Due to the API problems, that will only happen when track selection is changed by clicking the track with the mouse in TCP/MCP. Also, due to the bug in the API, the action won't get called if Mixer option "Scroll view when tracks activated" is disabled. With all of these problems, this can still be useful. For example, in case of big MIDI projects where one track has MIDI data, and another track outputs the audio for that track, this allows the user to use a simple ReaScript that will scroll the mixer to audio track when MIDI track gets selected.
  - SWS/BR: Play from edit cursor position (perform until shortcut released)
  - SWS/BR: Play from edit cursor position and solo track under mouse for the duration (perform until shortcut released)
  - SWS/BR: Play from edit cursor position and solo item and track under mouse for the duration (perform until shortcut released)

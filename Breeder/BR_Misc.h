@@ -83,6 +83,15 @@ void TitleBarDisplayOptionsExit ();
 void SetTitleBarDisplayOptions (COMMAND_T*);
 
 /******************************************************************************
+* Commands: Misc - Project track selection action                             *
+******************************************************************************/
+int ProjectTrackSelInitExit (bool init);
+void ExecuteTrackSelAction ();
+void SetProjectTrackSelAction (COMMAND_T*);
+void ShowProjectTrackSelAction (COMMAND_T*);
+void ClearProjectTrackSelAction (COMMAND_T*);
+
+/******************************************************************************
 * Toggle states: Misc                                                         *
 ******************************************************************************/
 int IsSnapFollowsGridVisOn (COMMAND_T*);

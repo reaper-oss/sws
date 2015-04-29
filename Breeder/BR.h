@@ -37,8 +37,9 @@ int  BR_GetNextActionToApply ();
 /******************************************************************************
 * Csurf                                                                       *
 ******************************************************************************/
-void BR_CSurfSetPlayState (bool play, bool pause, bool rec);
-int  BR_CSurfExtended (int call, void* parm1, void* parm2, void* parm3);
+void BR_CSurf_SetPlayState (bool play, bool pause, bool rec);
+void BR_CSurf_OnTrackSelection (MediaTrack* track);
+int  BR_CSurf_Extended (int call, void* parm1, void* parm2, void* parm3);
 
 /******************************************************************************
 * Continuous actions                                                          *

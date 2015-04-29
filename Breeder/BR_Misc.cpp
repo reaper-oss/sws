@@ -33,6 +33,7 @@
 #include "BR_MouseUtil.h"
 #include "BR_ProjState.h"
 #include "BR_Util.h"
+#include "../Prompt.h"
 #include "../SnM/SnM.h"
 #include "../SnM/SnM_Chunk.h"
 #include "../SnM/SnM_Dlg.h"
@@ -1235,7 +1236,7 @@ void TitleBarDisplayOptionsInit (bool hookWnd, int updateCount, bool updateNow, 
 
 		if (g_titleBarDisplayOptions != 0 && updateNow)
 		{
-			if (tabChange)
+			if (tabChange && CountProjectTabs() > 1)
 				g_titleBarDisplayOld.DeleteSub(0, g_titleBarDisplayOld.GetLength());
 
 			if (g_titleBarDisplayOld.GetLength() == 0)
@@ -1290,6 +1291,166 @@ void SetTitleBarDisplayOptions (COMMAND_T* ct)
 		TitleBarDisplayOptionsInit(true, 2, true, false); // count should depend if project is modified or not (2 for non-modified, 1 for modified), but since GetProjectStateChangeCount() is broken we have to update it twice just in case
 	}	
 }
+
+/******************************************************************************
+* Commands: Misc - Project track selection action                             *
+******************************************************************************/
+static SWSProjConfig<WDL_FastString> g_trackSelActions;
+
+static bool ProcessExtensionLineTrackSel (const char *line, ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
+{
+	LineParser lp(false);
+	if (lp.parse(line) || lp.getnumtokens() < 1)
+		return false;
+
+	if (!strcmp(lp.gettoken_str(0), "BR_PROJ_TRACK_SEL_ACTION"))
+	{
+		g_trackSelActions.Get()->Set(lp.gettoken_str(1));
+		return true;
+	}
+	return false;
+}
+
+static void SaveExtensionConfigTrackSel (ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
+{	
+	if (ctx && g_trackSelActions.Get()->GetLength())
+	{
+		char line[SNM_MAX_CHUNK_LINE_LENGTH] = "";
+		if (_snprintfStrict(line, sizeof(line), "BR_PROJ_TRACK_SEL_ACTION %s", g_trackSelActions.Get()->Get()) > 0)
+			ctx->AddLine("%s", line);
+	}
+}
+
+static void BeginLoadProjectStateTrackSel (bool isUndo, struct project_config_extension_t *reg)
+{
+	g_trackSelActions.Cleanup();
+	g_trackSelActions.Get()->Set("");
+}
+
+int ProjectTrackSelInitExit (bool init)
+{
+	static project_config_extension_t s_projectconfig = {ProcessExtensionLineTrackSel, SaveExtensionConfigTrackSel, BeginLoadProjectStateTrackSel, NULL};
+
+	if (init)
+	{
+		return plugin_register("projectconfig", &s_projectconfig);
+	}
+	else
+	{
+		plugin_register("-projectconfig", &s_projectconfig);
+		return 1;
+	}
+}
+
+void ExecuteTrackSelAction ()
+{
+	if (g_trackSelActions.Get()->GetLength())
+	{
+		if (int cmd = SNM_NamedCommandLookup(g_trackSelActions.Get()->Get()))
+			Main_OnCommand(cmd, 0);
+	}
+}
+
+void SetProjectTrackSelAction (COMMAND_T* ct)
+{
+	/* Note: this is pretty much c/p from Jeffos' code from SnM_Project.cpp (thanks for the code and the basic idea!) */
+
+	bool process = true;
+	if (int cmd = SNM_NamedCommandLookup(g_trackSelActions.Get()->Get()))
+	{
+		WDL_FastString msg;
+		msg.AppendFormatted(256, __LOCALIZE_VERFMT("Are you sure you want to replace current project track selection action: '%s'?","sws_mbox"), kbd_getTextFromCmd(cmd, NULL));
+		if (MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("SWS/BR - Confirmation","sws_mbox"), MB_YESNO) == IDNO)
+			process = false;
+	}
+
+	if (process)
+	{
+		// localization note: some messages are shared with the CA editor
+
+		char actionString[SNM_MAX_ACTION_CUSTID_LEN];
+		lstrcpyn(actionString, __LOCALIZE("Paste command ID or identifier string here","sws_mbox"), sizeof(actionString));
+
+		if (PromptUserForString(GetMainHwnd(), __LOCALIZE("Set project track selection action","sws_mbox"), actionString, sizeof(actionString), true))
+		{
+			WDL_FastString msg;
+			if (int cmd = SNM_NamedCommandLookup(actionString))
+			{
+				// more checks: http://forum.cockos.com/showpost.php?p=1252206&postcount=1618
+				if (int tstNum = CheckSwsMacroScriptNumCustomId(actionString))
+				{
+					msg.SetFormatted(256, __LOCALIZE_VERFMT("%s failed: unreliable command ID '%s'!","sws_DLG_161"), __LOCALIZE("Set project track selection action","sws_mbox"), actionString);
+					msg.Append("\n");
+					
+					if (tstNum==-1)
+						msg.Append(__LOCALIZE("For SWS actions, you must use identifier strings (e.g. _SWS_ABOUT), not command IDs (e.g. 47145).\nTip: to copy such identifiers, right-click the action in the Actions window > Copy selected action command ID.","sws_mbox"));
+					else if (tstNum==-2)
+						msg.Append(__LOCALIZE("For macros/scripts, you must use identifier strings (e.g. _f506bc780a0ab34b8fdedb67ed5d3649), not command IDs (e.g. 47145).\nTip: to copy such identifiers, right-click the macro/script in the Actions window > Copy selected action command ID.","sws_mbox"));
+					MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("SWS/BR - Error","sws_mbox"), MB_OK);
+				}
+				else
+				{
+					g_trackSelActions.Get()->Set(actionString);
+					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
+
+					msg.SetFormatted(256, __LOCALIZE_VERFMT("'%s' is defined as project track selection action","sws_mbox"), kbd_getTextFromCmd(cmd, NULL));
+					char projectPath[SNM_MAX_PATH] = "";
+					EnumProjects(-1, projectPath, sizeof(projectPath));
+					if (*projectPath)
+					{
+						msg.Append("\n");
+						msg.AppendFormatted(SNM_MAX_PATH, __LOCALIZE_VERFMT("for %s","sws_mbox"), projectPath);
+					}
+					msg.Append(".");
+					MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("Set project track selection action","sws_mbox"), MB_OK);
+				}
+			}
+			else
+			{
+				msg.SetFormatted(256, __LOCALIZE_VERFMT("%s failed: command ID or identifier string '%s' not found in the 'Main' section of the action list!","sws_DLG_161"), __LOCALIZE("Set project track selection action","sws_mbox"), actionString);
+				MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("SWS/BR - Error","sws_mbox"), MB_OK);
+			}
+		}
+	}
+}
+
+void ShowProjectTrackSelAction (COMMAND_T* ct)
+{
+	WDL_FastString msg(__LOCALIZE("No project track selection action is defined","sws_mbox"));
+	if (int cmd = SNM_NamedCommandLookup(g_trackSelActions.Get()->Get()))
+		msg.SetFormatted(256, __LOCALIZE_VERFMT("'%s' is defined as project track selection action", "sws_mbox"), kbd_getTextFromCmd(cmd, NULL));
+
+	char projectPath[SNM_MAX_PATH] = "";
+	EnumProjects(-1, projectPath, sizeof(projectPath));
+	if (*projectPath) {
+		msg.Append("\n");
+		msg.AppendFormatted(SNM_MAX_PATH, __LOCALIZE_VERFMT("for %s", "sws_mbox"), projectPath);
+	}
+	msg.Append(".");
+	MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("Project track selection action","sws_mbox"), MB_OK);
+}
+
+void ClearProjectTrackSelAction (COMMAND_T* ct)
+{
+	if (int cmd = SNM_NamedCommandLookup(g_trackSelActions.Get()->Get()))
+	{
+		WDL_FastString msg;
+		msg.AppendFormatted(256, __LOCALIZE_VERFMT("Are you sure you want to clear current project track selection action: '%s'?","sws_mbox"), kbd_getTextFromCmd(cmd, NULL));
+		if (MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("SWS/BR - Confirmation","sws_mbox"), MB_YESNO) == IDYES)
+		{
+			g_trackSelActions.Get()->Set("");
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
+		}
+	}
+	else
+	{
+		WDL_FastString msg(__LOCALIZE("No project track selection action is defined.","sws_mbox"));
+		MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("Project track selection action","sws_mbox"), MB_OK);
+		return;
+	}
+}
+
+
 
 /******************************************************************************
 * Toggle states: Misc                                                         *

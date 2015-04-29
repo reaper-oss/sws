@@ -492,7 +492,7 @@ public:
 		SNM_CSurfSetPlayState(play, pause, rec);
 		AWDoAutoGroup(rec);
 		ItemPreviewPlayState(play, rec);
-		BR_CSurfSetPlayState(play, pause, rec);
+		BR_CSurf_SetPlayState(play, pause, rec);
 	}
 
 	// This is our only notification of active project tab change, so update everything
@@ -519,13 +519,27 @@ public:
 			m_iACIgnore--;
 	}
 
+	void OnTrackSelection(MediaTrack *tr) // 3 problems with this (last check v5.0pre28): doesn't work if Mixer option "Scroll view when tracks activated" is disabled
+	{                                     //                                              gets called before CSurf->Extended(CSURF_EXT_SETLASTTOUCHEDTRACK)   
+		                                  //                                              only gets called when track is selected by clicking it in TCP/MCP (and not when track is selected via action)...bug or feature?
+
+		// while OnTrackSelection appears to be broken, putting this in SetSurfaceSelected() would mean it gets called multiple times (because SetSurfaceSelected() gets called once for each track whose
+		// selection state changed, and then once more for every track in the project). We could theoretically try and deduct when SetSurfaceSelected() got called the last time (but it's arguable if we could
+		// do this with 100% accuracy because when only master track is selected, SetSurfaceSelected() gets called only once, and in case new track is inserted, it gets called 3 times for the last track (once for unselecting
+		// prior to inserting new track, once for new track's selection state, and then once more when it iterates through all tracks)
+		// 
+		// Besides these complications, it would also mean we would have to check all of these things a lot of times, thus clogging the Csurf just to execute one simple thing. So just leave it here and hope the 
+		// OnTrackSelection() gets fixed at some point :)
+		BR_CSurf_OnTrackSelection(tr);
+	}
+
 	void SetSurfaceSelected(MediaTrack *tr, bool bSel)	{ ScheduleTracklistUpdate(); UpdateSnapshotsDialog(true); }
 	void SetSurfaceMute(MediaTrack *tr, bool mute)		{ ScheduleTracklistUpdate(); UpdateTrackMute(); }
 	void SetSurfaceSolo(MediaTrack *tr, bool solo)		{ ScheduleTracklistUpdate(); UpdateTrackSolo(); }
 	void SetSurfaceRecArm(MediaTrack *tr, bool arm)		{ ScheduleTracklistUpdate(); UpdateTrackArm(); }
 	int Extended(int call, void *parm1, void *parm2, void *parm3)
 	{
-		BR_CSurfExtended(call, parm1, parm2, parm3);
+		BR_CSurf_Extended(call, parm1, parm2, parm3);
 		SNM_CSurfExtended(call, parm1, parm2, parm3);
 		return 0;
 	}

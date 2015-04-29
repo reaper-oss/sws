@@ -249,31 +249,35 @@ static void StartupSearch ()
 		plugin_register("-timer",(void*)StartupSearch);
 }
 
-void VersionCheckInit ()
+int VersionCheckInitExit (bool init)
 {
-	bool official, beta; unsigned int lastTime;
-	GetStartupSearchOptions (&official, &beta, &lastTime);
-
-	if (official || beta)
+	if (init)
 	{
-		// Make sure at least 24 hours have passed since the last search
-		unsigned int currentTime = (unsigned int)time(NULL);
-		if (currentTime - lastTime >= 86400 || currentTime - lastTime < 0)
-		{
-			SetStartupSearchOptions(official, beta, currentTime);
+		bool official, beta; unsigned int lastTime;
+		GetStartupSearchOptions (&official, &beta, &lastTime);
 
-			g_searchObject = new (nothrow) BR_SearchObject(true);
-			plugin_register("timer",(void*)StartupSearch); // timer starts only after project gets loaded
+		if (official || beta)
+		{
+			// Make sure at least 24 hours have passed since the last search
+			unsigned int currentTime = (unsigned int)time(NULL);
+			if (currentTime - lastTime >= 86400 || currentTime - lastTime < 0)
+			{
+				SetStartupSearchOptions(official, beta, currentTime);
+	
+				g_searchObject = new (nothrow) BR_SearchObject(true);
+				return plugin_register("timer",(void*)StartupSearch); // timer starts only after project gets loaded
+			}
 		}
 	}
-}
+	else
+	{
+		if (g_searchObject)
+			delete g_searchObject;
+		g_searchObject = NULL;
+		StartupSearch();
+	}
 
-void VersionCheckExit ()
-{
-	if (g_searchObject)
-		delete g_searchObject;
-	g_searchObject = NULL;
-	StartupSearch();
+	return 1;
 }
 
 /******************************************************************************

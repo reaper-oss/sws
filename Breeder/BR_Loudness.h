@@ -282,8 +282,7 @@ protected:
 /******************************************************************************
 * Loudness init/exit                                                          *
 ******************************************************************************/
-int LoudnessInit ();
-void LoudnessExit ();
+int LoudnessInitExit (bool init);
 void LoudnessUpdate (bool updatePreferencesDlg = true);
 
 /******************************************************************************

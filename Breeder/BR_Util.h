@@ -100,6 +100,7 @@ template <typename T> T    GetClosestVal (T val, T targetVal1, T targetVal2) {if
 vector<double> GetProjectMarkers (bool timeSel, double timeSelDelta = 0);
 WDL_FastString FormatTime (double position, int mode = -1); // same as format_timestr_pos but handles "measures.beats + time" properly
 int FindClosestProjMarkerIndex (double position);
+int CountProjectTabs ();
 double EndOfProject (bool markers, bool regions);
 double GetMidiOscVal (double min, double max, double step, double currentVal, int commandVal, int commandValhw, int commandRelmode);
 void GetSetLastAdjustedSend (bool set, MediaTrack** track, int* sendId, BR_EnvType* type);

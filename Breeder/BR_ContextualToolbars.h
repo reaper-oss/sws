@@ -405,8 +405,7 @@ protected:
 /******************************************************************************
 * Contextual toolbars init/exit                                               *
 ******************************************************************************/
-int ContextualToolbarsInit ();
-void ContextualToolbarsExit ();
+int ContextualToolbarsInitExit (bool init);
 
 /******************************************************************************
 * Commands                                                                    *

@@ -30,8 +30,7 @@
 /******************************************************************************
 * Version check init/exit                                                     *
 ******************************************************************************/
-void VersionCheckInit ();
-void VersionCheckExit ();
+int VersionCheckInitExit (bool init);
 
 /******************************************************************************
 * Command and preferences (used from About dialog)                            *

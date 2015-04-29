@@ -51,8 +51,7 @@ extern SWSProjConfig<BR_MidiToggleCCLane>                                 g_midi
 /******************************************************************************
 * Project state init/exit                                                     *
 ******************************************************************************/
-int ProjStateInit ();
-void ProjStateExit ();
+int ProjStateInitExit (bool init);
 
 /******************************************************************************
 * Envelope selection state                                                    *

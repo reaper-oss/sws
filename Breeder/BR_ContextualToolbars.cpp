@@ -2748,19 +2748,21 @@ void BR_ContextualToolbarsWnd::ContextMenuReturnId (int id)
 /******************************************************************************
 * Contextual toolbars init/exit                                               *
 ******************************************************************************/
-int ContextualToolbarsInit ()
+int ContextualToolbarsInitExit (bool init)
 {
-	for (int i = CONTEXT_START; i < CONTEXT_COUNT; ++i)
-		g_listViewContexts[i] = i;
-
-	g_contextToolbarsWndManager.Init();
+	if (init)
+	{
+		for (int i = CONTEXT_START; i < CONTEXT_COUNT; ++i)
+			g_listViewContexts[i] = i;
+		g_contextToolbarsWndManager.Init();
+		
+	}
+	else
+	{
+		g_contextToolbarsWndManager.Delete();
+		BR_ContextualToolbar::Cleaup();
+	}
 	return 1;
-}
-
-void ContextualToolbarsExit ()
-{
-	g_contextToolbarsWndManager.Delete();
-	BR_ContextualToolbar::Cleaup();
 }
 
 /******************************************************************************

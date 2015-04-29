@@ -78,7 +78,14 @@ void ContinuousActionsExit ();                                                  
 * Put all continuous actions init functions here so their cmds end up         *
 * consequential (to optimize command hook - see ContinuousActionHook())       *
 ******************************************************************************/
-inline void ContinuousActionsInit ()
+inline void ContinuousActionsInitExit (bool init)
 {
-	BR_RegisterContinuousActions ();
+	if (init)
+	{
+		BR_RegisterContinuousActions ();
+	}
+	else
+	{
+		ContinuousActionStopAll();
+	}
 }

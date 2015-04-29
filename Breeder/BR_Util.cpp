@@ -335,6 +335,14 @@ int FindClosestProjMarkerIndex (double position)
 	return id;
 }
 
+int CountProjectTabs ()
+{
+	int count = 0;
+	while (EnumProjects(count, NULL, 0))
+		count++;
+	return count;
+}
+
 double EndOfProject (bool markers, bool regions)
 {
 	double projEnd = 0;
@@ -395,21 +403,21 @@ double GetMidiOscVal (double min, double max, double step, double currentVal, in
 
 void GetSetLastAdjustedSend (bool set, MediaTrack** track, int* sendId, BR_EnvType* type)
 {
-	static MediaTrack* lastTrack = NULL;
-	static int         lastId    = -1;
-	static BR_EnvType  lastType  = UNKNOWN;
+	static MediaTrack* s_lastTrack = NULL;
+	static int         s_lastId    = -1;
+	static BR_EnvType  s_lastType  = UNKNOWN;
 
 	if (set)
 	{
-		lastTrack = *track;
-		lastId    = *sendId;
-		lastType  = *type;
+		s_lastTrack = *track;
+		s_lastId    = *sendId;
+		s_lastType  = *type;
 	}
 	else
 	{
-		WritePtr(track,  lastTrack);
-		WritePtr(sendId, lastId);
-		WritePtr(type,   lastType);
+		WritePtr(track,  s_lastTrack);
+		WritePtr(sendId, s_lastId);
+		WritePtr(type,   s_lastType);
 	}
 }
 

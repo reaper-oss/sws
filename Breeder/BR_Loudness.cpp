@@ -3766,21 +3766,23 @@ void BR_AnalyzeLoudnessWnd::Properties::Save ()
 /******************************************************************************
 * Loudness init/exit                                                          *
 ******************************************************************************/
-static project_config_extension_t s_projectconfig = {ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL};
-
-int LoudnessInit ()
+int LoudnessInitExit (bool init)
 {
-	plugin_register("projectconfig", &s_projectconfig);
-	g_pref.LoadGlobalPref();
-	g_loudnessWndManager.Init();
-	return 1;
-}
+	static project_config_extension_t s_projectconfig = {ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL};
 
-void LoudnessExit ()
-{
-	plugin_register("-projectconfig", &s_projectconfig);
-	g_loudnessWndManager.Delete();
-	g_pref.SaveGlobalPref();
+	if (init)
+	{
+		g_pref.LoadGlobalPref();
+		g_loudnessWndManager.Init();
+		return plugin_register("projectconfig", &s_projectconfig);
+	}
+	else
+	{		
+		g_pref.SaveGlobalPref();
+		g_loudnessWndManager.Delete();
+		plugin_register("-projectconfig", &s_projectconfig);
+		return 1;
+	}
 }
 
 void LoudnessUpdate (bool updatePreferencesDlg /*true*/)

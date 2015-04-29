@@ -95,8 +95,6 @@ int BR_GetNextActionToApply ()
 /******************************************************************************
 * Csurf                                                                       *
 ******************************************************************************/
-static bool s_cSurf_OnTrackSelectionCalled = false;
-
 void BR_CSurf_SetPlayState (bool play, bool pause, bool rec)
 {
 	static const vector<void(*)(bool,bool,bool)>* s_functions = NULL;
@@ -115,8 +113,7 @@ void BR_CSurf_SetPlayState (bool play, bool pause, bool rec)
 
 void BR_CSurf_OnTrackSelection (MediaTrack* track)
 {
-	// ExecuteTrackSelAction() could call a script which uses GetLastTouchedTrack() API to see which track was last clicked, but last touched track is set after CSurf->OnTrackSelection() was called
-	s_cSurf_OnTrackSelectionCalled = true;
+	ExecuteTrackSelAction();
 }
 
 int BR_CSurf_Extended(int call, void* parm1, void* parm2, void* parm3)
@@ -125,14 +122,6 @@ int BR_CSurf_Extended(int call, void* parm1, void* parm2, void* parm3)
 	{
 		LoudnessUpdate();
 		TitleBarDisplayOptionsInit(true, 2, true, true); // count should depend if project is modified or not (2 for non-modified, 1 for modified), but since GetProjectStateChangeCount() is broken we have to update it twice just in case
-	}
-	else if (call == CSURF_EXT_SETLASTTOUCHEDTRACK)
-	{
-		if (s_cSurf_OnTrackSelectionCalled)
-		{
-			s_cSurf_OnTrackSelectionCalled = false;
-			ExecuteTrackSelAction();
-		}
 	}
 	else if (call == CSURF_EXT_SETSENDVOLUME || call == CSURF_EXT_SETSENDPAN)
 	{

@@ -521,7 +521,7 @@ public:
 
 	void OnTrackSelection(MediaTrack *tr) // 3 problems with this (last check v5.0pre28): doesn't work if Mixer option "Scroll view when tracks activated" is disabled
 	{                                     //                                              gets called before CSurf->Extended(CSURF_EXT_SETLASTTOUCHEDTRACK)   
-		                                  //                                              only gets called when track is selected by clicking it in TCP/MCP (and not when track is selected via action)...bug or feature?
+	                                      //                                              only gets called when track is selected by clicking it in TCP/MCP (and not when track is selected via action)...bug or feature?
 
 		// while OnTrackSelection appears to be broken, putting this in SetSurfaceSelected() would mean it gets called multiple times (because SetSurfaceSelected() gets called once for each track whose
 		// selection state changed, and then once more for every track in the project). We could theoretically try and deduct when SetSurfaceSelected() got called the last time (but it's arguable if we could

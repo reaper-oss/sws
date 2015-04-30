@@ -47,7 +47,7 @@ const char* const INI_KEY_POSITION          = "PositionOffsetPreset_";
 const char* const INI_KEY_CURRENT_PRESET    = "DlgPreset";
 const int PRESET_COUNT                      = 8;
 
-// List view columns
+// !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_181
 static SWS_LVColumn g_cols[] =
 {
 	{163, 0, "Context"},
@@ -55,6 +55,7 @@ static SWS_LVColumn g_cols[] =
 	{62,  0, "Auto close"},
 	{81,  0, "Position offset"},
 };
+// !WANT_LOCALIZE_STRINGS_END
 
 enum
 {

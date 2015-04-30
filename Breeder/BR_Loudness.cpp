@@ -101,7 +101,7 @@ static const WildCardList g_wildcards[] =
 	{NULL,                   0, NULL},
 };
 
-// List view columns
+// !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_174
 static SWS_LVColumn g_cols[] =
 {
 	{25,  0, "#"},
@@ -113,6 +113,7 @@ static SWS_LVColumn g_cols[] =
 	{115, 0, "Maximum short-term" },
 	{115, 0, "Maximum momentary" },
 };
+// !WANT_LOCALIZE_STRINGS_END
 
 enum
 {

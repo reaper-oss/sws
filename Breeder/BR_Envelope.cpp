@@ -564,6 +564,10 @@ static void SetEnvPointMouseValue (COMMAND_T* ct)
 				}
 				else
 				{
+					// When dealing with MUTE, snap to top or bottom
+					if (g_envMouseEnvelope->Type() == MUTE)
+						newValue = (newValue >= g_envMouseEnvelope->CenterValue()) ? g_envMouseEnvelope->LaneMaxValue() : g_envMouseEnvelope->LaneMinValue();
+
 					if (g_envMouseEnvelope->SetPoint(i, NULL, &newValue, NULL, NULL, false, true))
 					{
 						pointsEdited = true;

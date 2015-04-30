@@ -801,9 +801,26 @@ double BR_Envelope::NormalizedDisplayValue (double value)
 		else
 			displayValue = (value - 0.1) / 1.8 ; // original formula (min is always known so optimized): (value - min) / (1 - min) * 0.5;
 	}
-	else if ((this->Type() == VOLUME || this->Type() == VOLUME_PREFX) && this->IsScaledToFader())
+	else if (this->Type() == VOLUME || this->Type() == VOLUME_PREFX)
 	{
-		displayValue = SetToBounds(ScaleToEnvelopeMode(1,value) / ScaleToEnvelopeMode(1, max), 0.0, 1.0);
+		if (this->IsScaledToFader())
+		{
+			displayValue = SetToBounds(ScaleToEnvelopeMode(1,value) / ScaleToEnvelopeMode(1, max), 0.0, 1.0);
+		}
+		else
+		{
+			if (max <= 2)
+			{
+				displayValue = value / max; // original formula (min is always known so optimized): (value - min) / (max - min);
+			}
+			else
+			{
+				if (value > 1)
+					displayValue = (max + value - 2) / (2*max - 2);  
+				else
+					displayValue = 0.5 * value; // original formula (min is always known so optimized): (0.5 * value) / (1 - min);
+			}
+		}
 	}
 	else
 	{
@@ -825,11 +842,26 @@ double BR_Envelope::RealValue (double normalizedDisplayValue)
 		if (normalizedDisplayValue > 0.5)
 			realValue = 6 * normalizedDisplayValue - 2;     // see BR_Envelope::NormalizedDisplayValue() for original formula
 		else
-			realValue = 1.8 * normalizedDisplayValue + 0.1;
+			realValue = 1.8 * normalizedDisplayValue + 0.1; // see BR_Envelope::NormalizedDisplayValue() for original formula
 	}
-	else if ((this->Type() == VOLUME || this->Type() == VOLUME_PREFX) && this->IsScaledToFader())
+	else if (this->Type() == VOLUME || this->Type() == VOLUME_PREFX)
 	{
-		realValue = SetToBounds(ScaleFromEnvelopeMode(1, normalizedDisplayValue * ScaleToEnvelopeMode(1, max)), min, max);
+		if (this->IsScaledToFader())
+			realValue = SetToBounds(ScaleFromEnvelopeMode(1, normalizedDisplayValue * ScaleToEnvelopeMode(1, max)), min, max);
+		else
+		{
+			if (max <= 2)
+			{
+				realValue = normalizedDisplayValue * max; // see BR_Envelope::NormalizedDisplayValue() for original formula
+			}
+			else
+			{
+				if (normalizedDisplayValue > 0.5)
+					realValue = 1 + (2*normalizedDisplayValue - 1) * (max - 1);
+				else
+					realValue = normalizedDisplayValue / 0.5;  // see BR_Envelope::NormalizedDisplayValue() for original formula
+			}
+		}
 	}
 	else
 	{

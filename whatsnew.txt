@@ -75,6 +75,8 @@ Fixes
 +Fixed non-selectable radio buttons in SWS/BR: Select and adjust tempo markers... dialog
 +Don't change solo state of tracks if mouse is over master track when running certain "perform until shortcut released" playback actions
 +Fixed various SWS/BR actions so they work properly with hardware sends envelopes
++Fixed wrong vertical position of shadowed area when using Zoom tool (marquee) with master track visible
++Fixed various zooming issues when zooming tracks that have more than one envelope lane visible
 +ReaScript: fixed ULT_SetMediaItemNote
 +<em>SWS/S&M: Open/close image window</em> now reports it's state
 +Fixed <em>SWS/BR: Delete tempo marker (preserve overall tempo and positions if possible)</em> not deleting moved partial time signature markers properly

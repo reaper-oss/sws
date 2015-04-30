@@ -227,15 +227,16 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers, bo
 				{
 					int trackHeight = GetTrackHeightFromVZoomIndex(tr, iZoom);
 
+					int envHeight = 0;
 					if (i < (int)envelopeHeights.size())
 					{
 						for (size_t j = 0; j < envelopeHeights[i].size(); j++)
 						{
 							int h = envelopeHeights[i][j];
-							trackHeight += (h != 0) ? h : GetEnvHeightFromTrackHeight(trackHeight);
+							envHeight += (h != 0) ? h : GetEnvHeightFromTrackHeight(trackHeight);
 						}
 					}
-					iHeight += trackHeight;
+					iHeight += trackHeight + envHeight;
 					if (tr == masterTrack && TcpVis(tr) && iNum > 1) iHeight += GetMasterTcpGap();
 				}
 			}
@@ -623,9 +624,12 @@ MediaTrack* TrackAtPoint(HWND hTrackView, int iY, int* iOffset, int* iYMin, int*
 	// Find the current track #
 	while (iTrack <= GetNumTracks())
 	{
-		iTrackH = *(int*)GetSetMediaTrackInfo(CSurf_TrackFromID(iTrack, false), "I_WNDH", NULL);
+		MediaTrack* track = CSurf_TrackFromID(iTrack, false);
+		iTrackH = *(int*)GetSetMediaTrackInfo(track, "I_WNDH", NULL);
 		if (iVPos + iTrackH > iY)
 			break;
+		if (iTrack == 0 && TcpVis(track) && iTrackH != 0)
+			iTrackH += GetMasterTcpGap();
 		iVPos += iTrackH;
 		iTrack++;
 	}

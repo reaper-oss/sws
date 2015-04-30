@@ -779,7 +779,9 @@ SWS_ListView::SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn
 	// Setup UTF-8 (see http://forum.cockos.com/showthread.php?t=101547)
 	WDL_UTF8_HookListView(hwndList);
 #if !defined(WDL_NO_SUPPORT_UTF8)
+	#ifdef WDL_SUPPORT_WIN9X
 	if (GetVersion()<0x80000000)
+	#endif
 		SendMessage(hwndList,LVM_SETUNICODEFORMAT,1,0);
 #endif
 

@@ -158,7 +158,7 @@ void ToggleAllFXsBypassSelTracks(COMMAND_T* _ct) {
 }
 
 void ToggleFXBypassSelTracks(COMMAND_T* _ct) { 
-	SetOrToggleFXBypassSelTracks(SWS_CMD_SHORTNAME(_ct), 2, (int)_ct->user) && SNM_CountSelectedTracks(NULL, true);
+	SetOrToggleFXBypassSelTracks(SWS_CMD_SHORTNAME(_ct), 2, (int)_ct->user);
 } 
 
 void BypassFXSelTracks(COMMAND_T* _ct) { 

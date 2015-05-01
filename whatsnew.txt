@@ -70,6 +70,7 @@ ReaScript
 
 Fixes
 +Notes/Windows OS: fixed "wrap text" option (Issue 690)
++Prevent loading templates when creating new project tabs
 +Autorender/OSX: fixed UTF8 issues with media file tags (Issue 670)
 +Preserve metronome patterns when editing tempo envelope with various actions and dialogs
 +Fixed non-selectable radio buttons in SWS/BR: Select and adjust tempo markers... dialog

@@ -116,7 +116,7 @@ void OpenProjectsFromList(COMMAND_T*)
 				if (cPath[0])
 				{
 					if (i++)
-						Main_OnCommand(40859, 0); // 40859: New project tab
+						Main_OnCommand(41929, 0); // New project tab (ignore default template)
 					Main_openProject(cPath);
 				}
 			}
@@ -187,7 +187,7 @@ void OpenRelatedProject(COMMAND_T* pCmd)
 	iNewProjOpts = *pNewProjOpts;
 	*pNewProjOpts = 0;
 	pProj = EnumProjects(-1, NULL, 0);
-	Main_OnCommand(40859, 0); // 40859: New project tab
+	Main_OnCommand(41929, 0); // New project tab (ignore default template)
 	Main_openProject(pStr->Get());
 	EnumProjects(-1, cOpenedProj, 256);
 	if (_stricmp(pStr->Get(), cOpenedProj))

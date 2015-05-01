@@ -150,9 +150,12 @@ void LoadOrSelectProject(const char* _fn, bool _newTab)
 			found = true;
 
 	if (found)
+	{
 		SelectProjectInstance(prj);
-	else {
-		if (_newTab) Main_OnCommand(40859,0);
+	}
+	else
+	{
+		if (_newTab) Main_OnCommand(41929, 0); // New project tab (ignore default template)
 		Main_openProject((char*)_fn); // includes an undo point
 	}
 }

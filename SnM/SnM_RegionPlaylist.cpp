@@ -1955,8 +1955,9 @@ void AppendPasteCropPlaylist(RegionPlaylist* _playlist, int _mode)
 	CSurf_FlushUndo(true);
 */
 
-	// *** NEW PROJECT TAB***
-	Main_OnCommand(40859, 0);
+	///////////////////////////////////////////////////////////////////////////
+	// New project tab (ignore default template)
+	Main_OnCommand(41929, 0);
 
 	Undo_BeginBlock2(NULL);
 

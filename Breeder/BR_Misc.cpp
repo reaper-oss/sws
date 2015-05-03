@@ -702,6 +702,9 @@ void MoveActiveWndToMouse (COMMAND_T* ct)
 			}
 		#endif
 
+		if (GetBit((int)ct->user, 4) && !IsFloatingTrackFXWindow(hwnd))
+			return;
+ 
 		RECT r;  GetWindowRect(hwnd, &r);
 		POINT p; GetCursorPos(&p);
 

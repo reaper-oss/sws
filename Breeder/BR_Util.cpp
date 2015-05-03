@@ -2725,6 +2725,20 @@ void SimulateMouseClick (HWND hwnd, POINT point, bool keepCurrentFocus)
 	}
 }
 
+bool IsFloatingTrackFXWindow (HWND hwnd)
+{
+	for (int i = 0; i < CountTracks(NULL); ++i)
+	{
+		MediaTrack* track = GetTrack(NULL, i);
+		for (int j = 0; j < TrackFX_GetCount(track); ++j)
+		{
+			if (hwnd == TrackFX_GetFloatingWindow(track, j))
+				return true;
+		}
+	}
+	return false;
+}
+
 /******************************************************************************
 * Menus                                                                       *
 ******************************************************************************/

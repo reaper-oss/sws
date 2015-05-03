@@ -239,6 +239,7 @@ void GetMonitorRectFromPoint (const POINT& p, RECT* r);
 void BoundToRect (const RECT& boundingRect, RECT* r);
 void CenterOnPoint (RECT* rect, const POINT& point, int horz, int ver, int xOffset, int yOffset); // horz -> -1 left, 0 center, 1 right ..... vert -> -1 bottom, 0 center, 1 top (every other value will mean to do nothing)
 void SimulateMouseClick (HWND hwnd, POINT point, bool keepCurrentFocus);
+bool IsFloatingTrackFXWindow (HWND hwnd);
 
 /******************************************************************************
 * Menus                                                                       *

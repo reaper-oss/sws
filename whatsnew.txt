@@ -8,6 +8,13 @@ Added actions
  - SWS/BR: Disable "Ignore project tempo" for selected MIDI items preserving time position of MIDI events
  - SWS/BR: Move active floating track FX window to mouse cursor (9 version with different horizontal and vertical positions in regards to mouse cursor)
 
+ReaScript
++Added functions:
+ - BR_GetArrangeView
+ - BR_GetMidiTakeTempoInfo
+ - BR_GetNextGridDivision
+ - BR_SetMidiTakeTempoInfo
+ 
 Other:
  - Using SWS/BR actions to enable "ignore project tempo" will not change tempo information o items that are already ignoring project tempo
  - Fixed positions of certain check boxes in Contextual toolbar dialog

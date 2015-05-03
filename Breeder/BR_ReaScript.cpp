@@ -239,6 +239,16 @@ double BR_EnvValueAtPos (BR_Envelope* envelope, double position)
 		return 0;
 }
 
+void BR_GetArrangeView (ReaProject* proj, double* startPositionOut, double* endPositionOut)
+{
+	double start, end;
+	RECT r; GetWindowRect(GetArrangeWnd(), &r);
+	GetSet_ArrangeView2(NULL, false, r.left, r.right-SCROLLBAR_W, &start, &end);
+
+	WritePtr(startPositionOut, start);
+	WritePtr(endPositionOut, end);
+}
+
 double BR_GetClosestGridDivision (double position)
 {
 	return GetClosestGridDiv(position);
@@ -393,6 +403,49 @@ double BR_GetMidiSourceLenPPQ (MediaItem_Take* take)
 	return length;
 }
 
+bool BR_GetMidiTakeTempoInfo (MediaItem_Take* take, bool* ignoreProjTempoOut, double* bpmOut, int* numOut, int* denOut)
+{
+	bool   ignoreTempo = false;
+	double bpm         = 0;
+	int    num         = 0;
+	int    den         = 0;
+
+	bool succes = false;
+	if (take && IsMidi(take, NULL))
+	{
+		MediaItem* item = GetMediaItemTake_Item(take);
+		int takeId = GetTakeId(take, item);
+		if (takeId >= 0)
+		{
+			SNM_TakeParserPatcher p(item, CountTakes(item));
+			WDL_FastString takeChunk;
+			int tkPos, tklen;
+			if (p.GetTakeChunk(takeId, &takeChunk, &tkPos, &tklen))
+			{
+				SNM_ChunkParserPatcher ptk(&takeChunk, false);
+				WDL_FastString tempoLine;
+				if (ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "SOURCE", "IGNTEMPO", 0, -1, &tempoLine))
+				{
+					LineParser lp(false);
+					lp.parse(tempoLine.Get());
+
+					ignoreTempo = !!lp.gettoken_int(1);
+					bpm         = lp.gettoken_float(2);
+					num         = lp.gettoken_int(3);
+					den         = lp.gettoken_int(4);
+					succes = true;
+				}
+			}
+		}
+	}
+
+	WritePtr(ignoreProjTempoOut, ignoreTempo);
+	WritePtr(bpmOut,             bpm);
+	WritePtr(numOut,             num);
+	WritePtr(denOut,             den);
+	return succes;
+}
+
 void BR_GetMouseCursorContext (char* windowOut, int windowOut_sz, char* segmentOut, int segmentOut_sz, char* detailsOut, int detailsOut_sz)
 {
 	g_mouseInfo.Update();
@@ -462,6 +515,22 @@ MediaItem_Take* BR_GetMouseCursorContext_Take ()
 MediaTrack* BR_GetMouseCursorContext_Track ()
 {
 	return g_mouseInfo.GetTrack();
+}
+
+double BR_GetNextGridDivision (double position)
+{
+	if (position >= 0)
+		return GetNextGridDiv(position);
+	else
+		return 0;
+}
+
+double BR_GetPrevGridDivision (double position)
+{
+	if (position > 0)
+		return GetPrevGridDiv(position);
+	else
+		return 0;
 }
 
 double BR_GetSetTrackSendInfo (MediaTrack* track, int category, int sendidx, const char* parmname, bool setNewValue, double newValue)
@@ -840,6 +909,58 @@ bool BR_SetMediaTrackLayouts (MediaTrack* track, const char* mcpLayoutNameIn, co
 		FreeHeapPtr(trackState);
 	}
 	return updated;
+}
+
+bool BR_SetMidiTakeTempoInfo(MediaItem_Take* take, bool ignoreProjTempo, double bpm, int num, int den)
+{
+	bool   ignoreTempoOut = false;
+	double bpmOut         = 0;
+	int    numOut         = 0;
+	int    denOut         = 0;
+
+	bool succes = false;
+	if (take && IsMidi(take, NULL))
+	{
+		MediaItem* item = GetMediaItemTake_Item(take);
+		int takeId = GetTakeId(take, item);
+		if (takeId >= 0)
+		{
+			SNM_TakeParserPatcher p(item, CountTakes(item));
+			WDL_FastString takeChunk;
+			int tkPos, tklen;
+			if (p.GetTakeChunk(takeId, &takeChunk, &tkPos, &tklen))
+			{
+				SNM_ChunkParserPatcher ptk(&takeChunk, false);
+
+				WDL_FastString tempoLine;
+				if (int position = ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "SOURCE", "IGNTEMPO", 0, -1, &tempoLine))
+				{
+					LineParser lp(false);
+					lp.parse(tempoLine.Get());
+
+					if (ignoreProjTempo != !!lp.gettoken_int(1) ||  bpm != lp.gettoken_float(2) || num != lp.gettoken_int(3) || den != lp.gettoken_int(4))
+					{
+						WDL_FastString newLine;
+						for (int i = 0; i < lp.getnumtokens(); ++i)
+						{
+							if      (i == 1) newLine.AppendFormatted(256, "%d",  ignoreProjTempo ? 1 : 0);
+							else if (i == 2) newLine.AppendFormatted(256, "%lf", bpm);
+							else if (i == 3) newLine.AppendFormatted(256, "%d",  num);
+							else if (i == 4) newLine.AppendFormatted(256, "%d",  den);
+							else             newLine.AppendFormatted(256, "%s", lp.gettoken_str(i));
+							newLine.Append(" ");
+						}
+						newLine.Append("\n");
+						ptk.ReplaceLine(position - 1, newLine.Get());
+						succes = p.ReplaceTake(tkPos, tklen, ptk.GetChunk());
+					}				
+					
+				}
+			}
+		}
+	}
+
+	return succes;
 }
 
 bool BR_SetTakeSourceFromFile (MediaItem_Take* take, const char* filenameIn, bool inProjectData)

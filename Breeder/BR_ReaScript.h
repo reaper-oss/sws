@@ -47,6 +47,7 @@ bool            BR_EnvSetPoint (BR_Envelope* envelope, int id, double position, 
 void            BR_EnvSetProperties (BR_Envelope* envelope, bool active, bool visible, bool armed, bool inLane, int laneHeight, int defaultShape, bool faderScaling);
 void            BR_EnvSortPoints (BR_Envelope* envelope);
 double          BR_EnvValueAtPos (BR_Envelope* envelope, double position);
+void            BR_GetArrangeView (ReaProject* proj, double* startPositionOut, double* endPositionOut);
 double          BR_GetClosestGridDivision (double position);
 MediaItem*      BR_GetMediaItemByGUID (ReaProject* proj, const char* guidStringIn);
 void            BR_GetMediaItemGUID (MediaItem* item, char* guidStringOut, int guidStringOut_sz);
@@ -60,6 +61,7 @@ void            BR_GetMediaTrackLayouts (MediaTrack* track, char* mcpLayoutNameO
 TrackEnvelope*  BR_GetMediaTrackSendInfo_Envelope (MediaTrack* track, int category, int sendidx, int envelopeType);
 MediaTrack*     BR_GetMediaTrackSendInfo_Track (MediaTrack* track, int category, int sendidx, int trackType);
 double          BR_GetMidiSourceLenPPQ (MediaItem_Take* take);
+bool            BR_GetMidiTakeTempoInfo (MediaItem_Take* take, bool* ignoreProjTempoOut, double* bpmOut, int* numOut, int* denOut);
 void            BR_GetMouseCursorContext (char* windowOut, int windowOut_sz, char* segmentOut, int segmentOut_sz, char* detailsOut, int detailsOut_sz);
 TrackEnvelope*  BR_GetMouseCursorContext_Envelope (bool* takeEnvelopeOut);
 MediaItem*      BR_GetMouseCursorContext_Item ();
@@ -68,6 +70,8 @@ double          BR_GetMouseCursorContext_Position ();
 int             BR_GetMouseCursorContext_StretchMarker ();
 MediaItem_Take* BR_GetMouseCursorContext_Take ();
 MediaTrack*     BR_GetMouseCursorContext_Track ();
+double          BR_GetNextGridDivision (double position);
+double          BR_GetPrevGridDivision (double position);
 double          BR_GetSetTrackSendInfo (MediaTrack* track, int category, int sendidx, const char* parmname, bool setNewValue, double newValue);
 int             BR_GetTakeFXCount (MediaItem_Take* take);
 bool            BR_IsTakeMidi (MediaItem_Take* take, bool* inProjectMidiOut);
@@ -80,6 +84,7 @@ bool            BR_SetItemEdges (MediaItem* item, double startTime, double endTi
 void            BR_SetMediaItemImageResource (MediaItem* item, const char* imageIn, int imageFlags);
 bool            BR_SetMediaSourceProperties (MediaItem_Take* take, bool section, double start, double length, double fade, bool reverse);
 bool            BR_SetMediaTrackLayouts (MediaTrack* track, const char* mcpLayoutNameIn, const char* tcpLayoutNameIn);
+bool            BR_SetMidiTakeTempoInfo(MediaItem_Take* take, bool ignoreProjTempo, double bpm, int num, int den);
 bool            BR_SetTakeSourceFromFile (MediaItem_Take* take, const char* filenameIn, bool inProjectData);
 bool            BR_SetTakeSourceFromFile2 (MediaItem_Take* take, const char* filenameIn, bool inProjectData, bool keepSourceProperties);
 MediaItem_Take* BR_TakeAtMouseCursor (double* positionOut);

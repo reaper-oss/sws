@@ -294,6 +294,12 @@ static void* __vararg_BR_EnvValueAtPos(void** arglist, int numparms)
   return p;
 }
 
+static void* __vararg_BR_GetArrangeView(void** arglist, int numparms)
+{
+  BR_GetArrangeView((ReaProject*)arglist[0], (double*)arglist[1], (double*)arglist[2]);
+  return NULL;
+}
+
 static void* __vararg_BR_GetClosestGridDivision(void** arglist, int numparms)
 {
   double* p =(double*)arglist[numparms-1];
@@ -369,6 +375,11 @@ static void* __vararg_BR_GetMidiSourceLenPPQ(void** arglist, int numparms)
   return p;
 }
 
+static void* __vararg_BR_GetMidiTakeTempoInfo(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)BR_GetMidiTakeTempoInfo((MediaItem_Take*)arglist[0], (bool*)arglist[1], (double*)arglist[2], (int*)arglist[3], (int*)arglist[4]);
+}
+
 static void* __vararg_BR_GetMouseCursorContext(void** arglist, int numparms)
 {
   BR_GetMouseCursorContext((char*)arglist[0], (int)(INT_PTR)arglist[1], (char*)arglist[2], (int)(INT_PTR)arglist[3], (char*)arglist[4], (int)(INT_PTR)arglist[5]);
@@ -411,6 +422,22 @@ static void* __vararg_BR_GetMouseCursorContext_Take(void** arglist, int numparms
 static void* __vararg_BR_GetMouseCursorContext_Track(void** arglist, int numparms)
 {
   return (void*)(INT_PTR)BR_GetMouseCursorContext_Track();
+}
+
+static void* __vararg_BR_GetNextGridDivision(void** arglist, int numparms)
+{
+  double* p =(double*)arglist[numparms-1];
+  double d = BR_GetNextGridDivision(arglist[0] ? *(double*)arglist[0] : 0.0);
+  if (p) *p=d;
+  return p;
+}
+
+static void* __vararg_BR_GetPrevGridDivision(void** arglist, int numparms)
+{
+  double* p =(double*)arglist[numparms-1];
+  double d = BR_GetPrevGridDivision(arglist[0] ? *(double*)arglist[0] : 0.0);
+  if (p) *p=d;
+  return p;
 }
 
 static void* __vararg_BR_GetSetTrackSendInfo(void** arglist, int numparms)
@@ -479,6 +506,11 @@ static void* __vararg_BR_SetMediaSourceProperties(void** arglist, int numparms)
 static void* __vararg_BR_SetMediaTrackLayouts(void** arglist, int numparms)
 {
   return (void*)(INT_PTR)BR_SetMediaTrackLayouts((MediaTrack*)arglist[0], (const char*)arglist[1], (const char*)arglist[2]);
+}
+
+static void* __vararg_BR_SetMidiTakeTempoInfo(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)BR_SetMidiTakeTempoInfo((MediaItem_Take*)arglist[0], (bool)arglist[1], arglist[2] ? *(double*)arglist[2] : 0.0, (int)(INT_PTR)arglist[3], (int)(INT_PTR)arglist[4]);
 }
 
 static void* __vararg_BR_SetTakeSourceFromFile(void** arglist, int numparms)

@@ -537,22 +537,9 @@ void MidiItemTempo (COMMAND_T* ct)
 	if (IsLocked(ITEM_FULL))
 		return;
 
-	vector<BR_MidiItemTimePos> items;
-	if ((int)ct->user == 2)
-	{
-		items.reserve(CountSelectedMediaItems(NULL));
-		for (int i = 0; i < CountSelectedMediaItems(NULL); ++i)
-		{
-			MediaItem* item = GetSelectedMediaItem(NULL, i);
-			if (!IsItemLocked(item))
-			{
-				items.push_back(BR_MidiItemTimePos(item, false));
-				SetMediaItemInfo_Value(item, "C_BEATATTACHMODE", 0);
-			}
-		}
-	}
 
 	PreventUIRefresh(1);
+	bool ignoreTempo = ((int)ct->user == 2 || (int)ct->user == 3);
 	bool update = false;
 	for (int i = 0; i < CountSelectedMediaItems(NULL); ++i)
 	{
@@ -561,19 +548,21 @@ void MidiItemTempo (COMMAND_T* ct)
 		{
 			double bpm; int num, den;
 			TimeMap_GetTimeSigAtTime(NULL, GetMediaItemInfo_Value(item, "D_POSITION"), &num, &den, &bpm);
-			if ((int)ct->user == 2)
+
+			if ((int)ct->user == 0)
+			{
+				if (SetIgnoreTempo(item, ignoreTempo, bpm, num, den, true))
+					update = true;
+			}
+			else
 			{
 				BR_MidiItemTimePos timePos(item, false);
-				if (SetIgnoreTempo(item, !!(int)ct->user, bpm, num, den))
+				SetMediaItemInfo_Value(item, "C_BEATATTACHMODE", 0);
+				if (SetIgnoreTempo(item, ignoreTempo, bpm, num, den, true))
 				{
 					timePos.Restore(true);
 					update = true;
 				}
-			}
-			else
-			{
-				if (SetIgnoreTempo(item, !!(int)ct->user, bpm, num, den))
-					update = true;
 			}
 		}
 	}

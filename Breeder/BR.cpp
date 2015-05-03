@@ -558,8 +558,9 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Split selected items at stretch markers" },                                                                                     "BR_SPLIT_SEL_ITEM_STRETCH_MARKERS",  SplitItemAtStretchMarkers},
 	{ { DEFACCEL, "SWS/BR: Create project markers from selected tempo markers" },                                                                          "BR_TEMPO_TO_MARKERS",                MarkersAtTempo},
 	{ { DEFACCEL, "SWS/BR: Disable \"Ignore project tempo\" for selected MIDI items" },                                                                    "BR_MIDI_PROJ_TEMPO_DIS",             MidiItemTempo, NULL, 0},
-	{ { DEFACCEL, "SWS/BR: Enable \"Ignore project tempo\" for selected MIDI items (use tempo at item's start)" },                                         "BR_MIDI_PROJ_TEMPO_ENB",             MidiItemTempo, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Enable \"Ignore project tempo\" for selected MIDI items preserving time position of MIDI events (use tempo at item's start)" }, "BR_MIDI_PROJ_TEMPO_ENB_TIME",        MidiItemTempo, NULL, 2},
+	{ { DEFACCEL, "SWS/BR: Disable \"Ignore project tempo\" for selected MIDI items preserving time position of MIDI events" },                            "BR_MIDI_PROJ_TEMPO_DIS_TIME",        MidiItemTempo, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Enable \"Ignore project tempo\" for selected MIDI items (use tempo at item's start)" },                                         "BR_MIDI_PROJ_TEMPO_ENB",             MidiItemTempo, NULL, 2},
+	{ { DEFACCEL, "SWS/BR: Enable \"Ignore project tempo\" for selected MIDI items preserving time position of MIDI events (use tempo at item's start)" }, "BR_MIDI_PROJ_TEMPO_ENB_TIME",        MidiItemTempo, NULL, 3},
 	{ { DEFACCEL, "SWS/BR: Trim MIDI item to active content" },                                                                                            "BR_TRIM_MIDI_ITEM_ACT_CONTENT",      MidiItemTrim, NULL},
 
 	{ { DEFACCEL, "SWS/BR: Create project markers from notes in selected MIDI items" },                                                                    "BR_MIDI_NOTES_TO_MARKERS",           MarkersAtNotes},

@@ -745,7 +745,7 @@ int GetTakeFXCount (MediaItem_Take* take)
 	return count;
 }
 
-bool SetIgnoreTempo (MediaItem* item, bool ignoreTempo, double bpm, int num, int den)
+bool SetIgnoreTempo (MediaItem* item, bool ignoreTempo, double bpm, int num, int den, bool skipItemsWithSameIgnoreState)
 {
 	bool midiFound = false;
 	for (int i = 0; i < CountTakes(item); ++i)
@@ -768,15 +768,35 @@ bool SetIgnoreTempo (MediaItem* item, bool ignoreTempo, double bpm, int num, int
 	{
 		if (!strncmp(token, "IGNTEMPO ", sizeof("IGNTEMPO ") - 1))
 		{
-			if (ignoreTempo)
-				newState.AppendFormatted(256, "IGNTEMPO %d %.14lf %d %d\n", 1, bpm, num, den);
+			LineParser lp(false);
+			lp.parse(token);
+
+			bool replaceLine = true;
+			if (skipItemsWithSameIgnoreState)
+			{
+				if ((ignoreTempo && !!lp.gettoken_int(1) == true) || (!ignoreTempo && !!lp.gettoken_int(1) == false))
+					replaceLine = false;
+			}
+
+			if (replaceLine)
+			{
+				for (int i = 0; i < lp.getnumtokens(); ++i)
+				{
+					if      (i == 0) newState.AppendFormatted(256, "%s",     lp.gettoken_str(i));
+					else if (i == 1) newState.AppendFormatted(256, "%d",     ignoreTempo ? 1 : 0);
+					else if (i == 2) newState.AppendFormatted(256, "%.14lf", ignoreTempo ? bpm : lp.gettoken_float(i));
+					else if (i == 3) newState.AppendFormatted(256, "%d",     ignoreTempo ? num : lp.gettoken_int(i));
+					else if (i == 3) newState.AppendFormatted(256, "%d",     ignoreTempo ? den : lp.gettoken_int(i));
+					else             newState.AppendFormatted(256, "%s",     lp.gettoken_str(i));
+					newState.Append(" ");
+				}
+				newState.Append("\n");
+				stateChanged = true;
+			}
 			else
 			{
-				LineParser lp(false);
-				lp.parse(token);
-				newState.AppendFormatted(256, "IGNTEMPO %d %.14lf %d %d\n", 0, lp.gettoken_float(2), lp.gettoken_int(3), lp.gettoken_int(4));
+				AppendLine(newState, token);
 			}
-			stateChanged = true;
 		}
 		else
 		{
@@ -811,9 +831,9 @@ bool TrimItem (MediaItem* item, double start, double end)
 	double itemPos = GetMediaItemInfo_Value(item, "D_POSITION");
 	double itemLen = GetMediaItemInfo_Value(item, "D_LENGTH");
 
-	bool updateMidiSource = (newLen > itemLen && GetMediaItemInfo_Value(item, "B_LOOPSRC") == 0);
+	bool updateMidiSource = (DoesItemHaveMidiEvents(item) && GetMediaItemInfo_Value(item, "B_LOOPSRC") == 0);
 	MediaItem_Take* activeTake = (updateMidiSource) ? GetActiveTake(item) : NULL;
-	if (start != itemPos || newLen != itemLen)
+	if (start != itemPos || newLen != itemLen || updateMidiSource)
 	{
 		double startDif = start - itemPos;
 		SetMediaItemInfo_Value(item, "D_LENGTH", newLen);

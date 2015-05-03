@@ -575,8 +575,7 @@ void BR_MidiItemTimePos::Restore (bool clearCurrentEvents /*=true*/, double offs
 			midiTake->sysEvents[i].InsertEvent(take, offset);
 	}
 
-	SetMediaItemInfo_Value(item, "D_POSITION", position);
-	SetMediaItemInfo_Value(item, "D_LENGTH", length);
+	TrimItem(item, position, position + length);
 	SetMediaItemInfo_Value(item, "C_BEATATTACHMODE", timeBase);
 }
 

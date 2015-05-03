@@ -132,7 +132,7 @@ int GetTakeId (MediaItem_Take* take, MediaItem* item = NULL);
 int GetEffectiveTakeId (MediaItem_Take* take, MediaItem* item, int id, int* effectiveTakeCount); // empty takes could be hidden, so displayed id and real id can differ (pass either take or item and take id)
 int GetTakeType (MediaItem_Take* take); // -1 = unknown, 0 = audio, 1 = MIDI, 2 = video, 3 = click, 4 = timecode generator, 5 = RPR project
 int GetTakeFXCount (MediaItem_Take* take);
-bool SetIgnoreTempo (MediaItem* item, bool ignoreTempo, double bpm, int num, int den);
+bool SetIgnoreTempo (MediaItem* item, bool ignoreTempo, double bpm, int num, int den, bool skipItemsWithSameIgnoreState);
 bool DoesItemHaveMidiEvents (MediaItem* item);
 bool TrimItem (MediaItem* item, double start, double end);
 bool GetMediaSourceProperties (MediaItem_Take* take, bool* section, double* start, double* length, double* fade, bool* reverse);

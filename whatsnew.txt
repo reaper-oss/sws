@@ -1,3 +1,15 @@
+Added actions
++Main:
+ - SWS/AW: Set selected tracks timebase to project default
+ - SWS/AW: Set selected items timebase to project/track default
+ - SWS/AW: Set selected items timebase to time
+ - SWS/AW: Set selected items timebase to beats (position only)
+ - SWS/AW: Set selected items timebase to beats (position, length, rate)
+ - SWS/BR: Disable "Ignore project tempo" for selected MIDI items preserving time position of MIDI events
+
+Other:
+ - Using SWS/BR actions to enable "ignore project tempo" will not change tempo information o items that are already ignoring project tempo
+ 
 !v2.6.4 #0 pre-release build (May 1, 2015)
 <strong>REAPER v5.0pre21+ is required!</strong>
 

@@ -326,7 +326,9 @@ void SNM_RefreshToolbars()
 #ifdef _SNM_HOST_AW
 	// host AW's grid toolbar buttons auto refresh and track timebase auto refresh
 	UpdateGridToolbar();
+	UpdateTimebaseToolbar();
 	UpdateTrackTimebaseToolbar();
+	UpdateItemTimebaseToolbar();
 #endif
 }
 

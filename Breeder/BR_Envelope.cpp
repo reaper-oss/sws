@@ -123,7 +123,7 @@ static void SetEnvPointMouseValue (COMMAND_T* ct)
 
 			BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_ARRANGE | BR_MouseInfo::MODE_IGNORE_ENVELOPE_LANE_SEGMENT);
 			if ((!strcmp(mouseInfo.GetWindow(),  "arrange")   && !strcmp(mouseInfo.GetSegment(), "envelope"))   ||
-				(!strcmp(mouseInfo.GetDetails(), "env_point") || !strcmp(mouseInfo.GetSegment(), "env_segment"))
+				(!strcmp(mouseInfo.GetDetails(), "env_point") || !strcmp(mouseInfo.GetDetails(), "env_segment"))
 			)
 				envelopeToSelect = mouseInfo.GetEnvelope();
 
@@ -135,7 +135,7 @@ static void SetEnvPointMouseValue (COMMAND_T* ct)
 					UpdateArrange();
 				}
 			}
-			else
+			else if (!GetSelectedEnvelope(NULL))
 			{
 				ContinuousActionStopAll();
 				return;
@@ -171,6 +171,17 @@ static void SetEnvPointMouseValue (COMMAND_T* ct)
 		if (s_lastEndPosition < 0 || context != 0)
 			ContinuousActionStopAll();
 		return;
+	}
+
+	// Take envelope corner-case (pretend mouse position never got behind item's start)
+	if (g_envMouseEnvelope->IsTakeEnvelope())
+	{
+		if (MediaItem* item = GetMediaItemTake_Item(g_envMouseEnvelope->GetTake()))
+		{
+			double itemStart = GetMediaItemInfo_Value(item, "D_POSITION");
+			if (endPosition < itemStart)
+				endPosition = itemStart;
+		}		
 	}
 
 	// If calling for the first time when freehand drawing, unselect all points
@@ -1576,7 +1587,7 @@ void SelectEnvelopeUnderMouse (COMMAND_T* ct)
 
 	if ((!strcmp(mouseInfo.GetWindow(),  "tcp")       && !strcmp(mouseInfo.GetSegment(), "envelope"))   ||
 		(!strcmp(mouseInfo.GetWindow(),  "arrange")   && !strcmp(mouseInfo.GetSegment(), "envelope"))   ||
-		(!strcmp(mouseInfo.GetDetails(), "env_point") || !strcmp(mouseInfo.GetSegment(), "env_segment"))
+		(!strcmp(mouseInfo.GetDetails(), "env_point") || !strcmp(mouseInfo.GetDetails(), "env_segment"))
 	)
 	{
 		if (mouseInfo.GetEnvelope() && mouseInfo.GetEnvelope() != GetSelectedEnvelope(NULL))

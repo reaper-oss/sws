@@ -1386,7 +1386,7 @@ BEGIN
     COMBOBOX        IDC_ALL_POS_V_COMBO,494,52,77,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     CONTROL         "Keep toolbar always on top",IDC_ALL_TOPMOST,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,308,69,262,10
     CONTROL         "Set toolbar to foreground on load",IDC_ALL_FOREGROUND,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,307,83,263,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,308,83,262,10
     GROUPBOX        "TCP",IDC_TCP_BOX,300,102,278,47
     CONTROL         "Track:",IDC_TCP_TRACK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,308,116,46,10
     COMBOBOX        IDC_TCP_TRACK_COMBO,355,115,216,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
@@ -1406,15 +1406,15 @@ BEGIN
     COMBOBOX        IDC_ARG_TAKE_ENV_COMBO,379,244,192,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     CONTROL         "Track envelope:",IDC_ARG_TRACK_ENV,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,308,260,69,10
     COMBOBOX        IDC_ARG_TRACK_ENV_COMBO,379,259,192,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "Set item's take as active",IDC_ARG_TAKE_ACTIVATE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,319,274,251,10
+    CONTROL         "Set item's take as active",IDC_ARG_TAKE_ACTIVATE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,308,274,270,10
     GROUPBOX        "MIDI editor",IDC_MIDI_BOX,300,292,278,29
     CONTROL         "Set CC lane as last clicked",IDC_MIDI_CC_LANE_CLICKED,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,319,305,251,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,308,305,262,10
     GROUPBOX        "Inline MIDI editor",IDC_INLINE_BOX,300,324,278,45
     CONTROL         "Item:",IDC_INLINE_ITEM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,308,338,33,10
     COMBOBOX        IDC_INLINE_ITEM_COMBO,341,337,230,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     CONTROL         "Set CC lane as last clicked",IDC_INLINE_CC_LANE_CLICKED,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,319,353,251,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,308,353,262,10
     DEFPUSHBUTTON   "Help...",IDC_HELP_WIKI,397,373,75,14
     DEFPUSHBUTTON   "Save",IDC_SAVE,478,373,100,14
 END
@@ -2095,8 +2095,7 @@ IDC_ZOOM_UNDO           CURSOR                  "Resources\\Cursor\\sws_zoom_und
 // Generated from the TEXTINCLUDE 3 resource.
 //
 #include "version.h"
-#include "version.rc2"
-
+#include "version.rc2"
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

@@ -9,7 +9,8 @@ Added actions
 
 Other:
  - Using SWS/BR actions to enable "ignore project tempo" will not change tempo information o items that are already ignoring project tempo
- 
+ - Fixed positions of certain check boxes in Contextual toolbar dialog
+
 !v2.6.4 #0 pre-release build (May 1, 2015)
 <strong>REAPER v5.0pre21+ is required!</strong>
 

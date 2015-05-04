@@ -557,12 +557,14 @@ void MidiItemTempo (COMMAND_T* ct)
 			else
 			{
 				BR_MidiItemTimePos timePos(item, false);
+				int timeBase = GetMediaItemInfo_Value(item, "C_BEATATTACHMODE");
 				SetMediaItemInfo_Value(item, "C_BEATATTACHMODE", 0);
 				if (SetIgnoreTempo(item, ignoreTempo, bpm, num, den, true))
 				{
 					timePos.Restore(true);
 					update = true;
 				}
+				SetMediaItemInfo_Value(item, "C_BEATATTACHMODE", timeBase);
 			}
 		}
 	}

@@ -13,12 +13,14 @@ ReaScript
  - BR_GetArrangeView
  - BR_GetMidiTakeTempoInfo
  - BR_GetNextGridDivision
+ - BR_GetPrevGridDivision
  - BR_SetMidiTakeTempoInfo
  
 Other:
- - Using SWS/BR actions to enable "ignore project tempo" will not change tempo information o items that are already ignoring project tempo
- - Fixed various small usability corner-cases of envelope freehand actions
- - Fixed positions of certain check boxes in Contextual toolbar dialog
++Using SWS/BR actions to enable "ignore project tempo" will not change tempo information of items that are already ignoring project tempo
++Fixed various envelope functionality in regards to certain FX parameter envelopes (for example, freehand actions not properly setting the envelope to mouse cursor vertical position on ReaEQ gain parameter envelopes, like seen http://forum.cockos.com/showpost.php?p=1517026&postcount=4|here|)
++Fixed various small usability corner-cases of envelope freehand actions
++Fixed positions of certain check boxes in Contextual toolbar dialog
 
 !v2.6.4 #0 pre-release build (May 1, 2015)
 <strong>REAPER v5.0pre21+ is required!</strong>

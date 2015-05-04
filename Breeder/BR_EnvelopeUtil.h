@@ -143,11 +143,12 @@ public:
 	int GetFxId ();    // returns -1 if not FX envelope
 	int GetParamId (); // returns -1 if not FX envelope
 	int GetSendId ();  // returns -1 if not send envelope, otherwise send id for it's parent track
-	double MinValue ();
-	double MaxValue ();
+	double MinValueAbs (); // absolute minimum value for envelope (ignoring display preferences for certain envelopes)
+	double MaxValueAbs (); // absolute maximum value for envelope (ignoring display preferences for certain envelopes)
 	double CenterValue ();
-	double LaneMaxValue ();
-	double LaneMinValue ();
+	double LaneMinValue (); // minimum drawable value
+	double LaneMaxValue (); // maximum drawable value
+
 
 	/* Set envelope properties */
 	void SetActive (bool active);

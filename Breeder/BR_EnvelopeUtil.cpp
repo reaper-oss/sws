@@ -774,8 +774,8 @@ double BR_Envelope::ValueAtPosition (double position, bool fastMode /*= false*/)
 
 				x1 = SetToBounds(x1, t1, t2);
 				x2 = SetToBounds(x2, t1, t2);
-				y1 = SetToBounds(y1, this->MinValue(), this->MaxValue());
-				y2 = SetToBounds(y2, this->MinValue(), this->MaxValue());
+				y1 = SetToBounds(y1, this->MinValueAbs(), this->MaxValueAbs());
+				y2 = SetToBounds(y2, this->MinValueAbs(), this->MaxValueAbs());
 				returnValue = LICE_CBezier_GetY(t1, x1, x2, t2, v1, y1, y2, v2, position);
 			}
 			break;
@@ -794,37 +794,19 @@ double BR_Envelope::NormalizedDisplayValue (double value)
 	value = SetToBounds(value, min, max);
 
 	double displayValue = 0;
-	if (this->Type() == PLAYRATE)
+	if ((this->Type() == VOLUME || this->Type() == VOLUME_PREFX) && this->IsScaledToFader())
 	{
-		if (value > 1)
-			displayValue = (2 + value) / 6;      // original formula (max is always known so optimized): 0.5 + (value - 1) / (max - 1) * 0.5
-		else
-			displayValue = (value - 0.1) / 1.8 ; // original formula (min is always known so optimized): (value - min) / (1 - min) * 0.5;
+		displayValue = SetToBounds(ScaleToEnvelopeMode(1, value) / ScaleToEnvelopeMode(1, max), 0.0, 1.0);
 	}
-	else if (this->Type() == VOLUME || this->Type() == VOLUME_PREFX)
+	else if (this->Type() == TEMPO)
 	{
-		if (this->IsScaledToFader())
-		{
-			displayValue = SetToBounds(ScaleToEnvelopeMode(1,value) / ScaleToEnvelopeMode(1, max), 0.0, 1.0);
-		}
-		else
-		{
-			if (max <= 2)
-			{
-				displayValue = value / max; // original formula (min is always known so optimized): (value - min) / (max - min);
-			}
-			else
-			{
-				if (value > 1)
-					displayValue = (max + value - 2) / (2*max - 2);  
-				else
-					displayValue = 0.5 * value; // original formula (min is always known so optimized): (0.5 * value) / (1 - min);
-			}
-		}
+		displayValue = (value - min) / (max - min);
 	}
 	else
 	{
-		displayValue = (value - min) / (max - min);
+		double centerValue = this->CenterValue();
+		if (value > centerValue) displayValue = ((value - centerValue) / (max - centerValue) + 1) / 2;
+		else                     displayValue = ((value - min)         / (centerValue - min)    ) * 0.5;
 	}
 
 	return displayValue;
@@ -837,38 +819,22 @@ double BR_Envelope::RealValue (double normalizedDisplayValue)
 	normalizedDisplayValue = SetToBounds(normalizedDisplayValue, 0.0, 1.0);
 
 	double realValue = 0;
-	if (this->Type() == PLAYRATE)
+	if ((this->Type() == VOLUME || this->Type() == VOLUME_PREFX) && this->IsScaledToFader())
 	{
-		if (normalizedDisplayValue > 0.5)
-			realValue = 6 * normalizedDisplayValue - 2;     // see BR_Envelope::NormalizedDisplayValue() for original formula
-		else
-			realValue = 1.8 * normalizedDisplayValue + 0.1; // see BR_Envelope::NormalizedDisplayValue() for original formula
+		realValue = SetToBounds(ScaleFromEnvelopeMode(1, normalizedDisplayValue * ScaleToEnvelopeMode(1, max)), min, max);
 	}
-	else if (this->Type() == VOLUME || this->Type() == VOLUME_PREFX)
-	{
-		if (this->IsScaledToFader())
-			realValue = SetToBounds(ScaleFromEnvelopeMode(1, normalizedDisplayValue * ScaleToEnvelopeMode(1, max)), min, max);
-		else
-		{
-			if (max <= 2)
-			{
-				realValue = normalizedDisplayValue * max; // see BR_Envelope::NormalizedDisplayValue() for original formula
-			}
-			else
-			{
-				if (normalizedDisplayValue > 0.5)
-					realValue = 1 + (2*normalizedDisplayValue - 1) * (max - 1);
-				else
-					realValue = normalizedDisplayValue / 0.5;  // see BR_Envelope::NormalizedDisplayValue() for original formula
-			}
-		}
-	}
-	else
+	else if (this->Type() == TEMPO)
 	{
 		realValue = min + normalizedDisplayValue * (max - min);
 	}
+	else
+	{
+		double centerValue = this->CenterValue();
+		if (normalizedDisplayValue > 0.5) realValue = centerValue + (2 * normalizedDisplayValue - 1) * (max - centerValue);
+		else                              realValue = min         + (normalizedDisplayValue / 0.5)   * (centerValue - min);
+	}
 
-	return realValue;
+	return realValue;	
 }
 
 double BR_Envelope::SnapValue (double value)
@@ -1319,13 +1285,13 @@ int BR_Envelope::GetSendId ()
 	return id;
 }
 
-double BR_Envelope::MinValue ()
+double BR_Envelope::MinValueAbs ()
 {
 	this->FillProperties();
 	return m_properties.minValue;
 }
 
-double BR_Envelope::MaxValue ()
+double BR_Envelope::MaxValueAbs ()
 {
 	this->FillProperties();
 	if (this->Type() == VOLUME || this->Type() == VOLUME_PREFX)
@@ -1336,7 +1302,27 @@ double BR_Envelope::MaxValue ()
 double BR_Envelope::CenterValue ()
 {
 	this->FillProperties();
-	return m_properties.centerValue;
+	if ((this->Type() == VOLUME || this->Type() == VOLUME_PREFX) && this->LaneMaxValue() == 1)
+		return 0.5;
+	else if (this->Type() == TEMPO)
+		return (this->LaneMaxValue() + this->LaneMinValue()) / 2;
+	else
+		return m_properties.centerValue;
+}
+
+double BR_Envelope::LaneMinValue ()
+{
+	if (m_tempoMap)
+	{
+		int min; GetConfig("tempoenvmin", min);
+		return (double)min;
+	}
+	else if (this->Type() == PITCH)
+	{
+		int min; GetConfig("pitchenvrange", min);
+		return -(min & 0x0F); // range is in low 8 bits
+	}
+	return this->MinValueAbs();
 }
 
 double BR_Envelope::LaneMaxValue ()
@@ -1360,22 +1346,7 @@ double BR_Envelope::LaneMaxValue ()
 		int max; GetConfig("pitchenvrange", max);
 		return max & 0x0F; // range is in low 8 bits
 	}
-	return this->MaxValue();
-}
-
-double BR_Envelope::LaneMinValue ()
-{
-	if (m_tempoMap)
-	{
-		int min; GetConfig("tempoenvmin", min);
-		return (double)min;
-	}
-	else if (this->Type() == PITCH)
-	{
-		int min; GetConfig("pitchenvrange", min);
-		return -(min & 0x0F); // range is in low 8 bits
-	}
-	return this->MinValue();
+	return this->MaxValueAbs();
 }
 
 void BR_Envelope::SetActive (bool active)
@@ -1900,7 +1871,7 @@ void BR_Envelope::FillProperties () const
 				{
 					m_properties.minValue = MIN_BPM;
 					m_properties.maxValue = MAX_BPM;
-					m_properties.centerValue = GetProjectSettingsTempo(NULL, NULL);
+					m_properties.centerValue = (m_properties.maxValue + m_properties.minValue) / 2;
 					m_properties.type = TEMPO;
 					m_properties.paramType.Set(token);
 				}

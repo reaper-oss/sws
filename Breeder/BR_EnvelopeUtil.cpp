@@ -688,7 +688,7 @@ double BR_Envelope::ValueAtPosition (double position, bool fastMode /*= false*/)
 			if (this->ValidateId(nextId))
 				return m_points[nextId].value;
 			else
-				return this->CenterValue();
+				return this->LaneCenterValue();
 		}
 
 		// No next point?
@@ -804,9 +804,9 @@ double BR_Envelope::NormalizedDisplayValue (double value)
 	}
 	else
 	{
-		double centerValue = this->CenterValue();
-		if (value > centerValue) displayValue = ((value - centerValue) / (max - centerValue) + 1) / 2;
-		else                     displayValue = ((value - min)         / (centerValue - min)    ) * 0.5;
+		double center = this->LaneCenterValue();
+		if (value > center) displayValue = ((value - center) / (max - center) + 1) / 2;
+		else                displayValue = ((value - min)    / (center - min)    ) * 0.5;
 	}
 
 	return displayValue;
@@ -829,9 +829,9 @@ double BR_Envelope::RealValue (double normalizedDisplayValue)
 	}
 	else
 	{
-		double centerValue = this->CenterValue();
-		if (normalizedDisplayValue > 0.5) realValue = centerValue + (2 * normalizedDisplayValue - 1) * (max - centerValue);
-		else                              realValue = min         + (normalizedDisplayValue / 0.5)   * (centerValue - min);
+		double center = this->LaneCenterValue();
+		if (normalizedDisplayValue > 0.5) realValue = center + (2 * normalizedDisplayValue - 1) * (max - center);
+		else                              realValue = min    + (normalizedDisplayValue / 0.5)   * (center - min);
 	}
 
 	return realValue;	
@@ -1299,7 +1299,7 @@ double BR_Envelope::MaxValueAbs ()
 	return m_properties.maxValue;
 }
 
-double BR_Envelope::CenterValue ()
+double BR_Envelope::LaneCenterValue ()
 {
 	this->FillProperties();
 	if ((this->Type() == VOLUME || this->Type() == VOLUME_PREFX) && this->LaneMaxValue() == 1)

@@ -84,7 +84,7 @@ bool            BR_SetItemEdges (MediaItem* item, double startTime, double endTi
 void            BR_SetMediaItemImageResource (MediaItem* item, const char* imageIn, int imageFlags);
 bool            BR_SetMediaSourceProperties (MediaItem_Take* take, bool section, double start, double length, double fade, bool reverse);
 bool            BR_SetMediaTrackLayouts (MediaTrack* track, const char* mcpLayoutNameIn, const char* tcpLayoutNameIn);
-bool            BR_SetMidiTakeTempoInfo(MediaItem_Take* take, bool ignoreProjTempo, double bpm, int num, int den);
+bool            BR_SetMidiTakeTempoInfo (MediaItem_Take* take, bool ignoreProjTempo, double bpm, int num, int den);
 bool            BR_SetTakeSourceFromFile (MediaItem_Take* take, const char* filenameIn, bool inProjectData);
 bool            BR_SetTakeSourceFromFile2 (MediaItem_Take* take, const char* filenameIn, bool inProjectData, bool keepSourceProperties);
 MediaItem_Take* BR_TakeAtMouseCursor (double* positionOut);

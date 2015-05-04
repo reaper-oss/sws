@@ -1361,7 +1361,7 @@ void SetProjectTrackSelAction (COMMAND_T* ct)
 		// localization note: some messages are shared with the CA editor
 
 		char actionString[SNM_MAX_ACTION_CUSTID_LEN];
-		lstrcpyn(actionString, __LOCALIZE("Paste command ID or identifier string here","sws_mbox"), sizeof(actionString));
+		_snprintfSafe(actionString, sizeof(actionString), "%s", __LOCALIZE("Paste command ID or identifier string here","sws_mbox"));
 
 		if (PromptUserForString(GetMainHwnd(), __LOCALIZE("Set project track selection action","sws_mbox"), actionString, sizeof(actionString), true))
 		{

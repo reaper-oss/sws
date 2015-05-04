@@ -786,7 +786,7 @@ bool SetIgnoreTempo (MediaItem* item, bool ignoreTempo, double bpm, int num, int
 					else if (i == 1) newState.AppendFormatted(256, "%d",     ignoreTempo ? 1 : 0);
 					else if (i == 2) newState.AppendFormatted(256, "%.14lf", ignoreTempo ? bpm : lp.gettoken_float(i));
 					else if (i == 3) newState.AppendFormatted(256, "%d",     ignoreTempo ? num : lp.gettoken_int(i));
-					else if (i == 3) newState.AppendFormatted(256, "%d",     ignoreTempo ? den : lp.gettoken_int(i));
+					else if (i == 4) newState.AppendFormatted(256, "%d",     ignoreTempo ? den : lp.gettoken_int(i));
 					else             newState.AppendFormatted(256, "%s",     lp.gettoken_str(i));
 					newState.Append(" ");
 				}

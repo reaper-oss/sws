@@ -164,7 +164,7 @@ void BR_EnvGetProperties (BR_Envelope* envelope, bool* activeOut, bool* visibleO
 		WritePtr(defaultShapeOut,    envelope->GetDefaultShape());
 		WritePtr(minValueOut,        envelope->LaneMinValue());
 		WritePtr(maxValueOut,        envelope->LaneMaxValue());
-		WritePtr(centerValueOut,     envelope->CenterValue());
+		WritePtr(centerValueOut,     envelope->LaneCenterValue());
 		WritePtr(faderScalingOut,    envelope->IsScaledToFader());
 
 		if (typeOut)
@@ -911,13 +911,8 @@ bool BR_SetMediaTrackLayouts (MediaTrack* track, const char* mcpLayoutNameIn, co
 	return updated;
 }
 
-bool BR_SetMidiTakeTempoInfo(MediaItem_Take* take, bool ignoreProjTempo, double bpm, int num, int den)
+bool BR_SetMidiTakeTempoInfo (MediaItem_Take* take, bool ignoreProjTempo, double bpm, int num, int den)
 {
-	bool   ignoreTempoOut = false;
-	double bpmOut         = 0;
-	int    numOut         = 0;
-	int    denOut         = 0;
-
 	bool succes = false;
 	if (take && IsMidi(take, NULL))
 	{

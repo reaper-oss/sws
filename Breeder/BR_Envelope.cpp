@@ -577,7 +577,7 @@ static void SetEnvPointMouseValue (COMMAND_T* ct)
 				{
 					// When dealing with MUTE, snap to top or bottom
 					if (g_envMouseEnvelope->Type() == MUTE)
-						newValue = (newValue >= g_envMouseEnvelope->CenterValue()) ? g_envMouseEnvelope->LaneMaxValue() : g_envMouseEnvelope->LaneMinValue();
+						newValue = (newValue >= g_envMouseEnvelope->LaneCenterValue()) ? g_envMouseEnvelope->LaneMaxValue() : g_envMouseEnvelope->LaneMinValue();
 
 					if (g_envMouseEnvelope->SetPoint(i, NULL, &newValue, NULL, NULL, false, true))
 					{
@@ -1613,7 +1613,7 @@ void SelectDeleteEnvPointUnderMouse (COMMAND_T* ct)
 			{
 				envelope.DeletePoint(mouseInfo.GetEnvelopePoint());
 				if (envelope.CountPoints() == 0) // in case there are no more points left, envelope will get removed - so insert default point back
-					envelope.CreatePoint(0, 0, envelope.CenterValue(), envelope.GetDefaultShape(), 0, false); // position = 0 is why we created BR_Envelope with !takeEnvelopesUseProjectTime
+					envelope.CreatePoint(0, 0, envelope.LaneCenterValue(), envelope.GetDefaultShape(), 0, false); // position = 0 is why we created BR_Envelope with !takeEnvelopesUseProjectTime
 			}
 
 			if (envelope.Commit())

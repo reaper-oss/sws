@@ -140,14 +140,14 @@ public:
 	bool IsScaledToFader ();
 	int GetLaneHeight ();
 	int GetDefaultShape ();
-	int GetFxId ();    // returns -1 if not FX envelope
-	int GetParamId (); // returns -1 if not FX envelope
-	int GetSendId ();  // returns -1 if not send envelope, otherwise send id for it's parent track
-	double MinValueAbs (); // absolute minimum value for envelope (ignoring display preferences for certain envelopes)
-	double MaxValueAbs (); // absolute maximum value for envelope (ignoring display preferences for certain envelopes)
-	double CenterValue ();
-	double LaneMinValue (); // minimum drawable value
-	double LaneMaxValue (); // maximum drawable value
+	int GetFxId ();    // Returns -1 if not FX envelope
+	int GetParamId (); // Returns -1 if not FX envelope
+	int GetSendId ();  // Returns -1 if not send envelope, otherwise send id for it's parent track
+	double MinValueAbs (); // Absolute minimum value for envelope (ignoring display preferences for certain envelopes)
+	double MaxValueAbs (); // Absolute maximum value for envelope (ignoring display preferences for certain envelopes)
+	double LaneCenterValue ();  // Center value for lane center
+	double LaneMinValue ();     // Minimum drawable value
+	double LaneMaxValue ();     // Maximum drawable value
 
 
 	/* Set envelope properties */

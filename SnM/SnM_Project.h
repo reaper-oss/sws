@@ -36,7 +36,7 @@
 bool IsActiveProjectInLoadSave(char* _projfn = NULL, int _projfnSz = 0, bool _ensureRPP = false);
 void TieFileToProject(const char* _fn, ReaProject* _prj = NULL, bool _tie = true);
 void UntieFileFromProject(const char* _fn, ReaProject* _prj = NULL);
-double SNM_GetProjectLength(bool _items = true, bool _inclRgnsMkrs = false);
+double SNM_GetProjectLength(bool _items = true, bool _inclRgnsMkrs = true);
 bool InsertSilence(const char* _undoTitle, double _pos, double _len);
 
 void LoadOrSelectProject(const char* _fn, bool _newTab);

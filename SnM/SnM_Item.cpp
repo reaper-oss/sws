@@ -84,6 +84,22 @@ bool DeleteMediaItemIfNeeded(MediaItem* _item)
 	return deleted;
 }
 
+bool DeleteMediaItemsByName(const char* tkname)
+{
+	int cnt=0;
+	for (int ii=1; ii <= GetNumTracks(); ii++) // skip master
+		if (MediaTrack* tt = CSurf_TrackFromID(ii, false))
+			for (int j=GetTrackNumMediaItems(tt)-1; j>=0 ; j--)
+				if (MediaItem* item = GetTrackMediaItem(tt,j))
+					if (MediaItem_Take* tk=GetActiveTake(item))
+						if (!strcmp((char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL), tkname))
+						{
+							DeleteTrackMediaItem(tt, item);
+							cnt++;
+						}
+	return !!cnt;
+}
+
 void SNM_GetSelectedItems(ReaProject* _proj, WDL_PtrList<MediaItem>* _items, bool _onSelTracks)
 {
 	int count = _items ? CountTracks(_proj) : 0;
@@ -166,6 +182,23 @@ bool GetItemsInInterval(WDL_PtrList<void>* _items, double _pos1, double _pos2, b
 							_items->Add(item);
 	}
 	return (_items && _items->GetSize());
+}
+
+bool GenerateItemsInInterval(WDL_PtrList<void>* _items, double _pos1, double _pos2, const char* tkname)
+{
+	int cnt=0;
+	if (_items) _items->Empty(false);
+	for (int i=1; i <= GetNumTracks(); i++) // skip master
+		if (MediaTrack* tr = CSurf_TrackFromID(i, false))
+			if (MediaItem* item=CreateNewMIDIItemInProj(tr, _pos1, _pos2, NULL))
+			{
+				if (_items) _items->Add(item);
+				if (tkname)
+				if (MediaItem_Take* tk=GetActiveTake(item))
+					GetSetMediaItemTakeInfo(tk, "P_NAME", (void*)tkname);
+				cnt++;
+			}
+	return !!cnt;
 }
 
 void GetAllItemPointers(WDL_PtrList<void>* _items)

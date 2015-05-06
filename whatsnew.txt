@@ -1,3 +1,5 @@
+Region Playlist:crop project to playlist, paste playlist, etc support automation on folder/empty tracks (issue 701)
+
 Resources: more commands obey multiple selection in the list view (e.g. play all selected media files in one go, open a bunch of project tabs in one go, etc)
 
 Added actions

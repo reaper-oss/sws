@@ -1808,16 +1808,20 @@ void AppendPasteCropPlaylist(RegionPlaylist* _playlist, int _mode)
 			int rgnnum, rgncol=0; double rgnpos, rgnend; const char* rgnname;
 			if (EnumMarkerRegionById(NULL, plItem->m_rgnId, NULL, &rgnpos, &rgnend, &rgnname, &rgnnum, &rgncol)>=0)
 			{
-				WDL_PtrList<void> itemsToKeep;
-				if (GetItemsInInterval(&itemsToKeep, rgnpos, rgnend, false))
+				if (!updated)
 				{
-					if (!updated) // to do once (for undo stability)
-					{
-						updated = true;
-						Undo_BeginBlock2(NULL);
-						PreventUIRefresh(1);
-					}
+					updated = true;
+					Undo_BeginBlock2(NULL);
+					PreventUIRefresh(1);
+				}
 
+				// trick: generate dummy items to move envelope points, etc -- even with empty/folder tracks
+				WDL_PtrList<void> itemsToRemove;
+				GenerateItemsInInterval(&itemsToRemove, rgnpos+SNM_FUDGE_FACTOR, rgnend-SNM_FUDGE_FACTOR, "<S&M Region Playlist - TEMP>");
+
+				WDL_PtrList<void> itemsToKeep;
+				GetItemsInInterval(&itemsToKeep, rgnpos, rgnend, false);
+				{
 					// store regions
 					bool found = false;
 					for (int k=0; !found && k<rgns.GetSize(); k++)
@@ -1837,23 +1841,25 @@ void AppendPasteCropPlaylist(RegionPlaylist* _playlist, int _mode)
 
 					// REAPER "bug": the last param of ApplyNudge() is ignored although
 					// it is used in duplicate mode => use a loop instead
-					// note: DupSelItems() is an override of the native ApplyNudge()
 					if (plItem->m_cnt>0)
 						for (int k=0; k < plItem->m_cnt; k++) {
-							DupSelItems(NULL, endPos-rgnpos, &itemsToKeep);
+							DupSelItems(NULL, endPos-rgnpos, &itemsToKeep); // overrides the native ApplyNudge()
 							endPos += (rgnend-rgnpos);
 						}
 
-					// "unsplit" items (itemSates & splitItems are empty when croping, see above)
+					// "unsplit" items
 					for (int j=0; j < itemSates.GetSize(); j++)
 						if (SNM_ItemChunk* ic = itemSates.Get(j)) {
 								SNM_ChunkParserPatcher p(ic->m_item);
 								p.SetChunk(ic->m_chunk.Get());
 							}
+
+					DeleteMediaItemsByName("<S&M Region Playlist - TEMP>");
+
 					for (int j=0; j < splitItems.GetSize(); j++)
 						if (MediaItem* item = (MediaItem*)splitItems.Get(j))
 							if (itemsToKeep.Find(item) < 0)
-								DeleteTrackMediaItem(GetMediaItem_Track(item), item);
+								DeleteTrackMediaItem(GetMediaItem_Track(item), item); // might have been deleted above already (no-op)
 				}
 			}
 		}

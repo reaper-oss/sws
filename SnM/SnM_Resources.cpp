@@ -857,7 +857,7 @@ void ResourcesView::Perform(int _what)
 	WDL_FastString undo;
 	ResourceItem* pItem = (ResourceItem*)EnumSelected(&x);
 	int slot = g_SNM_ResSlots.Get(g_resType)->Find(pItem);
-	if (pItem && slot >= 0) 
+	while (pItem && slot >= 0)
 	{
 		switch(GetTypeForUser())
 		{
@@ -867,35 +867,35 @@ void ResourcesView::Perform(int _what)
 					case 0:
 						SNM_GetActionName("S&M_PASTE_TRACKFXCHAIN", &undo, slot);
 						ApplyTracksFXChainSlot(g_resType, undo.Get(), slot, false, false);
-						break;
+						goto done;
 					case 1:
 						SNM_GetActionName("S&M_PASTE_INFXCHAIN", &undo, slot);
 						ApplyTracksFXChainSlot(g_resType, undo.Get(), slot, false, true);
-						break;
+						goto done;
 					case 2:
 						SNM_GetActionName("S&M_TRACKFXCHAIN", &undo, slot);
 						ApplyTracksFXChainSlot(g_resType, undo.Get(), slot, true, false);
-						break;
+						goto done;
 					case 3:
 						SNM_GetActionName("S&M_INFXCHAIN", &undo, slot);
 						ApplyTracksFXChainSlot(g_resType, undo.Get(), slot, true, true);
-						break;
+						goto done;
 					case 4:
 						SNM_GetActionName("S&M_PASTE_TAKEFXCHAIN", &undo, slot);
 						ApplyTakesFXChainSlot(g_resType, undo.Get(), slot, true, false);
-						break;
+						goto done;
 					case 5:
 						SNM_GetActionName("S&M_PASTE_FXCHAIN_ALLTAKES", &undo, slot);
 						ApplyTakesFXChainSlot(g_resType, undo.Get(), slot, false, false);
-						break;
+						goto done;
 					case 6:
 						SNM_GetActionName("S&M_TAKEFXCHAIN", &undo, slot);
 						ApplyTakesFXChainSlot(g_resType, undo.Get(), slot, true, true);
-						break;
+						goto done;
 					case 7:
 						SNM_GetActionName("S&M_FXCHAIN_ALLTAKES", &undo, slot);
 						ApplyTakesFXChainSlot(g_resType, undo.Get(), slot, false, true);
-						break;
+						goto done;
 				}
 				break;
 			case SNM_SLOT_TR:
@@ -908,11 +908,11 @@ void ResourcesView::Perform(int _what)
 					case 1:
 						SNM_GetActionName("S&M_APPLY_TRTEMPLATE", &undo, slot);
 						ApplyTrackTemplateSlot(g_resType, undo.Get(), slot, false, false);
-						break;
+						goto done;
 					case 2:
 						SNM_GetActionName("S&M_APPLY_TRTEMPLATE_ITEMSENVS", &undo, slot);
 						ApplyTrackTemplateSlot(g_resType, undo.Get(), slot, true, true);
-						break;
+						goto done;
 					case 3:
 						SNM_GetActionName("S&M_PASTE_TEMPLATE_ITEMS", &undo, slot);
 						ReplacePasteItemsTrackTemplateSlot(g_resType, undo.Get(), slot, true);
@@ -929,7 +929,7 @@ void ResourcesView::Perform(int _what)
 					case 0:
 //						SNM_GetActionName("S&M_APPLY_PRJTEMPLATE", &undo, slot);
 						LoadOrSelectProjectSlot(g_resType, /*undo.Get()*/ NULL, slot, false);
-						break;
+						goto done;
 					case 1:
 //						SNM_GetActionName("S&M_NEWTAB_PRJTEMPLATE", &undo, slot);
 						LoadOrSelectProjectSlot(g_resType, /*undo.Get()*/ NULL, slot, true);
@@ -975,11 +975,11 @@ void ResourcesView::Perform(int _what)
 					case 0:
 //						SNM_GetActionName("S&M_SHOW_IMG", &undo, slot);
 						ShowImageSlot(g_resType, /*undo.Get()*/ NULL, slot);
-						break;
+						goto done; // single instance window ATM
 					case 1:
 						SNM_GetActionName("S&M_SET_TRACK_ICON", &undo, slot);
 						SetSelTrackIconSlot(g_resType, undo.Get(), slot);
-						break;
+						goto done;
 					case 2:
 						SNM_GetActionName("S&M_ADDMEDIA_CURTRACK", &undo, slot);
 						InsertMediaSlot(g_resType, undo.Get(), slot, 0);
@@ -989,7 +989,7 @@ void ResourcesView::Perform(int _what)
 	 		case SNM_SLOT_THM:
 //				SNM_GetActionName("S&M_LOAD_THEME", &undo, slot);
 				LoadThemeSlot(g_resType, /*undo.Get()*/ NULL, slot);
-				break;
+				goto done;
 			default:
 				// works on OSX too
 				if (WDL_FastString* fnStr = GetOrPromptOrBrowseSlot(g_resType, &slot)) 
@@ -999,12 +999,17 @@ void ResourcesView::Perform(int _what)
 					ShellExecute(GetMainHwnd(), "open", fnStr->Get(), NULL, NULL, SW_SHOWNORMAL);
 					delete fnStr;
 				}
-				break;
+				goto done;
 		}
 
-		// update (in case the slot has changed, e.g. empty -> filled)
-		Update();
+		pItem = (ResourceItem*)EnumSelected(&x);
+		slot = g_SNM_ResSlots.Get(g_resType)->Find(pItem);
 	}
+
+done:
+	// update in case slected slots' content have changed, e.g.:
+	// action ran on empty sel slot -> auto-prompt to fill slot (macro firendly) -> Perform()
+	Update();
 }
 
 
@@ -3621,7 +3626,7 @@ void ResourcesClearDeleteSlotsFiles(COMMAND_T* _ct, int _type, int _mode, int _s
 	{
 		if (ResourceList* fl = g_SNM_ResSlots.Get(g_tiedSlotActions[_type]))
 		{
-/*JFB commented: more not macro-friendly
+/*JFB commented: not macro-friendly
 			if (!fl->GetSize())
 			{
 				WDL_FastString msg;

@@ -75,30 +75,51 @@ void UntieFileFromProject(const char* _fn, ReaProject* _prj) {
 	TieFileToProject(_fn, _prj, false);
 }
 
-double SNM_GetProjectLength(bool _items, bool _inclRgnsMkrs)
+// flags&1=incl. items, &2=incl. markers/regions, &4=incl. envelopes
+double SNM_GetProjectLength(int _flags)
 {
 	double prjlen = 0.0, pos, end;
-	if (_inclRgnsMkrs)
+	if (_flags&2)
 	{
 		int x=0; bool isRgn;
-		while (x = EnumProjectMarkers2(NULL, x, &isRgn, &pos, &end, NULL, NULL)) {
+		while ((x = EnumProjectMarkers2(NULL, x, &isRgn, &pos, &end, NULL, NULL))) {
 			if (isRgn) { if (end > prjlen) prjlen = end; }
 			else { if (pos > prjlen) prjlen = pos; }
 		}
 	}
-	if (_items)
+	if ((_flags&1) || (_flags&4))
 	{
 		double len;
-		for (int i=1; i <= GetNumTracks(); i++) // skip master
+		for (int i=0; i <= GetNumTracks(); i++)
+		{
 			if (MediaTrack* tr = CSurf_TrackFromID(i, false))
-				for (int j=0; j < GetTrackNumMediaItems(tr); j++)
+			{
+				int cnt= i>0 ? GetTrackNumMediaItems(tr) : 0; // skip master
+				if (_flags&1) for (int j=0; j<cnt; j++)
+				{
 					if (MediaItem* item = GetTrackMediaItem(tr,j))
 					{
 						pos = *(double*)GetSetMediaItemInfo(item, "D_POSITION", NULL);
 						len = *(double*)GetSetMediaItemInfo(item, "D_LENGTH", NULL);
-						if ((pos+len)>prjlen)
-							prjlen = pos+len;
+						if ((pos+len)>prjlen) prjlen = pos+len;
 					}
+				}
+
+				cnt=CountTrackEnvelopes(tr);
+				if (_flags&4) for (int j=0; j<cnt; j++)
+				{
+					if (TrackEnvelope* env = GetTrackEnvelope(tr,j))
+					{
+						if (int ptcnt=CountEnvelopePoints(env))
+						{
+							pos=prjlen;
+							GetEnvelopePoint(env, ptcnt-1, &pos, NULL, NULL, NULL, NULL);
+							if (pos>prjlen) prjlen = pos;
+						}
+					}
+				}
+			}
+		}
 	}
 	return prjlen;
 }

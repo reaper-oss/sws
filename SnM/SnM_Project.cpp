@@ -190,7 +190,7 @@ double SelectProjectJob::GetCurrentValue()
 {
 	int i=-1;
 	ReaProject *prj, *curprj=EnumProjects(-1, NULL, 0);
-	while (prj = EnumProjects(++i, NULL, 0))
+	while ((prj = EnumProjects(++i, NULL, 0)))
 		if (prj == curprj)
 			return i;
 	return 0.0;
@@ -200,7 +200,7 @@ double SelectProjectJob::GetMaxValue()
 {
 	int i=0;
 	ReaProject *prj;
-	while (prj = EnumProjects(i++, NULL, 0));
+	while ((prj = EnumProjects(i++, NULL, 0)));
 	return i;
 }
 

@@ -1,4 +1,10 @@
-!v2.6.0 #0 featured build (January 7, 2015)
+!v2.7 featured build (May 7, 2015)
+
+OSX: fixed UI issues with listviews on Yosemite and trackpads
+
+Fixed various buglets (Region Playlist, marker/region actions, etc) when some regions/markers/envelopes end later than the last media item
+
+!v2.6 featured build (January 7, 2015)
 Notes window
 +Added "Wrap text" option in the context menu
 +Import SubRip file: name regions with subtitles content  

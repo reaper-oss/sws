@@ -191,7 +191,7 @@ int IsAboutBoxOpen(COMMAND_T*) {
 static COMMAND_T g_commandTable[] = 
 {
 	{ { DEFACCEL, "SWS: About" }, "SWS_ABOUT", OpenAboutBox, "About SWS Extensions", NULL, IsAboutBoxOpen, },
-	{ { DEFACCEL, "SWS/S&M: What's new?" }, "S&M_WHATSNEW", WhatsNew, },
+	{ { DEFACCEL, "SWS/S&M: What's new..." }, "S&M_WHATSNEW", WhatsNew, },
 	{ { DEFACCEL, "SWS/BR: Check for new SWS version..." }, "BR_VERSION_CHECK", VersionCheckAction, },
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

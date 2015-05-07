@@ -48,6 +48,7 @@
 #include "SnM/SnM.h"
 #include "SnM/SnM_CSurf.h"
 #include "SnM/SnM_Dlg.h"
+#include "SnM/SnM_Util.h"
 #include "Padre/padreActions.h"
 #include "Fingers/FNG_client.h"
 #include "Autorender/Autorender.h"
@@ -615,8 +616,6 @@ void ErrMsg(const char* errmsg, bool wantblabla=true)
 
 #define IMPAPI(x)       if (!errcnt && !((*((void **)&(x)) = (void *)rec->GetFunc(#x)))) errcnt++;
 #define ERR_RETURN(a)   { ErrMsg(a); goto error; }
-#define ERR_RETURN1(a)  { ErrMsg(a,false); goto error; }
-#define ERR_RETURN2(a)  { ErrMsg(a,false); return 0; }
 
 extern "C"
 {
@@ -1055,34 +1054,68 @@ error:
 		if (errcnt)
 		{
 			char txt[2048]="";
-			_snprintf(txt, sizeof(txt),
+			_snprintfSafe(txt, sizeof(txt),
 					// keep the message on a single line (for the LangPack generator)
 					__LOCALIZE_VERFMT("The version of SWS extension you have installed is incompatible with your version of REAPER.\nYou probably have a REAPER version less than %s installed.\nPlease install the latest version of REAPER from www.reaper.fm.","sws_mbox"),
 					"v5.0pre21"); // <-- update compatible version here
-			ERR_RETURN1(txt)
+
+			ErrMsg(txt,false);
+			goto error;
 		}
 
 		// check for dupe/clone
+		if (rec->GetFunc("SNM_GetIntConfigVar"))
 		{
-			int (*SNM_GetIntConfigVar)(const char* varname, int errvalue);
-			if ((*((void **)&(SNM_GetIntConfigVar)) = (void *)rec->GetFunc("SNM_GetIntConfigVar")))
-			{
-				WDL_FastString dir1, dir2;
+			WDL_FastString dir1, dir2, mypath(__LOCALIZE("Unknown","sws_mbox")), conflict;
 #ifdef _WIN32
-				dir1.SetFormatted(2048, "%s\\%s", GetExePath(), "Plugins");
-				dir2.SetFormatted(2048, "%s\\%s", GetResourcePath(), "UserPlugins");
+			dir1.SetFormatted(2048, "%s\\%s", GetExePath(), "Plugins");
+			dir2.SetFormatted(2048, "%s\\%s", GetResourcePath(), "UserPlugins");
+			
+			HMODULE hm = NULL;
+			if (GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | ET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+								   (LPCSTR)&hookCommandProc, &hm))
+			{
+				wchar_t wpath[2048]="";
+				GetModuleFileNameW(hm, wpath, sizeof(wpath));
+				
+				char path[2018]="";
+				WideCharToMultiByte(CP_UTF8, 0, wpath, -1, path, sizeof(path), NULL, NULL);
+				mypath.Set(path);
+			}
 #else
-				dir1.SetFormatted(2048, "%s/%s", GetResourcePath(), "UserPlugins");
-				dir2.Set("/Library/Application Support/REAPER/UserPlugins");
+			dir1.SetFormatted(2048, "%s/%s", GetResourcePath(), "UserPlugins");
+			dir2.Set("/Library/Application Support/REAPER/UserPlugins");
+
+			Dl_info info;
+			if (dladdr((const void*)hookCommandProc, &info))
+			{
+				mypath.Set(info.dli_fname);
+			}
+
+			// older reaper_sws.dylib?
+			// (renamed into reaper_sws_extension.dylib in newer SWS version so that REAPER scans both)
+			if (!strnicmp(mypath.Get(), dir2.Get(), dir2.GetLength()))
+			{
+				WDL_FastString tmp(dir1.Get());
+				tmp.Append("/reaper_sws.dylib");
+				if (FileExists(tmp.Get()))
+				{
+					conflict.SetFormatted(2048, __LOCALIZE_VERFMT("(probably %s/reaper_sws.dylib)","sws_mbox"), dir1.Get());
+				}
+			}
 #endif
 
-				char txt[8192]="";
-				_snprintf(txt, sizeof(txt),
-				// keep the message on a single line (for the LangPack generator)
-				__LOCALIZE_VERFMT("Several versions of the SWS extension (or SWS clones) are installed, SWS v%d.%d.%d #%d will not be loaded!\n\nPlease quit REAPER and uninstall the conflicting extension if it is older (see Main menu > Extensions > About SWS Extension).\n\nNote that REAPER will look for plugins in the following folders/order:\n%s\n%s","sws_mbox"),
-				SWS_VERSION, dir1.Get(), dir2.Get());
-				ERR_RETURN2(txt) // ERR_RETURN2: do not unregister stuff of the conflicting plugin!
-			}
+			char txt[8192]="";
+			_snprintfSafe(txt, sizeof(txt),
+			// keep the message on a single line (for the LangPack generator)
+			__LOCALIZE_VERFMT("Several versions of the SWS extension (or SWS clones) are installed!\n\nThis SWS extension instance will not be loaded:\n- Version: %d.%d.%d #%d\n- Location: %s\n\nPlease quit REAPER and remove the conflicting extension %s.\n\nNote: REAPER will look for extension plugins in the following order/folders:\n\t%s\n\t%s","sws_mbox"),
+				SWS_VERSION,
+				mypath.Get(),
+				conflict.Get()[0] ? conflict.Get() : __LOCALIZE(" (see the version in Main menu > Extensions > About SWS Extension)","sws_mbox"),
+				dir1.Get(), dir2.Get());
+			
+			ErrMsg(txt,false);
+			return 0; // do not unregister stuff of the conflicting plugin!
 		}
 
 		// hookcommand2 must be registered before hookcommand

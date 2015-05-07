@@ -6,7 +6,7 @@
 # This script must be run in <sws-dev-root>/Install
 #
 # Created by Tim Payne on 4/18/10. Updated by Jeffos.
-# Copyright 2010-2014 SWS. All rights reserved.
+# Copyright 2010-2015 SWS. All rights reserved.
 #
 if [ ! -d output ]; then
   mkdir output
@@ -23,9 +23,9 @@ read -p "Check build results, then press enter to continue..."
 #
 # Make universal binary
 #
-lipo sws_osx/reaper_sws.dylib sws_osx64/reaper_sws.dylib -create -o sws_osx/universal.dylib
-rm sws_osx/reaper_sws.dylib
-mv sws_osx/universal.dylib sws_osx/reaper_sws.dylib
+lipo sws_osx/reaper_sws_extension.dylib sws_osx64/reaper_sws_extension.dylib -create -o sws_osx/universal.dylib
+rm sws_osx/reaper_sws_extension.dylib
+mv sws_osx/universal.dylib sws_osx/reaper_sws_extension.dylib
 #
 # Make Reascript wrappers
 #

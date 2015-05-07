@@ -196,7 +196,7 @@ if exist temp\online_version.h (
 echo mdelete *.* >> temp\upload.ftp
 
 REM Upload new files
-echo put output\whatsnew.html index.html >> temp\upload.ftp
+..\BuildUtils\Release\PrintVersion ..\version.h "put output\whatsnew.html whatsnew-v%%d.%%d.%%d.%%d.html" >> temp\upload.ftp
 ..\BuildUtils\Release\PrintVersion ..\version.h "put output\sws_extension.exe sws-v%%d.%%d.%%d.%%d-install.exe" >> temp\upload.ftp
 ..\BuildUtils\Release\PrintVersion ..\version.h "put output\sws_extension_x64.exe sws-v%%d.%%d.%%d.%%d-x64-install.exe" >> temp\upload.ftp
 ..\BuildUtils\Release\PrintVersion ..\version.h "put %osx_dmg_path% sws-v%%d.%%d.%%d.%%d.dmg" >> temp\upload.ftp

@@ -2,7 +2,7 @@
 / Adam.cpp
 /
 / Copyright (c) 2010 Adam Wathan
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal

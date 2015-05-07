@@ -692,12 +692,12 @@ error:
 		IMPAPI(CoolSB_GetScrollInfo);
 		IMPAPI(CoolSB_SetScrollInfo);
 		IMPAPI(CountActionShortcuts);
-	IMPAPI(CountEnvelopePoints); // v5pre4+
+		IMPAPI(CountEnvelopePoints); // v5pre4+
 		IMPAPI(CountMediaItems);
 		IMPAPI(CountProjectMarkers);
 		IMPAPI(CountSelectedMediaItems);
 		IMPAPI(CountSelectedTracks);
-	IMPAPI(CountTakeEnvelopes) // v5pre12+
+		IMPAPI(CountTakeEnvelopes) // v5pre12+
 		IMPAPI(CountTakes);
 		IMPAPI(CountTCPFXParms);
 		IMPAPI(CountTempoTimeSigMarkers);
@@ -720,12 +720,12 @@ error:
 		IMPAPI(CSurf_TrackFromID);
 		IMPAPI(CSurf_TrackToID);
 		IMPAPI(DB2SLIDER);
-	IMPAPI(DeleteEnvelopePointRange); // v5pre5+
+		IMPAPI(DeleteEnvelopePointRange); // v5pre5+
 		IMPAPI(DeleteActionShortcut);
 		IMPAPI(DeleteProjectMarker);
 		IMPAPI(DeleteProjectMarkerByIndex);
 		IMPAPI(DeleteTakeStretchMarkers);
-	IMPAPI(DeleteTempoTimeSigMarker); // v5pre4+
+		IMPAPI(DeleteTempoTimeSigMarker); // v5pre4+
 		IMPAPI(DeleteTrack);
 		IMPAPI(DeleteTrackMediaItem);
 		IMPAPI(DestroyAudioAccessor);
@@ -743,8 +743,8 @@ error:
 		IMPAPI(EnumProjectMarkers2);
 		IMPAPI(EnumProjectMarkers3);
 		IMPAPI(EnumProjects);
-	IMPAPI(Envelope_Evaluate); // v5pre4+
-	IMPAPI(Envelope_SortPoints); // v5pre4+
+		IMPAPI(Envelope_Evaluate); // v5pre4+
+		IMPAPI(Envelope_SortPoints); // v5pre4+
 		IMPAPI(file_exists);
 		IMPAPI(format_timestr);
 		IMPAPI(format_timestr_pos);
@@ -765,12 +765,12 @@ error:
 		IMPAPI(GetCursorPosition);
 		IMPAPI(GetCursorPositionEx);
 		IMPAPI(GetEnvelopeName);
-	IMPAPI(GetEnvelopePoint); // v5pre4
-	IMPAPI(GetEnvelopePointByTime) // v5pre4
-	IMPAPI(GetEnvelopeScalingMode); // v5pre13+
+		IMPAPI(GetEnvelopePoint); // v5pre4
+		IMPAPI(GetEnvelopePointByTime) // v5pre4
+		IMPAPI(GetEnvelopeScalingMode); // v5pre13+
 		IMPAPI(GetExePath);
 		IMPAPI(GetFocusedFX);
-	IMPAPI(GetFXEnvelope); // v5pre5+
+		IMPAPI(GetFXEnvelope); // v5pre5+
 		IMPAPI(GetGlobalAutomationOverride);
 		IMPAPI(GetHZoomLevel);
 		IMPAPI(GetIconThemePointer);
@@ -823,7 +823,7 @@ error:
 		IMPAPI(GetSetEnvelopeState);
 		IMPAPI(GetSetMediaItemInfo);
 		IMPAPI(GetSetMediaItemTakeInfo);
-	IMPAPI(GetMediaSourceLength); // v5.0pre3+
+		IMPAPI(GetMediaSourceLength); // v5.0pre3+
 		IMPAPI(GetSetMediaTrackInfo);
 		IMPAPI(GetSetObjectState);
 		IMPAPI(GetSetObjectState2);
@@ -837,7 +837,7 @@ error:
 		IMPAPI(GetSet_LoopTimeRange2);
 		IMPAPI(GetSubProjectFromSource);
 		IMPAPI(GetTake);
-	IMPAPI(GetTakeEnvelope); // v5pre12+
+		IMPAPI(GetTakeEnvelope); // v5pre12+
 		IMPAPI(GetTakeNumStretchMarkers);
 		IMPAPI(GetTCPFXParm);
 		IMPAPI(GetToggleCommandState);
@@ -863,7 +863,7 @@ error:
 		IMPAPI(guidToString);
 		IMPAPI(Help_Set);
 		IMPAPI(InsertMedia);
-	IMPAPI(InsertEnvelopePoint); // v5pre4+
+		IMPAPI(InsertEnvelopePoint); // v5pre4+
 		IMPAPI(InsertTrackAtIndex);
 		IMPAPI(IsMediaExtension);
 		IMPAPI(kbd_enumerateActions);
@@ -907,7 +907,7 @@ error:
 		IMPAPI(MIDI_InsertTextSysexEvt);
 		IMPAPI(MIDI_SetCC);
 		IMPAPI(MIDI_SetEvt);
-	IMPAPI(MIDI_SetItemExtents); // v5.0pre (no data on exact build in whatsnew, but I'm pretty sure I never saw this in v4)
+		IMPAPI(MIDI_SetItemExtents); // v5.0pre (no data on exact build in whatsnew, but I'm pretty sure I never saw this in v4)
 		IMPAPI(MIDI_SetNote);
 		IMPAPI(MIDI_SetTextSysexEvt);
 		IMPAPI(MIDIEditor_GetActive);
@@ -921,7 +921,7 @@ error:
 		IMPAPI(mkvolstr);
 		IMPAPI(MoveEditCursor);
 		IMPAPI(MoveMediaItemToTrack);
-	IMPAPI(OnColorThemeOpenFile); // v5.0pre21+
+		IMPAPI(OnColorThemeOpenFile); // v5.0pre21+
 		IMPAPI(OnPauseButton);
 		IMPAPI(OnPlayButton);
 		IMPAPI(OnStopButton);
@@ -944,7 +944,7 @@ error:
 		IMPAPI(projectconfig_var_addr);
 		IMPAPI(projectconfig_var_getoffs);
 		IMPAPI(RefreshToolbar);
-	IMPAPI(RefreshToolbar2); // v5pre8+
+		IMPAPI(RefreshToolbar2); // v5pre8+
 #ifdef _WIN32
 		IMPAPI(RemoveXPStyle);
 #endif
@@ -952,8 +952,8 @@ error:
 		IMPAPI(Resample_EnumModes);
 		IMPAPI(Resampler_Create);
 		IMPAPI(ReverseNamedCommandLookup);
-	IMPAPI(ScaleFromEnvelopeMode); // v5pre13+
-	IMPAPI(ScaleToEnvelopeMode); // v5pre13+
+		IMPAPI(ScaleFromEnvelopeMode); // v5pre13+
+		IMPAPI(ScaleToEnvelopeMode); // v5pre13+
 		IMPAPI(screenset_register);
 		IMPAPI(screenset_registerNew);
 		IMPAPI(screenset_unregister);
@@ -965,7 +965,7 @@ error:
 		IMPAPI(SetCursorContext);
 		IMPAPI(SetEditCurPos);
 		IMPAPI(SetEditCurPos2);
-	IMPAPI(SetEnvelopePoint); // v5pre4+
+		IMPAPI(SetEnvelopePoint); // v5pre4+
 		IMPAPI(SetGlobalAutomationOverride);
 		IMPAPI(SetMasterTrackVisibility);
 		IMPAPI(SetMediaItemInfo_Value);

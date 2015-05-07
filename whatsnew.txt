@@ -3,8 +3,7 @@
 OSX:
 +<strong>New disk image (.dmg)</strong>
  - For easier installation, security reasons, etc the extension is now installed in /Library/Application Support/REAPER/UserPlugins/reaper_sws_extension.dylib (instead of ~/Library/Application Support/REAPER/UserPlugins/reaper_sws.dylib)
- - When launching REAPER, <strong>a message box will guide you to resolve conflicts</strong>, if any. Fortunately, this is quite simple (just delete the old ~/Library/Application Support/REAPER/UserPlugins/reaper_sws.dylib) and msut done only once
- - This PITA is courtesy of Apple, thanks again Apple!
+ - When launching REAPER, <strong>a message box will guide you to resolve conflicts</strong>, if any. Fortunately, this is quite simple (just delete the old ~/Library/Application Support/REAPER/UserPlugins/reaper_sws.dylib) and must done only one time
 +Fixed UI issues with listviews on Yosemite and trackpads
 
 Region Playlist

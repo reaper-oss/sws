@@ -993,7 +993,7 @@ bool DeleteTakeAndMedia(int _mode)
 							nbRemainingTakes--;
 							if (pcm && FileOrDirExists(pcm->GetFileName()))
 							{
-								// set all media offline (yeah, EACH TIME! Fails otherwise: http://code.google.com/p/sws-extension/issues/detail?id=175#c3)
+								// set all media offline (yeah, EACH TIME! Fails otherwise: http://github.com/Jeff0S/sws/issues/175#c3)
 								Main_OnCommand(40100,0); 
 								if (SNM_DeleteFile(pcm->GetFileName(), true))
 								{

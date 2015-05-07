@@ -1151,7 +1151,7 @@ LRESULT CALLBACK ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				BitBlt(dc, 0, 0, bm.getWidth(), bm.getHeight(), bm.getDC(), 0, 0, SRCCOPY);
 
 				// Now that we're done drawing, adjust rZoom to 0 height if necessary
-				// This is to avoid unintentional vert zoom per mbn http://code.google.com/p/sws-extension/issues/detail?id=178#c14
+				// This is to avoid unintentional vert zoom per mbn http://github.com/Jeff0S/sws/issues/178#c14
 				if (rMini.top == rBox.top && rMini.bottom == rBox.bottom)
 					rZoom.top = rZoom.bottom;
 			}

@@ -1091,7 +1091,7 @@ typedef struct
 
 
 // --------------------------------------------------------------------------->
-// Registering files (code.google.com/p/sws-extension/issues/detail?id=177#c12)
+// Registering files (github.com/Jeff0S/sws/issues/177)
 //
 //  You can register files that are used for a project so that reaper knows
 //  about them, and will copy them if you save as w/ media copy.

@@ -1483,7 +1483,7 @@ void Apply()
 	SaveCyclactions(g_editedActions);
 #ifdef _WIN32
 	// force ini file cache refresh
-	// see http://support.microsoft.com/kb/68827 & http://code.google.com/p/sws-extension/issues/detail?id=397
+	// see http://support.microsoft.com/kb/68827 & http://github.com/Jeff0S/sws/issues/397
 	WritePrivateProfileString(NULL, NULL, NULL, g_SNM_CyclIniFn.Get());
 #endif
 	LoadCyclactions(wasEdited); // + flush, unregister, re-register
@@ -1509,7 +1509,7 @@ void Cancel(bool _checkSave)
 		SaveCyclactions(g_editedActions);
 #ifdef _WIN32
 		// force ini file cache refresh
-		// see http://support.microsoft.com/kb/68827 & http://code.google.com/p/sws-extension/issues/detail?id=397
+		// see http://support.microsoft.com/kb/68827 & http://github.com/Jeff0S/sws/issues/397
 		WritePrivateProfileString(NULL, NULL, NULL, g_SNM_CyclIniFn.Get());
 #endif
 		LoadCyclactions(true); // + flush, unregister, re-register

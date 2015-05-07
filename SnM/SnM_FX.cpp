@@ -230,7 +230,7 @@ bool PatchSelTracksFXOnline(const char * _undoMsg, int _mode, int _fxCmdId, cons
 				updated |= updt;
 
 				// close the GUI for buggy plugins (before chunk update)
-				// http://code.google.com/p/sws-extension/issues/detail?id=317
+				// http://github.com/Jeff0S/sws/issues/317
 				if (updt && g_SNM_SupportBuggyPlug)
 					TrackFX_SetOpen(tr, fxId, false);
 
@@ -298,7 +298,7 @@ bool PatchSelItemsFXState(const char * _undoMsg, int _mode, int _token, int _fxI
 
 /*JFB not used: doesn't seem to occur with take FX
 				// close the GUI for buggy plugins
-				// http://code.google.com/p/sws-extension/issues/detail?id=317
+				// http://github.com/Jeff0S/sws/issues/317
 				// API LIMITATION: cannot restore shown FX here (contrary to track FX)
 				if (updt && g_SNM_SupportBuggyPlug && _token == 2)
 				{
@@ -643,7 +643,7 @@ void TriggerFXPresetSelTrack(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _rel
 // _fxId: fx index in chain or -1 for the selected fx
 // _what: 0 to remove, -1 to move fx up in chain, 1 to move fx down in chain
 // note: brutal code (we'd need a dedicated parser/patcher here..)
-// initially comes from http://code.google.com/p/sws-extension/issues/detail?id=258
+// initially comes from http://github.com/Jeff0S/sws/issues/258
 bool SNM_MoveOrRemoveTrackFX(MediaTrack* _tr, int _fxId, int _what)
 {
 	bool updated = false;

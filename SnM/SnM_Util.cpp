@@ -494,7 +494,7 @@ void StringToExtensionConfig(WDL_FastString* _str, ProjectStateContext* _ctx)
 				curLineLen = SNM_MAX_CHUNK_LINE_LENGTH-1; // trim long lines
 			memcpy(curLine, pLine, curLineLen);
 			curLine[curLineLen] = '\0';
-			_ctx->AddLine("%s", curLine); // "%s" needed, see http://code.google.com/p/sws-extension/issues/detail?id=358
+			_ctx->AddLine("%s", curLine); // "%s" needed, see http://github.com/Jeff0S/sws/issues/358
 		}
 	}
 }

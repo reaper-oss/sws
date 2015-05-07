@@ -1072,13 +1072,13 @@ error:
 			dir2.SetFormatted(2048, "%s\\%s", GetResourcePath(), "UserPlugins");
 			
 			HMODULE hm = NULL;
-			if (GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | ET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-								   (LPCSTR)&hookCommandProc, &hm))
+			if (GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+								   (LPCWSTR)&hookCommandProc, &hm))
 			{
-				wchar_t wpath[2048]="";
+				wchar_t wpath[2048];
 				GetModuleFileNameW(hm, wpath, sizeof(wpath));
 				
-				char path[2018]="";
+				char path[2048]="";
 				WideCharToMultiByte(CP_UTF8, 0, wpath, -1, path, sizeof(path), NULL, NULL);
 				mypath.Set(path);
 			}
@@ -1111,7 +1111,7 @@ error:
 			__LOCALIZE_VERFMT("Several versions of the SWS extension (or SWS clones) are installed!\n\nThis SWS extension instance will not be loaded:\n- Version: %d.%d.%d #%d\n- Location: %s\n\nPlease quit REAPER and remove the conflicting extension %s.\n\nNote: REAPER will look for extension plugins in the following order/folders:\n\t%s\n\t%s","sws_mbox"),
 				SWS_VERSION,
 				mypath.Get(),
-				conflict.Get()[0] ? conflict.Get() : __LOCALIZE(" (see the version in Main menu > Extensions > About SWS Extension)","sws_mbox"),
+				conflict.Get()[0] ? conflict.Get() : __LOCALIZE("(see version in Main menu > Extensions > About SWS Extension)","sws_mbox"),
 				dir1.Get(), dir2.Get());
 			
 			ErrMsg(txt,false);

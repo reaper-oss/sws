@@ -33,6 +33,8 @@
 #define SWS_URL_BETA_DOWNLOAD	"http://sws.mj-s.com/download/pre-release/"
 #define SWS_URL_BETA_VERSION_H	"http://sws.mj-s.com/download/pre-release/version.h"
 #define SWS_URL_HELP_DIR		"http://sws.mj-s.com" // e.g. SWS_URL_HELP"/reaconsole.php"
+#define SWS_URL_WHATSNEW        "http://sws.mj-s.com/whatsnew.php"
+#define SWS_URL_BETA_WHATSNEW   "http://sws.mj-s.com/download/pre-release/whatsnew-v%d.%d.%d.%d.html"
 
 #define BUFFER_SIZE				2048
 #define SWS_THEMING				true

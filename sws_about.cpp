@@ -46,6 +46,20 @@
 static HWND s_hwndAbout = NULL;
 
 
+int IsOfficialOrBeta()
+{
+	WDL_FastString v;
+	v.SetFormatted(128, "%d.%d.%d #%d; ", SWS_VERSION);
+	const char* p=strrchr(v.Get(),'.');
+	if (p)
+	{
+		p++;
+		if (*p == '0') return 1; // official
+		else return 2; // pre-release
+	}
+	return 0;
+}
+
 void WhatsNew(COMMAND_T*)
 {
 	WDL_FastString fnIn;
@@ -56,22 +70,32 @@ void WhatsNew(COMMAND_T*)
 		GetResourcePath());
 #endif
 
+#ifndef _WIN32 // reaper_sws_whatsnew.txt not deployed on OSX anymore, replaced with online help
+	if (FileOrDirExistsErrMsg(fnIn.Get(), false))
+	{
+		SNM_DeleteFile(fnIn.Get(), false); // lazy cleanup
+	}
+
+	if (IsOfficialOrBeta()==2)
+	{
+		WDL_FastString url;
+		url.SetFormatted(512, SWS_URL_BETA_WHATSNEW, SWS_VERSION);
+		ShellExecute(GetMainHwnd(), "open", url.Get(), NULL, NULL, SW_SHOWNORMAL);
+	}
+	else
+	{
+		ShellExecute(GetMainHwnd(), "open", SWS_URL_WHATSNEW, NULL, NULL, SW_SHOWNORMAL);
+	}
+#else
 	if (FileOrDirExistsErrMsg(fnIn.Get()))
 	{
 		WDL_FastString fnOut;
 		char tmpDir[BUFFER_SIZE] = "";
-#ifdef _WIN32
 		GetTempPath(sizeof(tmpDir), tmpDir);
-#else
-		strcpy(tmpDir, "/tmp/");
-#endif
 		fnOut.SetFormatted(BUFFER_SIZE, WHATSNEW_HTM, tmpDir);
 
 		if (!GenHtmlWhatsNew(fnIn.Get(), fnOut.Get(), true, SWS_URL))
 		{
-/*JFB commented: fails on osx (safari), optional on windows
-			fnOut.Insert("file://", 0);
-*/
 			ShellExecute(GetMainHwnd(), "open", fnOut.Get(), NULL, NULL, SW_SHOWNORMAL);
 		}
 		else
@@ -80,6 +104,7 @@ void WhatsNew(COMMAND_T*)
 			ShellExecute(GetMainHwnd(), "open", fnIn.Get(), NULL, NULL, SW_SHOWNORMAL);
 		}
 	}
+#endif
 }
 
 INT_PTR WINAPI doAbout(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)

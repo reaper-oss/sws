@@ -2,9 +2,10 @@
 
 <strong>OSX:</strong>
 +<strong>New installation disk image (.dmg)</strong>
- - The new .dmg proposes to install the SWS Extension in a different directory: /Library/Application Support/REAPER/UserPlugins (instead of ~/Library/Application Support/REAPER/UserPlugins)
+ - The new .dmg proposes to install the SWS Extension in a different directory: 
+   /Library/Application Support/REAPER/UserPlugins (instead of ~/Library/Application Support/REAPER/UserPlugins)
  - This eases the installation ("normal" drag-drop .dmg, no more script), fixes some security issues, etc but has a small inconvenience when upgrading too, some information messages will guide you in this case though
-- More details http://forum.cockos.com/showpost.php?p=1518816&postcount=96|here|
+ - More details http://forum.cockos.com/showpost.php?p=1518816&postcount=96|here|
 +Fixed UI issues with listviews on Yosemite and trackpads
 
 Region Playlist
@@ -56,8 +57,7 @@ Contextual toolbars
 +Contextual toolbars dialog:
  - When checking for modifications in contextual toolbars dialog (in case of closing the dialog or switching from the unsaved preset) also check position offset and auto close properties
  - Added an option to <em>Set toolbar to foreground</em>. When enabled, toolbar will be set to foreground (focused) every time it's shown. The option is disabled by default
-+Fixes
- - Fixed various issues with toolbar window manipulation (set always on top, auto close, position offset/override) when toolbar had the same name as some other window (i.e. toolbar was named "Mixer")
++Fixed various issues with toolbar window manipulation (set always on top, auto close, position offset/override) when toolbar had the same name as some other window (i.e. toolbar was named "Mixer")
 
 Added actions
 +Main:

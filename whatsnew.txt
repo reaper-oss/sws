@@ -1,16 +1,18 @@
 !v2.7.1 #0 pre-release build (May 7, 2015)
 
-OSX:
-+<strong>New disk image (.dmg)</strong>
- - For easier installation, security reasons, etc the extension is now installed in /Library/Application Support/REAPER/UserPlugins/reaper_sws_extension.dylib (instead of ~/Library/Application Support/REAPER/UserPlugins/reaper_sws.dylib)
- - When launching REAPER, <strong>a message box will guide you to resolve conflicts</strong>, if any. Fortunately, this is quite simple (just delete the old ~/Library/Application Support/REAPER/UserPlugins/reaper_sws.dylib) and must done only one time
+<strong>OSX:</strong>
++<strong>New installation disk image (.dmg)</strong>
+ - The new .dmg proposes to install the SWS Extension in a different directory: /Library/Application Support/REAPER/UserPlugins (instead of ~/Library/Application Support/REAPER/UserPlugins)
+ - This eases the installation ("normal" drag-drop .dmg, no more script), fixes some security issues, etc but has a small inconvenience when upgrading too, some information messages will guide you in this case though
+- More details http://forum.cockos.com/showpost.php?p=1518816&postcount=96|here|
 +Fixed UI issues with listviews on Yosemite and trackpads
 
 Region Playlist
 +Crop project to playlist, paste playlist, etc support automation on folder/empty tracks (issue 701)
-+Fixed some coner-case playback issues
++Fixed some corner-case playback issues
 
-Resources: more commands obey multiple selection in the list view (e.g. play all selected media files in one go, open a bunch of project tabs in one go, etc)
+Resources
++More commands obey multiple selection in the list view (e.g. play all selected media files in one go, open a bunch of project tabs in one go, etc)
 
 Added actions
 +Main:
@@ -30,7 +32,7 @@ ReaScript
  - BR_GetPrevGridDivision
  - BR_SetMidiTakeTempoInfo
  
-Other:
+Fixes:
 +Fixed various buglets (Region Playlist, marker/region actions, etc) when some regions/markers/envelopes end later than the last media item
 +Using SWS/BR actions to enable "ignore project tempo" will not change tempo information of items that are already ignoring project tempo
 +Fixed various envelope functionality in regards to certain FX parameter envelopes (for example, freehand actions not properly setting the envelope to mouse cursor vertical position on ReaEQ gain parameter envelopes, like seen http://forum.cockos.com/showpost.php?p=1517026&postcount=4|here|)

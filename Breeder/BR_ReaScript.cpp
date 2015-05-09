@@ -3,7 +3,7 @@
 /
 / Copyright (c) 2014-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
-/
+/ http://github.com/Jeff0S/sws
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -376,7 +376,7 @@ void BR_GetMediaTrackLayouts (MediaTrack* track, char* mcpLayoutNameOut, int mcp
 TrackEnvelope* BR_GetMediaTrackSendInfo_Envelope (MediaTrack* track, int category, int sendidx, int envelopeType)
 {
 	const char* sendType = (envelopeType == 0) ? ("<VOLENV") : (envelopeType == 1) ? ("<PANENV") : (envelopeType == 2) ? ("<MUTEENV") : NULL;
-	
+
 	if (sendType)
 		return (TrackEnvelope*)GetSetTrackSendInfo(track, category, sendidx, "P_ENV", (void*)sendType);
 	else
@@ -384,7 +384,7 @@ TrackEnvelope* BR_GetMediaTrackSendInfo_Envelope (MediaTrack* track, int categor
 }
 
 MediaTrack* BR_GetMediaTrackSendInfo_Track (MediaTrack* track, int category, int sendidx, int trackType)
-{	
+{
 	if (trackType == 0 || trackType == 1)
 		return (MediaTrack*)GetSetTrackSendInfo(track, category, sendidx, ((trackType == 0) ? "P_SRCTRACK" : "P_DESTTRACK"), NULL);
 	else
@@ -539,7 +539,7 @@ double BR_GetSetTrackSendInfo (MediaTrack* track, int category, int sendidx, con
 	if (track)
 	{
 		if (setNewValue)
-		{			
+		{
 			if (!strcmp(parmname, "B_MUTE") || !strcmp(parmname, "B_PHASE") || !strcmp(parmname, "B_MONO"))
 			{
 				bool valueToSet = !!newValue;
@@ -856,7 +856,7 @@ bool BR_SetMediaTrackLayouts (MediaTrack* track, const char* mcpLayoutNameIn, co
 						}
 						newState.Append(" ");
 					}
-					
+
 					newState.Append("\n");
 					didLayouts = true;
 				}
@@ -948,8 +948,8 @@ bool BR_SetMidiTakeTempoInfo (MediaItem_Take* take, bool ignoreProjTempo, double
 						newLine.Append("\n");
 						ptk.ReplaceLine(position - 1, newLine.Get());
 						succes = p.ReplaceTake(tkPos, tklen, ptk.GetChunk());
-					}				
-					
+					}
+
 				}
 			}
 		}

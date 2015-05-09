@@ -3,7 +3,7 @@
 /
 / Copyright (c) 2013 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
-/
+/ http://github.com/Jeff0S/sws
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -263,7 +263,7 @@ int VersionCheckInitExit (bool init)
 			if (currentTime - lastTime >= 86400 || currentTime - lastTime < 0)
 			{
 				SetStartupSearchOptions(official, beta, currentTime);
-	
+
 				g_searchObject = new (nothrow) BR_SearchObject(true);
 				return plugin_register("timer",(void*)StartupSearch); // timer starts only after project gets loaded
 			}

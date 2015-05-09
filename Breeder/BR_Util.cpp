@@ -3,7 +3,7 @@
 /
 / Copyright (c) 2013-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
-/
+/ http://github.com/Jeff0S/sws
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -291,7 +291,7 @@ WDL_FastString FormatTime (double position, int mode /*=-1*/)
 	return string;
 }
 
-int FindClosestProjMarkerIndex (double position)
+int FindClosestProjMarker (double position)
 {
 	int first = 0;
 	int last  = CountProjectMarkers(NULL, NULL, NULL);
@@ -534,6 +534,26 @@ bool AreAllCoordsZero (RECT& r)
 	return (r.bottom == 0 && r.left == 0 && r.right == 0 && r.top == 0);
 }
 
+PCM_source* DuplicateSource (PCM_source* source)
+{
+	PCM_source* newSource = NULL;
+	if (source)
+	{
+		int trimMidiOnSplit; GetConfig("trimmidionsplit", trimMidiOnSplit);
+		if (GetBit(trimMidiOnSplit, 1))
+		{
+			SetConfig("trimmidionsplit", ClearBit(trimMidiOnSplit, 1));
+			newSource = source->Duplicate();
+			SetConfig("trimmidionsplit", trimMidiOnSplit);
+		}
+		else
+		{
+			newSource = source->Duplicate();
+		}
+	}
+	return newSource;
+}
+
 /******************************************************************************
 * Tracks                                                                      *
 ******************************************************************************/
@@ -579,7 +599,7 @@ int GetTrackFreezeCount (MediaTrack* track)
 			token = strtok(NULL, "\n");
 		}
 		FreeHeapPtr(trackState);
-	}	
+	}
 
 	return freezeCount;
 }
@@ -647,6 +667,73 @@ int GetTakeId (MediaItem_Take* take, MediaItem* item /*= NULL*/)
 			return i;
 	}
 	return -1;
+}
+
+int GetLoopCount (MediaItem_Take* take, double position, int* loopIterationForPosition)
+{
+	int    loopCount   = 0;
+	int    currentLoop = -1;
+
+	MediaItem* item = GetMediaItemTake_Item(take);
+	if (item && take)
+	{
+		double itemStart = GetMediaItemInfo_Value(item, "D_POSITION");
+		double itemEnd   = GetMediaItemInfo_Value(GetMediaItemTake_Item(take), "D_LENGTH") + itemStart;
+
+		if (GetMediaItemInfo_Value(item, "B_LOOPSRC"))
+		{
+			if (IsMidi(take, NULL))
+			{
+				double itemEndPPQ    = MIDI_GetPPQPosFromProjTime(take, itemEnd);
+				double sourceLenPPQ  = GetMidiSourceLengthPPQ(take);
+				double itemLenPPQ = itemEndPPQ; // gotcha: the same cause PPQ starts counting from 0 from item start, making it mover obvious this way
+
+				loopCount = (int)(itemLenPPQ/sourceLenPPQ);
+				loopCount += (abs(fmod(itemLenPPQ, sourceLenPPQ) == 0) ? (-1) : (0)); // fmod works great here because ppq are always rounded to whole numbers
+
+				if (loopIterationForPosition && CheckBounds(position, itemStart, itemEnd))
+				{
+					double takeOffset   = GetMediaItemTakeInfo_Value(take, "D_STARTOFFS");
+					double itemStartEffPPQ = MIDI_GetPPQPosFromProjTime(take, itemStart - takeOffset);
+					double positionPPQ     = MIDI_GetPPQPosFromProjTime(take, position);
+					double itemEndEffPPQ = positionPPQ - itemStartEffPPQ;
+
+					currentLoop = (int)(itemEndEffPPQ / sourceLenPPQ);
+					if      (currentLoop > loopCount) currentLoop = loopCount;
+					else if (currentLoop < 0)         currentLoop = 0;
+				}
+			}
+			else
+			{
+				double takePlayrate = GetMediaItemTakeInfo_Value(take, "D_PLAYRATE");
+				double takeOffset   = GetMediaItemTakeInfo_Value(take, "D_STARTOFFS");
+
+				double itemStartEff = itemStart - takeOffset / takePlayrate;
+				double itemLen   = (itemEnd - itemStartEff);
+				double sourceLen = GetMediaItemTake_Source(take)->GetLength() / takePlayrate;
+
+				loopCount = (int)(itemLen/sourceLen);
+				if (loopCount > 0 && CheckBounds(itemStartEff + sourceLen*(loopCount), itemEnd - 0.00000000000001, itemEnd))
+					--loopCount;
+
+				if (loopIterationForPosition && CheckBounds(position, itemStart, itemEnd))
+				{
+					currentLoop = (int)((position - itemStartEff) / sourceLen);
+					if      (currentLoop > loopCount) currentLoop = loopCount;
+					else if (currentLoop < 0)         currentLoop = 0;
+				}
+			}
+		}
+		else
+		{
+			if (CheckBounds(position, itemStart, itemEnd))
+			{
+				currentLoop = 0;
+			}
+		}
+	}
+	WritePtr(loopIterationForPosition, currentLoop);
+	return loopCount;
 }
 
 int GetEffectiveTakeId (MediaItem_Take* take, MediaItem* item, int id, int* effectiveTakeCount)
@@ -759,6 +846,9 @@ bool SetIgnoreTempo (MediaItem* item, bool ignoreTempo, double bpm, int num, int
 	if (!midiFound)
 		return false;
 
+	double timeBase = GetMediaItemInfo_Value(item, "C_BEATATTACHMODE");
+	SetMediaItemInfo_Value(item, "C_BEATATTACHMODE", 0);
+
 	WDL_FastString newState;
 	char* chunk = GetSetObjectState(item, "");
 	bool stateChanged = false;
@@ -809,6 +899,7 @@ bool SetIgnoreTempo (MediaItem* item, bool ignoreTempo, double bpm, int num, int
 		GetSetObjectState(item, newState.Get());
 	FreeHeapPtr(chunk);
 
+	SetMediaItemInfo_Value(item, "C_BEATATTACHMODE", timeBase);
 	return stateChanged;
 }
 
@@ -827,7 +918,15 @@ bool TrimItem (MediaItem* item, double start, double end)
 	if (!item)
 		return false;
 
+	if (start > end)
+		swap(start, end);
+	if (start < 0)
+		start = 0;
+
 	double newLen  = end - start;
+	if (newLen <= 0)
+		return false;
+
 	double itemPos = GetMediaItemInfo_Value(item, "D_POSITION");
 	double itemLen = GetMediaItemInfo_Value(item, "D_LENGTH");
 
@@ -851,9 +950,9 @@ bool TrimItem (MediaItem* item, double start, double end)
 				MIDI_SetItemExtents(item, TimeMap_timeToQN(start), TimeMap_timeToQN(end));
 			}
 		}
+
 		if (updateMidiSource)
 			SetActiveTake(activeTake);
-
 		return true;
 	}
 	return false;
@@ -940,7 +1039,7 @@ bool SetMediaSourceProperties (MediaItem_Take* take, bool section, double start,
 		}
 		else if (newSource = PCM_Source_CreateFromType("SECTION"))
 		{
-			newSource->SetSource(mediaSource->Duplicate());
+			newSource->SetSource(DuplicateSource(mediaSource));
 			WDL_FastString sourceStr;
 
 			// Get default section values if needed

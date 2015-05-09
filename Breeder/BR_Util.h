@@ -3,7 +3,7 @@
 /
 / Copyright (c) 2013-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
-/
+/ http://github.com/Jeff0S/sws
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -99,7 +99,7 @@ template <typename T> T    GetClosestVal (T val, T targetVal1, T targetVal2) {if
 ******************************************************************************/
 vector<double> GetProjectMarkers (bool timeSel, double timeSelDelta = 0);
 WDL_FastString FormatTime (double position, int mode = -1); // same as format_timestr_pos but handles "measures.beats + time" properly
-int FindClosestProjMarkerIndex (double position);
+int FindClosestProjMarker (double position);
 int CountProjectTabs ();
 double EndOfProject (bool markers, bool regions);
 double GetMidiOscVal (double min, double max, double step, double currentVal, int commandVal, int commandValhw, int commandRelmode);
@@ -112,6 +112,7 @@ bool IsPlaying ();
 bool IsPaused ();
 bool IsRecording ();
 bool AreAllCoordsZero (RECT& r);
+PCM_source* DuplicateSource (PCM_source* source); // if the option "Toggle pooled (ghost) MIDI source data when copying media items", using PCM_source->Duplicate() will pool original and new source...use this function to escape this when necessary
 template <typename T> void GetConfig (const char* key, T& val) {val = *static_cast<T*>(GetConfigVar(key));}
 template <typename T> void SetConfig (const char* key, T  val) {*static_cast<T*>(GetConfigVar(key)) = val;}
 
@@ -129,6 +130,7 @@ vector<MediaItem*> GetSelItems (MediaTrack* track);
 double ProjectTimeToItemTime (MediaItem* item, double projTime);
 double ItemTimeToProjectTime (MediaItem* item, double itemTime);
 int GetTakeId (MediaItem_Take* take, MediaItem* item = NULL);
+int GetLoopCount (MediaItem_Take* take, double position, int* loopIterationForPosition);
 int GetEffectiveTakeId (MediaItem_Take* take, MediaItem* item, int id, int* effectiveTakeCount); // empty takes could be hidden, so displayed id and real id can differ (pass either take or item and take id)
 int GetTakeType (MediaItem_Take* take); // -1 = unknown, 0 = audio, 1 = MIDI, 2 = video, 3 = click, 4 = timecode generator, 5 = RPR project
 int GetTakeFXCount (MediaItem_Take* take);

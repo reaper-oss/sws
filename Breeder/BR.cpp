@@ -3,7 +3,7 @@
 /
 / Copyright (c) 2012-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
-/
+/ http://github.com/Jeff0S/sws
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -93,7 +93,7 @@ int BR_GetNextActionToApply ()
 }
 
 /******************************************************************************
-* Csurf                                                                       *
+* CSurf                                                                       *
 ******************************************************************************/
 void BR_CSurf_SetPlayState (bool play, bool pause, bool rec)
 {
@@ -870,7 +870,7 @@ int BR_Init ()
 	LoudnessInitExit(true);
 	TitleBarDisplayOptionsInit(false, 0, false, false);
 	ProjectTrackSelInitExit(true);
-	ProjStateInitExit(true);	
+	ProjStateInitExit(true);
 	VersionCheckInitExit(true);
 
 	// Keep "apply next action" registration mechanism here (no need for separate module until more actions are added)

@@ -3,7 +3,7 @@
 /
 / Copyright (c) 2014-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
-/ http://www.standingwaterstudios.com/reaper
+/ http://github.com/Jeff0S/sws
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -35,8 +35,8 @@ class BR_LoudnessObject
 {
 public:
 	BR_LoudnessObject ();
-	BR_LoudnessObject (MediaTrack* track);
-	BR_LoudnessObject (MediaItem_Take* take);
+	explicit BR_LoudnessObject (MediaTrack* track);
+	explicit BR_LoudnessObject (MediaItem_Take* take);
 	~BR_LoudnessObject ();
 
 	/* Analyze */

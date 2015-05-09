@@ -3,7 +3,7 @@
 /
 / Copyright (c) 2014-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
-/
+/ http://github.com/Jeff0S/sws
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -2756,7 +2756,7 @@ int ContextualToolbarsInitExit (bool init)
 		for (int i = CONTEXT_START; i < CONTEXT_COUNT; ++i)
 			g_listViewContexts[i] = i;
 		g_contextToolbarsWndManager.Init();
-		
+
 	}
 	else
 	{

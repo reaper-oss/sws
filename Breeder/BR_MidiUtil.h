@@ -3,7 +3,7 @@
 /
 / Copyright (c) 2014-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
-/
+/ http://github.com/Jeff0S/sws
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -100,9 +100,9 @@ const int INLINE_MIDI_CC_LANE_CLICK_Y_OFFSET = 2;
 class BR_MidiEditor
 {
 public:
-	BR_MidiEditor ();                     // last active main MIDI editor
-	BR_MidiEditor (void* midiEditor);     // main MIDI editor
-	BR_MidiEditor (MediaItem_Take* take); // inline MIDI editor
+	BR_MidiEditor ();                              // last active main MIDI editor
+	explicit BR_MidiEditor (void* midiEditor);     // main MIDI editor
+	explicit BR_MidiEditor (MediaItem_Take* take); // inline MIDI editor
 
 	/* Various MIDI editor view options */
 	MediaItem_Take* GetActiveTake ();
@@ -214,8 +214,8 @@ vector<int> GetUsedNamedNotes (void* midiEditor, MediaItem_Take* take, bool used
 vector<int> GetSelectedNotes (MediaItem_Take* take);
 vector<int> MuteUnselectedNotes (MediaItem_Take* take); // returns previous mute state of all notes
 set<int> GetUsedCCLanes (void* midiEditor, int detect14bit); // detect14bit: 0-> don't detect 14-bit, 1->detect partial 14-bit (count both 14 bit lanes and their counterparts) 2->detect full 14-bit (detect only if all CCs that make it have exactly same time positions)
-double EffectiveMidiTakeLength (MediaItem_Take* take, bool ignoreMutedEvents, bool ignoreTextEvents);
-double EffectiveMidiTakeStart (MediaItem_Take* take, bool ignoreMutedEvents, bool ignoreTextEvents);
+double EffectiveMidiTakeStart (MediaItem_Take* take, bool ignoreMutedEvents, bool ignoreTextEvents, bool ignoreEventsOutsideItemBoundaries);
+double EffectiveMidiTakeEnd (MediaItem_Take* take, bool ignoreMutedEvents, bool ignoreTextEvents, bool ignoreEventsOutsideItemBoundaries);
 double GetStartOfMeasure (MediaItem_Take* take, double ppqPos); // working versions of MIDI_GetPPQPos_StartOfMeasure
 double GetEndOfMeasure (MediaItem_Take* take, double ppqPos);   // and MIDI_GetPPQPos_EndOfMeasure
 double GetMidiSourceLengthPPQ (MediaItem_Take* take, bool* isMidiSource = NULL);
@@ -228,8 +228,9 @@ bool IsMidi (MediaItem_Take* take, bool* inProject = NULL);
 bool IsOpenInInlineEditor (MediaItem_Take* take);
 bool IsMidiNoteBlack (int note);
 bool IsVelLaneValid (int lane);
+int GetMidiTakeVisibleLoops (MediaItem_Take* take);
 int FindFirstSelectedNote (MediaItem_Take* take, BR_MidiEditor* midiEditorFilterSettings); // Pass midiEditorFilterSettings
-int FindFirstSelectedCC   (MediaItem_Take* take, BR_MidiEditor* midiEditorFilterSettings); // in case you want to check events
+int FindFirstSelectedCC   (MediaItem_Take* take, BR_MidiEditor* midiEditorFilterSettings); // to check event which only pass
 int FindFirstNote (MediaItem_Take* take, BR_MidiEditor* midiEditorFilterSettings);         // through MIDI filter
 int GetMIDIFilePPQ (const char* fp);
 int GetLastClickedVelLane (void* midiEditor);

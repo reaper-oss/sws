@@ -3,7 +3,7 @@
 /
 / Copyright (c) 2013-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
-/
+/ http://github.com/Jeff0S/sws
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -834,7 +834,7 @@ double BR_Envelope::RealValue (double normalizedDisplayValue)
 		else                              realValue = min    + (normalizedDisplayValue / 0.5)   * (center - min);
 	}
 
-	return realValue;	
+	return realValue;
 }
 
 double BR_Envelope::SnapValue (double value)
@@ -2003,19 +2003,6 @@ metronome2 (0)
 {
 }
 
-BR_Envelope::EnvPoint::EnvPoint (double position) :
-position (position),
-value    (0),
-bezier   (0),
-selected (false),
-shape    (0),
-sig      (0),
-partial  (0),
-metronome1 (0),
-metronome2 (0)
-{
-}
-
 BR_Envelope::EnvPoint::EnvPoint (double position, double value, int shape, int sig, bool selected, int partial, double bezier) :
 position   (position),
 value      (value),
@@ -2024,6 +2011,19 @@ selected   (selected),
 shape      (shape),
 sig        (sig),
 partial    (partial),
+metronome1 (0),
+metronome2 (0)
+{
+}
+
+BR_Envelope::EnvPoint::EnvPoint (double position) :
+position (position),
+value    (0),
+bezier   (0),
+selected (false),
+shape    (0),
+sig      (0),
+partial  (0),
 metronome1 (0),
 metronome2 (0)
 {

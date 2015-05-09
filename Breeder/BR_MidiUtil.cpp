@@ -3,7 +3,7 @@
 /
 / Copyright (c) 2014-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
-/
+/ http://github.com/Jeff0S/sws
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -565,6 +565,8 @@ void BR_MidiItemTimePos::Restore (bool clearCurrentEvents /*=true*/, double offs
 			}
 		}
 
+		TrimItem(item, position, position + length);
+
 		for (size_t i = 0; i < midiTake->noteEvents.size(); ++i)
 			midiTake->noteEvents[i].InsertEvent(take, offset);
 
@@ -575,7 +577,6 @@ void BR_MidiItemTimePos::Restore (bool clearCurrentEvents /*=true*/, double offs
 			midiTake->sysEvents[i].InsertEvent(take, offset);
 	}
 
-	TrimItem(item, position, position + length);
 	SetMediaItemInfo_Value(item, "C_BEATATTACHMODE", timeBase);
 }
 
@@ -879,31 +880,198 @@ set<int> GetUsedCCLanes (void* midiEditor, int detect14bit)
 	return usedCC;
 }
 
-double EffectiveMidiTakeLength (MediaItem_Take* take, bool ignoreMutedEvents, bool ignoreTextEvents)
+double EffectiveMidiTakeStart (MediaItem_Take* take, bool ignoreMutedEvents, bool ignoreTextEvents, bool ignoreEventsOutsideItemBoundaries)
 {
 	int noteCount, ccCount, sysCount;
 	if (take && MIDI_CountEvts(take, &noteCount, &ccCount, &sysCount))
 	{
-		double takeStartTime = GetMediaItemInfo_Value(GetMediaItemTake_Item(take), "D_POSITION");
-		double takeStartPPQ  = MIDI_GetPPQPosFromProjTime(take, takeStartTime);
-		double takeEndPPQ    = MIDI_GetPPQPosFromProjTime(take, takeStartTime + GetMediaItemInfo_Value(GetMediaItemTake_Item(take), "D_LENGTH"));
-		double takeLenPPQ    = takeEndPPQ - takeStartPPQ;
-		double sourceLenPPQ  = GetMidiSourceLengthPPQ(take);
+		MediaItem* item = GetMediaItemTake_Item(take);
+		double itemStart = GetMediaItemInfo_Value(item, "D_POSITION");
 
-		int loopCount = (int)(takeLenPPQ/sourceLenPPQ) + (!fmod(takeLenPPQ, sourceLenPPQ) ? (-1) : (0));
-		double effectiveTakeEndPPQ = takeStartPPQ;
+		double itemStartPPQ = MIDI_GetPPQPosFromProjTime(take, itemStart);
+		double itemEndPPQ   = (!ignoreEventsOutsideItemBoundaries) ? 0 : MIDI_GetPPQPosFromProjTime(take, GetMediaItemInfo_Value(item, "D_LENGTH") + itemStart);
+		int    loopCount    = (!ignoreEventsOutsideItemBoundaries) ? 0 : GetLoopCount(take, 0, NULL);
+		double sourceLenPPQ = (!ignoreEventsOutsideItemBoundaries) ? 0 :GetMidiSourceLengthPPQ(take);
+
+		bool validNote = false, validCC = false, validSys = false;
+		double noteStart, ccStart, sysStart;
+
+		double loopOffset = 0;
 		for (int i = 0; i < noteCount; ++i)
 		{
-			bool muted; double noteEnd;
-			MIDI_GetNote(take, i, NULL, &muted, NULL, &noteEnd, NULL, NULL, NULL);
+			bool muted; double start, end;
+			MIDI_GetNote(take, i, NULL, &muted, &start, &end, NULL, NULL, NULL);
+			if ((ignoreMutedEvents && !muted) || !ignoreMutedEvents)
+			{
+				if (!ignoreEventsOutsideItemBoundaries)
+				{
+					noteStart = start;
+					validNote = true;
+					break;
+				}
+				else
+				{
+					start += loopOffset;
+					end   += loopOffset;
+
+					if (AreOverlapped(start, end, itemStartPPQ, itemEndPPQ))
+					{
+						if (itemStartPPQ > start) start = itemStartPPQ;
+						noteStart = start;
+						validNote = true;
+						break;
+					}
+				}
+			}
+
+			if (ignoreEventsOutsideItemBoundaries && loopCount > 0 && i == noteCount - 1)
+			{
+				if (sourceLenPPQ > 0 && loopOffset == 0)
+				{
+					loopOffset = sourceLenPPQ;
+					i = -1;
+				}
+			}
+		}
+
+		loopOffset = 0;
+		for (int i = 0; i < ccCount; ++i)
+		{
+			bool muted; double pos;
+			MIDI_GetCC(take, i, NULL, &muted, &pos, NULL, NULL, NULL, NULL);
+			if ((ignoreMutedEvents && !muted) || !ignoreMutedEvents)
+			{
+				if (!ignoreEventsOutsideItemBoundaries)
+				{
+					ccStart = pos;
+					validCC = true;
+					break;
+				}
+				else
+				{
+					pos += loopOffset;
+
+					if (CheckBounds(pos, itemStartPPQ, itemEndPPQ))
+					{
+						ccStart = pos;
+						validCC = true;
+						break;
+					}
+				}
+			}
+
+			if (ignoreEventsOutsideItemBoundaries && loopCount > 0 && i == ccCount - 1)
+			{
+				if (sourceLenPPQ > 0 && loopOffset == 0)
+				{
+					loopOffset = sourceLenPPQ;
+					i = -1;
+				}
+			}
+		}
+
+		for (int i = 0; i < sysCount; ++i)
+		{
+			bool muted; double pos; int type;
+			MIDI_GetTextSysexEvt(take, i, NULL, &muted, &pos, &type, NULL, NULL);
+			if (((ignoreMutedEvents && !muted) || !ignoreMutedEvents) && ((ignoreTextEvents && type == -1) || !ignoreTextEvents))
+			{
+				if (!ignoreEventsOutsideItemBoundaries)
+				{
+					sysStart = pos;
+					validSys = true;
+					break;
+				}
+				else
+				{
+					pos += loopOffset;
+
+					if (CheckBounds(pos, itemStartPPQ, itemEndPPQ))
+					{
+						sysStart = pos;
+						validSys = true;
+						break;
+					}
+				}
+			}
+
+			if (ignoreEventsOutsideItemBoundaries && loopCount > 0 && i == sysCount - 1)
+			{
+				if (sourceLenPPQ > 0 && loopOffset == 0)
+				{
+					loopOffset = sourceLenPPQ;
+					i = -1;
+				}
+			}
+		}
+
+		if (validNote || validCC || validSys)
+		{
+			if (!validNote) noteStart = (validSys) ? sysStart : ccStart;
+			if (!validCC)   ccStart   = (validSys) ? sysStart : noteStart;
+			if (!validSys)  sysStart  = (ccStart)  ? ccStart  : noteStart;
+			return MIDI_GetProjTimeFromPPQPos(take, min(min(noteStart, ccStart), sysStart));
+		}
+		else
+		{
+			return GetMediaItemInfo_Value(item, "D_POSITION");
+		}
+	}
+	else
+	{
+		return GetMediaItemInfo_Value(GetMediaItemTake_Item(take), "D_POSITION");
+	}
+}
+
+double EffectiveMidiTakeEnd (MediaItem_Take* take, bool ignoreMutedEvents, bool ignoreTextEvents, bool ignoreEventsOutsideItemBoundaries)
+{
+	int noteCount, ccCount, sysCount;
+	if (take && MIDI_CountEvts(take, &noteCount, &ccCount, &sysCount))
+	{
+		MediaItem* item = GetMediaItemTake_Item(take);
+		double itemStart = GetMediaItemInfo_Value(item, "D_POSITION");
+		double itemStartPPQ = MIDI_GetPPQPosFromProjTime(take, itemStart);
+		double itemEndPPQ   = (!ignoreEventsOutsideItemBoundaries) ? 0 : MIDI_GetPPQPosFromProjTime(take, GetMediaItemInfo_Value(item, "D_LENGTH") + itemStart);
+
+		int    loopCount     = GetLoopCount(take, 0, NULL);
+		double sourceLenPPQ  = GetMidiSourceLengthPPQ(take);
+		double effectiveTakeEndPPQ = itemStartPPQ;
+
+		for (int i = 0; i < noteCount; ++i)
+		{
+			bool muted; double noteStart, noteEnd;
+			MIDI_GetNote(take, i, NULL, &muted, &noteStart, &noteEnd, NULL, NULL, NULL);
 			if (((ignoreMutedEvents && !muted) || !ignoreMutedEvents))
 			{
 				noteEnd += loopCount*sourceLenPPQ;
-				if (noteEnd > takeEndPPQ)
-					noteEnd -= sourceLenPPQ;
 
-				if (noteEnd > effectiveTakeEndPPQ)
-					effectiveTakeEndPPQ = noteEnd;
+				if (!ignoreEventsOutsideItemBoundaries)
+				{
+					if (noteEnd > effectiveTakeEndPPQ)
+						effectiveTakeEndPPQ = noteEnd;
+				}
+				else
+				{
+					noteStart += loopCount*sourceLenPPQ;
+
+					if (CheckBounds(noteStart, itemStartPPQ, itemEndPPQ))
+					{
+						if (noteEnd > itemEndPPQ) noteEnd = itemEndPPQ;
+						if (noteEnd > effectiveTakeEndPPQ)
+							effectiveTakeEndPPQ = noteEnd;
+					}
+					else if (loopCount > 0)
+					{
+						noteStart -= sourceLenPPQ;
+						if (CheckBounds(noteStart, itemStartPPQ, itemEndPPQ))
+						{
+							noteEnd -= sourceLenPPQ;
+							if (noteEnd > itemEndPPQ) noteEnd = itemEndPPQ;
+							if (noteEnd > effectiveTakeEndPPQ)
+								effectiveTakeEndPPQ = noteEnd;
+						}
+					}
+				}
 			}
 		}
 
@@ -914,11 +1082,36 @@ double EffectiveMidiTakeLength (MediaItem_Take* take, bool ignoreMutedEvents, bo
 			if ((ignoreMutedEvents && !muted) || !ignoreMutedEvents)
 			{
 				pos += loopCount*sourceLenPPQ;
-				if (pos > takeEndPPQ) pos -= sourceLenPPQ;
 
-				if (pos > effectiveTakeEndPPQ)
-					effectiveTakeEndPPQ = pos + 1; // add 1 ppq so length definitely includes that last event
-				break;
+				if (!ignoreEventsOutsideItemBoundaries)
+				{
+					if (pos > effectiveTakeEndPPQ)
+						effectiveTakeEndPPQ = pos + 1; // add 1 ppq so length definitely includes that last event
+					break;
+				}
+				else
+				{
+					if (CheckBounds(pos, itemStartPPQ, itemEndPPQ))
+					{
+						if (pos > effectiveTakeEndPPQ)
+						{
+							effectiveTakeEndPPQ = pos + 1;
+							break;
+						}
+					}
+					else if (loopCount > 0)
+					{
+						pos -= sourceLenPPQ;
+						if (CheckBounds(pos, itemStartPPQ, itemEndPPQ))
+						{
+							if (pos > effectiveTakeEndPPQ)
+							{
+								effectiveTakeEndPPQ = pos + 1;
+								break;
+							}
+						}
+					}
+				}
 			}
 		}
 
@@ -929,72 +1122,34 @@ double EffectiveMidiTakeLength (MediaItem_Take* take, bool ignoreMutedEvents, bo
 			if (((ignoreMutedEvents && !muted) || !ignoreMutedEvents) && ((ignoreTextEvents && type == -1) || !ignoreTextEvents))
 			{
 				pos += loopCount*sourceLenPPQ;
-				if (pos > takeEndPPQ) pos -= sourceLenPPQ;
-
-				if (pos > effectiveTakeEndPPQ)
-					effectiveTakeEndPPQ = pos + 1; // add 1 ppq so length definitely includes that last event
+				if (!ignoreEventsOutsideItemBoundaries)
+				{
+					if (pos > effectiveTakeEndPPQ)
+						effectiveTakeEndPPQ = pos + 1; // add 1 ppq so length definitely includes that last event
+				}
+				else
+				{
+					if (CheckBounds(pos, itemStartPPQ, itemEndPPQ))
+					{
+						if (pos > effectiveTakeEndPPQ)
+							effectiveTakeEndPPQ = pos + 1;
+					}
+					else if (loopCount > 0)
+					{
+						pos -= sourceLenPPQ;
+						if (CheckBounds(pos, itemStartPPQ, itemEndPPQ))
+						{
+							if (pos > effectiveTakeEndPPQ)
+								effectiveTakeEndPPQ = pos + 1;
+						}
+					}
+				}
 			}
 		}
 
-		return MIDI_GetProjTimeFromPPQPos(take, effectiveTakeEndPPQ) - takeStartTime;
+		return MIDI_GetProjTimeFromPPQPos(take, effectiveTakeEndPPQ);
 	}
 	return 0;
-}
-
-double EffectiveMidiTakeStart (MediaItem_Take* take, bool ignoreMutedEvents, bool ignoreTextEvents)
-{
-	int noteCount, ccCount, sysCount;
-	if (take && MIDI_CountEvts(take, &noteCount, &ccCount, &sysCount))
-	{
-		bool validNote = false, validCC = false, validSys = false;
-		double noteStart, ccStart, sysStart;
-
-		for (int i = 0; i < noteCount; ++i)
-		{
-			bool muted; double start;
-			MIDI_GetNote(take, i, NULL, &muted, &start, NULL, NULL, NULL, NULL);
-			if ((ignoreMutedEvents && !muted) || !ignoreMutedEvents)
-			{
-				noteStart = start;
-				validNote = true;
-				break;
-			}
-		}
-
-		for (int i = 0; i < ccCount; ++i)
-		{
-			bool muted; double pos;
-			MIDI_GetCC(take, i, NULL, &muted, &pos, NULL, NULL, NULL, NULL);
-			if ((ignoreMutedEvents && !muted) || !ignoreMutedEvents)
-			{
-				ccStart = pos;
-				validCC = true;
-				break;
-			}
-		}
-
-		for (int i = 0; i < sysCount; ++i)
-		{
-			bool muted; double pos; int type;
-			MIDI_GetTextSysexEvt(take, i, NULL, &muted, &pos, &type, NULL, NULL);
-			if (((ignoreMutedEvents && !muted) || !ignoreMutedEvents) && ((ignoreTextEvents && type == -1) || !ignoreTextEvents))
-			{
-				sysStart = pos;
-				validSys = true;
-				break;
-			}
-		}
-
-		if (validNote || validCC || validSys)
-		{
-			if (!validNote) noteStart = (validSys) ? sysStart : ccStart;
-			if (!validCC)   ccStart   = (validSys) ? sysStart : noteStart;
-			if (!validSys)  sysStart  = (ccStart)  ? ccStart  : noteStart;
-
-			return MIDI_GetProjTimeFromPPQPos(take, min(min(noteStart, ccStart), sysStart));
-		}
-	}
-	return GetMediaItemInfo_Value(GetMediaItemTake_Item(take), "D_POSITION");
 }
 
 double GetStartOfMeasure (MediaItem_Take* take, double ppqPos)
@@ -1045,7 +1200,7 @@ double GetOriginalPpqPos (MediaItem_Take* take, double ppqPos, bool* loopedItem,
 {
 	double returnPos = 0;
 	MediaItem* item = GetMediaItemTake_Item(take);
-	if (!take || !item)
+	if (!take || !item || !IsMidi(take, NULL))
 	{
 		WritePtr(loopedItem,          false);
 		WritePtr(posVisInsertStartPpq, 0.0);
@@ -1073,8 +1228,8 @@ double GetOriginalPpqPos (MediaItem_Take* take, double ppqPos, bool* loopedItem,
 
 			// Deduct take offset to get correct current loop iteration
 			double itemStartPpq = MIDI_GetPPQPosFromProjTime(take, itemStart - GetMediaItemTakeInfo_Value(take, "D_STARTOFFS"));
-			int currentLoop = (int)((ppqPos  - itemStartPpq) / sourceLenPpq);
-			int loopCount   = (int)((visibleItemEndPpq - visibleItemStartPpq) / sourceLenPpq);
+			int currentLoop;
+			int loopCount = GetLoopCount(take, MIDI_GetProjTimeFromPPQPos(take, ppqPos), &currentLoop);
 
 			returnPos = (ppqPos >= visibleItemStartPpq) ? (ppqPos - (currentLoop * sourceLenPpq)) : ppqPos;
 

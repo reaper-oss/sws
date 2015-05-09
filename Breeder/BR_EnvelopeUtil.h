@@ -3,7 +3,7 @@
 /
 / Copyright (c) 2013-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
-/
+/ http://github.com/Jeff0S/sws
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -198,8 +198,8 @@ private:
 		WDL_FastString tempoStr;
 
 		EnvPoint ();
-		EnvPoint (double position);
 		EnvPoint (double position, double value, int shape, int sig, bool selected, int partial, double bezier);
+		explicit EnvPoint (double position);
 		bool ReadLine (const LineParser& lp); // use only once per object (for efficiency, tempoStr is never deleted, only appended too)
 		void Append (WDL_FastString& string, bool tempoPoint);
 		struct ComparePoints

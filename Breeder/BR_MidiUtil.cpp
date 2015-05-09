@@ -1035,7 +1035,7 @@ double EffectiveMidiTakeEnd (MediaItem_Take* take, bool ignoreMutedEvents, bool 
 
 		int    loopCount     = GetLoopCount(take, 0, NULL);
 		double sourceLenPPQ  = GetMidiSourceLengthPPQ(take);
-		double effectiveTakeEndPPQ = itemStartPPQ;
+		double effectiveTakeEndPPQ = -1;
 
 		for (int i = 0; i < noteCount; ++i)
 		{
@@ -1147,7 +1147,7 @@ double EffectiveMidiTakeEnd (MediaItem_Take* take, bool ignoreMutedEvents, bool 
 			}
 		}
 
-		return MIDI_GetProjTimeFromPPQPos(take, effectiveTakeEndPPQ);
+		return (effectiveTakeEndPPQ == -1) ? itemStart : MIDI_GetProjTimeFromPPQPos(take, effectiveTakeEndPPQ);
 	}
 	return 0;
 }

@@ -1,9 +1,9 @@
 /******************************************************************************
 / BR_Misc.cpp
 /
-/ Copyright (c) 2013-2014 Dominik Martin Drzic
+/ Copyright (c) 2013-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
-/
+/ http://github.com/Jeff0S/sws
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -519,7 +519,7 @@ void MoveClosestMarker (COMMAND_T* ct)
 
 	if (position >= 0)
 	{
-		int id = FindClosestProjMarkerIndex(position);
+		int id = FindClosestProjMarker(position);
 		if (id >= 0)
 		{
 			if ((int)ct->user < 0) position = SnapToGrid(NULL, position);
@@ -537,7 +537,6 @@ void MidiItemTempo (COMMAND_T* ct)
 	if (IsLocked(ITEM_FULL))
 		return;
 
-
 	PreventUIRefresh(1);
 	bool ignoreTempo = ((int)ct->user == 2 || (int)ct->user == 3);
 	bool update = false;
@@ -549,7 +548,7 @@ void MidiItemTempo (COMMAND_T* ct)
 			double bpm; int num, den;
 			TimeMap_GetTimeSigAtTime(NULL, GetMediaItemInfo_Value(item, "D_POSITION"), &num, &den, &bpm);
 
-			if ((int)ct->user == 0)
+			if ((int)ct->user == 0 || (int)ct->user == 2)
 			{
 				if (SetIgnoreTempo(item, ignoreTempo, bpm, num, den, true))
 					update = true;
@@ -557,14 +556,11 @@ void MidiItemTempo (COMMAND_T* ct)
 			else
 			{
 				BR_MidiItemTimePos timePos(item, false);
-				double timeBase = GetMediaItemInfo_Value(item, "C_BEATATTACHMODE");
-				SetMediaItemInfo_Value(item, "C_BEATATTACHMODE", 0.0);
 				if (SetIgnoreTempo(item, ignoreTempo, bpm, num, den, true))
 				{
 					timePos.Restore(true);
 					update = true;
 				}
-				SetMediaItemInfo_Value(item, "C_BEATATTACHMODE", timeBase);
 			}
 		}
 	}
@@ -593,9 +589,8 @@ void MidiItemTrim (COMMAND_T* ct)
 				MediaItem_Take* take = GetTake(item, j);
 				if (MIDI_CountEvts(take, NULL, NULL, NULL))
 				{
-					double currentStart = EffectiveMidiTakeStart(take, false, false);
-					double currentEnd   = GetMediaItemInfo_Value(GetMediaItemTake_Item(take), "D_POSITION") + EffectiveMidiTakeLength(take, false, false);
-
+					double currentStart = EffectiveMidiTakeStart(take, false, false, false);
+					double currentEnd   = EffectiveMidiTakeEnd(take, false, false, false);
 					if (start == -1 && end == -1)
 					{
 						start = currentStart;
@@ -706,7 +701,7 @@ void MoveActiveWndToMouse (COMMAND_T* ct)
 
 		if (GetBit((int)ct->user, 4) && !IsFloatingTrackFXWindow(hwnd))
 			return;
- 
+
 		RECT r;  GetWindowRect(hwnd, &r);
 		POINT p; GetCursorPos(&p);
 
@@ -1171,11 +1166,11 @@ static LRESULT CALLBACK TitleBarDisplayWndCallback (HWND hwnd, UINT uMsg, WPARAM
 				searchString.AppendFormatted(512, "%s%s", "REAPER v", versionStr);
 				projNameEnd = strstr_last((const char*)lParam, searchString.Get());
 			}
-			
+
 			// Project name end position found, modify it
 			if (projNameEnd)
 			{
-				WDL_FastString projectName;  projectName.SetRaw((const char*)lParam, (int)(projNameEnd - (const char*)lParam));				
+				WDL_FastString projectName;  projectName.SetRaw((const char*)lParam, (int)(projNameEnd - (const char*)lParam));
 				WDL_FastString majorVersion; majorVersion.SetRaw(versionStr, 1);
 
 				WDL_FastString titleBar;
@@ -1199,7 +1194,7 @@ static LRESULT CALLBACK TitleBarDisplayWndCallback (HWND hwnd, UINT uMsg, WPARAM
 					g_titleBarDisplayUpdateCount = 0;
 				}
 				return 0;
-			}			
+			}
 		}
 	}
 	return g_titleBarOldWndProc(hwnd, uMsg, wParam, lParam);
@@ -1261,11 +1256,11 @@ void TitleBarDisplayOptionsExit ()
 void SetTitleBarDisplayOptions (COMMAND_T* ct)
 {
 	g_titleBarDisplayOptions = (!GetBit(g_titleBarDisplayOptions, (int)ct->user)) ? SetBit(0, (int)ct->user) : 0;
-	
-	if (g_titleBarDisplayOptions == 0) 
+
+	if (g_titleBarDisplayOptions == 0)
 	{
 		if (g_titleBarOldWndProc && TitleBarDisplayWndCallback == (WNDPROC)GetWindowLongPtr(g_hwndParent, GWLP_WNDPROC)) // restore old proc only if no new wndproc wasn't set in the meantime
-		{	
+		{
 			SetWindowLongPtr(g_hwndParent, GWLP_WNDPROC, (LONG_PTR)g_titleBarOldWndProc);
 			g_titleBarOldWndProc = NULL;
 			g_titleBarDisplayUpdateCount = 0;
@@ -1283,7 +1278,7 @@ void SetTitleBarDisplayOptions (COMMAND_T* ct)
 	else
 	{
 		TitleBarDisplayOptionsInit(true, 2, true, false); // count should depend if project is modified or not (2 for non-modified, 1 for modified), but since GetProjectStateChangeCount() is broken we have to update it twice just in case
-	}	
+	}
 }
 
 /******************************************************************************
@@ -1306,7 +1301,7 @@ static bool ProcessExtensionLineTrackSel (const char *line, ProjectStateContext 
 }
 
 static void SaveExtensionConfigTrackSel (ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
-{	
+{
 	if (ctx && g_trackSelActions.Get()->GetLength())
 	{
 		char line[SNM_MAX_CHUNK_LINE_LENGTH] = "";
@@ -1375,7 +1370,7 @@ void SetProjectTrackSelAction (COMMAND_T* ct)
 				{
 					msg.SetFormatted(256, __LOCALIZE_VERFMT("%s failed: unreliable command ID '%s'!","sws_DLG_161"), __LOCALIZE("Set project track selection action","sws_mbox"), actionString);
 					msg.Append("\n");
-					
+
 					if (tstNum==-1)
 						msg.Append(__LOCALIZE("For SWS actions, you must use identifier strings (e.g. _SWS_ABOUT), not command IDs (e.g. 47145).\nTip: to copy such identifiers, right-click the action in the Actions window > Copy selected action command ID.","sws_mbox"));
 					else if (tstNum==-2)

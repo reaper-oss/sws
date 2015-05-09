@@ -3,7 +3,7 @@
 /
 / Copyright (c) 2014-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
-/
+/ http://github.com/Jeff0S/sws
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -127,16 +127,44 @@ static void MidiTakePreview (int mode, MediaItem_Take* take, MediaTrack* track, 
 
 	if (take)
 	{
+		PreventUIRefresh(1); // item may get resized temporarily so hide it from the user
+
 		MediaItem* item         = GetMediaItemTake_Item(take);
 		MediaItem_Take* oldTake = GetActiveTake(item);
 		bool itemMuteState      = *(bool*)GetSetMediaItemInfo(item, "B_MUTE", NULL);
-		double effectiveTakeLen = EffectiveMidiTakeLength(take, true, true);
 
-		GetSetMediaItemInfo(item, "B_MUTE", &g_bFalse);     // needs to be set before getting the source
-		SetActiveTake(take);                                // active item take and editor take may differ
-		PCM_source* src = ((PCM_source*)item)->Duplicate(); // must be item source otherwise item/take volume won't get accounted for
+		GetSetMediaItemInfo(item, "B_MUTE", &g_bFalse); // needs to be set before getting the source
+		SetActiveTake(take);                            // active item take and editor take may differ
 
-		if (src && effectiveTakeLen > 0 && effectiveTakeLen > startOffset)
+		// If timebase in MIDI editor is set to Beats (source), make sure item is croped so full MIDI source is visible beforing getting the source
+		double itemStart    = -1;
+		double itemEnd      = -1;
+		double takeOffset   = 0;
+		double itemPositionOffset = 0;		
+		if (GetToggleCommandState2(SectionFromUniqueID(SECTION_MIDI_EDITOR), 40470) > 0) // Timebase: Beats(source)
+		{
+			itemStart = GetMediaItemInfo_Value(item, "D_POSITION");
+			itemEnd   = itemStart + GetMediaItemInfo_Value(item, "D_LENGTH");
+			takeOffset = GetMediaItemTakeInfo_Value(take, "D_STARTOFFS");
+			double sourceLenPPQ = GetMidiSourceLengthPPQ(take, NULL);
+
+			if (takeOffset != 0)
+				SetMediaItemTakeInfo_Value(take, "D_STARTOFFS", 0);
+
+			double itemSourceStart = MIDI_GetProjTimeFromPPQPos(take, 0);
+			if (itemSourceStart < 0)
+			{
+				itemPositionOffset = abs(itemSourceStart);
+				SetMediaItemInfo_Value(item, "D_POSITION", itemStart + itemPositionOffset);
+				itemSourceStart = MIDI_GetProjTimeFromPPQPos(take, 0);
+			}
+			SetMediaItemInfo_Value(item, "D_POSITION", itemSourceStart);
+			SetMediaItemInfo_Value(item, "D_LENGTH",   MIDI_GetProjTimeFromPPQPos(take, sourceLenPPQ) - itemSourceStart);
+		}
+
+		double effectiveTakeLen = EffectiveMidiTakeEnd(take, true, true, true) - GetMediaItemInfo_Value(item, "D_POSITION");
+		PCM_source* src = DuplicateSource((PCM_source*)item); // must be item source otherwise item/take volume won't get accounted for
+		if (src && effectiveTakeLen > 0)
 		{
 			GetSetMediaItemInfo((MediaItem*)src, "D_POSITION", &g_d0);
 			GetSetMediaItemInfo((MediaItem*)src, "D_LENGTH", &effectiveTakeLen);
@@ -176,8 +204,17 @@ static void MidiTakePreview (int mode, MediaItem_Take* take, MediaTrack* track, 
 				delete g_ItemPreview.src;
 		}
 
+		if (itemStart != -1)
+		{
+			SetMediaItemInfo_Value(item, "D_POSITION", itemStart + itemPositionOffset);
+			SetMediaItemInfo_Value(item, "D_LENGTH",   itemEnd - itemStart);
+			if (itemPositionOffset != 0) SetMediaItemInfo_Value(item, "D_POSITION", itemStart);
+			if (takeOffset != 0)         SetMediaItemTakeInfo_Value(take, "D_STARTOFFS", takeOffset);			
+		}
 		SetActiveTake(oldTake);
 		GetSetMediaItemInfo(item, "B_MUTE", &itemMuteState);
+
+		PreventUIRefresh(-1);
 	}
 }
 
@@ -212,7 +249,12 @@ void ME_PreviewActiveTake (COMMAND_T* ct, int val, int valhw, int relmode, HWND 
 		{
 			double mousePosition = ME_PositionAtMouseCursor(true, true);
 			if (mousePosition != -1)
-				start = mousePosition - GetMediaItemInfo_Value(item, "D_POSITION");
+			{
+				if (GetToggleCommandState2(SectionFromUniqueID(SECTION_MIDI_EDITOR), 40470) > 0) // Timebase: Beats(source)
+					start = mousePosition - MIDI_GetProjTimeFromPPQPos(take, 0);
+				else
+					start = mousePosition - GetMediaItemInfo_Value(item, "D_POSITION");
+			}
 			else
 				return;
 		}
@@ -229,6 +271,7 @@ void ME_PreviewActiveTake (COMMAND_T* ct, int val, int valhw, int relmode, HWND 
 					double time;
 					MIDI_GetNote(take, FindFirstSelectedNote(take, &editor), NULL, NULL, &time, NULL, NULL, NULL, NULL);
 					start = MIDI_GetProjTimeFromPPQPos(take, time) - GetMediaItemInfo_Value(item, "D_POSITION");
+					if (start < 0) start = 0;
 				}
 			}
 			else if (type != 2)
@@ -240,6 +283,7 @@ void ME_PreviewActiveTake (COMMAND_T* ct, int val, int valhw, int relmode, HWND 
 					double time;
 					MIDI_GetNote(take, id, NULL, NULL, &time, NULL, NULL, NULL, NULL);
 					start = MIDI_GetProjTimeFromPPQPos(take, time) - GetMediaItemInfo_Value(item, "D_POSITION");
+					if (start < 0) start = 0;
 				}
 			}
 		}

@@ -1,3 +1,7 @@
+Fixes
++Fixed the action <em>SWS/BR: Trim MIDI item to active content</em>
++Fixed preview actions not working properly in certain scenarios on MIDI items (looped items, MIDI editor timebase set to source (beats) etc...)
+
 !v2.7.1 #0 pre-release build (May 7, 2015)
 
 <strong>OSX:</strong>
@@ -32,8 +36,8 @@ ReaScript
  - BR_GetNextGridDivision
  - BR_GetPrevGridDivision
  - BR_SetMidiTakeTempoInfo
- 
-Fixes:
+
+Fixes
 +Fixed various buglets (Region Playlist, marker/region actions, etc) when some regions/markers/envelopes end later than the last media item
 +Using SWS/BR actions to enable "ignore project tempo" will not change tempo information of items that are already ignoring project tempo
 +Fixed various envelope functionality in regards to certain FX parameter envelopes (for example, freehand actions not properly setting the envelope to mouse cursor vertical position on ReaEQ gain parameter envelopes, like seen http://forum.cockos.com/showpost.php?p=1517026&postcount=4|here|)

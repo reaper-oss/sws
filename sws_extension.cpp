@@ -854,6 +854,7 @@ error:
 		IMPAPI(GetTrackMIDINoteNameEx);
 		IMPAPI(GetTrackNumMediaItems);
 		IMPAPI(GetTrackNumSends);
+		IMPAPI(GetTrackStateChunk);
 		IMPAPI(GetTrackUIVolPan);
 		IMPAPI(GetUserInputs);
 		IMPAPI(get_config_var);
@@ -987,6 +988,7 @@ error:
 		IMPAPI(SetTrackSelected);
 		IMPAPI(SetTrackSendUIPan);
 		IMPAPI(SetTrackSendUIVol);
+		IMPAPI(SetTrackStateChunk);
 		IMPAPI(ShowActionList);
 		IMPAPI(ShowConsoleMsg);
 		IMPAPI(ShowMessageBox);

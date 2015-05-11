@@ -1,8 +1,9 @@
 /******************************************************************************
 / wol_Zoom.cpp
 /
-/ Copyright (c) 2014 wol
+/ Copyright (c) 2014-2015 wol
 / http://forum.cockos.com/member.php?u=70153
+/ http://github.com/Jeff0S/sws
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -28,6 +29,7 @@
 #include "stdafx.h"
 #include "wol_Zoom.h"
 #include "wol_Util.h"
+#include "../Breeder/BR_MouseUtil.h"
 #include "../Breeder/BR_Util.h"
 #include "../Breeder/BR_EnvelopeUtil.h"
 #include "../SnM/SnM_Util.h"
@@ -82,6 +84,68 @@ void AdjustSelectedEnvelopeOrTrackHeight(COMMAND_T* ct, int val, int valhw, int 
 				ScrollToTrackIfNotInArrange(tr);
 			}
 		}
+	}
+}
+
+void AdjustEnvelopeOrTrackHeightUnderMouse(COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
+{
+	if (relmode > 0)
+	{
+		void(*ScrollTo)(TrackEnvelope*) = ScrollToTrackEnvelopeIfNotInArrange;
+		int height = AdjustRelative(relmode, (valhw == -1) ? BOUNDED(val, 0, 127) : (int)BOUNDED(16384.0 - (valhw | val << 7), 0.0, 16383.0));
+
+		TrackEnvelope* env = NULL;
+		MediaTrack* tr = NULL;
+		BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_MCP_TCP | BR_MouseInfo::MODE_ARRANGE | BR_MouseInfo::MODE_IGNORE_ENVELOPE_LANE_SEGMENT | BR_MouseInfo::MODE_IGNORE_ALL_TRACK_LANE_ELEMENTS_BUT_ITEMS);
+		if ((!strcmp(mouseInfo.GetWindow(), "tcp") && !strcmp(mouseInfo.GetSegment(), "envelope")) ||
+			(!strcmp(mouseInfo.GetWindow(), "arrange") && !strcmp(mouseInfo.GetSegment(), "envelope"))
+			)
+		{
+			if (mouseInfo.GetEnvelope())
+				env = mouseInfo.GetEnvelope();
+		}
+
+		if (!env && ((!strcmp(mouseInfo.GetWindow(), "tcp") && !strcmp(mouseInfo.GetSegment(), "track")) ||
+			(!strcmp(mouseInfo.GetWindow(), "arrange") && !strcmp(mouseInfo.GetSegment(), "track")))
+			)
+		{
+			if (mouseInfo.GetTrack())
+				tr = mouseInfo.GetTrack();
+		}
+
+		TrackEnvelope* sEnv = GetSelectedEnvelope(NULL);
+
+		if (env)
+		{
+			BR_Envelope brEnv(env);
+			if (brEnv.IsInLane())
+			{
+				if (brEnv.IsTakeEnvelope())
+				{
+					SetTrackHeight(brEnv.GetParent(), SetToBounds(height + GetTrackHeight(brEnv.GetParent(), NULL), GetTcpTrackMinHeight(), GetCurrentTcpMaxHeight()), true);
+					ScrollTo = ScrollToTrackIfNotInArrange;
+				}
+				else
+				{
+					brEnv.SetLaneHeight(SetToBounds(height + GetTrackEnvHeight(env, NULL, false), GetTcpEnvMinHeight(), GetCurrentTcpMaxHeight()));
+					brEnv.Commit();
+				}
+			}
+			else
+			{
+				SetTrackHeight(brEnv.GetParent(), SetToBounds(height + GetTrackHeight(brEnv.GetParent(), NULL), GetTcpTrackMinHeight(), GetCurrentTcpMaxHeight()), true);
+				ScrollTo = ScrollToTrackIfNotInArrange;
+			}
+			ScrollTo(env);
+		}
+		else if (tr)
+		{
+			SetTrackHeight(tr, SetToBounds(height + GetTrackHeight(tr, NULL), GetTcpTrackMinHeight(), GetCurrentTcpMaxHeight()), true);
+			ScrollToTrackIfNotInArrange(tr);
+		}
+
+		if (sEnv != GetSelectedEnvelope(NULL))
+			SetCursorContext(2, sEnv);
 	}
 }
 

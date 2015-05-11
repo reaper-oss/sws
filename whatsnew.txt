@@ -1,3 +1,7 @@
+Added actions
++Main:
+ - SWS/wol: Adjust envelope or track height under mouse cursor (MIDI CC relative/mousewheel)
+ 
 Fixes
 +Fixed the action <em>SWS/BR: Trim MIDI item to active content</em>
 +Fixed preview actions not working properly in certain scenarios on MIDI items (looped items, MIDI editor timebase set to source (beats) etc...)

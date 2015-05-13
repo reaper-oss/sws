@@ -291,7 +291,7 @@ WDL_FastString FormatTime (double position, int mode /*=-1*/)
 	return string;
 }
 
-int FindClosestProjMarker (double position)
+int FindClosestProjMarkerIndex (double position)
 {
 	int first = 0;
 	int last  = CountProjectMarkers(NULL, NULL, NULL);
@@ -944,7 +944,7 @@ bool TrimItem (MediaItem* item, double start, double end)
 			double playrate = GetMediaItemTakeInfo_Value(take, "D_PLAYRATE");
 			double offset   = GetMediaItemTakeInfo_Value(take, "D_STARTOFFS");
 			SetMediaItemTakeInfo_Value(take, "D_STARTOFFS", offset + playrate*startDif);
-			if (updateMidiSource && IsMidi(take)) // this will make sure MIDI's source length is updated to higer value
+			if (updateMidiSource && IsMidi(take)) // this will make sure MIDI's source length is updated to higher value
 			{
 				SetActiveTake(take);
 				MIDI_SetItemExtents(item, TimeMap_timeToQN(start), TimeMap_timeToQN(end));
@@ -3035,8 +3035,8 @@ HCURSOR GetSwsMouseCursor (BR_MouseCursor cursor)
 		// Cursor not yet loaded
 		if (!s_cursors[cursor])
 		{
-			const char* cursorFile   = NULL; // this is SWS only cursor file
-			int         idc_resVal   = -1;   // in case cursor file hasn't been found, default to this resource
+			const char* cursorFile = NULL;
+			int         idc_resVal = -1;
 
 			if      (cursor == CURSOR_ENV_PEN_GRID)    {idc_resVal = IDC_ENV_PEN_GRID;      cursorFile = "sws_env_pen_grid";}
 			else if (cursor == CURSOR_ENV_PT_ADJ_VERT) {idc_resVal = IDC_ENV_PT_ADJ_VERT;   cursorFile = "sws_env_pt_adj_vert";}

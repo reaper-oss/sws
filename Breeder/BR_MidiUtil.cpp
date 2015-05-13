@@ -113,8 +113,6 @@ m_valid                (false)
 		m_valid        = this->Build();
 		m_lastLane     = GetLastClickedVelLane(m_midiEditor);
 		m_ccLanesCount = (int)m_ccLanes.size();
-
-
 	}
 }
 

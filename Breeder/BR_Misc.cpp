@@ -519,7 +519,7 @@ void MoveClosestMarker (COMMAND_T* ct)
 
 	if (position >= 0)
 	{
-		int id = FindClosestProjMarker(position);
+		int id = FindClosestProjMarkerIndex(position);
 		if (id >= 0)
 		{
 			if ((int)ct->user < 0) position = SnapToGrid(NULL, position);
@@ -998,13 +998,18 @@ void RestoreTrackSoloMuteStateSlot (COMMAND_T* ct)
 void PreviewItemAtMouse (COMMAND_T* ct)
 {
 	double position;
-	if (MediaItem* item = ItemAtMouseCursor(&position))
+	MediaItem_Take* takeAtMouse = NULL;
+	if (MediaItem* item = ItemAtMouseCursor(&position, &takeAtMouse))
 	{
 		vector<int> options = GetDigits((int)ct->user);
-		int toggle = options[0];
-		int output = options[1];
-		int type   = options[2];
-		int pause  = options[3];
+		int toggle    = options[0];
+		int output    = options[1];
+		int type      = options[2];
+		int pause     = options[3];
+		bool playTake = (options[4] == 2);
+
+		if (playTake && !takeAtMouse)
+			return;
 
 		MediaTrack* track     = NULL;
 		double      volume    = 1;
@@ -1012,12 +1017,18 @@ void PreviewItemAtMouse (COMMAND_T* ct)
 		double      measure   = (type  == 3) ? 1 : 0;
 		bool        pausePlay = (pause == 2) ? true : false;
 
-		if (output == 2)
-			volume = GetMediaTrackInfo_Value(GetMediaItem_Track(item), "D_VOL");
-		else if (output == 3)
-			track = GetMediaItem_Track(item);
+		if      (output == 2) volume = GetMediaTrackInfo_Value(GetMediaItem_Track(item), "D_VOL");
+		else if (output == 3) track = GetMediaItem_Track(item);
+
+		MediaItem_Take* oldTake = NULL;
+		if (playTake)
+		{
+			oldTake = GetActiveTake(item);
+			if (oldTake != NULL) SetActiveTake(takeAtMouse);
+		}
 
 		ItemPreview(toggle, item, track, volume, start, measure, pausePlay);
+		if (oldTake) SetActiveTake(oldTake);
 	}
 }
 

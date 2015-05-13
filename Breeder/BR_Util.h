@@ -64,9 +64,9 @@ const int SECTION_MEDIA_EXPLORER = 32063;
 /******************************************************************************
 * Miscellaneous                                                               *
 ******************************************************************************/
-vector<int> GetDigits (int val); // if val = 123, returns [0] = 1, [1] = 2 etc...
-int GetFirstDigit (int val);     // if val = 123, returns 1
-int GetLastDigit (int val);      // if val = 123, returns 3
+vector<int> GetDigits (int val); // for 123 returns [0] = 1, [1] = 2 etc...
+int GetFirstDigit (int val);     // for 123 returns 1
+int GetLastDigit (int val);      // for 123 returns 3
 int BinaryToDecimal (const char* binaryString);
 int GetBit (int val, int bit);
 int SetBit (int val, int bit, bool set);
@@ -99,7 +99,7 @@ template <typename T> T    GetClosestVal (T val, T targetVal1, T targetVal2) {if
 ******************************************************************************/
 vector<double> GetProjectMarkers (bool timeSel, double timeSelDelta = 0);
 WDL_FastString FormatTime (double position, int mode = -1); // same as format_timestr_pos but handles "measures.beats + time" properly
-int FindClosestProjMarker (double position);
+int FindClosestProjMarkerIndex (double position);
 int CountProjectTabs ();
 double EndOfProject (bool markers, bool regions);
 double GetMidiOscVal (double min, double max, double step, double currentVal, int commandVal, int commandValhw, int commandRelmode);

@@ -145,10 +145,9 @@ public:
 	int GetSendId ();  // Returns -1 if not send envelope, otherwise send id for it's parent track
 	double MinValueAbs (); // Absolute minimum value for envelope (ignoring display preferences for certain envelopes)
 	double MaxValueAbs (); // Absolute maximum value for envelope (ignoring display preferences for certain envelopes)
-	double LaneCenterValue ();  // Center value for lane center
-	double LaneMinValue ();     // Minimum drawable value
-	double LaneMaxValue ();     // Maximum drawable value
-
+	double LaneCenterValue (); // Center value for lane center
+	double LaneMinValue ();    // Minimum drawable value
+	double LaneMaxValue ();    // Maximum drawable value
 
 	/* Set envelope properties */
 	void SetActive (bool active);
@@ -282,4 +281,4 @@ void CalculateSplitMiddlePoints (double* time1, double* time2, double* bpm1, dou
 void InitTempoMap ();  // will make sure there's at least one point in tempo map (we can't manipulate tempo map's chunk (i.e. insert new points) if there isn't at least one point in tempo map)
 void RemoveTempoMap ();
 void UnselectAllTempoMarkers ();
-void UpdateTempoTimeline (); // UpdateTimeline() isn't enough after changing tempo points - call this instead
+void UpdateTempoTimeline (); // UpdateTimeline() isn't enough after changing tempo points through chunk - call this instead

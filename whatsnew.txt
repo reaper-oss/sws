@@ -1,3 +1,7 @@
+Added actions
++Main:
+ - SWS/BR: Preview take under mouse (lots of different versions, see action list)
+
 Fixes
 +Fixed Groove tool crash vs duplicate Control Change events (report http://forum.cockos.com/showpost.php?p=1519436&postcount=111|here|)
 +Fixed the action <em>SWS/BR: Trim MIDI item to active content</em>
@@ -7,7 +11,7 @@ Fixes
 
 <strong>OSX:</strong>
 +<strong>New installation disk image (.dmg)</strong>
- - The new .dmg proposes to install the SWS Extension in a different directory: 
+ - The new .dmg proposes to install the SWS Extension in a different directory:
    /Library/Application Support/REAPER/UserPlugins (instead of ~/Library/Application Support/REAPER/UserPlugins)
  - This eases the installation ("normal" drag-drop .dmg, no more script), fixes some security issues, etc but has a small inconvenience when upgrading too, some information messages will guide you in this case though
  - More details http://forum.cockos.com/showpost.php?p=1518816&postcount=96|here|

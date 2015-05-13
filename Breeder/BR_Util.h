@@ -136,7 +136,7 @@ int GetTakeType (MediaItem_Take* take); // -1 = unknown, 0 = audio, 1 = MIDI, 2 
 int GetTakeFXCount (MediaItem_Take* take);
 bool SetIgnoreTempo (MediaItem* item, bool ignoreTempo, double bpm, int num, int den, bool skipItemsWithSameIgnoreState);
 bool DoesItemHaveMidiEvents (MediaItem* item);
-bool TrimItem (MediaItem* item, double start, double end);
+bool TrimItem (MediaItem* item, double start, double end, bool force = false);
 bool GetMediaSourceProperties (MediaItem_Take* take, bool* section, double* start, double* length, double* fade, bool* reverse);
 bool SetMediaSourceProperties (MediaItem_Take* take, bool section, double start, double length, double fade, bool reverse);
 bool SetTakeSourceFromFile (MediaItem_Take* take, const char* filename, bool inProjectData, bool keepSourceProperties);

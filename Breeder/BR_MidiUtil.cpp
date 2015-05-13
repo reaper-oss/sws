@@ -563,7 +563,7 @@ void BR_MidiItemTimePos::Restore (bool clearCurrentEvents /*=true*/, double offs
 			}
 		}
 
-		TrimItem(item, position, position + length);
+		TrimItem(item, position, position + length, true);
 
 		for (size_t i = 0; i < midiTake->noteEvents.size(); ++i)
 			midiTake->noteEvents[i].InsertEvent(take, offset);

@@ -913,7 +913,7 @@ bool DoesItemHaveMidiEvents (MediaItem* item)
 	return false;
 }
 
-bool TrimItem (MediaItem* item, double start, double end)
+bool TrimItem (MediaItem* item, double start, double end, bool force /*=false*/)
 {
 	if (!item)
 		return false;
@@ -930,9 +930,9 @@ bool TrimItem (MediaItem* item, double start, double end)
 	double itemPos = GetMediaItemInfo_Value(item, "D_POSITION");
 	double itemLen = GetMediaItemInfo_Value(item, "D_LENGTH");
 
-	bool updateMidiSource = (DoesItemHaveMidiEvents(item) && GetMediaItemInfo_Value(item, "B_LOOPSRC") == 0);
-	MediaItem_Take* activeTake = (updateMidiSource) ? GetActiveTake(item) : NULL;
-	if (start != itemPos || newLen != itemLen || updateMidiSource)
+	bool itemLooped = !!GetMediaItemInfo_Value(item, "B_LOOPSRC");
+	MediaItem_Take* activeTake = GetActiveTake(item);
+	if (force || start != itemPos || newLen != itemLen)
 	{
 		double startDif = start - itemPos;
 		SetMediaItemInfo_Value(item, "D_LENGTH", newLen);
@@ -944,15 +944,16 @@ bool TrimItem (MediaItem* item, double start, double end)
 			double playrate = GetMediaItemTakeInfo_Value(take, "D_PLAYRATE");
 			double offset   = GetMediaItemTakeInfo_Value(take, "D_STARTOFFS");
 			SetMediaItemTakeInfo_Value(take, "D_STARTOFFS", offset + playrate*startDif);
-			if (updateMidiSource && IsMidi(take)) // this will make sure MIDI's source length is updated to higher value
+			
+			if (IsMidi(take))
 			{
 				SetActiveTake(take);
-				MIDI_SetItemExtents(item, TimeMap_timeToQN(start), TimeMap_timeToQN(end));
-			}
+				if (!itemLooped)
+					MIDI_SetItemExtents(item, TimeMap_timeToQN(start), TimeMap_timeToQN(end));
+			}			
 		}
 
-		if (updateMidiSource)
-			SetActiveTake(activeTake);
+		SetActiveTake(activeTake);
 		return true;
 	}
 	return false;

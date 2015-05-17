@@ -159,8 +159,8 @@ private:
 class BR_MidiItemTimePos
 {
 public:
-	BR_MidiItemTimePos (MediaItem* item, bool deleteSavedEvents = true);
-	void Restore (bool clearCurrentEvents = true, double offset = 0);
+	BR_MidiItemTimePos (MediaItem* item); // saves all MIDI events in the item
+	void Restore (double timeOffset = 0); // deletes any MIDI events in the item and then restores saved events
 
 private:
 	struct MidiTake
@@ -199,6 +199,8 @@ private:
 	};
 	MediaItem* item;
 	double position, length, timeBase;
+	bool looped;
+	double loopStart, loopEnd, loopedOffset;
 	vector<BR_MidiItemTimePos::MidiTake> savedMidiTakes;
 };
 

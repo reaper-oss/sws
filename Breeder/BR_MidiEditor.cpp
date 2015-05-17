@@ -140,7 +140,7 @@ static void MidiTakePreview (int mode, MediaItem_Take* take, MediaTrack* track, 
 		double itemStart    = -1;
 		double itemEnd      = -1;
 		double takeOffset   = 0;
-		double itemPositionOffset = 0;		
+		double itemPositionOffset = 0;
 		if (GetToggleCommandState2(SectionFromUniqueID(SECTION_MIDI_EDITOR), 40470) > 0) // Timebase: Beats(source)
 		{
 			itemStart = GetMediaItemInfo_Value(item, "D_POSITION");
@@ -209,7 +209,7 @@ static void MidiTakePreview (int mode, MediaItem_Take* take, MediaTrack* track, 
 			SetMediaItemInfo_Value(item, "D_POSITION", itemStart + itemPositionOffset);
 			SetMediaItemInfo_Value(item, "D_LENGTH",   itemEnd - itemStart);
 			if (itemPositionOffset != 0) SetMediaItemInfo_Value(item, "D_POSITION", itemStart);
-			if (takeOffset != 0)         SetMediaItemTakeInfo_Value(take, "D_STARTOFFS", takeOffset);			
+			if (takeOffset != 0)         SetMediaItemTakeInfo_Value(take, "D_STARTOFFS", takeOffset);
 		}
 		SetActiveTake(oldTake);
 		GetSetMediaItemInfo(item, "B_MUTE", &itemMuteState);

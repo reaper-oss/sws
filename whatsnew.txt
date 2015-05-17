@@ -6,6 +6,9 @@ Fixes
 +Fixed Groove tool crash vs duplicate Control Change events (report http://forum.cockos.com/showpost.php?p=1519436&postcount=111|here|)
 +Fixed the action <em>SWS/BR: Trim MIDI item to active content</em>
 +Fixed preview actions not working properly in certain scenarios on MIDI items (looped items, MIDI editor timebase set to source (beats) etc...)
++Fixed these actions when dealing with looped items:
+ - SWS/BR: Delete tempo marker and preserve position and length of items (including MIDI events)
+ - SWS/BR: Disable "Ignore project tempo" for selected MIDI items preserving time position of MIDI events
 
 !v2.7.1 #0 pre-release build (May 7, 2015)
 

@@ -555,10 +555,10 @@ void MidiItemTempo (COMMAND_T* ct)
 			}
 			else
 			{
-				BR_MidiItemTimePos timePos(item, false);
+				BR_MidiItemTimePos timePos(item);
 				if (SetIgnoreTempo(item, ignoreTempo, bpm, num, den, true))
 				{
-					timePos.Restore(true);
+					timePos.Restore();
 					update = true;
 				}
 			}

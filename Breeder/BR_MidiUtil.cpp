@@ -525,7 +525,7 @@ loopedOffset (0)
 	{
 		if (MediaItem_Take* activeTake = GetActiveTake(item))
 		{
-			double sourceLenPPQ = GetMidiSourceLengthPPQ(activeTake, NULL);
+			double sourceLenPPQ = GetMidiSourceLengthPPQ(activeTake, true);
 			loopStart = MIDI_GetProjTimeFromPPQPos(activeTake, sourceLenPPQ); // we're not using MIDI_GetProjTimeFromPPQPos(activeTake, 0) because later we will use MIDI_SetItemExtents to make sure looped item
 			loopEnd = MIDI_GetProjTimeFromPPQPos(activeTake, sourceLenPPQ*2); // position info is restored and 0 PPQ in take could theoretically be behind project start in which case MIDI_SetItemExtents wont' work properly
 			loopedOffset = GetMediaItemTakeInfo_Value(activeTake, "D_STARTOFFS");
@@ -543,9 +543,10 @@ loopedOffset (0)
 		// In case of looped item, if active take wasn't midi, get looped position here for first MIDI take
 		if (looped && loopStart == -1 && loopEnd == -1 && IsMidi(take, NULL) && (midiEventCount > 0 || i == takeCount - 1))
 		{
-			double sourceLenPPQ = GetMidiSourceLengthPPQ(take, NULL);
+			double sourceLenPPQ = GetMidiSourceLengthPPQ(take, true);
 			loopStart = MIDI_GetProjTimeFromPPQPos(take, sourceLenPPQ);
 			loopEnd = MIDI_GetProjTimeFromPPQPos(take, sourceLenPPQ*2);
+			loopedOffset = GetMediaItemTakeInfo_Value(take, "D_STARTOFFS");
 		}
 
 
@@ -920,7 +921,7 @@ double EffectiveMidiTakeStart (MediaItem_Take* take, bool ignoreMutedEvents, boo
 		double itemStartPPQ = MIDI_GetPPQPosFromProjTime(take, itemStart);
 		double itemEndPPQ   = (!ignoreEventsOutsideItemBoundaries) ? 0 : MIDI_GetPPQPosFromProjTime(take, GetMediaItemInfo_Value(item, "D_LENGTH") + itemStart);
 		int    loopCount    = (!ignoreEventsOutsideItemBoundaries) ? 0 : GetLoopCount(take, 0, NULL);
-		double sourceLenPPQ = (!ignoreEventsOutsideItemBoundaries) ? 0 :GetMidiSourceLengthPPQ(take);
+		double sourceLenPPQ = (!ignoreEventsOutsideItemBoundaries) ? 0 : GetMidiSourceLengthPPQ(take, true);
 
 		bool validNote = false, validCC = false, validSys = false;
 		double noteStart, ccStart, sysStart;
@@ -1063,7 +1064,7 @@ double EffectiveMidiTakeEnd (MediaItem_Take* take, bool ignoreMutedEvents, bool 
 		double itemEndPPQ   = (!ignoreEventsOutsideItemBoundaries) ? 0 : MIDI_GetPPQPosFromProjTime(take, GetMediaItemInfo_Value(item, "D_LENGTH") + itemStart);
 
 		int    loopCount     = GetLoopCount(take, 0, NULL);
-		double sourceLenPPQ  = GetMidiSourceLengthPPQ(take);
+		double sourceLenPPQ  = GetMidiSourceLengthPPQ(take, true);
 		double effectiveTakeEndPPQ = -1;
 
 		for (int i = 0; i < noteCount; ++i)
@@ -1205,7 +1206,7 @@ double GetEndOfMeasure (MediaItem_Take* take, double ppqPos)
 	return -1;
 }
 
-double GetMidiSourceLengthPPQ (MediaItem_Take* take, bool* isMidiSource /*=NULL*/)
+double GetMidiSourceLengthPPQ (MediaItem_Take* take, bool accountPlayrateIfIgnoringProjTempo, bool* isMidiSource /*=NULL*/)
 {
 	bool   isMidi = false;
 	double length = 0;
@@ -1221,7 +1222,7 @@ double GetMidiSourceLengthPPQ (MediaItem_Take* take, bool* isMidiSource /*=NULL*
 		isMidi = true;
 		length = endPPQ - startPPQ;
 
-		if (GetMediaItemInfo_Value(item, "B_LOOPSRC"))
+		if (accountPlayrateIfIgnoringProjTempo)
 		{
 			bool ignoreProjTempo;
 			if (GetMidiTakeTempoInfo(take, &ignoreProjTempo, NULL, NULL, NULL) && ignoreProjTempo)
@@ -1261,7 +1262,7 @@ double GetOriginalPpqPos (MediaItem_Take* take, double ppqPos, bool* loopedItem,
 
 			double visibleItemStartPpq = MIDI_GetPPQPosFromProjTime(take, itemStart);
 			double visibleItemEndPpq   = MIDI_GetPPQPosFromProjTime(take, itemEnd);
-			double sourceLenPpq = GetMidiSourceLengthPPQ(take);
+			double sourceLenPpq = GetMidiSourceLengthPPQ(take, true);
 
 			// Deduct take offset to get correct current loop iteration
 			double itemStartPpq = MIDI_GetPPQPosFromProjTime(take, itemStart - GetMediaItemTakeInfo_Value(take, "D_STARTOFFS"));

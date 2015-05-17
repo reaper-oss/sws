@@ -607,6 +607,11 @@ void ME_CCToEnvPoints (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd
 	int shape = (abs((int)ct->user) == 1) ? SQUARE : LINEAR;
 	bool update = false;
 
+	MediaItem* item = GetMediaItemTake_Item(take);
+	double itemStart = GetMediaItemInfo_Value(item, "D_POSITION");
+	double itemEnd   = itemStart + GetMediaItemInfo_Value(item, "D_LENGTH");
+	double sourceLenPPQ = GetMidiSourceLengthPPQ(take, true);
+
 	// Process CC events first
 	int id = -1;
 	set<int> processed14BitIds;
@@ -669,11 +674,6 @@ void ME_CCToEnvPoints (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd
 
 			if (value != -1)
 			{
-				MediaItem* item = GetMediaItemTake_Item(take);
-				double itemStart = GetMediaItemInfo_Value(item, "D_POSITION");
-				double itemEnd   = itemStart + GetMediaItemInfo_Value(item, "D_LENGTH");
-				double sourceLenPpq = GetMidiSourceLengthPPQ(take);
-
 				double newValue = TranslateRange(value, 0, max, envelope.LaneMinValue(), envelope.LaneMaxValue());
 				while (true)
 				{
@@ -687,7 +687,7 @@ void ME_CCToEnvPoints (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd
 					{
 						break;
 					}
-					ppqPos += sourceLenPpq;
+					ppqPos += sourceLenPPQ;
 				}
 			}
 		}
@@ -701,11 +701,6 @@ void ME_CCToEnvPoints (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd
 		double ppqPos;
 		if (MIDI_GetNote(take, id, NULL, NULL, &ppqPos, NULL, &channel, NULL, &velocity) && midiEditor.IsNoteVisible(take, id))
 		{
-			MediaItem* item = GetMediaItemTake_Item(take);
-			double itemStart = GetMediaItemInfo_Value(item, "D_POSITION");
-			double itemEnd   = itemStart + GetMediaItemInfo_Value(item, "D_LENGTH");
-			double sourceLenPpq = GetMidiSourceLengthPPQ(take);
-
 			double newValue = TranslateRange(velocity, 1, 127, envelope.LaneMinValue(), envelope.LaneMaxValue());
 			while (true)
 			{
@@ -719,7 +714,7 @@ void ME_CCToEnvPoints (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd
 				{
 					break;
 				}
-				ppqPos += sourceLenPpq;
+				ppqPos += sourceLenPPQ;
 			}
 		}
 	}

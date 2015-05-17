@@ -685,7 +685,7 @@ int GetLoopCount (MediaItem_Take* take, double position, int* loopIterationForPo
 			if (IsMidi(take, NULL))
 			{
 				double itemEndPPQ    = MIDI_GetPPQPosFromProjTime(take, itemEnd);
-				double sourceLenPPQ  = GetMidiSourceLengthPPQ(take);
+				double sourceLenPPQ  = GetMidiSourceLengthPPQ(take, true);
 				double itemLenPPQ = itemEndPPQ; // gotcha: the same cause PPQ starts counting from 0 from item start, making it mover obvious this way
 
 				loopCount = (int)(itemLenPPQ/sourceLenPPQ);

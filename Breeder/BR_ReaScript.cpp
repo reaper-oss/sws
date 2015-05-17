@@ -397,7 +397,7 @@ double BR_GetMidiSourceLenPPQ (MediaItem_Take* take)
 	if (take)
 	{
 		bool isMidi = false;
-		length = GetMidiSourceLengthPPQ(take, &isMidi);
+		length = GetMidiSourceLengthPPQ(take, false, &isMidi);
 		if (!isMidi) length = -1;
 	}
 	return length;

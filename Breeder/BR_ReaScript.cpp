@@ -304,7 +304,7 @@ void BR_GetMediaItemTakeGUID (MediaItem_Take* take, char* guidStringOut, int gui
 		char guid[64];
 		if (take) guidToString((GUID*)GetSetMediaItemTakeInfo(take, "GUID", NULL), guid);
 		else      guidToString(&GUID_NULL, guid);
-		_snprintfSafe(guidStringOut,  guidStringOut_sz, "%s", guid);
+		_snprintfSafe(guidStringOut, guidStringOut_sz, "%s", guid);
 	}
 }
 
@@ -401,6 +401,37 @@ double BR_GetMidiSourceLenPPQ (MediaItem_Take* take)
 		if (!isMidi) length = -1;
 	}
 	return length;
+}
+
+bool BR_GetMidiTakePoolGUID (MediaItem_Take* take, char* guidStringOut, int guidStringOut_sz)
+{
+	if (take && IsMidi(take, NULL) && guidStringOut)
+	{
+		MediaItem* item = GetMediaItemTake_Item(take);
+		int takeId = GetTakeId(take, item);
+		if (takeId >= 0)
+		{
+			SNM_TakeParserPatcher p(item, CountTakes(item));
+			WDL_FastString takeChunk;
+			int tkPos, tklen;
+			if (p.GetTakeChunk(takeId, &takeChunk, &tkPos, &tklen))
+			{
+				SNM_ChunkParserPatcher ptk(&takeChunk, false);
+				WDL_FastString pooledEventsLine;
+				if (ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "SOURCE", "POOLEDEVTS", 0, -1, &pooledEventsLine))
+				{
+					LineParser lp(false);
+					lp.parse(pooledEventsLine.Get());
+					_snprintfSafe(guidStringOut, guidStringOut_sz, "%s", lp.gettoken_str(1));
+				}
+			}
+		}
+	}
+
+	if (PCM_source* source = GetMediaItemTake_Source(take))
+		return !strcmp(source->GetType(), "MIDIPOOL");
+	else
+		return false;
 }
 
 bool BR_GetMidiTakeTempoInfo (MediaItem_Take* take, bool* ignoreProjTempoOut, double* bpmOut, int* numOut, int* denOut)

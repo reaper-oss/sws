@@ -2,6 +2,10 @@ Added actions
 +Main:
  - SWS/BR: Preview take under mouse (lots of different versions, see action list)
 
+ReaScript
++Added functions:
+ - BR_GetMidiTakePoolGUID
+
 Fixes
 +Fixed Groove tool crash vs duplicate Control Change events (report http://forum.cockos.com/showpost.php?p=1519436&postcount=111|here|)
 +Fixed the action <em>SWS/BR: Trim MIDI item to active content</em>

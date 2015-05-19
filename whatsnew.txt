@@ -13,6 +13,7 @@ Fixes
 +Fixed <em>SWS/BR: Disable "Ignore project tempo" for selected MIDI items preserving time position of MIDI events</em> when dealing with looped items
 +Fixed "perform until shortcut released" playback actions playing back muted tracks/items shortly after shortcut release
 +Fixed simplifying main window title not working when undoing
++Fixed missing check mark in context menu of docked SWS dialogs next to menu item "Dock window in Docker"
 
 Other
 +When using "perform until shortcut released" playback actions, create undo point for restoring track/item mute/solo state in case of project changes during playback

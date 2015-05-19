@@ -810,9 +810,7 @@ error:
 		IMPAPI(GetPlayState);
 		IMPAPI(GetPlayStateEx);
 		IMPAPI(GetProjectPath);
-/*JFB commented: err in debug output "plugin_getapi fail:GetProjectStateChangeCount" - last check: v4.33rc1
 		IMPAPI(GetProjectStateChangeCount);
-*/
 		IMPAPI(GetProjectTimeSignature2);
 		IMPAPI(GetResourcePath);
 		IMPAPI(GetSelectedEnvelope);

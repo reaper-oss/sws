@@ -1,16 +1,29 @@
 Added actions
 +Main:
+ - SWS/BR: Preview take under mouse (lots of different versions, see action list)
  - SWS/wol: Adjust envelope or track height under mouse cursor (MIDI CC relative/mousewheel)
+
+ReaScript
++Added functions:
+ - BR_GetMidiTakePoolGUID
  
 Fixes
++Fixed Groove tool crash vs duplicate Control Change events (report http://forum.cockos.com/showpost.php?p=1519436&postcount=111|here|)
 +Fixed the action <em>SWS/BR: Trim MIDI item to active content</em>
 +Fixed preview actions not working properly in certain scenarios on MIDI items (looped items, MIDI editor timebase set to source (beats) etc...)
++Fixed <em>SWS/BR: Disable "Ignore project tempo" for selected MIDI items preserving time position of MIDI events</em> when dealing with looped items
++Fixed "perform until shortcut released" playback actions playing back muted tracks/items shortly after shortcut release
++Fixed simplifying main window title not working when undoing
++Fixed missing check mark in context menu of docked SWS dialogs next to menu item "Dock window in Docker"
+
+Other
++When using "perform until shortcut released" playback actions, create undo point for restoring track/item mute/solo state in case of project changes during playback
 
 !v2.7.1 #0 pre-release build (May 7, 2015)
 
 <strong>OSX:</strong>
 +<strong>New installation disk image (.dmg)</strong>
- - The new .dmg proposes to install the SWS Extension in a different directory: 
+ - The new .dmg proposes to install the SWS Extension in a different directory:
    /Library/Application Support/REAPER/UserPlugins (instead of ~/Library/Application Support/REAPER/UserPlugins)
  - This eases the installation ("normal" drag-drop .dmg, no more script), fixes some security issues, etc but has a small inconvenience when upgrading too, some information messages will guide you in this case though
  - More details http://forum.cockos.com/showpost.php?p=1518816&postcount=96|here|
@@ -21,7 +34,7 @@ Region Playlist
 +Fixed some corner-case playback issues
 
 Resources
-+More commands obey multiple selection in the list view (e.g. play all selected media files in one go, open a bunch of project tabs in one go, etc)
++Issue 709: More commands obey multiple selection in the list view (e.g. play all selected media files in one go, open a bunch of project tabs in one go, etc)
 
 Added actions
 +Main:
@@ -51,7 +64,7 @@ Fixes
 !v2.7 featured build (May 7, 2015)
 OSX: fixed UI issues with listviews on Yosemite and trackpads
 
-Fixed various buglets (Region Playlist, marker/region actions, etc) when some regions/markers/envelopes end later than the last media item
+Fixed various buglets (Region Playlist, marker/region actions, etc) when some regions/markers end later than the last media item
 
 !v2.6.4 #0 pre-release build (May 1, 2015)
 <strong>REAPER v5.0pre21+ is required!</strong>
@@ -126,7 +139,7 @@ ReaScript
 
 Fixes
 +Notes/Windows OS: fixed "wrap text" option (Issue 690)
-+Prevent loading templates when loading projects in new tabs
++Issue 709: Prevent loading templates when loading projects in new tabs
 +Compatibility fixes for new envelope max display options of +12db or +24db (introduced in REAPER v5.0pre21)
 +Autorender/OSX: fixed UTF8 issues with media file tags (Issue 670)
 +Preserve metronome patterns when editing tempo envelope with various actions and dialogs

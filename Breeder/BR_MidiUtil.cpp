@@ -113,8 +113,6 @@ m_valid                (false)
 		m_valid        = this->Build();
 		m_lastLane     = GetLastClickedVelLane(m_midiEditor);
 		m_ccLanesCount = (int)m_ccLanes.size();
-
-
 	}
 }
 
@@ -510,43 +508,66 @@ bool BR_MidiEditor::Build ()
 /******************************************************************************
 * BR_MidiItemTimePos                                                          *
 ******************************************************************************/
-BR_MidiItemTimePos::BR_MidiItemTimePos (MediaItem* item, bool deleteSavedEvents /*= true*/) :
-item (item)
+BR_MidiItemTimePos::BR_MidiItemTimePos (MediaItem* item) :
+item         (item),
+position     (GetMediaItemInfo_Value(item, "D_POSITION")),
+length       (GetMediaItemInfo_Value(item, "D_LENGTH")),
+timeBase     (GetMediaItemInfo_Value(item, "C_BEATATTACHMODE")),
+looped       (!!GetMediaItemInfo_Value(item, "B_LOOPSRC")),
+loopStart    (-1),
+loopEnd      (-1),
+loopedOffset (0)
 {
-	position = GetMediaItemInfo_Value(item, "D_POSITION");
-	length   = GetMediaItemInfo_Value(item, "D_LENGTH");
-	timeBase = GetMediaItemInfo_Value(item, "C_BEATATTACHMODE");
+	// When restoring position and lenght, the only way to restore it for looped MIDI items is to use MIDI_SetItemExtents which will disable looping
+	// for the whole item. Since we have no idea what will happen before this->Restore() is called take data for active MIDI item right now instead of
+	// in this->Restore() (for example, if client calls SetIgnoreTempo() from BR_Util.h before restoring to disable "ignore project tempo" length of MIDI item source may change)
+	if (looped)
+	{
+		if (MediaItem_Take* activeTake = GetActiveTake(item))
+		{
+			double sourceLenPPQ = GetMidiSourceLengthPPQ(activeTake, true);
+			loopStart = MIDI_GetProjTimeFromPPQPos(activeTake, sourceLenPPQ); // we're not using MIDI_GetProjTimeFromPPQPos(activeTake, 0) because later we will use MIDI_SetItemExtents to make sure looped item
+			loopEnd = MIDI_GetProjTimeFromPPQPos(activeTake, sourceLenPPQ*2); // position info is restored and 0 PPQ in take could theoretically be behind project start in which case MIDI_SetItemExtents wont' work properly
+			loopedOffset = GetMediaItemTakeInfo_Value(activeTake, "D_STARTOFFS");
+		}
+	}
 
-	for (int i = 0; i < CountTakes(item); ++i)
+	int takeCount = CountTakes(item);
+	for (int i = 0; i < takeCount; ++i)
 	{
 		MediaItem_Take* take = GetTake(item, i);
 
 		int noteCount, ccCount, textCount;
-		if (MIDI_CountEvts(take, &noteCount, &ccCount, &textCount))
+		int midiEventCount = MIDI_CountEvts(take, &noteCount, &ccCount, &textCount);
+
+		// In case of looped item, if active take wasn't midi, get looped position here for first MIDI take
+		if (looped && loopStart == -1 && loopEnd == -1 && IsMidi(take, NULL) && (midiEventCount > 0 || i == takeCount - 1))
+		{
+			double sourceLenPPQ = GetMidiSourceLengthPPQ(take, true);
+			loopStart = MIDI_GetProjTimeFromPPQPos(take, sourceLenPPQ);
+			loopEnd = MIDI_GetProjTimeFromPPQPos(take, sourceLenPPQ*2);
+			loopedOffset = GetMediaItemTakeInfo_Value(take, "D_STARTOFFS");
+		}
+
+
+		if (midiEventCount > 0)
 		{
 			savedMidiTakes.push_back(BR_MidiItemTimePos::MidiTake(take, noteCount, ccCount, textCount));
 			BR_MidiItemTimePos::MidiTake* midiTake = &savedMidiTakes.back();
 
 			for (int i = 0; i < noteCount; ++i)
-			{
-				midiTake->noteEvents.push_back(BR_MidiItemTimePos::MidiTake::NoteEvent(take, deleteSavedEvents ? 0 : i));
-				if (deleteSavedEvents) MIDI_DeleteNote(take, 0);
-			}
+				midiTake->noteEvents.push_back(BR_MidiItemTimePos::MidiTake::NoteEvent(take, i));
+
 			for (int i = 0; i < ccCount; ++i)
-			{
-				midiTake->ccEvents.push_back(BR_MidiItemTimePos::MidiTake::CCEvent(take, deleteSavedEvents ? 0 : i));
-				if (deleteSavedEvents) MIDI_DeleteCC(take, 0);
-			}
+				midiTake->ccEvents.push_back(BR_MidiItemTimePos::MidiTake::CCEvent(take, i));
+
 			for (int i = 0; i < textCount; ++i)
-			{
-				midiTake->sysEvents.push_back(BR_MidiItemTimePos::MidiTake::SysEvent(take, deleteSavedEvents ? 0 : i));
-				if (deleteSavedEvents) MIDI_DeleteTextSysexEvt(take, 0);
-			}
+				midiTake->sysEvents.push_back(BR_MidiItemTimePos::MidiTake::SysEvent(take, i));
 		}
 	}
 }
 
-void BR_MidiItemTimePos::Restore (bool clearCurrentEvents /*=true*/, double offset /*=0*/)
+void BR_MidiItemTimePos::Restore (double timeOffset /*=0*/)
 {
 	SetMediaItemInfo_Value(item, "C_BEATATTACHMODE", 0);
 	for (size_t i = 0; i < savedMidiTakes.size(); ++i)
@@ -554,27 +575,36 @@ void BR_MidiItemTimePos::Restore (bool clearCurrentEvents /*=true*/, double offs
 		BR_MidiItemTimePos::MidiTake* midiTake = &savedMidiTakes[i];
 		MediaItem_Take* take = midiTake->take;
 
-		if (clearCurrentEvents)
+		int noteCount, ccCount, textCount;
+		if (MIDI_CountEvts(take, &noteCount, &ccCount, &textCount))
 		{
-			int noteCount, ccCount, textCount;
-			if (MIDI_CountEvts(take, &noteCount, &ccCount, &textCount))
-			{
-				for (int i = 0; i < noteCount; ++i) MIDI_DeleteNote(take, 0);
-				for (int i = 0; i < ccCount;   ++i) MIDI_DeleteCC(take, 0);
-				for (int i = 0; i < textCount; ++i) MIDI_DeleteTextSysexEvt(take, 0);
-			}
+			for (int i = 0; i < noteCount; ++i) MIDI_DeleteNote(take, 0);
+			for (int i = 0; i < ccCount;   ++i) MIDI_DeleteCC(take, 0);
+			for (int i = 0; i < textCount; ++i) MIDI_DeleteTextSysexEvt(take, 0);
 		}
 
-		TrimItem(item, position, position + length);
+		if (looped && loopStart != -1 && loopEnd != -1)
+		{
+			SetMediaItemTakeInfo_Value(take, "D_STARTOFFS", 0);
+			MIDI_SetItemExtents(item, TimeMap_timeToQN(loopStart), TimeMap_timeToQN(loopEnd));
+
+			SetMediaItemInfo_Value(item , "B_LOOPSRC", 1); // because MIDI_SetItemExtents() disables looping
+			TrimItem(item, position, position + length, true);
+			SetMediaItemTakeInfo_Value(take, "D_STARTOFFS", loopedOffset);
+		}
+		else
+		{
+			TrimItem(item, position, position + length, true);
+		}
 
 		for (size_t i = 0; i < midiTake->noteEvents.size(); ++i)
-			midiTake->noteEvents[i].InsertEvent(take, offset);
+			midiTake->noteEvents[i].InsertEvent(take, timeOffset);
 
 		for (size_t i = 0; i < midiTake->ccEvents.size(); ++i)
-			midiTake->ccEvents[i].InsertEvent(take, offset);
+			midiTake->ccEvents[i].InsertEvent(take, timeOffset);
 
 		for (size_t i = 0; i < midiTake->sysEvents.size(); ++i)
-			midiTake->sysEvents[i].InsertEvent(take, offset);
+			midiTake->sysEvents[i].InsertEvent(take, timeOffset);
 	}
 
 	SetMediaItemInfo_Value(item, "C_BEATATTACHMODE", timeBase);
@@ -891,7 +921,7 @@ double EffectiveMidiTakeStart (MediaItem_Take* take, bool ignoreMutedEvents, boo
 		double itemStartPPQ = MIDI_GetPPQPosFromProjTime(take, itemStart);
 		double itemEndPPQ   = (!ignoreEventsOutsideItemBoundaries) ? 0 : MIDI_GetPPQPosFromProjTime(take, GetMediaItemInfo_Value(item, "D_LENGTH") + itemStart);
 		int    loopCount    = (!ignoreEventsOutsideItemBoundaries) ? 0 : GetLoopCount(take, 0, NULL);
-		double sourceLenPPQ = (!ignoreEventsOutsideItemBoundaries) ? 0 :GetMidiSourceLengthPPQ(take);
+		double sourceLenPPQ = (!ignoreEventsOutsideItemBoundaries) ? 0 : GetMidiSourceLengthPPQ(take, true);
 
 		bool validNote = false, validCC = false, validSys = false;
 		double noteStart, ccStart, sysStart;
@@ -1034,7 +1064,7 @@ double EffectiveMidiTakeEnd (MediaItem_Take* take, bool ignoreMutedEvents, bool 
 		double itemEndPPQ   = (!ignoreEventsOutsideItemBoundaries) ? 0 : MIDI_GetPPQPosFromProjTime(take, GetMediaItemInfo_Value(item, "D_LENGTH") + itemStart);
 
 		int    loopCount     = GetLoopCount(take, 0, NULL);
-		double sourceLenPPQ  = GetMidiSourceLengthPPQ(take);
+		double sourceLenPPQ  = GetMidiSourceLengthPPQ(take, true);
 		double effectiveTakeEndPPQ = -1;
 
 		for (int i = 0; i < noteCount; ++i)
@@ -1176,13 +1206,14 @@ double GetEndOfMeasure (MediaItem_Take* take, double ppqPos)
 	return -1;
 }
 
-double GetMidiSourceLengthPPQ (MediaItem_Take* take, bool* isMidiSource /*=NULL*/)
+double GetMidiSourceLengthPPQ (MediaItem_Take* take, bool accountPlayrateIfIgnoringProjTempo, bool* isMidiSource /*=NULL*/)
 {
 	bool   isMidi = false;
 	double length = 0;
 	if (take && IsMidi(take))
 	{
-		double itemStart    = GetMediaItemInfo_Value(GetMediaItemTake_Item(take), "D_POSITION");
+		MediaItem* item = GetMediaItemTake_Item(take);
+		double itemStart    = GetMediaItemInfo_Value(item, "D_POSITION");
 		double takeOffset   = GetMediaItemTakeInfo_Value(take, "D_STARTOFFS");
 		double sourceLength = GetMediaItemTake_Source(take)->GetLength();
 		double startPPQ = MIDI_GetPPQPosFromProjTime(take, itemStart - takeOffset);
@@ -1190,6 +1221,13 @@ double GetMidiSourceLengthPPQ (MediaItem_Take* take, bool* isMidiSource /*=NULL*
 
 		isMidi = true;
 		length = endPPQ - startPPQ;
+
+		if (accountPlayrateIfIgnoringProjTempo)
+		{
+			bool ignoreProjTempo;
+			if (GetMidiTakeTempoInfo(take, &ignoreProjTempo, NULL, NULL, NULL) && ignoreProjTempo)
+				length /= GetMediaItemTakeInfo_Value(take, "D_PLAYRATE");
+		}
 	}
 
 	WritePtr(isMidiSource, isMidi);
@@ -1224,7 +1262,7 @@ double GetOriginalPpqPos (MediaItem_Take* take, double ppqPos, bool* loopedItem,
 
 			double visibleItemStartPpq = MIDI_GetPPQPosFromProjTime(take, itemStart);
 			double visibleItemEndPpq   = MIDI_GetPPQPosFromProjTime(take, itemEnd);
-			double sourceLenPpq = GetMidiSourceLengthPPQ(take);
+			double sourceLenPpq = GetMidiSourceLengthPPQ(take, true);
 
 			// Deduct take offset to get correct current loop iteration
 			double itemStartPpq = MIDI_GetPPQPosFromProjTime(take, itemStart - GetMediaItemTakeInfo_Value(take, "D_STARTOFFS"));

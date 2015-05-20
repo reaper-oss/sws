@@ -720,6 +720,8 @@ static void removeDuplicates(std::vector<RprMidiCC *> *midiCCs)
                 delete *k;
                 k = midiCCs[i].erase(k);
                 j = midiCCs[i].begin() + ccOffset;
+                if (ccOffset+1 >= (int)midiCCs[i].size())
+                    break;
             }
         }
     }

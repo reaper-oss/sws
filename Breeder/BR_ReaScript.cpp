@@ -304,7 +304,7 @@ void BR_GetMediaItemTakeGUID (MediaItem_Take* take, char* guidStringOut, int gui
 		char guid[64];
 		if (take) guidToString((GUID*)GetSetMediaItemTakeInfo(take, "GUID", NULL), guid);
 		else      guidToString(&GUID_NULL, guid);
-		_snprintfSafe(guidStringOut,  guidStringOut_sz, "%s", guid);
+		_snprintfSafe(guidStringOut, guidStringOut_sz, "%s", guid);
 	}
 }
 
@@ -397,21 +397,15 @@ double BR_GetMidiSourceLenPPQ (MediaItem_Take* take)
 	if (take)
 	{
 		bool isMidi = false;
-		length = GetMidiSourceLengthPPQ(take, &isMidi);
+		length = GetMidiSourceLengthPPQ(take, false, &isMidi);
 		if (!isMidi) length = -1;
 	}
 	return length;
 }
 
-bool BR_GetMidiTakeTempoInfo (MediaItem_Take* take, bool* ignoreProjTempoOut, double* bpmOut, int* numOut, int* denOut)
+bool BR_GetMidiTakePoolGUID (MediaItem_Take* take, char* guidStringOut, int guidStringOut_sz)
 {
-	bool   ignoreTempo = false;
-	double bpm         = 0;
-	int    num         = 0;
-	int    den         = 0;
-
-	bool succes = false;
-	if (take && IsMidi(take, NULL))
+	if (take && IsMidi(take, NULL) && guidStringOut)
 	{
 		MediaItem* item = GetMediaItemTake_Item(take);
 		int takeId = GetTakeId(take, item);
@@ -423,27 +417,26 @@ bool BR_GetMidiTakeTempoInfo (MediaItem_Take* take, bool* ignoreProjTempoOut, do
 			if (p.GetTakeChunk(takeId, &takeChunk, &tkPos, &tklen))
 			{
 				SNM_ChunkParserPatcher ptk(&takeChunk, false);
-				WDL_FastString tempoLine;
-				if (ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "SOURCE", "IGNTEMPO", 0, -1, &tempoLine))
+				WDL_FastString pooledEventsLine;
+				if (ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "SOURCE", "POOLEDEVTS", 0, -1, &pooledEventsLine))
 				{
 					LineParser lp(false);
-					lp.parse(tempoLine.Get());
-
-					ignoreTempo = !!lp.gettoken_int(1);
-					bpm         = lp.gettoken_float(2);
-					num         = lp.gettoken_int(3);
-					den         = lp.gettoken_int(4);
-					succes = true;
+					lp.parse(pooledEventsLine.Get());
+					_snprintfSafe(guidStringOut, guidStringOut_sz, "%s", lp.gettoken_str(1));
 				}
 			}
 		}
 	}
 
-	WritePtr(ignoreProjTempoOut, ignoreTempo);
-	WritePtr(bpmOut,             bpm);
-	WritePtr(numOut,             num);
-	WritePtr(denOut,             den);
-	return succes;
+	if (PCM_source* source = GetMediaItemTake_Source(take))
+		return !strcmp(source->GetType(), "MIDIPOOL");
+	else
+		return false;
+}
+
+bool BR_GetMidiTakeTempoInfo (MediaItem_Take* take, bool* ignoreProjTempoOut, double* bpmOut, int* numOut, int* denOut)
+{
+	return GetMidiTakeTempoInfo (take, ignoreProjTempoOut, bpmOut, numOut, denOut);
 }
 
 void BR_GetMouseCursorContext (char* windowOut, int windowOut_sz, char* segmentOut, int segmentOut_sz, char* detailsOut, int detailsOut_sz)

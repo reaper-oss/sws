@@ -375,6 +375,11 @@ static void* __vararg_BR_GetMidiSourceLenPPQ(void** arglist, int numparms)
   return p;
 }
 
+static void* __vararg_BR_GetMidiTakePoolGUID(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)BR_GetMidiTakePoolGUID((MediaItem_Take*)arglist[0], (char*)arglist[1], (int)(INT_PTR)arglist[2]);
+}
+
 static void* __vararg_BR_GetMidiTakeTempoInfo(void** arglist, int numparms)
 {
   return (void*)(INT_PTR)BR_GetMidiTakeTempoInfo((MediaItem_Take*)arglist[0], (bool*)arglist[1], (double*)arglist[2], (int*)arglist[3], (int*)arglist[4]);

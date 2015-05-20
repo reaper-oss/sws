@@ -351,7 +351,7 @@ double PositionAtMouseCursor (bool checkRuler, bool checkCursorVisibility /*=tru
 	}
 }
 
-MediaItem* ItemAtMouseCursor (double* position)
+MediaItem* ItemAtMouseCursor (double* position, MediaItem_Take** takeAtMouse /*= NULL*/)
 {
 	POINT p; GetCursorPos(&p);
 	if (IsPointInArrange(p))
@@ -360,7 +360,7 @@ MediaItem* ItemAtMouseCursor (double* position)
 		double pos = PositionAtArrangePoint(p);
 
 		WritePtr(position, pos);
-		return GetItemFromY(y, pos, NULL, NULL);
+		return GetItemFromY(y, pos, takeAtMouse, NULL);
 	}
 	WritePtr(position, -1.0);
 	return NULL;

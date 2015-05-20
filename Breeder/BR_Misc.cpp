@@ -68,9 +68,14 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 	static double s_pausePos = -1;
 	static vector<pair<GUID,int> >* s_trackSoloMuteState = NULL;
 	static vector<pair<GUID,int> >* s_itemMuteState      = NULL;
+	static int s_projStateCount = 0;
+	static ReaProject* s_proj   = NULL;
 
 	if (init)
 	{
+		s_projStateCount = GetProjectStateChangeCount(NULL);
+		s_proj           = EnumProjects(-1, NULL, 0);
+
 		if (IsRecording())
 			return false;
 
@@ -178,6 +183,24 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 	}
 	else
 	{
+		RegisterCsurfPlayState(false, MousePlaybackPlayState); // deregister Csurf before setting playstate
+		if (g_mousePlaybackRestorePlayState)
+		{
+			if (s_playPos != -1)
+			{
+				StartPlayback(s_playPos);
+			}
+			else if (s_pausePos != -1)
+			{
+				OnPauseButton();
+				SetEditCurPos(s_pausePos, true, false);
+			}
+			else
+			{
+				OnStopButton();
+			}
+		}
+
 		PreventUIRefresh(1);
 
 		// Restore tracks' solo and mute state
@@ -203,25 +226,17 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 			}
 		}
 
-		RegisterCsurfPlayState(false, MousePlaybackPlayState); // deregister Csurf before setting playstate
-		if (g_mousePlaybackRestorePlayState)
-		{
-			if (s_playPos != -1)
-			{
-				StartPlayback(s_playPos);
-			}
-			else if (s_pausePos != -1)
-			{
-				OnPauseButton();
-				SetEditCurPos(s_pausePos, true, false);
-			}
-			else
-			{
-				OnStopButton();
-			}
-		}
 		PreventUIRefresh(-1);
 
+		if (GetProjectStateChangeCount(s_proj) > s_projStateCount)
+		{
+			if (s_trackSoloMuteState && !s_itemMuteState)
+				Undo_OnStateChangeEx2(s_proj, __LOCALIZE("Restore tracks solo/mute state", "sws_undo"), UNDO_STATE_TRACKCFG, -1);
+			else if (!s_trackSoloMuteState && s_itemMuteState)
+				Undo_OnStateChangeEx2(s_proj, __LOCALIZE("Restore items mute state", "sws_undo"), UNDO_STATE_ITEMS, -1);
+			else if (s_trackSoloMuteState && s_itemMuteState)
+				Undo_OnStateChangeEx2(s_proj, __LOCALIZE("Restore tracks and items solo/mute state", "sws_undo"), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS, -1);
+		}
 
 		delete s_trackSoloMuteState;
 		delete s_itemMuteState;
@@ -230,6 +245,8 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 		g_mousePlaybackRestorePlayState = true;
 		s_playPos  = -1;
 		s_pausePos = -1;
+		s_projStateCount = 0;
+		s_proj           = NULL;
 		return true;
 	}
 }
@@ -407,7 +424,7 @@ void MarkersAtNotes (COMMAND_T* ct)
 		// Due to possible tempo changes, always work with PPQ, never time
 		double itemStartPPQ = MIDI_GetPPQPosFromProjTime(take, itemStart);
 		double itemEndPPQ = MIDI_GetPPQPosFromProjTime(take, itemEnd);
-		double sourceLenPPQ = GetMidiSourceLengthPPQ(take);
+		double sourceLenPPQ = GetMidiSourceLengthPPQ(take, true);
 
 		int noteCount = 0;
 		MIDI_CountEvts(take, &noteCount, NULL, NULL);
@@ -519,7 +536,7 @@ void MoveClosestMarker (COMMAND_T* ct)
 
 	if (position >= 0)
 	{
-		int id = FindClosestProjMarker(position);
+		int id = FindClosestProjMarkerIndex(position);
 		if (id >= 0)
 		{
 			if ((int)ct->user < 0) position = SnapToGrid(NULL, position);
@@ -555,10 +572,10 @@ void MidiItemTempo (COMMAND_T* ct)
 			}
 			else
 			{
-				BR_MidiItemTimePos timePos(item, false);
+				BR_MidiItemTimePos timePos(item);
 				if (SetIgnoreTempo(item, ignoreTempo, bpm, num, den, true))
 				{
-					timePos.Restore(true);
+					timePos.Restore();
 					update = true;
 				}
 			}
@@ -998,13 +1015,18 @@ void RestoreTrackSoloMuteStateSlot (COMMAND_T* ct)
 void PreviewItemAtMouse (COMMAND_T* ct)
 {
 	double position;
-	if (MediaItem* item = ItemAtMouseCursor(&position))
+	MediaItem_Take* takeAtMouse = NULL;
+	if (MediaItem* item = ItemAtMouseCursor(&position, &takeAtMouse))
 	{
 		vector<int> options = GetDigits((int)ct->user);
-		int toggle = options[0];
-		int output = options[1];
-		int type   = options[2];
-		int pause  = options[3];
+		int toggle    = options[0];
+		int output    = options[1];
+		int type      = options[2];
+		int pause     = options[3];
+		bool playTake = (options[4] == 2);
+
+		if (playTake && !takeAtMouse)
+			return;
 
 		MediaTrack* track     = NULL;
 		double      volume    = 1;
@@ -1012,12 +1034,18 @@ void PreviewItemAtMouse (COMMAND_T* ct)
 		double      measure   = (type  == 3) ? 1 : 0;
 		bool        pausePlay = (pause == 2) ? true : false;
 
-		if (output == 2)
-			volume = GetMediaTrackInfo_Value(GetMediaItem_Track(item), "D_VOL");
-		else if (output == 3)
-			track = GetMediaItem_Track(item);
+		if      (output == 2) volume = GetMediaTrackInfo_Value(GetMediaItem_Track(item), "D_VOL");
+		else if (output == 3) track = GetMediaItem_Track(item);
+
+		MediaItem_Take* oldTake = NULL;
+		if (playTake)
+		{
+			oldTake = GetActiveTake(item);
+			if (oldTake != NULL) SetActiveTake(takeAtMouse);
+		}
 
 		ItemPreview(toggle, item, track, volume, start, measure, pausePlay);
+		if (oldTake) SetActiveTake(oldTake);
 	}
 }
 
@@ -1126,25 +1154,9 @@ void AdjustPlayrate (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 /******************************************************************************
 * Commands: Misc - Title bar display options                                  *
 ******************************************************************************/
-static int            g_titleBarDisplayUpdateCount = 0;
-static int            g_titleBarDisplayOptions     = 0;
-static bool           g_titleBarDisplayProjConf    = false;
-static WNDPROC        g_titleBarOldWndProc         = NULL;
+static int            g_titleBarDisplayOptions = 0;
+static WNDPROC        g_titleBarOldWndProc     = NULL;
 static WDL_FastString g_titleBarDisplayOld;
-
-static void SaveExtensionConfig (ProjectStateContext *ctx, bool isUndo, project_config_extension_t *reg)
-{
-	if (isUndo) return;
-	TitleBarDisplayOptionsInit(true, 2, false, false); // 2 so it gets updated on save and once more when modified
-}
-
-static void BeginLoadProjectState (bool isUndo, project_config_extension_t *reg)
-{
-	if (isUndo) return;
-	TitleBarDisplayOptionsInit(true, 1, false, false);
-}
-
-static project_config_extension_t s_projectconfig = {NULL, SaveExtensionConfig, BeginLoadProjectState, NULL};
 
 static LRESULT CALLBACK TitleBarDisplayWndCallback (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -1153,12 +1165,12 @@ static LRESULT CALLBACK TitleBarDisplayWndCallback (HWND hwnd, UINT uMsg, WPARAM
 		static bool s_reentry = false;
 		if (g_titleBarDisplayOptions != 0 && !s_reentry)
 		{
-			static const char* s_separator = __localizeFunc(" - ", "caption", 0);
+			const char* separator = __localizeFunc(" - ", "caption", 0);
 			const char* versionStr = GetAppVersion();
 
 			// Find position in window text where project name ends
 			WDL_FastString searchString;
-			searchString.AppendFormatted(512, "%s%s%s", s_separator, "REAPER v", versionStr);
+			searchString.AppendFormatted(512, "%s%s%s", separator, "REAPER v", versionStr);
 			const char* projNameEnd = strstr_last((const char*)lParam, searchString.Get());
 			if (!projNameEnd)
 			{
@@ -1175,8 +1187,8 @@ static LRESULT CALLBACK TitleBarDisplayWndCallback (HWND hwnd, UINT uMsg, WPARAM
 
 				WDL_FastString titleBar;
 				if      (projectName.GetLength() == 0)        titleBar.AppendFormatted(4096, "%s %s",     "REAPER", majorVersion.Get());
-				else if (GetBit(g_titleBarDisplayOptions, 0)) titleBar.AppendFormatted(4096, "%s%s%s %s", projectName.Get(), s_separator, "REAPER", majorVersion.Get());
-				else if (GetBit(g_titleBarDisplayOptions, 1)) titleBar.AppendFormatted(4096, "%s %s%s%s", "REAPER", majorVersion.Get(), s_separator, projectName.Get());
+				else if (GetBit(g_titleBarDisplayOptions, 0)) titleBar.AppendFormatted(4096, "%s%s%s %s", projectName.Get(), separator, "REAPER", majorVersion.Get());
+				else if (GetBit(g_titleBarDisplayOptions, 1)) titleBar.AppendFormatted(4096, "%s %s%s%s", "REAPER", majorVersion.Get(), separator, projectName.Get());
 				else                                          titleBar.AppendFormatted(4096, "%s",        projectName.Get());
 
 				s_reentry = true;
@@ -1184,15 +1196,6 @@ static LRESULT CALLBACK TitleBarDisplayWndCallback (HWND hwnd, UINT uMsg, WPARAM
 				g_titleBarDisplayOld.SetRaw((const char*)lParam, strlen((const char*)lParam));
 				s_reentry = false;
 
-				// Unhook from window procedure not to waste resource unnecessarily (we rehook again on project load, project save or active tab change)
-				if (g_titleBarDisplayUpdateCount > 0)
-					--g_titleBarDisplayUpdateCount;
-				if (g_titleBarDisplayUpdateCount == 0 && g_titleBarOldWndProc && TitleBarDisplayWndCallback == (WNDPROC)GetWindowLongPtr(g_hwndParent, GWLP_WNDPROC)) // restore old proc only if no new wndproc wasn't set in the meantime)
-				{
-					SetWindowLongPtr(g_hwndParent, GWLP_WNDPROC, (LONG_PTR)g_titleBarOldWndProc);
-					g_titleBarOldWndProc = NULL;
-					g_titleBarDisplayUpdateCount = 0;
-				}
 				return 0;
 			}
 		}
@@ -1200,57 +1203,41 @@ static LRESULT CALLBACK TitleBarDisplayWndCallback (HWND hwnd, UINT uMsg, WPARAM
 	return g_titleBarOldWndProc(hwnd, uMsg, wParam, lParam);
 }
 
-void TitleBarDisplayOptionsInit (bool hookWnd, int updateCount, bool updateNow, bool tabChange)
+void TitleBarDisplayOptionsInitExit (bool init)
 {
-	if (!hookWnd)
+	if (init)
 	{
 		char tmp[64];
 		GetPrivateProfileString("common", "titleBarDisplayOptions", "0", tmp, sizeof(tmp), GetIniFileBR());
 		g_titleBarDisplayOptions = atoi(tmp);
+
+		if (g_titleBarDisplayOptions != 0)
+		{
+			if (!g_titleBarOldWndProc)
+				g_titleBarOldWndProc = (WNDPROC)SetWindowLongPtr(g_hwndParent, GWLP_WNDPROC, (LONG_PTR)TitleBarDisplayWndCallback);
+
+			if (g_titleBarOldWndProc)
+			{
+				if (g_titleBarDisplayOld.GetLength() == 0)
+				{
+					char titleBarStr[4096] = "";
+					GetWindowText(g_hwndParent, (LPSTR)titleBarStr, sizeof(titleBarStr));
+					g_titleBarDisplayOld.SetRaw(titleBarStr, strlen(titleBarStr));
+				}
+				SetWindowText(g_hwndParent, (LPCTSTR)g_titleBarDisplayOld.Get());
+			}
+		}
 	}
 	else
 	{
-		if (g_titleBarDisplayOptions != 0 && !g_titleBarOldWndProc)
-		{
-			if (!g_titleBarDisplayProjConf)
-			{
-				plugin_register("projectconfig", &s_projectconfig);
-				g_titleBarDisplayProjConf = true;
-			}
-			g_titleBarOldWndProc = (WNDPROC)SetWindowLongPtr(g_hwndParent, GWLP_WNDPROC, (LONG_PTR)TitleBarDisplayWndCallback);
-		}
+		char tmp[512];
+		_snprintfSafe(tmp, sizeof(tmp), "%d", g_titleBarDisplayOptions);
+		WritePrivateProfileString("common", "titleBarDisplayOptions", tmp, GetIniFileBR());
 
-		if (g_titleBarDisplayOptions != 0) g_titleBarDisplayUpdateCount = (updateCount > g_titleBarDisplayUpdateCount) ? updateCount : g_titleBarDisplayUpdateCount;
-		else                               g_titleBarDisplayOptions = 0;
-
-		if (g_titleBarDisplayOptions != 0 && updateNow)
-		{
-			if (tabChange && CountProjectTabs() > 1)
-				g_titleBarDisplayOld.DeleteSub(0, g_titleBarDisplayOld.GetLength());
-
-			if (g_titleBarDisplayOld.GetLength() == 0)
-			{
-				char titleBarStr[4096] = "";
-				GetWindowText(g_hwndParent, (LPSTR)titleBarStr, sizeof(titleBarStr));
-				g_titleBarDisplayOld.SetRaw(titleBarStr, strlen(titleBarStr));
-			}
-			SetWindowText(g_hwndParent, (LPCTSTR)g_titleBarDisplayOld.Get());
-		}
+		if (g_titleBarOldWndProc)
+			SetWindowLongPtr(g_hwndParent, GWLP_WNDPROC, (LONG_PTR)g_titleBarOldWndProc);
+		g_titleBarOldWndProc = NULL;
 	}
-}
-
-void TitleBarDisplayOptionsExit ()
-{
-	char tmp[512];
-	_snprintfSafe(tmp, sizeof(tmp), "%d", g_titleBarDisplayOptions);
-	WritePrivateProfileString("common", "titleBarDisplayOptions", tmp, GetIniFileBR());
-
-	if (g_titleBarOldWndProc)
-		SetWindowLongPtr(g_hwndParent, GWLP_WNDPROC, (LONG_PTR)g_titleBarOldWndProc);
-	g_titleBarOldWndProc = NULL;
-	g_titleBarDisplayUpdateCount = 0;
-
-	plugin_register("-projectconfig", &s_projectconfig);
 }
 
 void SetTitleBarDisplayOptions (COMMAND_T* ct)
@@ -1263,11 +1250,7 @@ void SetTitleBarDisplayOptions (COMMAND_T* ct)
 		{
 			SetWindowLongPtr(g_hwndParent, GWLP_WNDPROC, (LONG_PTR)g_titleBarOldWndProc);
 			g_titleBarOldWndProc = NULL;
-			g_titleBarDisplayUpdateCount = 0;
 		}
-
-		plugin_register("-projectconfig", &s_projectconfig);
-		g_titleBarDisplayProjConf = false;
 
 		if (g_titleBarDisplayOld.GetLength() != 0)
 		{
@@ -1277,7 +1260,16 @@ void SetTitleBarDisplayOptions (COMMAND_T* ct)
 	}
 	else
 	{
-		TitleBarDisplayOptionsInit(true, 2, true, false); // count should depend if project is modified or not (2 for non-modified, 1 for modified), but since GetProjectStateChangeCount() is broken we have to update it twice just in case
+		if (!g_titleBarOldWndProc)
+			g_titleBarOldWndProc = (WNDPROC)SetWindowLongPtr(g_hwndParent, GWLP_WNDPROC, (LONG_PTR)TitleBarDisplayWndCallback);
+
+		if (g_titleBarDisplayOld.GetLength() == 0)
+		{
+			char titleBarStr[4096] = "";
+			GetWindowText(g_hwndParent, (LPSTR)titleBarStr, sizeof(titleBarStr));
+			g_titleBarDisplayOld.SetRaw(titleBarStr, strlen(titleBarStr));
+		}
+		SetWindowText(g_hwndParent, (LPCTSTR)g_titleBarDisplayOld.Get());
 	}
 }
 

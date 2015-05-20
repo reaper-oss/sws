@@ -82,7 +82,7 @@ inline void ContinuousActionsInitExit (bool init)
 {
 	if (init)
 	{
-		BR_RegisterContinuousActions ();
+		BR_RegisterContinuousActions();
 	}
 	else
 	{

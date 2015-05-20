@@ -33,7 +33,7 @@ class BR_Envelope;
 * Miscellaneous                                                               *
 ******************************************************************************/
 double PositionAtMouseCursor (bool checkRuler, bool checkCursorVisibility = true, int* yOffset = NULL, bool* overRuler = NULL);
-MediaItem* ItemAtMouseCursor (double* position);
+MediaItem* ItemAtMouseCursor (double* position, MediaItem_Take** takeAtMouse = NULL);
 MediaItem_Take* TakeAtMouseCursor (double* position);
 MediaTrack* TrackAtMouseCursor (int* context, double* position); // context: 0->TCP, 1->MCP, 2->Arrange
 

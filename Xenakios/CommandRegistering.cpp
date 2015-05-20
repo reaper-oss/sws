@@ -211,7 +211,7 @@ COMMAND_T g_XenCommandTable[] =
 	{ { DEFACCEL, "Xenakios/SWS: Move cursor left 10 pixels" }, "XENAKIOS_MOVECUR10PIX_LEFT", DoMoveCursor10pixLeft,NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Move cursor left 10 pixels, creating time selection" }, "XENAKIOS_MOVECUR10PIX_LEFTCTS", DoMoveCursor10pixLeftCreateSel,NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Move cursor right 10 pixels, creating time selection" }, "XENAKIOS_MOVECUR10PIX_RIGHTCTS", DoMoveCursor10pixRightCreateSel,NULL, },
-	{ { DEFACCEL, "Xenakios/SWS: Stop current media item preview" }, "SWS_STOPPREVIEW", DoPreviewSelectedItem, NULL, 0 },
+	{ { DEFACCEL, "Xenakios/SWS: Stop current media item/take preview" }, "SWS_STOPPREVIEW", DoPreviewSelectedItem, NULL, 0 },
 	{ { DEFACCEL, "Xenakios/SWS: Preview selected media item" }, "XENAKIOS_ITEMASPCM1", DoPreviewSelectedItem,NULL, 1 },
 	{ { DEFACCEL, "Xenakios/SWS: Preview selected media item (toggle)" }, "SWS_PREVIEWTOGGLE", DoPreviewSelectedItem, NULL, 2 },
 	{ { DEFACCEL, "Xenakios/SWS: Preview selected media item at track fader volume" }, "SWS_PREVIEWFADER", DoPreviewSelectedItem, NULL, 3 },

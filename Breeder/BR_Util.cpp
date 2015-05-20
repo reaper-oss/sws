@@ -291,7 +291,7 @@ WDL_FastString FormatTime (double position, int mode /*=-1*/)
 	return string;
 }
 
-int FindClosestProjMarker (double position)
+int FindClosestProjMarkerIndex (double position)
 {
 	int first = 0;
 	int last  = CountProjectMarkers(NULL, NULL, NULL);
@@ -685,7 +685,7 @@ int GetLoopCount (MediaItem_Take* take, double position, int* loopIterationForPo
 			if (IsMidi(take, NULL))
 			{
 				double itemEndPPQ    = MIDI_GetPPQPosFromProjTime(take, itemEnd);
-				double sourceLenPPQ  = GetMidiSourceLengthPPQ(take);
+				double sourceLenPPQ  = GetMidiSourceLengthPPQ(take, true);
 				double itemLenPPQ = itemEndPPQ; // gotcha: the same cause PPQ starts counting from 0 from item start, making it mover obvious this way
 
 				loopCount = (int)(itemLenPPQ/sourceLenPPQ);
@@ -832,6 +832,49 @@ int GetTakeFXCount (MediaItem_Take* take)
 	return count;
 }
 
+bool GetMidiTakeTempoInfo (MediaItem_Take* take, bool* ignoreProjTempo, double* bpm, int* num, int* den)
+{
+	bool   _ignoreTempo = false;
+	double _bpm         = 0;
+	int    _num         = 0;
+	int    _den         = 0;
+
+	bool succes = false;
+	if (take && IsMidi(take, NULL))
+	{
+		MediaItem* item = GetMediaItemTake_Item(take);
+		int takeId = GetTakeId(take, item);
+		if (takeId >= 0)
+		{
+			SNM_TakeParserPatcher p(item, CountTakes(item));
+			WDL_FastString takeChunk;
+			int tkPos, tklen;
+			if (p.GetTakeChunk(takeId, &takeChunk, &tkPos, &tklen))
+			{
+				SNM_ChunkParserPatcher ptk(&takeChunk, false);
+				WDL_FastString tempoLine;
+				if (ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "SOURCE", "IGNTEMPO", 0, -1, &tempoLine))
+				{
+					LineParser lp(false);
+					lp.parse(tempoLine.Get());
+
+					_ignoreTempo = !!lp.gettoken_int(1);
+					_bpm         = lp.gettoken_float(2);
+					_num         = lp.gettoken_int(3);
+					_den         = lp.gettoken_int(4);
+					succes = true;
+				}
+			}
+		}
+	}
+
+	WritePtr(ignoreProjTempo, _ignoreTempo);
+	WritePtr(bpm,             _bpm);
+	WritePtr(num,             _num);
+	WritePtr(den,             _den);
+	return succes;
+}
+
 bool SetIgnoreTempo (MediaItem* item, bool ignoreTempo, double bpm, int num, int den, bool skipItemsWithSameIgnoreState)
 {
 	bool midiFound = false;
@@ -913,7 +956,7 @@ bool DoesItemHaveMidiEvents (MediaItem* item)
 	return false;
 }
 
-bool TrimItem (MediaItem* item, double start, double end)
+bool TrimItem (MediaItem* item, double start, double end, bool force /*=false*/)
 {
 	if (!item)
 		return false;
@@ -930,9 +973,9 @@ bool TrimItem (MediaItem* item, double start, double end)
 	double itemPos = GetMediaItemInfo_Value(item, "D_POSITION");
 	double itemLen = GetMediaItemInfo_Value(item, "D_LENGTH");
 
-	bool updateMidiSource = (DoesItemHaveMidiEvents(item) && GetMediaItemInfo_Value(item, "B_LOOPSRC") == 0);
-	MediaItem_Take* activeTake = (updateMidiSource) ? GetActiveTake(item) : NULL;
-	if (start != itemPos || newLen != itemLen || updateMidiSource)
+	bool itemLooped = !!GetMediaItemInfo_Value(item, "B_LOOPSRC");
+	MediaItem_Take* activeTake = GetActiveTake(item);
+	if (force || start != itemPos || newLen != itemLen)
 	{
 		double startDif = start - itemPos;
 		SetMediaItemInfo_Value(item, "D_LENGTH", newLen);
@@ -944,15 +987,16 @@ bool TrimItem (MediaItem* item, double start, double end)
 			double playrate = GetMediaItemTakeInfo_Value(take, "D_PLAYRATE");
 			double offset   = GetMediaItemTakeInfo_Value(take, "D_STARTOFFS");
 			SetMediaItemTakeInfo_Value(take, "D_STARTOFFS", offset + playrate*startDif);
-			if (updateMidiSource && IsMidi(take)) // this will make sure MIDI's source length is updated to higer value
+
+			if (IsMidi(take))
 			{
 				SetActiveTake(take);
-				MIDI_SetItemExtents(item, TimeMap_timeToQN(start), TimeMap_timeToQN(end));
+				if (!itemLooped)
+					MIDI_SetItemExtents(item, TimeMap_timeToQN(start), TimeMap_timeToQN(end)); // this will update source length (but in case of looped midi item we don't want that (it also disabled looping for item)
 			}
 		}
 
-		if (updateMidiSource)
-			SetActiveTake(activeTake);
+		SetActiveTake(activeTake);
 		return true;
 	}
 	return false;
@@ -3035,8 +3079,8 @@ HCURSOR GetSwsMouseCursor (BR_MouseCursor cursor)
 		// Cursor not yet loaded
 		if (!s_cursors[cursor])
 		{
-			const char* cursorFile   = NULL; // this is SWS only cursor file
-			int         idc_resVal   = -1;   // in case cursor file hasn't been found, default to this resource
+			const char* cursorFile = NULL;
+			int         idc_resVal = -1;
 
 			if      (cursor == CURSOR_ENV_PEN_GRID)    {idc_resVal = IDC_ENV_PEN_GRID;      cursorFile = "sws_env_pen_grid";}
 			else if (cursor == CURSOR_ENV_PT_ADJ_VERT) {idc_resVal = IDC_ENV_PT_ADJ_VERT;   cursorFile = "sws_env_pt_adj_vert";}

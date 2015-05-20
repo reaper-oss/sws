@@ -61,6 +61,7 @@ void            BR_GetMediaTrackLayouts (MediaTrack* track, char* mcpLayoutNameO
 TrackEnvelope*  BR_GetMediaTrackSendInfo_Envelope (MediaTrack* track, int category, int sendidx, int envelopeType);
 MediaTrack*     BR_GetMediaTrackSendInfo_Track (MediaTrack* track, int category, int sendidx, int trackType);
 double          BR_GetMidiSourceLenPPQ (MediaItem_Take* take);
+bool            BR_GetMidiTakePoolGUID (MediaItem_Take* take, char* guidStringOut, int guidStringOut_sz);
 bool            BR_GetMidiTakeTempoInfo (MediaItem_Take* take, bool* ignoreProjTempoOut, double* bpmOut, int* numOut, int* denOut);
 void            BR_GetMouseCursorContext (char* windowOut, int windowOut_sz, char* segmentOut, int segmentOut_sz, char* detailsOut, int detailsOut_sz);
 TrackEnvelope*  BR_GetMouseCursorContext_Envelope (bool* takeEnvelopeOut);

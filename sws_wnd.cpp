@@ -271,7 +271,7 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				}
 				// Check dock state
 				if ((m_state.state & 2))
-					CheckMenuItem(hMenu, GetMenuItemCount(hMenu) - 1, MF_BYCOMMAND | MF_CHECKED);
+					CheckMenuItem(hMenu, dockId, MF_BYCOMMAND | MF_CHECKED);
 
 				if (!NotifyOnContextMenu())
 					cancelId = GetUnusedMenuId(hMenu);

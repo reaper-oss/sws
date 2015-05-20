@@ -78,8 +78,7 @@ void AdjustPlayrate (COMMAND_T*, int, int, int, HWND);
 /******************************************************************************
 * Commands: Misc - Title bar display options                                  *
 ******************************************************************************/
-void TitleBarDisplayOptionsInit (bool hookWnd, int updateCount, bool updateNow, bool tabChange);
-void TitleBarDisplayOptionsExit ();
+void TitleBarDisplayOptionsInitExit (bool init);
 void SetTitleBarDisplayOptions (COMMAND_T*);
 
 /******************************************************************************

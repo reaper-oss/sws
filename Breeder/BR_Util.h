@@ -64,9 +64,9 @@ const int SECTION_MEDIA_EXPLORER = 32063;
 /******************************************************************************
 * Miscellaneous                                                               *
 ******************************************************************************/
-vector<int> GetDigits (int val); // if val = 123, returns [0] = 1, [1] = 2 etc...
-int GetFirstDigit (int val);     // if val = 123, returns 1
-int GetLastDigit (int val);      // if val = 123, returns 3
+vector<int> GetDigits (int val); // for 123 returns [0] = 1, [1] = 2 etc...
+int GetFirstDigit (int val);     // for 123 returns 1
+int GetLastDigit (int val);      // for 123 returns 3
 int BinaryToDecimal (const char* binaryString);
 int GetBit (int val, int bit);
 int SetBit (int val, int bit, bool set);
@@ -99,7 +99,7 @@ template <typename T> T    GetClosestVal (T val, T targetVal1, T targetVal2) {if
 ******************************************************************************/
 vector<double> GetProjectMarkers (bool timeSel, double timeSelDelta = 0);
 WDL_FastString FormatTime (double position, int mode = -1); // same as format_timestr_pos but handles "measures.beats + time" properly
-int FindClosestProjMarker (double position);
+int FindClosestProjMarkerIndex (double position);
 int CountProjectTabs ();
 double EndOfProject (bool markers, bool regions);
 double GetMidiOscVal (double min, double max, double step, double currentVal, int commandVal, int commandValhw, int commandRelmode);
@@ -134,9 +134,10 @@ int GetLoopCount (MediaItem_Take* take, double position, int* loopIterationForPo
 int GetEffectiveTakeId (MediaItem_Take* take, MediaItem* item, int id, int* effectiveTakeCount); // empty takes could be hidden, so displayed id and real id can differ (pass either take or item and take id)
 int GetTakeType (MediaItem_Take* take); // -1 = unknown, 0 = audio, 1 = MIDI, 2 = video, 3 = click, 4 = timecode generator, 5 = RPR project
 int GetTakeFXCount (MediaItem_Take* take);
+bool GetMidiTakeTempoInfo (MediaItem_Take* take, bool* ignoreProjTempo, double* bpm, int* num, int* den);
 bool SetIgnoreTempo (MediaItem* item, bool ignoreTempo, double bpm, int num, int den, bool skipItemsWithSameIgnoreState);
 bool DoesItemHaveMidiEvents (MediaItem* item);
-bool TrimItem (MediaItem* item, double start, double end);
+bool TrimItem (MediaItem* item, double start, double end, bool force = false);
 bool GetMediaSourceProperties (MediaItem_Take* take, bool* section, double* start, double* length, double* fade, bool* reverse);
 bool SetMediaSourceProperties (MediaItem_Take* take, bool section, double start, double length, double fade, bool reverse);
 bool SetTakeSourceFromFile (MediaItem_Take* take, const char* filename, bool inProjectData, bool keepSourceProperties);

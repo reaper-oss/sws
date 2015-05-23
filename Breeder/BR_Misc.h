@@ -46,9 +46,11 @@ void MoveClosestMarker (COMMAND_T*);
 void MidiItemTempo (COMMAND_T*);
 void MidiItemTrim (COMMAND_T*);
 void SnapFollowsGridVis (COMMAND_T*);
+void PlaybackFollowsTempoChange (COMMAND_T*);
 void TrimNewVolPanEnvs (COMMAND_T*);
 void ToggleDisplayItemLabels (COMMAND_T*);
-void PlaybackFollowsTempoChange (COMMAND_T*);
+void SetMidiResetOnPlayStop (COMMAND_T*);
+void SetOptionsFX (COMMAND_T*);
 void CycleRecordModes (COMMAND_T*);
 void FocusArrangeTracks (COMMAND_T*);
 void MoveActiveWndToMouse (COMMAND_T*);
@@ -94,8 +96,10 @@ void ClearProjectTrackSelAction (COMMAND_T*);
 * Toggle states: Misc                                                         *
 ******************************************************************************/
 int IsSnapFollowsGridVisOn (COMMAND_T*);
+int IsPlaybackFollowsTempoChangeOn (COMMAND_T*);
 int IsTrimNewVolPanEnvsOn (COMMAND_T*);
-int IsDisplayDisplayItemLabelsOn (COMMAND_T*);
-int IsPlaybackFollowingTempoChange (COMMAND_T*);
+int IsToggleDisplayItemLabelsOn (COMMAND_T*);
+int IsSetMidiResetOnPlayStopOn (COMMAND_T*);
+int IsSetOptionsFXOn (COMMAND_T*);
 int IsAdjustPlayrateOptionsVisible (COMMAND_T*);
 int IsTitleBarDisplayOptionOn (COMMAND_T*);

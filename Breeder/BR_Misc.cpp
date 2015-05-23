@@ -637,7 +637,7 @@ void SnapFollowsGridVis (COMMAND_T* ct)
 	RefreshToolbar(0);
 }
 
-void PlaybackFollowsTempoChange (COMMAND_T*)
+void PlaybackFollowsTempoChange (COMMAND_T* ct)
 {
 	int option; GetConfig("seekmodes", option);
 
@@ -673,7 +673,42 @@ void ToggleDisplayItemLabels (COMMAND_T* ct)
 	UpdateArrange();
 }
 
-void CycleRecordModes (COMMAND_T*)
+void SetMidiResetOnPlayStop (COMMAND_T* ct)
+{
+	int option; GetConfig("midisendflags", option);
+	option = ToggleBit(option, (int)ct->user);
+	SetConfig("midisendflags", option);
+
+	char tmp[256];
+	_snprintfSafe(tmp, sizeof(tmp), "%d", option);
+	WritePrivateProfileString("reaper", "midisendflags", tmp, get_ini_file());
+}
+
+void SetOptionsFX (COMMAND_T* ct)
+{
+	if ((int)ct->user == 0)
+	{
+		int option; GetConfig("runallonstop", option);
+		option = ToggleBit(option, 3);
+		SetConfig("runallonstop", option);
+
+		char tmp[256];
+		_snprintfSafe(tmp, sizeof(tmp), "%d", option);
+		WritePrivateProfileString("reaper", "runallonstop", tmp, get_ini_file());
+	}
+	else
+	{
+		int option; GetConfig("loopstopfx", option);
+		option = ToggleBit(option, 0);
+		SetConfig("loopstopfx", option);
+
+		char tmp[256];
+		_snprintfSafe(tmp, sizeof(tmp), "%d", option);
+		WritePrivateProfileString("reaper", "loopstopfx", tmp, get_ini_file());
+	}
+}
+
+void CycleRecordModes (COMMAND_T* ct)
 {
 	int mode; GetConfig("projrecmode", mode);
 	if (++mode > 2) mode = 0;
@@ -1442,7 +1477,7 @@ int IsSnapFollowsGridVisOn (COMMAND_T* ct)
 	return !GetBit(option, 15);
 }
 
-int IsPlaybackFollowingTempoChange (COMMAND_T* ct)
+int IsPlaybackFollowsTempoChangeOn (COMMAND_T* ct)
 {
 	int option; GetConfig("seekmodes", option);
 	return GetBit(option, 5);
@@ -1454,10 +1489,30 @@ int IsTrimNewVolPanEnvsOn (COMMAND_T* ct)
 	return (option == (int)ct->user);
 }
 
-int IsDisplayDisplayItemLabelsOn (COMMAND_T* ct)
+int IsToggleDisplayItemLabelsOn (COMMAND_T* ct)
 {
 	int option; GetConfig("labelitems2", option);
 	return ((int)ct->user == 4) ? !GetBit(option, (int)ct->user) : GetBit(option, (int)ct->user);
+}
+
+int IsSetMidiResetOnPlayStopOn (COMMAND_T* ct)
+{
+	int option; GetConfig("midisendflags", option);
+	return !GetBit(option, (int)ct->user);
+}
+
+int IsSetOptionsFXOn (COMMAND_T* ct)
+{
+	if ((int)ct->user == 0)
+	{
+		int option; GetConfig("runallonstop", option);
+		return GetBit(option, 3);
+	}
+	else
+	{
+		int option; GetConfig("loopstopfx", option);
+		return GetBit(option, 0);
+	}
 }
 
 int IsAdjustPlayrateOptionsVisible (COMMAND_T* ct)

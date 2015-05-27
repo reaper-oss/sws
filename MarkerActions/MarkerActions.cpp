@@ -34,7 +34,7 @@ static void RefreshMAToolbar();
 
 void RunActionMarker(const char* cName)
 {
-	if (cName && cName[0] == '!')
+	if (cName && cName[0] == '!' && !EnumProjects(0x40000000, NULL, 0)) // disabled while rendering (0x40000000 trick == rendered project, if any)
 	{
 		if (g_bIgnoreNext)
 		{	// Ignore the entire marker action

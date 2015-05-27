@@ -23,6 +23,7 @@ Fixes
 
 Other
 +When using "perform until shortcut released" playback actions, create undo point for restoring track/item mute/solo state in case of project changes during playback
++Disabled Marker Actions while rendering
 
 !v2.7.1 #0 pre-release build (May 7, 2015)
 

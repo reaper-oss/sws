@@ -513,7 +513,7 @@ WDL_FastString* SNM_TakeParserPatcher::GetChunk()
 	if (!m_fakeTake && chunk)
 	{
 		m_fakeTake = true;
-		const char* p = strstr(m_chunk->Get(), "\nNAME \"");
+		const char* p = strstr(m_chunk->Get(), "\nNAME ");
 		// empty item (i.e. no take at all) or NULL takes only
 		if (!p) 
 		{
@@ -548,7 +548,7 @@ bool SNM_TakeParserPatcher::Commit(bool _force)
 		if (m_fakeTake)
 		{
 			m_fakeTake = false;
-			const char* p = strstr(m_chunk->Get(), "\nNAME \"");
+			const char* p = strstr(m_chunk->Get(), "\nNAME ");
 			// empty item (i.e. no take at all) or NULL takes only
 			if (!p) 
 			{

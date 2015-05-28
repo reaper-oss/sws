@@ -739,7 +739,7 @@ void ClearTake(COMMAND_T* _ct)
 					updated |= p.ReplaceTake(pos, len, &emptyTk);
 
 					// empty takes only => remove the item
-					if (!strstr(p.GetChunk()->Get(), "\nNAME \""))
+					if (!strstr(p.GetChunk()->Get(), "\nNAME "))
 					{	
 						p.CancelUpdates(); // prevent a useless SNM_ChunkParserPatcher commit
 						if (DeleteTrackMediaItem(tr, item)) {

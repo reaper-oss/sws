@@ -639,78 +639,102 @@ void SnapFollowsGridVis (COMMAND_T* ct)
 
 void PlaybackFollowsTempoChange (COMMAND_T* ct)
 {
-	int option; GetConfig("seekmodes", option);
+	static const char* s_configStr = "seekmodes";
+	int option; GetConfig(s_configStr, option);
 
 	option = ToggleBit(option, 5);
-	SetConfig("seekmodes", option);
+	SetConfig(s_configStr, option);
 	RefreshToolbar(0);
 
 	char tmp[256];
 	_snprintfSafe(tmp, sizeof(tmp), "%d", option);
-	WritePrivateProfileString("reaper", "seekmodes", tmp, get_ini_file());
+	WritePrivateProfileString("reaper", s_configStr, tmp, get_ini_file());
 }
 
 void TrimNewVolPanEnvs (COMMAND_T* ct)
 {
-	SetConfig("envtrimadjmode", (int)ct->user);
+	static const char* s_configStr = "envtrimadjmode";
+	SetConfig(s_configStr, (int)ct->user);
 	RefreshToolbar(0);
 
 	char tmp[256];
 	_snprintfSafe(tmp, sizeof(tmp), "%d", (int)ct->user);
-	WritePrivateProfileString("reaper", "envtrimadjmode", tmp, get_ini_file());
+	WritePrivateProfileString("reaper", s_configStr, tmp, get_ini_file());
 }
 
 void ToggleDisplayItemLabels (COMMAND_T* ct)
 {
-	int option; GetConfig("labelitems2", option);
+	static const char* s_configStr = "labelitems2";
+
+	int option; GetConfig(s_configStr, option);
 	option = ToggleBit(option, (int)ct->user);
-	SetConfig("labelitems2", option);
+	SetConfig(s_configStr, option);
 
 	char tmp[256];
 	_snprintfSafe(tmp, sizeof(tmp), "%d", option);
-	WritePrivateProfileString("reaper", "labelitems2", tmp, get_ini_file());
+	WritePrivateProfileString("reaper", s_configStr, tmp, get_ini_file());
 
 	UpdateArrange();
 }
 
 void SetMidiResetOnPlayStop (COMMAND_T* ct)
 {
-	int option; GetConfig("midisendflags", option);
+	static const char* s_configStr = "midisendflags";
+	int option; GetConfig(s_configStr, option);
+
 	option = ToggleBit(option, (int)ct->user);
-	SetConfig("midisendflags", option);
+	SetConfig(s_configStr, option);
 
 	char tmp[256];
 	_snprintfSafe(tmp, sizeof(tmp), "%d", option);
-	WritePrivateProfileString("reaper", "midisendflags", tmp, get_ini_file());
+	WritePrivateProfileString("reaper", s_configStr, tmp, get_ini_file());
 }
 
 void SetOptionsFX (COMMAND_T* ct)
 {
 	if ((int)ct->user == 0)
 	{
-		int option; GetConfig("runallonstop", option);
+		static const char* s_configStr = "runallonstop";
+		int option; GetConfig(s_configStr, option);
+
 		option = ToggleBit(option, 3);
-		SetConfig("runallonstop", option);
+		SetConfig(s_configStr, option);
 
 		char tmp[256];
 		_snprintfSafe(tmp, sizeof(tmp), "%d", option);
-		WritePrivateProfileString("reaper", "runallonstop", tmp, get_ini_file());
+		WritePrivateProfileString("reaper", s_configStr, tmp, get_ini_file());
 	}
 	else
 	{
-		int option; GetConfig("loopstopfx", option);
+		static const char* s_configStr = "loopstopfx";
+		int option; GetConfig(s_configStr, option);
+
 		option = ToggleBit(option, 0);
-		SetConfig("loopstopfx", option);
+		SetConfig(s_configStr, option);
 
 		char tmp[256];
 		_snprintfSafe(tmp, sizeof(tmp), "%d", option);
-		WritePrivateProfileString("reaper", "loopstopfx", tmp, get_ini_file());
+		WritePrivateProfileString("reaper", s_configStr, tmp, get_ini_file());
 	}
+}
+
+void SetMoveCursorOnPaste (COMMAND_T* ct)
+{
+	static const char* s_configStr = "itemclickmovecurs";
+	int option; GetConfig(s_configStr, option);
+
+	option = ToggleBit(option, abs((int)ct->user));
+	SetConfig(s_configStr, option);
+
+	char tmp[256];
+	_snprintfSafe(tmp, sizeof(tmp), "%d", option);
+	WritePrivateProfileString("reaper", s_configStr, tmp, get_ini_file());
 }
 
 void CycleRecordModes (COMMAND_T* ct)
 {
-	int mode; GetConfig("projrecmode", mode);
+	static const char* s_configStr = "projrecmode";
+	int mode; GetConfig(s_configStr, mode);
 	if (++mode > 2) mode = 0;
 
 	if      (mode == 0) Main_OnCommandEx(40253, 0, NULL);
@@ -1513,6 +1537,12 @@ int IsSetOptionsFXOn (COMMAND_T* ct)
 		int option; GetConfig("loopstopfx", option);
 		return GetBit(option, 0);
 	}
+}
+
+int IsSetMoveCursorOnPasteOn (COMMAND_T* ct)
+{
+	int option; GetConfig("itemclickmovecurs", option);
+	return ((int)ct->user < 0) ? !GetBit(option, abs((int)ct->user)) : GetBit(option, abs((int)ct->user));
 }
 
 int IsAdjustPlayrateOptionsVisible (COMMAND_T* ct)

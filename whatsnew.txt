@@ -6,6 +6,9 @@ Added actions
  - SWS/BR: Options - Toggle "Reset CC on stop/play"
  - SWS/BR: Options - Toggle "Flush FX on stop"
  - SWS/BR: Options - Toggle "Flush FX when looping"
+ - SWS/BR: Options - Toggle "Move edit cursor to start of time selection on time selection change"
+ - SWS/BR: Options - Toggle "Move edit cursor when pasting/inserting media"
+ - SWS/BR: Options - Toggle "Move edit cursor to end of recorded items on record stop"
  - SWS/wol: Adjust envelope or track height under mouse cursor (MIDI CC relative/mousewheel)
 
 ReaScript

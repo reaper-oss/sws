@@ -14,6 +14,7 @@ Added actions
 ReaScript
 +Added functions:
  - BR_GetMidiTakePoolGUID
++Hardened BR_Env functions so they don't crash REAPER in certain scenarios (reported and explained http://forum.cockos.com/showthread.php?p=1529077#post1529077|here|)
 
 Fixes
 +Fixed Groove tool crash vs duplicate Control Change events (report http://forum.cockos.com/showpost.php?p=1519436&postcount=111|here|)

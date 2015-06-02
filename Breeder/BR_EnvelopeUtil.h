@@ -217,7 +217,7 @@ private:
 	void Build (bool takeEnvelopesUseProjectTime);
 	void UpdateConsequential ();
 	void FillFxInfo ();
-	void FillProperties () const; // to make operator== const (yes, m_properties does get modified but only if not cached already)
+	bool FillProperties () const; // to make operator== const (yes, m_properties does get modified but only if not cached already)
 	WDL_FastString GetProperties ();
 
 	TrackEnvelope* m_envelope;

@@ -1351,9 +1351,7 @@ double BR_Envelope::LaneMaxValue ()
 
 void BR_Envelope::SetActive (bool active)
 {
-	this->FillProperties();
-
-	if (!!m_properties.active != active)
+	if (this->FillProperties() && !!m_properties.active != active)
 	{
 		m_properties.active  = active;
 		m_properties.changed = true;
@@ -1363,9 +1361,7 @@ void BR_Envelope::SetActive (bool active)
 
 void BR_Envelope::SetVisible (bool visible)
 {
-	this->FillProperties();
-
-	if (!!m_properties.visible != visible)
+	if (this->FillProperties() && !!m_properties.visible != visible)
 	{
 		m_properties.visible = visible;
 		m_properties.changed = true;
@@ -1377,8 +1373,7 @@ void BR_Envelope::SetInLane (bool lane)
 {
 	if (!this->IsTakeEnvelope())
 	{
-		this->FillProperties();
-		if (!!m_properties.lane != lane)
+		if (this->FillProperties() && !!m_properties.lane != lane)
 		{
 			m_properties.lane    = lane;
 			m_properties.changed = true;
@@ -1389,8 +1384,7 @@ void BR_Envelope::SetInLane (bool lane)
 
 void BR_Envelope::SetArmed (bool armed)
 {
-	this->FillProperties();
-	if (!!m_properties.armed != armed)
+	if (this->FillProperties() && !!m_properties.armed != armed)
 	{
 		m_properties.armed   = armed;
 		m_properties.changed = true;
@@ -1400,8 +1394,7 @@ void BR_Envelope::SetArmed (bool armed)
 
 void BR_Envelope::SetLaneHeight (int height)
 {
-	this->FillProperties();
-	if (m_properties.height != height)
+	if (this->FillProperties() && m_properties.height != height)
 	{
 		m_properties.height  = height;
 		m_properties.changed = true;
@@ -1411,8 +1404,7 @@ void BR_Envelope::SetLaneHeight (int height)
 
 void BR_Envelope::SetDefaultShape (int shape)
 {
-	this->FillProperties();
-	if (m_properties.shape != shape)
+	if (this->FillProperties() && m_properties.shape != shape)
 	{
 		m_properties.shape   = shape;
 		m_properties.changed = true;
@@ -1422,8 +1414,7 @@ void BR_Envelope::SetDefaultShape (int shape)
 
 void BR_Envelope::SetScalingToFader (bool faderScaling)
 {
-	this->FillProperties();
-	if (m_properties.type == VOLUME || m_properties.type == VOLUME_PREFX)
+	if (this->FillProperties() && (m_properties.type == VOLUME || m_properties.type == VOLUME_PREFX))
 	{
 		if (!!m_properties.faderMode != faderScaling)
 		{
@@ -1747,7 +1738,7 @@ void BR_Envelope::FillFxInfo ()
 	}
 }
 
-void BR_Envelope::FillProperties () const
+bool BR_Envelope::FillProperties () const
 {
 	if (!m_properties.filled)
 	{
@@ -1884,6 +1875,8 @@ void BR_Envelope::FillProperties () const
 			m_properties.filled = true;
 		}
 	}
+
+	return m_properties.filled;
 }
 
 WDL_FastString BR_Envelope::GetProperties ()

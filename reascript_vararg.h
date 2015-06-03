@@ -568,6 +568,11 @@ static void* __vararg_BR_Win32_SendMessage(void** arglist, int numparms)
   return (void*)(INT_PTR)BR_Win32_SendMessage((int)(INT_PTR)arglist[0], (int)(INT_PTR)arglist[1], (int)(INT_PTR)arglist[2], (int)(INT_PTR)arglist[3]);
 }
 
+static void* __vararg_BR_Win32_SetFocus(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)BR_Win32_SetFocus((int)(INT_PTR)arglist[0]);
+}
+
 static void* __vararg_BR_Win32_SetForegroundWindow(void** arglist, int numparms)
 {
   return (void*)(INT_PTR)BR_Win32_SetForegroundWindow((int)(INT_PTR)arglist[0]);

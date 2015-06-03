@@ -21,6 +21,7 @@ ReaScript
  - BR_Win32_GetConstant
  - BR_Win32_GetMainWndHwnd
  - BR_Win32_SendMessage
+ - BR_Win32_SetFocus
  - BR_Win32_SetForegroundWindow
  - BR_Win32_ShellExecute
   - Note: on OSX, standard SWELL limitations apply. SWELL (found within http://www.cockos.com/wdl/|WDL| library created by Cockos) is used both by REAPER and SWS to wrap win32 API on OSX

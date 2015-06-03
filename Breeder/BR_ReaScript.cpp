@@ -1021,6 +1021,11 @@ int BR_Win32_SendMessage(int hwnd, int msg, int lParam, int wParam)
 	return (int)SendMessage((HWND)hwnd, msg, lParam, wParam);
 }
 
+int BR_Win32_SetFocus (int hwnd)
+{
+	return (int)SetFocus((HWND)hwnd);
+}
+
 int BR_Win32_SetForegroundWindow (int hwnd)
 {
 	#ifdef _WIN32

@@ -95,7 +95,8 @@ int             BR_Win32_FindWindowEx(int hwndParent, int hwndChildAfter, const 
 int             BR_Win32_GetActiveMidiEditor ();
 int             BR_Win32_GetConstant (const char* constantName);
 int             BR_Win32_GetMainWndHwnd ();
-int             BR_Win32_SendMessage(int hwnd, int msg, int lParam, int wParam);
+int             BR_Win32_SendMessage (int hwnd, int msg, int lParam, int wParam);
+int             BR_Win32_SetFocus (int hwnd);
 int             BR_Win32_SetForegroundWindow (int hwnd);
 int             BR_Win32_ShellExecute (int hwnd, const char* operation, const char* file, const char* parameters, const char* directoy, int showFlags);
 

@@ -201,6 +201,7 @@ APIdef g_apidefs[] =
 	{ APIFUNC(BR_Win32_GetConstant), "int", "const char*", "constantName", "[BR] Returns various constants needed for BR_Win32 functions.\nSupported values are:\nCB_ERR, CB_GETCOUNT, CB_GETCURSEL, CB_SETCURSEL, VK_DOWN, VK_UP, WM_CLOSE, WM_KEYDOWN", },
 	{ APIFUNC(BR_Win32_GetMainWndHwnd), "int", "", "", "[BR] Alternative to <a href=\"#GetMainHwnd\">GetMainHwnd</a>. REAPER seems to have problems with extensions using HWND type for exported functions so all BR_Win32 functions use integer instead of HWND type", },
 	{ APIFUNC(BR_Win32_SendMessage), "int", "int,int,int,int", "hwnd,msg,lParam,wParam", "[BR] Equivalent to win32 API SendMessage().", },
+	{ APIFUNC(BR_Win32_SetFocus), "int", "int", "hwnd", "[BR] Equivalent to win32 API SetFocus().", },
 	{ APIFUNC(BR_Win32_SetForegroundWindow), "int", "int", "hwnd", "[BR] Equivalent to win32 API SetForegroundWindow().", },
 	{ APIFUNC(BR_Win32_ShellExecute), "int", "int,const char*,const char*,const char*,const char*,int", "hwnd, operation,file,parameters,directory,showFlags", "[BR] Equivalent to win32 API ShellExecute().", },
 

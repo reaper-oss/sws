@@ -796,7 +796,8 @@ set<int> GetUsedCCLanes (void* midiEditor, int detect14bit)
 								double nextPos;
 								int nextChanMsg, nextChan, nextMsg2;
 								MIDI_GetCC(take, ++tmpId, NULL, NULL, &nextPos, &nextChanMsg, &nextChan, &nextMsg2, NULL);
-
+								if (tmpId >= ccCount)
+									break;
 								if (nextPos > pos)
 								{
 									if (detect14bit == 2)

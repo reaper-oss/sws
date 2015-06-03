@@ -31,6 +31,7 @@ ReaScript
 Fixes
 +Fixed Groove tool crash vs duplicate Control Change events (report http://forum.cockos.com/showpost.php?p=1519436&postcount=111|here|)
 +Hardened various actions related to takes
++Fixed possible crash in MIDI editor actions that show/hide used CC lanes
 +Fixed the action <em>SWS/BR: Trim MIDI item to active content</em>
 +Fixed preview actions not working properly in certain scenarios on MIDI items (looped items, MIDI editor timebase set to source (beats) etc...)
 +Fixed <em>SWS/BR: Disable "Ignore project tempo" for selected MIDI items preserving time position of MIDI events</em> when dealing with looped items

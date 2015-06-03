@@ -31,6 +31,7 @@
 #include "../Breeder/BR_Util.h"
 #include "../Breeder/BR_EnvelopeUtil.h"
 #include "../SnM/SnM_Dlg.h"
+#include "../SnM/SnM_Util.h"
 
 
 
@@ -83,7 +84,7 @@ void SetTrackHeight(MediaTrack* track, int height, bool useChunk)
 
 		if (p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKHEIGHT", 0, 1, pTrackLine))
 		{
-			sprintf_s(pTrackLine, BUFFER_SIZE, "%d", height);
+			_snprintfSafe(pTrackLine, BUFFER_SIZE, "%d", height);
 			p.ParsePatch(SNM_SET_CHUNK_CHAR, 1, "TRACK", "TRACKHEIGHT", 0, 1, pTrackLine);
 		}
 	}

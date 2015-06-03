@@ -10,10 +10,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -28,7 +28,7 @@
 #include "stdafx.h"
 #include "Analysis.h"
 #include "../sws_waitdlg.h"
-#include "Breeder/BR_Util.h"
+#include "../Breeder/BR_Util.h"
 #include "../reaper/localize.h"
 
 
@@ -44,7 +44,7 @@ void AnalyzePCMSource(ANALYZE_PCM* a)
 	t.length = a->dWindowSize == 0.0 ? 16384 : (int)(a->dWindowSize * t.samplerate);
 	t.samples = new ReaSample[t.length * t.nch];
 	t.time_s = 0.0;
-	
+
 	ReaSample* prevBuf = NULL;
 	if (a->dWindowSize != 0.0)
 	{
@@ -115,7 +115,7 @@ void AnalyzePCMSource(ANALYZE_PCM* a)
 
 
 		a->dProgress = (double)a->sampleCount / totalSamples;
-		
+
 		iFrame++;
 		t.time_s = (double)t.length * iFrame / t.samplerate;
 		// Get next block
@@ -168,7 +168,7 @@ bool AnalyzeItem(MediaItem* mi, ANALYZE_PCM* a)
 
 	double dZero = 0.0;
 	GetSetMediaItemInfo((MediaItem*)a->pcm, "D_POSITION", &dZero);
-			
+
 	const char* cName = NULL;
 	MediaItem_Take* take = GetMediaItemTake(mi, -1);
 	if (take)
@@ -388,7 +388,7 @@ void SetRMSOptions(COMMAND_T*)
 }
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
-static COMMAND_T g_commandTable[] = 
+static COMMAND_T g_commandTable[] =
 {
 	{ { DEFACCEL, "SWS: Analyze and display item peak and RMS" },	"SWS_ANALYZEITEM",		DoAnalyzeItem,		NULL, },
 	{ { DEFACCEL, "SWS: Move cursor to item peak sample" },			"SWS_FINDITEMPEAK",		FindItemPeak,		NULL, },

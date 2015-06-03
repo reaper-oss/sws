@@ -551,35 +551,37 @@ double BR_GetSetTrackSendInfo (MediaTrack* track, int category, int sendidx, con
 				GetSetTrackSendInfo(track, category, sendidx, parmname, (void*)&valueToSet);
 				returnValue = 1;
 			}
-			else if (!strcmp(parmname, "I_MIDI_SRCCHAN") || !strcmp(parmname, "I_MIDI_DSTCHAN") || !strcmp(parmname, "I_MIDI_SRCBUS") || !strcmp(parmname, "I_MIDI_DSTBUS"))
+			else if (!strcmp(parmname, "I_MIDI_LINK_VOLPAN") || !strcmp(parmname, "I_MIDI_SRCCHAN") || !strcmp(parmname, "I_MIDI_DSTCHAN") || !strcmp(parmname, "I_MIDI_SRCBUS") || !strcmp(parmname, "I_MIDI_DSTBUS"))
 			{
 				if (void* sendInfo = GetSetTrackSendInfo(track, category, sendidx, "I_MIDIFLAGS", NULL))
 				{
 					int valueToSet = *(int*)sendInfo;
-					if      (newValue == -1)                      valueToSet |= 0x3FC01F;                                            // set all bits for source channel and bus to 1
-					else if (!strcmp(parmname, "I_MIDI_SRCCHAN")) valueToSet = (valueToSet & ~(0x1F))       | ((int)newValue);       // source chan is bits 0-4
-					else if (!strcmp(parmname, "I_MIDI_DSTCHAN")) valueToSet = (valueToSet & ~(0x1F << 5))  | ((int)newValue << 5);  // destination chan is bits 5-9
-					else if (!strcmp(parmname, "I_MIDI_SRCBUS"))  valueToSet = (valueToSet & ~(0xFF << 14)) | ((int)newValue << 14); // source MIDI bus is bits 14-21
-					else if (!strcmp(parmname, "I_MIDI_DSTBUS"))  valueToSet = (valueToSet & ~(0xFF << 22)) | ((int)newValue << 22); // destination MIDI bus is bits 22-29
+					if      (newValue == -1)                          valueToSet |= 0x3FC01F;                                            // set all bits for source channel and bus to 1
+					else if (!strcmp(parmname, "I_MIDI_LINK_VOLPAN")) valueToSet = SetBit(valueToSet, 10, (newValue != 0));
+					else if (!strcmp(parmname, "I_MIDI_SRCCHAN"))     valueToSet = (valueToSet & ~(0x1F))       | ((int)newValue);       // source chan is bits 0-4
+					else if (!strcmp(parmname, "I_MIDI_DSTCHAN"))     valueToSet = (valueToSet & ~(0x1F << 5))  | ((int)newValue << 5);  // destination chan is bits 5-9
+					else if (!strcmp(parmname, "I_MIDI_SRCBUS"))      valueToSet = (valueToSet & ~(0xFF << 14)) | ((int)newValue << 14); // source MIDI bus is bits 14-21
+					else if (!strcmp(parmname, "I_MIDI_DSTBUS"))      valueToSet = (valueToSet & ~(0xFF << 22)) | ((int)newValue << 22); // destination MIDI bus is bits 22-29
 					GetSetTrackSendInfo(track, category, sendidx, "I_MIDIFLAGS", (void*)&valueToSet);
+					returnValue = 1;
 				}
 			}
 		}
 		else
 		{
-			if (!strcmp(parmname, "I_MIDI_SRCCHAN") || !strcmp(parmname, "I_MIDI_DSTCHAN") || !strcmp(parmname, "I_MIDI_SRCBUS") || !strcmp(parmname, "I_MIDI_DSTBUS"))
+			if (!strcmp(parmname, "I_MIDI_LINK_VOLPAN") || !strcmp(parmname, "I_MIDI_SRCCHAN") || !strcmp(parmname, "I_MIDI_DSTCHAN") || !strcmp(parmname, "I_MIDI_SRCBUS") || !strcmp(parmname, "I_MIDI_DSTBUS"))
 			{
 				if (void* sendInfo = GetSetTrackSendInfo(track, category, sendidx, "I_MIDIFLAGS", NULL))
 				{
 					int midiFlags = *(int*)sendInfo;
-					if      ((midiFlags & 31) == 31)              returnValue = -1;
-					else if (!strcmp(parmname, "I_MIDI_SRCCHAN")) returnValue = midiFlags         & 0x1F; // source chan is bits 0-4
-					else if (!strcmp(parmname, "I_MIDI_DSTCHAN")) returnValue = (midiFlags >> 5)  & 0x1F; // destination chan is bits 5-9
-					else if (!strcmp(parmname, "I_MIDI_SRCBUS"))  returnValue = (midiFlags >> 14) & 0xFF; // source MIDI bus is bits 14-21
-					else if (!strcmp(parmname, "I_MIDI_DSTBUS"))  returnValue = (midiFlags >> 22) & 0xFF; // destination MIDI bus is bits 22-29
+					if      ((midiFlags & 31) == 31)                  returnValue = -1;
+					else if (!strcmp(parmname, "I_MIDI_LINK_VOLPAN")) returnValue = (GetBit(midiFlags, 10) ? 1 : 0);
+					else if (!strcmp(parmname, "I_MIDI_SRCCHAN"))     returnValue = midiFlags         & 0x1F; // source chan is bits 0-4
+					else if (!strcmp(parmname, "I_MIDI_DSTCHAN"))     returnValue = (midiFlags >> 5)  & 0x1F; // destination chan is bits 5-9
+					else if (!strcmp(parmname, "I_MIDI_SRCBUS"))      returnValue = (midiFlags >> 14) & 0xFF; // source MIDI bus is bits 14-21
+					else if (!strcmp(parmname, "I_MIDI_DSTBUS"))      returnValue = (midiFlags >> 22) & 0xFF; // destination MIDI bus is bits 22-29
 				}
 			}
-
 			else if (void* sendInfo = GetSetTrackSendInfo(track, category, sendidx, parmname, NULL))
 			{
 				if (!strcmp(parmname, "B_MUTE") || !strcmp(parmname, "B_PHASE") || !strcmp(parmname, "B_MONO"))

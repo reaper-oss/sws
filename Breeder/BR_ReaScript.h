@@ -90,6 +90,14 @@ bool            BR_SetTakeSourceFromFile (MediaItem_Take* take, const char* file
 bool            BR_SetTakeSourceFromFile2 (MediaItem_Take* take, const char* filenameIn, bool inProjectData, bool keepSourceProperties);
 MediaItem_Take* BR_TakeAtMouseCursor (double* positionOut);
 MediaTrack*     BR_TrackAtMouseCursor (int* contextOut, double* positionOut);
+int             BR_Win32_FindComboBoxString (int comboBoxHwnd, const char* string);
+int             BR_Win32_FindWindowEx(int hwndParent, int hwndChildAfter, const char* className, const char* windowName);
+int             BR_Win32_GetActiveMidiEditor ();
+int             BR_Win32_GetConstant (const char* constantName);
+int             BR_Win32_GetMainWndHwnd ();
+int             BR_Win32_SendMessage(int hwnd, int msg, int lParam, int wParam);
+int             BR_Win32_SetForegroundWindow (int hwnd);
+int             BR_Win32_ShellExecute (int hwnd, const char* operation, const char* file, const char* parameters, const char* directoy, int showFlags);
 
 /******************************************************************************
 * Big description!                                                            *

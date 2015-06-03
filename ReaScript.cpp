@@ -195,10 +195,17 @@ APIdef g_apidefs[] =
 	{ APIFUNC(BR_SetTakeSourceFromFile2), "bool", "MediaItem_Take*,const char*,bool,bool", "take,filenameIn,inProjectData,keepSourceProperties", "[BR] Differs from <a href=\"#BR_SetTakeSourceFromFile\">BR_SetTakeSourceFromFile</a> only that it can also preserve existing take media source properties.", },
 	{ APIFUNC(BR_TakeAtMouseCursor), "MediaItem_Take*", "double*", "positionOut", "[BR] Get take under mouse cursor. Position is mouse cursor position in arrange.", },
 	{ APIFUNC(BR_TrackAtMouseCursor), "MediaTrack*", "int*,double*", "contextOut,positionOut", "[BR] Get track under mouse cursor.\nContext signifies where the track was found: 0 = TCP, 1 = MCP, 2 = Arrange.\nPosition will hold mouse cursor position in arrange if applicable.", },
+	{ APIFUNC(BR_Win32_FindComboBoxString), "int", "int,const char*", "comboBoxHwnd,string", "[BR] Equivalent to win32 API SendMessage(hwnd, CB_FINDSTRING, -1, string)", },
+	{ APIFUNC(BR_Win32_FindWindowEx), "int", "int,int,const char*,const char*", "hwndParent,hwndChildAfter,className,windowName", "[BR] Equivalent to win32 API FindWindowEx()", },
+	{ APIFUNC(BR_Win32_GetActiveMidiEditor), "int", "", "", "[BR] Alternative to <a href=\"#MIDIEditor_GetActive\">MIDIEditor_GetActive</a>. REAPER seems to have problems with extensions using HWND type for exported functions so all BR_Win32 functions use integer instead of HWND type", },
+	{ APIFUNC(BR_Win32_GetConstant), "int", "const char*", "constantName", "[BR] Returns various constants needed for BR_Win32 functions.\nSupported values are:\nCB_ERR, CB_GETCOUNT, CB_GETCURSEL, CB_SETCURSEL, VK_DOWN, VK_UP, WM_CLOSE, WM_KEYDOWN", },
+	{ APIFUNC(BR_Win32_GetMainWndHwnd), "int", "", "", "[BR] Alternative to <a href=\"#GetMainHwnd\">GetMainHwnd</a>. REAPER seems to have problems with extensions using HWND type for exported functions so all BR_Win32 functions use integer instead of HWND type", },
+	{ APIFUNC(BR_Win32_SendMessage), "int", "int,int,int,int", "hwnd,msg,lParam,wParam", "[BR] Equivalent to win32 API SendMessage().", },
+	{ APIFUNC(BR_Win32_SetForegroundWindow), "int", "int", "hwnd", "[BR] Equivalent to win32 API SetForegroundWindow().", },
+	{ APIFUNC(BR_Win32_ShellExecute), "int", "int,const char*,const char*,const char*,const char*,int", "hwnd, operation,file,parameters,directory,showFlags", "[BR] Equivalent to win32 API ShellExecute().", },
 
 	{ APIFUNC(ULT_GetMediaItemNote), "const char*", "MediaItem*", "item", "[ULT] Get item notes.", },
 	{ APIFUNC(ULT_SetMediaItemNote), "void", "MediaItem*,const char*", "item,note", "[ULT] Set item notes.", },
-
 	{ NULL, } // denote end of table
 };
 

@@ -970,3 +970,66 @@ MediaTrack* BR_TrackAtMouseCursor (int* contextOut, double* positionOut)
 {
 	return TrackAtMouseCursor(contextOut, positionOut);
 }
+
+int BR_Win32_FindComboBoxString (int comboBoxHwnd, const char* string)
+{
+	if (comboBoxHwnd && string)
+		return (int)SendMessage((HWND)comboBoxHwnd, CB_FINDSTRING, -1, (LPARAM)string);
+	else
+		return CB_ERR;
+}
+
+int BR_Win32_FindWindowEx (int hwndParent, int hwndChildAfter, const char* className, const char* windowName)
+{
+	return (int)FindWindowEx((HWND)hwndParent, (HWND)hwndChildAfter, className, windowName);
+}
+
+int BR_Win32_GetActiveMidiEditor ()
+{
+	return (int)MIDIEditor_GetActive();
+}
+
+int BR_Win32_GetConstant (const char* constantName)
+{
+	if (constantName)
+	{
+		if (!strcmp(constantName, "CB_ERR"))        return CB_ERR;
+		if (!strcmp(constantName, "CB_GETCOUNT"))   return CB_GETCOUNT;
+		if (!strcmp(constantName, "CB_GETCURSEL"))  return CB_GETCURSEL;
+		if (!strcmp(constantName, "CB_SETCURSEL"))  return CB_SETCURSEL;
+		if (!strcmp(constantName, "VK_DOWN"))       return VK_DOWN;
+		if (!strcmp(constantName, "VK_UP"))         return VK_UP;
+		if (!strcmp(constantName, "WM_CLOSE"))      return WM_CLOSE;
+		if (!strcmp(constantName, "WM_KEYDOWN"))    return WM_KEYDOWN;
+		else                                        return -1;
+	}
+	else
+	{
+		return -1;
+	}
+}
+
+int BR_Win32_GetMainWndHwnd ()
+{
+	return (int)g_hwndParent;
+}
+
+int BR_Win32_SendMessage(int hwnd, int msg, int lParam, int wParam)
+{
+	return (int)SendMessage((HWND)hwnd, msg, lParam, wParam);
+}
+
+int BR_Win32_SetForegroundWindow (int hwnd)
+{
+	#ifdef _WIN32
+		return SetForegroundWindow((HWND)hwnd);
+	#else
+		SetForegroundWindow((HWND)hwnd);
+		return !!(hwnd);
+	#endif
+}
+
+int BR_Win32_ShellExecute (int hwnd, const char* operation, const char* file, const char* parameters, const char* directoy, int showFlags)
+{
+	return (int)ShellExecute((HWND)hwnd, operation, file, parameters, directoy, showFlags);
+}

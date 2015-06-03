@@ -538,6 +538,46 @@ static void* __vararg_BR_TrackAtMouseCursor(void** arglist, int numparms)
   return (void*)(INT_PTR)BR_TrackAtMouseCursor((int*)arglist[0], (double*)arglist[1]);
 }
 
+static void* __vararg_BR_Win32_FindComboBoxString(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)BR_Win32_FindComboBoxString((int)(INT_PTR)arglist[0], (const char*)arglist[1]);
+}
+
+static void* __vararg_BR_Win32_FindWindowEx(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)BR_Win32_FindWindowEx((int)(INT_PTR)arglist[0], (int)(INT_PTR)arglist[1], (const char*)arglist[2], (const char*)arglist[3]);
+}
+
+static void* __vararg_BR_Win32_GetActiveMidiEditor(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)BR_Win32_GetActiveMidiEditor();
+}
+
+static void* __vararg_BR_Win32_GetConstant(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)BR_Win32_GetConstant((const char*)arglist[0]);
+}
+
+static void* __vararg_BR_Win32_GetMainWndHwnd(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)BR_Win32_GetMainWndHwnd();
+}
+
+static void* __vararg_BR_Win32_SendMessage(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)BR_Win32_SendMessage((int)(INT_PTR)arglist[0], (int)(INT_PTR)arglist[1], (int)(INT_PTR)arglist[2], (int)(INT_PTR)arglist[3]);
+}
+
+static void* __vararg_BR_Win32_SetForegroundWindow(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)BR_Win32_SetForegroundWindow((int)(INT_PTR)arglist[0]);
+}
+
+static void* __vararg_BR_Win32_ShellExecute(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)BR_Win32_ShellExecute((int)(INT_PTR)arglist[0], (const char*)arglist[1], (const char*)arglist[2], (const char*)arglist[3], (const char*)arglist[4], (int)(INT_PTR)arglist[5]);
+}
+
 static void* __vararg_ULT_GetMediaItemNote(void** arglist, int numparms)
 {
   return (void*)(INT_PTR)ULT_GetMediaItemNote((MediaItem*)arglist[0]);

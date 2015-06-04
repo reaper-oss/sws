@@ -58,15 +58,15 @@ WDL_DLGRET doLabelProcDlg(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			helpStr.Append(__LOCALIZE("\n\t/i[digits, last]\t\tInverse enumerate in selection on track.","sws_DLG_163"));
 			helpStr.Append(__LOCALIZE("\n\t/K[digits]\t\tTake count.","sws_DLG_163"));
 			helpStr.Append(__LOCALIZE("\n\t/k[digits]\t\tTake number.","sws_DLG_163"));
-			helpStr.Append(__LOCALIZE("\n\t/L[offset, length]\tCurrent label.","sws_DLG_163"));
+			helpStr.Append(__LOCALIZE("\n\t/L[offset, length]\t\tCurrent label.","sws_DLG_163"));
 			helpStr.Append(__LOCALIZE("\n\t/O\t\t\tSource offset.","sws_DLG_163"));
 			helpStr.Append(__LOCALIZE("\n\t/P[precision]\t\tPeak level.","sws_DLG_163"));
 			helpStr.Append(__LOCALIZE("\n\t/R[precision]\t\tRMS peak level.","sws_DLG_163"));
 			helpStr.Append(__LOCALIZE("\n\t/r[precision]\t\tRMS average level.","sws_DLG_163"));
-			helpStr.Append(__LOCALIZE("\n\t/S[offset, length]\tSource media full path.","sws_DLG_163"));
-			helpStr.Append(__LOCALIZE("\n\t/s[offset, length]\tSource media filename.","sws_DLG_163"));
-			helpStr.Append(__LOCALIZE("\n\t/T[offset, length]\tTrack name.","sws_DLG_163"));
-			helpStr.Append(__LOCALIZE("\n\t/t[digits]\t\tTrack number.","sws_DLG_163"));
+			helpStr.Append(__LOCALIZE("\n\t/S[offset, length]\t\tSource media full path.","sws_DLG_163"));
+			helpStr.Append(__LOCALIZE("\n\t/s[offset, length]\t\tSource media filename.","sws_DLG_163"));
+			helpStr.Append(__LOCALIZE("\n\t/T[offset, length]\t\tTrack name.","sws_DLG_163"));
+			helpStr.Append(__LOCALIZE("\n\t/t[digits]\t\t\tTrack number.","sws_DLG_163"));
 			SetWindowText(GetDlgItem(hwnd, IDC_HELPTEXT), helpStr.Get());
 
 			if(pStr)

@@ -2727,7 +2727,7 @@ WDL_DLGRET BR_AnalyzeLoudnessWnd::ExportFormatDialogProc (HWND hwnd, UINT uMsg, 
 
 			RestoreWindowPos(hwnd, EXPORT_FORMAT_WND, true);
 			ShowWindow(hwnd, SW_SHOW);
-			SetFocus(hwnd);
+			SetFocus(GetDlgItem(hwnd, IDC_FORMAT));
 		}
 		break;
 

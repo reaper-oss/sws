@@ -17,9 +17,9 @@ ReaScript
 +Added various win32 API:
  - BR_Win32_FindComboBoxString
  - BR_Win32_FindWindowEx
- - BR_Win32_GetActiveMidiEditor
  - BR_Win32_GetConstant
- - BR_Win32_GetMainWndHwnd
+ - BR_Win32_GetMainHwnd
+ - BR_Win32_MIDIEditor_GetActive
  - BR_Win32_SendMessage
  - BR_Win32_SetFocus
  - BR_Win32_SetForegroundWindow

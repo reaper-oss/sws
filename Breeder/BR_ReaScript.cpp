@@ -986,11 +986,6 @@ int BR_Win32_FindWindowEx (int hwndParent, int hwndChildAfter, const char* class
 	return (int)FindWindowEx((HWND)hwndParent, (HWND)hwndChildAfter, className, windowName);
 }
 
-int BR_Win32_GetActiveMidiEditor ()
-{
-	return (int)MIDIEditor_GetActive();
-}
-
 int BR_Win32_GetConstant (const char* constantName)
 {
 	if (constantName)
@@ -1011,9 +1006,14 @@ int BR_Win32_GetConstant (const char* constantName)
 	}
 }
 
-int BR_Win32_GetMainWndHwnd ()
+int BR_Win32_GetMainHwnd ()
 {
 	return (int)g_hwndParent;
+}
+
+int BR_Win32_MIDIEditor_GetActive ()
+{
+	return (int)MIDIEditor_GetActive();
 }
 
 int BR_Win32_SendMessage(int hwnd, int msg, int lParam, int wParam)

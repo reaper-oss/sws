@@ -548,19 +548,19 @@ static void* __vararg_BR_Win32_FindWindowEx(void** arglist, int numparms)
   return (void*)(INT_PTR)BR_Win32_FindWindowEx((int)(INT_PTR)arglist[0], (int)(INT_PTR)arglist[1], (const char*)arglist[2], (const char*)arglist[3]);
 }
 
-static void* __vararg_BR_Win32_GetActiveMidiEditor(void** arglist, int numparms)
-{
-  return (void*)(INT_PTR)BR_Win32_GetActiveMidiEditor();
-}
-
 static void* __vararg_BR_Win32_GetConstant(void** arglist, int numparms)
 {
   return (void*)(INT_PTR)BR_Win32_GetConstant((const char*)arglist[0]);
 }
 
-static void* __vararg_BR_Win32_GetMainWndHwnd(void** arglist, int numparms)
+static void* __vararg_BR_Win32_GetMainHwnd(void** arglist, int numparms)
 {
-  return (void*)(INT_PTR)BR_Win32_GetMainWndHwnd();
+  return (void*)(INT_PTR)BR_Win32_GetMainHwnd();
+}
+
+static void* __vararg_BR_Win32_MIDIEditor_GetActive(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)BR_Win32_MIDIEditor_GetActive();
 }
 
 static void* __vararg_BR_Win32_SendMessage(void** arglist, int numparms)

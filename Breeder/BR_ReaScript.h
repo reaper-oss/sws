@@ -49,6 +49,7 @@ void            BR_EnvSortPoints (BR_Envelope* envelope);
 double          BR_EnvValueAtPos (BR_Envelope* envelope, double position);
 void            BR_GetArrangeView (ReaProject* proj, double* startPositionOut, double* endPositionOut);
 double          BR_GetClosestGridDivision (double position);
+void            BR_GetCurrentTheme (char* themePathOut, int themePathOut_sz, char* themeNameOut, int themeNameOut_sz);
 MediaItem*      BR_GetMediaItemByGUID (ReaProject* proj, const char* guidStringIn);
 void            BR_GetMediaItemGUID (MediaItem* item, char* guidStringOut, int guidStringOut_sz);
 bool            BR_GetMediaItemImageResource (MediaItem* item, char* imageOut, int imageOut_sz, int* imageFlagsOut);
@@ -91,14 +92,27 @@ bool            BR_SetTakeSourceFromFile2 (MediaItem_Take* take, const char* fil
 MediaItem_Take* BR_TakeAtMouseCursor (double* positionOut);
 MediaTrack*     BR_TrackAtMouseCursor (int* contextOut, double* positionOut);
 int             BR_Win32_FindComboBoxString (int comboBoxHwnd, const char* string);
-int             BR_Win32_FindWindowEx(int hwndParent, int hwndChildAfter, const char* className, const char* windowName);
+int             BR_Win32_FindWindowEx(int hwndParent, int hwndChildAfter, const char* className, const char* windowName, bool searchClass, bool searchName);
 int             BR_Win32_GetConstant (const char* constantName);
+int             BR_Win32_GetForegroundWindow ();
 int             BR_Win32_GetMainHwnd ();
+int             BR_Win32_GetMixerHwnd (bool* isDockedOut);
+void            BR_Win32_GetMonitorRectFromRect(bool workingAreaOnly, int leftIn, int topIn, int rightIn, int bottomIn, int* leftOut, int* topOut, int* rightOut, int* bottomOut);
+int             BR_Win32_GetParent (int hwnd);
+int             BR_Win32_GetWindow (int hwnd, int cmd);
+int             BR_Win32_GetWindowLong (int hwnd, int index);
+bool            BR_Win32_GetWindowRect(int hwnd, int* leftOut, int* topOut, int* rightOut, int* bottomOut);
+int             BR_Win32_GetWindowText (int hwnd, char* textOut, int textOut_sz);
+bool            BR_Win32_IsWindow (int hwnd);
+bool            BR_Win32_IsWindowVisible (int hwnd);
 int             BR_Win32_MIDIEditor_GetActive ();
 int             BR_Win32_SendMessage (int hwnd, int msg, int lParam, int wParam);
 int             BR_Win32_SetFocus (int hwnd);
 int             BR_Win32_SetForegroundWindow (int hwnd);
+int             BR_Win32_SetWindowLong (int hwnd, int index, int newLong);
+bool            BR_Win32_SetWindowPos (int hwnd, int hwndInsertAfter, int x, int y, int width, int height, int flags);
 int             BR_Win32_ShellExecute (int hwnd, const char* operation, const char* file, const char* parameters, const char* directoy, int showFlags);
+bool            BR_Win32_ShowWindow (int hwnd, int cmdShow);
 
 /******************************************************************************
 * Big description!                                                            *

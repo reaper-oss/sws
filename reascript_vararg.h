@@ -308,6 +308,12 @@ static void* __vararg_BR_GetClosestGridDivision(void** arglist, int numparms)
   return p;
 }
 
+static void* __vararg_BR_GetCurrentTheme(void** arglist, int numparms)
+{
+  BR_GetCurrentTheme((char*)arglist[0], (int)(INT_PTR)arglist[1], (char*)arglist[2], (int)(INT_PTR)arglist[3]);
+  return NULL;
+}
+
 static void* __vararg_BR_GetMediaItemByGUID(void** arglist, int numparms)
 {
   return (void*)(INT_PTR)BR_GetMediaItemByGUID((ReaProject*)arglist[0], (const char*)arglist[1]);
@@ -545,7 +551,7 @@ static void* __vararg_BR_Win32_FindComboBoxString(void** arglist, int numparms)
 
 static void* __vararg_BR_Win32_FindWindowEx(void** arglist, int numparms)
 {
-  return (void*)(INT_PTR)BR_Win32_FindWindowEx((int)(INT_PTR)arglist[0], (int)(INT_PTR)arglist[1], (const char*)arglist[2], (const char*)arglist[3]);
+  return (void*)(INT_PTR)BR_Win32_FindWindowEx((int)(INT_PTR)arglist[0], (int)(INT_PTR)arglist[1], (const char*)arglist[2], (const char*)arglist[3], (bool)arglist[4], (bool)arglist[5]);
 }
 
 static void* __vararg_BR_Win32_GetConstant(void** arglist, int numparms)
@@ -553,9 +559,60 @@ static void* __vararg_BR_Win32_GetConstant(void** arglist, int numparms)
   return (void*)(INT_PTR)BR_Win32_GetConstant((const char*)arglist[0]);
 }
 
+static void* __vararg_BR_Win32_GetForegroundWindow(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)BR_Win32_GetForegroundWindow();
+}
+
 static void* __vararg_BR_Win32_GetMainHwnd(void** arglist, int numparms)
 {
   return (void*)(INT_PTR)BR_Win32_GetMainHwnd();
+}
+
+static void* __vararg_BR_Win32_GetMixerHwnd(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)BR_Win32_GetMixerHwnd((bool*)arglist[0]);
+}
+
+static void* __vararg_BR_Win32_GetMonitorRectFromRect(void** arglist, int numparms)
+{
+  BR_Win32_GetMonitorRectFromRect((bool)arglist[0], (int)(INT_PTR)arglist[1], (int)(INT_PTR)arglist[2], (int)(INT_PTR)arglist[3], (int)(INT_PTR)arglist[4], (int*)arglist[5], (int*)arglist[6], (int*)arglist[7], (int*)arglist[8]);
+  return NULL;
+}
+
+static void* __vararg_BR_Win32_GetParent(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)BR_Win32_GetParent((int)(INT_PTR)arglist[0]);
+}
+
+static void* __vararg_BR_Win32_GetWindow(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)BR_Win32_GetWindow((int)(INT_PTR)arglist[0], (int)(INT_PTR)arglist[1]);
+}
+
+static void* __vararg_BR_Win32_GetWindowLong(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)BR_Win32_GetWindowLong((int)(INT_PTR)arglist[0], (int)(INT_PTR)arglist[1]);
+}
+
+static void* __vararg_BR_Win32_GetWindowRect(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)BR_Win32_GetWindowRect((int)(INT_PTR)arglist[0], (int*)arglist[1], (int*)arglist[2], (int*)arglist[3], (int*)arglist[4]);
+}
+
+static void* __vararg_BR_Win32_GetWindowText(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)BR_Win32_GetWindowText((int)(INT_PTR)arglist[0], (char*)arglist[1], (int)(INT_PTR)arglist[2]);
+}
+
+static void* __vararg_BR_Win32_IsWindow(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)BR_Win32_IsWindow((int)(INT_PTR)arglist[0]);
+}
+
+static void* __vararg_BR_Win32_IsWindowVisible(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)BR_Win32_IsWindowVisible((int)(INT_PTR)arglist[0]);
 }
 
 static void* __vararg_BR_Win32_MIDIEditor_GetActive(void** arglist, int numparms)
@@ -578,9 +635,24 @@ static void* __vararg_BR_Win32_SetForegroundWindow(void** arglist, int numparms)
   return (void*)(INT_PTR)BR_Win32_SetForegroundWindow((int)(INT_PTR)arglist[0]);
 }
 
+static void* __vararg_BR_Win32_SetWindowLong(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)BR_Win32_SetWindowLong((int)(INT_PTR)arglist[0], (int)(INT_PTR)arglist[1], (int)(INT_PTR)arglist[2]);
+}
+
+static void* __vararg_BR_Win32_SetWindowPos(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)BR_Win32_SetWindowPos((int)(INT_PTR)arglist[0], (int)(INT_PTR)arglist[1], (int)(INT_PTR)arglist[2], (int)(INT_PTR)arglist[3], (int)(INT_PTR)arglist[4], (int)(INT_PTR)arglist[5], (int)(INT_PTR)arglist[6]);
+}
+
 static void* __vararg_BR_Win32_ShellExecute(void** arglist, int numparms)
 {
   return (void*)(INT_PTR)BR_Win32_ShellExecute((int)(INT_PTR)arglist[0], (const char*)arglist[1], (const char*)arglist[2], (const char*)arglist[3], (const char*)arglist[4], (int)(INT_PTR)arglist[5]);
+}
+
+static void* __vararg_BR_Win32_ShowWindow(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)BR_Win32_ShowWindow((int)(INT_PTR)arglist[0], (int)(INT_PTR)arglist[1]);
 }
 
 static void* __vararg_ULT_GetMediaItemNote(void** arglist, int numparms)

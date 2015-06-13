@@ -1244,7 +1244,7 @@ void BR_ContextualToolbar::RepositionToolbar (BR_ContextualToolbar::ExecuteOnToo
 		}
 
 		RECT screen;
-		GetMonitorRectFromPoint(p, &screen);
+		GetMonitorRectFromPoint(p, true, &screen);
 		BoundToRect(screen, &r);
 		SetWindowPos(toolbarHwnd, NULL, r.left, r.top, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE);
 	}

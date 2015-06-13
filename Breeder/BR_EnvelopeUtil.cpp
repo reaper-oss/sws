@@ -922,8 +922,6 @@ bool BR_Envelope::GetPointsInTimeSelection (int* startId, int* endId, double* tS
 		if (startId)
 		{
 			int id = this->FindPrevious(start, offset) + 1;
-
-
 			while (this->ValidateId(id))
 			{
 				if (m_points[id].position >= start)
@@ -932,12 +930,13 @@ bool BR_Envelope::GetPointsInTimeSelection (int* startId, int* endId, double* tS
 			}
 
 			*startId = (this->ValidateId(id)) ? id : -1;
+			if (*startId != -1 && !CheckBounds(m_points[*startId].position, start, end))
+				*startId = -1;
 		}
 
 		if (endId)
 		{
 			int id = this->FindNext(end, offset) - 1;
-
 			while (this->ValidateId(id))
 			{
 				if (m_points[id].position <= end)
@@ -946,6 +945,8 @@ bool BR_Envelope::GetPointsInTimeSelection (int* startId, int* endId, double* tS
 			}
 
 			*endId = (this->ValidateId(id)) ? id : -1;
+			if (*endId != -1 && !CheckBounds(m_points[*endId].position, start, end))
+				*endId = -1;
 		}
 
 		return true;

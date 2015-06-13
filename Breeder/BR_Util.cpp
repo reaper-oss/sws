@@ -291,6 +291,21 @@ WDL_FastString FormatTime (double position, int mode /*=-1*/)
 	return string;
 }
 
+WDL_FastString GetCurrentThemeName (WDL_FastString* fullThemePath)
+{
+	char path[SNM_MAX_PATH] = "";
+	char name[SNM_MAX_PATH] = "";
+	GetPrivateProfileString("reaper", "lastthemefn4", "", path, sizeof(path), get_ini_file());	
+	GetFilenameNoExt(path, name, sizeof(name));
+
+	if (fullThemePath)
+		fullThemePath->Set(path);
+
+	WDL_FastString themeName;
+	themeName.Set(name);
+	return themeName;
+}
+
 int FindClosestProjMarkerIndex (double position)
 {
 	int first = 0;
@@ -2747,9 +2762,9 @@ void CenterDialog (HWND hwnd, HWND target, HWND zOrder)
 	SetWindowPos(hwnd, zOrder, r.left, r.top, 0, 0, SWP_NOSIZE);
 }
 
-void GetMonitorRectFromPoint (const POINT& p, RECT* r)
+void GetMonitorRectFromPoint (const POINT& p, bool workingAreaOnly, RECT* monitorRect)
 {
-	if (!r)
+	if (!monitorRect)
 		return;
 
 	#ifdef _WIN32
@@ -2757,18 +2772,43 @@ void GetMonitorRectFromPoint (const POINT& p, RECT* r)
 		{
 			MONITORINFO monitorInfo = {sizeof(MONITORINFO)};
 			GetMonitorInfo(monitor, &monitorInfo);
-			*r = monitorInfo.rcWork;
+			*monitorRect = (workingAreaOnly) ? monitorInfo.rcWork : monitorInfo.rcMonitor;
 		}
 		else
 		{
-			r->top  = 0;
-			r->left = 0;
-			r->right = 800;
-			r->left  = 600;
+			monitorRect->left   = 0;
+			monitorRect->top    = 0;			
+			monitorRect->right  = 800;
+			monitorRect->bottom = 600;
 		}
 	#else
 		RECT pRect = {p.x, p.y, p.x, p.y};
-		SWELL_GetViewPort(r, &pRect, false);
+		SWELL_GetViewPort(monitorRect, &pRect, workingAreaOnly);
+	#endif
+}
+
+void GetMonitorRectFromRect (const RECT& r, bool workingAreaOnly, RECT* monitorRect)
+{
+	if (!monitorRect)
+		return;
+
+	#ifdef _WIN32
+		if (HMONITOR monitor = MonitorFromRect(&r, MONITOR_DEFAULTTONEAREST))
+		{
+			MONITORINFO monitorInfo = {sizeof(MONITORINFO)};
+			GetMonitorInfo(monitor, &monitorInfo);
+			*monitorRect = (workingAreaOnly) ? monitorInfo.rcWork : monitorInfo.rcMonitor;
+		}
+		else
+		{
+			monitorRect->left   = 0;
+			monitorRect->top    = 0;			
+			monitorRect->right  = 800;
+			monitorRect->bottom = 600;
+		}
+	#else
+		RECT pRect = {r.left, r.top, r.right, r.bottom};
+		SWELL_GetViewPort(monitorRect, &pRect, workingAreaOnly);
 	#endif
 }
 

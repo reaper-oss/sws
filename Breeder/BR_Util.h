@@ -99,6 +99,7 @@ template <typename T> T    GetClosestVal (T val, T targetVal1, T targetVal2) {if
 ******************************************************************************/
 vector<double> GetProjectMarkers (bool timeSel, double timeSelDelta = 0);
 WDL_FastString FormatTime (double position, int mode = -1); // same as format_timestr_pos but handles "measures.beats + time" properly
+WDL_FastString GetCurrentThemeName (WDL_FastString* fullThemePath);
 int FindClosestProjMarkerIndex (double position);
 int CountProjectTabs ();
 double EndOfProject (bool markers, bool regions);
@@ -238,7 +239,8 @@ HWND GetPianoView (void* midiEditor);
 MediaTrack* HwndToTrack (HWND hwnd, int* hwndContext);  // context: 0->unknown, 1->TCP, 2->MCP (works even if hwnd is not a track but something else in mcp/tcp)
 TrackEnvelope* HwndToEnvelope (HWND hwnd);
 void CenterDialog (HWND hwnd, HWND target, HWND zOrder);
-void GetMonitorRectFromPoint (const POINT& p, RECT* r);
+void GetMonitorRectFromPoint (const POINT& p, bool workingAreaOnly, RECT* monitorRect);
+void GetMonitorRectFromRect (const RECT& r, bool workingAreaOnly, RECT* monitorRect);
 void BoundToRect (const RECT& boundingRect, RECT* r);
 void CenterOnPoint (RECT* rect, const POINT& point, int horz, int ver, int xOffset, int yOffset); // horz -> -1 left, 0 center, 1 right ..... vert -> -1 bottom, 0 center, 1 top (every other value will mean to do nothing)
 void SimulateMouseClick (HWND hwnd, POINT point, bool keepCurrentFocus);

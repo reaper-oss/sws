@@ -731,6 +731,19 @@ void SetMoveCursorOnPaste (COMMAND_T* ct)
 	WritePrivateProfileString("reaper", s_configStr, tmp, get_ini_file());
 }
 
+void SetPlaybackStopOptions (COMMAND_T* ct)
+{
+	static const char* s_configStr = (((int)ct->user == 0) ? "stopprojlen" : "viewadvance");
+	int option; GetConfig(s_configStr, option);
+
+	option = ToggleBit(option, ((int)ct->user));
+	SetConfig(s_configStr, option);
+
+	char tmp[256];
+	_snprintfSafe(tmp, sizeof(tmp), "%d", option);
+	WritePrivateProfileString("reaper", s_configStr, tmp, get_ini_file());
+}
+
 void CycleRecordModes (COMMAND_T* ct)
 {
 	static const char* s_configStr = "projrecmode";
@@ -1543,6 +1556,12 @@ int IsSetMoveCursorOnPasteOn (COMMAND_T* ct)
 {
 	int option; GetConfig("itemclickmovecurs", option);
 	return ((int)ct->user < 0) ? !GetBit(option, abs((int)ct->user)) : GetBit(option, abs((int)ct->user));
+}
+
+int IsSetPlaybackStopOptionsOn (COMMAND_T* ct)
+{
+	int option; GetConfig((((int)ct->user == 0) ? "stopprojlen" : "viewadvance"), option);
+	return !!GetBit(option, (int)ct->user);
 }
 
 int IsAdjustPlayrateOptionsVisible (COMMAND_T* ct)

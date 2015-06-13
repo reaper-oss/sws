@@ -607,6 +607,8 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Move edit cursor to start of time selection on time selection change\"" },                                   "BR_OPTIONS_MOVE_CUR_ON_TIME_SEL",    SetMoveCursorOnPaste, NULL, 2, IsSetMoveCursorOnPasteOn},
 	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Move edit cursor when pasting/inserting media\"" },                                                          "BR_OPTIONS_MOVE_CUR_ON_PASTE",       SetMoveCursorOnPaste, NULL, -3, IsSetMoveCursorOnPasteOn},
 	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Move edit cursor to end of recorded items on record stop\"" },                                               "BR_OPTIONS_MOVE_CUR_ON_RECORD_STOP", SetMoveCursorOnPaste, NULL, 4, IsSetMoveCursorOnPasteOn},
+	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Stop/repeat playback at end of project\"" },                                                                 "BR_OPTIONS_STOP_PLAYBACK_PROJ_END",  SetPlaybackStopOptions, NULL, 0, IsSetPlaybackStopOptionsOn},
+	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Scroll view to edit cursor on stop\"" },                                                                     "BR_OPTIONS_SCROLL_TO_CURS_ON_STOP",  SetPlaybackStopOptions, NULL, 3, IsSetPlaybackStopOptionsOn},
 
 	{ { DEFACCEL, "SWS/BR: Cycle through record modes" },                                                                                                  "BR_CYCLE_RECORD_MODES",              CycleRecordModes},
 

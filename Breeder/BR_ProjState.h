@@ -115,12 +115,14 @@ class BR_MidiCCEvents
 public:
 	BR_MidiCCEvents (int slot, BR_MidiEditor& midiEditor, int lane);
 	BR_MidiCCEvents (int slot, ProjectStateContext* ctx);
+	BR_MidiCCEvents (int slot, int lane); // just sets the source lane, use AddEvents to add events afterwards (in this case ppq of added events and take ppq to which they are restored needs to be the same)
 	void SaveState (ProjectStateContext* ctx);
 	bool Save (BR_MidiEditor& midiEditor, int lane);
-	bool Restore (BR_MidiEditor& midiEditor, int lane, bool allVisible, double startPositionPppq, bool showWarningForInvalidLane = true);
+	bool Restore (BR_MidiEditor& midiEditor, int lane, bool allVisible, double startPositionPppq, bool showWarningForInvalidLane = true, bool moveEditCursor = true);
 	int  GetSlot ();
 	int CountSavedEvents();
 	double GetSourcePpqStart ();
+	void AddEvent (double ppqPos, int msg2, int msg3, int channel); // always add events in time order
 
 private:
 	struct Event

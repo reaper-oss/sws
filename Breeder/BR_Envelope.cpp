@@ -29,6 +29,7 @@
 #include "BR_Envelope.h"
 #include "BR_ContinuousActions.h"
 #include "BR_EnvelopeUtil.h"
+#include "BR_MidiEditor.h"
 #include "BR_MouseUtil.h"
 #include "BR_ProjState.h"
 #include "BR_Util.h"
@@ -1120,6 +1121,11 @@ void CreateEnvPointsGrid (COMMAND_T* ct)
 
 	if (envelope.Commit())
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
+}
+
+void EnvPointsToCC (COMMAND_T* ct)
+{
+	ME_EnvPointsToCC (ct, 0, 0, 0, NULL);
 }
 
 void ShiftEnvSelection (COMMAND_T* ct)

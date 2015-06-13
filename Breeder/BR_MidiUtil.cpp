@@ -68,7 +68,7 @@ m_filterEventPos       (false),
 m_filterEventLen       (false),
 m_valid                (false)
 {
-	if (m_midiEditor && SWS_MIDIEditor_GetMode(m_midiEditor) != 1)
+	if (m_midiEditor && SWS_MIDIEditor_GetMode(m_midiEditor) != -1)
 	{
 		m_valid        = this->Build();
 		m_lastLane     = GetLastClickedVelLane(m_midiEditor);
@@ -108,7 +108,7 @@ m_filterEventPos       (false),
 m_filterEventLen       (false),
 m_valid                (false)
 {
-	if (m_midiEditor && SWS_MIDIEditor_GetMode(m_midiEditor) != 1)
+	if (m_midiEditor && SWS_MIDIEditor_GetMode(m_midiEditor) != -1)
 	{
 		m_valid        = this->Build();
 		m_lastLane     = GetLastClickedVelLane(m_midiEditor);
@@ -753,7 +753,7 @@ vector<int> MuteUnselectedNotes (MediaItem_Take* take)
 	return muteStatus;
 }
 
-set<int> GetUsedCCLanes (void* midiEditor, int detect14bit)
+set<int> GetUsedCCLanes (void* midiEditor, int detect14bit, bool selectedEventsOnly)
 {
 	MediaItem_Take* take = SWS_MIDIEditor_GetTake(midiEditor);
 	set<int> usedCC;
@@ -767,7 +767,8 @@ set<int> GetUsedCCLanes (void* midiEditor, int detect14bit)
 		for (int id = 0; id < ccCount; ++id)
 		{
 			int chanMsg, chan, msg2;
-			if (!MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, &chan, &msg2, NULL) || !editor.IsCCVisible(take, id))
+			bool selected;
+			if (!MIDI_GetCC(take, id, &selected, NULL, NULL, &chanMsg, &chan, &msg2, NULL) || !editor.IsCCVisible(take, id) || (selectedEventsOnly && !selected))
 				continue;
 
 			if      (chanMsg == STATUS_PROGRAM)          usedCC.insert(CC_PROGRAM);
@@ -870,9 +871,9 @@ set<int> GetUsedCCLanes (void* midiEditor, int detect14bit)
 
 		for (int i = 0; i < noteCount; ++i)
 		{
-			int chan;
-			MIDI_GetNote(take, i, NULL, NULL, NULL, NULL, &chan, NULL, NULL);
-			if (editor.IsChannelVisible(chan))
+			bool selected; int chan;
+			MIDI_GetNote(take, i, &selected, NULL, NULL, NULL, &chan, NULL, NULL);
+			if (editor.IsChannelVisible(chan) && (!selectedEventsOnly || (selectedEventsOnly && selected)))
 			{
 				usedCC.insert(-1);
 				break;
@@ -882,12 +883,13 @@ set<int> GetUsedCCLanes (void* midiEditor, int detect14bit)
 		bool foundText = false, foundSys = false;
 		for (int i = 0; i < sysCount; ++i)
 		{
+			bool selected;
 			int type = 0;
-			MIDI_GetTextSysexEvt(take, i, NULL, NULL, NULL, &type, NULL, NULL);
+			MIDI_GetTextSysexEvt(take, i, &selected, NULL, NULL, &type, NULL, NULL);
 
 			if (type == -1)
 			{
-				if (!foundSys)
+				if (!foundSys && (!selectedEventsOnly || (selectedEventsOnly && selected)))
 				{
 					usedCC.insert(CC_SYSEX);
 					foundSys = true;
@@ -897,7 +899,7 @@ set<int> GetUsedCCLanes (void* midiEditor, int detect14bit)
 			}
 			else
 			{
-				if (!foundText)
+				if (!foundText && (!selectedEventsOnly || (selectedEventsOnly && selected)))
 				{
 					usedCC.insert(CC_TEXT_EVENTS);
 					foundText = true;
@@ -1533,11 +1535,22 @@ int GetMIDIFilePPQ (const char* fp)
 int GetLastClickedVelLane (void* midiEditor)
 {
 	int cc = SWS_MIDIEditor_GetSetting_int(midiEditor, "last_clicked_cc_lane");
-	if (cc == -1)
-		return -666;
-	else
-		return MapReaScriptCCToVelLane(cc);
+	return MapReaScriptCCToVelLane(cc);
 }
+
+int ConvertLaneToStatusMsg (int lane)
+{
+	if (lane == CC_VELOCITY)                                   return STATUS_NOTE_ON;
+	if (lane == CC_VELOCITY_OFF)                               return STATUS_NOTE_OFF;
+	if (lane == CC_PITCH)                                      return STATUS_PITCH;
+	if (lane == CC_PROGRAM)                                    return STATUS_PROGRAM;
+	if (lane == CC_CHANNEL_PRESSURE)                           return STATUS_CHANNEL_PRESSURE;
+	if (lane == CC_BANK_SELECT)                                return STATUS_PROGRAM;
+	if (lane == CC_SYSEX)                                      return STATUS_SYS;
+	if (lane >= 0 && lane <= 127)                              return STATUS_CC;
+	if (lane >= CC_14BIT_START && lane <= CC_14BIT_START + 32) return STATUS_CC;
+	return 0;
+};
 
 int MapVelLaneToReaScriptCC (int lane)
 {
@@ -1556,5 +1569,5 @@ int MapReaScriptCCToVelLane (int cc)
 	if (cc >= 0     && cc <= 127)   return cc;
 	if (cc >= 0x201 && cc <= 0x206) return cc - 385;
 	if (cc >= 0x100 && cc <= 0x11F) return cc - 122;
-	else                            return -2;
+	else                            return -2; // because -1 stands for velocity lane
 }

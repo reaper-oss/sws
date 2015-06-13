@@ -10,6 +10,12 @@ Added actions
  - SWS/BR: Options - Toggle "Move edit cursor when pasting/inserting media"
  - SWS/BR: Options - Toggle "Move edit cursor to end of recorded items on record stop"
  - SWS/wol: Adjust envelope or track height under mouse cursor (MIDI CC relative/mousewheel)
++MIDI editor:
+ - SWS/BR: Show only used CC lanes with selected events (detect 14-bit)
++Main and MIDI editor:
+ - SWS/BR: Convert selected points in selected envelope to CC events (various versions)
+ - SWS/BR: Convert selected envelope's curve in time selection to CC events (various versions)
+  - Note: when converting envelope curve, event density is determined by setting "Events per quarter note when drawing in CC lanes" (Preferences->Editing Behavior->MIDI Editor)
 
 ReaScript
 +Added functions:

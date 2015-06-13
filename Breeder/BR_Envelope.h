@@ -44,6 +44,7 @@ void ShrinkEnvSel (COMMAND_T*);
 void ShrinkEnvSelEnd (COMMAND_T*);
 void EnvPointsGrid (COMMAND_T*);
 void CreateEnvPointsGrid (COMMAND_T*);
+void EnvPointsToCC (COMMAND_T*);
 void ShiftEnvSelection (COMMAND_T*);
 void PeaksDipsEnv (COMMAND_T*);
 void SelEnvTimeSel (COMMAND_T*);

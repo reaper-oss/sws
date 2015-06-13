@@ -769,8 +769,8 @@ void MoveActiveWndToMouse (COMMAND_T* ct)
 					return;
 
 				bool floating;
-				int result = DockIsChildOfDock(hwnd, &floating);
-				if (result != -1 && !floating)
+				int dockerIndex = DockIsChildOfDock(hwnd, &floating);
+				if (dockerIndex != -1 && !floating)
 					hwnd = g_hwndParent;
 			}
 		#endif
@@ -786,7 +786,7 @@ void MoveActiveWndToMouse (COMMAND_T* ct)
 		CenterOnPoint(&r, p, horz, vert, 0, 0);
 
 		RECT screen;
-		GetMonitorRectFromPoint(p, &screen);
+		GetMonitorRectFromPoint(p, true, &screen);
 		BoundToRect(screen, &r);
 
 		SetWindowPos(hwnd, NULL, r.left, r.top, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE);

@@ -349,7 +349,7 @@ void ME_ShowUsedCCLanesDetect14Bit (COMMAND_T* ct, int val, int valhw, int relmo
 		if (RprMidiCCLane* laneView = new (nothrow) RprMidiCCLane(rprTake))
 		{
 			int defaultHeight = 67; // same height FNG versions use (to keep behavior identical)
-			set<int> usedCC = GetUsedCCLanes(SWS_MIDIEditor_GetActive(), 2);
+			set<int> usedCC = GetUsedCCLanes(SWS_MIDIEditor_GetActive(), 2, ((int)ct->user == 1));
 
 			for (int i = 0; i < laneView->countShown(); ++i)
 			{
@@ -721,6 +721,176 @@ void ME_CCToEnvPoints (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd
 
 	if (update && envelope.Commit())
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS | UNDO_STATE_TRACKCFG, -1);
+}
+
+void ME_EnvPointsToCC (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
+{
+	void* midiEditorPtr = NULL;
+	int lane = 0;
+	if (abs((int)ct->user) == 1 || abs((int)ct->user) == 3)
+	{
+		midiEditorPtr = SWS_MIDIEditor_GetActive();
+		lane = GetLastClickedVelLane(midiEditorPtr);
+	}
+	else
+	{
+		BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_MIDI_EDITOR_ALL);
+		midiEditorPtr = mouseInfo.GetMidiEditor();
+		mouseInfo.GetCCLane(&lane, NULL, NULL);
+	}
+	
+	BR_MidiEditor midiEditor(midiEditorPtr);
+	MediaItem_Take* take = midiEditor.GetActiveTake();
+	if (!midiEditor.IsValid() || !take || !GetSelectedEnvelope(NULL) || lane == -2)
+		return;
+
+	if (lane == CC_TEXT_EVENTS || lane == CC_SYSEX || lane == CC_BANK_SELECT || lane == CC_VELOCITY || lane == CC_VELOCITY_OFF)
+	{
+		MessageBox((HWND)midiEditor.GetEditor(), __LOCALIZE("Can't create events in velocity, text, sysex and bank select lanes","sws_mbox"), __LOCALIZE("SWS/BR - Warning","sws_mbox"), MB_OK);
+	}
+	else
+	{
+		BR_Envelope envelope(GetSelectedEnvelope(NULL));
+		BR_MidiCCEvents events(0, lane);
+		double deleteRangeStart = -1;
+		double deleteRangeEnd   = -1;
+		bool update = false;
+
+		if (abs((int)ct->user) == 1 || abs((int)ct->user) == 2)
+		{
+			double itemPosition = GetMediaItemInfo_Value(GetMediaItemTake_Item(take), "D_POSITION");
+			for (int i = 0; i < envelope.CountSelected(); ++i)
+			{
+				double value, position;
+				envelope.GetPoint(envelope.GetSelected(i), &position, &value, NULL, NULL);
+				if (position >= itemPosition)
+				{
+					position = MIDI_GetPPQPosFromProjTime(take, position);
+					value    = envelope.NormalizedDisplayValue(value);
+
+					int msg2 = (lane >= 0 && lane <= 127) ? (0)                  : (((int)(value * 16383)) & 0x7F);
+					int msg3 = (lane >= 0 && lane <= 127) ? ((int)(value * 127)) : ((((int)(value * 16383)) >> 7) | 0);
+					int channel = SWS_MIDIEditor_GetSetting_int(midiEditor.GetEditor(), "default_note_chan");
+					events.AddEvent(position, msg2, msg3, channel);
+
+					if (deleteRangeStart == -1)    deleteRangeStart = position;
+					if (position > deleteRangeEnd) deleteRangeEnd   = position;
+					update = true;
+				}
+			}
+		}
+		else
+		{
+			int startPoint, endPoint;
+			double tStart, tEnd;
+			if (envelope.GetPointsInTimeSelection(&startPoint, &endPoint, &tStart, &tEnd))
+			{
+				bool beatsTimebase = (midiEditor.GetTimebase() == PROJECT_BEATS || midiEditor.GetTimebase() == SOURCE_BEATS);
+
+				double stepSize = 0;
+				int midiCcDensity; GetConfig("midiccdensity", midiCcDensity);
+				if (midiCcDensity > 0)
+				{
+					stepSize = (double)midiEditor.GetPPQ() / (double)midiCcDensity;
+					beatsTimebase = true;
+				}
+				else
+					stepSize = ((double)MIDI_CC_EVENT_WIDTH_PX) / midiEditor.GetHZoom();
+
+				double itemPosition = GetMediaItemInfo_Value(GetMediaItemTake_Item(take), "D_POSITION");
+				if (beatsTimebase) itemPosition = MIDI_GetPPQPosFromProjTime(take, itemPosition);
+
+				bool doOnce = (startPoint == -1 && endPoint == -1);
+				bool insertBeforeFirstPoint = false;
+				double startPointPosition;
+				if (startPoint == -1 || !envelope.GetPoint(startPoint, &startPointPosition, NULL, NULL, NULL) || startPointPosition > tStart)
+				{
+					insertBeforeFirstPoint = true;
+					--startPoint; // so loop does two iterations at the start, once for events before first point and then for the events after it
+				}
+
+				for (int i = startPoint; i <= endPoint; ++i)
+				{
+					double startPosition = 0;
+					double endPosition  = 0;
+					if (insertBeforeFirstPoint)
+					{
+						startPosition = tStart;
+						if (!envelope.GetPoint(startPoint + 1, &endPosition, NULL, NULL, NULL) || i == endPoint)
+							endPosition = tEnd;
+					}
+					else
+					{
+						envelope.GetPoint(i, &startPosition, NULL, NULL, NULL);
+						if (!envelope.GetPoint(i + 1, &endPosition, NULL, NULL, NULL) || i == endPoint)
+							endPosition = tEnd;
+					}
+
+					if (beatsTimebase)
+					{
+						startPosition = MIDI_GetPPQPosFromProjTime(take, startPosition);
+						endPosition   = MIDI_GetPPQPosFromProjTime(take, endPosition);
+					}
+
+					double currentPosition = startPosition;
+					if (currentPosition <= endPosition)
+					{
+						do
+						{
+							if (currentPosition >= itemPosition)
+							{
+								double timePosition = (beatsTimebase) ? MIDI_GetProjTimeFromPPQPos(take, currentPosition) : currentPosition;
+								double ppqPosition  = (beatsTimebase) ? currentPosition : MIDI_GetPPQPosFromProjTime(take, currentPosition);
+
+								double value = envelope.NormalizedDisplayValue(envelope.ValueAtPosition(timePosition));
+								int msg2 = (lane >= 0 && lane <= 127) ? (0)                  : (((int)(value * 16383)) & 0x7F);
+								int msg3 = (lane >= 0 && lane <= 127) ? ((int)(value * 127)) : ((((int)(value * 16383)) >> 7) | 0);
+								int channel = SWS_MIDIEditor_GetSetting_int(midiEditor.GetEditor(), "default_note_chan");
+								events.AddEvent(ppqPosition, msg2, msg3, channel);
+								update = true;
+
+								if (deleteRangeStart == -1)       deleteRangeStart = ppqPosition;
+								if (ppqPosition > deleteRangeEnd) deleteRangeEnd   = ppqPosition;
+							}
+							currentPosition += stepSize;
+
+						} while (currentPosition <= endPosition);
+					}
+
+					insertBeforeFirstPoint = false;
+					if (doOnce)
+						break;
+				}
+			}
+		}
+
+		if (update)
+		{
+			if ((int)ct->user < 0)
+			{
+				int eventType = ConvertLaneToStatusMsg(lane);
+				int lane1     = (lane >= CC_14BIT_START) ? lane - CC_14BIT_START : lane;
+				int lane2     = (lane >= CC_14BIT_START) ? lane + 32             : lane;
+
+				int ccCount; MIDI_CountEvts(take, NULL, &ccCount, NULL);
+				for (int i = 0; i < ccCount; ++i)
+				{
+					double position;
+					int chanMsg, msg2;
+					MIDI_GetCC(take, i, NULL, NULL, &position, &chanMsg, NULL, &msg2, NULL);
+					
+					
+					if (CheckBounds(position, deleteRangeStart, deleteRangeEnd) && chanMsg == eventType && (eventType != STATUS_CC || (lane1 == msg2 || lane2 == msg2)))
+					{
+						MIDI_DeleteCC(take, i);
+						--i;
+					}
+				}
+			}
+			events.Restore(midiEditor, lane, false, 0, false, false);
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
+		}
+	}
 }
 
 void ME_CopySelCCToLane (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)

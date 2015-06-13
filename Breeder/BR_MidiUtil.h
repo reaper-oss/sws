@@ -69,6 +69,7 @@ enum BR_MidiVelLanes
 ******************************************************************************/
 enum BR_MidiStatusBytes
 {
+	STATUS_NOTE_OFF         = 0x80,
 	STATUS_NOTE_ON          = 0x90,
 	STATUS_POLY_PRESSURE    = 0xA0,
 	STATUS_CC               = 0xB0,
@@ -86,6 +87,7 @@ const int MIDI_LANE_DIVIDER_H          = 9;
 const int MIDI_LANE_TOP_GAP            = 4;
 const int MIDI_BLACK_KEYS_W            = 73;
 const int MIDI_CC_LANE_CLICK_Y_OFFSET  = 5;
+const int MIDI_CC_EVENT_WIDTH_PX       = 8;
 
 const int INLINE_MIDI_MIN_H                  = 32;
 const int INLINE_MIDI_MIN_NOTEVIEW_H         = 24;
@@ -159,7 +161,7 @@ private:
 class BR_MidiItemTimePos
 {
 public:
-	BR_MidiItemTimePos (MediaItem* item); // saves all MIDI events in the item
+	explicit BR_MidiItemTimePos (MediaItem* item); // saves all MIDI events in the item
 	void Restore (double timeOffset = 0); // deletes any MIDI events in the item and then restores saved events
 
 private:
@@ -215,7 +217,7 @@ double ME_PositionAtMouseCursor (bool checkRuler, bool checkCCLanes);
 vector<int> GetUsedNamedNotes (void* midiEditor, MediaItem_Take* take, bool used, bool named, int channelForNames);
 vector<int> GetSelectedNotes (MediaItem_Take* take);
 vector<int> MuteUnselectedNotes (MediaItem_Take* take); // returns previous mute state of all notes
-set<int> GetUsedCCLanes (void* midiEditor, int detect14bit); // detect14bit: 0-> don't detect 14-bit, 1->detect partial 14-bit (count both 14 bit lanes and their counterparts) 2->detect full 14-bit (detect only if all CCs that make it have exactly same time positions)
+set<int> GetUsedCCLanes (void* midiEditor, int detect14bit, bool selectedEventsOnly); // detect14bit: 0-> don't detect 14-bit, 1->detect partial 14-bit (count both 14 bit lanes and their counterparts) 2->detect full 14-bit (detect only if all CCs that make it have exactly same time positions)
 double EffectiveMidiTakeStart (MediaItem_Take* take, bool ignoreMutedEvents, bool ignoreTextEvents, bool ignoreEventsOutsideItemBoundaries);
 double EffectiveMidiTakeEnd (MediaItem_Take* take, bool ignoreMutedEvents, bool ignoreTextEvents, bool ignoreEventsOutsideItemBoundaries);
 double GetStartOfMeasure (MediaItem_Take* take, double ppqPos); // working versions of MIDI_GetPPQPos_StartOfMeasure
@@ -235,6 +237,7 @@ int FindFirstSelectedNote (MediaItem_Take* take, BR_MidiEditor* midiEditorFilter
 int FindFirstSelectedCC   (MediaItem_Take* take, BR_MidiEditor* midiEditorFilterSettings); // to check event which only pass
 int FindFirstNote (MediaItem_Take* take, BR_MidiEditor* midiEditorFilterSettings);         // through MIDI filter
 int GetMIDIFilePPQ (const char* fp);
-int GetLastClickedVelLane (void* midiEditor);
+int GetLastClickedVelLane (void* midiEditor); // returns -2 if no last clicked lane
+int ConvertLaneToStatusMsg (int lane);
 int MapVelLaneToReaScriptCC (int lane); // CC format follows ReaScript scheme: 0-127=CC, 0x100|(0-31)=14-bit CC, 0x200=velocity, 0x201=pitch,
 int MapReaScriptCCToVelLane (int cc);   // 0x202=program, 0x203=channel pressure, 0x204=bank/program select, 0x205=text, 0x206=sysex, 0x207=off velocity

@@ -223,7 +223,7 @@ int ProjStateInitExit (bool init)
 * Envelope selection state                                                    *
 ******************************************************************************/
 BR_EnvSel::BR_EnvSel (int slot, TrackEnvelope* envelope) :
-m_slot      (slot)
+m_slot (slot)
 {
 	this->Save(envelope);
 }
@@ -422,6 +422,14 @@ m_sourcePpqStart (-1)
 	}
 }
 
+BR_MidiCCEvents::BR_MidiCCEvents (int slot, int lane):
+m_slot           (slot),
+m_sourceLane     (lane),
+m_ppq            (0),
+m_sourcePpqStart (-1)
+{
+}
+
 void BR_MidiCCEvents::SaveState (ProjectStateContext* ctx)
 {
 	if (m_events.size() != 0)
@@ -564,7 +572,7 @@ bool BR_MidiCCEvents::Save (BR_MidiEditor& midiEditor, int lane)
 	return false;
 }
 
-bool BR_MidiCCEvents::Restore (BR_MidiEditor& midiEditor, int lane, bool allVisible, double startPositionPppq, bool showWarningForInvalidLane /*=true*/)
+bool BR_MidiCCEvents::Restore (BR_MidiEditor& midiEditor, int lane, bool allVisible, double startPositionPppq, bool showWarningForInvalidLane /*=true*/, bool moveEditCursor /*=true*/)
 {
 	bool update = false;
 	if (m_events.size() && midiEditor.IsValid())
@@ -630,7 +638,7 @@ bool BR_MidiCCEvents::Restore (BR_MidiEditor& midiEditor, int lane, bool allVisi
 			}
 
 			// Restore events
-			double ratioPPQ = (double)midiEditor.GetPPQ() / (double)m_ppq;
+			double ratioPPQ = (m_ppq <= 0) ? (1) : ((double)midiEditor.GetPPQ() / (double)m_ppq);
 			bool do14bit    = (targetLane >= CC_14BIT_START)                                  ? true : false;
 			bool reverseMsg = (targetLane == CC_PROGRAM || targetLane == CC_CHANNEL_PRESSURE) ? true : false;
 			bool doMsg2     = (!do14bit && !CheckBounds(targetLane, 0, 127))                  ? true : false;
@@ -689,8 +697,11 @@ bool BR_MidiCCEvents::Restore (BR_MidiEditor& midiEditor, int lane, bool allVisi
 		if (moveOffsetMaxPPQ != -1)
 		{
 			update = true;
-			double newPosPPQ = Trunc(moveOffsetMaxPPQ + MIDI_GetPPQPosFromProjTime(take, GetCursorPositionEx(NULL))); // trunc because reaper creates events exactly on ppq
-			SetEditCurPos(MIDI_GetProjTimeFromPPQPos(take, newPosPPQ), true, false);
+			if (moveEditCursor)
+			{
+				double newPosPPQ = Trunc(moveOffsetMaxPPQ + MIDI_GetPPQPosFromProjTime(take, GetCursorPositionEx(NULL))); // trunc because reaper creates events exactly on ppq
+				SetEditCurPos(MIDI_GetProjTimeFromPPQPos(take, newPosPPQ), true, false);
+			}
 		}
 	}
 	return update;
@@ -709,6 +720,20 @@ int BR_MidiCCEvents::CountSavedEvents ()
 double BR_MidiCCEvents::GetSourcePpqStart ()
 {
 	return m_sourcePpqStart;
+}
+
+void BR_MidiCCEvents::AddEvent (double ppqPos, int msg2, int msg3, int channel)
+{
+	BR_MidiCCEvents::Event event;
+	event.positionPpq = ppqPos;
+	event.msg2        = msg2;
+	event.msg3        = msg3;
+	event.channel     = channel;
+	event.mute        = false;
+	
+	if (m_sourcePpqStart == -1)
+		m_sourcePpqStart = ppqPos;
+	m_events.push_back(event);
 }
 
 BR_MidiCCEvents::Event::Event () :

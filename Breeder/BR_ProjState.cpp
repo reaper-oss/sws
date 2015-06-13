@@ -732,7 +732,13 @@ void BR_MidiCCEvents::AddEvent (double ppqPos, int msg2, int msg3, int channel)
 	event.mute        = false;
 	
 	if (m_sourcePpqStart == -1)
+	{
 		m_sourcePpqStart = ppqPos;
+		event.positionPpq = 0;
+	}
+	else
+		event.positionPpq -= m_sourcePpqStart;
+
 	m_events.push_back(event);
 }
 

@@ -122,7 +122,7 @@ public:
 	int  GetSlot ();
 	int CountSavedEvents();
 	double GetSourcePpqStart ();
-	void AddEvent (double ppqPos, int msg2, int msg3, int channel); // always add events in time order
+	void AddEvent (double ppqPos, int msg2, int msg3, int channel); // always add events in time order from first to last
 
 private:
 	struct Event

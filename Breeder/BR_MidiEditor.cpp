@@ -738,7 +738,7 @@ void ME_EnvPointsToCC (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd
 		midiEditorPtr = mouseInfo.GetMidiEditor();
 		mouseInfo.GetCCLane(&lane, NULL, NULL);
 	}
-	
+
 	BR_MidiEditor midiEditor(midiEditorPtr);
 	MediaItem_Take* take = midiEditor.GetActiveTake();
 	if (!midiEditor.IsValid() || !take || !GetSelectedEnvelope(NULL) || lane == -2)
@@ -878,8 +878,8 @@ void ME_EnvPointsToCC (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd
 					double position;
 					int chanMsg, msg2;
 					MIDI_GetCC(take, i, NULL, NULL, &position, &chanMsg, NULL, &msg2, NULL);
-					
-					
+
+
 					if (CheckBounds(position, deleteRangeStart, deleteRangeEnd) && chanMsg == eventType && (eventType != STATUS_CC || (lane1 == msg2 || lane2 == msg2)))
 					{
 						MIDI_DeleteCC(take, i);
@@ -887,8 +887,8 @@ void ME_EnvPointsToCC (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd
 					}
 				}
 			}
-			events.Restore(midiEditor, lane, false, 0, false, false);
-			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
+			events.Restore(midiEditor, lane, false, events.GetSourcePpqStart(), false, false);
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 		}
 	}
 }

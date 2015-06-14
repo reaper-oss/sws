@@ -1049,7 +1049,14 @@ int BR_Win32_GetConstant (const char* constantName)
 	}
 
 	#ifndef _WIN32
-		#undef WS_MAXIMIZE 0x01000000L
+		#undef SW_MAXIMIZE        
+		#undef SWP_NOOWNERZORDER  
+		#undef WS_MAXIMIZE
+		#undef WS_MAXIMIZE        
+		#undef WS_MAXIMIZEBOX     
+		#undef WS_MINIMIZEBOX     
+		#undef WS_OVERLAPPED      
+		#undef WS_OVERLAPPEDWINDOW 
 	#endif
 	return constant;
 }

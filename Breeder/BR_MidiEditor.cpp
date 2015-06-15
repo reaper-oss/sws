@@ -867,26 +867,7 @@ void ME_EnvPointsToCC (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd
 		if (update)
 		{
 			if ((int)ct->user < 0)
-			{
-				int eventType = ConvertLaneToStatusMsg(lane);
-				int lane1     = (lane >= CC_14BIT_START) ? lane - CC_14BIT_START : lane;
-				int lane2     = (lane >= CC_14BIT_START) ? lane + 32             : lane;
-
-				int ccCount; MIDI_CountEvts(take, NULL, &ccCount, NULL);
-				for (int i = 0; i < ccCount; ++i)
-				{
-					double position;
-					int chanMsg, msg2;
-					MIDI_GetCC(take, i, NULL, NULL, &position, &chanMsg, NULL, &msg2, NULL);
-
-
-					if (CheckBounds(position, deleteRangeStart, deleteRangeEnd) && chanMsg == eventType && (eventType != STATUS_CC || (lane1 == msg2 || lane2 == msg2)))
-					{
-						MIDI_DeleteCC(take, i);
-						--i;
-					}
-				}
-			}
+				DeleteEventsInLane (take, lane, false, deleteRangeStart, deleteRangeEnd, true);
 			events.Restore(midiEditor, lane, false, events.GetSourcePpqStart(), false, false);
 			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 		}
@@ -949,6 +930,22 @@ void ME_CopySelCCToLane (COMMAND_T* ct, int val, int valhw, int relmode, HWND hw
 	}
 	else
 		MessageBox((HWND)midiEditor.GetEditor(), __LOCALIZE("Can't copy to velocity, text, sysex and bank select lanes","sws_mbox"), __LOCALIZE("SWS/BR - Warning","sws_mbox"), MB_OK);
+}
+
+void ME_DeleteEventsLastClickedLane (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
+{
+	void* midiEditor = SWS_MIDIEditor_GetActive();
+	MediaItem_Take* take = SWS_MIDIEditor_GetTake(midiEditor);
+
+	if (take && midiEditor)
+	{
+		int lane = GetLastClickedVelLane(midiEditor);
+		if (lane != -2)
+		{
+			if (DeleteEventsInLane(take, lane, ((int)ct->user == 1), 0, 0, false))
+				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+		}
+	}
 }
 
 void ME_SaveCursorPosSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)

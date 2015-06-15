@@ -232,6 +232,7 @@ bool IsMidi (MediaItem_Take* take, bool* inProject = NULL);
 bool IsOpenInInlineEditor (MediaItem_Take* take);
 bool IsMidiNoteBlack (int note);
 bool IsVelLaneValid (int lane);
+bool DeleteEventsInLane (MediaItem_Take* take, int lane, bool selectedOnly, double startRangePpq, double endRangePpq, bool doRange);
 int GetMidiTakeVisibleLoops (MediaItem_Take* take);
 int FindFirstSelectedNote (MediaItem_Take* take, BR_MidiEditor* midiEditorFilterSettings); // Pass midiEditorFilterSettings
 int FindFirstSelectedCC   (MediaItem_Take* take, BR_MidiEditor* midiEditorFilterSettings); // to check event which only pass

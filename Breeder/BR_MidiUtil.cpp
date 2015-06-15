@@ -1448,6 +1448,59 @@ bool IsVelLaneValid (int lane)
 		return false;
 }
 
+bool DeleteEventsInLane (MediaItem_Take* take, int lane, bool selectedOnly, double startRangePpq, double endRangePpq, bool doRange)
+{
+	bool update = false;
+
+	if (lane == CC_SYSEX || lane == CC_TEXT_EVENTS)
+	{
+		int sysCount; MIDI_CountEvts(take, NULL, NULL, &sysCount);
+		for (int i = 0; i < sysCount; ++i)
+		{
+			bool selected;
+			double position;
+			int type;
+			MIDI_GetTextSysexEvt(take, i, &selected, NULL, &position, &type, NULL, 0);
+
+			if ((!doRange || CheckBounds(position, startRangePpq, endRangePpq)) && ((lane == CC_SYSEX && type == -1) || (lane == CC_TEXT_EVENTS && CheckBounds(type, 1, 7))))
+			{
+				if (!selectedOnly || (selectedOnly && selected))
+				{
+					MIDI_DeleteTextSysexEvt(take, i);
+					--i;
+					update = true;
+				}
+			}
+		}
+	}
+	else
+	{
+		int eventType = ConvertLaneToStatusMsg(lane);
+		int lane1     = (lane >= CC_14BIT_START) ? lane - CC_14BIT_START : lane;
+		int lane2     = (lane >= CC_14BIT_START) ? lane + 32             : lane;
+
+		int ccCount; MIDI_CountEvts(take, NULL, &ccCount, NULL);
+		for (int i = 0; i < ccCount; ++i)
+		{
+			bool selected;
+			double position;
+			int chanMsg, msg2, msg3;
+			MIDI_GetCC(take, i, &selected, NULL, &position, &chanMsg, NULL, &msg2, &msg3);
+
+			if ((!doRange || CheckBounds(position, startRangePpq, endRangePpq)) && chanMsg == eventType && (eventType != STATUS_CC || (lane1 == msg2 || lane2 == msg2)))
+			{
+				if (!selectedOnly || (selectedOnly && selected))
+				{
+					MIDI_DeleteCC(take, i);
+					--i;
+					update = true;
+				}
+			}
+		}
+	}
+	return update;
+}
+
 int FindFirstSelectedNote (MediaItem_Take* take, BR_MidiEditor* midiEditorFilterSettings)
 {
 	int id = -1;

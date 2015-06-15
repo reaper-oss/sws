@@ -45,6 +45,7 @@ void ME_ToggleHideCCLanes (COMMAND_T*, int, int, int, HWND);
 void ME_CCToEnvPoints (COMMAND_T*, int, int, int, HWND);
 void ME_EnvPointsToCC (COMMAND_T*, int, int, int, HWND);
 void ME_CopySelCCToLane (COMMAND_T*, int, int, int, HWND);
+void ME_DeleteEventsLastClickedLane (COMMAND_T*, int, int, int, HWND);
 void ME_SaveCursorPosSlot (COMMAND_T*, int, int, int, HWND);
 void ME_RestoreCursorPosSlot (COMMAND_T*, int, int, int, HWND);
 void ME_SaveNoteSelSlot (COMMAND_T*, int, int, int, HWND);

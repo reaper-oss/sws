@@ -1335,12 +1335,19 @@ double BR_Envelope::LaneMaxValue ()
 	}
 	else if (this->Type() == VOLUME || this->Type() == VOLUME_PREFX)
 	{
+		static int s_max = -666;
 		int max; GetConfig("volenvrange", max);
-		if      (max == 3) return 1;
-		else if (max == 2) return 2;
-		else if (max == 6) return 4;
-		else if (max == 7) return 16;
-		else               return 2;
+
+		// LaneMaxValue tends to get called a lot so instead of doing all comparissons each time, rather cache value and do one comparisson only
+		if (max != s_max)
+		{
+			if      (max == 3 || max == 1) s_max = 1; // different max value depends on default volume envelope scaling (3 or 1 for 0db etc...)
+			else if (max == 2 || max == 0) s_max = 2;
+			else if (max == 6 || max == 4) s_max = 4;
+			else if (max == 7 || max == 5) s_max = 16;
+			else                           s_max = 2;
+		}
+		return s_max;
 	}
 	else if (this->Type() == PITCH)
 	{

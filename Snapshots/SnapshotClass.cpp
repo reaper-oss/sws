@@ -10,10 +10,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -195,7 +195,7 @@ TrackSnapshot::TrackSnapshot(MediaTrack* tr, int mask)
 	// and the full FX chain
 	if (mask & FXCHAIN_MASK)
 		GetFXChain(tr, &m_sFXChain);
-	
+
 	// Get the "std" envelopes
 	// JFB note: localized env names are retrieved in GetSetEnvelope()
 	if (mask & VOL_MASK)
@@ -347,7 +347,7 @@ bool TrackSnapshot::UpdateReaper(int mask, bool bSelOnly, int* fxErr, WDL_PtrLis
 	{
 		m_sends.UpdateReaper(tr, pFix);
 	}
-	
+
 	return false;
 }
 
@@ -363,7 +363,7 @@ bool TrackSnapshot::Cleanup()
 			m_fx.Delete(i, true);
 			i--;
 		}
-	
+
 	return false;
 }
 
@@ -374,7 +374,7 @@ void TrackSnapshot::GetChunk(WDL_FastString* chunk)
 	guidToString(&m_guid, guidStr);
 	chunk->AppendFormatted(chunk->GetLength()+250, "<TRACK %s %.14f %.14f %d %d %d %d %d %d %.14f %.14f %.14f %.14f\n", guidStr, m_dVol, m_dPan, m_bMute ? 1 : 0, m_iSolo, m_iFXEn, m_iVis ^ 2, m_iSel, m_iPanMode, m_dPanWidth, m_dPanL, m_dPanR, m_dPanLaw);
 	chunk->AppendFormatted(chunk->GetLength()+100, "NAME \"%s\" %d\n", m_sName.Get(), m_iTrackNum);
-	
+
 	m_sends.GetChunk(chunk);
 	for (int i = 0; i < m_fx.GetSize(); i++)
 		m_fx.Get(i)->GetChunk(chunk);
@@ -548,7 +548,7 @@ void TrackSnapshot::GetDetails(WDL_FastString* details, int iMask)
 				if (!lp.parse(line) && lp.getnumtokens() >= 2)
 				{
 					bool foundfx = false;
-					if (strncmp(lp.gettoken_str(0), "<VST", 4) == 0 || 
+					if (strncmp(lp.gettoken_str(0), "<VST", 4) == 0 ||
 						strncmp(lp.gettoken_str(0), "<AU", 3) == 0 ||
 						strncmp(lp.gettoken_str(0), "<DX", 3) == 0)
 					{
@@ -819,7 +819,7 @@ bool Snapshot::UpdateReaper(int mask, bool bSelOnly, bool bHideNewVis)
 	// Do "non-chunk" stuff first
 	for (int i = 0; i < m_tracks.GetSize(); i++)
 		m_tracks.Get(i)->UpdateReaper(mask & m_iMask & ~CHUNK_MASK, bSelOnly, &fxErr, &sendFixes);
-	
+
 	// Then cache all ObjectState changes for the chunk updating
 	SWS_CacheObjectState(true);
 	for (int i = 0; i < m_tracks.GetSize(); i++)
@@ -861,7 +861,7 @@ bool Snapshot::UpdateReaper(int mask, bool bSelOnly, bool bHideNewVis)
 		char errString[512];
 		int n = 0;
 		if (trackErr)
-			n += sprintf(errString + n, __LOCALIZE_VERFMT("%d track(s) from snapshot not found.","sws_DLG_101"), trackErr);
+			n += sprintf(errString + n, __LOCALIZE_VERFMT("%d tracks from snapshot not found.","sws_DLG_101"), trackErr);
 		if (fxErr)
 			n += sprintf(errString + n, __LOCALIZE_VERFMT("%s%d FX from snapshot not found.","sws_DLG_101"), n ? "\n" : "", fxErr);
 		sprintf(errString + n, __LOCALIZE("\nDelete abandonded items from snapshot? (You cannot undo this operation!)","sws_DLG_101"));
@@ -889,9 +889,9 @@ char* Snapshot::Tooltip(char* str, int maxLen)
 			break;
 
 	if (i < m_tracks.GetSize())
-		n = _snprintf(str, maxLen, __LOCALIZE_VERFMT("Master + %d track(s)","sws_DLG_101"), m_tracks.GetSize() - 1);
+		n = _snprintf(str, maxLen, __LOCALIZE_VERFMT("Master + %d tracks","sws_DLG_101"), m_tracks.GetSize() - 1);
 	else
-		n = _snprintf(str + n, maxLen - n, __LOCALIZE_VERFMT("%d track(s)","sws_DLG_101"), m_tracks.GetSize());
+		n = _snprintf(str + n, maxLen - n, __LOCALIZE_VERFMT("%d tracks","sws_DLG_101"), m_tracks.GetSize());
 
 	if (m_iMask & VOL_MASK && n < maxLen) {
 		n += _snprintf(str + n, maxLen - n, "%s", ", ");
@@ -1047,8 +1047,8 @@ char* Snapshot::GetTimeString(char* str, int iStrMax, bool bDate)
 		st.wMonth  = pt.tm_mon + 1;
 		st.wYear   = pt.tm_year + 1900;
 		st.wDayOfWeek = pt.tm_wday;
-		SystemTimeToTzSpecificLocalTime(NULL, &st, &st2);		
-		
+		SystemTimeToTzSpecificLocalTime(NULL, &st, &st2);
+
 		if (bDate)
 			GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &st2, NULL, str, iStrMax);
 		else

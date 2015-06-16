@@ -283,7 +283,7 @@ void SaveSelTrackSelItems(int iSlot)
 		}
 	}
 	char cUndoText[256];
-	sprintf(cUndoText, __LOCALIZE_VERFMT("Save selected item(s) on selected track(s) to slot %d","sws_undo"), iSlot+1);
+	sprintf(cUndoText, __LOCALIZE_VERFMT("Save selected items on selected tracks to slot %d","sws_undo"), iSlot+1);
 }
 
 void RestoreSelTrackSelItems(int iSlot)
@@ -303,7 +303,7 @@ void RestoreSelTrackSelItems(int iSlot)
 		}
 	}
 	char cUndoText[256];
-	sprintf(cUndoText, __LOCALIZE_VERFMT("Restore selected track(s) selected item(s), slot %d","sws_undo"), iSlot+1);
+	sprintf(cUndoText, __LOCALIZE_VERFMT("Restore selected tracks selected items, slot %d","sws_undo"), iSlot+1);
 	Undo_OnStateChangeEx(cUndoText, UNDO_STATE_ITEMS, -1);
 	UpdateTimeline();
 }

@@ -55,7 +55,7 @@ void DoNudgeSelectedItemsPositions(bool UseConfig, bool Positive, double NudgeTi
 
 		GetSetMediaItemInfo(item, "D_POSITION", &NewPos);
 	}
-	Undo_OnStateChangeEx("Nudge item position(s)", UNDO_STATE_ITEMS, -1);
+	Undo_OnStateChangeEx("Nudge item positions", UNDO_STATE_ITEMS, -1);
 	UpdateTimeline();
 }
 
@@ -179,7 +179,7 @@ void DoNudgeItemsBeatsBased(bool UseConf, bool Positive, double theNudgeAmount)
 		}
 		delete[] MediaItemsOnTrack;
 	}
-	Undo_OnStateChangeEx(__LOCALIZE("Nudge item position(s), beat based","sws_undo"),4,-1);
+	Undo_OnStateChangeEx(__LOCALIZE("Nudge item positions, beat based","sws_undo"),4,-1);
 	UpdateTimeline();
 }
 

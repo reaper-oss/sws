@@ -10,10 +10,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -38,7 +38,7 @@
 #define LOADSNAP_MSG	0x10100 // Keep space afterwards
 
 #define MAJORADJUST false
-	
+
 // Globals
 SWS_TrackListWnd* g_pList=NULL;
 
@@ -113,10 +113,10 @@ void SWS_TrackListView::GetItemText(SWS_ListItem* item, int iCol, char* str, int
 void SWS_TrackListView::OnItemBtnClk(SWS_ListItem* item, int iCol, int iKeyState)
 {
 	MediaTrack* tr = (MediaTrack*)item; // Always non-null
-	
+
 	if (iCol == COL_TCP || iCol == COL_MCP)
 	{
-		bool bClickedStar = ((iCol == COL_TCP && GetTrackVis(tr) & 2) || 
+		bool bClickedStar = ((iCol == COL_TCP && GetTrackVis(tr) & 2) ||
 							 (iCol == COL_MCP && GetTrackVis(tr) & 1));
 		m_bDisableUpdates = true;
 
@@ -218,7 +218,7 @@ void SWS_TrackListWnd::Update()
 	if (!IsValidWindow() || bRecurseCheck || !m_pLists.GetSize() || m_pLists.Get(0)->UpdatesDisabled())
 		return;
 	bRecurseCheck = true;
-	
+
 	//Update the check boxes
 	CheckDlgButton(m_hwnd, IDC_HIDE, m_bHideFiltered ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(m_hwnd, IDC_LINK, m_bLink ? BST_CHECKED : BST_UNCHECKED);
@@ -466,7 +466,7 @@ int SWS_TrackListWnd::OnKey(MSG* msg, int iKeyState)
 
 			m_pLists.Get(0)->DisableUpdates(false);
 			Update();
-			
+
 			// Update the focus
 			for (int i = 0; i < m_pLists.Get(0)->GetListItemCount(); i++)
 				if (m_pLists.Get(0)->GetListItem(i) == (SWS_ListItem*)m_trLastTouched)
@@ -513,7 +513,7 @@ void ShowInMCPOnly(COMMAND_T*)
 	}
 	TrackList_AdjustWindows(MAJORADJUST);
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Show selected track(s) in MCP only", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx("Show selected tracks in MCP only", UNDO_STATE_TRACKCFG, -1);
 }
 
 void ShowInTCPOnly(COMMAND_T*)
@@ -526,7 +526,7 @@ void ShowInTCPOnly(COMMAND_T*)
 	}
 	TrackList_AdjustWindows(MAJORADJUST);
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Show selected track(s) in TCP only", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx("Show selected tracks in TCP only", UNDO_STATE_TRACKCFG, -1);
 }
 
 void ShowInMCPandTCP(COMMAND_T*)
@@ -539,7 +539,7 @@ void ShowInMCPandTCP(COMMAND_T*)
 	}
 	TrackList_AdjustWindows(MAJORADJUST);
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Show selected track(s) in TCP and MCP", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx("Show selected tracks in TCP and MCP", UNDO_STATE_TRACKCFG, -1);
 }
 
 void HideTracks(COMMAND_T*)
@@ -552,7 +552,7 @@ void HideTracks(COMMAND_T*)
 	}
 	TrackList_AdjustWindows(MAJORADJUST);
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Hide selected track(s)", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx("Hide selected tracks", UNDO_STATE_TRACKCFG, -1);
 }
 
 void ShowInMCP(COMMAND_T*)
@@ -565,7 +565,7 @@ void ShowInMCP(COMMAND_T*)
 	}
 	TrackList_AdjustWindows(MAJORADJUST);
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Show selected track(s) in MCP", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx("Show selected tracks in MCP", UNDO_STATE_TRACKCFG, -1);
 }
 
 void ShowInTCP(COMMAND_T*)
@@ -578,7 +578,7 @@ void ShowInTCP(COMMAND_T*)
 	}
 	TrackList_AdjustWindows(MAJORADJUST);
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Show selected track(s) in TCP", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx("Show selected tracks in TCP", UNDO_STATE_TRACKCFG, -1);
 }
 
 void HideFromMCP(COMMAND_T*)
@@ -591,7 +591,7 @@ void HideFromMCP(COMMAND_T*)
 	}
 	TrackList_AdjustWindows(MAJORADJUST);
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Hide selected track(s) from MCP", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx("Hide selected tracks from MCP", UNDO_STATE_TRACKCFG, -1);
 }
 
 void HideFromTCP(COMMAND_T*)
@@ -604,7 +604,7 @@ void HideFromTCP(COMMAND_T*)
 	}
 	TrackList_AdjustWindows(MAJORADJUST);
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Hide selected track(s) from TCP", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx("Hide selected tracks from TCP", UNDO_STATE_TRACKCFG, -1);
 }
 
 void TogInMCP(COMMAND_T*)
@@ -617,7 +617,7 @@ void TogInMCP(COMMAND_T*)
 	}
 	TrackList_AdjustWindows(MAJORADJUST);
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Toggle selected track(s) visible in MCP", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx("Toggle selected tracks visible in MCP", UNDO_STATE_TRACKCFG, -1);
 }
 
 void TogInTCP(COMMAND_T*)
@@ -630,7 +630,7 @@ void TogInTCP(COMMAND_T*)
 	}
 	TrackList_AdjustWindows(MAJORADJUST);
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Toggle selected track(s) visible in TCP", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx("Toggle selected tracks visible in TCP", UNDO_STATE_TRACKCFG, -1);
 }
 
 void ToggleHide(COMMAND_T*)
@@ -643,7 +643,7 @@ void ToggleHide(COMMAND_T*)
 	}
 	TrackList_AdjustWindows(MAJORADJUST);
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Toggle selected track(s) fully visible/hidden", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx("Toggle selected tracks fully visible/hidden", UNDO_STATE_TRACKCFG, -1);
 }
 
 void ShowAll(COMMAND_T*)
@@ -702,7 +702,7 @@ void ShowInMCPEx(COMMAND_T*)
 	}
 	TrackList_AdjustWindows(MAJORADJUST);
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Show selected track(s) in MCP, hide others", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx("Show selected tracks in MCP, hide others", UNDO_STATE_TRACKCFG, -1);
 }
 
 void ShowInTCPEx(COMMAND_T*)
@@ -719,7 +719,7 @@ void ShowInTCPEx(COMMAND_T*)
 	}
 	TrackList_AdjustWindows(MAJORADJUST);
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Show selected track(s) in TCP, hide others", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx("Show selected tracks in TCP, hide others", UNDO_STATE_TRACKCFG, -1);
 }
 
 void ShowSelOnly(COMMAND_T*)
@@ -735,7 +735,7 @@ void ShowSelOnly(COMMAND_T*)
 	}
 	TrackList_AdjustWindows(MAJORADJUST);
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Show selected track(s), hide others", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx("Show selected tracks, hide others", UNDO_STATE_TRACKCFG, -1);
 }
 
 void HideUnSel(COMMAND_T*)
@@ -748,7 +748,7 @@ void HideUnSel(COMMAND_T*)
 	}
 	TrackList_AdjustWindows(MAJORADJUST);
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Hide unselected track(s)", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx("Hide unselected tracks", UNDO_STATE_TRACKCFG, -1);
 }
 
 static void ClearFilter(COMMAND_T*)
@@ -818,31 +818,31 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Show Tracklist with filter focused" },			"SWSTL_OPENFILT",	OpenTrackListFilt,	NULL, },
 
 	// Set all bits
-	{ { DEFACCEL, "SWS: Show selected track(s) in MCP only" },			"SWSTL_MCPONLY",	ShowInMCPOnly,		NULL, },
-	{ { DEFACCEL, "SWS: Show selected track(s) in TCP only" },			"SWSTL_TCPONLY",	ShowInTCPOnly,		NULL, },
-	{ { DEFACCEL, "SWS: Show selected track(s) in TCP and MCP" },		"SWSTL_BOTH",		ShowInMCPandTCP,	NULL, },
-	{ { DEFACCEL, "SWS: Hide selected track(s)" },						"SWSTL_HIDE",		HideTracks,			NULL, },
+	{ { DEFACCEL, "SWS: Show selected tracks in MCP only" },			"SWSTL_MCPONLY",	ShowInMCPOnly,		NULL, },
+	{ { DEFACCEL, "SWS: Show selected tracks in TCP only" },			"SWSTL_TCPONLY",	ShowInTCPOnly,		NULL, },
+	{ { DEFACCEL, "SWS: Show selected tracks in TCP and MCP" },			"SWSTL_BOTH",		ShowInMCPandTCP,	NULL, },
+	{ { DEFACCEL, "SWS: Hide selected tracks" },						"SWSTL_HIDE",		HideTracks,			NULL, },
 
 	// Set bits individually
-	{ { DEFACCEL, "SWS: Show selected track(s) in MCP" },				"SWSTL_SHOWMCP",	ShowInMCP,			NULL, },
-	{ { DEFACCEL, "SWS: Show selected track(s) in TCP" },				"SWSTL_SHOWTCP",	ShowInTCP,			NULL, },
-	{ { DEFACCEL, "SWS: Hide selected track(s) from MCP" },				"SWSTL_HIDEMCP",	HideFromMCP,		NULL, },
-	{ { DEFACCEL, "SWS: Hide selected track(s) from TCP" },				"SWSTL_HIDETCP",	HideFromTCP,		NULL, },
+	{ { DEFACCEL, "SWS: Show selected tracks in MCP" },					"SWSTL_SHOWMCP",	ShowInMCP,			NULL, },
+	{ { DEFACCEL, "SWS: Show selected tracks in TCP" },					"SWSTL_SHOWTCP",	ShowInTCP,			NULL, },
+	{ { DEFACCEL, "SWS: Hide selected tracks from MCP" },				"SWSTL_HIDEMCP",	HideFromMCP,		NULL, },
+	{ { DEFACCEL, "SWS: Hide selected tracks from TCP" },				"SWSTL_HIDETCP",	HideFromTCP,		NULL, },
 
 	// Toggle
-	{ { DEFACCEL, "SWS: Toggle selected track(s) visible in MCP" },		"SWSTL_TOGMCP",		TogInMCP,			NULL, },
-	{ { DEFACCEL, "SWS: Toggle selected track(s) visible in TCP" },		"SWSTL_TOGTCP",		TogInTCP,			NULL, },
-	{ { DEFACCEL, "SWS: Toggle selected track(s) fully visible/hidden" }, "SWSTL_TOGGLE",	ToggleHide,			NULL, },
+	{ { DEFACCEL, "SWS: Toggle selected tracks visible in MCP" },		"SWSTL_TOGMCP",		TogInMCP,			NULL, },
+	{ { DEFACCEL, "SWS: Toggle selected tracks visible in TCP" },		"SWSTL_TOGTCP",		TogInTCP,			NULL, },
+	{ { DEFACCEL, "SWS: Toggle selected tracks fully visible/hidden" }, "SWSTL_TOGGLE",	ToggleHide,			NULL, },
 
 	// Affect all tracks
 	{ { DEFACCEL, "SWS: Show all tracks" },								"SWSTL_SHOWALL",	ShowAll,			NULL, },
 	{ { DEFACCEL, "SWS: Show all tracks in MCP" },						"SWSTL_SHOWALLMCP",	ShowAllMCP,			NULL, },
 	{ { DEFACCEL, "SWS: Show all tracks in TCP" },						"SWSTL_SHOWALLTCP",	ShowAllTCP,			NULL, },
 	{ { DEFACCEL, "SWS: Hide all tracks" },								"SWSTL_HIDEALL",	HideAll,			NULL, },
-	{ { DEFACCEL, "SWS: Show selected track(s) in MCP, hide others" },	"SWSTL_SHOWMCPEX",	ShowInMCPEx,		NULL, },
-	{ { DEFACCEL, "SWS: Show selected track(s) in TCP, hide others" },	"SWSTL_SHOWTCPEX",	ShowInTCPEx,		NULL, },
-	{ { DEFACCEL, "SWS: Show selected track(s), hide others" },			"SWSTL_SHOWEX",		ShowSelOnly,		NULL, },
-	{ { DEFACCEL, "SWS: Hide unselected track(s)" },					"SWSTL_HIDEUNSEL",	HideUnSel,			NULL, },
+	{ { DEFACCEL, "SWS: Show selected tracks in MCP, hide others" },	"SWSTL_SHOWMCPEX",	ShowInMCPEx,		NULL, },
+	{ { DEFACCEL, "SWS: Show selected tracks in TCP, hide others" },	"SWSTL_SHOWTCPEX",	ShowInTCPEx,		NULL, },
+	{ { DEFACCEL, "SWS: Show selected tracks, hide others" },			"SWSTL_SHOWEX",		ShowSelOnly,		NULL, },
+	{ { DEFACCEL, "SWS: Hide unselected tracks" },						"SWSTL_HIDEUNSEL",	HideUnSel,			NULL, },
 
 	{ { DEFACCEL, "SWS: Clear tracklist filter" },                       "SWSTL_CLEARFLT",   ClearFilter,		NULL, },
 	{ { DEFACCEL, "SWS: Snapshot current track visibility" },            "SWSTL_SNAPSHOT",   NewVisSnapshot,		NULL, },

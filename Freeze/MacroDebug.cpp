@@ -29,7 +29,7 @@ public:
 	int* m_pActions;
 	int m_iNumActions;
 	char m_cName[256];
-	
+
 	Macro(LineParser* lp)
 	{
 		m_pActions = NULL;
@@ -117,7 +117,7 @@ INT_PTR WINAPI doDebug(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				g_selectedMacro = (Macro*)s->lParam;
 			break;
 		}
-		
+
 
 		case WM_COMMAND:
 			//if you need to debug commands, you probably want to ignore the focus stuff.  Break a few lines down.
@@ -164,8 +164,8 @@ void MacroDebug()
 
 }
 
-static COMMAND_STRUCT g_commandTable[] = 
+static COMMAND_STRUCT g_commandTable[] =
 {
-	{ { { 0, 0, 0 }, "SWS: Debug custom action(s)" },                                "SWS_ACTIONDEBUG",    MacroDebug,       NULL, false },
+	{ { { 0, 0, 0 }, "SWS: Debug custom actions" },                                "SWS_ACTIONDEBUG",    MacroDebug,       NULL, false },
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

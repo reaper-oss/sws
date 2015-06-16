@@ -294,7 +294,7 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 	AddSubMenu(hMenu, hPrjMgmtSubMenu, __LOCALIZE("Project Management", "sws_ext_menu"));
 	AddToMenu(hPrjMgmtSubMenu, __LOCALIZE("Open projects from list...", "sws_ext_menu"), NamedCommandLookup("_SWS_PROJLISTSOPEN"));
 	AddToMenu(hPrjMgmtSubMenu, __LOCALIZE("Save list of open projects...", "sws_ext_menu"), NamedCommandLookup("_SWS_PROJLISTSAVE"));
-	AddToMenu(hPrjMgmtSubMenu, __LOCALIZE("Add related project(s)...", "sws_ext_menu"), NamedCommandLookup("_SWS_ADDRELATEDPROJ"));
+	AddToMenu(hPrjMgmtSubMenu, __LOCALIZE("Add related projects...", "sws_ext_menu"), NamedCommandLookup("_SWS_ADDRELATEDPROJ"));
 	AddToMenu(hPrjMgmtSubMenu, __LOCALIZE("Delete related project...", "sws_ext_menu"), NamedCommandLookup("_SWS_DELRELATEDPROJ"));
 	AddToMenu(hPrjMgmtSubMenu, SWS_SEPARATOR, 0);
 	AddToMenu(hPrjMgmtSubMenu, __LOCALIZE("(related projects list)", "sws_ext_menu"), NamedCommandLookup("_SWS_OPENRELATED1"));

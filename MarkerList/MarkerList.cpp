@@ -10,10 +10,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -274,7 +274,7 @@ void SWS_MarkerListWnd::OnInitDlg()
 
 	CheckDlgButton(m_hwnd, IDC_PLAY, m_bPlayOnSel ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(m_hwnd, IDC_SCROLL, m_bScroll  ? BST_CHECKED : BST_UNCHECKED);
-	
+
 	Update();
 
 	SetTimer(m_hwnd, 1, 500, NULL);
@@ -309,7 +309,7 @@ void SWS_MarkerListWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				MarkerItem* item;
 				while ((item = (MarkerItem*)m_pLists.Get(0)->EnumSelected(&i)))
 					DeleteProjectMarker(NULL, item->GetNum(), item->IsRegion());
-				Undo_EndBlock(__LOCALIZE("Delete marker(s)","sws_undo"), UNDO_STATE_MISCCFG);
+				Undo_EndBlock(__LOCALIZE("Delete markers","sws_undo"), UNDO_STATE_MISCCFG);
 				Update();
 				break;
 			}
@@ -370,7 +370,7 @@ HMENU SWS_MarkerListWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 	AddToMenu(hMenu, __LOCALIZE("Reorder marker IDs","sws_DLG_102"), SWSGetCommandID(RenumberIds));
 	AddToMenu(hMenu, __LOCALIZE("Reorder region IDs","sws_DLG_102"), SWSGetCommandID(RenumberRegions));
 	AddToMenu(hMenu, SWS_SEPARATOR, 0);
-	AddToMenu(hMenu, __LOCALIZE("Delete selected marker(s)","sws_DLG_102"), DELETE_MSG);
+	AddToMenu(hMenu, __LOCALIZE("Delete selected markers","sws_DLG_102"), DELETE_MSG);
 	AddToMenu(hMenu, __LOCALIZE("Delete all markers","sws_DLG_102"), SWSGetCommandID(DeleteAllMarkers));
 	AddToMenu(hMenu, __LOCALIZE("Delete all regions","sws_DLG_102"), SWSGetCommandID(DeleteAllRegions));
 	AddToMenu(hMenu, SWS_SEPARATOR, 0);
@@ -380,7 +380,7 @@ HMENU SWS_MarkerListWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 	AddToMenu(hMenu, SWS_SEPARATOR, 0);
 	AddToMenu(hMenu, __LOCALIZE("Convert markers to regions","sws_DLG_102"), SWSGetCommandID(MarkersToRegions));
 	AddToMenu(hMenu, __LOCALIZE("Convert regions to markers","sws_DLG_102"), SWSGetCommandID(RegionsToMarkers));
-	
+
 	return hMenu;
 }
 
@@ -659,7 +659,7 @@ int MarkerListEnabled(COMMAND_T*)
 }
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
-static COMMAND_T g_commandTable[] = 
+static COMMAND_T g_commandTable[] =
 {
 	{ { DEFACCEL, "SWS: Open marker list" },							"SWSMARKERLIST1",  OpenMarkerList,    "SWS MarkerList", 0, MarkerListEnabled },
 	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
@@ -704,7 +704,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 		return false; // only look for <MARKERLIST lines
 
 	MarkerList* ml = g_savedLists.Get()->Add(new MarkerList(lp.gettoken_str(1), false));
-  
+
 	char linebuf[4096];
 	while(true)
 	{

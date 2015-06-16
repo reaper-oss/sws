@@ -1061,6 +1061,11 @@ int BR_Win32_GetConstant (const char* constantName)
 	return constant;
 }
 
+int BR_Win32_GetFocus ()
+{
+	return (int)GetFocus();
+}
+
 int BR_Win32_GetForegroundWindow ()
 {
 	return (int) GetForegroundWindow();
@@ -1095,6 +1100,11 @@ void BR_Win32_GetMonitorRectFromRect(bool workingAreaOnly, int leftIn, int topIn
 int BR_Win32_GetParent (int hwnd)
 {
 	return (int)GetParent((HWND)hwnd);
+}
+
+int BR_Win32_GetPrivateProfileString (const char* sectionName, const char* keyName, const char* defaultString, const char* filePath, char* stringOut, int stringOut_sz)
+{
+	return (int)GetPrivateProfileString(sectionName, keyName, defaultString, stringOut, stringOut_sz, filePath);
 }
 
 int BR_Win32_GetWindow (int hwnd, int cmd)
@@ -1192,4 +1202,9 @@ bool BR_Win32_ShowWindow (int hwnd, int cmdShow)
 		ShowWindow((HWND)hwnd, cmdShow);
 		return !!hwnd;
 	#endif
+}
+
+bool BR_Win32_WritePrivateProfileString (const char* sectionName, const char* keyName, const char* value, const char* filePath)
+{
+	return !!WritePrivateProfileString(sectionName, keyName, value, filePath);
 }

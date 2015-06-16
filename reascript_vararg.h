@@ -559,6 +559,11 @@ static void* __vararg_BR_Win32_GetConstant(void** arglist, int numparms)
   return (void*)(INT_PTR)BR_Win32_GetConstant((const char*)arglist[0]);
 }
 
+static void* __vararg_BR_Win32_GetFocus(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)BR_Win32_GetFocus();
+}
+
 static void* __vararg_BR_Win32_GetForegroundWindow(void** arglist, int numparms)
 {
   return (void*)(INT_PTR)BR_Win32_GetForegroundWindow();
@@ -583,6 +588,11 @@ static void* __vararg_BR_Win32_GetMonitorRectFromRect(void** arglist, int numpar
 static void* __vararg_BR_Win32_GetParent(void** arglist, int numparms)
 {
   return (void*)(INT_PTR)BR_Win32_GetParent((int)(INT_PTR)arglist[0]);
+}
+
+static void* __vararg_BR_Win32_GetPrivateProfileString(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)BR_Win32_GetPrivateProfileString((const char*)arglist[0], (const char*)arglist[1], (const char*)arglist[2], (const char*)arglist[3], (char*)arglist[4], (int)(INT_PTR)arglist[5]);
 }
 
 static void* __vararg_BR_Win32_GetWindow(void** arglist, int numparms)
@@ -653,6 +663,11 @@ static void* __vararg_BR_Win32_ShellExecute(void** arglist, int numparms)
 static void* __vararg_BR_Win32_ShowWindow(void** arglist, int numparms)
 {
   return (void*)(INT_PTR)BR_Win32_ShowWindow((int)(INT_PTR)arglist[0], (int)(INT_PTR)arglist[1]);
+}
+
+static void* __vararg_BR_Win32_WritePrivateProfileString(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)BR_Win32_WritePrivateProfileString((const char*)arglist[0], (const char*)arglist[1], (const char*)arglist[2], (const char*)arglist[3]);
 }
 
 static void* __vararg_ULT_GetMediaItemNote(void** arglist, int numparms)

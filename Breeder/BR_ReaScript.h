@@ -94,11 +94,13 @@ MediaTrack*     BR_TrackAtMouseCursor (int* contextOut, double* positionOut);
 int             BR_Win32_FindComboBoxString (int comboBoxHwnd, const char* string);
 int             BR_Win32_FindWindowEx(int hwndParent, int hwndChildAfter, const char* className, const char* windowName, bool searchClass, bool searchName);
 int             BR_Win32_GetConstant (const char* constantName);
+int             BR_Win32_GetFocus ();
 int             BR_Win32_GetForegroundWindow ();
 int             BR_Win32_GetMainHwnd ();
 int             BR_Win32_GetMixerHwnd (bool* isDockedOut);
 void            BR_Win32_GetMonitorRectFromRect(bool workingAreaOnly, int leftIn, int topIn, int rightIn, int bottomIn, int* leftOut, int* topOut, int* rightOut, int* bottomOut);
 int             BR_Win32_GetParent (int hwnd);
+int             BR_Win32_GetPrivateProfileString (const char* sectionName, const char* keyName, const char* defaultString, const char* filePath, char* stringOut, int stringOut_sz);
 int             BR_Win32_GetWindow (int hwnd, int cmd);
 int             BR_Win32_GetWindowLong (int hwnd, int index);
 bool            BR_Win32_GetWindowRect(int hwnd, int* leftOut, int* topOut, int* rightOut, int* bottomOut);
@@ -113,6 +115,7 @@ int             BR_Win32_SetWindowLong (int hwnd, int index, int newLong);
 bool            BR_Win32_SetWindowPos (int hwnd, int hwndInsertAfter, int x, int y, int width, int height, int flags);
 int             BR_Win32_ShellExecute (int hwnd, const char* operation, const char* file, const char* parameters, const char* directoy, int showFlags);
 bool            BR_Win32_ShowWindow (int hwnd, int cmdShow);
+bool            BR_Win32_WritePrivateProfileString (const char* sectionName, const char* keyName, const char* value, const char* filePath);
 
 /******************************************************************************
 * Big description!                                                            *

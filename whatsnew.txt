@@ -1,4 +1,5 @@
-Added actions
+<strong>REAPER v5.0rc1+ is required!</strong>
+
 +Main:
  - SWS/BR: Preview take under mouse (lots of different versions, see action list)
  - SWS/BR: Options - Toggle "Send all-notes-off on stop/play"
@@ -25,34 +26,8 @@ ReaScript
 +Added functions:
  - BR_GetMidiTakePoolGUID
  - BR_GetCurrentTheme
-+Added various win32 API:
- - BR_Win32_FindComboBoxString
- - BR_Win32_FindWindowEx
- - BR_Win32_FindWindowEx
- - BR_Win32_GetConstant
- - BR_Win32_GetFocus
- - BR_Win32_GetForegroundWindow
- - BR_Win32_GetMainHwnd
- - BR_Win32_GetMixerHwnd
- - BR_Win32_GetMonitorRectFromRect
- - BR_Win32_GetParent
- - BR_Win32_GetPrivateProfileString
- - BR_Win32_GetWindow
- - BR_Win32_GetWindowLong
- - BR_Win32_GetWindowRec
- - BR_Win32_GetWindowText
- - BR_Win32_IsWindow
- - BR_Win32_IsWindowVisible
- - BR_Win32_MIDIEditor_GetActive
- - BR_Win32_SendMessage
- - BR_Win32_SetFocus
- - BR_Win32_SetForegroundWindow
- - BR_Win32_SetWindowLong
- - BR_Win32_SetWindowPos
- - BR_Win32_ShellExecute
- - BR_Win32_ShowWindow
- - BR_Win32_WritePrivateProfileString
-  - Note: on OSX, standard SWELL limitations apply. SWELL (found within http://www.cockos.com/wdl/|WDL| library created by Cockos) is used both by REAPER and SWS to wrap win32 API on OSX
++Added various win32 API (too numerous to list here, see auto-generated API documentation):
+  - Note: on OSX, standard SWELL limitations apply. SWELL (found within http://www.cockos.com/wdl/|WDL| library created by Cockos) is used both by REAPER and SWS to wrap win32 API on OSX. To get an overview of stuff in SWELL, see https://github.com/justinfrankel/WDL/blob/master/WDL/swell/swell-functions.h|here| and https://github.com/justinfrankel/WDL/blob/master/WDL/swell/swell-types.h|here|
 +Other:
  - BR_GetSetTrackSendInfo: added support for linking volume/pan to MIDI
  - Hardened BR_Env functions so they don't crash REAPER in certain scenarios (reported and explained http://forum.cockos.com/showthread.php?p=1529077#post1529077|here|)

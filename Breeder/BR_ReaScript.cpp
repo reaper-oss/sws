@@ -982,17 +982,46 @@ MediaTrack* BR_TrackAtMouseCursor (int* contextOut, double* positionOut)
 	return TrackAtMouseCursor(contextOut, positionOut);
 }
 
-int BR_Win32_FindComboBoxString (int comboBoxHwnd, const char* string)
+int BR_Win32_CB_FindString (int comboBoxHwnd, int startId, const char* string)
 {
 	if (comboBoxHwnd && string)
-		return (int)SendMessage((HWND)comboBoxHwnd, CB_FINDSTRING, (WPARAM)-1, (LPARAM)string);
+		return (int)SendMessage((HWND)comboBoxHwnd, CB_FINDSTRING, (WPARAM)startId, (LPARAM)string);
 	else
 		return CB_ERR;
+}
+
+int BR_Win32_CB_FindStringExact (int comboBoxHwnd, int startId, const char* string)
+{
+	if (comboBoxHwnd && string)
+		return (int)SendMessage((HWND)comboBoxHwnd, CB_FINDSTRINGEXACT, (WPARAM)startId, (LPARAM)string);
+	else
+		return CB_ERR;
+}
+
+void BR_Win32_ClientToScreen (int hwnd, int xIn, int yIn, int* xOut, int* yOut)
+{
+	POINT p;
+	p.x = xIn;
+	p.y = yIn;
+
+	ClientToScreen((HWND)hwnd, &p);
+	WritePtr(xOut, (int)p.x);
+	WritePtr(yOut, (int)p.y);
 }
 
 int BR_Win32_FindWindowEx (int hwndParent, int hwndChildAfter, const char* className, const char* windowName, bool searchClass, bool searchName)
 {
 	return (int)FindWindowEx((HWND)hwndParent, (HWND)hwndChildAfter, searchClass ? className : NULL, searchName ? windowName : NULL);
+}
+
+int BR_Win32_GET_X_LPARAM (int lParam)
+{
+	return GET_X_LPARAM(lParam);
+}
+
+int BR_Win32_GET_Y_LPARAM (int lParam)
+{
+	return GET_Y_LPARAM(lParam);
 }
 
 int BR_Win32_GetConstant (const char* constantName)
@@ -1049,16 +1078,32 @@ int BR_Win32_GetConstant (const char* constantName)
 	}
 
 	#ifndef _WIN32
-		#undef SW_MAXIMIZE        
-		#undef SWP_NOOWNERZORDER  
+		#undef SW_MAXIMIZE
+		#undef SWP_NOOWNERZORDER
 		#undef WS_MAXIMIZE
-		#undef WS_MAXIMIZE        
-		#undef WS_MAXIMIZEBOX     
-		#undef WS_MINIMIZEBOX     
-		#undef WS_OVERLAPPED      
-		#undef WS_OVERLAPPEDWINDOW 
+		#undef WS_MAXIMIZE
+		#undef WS_MAXIMIZEBOX
+		#undef WS_MINIMIZEBOX
+		#undef WS_OVERLAPPED
+		#undef WS_OVERLAPPEDWINDOW
 	#endif
 	return constant;
+}
+
+bool BR_Win32_GetCursorPos (int* xOut, int* yOut)
+{
+	POINT p;
+	bool result;
+	#ifdef _WIN32
+		result = !!GetCursorPos(&p);
+	#else
+		result = true;
+		GetCursorPos(&p);
+	#endif
+
+	WritePtr(xOut, (int)p.x);
+	WritePtr(yOut, (int)p.y);
+	return result;
 }
 
 int BR_Win32_GetFocus ()
@@ -1134,6 +1179,16 @@ int BR_Win32_GetWindowText (int hwnd, char* textOut, int textOut_sz)
 	return GetWindowText((HWND)hwnd, textOut, textOut_sz);
 }
 
+int BR_Win32_HIBYTE (int value)
+{
+	return HIBYTE(value);
+}
+
+int BR_Win32_HIWORD (int value)
+{
+	return HIWORD(value);
+}
+
 bool BR_Win32_IsWindow (int hwnd)
 {
 	return SWS_IsWindow((HWND)hwnd);
@@ -1144,9 +1199,55 @@ bool BR_Win32_IsWindowVisible (int hwnd)
 	return !!IsWindowVisible((HWND)hwnd);
 }
 
+int BR_Win32_LOBYTE (int value)
+{
+	return LOBYTE(value);
+}
+
+int BR_Win32_LOWORD (int value)
+{
+	return LOWORD(value);
+}
+
+int BR_Win32_MAKELONG (int low, int high)
+{
+	return MAKELONG(low, high);
+}
+
+int BR_Win32_MAKELPARAM (int low, int high)
+{
+	return MAKELPARAM(low, high);
+}
+
+int BR_Win32_MAKELRESULT (int low, int high)
+{
+	return MAKELRESULT(low, high);
+}
+
+int BR_Win32_MAKEWORD (int low, int high)
+{
+	return MAKEWORD(low, high);
+}
+
+int BR_Win32_MAKEWPARAM (int low, int high)
+{
+	return MAKEWPARAM(low, high);
+}
+
 int BR_Win32_MIDIEditor_GetActive ()
 {
 	return (int)MIDIEditor_GetActive();
+}
+
+void BR_Win32_ScreenToClient (int hwnd, int xIn, int yIn, int* xOut, int* yOut)
+{
+	POINT p;
+	p.x = xIn;
+	p.y = yIn;
+
+	ScreenToClient((HWND)hwnd, &p);
+	WritePtr(xOut, (int)p.x);
+	WritePtr(yOut, (int)p.y);
 }
 
 int BR_Win32_SendMessage(int hwnd, int msg, int lParam, int wParam)
@@ -1202,6 +1303,14 @@ bool BR_Win32_ShowWindow (int hwnd, int cmdShow)
 		ShowWindow((HWND)hwnd, cmdShow);
 		return !!hwnd;
 	#endif
+}
+
+int BR_Win32_WindowFromPoint (int x, int y)
+{
+	POINT p;
+	p.x = x;
+	p.y = y;
+	return (int)WindowFromPoint(p);
 }
 
 bool BR_Win32_WritePrivateProfileString (const char* sectionName, const char* keyName, const char* value, const char* filePath)

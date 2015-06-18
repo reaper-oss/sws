@@ -1009,6 +1009,7 @@ error:
 		IMPAPI(TimeMap2_QNToTime);
 		IMPAPI(TimeMap2_timeToBeats);
 		IMPAPI(TimeMap2_timeToQN);
+		IMPAPI(TimeMap_curFrameRate);
 		IMPAPI(TrackFX_FormatParamValue);
 		IMPAPI(TrackFX_GetByName);
 		IMPAPI(TrackFX_GetChainVisible);
@@ -1057,7 +1058,7 @@ error:
 			_snprintfSafe(txt, sizeof(txt),
 					// keep the message on a single line (for the LangPack generator)
 					__LOCALIZE_VERFMT("The version of SWS extension you have installed is incompatible with your version of REAPER.\nYou probably have a REAPER version less than %s installed.\nPlease install the latest version of REAPER from www.reaper.fm.","sws_mbox"),
-					"v5.0pre21"); // <-- update compatible version here
+					"v5.0rc1"); // <-- update compatible version here
 
 			ErrMsg(txt,false);
 			goto error;

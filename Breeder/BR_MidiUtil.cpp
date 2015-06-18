@@ -362,8 +362,8 @@ bool BR_MidiEditor::CheckVisibility (MediaItem_Take* take, int chanMsg, double p
 
 		if (!posVis)
 		{
-			double measureEnd   = GetEndOfMeasure(take, position);
-			double measureStart = GetStartOfMeasure(take, measureEnd);
+			double measureEnd   = MIDI_GetPPQPos_EndOfMeasure(take, position);
+			double measureStart = MIDI_GetPPQPos_StartOfMeasure(take, measureEnd);
 
 			/* Shrink measureStart and measureEnd to obey repeat rate */
 			if (m_filterEventPosRepeat != 0)
@@ -1183,30 +1183,6 @@ double EffectiveMidiTakeEnd (MediaItem_Take* take, bool ignoreMutedEvents, bool 
 		return (effectiveTakeEndPPQ == -1) ? itemStart : MIDI_GetProjTimeFromPPQPos(take, effectiveTakeEndPPQ);
 	}
 	return 0;
-}
-
-double GetStartOfMeasure (MediaItem_Take* take, double ppqPos)
-{
-	if (take)
-	{
-		int measure;
-		if (TimeMap2_timeToBeats(NULL, MIDI_GetProjTimeFromPPQPos(take, ppqPos), &measure, NULL, NULL, NULL) < SNM_FUDGE_FACTOR && measure > 0)
-			--measure;
-		return MIDI_GetPPQPosFromProjTime(take, TimeMap2_beatsToTime(NULL, 0, &measure));
-	}
-	return -1;
-}
-
-double GetEndOfMeasure (MediaItem_Take* take, double ppqPos)
-{
-	if (take)
-	{
-		int measure;
-		TimeMap2_timeToBeats(NULL, MIDI_GetProjTimeFromPPQPos(take, ppqPos), &measure, NULL, NULL, NULL);
-		++measure;
-		return MIDI_GetPPQPosFromProjTime(take, TimeMap2_beatsToTime(NULL, 0, &measure));
-	}
-	return -1;
 }
 
 double GetMidiSourceLengthPPQ (MediaItem_Take* take, bool accountPlayrateIfIgnoringProjTempo, bool* isMidiSource /*=NULL*/)

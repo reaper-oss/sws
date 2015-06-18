@@ -27,6 +27,7 @@
 
 #include "stdafx.h"
 #include "EditCursor.h"
+#include "../Breeder/BR_Util.h"
 
 #define SWS_EDITCURSOR_STACK_SIZE 50
 
@@ -76,15 +77,9 @@ void MoveCursorAndSel(COMMAND_T* ct)
 	else
 		iEdge = 1;
 
-	// Move the edit cursor position
-	double dQN = TimeMap2_timeToQN(NULL, dPos);
-	// Special case for left move and on grid already
-	int iQN = (int)(dQN + SWS_ADJACENT_ITEM_THRESHOLD);
-	if (ct->user == -1 && fabs(dQN - iQN) < SWS_ADJACENT_ITEM_THRESHOLD)
-		--iQN;
-	else if (ct->user == 1)
-		++iQN;
-	dPos = TimeMap2_QNToTime(NULL, (double)iQN);
+	// Set edit cursor
+	dPos = ((int)ct->user == -1) ? GetPrevGridDiv(dPos) : GetNextGridDiv(dPos);
+	SetEditCurPos(dPos, true, false);
 
 	// Extend the time sel
 	if (iEdge == -1)
@@ -93,8 +88,6 @@ void MoveCursorAndSel(COMMAND_T* ct)
 		dEnd = dPos;
 	GetSet_LoopTimeRange(true, false, &dStart, &dEnd, false);
 
-	// Set the play cursor
-	SetEditCurPos(dPos, true, false);
 }
 
 // ct->user: -1 left, 1 right

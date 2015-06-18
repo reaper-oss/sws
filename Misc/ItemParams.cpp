@@ -29,6 +29,7 @@
 #include "stdafx.h"
 #include "ItemParams.h"
 #include "TrackSel.h"
+#include "../Breeder/BR_Util.h"
 #include "../reaper/localize.h"
 
 
@@ -183,22 +184,15 @@ void InsertFromTrackName(COMMAND_T*)
 		GetSetMediaTrackInfo((MediaTrack*)tracks.Get(i), "I_SELECTED", &g_i1);
 }
 
-double QuantizeTime(double dTime, double dGrid, double dMin, double dMax)
+double QuantizeTime(double dTime, double dMin, double dMax)
 {
-	double dBeatPos = TimeMap_timeToQN(dTime);
-	dBeatPos += dGrid / 2.0;
-	dBeatPos -= fmod(dBeatPos, dGrid);
-	double dNewTime = TimeMap_QNToTime(dBeatPos);
+	double dNewTime = GetClosestGridDiv(dTime);
 	while (dNewTime <= dMin)
-	{
-		dBeatPos += dGrid;
-		dNewTime = TimeMap_QNToTime(dBeatPos);
-	}
+		dNewTime = GetNextGridDiv(dNewTime);
+
 	while (dNewTime >= dMax)
-	{
-		dBeatPos -= dGrid;
-		dNewTime = TimeMap_QNToTime(dBeatPos);
-	}
+		dNewTime = GetPrevGridDiv(dNewTime);
+
 	return dNewTime;
 }
 
@@ -210,7 +204,6 @@ double QuantizeTime(double dTime, double dGrid, double dMin, double dMax)
 void QuantizeItemEdges(COMMAND_T* t)
 {
 	// Eventually a dialog?  for now quantize to grid
-	double div = *(double*)GetConfigVar("projgriddiv");
 	for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
 	{
 		MediaItem* item = GetSelectedMediaItem(NULL, i);
@@ -226,23 +219,23 @@ void QuantizeItemEdges(COMMAND_T* t)
 		switch(t->user)
 		{
 		case 1:
-			dStart = QuantizeTime(dStart, div, -DBL_MAX, dEnd);
+			dStart = QuantizeTime(dStart, -DBL_MAX, dEnd);
 			break;
 		case 2:
-			dStart = QuantizeTime(dStart, div, -DBL_MAX, dEnd);
+			dStart = QuantizeTime(dStart, -DBL_MAX, dEnd);
 			dLen   = dEnd - dStart;
 			break;
 		case 3:
-			dEnd = QuantizeTime(dEnd, div, dStart, DBL_MAX);
+			dEnd = QuantizeTime(dEnd, dStart, DBL_MAX);
 			dStart = dEnd - dLen;
 			break;
 		case 4:
-			dEnd = QuantizeTime(dEnd, div, dStart, DBL_MAX);
+			dEnd = QuantizeTime(dEnd, dStart, DBL_MAX);
 			dLen = dEnd - dStart;
 			break;
 		case 5:
-			dStart = QuantizeTime(dStart, div, -DBL_MAX, dEnd);
-			dEnd = QuantizeTime(dEnd, div, dStart, DBL_MAX);
+			dStart = QuantizeTime(dStart, -DBL_MAX, dEnd);
+			dEnd = QuantizeTime(dEnd, dStart, DBL_MAX);
 			dLen = dEnd - dStart;
 			break;
 		}

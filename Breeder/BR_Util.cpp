@@ -211,6 +211,38 @@ void AppendLine (WDL_FastString& str, const char* line)
 	str.Append("\n");
 }
 
+void AdvanceBySecond (int direction, int& hours, int& minutes, int& seconds)
+{
+	if (direction > 0)
+	{
+		++seconds;
+		if (seconds >= 60)
+		{
+			seconds = 0;
+			++minutes;
+			if (minutes >= 60)
+			{
+				minutes = 0;
+				++hours;
+			}
+		}
+
+	}
+	else
+	{
+		--seconds;
+		if (seconds < 0)
+		{
+			seconds = 59;
+			--minutes;
+			if (minutes < 0)
+			{
+				minutes = 59;
+				--hours;
+			}
+		}
+	}
+}
 const char* strstr_last (const char* haystack, const char* needle)
 {
 	if (!haystack || !needle || *needle == '\0')
@@ -295,7 +327,7 @@ WDL_FastString GetCurrentThemeName (WDL_FastString* fullThemePath)
 {
 	char path[SNM_MAX_PATH] = "";
 	char name[SNM_MAX_PATH] = "";
-	GetPrivateProfileString("reaper", "lastthemefn4", "", path, sizeof(path), get_ini_file());	
+	GetPrivateProfileString("reaper", "lastthemefn4", "", path, sizeof(path), get_ini_file());
 	GetFilenameNoExt(path, name, sizeof(name));
 
 	if (fullThemePath)
@@ -414,6 +446,67 @@ double GetMidiOscVal (double min, double max, double step, double currentVal, in
 		}
 	}
 	return SetToBounds(returnVal, min, max);
+}
+
+double GetPositionFromTimeInfo (int hours, int minutes, int seconds, int frames)
+{
+	WDL_FastString timeString;
+	timeString.AppendFormatted(256, "%d:%d:%d:%d", hours, minutes, seconds, frames);
+
+	return parse_timestr_pos(timeString.Get(), 5);
+}
+
+void GetTimeInfoFromPosition (double position, int* hours, int* minutes, int* seconds, int* frames)
+{
+	char timeStr[512];
+	format_timestr_len(position, timeStr, sizeof(timeStr), 0, 5);
+
+	WDL_FastString str[4];
+	int i     = -1;
+	int strId = 0;
+	while (timeStr[++i])
+	{
+		if (timeStr[i] == ':') ++strId;
+		else                   str[strId].AppendRaw(&timeStr[i], 1);
+	}
+
+	WritePtr(hours,   ((str[0].GetLength() > 0) ? atoi(str[0].Get()) : 0));
+	WritePtr(minutes, ((str[1].GetLength() > 0) ? atoi(str[1].Get()) : 0));
+	WritePtr(seconds, ((str[2].GetLength() > 0) ? atoi(str[2].Get()) : 0));
+	WritePtr(frames,  ((str[3].GetLength() > 0) ? atoi(str[3].Get()) : 0));
+}
+
+void AdvanceByFrame (int direction, int& hours, int& minutes, int& seconds, int& frames)
+{
+	bool dropFrame;
+	int maxFrame = (int)TimeMap_curFrameRate(NULL, &dropFrame);
+
+	if (direction > 0)
+	{
+		++frames;
+		if (frames > maxFrame)
+		{
+			AdvanceBySecond(direction, hours, minutes, seconds);
+			frames = (dropFrame) ? ((seconds == 0 && minutes % 10 != 0) ? 2 : 0) : (0);
+		}
+	}
+	else
+	{
+		if (frames == 0 && seconds == 0 && minutes == 0 && hours == 0)
+		{
+			return;
+		}
+		else
+		{
+			int minFrame = (dropFrame) ? ((seconds == 0 && minutes % 10 != 0) ? 2 : 0) : (0);
+			--frames;
+			if (frames < minFrame)
+			{
+				AdvanceBySecond(direction, hours, minutes, seconds);
+				frames = maxFrame;
+			}
+		}
+	}
 }
 
 void GetSetLastAdjustedSend (bool set, MediaTrack** track, int* sendId, BR_EnvType* type)
@@ -1516,98 +1609,155 @@ double GetNextGridDiv (double position)
 	*  would never use - like 11/7 with grid division of 2/13...haha. As it  *
 	*  stands now, at REAPER v4.7, this function handles it all              */
 
-	// Grid dividing starts again from the measure in which tempo marker is so find location of first measure grid (obvious if grid division spans more measures)
-	int gridDivStartTempo = FindPreviousTempoMarker(position);
-	double gridDivStart;
-	if (gridDivStartTempo >= 0)
+	if (position < 0)
+		return 0;
+
+	double nextGridPosition = position;
+
+	int projgridframe; GetConfig("projgridframe", projgridframe);
+	if (projgridframe > 0)
 	{
-		if (GetTempoTimeSigMarker(NULL, gridDivStartTempo + 1, &gridDivStart, NULL, NULL, NULL, NULL, NULL, NULL))
+		int hours, minutes, seconds, frames;
+		GetTimeInfoFromPosition(position, &hours, &minutes, &seconds, &frames);
+		AdvanceByFrame(1, hours, minutes, seconds, frames);
+
+		nextGridPosition = GetPositionFromTimeInfo(hours, minutes, seconds, frames);
+	}
+	else
+	{
+		// Grid dividing starts again from the measure in which tempo marker is so find location of first measure grid (obvious if grid division spans more measures)
+		int gridDivStartTempo = FindPreviousTempoMarker(position);
+		double gridDivStart;
+		if (gridDivStartTempo >= 0)
 		{
-			if (gridDivStart > position)
-				GetTempoTimeSigMarker(NULL, gridDivStartTempo, &gridDivStart, NULL, NULL, NULL, NULL, NULL, NULL);
+			if (GetTempoTimeSigMarker(NULL, gridDivStartTempo + 1, &gridDivStart, NULL, NULL, NULL, NULL, NULL, NULL))
+			{
+				if (gridDivStart > position)
+					GetTempoTimeSigMarker(NULL, gridDivStartTempo, &gridDivStart, NULL, NULL, NULL, NULL, NULL, NULL);
+				else
+					gridDivStartTempo += 1;
+			}
 			else
-				gridDivStartTempo += 1;
+				GetTempoTimeSigMarker(NULL, gridDivStartTempo, &gridDivStart, NULL, NULL, NULL, NULL, NULL, NULL);
 		}
 		else
-			GetTempoTimeSigMarker(NULL, gridDivStartTempo, &gridDivStart, NULL, NULL, NULL, NULL, NULL, NULL);
-	}
-	else
-	{
-		gridDivStart = 0;
-		gridDivStartTempo = 0; // if position is right at project start this would be -1 even if first tempo marker exists
-	}
-
-	// Get grid division translated into current time signature
-	int gridDivStartMeasure, num, den;
-	TimeMap2_timeToBeats(0, gridDivStart, &gridDivStartMeasure, &num, NULL, &den);
-	double gridDiv = GetGridDivSafe();
-	gridDiv = (den*gridDiv) / 4;
-
-	// How much measures must pass for grid diving to start anew? (again, obvious when grid division spans more measures)
-	int measureStep = (int)(gridDiv/num);
-	if (measureStep == 0) measureStep = 1;
-
-	// Find closest measure to our position, where grid diving starts again
-	int positionMeasure;
-	TimeMap2_timeToBeats(0, position, &positionMeasure, NULL, NULL, NULL);
-	gridDivStartMeasure += (int)((positionMeasure - gridDivStartMeasure) / measureStep) * measureStep;
-	gridDivStart = TimeMap2_beatsToTime(0, 0, &gridDivStartMeasure);
-
-	// Finally find next grid position (different cases for measures and beats)
-	double nextGridPosition;
-	if (gridDiv > num)
-	{
-		int gridDivEndMeasure = gridDivStartMeasure + measureStep;
-		double gridDivEnd = TimeMap2_beatsToTime(0, 0, &gridDivEndMeasure);
-
-		// Same as before, existing tempo markers can move end measure grid (where our next grid should be) so find if that's the case
-		if (measureStep > 1)
 		{
-			double tempoPosition;
-			while (GetTempoTimeSigMarker(NULL, ++gridDivStartTempo, &tempoPosition, NULL, NULL, NULL, NULL, NULL, NULL) && tempoPosition <= gridDivEnd)
-			{
-				int currentMeasure;
-				TimeMap2_timeToBeats(0, tempoPosition, &currentMeasure, NULL, NULL, NULL);
-
-				gridDivEndMeasure = currentMeasure + ((currentMeasure == positionMeasure) ? (measureStep) : (0));
-				gridDivEnd = TimeMap2_beatsToTime(0, 0, &gridDivEndMeasure);
-			}
+			gridDivStart = 0;
+			gridDivStartTempo = 0; // if position is right at project start this would be -1 even if first tempo marker exists
 		}
 
-		nextGridPosition = TimeMap2_beatsToTime(0, 0, &gridDivEndMeasure);
-	}
-	else
-	{
-		double positionBeats = TimeMap2_timeToBeats(0, position, NULL, NULL, NULL, NULL) - TimeMap2_timeToBeats(0, gridDivStart, NULL, NULL, NULL, NULL);
-		double nextGridBeats = (int)((positionBeats + gridDiv) / gridDiv) * gridDiv;
-		while (abs(nextGridBeats - positionBeats) < 1E-6) nextGridBeats += gridDiv; // rounding errors, yuck...
-
-		nextGridPosition = TimeMap2_beatsToTime(0, nextGridBeats, &gridDivStartMeasure);
-
-		// Check it didn't pass over into next measure
-		int gridDivEndMeasure = gridDivStartMeasure + measureStep;
-		double gridDivEnd     = TimeMap2_beatsToTime(0, 0, &gridDivEndMeasure);
-		if (nextGridPosition > gridDivEnd)
-			nextGridPosition = gridDivEnd;
-	}
-
-	// Not so perfect fix for this issue: http://forum.cockos.com/project.php?issueid=5263
-	if (nextGridPosition < position)
-	{
+		// Get grid division translated into current time signature
+		int gridDivStartMeasure, num, den;
+		TimeMap2_timeToBeats(0, gridDivStart, &gridDivStartMeasure, &num, NULL, &den);
 		double gridDiv = GetGridDivSafe();
+		gridDiv = (den*gridDiv) / 4;
 
-		double tempoPosition, beat; int measure; GetTempoTimeSigMarker(NULL, gridDivStartTempo, &tempoPosition, &measure, &beat, NULL, NULL, NULL, NULL);
-		double offset =  gridDiv - fmod(TimeMap_timeToQN(TimeMap2_beatsToTime(0, 0, &measure)), gridDiv);
+		// How much measures must pass for grid diving to start anew? (again, obvious when grid division spans more measures)
+		int measureStep = (int)(gridDiv/num);
+		if (measureStep == 0) measureStep = 1;
 
-		double gridLn = TimeMap_timeToQN(tempoPosition);
-		gridLn = TimeMap_QNToTime(gridLn - offset - fmod(gridLn, gridDiv));
-		while (gridLn < position + (MIN_GRID_DIST/2))
-			gridLn = TimeMap_QNToTime(TimeMap_timeToQN(gridLn) + gridDiv);
+		// Find closest measure to our position, where grid diving starts again
+		int positionMeasure;
+		TimeMap2_timeToBeats(0, position, &positionMeasure, NULL, NULL, NULL);
+		gridDivStartMeasure += (int)((positionMeasure - gridDivStartMeasure) / measureStep) * measureStep;
+		gridDivStart = TimeMap2_beatsToTime(0, 0, &gridDivStartMeasure);
 
-		nextGridPosition = gridLn;
+		// Finally find next grid position (different cases for measures and beats)
+		if (gridDiv > num)
+		{
+			int gridDivEndMeasure = gridDivStartMeasure + measureStep;
+			double gridDivEnd = TimeMap2_beatsToTime(0, 0, &gridDivEndMeasure);
+
+			// Same as before, existing tempo markers can move end measure grid (where our next grid should be) so find if that's the case
+			if (measureStep > 1)
+			{
+				double tempoPosition;
+				while (GetTempoTimeSigMarker(NULL, ++gridDivStartTempo, &tempoPosition, NULL, NULL, NULL, NULL, NULL, NULL) && tempoPosition <= gridDivEnd)
+				{
+					int currentMeasure;
+					TimeMap2_timeToBeats(0, tempoPosition, &currentMeasure, NULL, NULL, NULL);
+
+					gridDivEndMeasure = currentMeasure + ((currentMeasure == positionMeasure) ? (measureStep) : (0));
+					gridDivEnd = TimeMap2_beatsToTime(0, 0, &gridDivEndMeasure);
+				}
+			}
+
+			nextGridPosition = TimeMap2_beatsToTime(0, 0, &gridDivEndMeasure);
+		}
+		else
+		{
+			double positionBeats = TimeMap2_timeToBeats(0, position, NULL, NULL, NULL, NULL) - TimeMap2_timeToBeats(0, gridDivStart, NULL, NULL, NULL, NULL);
+			double nextGridBeats = (int)((positionBeats + gridDiv) / gridDiv) * gridDiv;
+			while (abs(nextGridBeats - positionBeats) < 1E-6) nextGridBeats += gridDiv; // rounding errors, yuck...
+
+			nextGridPosition = TimeMap2_beatsToTime(0, nextGridBeats, &gridDivStartMeasure);
+
+			// Check it didn't pass over into next measure
+			int gridDivEndMeasure = gridDivStartMeasure + measureStep;
+			double gridDivEnd     = TimeMap2_beatsToTime(0, 0, &gridDivEndMeasure);
+			if (nextGridPosition > gridDivEnd)
+				nextGridPosition = gridDivEnd;
+		}
+
+		// Not so perfect fix for this issue: http://forum.cockos.com/project.php?issueid=5263
+		if (nextGridPosition < position)
+		{
+			double gridDiv = GetGridDivSafe();
+
+			double tempoPosition, beat; int measure; GetTempoTimeSigMarker(NULL, gridDivStartTempo, &tempoPosition, &measure, &beat, NULL, NULL, NULL, NULL);
+			double offset =  gridDiv - fmod(TimeMap_timeToQN(TimeMap2_beatsToTime(0, 0, &measure)), gridDiv);
+
+			double gridLn = TimeMap_timeToQN(tempoPosition);
+			gridLn = TimeMap_QNToTime(gridLn - offset - fmod(gridLn, gridDiv));
+			while (gridLn < position + (MIN_GRID_DIST/2))
+				gridLn = TimeMap_QNToTime(TimeMap_timeToQN(gridLn) + gridDiv);
+
+			nextGridPosition = gridLn;
+		}
 	}
 
 	return nextGridPosition;
+}
+
+double GetPrevGridDiv (double position)
+{
+	if (position <= 0)
+		return 0;
+
+	double prevGridDivPos = position;
+
+	int projgridframe; GetConfig("projgridframe", projgridframe);
+	if (projgridframe > 0)
+	{
+		int hours, minutes, seconds, frames;
+		GetTimeInfoFromPosition(position, &hours, &minutes, &seconds, &frames);
+		
+		GetHZoomLevel();
+		double currentFramePos = GetPositionFromTimeInfo(hours, minutes, seconds, frames);
+		if (IsEqual(currentFramePos, position, SNM_FUDGE_FACTOR))
+		{
+			AdvanceByFrame(-1, hours, minutes, seconds, frames);
+			prevGridDivPos = GetPositionFromTimeInfo(hours, minutes, seconds, frames);
+		}
+		else
+		{
+			prevGridDivPos = currentFramePos;
+		}
+	}
+	else
+	{
+		// GetNextGridDiv is complicated enough, so let's not reinvent it here but reuse it (while less efficient than the real deal, it's really not that slower since GetNextGridDiv() is quite optimized)
+		prevGridDivPos = TimeMap_QNToTime_abs(NULL, TimeMap_timeToQN_abs(NULL, position) - 1.5*GetGridDivSafe());
+		while (true)
+		{
+			double tmp = GetNextGridDiv(prevGridDivPos);
+			if (tmp >= position)
+				break;
+			else
+				prevGridDivPos = tmp;
+		}
+	}
+	return prevGridDivPos;
 }
 
 double GetClosestGridDiv (double position)
@@ -1617,28 +1767,53 @@ double GetClosestGridDiv (double position)
 	{
 		double prevGridDiv = GetPrevGridDiv(position);
 		if (position == GetNextGridDiv(prevGridDiv)) gridDiv = position;
-		else                                         gridDiv = GetClosestVal (position, prevGridDiv, GetNextGridDiv(position));
+		else                                         gridDiv = GetClosestVal(position, prevGridDiv, GetNextGridDiv(position));
 	}
 	return gridDiv;
 }
 
-double GetPrevGridDiv (double position)
+double GetNextGridLine (double position)
 {
-	if (position <= 0)
-		return 0;
+	double nextGridLine = 0;
 
-	// GetNextGridDiv is complicated enough, so let's not reinvent it here but reuse it (while less efficient than the real deal, it's really not that slower since GetNextGridDiv() is quite optimized)
-	double prevGridDivPos = TimeMap_QNToTime_abs(NULL, TimeMap_timeToQN_abs(NULL, position) - 1.5*GetGridDivSafe());
-	while (true)
+	if (position >= 0)
 	{
-		double tmp = GetNextGridDiv(prevGridDivPos);
-		if (tmp >= position)
-			break;
-		else
-			prevGridDivPos = tmp;
+		PreventUIRefresh(1);
+		double editCursor = GetCursorPositionEx(NULL);
+		int editCursorUndo; GetConfig("undomask", editCursorUndo);
+		SetConfig("undomask", ClearBit(editCursorUndo, 3));  // prevent edit cursor undo
+
+		SetEditCurPos(position, false, false);
+		Main_OnCommand(40647, 0); // View: Move cursor right to grid division
+		nextGridLine = GetCursorPositionEx(NULL);
+
+		SetEditCurPos(editCursor, false, false);
+		SetConfig("undomask", editCursorUndo); 
+		PreventUIRefresh(-1);
 	}
 
-	return prevGridDivPos;
+	return nextGridLine;
+}
+
+double GetPrevGridLine (double position)
+{
+	double prevGridLine = 0;
+	if (position > 0)
+	{
+		PreventUIRefresh(1);
+		double editCursor = GetCursorPositionEx(NULL);
+		int editCursorUndo; GetConfig("undomask", editCursorUndo);
+		SetConfig("undomask", ClearBit(editCursorUndo, 3));  // prevent edit cursor undo
+
+		SetEditCurPos(position, false, false);
+		Main_OnCommand(40646, 0); // View: Move cursor left to grid division
+		prevGridLine = GetCursorPositionEx(NULL);
+
+		SetEditCurPos(editCursor, false, false);
+		SetConfig("undomask", editCursorUndo); 
+		PreventUIRefresh(-1);
+	}
+	return prevGridLine;
 }
 
 double GetClosestGridLine (double position)
@@ -2777,7 +2952,7 @@ void GetMonitorRectFromPoint (const POINT& p, bool workingAreaOnly, RECT* monito
 		else
 		{
 			monitorRect->left   = 0;
-			monitorRect->top    = 0;			
+			monitorRect->top    = 0;
 			monitorRect->right  = 800;
 			monitorRect->bottom = 600;
 		}
@@ -2802,7 +2977,7 @@ void GetMonitorRectFromRect (const RECT& r, bool workingAreaOnly, RECT* monitorR
 		else
 		{
 			monitorRect->left   = 0;
-			monitorRect->top    = 0;			
+			monitorRect->top    = 0;
 			monitorRect->right  = 800;
 			monitorRect->bottom = 600;
 		}

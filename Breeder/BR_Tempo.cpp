@@ -278,10 +278,25 @@ static bool MoveGridInit (COMMAND_T* ct, bool init)
 	bool initSuccessful = true;
 	if (init)
 	{
-		GetConfig("undomask", s_editCursorUndo);
-		initSuccessful = PositionAtMouseCursor(true) != -1;
-		if (initSuccessful)
-			SetConfig("undomask", ClearBit(s_editCursorUndo, 3));
+		int projgridframe; GetConfig("projgridframe", projgridframe);
+		if (((int)ct->user == 1 || (int)ct->user == 2) && projgridframe > 0)
+		{
+			initSuccessful = false;
+			static bool s_warnUser = true;
+			if (s_warnUser)
+			{
+				int userAnswer = MessageBox(g_hwndParent, __LOCALIZE("Can't move frame grid because it's attached to time, not beats. Would you like to be warned if it happens again?", "sws_mbox"), __LOCALIZE("SWS/BR - Warning", "sws_mbox"), MB_YESNO);
+				if (userAnswer == IDNO)
+					s_warnUser = false;
+			}
+		}
+		else
+		{
+			GetConfig("undomask", s_editCursorUndo);
+			initSuccessful = PositionAtMouseCursor(true) != -1;
+			if (initSuccessful)
+				SetConfig("undomask", ClearBit(s_editCursorUndo, 3));
+		}
 	}
 	else
 	{
@@ -1316,7 +1331,7 @@ void SelectMovePartialTimeSig (COMMAND_T* ct)
 
 				position = TimeMap_QNToTime_abs(NULL, positionAbsQN);
 				double nextGridDiv = GetNextGridDiv(position);
-				double prevGridDiv = TimeMap_QNToTime(TimeMap_timeToQN(nextGridDiv) - GetGridDivSafe());
+				double prevGridDiv = GetPrevGridDiv(nextGridDiv);
 
 				double prevPosition;
 				GetTempoTimeSigMarker(NULL, i - 1, &prevPosition, NULL, NULL, NULL, NULL, NULL, NULL);

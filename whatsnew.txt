@@ -28,6 +28,8 @@ ReaScript
  - BR_GetCurrentTheme
 +Added various win32 API (too numerous to list here, see auto-generated API documentation):
   - Note: on OSX, standard SWELL limitations apply. SWELL (found within http://www.cockos.com/wdl/|WDL| library created by Cockos) is used both by REAPER and SWS to wrap win32 API on OSX. To get an overview of stuff in SWELL, see https://github.com/justinfrankel/WDL/blob/master/WDL/swell/swell-functions.h|here| and https://github.com/justinfrankel/WDL/blob/master/WDL/swell/swell-types.h|here|
++Fixes:
+ - BR_GetClosestGridDivision, BR_GetNextGridDivision, BR_GetPrevGridDivision now work properly with frame grid
 +Other:
  - BR_GetSetTrackSendInfo: added support for linking volume/pan to MIDI
  - Hardened BR_Env functions so they don't crash REAPER in certain scenarios (reported and explained http://forum.cockos.com/showthread.php?p=1529077#post1529077|here|)
@@ -37,11 +39,12 @@ Fixes
 +Hardened various actions related to takes
 +Fixed possible crash in MIDI editor actions that show/hide used CC lanes
 +Fixed various problems with envelope functionality related to volume envelope range when default volume envelope scaling was set to amplitude
++Various actions will now properly work with frame grid
 +Fixed the action <em>SWS/BR: Trim MIDI item to active content</em>
-+Fixed preview actions not working properly in certain scenarios on MIDI items (looped items, MIDI editor timebase set to source (beats) etc...)
-+Fixed <em>SWS/BR: Disable "Ignore project tempo" for selected MIDI items preserving time position of MIDI events</em> when dealing with looped items
++Preview actions now work properly in certain scenarios on MIDI items (looped items, MIDI editor timebase set to source (beats) etc...)
++<em>SWS/BR: Disable "Ignore project tempo" for selected MIDI items preserving time position of MIDI events</em> should now work properly when dealing with looped items
 +Fixed "perform until shortcut released" playback actions playing back muted tracks/items shortly after shortcut release
-+Fixed simplifying main window title not working when undoing
++Simplifying main window title now works when undoing
 +Fixed missing check mark in context menu of docked SWS dialogs next to menu item "Dock window in Docker"
 
 Other

@@ -1490,15 +1490,18 @@ bool BR_Envelope::Commit (bool force /*=false*/)
 
 			// Edit/insert cached points
 			currentCount = CountEnvelopePoints(m_envelope);
+			double playrate = (m_take) ? (GetMediaItemTakeInfo_Value(m_take, "D_PLAYRATE")) : 1;
 			for (int i = firstPointDone ? 1 : 0; i < currentCount; ++i)
 			{
 				double value = (m_properties.faderMode != 0) ? ScaleToEnvelopeMode(m_properties.faderMode, m_points[i].value) : m_points[i].value;
-				SetEnvelopePoint(m_envelope, i, &m_points[i].position, &value, &m_points[i].shape, &m_points[i].bezier, &m_points[i].selected, &g_bTrue);
+				double position = m_points[i].position * playrate;
+				SetEnvelopePoint(m_envelope, i, &position, &value, &m_points[i].shape, &m_points[i].bezier, &m_points[i].selected, &g_bTrue);
 			}
 			for (int i = currentCount; i < m_count; ++i)
 			{
 				double value = (m_properties.faderMode != 0) ? ScaleToEnvelopeMode(m_properties.faderMode, m_points[i].value) : m_points[i].value;
-				InsertEnvelopePoint(m_envelope, m_points[i].position, value, m_points[i].shape, m_points[i].bezier, m_points[i].selected, &g_bTrue);
+				double position = m_points[i].position * playrate;
+				InsertEnvelopePoint(m_envelope, position, value, m_points[i].shape, m_points[i].bezier, m_points[i].selected, &g_bTrue);
 			}
 			Envelope_SortPoints(m_envelope);
 
@@ -1673,10 +1676,12 @@ void BR_Envelope::Build (bool takeEnvelopesUseProjectTime)
 		}
 		else
 		{
+			double playrate = (m_take) ? (GetMediaItemTakeInfo_Value(m_take, "D_PLAYRATE")) : 1;
 			for (int i = 0; i < count; ++i)
 			{
 				BR_Envelope::EnvPoint point;
 				GetEnvelopePoint(m_envelope, i, &point.position, &point.value, &point.shape, &point.bezier, &point.selected);
+				point.position /=  playrate;
 
 				if (m_properties.faderMode != 0)
 					point.value = ScaleFromEnvelopeMode(m_properties.faderMode, point.value);

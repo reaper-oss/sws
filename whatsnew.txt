@@ -30,6 +30,7 @@ ReaScript
   - Note: on OSX, standard SWELL limitations apply. SWELL (found within http://www.cockos.com/wdl/|WDL| library created by Cockos) is used both by REAPER and SWS to wrap win32 API on OSX. To get an overview of stuff in SWELL, see https://github.com/justinfrankel/WDL/blob/master/WDL/swell/swell-functions.h|here| and https://github.com/justinfrankel/WDL/blob/master/WDL/swell/swell-types.h|here|
 +Fixes:
  - BR_GetClosestGridDivision, BR_GetNextGridDivision, BR_GetPrevGridDivision now work properly with frame grid
+ - BR_Env functions now account for take playrate when it's set to something other than 1
 +Other:
  - BR_GetSetTrackSendInfo: added support for linking volume/pan to MIDI
  - Hardened BR_Env functions so they don't crash REAPER in certain scenarios (reported and explained http://forum.cockos.com/showthread.php?p=1529077#post1529077|here|)
@@ -39,6 +40,7 @@ Fixes
 +Hardened various actions related to takes
 +Fixed possible crash in MIDI editor actions that show/hide used CC lanes
 +Fixed various problems with envelope functionality related to volume envelope range when default volume envelope scaling was set to amplitude
++Fixed various issues related to take envelopes when takes playrate was set to something other than 1
 +Various actions will now properly work with frame grid
 +Fixed the action <em>SWS/BR: Trim MIDI item to active content</em>
 +Preview actions now work properly in certain scenarios on MIDI items (looped items, MIDI editor timebase set to source (beats) etc...)

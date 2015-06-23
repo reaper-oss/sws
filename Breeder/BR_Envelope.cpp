@@ -55,7 +55,7 @@ static bool EnvMouseInit (COMMAND_T* ct, bool init)
 
 static int EnvMouseUndo (COMMAND_T* ct)
 {
-	return (g_envMouseDidOnce) ? (UNDO_STATE_TRACKCFG) : (0);
+	return (g_envMouseDidOnce) ? (UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS) : (0);
 }
 
 static HCURSOR EnvMouseCursor (COMMAND_T* ct, int window)
@@ -758,7 +758,7 @@ void CursorToEnv1 (COMMAND_T* ct)
 		}
 
 		SetEditCurPos(cTime + takeEnvStartPos, true, false);
-		Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG);
+		Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS |UNDO_STATE_MISCCFG);
 	}
 	FreeHeapPtr(envState);
 }
@@ -793,7 +793,7 @@ void CursorToEnv2 (COMMAND_T* ct)
 
 		SetEditCurPos(targetPos, true, false);
 		envelope.Commit();
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS |UNDO_STATE_MISCCFG, -1);
 	}
 }
 
@@ -819,7 +819,7 @@ void SelNextPrevEnvPoint (COMMAND_T* ct)
 			envelope.GetPoint(((int)ct->user > 0) ? (id-1) : (id+1), &prevPos, NULL, NULL, NULL);
 			MoveArrangeToTarget(pos, prevPos);
 
-			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS, -1);
 		}
 	}
 }
@@ -852,7 +852,7 @@ void ExpandEnvSel (COMMAND_T* ct)
 	{
 		if (envelope.CountConseq() == 1)
 			envelope.MoveArrangeToPoint (id, ((int)ct->user > 0) ? (id-1) : (id+1));
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS, -1);
 	}
 }
 
@@ -870,7 +870,7 @@ void ExpandEnvSelEnd (COMMAND_T* ct)
 	if (envelope.Commit())
 	{
 		envelope.MoveArrangeToPoint(id, ((int)ct->user > 0) ? (id-1) : (id+1));
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS, -1);
 	}
 }
 
@@ -902,7 +902,7 @@ void ShrinkEnvSel (COMMAND_T* ct)
 	{
 		if (envelope.CountConseq() == 1)
 			envelope.MoveArrangeToPoint (((int)ct->user > 0) ? (id-1) : (id+1), id);
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS, -1);
 	}
 }
 
@@ -920,7 +920,7 @@ void ShrinkEnvSelEnd (COMMAND_T* ct)
 	if (envelope.Commit())
 	{
 		envelope.MoveArrangeToPoint (((int)ct->user > 0) ? (id-1) : (id+1), id);
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS, -1);
 	}
 }
 
@@ -1035,7 +1035,7 @@ void EnvPointsGrid (COMMAND_T* ct)
 	}
 
 	if (envelope.Commit())
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS, -1);
 }
 
 void CreateEnvPointsGrid (COMMAND_T* ct)
@@ -1120,7 +1120,7 @@ void CreateEnvPointsGrid (COMMAND_T* ct)
 
 
 	if (envelope.Commit())
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS, -1);
 }
 
 void EnvPointsToCC (COMMAND_T* ct)
@@ -1154,7 +1154,7 @@ void ShiftEnvSelection (COMMAND_T* ct)
 	}
 
 	if (envelope.Commit())
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS, -1);
 }
 
 void PeaksDipsEnv (COMMAND_T* ct)
@@ -1186,7 +1186,7 @@ void PeaksDipsEnv (COMMAND_T* ct)
 	}
 
 	if (envelope.Commit())
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS, -1);
 }
 
 void SelEnvTimeSel (COMMAND_T* ct)
@@ -1217,7 +1217,7 @@ void SelEnvTimeSel (COMMAND_T* ct)
 		}
 	}
 	if (envelope.Commit())
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS, -1);
 }
 
 void SetEnvValToNextPrev (COMMAND_T* ct)
@@ -1253,7 +1253,7 @@ void SetEnvValToNextPrev (COMMAND_T* ct)
 	}
 
 	if (envelope.Commit())
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS, -1);
 }
 
 void MoveEnvPointToEditCursor (COMMAND_T* ct)
@@ -1305,7 +1305,7 @@ void MoveEnvPointToEditCursor (COMMAND_T* ct)
 		{
 			envelope.SetPoint(id, &cursor, NULL, NULL, NULL, true);
 			if (envelope.Commit())
-				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
+				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS, -1);
 		}
 	}
 }
@@ -1372,7 +1372,7 @@ void Insert2EnvPointsTimeSelection (COMMAND_T* ct)
 	PreventUIRefresh(-1);
 
 	if (update)
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG | UNDO_STATE_TRACKCFG, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG | UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS, -1);
 }
 
 void CopyEnvPoints (COMMAND_T* ct)
@@ -1482,7 +1482,7 @@ void CopyEnvPoints (COMMAND_T* ct)
 	PreventUIRefresh(-1);
 
 	if (update)
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS, -1);
 
 	if (triedToCopyToTempo)
 		MessageBox(g_hwndParent, __LOCALIZE("Can't copy to tempo envelope", "sws_mbox"), __LOCALIZE("SWS/BR - Warning", "sws_mbox"), MB_OK);
@@ -1525,7 +1525,7 @@ void FitEnvPointsToTimeSel (COMMAND_T* ct)
 	}
 
 	if (envelope.Commit())
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS, -1);
 }
 
 void CreateEnvPointMouse (COMMAND_T* ct)
@@ -1554,14 +1554,14 @@ void CreateEnvPointMouse (COMMAND_T* ct)
 				if (SetTempoTimeSigMarker(NULL, -1, position, -1, -1, value, 0, 0, !envelope.GetDefaultShape()))
 				{
 					UpdateTimeline();
-					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);
+					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS | UNDO_STATE_MISCCFG, -1);
 				}
 			}
 			else
 			{
 				envelope.CreatePoint(envelope.CountPoints(), position, value, envelope.GetDefaultShape(), 0, false, true);
 				if (envelope.Commit())
-					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
+					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS, -1);
 			}
 		}
 	}
@@ -1583,7 +1583,7 @@ void IncreaseDecreaseVolEnvPoints (COMMAND_T* ct)
 			}
 		}
 		if (envelope.Commit())
-			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS, -1);
 	}
 }
 

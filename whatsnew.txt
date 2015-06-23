@@ -4,6 +4,8 @@ New actions
 +Main:
  - Resources: brought back all "prompt for slot" actions
  - SWS/BR: Preview take under mouse (lots of different versions, see action list)
+ - SWS/BR: Hide all but selected track envelope for all/selected tracks (except envelopes in separate lanes)
+ - SWS/BR: Hide all but selected track envelope for all/selected tracks (except envelopes in track lanes)
  - SWS/BR: Options - Toggle "Send all-notes-off on stop/play"
  - SWS/BR: Options - Toggle "Reset pitch on stop/play"
  - SWS/BR: Options - Toggle "Reset CC on stop/play"

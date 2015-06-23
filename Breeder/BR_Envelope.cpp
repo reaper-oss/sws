@@ -1734,38 +1734,99 @@ void RestoreEnvSelSlot (COMMAND_T* ct)
 ******************************************************************************/
 void ShowActiveTrackEnvOnly (COMMAND_T* ct)
 {
-	TrackEnvelope* env = GetSelectedTrackEnvelope(NULL);
-	if ((int)ct->user == 1 && !CountSelectedTracks(NULL))
+	TrackEnvelope* envPtr = GetSelectedTrackEnvelope(NULL);
+	int trackCount = ((int)ct->user > 0) ? (CountTracks(NULL)) : (CountSelectedTracks(NULL));
+	if (trackCount <= 0)
 		return;
-	BR_Envelope envelope(env);
 
-	Undo_BeginBlock2(NULL);
+	WDL_PtrList_DeleteOnDestroy<BR_Envelope> envelopes;
 
-	// If envelope has only one point, Reaper will not show it after hiding all
-	// envelopes and committing with vis = 1, so we create another artificial point
-	bool flag = false;
-	if (envelope.CountPoints() <= 1)
+	// First save selected envelope
+//	if (envPtr)
 	{
-		int id = envelope.CountPoints() - 1;
-		double position, value; int shape;
-		envelope.GetPoint(id, &position, &value, &shape, NULL);
-		envelope.CreatePoint(id+1, position+1, value, shape, 0, false);
-		envelope.Commit();
-		flag = true;
+		if (BR_Envelope* envelope = new (nothrow) BR_Envelope(envPtr))
+		{
+			envelope->SetVisible(true);
+				
+			// If envelope has only one point, REAPER will not show it after hiding all
+			// envelopes and committing with vis = 1, so we create another artificial point
+			if (envelope->CountPoints() <= 1)
+			{
+				double position, value; int shape;
+				envelope->GetPoint(envelope->CountPoints() - 1, &position, &value, &shape, NULL);
+				envelope->CreatePoint(envelope->CountPoints(), position+1, value, shape, 0, false);
+				envelope->SetData((void*)2);
+			}
+			envelopes.Add(envelope);
+		}
 	}
 
-	PreventUIRefresh(1);
-	if ((int)ct->user == 0)
-		Main_OnCommand(41150, 0); // hide all
-	else
-		Main_OnCommand(40889 ,0); // hide for selected tracks
+	// Check other envelopes 
+	if (abs((int)ct->user) != 1)
+	{
+		for (int i = 0; i < trackCount; ++i)
+		{			
+			MediaTrack* track = ((int)ct->user > 0) ? (GetTrack(NULL, i)) : (GetSelectedTrack(NULL, i));
+			int envelopeCount = CountTrackEnvelopes(track);
+			for (int j = 0; j < envelopeCount; ++j)
+			{
+				TrackEnvelope* currentEnvPtr = GetTrackEnvelope(track, j);
+				if (currentEnvPtr != envPtr)
+				{
+					if (BR_Envelope* envelope = new (nothrow) BR_Envelope(currentEnvPtr))
+					{
+						envelopes.Add(envelope);
+						if (envelope->IsVisible() && ((abs((int)ct->user) == 2) ? (envelope->IsInLane()) : (!envelope->IsInLane())))
+						{
+							envelope->SetVisible(true);
+							if (envelope->CountPoints() <= 1)
+							{
+								double position, value; int shape;
+								envelope->GetPoint(envelope->CountPoints() - 1, &position, &value, &shape, NULL);
+								envelope->CreatePoint(envelope->CountPoints(), position+1, value, shape, 0, false);
+								envelope->SetData((void*)2);
+							}
+						}
+						else
+						{
+							envelopes.Delete(envelopes.GetSize() - 1, true);
+						}
+					}
+				}
+			}
+		}
+	}
 
-	if (flag)
-		envelope.DeletePoint(envelope.CountPoints()-1);
+	if (envelopes.GetSize() > 0 || (!envPtr && abs((int)ct->user) == 1))
+	{
+		Undo_BeginBlock2(NULL);
+		PreventUIRefresh(1);
 
-	envelope.Commit(true);
-	PreventUIRefresh(-1);
-	Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG);
+		// Commit with fake point so we don't loose the envelope
+		for (int i = 0; i < envelopes.GetSize(); ++i)
+		{
+			if (envelopes.Get(i)->GetData() == (void*)2)
+				envelopes.Get(i)->Commit(true);
+		}
+
+		// Hide envelopes using actions
+		if ((int)ct->user > 0)
+			Main_OnCommand(41150, 0); // hide all
+		else
+			Main_OnCommand(40889 ,0); // hide for selected tracks
+
+		for (int i = 0; i < envelopes.GetSize(); ++i)
+		{
+			BR_Envelope* envelope = envelopes.Get(i);
+			if (envelope->GetData() == (void*)2)
+				envelope->DeletePoint(envelope->CountPoints()-1);
+			envelope->Commit(true);
+		}
+
+		SetCursorContext(2, envPtr); // hiding envelopes with actions will unselect current envelope
+		PreventUIRefresh(-1);
+		Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG);	
+	}
 }
 
 void ShowLastAdjustedSendEnv (COMMAND_T* ct)
@@ -1780,7 +1841,7 @@ void ShowLastAdjustedSendEnv (COMMAND_T* ct)
 	if (track)
 	{
 		if (ToggleShowSendEnvelope(track, sendId, type))
-			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);
 	}
 }
 
@@ -1833,7 +1894,7 @@ void ShowHideFxEnv (COMMAND_T* ct)
 		}
 	}
 	if (update)
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);
 	PreventUIRefresh(-1);
 }
 
@@ -1923,6 +1984,6 @@ void ShowHideSendEnv (COMMAND_T* ct)
 	}
 
 	if (update)
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);
 	PreventUIRefresh(-1);
 }

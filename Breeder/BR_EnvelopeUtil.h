@@ -127,6 +127,8 @@ public:
 	MediaItem_Take* GetTake ();
 	MediaTrack* GetParent ();
 	TrackEnvelope* GetPointer ();
+	void SetData (void* data); // used to save and
+	void* GetData ();           // get arbitrary data
 
 	/* Get envelope properties */
 	BR_EnvType Type ();
@@ -235,6 +237,7 @@ private:
 	int m_count;
 	int m_countSel;
 	BR_EnvType m_takeEnvType;
+	void* m_data;
 	vector<BR_Envelope::EnvPoint> m_points;
 	vector<int> m_pointsSel;
 	vector<IdPair> m_pointsConseq;

@@ -1,6 +1,8 @@
 <strong>REAPER v5.0rc1+ is required!</strong>
 
+New actions
 +Main:
+ - Resources: brought back all "prompt for slot" actions
  - SWS/BR: Preview take under mouse (lots of different versions, see action list)
  - SWS/BR: Options - Toggle "Send all-notes-off on stop/play"
  - SWS/BR: Options - Toggle "Reset pitch on stop/play"

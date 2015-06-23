@@ -519,12 +519,6 @@ static COMMAND_T s_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Dump action list (custom actions only)" }, "S&M_DUMP_CUST_ACTION_LIST", DumpActionList, NULL, 5},
 
 
-//!WANT_LOCALIZE_1ST_STRING_END
-
-
-	// Deprecated, unreleased, etc... -----------------------------------------
-#ifdef _SNM_MISC
-	// deprecated prompt actions (old stuff, no GUI at that time..)
 	{ { DEFACCEL, "SWS/S&M: Resources - Clear FX chain slot, prompt for slot" }, "S&M_CLRFXCHAINSLOT", ResourcesClearSlotPrompt, NULL, SNM_SLOT_FXC},
 	{ { DEFACCEL, "SWS/S&M: Resources - Clear track template slot, prompt for slot" }, "S&M_CLR_TRTEMPLATE_SLOT", ResourcesClearSlotPrompt, NULL, SNM_SLOT_TR},
 	{ { DEFACCEL, "SWS/S&M: Resources - Clear project template slot, prompt for slot" }, "S&M_CLR_PRJTEMPLATE_SLOT", ResourcesClearSlotPrompt, NULL, SNM_SLOT_PRJ},
@@ -548,7 +542,12 @@ static COMMAND_T s_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Resources - Open project, prompt for slot" }, "S&M_APPLY_PRJTEMPLATEp", LoadOrSelectProjectSlot, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Resources - Open project, prompt for slot (new tab)" }, "S&M_NEWTAB_PRJTEMPLATEp", LoadOrSelectProjectTabSlot, NULL, -1},
 
-	// deprecated
+
+  //!WANT_LOCALIZE_1ST_STRING_END
+
+
+  // Deprecated, unreleased, etc... -----------------------------------------
+#ifdef _SNM_MISC
 	{ { DEFACCEL, "SWS/S&M: Resources - Project loader/selecter: configuration" }, "S&M_PRJ_LOADER_CONF", ProjectLoaderConf, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Resources - Project loader/selecter: next (cycle)" }, "S&M_PRJ_LOADER_NEXT", LoadOrSelectNextPreviousProjectSlot, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Resources - Project loader/selecter: previous (cycle)" }, "S&M_PRJ_LOADER_PREV", LoadOrSelectNextPreviousProjectSlot, NULL, -1},

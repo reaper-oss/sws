@@ -37,6 +37,7 @@ ReaScript
 Fixes
 +Fixed Groove tool crash vs duplicate Control Change events (report http://forum.cockos.com/showpost.php?p=1519436&postcount=111|here|)
 +Hardened various actions related to takes
++Potential OSC output fixes (Region Playlist, Live Configs)
 +Fixed possible crash in MIDI editor actions that show/hide used CC lanes
 +Fixed various problems with envelope functionality related to volume envelope range when default volume envelope scaling was set to amplitude
 +Various actions will now properly work with frame grid

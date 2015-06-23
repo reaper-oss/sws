@@ -451,8 +451,9 @@ int GetUserPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL
 			const char* p = NULL;
 #ifdef _WIN32
 			p = stristr(buf, ".dll");
+			if (!p) p = stristr(buf, ".vst"); // e.g. vst3
 #else
-			p = stristr(buf, ".vst"); // standard vst or ".vst.dylib" (e.g. reaeq)
+			p = stristr(buf, ".vst"); // standard vst, vst3, or ".vst.dylib" (e.g. reaeq)
 #endif
 			if (p)
 				buf[(int)(p-buf)] = '\0';

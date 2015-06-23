@@ -30,8 +30,9 @@ ReaScript
 +Added functions:
  - BR_GetMidiTakePoolGUID
  - BR_GetCurrentTheme
-+Added various win32 API (too numerous to list here, see auto-generated API documentation):
-  - Note: on OSX, standard SWELL limitations apply. SWELL (found within http://www.cockos.com/wdl/|WDL| library created by Cockos) is used both by REAPER and SWS to wrap win32 API on OSX. To get an overview of stuff in SWELL, see https://github.com/justinfrankel/WDL/blob/master/WDL/swell/swell-functions.h|here| and https://github.com/justinfrankel/WDL/blob/master/WDL/swell/swell-types.h|here|
+ - BR_Win32_GetPrivateProfileString
+ - BR_Win32_ShellExecute
+ - BR_Win32_WritePrivateProfileString
 +Fixes:
  - BR_GetClosestGridDivision, BR_GetNextGridDivision, BR_GetPrevGridDivision now work properly with frame grid
  - BR_Env functions now account for take playrate when it's set to something other than 1
@@ -51,13 +52,13 @@ Fixes
 +Preview actions now work properly in certain scenarios on MIDI items (looped items, MIDI editor timebase set to source (beats) etc...)
 +<em>SWS/BR: Disable "Ignore project tempo" for selected MIDI items preserving time position of MIDI events</em> should now work properly when dealing with looped items
 +Fixed "perform until shortcut released" playback actions playing back muted tracks/items shortly after shortcut release
-+Simplifying main window title now works when undoing
 +Fixed missing check mark in context menu of docked SWS dialogs next to menu item "Dock window in Docker"
 
 Other
 +When using "perform until shortcut released" playback actions, create undo point for restoring track/item mute/solo state in case of project changes during playback
 +Renamed various actions (removed (s) prefix - this way it's more uniform with rest of the REAPER and easier to search in the action list)
 +Disabled Marker Actions while rendering
++Removed actions to simplify title bar. It wasn't reliable in certain situations and may not be morally right :)
 
 !v2.7.1 #0 pre-release build (May 7, 2015)
 

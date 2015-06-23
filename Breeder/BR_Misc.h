@@ -80,12 +80,6 @@ void PreviewItemAtMouse (COMMAND_T*);
 void AdjustPlayrate (COMMAND_T*, int, int, int, HWND);
 
 /******************************************************************************
-* Commands: Misc - Title bar display options                                  *
-******************************************************************************/
-void TitleBarDisplayOptionsInitExit (bool init);
-void SetTitleBarDisplayOptions (COMMAND_T*);
-
-/******************************************************************************
 * Commands: Misc - Project track selection action                             *
 ******************************************************************************/
 int ProjectTrackSelInitExit (bool init);

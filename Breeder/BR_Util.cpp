@@ -1821,11 +1821,11 @@ double GetClosestGridLine (double position)
 	/* All other GridLine (but not GridDiv) functions   *
 	*  are depending on this, but it appears SnapToGrid *
 	*  is broken in certain non-real-world testing      *
-	*  situations, so it should probably we rewritten   *
+	*  situations, so it should probably be rewritten   *
 	*  using the stuff from GetNextGridDiv()            */
 
 	int snap; GetConfig("projshowgrid", snap);
-	SetConfig("projshowgrid", ClearBit(snap, 8));
+	SetConfig("projshowgrid", snap & (~0x8100)); // enable snap and snapping following grid visibility
 
 	double grid = SnapToGrid(NULL, position);
 	SetConfig("projshowgrid", snap);

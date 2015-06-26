@@ -1731,7 +1731,7 @@ double GetPrevGridDiv (double position)
 	{
 		int hours, minutes, seconds, frames;
 		GetTimeInfoFromPosition(position, &hours, &minutes, &seconds, &frames);
-		
+
 		GetHZoomLevel();
 		double currentFramePos = GetPositionFromTimeInfo(hours, minutes, seconds, frames);
 		if (IsEqual(currentFramePos, position, SNM_FUDGE_FACTOR))
@@ -1788,7 +1788,7 @@ double GetNextGridLine (double position)
 		nextGridLine = GetCursorPositionEx(NULL);
 
 		SetEditCurPos(editCursor, false, false);
-		SetConfig("undomask", editCursorUndo); 
+		SetConfig("undomask", editCursorUndo);
 		PreventUIRefresh(-1);
 	}
 
@@ -1810,7 +1810,7 @@ double GetPrevGridLine (double position)
 		prevGridLine = GetCursorPositionEx(NULL);
 
 		SetEditCurPos(editCursor, false, false);
-		SetConfig("undomask", editCursorUndo); 
+		SetConfig("undomask", editCursorUndo);
 		PreventUIRefresh(-1);
 	}
 	return prevGridLine;

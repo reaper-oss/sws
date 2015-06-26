@@ -19,6 +19,9 @@ New actions
  - SWS/wol: Adjust envelope or track height under mouse cursor (MIDI CC relative/mousewheel)
 +MIDI editor:
  - SWS/BR: Show only used CC lanes with selected events (detect 14-bit)
+ - SWS/BR: Move last clicked CC lane up/down
+ - SWS/BR: Set all CC lanes' height to x pixel
+ - SWS/BR: Increase/Decrease all CC lanes' height by x pixel
  - SWS/BR: Delete all events in last clicked lane
  - SWS/BR: Delete selected events in last clicked lane
 +Main and MIDI editor:

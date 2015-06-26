@@ -730,7 +730,7 @@ void BR_MidiCCEvents::AddEvent (double ppqPos, int msg2, int msg3, int channel)
 	event.msg3        = msg3;
 	event.channel     = channel;
 	event.mute        = false;
-	
+
 	if (m_sourcePpqStart == -1)
 	{
 		m_sourcePpqStart = ppqPos;
@@ -987,10 +987,10 @@ bool BR_MidiToggleCCLane::Hide (void* midiEditor, int laneToKeep, int editorHeig
 					LineParser lp(false);
 
 					// Remove lanes
-					bool lanesRemoved = false;
 					vector<WDL_FastString> savedCCLanes;
-					int laneId = 0;
 					WDL_FastString lineLane;
+					bool lanesRemoved = false;
+					int laneId = 0;
 					while (int position = ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "SOURCE", "VELLANE", laneId, -1, &lineLane))
 					{
 						WDL_FastString currentLane;
@@ -1008,7 +1008,16 @@ bool BR_MidiToggleCCLane::Hide (void* midiEditor, int laneToKeep, int editorHeig
 							if ((editorHeight != -1 && editorHeight != lp.gettoken_int(2)) || (inlineHeight != -1 && inlineHeight != lp.gettoken_int(3)))
 							{
 								WDL_FastString newLane;
-								newLane.AppendFormatted(256, "%s %d %d %d\n", "VELLANE", laneToKeep, (editorHeight == -1) ? lp.gettoken_int(2) : editorHeight, (inlineHeight == -1) ? lp.gettoken_int(3) : inlineHeight);
+								for (int i = 0; i < lp.getnumtokens(); ++i)
+								{
+									if      (i == 1) newLane.AppendFormatted(256, "%d", laneToKeep);
+									else if (i == 2) newLane.AppendFormatted(256, "%d", ((editorHeight == -1) ? lp.gettoken_int(2) : editorHeight));
+									else if (i == 3) newLane.AppendFormatted(256, "%d", ((inlineHeight == -1) ? lp.gettoken_int(3) : inlineHeight));
+									else             newLane.Append(lp.gettoken_str(i));
+									newLane.Append(" ");
+								}
+								newLane.Append("\n");
+
 								ptk.ReplaceLine(position - 1, newLane.Get());
 								lanesRemoved = true;
 							}

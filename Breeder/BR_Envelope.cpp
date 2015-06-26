@@ -1747,7 +1747,7 @@ void ShowActiveTrackEnvOnly (COMMAND_T* ct)
 		if (BR_Envelope* envelope = new (nothrow) BR_Envelope(envPtr))
 		{
 			envelope->SetVisible(true);
-				
+
 			// If envelope has only one point, REAPER will not show it after hiding all
 			// envelopes and committing with vis = 1, so we create another artificial point
 			if (envelope->CountPoints() <= 1)
@@ -1761,11 +1761,11 @@ void ShowActiveTrackEnvOnly (COMMAND_T* ct)
 		}
 	}
 
-	// Check other envelopes 
+	// Check other envelopes
 	if (abs((int)ct->user) != 1)
 	{
 		for (int i = 0; i < trackCount; ++i)
-		{			
+		{
 			MediaTrack* track = ((int)ct->user > 0) ? (GetTrack(NULL, i)) : (GetSelectedTrack(NULL, i));
 			int envelopeCount = CountTrackEnvelopes(track);
 			for (int j = 0; j < envelopeCount; ++j)
@@ -1825,7 +1825,7 @@ void ShowActiveTrackEnvOnly (COMMAND_T* ct)
 
 		SetCursorContext(2, envPtr); // hiding envelopes with actions will unselect current envelope
 		PreventUIRefresh(-1);
-		Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG);	
+		Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG);
 	}
 }
 

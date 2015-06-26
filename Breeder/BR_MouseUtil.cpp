@@ -585,11 +585,6 @@ bool BR_MouseInfo::SetDetectedCCLaneAsLastClicked ()
 			else
 			{
 				hwnd = m_midiEditorPianoWnd ? m_midiEditorPianoWnd : GetPianoView(m_mouseInfo.midiEditor);
-				if (!m_midiEditorPianoWnd)
-				{
-					RECT r; GetClientRect(hwnd, &r);
-					point.x = r.left - r.right;
-				}
 			}
 
 			// Simulate mouse click
@@ -928,7 +923,7 @@ bool BR_MouseInfo::GetContextMIDI (POINT p, HWND hwnd, BR_MouseInfo::MouseInfo& 
 							mouseInfo.ccLane = midiEditor.GetCCLane(i);
 							mouseInfo.ccLaneId = i;
 							m_ccLaneClickPoint.y = ccStart + MIDI_CC_LANE_CLICK_Y_OFFSET;
-							m_ccLaneClickPoint.x = (cursorSegment == MIDI_WND_KEYBOARD) ? (r.left - r.right) : 0;
+							m_ccLaneClickPoint.x = 0;
 							m_midiEditorPianoWnd = (cursorSegment == MIDI_WND_KEYBOARD) ? segmentHwnd        : NULL;
 
 							// Get CC value at Y position

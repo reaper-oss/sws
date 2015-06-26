@@ -343,8 +343,9 @@ void ME_CCEventAtEditCursor (COMMAND_T* ct, int val, int valhw, int relmode, HWN
 
 void ME_ShowUsedCCLanesDetect14Bit (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
-	if (MediaItem_Take* take = MIDIEditor_GetTake(MIDIEditor_GetActive()))
-	{
+	MediaItem_Take* take = MIDIEditor_GetTake(MIDIEditor_GetActive());
+	if (take && ValidatePtr(take, "MediaItem_Take*")) // RprMidiCCLane constructor may crash if take is invalid (empty midi editor can return non-NULL pointer for take that's not there anymore)
+	{	
 		RprTake rprTake(take);
 		if (RprMidiCCLane* laneView = new (nothrow) RprMidiCCLane(rprTake))
 		{
@@ -388,9 +389,8 @@ void ME_CreateCCLaneLastClicked (COMMAND_T* ct, int val, int valhw, int relmode,
 {
 	bool updated = false;
 	void* editor = SWS_MIDIEditor_GetActive();
-	MediaItem_Take* take = editor ? SWS_MIDIEditor_GetTake(editor) : NULL;
 
-	if (take)
+	if (MediaItem_Take* take = SWS_MIDIEditor_GetTake(editor))
 	{
 		MediaItem* item = GetMediaItemTake_Item(take);
 		int takeId      = GetTakeId(take, item);
@@ -436,21 +436,250 @@ void ME_CreateCCLaneLastClicked (COMMAND_T* ct, int val, int valhw, int relmode,
 	}
 	if (updated)
 	{
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
-
 		BR_MidiEditor midiEditor(editor);
 		if (midiEditor.IsValid())
+			midiEditor.SetCCLaneLastClicked(0);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+	}
+}
+
+void ME_MoveCCLaneUpDown (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
+{
+	void* editor = SWS_MIDIEditor_GetActive();
+	int lastClickedLane = GetLastClickedVelLane(editor);
+
+	MediaItem_Take* take = SWS_MIDIEditor_GetTake(editor);
+	if (take && lastClickedLane != -2)
+	{
+		MediaItem* item = GetMediaItemTake_Item(take);
+		int takeId = GetTakeId(take, item);
+		if (takeId >= 0)
 		{
-			if (HWND keyboardWnd = GetPianoView(midiEditor.GetEditor()))
+			SNM_TakeParserPatcher p(item, CountTakes(item));
+			WDL_FastString takeChunk;
+			int tkPos, tklen;
+			if (p.GetTakeChunk(takeId, &takeChunk, &tkPos, &tklen))
 			{
-				RECT r; GetClientRect(keyboardWnd, &r);
-				int ccStart = abs(r.bottom - r.top) - midiEditor.GetCCLanesFullheight(true) + 1;
+				SNM_ChunkParserPatcher ptk(&takeChunk, false);
+				LineParser lp(false);
 
-				POINT point;
-				point.y = ccStart + MIDI_CC_LANE_CLICK_Y_OFFSET;
-				point.x = r.left - r.right;
-				SimulateMouseClick(hwnd, point, true);
+				// Remove all lanes from the chunk and save them
+				vector<WDL_FastString> savedLanes;
+				vector<pair<int,int> > savedLaneHeights;
+				WDL_FastString lineLane;
+				int firstPos = 0;
+				int laneCount = 0;
+				int lastClickedLaneId = -1;
+				while (int position = ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "SOURCE", "VELLANE", 0, -1, &lineLane))
+				{
+					if (!firstPos)
+						firstPos = position - 1;
+					++laneCount;
 
+					lp.parse(lineLane.Get());
+					ptk.RemoveLine("SOURCE", "VELLANE", 1, 0);
+					if ((lp.gettoken_int(1) == lastClickedLane && lastClickedLaneId == -1) || (lp.gettoken_int(1) != lastClickedLane))
+					{
+						savedLanes.push_back(lineLane);
+						if (lp.gettoken_int(1) == lastClickedLane)
+							lastClickedLaneId = (int)savedLanes.size() - 1;
+						savedLaneHeights.push_back(make_pair(lp.gettoken_int(2), lp.gettoken_int(3)));
+					}
+					lineLane.DeleteSub(0, lineLane.GetLength());
+				}
+
+				// Swap lanes and restore them back to chunk
+				if (laneCount > 1)
+				{
+					int newId = lastClickedLaneId + (((int)ct->user > 0) ? -1 : 1); // reverse because of reverse_iterator
+					if (CheckBounds(newId, 0, (int)savedLanes.size() - 1))
+					{
+						swap(savedLanes[lastClickedLaneId], savedLanes[newId]);
+					}
+					else
+					{
+						WDL_FastString lane = savedLanes[lastClickedLaneId];
+						savedLanes.erase(savedLanes.begin() + lastClickedLaneId);
+						savedLanes.insert(((newId < 0) ? savedLanes.end() : savedLanes.begin()), lane);
+					}
+
+					// Easier to insert in reverse (so we can always reuse firstPos)
+					for (vector<WDL_FastString>::reverse_iterator it = savedLanes.rbegin(); it != savedLanes.rend() ; ++it)
+						ptk.GetChunk()->Insert(it->Get(), firstPos);
+
+					// Make sure lane heights are kept constant
+					if (abs((int)ct->user) == 2)
+					{
+						WDL_FastString lineLane;
+						int laneId = 0;
+						while (int position = ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "SOURCE", "VELLANE", laneId, -1, &lineLane))
+						{
+
+							lp.parse(lineLane.Get());
+							WDL_FastString newLane;
+							for (int i = 0; i < lp.getnumtokens(); ++i)
+							{
+								if      (i == 2) newLane.AppendFormatted(256, "%d", savedLaneHeights[laneId].first);
+								else if (i == 3) newLane.AppendFormatted(256, "%d", savedLaneHeights[laneId].second);
+								else             newLane.Append(lp.gettoken_str(i));
+								newLane.Append(" ");
+							}
+							newLane.Append("\n");
+							ptk.ReplaceLine(position - 1, newLane.Get());
+
+							lineLane.DeleteSub(0, lineLane.GetLength());
+							++laneId;
+						}
+					}
+
+					// Update chunk
+					if (p.ReplaceTake(tkPos, tklen, ptk.GetChunk()))
+					{
+						BR_MidiEditor midiEditor(editor);
+						if (midiEditor.IsValid())
+							midiEditor.SetCCLaneLastClicked(midiEditor.FindCCLane(lastClickedLane));
+						Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+					}
+				}
+			}
+		}
+	}
+}
+
+void ME_SetAllCCLanesHeight (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
+{
+	void* editor = SWS_MIDIEditor_GetActive();
+	if (MediaItem_Take* take = SWS_MIDIEditor_GetTake(editor))
+	{
+		MediaItem* item = GetMediaItemTake_Item(take);
+		int takeId = GetTakeId(take, item);
+		if (takeId >= 0)
+		{
+			SNM_TakeParserPatcher p(item, CountTakes(item));
+			WDL_FastString takeChunk;
+			int tkPos, tklen;
+			if (p.GetTakeChunk(takeId, &takeChunk, &tkPos, &tklen))
+			{
+				SNM_ChunkParserPatcher ptk(&takeChunk, false);
+				int lanesCount = ptk.Parse(SNM_COUNT_KEYWORD, 1, "SOURCE", "VELLANE");
+				if (lanesCount > 0)
+				{
+					bool updated = false;
+
+					int height = (int)ct->user + MIDI_LANE_DIVIDER_H; // so pixel height is drawable height
+					height = SetToBounds(height, MIDI_LANE_DIVIDER_H, GetMaxCCLanesFullHeight(editor) / lanesCount);
+
+					LineParser lp(false);
+					WDL_FastString lineLane;
+					int laneId = 0;
+					while (int position = ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "SOURCE", "VELLANE", laneId, -1, &lineLane))
+					{
+						lp.parse(lineLane.Get());
+						WDL_FastString newLane;
+						for (int i = 0; i < lp.getnumtokens(); ++i)
+						{
+							if (i == 2 && height != lp.gettoken_int(2))
+							{
+								newLane.AppendFormatted(256, "%d", height);
+								updated = true;
+							}
+							else
+								newLane.Append(lp.gettoken_str(i));
+							newLane.Append(" ");
+						}
+						newLane.Append("\n");
+						ptk.ReplaceLine(position - 1, newLane.Get());
+
+						lineLane.DeleteSub(0, lineLane.GetLength());
+						++laneId;
+					}
+
+					if (updated && p.ReplaceTake(tkPos, tklen, ptk.GetChunk()))
+						Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+				}
+			}
+		}
+	}
+}
+
+void ME_IncDecAllCCLanesHeight (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
+{
+	void* editor = SWS_MIDIEditor_GetActive();
+	if (MediaItem_Take* take = SWS_MIDIEditor_GetTake(editor))
+	{
+		MediaItem* item = GetMediaItemTake_Item(take);
+		int takeId = GetTakeId(take, item);
+		if (takeId >= 0)
+		{
+			SNM_TakeParserPatcher p(item, CountTakes(item));
+			WDL_FastString takeChunk;
+			int tkPos, tklen;
+			if (p.GetTakeChunk(takeId, &takeChunk, &tkPos, &tklen))
+			{
+				SNM_ChunkParserPatcher ptk(&takeChunk, false);
+				int heightDiff = (int)ct->user;
+
+				// Correct height difference if full CC lane height would end up too tall
+				if (heightDiff > 0)
+				{
+					LineParser lp(false);
+					WDL_FastString lineLane;
+					int laneId = 0;
+					int newFullHeight = 0;
+					int fullHeight = 0;
+					while (int position = ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "SOURCE", "VELLANE", laneId, -1, &lineLane))
+					{
+						lp.parse(lineLane.Get());
+						int newHeight = lp.gettoken_int(2) + heightDiff;
+						if (newHeight < MIDI_LANE_DIVIDER_H) newHeight = MIDI_LANE_DIVIDER_H;
+
+						newFullHeight += newHeight;
+						fullHeight    += lp.gettoken_int(2);
+
+						lineLane.DeleteSub(0, lineLane.GetLength());
+						++laneId;
+					}
+
+					int maxFullHeight = GetMaxCCLanesFullHeight(editor);
+					if (newFullHeight > maxFullHeight && heightDiff > 0)
+						heightDiff = (int)(maxFullHeight - fullHeight) / laneId;
+				}
+
+				if (heightDiff != 0)
+				{
+					bool updated = false;
+
+					LineParser lp(false);
+					WDL_FastString lineLane;
+					int laneId = 0;
+					while (int position = ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "SOURCE", "VELLANE", laneId, -1, &lineLane))
+					{
+						lp.parse(lineLane.Get());
+						WDL_FastString newLane;
+						for (int i = 0; i < lp.getnumtokens(); ++i)
+						{
+							if (i == 2)
+							{
+								int newHeight = lp.gettoken_int(2) + heightDiff;
+								if (newHeight < MIDI_LANE_DIVIDER_H) newHeight = MIDI_LANE_DIVIDER_H;
+								newLane.AppendFormatted(256, "%d", newHeight);
+								updated = true;
+							}
+							else
+								newLane.Append(lp.gettoken_str(i));
+							newLane.Append(" ");
+						}
+						newLane.Append("\n");
+						ptk.ReplaceLine(position - 1, newLane.Get());
+
+						lineLane.DeleteSub(0, lineLane.GetLength());
+						++laneId;
+					}
+
+					// Update chunk
+					if (updated && p.ReplaceTake(tkPos, tklen, ptk.GetChunk()))
+						Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+				}
 			}
 		}
 	}
@@ -490,8 +719,8 @@ void ME_HideCCLanes (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 					LineParser lp(false);
 
 					// Remove lanes
-					int laneId = 0;
 					WDL_FastString lineLane;
+					int laneId = 0;
 					int firstPos = 0;
 					int laneCount = 0;
 					while (int position = ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "SOURCE", "VELLANE", laneId, -1, &lineLane))
@@ -562,7 +791,7 @@ void ME_ToggleHideCCLanes (COMMAND_T* ct, int val, int valhw, int relmode, HWND 
 			validLane = mouseInfo.GetCCLane(&laneToKeep, NULL, NULL);
 		}
 
-		if (midiEditor && validLane && g_midiToggleHideCCLanes.Get()->Hide(midiEditor, laneToKeep, (abs((int)ct->user) == 1) ? -1 : abs((int)ct->user)))
+		if (midiEditor && validLane && g_midiToggleHideCCLanes.Get()->Hide(midiEditor, laneToKeep, ((abs((int)ct->user) == 1) ? -1 : abs((int)ct->user) + MIDI_LANE_DIVIDER_H)))
 			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 	}
 

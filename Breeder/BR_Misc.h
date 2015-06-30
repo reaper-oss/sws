@@ -45,15 +45,6 @@ void MarkersRegionsAtItems (COMMAND_T*);
 void MoveClosestMarker (COMMAND_T*);
 void MidiItemTempo (COMMAND_T*);
 void MidiItemTrim (COMMAND_T*);
-void SnapFollowsGridVis (COMMAND_T*);
-void PlaybackFollowsTempoChange (COMMAND_T*);
-void TrimNewVolPanEnvs (COMMAND_T*);
-void ToggleDisplayItemLabels (COMMAND_T*);
-void SetMidiResetOnPlayStop (COMMAND_T*);
-void SetOptionsFX (COMMAND_T*);
-void SetMoveCursorOnPaste (COMMAND_T*);
-void SetPlaybackStopOptions (COMMAND_T*);
-void CycleRecordModes (COMMAND_T*);
 void FocusArrangeTracks (COMMAND_T*);
 void MoveActiveWndToMouse (COMMAND_T*);
 void ToggleItemOnline (COMMAND_T*);
@@ -68,6 +59,20 @@ void SaveItemMuteStateSlot (COMMAND_T*);
 void RestoreItemMuteStateSlot (COMMAND_T*);
 void SaveTrackSoloMuteStateSlot (COMMAND_T*);
 void RestoreTrackSoloMuteStateSlot (COMMAND_T*);
+
+/******************************************************************************
+* Commands: Misc - REAPER preferences                                         *
+******************************************************************************/
+void SnapFollowsGridVis (COMMAND_T*);
+void PlaybackFollowsTempoChange (COMMAND_T*);
+void TrimNewVolPanEnvs (COMMAND_T*);
+void ToggleDisplayItemLabels (COMMAND_T*);
+void SetMidiResetOnPlayStop (COMMAND_T*);
+void SetOptionsFX (COMMAND_T*);
+void SetMoveCursorOnPaste (COMMAND_T*);
+void SetPlaybackStopOptions (COMMAND_T*);
+void SetGridMarkerZOrder (COMMAND_T*);
+void CycleRecordModes (COMMAND_T*);
 
 /******************************************************************************
 * Commands: Misc - Media item preview                                         *
@@ -99,5 +104,6 @@ int IsSetMidiResetOnPlayStopOn (COMMAND_T*);
 int IsSetOptionsFXOn (COMMAND_T*);
 int IsSetMoveCursorOnPasteOn (COMMAND_T*);
 int IsSetPlaybackStopOptionsOn (COMMAND_T*);
+int IsSetGridMarkerZOrderOn (COMMAND_T*);
 int IsAdjustPlayrateOptionsVisible (COMMAND_T*);
 int IsTitleBarDisplayOptionOn (COMMAND_T*);

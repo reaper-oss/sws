@@ -648,27 +648,6 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Move closest project marker to edit cursor (obey snapping)" },                                                                  "BR_CLOSEST_PROJ_MARKER_EDIT_SNAP",   MoveClosestMarker, NULL, -2},
 	{ { DEFACCEL, "SWS/BR: Move closest project marker to mouse cursor (obey snapping)" },                                                                 "BR_CLOSEST_PROJ_MARKER_MOUSE_SNAP",  MoveClosestMarker, NULL, -3},
 
-	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Grid snap settings follow grid visibility\"" },                                                              "BR_OPTIONS_SNAP_FOLLOW_GRID_VIS",    SnapFollowsGridVis, NULL, 0, IsSnapFollowsGridVisOn},
-	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Playback position follows project timebase when changing tempo\"" },                                         "BR_OPTIONS_PLAYBACK_TEMPO_CHANGE",   PlaybackFollowsTempoChange, NULL, 0, IsPlaybackFollowsTempoChangeOn},
-	{ { DEFACCEL, "SWS/BR: Options - Set \"Apply trim when adding volume/pan envelopes\" to \"Always\"" },                                                 "BR_OPTIONS_ENV_TRIM_ALWAYS",         TrimNewVolPanEnvs, NULL, 0, IsTrimNewVolPanEnvsOn},
-	{ { DEFACCEL, "SWS/BR: Options - Set \"Apply trim when adding volume/pan envelopes\" to \"In read/write\"" },                                          "BR_OPTIONS_ENV_TRIM_READWRITE",      TrimNewVolPanEnvs, NULL, 1, IsTrimNewVolPanEnvsOn},
-	{ { DEFACCEL, "SWS/BR: Options - Set \"Apply trim when adding volume/pan envelopes\" to \"Never\"" },                                                  "BR_OPTIONS_ENV_TRIM_NEVER",          TrimNewVolPanEnvs, NULL, 2, IsTrimNewVolPanEnvsOn},
-	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Display media item take name\"" },                                                                           "BR_OPTIONS_DISPLAY_ITEM_TAKE_NAME",  ToggleDisplayItemLabels, NULL, 0, IsToggleDisplayItemLabelsOn},
-	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Display media item pitch/playrate if set\"" },                                                               "BR_OPTIONS_DISPLAY_ITEM_PITCH_RATE", ToggleDisplayItemLabels, NULL, 2, IsToggleDisplayItemLabelsOn},
-	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Display media item gain if set\"" },                                                                         "BR_OPTIONS_DISPLAY_ITEM_GAIN",       ToggleDisplayItemLabels, NULL, 4, IsToggleDisplayItemLabelsOn},
-	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Send all-notes-off on stop/play\"" },                                                                        "BR_OPTIONS_STOP_PLAY_NOTES_OFF",     SetMidiResetOnPlayStop, NULL, 0, IsSetMidiResetOnPlayStopOn},
-	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Reset pitch on stop/play\"" },                                                                               "BR_OPTIONS_STOP_PLAY_RESET_PITCH",   SetMidiResetOnPlayStop, NULL, 1, IsSetMidiResetOnPlayStopOn},
-	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Reset CC on stop/play\"" },                                                                                  "BR_OPTIONS_STOP_PLAY_RESET_CC",      SetMidiResetOnPlayStop, NULL, 2, IsSetMidiResetOnPlayStopOn},
-	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Flush FX on stop\"" },                                                                                       "BR_OPTIONS_FLUSH_FX_ON_STOP",        SetOptionsFX, NULL, 0, IsSetOptionsFXOn},
-	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Flush FX when looping\"" },                                                                                  "BR_OPTIONS_FLUSH_FX_WHEN_LOOPING",   SetOptionsFX, NULL, 1, IsSetOptionsFXOn},
-	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Move edit cursor to start of time selection on time selection change\"" },                                   "BR_OPTIONS_MOVE_CUR_ON_TIME_SEL",    SetMoveCursorOnPaste, NULL, 2, IsSetMoveCursorOnPasteOn},
-	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Move edit cursor when pasting/inserting media\"" },                                                          "BR_OPTIONS_MOVE_CUR_ON_PASTE",       SetMoveCursorOnPaste, NULL, -3, IsSetMoveCursorOnPasteOn},
-	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Move edit cursor to end of recorded items on record stop\"" },                                               "BR_OPTIONS_MOVE_CUR_ON_RECORD_STOP", SetMoveCursorOnPaste, NULL, 4, IsSetMoveCursorOnPasteOn},
-	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Stop/repeat playback at end of project\"" },                                                                 "BR_OPTIONS_STOP_PLAYBACK_PROJ_END",  SetPlaybackStopOptions, NULL, 0, IsSetPlaybackStopOptionsOn},
-	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Scroll view to edit cursor on stop\"" },                                                                     "BR_OPTIONS_SCROLL_TO_CURS_ON_STOP",  SetPlaybackStopOptions, NULL, 3, IsSetPlaybackStopOptionsOn},
-
-	{ { DEFACCEL, "SWS/BR: Cycle through record modes" },                                                                                                  "BR_CYCLE_RECORD_MODES",              CycleRecordModes},
-
 	{ { DEFACCEL, "SWS/BR: Focus arrange" },                                                                                                               "BR_FOCUS_ARRANGE_WND",               FocusArrangeTracks, NULL, 0},
 	{ { DEFACCEL, "SWS/BR: Focus tracks" },                                                                                                                "BR_FOCUS_TRACKS",                    FocusArrangeTracks, NULL, 1},
 
@@ -799,6 +778,37 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Restore tracks' solo and mute state to all tracks, slot 6" },                                                                   "BR_RESTORE_SOLO_MUTE_ALL_TRACKS_SLOT_6", RestoreTrackSoloMuteStateSlot, NULL, -6},
 	{ { DEFACCEL, "SWS/BR: Restore tracks' solo and mute state to all tracks, slot 7" },                                                                   "BR_RESTORE_SOLO_MUTE_ALL_TRACKS_SLOT_7", RestoreTrackSoloMuteStateSlot, NULL, -7},
 	{ { DEFACCEL, "SWS/BR: Restore tracks' solo and mute state to all tracks, slot 8" },                                                                   "BR_RESTORE_SOLO_MUTE_ALL_TRACKS_SLOT_8", RestoreTrackSoloMuteStateSlot, NULL, -8},
+
+	/******************************************************************************
+	* Misc - REAPER preferences                                                   *
+	******************************************************************************/
+	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Grid snap settings follow grid visibility\"" },                            "BR_OPTIONS_SNAP_FOLLOW_GRID_VIS",    SnapFollowsGridVis, NULL, 0, IsSnapFollowsGridVisOn},
+	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Playback position follows project timebase when changing tempo\"" },       "BR_OPTIONS_PLAYBACK_TEMPO_CHANGE",   PlaybackFollowsTempoChange, NULL, 0, IsPlaybackFollowsTempoChangeOn},
+	{ { DEFACCEL, "SWS/BR: Options - Set \"Apply trim when adding volume/pan envelopes\" to \"Always\"" },               "BR_OPTIONS_ENV_TRIM_ALWAYS",         TrimNewVolPanEnvs, NULL, 0, IsTrimNewVolPanEnvsOn},
+	{ { DEFACCEL, "SWS/BR: Options - Set \"Apply trim when adding volume/pan envelopes\" to \"In read/write\"" },        "BR_OPTIONS_ENV_TRIM_READWRITE",      TrimNewVolPanEnvs, NULL, 1, IsTrimNewVolPanEnvsOn},
+	{ { DEFACCEL, "SWS/BR: Options - Set \"Apply trim when adding volume/pan envelopes\" to \"Never\"" },                "BR_OPTIONS_ENV_TRIM_NEVER",          TrimNewVolPanEnvs, NULL, 2, IsTrimNewVolPanEnvsOn},
+	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Display media item take name\"" },                                         "BR_OPTIONS_DISPLAY_ITEM_TAKE_NAME",  ToggleDisplayItemLabels, NULL, 0, IsToggleDisplayItemLabelsOn},
+	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Display media item pitch/playrate if set\"" },                             "BR_OPTIONS_DISPLAY_ITEM_PITCH_RATE", ToggleDisplayItemLabels, NULL, 2, IsToggleDisplayItemLabelsOn},
+	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Display media item gain if set\"" },                                       "BR_OPTIONS_DISPLAY_ITEM_GAIN",       ToggleDisplayItemLabels, NULL, 4, IsToggleDisplayItemLabelsOn},
+	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Send all-notes-off on stop/play\"" },                                      "BR_OPTIONS_STOP_PLAY_NOTES_OFF",     SetMidiResetOnPlayStop, NULL, 0, IsSetMidiResetOnPlayStopOn},
+	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Reset pitch on stop/play\"" },                                             "BR_OPTIONS_STOP_PLAY_RESET_PITCH",   SetMidiResetOnPlayStop, NULL, 1, IsSetMidiResetOnPlayStopOn},
+	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Reset CC on stop/play\"" },                                                "BR_OPTIONS_STOP_PLAY_RESET_CC",      SetMidiResetOnPlayStop, NULL, 2, IsSetMidiResetOnPlayStopOn},
+	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Flush FX on stop\"" },                                                     "BR_OPTIONS_FLUSH_FX_ON_STOP",        SetOptionsFX, NULL, 0, IsSetOptionsFXOn},
+	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Flush FX when looping\"" },                                                "BR_OPTIONS_FLUSH_FX_WHEN_LOOPING",   SetOptionsFX, NULL, 1, IsSetOptionsFXOn},
+	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Move edit cursor to start of time selection on time selection change\"" }, "BR_OPTIONS_MOVE_CUR_ON_TIME_SEL",    SetMoveCursorOnPaste, NULL, 2, IsSetMoveCursorOnPasteOn},
+	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Move edit cursor when pasting/inserting media\"" },                        "BR_OPTIONS_MOVE_CUR_ON_PASTE",       SetMoveCursorOnPaste, NULL, -3, IsSetMoveCursorOnPasteOn},
+	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Move edit cursor to end of recorded items on record stop\"" },             "BR_OPTIONS_MOVE_CUR_ON_RECORD_STOP", SetMoveCursorOnPaste, NULL, 4, IsSetMoveCursorOnPasteOn},
+	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Stop/repeat playback at end of project\"" },                               "BR_OPTIONS_STOP_PLAYBACK_PROJ_END",  SetPlaybackStopOptions, NULL, 0, IsSetPlaybackStopOptionsOn},
+	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Scroll view to edit cursor on stop\"" },                                   "BR_OPTIONS_SCROLL_TO_CURS_ON_STOP",  SetPlaybackStopOptions, NULL, 3, IsSetPlaybackStopOptionsOn},
+
+	{ { DEFACCEL, "SWS/BR: Options - Set grid line Z order to \"Over items\"" },                                         "BR_OPTIONS_GRID_Z_OVER_ITEMS",       SetGridMarkerZOrder, NULL, 1,  IsSetGridMarkerZOrderOn},
+	{ { DEFACCEL, "SWS/BR: Options - Set grid line Z order to \"Through items\"" },                                      "BR_OPTIONS_GRID_Z_THROUGH_ITEMS",    SetGridMarkerZOrder, NULL, 2,  IsSetGridMarkerZOrderOn},
+	{ { DEFACCEL, "SWS/BR: Options - Set grid line Z order to \"Under items\"" },                                        "BR_OPTIONS_GRID_Z_UNDER_ITEMS",      SetGridMarkerZOrder, NULL, 3,  IsSetGridMarkerZOrderOn},
+	{ { DEFACCEL, "SWS/BR: Options - Set marker line Z order to \"Over items\"" },                                       "BR_OPTIONS_MARKER_Z_OVER_ITEMS",     SetGridMarkerZOrder, NULL, -1, IsSetGridMarkerZOrderOn},
+	{ { DEFACCEL, "SWS/BR: Options - Set marker line Z order to \"Through items\"" },                                    "BR_OPTIONS_MARKER_Z_THROUGH_ITEMS",  SetGridMarkerZOrder, NULL, -2, IsSetGridMarkerZOrderOn},
+	{ { DEFACCEL, "SWS/BR: Options - Set marker line Z order to \"Under items\"" },                                      "BR_OPTIONS_MARKER_Z_UNDER_ITEMS",    SetGridMarkerZOrder, NULL, -3, IsSetGridMarkerZOrderOn},
+
+	{ { DEFACCEL, "SWS/BR: Options - Cycle through record modes" },                                                      "BR_CYCLE_RECORD_MODES",              CycleRecordModes},
 
 	/******************************************************************************
 	* Misc - Media item preview                                                   *

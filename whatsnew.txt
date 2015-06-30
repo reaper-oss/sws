@@ -16,6 +16,7 @@ New actions
  - SWS/BR: Options - Toggle "Move edit cursor to end of recorded items on record stop"
  - SWS/BR: Options - Toggle "Stop/repeat playback at end of project"
  - SWS/BR: Options - Toggle "Scroll view to edit cursor on stop"
+ - SWS/BR: Options - Set grid/marker line Z order (6 actions that cover all settings)
  - SWS/wol: Adjust envelope or track height under mouse cursor (MIDI CC relative/mousewheel)
 +MIDI editor:
  - SWS/BR: Show only used CC lanes with selected events (detect 14-bit)

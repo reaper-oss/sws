@@ -629,132 +629,6 @@ void MidiItemTrim (COMMAND_T* ct)
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 }
 
-void SnapFollowsGridVis (COMMAND_T* ct)
-{
-	int option;
-	GetConfig("projshowgrid", option);
-	SetConfig("projshowgrid", ToggleBit(option, 15));
-	RefreshToolbar(0);
-}
-
-void PlaybackFollowsTempoChange (COMMAND_T* ct)
-{
-	static const char* s_configStr = "seekmodes";
-	int option; GetConfig(s_configStr, option);
-
-	option = ToggleBit(option, 5);
-	SetConfig(s_configStr, option);
-	RefreshToolbar(0);
-
-	char tmp[256];
-	_snprintfSafe(tmp, sizeof(tmp), "%d", option);
-	WritePrivateProfileString("reaper", s_configStr, tmp, get_ini_file());
-}
-
-void TrimNewVolPanEnvs (COMMAND_T* ct)
-{
-	static const char* s_configStr = "envtrimadjmode";
-	SetConfig(s_configStr, (int)ct->user);
-	RefreshToolbar(0);
-
-	char tmp[256];
-	_snprintfSafe(tmp, sizeof(tmp), "%d", (int)ct->user);
-	WritePrivateProfileString("reaper", s_configStr, tmp, get_ini_file());
-}
-
-void ToggleDisplayItemLabels (COMMAND_T* ct)
-{
-	static const char* s_configStr = "labelitems2";
-
-	int option; GetConfig(s_configStr, option);
-	option = ToggleBit(option, (int)ct->user);
-	SetConfig(s_configStr, option);
-
-	char tmp[256];
-	_snprintfSafe(tmp, sizeof(tmp), "%d", option);
-	WritePrivateProfileString("reaper", s_configStr, tmp, get_ini_file());
-
-	UpdateArrange();
-}
-
-void SetMidiResetOnPlayStop (COMMAND_T* ct)
-{
-	static const char* s_configStr = "midisendflags";
-	int option; GetConfig(s_configStr, option);
-
-	option = ToggleBit(option, (int)ct->user);
-	SetConfig(s_configStr, option);
-
-	char tmp[256];
-	_snprintfSafe(tmp, sizeof(tmp), "%d", option);
-	WritePrivateProfileString("reaper", s_configStr, tmp, get_ini_file());
-}
-
-void SetOptionsFX (COMMAND_T* ct)
-{
-	if ((int)ct->user == 0)
-	{
-		static const char* s_configStr = "runallonstop";
-		int option; GetConfig(s_configStr, option);
-
-		option = ToggleBit(option, 3);
-		SetConfig(s_configStr, option);
-
-		char tmp[256];
-		_snprintfSafe(tmp, sizeof(tmp), "%d", option);
-		WritePrivateProfileString("reaper", s_configStr, tmp, get_ini_file());
-	}
-	else
-	{
-		static const char* s_configStr = "loopstopfx";
-		int option; GetConfig(s_configStr, option);
-
-		option = ToggleBit(option, 0);
-		SetConfig(s_configStr, option);
-
-		char tmp[256];
-		_snprintfSafe(tmp, sizeof(tmp), "%d", option);
-		WritePrivateProfileString("reaper", s_configStr, tmp, get_ini_file());
-	}
-}
-
-void SetMoveCursorOnPaste (COMMAND_T* ct)
-{
-	static const char* s_configStr = "itemclickmovecurs";
-	int option; GetConfig(s_configStr, option);
-
-	option = ToggleBit(option, abs((int)ct->user));
-	SetConfig(s_configStr, option);
-
-	char tmp[256];
-	_snprintfSafe(tmp, sizeof(tmp), "%d", option);
-	WritePrivateProfileString("reaper", s_configStr, tmp, get_ini_file());
-}
-
-void SetPlaybackStopOptions (COMMAND_T* ct)
-{
-	static const char* s_configStr = (((int)ct->user == 0) ? "stopprojlen" : "viewadvance");
-	int option; GetConfig(s_configStr, option);
-
-	option = ToggleBit(option, ((int)ct->user));
-	SetConfig(s_configStr, option);
-
-	char tmp[256];
-	_snprintfSafe(tmp, sizeof(tmp), "%d", option);
-	WritePrivateProfileString("reaper", s_configStr, tmp, get_ini_file());
-}
-
-void CycleRecordModes (COMMAND_T* ct)
-{
-	static const char* s_configStr = "projrecmode";
-	int mode; GetConfig(s_configStr, mode);
-	if (++mode > 2) mode = 0;
-
-	if      (mode == 0) Main_OnCommandEx(40253, 0, NULL);
-	else if (mode == 1) Main_OnCommandEx(40252, 0, NULL);
-	else if (mode == 2) Main_OnCommandEx(40076, 0, NULL);
-}
-
 void FocusArrangeTracks (COMMAND_T* ct)
 {
 	if ((int)ct->user == 0)
@@ -1082,6 +956,148 @@ void RestoreTrackSoloMuteStateSlot (COMMAND_T* ct)
 }
 
 /******************************************************************************
+* Commands: Misc - REAPER preferences                                         *
+******************************************************************************/
+void SnapFollowsGridVis (COMMAND_T* ct)
+{
+	int option;
+	GetConfig("projshowgrid", option);
+	SetConfig("projshowgrid", ToggleBit(option, 15));
+	RefreshToolbar(0);
+}
+
+void PlaybackFollowsTempoChange (COMMAND_T* ct)
+{
+	const char* configStr = "seekmodes";
+	int option; GetConfig(configStr, option);
+
+	option = ToggleBit(option, 5);
+	SetConfig(configStr, option);
+	RefreshToolbar(0);
+
+	char tmp[256];
+	_snprintfSafe(tmp, sizeof(tmp), "%d", option);
+	WritePrivateProfileString("reaper", configStr, tmp, get_ini_file());
+}
+
+void TrimNewVolPanEnvs (COMMAND_T* ct)
+{
+	const char* configStr = "envtrimadjmode";
+	SetConfig(configStr, (int)ct->user);
+	RefreshToolbar(0);
+
+	char tmp[256];
+	_snprintfSafe(tmp, sizeof(tmp), "%d", (int)ct->user);
+	WritePrivateProfileString("reaper", configStr, tmp, get_ini_file());
+}
+
+void ToggleDisplayItemLabels (COMMAND_T* ct)
+{
+	const char* configStr = "labelitems2";
+
+	int option; GetConfig(configStr, option);
+	option = ToggleBit(option, (int)ct->user);
+	SetConfig(configStr, option);
+
+	char tmp[256];
+	_snprintfSafe(tmp, sizeof(tmp), "%d", option);
+	WritePrivateProfileString("reaper", configStr, tmp, get_ini_file());
+
+	UpdateArrange();
+}
+
+void SetMidiResetOnPlayStop (COMMAND_T* ct)
+{
+	const char* configStr = "midisendflags";
+	int option; GetConfig(configStr, option);
+
+	option = ToggleBit(option, (int)ct->user);
+	SetConfig(configStr, option);
+
+	char tmp[256];
+	_snprintfSafe(tmp, sizeof(tmp), "%d", option);
+	WritePrivateProfileString("reaper", configStr, tmp, get_ini_file());
+}
+
+void SetOptionsFX (COMMAND_T* ct)
+{
+	if ((int)ct->user == 0)
+	{
+		const char* configStr = "runallonstop";
+		int option; GetConfig(configStr, option);
+
+		option = ToggleBit(option, 3);
+		SetConfig(configStr, option);
+
+		char tmp[256];
+		_snprintfSafe(tmp, sizeof(tmp), "%d", option);
+		WritePrivateProfileString("reaper", configStr, tmp, get_ini_file());
+	}
+	else
+	{
+		const char* configStr = "loopstopfx";
+		int option; GetConfig(configStr, option);
+
+		option = ToggleBit(option, 0);
+		SetConfig(configStr, option);
+
+		char tmp[256];
+		_snprintfSafe(tmp, sizeof(tmp), "%d", option);
+		WritePrivateProfileString("reaper", configStr, tmp, get_ini_file());
+	}
+}
+
+void SetMoveCursorOnPaste (COMMAND_T* ct)
+{
+	const char* configStr = "itemclickmovecurs";
+	int option; GetConfig(configStr, option);
+
+	option = ToggleBit(option, abs((int)ct->user));
+	SetConfig(configStr, option);
+
+	char tmp[256];
+	_snprintfSafe(tmp, sizeof(tmp), "%d", option);
+	WritePrivateProfileString("reaper", configStr, tmp, get_ini_file());
+}
+
+void SetPlaybackStopOptions (COMMAND_T* ct)
+{
+	const char* configStr = (((int)ct->user == 0) ? "stopprojlen" : "viewadvance");
+	int option; GetConfig(configStr, option);
+
+	option = ToggleBit(option, ((int)ct->user));
+	SetConfig(configStr, option);
+
+	char tmp[256];
+	_snprintfSafe(tmp, sizeof(tmp), "%d", option);
+	WritePrivateProfileString("reaper", configStr, tmp, get_ini_file());
+}
+
+void SetGridMarkerZOrder (COMMAND_T* ct)
+{
+	const char* configStr = (((int)ct->user > 0) ? "gridinbg" : "gridinbg2");
+
+	int option = abs((int)ct->user) - 1;
+	SetConfig(configStr, option);
+
+	char tmp[256];
+	_snprintfSafe(tmp, sizeof(tmp), "%d", option);
+	WritePrivateProfileString("reaper", configStr, tmp, get_ini_file());
+	UpdateArrange();
+}
+
+void CycleRecordModes (COMMAND_T* ct)
+{
+	const char* configStr = "projrecmode";
+	int mode; GetConfig(configStr, mode);
+	if (++mode > 2) mode = 0;
+
+	if      (mode == 0) Main_OnCommandEx(40253, 0, NULL);
+	else if (mode == 1) Main_OnCommandEx(40252, 0, NULL);
+	else if (mode == 2) Main_OnCommandEx(40076, 0, NULL);
+}
+
+/******************************************************************************
 * Commands: Misc - Media item preview                                         *
 ******************************************************************************/
 void PreviewItemAtMouse (COMMAND_T* ct)
@@ -1381,8 +1397,6 @@ void ClearProjectTrackSelAction (COMMAND_T* ct)
 	}
 }
 
-
-
 /******************************************************************************
 * Toggle states: Misc                                                         *
 ******************************************************************************/
@@ -1440,6 +1454,13 @@ int IsSetPlaybackStopOptionsOn (COMMAND_T* ct)
 {
 	int option; GetConfig((((int)ct->user == 0) ? "stopprojlen" : "viewadvance"), option);
 	return !!GetBit(option, (int)ct->user);
+}
+
+int IsSetGridMarkerZOrderOn (COMMAND_T* ct)
+{
+	int option; GetConfig((((int)ct->user > 0) ? "gridinbg" : "gridinbg2"), option);
+
+	return option == abs((int)ct->user) - 1;
 }
 
 int IsAdjustPlayrateOptionsVisible (COMMAND_T* ct)

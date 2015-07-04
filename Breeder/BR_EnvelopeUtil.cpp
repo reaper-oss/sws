@@ -993,7 +993,7 @@ bool BR_Envelope::VisibleInArrange (int* envHeight, int* yOffset, bool cacheValu
 		{
 			double arrangeStart, arrangeEnd;
 			RECT r; GetWindowRect(hwnd, &r);
-			GetSet_ArrangeView2(NULL, false, r.left, r.right-SCROLLBAR_W, &arrangeStart, &arrangeEnd);
+			GetSetArrangeView(NULL, false, &arrangeStart, &arrangeEnd);
 
 			double itemStart = GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION");
 			double itemEnd = itemStart + GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_LENGTH");

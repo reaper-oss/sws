@@ -2306,6 +2306,16 @@ void MoveArrange (double amountTime)
 	GetSet_ArrangeView2(NULL, true, r.left, r.right-SCROLLBAR_W, &startTime, &endTime);
 }
 
+void GetSetArrangeView (ReaProject* proj, bool set, double* start, double* end)
+{
+	if (start && end)
+	{
+		RECT r;
+		GetWindowRect(GetArrangeWnd(), &r);
+		GetSet_ArrangeView2(NULL, set, r.left, r.right-SCROLLBAR_W, start, end);
+	}
+}
+
 void CenterArrange (double position)
 {
 	RECT r;
@@ -2364,10 +2374,8 @@ void ScrollToTrackIfNotInArrange (MediaTrack* track)
 
 bool IsOffScreen (double position)
 {
-	RECT r;
 	double startTime, endTime;
-	GetWindowRect(GetArrangeWnd(), &r);
-	GetSet_ArrangeView2(NULL, false, r.left, r.right-SCROLLBAR_W, &startTime, &endTime);
+	GetSetArrangeView(NULL, false, &startTime, &endTime);
 
 	if (position >= startTime && position <= endTime)
 		return true;

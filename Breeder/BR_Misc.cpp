@@ -66,6 +66,8 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 {
 	static double s_playPos  = -1;
 	static double s_pausePos = -1;
+	static double s_arrangeStart = -1;
+	static double s_arrangeEnd   = -1;
 	static vector<pair<GUID,int> >* s_trackSoloMuteState = NULL;
 	static vector<pair<GUID,int> >* s_itemMuteState      = NULL;
 	static int s_projStateCount = 0;
@@ -171,6 +173,8 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 			}
 		}
 
+		GetSetArrangeView(NULL, false, &s_arrangeStart, &s_arrangeEnd);
+
 		PreventUIRefresh(-1);
 
 		s_playPos  = (IsPlaying()) ? GetPlayPositionEx(NULL)   : -1;
@@ -183,6 +187,8 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 	}
 	else
 	{
+		PreventUIRefresh(1);
+
 		RegisterCsurfPlayState(false, MousePlaybackPlayState); // deregister Csurf before setting playstate
 		if (g_mousePlaybackRestorePlayState)
 		{
@@ -200,8 +206,6 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 				OnStopButton();
 			}
 		}
-
-		PreventUIRefresh(1);
 
 		// Restore tracks' solo and mute state
 		if (s_trackSoloMuteState)
@@ -226,6 +230,11 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 			}
 		}
 
+		int viewAdvance;
+		GetConfig("viewadvance", viewAdvance);
+		if (GetBit(viewAdvance, 3) && (int)ct->user > 0) // Move view to edit cursor on stop (analogously applied here when starting playback from mouse cursor)
+			GetSetArrangeView(NULL, true, &s_arrangeStart, &s_arrangeEnd);
+
 		PreventUIRefresh(-1);
 
 		if (GetProjectStateChangeCount(s_proj) > s_projStateCount)
@@ -245,6 +254,8 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 		g_mousePlaybackRestorePlayState = true;
 		s_playPos  = -1;
 		s_pausePos = -1;
+		s_arrangeStart = -1;
+		s_arrangeEnd   = -1;
 		s_projStateCount = 0;
 		s_proj           = NULL;
 		return true;

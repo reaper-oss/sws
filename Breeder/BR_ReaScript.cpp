@@ -242,8 +242,7 @@ double BR_EnvValueAtPos (BR_Envelope* envelope, double position)
 void BR_GetArrangeView (ReaProject* proj, double* startPositionOut, double* endPositionOut)
 {
 	double start, end;
-	RECT r; GetWindowRect(GetArrangeWnd(), &r);
-	GetSet_ArrangeView2(NULL, false, r.left, r.right-SCROLLBAR_W, &start, &end);
+	GetSetArrangeView(NULL, false, &start, &end);
 
 	WritePtr(startPositionOut, start);
 	WritePtr(endPositionOut, end);
@@ -694,8 +693,7 @@ double BR_PositionAtMouseCursor (bool checkRuler)
 
 void BR_SetArrangeView (ReaProject* proj, double startPosition, double endPosition)
 {
-	RECT r; GetWindowRect(GetArrangeWnd(), &r);
-	GetSet_ArrangeView2(proj, true, r.left, r.right - SCROLLBAR_W, &startPosition, &endPosition);
+	GetSetArrangeView(proj, true, &startPosition, &endPosition);
 }
 
 bool BR_SetItemEdges (MediaItem* item, double startTime, double endTime)

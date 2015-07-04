@@ -1148,7 +1148,7 @@ bool BR_MouseInfo::GetContextMIDIInline (BR_MouseInfo::MouseInfo& mouseInfo, int
 			double arrangeStartTime, arrangeEndTime;
 			double itemStartTime = GetMediaItemInfo_Value(mouseInfo.item, "D_POSITION");
 			double itemEndTime   = GetMediaItemInfo_Value(mouseInfo.item, "D_LENGTH") + itemStartTime;
-			GetSet_ArrangeView2(NULL, false, r.left, r.right-SCROLLBAR_W, &arrangeStartTime, &arrangeEndTime);
+			GetSetArrangeView(NULL, false, &arrangeStartTime, &arrangeEndTime);
 
 			int itemStartX = (itemStartTime <= arrangeStartTime) ? (0)                                                                  : ((int)((itemStartTime - arrangeStartTime) * midiEditor.GetHZoom()));
 			int itemEndX   = (itemEndTime   >  arrangeEndTime  ) ? ((int)((arrangeEndTime - arrangeStartTime) * midiEditor.GetHZoom())) : ((int)((itemEndTime   - arrangeStartTime) * midiEditor.GetHZoom()));

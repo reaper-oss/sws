@@ -56,6 +56,7 @@ Fixes
 +Preview actions now work properly in certain scenarios on MIDI items (looped items, MIDI editor timebase set to source (beats) etc...)
 +<em>SWS/BR: Disable "Ignore project tempo" for selected MIDI items preserving time position of MIDI events</em> should now work properly when dealing with looped items
 +Fixed "perform until shortcut released" playback actions playing back muted tracks/items shortly after shortcut release
++"perform until shortcut released" playback actions restore view when starting the playback from mouse cursor (if option "scroll view to edit cursor on stop" is turned on)
 +Fixed missing check mark in context menu of docked SWS dialogs next to menu item "Dock window in Docker"
 +Actions that move closest grid line now work properly when "Grid snap settings follow grid visibility" is disabled
 

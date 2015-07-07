@@ -55,6 +55,7 @@
 // compilation time both on Win & OSX).
 
 #define APIFUNC(x) (void*)x,#x,(void*)__vararg_ ## x,"APIvararg_" #x "","API_" #x "","APIdef_" #x ""
+#define CAPIFUNC(x) (void*)x,#x,NULL,NULL,"API_" #x "",NULL // export to C/C++ only
 
 typedef struct APIdef
 {
@@ -253,7 +254,7 @@ bool RegisterExportedFuncs(reaper_plugin_info_t* _rec)
 	while (ok && g_apidefs[++i].func)
 	{
 		ok &= (_rec->Register(g_apidefs[i].regkey_func, g_apidefs[i].func) != 0);
-		if (g_apidefs[i].func_vararg)
+		if (g_apidefs[i].regkey_vararg && g_apidefs[i].func_vararg)
 		{
 			ok &= (_rec->Register(g_apidefs[i].regkey_vararg, g_apidefs[i].func_vararg) != 0);
 		}
@@ -277,7 +278,7 @@ bool RegisterExportedAPI(reaper_plugin_info_t* _rec)
 	bool ok = (_rec!=NULL);
 	int i=-1;
 	char tmp[8*1024];
-	while (ok && g_apidefs[++i].func)
+	while (ok && g_apidefs[++i].func && g_apidefs[i].regkey_def)
 	{
 		memset(tmp, 0, sizeof(tmp));
 		_snprintf(tmp, sizeof(tmp), "%s\r%s\r%s\r%s", g_apidefs[i].ret_val, g_apidefs[i].parm_types, g_apidefs[i].parm_names, g_apidefs[i].help);

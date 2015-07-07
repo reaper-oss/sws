@@ -204,61 +204,44 @@ void ULT_SetMediaItemNote(MediaItem* _item, const char* _str) {
 		GetSetMediaItemInfo(_item, "P_NOTES", (char*)_str);
 }
 
-bool IsSupportedMediaFileTag(const char* tag)
-{
-  if (!tag || (_stricmp(tag, "artist") && _stricmp(tag, "album") &&
-      _stricmp(tag, "genre") && _stricmp(tag, "comment") &&
-      _stricmp(tag, "title") && _stricmp(tag, "year") &&
-      _stricmp(tag, "track")))
-  {
-    return false;
-  }
-  return true;
-}
-
 bool SNM_ReadMediaFileTag(const char *fn, const char* tag, char* tagval, int tagval_sz)
 {
-  if (!tagval || tagval_sz<=0 || !IsSupportedMediaFileTag(tag) || !FileExists(fn)) return false;
+  if (!fn || !*fn || !tagval || tagval_sz<=0) return false;
 
 #ifdef _WIN32
   wchar_t* w_fn = WideCharPlz(fn);
+  if (!w_fn) return false;
   TagLib::FileRef f(w_fn, false);
 #else
   TagLib::FileRef f(fn, false);
 #endif
   
-  bool didsmthg=false;
-  if (!f.isNull())
+  if (!f.isNull() && !f.tag()->isEmpty())
   {
     TagLib::String s;
-    if (!_stricmp(tag, "artist")) { s=f.tag()->artist(); didsmthg=true; }
-    if (!_stricmp(tag, "album")) { s=f.tag()->album(); didsmthg=true; }
-    if (!_stricmp(tag, "genre")) { s=f.tag()->genre(); didsmthg=true; }
-    if (!_stricmp(tag, "comment")) { s=f.tag()->comment(); didsmthg=true; }
-    if (!_stricmp(tag, "title")) { s=f.tag()->title(); didsmthg=true; }
-    if (didsmthg)
-    {
-      lstrcpyn(tagval, s.toCString(true), tagval_sz);
-    }
-    else if (!_stricmp(tag, "year") || !_stricmp(tag, "track"))
-    {
-      int val = (int)(!_stricmp(tag, "year") ? f.tag()->year() : f.tag()->track());
-      if (!val) { *tagval=0; didsmthg=true; }
-      else if (val>0) { _snprintfSafe(tagval, tagval_sz, "%d", val); didsmthg=true; }
-    }
+    if (!_stricmp(tag, "artist")) s=f.tag()->artist();
+    else if (!_stricmp(tag, "album")) s=f.tag()->album();
+    else if (!_stricmp(tag, "genre")) s=f.tag()->genre();
+    else if (!_stricmp(tag, "comment")) s=f.tag()->comment();
+    else if (!_stricmp(tag, "title")) s=f.tag()->title();
+    else if (!_stricmp(tag, "year")) _snprintfSafe(tagval, tagval_sz, "%u", f.tag()->year());
+    else if (!_stricmp(tag, "track")) _snprintfSafe(tagval, tagval_sz, "%u", f.tag()->track());
+
+    if (!s.isNull()) lstrcpyn(tagval, s.toCString(true), tagval_sz);
   }
 #ifdef _WIN32
   delete [] w_fn;
 #endif
-  return didsmthg;
+  return false;
 }
 
 bool SNM_TagMediaFile(const char *fn, const char* tag, const char* tagval)
 {
-  if (!tagval || !IsSupportedMediaFileTag(tag) || !FileExists(fn)) return false;
+  if (!fn || !*fn || !tagval || !tag) return false;
 
 #ifdef _WIN32
   wchar_t* w_fn = WideCharPlz(fn);
+  if (!w_fn) return false;
   TagLib::FileRef f(w_fn, false);
 #else
   TagLib::FileRef f(fn, false);
@@ -271,24 +254,22 @@ bool SNM_TagMediaFile(const char *fn, const char* tag, const char* tagval)
     TagLib::String s(tagval, TagLib::String::UTF8);
 #else
     wchar_t* s = WideCharPlz(tagval);
-    if (s)
+    if (!s) return false;
 #endif
-    {
-      if (!_stricmp(tag, "artist")) { f.tag()->setArtist(s); didsmthg=true; }
-      if (!_stricmp(tag, "album")) { f.tag()->setAlbum(s); didsmthg=true; }
-      if (!_stricmp(tag, "genre")) { f.tag()->setGenre(s); didsmthg=true; }
-      if (!_stricmp(tag, "comment")) { f.tag()->setComment(s); didsmthg=true; }
-      if (!_stricmp(tag, "title")) { f.tag()->setTitle(s); didsmthg=true; }
-    }
-    if (!_stricmp(tag, "year") || !_stricmp(tag, "track"))
+    if (!_stricmp(tag, "artist")) { f.tag()->setArtist(s); didsmthg=true; }
+    else if (!_stricmp(tag, "album")) { f.tag()->setAlbum(s); didsmthg=true; }
+    else if (!_stricmp(tag, "genre")) { f.tag()->setGenre(s); didsmthg=true; }
+    else if (!_stricmp(tag, "comment") || !_stricmp(tag, "desc")) { f.tag()->setComment(s); didsmthg=true; }
+    else if (!_stricmp(tag, "title")) { f.tag()->setTitle(s); didsmthg=true; }
+    else if (!_stricmp(tag, "year"))
     {
       int val=atoi(tagval);
-      if (val>0 || !*tagval)
-      {
-        if (!_stricmp(tag, "year")) f.tag()->setYear(val);
-        else f.tag()->setTrack(val);
-        didsmthg=true;
-      }
+      if (val>0 || !*tagval) { f.tag()->setYear(val); didsmthg=true; }
+    }
+    else if (!_stricmp(tag, "track"))
+    {
+      int val=atoi(tagval);
+      if (val>0 || !*tagval) { f.tag()->setTrack(val); didsmthg=true; }
     }
     if (didsmthg) f.save();
   }
@@ -299,6 +280,42 @@ bool SNM_TagMediaFile(const char *fn, const char* tag, const char* tagval)
 #endif
   return didsmthg;
 }
+
+// Bulk read of all common media file tags
+bool SNM_ReadMediaFileTags(const char *fn, WDL_FastString* tags, int tags_sz)
+{
+  if (!fn || !*fn || !tags || tags_sz<=0) return false;
+  
+#ifdef _WIN32
+  wchar_t* w_fn = WideCharPlz(fn);
+  if (!w_fn) return false;
+  TagLib::FileRef f(w_fn, false);
+#else
+  TagLib::FileRef f(fn, false);
+#endif
+  
+  bool hastag=false;
+  if (!f.isNull() && !f.tag()->isEmpty())
+  {
+    hastag=true;
+    
+    TagLib::String s;
+    s=f.tag()->comment();
+    tags[0].Set(s.isNull() ? "" : s.toCString(true));
+    if (tags_sz>=2) { s=f.tag()->title(); tags[1].Set(s.isNull() ? "" : s.toCString(true)); }
+    if (tags_sz>=3) { s=f.tag()->artist(); tags[2].Set(s.isNull() ? "" : s.toCString(true)); }
+    if (tags_sz>=4) { s=f.tag()->album(); tags[3].Set(s.isNull() ? "" : s.toCString(true)); }
+    if (tags_sz>=5) { if (f.tag()->year()) tags[4].SetFormatted(128, "%u", f.tag()->year()); else tags[4].Set(""); }
+    if (tags_sz>=6) { s=f.tag()->genre(); tags[5].Set(s.isNull() ? "" : s.toCString(true)); }
+    if (tags_sz>=7) { if (f.tag()->track()) tags[6].SetFormatted(128, "%u", f.tag()->track()); else tags[6].Set(""); }
+    // ... more tags could go here
+  }
+#ifdef _WIN32
+  delete [] w_fn;
+#endif
+  return hastag;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Toolbars auto refresh option

@@ -222,9 +222,9 @@ bool SNM_ReadMediaFileTag(const char *fn, const char* tag, char* tagval, int tag
 
 #ifdef _WIN32
   wchar_t* w_fn = WideCharPlz(fn);
-  TagLib::FileRef f(w_fn);
+  TagLib::FileRef f(w_fn, false);
 #else
-  TagLib::FileRef f(fn);
+  TagLib::FileRef f(fn, false);
 #endif
   
   bool didsmthg=false;
@@ -259,9 +259,9 @@ bool SNM_TagMediaFile(const char *fn, const char* tag, const char* tagval)
 
 #ifdef _WIN32
   wchar_t* w_fn = WideCharPlz(fn);
-  TagLib::FileRef f(w_fn);
+  TagLib::FileRef f(w_fn, false);
 #else
-  TagLib::FileRef f(fn);
+  TagLib::FileRef f(fn, false);
 #endif
 
   bool didsmthg=false;

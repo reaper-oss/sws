@@ -1,3 +1,4 @@
+!v2.7.2 #0 pre-release build (July 7, 2015)
 <strong>REAPER v5.0rc1+ is required!</strong>
 
 New actions
@@ -67,7 +68,6 @@ Other
 +Removed actions to simplify title bar. It wasn't reliable in certain situations and may not be morally right :)
 
 !v2.7.1 #0 pre-release build (May 7, 2015)
-
 <strong>OSX:</strong>
 +<strong>New installation disk image (.dmg)</strong>
  - The new .dmg proposes to install the SWS Extension in a different directory:

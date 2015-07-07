@@ -49,7 +49,8 @@ m_height        (-1),
 m_yOffset       (-1),
 m_count         (0),
 m_countSel      (0),
-m_takeEnvType   (UNKNOWN)
+m_takeEnvType   (UNKNOWN),
+m_data          (NULL)
 {
 }
 
@@ -68,7 +69,8 @@ m_height        (-1),
 m_yOffset       (-1),
 m_count         (0),
 m_countSel      (0),
-m_takeEnvType   (UNKNOWN)
+m_takeEnvType   (UNKNOWN),
+m_data          (NULL)
 {
 	if (!m_parent)
 		m_take = GetTakeEnvParent(m_envelope, &m_takeEnvType);
@@ -90,7 +92,8 @@ m_height        (-1),
 m_yOffset       (-1),
 m_count         (0),
 m_countSel      (0),
-m_takeEnvType   (UNKNOWN)
+m_takeEnvType   (UNKNOWN),
+m_data          (NULL)
 {
 	this->Build(takeEnvelopesUseProjectTime);
 }
@@ -110,7 +113,8 @@ m_height        (-1),
 m_yOffset       (-1),
 m_count         (0),
 m_countSel      (0),
-m_takeEnvType   (m_envelope ? envType : UNKNOWN)
+m_takeEnvType   (m_envelope ? envType : UNKNOWN),
+m_data          (NULL)
 {
 	this->Build(takeEnvelopesUseProjectTime);
 }
@@ -131,6 +135,7 @@ m_yOffset         (envelope.m_yOffset),
 m_count           (envelope.m_count),
 m_countSel        (envelope.m_countSel),
 m_takeEnvType     (envelope.m_takeEnvType),
+m_data            (envelope.m_data),
 m_points          (envelope.m_points),
 m_pointsSel       (envelope.m_pointsSel),
 m_pointsConseq    (envelope.m_pointsConseq),
@@ -164,6 +169,7 @@ BR_Envelope& BR_Envelope::operator= (const BR_Envelope& envelope)
 	m_count         = envelope.m_count;
 	m_countSel      = envelope.m_countSel;
 	m_takeEnvType   = envelope.m_takeEnvType;
+	m_data          = envelope.m_data;
 	m_points        = envelope.m_points;
 	m_pointsSel     = envelope.m_pointsSel;
 	m_pointsConseq  = envelope.m_pointsConseq;
@@ -987,7 +993,7 @@ bool BR_Envelope::VisibleInArrange (int* envHeight, int* yOffset, bool cacheValu
 		{
 			double arrangeStart, arrangeEnd;
 			RECT r; GetWindowRect(hwnd, &r);
-			GetSet_ArrangeView2(NULL, false, r.left, r.right-SCROLLBAR_W, &arrangeStart, &arrangeEnd);
+			GetSetArrangeView(NULL, false, &arrangeStart, &arrangeEnd);
 
 			double itemStart = GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION");
 			double itemEnd = itemStart + GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_LENGTH");
@@ -1164,6 +1170,16 @@ MediaTrack* BR_Envelope::GetParent ()
 TrackEnvelope* BR_Envelope::GetPointer ()
 {
 	return m_envelope;
+}
+
+void BR_Envelope::SetData (void* data)
+{
+	m_data = data;
+}
+
+void* BR_Envelope::GetData ()
+{
+	return m_data;
 }
 
 BR_EnvType BR_Envelope::Type ()
@@ -1437,7 +1453,7 @@ void BR_Envelope::SetScalingToFader (bool faderScaling)
 
 bool BR_Envelope::Commit (bool force /*=false*/)
 {
-	if (force || (m_update && !this->IsLocked()))
+	if ((force || (m_update && !this->IsLocked())) && m_envelope)
 	{
 		// Prevents reselection of points in time selection
 		int envClickSegMode; GetConfig("envclicksegmode", envClickSegMode);
@@ -1461,7 +1477,7 @@ bool BR_Envelope::Commit (bool force /*=false*/)
 			// If properties were changed, first commit chunk with properties only and one point (one point prevents REAPER
 			// from removing envelope completely) (creating points later using API instead of supplying full chunk is faster)
 			bool firstPointDone = false;
-			if (m_properties.changed)
+			if (m_properties.changed || force)
 			{
 				WDL_FastString chunkStart = this->GetProperties();
 				if (m_count > 0)
@@ -1895,7 +1911,7 @@ bool BR_Envelope::FillProperties () const
 
 WDL_FastString BR_Envelope::GetProperties ()
 {
-	if (m_properties.filled)
+	if (m_properties.filled || !m_envelope)
 	{
 		WDL_FastString properties;
 		properties.AppendFormatted(256, "%s\n", m_properties.paramType.Get());

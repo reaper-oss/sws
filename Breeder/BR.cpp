@@ -358,41 +358,45 @@ static COMMAND_T g_commandTable[] =
 	/******************************************************************************
 	* Envelopes - Visibility                                                      *
 	******************************************************************************/
-	{ { DEFACCEL, "SWS/BR: Hide all but selected track envelope for all tracks" },               "BR_ENV_HIDE_ALL_BUT_ACTIVE",            ShowActiveTrackEnvOnly, NULL, 0},
-	{ { DEFACCEL, "SWS/BR: Hide all but selected track envelope for selected tracks" },          "BR_ENV_HIDE_ALL_BUT_ACTIVE_SEL",        ShowActiveTrackEnvOnly, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Hide all but selected track envelope for all tracks" },                                           "BR_ENV_HIDE_ALL_BUT_ACTIVE",              ShowActiveTrackEnvOnly, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Hide all but selected track envelope for selected tracks" },                                      "BR_ENV_HIDE_ALL_BUT_ACTIVE_SEL",          ShowActiveTrackEnvOnly, NULL, -1},
+	{ { DEFACCEL, "SWS/BR: Hide all but selected track envelope for all tracks (except envelopes in separate lanes)" },      "BR_ENV_HIDE_ALL_BUT_ACTIVE_NO_ENV_L",     ShowActiveTrackEnvOnly, NULL, 2},
+	{ { DEFACCEL, "SWS/BR: Hide all but selected track envelope for selected tracks (except envelopes in separate lanes)" }, "BR_ENV_HIDE_ALL_BUT_ACTIVE_SEL_NO_ENV_L", ShowActiveTrackEnvOnly, NULL, -2},
+	{ { DEFACCEL, "SWS/BR: Hide all but selected track envelope for all tracks (except envelopes in track lanes)" },         "BR_ENV_HIDE_ALL_BUT_ACTIVE_NO_TR_L",      ShowActiveTrackEnvOnly, NULL, 3},
+	{ { DEFACCEL, "SWS/BR: Hide all but selected track envelope for selected tracks (except envelopes in track lanes)" },    "BR_ENV_HIDE_ALL_BUT_ACTIVE_SEL_NO_TR_L",  ShowActiveTrackEnvOnly, NULL, -3},
 
-	{ { DEFACCEL, "SWS/BR: Show/hide track envelope for last adjusted send (volume/pan only)" }, "BR_LAST_ADJ_SEND_ENVELOPE",             ShowLastAdjustedSendEnv, NULL, 0},
-	{ { DEFACCEL, "SWS/BR: Show/hide volume track envelope for last adjusted send" },            "BR_LAST_ADJ_SEND_ENVELOPE_VOL",         ShowLastAdjustedSendEnv, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Show/hide pan track envelope for last adjusted send" },               "BR_LAST_ADJ_SEND_ENVELOPE_PAN",         ShowLastAdjustedSendEnv, NULL, 2},
+	{ { DEFACCEL, "SWS/BR: Show/hide track envelope for last adjusted send (volume/pan only)" },                             "BR_LAST_ADJ_SEND_ENVELOPE",               ShowLastAdjustedSendEnv, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Show/hide volume track envelope for last adjusted send" },                                        "BR_LAST_ADJ_SEND_ENVELOPE_VOL",           ShowLastAdjustedSendEnv, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Show/hide pan track envelope for last adjusted send" },                                           "BR_LAST_ADJ_SEND_ENVELOPE_PAN",           ShowLastAdjustedSendEnv, NULL, 2},
 
-	{ { DEFACCEL, "SWS/BR: Toggle show all active FX envelopes for selected tracks" },           "BR_T_SHOW_ACT_FX_ENV_SEL_TRACK",        ShowHideFxEnv, NULL, BINARY(110)},
-	{ { DEFACCEL, "SWS/BR: Toggle show all FX envelopes for selected tracks" },                  "BR_T_SHOW_FX_ENV_SEL_TRACK",            ShowHideFxEnv, NULL, BINARY(100)},
-	{ { DEFACCEL, "SWS/BR: Show all active FX envelopes for selected tracks" },                  "BR_SHOW_ACT_FX_ENV_SEL_TRACK",          ShowHideFxEnv, NULL, BINARY(010)},
-	{ { DEFACCEL, "SWS/BR: Show all FX envelopes for selected tracks" },                         "BR_SHOW_FX_ENV_SEL_TRACK",              ShowHideFxEnv, NULL, BINARY(000)},
-	{ { DEFACCEL, "SWS/BR: Hide all FX envelopes for selected tracks" },                         "BR_HIDE_FX_ENV_SEL_TRACK",              ShowHideFxEnv, NULL, BINARY(001)},
+	{ { DEFACCEL, "SWS/BR: Toggle show all active FX envelopes for selected tracks" },                                       "BR_T_SHOW_ACT_FX_ENV_SEL_TRACK",          ShowHideFxEnv, NULL, BINARY(110)},
+	{ { DEFACCEL, "SWS/BR: Toggle show all FX envelopes for selected tracks" },                                              "BR_T_SHOW_FX_ENV_SEL_TRACK",              ShowHideFxEnv, NULL, BINARY(100)},
+	{ { DEFACCEL, "SWS/BR: Show all active FX envelopes for selected tracks" },                                              "BR_SHOW_ACT_FX_ENV_SEL_TRACK",            ShowHideFxEnv, NULL, BINARY(010)},
+	{ { DEFACCEL, "SWS/BR: Show all FX envelopes for selected tracks" },                                                     "BR_SHOW_FX_ENV_SEL_TRACK",                ShowHideFxEnv, NULL, BINARY(000)},
+	{ { DEFACCEL, "SWS/BR: Hide all FX envelopes for selected tracks" },                                                     "BR_HIDE_FX_ENV_SEL_TRACK",                ShowHideFxEnv, NULL, BINARY(001)},
 
-	{ { DEFACCEL, "SWS/BR: Toggle show all active send envelopes for selected tracks" },         "BR_T_SHOW_ACT_SEND_ENV_ALL_SEL_TRACK",  ShowHideSendEnv, NULL, BINARY(111110)},
-	{ { DEFACCEL, "SWS/BR: Toggle show active volume send envelopes for selected tracks" },      "BR_T_SHOW_ACT_SEND_ENV_VOL_SEL_TRACK",  ShowHideSendEnv, NULL, BINARY(001110)},
-	{ { DEFACCEL, "SWS/BR: Toggle show active pan send envelopes for selected tracks" },         "BR_T_SHOW_ACT_SEND_ENV_PAN_SEL_TRACK",  ShowHideSendEnv, NULL, BINARY(010110)},
-	{ { DEFACCEL, "SWS/BR: Toggle show active mute send envelopes for selected tracks" },        "BR_T_SHOW_ACT_SEND_ENV_MUTE_SEL_TRACK", ShowHideSendEnv, NULL, BINARY(100110)},
-	{ { DEFACCEL, "SWS/BR: Show all active send envelopes for selected tracks" },                "BR_SHOW_ACT_SEND_ENV_ALL_SEL_TRACK",    ShowHideSendEnv, NULL, BINARY(111010)},
-	{ { DEFACCEL, "SWS/BR: Show active volume send envelopes for selected tracks" },             "BR_SHOW_ACT_SEND_ENV_VOL_SEL_TRACK",    ShowHideSendEnv, NULL, BINARY(001010)},
-	{ { DEFACCEL, "SWS/BR: Show active pan send envelopes for selected tracks" },                "BR_SHOW_ACT_SEND_ENV_PAN_SEL_TRACK",    ShowHideSendEnv, NULL, BINARY(010010)},
-	{ { DEFACCEL, "SWS/BR: Show active mute send envelopes for selected tracks" },               "BR_SHOW_ACT_SEND_ENV_MUTE_SEL_TRACK",   ShowHideSendEnv, NULL, BINARY(100010)},
+	{ { DEFACCEL, "SWS/BR: Toggle show all active send envelopes for selected tracks" },                                     "BR_T_SHOW_ACT_SEND_ENV_ALL_SEL_TRACK",    ShowHideSendEnv, NULL, BINARY(111110)},
+	{ { DEFACCEL, "SWS/BR: Toggle show active volume send envelopes for selected tracks" },                                  "BR_T_SHOW_ACT_SEND_ENV_VOL_SEL_TRACK",    ShowHideSendEnv, NULL, BINARY(001110)},
+	{ { DEFACCEL, "SWS/BR: Toggle show active pan send envelopes for selected tracks" },                                     "BR_T_SHOW_ACT_SEND_ENV_PAN_SEL_TRACK",    ShowHideSendEnv, NULL, BINARY(010110)},
+	{ { DEFACCEL, "SWS/BR: Toggle show active mute send envelopes for selected tracks" },                                    "BR_T_SHOW_ACT_SEND_ENV_MUTE_SEL_TRACK",   ShowHideSendEnv, NULL, BINARY(100110)},
+	{ { DEFACCEL, "SWS/BR: Show all active send envelopes for selected tracks" },                                            "BR_SHOW_ACT_SEND_ENV_ALL_SEL_TRACK",      ShowHideSendEnv, NULL, BINARY(111010)},
+	{ { DEFACCEL, "SWS/BR: Show active volume send envelopes for selected tracks" },                                         "BR_SHOW_ACT_SEND_ENV_VOL_SEL_TRACK",      ShowHideSendEnv, NULL, BINARY(001010)},
+	{ { DEFACCEL, "SWS/BR: Show active pan send envelopes for selected tracks" },                                            "BR_SHOW_ACT_SEND_ENV_PAN_SEL_TRACK",      ShowHideSendEnv, NULL, BINARY(010010)},
+	{ { DEFACCEL, "SWS/BR: Show active mute send envelopes for selected tracks" },                                           "BR_SHOW_ACT_SEND_ENV_MUTE_SEL_TRACK",     ShowHideSendEnv, NULL, BINARY(100010)},
 
-	{ { DEFACCEL, "SWS/BR: Toggle show all send envelopes for selected tracks" },                "BR_T_SHOW_SEND_ENV_ALL_SEL_TRACK",      ShowHideSendEnv, NULL, BINARY(111100)},
-	{ { DEFACCEL, "SWS/BR: Toggle show volume send envelopes for selected tracks" },             "BR_T_SHOW_SEND_ENV_VOL_SEL_TRACK",      ShowHideSendEnv, NULL, BINARY(001100)},
-	{ { DEFACCEL, "SWS/BR: Toggle show pan send envelopes for selected tracks" },                "BR_T_SHOW_SEND_ENV_PAN_SEL_TRACK",      ShowHideSendEnv, NULL, BINARY(010100)},
-	{ { DEFACCEL, "SWS/BR: Toggle show mute send envelopes for selected tracks" },               "BR_T_SHOW_SEND_ENV_MUTE_SEL_TRACK",     ShowHideSendEnv, NULL, BINARY(100100)},
-	{ { DEFACCEL, "SWS/BR: Show all send envelopes for selected tracks" },                       "BR_SHOW_SEND_ENV_ALL_SEL_TRACK",        ShowHideSendEnv, NULL, BINARY(111000)},
-	{ { DEFACCEL, "SWS/BR: Show volume send envelopes for selected tracks" },                    "BR_SHOW_SEND_ENV_VOL_SEL_TRACK",        ShowHideSendEnv, NULL, BINARY(001000)},
-	{ { DEFACCEL, "SWS/BR: Show pan send envelopes for selected tracks" },                       "BR_SHOW_SEND_ENV_PAN_SEL_TRACK",        ShowHideSendEnv, NULL, BINARY(010000)},
-	{ { DEFACCEL, "SWS/BR: Show mute send envelopes for selected tracks" },                      "BR_SHOW_SEND_ENV_MUTE_SEL_TRACK",       ShowHideSendEnv, NULL, BINARY(100000)},
+	{ { DEFACCEL, "SWS/BR: Toggle show all send envelopes for selected tracks" },                                            "BR_T_SHOW_SEND_ENV_ALL_SEL_TRACK",        ShowHideSendEnv, NULL, BINARY(111100)},
+	{ { DEFACCEL, "SWS/BR: Toggle show volume send envelopes for selected tracks" },                                         "BR_T_SHOW_SEND_ENV_VOL_SEL_TRACK",        ShowHideSendEnv, NULL, BINARY(001100)},
+	{ { DEFACCEL, "SWS/BR: Toggle show pan send envelopes for selected tracks" },                                            "BR_T_SHOW_SEND_ENV_PAN_SEL_TRACK",        ShowHideSendEnv, NULL, BINARY(010100)},
+	{ { DEFACCEL, "SWS/BR: Toggle show mute send envelopes for selected tracks" },                                           "BR_T_SHOW_SEND_ENV_MUTE_SEL_TRACK",       ShowHideSendEnv, NULL, BINARY(100100)},
+	{ { DEFACCEL, "SWS/BR: Show all send envelopes for selected tracks" },                                                   "BR_SHOW_SEND_ENV_ALL_SEL_TRACK",          ShowHideSendEnv, NULL, BINARY(111000)},
+	{ { DEFACCEL, "SWS/BR: Show volume send envelopes for selected tracks" },                                                "BR_SHOW_SEND_ENV_VOL_SEL_TRACK",          ShowHideSendEnv, NULL, BINARY(001000)},
+	{ { DEFACCEL, "SWS/BR: Show pan send envelopes for selected tracks" },                                                   "BR_SHOW_SEND_ENV_PAN_SEL_TRACK",          ShowHideSendEnv, NULL, BINARY(010000)},
+	{ { DEFACCEL, "SWS/BR: Show mute send envelopes for selected tracks" },                                                  "BR_SHOW_SEND_ENV_MUTE_SEL_TRACK",         ShowHideSendEnv, NULL, BINARY(100000)},
 
-	{ { DEFACCEL, "SWS/BR: Hide all send envelopes for selected tracks" },                       "BR_HIDE_SEND_ENV_SEL_ALL_TRACK",        ShowHideSendEnv, NULL, BINARY(111001)},
-	{ { DEFACCEL, "SWS/BR: Hide volume send envelopes for selected tracks" },                    "BR_HIDE_SEND_ENV_SEL_VOL_TRACK",        ShowHideSendEnv, NULL, BINARY(001001)},
-	{ { DEFACCEL, "SWS/BR: Hide pan send envelopes for selected tracks" },                       "BR_HIDE_SEND_ENV_SEL_PAN_TRACK",        ShowHideSendEnv, NULL, BINARY(010001)},
-	{ { DEFACCEL, "SWS/BR: Hide mute send envelopes for selected tracks" },                      "BR_HIDE_SEND_ENV_SEL_NUTE_TRACK",       ShowHideSendEnv, NULL, BINARY(100001)},
+	{ { DEFACCEL, "SWS/BR: Hide all send envelopes for selected tracks" },                                                   "BR_HIDE_SEND_ENV_SEL_ALL_TRACK",        ShowHideSendEnv, NULL, BINARY(111001)},
+	{ { DEFACCEL, "SWS/BR: Hide volume send envelopes for selected tracks" },                                                "BR_HIDE_SEND_ENV_SEL_VOL_TRACK",        ShowHideSendEnv, NULL, BINARY(001001)},
+	{ { DEFACCEL, "SWS/BR: Hide pan send envelopes for selected tracks" },                                                   "BR_HIDE_SEND_ENV_SEL_PAN_TRACK",        ShowHideSendEnv, NULL, BINARY(010001)},
+	{ { DEFACCEL, "SWS/BR: Hide mute send envelopes for selected tracks" },                                                  "BR_HIDE_SEND_ENV_SEL_NUTE_TRACK",       ShowHideSendEnv, NULL, BINARY(100001)},
 
 	/******************************************************************************
 	* Loudness                                                                    *
@@ -444,6 +448,56 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Show only used CC lanes (detect 14-bit)" },                                                                                   "BR_ME_SHOW_USED_CC_14_BIT",                    NULL, NULL, 0, NULL, SECTION_MIDI_EDITOR, ME_ShowUsedCCLanesDetect14Bit},
 	{ { DEFACCEL, "SWS/BR: Show only used CC lanes with selected events (detect 14-bit)" },                                                              "BR_ME_SHOW_USED_AND_SELECTED_CC_14_BIT",       NULL, NULL, 1, NULL, SECTION_MIDI_EDITOR, ME_ShowUsedCCLanesDetect14Bit},
 	{ { DEFACCEL, "SWS/BR: Create CC lane and make it last clicked" },                                                                                   "BR_ME_CREATE_CC_LAST_CLICKED",                 NULL, NULL, 0, NULL, SECTION_MIDI_EDITOR, ME_CreateCCLaneLastClicked},
+
+	{ { DEFACCEL, "SWS/BR: Move last clicked CC lane up" },                                                                                              "BR_ME_MOVE_CC_LAST_CLICKED_UP",                NULL, NULL, 1,  NULL, SECTION_MIDI_EDITOR, ME_MoveCCLaneUpDown},
+	{ { DEFACCEL, "SWS/BR: Move last clicked CC lane up (keep lane height constant)" },                                                                  "BR_ME_MOVE_CC_LAST_CLICKED_UP_CONST",          NULL, NULL, 2,  NULL, SECTION_MIDI_EDITOR, ME_MoveCCLaneUpDown},
+	{ { DEFACCEL, "SWS/BR: Move last clicked CC lane down" },                                                                                            "BR_ME_MOVE_CC_LAST_CLICKED_DOWN",              NULL, NULL, -1, NULL, SECTION_MIDI_EDITOR, ME_MoveCCLaneUpDown},
+	{ { DEFACCEL, "SWS/BR: Move last clicked CC lane down (keep lane height constant)" },                                                                "BR_ME_MOVE_CC_LAST_CLICKED_DOWN_CONST",        NULL, NULL, -2, NULL, SECTION_MIDI_EDITOR, ME_MoveCCLaneUpDown},
+
+	{ { DEFACCEL, "SWS/BR: Set all CC lanes' height to 0 pixel" },                                                                                       "BR_ME_SET_CC_LANES_HEIGHT_0",                  NULL, NULL, 0,   NULL, SECTION_MIDI_EDITOR, ME_SetAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Set all CC lanes' height to 010 pixel" },                                                                                     "BR_ME_SET_CC_LANES_HEIGHT_10",                 NULL, NULL, 10,  NULL, SECTION_MIDI_EDITOR, ME_SetAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Set all CC lanes' height to 020 pixel" },                                                                                     "BR_ME_SET_CC_LANES_HEIGHT_20",                 NULL, NULL, 20,  NULL, SECTION_MIDI_EDITOR, ME_SetAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Set all CC lanes' height to 030 pixel" },                                                                                     "BR_ME_SET_CC_LANES_HEIGHT_30",                 NULL, NULL, 30,  NULL, SECTION_MIDI_EDITOR, ME_SetAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Set all CC lanes' height to 040 pixel" },                                                                                     "BR_ME_SET_CC_LANES_HEIGHT_40",                 NULL, NULL, 40,  NULL, SECTION_MIDI_EDITOR, ME_SetAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Set all CC lanes' height to 050 pixel" },                                                                                     "BR_ME_SET_CC_LANES_HEIGHT_50",                 NULL, NULL, 50,  NULL, SECTION_MIDI_EDITOR, ME_SetAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Set all CC lanes' height to 060 pixel" },                                                                                     "BR_ME_SET_CC_LANES_HEIGHT_60",                 NULL, NULL, 60,  NULL, SECTION_MIDI_EDITOR, ME_SetAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Set all CC lanes' height to 070 pixel" },                                                                                     "BR_ME_SET_CC_LANES_HEIGHT_70",                 NULL, NULL, 70,  NULL, SECTION_MIDI_EDITOR, ME_SetAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Set all CC lanes' height to 080 pixel" },                                                                                     "BR_ME_SET_CC_LANES_HEIGHT_80",                 NULL, NULL, 80,  NULL, SECTION_MIDI_EDITOR, ME_SetAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Set all CC lanes' height to 090 pixel" },                                                                                     "BR_ME_SET_CC_LANES_HEIGHT_90",                 NULL, NULL, 90,  NULL, SECTION_MIDI_EDITOR, ME_SetAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Set all CC lanes' height to 100 pixel" },                                                                                     "BR_ME_SET_CC_LANES_HEIGHT_100",                NULL, NULL, 100, NULL, SECTION_MIDI_EDITOR, ME_SetAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Set all CC lanes' height to 110 pixel" },                                                                                     "BR_ME_SET_CC_LANES_HEIGHT_110",                NULL, NULL, 110, NULL, SECTION_MIDI_EDITOR, ME_SetAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Set all CC lanes' height to 120 pixel" },                                                                                     "BR_ME_SET_CC_LANES_HEIGHT_120",                NULL, NULL, 120, NULL, SECTION_MIDI_EDITOR, ME_SetAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Set all CC lanes' height to 130 pixel" },                                                                                     "BR_ME_SET_CC_LANES_HEIGHT_130",                NULL, NULL, 130, NULL, SECTION_MIDI_EDITOR, ME_SetAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Set all CC lanes' height to 140 pixel" },                                                                                     "BR_ME_SET_CC_LANES_HEIGHT_140",                NULL, NULL, 140, NULL, SECTION_MIDI_EDITOR, ME_SetAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Set all CC lanes' height to 150 pixel" },                                                                                     "BR_ME_SET_CC_LANES_HEIGHT_150",                NULL, NULL, 150, NULL, SECTION_MIDI_EDITOR, ME_SetAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Set all CC lanes' height to 160 pixel" },                                                                                     "BR_ME_SET_CC_LANES_HEIGHT_160",                NULL, NULL, 160, NULL, SECTION_MIDI_EDITOR, ME_SetAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Set all CC lanes' height to 170 pixel" },                                                                                     "BR_ME_SET_CC_LANES_HEIGHT_170",                NULL, NULL, 170, NULL, SECTION_MIDI_EDITOR, ME_SetAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Set all CC lanes' height to 180 pixel" },                                                                                     "BR_ME_SET_CC_LANES_HEIGHT_180",                NULL, NULL, 180, NULL, SECTION_MIDI_EDITOR, ME_SetAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Set all CC lanes' height to 190 pixel" },                                                                                     "BR_ME_SET_CC_LANES_HEIGHT_190",                NULL, NULL, 190, NULL, SECTION_MIDI_EDITOR, ME_SetAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Set all CC lanes' height to 200 pixel" },                                                                                     "BR_ME_SET_CC_LANES_HEIGHT_200",                NULL, NULL, 200, NULL, SECTION_MIDI_EDITOR, ME_SetAllCCLanesHeight},
+
+	{ { DEFACCEL, "SWS/BR: Increase all CC lanes' height by 001 pixel" },                                                                                "BR_ME_INC_CC_LANES_HEIGHT_1",                  NULL, NULL, 1,   NULL,  SECTION_MIDI_EDITOR, ME_IncDecAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Increase all CC lanes' height by 002 pixel" },                                                                                "BR_ME_INC_CC_LANES_HEIGHT_2",                  NULL, NULL, 2,   NULL,  SECTION_MIDI_EDITOR, ME_IncDecAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Increase all CC lanes' height by 003 pixel" },                                                                                "BR_ME_INC_CC_LANES_HEIGHT_3",                  NULL, NULL, 3,   NULL,  SECTION_MIDI_EDITOR, ME_IncDecAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Increase all CC lanes' height by 004 pixel" },                                                                                "BR_ME_INC_CC_LANES_HEIGHT_4",                  NULL, NULL, 4,   NULL,  SECTION_MIDI_EDITOR, ME_IncDecAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Increase all CC lanes' height by 005 pixel" },                                                                                "BR_ME_INC_CC_LANES_HEIGHT_5",                  NULL, NULL, 5,   NULL,  SECTION_MIDI_EDITOR, ME_IncDecAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Increase all CC lanes' height by 010 pixel" },                                                                                "BR_ME_INC_CC_LANES_HEIGHT_10",                 NULL, NULL, 10,  NULL,  SECTION_MIDI_EDITOR, ME_IncDecAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Increase all CC lanes' height by 020 pixel" },                                                                                "BR_ME_INC_CC_LANES_HEIGHT_20",                 NULL, NULL, 20,  NULL,  SECTION_MIDI_EDITOR, ME_IncDecAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Increase all CC lanes' height by 030 pixel" },                                                                                "BR_ME_INC_CC_LANES_HEIGHT_30",                 NULL, NULL, 30,  NULL,  SECTION_MIDI_EDITOR, ME_IncDecAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Increase all CC lanes' height by 040 pixel" },                                                                                "BR_ME_INC_CC_LANES_HEIGHT_40",                 NULL, NULL, 40,  NULL,  SECTION_MIDI_EDITOR, ME_IncDecAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Increase all CC lanes' height by 050 pixel" },                                                                                "BR_ME_INC_CC_LANES_HEIGHT_50",                 NULL, NULL, 50,  NULL,  SECTION_MIDI_EDITOR, ME_IncDecAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Increase all CC lanes' height by 100 pixel" },                                                                                "BR_ME_INC_CC_LANES_HEIGHT_100",                NULL, NULL, 100, NULL,  SECTION_MIDI_EDITOR, ME_IncDecAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Decrease all CC lanes' height by 001 pixel" },                                                                                "BR_ME_DEC_CC_LANES_HEIGHT_1",                  NULL, NULL, -1,   NULL, SECTION_MIDI_EDITOR, ME_IncDecAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Decrease all CC lanes' height by 002 pixel" },                                                                                "BR_ME_DEC_CC_LANES_HEIGHT_2",                  NULL, NULL, -2,   NULL, SECTION_MIDI_EDITOR, ME_IncDecAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Decrease all CC lanes' height by 003 pixel" },                                                                                "BR_ME_DEC_CC_LANES_HEIGHT_3",                  NULL, NULL, -3,   NULL, SECTION_MIDI_EDITOR, ME_IncDecAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Decrease all CC lanes' height by 004 pixel" },                                                                                "BR_ME_DEC_CC_LANES_HEIGHT_4",                  NULL, NULL, -4,   NULL, SECTION_MIDI_EDITOR, ME_IncDecAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Decrease all CC lanes' height by 005 pixel" },                                                                                "BR_ME_DEC_CC_LANES_HEIGHT_5",                  NULL, NULL, -5,   NULL, SECTION_MIDI_EDITOR, ME_IncDecAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Decrease all CC lanes' height by 010 pixel" },                                                                                "BR_ME_DEC_CC_LANES_HEIGHT_10",                 NULL, NULL, -10,  NULL, SECTION_MIDI_EDITOR, ME_IncDecAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Decrease all CC lanes' height by 020 pixel" },                                                                                "BR_ME_DEC_CC_LANES_HEIGHT_20",                 NULL, NULL, -20,  NULL, SECTION_MIDI_EDITOR, ME_IncDecAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Decrease all CC lanes' height by 030 pixel" },                                                                                "BR_ME_DEC_CC_LANES_HEIGHT_30",                 NULL, NULL, -30,  NULL, SECTION_MIDI_EDITOR, ME_IncDecAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Decrease all CC lanes' height by 040 pixel" },                                                                                "BR_ME_DEC_CC_LANES_HEIGHT_40",                 NULL, NULL, -40,  NULL, SECTION_MIDI_EDITOR, ME_IncDecAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Decrease all CC lanes' height by 050 pixel" },                                                                                "BR_ME_DEC_CC_LANES_HEIGHT_50",                 NULL, NULL, -50,  NULL, SECTION_MIDI_EDITOR, ME_IncDecAllCCLanesHeight},
+	{ { DEFACCEL, "SWS/BR: Decrease all CC lanes' height by 100 pixel" },                                                                                "BR_ME_DEC_CC_LANES_HEIGHT_100",                NULL, NULL, -100, NULL, SECTION_MIDI_EDITOR, ME_IncDecAllCCLanesHeight},
 
 	{ { DEFACCEL, "SWS/BR: Hide last clicked CC lane" },                                                                                                 "BR_ME_HIDE_LAST_CLICKED_LANE",                 NULL, NULL, 1,   NULL,                     SECTION_MIDI_EDITOR, ME_HideCCLanes},
 	{ { DEFACCEL, "SWS/BR: Hide all CC lanes except last clicked lane" },                                                                                "BR_ME_HIDE_ALL_NO_LAST_CLICKED",               NULL, NULL, 2,   NULL,                     SECTION_MIDI_EDITOR, ME_HideCCLanes},
@@ -594,27 +648,6 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Move closest project marker to edit cursor (obey snapping)" },                                                                  "BR_CLOSEST_PROJ_MARKER_EDIT_SNAP",   MoveClosestMarker, NULL, -2},
 	{ { DEFACCEL, "SWS/BR: Move closest project marker to mouse cursor (obey snapping)" },                                                                 "BR_CLOSEST_PROJ_MARKER_MOUSE_SNAP",  MoveClosestMarker, NULL, -3},
 
-	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Grid snap settings follow grid visibility\"" },                                                              "BR_OPTIONS_SNAP_FOLLOW_GRID_VIS",    SnapFollowsGridVis, NULL, 0, IsSnapFollowsGridVisOn},
-	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Playback position follows project timebase when changing tempo\"" },                                         "BR_OPTIONS_PLAYBACK_TEMPO_CHANGE",   PlaybackFollowsTempoChange, NULL, 0, IsPlaybackFollowsTempoChangeOn},
-	{ { DEFACCEL, "SWS/BR: Options - Set \"Apply trim when adding volume/pan envelopes\" to \"Always\"" },                                                 "BR_OPTIONS_ENV_TRIM_ALWAYS",         TrimNewVolPanEnvs, NULL, 0, IsTrimNewVolPanEnvsOn},
-	{ { DEFACCEL, "SWS/BR: Options - Set \"Apply trim when adding volume/pan envelopes\" to \"In read/write\"" },                                          "BR_OPTIONS_ENV_TRIM_READWRITE",      TrimNewVolPanEnvs, NULL, 1, IsTrimNewVolPanEnvsOn},
-	{ { DEFACCEL, "SWS/BR: Options - Set \"Apply trim when adding volume/pan envelopes\" to \"Never\"" },                                                  "BR_OPTIONS_ENV_TRIM_NEVER",          TrimNewVolPanEnvs, NULL, 2, IsTrimNewVolPanEnvsOn},
-	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Display media item take name\"" },                                                                           "BR_OPTIONS_DISPLAY_ITEM_TAKE_NAME",  ToggleDisplayItemLabels, NULL, 0, IsToggleDisplayItemLabelsOn},
-	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Display media item pitch/playrate if set\"" },                                                               "BR_OPTIONS_DISPLAY_ITEM_PITCH_RATE", ToggleDisplayItemLabels, NULL, 2, IsToggleDisplayItemLabelsOn},
-	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Display media item gain if set\"" },                                                                         "BR_OPTIONS_DISPLAY_ITEM_GAIN",       ToggleDisplayItemLabels, NULL, 4, IsToggleDisplayItemLabelsOn},
-	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Send all-notes-off on stop/play\"" },                                                                        "BR_OPTIONS_STOP_PLAY_NOTES_OFF",     SetMidiResetOnPlayStop, NULL, 0, IsSetMidiResetOnPlayStopOn},
-	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Reset pitch on stop/play\"" },                                                                               "BR_OPTIONS_STOP_PLAY_RESET_PITCH",   SetMidiResetOnPlayStop, NULL, 1, IsSetMidiResetOnPlayStopOn},
-	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Reset CC on stop/play\"" },                                                                                  "BR_OPTIONS_STOP_PLAY_RESET_CC",      SetMidiResetOnPlayStop, NULL, 2, IsSetMidiResetOnPlayStopOn},
-	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Flush FX on stop\"" },                                                                                       "BR_OPTIONS_FLUSH_FX_ON_STOP",        SetOptionsFX, NULL, 0, IsSetOptionsFXOn},
-	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Flush FX when looping\"" },                                                                                  "BR_OPTIONS_FLUSH_FX_WHEN_LOOPING",   SetOptionsFX, NULL, 1, IsSetOptionsFXOn},
-	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Move edit cursor to start of time selection on time selection change\"" },                                   "BR_OPTIONS_MOVE_CUR_ON_TIME_SEL",    SetMoveCursorOnPaste, NULL, 2, IsSetMoveCursorOnPasteOn},
-	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Move edit cursor when pasting/inserting media\"" },                                                          "BR_OPTIONS_MOVE_CUR_ON_PASTE",       SetMoveCursorOnPaste, NULL, -3, IsSetMoveCursorOnPasteOn},
-	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Move edit cursor to end of recorded items on record stop\"" },                                               "BR_OPTIONS_MOVE_CUR_ON_RECORD_STOP", SetMoveCursorOnPaste, NULL, 4, IsSetMoveCursorOnPasteOn},
-	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Stop/repeat playback at end of project\"" },                                                                 "BR_OPTIONS_STOP_PLAYBACK_PROJ_END",  SetPlaybackStopOptions, NULL, 0, IsSetPlaybackStopOptionsOn},
-	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Scroll view to edit cursor on stop\"" },                                                                     "BR_OPTIONS_SCROLL_TO_CURS_ON_STOP",  SetPlaybackStopOptions, NULL, 3, IsSetPlaybackStopOptionsOn},
-
-	{ { DEFACCEL, "SWS/BR: Cycle through record modes" },                                                                                                  "BR_CYCLE_RECORD_MODES",              CycleRecordModes},
-
 	{ { DEFACCEL, "SWS/BR: Focus arrange" },                                                                                                               "BR_FOCUS_ARRANGE_WND",               FocusArrangeTracks, NULL, 0},
 	{ { DEFACCEL, "SWS/BR: Focus tracks" },                                                                                                                "BR_FOCUS_TRACKS",                    FocusArrangeTracks, NULL, 1},
 
@@ -747,6 +780,37 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Restore tracks' solo and mute state to all tracks, slot 8" },                                                                   "BR_RESTORE_SOLO_MUTE_ALL_TRACKS_SLOT_8", RestoreTrackSoloMuteStateSlot, NULL, -8},
 
 	/******************************************************************************
+	* Misc - REAPER preferences                                                   *
+	******************************************************************************/
+	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Grid snap settings follow grid visibility\"" },                            "BR_OPTIONS_SNAP_FOLLOW_GRID_VIS",    SnapFollowsGridVis, NULL, 0, IsSnapFollowsGridVisOn},
+	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Playback position follows project timebase when changing tempo\"" },       "BR_OPTIONS_PLAYBACK_TEMPO_CHANGE",   PlaybackFollowsTempoChange, NULL, 0, IsPlaybackFollowsTempoChangeOn},
+	{ { DEFACCEL, "SWS/BR: Options - Set \"Apply trim when adding volume/pan envelopes\" to \"Always\"" },               "BR_OPTIONS_ENV_TRIM_ALWAYS",         TrimNewVolPanEnvs, NULL, 0, IsTrimNewVolPanEnvsOn},
+	{ { DEFACCEL, "SWS/BR: Options - Set \"Apply trim when adding volume/pan envelopes\" to \"In read/write\"" },        "BR_OPTIONS_ENV_TRIM_READWRITE",      TrimNewVolPanEnvs, NULL, 1, IsTrimNewVolPanEnvsOn},
+	{ { DEFACCEL, "SWS/BR: Options - Set \"Apply trim when adding volume/pan envelopes\" to \"Never\"" },                "BR_OPTIONS_ENV_TRIM_NEVER",          TrimNewVolPanEnvs, NULL, 2, IsTrimNewVolPanEnvsOn},
+	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Display media item take name\"" },                                         "BR_OPTIONS_DISPLAY_ITEM_TAKE_NAME",  ToggleDisplayItemLabels, NULL, 0, IsToggleDisplayItemLabelsOn},
+	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Display media item pitch/playrate if set\"" },                             "BR_OPTIONS_DISPLAY_ITEM_PITCH_RATE", ToggleDisplayItemLabels, NULL, 2, IsToggleDisplayItemLabelsOn},
+	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Display media item gain if set\"" },                                       "BR_OPTIONS_DISPLAY_ITEM_GAIN",       ToggleDisplayItemLabels, NULL, 4, IsToggleDisplayItemLabelsOn},
+	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Send all-notes-off on stop/play\"" },                                      "BR_OPTIONS_STOP_PLAY_NOTES_OFF",     SetMidiResetOnPlayStop, NULL, 0, IsSetMidiResetOnPlayStopOn},
+	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Reset pitch on stop/play\"" },                                             "BR_OPTIONS_STOP_PLAY_RESET_PITCH",   SetMidiResetOnPlayStop, NULL, 1, IsSetMidiResetOnPlayStopOn},
+	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Reset CC on stop/play\"" },                                                "BR_OPTIONS_STOP_PLAY_RESET_CC",      SetMidiResetOnPlayStop, NULL, 2, IsSetMidiResetOnPlayStopOn},
+	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Flush FX on stop\"" },                                                     "BR_OPTIONS_FLUSH_FX_ON_STOP",        SetOptionsFX, NULL, 0, IsSetOptionsFXOn},
+	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Flush FX when looping\"" },                                                "BR_OPTIONS_FLUSH_FX_WHEN_LOOPING",   SetOptionsFX, NULL, 1, IsSetOptionsFXOn},
+	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Move edit cursor to start of time selection on time selection change\"" }, "BR_OPTIONS_MOVE_CUR_ON_TIME_SEL",    SetMoveCursorOnPaste, NULL, 2, IsSetMoveCursorOnPasteOn},
+	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Move edit cursor when pasting/inserting media\"" },                        "BR_OPTIONS_MOVE_CUR_ON_PASTE",       SetMoveCursorOnPaste, NULL, -3, IsSetMoveCursorOnPasteOn},
+	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Move edit cursor to end of recorded items on record stop\"" },             "BR_OPTIONS_MOVE_CUR_ON_RECORD_STOP", SetMoveCursorOnPaste, NULL, 4, IsSetMoveCursorOnPasteOn},
+	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Stop/repeat playback at end of project\"" },                               "BR_OPTIONS_STOP_PLAYBACK_PROJ_END",  SetPlaybackStopOptions, NULL, 0, IsSetPlaybackStopOptionsOn},
+	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Scroll view to edit cursor on stop\"" },                                   "BR_OPTIONS_SCROLL_TO_CURS_ON_STOP",  SetPlaybackStopOptions, NULL, 3, IsSetPlaybackStopOptionsOn},
+
+	{ { DEFACCEL, "SWS/BR: Options - Set grid line Z order to \"Over items\"" },                                         "BR_OPTIONS_GRID_Z_OVER_ITEMS",       SetGridMarkerZOrder, NULL, 1,  IsSetGridMarkerZOrderOn},
+	{ { DEFACCEL, "SWS/BR: Options - Set grid line Z order to \"Through items\"" },                                      "BR_OPTIONS_GRID_Z_THROUGH_ITEMS",    SetGridMarkerZOrder, NULL, 2,  IsSetGridMarkerZOrderOn},
+	{ { DEFACCEL, "SWS/BR: Options - Set grid line Z order to \"Under items\"" },                                        "BR_OPTIONS_GRID_Z_UNDER_ITEMS",      SetGridMarkerZOrder, NULL, 3,  IsSetGridMarkerZOrderOn},
+	{ { DEFACCEL, "SWS/BR: Options - Set marker line Z order to \"Over items\"" },                                       "BR_OPTIONS_MARKER_Z_OVER_ITEMS",     SetGridMarkerZOrder, NULL, -1, IsSetGridMarkerZOrderOn},
+	{ { DEFACCEL, "SWS/BR: Options - Set marker line Z order to \"Through items\"" },                                    "BR_OPTIONS_MARKER_Z_THROUGH_ITEMS",  SetGridMarkerZOrder, NULL, -2, IsSetGridMarkerZOrderOn},
+	{ { DEFACCEL, "SWS/BR: Options - Set marker line Z order to \"Under items\"" },                                      "BR_OPTIONS_MARKER_Z_UNDER_ITEMS",    SetGridMarkerZOrder, NULL, -3, IsSetGridMarkerZOrderOn},
+
+	{ { DEFACCEL, "SWS/BR: Options - Cycle through record modes" },                                                      "BR_CYCLE_RECORD_MODES",              CycleRecordModes},
+
+	/******************************************************************************
 	* Misc - Media item preview                                                   *
 	******************************************************************************/
 	{ { DEFACCEL, "SWS/BR: Preview media item under mouse" },                                                                                          "BR_PREV_ITEM_CURSOR",                 PreviewItemAtMouse, NULL, 11111},
@@ -818,15 +882,6 @@ static COMMAND_T g_commandTable[] =
 	******************************************************************************/
 	{ { DEFACCEL, "SWS/BR: Adjust playrate (MIDI CC only)" }, "BR_ADJUST_PLAYRATE_MIDI",         NULL, NULL, 0, NULL,                           0, AdjustPlayrate},
 	{ { DEFACCEL, "SWS/BR: Adjust playrate options..." },     "BR_ADJUST_PLAYRATE_MIDI_OPTIONS", NULL, NULL, 1, IsAdjustPlayrateOptionsVisible, 0, AdjustPlayrate},
-
-	/******************************************************************************
-	* Misc - Title bar display options                                            *
-	******************************************************************************/
-	#ifdef _WIN32 // WM_SETTEXT is not implemented in SWELL (last checked REAPER v5.0pre27)
-	{ { DEFACCEL, "SWS/BR: Simplify main window title bar (show project name on the left)" },  "BR_MAIN_TITLE_BAR_SIMPLIFY_LEFT_PROJ_NAME",  SetTitleBarDisplayOptions, NULL, 0, IsTitleBarDisplayOptionOn},
-	{ { DEFACCEL, "SWS/BR: Simplify main window title bar (show project name on the right)" }, "BR_MAIN_TITLE_BAR_SIMPLIFY_RIGHT_PROJ_NAME", SetTitleBarDisplayOptions, NULL, 1, IsTitleBarDisplayOptionOn},
-	{ { DEFACCEL, "SWS/BR: Simplify main window title bar (show only project name)" },         "BR_MAIN_TITLE_BAR_SIMPLIFY_ONLY_PROJ_NAME",  SetTitleBarDisplayOptions, NULL, 2, IsTitleBarDisplayOptionOn},
-	#endif
 
 	/******************************************************************************
 	* Misc - Project track selection action                                       *
@@ -944,7 +999,6 @@ int BR_Init ()
 
 int BR_InitPost ()
 {
-	TitleBarDisplayOptionsInitExit(true);
 	return 1;
 }
 
@@ -953,7 +1007,6 @@ void BR_Exit ()
 	ContextualToolbarsInitExit(false);
 	ContinuousActionsInitExit(false);
 	LoudnessInitExit(false);
-	TitleBarDisplayOptionsInitExit(false);
 	ProjectTrackSelInitExit(false);
 	ProjStateInitExit(false);
 	VersionCheckInitExit(false);

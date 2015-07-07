@@ -219,6 +219,7 @@ int GetTrackEnvHeight (TrackEnvelope* envelope, int* offsetY, bool drawableRange
 * Arrange                                                                     *
 ******************************************************************************/
 void MoveArrange (double amountTime);
+void GetSetArrangeView (ReaProject* proj, bool set, double* start, double* end);
 void CenterArrange (double position);
 void SetArrangeStart (double start);
 void MoveArrangeToTarget (double target, double reference);

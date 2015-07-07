@@ -88,6 +88,7 @@ const int MIDI_LANE_TOP_GAP            = 4;
 const int MIDI_BLACK_KEYS_W            = 73;
 const int MIDI_CC_LANE_CLICK_Y_OFFSET  = 5;
 const int MIDI_CC_EVENT_WIDTH_PX       = 8;
+const int MIDI_MIN_NOTE_VIEW_H         = 110;
 
 const int INLINE_MIDI_MIN_H                  = 32;
 const int INLINE_MIDI_MIN_NOTEVIEW_H         = 24;
@@ -126,6 +127,7 @@ public:
 	int FindCCLane (int lane);
 	int GetCCLanesFullheight (bool keyboardView);
 	bool IsCCLaneVisible (int lane);
+	bool SetCCLaneLastClicked (int idx); // works only for main MIDI editor
 
 	/* Event filter */
 	bool IsNoteVisible (MediaItem_Take* take, int id);
@@ -237,6 +239,7 @@ int FindFirstSelectedCC   (MediaItem_Take* take, BR_MidiEditor* midiEditorFilter
 int FindFirstNote (MediaItem_Take* take, BR_MidiEditor* midiEditorFilterSettings);         // through MIDI filter
 int GetMIDIFilePPQ (const char* fp);
 int GetLastClickedVelLane (void* midiEditor); // returns -2 if no last clicked lane
+int GetMaxCCLanesFullHeight (void* midiEditor);
 int ConvertLaneToStatusMsg (int lane);
 int MapVelLaneToReaScriptCC (int lane); // CC format follows ReaScript scheme: 0-127=CC, 0x100|(0-31)=14-bit CC, 0x200=velocity, 0x201=pitch,
 int MapReaScriptCCToVelLane (int cc);   // 0x202=program, 0x203=channel pressure, 0x204=bank/program select, 0x205=text, 0x206=sysex, 0x207=off velocity

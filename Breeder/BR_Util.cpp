@@ -1731,7 +1731,7 @@ double GetPrevGridDiv (double position)
 	{
 		int hours, minutes, seconds, frames;
 		GetTimeInfoFromPosition(position, &hours, &minutes, &seconds, &frames);
-		
+
 		GetHZoomLevel();
 		double currentFramePos = GetPositionFromTimeInfo(hours, minutes, seconds, frames);
 		if (IsEqual(currentFramePos, position, SNM_FUDGE_FACTOR))
@@ -1788,7 +1788,7 @@ double GetNextGridLine (double position)
 		nextGridLine = GetCursorPositionEx(NULL);
 
 		SetEditCurPos(editCursor, false, false);
-		SetConfig("undomask", editCursorUndo); 
+		SetConfig("undomask", editCursorUndo);
 		PreventUIRefresh(-1);
 	}
 
@@ -1810,7 +1810,7 @@ double GetPrevGridLine (double position)
 		prevGridLine = GetCursorPositionEx(NULL);
 
 		SetEditCurPos(editCursor, false, false);
-		SetConfig("undomask", editCursorUndo); 
+		SetConfig("undomask", editCursorUndo);
 		PreventUIRefresh(-1);
 	}
 	return prevGridLine;
@@ -1821,11 +1821,11 @@ double GetClosestGridLine (double position)
 	/* All other GridLine (but not GridDiv) functions   *
 	*  are depending on this, but it appears SnapToGrid *
 	*  is broken in certain non-real-world testing      *
-	*  situations, so it should probably we rewritten   *
+	*  situations, so it should probably be rewritten   *
 	*  using the stuff from GetNextGridDiv()            */
 
 	int snap; GetConfig("projshowgrid", snap);
-	SetConfig("projshowgrid", ClearBit(snap, 8));
+	SetConfig("projshowgrid", snap & (~0x8100)); // enable snap and snapping following grid visibility
 
 	double grid = SnapToGrid(NULL, position);
 	SetConfig("projshowgrid", snap);
@@ -2306,6 +2306,16 @@ void MoveArrange (double amountTime)
 	GetSet_ArrangeView2(NULL, true, r.left, r.right-SCROLLBAR_W, &startTime, &endTime);
 }
 
+void GetSetArrangeView (ReaProject* proj, bool set, double* start, double* end)
+{
+	if (start && end)
+	{
+		RECT r;
+		GetWindowRect(GetArrangeWnd(), &r);
+		GetSet_ArrangeView2(NULL, set, r.left, r.right-SCROLLBAR_W, start, end);
+	}
+}
+
 void CenterArrange (double position)
 {
 	RECT r;
@@ -2364,10 +2374,8 @@ void ScrollToTrackIfNotInArrange (MediaTrack* track)
 
 bool IsOffScreen (double position)
 {
-	RECT r;
 	double startTime, endTime;
-	GetWindowRect(GetArrangeWnd(), &r);
-	GetSet_ArrangeView2(NULL, false, r.left, r.right-SCROLLBAR_W, &startTime, &endTime);
+	GetSetArrangeView(NULL, false, &startTime, &endTime);
 
 	if (position >= startTime && position <= endTime)
 		return true;

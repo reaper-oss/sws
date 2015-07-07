@@ -264,6 +264,29 @@ bool BR_MidiEditor::IsCCLaneVisible (int lane)
 	return false;
 }
 
+bool BR_MidiEditor::SetCCLaneLastClicked (int idx)
+{
+	bool success = false;
+	if (m_midiEditor && idx >= 0 && idx < m_ccLanes.size() && m_ccLanes.size() > 0)
+	{
+		if (HWND keyboardWnd = GetPianoView(m_midiEditor))
+		{
+			RECT r; GetClientRect(keyboardWnd, &r);
+			int ccStart = abs(r.bottom - r.top) - this->GetCCLanesFullheight(true) + 1;
+
+			for (int i = 0; i < idx; ++i)
+				ccStart += m_ccLanesHeight[i];
+
+			POINT point;
+			point.y = ccStart + MIDI_CC_LANE_CLICK_Y_OFFSET;
+			point.x = 0;
+			SimulateMouseClick(keyboardWnd, point, true);
+			success = true;
+		}
+	}
+	return success;
+}
+
 bool BR_MidiEditor::IsNoteVisible (MediaItem_Take* take, int id)
 {
 	bool visible = false;
@@ -1565,6 +1588,24 @@ int GetLastClickedVelLane (void* midiEditor)
 {
 	int cc = SWS_MIDIEditor_GetSetting_int(midiEditor, "last_clicked_cc_lane");
 	return MapReaScriptCCToVelLane(cc);
+}
+
+int GetMaxCCLanesFullHeight (void* midiEditor)
+{
+	int fullHeight = 0;
+	if (HWND hwnd = GetNotesView (midiEditor))
+	{
+		RECT r; GetWindowRect(hwnd, &r);
+		int wndH = abs(r.bottom - r.top);
+		fullHeight = wndH - MIDI_RULER_H - MIDI_MIN_NOTE_VIEW_H;
+		if (fullHeight <= 0)
+		{
+			fullHeight = (int)(wndH - MIDI_RULER_H) / 2;
+			if (fullHeight < 0) fullHeight = 0;
+		}
+	}
+
+	return fullHeight;
 }
 
 int ConvertLaneToStatusMsg (int lane)

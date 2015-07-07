@@ -294,6 +294,7 @@ bool SNM_TagMediaFile(const char *fn, const char* tag, const char* tagval)
   }
 
 #ifdef _WIN32
+  delete [] s;
   delete [] w_fn;
 #endif
   return didsmthg;

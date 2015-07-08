@@ -272,10 +272,12 @@ bool SNM_TagMediaFile(const char *fn, const char* tag, const char* tagval)
       if (val>0 || !*tagval) { f.tag()->setTrack(val); didsmthg=true; }
     }
     if (didsmthg) f.save();
+#ifdef _WIN32
+  delete [] s;
+#endif
   }
 
 #ifdef _WIN32
-  delete [] s;
   delete [] w_fn;
 #endif
   return didsmthg;

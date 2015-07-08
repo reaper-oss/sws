@@ -1,3 +1,6 @@
+!v2.7.3 #0 pre-release build (July 8, 2015)
+ReaScript: fixed missing exported functions
+
 !v2.7.2 #0 pre-release build (July 7, 2015)
 <strong>REAPER v5.0rc1+ is required!</strong>
 

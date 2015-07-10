@@ -2326,6 +2326,7 @@ bool ToggleShowSendEnvelope (MediaTrack* track, int sendId, BR_EnvType type)
 								else if (!strcmp(lp.gettoken_str(0), "<AUXMUTEENV") || !strcmp(lp.gettoken_str(0), "<HWMUTEENV")) {currentEnv = MUTE;   currentEnvState = &muteEnv;}
 
 								// Save current send envelope
+								currentEnvState->Append("\n");
 								while (token != NULL)
 								{
 									lp.parse(token);
@@ -2525,6 +2526,7 @@ bool ShowSendEnvelopes (vector<MediaTrack*>& tracks, BR_EnvType envelopeTypes)
 								else if (!strcmp(lp.gettoken_str(0), "<AUXMUTEENV") || !strcmp(lp.gettoken_str(0), "<HWMUTEENV")) {currentEnv = MUTE;   currentEnvState = &muteEnv;}
 
 								// Save current send envelope
+								currentEnvState->Append("\n");
 								while (token != NULL)
 								{
 									lp.parse(token);

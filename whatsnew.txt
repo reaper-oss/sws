@@ -1,3 +1,6 @@
+Fixes
++Fixed various SWS/BR actions that show send envelopes. In certain corner cases they didn't work and could potentially remove FXs from receiving track
+
 !v2.7.3 #0 pre-release build (July 8, 2015)
 ReaScript: fixed missing exported functions
 

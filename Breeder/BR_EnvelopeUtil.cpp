@@ -2221,7 +2221,7 @@ vector<int> GetSelPoints (TrackEnvelope* envelope)
 	return selectedPoints;
 }
 
-WDL_FastString ConstructReceiveEnv (BR_EnvType type, double firstPointValue, bool hardwareSend)
+WDL_FastString ConstructReceiveEnv (BR_EnvType type, double firstPointValue, bool hardwareSend, bool addNewLinePrefix /*=true*/)
 {
 	WDL_FastString envelope;
 
@@ -2232,6 +2232,9 @@ WDL_FastString ConstructReceiveEnv (BR_EnvType type, double firstPointValue, boo
 	int envLanes;    GetConfig("envlanes", envLanes);
 
 	BR_EnvShape defShape = (type == MUTE) ? SQUARE : GetDefaultPointShape();
+
+	if (addNewLinePrefix)
+		envelope.Append("\n");
 
 	if      (type == VOLUME) (hardwareSend) ? AppendLine(envelope, "<HWVOLENV")  : AppendLine(envelope, "<AUXVOLENV");
 	else if (type == PAN)    (hardwareSend) ? AppendLine(envelope, "<HWPANENV")  : AppendLine(envelope, "<AUXPANENV");

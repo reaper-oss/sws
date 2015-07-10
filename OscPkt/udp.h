@@ -177,7 +177,15 @@ struct UdpSocket {
     if (gethostname(hostname_buf, sizeof hostname_buf) != 0)
       hostname_buf[0] = 0;
     hostname_buf[sizeof hostname_buf - 1] = 0;
+	// BR: comment for struct UdpSocket says it "avoids all deprecated stuff such as gethostbyname etc" and comment for this functions says "this stuff is not very nice" so I presume gethostbyname is needed so just hide the warning
+#ifdef _MSC_VER                
+    #pragma warning(push) 
+    #pragma warning(disable: 4996) // warning C4996: 'gethostbyname': Use getaddrinfo() or GetAddrInfoW() instead or define _WINSOCK_DEPRECATED_NO_WARNINGS to disable deprecated API warnings
+#endif
     struct hostent * host = gethostbyname(hostname_buf);
+#ifdef _MSC_VER
+    #pragma warning(pop)
+#endif
     if (host) { return host->h_name; }
     return hostname_buf[0] ? hostname_buf : "localhost";
   }

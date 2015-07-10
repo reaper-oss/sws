@@ -267,7 +267,7 @@ bool BR_MidiEditor::IsCCLaneVisible (int lane)
 bool BR_MidiEditor::SetCCLaneLastClicked (int idx)
 {
 	bool success = false;
-	if (m_midiEditor && idx >= 0 && idx < m_ccLanes.size() && m_ccLanes.size() > 0)
+	if (m_midiEditor && idx >= 0 && idx < (int)m_ccLanes.size() && m_ccLanes.size() > 0)
 	{
 		if (HWND keyboardWnd = GetPianoView(m_midiEditor))
 		{

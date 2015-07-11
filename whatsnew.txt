@@ -1,3 +1,7 @@
+Contextual toolbars
++Other:
+ - Added toggle states to all actions for toggling toolbars
+ 
 Fixes
 +Fixed various SWS/BR actions that show send envelopes. In certain corner cases they didn't work and could potentially remove FXs from receiving track
 

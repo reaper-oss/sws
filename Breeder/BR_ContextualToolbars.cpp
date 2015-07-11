@@ -273,6 +273,20 @@ void BR_ContextualToolbar::LoadToolbar (bool exclusive)
 	}
 }
 
+bool BR_ContextualToolbar::AreAssignedToolbarsOpened ()
+{
+	for (set<int>::iterator it = m_activeContexts.begin(); it != m_activeContexts.end(); ++it)
+	{
+		int toggleAction = this->GetToggleAction(*it);
+		if (this->IsContextValid(*it) && this->IsToolbarAction(toggleAction))
+		{
+			if (GetToggleCommandState(toggleAction))
+				return true;
+		}
+	}
+	return false;
+}
+
 int BR_ContextualToolbar::CountToolbars ()
 {
 	return TOOLBAR_COUNT;
@@ -1572,20 +1586,6 @@ void BR_ContextualToolbar::CloseAllAssignedToolbars ()
 	}
 }
 
-bool BR_ContextualToolbar::AreAssignedToolbarsOpened ()
-{
-	for (set<int>::iterator it = m_activeContexts.begin(); it != m_activeContexts.end(); ++it)
-	{
-		int toggleAction = this->GetToggleAction(*it);
-		if (this->IsContextValid(*it) && this->IsToolbarAction(toggleAction))
-		{
-			if (GetToggleCommandState(toggleAction))
-				return true;
-		}
-	}
-	return false;
-}
-
 LRESULT CALLBACK BR_ContextualToolbar::ToolbarWndCallback (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	int id = -1;
@@ -2794,6 +2794,13 @@ void ToggleContextualToolbar (COMMAND_T* ct, int val, int valhw, int relmode, HW
 int IsContextualToolbarsOptionsVisible (COMMAND_T* ct)
 {
 	if (BR_ContextualToolbarsWnd* dialog = g_contextToolbarsWndManager.Get())
-		return dialog->IsWndVisible();
+		return (int)dialog->IsWndVisible();
+	return 0;
+}
+
+int IsContextualToolbarVisible (COMMAND_T* ct)
+{
+	if (BR_ContextualToolbar* contextualToolbar = g_toolbarsManager.GetContextualToolbar(abs((int)ct->user) - 1))
+		return (int)contextualToolbar->AreAssignedToolbarsOpened();
 	return 0;
 }

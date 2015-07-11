@@ -1476,5 +1476,5 @@ int IsSetGridMarkerZOrderOn (COMMAND_T* ct)
 
 int IsAdjustPlayrateOptionsVisible (COMMAND_T* ct)
 {
-	return !!g_adjustPlayrateWnd;
+	return (int)g_adjustPlayrateWnd;
 }

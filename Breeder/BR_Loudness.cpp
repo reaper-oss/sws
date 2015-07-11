@@ -3985,13 +3985,13 @@ void ToggleLoudnessPref (COMMAND_T* ct)
 ******************************************************************************/
 int IsNormalizeLoudnessVisible (COMMAND_T* ct)
 {
-	return g_normalizeWnd  ? 1 : 0;
+	return g_normalizeWnd ? 1 : 0;
 }
 
 int IsAnalyzeLoudnessVisible (COMMAND_T* ct)
 {
 	if (BR_AnalyzeLoudnessWnd* dialog = g_loudnessWndManager.Get())
-		return dialog->IsWndVisible();
+		return (int)dialog->IsWndVisible();
 	return 0;
 }
 

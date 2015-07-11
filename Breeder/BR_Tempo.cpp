@@ -1610,15 +1610,15 @@ void TempoShapeOptionsDialog (COMMAND_T* ct)
 
 int IsConvertMarkersToTempoVisible (COMMAND_T* ct)
 {
-	return !!g_convertMarkersToTempoWnd;
+	return (int)g_convertMarkersToTempoWnd;
 }
 
 int IsSelectAdjustTempoVisible (COMMAND_T* ct)
 {
-	return !!g_selectAdjustTempoWnd;
+	return (int)g_selectAdjustTempoWnd;
 }
 
 int IsTempoShapeOptionsVisible (COMMAND_T* ct)
 {
-	return !!g_tempoShapeWnd;
+	return (int)g_tempoShapeWnd;
 }

@@ -136,6 +136,7 @@ public:
 
 	/* Toggle appropriate toolbar under mouse cursor */
 	void LoadToolbar (bool exclusive);
+	bool AreAssignedToolbarsOpened ();
 
 	/* Get toolbar info */
 	int CountToolbars ();
@@ -319,7 +320,6 @@ private:
 	/* Toolbar manipulation */
 	HWND GetFloatingToolbarHwnd (int mouseAction, bool* inDocker);
 	void CloseAllAssignedToolbars ();
-	bool AreAssignedToolbarsOpened ();
 
 	/* Ensures that toolbar is always on top or auto closed on button press */
 	static LRESULT CALLBACK ToolbarWndCallback (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -418,3 +418,4 @@ void ToggleContextualToolbar (COMMAND_T*, int, int, int, HWND);
 * Toggle states                                                               *
 ******************************************************************************/
 int IsContextualToolbarsOptionsVisible (COMMAND_T*);
+int IsContextualToolbarVisible (COMMAND_T*);

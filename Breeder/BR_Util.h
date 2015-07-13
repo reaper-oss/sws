@@ -112,10 +112,10 @@ void GetSetLastAdjustedSend (bool set, MediaTrack** track, int* sendId, BR_EnvTy
 void GetSetFocus (bool set, HWND* hwnd, int* context);
 void SetAllCoordsToZero (RECT* r);
 void RegisterCsurfPlayState (bool set, void (*CSurfPlayState)(bool,bool,bool), const vector<void(*)(bool,bool,bool)>** registeredFunctions = NULL, bool cleanup = false);
-void StartPlayback (double position);
-bool IsPlaying ();
-bool IsPaused ();
-bool IsRecording ();
+void StartPlayback (ReaProject* proj, double position);
+bool IsPlaying (ReaProject* proj);
+bool IsPaused (ReaProject* proj);
+bool IsRecording (ReaProject* proj);
 bool AreAllCoordsZero (RECT& r);
 PCM_source* DuplicateSource (PCM_source* source); // if the option "Toggle pooled (ghost) MIDI source data when copying media items", using PCM_source->Duplicate() will pool original and new source...use this function to escape this when necessary
 template <typename T> void GetConfig (const char* key, T& val) {val = *static_cast<T*>(GetConfigVar(key));}
@@ -243,6 +243,7 @@ HWND GetTcpWnd ();
 HWND GetTcpTrackWnd (MediaTrack* track);
 HWND GetNotesView (void* midiEditor);
 HWND GetPianoView (void* midiEditor);
+HWND GetTrackView (void* midiEditor);
 MediaTrack* HwndToTrack (HWND hwnd, int* hwndContext);  // context: 0->unknown, 1->TCP, 2->MCP (works even if hwnd is not a track but something else in mcp/tcp)
 TrackEnvelope* HwndToEnvelope (HWND hwnd);
 void CenterDialog (HWND hwnd, HWND target, HWND zOrder);

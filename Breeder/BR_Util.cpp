@@ -611,30 +611,30 @@ void RegisterCsurfPlayState (bool set, void (*CSurfPlayState)(bool,bool,bool), c
 		*registeredFunctions = &s_functions;
 }
 
-void StartPlayback (double position)
+void StartPlayback (ReaProject* proj, double position)
 {
-	double editCursor = GetCursorPositionEx(NULL);
+	double editCursor = GetCursorPositionEx(proj);
 
 	PreventUIRefresh(1);
-	SetEditCurPos2(NULL, position, false, false);
-	OnPlayButton();
-	SetEditCurPos2(NULL, editCursor, false, false);
+	SetEditCurPos2(proj, position, false, false);
+	OnPlayButtonEx(proj);
+	SetEditCurPos2(proj, editCursor, false, false);
 	PreventUIRefresh(-1);
 }
 
-bool IsPlaying ()
+bool IsPlaying (ReaProject* proj)
 {
-	return (GetPlayStateEx(NULL) & 1) == 1;
+	return (GetPlayStateEx(proj) & 1) == 1;
 }
 
-bool IsPaused ()
+bool IsPaused (ReaProject* proj)
 {
-	return (GetPlayStateEx(NULL) & 2) == 2;
+	return (GetPlayStateEx(proj) & 2) == 2;
 }
 
-bool IsRecording ()
+bool IsRecording (ReaProject* proj)
 {
-	return (GetPlayStateEx(NULL) & 4) == 4;
+	return (GetPlayStateEx(proj) & 4) == 4;
 }
 
 bool AreAllCoordsZero (RECT& r)
@@ -2837,7 +2837,7 @@ HWND GetNotesView (void* midiEditor)
 			{
 				if (!s_name)
 					AllocPreparedString(__localizeFunc("midiview", "midi_DLG_102", 0),&s_name);
-				return SearchChildren(s_name,  (HWND)midiEditor);
+				return SearchChildren(s_name, (HWND)midiEditor);
 			}
 			else
 				return FindWindowEx((HWND)midiEditor, NULL, NULL , s_name);
@@ -2860,7 +2860,7 @@ HWND GetPianoView (void* midiEditor)
 			{
 				if (!s_name)
 					AllocPreparedString(__localizeFunc("midipianoview", "midi_DLG_102", 0),&s_name);
-				return SearchChildren(s_name,  (HWND)midiEditor);
+				return SearchChildren(s_name, (HWND)midiEditor);
 			}
 			else
 				return FindWindowEx((HWND)midiEditor, NULL, NULL , s_name);
@@ -2870,6 +2870,36 @@ HWND GetPianoView (void* midiEditor)
 	}
 	else
 		return NULL;
+}
+
+HWND GetTrackView (void* midiEditor)
+{
+	HWND trackListHwnd = NULL;
+	if (midiEditor)
+	{
+		if (GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 40818) > 0)// Contents: Show/hide track list
+		{
+			RECT r; GetWindowRect((HWND)midiEditor, &r);
+			POINT p = {r.right - 20, r.top + ((r.bottom - r.top) / 2)};
+			
+
+			HWND child = GetWindow((HWND)midiEditor, GW_CHILD);
+			while (true)
+			{
+				if (!child)
+					break;
+				if (IsWindowVisible(child))
+				{
+					RECT r;
+					GetWindowRect(child, &r);
+					if (CheckBounds(p.x, r.left, r.right) && CheckBounds(p.y, r.top, r.bottom))
+						trackListHwnd = child; // don't break, track list is last in z-order
+				}
+				child = GetWindow(child, GW_HWNDNEXT);
+			}
+		}
+	}
+	return trackListHwnd;
 }
 
 MediaTrack* HwndToTrack (HWND hwnd, int* hwndContext)

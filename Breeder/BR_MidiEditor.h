@@ -36,6 +36,7 @@ void ME_PreviewActiveTake (COMMAND_T*, int, int, int, HWND);
 /******************************************************************************
 * Commands: MIDI editor - Misc                                                *
 ******************************************************************************/
+void ME_ToggleMousePlayback (COMMAND_T*, int, int, int, HWND);
 void ME_PlaybackAtMouseCursor (COMMAND_T*, int, int, int, HWND);
 void ME_CCEventAtEditCursor (COMMAND_T*, int, int, int, HWND);
 void ME_ShowUsedCCLanesDetect14Bit (COMMAND_T*, int, int, int, HWND);

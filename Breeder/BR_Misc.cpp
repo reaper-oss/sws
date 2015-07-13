@@ -55,21 +55,63 @@ HWND g_adjustPlayrateWnd = NULL;
 /******************************************************************************
 * Commands: Misc continuous actions                                           *
 ******************************************************************************/
-static bool g_mousePlaybackRestorePlayState = false;
+static COMMAND_T* g_activeCommand = NULL;
+static bool g_mousePlaybackActive           = false;
+static bool g_mousePlaybackRestorePlaystate = true;
+static bool g_mousePlaybackRestoreView      = true;
+static bool g_mousePlaybackContinuousActive = false;
+
+static bool g_mousePlaybackForceMoveView    = false;
+static int  g_mousePlaybackReaperOptions    = 0;
+
+static void MousePlaybackTimer ()
+{
+	PreventUIRefresh(-1);
+	SetConfig("viewadvance", g_mousePlaybackReaperOptions);	
+	plugin_register("-timer", (void*)MousePlaybackTimer);
+}
 
 static void MousePlaybackPlayState (bool play, bool pause, bool rec)
 {
-	g_mousePlaybackRestorePlayState = false;
+	g_mousePlaybackRestorePlaystate = false;
+	if (rec || pause)
+		g_mousePlaybackRestoreView = false;
+	
+	if (rec || (!g_mousePlaybackContinuousActive && !play))
+	{		
+		if (g_mousePlaybackRestoreView && g_activeCommand && (int)g_activeCommand->user > 0)
+		{			
+			GetConfig("viewadvance", g_mousePlaybackReaperOptions);
+			if (GetBit(g_mousePlaybackReaperOptions, 3))
+				g_mousePlaybackForceMoveView = true;
+		}
+
+		ToggleMousePlayback(g_activeCommand);
+
+		// Sole purpose of this is to prevent REAPER from moving arrange back to edit cursor when stopping mouse toggle playback actions with transport (because REAPER moves to edit cursor after notifying play state)
+		if (g_mousePlaybackForceMoveView)
+		{
+			g_mousePlaybackForceMoveView = false;
+
+			PreventUIRefresh(1);
+			SetConfig("viewadvance", ClearBit(g_mousePlaybackReaperOptions, 3));
+			plugin_register("timer", (void*)MousePlaybackTimer);
+		}
+	}
 }
 
 static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 {
 	static double s_playPos  = -1;
 	static double s_pausePos = -1;
+	static double s_startPos = -1;
+
 	static double s_arrangeStart = -1;
 	static double s_arrangeEnd   = -1;
+
 	static vector<pair<GUID,int> >* s_trackSoloMuteState = NULL;
 	static vector<pair<GUID,int> >* s_itemMuteState      = NULL;
+
 	static int s_projStateCount = 0;
 	static ReaProject* s_proj   = NULL;
 
@@ -78,7 +120,7 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 		s_projStateCount = GetProjectStateChangeCount(NULL);
 		s_proj           = EnumProjects(-1, NULL, 0);
 
-		if (IsRecording())
+		if (IsRecording(s_proj))
 			return false;
 
 		BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_ARRANGE                                  |
@@ -111,7 +153,7 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 			if (abs((int)ct->user) != 3)
 				itemToSolo = NULL;
 
-			if (trackToSolo == GetMasterTrack(NULL))
+			if (trackToSolo == GetMasterTrack(s_proj))
 				trackToSolo = NULL;
 		}
 
@@ -127,10 +169,10 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 			if (!s_trackSoloMuteState)
 				return false;
 
-			int count = CountTracks(NULL);
+			int count = CountTracks(s_proj);
 			for (int i = 0; i < count; ++i)
 			{
-				MediaTrack* track = GetTrack(NULL, i);
+				MediaTrack* track = GetTrack(s_proj, i);
 				int solo = (int)GetMediaTrackInfo_Value(track, "I_SOLO");
 				int mute = (int)GetMediaTrackInfo_Value(track, "B_MUTE");
 				if (solo != 0 || mute != 0 || track == trackToSolo)
@@ -173,37 +215,43 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 			}
 		}
 
-		GetSetArrangeView(NULL, false, &s_arrangeStart, &s_arrangeEnd);
-
 		PreventUIRefresh(-1);
+		if (HWND midiTrackList = GetTrackView(SWS_MIDIEditor_GetActive()))
+			InvalidateRect(midiTrackList, NULL, false); // makes sure solo buttons are refreshed in MIDI editor track list
 
-		s_playPos  = (IsPlaying()) ? GetPlayPositionEx(NULL)   : -1;
-		s_pausePos = (IsPaused())  ? GetCursorPositionEx(NULL) : -1;
-		g_mousePlaybackRestorePlayState = true;
+		GetSetArrangeView(s_proj, false, &s_arrangeStart, &s_arrangeEnd);		
+		s_playPos  = (IsPlaying(s_proj)) ? GetPlayPositionEx(s_proj)   : -1;
+		s_pausePos = (IsPaused(s_proj))  ? GetCursorPositionEx(s_proj) : -1;
+		s_startPos = ((int)ct->user < 0) ? GetCursorPositionEx(s_proj) : mouseInfo.GetPosition();
 
-		StartPlayback(((int)ct->user < 0) ? GetCursorPositionEx(NULL) : mouseInfo.GetPosition());
-		RegisterCsurfPlayState(true, MousePlaybackPlayState); // register Csurf after starting playback
+		StartPlayback(s_proj, s_startPos);
+		RegisterCsurfPlayState(true, MousePlaybackPlayState); // register Csurf after starting playback so it doesn't mess with our flags
+
+		g_activeCommand                 = ct;
+		g_mousePlaybackActive           = true;		
+		g_mousePlaybackRestorePlaystate = true;
+		g_mousePlaybackRestoreView      = true;
 		return true;
 	}
 	else
 	{
 		PreventUIRefresh(1);
 
-		RegisterCsurfPlayState(false, MousePlaybackPlayState); // deregister Csurf before setting playstate
-		if (g_mousePlaybackRestorePlayState)
+		RegisterCsurfPlayState(false, MousePlaybackPlayState); // deregister Csurf before setting playstate so it doesn't mess with our flags
+		if (g_mousePlaybackRestorePlaystate)
 		{
 			if (s_playPos != -1)
 			{
-				StartPlayback(s_playPos);
+				StartPlayback(s_proj, s_playPos);
 			}
 			else if (s_pausePos != -1)
 			{
-				OnPauseButton();
-				SetEditCurPos(s_pausePos, true, false);
+				OnPauseButtonEx(s_proj);
+				SetEditCurPos2(s_proj, s_pausePos, true, false);
 			}
 			else
 			{
-				OnStopButton();
+				OnStopButtonEx(s_proj);
 			}
 		}
 
@@ -230,12 +278,30 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 			}
 		}
 
-		int viewAdvance;
-		GetConfig("viewadvance", viewAdvance);
-		if (GetBit(viewAdvance, 3) && (int)ct->user > 0) // Move view to edit cursor on stop (analogously applied here when starting playback from mouse cursor)
-			GetSetArrangeView(NULL, true, &s_arrangeStart, &s_arrangeEnd);
+		if (g_mousePlaybackRestoreView)
+		{
+			int viewAdvance;
+			GetConfig("viewadvance", viewAdvance);
+			if ((GetBit(viewAdvance, 3) || g_mousePlaybackForceMoveView) && (int)ct->user > 0) // Move view to edit cursor on stop (analogously applied here when starting playback from mouse cursor)
+			{
+				double arrangeStart, arrangeEnd;
+				GetSetArrangeView(s_proj, false, &arrangeStart, &arrangeEnd);
+				if (s_arrangeStart != arrangeStart || s_arrangeEnd != arrangeEnd)
+				{
+					double startPosNormalized = (s_startPos - s_arrangeStart) / (s_arrangeEnd - s_arrangeStart);
+					double currentArrangeLen  = arrangeEnd - arrangeStart;
+
+					if ((arrangeStart = s_startPos - (currentArrangeLen * startPosNormalized)) < 0)
+						arrangeStart = 0;
+					arrangeEnd = arrangeStart + currentArrangeLen;
+					GetSetArrangeView(s_proj, true, &arrangeStart, &arrangeEnd);
+				}
+			}
+		}
 
 		PreventUIRefresh(-1);
+		if (HWND midiTrackList = GetTrackView(SWS_MIDIEditor_GetActive()))
+			InvalidateRect(midiTrackList, NULL, false); // makes sure solo buttons are refreshed in MIDI editor track list
 
 		if (GetProjectStateChangeCount(s_proj) > s_projStateCount)
 		{
@@ -251,11 +317,20 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 		delete s_itemMuteState;
 		s_trackSoloMuteState = NULL;
 		s_itemMuteState      = NULL;
-		g_mousePlaybackRestorePlayState = true;
+
+		g_activeCommand                 = NULL;
+		g_mousePlaybackActive           = false;		
+		g_mousePlaybackRestorePlaystate = true;
+		g_mousePlaybackRestoreView      = true;
+		g_mousePlaybackContinuousActive = false;
+
 		s_playPos  = -1;
 		s_pausePos = -1;
+		s_startPos = -1;
+
 		s_arrangeStart = -1;
 		s_arrangeEnd   = -1;
+
 		s_projStateCount = 0;
 		s_proj           = NULL;
 		return true;
@@ -277,6 +352,7 @@ static HCURSOR MousePlaybackCursor (COMMAND_T* ct, int window)
 
 static void MousePlayback (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
+	g_mousePlaybackContinuousActive = true;
 }
 
 void PlaybackAtMouseCursorInit ()
@@ -312,6 +388,46 @@ void PlaybackAtMouseCursorInit ()
 /******************************************************************************
 * Commands: Misc                                                              *
 ******************************************************************************/
+void ToggleMousePlayback (COMMAND_T* ct)
+{
+	if (g_mousePlaybackContinuousActive)
+	{
+		g_mousePlaybackRestorePlaystate = false;
+		g_mousePlaybackRestoreView      = false;
+		ContinuousActionStopAll();
+	}
+	MousePlaybackInit(ct, !g_mousePlaybackActive);
+}
+
+void PlaybackAtMouseCursor (COMMAND_T* ct)
+{
+	if (IsRecording(NULL))
+		return;
+
+	// Do both MIDI editor and arrange from here to prevent focusing issues (not unexpected in dual monitor situation)
+	double mousePos = PositionAtMouseCursor(true);
+	if (mousePos == -1)
+		mousePos = ME_PositionAtMouseCursor(true, true);
+
+	if (mousePos != -1)
+	{
+		if ((int)ct->user == 0)
+		{
+			StartPlayback(NULL, mousePos);
+		}
+		else
+		{
+			if (!IsPlaying(NULL) || IsPaused(NULL))
+				StartPlayback(NULL, mousePos);
+			else
+			{
+				if ((int)ct->user == 1) OnPauseButton();
+				if ((int)ct->user == 2) OnStopButton();
+			}
+		}
+	}
+}
+
 void SplitItemAtTempo (COMMAND_T* ct)
 {
 	WDL_TypedBuf<MediaItem*> items;
@@ -790,35 +906,6 @@ void SelectTrackUnderMouse (COMMAND_T* ct)
 		{
 			SetMediaTrackInfo_Value(mouseInfo.GetTrack(), "I_SELECTED", 1);
 			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
-		}
-	}
-}
-
-void PlaybackAtMouseCursor (COMMAND_T* ct)
-{
-	if (IsRecording())
-		return;
-
-	// Do both MIDI editor and arrange from here to prevent focusing issues (not unexpected in dual monitor situation)
-	double mousePos = PositionAtMouseCursor(true);
-	if (mousePos == -1)
-		mousePos = ME_PositionAtMouseCursor(true, true);
-
-	if (mousePos != -1)
-	{
-		if ((int)ct->user == 0)
-		{
-			StartPlayback(mousePos);
-		}
-		else
-		{
-			if (!IsPlaying() || IsPaused())
-				StartPlayback(mousePos);
-			else
-			{
-				if ((int)ct->user == 1) OnPauseButton();
-				if ((int)ct->user == 2) OnStopButton();
-			}
 		}
 	}
 }

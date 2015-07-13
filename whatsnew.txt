@@ -1,3 +1,17 @@
+New actions
++Main:
+ - SWS/BR: Toggle play from mouse cursor position
+ - SWS/BR: Toggle play from mouse cursor position and solo active item's track for the duration
+ - SWS/BR: Toggle play from mouse cursor position and solo active item for the duration
+ - SWS/BR: Toggle play from edit cursor position and solo active item's track for the duration
+ - SWS/BR: Toggle play from edit cursor position and solo active item for the duration
++MIDI editor:
+ - SWS/BR: Toggle play from mouse cursor position                                            
+ - SWS/BR: Toggle play from mouse cursor position and solo track under mouse for the duration
+ - SWS/BR: Toggle play from mouse cursor position and solo item and track under mouse for the duration
+ - SWS/BR: Toggle play from edit cursor position and solo track under mouse for the duration 
+ - SWS/BR: Toggle play from edit cursor position and solo item and track under mouse for the duration
+
 Contextual toolbars
 +Other:
  - Added toggle states to all actions for toggling toolbars

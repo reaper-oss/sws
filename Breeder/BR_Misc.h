@@ -35,6 +35,8 @@ void PlaybackAtMouseCursorInit ();
 /******************************************************************************
 * Commands: Misc                                                              *
 ******************************************************************************/
+void ToggleMousePlayback (COMMAND_T*);
+void PlaybackAtMouseCursor (COMMAND_T*);
 void SplitItemAtTempo (COMMAND_T*);
 void SplitItemAtStretchMarkers (COMMAND_T*);
 void MarkersAtTempo (COMMAND_T*);
@@ -51,7 +53,6 @@ void ToggleItemOnline (COMMAND_T*);
 void ItemSourcePathToClipBoard (COMMAND_T*);
 void DeleteTakeUnderMouse (COMMAND_T*);
 void SelectTrackUnderMouse (COMMAND_T*);
-void PlaybackAtMouseCursor (COMMAND_T*);
 void SelectItemsByType (COMMAND_T*);
 void SaveCursorPosSlot (COMMAND_T*);
 void RestoreCursorPosSlot (COMMAND_T*);

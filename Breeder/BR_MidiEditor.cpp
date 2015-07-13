@@ -111,8 +111,8 @@ static void MidiTakePreview (int mode, MediaItem_Take* take, MediaTrack* track, 
 
 		if (g_itemPreviewPaused && mode != 1) // requesting new preview while old one is still playing shouldn't unpause playback
 		{
-			if (IsPaused())
-				OnPauseButton();
+			if (IsPaused(NULL))
+				OnPauseButtonEx(NULL);
 			g_itemPreviewPaused = false;
 		}
 
@@ -122,7 +122,7 @@ static void MidiTakePreview (int mode, MediaItem_Take* take, MediaTrack* track, 
 	}
 
 	// About IsRecording: REAPER won't preview anything during recording but extension will still think preview is in progress if we let it continue here
-	if (mode == 0 || IsRecording())
+	if (mode == 0 || IsRecording(NULL))
 		return;
 
 	if (take)
@@ -187,7 +187,7 @@ static void MidiTakePreview (int mode, MediaItem_Take* take, MediaTrack* track, 
 
 			// Pause before preview otherwise MidiTakePreviewPlayState will stop it
 			g_itemPreviewPaused = pauseDuringPrev;
-			if (g_itemPreviewPaused && IsPlaying() && !IsPaused())
+			if (g_itemPreviewPaused && IsPlaying(NULL) && !IsPaused(NULL))
 				OnPauseButton();
 
 			if (g_ItemPreview.preview_track)
@@ -297,6 +297,11 @@ void ME_PreviewActiveTake (COMMAND_T* ct, int val, int valhw, int relmode, HWND 
 /******************************************************************************
 * Commands: MIDI editor - Misc                                                *
 ******************************************************************************/
+void ME_ToggleMousePlayback (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
+{
+	ToggleMousePlayback(ct);
+}
+
 void ME_PlaybackAtMouseCursor (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
 	PlaybackAtMouseCursor(ct);

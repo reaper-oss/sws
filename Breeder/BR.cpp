@@ -440,6 +440,12 @@ static COMMAND_T g_commandTable[] =
 	/******************************************************************************
 	* MIDI editor - Misc                                                          *
 	******************************************************************************/
+	{ { DEFACCEL, "SWS/BR: Toggle play from mouse cursor position" },                                                                                    "BR_ME_TOGGLE_PLAY_MOUSE",                      NULL, NULL, 1, NULL, SECTION_MIDI_EDITOR, ME_ToggleMousePlayback},
+	{ { DEFACCEL, "SWS/BR: Toggle play from mouse cursor position and solo active item's track for the duration" },                                      "BR_ME_TOGGLE_PLAY_MOUSE_SOLO_TRACK",           NULL, NULL, 2, NULL, SECTION_MIDI_EDITOR, ME_ToggleMousePlayback},
+	{ { DEFACCEL, "SWS/BR: Toggle play from mouse cursor position and solo active item for the duration" },                                              "BR_ME_TOGGLE_PLAY_MOUSE_SOLO_ITEM",            NULL, NULL, 3, NULL, SECTION_MIDI_EDITOR, ME_ToggleMousePlayback},
+	{ { DEFACCEL, "SWS/BR: Toggle play from edit cursor position and solo active item's track for the duration" },                                       "BR_ME_TOGGLE_PLAY_EDIT_SOLO_TRACK",            NULL, NULL, -2, NULL, SECTION_MIDI_EDITOR, ME_ToggleMousePlayback},
+	{ { DEFACCEL, "SWS/BR: Toggle play from edit cursor position and solo active item for the duration" },                                               "BR_ME_TOGGLE_PLAY_EDIT_SOLO_ITEM",             NULL, NULL, -3, NULL, SECTION_MIDI_EDITOR, ME_ToggleMousePlayback},
+
 	{ { DEFACCEL, "SWS/BR: Play from mouse cursor position" },                                                                                           "BR_ME_PLAY_MOUSECURSOR",                       NULL, NULL, 0, NULL, SECTION_MIDI_EDITOR, ME_PlaybackAtMouseCursor},
 	{ { DEFACCEL, "SWS/BR: Play/pause from mouse cursor position" },                                                                                     "BR_ME_PLAY_PAUSE_MOUSECURSOR",                 NULL, NULL, 1, NULL, SECTION_MIDI_EDITOR, ME_PlaybackAtMouseCursor},
 	{ { DEFACCEL, "SWS/BR: Play/stop from mouse cursor position" },                                                                                      "BR_ME_PLAY_STOP_MOUSECURSOR",                  NULL, NULL, 2, NULL, SECTION_MIDI_EDITOR, ME_PlaybackAtMouseCursor},
@@ -625,6 +631,16 @@ static COMMAND_T g_commandTable[] =
 	/******************************************************************************
 	* Misc                                                                        *
 	******************************************************************************/
+	{ { DEFACCEL, "SWS/BR: Toggle play from mouse cursor position" },                                                                                      "BR_TOGGLE_PLAY_MOUSE",               ToggleMousePlayback, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Toggle play from mouse cursor position and solo track under mouse for the duration" },                                          "BR_TOGGLE_PLAY_MOUSE_SOLO_TRACK",    ToggleMousePlayback, NULL, 2},
+	{ { DEFACCEL, "SWS/BR: Toggle play from mouse cursor position and solo item and track under mouse for the duration" },                                 "BR_TOGGLE_PLAY_MOUSE_SOLO_ITEM",     ToggleMousePlayback, NULL, 3},
+	{ { DEFACCEL, "SWS/BR: Toggle play from edit cursor position and solo track under mouse for the duration" },                                           "BR_TOGGLE_PLAY_EDIT_SOLO_TRACK",     ToggleMousePlayback, NULL, -2},
+	{ { DEFACCEL, "SWS/BR: Toggle play from edit cursor position and solo item and track under mouse for the duration" },                                  "BR_TOGGLE_PLAY_EDIT_SOLO_ITEM",      ToggleMousePlayback, NULL, -3},
+				
+	{ { DEFACCEL, "SWS/BR: Play from mouse cursor position" },                                                                                             "BR_PLAY_MOUSECURSOR",                PlaybackAtMouseCursor, NULL, 0},
+	{ { DEFACCEL, "SWS/BR: Play/pause from mouse cursor position" },                                                                                       "BR_PLAY_PAUSE_MOUSECURSOR",          PlaybackAtMouseCursor, NULL, 1},
+	{ { DEFACCEL, "SWS/BR: Play/stop from mouse cursor position" },                                                                                        "BR_PLAY_STOP_MOUSECURSOR",           PlaybackAtMouseCursor, NULL, 2},
+
 	{ { DEFACCEL, "SWS/BR: Split selected items at tempo markers" },                                                                                       "SWS_BRSPLITSELECTEDTEMPO",           SplitItemAtTempo},
 	{ { DEFACCEL, "SWS/BR: Split selected items at stretch markers" },                                                                                     "BR_SPLIT_SEL_ITEM_STRETCH_MARKERS",  SplitItemAtStretchMarkers},
 	{ { DEFACCEL, "SWS/BR: Create project markers from selected tempo markers" },                                                                          "BR_TEMPO_TO_MARKERS",                MarkersAtTempo},
@@ -676,10 +692,6 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Delete take under mouse cursor" },                                                                                              "BR_DELETE_TAKE_MOUSE",               DeleteTakeUnderMouse, NULL, 0},
 	{ { DEFACCEL, "SWS/BR: Select TCP track under mouse cursor" },                                                                                         "BR_SEL_TCP_TRACK_MOUSE",             SelectTrackUnderMouse, NULL, 0},
 	{ { DEFACCEL, "SWS/BR: Select MCP track under mouse cursor" },                                                                                         "BR_SEL_MCP_TRACK_MOUSE",             SelectTrackUnderMouse, NULL, 1},
-
-	{ { DEFACCEL, "SWS/BR: Play from mouse cursor position" },                                                                                             "BR_PLAY_MOUSECURSOR",                PlaybackAtMouseCursor, NULL, 0},
-	{ { DEFACCEL, "SWS/BR: Play/pause from mouse cursor position" },                                                                                       "BR_PLAY_PAUSE_MOUSECURSOR",          PlaybackAtMouseCursor, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Play/stop from mouse cursor position" },                                                                                        "BR_PLAY_STOP_MOUSECURSOR",           PlaybackAtMouseCursor, NULL, 2},
 
 	{ { DEFACCEL, "SWS/BR: Select all audio items" },                                                                                                      "BR_SEL_ALL_ITEMS_AUDIO",             SelectItemsByType, NULL, 1},
 	{ { DEFACCEL, "SWS/BR: Select all MIDI items" },                                                                                                       "BR_SEL_ALL_ITEMS_MIDI",              SelectItemsByType, NULL, 2},

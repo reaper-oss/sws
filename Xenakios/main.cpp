@@ -491,7 +491,7 @@ void ItemPreviewPlayState(bool play, bool rec)
 // 2: toggle
 void ItemPreview(int mode, MediaItem* item, MediaTrack* track, double volume, double startOffset, double measureSync, bool pauseDuringPrev)
 {
-	if (IsRecording()) // Reaper won't preview anything during recording but extension will still think preview is in progress (could disrupt toggle states and send unneeded CC123)
+	if (IsRecording(NULL)) // Reaper won't preview anything during recording but extension will still think preview is in progress (could disrupt toggle states and send unneeded CC123)
 		return;
 
 	// Preview called while preview in progress, stopping previous preview...

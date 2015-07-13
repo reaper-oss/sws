@@ -840,6 +840,7 @@ error:
 		IMPAPI(GetTCPFXParm);
 		IMPAPI(GetToggleCommandState);
 		IMPAPI(GetToggleCommandState2);
+		IMPAPI(GetToggleCommandStateEx);
 		IMPAPI(GetSelectedEnvelope);
 		IMPAPI(GetToggleCommandStateThroughHooks);
 		IMPAPI(GetTooltipWindow);
@@ -922,8 +923,11 @@ error:
 		IMPAPI(MoveMediaItemToTrack);
 		IMPAPI(OnColorThemeOpenFile); // v5.0pre21+
 		IMPAPI(OnPauseButton);
+		IMPAPI(OnPauseButtonEx);
 		IMPAPI(OnPlayButton);
+		IMPAPI(OnPlayButtonEx);
 		IMPAPI(OnStopButton);
+		IMPAPI(OnStopButtonEx);
 		IMPAPI(NamedCommandLookup);
 		IMPAPI(parse_timestr_len);
 		IMPAPI(parse_timestr_pos);

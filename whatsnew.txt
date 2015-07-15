@@ -14,6 +14,8 @@ New actions
  - SWS/BR: Toggle play from edit cursor position and solo item and track under mouse for the duration
 
 Contextual toolbars
++Fixes:
+ - Fixed stretch marker detection when take had modified playrate
 +Other:
  - Added toggle states to all actions for toggling toolbars
  

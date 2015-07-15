@@ -1188,7 +1188,7 @@ bool BR_MouseInfo::IsStretchMarkerVisible (MediaItem_Take* take, int id, double 
 	{
 		double stretchMarkerPos;
 		GetTakeStretchMarker(take, id, &stretchMarkerPos, NULL);
-		stretchMarkerPos = ItemTimeToProjectTime(item, stretchMarkerPos);
+		stretchMarkerPos = ItemTimeToProjectTime(item, stretchMarkerPos) / GetMediaItemTakeInfo_Value(take, "D_PLAYRATE");
 
 		double itemStart = GetMediaItemInfo_Value(item, "D_POSITION");
 		double itemEnd   = GetMediaItemInfo_Value(item, "D_LENGTH") + itemStart;
@@ -1217,8 +1217,9 @@ int BR_MouseInfo::IsMouseOverStretchMarker (MediaItem* item, MediaItem_Take* tak
 
 		if (CheckBoundsEx(mouseY, y0, y2))
 		{
+			double takePlayrate = GetMediaItemTakeInfo_Value(take, "D_PLAYRATE");
 			// Mouse is within stretch marker Y range, look for X axis of a closest stretch marker
-			int id = FindClosestStretchMarker(take, ProjectTimeToItemTime(item, mousePos));
+			int id = FindClosestStretchMarker(take, ProjectTimeToItemTime(item, mousePos) * takePlayrate);
 			if (id != -1)
 			{
 				int count = GetTakeNumStretchMarkers(take);
@@ -1227,7 +1228,7 @@ int BR_MouseInfo::IsMouseOverStretchMarker (MediaItem* item, MediaItem_Take* tak
 
 				double stretchMarkerPos;
 				GetTakeStretchMarker(take, id, &stretchMarkerPos, NULL);
-				stretchMarkerPos = ItemTimeToProjectTime(item, stretchMarkerPos) - arrangeStart; // convert to "displayed" time
+				stretchMarkerPos = ItemTimeToProjectTime(item, stretchMarkerPos / takePlayrate) - arrangeStart; // convert to "displayed" time
 
 				if (stretchMarkerPos > 0)
 				{

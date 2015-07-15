@@ -65,7 +65,7 @@ public:
 	bool CheckTarget (MediaTrack* track);
 	bool CheckTarget (MediaItem_Take* take);
 	bool IsSelectedInProject ();
-	bool CreateGraph (BR_Envelope& envelope, double minLUFS, double maxLUFS, bool momentary);
+	bool CreateGraph (BR_Envelope& envelope, double minLUFS, double maxLUFS, bool momentary, HWND warningHwnd = g_hwndParent);
 	bool NormalizeIntegrated (double targetLUFS); // uses existing analyze data
 	void SetSelectedInProject (bool selected);
 	void GoToTarget ();

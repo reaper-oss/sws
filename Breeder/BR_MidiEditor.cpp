@@ -830,8 +830,12 @@ void ME_ToggleHideCCLanes (COMMAND_T* ct, int val, int valhw, int relmode, HWND 
 void ME_CCToEnvPoints (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
 	BR_MidiEditor midiEditor(SWS_MIDIEditor_GetActive());
-	if (!midiEditor.IsValid() || !GetSelectedEnvelope(NULL))
+	if (!midiEditor.IsValid() || !GetSelectedEnvelope(NULL) || GetSelectedEnvelope(NULL) == GetTempoEnv())
+	{
+		if (GetSelectedEnvelope(NULL) == GetTempoEnv())			
+			MessageBox(hwnd, __LOCALIZE("Can't copy CC events to tempo map.","sws_mbox"), __LOCALIZE("SWS/BR - Error","sws_mbox"), 0);
 		return;
+	}
 
 	MediaItem_Take* take = MIDIEditor_GetTake(MIDIEditor_GetActive());
 	BR_Envelope envelope(GetSelectedEnvelope(NULL));

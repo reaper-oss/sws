@@ -382,6 +382,8 @@ static void SetEnvPointMouseValue (COMMAND_T* ct)
 				int num, den;
 				double position;
 				GetTempoTimeSigMarker(NULL, id, &position, NULL, NULL, NULL, &num, &den, NULL);
+				InsertStretchMarkerInAllItems(position, true, GRID_DIV_DELTA / 2);
+
 				if (den != 0)
 				{
 					double positionQN = TimeMap_timeToQN_abs(NULL, position);
@@ -405,6 +407,7 @@ static void SetEnvPointMouseValue (COMMAND_T* ct)
 			else
 			{
 				int measure; double beats = TimeMap2_timeToBeats(NULL, gridDiv, &measure, NULL, NULL, NULL);
+				InsertStretchMarkerInAllItems(gridDiv, true, GRID_DIV_DELTA / 2);
 				if (SetTempoTimeSigMarker(NULL, -1, -1, measure, beats, newVal, 0, 0, g_envMouseEnvelope->GetDefaultShape() == LINEAR))
 				{
 					pointsEdited   = true;
@@ -491,6 +494,7 @@ static void SetEnvPointMouseValue (COMMAND_T* ct)
 					{
 						int nextMeasure;
 						double nextBeats = TimeMap2_timeToBeats(NULL, nextGridDiv, &nextMeasure, NULL, NULL, NULL);
+						InsertStretchMarkerInAllItems(nextGridDiv, true, GRID_DIV_DELTA / 2);
 						if (SetTempoTimeSigMarker(NULL, -1, -1, nextMeasure, nextBeats, nextGridDivBpm, 0, 0, g_envMouseEnvelope->GetDefaultShape() == LINEAR))
 						{
 							pointsEdited       = true;
@@ -559,6 +563,7 @@ static void SetEnvPointMouseValue (COMMAND_T* ct)
 				{
 					int measure, num, den; double position, beat; bool linear;
 					GetTempoTimeSigMarker(NULL, i, &position, &measure, &beat, NULL, &num, &den, &linear);
+					InsertStretchMarkerInAllItems(position, true, GRID_DIV_DELTA / 2);
 					if (den != 0) // make sure any partial tempo markers don't loose their position
 					{
 						double positionQN = TimeMap_timeToQN_abs(NULL, position);
@@ -1101,7 +1106,7 @@ void CreateEnvPointsGrid (COMMAND_T* ct)
 			// Make sure points are created after time selection only
 			if (gridLine >= tStart)
 			{
-				if (gridLine < t1 - (MAX_GRID_DIV/2))
+				if (gridLine <= t1 - (MAX_GRID_DIV/2) || (timeSel && i == endId && gridLine <= t1))
 				{
 					position.push_back(gridLine);
 					value.push_back(envelope.ValueAtPosition(gridLine, true)); // ValueAtPosition can be much faster when dealing with sorted
@@ -1117,9 +1122,9 @@ void CreateEnvPointsGrid (COMMAND_T* ct)
 
 	for (size_t i = 0; i < position.size(); ++i)
 		envelope.CreatePoint(envelope.CountPoints(), position[i], value[i], shape[i], bezier[i], false, true);
-
-
-	if (envelope.Commit())
+	
+	bool stretchMarkersInserted = ((envelope.IsTempo()) ? InsertStretchMarkersInAllItems(position) : false);
+	if (envelope.Commit() || stretchMarkersInserted)
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS, -1);
 }
 
@@ -1334,6 +1339,7 @@ void Insert2EnvPointsTimeSelection (COMMAND_T* ct)
 		if (track)
 		{
 			int envelopeCount = selEnvOnly ? 1: CountTrackEnvelopes(track);
+			vector<double> stretchMarkers;
 			for (int j = 0; j < envelopeCount; ++j)
 			{
 				BR_Envelope envelope(selEnvOnly ? GetSelectedEnvelope(NULL) : GetTrackEnvelope(track, j));
@@ -1348,21 +1354,39 @@ void Insert2EnvPointsTimeSelection (COMMAND_T* ct)
 					// Create left-side point only if surrounding points are not too close, otherwise just move existing
 					if (envelope.ValidateId(startId))
 					{
+						double position; envelope.GetPoint(startId, &position, NULL, NULL, NULL);		
 						if (envelope.SetPoint(startId, &tStart, NULL, &defaultShape, 0, true))
+						{
+							stretchMarkers.push_back(position);
 							envelope.SetSelection(startId, true);
+						}
 					}
 					else
-						envelope.CreatePoint(envelope.CountPoints(), tStart, envelope.ValueAtPosition(tStart), defaultShape, 0, true, true);
+					{
+						if (envelope.CreatePoint(envelope.CountPoints(), tStart, envelope.ValueAtPosition(tStart), defaultShape, 0, true, true) && envelope.IsTempo())
+							stretchMarkers.push_back(tStart);
+
+					}
 
 					// Create right-side point only if surrounding points are not too close, otherwise just move existing
 					if (envelope.ValidateId(endId))
 					{
+						double position; envelope.GetPoint(endId, &position, NULL, NULL, NULL);						
 						if (envelope.SetPoint(endId, &tEnd, NULL, &defaultShape, 0, true))
+						{
+							stretchMarkers.push_back(position);
 							envelope.SetSelection(endId, true);
+						}
 					}
 					else
-						envelope.CreatePoint(envelope.CountPoints(), tEnd, envelope.ValueAtPosition(tEnd), defaultShape, 0, true, true);
+					{
+						if (envelope.CreatePoint(envelope.CountPoints(), tEnd, envelope.ValueAtPosition(tEnd), defaultShape, 0, true, true) && envelope.IsTempo())
+							stretchMarkers.push_back(tEnd);
+					}
 
+					if (envelope.IsTempo() && InsertStretchMarkersInAllItems(stretchMarkers))
+						update = true;
+						
 					if (envelope.Commit())
 						update = true;
 				}
@@ -1372,7 +1396,10 @@ void Insert2EnvPointsTimeSelection (COMMAND_T* ct)
 	PreventUIRefresh(-1);
 
 	if (update)
+	{
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG | UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS, -1);
+		UpdateArrange();
+	}
 }
 
 void CopyEnvPoints (COMMAND_T* ct)
@@ -1485,7 +1512,7 @@ void CopyEnvPoints (COMMAND_T* ct)
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS, -1);
 
 	if (triedToCopyToTempo)
-		MessageBox(g_hwndParent, __LOCALIZE("Can't copy to tempo envelope", "sws_mbox"), __LOCALIZE("SWS/BR - Warning", "sws_mbox"), MB_OK);
+		MessageBox(g_hwndParent, __LOCALIZE("Can't copy to tempo map", "sws_mbox"), __LOCALIZE("SWS/BR - Warning", "sws_mbox"), MB_OK);
 }
 
 void FitEnvPointsToTimeSel (COMMAND_T* ct)
@@ -1551,7 +1578,8 @@ void CreateEnvPointMouse (COMMAND_T* ct)
 			double value = envelope.ValueAtPosition(position);
 			if (envelope.IsTempo())
 			{
-				if (SetTempoTimeSigMarker(NULL, -1, position, -1, -1, value, 0, 0, !envelope.GetDefaultShape()))
+				bool insertedStretchMarkers = InsertStretchMarkerInAllItems(position);
+				if (SetTempoTimeSigMarker(NULL, -1, position, -1, -1, value, 0, 0, !envelope.GetDefaultShape()) || insertedStretchMarkers)
 				{
 					UpdateTimeline();
 					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS | UNDO_STATE_MISCCFG, -1);
@@ -1612,18 +1640,31 @@ void SelectDeleteEnvPointUnderMouse (COMMAND_T* ct)
 		if (mouseInfo.GetEnvelope() && (abs((int)ct->user) == 2 || (abs((int)ct->user) == 1 && mouseInfo.GetEnvelope() == GetSelectedEnvelope(NULL))))
 		{
 			BR_Envelope envelope(mouseInfo.GetEnvelope(), false);
+			bool tempoMapEdited = false;
 
 			if ((int)ct->user > 0 && !envelope.GetSelection(mouseInfo.GetEnvelopePoint()))
 				envelope.SetSelection(mouseInfo.GetEnvelopePoint(), true);
 			else if ((int)ct->user < 0)
 			{
-				envelope.DeletePoint(mouseInfo.GetEnvelopePoint());
-				if (envelope.CountPoints() == 0) // in case there are no more points left, envelope will get removed - so insert default point back
-					envelope.CreatePoint(0, 0, envelope.LaneCenterValue(), envelope.GetDefaultShape(), 0, false); // position = 0 is why we created BR_Envelope with !takeEnvelopesUseProjectTime
+				if (envelope.IsTempo())
+				{
+					int id = mouseInfo.GetEnvelopePoint();
+					if (id > 0 && DeleteTempoTimeSigMarker(NULL, id))
+					{
+						UpdateTimeline();
+						tempoMapEdited = true;
+					}
+				}
+				else
+				{
+					envelope.DeletePoint(mouseInfo.GetEnvelopePoint());				
+					if (envelope.CountPoints() == 0) // in case there are no more points left, envelope will get removed - so insert default point back
+						envelope.CreatePoint(0, 0, envelope.LaneCenterValue(), envelope.GetDefaultShape(), 0, false); // position = 0 is why we created BR_Envelope with !takeEnvelopesUseProjectTime
+				}
 			}
 
-			if (envelope.Commit())
-				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
+			if (envelope.Commit() || tempoMapEdited)
+				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 		}
 	}
 }
@@ -1742,7 +1783,7 @@ void ShowActiveTrackEnvOnly (COMMAND_T* ct)
 	WDL_PtrList_DeleteOnDestroy<BR_Envelope> envelopes;
 
 	// First save selected envelope
-//	if (envPtr)
+	if (envPtr)
 	{
 		if (BR_Envelope* envelope = new (nothrow) BR_Envelope(envPtr))
 		{

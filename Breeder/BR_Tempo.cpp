@@ -30,6 +30,7 @@
 #include "BR_ContinuousActions.h"
 #include "BR_EnvelopeUtil.h"
 #include "BR_MidiUtil.h"
+#include "BR_Misc.h"
 #include "BR_MouseUtil.h"
 #include "BR_TempoDlg.h"
 #include "BR_Util.h"
@@ -268,8 +269,9 @@ static bool DeleteTempo (int id, bool checkEditedPoints, TrackEnvelope* tempoEnv
 * Commands: Tempo continuous actions                                          *
 ******************************************************************************/
 static BR_Envelope* g_moveGridTempoMap = NULL;
-static bool         g_movedGridOnce    = false;
-static bool         g_didTempoMapInit  = false;
+static bool         g_movedGridOnce          = false;
+static bool         g_didTempoMapInit        = false;
+static bool         g_insertedStretchMarkers = false;
 
 static bool MoveGridInit (COMMAND_T* ct, bool init)
 {
@@ -305,8 +307,9 @@ static bool MoveGridInit (COMMAND_T* ct, bool init)
 		g_moveGridTempoMap = NULL;
 	}
 
-	g_movedGridOnce   = false;
-	g_didTempoMapInit = false;
+	g_movedGridOnce          = false;
+	g_didTempoMapInit        = false;
+	g_insertedStretchMarkers = false;
 	return initSuccessful;
 }
 
@@ -314,7 +317,7 @@ static int MoveGridDoUndo (COMMAND_T* ct)
 {
 	if (!g_movedGridOnce && g_didTempoMapInit)
 		RemoveTempoMap();
-	return (g_movedGridOnce) ? (UNDO_STATE_TRACKCFG) : (0);
+	return (g_movedGridOnce) ? (UNDO_STATE_TRACKCFG | ((g_insertedStretchMarkers) ? UNDO_STATE_ITEMS : 0)) : (0);
 }
 
 static HCURSOR MoveGridCursor (COMMAND_T* ct, int window)
@@ -393,7 +396,7 @@ static void MoveGridToMouse (COMMAND_T* ct)
 			{
 				int prevId = g_moveGridTempoMap->FindPrevious(grid);
 				int shape; g_moveGridTempoMap->GetPoint(prevId, NULL, NULL, &shape, NULL);
-				g_moveGridTempoMap->CreatePoint(prevId+1, grid, g_moveGridTempoMap->ValueAtPosition(grid), shape, 0, false);
+				if (g_moveGridTempoMap->CreatePoint(prevId+1, grid, g_moveGridTempoMap->ValueAtPosition(grid), shape, 0, false))
 				targetId = prevId + 1;
 			}
 
@@ -401,7 +404,7 @@ static void MoveGridToMouse (COMMAND_T* ct)
 			if (targetId != 0)
 			{
 				s_lockedId = targetId;
-				tDiff = mousePosition - grid;
+				tDiff = mousePosition - grid;				
 			}
 		}
 	}
@@ -423,6 +426,9 @@ static void MoveGridToMouse (COMMAND_T* ct)
 		}
 		else
 		{
+			if (!g_movedGridOnce)
+				g_insertedStretchMarkers = InsertStretchMarkerInAllItems(mousePosition - tDiff, true);
+
 			s_lastPosition = mousePosition;
 			g_moveGridTempoMap->Commit();
 			g_movedGridOnce = true;
@@ -453,7 +459,8 @@ void MoveGridToMouseInit ()
 void MoveGridToEditPlayCursor (COMMAND_T* ct)
 {
 	// Find cursor immediately (in case of playback we want the most accurate position)
-	double cursor = ((int)ct->user == 1 || (int)ct->user == 3) ? (GetPlayPositionEx(NULL)) : (GetCursorPositionEx(NULL));
+	bool doPlayCursor = ((int)ct->user == 1 || (int)ct->user == 3) && IsPlaying(NULL);
+	double cursor =  (doPlayCursor) ? (GetPlayPositionEx(NULL)) : (GetCursorPositionEx(NULL));
 
 	PreventUIRefresh(1);
 
@@ -498,10 +505,11 @@ void MoveGridToEditPlayCursor (COMMAND_T* ct)
 	{
 		if (MoveTempo(tempoMap, targetId, tDiff, true))
 		{
+			InsertStretchMarkerInAllItems(grid, true);
 			if (tempoMap.Commit())
 			{
 				// Restore edit cursor only if moving to it
-				if ((int)ct->user != 1 && (int)ct->user != 3)
+				if (!doPlayCursor)
 					SetEditCurPos2(NULL, cursor, false, false);
 				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 				success = true;
@@ -1239,6 +1247,7 @@ void TempoAtGrid (COMMAND_T* ct)
 		return;
 
 	Undo_BeginBlock2(NULL);
+	vector<double> gridLines;
 	int count = tempoMap.CountPoints()-1;
 	for (int i = 0; i < tempoMap.CountSelected(); ++i)
 	{
@@ -1266,13 +1275,18 @@ void TempoAtGrid (COMMAND_T* ct)
 		{
 			gridLine = GetNextGridDiv(gridLine);
 			if (gridLine < t1 - (MIN_GRID_DIST/2))
-				tempoMap.CreatePoint(tempoMap.CountPoints(), gridLine, CalculateTempoAtPosition(b0, b1, t0, t1, gridLine), s0, 0, false);
+			{
+				if (tempoMap.CreatePoint(tempoMap.CountPoints(), gridLine, CalculateTempoAtPosition(b0, b1, t0, t1, gridLine), s0, 0, false))
+					gridLines.push_back(gridLine);
+			}
 			else
 				break;
 		}
 	}
+
+	bool stretchMarkersInserted = InsertStretchMarkersInAllItems(gridLines);
 	tempoMap.Commit();
-	Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG);
+	Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | ((stretchMarkersInserted) ? UNDO_STATE_ITEMS : 0));
 }
 
 void SelectMovePartialTimeSig (COMMAND_T* ct)
@@ -1367,6 +1381,7 @@ void TempoShapeLinear (COMMAND_T* ct)
 	// Loop through selected points and perform BPM calculations
 	int skipped = 0;
 	int count = tempoMap.CountPoints()-1;
+	vector<double> stretchMarkers;
 	for (int i = 0; i < tempoMap.CountSelected(); ++i)
 	{
 		int id = tempoMap.GetSelected(i);
@@ -1398,7 +1413,18 @@ void TempoShapeLinear (COMMAND_T* ct)
 			{
 				// Check if value and position is legal, if not, skip
 				if (bpm>=MIN_BPM && bpm<=MAX_BPM && (position-t0)>=MIN_TEMPO_DIST && (t1-position)>=MIN_TEMPO_DIST)
-					tempoMap.CreatePoint(tempoMap.CountPoints(), position, bpm, LINEAR, 0, false);
+				{
+					if (tempoMap.CreatePoint(tempoMap.CountPoints(), position, bpm, LINEAR, 0, false))
+					{
+						stretchMarkers.push_back(t0);
+
+						double t0_QN = TimeMap_timeToQN_abs(NULL, t0);
+						double t1_QN = TimeMap_timeToQN_abs(NULL, t1);
+						stretchMarkers.push_back(TimeMap_QNToTime_abs(NULL, (t0_QN + t1_QN) / 2));
+
+						stretchMarkers.push_back(t1);
+					}
+				}
 				else
 					SKIP(skipped, 1);
 			}
@@ -1412,8 +1438,18 @@ void TempoShapeLinear (COMMAND_T* ct)
 				// Check if value and position is legal, if not, skip
 				if (bpm1>=MIN_BPM && bpm1<=MAX_BPM && bpm2>=MIN_BPM && bpm2<=MAX_BPM && (position1-t0)>=MIN_TEMPO_DIST && (position2-position1)>=MIN_TEMPO_DIST && (t1-position2)>=MIN_TEMPO_DIST)
 				{
-					tempoMap.CreatePoint(tempoMap.CountPoints(), position1, bpm1, LINEAR, 0, false);
-					tempoMap.CreatePoint(tempoMap.CountPoints(), position2, bpm2, LINEAR, 0, false);
+					stretchMarkers.push_back(t0);
+
+					double t0_QN = TimeMap_timeToQN_abs(NULL, t0);
+					double t1_QN = TimeMap_timeToQN_abs(NULL, t1);
+					double lenHalfQ = (t1_QN - t0_QN) / 2;
+
+					if (tempoMap.CreatePoint(tempoMap.CountPoints(), position1, bpm1, LINEAR, 0, false))
+						stretchMarkers.push_back(TimeMap_QNToTime_abs(NULL, lenHalfQ * (1 - splitRatio) + t0_QN));
+					if (tempoMap.CreatePoint(tempoMap.CountPoints(), position2, bpm2, LINEAR, 0, false))
+						stretchMarkers.push_back(TimeMap_QNToTime_abs(NULL, lenHalfQ * (splitRatio) + t0_QN + lenHalfQ));
+
+					stretchMarkers.push_back(t1);
 				}
 				else
 					SKIP(skipped, 1);
@@ -1425,8 +1461,9 @@ void TempoShapeLinear (COMMAND_T* ct)
 	}
 
 	// Commit changes
-	if (tempoMap.Commit())
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
+	bool stretchMarkersInserted = InsertStretchMarkersInAllItems(stretchMarkers);
+	if (tempoMap.Commit() || stretchMarkersInserted)
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | ((stretchMarkersInserted) ? UNDO_STATE_ITEMS : 0), -1);
 
 	// Warn user if some points weren't processed
 	static bool s_warnUser = true;
@@ -1454,6 +1491,7 @@ void TempoShapeSquare (COMMAND_T* ct)
 	// Loop through selected points and perform BPM calculations
 	int skipped = 0;
 	int count = tempoMap.CountPoints()-1;
+	vector<double> stretchMarkers;
 	for (int i = 0; i < tempoMap.CountSelected(); ++i)
 	{
 		int id = tempoMap.GetSelected(i);
@@ -1501,8 +1539,19 @@ void TempoShapeSquare (COMMAND_T* ct)
 			// Don't split middle point
 			if (!split)
 			{
-				if (bpm<= MAX_BPM && bpm>=MIN_BPM && (position-t0)>=MIN_TEMPO_DIST && (t1-position)>=MIN_TEMPO_DIST)
-					tempoMap.CreatePoint(tempoMap.CountPoints(), position, bpm, LINEAR, 0, false);
+				if (bpm <= MAX_BPM && bpm >= MIN_BPM && (position-t0) >= MIN_TEMPO_DIST && (t1-position) >= MIN_TEMPO_DIST)
+				{
+					if (tempoMap.CreatePoint(tempoMap.CountPoints(), position, bpm, LINEAR, 0, false))
+					{
+						stretchMarkers.push_back(t0);
+
+						double t0_QN = TimeMap_timeToQN_abs(NULL, t0);
+						double t1_QN = TimeMap_timeToQN_abs(NULL, t1);
+						stretchMarkers.push_back(TimeMap_QNToTime_abs(NULL, (t0_QN + t1_QN) / 2));
+
+						stretchMarkers.push_back(t1);
+					}
+				}
 				else
 					SKIP(skipped, 1);
 			}
@@ -1515,8 +1564,18 @@ void TempoShapeSquare (COMMAND_T* ct)
 
 				if (bpm1>=MIN_BPM && bpm1<=MAX_BPM && bpm2>=MIN_BPM && bpm2<=MAX_BPM && (position1-t0)>=MIN_TEMPO_DIST && (position2-position1)>=MIN_TEMPO_DIST && (t1-position2)>=MIN_TEMPO_DIST)
 				{
-					tempoMap.CreatePoint(tempoMap.CountPoints(), position1, bpm1, LINEAR, 0, false);
-					tempoMap.CreatePoint(tempoMap.CountPoints(), position2, bpm2, LINEAR, 0, false);
+					stretchMarkers.push_back(t0);
+
+					double t0_QN = TimeMap_timeToQN_abs(NULL, t0);
+					double t1_QN = TimeMap_timeToQN_abs(NULL, t1);
+					double lenHalfQ = (t1_QN - t0_QN) / 2;
+
+					if (tempoMap.CreatePoint(tempoMap.CountPoints(), position1, bpm1, LINEAR, 0, false))
+						stretchMarkers.push_back(TimeMap_QNToTime_abs(NULL, lenHalfQ * (1 - splitRatio) + t0_QN));
+					if (tempoMap.CreatePoint(tempoMap.CountPoints(), position2, bpm2, LINEAR, 0, false))
+						stretchMarkers.push_back(TimeMap_QNToTime_abs(NULL, lenHalfQ * (splitRatio)+t0_QN + lenHalfQ));
+
+					stretchMarkers.push_back(t1);
 				}
 				else
 					SKIP(skipped, 1);
@@ -1528,8 +1587,9 @@ void TempoShapeSquare (COMMAND_T* ct)
 	}
 
 	// Commit changes
-	if (tempoMap.Commit())
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
+	bool stretchMarkersInserted = InsertStretchMarkersInAllItems(stretchMarkers);
+	if (tempoMap.Commit() || stretchMarkersInserted)
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | ((stretchMarkersInserted) ? UNDO_STATE_ITEMS : 0), -1);
 
 	// Warn user if some points weren't processed
 	static bool s_warnUser = true;

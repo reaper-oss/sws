@@ -51,6 +51,7 @@ const char* const ADJUST_PLAYRATE_WND = "BR - AdjustPlayrateWnd";
 * Globals                                                                     *
 ******************************************************************************/
 HWND g_adjustPlayrateWnd = NULL;
+static bool g_autoStretchMarkers = true;
 
 /******************************************************************************
 * Commands: Misc continuous actions                                           *
@@ -1184,6 +1185,14 @@ void SetGridMarkerZOrder (COMMAND_T* ct)
 	UpdateArrange();
 }
 
+void SetAutoStretchMarkers(COMMAND_T* ct)
+{
+	if ((int)ct->user == -1)
+		g_autoStretchMarkers = !g_autoStretchMarkers;
+	else
+		g_autoStretchMarkers = !!(int)ct->user;
+}
+
 void CycleRecordModes (COMMAND_T* ct)
 {
 	const char* configStr = "projrecmode";
@@ -1559,6 +1568,11 @@ int IsSetGridMarkerZOrderOn (COMMAND_T* ct)
 	int option; GetConfig((((int)ct->user > 0) ? "gridinbg" : "gridinbg2"), option);
 
 	return option == abs((int)ct->user) - 1;
+}
+
+int IsSetAutoStretchMarkersOn(COMMAND_T* ct)
+{
+	return (int)g_autoStretchMarkers;
 }
 
 int IsAdjustPlayrateOptionsVisible (COMMAND_T* ct)

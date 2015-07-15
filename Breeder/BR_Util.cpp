@@ -30,6 +30,7 @@
 #include "BR.h"
 #include "BR_EnvelopeUtil.h"
 #include "BR_MidiUtil.h"
+#include "BR_Misc.h"
 #include "../reaper/localize.h"
 #include "../SnM/SnM.h"
 #include "../SnM/SnM_Chunk.h"
@@ -921,6 +922,22 @@ int GetTakeType (MediaItem_Take* take)
 	return returnType;
 }
 
+int GetEffectiveTimebase (MediaItem* item)
+{
+	int timeBase = 0;
+	if (item)
+	{
+		timeBase = (int)(char)GetMediaItemInfo_Value(item , "C_BEATATTACHMODE");
+		if (timeBase != 0 && timeBase != 1 && timeBase != 2)
+		{
+			timeBase = (int)(char)GetMediaTrackInfo_Value(GetMediaItemTrack(item), "C_BEATATTACHMODE");
+			if (timeBase != 0 && timeBase != 1 && timeBase != 2)
+				GetConfig("itemtimelock", timeBase);
+		}
+	}
+	return timeBase;
+}
+
 int GetTakeFXCount (MediaItem_Take* take)
 {
 	int count = 0;
@@ -1582,6 +1599,63 @@ int FindStretchMarker (MediaItem_Take* take, double position, double surrounding
 			id = nextId;
 	}
 	return (id < count) ? id : -1;
+}
+
+bool InsertStretchMarkersInAllItems (const vector<double>& stretchMarkers, bool doBeatsTimebaseOnly /*=false*/, double hardCheckPositionsDelta /*=-1*/, bool obeySwsOptions /*=true*/)
+{
+	bool updated = true;
+
+	if (!IsLocked(ITEM_FULL) && !IsLocked(STRETCH_MARKERS) && (!obeySwsOptions || (obeySwsOptions && IsSetAutoStretchMarkersOn(NULL))))
+	{
+		int itemCount = CountMediaItems(NULL);
+		for (int i = 0; i < itemCount; ++i)
+		{
+			MediaItem* item = GetMediaItem(NULL, i);
+			int itemEffectiveTimebase = (doBeatsTimebaseOnly) ? GetEffectiveTimebase(item) : 1;
+			if (itemEffectiveTimebase > 0 && !IsItemLocked(item))
+			{
+				vector<pair<MediaItem_Take*,double> > takes;
+				int allTakesCount = CountTakes(item);
+				for (int j = 0; j < allTakesCount; ++j)
+				{
+					MediaItem_Take* take = GetMediaItemTake(item, j);
+					if (take && !IsMidi(take))
+						takes.push_back(make_pair(take, GetMediaItemTakeInfo_Value(take, "D_PLAYRATE")));
+				}
+
+				size_t takeCount = takes.size();
+				if (takeCount > 0)
+				{
+					double itemStart = GetMediaItemInfo_Value(item, "D_POSITION");
+					double itemEnd = itemStart + GetMediaItemInfo_Value(item, "D_LENGTH");
+					size_t markersCount = stretchMarkers.size();
+					for (size_t j = 0; j < markersCount; ++j)
+					{
+						double position = stretchMarkers[j];
+						if (CheckBounds(position, itemStart, itemEnd))
+						{
+							for (int h = 0; h < takeCount; ++h)
+							{
+								if (hardCheckPositionsDelta < 0 || FindStretchMarker(takes[h].first, (position - itemStart) * takes[h].second , hardCheckPositionsDelta) < 0)
+								{
+									if (SetTakeStretchMarker(takes[h].first, -1, (position - itemStart) * takes[h].second, NULL) > 0)
+										updated = true;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return updated;
+}
+
+bool InsertStretchMarkerInAllItems (double position, bool doBeatsTimebaseOnly /*=false*/, double hardCheckPositionDelta /*=-1*/, bool obeySwsOptions /*=true*/)
+{
+	vector<double> stretchMarker;
+	stretchMarker.push_back(position);
+	return InsertStretchMarkersInAllItems(stretchMarker, doBeatsTimebaseOnly, hardCheckPositionDelta, obeySwsOptions);
 }
 
 /******************************************************************************

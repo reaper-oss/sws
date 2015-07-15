@@ -74,6 +74,7 @@ void SetMoveCursorOnPaste (COMMAND_T*);
 void SetPlaybackStopOptions (COMMAND_T*);
 void SetGridMarkerZOrder (COMMAND_T*);
 void CycleRecordModes (COMMAND_T*);
+void SetAutoStretchMarkers (COMMAND_T*);
 
 /******************************************************************************
 * Commands: Misc - Media item preview                                         *
@@ -106,5 +107,6 @@ int IsSetOptionsFXOn (COMMAND_T*);
 int IsSetMoveCursorOnPasteOn (COMMAND_T*);
 int IsSetPlaybackStopOptionsOn (COMMAND_T*);
 int IsSetGridMarkerZOrderOn (COMMAND_T*);
+int IsSetAutoStretchMarkersOn (COMMAND_T*);
 int IsAdjustPlayrateOptionsVisible (COMMAND_T*);
 int IsTitleBarDisplayOptionOn (COMMAND_T*);

@@ -28,6 +28,7 @@
 #include "stdafx.h"
 #include "BR_TempoDlg.h"
 #include "BR_EnvelopeUtil.h"
+#include "BR_Misc.h"
 #include "BR_Tempo.h"
 #include "BR_Util.h"
 #include "../SnM/SnM_Dlg.h"
@@ -106,18 +107,26 @@ static void ConvertMarkersToTempo (int markers, int num, int den, bool removeMar
 	double measure = num / (den * (double)markers);
 	int exceed = 0;
 
+	vector<double> stretchMarkers;
 	if (!gradualTempo)
 	{
-		for (size_t i = 0; i < markerPositions.size()-1 ; ++i)
+		for (size_t i = 0; i < markerPositions.size() - 1 ; ++i)
 		{
 			double bpm = (240 * measure) / (markerPositions[i+1] - markerPositions[i]);
 			if (bpm > MAX_BPM)
 				++exceed;
 
 			if (i == 0) // Set first tempo marker with time signature
-				SetTempoTimeSigMarker(NULL, -1, markerPositions[0], -1, -1, bpm, num, den, false);
+				SetTempoTimeSigMarker(NULL, -1, markerPositions[i], -1, -1, bpm, num, den, false);
 			else
 				SetTempoTimeSigMarker(NULL, -1, markerPositions[i], -1, -1, bpm, 0, 0, false);
+			
+			if (IsSetAutoStretchMarkersOn(NULL))
+			{
+				double position;
+				if (GetTempoTimeSigMarker(NULL, FindTempoMarker(markerPositions[i], MIN_TEMPO_DIST / 2), &position, NULL, NULL, NULL, NULL, NULL, NULL))
+					stretchMarkers.push_back(position);
+			}			
 		}
 	}
 	else
@@ -152,8 +161,10 @@ static void ConvertMarkersToTempo (int markers, int num, int den, bool removeMar
 		double beatsInternval = (split) ? (measure*(1-splitRatio) / 2) : (measure/2);
 
 		// Set points
-		for(size_t i = 0; i < linearPoints.size(); ++i)
+		for (size_t i = 0; i < linearPoints.size(); ++i)
 		{
+			
+			
 			// First tempo marker has time signature, last will have square shape if converting within time selection
 			if (i == 0)
 				SetTempoTimeSigMarker(NULL, -1, markerPositions[i], -1, -1, linearPoints[i], num, den, true);
@@ -167,6 +178,13 @@ static void ConvertMarkersToTempo (int markers, int num, int den, bool removeMar
 					SetTempoTimeSigMarker(NULL, -1, markerPositions[i], -1, -1, linearPoints[i], 0, 0, true);
 			}
 
+			if (IsSetAutoStretchMarkersOn(NULL))
+			{
+				double position;
+				if (GetTempoTimeSigMarker(NULL, FindTempoMarker(markerPositions[i], MIN_TEMPO_DIST/2), &position, NULL, NULL, NULL, NULL, NULL, NULL))
+					stretchMarkers.push_back(position);
+			}
+			
 			if (linearPoints[i] > MAX_BPM)
 				++exceed;
 
@@ -179,6 +197,12 @@ static void ConvertMarkersToTempo (int markers, int num, int den, bool removeMar
 				if (!split)
 				{
 					SetTempoTimeSigMarker(NULL, -1, pos, -1, -1, bpm, 0, 0, true);
+					if (IsSetAutoStretchMarkersOn(NULL))
+					{
+						double position;
+						if (GetTempoTimeSigMarker(NULL, FindTempoMarker(pos, MIN_TEMPO_DIST / 2), &position, NULL, NULL, NULL, NULL, NULL, NULL))
+							stretchMarkers.push_back(position);
+					}
 					if (bpm > MAX_BPM)
 						++exceed;
 				}
@@ -189,6 +213,15 @@ static void ConvertMarkersToTempo (int markers, int num, int den, bool removeMar
 
 					SetTempoTimeSigMarker(NULL, -1, pos1, -1, -1, bpm1, 0, 0, true);
 					SetTempoTimeSigMarker(NULL, -1, pos2, -1, -1, bpm2, 0, 0, true);
+					if (IsSetAutoStretchMarkersOn(NULL))
+					{
+						double position;
+						if (GetTempoTimeSigMarker(NULL, FindTempoMarker(pos1, MIN_TEMPO_DIST / 2), &position, NULL, NULL, NULL, NULL, NULL, NULL))
+							stretchMarkers.push_back(position);
+						if (GetTempoTimeSigMarker(NULL, FindTempoMarker(pos2, MIN_TEMPO_DIST / 2), &position, NULL, NULL, NULL, NULL, NULL, NULL))
+							stretchMarkers.push_back(position);
+					}
+
 					if (bpm1 > MAX_BPM || bpm2 > MAX_BPM)
 						++exceed;
 
@@ -223,6 +256,7 @@ static void ConvertMarkersToTempo (int markers, int num, int den, bool removeMar
 		}
 	}
 
+	InsertStretchMarkersInAllItems(stretchMarkers);
 	UpdateTimeline();
 	Undo_EndBlock2(NULL, __LOCALIZE("Convert project markers to tempo markers","sws_undo"), UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG);
 

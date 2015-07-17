@@ -2,6 +2,7 @@ New actions
 +Main:
  - SWS/BR: Options - Automatically insert stretch markers when inserting tempo markers with SWS actions
   - Note:  The option is enabled by default. It allows for stretch markers to get automatically inserted when editing tempo map with various SWS/BR features (warp grid, freehand draw, tempo mapping). When appropriate, some of these features (i.e. warp grid) won't insert stretch markers in items with effective timebase time. See some examples http://stash.reaper.fm/24586/sws%20auto%20stretch%20markers.gif|here|
+ - SWS/BR: Toggle play from mouse cursor position 
  - SWS/BR: Toggle play from mouse cursor position and solo active item's track for the duration
  - SWS/BR: Toggle play from mouse cursor position and solo active item for the duration
  - SWS/BR: Toggle play from edit cursor position and solo active item's track for the duration
@@ -18,7 +19,11 @@ Contextual toolbars
  - Fixed stretch marker detection when take had modified playrate
 +Other:
  - Added toggle states to all actions for toggling toolbars
- 
+
+ReaScript
++Other:
+ - BR_GetMouseCursorContext: fixed stretch marker detection when take had modified playrate
+
 Fixes
 +Fixed various SWS/BR actions that show send envelopes. In certain corner cases they didn't work and could potentially remove FXs from receiving track
 

@@ -1634,7 +1634,7 @@ bool InsertStretchMarkersInAllItems (const vector<double>& stretchMarkers, bool 
 						double position = stretchMarkers[j];
 						if (CheckBounds(position, itemStart, itemEnd))
 						{
-							for (int h = 0; h < takeCount; ++h)
+							for (size_t h = 0; h < takeCount; ++h)
 							{
 								if (hardCheckPositionsDelta < 0 || FindStretchMarker(takes[h].first, (position - itemStart) * takes[h].second , hardCheckPositionsDelta) < 0)
 								{

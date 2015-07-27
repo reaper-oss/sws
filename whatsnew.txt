@@ -2,6 +2,10 @@ New actions
 +Main:
  - SWS/BR: Options - Automatically insert stretch markers when inserting tempo markers with SWS actions
   - Note:  The option is enabled by default. It allows for stretch markers to get automatically inserted when editing tempo map with various SWS/BR features (warp grid, freehand draw, tempo mapping). When appropriate, some of these features (i.e. warp grid) won't insert stretch markers in items with effective timebase time. See some examples http://stash.reaper.fm/24586/sws%20auto%20stretch%20markers.gif|here|
+ - SWS/BR: Copy selected points in selected envelope to envelope at mouse cursor
+ - SWS/BR: Copy points in time selection in selected envelope to envelope at mouse cursor
+ - SWS/BR: Copy selected points in selected envelope to to envelope at mouse cursor (paste at edit cursor)
+ - SWS/BR: Copy points in time selection in selected envelope to envelope at mouse cursor (paste at edit cursor)
  - SWS/BR: Toggle play from mouse cursor position 
  - SWS/BR: Toggle play from mouse cursor position and solo active item's track for the duration
  - SWS/BR: Toggle play from mouse cursor position and solo active item for the duration

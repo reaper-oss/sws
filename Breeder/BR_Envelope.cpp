@@ -1406,9 +1406,10 @@ void CopyEnvPoints (COMMAND_T* ct)
 {
 	BR_Envelope envelope(GetSelectedEnvelope(NULL));
 
-	bool recordArm  = !!GetBit((int)ct->user, 0);
-	bool doTimeSel  = !!GetBit((int)ct->user, 1);
-	bool fromCursor = !!GetBit((int)ct->user, 2);
+	bool recordArm      = !!GetBit((int)ct->user, 0);
+	bool doTimeSel      = !!GetBit((int)ct->user, 1);
+	bool fromCursor     = !!GetBit((int)ct->user, 2);
+	bool copyToMouseEnv = !!GetBit((int)ct->user, 3);
 
 	double startTime = 0;
 	double endTime   = 0;
@@ -1459,51 +1460,76 @@ void CopyEnvPoints (COMMAND_T* ct)
 		endTime   += positionOffset;
 	}
 
+
+	vector<TrackEnvelope*> envelopes;
+	if (copyToMouseEnv)
+	{
+		BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_MCP_TCP | BR_MouseInfo::MODE_ARRANGE | BR_MouseInfo::MODE_IGNORE_ENVELOPE_LANE_SEGMENT);
+
+		if ((!strcmp(mouseInfo.GetWindow(), "tcp") && !strcmp(mouseInfo.GetSegment(), "envelope")) ||
+			(!strcmp(mouseInfo.GetWindow(), "arrange") && !strcmp(mouseInfo.GetSegment(), "envelope")) ||
+			(!strcmp(mouseInfo.GetDetails(), "env_point") || !strcmp(mouseInfo.GetDetails(), "env_segment"))
+			)
+		{
+			if (mouseInfo.GetEnvelope())
+				envelopes.push_back(mouseInfo.GetEnvelope());
+		}
+	}
+	else
+	{
+		for (int i = -1; i < CountSelectedTracks(NULL); ++i)
+		{
+			MediaTrack* track = NULL;
+			if (i == -1 && *(int*)GetSetMediaTrackInfo(GetMasterTrack(NULL), "I_SELECTED", NULL))
+				track = GetMasterTrack(NULL);
+			else
+				track = GetSelectedTrack(NULL, i);
+
+			for (int j = 0; j < CountTrackEnvelopes(track); ++j)
+			{
+				TrackEnvelope* envPtr = GetTrackEnvelope(track, j);
+				if ((positionOffset != 0 || envPtr != envelope.GetPointer()) && envPtr != GetTempoEnv())
+					envelopes.push_back(envPtr);
+			}
+		}
+	}
+
 	PreventUIRefresh(1);
 	bool update = false;
 	bool triedToCopyToTempo = false;
-	for (int i = -1; i < CountSelectedTracks(NULL); ++i)
+	for (size_t i = 0; i < envelopes.size(); ++i)
 	{
-		MediaTrack* track = NULL;
-		if (i == -1 && *(int*)GetSetMediaTrackInfo(GetMasterTrack(NULL), "I_SELECTED", NULL))
-			track = GetMasterTrack(NULL);
-		else
-			track = GetSelectedTrack(NULL, i);
-
-		for (int j = 0; j < CountTrackEnvelopes(track); ++j)
+		TrackEnvelope* envPtr = envelopes[i];;
+		if ((positionOffset != 0 || envPtr != envelope.GetPointer()) && envPtr != GetTempoEnv())
 		{
-			TrackEnvelope* envPtr = GetTrackEnvelope(track, j);
-			if ((positionOffset != 0 || envPtr != envelope.GetPointer()) && envPtr != GetTempoEnv())
-			{
-				BR_Envelope targetEnv (envPtr);
+			BR_Envelope targetEnv(envPtr);
 
-				if (targetEnv.IsVisible() && (!recordArm || recordArm && targetEnv.IsArmed()))
+			if (targetEnv.IsVisible() && (!recordArm || recordArm && targetEnv.IsArmed()))
+			{
+				targetEnv.UnselectAll();
+				targetEnv.DeletePointsInRange(startTime, endTime);
+
+				double sourceMin = envelope.LaneMinValue();
+				double sourceMax = envelope.LaneMaxValue();
+				double targetMin = targetEnv.LaneMinValue();
+				double targetMax = targetEnv.LaneMaxValue();
+
+				for (size_t h = 0; h < idsToCopy.size(); ++h)
 				{
-					targetEnv.UnselectAll();
-					targetEnv.DeletePointsInRange(startTime, endTime);
-
-					double sourceMin = envelope.LaneMinValue();
-					double sourceMax = envelope.LaneMaxValue();
-					double targetMin = targetEnv.LaneMinValue();
-					double targetMax = targetEnv.LaneMaxValue();
-
-					for (size_t h = 0; h < idsToCopy.size(); ++h)
-					{
-						double position, value, bezier;
-						int shape;
-						envelope.GetPoint(idsToCopy[h], &position, &value, &shape, &bezier);
-						targetEnv.CreatePoint(targetEnv.CountPoints(), position + positionOffset, TranslateRange(value, sourceMin, sourceMax, targetMin, targetMax), shape, bezier, true, true, false);
-					}
-					if (targetEnv.Commit())
-						update = true;
+					double position, value, bezier;
+					int shape;
+					envelope.GetPoint(idsToCopy[h], &position, &value, &shape, &bezier);
+					targetEnv.CreatePoint(targetEnv.CountPoints(), position + positionOffset, TranslateRange(value, sourceMin, sourceMax, targetMin, targetMax), shape, bezier, true, true, false);
 				}
+				if (targetEnv.Commit())
+					update = true;
 			}
-			else if (envPtr == GetTempoEnv())
-			{
-				BR_Envelope tempoMap(envPtr);
-				if (tempoMap.IsVisible() && !recordArm)
-					triedToCopyToTempo = true;
-			}
+		}
+		else if (envPtr == GetTempoEnv())
+		{
+			BR_Envelope tempoMap(envPtr);
+			if (tempoMap.IsVisible() && !recordArm)
+				triedToCopyToTempo = true;
 		}
 	}
 	PreventUIRefresh(-1);

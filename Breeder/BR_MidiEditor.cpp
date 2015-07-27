@@ -551,6 +551,11 @@ void ME_MoveCCLaneUpDown (COMMAND_T* ct, int val, int valhw, int relmode, HWND h
 	}
 }
 
+void ME_MoveActiveWndToMouse (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
+{
+	MoveActiveWndToMouse(ct);
+}
+
 void ME_SetAllCCLanesHeight (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
 	void* editor = SWS_MIDIEditor_GetActive();

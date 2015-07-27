@@ -13,6 +13,7 @@ New actions
  - SWS/BR: Toggle play from mouse cursor position and solo item and track under mouse for the duration
  - SWS/BR: Toggle play from edit cursor position and solo track under mouse for the duration 
  - SWS/BR: Toggle play from edit cursor position and solo item and track under mouse for the duration
+ - SWS/BR: Move active floating window to mouse cursor (9 version with different horizontal and vertical positions in regards to mouse cursor)
 
 Contextual toolbars
 +Fixes:

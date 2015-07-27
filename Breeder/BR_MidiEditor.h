@@ -42,6 +42,7 @@ void ME_CCEventAtEditCursor (COMMAND_T*, int, int, int, HWND);
 void ME_ShowUsedCCLanesDetect14Bit (COMMAND_T*, int, int, int, HWND);
 void ME_CreateCCLaneLastClicked (COMMAND_T*, int, int, int, HWND);
 void ME_MoveCCLaneUpDown (COMMAND_T*, int, int, int, HWND);
+void ME_MoveActiveWndToMouse (COMMAND_T*, int, int, int, HWND);
 void ME_SetAllCCLanesHeight (COMMAND_T*, int, int, int, HWND);
 void ME_IncDecAllCCLanesHeight (COMMAND_T*, int, int, int, HWND);
 void ME_HideCCLanes (COMMAND_T*, int, int, int, HWND);

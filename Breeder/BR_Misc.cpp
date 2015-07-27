@@ -57,10 +57,11 @@ static bool g_autoStretchMarkers = true;
 * Commands: Misc continuous actions                                           *
 ******************************************************************************/
 static COMMAND_T* g_activeCommand = NULL;
-static bool g_mousePlaybackActive           = false;
-static bool g_mousePlaybackRestorePlaystate = true;
-static bool g_mousePlaybackRestoreView      = true;
-static bool g_mousePlaybackContinuousActive = false;
+static bool g_mousePlaybackActive             = false;
+static bool g_mousePlaybackRestorePlaystate   = true;
+static bool g_mousePlaybackRestoreView        = true;
+static bool g_mousePlaybackContinuousActive   = false;
+static bool g_mousePlaybackDoRestorePlaystate = true;
 
 static bool g_mousePlaybackForceMoveView    = false;
 static int  g_mousePlaybackReaperOptions    = 0;
@@ -125,11 +126,11 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 			return false;
 
 		BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_ARRANGE                                  |
-		                       BR_MouseInfo::MODE_RULER                                    |
-							   BR_MouseInfo::MODE_MIDI_EDITOR                              |
-							   BR_MouseInfo::MODE_IGNORE_ALL_TRACK_LANE_ELEMENTS_BUT_ITEMS |
-							   BR_MouseInfo::MODE_IGNORE_ENVELOPE_LANE_SEGMENT             |
-							   (((int)ct->user < -1) ? BR_MouseInfo::MODE_MCP_TCP : 0));
+                               BR_MouseInfo::MODE_RULER                                    |
+                               BR_MouseInfo::MODE_MIDI_EDITOR                              |
+                               BR_MouseInfo::MODE_IGNORE_ALL_TRACK_LANE_ELEMENTS_BUT_ITEMS |
+                               BR_MouseInfo::MODE_IGNORE_ENVELOPE_LANE_SEGMENT             |
+                               (((int)ct->user < -1) ? BR_MouseInfo::MODE_MCP_TCP : 0));
 
 		if ((int)ct->user > 0 && mouseInfo.GetPosition() == -1)
 			return false;
@@ -229,9 +230,9 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 		RegisterCsurfPlayState(true, MousePlaybackPlayState); // register Csurf after starting playback so it doesn't mess with our flags
 
 		g_activeCommand                 = ct;
-		g_mousePlaybackActive           = true;		
-		g_mousePlaybackRestorePlaystate = true;
+		g_mousePlaybackActive           = true;
 		g_mousePlaybackRestoreView      = true;
+		g_mousePlaybackRestorePlaystate = g_mousePlaybackDoRestorePlaystate;
 		return true;
 	}
 	else
@@ -254,6 +255,10 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 			{
 				OnStopButtonEx(s_proj);
 			}
+		}
+		else
+		{
+			OnStopButtonEx(s_proj);
 		}
 
 		// Restore tracks' solo and mute state
@@ -391,13 +396,16 @@ void PlaybackAtMouseCursorInit ()
 ******************************************************************************/
 void ToggleMousePlayback (COMMAND_T* ct)
 {
+   
 	if (g_mousePlaybackContinuousActive)
 	{
 		g_mousePlaybackRestorePlaystate = false;
 		g_mousePlaybackRestoreView      = false;
 		ContinuousActionStopAll();
 	}
+	g_mousePlaybackDoRestorePlaystate = false;
 	MousePlaybackInit(ct, !g_mousePlaybackActive);
+	g_mousePlaybackDoRestorePlaystate = true; // toggle play actions shouldn't restore playback
 }
 
 void PlaybackAtMouseCursor (COMMAND_T* ct)

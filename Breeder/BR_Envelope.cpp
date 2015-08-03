@@ -1710,15 +1710,33 @@ void UnselectEnvelope (COMMAND_T* ct)
 
 void ApplyNextCmdToMultiEnvelopes (COMMAND_T* ct)
 {
+	static bool s_reentrancy = false;
+	static const int s_thisCommandCmdsCount = 4;
+	static const int s_thisCommandCmds[s_thisCommandCmdsCount] = {NamedCommandLookup("_BR_NEXT_CMD_SEL_TK_VIS_ENVS"),
+	                                                              NamedCommandLookup("_BR_NEXT_CMD_SEL_TK_REC_ENVS"),
+	                                                              NamedCommandLookup("_BR_NEXT_CMD_SEL_TK_VIS_ENVS_NOSEL"),
+	                                                              NamedCommandLookup("_BR_NEXT_CMD_SEL_TK_REC_ENVS_NOSEL")};
+
+	if (s_reentrancy)
+		return;
+
 	int cmd = BR_GetNextActionToApply();
 	if (cmd == 0)
 		return;
+
+	for (size_t i = 0; i < s_thisCommandCmdsCount; ++i)
+	{
+		if (cmd == s_thisCommandCmds[i])
+			return;
+	}
 
 	if ((int)ct->user < 0)
 	{
 		if (GetSelectedTrackEnvelope(NULL))
 		{
+			s_reentrancy = true;
 			Main_OnCommand(cmd, 0);
+			s_reentrancy = false;
 			return;
 		}
 	}
@@ -1744,7 +1762,10 @@ void ApplyNextCmdToMultiEnvelopes (COMMAND_T* ct)
 			{
 				SetCursorContext(2, envelope.GetPointer());
 				updated = true;
+
+				s_reentrancy = true;
 				Main_OnCommand(cmd, 0);
+				s_reentrancy = false;
 			}
 		}
 

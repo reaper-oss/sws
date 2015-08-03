@@ -63,7 +63,9 @@ bool BR_GlobalActionHook (int cmd, int val, int valhw, int relmode, HWND hwnd)
 		g_nextActionToApply = cmd;
 		if      (nextActionApplyer->doCommand) nextActionApplyer->doCommand(nextActionApplyer);
 		else if (nextActionApplyer->onAction)  nextActionApplyer->onAction(nextActionApplyer, val, valhw, relmode, hwnd);
+
 		g_nextActionToApply = 0;
+		g_nextActionApplyer = NULL; // because BR_SwsActionHook might set it to something else during the call to this function
 
 		return true;
 	}

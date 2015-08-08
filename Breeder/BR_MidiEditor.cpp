@@ -917,7 +917,7 @@ void ME_CCToEnvPoints (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd
 
 			if (value != -1)
 			{
-				double newValue = TranslateRange(value, 0, max, envelope.LaneMinValue(), envelope.LaneMaxValue());
+				double newValue = envelope.RealValue(TranslateRange(value, 0, max, 0.0, 1.0));
 				while (true)
 				{
 					double position = MIDI_GetProjTimeFromPPQPos(take, ppqPos);
@@ -944,7 +944,7 @@ void ME_CCToEnvPoints (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd
 		double ppqPos;
 		if (MIDI_GetNote(take, id, NULL, NULL, &ppqPos, NULL, &channel, NULL, &velocity) && midiEditor.IsNoteVisible(take, id))
 		{
-			double newValue = TranslateRange(velocity, 1, 127, envelope.LaneMinValue(), envelope.LaneMaxValue());
+			double newValue = envelope.RealValue(TranslateRange(velocity, 1, 127, 0.0, 1.0));
 			while (true)
 			{
 				double position = MIDI_GetProjTimeFromPPQPos(take, ppqPos);

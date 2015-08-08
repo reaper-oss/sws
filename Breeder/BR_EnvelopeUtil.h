@@ -128,7 +128,7 @@ public:
 	MediaTrack* GetParent ();
 	TrackEnvelope* GetPointer ();
 	void SetData (void* data); // used to save and
-	void* GetData ();           // get arbitrary data
+	void* GetData ();          // get arbitrary data
 
 	/* Get envelope properties */
 	BR_EnvType Type ();

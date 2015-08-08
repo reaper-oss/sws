@@ -762,7 +762,7 @@ bool BR_LoudnessObject::CreateGraph (BR_Envelope& envelope, double minLUFS, doub
 	size_t size = values.size();
 	for (size_t i = 0; i < size; ++i)
 	{
-		double value = TranslateRange(values[i], minLUFS, maxLUFS, newMin, newMax);
+		double value = envelope.RealValue(TranslateRange(values[i], minLUFS, maxLUFS, 0.0, 1.0));
 
 		if (i != size-1)
 		{

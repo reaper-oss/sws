@@ -6,16 +6,16 @@ New actions
  - SWS/BR: Copy points in time selection in selected envelope to envelope at mouse cursor
  - SWS/BR: Copy selected points in selected envelope to to envelope at mouse cursor (paste at edit cursor)
  - SWS/BR: Copy points in time selection in selected envelope to envelope at mouse cursor (paste at edit cursor)
- - SWS/BR: Toggle play from mouse cursor position 
+ - SWS/BR: Toggle play from mouse cursor position
  - SWS/BR: Toggle play from mouse cursor position and solo active item's track for the duration
  - SWS/BR: Toggle play from mouse cursor position and solo active item for the duration
  - SWS/BR: Toggle play from edit cursor position and solo active item's track for the duration
  - SWS/BR: Toggle play from edit cursor position and solo active item for the duration
 +MIDI editor:
- - SWS/BR: Toggle play from mouse cursor position                                            
+ - SWS/BR: Toggle play from mouse cursor position
  - SWS/BR: Toggle play from mouse cursor position and solo track under mouse for the duration
  - SWS/BR: Toggle play from mouse cursor position and solo item and track under mouse for the duration
- - SWS/BR: Toggle play from edit cursor position and solo track under mouse for the duration 
+ - SWS/BR: Toggle play from edit cursor position and solo track under mouse for the duration
  - SWS/BR: Toggle play from edit cursor position and solo item and track under mouse for the duration
  - SWS/BR: Move active floating window to mouse cursor (9 version with different horizontal and vertical positions in regards to mouse cursor)
 
@@ -30,7 +30,8 @@ ReaScript
  - BR_GetMouseCursorContext: fixed stretch marker detection when take had modified playrate
 
 Fixes
-+Fixed various SWS/BR actions that show send envelopes. In certain corner cases they didn't work and could potentially remove FXs from receiving track
++Fixed SWS/BR actions that show send envelopes. In certain corner cases they didn't work and could potentially remove FXs from receiving track
++Fixed SWS/BR actions that copy other stuff to envelopes (CC events, envelope points from other envelopes etc...) when dealing with FX envelopes
 
 !v2.7.3 #0 pre-release build (July 8, 2015)
 ReaScript: fixed missing exported functions

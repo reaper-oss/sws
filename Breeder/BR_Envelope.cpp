@@ -1509,17 +1509,19 @@ void CopyEnvPoints (COMMAND_T* ct)
 				targetEnv.UnselectAll();
 				targetEnv.DeletePointsInRange(startTime, endTime);
 
-				double sourceMin = envelope.LaneMinValue();
-				double sourceMax = envelope.LaneMaxValue();
-				double targetMin = targetEnv.LaneMinValue();
-				double targetMax = targetEnv.LaneMaxValue();
+				double sourceMin    = envelope.NormalizedDisplayValue(envelope.LaneMinValue());
+				double sourceCenter = envelope.NormalizedDisplayValue(envelope.LaneCenterValue());
+				double sourceMax    = envelope.NormalizedDisplayValue(envelope.LaneMaxValue());
 
 				for (size_t h = 0; h < idsToCopy.size(); ++h)
 				{
 					double position, value, bezier;
 					int shape;
 					envelope.GetPoint(idsToCopy[h], &position, &value, &shape, &bezier);
-					targetEnv.CreatePoint(targetEnv.CountPoints(), position + positionOffset, TranslateRange(value, sourceMin, sourceMax, targetMin, targetMax), shape, bezier, true, true, false);
+					targetEnv.CreatePoint(targetEnv.CountPoints(), 
+					                      position + positionOffset,
+					                      targetEnv.RealValue(envelope.NormalizedDisplayValue(value)),
+					                      shape, bezier, true, true, false);					
 				}
 				if (targetEnv.Commit())
 					update = true;

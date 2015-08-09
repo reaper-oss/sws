@@ -258,14 +258,6 @@ void SWS_GetSelectedMediaItemsOnTrack(WDL_TypedBuf<MediaItem*>* buf, MediaTrack*
 int SWS_GetModifiers();
 bool SWS_IsWindow(HWND hwnd);
 
-// API wrappers due to some prototypes changed in v4.76
-void* SWS_MIDIEditor_GetActive();
-int SWS_MIDIEditor_GetMode(void* midieditor);
-int SWS_MIDIEditor_GetSetting_int(void* midieditor, const char* setting_desc);
-bool SWS_MIDIEditor_GetSetting_str(void* midieditor, const char* setting_desc, char* buf, int buf_sz);
-MediaItem_Take* SWS_MIDIEditor_GetTake(void* midieditor);
-bool SWS_MIDIEditor_OnCommand(void* midieditor, int command_id);
-
 // Localization, sws_util.cpp
 #define _SWS_LOCALIZATION
 WDL_FastString* GetLangPack();

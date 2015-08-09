@@ -654,7 +654,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Toggle play from mouse cursor position and solo item and track under mouse for the duration" },                                 "BR_TOGGLE_PLAY_MOUSE_SOLO_ITEM",     ToggleMousePlayback, NULL, 3},
 	{ { DEFACCEL, "SWS/BR: Toggle play from edit cursor position and solo track under mouse for the duration" },                                           "BR_TOGGLE_PLAY_EDIT_SOLO_TRACK",     ToggleMousePlayback, NULL, -2},
 	{ { DEFACCEL, "SWS/BR: Toggle play from edit cursor position and solo item and track under mouse for the duration" },                                  "BR_TOGGLE_PLAY_EDIT_SOLO_ITEM",      ToggleMousePlayback, NULL, -3},
-				
+
 	{ { DEFACCEL, "SWS/BR: Play from mouse cursor position" },                                                                                             "BR_PLAY_MOUSECURSOR",                PlaybackAtMouseCursor, NULL, 0},
 	{ { DEFACCEL, "SWS/BR: Play/pause from mouse cursor position" },                                                                                       "BR_PLAY_PAUSE_MOUSECURSOR",          PlaybackAtMouseCursor, NULL, 1},
 	{ { DEFACCEL, "SWS/BR: Play/stop from mouse cursor position" },                                                                                        "BR_PLAY_STOP_MOUSECURSOR",           PlaybackAtMouseCursor, NULL, 2},

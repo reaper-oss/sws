@@ -519,17 +519,8 @@ bool SWS_IsWindow(HWND hwnd)
 }
 
 
-// API wrappers due to some prototypes changed in v4.76
-void* SWS_MIDIEditor_GetActive() { return (void*)MIDIEditor_GetActive(); }
-int SWS_MIDIEditor_GetMode(void* midieditor) { return MIDIEditor_GetMode((HWND)midieditor); }
-int SWS_MIDIEditor_GetSetting_int(void* midieditor, const char* setting_desc) { return MIDIEditor_GetSetting_int((HWND)midieditor, setting_desc); }
-bool SWS_MIDIEditor_GetSetting_str(void* midieditor, const char* setting_desc, char* buf, int buf_sz) { return MIDIEditor_GetSetting_str((HWND)midieditor, setting_desc, buf, buf_sz); }
-MediaItem_Take* SWS_MIDIEditor_GetTake(void* midieditor) { return MIDIEditor_GetTake((HWND)midieditor); }
-bool SWS_MIDIEditor_OnCommand(void* midieditor, int command_id) { return MIDIEditor_OnCommand((HWND)midieditor, command_id); }
-
 
 // Localization
-
 WDL_FastString* g_LangPack = NULL;
 
 // Never returns NULL ("" means no langpack defined)

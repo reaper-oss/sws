@@ -467,7 +467,7 @@ MediaItem* BR_GetMouseCursorContext_Item ()
 	return g_mouseInfo.GetItem();
 }
 
-void* BR_GetMouseCursorContext_MIDI (bool* inlineEditorOut, int* noteRowOut, int* ccLaneOut, int* ccLaneValOut, int* ccLaneIdOut)
+HWND BR_GetMouseCursorContext_MIDI (bool* inlineEditorOut, int* noteRowOut, int* ccLaneOut, int* ccLaneValOut, int* ccLaneIdOut)
 {
 	if (g_mouseInfo.GetNoteRow() == -1)
 		WritePtr(noteRowOut, -1);

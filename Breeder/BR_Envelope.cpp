@@ -1122,7 +1122,7 @@ void CreateEnvPointsGrid (COMMAND_T* ct)
 
 	for (size_t i = 0; i < position.size(); ++i)
 		envelope.CreatePoint(envelope.CountPoints(), position[i], value[i], shape[i], bezier[i], false, true);
-	
+
 	bool stretchMarkersInserted = ((envelope.IsTempo()) ? InsertStretchMarkersInAllItems(position) : false);
 	if (envelope.Commit() || stretchMarkersInserted)
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS, -1);
@@ -1354,7 +1354,7 @@ void Insert2EnvPointsTimeSelection (COMMAND_T* ct)
 					// Create left-side point only if surrounding points are not too close, otherwise just move existing
 					if (envelope.ValidateId(startId))
 					{
-						double position; envelope.GetPoint(startId, &position, NULL, NULL, NULL);		
+						double position; envelope.GetPoint(startId, &position, NULL, NULL, NULL);
 						if (envelope.SetPoint(startId, &tStart, NULL, &defaultShape, 0, true))
 						{
 							stretchMarkers.push_back(position);
@@ -1371,7 +1371,7 @@ void Insert2EnvPointsTimeSelection (COMMAND_T* ct)
 					// Create right-side point only if surrounding points are not too close, otherwise just move existing
 					if (envelope.ValidateId(endId))
 					{
-						double position; envelope.GetPoint(endId, &position, NULL, NULL, NULL);						
+						double position; envelope.GetPoint(endId, &position, NULL, NULL, NULL);
 						if (envelope.SetPoint(endId, &tEnd, NULL, &defaultShape, 0, true))
 						{
 							stretchMarkers.push_back(position);
@@ -1386,7 +1386,7 @@ void Insert2EnvPointsTimeSelection (COMMAND_T* ct)
 
 					if (envelope.IsTempo() && InsertStretchMarkersInAllItems(stretchMarkers))
 						update = true;
-						
+
 					if (envelope.Commit())
 						update = true;
 				}
@@ -1509,19 +1509,14 @@ void CopyEnvPoints (COMMAND_T* ct)
 				targetEnv.UnselectAll();
 				targetEnv.DeletePointsInRange(startTime, endTime);
 
-				double sourceMin    = envelope.NormalizedDisplayValue(envelope.LaneMinValue());
-				double sourceCenter = envelope.NormalizedDisplayValue(envelope.LaneCenterValue());
-				double sourceMax    = envelope.NormalizedDisplayValue(envelope.LaneMaxValue());
-
 				for (size_t h = 0; h < idsToCopy.size(); ++h)
 				{
 					double position, value, bezier;
 					int shape;
 					envelope.GetPoint(idsToCopy[h], &position, &value, &shape, &bezier);
-					targetEnv.CreatePoint(targetEnv.CountPoints(), 
-					                      position + positionOffset,
+					targetEnv.CreatePoint(targetEnv.CountPoints(), position + positionOffset,
 					                      targetEnv.RealValue(envelope.NormalizedDisplayValue(value)),
-					                      shape, bezier, true, true, false);					
+					                      shape, bezier, true, true, false);
 				}
 				if (targetEnv.Commit())
 					update = true;
@@ -1685,7 +1680,7 @@ void SelectDeleteEnvPointUnderMouse (COMMAND_T* ct)
 				}
 				else
 				{
-					envelope.DeletePoint(mouseInfo.GetEnvelopePoint());				
+					envelope.DeletePoint(mouseInfo.GetEnvelopePoint());
 					if (envelope.CountPoints() == 0) // in case there are no more points left, envelope will get removed - so insert default point back
 						envelope.CreatePoint(0, 0, envelope.LaneCenterValue(), envelope.GetDefaultShape(), 0, false); // position = 0 is why we created BR_Envelope with !takeEnvelopesUseProjectTime
 				}

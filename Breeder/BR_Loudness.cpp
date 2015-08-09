@@ -745,18 +745,15 @@ bool BR_LoudnessObject::CreateGraph (BR_Envelope& envelope, double minLUFS, doub
 	}
 
 	envelope.Sort();
-
 	double start = this->GetAudioStart();
 	double end   = this->GetAudioEnd();
-	double newMin = envelope.LaneMinValue();
-	double newMax = envelope.LaneMaxValue();
 
 	vector<double> values;
 	this->GetAnalyzeData(NULL, NULL, NULL, NULL, NULL, NULL, ((momentary) ? NULL : &values), ((momentary) ? &values : NULL));
 	envelope.DeletePointsInRange(start, end);
 
 	double position = start;
-	envelope.CreatePoint(envelope.CountPoints(), position, newMin, LINEAR, 0, false);
+	envelope.CreatePoint(envelope.CountPoints(), position, envelope.LaneMinValue(), LINEAR, 0, false);
 	position += (momentary) ? 0.4 : 3;
 
 	size_t size = values.size();
@@ -776,18 +773,18 @@ bool BR_LoudnessObject::CreateGraph (BR_Envelope& envelope, double minLUFS, doub
 			{
 				envelope.CreatePoint(envelope.CountPoints(), position, value, LINEAR, 0, false);
 				envelope.CreatePoint(envelope.CountPoints(), end, value, LINEAR, 0, false);
-				if (value > newMin)
-					envelope.CreatePoint(envelope.CountPoints(), end, newMin, SQUARE, 0, false);
+				if (value > envelope.LaneMinValue())
+					envelope.CreatePoint(envelope.CountPoints(), end, envelope.LaneMinValue(), SQUARE, 0, false);
 			}
 			else
 			{
 				if (position > end)
 					position = end;
 
-				if (value > newMin)
+				if (value > envelope.LaneMinValue())
 				{
 					envelope.CreatePoint(envelope.CountPoints(), position, value, LINEAR, 0, false);
-					envelope.CreatePoint(envelope.CountPoints(), end, newMin, SQUARE, 0, false);
+					envelope.CreatePoint(envelope.CountPoints(), end, envelope.LaneMinValue(), SQUARE, 0, false);
 				}
 				else
 				{
@@ -800,7 +797,7 @@ bool BR_LoudnessObject::CreateGraph (BR_Envelope& envelope, double minLUFS, doub
 
 	// In case there are no values (item too short) make sure graph ends with minimum
 	if (size == 0)
-		envelope.CreatePoint(envelope.CountPoints(), end, newMin, SQUARE, 0, false);
+		envelope.CreatePoint(envelope.CountPoints(), end, envelope.LaneMinValue(), SQUARE, 0, false);
 
 	return true;
 }

@@ -6,6 +6,7 @@ New actions
  - SWS/BR: Copy points in time selection in selected envelope to envelope at mouse cursor
  - SWS/BR: Copy selected points in selected envelope to to envelope at mouse cursor (paste at edit cursor)
  - SWS/BR: Copy points in time selection in selected envelope to envelope at mouse cursor (paste at edit cursor)
+ - SWS/BR: Options - Set "Run FX after stopping for" to x ms (various values)
  - SWS/BR: Toggle play from mouse cursor position
  - SWS/BR: Toggle play from mouse cursor position and solo active item's track for the duration
  - SWS/BR: Toggle play from mouse cursor position and solo active item for the duration

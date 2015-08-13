@@ -216,7 +216,8 @@ bool SNM_ReadMediaFileTag(const char *fn, const char* tag, char* tagval, int tag
   TagLib::FileRef f(fn, false);
 #endif
   
-  if (!f.isNull() && !f.tag()->isEmpty())
+  bool hastag=(!f.isNull() && !f.tag()->isEmpty());
+  if (hastag)
   {
     TagLib::String s;
     if (!_stricmp(tag, "artist")) s=f.tag()->artist();
@@ -232,7 +233,7 @@ bool SNM_ReadMediaFileTag(const char *fn, const char* tag, char* tagval, int tag
 #ifdef _WIN32
   delete [] w_fn;
 #endif
-  return false;
+  return hastag;
 }
 
 bool SNM_TagMediaFile(const char *fn, const char* tag, const char* tagval)
@@ -296,11 +297,9 @@ bool SNM_ReadMediaFileTags(const char *fn, WDL_FastString* tags, int tags_sz)
   TagLib::FileRef f(fn, false);
 #endif
   
-  bool hastag=false;
-  if (!f.isNull() && !f.tag()->isEmpty())
+  bool hastag=!f.isNull() && !f.tag()->isEmpty();
+  if (hastag)
   {
-    hastag=true;
-    
     TagLib::String s;
     s=f.tag()->comment();
     tags[0].Set(s.isNull() ? "" : s.toCString(true));

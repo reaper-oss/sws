@@ -88,6 +88,7 @@ const char *RprTake::getName()
 
 RprTake RprTake::createFromMidiEditor()
 {
-    RprTake take(MIDIEditor_GetTake(MIDIEditor_GetActive()));
+    void *midiEditor = SWS_MIDIEditor_GetActive();
+    RprTake take(SWS_MIDIEditor_GetTake(midiEditor));
     return take;
 }

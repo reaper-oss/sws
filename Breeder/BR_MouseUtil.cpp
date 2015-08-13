@@ -498,7 +498,7 @@ bool BR_MouseInfo::IsTakeEnvelope ()
 	return m_mouseInfo.takeEnvelope;
 }
 
-HWND BR_MouseInfo::GetMidiEditor ()
+void* BR_MouseInfo::GetMidiEditor ()
 {
 	return m_mouseInfo.midiEditor;
 }
@@ -1510,14 +1510,14 @@ int BR_MouseInfo::GetRulerLaneHeight (int rulerH, int lane)
 	return 0;
 }
 
-int BR_MouseInfo::IsHwndMidiEditor (HWND hwnd, HWND* midiEditor, HWND* subView)
+int BR_MouseInfo::IsHwndMidiEditor (HWND hwnd, void** midiEditor, HWND* subView)
 {
 	int status = 0;
 
 	if (MIDIEditor_GetMode(hwnd) != -1)
 	{
 		status = MIDI_WND_UNKNOWN;
-		WritePtr(midiEditor, hwnd);
+		WritePtr(midiEditor, (void*)hwnd);
 		WritePtr(subView, (HWND)NULL);
 	}
 	else
@@ -1528,12 +1528,12 @@ int BR_MouseInfo::IsHwndMidiEditor (HWND hwnd, HWND* midiEditor, HWND* subView)
 			hwnd = GetParent(hwnd);
 			if (MIDIEditor_GetMode(hwnd) != -1)
 			{
-				WritePtr(midiEditor, hwnd);
+				WritePtr(midiEditor, (void*)hwnd);
 				WritePtr(subView, subWnd);
 
-				if      (subWnd == GetNotesView(hwnd)) {status = MIDI_WND_NOTEVIEW; break;}
-				else if (subWnd == GetPianoView(hwnd)) {status = MIDI_WND_KEYBOARD; break;}
-				else                                   {status = MIDI_WND_UNKNOWN;  break;}
+				if      (subWnd == GetNotesView((void*)hwnd)) { status = MIDI_WND_NOTEVIEW; break;}
+				else if (subWnd == GetPianoView((void*)hwnd)) { status = MIDI_WND_KEYBOARD; break;}
+				else                                          { status = MIDI_WND_UNKNOWN;  break;}
 			}
 		}
 	}

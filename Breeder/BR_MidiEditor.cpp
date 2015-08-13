@@ -228,8 +228,8 @@ void ME_StopMidiTakePreview (COMMAND_T* ct, int val, int valhw, int relmode, HWN
 
 void ME_PreviewActiveTake (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
-	HWND midiEditor = MIDIEditor_GetActive();
-	if (MediaItem_Take* take = MIDIEditor_GetTake(midiEditor))
+	void* midiEditor = MIDIEditor_GetActive();
+	if (MediaItem_Take* take = SWS_MIDIEditor_GetTake(midiEditor))
 	{
 		MediaItem* item = GetMediaItemTake_Item(take);
 
@@ -312,7 +312,7 @@ void ME_CCEventAtEditCursor (COMMAND_T* ct, int val, int valhw, int relmode, HWN
 	BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_MIDI_EDITOR_ALL);
 	if (mouseInfo.GetMidiEditor())
 	{
-		if (MediaItem_Take* take = MIDIEditor_GetTake(mouseInfo.GetMidiEditor()))
+		if (MediaItem_Take* take = SWS_MIDIEditor_GetTake(mouseInfo.GetMidiEditor()))
 		{
 			double startLimit, endLimit;
 			double positionPPQ = GetOriginalPpqPos(take, MIDI_GetPPQPosFromProjTime(take, GetCursorPositionEx(NULL)), NULL, &startLimit, &endLimit);
@@ -328,7 +328,7 @@ void ME_CCEventAtEditCursor (COMMAND_T* ct, int val, int valhw, int relmode, HWN
 				{
 					bool do14bit    = (lane >= CC_14BIT_START) ? true : false;
 					int type        = (lane == CC_PROGRAM) ? (STATUS_PROGRAM) : (lane == CC_CHANNEL_PRESSURE ? STATUS_CHANNEL_PRESSURE : (lane == CC_PITCH ? STATUS_PITCH : STATUS_CC));
-					int channel     = MIDIEditor_GetSetting_int(mouseInfo.GetMidiEditor(), "default_note_chan");
+					int channel     = SWS_MIDIEditor_GetSetting_int(mouseInfo.GetMidiEditor(), "default_note_chan");
 					int msg2        = CheckBounds(lane, 0, 127) ? ((value >> 7) | 0) : (value & 0x7F);
 					int msg3        = CheckBounds(lane, 0, 127) ? (value & 0x7F)     : ((value >> 7) | 0);
 
@@ -355,7 +355,7 @@ void ME_ShowUsedCCLanesDetect14Bit (COMMAND_T* ct, int val, int valhw, int relmo
 		if (RprMidiCCLane* laneView = new (nothrow) RprMidiCCLane(rprTake))
 		{
 			int defaultHeight = 67; // same height FNG versions use (to keep behavior identical)
-			set<int> usedCC = GetUsedCCLanes(MIDIEditor_GetActive(), 2, ((int)ct->user == 1));
+			set<int> usedCC = GetUsedCCLanes(SWS_MIDIEditor_GetActive(), 2, ((int)ct->user == 1));
 
 			for (int i = 0; i < laneView->countShown(); ++i)
 			{
@@ -393,9 +393,9 @@ void ME_ShowUsedCCLanesDetect14Bit (COMMAND_T* ct, int val, int valhw, int relmo
 void ME_CreateCCLaneLastClicked (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
 	bool updated = false;
-	HWND editor = MIDIEditor_GetActive();
+	void* editor = SWS_MIDIEditor_GetActive();
 
-	if (MediaItem_Take* take = MIDIEditor_GetTake(editor))
+	if (MediaItem_Take* take = SWS_MIDIEditor_GetTake(editor))
 	{
 		MediaItem* item = GetMediaItemTake_Item(take);
 		int takeId      = GetTakeId(take, item);
@@ -450,10 +450,10 @@ void ME_CreateCCLaneLastClicked (COMMAND_T* ct, int val, int valhw, int relmode,
 
 void ME_MoveCCLaneUpDown (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
-	HWND editor = MIDIEditor_GetActive();
+	void* editor = SWS_MIDIEditor_GetActive();
 	int lastClickedLane = GetLastClickedVelLane(editor);
 
-	MediaItem_Take* take = MIDIEditor_GetTake(editor);
+	MediaItem_Take* take = SWS_MIDIEditor_GetTake(editor);
 	if (take && lastClickedLane != -2)
 	{
 		MediaItem* item = GetMediaItemTake_Item(take);
@@ -558,8 +558,8 @@ void ME_MoveActiveWndToMouse (COMMAND_T* ct, int val, int valhw, int relmode, HW
 
 void ME_SetAllCCLanesHeight (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
-	HWND editor = MIDIEditor_GetActive();
-	if (MediaItem_Take* take = MIDIEditor_GetTake(editor))
+	void* editor = SWS_MIDIEditor_GetActive();
+	if (MediaItem_Take* take = SWS_MIDIEditor_GetTake(editor))
 	{
 		MediaItem* item = GetMediaItemTake_Item(take);
 		int takeId = GetTakeId(take, item);
@@ -614,8 +614,8 @@ void ME_SetAllCCLanesHeight (COMMAND_T* ct, int val, int valhw, int relmode, HWN
 
 void ME_IncDecAllCCLanesHeight (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
-	HWND editor = MIDIEditor_GetActive();
-	if (MediaItem_Take* take = MIDIEditor_GetTake(editor))
+	void* editor = SWS_MIDIEditor_GetActive();
+	if (MediaItem_Take* take = SWS_MIDIEditor_GetTake(editor))
 	{
 		MediaItem* item = GetMediaItemTake_Item(take);
 		int takeId = GetTakeId(take, item);
@@ -698,10 +698,10 @@ void ME_IncDecAllCCLanesHeight (COMMAND_T* ct, int val, int valhw, int relmode, 
 void ME_HideCCLanes (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
 	int laneToProcess;
-	HWND midiEditor;
+	void* midiEditor;
 	if ((int)ct->user > 0)
 	{
-		midiEditor    = MIDIEditor_GetActive();
+		midiEditor    = SWS_MIDIEditor_GetActive();
 		laneToProcess = GetLastClickedVelLane(midiEditor);
 	}
 	else
@@ -713,7 +713,7 @@ void ME_HideCCLanes (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 
 	if (midiEditor)
 	{
-		MediaItem_Take* take = MIDIEditor_GetTake(midiEditor);
+		MediaItem_Take* take = SWS_MIDIEditor_GetTake(midiEditor);
 		if (take)
 		{
 			MediaItem* item = GetMediaItemTake_Item(take);
@@ -769,12 +769,12 @@ void ME_HideCCLanes (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 
 void ME_ToggleHideCCLanes (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
-	HWND midiEditor = NULL;
+	void* midiEditor = NULL;
 	if (g_midiToggleHideCCLanes.Get()->IsHidden())
 	{
 		if ((int)ct->user > 0)
 		{
-			midiEditor = MIDIEditor_GetActive();
+			midiEditor = SWS_MIDIEditor_GetActive();
 		}
 		else
 		{
@@ -791,7 +791,7 @@ void ME_ToggleHideCCLanes (COMMAND_T* ct, int val, int valhw, int relmode, HWND 
 		bool validLane = true;
 		if ((int)ct->user > 0)
 		{
-			midiEditor = MIDIEditor_GetActive();
+			midiEditor = SWS_MIDIEditor_GetActive();
 			laneToKeep = GetLastClickedVelLane(midiEditor);
 		}
 		else
@@ -834,7 +834,7 @@ void ME_ToggleHideCCLanes (COMMAND_T* ct, int val, int valhw, int relmode, HWND 
 
 void ME_CCToEnvPoints (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
-	BR_MidiEditor midiEditor(MIDIEditor_GetActive());
+	BR_MidiEditor midiEditor(SWS_MIDIEditor_GetActive());
 	if (!midiEditor.IsValid() || !GetSelectedEnvelope(NULL) || GetSelectedEnvelope(NULL) == GetTempoEnv())
 	{
 		if (GetSelectedEnvelope(NULL) == GetTempoEnv())			
@@ -968,11 +968,11 @@ void ME_CCToEnvPoints (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd
 
 void ME_EnvPointsToCC (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
-	HWND midiEditorPtr = NULL;
+	void* midiEditorPtr = NULL;
 	int lane = 0;
 	if (abs((int)ct->user) == 1 || abs((int)ct->user) == 3)
 	{
-		midiEditorPtr = MIDIEditor_GetActive();
+		midiEditorPtr = SWS_MIDIEditor_GetActive();
 		lane = GetLastClickedVelLane(midiEditorPtr);
 	}
 	else
@@ -1013,7 +1013,7 @@ void ME_EnvPointsToCC (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd
 
 					int msg2 = (lane >= 0 && lane <= 127) ? (0)                  : (((int)(value * 16383)) & 0x7F);
 					int msg3 = (lane >= 0 && lane <= 127) ? ((int)(value * 127)) : ((((int)(value * 16383)) >> 7) | 0);
-					int channel = MIDIEditor_GetSetting_int(midiEditor.GetEditor(), "default_note_chan");
+					int channel = SWS_MIDIEditor_GetSetting_int(midiEditor.GetEditor(), "default_note_chan");
 					events.AddEvent(position, msg2, msg3, channel);
 
 					if (deleteRangeStart == -1)    deleteRangeStart = position;
@@ -1088,7 +1088,7 @@ void ME_EnvPointsToCC (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd
 								double value = envelope.NormalizedDisplayValue(envelope.ValueAtPosition(timePosition));
 								int msg2 = (lane >= 0 && lane <= 127) ? (0)                  : (((int)(value * 16383)) & 0x7F);
 								int msg3 = (lane >= 0 && lane <= 127) ? ((int)(value * 127)) : ((((int)(value * 16383)) >> 7) | 0);
-								int channel = MIDIEditor_GetSetting_int(midiEditor.GetEditor(), "default_note_chan");
+								int channel = SWS_MIDIEditor_GetSetting_int(midiEditor.GetEditor(), "default_note_chan");
 								events.AddEvent(ppqPosition, msg2, msg3, channel);
 								update = true;
 
@@ -1119,7 +1119,7 @@ void ME_EnvPointsToCC (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd
 
 void ME_CopySelCCToLane (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
-	HWND editor;
+	void* editor;
 	int lane;
 	if ((int)ct->user < 0)
 	{
@@ -1128,7 +1128,7 @@ void ME_CopySelCCToLane (COMMAND_T* ct, int val, int valhw, int relmode, HWND hw
 	}
 	else
 	{
-		editor = MIDIEditor_GetActive();
+		editor = SWS_MIDIEditor_GetActive();
 		lane = GetLastClickedVelLane(editor);
 	}
 
@@ -1177,8 +1177,8 @@ void ME_CopySelCCToLane (COMMAND_T* ct, int val, int valhw, int relmode, HWND hw
 
 void ME_DeleteEventsLastClickedLane (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
-	HWND midiEditor = MIDIEditor_GetActive();
-	MediaItem_Take* take = MIDIEditor_GetTake(midiEditor);
+	void* midiEditor = SWS_MIDIEditor_GetActive();
+	MediaItem_Take* take = SWS_MIDIEditor_GetTake(midiEditor);
 
 	if (take && midiEditor)
 	{
@@ -1237,7 +1237,7 @@ void ME_RestoreNoteSelSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWND
 void ME_SaveCCEventsSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
 	int lane;
-	HWND midiEditor;
+	void* midiEditor;
 	if ((int)ct->user < 0)
 	{
 		BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_MIDI_EDITOR_ALL);
@@ -1245,7 +1245,7 @@ void ME_SaveCCEventsSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWND h
 	}
 	else
 	{
-		midiEditor = MIDIEditor_GetActive();
+		midiEditor = SWS_MIDIEditor_GetActive();
 		lane = GetLastClickedVelLane(midiEditor);
 	}
 
@@ -1273,7 +1273,7 @@ void ME_SaveCCEventsSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWND h
 void ME_RestoreCCEventsSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 {
 	int lane;
-	HWND midiEditor;
+	void* midiEditor;
 	if ((int)ct->user < 0)
 	{
 		BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_MIDI_EDITOR_ALL);
@@ -1281,7 +1281,7 @@ void ME_RestoreCCEventsSlot (COMMAND_T* ct, int val, int valhw, int relmode, HWN
 	}
 	else
 	{
-		midiEditor = MIDIEditor_GetActive();
+		midiEditor = SWS_MIDIEditor_GetActive();
 		lane = GetLastClickedVelLane(midiEditor);
 	}
 

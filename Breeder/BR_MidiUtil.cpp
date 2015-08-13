@@ -38,7 +38,7 @@
 ******************************************************************************/
 BR_MidiEditor::BR_MidiEditor () :
 m_take                 (NULL),
-m_midiEditor           (MIDIEditor_GetActive()),
+m_midiEditor           (SWS_MIDIEditor_GetActive()),
 m_startPos             (-1),
 m_hZoom                (-1),
 m_vPos                 (-1),
@@ -68,7 +68,7 @@ m_filterEventPos       (false),
 m_filterEventLen       (false),
 m_valid                (false)
 {
-	if (m_midiEditor && MIDIEditor_GetMode(m_midiEditor) != -1)
+	if (m_midiEditor && SWS_MIDIEditor_GetMode(m_midiEditor) != -1)
 	{
 		m_valid        = this->Build();
 		m_lastLane     = GetLastClickedVelLane(m_midiEditor);
@@ -76,7 +76,7 @@ m_valid                (false)
 	}
 }
 
-BR_MidiEditor::BR_MidiEditor (HWND midiEditor) :
+BR_MidiEditor::BR_MidiEditor (void* midiEditor) :
 m_take                 (NULL),
 m_midiEditor           (midiEditor),
 m_startPos             (-1),
@@ -108,7 +108,7 @@ m_filterEventPos       (false),
 m_filterEventLen       (false),
 m_valid                (false)
 {
-	if (m_midiEditor && MIDIEditor_GetMode(m_midiEditor) != -1)
+	if (m_midiEditor && SWS_MIDIEditor_GetMode(m_midiEditor) != -1)
 	{
 		m_valid        = this->Build();
 		m_lastLane     = GetLastClickedVelLane(m_midiEditor);
@@ -358,7 +358,7 @@ bool BR_MidiEditor::IsChannelVisible (int channel)
 		return true;
 }
 
-HWND BR_MidiEditor::GetEditor ()
+void* BR_MidiEditor::GetEditor ()
 {
 	return m_midiEditor;
 }
@@ -415,7 +415,7 @@ bool BR_MidiEditor::CheckVisibility (MediaItem_Take* take, int chanMsg, double p
 
 bool BR_MidiEditor::Build ()
 {
-	m_take = (m_midiEditor) ? MIDIEditor_GetTake(m_midiEditor) : m_take;
+	m_take = (m_midiEditor) ? SWS_MIDIEditor_GetTake(m_midiEditor) : m_take;
 
 	if (m_take)
 	{
@@ -700,13 +700,13 @@ double ME_PositionAtMouseCursor (bool checkRuler, bool checkCCLanes)
 /******************************************************************************
 * Miscellaneous                                                               *
 ******************************************************************************/
-vector<int> GetUsedNamedNotes (HWND midiEditor, MediaItem_Take* take, bool used, bool named, int channelForNames)
+vector<int> GetUsedNamedNotes (void* midiEditor, MediaItem_Take* take, bool used, bool named, int channelForNames)
 {
 	/* Not really reliable, user could have changed default draw channel  *
 	*  but without resetting note view settings, view won't get updated   */
 
 	vector<int> allNotesStatus(127, 0);
-	MediaItem_Take* midiTake = (midiEditor) ? MIDIEditor_GetTake(midiEditor) : take;
+	MediaItem_Take* midiTake = (midiEditor) ? SWS_MIDIEditor_GetTake(midiEditor) : take;
 
 	if (named)
 	{
@@ -776,9 +776,9 @@ vector<int> MuteUnselectedNotes (MediaItem_Take* take)
 	return muteStatus;
 }
 
-set<int> GetUsedCCLanes (HWND midiEditor, int detect14bit, bool selectedEventsOnly)
+set<int> GetUsedCCLanes (void* midiEditor, int detect14bit, bool selectedEventsOnly)
 {
-	MediaItem_Take* take = MIDIEditor_GetTake(midiEditor);
+	MediaItem_Take* take = SWS_MIDIEditor_GetTake(midiEditor);
 	set<int> usedCC;
 
 	int noteCount, ccCount, sysCount;
@@ -1584,23 +1584,16 @@ int GetMIDIFilePPQ (const char* fp)
 		return 0;
 }
 
-int GetLastClickedVelLane (HWND midiEditor)
+int GetLastClickedVelLane (void* midiEditor)
 {
-	if (midiEditor)
-	{
-		int cc = MIDIEditor_GetSetting_int(midiEditor, "last_clicked_cc_lane");
-		return MapReaScriptCCToVelLane(cc);
-	}
-	else
-	{
-		return -2; // because -1 stands for velocity lane
-	}
+	int cc = SWS_MIDIEditor_GetSetting_int(midiEditor, "last_clicked_cc_lane");
+	return MapReaScriptCCToVelLane(cc);
 }
 
-int GetMaxCCLanesFullHeight (HWND midiEditor)
+int GetMaxCCLanesFullHeight (void* midiEditor)
 {
 	int fullHeight = 0;
-	if (HWND hwnd = GetNotesView(midiEditor))
+	if (HWND hwnd = GetNotesView (midiEditor))
 	{
 		RECT r; GetWindowRect(hwnd, &r);
 		int wndH = abs(r.bottom - r.top);

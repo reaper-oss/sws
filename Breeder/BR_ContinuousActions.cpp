@@ -382,9 +382,9 @@ static bool ContinuousActionInit (bool init, COMMAND_T* ct, HWND hwnd, BR_Contin
 		GetConfig("tooltips", g_tooltips);
 		g_actionInProgress     = action;
 		g_removedNativeTooltip = false;
-		g_midiEditorWnd        = (action && action->ct->uniqueSectionId == SECTION_MIDI_EDITOR) ? hwnd                          : NULL;
-		g_notesWnd             = (g_midiEditorWnd)                                              ? GetNotesView(g_midiEditorWnd) : NULL;
-		g_pianoWnd             = (g_midiEditorWnd)                                              ? GetPianoView(g_midiEditorWnd) : NULL;
+		g_midiEditorWnd        = (action && action->ct->uniqueSectionId == SECTION_MIDI_EDITOR) ? hwnd                                 : NULL;
+		g_notesWnd             = (g_midiEditorWnd)                                              ? GetNotesView((void*)g_midiEditorWnd) : NULL;
+		g_pianoWnd             = (g_midiEditorWnd)                                              ? GetPianoView((void*)g_midiEditorWnd) : NULL;
 		g_registeredWindows.clear();
 		#ifndef BR_USE_PRE_HOOK_ACCEL
 			#ifndef _WIN32

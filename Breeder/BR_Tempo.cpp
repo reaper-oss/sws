@@ -404,7 +404,7 @@ static void MoveGridToMouse (COMMAND_T* ct)
 			if (targetId != 0)
 			{
 				s_lockedId = targetId;
-				tDiff = mousePosition - grid;
+				tDiff = mousePosition - grid;				
 			}
 		}
 	}

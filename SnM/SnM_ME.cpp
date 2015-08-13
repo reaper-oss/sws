@@ -36,8 +36,8 @@
 void MainCreateCCLane(COMMAND_T* _ct)
 {
 	bool updated = false;
-	HWND me = MIDIEditor_GetActive();
-	MediaItem_Take* tk = me ? MIDIEditor_GetTake(me) : NULL;
+	void* me = SWS_MIDIEditor_GetActive();
+	MediaItem_Take* tk = me ? SWS_MIDIEditor_GetTake(me) : NULL;
 	if (tk)
 	{
 		MediaItem* item = GetMediaItemTake_Item(tk);
@@ -90,8 +90,8 @@ void MECreateCCLane(COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hw
 bool replaceCCLanes(const char* _newCClanes)
 {
 	bool updated = false;
-	HWND me = MIDIEditor_GetActive();
-	MediaItem_Take* tk = me ? MIDIEditor_GetTake(me) : NULL;
+	void* me = SWS_MIDIEditor_GetActive();
+	MediaItem_Take* tk = me ? SWS_MIDIEditor_GetTake(me) : NULL;
 	if (tk)
 	{
 		MediaItem* item = GetMediaItemTake_Item(tk);
@@ -136,8 +136,8 @@ void MEHideCCLanes(COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwn
 
 void MainSetCCLanes(COMMAND_T* _ct)
 {
-	HWND me = MIDIEditor_GetActive();
-	MediaItem_Take* tk = me ? MIDIEditor_GetTake(me) : NULL;
+	void* me = SWS_MIDIEditor_GetActive();
+	MediaItem_Take* tk = me ? SWS_MIDIEditor_GetTake(me) : NULL;
 	if (tk)
 	{
 		// recall lanes
@@ -169,8 +169,8 @@ void MESetCCLanes(COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd
 
 void MainSaveCCLanes(COMMAND_T* _ct)
 {
-	HWND me = MIDIEditor_GetActive();
-	MediaItem_Take* tk = me ? MIDIEditor_GetTake(me) : NULL;
+	void* me = SWS_MIDIEditor_GetActive();
+	MediaItem_Take* tk = me ? SWS_MIDIEditor_GetTake(me) : NULL;
 	if (tk)
 	{
 		MediaItem* item = GetMediaItemTake_Item(tk);

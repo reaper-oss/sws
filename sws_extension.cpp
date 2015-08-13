@@ -449,10 +449,7 @@ static void swsMenuHook(const char* menustr, HMENU hMenu, int flag)
 				swsMenuHook(menustr, mi.hSubMenu, flag);
 			else if (mi.wID >= (UINT)g_iFirstCommand && mi.wID <= (UINT)g_iLastCommand) {
 				if (COMMAND_T* t = g_commands.Get(mi.wID, NULL))
-				{
 					CheckMenuItem(hMenu, i, MF_BYPOSITION | (t->getEnabled && t->getEnabled(t) ? MF_CHECKED : MF_UNCHECKED));
-					BR_MenuHook(t, hMenu, i);
-				}
 			}
 		}
 	}

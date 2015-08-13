@@ -1,9 +1,9 @@
 /******************************************************************************
 / BR_ContextualToolbars.h
 /
-/ Copyright (c) 2014 Dominik Martin Drzic
+/ Copyright (c) 2014-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
-/ https://code.google.com/p/sws-extension
+/ http://github.com/Jeff0S/sws
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -34,20 +34,20 @@ class BR_MouseInfo;
 ******************************************************************************/
 enum BR_ToolbarContexts
 {
-	/* If adding new context group make sure to update IsContextValid() in   *
-	* BR_ContextualToolbar                                                   *
-	*                                                                        *
-	* If adding new context or removing existing one from the existing group *
-	* update UpdateInternals(), GetContextFromIniIndex() and any other       *
-	* detection function in BR_ContextualToolbar. You also need to update    *
-	* GetItemText() in BR_ContextualToolbarsView                             *
-	*                                                                        *
-	* If removing existing context, also increase REMOVED_CONTEXTS           */
+	/* If adding new context group make sure to update IsContextValid() in    *
+	*  BR_ContextualToolbar                                                   *
+	*                                                                         *
+	*  If adding new context or removing existing one from the existing group *
+	*  update UpdateInternals(), GetContextFromIniIndex() and any other       *
+	*  detection function in BR_ContextualToolbar. You also need to update    *
+	*  GetItemText() in BR_ContextualToolbarsView                             *
+	*                                                                         *
+	*  If removing existing context, also increase REMOVED_CONTEXTS           */
 
 	CONTEXT_START  = 0,
 	UNUSED_CONTEXT = CONTEXT_START - 1,
 
-	TRANSPORT     = CONTEXT_START,
+	TRANSPORT      = CONTEXT_START,
 	END_TRANSPORT,
 
 	RULER,
@@ -136,6 +136,7 @@ public:
 
 	/* Toggle appropriate toolbar under mouse cursor */
 	void LoadToolbar (bool exclusive);
+	bool AreAssignedToolbarsOpened ();
 
 	/* Get toolbar info */
 	int CountToolbars ();
@@ -154,8 +155,8 @@ public:
 	bool CanContextFollowItem (int context);    // Check if context can follow item contexts
 
 	/* Get and set options for toolbar loading */
-	void SetOptionsAll (int* focus, int* topmost, int* position);
-	void GetOptionsAll (int* focus, int* topmost, int* position);
+	void SetOptionsAll (int* focus, int* topmost, int* position, int* setToolbarToForeground);
+	void GetOptionsAll (int* focus, int* topmost, int* position, int* setToolbarToForeground);
 	void SetOptionsTcp (int* track, int* envelope);
 	void GetOptionsTcp (int* track, int* envelope);
 	void SetOptionsMcp (int* track);
@@ -171,6 +172,9 @@ public:
 	void ExportConfig (WDL_FastString& contextToolbars, WDL_FastString& contextAutoClose, WDL_FastString& contextPosition, WDL_FastString& options);
 	void ImportConfig (const char* contextToolbars, const char* contextAutoClose, const char* contextPosition, const char* options);
 
+	/* Call when unloading extension to make sure everything is cleaned up properly */
+	static void Cleaup ();
+
 private:
 	struct ContextInfo
 	{
@@ -180,7 +184,7 @@ private:
 	};
 	struct Options
 	{
-		int focus, position, topmost, tcpTrack, tcpEnvelope, mcpTrack;
+		int focus, setToolbarToForeground, position, topmost, tcpTrack, tcpEnvelope, mcpTrack;
 		int arrangeTrack, arrangeItem, arrangeStretchMarker, arrangeTakeEnvelope, arrangeTrackEnvelope, arrangeActTake;
 		int midiSetCCLane;
 		int inlineItem, inlineSetCCLane;
@@ -194,12 +198,13 @@ private:
 		MediaItem* itemToSelect;
 		MediaItem* takeParent;
 		int takeIdToActivate, focusContext, positionOffsetX, positionOffsetY, positionOrientation;
-		bool positionOverride, setFocus, clearTrackSelection, clearItemSelection, setCCLaneAsClicked, autoCloseToolbar, makeTopMost;
+		bool positionOverride, setFocus, clearTrackSelection, clearItemSelection, setCCLaneAsClicked, autoCloseToolbar, makeTopMost, setToolbarToForeground;
 		ExecuteOnToolbarLoad ();
 	};
 	struct ToolbarWndData
 	{
 		HWND hwnd;
+		HWND lastFocusedHwnd;
 		WNDPROC wndProc;
 		bool keepOnTop, autoClose;
 		int toggleAction;
@@ -210,40 +215,64 @@ private:
 	};
 	enum ToolbarActions
 	{
-		/* If adding or removing new actions       *
-		*  make sure to update GetReaperToolbar(), *
-		*  TranslateAction(), IsFirstToolbar(),    *
-		*  and IsFirstMidiToolbar()                */
+		/* If adding or removing new actions          *
+		*  make sure to update GetReaperToolbar(),    *
+		*  TranslateAction(), IsFirstToolbar(),       *
+		*  IsFirstMidiToolbar() and IsToolbarAction() */
 
-		DO_NOTHING            = 0xF001,
-		INHERIT_PARENT        = 0xF002,
-		FOLLOW_ITEM_CONTEXT   = 0xF003,
-		TOOLBAR_1_MOUSE       = 41111,
-		TOOLBAR_2_MOUSE       = 41112,
-		TOOLBAR_3_MOUSE       = 41113,
-		TOOLBAR_4_MOUSE       = 41114,
-		TOOLBAR_5_MOUSE       = 41655,
-		TOOLBAR_6_MOUSE       = 41656,
-		TOOLBAR_7_MOUSE       = 41657,
-		TOOLBAR_8_MOUSE       = 41658,
-		MIDI_TOOLBAR_1_MOUSE  = 41640,
-		MIDI_TOOLBAR_2_MOUSE  = 41641,
-		MIDI_TOOLBAR_3_MOUSE  = 41642,
-		MIDI_TOOLBAR_4_MOUSE  = 41643,
-		TOOLBAR_1_TOGGLE      = 41679,
-		TOOLBAR_2_TOGGLE      = 41680,
-		TOOLBAR_3_TOGGLE      = 41681,
-		TOOLBAR_4_TOGGLE      = 41682,
-		TOOLBAR_5_TOGGLE      = 41683,
-		TOOLBAR_6_TOGGLE      = 41684,
-		TOOLBAR_7_TOGGLE      = 41685,
-		TOOLBAR_8_TOGGLE      = 41686,
-		MIDI_TOOLBAR_1_TOGGLE = 41687,
-		MIDI_TOOLBAR_2_TOGGLE = 41688,
-		MIDI_TOOLBAR_3_TOGGLE = 41689,
-		MIDI_TOOLBAR_4_TOGGLE = 41690,
+		TOOLBAR_COUNT         = 27, // includes both toolbars and other entries (inherit parent etc...)
 
-		TOOLBAR_COUNT         = 15
+		DO_NOTHING            = 1,
+		INHERIT_PARENT        = 2,
+		FOLLOW_ITEM_CONTEXT   = 3,
+		TOOLBAR_01_MOUSE      = 41111,
+		TOOLBAR_02_MOUSE      = 41112,
+		TOOLBAR_03_MOUSE      = 41113,
+		TOOLBAR_04_MOUSE      = 41114,
+		TOOLBAR_05_MOUSE      = 41655,
+		TOOLBAR_06_MOUSE      = 41656,
+		TOOLBAR_07_MOUSE      = 41657,
+		TOOLBAR_08_MOUSE      = 41658,
+		TOOLBAR_09_MOUSE      = 41960,
+		TOOLBAR_10_MOUSE      = 41961,
+		TOOLBAR_11_MOUSE      = 41962,
+		TOOLBAR_12_MOUSE      = 41963,
+		TOOLBAR_13_MOUSE      = 41964,
+		TOOLBAR_14_MOUSE      = 41965,
+		TOOLBAR_15_MOUSE      = 41966,
+		TOOLBAR_16_MOUSE      = 41967,
+		MIDI_TOOLBAR_01_MOUSE = 41640,
+		MIDI_TOOLBAR_02_MOUSE = 41641,
+		MIDI_TOOLBAR_03_MOUSE = 41642,
+		MIDI_TOOLBAR_04_MOUSE = 41643,
+		MIDI_TOOLBAR_05_MOUSE = 41968,
+		MIDI_TOOLBAR_06_MOUSE = 41969,
+		MIDI_TOOLBAR_07_MOUSE = 41970,
+		MIDI_TOOLBAR_08_MOUSE = 41971,
+		TOOLBAR_01_TOGGLE     = 41679,
+		TOOLBAR_02_TOGGLE     = 41680,
+		TOOLBAR_03_TOGGLE     = 41681,
+		TOOLBAR_04_TOGGLE     = 41682,
+		TOOLBAR_05_TOGGLE     = 41683,
+		TOOLBAR_06_TOGGLE     = 41684,
+		TOOLBAR_07_TOGGLE     = 41685,
+		TOOLBAR_08_TOGGLE     = 41686,
+		TOOLBAR_09_TOGGLE     = 41936,
+		TOOLBAR_10_TOGGLE     = 41937,
+		TOOLBAR_11_TOGGLE     = 41938,
+		TOOLBAR_12_TOGGLE     = 41939,
+		TOOLBAR_13_TOGGLE     = 41940,
+		TOOLBAR_14_TOGGLE     = 41941,
+		TOOLBAR_15_TOGGLE     = 41942,
+		TOOLBAR_16_TOGGLE     = 41943,
+		MIDI_TOOLBAR_01_TOGGLE = 41687,
+		MIDI_TOOLBAR_02_TOGGLE = 41688,
+		MIDI_TOOLBAR_03_TOGGLE = 41689,
+		MIDI_TOOLBAR_04_TOGGLE = 41690,
+		MIDI_TOOLBAR_05_TOGGLE = 41944,
+		MIDI_TOOLBAR_06_TOGGLE = 41945,
+		MIDI_TOOLBAR_07_TOGGLE = 41946,
+		MIDI_TOOLBAR_08_TOGGLE = 41947
 	};
 
 	/* Call every time contexts change */
@@ -266,8 +295,7 @@ private:
 	void SetFocus              (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad);
 	void SetCCLaneClicked      (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad, BR_MouseInfo& mouseInfo);
 	void RepositionToolbar     (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad, HWND toolbarHwnd);
-	void SetToolbarAlwaysOnTop (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad, HWND toolbarHwnd, int toggleAction);
-	void SetToolbarAutoClose   (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad, HWND toolbarHwnd, int toggleAction);
+	void SetToolbarWndProc (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad, HWND toolbarHwnd, int toggleAction, HWND toolbarParent);
 
 	/* Set and get info for various contexts */
 	int GetMouseAction (int context);
@@ -290,9 +318,8 @@ private:
 	int GetToolbarId (int mouseAction);
 
 	/* Toolbar manipulation */
-	HWND GetFloatingToolbarHwnd (int mouseAction);
+	HWND GetFloatingToolbarHwnd (int mouseAction, bool* inDocker);
 	void CloseAllAssignedToolbars ();
-	bool AreAssignedToolbarsOpened ();
 
 	/* Ensures that toolbar is always on top or auto closed on button press */
 	static LRESULT CALLBACK ToolbarWndCallback (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -378,8 +405,7 @@ protected:
 /******************************************************************************
 * Contextual toolbars init/exit                                               *
 ******************************************************************************/
-int ContextualToolbarsInit ();
-void ContextualToolbarsExit ();
+int ContextualToolbarsInitExit (bool init);
 
 /******************************************************************************
 * Commands                                                                    *
@@ -392,3 +418,4 @@ void ToggleContextualToolbar (COMMAND_T*, int, int, int, HWND);
 * Toggle states                                                               *
 ******************************************************************************/
 int IsContextualToolbarsOptionsVisible (COMMAND_T*);
+int IsContextualToolbarVisible (COMMAND_T*);

@@ -36,9 +36,6 @@
 // when destroying the instance (can also be avoided/forced, see m_autoCommit
 // and Commit()).
 //
-// Use-cases here: 
-// http://code.google.com/p/sws-extension/source/browse/trunk#trunk/SnM
-//
 // Important: 
 // - Chunks can be HUGE! e.g. 4Mb+ is an usual case
 // - The code assumes RPP chunks are consistent, left trimmed, with Unix EOL

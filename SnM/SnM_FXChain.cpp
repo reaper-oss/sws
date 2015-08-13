@@ -2,7 +2,7 @@
 / SnM_FXChain.cpp
 /
 / Copyright (c) 2009-2013 Jeffos
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -169,7 +169,7 @@ void SetTakeFXChain(const char* _title, WDL_FastString* _chain, bool _activeOnly
 // Track FX chains
 ///////////////////////////////////////////////////////////////////////////////
 
-// best effort for http://code.google.com/p/sws-extension/issues/detail?id=363
+// best effort for http://github.com/Jeff0S/sws/issues/363
 // update the track's nb of channels if that info exists (as a comment) in the provided chunk
 // return true if update done
 bool SetTrackChannelsForFXChain(MediaTrack* _tr, WDL_FastString* _chain)

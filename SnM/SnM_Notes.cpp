@@ -2,7 +2,7 @@
 / SnM_Notes.cpp
 /
 / Copyright (c) 2010-2013 Jeffos
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -129,10 +129,9 @@ NotesWnd::~NotesWnd()
 
 void NotesWnd::OnInitDlg()
 {
-  SWS_ShowTextScrollbar(GetDlgItem(m_hwnd, IDC_EDIT), !g_wrapText);
-  
 	m_resize.init_item(IDC_EDIT, 0.0, 0.0, 1.0, 1.0);
 	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_EDIT), GWLP_USERDATA, 0xdeadf00b);
+	SetWrapText(g_wrapText, true);
 
 	LICE_CachedFont* font = SNM_GetThemeFont();
 
@@ -257,6 +256,97 @@ void NotesWnd::RefreshGUI()
 	m_parentVwnd.RequestRedraw(NULL); // the meat!
 }
 
+
+#ifdef _WIN32
+
+typedef void (*FNCHANGESTYLE)(long&,long&);
+HWND replacecontrol(HWND h,const int idc,FNCHANGESTYLE fnchange)
+{
+  HWND      hwnd;
+  HWND      prev;
+  RECT      rc;
+  POINT      pt = {0,0};
+  HINSTANCE  hinst;
+  long      style;
+  long      exstyle;
+  TCHAR      text[256];
+  TCHAR      scls[256];
+  HFONT      hfont;
+  int        focus;
+
+  hwnd    = GetDlgItem(h,idc);
+
+  // control not exist
+  if(!IsWindow(hwnd)) return 0;
+
+  prev    = GetWindow(hwnd,GW_HWNDPREV);
+  hinst   = (HINSTANCE)GetWindowLongPtr(hwnd,GWLP_HINSTANCE);
+  style   = GetWindowLong(hwnd,GWL_STYLE);
+  exstyle = GetWindowLong(hwnd,GWL_EXSTYLE);
+  focus   = hwnd == GetFocus();
+  hfont   = (HFONT)SendMessage(hwnd,WM_GETFONT,0,0);
+
+  ClientToScreen(h,&pt);
+  GetWindowRect(hwnd,&rc);
+  GetClassName(hwnd,scls,sizeof(scls)/sizeof(scls[0]));
+  GetWindowText(hwnd,text,sizeof(text)/sizeof(text[0]));
+
+  DestroyWindow(hwnd);
+  fnchange(style,exstyle);
+
+  hwnd = CreateWindowEx
+  (
+    exstyle,
+    scls,
+    text,
+    style,
+    rc.left-pt.x,
+    rc.top-pt.y,
+    rc.right-rc.left,
+    rc.bottom-rc.top,
+    h,
+    (HMENU)idc,
+    hinst,
+    0
+  );
+
+  SendMessage(hwnd,WM_SETFONT,(WPARAM)hfont,1);
+  SetWindowPos(hwnd,prev,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
+  if(focus) SetFocus(hwnd);
+  return hwnd;
+}
+
+void modES_AUTOHSCROLL(long& style,long& exstyle)
+{
+  if (g_wrapText) style &= ~ES_AUTOHSCROLL;
+  else style |= ES_AUTOHSCROLL;
+}
+
+#endif
+
+
+void NotesWnd::SetWrapText(bool _wrap, bool _isInit)
+{
+  g_wrapText = _wrap;
+  SWS_ShowTextScrollbar(GetDlgItem(m_hwnd, IDC_EDIT), !g_wrapText);
+#ifdef _WIN32
+  RECT r1 = m_resize.get_item(IDC_EDIT)->real_orig;
+  RECT r2 = m_resize.get_item(IDC_EDIT)->orig;
+  m_resize.remove_item(IDC_EDIT);
+  replacecontrol(m_hwnd,IDC_EDIT,modES_AUTOHSCROLL);
+  m_resize.init_item(IDC_EDIT, 0.0, 0.0, 1.0, 1.0);
+  m_resize.get_item(IDC_EDIT)->real_orig = r1;
+  m_resize.get_item(IDC_EDIT)->orig = r2;
+  SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_EDIT), GWLP_USERDATA, 0xdeadf00b);
+#else
+  if (!_isInit)
+  {
+    SendMessage(m_hwnd, WM_COMMAND, IDCANCEL, 0);
+    ScheduledJob::Schedule(new ReopenNotesJob());
+  }
+#endif
+}
+
 void NotesWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 {
 	switch (LOWORD(wParam))
@@ -269,12 +359,8 @@ void NotesWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			SetActionHelpFilename(NULL);
 			break;
 		case WRAP_MSG:
-    {
-      g_wrapText = !g_wrapText;
-      SWS_ShowTextScrollbar(GetDlgItem(m_hwnd, IDC_EDIT), !g_wrapText);
-      SendMessage(m_hwnd, WM_SIZE, 0xf00b, 0);
+			SetWrapText(!g_wrapText);
 			break;
-    }
 		case BTNID_LOCK:
 			if (!HIWORD(wParam))
 				ToggleLock();
@@ -337,6 +423,11 @@ void OSXForceTxtChangeJob::Perform() {
 }
 #endif
 
+void ReopenNotesJob::Perform() {
+	if (NotesWnd* w = g_notesWndMgr.Get()) w->Show(false, true);
+}
+
+
 // returns: 
 // -1 = catch and send to the control 
 //  0 = pass-thru to main window (then -666 in SWS_DockWnd::keyHandler())
@@ -371,12 +462,9 @@ int NotesWnd::OnKey(MSG* _msg, int _iKeyState)
 			if (_msg->wParam == VK_RETURN)
 				return -1; // send the return key to the edit control
 #else
-			// fix/workaround (SWELL bug?) : EN_CHANGE is not sent when the wnd is undocked,
-			// the root cause seems to be the flags WS_VSCROLL and WS_HSCROLL of the .rc file
-			// but we definitely need those..
+			// fix/workaround (SWELL bug?): EN_CHANGE is not always sent...
 			{
-				if (!IsDocked())
-					ScheduledJob::Schedule(new OSXForceTxtChangeJob());
+				ScheduledJob::Schedule(new OSXForceTxtChangeJob());
 				return -1; // send the return key to the edit control
 			}
 #endif
@@ -1443,6 +1531,8 @@ int NotesInit()
 
 void NotesExit()
 {
+	plugin_register("-projectconfig", &s_projectconfig);
+
 	char tmp[4] = "";
 	if (_snprintfStrict(tmp, sizeof(tmp), "%d", g_notesType) > 0)
 		WritePrivateProfileString(NOTES_INI_SEC, "Type", tmp, g_SNM_IniFn.Get()); 
@@ -1477,7 +1567,7 @@ void OpenNotes(COMMAND_T* _ct)
 int IsNotesDisplayed(COMMAND_T* _ct)
 {
 	if (NotesWnd* w = g_notesWndMgr.Get())
-		return w->IsValidWindow();
+		return w->IsWndVisible();
 	return 0;
 }
 

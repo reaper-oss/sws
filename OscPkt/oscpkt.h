@@ -583,7 +583,7 @@ public:
       put them in a bundle. Nested bundles inside bundles are also allowed. */
   PacketWriter &startBundle(TimeTag ts = TimeTag::immediate()) {
     char *p;
-    if (bundles.size()) p = storage.getBytes(4); // hold the bundle size
+    if (bundles.size()) storage.getBytes(4); // hold the bundle size
     p = storage.getBytes(8); strcpy(p, "#bundle"); bundles.push_back(p - storage.begin());
     p = storage.getBytes(8); pod2bytes<uint64_t>(ts, p);
     return *this;
@@ -619,7 +619,7 @@ public:
   /** return the number of bytes of the osc packet -- will always be a
       multiple of 4 -- returns 0 if the construction of the packet has
       failed. */
-  uint32_t packetSize() { return err ? 0 : storage.size(); }
+  uint32_t packetSize() { return err ? 0 : (uint32_t)storage.size(); }
   
   /** return the bytes of the osc packet (NULL if the construction of the packet has failed) */
   char *packetData() { return err ? 0 : storage.begin(); }
@@ -641,7 +641,7 @@ inline const char *internalPatternMatch(const char *pattern, const char *path) {
       bool match = reverse;
       for (; *p && *p != ']'; ++p) {
         char c0 = *p, c1 = c0;
-        if (p[1] == '-' && p[2]) { p += 2; c1 = *p; }
+        if (p[1] == '-' && p[2] && p[2] != ']') { p += 2; c1 = *p; }
         if (*path >= c0 && *path <= c1) { match = !reverse; }
       }
       if (!match || *p != ']') return pattern;

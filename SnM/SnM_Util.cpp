@@ -2,7 +2,7 @@
 / SnM_Util.cpp
 /
 / Copyright (c) 2012-2014 Jeffos
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -494,7 +494,7 @@ void StringToExtensionConfig(WDL_FastString* _str, ProjectStateContext* _ctx)
 				curLineLen = SNM_MAX_CHUNK_LINE_LENGTH-1; // trim long lines
 			memcpy(curLine, pLine, curLineLen);
 			curLine[curLineLen] = '\0';
-			_ctx->AddLine("%s", curLine); // "%s" needed, see http://code.google.com/p/sws-extension/issues/detail?id=358
+			_ctx->AddLine("%s", curLine); // "%s" needed, see http://github.com/Jeff0S/sws/issues/358
 		}
 	}
 }
@@ -960,9 +960,13 @@ bool IsMacroOrScript(const char* _cmd, bool _cmdIsName)
 		// _cmd is an action name?
 		if (_cmdIsName)
 		{
-			static const char* sCustom = __localizeFunc("Custom","actions",0);
-			static int sCustomlen = strlen(sCustom);
-			return (!_strnicmp(_cmd, sCustom, sCustomlen) && _cmd[sCustomlen] == ':');
+			const char* tag = __localizeFunc("Custom","actions",0);
+			int len = strlen(tag);
+			if (!_strnicmp(_cmd, tag, len) && _cmd[len] == ':') return true;
+			tag = __localizeFunc("Script","actions",0);
+			len = strlen(tag);
+			if (!_strnicmp(_cmd, tag, len) && _cmd[len] == ':') return true;
+			return false;
 		}
 		// _cmd is a custom id (both formats are allowed: "bla" and "_bla")
 		else

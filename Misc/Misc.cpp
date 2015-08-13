@@ -2,7 +2,7 @@
 / Misc.cpp
 /
 / Copyright (c) 2011 Tim Payne (SWS)
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -83,13 +83,12 @@ int MiscInit()
 		return 0;
 	if (!TrackSelInit())
 		return 0;
-	if (!ZoomInit())
-		return 0;
 	
 	return 1;
 }
 
 void MiscExit()
 {
+	EditCursorExit();
 	ZoomExit();
 }

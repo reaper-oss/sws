@@ -1,9 +1,9 @@
 /******************************************************************************
 / BR_MidiEditor.h
 /
-/ Copyright (c) 2014 Dominik Martin Drzic
+/ Copyright (c) 2014-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
-/ https://code.google.com/p/sws-extension
+/ http://github.com/Jeff0S/sws
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -28,11 +28,6 @@
 #pragma once
 
 /******************************************************************************
-*  Miscellaneous                                                              *
-******************************************************************************/
-void MidiTakePreviewPlayState (bool play, bool rec);
-
-/******************************************************************************
 * Commands: MIDI editor - Item preview                                        *
 ******************************************************************************/
 void ME_StopMidiTakePreview (COMMAND_T*, int, int, int, HWND);
@@ -41,12 +36,21 @@ void ME_PreviewActiveTake (COMMAND_T*, int, int, int, HWND);
 /******************************************************************************
 * Commands: MIDI editor - Misc                                                *
 ******************************************************************************/
+void ME_ToggleMousePlayback (COMMAND_T*, int, int, int, HWND);
 void ME_PlaybackAtMouseCursor (COMMAND_T*, int, int, int, HWND);
 void ME_CCEventAtEditCursor (COMMAND_T*, int, int, int, HWND);
 void ME_ShowUsedCCLanesDetect14Bit (COMMAND_T*, int, int, int, HWND);
+void ME_CreateCCLaneLastClicked (COMMAND_T*, int, int, int, HWND);
+void ME_MoveCCLaneUpDown (COMMAND_T*, int, int, int, HWND);
+void ME_MoveActiveWndToMouse (COMMAND_T*, int, int, int, HWND);
+void ME_SetAllCCLanesHeight (COMMAND_T*, int, int, int, HWND);
+void ME_IncDecAllCCLanesHeight (COMMAND_T*, int, int, int, HWND);
 void ME_HideCCLanes (COMMAND_T*, int, int, int, HWND);
 void ME_ToggleHideCCLanes (COMMAND_T*, int, int, int, HWND);
 void ME_CCToEnvPoints (COMMAND_T*, int, int, int, HWND);
+void ME_EnvPointsToCC (COMMAND_T*, int, int, int, HWND);
+void ME_CopySelCCToLane (COMMAND_T*, int, int, int, HWND);
+void ME_DeleteEventsLastClickedLane (COMMAND_T*, int, int, int, HWND);
 void ME_SaveCursorPosSlot (COMMAND_T*, int, int, int, HWND);
 void ME_RestoreCursorPosSlot (COMMAND_T*, int, int, int, HWND);
 void ME_SaveNoteSelSlot (COMMAND_T*, int, int, int, HWND);

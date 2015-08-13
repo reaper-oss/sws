@@ -2,7 +2,7 @@
 / SnapshotMerge.cpp
 /
 / Copyright (c) 2010 Tim Payne (SWS)
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -429,6 +429,7 @@ INT_PTR WINAPI mergeWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 			delete mv;
 			mv = NULL;
 			g_mergeItems.Empty(true);
+			resize.init(NULL);
 			break;
 	}
 	return 0;

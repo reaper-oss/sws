@@ -2,7 +2,7 @@
 / XenakiosExts.h
 /
 / Copyright (c) 2009 Tim Payne (SWS), original code by Xenakios
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -198,7 +198,9 @@ void DoRenameMarkersWithAscendingNumbers(COMMAND_T*);
 int IsStopAtEndOfTimeSel(COMMAND_T*);
 void DoToggleSTopAtEndOfTimeSel(COMMAND_T*);
 extern WDL_String g_XenIniFilename;
+
 int XenakiosInit();
+void XenakiosExit();
 
 //===========================================================
 // MediaDialog.cpp
@@ -296,6 +298,7 @@ void DoSpreadSelItemsOver4Tracks(COMMAND_T*);
 void DoShowSpreadItemsDlg(COMMAND_T*);
 void DoToggleSelectedItemsRndDlg(COMMAND_T*);
 void InitUndoKeyUpHandler01();
+void RemoveUndoKeyUpHandler01();
 void DoSlipItemContentsOneSampleLeft(COMMAND_T*);
 void DoSlipItemContentsOneSampleRight(COMMAND_T*);
 void DoReplaceItemFileWithNextInFolder(COMMAND_T*);

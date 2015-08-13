@@ -2,7 +2,7 @@
 / SnM_Misc.h
 /
 / Copyright (c) 2012-2013 Jeffos
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -46,8 +46,10 @@ bool SNM_SetIntConfigVar(const char* _varName, int _newVal);
 double SNM_GetDoubleConfigVar(const char* _varName, double _errVal);
 bool SNM_SetDoubleConfigVar(const char* _varName, double _newVal);
 const char* ULT_GetMediaItemNote(MediaItem* _item);
-void ULT_SetMediaItemNote(MediaItem* _item, char* _str);
-MediaItem_Take* SNM_GetMIDIEditorActiveTake();
+void ULT_SetMediaItemNote(MediaItem* _item, const char* _str);
+bool SNM_ReadMediaFileTag(const char *fn, const char* tag, char* tagval, int tagval_sz);
+bool SNM_TagMediaFile(const char *fn, const char* tag, const char* tagval);
+bool SNM_ReadMediaFileTags(const char *fn, WDL_FastString* tags, int tags_sz);
 
 // toolbar auto refresh
 void EnableToolbarsAutoRefesh(COMMAND_T*);

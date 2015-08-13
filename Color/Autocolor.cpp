@@ -2,7 +2,7 @@
 / Autocolor.cpp
 /
 / Copyright (c) 2010-2012 Tim Payne (SWS), Jeffos
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -70,7 +70,7 @@ static const char cColorTypes[][32] = { "Custom", "Gradient", "Random", "None", 
 
 
 // Globals
-static SWS_AutoColorWnd* g_pACWnd = NULL;
+SWS_AutoColorWnd* g_pACWnd = NULL;
 static WDL_PtrList<SWS_RuleItem> g_pACItems;
 static SWSProjConfig<WDL_PtrList<SWS_RuleTrack> > g_pACTracks;
 static bool g_bACEnabled = false;
@@ -968,7 +968,7 @@ void ApplyAutoColor(COMMAND_T*)
 	AutoColorMarkerRegion(true);
 }
 
-int IsAutoColorOpen(COMMAND_T*)		{ return g_pACWnd->IsValidWindow(); }
+int IsAutoColorOpen(COMMAND_T*)		{ return g_pACWnd->IsWndVisible(); }
 int IsAutoIconEnabled(COMMAND_T*)	{ return g_bAIEnabled; }
 
 int IsAutoColorEnabled(COMMAND_T* ct)
@@ -1155,7 +1155,8 @@ void AutoColorSaveState()
 
 void AutoColorExit()
 {
+	plugin_register("-projectconfig",&g_projectconfig);
 	UnregisterToMarkerRegionUpdates(&g_mkrRgnListener);
 	AutoColorSaveState();
-	delete g_pACWnd;
+	DELETE_NULL(g_pACWnd);
 }

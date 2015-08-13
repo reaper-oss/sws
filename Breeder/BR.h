@@ -1,9 +1,9 @@
 /******************************************************************************
 / BR.h
 /
-/ Copyright (c) 2012-2014 Dominik Martin Drzic
+/ Copyright (c) 2012-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
-/ https://code.google.com/p/sws-extension
+/ http://github.com/Jeff0S/sws
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -27,10 +27,28 @@
 ******************************************************************************/
 #pragma once
 
-int         BR_Init ();
-void        BR_Exit ();
-bool        BR_ActionHook (int cmd, int flag);
-void        BR_CSurfSetPlayState (bool play, bool pause, bool rec);
-int         BR_CSurfExtended (int call, void* parm1, void* parm2, void* parm3);
-bool        BR_SetGetCommandHook2Reentrancy (bool set, bool reentrancy); // needed for RefreshToolbarAlt()
-const char* BR_GetIniFile ();
+/******************************************************************************
+* Command hook                                                                *
+******************************************************************************/
+bool BR_GlobalActionHook (int cmd, int val, int valhw, int relmode, HWND hwnd);
+bool BR_SwsActionHook (COMMAND_T* ct, int flagOrRelmode, HWND hwnd);
+int  BR_GetNextActionToApply ();
+
+/******************************************************************************
+* Csurf                                                                       *
+******************************************************************************/
+void BR_CSurf_SetPlayState (bool play, bool pause, bool rec);
+void BR_CSurf_OnTrackSelection (MediaTrack* track);
+int  BR_CSurf_Extended (int call, void* parm1, void* parm2, void* parm3);
+
+/******************************************************************************
+* Continuous actions                                                          *
+******************************************************************************/
+void BR_RegisterContinuousActions ();
+
+/******************************************************************************
+* BR init/exit                                                                *
+******************************************************************************/
+int  BR_Init ();
+int  BR_InitPost ();
+void BR_Exit ();

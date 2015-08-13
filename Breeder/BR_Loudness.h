@@ -1,9 +1,9 @@
 /******************************************************************************
 / BR_Loudness.h
 /
-/ Copyright (c) 2014 Dominik Martin Drzic
+/ Copyright (c) 2014-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
-/ http://www.standingwaterstudios.com/reaper
+/ http://github.com/Jeff0S/sws
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -35,8 +35,8 @@ class BR_LoudnessObject
 {
 public:
 	BR_LoudnessObject ();
-	BR_LoudnessObject (MediaTrack* track);
-	BR_LoudnessObject (MediaItem_Take* take);
+	explicit BR_LoudnessObject (MediaTrack* track);
+	explicit BR_LoudnessObject (MediaItem_Take* take);
 	~BR_LoudnessObject ();
 
 	/* Analyze */
@@ -65,7 +65,7 @@ public:
 	bool CheckTarget (MediaTrack* track);
 	bool CheckTarget (MediaItem_Take* take);
 	bool IsSelectedInProject ();
-	bool CreateGraph (BR_Envelope& envelope, double minLUFS, double maxLUFS, bool momentary);
+	bool CreateGraph (BR_Envelope& envelope, double minLUFS, double maxLUFS, bool momentary, HWND warningHwnd = g_hwndParent);
 	bool NormalizeIntegrated (double targetLUFS); // uses existing analyze data
 	void SetSelectedInProject (bool selected);
 	void GoToTarget ();
@@ -83,8 +83,6 @@ private:
 		int samplerate, channels, channelMode;
 		double audioStart, audioEnd;
 		double volume, pan;
-		double fadeInStart, fadeOutStart, fadeInEnd,  fadeOutEnd, fadeInCurve, fadeOutCurve;
-		int fadeInShape, fadeOutShape;
 		BR_Envelope volEnv, volEnvPreFX;
 		AudioData();
 	};
@@ -284,8 +282,7 @@ protected:
 /******************************************************************************
 * Loudness init/exit                                                          *
 ******************************************************************************/
-int LoudnessInit ();
-void LoudnessExit ();
+int LoudnessInitExit (bool init);
 void LoudnessUpdate (bool updatePreferencesDlg = true);
 
 /******************************************************************************

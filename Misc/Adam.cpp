@@ -2,7 +2,7 @@
 / Adam.cpp
 /
 / Copyright (c) 2010 Adam Wathan
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -2455,11 +2455,14 @@ int IsClrLoopClkOn(COMMAND_T* = NULL)           { return (*(int*)GetConfigVar("i
 
 void UpdateTimebaseToolbar()
 {
-	RefreshToolbar(NamedCommandLookup("_SWS_AWTBASETIME"));
-	RefreshToolbar(NamedCommandLookup("_SWS_AWTBASEBEATPOS"));
-	RefreshToolbar(NamedCommandLookup("_SWS_AWTBASEBEATALL"));
-	RefreshToolbar(NamedCommandLookup("_SWS_AWTBASEBEAT"));
-	RefreshToolbar(NamedCommandLookup("_SWS_AWTBASEBTOG"));
+	static int cmds[3] =
+	{
+		NamedCommandLookup("_SWS_AWTBASETIME"),
+		NamedCommandLookup("_SWS_AWTBASEBEATPOS"),
+		NamedCommandLookup("_SWS_AWTBASEBEATALL"),
+	};
+	for (int i = 0; i < 3; ++i)
+		RefreshToolbar(cmds[i]);
 }
 
 void AWTimebaseTime(COMMAND_T* = NULL)          { *(int*)GetConfigVar("itemtimelock") = 0; UpdateTimebaseToolbar();}
@@ -2711,17 +2714,17 @@ void UpdateGridToolbar()
 {
 	static int cmds[11] =
 	{
-		SWSGetCommandID(AWToggleTriplet),
-		SWSGetCommandID(AWToggleDotted),
-		SWSGetCommandID(AWGridWhole),
-		SWSGetCommandID(AWGridHalf),
-		SWSGetCommandID(AWGrid4),
-		SWSGetCommandID(AWGrid8),
-		SWSGetCommandID(AWGrid16),
-		SWSGetCommandID(AWGrid32),
-		SWSGetCommandID(AWGrid64),
-		SWSGetCommandID(AWGrid128),
-		SWSGetCommandID(AWToggleClickTrack)
+		NamedCommandLookup("_SWS_AWTOGGLETRIPLET"),
+		NamedCommandLookup("_SWS_AWTOGGLEDOTTED"),
+		NamedCommandLookup("_SWS_AWGRIDWHOLE"),
+		NamedCommandLookup("_SWS_AWGRIDHALF"),
+		NamedCommandLookup("_SWS_AWGRID4"),
+		NamedCommandLookup("_SWS_AWGRID8"),
+		NamedCommandLookup("_SWS_AWGRID16"),
+		NamedCommandLookup("_SWS_AWGRID32"),
+		NamedCommandLookup("_SWS_AWGRID64"),
+		NamedCommandLookup("_SWS_AWGRID128"),
+		NamedCommandLookup("_SWS_AWTOGGLECLICKTRACK"),
 	};
 	for (int i = 0; i < 11; ++i)
 		RefreshToolbar(cmds[i]);
@@ -2906,124 +2909,218 @@ void AWSplitXFadeLeft(COMMAND_T* t)
 }
 
 
+// Track timebase actions
+void AWSelTracksTimebaseProj(COMMAND_T* t)
+{
+	for (int i = 0; i < CountSelectedTracks(NULL); i++)
+		SetMediaTrackInfo_Value(GetSelectedTrack(NULL, i), "C_BEATATTACHMODE", -1);
+	UpdateTrackTimebaseToolbar();
 
+	if (CountSelectedTracks(NULL) > 0)
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
+}
+
+int IsSelTracksTimebaseProj(COMMAND_T* = NULL)
+{
+	if (CountSelectedTracks(NULL) == 0)
+		return 0;
+
+	for (int i = 0; i < CountSelectedTracks(NULL); i++)
+	{
+		if (GetMediaTrackInfo_Value(GetSelectedTrack(NULL, i), "C_BEATATTACHMODE") != -1)
+			return 0;
+	}
+	return 1;
+}
 
 void AWSelTracksTimebaseTime(COMMAND_T* t)
 {
-
-	MediaTrack* tr;
-
 	for (int i = 0; i < CountSelectedTracks(NULL); i++)
-	{
-		tr = GetSelectedTrack(NULL, i);
-		SetMediaTrackInfo_Value(tr, "C_BEATATTACHMODE", 0);
-	}
+		SetMediaTrackInfo_Value(GetSelectedTrack(NULL, i), "C_BEATATTACHMODE", 0);
 	UpdateTrackTimebaseToolbar();
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
-}
 
+	if (CountSelectedTracks(NULL) > 0)
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
+}
 
 int IsSelTracksTimebaseTime(COMMAND_T* = NULL)
 {
-
-	MediaTrack* tr;
-
-	if(CountSelectedTracks(NULL) == 0)
+	if (CountSelectedTracks(NULL) == 0)
 		return 0;
 
 	for (int i = 0; i < CountSelectedTracks(NULL); i++)
 	{
-		tr = GetSelectedTrack(NULL, i);
-		if (GetMediaTrackInfo_Value(tr, "C_BEATATTACHMODE") != 0)
-		{
+		if (GetMediaTrackInfo_Value(GetSelectedTrack(NULL, i), "C_BEATATTACHMODE") != 0)
 			return 0;
-		}
 	}
-
 	return 1;
-
 }
-
 
 void AWSelTracksTimebaseBeatPos(COMMAND_T* t)
 {
-	MediaTrack* tr;
-
-
 	for (int i = 0; i < CountSelectedTracks(NULL); i++)
-	{
-		tr = GetSelectedTrack(NULL, i);
-		SetMediaTrackInfo_Value(tr, "C_BEATATTACHMODE", 2);
-	}
+		SetMediaTrackInfo_Value(GetSelectedTrack(NULL, i), "C_BEATATTACHMODE", 2);
 	UpdateTrackTimebaseToolbar();
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
-}
 
+	if (CountSelectedTracks(NULL) > 0)
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
+}
 
 int IsSelTracksTimebaseBeatPos(COMMAND_T* = NULL)
 {
-	MediaTrack* tr;
-
-	if(CountSelectedTracks(NULL) == 0)
+	if (CountSelectedTracks(NULL) == 0)
 		return 0;
 
 	for (int i = 0; i < CountSelectedTracks(NULL); i++)
 	{
-		tr = GetSelectedTrack(NULL, i);
-		if (GetMediaTrackInfo_Value(tr, "C_BEATATTACHMODE") != 2)
-		{
+		if (GetMediaTrackInfo_Value(GetSelectedTrack(NULL, i), "C_BEATATTACHMODE") != 2)
 			return 0;
-		}
 	}
-
 	return 1;
 }
 
 void AWSelTracksTimebaseBeatAll(COMMAND_T* t)
 {
-	MediaTrack* tr;
-
 	for (int i = 0; i < CountSelectedTracks(NULL); i++)
-	{
-		tr = GetSelectedTrack(NULL, i);
-		SetMediaTrackInfo_Value(tr, "C_BEATATTACHMODE", 1);
-	}
+		SetMediaTrackInfo_Value(GetSelectedTrack(NULL, i), "C_BEATATTACHMODE", 1);
 	UpdateTrackTimebaseToolbar();
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
-}
 
+	if (CountSelectedTracks(NULL) > 0)
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
+}
 
 int IsSelTracksTimebaseBeatAll(COMMAND_T* = NULL)
 {
-	MediaTrack* tr;
-
-	if(CountSelectedTracks(NULL) == 0)
+	if (CountSelectedTracks(NULL) == 0)
 		return 0;
 
 	for (int i = 0; i < CountSelectedTracks(NULL); i++)
 	{
-		tr = GetSelectedTrack(NULL, i);
-		if (GetMediaTrackInfo_Value(tr, "C_BEATATTACHMODE") != 1)
-		{
+		if (GetMediaTrackInfo_Value(GetSelectedTrack(NULL, i), "C_BEATATTACHMODE") != 1)
 			return 0;
-		}
 	}
-
 	return 1;
 }
 
 void UpdateTrackTimebaseToolbar()
 {
-	static int cmds[3] =
+	static int cmds[4] =
 	{
-		SWSGetCommandID(AWSelTracksTimebaseTime),
-		SWSGetCommandID(AWSelTracksTimebaseBeatPos),
-		SWSGetCommandID(AWSelTracksTimebaseBeatAll),
-
+		NamedCommandLookup("_SWS_AWTRACKTBASEPROJ"),
+		NamedCommandLookup("_SWS_AWTRACKTBASETIME"),
+		NamedCommandLookup("_SWS_AWTRACKTBASEBEATPOS"),
+		NamedCommandLookup("_SWS_AWTRACKTBASEBEATALL"),
 	};
-	for (int i = 0; i < 3; ++i)
+	for (int i = 0; i < 4; ++i)
 		RefreshToolbar(cmds[i]);
 }
+
+// Item timebase actions
+void AWSelItemsTimebaseProj(COMMAND_T* t)
+{
+	for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
+		SetMediaItemInfo_Value(GetSelectedMediaItem(NULL, i), "C_BEATATTACHMODE", -1);
+	UpdateItemTimebaseToolbar();
+
+	if (CountSelectedMediaItems(NULL) > 0)
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
+}
+
+int IsSelItemsTimebaseProj(COMMAND_T* = NULL)
+{
+	if (CountSelectedMediaItems(NULL) == 0)
+		return 0;
+
+	for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
+	{
+		if (GetMediaItemInfo_Value(GetSelectedMediaItem(NULL, i), "C_BEATATTACHMODE") != -1)
+			return 0;
+	}
+	return 1;
+}
+
+void AWSelItemsTimebaseTime(COMMAND_T* t)
+{
+	for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
+		SetMediaItemInfo_Value(GetSelectedMediaItem(NULL, i), "C_BEATATTACHMODE", 0);
+	UpdateItemTimebaseToolbar();
+
+	if (CountSelectedMediaItems(NULL) > 0)
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
+}
+
+int IsSelItemsTimebaseTime(COMMAND_T* = NULL)
+{
+	if (CountSelectedMediaItems(NULL) == 0)
+		return 0;
+
+	for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
+	{
+		if (GetMediaItemInfo_Value(GetSelectedMediaItem(NULL, i), "C_BEATATTACHMODE") != 0)
+			return 0;
+	}
+	return 1;
+}
+
+void AWSelItemsTimebaseBeatPos(COMMAND_T* t)
+{
+	for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
+		SetMediaItemInfo_Value(GetSelectedMediaItem(NULL, i), "C_BEATATTACHMODE", 2);
+	UpdateItemTimebaseToolbar();
+
+	if (CountSelectedMediaItems(NULL) > 0)
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
+}
+
+int IsSelItemsTimebaseBeatPos(COMMAND_T* = NULL)
+{
+	if (CountSelectedMediaItems(NULL) == 0)
+		return 0;
+
+	for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
+	{
+		if (GetMediaItemInfo_Value(GetSelectedMediaItem(NULL, i), "C_BEATATTACHMODE") != 2)
+			return 0;
+	}
+	return 1;
+}
+
+void AWSelItemsTimebaseBeatAll(COMMAND_T* t)
+{
+	for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
+		SetMediaItemInfo_Value(GetSelectedMediaItem(NULL, i), "C_BEATATTACHMODE", 1);
+	UpdateItemTimebaseToolbar();
+
+	if (CountSelectedMediaItems(NULL) > 0)
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
+}
+
+int IsSelItemsTimebaseBeatAll(COMMAND_T* = NULL)
+{
+	if (CountSelectedMediaItems(NULL) == 0)
+		return 0;
+
+	for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
+	{
+		if (GetMediaItemInfo_Value(GetSelectedMediaItem(NULL, i), "C_BEATATTACHMODE") != 1)
+			return 0;
+	}
+	return 1;
+}
+
+void UpdateItemTimebaseToolbar()
+{
+	static int cmds[4] =
+	{
+		NamedCommandLookup("_SWS_AWITEMTBASEPROJ"),
+		NamedCommandLookup("_SWS_AWITEMTBASETIME"),
+		NamedCommandLookup("_SWS_AWITEMTBASEBEATPOS"),
+		NamedCommandLookup("_SWS_AWITEMTBASEBEATALL"),
+	};
+	for (int i = 0; i < 4; ++i)
+		RefreshToolbar(cmds[i]);
+}
+
 
 
 void AWSelChilOrSelItems(COMMAND_T* t)
@@ -3058,7 +3155,6 @@ void AWSelTracksPanMode(int mode)
 		tr = GetSelectedTrack(NULL, i);
 		SetMediaTrackInfo_Value(tr, "I_PANMODE", mode);
 	}
-
 }
 
 void AWSelTracksPanLaw(int j)
@@ -3070,7 +3166,6 @@ void AWSelTracksPanLaw(int j)
 		tr = GetSelectedTrack(NULL, i);
 		SetMediaTrackInfo_Value(tr, "I_PANLAW", j);
 	}
-
 }
 
 void AWSelTracksPanBalanceNew(COMMAND_T* t)
@@ -3164,9 +3259,15 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/AW: Set project timebase to beats (position only)" },                            "SWS_AWTBASEBEATPOS",               AWTimebaseBeatPos, NULL, 0, IsTimebaseBeatPos},
 	{ { DEFACCEL, "SWS/AW: Set project timebase to beats (position, length, rate)" },                   "SWS_AWTBASEBEATALL",               AWTimebaseBeatAll, NULL, 0, IsTimebaseBeatAll},
 
+	{ { DEFACCEL, "SWS/AW: Set selected tracks timebase to project default" },                                  "SWS_AWTRACKTBASEPROJ",                 AWSelTracksTimebaseProj, NULL, 0, IsSelTracksTimebaseProj},
 	{ { DEFACCEL, "SWS/AW: Set selected tracks timebase to time" },                                             "SWS_AWTRACKTBASETIME",                 AWSelTracksTimebaseTime, NULL, 0, IsSelTracksTimebaseTime},
 	{ { DEFACCEL, "SWS/AW: Set selected tracks timebase to beats (position only)" },                            "SWS_AWTRACKTBASEBEATPOS",              AWSelTracksTimebaseBeatPos, NULL, 0, IsSelTracksTimebaseBeatPos},
 	{ { DEFACCEL, "SWS/AW: Set selected tracks timebase to beats (position, length, rate)" },                   "SWS_AWTRACKTBASEBEATALL",              AWSelTracksTimebaseBeatAll, NULL, 0, IsSelTracksTimebaseBeatAll},
+
+	{ { DEFACCEL, "SWS/AW: Set selected items timebase to project/track default" },                                 "SWS_AWITEMTBASEPROJ",                 AWSelItemsTimebaseProj, NULL, 0, IsSelItemsTimebaseProj},
+	{ { DEFACCEL, "SWS/AW: Set selected items timebase to time" },                                             "SWS_AWITEMTBASETIME",                 AWSelItemsTimebaseTime, NULL, 0, IsSelItemsTimebaseTime},
+	{ { DEFACCEL, "SWS/AW: Set selected items timebase to beats (position only)" },                            "SWS_AWITEMTBASEBEATPOS",              AWSelItemsTimebaseBeatPos, NULL, 0, IsSelItemsTimebaseBeatPos},
+	{ { DEFACCEL, "SWS/AW: Set selected items timebase to beats (position, length, rate)" },                   "SWS_AWITEMTBASEBEATALL",              AWSelItemsTimebaseBeatAll, NULL, 0, IsSelItemsTimebaseBeatAll},
 
 	{ { DEFACCEL, "SWS/AW: Toggle triplet grid" },          "SWS_AWTOGGLETRIPLET",              AWToggleTriplet, NULL, 0, IsGridTriplet},
 	{ { DEFACCEL, "SWS/AW: Toggle dotted grid" },           "SWS_AWTOGGLEDOTTED",               AWToggleDotted, NULL, 0, IsGridDotted},

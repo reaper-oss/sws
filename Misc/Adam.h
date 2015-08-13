@@ -2,7 +2,7 @@
 / Adam.h
 /
 / Copyright (c) 2010 Adam Wathan
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -31,4 +31,6 @@ int AdamInit();
 void AWFillGapsAdv(const char* title, char* retVals);
 void UpdateGridToolbar();
 void UpdateTrackTimebaseToolbar();
+void UpdateItemTimebaseToolbar();
+void UpdateTimebaseToolbar();
 void AWDoAutoGroup(bool rec);

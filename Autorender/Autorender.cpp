@@ -437,16 +437,6 @@ void OpenRenderPath(COMMAND_T *){
 	}
 }
 
-#ifdef _WIN32
-wchar_t* WideCharPlz( const char* inChar ){		
-	DWORD dwNum = MultiByteToWideChar(CP_UTF8, 0, inChar, -1, NULL, 0);
-	wchar_t *wChar;
-	wChar = new wchar_t[ dwNum ];
-	MultiByteToWideChar(CP_UTF8, 0, inChar, -1, wChar, dwNum );
-	return wChar;
-}
-#endif
-
 void ForceSaveAndLoad( WDL_FastString *str ){
 	Undo_OnStateChangeEx(__LOCALIZE("Autorender: Load project data","sws_undo"), UNDO_STATE_MISCCFG, -1);
 	Main_OnCommand( 40026, 0 ); //Save current project
@@ -786,12 +776,31 @@ void AutorenderRegions(COMMAND_T*) {
 			delete [] w_tag_comment;
 			delete [] w_track_title;
 #else
-			if( !g_tag_artist.empty() ) f.tag()->setArtist( g_tag_artist.c_str() );
-			if( !g_tag_album.empty() ) f.tag()->setAlbum( g_tag_album.c_str() );
-			if( !g_tag_genre.empty() ) f.tag()->setGenre( g_tag_genre.c_str() );
-			if( !g_tag_comment.empty() ) f.tag()->setComment( g_tag_comment.c_str() );
-			f.tag()->setTitle( renderTracks[i].trackName.c_str() );
-#endif			
+      if( !g_tag_artist.empty() )
+      {
+        TagLib::String s(g_tag_artist.c_str(), TagLib::String::UTF8);
+        f.tag()->setArtist(s);
+      }
+      if( !g_tag_album.empty() )
+      {
+        TagLib::String s(g_tag_album.c_str(), TagLib::String::UTF8);
+        f.tag()->setAlbum(s);
+      }
+      if( !g_tag_genre.empty() )
+      {
+        TagLib::String s(g_tag_genre.c_str(), TagLib::String::UTF8);
+        f.tag()->setGenre(s);
+      }
+      if( !g_tag_comment.empty() )
+      {
+        TagLib::String s(g_tag_comment.c_str(), TagLib::String::UTF8);
+        f.tag()->setComment(s);
+      }
+      {
+        TagLib::String s(renderTracks[i].trackName.c_str(), TagLib::String::UTF8);
+        f.tag()->setTitle(s);
+      }
+#endif
 			if( g_tag_year > 0 ) f.tag()->setYear( g_tag_year );
 			f.tag()->setTrack( i + 1 );
 			f.save();
@@ -1110,4 +1119,9 @@ int AutorenderInit(){
 	if (!plugin_register("projectconfig",&g_projectconfig))
 		return 0;
 	return 1;
+}
+
+void AutorenderExit()
+{
+	plugin_register("-projectconfig",&g_projectconfig);
 }

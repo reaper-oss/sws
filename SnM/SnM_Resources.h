@@ -2,7 +2,7 @@
 / SnM_Resources.h
 /
 / Copyright (c) 2009-2013 Jeffos
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -124,6 +124,8 @@ class ResourcesWnd : public SWS_DockWnd
 {
 public:
 	ResourcesWnd();
+	virtual ~ResourcesWnd();
+
 	void SetType(int _type);
 	int SetType(const char* _name);
 	void Update();
@@ -147,7 +149,7 @@ protected:
 	void OnDroppedFiles(HDROP _h);
 	void DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight = NULL);
 	bool GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOutSz);
-	virtual void GetMinSize(int* w, int* h) { *w=190; *h=140; }
+	virtual void GetMinSize(int* w, int* h) { *w=190; *h=140; }	
 
 	void AddSlot();
 	void InsertAtSelectedSlot();

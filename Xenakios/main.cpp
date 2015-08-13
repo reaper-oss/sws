@@ -2,7 +2,7 @@
 / main.cpp
 /
 / Copyright (c) 2010 Tim Payne (SWS), original code by Xenakios
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -491,7 +491,7 @@ void ItemPreviewPlayState(bool play, bool rec)
 // 2: toggle
 void ItemPreview(int mode, MediaItem* item, MediaTrack* track, double volume, double startOffset, double measureSync, bool pauseDuringPrev)
 {
-	if (IsRecording()) // Reaper won't preview anything during recording but extension will still think preview is in progress (could disrupt toggle states and send unneeded CC123)
+	if (IsRecording(NULL)) // Reaper won't preview anything during recording but extension will still think preview is in progress (could disrupt toggle states and send unneeded CC123)
 		return;
 
 	// Preview called while preview in progress, stopping previous preview...
@@ -530,10 +530,13 @@ void ItemPreview(int mode, MediaItem* item, MediaTrack* track, double volume, do
 		MediaItem_Take* take = GetActiveTake(item);
 		bool itemMuteState = *(bool*)GetSetMediaItemInfo(item, "B_MUTE", NULL);
 		bool isMidi = IsMidi(take);
-		double effectiveMidiTakeLen = (isMidi) ? EffectiveMidiTakeLength(take, true, true) : 0;
+		double effectiveMidiTakeLen = EffectiveMidiTakeEnd(take, true, true, true) - GetMediaItemInfo_Value(item, "D_POSITION");
+		if (isMidi && effectiveMidiTakeLen <= 0)
+			return;
+
 		GetSetMediaItemInfo(item, "B_MUTE", &g_bFalse); // needs to be set before getting the source
 
-		PCM_source* src = ((PCM_source*)item)->Duplicate(); // Casting from MediaItem* to PCM_source works!  Who would have known?
+		PCM_source* src = DuplicateSource((PCM_source*)item); // Casting from MediaItem* to PCM_source works!  Who would have known?
 		if (src && (!isMidi || (isMidi && effectiveMidiTakeLen > 0 && effectiveMidiTakeLen > startOffset)))
 		{
 			GetSetMediaItemInfo((MediaItem*)src, "D_POSITION", &g_d0);
@@ -666,7 +669,7 @@ void DoSetStopAtEndOfTimeSel(int enabled) // -1 toggle 0 unset 1 set
 	// stopendofloop
 	int sz=0;
 	int *stopatend = (int *)get_config_var("stopendofloop",&sz);
-    if (stopatend)
+	if (stopatend)
 	{
 		if (enabled==-1)
 		{
@@ -696,6 +699,16 @@ WDL_String g_XenIniFilename;
 #define XEN_INIFILE_OLD "%s/Plugins/Xenakios_Commands.ini"
 #define XEN_INIFILE_NEW "%s/Xenakios_Commands.ini"
 #endif
+
+void XenakiosExit()
+{
+	plugin_register("-projectconfig",&xen_reftrack_pcreg);
+	plugin_register("-timer", (void*)PlayItemsOnceTimer);
+	plugin_register("-timer",(void*)ItemPreviewTimer);
+	RemoveUndoKeyUpHandler01();
+	DestroyWindow(g_hItemInspector);
+  g_hItemInspector=NULL;
+}
 
 int XenakiosInit()
 {

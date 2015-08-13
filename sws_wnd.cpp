@@ -2,7 +2,7 @@
 / sws_wnd.cpp
 /
 / Copyright (c) 2012 Tim Payne (SWS), Jeffos
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -74,7 +74,7 @@ SWS_DockWnd::SWS_DockWnd(int iResource, const char* cWndTitle, const char* cId, 
 // setup yet.
 void SWS_DockWnd::Init()
 {
-	int iLen = sizeof(SWS_DockWnd_State) + SaveView(NULL, 0);
+	int iLen = sizeof(SWS_DockWnd_State);
 	char* cState = SWS_LoadDockWndStateBuf(m_id.Get(), iLen);
 	LoadState(cState, iLen);
 	delete [] cState;
@@ -85,6 +85,12 @@ SWS_DockWnd::~SWS_DockWnd()
 	plugin_register("-accelerator", &m_ar);
 	if (m_id.GetLength())
 		screenset_unregister((char*)m_id.Get());
+
+	if (m_hwnd)
+	{
+		m_bSaveStateOnDestroy = false;
+		DestroyWindow(m_hwnd);
+	}
 }
 
 void SWS_DockWnd::Show(bool bToggle, bool bActivate)
@@ -148,6 +154,10 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		if (INT_PTR r = SNM_HookThemeColorsMessage(m_hwnd, uMsg, wParam, lParam, false))
 			return r;
 	}
+
+	// Since there are no virtual functions for WM_SHOWWINDOW, let the message get passed on just in case
+	if (uMsg == WM_SHOWWINDOW)
+		RefreshToolbar(0);
 
 	switch (uMsg)
 	{
@@ -261,7 +271,7 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				}
 				// Check dock state
 				if ((m_state.state & 2))
-					CheckMenuItem(hMenu, GetMenuItemCount(hMenu) - 1, MF_BYCOMMAND | MF_CHECKED);
+					CheckMenuItem(hMenu, dockId, MF_BYCOMMAND | MF_CHECKED);
 
 				if (!NotifyOnContextMenu())
 					cancelId = GetUnusedMenuId(hMenu);
@@ -355,10 +365,12 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			KillTimer(m_hwnd, CELL_EDIT_TIMER);
 			KillTooltip();
 
-			OnDestroy();
-
 			m_parentVwnd.RemoveAllChildren(false);
 			m_parentVwnd.SetRealParent(NULL);
+
+			OnDestroy();
+
+			m_resize.init(NULL);
 
 			for (int i=0; i < m_pLists.GetSize(); i++)
 				m_pLists.Get(i)->OnDestroy();
@@ -381,7 +393,7 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 #endif
 			m_pLists.Empty(true);
 			m_hwnd = NULL;
-			RefreshToolbar(m_iCmdID);
+			RefreshToolbar(0);
 			break;
 		case WM_PAINT:
 			if (!OnPaint() && m_parentVwnd.GetNumChildren())
@@ -580,8 +592,7 @@ int SWS_DockWnd::keyHandler(MSG* msg, accelerator_register_t* ctx)
 	return 0;
 }
 
-// *Local* function to save the state of the view.  This is the window size, position & dock state,
-// as well as any derived class view information from the function SaveView
+// *Local* function to save the state of the view: window size, position & dock state
 int SWS_DockWnd::SaveState(char* cStateBuf, int iMaxLen)
 {
 	if (SWS_IsWindow(m_hwnd))
@@ -602,19 +613,13 @@ int SWS_DockWnd::SaveState(char* cStateBuf, int iMaxLen)
 	if (cStateBuf)
 	{
 		memcpy(cStateBuf, &m_state, iLen);
-		iLen += SaveView(cStateBuf + iLen, iMaxLen - iLen);
-
 		for (int i = 0; i < iLen / (int)sizeof(int); i++)
 			REAPER_MAKELEINTMEM(&(((int*)cStateBuf)[i]));
 	}
-	else
-		iLen += SaveView(NULL, 0);
-
 	return iLen;
 }
 
-// *Local* function to restore view state.  This is the window size, position & dock state.
-// Also calls the derived class method LoadView.
+// *Local* function to restore view state: window size, position & dock state.
 // if both _stateBuf and _len are NULL, hide (see SDK)
 void SWS_DockWnd::LoadState(const char* cStateBuf, int iLen)
 {
@@ -624,15 +629,6 @@ void SWS_DockWnd::LoadState(const char* cStateBuf, int iLen)
 		SWS_SetDockWndState(cStateBuf, iLen, &m_state);
 	else
 		m_state.state &= ~1;
-
-	if (iLen > sizeof(SWS_DockWnd_State))
-	{
-		int iViewLen = iLen - sizeof(SWS_DockWnd_State);
-		char* pTemp = new char[iViewLen];
-		memcpy(pTemp, cStateBuf + sizeof(SWS_DockWnd_State), iViewLen);
-		LoadView(pTemp, iViewLen);
-		delete [] pTemp;
-	}
 
 	Dock_UpdateDockID((char*)m_id.Get(), m_state.whichdock);
 
@@ -783,7 +779,9 @@ SWS_ListView::SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn
 	// Setup UTF-8 (see http://forum.cockos.com/showthread.php?t=101547)
 	WDL_UTF8_HookListView(hwndList);
 #if !defined(WDL_NO_SUPPORT_UTF8)
+	#ifdef WDL_SUPPORT_WIN9X
 	if (GetVersion()<0x80000000)
+	#endif
 		SendMessage(hwndList,LVM_SETUNICODEFORMAT,1,0);
 #endif
 

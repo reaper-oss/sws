@@ -1,9 +1,9 @@
 /******************************************************************************
 / BR_ProjState.cpp
 /
-/ Copyright (c) 2014 Dominik Martin Drzic
+/ Copyright (c) 2014-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
-/ https://code.google.com/p/sws-extension
+/ http://github.com/Jeff0S/sws
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -36,23 +36,27 @@
 /******************************************************************************
 * Constants                                                                   *
 ******************************************************************************/
-const char* const ENVELOPE_SEL    = "<BR_ENV_SEL_SLOT";
-const char* const CURSOR_POS      = "<BR_CURSOR_POS";
-const char* const NOTE_SEL        = "<BR_NOTE_SEL_SLOT";
-const char* const SAVED_CC_EVENTS = "<BR_SAVED_CC_EVENTS";
-const char* const SAVED_CC_LANES  = "<BR_SAVED_HIDDEN_CC_LANES";
+const char* const ENVELOPE_SEL             = "<BR_ENV_SEL_SLOT";
+const char* const CURSOR_POS               = "<BR_CURSOR_POS";
+const char* const NOTE_SEL                 = "<BR_NOTE_SEL_SLOT";
+const char* const SAVED_CC_EVENTS          = "<BR_SAVED_CC_EVENTS";
+const char* const ITEMS_MUTE_STATES        = "<BR_ITEMS_MUTE_STATE_SLOT";
+const char* const TRACKS_SOLO_MUTE_STATES  = "<BR_TRACKS_SOLO_MUTE_STATE_SLOT";
+const char* const SAVED_CC_LANES           = "<BR_SAVED_HIDDEN_CC_LANES";
 
 /******************************************************************************
 * Globals                                                                     *
 ******************************************************************************/
-SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_EnvSel> >           g_envSel;
-SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_CursorPos> >        g_cursorPos;
-SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_MidiNoteSel> >      g_midiNoteSel;
-SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_MidiCCEvents> >     g_midiCCEvents;
-SWSProjConfig<BR_MidiToggleCCLane>                               g_midiToggleHideCCLanes;
+SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_EnvSel> >             g_envSel;
+SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_CursorPos> >          g_cursorPos;
+SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_MidiNoteSel> >        g_midiNoteSel;
+SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_MidiCCEvents> >       g_midiCCEvents;
+SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_ItemMuteState> >      g_itemMuteState;
+SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_TrackSoloMuteState> > g_trackSoloMuteState;
+SWSProjConfig<BR_MidiToggleCCLane>                                 g_midiToggleHideCCLanes;
 
 /******************************************************************************
-* Project state saving functionality                                          *
+* Project state init/exit                                                     *
 ******************************************************************************/
 static bool ProcessExtensionLine (const char *line, ProjectStateContext *ctx, bool isUndo, project_config_extension_t *reg)
 {
@@ -88,6 +92,20 @@ static bool ProcessExtensionLine (const char *line, ProjectStateContext *ctx, bo
 	if (!strcmp(lp.gettoken_str(0), SAVED_CC_EVENTS))
 	{
 		g_midiCCEvents.Get()->Add(new BR_MidiCCEvents(lp.gettoken_int(1), ctx));
+		return true;
+	}
+
+	// Items mute state
+	if (!strcmp(lp.gettoken_str(0), ITEMS_MUTE_STATES))
+	{
+		g_itemMuteState.Get()->Add(new BR_ItemMuteState(lp.gettoken_int(1), ctx));
+		return true;
+	}
+
+	// Tracks solo/mute state
+	if (!strcmp(lp.gettoken_str(0), TRACKS_SOLO_MUTE_STATES))
+	{
+		g_trackSoloMuteState.Get()->Add(new BR_TrackSoloMuteState(lp.gettoken_int(1), ctx));
 		return true;
 	}
 
@@ -134,6 +152,20 @@ static void SaveExtensionConfig (ProjectStateContext *ctx, bool isUndo, project_
 			g_midiCCEvents.Get()->Get(i)->SaveState(ctx);
 	}
 
+	// Items mute state
+	if (int count = g_itemMuteState.Get()->GetSize())
+	{
+		for (int i = 0; i < count; ++i)
+			g_itemMuteState.Get()->Get(i)->SaveState(ctx);
+	}
+
+	// Tracks solo/mute state
+	if (int count = g_trackSoloMuteState.Get()->GetSize())
+	{
+		for (int i = 0; i < count; ++i)
+			g_trackSoloMuteState.Get()->Get(i)->SaveState(ctx);
+	}
+
 	// Toggled hidden CC lanes
 	if (g_midiToggleHideCCLanes.Get()->IsHidden())
 		g_midiToggleHideCCLanes.Get()->SaveState(ctx);
@@ -160,24 +192,40 @@ static void BeginLoadProjectState (bool isUndo, project_config_extension_t *reg)
 	g_midiCCEvents.Get()->Empty(true);
 	g_midiCCEvents.Cleanup();
 
+	// Items mute state
+	g_itemMuteState.Get()->Empty(true);
+	g_itemMuteState.Cleanup();
+
+	// Tracks solo/mute state
+	g_trackSoloMuteState.Get()->Empty(true);
+	g_trackSoloMuteState.Cleanup();
+
 	// Toggled hidden CC lanes
 	g_midiCCEvents.Cleanup();
 }
 
-int ProjStateInit ()
+int ProjStateInitExit (bool init)
 {
 	static project_config_extension_t s_projectconfig = {ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL};
-	return plugin_register("projectconfig", &s_projectconfig);
+
+	if (init)
+	{
+		return plugin_register("projectconfig", &s_projectconfig);
+	}
+	else
+	{
+		plugin_register("-projectconfig", &s_projectconfig);
+		return 1;
+	}
 }
 
 /******************************************************************************
 * Envelope selection state                                                    *
 ******************************************************************************/
 BR_EnvSel::BR_EnvSel (int slot, TrackEnvelope* envelope) :
-m_slot      (slot),
-m_selection (GetSelPoints(envelope))
+m_slot (slot)
 {
-	MarkProjectDirty(NULL);
+	this->Save(envelope);
 }
 
 BR_EnvSel::BR_EnvSel (int slot, ProjectStateContext* ctx) :
@@ -214,7 +262,6 @@ bool BR_EnvSel::Restore (TrackEnvelope* envelope)
 
 	for (size_t i = 0; i < m_selection.size(); ++i)
 		env.SetSelection(m_selection[i], true);
-
 	if (env.Commit())
 		return true;
 	else
@@ -231,9 +278,9 @@ int BR_EnvSel::GetSlot ()
 ******************************************************************************/
 BR_CursorPos::BR_CursorPos (int slot) :
 m_slot     (slot),
-m_position (GetCursorPositionEx(NULL))
+m_position (0)
 {
-	MarkProjectDirty(NULL);
+	this->Save();
 }
 
 BR_CursorPos::BR_CursorPos (int slot, ProjectStateContext* ctx) :
@@ -282,10 +329,9 @@ int BR_CursorPos::GetSlot ()
 * MIDI notes selection state                                                  *
 ******************************************************************************/
 BR_MidiNoteSel::BR_MidiNoteSel (int slot, MediaItem_Take* take) :
-m_slot      (slot),
-m_selection (GetSelectedNotes(take))
+m_slot      (slot)
 {
-	MarkProjectDirty(NULL);
+	this->Save(take);
 }
 
 BR_MidiNoteSel::BR_MidiNoteSel (int slot, ProjectStateContext* ctx) :
@@ -335,18 +381,19 @@ int BR_MidiNoteSel::GetSlot ()
 * MIDI saved CC events state                                                  *
 ******************************************************************************/
 BR_MidiCCEvents::BR_MidiCCEvents (int slot, BR_MidiEditor& midiEditor, int lane) :
-m_slot       (slot),
-m_sourceLane (lane),
-m_ppq        (960)
+m_slot           (slot),
+m_sourceLane     (lane),
+m_ppq            (960),
+m_sourcePpqStart (-1)
 {
-	this->SaveEvents(midiEditor, m_sourceLane);
-	MarkProjectDirty(NULL);
+	this->Save(midiEditor, m_sourceLane);
 }
 
 BR_MidiCCEvents::BR_MidiCCEvents (int slot, ProjectStateContext* ctx) :
 m_slot       (slot),
 m_sourceLane (0),
-m_ppq        (960)
+m_ppq        (960),
+m_sourcePpqStart (-1)
 {
 	char line[512];
 	LineParser lp(false);
@@ -375,30 +422,157 @@ m_ppq        (960)
 	}
 }
 
+BR_MidiCCEvents::BR_MidiCCEvents (int slot, int lane):
+m_slot           (slot),
+m_sourceLane     (lane),
+m_ppq            (0),
+m_sourcePpqStart (-1)
+{
+}
+
 void BR_MidiCCEvents::SaveState (ProjectStateContext* ctx)
 {
-	ctx->AddLine("%s %.2d", SAVED_CC_EVENTS, m_slot);
-	ctx->AddLine("%s %d",   "SOURCE_LANE",   m_sourceLane);
-	ctx->AddLine("%s %d",   "PPQ",           m_ppq);
-	for (size_t i = 0; i < m_events.size(); ++i)
-		ctx->AddLine("E %lf %d %d %d %d",
-		             m_events[i].positionPPQ,
-		             m_events[i].channel,
-		             m_events[i].msg2,
-		             m_events[i].msg3,
-		             (int)m_events[i].mute
-		            );
+	if (m_events.size() != 0)
+	{
+		ctx->AddLine("%s %.2d", SAVED_CC_EVENTS, m_slot);
+		ctx->AddLine("%s %d",   "SOURCE_LANE",   m_sourceLane);
+		ctx->AddLine("%s %d",   "PPQ",           m_ppq);
+		for (size_t i = 0; i < m_events.size(); ++i)
+			ctx->AddLine("E %lf %d %d %d %d",
+			             m_events[i].positionPpq,
+			             m_events[i].channel,
+			             m_events[i].msg2,
+			             m_events[i].msg3,
+			             (int)m_events[i].mute
+			            );
 
-	ctx->AddLine(">");
+		ctx->AddLine(">");
+	}
 }
 
-void BR_MidiCCEvents::Save (BR_MidiEditor& midiEditor, int lane)
+bool BR_MidiCCEvents::Save (BR_MidiEditor& midiEditor, int lane)
 {
-	this->SaveEvents(midiEditor, lane);
-	MarkProjectDirty(NULL);
+	if (midiEditor.IsValid())
+	{
+		MediaItem_Take* take = midiEditor.GetActiveTake();
+		vector<BR_MidiCCEvents::Event> events;
+
+		m_sourcePpqStart = -1;
+		if ((lane >= 0 && lane <= 127))
+		{
+			int id = -1;
+
+			while ((id = MIDI_EnumSelCC(take, id)) != -1)
+			{
+				int cc, chanMsg;
+				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, NULL, &cc, NULL) && midiEditor.IsCCVisible(take, id) && chanMsg == STATUS_CC && cc == lane)
+				{
+					BR_MidiCCEvents::Event event;
+					MIDI_GetCC(take, id, NULL, &event.mute, &event.positionPpq, NULL, &event.channel, NULL, &event.msg3);
+					events.push_back(event);
+					if (m_sourcePpqStart == -1)
+						m_sourcePpqStart = event.positionPpq;
+				}
+			}
+		}
+		else if (lane == CC_PITCH)
+		{
+			int id = -1;
+			while ((id = MIDI_EnumSelCC(take, id)) != -1)
+			{
+				int chanMsg;
+				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, NULL, NULL, NULL) && midiEditor.IsCCVisible(take, id) &&chanMsg == STATUS_PITCH)
+				{
+					BR_MidiCCEvents::Event event;
+					MIDI_GetCC(take, id, NULL, &event.mute, &event.positionPpq, NULL, &event.channel, &event.msg2, &event.msg3);
+					events.push_back(event);
+					if (m_sourcePpqStart == -1)
+						m_sourcePpqStart = event.positionPpq;
+				}
+			}
+		}
+		else if (lane == CC_PROGRAM || lane == CC_CHANNEL_PRESSURE)
+		{
+			int id = -1;
+			while ((id = MIDI_EnumSelCC(take, id)) != -1)
+			{
+				int chanMsg;
+				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, NULL, NULL, NULL) && midiEditor.IsCCVisible(take, id) && chanMsg == ((lane == CC_PROGRAM) ? STATUS_PROGRAM : STATUS_CHANNEL_PRESSURE))
+				{
+					BR_MidiCCEvents::Event event;
+					MIDI_GetCC(take, id, NULL, &event.mute, &event.positionPpq, NULL, &event.channel, &event.msg3, &event.msg2); // messages are reversed
+					events.push_back(event);
+					if (m_sourcePpqStart == -1)
+						m_sourcePpqStart = event.positionPpq;
+				}
+			}
+		}
+		else if (lane == CC_VELOCITY || lane == CC_VELOCITY_OFF)
+		{
+			int id = -1;
+			while ((id = MIDI_EnumSelNotes(take, id)) != -1)
+			{
+				BR_MidiCCEvents::Event event;
+				if (MIDI_GetNote(take, id, NULL, &event.mute, &event.positionPpq, NULL, &event.channel, NULL, &event.msg3) && midiEditor.IsNoteVisible(take, id))
+				{
+					events.push_back(event);
+					if (m_sourcePpqStart == -1)
+						m_sourcePpqStart = event.positionPpq;
+				}
+			}
+		}
+		else if (lane >= CC_14BIT_START)
+		{
+			int id = -1;
+			int cc1 = lane - CC_14BIT_START;
+			int cc2 = cc1 + 32;
+			while ((id = MIDI_EnumSelCC(take, id)) != -1)
+			{
+				int cc, chanMsg;
+				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, NULL, &cc, NULL) && midiEditor.IsCCVisible(take, id) && chanMsg == STATUS_CC && cc == cc1)
+				{
+					BR_MidiCCEvents::Event event;
+					MIDI_GetCC(take, id, NULL, &event.mute, &event.positionPpq, NULL, &event.channel, NULL, &event.msg3);
+					events.push_back(event);
+					if (m_sourcePpqStart == -1)
+						m_sourcePpqStart = event.positionPpq;
+
+					int tmpId = id;
+					while ((tmpId = MIDI_EnumSelCC(take, tmpId)) != -1)
+					{
+						double pos; int channel, value, chanMsg2;
+						MIDI_GetCC(take, tmpId, NULL, NULL, &pos, &chanMsg2, &channel, &cc, &value);
+						if (pos > event.positionPpq)
+							break;
+						if (chanMsg2 == STATUS_CC && cc == cc2 && channel == events.back().channel)
+						{
+							events.back().msg2 = value;
+							break;
+						}
+					}
+				}
+			}
+		}
+
+		if (events.size())
+		{
+			// Make sure positions are saved in a relative manner
+			for (size_t i = 1; i < events.size(); ++i)
+				events[i].positionPpq -= events.front().positionPpq;
+			events.front().positionPpq = 0;
+
+			m_events     = events;
+			m_ppq        = midiEditor.GetPPQ();
+			m_sourceLane = lane;
+
+			MarkProjectDirty(NULL);
+			return true;
+		}
+	}
+	return false;
 }
 
-bool BR_MidiCCEvents::Restore (BR_MidiEditor& midiEditor, int lane, bool allVisible)
+bool BR_MidiCCEvents::Restore (BR_MidiEditor& midiEditor, int lane, bool allVisible, double startPositionPppq, bool showWarningForInvalidLane /*=true*/, bool moveEditCursor /*=true*/)
 {
 	bool update = false;
 	if (m_events.size() && midiEditor.IsValid())
@@ -427,72 +601,44 @@ bool BR_MidiCCEvents::Restore (BR_MidiEditor& midiEditor, int lane, bool allVisi
 		else
 			lanesToProcess.insert(lane);
 
-		double moveOffsetPPQMax = -1;
+		double moveOffsetMaxPPQ = -1;
 		for (set<int>::iterator i = lanesToProcess.begin(); i != lanesToProcess.end(); ++i)
 		{
-			int targetLane           = *i;
-			int targetLane2          = targetLane;
+			int targetLane  = *i;
+			int targetLane2 = targetLane;
 			if (!midiEditor.IsCCLaneVisible(targetLane) ||
 			    targetLane == CC_TEXT_EVENTS            ||
 			    targetLane == CC_SYSEX                  ||
 			    targetLane == CC_BANK_SELECT            ||
-			    targetLane == CC_VELOCITY
+			    targetLane == CC_VELOCITY               ||
+			    targetLane == CC_VELOCITY_OFF
 			)
 				continue;
 
-			double insertionStartPPQ = MIDI_GetPPQPosFromProjTime(take, GetCursorPositionEx(NULL));
-			double takeStartPPQ, takeEndPPQ;
+			double startLimitPPQ, endLimitPPQ;
+			bool loopedItem;
+			startPositionPppq = GetOriginalPpqPos(take, startPositionPppq,  &loopedItem, &startLimitPPQ, &endLimitPPQ);
 
-			if (GetMediaItemInfo_Value(item, "B_LOOPSRC"))
+			if (!loopedItem)
 			{
-				double itemEndPPQ   = MIDI_GetPPQPosFromProjTime(take, GetMediaItemInfo_Value(item, "D_POSITION") + GetMediaItemInfo_Value(item, "D_LENGTH"));
-				double itemStartPPQ = MIDI_GetPPQPosFromProjTime(take, GetMediaItemInfo_Value(item, "D_POSITION"));
-				if (CheckBounds(insertionStartPPQ, itemEndPPQ, itemStartPPQ))
-					continue;
-
-				double sourceLenPPQ = GetSourceLengthPPQ(take);
-				int currentLoop = (int)((insertionStartPPQ - itemStartPPQ) / sourceLenPPQ);
-				int loopCount   = (int)((itemEndPPQ        - itemStartPPQ) / sourceLenPPQ);
-
-				insertionStartPPQ -= currentLoop * sourceLenPPQ; // when dealing with looped items, always insert at the first iteration of the loop
-
-				if (currentLoop == loopCount)
-				{
-					takeStartPPQ = itemStartPPQ;
-					takeEndPPQ   = itemStartPPQ + (itemEndPPQ - (currentLoop * sourceLenPPQ));
-				}
-				else if (currentLoop == 0)
-				{
-					takeStartPPQ = itemStartPPQ;
-					takeEndPPQ   = (itemEndPPQ - itemStartPPQ >= sourceLenPPQ) ? sourceLenPPQ : itemEndPPQ;
-				}
-				else
-				{
-					takeStartPPQ = itemStartPPQ;
-					takeEndPPQ   = itemStartPPQ + sourceLenPPQ;
-				}
-			}
-			else
-			{
-				double itemStart = GetMediaItemInfo_Value(item, "D_POSITION");
-
 				// Extend item if needed
 				int midiVu; GetConfig("midivu", midiVu);
 				if (GetBit(midiVu, 14))
 				{
+					double itemStart = GetMediaItemInfo_Value(item, "D_POSITION");
 					double itemEnd = itemStart + GetMediaItemInfo_Value(item, "D_LENGTH");
-					double newEnd  = MIDI_GetProjTimeFromPPQPos(take, insertionStartPPQ + m_events.back().positionPPQ + 1);
+
+					double newEnd  = MIDI_GetProjTimeFromPPQPos(take, startPositionPppq + m_events.back().positionPpq + 1);
 					if (newEnd > itemEnd)
 						SetMediaItemInfo_Value(item, "D_LENGTH", newEnd - itemStart);
-				}
 
-				takeStartPPQ = MIDI_GetPPQPosFromProjTime(take, itemStart);
-				takeEndPPQ   = MIDI_GetPPQPosFromProjTime(take, itemStart + GetMediaItemInfo_Value(item, "D_LENGTH"));
+					startLimitPPQ = MIDI_GetPPQPosFromProjTime(take, itemStart);
+					endLimitPPQ   = MIDI_GetPPQPosFromProjTime(take, itemStart + GetMediaItemInfo_Value(item, "D_LENGTH"));
+				}
 			}
 
 			// Restore events
-			UnselectAllEvents(take, targetLane);
-			double ratioPPQ = (double)midiEditor.GetPPQ() / (double)m_ppq;
+			double ratioPPQ = (m_ppq <= 0) ? (1) : ((double)midiEditor.GetPPQ() / (double)m_ppq);
 			bool do14bit    = (targetLane >= CC_14BIT_START)                                  ? true : false;
 			bool reverseMsg = (targetLane == CC_PROGRAM || targetLane == CC_CHANNEL_PRESSURE) ? true : false;
 			bool doMsg2     = (!do14bit && !CheckBounds(targetLane, 0, 127))                  ? true : false;
@@ -501,50 +647,61 @@ bool BR_MidiCCEvents::Restore (BR_MidiEditor& midiEditor, int lane, bool allVisi
 			targetLane  = (do14bit) ? targetLane - CC_14BIT_START : targetLane;
 			targetLane2 = (do14bit) ? targetLane + 32             : targetLane2;
 			double moveOffsetPPQ = -1;
+			bool insertedOneEvent = false;
 			for (size_t i = 0; i < m_events.size(); ++i)
 			{
-				double posAddPPQ = (ratioPPQ == 0) ? m_events[i].positionPPQ : Round(m_events[i].positionPPQ * ratioPPQ);
-				double positionPPQ = insertionStartPPQ + posAddPPQ;
+				double posAddPPQ = (ratioPPQ == 0) ? m_events[i].positionPpq : Round(m_events[i].positionPpq * ratioPPQ);
+				double positionPpq = startPositionPppq + posAddPPQ;
 
-				if (positionPPQ < takeStartPPQ)
+				if (positionPpq < startLimitPPQ)
 					continue;
-				if (positionPPQ > takeEndPPQ)
+				if (positionPpq > endLimitPPQ)
 					break;
 				moveOffsetPPQ = posAddPPQ;
 
+				// Make sure events are unselected only when we know at least new one event will get inserted
+				if (!insertedOneEvent)
+				{
+					insertedOneEvent = true;
+					UnselectAllEvents(take, targetLane);
+				}
+
 				MIDI_InsertCC(take,
-							  true,
-							  m_events[i].mute,
-							  positionPPQ,
-							  type,
-							  midiEditor.IsChannelVisible(m_events[i].channel) ? m_events[i].channel : midiEditor.GetDrawChannel(),
-							  (!doMsg2)    ? targetLane       : (reverseMsg ? m_events[i].msg3 : m_events[i].msg2),
-							  (reverseMsg) ? m_events[i].msg2 : m_events[i].msg3
+				              true,
+				              m_events[i].mute,
+				              positionPpq,
+				              type,
+				              midiEditor.IsChannelVisible(m_events[i].channel) ? m_events[i].channel : midiEditor.GetDrawChannel(),
+				              (!doMsg2)    ? targetLane       : (reverseMsg ? m_events[i].msg3 : m_events[i].msg2),
+				              (reverseMsg) ? m_events[i].msg2 : m_events[i].msg3
 				);
 
 				if (do14bit)
 				{
 					MIDI_InsertCC(take,
-								  true,
-								  m_events[i].mute,
-								  positionPPQ,
-								  type,
-								  midiEditor.IsChannelVisible(m_events[i].channel) ? m_events[i].channel : midiEditor.GetDrawChannel(),
-								  targetLane2,
-								  m_events[i].msg2
+					              true,
+					              m_events[i].mute,
+					              positionPpq,
+					              type,
+					              midiEditor.IsChannelVisible(m_events[i].channel) ? m_events[i].channel : midiEditor.GetDrawChannel(),
+					              targetLane2,
+					              m_events[i].msg2
 					);
 				}
 			}
 
-			if (moveOffsetPPQ != -1 && moveOffsetPPQ > moveOffsetPPQMax)
-				moveOffsetPPQMax = moveOffsetPPQ;
+			if (moveOffsetPPQ != -1 && moveOffsetPPQ > moveOffsetMaxPPQ)
+				moveOffsetMaxPPQ = moveOffsetPPQ;
 		}
 
-		if (moveOffsetPPQMax != -1)
+		if (moveOffsetMaxPPQ != -1)
 		{
 			update = true;
-			double newPosPPQ = Trunc(moveOffsetPPQMax + MIDI_GetPPQPosFromProjTime(take, GetCursorPositionEx(NULL))); // trunc because reaper creates events exactly on ppq
-			SetEditCurPos(MIDI_GetProjTimeFromPPQPos(take, newPosPPQ), true, false);
+			if (moveEditCursor)
+			{
+				double newPosPPQ = Trunc(moveOffsetMaxPPQ + MIDI_GetPPQPosFromProjTime(take, GetCursorPositionEx(NULL))); // trunc because reaper creates events exactly on ppq
+				SetEditCurPos(MIDI_GetProjTimeFromPPQPos(take, newPosPPQ), true, false);
+			}
 		}
 	}
 	return update;
@@ -555,114 +712,38 @@ int BR_MidiCCEvents::GetSlot ()
 	return m_slot;
 }
 
-bool BR_MidiCCEvents::SaveEvents (BR_MidiEditor& midiEditor, int lane)
+int BR_MidiCCEvents::CountSavedEvents ()
 {
-	if (midiEditor.IsValid())
+	return (int)m_events.size();
+}
+
+double BR_MidiCCEvents::GetSourcePpqStart ()
+{
+	return m_sourcePpqStart;
+}
+
+void BR_MidiCCEvents::AddEvent (double ppqPos, int msg2, int msg3, int channel)
+{
+	BR_MidiCCEvents::Event event;
+	event.positionPpq = ppqPos;
+	event.msg2        = msg2;
+	event.msg3        = msg3;
+	event.channel     = channel;
+	event.mute        = false;
+
+	if (m_sourcePpqStart == -1)
 	{
-		MediaItem_Take* take = midiEditor.GetActiveTake();
-		vector<BR_MidiCCEvents::Event> events;
-
-		if ((lane >= 0 && lane <= 127))
-		{
-			int id = -1;
-			while ((id = MIDI_EnumSelCC(take, id)) != -1)
-			{
-				int cc, chanMsg;
-				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, NULL, &cc, NULL) && chanMsg == STATUS_CC && cc == lane)
-				{
-					BR_MidiCCEvents::Event event;
-					MIDI_GetCC(take, id, NULL, &event.mute, &event.positionPPQ, NULL, &event.channel, NULL, &event.msg3);
-					events.push_back(event);
-				}
-			}
-		}
-		else if (lane == CC_PITCH)
-		{
-			int id = -1;
-			while ((id = MIDI_EnumSelCC(take, id)) != -1)
-			{
-				int chanMsg;
-				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, NULL, NULL, NULL) && chanMsg == STATUS_PITCH)
-				{
-					BR_MidiCCEvents::Event event;
-					MIDI_GetCC(take, id, NULL, &event.mute, &event.positionPPQ, NULL, &event.channel, &event.msg2, &event.msg3);
-					events.push_back(event);
-				}
-			}
-		}
-		else if (lane == CC_PROGRAM || lane == CC_CHANNEL_PRESSURE)
-		{
-			int id = -1;
-			while ((id = MIDI_EnumSelCC(take, id)) != -1)
-			{
-				int chanMsg;
-				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, NULL, NULL, NULL) && chanMsg == ((lane == CC_PROGRAM) ? STATUS_PROGRAM : STATUS_CHANNEL_PRESSURE))
-				{
-					BR_MidiCCEvents::Event event;
-					MIDI_GetCC(take, id, NULL, &event.mute, &event.positionPPQ, NULL, &event.channel, &event.msg3, &event.msg2); // messages are reversed
-					events.push_back(event);
-				}
-			}
-		}
-		else if (lane == CC_VELOCITY)
-		{
-			int id = -1;
-			while ((id = MIDI_EnumSelNotes(take, id)) != -1)
-			{
-				BR_MidiCCEvents::Event event;
-				MIDI_GetNote(take, id, NULL, &event.mute, &event.positionPPQ, NULL, &event.channel, NULL, &event.msg3);
-				events.push_back(event);
-			}
-		}
-		else if (lane >= CC_14BIT_START)
-		{
-			int id = -1;
-			int cc1 = lane - CC_14BIT_START;
-			int cc2 = cc1 + 32;
-			while ((id = MIDI_EnumSelCC(take, id)) != -1)
-			{
-				int cc, chanMsg;
-				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, NULL, &cc, NULL) && chanMsg == STATUS_CC && cc == cc1)
-				{
-					BR_MidiCCEvents::Event event;
-					MIDI_GetCC(take, id, NULL, &event.mute, &event.positionPPQ, NULL, &event.channel, NULL, &event.msg3);
-					events.push_back(event);
-
-					int tmpId = id;
-					while ((tmpId = MIDI_EnumSelCC(take, tmpId)) != -1)
-					{
-						double pos; int channel, value, chanMsg2;
-						MIDI_GetCC(take, tmpId, NULL, NULL, &pos, &chanMsg2, &channel, &cc, &value);
-						if (pos > event.positionPPQ)
-							break;
-						if (chanMsg2 == STATUS_CC && cc == cc2 && channel == events.back().channel)
-						{
-							events.back().msg2 = value;
-							break;
-						}
-					}
-				}
-			}
-		}
-
-		if (events.size())
-		{
-			// Make sure positions are saved in a relative manner
-			for (size_t i = 1; i < events.size(); ++i)
-				events[i].positionPPQ -= events.front().positionPPQ;
-			events.front().positionPPQ = 0;
-
-			m_events     = events;
-			m_ppq        = midiEditor.GetPPQ();
-			m_sourceLane = lane;
-			return true;
-		}
+		m_sourcePpqStart = ppqPos;
+		event.positionPpq = 0;
 	}
-	return false;
+	else
+		event.positionPpq -= m_sourcePpqStart;
+
+	m_events.push_back(event);
 }
 
 BR_MidiCCEvents::Event::Event () :
-positionPPQ (0),
+positionPpq (0),
 channel     (0),
 msg2        (0),
 msg3        (0),
@@ -670,13 +751,185 @@ mute        (false)
 {
 }
 
-BR_MidiCCEvents::Event::Event (double positionPPQ, int channel, int msg2, int msg3, bool mute) :
-positionPPQ (positionPPQ),
+BR_MidiCCEvents::Event::Event (double positionPpq, int channel, int msg2, int msg3, bool mute) :
+positionPpq (positionPpq),
 channel     (channel),
 msg2        (msg2),
 msg3        (msg3),
 mute        (mute)
 {
+}
+
+/******************************************************************************
+* Item mute state                                                             *
+******************************************************************************/
+BR_ItemMuteState::BR_ItemMuteState (int slot, bool selectedOnly) :
+m_slot (slot)
+{
+	this->Save(selectedOnly);
+}
+
+BR_ItemMuteState::BR_ItemMuteState (int slot, ProjectStateContext* ctx) :
+m_slot (slot)
+{
+	char line[64];
+	LineParser lp(false);
+	while(!ctx->GetLine(line, sizeof(line)) && !lp.parse(line))
+	{
+		if (!strcmp(lp.gettoken_str(0), ">"))
+			break;
+
+		GUID guid;stringToGuid(lp.gettoken_str(0), &guid);
+
+		BR_ItemMuteState::MuteState trackState;
+		trackState.guid = guid;
+		trackState.mute = lp.gettoken_int(1);
+		m_items.push_back(trackState);
+	}
+}
+
+void BR_ItemMuteState::SaveState (ProjectStateContext* ctx)
+{
+	if (m_items.size() != 0)
+	{
+		ctx->AddLine("%s %.2d", ITEMS_MUTE_STATES, m_slot);
+		for (size_t i = 0; i < m_items.size(); ++i)
+		{
+			char guid[64];
+			guidToString(&m_items[i].guid, guid);
+			ctx->AddLine("%s %d", guid, m_items[i].mute);
+		}
+		ctx->AddLine(">");
+	}
+}
+
+void BR_ItemMuteState::Save (bool selectedOnly)
+{
+	m_items.clear();
+
+	int count = (selectedOnly) ? CountSelectedMediaItems(NULL) : CountMediaItems(NULL);
+	for (int i = 0; i < count; ++i)
+	{
+		MediaItem* item = (selectedOnly) ? GetSelectedMediaItem(NULL, i) : GetMediaItem(NULL, i);
+
+		BR_ItemMuteState::MuteState trackState;
+		trackState.guid = GetItemGuid(item);
+		trackState.mute = (int)GetMediaItemInfo_Value(item, "B_MUTE");
+		m_items.push_back(trackState);
+	}
+	MarkProjectDirty(NULL);
+}
+
+bool BR_ItemMuteState::Restore (bool selectedOnly)
+{
+	PreventUIRefresh(1);
+	bool update = false;
+	for (size_t i = 0; i < m_items.size(); ++i)
+	{
+		if (MediaItem* item = GuidToItem(&m_items[i].guid))
+		{
+			if (!selectedOnly || (selectedOnly && GetMediaItemInfo_Value(item, "B_UISEL") != 0))
+			{
+				SetMediaItemInfo_Value(item, "B_MUTE", m_items[i].mute);
+				update = true;
+			}
+		}
+	}
+	PreventUIRefresh(-1);
+	UpdateArrange();
+	return update;
+}
+
+int BR_ItemMuteState::GetSlot ()
+{
+	return m_slot;
+}
+
+/******************************************************************************
+* Track solo/mute state                                                        *
+******************************************************************************/
+BR_TrackSoloMuteState::BR_TrackSoloMuteState (int slot, bool selectedOnly) :
+m_slot (slot)
+{
+	this->Save(selectedOnly);
+}
+
+BR_TrackSoloMuteState::BR_TrackSoloMuteState (int slot, ProjectStateContext* ctx) :
+m_slot (slot)
+{
+	char line[64];
+	LineParser lp(false);
+	while(!ctx->GetLine(line, sizeof(line)) && !lp.parse(line))
+	{
+		if (!strcmp(lp.gettoken_str(0), ">"))
+			break;
+
+		GUID guid; stringToGuid(lp.gettoken_str(0), &guid);
+
+		BR_TrackSoloMuteState::SoloMuteState trackState;
+		trackState.guid = guid;
+		trackState.solo = lp.gettoken_int(1);
+		trackState.mute = lp.gettoken_int(2);
+		m_tracks.push_back(trackState);
+	}
+}
+
+void BR_TrackSoloMuteState::SaveState (ProjectStateContext* ctx)
+{
+	if (m_tracks.size() != 0)
+	{
+		ctx->AddLine("%s %.2d", TRACKS_SOLO_MUTE_STATES, m_slot);
+		for (size_t i = 0; i < m_tracks.size(); ++i)
+		{
+			char guid[64];
+			guidToString(&m_tracks[i].guid, guid);
+			ctx->AddLine("%s %d %d", guid, m_tracks[i].guid, m_tracks[i].solo, m_tracks[i].mute);
+		}
+		ctx->AddLine(">");
+	}
+}
+
+void BR_TrackSoloMuteState::Save (bool selectedOnly)
+{
+	m_tracks.clear();
+
+	int count = (selectedOnly) ? CountSelectedTracks(NULL) : CountTracks(NULL);
+	for (int i = 0; i < count; ++i)
+	{
+		MediaTrack* track = (selectedOnly) ? GetSelectedTrack(NULL, i) : GetTrack(NULL, i);
+
+		BR_TrackSoloMuteState::SoloMuteState trackState;
+		trackState.guid = *GetTrackGUID(track);
+		trackState.solo = (int)GetMediaTrackInfo_Value(track, "I_SOLO");
+		trackState.mute = (int)GetMediaTrackInfo_Value(track, "B_MUTE");
+		m_tracks.push_back(trackState);
+	}
+	MarkProjectDirty(NULL);
+}
+
+bool BR_TrackSoloMuteState::Restore (bool selectedOnly)
+{
+	PreventUIRefresh(1);
+	bool update = false;
+	for (size_t i = 0; i < m_tracks.size(); ++i)
+	{
+		if (MediaTrack* track = GuidToTrack(&m_tracks[i].guid))
+		{
+			if (!selectedOnly || (selectedOnly && GetMediaTrackInfo_Value(track, "I_SELECTED") != 0))
+			{
+				SetMediaTrackInfo_Value(track, "I_SOLO", m_tracks[i].solo);
+				SetMediaTrackInfo_Value(track, "B_MUTE", m_tracks[i].mute);
+				update = true;
+			}
+		}
+	}
+	PreventUIRefresh(-1);
+	return update;
+}
+
+int BR_TrackSoloMuteState::GetSlot ()
+{
+	return m_slot;
 }
 
 /******************************************************************************
@@ -734,10 +987,10 @@ bool BR_MidiToggleCCLane::Hide (void* midiEditor, int laneToKeep, int editorHeig
 					LineParser lp(false);
 
 					// Remove lanes
-					bool lanesRemoved = false;
 					vector<WDL_FastString> savedCCLanes;
-					int laneId = 0;
 					WDL_FastString lineLane;
+					bool lanesRemoved = false;
+					int laneId = 0;
 					while (int position = ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "SOURCE", "VELLANE", laneId, -1, &lineLane))
 					{
 						WDL_FastString currentLane;
@@ -755,7 +1008,16 @@ bool BR_MidiToggleCCLane::Hide (void* midiEditor, int laneToKeep, int editorHeig
 							if ((editorHeight != -1 && editorHeight != lp.gettoken_int(2)) || (inlineHeight != -1 && inlineHeight != lp.gettoken_int(3)))
 							{
 								WDL_FastString newLane;
-								newLane.AppendFormatted(256, "%s %d %d %d\n", "VELLANE", laneToKeep, (editorHeight == -1) ? lp.gettoken_int(2) : editorHeight, (inlineHeight == -1) ? lp.gettoken_int(3) : inlineHeight);
+								for (int i = 0; i < lp.getnumtokens(); ++i)
+								{
+									if      (i == 1) newLane.AppendFormatted(256, "%d", laneToKeep);
+									else if (i == 2) newLane.AppendFormatted(256, "%d", ((editorHeight == -1) ? lp.gettoken_int(2) : editorHeight));
+									else if (i == 3) newLane.AppendFormatted(256, "%d", ((inlineHeight == -1) ? lp.gettoken_int(3) : inlineHeight));
+									else             newLane.Append(lp.gettoken_str(i));
+									newLane.Append(" ");
+								}
+								newLane.Append("\n");
+
 								ptk.ReplaceLine(position - 1, newLane.Get());
 								lanesRemoved = true;
 							}

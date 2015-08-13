@@ -178,7 +178,7 @@ int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML, const c
 				iPos++;
 			}
 
-			if (strncmp(&cBuf[iPos], "http://", 7) == 0)
+			if (!strncmp(&cBuf[iPos], "http://", 7) || !strncmp(&cBuf[iPos], "https://", 8))
 			{
 				fputs("<a href=\"", pOut);
 				curSection.Push(URL);

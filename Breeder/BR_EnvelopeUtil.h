@@ -1,9 +1,9 @@
 /******************************************************************************
 / BR_EnvelopeUtil.h
 /
-/ Copyright (c) 2013-2014 Dominik Martin Drzic
+/ Copyright (c) 2013-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
-/ https://code.google.com/p/sws-extension
+/ http://github.com/Jeff0S/sws
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -28,18 +28,6 @@
 #pragma once
 
 /******************************************************************************
-* Constants                                                                   *
-******************************************************************************/
-const int    MIN_BPM        = 1;
-const int    MAX_BPM        = 960;
-const int    MIN_SIG        = 1;
-const int    MAX_SIG        = 255;
-const double MIN_TEMPO_DIST = 0.001;
-const double MIN_ENV_DIST   = 0.000001;
-const double MIN_GRID_DIST  = 0.00097;         // 1/256 at 960 BPM (can't set it to more than 1/256 in grid settings, but other actions like Adjust grid by 1/2 can)
-const double MAX_GRID_DIV   = 1.0 / 256.0 * 4; // 1/256 because things can get broken after that (http://forum.cockos.com/project.php?issueid=5263)
-
-/******************************************************************************
 * Envelope shapes - this is how Reaper stores point shapes internally         *
 ******************************************************************************/
 enum BR_EnvShape
@@ -49,7 +37,10 @@ enum BR_EnvShape
 	SLOW_START_END = 2,
 	FAST_START     = 3,
 	FAST_END       = 4,
-	BEZIER         = 5
+	BEZIER         = 5,
+
+	MIN_SHAPE      = LINEAR,
+	MAX_SHAPE      = BEZIER
 };
 
 /******************************************************************************
@@ -70,34 +61,6 @@ enum BR_EnvType
 	PLAYRATE     = 0x200,
 	TEMPO        = 0x400,
 	PARAMETER    = 0x800
-};
-
-/******************************************************************************
-* Envelope point class, mostly used internally by BR_Envelope                 *
-******************************************************************************/
-struct BR_EnvPoint
-{
-	double position;
-	double value;
-	double bezier;
-	int shape;
-	int sig;
-	int selected;
-	int partial;
-
-	BR_EnvPoint () {}
-	BR_EnvPoint (double position);
-	BR_EnvPoint (double position, double value, int shape, int sig, int selected, int partial, double bezier);
-	bool ReadLine (const LineParser& lp);
-	void Append (WDL_FastString& string);
-
-	struct ComparePoints
-	{
-		bool operator() (const BR_EnvPoint& first, const BR_EnvPoint& second)
-		{
-			return (first.position < second.position);
-		}
-	};
 };
 
 /******************************************************************************
@@ -123,10 +86,11 @@ public:
 	bool SetSelection (int id, bool selected);
 	bool CreatePoint (int id, double position, double value, int shape, double bezier, bool selected, bool checkPosition = false, bool snapValue = false);
 	bool DeletePoint (int id);
-	bool DeletePoints (int startId, int endId);
 	bool GetTimeSig (int id, bool* sig, bool* partial, int* num, int* den);
 	bool SetTimeSig (int id, bool sig, bool partial, int num, int den);
-	bool SetCreateSortedPoint (int id, double position, double value, int shape, double bezier, bool selected); // for ReaScript export
+	bool SetCreatePoint (int id, double position, double value, int shape, double bezier, bool selected); // for ReaScript export (id = -1 will create new point, performs additional safety checks)
+	int  DeletePoints (int startId, int endId);
+	int  DeletePointsInRange (double start, double end);
 
 	/* Selected points (never updated when editing, use UpdateSelected() if needed) */
 	void UnselectAll ();
@@ -138,7 +102,6 @@ public:
 
 	/* All points */
 	bool ValidateId (int id);
-	void DeletePointsInRange (double start, double end);
 	void DeleteAllPoints ();
 	void Sort ();                                            // Sort points by position
 	int CountPoints ();                                      // Count existing points
@@ -148,10 +111,10 @@ public:
 	int FindClosest (double position);                       // note that caller needs to check if returned id exists
 
 	/* Points properties */
-	double ValueAtPosition (double position);         // Using find functionality, so efficiency may vary (see comment about Find())
-	double NormalizedDisplayValue (double value);     // Convert point value to 0.0 - 1.0 range as displayed in arrange
-	double RealDisplayValue (double normalizedValue); // Convert normalized display value in range 0.0 - 1.0 to real envelope value
-	double SnapValue (double value);                  // Snaps value to current settings (only relevant for take pitch envelope)
+	double ValueAtPosition (double position, bool fastMode = false); // fastMode will not use native API which is more accurate in some cases (noticed it with bezier curves), but much slower with high point count (accuracy difference should be minimal but still important when dealing with things like mouse detection where every pixel counts!)
+	double NormalizedDisplayValue (double value);                    // Convert point value to 0.0 - 1.0 range as displayed in arrange
+	double RealValue (double normalizedDisplayValue);                // Convert normalized display value in range 0.0 - 1.0 to real envelope value
+	double SnapValue (double value);                                 // Snaps value to current settings (only relevant for take pitch envelope)
 	void GetSelectedPointsExtrema (double* minimum, double* maximum);
 	bool GetPointsInTimeSelection (int* startId, int* endId, double* tStart = NULL, double* tEnd = NULL); // Presumes points are sorted, returns false if there is no time selection (if there are no points in time selection, both ids will be -1)
 
@@ -159,30 +122,34 @@ public:
 	bool VisibleInArrange (int* envHeight, int* yOffset, bool cacheValues = false); // Is part of the envelope visible in arrange (height calculation can be intensive (envelopes in track lane), use cacheValues if situation allows)
 	void MoveArrangeToPoint (int id, int referenceId);                              // Moves arrange horizontally if needed so point is visible
 	void SetTakeEnvelopeTimebase (bool useProjectTime);                             // By setting this to true, project time can be used everywhere when dealing with take envelopes. If take changes position, just call again.
-	WDL_FastString FormatValue (double value);                                      // Due to API limitation we can't known to which FX envelope belongs, so FX (non-native) envelopes won't get properly formated
+	WDL_FastString FormatValue (double value);
 	WDL_FastString GetName ();
 	MediaItem_Take* GetTake ();
 	MediaTrack* GetParent ();
 	TrackEnvelope* GetPointer ();
+	void SetData (void* data); // used to save and
+	void* GetData ();          // get arbitrary data
 
 	/* Get envelope properties */
+	BR_EnvType Type ();
 	bool IsTempo ();
 	bool IsTakeEnvelope ();
-	bool IsLocked (); // Check lock settings for specific envelope type
+	bool IsLocked (); // Checks lock settings for specific envelope type
 	bool IsActive ();
 	bool IsVisible ();
 	bool IsInLane ();
 	bool IsArmed ();
+	bool IsScaledToFader ();
 	int GetLaneHeight ();
 	int GetDefaultShape ();
-	int Type ();      // See BR_EnvType for types
-	int ParamId ();   // If FX envelope, get parameter id for it's FX, otherwise -1
-	int GetSendId (); // If send envelope, get send id for it's parent track, otherwise -1
-	double MinValue ();
-	double MaxValue ();
-	double CenterValue ();
-	double LaneMaxValue ();
-	double LaneMinValue ();
+	int GetFxId ();    // Returns -1 if not FX envelope
+	int GetParamId (); // Returns -1 if not FX envelope
+	int GetSendId ();  // Returns -1 if not send envelope, otherwise send id for it's parent track
+	double MinValueAbs (); // Absolute minimum value for envelope (ignoring display preferences for certain envelopes)
+	double MaxValueAbs (); // Absolute maximum value for envelope (ignoring display preferences for certain envelopes)
+	double LaneCenterValue (); // Center value for lane center
+	double LaneMinValue ();    // Minimum drawable value
+	double LaneMaxValue ();    // Maximum drawable value
 
 	/* Set envelope properties */
 	void SetActive (bool active);
@@ -191,56 +158,92 @@ public:
 	void SetArmed (bool armed);
 	void SetLaneHeight (int height);
 	void SetDefaultShape (int shape);
+	void SetScalingToFader (bool faderScaling);
 
 	/* Committing - does absolutely nothing if there are no edits or locking is turned on (unless forced) */
 	bool Commit (bool force = false);
 
 private:
-	struct IdPair { int first, second; };
-	int FindFirstPoint ();
-	int LastPointAtPos (int id);
-	int FindNext (double position, double offset);     // used for internal stuff since position
-	int FindPrevious (double position, double offset); // offset of take envelopes has to be tracked
-	void ParseState (char* envState, size_t size);
-	void UpdateConsequential ();
-	void FillProperties () const; // to make operator== const (yes, m_properties does get modified, but always according to chunk and only if not cached already)
-	WDL_FastString GetProperties ();
-	TrackEnvelope* m_envelope;
-	MediaItem_Take* m_take;
-	MediaTrack* m_parent;
-	bool m_tempoMap;
-	bool m_update;
-	bool m_sorted;
-	double m_takeEnvOffset;
-	int m_takeEnvType;
-	int m_countConseq;
-	int m_height;
-	int m_yOffset;
-	int m_count;
-	int m_countSel;
-	vector<BR_EnvPoint> m_points;
-	vector<int> m_pointsSel;
-	vector<IdPair> m_pointsConseq;
-	WDL_FastString m_chunkStart;
-	WDL_FastString m_chunkEnd;
-	WDL_FastString m_envName;
+	struct IdPair
+	{
+		int first, second;
+	};
 	struct EnvProperties
 	{
 		int active;
-		int visible, lane;
-		double visUnknown;
+		int visible, lane, visUnknown;
 		int height, heightUnknown;
 		int armed;
 		int shape, shapeUnknown1, shapeUnknown2;
-		int type;
+		int faderMode;
+		BR_EnvType type;
 		double minValue, maxValue, centerValue;
-		int paramId;
+		int paramId, fxId;
 		bool filled, changed;
 		WDL_FastString paramType;
 		EnvProperties ();
 		EnvProperties (const EnvProperties& properties);
 		EnvProperties& operator=  (const EnvProperties& properties);
-	} mutable m_properties; // because FillProperties must be const (to make operator== const) but still be able to change m_properties
+	};
+	struct EnvPoint
+	{
+		double position;
+		double value;
+		double bezier;
+		bool selected;
+		int shape;
+		int sig;
+		int partial;
+		unsigned int metronome1;
+		unsigned int metronome2;
+		WDL_FastString tempoStr;
+
+		EnvPoint ();
+		EnvPoint (double position, double value, int shape, int sig, bool selected, int partial, double bezier);
+		explicit EnvPoint (double position);
+		bool ReadLine (const LineParser& lp); // use only once per object (for efficiency, tempoStr is never deleted, only appended too)
+		void Append (WDL_FastString& string, bool tempoPoint);
+		struct ComparePoints
+		{
+			bool operator() (const EnvPoint& first, const EnvPoint& second)
+			{
+				return (first.position < second.position);
+			}
+		};
+	};
+
+	int FindFirstPoint ();
+	int LastPointAtPos (int id);
+	int FindNext (double position, double offset);     // used for internal stuff since position
+	int FindPrevious (double position, double offset); // offset of take envelopes has to be tracked
+	void Build (bool takeEnvelopesUseProjectTime);
+	void UpdateConsequential ();
+	void FillFxInfo ();
+	bool FillProperties () const; // to make operator== const (yes, m_properties does get modified but only if not cached already)
+	WDL_FastString GetProperties ();
+
+	TrackEnvelope* m_envelope;
+	MediaTrack* m_parent;
+	MediaItem_Take* m_take;
+	bool m_tempoMap;
+	bool m_update;
+	bool m_sorted;
+	bool m_pointsEdited; // tells us if we can use Envelope_Evaluate() in this->ValueAtPosition()
+	double m_takeEnvOffset;
+	int m_sampleRate;
+	int m_countConseq;
+	int m_height;
+	int m_yOffset;
+	int m_count;
+	int m_countSel;
+	BR_EnvType m_takeEnvType;
+	void* m_data;
+	vector<BR_Envelope::EnvPoint> m_points;
+	vector<int> m_pointsSel;
+	vector<IdPair> m_pointsConseq;
+	WDL_FastString m_chunkProperties;
+	WDL_FastString m_envName;
+	BR_Envelope::EnvProperties mutable m_properties; // access through separate class methods (they make sure data is read and written correctly) - mutable because FillProperties must be const (to make operator== const) but still be able to change m_properties
 };
 
 /******************************************************************************
@@ -250,18 +253,18 @@ TrackEnvelope* GetTempoEnv ();
 TrackEnvelope* GetVolEnv (MediaTrack* track);
 TrackEnvelope* GetVolEnvPreFX (MediaTrack* track);
 TrackEnvelope* GetTakeEnv (MediaItem_Take* take, BR_EnvType envelope);
-MediaItem_Take* GetTakeEnvParent (TrackEnvelope* envelope, int* type); // for type see BR_EnvType
+MediaItem_Take* GetTakeEnvParent (TrackEnvelope* envelope, BR_EnvType* type);
 MediaTrack* GetEnvParent (TrackEnvelope* envelope);
 vector<int> GetSelPoints (TrackEnvelope* envelope);
-WDL_FastString ConstructReceiveEnv (int type, double firstPointValue); // for type see BR_EnvType
-bool ToggleShowSendEnvelope (MediaTrack* track, int sendId, int type); // for type see BR_EnvType
-bool ShowSendEnvelopes (vector<MediaTrack*>& tracks, int envelopes);   // envelopes is a bitmask (see BR_EnvType)
+WDL_FastString ConstructReceiveEnv (BR_EnvType type, double firstPointValue, bool hardwareSend, bool addNewLinePrefix = true);
+bool ToggleShowSendEnvelope (MediaTrack* track, int sendId, BR_EnvType type);
+bool ShowSendEnvelopes (vector<MediaTrack*>& tracks, BR_EnvType envelopeTypes);
 bool EnvVis (TrackEnvelope* envelope, bool* lane);
 int GetEnvId (TrackEnvelope* envelope, MediaTrack* parent = NULL);
-int GetDefaultPointShape ();                                      // see BR_EnvShape for return values;
-int GetEnvType (TrackEnvelope* envelope, bool* isSend);           // for return type see BR_EnvType (note: function relies on envelope names, localization could theoretically break it)
-int GetCurrentAutomationMode (MediaTrack* track);                 // takes global override into account
+int GetEffectiveAutomationMode (MediaTrack* track); // takes global override into account
 int CountTrackEnvelopePanels (MediaTrack* track);
+BR_EnvShape GetDefaultPointShape ();
+BR_EnvType GetEnvType (TrackEnvelope* envelope, bool* isSend, bool* isHwSend); // note: relies on envelope names, localization could theoretically break it
 
 /******************************************************************************
 * Tempo                                                                       *
@@ -270,9 +273,15 @@ int FindPreviousTempoMarker (double position);
 int FindNextTempoMarker (double position);
 int FindClosestTempoMarker (double position);
 int FindTempoMarker (double position, double surroundingRange = 0);
+double TempoAtPosition (double position);
 double AverageProjTempo ();
-double TempoAtPosition (double startBpm, double endBpm, double startTime, double endTime, double targetTime);
-double MeasureAtPosition (double startBpm, double endBpm, double timeLen, double targetTime);
-double PositionAtMeasure (double startBpm, double endBpm, double timeLen, double targetMeasure);
-void FindMiddlePoint (double* middleTime, double* middleBpm, double measure, double startTime, double endTime, double startBpm, double endBpm);
-void SplitMiddlePoint (double* time1, double* time2, double* bpm1, double* bpm2, double splitRatio, double measure, double startTime, double middleTime, double endTime, double startBpm, double middleBpm, double endBpm);
+double GetProjectSettingsTempo (int* num, int* den);
+double CalculateTempoAtPosition (double startBpm, double endBpm, double startTime, double endTime, double targetTime);
+double CalculateMeasureAtPosition (double startBpm, double endBpm, double timeLen, double targetTime);
+double CalculatePositionAtMeasure (double startBpm, double endBpm, double timeLen, double targetMeasure);
+void CalculateMiddlePoint (double* middleTime, double* middleBpm, double measure, double startTime, double endTime, double startBpm, double endBpm);
+void CalculateSplitMiddlePoints (double* time1, double* time2, double* bpm1, double* bpm2, double splitRatio, double measure, double startTime, double middleTime, double endTime, double startBpm, double middleBpm, double endBpm);
+void InitTempoMap ();  // will make sure there's at least one point in tempo map (we can't manipulate tempo map's chunk (i.e. insert new points) if there isn't at least one point in tempo map)
+void RemoveTempoMap ();
+void UnselectAllTempoMarkers ();
+void UpdateTempoTimeline (); // UpdateTimeline() isn't enough after changing tempo points through chunk - call this instead

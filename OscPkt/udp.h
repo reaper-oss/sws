@@ -37,9 +37,12 @@
 # include <winsock2.h> 
 # include <windows.h>
 # include <ws2tcpip.h>
-# pragma comment(lib, "ws2_32.lib")
+# if defined(_MSC_VER)
+#  pragma comment(lib, "ws2_32.lib")
+# endif
 #else
 # include <sys/socket.h>
+# include <netinet/in.h>
 # include <netdb.h>
 # include <sys/time.h>
 #endif
@@ -174,7 +177,15 @@ struct UdpSocket {
     if (gethostname(hostname_buf, sizeof hostname_buf) != 0)
       hostname_buf[0] = 0;
     hostname_buf[sizeof hostname_buf - 1] = 0;
+	// BR: comment for struct UdpSocket says it "avoids all deprecated stuff such as gethostbyname etc" and comment for this functions says "this stuff is not very nice" so I presume gethostbyname is needed so just hide the warning
+#ifdef _MSC_VER                
+    #pragma warning(push) 
+    #pragma warning(disable: 4996) // warning C4996: 'gethostbyname': Use getaddrinfo() or GetAddrInfoW() instead or define _WINSOCK_DEPRECATED_NO_WARNINGS to disable deprecated API warnings
+#endif
     struct hostent * host = gethostbyname(hostname_buf);
+#ifdef _MSC_VER
+    #pragma warning(pop)
+#endif
     if (host) { return host->h_name; }
     return hostname_buf[0] ? hostname_buf : "localhost";
   }
@@ -235,15 +246,20 @@ struct UdpSocket {
     }
 
     /* now we should be able to read without blocking.. */
-    socklen_t len = remote_addr.maxLen();
-    int nread = (int)recvfrom(handle, &buffer[0], buffer.size(), 0,
+    socklen_t len = (socklen_t)remote_addr.maxLen();
+    int nread = (int)recvfrom(handle, &buffer[0], (int)buffer.size(), 0,
                               &remote_addr.addr(), &len);
     if (nread < 0) {       
       // maybe here we should differentiate EAGAIN/EINTR/EWOULDBLOCK from real errors
 #ifdef WIN32
       if (WSAGetLastError() != WSAEINTR && WSAGetLastError() != WSAEWOULDBLOCK && 
           WSAGetLastError() != WSAECONNRESET && WSAGetLastError() != WSAECONNREFUSED) {
-        char s[512]; _snprintf_s(s,512,512, "system error #%d", WSAGetLastError());
+        char s[512]; 
+#ifdef _MSC_VER
+        _snprintf_s(s,512,512, "system error #%d", WSAGetLastError());
+#else
+        snprintf(s,512, "system error #%d", WSAGetLastError());
+#endif
         setErr(s);
       }
 #else
@@ -282,9 +298,9 @@ struct UdpSocket {
     do {
       int res;
       if (isBound()) {
-        res = sendto(handle, (const char*)ptr, sz, 0, &addr.addr(), addr.actualLen());
+        res = sendto(handle, (const char*)ptr, (int)sz, 0, &addr.addr(), (int)addr.actualLen());
       } else {
-        res = send(handle, (const char*)ptr, sz, 0);
+        res = send(handle, (const char*)ptr, (int)sz, 0);
         //        res = write(handle, ptr, sz);
       }
 #ifdef WIN32
@@ -303,7 +319,7 @@ struct UdpSocket {
 private:
   bool openSocket(const std::string &hostname, int port, int options) {
     char port_string[64]; 
-#ifdef WIN32
+#ifdef _MSC_VER
     _snprintf_s(port_string, 64, 64, "%d", port);
 #else
     snprintf(port_string, 64, "%d", port);
@@ -330,35 +346,33 @@ private:
     
     err = getaddrinfo(binding ? 0 : hostname.c_str(), port.empty() ? 0 : port.c_str(), &hints, &result);
     if (err != 0) {
-//JFB COMP      setErr(gai_strerror(err));
-      setErr("getaddrinfo failed");
+      setErr(gai_strerror(err));
       return false;
     }
 
     for (rp = result; rp && handle==-1; rp = rp->ai_next) {
  
 
-       // TRP fix return mismatch on win32
-       handle = (int)socket(rp->ai_family, rp->ai_socktype,
+      handle = socket(rp->ai_family, rp->ai_socktype,
                       rp->ai_protocol);
       if (handle == -1)
         continue;
 
       if (binding) {
-        if (bind(handle, rp->ai_addr, rp->ai_addrlen) != 0) {
+        if (bind(handle, rp->ai_addr, (socklen_t)rp->ai_addrlen) != 0) {
           close();
         } else {
-          socklen_t len = local_addr.maxLen();
+          socklen_t len = (socklen_t)local_addr.maxLen();
           if (getsockname(handle, &local_addr.addr(), &len) == 0) {
             /* great */
           }
           break;
         }
       } else {
-        if (connect(handle, rp->ai_addr, rp->ai_addrlen) != 0) {
+        if (connect(handle, rp->ai_addr, (socklen_t)rp->ai_addrlen) != 0) {
           close();
         } else {
-          assert(rp->ai_addrlen <= sizeof remote_addr);
+          assert((size_t)rp->ai_addrlen <= sizeof remote_addr);
           memcpy(&remote_addr.addr(), rp->ai_addr, rp->ai_addrlen);
           break;
         }

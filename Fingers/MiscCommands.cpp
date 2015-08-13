@@ -12,6 +12,7 @@
 #include "FNG_Settings.h"
 #include "TimeMap.h"
 #include "RprStateChunk.h"
+#include "../Breeder/BR_Util.h"
 
 static void EmulateMidiHardware(int flag, void *data);
 static void GetEmulationSettings(int flag, void *data);
@@ -218,34 +219,33 @@ double getQuantizedPosition(double pos, double gridSize)
     }
 }
 
-static void QuanitzeMidi(RprTake &take, double gridSize)
+static void QuanitzeMidi(RprTake &take)
 {
     RprMidiTake midiTake(take);
     for(int i = 0; i < midiTake.countNotes(); ++i) {
-        midiTake.getNoteAt(i)->setPosition(getQuantizedPosition(midiTake.getNoteAt(i)->getPosition(), gridSize));
+        midiTake.getNoteAt(i)->setPosition(GetClosestGridDiv(midiTake.getNoteAt(i)->getPosition()));
     }
 }
 
-static void QuanitzeAudio(RprItem &item, double gridSize)
+static void QuanitzeAudio(RprItem &item)
 {
-    item.setPosition(getQuantizedPosition(item.getPosition(), gridSize));
+    item.setPosition(GetClosestGridDiv(item.getPosition()));
 }
 
 static void QuantizeAllToGrid(int flag, void *data)
 {
     RprItemCtrPtr itemCtr = RprItemCollec::getSelected();
-    double gridSize = *(double *)getInternalReaperProperty("projgriddiv");
     if(!convertToInProjectMidi(itemCtr))
         return;
 
     for(int i = 0; i < itemCtr->size(); ++i) {
         RprTake take = itemCtr->getAt(i).getActiveTake();
         if(take.isMIDI())
-            QuanitzeMidi(take, gridSize);
+            QuanitzeMidi(take);
         else
         {
             RprItem item = itemCtr->getAt(i);
-            QuanitzeAudio(item, gridSize);
+            QuanitzeAudio(item);
         }
      }
 

@@ -196,7 +196,12 @@ if exist temp\online_version.h (
 echo mdelete *.* >> temp\upload.ftp
 
 REM Upload new files
-echo put output\whatsnew.html index.html >> temp\upload.ftp
+if %build_type%==pre-release (
+    ..\BuildUtils\Release\PrintVersion ..\version.h "put output\whatsnew.html whatsnew-v%%d.%%d.%%d.%%d.html" >> temp\upload.ftp
+)
+if %build_type%==featured (
+    echo put output\whatsnew.html index.html >> temp\upload.ftp
+)
 ..\BuildUtils\Release\PrintVersion ..\version.h "put output\sws_extension.exe sws-v%%d.%%d.%%d.%%d-install.exe" >> temp\upload.ftp
 ..\BuildUtils\Release\PrintVersion ..\version.h "put output\sws_extension_x64.exe sws-v%%d.%%d.%%d.%%d-x64-install.exe" >> temp\upload.ftp
 ..\BuildUtils\Release\PrintVersion ..\version.h "put %osx_dmg_path% sws-v%%d.%%d.%%d.%%d.dmg" >> temp\upload.ftp
@@ -210,8 +215,7 @@ echo quit >> temp\upload.ftp
 echo FTP: uploading...
 ftp -v -n -i -s:temp\upload.ftp %ftp_host%
 echo.
-echo Can't test if ftp has succeeded (always return 0, unfortunately :/)
-echo Please double-check the above log, and terminate batch job if needed (ctrl-c)
+echo Please double-check the above log
 echo.
 pause
 goto success
@@ -224,7 +228,7 @@ echo ************
 echo.
 copy /y temp\oldversion.h ..\version.h > NUL
 copy /y temp\oldwhatsnew.txt ..\whatsnew.txt > NUL
-goto pause
+goto theend
 
 :success
 echo.
@@ -234,8 +238,7 @@ echo Success!
 echo ****************************************
 echo.
 
-:pause
+:theend
 del /q temp\*.*
 rmdir temp
-pause
 echo.

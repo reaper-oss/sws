@@ -1,9 +1,9 @@
 /******************************************************************************
 / BR_MouseUtil.cpp
 /
-/ Copyright (c) 2014 Dominik Martin Drzic
+/ Copyright (c) 2014-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
-/ https://code.google.com/p/sws-extension
+/ http://github.com/Jeff0S/sws
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -34,18 +34,16 @@
 /******************************************************************************
 * Constants                                                                   *
 ******************************************************************************/
-const int ITEM_LABEL_MIN_HEIGHT        = 28;
-const int TCP_MASTER_GAP               = 5;
+const int ITEM_LABEL_MIN_HEIGHT     = 28;
 
-const int ENV_GAP                      = 4; // bottom gap may seem like 3 when selected, but that
-const int ENV_LINE_WIDTH               = 1; // first pixel is used to "bold" selected envelope
+const int ENV_GAP                   = 4; // bottom gap may seem like 3 when selected, but that
+const int ENV_LINE_WIDTH            = 1; // first pixel is used to "bold" selected envelope
+const int ENV_HIT_POINT             = 5;
+const int ENV_HIT_POINT_LEFT        = 6; // envelope point doesn't always have middle pixel so hit point is different for one side
+const int ENV_HIT_POINT_DOWN        = 6; // +1 because lower part is tracked starting 1 pixel below line (so when envelope is active, hit points appear the same)
 
-const int ENV_HIT_POINT                = 5;
-const int ENV_HIT_POINT_LEFT           = 6; // envelope point doesn't always have middle pixel so hit point is different for one side
-const int ENV_HIT_POINT_DOWN           = 6; // +1 because lower part is tracked starting 1 pixel below line (so when envelope is active, hit points appear the same)
-
-const int STRETCH_M_HIT_POINT          = 6;
-const int STRETCH_M_MIN_TAKE_HEIGHT    = 8;
+const int STRETCH_M_HIT_POINT       = 6;
+const int STRETCH_M_MIN_TAKE_HEIGHT = 8;
 
 // Not tied to Reaper, purely for readability
 const int MIDI_WND_NOTEVIEW     = 1;
@@ -70,7 +68,7 @@ static MediaTrack* GetTrackAreaFromY (int y, int* offset)
 		MediaTrack* currentTrack = CSurf_TrackFromID(i, false);
 		int height = *(int*)GetSetMediaTrackInfo(currentTrack, "I_WNDH", NULL);
 		if (currentTrack == master && TcpVis(master))
-			height += TCP_MASTER_GAP;
+			height += GetMasterTcpGap();
 		trackEnd += height;
 
 		if (y >= trackOffset && y < trackEnd)
@@ -210,7 +208,6 @@ static MediaItem* GetItemFromY (int y, double position, MediaItem_Take** take, i
 					item = currentItem;
 					itemYStart = yStart;
 				}
-
 			}
 			iStartLast = iStart;
 		}
@@ -354,7 +351,7 @@ double PositionAtMouseCursor (bool checkRuler, bool checkCursorVisibility /*=tru
 	}
 }
 
-MediaItem* ItemAtMouseCursor (double* position)
+MediaItem* ItemAtMouseCursor (double* position, MediaItem_Take** takeAtMouse /*= NULL*/)
 {
 	POINT p; GetCursorPos(&p);
 	if (IsPointInArrange(p))
@@ -363,7 +360,7 @@ MediaItem* ItemAtMouseCursor (double* position)
 		double pos = PositionAtArrangePoint(p);
 
 		WritePtr(position, pos);
-		return GetItemFromY(y, pos, NULL, NULL);
+		return GetItemFromY(y, pos, takeAtMouse, NULL);
 	}
 	WritePtr(position, -1.0);
 	return NULL;
@@ -418,7 +415,7 @@ MediaTrack* TrackAtMouseCursor (int* context, double* position)
 * BR_MouseInfo                                                                *
 ******************************************************************************/
 BR_MouseInfo::BR_MouseInfo (int mode /*= BR_MouseInfo::MODE_ALL*/, bool updateNow /*= true*/) :
-m_ccLaneClickPointHwnd (NULL)
+m_midiEditorPianoWnd (NULL)
 {
 	m_mode = mode;
 	if (updateNow)
@@ -437,7 +434,7 @@ void BR_MouseInfo::Update (const POINT* p /*=NULL*/)
 	else
 		GetCursorPos(&currentPoint);
 
-	m_ccLaneClickPointHwnd = NULL;
+	m_midiEditorPianoWnd = NULL;
 	this->GetContext(currentPoint);
 }
 
@@ -551,10 +548,8 @@ bool BR_MouseInfo::SetDetectedCCLaneAsLastClicked ()
 	{
 		if (m_mouseInfo.midiEditor || m_mouseInfo.inlineMidi)
 		{
-			// Save current focus and locking settings
-			HWND focusedHwnd;
-			int focusedContext;
-			GetSetFocus(false, &focusedHwnd, &focusedContext);
+			POINT point = m_ccLaneClickPoint;
+
 			int lockSettings; GetConfig("projsellock", lockSettings);
 			char itemLock = m_mouseInfo.inlineMidi ? (char)GetMediaItemInfo_Value(GetMediaItemTake_Item(m_mouseInfo.take), "C_LOCK") : 0;
 
@@ -566,18 +561,21 @@ bool BR_MouseInfo::SetDetectedCCLaneAsLastClicked ()
 				SCROLLINFO si = { sizeof(SCROLLINFO), };
 				si.fMask = SIF_ALL;
 				CoolSB_GetScrollInfo(hwnd, SB_VERT, &si);
-				m_ccLaneClickPoint.y -= si.nPos;
+				point.y -= si.nPos;
 
 				CoolSB_GetScrollInfo(hwnd, SB_HORZ, &si);
 				double hZoom = GetHZoomLevel();
+
 				double itemStart = GetMediaItemInfo_Value(m_mouseInfo.item, "D_POSITION");
 				double itemEnd   = itemStart + GetMediaItemInfo_Value(m_mouseInfo.item, "D_LENGTH");
 				int itemStartPx = RoundToInt(itemStart * hZoom) - si.nPos; if (itemStartPx < 0)                         itemStartPx = 0;
-				int itemEndPx   = RoundToInt(itemEnd   * hZoom) - si.nPos; if (itemEndPx   > (int)(si.nPos + si.nPage)) itemEndPx = si.nPos + si.nPage;
-				m_ccLaneClickPoint.x = (itemStartPx + itemEndPx) / 2;
+				int itemEndPx   = RoundToInt(itemEnd   * hZoom) - si.nPos; if (itemEndPx   > (int)(si.nPos + si.nPage)) itemEndPx   = si.nPos + si.nPage;
 
-				if (!CheckBounds((int)m_ccLaneClickPoint.x, itemStartPx, itemEndPx)) // REAPER gives priority to what's inside rather than edges (so if item's too short, edge hit-points won't stretch inside the item)
+				// REAPER gives priority to what's inside rather than the edges (so if item's too short, edge hit-points won't stretch inside the item)
+				if (!CheckBounds((int)((itemStartPx + itemEndPx) / 2), itemStartPx, itemEndPx))
+				{
 					hwnd = NULL;
+				}
 				else
 				{
 					SetConfig("projsellock", 23492); // lock item edges, fades, volume handles, stretch markers, item movement, take and track envelopes
@@ -586,26 +584,13 @@ bool BR_MouseInfo::SetDetectedCCLaneAsLastClicked ()
 			}
 			else
 			{
-				hwnd = m_ccLaneClickPointHwnd ? m_ccLaneClickPointHwnd : GetPianoView(m_mouseInfo.midiEditor);
-				if (!m_ccLaneClickPointHwnd)
-				{
-					RECT r; GetClientRect(hwnd, &r);
-					m_ccLaneClickPoint.x = r.left - r.right;
-				}
+				hwnd = m_midiEditorPianoWnd ? m_midiEditorPianoWnd : GetPianoView(m_mouseInfo.midiEditor);
 			}
 
 			// Simulate mouse click
 			if (hwnd)
 			{
-				HWND captureHwnd = GetCapture();
-				SetCapture(hwnd);
-				SendMessage(hwnd, WM_LBUTTONDOWN, 0, MAKELPARAM((UINT)(m_ccLaneClickPoint.x), (UINT)(m_ccLaneClickPoint.y)));
-				SendMessage(hwnd, WM_LBUTTONUP, 0, MAKELPARAM((UINT)(m_ccLaneClickPoint.x), (UINT)(m_ccLaneClickPoint.y)));
-				ReleaseCapture();
-				SetCapture(captureHwnd);
-
-				// And restore the focus back (not exactly nice (window may blink), but we have no alternative for now) :/
-				GetSetFocus(true, &focusedHwnd, &focusedContext);
+				SimulateMouseClick(hwnd, point, true);
 				if (m_mouseInfo.inlineMidi)
 				{
 					SetConfig("projsellock", lockSettings);
@@ -741,7 +726,7 @@ void BR_MouseInfo::GetContext (const POINT& p)
 						mouseInfo.segment = "envelope";
 
 						int trackEnvHit = 0;
-						if ((m_mode & BR_MouseInfo::MODE_ALL) || (m_mode & BR_MouseInfo::MODE_ENV_LANE_DO_SEGMENT))
+						if (!(m_mode & BR_MouseInfo::MODE_IGNORE_ENVELOPE_LANE_SEGMENT))
 						{
 							BR_Envelope envelope(mouseInfo.envelope);
 							trackEnvHit = this->IsMouseOverEnvelopeLine(envelope, height-2*ENV_GAP, offset+ENV_GAP, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, &mouseInfo.envPointId);
@@ -750,38 +735,41 @@ void BR_MouseInfo::GetContext (const POINT& p)
 						if      (trackEnvHit == 1) mouseInfo.details = "env_point";
 						else if (trackEnvHit == 2) mouseInfo.details = "env_segment";
 						else                       mouseInfo.details = "empty";
-						mouseInfo.track = NULL;
 					}
 
 					// Mouse cursor is in track lane
 					else if (mouseInfo.track)
 					{
 						mouseInfo.segment = "track";
-
-						// Check track lane for track envelope and item/take under mouse
-						int trackEnvHit = (IsLocked(TRACK_ENV)) ? 0 : this->IsMouseOverEnvelopeLineTrackLane(mouseInfo.track, height, offset, laneEnvs, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, &mouseInfo.envelope, &mouseInfo.envPointId);
 						mouseInfo.item = GetItemFromY(mouseY, mousePos, &mouseInfo.take, &mouseInfo.takeId);
 
-						MediaItem_Take* activeTake = GetActiveTake(mouseInfo.item);
-
-						// Check track lane for take envelope (only if take is active - REAPER doesn't allow editing of envelopes of inactive takes)
-						int takeEnvHit = 0;
-						int takeHeight = -666;
-						int takeOffset = -666;
-						if (trackEnvHit == 0 && mouseInfo.take && activeTake == mouseInfo.take && !IsLocked(TAKE_ENV))
-						{
-							if (takeHeight == -666)
-								takeHeight = GetTakeHeight(mouseInfo.take, NULL, 0, &takeOffset, true, height, offset);
-							takeEnvHit = this->IsMouseOverEnvelopeLineTake(mouseInfo.take, takeHeight, takeOffset, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, &mouseInfo.envelope, &mouseInfo.envPointId);
-						}
-
-						// Check for stretch markers (again, only active take)
+						int trackEnvHit      = 0;
+						int takeEnvHit       = 0;
 						int stretchMarkerHit = -1;
-						if (trackEnvHit == 0 && takeEnvHit == 0 && mouseInfo.take && activeTake == mouseInfo.take && !IsLocked(STRETCH_MARKERS) && !IsItemLocked(mouseInfo.item) && !IsLocked(ITEM_FULL))
+						if (!(m_mode & BR_MouseInfo::MODE_IGNORE_ALL_TRACK_LANE_ELEMENTS_BUT_ITEMS))
 						{
-							if (takeHeight == -666)
-								takeHeight = GetTakeHeight(mouseInfo.take, NULL, 0, &takeOffset, true, height, offset);
-							stretchMarkerHit = this->IsMouseOverStretchMarker(mouseInfo.item, mouseInfo.take, takeHeight, takeOffset, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom);
+							// Check track lane for track envelope
+							MediaItem_Take* activeTake = GetActiveTake(mouseInfo.item);
+							trackEnvHit = (IsLocked(TRACK_ENV)) ? 0 : this->IsMouseOverEnvelopeLineTrackLane(mouseInfo.track, height, offset, laneEnvs, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, &mouseInfo.envelope, &mouseInfo.envPointId);
+
+							// Check track lane for take envelope (only if take is active - REAPER doesn't allow editing of envelopes of inactive takes)
+							int takeHeight = -666;
+							int takeOffset = -666;
+							if (trackEnvHit == 0 && mouseInfo.take && activeTake == mouseInfo.take && !IsLocked(TAKE_ENV))
+							{
+								if (takeHeight == -666)
+									takeHeight = GetTakeHeight(mouseInfo.take, NULL, 0, &takeOffset, true, height, offset);
+								takeEnvHit = this->IsMouseOverEnvelopeLineTake(mouseInfo.take, takeHeight, takeOffset, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, &mouseInfo.envelope, &mouseInfo.envPointId);
+							}
+
+							// Check for stretch markers (again, only active take)
+							stretchMarkerHit = -1;
+							if (trackEnvHit == 0 && takeEnvHit == 0 && mouseInfo.take && activeTake == mouseInfo.take && !IsLocked(STRETCH_MARKERS) && !IsItemLocked(mouseInfo.item) && !IsLocked(ITEM_FULL))
+							{
+								if (takeHeight == -666)
+									takeHeight = GetTakeHeight(mouseInfo.take, NULL, 0, &takeOffset, true, height, offset);
+								stretchMarkerHit = this->IsMouseOverStretchMarker(mouseInfo.item, mouseInfo.take, takeHeight, takeOffset, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom);
+							}
 						}
 
 						// Track envelope takes priority
@@ -911,13 +899,8 @@ bool BR_MouseInfo::GetContextMIDI (POINT p, HWND hwnd, BR_MouseInfo::MouseInfo& 
 			// Check others
 			else
 			{
-				int viewHeight = r.bottom - r.top;
-				int ccFullHeight = 0;
-
-				for (int i = 0; i < midiEditor.CountCCLanes(); ++i)
-					ccFullHeight += midiEditor.GetCCLaneHeight (i);
-				if (cursorSegment == MIDI_WND_KEYBOARD)
-					ccFullHeight += SCROLLBAR_W - 3;   // envelope selector is not completely aligned with CC lane
+				int viewHeight = abs(r.bottom - r.top);
+				int ccFullHeight = midiEditor.GetCCLanesFullheight(cursorSegment == MIDI_WND_KEYBOARD);
 
 				// Over CC lanes
 				if (p.y > (viewHeight - ccFullHeight))
@@ -939,9 +922,9 @@ bool BR_MouseInfo::GetContextMIDI (POINT p, HWND hwnd, BR_MouseInfo::MouseInfo& 
 						{
 							mouseInfo.ccLane = midiEditor.GetCCLane(i);
 							mouseInfo.ccLaneId = i;
-							m_ccLaneClickPoint.y   = ccStart + 5;
-							m_ccLaneClickPoint.x   = (cursorSegment == MIDI_WND_KEYBOARD) ? (r.left - r.right) : 0;
-							m_ccLaneClickPointHwnd = (cursorSegment == MIDI_WND_KEYBOARD) ? segmentHwnd        : NULL;
+							m_ccLaneClickPoint.y = ccStart + MIDI_CC_LANE_CLICK_Y_OFFSET;
+							m_ccLaneClickPoint.x = 0;
+							m_midiEditorPianoWnd = (cursorSegment == MIDI_WND_KEYBOARD) ? segmentHwnd        : NULL;
 
 							// Get CC value at Y position
 							if (cursorSegment == MIDI_WND_NOTEVIEW)
@@ -1107,9 +1090,7 @@ bool BR_MouseInfo::GetContextMIDIInline (BR_MouseInfo::MouseInfo& mouseInfo, int
 			mouseInfo.pianoRollMode = midiEditor.GetPianoRoll();
 
 		// Get heights of various elements
-		int ccFullHeight = 0;
-		for (int i = 0; i < midiEditor.CountCCLanes(); ++i)
-			ccFullHeight +=midiEditor.GetCCLaneHeight(i);
+		int ccFullHeight = midiEditor.GetCCLanesFullheight(false);
 
 		int pianoRollFullHeight = editorHeight - ccFullHeight;
 		if (pianoRollFullHeight < INLINE_MIDI_MIN_NOTEVIEW_H)
@@ -1132,12 +1113,12 @@ bool BR_MouseInfo::GetContextMIDIInline (BR_MouseInfo::MouseInfo& mouseInfo, int
 
 				if (mouseY >= ccStart && mouseY < ccEnd)
 				{
-					mouseInfo.ccLane = midiEditor.GetCCLane(i);
+					mouseInfo.ccLane   = midiEditor.GetCCLane(i);
 					mouseInfo.ccLaneId = i;
 
-					m_ccLaneClickPoint.y   = ccStart + 2; // account for different hit-point
-					m_ccLaneClickPoint.x   = mouseDisplayX;
-					m_ccLaneClickPointHwnd = NULL;
+					m_ccLaneClickPoint.y = ccStart + INLINE_MIDI_CC_LANE_CLICK_Y_OFFSET;
+					m_ccLaneClickPoint.x = mouseDisplayX;
+					m_midiEditorPianoWnd = NULL;
 
 					// Get CC value at Y position
 					ccStart += INLINE_MIDI_LANE_DIVIDER_H;
@@ -1167,7 +1148,7 @@ bool BR_MouseInfo::GetContextMIDIInline (BR_MouseInfo::MouseInfo& mouseInfo, int
 			double arrangeStartTime, arrangeEndTime;
 			double itemStartTime = GetMediaItemInfo_Value(mouseInfo.item, "D_POSITION");
 			double itemEndTime   = GetMediaItemInfo_Value(mouseInfo.item, "D_LENGTH") + itemStartTime;
-			GetSet_ArrangeView2(NULL, false, r.left, r.right-SCROLLBAR_W, &arrangeStartTime, &arrangeEndTime);
+			GetSetArrangeView(NULL, false, &arrangeStartTime, &arrangeEndTime);
 
 			int itemStartX = (itemStartTime <= arrangeStartTime) ? (0)                                                                  : ((int)((itemStartTime - arrangeStartTime) * midiEditor.GetHZoom()));
 			int itemEndX   = (itemEndTime   >  arrangeEndTime  ) ? ((int)((arrangeEndTime - arrangeStartTime) * midiEditor.GetHZoom())) : ((int)((itemEndTime   - arrangeStartTime) * midiEditor.GetHZoom()));
@@ -1207,7 +1188,7 @@ bool BR_MouseInfo::IsStretchMarkerVisible (MediaItem_Take* take, int id, double 
 	{
 		double stretchMarkerPos;
 		GetTakeStretchMarker(take, id, &stretchMarkerPos, NULL);
-		stretchMarkerPos = ItemTimeToProjectTime(item, stretchMarkerPos);
+		stretchMarkerPos = ItemTimeToProjectTime(item, stretchMarkerPos) / GetMediaItemTakeInfo_Value(take, "D_PLAYRATE");
 
 		double itemStart = GetMediaItemInfo_Value(item, "D_POSITION");
 		double itemEnd   = GetMediaItemInfo_Value(item, "D_LENGTH") + itemStart;
@@ -1236,8 +1217,9 @@ int BR_MouseInfo::IsMouseOverStretchMarker (MediaItem* item, MediaItem_Take* tak
 
 		if (CheckBoundsEx(mouseY, y0, y2))
 		{
+			double takePlayrate = GetMediaItemTakeInfo_Value(take, "D_PLAYRATE");
 			// Mouse is within stretch marker Y range, look for X axis of a closest stretch marker
-			int id = FindClosestStretchMarker(take, ProjectTimeToItemTime(item, mousePos));
+			int id = FindClosestStretchMarker(take, ProjectTimeToItemTime(item, mousePos) * takePlayrate);
 			if (id != -1)
 			{
 				int count = GetTakeNumStretchMarkers(take);
@@ -1246,7 +1228,7 @@ int BR_MouseInfo::IsMouseOverStretchMarker (MediaItem* item, MediaItem_Take* tak
 
 				double stretchMarkerPos;
 				GetTakeStretchMarker(take, id, &stretchMarkerPos, NULL);
-				stretchMarkerPos = ItemTimeToProjectTime(item, stretchMarkerPos) - arrangeStart; // convert to "displayed" time
+				stretchMarkerPos = ItemTimeToProjectTime(item, stretchMarkerPos / takePlayrate) - arrangeStart; // convert to "displayed" time
 
 				if (stretchMarkerPos > 0)
 				{
@@ -1276,6 +1258,7 @@ int BR_MouseInfo::IsMouseOverEnvelopeLine (BR_Envelope& envelope, int drawableEn
 
 	int mouseHit = 0;
 	int pointId  = -1;
+
 	// Check if mouse is in drawable part of envelope lane where line resides
 	if (mouseY >= yOffset && mouseY < yOffset + drawableEnvHeight)
 	{
@@ -1372,14 +1355,14 @@ int BR_MouseInfo::IsMouseOverEnvelopeLineTrackLane (MediaTrack* track, int track
 	}
 
 	// Find envelope lane in track lane at mouse cursor and check mouse cursor against it
-	int overlapLimit,trackGapTop, trackGapBottom;
-	GetConfig("env_ol_minh", overlapLimit);
-	GetTrackGap(trackHeight, &trackGapTop, &trackGapBottom);
-
-	int envLaneFull = trackHeight - trackGapTop - trackGapBottom;
 	int envLaneCount = (int)trackLaneEnvs.size();
 	if (envLaneCount > 0)
 	{
+		int overlapLimit,trackGapTop, trackGapBottom;
+		GetConfig("env_ol_minh", overlapLimit);
+		GetTrackGap(trackHeight, &trackGapTop, &trackGapBottom);
+
+		int envLaneFull = trackHeight - trackGapTop - trackGapBottom;
 		bool envelopesOverlapping = (overlapLimit >= 0 && envLaneFull / envLaneCount < overlapLimit) ? (true) : (false);
 
 		// Each envelope has it's own lane, find the right one
@@ -1440,24 +1423,67 @@ int BR_MouseInfo::IsMouseOverEnvelopeLineTake (MediaItem_Take* take, int takeHei
 	int mouseHit = 0;
 	TrackEnvelope* envelopeUnderMouse = NULL;
 
-	takeHeight -= 2*ENV_GAP;
-	takeOffset += ENV_GAP;
-
-	for (int i = 0; i < 4; ++i)
+	// Get all visible take envelopes
+	vector<TrackEnvelope*> envelopes;
+	int count = CountTakeEnvelopes(take);
+	for (int i = 0; i < count; ++i)
 	{
-		BR_EnvType type = VOLUME;    // gotcha: the order is important (it is the same reaper uses)
-		if      (i == 1) type = PAN;
-		else if (i == 2) type = MUTE;
-		else if (i == 3) type = PITCH;
+		TrackEnvelope* envelope = GetTakeEnvelope(take, i);
+		if (EnvVis(envelope, NULL))
+			envelopes.push_back(envelope);
+	}
 
-		BR_Envelope envelope(take, type);
-		if (envelope.IsVisible())
-			mouseHit = this->IsMouseOverEnvelopeLine(envelope, takeHeight, takeOffset, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, pointUnderMouse);
+	// Find envelope under mouse cursor
+	int envelopeCount = (int)envelopes.size();
+	if (envelopeCount > 0)
+	{
+		int overlapLimit;
+		GetConfig("env_ol_minh", overlapLimit);
+		bool envelopesOverlapping = (overlapLimit >= 0 && takeHeight / envelopeCount < overlapLimit) ? (true) : (false);
 
-		if (mouseHit != 0)
+		// Each envelope has it's own lane, find the right one
+		if (!envelopesOverlapping)
 		{
-			envelopeUnderMouse = envelope.GetPointer();
-			break;
+			int envLaneH = takeHeight / envelopeCount;
+			int envHeight = envLaneH - 2*ENV_GAP;
+			if (envHeight > ENV_LINE_WIDTH)
+			{
+				for (int i = 0; i < envelopeCount; ++i)
+				{
+					int envelopeStart = takeOffset + ENV_GAP + envLaneH * i;
+					int envelopeEnd = envelopeStart + envLaneH;
+					if (mouseY >= envelopeStart && mouseY < envelopeEnd)
+					{
+						int envOffset = takeOffset + ENV_GAP + + envLaneH * i;
+						BR_Envelope envelope(envelopes[i]);
+
+						mouseHit = this->IsMouseOverEnvelopeLine(envelope, envHeight, envOffset, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, pointUnderMouse);
+						if (mouseHit != 0)
+							envelopeUnderMouse = envelope.GetPointer();
+						break;
+					}
+				}
+			}
+		}
+		// Envelopes are overlapping each other, search them all
+		else
+		{
+			int envHeight = takeHeight - 2*ENV_GAP;
+			if (envHeight > ENV_LINE_WIDTH)
+			{
+				for (int i = 0; i < envelopeCount; ++i)
+				{
+					int envOffset = takeOffset + ENV_GAP;
+					BR_Envelope envelope(envelopes[i]);
+
+					mouseHit = this->IsMouseOverEnvelopeLine(envelope, envHeight, envOffset, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, pointUnderMouse);
+					if (mouseHit != 0)
+					{
+						envelopeUnderMouse = envelope.GetPointer();
+						break;
+					}
+				}
+			}
 		}
 	}
 
@@ -1541,6 +1567,14 @@ void BR_MouseInfo::GetTrackOrEnvelopeFromY (int y, TrackEnvelope** _envelope, Me
 		// Get first envelope's lane hwnd and cycle through the rest
 		HWND hwnd = ::GetWindow(GetTcpTrackWnd(track), GW_HWNDNEXT);
 		MediaTrack* nextTrack = CSurf_TrackFromID(1 + CSurf_TrackToID(track, false), false);
+		while (true)
+		{
+			if (!nextTrack || GetMediaTrackInfo_Value(nextTrack, "B_SHOWINTCP"))
+				break;
+			else
+				nextTrack = CSurf_TrackFromID(1 + CSurf_TrackToID(nextTrack, false), false);
+		}
+
 		int count = CountTrackEnvelopes(track);
 		for (int i = 0; i < count; ++i)
 		{
@@ -1562,6 +1596,8 @@ void BR_MouseInfo::GetTrackOrEnvelopeFromY (int y, TrackEnvelope** _envelope, Me
 			}
 
 			hwnd = ::GetWindow(hwnd, GW_HWNDNEXT);
+			if (!hwnd)
+				break;
 		}
 
 		if (!yInTrack)

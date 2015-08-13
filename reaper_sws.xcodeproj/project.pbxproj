@@ -741,7 +741,7 @@
 		98E89AC60FC9C05C00A56C44 /* TrackEnvelope.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TrackEnvelope.cpp; path = ObjectState/TrackEnvelope.cpp; sourceTree = "<group>"; };
 		98E89AC70FC9C05C00A56C44 /* TrackEnvelope.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TrackEnvelope.h; path = ObjectState/TrackEnvelope.h; sourceTree = "<group>"; };
 		98E8A0AF0F9123F900FC657D /* sws_util.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = sws_util.mm; sourceTree = "<group>"; };
-		D2AAC0630554660B00DB518D /* reaper_sws.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = reaper_sws.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		D2AAC0630554660B00DB518D /* reaper_sws_extension.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = reaper_sws_extension.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -868,7 +868,7 @@
 		1AB674ADFE9D54B511CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				D2AAC0630554660B00DB518D /* reaper_sws.dylib */,
+				D2AAC0630554660B00DB518D /* reaper_sws_extension.dylib */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1498,7 +1498,7 @@
 			);
 			name = reaper_sws;
 			productName = reaper_sws;
-			productReference = D2AAC0630554660B00DB518D /* reaper_sws.dylib */;
+			productReference = D2AAC0630554660B00DB518D /* reaper_sws_extension.dylib */;
 			productType = "com.apple.product-type.library.dynamic";
 		};
 /* End PBXNativeTarget section */
@@ -1540,13 +1540,13 @@
 			files = (
 			);
 			inputPaths = (
-				"$(TARGET_BUILD_DIR)/reaper_sws.dylib",
+				"$(TARGET_BUILD_DIR)/reaper_sws_extension.dylib",
 			);
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ \"$CONFIGURATION\" == \"Debug\" ]\nthen\n  cp $TARGET_BUILD_DIR/reaper_sws.dylib ~/Library/Application\\ Support/REAPER/UserPlugins/\n  perl reascript_python.pl > ~/Library/Application\\ Support/REAPER/Scripts/sws_python32.py\n  perl reascript_python.pl -x64 > ~/Library/Application\\ Support/REAPER/Scripts/sws_python64.py\n  cp Install/sws_osx_install.py ~/Library/Application\\ Support/REAPER/Scripts/sws_python.py\nfi\n";
+			shellScript = "if [ \"$CONFIGURATION\" == \"Debug\" ]\nthen\n  rm -f ~/Library/Application\\ Support/REAPER/UserPlugins/reaper_sws.dylib\n  cp $TARGET_BUILD_DIR/reaper_sws_extension.dylib /Library/Application\\ Support/REAPER/UserPlugins/\n  perl reascript_python.pl > ~/Library/Application\\ Support/REAPER/Scripts/sws_python32.py\n  perl reascript_python.pl -x64 > ~/Library/Application\\ Support/REAPER/Scripts/sws_python64.py\n  cp Install/sws_osx_install.py ~/Library/Application\\ Support/REAPER/Scripts/sws_python.py\nfi\n";
 		};
 		22C126E6115FE57000663F0C /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1563,7 +1563,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "php ../WDL/swell/mac_resgen.php sws_extension.rc";
+			shellScript = "php ../WDL/swell/mac_resgen.php sws_extension.rc\nphp reascript_vararg.php > reascript_vararg.h";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -1790,7 +1790,7 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				INSTALL_PATH = /usr/local/lib;
-				PRODUCT_NAME = reaper_sws;
+				PRODUCT_NAME = reaper_sws_extension;
 			};
 			name = Debug;
 		};
@@ -1804,7 +1804,7 @@
 				GCC_MODEL_TUNING = G5;
 				INSTALL_PATH = /Applications/REAPER/REAPER.app/Contents/Plugins;
 				OBJROOT = "$(SYMROOT)";
-				PRODUCT_NAME = reaper_sws;
+				PRODUCT_NAME = reaper_sws_extension;
 				SYMROOT = build;
 			};
 			name = Release;
@@ -1894,7 +1894,7 @@
 				GCC_MODEL_TUNING = G5;
 				INSTALL_PATH = /Applications/REAPER/REAPER.app/Contents/Plugins;
 				OBJROOT = "$(SYMROOT)";
-				PRODUCT_NAME = reaper_sws;
+				PRODUCT_NAME = reaper_sws_extension;
 				SYMROOT = build;
 			};
 			name = "Release x86_64";

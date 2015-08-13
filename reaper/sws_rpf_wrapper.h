@@ -2,7 +2,7 @@
 / sws_rpf_wrapper.h
 /
 / Copyright (c) 2011 Tim Payne (SWS)
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -42,6 +42,8 @@ REAPER_EXTRA_API_DECL BOOL (WINAPI *CoolSB_GetScrollInfo)(HWND hwnd, int nBar, L
 REAPER_EXTRA_API_DECL int (WINAPI *CoolSB_SetScrollInfo)(HWND hwnd, int nBar, LPSCROLLINFO lpsi, BOOL fRedraw);
 REAPER_EXTRA_API_DECL void (*MainThread_LockTracks)();
 REAPER_EXTRA_API_DECL void (*MainThread_UnlockTracks)();
+REAPER_EXTRA_API_DECL bool (*OnColorThemeOpenFile)(const char*);
+
 
 // Avoid VWnd collisions!
 #define WDL_VirtualWnd_ScaledBlitBG WDL_VirtualWnd_ScaledBlitBG_fptr

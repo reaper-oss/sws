@@ -70,7 +70,8 @@ public:
 	void showGrooveDialog();
 	GrooveDialog* GetGrooveDialog() { return mGrooveDialog; }
 
-	static void Init(reaper_plugin_info_t *rec);
+	static void Init();
+	static void Exit();
 
 private:
 	GrooveTemplateHandler();

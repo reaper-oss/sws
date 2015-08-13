@@ -2,7 +2,7 @@
 / ItemParams.cpp
 /
 / Copyright (c) 2010 Tim Payne (SWS)
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -10,10 +10,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -29,6 +29,7 @@
 #include "stdafx.h"
 #include "ItemParams.h"
 #include "TrackSel.h"
+#include "../Breeder/BR_Util.h"
 #include "../reaper/localize.h"
 
 
@@ -102,7 +103,7 @@ void LoopItemSection(COMMAND_T*)
 void MoveItemLeftToCursor(COMMAND_T* = NULL)
 {
 	double dEditCur = GetCursorPosition();
-	// 
+	//
 	for (int i = 1; i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
@@ -122,7 +123,7 @@ void MoveItemLeftToCursor(COMMAND_T* = NULL)
 void MoveItemRightToCursor(COMMAND_T* = NULL)
 {
 	double dEditCur = GetCursorPosition();
-	// 
+	//
 	for (int i = 1; i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
@@ -155,7 +156,7 @@ void InsertFromTrackName(COMMAND_T*)
 	char* pSlash = strrchr(cPath, PATH_SLASH_CHAR);
 	if (pSlash)
 		pSlash[1] = 0;
-	
+
 	double dCurPos = GetCursorPosition();
 	for (int i = 0; i < tracks.GetSize(); i++)
 	{
@@ -183,22 +184,15 @@ void InsertFromTrackName(COMMAND_T*)
 		GetSetMediaTrackInfo((MediaTrack*)tracks.Get(i), "I_SELECTED", &g_i1);
 }
 
-double QuantizeTime(double dTime, double dGrid, double dMin, double dMax)
+double QuantizeTime(double dTime, double dMin, double dMax)
 {
-	double dBeatPos = TimeMap_timeToQN(dTime);
-	dBeatPos += dGrid / 2.0;
-	dBeatPos -= fmod(dBeatPos, dGrid);
-	double dNewTime = TimeMap_QNToTime(dBeatPos);
+	double dNewTime = GetClosestGridDiv(dTime);
 	while (dNewTime <= dMin)
-	{
-		dBeatPos += dGrid;
-		dNewTime = TimeMap_QNToTime(dBeatPos);
-	}
+		dNewTime = GetNextGridDiv(dNewTime);
+
 	while (dNewTime >= dMax)
-	{
-		dBeatPos -= dGrid;
-		dNewTime = TimeMap_QNToTime(dBeatPos);
-	}
+		dNewTime = GetPrevGridDiv(dNewTime);
+
 	return dNewTime;
 }
 
@@ -210,7 +204,6 @@ double QuantizeTime(double dTime, double dGrid, double dMin, double dMax)
 void QuantizeItemEdges(COMMAND_T* t)
 {
 	// Eventually a dialog?  for now quantize to grid
-	double div = *(double*)GetConfigVar("projgriddiv");
 	for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
 	{
 		MediaItem* item = GetSelectedMediaItem(NULL, i);
@@ -226,23 +219,23 @@ void QuantizeItemEdges(COMMAND_T* t)
 		switch(t->user)
 		{
 		case 1:
-			dStart = QuantizeTime(dStart, div, -DBL_MAX, dEnd);
+			dStart = QuantizeTime(dStart, -DBL_MAX, dEnd);
 			break;
 		case 2:
-			dStart = QuantizeTime(dStart, div, -DBL_MAX, dEnd);
+			dStart = QuantizeTime(dStart, -DBL_MAX, dEnd);
 			dLen   = dEnd - dStart;
 			break;
 		case 3:
-			dEnd = QuantizeTime(dEnd, div, dStart, DBL_MAX);
+			dEnd = QuantizeTime(dEnd, dStart, DBL_MAX);
 			dStart = dEnd - dLen;
 			break;
 		case 4:
-			dEnd = QuantizeTime(dEnd, div, dStart, DBL_MAX);
+			dEnd = QuantizeTime(dEnd, dStart, DBL_MAX);
 			dLen = dEnd - dStart;
 			break;
 		case 5:
-			dStart = QuantizeTime(dStart, div, -DBL_MAX, dEnd);
-			dEnd = QuantizeTime(dEnd, div, dStart, DBL_MAX);
+			dStart = QuantizeTime(dStart, -DBL_MAX, dEnd);
+			dEnd = QuantizeTime(dEnd, dStart, DBL_MAX);
 			dLen = dEnd - dStart;
 			break;
 		}
@@ -321,7 +314,7 @@ void NudgePlayrate(COMMAND_T *t)
 				newRate = rate * pow(2.0, 1.0/12.0 / (double)t->user);
 			GetSetMediaItemTakeInfo(take, "D_PLAYRATE", &newRate);
 			GetSetMediaItemTakeInfo(take, "B_PPITCH", &g_bFalse);
-			
+
 			// Take into account the snap offset
 			if (snapOffset != 0.0)
 			{
@@ -351,7 +344,7 @@ void SetItemChannels(COMMAND_T* t)
 		bool bWasStereo = false;
 		// Ignore empty takes
 		if (take)
-		{	
+		{
 			// Find max # of channels in all takes
 			int iMaxNumChannels = 2;
 			for (int j = 0; j < GetMediaItemNumTakes(item); j++)
@@ -489,7 +482,7 @@ void SetItemLen(COMMAND_T* t)
 	static double dLen = 1.0;
 	char reply[50];
 	sprintf(reply, "%f", dLen);
-	if (GetUserInputs(__LOCALIZE("Set selected items length","sws_mbox"), 1, __LOCALIZE("New item length (s)","sws_mbox"), reply, 50))
+	if (GetUserInputs(__LOCALIZE("Set selected items length","sws_mbox"), 1, __LOCALIZE("New items length","sws_mbox"), reply, 50))
 	{
 		dLen = atof(reply);
 		if (dLen <= 0.0)
@@ -504,14 +497,14 @@ void SetItemLen(COMMAND_T* t)
 }
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
-static COMMAND_T g_commandTable[] = 
+static COMMAND_T g_commandTable[] =
 {
-	{ { DEFACCEL, "SWS: Toggle mute of items on selected track(s)" },			"SWS_TOGITEMMUTE",		TogItemMute,			},
-	{ { DEFACCEL, "SWS: Delete all items on selected track(s)" },				"SWS_DELALLITEMS",		DelAllItems,			},
-	{ { DEFACCEL, "SWS: Loop section of selected item(s)" },					"SWS_LOOPITEMSECTION",	LoopItemSection,		},
-	{ { DEFACCEL, "SWS: Move selected item(s) left edge to edit cursor" },		"SWS_ITEMLEFTTOCUR",	MoveItemLeftToCursor,	},
-	{ { DEFACCEL, "SWS: Move selected item(s) right edge to edit cursor" },		"SWS_ITEMRIGHTTOCUR",	MoveItemRightToCursor,	},
-	{ { DEFACCEL, "SWS: Insert file matching selected track(s) name" },			"SWS_INSERTFROMTN",		InsertFromTrackName,	},
+	{ { DEFACCEL, "SWS: Toggle mute of items on selected tracks" },				"SWS_TOGITEMMUTE",		TogItemMute,			},
+	{ { DEFACCEL, "SWS: Delete all items on selected tracks" },					"SWS_DELALLITEMS",		DelAllItems,			},
+	{ { DEFACCEL, "SWS: Loop section of selected items" },						"SWS_LOOPITEMSECTION",	LoopItemSection,		},
+	{ { DEFACCEL, "SWS: Move selected items left edge to edit cursor" },		"SWS_ITEMLEFTTOCUR",	MoveItemLeftToCursor,	},
+	{ { DEFACCEL, "SWS: Move selected items right edge to edit cursor" },		"SWS_ITEMRIGHTTOCUR",	MoveItemRightToCursor,	},
+	{ { DEFACCEL, "SWS: Insert file matching selected tracks name" },			"SWS_INSERTFROMTN",		InsertFromTrackName,	},
 	{ { DEFACCEL, "SWS: Quantize item's start to grid (keep length)" },			"SWS_QUANTITESTART2",	QuantizeItemEdges, NULL, 1 },
 	{ { DEFACCEL, "SWS: Quantize item's start to grid (change length)" },		"SWS_QUANTITESTART1",	QuantizeItemEdges, NULL, 2 },
 	{ { DEFACCEL, "SWS: Quantize item's end to grid (keep length)" },			"SWS_QUANTITEEND2",		QuantizeItemEdges, NULL, 3 },

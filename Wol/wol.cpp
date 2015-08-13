@@ -1,8 +1,9 @@
 /******************************************************************************
 / wol.cpp
 /
-/ Copyright (c) 2014 wol
+/ Copyright (c) 2014-2015 wol
 / http://forum.cockos.com/member.php?u=70153
+/ http://github.com/Jeff0S/sws
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -50,6 +51,7 @@ static COMMAND_T g_commandTable[] =
 		{ { DEFACCEL, "SWS/wol: Set selected envelope height to maximum" }, "WOL_SETSELENVHMAX", SetVerticalZoomSelectedEnvelope, NULL, 2 },
 		{ { DEFACCEL, "SWS/wol: Adjust selected envelope height (MIDI CC relative/mousewheel)" }, "WOL_ADJSELENVH", NULL, NULL, 0, NULL, 0, AdjustSelectedEnvelopeOrTrackHeight, },
 		{ { DEFACCEL, "SWS/wol: Adjust selected envelope or last touched track height (MIDI CC relative/mousewheel)" }, "WOL_ADJSELENVTRH", NULL, NULL, 1, NULL, 0, AdjustSelectedEnvelopeOrTrackHeight, },
+		{ { DEFACCEL, "SWS/wol: Adjust envelope or track height under mouse cursor (MIDI CC relative/mousewheel)" }, "WOL_ADJENVTRHMOUSE", NULL, NULL, 0, NULL, 0, AdjustEnvelopeOrTrackHeightUnderMouse, },
 		{ { DEFACCEL, "SWS/wol: Toggle enable extended zoom for envelopes in track lane" }, "WOL_TENEXTZENVTRL", ToggleEnableEnvelopesExtendedZoom, NULL, 0, IsEnvelopesExtendedZoomEnabled },
 		{ { DEFACCEL, "SWS/wol: Toggle enable envelope overlap for envelopes in track lane" }, "WOL_TENENVOLENVTRL", ToggleEnableEnvelopeOverlap, NULL, 0, IsEnvelopeOverlapEnabled },
 		{ { DEFACCEL, "SWS/wol: Force overlap for selected envelope in track lane in its track height" }, "WOL_FENVOL", ForceEnvelopeOverlap, NULL, 0 },

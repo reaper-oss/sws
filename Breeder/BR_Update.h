@@ -3,7 +3,7 @@
 /
 / Copyright (c) 2013 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
-/ https://code.google.com/p/sws-extension
+/ http://github.com/Jeff0S/sws
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -28,9 +28,9 @@
 #pragma once
 
 /******************************************************************************
-* Call on startup to initiate search                                          *
+* Version check init/exit                                                     *
 ******************************************************************************/
-void VersionCheckInit ();
+int VersionCheckInitExit (bool init);
 
 /******************************************************************************
 * Command and preferences (used from About dialog)                            *
@@ -59,7 +59,7 @@ struct BR_Version
 class BR_SearchObject
 {
 public:
-	BR_SearchObject (bool startup = false);
+	explicit BR_SearchObject (bool startup = false);
 	~BR_SearchObject ();
 	int GetStatus (BR_Version* official, BR_Version* beta);
 	double GetProgress ();

@@ -2,7 +2,7 @@
 / Zoom.cpp
 /
 / Copyright (c) 2009 Tim Payne (SWS)
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -58,6 +58,7 @@ void SetHorizPos(HWND hwnd, double dPos, double dOffset = 0.0)
 		si.nPos -= (int)(dOffset * si.nPage);
 	CoolSB_SetScrollInfo(hwnd, SB_HORZ, &si, true);
 	SendMessage(hwnd, WM_HSCROLL, SB_THUMBPOSITION, NULL);
+	UpdateTimeline();
 }
 
 void SetVertPos(HWND hwnd, int iTrack, bool bPixels, int iExtra = 0) // 1 based track index!
@@ -73,9 +74,12 @@ void SetVertPos(HWND hwnd, int iTrack, bool bPixels, int iExtra = 0) // 1 based 
 	else
 		si.nPos = iExtra;
 
+	MediaTrack* masterTrack = GetMasterTrack(NULL);
 	for (int i = 0; i <= GetNumTracks(); i++)
 	{
-		int iHeight = *(int*)GetSetMediaTrackInfo(CSurf_TrackFromID(i, false), "I_WNDH", NULL);
+		MediaTrack* track = CSurf_TrackFromID(i, false);
+		int iHeight = *(int*)GetSetMediaTrackInfo(track, "I_WNDH", NULL);
+		if (track == masterTrack && TcpVis(track)) iHeight += GetMasterTcpGap();
 		if (!bPixels && i < iTrack)
 			si.nPos += iHeight;
 		si.nMax += iHeight;
@@ -91,9 +95,10 @@ void SetVertPos(HWND hwnd, int iTrack, bool bPixels, int iExtra = 0) // 1 based 
 	SendMessage(hwnd, WM_VSCROLL, si.nPos << 16 | SB_THUMBPOSITION, NULL);
 }
 
-void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers)
+void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers, bool includeEnvelopes)
 {
 	HWND hTrackView = GetTrackWnd();
+	MediaTrack* masterTrack = GetMasterTrack(NULL);
 	if (!hTrackView || iNum == 0)
 		return;
 
@@ -101,6 +106,7 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers)
 	RECT rect;
 	GetClientRect(hTrackView, &rect);
 	int iTotalHeight = rect.bottom;
+	int lastTrackId = iFirst + iNum - (includeEnvelopes ? 1 : 2);
 
 	if (bMinimizeOthers)
 	{
@@ -119,26 +125,32 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers)
 		{
 			MediaTrack* tr = CSurf_TrackFromID(i+iFirst, false);
 			if (bZoomed[i])
+			{
 				iZoomed++;
+				if (tr == masterTrack && TcpVis(tr) && iNum > 1) iNotZoomedSize += GetMasterTcpGap();
+			}
 			else
 			{
-				int trackHeight = GetTrackHeightFromVZoomIndex(tr, 0);
-				trackHeight += CountTrackEnvelopePanels(tr) * GetEnvHeightFromTrackHeight(trackHeight);
-
-				iNotZoomedSize += trackHeight;
+				if (TcpVis(tr))
+				{
+					int trackHeight = GetTrackHeightFromVZoomIndex(tr, 0);
+					trackHeight += CountTrackEnvelopePanels(tr) * GetEnvHeightFromTrackHeight(trackHeight);
+					iNotZoomedSize += trackHeight;
+				}
 			}
 		}
 		// Pixels we have to work with will all the sel tracks and their envelopes
 		iTotalHeight -= iNotZoomedSize;
 		int iEachHeight = iTotalHeight / iZoomed;
 		int minTrackHeight = SNM_GetIconTheme()->tcp_small_height;
+		int iLanesHeight = 0;
 		while (true)
 		{
-			int iLanesHeight = 0;
+			iLanesHeight = 0;
 			// Calc envelope height
 			for (int i = 0; i < iNum; i++)
 			{
-				if (bZoomed[i] && i + 1 != iNum) // don't check envelope lanes height for the last track
+				if (bZoomed[i] && i + iFirst <= lastTrackId) // don't check envelope lanes height for the last track if includeEnvelopes == true
 					iLanesHeight += CountTrackEnvelopePanels(CSurf_TrackFromID(i + iFirst, false)) * GetEnvHeightFromTrackHeight(iEachHeight);
 			}
 			if (iEachHeight * iZoomed + iLanesHeight <= iTotalHeight)
@@ -154,17 +166,54 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers)
 				break;
 		}
 
-		if (iEachHeight >= minTrackHeight)
+		// Check track is over minimum and make sure last track fills the TCP exactly to the bottom
+		int leftOverHeight = 0;
+		if (iEachHeight < minTrackHeight)
 		{
-			for (int i = 0; i < iNum; i++)
-				if (bZoomed[i])
-					GetSetMediaTrackInfo(CSurf_TrackFromID(i+iFirst, false), "I_HEIGHTOVERRIDE", &iEachHeight);
-			TrackList_AdjustWindows(false);
-			UpdateTimeline();
+			iEachHeight = minTrackHeight;
 		}
+		else
+		{
+			leftOverHeight = iTotalHeight - (iEachHeight * iZoomed) - iLanesHeight;
+			if (iEachHeight + leftOverHeight >= (int) (iEachHeight * 1.5)) // if leftover height is to big, just leave it cropped (this is the same mechanism REAPER uses for take heights within the item)
+				leftOverHeight = 0;
+
+		}
+
+		for (int i = 0; i < iNum; i++)
+		{
+			if (bZoomed[i])
+			{
+				if (i + 1 == iNum)
+					iEachHeight +=leftOverHeight;
+				GetSetMediaTrackInfo(CSurf_TrackFromID(i+iFirst, false), "I_HEIGHTOVERRIDE", &iEachHeight);
+			}
+		}
+		TrackList_AdjustWindows(false);
+		UpdateTimeline();
 	}
 	else
 	{
+		vector<vector<int> > envelopeHeights;
+		for (int i = 0; i < iNum; i++)
+		{
+			if (i+iFirst <= lastTrackId) // don't check envelope lanes height for the last track if includeEnvelopes == true
+			{
+				vector<int> tmp;
+				envelopeHeights.push_back(tmp);
+				MediaTrack* tr = CSurf_TrackFromID(i+iFirst, false);
+				if (TcpVis(tr))
+				{
+					for (int j = 0; j < CountTrackEnvelopes(tr); j++)
+					{
+						BR_Envelope envelope(GetTrackEnvelope(tr, j));
+						if (envelope.IsInLane())
+							envelopeHeights.back().push_back(envelope.GetLaneHeight());
+					}
+				}
+			}
+		}
+
 		int iZoom = VZOOM_RANGE+1;
 		int iHeight;
 		do
@@ -174,11 +223,22 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers)
 			for (int i = 0; i < iNum; i++)
 			{
 				MediaTrack* tr = CSurf_TrackFromID(i+iFirst, false);
-				int trackHeight = GetTrackHeightFromVZoomIndex(tr, iZoom);
-				if (i + 1 != iNum) // don't check envelope lanes height for the last track
-					 trackHeight += CountTrackEnvelopePanels(tr) * GetEnvHeightFromTrackHeight(trackHeight);
-				iHeight += trackHeight;
+				if (TcpVis(tr))
+				{
+					int trackHeight = GetTrackHeightFromVZoomIndex(tr, iZoom);
 
+					int envHeight = 0;
+					if (i < (int)envelopeHeights.size())
+					{
+						for (size_t j = 0; j < envelopeHeights[i].size(); j++)
+						{
+							int h = envelopeHeights[i][j];
+							envHeight += (h != 0) ? h : GetEnvHeightFromTrackHeight(trackHeight);
+						}
+					}
+					iHeight += trackHeight + envHeight;
+					if (tr == masterTrack && TcpVis(tr) && iNum > 1) iHeight += GetMasterTcpGap();
+				}
 			}
 		} while (iHeight > iTotalHeight && iZoom > 0);
 
@@ -190,11 +250,12 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers)
 		UpdateTimeline();
 	}
 
+
 	SetVertPos(hTrackView, iFirst, false);
 }
 
 // iOthers == 0 nothing, 1 minimize, 2 hide from TCP
-void VertZoomSelTracks(int iOthers)
+void VertZoomSelTracks(int iOthers, bool includeEnvelopes)
 {
 	// Find first and last selected tracks
 	int iFirstSel = -1;
@@ -226,12 +287,12 @@ void VertZoomSelTracks(int iOthers)
 				SetTrackVis(tr, GetTrackVis(tr) & 1);
 			}
 
-	VertZoomRange(iFirstSel, 1+iLastSel-iFirstSel, hbSelected.Get()+iFirstSel, iOthers == 1);
+	VertZoomRange(iFirstSel, 1+iLastSel-iFirstSel, hbSelected.Get()+iFirstSel, iOthers == 1, includeEnvelopes);
 	SaveZoomSlice(true);
 }
 
 // iOthers == 0 nothing, 1 minimize, 2 hide from TCP
-void VertZoomSelItems(int iOthers)
+void VertZoomSelItems(int iOthers, bool includeEnvelopes)
 {
 	// Find the tracks of the first and last selected item
 	int y1 = -1, y2 = -1;
@@ -265,14 +326,19 @@ void VertZoomSelItems(int iOthers)
 
 	// Hide tracks from TCP only after making sure there's actually something selected
 	if (iOthers == 2)
+	{
 		for (int i = 1; i <= GetNumTracks(); i++)
+		{
 			if (!hbVisOnTrack.Get()[i-1])
 			{
 				MediaTrack* tr = CSurf_TrackFromID(i, false);
 				SetTrackVis(tr, GetTrackVis(tr) & 1);
 			}
-
-	VertZoomRange(y1, 1+y2-y1, hbVisOnTrack.Get()+y1-1, iOthers == 1);
+		}
+		if (TcpVis(GetMasterTrack(NULL)))
+			SetTrackVis(GetMasterTrack(NULL), GetTrackVis(GetMasterTrack(NULL)) & 1);
+	}
+	VertZoomRange(y1, 1+y2-y1, hbVisOnTrack.Get()+y1-1, iOthers == 1, includeEnvelopes);
 	SaveZoomSlice(true);
 }
 
@@ -338,15 +404,15 @@ void HorizScroll(COMMAND_T* ctx)
 	SendMessage(hwnd, WM_HSCROLL, SB_THUMBPOSITION, NULL);
 }
 
-void ZoomToSelItems(COMMAND_T*)				{ VertZoomSelItems(0); HorizZoomSelItems(); }
-void ZoomToSelItemsMin(COMMAND_T* = NULL)	{ VertZoomSelItems(1);  HorizZoomSelItems(); }
-void VZoomToSelItems(COMMAND_T* = NULL)		{ VertZoomSelItems(0); }
-void VZoomToSelItemsMin(COMMAND_T* = NULL)	{ VertZoomSelItems(1); }
+void ZoomToSelItems(COMMAND_T* ct)			{ VertZoomSelItems(0, (int)ct->user == 0); HorizZoomSelItems(); }
+void ZoomToSelItemsMin(COMMAND_T* ct)		{ VertZoomSelItems(1, (int)ct->user == 0); HorizZoomSelItems(); }
+void VZoomToSelItems(COMMAND_T* ct)			{ VertZoomSelItems(0, (int)ct->user == 0); }
+void VZoomToSelItemsMin(COMMAND_T* ct)		{ VertZoomSelItems(1, (int)ct->user == 0); }
 void HZoomToSelItems(COMMAND_T* = NULL)		{ HorizZoomSelItems(); }
-void ZoomToSIT(COMMAND_T* = NULL)			{ VertZoomSelItems(0); HorizZoomSelItems(true); }
-void ZoomToSITMin(COMMAND_T* = NULL)		{ VertZoomSelItems(1); HorizZoomSelItems(true); }
-void FitSelTracks(COMMAND_T* = NULL)		{ VertZoomSelTracks(0); }
-void FitSelTracksMin(COMMAND_T* = NULL)		{ VertZoomSelTracks(1); }
+void ZoomToSIT(COMMAND_T* ct)				{ VertZoomSelItems(0, (int)ct->user == 0); HorizZoomSelItems(true); }
+void ZoomToSITMin(COMMAND_T* ct)			{ VertZoomSelItems(1, (int)ct->user == 0); HorizZoomSelItems(true); }
+void FitSelTracks(COMMAND_T* ct)			{ VertZoomSelTracks(0, (int)ct->user == 0); }
+void FitSelTracksMin(COMMAND_T* ct)			{ VertZoomSelTracks(1, (int)ct->user == 0); }
 
 class ArrangeState
 {
@@ -488,7 +554,7 @@ static bool g_bASToggled = false;
 
 // iType == 0 tracks, 1 items or time sel, 2 just items, 3 horiz items or time sel, 4 horiz items, 5 horiz time sel
 // iOthers == 0 nothing, 1 minimize, 2 hide from TCP
-void TogZoom(int iType, int iOthers)
+void TogZoom(int iType, int iOthers, bool includeEnvelopes)
 {
 	if (g_bASToggled)
 	{
@@ -516,7 +582,7 @@ void TogZoom(int iType, int iOthers)
 	if (iType == 0)
 	{
 		Main_OnCommand(40031, 0);
-		VertZoomSelTracks(iOthers);
+		VertZoomSelTracks(iOthers, includeEnvelopes);
 	}
 	else
 	{
@@ -525,20 +591,20 @@ void TogZoom(int iType, int iOthers)
 		else
 			HorizZoomSelItems();
 		if (iType < 3)
-			VertZoomSelItems(iOthers);
+			VertZoomSelItems(iOthers, includeEnvelopes);
 	}
 }
 
-void TogZoomTT(COMMAND_T* = NULL)			{ TogZoom(0, 0); }
-void TogZoomTTMin(COMMAND_T* = NULL)		{ TogZoom(0, 1); }
-void TogZoomTTHide(COMMAND_T* = NULL)		{ TogZoom(0, 2); }
-void TogZoomItems(COMMAND_T* = NULL)		{ TogZoom(1, 0); }
-void TogZoomItemsMin(COMMAND_T* = NULL)		{ TogZoom(1, 1); }
-void TogZoomItemsHide(COMMAND_T* = NULL)	{ TogZoom(1, 2); }
-void TogZoomItemsOnly(COMMAND_T* = NULL)	{ TogZoom(2, 0); }
-void TogZoomItemsOnlyMin(COMMAND_T* = NULL)	{ TogZoom(2, 1); }
-void TogZoomItemsOnlyHide(COMMAND_T* = NULL){ TogZoom(2, 2); }
-void TogZoomHoriz(COMMAND_T* ct)		    { TogZoom((int)ct->user, 0); }
+void TogZoomTT(COMMAND_T* ct)				{ TogZoom(0, 0, (int)ct->user == 0); }
+void TogZoomTTMin(COMMAND_T* ct)			{ TogZoom(0, 1, (int)ct->user == 0); }
+void TogZoomTTHide(COMMAND_T* ct)			{ TogZoom(0, 2, (int)ct->user == 0); }
+void TogZoomItems(COMMAND_T* ct)			{ TogZoom(1, 0, (int)ct->user == 0); }
+void TogZoomItemsMin(COMMAND_T* ct)			{ TogZoom(1, 1, (int)ct->user == 0); }
+void TogZoomItemsHide(COMMAND_T* ct)		{ TogZoom(1, 2, (int)ct->user == 0); }
+void TogZoomItemsOnly(COMMAND_T* ct)		{ TogZoom(2, 0, (int)ct->user == 0); }
+void TogZoomItemsOnlyMin(COMMAND_T* ct)		{ TogZoom(2, 1, (int)ct->user == 0); }
+void TogZoomItemsOnlyHide(COMMAND_T* ct)	{ TogZoom(2, 2, (int)ct->user == 0); }
+void TogZoomHoriz(COMMAND_T* ct)			{ TogZoom((int)ct->user, 0, true); }
 
 void SaveCurrentArrangeViewSlot(COMMAND_T* ct)	{ g_stdAS[(int)ct->user].Get()->Save(true, true); }
 void RestoreArrangeViewSlot(COMMAND_T* ct)      { g_stdAS[(int)ct->user].Get()->Restore(); }
@@ -558,9 +624,12 @@ MediaTrack* TrackAtPoint(HWND hTrackView, int iY, int* iOffset, int* iYMin, int*
 	// Find the current track #
 	while (iTrack <= GetNumTracks())
 	{
-		iTrackH = *(int*)GetSetMediaTrackInfo(CSurf_TrackFromID(iTrack, false), "I_WNDH", NULL);
+		MediaTrack* track = CSurf_TrackFromID(iTrack, false);
+		iTrackH = *(int*)GetSetMediaTrackInfo(track, "I_WNDH", NULL);
 		if (iVPos + iTrackH > iY)
 			break;
+		if (iTrack == 0 && TcpVis(track) && iTrackH != 0)
+			iTrackH += GetMasterTcpGap();
 		iVPos += iTrackH;
 		iTrack++;
 	}
@@ -665,7 +734,7 @@ public:
 	}
 	void ZoomToProject()
 	{
-		VertZoomRange(0, GetNumTracks()+1, NULL, false);
+		VertZoomRange(0, GetNumTracks()+1, NULL, false, true);
 		Main_OnCommand(40295, 0);
 		SaveZoom();
 		SavePos();
@@ -890,7 +959,7 @@ void ZoomToRect(HWND hTrackView, RECT* rZoom, double dX1, double dX2)
 				iNum = CSurf_TrackToID(tr, false) - iFirst + 1;
 			else
 				iNum = GetNumTracks() - iFirst + 1;
-			VertZoomRange(iFirst, iNum, NULL, false);
+			VertZoomRange(iFirst, iNum, NULL, false, true);
 		}
 	}
 	SaveZoomSlice(true);
@@ -1082,7 +1151,7 @@ LRESULT CALLBACK ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				BitBlt(dc, 0, 0, bm.getWidth(), bm.getHeight(), bm.getDC(), 0, 0, SRCCOPY);
 
 				// Now that we're done drawing, adjust rZoom to 0 height if necessary
-				// This is to avoid unintentional vert zoom per mbn http://code.google.com/p/sws-extension/issues/detail?id=178#c14
+				// This is to avoid unintentional vert zoom per mbn http://github.com/Jeff0S/sws/issues/178#c14
 				if (rMini.top == rBox.top && rMini.bottom == rBox.bottom)
 					rZoom.top = rZoom.bottom;
 			}
@@ -1429,32 +1498,54 @@ static project_config_extension_t g_projectconfig = { ProcessExtensionLine, Save
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] =
 {
-	{ { DEFACCEL, "SWS: Set reaper window size to reaper.ini setwndsize" },                        "SWS_SETWINDOWSIZE",       SetReaperWndSize,    NULL, },
-	{ { DEFACCEL, "SWS: Horizontal scroll to put edit cursor at 10%" },                            "SWS_HSCROLL10",           ScrollToCursor,      NULL, 10, },
-	{ { DEFACCEL, "SWS: Horizontal scroll to put edit cursor at 50%" },                            "SWS_HSCROLL50",           ScrollToCursor,      NULL, 50, },
-	{ { DEFACCEL, "SWS: Horizontal scroll to put play cursor at 10%" },                            "SWS_HSCROLLPLAY10",       ScrollToCursor,      NULL, -10, },
-	{ { DEFACCEL, "SWS: Horizontal scroll to put play cursor at 50%" },                            "SWS_HSCROLLPLAY50",       ScrollToCursor,      NULL, -50, },
-	{ { DEFACCEL, "SWS: Vertical zoom to selected tracks" },                                       "SWS_VZOOMFIT",            FitSelTracks,        NULL, },
-	{ { DEFACCEL, "SWS: Vertical zoom to selected tracks, minimize others" },                      "SWS_VZOOMFITMIN",         FitSelTracksMin,     NULL, },
-	{ { DEFACCEL, "SWS: Vertical zoom to selected items" },                                        "SWS_VZOOMIITEMS",         VZoomToSelItems,     NULL, },
-	{ { DEFACCEL, "SWS: Vertical zoom to selected items, minimize others" },                       "SWS_VZOOMITEMSMIN",       VZoomToSelItemsMin,  NULL, },
-	{ { DEFACCEL, "SWS: Horizontal zoom to selected items" },                                      "SWS_HZOOMITEMS",          HZoomToSelItems,     NULL, },
-	{ { DEFACCEL, "SWS: Zoom to selected items" },                                                 "SWS_ITEMZOOM",            ZoomToSelItems,      NULL, },
-	{ { DEFACCEL, "SWS: Zoom to selected items, minimize others" },                                "SWS_ITEMZOOMMIN",         ZoomToSelItemsMin,   NULL, },
-	{ { DEFACCEL, "SWS: Zoom to selected items or time selection" },                               "SWS_ZOOMSIT",             ZoomToSIT,           NULL, },
-	{ { DEFACCEL, "SWS: Zoom to selected items or time selection, minimize others" },              "SWS_ZOOMSITMIN",          ZoomToSITMin,        NULL, },
-	{ { DEFACCEL, "SWS: Toggle zoom to selected tracks and time selection" },                      "SWS_TOGZOOMTT",           TogZoomTT,           NULL, 0, IsTogZoomed },
-	{ { DEFACCEL, "SWS: Toggle zoom to selected tracks and time selection, minimize others" },     "SWS_TOGZOOMTTMIN",        TogZoomTTMin,        NULL, 0, IsTogZoomed },
-	{ { DEFACCEL, "SWS: Toggle zoom to selected tracks and time selection, hide others" },         "SWS_TOGZOOMTTHIDE",       TogZoomTTHide,       NULL, 0, IsTogZoomed },
-	{ { DEFACCEL, "SWS: Toggle zoom to selected items or time selection" },                        "SWS_TOGZOOMI",            TogZoomItems,        NULL, 0, IsTogZoomed },
-	{ { DEFACCEL, "SWS: Toggle zoom to selected items or time selection, minimize other tracks" }, "SWS_TOGZOOMIMIN",         TogZoomItemsMin,     NULL, 0, IsTogZoomed },
-	{ { DEFACCEL, "SWS: Toggle zoom to selected items or time selection, hide other tracks" },     "SWS_TOGZOOMIHIDE",        TogZoomItemsHide,    NULL, 0, IsTogZoomed },
-	{ { DEFACCEL, "SWS: Toggle zoom to selected items" },                                          "SWS_TOGZOOMIONLY",        TogZoomItemsOnly,    NULL, 0, IsTogZoomed },
-	{ { DEFACCEL, "SWS: Toggle zoom to selected items, minimize other tracks" },                   "SWS_TOGZOOMIONLYMIN",     TogZoomItemsOnlyMin, NULL, 0, IsTogZoomed },
-	{ { DEFACCEL, "SWS: Toggle zoom to selected items, hide other tracks" },                       "SWS_TOGZOOMIONLYHIDE",    TogZoomItemsOnlyHide,NULL, 0, IsTogZoomed },
-	{ { DEFACCEL, "SWS: Toggle horizontal zoom to selected items or time selection" },             "SWS_TOGZOOMHORIZ",        TogZoomHoriz,        NULL, 3, IsTogZoomed },
-	{ { DEFACCEL, "SWS: Toggle horizontal zoom to selected items" },                               "SWS_TOGZOOMHORIZ_ITEMS",  TogZoomHoriz,        NULL, 4, IsTogZoomed },
-	{ { DEFACCEL, "SWS: Toggle horizontal zoom to time selection" },                               "SWS_TOGZOOMHORIZ_TSEL",   TogZoomHoriz,        NULL, 5, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Set reaper window size to reaper.ini setwndsize" }, "SWS_SETWINDOWSIZE", SetReaperWndSize,    NULL, },
+	{ { DEFACCEL, "SWS: Horizontal scroll to put edit cursor at 10%" },     "SWS_HSCROLL10",     ScrollToCursor,      NULL, 10, },
+	{ { DEFACCEL, "SWS: Horizontal scroll to put edit cursor at 50%" },     "SWS_HSCROLL50",     ScrollToCursor,      NULL, 50, },
+	{ { DEFACCEL, "SWS: Horizontal scroll to put play cursor at 10%" },     "SWS_HSCROLLPLAY10", ScrollToCursor,      NULL, -10, },
+	{ { DEFACCEL, "SWS: Horizontal scroll to put play cursor at 50%" },     "SWS_HSCROLLPLAY50", ScrollToCursor,      NULL, -50, },
+
+	{ { DEFACCEL, "SWS: Vertical zoom to selected tracks" },                                                       "SWS_VZOOMFIT",             FitSelTracks,        NULL, 0},
+	{ { DEFACCEL, "SWS: Vertical zoom to selected tracks, minimize others" },                                      "SWS_VZOOMFITMIN",          FitSelTracksMin,     NULL, 0},
+	{ { DEFACCEL, "SWS: Vertical zoom to selected items" },                                                        "SWS_VZOOMIITEMS",          VZoomToSelItems,     NULL, 0},
+	{ { DEFACCEL, "SWS: Vertical zoom to selected items, minimize others" },                                       "SWS_VZOOMITEMSMIN",        VZoomToSelItemsMin,  NULL, 0},
+	{ { DEFACCEL, "SWS: Vertical zoom to selected tracks (ignore last track's envelope lanes)" },                  "SWS_VZOOMFIT_NO_ENV",      FitSelTracks,        NULL, 1},
+	{ { DEFACCEL, "SWS: Vertical zoom to selected tracks, minimize others (ignore last track's envelope lanes)" }, "SWS_VZOOMFITMIN_NO_ENV",   FitSelTracksMin,     NULL, 1},
+	{ { DEFACCEL, "SWS: Vertical zoom to selected items (ignore last track's envelope lanes)" },                   "SWS_VZOOMIITEMS_NO_ENV",   VZoomToSelItems,     NULL, 1},
+	{ { DEFACCEL, "SWS: Vertical zoom to selected items, minimize others (ignore last track's envelope lanes)" },  "SWS_VZOOMITEMSMIN_NO_ENV", VZoomToSelItemsMin,  NULL, 1},
+
+	{ { DEFACCEL, "SWS: Horizontal zoom to selected items" }, "SWS_HZOOMITEMS",          HZoomToSelItems,     NULL, },
+
+	{ { DEFACCEL, "SWS: Zoom to selected items" },                                                                         "SWS_ITEMZOOM",           ZoomToSelItems,      NULL, 0},
+	{ { DEFACCEL, "SWS: Zoom to selected items, minimize others" },                                                        "SWS_ITEMZOOMMIN",        ZoomToSelItemsMin,   NULL, 0},
+	{ { DEFACCEL, "SWS: Zoom to selected items or time selection" },                                                       "SWS_ZOOMSIT",            ZoomToSIT,           NULL, 0},
+	{ { DEFACCEL, "SWS: Zoom to selected items or time selection, minimize others" },                                      "SWS_ZOOMSITMIN",         ZoomToSITMin,        NULL, 0},
+	{ { DEFACCEL, "SWS: Zoom to selected items (ignore last track's envelope lanes)" },                                    "SWS_ITEMZOOM_NO_ENV",    ZoomToSelItems,      NULL, 1},
+	{ { DEFACCEL, "SWS: Zoom to selected items, minimize others (ignore last track's envelope lanes)" },                   "SWS_ITEMZOOMMIN_NO_ENV", ZoomToSelItemsMin,   NULL, 1},
+	{ { DEFACCEL, "SWS: Zoom to selected items or time selection (ignore last track's envelope lanes)" },                  "SWS_ZOOMSIT_NO_ENV",     ZoomToSIT,           NULL, 1},
+	{ { DEFACCEL, "SWS: Zoom to selected items or time selection, minimize others (ignore last track's envelope lanes)" }, "SWS_ZOOMSITMIN_NO_ENV",  ZoomToSITMin,        NULL, 1},
+
+	{ { DEFACCEL, "SWS: Toggle zoom to selected tracks and time selection" },                                                           "SWS_TOGZOOMTT",               TogZoomTT,           NULL, 0, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to selected tracks and time selection, minimize others" },                                          "SWS_TOGZOOMTTMIN",            TogZoomTTMin,        NULL, 0, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to selected tracks and time selection, hide others" },                                              "SWS_TOGZOOMTTHIDE",           TogZoomTTHide,       NULL, 0, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to selected items or time selection" },                                                             "SWS_TOGZOOMI",                TogZoomItems,        NULL, 0, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to selected items or time selection, minimize other tracks" },                                      "SWS_TOGZOOMIMIN",             TogZoomItemsMin,     NULL, 0, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to selected items or time selection, hide other tracks" },                                          "SWS_TOGZOOMIHIDE",            TogZoomItemsHide,    NULL, 0, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to selected items" },                                                                               "SWS_TOGZOOMIONLY",            TogZoomItemsOnly,    NULL, 0, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to selected items, minimize other tracks" },                                                        "SWS_TOGZOOMIONLYMIN",         TogZoomItemsOnlyMin, NULL, 0, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to selected items, hide other tracks" },                                                            "SWS_TOGZOOMIONLYHIDE",        TogZoomItemsOnlyHide,NULL, 0, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to selected tracks and time selection (ignore last track's envelope lanes)" },                      "SWS_TOGZOOMTT_NO_ENV",        TogZoomTT,           NULL, 1, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to selected tracks and time selection, minimize others (ignore last track's envelope lanes)" },     "SWS_TOGZOOMTTMIN_NO_ENV",     TogZoomTTMin,        NULL, 1, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to selected tracks and time selection, hide others (ignore last track's envelope lanes)" },         "SWS_TOGZOOMTTHIDE_NO_ENV",    TogZoomTTHide,       NULL, 1, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to selected items or time selection (ignore last track's envelope lanes)" },                        "SWS_TOGZOOMI_NO_ENV",         TogZoomItems,        NULL, 1, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to selected items or time selection, minimize other tracks (ignore last track's envelope lanes)" }, "SWS_TOGZOOMIMIN_NO_ENV",      TogZoomItemsMin,     NULL, 1, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to selected items or time selection, hide other tracks (ignore last track's envelope lanes)" },     "SWS_TOGZOOMIHIDE_NO_ENV",     TogZoomItemsHide,    NULL, 1, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to selected items (ignore last track's envelope lanes)" },                                          "SWS_TOGZOOMIONLY_NO_ENV",     TogZoomItemsOnly,    NULL, 1, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to selected items, minimize other tracks (ignore last track's envelope lanes)" },                   "SWS_TOGZOOMIONLYMIN_NO_ENV",  TogZoomItemsOnlyMin, NULL, 1, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to selected items, hide other tracks (ignore last track's envelope lanes)" },                       "SWS_TOGZOOMIONLYHIDE_NO_ENV", TogZoomItemsOnlyHide,NULL, 1, IsTogZoomed },
+
+	{ { DEFACCEL, "SWS: Toggle horizontal zoom to selected items or time selection" }, "SWS_TOGZOOMHORIZ",        TogZoomHoriz,        NULL, 3, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle horizontal zoom to selected items" },                   "SWS_TOGZOOMHORIZ_ITEMS",  TogZoomHoriz,        NULL, 4, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle horizontal zoom to time selection" },                   "SWS_TOGZOOMHORIZ_TSEL",   TogZoomHoriz,        NULL, 5, IsTogZoomed },
 
 	{ { DEFACCEL, "SWS: Scroll left 10%" },  "SWS_SCROLL_L10",  HorizScroll, NULL, -10 },
 	{ { DEFACCEL, "SWS: Scroll right 10%" }, "SWS_SCROLL_R10",  HorizScroll, NULL, 10 },
@@ -1514,32 +1605,27 @@ static accelerator_register_t g_ar = { translateAccel, TRUE, NULL };
 
 #define ZOOMPREFS_KEY "ZoomPrefs"
 #define DRAGZOOMSCALE_KEY "DragZoomScale"
-int ZoomInit()
+int ZoomInit(bool hookREAPERWndProcs)
 {
+	if (hookREAPERWndProcs)
+	{
+		HWND hTrackView = GetTrackWnd();
+		if (hTrackView) g_ReaperTrackWndProc = (WNDPROC)SetWindowLongPtr(hTrackView, GWLP_WNDPROC, (LONG_PTR)ZoomWndProc);
+		HWND hRuler = GetRulerWnd();
+		if (hRuler) g_ReaperRulerWndProc = (WNDPROC)SetWindowLongPtr(hRuler, GWLP_WNDPROC, (LONG_PTR)DragZoomWndProc);
+		return 1;
+	}
+
 	if (!plugin_register("accelerator",&g_ar))
 		return 0;
 	SWSRegisterCommands(g_commandTable);
 	if (!plugin_register("projectconfig",&g_projectconfig))
 		return 0;
-	// Init the zoom tool
-	HWND hTrackView = GetTrackWnd();
-	if (hTrackView)
-		g_ReaperTrackWndProc = (WNDPROC)SetWindowLongPtr(hTrackView, GWLP_WNDPROC, (LONG_PTR)ZoomWndProc);
-	HWND hRuler = GetRulerWnd();
-	if (hRuler)
-		g_ReaperRulerWndProc = (WNDPROC)SetWindowLongPtr(hRuler, GWLP_WNDPROC, (LONG_PTR)DragZoomWndProc);
 
-#ifdef _WIN32
-	g_hZoomInCur   = LoadCursor(g_hInst, MAKEINTRESOURCE(IDC_ZOOMIN));
-	g_hZoomOutCur  = LoadCursor(g_hInst, MAKEINTRESOURCE(IDC_ZOOMOUT));
-	g_hZoomUndoCur = LoadCursor(g_hInst, MAKEINTRESOURCE(IDC_ZOOMUNDO));
-	g_hZoomDragCur = LoadCursor(g_hInst, MAKEINTRESOURCE(IDC_ZOOMDRAG));
-#else
-	g_hZoomInCur   = SWS_LoadCursor(IDC_ZOOMIN);
-	g_hZoomOutCur  = SWS_LoadCursor(IDC_ZOOMOUT);
-	g_hZoomUndoCur = SWS_LoadCursor(IDC_ZOOMUNDO);
-	g_hZoomDragCur = SWS_LoadCursor(IDC_ZOOMDRAG);
-#endif
+	g_hZoomInCur   = GetSwsMouseCursor(CURSOR_ZOOM_IN);
+	g_hZoomOutCur  = GetSwsMouseCursor(CURSOR_ZOOM_OUT);
+	g_hZoomUndoCur = GetSwsMouseCursor(CURSOR_ZOOM_UNDO);
+	g_hZoomDragCur = GetSwsMouseCursor(CURSOR_ZOOM_DRAG);
 
 	// Restore prefs
 	int iPrefs = GetPrivateProfileInt(SWS_INI, ZOOMPREFS_KEY, 0, get_ini_file());
@@ -1564,6 +1650,9 @@ int ZoomInit()
 
 void ZoomExit()
 {
+	plugin_register("-accelerator",&g_ar);
+	plugin_register("-projectconfig",&g_projectconfig);
+
 	// Write the zoom prefs
 	char str[32];
 	sprintf(str, "%d", (g_bMidMouseButton ? 1 : 0) + (g_bItemZoom ? 2 : 0) + (g_bUndoZoom ? 4 : 0) +

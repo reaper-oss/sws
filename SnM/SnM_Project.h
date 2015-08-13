@@ -2,7 +2,7 @@
 / SnM_Project.h
 /
 / Copyright (c) 2012-2013 Jeffos
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -36,7 +36,7 @@
 bool IsActiveProjectInLoadSave(char* _projfn = NULL, int _projfnSz = 0, bool _ensureRPP = false);
 void TieFileToProject(const char* _fn, ReaProject* _prj = NULL, bool _tie = true);
 void UntieFileFromProject(const char* _fn, ReaProject* _prj = NULL);
-double SNM_GetProjectLength(bool _items = true, bool _inclRgnsMkrs = true);
+double SNM_GetProjectLength(int _flags=0xFFFF);
 bool InsertSilence(const char* _undoTitle, double _pos, double _len);
 
 void LoadOrSelectProject(const char* _fn, bool _newTab);
@@ -55,18 +55,11 @@ protected:
 
 void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
 
-class StartupProjectActionJob : public ScheduledJob {
-public:
-	StartupProjectActionJob(int _cmdId) : m_cmdId(_cmdId), ScheduledJob(SNM_SCHEDJOB_PRJ_ACTION, 1000) {}
-protected:
-	void Perform() { if (m_cmdId) Main_OnCommand(m_cmdId, 0); }
-	int m_cmdId;
-};
-
 void SetProjectStartupAction(COMMAND_T*);
 void ClearProjectStartupAction(COMMAND_T*);
 void ShowProjectStartupAction(COMMAND_T*);
-int ReaProjectInit();
+int SNM_ProjectInit();
+void SNM_ProjectExit();
 
 void InsertSilence(COMMAND_T*);
 void OpenProjectPathInExplorerFinder(COMMAND_T*);

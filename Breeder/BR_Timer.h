@@ -3,7 +3,7 @@
 /
 / Copyright (c) 2014 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
-/ https://code.google.com/p/sws-extension
+/ http://github.com/Jeff0S/sws
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -31,7 +31,7 @@
 * Uncomment do enable timer functionality                                     *
 ******************************************************************************/
 //#define BR_DEBUG_PERFORMANCE_ACTIONS
-//#define BR_DEBUG_PERFORMANCE_TIMER
+#define BR_DEBUG_PERFORMANCE_TIMER
 
 /******************************************************************************
 * Used in command hook in sws_extension.cpp. If BR_DEBUG_PERFORMANCE_ACTIONS  *
@@ -40,8 +40,9 @@
 void CommandTimer (COMMAND_T* ct, int val = 0, int valhw = 0, int relmode = 0, HWND hwnd = NULL, bool commandHook2 = false);
 
 /******************************************************************************
-* Creating the object starts the timer. When the object goes out of scope,    *
-* elapsed time is printed to the console along with the message.              *
+* Creating the object starts the timer (if autoStart is true). When the       *
+* object goes out of scope, elapsed time is printed to the console along with *
+* the message.                                                                *
 * To prevent printing when going out of scope, supply autoPrint as false and  *
 * use Progress(message) to manually print current progress.                   *
 * Calling Progress with NULL or no parameters will use the message supplied   *
@@ -52,7 +53,7 @@ void CommandTimer (COMMAND_T* ct, int val = 0, int valhw = 0, int relmode = 0, H
 class BR_Timer
 {
 public:
-	BR_Timer (const char* message, bool autoPrint = true);
+	BR_Timer (const char* message, bool autoPrint = true, bool autoStart = true);
 	~BR_Timer ();
 	void Pause ();
 	void Resume ();

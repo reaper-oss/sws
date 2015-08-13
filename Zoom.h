@@ -2,7 +2,7 @@
 / Zoom.h
 /
 / Copyright (c) 2009 Tim Payne (SWS)
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -28,6 +28,6 @@
 #pragma once
 
 void ZoomSlice();
-int ZoomInit();
+int ZoomInit(bool hookREAPERWndProcs);
 void ZoomExit();
 void ZoomToSelItems(COMMAND_T* = NULL);

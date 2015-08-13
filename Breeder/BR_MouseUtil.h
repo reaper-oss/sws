@@ -1,9 +1,9 @@
 /******************************************************************************
 / BR_MouseUtil.h
 /
-/ Copyright (c) 2014 Dominik Martin Drzic
+/ Copyright (c) 2014-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
-/ https://code.google.com/p/sws-extension
+/ http://github.com/Jeff0S/sws
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -33,7 +33,7 @@ class BR_Envelope;
 * Miscellaneous                                                               *
 ******************************************************************************/
 double PositionAtMouseCursor (bool checkRuler, bool checkCursorVisibility = true, int* yOffset = NULL, bool* overRuler = NULL);
-MediaItem* ItemAtMouseCursor (double* position);
+MediaItem* ItemAtMouseCursor (double* position, MediaItem_Take** takeAtMouse = NULL);
 MediaItem_Take* TakeAtMouseCursor (double* position);
 MediaTrack* TrackAtMouseCursor (int* context, double* position); // context: 0->TCP, 1->MCP, 2->Arrange
 
@@ -97,7 +97,7 @@ public:
 	const char* GetDetails ();
 
 	// Main window
-	MediaTrack*     GetTrack ();
+	MediaTrack*     GetTrack (); // if mouse is over envelope, returns envelope parent
 	MediaItem*      GetItem ();  // returns item even if mouse is over some other track element
 	MediaItem_Take* GetTake();
 	TrackEnvelope*  GetEnvelope ();
@@ -112,7 +112,7 @@ public:
 	bool  GetCCLane (int* ccLane, int* ccLaneVal, int* ccLaneId); // returns false if mouse is not over CC lane
 	int   GetNoteRow ();                                          // returns -1 if mouse is not over any note row (sketchy when it comes to inline MIDI editor, see BR_MidiEditor)
 	int   GetPianoRollMode ();                                    // returns 0->normal, 1->named notes, -1->unknown
-	bool  SetDetectedCCLaneAsLastClicked ();                      // hacky! works only if MIDI editor/arrange state didn't change after the last update (it also briefly switches focus to MIDI editor/arrange...)
+	bool  SetDetectedCCLaneAsLastClicked ();                      // hacky! works only if MIDI editor/arrange state didn't change after last update (it also briefly switches focus to MIDI editor/arrange...)
 
 	// Both main window and MIDI editor
 	double GetPosition ();  // time position in arrange or MIDI ruler (returns -1 if not applicable)
@@ -120,16 +120,18 @@ public:
 	// Use these in constructor and SetMode() to optimize things if possible
 	enum Modes
 	{
-		MODE_ALL                 = 0x1,
-		MODE_RULER               = 0x2,
-		MODE_TRANSPORT           = 0x4,
-		MODE_MCP_TCP             = 0x8,
-		MODE_ARRANGE             = 0x10,
-		MODE_ENV_LANE_DO_SEGMENT = 0x20, // valid only in tandem with MODE_ARRANGE. Set it to look for envelope points/segments in envelope lane (track lane gets checked always)
-		MODE_MIDI_EDITOR         = 0x40,
-		MODE_MIDI_INLINE         = 0x80,
-		MODE_MIDI_EDITOR_ALL     = MODE_MIDI_EDITOR | MODE_MIDI_INLINE,
-		MODE_ARRANGE_ALL         = MODE_ARRANGE | MODE_ENV_LANE_DO_SEGMENT
+		MODE_ALL             = 0x1,
+		MODE_RULER           = 0x2,
+		MODE_TRANSPORT       = 0x4,
+		MODE_MCP_TCP         = 0x8,
+		MODE_ARRANGE         = 0x10,
+		MODE_MIDI_EDITOR     = 0x20,
+		MODE_MIDI_INLINE     = 0x40,
+		MODE_MIDI_EDITOR_ALL = MODE_MIDI_EDITOR | MODE_MIDI_INLINE,
+
+		// More optimization for MODE_ARRANGE or MODE_ALL
+		MODE_IGNORE_ALL_TRACK_LANE_ELEMENTS_BUT_ITEMS = 0x80,
+		MODE_IGNORE_ENVELOPE_LANE_SEGMENT             = 0x100
 	};
 
 private:
@@ -164,6 +166,6 @@ private:
 
 	BR_MouseInfo::MouseInfo m_mouseInfo;
 	POINT m_ccLaneClickPoint;
-	HWND  m_ccLaneClickPointHwnd;
+	HWND  m_midiEditorPianoWnd;
 	int m_mode;
 };

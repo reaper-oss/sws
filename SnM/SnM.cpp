@@ -2,7 +2,7 @@
 / SnM.cpp
 /
 / Copyright (c) 2009-2013 Jeffos
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -219,7 +219,7 @@ static COMMAND_T s_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Show project startup action" }, "S&M_SHOW_PRJ_ACTION", ShowProjectStartupAction, NULL, },
 
 	// Images ------------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Open/close image window" }, "S&M_OPEN_IMAGEVIEW", OpenImageWnd, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Open/close image window" }, "S&M_OPEN_IMAGEVIEW", OpenImageWnd, NULL, 0, IsImageWndDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Clear image window" }, "S&M_CLR_IMAGEVIEW", ClearImageWnd, NULL, },
 
 	// Resources --------------------------------------------------------
@@ -519,12 +519,6 @@ static COMMAND_T s_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Dump action list (custom actions only)" }, "S&M_DUMP_CUST_ACTION_LIST", DumpActionList, NULL, 5},
 
 
-//!WANT_LOCALIZE_1ST_STRING_END
-
-
-	// Deprecated, unreleased, etc... -----------------------------------------
-#ifdef _SNM_MISC
-	// deprecated prompt actions (old stuff, no GUI at that time..)
 	{ { DEFACCEL, "SWS/S&M: Resources - Clear FX chain slot, prompt for slot" }, "S&M_CLRFXCHAINSLOT", ResourcesClearSlotPrompt, NULL, SNM_SLOT_FXC},
 	{ { DEFACCEL, "SWS/S&M: Resources - Clear track template slot, prompt for slot" }, "S&M_CLR_TRTEMPLATE_SLOT", ResourcesClearSlotPrompt, NULL, SNM_SLOT_TR},
 	{ { DEFACCEL, "SWS/S&M: Resources - Clear project template slot, prompt for slot" }, "S&M_CLR_PRJTEMPLATE_SLOT", ResourcesClearSlotPrompt, NULL, SNM_SLOT_PRJ},
@@ -548,7 +542,12 @@ static COMMAND_T s_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Resources - Open project, prompt for slot" }, "S&M_APPLY_PRJTEMPLATEp", LoadOrSelectProjectSlot, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Resources - Open project, prompt for slot (new tab)" }, "S&M_NEWTAB_PRJTEMPLATEp", LoadOrSelectProjectTabSlot, NULL, -1},
 
-	// deprecated
+
+  //!WANT_LOCALIZE_1ST_STRING_END
+
+
+  // Deprecated, unreleased, etc... -----------------------------------------
+#ifdef _SNM_MISC
 	{ { DEFACCEL, "SWS/S&M: Resources - Project loader/selecter: configuration" }, "S&M_PRJ_LOADER_CONF", ProjectLoaderConf, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Resources - Project loader/selecter: next (cycle)" }, "S&M_PRJ_LOADER_NEXT", LoadOrSelectNextPreviousProjectSlot, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Resources - Project loader/selecter: previous (cycle)" }, "S&M_PRJ_LOADER_PREV", LoadOrSelectNextPreviousProjectSlot, NULL, -1},
@@ -1296,7 +1295,7 @@ int SNM_Init(reaper_plugin_info_t* _rec)
 	FindInit();
 	ImageInit();
 	RegionPlaylistInit();
-	ReaProjectInit();
+	SNM_ProjectInit();
 	CyclactionInit();
 
 	// callback when REAPER is fully initialized 
@@ -1313,7 +1312,13 @@ void SNM_Exit()
 	FindExit();
 	ImageExit();
 	RegionPlaylistExit();
+	SNM_ProjectExit();
 	CyclactionExit();
 	SNM_UIExit();
 	IniFileExit();
+	plugin_register("-accel_section",(void*)SNM_GetMySection());
+#ifdef _SNM_MISC
+	plugin_register("-hookcustommenu", (void*)SNM_Menuhook);
+#endif
+	plugin_register("-timer",(void*)OnInitTimer);
 }

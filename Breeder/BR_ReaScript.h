@@ -1,9 +1,9 @@
 /******************************************************************************
 / BR_ReaScript.h
 /
-/ Copyright (c) 2014 Dominik Martin Drzic
+/ Copyright (c) 2014-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
-/ https://code.google.com/p/sws-extension
+/ http://github.com/Jeff0S/sws
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -41,29 +41,59 @@ int             BR_EnvFindPrevious (BR_Envelope* envelope, double position);
 bool            BR_EnvFree (BR_Envelope* envelope, bool commit);
 MediaItem_Take* BR_EnvGetParentTake (BR_Envelope* envelope);
 MediaTrack*     BR_EnvGetParentTrack (BR_Envelope* envelope);
-bool            BR_EnvGetPoint (BR_Envelope* envelope, int id, double* position, double* value, int* shape, bool* selected, double* bezier);
-void            BR_EnvGetProperties (BR_Envelope* envelope, bool* active, bool* visible, bool* armed, bool* inLane, int* laneHeight, int* defaultShape, double* minValue, double* maxValue, double* centerValue, int* type);
+bool            BR_EnvGetPoint (BR_Envelope* envelope, int id, double* positionOut, double* valueOut, int* shapeOut, bool* selectedOut, double* bezierOut);
+void            BR_EnvGetProperties (BR_Envelope* envelope, bool* activeOut, bool* visibleOut, bool* armedOut, bool* inLaneOut, int* laneHeightOut, int* defaultShapeOut, double* minValueOut, double* maxValueOut, double* centerValueOut, int* typeOut, bool* faderScalingOut);
 bool            BR_EnvSetPoint (BR_Envelope* envelope, int id, double position, double value, int shape, bool selected, double bezier);
-void            BR_EnvSetProperties (BR_Envelope* envelope, bool active, bool visible, bool armed, bool inLane, int laneHeight, int defaultShape);
+void            BR_EnvSetProperties (BR_Envelope* envelope, bool active, bool visible, bool armed, bool inLane, int laneHeight, int defaultShape, bool faderScaling);
+void            BR_EnvSortPoints (BR_Envelope* envelope);
 double          BR_EnvValueAtPos (BR_Envelope* envelope, double position);
-bool            BR_GetMediaSourceProperties (MediaItem_Take* take, bool* section, double* start, double* length, double* fade, bool* reverse);
-void            BR_GetMouseCursorContext (char* window, char* segment, char* details, int char_sz);
-TrackEnvelope*  BR_GetMouseCursorContext_Envelope (bool* takeEnvelope);
+void            BR_GetArrangeView (ReaProject* proj, double* startPositionOut, double* endPositionOut);
+double          BR_GetClosestGridDivision (double position);
+void            BR_GetCurrentTheme (char* themePathOut, int themePathOut_sz, char* themeNameOut, int themeNameOut_sz);
+MediaItem*      BR_GetMediaItemByGUID (ReaProject* proj, const char* guidStringIn);
+void            BR_GetMediaItemGUID (MediaItem* item, char* guidStringOut, int guidStringOut_sz);
+bool            BR_GetMediaItemImageResource (MediaItem* item, char* imageOut, int imageOut_sz, int* imageFlagsOut);
+void            BR_GetMediaItemTakeGUID (MediaItem_Take* take, char* guidStringOut, int guidStringOut_sz);
+bool            BR_GetMediaSourceProperties (MediaItem_Take* take, bool* sectionOut, double* startOut, double* lengthOut, double* fadeOut, bool* reverseOut);
+MediaTrack*     BR_GetMediaTrackByGUID (ReaProject* proj, const char* guidStringIn);
+int             BR_GetMediaTrackFreezeCount (MediaTrack* track);
+void            BR_GetMediaTrackGUID (MediaTrack* track, char* guidStringOut, int guidStringOut_sz);
+void            BR_GetMediaTrackLayouts (MediaTrack* track, char* mcpLayoutNameOut, int mcpLayoutNameOut_sz, char* tcpLayoutNameOut, int tcpLayoutNameOut_sz);
+TrackEnvelope*  BR_GetMediaTrackSendInfo_Envelope (MediaTrack* track, int category, int sendidx, int envelopeType);
+MediaTrack*     BR_GetMediaTrackSendInfo_Track (MediaTrack* track, int category, int sendidx, int trackType);
+double          BR_GetMidiSourceLenPPQ (MediaItem_Take* take);
+bool            BR_GetMidiTakePoolGUID (MediaItem_Take* take, char* guidStringOut, int guidStringOut_sz);
+bool            BR_GetMidiTakeTempoInfo (MediaItem_Take* take, bool* ignoreProjTempoOut, double* bpmOut, int* numOut, int* denOut);
+void            BR_GetMouseCursorContext (char* windowOut, int windowOut_sz, char* segmentOut, int segmentOut_sz, char* detailsOut, int detailsOut_sz);
+TrackEnvelope*  BR_GetMouseCursorContext_Envelope (bool* takeEnvelopeOut);
 MediaItem*      BR_GetMouseCursorContext_Item ();
-void*           BR_GetMouseCursorContext_MIDI (bool* inlineEditor, int* noteRow, int* ccLane, int* ccLaneVal, int* ccLaneId);
+void*           BR_GetMouseCursorContext_MIDI (bool* inlineEditorOut, int* noteRowOut, int* ccLaneOut, int* ccLaneValOut, int* ccLaneIdOut);
 double          BR_GetMouseCursorContext_Position ();
 int             BR_GetMouseCursorContext_StretchMarker ();
 MediaItem_Take* BR_GetMouseCursorContext_Take ();
 MediaTrack*     BR_GetMouseCursorContext_Track ();
-MediaItem*      BR_ItemAtMouseCursor (double* position);
-bool            BR_MIDI_CCLaneRemove (void* midiEditor, int laneId);
-bool            BR_MIDI_CCLaneReplace (void* midiEditor, int laneId, int newCC);
+double          BR_GetNextGridDivision (double position);
+double          BR_GetPrevGridDivision (double position);
+double          BR_GetSetTrackSendInfo (MediaTrack* track, int category, int sendidx, const char* parmname, bool setNewValue, double newValue);
+int             BR_GetTakeFXCount (MediaItem_Take* take);
+bool            BR_IsTakeMidi (MediaItem_Take* take, bool* inProjectMidiOut);
+MediaItem*      BR_ItemAtMouseCursor (double* positionOut);
+bool            BR_MIDI_CCLaneRemove (HWND midiEditor, int laneId);
+bool            BR_MIDI_CCLaneReplace (HWND midiEditor, int laneId, int newCC);
 double          BR_PositionAtMouseCursor (bool checkRuler);
+void            BR_SetArrangeView (ReaProject* proj, double startPosition, double endPosition);
+bool            BR_SetItemEdges (MediaItem* item, double startTime, double endTime);
+void            BR_SetMediaItemImageResource (MediaItem* item, const char* imageIn, int imageFlags);
 bool            BR_SetMediaSourceProperties (MediaItem_Take* take, bool section, double start, double length, double fade, bool reverse);
-bool            BR_SetTakeSourceFromFile (MediaItem_Take* take, const char* filename, bool inProjectData);
-bool            BR_SetTakeSourceFromFile2 (MediaItem_Take* take, const char* filename, bool inProjectData, bool keepSourceProperties);
-MediaItem_Take* BR_TakeAtMouseCursor (double* position);
-MediaTrack*     BR_TrackAtMouseCursor (int* context, double* position);
+bool            BR_SetMediaTrackLayouts (MediaTrack* track, const char* mcpLayoutNameIn, const char* tcpLayoutNameIn);
+bool            BR_SetMidiTakeTempoInfo (MediaItem_Take* take, bool ignoreProjTempo, double bpm, int num, int den);
+bool            BR_SetTakeSourceFromFile (MediaItem_Take* take, const char* filenameIn, bool inProjectData);
+bool            BR_SetTakeSourceFromFile2 (MediaItem_Take* take, const char* filenameIn, bool inProjectData, bool keepSourceProperties);
+MediaItem_Take* BR_TakeAtMouseCursor (double* positionOut);
+MediaTrack*     BR_TrackAtMouseCursor (int* contextOut, double* positionOut);
+int             BR_Win32_GetPrivateProfileString (const char* sectionName, const char* keyName, const char* defaultString, const char* filePath, char* stringOut, int stringOut_sz);
+int             BR_Win32_ShellExecute (const char* operation, const char* file, const char* parameters, const char* directoy, int showFlags);
+bool            BR_Win32_WritePrivateProfileString (const char* sectionName, const char* keyName, const char* value, const char* filePath);
 
 /******************************************************************************
 * Big description!                                                            *

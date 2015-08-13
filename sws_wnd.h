@@ -2,7 +2,7 @@
 / sws_wnd.h
 /
 / Copyright (c) 2012 Tim Payne (SWS), Jeffos
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -182,6 +182,7 @@ public:
 	virtual bool IsActive(bool bWantEdit = false);
 	bool IsDocked() { return (m_state.state & 2) == 2; }
 	bool IsValidWindow() { return SWS_IsWindow(m_hwnd) ? true : false; }
+	bool IsWndVisible() {return IsValidWindow() && IsWindowVisible(m_hwnd);}	
 	HWND GetHWND() { return m_hwnd; }
 	WDL_VWnd* GetParentVWnd() { return &m_parentVwnd; }
 	WDL_VWnd_Painter* GetVWndPainter() { return &m_vwnd_painter; }
@@ -221,10 +222,6 @@ protected:
 	virtual bool OnMouseMove(int xpos, int ypos) { return false; }
 	virtual bool OnMouseUp(int xpos, int ypos) { return false; }
 	virtual INT_PTR OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam) { return 0; }
-
-	// Functions for derived classes to load/save some view information (for startup/screensets)
-	virtual int SaveView(char* cViewBuf, int iLen) { return 0; } // return num of chars in state (if cViewBuf == NULL, ret # of bytes needed)
-	virtual void LoadView(const char* cViewBuf, int iLen) {}
 
 	// Functions for WDL_VWnd-based GUIs
 	virtual void DrawControls(LICE_IBitmap* bm, const RECT* r, int* tooltipHeight = NULL) {}

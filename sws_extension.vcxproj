@@ -97,8 +97,32 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <PreBuildEvent>
-      <Message>Checking for REAPER_DIR environment variable...</Message>
-      <Command>if "$(REAPER_DIR)"=="" exit 1</Command>
+      <Message>Generating reascript_vararg.h</Message>
+      <Command>php &lt; nul
+if errorlevel==1 goto errphp
+
+php "reascript_vararg.php" &gt; "reascript_vararg_tmp.h"
+if errorlevel==1 goto errphp
+
+:: don't generate directly to reascript_vararg.h because changing that file will trigger linking even if new file is the same, instead compare first
+fc "reascript_vararg.h" "reascript_vararg_tmp.h" | find "FC: no dif" &gt; nul
+if errorlevel==1 goto update
+del "reascript_vararg_tmp.h"
+goto end
+
+:update
+echo Updating reascript_vararg.h
+del "reascript_vararg.h"
+ren "reascript_vararg_tmp.h" "reascript_vararg.h"
+goto end
+
+:errphp
+verify &gt; nul
+echo Warning: reascript_vararg.h generation failed (PHP installed?)
+
+:end
+
+</Command>
     </PreBuildEvent>
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
@@ -150,8 +174,32 @@ echo Copied to "$(REAPER_DIR)\plugins\$(TargetFilename)"
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <PreBuildEvent>
-      <Message>Checking for REAPER_DIR environment variable...</Message>
-      <Command>if "$(REAPER_DIR)"=="" exit 1</Command>
+      <Message>Generating reascript_vararg.h</Message>
+      <Command>php &lt; nul
+if errorlevel==1 goto errphp
+
+php "reascript_vararg.php" &gt; "reascript_vararg_tmp.h"
+if errorlevel==1 goto errphp
+
+:: don't generate directly to reascript_vararg.h because changing that file will trigger linking even if new file is the same, instead compare first
+fc "reascript_vararg.h" "reascript_vararg_tmp.h" | find "FC: no dif" &gt; nul
+if errorlevel==1 goto update
+del "reascript_vararg_tmp.h"
+goto end
+
+:update
+echo Updating reascript_vararg.h
+del "reascript_vararg.h"
+ren "reascript_vararg_tmp.h" "reascript_vararg.h"
+goto end
+
+:errphp
+verify &gt; nul
+echo Warning: reascript_vararg.h generation failed (PHP installed?)
+
+:end
+
+</Command>
     </PreBuildEvent>
     <Midl>
       <TargetEnvironment>X64</TargetEnvironment>
@@ -205,8 +253,32 @@ echo Copied to "$(REAPER64_DIR)\plugins\$(TargetFilename)"</Command>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">
     <PreBuildEvent>
-      <Message>Checking for REAPER_DIR environment variable...</Message>
-      <Command>if "$(REAPER_DIR)"=="" exit 1</Command>
+      <Message>Generating reascript_vararg.h</Message>
+      <Command>php &lt; nul
+if errorlevel==1 goto errphp
+
+php "reascript_vararg.php" &gt; "reascript_vararg_tmp.h"
+if errorlevel==1 goto errphp
+
+:: don't generate directly to reascript_vararg.h because changing that file will trigger linking even if new file is the same, instead compare first
+fc "reascript_vararg.h" "reascript_vararg_tmp.h" | find "FC: no dif" &gt; nul
+if errorlevel==1 goto update
+del "reascript_vararg_tmp.h"
+goto end
+
+:update
+echo Updating reascript_vararg.h
+del "reascript_vararg.h"
+ren "reascript_vararg_tmp.h" "reascript_vararg.h"
+goto end
+
+:errphp
+verify &gt; nul
+echo Warning: reascript_vararg.h generation failed (PHP installed?)
+
+:end
+
+</Command>
     </PreBuildEvent>
     <ClCompile>
       <Optimization>Disabled</Optimization>
@@ -258,8 +330,32 @@ echo Copied to "$(REAPER_DIR)\plugins\$(TargetFilename)"</Command>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Test|x64'">
     <PreBuildEvent>
-      <Message>Checking for REAPER64_DIR environment variable...</Message>
-      <Command>if "$(REAPER64_DIR)"=="" exit 1</Command>
+      <Message>Generating reascript_vararg.h</Message>
+      <Command>php &lt; nul
+if errorlevel==1 goto errphp
+
+php "reascript_vararg.php" &gt; "reascript_vararg_tmp.h"
+if errorlevel==1 goto errphp
+
+:: don't generate directly to reascript_vararg.h because changing that file will trigger linking even if new file is the same, instead compare first
+fc "reascript_vararg.h" "reascript_vararg_tmp.h" | find "FC: no dif" &gt; nul
+if errorlevel==1 goto update
+del "reascript_vararg_tmp.h"
+goto end
+
+:update
+echo Updating reascript_vararg.h
+del "reascript_vararg.h"
+ren "reascript_vararg_tmp.h" "reascript_vararg.h"
+goto end
+
+:errphp
+verify &gt; nul
+echo Warning: reascript_vararg.h generation failed (PHP installed?)
+
+:end
+
+</Command>
     </PreBuildEvent>
     <Midl>
       <TargetEnvironment>X64</TargetEnvironment>
@@ -313,13 +409,17 @@ echo Copied to "$(REAPER64_DIR)\plugins\$(TargetFilename)"</Command>
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="downarrow.bmp" />
-    <None Include="uparrow.bmp" />
+    <None Include="Resources\Bitmap\downarrow.bmp" />
+    <None Include="Resources\Bitmap\uparrow.bmp" />
+    <None Include="Resources\Cursor\sws_env_pen_grid.cur" />
+    <None Include="Resources\Cursor\sws_env_pt_adj_vert.cur" />
+    <None Include="Resources\Cursor\sws_grid_warp.cur" />
+    <None Include="Resources\Cursor\sws_misc_speaker.cur" />
+    <None Include="Resources\Cursor\sws_zoom_drag.cur" />
+    <None Include="Resources\Cursor\sws_zoom_in.cur" />
+    <None Include="Resources\Cursor\sws_zoom_out.cur" />
+    <None Include="Resources\Cursor\sws_zoom_undo.cur" />
     <None Include="version.rc2" />
-    <None Include="zoomdrag.cur" />
-    <None Include="zoomin.cur" />
-    <None Include="zoomout.cur" />
-    <None Include="zoomundo.cur" />
     <None Include="whatsnew.txt" />
   </ItemGroup>
   <ItemGroup>

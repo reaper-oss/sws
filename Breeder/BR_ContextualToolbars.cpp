@@ -1,9 +1,9 @@
 /******************************************************************************
 / BR_ContextualToolbars.cpp
 /
-/ Copyright (c) 2014 Dominik Martin Drzic
+/ Copyright (c) 2014-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
-/ https://code.google.com/p/sws-extension
+/ http://github.com/Jeff0S/sws
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -30,7 +30,6 @@
 #include "BR_EnvelopeUtil.h"
 #include "BR_MouseUtil.h"
 #include "BR_Util.h"
-#include "BR.h"
 #include "../SnM/SnM_Dlg.h"
 #include "../SnM/SnM_Util.h"
 #include "../reaper/localize.h"
@@ -48,24 +47,7 @@ const char* const INI_KEY_POSITION          = "PositionOffsetPreset_";
 const char* const INI_KEY_CURRENT_PRESET    = "DlgPreset";
 const int PRESET_COUNT                      = 8;
 
-// Options flags (never change values - used for state saving to .ini)
-const int OPTION_ENABLED          = 0x1;
-const int SELECT_ITEM             = 0x2;
-const int SELECT_TRACK            = 0x4;
-const int SELECT_ENVELOPE         = 0x8;
-const int CLEAR_ITEM_SELECTION    = 0x10;
-const int CLEAR_TRACK_SELECTION   = 0x20;
-const int FOCUS_ALL               = 0x40;
-const int FOCUS_MAIN              = 0x80;
-const int FOCUS_MIDI              = 0x100;
-const int POSITION_H_LEFT         = 0x200;
-const int POSITION_H_MIDDLE       = 0x400;
-const int POSITION_H_RIGHT        = 0x800;
-const int POSITION_V_TOP          = 0x2000;
-const int POSITION_V_MIDDLE       = 0x4000;
-const int POSITION_V_BOTTOM       = 0x8000;
-
-// List view columns
+// !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_181
 static SWS_LVColumn g_cols[] =
 {
 	{163, 0, "Context"},
@@ -73,6 +55,7 @@ static SWS_LVColumn g_cols[] =
 	{62,  0, "Auto close"},
 	{81,  0, "Position offset"},
 };
+// !WANT_LOCALIZE_STRINGS_END
 
 enum
 {
@@ -83,12 +66,30 @@ enum
 	COL_COUNT
 };
 
+// Options flags (never change values - used for state saving to .ini)
+const int OPTION_ENABLED         = 0x1;
+const int SELECT_ITEM            = 0x2;
+const int SELECT_TRACK           = 0x4;
+const int SELECT_ENVELOPE        = 0x8;
+const int CLEAR_ITEM_SELECTION   = 0x10;
+const int CLEAR_TRACK_SELECTION  = 0x20;
+const int FOCUS_ALL              = 0x40;
+const int FOCUS_MAIN             = 0x80;
+const int FOCUS_MIDI             = 0x100;
+const int POSITION_H_LEFT        = 0x200;
+const int POSITION_H_MIDDLE      = 0x400;
+const int POSITION_H_RIGHT       = 0x800;
+const int POSITION_V_TOP         = 0x2000;
+const int POSITION_V_MIDDLE      = 0x4000;
+const int POSITION_V_BOTTOM      = 0x8000;
+const int SET_FOREGROUND         = 0x1000;
+
 /******************************************************************************
 * Globals                                                                     *
 ******************************************************************************/
-static SNM_WindowManager<BR_ContextualToolbarsWnd> g_contextToolbarsWndManager(CONTEXT_TOOLBARS_WND);
-static BR_ContextualToolbarsManager                g_toolbarsManager;
-static int                                         g_listViewContexts[CONTEXT_COUNT];
+SNM_WindowManager<BR_ContextualToolbarsWnd> g_contextToolbarsWndManager(CONTEXT_TOOLBARS_WND);
+static BR_ContextualToolbarsManager         g_toolbarsManager;
+static int                                  g_listViewContexts[CONTEXT_COUNT];
 
 /******************************************************************************
 * Context toolbars                                                            *
@@ -131,24 +132,28 @@ bool BR_ContextualToolbar::operator== (const BR_ContextualToolbar& contextualToo
 			continue;
 		else
 		{
-			if (contextualToolbar.m_contexts[i].mouseAction  != m_contexts[i].mouseAction)  return false;
-		    if (contextualToolbar.m_contexts[i].toggleAction != m_contexts[i].toggleAction) return false;
+			if (contextualToolbar.m_contexts[i].mouseAction     != m_contexts[i].mouseAction)     return false;
+		    if (contextualToolbar.m_contexts[i].toggleAction    != m_contexts[i].toggleAction)    return false;
+		    if (contextualToolbar.m_contexts[i].positionOffsetX != m_contexts[i].positionOffsetX) return false;
+		    if (contextualToolbar.m_contexts[i].positionOffsetY != m_contexts[i].positionOffsetY) return false;
+		    if (contextualToolbar.m_contexts[i].autoClose       != m_contexts[i].autoClose)       return false;
 		}
 	}
-	if (contextualToolbar.m_options.focus                != m_options.focus)                return false;
-	if (contextualToolbar.m_options.position             != m_options.position)             return false;
-	if (contextualToolbar.m_options.tcpTrack             != m_options.tcpTrack)             return false;
-	if (contextualToolbar.m_options.tcpEnvelope          != m_options.tcpEnvelope)          return false;
-	if (contextualToolbar.m_options.mcpTrack             != m_options.mcpTrack)             return false;
-	if (contextualToolbar.m_options.arrangeTrack         != m_options.arrangeTrack)         return false;
-	if (contextualToolbar.m_options.arrangeItem          != m_options.arrangeItem)          return false;
-	if (contextualToolbar.m_options.arrangeTakeEnvelope  != m_options.arrangeTakeEnvelope)  return false;
-	if (contextualToolbar.m_options.arrangeStretchMarker != m_options.arrangeStretchMarker) return false;
-	if (contextualToolbar.m_options.arrangeTrackEnvelope != m_options.arrangeTrackEnvelope) return false;
-	if (contextualToolbar.m_options.arrangeActTake       != m_options.arrangeActTake)       return false;
-	if (contextualToolbar.m_options.midiSetCCLane        != m_options.midiSetCCLane)        return false;
-	if (contextualToolbar.m_options.inlineItem           != m_options.inlineItem)           return false;
-	if (contextualToolbar.m_options.inlineSetCCLane      != m_options.inlineSetCCLane)      return false;
+	if (contextualToolbar.m_options.focus                  != m_options.focus)                  return false;
+	if (contextualToolbar.m_options.position               != m_options.position)               return false;
+	if (contextualToolbar.m_options.setToolbarToForeground != m_options.setToolbarToForeground) return false;
+	if (contextualToolbar.m_options.tcpTrack               != m_options.tcpTrack)               return false;
+	if (contextualToolbar.m_options.tcpEnvelope            != m_options.tcpEnvelope)            return false;
+	if (contextualToolbar.m_options.mcpTrack               != m_options.mcpTrack)               return false;
+	if (contextualToolbar.m_options.arrangeTrack           != m_options.arrangeTrack)           return false;
+	if (contextualToolbar.m_options.arrangeItem            != m_options.arrangeItem)            return false;
+	if (contextualToolbar.m_options.arrangeTakeEnvelope    != m_options.arrangeTakeEnvelope)    return false;
+	if (contextualToolbar.m_options.arrangeStretchMarker   != m_options.arrangeStretchMarker)   return false;
+	if (contextualToolbar.m_options.arrangeTrackEnvelope   != m_options.arrangeTrackEnvelope)   return false;
+	if (contextualToolbar.m_options.arrangeActTake         != m_options.arrangeActTake)         return false;
+	if (contextualToolbar.m_options.midiSetCCLane          != m_options.midiSetCCLane)          return false;
+	if (contextualToolbar.m_options.inlineItem             != m_options.inlineItem)             return false;
+	if (contextualToolbar.m_options.inlineSetCCLane        != m_options.inlineSetCCLane)        return false;
 
 	return true;
 }
@@ -198,31 +203,42 @@ void BR_ContextualToolbar::LoadToolbar (bool exclusive)
 				if (toolbarsOpen)
 					this->CloseAllAssignedToolbars();
 
-				// Fill in missing execution options
-				executeOnToolbarLoad.autoCloseToolbar     = GetAutoClose(context);
-				executeOnToolbarLoad.makeTopMost          = !!(m_options.topmost & OPTION_ENABLED);
-				executeOnToolbarLoad.positionOffsetX      = GetPositionOffsetX(context);
-				executeOnToolbarLoad.positionOffsetY      = GetPositionOffsetY(context);
-				executeOnToolbarLoad.positionOrientation  = ((m_options.position & OPTION_ENABLED) ? m_options.position : 0);
-				executeOnToolbarLoad.positionOverride     = (executeOnToolbarLoad.positionOffsetX != 0 || executeOnToolbarLoad.positionOffsetY != 0 || executeOnToolbarLoad.positionOrientation != 0);
+				// Fill in missing execution options (these repeat for all contexts so no need to repeat it in every find function)
+				executeOnToolbarLoad.autoCloseToolbar       = GetAutoClose(context);
+				executeOnToolbarLoad.makeTopMost            = !!(m_options.topmost & OPTION_ENABLED);
+				executeOnToolbarLoad.setToolbarToForeground = !!(m_options.setToolbarToForeground & OPTION_ENABLED);
+				executeOnToolbarLoad.positionOffsetX        = GetPositionOffsetX(context);
+				executeOnToolbarLoad.positionOffsetY        = GetPositionOffsetY(context);
+				executeOnToolbarLoad.positionOrientation    = ((m_options.position & OPTION_ENABLED) ? m_options.position : 0);
+				executeOnToolbarLoad.positionOverride       = (executeOnToolbarLoad.positionOffsetX != 0 || executeOnToolbarLoad.positionOffsetY != 0 || executeOnToolbarLoad.positionOrientation != 0);
+
+				PreventUIRefresh(1);
 
 				// Execute these options before showing toolbar (otherwise toolbar can end up behind mixer/MIDI editor etc... due to focus changes)
 				this->SetCCLaneClicked(executeOnToolbarLoad, mouseInfo);
 				this->SetFocus(executeOnToolbarLoad);
-				this->SelectEnvelope(executeOnToolbarLoad);
+				this->SelectEnvelope(executeOnToolbarLoad); // execute after focusing (since focus is tied to envelope selection)
 
 				// Toggle toolbar and set it up if needed
 				Main_OnCommand(mouseAction, 0);
-				if (executeOnToolbarLoad.makeTopMost  || executeOnToolbarLoad.positionOverride)
-				{
-					int toggleAction;
-					this->GetReaperToolbar(this->GetToolbarId(mouseAction), NULL, &toggleAction, NULL, NULL);
-					HWND toolbarHwnd = this->GetFloatingToolbarHwnd(mouseAction);
 
-					this->RepositionToolbar(executeOnToolbarLoad, toolbarHwnd);
-					this->SetToolbarAlwaysOnTop(executeOnToolbarLoad, toolbarHwnd, toggleAction);
-					this->SetToolbarAutoClose(executeOnToolbarLoad, toolbarHwnd, toggleAction);
+				// Find toolbar hwnd to manage (in case toolbar is docked in toolbar docker)
+				bool inDocker;
+				HWND toolbarHwnd   = this->GetFloatingToolbarHwnd(mouseAction, &inDocker);
+				HWND toolbarParent = toolbarHwnd;
+				if (inDocker)
+				{
+					while (toolbarParent && GetParent(toolbarParent) != g_hwndParent)
+						toolbarParent = GetParent(toolbarParent);
 				}
+
+				// Make sure toolbar is not out of monitor bounds (also reposition if allowed by preferences)
+				this->RepositionToolbar(executeOnToolbarLoad, toolbarParent);
+
+				// Set up toolbar window process for various options
+				int toggleAction;
+				this->GetReaperToolbar(this->GetToolbarId(mouseAction), NULL, &toggleAction, NULL, NULL);
+				this->SetToolbarWndProc(executeOnToolbarLoad, toolbarHwnd, toggleAction, toolbarParent);
 
 				// Continue executing options
 				bool undoTrack = this->SelectTrack(executeOnToolbarLoad);
@@ -250,10 +266,25 @@ void BR_ContextualToolbar::LoadToolbar (bool exclusive)
 					if (undoMsg) Undo_OnStateChangeEx2(NULL, undoMsg, UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS | UNDO_STATE_MISCCFG, -1);
 				}
 
+				PreventUIRefresh(-1);
 				UpdateArrange();
 			}
 		}
 	}
+}
+
+bool BR_ContextualToolbar::AreAssignedToolbarsOpened ()
+{
+	for (set<int>::iterator it = m_activeContexts.begin(); it != m_activeContexts.end(); ++it)
+	{
+		int toggleAction = this->GetToggleAction(*it);
+		if (this->IsContextValid(*it) && this->IsToolbarAction(toggleAction))
+		{
+			if (GetToggleCommandState(toggleAction))
+				return true;
+		}
+	}
+	return false;
 }
 
 int BR_ContextualToolbar::CountToolbars ()
@@ -286,7 +317,7 @@ bool BR_ContextualToolbar::IsFirstToolbar (int toolbarId)
 {
 	int mouseAction;
 	if (this->GetReaperToolbar(toolbarId, &mouseAction, NULL, NULL, 0))
-		return (mouseAction == TOOLBAR_1_MOUSE) ? true : false;
+		return (mouseAction == TOOLBAR_01_MOUSE) ? true : false;
 	return false;
 }
 
@@ -294,7 +325,7 @@ bool BR_ContextualToolbar::IsFirstMidiToolbar (int toolbarId)
 {
 	int mouseAction;
 	if (this->GetReaperToolbar(toolbarId, &mouseAction, NULL, NULL, 0))
-		return (mouseAction == MIDI_TOOLBAR_1_MOUSE) ? true : false;
+		return (mouseAction == MIDI_TOOLBAR_01_MOUSE) ? true : false;
 	return false;
 }
 
@@ -362,11 +393,11 @@ bool BR_ContextualToolbar::IsContextValid (int context)
 	if (context >= CONTEXT_START && context < CONTEXT_COUNT)
 	{
 		if (context != END_TRANSPORT   &&
-			context != END_RULER       &&
-			context != END_TCP         &&
-			context != END_MCP         &&
-			context != END_ARRANGE     &&
-			context != END_MIDI_EDITOR
+		    context != END_RULER       &&
+		    context != END_TCP         &&
+		    context != END_MCP         &&
+		    context != END_ARRANGE     &&
+		    context != END_MIDI_EDITOR
 		)
 		{
 			return true;
@@ -380,12 +411,12 @@ bool BR_ContextualToolbar::CanContextInheritParent (int context)
 	if (this->IsContextValid(context))
 	{
 		if (context == TRANSPORT          ||
-			context == RULER              ||
-			context == TCP                ||
-			context == MCP                ||
-			context == ARRANGE            ||
-			context == MIDI_EDITOR        ||
-			context == INLINE_MIDI_EDITOR
+		    context == RULER              ||
+		    context == TCP                ||
+		    context == MCP                ||
+		    context == ARRANGE            ||
+		    context == MIDI_EDITOR        ||
+		    context == INLINE_MIDI_EDITOR
 		)
 		{
 			return false;
@@ -403,11 +434,11 @@ bool BR_ContextualToolbar::CanContextFollowItem (int context)
 	if (this->IsContextValid(context))
 	{
 		if (context == ARRANGE_TRACK_ITEM_STRETCH_MARKER  ||
-			context == ARRANGE_TRACK_TAKE_ENVELOPE        ||
-			context == ARRANGE_TRACK_TAKE_ENVELOPE_VOLUME ||
-			context == ARRANGE_TRACK_TAKE_ENVELOPE_PAN    ||
-			context == ARRANGE_TRACK_TAKE_ENVELOPE_MUTE   ||
-			context == ARRANGE_TRACK_TAKE_ENVELOPE_PITCH
+		    context == ARRANGE_TRACK_TAKE_ENVELOPE        ||
+		    context == ARRANGE_TRACK_TAKE_ENVELOPE_VOLUME ||
+		    context == ARRANGE_TRACK_TAKE_ENVELOPE_PAN    ||
+		    context == ARRANGE_TRACK_TAKE_ENVELOPE_MUTE   ||
+		    context == ARRANGE_TRACK_TAKE_ENVELOPE_PITCH
 		)
 		{
 			return true;
@@ -420,18 +451,20 @@ bool BR_ContextualToolbar::CanContextFollowItem (int context)
 	return false;
 }
 
-void BR_ContextualToolbar::SetOptionsAll (int* focus, int* topmost, int* position)
+void BR_ContextualToolbar::SetOptionsAll (int* focus, int* topmost, int* position, int* setToolbarToForeground)
 {
-	ReadPtr(focus,    m_options.focus);
-	ReadPtr(topmost,  m_options.topmost);
-	ReadPtr(position, m_options.position);
+	ReadPtr(focus,                  m_options.focus);
+	ReadPtr(topmost,                m_options.topmost);
+	ReadPtr(position,               m_options.position);
+	ReadPtr(setToolbarToForeground, m_options.setToolbarToForeground);
 }
 
-void BR_ContextualToolbar::GetOptionsAll (int* focus, int* topmost, int* position)
+void BR_ContextualToolbar::GetOptionsAll (int* focus, int* topmost, int* position, int* setToolbarToForeground)
 {
-	WritePtr(focus,    m_options.focus);
-	WritePtr(topmost,  m_options.topmost);
-	WritePtr(position, m_options.position);
+	WritePtr(focus,                  m_options.focus);
+	WritePtr(topmost,                m_options.topmost);
+	WritePtr(position,               m_options.position);
+	WritePtr(setToolbarToForeground, m_options.setToolbarToForeground);
 }
 
 void BR_ContextualToolbar::SetOptionsTcp (int* track, int* envelope)
@@ -523,7 +556,7 @@ void BR_ContextualToolbar::ExportConfig (WDL_FastString& contextToolbars, WDL_Fa
 	contextPosition.DeleteSub(contextPosition.GetLength()   - 1, 1);
 
 	options.AppendFormatted(1024,
-	                        "%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d",
+	                        "%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d",
 	                        m_options.focus,
 	                        m_options.topmost,
 	                        m_options.tcpTrack,
@@ -538,7 +571,8 @@ void BR_ContextualToolbar::ExportConfig (WDL_FastString& contextToolbars, WDL_Fa
 	                        m_options.midiSetCCLane,
 	                        m_options.inlineItem,
 	                        m_options.inlineSetCCLane,
-	                        m_options.position
+	                        m_options.position,
+							m_options.setToolbarToForeground
 	);
 }
 
@@ -582,23 +616,39 @@ void BR_ContextualToolbar::ImportConfig (const char* contextToolbars, const char
 	LineParser lp(false);
 	lp.parse(options);
 	BR_ContextualToolbar::Options cleanOptions;
-	m_options.focus                = (lp.getnumtokens() > 0)  ? lp.gettoken_int(0)  : cleanOptions.focus;
-	m_options.topmost              = (lp.getnumtokens() > 1)  ? lp.gettoken_int(1)  : cleanOptions.topmost;
-	m_options.tcpTrack             = (lp.getnumtokens() > 2)  ? lp.gettoken_int(2)  : cleanOptions.tcpTrack;
-	m_options.tcpEnvelope          = (lp.getnumtokens() > 3)  ? lp.gettoken_int(3)  : cleanOptions.tcpEnvelope;
-	m_options.mcpTrack             = (lp.getnumtokens() > 4)  ? lp.gettoken_int(4)  : cleanOptions.mcpTrack;
-	m_options.arrangeTrack         = (lp.getnumtokens() > 5)  ? lp.gettoken_int(5)  : cleanOptions.arrangeTrack;
-	m_options.arrangeItem          = (lp.getnumtokens() > 6)  ? lp.gettoken_int(6)  : cleanOptions.arrangeItem;
-	m_options.arrangeStretchMarker = (lp.getnumtokens() > 7)  ? lp.gettoken_int(7)  : cleanOptions.arrangeStretchMarker;
-	m_options.arrangeTakeEnvelope  = (lp.getnumtokens() > 8)  ? lp.gettoken_int(8)  : cleanOptions.arrangeTakeEnvelope;
-	m_options.arrangeTrackEnvelope = (lp.getnumtokens() > 9)  ? lp.gettoken_int(9)  : cleanOptions.arrangeTrackEnvelope;
-	m_options.arrangeActTake       = (lp.getnumtokens() > 10) ? lp.gettoken_int(10) : cleanOptions.arrangeActTake;
-	m_options.midiSetCCLane        = (lp.getnumtokens() > 11) ? lp.gettoken_int(11) : cleanOptions.midiSetCCLane;
-	m_options.inlineItem           = (lp.getnumtokens() > 12) ? lp.gettoken_int(12) : cleanOptions.inlineItem;
-	m_options.inlineSetCCLane      = (lp.getnumtokens() > 13) ? lp.gettoken_int(13) : cleanOptions.inlineSetCCLane;
-	m_options.position             = (lp.getnumtokens() > 14) ? lp.gettoken_int(14) : cleanOptions.position;
+	m_options.focus                  = (lp.getnumtokens() > 0)  ? lp.gettoken_int(0)  : cleanOptions.focus;
+	m_options.topmost                = (lp.getnumtokens() > 1)  ? lp.gettoken_int(1)  : cleanOptions.topmost;
+	m_options.tcpTrack               = (lp.getnumtokens() > 2)  ? lp.gettoken_int(2)  : cleanOptions.tcpTrack;
+	m_options.tcpEnvelope            = (lp.getnumtokens() > 3)  ? lp.gettoken_int(3)  : cleanOptions.tcpEnvelope;
+	m_options.mcpTrack               = (lp.getnumtokens() > 4)  ? lp.gettoken_int(4)  : cleanOptions.mcpTrack;
+	m_options.arrangeTrack           = (lp.getnumtokens() > 5)  ? lp.gettoken_int(5)  : cleanOptions.arrangeTrack;
+	m_options.arrangeItem            = (lp.getnumtokens() > 6)  ? lp.gettoken_int(6)  : cleanOptions.arrangeItem;
+	m_options.arrangeStretchMarker   = (lp.getnumtokens() > 7)  ? lp.gettoken_int(7)  : cleanOptions.arrangeStretchMarker;
+	m_options.arrangeTakeEnvelope    = (lp.getnumtokens() > 8)  ? lp.gettoken_int(8)  : cleanOptions.arrangeTakeEnvelope;
+	m_options.arrangeTrackEnvelope   = (lp.getnumtokens() > 9)  ? lp.gettoken_int(9)  : cleanOptions.arrangeTrackEnvelope;
+	m_options.arrangeActTake         = (lp.getnumtokens() > 10) ? lp.gettoken_int(10) : cleanOptions.arrangeActTake;
+	m_options.midiSetCCLane          = (lp.getnumtokens() > 11) ? lp.gettoken_int(11) : cleanOptions.midiSetCCLane;
+	m_options.inlineItem             = (lp.getnumtokens() > 12) ? lp.gettoken_int(12) : cleanOptions.inlineItem;
+	m_options.inlineSetCCLane        = (lp.getnumtokens() > 13) ? lp.gettoken_int(13) : cleanOptions.inlineSetCCLane;
+	m_options.position               = (lp.getnumtokens() > 14) ? lp.gettoken_int(14) : cleanOptions.position;
+	m_options.setToolbarToForeground = (lp.getnumtokens() > 15) ? lp.gettoken_int(15) : cleanOptions.setToolbarToForeground;
 
 	this->UpdateInternals();
+}
+
+void BR_ContextualToolbar::Cleaup ()
+{
+	plugin_register("-timer",(void*)BR_ContextualToolbar::TooltipTimer);
+
+	// Make sure all hooked windows procedures are removed
+	for (int i = 0; i < m_callbackToolbars.GetSize(); ++i)
+	{
+		HWND hwnd       = m_callbackToolbars.Get(i)->hwnd;
+		WNDPROC wndProc = m_callbackToolbars.Get(i)->wndProc;
+		if (hwnd && wndProc)
+			SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)wndProc);
+	}
+	m_callbackToolbars.EmptySafe(true);
 }
 
 BR_ContextualToolbar::ContextInfo::ContextInfo () :
@@ -611,51 +661,54 @@ autoClose       (false)
 }
 
 BR_ContextualToolbar::Options::Options () :
-focus                (OPTION_ENABLED|FOCUS_ALL),
-position             (0),
-topmost              (0),
-tcpTrack             (0),
-tcpEnvelope          (0),
-mcpTrack             (0),
-arrangeTrack         (0),
-arrangeItem          (0),
-arrangeStretchMarker (0),
-arrangeTakeEnvelope  (0),
-arrangeTrackEnvelope (0),
-arrangeActTake       (false),
-midiSetCCLane        (false),
-inlineItem           (0),
-inlineSetCCLane      (false)
+focus                  (OPTION_ENABLED|FOCUS_ALL),
+setToolbarToForeground (0),
+position               (0),
+topmost                (0),
+tcpTrack               (0),
+tcpEnvelope            (0),
+mcpTrack               (0),
+arrangeTrack           (0),
+arrangeItem            (0),
+arrangeStretchMarker   (0),
+arrangeTakeEnvelope    (0),
+arrangeTrackEnvelope   (0),
+arrangeActTake         (false),
+midiSetCCLane          (false),
+inlineItem             (0),
+inlineSetCCLane        (false)
 {
 }
 
 BR_ContextualToolbar::ExecuteOnToolbarLoad::ExecuteOnToolbarLoad () :
-focusHwnd           (NULL),
-trackToSelect       (NULL),
-envelopeToSelect    (NULL),
-itemToSelect        (NULL),
-takeParent          (NULL),
-takeIdToActivate    (-1),
-focusContext        (-1),
-positionOrientation (0),
-positionOffsetX     (0),
-positionOffsetY     (0),
-positionOverride    (false),
-setFocus            (false),
-clearTrackSelection (false),
-clearItemSelection  (false),
-setCCLaneAsClicked  (false),
-autoCloseToolbar    (false),
-makeTopMost         (false)
+focusHwnd              (NULL),
+trackToSelect          (NULL),
+envelopeToSelect       (NULL),
+itemToSelect           (NULL),
+takeParent             (NULL),
+takeIdToActivate       (-1),
+focusContext           (-1),
+positionOrientation    (0),
+positionOffsetX        (0),
+positionOffsetY        (0),
+positionOverride       (false),
+setFocus               (false),
+clearTrackSelection    (false),
+clearItemSelection     (false),
+setCCLaneAsClicked     (false),
+autoCloseToolbar       (false),
+makeTopMost            (false),
+setToolbarToForeground (false)
 {
 }
 
 BR_ContextualToolbar::ToolbarWndData::ToolbarWndData () :
-hwnd         (NULL),
-wndProc      (NULL),
-keepOnTop    (false),
-autoClose    (false),
-toggleAction (-1)
+hwnd            (NULL),
+lastFocusedHwnd (NULL),
+wndProc         (NULL),
+keepOnTop       (false),
+autoClose       (false),
+toggleAction    (-1)
 {
 	#ifndef _WIN32
 		level = 0;
@@ -725,6 +778,8 @@ void BR_ContextualToolbar::UpdateInternals ()
 	context = INLINE_MIDI_EDITOR_PIANO;           if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_MIDI_INLINE; m_activeContexts.insert(context);}
 	context = INLINE_MIDI_EDITOR_NOTES;           if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_MIDI_INLINE; m_activeContexts.insert(context);}
 	context = INLINE_MIDI_EDITOR_CC_LANE;         if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_MIDI_INLINE; m_activeContexts.insert(context);}
+
+	m_mode |= BR_MouseInfo::MODE_IGNORE_ENVELOPE_LANE_SEGMENT;
 }
 
 int BR_ContextualToolbar::FindRulerToolbar (BR_MouseInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad)
@@ -792,7 +847,7 @@ int BR_ContextualToolbar::FindTcpToolbar (BR_MouseInfo& mouseInfo,  BR_Contextua
 	{
 		context = TCP_ENVELOPE;
 
-		int type = GetEnvType(mouseInfo.GetEnvelope(), false);
+		BR_EnvType type = GetEnvType(mouseInfo.GetEnvelope(), NULL, NULL);
 		if      (type == VOLUME || type == VOLUME_PREFX) context = (this->GetMouseAction(TCP_ENVELOPE_VOLUME)   == INHERIT_PARENT) ? TCP_ENVELOPE : TCP_ENVELOPE_VOLUME;
 		else if (type == PAN    || type == PAN_PREFX)    context = (this->GetMouseAction(TCP_ENVELOPE_PAN)      == INHERIT_PARENT) ? TCP_ENVELOPE : TCP_ENVELOPE_PAN;
 		else if (type == WIDTH  || type == WIDTH_PREFX)  context = (this->GetMouseAction(TCP_ENVELOPE_WIDTH)    == INHERIT_PARENT) ? TCP_ENVELOPE : TCP_ENVELOPE_WIDTH;
@@ -862,7 +917,6 @@ int BR_ContextualToolbar::FindMcpToolbar (BR_MouseInfo& mouseInfo, BR_Contextual
 
 int BR_ContextualToolbar::FindArrangeToolbar (BR_MouseInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad)
 {
-	bool focusEnvelope = false;
 	int context = -1;
 
 	// Empty arrange space
@@ -888,7 +942,7 @@ int BR_ContextualToolbar::FindArrangeToolbar (BR_MouseInfo& mouseInfo, BR_Contex
 		if (mouseInfo.IsTakeEnvelope())
 		{
 			context  = ARRANGE_TRACK_TAKE_ENVELOPE;
-			int type = GetEnvType(mouseInfo.GetEnvelope(), false);
+			BR_EnvType type = GetEnvType(mouseInfo.GetEnvelope(), NULL, NULL);
 
 			if      (type == VOLUME || type == VOLUME_PREFX) context = (this->GetMouseAction(ARRANGE_TRACK_TAKE_ENVELOPE_VOLUME) == INHERIT_PARENT) ? ARRANGE_TRACK_TAKE_ENVELOPE : ARRANGE_TRACK_TAKE_ENVELOPE_VOLUME;
 			else if (type == PAN    || type == PAN_PREFX)    context = (this->GetMouseAction(ARRANGE_TRACK_TAKE_ENVELOPE_PAN)    == INHERIT_PARENT) ? ARRANGE_TRACK_TAKE_ENVELOPE : ARRANGE_TRACK_TAKE_ENVELOPE_PAN;
@@ -910,7 +964,7 @@ int BR_ContextualToolbar::FindArrangeToolbar (BR_MouseInfo& mouseInfo, BR_Contex
 		else
 		{
 			context  = ARRANGE_ENVELOPE_TRACK;
-			int type = GetEnvType(mouseInfo.GetEnvelope(), false);
+			BR_EnvType type = GetEnvType(mouseInfo.GetEnvelope(), NULL, NULL);
 
 			if      (type == VOLUME || type == VOLUME_PREFX) context = (this->GetMouseAction(ARRANGE_ENVELOPE_TRACK_VOLUME)   == INHERIT_PARENT) ? ARRANGE_ENVELOPE_TRACK : ARRANGE_ENVELOPE_TRACK_VOLUME;
 			else if (type == PAN    || type == PAN_PREFX)    context = (this->GetMouseAction(ARRANGE_ENVELOPE_TRACK_PAN)      == INHERIT_PARENT) ? ARRANGE_ENVELOPE_TRACK : ARRANGE_ENVELOPE_TRACK_PAN;
@@ -926,14 +980,12 @@ int BR_ContextualToolbar::FindArrangeToolbar (BR_MouseInfo& mouseInfo, BR_Contex
 				if ((m_options.arrangeTrackEnvelope & OPTION_ENABLED))
 				{
 					if ((m_options.arrangeTrackEnvelope & SELECT_ENVELOPE)) executeOnToolbarLoad.envelopeToSelect = mouseInfo.GetEnvelope();
-					if ((m_options.arrangeTrackEnvelope & SELECT_TRACK))    executeOnToolbarLoad.trackToSelect    = mouseInfo.GetTrack() ? mouseInfo.GetTrack() : GetEnvParent(mouseInfo.GetEnvelope());
+					if ((m_options.arrangeTrackEnvelope & SELECT_TRACK))    executeOnToolbarLoad.trackToSelect    = mouseInfo.GetTrack();
 
 					executeOnToolbarLoad.clearTrackSelection = !!(m_options.arrangeTrackEnvelope & CLEAR_TRACK_SELECTION);
 				}
 			}
 		}
-
-		focusEnvelope = true;
 	}
 	// Stretch markers
 	else if (!strcmp(mouseInfo.GetSegment(), "track") && (!strcmp(mouseInfo.GetDetails(), "item_stretch_marker")))
@@ -1001,7 +1053,7 @@ int BR_ContextualToolbar::FindArrangeToolbar (BR_MouseInfo& mouseInfo, BR_Contex
 	{
 		executeOnToolbarLoad.setFocus     = true;
 		executeOnToolbarLoad.focusHwnd    = g_hwndParent;
-		executeOnToolbarLoad.focusContext = (focusEnvelope && GetSelectedEnvelope(NULL)) ? 2 : 1;
+		executeOnToolbarLoad.focusContext = (GetSelectedEnvelope(NULL) && !executeOnToolbarLoad.trackToSelect && !executeOnToolbarLoad.itemToSelect) ? 2 : 1;
 	}
 
 	if (context != -1 && this->GetMouseAction(context) == INHERIT_PARENT)
@@ -1185,50 +1237,36 @@ void BR_ContextualToolbar::SetCCLaneClicked (BR_ContextualToolbar::ExecuteOnTool
 
 void BR_ContextualToolbar::RepositionToolbar (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad, HWND toolbarHwnd)
 {
-	if (toolbarHwnd && executeOnToolbarLoad.positionOverride)
+	if (toolbarHwnd)
 	{
 		RECT r;  GetWindowRect(toolbarHwnd, &r);
 		POINT p; GetCursorPos(&p);
-		int h = r.bottom - r.top;
-		int w = r.right  - r.left;
-
-		if (executeOnToolbarLoad.positionOrientation != 0)
+		if (executeOnToolbarLoad.positionOverride)
 		{
-			if      ((executeOnToolbarLoad.positionOrientation & POSITION_H_RIGHT))  r.left = p.x;
-			else if ((executeOnToolbarLoad.positionOrientation & POSITION_H_MIDDLE)) r.left = p.x - (w/2);
-			else if ((executeOnToolbarLoad.positionOrientation & POSITION_H_LEFT))   r.left = p.x - w;
+			int vert = -666;
+			int horz = -666;
 
-			#ifdef _WIN32
-				if      ((executeOnToolbarLoad.positionOrientation & POSITION_V_BOTTOM)) r.top = p.y;
-				else if ((executeOnToolbarLoad.positionOrientation & POSITION_V_MIDDLE)) r.top = p.y - (h/2);
-				else if ((executeOnToolbarLoad.positionOrientation & POSITION_V_TOP))    r.top = p.y - h;
-			#else
-				if      ((executeOnToolbarLoad.positionOrientation & POSITION_V_BOTTOM)) r.top = p.y - h;
-				else if ((executeOnToolbarLoad.positionOrientation & POSITION_V_MIDDLE)) r.top = p.y - (h/2);
-				else if ((executeOnToolbarLoad.positionOrientation & POSITION_V_TOP))    r.top = p.y;
-			#endif
+			if      ((executeOnToolbarLoad.positionOrientation & POSITION_H_RIGHT))  horz = 1;
+			else if ((executeOnToolbarLoad.positionOrientation & POSITION_H_MIDDLE)) horz = 0;
+			else if ((executeOnToolbarLoad.positionOrientation & POSITION_H_LEFT))   horz = -1;
+
+			if      ((executeOnToolbarLoad.positionOrientation & POSITION_V_BOTTOM)) vert = -1;
+			else if ((executeOnToolbarLoad.positionOrientation & POSITION_V_MIDDLE)) vert = 0;
+			else if ((executeOnToolbarLoad.positionOrientation & POSITION_V_TOP))    vert = 1;
+
+			CenterOnPoint(&r, p, horz, vert, executeOnToolbarLoad.positionOffsetX, executeOnToolbarLoad.positionOffsetY);
 		}
 
-		#ifdef _WIN32
-			r.top  += executeOnToolbarLoad.positionOffsetY;
-		#else
-			r.top  -= executeOnToolbarLoad.positionOffsetY;
-		#endif
-		r.left += executeOnToolbarLoad.positionOffsetX;
-
-		r.right  = r.left + w;
-		r.bottom = r.top  + h;
-
 		RECT screen;
-		GetMonitorRectFromPoint(p, &screen);
+		GetMonitorRectFromPoint(p, true, &screen);
 		BoundToRect(screen, &r);
 		SetWindowPos(toolbarHwnd, NULL, r.left, r.top, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE);
 	}
 }
 
-void BR_ContextualToolbar::SetToolbarAlwaysOnTop (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad, HWND toolbarHwnd, int toggleAction)
+void BR_ContextualToolbar::SetToolbarWndProc (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad, HWND toolbarHwnd, int toggleAction, HWND toolbarParent)
 {
-	if (toolbarHwnd && executeOnToolbarLoad.makeTopMost)
+	if (toolbarHwnd)
 	{
 		// Check if toolbar is already assigned callback
 		int id = -1;
@@ -1241,87 +1279,46 @@ void BR_ContextualToolbar::SetToolbarAlwaysOnTop (BR_ContextualToolbar::ExecuteO
 			}
 		}
 
-		if (id == -1 || !m_callbackToolbars.Get(id)->keepOnTop)
+		// Assign callback or just enable functionality if already has callback
+		BR_ContextualToolbar::ToolbarWndData* toolbarWndData  = NULL;
+		if (id == -1)
 		{
-			// Assign callback or just enable functionality if already has callback
-			BR_ContextualToolbar::ToolbarWndData* toolbarWndData  = NULL;
-			if (id == -1)
+			if (toolbarWndData = m_callbackToolbars.Add(new BR_ContextualToolbar::ToolbarWndData))
 			{
-				if (toolbarWndData = m_callbackToolbars.Add(new BR_ContextualToolbar::ToolbarWndData))
+				if (WNDPROC wndProc = (WNDPROC)SetWindowLongPtr(toolbarHwnd, GWLP_WNDPROC, (LONG_PTR)BR_ContextualToolbar::ToolbarWndCallback))
 				{
-					if (WNDPROC wndProc = (WNDPROC)SetWindowLongPtr(toolbarHwnd, GWLP_WNDPROC, (LONG_PTR)BR_ContextualToolbar::ToolbarWndCallback))
-					{
-						toolbarWndData->hwnd         = toolbarHwnd;
-						toolbarWndData->wndProc      = wndProc;
-						toolbarWndData->keepOnTop    = true;
-						toolbarWndData->toggleAction = toggleAction;
-					}
-					else
-					{
-						m_callbackToolbars.Delete(m_callbackToolbars.GetSize() - 1, true);
-						toolbarWndData = NULL;
-					}
+					toolbarWndData->hwnd         = toolbarHwnd;
+					toolbarWndData->wndProc      = wndProc;
+					toolbarWndData->keepOnTop    = executeOnToolbarLoad.makeTopMost;
+					toolbarWndData->autoClose    = executeOnToolbarLoad.autoCloseToolbar;
+					toolbarWndData->toggleAction = toggleAction;
+				}
+				else
+				{
+					m_callbackToolbars.Delete(m_callbackToolbars.GetSize() - 1, true);
+					toolbarWndData = NULL;
 				}
 			}
-			else if (toolbarWndData = m_callbackToolbars.Get(id))
-			{
-				toolbarWndData->keepOnTop = true;
-			}
-
-			// Make it always on top
-			if (toolbarWndData)
-			{
-				#ifdef _WIN32
-					SetWindowPos(toolbarWndData->hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-				#else
-					toolbarWndData->level = SWELL_SetWindowLevel(toolbarWndData->hwnd, 25); // NSStatusWindowLevel
-				#endif
-			}
 		}
-	}
-}
-
-void BR_ContextualToolbar::SetToolbarAutoClose (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad, HWND toolbarHwnd, int toggleAction)
-{
-	if (toolbarHwnd && executeOnToolbarLoad.autoCloseToolbar)
-	{
-		// Check if toolbar is already assigned callback
-		int id = -1;
-		for (int i = 0; i < m_callbackToolbars.GetSize(); ++i)
+		else if (toolbarWndData = m_callbackToolbars.Get(id))
 		{
-			if (m_callbackToolbars.Get(i)->hwnd == toolbarHwnd)
-			{
-				id = i;
-				break;
-			}
+			toolbarWndData->keepOnTop = executeOnToolbarLoad.makeTopMost;
+			toolbarWndData->autoClose = executeOnToolbarLoad.autoCloseToolbar;
 		}
 
-		if (id == -1 || !m_callbackToolbars.Get(id)->autoClose)
+		// Make it always on top
+		if (toolbarWndData && toolbarWndData->keepOnTop)
 		{
-			// Assign callback or just enable functionality if already has callback
-			if (id == -1)
-			{
-				if (BR_ContextualToolbar::ToolbarWndData* toolbarWndData = m_callbackToolbars.Add(new BR_ContextualToolbar::ToolbarWndData))
-				{
-					if (WNDPROC wndProc = (WNDPROC)SetWindowLongPtr(toolbarHwnd, GWLP_WNDPROC, (LONG_PTR)BR_ContextualToolbar::ToolbarWndCallback))
-					{
-						toolbarWndData->hwnd         = toolbarHwnd;
-						toolbarWndData->wndProc      = wndProc;
-						toolbarWndData->autoClose    = true;
-						toolbarWndData->toggleAction = toggleAction;
-					}
-					else
-					{
-						m_callbackToolbars.Delete(m_callbackToolbars.GetSize() - 1, true);
-						toolbarWndData = NULL;
-					}
-				}
-			}
-			else if (BR_ContextualToolbar::ToolbarWndData* toolbarWndData = m_callbackToolbars.Get(id))
-			{
-				toolbarWndData->autoClose = true;
-			}
+			#ifdef _WIN32
+				SetWindowPos(toolbarWndData->hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+			#else
+				toolbarWndData->level = SWELL_SetWindowLevel(toolbarWndData->hwnd, 25); // NSStatusWindowLevel
+			#endif
 		}
+
+		// Set to foreground after hooking into toolbar wnd procedure (because we want for toolbarWndData->lastFocusedHwnd to be saved before focusing toolbar)
+		if (executeOnToolbarLoad.setToolbarToForeground && toolbarParent)
+			::SetFocus(toolbarParent);
 	}
 }
 
@@ -1377,22 +1374,34 @@ int BR_ContextualToolbar::TranslateAction (int mouseAction, bool toIni)
 	{
 		switch (mouseAction)
 		{
-			case DO_NOTHING:           return 1;
-			case INHERIT_PARENT:       return 2;
-			case FOLLOW_ITEM_CONTEXT:  return 3;
-			case TOOLBAR_1_MOUSE:      return 4;
-			case TOOLBAR_2_MOUSE:      return 5;
-			case TOOLBAR_3_MOUSE:      return 6;
-			case TOOLBAR_4_MOUSE:      return 7;
-			case TOOLBAR_5_MOUSE:      return 8;
-			case TOOLBAR_6_MOUSE:      return 9;
-			case TOOLBAR_7_MOUSE:      return 10;
-			case TOOLBAR_8_MOUSE:      return 11;
-			case MIDI_TOOLBAR_1_MOUSE: return 12;
-			case MIDI_TOOLBAR_2_MOUSE: return 13;
-			case MIDI_TOOLBAR_3_MOUSE: return 14;
-			case MIDI_TOOLBAR_4_MOUSE: return 15;
-			default:                   return 1;
+			case DO_NOTHING:            return 1;
+			case INHERIT_PARENT:        return 2;
+			case FOLLOW_ITEM_CONTEXT:   return 3;
+			case TOOLBAR_01_MOUSE:      return 4;
+			case TOOLBAR_02_MOUSE:      return 5;
+			case TOOLBAR_03_MOUSE:      return 6;
+			case TOOLBAR_04_MOUSE:      return 7;
+			case TOOLBAR_05_MOUSE:      return 8;
+			case TOOLBAR_06_MOUSE:      return 9;
+			case TOOLBAR_07_MOUSE:      return 10;
+			case TOOLBAR_08_MOUSE:      return 11;
+			case TOOLBAR_09_MOUSE:      return 16;
+			case TOOLBAR_10_MOUSE:      return 17;
+			case TOOLBAR_11_MOUSE:      return 18;
+			case TOOLBAR_12_MOUSE:      return 19;
+			case TOOLBAR_13_MOUSE:      return 20;
+			case TOOLBAR_14_MOUSE:      return 21;
+			case TOOLBAR_15_MOUSE:      return 22;
+			case TOOLBAR_16_MOUSE:      return 23;
+			case MIDI_TOOLBAR_01_MOUSE: return 12;
+			case MIDI_TOOLBAR_02_MOUSE: return 13;
+			case MIDI_TOOLBAR_03_MOUSE: return 14;
+			case MIDI_TOOLBAR_04_MOUSE: return 15;
+			case MIDI_TOOLBAR_05_MOUSE: return 24;
+			case MIDI_TOOLBAR_06_MOUSE: return 25;
+			case MIDI_TOOLBAR_07_MOUSE: return 26;
+			case MIDI_TOOLBAR_08_MOUSE: return 27;
+			default:                    return 1;
 		}
 	}
 	else
@@ -1402,18 +1411,30 @@ int BR_ContextualToolbar::TranslateAction (int mouseAction, bool toIni)
 			case 1:  return DO_NOTHING;
 			case 2:  return INHERIT_PARENT;
 			case 3:  return FOLLOW_ITEM_CONTEXT;
-			case 4:  return TOOLBAR_1_MOUSE;
-			case 5:  return TOOLBAR_2_MOUSE;
-			case 6:  return TOOLBAR_3_MOUSE;
-			case 7:  return TOOLBAR_4_MOUSE;
-			case 8:  return TOOLBAR_5_MOUSE;
-			case 9:  return TOOLBAR_6_MOUSE;
-			case 10: return TOOLBAR_7_MOUSE;
-			case 11: return TOOLBAR_8_MOUSE;
-			case 12: return MIDI_TOOLBAR_1_MOUSE;
-			case 13: return MIDI_TOOLBAR_2_MOUSE;
-			case 14: return MIDI_TOOLBAR_3_MOUSE;
-			case 15: return MIDI_TOOLBAR_4_MOUSE;
+			case 4:  return TOOLBAR_01_MOUSE;
+			case 5:  return TOOLBAR_02_MOUSE;
+			case 6:  return TOOLBAR_03_MOUSE;
+			case 7:  return TOOLBAR_04_MOUSE;
+			case 8:  return TOOLBAR_05_MOUSE;
+			case 9:  return TOOLBAR_06_MOUSE;
+			case 10: return TOOLBAR_07_MOUSE;
+			case 11: return TOOLBAR_08_MOUSE;
+			case 12: return MIDI_TOOLBAR_01_MOUSE;
+			case 13: return MIDI_TOOLBAR_02_MOUSE;
+			case 14: return MIDI_TOOLBAR_03_MOUSE;
+			case 15: return MIDI_TOOLBAR_04_MOUSE;
+			case 16: return TOOLBAR_09_MOUSE;
+			case 17: return TOOLBAR_10_MOUSE;
+			case 18: return TOOLBAR_11_MOUSE;
+			case 19: return TOOLBAR_12_MOUSE;
+			case 20: return TOOLBAR_13_MOUSE;
+			case 21: return TOOLBAR_14_MOUSE;
+			case 22: return TOOLBAR_15_MOUSE;
+			case 23: return TOOLBAR_16_MOUSE;
+			case 24: return MIDI_TOOLBAR_05_MOUSE;
+			case 25: return MIDI_TOOLBAR_06_MOUSE;
+			case 26: return MIDI_TOOLBAR_07_MOUSE;
+			case 27: return MIDI_TOOLBAR_08_MOUSE;
 			default: return DO_NOTHING;
 		}
 	}
@@ -1452,111 +1473,63 @@ bool BR_ContextualToolbar::GetReaperToolbar (int id, int* mouseAction, int* togg
 {
 	if (id >= 0 && id < TOOLBAR_COUNT)
 	{
-		if (id == 0)
+		if      (id == 0)  {WritePtr(mouseAction, (int)DO_NOTHING);            WritePtr(toggleAction, (int)DO_NOTHING);}
+		else if (id == 1)  {WritePtr(mouseAction, (int)INHERIT_PARENT);        WritePtr(toggleAction, (int)INHERIT_PARENT);}
+		else if (id == 2)  {WritePtr(mouseAction, (int)FOLLOW_ITEM_CONTEXT);   WritePtr(toggleAction, (int)FOLLOW_ITEM_CONTEXT);}
+		else if (id == 3)  {WritePtr(mouseAction, (int)TOOLBAR_01_MOUSE);      WritePtr(toggleAction, (int)TOOLBAR_01_TOGGLE);}
+		else if (id == 4)  {WritePtr(mouseAction, (int)TOOLBAR_02_MOUSE);      WritePtr(toggleAction, (int)TOOLBAR_02_TOGGLE);}
+		else if (id == 5)  {WritePtr(mouseAction, (int)TOOLBAR_03_MOUSE);      WritePtr(toggleAction, (int)TOOLBAR_03_TOGGLE);}
+		else if (id == 6)  {WritePtr(mouseAction, (int)TOOLBAR_04_MOUSE);      WritePtr(toggleAction, (int)TOOLBAR_04_TOGGLE);}
+		else if (id == 7)  {WritePtr(mouseAction, (int)TOOLBAR_05_MOUSE);      WritePtr(toggleAction, (int)TOOLBAR_05_TOGGLE);}
+		else if (id == 8)  {WritePtr(mouseAction, (int)TOOLBAR_06_MOUSE);      WritePtr(toggleAction, (int)TOOLBAR_06_TOGGLE);}
+		else if (id == 9)  {WritePtr(mouseAction, (int)TOOLBAR_07_MOUSE);      WritePtr(toggleAction, (int)TOOLBAR_07_TOGGLE);}
+		else if (id == 10) {WritePtr(mouseAction, (int)TOOLBAR_08_MOUSE);      WritePtr(toggleAction, (int)TOOLBAR_08_TOGGLE);}
+		else if (id == 11) {WritePtr(mouseAction, (int)TOOLBAR_09_MOUSE);      WritePtr(toggleAction, (int)TOOLBAR_09_TOGGLE);}
+		else if (id == 12) {WritePtr(mouseAction, (int)TOOLBAR_10_MOUSE);      WritePtr(toggleAction, (int)TOOLBAR_10_TOGGLE);}
+		else if (id == 13) {WritePtr(mouseAction, (int)TOOLBAR_11_MOUSE);      WritePtr(toggleAction, (int)TOOLBAR_11_TOGGLE);}
+		else if (id == 14) {WritePtr(mouseAction, (int)TOOLBAR_12_MOUSE);      WritePtr(toggleAction, (int)TOOLBAR_12_TOGGLE);}
+		else if (id == 15) {WritePtr(mouseAction, (int)TOOLBAR_13_MOUSE);      WritePtr(toggleAction, (int)TOOLBAR_13_TOGGLE);}
+		else if (id == 16) {WritePtr(mouseAction, (int)TOOLBAR_14_MOUSE);      WritePtr(toggleAction, (int)TOOLBAR_14_TOGGLE);}
+		else if (id == 17) {WritePtr(mouseAction, (int)TOOLBAR_15_MOUSE);      WritePtr(toggleAction, (int)TOOLBAR_15_TOGGLE);}
+		else if (id == 18) {WritePtr(mouseAction, (int)TOOLBAR_16_MOUSE);      WritePtr(toggleAction, (int)TOOLBAR_16_TOGGLE);}
+		else if (id == 19) {WritePtr(mouseAction, (int)MIDI_TOOLBAR_01_MOUSE); WritePtr(toggleAction, (int)MIDI_TOOLBAR_01_TOGGLE);}
+		else if (id == 20) {WritePtr(mouseAction, (int)MIDI_TOOLBAR_02_MOUSE); WritePtr(toggleAction, (int)MIDI_TOOLBAR_02_TOGGLE);}
+		else if (id == 21) {WritePtr(mouseAction, (int)MIDI_TOOLBAR_03_MOUSE); WritePtr(toggleAction, (int)MIDI_TOOLBAR_03_TOGGLE);}
+		else if (id == 22) {WritePtr(mouseAction, (int)MIDI_TOOLBAR_04_MOUSE); WritePtr(toggleAction, (int)MIDI_TOOLBAR_04_TOGGLE);}
+		else if (id == 23) {WritePtr(mouseAction, (int)MIDI_TOOLBAR_05_MOUSE); WritePtr(toggleAction, (int)MIDI_TOOLBAR_05_TOGGLE);}
+		else if (id == 24) {WritePtr(mouseAction, (int)MIDI_TOOLBAR_06_MOUSE); WritePtr(toggleAction, (int)MIDI_TOOLBAR_06_TOGGLE);}
+		else if (id == 25) {WritePtr(mouseAction, (int)MIDI_TOOLBAR_07_MOUSE); WritePtr(toggleAction, (int)MIDI_TOOLBAR_07_TOGGLE);}
+		else if (id == 26) {WritePtr(mouseAction, (int)MIDI_TOOLBAR_08_MOUSE); WritePtr(toggleAction, (int)MIDI_TOOLBAR_08_TOGGLE);}
+
+		if (toolbarName)
 		{
-			WritePtr(mouseAction, (int)DO_NOTHING);
-			WritePtr(toggleAction, (int)DO_NOTHING);
-			if (toolbarName)
-				_snprintfSafe(toolbarName, toolbarNameSz, "%s", __LOCALIZE("Do nothing", "sws_DLG_181"));
+			if (id >= 0 && id <= 2)
+			{
+				if      (id == 0) _snprintfSafe(toolbarName, toolbarNameSz, "%s", __LOCALIZE("Do nothing", "sws_DLG_181"));
+				else if (id == 1) _snprintfSafe(toolbarName, toolbarNameSz, "%s", __LOCALIZE("Inherit parent", "sws_DLG_181"));
+				else if (id == 2) _snprintfSafe(toolbarName, toolbarNameSz, "%s", __LOCALIZE("Follow item context", "sws_DLG_181"));
+			}
+			else
+			{
+				bool midiToolbar = (id >= 19 && id <= 26) ? (true)    : (false);
+				int toolbarId    = (id >= 19 && id <= 26) ? (id - 18) : (id - 2);
+
+				WDL_FastString defaultName, section;
+				if (midiToolbar)
+				{
+					section.AppendFormatted(512, "%s %d", "Floating MIDI toolbar", toolbarId);
+					defaultName.AppendFormatted(512, "%s %d", "MIDI", toolbarId);
+				}
+				else
+				{
+					section.AppendFormatted(512, "%s %d", "Floating toolbar", toolbarId);
+					defaultName.AppendFormatted(512, "%s %d", "Toolbar", toolbarId);
+				}
+
+				GetPrivateProfileString(section.Get(), "title", __localizeFunc(defaultName.Get(), "MENU_349", 0), toolbarName, toolbarNameSz, GetReaperMenuIni());
+			}
 		}
-		else if (id == 1)
-		{
-			WritePtr(mouseAction,  (int)INHERIT_PARENT);
-			WritePtr(toggleAction, (int)INHERIT_PARENT);
-			if (toolbarName)
-				_snprintfSafe(toolbarName, toolbarNameSz, "%s", __LOCALIZE("Inherit parent", "sws_DLG_181"));
-		}
-		else if (id == 2)
-		{
-			WritePtr(mouseAction,  (int)FOLLOW_ITEM_CONTEXT);
-			WritePtr(toggleAction, (int)FOLLOW_ITEM_CONTEXT);
-			if (toolbarName)
-				_snprintfSafe(toolbarName, toolbarNameSz, "%s", __LOCALIZE("Follow item context", "sws_DLG_181"));
-		}
-		else if (id == 3)
-		{
-			WritePtr(mouseAction, (int)TOOLBAR_1_MOUSE);
-			WritePtr(toggleAction, (int)TOOLBAR_1_TOGGLE);
-			if (toolbarName)
-				GetPrivateProfileString("Floating toolbar 1", "title", __localizeFunc("Toolbar 1", "MENU_349", 0), toolbarName, toolbarNameSz, GetReaperMenuIniPath().Get());
-		}
-		else if (id == 4)
-		{
-			WritePtr(mouseAction, (int)TOOLBAR_2_MOUSE);
-			WritePtr(toggleAction, (int)TOOLBAR_2_TOGGLE);
-			if (toolbarName)
-				GetPrivateProfileString("Floating toolbar 2", "title", __localizeFunc("Toolbar 2", "MENU_349", 0), toolbarName, toolbarNameSz, GetReaperMenuIniPath().Get());
-		}
-		else if (id == 5)
-		{
-			WritePtr(mouseAction, (int)TOOLBAR_3_MOUSE);
-			WritePtr(toggleAction, (int)TOOLBAR_3_TOGGLE);
-			if (toolbarName)
-				GetPrivateProfileString("Floating toolbar 3", "title", __localizeFunc("Toolbar 3", "MENU_349", 0), toolbarName, toolbarNameSz, GetReaperMenuIniPath().Get());
-		}
-		else if (id == 6)
-		{
-			WritePtr(mouseAction, (int)TOOLBAR_4_MOUSE);
-			WritePtr(toggleAction, (int)TOOLBAR_4_TOGGLE);
-			if (toolbarName)
-				GetPrivateProfileString("Floating toolbar 4", "title", __localizeFunc("Toolbar 4", "MENU_349", 0), toolbarName, toolbarNameSz, GetReaperMenuIniPath().Get());
-		}
-		else if (id == 7)
-		{
-			WritePtr(mouseAction, (int)TOOLBAR_5_MOUSE);
-			WritePtr(toggleAction, (int)TOOLBAR_5_TOGGLE);
-			if (toolbarName)
-				GetPrivateProfileString("Floating toolbar 5", "title", __localizeFunc("Toolbar 5", "MENU_349", 0), toolbarName, toolbarNameSz, GetReaperMenuIniPath().Get());
-		}
-		else if (id == 8)
-		{
-			WritePtr(mouseAction, (int)TOOLBAR_6_MOUSE);
-			WritePtr(toggleAction, (int)TOOLBAR_6_TOGGLE);
-			if (toolbarName)
-				GetPrivateProfileString("Floating toolbar 6", "title", __localizeFunc("Toolbar 6", "MENU_349", 0), toolbarName, toolbarNameSz, GetReaperMenuIniPath().Get());
-		}
-		else if (id == 9)
-		{
-			WritePtr(mouseAction, (int)TOOLBAR_7_MOUSE);
-			WritePtr(toggleAction, (int)TOOLBAR_7_TOGGLE);
-			if (toolbarName)
-				GetPrivateProfileString("Floating toolbar 7", "title", __localizeFunc("Toolbar 7", "MENU_349", 0), toolbarName, toolbarNameSz, GetReaperMenuIniPath().Get());
-		}
-		else if (id == 10)
-		{
-			WritePtr(mouseAction, (int)TOOLBAR_8_MOUSE);
-			WritePtr(toggleAction, (int)TOOLBAR_8_TOGGLE);
-			if (toolbarName)
-				GetPrivateProfileString("Floating toolbar 8", "title", __localizeFunc("Toolbar 8", "MENU_349", 0), toolbarName, toolbarNameSz, GetReaperMenuIniPath().Get());
-		}
-		else if (id == 11)
-		{
-			WritePtr(mouseAction, (int)MIDI_TOOLBAR_1_MOUSE);
-			WritePtr(toggleAction, (int)MIDI_TOOLBAR_1_TOGGLE);
-			if (toolbarName)
-				GetPrivateProfileString("Floating MIDI Toolbar 1", "title", __localizeFunc("MIDI 1", "MENU_349", 0), toolbarName, toolbarNameSz, GetReaperMenuIniPath().Get());
-		}
-		else if (id == 12)
-		{
-			WritePtr(mouseAction, (int)MIDI_TOOLBAR_2_MOUSE);
-			WritePtr(toggleAction, (int)MIDI_TOOLBAR_2_TOGGLE);
-			if (toolbarName)
-				GetPrivateProfileString("Floating MIDI Toolbar 2", "title", __localizeFunc("MIDI 2", "MENU_349", 0), toolbarName, toolbarNameSz, GetReaperMenuIniPath().Get());
-		}
-		else if (id == 13)
-		{
-			WritePtr(mouseAction, (int)MIDI_TOOLBAR_3_MOUSE);
-			WritePtr(toggleAction, (int)MIDI_TOOLBAR_3_TOGGLE);
-			if (toolbarName)
-				GetPrivateProfileString("Floating MIDI Toolbar 3", "title", __localizeFunc("MIDI 3", "MENU_349", 0), toolbarName, toolbarNameSz, GetReaperMenuIniPath().Get());
-		}
-		else if (id == 14)
-		{
-			WritePtr(mouseAction, (int)MIDI_TOOLBAR_4_MOUSE);
-			WritePtr(toggleAction, (int)MIDI_TOOLBAR_4_TOGGLE);
-			if (toolbarName)
-				GetPrivateProfileString("Floating MIDI Toolbar 4", "title", __localizeFunc("MIDI 4", "MENU_349", 0), toolbarName, toolbarNameSz, GetReaperMenuIniPath().Get());
-		}
+
 		return true;
 	}
 
@@ -1583,15 +1556,21 @@ int BR_ContextualToolbar::GetToolbarId (int mouseAction)
 	return -1;
 }
 
-HWND BR_ContextualToolbar::GetFloatingToolbarHwnd (int mouseAction)
+HWND BR_ContextualToolbar::GetFloatingToolbarHwnd (int mouseAction, bool* inDocker)
 {
+	HWND hwnd = NULL;
+	bool docker = false;
 	int toolbarId = this->GetToolbarId(mouseAction);
 
 	char toolbarName[256];
 	if (this->GetReaperToolbar(toolbarId, NULL,NULL, toolbarName, sizeof(toolbarName)))
-		return FindReaperWndByTitle(toolbarName);
-	else
-		return NULL;
+	{
+		hwnd = FindFloatingToolbarWndByName(toolbarName);
+		docker = GetParent(hwnd) != g_hwndParent;
+	}
+
+	WritePtr(inDocker, docker);
+	return hwnd;
 }
 
 void BR_ContextualToolbar::CloseAllAssignedToolbars ()
@@ -1605,20 +1584,6 @@ void BR_ContextualToolbar::CloseAllAssignedToolbars ()
 				Main_OnCommand(toggleAction, 0);
 		}
 	}
-}
-
-bool BR_ContextualToolbar::AreAssignedToolbarsOpened ()
-{
-	for (set<int>::iterator it = m_activeContexts.begin(); it != m_activeContexts.end(); ++it)
-	{
-		int toggleAction = this->GetToggleAction(*it);
-		if (this->IsContextValid(*it) && this->IsToolbarAction(toggleAction))
-		{
-			if (GetToggleCommandState(toggleAction))
-				return true;
-		}
-	}
-	return false;
 }
 
 LRESULT CALLBACK BR_ContextualToolbar::ToolbarWndCallback (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -1638,7 +1603,7 @@ LRESULT CALLBACK BR_ContextualToolbar::ToolbarWndCallback (HWND hwnd, UINT uMsg,
 
 	if (id == -1)
 	{
-		return 0;
+		return DefWindowProc(hwnd, uMsg, wParam, lParam);
 	}
 	else
 	{
@@ -1685,9 +1650,24 @@ LRESULT CALLBACK BR_ContextualToolbar::ToolbarWndCallback (HWND hwnd, UINT uMsg,
 				}
 			}
 		}
+		else if (uMsg == WM_ACTIVATE)
+		{
+			if (LOWORD(wParam) != WA_INACTIVE)
+			{
+				if (!toolbarWndData->lastFocusedHwnd)
+					toolbarWndData->lastFocusedHwnd = (HWND)lParam;
+			}
+			else
+			{
+				if (IsWindowVisible(hwnd))
+					toolbarWndData->lastFocusedHwnd = NULL;
+			}
+		}
 		else if (uMsg == WM_DESTROY)
 		{
 			SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)wndProc);
+			if (toolbarWndData->lastFocusedHwnd)
+				::SetFocus(toolbarWndData->lastFocusedHwnd);
 			m_callbackToolbars.Delete(id, true);
 		}
 
@@ -1766,10 +1746,10 @@ BR_ContextualToolbar* BR_ContextualToolbarsManager::GetContextualToolbar (int id
 			char contextAutoClose[size];
 			char contextPosition[size];
 			char options[size];
-			GetPrivateProfileString(INI_SECTION, this->GetKeyForPreset(INI_KEY_CONTEXTS,  id).Get(), "", contextToolbars,  size, BR_GetIniFile());
-			GetPrivateProfileString(INI_SECTION, this->GetKeyForPreset(INI_KEY_AUTOCLOSE, id).Get(), "", contextAutoClose, size, BR_GetIniFile());
-			GetPrivateProfileString(INI_SECTION, this->GetKeyForPreset(INI_KEY_POSITION,  id).Get(), "", contextPosition,  size, BR_GetIniFile());
-			GetPrivateProfileString(INI_SECTION, this->GetKeyForPreset(INI_KEY_OPTIONS,   id).Get(), "", options,          size, BR_GetIniFile());
+			GetPrivateProfileString(INI_SECTION, this->GetKeyForPreset(INI_KEY_CONTEXTS,  id).Get(), "", contextToolbars,  size, GetIniFileBR());
+			GetPrivateProfileString(INI_SECTION, this->GetKeyForPreset(INI_KEY_AUTOCLOSE, id).Get(), "", contextAutoClose, size, GetIniFileBR());
+			GetPrivateProfileString(INI_SECTION, this->GetKeyForPreset(INI_KEY_POSITION,  id).Get(), "", contextPosition,  size, GetIniFileBR());
+			GetPrivateProfileString(INI_SECTION, this->GetKeyForPreset(INI_KEY_OPTIONS,   id).Get(), "", options,          size, GetIniFileBR());
 
 			contextualToolbar->ImportConfig(contextToolbars, contextAutoClose, contextPosition, options);
 		}
@@ -1790,10 +1770,10 @@ void BR_ContextualToolbarsManager::SetContextualToolbar (int id, BR_ContextualTo
 		WDL_FastString options;
 		currentContextualToolbar->ExportConfig(contextToolbars, contextAutoClose, contextPosition, options);
 
-		WritePrivateProfileString(INI_SECTION, this->GetKeyForPreset(INI_KEY_CONTEXTS,  id).Get(), contextToolbars.Get(),  BR_GetIniFile());
-		WritePrivateProfileString(INI_SECTION, this->GetKeyForPreset(INI_KEY_AUTOCLOSE, id).Get(), contextAutoClose.Get(), BR_GetIniFile());
-		WritePrivateProfileString(INI_SECTION, this->GetKeyForPreset(INI_KEY_POSITION, id).Get(),  contextPosition.Get(),  BR_GetIniFile());
-		WritePrivateProfileString(INI_SECTION, this->GetKeyForPreset(INI_KEY_OPTIONS, id).Get(),   options.Get(),          BR_GetIniFile());
+		WritePrivateProfileString(INI_SECTION, this->GetKeyForPreset(INI_KEY_CONTEXTS,  id).Get(), contextToolbars.Get(),  GetIniFileBR());
+		WritePrivateProfileString(INI_SECTION, this->GetKeyForPreset(INI_KEY_AUTOCLOSE, id).Get(), contextAutoClose.Get(), GetIniFileBR());
+		WritePrivateProfileString(INI_SECTION, this->GetKeyForPreset(INI_KEY_POSITION, id).Get(),  contextPosition.Get(),  GetIniFileBR());
+		WritePrivateProfileString(INI_SECTION, this->GetKeyForPreset(INI_KEY_OPTIONS, id).Get(),   options.Get(),          GetIniFileBR());
 	}
 }
 
@@ -2022,8 +2002,7 @@ void BR_ContextualToolbarsView::OnItemDblClk (SWS_ListItem* item, int iCol)
 					break;
 				}
 
-
-					listView->Update();
+				listView->Update();
 			}
 		}
 	}
@@ -2080,8 +2059,8 @@ void BR_ContextualToolbarsWnd::Update ()
 			int combo2   = 0;
 			int option   = 0;
 
-			if      (x == 0)  {checkBox = IDC_ALL_FOCUS;     combo1 = IDC_ALL_FOCUS_COMBO;     combo2 = 0;                   m_currentToolbar.GetOptionsAll(&option, NULL, NULL);}
-			else if (x == 1)  {checkBox = IDC_ALL_POS;       combo1 = IDC_ALL_POS_H_COMBO;     combo2 = IDC_ALL_POS_V_COMBO; m_currentToolbar.GetOptionsAll(NULL, NULL, &option);}
+			if      (x == 0)  {checkBox = IDC_ALL_FOCUS;     combo1 = IDC_ALL_FOCUS_COMBO;     combo2 = 0;                   m_currentToolbar.GetOptionsAll(&option, NULL, NULL, NULL);}
+			else if (x == 1)  {checkBox = IDC_ALL_POS;       combo1 = IDC_ALL_POS_H_COMBO;     combo2 = IDC_ALL_POS_V_COMBO; m_currentToolbar.GetOptionsAll(NULL, NULL, &option, NULL);}
 			else if (x == 2)  {checkBox = IDC_TCP_TRACK;     combo1 = IDC_TCP_TRACK_COMBO;     combo2 = 0;                   m_currentToolbar.GetOptionsTcp(&option, NULL);}
 			else if (x == 3)  {checkBox = IDC_TCP_ENV;       combo1 = IDC_TCP_ENV_COMBO;       combo2 = 0;                   m_currentToolbar.GetOptionsTcp(NULL, &option);}
 			else if (x == 4)  {checkBox = IDC_MCP_TRACK;     combo1 = IDC_MCP_TRACK_COMBO;     combo2 = 0;                   m_currentToolbar.GetOptionsMcp(&option);}
@@ -2137,7 +2116,8 @@ void BR_ContextualToolbarsWnd::Update ()
 
 		// Process check boxes without paired combos
 		int option;
-		m_currentToolbar.GetOptionsAll(NULL, &option, NULL);                       CheckDlgButton(m_hwnd, IDC_ALL_TOPMOST,            (option & OPTION_ENABLED));
+		m_currentToolbar.GetOptionsAll(NULL, &option, NULL, NULL);                 CheckDlgButton(m_hwnd, IDC_ALL_TOPMOST,            (option & OPTION_ENABLED));
+		m_currentToolbar.GetOptionsAll(NULL, NULL, NULL, &option);                 CheckDlgButton(m_hwnd, IDC_ALL_FOREGROUND,         (option & OPTION_ENABLED));
 		m_currentToolbar.GetOptionsArrange(NULL, NULL, NULL, NULL, NULL, &option); CheckDlgButton(m_hwnd, IDC_ARG_TAKE_ACTIVATE,      (option & OPTION_ENABLED));
 		m_currentToolbar.GetOptionsMIDI(&option);                                  CheckDlgButton(m_hwnd, IDC_MIDI_CC_LANE_CLICKED,   (option & OPTION_ENABLED)),
 		m_currentToolbar.GetOptionsInline(NULL, &option);                          CheckDlgButton(m_hwnd, IDC_INLINE_CC_LANE_CLICKED, (option & OPTION_ENABLED));
@@ -2261,7 +2241,7 @@ BR_ContextualToolbar* BR_ContextualToolbarsWnd::GetCurrentContextualToolbar ()
 void BR_ContextualToolbarsWnd::OnInitDlg ()
 {
 	char currentPresetStr[64];
-	GetPrivateProfileString(INI_SECTION, INI_KEY_CURRENT_PRESET, "0", currentPresetStr, sizeof(currentPresetStr), BR_GetIniFile());
+	GetPrivateProfileString(INI_SECTION, INI_KEY_CURRENT_PRESET, "0", currentPresetStr, sizeof(currentPresetStr), GetIniFileBR());
 	m_currentPreset = atoi(currentPresetStr);
 	if (m_currentPreset < 0 || m_currentPreset > PRESET_COUNT)
 		m_currentPreset = 0;
@@ -2281,6 +2261,7 @@ void BR_ContextualToolbarsWnd::OnInitDlg ()
 	m_resize.init_item(IDC_ALL_POS_H_COMBO, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_ALL_POS_V_COMBO, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_ALL_TOPMOST, 1.0, 0.0, 1.0, 0.0);
+	m_resize.init_item(IDC_ALL_FOREGROUND, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_TCP_BOX, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_TCP_TRACK, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_TCP_TRACK_COMBO, 1.0, 0.0, 1.0, 0.0);
@@ -2518,15 +2499,14 @@ void BR_ContextualToolbarsWnd::OnCommand (WPARAM wParam, LPARAM lParam)
 				if (combo1) EnableWindow(GetDlgItem(m_hwnd, combo1), IsDlgButtonChecked(m_hwnd, checkBox));
 				if (combo2) EnableWindow(GetDlgItem(m_hwnd, combo2), IsDlgButtonChecked(m_hwnd, checkBox));
 
-
 				int option = 0;
 				option |= (!!IsDlgButtonChecked(m_hwnd, checkBox)) ? OPTION_ENABLED : 0;
 
 				if (combo1) option |= SendDlgItemMessage(m_hwnd, combo1, CB_GETITEMDATA, SendDlgItemMessage(m_hwnd, combo1, CB_GETCURSEL, 0, 0), 0);
 				if (combo2) option |= SendDlgItemMessage(m_hwnd, combo2, CB_GETITEMDATA, SendDlgItemMessage(m_hwnd, combo2, CB_GETCURSEL, 0, 0), 0);
 
-				if      (checkBox == IDC_ALL_FOCUS)     m_currentToolbar.SetOptionsAll(&option, NULL, NULL);
-				else if (checkBox == IDC_ALL_POS)       m_currentToolbar.SetOptionsAll(NULL, NULL, &option);
+				if      (checkBox == IDC_ALL_FOCUS)     m_currentToolbar.SetOptionsAll(&option, NULL, NULL, NULL);
+				else if (checkBox == IDC_ALL_POS)       m_currentToolbar.SetOptionsAll(NULL, NULL, &option, NULL);
 				else if (checkBox == IDC_TCP_TRACK)     m_currentToolbar.SetOptionsTcp(&option, NULL);
 				else if (checkBox == IDC_TCP_ENV)       m_currentToolbar.SetOptionsTcp(NULL, &option);
 				else if (checkBox == IDC_MCP_TRACK)     m_currentToolbar.SetOptionsMcp(&option);
@@ -2541,6 +2521,7 @@ void BR_ContextualToolbarsWnd::OnCommand (WPARAM wParam, LPARAM lParam)
 		break;
 
 		case IDC_ALL_TOPMOST:
+		case IDC_ALL_FOREGROUND:
 		case IDC_ARG_TAKE_ACTIVATE:
 		case IDC_MIDI_CC_LANE_CLICKED:
 		case IDC_INLINE_CC_LANE_CLICKED:
@@ -2548,7 +2529,8 @@ void BR_ContextualToolbarsWnd::OnCommand (WPARAM wParam, LPARAM lParam)
 			int checkBox = LOWORD(wParam);
 			int option = (IsDlgButtonChecked(m_hwnd, checkBox)) ? OPTION_ENABLED : 0;
 
-			if      (checkBox == IDC_ALL_TOPMOST)            m_currentToolbar.SetOptionsAll(NULL, &option, NULL);
+			if      (checkBox == IDC_ALL_TOPMOST)            m_currentToolbar.SetOptionsAll(NULL, &option, NULL, NULL);
+			else if (checkBox == IDC_ALL_FOREGROUND)         m_currentToolbar.SetOptionsAll(NULL, NULL, NULL, &option);
 			else if (checkBox == IDC_ARG_TAKE_ACTIVATE)      m_currentToolbar.SetOptionsArrange(NULL, NULL, NULL, NULL, NULL, &option);
 			else if (checkBox == IDC_MIDI_CC_LANE_CLICKED)   m_currentToolbar.SetOptionsMIDI(&option);
 			else if (checkBox == IDC_INLINE_CC_LANE_CLICKED) m_currentToolbar.SetOptionsInline(NULL, &option);
@@ -2567,7 +2549,7 @@ void BR_ContextualToolbarsWnd::OnDestroy ()
 {
 	char currentPresetStr[512];
 	_snprintfSafe(currentPresetStr, sizeof(currentPresetStr), "%d", m_currentPreset);
-	WritePrivateProfileString(INI_SECTION, INI_KEY_CURRENT_PRESET, currentPresetStr, BR_GetIniFile());
+	WritePrivateProfileString(INI_SECTION, INI_KEY_CURRENT_PRESET, currentPresetStr, GetIniFileBR());
 }
 
 void BR_ContextualToolbarsWnd::GetMinSize (int* w, int* h)
@@ -2618,18 +2600,22 @@ HMENU BR_ContextualToolbarsWnd::OnContextMenu (int x, int y, bool* wantDefaultIt
 			case COL_AUTOCLOSE:
 			{
 				int x = 0;
-				bool autoCloseEnabled = true;
+				int toolbarCount = 0;
+				int enabledCount = 0;
 				while (int* selectedContext = (int*)m_list->EnumSelected(&x))
 				{
-					int toolbarId;
-					bool autoClose;
-					if (m_currentToolbar.GetContext(*selectedContext, &toolbarId, &autoClose, NULL, NULL) && (!autoClose || m_currentToolbar.GetToolbarType(toolbarId) != 3))
+					int toolbarId; bool autoClose;
+					if (m_currentToolbar.GetContext(*selectedContext, &toolbarId, &autoClose, NULL, NULL))
 					{
-						autoCloseEnabled = false;
-						break;
+						if (m_currentToolbar.GetToolbarType(toolbarId) == 3)
+						{
+							++toolbarCount;
+							if (autoClose) ++enabledCount;
+						}
 					}
 				}
 
+				bool autoCloseEnabled = (toolbarCount > 0 && enabledCount == toolbarCount);
 				AddToMenu(menu, __LOCALIZE("Enable toolbar auto close", "sws_DLG_181"), (autoCloseEnabled ? 1 : 2), -1, false, (autoCloseEnabled ? MF_CHECKED : MF_UNCHECKED));
 			}
 			break;
@@ -2763,18 +2749,21 @@ void BR_ContextualToolbarsWnd::ContextMenuReturnId (int id)
 /******************************************************************************
 * Contextual toolbars init/exit                                               *
 ******************************************************************************/
-int ContextualToolbarsInit ()
+int ContextualToolbarsInitExit (bool init)
 {
-	for (int i = CONTEXT_START; i < CONTEXT_COUNT; ++i)
-		g_listViewContexts[i] = i;
+	if (init)
+	{
+		for (int i = CONTEXT_START; i < CONTEXT_COUNT; ++i)
+			g_listViewContexts[i] = i;
+		g_contextToolbarsWndManager.Init();
 
-	g_contextToolbarsWndManager.Init();
+	}
+	else
+	{
+		g_contextToolbarsWndManager.Delete();
+		BR_ContextualToolbar::Cleaup();
+	}
 	return 1;
-}
-
-void ContextualToolbarsExit ()
-{
-	g_contextToolbarsWndManager.Delete();
 }
 
 /******************************************************************************
@@ -2805,6 +2794,13 @@ void ToggleContextualToolbar (COMMAND_T* ct, int val, int valhw, int relmode, HW
 int IsContextualToolbarsOptionsVisible (COMMAND_T* ct)
 {
 	if (BR_ContextualToolbarsWnd* dialog = g_contextToolbarsWndManager.Get())
-		return dialog->IsValidWindow();
+		return (int)dialog->IsWndVisible();
+	return 0;
+}
+
+int IsContextualToolbarVisible (COMMAND_T* ct)
+{
+	if (BR_ContextualToolbar* contextualToolbar = g_toolbarsManager.GetContextualToolbar(abs((int)ct->user) - 1))
+		return (int)contextualToolbar->AreAssignedToolbarsOpened();
 	return 0;
 }

@@ -2,7 +2,7 @@
 / ItemSelState.cpp
 /
 / Copyright (c) 2010 Tim Payne (SWS)
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -10,10 +10,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -283,8 +283,7 @@ void SaveSelTrackSelItems(int iSlot)
 		}
 	}
 	char cUndoText[256];
-	sprintf(cUndoText, __LOCALIZE_VERFMT("Save selected item(s) on selected track(s) to slot %d","sws_undo"), iSlot+1);
-	Undo_OnStateChangeEx(cUndoText, UNDO_STATE_MISCCFG, -1);
+	sprintf(cUndoText, __LOCALIZE_VERFMT("Save selected items on selected tracks to slot %d","sws_undo"), iSlot+1);
 }
 
 void RestoreSelTrackSelItems(int iSlot)
@@ -304,7 +303,7 @@ void RestoreSelTrackSelItems(int iSlot)
 		}
 	}
 	char cUndoText[256];
-	sprintf(cUndoText, __LOCALIZE_VERFMT("Restore selected track(s) selected item(s), slot %d","sws_undo"), iSlot+1);
+	sprintf(cUndoText, __LOCALIZE_VERFMT("Restore selected tracks selected items, slot %d","sws_undo"), iSlot+1);
 	Undo_OnStateChangeEx(cUndoText, UNDO_STATE_ITEMS, -1);
 	UpdateTimeline();
 }
@@ -332,7 +331,6 @@ void RestoreLastSelItemTrack(COMMAND_T* ct)
 void SaveSelItems(COMMAND_T* ct)
 {
 	g_selItems.Get()->Save(NULL);
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
 }
 
 void RestoreSelItems(COMMAND_T* ct)

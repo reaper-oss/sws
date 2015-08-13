@@ -2,7 +2,7 @@
 / SnM_Notes.h
 /
 / Copyright (c) 2010-2013 Jeffos
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -77,7 +77,6 @@ protected:
 	void Perform();
 };
 
-// OSX fix/workaround (SWELL bug?)
 #ifdef _SNM_SWELL_ISSUES
 class OSXForceTxtChangeJob : public ScheduledJob {
 public:
@@ -86,6 +85,13 @@ protected:
 	void Perform();
 };
 #endif
+
+class ReopenNotesJob : public ScheduledJob {
+public:
+	ReopenNotesJob() : ScheduledJob(SNM_SCHEDJOB_REOPEN_NOTES, 50) {}
+protected:
+	void Perform();
+};
 
 class NotesMarkerRegionListener : public SNM_MarkerRegionListener {
 public:
@@ -102,6 +108,7 @@ public:
 	void SetType(int _type);
 	void SetText(const char* _str, bool _addRN = true);
 	void RefreshGUI();
+	void SetWrapText(bool _wrap, bool _isInit=false);
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 	void GetMinSize(int* _w, int* _h) { *_w=MIN_DOCKWND_WIDTH; *_h=140; }
 	void ToggleLock();

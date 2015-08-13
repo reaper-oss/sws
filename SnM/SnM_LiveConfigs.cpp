@@ -2,7 +2,7 @@
 / SnM_LiveConfigs.cpp
 /
 / Copyright (c) 2010-2013 Jeffos
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -88,7 +88,7 @@
 #define SET_TRACK_START_MSG			0xF300 // 255 track max -->
 #define SET_TRACK_END_MSG			0xF3FF // <--
 #define SET_PRESET_START_MSG		0xF400 // a bunch of presets -->
-#define SET_PRESET_END_MSG			0xFFFF // <--
+#define SET_PRESET_END_MSG			0xFFFE // <-- note: exclude very last LOWROD value to prevent compilation warning
 
 #define MAX_CC_DELAY				3000
 #define DEF_CC_DELAY				500
@@ -686,6 +686,14 @@ LiveConfigsWnd::LiveConfigsWnd()
 	Init();
 }
 
+LiveConfigsWnd::~LiveConfigsWnd()
+{
+	m_vwndCC.RemoveAllChildren(false);
+	m_vwndCC.SetRealParent(NULL);
+	m_vwndFade.RemoveAllChildren(false);
+	m_vwndFade.SetRealParent(NULL);
+}
+
 void LiveConfigsWnd::OnInitDlg()
 {
 	m_resize.init_item(IDC_LIST, 0.0, 0.0, 1.0, 1.0);
@@ -758,7 +766,9 @@ void LiveConfigsWnd::OnDestroy()
 	m_cbConfig.Empty();
 	m_cbInputTr.Empty();
 	m_vwndCC.RemoveAllChildren(false);
+	m_vwndCC.SetRealParent(NULL);
 	m_vwndFade.RemoveAllChildren(false);
+	m_vwndFade.SetRealParent(NULL);
 }
 
 void LiveConfigsWnd::FillComboInputTrack()
@@ -955,7 +965,7 @@ void LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				if (destIdx>=0)
 				{
 					for (int i=0; i<g_clipboardConfigs.GetSize() && (destIdx+i)<lc->m_ccConfs.GetSize(); i++)
-						if (item = lc->m_ccConfs.Get(destIdx+i))
+						if ((item = lc->m_ccConfs.Get(destIdx+i)))
 							if (LiveConfigItem* pasteItem = g_clipboardConfigs.Get(i))
 							{
 								item->Paste(pasteItem); // copy everything except the cc value
@@ -2011,8 +2021,8 @@ int LiveConfigInit()
 
 void LiveConfigExit()
 {
+	plugin_register("-projectconfig", &s_projectconfig);
 	WritePrivateProfileString("LiveConfigs", "BigFontName", g_lcBigFontName, g_SNM_IniFn.Get());
-
 	g_lcWndMgr.Delete();
 	g_monWndsMgr.DeleteAll();
 }
@@ -2025,7 +2035,7 @@ void OpenLiveConfig(COMMAND_T*)
 
 int IsLiveConfigDisplayed(COMMAND_T*) {
 	if (LiveConfigsWnd* w = g_lcWndMgr.Get())
-		return w->IsValidWindow();
+		return w->IsWndVisible();
 	return 0;
 }
 
@@ -2744,6 +2754,12 @@ LiveConfigMonitorWnd::LiveConfigMonitorWnd(int _cfgId)
 	Init();
 }
 
+LiveConfigMonitorWnd::~LiveConfigMonitorWnd()
+{
+	m_mons.RemoveAllChildren(false);
+	m_mons.SetRealParent(NULL);
+}
+
 void LiveConfigMonitorWnd::OnInitDlg()
 {
 	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
@@ -2774,6 +2790,7 @@ void LiveConfigMonitorWnd::OnInitDlg()
 
 void LiveConfigMonitorWnd::OnDestroy() {
 	m_mons.RemoveAllChildren(false);
+	m_mons.SetRealParent(NULL);
 }
 
 INT_PTR LiveConfigMonitorWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -2879,7 +2896,7 @@ int IsLiveConfigMonitorWndDisplayed(COMMAND_T* _ct)
 	int wndId = (int)_ct->user;
 	if (wndId>=0 && wndId<SNM_LIVECFG_NB_CONFIGS)
 		if (LiveConfigMonitorWnd* w = g_monWndsMgr.Get(wndId))
-			return w->IsValidWindow();
+			return w->IsWndVisible();
 	return 0;
 }
 

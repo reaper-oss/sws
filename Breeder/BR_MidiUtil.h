@@ -1,9 +1,9 @@
 /******************************************************************************
 / BR_MidiUtil.h
 /
-/ Copyright (c) 2014 Dominik Martin Drzic
+/ Copyright (c) 2014-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
-/ https://code.google.com/p/sws-extension
+/ http://github.com/Jeff0S/sws
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -54,6 +54,7 @@ enum BR_MidiNoteshow
 enum BR_MidiVelLanes
 {
 	CC_VELOCITY         = -1,
+	CC_VELOCITY_OFF     = 167,
 	CC_PITCH            = 128,
 	CC_PROGRAM          = 129,
 	CC_CHANNEL_PRESSURE = 130,
@@ -68,6 +69,7 @@ enum BR_MidiVelLanes
 ******************************************************************************/
 enum BR_MidiStatusBytes
 {
+	STATUS_NOTE_OFF         = 0x80,
 	STATUS_NOTE_ON          = 0x90,
 	STATUS_POLY_PRESSURE    = 0xA0,
 	STATUS_CC               = 0xB0,
@@ -80,16 +82,20 @@ enum BR_MidiStatusBytes
 /******************************************************************************
 * Various constants related to position and dimension of MIDI editor elements *
 ******************************************************************************/
-const int MIDI_RULER_H                 = 44;
+const int MIDI_RULER_H                 = 64;
 const int MIDI_LANE_DIVIDER_H          = 9;
 const int MIDI_LANE_TOP_GAP            = 4;
 const int MIDI_BLACK_KEYS_W            = 73;
+const int MIDI_CC_LANE_CLICK_Y_OFFSET  = 5;
+const int MIDI_CC_EVENT_WIDTH_PX       = 8;
+const int MIDI_MIN_NOTE_VIEW_H         = 110;
 
-const int INLINE_MIDI_MIN_H            = 32;
-const int INLINE_MIDI_MIN_NOTEVIEW_H   = 24;
-const int INLINE_MIDI_LANE_DIVIDER_H   = 6;
-const int INLINE_MIDI_KEYBOARD_W       = 12;
-const int INLINE_MIDI_TOP_BAR_H        = 17;
+const int INLINE_MIDI_MIN_H                  = 32;
+const int INLINE_MIDI_MIN_NOTEVIEW_H         = 24;
+const int INLINE_MIDI_LANE_DIVIDER_H         = 6;
+const int INLINE_MIDI_KEYBOARD_W             = 12;
+const int INLINE_MIDI_TOP_BAR_H              = 17;
+const int INLINE_MIDI_CC_LANE_CLICK_Y_OFFSET = 2;
 
 /******************************************************************************
 * Class for managing normal or inline MIDI editor (read-only for now)         *
@@ -97,9 +103,9 @@ const int INLINE_MIDI_TOP_BAR_H        = 17;
 class BR_MidiEditor
 {
 public:
-	BR_MidiEditor ();                     // last active main MIDI editor
-	BR_MidiEditor (void* midiEditor);     // main MIDI editor
-	BR_MidiEditor (MediaItem_Take* take); // inline MIDI editor
+	BR_MidiEditor ();                              // last active main MIDI editor
+	explicit BR_MidiEditor (void* midiEditor);     // main MIDI editor
+	explicit BR_MidiEditor (MediaItem_Take* take); // inline MIDI editor
 
 	/* Various MIDI editor view options */
 	MediaItem_Take* GetActiveTake ();
@@ -119,7 +125,9 @@ public:
 	int GetCCLaneHeight (int idx);
 	int GetLastClickedCCLane ();
 	int FindCCLane (int lane);
+	int GetCCLanesFullheight (bool keyboardView);
 	bool IsCCLaneVisible (int lane);
+	bool SetCCLaneLastClicked (int idx); // works only for main MIDI editor
 
 	/* Event filter */
 	bool IsNoteVisible (MediaItem_Take* take, int id);
@@ -155,8 +163,8 @@ private:
 class BR_MidiItemTimePos
 {
 public:
-	BR_MidiItemTimePos (MediaItem* item, bool deleteSavedEvents = true);
-	void Restore (bool clearCurrentEvents = true, double offset = 0);
+	explicit BR_MidiItemTimePos (MediaItem* item); // saves all MIDI events in the item
+	void Restore (double timeOffset = 0); // deletes any MIDI events in the item and then restores saved events
 
 private:
 	struct MidiTake
@@ -195,6 +203,8 @@ private:
 	};
 	MediaItem* item;
 	double position, length, timeBase;
+	bool looped;
+	double loopStart, loopEnd, loopedOffset;
 	vector<BR_MidiItemTimePos::MidiTake> savedMidiTakes;
 };
 
@@ -208,12 +218,12 @@ double ME_PositionAtMouseCursor (bool checkRuler, bool checkCCLanes);
 ******************************************************************************/
 vector<int> GetUsedNamedNotes (void* midiEditor, MediaItem_Take* take, bool used, bool named, int channelForNames);
 vector<int> GetSelectedNotes (MediaItem_Take* take);
-vector<int> MuteSelectedNotes (MediaItem_Take* take); // returns previous mute state of all notes
-set<int> GetUsedCCLanes (void* midiEditor, int detect14bit); // detect14bit: 0-> don't detect 14-bit, 1->detect partial 14-bit (count both 14 bit lanes and their counterparts) 2->detect full 14-bit (detect only if all CCs that make it have exactly same time positions)
-double EffectiveMidiTakeLength (MediaItem_Take* take, bool ignoreMutedEvents, bool ignoreTextEvents);
-double EffectiveMidiTakeStart (MediaItem_Take* take, bool ignoreMutedEvents, bool ignoreTextEvents);
-double GetStartOfMeasure (MediaItem_Take* take, double ppqPos); // working versions of MIDI_GetPPQPos_StartOfMeasure
-double GetEndOfMeasure (MediaItem_Take* take, double ppqPos);   // and MIDI_GetPPQPos_EndOfMeasure
+vector<int> MuteUnselectedNotes (MediaItem_Take* take); // returns previous mute state of all notes
+set<int> GetUsedCCLanes (void* midiEditor, int detect14bit, bool selectedEventsOnly); // detect14bit: 0-> don't detect 14-bit, 1->detect partial 14-bit (count both 14 bit lanes and their counterparts) 2->detect full 14-bit (detect only if all CCs that make it have exactly same time positions)
+double EffectiveMidiTakeStart (MediaItem_Take* take, bool ignoreMutedEvents, bool ignoreTextEvents, bool ignoreEventsOutsideItemBoundaries);
+double EffectiveMidiTakeEnd (MediaItem_Take* take, bool ignoreMutedEvents, bool ignoreTextEvents, bool ignoreEventsOutsideItemBoundaries);
+double GetMidiSourceLengthPPQ (MediaItem_Take* take, bool accountPlayrateIfIgnoringProjTempo, bool* isMidiSource = NULL);
+double GetOriginalPpqPos (MediaItem_Take* take, double ppqPos, bool* loopedItem, double* posVisInsertStartPpq, double* posVisInsertEndPpq); // insert start/end are used to check if event can be inserted at returned pos and be visible at the loop iteration where ppqPos is located
 void SetMutedNotes (MediaItem_Take* take, const vector<int>& muteStatus);
 void SetSelectedNotes (MediaItem_Take* take, const vector<int>& selectedNotes, bool unselectOthers);
 void UnselectAllEvents (MediaItem_Take* take, int lane);
@@ -222,9 +232,14 @@ bool IsMidi (MediaItem_Take* take, bool* inProject = NULL);
 bool IsOpenInInlineEditor (MediaItem_Take* take);
 bool IsMidiNoteBlack (int note);
 bool IsVelLaneValid (int lane);
-int FindFirstSelectedNote (MediaItem_Take* take, BR_MidiEditor* midiEditorFilterSettings); // Pass midiEditorFilterSettings in case you
-int FindFirstSelectedCC   (MediaItem_Take* take, BR_MidiEditor* midiEditorFilterSettings); // want to check events through MIDI filter
+bool DeleteEventsInLane (MediaItem_Take* take, int lane, bool selectedOnly, double startRangePpq, double endRangePpq, bool doRange);
+int GetMidiTakeVisibleLoops (MediaItem_Take* take);
+int FindFirstSelectedNote (MediaItem_Take* take, BR_MidiEditor* midiEditorFilterSettings); // Pass midiEditorFilterSettings
+int FindFirstSelectedCC   (MediaItem_Take* take, BR_MidiEditor* midiEditorFilterSettings); // to check event which only pass
+int FindFirstNote (MediaItem_Take* take, BR_MidiEditor* midiEditorFilterSettings);         // through MIDI filter
 int GetMIDIFilePPQ (const char* fp);
-int GetLastClickedVelLane (void* midiEditor);
+int GetLastClickedVelLane (void* midiEditor); // returns -2 if no last clicked lane
+int GetMaxCCLanesFullHeight (void* midiEditor);
+int ConvertLaneToStatusMsg (int lane);
 int MapVelLaneToReaScriptCC (int lane); // CC format follows ReaScript scheme: 0-127=CC, 0x100|(0-31)=14-bit CC, 0x200=velocity, 0x201=pitch,
-int MapReaScriptCCToVelLane (int cc);   // 0x202=program, 0x203=channel pressure, 0x204=bank/program select, 0x205=text, 0x206=sysex
+int MapReaScriptCCToVelLane (int cc);   // 0x202=program, 0x203=channel pressure, 0x204=bank/program select, 0x205=text, 0x206=sysex, 0x207=off velocity

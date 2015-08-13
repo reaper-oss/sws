@@ -2,7 +2,7 @@
 / Freeze.cpp
 /
 / Copyright (c) 2010 Tim Payne (SWS)
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -10,10 +10,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -242,7 +242,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 
 	for (int i = 0; i < g_tracks.Get()->GetSize(); i++)
 	{
-		ctx->AddLine("%s",g_tracks.Get()->Get(i)->ItemString(str, 4096)); 
+		ctx->AddLine("%s",g_tracks.Get()->Get(i)->ItemString(str, 4096));
 		for (int j = 0; j < g_tracks.Get()->Get(i)->m_items.GetSize(); j++)
 			ctx->AddLine("%s",g_tracks.Get()->Get(i)->m_items.Get(j)->ItemString(str, 4096));
 		ctx->AddLine(">");
@@ -269,7 +269,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 	}
 	for (int i = 0; i < g_activeTakeTracks.Get()->GetSize(); i++)
 	{
-		ctx->AddLine("%s",g_activeTakeTracks.Get()->Get(i)->ItemString(str, 4096)); 
+		ctx->AddLine("%s",g_activeTakeTracks.Get()->Get(i)->ItemString(str, 4096));
 		for (int j = 0; j < g_activeTakeTracks.Get()->Get(i)->m_items.GetSize(); j++)
 			ctx->AddLine("%s",g_activeTakeTracks.Get()->Get(i)->m_items.Get(j)->ItemString(str, 4096));
 		ctx->AddLine(">");
@@ -297,30 +297,30 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 static project_config_extension_t g_projectconfig = { ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL };
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
-static COMMAND_T g_commandTable[] = 
+static COMMAND_T g_commandTable[] =
 {
 	// ActiveTake.cpp
-	{ { DEFACCEL, "SWS: Save active takes on selected track(s)" },					"SWS_SAVEACTTAKES",		SaveActiveTakes,			},
-	{ { DEFACCEL, "SWS: Restore active takes on selected track(s)" },				"SWS_RESTACTTAKES",		RestoreActiveTakes,			},
+	{ { DEFACCEL, "SWS: Save active takes on selected tracks" },					"SWS_SAVEACTTAKES",		SaveActiveTakes,			},
+	{ { DEFACCEL, "SWS: Restore active takes on selected tracks" },				"SWS_RESTACTTAKES",		RestoreActiveTakes,			},
 
 	// ItemSelState.cpp
-	{ { DEFACCEL, "SWS: Save selected track(s) selected item(s), slot 1" },			"SWS_SAVESELITEMS1",	SaveSelTrackSelItems,		NULL, 0 },
-	{ { DEFACCEL, "SWS: Save selected track(s) selected item(s), slot 2" },			"SWS_SAVESELITEMS2",	SaveSelTrackSelItems,		NULL, 1 },
-	{ { DEFACCEL, "SWS: Save selected track(s) selected item(s), slot 3" },			"SWS_SAVESELITEMS3",	SaveSelTrackSelItems,		NULL, 2 },
-	{ { DEFACCEL, "SWS: Save selected track(s) selected item(s), slot 4" },			"SWS_SAVESELITEMS4",	SaveSelTrackSelItems,		NULL, 3 },
-	{ { DEFACCEL, "SWS: Save selected track(s) selected item(s), slot 5" },			"SWS_SAVESELITEMS5",	SaveSelTrackSelItems,		NULL, 4 },
-	{ { DEFACCEL, "SWS: Restore selected track(s) selected item(s), slot 1" },		"SWS_RESTSELITEMS1",	RestoreSelTrackSelItems,	NULL, 0 },
-	{ { DEFACCEL, "SWS: Restore selected track(s) selected item(s), slot 2" },		"SWS_RESTSELITEMS2",	RestoreSelTrackSelItems,	NULL, 1 },
-	{ { DEFACCEL, "SWS: Restore selected track(s) selected item(s), slot 3" },		"SWS_RESTSELITEMS3",	RestoreSelTrackSelItems,	NULL, 2 },
-	{ { DEFACCEL, "SWS: Restore selected track(s) selected item(s), slot 4" },		"SWS_RESTSELITEMS4",	RestoreSelTrackSelItems,	NULL, 3 },
-	{ { DEFACCEL, "SWS: Restore selected track(s) selected item(s), slot 5" },		"SWS_RESTSELITEMS5",	RestoreSelTrackSelItems,	NULL, 4 },
-	{ { DEFACCEL, "SWS: Restore last item selection on selected track(s)" },		"SWS_RESTLASTSEL",		RestoreLastSelItemTrack,	NULL, },
-	{ { DEFACCEL, "SWS: Save selected item(s)" },									"SWS_SAVEALLSELITEMS1",	SaveSelItems,				NULL, 0 }, // Slots aren't supported here (yet?)
-	{ { DEFACCEL, "SWS: Restore saved selected item(s)" },							"SWS_RESTALLSELITEMS1",	RestoreSelItems,			NULL, 0 },
+	{ { DEFACCEL, "SWS: Save selected tracks selected items, slot 1" },			"SWS_SAVESELITEMS1",	SaveSelTrackSelItems,		NULL, 0 },
+	{ { DEFACCEL, "SWS: Save selected tracks selected items, slot 2" },			"SWS_SAVESELITEMS2",	SaveSelTrackSelItems,		NULL, 1 },
+	{ { DEFACCEL, "SWS: Save selected tracks selected items, slot 3" },			"SWS_SAVESELITEMS3",	SaveSelTrackSelItems,		NULL, 2 },
+	{ { DEFACCEL, "SWS: Save selected tracks selected items, slot 4" },			"SWS_SAVESELITEMS4",	SaveSelTrackSelItems,		NULL, 3 },
+	{ { DEFACCEL, "SWS: Save selected tracks selected items, slot 5" },			"SWS_SAVESELITEMS5",	SaveSelTrackSelItems,		NULL, 4 },
+	{ { DEFACCEL, "SWS: Restore selected tracks selected items, slot 1" },		"SWS_RESTSELITEMS1",	RestoreSelTrackSelItems,	NULL, 0 },
+	{ { DEFACCEL, "SWS: Restore selected tracks selected items, slot 2" },		"SWS_RESTSELITEMS2",	RestoreSelTrackSelItems,	NULL, 1 },
+	{ { DEFACCEL, "SWS: Restore selected tracks selected items, slot 3" },		"SWS_RESTSELITEMS3",	RestoreSelTrackSelItems,	NULL, 2 },
+	{ { DEFACCEL, "SWS: Restore selected tracks selected items, slot 4" },		"SWS_RESTSELITEMS4",	RestoreSelTrackSelItems,	NULL, 3 },
+	{ { DEFACCEL, "SWS: Restore selected tracks selected items, slot 5" },		"SWS_RESTSELITEMS5",	RestoreSelTrackSelItems,	NULL, 4 },
+	{ { DEFACCEL, "SWS: Restore last item selection on selected tracks" },		"SWS_RESTLASTSEL",		RestoreLastSelItemTrack,	NULL, },
+	{ { DEFACCEL, "SWS: Save selected items" },									"SWS_SAVEALLSELITEMS1",	SaveSelItems,				NULL, 0 }, // Slots aren't supported here (yet?)
+	{ { DEFACCEL, "SWS: Restore saved selected items" },							"SWS_RESTALLSELITEMS1",	RestoreSelItems,			NULL, 0 },
 
 	// MuteState.cpp
-	{ { DEFACCEL, "SWS: Save selected track(s) mutes (+receives, children)" },		"SWS_SAVEMUTES",		SaveMutes,					},
-	{ { DEFACCEL, "SWS: Restore selected track(s) mutes (+receives, children)" },	"SWS_RESTRMUTES",		RestoreMutes,				},
+	{ { DEFACCEL, "SWS: Save selected tracks mutes (+receives, children)" },		"SWS_SAVEMUTES",		SaveMutes,					},
+	{ { DEFACCEL, "SWS: Restore selected tracks mutes (+receives, children)" },	"SWS_RESTRMUTES",		RestoreMutes,				},
 
 	// TimeState.cpp
 	{ { DEFACCEL, "SWS: Save time selection, slot 1" },								"SWS_SAVETIME1",		SaveTimeSel,	NULL, 1 },
@@ -346,12 +346,12 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Restore time selection, next slot" },						"SWS_RESTTIMENEXT",		RestoreTimeNext, },
 	{ { DEFACCEL, "SWS: Restore loop selection, next slot" },						"SWS_RESTLOOPNEXT",		RestoreLoopNext, },
 
-	// TrackItemState.cpp	
-	{ { DEFACCEL, "SWS: Save selected track(s) items' states" },					"SWS_SAVETRACK",		SaveTrack,			},
-	{ { DEFACCEL, "SWS: Restore selected track(s) items' states" },					"SWS_RESTORETRACK",		RestoreTrack,		},
-	{ { DEFACCEL, "SWS: Save selected track(s) selected items' states" },			"SWS_SAVESELONTRACK",	SaveSelOnTrack,		},
-	{ { DEFACCEL, "SWS: Restore selected track(s) selected items' states" },		"SWS_RESTSELONTRACK",	RestoreSelOnTrack,	},
-	{ { DEFACCEL, "SWS: Select item(s) with saved state on selected track(s)" },	"SWS_SELWITHSTATE",		SelItemsWithState,	},
+	// TrackItemState.cpp
+	{ { DEFACCEL, "SWS: Save selected tracks items' states" },					"SWS_SAVETRACK",		SaveTrack,			},
+	{ { DEFACCEL, "SWS: Restore selected tracks items' states" },				"SWS_RESTORETRACK",		RestoreTrack,		},
+	{ { DEFACCEL, "SWS: Save selected tracks selected items' states" },			"SWS_SAVESELONTRACK",	SaveSelOnTrack,		},
+	{ { DEFACCEL, "SWS: Restore selected tracks selected items' states" },		"SWS_RESTSELONTRACK",	RestoreSelOnTrack,	},
+	{ { DEFACCEL, "SWS: Select items with saved state on selected tracks" },	"SWS_SELWITHSTATE",		SelItemsWithState,	},
 
 #ifdef TESTCODE
 	{ { DEFACCEL, "SWS: [Internal] Test" }, "SWS_TEST",  TestFunc, },
@@ -373,4 +373,9 @@ int FreezeInit()
 		return 0;
 
 	return 1;
+}
+
+void FreezeExit()
+{
+	plugin_register("-projectconfig",&g_projectconfig);
 }

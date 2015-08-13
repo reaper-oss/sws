@@ -1,9 +1,9 @@
 /******************************************************************************
 / BR_Tempo.h
 /
-/ Copyright (c) 2013 Dominik Martin Drzic
+/ Copyright (c) 2013-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
-/ https://code.google.com/p/sws-extension
+/ http://github.com/Jeff0S/sws
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -28,21 +28,21 @@
 #pragma once
 
 /******************************************************************************
-* Commands: Tempo - Grid                                                      *
+* Commands: Tempo continuous actions                                          *
 ******************************************************************************/
 void MoveGridToMouseInit ();
-void MoveGridToMouse (COMMAND_T*);
-void MoveGridToEditPlayCursor (COMMAND_T*);
 
 /******************************************************************************
-* Commands: Tempo - Misc                                                      *
+* Commands: Tempo                                                             *
 ******************************************************************************/
+void MoveGridToEditPlayCursor (COMMAND_T*);
 void MoveTempo (COMMAND_T*);
 void EditTempo (COMMAND_T*);
 void EditTempoGradual (COMMAND_T*);
 void DeleteTempo (COMMAND_T*);
 void DeleteTempoPreserveItems (COMMAND_T*);
 void TempoAtGrid (COMMAND_T*);
+void SelectMovePartialTimeSig (COMMAND_T*);
 void TempoShapeLinear (COMMAND_T*);
 void TempoShapeSquare (COMMAND_T*);
 void OpenTempoWiki (COMMAND_T*);

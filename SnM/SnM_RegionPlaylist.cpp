@@ -2,7 +2,7 @@
 / SnM_RegionPlaylist.cpp
 /
 / Copyright (c) 2012-2013 Jeffos
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -211,7 +211,7 @@ int RegionPlaylist::GetNestedMarkerRegion()
 			if (rgnidx>=0)
 			{
 				int x=0, lastx=0; double dPos, dEnd; bool isRgn;
-				while (x = EnumProjectMarkers2(NULL, x, &isRgn, &dPos, &dEnd, NULL, NULL))
+				while ((x = EnumProjectMarkers2(NULL, x, &isRgn, &dPos, &dEnd, NULL, NULL)))
 				{
 					if (rgnidx != lastx)
 					{
@@ -561,6 +561,14 @@ RegionPlaylistWnd::RegionPlaylistWnd()
 	Init();
 }
 
+RegionPlaylistWnd::~RegionPlaylistWnd()
+{
+	m_mons.RemoveAllChildren(false);
+	m_mons.SetRealParent(NULL);
+	m_btnsAddDel.RemoveAllChildren(false);
+	m_btnsAddDel.SetRealParent(NULL);
+}
+
 void RegionPlaylistWnd::OnInitDlg()
 {
 	m_resize.init_item(IDC_LIST, 0.0, 0.0, 1.0, 1.0);
@@ -623,7 +631,9 @@ void RegionPlaylistWnd::OnDestroy()
 	UnregisterToMarkerRegionUpdates(&m_mkrRgnListener);
 	m_cbPlaylist.Empty();
 	m_mons.RemoveAllChildren(false);
+	m_mons.SetRealParent(NULL);
 	m_btnsAddDel.RemoveAllChildren(false);
+	m_btnsAddDel.SetRealParent(NULL);
 }
 
 // _flags: &1=fast update, normal/full update otherwise
@@ -892,7 +902,7 @@ void RegionPlaylistWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case ADD_ALL_REGIONS_MSG:
 		{
 			int x=0, y, num; bool isRgn, updt=false;
-			while (y = EnumProjectMarkers2(NULL, x, &isRgn, NULL, NULL, NULL, &num))
+			while ((y = EnumProjectMarkers2(NULL, x, &isRgn, NULL, NULL, NULL, &num)))
 			{
 				if (isRgn) {
 					RgnPlaylistItem* newItem = new RgnPlaylistItem(MakeMarkerRegionId(num, isRgn));
@@ -1781,11 +1791,11 @@ void AppendPasteCropPlaylist(RegionPlaylist* _playlist, int _mode)
 	// make sure some envelope options are enabled: move with items + add edge points
 	int oldOpt[2] = {-1,-1};
 	int* options[2] = {NULL,NULL};
-	if (options[0] = (int*)GetConfigVar("envattach")) {
+	if ((options[0] = (int*)GetConfigVar("envattach"))) {
 		oldOpt[0] = *options[0];
 		*options[0] = 1;
 	}
-	if (options[1] = (int*)GetConfigVar("env_reduce")) {
+	if ((options[1] = (int*)GetConfigVar("env_reduce"))) {
 		oldOpt[1] = *options[1];
 		*options[1] = 2;
 	}
@@ -1798,16 +1808,20 @@ void AppendPasteCropPlaylist(RegionPlaylist* _playlist, int _mode)
 			int rgnnum, rgncol=0; double rgnpos, rgnend; const char* rgnname;
 			if (EnumMarkerRegionById(NULL, plItem->m_rgnId, NULL, &rgnpos, &rgnend, &rgnname, &rgnnum, &rgncol)>=0)
 			{
-				WDL_PtrList<void> itemsToKeep;
-				if (GetItemsInInterval(&itemsToKeep, rgnpos, rgnend, false))
+				if (!updated)
 				{
-					if (!updated) // to do once (for undo stability)
-					{
-						updated = true;
-						Undo_BeginBlock2(NULL);
-						PreventUIRefresh(1);
-					}
+					updated = true;
+					Undo_BeginBlock2(NULL);
+					PreventUIRefresh(1);
+				}
 
+				// trick: generate dummy items to move envelope points, etc -- even with empty/folder tracks
+				WDL_PtrList<void> itemsToRemove;
+				GenerateItemsInInterval(&itemsToRemove, rgnpos+SNM_FUDGE_FACTOR, rgnend-SNM_FUDGE_FACTOR, "<S&M Region Playlist - TEMP>");
+
+				WDL_PtrList<void> itemsToKeep;
+				GetItemsInInterval(&itemsToKeep, rgnpos, rgnend, false);
+				{
 					// store regions
 					bool found = false;
 					for (int k=0; !found && k<rgns.GetSize(); k++)
@@ -1827,23 +1841,25 @@ void AppendPasteCropPlaylist(RegionPlaylist* _playlist, int _mode)
 
 					// REAPER "bug": the last param of ApplyNudge() is ignored although
 					// it is used in duplicate mode => use a loop instead
-					// note: DupSelItems() is an override of the native ApplyNudge()
 					if (plItem->m_cnt>0)
 						for (int k=0; k < plItem->m_cnt; k++) {
-							DupSelItems(NULL, endPos-rgnpos, &itemsToKeep);
+							DupSelItems(NULL, endPos-rgnpos, &itemsToKeep); // overrides the native ApplyNudge()
 							endPos += (rgnend-rgnpos);
 						}
 
-					// "unsplit" items (itemSates & splitItems are empty when croping, see above)
+					// "unsplit" items
 					for (int j=0; j < itemSates.GetSize(); j++)
 						if (SNM_ItemChunk* ic = itemSates.Get(j)) {
 								SNM_ChunkParserPatcher p(ic->m_item);
 								p.SetChunk(ic->m_chunk.Get());
 							}
+
+					DeleteMediaItemsByName("<S&M Region Playlist - TEMP>");
+
 					for (int j=0; j < splitItems.GetSize(); j++)
 						if (MediaItem* item = (MediaItem*)splitItems.Get(j))
 							if (itemsToKeep.Find(item) < 0)
-								DeleteTrackMediaItem(GetMediaItem_Track(item), item);
+								DeleteTrackMediaItem(GetMediaItem_Track(item), item); // might have been deleted above already (no-op)
 				}
 			}
 		}
@@ -1945,8 +1961,9 @@ void AppendPasteCropPlaylist(RegionPlaylist* _playlist, int _mode)
 	CSurf_FlushUndo(true);
 */
 
-	// *** NEW PROJECT TAB***
-	Main_OnCommand(40859, 0);
+	///////////////////////////////////////////////////////////////////////////
+	// New project tab (ignore default template)
+	Main_OnCommand(41929, 0);
 
 	Undo_BeginBlock2(NULL);
 
@@ -2125,6 +2142,8 @@ int RegionPlaylistInit()
 
 void RegionPlaylistExit()
 {
+	plugin_register("-projectconfig", &s_projectconfig);
+
 	// save prefs
 	WritePrivateProfileString("RegionPlaylist", "MonitorMode", g_monitorMode?"1":"0", g_SNM_IniFn.Get()); 
 	WritePrivateProfileString("RegionPlaylist", "Repeat", g_repeatPlaylist?"1":"0", g_SNM_IniFn.Get()); 
@@ -2153,7 +2172,7 @@ void OpenRegionPlaylist(COMMAND_T*)
 
 int IsRegionPlaylistDisplayed(COMMAND_T*){
 	if (RegionPlaylistWnd* w = g_rgnplWndMgr.Get())
-		return w->IsValidWindow();
+		return w->IsWndVisible();
 	return 0;
 }
 

@@ -1,7 +1,10 @@
-# Original script by Cockos (http://landoleet.org/dev/sws/), also see http://code.google.com/p/sws-extension/issues/detail?id=432
-# JFB mods: tailored for the SWS/S&M extension, i.e. simplified (use a reaper_python import), gets function pointers with rpr_getfp(), removed "RPR_" prefix
-
 #!/usr/bin/perl
+
+# Original script by Cockos (http://landoleet.org/dev/sws/)
+# JFB mods: tailored for the SWS/S&M extension:
+# - re-use rpr_ internal functions from reaper_python import
+# - gets function pointers with rpr_getfp()
+# - removed "RPR_" prefix
 
 require "reascript_helper.pl";
 
@@ -35,7 +38,8 @@ sub PyPack
 {
   my ($t, $v)=@_;
   IsPlainData($t) and return sprintf "%s(%s)", PyType($t), $v; 
-  $t eq "const char*" and return sprintf "rpr_packsc(%s)", $v;
+  ($t eq "const char*" && $v ne "bytestr") and return sprintf "rpr_packsc(%s)", $v;
+  ($t eq "const char*" && $v eq "bytestr") and return sprintf "c_char_p(%s)", $v;
   $t eq "char*" and return sprintf "rpr_packs(%s)", $v;
   # todo handle char**
   IsPlainDataPtr($t) and return sprintf "%s(%s)", PyType(UnderlyingType($t)), $v;
@@ -48,10 +52,9 @@ sub PyUnpack
   my ($t, $ov, $v)=@_;
   (IsPlainData($t) || IsOpaquePtr($t) || $t eq "const char*") and return $ov;
   $t eq "char*" and return sprintf "rpr_unpacks(%s)", $v;
-  ($t eq "bool*" || $t eq "char*" || IsInt(UnderlyingType($t))) and
-    return sprintf "int(%s.value)", $v;
-  ($t eq "float*" || $t eq "double*") and return sprintf "float(%s.value)", $v;
   # todo handle char**
+  ($t eq "bool*" || IsInt(UnderlyingType($t))) and return sprintf "int(%s.value)", $v;
+  ($t eq "float*" || $t eq "double*") and return sprintf "float(%s.value)", $v;
   IsPlainDataPtr($t) and return PyUnpack(UnderlyingType($t), $v);
   die "unknown type $t";
 }
@@ -70,6 +73,13 @@ ReadAPIFuncs();
 foreach $fname (@$funclist)
 {
   $fname eq "ValidatePtr" and next;
+  $fname eq "GetAudioAccessorSamples" and next;
+
+  # remove this to test python export (if _TEST_REASCRIPT_EXPORT is #define'd in ReaScript.cpp) 
+  if ($fname =~ /^SNM_test/)
+  {
+    next;
+  }
 
   @inparms=();
   @proto=();
@@ -83,14 +93,14 @@ foreach $fname (@$funclist)
   $i=0;
   foreach $t (split(",", $ptypes->{$fname}))
   { 
-    $isptr=IsPlainDataPtr($t);
-
+    ($t ne "const char*") and $t =~ s/const //;
+ 
     push @inparms, "p$i";
     push @proto, PyType($t);
     push @pack, PyPack($t, "p$i");
-	push @cparms, (($isptr && $t ne "char*") ? "byref(t[$i])" : "t[$i]");
+    push @cparms, (IsPlainDataPtr($t) && !IsString($t) ? "byref(t[$i])" : "t[$i]");
     push @unpack, PyUnpack($t, "p$i", "t[$i]");
-    $isptr and $byref=1;
+    IsPlainDataPtr($t) and $byref=1;
     ++$i;
   }
 
@@ -114,5 +124,5 @@ foreach $fname (@$funclist)
 }
 
 
-warn "Parsed " . @$funclist . " functions\n";
+print STDERR "Parsed " . @$funclist . " functions\n";
 

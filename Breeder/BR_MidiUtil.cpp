@@ -1,9 +1,9 @@
 /******************************************************************************
 / BR_MidiUtil.cpp
 /
-/ Copyright (c) 2014 Dominik Martin Drzic
+/ Copyright (c) 2014-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
-/ https://code.google.com/p/sws-extension
+/ http://github.com/Jeff0S/sws
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -68,9 +68,12 @@ m_filterEventPos       (false),
 m_filterEventLen       (false),
 m_valid                (false)
 {
-	m_valid        = this->Build();
-	m_lastLane     = GetLastClickedVelLane(m_midiEditor);
-	m_ccLanesCount = (int)m_ccLanes.size();
+	if (m_midiEditor && SWS_MIDIEditor_GetMode(m_midiEditor) != -1)
+	{
+		m_valid        = this->Build();
+		m_lastLane     = GetLastClickedVelLane(m_midiEditor);
+		m_ccLanesCount = (int)m_ccLanes.size();
+	}
 }
 
 BR_MidiEditor::BR_MidiEditor (void* midiEditor) :
@@ -105,9 +108,12 @@ m_filterEventPos       (false),
 m_filterEventLen       (false),
 m_valid                (false)
 {
-	m_valid        = this->Build();
-	m_lastLane     = GetLastClickedVelLane(m_midiEditor);
-	m_ccLanesCount = (int)m_ccLanes.size();
+	if (m_midiEditor && SWS_MIDIEditor_GetMode(m_midiEditor) != -1)
+	{
+		m_valid        = this->Build();
+		m_lastLane     = GetLastClickedVelLane(m_midiEditor);
+		m_ccLanesCount = (int)m_ccLanes.size();
+	}
 }
 
 BR_MidiEditor::BR_MidiEditor (MediaItem_Take* take) :
@@ -236,6 +242,18 @@ int BR_MidiEditor::FindCCLane (int lane)
 	return id;
 }
 
+int BR_MidiEditor::GetCCLanesFullheight (bool keyboardView)
+{
+	int fullHeight = 0;
+	for (int i = 0; i < m_ccLanesCount; ++i)
+		fullHeight += m_ccLanesHeight[i];
+
+	if (m_midiEditor && keyboardView)
+		fullHeight += SCROLLBAR_W - 3;   // cc lane selector is not completely aligned with CC lane
+
+	return fullHeight;
+}
+
 bool BR_MidiEditor::IsCCLaneVisible (int lane)
 {
 	for (size_t i = 0; i < m_ccLanes.size(); ++i)
@@ -244,6 +262,29 @@ bool BR_MidiEditor::IsCCLaneVisible (int lane)
 			return true;
 	}
 	return false;
+}
+
+bool BR_MidiEditor::SetCCLaneLastClicked (int idx)
+{
+	bool success = false;
+	if (m_midiEditor && idx >= 0 && idx < (int)m_ccLanes.size() && m_ccLanes.size() > 0)
+	{
+		if (HWND keyboardWnd = GetPianoView(m_midiEditor))
+		{
+			RECT r; GetClientRect(keyboardWnd, &r);
+			int ccStart = abs(r.bottom - r.top) - this->GetCCLanesFullheight(true) + 1;
+
+			for (int i = 0; i < idx; ++i)
+				ccStart += m_ccLanesHeight[i];
+
+			POINT point;
+			point.y = ccStart + MIDI_CC_LANE_CLICK_Y_OFFSET;
+			point.x = 0;
+			SimulateMouseClick(keyboardWnd, point, true);
+			success = true;
+		}
+	}
+	return success;
 }
 
 bool BR_MidiEditor::IsNoteVisible (MediaItem_Take* take, int id)
@@ -344,8 +385,8 @@ bool BR_MidiEditor::CheckVisibility (MediaItem_Take* take, int chanMsg, double p
 
 		if (!posVis)
 		{
-			double measureEnd   = GetEndOfMeasure(take, position);
-			double measureStart = GetStartOfMeasure(take, measureEnd);
+			double measureEnd   = MIDI_GetPPQPos_EndOfMeasure(take, position);
+			double measureStart = MIDI_GetPPQPos_StartOfMeasure(take, measureEnd);
 
 			/* Shrink measureStart and measureEnd to obey repeat rate */
 			if (m_filterEventPosRepeat != 0)
@@ -490,43 +531,66 @@ bool BR_MidiEditor::Build ()
 /******************************************************************************
 * BR_MidiItemTimePos                                                          *
 ******************************************************************************/
-BR_MidiItemTimePos::BR_MidiItemTimePos (MediaItem* item, bool deleteSavedEvents /*= true*/) :
-item (item)
+BR_MidiItemTimePos::BR_MidiItemTimePos (MediaItem* item) :
+item         (item),
+position     (GetMediaItemInfo_Value(item, "D_POSITION")),
+length       (GetMediaItemInfo_Value(item, "D_LENGTH")),
+timeBase     (GetMediaItemInfo_Value(item, "C_BEATATTACHMODE")),
+looped       (!!GetMediaItemInfo_Value(item, "B_LOOPSRC")),
+loopStart    (-1),
+loopEnd      (-1),
+loopedOffset (0)
 {
-	position = GetMediaItemInfo_Value(item, "D_POSITION");
-	length   = GetMediaItemInfo_Value(item, "D_LENGTH");
-	timeBase = GetMediaItemInfo_Value(item, "C_BEATATTACHMODE");
+	// When restoring position and lenght, the only way to restore it for looped MIDI items is to use MIDI_SetItemExtents which will disable looping
+	// for the whole item. Since we have no idea what will happen before this->Restore() is called take data for active MIDI item right now instead of
+	// in this->Restore() (for example, if client calls SetIgnoreTempo() from BR_Util.h before restoring to disable "ignore project tempo" length of MIDI item source may change)
+	if (looped)
+	{
+		if (MediaItem_Take* activeTake = GetActiveTake(item))
+		{
+			double sourceLenPPQ = GetMidiSourceLengthPPQ(activeTake, true);
+			loopStart = MIDI_GetProjTimeFromPPQPos(activeTake, sourceLenPPQ); // we're not using MIDI_GetProjTimeFromPPQPos(activeTake, 0) because later we will use MIDI_SetItemExtents to make sure looped item
+			loopEnd = MIDI_GetProjTimeFromPPQPos(activeTake, sourceLenPPQ*2); // position info is restored and 0 PPQ in take could theoretically be behind project start in which case MIDI_SetItemExtents wont' work properly
+			loopedOffset = GetMediaItemTakeInfo_Value(activeTake, "D_STARTOFFS");
+		}
+	}
 
-	for (int i = 0; i < CountTakes(item); ++i)
+	int takeCount = CountTakes(item);
+	for (int i = 0; i < takeCount; ++i)
 	{
 		MediaItem_Take* take = GetTake(item, i);
 
 		int noteCount, ccCount, textCount;
-		if (MIDI_CountEvts(take, &noteCount, &ccCount, &textCount))
+		int midiEventCount = MIDI_CountEvts(take, &noteCount, &ccCount, &textCount);
+
+		// In case of looped item, if active take wasn't midi, get looped position here for first MIDI take
+		if (looped && loopStart == -1 && loopEnd == -1 && IsMidi(take, NULL) && (midiEventCount > 0 || i == takeCount - 1))
+		{
+			double sourceLenPPQ = GetMidiSourceLengthPPQ(take, true);
+			loopStart = MIDI_GetProjTimeFromPPQPos(take, sourceLenPPQ);
+			loopEnd = MIDI_GetProjTimeFromPPQPos(take, sourceLenPPQ*2);
+			loopedOffset = GetMediaItemTakeInfo_Value(take, "D_STARTOFFS");
+		}
+
+
+		if (midiEventCount > 0)
 		{
 			savedMidiTakes.push_back(BR_MidiItemTimePos::MidiTake(take, noteCount, ccCount, textCount));
 			BR_MidiItemTimePos::MidiTake* midiTake = &savedMidiTakes.back();
 
 			for (int i = 0; i < noteCount; ++i)
-			{
-				midiTake->noteEvents.push_back(BR_MidiItemTimePos::MidiTake::NoteEvent(take, deleteSavedEvents ? 0 : i));
-				if (deleteSavedEvents) MIDI_DeleteNote(take, 0);
-			}
+				midiTake->noteEvents.push_back(BR_MidiItemTimePos::MidiTake::NoteEvent(take, i));
+
 			for (int i = 0; i < ccCount; ++i)
-			{
-				midiTake->ccEvents.push_back(BR_MidiItemTimePos::MidiTake::CCEvent(take, deleteSavedEvents ? 0 : i));
-				if (deleteSavedEvents) MIDI_DeleteCC(take, 0);
-			}
+				midiTake->ccEvents.push_back(BR_MidiItemTimePos::MidiTake::CCEvent(take, i));
+
 			for (int i = 0; i < textCount; ++i)
-			{
-				midiTake->sysEvents.push_back(BR_MidiItemTimePos::MidiTake::SysEvent(take, deleteSavedEvents ? 0 : i));
-				if (deleteSavedEvents) MIDI_DeleteTextSysexEvt(take, 0);
-			}
+				midiTake->sysEvents.push_back(BR_MidiItemTimePos::MidiTake::SysEvent(take, i));
 		}
 	}
 }
 
-void BR_MidiItemTimePos::Restore (bool clearCurrentEvents /*=true*/, double offset /*=0*/)
+void BR_MidiItemTimePos::Restore (double timeOffset /*=0*/)
 {
 	SetMediaItemInfo_Value(item, "C_BEATATTACHMODE", 0);
 	for (size_t i = 0; i < savedMidiTakes.size(); ++i)
@@ -534,29 +598,38 @@ void BR_MidiItemTimePos::Restore (bool clearCurrentEvents /*=true*/, double offs
 		BR_MidiItemTimePos::MidiTake* midiTake = &savedMidiTakes[i];
 		MediaItem_Take* take = midiTake->take;
 
-		if (clearCurrentEvents)
+		int noteCount, ccCount, textCount;
+		if (MIDI_CountEvts(take, &noteCount, &ccCount, &textCount))
 		{
-			int noteCount, ccCount, textCount;
-			if (MIDI_CountEvts(take, &noteCount, &ccCount, &textCount))
-			{
-				for (int i = 0; i < noteCount; ++i) MIDI_DeleteNote(take, 0);
-				for (int i = 0; i < ccCount;   ++i) MIDI_DeleteCC(take, 0);
-				for (int i = 0; i < textCount; ++i) MIDI_DeleteTextSysexEvt(take, 0);
-			}
+			for (int i = 0; i < noteCount; ++i) MIDI_DeleteNote(take, 0);
+			for (int i = 0; i < ccCount;   ++i) MIDI_DeleteCC(take, 0);
+			for (int i = 0; i < textCount; ++i) MIDI_DeleteTextSysexEvt(take, 0);
+		}
+
+		if (looped && loopStart != -1 && loopEnd != -1)
+		{
+			SetMediaItemTakeInfo_Value(take, "D_STARTOFFS", 0);
+			MIDI_SetItemExtents(item, TimeMap_timeToQN(loopStart), TimeMap_timeToQN(loopEnd));
+
+			SetMediaItemInfo_Value(item , "B_LOOPSRC", 1); // because MIDI_SetItemExtents() disables looping
+			TrimItem(item, position, position + length, true);
+			SetMediaItemTakeInfo_Value(take, "D_STARTOFFS", loopedOffset);
+		}
+		else
+		{
+			TrimItem(item, position, position + length, true);
 		}
 
 		for (size_t i = 0; i < midiTake->noteEvents.size(); ++i)
-			midiTake->noteEvents[i].InsertEvent(take, offset);
+			midiTake->noteEvents[i].InsertEvent(take, timeOffset);
 
 		for (size_t i = 0; i < midiTake->ccEvents.size(); ++i)
-			midiTake->ccEvents[i].InsertEvent(take, offset);
+			midiTake->ccEvents[i].InsertEvent(take, timeOffset);
 
 		for (size_t i = 0; i < midiTake->sysEvents.size(); ++i)
-			midiTake->sysEvents[i].InsertEvent(take, offset);
+			midiTake->sysEvents[i].InsertEvent(take, timeOffset);
 	}
 
-	SetMediaItemInfo_Value(item, "D_POSITION", position);
-	SetMediaItemInfo_Value(item, "D_LENGTH", length);
 	SetMediaItemInfo_Value(item, "C_BEATATTACHMODE", timeBase);
 }
 
@@ -571,7 +644,7 @@ void BR_MidiItemTimePos::MidiTake::NoteEvent::InsertEvent (MediaItem_Take* take,
 {
 	double posPPQ = MIDI_GetPPQPosFromProjTime(take, pos + offset);
 	double endPPQ = MIDI_GetPPQPosFromProjTime(take, end + offset);
-	MIDI_InsertNote(take, selected, muted, posPPQ, endPPQ, chan, pitch, vel);
+	MIDI_InsertNote(take, selected, muted, posPPQ, endPPQ, chan, pitch, vel, NULL);
 }
 
 BR_MidiItemTimePos::MidiTake::CCEvent::CCEvent (MediaItem_Take* take, int id)
@@ -684,7 +757,7 @@ vector<int> GetSelectedNotes (MediaItem_Take* take)
 	return selectedNotes;
 }
 
-vector<int> MuteSelectedNotes (MediaItem_Take* take)
+vector<int> MuteUnselectedNotes (MediaItem_Take* take)
 {
 	vector<int> muteStatus;
 
@@ -697,16 +770,13 @@ vector<int> MuteSelectedNotes (MediaItem_Take* take)
 			MIDI_GetNote(take, i, &selected, &muted, NULL, NULL, NULL, NULL, NULL);
 			muteStatus.push_back((int)muted);
 			if (!selected)
-			{
-				muted = true;
-				MIDI_SetNote(take, i, NULL, &muted, NULL, NULL, NULL, NULL, NULL);
-			}
+				MIDI_SetNote(take, i, NULL, &g_bTrue, NULL, NULL, NULL, NULL, NULL, NULL);
 		}
 	}
 	return muteStatus;
 }
 
-set<int> GetUsedCCLanes (void* midiEditor, int detect14bit)
+set<int> GetUsedCCLanes (void* midiEditor, int detect14bit, bool selectedEventsOnly)
 {
 	MediaItem_Take* take = SWS_MIDIEditor_GetTake(midiEditor);
 	set<int> usedCC;
@@ -720,7 +790,8 @@ set<int> GetUsedCCLanes (void* midiEditor, int detect14bit)
 		for (int id = 0; id < ccCount; ++id)
 		{
 			int chanMsg, chan, msg2;
-			if (!MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, &chan, &msg2, NULL) || !editor.IsCCVisible(take, id))
+			bool selected;
+			if (!MIDI_GetCC(take, id, &selected, NULL, NULL, &chanMsg, &chan, &msg2, NULL) || !editor.IsCCVisible(take, id) || (selectedEventsOnly && !selected))
 				continue;
 
 			if      (chanMsg == STATUS_PROGRAM)          usedCC.insert(CC_PROGRAM);
@@ -749,7 +820,8 @@ set<int> GetUsedCCLanes (void* midiEditor, int detect14bit)
 								double nextPos;
 								int nextChanMsg, nextChan, nextMsg2;
 								MIDI_GetCC(take, ++tmpId, NULL, NULL, &nextPos, &nextChanMsg, &nextChan, &nextMsg2, NULL);
-
+								if (tmpId >= ccCount)
+									break;
 								if (nextPos > pos)
 								{
 									if (detect14bit == 2)
@@ -822,9 +894,9 @@ set<int> GetUsedCCLanes (void* midiEditor, int detect14bit)
 
 		for (int i = 0; i < noteCount; ++i)
 		{
-			int chan;
-			MIDI_GetNote(take, i, NULL, NULL, NULL, NULL, &chan, NULL, NULL);
-			if (editor.IsChannelVisible(chan))
+			bool selected; int chan;
+			MIDI_GetNote(take, i, &selected, NULL, NULL, NULL, &chan, NULL, NULL);
+			if (editor.IsChannelVisible(chan) && (!selectedEventsOnly || (selectedEventsOnly && selected)))
 			{
 				usedCC.insert(-1);
 				break;
@@ -834,12 +906,13 @@ set<int> GetUsedCCLanes (void* midiEditor, int detect14bit)
 		bool foundText = false, foundSys = false;
 		for (int i = 0; i < sysCount; ++i)
 		{
+			bool selected;
 			int type = 0;
-			MIDI_GetTextSysexEvt(take, i, NULL, NULL, NULL, &type, NULL, NULL);
+			MIDI_GetTextSysexEvt(take, i, &selected, NULL, NULL, &type, NULL, NULL);
 
 			if (type == -1)
 			{
-				if (!foundSys)
+				if (!foundSys && (!selectedEventsOnly || (selectedEventsOnly && selected)))
 				{
 					usedCC.insert(CC_SYSEX);
 					foundSys = true;
@@ -849,7 +922,7 @@ set<int> GetUsedCCLanes (void* midiEditor, int detect14bit)
 			}
 			else
 			{
-				if (!foundText)
+				if (!foundText && (!selectedEventsOnly || (selectedEventsOnly && selected)))
 				{
 					usedCC.insert(CC_TEXT_EVENTS);
 					foundText = true;
@@ -863,31 +936,198 @@ set<int> GetUsedCCLanes (void* midiEditor, int detect14bit)
 	return usedCC;
 }
 
-double EffectiveMidiTakeLength (MediaItem_Take* take, bool ignoreMutedEvents, bool ignoreTextEvents)
+double EffectiveMidiTakeStart (MediaItem_Take* take, bool ignoreMutedEvents, bool ignoreTextEvents, bool ignoreEventsOutsideItemBoundaries)
 {
 	int noteCount, ccCount, sysCount;
 	if (take && MIDI_CountEvts(take, &noteCount, &ccCount, &sysCount))
 	{
-		double takeStartTime = GetMediaItemInfo_Value(GetMediaItemTake_Item(take), "D_POSITION");
-		double takeStartPPQ  = MIDI_GetPPQPosFromProjTime(take, takeStartTime);
-		double takeEndPPQ    = MIDI_GetPPQPosFromProjTime(take, takeStartTime + GetMediaItemInfo_Value(GetMediaItemTake_Item(take), "D_LENGTH"));
-		double takeLenPPQ    = takeEndPPQ - takeStartPPQ;
-		double sourceLenPPQ  = GetSourceLengthPPQ(take);
+		MediaItem* item = GetMediaItemTake_Item(take);
+		double itemStart = GetMediaItemInfo_Value(item, "D_POSITION");
 
-		int loopCount = (int)(takeLenPPQ/sourceLenPPQ) + (!fmod(takeLenPPQ, sourceLenPPQ) ? (-1) : (0));
-		double effectiveTakeEndPPQ = takeStartPPQ;
+		double itemStartPPQ = MIDI_GetPPQPosFromProjTime(take, itemStart);
+		double itemEndPPQ   = (!ignoreEventsOutsideItemBoundaries) ? 0 : MIDI_GetPPQPosFromProjTime(take, GetMediaItemInfo_Value(item, "D_LENGTH") + itemStart);
+		int    loopCount    = (!ignoreEventsOutsideItemBoundaries) ? 0 : GetLoopCount(take, 0, NULL);
+		double sourceLenPPQ = (!ignoreEventsOutsideItemBoundaries) ? 0 : GetMidiSourceLengthPPQ(take, true);
+
+		bool validNote = false, validCC = false, validSys = false;
+		double noteStart, ccStart, sysStart;
+
+		double loopOffset = 0;
 		for (int i = 0; i < noteCount; ++i)
 		{
-			bool muted; double noteEnd;
-			MIDI_GetNote(take, i, NULL, &muted, NULL, &noteEnd, NULL, NULL, NULL);
+			bool muted; double start, end;
+			MIDI_GetNote(take, i, NULL, &muted, &start, &end, NULL, NULL, NULL);
+			if ((ignoreMutedEvents && !muted) || !ignoreMutedEvents)
+			{
+				if (!ignoreEventsOutsideItemBoundaries)
+				{
+					noteStart = start;
+					validNote = true;
+					break;
+				}
+				else
+				{
+					start += loopOffset;
+					end   += loopOffset;
+
+					if (AreOverlapped(start, end, itemStartPPQ, itemEndPPQ))
+					{
+						if (itemStartPPQ > start) start = itemStartPPQ;
+						noteStart = start;
+						validNote = true;
+						break;
+					}
+				}
+			}
+
+			if (ignoreEventsOutsideItemBoundaries && loopCount > 0 && i == noteCount - 1)
+			{
+				if (sourceLenPPQ > 0 && loopOffset == 0)
+				{
+					loopOffset = sourceLenPPQ;
+					i = -1;
+				}
+			}
+		}
+
+		loopOffset = 0;
+		for (int i = 0; i < ccCount; ++i)
+		{
+			bool muted; double pos;
+			MIDI_GetCC(take, i, NULL, &muted, &pos, NULL, NULL, NULL, NULL);
+			if ((ignoreMutedEvents && !muted) || !ignoreMutedEvents)
+			{
+				if (!ignoreEventsOutsideItemBoundaries)
+				{
+					ccStart = pos;
+					validCC = true;
+					break;
+				}
+				else
+				{
+					pos += loopOffset;
+
+					if (CheckBounds(pos, itemStartPPQ, itemEndPPQ))
+					{
+						ccStart = pos;
+						validCC = true;
+						break;
+					}
+				}
+			}
+
+			if (ignoreEventsOutsideItemBoundaries && loopCount > 0 && i == ccCount - 1)
+			{
+				if (sourceLenPPQ > 0 && loopOffset == 0)
+				{
+					loopOffset = sourceLenPPQ;
+					i = -1;
+				}
+			}
+		}
+
+		for (int i = 0; i < sysCount; ++i)
+		{
+			bool muted; double pos; int type;
+			MIDI_GetTextSysexEvt(take, i, NULL, &muted, &pos, &type, NULL, NULL);
+			if (((ignoreMutedEvents && !muted) || !ignoreMutedEvents) && ((ignoreTextEvents && type == -1) || !ignoreTextEvents))
+			{
+				if (!ignoreEventsOutsideItemBoundaries)
+				{
+					sysStart = pos;
+					validSys = true;
+					break;
+				}
+				else
+				{
+					pos += loopOffset;
+
+					if (CheckBounds(pos, itemStartPPQ, itemEndPPQ))
+					{
+						sysStart = pos;
+						validSys = true;
+						break;
+					}
+				}
+			}
+
+			if (ignoreEventsOutsideItemBoundaries && loopCount > 0 && i == sysCount - 1)
+			{
+				if (sourceLenPPQ > 0 && loopOffset == 0)
+				{
+					loopOffset = sourceLenPPQ;
+					i = -1;
+				}
+			}
+		}
+
+		if (validNote || validCC || validSys)
+		{
+			if (!validNote) noteStart = (validSys) ? sysStart : ccStart;
+			if (!validCC)   ccStart   = (validSys) ? sysStart : noteStart;
+			if (!validSys)  sysStart  = (ccStart)  ? ccStart  : noteStart;
+			return MIDI_GetProjTimeFromPPQPos(take, min(min(noteStart, ccStart), sysStart));
+		}
+		else
+		{
+			return GetMediaItemInfo_Value(item, "D_POSITION");
+		}
+	}
+	else
+	{
+		return GetMediaItemInfo_Value(GetMediaItemTake_Item(take), "D_POSITION");
+	}
+}
+
+double EffectiveMidiTakeEnd (MediaItem_Take* take, bool ignoreMutedEvents, bool ignoreTextEvents, bool ignoreEventsOutsideItemBoundaries)
+{
+	int noteCount, ccCount, sysCount;
+	if (take && MIDI_CountEvts(take, &noteCount, &ccCount, &sysCount))
+	{
+		MediaItem* item = GetMediaItemTake_Item(take);
+		double itemStart = GetMediaItemInfo_Value(item, "D_POSITION");
+		double itemStartPPQ = MIDI_GetPPQPosFromProjTime(take, itemStart);
+		double itemEndPPQ   = (!ignoreEventsOutsideItemBoundaries) ? 0 : MIDI_GetPPQPosFromProjTime(take, GetMediaItemInfo_Value(item, "D_LENGTH") + itemStart);
+
+		int    loopCount     = GetLoopCount(take, 0, NULL);
+		double sourceLenPPQ  = GetMidiSourceLengthPPQ(take, true);
+		double effectiveTakeEndPPQ = -1;
+
+		for (int i = 0; i < noteCount; ++i)
+		{
+			bool muted; double noteStart, noteEnd;
+			MIDI_GetNote(take, i, NULL, &muted, &noteStart, &noteEnd, NULL, NULL, NULL);
 			if (((ignoreMutedEvents && !muted) || !ignoreMutedEvents))
 			{
 				noteEnd += loopCount*sourceLenPPQ;
-				if (noteEnd > takeEndPPQ)
-					noteEnd -= sourceLenPPQ;
 
-				if (noteEnd > effectiveTakeEndPPQ)
-					effectiveTakeEndPPQ = noteEnd;
+				if (!ignoreEventsOutsideItemBoundaries)
+				{
+					if (noteEnd > effectiveTakeEndPPQ)
+						effectiveTakeEndPPQ = noteEnd;
+				}
+				else
+				{
+					noteStart += loopCount*sourceLenPPQ;
+
+					if (CheckBounds(noteStart, itemStartPPQ, itemEndPPQ))
+					{
+						if (noteEnd > itemEndPPQ) noteEnd = itemEndPPQ;
+						if (noteEnd > effectiveTakeEndPPQ)
+							effectiveTakeEndPPQ = noteEnd;
+					}
+					else if (loopCount > 0)
+					{
+						noteStart -= sourceLenPPQ;
+						if (CheckBounds(noteStart, itemStartPPQ, itemEndPPQ))
+						{
+							noteEnd -= sourceLenPPQ;
+							if (noteEnd > itemEndPPQ) noteEnd = itemEndPPQ;
+							if (noteEnd > effectiveTakeEndPPQ)
+								effectiveTakeEndPPQ = noteEnd;
+						}
+					}
+				}
 			}
 		}
 
@@ -898,11 +1138,36 @@ double EffectiveMidiTakeLength (MediaItem_Take* take, bool ignoreMutedEvents, bo
 			if ((ignoreMutedEvents && !muted) || !ignoreMutedEvents)
 			{
 				pos += loopCount*sourceLenPPQ;
-				if (pos > takeEndPPQ) pos -= sourceLenPPQ;
 
-				if (pos > effectiveTakeEndPPQ)
-					effectiveTakeEndPPQ = pos + 1; // add 1 ppq so length definitely includes that last event
-				break;
+				if (!ignoreEventsOutsideItemBoundaries)
+				{
+					if (pos > effectiveTakeEndPPQ)
+						effectiveTakeEndPPQ = pos + 1; // add 1 ppq so length definitely includes that last event
+					break;
+				}
+				else
+				{
+					if (CheckBounds(pos, itemStartPPQ, itemEndPPQ))
+					{
+						if (pos > effectiveTakeEndPPQ)
+						{
+							effectiveTakeEndPPQ = pos + 1;
+							break;
+						}
+					}
+					else if (loopCount > 0)
+					{
+						pos -= sourceLenPPQ;
+						if (CheckBounds(pos, itemStartPPQ, itemEndPPQ))
+						{
+							if (pos > effectiveTakeEndPPQ)
+							{
+								effectiveTakeEndPPQ = pos + 1;
+								break;
+							}
+						}
+					}
+				}
 			}
 		}
 
@@ -913,96 +1178,125 @@ double EffectiveMidiTakeLength (MediaItem_Take* take, bool ignoreMutedEvents, bo
 			if (((ignoreMutedEvents && !muted) || !ignoreMutedEvents) && ((ignoreTextEvents && type == -1) || !ignoreTextEvents))
 			{
 				pos += loopCount*sourceLenPPQ;
-				if (pos > takeEndPPQ) pos -= sourceLenPPQ;
-
-				if (pos > effectiveTakeEndPPQ)
-					effectiveTakeEndPPQ = pos + 1; // add 1 ppq so length definitely includes that last event
+				if (!ignoreEventsOutsideItemBoundaries)
+				{
+					if (pos > effectiveTakeEndPPQ)
+						effectiveTakeEndPPQ = pos + 1; // add 1 ppq so length definitely includes that last event
+				}
+				else
+				{
+					if (CheckBounds(pos, itemStartPPQ, itemEndPPQ))
+					{
+						if (pos > effectiveTakeEndPPQ)
+							effectiveTakeEndPPQ = pos + 1;
+					}
+					else if (loopCount > 0)
+					{
+						pos -= sourceLenPPQ;
+						if (CheckBounds(pos, itemStartPPQ, itemEndPPQ))
+						{
+							if (pos > effectiveTakeEndPPQ)
+								effectiveTakeEndPPQ = pos + 1;
+						}
+					}
+				}
 			}
 		}
 
-		return MIDI_GetProjTimeFromPPQPos(take, effectiveTakeEndPPQ) - takeStartTime;
+		return (effectiveTakeEndPPQ == -1) ? itemStart : MIDI_GetProjTimeFromPPQPos(take, effectiveTakeEndPPQ);
 	}
 	return 0;
 }
 
-double EffectiveMidiTakeStart (MediaItem_Take* take, bool ignoreMutedEvents, bool ignoreTextEvents)
+double GetMidiSourceLengthPPQ (MediaItem_Take* take, bool accountPlayrateIfIgnoringProjTempo, bool* isMidiSource /*=NULL*/)
 {
-	int noteCount, ccCount, sysCount;
-	if (take && MIDI_CountEvts(take, &noteCount, &ccCount, &sysCount))
+	bool   isMidi = false;
+	double length = 0;
+	if (take && IsMidi(take))
 	{
-		bool validNote = false, validCC = false, validSys = false;
-		double noteStart, ccStart, sysStart;
+		MediaItem* item = GetMediaItemTake_Item(take);
+		double itemStart    = GetMediaItemInfo_Value(item, "D_POSITION");
+		double takeOffset   = GetMediaItemTakeInfo_Value(take, "D_STARTOFFS");
+		double sourceLength = GetMediaItemTake_Source(take)->GetLength();
+		double startPPQ = MIDI_GetPPQPosFromProjTime(take, itemStart - takeOffset);
+		double endPPQ   = MIDI_GetPPQPosFromProjTime(take, itemStart - takeOffset + sourceLength);
 
-		for (int i = 0; i < noteCount; ++i)
+		isMidi = true;
+		length = endPPQ - startPPQ;
+
+		if (accountPlayrateIfIgnoringProjTempo)
 		{
-			bool muted; double start;
-			MIDI_GetNote(take, i, NULL, &muted, &start, NULL, NULL, NULL, NULL);
-			if ((ignoreMutedEvents && !muted) || !ignoreMutedEvents)
-			{
-				noteStart = start;
-				validNote = true;
-				break;
-			}
-		}
-
-		for (int i = 0; i < ccCount; ++i)
-		{
-			bool muted; double pos;
-			MIDI_GetCC(take, i, NULL, &muted, &pos, NULL, NULL, NULL, NULL);
-			if ((ignoreMutedEvents && !muted) || !ignoreMutedEvents)
-			{
-				ccStart = pos;
-				validCC = true;
-				break;
-			}
-		}
-
-		for (int i = 0; i < sysCount; ++i)
-		{
-			bool muted; double pos; int type;
-			MIDI_GetTextSysexEvt(take, i, NULL, &muted, &pos, &type, NULL, NULL);
-			if (((ignoreMutedEvents && !muted) || !ignoreMutedEvents) && ((ignoreTextEvents && type == -1) || !ignoreTextEvents))
-			{
-				sysStart = pos;
-				validSys = true;
-				break;
-			}
-		}
-
-		if (validNote || validCC || validSys)
-		{
-			if (!validNote) noteStart = (validSys) ? sysStart : ccStart;
-			if (!validCC)   ccStart   = (validSys) ? sysStart : noteStart;
-			if (!validSys)  sysStart  = (ccStart)  ? ccStart  : noteStart;
-
-			return MIDI_GetProjTimeFromPPQPos(take, min(min(noteStart, ccStart), sysStart));
+			bool ignoreProjTempo;
+			if (GetMidiTakeTempoInfo(take, &ignoreProjTempo, NULL, NULL, NULL) && ignoreProjTempo)
+				length /= GetMediaItemTakeInfo_Value(take, "D_PLAYRATE");
 		}
 	}
-	return GetMediaItemInfo_Value(GetMediaItemTake_Item(take), "D_POSITION");
+
+	WritePtr(isMidiSource, isMidi);
+	return length;
 }
 
-double GetStartOfMeasure (MediaItem_Take* take, double ppqPos)
+double GetOriginalPpqPos (MediaItem_Take* take, double ppqPos, bool* loopedItem, double* posVisInsertStartPpq, double* posVisInsertEndPpq)
 {
-	if (take)
+	double returnPos = 0;
+	MediaItem* item = GetMediaItemTake_Item(take);
+	if (!take || !item || !IsMidi(take, NULL))
 	{
-		int measure;
-		if (TimeMap2_timeToBeats(NULL, MIDI_GetProjTimeFromPPQPos(take, ppqPos), &measure, NULL, NULL, NULL) < SNM_FUDGE_FACTOR && measure > 0)
-			--measure;
-		return MIDI_GetPPQPosFromProjTime(take, TimeMap2_beatsToTime(NULL, 0, &measure));
+		WritePtr(loopedItem,          false);
+		WritePtr(posVisInsertStartPpq, 0.0);
+		WritePtr(posVisInsertEndPpq,   0.0);
 	}
-	return -1;
-}
+	else
+	{
+		double itemStart = GetMediaItemInfo_Value(item, "D_POSITION");
+		double itemEnd   = itemStart + GetMediaItemInfo_Value(item, "D_LENGTH");
 
-double GetEndOfMeasure (MediaItem_Take* take, double ppqPos)
-{
-	if (take)
-	{
-		int measure;
-		TimeMap2_timeToBeats(NULL, MIDI_GetProjTimeFromPPQPos(take, ppqPos), &measure, NULL, NULL, NULL);
-		++measure;
-		return MIDI_GetPPQPosFromProjTime(take, TimeMap2_beatsToTime(NULL, 0, &measure));
+		if (GetMediaItemInfo_Value(item, "B_LOOPSRC") == 0)
+		{
+			WritePtr(loopedItem,           false);
+			WritePtr(posVisInsertStartPpq, MIDI_GetPPQPosFromProjTime(take, itemStart));
+			WritePtr(posVisInsertEndPpq,   MIDI_GetPPQPosFromProjTime(take, itemEnd));
+			returnPos = ppqPos;
+		}
+		else
+		{
+			WritePtr(loopedItem, true);
+
+			double visibleItemStartPpq = MIDI_GetPPQPosFromProjTime(take, itemStart);
+			double visibleItemEndPpq   = MIDI_GetPPQPosFromProjTime(take, itemEnd);
+			double sourceLenPpq = GetMidiSourceLengthPPQ(take, true);
+
+			// Deduct take offset to get correct current loop iteration
+			double itemStartPpq = MIDI_GetPPQPosFromProjTime(take, itemStart - GetMediaItemTakeInfo_Value(take, "D_STARTOFFS"));
+			int currentLoop;
+			int loopCount = GetLoopCount(take, MIDI_GetProjTimeFromPPQPos(take, ppqPos), &currentLoop);
+
+			returnPos = (ppqPos >= visibleItemStartPpq) ? (ppqPos - (currentLoop * sourceLenPpq)) : ppqPos;
+
+			if (ppqPos > visibleItemEndPpq)                            // position after item end
+			{
+				WritePtr(posVisInsertStartPpq, 0.0);
+				WritePtr(posVisInsertEndPpq,   0.0);
+			}
+			else if (ppqPos < visibleItemStartPpq || currentLoop == 0) // position in first loop iteration or before it
+			{
+				WritePtr(posVisInsertStartPpq, visibleItemStartPpq);
+				WritePtr(posVisInsertEndPpq,   (visibleItemEndPpq - visibleItemStartPpq >= sourceLenPpq) ? itemStartPpq + sourceLenPpq : visibleItemEndPpq);
+			}
+			else if (currentLoop == loopCount)                        // position in last loop iteration
+			{
+				WritePtr(posVisInsertStartPpq, itemStartPpq);
+				WritePtr(posVisInsertEndPpq,   itemStartPpq + (visibleItemEndPpq - (currentLoop * sourceLenPpq)));
+			}
+			else                                                     // position in other loop iterations
+			{
+				WritePtr(posVisInsertStartPpq, itemStartPpq);
+				WritePtr(posVisInsertEndPpq,   itemStartPpq + sourceLenPpq);
+			}
+		}
 	}
-	return -1;
+
+	return returnPos;
 }
 
 void SetMutedNotes (MediaItem_Take* take, const vector<int>& muteStatus)
@@ -1011,7 +1305,7 @@ void SetMutedNotes (MediaItem_Take* take, const vector<int>& muteStatus)
 	for (int i = 0; i < noteCount; ++i)
 	{
 		bool muted = !!muteStatus[i];
-		MIDI_SetNote(take, i, NULL, &muted, NULL, NULL, NULL, NULL, NULL);
+		MIDI_SetNote(take, i, NULL, &muted, NULL, NULL, NULL, NULL, NULL, NULL);
 	}
 }
 
@@ -1031,7 +1325,7 @@ void SetSelectedNotes (MediaItem_Take* take, const vector<int>& selectedNotes, b
 			++selectedId;
 		}
 
-		MIDI_SetNote(take, i, ((unselectOthers) ? (&selected) : ((&selected) ? &selected : NULL)), NULL, NULL, NULL, NULL, NULL, NULL);
+		MIDI_SetNote(take, i, ((unselectOthers) ? (&selected) : ((&selected) ? &selected : NULL)), NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 	}
 }
 
@@ -1046,7 +1340,7 @@ void UnselectAllEvents (MediaItem_Take* take, int lane)
 			{
 				int cc, chanMsg;
 				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, NULL, &cc, NULL) && chanMsg == STATUS_CC && cc == lane)
-					MIDI_SetCC(take, id, &g_bFalse, NULL, NULL, NULL, NULL, NULL, NULL);
+					MIDI_SetCC(take, id, &g_bFalse, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 			}
 		}
 		else if (lane == CC_PROGRAM || lane == CC_CHANNEL_PRESSURE || lane == CC_PITCH || lane == CC_BANK_SELECT)
@@ -1060,14 +1354,14 @@ void UnselectAllEvents (MediaItem_Take* take, int lane)
 			{
 				int chanMsg;
 				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, NULL, NULL, NULL) && chanMsg == type)
-					MIDI_SetCC(take, id, &g_bFalse, NULL, NULL, NULL, NULL, NULL, NULL);
+					MIDI_SetCC(take, id, &g_bFalse, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 			}
 		}
-		else if (lane == CC_VELOCITY)
+		else if (lane == CC_VELOCITY || lane == CC_VELOCITY_OFF)
 		{
 			int id = -1;
 			while ((id = MIDI_EnumSelNotes(take, id)) != -1)
-				MIDI_SetNote(take, id, &g_bFalse, NULL, NULL, NULL, NULL, NULL, NULL);
+				MIDI_SetNote(take, id, &g_bFalse, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 		}
 		else if (lane == CC_TEXT_EVENTS || lane == CC_SYSEX)
 		{
@@ -1076,7 +1370,7 @@ void UnselectAllEvents (MediaItem_Take* take, int lane)
 			{
 				int type = 0;
 				if (MIDI_GetTextSysexEvt(take, id, NULL, NULL, NULL, &type, NULL, NULL) && ((lane == CC_SYSEX && type == -1) || (lane == CC_TEXT_EVENTS && type != -1)))
-					MIDI_SetTextSysexEvt(take, id, &g_bFalse, NULL, NULL, NULL, NULL, NULL);
+					MIDI_SetTextSysexEvt(take, id, &g_bFalse, NULL, NULL, NULL, NULL, NULL, NULL);
 			}
 		}
 		else if (lane >= CC_14BIT_START)
@@ -1089,7 +1383,7 @@ void UnselectAllEvents (MediaItem_Take* take, int lane)
 			{
 				int cc, chanMsg;
 				if (MIDI_GetCC(take, id, NULL, NULL, NULL, &chanMsg, NULL, &cc, NULL) && chanMsg == STATUS_CC && (cc == cc1 || cc == cc2))
-					MIDI_SetCC(take, id, &g_bFalse, NULL, NULL, NULL, NULL, NULL, NULL);
+					MIDI_SetCC(take, id, &g_bFalse, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 			}
 		}
 	}
@@ -1116,10 +1410,7 @@ bool IsMidi (MediaItem_Take* take, bool* inProject /*= NULL*/)
 			if (inProject)
 			{
 				const char* fileName = source->GetFileName();
-				if (fileName && !strcmp(fileName, ""))
-					*inProject = true;
-				else
-					*inProject = false;
+				*inProject = (fileName && !strcmp(fileName, ""));
 			}
 			return true;
 		}
@@ -1150,10 +1441,63 @@ bool IsMidiNoteBlack (int note)
 
 bool IsVelLaneValid (int lane)
 {
-	if (lane >= -1 && lane <= 165)
+	if (lane >= CC_VELOCITY && lane <= CC_VELOCITY_OFF)
 		return true;
 	else
 		return false;
+}
+
+bool DeleteEventsInLane (MediaItem_Take* take, int lane, bool selectedOnly, double startRangePpq, double endRangePpq, bool doRange)
+{
+	bool update = false;
+
+	if (lane == CC_SYSEX || lane == CC_TEXT_EVENTS)
+	{
+		int sysCount; MIDI_CountEvts(take, NULL, NULL, &sysCount);
+		for (int i = 0; i < sysCount; ++i)
+		{
+			bool selected;
+			double position;
+			int type;
+			MIDI_GetTextSysexEvt(take, i, &selected, NULL, &position, &type, NULL, 0);
+
+			if ((!doRange || CheckBounds(position, startRangePpq, endRangePpq)) && ((lane == CC_SYSEX && type == -1) || (lane == CC_TEXT_EVENTS && CheckBounds(type, 1, 7))))
+			{
+				if (!selectedOnly || (selectedOnly && selected))
+				{
+					MIDI_DeleteTextSysexEvt(take, i);
+					--i;
+					update = true;
+				}
+			}
+		}
+	}
+	else
+	{
+		int eventType = ConvertLaneToStatusMsg(lane);
+		int lane1     = (lane >= CC_14BIT_START) ? lane - CC_14BIT_START : lane;
+		int lane2     = (lane >= CC_14BIT_START) ? lane + 32             : lane;
+
+		int ccCount; MIDI_CountEvts(take, NULL, &ccCount, NULL);
+		for (int i = 0; i < ccCount; ++i)
+		{
+			bool selected;
+			double position;
+			int chanMsg, msg2, msg3;
+			MIDI_GetCC(take, i, &selected, NULL, &position, &chanMsg, NULL, &msg2, &msg3);
+
+			if ((!doRange || CheckBounds(position, startRangePpq, endRangePpq)) && chanMsg == eventType && (eventType != STATUS_CC || (lane1 == msg2 || lane2 == msg2)))
+			{
+				if (!selectedOnly || (selectedOnly && selected))
+				{
+					MIDI_DeleteCC(take, i);
+					--i;
+					update = true;
+				}
+			}
+		}
+	}
+	return update;
 }
 
 int FindFirstSelectedNote (MediaItem_Take* take, BR_MidiEditor* midiEditorFilterSettings)
@@ -1162,8 +1506,6 @@ int FindFirstSelectedNote (MediaItem_Take* take, BR_MidiEditor* midiEditorFilter
 	int foundId = -1;
 	while ((id = MIDI_EnumSelNotes(take, id)) != -1)
 	{
-		double position; int channel;
-		MIDI_GetNote(take, id, NULL, NULL, &position, NULL, &channel, NULL, NULL);
 		if (midiEditorFilterSettings)
 		{
 			if (midiEditorFilterSettings->IsNoteVisible(take, id))
@@ -1187,9 +1529,6 @@ int FindFirstSelectedCC (MediaItem_Take* take, BR_MidiEditor* midiEditorFilterSe
 	int foundId = -1;
 	while ((id = MIDI_EnumSelCC(take, id)) != -1)
 	{
-		double position; int channel;
-		MIDI_GetCC(take, id, NULL, NULL, &position, &channel, NULL, NULL, NULL);
-
 		if (midiEditorFilterSettings)
 		{
 			if (midiEditorFilterSettings->IsCCVisible(take, id))
@@ -1201,6 +1540,29 @@ int FindFirstSelectedCC (MediaItem_Take* take, BR_MidiEditor* midiEditorFilterSe
 		else
 		{
 			foundId = id;
+			break;
+		}
+	}
+	return foundId;
+}
+
+int FindFirstNote (MediaItem_Take* take, BR_MidiEditor* midiEditorFilterSettings)
+{
+	int foundId = -1;
+	int count; MIDI_CountEvts(take, &count, NULL, NULL);
+	for (int i = 0; i < count; ++i)
+	{
+		if (midiEditorFilterSettings)
+		{
+			if (midiEditorFilterSettings->IsNoteVisible(take, i))
+			{
+				foundId = i;
+				break;
+			}
+		}
+		else
+		{
+			foundId = i;
 			break;
 		}
 	}
@@ -1225,15 +1587,45 @@ int GetMIDIFilePPQ (const char* fp)
 int GetLastClickedVelLane (void* midiEditor)
 {
 	int cc = SWS_MIDIEditor_GetSetting_int(midiEditor, "last_clicked_cc_lane");
-	if (cc == -1)
-		return -666;
-	else
-		return MapReaScriptCCToVelLane(cc);
+	return MapReaScriptCCToVelLane(cc);
 }
+
+int GetMaxCCLanesFullHeight (void* midiEditor)
+{
+	int fullHeight = 0;
+	if (HWND hwnd = GetNotesView (midiEditor))
+	{
+		RECT r; GetWindowRect(hwnd, &r);
+		int wndH = abs(r.bottom - r.top);
+		fullHeight = wndH - MIDI_RULER_H - MIDI_MIN_NOTE_VIEW_H;
+		if (fullHeight <= 0)
+		{
+			fullHeight = (int)(wndH - MIDI_RULER_H) / 2;
+			if (fullHeight < 0) fullHeight = 0;
+		}
+	}
+
+	return fullHeight;
+}
+
+int ConvertLaneToStatusMsg (int lane)
+{
+	if (lane == CC_VELOCITY)                                   return STATUS_NOTE_ON;
+	if (lane == CC_VELOCITY_OFF)                               return STATUS_NOTE_OFF;
+	if (lane == CC_PITCH)                                      return STATUS_PITCH;
+	if (lane == CC_PROGRAM)                                    return STATUS_PROGRAM;
+	if (lane == CC_CHANNEL_PRESSURE)                           return STATUS_CHANNEL_PRESSURE;
+	if (lane == CC_BANK_SELECT)                                return STATUS_PROGRAM;
+	if (lane == CC_SYSEX)                                      return STATUS_SYS;
+	if (lane >= 0 && lane <= 127)                              return STATUS_CC;
+	if (lane >= CC_14BIT_START && lane <= CC_14BIT_START + 32) return STATUS_CC;
+	return 0;
+};
 
 int MapVelLaneToReaScriptCC (int lane)
 {
-	if (lane == -1)	                return 0x200;
+	if (lane == CC_VELOCITY)        return 0x200;
+	if (lane == CC_VELOCITY_OFF)    return 0x207;
 	if (lane >= 0   && lane <= 127) return lane;
 	if (lane >= 128 && lane <= 133)	return 0x200 | (lane+1 & 0x7F);
 	if (lane >= 134 && lane <= 165) return 0x100 | (lane - 134);
@@ -1242,9 +1634,10 @@ int MapVelLaneToReaScriptCC (int lane)
 
 int MapReaScriptCCToVelLane (int cc)
 {
-	if (cc == 0x200)                return -1;
+	if (cc == 0x200)                return CC_VELOCITY;
+	if (cc == 0x207)                return CC_VELOCITY_OFF;
 	if (cc >= 0     && cc <= 127)   return cc;
 	if (cc >= 0x201 && cc <= 0x206) return cc - 385;
 	if (cc >= 0x100 && cc <= 0x11F) return cc - 122;
-	else                            return -2;
+	else                            return -2; // because -1 stands for velocity lane
 }

@@ -2,7 +2,7 @@
 / MarkerActions.cpp
 /
 / Copyright (c) 2011 Tim Payne (SWS)
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -34,7 +34,7 @@ static void RefreshMAToolbar();
 
 void RunActionMarker(const char* cName)
 {
-	if (cName && cName[0] == '!')
+	if (cName && cName[0] == '!' && !EnumProjects(0x40000000, NULL, 0)) // disabled while rendering (0x40000000 trick == rendered project, if any)
 	{
 		if (g_bIgnoreNext)
 		{	// Ignore the entire marker action
@@ -223,3 +223,9 @@ int MarkerActionsInit()
 	if (g_bMAEnabled) plugin_register("timer", (void*)MarkerActionTimer);
 	return 1;
 }
+
+void MarkerActionsExit()
+{
+	plugin_register("-timer",(void*)MarkerActionTimer);
+}
+

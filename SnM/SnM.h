@@ -2,7 +2,7 @@
 / SnM.h
 /
 / Copyright (c) 2009-2013 Jeffos
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -142,7 +142,7 @@
 
 #define SNM_MAX_PATH				2048
 #define SNM_MAX_HW_OUTS				8
-#define SNM_MAX_CC_LANE_ID			133
+#define SNM_MAX_CC_LANE_ID			167 // v5pre11
 #define SNM_MAX_CC_LANES_LEN		4096
 #define SNM_MAX_TRACK_GROUPS		32
 #define SNM_MAX_CUE_BUSS_CONFS		8
@@ -178,8 +178,8 @@
 #define SNM_SCHEDJOB_TRIG_PRESET			SNM_SCHEDJOB_SEL_PRJ + 1
 #define SNM_SCHEDJOB_RES_ATTACH				SNM_SCHEDJOB_TRIG_PRESET + SNM_PRESETS_NB_FX + 1 // +1 for the "selected fx" preset action
 #define SNM_SCHEDJOB_PLAYLIST_UPDATE		SNM_SCHEDJOB_RES_ATTACH + 1
-#define SNM_SCHEDJOB_PRJ_ACTION				SNM_SCHEDJOB_PLAYLIST_UPDATE + 1
-#define SNM_SCHEDJOB_OSX_FIX				SNM_SCHEDJOB_PRJ_ACTION + 1	//JFB!! removeme some day
+#define SNM_SCHEDJOB_REOPEN_NOTES			SNM_SCHEDJOB_PLAYLIST_UPDATE + 1
+#define SNM_SCHEDJOB_OSX_FIX				SNM_SCHEDJOB_REOPEN_NOTES + 1	//JFB!! removeme some day, due to _SNM_SWELL_ISSUES/missing EN_CHANGE messages
 
 #define SNM_SCHEDJOB_DEFAULT_DELAY			250
 #define SNM_SCHEDJOB_SLOW_DELAY				500

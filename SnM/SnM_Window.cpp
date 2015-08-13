@@ -2,7 +2,7 @@
 / SnM_Windows.cpp
 /
 / Copyright (c) 2009-2013 Jeffos
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -475,7 +475,7 @@ int GetSelectedAction(char* _section, int _secSize, int* _cmdId, char* _id, int 
 								return (_snprintfStrict(_id, _idSize, "_%s", ct->id)>0 ? i : -1);
 
 						// best effort to get the custom id (relies on displayed columns..)
-						SNM_ListView_GetItemText(hList, i, 4, _id, _idSize);  //JFB displaytodata? (ok: columns not re-orderable yet)
+						SNM_ListView_GetItemText(hList, i, 3, _id, _idSize);  //JFB displaytodata? (ok: columns not re-orderable yet)
 						if (!*_id)
 						{
 							if (!IsMacroOrScript(actionName))

@@ -2,7 +2,7 @@
 / padreMidiItemFilters.cpp
 /
 / Copyright (c) 2009-2010 Tim Payne (SWS), Jeffos (S&M), P. Bourdon
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -127,8 +127,6 @@ void MidiFilterTranspose::process(MIDI_event_t* evt, MIDI_eventlist* evts, int &
 			evt->midi_message[1] += _offset;
 			if(evt->midi_message[1]>127)
 				evt->midi_message[1] = 127;
-			if(evt->midi_message[1]<0)
-				evt->midi_message[1] = 0;
 		}
 		break;
 

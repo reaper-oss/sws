@@ -1,14 +1,15 @@
-# Original script by Cockos (http://landoleet.org/dev/sws/), also see http://code.google.com/p/sws-extension/issues/detail?id=432
-# JFB mods: tailored for the SWS/S&M extension, i.e. process ./ReaScript.cpp rather than ../plugin.cpp
-
 #!/usr/bin/perl
 
+# Original script by Cockos (http://landoleet.org/dev/sws/)
+# JFB mods: tailored for the SWS/S&M extension: process ./ReaScript.cpp rather than ../plugin.cpp
 
 sub ReadAPIFuncs
 {
   @funclist=();
   %rtype={};
   %ptypes={};
+  %pnames={};
+  %callfuncs={};
 
   open INFILE, "ReaScript.cpp" or die "Can't read ReaScript.cpp";
   while (<INFILE>)
@@ -16,36 +17,38 @@ sub ReadAPIFuncs
     if (/\s*\{\s*APIFUNC/)
     {          
       $fname="";   
+      $callfunc="";
       if (/APIFUNC\((.+?)\),\s*(.*)/)
       {
-        $fname=$1;
+        $callfunc=$fname=$1;
         $_=$2;
       } 
       elsif (/APIFUNC_NAMED\((.+?)\,(.+?)\),\s*(.*)/)
       {
         $fname=$1;
+        $callfunc=$2;
         $_=$3;
       }    
       $fname or die "Can't parse function name";
       push @funclist, $fname;
+      $callfuncs{$fname}=$callfunc;
 
-      (/\"(.+?)\"\,\s*(.*)/) or die "Can't parse return type";
+      (/\"(.+?)\"\s*\,\s*(.*)/) or die "Can't parse return type";
       $rtype{$fname}=$1;
       $_=$2;
      
-      (/\"(.*?)\"\,\s*(.*)/) or die "Can't parse parameter types";
+      (/\"(.*?)\"\s*\,\s*(.*)/) or die "Can't parse parameter types";
       $ptypes{$fname}=$1;
       $_=$2;
      
-	  # not using these
-      #(/\"(.*?)\"/) or die "Can't parse parameter names";
-	  #$pnames{$fname}=$1;	
+      (/\"(.*?)\"/) or die "Can't parse parameter names";
+	  $pnames{$fname}=$1;	
     }
   }
   close INFILE;
 
   @funclist=sort {lc $a cmp lc $b} @funclist;
-  return (\@funclist, \%rtype, \%ptypes); 
+  return (\@funclist, \%rtype, \%ptypes, \%pnames, \%callfuncs); 
 }
 
 sub IsInt

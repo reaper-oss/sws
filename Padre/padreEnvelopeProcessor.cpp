@@ -2,7 +2,7 @@
 / padreEnvelopeProcessor.cpp
 /
 / Copyright (c) 2009-2010 Tim Payne (SWS), Jeffos (S&M), P. Bourdon
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -36,8 +36,8 @@ const char* GetEnvTypeStr(EnvType type)
 	switch(type)
 	{
 		case eENVTYPE_TRACK			: return __LOCALIZE("Selected track envelope","sws_DLG_148");	break;
-		case eENVTYPE_TAKE			: return __LOCALIZE("Selected take(s)","sws_DLG_148");			break;
-		case eENVTYPE_MIDICC		: return __LOCALIZE("Selected take(s) (MIDI)","sws_DLG_148");	break;
+		case eENVTYPE_TAKE			: return __LOCALIZE("Selected takes","sws_DLG_148");			break;
+		case eENVTYPE_MIDICC		: return __LOCALIZE("Selected takes (MIDI)","sws_DLG_148");		break;
 		default						: return NULL;													break;
 	}
 }

@@ -2,7 +2,7 @@
 / SnM_Item.cpp
 /
 / Copyright (c) 2009-2013 Jeffos
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -82,6 +82,22 @@ bool DeleteMediaItemIfNeeded(MediaItem* _item)
 			deleted &= DeleteTrackMediaItem(tr, _item);
 	}
 	return deleted;
+}
+
+bool DeleteMediaItemsByName(const char* tkname)
+{
+	int cnt=0;
+	for (int ii=1; ii <= GetNumTracks(); ii++) // skip master
+		if (MediaTrack* tt = CSurf_TrackFromID(ii, false))
+			for (int j=GetTrackNumMediaItems(tt)-1; j>=0 ; j--)
+				if (MediaItem* item = GetTrackMediaItem(tt,j))
+					if (MediaItem_Take* tk=GetActiveTake(item))
+						if (!strcmp((char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL), tkname))
+						{
+							DeleteTrackMediaItem(tt, item);
+							cnt++;
+						}
+	return !!cnt;
 }
 
 void SNM_GetSelectedItems(ReaProject* _proj, WDL_PtrList<MediaItem>* _items, bool _onSelTracks)
@@ -166,6 +182,23 @@ bool GetItemsInInterval(WDL_PtrList<void>* _items, double _pos1, double _pos2, b
 							_items->Add(item);
 	}
 	return (_items && _items->GetSize());
+}
+
+bool GenerateItemsInInterval(WDL_PtrList<void>* _items, double _pos1, double _pos2, const char* tkname)
+{
+	int cnt=0;
+	if (_items) _items->Empty(false);
+	for (int i=1; i <= GetNumTracks(); i++) // skip master
+		if (MediaTrack* tr = CSurf_TrackFromID(i, false))
+			if (MediaItem* item=CreateNewMIDIItemInProj(tr, _pos1, _pos2, NULL))
+			{
+				if (_items) _items->Add(item);
+				if (tkname)
+				if (MediaItem_Take* tk=GetActiveTake(item))
+					GetSetMediaItemTakeInfo(tk, "P_NAME", (void*)tkname);
+				cnt++;
+			}
+	return !!cnt;
 }
 
 void GetAllItemPointers(WDL_PtrList<void>* _items)
@@ -706,7 +739,7 @@ void ClearTake(COMMAND_T* _ct)
 					updated |= p.ReplaceTake(pos, len, &emptyTk);
 
 					// empty takes only => remove the item
-					if (!strstr(p.GetChunk()->Get(), "\nNAME \""))
+					if (!strstr(p.GetChunk()->Get(), "\nNAME "))
 					{	
 						p.CancelUpdates(); // prevent a useless SNM_ChunkParserPatcher commit
 						if (DeleteTrackMediaItem(tr, item)) {
@@ -960,7 +993,7 @@ bool DeleteTakeAndMedia(int _mode)
 							nbRemainingTakes--;
 							if (pcm && FileOrDirExists(pcm->GetFileName()))
 							{
-								// set all media offline (yeah, EACH TIME! Fails otherwise: http://code.google.com/p/sws-extension/issues/detail?id=175#c3)
+								// set all media offline (yeah, EACH TIME! Fails otherwise: http://github.com/Jeff0S/sws/issues/175#c3)
 								Main_OnCommand(40100,0); 
 								if (SNM_DeleteFile(pcm->GetFileName(), true))
 								{

@@ -2,7 +2,7 @@
 / sws_util.cpp
 /
 / Copyright (c) 2010 Tim Payne (SWS)
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -409,6 +409,15 @@ const char* stristr(const char* str1, const char* str2)
 }
 
 #ifdef _WIN32
+wchar_t* WideCharPlz(const char* inChar)
+{
+	DWORD dwNum = MultiByteToWideChar(CP_UTF8, 0, inChar, -1, NULL, 0);
+	wchar_t *wChar;
+	wChar = new wchar_t[ dwNum ];
+	MultiByteToWideChar(CP_UTF8, 0, inChar, -1, wChar, dwNum );
+	return wChar;
+}
+
 void dprintf(const char* format, ...)
 {
     va_list args;

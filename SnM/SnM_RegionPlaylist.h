@@ -2,7 +2,7 @@
 / SnM_RegionPlaylist.h
 /
 / Copyright (c) 2012-2013 Jeffos
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -95,7 +95,7 @@ class RegionPlaylistWnd : public SWS_DockWnd
 {
 public:
 	RegionPlaylistWnd();
-	~RegionPlaylistWnd() {}
+	virtual ~RegionPlaylistWnd();
 	void GetMinSize(int* _w, int* _h) { *_w=202; *_h=100; }
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 	void Update(int _flags = 0, WDL_FastString* _curNum=NULL, WDL_FastString* _cur=NULL, WDL_FastString* _nextNum=NULL, WDL_FastString* _next=NULL);

@@ -1,9 +1,9 @@
 /******************************************************************************
 / BR_Envelope.h
 /
-/ Copyright (c) 2014 Dominik Martin Drzic
+/ Copyright (c) 2014-2015 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
-/ https://code.google.com/p/sws-extension
+/ http://github.com/Jeff0S/sws
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -28,10 +28,13 @@
 #pragma once
 
 /******************************************************************************
-* Commands: Envelopes - Misc                                                  *
+* Commands: Envelope continuous actions                                       *
 ******************************************************************************/
 void SetEnvPointMouseValueInit ();
-void SetEnvPointMouseValue (COMMAND_T*);
+
+/******************************************************************************
+* Commands: Envelopes - Misc                                                  *
+******************************************************************************/
 void CursorToEnv1 (COMMAND_T*);
 void CursorToEnv2 (COMMAND_T*);
 void SelNextPrevEnvPoint (COMMAND_T*);
@@ -41,18 +44,21 @@ void ShrinkEnvSel (COMMAND_T*);
 void ShrinkEnvSelEnd (COMMAND_T*);
 void EnvPointsGrid (COMMAND_T*);
 void CreateEnvPointsGrid (COMMAND_T*);
+void EnvPointsToCC (COMMAND_T*);
 void ShiftEnvSelection (COMMAND_T*);
 void PeaksDipsEnv (COMMAND_T*);
 void SelEnvTimeSel (COMMAND_T*);
 void SetEnvValToNextPrev (COMMAND_T*);
 void MoveEnvPointToEditCursor (COMMAND_T*);
 void Insert2EnvPointsTimeSelection (COMMAND_T*);
+void CopyEnvPoints (COMMAND_T*);
 void FitEnvPointsToTimeSel (COMMAND_T*);
 void CreateEnvPointMouse (COMMAND_T*);
 void IncreaseDecreaseVolEnvPoints (COMMAND_T*);
 void SelectEnvelopeUnderMouse (COMMAND_T*);
 void SelectDeleteEnvPointUnderMouse (COMMAND_T*);
 void UnselectEnvelope (COMMAND_T*);
+void ApplyNextCmdToMultiEnvelopes (COMMAND_T*);
 void SaveEnvSelSlot (COMMAND_T*);
 void RestoreEnvSelSlot (COMMAND_T*);
 

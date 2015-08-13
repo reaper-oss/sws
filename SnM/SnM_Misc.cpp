@@ -2,7 +2,7 @@
 / SnM_Misc.cpp
 /
 / Copyright (c) 2009-2013 Jeffos
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -31,9 +31,15 @@
 #include "SnM_Item.h"
 #include "SnM_Misc.h"
 #include "SnM_Track.h"
+#include "SnM_Util.h"
 #ifdef _SNM_HOST_AW
 #include "../Misc/Adam.h"
 #endif
+
+#define TAGLIB_STATIC
+#define TAGLIB_NO_CONFIG
+#include "../taglib/tag.h"
+#include "../taglib/fileref.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -193,9 +199,122 @@ const char* ULT_GetMediaItemNote(MediaItem* _item) {
 	return "";
 }
 
-void ULT_SetMediaItemNote(MediaItem* _item, char* _str) {
+void ULT_SetMediaItemNote(MediaItem* _item, const char* _str) {
 	if (_str && _item)
-		GetSetMediaItemInfo(_item, "P_NOTES", _str);
+		GetSetMediaItemInfo(_item, "P_NOTES", (char*)_str);
+}
+
+bool SNM_ReadMediaFileTag(const char *fn, const char* tag, char* tagval, int tagval_sz)
+{
+  if (!fn || !*fn || !tagval || tagval_sz<=0) return false;
+
+#ifdef _WIN32
+  wchar_t* w_fn = WideCharPlz(fn);
+  if (!w_fn) return false;
+  TagLib::FileRef f(w_fn, false);
+#else
+  TagLib::FileRef f(fn, false);
+#endif
+  
+  bool hastag=(!f.isNull() && !f.tag()->isEmpty());
+  if (hastag)
+  {
+    TagLib::String s;
+    if (!_stricmp(tag, "artist")) s=f.tag()->artist();
+    else if (!_stricmp(tag, "album")) s=f.tag()->album();
+    else if (!_stricmp(tag, "genre")) s=f.tag()->genre();
+    else if (!_stricmp(tag, "comment")) s=f.tag()->comment();
+    else if (!_stricmp(tag, "title")) s=f.tag()->title();
+    else if (!_stricmp(tag, "year")) _snprintfSafe(tagval, tagval_sz, "%u", f.tag()->year());
+    else if (!_stricmp(tag, "track")) _snprintfSafe(tagval, tagval_sz, "%u", f.tag()->track());
+
+    if (!s.isNull()) lstrcpyn(tagval, s.toCString(true), tagval_sz);
+  }
+#ifdef _WIN32
+  delete [] w_fn;
+#endif
+  return hastag;
+}
+
+bool SNM_TagMediaFile(const char *fn, const char* tag, const char* tagval)
+{
+  if (!fn || !*fn || !tagval || !tag) return false;
+
+#ifdef _WIN32
+  wchar_t* w_fn = WideCharPlz(fn);
+  if (!w_fn) return false;
+  TagLib::FileRef f(w_fn, false);
+#else
+  TagLib::FileRef f(fn, false);
+#endif
+
+  bool didsmthg=false;
+  if (!f.isNull())
+  {
+#ifndef _WIN32
+    TagLib::String s(tagval, TagLib::String::UTF8);
+#else
+    wchar_t* s = WideCharPlz(tagval);
+    if (!s) return false;
+#endif
+    if (!_stricmp(tag, "artist")) { f.tag()->setArtist(s); didsmthg=true; }
+    else if (!_stricmp(tag, "album")) { f.tag()->setAlbum(s); didsmthg=true; }
+    else if (!_stricmp(tag, "genre")) { f.tag()->setGenre(s); didsmthg=true; }
+    else if (!_stricmp(tag, "comment") || !_stricmp(tag, "desc")) { f.tag()->setComment(s); didsmthg=true; }
+    else if (!_stricmp(tag, "title")) { f.tag()->setTitle(s); didsmthg=true; }
+    else if (!_stricmp(tag, "year"))
+    {
+      int val=atoi(tagval);
+      if (val>0 || !*tagval) { f.tag()->setYear(val); didsmthg=true; }
+    }
+    else if (!_stricmp(tag, "track"))
+    {
+      int val=atoi(tagval);
+      if (val>0 || !*tagval) { f.tag()->setTrack(val); didsmthg=true; }
+    }
+    if (didsmthg) f.save();
+#ifdef _WIN32
+  delete [] s;
+#endif
+  }
+
+#ifdef _WIN32
+  delete [] w_fn;
+#endif
+  return didsmthg;
+}
+
+// Bulk read of all common media file tags
+bool SNM_ReadMediaFileTags(const char *fn, WDL_FastString* tags, int tags_sz)
+{
+  if (!fn || !*fn || !tags || tags_sz<=0) return false;
+  
+#ifdef _WIN32
+  wchar_t* w_fn = WideCharPlz(fn);
+  if (!w_fn) return false;
+  TagLib::FileRef f(w_fn, false);
+#else
+  TagLib::FileRef f(fn, false);
+#endif
+  
+  bool hastag=!f.isNull() && !f.tag()->isEmpty();
+  if (hastag)
+  {
+    TagLib::String s;
+    s=f.tag()->comment();
+    tags[0].Set(s.isNull() ? "" : s.toCString(true));
+    if (tags_sz>=2) { s=f.tag()->title(); tags[1].Set(s.isNull() ? "" : s.toCString(true)); }
+    if (tags_sz>=3) { s=f.tag()->artist(); tags[2].Set(s.isNull() ? "" : s.toCString(true)); }
+    if (tags_sz>=4) { s=f.tag()->album(); tags[3].Set(s.isNull() ? "" : s.toCString(true)); }
+    if (tags_sz>=5) { if (f.tag()->year()) tags[4].SetFormatted(128, "%u", f.tag()->year()); else tags[4].Set(""); }
+    if (tags_sz>=6) { s=f.tag()->genre(); tags[5].Set(s.isNull() ? "" : s.toCString(true)); }
+    if (tags_sz>=7) { if (f.tag()->track()) tags[6].SetFormatted(128, "%u", f.tag()->track()); else tags[6].Set(""); }
+    // ... more tags could go here
+  }
+#ifdef _WIN32
+  delete [] w_fn;
+#endif
+  return hastag;
 }
 
 MediaItem_Take* SNM_GetMIDIEditorActiveTake() {
@@ -216,7 +335,7 @@ int IsToolbarsAutoRefeshEnabled(COMMAND_T* _ct) {
 	return g_SNM_ToolbarRefresh;
 }
 
-void RefreshToolbars()
+void SNM_RefreshToolbars()
 {
 	// offscreen item sel. buttons
 	for (int i=0; i<SNM_ITEM_SEL_COUNT; i++)
@@ -229,7 +348,9 @@ void RefreshToolbars()
 #ifdef _SNM_HOST_AW
 	// host AW's grid toolbar buttons auto refresh and track timebase auto refresh
 	UpdateGridToolbar();
+	UpdateTimebaseToolbar();
 	UpdateTrackTimebaseToolbar();
+	UpdateItemTimebaseToolbar();
 #endif
 }
 
@@ -244,7 +365,7 @@ void AutoRefreshToolbarRun()
 		}
 		if (GetTickCount() > g_toolbarRefreshTime) {
 			g_toolbarRefreshTime = GetTickCount() + g_SNM_ToolbarRefreshFreq; // custom freq (from S&M.ini)
-			RefreshToolbars();
+			SNM_RefreshToolbars();
 		}
 	}
 }

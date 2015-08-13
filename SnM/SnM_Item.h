@@ -2,7 +2,7 @@
 / SnM_Item.h
 /
 / Copyright (c) 2012-2013 Jeffos
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -55,11 +55,13 @@ public:
 char* GetName(MediaItem* _item);
 int GetTakeIndex(MediaItem* _item, MediaItem_Take* _take);
 bool DeleteMediaItemIfNeeded(MediaItem* _item);
+bool DeleteMediaItemsByName(const char* tkname);
 void SNM_GetSelectedItems(ReaProject* _proj, WDL_PtrList<MediaItem>* _items, bool _onSelTracks = false);
 bool SNM_SetSelectedItems(ReaProject* _proj, WDL_PtrList<MediaItem>* _items, bool _onSelTracks = false);
 bool SNM_ClearSelectedItems(ReaProject* _proj, bool _onSelTracks = false);
 bool IsItemInInterval(MediaItem* _item, double _pos1, double _pos2, bool _inclusive);
 bool GetItemsInInterval(WDL_PtrList<void>* _items, double _pos1, double _pos2, bool _inclusive);
+bool GenerateItemsInInterval(WDL_PtrList<void>* _items, double _pos1, double _pos2, const char* tkname=NULL);
 void GetAllItemPointers(WDL_PtrList<void>* _items);
 void DiffItemPointers(WDL_PtrList<void>* _oldItemsIn, WDL_PtrList<void>* _newItemsOut);
 bool DupSelItems(const char* _undoTitle, double _nudgePos, WDL_PtrList<void>* _newItemsOut = NULL);

@@ -2,7 +2,7 @@
 / MarkerList.cpp
 /
 / Copyright (c) 2011 Tim Payne (SWS)
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -158,7 +158,7 @@ void OpenProjectList(COMMAND_T*)
 
 int ProjectListEnabled(COMMAND_T*)
 {
-	return g_pProjList->IsValidWindow();
+	return g_pProjList->IsWndVisible();
 }
 
 void ProjectListUpdate()
@@ -176,5 +176,5 @@ int ProjectListInit()
 
 void ProjectListExit()
 {
-	delete g_pProjList;
+	DELETE_NULL(g_pProjList);
 }

@@ -2,7 +2,7 @@
 / Snapshots.cpp
 /
 / Copyright (c) 2011 Tim Payne (SWS)
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -67,7 +67,7 @@ public:
 
 // Globals
 static SWSProjConfig<ProjSnapshot> g_ss;
-static SWS_SnapshotsWnd* g_pSSWnd;
+SWS_SnapshotsWnd* g_pSSWnd=NULL;
 void PasteSnapshot(COMMAND_T*);
 void MergeSnapshot(Snapshot* ss);
 
@@ -399,6 +399,14 @@ SWS_SnapshotsWnd::SWS_SnapshotsWnd()
 	Init();
 }
 
+SWS_SnapshotsWnd::~SWS_SnapshotsWnd()
+{
+#ifdef _SNAP_TINY_BUTTONS
+	m_tinyLRbtns.RemoveAllChildren(false);
+	m_tinyLRbtns.SetRealParent(NULL);
+#endif
+}
+
 void SWS_SnapshotsWnd::Update()
 {
 	static bool bRecurseCheck = false;
@@ -714,8 +722,8 @@ HMENU SWS_SnapshotsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 		AddToMenu(contextMenu, SWS_SEPARATOR, 0);
 		AddToMenu(contextMenu, __LOCALIZE("Show snapshot details","sws_DLG_101"), DETAILS_MSG);
 		AddToMenu(contextMenu, __LOCALIZE("Select tracks in snapshot","sws_DLG_101"), SEL_MSG);
-		AddToMenu(contextMenu, __LOCALIZE("Add selected track(s) to snapshot","sws_DLG_101"), ADDSEL_MSG);
-		AddToMenu(contextMenu, __LOCALIZE("Delete selected track(s) from snapshot","sws_DLG_101"), DELSEL_MSG);
+		AddToMenu(contextMenu, __LOCALIZE("Add selected tracks to snapshot","sws_DLG_101"), ADDSEL_MSG);
+		AddToMenu(contextMenu, __LOCALIZE("Delete selected tracks from snapshot","sws_DLG_101"), DELSEL_MSG);
 		AddToMenu(contextMenu, __LOCALIZE("Overwrite snapshot","sws_DLG_101"), SAVE_MSG);
 		AddToMenu(contextMenu, __LOCALIZE("Delete snapshot","sws_DLG_101"), DELETE_MSG);
 		AddToMenu(contextMenu, __LOCALIZE("Copy snapshot","sws_DLG_101"), COPY_MSG);
@@ -802,6 +810,7 @@ void SWS_SnapshotsWnd::OnDestroy()
 
 #ifdef _SNAP_TINY_BUTTONS
 	m_tinyLRbtns.RemoveAllChildren(false);
+	m_tinyLRbtns.SetRealParent(NULL);
 #endif
 }
 
@@ -1057,7 +1066,7 @@ int IsSnapParamEn(COMMAND_T* ct)
 
 int SnapshotsWindowEnabled(COMMAND_T*)
 {
-	return g_pSSWnd->IsValidWindow();
+	return g_pSSWnd->IsWndVisible();
 }
 
 void CopyCurSnapshot(COMMAND_T*)
@@ -1118,21 +1127,21 @@ void PasteSnapshot(COMMAND_T*)
 static COMMAND_T g_commandTable[] =
 {
 	{ { DEFACCEL, "SWS: Open snapshots window" },							"SWSSNAPSHOT_OPEN",	     OpenSnapshotsDialog,  "Show snapshots list and settings", 0, SnapshotsWindowEnabled },
-	{ { DEFACCEL, "SWS: Add selected track(s) to current snapshot" },		"SWSSNAPSHOT_ADD",	     AddSnapshotTracks,	   "Add selected track(s) to current snapshot", },
-	{ { DEFACCEL, "SWS: Add selected track(s) to all snapshots" },			"SWSSNAPSHOTS_ADD",	     AddTracks,			   "Add selected track(s) to all snapshots", },
-	{ { DEFACCEL, "SWS: Delete selected track(s) from current snapshot" },	"SWSSNAPSHOT_DEL",	 DelSnapshotTracks,	   "Delete selected track(s) from current snapshot", },
-	{ { DEFACCEL, "SWS: Delete selected track(s) from all snapshots" },		"SWSSNAPSHOTS_DEL",	     DelTracks,			   "Delete selected track(s) from all snapshots", },
-	{ { DEFACCEL, "SWS: Select current snapshot track(s)" },				"SWSSNAPSHOT_SEL",	     SelSnapshotTracks,	   "Select current snapshot's track(s)", },
+	{ { DEFACCEL, "SWS: Add selected tracks to current snapshot" },			"SWSSNAPSHOT_ADD",	     AddSnapshotTracks,	   "Add selected tracks to current snapshot", },
+	{ { DEFACCEL, "SWS: Add selected tracks to all snapshots" },			"SWSSNAPSHOTS_ADD",	     AddTracks,			   "Add selected tracks to all snapshots", },
+	{ { DEFACCEL, "SWS: Delete selected tracks from current snapshot" },	"SWSSNAPSHOT_DEL",	 DelSnapshotTracks,	   "Delete selected tracks from current snapshot", },
+	{ { DEFACCEL, "SWS: Delete selected tracks from all snapshots" },		"SWSSNAPSHOTS_DEL",	     DelTracks,			   "Delete selected tracks from all snapshots", },
+	{ { DEFACCEL, "SWS: Select current snapshot tracks" },					"SWSSNAPSHOT_SEL",	     SelSnapshotTracks,	   "Select current snapshot's tracks", },
 	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
 	{ { DEFACCEL, "SWS: New snapshot (all tracks)" },						"SWSSNAPSHOT_NEWALL",    NewSnapshot,		   "New snapshot (all tracks)", 1 },
-	{ { DEFACCEL, "SWS: New snapshot (selected track(s))" },				"SWSSNAPSHOT_NEWSEL",    NewSnapshot,		   "New snapshot (selected track(s))", 2 },
+	{ { DEFACCEL, "SWS: New snapshot (selected tracks)" },					"SWSSNAPSHOT_NEWSEL",    NewSnapshot,		   "New snapshot (selected tracks)", 2 },
 	{ { DEFACCEL, "SWS: Save over current snapshot" },						"SWSSNAPSHOT_SAVE",	     SaveCurSnapshot,	   "Save over current snapshot", },
 	{ { DEFACCEL, "SWS: Recall current snapshot" },							"SWSSNAPSHOT_GET",	     GetCurSnapshot,       "Recall current snapshot", },
 	{ { DEFACCEL, "SWS: Recall previous snapshot" },						"SWSSNAPSHOT_GET_PREVIOUS",	 GetPreviousSnapshot,  "Recall previous snapshot", },
 	{ { DEFACCEL, "SWS: Recall next snapshot" },							"SWSSNAPSHOT_GET_NEXT",	     GetNextSnapshot,      "Recall next snapshot", },
 	{ { DEFACCEL, "SWS: Copy current snapshot" },							"SWSSNAPSHOT_COPY",	     CopyCurSnapshot,      "Copy current snapshot", },
-	{ { DEFACCEL, "SWS: Copy new snapshot (selected track(s))" },			"SWSSNAPSHOT_COPYSEL",   CopySelSnapshot,      "Copy new snapshot (selected track(s))", },
-	{ { DEFACCEL, "SWS: Copy new snapshot (all track(s))" },				"SWSSNAPSHOT_COPYALL",   CopyAllSnapshot,      "Copy new snapshot (all track(s))", },
+	{ { DEFACCEL, "SWS: Copy new snapshot (selected tracks)" },				"SWSSNAPSHOT_COPYSEL",   CopySelSnapshot,      "Copy new snapshot (selected tracks)", },
+	{ { DEFACCEL, "SWS: Copy new snapshot (all tracks)" },					"SWSSNAPSHOT_COPYALL",   CopyAllSnapshot,      "Copy new snapshot (all tracks)", },
 	{ { DEFACCEL, "SWS: Paste snapshot" },									"SWSSNAPSHOT_PASTE",	 PasteSnapshot,        "Paste snapshot", },
 
 	{ { DEFACCEL, "SWS: New snapshot (with current settings)" },			"SWSSNAPSHOT_NEW",	     NewSnapshot,		   NULL, 0 },
@@ -1243,6 +1252,9 @@ int SnapshotsInit()
 
 void SnapshotsExit()
 {
+	plugin_register("-projectconfig",&g_projectconfig);
+	plugin_register("-hookcustommenu", (void*)menuhook);
+
 	char buf[64];
 	sprintf(buf, "%d", g_nbRecallPref);
 	WritePrivateProfileString(SWS_INI, "DefaultNbSnapsRecall", buf, get_ini_file());

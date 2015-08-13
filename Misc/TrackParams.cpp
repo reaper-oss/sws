@@ -2,7 +2,7 @@
 / TrackParams.cpp
 /
 / Copyright (c) 2010 Tim Payne (SWS)
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -330,7 +330,7 @@ void CreateTrack1(COMMAND_T* = NULL)
 
 void DelTracksChild(COMMAND_T* = NULL)
 {
-	int iRet = MessageBox(g_hwndParent, __LOCALIZE("Delete track(s) children too?","sws_mbox"), __LOCALIZE("Delete track(s)","sws_mbox"), MB_YESNOCANCEL);
+	int iRet = MessageBox(g_hwndParent, __LOCALIZE("Delete tracks children too?","sws_mbox"), __LOCALIZE("Delete tracks","sws_mbox"), MB_YESNOCANCEL);
 	if (iRet == IDCANCEL)
 		return;
 	if (iRet == IDYES)
@@ -344,7 +344,7 @@ void DelTracksChild(COMMAND_T* = NULL)
 			i--;
 		}
 	}
-	Undo_OnStateChangeEx(__LOCALIZE("Delete track(s)","sws_undo"), UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Delete tracks","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 void NameTrackLikeItem(COMMAND_T* ct)
@@ -512,9 +512,9 @@ void InputMatch(COMMAND_T* ct)
 static COMMAND_T g_commandTable[] =
 {
 	// Master/parent send
-	{ { DEFACCEL, "SWS: Enable master/parent send on selected track(s)" },		"SWS_ENMPSEND",		EnableMPSend,		},
-	{ { DEFACCEL, "SWS: Disable master/parent send on selected track(s)" },		"SWS_DISMPSEND",	DisableMPSend,		},
-	{ { DEFACCEL, "SWS: Toggle master/parent send on selected track(s)" },		"SWS_TOGMPSEND",	TogMPSend,			},
+	{ { DEFACCEL, "SWS: Enable master/parent send on selected tracks" },		"SWS_ENMPSEND",		EnableMPSend,		},
+	{ { DEFACCEL, "SWS: Disable master/parent send on selected tracks" },		"SWS_DISMPSEND",	DisableMPSend,		},
+	{ { DEFACCEL, "SWS: Toggle master/parent send on selected tracks" },		"SWS_TOGMPSEND",	TogMPSend,			},
 	// Master/parent mono/stereo
 	{ { DEFACCEL, "SWS: Set master mono" },										"SWS_MASTERMONO",	SetMasterMono, NULL, 0	},
 	{ { DEFACCEL, "SWS: Set master stereo" },									"SWS_MASTERSTEREO",	SetMasterMono, NULL, 1	},
@@ -549,33 +549,33 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Set master output 1 volume to 0db" },					"SWS_MAST_O1_0",				SetMasterOutputVol,		NULL, 0 },
 
 	// Send/recvs
-	{ { DEFACCEL, "SWS: Mute all receives for selected track(s)" },				"SWS_MUTERECVS",	MuteRecvs,			},
-	{ { DEFACCEL, "SWS: Unmute all receives for selected track(s)" },			"SWS_UNMUTERECVS",	UnmuteRecvs,		},
-	{ { DEFACCEL, "SWS: Toggle mute on receives for selected track(s)" },		"SWS_TOGMUTERECVS",	TogMuteRecvs,		},
-	{ { DEFACCEL, "SWS: Mute all sends from selected track(s)" },				"SWS_MUTESENDS",	MuteSends,			},
-	{ { DEFACCEL, "SWS: Unmute all sends from selected track(s)" },				"SWS_UNMUTESENDS",	UnmuteSends,		},
+	{ { DEFACCEL, "SWS: Mute all receives for selected tracks" },				"SWS_MUTERECVS",	MuteRecvs,			},
+	{ { DEFACCEL, "SWS: Unmute all receives for selected tracks" },				"SWS_UNMUTERECVS",	UnmuteRecvs,		},
+	{ { DEFACCEL, "SWS: Toggle mute on receives for selected tracks" },			"SWS_TOGMUTERECVS",	TogMuteRecvs,		},
+	{ { DEFACCEL, "SWS: Mute all sends from selected tracks" },					"SWS_MUTESENDS",	MuteSends,			},
+	{ { DEFACCEL, "SWS: Unmute all sends from selected tracks" },				"SWS_UNMUTESENDS",	UnmuteSends,		},
 
 	// FX bypass
-	{ { DEFACCEL, "SWS: Bypass FX on selected track(s)" },						"SWS_BYPASSFX",		BypassFX,			},
-	{ { DEFACCEL, "SWS: Unbypass FX on selected track(s)" },					"SWS_UNBYPASSFX",	UnbypassFX,			},
+	{ { DEFACCEL, "SWS: Bypass FX on selected tracks" },						"SWS_BYPASSFX",		BypassFX,			},
+	{ { DEFACCEL, "SWS: Unbypass FX on selected tracks" },						"SWS_UNBYPASSFX",	UnbypassFX,			},
 	{ { DEFACCEL, "SWS: Save master FX enabled state" },						"SWS_SAVEMSTFXEN",	SaveMasterFXEn,		},
 	{ { DEFACCEL, "SWS: Restore master FX enabled state" },						"SWS_RESTMSTFXEN",	RestMasterFXEn,		},
 	{ { DEFACCEL, "SWS: Enable master FX" },									"SWS_ENMASTERFX",	EnableMasterFX,		},
 	{ { DEFACCEL, "SWS: Disable master FX" },									"SWS_DISMASTERFX",	DisableMasterFX,	},
 
 	// Size
-	{ { DEFACCEL, "SWS: Minimize selected track(s)" },							"SWS_MINTRACKS",	MinimizeTracks,		NULL, 0, IsMinimizeTracks},
+	{ { DEFACCEL, "SWS: Minimize selected tracks" },							"SWS_MINTRACKS",	MinimizeTracks,		NULL, 0, IsMinimizeTracks},
 
 	// Rec options
-	{ { DEFACCEL, "SWS: Set selected track(s) record output mode based on items" },		"SWS_SETRECSRCOUT",		RecSrcOut,		},
-	{ { DEFACCEL, "SWS: Set selected track(s) monitor track media while recording" },	"SWS_SETMONMEDIA",		SetMonMedia,	},
-	{ { DEFACCEL, "SWS: Unset selected track(s) monitor track media while recording" },	"SWS_UNSETMONMEDIA",	UnsetMonMedia,	},
-	{ { DEFACCEL, "SWS: Toolbar arm toggle" },									"SWS_ARMTOGGLE",  ArmToggle, NULL, (INT_PTR)"I_RECARM", CheckTrackParam, },
+	{ { DEFACCEL, "SWS: Set selected tracks record output mode based on items" },		"SWS_SETRECSRCOUT",		RecSrcOut,		},
+	{ { DEFACCEL, "SWS: Set selected tracks monitor track media while recording" },		"SWS_SETMONMEDIA",		SetMonMedia,	},
+	{ { DEFACCEL, "SWS: Unset selected tracks monitor track media while recording" },	"SWS_UNSETMONMEDIA",	UnsetMonMedia,	},
+	{ { DEFACCEL, "SWS: Toolbar arm toggle" },											"SWS_ARMTOGGLE",  ArmToggle, NULL, (INT_PTR)"I_RECARM", CheckTrackParam, },
 
 	// Add/remove tracks
 	{ { DEFACCEL, "SWS: Insert track above selected tracks" },					"SWS_INSRTTRKABOVE",InsertTrkAbove,		},
 	{ { DEFACCEL, "SWS: Create and select first track" },						"SWS_CREATETRK1",	CreateTrack1,		},
-	{ { DEFACCEL, "SWS: Delete track(s) with children (prompt)" },				"SWS_DELTRACKCHLD",	DelTracksChild,		},
+	{ { DEFACCEL, "SWS: Delete tracks with children (prompt)" },				"SWS_DELTRACKCHLD",	DelTracksChild,		},
 
 	// Name
 	{ { DEFACCEL, "SWS: Set track name from first selected item on track" },    "SWS_NAMETKLIKEITEM",  NameTrackLikeItem,	},

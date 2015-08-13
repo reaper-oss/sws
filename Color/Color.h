@@ -2,7 +2,7 @@
 / Color.h
 /
 / Copyright (c) 2010 Tim Payne (SWS)
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -34,4 +34,5 @@ void UpdateCustomColors();
 bool AllBlack();
 COLORREF CalcGradient(COLORREF crStart, COLORREF crEnd, double dPos);
 int ColorInit();
+void ColorExit();
 void ShowColorDialog(COMMAND_T* = NULL);

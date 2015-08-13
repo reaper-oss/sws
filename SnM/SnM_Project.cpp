@@ -2,7 +2,7 @@
 / SnM_Project.cpp
 /
 / Copyright (c) 2011-2014 Jeffos
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -75,30 +75,51 @@ void UntieFileFromProject(const char* _fn, ReaProject* _prj) {
 	TieFileToProject(_fn, _prj, false);
 }
 
-double SNM_GetProjectLength(bool _items, bool _inclRgnsMkrs)
+// flags&1=incl. items, &2=incl. markers/regions, &4=incl. envelopes
+double SNM_GetProjectLength(int _flags)
 {
 	double prjlen = 0.0, pos, end;
-	if (_inclRgnsMkrs)
+	if (_flags&2)
 	{
 		int x=0; bool isRgn;
-		while (x = EnumProjectMarkers2(NULL, x, &isRgn, &pos, &end, NULL, NULL)) {
+		while ((x = EnumProjectMarkers2(NULL, x, &isRgn, &pos, &end, NULL, NULL))) {
 			if (isRgn) { if (end > prjlen) prjlen = end; }
 			else { if (pos > prjlen) prjlen = pos; }
 		}
 	}
-	if (_items)
+	if ((_flags&1) || (_flags&4))
 	{
 		double len;
-		for (int i=1; i <= GetNumTracks(); i++) // skip master
+		for (int i=0; i <= GetNumTracks(); i++)
+		{
 			if (MediaTrack* tr = CSurf_TrackFromID(i, false))
-				for (int j=0; j < GetTrackNumMediaItems(tr); j++)
+			{
+				int cnt= i>0 ? GetTrackNumMediaItems(tr) : 0; // skip master
+				if (_flags&1) for (int j=0; j<cnt; j++)
+				{
 					if (MediaItem* item = GetTrackMediaItem(tr,j))
 					{
 						pos = *(double*)GetSetMediaItemInfo(item, "D_POSITION", NULL);
 						len = *(double*)GetSetMediaItemInfo(item, "D_LENGTH", NULL);
-						if ((pos+len)>prjlen)
-							prjlen = pos+len;
+						if ((pos+len)>prjlen) prjlen = pos+len;
 					}
+				}
+
+				cnt=CountTrackEnvelopes(tr);
+				if (_flags&4) for (int j=0; j<cnt; j++)
+				{
+					if (TrackEnvelope* env = GetTrackEnvelope(tr,j))
+					{
+						if (int ptcnt=CountEnvelopePoints(env))
+						{
+							pos=prjlen;
+							GetEnvelopePoint(env, ptcnt-1, &pos, NULL, NULL, NULL, NULL);
+							if (pos>prjlen) prjlen = pos;
+						}
+					}
+				}
+			}
+		}
 	}
 	return prjlen;
 }
@@ -150,9 +171,12 @@ void LoadOrSelectProject(const char* _fn, bool _newTab)
 			found = true;
 
 	if (found)
+	{
 		SelectProjectInstance(prj);
-	else {
-		if (_newTab) Main_OnCommand(40859,0);
+	}
+	else
+	{
+		if (_newTab) Main_OnCommand(41929, 0); // New project tab (ignore default template)
 		Main_openProject((char*)_fn); // includes an undo point
 	}
 }
@@ -166,7 +190,7 @@ double SelectProjectJob::GetCurrentValue()
 {
 	int i=-1;
 	ReaProject *prj, *curprj=EnumProjects(-1, NULL, 0);
-	while (prj = EnumProjects(++i, NULL, 0))
+	while ((prj = EnumProjects(++i, NULL, 0)))
 		if (prj == curprj)
 			return i;
 	return 0.0;
@@ -176,7 +200,7 @@ double SelectProjectJob::GetMaxValue()
 {
 	int i=0;
 	ReaProject *prj;
-	while (prj = EnumProjects(i++, NULL, 0));
+	while ((prj = EnumProjects(i++, NULL, 0)));
 	return i;
 }
 
@@ -187,8 +211,7 @@ void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND
 
 ///////////////////////////////////////////////////////////////////////////////
 // Project startup action
-// Based on a registered timer so that everything has been initialized before
-// triggering the startup action (useful on REAPER launch)
+// Based on a registered timer so that everything has been initialized
 ///////////////////////////////////////////////////////////////////////////////
 
 SWSProjConfig<WDL_FastString> g_prjActions;
@@ -200,13 +223,7 @@ void OnTriggerActionTimer()
 
 	if (int cmdId = NamedCommandLookup(g_prjActions.Get()->Get()))
 	{
-		// specific case for "load theme" actions (~1s delay)
-		if (strstr(g_prjActions.Get()->Get(), "S&M_LOAD_THEME"))
-			ScheduledJob::Schedule(new StartupProjectActionJob(cmdId));
-
-		// standard case, faster
-		else
-			Main_OnCommand(cmdId, 0);
+		Main_OnCommand(cmdId, 0);
 #ifdef _SNM_DEBUG
 		OutputDebugString("OnTriggerActionTimer() - Performed startup action '");
 		OutputDebugString(g_prjActions.Get()->Get());
@@ -340,8 +357,13 @@ static project_config_extension_t s_projectconfig = {
 	ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL
 };
 
-int ReaProjectInit() {
+int SNM_ProjectInit() {
 	return plugin_register("projectconfig", &s_projectconfig);
+}
+
+void SNM_ProjectExit() {
+	plugin_register("-projectconfig", &s_projectconfig);
+	plugin_register("-timer",(void*)OnTriggerActionTimer);
 }
 
 

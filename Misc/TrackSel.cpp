@@ -2,7 +2,7 @@
 / TrackSel.cpp
 /
 / Copyright (c) 2011 Tim Payne (SWS)
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -10,10 +10,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -284,7 +284,7 @@ void SelNextFolder(COMMAND_T* = NULL)
 			}
 			else if (iType + iFolder < iDepth)
 				iDepth = -1;
-		}		
+		}
 		else if (iDepth == -1 && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
 			iFolder = GetFolderDepth(tr, &iType, &gfd);
@@ -313,7 +313,7 @@ void SelPrevFolder(COMMAND_T* = NULL)
 			}
 			else if (iFolder < iDepth)
 				iDepth = -1;
-		}		
+		}
 		else if (iDepth == -1 && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
 			iFolder = GetFolderDepth(tr, &iType, &gfd);
@@ -446,37 +446,37 @@ void SelectTrack(COMMAND_T* ct)
 }
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
-static COMMAND_T g_commandTable[] = 
+static COMMAND_T g_commandTable[] =
 {
 	{ { DEFACCEL, "SWS: Save current track selection" },						"SWS_SAVESEL",			SaveSelTracks,		},
 	{ { DEFACCEL, "SWS: Restore saved track selection" },						"SWS_RESTORESEL",		RestoreSelTracks,	},
-	{ { DEFACCEL, "SWS: Toggle between current and saved track selection" },	"SWS_TOGSAVESEL",		TogSaveSelTracks,	}, 
+	{ { DEFACCEL, "SWS: Toggle between current and saved track selection" },	"SWS_TOGSAVESEL",		TogSaveSelTracks,	},
 	{ { DEFACCEL, "SWS: Toggle (invert) track selection" },						"SWS_TOGTRACKSEL",		TogTrackSel,		},
-	{ { DEFACCEL, "SWS: Select only track(s) with selected item(s)" },			"SWS_SELTRKWITEM",		SelTracksWItems,	},
+	{ { DEFACCEL, "SWS: Select only tracks with selected items" },				"SWS_SELTRKWITEM",		SelTracksWItems,	},
 	{ { DEFACCEL, "SWS: Set last touched track to match track selection (deprecated)" },		"SWS_SETLTT",			SetLTT,				},
-	
+
 	// Folder/parent/child selection
 	{ { DEFACCEL, "SWS: Select only children of selected folders" },			"SWS_SELCHILDREN",		SelChildrenOnly,	},
-	{ { DEFACCEL, "SWS: Select children of selected folder track(s)" },			"SWS_SELCHILDREN2",		SelChildren,		},
-	{ { DEFACCEL, "SWS: Select only parent(s) of selected folder track(s)" },	"SWS_SELPARENTS",		SelParentsOnly,		},
-	{ { DEFACCEL, "SWS: Select parent(s) of selected folder track(s)" },		"SWS_SELPARENTS2",		SelParents,			},
-	{ { DEFACCEL, "SWS: Unselect parent(s) of selected folder track(s)" },		"SWS_UNSELPARENTS",		UnselParents,		},
-	{ { DEFACCEL, "SWS: Unselect children of selected folder track(s)" },		"SWS_UNSELCHILDREN",	UnselChildren,		},
+	{ { DEFACCEL, "SWS: Select children of selected folder tracks" },			"SWS_SELCHILDREN2",		SelChildren,		},
+	{ { DEFACCEL, "SWS: Select only parents of selected folder tracks" },		"SWS_SELPARENTS",		SelParentsOnly,		},
+	{ { DEFACCEL, "SWS: Select parents of selected folder tracks" },			"SWS_SELPARENTS2",		SelParents,			},
+	{ { DEFACCEL, "SWS: Unselect parents of selected folder tracks" },			"SWS_UNSELPARENTS",		UnselParents,		},
+	{ { DEFACCEL, "SWS: Unselect children of selected folder tracks" },			"SWS_UNSELCHILDREN",	UnselChildren,		},
 	{ { DEFACCEL, "SWS: Select all folders (parents only)" },					"SWS_SELALLPARENTS",	SelAllParents,		},
 	{ { DEFACCEL, "SWS: Select all folder start tracks" },						"SWS_SELFOLDSTARTS",	SelFolderStarts,	},
 	{ { DEFACCEL, "SWS: Select all non-folders" },								"SWS_SELNOTFOLDER",		SelNotFolder,		},
 	{ { DEFACCEL, "SWS: Select next folder" },									"SWS_SELNEXTFOLDER",	SelNextFolder,		},
 	{ { DEFACCEL, "SWS: Select previous folder" },								"SWS_SELPREVFOLDER",	SelPrevFolder,		},
-	
+
 	// Sel based on states
 	{ { DEFACCEL, "SWS: Select muted tracks" },										"SWS_SELMUTEDTRACKS",	SelMutedTracks, NULL, 1 },
 	{ { DEFACCEL, "SWS: Select unmuted tracks" },									"SWS_SELUNMUTEDTRACKS",	SelMutedTracks, NULL, 0	},
 	{ { DEFACCEL, "SWS: Select soloed tracks" },									"SWS_SELSOLOEDTRACKS",	SelSoloedTracks,	},
 	{ { DEFACCEL, "SWS: Select tracks with flipped phase" },						"SWS_SELPHASETRACKS",	SelPhaseTracks,		},
 	{ { DEFACCEL, "SWS: Select armed tracks" },										"SWS_SELARMEDTRACKS",	SelArmedTracks,		},
-	{ { DEFACCEL, "SWS: Select tracks with active routing to selected track(s)" },	"SWS_SELROUTED",		SelRouted,			},
-	{ { DEFACCEL, "SWS: Select only rec armed track(s)" },							"SWS_SELRECARM",		SelArmed,			},
-	{ { DEFACCEL, "SWS: Unselect rec armed track(s)" },								"SWS_UNSELRECARM",		UnselArmed,			},
+	{ { DEFACCEL, "SWS: Select tracks with active routing to selected tracks" },	"SWS_SELROUTED",		SelRouted,			},
+	{ { DEFACCEL, "SWS: Select only rec armed tracks" },							"SWS_SELRECARM",		SelArmed,			},
+	{ { DEFACCEL, "SWS: Unselect rec armed tracks" },								"SWS_UNSELRECARM",		UnselArmed,			},
 
 	// Master track
 	{ { DEFACCEL, "SWS: Select master track" },									"SWS_SELMASTER",		SelMaster,			},

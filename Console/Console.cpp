@@ -2,7 +2,7 @@
 / Console.cpp
 /
 / Copyright (c) 2011-2014 Tim Payne (SWS), Jeffos
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -10,10 +10,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -39,7 +39,7 @@
 #include "Console.h"
 
 
-static ReaConsoleWnd* g_pConsoleWnd = NULL;
+ReaConsoleWnd* g_pConsoleWnd = NULL;
 static WDL_TypedBuf<int> g_selTracks;
 static char g_cLastKey = 0;
 static DWORD g_dwLastKeyMsg = 0;
@@ -63,7 +63,7 @@ typedef struct CUSTOM_COMMAND
 WDL_PtrList<CUSTOM_COMMAND> g_customCommands;
 
 //!WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_100
-static console_COMMAND_T g_commands[NUM_COMMANDS] = 
+static console_COMMAND_T g_commands[NUM_COMMANDS] =
 {
 	{ SOLO_ENABLE,    '+', 'o',  0, "Enable solo on " ,      0 },
 	{ SOLO_DISABLE,   '-', 'o',  0, "Disable solo on ",      0 },
@@ -124,7 +124,7 @@ CONSOLE_COMMAND Tokenize(char* strCommand, char** trackid, char** args)
 
 	// Try to find out the command
 	for (i = 0; i < NUM_COMMANDS; i++)
-		if (g_commands[i].cKey == strCommand[index] && 
+		if (g_commands[i].cKey == strCommand[index] &&
 			(!g_commands[i].cPrefix || g_commands[i].cPrefix == strCommand[0]))
 		{
 			command = g_commands[i].command;
@@ -276,7 +276,7 @@ void ParseTrackId(char* strId, bool bReset)
 		for (track = start-1; track < end; track++)
 			g_selTracks.Get()[track] = 1;
 	}
-	
+
 	// If a wildcard is in the string, use loose matches
 	else if ((p = strchr(strId, '*')) != NULL)
 	{
@@ -729,7 +729,7 @@ void RunConsoleCommand(COMMAND_T* ct)
 }
 
 int IsConsoleDisplayed(COMMAND_T*) {
-	return (g_pConsoleWnd && g_pConsoleWnd->IsValidWindow());
+	return (g_pConsoleWnd && g_pConsoleWnd->IsWndVisible());
 }
 
 void EditCustomCommands(COMMAND_T*)
@@ -754,7 +754,7 @@ void EditCustomCommands(COMMAND_T*)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// This is really just a hack to find out what key the user hit 
+// This is really just a hack to find out what key the user hit
 /*JFB oh yeah.. haha!
   I keep this code because 1) it works fine 2) replacing it with the new ReaConsoleWnd::OnKey()
   would look better but it would break the feature "SWS: Open console and copy keystroke"
@@ -785,26 +785,26 @@ static accelerator_register_t g_ar = { translateAccel, TRUE, NULL };
 ///////////////////////////////////////////////////////////////////////////////
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
-static COMMAND_T g_commandTable[] = 
+static COMMAND_T g_commandTable[] =
 {
 	{ { { 0, 'c', 0 }, "SWS: Open console" },								"SWSCONSOLE",       ConsoleCommand,  "SWS ReaConsole", 0, IsConsoleDisplayed },
 	{ { DEFACCEL,   "SWS: Open console and copy keystroke" },				"SWSCONSOLE2",      BringKeyCommand, NULL, },
-	{ { DEFACCEL,   "SWS: Open console with 'S' to select track(s)" },		"SWSCONSOLEEXSEL",  ConsoleCommand,  NULL,   'S' },
-	{ { DEFACCEL,   "SWS: Open console with 'n' to name track(s)" },		"SWSCONSOLENAME",   ConsoleCommand,  NULL,   'n' },
-	{ { DEFACCEL,   "SWS: Open console with 'o' to solo track(s)" },		"SWSCONSOLESOLO",   ConsoleCommand,  NULL,   'o' },
-	{ { DEFACCEL,   "SWS: Open console with 'a' to arm track(s)" },			"SWSCONSOLEARM",    ConsoleCommand,  NULL,   'a' },
-	{ { DEFACCEL,   "SWS: Open console with 'm' to mute track(s)" },		"SWSCONSOLEMUTE",   ConsoleCommand,  NULL,   'm' },
+	{ { DEFACCEL,   "SWS: Open console with 'S' to select tracks" },		"SWSCONSOLEEXSEL",  ConsoleCommand,  NULL,   'S' },
+	{ { DEFACCEL,   "SWS: Open console with 'n' to name tracks" },		"SWSCONSOLENAME",   ConsoleCommand,  NULL,   'n' },
+	{ { DEFACCEL,   "SWS: Open console with 'o' to solo tracks" },		"SWSCONSOLESOLO",   ConsoleCommand,  NULL,   'o' },
+	{ { DEFACCEL,   "SWS: Open console with 'a' to arm tracks" },			"SWSCONSOLEARM",    ConsoleCommand,  NULL,   'a' },
+	{ { DEFACCEL,   "SWS: Open console with 'm' to mute tracks" },		"SWSCONSOLEMUTE",   ConsoleCommand,  NULL,   'm' },
 	{ { DEFACCEL,   "SWS: Open console with 'f' to toggle FX enable" },		"SWSCONSOLEFX",     ConsoleCommand,  NULL,   'f' },
-	{ { DEFACCEL,   "SWS: Open console with 'i' to set track(s) input" },	"SWSCONSOLEINPUT",  ConsoleCommand,  NULL,   'i' },
-	{ { DEFACCEL,   "SWS: Open console with 'b' to prefix track(s)" },		"SWSCONSOLEPREFIX", ConsoleCommand,  NULL,   'b' },
-	{ { DEFACCEL,   "SWS: Open console with 'z' to suffix track(s)" },		"SWSCONSOLESUFFIX", ConsoleCommand,  NULL,   'z' },
-	{ { DEFACCEL,   "SWS: Open console with 'c' to color track(s)" },		"SWSCONSOLECOLOR",  ConsoleCommand,  NULL,   'c' },
-	{ { DEFACCEL,   "SWS: Open console with 'h' to flip phase on track(s)" },"SWSCONSOLEPHASE", ConsoleCommand,  NULL,   'h' },
-	{ { DEFACCEL,   "SWS: Open console with 'V' to set track(s) volume" },	"SWSCONSOLEVOL",    ConsoleCommand,  NULL,   'V' },
-	{ { DEFACCEL,   "SWS: Open console with 'P' to set track(s) pan" },		"SWSCONSOLEPAN",    ConsoleCommand,  NULL,   'P' },
-	{ { DEFACCEL,   "SWS: Open console with 'v' to trim volume on track(s)" },"SWSCONSOLEVOLT", ConsoleCommand,  NULL,   'v' },
-	{ { DEFACCEL,   "SWS: Open console with 'p' to trim pan on track(s)" },	"SWSCONSOLEPANT",   ConsoleCommand,  NULL,   'p' },
-	{ { DEFACCEL,   "SWS: Open console with 'l' to set track(s) # channels" },"SWSCONSOLECHAN", ConsoleCommand,  NULL,   'l' },
+	{ { DEFACCEL,   "SWS: Open console with 'i' to set tracks input" },	"SWSCONSOLEINPUT",  ConsoleCommand,  NULL,   'i' },
+	{ { DEFACCEL,   "SWS: Open console with 'b' to prefix tracks" },		"SWSCONSOLEPREFIX", ConsoleCommand,  NULL,   'b' },
+	{ { DEFACCEL,   "SWS: Open console with 'z' to suffix tracks" },		"SWSCONSOLESUFFIX", ConsoleCommand,  NULL,   'z' },
+	{ { DEFACCEL,   "SWS: Open console with 'c' to color tracks" },		"SWSCONSOLECOLOR",  ConsoleCommand,  NULL,   'c' },
+	{ { DEFACCEL,   "SWS: Open console with 'h' to flip phase on tracks" },"SWSCONSOLEPHASE", ConsoleCommand,  NULL,   'h' },
+	{ { DEFACCEL,   "SWS: Open console with 'V' to set tracks volume" },	"SWSCONSOLEVOL",    ConsoleCommand,  NULL,   'V' },
+	{ { DEFACCEL,   "SWS: Open console with 'P' to set tracks pan" },		"SWSCONSOLEPAN",    ConsoleCommand,  NULL,   'P' },
+	{ { DEFACCEL,   "SWS: Open console with 'v' to trim volume on tracks" },"SWSCONSOLEVOLT", ConsoleCommand,  NULL,   'v' },
+	{ { DEFACCEL,   "SWS: Open console with 'p' to trim pan on tracks" },	"SWSCONSOLEPANT",   ConsoleCommand,  NULL,   'p' },
+	{ { DEFACCEL,   "SWS: Open console with 'l' to set tracks # channels" },"SWSCONSOLECHAN", ConsoleCommand,  NULL,   'l' },
 	{ { DEFACCEL,   "SWS: Open console with '!' to add action marker" },	"SWSCONSOLEMARKER", ConsoleCommand,  NULL,   '!' },
 	{ { DEFACCEL,   "SWS/S&M: Open console with 'x' to add track FX" },		"S&M_CONSOLE_ADDFX",  ConsoleCommand,  NULL, 'x' },
 	{ { DEFACCEL,   "SWS/S&M: Open console with '/' to send a local OSC message" }, "S&M_CONSOLE_OSC",  ConsoleCommand,  NULL, '/' },
@@ -848,7 +848,9 @@ int ConsoleInit()
 	return 1;
 }
 
-void ConsoleExit() {
+void ConsoleExit()
+{
+	plugin_register("-accelerator",&g_ar);
 	WritePrivateProfileString("SWS","CloseConsoleOnReturnKey",g_bCloseOnReturnPref?"1":"0",get_ini_file());
 	DELETE_NULL(g_pConsoleWnd);
 }
@@ -912,7 +914,7 @@ HMENU ReaConsoleWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 	return hMenu;
 }
 
-int ReaConsoleWnd::OnKey(MSG* msg, int iKeyState) 
+int ReaConsoleWnd::OnKey(MSG* msg, int iKeyState)
 {
 	HWND h = GetDlgItem(m_hwnd, IDC_COMMAND);
 /*JFB not needed: IDC_COMMAND is the single control of this window..
@@ -991,8 +993,8 @@ void ReaConsoleWnd::ShowConsole()
 	m_strCmd[1] = '\0';
 	SetDlgItemText(m_hwnd, IDC_COMMAND, m_strCmd);
 
-	// Move the cursor to the end 
-	HWND h = GetDlgItem(m_hwnd, IDC_COMMAND);  
+	// Move the cursor to the end
+	HWND h = GetDlgItem(m_hwnd, IDC_COMMAND);
 	SetFocus(h);
 	SendMessage(h, EM_SETSEL, 1, 1);
 

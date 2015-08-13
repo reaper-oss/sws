@@ -2,7 +2,7 @@
 / sws_util.h
 /
 / Copyright (c) 2012 Tim Payne (SWS), Jeffos
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -10,10 +10,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -27,15 +27,14 @@
 
 #pragma once
 
-#define IMPAPI(x)				if (!((*((void **)&(x)) = (void *)rec->GetFunc(#x)))) errcnt++;
-#define IMPVAR(x,nm)			if (!((*(void **)&(x)) = get_config_var(nm,&sztmp)) || sztmp != sizeof(*x)) errcnt++;
-
 #define SWS_URL					"http://www.standingwaterstudios.com/reaper"
 #define SWS_URL_DOWNLOAD		SWS_URL
 #define SWS_URL_VERSION_H		"http://sws.mj-s.com/download/featured/version.h"
-#define SWS_URL_BETA_DOWNLOAD	SWS_URL
+#define SWS_URL_BETA_DOWNLOAD	"http://sws.mj-s.com/download/pre-release/"
 #define SWS_URL_BETA_VERSION_H	"http://sws.mj-s.com/download/pre-release/version.h"
 #define SWS_URL_HELP_DIR		"http://sws.mj-s.com" // e.g. SWS_URL_HELP"/reaconsole.php"
+#define SWS_URL_WHATSNEW        "http://sws.mj-s.com/whatsnew.php"
+#define SWS_URL_BETA_WHATSNEW   "http://sws.mj-s.com/download/pre-release/whatsnew-v%d.%d.%d.%d.html"
 
 #define BUFFER_SIZE				2048
 #define SWS_THEMING				true
@@ -58,8 +57,8 @@
 #define SWS_CMD_SHORTNAME(_ct)	(_ct ? GetLocalizedActionName(_ct->accel.desc) + IsSwsAction(_ct->accel.desc) : "")
 #define __ARRAY_SIZE(x)			(sizeof(x) / sizeof(x[0]))
 #define BOUNDED(x,lo,hi)		((x) < (lo) ? (lo) : (x) > (hi) ? (hi) : (x))
-#define FREE_NULL(p)			{free(p);p=0;}
-#define DELETE_NULL(p)			{delete(p); p=0;}
+#define FREE_NULL(p)			{free(p);p=NULL;}
+#define DELETE_NULL(p)			{delete(p); p=NULL;}
 #define STR_HELPER(x)			#x
 #define STR(x)					STR_HELPER(x)
 
@@ -126,7 +125,7 @@ public:
 	void Empty()
 	{
 		m_projects.Empty(false);
-		m_data.Empty(true); 
+		m_data.Empty(true);
 	}
 	void Cleanup()
 	{
@@ -244,6 +243,7 @@ bool TrackMatchesGuid(MediaTrack* tr, const GUID* g);
 const char* stristr(const char* str1, const char* str2);
 
 #ifdef _WIN32
+wchar_t* WideCharPlz(const char* inChar);
 void dprintf(const char* format, ...);
 #else
 #define dprintf printf
@@ -280,5 +280,6 @@ int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML, const c
 
 // Functions export to reascript and c++ plugins, Reascript.cpp
 bool RegisterExportedFuncs(reaper_plugin_info_t* _rec);
+void UnregisterExportedFuncs();
 bool RegisterExportedAPI(reaper_plugin_info_t* _rec);
 

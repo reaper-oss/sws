@@ -2,7 +2,7 @@
 / SnM_Resources.cpp
 /
 / Copyright (c) 2009-2014 Jeffos
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -857,7 +857,7 @@ void ResourcesView::Perform(int _what)
 	WDL_FastString undo;
 	ResourceItem* pItem = (ResourceItem*)EnumSelected(&x);
 	int slot = g_SNM_ResSlots.Get(g_resType)->Find(pItem);
-	if (pItem && slot >= 0) 
+	while (pItem && slot >= 0)
 	{
 		switch(GetTypeForUser())
 		{
@@ -867,35 +867,35 @@ void ResourcesView::Perform(int _what)
 					case 0:
 						SNM_GetActionName("S&M_PASTE_TRACKFXCHAIN", &undo, slot);
 						ApplyTracksFXChainSlot(g_resType, undo.Get(), slot, false, false);
-						break;
+						goto done;
 					case 1:
 						SNM_GetActionName("S&M_PASTE_INFXCHAIN", &undo, slot);
 						ApplyTracksFXChainSlot(g_resType, undo.Get(), slot, false, true);
-						break;
+						goto done;
 					case 2:
 						SNM_GetActionName("S&M_TRACKFXCHAIN", &undo, slot);
 						ApplyTracksFXChainSlot(g_resType, undo.Get(), slot, true, false);
-						break;
+						goto done;
 					case 3:
 						SNM_GetActionName("S&M_INFXCHAIN", &undo, slot);
 						ApplyTracksFXChainSlot(g_resType, undo.Get(), slot, true, true);
-						break;
+						goto done;
 					case 4:
 						SNM_GetActionName("S&M_PASTE_TAKEFXCHAIN", &undo, slot);
 						ApplyTakesFXChainSlot(g_resType, undo.Get(), slot, true, false);
-						break;
+						goto done;
 					case 5:
 						SNM_GetActionName("S&M_PASTE_FXCHAIN_ALLTAKES", &undo, slot);
 						ApplyTakesFXChainSlot(g_resType, undo.Get(), slot, false, false);
-						break;
+						goto done;
 					case 6:
 						SNM_GetActionName("S&M_TAKEFXCHAIN", &undo, slot);
 						ApplyTakesFXChainSlot(g_resType, undo.Get(), slot, true, true);
-						break;
+						goto done;
 					case 7:
 						SNM_GetActionName("S&M_FXCHAIN_ALLTAKES", &undo, slot);
 						ApplyTakesFXChainSlot(g_resType, undo.Get(), slot, false, true);
-						break;
+						goto done;
 				}
 				break;
 			case SNM_SLOT_TR:
@@ -908,11 +908,11 @@ void ResourcesView::Perform(int _what)
 					case 1:
 						SNM_GetActionName("S&M_APPLY_TRTEMPLATE", &undo, slot);
 						ApplyTrackTemplateSlot(g_resType, undo.Get(), slot, false, false);
-						break;
+						goto done;
 					case 2:
 						SNM_GetActionName("S&M_APPLY_TRTEMPLATE_ITEMSENVS", &undo, slot);
 						ApplyTrackTemplateSlot(g_resType, undo.Get(), slot, true, true);
-						break;
+						goto done;
 					case 3:
 						SNM_GetActionName("S&M_PASTE_TEMPLATE_ITEMS", &undo, slot);
 						ReplacePasteItemsTrackTemplateSlot(g_resType, undo.Get(), slot, true);
@@ -929,7 +929,7 @@ void ResourcesView::Perform(int _what)
 					case 0:
 //						SNM_GetActionName("S&M_APPLY_PRJTEMPLATE", &undo, slot);
 						LoadOrSelectProjectSlot(g_resType, /*undo.Get()*/ NULL, slot, false);
-						break;
+						goto done;
 					case 1:
 //						SNM_GetActionName("S&M_NEWTAB_PRJTEMPLATE", &undo, slot);
 						LoadOrSelectProjectSlot(g_resType, /*undo.Get()*/ NULL, slot, true);
@@ -975,11 +975,11 @@ void ResourcesView::Perform(int _what)
 					case 0:
 //						SNM_GetActionName("S&M_SHOW_IMG", &undo, slot);
 						ShowImageSlot(g_resType, /*undo.Get()*/ NULL, slot);
-						break;
+						goto done; // single instance window ATM
 					case 1:
 						SNM_GetActionName("S&M_SET_TRACK_ICON", &undo, slot);
 						SetSelTrackIconSlot(g_resType, undo.Get(), slot);
-						break;
+						goto done;
 					case 2:
 						SNM_GetActionName("S&M_ADDMEDIA_CURTRACK", &undo, slot);
 						InsertMediaSlot(g_resType, undo.Get(), slot, 0);
@@ -989,7 +989,7 @@ void ResourcesView::Perform(int _what)
 	 		case SNM_SLOT_THM:
 //				SNM_GetActionName("S&M_LOAD_THEME", &undo, slot);
 				LoadThemeSlot(g_resType, /*undo.Get()*/ NULL, slot);
-				break;
+				goto done;
 			default:
 				// works on OSX too
 				if (WDL_FastString* fnStr = GetOrPromptOrBrowseSlot(g_resType, &slot)) 
@@ -999,12 +999,17 @@ void ResourcesView::Perform(int _what)
 					ShellExecute(GetMainHwnd(), "open", fnStr->Get(), NULL, NULL, SW_SHOWNORMAL);
 					delete fnStr;
 				}
-				break;
+				goto done;
 		}
 
-		// update (in case the slot has changed, e.g. empty -> filled)
-		Update();
+		pItem = (ResourceItem*)EnumSelected(&x);
+		slot = g_SNM_ResSlots.Get(g_resType)->Find(pItem);
 	}
+
+done:
+	// update in case slected slots' content have changed, e.g.:
+	// action ran on empty sel slot -> auto-prompt to fill slot (macro firendly) -> Perform()
+	Update();
 }
 
 
@@ -1020,6 +1025,12 @@ ResourcesWnd::ResourcesWnd()
 	m_id.Set(RES_WND_ID);
 	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();
+}
+
+ResourcesWnd::~ResourcesWnd()
+{
+	m_btnsAddDel.RemoveAllChildren(false);
+	m_btnsAddDel.SetRealParent(NULL);
 }
 
 void ResourcesWnd::OnInitDlg()
@@ -1089,6 +1100,7 @@ void ResourcesWnd::OnDestroy()
 	m_cbType.Empty();
 	m_cbDblClickType.Empty();
 	m_btnsAddDel.RemoveAllChildren(false);
+	m_btnsAddDel.SetRealParent(NULL);
 }
 
 void ResourcesWnd::SetType(int _type)
@@ -3313,6 +3325,8 @@ int ResourcesInit()
 
 void ResourcesExit()
 {
+	plugin_register("-projectconfig", &s_projectconfig);
+
 	WDL_FastString iniStr, escapedStr;
 	WDL_PtrList_DeleteOnDestroy<WDL_FastString> iniSections;
 	GetIniSectionNames(&iniSections);
@@ -3428,7 +3442,7 @@ void OpenResources(COMMAND_T* _ct)
 
 int IsResourcesDisplayed(COMMAND_T* _ct) {
 	if (ResourcesWnd* w = g_resWndMgr.Get())
-		return w->IsValidWindow();
+		return w->IsWndVisible();
 	return 0;
 }
 
@@ -3591,7 +3605,7 @@ void ClearImageWnd(COMMAND_T*) {
 int IsImageWndDisplayed(COMMAND_T*)
 {
 	if (ImageWnd* w = g_imgWndMgr.Get())
-		return w->IsValidWindow();
+		return w->IsWndVisible();
 	return 0;
 }
 
@@ -3612,7 +3626,7 @@ void ResourcesClearDeleteSlotsFiles(COMMAND_T* _ct, int _type, int _mode, int _s
 	{
 		if (ResourceList* fl = g_SNM_ResSlots.Get(g_tiedSlotActions[_type]))
 		{
-/*JFB commented: more not macro-friendly
+/*JFB commented: not macro-friendly
 			if (!fl->GetSize())
 			{
 				WDL_FastString msg;
@@ -3735,7 +3749,7 @@ bool AutoSaveTrackFXChainSlots(int _slotType, const char* _dirPath, WDL_PtrList<
 				RemoveAllIds(&fxChain);
 
 				// add track channels as a comment (so that it does not bother REAPER)
-				// i.e. best effort for http://code.google.com/p/sws-extension/issues/detail?id=363
+				// i.e. best effort for http://github.com/Jeff0S/sws/issues/363
 				WDL_FastString nbChStr;
 				nbChStr.SetFormatted(32, "#NCHAN %d\n", *(int*)GetSetMediaTrackInfo(tr, "I_NCHAN", NULL));
 				fxChain.Insert(nbChStr.Get(), 0);
@@ -4480,26 +4494,7 @@ void LoadThemeSlot(int _slotType, const char* _title, int _slot)
 {
 	if (WDL_FastString* fnStr = GetOrPromptOrBrowseSlot(_slotType, &_slot))
 	{
-		char cmd[SNM_MAX_PATH]=""; 
-		if (_snprintfStrict(cmd, sizeof(cmd), SNM_REAPER_EXE_FILE, GetExePath()) > 0)
-		{
-			WDL_FastString syscmd;
-			// on Win, force -nonewinst not to spawn a new instance (i.e. ignore multi instance prefs)
-			// note: can't access those prefs via GetConfigVar("multinst"), not exposed?
-#ifdef _WIN32
-			syscmd.SetFormatted(SNM_MAX_PATH, "\"%s\" -nonewinst -ignoreerrors", fnStr->Get());
-			ShellExecute(GetMainHwnd(), "open", cmd, syscmd.Get(), NULL, SW_SHOWNORMAL);
-#else
-			syscmd.SetFormatted(SNM_MAX_PATH, "open -a \"%s\" \"%s\"", cmd, fnStr->Get());
-/*JFB useless on OSX: no multi instance prefs like on Win but this would work if so (--args requires OSX >= 10.6 though)
-			syscmd.SetFormatted(SNM_MAX_PATH, "open -a '%s' '%s' --args -nonewinst -ignoreerrors", cmd, fnStr->Get());
-*/
-			system(syscmd.Get());
-#endif
-		}
-
-		//JFB! would be great to make this "synchroneous" (somehow)
-
+		OnColorThemeOpenFile(fnStr->Get());
 		delete fnStr;
 	}
 }

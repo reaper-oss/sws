@@ -1,8 +1,9 @@
 /******************************************************************************
 / wol_Util.cpp
 /
-/ Copyright (c) 2014 wol
+/ Copyright (c) 2014-2015 wol
 / http://forum.cockos.com/member.php?u=70153
+/ http://github.com/Jeff0S/sws
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -30,6 +31,7 @@
 #include "../Breeder/BR_Util.h"
 #include "../Breeder/BR_EnvelopeUtil.h"
 #include "../SnM/SnM_Dlg.h"
+#include "../SnM/SnM_Util.h"
 
 
 
@@ -37,7 +39,6 @@
 /// Track
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 static vector<MediaTrack*>* g_savedSelectedTracks = NULL;
-static bool g_free;
 
 bool SaveSelectedTracks()
 {
@@ -65,13 +66,28 @@ bool RestoreSelectedTracks()
 	return true;
 }
 
-void SetTrackHeight(MediaTrack* track, int height)
+void SetTrackHeight(MediaTrack* track, int height, bool useChunk)
 {
-	GetSetMediaTrackInfo(track, "I_HEIGHTOVERRIDE", &height);
-	PreventUIRefresh(1);
-	Main_OnCommand(41327, 0);
-	Main_OnCommand(41328, 0);
-	PreventUIRefresh(-1);
+	if (!useChunk)
+	{
+		GetSetMediaTrackInfo(track, "I_HEIGHTOVERRIDE", &height);
+
+		PreventUIRefresh(1);
+		Main_OnCommand(41327, 0);
+		Main_OnCommand(41328, 0);
+		PreventUIRefresh(-1);
+	}
+	else
+	{
+		SNM_ChunkParserPatcher p(track);
+		char pTrackLine[BUFFER_SIZE] = "";
+
+		if (p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKHEIGHT", 0, 1, pTrackLine))
+		{
+			_snprintfSafe(pTrackLine, BUFFER_SIZE, "%d", height);
+			p.ParsePatch(SNM_SET_CHUNK_CHAR, 1, "TRACK", "TRACKHEIGHT", 0, 1, pTrackLine);
+		}
+	}
 }
 
 

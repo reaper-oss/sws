@@ -3,7 +3,7 @@
 /
 / Copyright (c) 2013 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
-/ https://code.google.com/p/sws-extension
+/ http://github.com/Jeff0S/sws
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -47,6 +47,11 @@ const int UP_TO_DATE         =  0;
 const int OFFICIAL_AVAILABLE =  1;
 const int BETA_AVAILABLE     =  2;
 const int BOTH_AVAILABLE     =  3;
+
+/******************************************************************************
+* Globals                                                                     *
+******************************************************************************/
+static BR_SearchObject* g_searchObject = NULL;
 
 /******************************************************************************
 * Dialog functionality                                                        *
@@ -229,38 +234,50 @@ static WDL_DLGRET DialogProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 ******************************************************************************/
 static void StartupSearch ()
 {
-	static BR_SearchObject* s_searchObject = new (nothrow) BR_SearchObject(true);
-
-	if (s_searchObject)
+	if (g_searchObject)
 	{
-		int status = s_searchObject->GetStatus(NULL, NULL);
+		int status = g_searchObject->GetStatus(NULL, NULL);
 		if (status != SEARCH_INITIATED)
 		{
 			if (status == OFFICIAL_AVAILABLE || status == BETA_AVAILABLE || status == BOTH_AVAILABLE)
-				DialogBoxParam(g_hInst, MAKEINTRESOURCE(IDD_BR_VERSION), g_hwndParent, DialogProc, (LPARAM)s_searchObject);
-			delete s_searchObject;
-			s_searchObject = NULL;
+				DialogBoxParam(g_hInst, MAKEINTRESOURCE(IDD_BR_VERSION), g_hwndParent, DialogProc, (LPARAM)g_searchObject);
+			delete g_searchObject;
+			g_searchObject = NULL;
 		}
 	}
 	else
 		plugin_register("-timer",(void*)StartupSearch);
 }
 
-void VersionCheckInit ()
+int VersionCheckInitExit (bool init)
 {
-	bool official, beta; unsigned int lastTime;
-	GetStartupSearchOptions (&official, &beta, &lastTime);
-
-	if (official || beta)
+	if (init)
 	{
-		// Make sure at least 24 hours have passed since the last search
-		unsigned int currentTime = (unsigned int)time(NULL);
-		if (currentTime - lastTime >= 86400 || currentTime - lastTime < 0)
+		bool official, beta; unsigned int lastTime;
+		GetStartupSearchOptions (&official, &beta, &lastTime);
+
+		if (official || beta)
 		{
-			SetStartupSearchOptions (official, beta, currentTime);
-			plugin_register("timer",(void*)StartupSearch); // timer starts only after project whole load
+			// Make sure at least 24 hours have passed since the last search
+			unsigned int currentTime = (unsigned int)time(NULL);
+			if (currentTime - lastTime >= 86400 || currentTime - lastTime < 0)
+			{
+				SetStartupSearchOptions(official, beta, currentTime);
+
+				g_searchObject = new (nothrow) BR_SearchObject(true);
+				return plugin_register("timer",(void*)StartupSearch); // timer starts only after project gets loaded
+			}
 		}
 	}
+	else
+	{
+		if (g_searchObject)
+			delete g_searchObject;
+		g_searchObject = NULL;
+		StartupSearch();
+	}
+
+	return 1;
 }
 
 /******************************************************************************

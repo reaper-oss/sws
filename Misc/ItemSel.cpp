@@ -2,7 +2,7 @@
 / ItemSel.cpp
 /
 / Copyright (c) 2010 Tim Payne (SWS)
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -10,10 +10,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -277,7 +277,7 @@ void AddRightItem(COMMAND_T* = NULL)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		WDL_PtrList<void> selItems;
-		// First find selected item(s)
+		// First find selected items
 		for (int j = 0; j < GetTrackNumMediaItems(tr); j++)
 		{
 			MediaItem* selItem = GetTrackMediaItem(tr, j);
@@ -316,14 +316,14 @@ void AddLeftItem(COMMAND_T* = NULL)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		WDL_PtrList<void> selItems;
-		// First find selected item(s)
+		// First find selected items
 		for (int j = 0; j < GetTrackNumMediaItems(tr); j++)
 		{
 			MediaItem* selItem = GetTrackMediaItem(tr, j);
 			if (*(bool*)GetSetMediaItemInfo(selItem, "B_UISEL", NULL))
 				selItems.Add(selItem);
 		}
-		
+
 		for (int j = 0; j < selItems.GetSize(); j++)
 		{
 			double dLeft    = *(double*)GetSetMediaItemInfo((MediaItem*)selItems.Get(j), "D_POSITION", NULL);
@@ -388,25 +388,25 @@ void UnselNotRender(COMMAND_T* = NULL)
 }
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
-static COMMAND_T g_commandTable[] = 
+static COMMAND_T g_commandTable[] =
 {
-	{ { DEFACCEL, "SWS: Unselect all items on selected track(s)" },							"SWS_UNSELONTRACKS",	UnselOnTracks,		},
-	{ { DEFACCEL, "SWS: Select lower-leftmost item on selected track(s)" },					"SWS_SELLLI",			SelLLItem,			},
-	{ { DEFACCEL, "SWS: Select upper-leftmost item on selected track(s)" },					"SWS_SELULI",			SelULItem,			},
-	{ { DEFACCEL, "SWS: Unselect upper-leftmost item on selected track(s)" },				"SWS_UNSELULI",			UnselULItem,		},
-	{ { DEFACCEL, "SWS: Toggle selection of items on selected track(s)" },					"SWS_TOGITEMSEL",		TogItemSel,			},
+	{ { DEFACCEL, "SWS: Unselect all items on selected tracks" },							"SWS_UNSELONTRACKS",	UnselOnTracks,		},
+	{ { DEFACCEL, "SWS: Select lower-leftmost item on selected tracks" },					"SWS_SELLLI",			SelLLItem,			},
+	{ { DEFACCEL, "SWS: Select upper-leftmost item on selected tracks" },					"SWS_SELULI",			SelULItem,			},
+	{ { DEFACCEL, "SWS: Unselect upper-leftmost item on selected tracks" },					"SWS_UNSELULI",			UnselULItem,		},
+	{ { DEFACCEL, "SWS: Toggle selection of items on selected tracks" },					"SWS_TOGITEMSEL",		TogItemSel,			},
 	{ { DEFACCEL, "SWS: Select muted items" },												"SWS_SELMUTEDITEMS",	SelMutedItems,		NULL, 1, },
 	{ { DEFACCEL, "SWS: Select unmuted items" },											"SWS_SELUNMUTEDITEMS",	SelMutedItems,		NULL, 0, },
-	{ { DEFACCEL, "SWS: Select muted items on selected track(s)" },							"SWS_SELMUTEDITEMS2",	SelMutedItemsSel,	NULL, 1, },
-	{ { DEFACCEL, "SWS: Select unmuted items on selected track(s)" },						"SWS_SELUNMUTEDITEMS2",	SelMutedItemsSel,	NULL, 0, },
+	{ { DEFACCEL, "SWS: Select muted items on selected tracks" },							"SWS_SELMUTEDITEMS2",	SelMutedItemsSel,	NULL, 1, },
+	{ { DEFACCEL, "SWS: Select unmuted items on selected tracks" },							"SWS_SELUNMUTEDITEMS2",	SelMutedItemsSel,	NULL, 0, },
 	{ { DEFACCEL, "SWS: Select next item (across tracks)" },								"SWS_SELNEXTITEM",		SelNextItem,		NULL, 0, },
 	{ { DEFACCEL, "SWS: Select previous item (across tracks)" },							"SWS_SELPREVITEM",		SelPrevItem,		NULL, 0, },
 	{ { DEFACCEL, "SWS: Select next item, keeping current selection (across tracks)" },		"SWS_SELNEXTITEM2",		SelNextItem,		NULL, 1 },
 	{ { DEFACCEL, "SWS: Select previous item, keeping current selection (across tracks)" },	"SWS_SELPREVITEM2",		SelPrevItem,		NULL, 1 },
 	{ { DEFACCEL, "SWS: Select locked items" },												"SWS_SELLOCKITEMS",		SelLockedItems,		},
-	{ { DEFACCEL, "SWS: Select locked items on selected track(s)" },						"SWS_SELLOCKITEMS2",	SelLockedItemsSel,	},
-	{ { DEFACCEL, "SWS: Add item(s) to right of selected item(s) to selection" },			"SWS_ADDRIGHTITEM",		AddRightItem,		},
-	{ { DEFACCEL, "SWS: Add item(s) to left of selected item(s) to selection" },			"SWS_ADDLEFTITEM",		AddLeftItem,		},
+	{ { DEFACCEL, "SWS: Select locked items on selected tracks" },							"SWS_SELLOCKITEMS2",	SelLockedItemsSel,	},
+	{ { DEFACCEL, "SWS: Add items to right of selected items to selection" },				"SWS_ADDRIGHTITEM",		AddRightItem,		},
+	{ { DEFACCEL, "SWS: Add items to left of selected items to selection" },				"SWS_ADDLEFTITEM",		AddLeftItem,		},
 	{ { DEFACCEL, "SWS: Unselect items without 'stems' in source filename" },				"SWS_UNSELNOTSTEM",		UnselNotStem,		},
 	{ { DEFACCEL, "SWS: Unselect items without 'render' in source filename" },				"SWS_UNSELNOTRENDER",	UnselNotRender,		},
 

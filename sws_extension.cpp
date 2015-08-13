@@ -2,7 +2,7 @@
 / sws_extension.cpp
 /
 / Copyright (c) 2013 Tim Payne (SWS), Jeffos
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +27,7 @@
 
 
 #include "stdafx.h"
+#include "version.h"
 #include "Console/Console.h"
 #include "Freeze/Freeze.h"
 #include "MarkerActions/MarkerActions.h"
@@ -47,6 +48,7 @@
 #include "SnM/SnM.h"
 #include "SnM/SnM_CSurf.h"
 #include "SnM/SnM_Dlg.h"
+#include "SnM/SnM_Util.h"
 #include "Padre/padreActions.h"
 #include "Fingers/FNG_client.h"
 #include "Autorender/Autorender.h"
@@ -64,6 +66,7 @@
 // Globals
 REAPER_PLUGIN_HINSTANCE g_hInst = NULL;
 HWND g_hwndParent = NULL;
+bool g_bInitDone = false;
 
 #ifdef ACTION_DEBUG
 void freeCmdFilesValue(WDL_String* p) {delete p;}
@@ -91,13 +94,16 @@ bool hookCommandProc(int iCmd, int flag)
 	if (iCmd == 1013 && !RecordInputCheck())
 		return true;
 
-	// For continuous actions
-	if (BR_ActionHook(iCmd, flag))
+	if (BR_GlobalActionHook(iCmd, 0, 0, 0, 0))
 		return true;
 
 	// Ignore commands that don't have anything to do with us from this point forward
 	if (COMMAND_T* cmd = SWSGetCommandByID(iCmd))
 	{
+		// For continuous actions
+		if (BR_SwsActionHook(cmd, flag, NULL))
+			return true;
+
 		if (!cmd->uniqueSectionId && cmd->accel.accel.cmd==iCmd && cmd->doCommand)
 		{
 			if (sReentrantCmds.Find(cmd->id)<0)
@@ -129,6 +135,9 @@ bool hookCommandProc2(KbdSectionInfo* sec, int cmdId, int val, int valhw, int re
 {
 	static WDL_PtrList<const char> sReentrantCmds;
 
+	if (BR_GlobalActionHook(cmdId, val, valhw, relmode, hwnd))
+		return true;
+
 	// Ignore commands that don't have anything to do with us from this point forward
 	if (COMMAND_T* cmd = SWSGetCommandByID(cmdId))
 	{
@@ -141,19 +150,20 @@ bool hookCommandProc2(KbdSectionInfo* sec, int cmdId, int val, int valhw, int re
 
 			if (cmd->onAction)
 			{
+				// For continuous actions
+				if (BR_SwsActionHook(cmd, relmode, hwnd))
+					return true;
+
 				if (sReentrantCmds.Find(cmd->id)<0)
 				{
 					sReentrantCmds.Add(cmd->id);
 					cmd->fakeToggle = !cmd->fakeToggle;
 
-					if (!BR_SetGetCommandHook2Reentrancy(false, false)) // needed for refreshing MIDI toolbar (make sure it's called after changing toggle state)
-					{
 #ifndef BR_DEBUG_PERFORMANCE_ACTIONS
-						cmd->onAction(cmd, val, valhw, relmode, hwnd);
+					cmd->onAction(cmd, val, valhw, relmode, hwnd);
 #else
-						CommandTimer(cmd, val, valhw, relmode, hwnd, true);
+					CommandTimer(cmd, val, valhw, relmode, hwnd, true);
 #endif
-					}
 					sReentrantCmds.Delete(sReentrantCmds.Find(cmd->id));
 					return true;
 				}
@@ -321,6 +331,11 @@ COMMAND_T* SWSUnregisterCmd(int id)
 	return NULL;
 }
 
+void UnregisterAllCmds() {
+	for (int i=g_iFirstCommand; i<=g_iLastCommand; i++)
+		SWSUnregisterCmd(i);
+}
+
 #ifdef ACTION_DEBUG
 void ActionsList(COMMAND_T*)
 {
@@ -478,7 +493,7 @@ public:
 		SNM_CSurfSetPlayState(play, pause, rec);
 		AWDoAutoGroup(rec);
 		ItemPreviewPlayState(play, rec);
-		BR_CSurfSetPlayState(play, pause, rec);
+		BR_CSurf_SetPlayState(play, pause, rec);
 	}
 
 	// This is our only notification of active project tab change, so update everything
@@ -505,13 +520,27 @@ public:
 			m_iACIgnore--;
 	}
 
+	void OnTrackSelection(MediaTrack *tr) // 3 problems with this (last check v5.0pre28): doesn't work if Mixer option "Scroll view when tracks activated" is disabled
+	{                                     //                                              gets called before CSurf->Extended(CSURF_EXT_SETLASTTOUCHEDTRACK)   
+	                                      //                                              only gets called when track is selected by clicking it in TCP/MCP (and not when track is selected via action)...bug or feature?
+
+		// while OnTrackSelection appears to be broken, putting this in SetSurfaceSelected() would mean it gets called multiple times (because SetSurfaceSelected() gets called once for each track whose
+		// selection state changed, and then once more for every track in the project). We could theoretically try and deduct when SetSurfaceSelected() got called the last time (but it's arguable if we could
+		// do this with 100% accuracy because when only master track is selected, SetSurfaceSelected() gets called only once, and in case new track is inserted, it gets called 3 times for the last track (once for unselecting
+		// prior to inserting new track, once for new track's selection state, and then once more when it iterates through all tracks)
+		// 
+		// Besides these complications, it would also mean we would have to check all of these things a lot of times, thus clogging the Csurf just to execute one simple thing. So just leave it here and hope the 
+		// OnTrackSelection() gets fixed at some point :)
+		BR_CSurf_OnTrackSelection(tr);
+	}
+
 	void SetSurfaceSelected(MediaTrack *tr, bool bSel)	{ ScheduleTracklistUpdate(); UpdateSnapshotsDialog(true); }
 	void SetSurfaceMute(MediaTrack *tr, bool mute)		{ ScheduleTracklistUpdate(); UpdateTrackMute(); }
 	void SetSurfaceSolo(MediaTrack *tr, bool solo)		{ ScheduleTracklistUpdate(); UpdateTrackSolo(); }
 	void SetSurfaceRecArm(MediaTrack *tr, bool arm)		{ ScheduleTracklistUpdate(); UpdateTrackArm(); }
 	int Extended(int call, void *parm1, void *parm2, void *parm3)
 	{
-		BR_CSurfExtended(call, parm1, parm2, parm3);
+		BR_CSurf_Extended(call, parm1, parm2, parm3);
 		SNM_CSurfExtended(call, parm1, parm2, parm3);
 		return 0;
 	}
@@ -566,10 +595,27 @@ void WDL_STYLE_ScaleImageCoords(int *x, int *y) { }
 
 // Main DLL entry point
 
-#define ERR_RETURN(a) { return 0; }
-#define OK_RETURN(a)  { return 1; }
-//#define ERR_RETURN(a) { FILE* f = fopen("c:\\swserror.txt", "a"); if (f) { fprintf(f, a); fclose(f); } return 0; }
-//#define OK_RETURN(a)  { FILE* f = fopen("c:\\swserror.txt", "a"); if (f) { fprintf(f, a); fclose(f); } return 1; }
+SWSTimeSlice* g_ts=NULL;
+
+void ErrMsg(const char* errmsg, bool wantblabla=true)
+{
+	if (errmsg && *errmsg && (!IsREAPER || IsREAPER())) // don't display any message if loaded from ReaMote
+	{
+		WDL_FastString msg(errmsg);
+		if (wantblabla)
+		{
+			// reversed insertion
+			msg.Insert(" ", 0);
+			msg.Insert(__LOCALIZE("Hint:","sws_mbox"), 0);
+			msg.Insert("\r\n", 0);
+			msg.Insert(__LOCALIZE("An error occured during the SWS extension initialization.","sws_mbox"), 0);
+		}
+		MessageBox(Splash_GetWnd&&Splash_GetWnd()?Splash_GetWnd():NULL, msg.Get(), __LOCALIZE("SWS - Error","sws_mbox"), MB_OK);
+	}
+}
+
+#define IMPAPI(x)       if (!errcnt && !((*((void **)&(x)) = (void *)rec->GetFunc(#x)))) errcnt++;
+#define ERR_RETURN(a)   { ErrMsg(a); goto error; }
 
 extern "C"
 {
@@ -577,32 +623,57 @@ extern "C"
 	{
 		if (!rec)
 		{
-			SnapshotsExit();
-			TrackListExit();
-			MarkerListExit();
-			AutoColorExit();
-			ProjectListExit();
-			ConsoleExit();
-			MiscExit();
-			PadreExit();
-			SNM_Exit();
-			BR_Exit();
-			ERR_RETURN("Exiting Reaper.\n")
+error:
+			if (plugin_register)
+			{
+				UnregisterAllCmds();
+				plugin_register("-hookcommand2", (void*)hookCommandProc2);
+				plugin_register("-hookcommand", (void*)hookCommandProc);
+//				plugin_register("-hookpostcommand", (void*)hookPostCommandProc);
+				plugin_register("-toggleaction", (void*)toggleActionHook);
+				plugin_register("-hookcustommenu", (void*)swsMenuHook);
+				if (g_ts) { plugin_register("-csurf_inst", g_ts); DELETE_NULL(g_ts); }
+				UnregisterExportedFuncs();
+			}
+
+			if (g_bInitDone) // no granularity here, but it'd be an internal error anyway
+			{
+				ColorExit();
+				AutorenderExit();
+				SnapshotsExit();
+				TrackListExit();
+				MarkerListExit();
+				MarkerActionsExit();
+				AutoColorExit();
+				ProjectListExit();
+				ProjectMgrExit();
+				XenakiosExit();
+				ConsoleExit();
+				FreezeExit();
+				MiscExit();
+				FNGExtensionExit();
+				PadreExit();
+				SNM_Exit();
+				BR_Exit();
+			}
+			return 0; // makes REAPER unloading us
 		}
 
+
+		int errcnt=0; // IMPAPI failed if >0
+
 		if (rec->caller_version != REAPER_PLUGIN_VERSION)
-			ERR_RETURN("Wrong REAPER_PLUGIN_VERSION!\n")
+			ERR_RETURN("Wrong REAPER_PLUGIN_VERSION!")
 
 		if (!rec->GetFunc)
-			ERR_RETURN("Null rec->GetFunc ptr\n")
+			ERR_RETURN("Null rec->GetFunc ptr.")
 
 #ifdef _SWS_LOCALIZATION
 		IMPORT_LOCALIZE_RPLUG(rec);
 #endif
 
-		int errcnt=0;
-
-		IMPAPI(IsREAPER); // must be tested first, see below
+		IMPAPI(plugin_register); // keep those first
+		IMPAPI(IsREAPER);
 
 		IMPAPI(AddExtensionsMainMenu);
 		IMPAPI(AddMediaItemToTrack);
@@ -621,10 +692,12 @@ extern "C"
 		IMPAPI(CoolSB_GetScrollInfo);
 		IMPAPI(CoolSB_SetScrollInfo);
 		IMPAPI(CountActionShortcuts);
+		IMPAPI(CountEnvelopePoints); // v5pre4+
 		IMPAPI(CountMediaItems);
 		IMPAPI(CountProjectMarkers);
 		IMPAPI(CountSelectedMediaItems);
 		IMPAPI(CountSelectedTracks);
+		IMPAPI(CountTakeEnvelopes) // v5pre12+
 		IMPAPI(CountTakes);
 		IMPAPI(CountTCPFXParms);
 		IMPAPI(CountTempoTimeSigMarkers);
@@ -646,10 +719,13 @@ extern "C"
 		IMPAPI(CSurf_OnWidthChange);
 		IMPAPI(CSurf_TrackFromID);
 		IMPAPI(CSurf_TrackToID);
+		IMPAPI(DB2SLIDER);
+		IMPAPI(DeleteEnvelopePointRange); // v5pre5+
 		IMPAPI(DeleteActionShortcut);
 		IMPAPI(DeleteProjectMarker);
 		IMPAPI(DeleteProjectMarkerByIndex);
 		IMPAPI(DeleteTakeStretchMarkers);
+		IMPAPI(DeleteTempoTimeSigMarker); // v5pre4+
 		IMPAPI(DeleteTrack);
 		IMPAPI(DeleteTrackMediaItem);
 		IMPAPI(DestroyAudioAccessor);
@@ -667,6 +743,8 @@ extern "C"
 		IMPAPI(EnumProjectMarkers2);
 		IMPAPI(EnumProjectMarkers3);
 		IMPAPI(EnumProjects);
+		IMPAPI(Envelope_Evaluate); // v5pre4+
+		IMPAPI(Envelope_SortPoints); // v5pre4+
 		IMPAPI(file_exists);
 		IMPAPI(format_timestr);
 		IMPAPI(format_timestr_pos);
@@ -687,8 +765,12 @@ extern "C"
 		IMPAPI(GetCursorPosition);
 		IMPAPI(GetCursorPositionEx);
 		IMPAPI(GetEnvelopeName);
+		IMPAPI(GetEnvelopePoint); // v5pre4
+		IMPAPI(GetEnvelopePointByTime) // v5pre4
+		IMPAPI(GetEnvelopeScalingMode); // v5pre13+
 		IMPAPI(GetExePath);
 		IMPAPI(GetFocusedFX);
+		IMPAPI(GetFXEnvelope); // v5pre5+
 		IMPAPI(GetGlobalAutomationOverride);
 		IMPAPI(GetHZoomLevel);
 		IMPAPI(GetIconThemePointer);
@@ -699,6 +781,7 @@ extern "C"
 		IMPAPI(GetLastTouchedTrack);
 		IMPAPI(GetMainHwnd);
 		IMPAPI(GetMasterMuteSoloFlags);
+		IMPAPI(GetMasterTrackVisibility);
 		IMPAPI(GetMasterTrack);
 		IMPAPI(GetMediaItem);
 		IMPAPI(GetMediaItem_Track);
@@ -727,9 +810,7 @@ extern "C"
 		IMPAPI(GetPlayState);
 		IMPAPI(GetPlayStateEx);
 		IMPAPI(GetProjectPath);
-/*JFB commented: err in debug output "plugin_getapi fail:GetProjectStateChangeCount" - last check: v4.33rc1
 		IMPAPI(GetProjectStateChangeCount);
-*/
 		IMPAPI(GetProjectTimeSignature2);
 		IMPAPI(GetResourcePath);
 		IMPAPI(GetSelectedEnvelope);
@@ -740,6 +821,7 @@ extern "C"
 		IMPAPI(GetSetEnvelopeState);
 		IMPAPI(GetSetMediaItemInfo);
 		IMPAPI(GetSetMediaItemTakeInfo);
+		IMPAPI(GetMediaSourceLength); // v5.0pre3+
 		IMPAPI(GetSetMediaTrackInfo);
 		IMPAPI(GetSetObjectState);
 		IMPAPI(GetSetObjectState2);
@@ -753,10 +835,12 @@ extern "C"
 		IMPAPI(GetSet_LoopTimeRange2);
 		IMPAPI(GetSubProjectFromSource);
 		IMPAPI(GetTake);
+		IMPAPI(GetTakeEnvelope); // v5pre12+
 		IMPAPI(GetTakeNumStretchMarkers);
 		IMPAPI(GetTCPFXParm);
 		IMPAPI(GetToggleCommandState);
 		IMPAPI(GetToggleCommandState2);
+		IMPAPI(GetToggleCommandStateEx);
 		IMPAPI(GetSelectedEnvelope);
 		IMPAPI(GetToggleCommandStateThroughHooks);
 		IMPAPI(GetTooltipWindow);
@@ -769,6 +853,7 @@ extern "C"
 		IMPAPI(GetTrackMIDINoteNameEx);
 		IMPAPI(GetTrackNumMediaItems);
 		IMPAPI(GetTrackNumSends);
+		IMPAPI(GetTrackStateChunk);
 		IMPAPI(GetTrackUIVolPan);
 		IMPAPI(GetUserInputs);
 		IMPAPI(get_config_var);
@@ -778,6 +863,7 @@ extern "C"
 		IMPAPI(guidToString);
 		IMPAPI(Help_Set);
 		IMPAPI(InsertMedia);
+		IMPAPI(InsertEnvelopePoint); // v5pre4+
 		IMPAPI(InsertTrackAtIndex);
 		IMPAPI(IsMediaExtension);
 		IMPAPI(kbd_enumerateActions);
@@ -821,6 +907,7 @@ extern "C"
 		IMPAPI(MIDI_InsertTextSysexEvt);
 		IMPAPI(MIDI_SetCC);
 		IMPAPI(MIDI_SetEvt);
+		IMPAPI(MIDI_SetItemExtents); // v5.0pre (no data on exact build in whatsnew, but I'm pretty sure I never saw this in v4)
 		IMPAPI(MIDI_SetNote);
 		IMPAPI(MIDI_SetTextSysexEvt);
 		IMPAPI(MIDIEditor_GetActive);
@@ -834,9 +921,13 @@ extern "C"
 		IMPAPI(mkvolstr);
 		IMPAPI(MoveEditCursor);
 		IMPAPI(MoveMediaItemToTrack);
+		IMPAPI(OnColorThemeOpenFile); // v5.0pre21+
 		IMPAPI(OnPauseButton);
+		IMPAPI(OnPauseButtonEx);
 		IMPAPI(OnPlayButton);
+		IMPAPI(OnPlayButtonEx);
 		IMPAPI(OnStopButton);
+		IMPAPI(OnStopButtonEx);
 		IMPAPI(NamedCommandLookup);
 		IMPAPI(parse_timestr_len);
 		IMPAPI(parse_timestr_pos);
@@ -852,11 +943,11 @@ extern "C"
 		IMPAPI(PlayTrackPreview2Ex);
 		IMPAPI(plugin_getFilterList);
 		IMPAPI(plugin_getImportableProjectFilterList);
-		IMPAPI(plugin_register);
 		IMPAPI(PreventUIRefresh);
 		IMPAPI(projectconfig_var_addr);
 		IMPAPI(projectconfig_var_getoffs);
 		IMPAPI(RefreshToolbar);
+		IMPAPI(RefreshToolbar2); // v5pre8+
 #ifdef _WIN32
 		IMPAPI(RemoveXPStyle);
 #endif
@@ -864,6 +955,8 @@ extern "C"
 		IMPAPI(Resample_EnumModes);
 		IMPAPI(Resampler_Create);
 		IMPAPI(ReverseNamedCommandLookup);
+		IMPAPI(ScaleFromEnvelopeMode); // v5pre13+
+		IMPAPI(ScaleToEnvelopeMode); // v5pre13+
 		IMPAPI(screenset_register);
 		IMPAPI(screenset_registerNew);
 		IMPAPI(screenset_unregister);
@@ -875,7 +968,9 @@ extern "C"
 		IMPAPI(SetCursorContext);
 		IMPAPI(SetEditCurPos);
 		IMPAPI(SetEditCurPos2);
+		IMPAPI(SetEnvelopePoint); // v5pre4+
 		IMPAPI(SetGlobalAutomationOverride);
+		IMPAPI(SetMasterTrackVisibility);
 		IMPAPI(SetMediaItemInfo_Value);
 		IMPAPI(SetMediaItemLength);
 		IMPAPI(SetMediaItemPosition);
@@ -895,9 +990,11 @@ extern "C"
 		IMPAPI(SetTrackSelected);
 		IMPAPI(SetTrackSendUIPan);
 		IMPAPI(SetTrackSendUIVol);
+		IMPAPI(SetTrackStateChunk);
 		IMPAPI(ShowActionList);
 		IMPAPI(ShowConsoleMsg);
 		IMPAPI(ShowMessageBox);
+		IMPAPI(SLIDER2DB);
 		IMPAPI(SnapToGrid);
 		IMPAPI(Splash_GetWnd);
 		IMPAPI(SplitMediaItem);
@@ -907,13 +1004,16 @@ extern "C"
 		IMPAPI(TimeMap_GetDividedBpmAtTime);
 		IMPAPI(TimeMap_GetTimeSigAtTime);
 		IMPAPI(TimeMap_QNToTime);
+		IMPAPI(TimeMap_QNToTime_abs);
 		IMPAPI(TimeMap_timeToQN);
+		IMPAPI(TimeMap_timeToQN_abs);
 		IMPAPI(TimeMap2_beatsToTime);
 		IMPAPI(TimeMap2_GetDividedBpmAtTime);
 		IMPAPI(TimeMap2_GetNextChangeTime);
 		IMPAPI(TimeMap2_QNToTime);
 		IMPAPI(TimeMap2_timeToBeats);
 		IMPAPI(TimeMap2_timeToQN);
+		IMPAPI(TimeMap_curFrameRate);
 		IMPAPI(TrackFX_FormatParamValue);
 		IMPAPI(TrackFX_GetByName);
 		IMPAPI(TrackFX_GetChainVisible);
@@ -954,109 +1054,157 @@ extern "C"
 		IMPAPI(ValidatePtr);
 
 		g_hInst = hInstance;
-		g_hwndParent = GetMainHwnd();
+		g_hwndParent = GetMainHwnd&&GetMainHwnd()?GetMainHwnd():0;
 
 		if (errcnt)
 		{
-			if (IsREAPER && IsREAPER())
-			{
-				char txt[512]="";
-				_snprintf(txt, sizeof(txt),
+			char txt[2048]="";
+			_snprintfSafe(txt, sizeof(txt),
 					// keep the message on a single line (for the LangPack generator)
-					__LOCALIZE_VERFMT("The version of SWS extension you have installed is incompatible with your version of REAPER.\nYou probably have a REAPER version less than v%s installed.\nPlease install the latest version of REAPER from www.reaper.fm.","sws_mbox"),
-					"4.75"); // <- update compatible version here
+					__LOCALIZE_VERFMT("The version of SWS extension you have installed is incompatible with your version of REAPER.\nYou probably have a REAPER version less than %s installed.\nPlease install the latest version of REAPER from www.reaper.fm.","sws_mbox"),
+					"v5.0rc1"); // <-- update compatible version here
 
-				MessageBox(Splash_GetWnd && Splash_GetWnd() ? Splash_GetWnd() : NULL, txt, __LOCALIZE("SWS - Version Incompatibility","sws_mbox"), MB_OK);
-			}
-			ERR_RETURN("SWS version incompatibility\n")
+			ErrMsg(txt,false);
+			goto error;
 		}
 
-		// check for dupe/clone before registering any new action
+		// check for dupe/clone
+		if (rec->GetFunc("SNM_GetIntConfigVar"))
 		{
-			int(*SNM_GetIntConfigVar)(const char* varname, int errvalue);
-			IMPAPI(SNM_GetIntConfigVar);
-			if (!errcnt)
-				ERR_RETURN("Dupe SWS\n")
-			errcnt=0;
+			WDL_FastString dir1, dir2, mypath(__LOCALIZE("Unknown","sws_mbox")), conflict;
+#ifdef _WIN32
+			dir1.SetFormatted(2048, "%s\\%s", GetExePath(), "Plugins");
+			dir2.SetFormatted(2048, "%s\\%s", GetResourcePath(), "UserPlugins");
+			
+			HMODULE hm = NULL;
+			if (GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+								   (LPCWSTR)&hookCommandProc, &hm))
+			{
+				wchar_t wpath[2048];
+				GetModuleFileNameW(hm, wpath, sizeof(wpath));
+				
+				char path[2048]="";
+				WideCharToMultiByte(CP_UTF8, 0, wpath, -1, path, sizeof(path), NULL, NULL);
+				mypath.Set(path);
+			}
+#else
+			dir1.SetFormatted(2048, "%s/%s", GetResourcePath(), "UserPlugins");
+			dir2.Set("/Library/Application Support/REAPER/UserPlugins");
+
+			Dl_info info;
+			if (dladdr((const void*)hookCommandProc, &info))
+			{
+				mypath.Set(info.dli_fname);
+			}
+
+			// older reaper_sws.dylib?
+			// (renamed into reaper_sws_extension.dylib in newer SWS version so that REAPER scans both)
+			if (!strnicmp(mypath.Get(), dir2.Get(), dir2.GetLength()))
+			{
+				WDL_FastString tmp(dir1.Get());
+				tmp.Append("/reaper_sws.dylib");
+				if (FileExists(tmp.Get()))
+				{
+					conflict.SetFormatted(2048, __LOCALIZE_VERFMT("(probably %s/reaper_sws.dylib)","sws_mbox"), dir1.Get());
+				}
+			}
+#endif
+
+			char txt[8192]="";
+			_snprintfSafe(txt, sizeof(txt),
+			// keep the message on a single line (for the LangPack generator)
+			__LOCALIZE_VERFMT("Several versions of the SWS extension (or SWS clones) are installed!\n\nThis SWS extension instance will not be loaded:\n- Version: %d.%d.%d #%d\n- Location: %s\n\nPlease quit REAPER and remove the conflicting extension %s.\n\nNote: REAPER will look for extension plugins in the following order/folders:\n\t%s\n\t%s","sws_mbox"),
+				SWS_VERSION,
+				mypath.Get(),
+				conflict.Get()[0] ? conflict.Get() : __LOCALIZE("(see version in Main menu > Extensions > About SWS Extension)","sws_mbox"),
+				dir1.Get(), dir2.Get());
+			
+			ErrMsg(txt,false);
+			return 0; // do not unregister stuff of the conflicting plugin!
 		}
 
 		// hookcommand2 must be registered before hookcommand
 		if (!rec->Register("hookcommand2", (void*)hookCommandProc2))
-		{
-
-			ERR_RETURN("hookcommand error\n")
-
-		}
+			ERR_RETURN("hookcommand2 error.")
 
 		if (!rec->Register("hookcommand", (void*)hookCommandProc))
-			ERR_RETURN("hookcommand error\n")
+			ERR_RETURN("hookcommand error.")
 
 		//if (!rec->Register("hookpostcommand", (void*)hookPostCommandProc))
-		//	ERR_RETURN("hookpostcommand error\n")
+		//	ERR_RETURN("hookpostcommand error.")
 
 		if (!rec->Register("toggleaction", (void*)toggleActionHook))
-			ERR_RETURN("Toggle action hook error\n")
+			ERR_RETURN("Toggle action hook error.")
 
 		// Call plugin specific init
 		if (!AutoColorInit())
-			ERR_RETURN("Auto Color init error\n")
+			ERR_RETURN("Auto Color init error.")
 		if (!ColorInit())
-			ERR_RETURN("Color init error\n")
+			ERR_RETURN("Color init error.")
 		if (!MarkerListInit())
-			ERR_RETURN("Marker list init error\n")
+			ERR_RETURN("Marker list init error.")
 		if (!MarkerActionsInit())
-			ERR_RETURN("Marker action init error\n")
+			ERR_RETURN("Marker action init error.")
 		if (!ConsoleInit())
-			ERR_RETURN("ReaConsole init error\n")
+			ERR_RETURN("ReaConsole init error.")
 		if (!FreezeInit())
-			ERR_RETURN("Freeze init error\n")
+			ERR_RETURN("Freeze init error.")
 		if (!SnapshotsInit())
-			ERR_RETURN("Snapshots init error\n")
+			ERR_RETURN("Snapshots init error.")
 		if (!TrackListInit())
-			ERR_RETURN("Tracklist init error\n")
+			ERR_RETURN("Tracklist init error.")
 		if (!ProjectListInit())
-			ERR_RETURN("Project List init error\n")
+			ERR_RETURN("Project List init error.")
 		if (!ProjectMgrInit())
-			ERR_RETURN("Project Mgr init error\n")
+			ERR_RETURN("Project Mgr init error.")
 		if (!XenakiosInit())
-			ERR_RETURN("Xenakios init error\n")
+			ERR_RETURN("Xenakios init error.")
 		if (!MiscInit())
-			ERR_RETURN("Misc init error\n")
-		if(!FNGExtensionInit(hInstance, rec))
-			ERR_RETURN("Fingers init error\n")
+			ERR_RETURN("Misc init error.")
+		if (!ZoomInit(false))
+			ERR_RETURN("Zoom init error.")
+		if(!FNGExtensionInit())
+			ERR_RETURN("Fingers init error.")
 		if (!PadreInit())
-			ERR_RETURN("Padre init error\n")
+			ERR_RETURN("Padre init error.")
 		if (!AboutBoxInit())
-			ERR_RETURN("About box init error\n")
+			ERR_RETURN("About box init error.")
 		if (!AutorenderInit())
-			ERR_RETURN("Autorender init error\n")
+			ERR_RETURN("Autorender init error.")
 		if (!IXInit())
-			ERR_RETURN("IX init error\n")
+			ERR_RETURN("IX init error.")
 		if (!BR_Init())
-			ERR_RETURN("Breeder init error\n")
+			ERR_RETURN("Breeder init error.")
 		if (!WOL_Init())
-			ERR_RETURN("Wol init error\n")
+			ERR_RETURN("Wol init error.")
 		if (!SNM_Init(rec)) // keep it as the last init (for cycle actions)
-			ERR_RETURN("S&M init error\n")
+			ERR_RETURN("S&M init error.")
 
-		if (!rec->Register("hookcustommenu", (void*)swsMenuHook))
-			ERR_RETURN("Menu hook error\n")
-		AddExtensionsMainMenu();
-
-		if (!RegisterExportedFuncs(rec))
-			ERR_RETURN("Reascript export failed\n");
-		RegisterExportedAPI(rec); // optional: no test on the returned value
-
-		SWSTimeSlice* ts = new SWSTimeSlice();
-		if (!rec->Register("csurf_inst", ts))
+		// above specific inits went well
 		{
-			delete ts;
-			ERR_RETURN("TimeSlice init error\n")
+			g_bInitDone=true;
+
+			g_ts = new SWSTimeSlice();
+			if (!rec->Register("csurf_inst", g_ts))
+			{
+				delete g_ts;
+				ERR_RETURN("TimeSlice init error.")
+			}
 		}
 
-		OK_RETURN("SWS Extension successfully loaded.\n");
+		if (!rec->Register("hookcustommenu", (void*)swsMenuHook))
+			ERR_RETURN("Menu hook error.")
+
+		if ((!RegisterExportedFuncs(rec) || !RegisterExportedAPI(rec)))
+			ERR_RETURN("Reascript export failed.");
+
+		AddExtensionsMainMenu();
+		ZoomInit(true); // touchy! only hook REAPER window procs at the very end, i.e. only if everything else went well
+		BR_InitPost();  // same reason as above (wnd hooks)
+		return 1;
 	}
 };   // end extern C
+
 
 #ifndef _WIN32 // MAC resources
 #include "../WDL/swell/swell-dlggen.h"

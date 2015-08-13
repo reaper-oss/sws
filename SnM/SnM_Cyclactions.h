@@ -2,7 +2,7 @@
 / SnM_Cyclactions.h
 /
 / Copyright (c) 2011-2013 Jeffos
-/ https://code.google.com/p/sws-extension
+/
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -35,8 +35,8 @@
 
 #define CA_VERSION		3
 #define CA_MAX_LEN		SNM_MAX_CHUNK_LINE_LENGTH
-#define CA_SEP_V1		',' // deprecated (prevented console cmd support)
-#define CA_SEP_V2		'µ' // deprecated: (UTF8 warning on OSX)
+#define CA_SEP_V1		',' // deprecated: prevented console cmd support
+#define CA_SEP_V2		'µ' // deprecated: UTF8 on OSX
 #define CA_SEP			'|'
 #define CA_EMPTY		"no-op|65535" // use the above CA_SEP separator!
 #define CA_TGL1			'#' // CA reports a fake toggle state
@@ -94,6 +94,8 @@ class CyclactionWnd : public SWS_DockWnd
 {
 public:
 	CyclactionWnd();
+	virtual ~CyclactionWnd();
+
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 	void Update(bool _updateListViews=true);
 	void UpdateSection(int _newSection);

@@ -32,7 +32,6 @@
 ******************************************************************************/
 bool BR_GlobalActionHook (int cmd, int val, int valhw, int relmode, HWND hwnd);
 bool BR_SwsActionHook (COMMAND_T* ct, int flagOrRelmode, HWND hwnd);
-void BR_MenuHook (COMMAND_T* ct, HMENU menu, int id);
 int  BR_GetNextActionToApply ();
 
 /******************************************************************************

@@ -1128,23 +1128,19 @@ void SetMidiResetOnPlayStop (COMMAND_T* ct)
 
 void SetOptionsFX (COMMAND_T* ct)
 {
-	if ((int)ct->user == 1)
+	if ((int)ct->user == 0)
 	{
 		const char* configStr = "runallonstop";
 		int option; GetConfig(configStr, option);
 
-		// Set only if "Run FX when stopped" is turned on (otherwise the option is disabled so we don't allow the user to change it)
-		if (GetBit(option, 0))
-		{
-			option = ToggleBit(option, 3);
-			SetConfig(configStr, option);
+		option = ToggleBit(option, 3);
+		SetConfig(configStr, option);
 
-			char tmp[256];
-			_snprintfSafe(tmp, sizeof(tmp), "%d", option);
-			WritePrivateProfileString("reaper", configStr, tmp, get_ini_file());
-		}
+		char tmp[256];
+		_snprintfSafe(tmp, sizeof(tmp), "%d", option);
+		WritePrivateProfileString("reaper", configStr, tmp, get_ini_file());
 	}
-	else if ((int)ct->user == 2)
+	else
 	{
 		const char* configStr = "loopstopfx";
 		int option; GetConfig(configStr, option);
@@ -1155,21 +1151,6 @@ void SetOptionsFX (COMMAND_T* ct)
 		char tmp[256];
 		_snprintfSafe(tmp, sizeof(tmp), "%d", option);
 		WritePrivateProfileString("reaper", configStr, tmp, get_ini_file());
-	}
-	else
-	{
-		const char* configStr = "runallonstop";
-		int runallonstop; GetConfig(configStr, runallonstop);
-
-		// Set only if "Run FX when stopped" is turned of (otherwise the option is disabled so we don't allow the user to change it)
-		if (!GetBit(runallonstop, 0))
-		{
-			const char* configStr = "runafterstop";
-			SetConfig(configStr, abs((int)ct->user));
-			char tmp[256];
-			_snprintfSafe(tmp, sizeof(tmp), "%d", abs((int)ct->user));
-			WritePrivateProfileString("reaper", configStr, tmp, get_ini_file());
-		}
 	}
 }
 
@@ -1566,21 +1547,15 @@ int IsSetMidiResetOnPlayStopOn (COMMAND_T* ct)
 
 int IsSetOptionsFXOn (COMMAND_T* ct)
 {
-	if ((int)ct->user == 1)
+	if ((int)ct->user == 0)
 	{
 		int option; GetConfig("runallonstop", option);
-		return GetBit(option, 0) ? GetBit(option, 3) : 0; // report as false if "Run FX when stopped" is turned off (because the option is then disabled in the preferences)
-	}
-	else if ((int)ct->user == 2)
-	{
-		int option; GetConfig("loopstopfx", option);
-		return GetBit(option, 0);
+		return GetBit(option, 3);
 	}
 	else
 	{
-		int runallonstop; GetConfig("runallonstop", runallonstop);
-		int option; GetConfig("runafterstop", option);
-		return GetBit(runallonstop, 0) ? 0 : option == abs((int)ct->user) ; // report as false if "Run FX when stopped" is turned on (because the option is then disabled in the preferences)
+		int option; GetConfig("loopstopfx", option);
+		return GetBit(option, 0);
 	}
 }
 

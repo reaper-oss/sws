@@ -1,7 +1,11 @@
 New actions
 +Main:
  - SWS/BR: Options - Set "Run FX after stopping for" to x ms (various values)
- 
+
+ReaScript
++Added functions:
+ - BR_TrackFX_GetFXModuleName
+
 !v2.8 featured build (August 13, 2015)
 <strong>This new SWS version requires and supports REAPER v5.0+!<br>
 Lots of new features/fixes: everything listed below is new, down to v2.6 (all intermediate versions were pre-releases/beta/fixup builds).

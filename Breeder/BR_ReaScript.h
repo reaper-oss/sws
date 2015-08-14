@@ -91,6 +91,7 @@ bool            BR_SetTakeSourceFromFile (MediaItem_Take* take, const char* file
 bool            BR_SetTakeSourceFromFile2 (MediaItem_Take* take, const char* filenameIn, bool inProjectData, bool keepSourceProperties);
 MediaItem_Take* BR_TakeAtMouseCursor (double* positionOut);
 MediaTrack*     BR_TrackAtMouseCursor (int* contextOut, double* positionOut);
+bool            BR_TrackFX_GetFXModuleName (MediaTrack* track, int fx, char* nameOut, int nameOutSz);
 int             BR_Win32_GetPrivateProfileString (const char* sectionName, const char* keyName, const char* defaultString, const char* filePath, char* stringOut, int stringOut_sz);
 int             BR_Win32_ShellExecute (const char* operation, const char* file, const char* parameters, const char* directoy, int showFlags);
 bool            BR_Win32_WritePrivateProfileString (const char* sectionName, const char* keyName, const char* value, const char* filePath);

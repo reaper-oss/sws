@@ -979,6 +979,21 @@ MediaTrack* BR_TrackAtMouseCursor (int* contextOut, double* positionOut)
 	return TrackAtMouseCursor(contextOut, positionOut);
 }
 
+bool BR_TrackFX_GetFXModuleName (MediaTrack* track, int fx, char* nameOut, int nameOutSz)
+{
+	WDL_FastString module;
+	bool found = false;
+
+	if (track)
+	{
+		SNM_FXSummaryParser trackFxs(track);
+		if (SNM_FXSummary* summary =  trackFxs.GetSummaries()->Get(fx))
+		{
+			module = summary->m_realName;
+			found = true;
+		}
+	}
+
 int BR_Win32_GetPrivateProfileString (const char* sectionName, const char* keyName, const char* defaultString, const char* filePath, char* stringOut, int stringOut_sz)
 {
 	return (int)GetPrivateProfileString(sectionName, keyName, defaultString, stringOut, stringOut_sz, filePath);

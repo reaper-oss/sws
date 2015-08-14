@@ -1011,13 +1011,13 @@ void RprMidiTake::cleanup()
 
 RprMidiTakePtr RprMidiTake::createFromMidiEditor(bool readOnly)
 {
-    void *midiEditor = SWS_MIDIEditor_GetActive();
+    HWND midiEditor = MIDIEditor_GetActive();
     if(midiEditor == NULL)
     {
         throw RprLibException(__LOCALIZE("No active MIDI editor","sws_mbox"), true);
     }
 
-    RprTake take(SWS_MIDIEditor_GetTake(midiEditor));
+    RprTake take(MIDIEditor_GetTake(midiEditor));
     const char *sourceFilename = take.getSource()->GetFileName();
     if(!*sourceFilename)
     {

@@ -69,7 +69,7 @@ static int  g_mousePlaybackReaperOptions    = 0;
 static void MousePlaybackTimer ()
 {
 	PreventUIRefresh(-1);
-	SetConfig("viewadvance", g_mousePlaybackReaperOptions);	
+	SetConfig("viewadvance", g_mousePlaybackReaperOptions);
 	plugin_register("-timer", (void*)MousePlaybackTimer);
 }
 
@@ -78,11 +78,11 @@ static void MousePlaybackPlayState (bool play, bool pause, bool rec)
 	g_mousePlaybackRestorePlaystate = false;
 	if (rec || pause)
 		g_mousePlaybackRestoreView = false;
-	
+
 	if (rec || (!g_mousePlaybackContinuousActive && !play))
-	{		
+	{
 		if (g_mousePlaybackRestoreView && g_activeCommand && (int)g_activeCommand->user > 0)
-		{			
+		{
 			GetConfig("viewadvance", g_mousePlaybackReaperOptions);
 			if (GetBit(g_mousePlaybackReaperOptions, 3))
 				g_mousePlaybackForceMoveView = true;
@@ -143,7 +143,7 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 		{
 			if (!strcmp(mouseInfo.GetWindow(), "midi_editor") && mouseInfo.GetMidiEditor())
 			{
-				itemToSolo  = GetMediaItemTake_Item(SWS_MIDIEditor_GetTake(mouseInfo.GetMidiEditor()));
+				itemToSolo  = GetMediaItemTake_Item(MIDIEditor_GetTake(mouseInfo.GetMidiEditor()));
 				trackToSolo = GetMediaItem_Track(itemToSolo);
 			}
 			else
@@ -218,10 +218,10 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 		}
 
 		PreventUIRefresh(-1);
-		if (HWND midiTrackList = GetTrackView(SWS_MIDIEditor_GetActive()))
+		if (HWND midiTrackList = GetTrackView(MIDIEditor_GetActive()))
 			InvalidateRect(midiTrackList, NULL, false); // makes sure solo buttons are refreshed in MIDI editor track list
 
-		GetSetArrangeView(s_proj, false, &s_arrangeStart, &s_arrangeEnd);		
+		GetSetArrangeView(s_proj, false, &s_arrangeStart, &s_arrangeEnd);
 		s_playPos  = (IsPlaying(s_proj)) ? GetPlayPositionEx(s_proj)   : -1;
 		s_pausePos = (IsPaused(s_proj))  ? GetCursorPositionEx(s_proj) : -1;
 		s_startPos = ((int)ct->user < 0) ? GetCursorPositionEx(s_proj) : mouseInfo.GetPosition();
@@ -306,7 +306,7 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 		}
 
 		PreventUIRefresh(-1);
-		if (HWND midiTrackList = GetTrackView(SWS_MIDIEditor_GetActive()))
+		if (HWND midiTrackList = GetTrackView(MIDIEditor_GetActive()))
 			InvalidateRect(midiTrackList, NULL, false); // makes sure solo buttons are refreshed in MIDI editor track list
 
 		if (GetProjectStateChangeCount(s_proj) > s_projStateCount)
@@ -325,7 +325,7 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 		s_itemMuteState      = NULL;
 
 		g_activeCommand                 = NULL;
-		g_mousePlaybackActive           = false;		
+		g_mousePlaybackActive           = false;
 		g_mousePlaybackRestorePlaystate = true;
 		g_mousePlaybackRestoreView      = true;
 		g_mousePlaybackContinuousActive = false;
@@ -396,7 +396,7 @@ void PlaybackAtMouseCursorInit ()
 ******************************************************************************/
 void ToggleMousePlayback (COMMAND_T* ct)
 {
-   
+
 	if (g_mousePlaybackContinuousActive)
 	{
 		g_mousePlaybackRestorePlaystate = false;

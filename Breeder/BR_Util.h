@@ -244,9 +244,9 @@ HWND GetMediaExplorerWnd ();
 HWND GetMcpWnd ();
 HWND GetTcpWnd ();
 HWND GetTcpTrackWnd (MediaTrack* track);
-HWND GetNotesView (void* midiEditor);
-HWND GetPianoView (void* midiEditor);
-HWND GetTrackView (void* midiEditor);
+HWND GetNotesView (HWND midiEditor);
+HWND GetPianoView (HWND midiEditor);
+HWND GetTrackView (HWND midiEditor);
 MediaTrack* HwndToTrack (HWND hwnd, int* hwndContext);  // context: 0->unknown, 1->TCP, 2->MCP (works even if hwnd is not a track but something else in mcp/tcp)
 TrackEnvelope* HwndToEnvelope (HWND hwnd);
 void CenterDialog (HWND hwnd, HWND target, HWND zOrder);

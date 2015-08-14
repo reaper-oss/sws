@@ -187,8 +187,8 @@ public:
 	BR_MidiToggleCCLane ();
 	void SaveState (ProjectStateContext* ctx);
 	void LoadState (ProjectStateContext* ctx);
-	bool Hide (void* midiEditor, int laneToKeep, int editorHeight = -1, int inlineHeight = -1);
-	bool Restore (void* midiEditor);
+	bool Hide (HWND midiEditor, int laneToKeep, int editorHeight = -1, int inlineHeight = -1);
+	bool Restore (HWND midiEditor);
 	bool IsHidden ();
 
 private:

@@ -487,7 +487,7 @@ void* BR_GetMouseCursorContext_MIDI (bool* inlineEditorOut, int* noteRowOut, int
 	}
 
 	WritePtr(inlineEditorOut, g_mouseInfo.IsInlineMidi());
-	return g_mouseInfo.GetMidiEditor();
+	return (void*)g_mouseInfo.GetMidiEditor();
 }
 
 double BR_GetMouseCursorContext_Position ()

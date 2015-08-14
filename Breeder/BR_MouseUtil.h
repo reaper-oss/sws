@@ -107,7 +107,7 @@ public:
 	bool IsTakeEnvelope ();  // returns true if envelope under mouse cursor is take envelope
 
 	// MIDI editor
-	void* GetMidiEditor ();
+	HWND  GetMidiEditor ();
 	bool  IsInlineMidi ();
 	bool  GetCCLane (int* ccLane, int* ccLaneVal, int* ccLaneId); // returns false if mouse is not over CC lane
 	int   GetNoteRow ();                                          // returns -1 if mouse is not over any note row (sketchy when it comes to inline MIDI editor, see BR_MidiEditor)
@@ -144,7 +144,7 @@ private:
 		MediaItem* item;
 		MediaItem_Take* take;
 		TrackEnvelope* envelope;
-		void* midiEditor;
+		HWND midiEditor;
 		bool takeEnvelope, inlineMidi;
 		double position;
 		int takeId, envPointId, stretchMarkerId, noteRow, ccLaneVal, ccLaneId, ccLane, pianoRollMode;
@@ -160,7 +160,7 @@ private:
 	int IsMouseOverEnvelopeLineTrackLane (MediaTrack* track, int trackHeight, int trackOffset, list<TrackEnvelope*>& laneEnvs, int mouseDisplayX, int mouseY, double mousePos, double arrangeStart, double arrangeZoom, TrackEnvelope** trackEnvelope, int* pointUnderMouse);
 	int IsMouseOverEnvelopeLineTake (MediaItem_Take* take, int takeHeight, int takeOffset, int mouseDisplayX, int mouseY, double mousePos, double arrangeStart, double arrangeZoom, TrackEnvelope** trackEnvelope, int* pointUnderMouse);
 	int GetRulerLaneHeight (int rulerH, int lane);
-	int IsHwndMidiEditor (HWND hwnd, void** midiEditor, HWND* subView);
+	int IsHwndMidiEditor (HWND hwnd, HWND* midiEditor, HWND* subView);
 	static bool SortEnvHeightsById (const pair<int,int>& left, const pair<int,int>& right);
 	void GetTrackOrEnvelopeFromY (int y, TrackEnvelope** _envelope, MediaTrack** _track, list<TrackEnvelope*>* envelopes, int* height, int* offset);
 

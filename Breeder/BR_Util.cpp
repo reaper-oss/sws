@@ -2900,9 +2900,9 @@ HWND GetTcpTrackWnd (MediaTrack* track)
 	return NULL;
 }
 
-HWND GetNotesView (void* midiEditor)
+HWND GetNotesView (HWND midiEditor)
 {
-	if (SWS_MIDIEditor_GetMode(midiEditor) != -1)
+	if (MIDIEditor_GetMode(midiEditor) != -1)
 	{
 		#ifdef _WIN32
 			static char* s_name  = (IsLocalized()) ? (NULL) : (const_cast<char*>(__localizeFunc("midiview", "midi_DLG_102", 0)));
@@ -2911,21 +2911,21 @@ HWND GetNotesView (void* midiEditor)
 			{
 				if (!s_name)
 					AllocPreparedString(__localizeFunc("midiview", "midi_DLG_102", 0),&s_name);
-				return SearchChildren(s_name, (HWND)midiEditor);
+				return SearchChildren(s_name, midiEditor);
 			}
 			else
-				return FindWindowEx((HWND)midiEditor, NULL, NULL , s_name);
+				return FindWindowEx(midiEditor, NULL, NULL , s_name);
 		#else
-			return GetWindow(GetWindow((HWND)midiEditor, GW_CHILD), GW_HWNDNEXT);
+			return GetWindow(GetWindow(midiEditor, GW_CHILD), GW_HWNDNEXT);
 		#endif
 	}
 	else
 		return NULL;
 }
 
-HWND GetPianoView (void* midiEditor)
+HWND GetPianoView (HWND midiEditor)
 {
-	if (SWS_MIDIEditor_GetMode(midiEditor) != -1)
+	if (MIDIEditor_GetMode(midiEditor) != -1)
 	{
 		#ifdef _WIN32
 			static char* s_name  = (IsLocalized()) ? (NULL) : (const_cast<char*>(__localizeFunc("midipianoview", "midi_DLG_102", 0)));
@@ -2934,30 +2934,30 @@ HWND GetPianoView (void* midiEditor)
 			{
 				if (!s_name)
 					AllocPreparedString(__localizeFunc("midipianoview", "midi_DLG_102", 0),&s_name);
-				return SearchChildren(s_name, (HWND)midiEditor);
+				return SearchChildren(s_name, midiEditor);
 			}
 			else
-				return FindWindowEx((HWND)midiEditor, NULL, NULL , s_name);
+				return FindWindowEx(midiEditor, NULL, NULL , s_name);
 		#else
-			return GetWindow((HWND)midiEditor, GW_CHILD);
+			return GetWindow(midiEditor, GW_CHILD);
 		#endif
 	}
 	else
 		return NULL;
 }
 
-HWND GetTrackView (void* midiEditor)
+HWND GetTrackView (HWND midiEditor)
 {
 	HWND trackListHwnd = NULL;
 	if (midiEditor)
 	{
 		if (GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 40818) > 0)// Contents: Show/hide track list
 		{
-			RECT r; GetWindowRect((HWND)midiEditor, &r);
+			RECT r; GetWindowRect(midiEditor, &r);
 			POINT p = {r.right - 20, r.top + ((r.bottom - r.top) / 2)};
-			
 
-			HWND child = GetWindow((HWND)midiEditor, GW_CHILD);
+
+			HWND child = GetWindow(midiEditor, GW_CHILD);
 			while (true)
 			{
 				if (!child)

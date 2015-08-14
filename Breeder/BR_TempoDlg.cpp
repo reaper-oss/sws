@@ -120,13 +120,13 @@ static void ConvertMarkersToTempo (int markers, int num, int den, bool removeMar
 				SetTempoTimeSigMarker(NULL, -1, markerPositions[i], -1, -1, bpm, num, den, false);
 			else
 				SetTempoTimeSigMarker(NULL, -1, markerPositions[i], -1, -1, bpm, 0, 0, false);
-			
+
 			if (IsSetAutoStretchMarkersOn(NULL))
 			{
 				double position;
 				if (GetTempoTimeSigMarker(NULL, FindTempoMarker(markerPositions[i], MIN_TEMPO_DIST / 2), &position, NULL, NULL, NULL, NULL, NULL, NULL))
 					stretchMarkers.push_back(position);
-			}			
+			}
 		}
 	}
 	else
@@ -163,8 +163,8 @@ static void ConvertMarkersToTempo (int markers, int num, int den, bool removeMar
 		// Set points
 		for (size_t i = 0; i < linearPoints.size(); ++i)
 		{
-			
-			
+
+
 			// First tempo marker has time signature, last will have square shape if converting within time selection
 			if (i == 0)
 				SetTempoTimeSigMarker(NULL, -1, markerPositions[i], -1, -1, linearPoints[i], num, den, true);
@@ -184,7 +184,7 @@ static void ConvertMarkersToTempo (int markers, int num, int den, bool removeMar
 				if (GetTempoTimeSigMarker(NULL, FindTempoMarker(markerPositions[i], MIN_TEMPO_DIST/2), &position, NULL, NULL, NULL, NULL, NULL, NULL))
 					stretchMarkers.push_back(position);
 			}
-			
+
 			if (linearPoints[i] > MAX_BPM)
 				++exceed;
 

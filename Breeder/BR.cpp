@@ -90,6 +90,20 @@ bool BR_SwsActionHook (COMMAND_T* ct, int flagOrRelmode, HWND hwnd)
 	return false;
 }
 
+void BR_MenuHook (COMMAND_T* ct, HMENU menu, int id)
+{
+	if (ct->doCommand == SetOptionsFX)
+	{
+		// Disable the action "Flush FX on stop" if the option "Run FX when stopped" is turned off
+		if ((int)ct->user == 1)
+			EnableMenuItem(menu, id, (GetBit(*static_cast<int*>(GetConfigVar("runallonstop")), 0) ? MF_ENABLED : MF_GRAYED) | MF_BYPOSITION);
+
+		// Disable the action to set "Run FX after stopping for" if the option "Run FX when stopped" is turned on
+		else if ((int)ct->user <= 0)
+			EnableMenuItem(menu, id, (!GetBit(*static_cast<int*>(GetConfigVar("runallonstop")), 0) ? MF_ENABLED : MF_GRAYED) | MF_BYPOSITION);
+	}
+}
+
 int BR_GetNextActionToApply ()
 {
 	return g_nextActionToApply;
@@ -823,8 +837,22 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Send all-notes-off on stop/play\"" },                                         "BR_OPTIONS_STOP_PLAY_NOTES_OFF",     SetMidiResetOnPlayStop, NULL, 0, IsSetMidiResetOnPlayStopOn},
 	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Reset pitch on stop/play\"" },                                                "BR_OPTIONS_STOP_PLAY_RESET_PITCH",   SetMidiResetOnPlayStop, NULL, 1, IsSetMidiResetOnPlayStopOn},
 	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Reset CC on stop/play\"" },                                                   "BR_OPTIONS_STOP_PLAY_RESET_CC",      SetMidiResetOnPlayStop, NULL, 2, IsSetMidiResetOnPlayStopOn},
-	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Flush FX on stop\"" },                                                        "BR_OPTIONS_FLUSH_FX_ON_STOP",        SetOptionsFX, NULL, 0, IsSetOptionsFXOn},
-	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Flush FX when looping\"" },                                                   "BR_OPTIONS_FLUSH_FX_WHEN_LOOPING",   SetOptionsFX, NULL, 1, IsSetOptionsFXOn},
+	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Flush FX on stop\"" },                                                        "BR_OPTIONS_FLUSH_FX_ON_STOP",        SetOptionsFX, NULL, 1,      IsSetOptionsFXOn},
+	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Flush FX when looping\"" },                                                   "BR_OPTIONS_FLUSH_FX_WHEN_LOOPING",   SetOptionsFX, NULL, 2,      IsSetOptionsFXOn},
+	{ { DEFACCEL, "SWS/BR: Options - Set \"Run FX after stopping for\" to 0 ms" },                                          "BR_OPTIONS_RUN_FX_AFTER_STOP_0",     SetOptionsFX, NULL, 0,      IsSetOptionsFXOn},
+	{ { DEFACCEL, "SWS/BR: Options - Set \"Run FX after stopping for\" to 100 ms" },                                        "BR_OPTIONS_RUN_FX_AFTER_STOP_100",   SetOptionsFX, NULL, -100,   IsSetOptionsFXOn},
+	{ { DEFACCEL, "SWS/BR: Options - Set \"Run FX after stopping for\" to 500 ms" },                                        "BR_OPTIONS_RUN_FX_AFTER_STOP_500",   SetOptionsFX, NULL, -500,   IsSetOptionsFXOn},
+	{ { DEFACCEL, "SWS/BR: Options - Set \"Run FX after stopping for\" to 1000 ms" },                                       "BR_OPTIONS_RUN_FX_AFTER_STOP_1000",  SetOptionsFX, NULL, -1000,  IsSetOptionsFXOn},
+	{ { DEFACCEL, "SWS/BR: Options - Set \"Run FX after stopping for\" to 2000 ms" },                                       "BR_OPTIONS_RUN_FX_AFTER_STOP_2000",  SetOptionsFX, NULL, -2000,  IsSetOptionsFXOn},
+	{ { DEFACCEL, "SWS/BR: Options - Set \"Run FX after stopping for\" to 3000 ms" },                                       "BR_OPTIONS_RUN_FX_AFTER_STOP_3000",  SetOptionsFX, NULL, -3000,  IsSetOptionsFXOn},
+	{ { DEFACCEL, "SWS/BR: Options - Set \"Run FX after stopping for\" to 4000 ms" },                                       "BR_OPTIONS_RUN_FX_AFTER_STOP_4000",  SetOptionsFX, NULL, -4000,  IsSetOptionsFXOn},
+	{ { DEFACCEL, "SWS/BR: Options - Set \"Run FX after stopping for\" to 5000 ms" },                                       "BR_OPTIONS_RUN_FX_AFTER_STOP_5000",  SetOptionsFX, NULL, -5000,  IsSetOptionsFXOn},
+	{ { DEFACCEL, "SWS/BR: Options - Set \"Run FX after stopping for\" to 6000 ms" },                                       "BR_OPTIONS_RUN_FX_AFTER_STOP_6000",  SetOptionsFX, NULL, -6000,  IsSetOptionsFXOn},
+	{ { DEFACCEL, "SWS/BR: Options - Set \"Run FX after stopping for\" to 7000 ms" },                                       "BR_OPTIONS_RUN_FX_AFTER_STOP_7000",  SetOptionsFX, NULL, -7000,  IsSetOptionsFXOn},
+	{ { DEFACCEL, "SWS/BR: Options - Set \"Run FX after stopping for\" to 8000 ms" },                                       "BR_OPTIONS_RUN_FX_AFTER_STOP_8000",  SetOptionsFX, NULL, -8000,  IsSetOptionsFXOn},
+	{ { DEFACCEL, "SWS/BR: Options - Set \"Run FX after stopping for\" to 9000 ms" },                                       "BR_OPTIONS_RUN_FX_AFTER_STOP_9000",  SetOptionsFX, NULL, -9000,  IsSetOptionsFXOn},
+	{ { DEFACCEL, "SWS/BR: Options - Set \"Run FX after stopping for\" to 10000 ms" },                                      "BR_OPTIONS_RUN_FX_AFTER_STOP_10000", SetOptionsFX, NULL, -10000, IsSetOptionsFXOn},
+
 	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Move edit cursor to start of time selection on time selection change\"" },    "BR_OPTIONS_MOVE_CUR_ON_TIME_SEL",    SetMoveCursorOnPaste, NULL, 2, IsSetMoveCursorOnPasteOn},
 	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Move edit cursor when pasting/inserting media\"" },                           "BR_OPTIONS_MOVE_CUR_ON_PASTE",       SetMoveCursorOnPaste, NULL, -3, IsSetMoveCursorOnPasteOn},
 	{ { DEFACCEL, "SWS/BR: Options - Toggle \"Move edit cursor to end of recorded items on record stop\"" },                "BR_OPTIONS_MOVE_CUR_ON_RECORD_STOP", SetMoveCursorOnPaste, NULL, 4, IsSetMoveCursorOnPasteOn},

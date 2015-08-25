@@ -544,6 +544,11 @@ static void* __vararg_BR_TrackAtMouseCursor(void** arglist, int numparms)
   return (void*)(INT_PTR)BR_TrackAtMouseCursor((int*)arglist[0], (double*)arglist[1]);
 }
 
+static void* __vararg_BR_TrackFX_GetFXModuleName(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)BR_TrackFX_GetFXModuleName((MediaTrack*)arglist[0], (int)(INT_PTR)arglist[1], (char*)arglist[2], (int)(INT_PTR)arglist[3]);
+}
+
 static void* __vararg_BR_Win32_GetPrivateProfileString(void** arglist, int numparms)
 {
   return (void*)(INT_PTR)BR_Win32_GetPrivateProfileString((const char*)arglist[0], (const char*)arglist[1], (const char*)arglist[2], (const char*)arglist[3], (char*)arglist[4], (int)(INT_PTR)arglist[5]);

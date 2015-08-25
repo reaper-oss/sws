@@ -993,7 +993,9 @@ bool BR_TrackFX_GetFXModuleName (MediaTrack* track, int fx, char* nameOut, int n
 			found = true;
 		}
 	}
-  return found;
+
+	_snprintfSafe(nameOut, nameOutSz, "%s", module.Get());
+	return found;
 }
 
 int BR_Win32_GetPrivateProfileString (const char* sectionName, const char* keyName, const char* defaultString, const char* filePath, char* stringOut, int stringOut_sz)

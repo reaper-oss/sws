@@ -2,6 +2,9 @@ New actions
 +Main:
  - SWS/BR: Options - Set "Run FX after stopping for" to x ms (various values)
 
+Fixes
++Issue 761: Obey preference for volume envelope scaling when creating volume send envelopes with various actions
+
 ReaScript
 +Added functions:
  - BR_TrackFX_GetFXModuleName

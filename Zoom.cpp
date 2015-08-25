@@ -404,7 +404,7 @@ void HorizScroll(COMMAND_T* ctx)
 	SendMessage(hwnd, WM_HSCROLL, SB_THUMBPOSITION, NULL);
 }
 
-void ZoomToSelItems(COMMAND_T* ct)			{ VertZoomSelItems(0, (int)ct->user == 0); HorizZoomSelItems(); }
+void ZoomToSelItems(COMMAND_T* ct)			{ VertZoomSelItems(0, ct ? (int)ct->user == 0 : false); HorizZoomSelItems(); }
 void ZoomToSelItemsMin(COMMAND_T* ct)		{ VertZoomSelItems(1, (int)ct->user == 0); HorizZoomSelItems(); }
 void VZoomToSelItems(COMMAND_T* ct)			{ VertZoomSelItems(0, (int)ct->user == 0); }
 void VZoomToSelItemsMin(COMMAND_T* ct)		{ VertZoomSelItems(1, (int)ct->user == 0); }

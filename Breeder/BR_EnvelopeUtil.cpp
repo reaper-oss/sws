@@ -2240,11 +2240,15 @@ WDL_FastString ConstructReceiveEnv (BR_EnvType type, double firstPointValue, boo
 	else if (type == PAN)    (hardwareSend) ? AppendLine(envelope, "<HWPANENV")  : AppendLine(envelope, "<AUXPANENV");
 	else if (type == MUTE)   (hardwareSend) ? AppendLine(envelope, "<HWMUTEENV") : AppendLine(envelope, "<AUXMUTEENV");
 
+	int volenvrange; GetConfig("volenvrange", volenvrange);
 	envelope.AppendFormatted(128, "%s %d\n",             "ACT", 1);
 	envelope.AppendFormatted(128, "%s %d %d %d\n",       "VIS", 1, GetBit(envLanes, 0), 1);
 	envelope.AppendFormatted(128, "%s %d %d\n",          "LANEHEIGHT", 0, 0);
 	envelope.AppendFormatted(128, "%s %d\n",             "ARM", !GetBit(defAutoMode, 9));
 	envelope.AppendFormatted(128, "%s %d %d %d\n",       "DEFSHAPE", defShape, -1, -1);
+	if (GetBit(volenvrange, 1))
+		envelope.AppendFormatted(128, "%s %d\n", "VOLTYPE", 1);
+
 	envelope.AppendFormatted(128, "%s %.8lf %.8lf %d\n", "PT", 0.0, firstPointValue, defShape);
 	AppendLine(envelope, ">");
 

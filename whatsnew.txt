@@ -7,6 +7,7 @@ New actions
 
 Fixes
 +Issue 761: Obey preference for volume envelope scaling when creating volume send envelopes with various actions
++Issue 757: fixed actions "SWS: Set snapshots to 'mix' mode" and "SWS: Set snapshots to 'visibility' mode"
 +Renamed "SWS/wol: Set "Vertical/Horizontal zoom center" to..." actions to "SWS/wol: Options - Set "Vertical/Horizontal zoom center" to..." to be consistent with Breeder's actions.
 
 ReaScript

@@ -1038,7 +1038,15 @@ void GetCurSnapshot(COMMAND_T*)	 { if (g_ss.Get()->m_pCurSnapshot) GetSnapshot(g
 void GetPreviousSnapshot(COMMAND_T*) { if ((g_ss.Get()->m_pCurSnapshot) && (g_ss.Get()->m_pCurSnapshot)->m_iSlot >= 0) GetSnapshot(((g_ss.Get()->m_pCurSnapshot->m_iSlot) - 1), ALL_MASK, false); }
 void GetNextSnapshot(COMMAND_T*)	 { if (g_ss.Get()->m_pCurSnapshot) GetSnapshot(((g_ss.Get()->m_pCurSnapshot->m_iSlot) + 1), ALL_MASK, false); }
 void GetSnapshot(COMMAND_T* ct)	 { GetSnapshot((int)ct->user, ALL_MASK, false); }
-void SetSnapType(COMMAND_T* ct)  { g_pSSWnd->SetFilterType((int)ct->user); UpdateSnapshotsDialog(); }
+void SetSnapType(COMMAND_T* ct)
+{
+	int type=(int)ct->user;
+	g_pSSWnd->SetFilterType(type);
+	if (type==0) g_iMask = MIX_MASK;
+	else if (type==1) g_iMask = VIS_MASK;
+	// use current g_iMask otherwise
+	UpdateSnapshotsDialog();
+}
 void TogSnapParam(COMMAND_T* ct) { g_pSSWnd->SetFilterType(2); g_iMask ^= ct->user; UpdateSnapshotsDialog(); }
 void ToggleSelOnlySave(COMMAND_T*)	{ g_bSelOnly_OnSave = !g_bSelOnly_OnSave; UpdateSnapshotsDialog(); }
 void ToggleSelOnlyRecall(COMMAND_T*){ g_bSelOnly_OnRecall = !g_bSelOnly_OnRecall; UpdateSnapshotsDialog(); }

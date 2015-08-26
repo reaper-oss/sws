@@ -29,7 +29,6 @@
 #include "stdafx.h"
 #include "wol_Util.h"
 #include "../Breeder/BR_Util.h"
-#include "../Breeder/BR_EnvelopeUtil.h"
 #include "../SnM/SnM_Dlg.h"
 #include "../SnM/SnM_Util.h"
 
@@ -93,7 +92,7 @@ void SetTrackHeight(MediaTrack* track, int height, bool useChunk)
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// Tcp
+/// Arrange/TCP
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 int GetTcpEnvMinHeight()
 {
@@ -116,57 +115,129 @@ int GetCurrentTcpMaxHeight()
 	return r.bottom - r.top;
 }
 
-// Stolen from BR_Util.cpp
-void ScrollToTrackEnvelopeIfNotInArrange(TrackEnvelope* envelope)
+void SetArrangeScroll(int offsetY, int height, VerticalZoomCenter center)
 {
-	int offsetY;
-	int height = GetTrackEnvHeight(envelope, &offsetY, false, NULL);
-
 	HWND hwnd = GetArrangeWnd();
 	SCROLLINFO si = { sizeof(SCROLLINFO), };
 	si.fMask = SIF_ALL;
 	CoolSB_GetScrollInfo(hwnd, SB_VERT, &si);
 
-	int envEnd = offsetY + height;
-	int pageEnd = si.nPos + (int)si.nPage + SCROLLBAR_W;
+	int newPos = si.nPos;
+	const int objUpperHalf = offsetY + (height / 4);
+	const int objMid = offsetY + (height / 2);
+	const int objLowerHalf = offsetY + (height / 4) * 3;
+	const int objEnd = offsetY + height;
+	const int pageEnd = si.nPos + (int)si.nPage + SCROLLBAR_W;
 
-	if (offsetY < si.nPos || envEnd > pageEnd)
+	switch (center)
 	{
-		si.nPos = offsetY;
-		CoolSB_SetScrollInfo(hwnd, SB_VERT, &si, true);
-		SendMessage(hwnd, WM_VSCROLL, si.nPos << 16 | SB_THUMBPOSITION, NULL);
+	case CLIP_IN_ARRANGE:
+	{
+		if (offsetY < si.nPos)
+			newPos = offsetY;
+		else if (objEnd > pageEnd)
+			newPos = objEnd - (int)si.nPage - SCROLLBAR_W;
+		break;
 	}
+	case MID_ARRANGE:
+	{
+		newPos = objMid - (int)(si.nPage / 2 + 0.5f) - (int)(SCROLLBAR_W / 2 + 0.5f);
+		break;
+	}
+	case MOUSE_CURSOR:
+	{
+		POINT cr;
+		GetCursorPos(&cr);
+		ScreenToClient(hwnd, &cr);
+		newPos = objMid - cr.y;
+		break;
+	}
+	case UPPER_HALF:
+	{
+		newPos = objUpperHalf - (int)(si.nPage / 2 + 0.5f) - (int)(SCROLLBAR_W / 2 + 0.5f);
+		break;
+	}
+	case LOWER_HALF:
+	{
+		newPos = objLowerHalf - (int)(si.nPage / 2 + 0.5f) - (int)(SCROLLBAR_W / 2 + 0.5f);
+		break;
+	}
+	}
+
+	if (newPos == si.nPos)
+		return;
+	else if (newPos < si.nMin)
+		newPos = si.nMin;
+	else if (newPos > si.nMax)
+		newPos = si.nMax - si.nPage + 1;
+
+	si.nPos = newPos;
+	CoolSB_SetScrollInfo(hwnd, SB_VERT, &si, true);
+	SendMessage(hwnd, WM_VSCROLL, si.nPos << 16 | SB_THUMBPOSITION, NULL);
 }
 
-// Overloads ScrollToTrackIfNotInArrange(MediaTrack* track) in BR_Util.cpp
-void ScrollToTrackIfNotInArrange(TrackEnvelope* envelope)
-{
-	if (MediaTrack* tr = GetEnvParent(envelope))
-		ScrollToTrackIfNotInArrange(tr);
-	else if (MediaItem_Take* tk = GetTakeEnvParent(envelope, NULL))
-		if (MediaTrack* tr = GetMediaItemTake_Track(tk))
-			ScrollToTrackIfNotInArrange(tr);
-}
-
-void ScrollToTakeIfNotInArrange(MediaItem_Take* take)
+void SetArrangeScrollTo(MediaTrack* track, VerticalZoomCenter center)
 {
 	int offsetY;
-	int height = GetTakeHeight(take, &offsetY);
+	int height = GetTrackHeight(track, &offsetY);
+	SetArrangeScroll(offsetY, height, center);
+}
 
-	HWND hwnd = GetArrangeWnd();
-	SCROLLINFO si = { sizeof(SCROLLINFO), };
-	si.fMask = SIF_ALL;
-	CoolSB_GetScrollInfo(hwnd, SB_VERT, &si);
+inline void SetArrangeScrollTo(MediaItem* item, VerticalZoomCenter center)
+{
+	SetArrangeScrollTo(GetMediaItemTrack(item), center);
+}
 
-	int envEnd = offsetY + height;
-	int pageEnd = si.nPos + (int)si.nPage + SCROLLBAR_W;
+inline void SetArrangeScrollTo(MediaItem_Take* take, VerticalZoomCenter center)
+{
+	SetArrangeScrollTo(GetMediaItemTake_Item(take), center);
+}
 
-	if (offsetY < si.nPos || envEnd > pageEnd)
+// With check = false the envelope is assumed to be in its lane
+void SetArrangeScrollTo(TrackEnvelope* envelope, bool check, VerticalZoomCenter center)
+{
+	bool doScroll = !check;
+	if (check)
 	{
-		si.nPos = offsetY;
-		CoolSB_SetScrollInfo(hwnd, SB_VERT, &si, true);
-		SendMessage(hwnd, WM_VSCROLL, si.nPos << 16 | SB_THUMBPOSITION, NULL);
+		BR_Envelope env(envelope);
+		if (env.IsInLane())
+		{
+			if (env.IsTakeEnvelope())
+			{
+				if (MediaItem_Take* tk = env.GetTake())
+					SetArrangeScrollTo(tk, center);
+			}
+			else
+				doScroll = true;
+		}
+		else
+			if (MediaTrack* tr = env.GetParent())
+				SetArrangeScrollTo(tr, center);
 	}
+
+	if (doScroll)
+	{
+		int offsetY;
+		int height = GetTrackEnvHeight(envelope, &offsetY, false, NULL);
+		SetArrangeScroll(offsetY, height, center);
+	}
+}
+
+void SetArrangeScrollTo(BR_Envelope* envelope, VerticalZoomCenter center)
+{
+	if (envelope->IsInLane())
+	{
+		if (envelope->IsTakeEnvelope())
+		{
+			if (MediaItem_Take* tk = envelope->GetTake())
+				SetArrangeScrollTo(tk, center);
+		}
+		else
+			SetArrangeScrollTo(envelope->GetPointer(), false, center);
+	}
+	else
+		if (MediaTrack* tr = envelope->GetParent())
+			SetArrangeScrollTo(tr, center);
 }
 
 
@@ -187,12 +258,6 @@ int CountVisibleTrackEnvelopesInTrackLane(MediaTrack* track)
 	return count;
 }
 
-// Return   -1 for envelope not in track lane or not visible, *laneCount and *envCount not modified
-//			 0 for overlap disabled, *laneCount = *envCount = number of lanes (same as visible envelopes)
-//			 1 for overlap enabled, envelope height < overlap limit -> single lane (one envelope visible), *laneCount = *envCount = 1
-//			 2 for overlap enabled, envelope height < overlap limit -> single lane (overlapping), *laneCount = 1, *envCount = number of visible envelopes
-//			 3 for overlap enabled, envelope height > overlap limit -> single lane (one envelope visible), *laneCount = *envCount = 1
-//			 4 for overlap enabled, envelope height > overlap limit -> multiple lanes, *laneCount = *envCount = number of lanes (same as visible envelopes)
 int GetEnvelopeOverlapState(TrackEnvelope* envelope, int* laneCount, int* envCount)
 {
 	bool lane, visible;

@@ -28,6 +28,8 @@
 
 #pragma once
 
+#include "../Breeder/BR_EnvelopeUtil.h"
+
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -35,21 +37,43 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 bool SaveSelectedTracks();
 bool RestoreSelectedTracks();
+
+/* refreshes UI too */
 void SetTrackHeight(MediaTrack* track, int height, bool useChunk = false);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// Tcp
+/// Arrange/TCP
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+enum VerticalZoomCenter
+{
+	CLIP_IN_ARRANGE = 0,		// Do not change order, add at the end
+	MID_ARRANGE,
+	MOUSE_CURSOR,
+	UPPER_HALF,
+	LOWER_HALF
+};
+
 int GetTcpEnvMinHeight();
 int GetTcpTrackMinHeight();
 int GetCurrentTcpMaxHeight();
-void ScrollToTrackEnvelopeIfNotInArrange(TrackEnvelope* envelope);
-void ScrollToTrackIfNotInArrange(TrackEnvelope* envelope);
+void SetArrangeScroll(int offsetY, int height, VerticalZoomCenter center = CLIP_IN_ARRANGE);
+void SetArrangeScrollTo(MediaTrack* track, VerticalZoomCenter center = CLIP_IN_ARRANGE);
+inline void SetArrangeScrollTo(MediaItem* item, VerticalZoomCenter center = CLIP_IN_ARRANGE);
+inline void SetArrangeScrollTo(MediaItem_Take* take, VerticalZoomCenter center = CLIP_IN_ARRANGE);
+void SetArrangeScrollTo(TrackEnvelope* envelope, bool check = true, VerticalZoomCenter center = CLIP_IN_ARRANGE);
+void SetArrangeScrollTo(BR_Envelope* envelope, VerticalZoomCenter center = CLIP_IN_ARRANGE);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Envelope
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 int CountVisibleTrackEnvelopesInTrackLane(MediaTrack* track);
+
+/*  Return   -1 for envelope not in track lane or not visible, *laneCount and *envCount not modified
+			 0 for overlap disabled, *laneCount = *envCount = number of lanes (same as visible envelopes)
+			 1 for overlap enabled, envelope height < overlap limit -> single lane (one envelope visible), *laneCount = *envCount = 1
+			 2 for overlap enabled, envelope height < overlap limit -> single lane (overlapping), *laneCount = 1, *envCount = number of visible envelopes
+			 3 for overlap enabled, envelope height > overlap limit -> single lane (one envelope visible), *laneCount = *envCount = 1
+			 4 for overlap enabled, envelope height > overlap limit -> multiple lanes, *laneCount = *envCount = number of lanes (same as visible envelopes) */
 int GetEnvelopeOverlapState(TrackEnvelope* envelope, int* laneCount = NULL, int* envCount = NULL);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

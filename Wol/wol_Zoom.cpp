@@ -45,7 +45,7 @@ void AdjustSelectedEnvelopeOrTrackHeight(COMMAND_T* ct, int val, int valhw, int 
 {
 	if (relmode > 0)
 	{
-		void(*ScrollTo)(TrackEnvelope*) = ScrollToTrackEnvelopeIfNotInArrange;
+		VerticalZoomCenter scrollCenter = static_cast<VerticalZoomCenter>((int)ct->user > 2 ? (int)ct->user - 3 : (int)ct->user);
 		int height = AdjustRelative(relmode, (valhw == -1) ? BOUNDED(val, 0, 127) : (int)BOUNDED(16384.0 - (valhw | val << 7), 0.0, 16383.0));
 		if (TrackEnvelope* env = GetSelectedEnvelope(NULL))
 		{
@@ -55,12 +55,13 @@ void AdjustSelectedEnvelopeOrTrackHeight(COMMAND_T* ct, int val, int valhw, int 
 				if (brEnv.IsTakeEnvelope())
 				{
 					SetTrackHeight(brEnv.GetParent(), SetToBounds(height + GetTrackHeight(brEnv.GetParent(), NULL), GetTcpTrackMinHeight(), GetCurrentTcpMaxHeight()));
-					ScrollTo = ScrollToTrackIfNotInArrange;
+					SetArrangeScrollTo(brEnv.GetParent(), scrollCenter);
 				}
 				else
 				{
 					brEnv.SetLaneHeight(SetToBounds(height + GetTrackEnvHeight(env, NULL, false), GetTcpEnvMinHeight(), GetCurrentTcpMaxHeight()));
 					brEnv.Commit();
+					SetArrangeScrollTo(env, false, scrollCenter);
 				}
 			}
 			else
@@ -69,20 +70,17 @@ void AdjustSelectedEnvelopeOrTrackHeight(COMMAND_T* ct, int val, int valhw, int 
 				currentHeight = GetTrackHeight(brEnv.GetParent(), NULL, &trackGapTop, &trackGapBottom);
 				GetEnvelopeOverlapState(env, &laneCount, &envCount);
 				mul = g_EnvelopesExtendedZoom ? laneCount : 1;
-				if (mul == 1)
-					ScrollTo = ScrollToTrackIfNotInArrange;
-
 				SetTrackHeight(brEnv.GetParent(), SetToBounds(height * mul + currentHeight, GetTcpTrackMinHeight(), (g_EnvelopesExtendedZoom ? GetCurrentTcpMaxHeight() * envCount + trackGapTop + trackGapBottom : GetCurrentTcpMaxHeight())));
+				if (mul == 1)
+					SetArrangeScrollTo(brEnv.GetParent(), scrollCenter);
+				else
+					SetArrangeScrollTo(env, false, scrollCenter);
 			}
-			ScrollTo(env);
 		}
-		else if ((int)ct->user == 1)
+		else if (MediaTrack* tr = (int)ct->user > 2 ? GetLastTouchedTrack() : NULL)
 		{
-			if (MediaTrack* tr = GetLastTouchedTrack())
-			{
-				SetTrackHeight(tr, SetToBounds(height + GetTrackHeight(tr, NULL), GetTcpTrackMinHeight(), GetCurrentTcpMaxHeight()));
-				ScrollToTrackIfNotInArrange(tr);
-			}
+			SetTrackHeight(tr, SetToBounds(height + GetTrackHeight(tr, NULL), GetTcpTrackMinHeight(), GetCurrentTcpMaxHeight()));
+			SetArrangeScrollTo(tr, scrollCenter);
 		}
 	}
 }
@@ -91,7 +89,6 @@ void AdjustEnvelopeOrTrackHeightUnderMouse(COMMAND_T* ct, int val, int valhw, in
 {
 	if (relmode > 0)
 	{
-		void(*ScrollTo)(TrackEnvelope*) = ScrollToTrackEnvelopeIfNotInArrange;
 		int height = AdjustRelative(relmode, (valhw == -1) ? BOUNDED(val, 0, 127) : (int)BOUNDED(16384.0 - (valhw | val << 7), 0.0, 16383.0));
 
 		TrackEnvelope* env = NULL;
@@ -123,25 +120,25 @@ void AdjustEnvelopeOrTrackHeightUnderMouse(COMMAND_T* ct, int val, int valhw, in
 				if (brEnv.IsTakeEnvelope())
 				{
 					SetTrackHeight(brEnv.GetParent(), SetToBounds(height + GetTrackHeight(brEnv.GetParent(), NULL), GetTcpTrackMinHeight(), GetCurrentTcpMaxHeight()), true);
-					ScrollTo = ScrollToTrackIfNotInArrange;
+					SetArrangeScrollTo(brEnv.GetParent(), static_cast<VerticalZoomCenter>((int)ct->user));
 				}
 				else
 				{
 					brEnv.SetLaneHeight(SetToBounds(height + GetTrackEnvHeight(env, NULL, false), GetTcpEnvMinHeight(), GetCurrentTcpMaxHeight()));
 					brEnv.Commit();
+					SetArrangeScrollTo(env, false, static_cast<VerticalZoomCenter>((int)ct->user));
 				}
 			}
 			else
 			{
 				SetTrackHeight(brEnv.GetParent(), SetToBounds(height + GetTrackHeight(brEnv.GetParent(), NULL), GetTcpTrackMinHeight(), GetCurrentTcpMaxHeight()), true);
-				ScrollTo = ScrollToTrackIfNotInArrange;
+				SetArrangeScrollTo(brEnv.GetParent(), static_cast<VerticalZoomCenter>((int)ct->user));
 			}
-			ScrollTo(env);
 		}
 		else if (tr)
 		{
 			SetTrackHeight(tr, SetToBounds(height + GetTrackHeight(tr, NULL), GetTcpTrackMinHeight(), GetCurrentTcpMaxHeight()), true);
-			ScrollToTrackIfNotInArrange(tr);
+			SetArrangeScrollTo(tr, static_cast<VerticalZoomCenter>((int)ct->user));
 		}
 
 		if (sEnv != GetSelectedEnvelope(NULL))
@@ -154,27 +151,28 @@ void SetVerticalZoomSelectedEnvelope(COMMAND_T* ct)
 	if (TrackEnvelope* env = GetSelectedEnvelope(NULL))
 	{
 		BR_Envelope brEnv(env);
-		void(*ScrollTo)(TrackEnvelope*) = ScrollToTrackEnvelopeIfNotInArrange;
 		if (brEnv.IsInLane())
 		{
 			if (brEnv.IsTakeEnvelope())
 			{
 				SetTrackHeight(brEnv.GetParent(), ((int)ct->user == 0) ? 0 : ((int)ct->user == 1) ? GetTcpTrackMinHeight() : GetCurrentTcpMaxHeight());
-				ScrollTo = ScrollToTrackIfNotInArrange;
+				SetArrangeScrollTo(brEnv.GetParent());
 			}
 			else
 			{
 				brEnv.SetLaneHeight(((int)ct->user == 0) ? 0 : ((int)ct->user == 1) ? GetTcpEnvMinHeight() : GetCurrentTcpMaxHeight());
 				brEnv.Commit();
+				SetArrangeScrollTo(env, false);
 			}
 		}
 		else
 		{
+			bool ScrollToEnv = true;
 			int height, trackGapTop, trackGapBottom;
 			int overlapMinHeight = *(int*)GetConfigVar("env_ol_minh");
 			int mul = CountVisibleTrackEnvelopesInTrackLane(brEnv.GetParent());
 			GetTrackHeight(brEnv.GetParent(), NULL, &trackGapTop, &trackGapBottom);
-			if ((int)ct->user == 2 )
+			if ((int)ct->user == 2)
 			{
 				if (g_EnvelopesExtendedZoom)
 				{
@@ -187,7 +185,7 @@ void SetVerticalZoomSelectedEnvelope(COMMAND_T* ct)
 						else
 						{
 							height = GetCurrentTcpMaxHeight();
-							ScrollTo = ScrollToTrackIfNotInArrange;
+							ScrollToEnv = false;
 						}
 					}
 					else
@@ -195,7 +193,7 @@ void SetVerticalZoomSelectedEnvelope(COMMAND_T* ct)
 						if (mul == 1)
 						{
 							height = GetCurrentTcpMaxHeight();
-							ScrollTo = ScrollToTrackIfNotInArrange;
+							ScrollToEnv = false;
 						}
 						else
 						{
@@ -206,17 +204,20 @@ void SetVerticalZoomSelectedEnvelope(COMMAND_T* ct)
 				else
 				{
 					height = GetCurrentTcpMaxHeight();
-					ScrollTo = ScrollToTrackIfNotInArrange;
+					ScrollToEnv = false;
 				}
 			}
 			else
 			{
 				height = 0;
-				ScrollTo = ScrollToTrackIfNotInArrange;
+				ScrollToEnv = false;
 			}
 			SetTrackHeight(brEnv.GetParent(), height);
+			if (ScrollToEnv)
+				SetArrangeScrollTo(env, false);
+			else
+				SetArrangeScrollTo(brEnv.GetParent());
 		}
-		ScrollTo(env);
 	}
 }
 

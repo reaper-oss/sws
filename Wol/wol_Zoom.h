@@ -30,18 +30,13 @@
 
 
 
-void wol_ZoomInit();
+void ToggleEnableEnvelopesExtendedZoom(COMMAND_T* = NULL);
+int IsEnvelopesExtendedZoomEnabled(COMMAND_T* = NULL);
 
 void AdjustSelectedEnvelopeOrTrackHeight(COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd);
 void AdjustEnvelopeOrTrackHeightUnderMouse(COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd);
 
 void SetVerticalZoomSelectedEnvelope(COMMAND_T* ct);
-
-void SetVerticalZoomCenter(COMMAND_T* ct);
-void SetHorizontalZoomCenter(COMMAND_T* ct);
-
-void ToggleEnableEnvelopesExtendedZoom(COMMAND_T* = NULL);
-int IsEnvelopesExtendedZoomEnabled(COMMAND_T* = NULL);
 
 void ToggleEnableEnvelopeOverlap(COMMAND_T* = NULL);
 int IsEnvelopeOverlapEnabled(COMMAND_T* = NULL);
@@ -49,3 +44,10 @@ int IsEnvelopeOverlapEnabled(COMMAND_T* = NULL);
 void ForceEnvelopeOverlap(COMMAND_T* ct);
 
 void ZoomSelectedEnvelopeTimeSelection(COMMAND_T* ct);
+
+void SetVerticalZoomCenter(COMMAND_T* ct);
+void SetHorizontalZoomCenter(COMMAND_T* ct);
+
+
+
+void wol_ZoomInit();

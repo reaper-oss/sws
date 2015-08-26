@@ -1,9 +1,13 @@
 New actions
 +Main:
  - SWS/BR: Options - Set "Run FX after stopping for" to x ms (various values)
+ - SWS/wol: Adjust selected envelope height, zoom center to middle arrange/mouse cursor (MIDI CC relative/mousewheel)
+ - SWS/wol: Adjust selected envelope or last touched track height, zoom center to middle arrange/mouse cursor (MIDI CC relative/mousewheel)
+ - SWS/wol: Adjust envelope or track height under mouse cursor, zoom center to mouse cursor (MIDI CC relative/mousewheel)
 
 Fixes
 +Issue 761: Obey preference for volume envelope scaling when creating volume send envelopes with various actions
++Renamed "SWS/wol: Set "Vertical/Horizontal zoom center" to..." actions to "SWS/wol: Options - Set "Vertical/Horizontal zoom center" to..." to be consistent with Breeder's actions.
 
 ReaScript
 +Added functions:

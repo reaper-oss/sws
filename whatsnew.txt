@@ -13,6 +13,7 @@ Fixes
 ReaScript
 +Added functions:
  - BR_TrackFX_GetFXModuleName
++Issue 764: fixed glitches in TCP after setting new TCP layout with BR_SetMediaTrackLayouts
 
 !v2.8 featured build (August 13, 2015)
 <strong>This new SWS version requires and supports REAPER v5.0+!<br>

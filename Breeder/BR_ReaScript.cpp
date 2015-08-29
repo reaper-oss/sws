@@ -816,7 +816,7 @@ bool BR_SetMediaSourceProperties (MediaItem_Take* take, bool section, double sta
 
 bool BR_SetMediaTrackLayouts (MediaTrack* track, const char* mcpLayoutNameIn, const char* tcpLayoutNameIn)
 {
-	bool updated = false;
+	int changedLayouts = 0;
 	if (track && (mcpLayoutNameIn || tcpLayoutNameIn))
 	{
 		char* trackState = GetSetObjectState(track, "");
@@ -843,13 +843,13 @@ bool BR_SetMediaTrackLayouts (MediaTrack* track, const char* mcpLayoutNameIn, co
 						{
 							newState.AppendFormatted(512, "\"%s\"", (tcpLayoutNameIn ? tcpLayoutNameIn : lp.gettoken_str(i)));
 							if (tcpLayoutNameIn && strcmp(tcpLayoutNameIn, lp.gettoken_str(i)))
-								updated = true;
+								changedLayouts = SetBit(changedLayouts, 0);
 						}
 						else if (i == 2)
 						{
 							newState.AppendFormatted(512, "\"%s\"", (mcpLayoutNameIn ? mcpLayoutNameIn : lp.gettoken_str(i)));
 							if (mcpLayoutNameIn && strcmp(mcpLayoutNameIn, lp.gettoken_str(i)))
-								updated = true;
+								changedLayouts = SetBit(changedLayouts, 1);
 						}
 						else
 						{
@@ -872,10 +872,12 @@ bool BR_SetMediaTrackLayouts (MediaTrack* track, const char* mcpLayoutNameIn, co
 				{
 					if (!didLayouts)
 					{
-						if ((tcpLayoutNameIn && strcmp(tcpLayoutNameIn, "")) || (mcpLayoutNameIn && strcmp(mcpLayoutNameIn, "")))
-							updated = true;
+						if (tcpLayoutNameIn && strcmp(tcpLayoutNameIn, ""))
+							changedLayouts = SetBit(changedLayouts, 0);
+						if (mcpLayoutNameIn && strcmp(mcpLayoutNameIn, ""))
+							changedLayouts = SetBit(changedLayouts, 1);
 
-						if (updated)
+						if (changedLayouts)
 						{
 							newState.Append("LAYOUTS ");
 
@@ -905,11 +907,26 @@ bool BR_SetMediaTrackLayouts (MediaTrack* track, const char* mcpLayoutNameIn, co
 			token = strtok(NULL, "\n");
 		}
 
-		if (updated)
+		if (changedLayouts)
+		{
+			PreventUIRefresh(1);
+
 			GetSetObjectState(track, newState.Get());
+
+			if (GetBit(changedLayouts, 0) && GetMediaTrackInfo_Value(track, "B_SHOWINTCP"))
+			{
+				SetMediaTrackInfo_Value(track, "B_SHOWINTCP", 0);
+				TrackList_AdjustWindows(true);
+				SetMediaTrackInfo_Value(track, "B_SHOWINTCP", 1);
+				TrackList_AdjustWindows(true);
+			}
+
+			PreventUIRefresh(-1);
+			
+		}
 		FreeHeapPtr(trackState);
 	}
-	return updated;
+	return changedLayouts;
 }
 
 bool BR_SetMidiTakeTempoInfo (MediaItem_Take* take, bool ignoreProjTempo, double bpm, int num, int den)

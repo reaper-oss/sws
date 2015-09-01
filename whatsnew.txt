@@ -8,6 +8,7 @@ New actions
 Fixes
 +Issue 761: Obey preference for volume envelope scaling when creating volume send envelopes with various actions
 +Issue 757: fixed actions "SWS: Set snapshots to 'mix' mode" and "SWS: Set snapshots to 'visibility' mode"
++Issue 765: Fixed various actions and ReaScript API not working properly with stretch markers at mouse cursor when take playrate is modified
 +Renamed "SWS/wol: Set "Vertical/Horizontal zoom center" to..." actions to "SWS/wol: Options - Set "Vertical/Horizontal zoom center" to..." to be consistent with Breeder's actions.
 
 ReaScript

@@ -1,3 +1,5 @@
+<strong>This new SWS version requires and supports REAPER v5.02+!<br>
+
 New actions
 +Main:
  - SWS/BR: Options - Set "Run FX after stopping for" to x ms (various values)
@@ -15,6 +17,9 @@ ReaScript
 +Added functions:
  - BR_TrackFX_GetFXModuleName
 +Issue 764: fixed glitches in TCP after setting new TCP layout with BR_SetMediaTrackLayouts
++Issue 760: fixed BR_GetMediaTrackLayouts broken in certain instances
++Other:
+ - BR_GetMediaTrackLayout/BR_SetMediaTrackLayout now use native API so it should make them faster
 
 !v2.8 featured build (August 13, 2015)
 <strong>This new SWS version requires and supports REAPER v5.0+!<br>

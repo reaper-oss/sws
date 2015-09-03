@@ -263,7 +263,7 @@ bool DupSelItems(const char* _undoTitle, double _nudgePos, WDL_PtrList<void>* _n
 	}
 
 	if (_undoTitle) {
-		UpdateTimeline();
+		UpdateArrange();
 		Undo_EndBlock2(NULL, _undoTitle, UNDO_STATE_ALL);
 	}
 	return updated;
@@ -319,7 +319,7 @@ void SplitMidiAudio(COMMAND_T* _ct)
 
 	if (updated)
 	{
-		UpdateTimeline();
+		UpdateArrange();
 		// hard coded undo label: action name too long + consistent with
 		// the unique native wording (whatever is the split action)
 		Undo_EndBlock2(NULL, __LOCALIZE("Split selected items","sws_undo"), UNDO_STATE_ALL);
@@ -647,7 +647,7 @@ int BuildLanes(const char* _undoTitle, int _mode)
 		}
 	}
 	if (updates > 0) {
-		UpdateTimeline();
+		UpdateArrange();
 		if (_undoTitle)
 			Undo_OnStateChangeEx2(NULL, _undoTitle, UNDO_STATE_ALL, -1);
 	}
@@ -709,7 +709,7 @@ bool RemoveEmptyTakes(const char* _undoTitle, bool _empty, bool _midiEmpty, bool
 		updated |= RemoveEmptyTakes(CSurf_TrackFromID(i+1,false), _empty, _midiEmpty, _trSel, _itemSel);
 	if (updated)
 	{
-		UpdateTimeline();
+		UpdateArrange();
 		if (_undoTitle)
 			Undo_OnStateChangeEx2(NULL, _undoTitle, UNDO_STATE_ALL, -1);
 	}
@@ -750,7 +750,7 @@ void ClearTake(COMMAND_T* _ct)
 		}
 	}
 	if (updated) {
-		UpdateTimeline();
+		UpdateArrange();
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 	}
 }
@@ -798,7 +798,7 @@ void MoveTakes(COMMAND_T* _ct)
 		}
 	}
 	if (updated) {
-		UpdateTimeline();
+		UpdateArrange();
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 	}
 }
@@ -843,7 +843,7 @@ void MoveActiveTake(COMMAND_T* _ct)
 		}
 	}
 	if (updated) {
-		UpdateTimeline();
+		UpdateArrange();
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 	}
 }
@@ -892,7 +892,7 @@ void ActivateLaneFromSelItem(COMMAND_T* _ct)
 		}
 	}
 	if (_ct && updated) {
-		UpdateTimeline();
+		UpdateArrange();
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 	}
 }
@@ -1054,7 +1054,7 @@ int GetPitchTakeEnvRangeFromPrefs()
 	return min(231, range); // clamps like REAPER does
 }
 
-// callers must use UpdateTimeline() at some point if it returns true..
+// callers must use UpdateArrange() at some point if it returns true..
 bool PatchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeyword, const char* _vis, const WDL_FastString* _defaultPoint, bool _reset)
 {
 	bool updated = false;
@@ -1153,7 +1153,7 @@ bool PatchTakeEnvelopeVis(const char* _undoTitle, const char* _envKeyword, const
 
 	if (updated)
 	{
-		UpdateTimeline();
+		UpdateArrange();
 		if (_undoTitle)
 			Undo_OnStateChangeEx2(NULL, _undoTitle, UNDO_STATE_ALL, -1);
 	}

@@ -602,6 +602,8 @@ void DoRecallSelectedTakes(COMMAND_T* ct)
 		if (Matches==0)
 			g_VecItemStates.erase(g_VecItemStates.begin()+i);
 	}
+
+	PreventUIRefresh(1);
 	int i;
 	for (i=0;i<(int)g_VecItemStates.size();i++)
 	{
@@ -614,6 +616,7 @@ void DoRecallSelectedTakes(COMMAND_T* ct)
 			GetSetMediaItemInfo(CurItem,"I_CURTAKE",&TakeIndex);
 		}
 	}
+	PreventUIRefresh(-1);
 	UpdateTimeline();
 	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);
 }
@@ -807,6 +810,8 @@ void DoSelectFirstItemInSelectedTrack(COMMAND_T*)
 {
 	MediaTrack *CurTrack;
 	MediaItem *CurItem;
+
+	PreventUIRefresh(1);
 	Main_OnCommand(40289,0); // unselect all items
 	int i;
 	for (i=0;i<GetNumTracks();i++)
@@ -825,6 +830,7 @@ void DoSelectFirstItemInSelectedTrack(COMMAND_T*)
 			}
 		}
 	}
+	PreventUIRefresh(-1);
 	UpdateTimeline();
 }
 
@@ -1464,7 +1470,7 @@ void DoCreateMarkersFromSelItems1(COMMAND_T* ct)
 	{
 		sort(theitems.begin(),theitems.end(),MySortItemsByTimeFunc);
 
-    PreventUIRefresh(1);
+		PreventUIRefresh(1);
 
 		Undo_BeginBlock2(NULL);
 
@@ -1480,9 +1486,10 @@ void DoCreateMarkersFromSelItems1(COMMAND_T* ct)
 			AddProjectMarker(NULL, false, itempos, 0.0, fncomps.size()>1 ? fncomps[1].c_str() : "", -1);
 		}
 
-		Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG);
+		PreventUIRefresh(-1);
+		UpdateTimeline();
 
-    PreventUIRefresh(-1);
+		Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG);    
 	}
 }
 
@@ -1524,6 +1531,8 @@ void DoSelectItemUnderEditCursorOnSelTrack(COMMAND_T*)
 	//XenGetProjectTracks(txs,true);
 	vector<MediaItem*> theitems;
 	XenGetProjectItems(theitems,false,true);
+
+	PreventUIRefresh(1);
 	Main_OnCommand(40289,0); // unselect all items
 	int i;
 	double curpos=GetCursorPosition();
@@ -1543,7 +1552,9 @@ void DoSelectItemUnderEditCursorOnSelTrack(COMMAND_T*)
 			}
 		}
 	}
+	PreventUIRefresh(-1);
 	UpdateTimeline();
+  //JFB undo?
 }
 
 void DoNormalizeSelTakesTodB(COMMAND_T* ct)

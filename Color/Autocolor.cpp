@@ -934,12 +934,12 @@ void AutoColorMarkerRegion(bool _force, int _flags)
 
 	if (newFlags)
 	{
-    PreventUIRefresh(1);
+		PreventUIRefresh(1);
 
 		for (int i=g_pACItems.GetSize()-1; i>=0; i--) // reverse to obey priority
 			ApplyColorRuleToMarkerRegion(g_pACItems.Get(i), newFlags);
 
-    PreventUIRefresh(-1);
+		PreventUIRefresh(-1);
 	}
 
 	bRecurse = false;

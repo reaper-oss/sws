@@ -462,6 +462,7 @@ void DoChooseNewSourceFileForSelTakes(COMMAND_T* ct)
 
 void DoInvertItemSelection(COMMAND_T*)
 {
+	PreventUIRefresh(1);
 	for (int i = 1; i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, FALSE);
@@ -474,6 +475,7 @@ void DoInvertItemSelection(COMMAND_T*)
 				GetSetMediaItemInfo(CurItem, "B_UISEL", &g_bTrue);
 		}
 	}
+	PreventUIRefresh(-1);
 	UpdateTimeline();
 }
 
@@ -502,6 +504,8 @@ void DoRepeatPaste(COMMAND_T*)
 
 void DoSelectEveryNthItemOnSelectedTracks(int Step,int ItemOffset)
 {
+	PreventUIRefresh(1);
+
 	Main_OnCommand(40289,0); // Unselect all items
 
 	int flags;
@@ -525,6 +529,7 @@ void DoSelectEveryNthItemOnSelectedTracks(int Step,int ItemOffset)
 			}
 		}
 	}
+	PreventUIRefresh(-1);
 	UpdateTimeline();
 }
 
@@ -535,6 +540,7 @@ void DoSelectSkipSelectOnSelectedItems(int Step,int ItemOffset)
 
 	int numItems;
 
+	PreventUIRefresh(1);
 	//Main_OnCommand(40289,0); // Unselect all items
 	bool NewSelectedStatus=false;
 	int flags, i, j;
@@ -567,6 +573,7 @@ void DoSelectSkipSelectOnSelectedItems(int Step,int ItemOffset)
 			}
 		}
 	}
+	PreventUIRefresh(-1);
 	UpdateTimeline();
 }
 
@@ -833,6 +840,7 @@ void DoApplyTrackFXMonoAndResetVol(COMMAND_T* ct)
 
 void DoSelItemsToEndOfTrack(COMMAND_T*)
 {
+	PreventUIRefresh(1);
 	for (int i = 0; i < GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i+1, false);
@@ -846,11 +854,13 @@ void DoSelItemsToEndOfTrack(COMMAND_T*)
 				GetSetMediaItemInfo(mi, "B_UISEL", &g_bTrue);
 		}
 	}
+	PreventUIRefresh(-1);
 	UpdateTimeline();
 }
 
 void DoSelItemsToStartOfTrack(COMMAND_T*)
 {
+	PreventUIRefresh(1);
 	for (int i = 0; i < GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i+1, false);
@@ -862,6 +872,7 @@ void DoSelItemsToStartOfTrack(COMMAND_T*)
 		for (int j = 0; j < iLastSelItem; j++)
 			GetSetMediaItemInfo(GetTrackMediaItem(tr, j), "B_UISEL", &g_bTrue);
 	}
+	PreventUIRefresh(-1);
 	UpdateTimeline();
 }
 

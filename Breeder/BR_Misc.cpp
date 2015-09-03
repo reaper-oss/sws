@@ -929,6 +929,8 @@ void SelectItemsByType (COMMAND_T* ct)
 
 	bool checkTimeSel = ((int)ct->user > 0) ? false : ((tStart == tEnd) ? false : true);
 	bool update = false;
+
+	PreventUIRefresh(1);
 	for (int i = 0; i < CountMediaItems(NULL); ++i)
 	{
 		MediaItem* item = GetMediaItem(NULL, i);
@@ -966,6 +968,7 @@ void SelectItemsByType (COMMAND_T* ct)
 			}
 		}
 	}
+	PreventUIRefresh(-1);
 
 	if (update)
 	{

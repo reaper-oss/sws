@@ -243,6 +243,7 @@ void SaveTrack(COMMAND_T*)
 
 void RestoreTrack(COMMAND_T*)
 {
+	PreventUIRefresh(1);
 	for (int i = 1; i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
@@ -252,11 +253,14 @@ void RestoreTrack(COMMAND_T*)
 				if (TrackMatchesGuid(tr, &g_tracks.Get()->Get(j)->m_guid))
 					g_tracks.Get()->Get(j)->Restore(tr, false);
 	}
+	PreventUIRefresh(-1);
 	UpdateTimeline();
+  //JFB undo?
 }
 
 void SelItemsWithState(COMMAND_T*)
 {
+	PreventUIRefresh(1);
 	for (int i = 1; i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
@@ -266,7 +270,9 @@ void SelItemsWithState(COMMAND_T*)
 				if (TrackMatchesGuid(tr, &g_tracks.Get()->Get(j)->m_guid))
 					g_tracks.Get()->Get(j)->SelectItems(tr);
 	}
+	PreventUIRefresh(-1);
 	UpdateTimeline();
+  //JFB undo
 }
 
 void SaveSelOnTrack(COMMAND_T*)
@@ -292,6 +298,7 @@ void SaveSelOnTrack(COMMAND_T*)
 
 void RestoreSelOnTrack(COMMAND_T*)
 {
+	PreventUIRefresh(1);
 	for (int i = 1; i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
@@ -301,5 +308,7 @@ void RestoreSelOnTrack(COMMAND_T*)
 				if (TrackMatchesGuid(tr, &g_tracks.Get()->Get(j)->m_guid))
 					g_tracks.Get()->Get(j)->Restore(tr, true);
 	}
+	PreventUIRefresh(-1);
 	UpdateTimeline();
+  //JFB undo?
 }

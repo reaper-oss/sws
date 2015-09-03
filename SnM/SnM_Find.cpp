@@ -420,6 +420,8 @@ bool FindWnd::FindMediaItem(int _dir, bool _allTakes, bool (*jobTake)(MediaItem_
 	bool update = false, found = false, sel = true;
 	if (g_searchStr && *g_searchStr)
 	{
+		PreventUIRefresh(1);
+
 		MediaItem* startItem = NULL;
 		bool clearCurrentSelection = false;
 		if (_dir)
@@ -510,7 +512,10 @@ bool FindWnd::FindMediaItem(int _dir, bool _allTakes, bool (*jobTake)(MediaItem_
 			if (!_dir) ZoomToSelItems();
 			else if (item) ScrollToSelItem(item);
 		}
+
+		PreventUIRefresh(-1);
 	}
+
 	if (update)
 	{
 		UpdateTimeline();

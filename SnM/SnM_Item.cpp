@@ -112,7 +112,7 @@ void SNM_GetSelectedItems(ReaProject* _proj, WDL_PtrList<MediaItem>* _items, boo
 							_items->Add(item);
 }
 
-bool SNM_SetSelectedItems(ReaProject* _proj, WDL_PtrList<MediaItem>* _items, bool _onSelTracks)
+bool SNM_SetSelectedItems(ReaProject* _proj, WDL_PtrList<MediaItem>* _items, bool _onSelTracks) // primitive func
 {
 	bool updated = false;
 	int count = _items && _items->GetSize() ? CountTracks(_proj) : 0;
@@ -130,7 +130,7 @@ bool SNM_SetSelectedItems(ReaProject* _proj, WDL_PtrList<MediaItem>* _items, boo
 	return updated;
 }
 
-bool SNM_ClearSelectedItems(ReaProject* _proj, bool _onSelTracks)
+bool SNM_ClearSelectedItems(ReaProject* _proj, bool _onSelTracks) // primitive func
 {
 	bool updated = false;
 	int count = CountTracks(_proj);
@@ -405,19 +405,17 @@ bool SplitSelectItemsInInterval(const char* _undoTitle, double _pos1, double _po
 {
 	bool updated = false;
   
-  PreventUIRefresh(1);
-
+	PreventUIRefresh(1);
 	for (int i=1; i <= GetNumTracks(); i++) // skip master
 		if (MediaTrack* tr = CSurf_TrackFromID(i, false))
 			if (!_selTracks || (_selTracks && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL)))
 				updated |= SplitSelectItemsInInterval(tr, _pos1, _pos2, _newItemsOut);
-
 	PreventUIRefresh(-1);
 
-	if (updated)
+	if (updated && _undoTitle)
 	{
-		if (_undoTitle)
-			Undo_OnStateChangeEx2(NULL, _undoTitle, UNDO_STATE_ALL, -1);
+		UpdateArrange();
+		Undo_OnStateChangeEx2(NULL, _undoTitle, UNDO_STATE_ALL, -1);
 	}
 	return updated;
 }
@@ -906,14 +904,15 @@ void ActivateLaneUnderMouse(COMMAND_T* _ct)
 	WDL_PtrList<MediaItem> selItems;
 	SNM_GetSelectedItems(NULL, &selItems);
 
+	PreventUIRefresh(1);
 	Main_OnCommand(40528,0); // select item under mouse cursor
 	Main_OnCommand(41342,0); // activate take under mouse cursor
 	ActivateLaneFromSelItem(NULL);
-
 	SNM_ClearSelectedItems(NULL);
 	SNM_SetSelectedItems(NULL, &selItems);
-	UpdateTimeline();
-
+	PreventUIRefresh(-1);
+	
+	UpdateArrange();
 	Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL);
 }
 
@@ -1330,8 +1329,7 @@ void RefreshOffscreenItems()
 }
 
 // deselects offscreen items and reselects those items -on toggle-
-// note: callers must call UpdateTimeline() if it returns true
-bool ToggleOffscreenSelItems(int _dir)
+bool ToggleOffscreenSelItems(int _dir) // primitive func
 {
 #ifdef _SNM_MUTEX
 	SWS_SectionLock lock(&g_toolbarItemSelLock);
@@ -1364,7 +1362,6 @@ bool ToggleOffscreenSelItems(int _dir)
 
 		if (l1 && l2) 
 		{
-			PreventUIRefresh(1);
 			l2->Empty(false);
 			for (int j=0; j < l1->GetSize(); j++)
 			{
@@ -1373,7 +1370,6 @@ bool ToggleOffscreenSelItems(int _dir)
 				updated = true;
 			}
 			l1->Empty(false);
-			PreventUIRefresh(-1);
 
 			// in case auto-refresh toolbar option is off..
 			RefreshToolbar(SWSGetCommandID(ToggleOffscreenSelItems, i));
@@ -1390,8 +1386,13 @@ void ToggleOffscreenSelItems(COMMAND_T* _ct)
 	if (!g_SNM_ToolbarRefresh) 
 		RefreshOffscreenItems();
 
-	if (ToggleOffscreenSelItems(dir)) {
-		UpdateTimeline();
+	PreventUIRefresh(1);
+	bool updated = (ToggleOffscreenSelItems(dir));
+	PreventUIRefresh(-1);
+  
+	if (updated)
+	{
+		UpdateArrange();
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 	}
 }
@@ -1430,11 +1431,14 @@ void UnselectOffscreenItems(COMMAND_T* _ct)
 		RefreshOffscreenItems();
 
 	bool updated = false;
+	PreventUIRefresh(1);
 	for(int i=0; i<SNM_ITEM_SEL_COUNT; i++)
 		if (g_toolbarItemSel[i].GetSize() > 0)
 			updated |= ToggleOffscreenSelItems(i);
+	PreventUIRefresh(-1);
+
 	if (updated) {
-		UpdateTimeline();
+		UpdateArrange();
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 	}
 }
@@ -1449,18 +1453,16 @@ void ScrollToSelItem(MediaItem* _item)
 {
 	if (_item)
 	{
-		PreventUIRefresh(1);
-
 		// horizontal scroll to selected item
+		PreventUIRefresh(1);
 		double curPos = GetCursorPositionEx(NULL);
 		SetEditCurPos2(NULL, *(double*)GetSetMediaItemInfo(_item, "D_POSITION", NULL), true, false);
 		SetEditCurPos2(NULL, curPos, false, false);
+		PreventUIRefresh(-1);
 
 		// vertical scroll to selected item
 		if (MediaTrack* tr = GetMediaItem_Track(_item))
 			ScrollTrack(tr, true, false);
-
-		PreventUIRefresh(-1);
 	}
 }
 

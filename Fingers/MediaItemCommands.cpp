@@ -385,9 +385,11 @@ void CmdDeselectIfNotStartInTimeSelection(int flag, void *data)
     double startLoop, endLoop;
     GetSet_LoopTimeRange(false, false, &startLoop, &endLoop, false);
 
+    PreventUIRefresh(1);
     for(int i = 0; i < ctr->size(); i++) {
         if( ctr->getAt(i).getPosition() < startLoop || ctr->getAt(i).getPosition() > endLoop)
             ctr->getAt(i).setSelected(false);
     }
-	UpdateArrange();
+    PreventUIRefresh(-1);
+    UpdateArrange();
 }

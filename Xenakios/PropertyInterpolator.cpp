@@ -257,6 +257,7 @@ int AddNodeFromCoordinates(int x,int y)
 
 void RecallOrigProps()
 {
+	PreventUIRefresh(1);
 	int i;
 	t_interpolator_item_state ista;
 	for (i=0;i<(int)g_ii_storeditemstates.size();i++)
@@ -274,8 +275,8 @@ void RecallOrigProps()
 		bool uisel=true;
 		GetSetMediaItemInfo(pIt,"B_UISEL",&uisel);
 		GetSetMediaItemTakeInfo(pTk,"D_STARTOFFS",&ista.mediaoffset);
-
 	}
+	PreventUIRefresh(-1);
 }
 
 LRESULT CALLBACK EnveAreaWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
@@ -444,6 +445,8 @@ void PerformPropertyChanges()
 	int i;
 	int j;
 	double accumScaler=1.0;
+
+	PreventUIRefresh(1);
 	for (i=0;i<(int)g_IItakes.size();i++)
 	{
 		j=0;
@@ -558,8 +561,8 @@ void PerformPropertyChanges()
 		}
 
 	}
+	PreventUIRefresh(-1);
 	UpdateTimeline();
-
 }
 
 void StoreOrigProps()

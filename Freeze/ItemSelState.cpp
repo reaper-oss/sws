@@ -86,7 +86,9 @@ void SelItems::Add(MediaTrack* tr)
 // caller initializes bUsed
 void SelItems::Match(MediaTrack* tr, bool* bUsed)
 {
-	for (int i = 0; i < GetTrackNumMediaItems(tr); i++)
+	PreventUIRefresh(1);
+	int nbitems=GetTrackNumMediaItems(tr);
+	for (int i = 0; i < nbitems; i++)
 	{
 		MediaItem* mi = GetTrackMediaItem(tr, i);
 		GetSetMediaItemInfo(mi, "B_UISEL", &g_bFalse);
@@ -99,6 +101,7 @@ void SelItems::Match(MediaTrack* tr, bool* bUsed)
 				break;
 			}
 	}
+	PreventUIRefresh(-1);
 }
 
 void SelItems::Restore(MediaTrack* tr)
@@ -111,8 +114,12 @@ void SelItems::Restore(MediaTrack* tr)
 	}
 
 	if (tr == NULL)
+	{
+		PreventUIRefresh(1);
 		for (int i = 1; i <= GetNumTracks(); i++)
 			Match(CSurf_TrackFromID(i, false), bUsed);
+		PreventUIRefresh(-1);
+	}
 	else
 		Match(tr, bUsed);
 
@@ -288,6 +295,7 @@ void SaveSelTrackSelItems(int iSlot)
 
 void RestoreSelTrackSelItems(int iSlot)
 {
+	PreventUIRefresh(1);
 	for (int i = 1; i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
@@ -302,6 +310,8 @@ void RestoreSelTrackSelItems(int iSlot)
 				}
 		}
 	}
+	PreventUIRefresh(-1);
+
 	char cUndoText[256];
 	sprintf(cUndoText, __LOCALIZE_VERFMT("Restore selected tracks selected items, slot %d","sws_undo"), iSlot+1);
 	Undo_OnStateChangeEx(cUndoText, UNDO_STATE_ITEMS, -1);
@@ -310,6 +320,7 @@ void RestoreSelTrackSelItems(int iSlot)
 
 void RestoreLastSelItemTrack(COMMAND_T* ct)
 {
+	PreventUIRefresh(1);
 	for (int i = 1; i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
@@ -324,6 +335,7 @@ void RestoreLastSelItemTrack(COMMAND_T* ct)
 				}
 		}
 	}
+	PreventUIRefresh(-1);
 	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 	UpdateTimeline();
 }

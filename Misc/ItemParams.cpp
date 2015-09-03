@@ -77,6 +77,7 @@ void LoopItemSection(COMMAND_T*)
 			sections.Add(item);
 	}
 
+	PreventUIRefresh(1);
 	if (sections.GetSize())
 	{	// Some items already are in "section mode", turn it off
 		Main_OnCommand(40289, 0); // Unselect all items
@@ -96,8 +97,10 @@ void LoopItemSection(COMMAND_T*)
 	for (int i = 0; i < items.GetSize(); i++)
 		GetSetMediaItemInfo((MediaItem*)items.Get(i), "B_LOOPSRC", &g_bTrue);
 
+	PreventUIRefresh(-1);
+
 	// Turn on loop section
-	Main_OnCommand(40547, 0);
+	Main_OnCommand(40547, 0); // takes care of UI refresh
 }
 
 void MoveItemLeftToCursor(COMMAND_T* = NULL)

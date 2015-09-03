@@ -2377,6 +2377,7 @@ void AWSelectStretched(COMMAND_T* t)
 	WDL_TypedBuf<MediaItem*> items;
 	SWS_GetSelectedMediaItems(&items);
 
+	PreventUIRefresh(1);
 	for (int i = 0; i < items.GetSize(); i++)
 	{
 		MediaItem_Take* take = GetMediaItemTake(items.Get()[i], -1);
@@ -2384,9 +2385,9 @@ void AWSelectStretched(COMMAND_T* t)
 		if (take && *(double*)GetSetMediaItemTakeInfo(take, "D_PLAYRATE", NULL) == 1.0)
 			GetSetMediaItemInfo(items.Get()[i], "B_UISEL", &g_i0);
 	}
+	PreventUIRefresh(-1);
 
 	UpdateArrange();
-
 	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
 
 }
@@ -2869,7 +2870,7 @@ void AWSplitXFadeLeft(COMMAND_T* t)
 	int lastGroup = -1;
 	int groupAdd = 0;
 
-
+	PreventUIRefresh(1);
 	for (int i = 0; i < items.GetSize(); i++)
 	{
 		dItemLength = GetMediaItemInfo_Value(items.Get()[i], "D_LENGTH");
@@ -2900,6 +2901,7 @@ void AWSplitXFadeLeft(COMMAND_T* t)
 
 		SetMediaItemInfo_Value(items.Get()[i], "B_UISEL", 0);
 	}
+	PreventUIRefresh(-1);
 
 	// restore xfade setting
 	*(int*)(GetConfigVar("splitautoxfade")) = fadeStateStore;
@@ -3127,6 +3129,7 @@ void AWSelChilOrSelItems(COMMAND_T* t)
 {
 	MediaTrack* tr = GetLastTouchedTrack();
 
+	PreventUIRefresh(1);
 	if(GetMediaTrackInfo_Value(tr, "I_FOLDERDEPTH") == 1)
 		SelChildren();
 	else
@@ -3140,9 +3143,9 @@ void AWSelChilOrSelItems(COMMAND_T* t)
 			SetMediaItemInfo_Value(item, "B_UISEL", 1);
 		}
 	}
+	PreventUIRefresh(-1);
 
 	UpdateArrange();
-
 	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS | UNDO_STATE_TRACKCFG, -1);
 }
 

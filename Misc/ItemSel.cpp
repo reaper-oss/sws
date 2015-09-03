@@ -33,6 +33,7 @@
 
 void UnselOnTracks(COMMAND_T* = NULL)
 {
+	PreventUIRefresh(1);
 	for (int i = 1; i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
@@ -40,11 +41,13 @@ void UnselOnTracks(COMMAND_T* = NULL)
 			for (int j = 0; j < GetTrackNumMediaItems(tr); j++)
 				GetSetMediaItemInfo(GetTrackMediaItem(tr, j), "B_UISEL", &g_bFalse);
 	}
+	PreventUIRefresh(-1);
 	UpdateTimeline();
 }
 
 void SelLLItem(COMMAND_T* = NULL)
 {
+	PreventUIRefresh(1);
 	UnselOnTracks();
 	for (int i = 1; i <= GetNumTracks(); i++)
 	{
@@ -68,11 +71,13 @@ void SelLLItem(COMMAND_T* = NULL)
 			GetSetMediaItemInfo(pLL, "B_UISEL", &g_bTrue);
 		}
 	}
+	PreventUIRefresh(-1);
 	UpdateTimeline();
 }
 
 void SelULItem(COMMAND_T* = NULL)
 {
+	PreventUIRefresh(1);
 	UnselOnTracks();
 	for (int i = 1; i <= GetNumTracks(); i++)
 	{
@@ -96,11 +101,13 @@ void SelULItem(COMMAND_T* = NULL)
 			GetSetMediaItemInfo(pUL, "B_UISEL", &g_bTrue);
 		}
 	}
+	PreventUIRefresh(-1);
 	UpdateTimeline();
 }
 
 void UnselULItem(COMMAND_T* = NULL)
 {
+	PreventUIRefresh(1);
 	for (int i = 1; i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
@@ -123,11 +130,13 @@ void UnselULItem(COMMAND_T* = NULL)
 			GetSetMediaItemInfo(pUL, "B_UISEL", &g_bFalse);
 		}
 	}
+	PreventUIRefresh(-1);
 	UpdateTimeline();
 }
 
 void TogItemSel(COMMAND_T* = NULL)
 {	// Toggle item's selection states on selected tracks
+	PreventUIRefresh(1);
 	bool bSel;
 	MediaTrack* tr;
 	MediaItem* mi;
@@ -142,6 +151,7 @@ void TogItemSel(COMMAND_T* = NULL)
 				GetSetMediaItemInfo(mi, "B_UISEL", &bSel);
 			}
 	}
+	PreventUIRefresh(-1);
 	UpdateTimeline();
 }
 
@@ -205,6 +215,7 @@ void SelPrevItem(COMMAND_T* ctx)
 
 void SelMutedItems(COMMAND_T* ct)
 {
+	PreventUIRefresh(1);
 	for (int i = 1; i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
@@ -216,11 +227,13 @@ void SelMutedItems(COMMAND_T* ct)
 			GetSetMediaItemInfo(mi, "B_UISEL", &sel);
 		}
 	}
+	PreventUIRefresh(-1);
 	UpdateTimeline();
 }
 
 void SelMutedItemsSel(COMMAND_T* ct)
 {
+	PreventUIRefresh(1);
 	for (int i = 1; i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
@@ -233,11 +246,13 @@ void SelMutedItemsSel(COMMAND_T* ct)
 				GetSetMediaItemInfo(mi, "B_UISEL", &sel);
 			}
 	}
+	PreventUIRefresh(-1);
 	UpdateTimeline();
 }
 
 void SelLockedItems(COMMAND_T* = NULL)
 {
+	PreventUIRefresh(1);
 	for (int i = 1; i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
@@ -250,11 +265,13 @@ void SelLockedItems(COMMAND_T* = NULL)
 				GetSetMediaItemInfo(mi, "B_UISEL", &g_i0);
 		}
 	}
+	PreventUIRefresh(-1);
 	UpdateTimeline();
 }
 
 void SelLockedItemsSel(COMMAND_T* = NULL)
 {
+	PreventUIRefresh(1);
 	for (int i = 1; i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
@@ -268,11 +285,13 @@ void SelLockedItemsSel(COMMAND_T* = NULL)
 					GetSetMediaItemInfo(mi, "B_UISEL", &g_i0);
 			}
 	}
+	PreventUIRefresh(-1);
 	UpdateTimeline();
 }
 
 void AddRightItem(COMMAND_T* = NULL)
 {
+	PreventUIRefresh(1);
 	for (int i = 1; i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
@@ -307,11 +326,13 @@ void AddRightItem(COMMAND_T* = NULL)
 				GetSetMediaItemInfo(rightItem, "B_UISEL", &g_i1);
 		}
 	}
+	PreventUIRefresh(-1);
 	UpdateTimeline();
 }
 
 void AddLeftItem(COMMAND_T* = NULL)
 {
+	PreventUIRefresh(1);
 	for (int i = 1; i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
@@ -346,11 +367,13 @@ void AddLeftItem(COMMAND_T* = NULL)
 				GetSetMediaItemInfo(leftItem, "B_UISEL", &g_i1);
 		}
 	}
+	PreventUIRefresh(-1);
 	UpdateTimeline();
 }
 
 void UnselNotStem(COMMAND_T* = NULL)
 {
+	PreventUIRefresh(1);
 	for (int i = 1; i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
@@ -365,11 +388,13 @@ void UnselNotStem(COMMAND_T* = NULL)
 			}
 		}
 	}
+	PreventUIRefresh(-1);
 	UpdateTimeline();
 }
 
 void UnselNotRender(COMMAND_T* = NULL)
 {
+	PreventUIRefresh(1);
 	for (int i = 1; i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
@@ -384,6 +409,7 @@ void UnselNotRender(COMMAND_T* = NULL)
 			}
 		}
 	}
+	PreventUIRefresh(-1);
 	UpdateTimeline();
 }
 

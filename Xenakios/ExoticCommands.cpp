@@ -1585,6 +1585,7 @@ int PerformTakeSearch(char *SearchString)
 	int i;
 	int k;
 	int tokenCount;
+	PreventUIRefresh(1);
 	for (i=0;i<g_NumProjectItems;i++)
 	{
 		int NumTakes=GetMediaItemNumTakes(g_Project_Items[i].ReaperItem);
@@ -1614,6 +1615,7 @@ int PerformTakeSearch(char *SearchString)
 			}
 		}
 	}
+	PreventUIRefresh(-1);
 	UpdateTimeline();
 	return NumMatches;
 }

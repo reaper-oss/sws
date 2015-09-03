@@ -1178,7 +1178,7 @@ bool BR_MouseInfo::GetContextMIDIInline (BR_MouseInfo::MouseInfo& mouseInfo, int
 	return false;
 }
 
-bool BR_MouseInfo::IsStretchMarkerVisible (MediaItem_Take* take, int id, double arrangeZoom)
+bool BR_MouseInfo::IsStretchMarkerVisible (MediaItem_Take* take, int id, double takePlayrate, double arrangeZoom)
 {
 	/* This checks if stretch marker is so close *
 	*  to item edge that REAPER hides it         */
@@ -1188,7 +1188,7 @@ bool BR_MouseInfo::IsStretchMarkerVisible (MediaItem_Take* take, int id, double 
 	{
 		double stretchMarkerPos;
 		GetTakeStretchMarker(take, id, &stretchMarkerPos, NULL);
-		stretchMarkerPos = ItemTimeToProjectTime(item, stretchMarkerPos) / GetMediaItemTakeInfo_Value(take, "D_PLAYRATE");
+		stretchMarkerPos = ItemTimeToProjectTime(item, stretchMarkerPos / takePlayrate);
 
 		double itemStart = GetMediaItemInfo_Value(item, "D_POSITION");
 		double itemEnd   = GetMediaItemInfo_Value(item, "D_LENGTH") + itemStart;
@@ -1223,7 +1223,7 @@ int BR_MouseInfo::IsMouseOverStretchMarker (MediaItem* item, MediaItem_Take* tak
 			if (id != -1)
 			{
 				int count = GetTakeNumStretchMarkers(take);
-				while (id < count && !this->IsStretchMarkerVisible(take, id, arrangeZoom))
+				while (id < count && !this->IsStretchMarkerVisible(take, id, takePlayrate, arrangeZoom))
 					id++;
 
 				double stretchMarkerPos;

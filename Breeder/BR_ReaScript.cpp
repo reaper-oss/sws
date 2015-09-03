@@ -355,26 +355,14 @@ void BR_GetMediaTrackGUID (MediaTrack* track, char* guidStringOut, int guidStrin
 
 void BR_GetMediaTrackLayouts (MediaTrack* track, char* mcpLayoutNameOut, int mcpLayoutNameOut_sz, char* tcpLayoutNameOut, int tcpLayoutNameOut_sz)
 {
-	bool nothingFound = true;
-
-	if (track && (mcpLayoutNameOut || tcpLayoutNameOut))
+	if (track)
 	{
-		SNM_ChunkParserPatcher p(track);
-		p.SetWantsMinimalState(true);
-
-		WDL_FastString layoutsLine;
-		if (p.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "TRACK", "LAYOUTS", 0, 1, &layoutsLine))
-		{
-			LineParser lp(false);
-			lp.parse(layoutsLine.Get());
-			if (mcpLayoutNameOut && mcpLayoutNameOut_sz > 0) _snprintfSafe(mcpLayoutNameOut, mcpLayoutNameOut_sz, "%s", lp.gettoken_str(2));
-			if (tcpLayoutNameOut && tcpLayoutNameOut_sz > 0) _snprintfSafe(tcpLayoutNameOut, tcpLayoutNameOut_sz, "%s", lp.gettoken_str(1));
-
-			nothingFound = false;
-		}
+		if (mcpLayoutNameOut)
+			_snprintfSafe(mcpLayoutNameOut, mcpLayoutNameOut_sz, "%s", (const char*)GetSetMediaTrackInfo(track, "P_MCP_LAYOUT", NULL));
+		if (tcpLayoutNameOut)
+			_snprintfSafe(tcpLayoutNameOut, tcpLayoutNameOut_sz, "%s", (const char*)GetSetMediaTrackInfo(track, "P_TCP_LAYOUT", NULL));
 	}
-
-	if (nothingFound)
+	else
 	{
 		if (mcpLayoutNameOut && mcpLayoutNameOut_sz > 0) _snprintfSafe(mcpLayoutNameOut, mcpLayoutNameOut_sz, "%s", "");
 		if (tcpLayoutNameOut && tcpLayoutNameOut_sz > 0) _snprintfSafe(tcpLayoutNameOut, tcpLayoutNameOut_sz, "%s", "");
@@ -816,100 +804,30 @@ bool BR_SetMediaSourceProperties (MediaItem_Take* take, bool section, double sta
 
 bool BR_SetMediaTrackLayouts (MediaTrack* track, const char* mcpLayoutNameIn, const char* tcpLayoutNameIn)
 {
-	bool updated = false;
-	if (track && (mcpLayoutNameIn || tcpLayoutNameIn))
+	bool changedLayouts = false;
+	if (track)
 	{
-		char* trackState = GetSetObjectState(track, "");
-		char* token = strtok(trackState, "\n");
-
-		WDL_FastString newState;
-		LineParser lp(false);
-
-		int blockCount = 0;
-		bool didLayouts = false;
-		while (token != NULL)
+		if (mcpLayoutNameIn)
 		{
-			lp.parse(token);
-			if      (lp.gettoken_str(0)[0] == '<')  ++blockCount;
-			else if (lp.gettoken_str(0)[0] == '>')  --blockCount;
-
-			if (blockCount == 1)
+			const char* currentMpc = (const char*)GetSetMediaTrackInfo(track, "P_MCP_LAYOUT", NULL);
+			if (currentMpc && strcmp(currentMpc, mcpLayoutNameIn))
 			{
-				if (!strcmp(lp.gettoken_str(0), "LAYOUTS") && !didLayouts)
-				{
-					for (int i = 0; i < lp.getnumtokens(); ++i)
-					{
-						if (i == 1)
-						{
-							newState.AppendFormatted(512, "\"%s\"", (tcpLayoutNameIn ? tcpLayoutNameIn : lp.gettoken_str(i)));
-							if (tcpLayoutNameIn && strcmp(tcpLayoutNameIn, lp.gettoken_str(i)))
-								updated = true;
-						}
-						else if (i == 2)
-						{
-							newState.AppendFormatted(512, "\"%s\"", (mcpLayoutNameIn ? mcpLayoutNameIn : lp.gettoken_str(i)));
-							if (mcpLayoutNameIn && strcmp(mcpLayoutNameIn, lp.gettoken_str(i)))
-								updated = true;
-						}
-						else
-						{
-							newState.Append(lp.gettoken_str(i));
-						}
-						newState.Append(" ");
-					}
-
-					newState.Append("\n");
-					didLayouts = true;
-				}
-				else
-				{
-					AppendLine(newState, token);
-				}
+				GetSetMediaTrackInfo(track, "P_MCP_LAYOUT", (void*)mcpLayoutNameIn);
+				changedLayouts = true;
 			}
-			else if (blockCount == 0)
-			{
-				if (lp.gettoken_str(0)[0] == '>')
-				{
-					if (!didLayouts)
-					{
-						if ((tcpLayoutNameIn && strcmp(tcpLayoutNameIn, "")) || (mcpLayoutNameIn && strcmp(mcpLayoutNameIn, "")))
-							updated = true;
-
-						if (updated)
-						{
-							newState.Append("LAYOUTS ");
-
-							newState.Append("\"");
-							newState.Append((tcpLayoutNameIn ? tcpLayoutNameIn : ""));
-							newState.Append("\"");
-
-							newState.Append("\"");
-							newState.Append((mcpLayoutNameIn ? mcpLayoutNameIn : ""));
-							newState.Append("\"");
-
-							newState.Append("\n");
-						}
-					}
-					AppendLine(newState, token);
-				}
-				else
-				{
-					AppendLine(newState, token);
-				}
-			}
-			else
-			{
-				AppendLine(newState, token);
-			}
-
-			token = strtok(NULL, "\n");
 		}
 
-		if (updated)
-			GetSetObjectState(track, newState.Get());
-		FreeHeapPtr(trackState);
+		if (tcpLayoutNameIn)
+		{
+			const char* currentMpc = (const char*)GetSetMediaTrackInfo(track, "P_TCP_LAYOUT", NULL);
+			if (currentMpc && strcmp(currentMpc, tcpLayoutNameIn))
+			{
+				GetSetMediaTrackInfo(track, "P_TCP_LAYOUT", (void*)tcpLayoutNameIn);
+				changedLayouts = true;
+			}
+		}
 	}
-	return updated;
+	return changedLayouts;
 }
 
 bool BR_SetMidiTakeTempoInfo (MediaItem_Take* take, bool ignoreProjTempo, double bpm, int num, int den)

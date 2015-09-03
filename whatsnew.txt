@@ -1,3 +1,5 @@
+<strong>This new SWS version requires and supports REAPER v5.02+!<br>
+
 New actions
 +Main:
  - SWS/BR: Options - Set "Run FX after stopping for" to x ms (various values)
@@ -8,11 +10,16 @@ New actions
 Fixes
 +Issue 761: Obey preference for volume envelope scaling when creating volume send envelopes with various actions
 +Issue 757: fixed actions "SWS: Set snapshots to 'mix' mode" and "SWS: Set snapshots to 'visibility' mode"
++Issue 765: Fixed various actions and ReaScript API not working properly with stretch markers at mouse cursor when take playrate is modified
 +Renamed "SWS/wol: Set "Vertical/Horizontal zoom center" to..." actions to "SWS/wol: Options - Set "Vertical/Horizontal zoom center" to..." to be consistent with Breeder's actions.
 
 ReaScript
 +Added functions:
  - BR_TrackFX_GetFXModuleName
++Issue 764: fixed glitches in TCP after setting new TCP layout with BR_SetMediaTrackLayouts
++Issue 760: fixed BR_GetMediaTrackLayouts broken in certain instances
++Other:
+ - BR_GetMediaTrackLayout/BR_SetMediaTrackLayout now use native API so it should make them faster
 
 !v2.8 featured build (August 13, 2015)
 <strong>This new SWS version requires and supports REAPER v5.0+!<br>

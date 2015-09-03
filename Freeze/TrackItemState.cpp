@@ -241,7 +241,7 @@ void SaveTrack(COMMAND_T*)
 	}
 }
 
-void RestoreTrack(COMMAND_T*)
+void RestoreTrack(COMMAND_T* _ct)
 {
 	PreventUIRefresh(1);
 	for (int i = 1; i <= GetNumTracks(); i++)
@@ -255,10 +255,10 @@ void RestoreTrack(COMMAND_T*)
 	}
 	PreventUIRefresh(-1);
 	UpdateTimeline();
-  //JFB undo?
+	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 
-void SelItemsWithState(COMMAND_T*)
+void SelItemsWithState(COMMAND_T* _ct)
 {
 	PreventUIRefresh(1);
 	for (int i = 1; i <= GetNumTracks(); i++)
@@ -272,7 +272,7 @@ void SelItemsWithState(COMMAND_T*)
 	}
 	PreventUIRefresh(-1);
 	UpdateArrange();
-  //JFB undo
+	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 
 void SaveSelOnTrack(COMMAND_T*)
@@ -296,7 +296,7 @@ void SaveSelOnTrack(COMMAND_T*)
 	}
 }
 
-void RestoreSelOnTrack(COMMAND_T*)
+void RestoreSelOnTrack(COMMAND_T* _ct)
 {
 	PreventUIRefresh(1);
 	for (int i = 1; i <= GetNumTracks(); i++)
@@ -310,5 +310,5 @@ void RestoreSelOnTrack(COMMAND_T*)
 	}
 	PreventUIRefresh(-1);
 	UpdateTimeline();
-  //JFB undo?
+	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }

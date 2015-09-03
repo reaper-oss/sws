@@ -460,7 +460,7 @@ void DoChooseNewSourceFileForSelTakes(COMMAND_T* ct)
 	delete TheTakes;
 }
 
-void DoInvertItemSelection(COMMAND_T*)
+void DoInvertItemSelection(COMMAND_T* _ct)
 {
 	PreventUIRefresh(1);
 	for (int i = 1; i <= GetNumTracks(); i++)
@@ -477,6 +477,7 @@ void DoInvertItemSelection(COMMAND_T*)
 	}
 	PreventUIRefresh(-1);
 	UpdateArrange();
+	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 
 bool DoLaunchExternalTool(const char *ExeFilename)
@@ -858,7 +859,7 @@ void DoSelItemsToEndOfTrack(COMMAND_T*)
 	UpdateArrange();
 }
 
-void DoSelItemsToStartOfTrack(COMMAND_T*)
+void DoSelItemsToStartOfTrack(COMMAND_T* _ct)
 {
 	PreventUIRefresh(1);
 	for (int i = 0; i < GetNumTracks(); i++)
@@ -874,7 +875,7 @@ void DoSelItemsToStartOfTrack(COMMAND_T*)
 	}
 	PreventUIRefresh(-1);
 	UpdateArrange();
-  //JFB undo?
+	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 
 void DoSetAllTakesPlay()

@@ -1526,7 +1526,7 @@ void DoSaveItemAsFile1(COMMAND_T*)
 	}
 }
 
-void DoSelectItemUnderEditCursorOnSelTrack(COMMAND_T*)
+void DoSelectItemUnderEditCursorOnSelTrack(COMMAND_T* _ct)
 {
 	//XenGetProjectTracks(txs,true);
 	vector<MediaItem*> theitems;
@@ -1554,7 +1554,7 @@ void DoSelectItemUnderEditCursorOnSelTrack(COMMAND_T*)
 	}
 	PreventUIRefresh(-1);
 	UpdateArrange();
-  //JFB undo?
+	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 
 void DoNormalizeSelTakesTodB(COMMAND_T* ct)

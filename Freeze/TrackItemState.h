@@ -69,8 +69,8 @@ public:
 
 extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<TrackState> > g_tracks;
 
-void SaveTrack(COMMAND_T* = NULL);
-void RestoreTrack(COMMAND_T* = NULL);
-void SelItemsWithState(COMMAND_T* = NULL);
-void SaveSelOnTrack(COMMAND_T* = NULL);
-void RestoreSelOnTrack(COMMAND_T* = NULL);
+void SaveTrack(COMMAND_T* ct);
+void RestoreTrack(COMMAND_T* ct);
+void SelItemsWithState(COMMAND_T* ct);
+void SaveSelOnTrack(COMMAND_T* ct);
+void RestoreSelOnTrack(COMMAND_T* ct);

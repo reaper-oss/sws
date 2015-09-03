@@ -289,8 +289,6 @@ void SaveSelTrackSelItems(int iSlot)
 			}
 		}
 	}
-	char cUndoText[256];
-	sprintf(cUndoText, __LOCALIZE_VERFMT("Save selected items on selected tracks to slot %d","sws_undo"), iSlot+1);
 }
 
 void RestoreSelTrackSelItems(int iSlot)

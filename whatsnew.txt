@@ -12,10 +12,18 @@ Autorender
 +Updated/added guiding messages
 
 Fixes
++Fixed http://forum.cockos.com/showpost.php?p=1567618&postcount=1968|mass item selection hang| vs grouped/pooled items, requires REAPER v5.02pre3+
++Fixed http://forum.cockos.com/showpost.php?p=1563402&postcount=191|potential crash in zoom functions|
 +Issue 761: Obey preference for volume envelope scaling when creating volume send envelopes with various actions
 +Issue 757: fixed actions "SWS: Set snapshots to 'mix' mode" and "SWS: Set snapshots to 'visibility' mode"
 +Issue 765: Fixed various actions and ReaScript API not working properly with stretch markers at mouse cursor when take playrate is modified
 +Renamed "SWS/wol: Set "Vertical/Horizontal zoom center" to..." actions to "SWS/wol: Options - Set "Vertical/Horizontal zoom center" to..." to be consistent with Breeder's actions.
++Added missing undo points for some SWS and Xenakios actions
++ReaConsole: fixed default key shortcut "C"
+
+Other
++Various optimizations around item/take selection/activation
+
 
 ReaScript
 +Added functions:

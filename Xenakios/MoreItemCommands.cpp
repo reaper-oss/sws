@@ -617,7 +617,7 @@ void DoRecallSelectedTakes(COMMAND_T* ct)
 		}
 	}
 	PreventUIRefresh(-1);
-	UpdateTimeline();
+	UpdateArrange();
 	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);
 }
 
@@ -831,7 +831,7 @@ void DoSelectFirstItemInSelectedTrack(COMMAND_T*)
 		}
 	}
 	PreventUIRefresh(-1);
-	UpdateTimeline();
+	UpdateArrange();
 }
 
 struct t_PersistentTakeInfo
@@ -1553,7 +1553,7 @@ void DoSelectItemUnderEditCursorOnSelTrack(COMMAND_T*)
 		}
 	}
 	PreventUIRefresh(-1);
-	UpdateTimeline();
+	UpdateArrange();
   //JFB undo?
 }
 

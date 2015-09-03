@@ -562,7 +562,7 @@ void PerformPropertyChanges()
 
 	}
 	PreventUIRefresh(-1);
-	UpdateTimeline();
+	UpdateArrange();
 }
 
 void StoreOrigProps()

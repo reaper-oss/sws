@@ -164,5 +164,5 @@ void RestoreActiveTakes(COMMAND_T*)
 				if (TrackMatchesGuid(tr, &g_activeTakeTracks.Get()->Get(j)->m_guid))
 					g_activeTakeTracks.Get()->Get(j)->Restore(tr);
 	}
-	UpdateTimeline();
+	UpdateArrange();
 }

@@ -42,7 +42,7 @@ void UnselOnTracks(COMMAND_T* = NULL)
 				GetSetMediaItemInfo(GetTrackMediaItem(tr, j), "B_UISEL", &g_bFalse);
 	}
 	PreventUIRefresh(-1);
-	UpdateTimeline();
+	UpdateArrange();
 }
 
 void SelLLItem(COMMAND_T* = NULL)
@@ -72,7 +72,7 @@ void SelLLItem(COMMAND_T* = NULL)
 		}
 	}
 	PreventUIRefresh(-1);
-	UpdateTimeline();
+	UpdateArrange();
 }
 
 void SelULItem(COMMAND_T* = NULL)
@@ -102,7 +102,7 @@ void SelULItem(COMMAND_T* = NULL)
 		}
 	}
 	PreventUIRefresh(-1);
-	UpdateTimeline();
+	UpdateArrange();
 }
 
 void UnselULItem(COMMAND_T* = NULL)
@@ -131,7 +131,7 @@ void UnselULItem(COMMAND_T* = NULL)
 		}
 	}
 	PreventUIRefresh(-1);
-	UpdateTimeline();
+	UpdateArrange();
 }
 
 void TogItemSel(COMMAND_T* = NULL)
@@ -152,7 +152,7 @@ void TogItemSel(COMMAND_T* = NULL)
 			}
 	}
 	PreventUIRefresh(-1);
-	UpdateTimeline();
+	UpdateArrange();
 }
 
 void SelNextItem(COMMAND_T* ctx)
@@ -228,7 +228,7 @@ void SelMutedItems(COMMAND_T* ct)
 		}
 	}
 	PreventUIRefresh(-1);
-	UpdateTimeline();
+	UpdateArrange();
 }
 
 void SelMutedItemsSel(COMMAND_T* ct)
@@ -247,7 +247,7 @@ void SelMutedItemsSel(COMMAND_T* ct)
 			}
 	}
 	PreventUIRefresh(-1);
-	UpdateTimeline();
+	UpdateArrange();
 }
 
 void SelLockedItems(COMMAND_T* = NULL)
@@ -266,7 +266,7 @@ void SelLockedItems(COMMAND_T* = NULL)
 		}
 	}
 	PreventUIRefresh(-1);
-	UpdateTimeline();
+	UpdateArrange();
 }
 
 void SelLockedItemsSel(COMMAND_T* = NULL)
@@ -286,7 +286,7 @@ void SelLockedItemsSel(COMMAND_T* = NULL)
 			}
 	}
 	PreventUIRefresh(-1);
-	UpdateTimeline();
+	UpdateArrange();
 }
 
 void AddRightItem(COMMAND_T* = NULL)
@@ -327,7 +327,7 @@ void AddRightItem(COMMAND_T* = NULL)
 		}
 	}
 	PreventUIRefresh(-1);
-	UpdateTimeline();
+	UpdateArrange();
 }
 
 void AddLeftItem(COMMAND_T* = NULL)
@@ -368,7 +368,7 @@ void AddLeftItem(COMMAND_T* = NULL)
 		}
 	}
 	PreventUIRefresh(-1);
-	UpdateTimeline();
+	UpdateArrange();
 }
 
 void UnselNotStem(COMMAND_T* = NULL)
@@ -389,7 +389,7 @@ void UnselNotStem(COMMAND_T* = NULL)
 		}
 	}
 	PreventUIRefresh(-1);
-	UpdateTimeline();
+	UpdateArrange();
 }
 
 void UnselNotRender(COMMAND_T* = NULL)
@@ -410,7 +410,7 @@ void UnselNotRender(COMMAND_T* = NULL)
 		}
 	}
 	PreventUIRefresh(-1);
-	UpdateTimeline();
+	UpdateArrange();
 }
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions

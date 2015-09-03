@@ -1616,7 +1616,7 @@ int PerformTakeSearch(char *SearchString)
 		}
 	}
 	PreventUIRefresh(-1);
-	UpdateTimeline();
+	UpdateArrange();
 	return NumMatches;
 }
 

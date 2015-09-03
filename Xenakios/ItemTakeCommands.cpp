@@ -476,7 +476,7 @@ void DoInvertItemSelection(COMMAND_T*)
 		}
 	}
 	PreventUIRefresh(-1);
-	UpdateTimeline();
+	UpdateArrange();
 }
 
 bool DoLaunchExternalTool(const char *ExeFilename)
@@ -530,7 +530,7 @@ void DoSelectEveryNthItemOnSelectedTracks(int Step,int ItemOffset)
 		}
 	}
 	PreventUIRefresh(-1);
-	UpdateTimeline();
+	UpdateArrange();
 }
 
 void DoSelectSkipSelectOnSelectedItems(int Step,int ItemOffset)
@@ -574,7 +574,7 @@ void DoSelectSkipSelectOnSelectedItems(int Step,int ItemOffset)
 		}
 	}
 	PreventUIRefresh(-1);
-	UpdateTimeline();
+	UpdateArrange();
 }
 
 
@@ -855,7 +855,7 @@ void DoSelItemsToEndOfTrack(COMMAND_T*)
 		}
 	}
 	PreventUIRefresh(-1);
-	UpdateTimeline();
+	UpdateArrange();
 }
 
 void DoSelItemsToStartOfTrack(COMMAND_T*)
@@ -873,7 +873,8 @@ void DoSelItemsToStartOfTrack(COMMAND_T*)
 			GetSetMediaItemInfo(GetTrackMediaItem(tr, j), "B_UISEL", &g_bTrue);
 	}
 	PreventUIRefresh(-1);
-	UpdateTimeline();
+	UpdateArrange();
+  //JFB undo?
 }
 
 void DoSetAllTakesPlay()

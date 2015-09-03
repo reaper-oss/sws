@@ -315,7 +315,7 @@ void RestoreSelTrackSelItems(int iSlot)
 	char cUndoText[256];
 	sprintf(cUndoText, __LOCALIZE_VERFMT("Restore selected tracks selected items, slot %d","sws_undo"), iSlot+1);
 	Undo_OnStateChangeEx(cUndoText, UNDO_STATE_ITEMS, -1);
-	UpdateTimeline();
+	UpdateArrange();
 }
 
 void RestoreLastSelItemTrack(COMMAND_T* ct)
@@ -337,7 +337,7 @@ void RestoreLastSelItemTrack(COMMAND_T* ct)
 	}
 	PreventUIRefresh(-1);
 	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
-	UpdateTimeline();
+	UpdateArrange();
 }
 
 void SaveSelItems(COMMAND_T* ct)

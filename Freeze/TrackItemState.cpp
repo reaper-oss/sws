@@ -271,7 +271,7 @@ void SelItemsWithState(COMMAND_T*)
 					g_tracks.Get()->Get(j)->SelectItems(tr);
 	}
 	PreventUIRefresh(-1);
-	UpdateTimeline();
+	UpdateArrange();
   //JFB undo
 }
 

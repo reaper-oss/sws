@@ -253,9 +253,10 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 	AddSubMenu(hMenu, hAutoRenderSubMenu, __LOCALIZE("Autorender", "sws_ext_menu"));
 	AddToMenu(hAutoRenderSubMenu, __LOCALIZE("Batch render regions...", "sws_ext_menu"), NamedCommandLookup("_AUTORENDER"));
 	AddToMenu(hAutoRenderSubMenu, __LOCALIZE("Edit project metadata...", "sws_ext_menu"), NamedCommandLookup("_AUTORENDER_METADATA"));
-	AddToMenu(hAutoRenderSubMenu, __LOCALIZE("Open render path", "sws_ext_menu"), NamedCommandLookup("_AUTORENDER_OPEN_RENDER_PATH"));
-	AddToMenu(hAutoRenderSubMenu, __LOCALIZE("Show help...", "sws_ext_menu"), NamedCommandLookup("_AUTORENDER_HELP"));
 	AddToMenu(hAutoRenderSubMenu, __LOCALIZE("Global preferences...", "sws_ext_menu"), NamedCommandLookup("_AUTORENDER_PREFERENCES"));
+	AddToMenu(hAutoRenderSubMenu, __LOCALIZE("Open render path", "sws_ext_menu"), NamedCommandLookup("_AUTORENDER_OPEN_RENDER_PATH"));
+	AddToMenu(hAutoRenderSubMenu, SWS_SEPARATOR, 0);
+	AddToMenu(hAutoRenderSubMenu, __LOCALIZE("Show help...", "sws_ext_menu"), NamedCommandLookup("_AUTORENDER_HELP"));
 
 	AddToMenu(hMenu, __LOCALIZE("Command parameters...", "sws_ext_menu"), NamedCommandLookup("_XENAKIOS_SHOW_COMMANDPARAMS"));
 	AddToMenu(hMenu, __LOCALIZE("Contextual toolbars...", "sws_ext_menu"), NamedCommandLookup("_BR_CONTEXTUAL_TOOLBARS_PREF"));

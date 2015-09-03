@@ -369,10 +369,10 @@ void ShowAutorenderHelp(COMMAND_T*) {
 	helpText.append(__LOCALIZE("2. [Optional] Select Edit Project Metadata\r\n","sws_DLG_158"));
 	helpText.append(__LOCALIZE("and set tag metadata and render path.\r\n","sws_DLG_158"));
 	helpText.append(__LOCALIZE("3. Batch Render Regions!\r\n\r\n\r\n","sws_DLG_158"));
-	helpText.append(__LOCALIZE("Notes:\r\n\r\n","sws_DLG_158"));
+	helpText.append(__LOCALIZE("Important notes:\r\n","sws_DLG_158"));
 	helpText.append(__LOCALIZE("Autorender uses the last used render settings.\r\n","sws_DLG_158"));
-	helpText.append(__LOCALIZE("If you need to set your render format, run a dummy\r\n","sws_DLG_158"));
-	helpText.append(__LOCALIZE("render the normal way before batch rendering.\r\n\r\n","sws_DLG_158"));
+	helpText.append(__LOCALIZE("If you need to change render settings, run a dummy\r\n","sws_DLG_158"));
+	helpText.append(__LOCALIZE("render and save the project before batch rendering.\r\n","sws_DLG_158"));
 	helpText.append(__LOCALIZE("If no regions are present, the entire project\r\n","sws_DLG_158"));
 	helpText.append(__LOCALIZE("will be rendered and tagged.\r\n\r\n","sws_DLG_158"));
 	DisplayInfoBox(GetMainHwnd(), __LOCALIZE("Autorender usage","sws_DLG_158"), helpText.c_str());
@@ -582,7 +582,17 @@ void MakeMediaFilesAbsolute( WDL_FastString *prjStr ){
 }
 
 
-void AutorenderRegions(COMMAND_T*) {
+void AutorenderRegions(COMMAND_T*)
+{
+  if (IsProjectDirty && IsProjectDirty(NULL))
+  {
+    // keep this msg on a single line for the langpack generator
+		int r=MessageBox(GetMainHwnd(), __LOCALIZE("The current project is not saved.\r\nDo you want to save it?\r\n\r\nNote: if you have changed render settings, you need to run a dummy render and save the project first (last settings will not be taken into account otherwise).","sws_mbox"), 
+      __LOCALIZE("Autorender","sws_mbox"), MB_YESNOCANCEL);
+    if (r==IDCANCEL) return;
+    if (r==IDYES) Main_OnCommand(40026,0);
+  }
+
 	g_doing_render = true;
 
 	//Get the project config as a WDL_FastString
@@ -621,10 +631,13 @@ void AutorenderRegions(COMMAND_T*) {
 
 	string renderFileExtension = GetCurrentRenderExtension( &prjStr );
 	if( renderFileExtension.empty() ){
+/*JFB commented: fallback to wav
 		//have to have a renderFileExtension, show error and exit
 		MessageBox( GetMainHwnd(), __LOCALIZE("Couldn't get render extension. Manually render a dummy file with the desired settings and run again.","sws_mbox"), __LOCALIZE("Autorender - Error","sws_mbox"), MB_OK );
 		g_doing_render = false;
 		return;
+*/
+    renderFileExtension="wav";
 	}
 
 	//Project tweaks - only do after render path check! (Don't want to overwrite users settings in the original file)

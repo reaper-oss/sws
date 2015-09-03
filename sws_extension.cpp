@@ -866,6 +866,7 @@ error:
 		IMPAPI(InsertEnvelopePoint); // v5pre4+
 		IMPAPI(InsertTrackAtIndex);
 		IMPAPI(IsMediaExtension);
+		(*((void **)&(IsProjectDirty)) = (void *)rec->GetFunc("IsProjectDirty"));
 		IMPAPI(kbd_enumerateActions);
 		IMPAPI(kbd_formatKeyName);
 		IMPAPI(kbd_getCommandName);

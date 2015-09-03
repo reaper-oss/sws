@@ -7,6 +7,10 @@ New actions
  - SWS/wol: Adjust selected envelope or last touched track height, zoom center to middle arrange/mouse cursor (MIDI CC relative/mousewheel)
  - SWS/wol: Adjust envelope or track height under mouse cursor, zoom center to mouse cursor (MIDI CC relative/mousewheel)
 
+Autorender
++Fallback to WAV render if no render settings are found
++Updated/added guiding messages
+
 Fixes
 +Issue 761: Obey preference for volume envelope scaling when creating volume send envelopes with various actions
 +Issue 757: fixed actions "SWS: Set snapshots to 'mix' mode" and "SWS: Set snapshots to 'visibility' mode"

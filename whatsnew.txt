@@ -33,6 +33,9 @@ ReaScript
 +Other:
  - BR_GetMediaTrackLayout/BR_SetMediaTrackLayout now use native API so it should make them faster
 
+Other
++Increased all SWS/BR slot actions count to 16
+
 !v2.8 featured build (August 13, 2015)
 <strong>This new SWS version requires and supports REAPER v5.0+!<br>
 Lots of new features/fixes: everything listed below is new, down to v2.6 (all intermediate versions were pre-releases/beta/fixup builds).

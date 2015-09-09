@@ -979,7 +979,6 @@ bool BR_Envelope::VisibleInArrange (int* envHeight, int* yOffset, bool cacheValu
 	{
 		if (!cacheValues || (cacheValues && m_height == -1))
 		{
-			m_yOffset;
 			m_height = GetTakeEnvHeight(m_take, &m_yOffset);
 		}
 
@@ -1006,7 +1005,6 @@ bool BR_Envelope::VisibleInArrange (int* envHeight, int* yOffset, bool cacheValu
 	{
 		if (!cacheValues || (cacheValues && m_height == -1))
 		{
-			m_yOffset;
 			m_height = GetTrackEnvHeight(m_envelope, &m_yOffset, true, this->GetParent());
 		}
 

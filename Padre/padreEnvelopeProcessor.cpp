@@ -503,6 +503,8 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::processPoints(char* envState, st
 							case eENVMOD_AMPLIFY :
 								dEnvNormValue = dStrength*(dEnvNormValue + dOffset);
 							break;
+							default :
+							break;
 						}
 
 						value = dEnvMagnitude*dEnvNormValue + dEnvOffset;

@@ -260,7 +260,7 @@ int VersionCheckInitExit (bool init)
 		{
 			// Make sure at least 24 hours have passed since the last search
 			unsigned int currentTime = (unsigned int)time(NULL);
-			if (currentTime - lastTime >= 86400 || currentTime - lastTime < 0)
+			if (currentTime-lastTime >= 86400 || (int)(currentTime-lastTime) < 0)
 			{
 				SetStartupSearchOptions(official, beta, currentTime);
 

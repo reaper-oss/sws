@@ -1755,7 +1755,7 @@ void ApplyNextCmdToMultiEnvelopes (COMMAND_T* ct)
 		for (int j = 0; j < CountTrackEnvelopes(track); ++j)
 		{
 			BR_Envelope envelope(GetTrackEnvelope(track, j));
-			if (envelope.IsVisible() && (!recordArm || recordArm && envelope.IsArmed()))
+			if (envelope.IsVisible() && (!recordArm || envelope.IsArmed()))
 			{
 				SetCursorContext(2, envelope.GetPointer());
 				updated = true;

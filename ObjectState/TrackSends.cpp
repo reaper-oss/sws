@@ -106,7 +106,7 @@ bool ResolveMissingRecv(MediaTrack* tr, int iSend, TrackSend* ts, WDL_PtrList<Tr
 	WDL_FastString str;
 	char* cName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
 	if (!cName || !cName[0])
-		cName = "(unnamed)";
+		cName = (char*)"(unnamed)";
 	str.SetFormatted(200, "Send %d on track %d \"%s\" is missing its receive track! ", iSend+1, CSurf_TrackToID(tr, false), cName);
 
 	g_cErrorStr = str.Get();

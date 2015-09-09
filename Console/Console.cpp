@@ -111,7 +111,7 @@ static console_COMMAND_T g_commands[NUM_COMMANDS] =
 // Basically just a fancy tokenizer
 CONSOLE_COMMAND Tokenize(char* strCommand, char** trackid, char** args)
 {
-	*trackid = *args = "";
+	*trackid = *args = (char*)"";
 	char* p;
 	CONSOLE_COMMAND command = UNKNOWN_COMMAND;
 	int index = 0;
@@ -153,7 +153,7 @@ CONSOLE_COMMAND Tokenize(char* strCommand, char** trackid, char** args)
 		if (p)
 		{
 			if (p == *trackid)
-				*trackid = "";
+				*trackid = (char*)"";
 			p[0] = 0;
 			// Go to first non-space char
 			while (*(++p) == ' ');
@@ -163,13 +163,13 @@ CONSOLE_COMMAND Tokenize(char* strCommand, char** trackid, char** args)
 		{
 			// No spaces, assume it's the argument that's being typed
 			*args = *trackid;
-			*trackid = "";
+			*trackid = (char*)"";
 		}
 	}
 	else
 	{
 		*args = *trackid;
-		*trackid = "";
+		*trackid = (char*)"";
 		return command;
 	}
 
@@ -179,7 +179,7 @@ CONSOLE_COMMAND Tokenize(char* strCommand, char** trackid, char** args)
 	{
 		if (!**trackid)
 			*trackid = *args;
-		*args = "";
+		*args = (char*)"";
 	}
 
 	return command;
@@ -212,7 +212,7 @@ void ParseTrackId(char* strId, bool bReset)
 		temp[127]=0; // Just in case
 		token = strtok(temp, ",");
 		if (!token)
-			ParseTrackId("", false);
+			ParseTrackId((char*)"", false);
 		while (token)
 		{
 			ParseTrackId(token, false);
@@ -409,6 +409,8 @@ void ProcessCommand(CONSOLE_COMMAND command, const char* args)
 				SNM_SendLocalOscMessage(oscStr);
 				break;
 			}
+		default:
+			break;
 		}
 		return;
 	}
@@ -595,6 +597,8 @@ void ProcessCommand(CONSOLE_COMMAND command, const char* args)
 					GetSetMediaTrackInfo(pMt, "I_CUSTOMCOLOR", &i);
 				}
 				break;
+			default:
+				break;
 			}
 		}
 
@@ -622,6 +626,8 @@ void ProcessCommand(CONSOLE_COMMAND command, const char* args)
 		case FX_EXCLUSIVE:
 			GetSetMediaTrackInfo(pMt, "I_FXEN", &g_selTracks.Get()[track]);
 			break;
+		default:
+			break;
 		}
 	}
 }
@@ -634,7 +640,7 @@ const char* StatusString(CONSOLE_COMMAND command, const char* args)
 	if (command >= NUM_COMMANDS)
 		return __LOCALIZE("Internal error, contact SWS","sws_DLG_100");
 
-	int n = sprintf(status, __localizeFunc(g_commands[command].cHelpPrefix, "sws_DLG_100", 0));
+	int n = sprintf(status, "%s", __localizeFunc(g_commands[command].cHelpPrefix, "sws_DLG_100", LOCALIZE_FLAG_NOCACHE));
 
 	// add space if localized (trailing ' ' cannot be retrieved from LangPack files)
 	if (IsLocalized() && n>0 && n<(sizeof(status)-1) && status[n-1] != ' ')
@@ -676,7 +682,7 @@ const char* StatusString(CONSOLE_COMMAND command, const char* args)
 				}
 
 			if (n == previous_n)
-				n += sprintf(status + n, __LOCALIZE("nothing","sws_DLG_100"));
+				n += sprintf(status + n, "%s", __LOCALIZE("nothing","sws_DLG_100"));
 			else
 			{
 				status[n-2] = 0; // take off last ", "

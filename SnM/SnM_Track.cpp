@@ -1562,6 +1562,7 @@ void ScrollTrack(MediaTrack* _tr, bool _tcp, bool _mcp)
 		ScrollSelTrack(true, false);
 		SNM_SetSelectedTracks(NULL, &selTrs, true);
 		PreventUIRefresh(-1);
+		// restoration => no need to UpdateArrange();
 	}
 }
 

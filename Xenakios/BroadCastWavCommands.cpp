@@ -64,8 +64,7 @@ void DoRenameTakesWithBWAVDesc(COMMAND_T* ct)
 				break;
 
 			char buf[8192];
-			int sz = 8192;
-			sz = pSrc->Extended(PCM_SOURCE_EXT_GETMETADATA, (void*)"DESC", buf, (void*)sz);
+			int sz = pSrc->Extended(PCM_SOURCE_EXT_GETMETADATA, (void*)"DESC", buf, (void*)(INT_PTR)(int)sizeof(buf));
 			if (sz > 0 && buf[0])
 			{
 				SanitizeString(buf);
@@ -304,8 +303,7 @@ void DoOpenRPPofBWAVdesc(COMMAND_T*)
 	if (pSrc)
 	{
 		char buf[8192];
-		int sz=8192;
-		sz = pSrc->Extended(PCM_SOURCE_EXT_GETMETADATA, (void*)"DESC", buf, (void*)sz);
+		int sz = pSrc->Extended(PCM_SOURCE_EXT_GETMETADATA, (void*)"DESC", buf, (void*)(INT_PTR)(int)sizeof(buf));
 		if (sz > 0 && buf[0])
 		{
 			string RPPFileName;

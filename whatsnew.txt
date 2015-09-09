@@ -1,3 +1,4 @@
+!v2.8.1 pre-release build (September 10, 2015)
 New actions
 +Main:
  - SWS/BR: Options - Set "Run FX after stopping for" to x ms (various values)
@@ -23,7 +24,6 @@ Other
 +SWS auto-update now checks for REAPER compatibility before announcing a new SWS version is available
 +Increased all SWS/BR slot actions count to 16
 +Optimizations around item/take selection/activation
-
 
 ReaScript
 +Added functions:

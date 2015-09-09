@@ -1504,7 +1504,7 @@ void CopyEnvPoints (COMMAND_T* ct)
 		{
 			BR_Envelope targetEnv(envPtr);
 
-			if (targetEnv.IsVisible() && (!recordArm || recordArm && targetEnv.IsArmed()))
+			if (targetEnv.IsVisible() && (!recordArm || targetEnv.IsArmed()))
 			{
 				targetEnv.UnselectAll();
 				targetEnv.DeletePointsInRange(startTime, endTime);

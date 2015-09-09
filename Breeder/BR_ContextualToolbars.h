@@ -210,7 +210,7 @@ private:
 		int toggleAction;
 		#ifndef _WIN32
 			int level;
-		#endif;
+		#endif
 		ToolbarWndData ();
 	};
 	enum ToolbarActions

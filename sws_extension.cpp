@@ -1062,8 +1062,8 @@ error:
 			char txt[2048]="";
 			_snprintfSafe(txt, sizeof(txt),
 					// keep the message on a single line (for the LangPack generator)
-					__LOCALIZE_VERFMT("The version of SWS extension you have installed is incompatible with your version of REAPER.\nYou probably have a REAPER version less than %s installed.\nPlease install the latest version of REAPER from www.reaper.fm.","sws_mbox"),
-					"v5.0rc1"); // <-- update compatible version here
+					__LOCALIZE_VERFMT("The version of SWS extension you have installed is incompatible with your version of REAPER. You probably have a REAPER version less than v%d.%d%.0d installed.\r\nPlease install the latest version of REAPER from www.reaper.fm.","sws_mbox"),
+					REA_VERSION);
 
 			ErrMsg(txt,false);
 			goto error;

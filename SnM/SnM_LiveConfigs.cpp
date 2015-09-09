@@ -2131,7 +2131,7 @@ void WaitForMuteAndSendCC123(LiveConfig* _lc, LiveConfigItem* _cfg, DWORD* _mute
 
 	if (_lc->m_cc123 && SendAllNotesOff(_cc123Tracks)) {
 		WaitForAllNotesOff();
-		_cc123Tracks->Empty(false);
+		_cc123Tracks->Empty();
 	}
 }
 

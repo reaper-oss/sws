@@ -1028,7 +1028,7 @@ bool DeleteTakeAndMedia(int _mode)
 		for (int j=0;j<removedItems.GetSize();j++)
 			DeleteTrackMediaItem(tr, (MediaItem*)removedItems.Get(j));
 
-		removedItems.Empty(false);
+		removedItems.Empty();
 	}
 	removeFiles.DeleteAll();
 	Main_OnCommand(40101,0); // set all media online
@@ -1258,7 +1258,7 @@ void RefreshOffscreenItems()
 	SWS_SectionLock lock(&g_toolbarItemSelLock);
 #endif
 	for(int i=0; i<SNM_ITEM_SEL_COUNT; i++)
-		g_toolbarItemSel[i].Empty(false);
+		g_toolbarItemSel[i].Empty();
 
 	if (CountSelectedMediaItems(NULL))
 	{
@@ -1362,14 +1362,14 @@ bool ToggleOffscreenSelItems(int _dir) // primitive func
 
 		if (l1 && l2) 
 		{
-			l2->Empty(false);
+			l2->Empty();
 			for (int j=0; j < l1->GetSize(); j++)
 			{
 				GetSetMediaItemInfo((MediaItem*)l1->Get(j), "B_UISEL", &toggle);
 				l2->Add((MediaItem*)l1->Get(j));
 				updated = true;
 			}
-			l1->Empty(false);
+			l1->Empty();
 
 			// in case auto-refresh toolbar option is off..
 			RefreshToolbar(SWSGetCommandID(ToggleOffscreenSelItems, i));

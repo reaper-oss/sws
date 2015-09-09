@@ -749,7 +749,7 @@ const char* FindFirstRN(const char* _str, bool _anyOrder)
 char* ShortenStringToFirstRN(char* _str, bool _anyOrder)
 {
 	char* p = NULL;
-	if (p = (char*)FindFirstRN(_str, _anyOrder))
+	if ((p = (char*)FindFirstRN(_str, _anyOrder)))
 		*p = '\0'; 
 	return p;
 }

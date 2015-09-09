@@ -1432,16 +1432,21 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 
 	// save region/marker subs
 	for (int i=0; i<g_pRegionSubs.Get()->GetSize(); i++)
+	{
 		if (SNM_RegionSubtitle* sub = g_pRegionSubs.Get()->Get(i))
-			if (sub->m_notes.GetLength() && 
-				GetMarkerRegionIndexFromId(NULL, sub->m_id) >= 0) // valid mkr/rgn?
+		{
+			if (sub->m_notes.GetLength() && GetMarkerRegionIndexFromId(NULL, sub->m_id) >= 0) // valid mkr/rgn?
 			{
 				if (_snprintfStrict(line, sizeof(line), "<S&M_SUBTITLE %d\n|", sub->m_id) > 0)
 					if (GetNotesChunkFromString(sub->m_notes.Get(), &formatedNotes, line))
 						StringToExtensionConfig(&formatedNotes, ctx);
 			}
 			else
+			{
 				g_pRegionSubs.Get()->Delete(i--, true);
+			}
+		}
+	}
 }
 
 static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t *reg)

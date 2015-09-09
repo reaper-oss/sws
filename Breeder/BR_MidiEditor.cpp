@@ -637,7 +637,7 @@ void ME_IncDecAllCCLanesHeight (COMMAND_T* ct, int val, int valhw, int relmode, 
 					int laneId = 0;
 					int newFullHeight = 0;
 					int fullHeight = 0;
-					while (int position = ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "SOURCE", "VELLANE", laneId, -1, &lineLane))
+					while (ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "SOURCE", "VELLANE", laneId, -1, &lineLane))
 					{
 						lp.parse(lineLane.Get());
 						int newHeight = lp.gettoken_int(2) + heightDiff;

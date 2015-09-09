@@ -407,7 +407,7 @@ double EndOfProject (bool markers, bool regions)
 	if (markers || regions)
 	{
 		bool region; double start, end; int i = 0;
-		while (i = EnumProjectMarkers(i, &region, &start, &end, NULL, NULL))
+		while ((i = EnumProjectMarkers(i, &region, &start, &end, NULL, NULL)))
 		{
 			if (regions)
 				if (region && end > projEnd)
@@ -670,7 +670,7 @@ int GetEffectiveCompactLevel (MediaTrack* track)
 {
 	int compact = 0;
 	MediaTrack* parent = track;
-	while (parent = (MediaTrack*)GetSetMediaTrackInfo(parent, "P_PARTRACK", NULL))
+	while ((parent = (MediaTrack*)GetSetMediaTrackInfo(parent, "P_PARTRACK", NULL)))
 	{
 		int tmp = (int)GetMediaTrackInfo_Value(parent, "I_FOLDERCOMPACT");
 		if (tmp > compact)
@@ -1206,7 +1206,7 @@ bool SetMediaSourceProperties (MediaItem_Take* take, bool section, double start,
 		{
 			newSource = mediaSource->Duplicate();
 		}
-		else if (newSource = PCM_Source_CreateFromType("SECTION"))
+		else if ((newSource = PCM_Source_CreateFromType("SECTION")))
 		{
 			newSource->SetSource(DuplicateSource(mediaSource));
 			WDL_FastString sourceStr;
@@ -2895,7 +2895,7 @@ HWND GetTcpTrackWnd (MediaTrack* track)
 		if ((MediaTrack*)GetWindowLongPtr(hwnd, GWLP_USERDATA) == track)
 			return hwnd;
 	}
-	while (hwnd = GetWindow(hwnd, GW_HWNDNEXT));
+	while ((hwnd = GetWindow(hwnd, GW_HWNDNEXT)));
 
 	return NULL;
 }
@@ -3317,7 +3317,7 @@ void DrawTooltip (LICE_IBitmap* bm, const char* text)
 		{
 			if (HFONT ttFont = (HFONT)SendMessage(GetTooltipWindow(), WM_GETFONT, 0, 0))
 			{
-				if (s_font = new (nothrow) LICE_CachedFont())
+				if ((s_font = new (nothrow) LICE_CachedFont()))
 				{
 					#ifdef _WIN32
 						s_font->SetFromHFont(ttFont, LICE_FONT_FLAG_OWNS_HFONT | LICE_FONT_FLAG_FORCE_NATIVE);

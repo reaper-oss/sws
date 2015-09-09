@@ -651,10 +651,10 @@ WDL_DLGRET ItemInterpDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 			LVCOLUMN col;
 			col.mask=LVCF_TEXT|LVCF_WIDTH;
 			col.cx=15;
-			col.pszText="";
+			col.pszText=(char*)"";
 			ListView_InsertColumn(GetDlgItem(hwnd,IDC_IIACTPARLIST), 0 ,&col);
 			col.cx=140;
-			col.pszText="Property";
+			col.pszText=(char*)"Property";
 			ListView_InsertColumn(GetDlgItem(hwnd,IDC_IIACTPARLIST), 1 ,&col);
 			for (int i = 0; g_IIproperties[i].Name; i++)
 			{

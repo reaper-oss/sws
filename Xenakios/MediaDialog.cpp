@@ -326,13 +326,13 @@ WDL_DLGRET MulMatchesFoundDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM
 			LVCOLUMN col;
 			col.mask=LVCF_TEXT|LVCF_WIDTH;
 			col.cx=425;
-			col.pszText="File name";
+			col.pszText=(char*)"File name";
 			ListView_InsertColumn(GetDlgItem(hwnd,IDC_MULMATCHLIST), 0 , &col);
 			col.cx=100;
-			col.pszText="Date Modified";
+			col.pszText=(char*)"Date Modified";
 			ListView_InsertColumn(GetDlgItem(hwnd,IDC_MULMATCHLIST), 1 , &col);
 			col.cx=75;
-			col.pszText="Size (MB)";
+			col.pszText=(char*)"Size (MB)";
 			ListView_InsertColumn(GetDlgItem(hwnd,IDC_MULMATCHLIST), 2 , &col);
 			LVITEM item;
 			char buf[2048];
@@ -687,21 +687,21 @@ WDL_DLGRET ProjMediaDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 			LVCOLUMN col;
 			col.mask=LVCF_TEXT|LVCF_WIDTH;
 			col.cx=295;
-			col.pszText="File name";
+			col.pszText=(char*)"File name";
 			ListView_InsertColumn(GetDlgItem(hwnd,IDC_PROJFILES_USED), 0 , &col);
 			col.cx=50;
-			col.pszText="Used";
+			col.pszText=(char*)"Used";
 			ListView_InsertColumn(GetDlgItem(hwnd,IDC_PROJFILES_USED), 1 , &col);
 			col.cx=50;
-			col.pszText="Status";
+			col.pszText=(char*)"Status";
 			ListView_InsertColumn(GetDlgItem(hwnd,IDC_PROJFILES_USED), 2 , &col);
 
 			col.cx=345;
-			col.pszText="File name";
+			col.pszText=(char*)"File name";
 			ListView_InsertColumn(GetDlgItem(hwnd,IDC_PROJFOLMEDLIST), 0 , &col);
 
 			col.cx=50;
-			col.pszText="Used in project";
+			col.pszText=(char*)"Used in project";
 			ListView_InsertColumn(GetDlgItem(hwnd,IDC_PROJFOLMEDLIST), 1 , &col);
 
 			PopulateProjectUsedList(IsDlgButtonChecked(hwnd, IDC_HIDEPATHS) == BST_CHECKED);

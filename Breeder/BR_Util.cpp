@@ -3517,8 +3517,8 @@ bool IsLastTakeTooTall (int itemHeight, int averageTakeHeight, int effectiveTake
 int GetItemHeight (MediaItem* item, int* offsetY, int trackHeight, int trackOffsetY)
 {
 	/* Reaper takes into account FIPM and overlapping media item lanes *
-	/* so no gotchas here besides track height checking since I_LASTH  *
-	/* might return wrong value when track height is 0                 */
+	 * so no gotchas here besides track height checking since I_LASTH  *
+	 * might return wrong value when track height is 0                 */
 
 	if (trackHeight == 0 || !item)
 	{

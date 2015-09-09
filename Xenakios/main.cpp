@@ -652,7 +652,7 @@ void DoRenameMarkersWithAscendingNumbers(COMMAND_T* ct)
 	int number, color;
 	char newmarkname[100];
 	int j=1;
-	while (x = EnumProjectMarkers3(NULL, x, &isrgn, &pos, &rgnend, NULL, &number, &color))
+	while ((x = EnumProjectMarkers3(NULL, x, &isrgn, &pos, &rgnend, NULL, &number, &color)))
 	{
 		if (!isrgn)
 		{

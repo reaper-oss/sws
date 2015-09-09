@@ -142,7 +142,7 @@ void MarkerNudge(bool bRight)
 	double dPos, dEnd;
 	bool bReg;
 	double dCurPos = GetCursorPosition();
-	while (x = EnumProjectMarkers3(NULL, x, &bReg, &dPos, &dEnd, NULL, &iIndex, &iColor))
+	while ((x = EnumProjectMarkers3(NULL, x, &bReg, &dPos, &dEnd, NULL, &iIndex, &iColor)))
 	{
 		if (dPos == dCurPos)
 		{

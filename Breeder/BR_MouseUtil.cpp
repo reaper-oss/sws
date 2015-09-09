@@ -685,13 +685,13 @@ void BR_MouseInfo::GetContext (const POINT& p)
 		if (!found && ((m_mode & BR_MouseInfo::MODE_ALL) || (m_mode & BR_MouseInfo::MODE_MCP_TCP)))
 		{
 			int context;
-			if (mouseInfo.track = HwndToTrack(hwnd, &context))
+			if ((mouseInfo.track = HwndToTrack(hwnd, &context)))
 			{
 				mouseInfo.window = (context == 1) ? "tcp" : "mcp";
 				mouseInfo.segment = "track";
 				found = true;
 			}
-			else if (mouseInfo.envelope = HwndToEnvelope(hwnd))
+			else if ((mouseInfo.envelope = HwndToEnvelope(hwnd)))
 			{
 				mouseInfo.window = "tcp";
 				mouseInfo.segment = "envelope";

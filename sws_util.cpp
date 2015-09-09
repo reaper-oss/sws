@@ -304,7 +304,7 @@ void* GetConfigVar(const char* cVar)
 	{
 		p = projectconfig_var_addr(EnumProjects(-1, NULL, 0), iOffset);
 	}
-	else if (p = get_config_var(cVar, &sztmp))
+	else if ((p = get_config_var(cVar, &sztmp)))
 	{
 	}
 	else

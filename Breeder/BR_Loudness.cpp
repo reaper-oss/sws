@@ -2007,7 +2007,7 @@ static WDL_DLGRET NormalizeProgressProc (HWND hwnd, UINT uMsg, WPARAM wParam, LP
 				}
 
 				// Start analysis of the next item
-				if (s_currentItem = s_normalizeData->items->Get(s_currentItemId))
+				if ((s_currentItem = s_normalizeData->items->Get(s_currentItemId)))
 				{
 					s_currentItemLen = s_currentItem->GetAudioLength();
 					s_currentItem->Analyze(s_normalizeData->quickMode, false);
@@ -2424,19 +2424,19 @@ WDL_FastString BR_AnalyzeLoudnessWnd::CreateExportString (bool previewOnly)
 			if (!strncmp(format, "$", 1))
 			{
 				// keep alphabetically sorted with longer names first (itemnumber before item)
-				if (foundWildcard = !strncmp(format, "$$", strlen("$$")))
+				if ((foundWildcard = !strncmp(format, "$$", strlen("$$"))))
 				{
 					for (int i = 0; i < strings.GetSize(); ++i)
 						strings.Get(i)->Append("$");
 					step = strlen("$$");
 				}
-				else if (foundWildcard = !strncmp(format, "$end", strlen("$end")))
+				else if ((foundWildcard = !strncmp(format, "$end", strlen("$end"))))
 				{
 					for (int i = 0; i < strings.GetSize(); ++i)
 						strings.Get(i)->AppendFormatted(128, "%.3lf", objects.Get(i)->GetAudioEnd());
 					step = strlen("$end");
 				}
-				else if (foundWildcard = !strncmp(format, "$id", strlen("$id")))
+				else if ((foundWildcard = !strncmp(format, "$id", strlen("$id"))))
 				{
 					for (int i = 0; i < strings.GetSize(); ++i)
 					{
@@ -2446,7 +2446,7 @@ WDL_FastString BR_AnalyzeLoudnessWnd::CreateExportString (bool previewOnly)
 					}
 					step = strlen("$id");
 				}
-				else if (foundWildcard = !strncmp(format, "$integrated", strlen("$integrated")))
+				else if ((foundWildcard = !strncmp(format, "$integrated", strlen("$integrated"))))
 				{
 					for (int i = 0; i < strings.GetSize(); ++i)
 					{
@@ -2456,13 +2456,13 @@ WDL_FastString BR_AnalyzeLoudnessWnd::CreateExportString (bool previewOnly)
 					}
 					step = strlen("$integrated");
 				}
-				else if (foundWildcard = !strncmp(format, "$itemnumber", strlen("$itemnumber")))
+				else if ((foundWildcard = !strncmp(format, "$itemnumber", strlen("$itemnumber"))))
 				{
 					for (int i = 0; i < strings.GetSize(); ++i)
 						strings.Get(i)->AppendFormatted(128, "%d", objects.Get(i)->GetItemNumber());
 					step = strlen("$itemnumber");
 				}
-				else if (foundWildcard = !strncmp(format, "$item", strlen("$item")))
+				else if ((foundWildcard = !strncmp(format, "$item", strlen("$item"))))
 				{
 					for (int i = 0; i < strings.GetSize(); ++i)
 					{
@@ -2472,37 +2472,37 @@ WDL_FastString BR_AnalyzeLoudnessWnd::CreateExportString (bool previewOnly)
 					}
 					step = strlen("$item");
 				}
-				else if (foundWildcard = !strncmp(format, "$length", strlen("$length")))
+				else if ((foundWildcard = !strncmp(format, "$length", strlen("$length"))))
 				{
 					for (int i = 0; i < strings.GetSize(); ++i)
 							strings.Get(i)->AppendFormatted(128, "%.3lf", objects.Get(i)->GetAudioLength());
 					step = strlen("$length");
 				}
-				else if (foundWildcard = !strncmp(format, "$luformat", strlen("$luformat")))
+				else if ((foundWildcard = !strncmp(format, "$luformat", strlen("$luformat"))))
 				{
 					for (int i = 0; i < strings.GetSize(); ++i)
 						strings.Get(i)->Append(g_pref.GetFormatedLUString().Get());
 					step = strlen("$luformat");
 				}
-				else if (foundWildcard = !strncmp(format, "$lureference", strlen("$lureference")))
+				else if ((foundWildcard = !strncmp(format, "$lureference", strlen("$lureference"))))
 				{
 					for (int i = 0; i < strings.GetSize(); ++i)
 						strings.Get(i)->AppendFormatted(128, "%g %s", g_pref.GetReferenceLU(), __LOCALIZE("LUFS", "sws_loudness"));
 					step = strlen("$lureference");
 				}
-				else if (foundWildcard = !strncmp(format, "$maxmomentaryposproj", strlen("$maxmomentaryposproj")))
+				else if ((foundWildcard = !strncmp(format, "$maxmomentaryposproj", strlen("$maxmomentaryposproj"))))
 				{
 					for (int i = 0; i < strings.GetSize(); ++i)
 						strings.Get(i)->AppendFormatted(256, "%.3lf", objects.Get(i)->GetMaxMomentaryPos(true));
 					step = strlen("$maxmomentaryposproj");
 				}
-				else if (foundWildcard = !strncmp(format, "$maxmomentarypos", strlen("$maxmomentarypos")))
+				else if ((foundWildcard = !strncmp(format, "$maxmomentarypos", strlen("$maxmomentarypos"))))
 				{
 					for (int i = 0; i < strings.GetSize(); ++i)
 						strings.Get(i)->AppendFormatted(256, "%.3lf", objects.Get(i)->GetMaxMomentaryPos(false));
 					step = strlen("$maxmomentarypos");
 				}
-				else if (foundWildcard = !strncmp(format, "$maxmomentary", strlen("$maxmomentary")))
+				else if ((foundWildcard = !strncmp(format, "$maxmomentary", strlen("$maxmomentary"))))
 				{
 					for (int i = 0; i < strings.GetSize(); ++i)
 					{
@@ -2512,19 +2512,19 @@ WDL_FastString BR_AnalyzeLoudnessWnd::CreateExportString (bool previewOnly)
 					}
 					step = strlen("$maxmomentary");
 				}
-				else if (foundWildcard = !strncmp(format, "$maxshortposproj", strlen("$maxshortposproj")))
+				else if ((foundWildcard = !strncmp(format, "$maxshortposproj", strlen("$maxshortposproj"))))
 				{
 					for (int i = 0; i < strings.GetSize(); ++i)
 						strings.Get(i)->AppendFormatted(256, "%.3lf", objects.Get(i)->GetMaxShorttermPos(true));
 					step = strlen("$maxshortposproj");
 				}
-				else if (foundWildcard = !strncmp(format, "$maxshortpos", strlen("$maxshortpos")))
+				else if ((foundWildcard = !strncmp(format, "$maxshortpos", strlen("$maxshortpos"))))
 				{
 					for (int i = 0; i < strings.GetSize(); ++i)
 						strings.Get(i)->AppendFormatted(256, "%.3lf", objects.Get(i)->GetMaxShorttermPos(false));
 					step = strlen("$maxshortpos");
 				}
-				else if (foundWildcard = !strncmp(format, "$maxshort", strlen("$maxshort")))
+				else if ((foundWildcard = !strncmp(format, "$maxshort", strlen("$maxshort"))))
 				{
 					for (int i = 0; i < strings.GetSize(); ++i)
 					{
@@ -2534,7 +2534,7 @@ WDL_FastString BR_AnalyzeLoudnessWnd::CreateExportString (bool previewOnly)
 					}
 					step = strlen("$maxshort");
 				}
-				else if (foundWildcard = !strncmp(format, "$n", strlen("$n")))
+				else if ((foundWildcard = !strncmp(format, "$n", strlen("$n"))))
 				{
 					for (int i = 0; i < strings.GetSize(); ++i)
 					{
@@ -2549,7 +2549,7 @@ WDL_FastString BR_AnalyzeLoudnessWnd::CreateExportString (bool previewOnly)
 					}
 					step = strlen("$n");
 				}
-				else if (foundWildcard = !strncmp(format, "$range", strlen("$range")))
+				else if ((foundWildcard = !strncmp(format, "$range", strlen("$range"))))
 				{
 					for (int i = 0; i < strings.GetSize(); ++i)
 					{
@@ -2559,19 +2559,19 @@ WDL_FastString BR_AnalyzeLoudnessWnd::CreateExportString (bool previewOnly)
 					}
 					step = strlen("$range");
 				}
-				else if (foundWildcard = !strncmp(format, "$start", strlen("$start")))
+				else if ((foundWildcard = !strncmp(format, "$start", strlen("$start"))))
 				{
 					for (int i = 0; i < strings.GetSize(); ++i)
 						strings.Get(i)->AppendFormatted(128, "%.3lf", objects.Get(i)->GetAudioStart());
 					step = strlen("$start");
 				}
-				else if (foundWildcard = !strncmp(format, "$targetnumber", strlen("$targetnumber")))
+				else if ((foundWildcard = !strncmp(format, "$targetnumber", strlen("$targetnumber"))))
 				{
 					for (int i = 0; i < strings.GetSize(); ++i)
 						strings.Get(i)->AppendFormatted(128, "%d", objects.Get(i)->IsTrack() ? objects.Get(i)->GetTrackNumber() : objects.Get(i)->GetItemNumber());
 					step = strlen("$targetnumber");
 				}
-				else if (foundWildcard = !strncmp(format, "$target", strlen("$target")))
+				else if ((foundWildcard = !strncmp(format, "$target", strlen("$target"))))
 				{
 					for (int i = 0; i < strings.GetSize(); ++i)
 					{
@@ -2581,13 +2581,13 @@ WDL_FastString BR_AnalyzeLoudnessWnd::CreateExportString (bool previewOnly)
 					}
 					step = strlen("$target");
 				}
-				else if (foundWildcard = !strncmp(format, "$tracknumber", strlen("$tracknumber")))
+				else if ((foundWildcard = !strncmp(format, "$tracknumber", strlen("$tracknumber"))))
 				{
 					for (int i = 0; i < strings.GetSize(); ++i)
 						strings.Get(i)->AppendFormatted(128, "%d", objects.Get(i)->GetTrackNumber());
 					step = strlen("$tracknumber");
 				}
-				else if (foundWildcard = !strncmp(format, "$track", strlen("$track")))
+				else if ((foundWildcard = !strncmp(format, "$track", strlen("$track"))))
 				{
 					for (int i = 0; i < strings.GetSize(); ++i)
 					{
@@ -2597,19 +2597,19 @@ WDL_FastString BR_AnalyzeLoudnessWnd::CreateExportString (bool previewOnly)
 					}
 					step = strlen("$track");
 				}
-				else if (foundWildcard = !strncmp(format, "$truepeakposproj", strlen("$truepeakposproj")))
+				else if ((foundWildcard = !strncmp(format, "$truepeakposproj", strlen("$truepeakposproj"))))
 				{
 					for (int i = 0; i < strings.GetSize(); ++i)
 						strings.Get(i)->AppendFormatted(256, "%.3lf", objects.Get(i)->GetTruePeakPos(true));
 					step = strlen("$truepeakposproj");
 				}
-				else if (foundWildcard = !strncmp(format, "$truepeakpos", strlen("$truepeakpos")))
+				else if ((foundWildcard = !strncmp(format, "$truepeakpos", strlen("$truepeakpos"))))
 				{
 					for (int i = 0; i < strings.GetSize(); ++i)
 						strings.Get(i)->AppendFormatted(256, "%.3lf", objects.Get(i)->GetTruePeakPos(false));
 					step = strlen("$truepeakpos");
 				}
-				else if (foundWildcard = !strncmp(format, "$truepeak", strlen("$truepeak")))
+				else if ((foundWildcard = !strncmp(format, "$truepeak", strlen("$truepeak"))))
 				{
 					for (int i = 0; i < strings.GetSize(); ++i)
 					{
@@ -2619,7 +2619,7 @@ WDL_FastString BR_AnalyzeLoudnessWnd::CreateExportString (bool previewOnly)
 					}
 					step = strlen("$truepeak");
 				}
-				else if (foundWildcard = !strncmp(format, "$t", strlen("$t")))
+				else if ((foundWildcard = !strncmp(format, "$t", strlen("$t"))))
 				{
 					for (int i = 0; i < strings.GetSize(); ++i)
 					{
@@ -3440,7 +3440,7 @@ void BR_AnalyzeLoudnessWnd::OnTimer (WPARAM wParam)
 			}
 			else
 			{
-				if (s_currentObject = m_analyzeQueue.Get(0))
+				if ((s_currentObject = m_analyzeQueue.Get(0)))
 				{
 					s_currentObjectLen = s_currentObject->GetAudioLength();
 					s_currentObject->Analyze(false, m_properties.doTruePeak);
@@ -3496,7 +3496,7 @@ void BR_AnalyzeLoudnessWnd::OnTimer (WPARAM wParam)
 			}
 			else
 			{
-				if (s_currentObject = m_reanalyzeQueue.Get(0))
+				if ((s_currentObject = m_reanalyzeQueue.Get(0)))
 				{
 					s_currentObjectLen = s_currentObject->GetAudioLength();
 					s_currentObject->Analyze(false, m_properties.doTruePeak);

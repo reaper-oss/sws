@@ -761,7 +761,7 @@ public:
 			ZoomToProject();
 
 		HWND hTrackView = GetTrackWnd();
-		if (!hTrackView || m_dHZoom == 0.0 && m_iVZoom == 0)
+		if (!hTrackView || (m_dHZoom == 0.0 && m_iVZoom == 0))
 			return;
 
 		adjustZoom(m_dHZoom, 1, false, -1);

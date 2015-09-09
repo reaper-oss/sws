@@ -175,6 +175,8 @@ void RprMidiEvent::setMessageType(RprMidiEvent::MessageType messageType)
         case PitchBend:
             messageNibble = 0xE;
             break;
+        default:
+            break;
     }
     mMidiMessage[0] &= 0x0F;
     mMidiMessage[0] |= (messageNibble << 4);

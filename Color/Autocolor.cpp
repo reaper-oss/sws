@@ -903,7 +903,7 @@ void ApplyColorRuleToMarkerRegion(SWS_RuleItem* _rule, int _flags)
 	PreventUIRefresh(1);
 	if(_rule->m_type & _flags)
 	{
-		while (x = EnumProjectMarkers3(NULL, x, &isRgn, &pos, &end, &name, &num, &color))
+		while ((x = EnumProjectMarkers3(NULL, x, &isRgn, &pos, &end, &name, &num, &color)))
 		{
 			if ((!strcmp(cFilterTypes[AC_RGNANY], _rule->m_str_filter.Get()) ||
 				(!strcmp(cFilterTypes[AC_RGNUNNAMED], _rule->m_str_filter.Get()) && (!name || !*name)) ||

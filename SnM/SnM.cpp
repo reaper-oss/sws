@@ -57,7 +57,7 @@ void Noop(COMMAND_T* _ct) {
 void Noop2(COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd)
 {
 	WDL_FastString str;
-  str.SetFormatted(512, "Noop2: _val=%d, _valhw=%d, _relmode=%d\r\n", _val, _valhw, _relmode, _valhw|(_val<<7));
+	str.SetFormatted(512, "Noop2: _val=%d, _valhw=%d, _relmode=%d, val14=%d\r\n", _val, _valhw, _relmode, _valhw|(_val<<7));
 	ShowConsoleMsg(str.Get());
 }
 
@@ -874,6 +874,26 @@ bool SNM_GetActionName(const char* _custId, WDL_FastString* _nameOut, int _slot)
 	return false;
 }
 
+
+///////////////////////////////////////////////////////////////////////////////
+// Action sections info, keep SNM_SEC_IDX_* enums in sync!
+///////////////////////////////////////////////////////////////////////////////
+
+SECTION_INFO_T *SNM_GetActionSectionInfo(int _idx)
+{
+  static SECTION_INFO_T sectionInfos[] = {
+    {0,		"S&M_CYCLACTION_",			"Main_Cyclactions"},
+    {100,	"S&M_MAIN_ALT_CYCLACTION",	"MainAlt_Cyclactions"},
+    {32063,	"S&M_MEDIAEX_CYCLACTION",	"MediaEx_Cyclactions"},
+    {32060,	"S&M_ME_PIANO_CYCLACTION",	"ME_Piano_Cyclactions"},
+    {32061,	"S&M_ME_LIST_CYCLACTION",	"ME_List_Cyclactions"},
+    {32062,	"S&M_ME_INLINE_CYCLACTION", "ME_Inline_Cyclactions"},
+    {SNM_SECTION_ID, "", ""}
+  };  
+  return (_idx>=SNM_SEC_IDX_MAIN && _idx<SNM_NUM_MANAGED_SECTIONS ? &sectionInfos[_idx] : NULL);
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // Fake toggle states
 // Those fake states are automatically toggled when actions are performed, 
@@ -1172,7 +1192,7 @@ int MidiOscActionJob::AdjustRelative(int _adjmode, int _reladj)
 {
   if (_adjmode==1) { if (_reladj >= 0x40) _reladj|=~0x3f; } // sign extend if 0x40 set
   else if (_adjmode==2) { _reladj-=0x40; } // offset by 0x40
-  else if (_adjmode==3) { if (_reladj&0x40) _reladj=-(_reladj&0x3f); } // 0x40 is sign bit
+  else if (_adjmode==3) { if (_reladj&0x40) _reladj = -(_reladj&0x3f); } // 0x40 is sign bit
   else _reladj=0;
   return _reladj;
 }

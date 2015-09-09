@@ -353,15 +353,7 @@ enum {
 };
 
 // various properties indexed with the above enum: keep both in sync!
-static SECTION_INFO_T s_SNM_sectionInfos[] = {
-	{0,		"S&M_CYCLACTION_",			"Main_Cyclactions"},
-	{100,	"S&M_MAIN_ALT_CYCLACTION",	"MainAlt_Cyclactions"},
-	{32063,	"S&M_MEDIAEX_CYCLACTION",	"MediaEx_Cyclactions"},
-	{32060,	"S&M_ME_PIANO_CYCLACTION",	"ME_Piano_Cyclactions"},
-	{32061,	"S&M_ME_LIST_CYCLACTION",	"ME_List_Cyclactions"},
-	{32062,	"S&M_ME_INLINE_CYCLACTION", "ME_Inline_Cyclactions"},
-	{SNM_SECTION_ID, "", ""}
-};
+SECTION_INFO_T *SNM_GetActionSectionInfo(int _idx);
 
 #define SNM_NUM_NATIVE_SECTIONS		SNM_SEC_IDX_SNM
 #define SNM_MAX_CA_SECTIONS			SNM_NUM_NATIVE_SECTIONS

@@ -53,20 +53,32 @@ bool g_undos = true; // consolidate undo points
 // CA helpers
 ///////////////////////////////////////////////////////////////////////////////
 
-const char* GetCACustomId(int _sectionIdx) {
-	return _sectionIdx>=0 && _sectionIdx<SNM_MAX_CA_SECTIONS ? s_SNM_sectionInfos[_sectionIdx].ca_cust_id : "";
+const char* GetCACustomId(int _sectionIdx)
+{
+	if (_sectionIdx>=0 && _sectionIdx<SNM_MAX_CA_SECTIONS)
+	{
+		SECTION_INFO_T *info = SNM_GetActionSectionInfo(_sectionIdx);
+		if (info) return info->ca_cust_id;
+	}
+	return "";
 }
 
 int GetCASectionFromCustId(const char* _custId)
 {
 	for (int idx=0; idx<SNM_MAX_CA_SECTIONS; idx++)
-		if (strstr(_custId, s_SNM_sectionInfos[idx].ca_cust_id))
+		if (strstr(_custId, GetCACustomId(idx)))
 			return idx;
 	return -1;
 }
 
-const char* GetCAIniSection(int _sectionIdx) {
-	return _sectionIdx>=0 && _sectionIdx<SNM_MAX_CA_SECTIONS ? s_SNM_sectionInfos[_sectionIdx].ca_ini_sec : "";
+const char* GetCAIniSection(int _sectionIdx)
+{
+	if (_sectionIdx>=0 && _sectionIdx<SNM_MAX_CA_SECTIONS)
+	{
+		SECTION_INFO_T *info = SNM_GetActionSectionInfo(_sectionIdx);
+		if (info) return info->ca_ini_sec;
+	}
+	return "";
 }
 
 // this func works for CAs that are not registered yet

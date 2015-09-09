@@ -1009,14 +1009,17 @@ int CheckSwsMacroScriptNumCustomId(const char* _custId, int _secIdx)
 	return 0;
 }
 
-int SNM_GetActionSectionUniqueId(int _sectionIdx) {
-	return _sectionIdx>=0 && _sectionIdx<SNM_NUM_MANAGED_SECTIONS ? s_SNM_sectionInfos[_sectionIdx].unique_id : -1;
+int SNM_GetActionSectionUniqueId(int _sectionIdx)
+{
+	SECTION_INFO_T *info = SNM_GetActionSectionInfo(_sectionIdx);
+	if (info) return info->unique_id;
+	return -1;
 }
 
 int SNM_GetActionSectionIndex(int _uniqueId)
 {
 	for (int i=0; i<SNM_NUM_MANAGED_SECTIONS; i++)
-		if (s_SNM_sectionInfos[i].unique_id == _uniqueId)
+		if (SNM_GetActionSectionUniqueId(i) == _uniqueId)
 			return i;
 	return -1;
 }

@@ -1291,7 +1291,7 @@ bool ExportSubRipFile(const char* _fn)
 	{
 		WDL_FastString subs;
 		int x=0, subIdx=1, num; bool isRgn; double p1, p2;
-		while (x = EnumProjectMarkers2(NULL, x, &isRgn, &p1, &p2, NULL, &num))
+		while ((x = EnumProjectMarkers2(NULL, x, &isRgn, &p1, &p2, NULL, &num)))
 		{
 			// special case for markers: end position = next start position
 			if (!isRgn)

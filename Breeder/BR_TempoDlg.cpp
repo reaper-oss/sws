@@ -1450,7 +1450,7 @@ WDL_DLGRET SelectAdjustTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			static WDL_FastString* s_title = NULL;
 			if (!s_title)
 			{
-				if (s_title = new (nothrow) WDL_FastString())
+				if ((s_title = new (nothrow) WDL_FastString()))
 				{
 					s_title->AppendFormatted(62, "%s", "SWS/BR - ");
 					s_title->AppendFormatted(512, "%s", __LOCALIZE_VERFMT("Select and adjust tempo markers (%d of %d points selected)", "sws_DLG_167"));

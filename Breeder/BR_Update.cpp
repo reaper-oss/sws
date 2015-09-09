@@ -385,7 +385,9 @@ unsigned WINAPI BR_SearchObject::StartSearch (void* searchObject)
 		GetStartupSearchOptions(&searchO, &searchB, NULL);
 
 	// Get official version and compare
-	BR_Version versionO;
+	double runningReaVer = atof(GetAppVersion());
+
+	BR_Version versionO, reaperO;
 	int statusO = NO_CONNECTION;
 	if (searchO && !_this->GetKillFlag())
 	{
@@ -411,12 +413,13 @@ unsigned WINAPI BR_SearchObject::StartSearch (void* searchObject)
 					char* token = strtok(buf, "\n");
 					while (token != NULL)
 					{
-						if (sscanf(token, "#define SWS_VERSION %10d,%10d,%10d,%10d", &versionO.maj, &versionO.min, &versionO.rev, &versionO.build) > 0)
-							break;
+						if (sscanf(token, "#define SWS_VERSION %10d,%10d,%10d,%10d", &versionO.maj, &versionO.min, &versionO.rev, &versionO.build) > 0) {}
+						else if (sscanf(token, "#define REA_VERSION %10d,%10d,%10d,%10d", &reaperO.maj, &reaperO.min, &reaperO.rev, &reaperO.build) > 0) break;
 						token = strtok(NULL, "\n");
 					}
 
-					if (_this->CompareVersion(versionO, versionL) == 1)
+					double compatibleReaVerO = (double)reaperO.maj + (double)reaperO.min*0.1 + (double)reaperO.rev*0.01 + (double)reaperO.build*0.001;
+					if (runningReaVer >= compatibleReaVerO && _this->CompareVersion(versionO, versionL) == 1)
 						statusO = OFFICIAL_AVAILABLE;
 					else
 						statusO = UP_TO_DATE;
@@ -429,7 +432,7 @@ unsigned WINAPI BR_SearchObject::StartSearch (void* searchObject)
 	}
 
 	// Get beta version and compare
-	BR_Version versionB;
+	BR_Version versionB, reaperB;
 	int statusB = NO_CONNECTION;
 	if (searchB && !_this->GetKillFlag())
 	{
@@ -455,12 +458,13 @@ unsigned WINAPI BR_SearchObject::StartSearch (void* searchObject)
 					char* token = strtok(buf, "\n");
 					while (token != NULL)
 					{
-						if (sscanf(token, "#define SWS_VERSION %10d,%10d,%10d,%10d", &versionB.maj, &versionB.min, &versionB.rev, &versionB.build) > 0)
-							break;
+						if (sscanf(token, "#define SWS_VERSION %10d,%10d,%10d,%10d", &versionB.maj, &versionB.min, &versionB.rev, &versionB.build) > 0) {}
+						else if (sscanf(token, "#define REA_VERSION %10d,%10d,%10d,%10d", &reaperB.maj, &reaperB.min, &reaperB.rev, &reaperB.build) > 0) break;
 						token = strtok(NULL, "\n");
 					}
 
-					if (_this->CompareVersion(versionB, versionL) == 1)
+					double compatibleReaVerB = (double)reaperB.maj + (double)reaperB.min*0.1 + (double)reaperB.rev*0.01 + (double)reaperB.build*0.001;
+					if (runningReaVer >= compatibleReaVerB && _this->CompareVersion(versionB, versionL) == 1)
 						statusB = BETA_AVAILABLE;
 					else
 						statusB = UP_TO_DATE;

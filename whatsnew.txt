@@ -22,7 +22,8 @@ Fixes
 +ReaConsole: fixed default key shortcut "C"
 
 Other
-+Various optimizations around item/take selection/activation
++SWS auto-update now checks for REAPER compatibility before announcing a new SWS version is available
++Optimizations around item/take selection/activation
 
 
 ReaScript

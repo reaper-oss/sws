@@ -440,7 +440,7 @@ double GetMidiOscVal (double min, double max, double step, double currentVal, in
 		{
 			if      (commandRelmode == 1) {if (commandVal >= 0x40) commandVal |= ~0x3f;}               // sign extend if 0x40 set
 			else if (commandRelmode == 2) {commandVal -= 0x40;}                                        // offset by 0x40
-			else if (commandRelmode == 3) {if (commandVal &  0x40) commandVal =- (commandVal & 0x3f);} // 0x40 is sign bit
+			else if (commandRelmode == 3) {if (commandVal &  0x40) commandVal = -(commandVal & 0x3f);} // 0x40 is sign bit
 			else                                                   commandVal = 0;
 
 			returnVal = currentVal + (commandVal * step);

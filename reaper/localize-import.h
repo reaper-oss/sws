@@ -60,7 +60,7 @@ HWND __localizeDialog(HINSTANCE hInstance, const char *lpTemplate, HWND hwndPare
   switch (mode)
   {
     case 0: return CreateDialogParam(hInstance,lpTemplate,hwndParent,dlgProc,lParam);
-    case 1: return (HWND) DialogBoxParam(hInstance,lpTemplate,hwndParent,dlgProc,lParam);
+    case 1: return (HWND) (INT_PTR)DialogBoxParam(hInstance,lpTemplate,hwndParent,dlgProc,lParam);
   }
   return 0;
 }

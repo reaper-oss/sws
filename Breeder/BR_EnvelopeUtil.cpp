@@ -1777,7 +1777,7 @@ bool BR_Envelope::FillProperties () const
 		if (m_chunkProperties.GetLength())
 		{
 			size_t size = m_chunkProperties.GetLength()+1;
-			if (chunk = new (nothrow) char[size])
+			if ((chunk = new (nothrow) char[size]))
 				memcpy(chunk, m_chunkProperties.Get(), size);
 		}
 		else

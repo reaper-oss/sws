@@ -1855,7 +1855,7 @@ bool ListView_HookThemeColorsMessage(HWND hwndDlg, int uMsg, LPARAM lParam, int 
 	break;
 	case WM_CREATE:
 	case WM_INITDIALOG:
-	  memset(cstate,0,sizeof(cstate));
+	  memset(cstate, 0, LISTVIEW_COLORHOOK_STATESIZE*sizeof(cstate[0]));
 	break;
 #ifdef _WIN32
 	case WM_NOTIFY:

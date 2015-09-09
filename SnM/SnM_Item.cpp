@@ -173,7 +173,7 @@ bool GetItemsInInterval(WDL_PtrList<void>* _items, double _pos1, double _pos2, b
 {
 	if (_items)
 	{
-		_items->Empty(false);
+		_items->Empty();
 		for (int i=1; i <= GetNumTracks(); i++) // skip master
 			if (MediaTrack* tr = CSurf_TrackFromID(i, false))
 				for (int j=0; j < GetTrackNumMediaItems(tr); j++)
@@ -187,7 +187,7 @@ bool GetItemsInInterval(WDL_PtrList<void>* _items, double _pos1, double _pos2, b
 bool GenerateItemsInInterval(WDL_PtrList<void>* _items, double _pos1, double _pos2, const char* tkname)
 {
 	int cnt=0;
-	if (_items) _items->Empty(false);
+	if (_items) _items->Empty();
 	for (int i=1; i <= GetNumTracks(); i++) // skip master
 		if (MediaTrack* tr = CSurf_TrackFromID(i, false))
 			if (MediaItem* item=CreateNewMIDIItemInProj(tr, _pos1, _pos2, NULL))
@@ -205,7 +205,7 @@ void GetAllItemPointers(WDL_PtrList<void>* _items)
 {
 	if (_items)
 	{
-		_items->Empty(false);
+		_items->Empty();
 		for (int i=1; i <= GetNumTracks(); i++) // skip master
 			if (MediaTrack* tr = CSurf_TrackFromID(i, false))
 				for (int j=0; j < GetTrackNumMediaItems(tr); j++)
@@ -222,7 +222,7 @@ void DiffItemPointers(WDL_PtrList<void>* _oldItemsIn, WDL_PtrList<void>* _newIte
 		for (int j=_newItemsOut->GetSize(); j >= 0; j--)
 			for (int k=0; k < _oldItemsIn->GetSize(); k++)
 				if (_oldItemsIn->Get(k) == _newItemsOut->Get(j))
-					_newItemsOut->Delete(j, false);
+					_newItemsOut->Delete(j);
 	}
 }
 

@@ -331,7 +331,7 @@ INT_PTR WINAPI mergeWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 					WDL_PtrList<TrackSnapshot> oldTrackSS;
 					for (int i = 0; i < g_ss->m_tracks.GetSize(); i++)
 						oldTrackSS.Add(g_ss->m_tracks.Get(i));
-					g_ss->m_tracks.Empty(false);
+					g_ss->m_tracks.Empty();
 
 					// 2) Create new TrackSnapshot tracks from the user's selections
 					for (int i = 0; i < g_mergeItems.GetSize(); i++)

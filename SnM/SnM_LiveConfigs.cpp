@@ -482,7 +482,7 @@ int LiveConfig::SetInputTrack(MediaTrack* _newInputTr, bool _updateSends)
 		// add sends to the new input track
 		if (_newInputTr && CSurf_TrackToID(_newInputTr, false) > 0)
 		{
-			doneTrs.Empty(false);
+			doneTrs.Empty();
 			for (int i=0; i < m_ccConfs.GetSize(); i++)
 				if (LiveConfigItem* cfg = m_ccConfs.Get(i))
 					if (cfg->m_track &&

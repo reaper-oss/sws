@@ -124,7 +124,7 @@ public:
 	int GetNumProj() { return m_data.GetSize(); }
 	void Empty()
 	{
-		m_projects.Empty(false);
+		m_projects.Empty();
 		m_data.Empty(true);
 	}
 	void Cleanup()
@@ -140,7 +140,7 @@ public:
 						break;
 				if (!pProj)
 				{
-					m_projects.Delete(i, false);
+					m_projects.Delete(i);
 					m_data.Delete(i, true);
 				}
 			}

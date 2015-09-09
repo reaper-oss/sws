@@ -87,7 +87,7 @@ char* FilteredVisState::ItemString(char* str, int maxLen, bool* bDone)
 WDL_PtrList<void>* FilteredVisState::GetFilteredTracks()
 {
 	static WDL_PtrList<void> tracks;
-	tracks.Empty(false);
+	tracks.Empty();
 	
 	for (int i = 1; i <= GetNumTracks(); i++)
 	{

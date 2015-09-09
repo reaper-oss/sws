@@ -73,7 +73,7 @@ void ObjectStateCache::WriteCache()
 
 void ObjectStateCache::EmptyCache()
 {
-	m_obj.Empty(false);
+	m_obj.Empty();
 	m_str.Empty(true);
 	m_orig.Empty(true, FreeHeapPtr);
 }

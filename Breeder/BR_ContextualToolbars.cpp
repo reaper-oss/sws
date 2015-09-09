@@ -1283,7 +1283,7 @@ void BR_ContextualToolbar::SetToolbarWndProc (BR_ContextualToolbar::ExecuteOnToo
 		BR_ContextualToolbar::ToolbarWndData* toolbarWndData  = NULL;
 		if (id == -1)
 		{
-			if (toolbarWndData = m_callbackToolbars.Add(new BR_ContextualToolbar::ToolbarWndData))
+			if ((toolbarWndData = m_callbackToolbars.Add(new BR_ContextualToolbar::ToolbarWndData)))
 			{
 				if (WNDPROC wndProc = (WNDPROC)SetWindowLongPtr(toolbarHwnd, GWLP_WNDPROC, (LONG_PTR)BR_ContextualToolbar::ToolbarWndCallback))
 				{
@@ -1300,7 +1300,7 @@ void BR_ContextualToolbar::SetToolbarWndProc (BR_ContextualToolbar::ExecuteOnToo
 				}
 			}
 		}
-		else if (toolbarWndData = m_callbackToolbars.Get(id))
+		else if ((toolbarWndData = m_callbackToolbars.Get(id)))
 		{
 			toolbarWndData->keepOnTop = executeOnToolbarLoad.makeTopMost;
 			toolbarWndData->autoClose = executeOnToolbarLoad.autoCloseToolbar;

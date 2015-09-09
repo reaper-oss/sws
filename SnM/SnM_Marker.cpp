@@ -68,7 +68,7 @@ int UpdateMarkerRegionCache()
 	int i=0, x=0, num, col; double pos, rgnend; const char* name; bool isRgn;
 
 	// added/updated markers/regions?
-	while (x = EnumProjectMarkers3(NULL, x, &isRgn, &pos, &rgnend, &name, &num, &col))
+	while ((x = EnumProjectMarkers3(NULL, x, &isRgn, &pos, &rgnend, &name, &num, &col)))
 	{
 		MarkerRegion* m = g_mkrRgnCache.Get(i);
 		if (!m || (m && !m->Compare(isRgn, pos, rgnend, name, num, col)))
@@ -129,8 +129,8 @@ bool SNM_SetProjectMarker(ReaProject* _proj, int _num, bool _isrgn, double _pos,
 		if (!_color) // dang! it means we have to preserve the current color..
 		{
 			int x=0, num; bool isrgn, found=false;
-			while (x = EnumProjectMarkers3(_proj, x, &isrgn, NULL, NULL, NULL, &num, &color))
-				if (found = (isrgn==_isrgn && num==_num))
+			while ((x = EnumProjectMarkers3(_proj, x, &isrgn, NULL, NULL, NULL, &num, &color)))
+				if ((found = (isrgn==_isrgn && num==_num)))
 					break;
 			if (!found)
 				return false;
@@ -152,7 +152,7 @@ bool SNM_GetProjectMarkerName(ReaProject* _proj, int _num, bool _isrgn, WDL_Fast
 	if (_name)
 	{
 		int x=0, num; const char* name; bool isrgn;
-		while (x = EnumProjectMarkers3(_proj, x, &isrgn, NULL, NULL, &name, &num, NULL))
+		while ((x = EnumProjectMarkers3(_proj, x, &isrgn, NULL, NULL, &name, &num, NULL)))
 			if (num==_num && isrgn==_isrgn) {
 				_name->Set(name);
 				return true;
@@ -169,7 +169,7 @@ int FindMarkerRegion(ReaProject* _proj, double _pos, int _flags, int* _idOut)
 	bool isrgn;
 	double dPos, dEnd;
 	int x=0, lastx=0, num, foundId=-1, foundx=-1;
-	while (x = EnumProjectMarkers3(_proj, x, &isrgn, &dPos, &dEnd, NULL, &num, NULL))
+	while ((x = EnumProjectMarkers3(_proj, x, &isrgn, &dPos, &dEnd, NULL, &num, NULL)))
 	{
 		if ((!isrgn && _flags&SNM_MARKER_MASK) || (isrgn && _flags&SNM_REGION_MASK && _pos<=dEnd))
 		{
@@ -218,7 +218,7 @@ int GetMarkerRegionIndexFromId(ReaProject* _proj, int _id)
 	{
 		int x=0, lastx=0, num=(_id&0x3FFFFFFF), num2; 
 		bool isrgn = IsRegion(_id), isrgn2;
-		while (x = EnumProjectMarkers3(_proj, x, &isrgn2, NULL, NULL, NULL, &num2, NULL)) {
+		while ((x = EnumProjectMarkers3(_proj, x, &isrgn2, NULL, NULL, NULL, &num2, NULL))) {
 			if (num == num2 && isrgn == isrgn2)
 				return lastx;
 			lastx=x;
@@ -243,7 +243,7 @@ int EnumMarkerRegionById(ReaProject* _proj, int _id, bool* _isrgn, double* _pos,
 		double pos2, end2;
 		bool isrgn = IsRegion(_id), isrgn2;
 		int  num=(_id&0x3FFFFFFF), x=0, lastx=0, num2, col2;
-		while (x = EnumProjectMarkers3(_proj, x, &isrgn2, &pos2, &end2, &name2, &num2, &col2))
+		while ((x = EnumProjectMarkers3(_proj, x, &isrgn2, &pos2, &end2, &name2, &num2, &col2)))
 		{
 			if (num == num2 && isrgn == isrgn2)
 			{
@@ -342,7 +342,7 @@ void FillMarkerRegionMenu(ReaProject* _proj, HMENU _menu, int _msgStart, int _fl
 {
 	int x=0, lastx=0;
 	char desc[SNM_MAX_MARKER_NAME_LEN]="";
-	while (x = EnumMarkerRegionDesc(_proj, x, desc, SNM_MAX_MARKER_NAME_LEN, _flags, true, true, true)) {
+	while ((x = EnumMarkerRegionDesc(_proj, x, desc, SNM_MAX_MARKER_NAME_LEN, _flags, true, true, true))) {
 		if (*desc) AddToMenu(_menu, desc, _msgStart+lastx, -1, false, _uiState);
 		lastx=x;
 	}
@@ -359,7 +359,7 @@ bool GotoMarkerRegion(ReaProject* _proj, int _num, int _flags, bool _select = fa
 {
 	bool isrgn; double pos, end;
 	int x=0, n; 
-	while (x = EnumProjectMarkers3(_proj, x, &isrgn, &pos, &end, NULL, &n, NULL))
+	while ((x = EnumProjectMarkers3(_proj, x, &isrgn, &pos, &end, NULL, &n, NULL)))
 		if (n == _num && ((!isrgn && _flags&SNM_MARKER_MASK) || (isrgn && _flags&SNM_REGION_MASK)))
 		{
 			PreventUIRefresh(1);

@@ -190,17 +190,17 @@ HWND GetReaHwndByTitle(const char* _title)
 	// docked in main window?
 	HWND hdock = FindWindowEx(GetMainHwnd(), NULL, NULL, "REAPER_dock");
 	while(hdock) {
-		if (w = FindWindowEx(hdock, NULL, NULL, _title)) return w;
+		if ((w = FindWindowEx(hdock, NULL, NULL, _title))) return w;
 		hdock = FindWindowEx(GetMainHwnd(), hdock, NULL, "REAPER_dock");
 	}
 	// in a floating docker (w/ other hwnds)?
-	if (w = GetReaHwndByTitleInFloatingDocker(_title, __localizeFunc("Docker", "docker", 0)))
+	if ((w = GetReaHwndByTitleInFloatingDocker(_title, __localizeFunc("Docker", "docker", 0))))
 		return w;
 	// in a floating docker (w/o other hwnds)?
 	{
 		char dockerName[256]="";
 		if (_snprintfStrict(dockerName, sizeof(dockerName), "%s%s", _title, __localizeFunc(" (docked)", "docker", 0)) > 0)
-			if (w = GetReaHwndByTitleInFloatingDocker(_title, dockerName))
+			if ((w = GetReaHwndByTitleInFloatingDocker(_title, dockerName)))
 				return w;
 	}
 	return NULL;

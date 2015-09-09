@@ -2877,7 +2877,7 @@ int AddCustomBookmark(char* _definition)
 			if (char* tok = strtok(_definition, ","))
 			{
 				tokenStrs[0].Set(tok);
-				if (tok = strtok(NULL, ","))
+				if ((tok = strtok(NULL, ",")))
 				{
 					tokenStrs[1].Set(tok);
 

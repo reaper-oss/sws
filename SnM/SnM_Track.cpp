@@ -856,7 +856,7 @@ bool ApplyTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmplt, bool _itemsFrom
 		}
 
 		// apply tr template
-		if (updated = ApplyTrackTemplatePrimitive(_tr, _tmplt, _itemsFromTmplt, _envsFromTmplt, p))
+		if ((updated = ApplyTrackTemplatePrimitive(_tr, _tmplt, _itemsFromTmplt, _envsFromTmplt, p)))
 		{
 			// restore receives, folder and compact states
 			WDL_PtrList<SNM_ChunkParserPatcher> ps; ps.Add(p);
@@ -1440,7 +1440,7 @@ bool SendAllNotesOff(WDL_PtrList<void>* _trs)
 		void* p = hb.Resize(len, false);
 		if (p && hb.GetSize()==len)
 		{
-			if (g_cc123src = PCM_Source_CreateFromType("MIDI"))
+			if ((g_cc123src = PCM_Source_CreateFromType("MIDI")))
 			{
 				memcpy(p, SNM_CC123_MID_STATE, len);
 				ProjectStateContext* ctx = ProjectCreateMemCtx(&hb);

@@ -54,9 +54,9 @@ void SNM_DynSizedText::SetText(const char* _txt, int _col, unsigned char _alpha)
 	{
 		int maxLineLen=0, len;
 		const char* p=_txt, *p2=NULL;
-		while (p2 = FindFirstRN(p, true)) // \r or \n in any order (for OSX..)
+		while ((p2 = FindFirstRN(p, true))) // \r or \n in any order (for OSX..)
 		{
-			if (len = (int)(p2-p))
+			if ((len = (int)(p2-p)))
 			{
 				if (len > maxLineLen) {
 					maxLineLen = len;
@@ -504,7 +504,7 @@ int SNM_ImageVWnd::GetHeight() {
 void SNM_ImageVWnd::SetImage(const char* _fn)
 {
 	if (_fn && *_fn)
-		if (m_img = LICE_LoadPNG(_fn, NULL)) {
+		if ((m_img = LICE_LoadPNG(_fn, NULL))) {
 			m_fn.Set(_fn);
 			return;
 		}

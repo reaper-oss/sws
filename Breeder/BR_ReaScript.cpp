@@ -355,17 +355,20 @@ void BR_GetMediaTrackGUID (MediaTrack* track, char* guidStringOut, int guidStrin
 
 void BR_GetMediaTrackLayouts (MediaTrack* track, char* mcpLayoutNameOut, int mcpLayoutNameOut_sz, char* tcpLayoutNameOut, int tcpLayoutNameOut_sz)
 {
+	if (mcpLayoutNameOut && mcpLayoutNameOut_sz > 0) *mcpLayoutNameOut=0;
+	if (tcpLayoutNameOut && tcpLayoutNameOut_sz > 0) *tcpLayoutNameOut=0;
 	if (track)
 	{
 		if (mcpLayoutNameOut)
-			_snprintfSafe(mcpLayoutNameOut, mcpLayoutNameOut_sz, "%s", (const char*)GetSetMediaTrackInfo(track, "P_MCP_LAYOUT", NULL));
+		{
+			const char *l = (const char*)GetSetMediaTrackInfo(track, "P_MCP_LAYOUT", NULL);
+			if (l) _snprintfSafe(mcpLayoutNameOut, mcpLayoutNameOut_sz, "%s", l);
+		}
 		if (tcpLayoutNameOut)
-			_snprintfSafe(tcpLayoutNameOut, tcpLayoutNameOut_sz, "%s", (const char*)GetSetMediaTrackInfo(track, "P_TCP_LAYOUT", NULL));
-	}
-	else
-	{
-		if (mcpLayoutNameOut && mcpLayoutNameOut_sz > 0) _snprintfSafe(mcpLayoutNameOut, mcpLayoutNameOut_sz, "%s", "");
-		if (tcpLayoutNameOut && tcpLayoutNameOut_sz > 0) _snprintfSafe(tcpLayoutNameOut, tcpLayoutNameOut_sz, "%s", "");
+		{
+			const char *l = (const char*)GetSetMediaTrackInfo(track, "P_TCP_LAYOUT", NULL);
+			if (l) _snprintfSafe(tcpLayoutNameOut, tcpLayoutNameOut_sz, "%s", l);
+		}
 	}
 }
 

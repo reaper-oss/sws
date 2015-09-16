@@ -129,7 +129,6 @@ APIdef g_apidefs[] =
 	{ APIFUNC(SNM_AddTCPFXParm), "bool", "MediaTrack*,int,int", "tr,fxId,prmId", "[S&M] Add an FX parameter knob in the TCP. Returns false if nothing updated (invalid parameters, knob already present, etc..)", },
 	{ APIFUNC(SNM_TagMediaFile), "bool", "const char*,const char*,const char*", "fn,tag,tagval", "[S&M] Tags a media file thanks to <a href=\"https://taglib.github.io\">TagLib</a>. Supported tags: \"artist\", \"album\", \"genre\", \"comment\", \"title\", or \"year\". Use an empty tagval to clear a tag. When a file is opened in REAPER, turn it offline before using this function. Returns false if nothing updated. See SNM_ReadMediaFileTag.", },
 	{ APIFUNC(SNM_ReadMediaFileTag), "bool", "const char*,const char*,char*,int", "fn,tag,tagval,tagval_sz", "[S&M] Reads a media file tag. Supported tags: \"artist\", \"album\", \"genre\", \"comment\", \"title\", or \"year\". Returns false if tag was not found. See SNM_TagMediaFile.", },
-	{ CAPIFUNC(SNM_ReadMediaFileTags), },
 
 	{ APIFUNC(FNG_AllocMidiTake), "RprMidiTake*", "MediaItem_Take*", "take", "[FNG] Allocate a RprMidiTake from a take pointer. Returns a NULL pointer if the take is not an in-project MIDI take", },
 	{ APIFUNC(FNG_FreeMidiTake), "void", "RprMidiTake*", "midiTake", "[FNG] Commit changes to MIDI take and free allocated memory", },

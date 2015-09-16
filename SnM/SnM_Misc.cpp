@@ -207,6 +207,7 @@ void ULT_SetMediaItemNote(MediaItem* _item, const char* _str) {
 bool SNM_ReadMediaFileTag(const char *fn, const char* tag, char* tagval, int tagval_sz)
 {
   if (!fn || !*fn || !tagval || tagval_sz<=0) return false;
+  *tagval=0;
 
 #ifdef _WIN32
   wchar_t* w_fn = WideCharPlz(fn);
@@ -216,8 +217,6 @@ bool SNM_ReadMediaFileTag(const char *fn, const char* tag, char* tagval, int tag
   TagLib::FileRef f(fn, false);
 #endif
   
-  bool hastag=(!f.isNull() && !f.tag()->isEmpty());
-  if (hastag)
   {
     TagLib::String s;
     if (!_stricmp(tag, "artist")) s=f.tag()->artist();
@@ -225,20 +224,21 @@ bool SNM_ReadMediaFileTag(const char *fn, const char* tag, char* tagval, int tag
     else if (!_stricmp(tag, "genre")) s=f.tag()->genre();
     else if (!_stricmp(tag, "comment")) s=f.tag()->comment();
     else if (!_stricmp(tag, "title")) s=f.tag()->title();
-    else if (!_stricmp(tag, "year")) _snprintfSafe(tagval, tagval_sz, "%u", f.tag()->year());
-    else if (!_stricmp(tag, "track")) _snprintfSafe(tagval, tagval_sz, "%u", f.tag()->track());
-
     if (!s.isNull())
     {
       const char *p=s.toCString(true);
       if (strcmp(p,"0")) lstrcpyn(tagval, p, tagval_sz); // must be a taglib bug...
-      else hastag=false;
+    }
+    else
+    {
+      if (!_stricmp(tag, "year") && f.tag()->year()) _snprintfSafe(tagval, tagval_sz, "%u", f.tag()->year());
+      else if (!_stricmp(tag, "track") && f.tag()->track()) _snprintfSafe(tagval, tagval_sz, "%u", f.tag()->track());
     }
   }
 #ifdef _WIN32
   delete [] w_fn;
 #endif
-  return hastag;
+  return !!*tagval;
 }
 
 bool SNM_TagMediaFile(const char *fn, const char* tag, const char* tagval)
@@ -287,63 +287,6 @@ bool SNM_TagMediaFile(const char *fn, const char* tag, const char* tagval)
   delete [] w_fn;
 #endif
   return didsmthg;
-}
-
-char *_strduptaglib(TagLib::String s)
-{
-  if (!s.isNull())
-  {
-    const char *p=s.toCString(true);
-    if (*p && strcmp(p,"0")) return _strdup(p); // must be a taglib bug...
-  }
-  return NULL;
-}
-
-// Bulk read of all common media file tags, it's up to the caller to free allocated strings
-bool SNM_ReadMediaFileTags(const char *fn,  WDL_IntKeyedArray<char*> *tags)
-{
-  if (!fn || !*fn || !tags) return false;
-  
-#ifdef _WIN32
-  wchar_t* w_fn = WideCharPlz(fn);
-  if (!w_fn) return false;
-  TagLib::FileRef f(w_fn, false);
-#else
-  TagLib::FileRef f(fn, false);
-#endif
-  
-  if (!f.isNull() && !f.tag()->isEmpty())
-  {
-    char *s=_strduptaglib(f.tag()->title());
-    if (s) tags->Insert('t', s);
-    s = _strduptaglib(f.tag()->artist());
-    if (s) tags->Insert('a', s);
-    s = _strduptaglib(f.tag()->album());
-    if (s) tags->Insert('b', s);
-    if (f.tag()->year())
-    {
-      char tmp[32];
-      _snprintfSafe(tmp, sizeof(tmp), "%u", f.tag()->year());
-      tags->Insert('y', _strdup(tmp));
-    }
-    s = _strduptaglib(f.tag()->genre());
-    if (s) tags->Insert('g', s);
-    s = _strduptaglib(f.tag()->comment());
-    if (s) tags->Insert('c', s);
-/*
-    if (f.tag()->track())
-    {
-      char tmp[32];
-      _snprintfSafe(tmp, sizeof(tmp), "%u", f.tag()->track());
-      tags->Insert('n', _strdup(tmp));
-    }
-*/
-    // ... more tags could go here
-  }
-#ifdef _WIN32
-  delete [] w_fn;
-#endif
-  return !!tags->GetSize();
 }
 
 MediaItem_Take* SNM_GetMIDIEditorActiveTake() {

@@ -216,7 +216,8 @@ bool SNM_ReadMediaFileTag(const char *fn, const char* tag, char* tagval, int tag
 #else
   TagLib::FileRef f(fn, false);
 #endif
-  
+
+  if (!f.isNull() && !f.tag()->isEmpty())
   {
     TagLib::String s;
     if (!_stricmp(tag, "artist")) s=f.tag()->artist();
@@ -224,7 +225,7 @@ bool SNM_ReadMediaFileTag(const char *fn, const char* tag, char* tagval, int tag
     else if (!_stricmp(tag, "genre")) s=f.tag()->genre();
     else if (!_stricmp(tag, "comment")) s=f.tag()->comment();
     else if (!_stricmp(tag, "title")) s=f.tag()->title();
-    if (!s.isNull())
+    if (s.length())
     {
       const char *p=s.toCString(true);
       if (strcmp(p,"0")) lstrcpyn(tagval, p, tagval_sz); // must be a taglib bug...
@@ -279,7 +280,7 @@ bool SNM_TagMediaFile(const char *fn, const char* tag, const char* tagval)
     }
     if (didsmthg) f.save();
 #ifdef _WIN32
-  delete [] s;
+    delete [] s;
 #endif
   }
 

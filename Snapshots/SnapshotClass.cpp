@@ -871,7 +871,7 @@ bool Snapshot::UpdateReaper(int mask, bool bSelOnly, bool bHideNewVis)
 			n += sprintf(errString + n, __LOCALIZE_VERFMT("%d tracks from snapshot not found.","sws_DLG_101"), trackErr);
 		if (fxErr)
 			n += sprintf(errString + n, __LOCALIZE_VERFMT("%s%d FX from snapshot not found.","sws_DLG_101"), n ? "\n" : "", fxErr);
-		sprintf(errString + n, __LOCALIZE("\nDelete abandonded items from snapshot? (You cannot undo this operation!)","sws_DLG_101"));
+		sprintf(errString + n, "%s", __LOCALIZE("\nDelete abandonded items from snapshot? (You cannot undo this operation!)","sws_DLG_101"));
 		if (MessageBox(g_hwndParent, errString, __LOCALIZE("Snapshot recall error","sws_DLG_101"), MB_YESNO) == IDYES)
 		{
 			for (int i = 0; i < m_tracks.GetSize(); i++)

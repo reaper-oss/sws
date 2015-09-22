@@ -1,5 +1,6 @@
 Snapshots
 +Fixed http://forum.cockos.com/showthread.php?t=166652|snapshots with bypassed FX Chains|
++Improved snapshot recall (faster)
 
 !v2.8.1 featured build (September 10, 2015)
 New actions

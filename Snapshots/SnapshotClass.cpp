@@ -286,6 +286,8 @@ bool TrackSnapshot::UpdateReaper(int mask, bool bSelOnly, int* fxErr, bool wantC
 	if (bSelOnly && !iSel)
 		return false; // Ignore if the track isn't selected
 
+	PreventUIRefresh(1);
+
 	if (mask & VOL_MASK)
 	{
 		GetSetMediaTrackInfo(tr, "D_VOL", &m_dVol);
@@ -347,6 +349,9 @@ bool TrackSnapshot::UpdateReaper(int mask, bool bSelOnly, int* fxErr, bool wantC
 	{
 		if (wantChunk) m_sends.UpdateReaper(tr, pFix);
 	}
+
+	PreventUIRefresh(-1);
+
 	return false;
 }
 
@@ -814,6 +819,8 @@ bool Snapshot::UpdateReaper(int mask, bool bSelOnly, bool bHideNewVis)
 	int trackErr = 0, fxErr = 0;
 	WDL_PtrList<TrackSendFix> sendFixes;
 
+	PreventUIRefresh(1);
+
 	// Do "non-chunk" stuff first
 	for (int i = 0; i < m_tracks.GetSize(); i++)
 		m_tracks.Get(i)->UpdateReaper(mask & m_iMask, bSelOnly, &fxErr, false, &sendFixes);
@@ -849,8 +856,10 @@ bool Snapshot::UpdateReaper(int mask, bool bSelOnly, bool bHideNewVis)
 
 		// Must manually redraw visibiliy changes, maybe others??
 		TrackList_AdjustWindows(false);
-		UpdateTimeline();
 	}
+
+	PreventUIRefresh(-1);
+
 	sprintf(str, __LOCALIZE_VERFMT("Load snapshot %s","sws_undo"), m_cName);
 	Undo_OnStateChangeEx(str, UNDO_STATE_ALL, -1);
 

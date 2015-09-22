@@ -276,7 +276,7 @@ TrackSnapshot::~TrackSnapshot()
 }
 
 // Returns true if cannot find the track to update!
-bool TrackSnapshot::UpdateReaper(int mask, bool bSelOnly, int* fxErr, WDL_PtrList<TrackSendFix>* pFix)
+bool TrackSnapshot::UpdateReaper(int mask, bool bSelOnly, int* fxErr, bool wantChunk, WDL_PtrList<TrackSendFix>* pFix)
 {
 	MediaTrack* tr = GuidToTrack(&m_guid);
 	if (!tr)
@@ -341,13 +341,12 @@ bool TrackSnapshot::UpdateReaper(int mask, bool bSelOnly, int* fxErr, WDL_PtrLis
 	if (mask & FXCHAIN_MASK)
 	{
 		GetSetMediaTrackInfo(tr, "I_FXEN", &m_iFXEn);
-		SetFXChain(tr, m_sFXChain.Get());
+		if (wantChunk) SetFXChain(tr, m_sFXChain.Get());
 	}
 	if (mask & SENDS_MASK)
 	{
-		m_sends.UpdateReaper(tr, pFix);
+		if (wantChunk) m_sends.UpdateReaper(tr, pFix);
 	}
-
 	return false;
 }
 
@@ -812,18 +811,17 @@ Snapshot::~Snapshot()
 bool Snapshot::UpdateReaper(int mask, bool bSelOnly, bool bHideNewVis)
 {
 	char str[256];
-	//Undo_BeginBlock();
 	int trackErr = 0, fxErr = 0;
 	WDL_PtrList<TrackSendFix> sendFixes;
 
 	// Do "non-chunk" stuff first
 	for (int i = 0; i < m_tracks.GetSize(); i++)
-		m_tracks.Get(i)->UpdateReaper(mask & m_iMask & ~CHUNK_MASK, bSelOnly, &fxErr, &sendFixes);
+		m_tracks.Get(i)->UpdateReaper(mask & m_iMask, bSelOnly, &fxErr, false, &sendFixes);
 
 	// Then cache all ObjectState changes for the chunk updating
 	SWS_CacheObjectState(true);
 	for (int i = 0; i < m_tracks.GetSize(); i++)
-		if (m_tracks.Get(i)->UpdateReaper(mask & m_iMask & CHUNK_MASK, bSelOnly, &fxErr, &sendFixes))
+		if (m_tracks.Get(i)->UpdateReaper(mask & m_iMask, bSelOnly, &fxErr, true, &sendFixes))
 			trackErr++;
 	SWS_CacheObjectState(false);
 

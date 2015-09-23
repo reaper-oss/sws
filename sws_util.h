@@ -240,7 +240,7 @@ const GUID* TrackToGuid(MediaTrack* tr);
 MediaTrack* GuidToTrack(const GUID* guid);
 bool GuidsEqual(const GUID* g1, const GUID* g2);
 bool TrackMatchesGuid(MediaTrack* tr, const GUID* g);
-const char* stristr(const char* str1, const char* str2);
+const char *stristr(const char* a, const char* b);
 
 #ifdef _WIN32
 wchar_t* WideCharPlz(const char* inChar);

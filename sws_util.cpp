@@ -380,32 +380,16 @@ bool TrackMatchesGuid(MediaTrack* tr, const GUID* g)
 	return false;
 }
 
-const char* stristr(const char* str1, const char* str2)
+const char *stristr(const char* a, const char* b)
 {
-#if defined(_WIN32) && !defined(WDL_NO_SUPPORT_UTF8)
-	// Don't mess with UTF8, TODO fix!
-	if (WDL_HasUTF8(str1) || WDL_HasUTF8(str2))
-		return strstr(str1, str2);
-#endif
-
-	const char* p1 = str1; const char* p2 = str2;
-
-	while(*p1 && *p2)
-	{
-		if (tolower(*p1) == tolower(*p2))
-		{
-			p1++;
-			p2++;
-		}
-		else
-		{
-			p1++;
-			p2 = str2;
-		}
-	}
-	if (!*p2)
-		return p1 - strlen(str2);
-	return NULL;
+  int i;
+  int len = strlen(b);
+  int n = strlen(a)-len;
+  for (i = 0; i <= n; ++i)
+  {
+    if (!strnicmp(a+i, b, len)) return a+i;
+  }
+  return NULL;
 }
 
 #ifdef _WIN32

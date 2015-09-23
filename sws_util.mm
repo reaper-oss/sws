@@ -84,7 +84,7 @@ static int RGBfromNSColor(NSColor *col)
 int GetCustomColors(COLORREF custColors[])
 {
 	NSColorPanel* cp = [NSColorPanel sharedColorPanel];
-	[[cp valueForKey:@"_colorSwatch"] readColors];
+	[[cp valueForKey:@"_colorSwatch"] performSelector:@selector(readColors)];
 
 	// Get the NSColorSwatch's internal mutable array of NSColors
 	NSMutableArray *colors = [[cp valueForKey:@"_colorSwatch"] valueForKey:@"colors"];
@@ -102,7 +102,7 @@ int GetCustomColors(COLORREF custColors[])
 void SetCustomColors(COLORREF custColors[])
 {
 	NSColorPanel* cp = [NSColorPanel sharedColorPanel];
-	[[cp valueForKey:@"_colorSwatch"] readColors];
+	[[cp valueForKey:@"_colorSwatch"] performSelector:@selector(readColors)];
 
 	// Get the NSColorSwatch's internal mutable array of NSColors
 	NSMutableArray *colors = [[cp valueForKey:@"_colorSwatch"] valueForKey:@"colors"];
@@ -111,7 +111,7 @@ void SetCustomColors(COLORREF custColors[])
 		NSColor* col = [NSColor colorWithCalibratedRed:(custColors[i]>>16)/255.0 green:((custColors[i]&0xFF00)>>8)/255.0 blue:(custColors[i]&0xFF)/255.0 alpha:1.0];
 		[colors replaceObjectAtIndex:i*10 withObject:col];
 	}
-	[[cp valueForKey:@"_colorSwatch"] writeColors];
+	[[cp valueForKey:@"_colorSwatch"] performSelector:@selector(writeColors)];
 }
 
 void ShowColorChooser(COLORREF initialCol)

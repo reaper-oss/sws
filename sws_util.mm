@@ -37,7 +37,7 @@ void SWS_GetDateString(int time, char* buf, int bufsize)
 	[macTimeFmt setFormatterBehavior:NSDateFormatterBehavior10_4];
 	[macTimeFmt setDateStyle:NSDateFormatterShortStyle];
 	NSString* s = [macTimeFmt stringFromDate:macTime];
-	[s getCString:buf maxLength:bufsize];
+	[s getCString:buf maxLength:bufsize encoding:NSUTF8StringEncoding];
 }
 
 void SWS_GetTimeString(int time, char* buf, int bufsize)
@@ -47,7 +47,7 @@ void SWS_GetTimeString(int time, char* buf, int bufsize)
 	[macTimeFmt setFormatterBehavior:NSDateFormatterBehavior10_4];
 	[macTimeFmt setTimeStyle:NSDateFormatterShortStyle];
 	NSString* s = [macTimeFmt stringFromDate:macTime];
-	[s getCString:buf maxLength:bufsize];
+	[s getCString:buf maxLength:bufsize encoding:NSUTF8StringEncoding];
 }
 
 void SetColumnArrows(HWND h, int iSortCol)

@@ -373,8 +373,8 @@ void ShowThemeHelper(WDL_FastString* _report, HWND _hwnd, bool _mcp, bool _sel)
 							_mcp ? "MCP" : "TCP",
 							trIdx==-1 ? 0 : trIdx,
 							trIdx==-1 ? "[MASTER]" : (trName?trName:""),
-							r.right-r.left,
-							r.bottom-r.top);
+							(int)(r.right-r.left),
+							(int)(r.bottom-r.top));
 					}
 				}
 			}

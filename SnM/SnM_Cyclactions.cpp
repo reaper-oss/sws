@@ -2590,8 +2590,9 @@ int CyclactionWnd::OnKey(MSG* _msg, int _iKeyState)
 						int x=0;
 						if (focusedList<m_pLists.GetSize())
 						{
-							if (SWS_ListItem* item = GetListView(focusedList)->EnumSelected(&x)) {
-								GetListView(focusedList)->EditListItem(item, !focusedList ? COL_L_NAME : COL_R_CMD);
+							if (SWS_ListItem* item = GetListView(focusedList)->EnumSelected(&x))
+							{
+								GetListView(focusedList)->EditListItem(item, !focusedList ? (int)COL_L_NAME : (int)COL_R_CMD);
 								return 1;
 							}
 						}

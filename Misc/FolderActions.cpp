@@ -10,10 +10,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/
+/ 
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/
+/ 
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -59,7 +59,7 @@ void TogMuteChildren(COMMAND_T* = NULL)
 	}
 }
 
-// Set selected tracks folder depth to the same folder depth as the previous tracks
+// Set selected track(s) folder depth to the same folder depth as the previous track(s)
 void FolderLikePrev(COMMAND_T* = NULL)
 {
 	MediaTrack* prevTr = CSurf_TrackFromID(1, false);
@@ -78,7 +78,7 @@ void FolderLikePrev(COMMAND_T* = NULL)
 		prevTr = tr;
 	}
 	if (bUndo)
-		Undo_OnStateChangeEx(__LOCALIZE("Set selected tracks to same folder as previous track","sws_undo"), UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);
+		Undo_OnStateChangeEx(__LOCALIZE("Set selected track(s) to same folder as previous track","sws_undo"), UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);
 }
 
 void MakeFolder(COMMAND_T* = NULL)
@@ -183,18 +183,18 @@ void CollapseFolder(COMMAND_T* ct)
 }
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
-static COMMAND_T g_commandTable[] =
+static COMMAND_T g_commandTable[] = 
 {
-	{ { DEFACCEL, "SWS: Mute children of selected folders" },						"SWS_MUTECHILDREN",		MuteChildren,     },
-	{ { DEFACCEL, "SWS: Unmute children of selected folders" },						"SWS_UNMUTECHILDREN",	UnmuteChildren,   },
-	{ { DEFACCEL, "SWS: Toggle mute of children of selected folders" },				"SWS_TOGMUTECHILDRN",	TogMuteChildren,  },
-	{ { DEFACCEL, "SWS: Set selected tracks to same folder as previous track" },	"SWS_FOLDERPREV",		FolderLikePrev,   },
+	{ { DEFACCEL, "SWS: Mute children of selected folder(s)" },						"SWS_MUTECHILDREN",		MuteChildren,     },
+	{ { DEFACCEL, "SWS: Unmute children of selected folder(s)" },					"SWS_UNMUTECHILDREN",	UnmuteChildren,   },
+	{ { DEFACCEL, "SWS: Toggle mute of children of selected folder(s)" },			"SWS_TOGMUTECHILDRN",	TogMuteChildren,  },
+	{ { DEFACCEL, "SWS: Set selected track(s) to same folder as previous track" },	"SWS_FOLDERPREV",		FolderLikePrev,   },
 	{ { DEFACCEL, "SWS: Make folder from selected tracks" },						"SWS_MAKEFOLDER",		MakeFolder,       },
-	{ { DEFACCEL, "SWS: Indent selected tracks" },									"SWS_INDENT",			IndentTracks,     "SWS Indent tracks", },
-	{ { DEFACCEL, "SWS: Unindent selected tracks" },								"SWS_UNINDENT",			UnindentTracks,   "SWS Unindent tracks", },
-	{ { DEFACCEL, "SWS: Set selected folders collapsed" },							"SWS_COLLAPSE",			CollapseFolder, NULL, 2, },
-	{ { DEFACCEL, "SWS: Set selected folders uncollapsed" },						"SWS_UNCOLLAPSE",		CollapseFolder, NULL, 0, },
-	{ { DEFACCEL, "SWS: Set selected folders small" },								"SWS_FOLDSMALL",		CollapseFolder, NULL, 1, },
+	{ { DEFACCEL, "SWS: Indent selected track(s)" },								"SWS_INDENT",			IndentTracks,     "SWS Indent track(s)", },
+	{ { DEFACCEL, "SWS: Unindent selected track(s)" },								"SWS_UNINDENT",			UnindentTracks,   "SWS Unindent track(s)", },
+	{ { DEFACCEL, "SWS: Set selected folder(s) collapsed" },						"SWS_COLLAPSE",			CollapseFolder, NULL, 2, },
+	{ { DEFACCEL, "SWS: Set selected folder(s) uncollapsed" },						"SWS_UNCOLLAPSE",		CollapseFolder, NULL, 0, },
+	{ { DEFACCEL, "SWS: Set selected folder(s) small" },							"SWS_FOLDSMALL",		CollapseFolder, NULL, 1, },
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

@@ -317,7 +317,7 @@ void ColorChildren(COMMAND_T* = NULL)
 		if (iType + iFolder <= iParentDepth)
 			bSelected = false;
 	}
-	Undo_OnStateChangeEx(__LOCALIZE("Set tracks children to same color","sws_undo"), UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Set track(s) children to same color","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 
@@ -334,7 +334,7 @@ void WhiteItem(COMMAND_T* = NULL)
 				GetSetMediaItemInfo(mi, "I_CUSTOMCOLOR", &iWhite);
 		}
 	}
-	Undo_OnStateChange(__LOCALIZE("Set items color white","sws_undo"));
+	Undo_OnStateChange(__LOCALIZE("Set item(s) color white","sws_undo"));
 	UpdateTimeline();
 }
 
@@ -351,7 +351,7 @@ void BlackItem(COMMAND_T* = NULL)
 				GetSetMediaItemInfo(mi, "I_CUSTOMCOLOR", &iBlack);
 		}
 	}
-	Undo_OnStateChange(__LOCALIZE("Set items color black","sws_undo"));
+	Undo_OnStateChange(__LOCALIZE("Set item(s) color black","sws_undo"));
 	UpdateTimeline();
 }
 
@@ -364,7 +364,7 @@ void WhiteTrack(COMMAND_T* = NULL)
 		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 			GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", &iWhite);
 	}
-	Undo_OnStateChangeEx(__LOCALIZE("Set tracks color white","sws_undo"), UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Set track(s) color white","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 void BlackTrack(COMMAND_T* = NULL)
@@ -376,7 +376,7 @@ void BlackTrack(COMMAND_T* = NULL)
 		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 			GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", &iBlack);
 	}
-	Undo_OnStateChangeEx(__LOCALIZE("Set tracks color black","sws_undo"), UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Set track(s) color black","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 void ColorTrackPrev(COMMAND_T* = NULL)
@@ -389,7 +389,7 @@ void ColorTrackPrev(COMMAND_T* = NULL)
 			GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", GetSetMediaTrackInfo(prevTr, "I_CUSTOMCOLOR", NULL));
 		prevTr = tr;
 	}
-	Undo_OnStateChangeEx(__LOCALIZE("Set tracks to previous track's color","sws_undo"), UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Set track(s) to previous track's color","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 void ColorTrackNext(COMMAND_T* = NULL)
@@ -400,7 +400,7 @@ void ColorTrackNext(COMMAND_T* = NULL)
 		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 			GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", GetSetMediaTrackInfo(CSurf_TrackFromID(i+1, false), "I_CUSTOMCOLOR", NULL));
 	}
-	Undo_OnStateChangeEx(__LOCALIZE("Set tracks to previous track's color","sws_undo"), UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Set track(s) to previous track's color","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 
@@ -438,7 +438,7 @@ void ColorTrackNextCust(COMMAND_T* = NULL)
 			GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", &cr);
 		}
 	}
-	Undo_OnStateChangeEx(__LOCALIZE("Set tracks to next custom color","sws_undo"), UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Set track(s) to next custom color","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 void ColorItemNextCust(COMMAND_T* = NULL)
@@ -460,7 +460,7 @@ void ColorItemNextCust(COMMAND_T* = NULL)
 			}
 		}
 	}
-	Undo_OnStateChange(__LOCALIZE("Set items to next custom color","sws_undo"));
+	Undo_OnStateChange(__LOCALIZE("Set item(s) to next custom color","sws_undo"));
 	UpdateTimeline();
 }
 
@@ -478,7 +478,7 @@ void TrackRandomCol(COMMAND_T* = NULL)
 		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 			GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", &cr);
 	}
-	Undo_OnStateChangeEx(__LOCALIZE("Set tracks to one random custom color","sws_undo"), UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Set track(s) to one random custom color","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 void TrackRandomCols(COMMAND_T* = NULL)
@@ -497,7 +497,7 @@ void TrackRandomCols(COMMAND_T* = NULL)
 			GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", &cr);
 		}
 	}
-	Undo_OnStateChangeEx(__LOCALIZE("Set tracks to random custom colors","sws_undo"), UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Set track(s) to random custom color(s)","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 void ItemRandomCol(COMMAND_T* = NULL)
@@ -518,7 +518,7 @@ void ItemRandomCol(COMMAND_T* = NULL)
 				GetSetMediaItemInfo(mi, "I_CUSTOMCOLOR", &cr);
 		}
 	}
-	Undo_OnStateChange(__LOCALIZE("Set items to one random custom color","sws_undo"));
+	Undo_OnStateChange(__LOCALIZE("Set item(s) to one random custom color","sws_undo"));
 	UpdateTimeline();
 }
 
@@ -542,7 +542,7 @@ void ItemRandomCols(COMMAND_T* = NULL)
 			}
 		}
 	}
-	Undo_OnStateChange(__LOCALIZE("Set items to random custom colors","sws_undo"));
+	Undo_OnStateChange(__LOCALIZE("Set item(s) to random custom color(s)","sws_undo"));
 	UpdateTimeline();
 }
 
@@ -569,7 +569,7 @@ void TakeRandomCols(COMMAND_T* = NULL)
 			}
 		}
 	}
-	Undo_OnStateChange(__LOCALIZE("Set takes in selected items to random custom colors","sws_undo"));
+	Undo_OnStateChange(__LOCALIZE("Set takes in selected item(s) to random custom color(s)","sws_undo"));
 	UpdateTimeline();
 }
 
@@ -585,7 +585,7 @@ void TrackCustomColor(int iCustColor)
 			GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", &cr);
 	}
 	char cUndoText[100];
-	sprintf(cUndoText, __LOCALIZE_VERFMT("Set tracks to custom color %d","sws_undo"), iCustColor+1);
+	sprintf(cUndoText, __LOCALIZE_VERFMT("Set track(s) to custom color %d","sws_undo"), iCustColor+1);
 	Undo_OnStateChangeEx(cUndoText, UNDO_STATE_TRACKCFG, -1);
 }
 
@@ -605,7 +605,7 @@ void ItemCustomColor(int iCustColor)
 		}
 	}
 	char cUndoText[100];
-	sprintf(cUndoText, __LOCALIZE_VERFMT("Set items to custom color %d","sws_undo"), iCustColor+1);
+	sprintf(cUndoText, __LOCALIZE_VERFMT("Set item(s) to custom color %d","sws_undo"), iCustColor+1);
 	Undo_OnStateChange(cUndoText);
 	UpdateTimeline();
 }
@@ -630,7 +630,7 @@ void TakeCustomColor(int iCustColor)
 		}
 	}
 	char cUndoText[100];
-	sprintf(cUndoText, __LOCALIZE_VERFMT("Set takes to custom color %d","sws_undo"), iCustColor+1);
+	sprintf(cUndoText, __LOCALIZE_VERFMT("Set take(s) to custom color %d","sws_undo"), iCustColor+1);
 	Undo_OnStateChange(cUndoText);
 	UpdateTimeline();
 }
@@ -648,7 +648,7 @@ void RandomColorAll(COMMAND_T*)
 		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
 			Undo_BeginBlock();
-			Main_OnCommand(40360, 0); // Set tracks to one random color
+			Main_OnCommand(40360, 0); // Set track(s) to one random color
 			COLORREF cr = *(COLORREF*)GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", NULL);
 			for (int i = 1; i <= GetNumTracks(); i++)
 			{
@@ -661,12 +661,12 @@ void RandomColorAll(COMMAND_T*)
 				}
 			}
 			UpdateTimeline();
-			Undo_EndBlock(__LOCALIZE("Set selected tracks/items to one random color","sws_undo"), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS);
+			Undo_EndBlock(__LOCALIZE("Set selected track(s)/item(s) to one random color","sws_undo"), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS);
 			return;
 		}
 	}
 	// No tracks selected so just run the item action
-	Main_OnCommand(40706, 0); // Set items to one random color
+	Main_OnCommand(40706, 0); // Set item(s) to one random color
 }
 
 void CustomColorAll(COMMAND_T*)
@@ -678,7 +678,7 @@ void CustomColorAll(COMMAND_T*)
 		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
 			Undo_BeginBlock();
-			Main_OnCommand(40357, 0); // Set tracks to one custom color
+			Main_OnCommand(40357, 0); // Set track(s) to one custom color
 			// Assume the user clicked 'OK' in the color picker!
 			COLORREF cr = *(COLORREF*)GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", NULL);
 			for (int i = 1; i <= GetNumTracks(); i++)
@@ -692,12 +692,12 @@ void CustomColorAll(COMMAND_T*)
 				}
 			}
 			UpdateTimeline();
-			Undo_EndBlock(__LOCALIZE("Set selected tracks/items to custom color","sws_undo"), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS);
+			Undo_EndBlock(__LOCALIZE("Set selected track(s)/item(s) to custom color","sws_undo"), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS);
 			return;
 		}
 	}
 	// No tracks selected so just run the item action
-	Main_OnCommand(40704, 0); // Set items to one custom color
+	Main_OnCommand(40704, 0); // Set item(s) to one custom color
 }
 
 int RecRedRulerEnabled(COMMAND_T*)
@@ -788,7 +788,7 @@ void TrackOrderedCol(COMMAND_T* = NULL)
 			GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", &cr);
 		}
 	}
-	Undo_OnStateChangeEx(__LOCALIZE("Set tracks to ordered custom color colors","sws_undo"), UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Set track(s) to ordered custom color color(s)","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 void ItemTrackGrad(COMMAND_T* = NULL)
@@ -828,7 +828,7 @@ void ItemTrackGrad(COMMAND_T* = NULL)
 			}
 		}
 	}
-	Undo_OnStateChange(__LOCALIZE("Set selected items to color gradient per track","sws_undo"));
+	Undo_OnStateChange(__LOCALIZE("Set selected item(s) to color gradient per track","sws_undo"));
 	UpdateTimeline();
 }
 
@@ -858,7 +858,7 @@ void ItemGradient(COMMAND_T* = NULL)
 			}
 		}
 	}
-	Undo_OnStateChange(__LOCALIZE("Set selected items to color gradient","sws_undo"));
+	Undo_OnStateChange(__LOCALIZE("Set selected item(s) to color gradient","sws_undo"));
 	UpdateTimeline();
 }
 
@@ -882,7 +882,7 @@ void TakeGradient(COMMAND_T* = NULL)
 			}
 		}
 	}
-	Undo_OnStateChange(__LOCALIZE("Set takes in selected items to color gradient","sws_undo"));
+	Undo_OnStateChange(__LOCALIZE("Set takes in selected item(s) to color gradient","sws_undo"));
 	UpdateTimeline();
 }
 
@@ -903,7 +903,7 @@ void ItemOrdColTrack(COMMAND_T* = NULL)
 			}
 		}
 	}
-	Undo_OnStateChange(__LOCALIZE("Set selected items to ordered custom colors","sws_undo"));
+	Undo_OnStateChange(__LOCALIZE("Set selected item(s) to ordered custom colors","sws_undo"));
 	UpdateTimeline();
 }
 
@@ -924,7 +924,7 @@ void ItemOrderedCol(COMMAND_T* = NULL)
 			}
 		}
 	}
-	Undo_OnStateChange(__LOCALIZE("Set selected items to ordered custom colors","sws_undo"));
+	Undo_OnStateChange(__LOCALIZE("Set selected item(s) to ordered custom colors","sws_undo"));
 	UpdateTimeline();
 }
 
@@ -942,7 +942,7 @@ void ItemToTrackCol(COMMAND_T* = NULL)
 				GetSetMediaItemInfo(mi, "I_CUSTOMCOLOR", &cr);
 		}
 	}
-	Undo_OnStateChange(__LOCALIZE("Set selected items to respective track color","sws_undo"));
+	Undo_OnStateChange(__LOCALIZE("Set selected item(s) to respective track color","sws_undo"));
 	UpdateTimeline();
 }
 
@@ -967,7 +967,7 @@ void TakeOrderedCol(COMMAND_T* = NULL)
 			}
 		}
 	}
-	Undo_OnStateChange(__LOCALIZE("Set takes in selected items to ordered custom colors","sws_undo"));
+	Undo_OnStateChange(__LOCALIZE("Set takes in selected item(s) to ordered custom colors","sws_undo"));
 	UpdateTimeline();
 }
 
@@ -978,88 +978,88 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Toggle ruler red while recording" },                      "SWS_RECREDRULER",		RecRedRuler,		"Enable red ruler while recording (SWS)", 0, RecRedRulerEnabled },
 	// Position of the above two commands in this table is important for menu generation!
 
-	{ { DEFACCEL, "SWS: Set selected tracks to color white" },                  "SWS_WHITETRACK",			WhiteTrack,			NULL, },
-	{ { DEFACCEL, "SWS: Set selected tracks to color black" },                  "SWS_BLACKTRACK",			BlackTrack,			NULL, },
-	{ { DEFACCEL, "SWS: Set selected tracks to previous track's color" },       "SWS_COLTRACKPREV",		    ColorTrackPrev,		NULL, },
-	{ { DEFACCEL, "SWS: Set selected tracks to next track's color" },           "SWS_COLTRACKNEXT",		    ColorTrackNext,		NULL, },
-	{ { DEFACCEL, "SWS: Set selected tracks to next custom color" },            "SWS_COLTRACKNEXTCUST",	    ColorTrackNextCust,	NULL, },
+	{ { DEFACCEL, "SWS: Set selected track(s) to color white" },	              "SWS_WHITETRACK",			WhiteTrack,			NULL, },
+	{ { DEFACCEL, "SWS: Set selected track(s) to color black" },	              "SWS_BLACKTRACK",			BlackTrack,			NULL, },
+	{ { DEFACCEL, "SWS: Set selected track(s) to previous track's color" },       "SWS_COLTRACKPREV",		ColorTrackPrev,		NULL, },
+	{ { DEFACCEL, "SWS: Set selected track(s) to next track's color" },           "SWS_COLTRACKNEXT",		ColorTrackNext,		NULL, },
+	{ { DEFACCEL, "SWS: Set selected track(s) to next custom color" },            "SWS_COLTRACKNEXTCUST",	ColorTrackNextCust,	NULL, },
 
 	// Start of menu!!
-	{ { DEFACCEL, "SWS: Set selected tracks to one random custom color" },      "SWS_TRACKRANDCOL",		    TrackRandomCol,		"Set to one random custom color", },
-	{ { DEFACCEL, "SWS: Set selected tracks to random custom colors" },         "SWS_TRACKRANDCOLS",		TrackRandomCols,	"Set to random custom colors", },
-	{ { DEFACCEL, "SWS: Set selected tracks to color gradient" },               "SWS_TRACKGRAD",			TrackGradient,		"Set to color gradient", },
-	{ { DEFACCEL, "SWS: Set selected tracks to ordered custom colors" },        "SWS_TRACKORDCOL",		    TrackOrderedCol,	"Set to ordered custom colors", },
-	{ { DEFACCEL, "SWS: Set selected tracks children to same color" },          "SWS_COLCHILDREN",		    ColorChildren,		"Set children to same color", },
-	{ { DEFACCEL, "SWS: Set selected tracks to custom color 1" },               "SWS_TRACKCUSTCOL1",		TrackCustCol,		"Set to custom color 1", 0 },
-	{ { DEFACCEL, "SWS: Set selected tracks to custom color 2" },               "SWS_TRACKCUSTCOL2",		TrackCustCol,		"Set to custom color 2", 1 },
-	{ { DEFACCEL, "SWS: Set selected tracks to custom color 3" },               "SWS_TRACKCUSTCOL3",		TrackCustCol,		"Set to custom color 3", 2 },
-	{ { DEFACCEL, "SWS: Set selected tracks to custom color 4" },               "SWS_TRACKCUSTCOL4",		TrackCustCol,		"Set to custom color 4", 3 },
-	{ { DEFACCEL, "SWS: Set selected tracks to custom color 5" },               "SWS_TRACKCUSTCOL5",		TrackCustCol,		"Set to custom color 5", 4 },
-	{ { DEFACCEL, "SWS: Set selected tracks to custom color 6" },               "SWS_TRACKCUSTCOL6",		TrackCustCol,		"Set to custom color 6", 5 },
-	{ { DEFACCEL, "SWS: Set selected tracks to custom color 7" },               "SWS_TRACKCUSTCOL7",		TrackCustCol,		"Set to custom color 7", 6 },
-	{ { DEFACCEL, "SWS: Set selected tracks to custom color 8" },               "SWS_TRACKCUSTCOL8",		TrackCustCol,		"Set to custom color 8", 7 },
-	{ { DEFACCEL, "SWS: Set selected tracks to custom color 9" },               "SWS_TRACKCUSTCOL9",		TrackCustCol,		"Set to custom color 9", 8 },
-	{ { DEFACCEL, "SWS: Set selected tracks to custom color 10" },              "SWS_TRACKCUSTCOL10",		TrackCustCol,		"Set to custom color 10", 9 },
-	{ { DEFACCEL, "SWS: Set selected tracks to custom color 11" },              "SWS_TRACKCUSTCOL11",		TrackCustCol,		"Set to custom color 11", 10 },
-	{ { DEFACCEL, "SWS: Set selected tracks to custom color 12" },              "SWS_TRACKCUSTCOL12",		TrackCustCol,		"Set to custom color 12", 11 },
-	{ { DEFACCEL, "SWS: Set selected tracks to custom color 13" },              "SWS_TRACKCUSTCOL13",		TrackCustCol,		"Set to custom color 13", 12 },
-	{ { DEFACCEL, "SWS: Set selected tracks to custom color 14" },              "SWS_TRACKCUSTCOL14",		TrackCustCol,		"Set to custom color 14", 13 },
-	{ { DEFACCEL, "SWS: Set selected tracks to custom color 15" },              "SWS_TRACKCUSTCOL15",		TrackCustCol,		"Set to custom color 15", 14 },
-	{ { DEFACCEL, "SWS: Set selected tracks to custom color 16" },              "SWS_TRACKCUSTCOL16",		TrackCustCol,		"Set to custom color 16", 15 },
+	{ { DEFACCEL, "SWS: Set selected track(s) to one random custom color" },      "SWS_TRACKRANDCOL",		TrackRandomCol,		"Set to one random custom color", },
+	{ { DEFACCEL, "SWS: Set selected track(s) to random custom color(s)" },       "SWS_TRACKRANDCOLS",		TrackRandomCols,	"Set to random custom color(s)", },
+	{ { DEFACCEL, "SWS: Set selected tracks to color gradient" },                 "SWS_TRACKGRAD",			TrackGradient,		"Set to color gradient", },
+	{ { DEFACCEL, "SWS: Set selected track(s) to ordered custom colors" },        "SWS_TRACKORDCOL",		TrackOrderedCol,	"Set to ordered custom colors", },
+	{ { DEFACCEL, "SWS: Set selected track(s) children to same color" },          "SWS_COLCHILDREN",		ColorChildren,		"Set children to same color", },
+	{ { DEFACCEL, "SWS: Set selected track(s) to custom color 1" },               "SWS_TRACKCUSTCOL1",		TrackCustCol,		"Set to custom color 1", 0 },
+	{ { DEFACCEL, "SWS: Set selected track(s) to custom color 2" },               "SWS_TRACKCUSTCOL2",		TrackCustCol,		"Set to custom color 2", 1 },
+	{ { DEFACCEL, "SWS: Set selected track(s) to custom color 3" },               "SWS_TRACKCUSTCOL3",		TrackCustCol,		"Set to custom color 3", 2 },
+	{ { DEFACCEL, "SWS: Set selected track(s) to custom color 4" },               "SWS_TRACKCUSTCOL4",		TrackCustCol,		"Set to custom color 4", 3 },
+	{ { DEFACCEL, "SWS: Set selected track(s) to custom color 5" },               "SWS_TRACKCUSTCOL5",		TrackCustCol,		"Set to custom color 5", 4 },
+	{ { DEFACCEL, "SWS: Set selected track(s) to custom color 6" },               "SWS_TRACKCUSTCOL6",		TrackCustCol,		"Set to custom color 6", 5 },
+	{ { DEFACCEL, "SWS: Set selected track(s) to custom color 7" },               "SWS_TRACKCUSTCOL7",		TrackCustCol,		"Set to custom color 7", 6 },
+	{ { DEFACCEL, "SWS: Set selected track(s) to custom color 8" },               "SWS_TRACKCUSTCOL8",		TrackCustCol,		"Set to custom color 8", 7 },
+	{ { DEFACCEL, "SWS: Set selected track(s) to custom color 9" },               "SWS_TRACKCUSTCOL9",		TrackCustCol,		"Set to custom color 9", 8 },
+	{ { DEFACCEL, "SWS: Set selected track(s) to custom color 10" },              "SWS_TRACKCUSTCOL10",		TrackCustCol,		"Set to custom color 10", 9 },
+	{ { DEFACCEL, "SWS: Set selected track(s) to custom color 11" },              "SWS_TRACKCUSTCOL11",		TrackCustCol,		"Set to custom color 11", 10 },
+	{ { DEFACCEL, "SWS: Set selected track(s) to custom color 12" },              "SWS_TRACKCUSTCOL12",		TrackCustCol,		"Set to custom color 12", 11 },
+	{ { DEFACCEL, "SWS: Set selected track(s) to custom color 13" },              "SWS_TRACKCUSTCOL13",		TrackCustCol,		"Set to custom color 13", 12 },
+	{ { DEFACCEL, "SWS: Set selected track(s) to custom color 14" },              "SWS_TRACKCUSTCOL14",		TrackCustCol,		"Set to custom color 14", 13 },
+	{ { DEFACCEL, "SWS: Set selected track(s) to custom color 15" },              "SWS_TRACKCUSTCOL15",		TrackCustCol,		"Set to custom color 15", 14 },
+	{ { DEFACCEL, "SWS: Set selected track(s) to custom color 16" },              "SWS_TRACKCUSTCOL16",		TrackCustCol,		"Set to custom color 16", 15 },
 	//  End of menu!!
 
-	{ { DEFACCEL, "SWS: Set selected items to color white" },	                "SWS_WHITEITEM",			WhiteItem,			NULL, },
-	{ { DEFACCEL, "SWS: Set selected items to color black" },	                "SWS_BLACKITEM",			BlackItem,			NULL, },
-	{ { DEFACCEL, "SWS: Set selected items to next custom color" },             "SWS_COLITEMNEXTCUST",	    ColorItemNextCust,	NULL, },
+	{ { DEFACCEL, "SWS: Set selected item(s) to color white" },	                  "SWS_WHITEITEM",			WhiteItem,			NULL, },
+	{ { DEFACCEL, "SWS: Set selected item(s) to color black" },	                  "SWS_BLACKITEM",			BlackItem,			NULL, },
+	{ { DEFACCEL, "SWS: Set selected item(s) to next custom color" },             "SWS_COLITEMNEXTCUST",	ColorItemNextCust,	NULL, },
 
 	// Start of menu!!
-	{ { DEFACCEL, "SWS: Set selected items to one random custom color" },        "SWS_ITEMRANDCOL",		    ItemRandomCol,		"Set to one random custom color", },
-	{ { DEFACCEL, "SWS: Set selected items to random custom colors" },           "SWS_ITEMRANDCOLS",		ItemRandomCols,		"Set to random custom colors", },
-	{ { DEFACCEL, "SWS: Set selected items to color gradient per track" },       "SWS_ITEMTRACKGRAD",		ItemTrackGrad,		"Set to color gradient per track", },
-	{ { DEFACCEL, "SWS: Set selected items to color gradient" },                 "SWS_ITEMGRAD",			ItemGradient,		"Set to color gradient", },
-	{ { DEFACCEL, "SWS: Set selected items to ordered custom colors per track" },"SWS_ITEMORDCOLTRACK",	    ItemOrdColTrack,	"Set to ordered custom colors per track", },
-	{ { DEFACCEL, "SWS: Set selected items to ordered custom colors" },          "SWS_ITEMORDCOL",			ItemOrderedCol,		"Set to ordered custom colors", },
-	{ { DEFACCEL, "SWS: Set selected items to respective track color" },         "SWS_ITEMTRKCOL",			ItemToTrackCol,		"Set to track color", },
-	{ { DEFACCEL, "SWS: Set selected items to custom color 1" },                 "SWS_ITEMCUSTCOL1",		ItemCustCol,		"Set to custom color 1", 0 },
-	{ { DEFACCEL, "SWS: Set selected items to custom color 2" },                 "SWS_ITEMCUSTCOL2",		ItemCustCol,		"Set to custom color 2", 1 },
-	{ { DEFACCEL, "SWS: Set selected items to custom color 3" },                 "SWS_ITEMCUSTCOL3",		ItemCustCol,		"Set to custom color 3", 2 },
-	{ { DEFACCEL, "SWS: Set selected items to custom color 4" },                 "SWS_ITEMCUSTCOL4",		ItemCustCol,		"Set to custom color 4", 3 },
-	{ { DEFACCEL, "SWS: Set selected items to custom color 5" },                 "SWS_ITEMCUSTCOL5",		ItemCustCol,		"Set to custom color 5", 4 },
-	{ { DEFACCEL, "SWS: Set selected items to custom color 6" },                 "SWS_ITEMCUSTCOL6",		ItemCustCol,		"Set to custom color 6", 5 },
-	{ { DEFACCEL, "SWS: Set selected items to custom color 7" },                 "SWS_ITEMCUSTCOL7",		ItemCustCol,		"Set to custom color 7", 6 },
-	{ { DEFACCEL, "SWS: Set selected items to custom color 8" },                 "SWS_ITEMCUSTCOL8",		ItemCustCol,		"Set to custom color 8", 7 },
-	{ { DEFACCEL, "SWS: Set selected items to custom color 9" },                 "SWS_ITEMCUSTCOL9",		ItemCustCol,		"Set to custom color 9", 8 },
-	{ { DEFACCEL, "SWS: Set selected items to custom color 10" },                "SWS_ITEMCUSTCOL10",		ItemCustCol,		"Set to custom color 10", 9 },
-	{ { DEFACCEL, "SWS: Set selected items to custom color 11" },                "SWS_ITEMCUSTCOL11",		ItemCustCol,		"Set to custom color 11", 10 },
-	{ { DEFACCEL, "SWS: Set selected items to custom color 12" },                "SWS_ITEMCUSTCOL12",		ItemCustCol,		"Set to custom color 12", 11 },
-	{ { DEFACCEL, "SWS: Set selected items to custom color 13" },                "SWS_ITEMCUSTCOL13",		ItemCustCol,		"Set to custom color 13", 12 },
-	{ { DEFACCEL, "SWS: Set selected items to custom color 14" },                "SWS_ITEMCUSTCOL14",		ItemCustCol,		"Set to custom color 14", 13 },
-	{ { DEFACCEL, "SWS: Set selected items to custom color 15" },                "SWS_ITEMCUSTCOL15",		ItemCustCol,		"Set to custom color 15", 14 },
-	{ { DEFACCEL, "SWS: Set selected items to custom color 16" },                "SWS_ITEMCUSTCOL16",		ItemCustCol,		"Set to custom color 16", 15 },
+	{ { DEFACCEL, "SWS: Set selected item(s) to one random custom color" },       "SWS_ITEMRANDCOL",		ItemRandomCol,		"Set to one random custom color", },
+	{ { DEFACCEL, "SWS: Set selected item(s) to random custom color(s)" },        "SWS_ITEMRANDCOLS",		ItemRandomCols,		"Set to random custom color(s)", },
+	{ { DEFACCEL, "SWS: Set selected item(s) to color gradient per track" },      "SWS_ITEMTRACKGRAD",		ItemTrackGrad,		"Set to color gradient per track", },
+	{ { DEFACCEL, "SWS: Set selected item(s) to color gradient" },                "SWS_ITEMGRAD",			ItemGradient,		"Set to color gradient", },
+	{ { DEFACCEL, "SWS: Set selected item(s) to ordered custom colors per track" },"SWS_ITEMORDCOLTRACK",	ItemOrdColTrack,	"Set to ordered custom colors per track", },
+	{ { DEFACCEL, "SWS: Set selected item(s) to ordered custom colors" },         "SWS_ITEMORDCOL",			ItemOrderedCol,		"Set to ordered custom colors", },
+	{ { DEFACCEL, "SWS: Set selected item(s) to respective track color" },        "SWS_ITEMTRKCOL",			ItemToTrackCol,		"Set to track color", },
+	{ { DEFACCEL, "SWS: Set selected item(s) to custom color 1" },                "SWS_ITEMCUSTCOL1",		ItemCustCol,		"Set to custom color 1", 0 },
+	{ { DEFACCEL, "SWS: Set selected item(s) to custom color 2" },                "SWS_ITEMCUSTCOL2",		ItemCustCol,		"Set to custom color 2", 1 },
+	{ { DEFACCEL, "SWS: Set selected item(s) to custom color 3" },                "SWS_ITEMCUSTCOL3",		ItemCustCol,		"Set to custom color 3", 2 },
+	{ { DEFACCEL, "SWS: Set selected item(s) to custom color 4" },                "SWS_ITEMCUSTCOL4",		ItemCustCol,		"Set to custom color 4", 3 },
+	{ { DEFACCEL, "SWS: Set selected item(s) to custom color 5" },                "SWS_ITEMCUSTCOL5",		ItemCustCol,		"Set to custom color 5", 4 },
+	{ { DEFACCEL, "SWS: Set selected item(s) to custom color 6" },                "SWS_ITEMCUSTCOL6",		ItemCustCol,		"Set to custom color 6", 5 },
+	{ { DEFACCEL, "SWS: Set selected item(s) to custom color 7" },                "SWS_ITEMCUSTCOL7",		ItemCustCol,		"Set to custom color 7", 6 },
+	{ { DEFACCEL, "SWS: Set selected item(s) to custom color 8" },                "SWS_ITEMCUSTCOL8",		ItemCustCol,		"Set to custom color 8", 7 },
+	{ { DEFACCEL, "SWS: Set selected item(s) to custom color 9" },                "SWS_ITEMCUSTCOL9",		ItemCustCol,		"Set to custom color 9", 8 },
+	{ { DEFACCEL, "SWS: Set selected item(s) to custom color 10" },               "SWS_ITEMCUSTCOL10",		ItemCustCol,		"Set to custom color 10", 9 },
+	{ { DEFACCEL, "SWS: Set selected item(s) to custom color 11" },               "SWS_ITEMCUSTCOL11",		ItemCustCol,		"Set to custom color 11", 10 },
+	{ { DEFACCEL, "SWS: Set selected item(s) to custom color 12" },               "SWS_ITEMCUSTCOL12",		ItemCustCol,		"Set to custom color 12", 11 },
+	{ { DEFACCEL, "SWS: Set selected item(s) to custom color 13" },               "SWS_ITEMCUSTCOL13",		ItemCustCol,		"Set to custom color 13", 12 },
+	{ { DEFACCEL, "SWS: Set selected item(s) to custom color 14" },               "SWS_ITEMCUSTCOL14",		ItemCustCol,		"Set to custom color 14", 13 },
+	{ { DEFACCEL, "SWS: Set selected item(s) to custom color 15" },               "SWS_ITEMCUSTCOL15",		ItemCustCol,		"Set to custom color 15", 14 },
+	{ { DEFACCEL, "SWS: Set selected item(s) to custom color 16" },               "SWS_ITEMCUSTCOL16",		ItemCustCol,		"Set to custom color 16", 15 },
 	// End of menu!!
 
-	{ { DEFACCEL, "SWS: Set selected tracks/items to one random color" },        "SWS_RANDOMCOLALL",		RandomColorAll,		NULL, },
-	{ { DEFACCEL, "SWS: Set selected tracks/items to custom color..." },         "SWS_CUSTOMCOLALL",		CustomColorAll,		NULL, },
+	{ { DEFACCEL, "SWS: Set selected track(s)/item(s) to one random color" },     "SWS_RANDOMCOLALL",		RandomColorAll,		NULL, },
+	{ { DEFACCEL, "SWS: Set selected track(s)/item(s) to custom color..." },      "SWS_CUSTOMCOLALL",		CustomColorAll,		NULL, },
 
-	{ { DEFACCEL, "SWS: Set takes in selected items to random custom colors"},   "SWS_TAKESRANDCOLS",		TakeRandomCols,		NULL, },
-	{ { DEFACCEL, "SWS: Set takes in selected items to color gradient"},		 "SWS_TAKEGRAD",			TakeGradient,		NULL, },
-	{ { DEFACCEL, "SWS: Set takes in selected items to ordered custom colors"},  "SWS_TAKEORDCOL",			TakeOrderedCol,		NULL, },
-	{ { DEFACCEL, "SWS: Set selected takes to custom color 1" },                 "SWS_TAKECUSTCOL1",		TakeCustCol,		NULL, 0 },
-	{ { DEFACCEL, "SWS: Set selected takes to custom color 2" },                 "SWS_TAKECUSTCOL2",		TakeCustCol,		NULL, 1 },
-	{ { DEFACCEL, "SWS: Set selected takes to custom color 3" },                 "SWS_TAKECUSTCOL3",		TakeCustCol,		NULL, 2 },
-	{ { DEFACCEL, "SWS: Set selected takes to custom color 4" },                 "SWS_TAKECUSTCOL4",		TakeCustCol,		NULL, 3 },
-	{ { DEFACCEL, "SWS: Set selected takes to custom color 5" },                 "SWS_TAKECUSTCOL5",		TakeCustCol,		NULL, 4 },
-	{ { DEFACCEL, "SWS: Set selected takes to custom color 6" },                 "SWS_tAKECUSTCOL6",		TakeCustCol,		NULL, 5 },
-	{ { DEFACCEL, "SWS: Set selected takes to custom color 7" },                 "SWS_TAKECUSTCOL7",		TakeCustCol,		NULL, 6 },
-	{ { DEFACCEL, "SWS: Set selected takes to custom color 8" },                 "SWS_TAKECUSTCOL8",		TakeCustCol,		NULL, 7 },
-	{ { DEFACCEL, "SWS: Set selected takes to custom color 9" },                 "SWS_TAKECUSTCOL9",		TakeCustCol,		NULL, 8 },
-	{ { DEFACCEL, "SWS: Set selected takes to custom color 10" },                "SWS_TAKECUSTCOL10",		TakeCustCol,		NULL, 9 },
-	{ { DEFACCEL, "SWS: Set selected takes to custom color 11" },                "SWS_TAKECUSTCOL11",		TakeCustCol,		NULL, 10 },
-	{ { DEFACCEL, "SWS: Set selected takes to custom color 12" },                "SWS_TAKECUSTCOL12",		TakeCustCol,		NULL, 11 },
-	{ { DEFACCEL, "SWS: Set selected takes to custom color 13" },                "SWS_TAKECUSTCOL13",		TakeCustCol,		NULL, 12 },
-	{ { DEFACCEL, "SWS: Set selected takes to custom color 14" },                "SWS_TAKECUSTCOL14",		TakeCustCol,		NULL, 13 },
-	{ { DEFACCEL, "SWS: Set selected takes to custom color 15" },                "SWS_TAKECUSTCOL15",		TakeCustCol,		NULL, 14 },
-	{ { DEFACCEL, "SWS: Set selected takes to custom color 16" },                "SWS_TAKECUSTCOL16",		TakeCustCol,		NULL, 15 },
+	{ { DEFACCEL, "SWS: Set takes in selected item(s) to random custom color(s)"},"SWS_TAKESRANDCOLS",		TakeRandomCols,		NULL, },
+	{ { DEFACCEL, "SWS: Set takes in selected item(s) to color gradient"},		  "SWS_TAKEGRAD",			TakeGradient,		NULL, },
+	{ { DEFACCEL, "SWS: Set takes in selected item(s) to ordered custom colors"}, "SWS_TAKEORDCOL",			TakeOrderedCol,		NULL, },
+	{ { DEFACCEL, "SWS: Set selected take(s) to custom color 1" },                "SWS_TAKECUSTCOL1",		TakeCustCol,		NULL, 0 },
+	{ { DEFACCEL, "SWS: Set selected take(s) to custom color 2" },                "SWS_TAKECUSTCOL2",		TakeCustCol,		NULL, 1 },
+	{ { DEFACCEL, "SWS: Set selected take(s) to custom color 3" },                "SWS_TAKECUSTCOL3",		TakeCustCol,		NULL, 2 },
+	{ { DEFACCEL, "SWS: Set selected take(s) to custom color 4" },                "SWS_TAKECUSTCOL4",		TakeCustCol,		NULL, 3 },
+	{ { DEFACCEL, "SWS: Set selected take(s) to custom color 5" },                "SWS_TAKECUSTCOL5",		TakeCustCol,		NULL, 4 },
+	{ { DEFACCEL, "SWS: Set selected take(s) to custom color 6" },                "SWS_tAKECUSTCOL6",		TakeCustCol,		NULL, 5 },
+	{ { DEFACCEL, "SWS: Set selected take(s) to custom color 7" },                "SWS_TAKECUSTCOL7",		TakeCustCol,		NULL, 6 },
+	{ { DEFACCEL, "SWS: Set selected take(s) to custom color 8" },                "SWS_TAKECUSTCOL8",		TakeCustCol,		NULL, 7 },
+	{ { DEFACCEL, "SWS: Set selected take(s) to custom color 9" },                "SWS_TAKECUSTCOL9",		TakeCustCol,		NULL, 8 },
+	{ { DEFACCEL, "SWS: Set selected take(s) to custom color 10" },               "SWS_TAKECUSTCOL10",		TakeCustCol,		NULL, 9 },
+	{ { DEFACCEL, "SWS: Set selected take(s) to custom color 11" },               "SWS_TAKECUSTCOL11",		TakeCustCol,		NULL, 10 },
+	{ { DEFACCEL, "SWS: Set selected take(s) to custom color 12" },               "SWS_TAKECUSTCOL12",		TakeCustCol,		NULL, 11 },
+	{ { DEFACCEL, "SWS: Set selected take(s) to custom color 13" },               "SWS_TAKECUSTCOL13",		TakeCustCol,		NULL, 12 },
+	{ { DEFACCEL, "SWS: Set selected take(s) to custom color 14" },               "SWS_TAKECUSTCOL14",		TakeCustCol,		NULL, 13 },
+	{ { DEFACCEL, "SWS: Set selected take(s) to custom color 15" },               "SWS_TAKECUSTCOL15",		TakeCustCol,		NULL, 14 },
+	{ { DEFACCEL, "SWS: Set selected take(s) to custom color 16" },               "SWS_TAKECUSTCOL16",		TakeCustCol,		NULL, 15 },
 
 	{ {}, LAST_COMMAND, NULL }, // Denote end of table
 };

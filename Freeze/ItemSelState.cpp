@@ -311,7 +311,7 @@ void RestoreSelTrackSelItems(int iSlot)
 	PreventUIRefresh(-1);
 
 	char cUndoText[256];
-	sprintf(cUndoText, __LOCALIZE_VERFMT("Restore selected tracks selected items, slot %d","sws_undo"), iSlot+1);
+	sprintf(cUndoText, __LOCALIZE_VERFMT("Restore selected track(s) selected item(s), slot %d","sws_undo"), iSlot+1);
 	Undo_OnStateChangeEx(cUndoText, UNDO_STATE_ITEMS, -1);
 	UpdateArrange();
 }

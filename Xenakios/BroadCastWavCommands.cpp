@@ -10,10 +10,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/
+/ 
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/
+/ 
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -53,16 +53,16 @@ void DoRenameTakesWithBWAVDesc(COMMAND_T* ct)
 {
 	WDL_TypedBuf<MediaItem*> selectedItems;
 	SWS_GetSelectedMediaItems(&selectedItems);
-
+	
 	for (int i = 0; i < selectedItems.GetSize(); i++)
 	{
 		for (int iTake = 0; iTake < GetMediaItemNumTakes(selectedItems.Get()[i]); iTake++)
 		{
 			MediaItem_Take* curTake = GetMediaItemTake(selectedItems.Get()[i], iTake);
 			PCM_source* pSrc = (PCM_source*)GetSetMediaItemTakeInfo(curTake, "P_SOURCE", NULL);
-			if (!pSrc)
+			if (!pSrc) 
 				break;
-
+			
 			char buf[8192];
 			int sz = pSrc->Extended(PCM_SOURCE_EXT_GETMETADATA, (void*)"DESC", buf, (void*)(INT_PTR)(int)sizeof(buf));
 			if (sz > 0 && buf[0])
@@ -73,7 +73,7 @@ void DoRenameTakesWithBWAVDesc(COMMAND_T* ct)
 			else
 				MessageBox(g_hwndParent, __LOCALIZE("Take source media has no Broadcast Info Description","sws_mbox"), __LOCALIZE("Xenakios - Error","sws_mbox"),MB_OK);
 		}
-	}
+	}	
 	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 	UpdateTimeline();
 }
@@ -104,7 +104,7 @@ WDL_DLGRET NewRenameDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
     {
         case WM_INITDIALOG:
 			{
-
+				  
 			   	char FullFileName[1024];
 				char ShortFileName[1024];
 				char *TxtBuf=(char*)GetSetMediaItemTakeInfo(g_takerenameParams.TakeToRename,"P_NAME",NULL);
@@ -120,7 +120,7 @@ WDL_DLGRET NewRenameDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 						strcpy(FullFileName, ThePCM->GetFileName());
 						ExtractFileNameEx(FullFileName,ShortFileName,true);
 						SetDlgItemText(hwnd,IDC_FILENAME_EDIT,ShortFileName);
-					}
+					} 
 					else
 					{
 						PCM_source *TheOtherPCM=0;
@@ -181,7 +181,7 @@ WDL_DLGRET NewRenameDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 							g_takerenameParams.DoSourceRename=true;
 							g_takerenameParams.SourceNameFromTakeName=true;
 							EndDialog(hwnd,0);
-							return 0;
+							return 0;	
 						}
 					case IDC_RENAMEMEDIA:
 						{
@@ -193,7 +193,7 @@ WDL_DLGRET NewRenameDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 							g_takerenameParams.DoSourceRename=true;
 							g_takerenameParams.SourceNameFromTakeName=true;
 							EndDialog(hwnd,0);
-							return 0;
+							return 0;	
 						}
 				}
 			}
@@ -238,7 +238,7 @@ int ReplaceProjectMedia(char *OldFileName,char *NewFileName)
 				if (ThePCM!=0 && ThePCM->GetFileName())
 					if (strcmp(ThePCM->GetType(),"SECTION")!=0)
 						if (strcmp(ThePCM->GetFileName(),OldFileName)==0)
-							ThePCM->SetFileName(NewFileName);
+							ThePCM->SetFileName(NewFileName);	
 			}
 		}
 	}
@@ -279,7 +279,7 @@ void DoRenameTakeDlg(COMMAND_T*)
 		GetSetMediaItemTakeInfo(VecTakesToRename[i],"P_NAME",(void*)g_takerenameParams.NewTakeName.c_str());
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx(__LOCALIZE("Rename takes","sws_undo"),4,-1);
+	Undo_OnStateChangeEx(__LOCALIZE("Rename take(s)","sws_undo"),4,-1);
 }
 
 void DoOpenRPPofBWAVdesc(COMMAND_T*)
@@ -291,14 +291,14 @@ void DoOpenRPPofBWAVdesc(COMMAND_T*)
 		MessageBox(g_hwndParent, __LOCALIZE("Please select exactly one item.","sws_mbox"), __LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 		return;
 	}
-
+	
 	MediaItem_Take* take = GetMediaItemTake(selectedItems.Get()[0], -1);
 	if (!take)
 	{
 		MessageBox(g_hwndParent, __LOCALIZE("Active take is empty.","sws_mbox"), __LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 		return;
 	}
-
+	
 	PCM_source* pSrc = (PCM_source*)GetSetMediaItemTakeInfo(take, "P_SOURCE", NULL);
 	if (pSrc)
 	{
@@ -386,7 +386,7 @@ void PerformSectionLoopNudge(int paramToNudge,double nudgeAmount)
 				if (paramToNudge==1)
 					sectiosoorssi->m_length=sectiosoorssi->m_length+nudgeAmount;
 				if (paramToNudge==2)
-					sectiosoorssi->m_edgeoverlap_time =sectiosoorssi->m_edgeoverlap_time+nudgeAmount;
+					sectiosoorssi->m_edgeoverlap_time =sectiosoorssi->m_edgeoverlap_time+nudgeAmount;			
 			}
 		}
 	}

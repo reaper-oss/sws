@@ -10,10 +10,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/
+/ 
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/
+/ 
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -50,7 +50,7 @@ void SaveProjectList(COMMAND_T*)
 			bValid = true;
 	if (!bValid)
 	{
-		MessageBox(g_hwndParent, __LOCALIZE("No saved projects are open. Please save your projects first.","sws_mbox"), __LOCALIZE("SWS Project List Save","sws_mbox"), MB_OK);
+		MessageBox(g_hwndParent, __LOCALIZE("No saved projects are open. Please save your project(s) first.","sws_mbox"), __LOCALIZE("SWS Project List Save","sws_mbox"), MB_OK);
 		return;
 	}
 
@@ -126,7 +126,7 @@ void OpenProjectsFromList(COMMAND_T*)
 		}
 		else
 			MessageBox(g_hwndParent, __LOCALIZE("Unable to open file.","sws_mbox"), __LOCALIZE("SWS Project List Open","sws_mbox"), MB_OK);
-
+		
 		free(filename);
 	}
 }
@@ -140,7 +140,7 @@ void AddRelatedProject(COMMAND_T* = NULL)
 	char cPath[256];
 	GetProjectPath(cPath, 256);
 
-	char* filename = BrowseForFiles(__LOCALIZE("Select related projects","sws_mbox"), cPath, NULL, false, "Reaper Project (*.RPP)\0*.RPP");
+	char* filename = BrowseForFiles(__LOCALIZE("Select related project(s)","sws_mbox"), cPath, NULL, false, "Reaper Project (*.RPP)\0*.RPP");
 	char* pBuf = filename;
 	if (pBuf)
 	{
@@ -151,7 +151,7 @@ void AddRelatedProject(COMMAND_T* = NULL)
 		}
 
 		free(pBuf);
-		Undo_OnStateChangeEx(__LOCALIZE("Add related projects","sws_mbox"), UNDO_STATE_MISCCFG, -1);
+		Undo_OnStateChangeEx(__LOCALIZE("Add related project(s)","sws_mbox"), UNDO_STATE_MISCCFG, -1);
 	}
 }
 
@@ -338,11 +338,11 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 static project_config_extension_t g_projectconfig = { ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL };
 
 //!WANT_LOCALIZE_SWS_CMD_TABLE_BEGIN:sws_actions
-COMMAND_T g_projMgrCmdTable[] =
+COMMAND_T g_projMgrCmdTable[] = 
 {
 	{ { DEFACCEL, "SWS: Save list of open projects" },	"SWS_PROJLISTSAVE",		SaveProjectList,		"Save list of open projects...", },
 	{ { DEFACCEL, "SWS: Open projects from list" },		"SWS_PROJLISTSOPEN",	OpenProjectsFromList,	"Open projects from list...", },
-	{ { DEFACCEL, "SWS: Add related projects" },		"SWS_ADDRELATEDPROJ",	AddRelatedProject,		"Add related projects...", },
+	{ { DEFACCEL, "SWS: Add related project(s)" },		"SWS_ADDRELATEDPROJ",	AddRelatedProject,		"Add related project(s)...", },
 	{ { DEFACCEL, "SWS: Delete related project" },		"SWS_DELRELATEDPROJ",	DelRelatedProject,		"Delete related project...", },
 	{ { DEFACCEL, "SWS: Open project list" },			"SWS_PROJLIST_OPEN",	OpenProjectList,		"SWS Project List", 0, ProjectListEnabled },
 	{ { DEFACCEL, "SWS: Open related project 1" },		"SWS_OPENRELATED1",		OpenRelatedProject,		"(related projects list)", 0 },

@@ -3,6 +3,7 @@ Snapshots
 +Improved snapshot recall (faster)
 
 Cycle Actions
++Ease action selection (works regardless of the displayed columns in the Action window)
 +Support new ReaScript command IDs (REAPER v5.05pre1+)
 
 Fixes

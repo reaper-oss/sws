@@ -437,11 +437,9 @@ HWND GetActionListBox(char* _currentSection, int _sectionSz)
 
 // returns the list view's selected item, or:
 // -1 if the action wnd is not opened
-// -2 if the custom id cannot be retrieved (hidden column)
+// deprecated: -2 if the custom id cannot be retrieved (hidden column)
 // -3 if there is no selected action
 // note: no multi-selection mgmt here..
-// API LIMITATION: could be much simplified if we could retrieve string ids fom cmdIds, 
-//                 e.g. if we had: const char* ReverseNamedCommandLookup(int)
 int GetSelectedAction(char* _section, int _secSize, int* _cmdId, char* _id, int _idSize, char* _desc, int _descSize)
 {
 	HWND hList = GetActionListBox(_section, _secSize);
@@ -469,20 +467,9 @@ int GetSelectedAction(char* _section, int _secSize, int* _cmdId, char* _id, int 
 
 					if (_id && _idSize > 0)
 					{
-						// SWS action? => get the custom id in a reliable way
-						if (!_section || (_section && !strcmp(_section,__localizeFunc("Main","accel_sec",0))))
-							if (COMMAND_T* ct = SWSGetCommandByID(cmdId))
-								return (_snprintfStrict(_id, _idSize, "_%s", ct->id)>0 ? i : -1);
-
-						// best effort to get the custom id (relies on displayed columns..)
-						SNM_ListView_GetItemText(hList, i, 3, _id, _idSize);  //JFB displaytodata? (ok: columns not re-orderable yet)
-						if (!*_id)
-						{
-							if (!IsMacroOrScript(actionName))
-								return (_snprintfStrict(_id, _idSize, "%d", (int)li.lParam)>0 ? i : -1);
-							else
-								return -2;
-						}
+						const char *custid=ReverseNamedCommandLookup(cmdId);
+						if (custid) _snprintfStrict(_id, _idSize, "_%s", custid);
+						else _snprintfStrict(_id, _idSize, "%d", cmdId);
 					}
 					return i;
 				}
@@ -521,12 +508,14 @@ bool GetSelectedAction(char* _idstrOut, int _idStrSz, KbdSectionInfo* _expectedS
 				__LOCALIZE("S&M - Error","sws_mbox"),
 				MB_OK);
 			return false;
+/* deprecated thanks to the new API func ReverseNamedCommandLookup()
 		case -2:
 			MessageBox(GetMainHwnd(),
 				__LOCALIZE("Action IDs are not displayed in the Actions window!\nTip: right-click on the table header > Show action IDs.","sws_mbox"),
 				__LOCALIZE("S&M - Error","sws_mbox"),
 				MB_OK);
 			return false;
+*/
 		case -1:
 			if (IDYES == MessageBox(
 				GetMainHwnd(),

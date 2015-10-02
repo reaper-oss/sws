@@ -7,7 +7,8 @@ Cycle Actions
 +Support new ReaScript command IDs (REAPER v5.05pre1+)
 
 Fixes
-+Localization: fixed broken user LangPacks (thanks ecl!)
++Localization: fixed partly broken user LangPacks (thanks ecl!)
++Fixed http://forum.cockos.com/showpost.php?p=1579114&postcount=2010|"SWS/AW: Consolidate Selection" potential crash|
 
 !v2.8.1 featured build (September 10, 2015)
 New actions

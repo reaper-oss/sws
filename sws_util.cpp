@@ -189,7 +189,10 @@ static int g_iNumSel = 0;
 void SaveSelected()
 {
 	if (g_pSelTracks)
+	{
 		delete [] g_pSelTracks;
+		g_pSelTracks=NULL;
+	}
 	g_iNumSel = NumSelTracks();
 	if (g_iNumSel)
 	{
@@ -203,6 +206,8 @@ void SaveSelected()
 
 void RestoreSelected()
 {
+	if (!g_pSelTracks) return;
+
 	int iSel = 1;
 	for (int i = 0; i < g_iNumSel; i++)
 		if (CSurf_TrackToID(g_pSelTracks[i], false) >= 0)

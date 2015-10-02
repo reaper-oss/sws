@@ -2,6 +2,9 @@ Snapshots
 +Fixed http://forum.cockos.com/showthread.php?t=166652|snapshots with bypassed FX Chains|
 +Improved snapshot recall (faster)
 
+Cycle Actions
++Support new ReaScript command IDs (REAPER v5.05pre1+)
+
 Fixes
 +Localization: fixed broken user LangPacks (thanks ecl!)
 

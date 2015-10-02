@@ -30,6 +30,7 @@
 #include "SnM_Chunk.h"
 #include "SnM_Util.h"
 #include "../reaper/localize.h"
+#include "../../WDL/sha.h"
 #include "../../WDL/projectcontext.h"
 
 
@@ -920,7 +921,7 @@ int GetMacroOrScript(const char* _custId, int _sectionUniqueId, WDL_PtrList<WDL_
 		{
 			LineParser lp(false);
 			if (!lp.parse(cmd) && 
-				lp.getnumtokens()>=5 && // indirectly exlude key shortcuts, etc..
+				lp.getnumtokens()>=5 &&
 				!_stricmp(lp.gettoken_str(3), _custId))
 			{
 				int success, iniSecId = lp.gettoken_int(2, &success);
@@ -973,18 +974,20 @@ bool IsMacroOrScript(const char* _cmd, bool _cmdIsName)
 		{
 			int len=0;
 			if (*_cmd=='_') _cmd++;
+
+			bool probably_new_script_id=false; // REAPER v5.05pre1+
+			if (!strncmp(_cmd, "RS", 2))
+			{
+				probably_new_script_id=true;
+				_cmd+=2;
+			}
+
 			while (*_cmd)
 			{
-				if ((*_cmd>='0' && *_cmd<='9') || 
-//					(*_cmd>='A' && *_cmd<='F') || 
-					(*_cmd>='a' && *_cmd<='f'))
-				{
-					_cmd++; len++;
-				}
-				else
-					return false;
+				if ((*_cmd>='0' && *_cmd<='9') ||  (*_cmd>='a' && *_cmd<='f')) { _cmd++; len++; }
+				else return false;
 			}
-			return len==SNM_MAX_MACRO_CUSTID_LEN;
+			return len == (probably_new_script_id ? WDL_SHA1SIZE*2 : SNM_MAX_MACRO_CUSTID_LEN);
 		}
 	}
 	return false;

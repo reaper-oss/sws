@@ -2,7 +2,7 @@ SWS Extension
 
 The SWS extension is a collection of features that seamlessly integrate into REAPER, the Digital Audio Workstation (DAW) software by Cockos, Inc.
 
-For more information on the capabilities of the SWS extension or to download it, please visit the end-user website http://www.standingwaterstudios.com/reaper.
+For more information on the capabilities of the SWS extension or to download it, please visit the end-user website http://www.sws-extension.org.
 For more information on REAPER itself or to download the latest version, go to http://www.reaper.fm.
 
 You are welcome to contribute! Just fork the repo and send us a pull request on the 'next' branch. For building details see https://github.com/Jeff0S/sws/wiki/Building-the-SWS-Extension.

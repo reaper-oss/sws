@@ -2299,6 +2299,7 @@ void BR_ContextualToolbarsWnd::OnInitDlg ()
 
 	// Options: All
 	int x;
+	WDL_UTF8_HookComboBox(GetDlgItem(m_hwnd, IDC_ALL_FOCUS_COMBO));
 	x = (int)SendDlgItemMessage(m_hwnd, IDC_ALL_FOCUS_COMBO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("All", "sws_DLG_181"));
 	SendDlgItemMessage(m_hwnd, IDC_ALL_FOCUS_COMBO, CB_SETITEMDATA, x, (LPARAM)(FOCUS_ALL));
 	x = (int)SendDlgItemMessage(m_hwnd, IDC_ALL_FOCUS_COMBO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Main window", "sws_DLG_181"));
@@ -2306,6 +2307,7 @@ void BR_ContextualToolbarsWnd::OnInitDlg ()
 	x = (int)SendDlgItemMessage(m_hwnd, IDC_ALL_FOCUS_COMBO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("MIDI editor", "sws_DLG_181"));
 	SendDlgItemMessage(m_hwnd, IDC_ALL_FOCUS_COMBO, CB_SETITEMDATA, x, (LPARAM)(FOCUS_MIDI));
 
+	WDL_UTF8_HookComboBox(GetDlgItem(m_hwnd, IDC_ALL_POS_H_COMBO));
 	x = (int)SendDlgItemMessage(m_hwnd, IDC_ALL_POS_H_COMBO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Horizontal: left", "sws_DLG_181"));
 	SendDlgItemMessage(m_hwnd, IDC_ALL_POS_H_COMBO, CB_SETITEMDATA, x, (LPARAM)(POSITION_H_LEFT));
 	x = (int)SendDlgItemMessage(m_hwnd, IDC_ALL_POS_H_COMBO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Horizontal: middle", "sws_DLG_181"));
@@ -2313,6 +2315,7 @@ void BR_ContextualToolbarsWnd::OnInitDlg ()
 	x = (int)SendDlgItemMessage(m_hwnd, IDC_ALL_POS_H_COMBO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Horizontal: right", "sws_DLG_181"));
 	SendDlgItemMessage(m_hwnd, IDC_ALL_POS_H_COMBO, CB_SETITEMDATA, x, (LPARAM)(POSITION_H_RIGHT));
 
+	WDL_UTF8_HookComboBox(GetDlgItem(m_hwnd, IDC_ALL_POS_V_COMBO));
 	x = (int)SendDlgItemMessage(m_hwnd, IDC_ALL_POS_V_COMBO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Vertical: bottom", "sws_DLG_181"));
 	SendDlgItemMessage(m_hwnd, IDC_ALL_POS_V_COMBO, CB_SETITEMDATA, x, (LPARAM)(POSITION_V_BOTTOM));
 	x = (int)SendDlgItemMessage(m_hwnd, IDC_ALL_POS_V_COMBO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Vertical: middle", "sws_DLG_181"));
@@ -2321,11 +2324,13 @@ void BR_ContextualToolbarsWnd::OnInitDlg ()
 	SendDlgItemMessage(m_hwnd, IDC_ALL_POS_V_COMBO, CB_SETITEMDATA, x, (LPARAM)(POSITION_V_TOP));
 
 	// Options: TCP
+	WDL_UTF8_HookComboBox(GetDlgItem(m_hwnd, IDC_TCP_TRACK_COMBO));
 	x = (int)SendDlgItemMessage(m_hwnd, IDC_TCP_TRACK_COMBO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Select track", "sws_DLG_181"));
 	SendDlgItemMessage(m_hwnd, IDC_TCP_TRACK_COMBO, CB_SETITEMDATA, x, (LPARAM)(SELECT_TRACK|CLEAR_TRACK_SELECTION));
 	x = (int)SendDlgItemMessage(m_hwnd, IDC_TCP_TRACK_COMBO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Add track to selection", "sws_DLG_181"));
 	SendDlgItemMessage(m_hwnd, IDC_TCP_TRACK_COMBO, CB_SETITEMDATA, x, (LPARAM)(SELECT_TRACK));
 
+	WDL_UTF8_HookComboBox(GetDlgItem(m_hwnd, IDC_TCP_ENV_COMBO));
 	x = (int)SendDlgItemMessage(m_hwnd, IDC_TCP_ENV_COMBO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Select envelope", "sws_DLG_181"));
 	SendDlgItemMessage(m_hwnd, IDC_TCP_ENV_COMBO, CB_SETITEMDATA, x, (LPARAM)(SELECT_ENVELOPE));
 	x = (int)SendDlgItemMessage(m_hwnd, IDC_TCP_ENV_COMBO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Select envelope and parent track", "sws_DLG_181"));
@@ -2338,17 +2343,20 @@ void BR_ContextualToolbarsWnd::OnInitDlg ()
 	SendDlgItemMessage(m_hwnd, IDC_TCP_ENV_COMBO, CB_SETITEMDATA, x, (LPARAM)(SELECT_TRACK));
 
 	// Options: MCP
+	WDL_UTF8_HookComboBox(GetDlgItem(m_hwnd, IDC_MCP_TRACK_COMBO));
 	x = (int)SendDlgItemMessage(m_hwnd, IDC_MCP_TRACK_COMBO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Select track", "sws_DLG_181"));
 	SendDlgItemMessage(m_hwnd, IDC_MCP_TRACK_COMBO, CB_SETITEMDATA, x, (LPARAM)(SELECT_TRACK|CLEAR_TRACK_SELECTION));
 	x = (int)SendDlgItemMessage(m_hwnd, IDC_MCP_TRACK_COMBO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Add track to selection", "sws_DLG_181"));
 	SendDlgItemMessage(m_hwnd, IDC_MCP_TRACK_COMBO, CB_SETITEMDATA, x, (LPARAM)(SELECT_TRACK));
 
 	// Options: Arrange
+	WDL_UTF8_HookComboBox(GetDlgItem(m_hwnd, IDC_ARG_TRACK_COMBO));
 	x = (int)SendDlgItemMessage(m_hwnd, IDC_ARG_TRACK_COMBO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Select track", "sws_DLG_181"));
 	SendDlgItemMessage(m_hwnd, IDC_ARG_TRACK_COMBO, CB_SETITEMDATA, x, (LPARAM)(SELECT_TRACK|CLEAR_TRACK_SELECTION));
 	x = (int)SendDlgItemMessage(m_hwnd, IDC_ARG_TRACK_COMBO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Add track to selection", "sws_DLG_181"));
 	SendDlgItemMessage(m_hwnd, IDC_ARG_TRACK_COMBO, CB_SETITEMDATA, x, (LPARAM)(SELECT_TRACK));
 
+	WDL_UTF8_HookComboBox(GetDlgItem(m_hwnd, IDC_ARG_ITEM_COMBO));
 	x = (int)SendDlgItemMessage(m_hwnd, IDC_ARG_ITEM_COMBO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Select item", "sws_DLG_181"));
 	SendDlgItemMessage(m_hwnd, IDC_ARG_ITEM_COMBO, CB_SETITEMDATA, x, (LPARAM)(SELECT_ITEM|CLEAR_ITEM_SELECTION));
 	x = (int)SendDlgItemMessage(m_hwnd, IDC_ARG_ITEM_COMBO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Select item and parent track", "sws_DLG_181"));
@@ -2366,6 +2374,7 @@ void BR_ContextualToolbarsWnd::OnInitDlg ()
 	x = (int)SendDlgItemMessage(m_hwnd, IDC_ARG_ITEM_COMBO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Add parent track to selection", "sws_DLG_181"));
 	SendDlgItemMessage(m_hwnd, IDC_ARG_ITEM_COMBO, CB_SETITEMDATA, x, (LPARAM)(SELECT_TRACK));
 
+	WDL_UTF8_HookComboBox(GetDlgItem(m_hwnd, IDC_ARG_STRETCH_COMBO));
 	x = (int)SendDlgItemMessage(m_hwnd, IDC_ARG_STRETCH_COMBO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Select item", "sws_DLG_181"));
 	SendDlgItemMessage(m_hwnd, IDC_ARG_STRETCH_COMBO, CB_SETITEMDATA, x, (LPARAM)(SELECT_ITEM|CLEAR_ITEM_SELECTION));
 	x = (int)SendDlgItemMessage(m_hwnd, IDC_ARG_STRETCH_COMBO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Select item and parent track", "sws_DLG_181"));
@@ -2383,6 +2392,7 @@ void BR_ContextualToolbarsWnd::OnInitDlg ()
 	x = (int)SendDlgItemMessage(m_hwnd, IDC_ARG_STRETCH_COMBO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Add parent track to selection", "sws_DLG_181"));
 	SendDlgItemMessage(m_hwnd, IDC_ARG_STRETCH_COMBO, CB_SETITEMDATA, x, (LPARAM)(SELECT_TRACK));
 
+	WDL_UTF8_HookComboBox(GetDlgItem(m_hwnd, IDC_ARG_TAKE_ENV_COMBO));
 	x = (int)SendDlgItemMessage(m_hwnd, IDC_ARG_TAKE_ENV_COMBO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Select envelope", "sws_DLG_181"));
 	SendDlgItemMessage(m_hwnd, IDC_ARG_TAKE_ENV_COMBO, CB_SETITEMDATA, x, (LPARAM)(SELECT_ENVELOPE));
 	x = (int)SendDlgItemMessage(m_hwnd, IDC_ARG_TAKE_ENV_COMBO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Select envelope and parent item", "sws_DLG_181"));
@@ -2394,7 +2404,7 @@ void BR_ContextualToolbarsWnd::OnInitDlg ()
 	x = (int)SendDlgItemMessage(m_hwnd, IDC_ARG_TAKE_ENV_COMBO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Add parent item to selection", "sws_DLG_181"));
 	SendDlgItemMessage(m_hwnd, IDC_ARG_TAKE_ENV_COMBO, CB_SETITEMDATA, x, (LPARAM)(SELECT_ITEM));
 
-
+	WDL_UTF8_HookComboBox(GetDlgItem(m_hwnd, IDC_ARG_TRACK_ENV_COMBO));
 	x = (int)SendDlgItemMessage(m_hwnd, IDC_ARG_TRACK_ENV_COMBO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Select envelope", "sws_DLG_181"));
 	SendDlgItemMessage(m_hwnd, IDC_ARG_TRACK_ENV_COMBO, CB_SETITEMDATA, x, (LPARAM)(SELECT_ENVELOPE));
 	x = (int)SendDlgItemMessage(m_hwnd, IDC_ARG_TRACK_ENV_COMBO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Select envelope and parent track", "sws_DLG_181"));
@@ -2407,6 +2417,7 @@ void BR_ContextualToolbarsWnd::OnInitDlg ()
 	SendDlgItemMessage(m_hwnd, IDC_ARG_TRACK_ENV_COMBO, CB_SETITEMDATA, x, (LPARAM)(SELECT_TRACK));
 
 	// Options: Inline MIDI editor
+	WDL_UTF8_HookComboBox(GetDlgItem(m_hwnd, IDC_INLINE_ITEM_COMBO));
 	x = (int)SendDlgItemMessage(m_hwnd, IDC_INLINE_ITEM_COMBO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Select item", "sws_DLG_181"));
 	SendDlgItemMessage(m_hwnd, IDC_INLINE_ITEM_COMBO, CB_SETITEMDATA, x, (LPARAM)(SELECT_ITEM|CLEAR_ITEM_SELECTION));
 	x = (int)SendDlgItemMessage(m_hwnd, IDC_INLINE_ITEM_COMBO, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Select item and parent track", "sws_DLG_181"));

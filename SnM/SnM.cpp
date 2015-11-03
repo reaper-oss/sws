@@ -126,7 +126,7 @@ static COMMAND_T s_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Focus previous floating FX (cycle)" }, "S&M_WNFOCUS7", CycleFocusFXMainWndAllTracks, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Focus next floating FX (cycle)" }, "S&M_WNFOCUS8", CycleFocusFXMainWndAllTracks, NULL, 1},
 
-	{ { DEFACCEL, "SWS/S&M: Focus main window" }, "S&M_WNMAIN", FocusMainWindow, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Focus main window (only valid within custom actions)" }, "S&M_WNMAIN", FocusMainWindow, NULL, },
 #ifdef _WIN32
 	{ { DEFACCEL, "SWS/S&M: Focus main window (close others)" }, "S&M_WNMAIN_HIDE_OTHERS", FocusMainWindowCloseOthers, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Cycle focused window" }, "S&M_WNFOCUS9", CycleFocusWnd, NULL, },

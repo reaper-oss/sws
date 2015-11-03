@@ -27,6 +27,7 @@
 
 
 #include "stdafx.h"
+#include "../reaper/localize.h"
 #include "../Misc/TrackSel.h"
 #include "../Snapshots/SnapshotClass.h"
 #include "../Snapshots/Snapshots.h"
@@ -196,7 +197,7 @@ int SWS_TrackListView::GetItemState(SWS_ListItem* item)
 }
 
 SWS_TrackListWnd::SWS_TrackListWnd()
-:SWS_DockWnd(IDD_TRACKLIST, "Track List", "SWSTrackList", SWSGetCommandID(OpenTrackList)),m_bUpdate(false),
+:SWS_DockWnd(IDD_TRACKLIST, __LOCALIZE("Track List","sws_DLG_108"), "SWSTrackList", SWSGetCommandID(OpenTrackList)),m_bUpdate(false),
 m_trLastTouched(NULL),m_bHideFiltered(false),m_bLink(false),m_cOptionsKey("Track List Options")
 {
 	// Restore state
@@ -303,7 +304,7 @@ HMENU SWS_TrackListWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 {
 	HMENU contextMenu = CreatePopupMenu();
 
-	AddToMenu(contextMenu, "Snapshot current track visibility", SWSGetCommandID(NewVisSnapshot));
+	AddToMenu(contextMenu, __LOCALIZE("Snapshot current track visibility","tracklistmenu"), SWSGetCommandID(NewVisSnapshot));
 	Snapshot* s;
 	int i = 0;
 	while((s = GetSnapshotPtr(i++)) != NULL)
@@ -314,34 +315,34 @@ HMENU SWS_TrackListWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 			int iCmd = SWSGetCommandID(GetSnapshot, s->m_iSlot);
 			if (!iCmd)
 				iCmd = LOADSNAP_MSG + s->m_iSlot;
-			_snprintf(cMenu, 50, "Recall snapshot %s", s->m_cName);
+			_snprintf(cMenu, 50, __LOCALIZE_VERFMT("Recall snapshot %s","tracklistmenu"), s->m_cName);
 			AddToMenu(contextMenu, cMenu, iCmd);
 		}
 	}
 
-	AddToMenu(contextMenu, "Show all tracks", SWSGetCommandID(ShowAll));
-	AddToMenu(contextMenu, "Show SWS Snapshots", SWSGetCommandID(OpenSnapshotsDialog));
+	AddToMenu(contextMenu, __LOCALIZE("Show all tracks","tracklistmenu"), SWSGetCommandID(ShowAll));
+	AddToMenu(contextMenu, __LOCALIZE("Show SWS Snapshots","tracklistmenu"), SWSGetCommandID(OpenSnapshotsDialog));
 
 	SWS_ListItem* item = m_pLists.Get(0)->GetHitItem(x, y, NULL);
 	if (item)
 	{
 		m_trLastTouched = (MediaTrack*)item;
 		AddToMenu(contextMenu, SWS_SEPARATOR, 0);
-		AddToMenu(contextMenu, "Rename", RENAME_MSG);
+		AddToMenu(contextMenu, __LOCALIZE("Rename","tracklistmenu"), RENAME_MSG);
 		AddToMenu(contextMenu, SWS_SEPARATOR, 0);
-		AddToMenu(contextMenu, "Show only in MCP", SWSGetCommandID(ShowInMCPOnly));
-		AddToMenu(contextMenu, "Show only in TCP", SWSGetCommandID(ShowInTCPOnly));
-		AddToMenu(contextMenu, "Show in both MCP and TCP", SWSGetCommandID(ShowInMCPandTCP));
-		AddToMenu(contextMenu, "Hide in both MCP and TCP", SWSGetCommandID(HideTracks));
+		AddToMenu(contextMenu, __LOCALIZE("Show only in MCP","tracklistmenu"), SWSGetCommandID(ShowInMCPOnly));
+		AddToMenu(contextMenu, __LOCALIZE("Show only in TCP","tracklistmenu"), SWSGetCommandID(ShowInTCPOnly));
+		AddToMenu(contextMenu, __LOCALIZE("Show in both MCP and TCP","tracklistmenu"), SWSGetCommandID(ShowInMCPandTCP));
+		AddToMenu(contextMenu, __LOCALIZE("Hide in both MCP and TCP","tracklistmenu"), SWSGetCommandID(HideTracks));
 		AddToMenu(contextMenu, SWS_SEPARATOR, 0);
-		AddToMenu(contextMenu, "Invert selection", SWSGetCommandID(TogTrackSel));
-		AddToMenu(contextMenu, "Hide unselected", SWSGetCommandID(HideUnSel));
+		AddToMenu(contextMenu, __LOCALIZE("Invert selection","tracklistmenu"), SWSGetCommandID(TogTrackSel));
+		AddToMenu(contextMenu, __LOCALIZE("Hide unselected","tracklistmenu"), SWSGetCommandID(HideUnSel));
 
 		HMENU fxSubMenu;
 		if(AddFXSubMenu(&fxSubMenu, m_trLastTouched))
 		{
 			AddToMenu(contextMenu, SWS_SEPARATOR, 0);
-			AddSubMenu(contextMenu, fxSubMenu, "FX");
+			AddSubMenu(contextMenu, fxSubMenu, __LOCALIZE("FX","tracklistmenu"));
 		}
 
 		// Check current state
@@ -513,7 +514,7 @@ void ShowInMCPOnly(COMMAND_T*)
 	}
 	TrackList_AdjustWindows(MAJORADJUST);
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Show selected track(s) in MCP only", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Show selected tracks in MCP only","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 void ShowInTCPOnly(COMMAND_T*)
@@ -526,7 +527,7 @@ void ShowInTCPOnly(COMMAND_T*)
 	}
 	TrackList_AdjustWindows(MAJORADJUST);
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Show selected track(s) in TCP only", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Show selected tracks in TCP only","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 void ShowInMCPandTCP(COMMAND_T*)
@@ -539,7 +540,7 @@ void ShowInMCPandTCP(COMMAND_T*)
 	}
 	TrackList_AdjustWindows(MAJORADJUST);
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Show selected track(s) in TCP and MCP", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Show selected tracks in TCP and MCP","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 void HideTracks(COMMAND_T*)
@@ -552,7 +553,7 @@ void HideTracks(COMMAND_T*)
 	}
 	TrackList_AdjustWindows(MAJORADJUST);
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Hide selected track(s)", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Hide selected tracks","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 void ShowInMCP(COMMAND_T*)
@@ -565,7 +566,7 @@ void ShowInMCP(COMMAND_T*)
 	}
 	TrackList_AdjustWindows(MAJORADJUST);
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Show selected track(s) in MCP", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Show selected tracks in MCP","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 void ShowInTCP(COMMAND_T*)
@@ -578,7 +579,7 @@ void ShowInTCP(COMMAND_T*)
 	}
 	TrackList_AdjustWindows(MAJORADJUST);
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Show selected track(s) in TCP", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Show selected tracks in TCP","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 void HideFromMCP(COMMAND_T*)
@@ -591,7 +592,7 @@ void HideFromMCP(COMMAND_T*)
 	}
 	TrackList_AdjustWindows(MAJORADJUST);
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Hide selected track(s) from MCP", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Hide selected tracks from MCP","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 void HideFromTCP(COMMAND_T*)
@@ -604,7 +605,7 @@ void HideFromTCP(COMMAND_T*)
 	}
 	TrackList_AdjustWindows(MAJORADJUST);
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Hide selected track(s) from TCP", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Hide selected tracks from TCP","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 void TogInMCP(COMMAND_T*)
@@ -617,7 +618,7 @@ void TogInMCP(COMMAND_T*)
 	}
 	TrackList_AdjustWindows(MAJORADJUST);
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Toggle selected track(s) visible in MCP", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Toggle selected tracks visible in MCP","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 void TogInTCP(COMMAND_T*)
@@ -630,7 +631,7 @@ void TogInTCP(COMMAND_T*)
 	}
 	TrackList_AdjustWindows(MAJORADJUST);
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Toggle selected track(s) visible in TCP", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Toggle selected tracks visible in TCP","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 void ToggleHide(COMMAND_T*)
@@ -643,7 +644,7 @@ void ToggleHide(COMMAND_T*)
 	}
 	TrackList_AdjustWindows(MAJORADJUST);
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Toggle selected track(s) fully visible/hidden", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Toggle selected tracks fully visible/hidden","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 void ShowAll(COMMAND_T*)
@@ -652,7 +653,7 @@ void ShowAll(COMMAND_T*)
 		SetTrackVis(CSurf_TrackFromID(i, false), 3);
 	TrackList_AdjustWindows(MAJORADJUST);
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Show all tracks", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Show all tracks","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 void ShowAllMCP(COMMAND_T*)
@@ -664,7 +665,7 @@ void ShowAllMCP(COMMAND_T*)
 	}
 	TrackList_AdjustWindows(MAJORADJUST);
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Show all tracks in MCP", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Show all tracks in MCP","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 void ShowAllTCP(COMMAND_T*)
@@ -676,7 +677,7 @@ void ShowAllTCP(COMMAND_T*)
 	}
 	TrackList_AdjustWindows(MAJORADJUST);
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Show all tracks in TCP", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Show all tracks in TCP","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 void HideAll(COMMAND_T* = NULL)
@@ -685,7 +686,7 @@ void HideAll(COMMAND_T* = NULL)
 		SetTrackVis(CSurf_TrackFromID(i, false), 0);
 	TrackList_AdjustWindows(MAJORADJUST);
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Hide all tracks", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Hide all tracks","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 void ShowInMCPEx(COMMAND_T*)
@@ -702,7 +703,7 @@ void ShowInMCPEx(COMMAND_T*)
 	}
 	TrackList_AdjustWindows(MAJORADJUST);
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Show selected track(s) in MCP, hide others", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Show selected tracks in MCP, hide others","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 void ShowInTCPEx(COMMAND_T*)
@@ -719,7 +720,7 @@ void ShowInTCPEx(COMMAND_T*)
 	}
 	TrackList_AdjustWindows(MAJORADJUST);
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Show selected track(s) in TCP, hide others", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Show selected tracks in TCP, hide others","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 void ShowSelOnly(COMMAND_T*)
@@ -735,7 +736,7 @@ void ShowSelOnly(COMMAND_T*)
 	}
 	TrackList_AdjustWindows(MAJORADJUST);
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Show selected track(s), hide others", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Show selected tracks, hide others","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 void HideUnSel(COMMAND_T*)
@@ -748,7 +749,7 @@ void HideUnSel(COMMAND_T*)
 	}
 	TrackList_AdjustWindows(MAJORADJUST);
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Hide unselected track(s)", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Hide unselected tracks","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 static void ClearFilter(COMMAND_T*)

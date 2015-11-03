@@ -392,7 +392,11 @@ const char *stristr(const char* a, const char* b)
   int n = strlen(a)-len;
   for (i = 0; i <= n; ++i)
   {
+#ifdef _WIN32
+    if (!_strnicmp(a+i, b, len)) return a+i;
+#else
     if (!strnicmp(a+i, b, len)) return a+i;
+#endif
   }
   return NULL;
 }

@@ -1,9 +1,9 @@
 @echo off
 
-REM Copyright 2014 Jeffos. All rights reserved.
+REM Copyright 2015 Jeffos. All rights reserved.
 
-REM When uploading, the website will be automatically updated thanks to a PHP 
-REM that reads the (new) version.h. The version checker reads that file too.
+REM The website is automatically updated thanks to a PHP that reads the (new) 
+REM version.h. At runtime, the version checker reads that file too.
 
 
 REM ===========================================================================
@@ -30,51 +30,20 @@ set build_type=
 set /p build_type=Build type? (f[eatured] / p[re-release]) 
 if %build_type%==f (
 	set build_type=featured
-	goto inc_choice
+	goto whatsnew
 )
 if %build_type%==p (
 	set build_type=pre-release
-	goto inc_choice
+	goto whatsnew
 )
 echo Invalid input '%build_type%': 'f', 'p', or 'n' expected!
 goto error
 
 
-REM ====== VERSIONING =========================================================
-:inc_choice
-..\BuildUtils\Release\PrintVersion ..\version.h "Current version: v%%d.%%d.%%d #%%d"
-
-echo.
-echo New version, enter:
-echo   i[ncrement]: to increment build # in version.h, and
-echo                add this new version to the whatsnew.txt
-echo   m[anual]: to add the current version to the whatsnew.txt 
-echo             (e.g. when version.h was edited by hand)
-echo   n[o]: to use the current version.h and whatsnew.txt
-
-set choice_inc=
-set /p choice_inc=New version? (i[ncrement] / m[anual] / n[o]) 
-if %choice_inc%==i goto inc
-if %choice_inc%==m goto inc_add
-if %choice_inc%==n goto inc_no
-
-echo Invalid input '%choice_inc%': 'i', 'm', or 'n' expected!
-goto error
-
-:inc
-echo Incrementing version...
-..\BuildUtils\Release\IncVersion.exe ..\version.h
-
-:inc_add
-REM Add a version line in ..\whatsnew.txt
-..\BuildUtils\Release\PrintVersion ..\version.h -d "!v%%d.%%d.%%d #%%d %build_type% build" > ..\whatsnew.txt
-type temp\oldwhatsnew.txt >> ..\whatsnew.txt
-
-:inc_no
-copy ..\whatsnew.txt output\whatsnew.txt > NUL
-
+REM ====== WHATSNEW ===========================================================
 :whatsnew
 echo Generating output\whatsnew.htm...
+copy ..\whatsnew.txt output\whatsnew.txt > NUL
 ..\BuildUtils\Release\MakeWhatsNew.exe output\whatsnew.txt > output\whatsnew.html
 
 REM ====== LANGPACK ===========================================================
@@ -179,7 +148,7 @@ REM 2nd step ==========================
 REM backup remote files and upload new ones
 echo user %ftp_user% > temp\upload.ftp
 echo %ftp_pwd%>> temp\upload.ftp
-echo cd download/%build_type% >> temp\upload.ftp
+echo cd www/download/%build_type% >> temp\upload.ftp
 echo binary >> temp\upload.ftp
 
 REM Backup current remote files into download/%build_type%/old (except whatsnew.html: common to all versions)

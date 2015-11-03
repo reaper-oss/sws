@@ -37,6 +37,7 @@
 #include "SnM_Track.h"
 #include "SnM_Util.h"
 #include "../Zoom.h"
+#include "../reaper/localize.h"
 
 
 #define FIND_WND_ID				"SnMFind"
@@ -133,7 +134,7 @@ bool TrackNotesMatch(MediaTrack* _tr, const char* _searchStr)
 // S&M windows lazy init: below's "" prevents registering the SWS' screenset callback
 // (use the S&M one instead - already registered via SNM_WindowManager::Init())
 FindWnd::FindWnd()
-	: SWS_DockWnd(IDD_SNM_FIND, "Find", "", SWSGetCommandID(OpenFind))
+	: SWS_DockWnd(IDD_SNM_FIND, __LOCALIZE("Find","sws_DLG_154"), "", SWSGetCommandID(OpenFind))
 {
 	m_id.Set(FIND_WND_ID);
 	m_type = 0;
@@ -160,11 +161,11 @@ void FindWnd::OnInitDlg()
 	
 	m_txtScope.SetID(TXTID_SCOPE);
 	m_txtScope.SetFont(font);
-	m_txtScope.SetText("Find in:");
+	m_txtScope.SetText(__LOCALIZE("Find in:","sws_DLG_154"));
 	m_parentVwnd.AddChild(&m_txtScope);
 
 	m_btnEnableZommScroll.SetID(BTNID_ZOOM_SCROLL_EN);
-	m_btnEnableZommScroll.SetTextLabel("Zoom/Scroll", -1, font);
+	m_btnEnableZommScroll.SetTextLabel(__LOCALIZE("Zoom/Scroll","sws_DLG_154"), -1, font);
 	m_btnEnableZommScroll.SetCheckState(m_zoomSrollItems);
 	m_parentVwnd.AddChild(&m_btnEnableZommScroll);
 
@@ -179,14 +180,14 @@ void FindWnd::OnInitDlg()
 
 	m_cbType.SetID(CMBID_TYPE);
 	m_cbType.SetFont(font);
-	m_cbType.AddItem("Item names");
-	m_cbType.AddItem("Item names (all takes)");
-	m_cbType.AddItem("Media filenames");
-	m_cbType.AddItem("Media filenames (all takes)");
-	m_cbType.AddItem("Item notes");
-	m_cbType.AddItem("Track names");
-	m_cbType.AddItem("Track notes");
-	m_cbType.AddItem("Marker/region names");
+	m_cbType.AddItem(__LOCALIZE("Item names","sws_DLG_154"));
+	m_cbType.AddItem(__LOCALIZE("Item names (all takes)","sws_DLG_154"));
+	m_cbType.AddItem(__LOCALIZE("Media filenames","sws_DLG_154"));
+	m_cbType.AddItem(__LOCALIZE("Media filenames (all takes)","sws_DLG_154"));
+	m_cbType.AddItem(__LOCALIZE("Item notes","sws_DLG_154"));
+	m_cbType.AddItem(__LOCALIZE("Track names","sws_DLG_154"));
+	m_cbType.AddItem(__LOCALIZE("Track notes","sws_DLG_154"));
+	m_cbType.AddItem(__LOCALIZE("Marker/region names","sws_DLG_154"));
 	m_cbType.SetCurSel(m_type);
 	m_parentVwnd.AddChild(&m_cbType);
 
@@ -328,21 +329,21 @@ void FindWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeigh
 	x0 = _r->left + SNM_GUI_X_MARGIN_OLD;
 	int y0 = _r->top+56;
 
-	SNM_SkinToolbarButton(&m_btnFind, "Find all");
+	SNM_SkinToolbarButton(&m_btnFind, __LOCALIZE("Find all","sws_DLG_154"));
 	m_btnFind.SetGrayed(!g_searchStr || !(*g_searchStr) || m_type == TYPE_MARKER_REGION);
 	if (SNM_AutoVWndPosition(DT_LEFT, &m_btnFind, NULL, _r, &x0, y0, h, 4))
 	{
-		SNM_SkinToolbarButton(&m_btnPrev, "Previous");
+		SNM_SkinToolbarButton(&m_btnPrev, __LOCALIZE("Previous","sws_DLG_154"));
 		m_btnPrev.SetGrayed(!g_searchStr || !(*g_searchStr));
 		if (SNM_AutoVWndPosition(DT_LEFT, &m_btnPrev, NULL, _r, &x0, y0, h, 4))
 		{
-			SNM_SkinToolbarButton(&m_btnNext, "Next");
+			SNM_SkinToolbarButton(&m_btnNext, __LOCALIZE("Next","sws_DLG_154"));
 			m_btnNext.SetGrayed(!g_searchStr || !(*g_searchStr));
 			SNM_AutoVWndPosition(DT_LEFT, &m_btnNext, NULL, _r, &x0, y0, h);
 		}
 	}
 
-	m_txtResult.SetText(g_notFound ? "Not found!" : "");
+	m_txtResult.SetText(g_notFound ? __LOCALIZE("Not found!","sws_DLG_154") : "");
 	SNM_AutoVWndPosition(DT_LEFT, &m_txtResult, NULL, _r, &x0, y0, h);
 }
 
@@ -519,7 +520,7 @@ bool FindWnd::FindMediaItem(int _dir, bool _allTakes, bool (*jobTake)(MediaItem_
 	if (update)
 	{
 		UpdateTimeline();
-		Undo_EndBlock2(NULL, "Find: change media item selection", UNDO_STATE_ALL);
+		Undo_EndBlock2(NULL, __LOCALIZE("Find: change media item selection","sws_undo"), UNDO_STATE_ALL);
 	}
 	return update;
 }
@@ -585,7 +586,7 @@ bool FindWnd::FindTrack(int _dir, bool (*job)(MediaTrack*,const char*))
 	}
 
 	if (update)
-		Undo_EndBlock2(NULL, "Find: change track selection", UNDO_STATE_ALL);
+		Undo_EndBlock2(NULL, __LOCALIZE("Find: change track selection","sws_undo"), UNDO_STATE_ALL);
 
 	return update;
 }
@@ -625,7 +626,7 @@ bool FindWnd::FindMarkerRegion(int _dir)
 		}
 	}
 	if (update)
-		Undo_OnStateChangeEx2(NULL, "Find: change edit cursor position", UNDO_STATE_ALL, -1); // in case the pref "undo pt for edit cursor positions" is enabled..
+		Undo_OnStateChangeEx2(NULL, __LOCALIZE("Find: change edit cursor position","sws_undo"), UNDO_STATE_ALL, -1); // in case the pref "undo pt for edit cursor positions" is enabled..
 	return update;
 }
 

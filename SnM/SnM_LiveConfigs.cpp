@@ -848,7 +848,7 @@ void LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 	switch (LOWORD(wParam))
 	{
 		case HELP_MSG:
-			ShellExecute(m_hwnd, "open", "http://reaper.mj-s.com/S&M_LiveConfigs.pdf" , NULL, NULL, SW_SHOWNORMAL); //JFB! oudated
+			ShellExecute(m_hwnd, "open", "http://www.sws-extension.org/download/S&M_LiveConfigs.pdf" , NULL, NULL, SW_SHOWNORMAL); //JFB! oudated
 			break;
 		case CREATE_INPUT_MSG:
 		{

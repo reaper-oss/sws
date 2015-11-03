@@ -509,7 +509,7 @@ INT_PTR SWS_AutoColorWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam
 			}
 
 			if (col < 0)
-				col = GetSysColor(COLOR_3DFACE);
+				col = GetSysColor(COLOR_3DHILIGHT);
 
 			HBRUSH hb = CreateSolidBrush(col);
 			FillRect(pDI->hDC, &pDI->rcItem, hb);

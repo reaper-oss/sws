@@ -319,7 +319,7 @@ void SWS_AutoColorWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		}
 		case IDC_ADD:
 			// default options when we add a new row
-			g_pACItems.Add(new SWS_RuleItem(AC_TRACK, "(name)", -AC_NONE-1, ""));
+			g_pACItems.Add(new SWS_RuleItem(AC_TRACK, __LOCALIZE("(name)","sws_DLG_115"), -AC_NONE-1, ""));
 			Update();
 			break;
 		case IDC_REMOVE:

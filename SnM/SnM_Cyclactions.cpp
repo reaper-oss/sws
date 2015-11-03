@@ -1738,7 +1738,8 @@ void CommandsView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iStr
 
 					int instIdx = IsStatement(pItem->Get());
 					if (instIdx>=0) {
-						txt.Append(g_statementInfos[instIdx]); lstrcpyn(str, txt.Get(), iStrMax);
+						txt.Append(__localizeFunc(g_statementInfos[instIdx],"sws_DLG_161",LOCALIZE_FLAG_NOCACHE)); 
+						lstrcpyn(str, txt.Get(), iStrMax);
 						return;
 					}
 
@@ -2525,7 +2526,7 @@ HMENU CyclactionWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 						i!=IDX_STATEMENT_LOOP && i!=IDX_STATEMENT_ENDLOOP)
 					{
 						itemTxt.Append("  [");
-						itemTxt.Append(g_statementInfos[i]);
+						itemTxt.Append(__localizeFunc(g_statementInfos[i],"sws_DLG_161",LOCALIZE_FLAG_NOCACHE));
 						itemTxt.Append("]");
 					}
 					AddToMenu(hStatementSubMenu, itemTxt.Get(), ADD_STATEMENT_MSG+i);

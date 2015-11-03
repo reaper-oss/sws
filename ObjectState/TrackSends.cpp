@@ -53,7 +53,7 @@ INT_PTR WINAPI doResolve(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			CheckDlgButton(hwndDlg, IDC_APPLY, BST_CHECKED);
 			HWND hTracks = GetDlgItem(hwndDlg, IDC_TRACK);
 			WDL_UTF8_HookComboBox(hTracks);
-			SendMessage(hTracks, CB_ADDSTRING, 0, (LPARAM)"(create new track)");
+			SendMessage(hTracks, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("(create new track)","sws_DLG_114"));
 				
 			for (int i = 1; i <= GetNumTracks(); i++)
 			{
@@ -106,8 +106,8 @@ bool ResolveMissingRecv(MediaTrack* tr, int iSend, TrackSend* ts, WDL_PtrList<Tr
 	WDL_FastString str;
 	char* cName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
 	if (!cName || !cName[0])
-		cName = (char*)"(unnamed)";
-	str.SetFormatted(200, "Send %d on track %d \"%s\" is missing its receive track! ", iSend+1, CSurf_TrackToID(tr, false), cName);
+		cName = (char*)__LOCALIZE("(unnamed)","sws_DLG_114");
+	str.SetFormatted(200, __LOCALIZE_VERFMT("Send %d on track %d \"%s\" is missing its receive track!","sws_DLG_114"), iSend+1, CSurf_TrackToID(tr, false), cName);
 
 	g_cErrorStr = str.Get();
 	g_ts = ts;

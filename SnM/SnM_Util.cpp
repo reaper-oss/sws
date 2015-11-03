@@ -437,9 +437,9 @@ void ScanFiles(WDL_PtrList<WDL_String>* _files, const char* _initDir, const char
 	WDL_DirScan ds;
 	if (_files && _initDir && !ds.First(_initDir))
 	{
-		char* curFn;
+		const char* curFn;
 		const char* curfnExt;
-		WDL_String fn, ext;
+		WDL_FastString fn, ext;
 		do 
 		{
 			curFn = ds.GetCurrentFN();
@@ -465,7 +465,7 @@ void ScanFiles(WDL_PtrList<WDL_String>* _files, const char* _initDir, const char
 					curfnExt = GetFileExtension(curFn);
 					if (*curfnExt)
 					{
-						ext.SetFormatted(32, "*.%s", curfnExt);
+						ext.SetFormatted(64, "*.%s", curfnExt);
 						if (stristr(_filterList, ext.Get())) {
 							ds.GetCurrentFullFN(&fn);
 							_files->Add(new WDL_String(fn.Get()));

@@ -368,11 +368,11 @@ void ShowThemeHelper(WDL_FastString* _report, HWND _hwnd, bool _mcp, bool _sel)
 						RECT r;	GetClientRect(w, &r);
 						char* trName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
 						_report->AppendFormatted(
-							256,
-							"%s Track #%d '%s': W=%d, H=%d\n",
-							_mcp ? "MCP" : "TCP",
+							1024,
+							__LOCALIZE_VERFMT("%s Track #%d '%s': W=%d, H=%d\n","theme_helper"),
+							_mcp ? __LOCALIZE("MCP","theme_helper") : __LOCALIZE("TCP","theme_helper"),
 							trIdx==-1 ? 0 : trIdx,
-							trIdx==-1 ? "[MASTER]" : (trName?trName:""),
+							trIdx==-1 ? __LOCALIZE("[MASTER]","theme_helper") : (trName?trName:""),
 							(int)(r.right-r.left),
 							(int)(r.bottom-r.top));
 					}
@@ -397,7 +397,7 @@ void ShowThemeHelper(COMMAND_T* _ct)
 	if (w && IsWindowVisible(w)) 
 		ShowThemeHelper(&report, w, true, (int)_ct->user == 1);
 
-	SNM_ShowMsg(report.Get(), "S&M - Theme Helper");
+	SNM_ShowMsg(report.Get(), __LOCALIZE("S&M - Theme Helper","theme_helper"));
 }
 
 

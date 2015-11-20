@@ -28,6 +28,7 @@
 #include "stdafx.h"
 #include "../SnM/SnM_Dlg.h"
 #include "../reaper/localize.h"
+#include "../../WDL/wdlcstring.h"
 
 using namespace std;
 
@@ -641,7 +642,7 @@ void DoDeleteItemAndMedia(COMMAND_T*)
 					CurTake=GetMediaItemTake(CurItem,k);
 					PCM_source *CurPCM;
 					CurPCM=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
-					if (CurPCM && CurPCM->GetFileName() && FileExists(CurPCM->GetFileName()))
+					if (CurPCM && CurPCM->GetFileName() && FileExists(CurPCM->GetFileName()) && stricmp(WDL_get_fileext(CurPCM->GetFileName()), ".rpp"))
 					{
 						char buf[2000];
 						sprintf(buf,__LOCALIZE_VERFMT("Do you really want to immediately delete file (NO UNDO) %s?","sws_mbox"),CurPCM->GetFileName());
@@ -709,7 +710,7 @@ void DoDelSelItemAndSendActiveTakeMediaToRecycler(COMMAND_T*)
 				{
 					CurTake=GetMediaItemTake(CurItem,k);
 					PCM_source* CurPCM = (PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
-					if (CurPCM && CurPCM->GetFileName() && FileExists(CurPCM->GetFileName()))
+					if (CurPCM && CurPCM->GetFileName() && FileExists(CurPCM->GetFileName()) && stricmp(WDL_get_fileext(CurPCM->GetFileName()), ".rpp"))
 					{
 						SendFileToRecycleBin(CurPCM->GetFileName());
 						char fileName[512];
@@ -746,7 +747,7 @@ void DoNukeTakeAndSourceMedia(COMMAND_T*)
 				CurTake=GetMediaItemTake(CurItem,-1);
 				PCM_source *CurPCM;
 				CurPCM=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
-				if (CurPCM && CurPCM->GetFileName() && FileExists(CurPCM->GetFileName()))
+				if (CurPCM && CurPCM->GetFileName() && FileExists(CurPCM->GetFileName()) && stricmp(WDL_get_fileext(CurPCM->GetFileName()), ".rpp"))
 				{
 					char buf[2000];
 					sprintf(buf,__LOCALIZE_VERFMT("Do you really want to immediately delete file (NO UNDO) %s?","sws_mbox"),CurPCM->GetFileName());
@@ -788,7 +789,7 @@ void DoDeleteActiveTakeAndRecycleSourceMedia(COMMAND_T*)
 			{
 				CurTake=GetMediaItemTake(CurItem,-1);
 				PCM_source *CurPCM=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
-				if (CurPCM && CurPCM->GetFileName() && FileExists(CurPCM->GetFileName()))
+				if (CurPCM && CurPCM->GetFileName() && FileExists(CurPCM->GetFileName()) && stricmp(WDL_get_fileext(CurPCM->GetFileName()), ".rpp"))
 				{
 					SendFileToRecycleBin(CurPCM->GetFileName());
 					char fileName[512];

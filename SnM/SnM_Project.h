@@ -55,9 +55,10 @@ protected:
 
 void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
 
-void SetProjectStartupAction(COMMAND_T*);
-void ClearProjectStartupAction(COMMAND_T*);
-void ShowProjectStartupAction(COMMAND_T*);
+void GlobalStartupActionTimer();
+void SetStartupAction(COMMAND_T*);
+void ClearStartupAction(COMMAND_T*);
+void ShowStartupActions(COMMAND_T*);
 int SNM_ProjectInit();
 void SNM_ProjectExit();
 

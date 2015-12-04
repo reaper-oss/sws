@@ -1,5 +1,8 @@
 Actions
-+Prevent various delete take/item/source file actions to delete project files (ReaProxy)
++Added a global startup action (in addition to per-project startup actions)
+ - The new global startup action is performed one time, at REAPER launch
+ - To edit/clear it, see Main menu/Extenstions/Startup actions
++Prevent various delete take/item/source file actions to delete project files
  
 !v2.8.2 featured build (November 3, 2015)
 Snapshots

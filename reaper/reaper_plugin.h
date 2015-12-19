@@ -1035,6 +1035,26 @@ class IReaperControlSurface
     virtual int Extended(int call, void *parm1, void *parm2, void *parm3) { return 0; } // return 0 if unsupported
 };
 
+#define CSURF_EXT_RESET 0x0001FFFF // clear all surface state and reset (harder reset than SetTrackListChange)
+#define CSURF_EXT_SETINPUTMONITOR 0x00010001 // parm1=(MediaTrack*)track, parm2=(int*)recmonitor
+#define CSURF_EXT_SETMETRONOME 0x00010002 // parm1=0 to disable metronome, !0 to enable
+#define CSURF_EXT_SETAUTORECARM 0x00010003 // parm1=0 to disable autorecarm, !0 to enable
+#define CSURF_EXT_SETRECMODE 0x00010004 // parm1=(int*)record mode: 0=autosplit and create takes, 1=replace (tape) mode
+#define CSURF_EXT_SETSENDVOLUME 0x00010005 // parm1=(MediaTrack*)track, parm2=(int*)sendidx, parm3=(double*)volume
+#define CSURF_EXT_SETSENDPAN 0x00010006 // parm1=(MediaTrack*)track, parm2=(int*)sendidx, parm3=(double*)pan
+#define CSURF_EXT_SETFXENABLED 0x00010007 // parm1=(MediaTrack*)track, parm2=(int*)fxidx, parm3=0 if bypassed, !0 if enabled
+#define CSURF_EXT_SETFXPARAM 0x00010008 // parm1=(MediaTrack*)track, parm2=(int*)(fxidx<<16|paramidx), parm3=(double*)normalized value
+#define CSURF_EXT_SETLASTTOUCHEDFX 0x0001000A // parm1=(MediaTrack*)track, parm2=(int*)mediaitemidx (may be NULL), parm3=(int*)fxidx. all parms NULL=clear last touched FX
+#define CSURF_EXT_SETFOCUSEDFX 0x0001000B // parm1=(MediaTrack*)track, parm2=(int*)mediaitemidx (may be NULL), parm3=(int*)fxidx. all parms NULL=clear focused FX
+#define CSURF_EXT_SETLASTTOUCHEDTRACK 0x0001000C // parm1=(MediaTrack*)track
+#define CSURF_EXT_SETMIXERSCROLL 0x0001000D // parm1=(MediaTrack*)track, leftmost track visible in the mixer
+#define CSURF_EXT_SETBPMANDPLAYRATE 0x00010009 // parm1=*(double*)bpm (may be NULL), parm2=*(double*)playrate (may be NULL)
+#define CSURF_EXT_SETPAN_EX 0x0001000E // parm1=(MediaTrack*)track, parm2=(double*)pan, parm3=(int*)mode 0=v1-3 balance, 3=v4+ balance, 5=stereo pan, 6=dual pan. for modes 5 and 6, (double*)pan points to an array of two doubles.  if a csurf supports CSURF_EXT_SETPAN_EX, it should ignore CSurf_SetSurfacePan.
+#define CSURF_EXT_SETRECVVOLUME 0x00010010 // parm1=(MediaTrack*)track, parm2=(int*)recvidx, parm3=(double*)volume
+#define CSURF_EXT_SETRECVPAN 0x00010011 // parm1=(MediaTrack*)track, parm2=(int*)recvidx, parm3=(double*)pan
+#define CSURF_EXT_SETFXOPEN 0x00010012 // parm1=(MediaTrack*)track, parm2=(int*)fxidx, parm3=0 if UI closed, !0 if open
+#define CSURF_EXT_SETFXCHANGE 0x00010013 // parm1=(MediaTrack*)track, whenever FX are added, deleted, or change order
+
 typedef struct
 {
   const char *type_string; // simple unique string with only A-Z, 0-9, no spaces or other chars
@@ -1047,63 +1067,6 @@ typedef struct
 // note you can also add a control surface behind the scenes with "csurf_inst" (IReaperControlSurface*)instance
 
 
-//JFB added ------------------------------------------------------------------>
-// http://forum.cockos.com/showthread.php?t=99616
-#define CSURF_EXT_RESET 0x0001FFFF				// clear all surface state and reset (harder reset than SetTrackListChange)
-#define CSURF_EXT_SETINPUTMONITOR 0x00010001	// parm1=(MediaTrack*)track, parm2=(int*)recmonitor
-#define CSURF_EXT_SETMETRONOME 0x00010002		// parm1=0 to disable metronome, !0 to enable
-#define CSURF_EXT_SETAUTORECARM 0x00010003		// parm1=0 to disable autorecarm, !0 to enable
-#define CSURF_EXT_SETRECMODE 0x00010004			// parm1=(int*)record mode: 0=autosplit and create takes, 1=replace (tape) mode
-#define CSURF_EXT_SETSENDVOLUME 0x00010005		// parm1=(MediaTrack*)track, parm2=(int*)sendidx, parm3=(double*)volume
-#define CSURF_EXT_SETSENDPAN 0x00010006			// parm1=(MediaTrack*)track, parm2=(int*)sendidx, parm3=(double*)pan
-#define CSURF_EXT_SETFXENABLED 0x00010007		// parm1=(MediaTrack*)track, parm2=(int*)fxidx, parm3=0 if bypassed, !0 if enabled
-#define CSURF_EXT_SETFXPARAM 0x00010008			// parm1=(MediaTrack*)track, parm2=(int*)(fxidx<<16|paramidx), parm3=(double*)normalized value
-#define CSURF_EXT_SETLASTTOUCHEDFX 0x0001000A	// parm1=(MediaTrack*)track, parm2=(int*)mediaitemidx (may be NULL), parm3=(int*)fxidx. all parms NULL=clear last touched FX
-#define CSURF_EXT_SETFOCUSEDFX 0x0001000B		// parm1=(MediaTrack*)track, parm2=(int*)mediaitemidx (may be NULL), parm3=(int*)fxidx. all parms NULL=clear focused FX
-#define CSURF_EXT_SETLASTTOUCHEDTRACK 0x0001000C //parm1=(MediaTrack*)track
-#define CSURF_EXT_SETMIXERSCROLL 0x0001000D		// parm1=(MediaTrack*)track, leftmost track visible in the mixer
-#define CSURF_EXT_SETBPMANDPLAYRATE 0x00010009	// parm1=*(double*)bpm (may be NULL), parm2=*(double*)playrate (may be NULL)
-#define CSURF_EXT_SETPAN_EX 0x0001000E			// parm1=(MediaTrack*)track, parm2=(double*)pan, parm3=(int*)mode 0=v1-3 balance, 3=v4+ balance, 5=stereo pan, 6=dual pan. for modes 5 and 6, (double*)pan points to an array of two doubles.  if a csurf supports CSURF_EXT_SETPAN_EX, it should ignore CSurf_SetSurfacePan.
-#define CSURF_EXT_SETRECVVOLUME 0x00010010		// parm1=(MediaTrack*)track, parm2=(int*)recvidx, parm3=(double*)volume
-#define CSURF_EXT_SETRECVPAN 0x00010011			// parm1=(MediaTrack*)track, parm2=(int*)recvidx, parm3=(double*)pan
-#define CSURF_EXT_SETFXOPEN 0x00010012			// parm1=(MediaTrack*)track, parm2=(int*)fxidx, parm3=0 if UI closed, !0 if open
-#define CSURF_EXT_SETFXCHANGE 0x00010013		// parm1=(MediaTrack*)track, whenever FX are added, deleted, or change order
-// JFB <-----------------------------------------------------------------------
-
-
-// --------------------------------------------------------------------------->
-// Registering a timer (direct quote from Justin):
-//
-//  As far as getting notification that everything has finished loading...
-//  I'm not sure that the SaveExtensionConfig method will be reliable in the
-//  current version, or in the future. A good way to do this might be to run
-//  everything from a registered timer, where you do:
-//
-//  void myTimer() {
-//  }
-//
-//  rec->Register("timer",(void*)myTimer);
-//
-//
-//  This timer will only run after initialization has begun (as far as I
-//  remember, might need to test that)...
-// <-----------------------------------------------------------------------
-
-
-// --------------------------------------------------------------------------->
-// Registering files (github.com/Jeff0S/sws/issues/177)
-//
-//  You can register files that are used for a project so that reaper knows
-//  about them, and will copy them if you save as w/ media copy.
-//  Call the Register() function with "file_in_project_ex"
-//  (or "-file_in_project_ex" to remove) and pass it:
-//  void *p[2] = { (void *)filename, (void *)projectptr };
-//
-//
-//   v4.58 - December 16 2013
-//    + API: added file_in_project_ex2, so that plugins tracking media files
-//           can receive copy notifications in save-as-copy etc
-// <-----------------------------------------------------------------------
 
 #ifndef UNDO_STATE_ALL
 #define UNDO_STATE_ALL 0xFFFFFFFF

@@ -63,7 +63,6 @@
 #include "./reaper/localize.h"
 
 
-// Globals
 REAPER_PLUGIN_HINSTANCE g_hInst = NULL;
 HWND g_hwndParent = NULL;
 bool g_bInitDone = false;
@@ -313,7 +312,9 @@ COMMAND_T* SWSUnregisterCmd(int id)
 		if (!ct->uniqueSectionId && ct->doCommand)
 		{
 			plugin_register("-gaccel", &ct->accel);
+/* this is no-op ATM
 			plugin_register("-command_id", &id);
+*/
 		}
 		else if (ct->onAction)
 		{

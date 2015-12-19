@@ -141,7 +141,6 @@ COMMAND_T g_XenCommandTable[] =
 	{ { DEFACCEL, "Xenakios/SWS: Apply track FX to items (mono) and reset volume" }, "XENAKIOS_APPLYTRACKFXMONORESETVOL", DoApplyTrackFXMonoAndResetVol,	"Apply track FX to items (mono) and reset volume", },
 	{ { DEFACCEL, "Xenakios/SWS: Move cursor to next transient minus default fade time" }, "XENAKIOS_MOVECURNEXT_TRANSMINUSFADE", DoMoveCurNextTransMinusFade, NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Move cursor to previous transient minus default fade time" }, "XENAKIOS_MOVECURPREV_TRANSMINUSFADE", DoMoveCurPrevTransMinusFade, NULL, },
-	{ { DEFACCEL, "Xenakios/SWS: Process item with Rubberband..." }, "XENAKIOS_PROCESSRUBBERBAND", DoShowRubberbandDlg, NULL, },
 
 	{ { DEFACCEL, "Xenakios/SWS: Reset volume and pan of selected tracks" }, "XENAKIOS_RESETTRACKVOLANDPAN1", DoResetTracksVolPan,	"Reset volume and pan of selected tracks", },
 	{ { DEFACCEL, "Xenakios/SWS: Set volume of selected tracks to 0.0 dB" }, "XENAKIOS_RESETTRACKVOL1", DoSetTrackVolumeToZero,	"Set volume of selected tracks to 0.0 dB", },
@@ -197,7 +196,6 @@ COMMAND_T g_XenCommandTable[] =
 	{ { DEFACCEL, "Xenakios/SWS: Loop and play selected items" }, "XENAKIOS_LOOPANDPLAYSELITEMS", DoLoopAndPlaySelectedItems, NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Play selected items once" }, "XENAKIOS_TIMERTEST1", DoPlayItemsOnce,NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Toggle selected items selected randomly..." }, "XENAKIOS_RANDOM_ITEM_SELTOGGLE", DoToggleSelectedItemsRndDlg,	NULL, },
-	{ { DEFACCEL, "Xenakios/SWS: Process item with csound phase vocoder..." }, "XENAKIOS_CSOUNDPVOC", DoShowPVocDlg,NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Render item to new take with tail..." }, "XENAKIOS_RENDERITEMNEWTAKEWITHTAIL", DoRenderItemsWithTail,NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Open associated REAPER project of item" }, "XENAKIOS_OPENASSOCIATED_RPP", DoOpenAssociatedRPP,	NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Take mixer..." }, "XENAKIOS_SHOWTAKEMIXERDLG", DoShowTakeMixerDlg,	NULL, },

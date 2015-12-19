@@ -32,7 +32,7 @@
 
 
 const char* GetFileRelativePath(const char* _fn);
-const char* GetFileExtension(const char* _fn);
+const char* GetFileExtension(const char* _fn, bool _wantdot = false);
 bool HasFileExtension(const char* _fn, const char* _expectedExt);
 void GetFilenameNoExt(const char* _fullFn, char* _fn, int _fnSz);
 const char* GetFilenameWithExt(const char* _fullFn);

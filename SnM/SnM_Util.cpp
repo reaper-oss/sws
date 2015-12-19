@@ -45,10 +45,10 @@ const char* GetFileRelativePath(const char* _fn)
 	return _fn;
 }
 
-const char* GetFileExtension(const char* _fn)
+const char* GetFileExtension(const char* _fn, bool _wantdot)
 {
 	if (const char* p = strrchr(_fn, '.'))
-		return p+1;
+		return p+(_wantdot?0:1);
 	return "";
 }
 

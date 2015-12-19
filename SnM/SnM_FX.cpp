@@ -628,7 +628,7 @@ double TriggerPresetJob::GetMaxValue()
 	int presetCnt=0;
 	if (GetSetFXPresetSelTrack(m_fxId, NULL, &presetCnt))
 		return presetCnt-1;
-	return 0;
+	return 0.0;
 }
 
 void TriggerFXPresetSelTrack(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd) {

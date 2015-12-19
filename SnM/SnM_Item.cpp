@@ -33,7 +33,6 @@
 #include "SnM_Track.h"
 #include "SnM_Util.h"
 #include "SnM_Window.h"
-#include "../../WDL/wdlcstring.h"
 #include "../Misc/Context.h"
 #include "../reaper/localize.h"
 
@@ -972,9 +971,9 @@ bool DeleteTakeAndMedia(int _mode)
 							if (_mode == 1 || _mode == 3)
 							{
 								char buf[SNM_MAX_PATH];
-								if (pcm && pcm->GetFileName() && *pcm->GetFileName() && stricmp(WDL_get_fileext(pcm->GetFileName()), ".rpp"))
+								if (pcm && pcm->GetFileName() && *pcm->GetFileName() && stricmp(GetFileExtension(pcm->GetFileName()), "rpp"))
 									_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("[Track %d, item %d, take %d] Delete take '%s' and its media file '%s'?","sws_mbox"), i, j+1, originalTkIdx+1, tkName, tkDisplayName);
-								else if (pcm && pcm->GetFileName() && *pcm->GetFileName() && !stricmp(WDL_get_fileext(pcm->GetFileName()), ".rpp"))
+								else if (pcm && pcm->GetFileName() && *pcm->GetFileName() && !stricmp(GetFileExtension(pcm->GetFileName()), "rpp"))
 									_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("[Track %d, item %d, take %d] Delete take '%s'?\r\nNote: the media file '%s' will not be deleted (project within project)","sws_mbox"), i, j+1, originalTkIdx+1, tkName, tkDisplayName);
 								else if (pcm && pcm->GetFileName() && !*(pcm->GetFileName())) 
 									_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("[Track %d, item %d, take %d] Delete take '%s' (MIDI in-project)?","sws_mbox"), i, j+1, originalTkIdx+1, tkName);
@@ -995,7 +994,7 @@ bool DeleteTakeAndMedia(int _mode)
 						if (rc==IDYES)
 						{
 							nbRemainingTakes--;
-							if (pcm && FileOrDirExists(pcm->GetFileName()) && stricmp(WDL_get_fileext(pcm->GetFileName()), ".rpp"))
+							if (pcm && FileOrDirExists(pcm->GetFileName()) && stricmp(GetFileExtension(pcm->GetFileName()), "rpp"))
 							{
 								// set all media offline (yeah, EACH TIME! Fails otherwise: http://github.com/Jeff0S/sws/issues/175#c3)
 								Main_OnCommand(40100,0); 

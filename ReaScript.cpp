@@ -1,7 +1,7 @@
 /******************************************************************************
 / ReaScript.cpp
 /
-/ Copyright (c) 2012 Jeffos
+/ Copyright (c) 2012 and later Jeffos
 /
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -35,8 +35,13 @@
 #include "Fingers/RprMidiTake.h"
 #include "Breeder/BR_ReaScript.h"
 
-//#define _TEST_REASCRIPT_EXPORT
-#include "reascript_test.c"
+
+// if _TEST_REASCRIPT_EXPORT is #define'd, you need to rename "APITESTFUNC" into "APIFUNC" in g_apidefs too
+// (because our function wrappers generations scripts aren't smart enough to skip #ifdef'ed out lines ATM)
+#ifdef _TEST_REASCRIPT_EXPORT
+#include "reascript_test.c" // test all possible parameter/return types
+#endif
+
 
 #ifdef _WIN32
 #pragma warning(push, 0)
@@ -48,12 +53,10 @@
 #endif
 
 
-// Important, keep APIFUNC() as it is defined: both scripts reascript_vararg.php
-// and reascript_python.pl parse g_apidefs to generate variable argument wrappers
-// for EEL and Lua (reascript_vararg.h, automatically generated at compilation time
-// on OSX), as well as python wrappers (sws_python.py, automatically generated at
-// compilation time both on Win & OSX).
-
+// Important, keep APIFUNC() as it is defined: both scripts reascript_vararg.php and
+// reascript_python.pl parse the function definition table (g_apidefs) at compilation
+// time to generate variable argument function wrappers for EEL and Lua (reascript_vararg.h)
+// as well as python function wrappers (sws_python32.py, sws_python64.py).
 #define APIFUNC(x) (void*)x,#x,(void*)__vararg_ ## x,"APIvararg_" #x "","API_" #x "","APIdef_" #x ""
 #define CAPIFUNC(x) (void*)x,#x,NULL,NULL,"API_" #x "",NULL // export to C/C++ only
 
@@ -95,14 +98,14 @@ typedef struct APIdef
 APIdef g_apidefs[] =
 {
 #ifdef _TEST_REASCRIPT_EXPORT
-  { APIFUNC(SNM_test1), "int", "int*", "aOut", "", },
-  { APIFUNC(SNM_test2), "double", "double*", "aOut", "", },
-  { APIFUNC(SNM_test3), "bool", "int*,double*,bool*", "aOut,bOut,cOut", "", },
-  { APIFUNC(SNM_test4), "void", "double", "a", "", },
-  { APIFUNC(SNM_test5), "void", "const char*", "a", "", },
-  { APIFUNC(SNM_test6), "const char*", "char*", "a", "", }, // not an "Out" parm
-  { APIFUNC(SNM_test7), "double", "int,int*,double*,bool*,char*,const char*", "i,aOut,bInOptional,cOutOptional,sOutOptional,csInOptional", "", },
-  { APIFUNC(SNM_test8), "const char*", "char*,int,const char*,int,int,char*,int,int*", "buf1,buf1_sz,buf2,buf2_sz,i,buf3,buf3_sz,iOutOptional", "", },
+	{ APITESTFUNC(SNM_test1), "int", "int*", "aOut", "", },
+	{ APITESTFUNC(SNM_test2), "double", "double*", "aOut", "", },
+	{ APITESTFUNC(SNM_test3), "bool", "int*,double*,bool*", "aOut,bOut,cOut", "", },
+	{ APITESTFUNC(SNM_test4), "void", "double", "a", "", },
+	{ APITESTFUNC(SNM_test5), "void", "const char*", "a", "", },
+	{ APITESTFUNC(SNM_test6), "const char*", "char*", "a", "", }, // not an "Out" parm
+	{ APITESTFUNC(SNM_test7), "double", "int,int*,double*,bool*,char*,const char*", "i,aOut,bInOptional,cOutOptional,sOutOptional,csInOptional", "", },
+	{ APITESTFUNC(SNM_test8), "const char*", "char*,int,const char*,int,int,char*,int,int*", "buf1,buf1_sz,buf2,buf2_sz,i,buf3,buf3_sz,iOutOptional", "", },
 #endif
 	{ APIFUNC(SNM_CreateFastString), "WDL_FastString*", "const char*", "str", "[S&M] Instantiates a new \"fast string\". You must delete this string, see SNM_DeleteFastString.", },
 	{ APIFUNC(SNM_DeleteFastString), "void", "WDL_FastString*", "str", "[S&M] Deletes a \"fast string\" instance.", },
@@ -238,7 +241,7 @@ void UnregisterExportedFuncs()
 	}
 }
 
-// register exported function definitions (html documentation)
+// register exported function definitions + help text for the reaper api header and html documentation
 bool RegisterExportedAPI(reaper_plugin_info_t* _rec)
 {
 	bool ok = (_rec!=NULL);

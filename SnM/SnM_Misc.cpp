@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Misc.cpp
 /
-/ Copyright (c) 2009-2013 Jeffos
+/ Copyright (c) 2009 and later Jeffos
 /
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -46,25 +46,32 @@
 // Reascript export, funcs made dumb-proof!
 ///////////////////////////////////////////////////////////////////////////////
 
+WDL_PtrList_DeleteOnDestroy<WDL_FastString> g_script_strs; // just to validate function parameters
+
 WDL_FastString* SNM_CreateFastString(const char* _str) {
-	return new WDL_FastString(_str);
+	return g_script_strs.Add(new WDL_FastString(_str));
 }
 
 void SNM_DeleteFastString(WDL_FastString* _str) { 
-	DELETE_NULL(_str);
+  if (_str) g_script_strs.Delete(g_script_strs.Find(_str), true);
 }
 
 const char* SNM_GetFastString(WDL_FastString* _str) {
-	return _str?_str->Get():"";
+	return _str && g_script_strs.Find(_str)>=0 ? _str->Get() : "";
 }
 
 int SNM_GetFastStringLength(WDL_FastString* _str) {
-	return _str?_str->GetLength():0;
+	return _str && g_script_strs.Find(_str)>=0 ? _str->GetLength() : 0;
 }
 
-WDL_FastString* SNM_SetFastString(WDL_FastString* _str, const char* _newStr) {
-	if (_str) _str->Set(_newStr?_newStr:"");
-	return _str;
+WDL_FastString* SNM_SetFastString(WDL_FastString* _str, const char* _newStr)
+{
+	if (_str && g_script_strs.Find(_str)>=0)
+	{
+		_str->Set(_newStr?_newStr:"");
+		return _str;
+	}
+	return NULL;
 }
 
 MediaItem_Take* SNM_GetMediaItemTakeByGUID(ReaProject* _project, const char* _guid)
@@ -80,11 +87,14 @@ MediaItem_Take* SNM_GetMediaItemTakeByGUID(ReaProject* _project, const char* _gu
 
 bool SNM_GetSourceType(MediaItem_Take* _tk, WDL_FastString* _type)
 {
-	if (_tk && _type)
-		if (PCM_source* source = GetMediaItemTake_Source(_tk)) {
+	if (_tk && _type && g_script_strs.Find(_type)>=0)
+	{
+		if (PCM_source* source = GetMediaItemTake_Source(_tk))
+		{
 			_type->Set(source->GetType());
 			return true;
 		}
+	}
 	return false;
 }
 
@@ -93,7 +103,7 @@ bool SNM_GetSourceType(MediaItem_Take* _tk, WDL_FastString* _type)
 bool SNM_GetSetSourceState(MediaItem* _item, int _takeIdx, WDL_FastString* _state, bool _setnewvalue)
 {
 	bool ok = false;
-	if (_item && _state)
+	if (_item && _state && g_script_strs.Find(_state)>=0)
 	{
 		if (_takeIdx<0)
 			_takeIdx = *(int*)GetSetMediaItemInfo(_item, "I_CURTAKE", NULL);
@@ -133,19 +143,22 @@ bool SNM_GetSetSourceState(MediaItem* _item, int _takeIdx, WDL_FastString* _stat
 
 bool SNM_GetSetSourceState2(MediaItem_Take* _tk, WDL_FastString* _state, bool _setnewvalue)
 {
-	if (_tk)
-		if (MediaItem* item = GetMediaItemTake_Item(_tk)) {
+	if (_tk && _state && g_script_strs.Find(_state)>=0)
+	{
+		if (MediaItem* item = GetMediaItemTake_Item(_tk))
+		{
 			int tkIdx = GetTakeIndex(item, _tk);
 			if (tkIdx >= 0)
 				return SNM_GetSetSourceState(item, tkIdx, _state, _setnewvalue);
 		}
+	}
 	return false;
 }
 
 bool SNM_GetSetObjectState(void* _obj, WDL_FastString* _state, bool _setnewvalue, bool _minstate)
 {
 	bool ok = false;
-	if (_obj && _state)
+	if (_state && g_script_strs.Find(_state)>=0 && (ValidatePtr(_obj, "MediaTrack*") || ValidatePtr(_obj, "MediaItem*") || ValidatePtr(_obj, "TrackEnvelope*")))
 	{
 		int fxstate = SNM_PreObjectState(_setnewvalue ? _state : NULL, _minstate);
 		char* p = GetSetObjectState(_obj, _setnewvalue ? _state->Get() : NULL);
@@ -194,14 +207,11 @@ bool SNM_SetDoubleConfigVar(const char* _varName, double _newVal) {
 
 // host some funcs from Ultraschall, https://github.com/Ultraschall
 const char* ULT_GetMediaItemNote(MediaItem* _item) {
-	if (_item)
-		return (const char*)GetSetMediaItemInfo(_item, "P_NOTES", NULL);
-	return "";
+		return _item ? (const char*)GetSetMediaItemInfo(_item, "P_NOTES", NULL): "";
 }
 
 void ULT_SetMediaItemNote(MediaItem* _item, const char* _str) {
-	if (_str && _item)
-		GetSetMediaItemInfo(_item, "P_NOTES", (char*)_str);
+	if (_item) GetSetMediaItemInfo(_item, "P_NOTES", (char*)_str);
 }
 
 bool SNM_ReadMediaFileTag(const char *fn, const char* tag, char* tagval, int tagval_sz)

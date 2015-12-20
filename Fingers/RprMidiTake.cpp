@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "../reaper/localize.h"
+#include "../../WDL/ptrlist.h"
 
 #include <algorithm>
 
@@ -13,48 +14,42 @@
 #include "TimeMap.h"
 #include "RprException.h"
 
+WDL_PtrList_DeleteOnDestroy<RprMidiTake> g_script_miditakes; // just to validate function parameters
+
 RprMidiTake* FNG_AllocMidiTake(MediaItem_Take* take)
 {
+    if (!take) return NULL;
+
     RprTake rprTake(take);
     if (rprTake.isMIDI() && !rprTake.isFile())
     {
-        return new RprMidiTake(rprTake);
+        return g_script_miditakes.Add(new RprMidiTake(rprTake));
     }
-    return 0;
+    return NULL;
 }
 
 void FNG_FreeMidiTake(RprMidiTake* midiTake)
 {
-    delete midiTake;
+    int idx=g_script_miditakes.Find(midiTake);
+    if (idx>=0) g_script_miditakes.Delete(idx, true);
 }
 
 // Count how many MIDI notes the take has
 int FNG_CountMidiNotes(RprMidiTake* midiTake)
 {
-    if (midiTake)
+    if (midiTake && g_script_miditakes.Find(midiTake)>=0)
     {
         return midiTake->countNotes();
     }
-
-    return 0;
+    return NULL;
 }
 
 // Get MIDI note from MIDI take at specified index
 RprMidiNote* FNG_GetMidiNote(RprMidiTake* midiTake, int index)
 {
-    if (index < 0)
+    if (index < 0 || !midiTake || g_script_miditakes.Find(midiTake)<0 || index >= midiTake->countNotes())
     {
-        return 0;
-    }
-
-    if (!midiTake)
-    {
-        return 0;
-    }
-
-    if (index >= midiTake->countNotes())
-    {
-        return 0;
+        return NULL;
     }
     return midiTake->getNoteAt(index);
 }
@@ -157,11 +152,11 @@ void FNG_SetMidiNoteIntProperty(RprMidiNote* midiNote, const char* property, int
 
 RprMidiNote* FNG_AddMidiNote(RprMidiTake* midiTake)
 {
-    if (midiTake)
+    if (midiTake && g_script_miditakes.Find(midiTake)>=0)
     {
         return midiTake->addNoteAt(0);
     }
-    return 0;
+    return NULL;
 }
 
 typedef std::list<RprMidiEvent *> RprMidiEvents;

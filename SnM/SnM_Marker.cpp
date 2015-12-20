@@ -119,34 +119,16 @@ void UpdateMarkerRegionRun()
 // Marker/region helpers
 ///////////////////////////////////////////////////////////////////////////////
 
-// overrides the API's SetProjectMarker3() which cannot set an empty name ""
-// see http://github.com/Jeff0S/sws/issues/476
+// http://github.com/Jeff0S/sws/issues/476
+// used to override SetProjectMarker3() which cannot set empty names "",
+// the new SetProjectMarker4() can do it now, so just wrap this func now (we 
+// keep SNM_SetProjectMarker() for existing scripts that rely on it though...)
 bool SNM_SetProjectMarker(ReaProject* _proj, int _num, bool _isrgn, double _pos, double _rgnend, const char* _name, int _color)
 {
-	if (_name && !*_name)
-	{
-		int color = _color;
-		if (!_color) // dang! it means we have to preserve the current color..
-		{
-			int x=0, num; bool isrgn, found=false;
-			while ((x = EnumProjectMarkers3(_proj, x, &isrgn, NULL, NULL, NULL, &num, &color)))
-				if ((found = (isrgn==_isrgn && num==_num)))
-					break;
-			if (!found)
-				return false;
-		}
-
-		bool ok = false;
-		PreventUIRefresh(1);
-		if (DeleteProjectMarker(_proj, _num, _isrgn))
-			ok = (AddProjectMarker2(_proj, _isrgn, _pos, _rgnend, _name, _num, color) == _num);
-		PreventUIRefresh(-1);
-		return ok;
-	}
-	return SetProjectMarker3(_proj, _num, _isrgn, _pos, _rgnend, _name, _color);
+	return SetProjectMarker4(_proj, _num, _isrgn, _pos, _rgnend, _name, _color, _name && !*_name ? 1 : 0);
 }
 
-// for reascript (that cannot handle the char** param of EnumProjectMarkers())
+// for reascript (which cannot handle the char** param of EnumProjectMarkers())
 bool SNM_GetProjectMarkerName(ReaProject* _proj, int _num, bool _isrgn, WDL_FastString* _name)
 {
 	if (_name)

@@ -102,7 +102,7 @@ protected:
 
 private:
 	// the trick
-	static LRESULT SNM_ScreensetCallback(int _action, char* _id, void* _param, void* _actionParm, int _actionParmSize)
+	static LRESULT SNM_ScreensetCallback(int _action, const char* _id, void* _param, void* _actionParm, int _actionParmSize)
 	{
 #ifdef _SNM_SCREENSET_DEBUG
 		char dbg[256]="";

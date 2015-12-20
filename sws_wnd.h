@@ -195,7 +195,7 @@ public:
 	virtual void OnCommand(WPARAM wParam, LPARAM lParam) {}
 	virtual bool CloseOnCancel () {return true;}
 
-	static LRESULT screensetCallback(int action, char *id, void *param, void *actionParm, int actionParmSize);
+	static LRESULT screensetCallback(int action, const char *id, void *param, void *actionParm, int actionParmSize);
 
 	static const int DOCK_MSG = 0xFF0000;
 

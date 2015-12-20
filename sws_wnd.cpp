@@ -529,7 +529,7 @@ void SWS_DockWnd::ToggleDocking()
 }
 
 // screenset support
-LRESULT SWS_DockWnd::screensetCallback(int action, char *id, void *param, void *actionParm, int actionParmSize)
+LRESULT SWS_DockWnd::screensetCallback(int action, const char *id, void *param, void *actionParm, int actionParmSize)
 {
 	if (SWS_DockWnd* pObj = (SWS_DockWnd*)param)
 	{

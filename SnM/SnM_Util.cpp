@@ -980,6 +980,14 @@ bool IsMacroOrScript(const char* _cmd, bool _cmdIsName)
 			{
 				probably_new_script_id=true;
 				_cmd+=2;
+        
+				// v5.11pre14+: scripts registered in non-main sections have an extra "UniqueSectionIdInHexa_" tag, skip it
+				if (strchr(_cmd, '_')) while (*_cmd)
+				{
+					if ((*_cmd>='0' && *_cmd<='9') ||  (*_cmd>='a' && *_cmd<='f')) _cmd++;
+					else if (*_cmd=='_') { _cmd++; break; }
+					else return false;
+				}
 			}
 
 			while (*_cmd)

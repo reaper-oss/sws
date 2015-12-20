@@ -290,9 +290,6 @@ bool SNM_TagMediaFile(const char *fn, const char* tag, const char* tagval)
   return didsmthg;
 }
 
-MediaItem_Take* SNM_GetMIDIEditorActiveTake() {
-  return MIDIEditor_GetTake(MIDIEditor_GetActive());
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Toolbars auto refresh option

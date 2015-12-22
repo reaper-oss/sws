@@ -41,7 +41,6 @@
 #include "stdafx.h"
 #include "SnM.h"
 #include "SnM_Dlg.h"
-#include "SnM_Marker.h"
 #include "SnM_Notes.h"
 #include "SnM_Project.h"
 #include "SnM_Track.h"
@@ -772,7 +771,7 @@ void NotesWnd::SaveCurrentMkrRgnNameOrSub(int _type, bool _wantUndo)
 				// via SNM_MarkerRegionListener.NotifyMarkerRegionUpdate()
 				g_internalMkrRgnChange = true;
 
-				if (SNM_SetProjectMarker(NULL, num, isRgn, pos, end, g_lastText, color))
+				if (SetProjectMarker4(NULL, num, isRgn, pos, end, g_lastText, color, !*g_lastText ? 1 : 0))
 				{
 					UpdateTimeline();
 					if (_wantUndo)

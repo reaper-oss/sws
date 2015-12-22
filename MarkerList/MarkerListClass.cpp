@@ -32,7 +32,6 @@
 #include "../reaper/localize.h"
 #include "MarkerListClass.h"
 #include "MarkerListActions.h"
-#include "../SnM/SnM_Marker.h"
 #include "../SnM/SnM_Project.h"
 
 
@@ -81,8 +80,7 @@ void MarkerItem::AddToProject()
 
 void MarkerItem::UpdateProject()
 {
-	// Use SnM version to overcome API limitation of not being to set empty name
-	SNM_SetProjectMarker(NULL, m_num, m_bReg, m_dPos, m_dRegEnd, GetName(), m_iColor ? m_iColor | 0x1000000 : 0);
+	SetProjectMarker4(NULL, m_num, m_bReg, m_dPos, m_dRegEnd, GetName(), m_iColor ? m_iColor | 0x1000000 : 0, !*GetName() ? 1 : 0);
 }
 
 MarkerList::MarkerList(const char* name, bool bGetCurList)

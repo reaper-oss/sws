@@ -1053,7 +1053,7 @@ error:
 		IMPAPI(UpdateArrange);
 		IMPAPI(UpdateItemInProject);
 		IMPAPI(UpdateTimeline);
-		IMPAPI(ValidatePtr);
+		IMPAPI(ValidatePtr); //JFB!!! todo: check all calls: ValidatePtr2() may be needed instead
 
 		g_hInst = hInstance;
 		g_hwndParent = GetMainHwnd&&GetMainHwnd()?GetMainHwnd():0;

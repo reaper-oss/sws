@@ -1,3 +1,6 @@
+#ifndef _REASCRIPT_VARARG_H_
+#define _REASCRIPT_VARARG_H_
+
 static void* __vararg_SNM_CreateFastString(void** arglist, int numparms)
 {
   return (void*)(INT_PTR)SNM_CreateFastString((const char*)arglist[0]);
@@ -527,3 +530,5 @@ static void* __vararg_ULT_SetMediaItemNote(void** arglist, int numparms)
   return NULL;
 }
 
+
+#endif

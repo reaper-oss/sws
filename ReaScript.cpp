@@ -53,12 +53,19 @@
 #endif
 
 
-// Important, keep APIFUNC() as it is defined: both scripts reascript_vararg.php and
-// reascript_python.pl parse the function definition table (g_apidefs) at compilation
-// time to generate variable argument function wrappers for EEL and Lua (reascript_vararg.h)
-// as well as python function wrappers (sws_python32.py, sws_python64.py).
-#define APIFUNC(x) (void*)x,#x,(void*)__vararg_ ## x,"APIvararg_" #x "","API_" #x "","APIdef_" #x ""
-#define CAPIFUNC(x) (void*)x,#x,NULL,NULL,"API_" #x "",NULL // export to C/C++ only
+// Important, keep APIFUNC() and APIdef as they are defined: the scripts reascript_vararg.php
+// and reascript_python.pl both parse the function definition table (g_apidefs) at compilation
+// time to generate variable argument function wrappers for EEL and Lua (reascript_vararg.h),
+// and python function wrappers (sws_python32.py, sws_python64.py), respectively.
+
+#ifdef _REASCRIPT_VARARG_H_
+  #define APIFUNC(x)  (void*)x,#x,(void*)__vararg_ ## x,"APIvararg_" #x "","API_" #x "","APIdef_" #x ""
+  #define CAPIFUNC(x) (void*)x,#x,NULL,NULL,"API_" #x "",NULL // export to C/C++ only
+#else
+  #pragma message("WARNING: DISABLING FUNCTION EXPORT TO LUA/EEL REASCRIPTS! Probable cause: 'reascript_vararg.php' couldn't generate 'reascript_vararg.h' (PHP installed?)")
+  #define APIFUNC(x)  (void*)x,#x,NULL,NULL,"API_" #x "",NULL // export to C/C++ only
+  #define CAPIFUNC(x) (void*)x,#x,NULL,NULL,"API_" #x "",NULL // export to C/C++ only
+#endif
 
 typedef struct APIdef
 {

@@ -119,30 +119,6 @@ void UpdateMarkerRegionRun()
 // Marker/region helpers
 ///////////////////////////////////////////////////////////////////////////////
 
-// http://github.com/Jeff0S/sws/issues/476
-// used to override SetProjectMarker3() which cannot set empty names "",
-// the new SetProjectMarker4() can do it now, so just wrap this func now (we 
-// keep SNM_SetProjectMarker() for existing scripts that rely on it though...)
-bool SNM_SetProjectMarker(ReaProject* _proj, int _num, bool _isrgn, double _pos, double _rgnend, const char* _name, int _color)
-{
-	return SetProjectMarker4(_proj, _num, _isrgn, _pos, _rgnend, _name, _color, _name && !*_name ? 1 : 0);
-}
-
-// for reascript (which cannot handle the char** param of EnumProjectMarkers())
-bool SNM_GetProjectMarkerName(ReaProject* _proj, int _num, bool _isrgn, WDL_FastString* _name)
-{
-	if (_name)
-	{
-		int x=0, num; const char* name; bool isrgn;
-		while ((x = EnumProjectMarkers3(_proj, x, &isrgn, NULL, NULL, &name, &num, NULL)))
-			if (num==_num && isrgn==_isrgn) {
-				_name->Set(name);
-				return true;
-			}
-	}
-	return false;
-}
-
 // returns the 1st marker or region index found at _pos
 // note: relies on markers & regions indexed by positions
 // _flags: &SNM_MARKER_MASK=marker, &SNM_REGION_MASK=region

@@ -46,8 +46,6 @@ void RegisterToMarkerRegionUpdates(SNM_MarkerRegionListener* _sub);
 void UnregisterToMarkerRegionUpdates(SNM_MarkerRegionListener* _sub) ;
 void UpdateMarkerRegionRun();
 
-bool SNM_SetProjectMarker(ReaProject* _proj, int _num, bool _isrgn, double _pos, double _rgnend, const char* _name, int _color = 0);
-bool SNM_GetProjectMarkerName(ReaProject* _proj, int _num, bool _isrgn, WDL_FastString* _name);
 int FindMarkerRegion(ReaProject* _proj, double _pos, int _flags, int* _idOut = NULL);
 int MakeMarkerRegionId(int _num, bool _isRgn);
 int GetMarkerRegionIdFromIndex(ReaProject* _proj, int _idx);

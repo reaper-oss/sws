@@ -177,6 +177,32 @@ bool SNM_GetSetObjectState(void* _obj, WDL_FastString* _state, bool _setnewvalue
 	return ok;
 }
 
+// http://github.com/Jeff0S/sws/issues/476
+// used to override the old SetProjectMarker3() which cannot set empty names "", but SetProjectMarker4() can do it now
+// (keep SNM_SetProjectMarker() around for scripts that rely on it though...)
+bool SNM_SetProjectMarker(ReaProject* _proj, int _num, bool _isrgn, double _pos, double _rgnend, const char* _name, int _color)
+{
+	return SetProjectMarker4(_proj, _num, _isrgn, _pos, _rgnend, _name, _color, _name && !*_name ? 1 : 0);
+}
+
+// just a wrapper func: reascripts cannot handle the char** param of EnumProjectMarkers()
+bool SNM_GetProjectMarkerName(ReaProject* _proj, int _num, bool _isrgn, WDL_FastString* _name)
+{
+	if (_name && g_script_strs.Find(_name)>=0)
+	{
+		int x=0, num; const char* name; bool isrgn;
+		while ((x = EnumProjectMarkers3(_proj, x, &isrgn, NULL, NULL, &name, &num, NULL)))
+    {
+			if (num==_num && isrgn==_isrgn)
+      {
+				_name->Set(name);
+				return true;
+			}
+    }
+	}
+	return false;
+}
+
 int SNM_GetIntConfigVar(const char* _varName, int _errVal) {
 	if (int* pVar = (int*)(GetConfigVar(_varName)))
 		return *pVar;

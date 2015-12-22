@@ -36,20 +36,21 @@
 #include "Breeder/BR_ReaScript.h"
 
 
-// if _TEST_REASCRIPT_EXPORT is #define'd, you need to rename "APITESTFUNC" into "APIFUNC" in g_apidefs too
-// (because our function wrappers generations scripts aren't smart enough to skip #ifdef'ed out lines ATM)
+// if _TEST_REASCRIPT_EXPORT is #define'd, you'll need to rename "APITESTFUNC" into "APIFUNC" in g_apidefs too
+// (because our function wrapper generation scripts aren't smart enough to skip #ifdef'ed out lines ATM)
+// you will find also the realed reascript_test.eel and reascript_test.lua in the repo (python: todo).
+//#define _TEST_REASCRIPT_EXPORT
 #ifdef _TEST_REASCRIPT_EXPORT
-#include "reascript_test.c" // test all possible parameter/return types
+  #include "reascript_test.c" // test all possible parameter/return types
 #endif
 
-
 #ifdef _WIN32
-#pragma warning(push, 0)
-#pragma warning(disable: 4800) // disable "forcing value to bool..." warnings
+  #pragma warning(push, 0)
+  #pragma warning(disable: 4800) // disable "forcing value to bool..." warnings
 #endif
 #include "reascript_vararg.h"
 #ifdef _WIN32
-#pragma warning(pop)
+  #pragma warning(pop)
 #endif
 
 
@@ -87,9 +88,21 @@ typedef struct APIdef
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Add the functions you want to export here (+ related #include on top)
-// Make sure function names have a prefix like "SWS_", "FNG_", etc..
-// When documenting API function parameters:
+//
+// Add functions you want to export in the table below (+ related #include on
+// top). To distinguish SWS and native functions, make sure function names have
+// a prefix like "SWS_", "FNG_", etc.
+// Your functions must be made dumb-proof, they must not trust any parameter.
+// However, your do not need to ValidatePr() REAPER pointer parameters (such as 
+// MediaTrack*, MediaItem*, etc): REAPER does this for you when a script runs
+// an exported function.
+// REAPER pointer parameters are validated against the prior ReaProject* param,
+// (or the current project if absent/NULL). For ex., in the following function:
+// void bla(ReaProject* p1, MediaTrack* t1, ReaProject* p2, MediaItem* i2),
+// t1 will be validated against p1, but i2 will be validated against p2.
+// Your must interpret NULL ReaProject* params as "the current project".
+//
+// When defining/documenting API function parameters:
 //  - if a (char*,int) pair is encountered, name them buf, buf_sz
 //  - if a (const char*,int) pair is encountered, buf, buf_sz as well
 //  - if a lone basicType *, use varNameOut or varNameIn or
@@ -100,6 +113,7 @@ typedef struct APIdef
 // At the moment (REAPER v5pre6) the supported return types are:
 //  - int, bool, double, const char*
 //  - AnyStructOrClass* (handled as an opaque pointer)
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 APIdef g_apidefs[] =

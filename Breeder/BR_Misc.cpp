@@ -115,7 +115,7 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 	static vector<pair<GUID,int> >* s_itemMuteState      = NULL;
 
 	static int s_projStateCount = 0;
-	static ReaProject* s_proj   = NULL;
+	static ReaProject* s_proj   = NULL; //JFB bug here: this is "single-project minded", todo: remove this var (or update it on project switches...)
 
 	if (init)
 	{

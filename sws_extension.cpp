@@ -798,7 +798,9 @@ error:
 		IMPAPI(GetMediaSourceFileName);
 		IMPAPI(GetMediaSourceType);
 		IMPAPI(GetMediaTrackInfo_Value);
+/* deprecated, no-op
 		IMPAPI(get_midi_config_var);
+*/
 		IMPAPI(GetMouseModifier);
 		IMPAPI(GetNumTracks);
 		IMPAPI(GetOutputChannelName);

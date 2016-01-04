@@ -322,7 +322,7 @@ WDL_DLGRET MulMatchesFoundDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM
     {
         case WM_INITDIALOG:
 		{
-			ThemeListViewOnInit(GetDlgItem(hwnd,IDC_MULMATCHLIST));
+			if (SWS_THEMING) SNM_ThemeListView(GetDlgItem(hwnd,IDC_MULMATCHLIST));
 			LVCOLUMN col;
 			col.mask=LVCF_TEXT|LVCF_WIDTH;
 			col.cx=425;
@@ -643,8 +643,12 @@ WDL_DLGRET ProjMediaDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
     {
         case WM_INITDIALOG:
 		{
-			ThemeListViewOnInit(GetDlgItem(hwnd,IDC_PROJFILES_USED));
-			ThemeListViewOnInit(GetDlgItem(hwnd,IDC_PROJFOLMEDLIST));
+			if (SWS_THEMING)
+			{
+				SNM_ThemeListView(GetDlgItem(hwnd,IDC_PROJFILES_USED));
+				SNM_ThemeListView(GetDlgItem(hwnd,IDC_PROJFOLMEDLIST));
+			}
+
 			RECT r;
 			r.left=10;
 			r.right=300;

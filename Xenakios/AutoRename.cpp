@@ -213,7 +213,7 @@ WDL_DLGRET AutoRenameDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
         case WM_INITDIALOG:
 		{
 			WDL_UTF8_HookComboBox(GetDlgItem(hwnd,IDC_AUTONAMEPRESETS));
-			ThemeListViewOnInit(GetDlgItem(hwnd,IDC_AUTONAMEOUTPUT));
+			if (SWS_THEMING) SNM_ThemeListView(GetDlgItem(hwnd,IDC_AUTONAMEOUTPUT));
 
 			for (int i = 0; i < (int)g_AutoNamePresets.size(); i++)
 			{

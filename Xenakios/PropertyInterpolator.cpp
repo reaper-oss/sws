@@ -616,7 +616,7 @@ WDL_DLGRET ItemInterpDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 	{
 		case WM_INITDIALOG:
 		{
-			ThemeListViewOnInit(GetDlgItem(hwnd,IDC_IIACTPARLIST));
+			if (SWS_THEMING) SNM_ThemeListView(GetDlgItem(hwnd,IDC_IIACTPARLIST));
 
 			g_hIIdlg=hwnd;
 			g_IItakes.clear();

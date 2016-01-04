@@ -141,19 +141,24 @@ void SNM_GetThemeEditColors(int* _bg, int* _txt)
 	if (_txt) *_txt = txtcol;
 }
 
-void SNM_ThemeListView(SWS_ListView* _lv)
+void SNM_ThemeListView(HWND _h)
 {
-	if (_lv && _lv->GetHWND())
+	if (_h)
 	{
 		int bgcol, txtcol, gridcol;
 		SNM_GetThemeListColors(&bgcol, &txtcol, &gridcol);
-		ListView_SetBkColor(_lv->GetHWND(), bgcol);
-		ListView_SetTextColor(_lv->GetHWND(), txtcol);
-		ListView_SetTextBkColor(_lv->GetHWND(), bgcol);
+		ListView_SetBkColor(_h, bgcol);
+		ListView_SetTextColor(_h, txtcol);
+		ListView_SetTextBkColor(_h, bgcol);
 #ifndef _WIN32
-		ListView_SetGridColor(_lv->GetHWND(), gridcol);
+		ListView_SetGridColor(_h, gridcol);
 #endif
 	}
+}
+
+void SNM_ThemeListView(SWS_ListView* _lv)
+{
+	if (_lv) return SNM_ThemeListView(_lv->GetHWND());
 }
 
 // note that LICE_LoadPNGFromResource() is KO on OSX (it looks for REAPER's resources..)

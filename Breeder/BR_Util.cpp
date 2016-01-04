@@ -3349,15 +3349,6 @@ void DrawTooltip (LICE_IBitmap* bm, const char* text)
 	}
 }
 
-void ThemeListViewOnInit (HWND list)
-{
-	if (SWS_THEMING)
-	{
-		SWS_ListView listView(list, NULL, 0, NULL, NULL, false, NULL, true);
-		SNM_ThemeListView(&listView);
-	}
-}
-
 void SetWndIcon (HWND hwnd)
 {
 	#ifdef _WIN32

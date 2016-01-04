@@ -645,22 +645,19 @@ bool AreAllCoordsZero (RECT& r)
 
 PCM_source* DuplicateSource (PCM_source* source)
 {
-	PCM_source* newSource = NULL;
-	if (source)
+	if (source && !strcmp(source->GetType(), "MIDI")) // check "MIDI" only (trim pref doesn't apply to pooled MIDI)
 	{
-		int trimMidiOnSplit; GetConfig("trimmidionsplit", trimMidiOnSplit);
+		int trimMidiOnSplit;
+		GetConfig("trimmidionsplit", trimMidiOnSplit);
 		if (GetBit(trimMidiOnSplit, 1))
 		{
 			SetConfig("trimmidionsplit", ClearBit(trimMidiOnSplit, 1));
-			newSource = source->Duplicate();
+			PCM_source* newSource = source->Duplicate();
 			SetConfig("trimmidionsplit", trimMidiOnSplit);
-		}
-		else
-		{
-			newSource = source->Duplicate();
+			return newSource;
 		}
 	}
-	return newSource;
+	return source ? source->Duplicate() : NULL;
 }
 
 /******************************************************************************

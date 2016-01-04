@@ -309,12 +309,9 @@ void* GetConfigVar(const char* cVar)
 	{
 		p = projectconfig_var_addr(EnumProjects(-1, NULL, 0), iOffset);
 	}
-	else if ((p = get_config_var(cVar, &sztmp)))
-	{
-	}
 	else
 	{
-		p = get_midi_config_var(cVar, &sztmp);
+		p = get_config_var(cVar, &sztmp);
 	}
 	return p;
 }

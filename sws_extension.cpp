@@ -63,7 +63,6 @@
 #include "./reaper/localize.h"
 
 
-// Globals
 REAPER_PLUGIN_HINSTANCE g_hInst = NULL;
 HWND g_hwndParent = NULL;
 bool g_bInitDone = false;
@@ -313,7 +312,9 @@ COMMAND_T* SWSUnregisterCmd(int id)
 		if (!ct->uniqueSectionId && ct->doCommand)
 		{
 			plugin_register("-gaccel", &ct->accel);
+/* this is no-op ATM
 			plugin_register("-command_id", &id);
+*/
 		}
 		else if (ct->onAction)
 		{
@@ -797,7 +798,9 @@ error:
 		IMPAPI(GetMediaSourceFileName);
 		IMPAPI(GetMediaSourceType);
 		IMPAPI(GetMediaTrackInfo_Value);
+/* deprecated, no-op
 		IMPAPI(get_midi_config_var);
+*/
 		IMPAPI(GetMouseModifier);
 		IMPAPI(GetNumTracks);
 		IMPAPI(GetOutputChannelName);
@@ -1052,7 +1055,7 @@ error:
 		IMPAPI(UpdateArrange);
 		IMPAPI(UpdateItemInProject);
 		IMPAPI(UpdateTimeline);
-		IMPAPI(ValidatePtr);
+		IMPAPI(ValidatePtr); //JFB!!! todo: check all calls: ValidatePtr2() may be needed instead
 
 		g_hInst = hInstance;
 		g_hwndParent = GetMainHwnd&&GetMainHwnd()?GetMainHwnd():0;

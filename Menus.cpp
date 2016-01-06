@@ -301,10 +301,14 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 	AddToMenu(hPrjMgmtSubMenu, __LOCALIZE("(related projects list)", "sws_ext_menu"), NamedCommandLookup("_SWS_OPENRELATED1"));
 
 	HMENU hStartupSubMenu = CreatePopupMenu();
-	AddSubMenu(hMenu, hStartupSubMenu, __LOCALIZE("Project startup action", "sws_ext_menu"));
+	AddSubMenu(hMenu, hStartupSubMenu, __LOCALIZE("Startup actions", "sws_ext_menu"));
 	AddToMenu(hStartupSubMenu, __LOCALIZE("Set project startup action...", "sws_ext_menu"), NamedCommandLookup("_S&M_SET_PRJ_ACTION"));
-	AddToMenu(hStartupSubMenu, __LOCALIZE("Show project startup action...", "sws_ext_menu"), NamedCommandLookup("_S&M_SHOW_PRJ_ACTION"));
 	AddToMenu(hStartupSubMenu, __LOCALIZE("Clear project startup action", "sws_ext_menu"), NamedCommandLookup("_S&M_CLR_PRJ_ACTION"));
+	AddToMenu(hStartupSubMenu, SWS_SEPARATOR, 0);
+	AddToMenu(hStartupSubMenu, __LOCALIZE("Set global startup action...", "sws_ext_menu"), NamedCommandLookup("_S&M_SET_STARTUP_ACTION"));
+	AddToMenu(hStartupSubMenu, __LOCALIZE("Clear global startup action", "sws_ext_menu"), NamedCommandLookup("_S&M_CLR_STARTUP_ACTION"));
+	AddToMenu(hStartupSubMenu, SWS_SEPARATOR, 0);
+	AddToMenu(hStartupSubMenu, __LOCALIZE("Show project/global startup actions...", "sws_ext_menu"), NamedCommandLookup("_S&M_SHOW_PRJ_ACTION"));
 
 	AddToMenu(hMenu, __LOCALIZE("ReaConsole...", "sws_ext_menu"), NamedCommandLookup("_SWSCONSOLE"));
 	AddToMenu(hMenu, __LOCALIZE("Region Playlist", "sws_ext_menu"), NamedCommandLookup("_S&M_SHOW_RGN_PLAYLIST"));

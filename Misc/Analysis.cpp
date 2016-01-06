@@ -28,7 +28,6 @@
 #include "stdafx.h"
 #include "Analysis.h"
 #include "../sws_waitdlg.h"
-#include "../Breeder/BR_Util.h"
 #include "../reaper/localize.h"
 
 
@@ -162,7 +161,7 @@ bool AnalyzeItem(MediaItem* mi, ANALYZE_PCM* a)
 	if (!a->pcm || strcmp(a->pcm->GetType(), "MIDI") == 0 || strcmp(a->pcm->GetType(), "MIDIPOOL") == 0)
 		return false;
 
-	a->pcm = DuplicateSource(a->pcm);
+	a->pcm = a->pcm->Duplicate();
 	if (!a->pcm || !a->pcm->GetNumChannels())
 		return false;
 

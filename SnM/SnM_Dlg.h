@@ -102,7 +102,7 @@ protected:
 
 private:
 	// the trick
-	static LRESULT SNM_ScreensetCallback(int _action, char* _id, void* _param, void* _actionParm, int _actionParmSize)
+	static LRESULT SNM_ScreensetCallback(int _action, const char* _id, void* _param, void* _actionParm, int _actionParmSize)
 	{
 #ifdef _SNM_SCREENSET_DEBUG
 		char dbg[256]="";
@@ -250,6 +250,7 @@ LICE_CachedFont* SNM_GetThemeFont();
 LICE_CachedFont* SNM_GetToolbarFont();
 void SNM_GetThemeListColors(int* _bg, int* _txt, int* _grid = NULL);
 void SNM_GetThemeEditColors(int* _bg, int* _txt);
+void SNM_ThemeListView(HWND _h);
 void SNM_ThemeListView(SWS_ListView* _lv);
 LICE_IBitmap* SNM_GetThemeLogo();
 WDL_DLGRET SNM_HookThemeColorsMessage(HWND _hwnd, UINT _uMsg, WPARAM _wParam, LPARAM _lParam, bool _wantColorEdit = true);

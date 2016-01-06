@@ -931,13 +931,12 @@ void RemoveAllEmptyTakes(COMMAND_T* _ct) {
 // note: no undo due to file deletion
 bool DeleteTakeAndMedia(int _mode)
 {
-	bool deleteFileOK = true;
+	bool deleteFileOK = true, cancel = false;
 	WDL_StringKeyedArray<int> removeFiles(false);
-	for (int i=1; i <= GetNumTracks(); i++) // skip master
+	for (int i=1; !cancel && i <= GetNumTracks(); i++) // skip master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		WDL_PtrList<void> removedItems; 
-		bool cancel = false;
 		for (int j=0; !cancel && tr && j < GetTrackNumMediaItems(tr); j++)
 		{
 			MediaItem* item = GetTrackMediaItem(tr,j);
@@ -952,14 +951,17 @@ bool DeleteTakeAndMedia(int _mode)
 					if ((_mode == 1 || _mode == 2 || // all takes
 						((_mode == 3 || _mode == 4) && originalActiveTkIdx == k))) // active take only
 					{
-						char tkDisplayName[SNM_MAX_PATH] = "[empty]"; // no localization here..
+						char tkName[SNM_MAX_PATH] = "";
+						if (tk) lstrcpyn(tkName, (char*)GetSetMediaItemTakeInfo(tk,"P_NAME",NULL), sizeof(tkName));
+
+						char tkDisplayName[SNM_MAX_PATH] = "[empty take]"; // no localization here..
 						PCM_source* pcm = tk ? (PCM_source*)GetSetMediaItemTakeInfo(tk,"P_SOURCE",NULL) : NULL;
-						if (pcm)
+						if (pcm && pcm->GetFileName())
 						{
-							if (pcm->GetFileName() && *(pcm->GetFileName()))
+							if (*pcm->GetFileName())
 								lstrcpyn(tkDisplayName, pcm->GetFileName(), sizeof(tkDisplayName));
-							else if (pcm->GetFileName() && !strlen(pcm->GetFileName()))
-								lstrcpyn(tkDisplayName, (char*)GetSetMediaItemTakeInfo(tk,"P_NAME",NULL), sizeof(tkDisplayName));
+							else
+								lstrcpyn(tkDisplayName, tkName, sizeof(tkDisplayName));
 						}
 
 						// not already removed ?
@@ -969,10 +971,12 @@ bool DeleteTakeAndMedia(int _mode)
 							if (_mode == 1 || _mode == 3)
 							{
 								char buf[SNM_MAX_PATH];
-								if (pcm && pcm->GetFileName() && strlen(pcm->GetFileName())) 
-									_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("[Track %d, item %d] Delete take %d and its media file %s ?","sws_mbox"), i, j+1, originalTkIdx+1, tkDisplayName);
-								else if (pcm && pcm->GetFileName() && !strlen(pcm->GetFileName())) 
-									_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("[Track %d, item %d] Delete take %d (%s, in-project) ?","sws_mbox"), i, j+1, originalTkIdx+1, tkDisplayName);
+								if (pcm && pcm->GetFileName() && *pcm->GetFileName() && stricmp(GetFileExtension(pcm->GetFileName()), "rpp"))
+									_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("[Track %d, item %d, take %d] Delete take '%s' and its media file '%s'?","sws_mbox"), i, j+1, originalTkIdx+1, tkName, tkDisplayName);
+								else if (pcm && pcm->GetFileName() && *pcm->GetFileName() && !stricmp(GetFileExtension(pcm->GetFileName()), "rpp"))
+									_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("[Track %d, item %d, take %d] Delete take '%s'?\r\nNote: the media file '%s' will not be deleted (project within project)","sws_mbox"), i, j+1, originalTkIdx+1, tkName, tkDisplayName);
+								else if (pcm && pcm->GetFileName() && !*(pcm->GetFileName())) 
+									_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("[Track %d, item %d, take %d] Delete take '%s' (MIDI in-project)?","sws_mbox"), i, j+1, originalTkIdx+1, tkName);
 								else 
 									_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("[Track %d, item %d] Delete take %d (empty take) ?","sws_mbox"), i, j+1, originalTkIdx+1); // v3 or v4 empty takes
 
@@ -990,7 +994,7 @@ bool DeleteTakeAndMedia(int _mode)
 						if (rc==IDYES)
 						{
 							nbRemainingTakes--;
-							if (pcm && FileOrDirExists(pcm->GetFileName()))
+							if (pcm && FileOrDirExists(pcm->GetFileName()) && stricmp(GetFileExtension(pcm->GetFileName()), "rpp"))
 							{
 								// set all media offline (yeah, EACH TIME! Fails otherwise: http://github.com/Jeff0S/sws/issues/175#c3)
 								Main_OnCommand(40100,0); 

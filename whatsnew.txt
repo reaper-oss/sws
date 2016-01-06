@@ -1,3 +1,21 @@
+New actions
++Main:
+ - SWS/wol: Full zoom selected envelope (in media lane only) to upper/lower half in time selection
+ - SWS/wol: Vertical zoom selected envelope (in media lane only) to upper/lower half
+ - SWS/wol: Put selected envelope in media/envelope lane
+
+New global startup action (in addition to per-project startup actions)
++The new global startup action is performed one time, at REAPER launch (contrary to per-project startup actions which are performed each time a project is loaded)
++To edit/view/clear startup actions: Main menu/Extenstions/Startup actions
++Tip: if you want to perform several actions at launch time, create a macro and set it the global startup action
+
+Actions
++Prevent various delete take/item/source file actions to delete subproject files
++Support new ReaScript command IDs (REAPER v5.11pre14+)
++Remove outdated actions (issue #787):
+ - Xenakios/SWS : Process item with csound phase vocoder
+ - Xenakios/SWS : Process item with RubberBand
+
 !v2.8.2 featured build (November 3, 2015)
 Snapshots
 +Fixed http://forum.cockos.com/showthread.php?t=166652|snapshots with bypassed FX Chains|

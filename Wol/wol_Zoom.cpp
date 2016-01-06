@@ -273,18 +273,66 @@ void ForceEnvelopeOverlap(COMMAND_T* ct)
 	}
 }
 
+//---------//
+
 void ZoomSelectedEnvelopeTimeSelection(COMMAND_T* ct)
 {
 	double d1, d2;
 	GetSet_LoopTimeRange(false, false, &d1, &d2, false);
-	//TrackEnvelope* env = GetSelectedEnvelope(NULL);
-	if (/*env &&*/ (d1 != d2))
+	TrackEnvelope* env = GetSelectedEnvelope(NULL);
+	if (env && (d1 != d2))
 	{
-		Main_OnCommand(40031, 0);
 		if ((int)ct->user == 1)
-			Main_OnCommand(SWSGetCommandID(SetVerticalZoomSelectedEnvelope, 2), 0);
+			Main_OnCommand(NamedCommandLookup("_WOL_SETSELENVHMAX"), 0);
+		else if (IsEnvelopeInMediaLane())
+		{
+			if ((int)ct->user == 2)
+				Main_OnCommand(NamedCommandLookup("_WOL_VZOOMSELENVUPH"), 0);
+			else if ((int)ct->user == 3)
+				Main_OnCommand(NamedCommandLookup("_WOL_VZOOMSELENVLOH"), 0);
+		}
+		else
+			return;
+
+		Main_OnCommand(40031, 0);
 	}
 }
+
+void VerticalZoomSelectedEnvelopeLoUpHalf(COMMAND_T* ct)
+{
+	if (TrackEnvelope* env = GetSelectedEnvelope(NULL))
+	{
+		VerticalZoomCenter zoomCenter = (int)ct->user == 0 ? UPPER_HALF : LOWER_HALF;
+		BR_Envelope brEnv(env);
+		if (brEnv.IsInLane())
+		{
+			//if (brEnv.IsTakeEnvelope())		// Currently not supported...
+			//{
+			//	return;
+			//}
+			//else                   // Since take envelopes are not supported and envelopes in their lane cannot be higher than TCP, return
+			//{
+			//	brEnv.SetLaneHeight(2 * GetCurrentTcpMaxHeight());		// Actually envelopes in their lane cannot be higher than TCP...
+			//	brEnv.Commit();
+			//	SetArrangeScrollTo(env, false, zoomCenter);
+			//}
+			return;
+		}
+		else
+		{
+			int height, trackGapTop, trackGapBottom;
+			int mul = CountVisibleTrackEnvelopesInTrackLane(brEnv.GetParent());
+			GetTrackHeight(brEnv.GetParent(), NULL, &trackGapTop, &trackGapBottom);
+
+			height = 2 * GetCurrentTcpMaxHeight() * mul - 15;
+
+			SetTrackHeight(brEnv.GetParent(), height);
+			SetArrangeScrollTo(env, false, zoomCenter);
+		}
+	}
+}
+
+//---------//
 
 void SetVerticalZoomCenter(COMMAND_T* ct)
 {

@@ -210,51 +210,76 @@ void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Project startup action
+// Global and per-project startup actions
 // Based on a registered timer so that everything has been initialized
 ///////////////////////////////////////////////////////////////////////////////
 
 SWSProjConfig<WDL_FastString> g_prjActions;
+WDL_FastString g_globalAction;
 
-void OnTriggerActionTimer()
+// per-project action timer armed via ProcessExtensionLine()
+void ProjectStartupActionTimer()
 {
-	// unregister timer (called once)
-	plugin_register("-timer",(void*)OnTriggerActionTimer);
-
+	plugin_register("-timer",(void*)ProjectStartupActionTimer);
 	if (int cmdId = NamedCommandLookup(g_prjActions.Get()->Get()))
 	{
 		Main_OnCommand(cmdId, 0);
 #ifdef _SNM_DEBUG
-		OutputDebugString("OnTriggerActionTimer() - Performed startup action '");
+		OutputDebugString("ProjectStartupActionTimer() - Performed project startup action '");
 		OutputDebugString(g_prjActions.Get()->Get());
 		OutputDebugString("'\n");
 #endif
 	}
 }
 
-int PromptClearProjectStartupAction(bool _clear)
+// global action timer armed via SNM_Init()/OnInitTimer()
+void GlobalStartupActionTimer()
 {
-	int r=0, cmdId=SNM_NamedCommandLookup(g_prjActions.Get()->Get());
+	if (int cmdId = NamedCommandLookup(g_globalAction.Get()))
+	{
+		Main_OnCommand(cmdId, 0);
+#ifdef _SNM_DEBUG
+		OutputDebugString("GlobalStartupActionTimer() - Performed global startup action '");
+		OutputDebugString(g_globalAction.Get());
+		OutputDebugString("'\n");
+#endif
+	}
+}
+
+int PromptClearStartupAction(int _type, bool _clear)
+{
+	int r=0, cmdId=SNM_NamedCommandLookup(_type ? g_globalAction.Get() : g_prjActions.Get()->Get());
 	if (cmdId)
 	{
 		WDL_FastString msg;
-		msg.AppendFormatted(256,
-			_clear ?
-				__LOCALIZE_VERFMT("Are you sure you want to clear the current startup action: '%s'?","sws_mbox") :
-				__LOCALIZE_VERFMT("Are you sure you want to replace the current startup action: '%s'?","sws_mbox"),
-			kbd_getTextFromCmd(cmdId, NULL));
+		if (!_type)
+		{
+			msg.AppendFormatted(512, _clear ?
+                          __LOCALIZE_VERFMT("Are you sure you want to clear the project startup action: '%s'?","sws_startup_action") :
+                          __LOCALIZE_VERFMT("Are you sure you want to replace the project startup action: '%s'?","sws_startup_action"),
+                          kbd_getTextFromCmd(cmdId, NULL));
+		}
+		else
+		{
+			msg.AppendFormatted(512, _clear ?
+                          __LOCALIZE_VERFMT("Are you sure you want to clear the global startup action: '%s'?","sws_startup_action") :
+                          __LOCALIZE_VERFMT("Are you sure you want to replace the global startup action: '%s'?","sws_startup_action"),
+                          kbd_getTextFromCmd(cmdId, NULL));
+		}
 		r = MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("S&M - Confirmation","sws_mbox"), MB_YESNO);
 	}
 	return r;
 }
 
-void SetProjectStartupAction(COMMAND_T* _ct)
+void SetStartupAction(COMMAND_T* _ct)
 {
-	if (PromptClearProjectStartupAction(false) == IDNO)
+	int type=(int)_ct->user;
+
+	if (PromptClearStartupAction(type, false) == IDNO)
 		return;
 
 	char idstr[SNM_MAX_ACTION_CUSTID_LEN];
-	lstrcpyn(idstr, __LOCALIZE("Paste command ID or identifier string here","sws_mbox"), sizeof(idstr));
+	lstrcpyn(idstr, __LOCALIZE("Paste command ID or identifier string here","sws_startup_action"), sizeof(idstr));
 	if (PromptUserForString(GetMainHwnd(), SWS_CMD_SHORTNAME(_ct), idstr, sizeof(idstr), true))
 	{
 		WDL_FastString msg;
@@ -263,27 +288,40 @@ void SetProjectStartupAction(COMMAND_T* _ct)
 			// more checks: http://forum.cockos.com/showpost.php?p=1252206&postcount=1618
 			if (int tstNum = CheckSwsMacroScriptNumCustomId(idstr))
 			{
-				msg.SetFormatted(256, __LOCALIZE_VERFMT("%s failed: unreliable command ID '%s'!","sws_DLG_161"), SWS_CMD_SHORTNAME(_ct), idstr);
-				msg.Append("\n");
-
 				// localization note: msgs shared with the CA editor
+				msg.SetFormatted(512, __LOCALIZE_VERFMT("%s failed: unreliable command ID '%s'!","sws_startup_action"), SWS_CMD_SHORTNAME(_ct), idstr);
+				msg.Append("\r\n");
+
 				if (tstNum==-1)
-					msg.Append(__LOCALIZE("For SWS/S&M actions, you must use identifier strings (e.g. _SWS_ABOUT), not command IDs (e.g. 47145).\nTip: to copy such identifiers, right-click the action in the Actions window > Copy selected action cmdID/identifier string.","sws_mbox"));
+					msg.Append(__LOCALIZE("For SWS/S&M actions, you must use identifier strings (e.g. _SWS_ABOUT), not command IDs (e.g. 47145).\nTip: to copy such identifiers, right-click the action in the Actions window > Copy selected action cmdID/identifier string.","sws_startup_action"));
 				else if (tstNum==-2)
-					msg.Append(__LOCALIZE("For macros/scripts, you must use identifier strings (e.g. _f506bc780a0ab34b8fdedb67ed5d3649), not command IDs (e.g. 47145).\nTip: to copy such identifiers, right-click the macro/script in the Actions window > Copy selected action cmdID/identifier string.","sws_mbox"));
-				MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("S&M - Error","sws_DLG_161"), MB_OK);
+					msg.Append(__LOCALIZE("For macros/scripts, you must use identifier strings (e.g. _f506bc780a0ab34b8fdedb67ed5d3649), not command IDs (e.g. 47145).\nTip: to copy such identifiers, right-click the macro/script in the Actions window > Copy selected action cmdID/identifier string.","sws_startup_action"));
+				MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
 			}
 			else
 			{
-				g_prjActions.Get()->Set(idstr);
-				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_MISCCFG, -1);
+				if (!type)
+				{
+					g_prjActions.Get()->Set(idstr);
+					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_MISCCFG, -1);
 
-				msg.SetFormatted(256, __LOCALIZE_VERFMT("'%s' is defined as project startup action","sws_mbox"), kbd_getTextFromCmd(cmdId, NULL));
-				char prjFn[SNM_MAX_PATH] = "";
-				EnumProjects(-1, prjFn, sizeof(prjFn));
-				if (*prjFn) {
-					msg.Append("\n");
-					msg.AppendFormatted(SNM_MAX_PATH, __LOCALIZE_VERFMT("for %s","sws_mbox"), prjFn);
+					msg.SetFormatted(512, __LOCALIZE_VERFMT("'%s' is defined as project startup action","sws_startup_action"), kbd_getTextFromCmd(cmdId, NULL));          
+					char prjFn[SNM_MAX_PATH] = "";
+					EnumProjects(-1, prjFn, sizeof(prjFn));
+					if (*prjFn)
+					{
+						msg.Append("\r\n");
+						msg.AppendFormatted(SNM_MAX_PATH, __LOCALIZE_VERFMT("for %s","sws_startup_action"), prjFn);
+						msg.Append(".\r\n\r\n");
+						msg.Append(__LOCALIZE("Note: do not forget to save this project","sws_startup_action"));
+					}
+				}
+				else
+				{
+					g_globalAction.Set(idstr);
+					WritePrivateProfileString("Misc", "GlobalStartupAction", idstr, g_SNM_IniFn.Get()); 
+
+					msg.SetFormatted(512, __LOCALIZE_VERFMT("'%s' is defined as global startup action","sws_startup_action"), kbd_getTextFromCmd(cmdId, NULL));
 				}
 				msg.Append(".");
 				MessageBox(GetMainHwnd(), msg.Get(), SWS_CMD_SHORTNAME(_ct), MB_OK);
@@ -291,33 +329,57 @@ void SetProjectStartupAction(COMMAND_T* _ct)
 		}
 		else
 		{
-			msg.SetFormatted(256, __LOCALIZE_VERFMT("%s failed: command ID or identifier string '%s' not found in the 'Main' section of the action list!","sws_DLG_161"), SWS_CMD_SHORTNAME(_ct), idstr);
-			MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("S&M - Error","sws_DLG_161"), MB_OK);
+			msg.SetFormatted(512, __LOCALIZE_VERFMT("%s failed: command ID or identifier string '%s' not found in the 'Main' section of the action list!","sws_startup_action"), SWS_CMD_SHORTNAME(_ct), idstr);
+			MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
 		}
 	}
 }
 
-void ClearProjectStartupAction(COMMAND_T* _ct)
+void ClearStartupAction(COMMAND_T* _ct)
 {
-	if (PromptClearProjectStartupAction(true)==IDYES) {
-		g_prjActions.Get()->Set("");
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_MISCCFG, -1);
+	int type=(int)_ct->user;
+  
+	if (PromptClearStartupAction(type, true)==IDYES)
+	{
+		if (!type)
+		{
+			g_prjActions.Get()->Set("");
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_MISCCFG, -1);
+		}
+		else
+		{
+			g_globalAction.Set("");
+			WritePrivateProfileString("Misc", "GlobalStartupAction", NULL, g_SNM_IniFn.Get()); 
+		}
 	}
 }
 
-void ShowProjectStartupAction(COMMAND_T* _ct)
+void ShowStartupActions(COMMAND_T* _ct)
 {
-	WDL_FastString msg(__LOCALIZE("No startup action is defined","sws_mbox"));
+	WDL_FastString msg(__LOCALIZE("No project startup action is defined","sws_startup_action"));
 	if (int cmdId = SNM_NamedCommandLookup(g_prjActions.Get()->Get()))
-		msg.SetFormatted(256, __LOCALIZE_VERFMT("'%s' is defined as project startup action", "sws_mbox"), kbd_getTextFromCmd(cmdId, NULL));
+		msg.SetFormatted(512, __LOCALIZE_VERFMT("'%s' is defined as project startup action", "sws_startup_action"), kbd_getTextFromCmd(cmdId, NULL));
 
 	char prjFn[SNM_MAX_PATH] = "";
 	EnumProjects(-1, prjFn, sizeof(prjFn));
-	if (*prjFn) {
-		msg.Append("\n");
-		msg.AppendFormatted(SNM_MAX_PATH, __LOCALIZE_VERFMT("for %s", "sws_mbox"), prjFn);
+	if (*prjFn)
+	{
+		msg.Append("\r\n");
+		msg.AppendFormatted(SNM_MAX_PATH, __LOCALIZE_VERFMT("for %s", "sws_startup_action"), prjFn);
 	}
 	msg.Append(".");
+	msg.Append("\r\n\r\n");
+
+	if (int cmdId = SNM_NamedCommandLookup(g_globalAction.Get()))
+	{
+		msg.AppendFormatted(512, __LOCALIZE_VERFMT("'%s' is defined as global startup action", "sws_startup_action"), kbd_getTextFromCmd(cmdId, NULL));
+	}
+	else
+	{
+		msg.Append(__LOCALIZE("No global startup action is defined","sws_startup_action"));
+	}
+	msg.Append(".");
+
 	MessageBox(GetMainHwnd(), msg.Get(), SWS_CMD_SHORTNAME(_ct), MB_OK);
 }
 
@@ -331,10 +393,8 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 	{
 		g_prjActions.Get()->Set(lp.gettoken_str(1));
 
-		// by default, a registered timer is not armed when 
-		// loading projects, only when launching REAPER, so...
 		if (!isUndo && g_prjActions.Get()->GetLength() && IsActiveProjectInLoadSave())
-			plugin_register("timer",(void*)OnTriggerActionTimer);
+			plugin_register("timer",(void*)ProjectStartupActionTimer);
 		return true;
 	}
 	return false;
@@ -357,13 +417,18 @@ static project_config_extension_t s_projectconfig = {
 	ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL
 };
 
-int SNM_ProjectInit() {
-	return plugin_register("projectconfig", &s_projectconfig);
+int SNM_ProjectInit()
+{
+  char buf[SNM_MAX_ACTION_CUSTID_LEN]="";
+  GetPrivateProfileString("Misc", "GlobalStartupAction", "", buf, sizeof(buf), g_SNM_IniFn.Get());
+  g_globalAction.Set(buf);
+  return plugin_register("projectconfig", &s_projectconfig);
 }
 
-void SNM_ProjectExit() {
+void SNM_ProjectExit()
+{
 	plugin_register("-projectconfig", &s_projectconfig);
-	plugin_register("-timer",(void*)OnTriggerActionTimer);
+	plugin_register("-timer",(void*)ProjectStartupActionTimer);
 }
 
 

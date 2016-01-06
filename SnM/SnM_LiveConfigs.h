@@ -156,7 +156,7 @@ public:
 	LiveConfigJob(int _jobId, int _approxMs, int _val, int _valhw, int _relmode, int _cfgId) 
 		: MidiOscActionJob(_jobId,_approxMs,_val,_valhw,_relmode), m_cfgId(_cfgId) {}
 protected:
-	double GetMinValue() { return 0; }
+	double GetMinValue() { return 0.0; }
 	double GetMaxValue() { return SNM_LIVECFG_NB_ROWS-1; }
 	int m_cfgId;
 };

@@ -479,23 +479,6 @@ BEGIN
     LTEXT           "",IDC_STATIC7,6,114,60,8
 END
 
-IDD_CSPVOC_CONF DIALOGEX 0, 0, 186, 95
-STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Process Item With Phase Vocoder"
-FONT 8, "MS Sans Serif", 0, 0, 0x0
-BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,5,74,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,60,74,50,14
-    COMBOBOX        IDC_COMBO1,40,5,60,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "FFT Size",IDC_STATIC,5,5,29,8
-    LTEXT           "Stretch Factor",IDC_STATIC,5,25,46,8
-    EDITTEXT        IDC_EDIT1,60,25,25,14,ES_AUTOHSCROLL
-    LTEXT           "x",IDC_STATIC,105,25,8,8
-    LTEXT           "Transpose",IDC_STATIC,5,50,34,8
-    EDITTEXT        IDC_EDIT2,60,50,25,14,ES_AUTOHSCROLL
-    LTEXT           "semitones",IDC_STATIC,105,50,32,8
-END
-
 IDD_RENDITEMS DIALOGEX 0, 0, 186, 44
 STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Render Items With Tail"
@@ -612,24 +595,6 @@ BEGIN
     DEFPUSHBUTTON   "OK",IDOK,17,31,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,72,31,50,14
     PUSHBUTTON      "Apply",IDC_APPLY,127,31,50,14
-END
-
-IDD_RUBBERBAND DIALOGEX 0, 0, 186, 95
-STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Process with Rubberband"
-FONT 8, "MS Sans Serif", 0, 0, 0x0
-BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,5,74,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,60,74,50,14
-    PUSHBUTTON      "Preview",IDC_BUTTON1,115,74,50,14,WS_DISABLED
-    LTEXT           "Mode (0..5)",IDC_STATIC,11,5,37,8
-    EDITTEXT        IDC_RBPEDIT1,60,5,40,14,ES_AUTOHSCROLL
-    EDITTEXT        IDC_RBPEDIT2,60,25,40,14,ES_AUTOHSCROLL
-    EDITTEXT        IDC_RBPEDIT3,60,45,40,14,ES_AUTOHSCROLL
-    LTEXT           "Stretch factor",IDC_STATIC,4,25,44,8
-    LTEXT           "%",IDC_STATIC,105,25,8,8
-    LTEXT           "Transposition",IDC_STATIC,5,45,43,8
-    LTEXT           "semitones",IDC_STATIC,105,45,32,8
 END
 
 IDD_MEDIADLG DIALOGEX 0, 0, 612, 294
@@ -1648,14 +1613,6 @@ BEGIN
         BOTTOMMARGIN, 146
     END
 
-    IDD_CSPVOC_CONF, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 179
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 88
-    END
-
     IDD_RENDITEMS, DIALOG
     BEGIN
         LEFTMARGIN, 7
@@ -1718,14 +1675,6 @@ BEGIN
         RIGHTMARGIN, 185
         TOPMARGIN, 7
         BOTTOMMARGIN, 45
-    END
-
-    IDD_RUBBERBAND, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 179
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 88
     END
 
     IDD_MEDIADLG, DIALOG
@@ -2099,7 +2048,8 @@ IDC_ZOOM_UNDO           CURSOR                  "Resources\\Cursor\\sws_zoom_und
 // Generated from the TEXTINCLUDE 3 resource.
 //
 #include "version.h"
-#include "version.rc2"
+#include "version.rc2"
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

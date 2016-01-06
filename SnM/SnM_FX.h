@@ -77,7 +77,7 @@ public:
 protected:
 	void Perform();
 	double GetCurrentValue();
-	double GetMinValue() { return 0; }
+	double GetMinValue() { return 0.0; }
 	double GetMaxValue();
 	int m_fxId;
 };

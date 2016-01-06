@@ -27,6 +27,7 @@
 
 #include "stdafx.h"
 #include "../SnM/SnM_Dlg.h"
+#include "../SnM/SnM_Util.h"
 #include "../reaper/localize.h"
 
 using namespace std;
@@ -197,186 +198,6 @@ void ExtractFileNameEx(const char *FullFileName,char *Filename,bool StripExtensi
 	}
 }
 
-#ifdef _WIN32
-typedef struct
-{
-	int Mode;
-	double StretchFactor;
-	double PitchSemis;
-} t_RubberBandParams;
-
-t_RubberBandParams g_RubberBandParams;
-
-void DoRubberBandProcessing()
-{
-	char ExeLine[2048];
-	double PitchFactor=pow(2.0,g_RubberBandParams.PitchSemis/12.0);
-
-
-	MediaTrack* MunRaita;
-	MediaItem* CurItem;
-	MediaItem_Take* CurTake;
-	PCM_source *ThePCMSource;
-	int numItems=666;
-
-	bool ItemSelected=false;
-
-	bool NewSelectedStatus=false;
-	bool FirstSelFound=false;
-	Undo_BeginBlock();
-	Main_OnCommand(40601,0); // render items to new take
-
-	for (int i=0;i<GetNumTracks();i++)
-	{
-		MunRaita = CSurf_TrackFromID(i+1,FALSE);
-		numItems=GetTrackNumMediaItems(MunRaita);
-
-		for (int j=0;j<numItems;j++)
-		{
-			CurItem = GetTrackMediaItem(MunRaita,j);
-			ItemSelected=*(bool*)GetSetMediaItemInfo(CurItem,"B_UISEL",NULL);
-			if (ItemSelected==TRUE)
-			{
-				if (GetMediaItemNumTakes(CurItem)>0)
-				{
-					CurTake=GetMediaItemTake(CurItem,-1);
-
-					double NewVol=1.0;
-					FirstSelFound=true;
-
-					ThePCMSource=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
-					if (!ThePCMSource || !ThePCMSource->GetFileName())
-						break;
-
-					char ProjectPath[1024];
-					char RenderOutName[1024];
-					GetProjectPath(ProjectPath,1024);
-					char OriginalSourceFileName[1024];
-					char OrigFullFileName[1024];
-					strcpy(OrigFullFileName, ThePCMSource->GetFileName());
-					ExtractFileNameEx(OrigFullFileName,OriginalSourceFileName,true);
-
-					for (int x = 1; x < 1000; x ++)
-					{
-						sprintf(RenderOutName,"%s\\%s %03d.wav",ProjectPath, OriginalSourceFileName,x);
-						if (!FileExists(RenderOutName))
-							break;
-					}
-
-					sprintf(ExeLine,"%s\\Plugins\\rubberband.exe -c%d -t%f -f%f \"%s\" \"%s\"",GetExePath(),g_RubberBandParams.Mode,
-						g_RubberBandParams.StretchFactor,PitchFactor,ThePCMSource->GetFileName(),RenderOutName);
-					STARTUPINFO          si = { sizeof(si) };
-					PROCESS_INFORMATION  pi;
-					if(CreateProcess(0, ExeLine, 0, 0, FALSE, 0, 0, 0, &si, &pi))
-					{
-						DWORD TheResult;
-						// optionally wait for process to finish
-						TheResult=WaitForSingleObject(pi.hProcess, 60000); // max 60 seconds to wait for processing to complete
-						if (TheResult==WAIT_TIMEOUT)
-						{
-							// RubberBand processed too long
-							//CsoundSuccesfull=false;
-						}
-						CloseHandle(pi.hProcess);
-						CloseHandle(pi.hThread);
-						char OldTakeName[2048];
-						strcpy(OldTakeName,(char*)GetSetMediaItemTakeInfo(CurTake,"P_NAME",NULL));
-						Main_OnCommand(40440,0); // selected item medias offline
-						DeleteFile(ThePCMSource->GetFileName());
-						Main_OnCommand(40129,0); // delete current take from item
-						// 40439
-						//int CurTakeIndex=*(int*)GetSetMediaItemInfo(CurItem,"I_CURTAKE",NULL);
-						int LastTakeIndex=GetMediaItemNumTakes(CurItem);
-						MediaItem_Take *NewMediaTake=AddTakeToMediaItem(CurItem);
-						PCM_source *NewPCMSource=PCM_Source_CreateFromFile(RenderOutName);
-						NewPCMSource->Peaks_Clear(true);
-						//ProjectStateContext ctx;
-						//NewPCMSource->LoadState
-						GetSetMediaItemTakeInfo(NewMediaTake,"P_SOURCE",NewPCMSource);
-						//GetSetMediaItemInfo(CurItem,"I_CURTAKE",&LastTake);
-						//GetSetMediaItemInfo(CurItem,"D_LENGTH",&OutDur);
-						char BetterTakeName[512];
-
-						sprintf(BetterTakeName,"%s_RB_%d_%.2fx_%.2fsemitones",OldTakeName,g_RubberBandParams.Mode, g_RubberBandParams.StretchFactor,g_RubberBandParams.PitchSemis);
-						GetSetMediaItemTakeInfo(NewMediaTake,"P_NAME",BetterTakeName);
-						GetSetMediaItemInfo(CurItem,"I_CURTAKE",&LastTakeIndex);
-						Main_OnCommand(40047,0); // build any missing peaks
-						Main_OnCommand(40612,0); // set item length to source media len
-						Main_OnCommand(40439,0); // set selected media online
-						SetForegroundWindow(g_hwndParent);
-						//Undo_OnStateChangeEx("Process item with RubberBand as new take",4,-1);
-						Undo_EndBlock(__LOCALIZE("Process item with RubberBand","sws_undo"),0);
-					}
-				}
-			}
-		}
-	}
-}
-
-
-WDL_DLGRET RubberBandDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
-{
-	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, Message, wParam, lParam))
-		return r;
-
-	switch(Message)
-    {
-        case WM_INITDIALOG:
-		{
-			char txt[200];
-			sprintf(txt,"%f",g_RubberBandParams.StretchFactor);
-			SetDlgItemText(hwnd,IDC_RBPEDIT2,txt);
-			sprintf(txt,"%f",g_RubberBandParams.PitchSemis);
-			SetDlgItemText(hwnd,IDC_RBPEDIT3,txt);
-			sprintf(txt,"%d",g_RubberBandParams.Mode);
-			SetDlgItemText(hwnd,IDC_RBPEDIT1,txt);
-			SetFocus(GetDlgItem(hwnd, IDC_RBPEDIT2));
-			SendMessage(GetDlgItem(hwnd, IDC_RBPEDIT2), EM_SETSEL, 0, -1);
-		}
-		case WM_COMMAND:
-			switch(LOWORD(wParam))
-			{
-				case IDCANCEL:
-					EndDialog(hwnd,0);
-					return 0;
-				case IDOK:
-				{
-					char txt[200];
-					GetDlgItemText(hwnd,IDC_RBPEDIT2,txt,200);
-					g_RubberBandParams.StretchFactor=atof(txt);
-					GetDlgItemText(hwnd,IDC_RBPEDIT3,txt,200);
-					g_RubberBandParams.PitchSemis=atof(txt);
-					GetDlgItemText(hwnd,IDC_RBPEDIT1,txt,200);
-					g_RubberBandParams.Mode=atoi(txt);
-
-					DoRubberBandProcessing();
-					EndDialog(hwnd,0);
-					return 0;
-				}
-			}
-			break;
-	}
-	return 0;
-}
-#endif
-
-void DoShowRubberbandDlg(COMMAND_T*)
-{
-#ifdef _WIN32
-	static bool firstRun=true;
-	if (firstRun==true)
-	{
-		firstRun=false;
-		g_RubberBandParams.Mode=4;
-		g_RubberBandParams.PitchSemis=0.0;
-		g_RubberBandParams.StretchFactor=1.0;
-	}
-
-	DialogBox(g_hInst,MAKEINTRESOURCE(IDD_RUBBERBAND), g_hwndParent, RubberBandDlgProc);
-#else
-	MessageBox(g_hwndParent, __LOCALIZE("Not supported on OSX, sorry!", "sws_mbox"), __LOCALIZE("SWS - Error", "sws_mbox"), MB_OK);
-#endif
-}
 
 struct t_cuestruct
 {
@@ -641,7 +462,7 @@ void DoDeleteItemAndMedia(COMMAND_T*)
 					CurTake=GetMediaItemTake(CurItem,k);
 					PCM_source *CurPCM;
 					CurPCM=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
-					if (CurPCM && CurPCM->GetFileName() && FileExists(CurPCM->GetFileName()))
+					if (CurPCM && CurPCM->GetFileName() && FileExists(CurPCM->GetFileName()) && stricmp(GetFileExtension(CurPCM->GetFileName()), "rpp"))
 					{
 						char buf[2000];
 						sprintf(buf,__LOCALIZE_VERFMT("Do you really want to immediately delete file (NO UNDO) %s?","sws_mbox"),CurPCM->GetFileName());
@@ -709,7 +530,7 @@ void DoDelSelItemAndSendActiveTakeMediaToRecycler(COMMAND_T*)
 				{
 					CurTake=GetMediaItemTake(CurItem,k);
 					PCM_source* CurPCM = (PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
-					if (CurPCM && CurPCM->GetFileName() && FileExists(CurPCM->GetFileName()))
+					if (CurPCM && CurPCM->GetFileName() && FileExists(CurPCM->GetFileName()) && stricmp(GetFileExtension(CurPCM->GetFileName()), "rpp"))
 					{
 						SendFileToRecycleBin(CurPCM->GetFileName());
 						char fileName[512];
@@ -746,7 +567,7 @@ void DoNukeTakeAndSourceMedia(COMMAND_T*)
 				CurTake=GetMediaItemTake(CurItem,-1);
 				PCM_source *CurPCM;
 				CurPCM=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
-				if (CurPCM && CurPCM->GetFileName() && FileExists(CurPCM->GetFileName()))
+				if (CurPCM && CurPCM->GetFileName() && FileExists(CurPCM->GetFileName()) && stricmp(GetFileExtension(CurPCM->GetFileName()), "rpp"))
 				{
 					char buf[2000];
 					sprintf(buf,__LOCALIZE_VERFMT("Do you really want to immediately delete file (NO UNDO) %s?","sws_mbox"),CurPCM->GetFileName());
@@ -788,7 +609,7 @@ void DoDeleteActiveTakeAndRecycleSourceMedia(COMMAND_T*)
 			{
 				CurTake=GetMediaItemTake(CurItem,-1);
 				PCM_source *CurPCM=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
-				if (CurPCM && CurPCM->GetFileName() && FileExists(CurPCM->GetFileName()))
+				if (CurPCM && CurPCM->GetFileName() && FileExists(CurPCM->GetFileName()) && stricmp(GetFileExtension(CurPCM->GetFileName()), "rpp"))
 				{
 					SendFileToRecycleBin(CurPCM->GetFileName());
 					char fileName[512];

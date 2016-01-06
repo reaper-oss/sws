@@ -3,6 +3,9 @@
 $fp= fopen("./ReaScript.cpp","r");
 if (!$fp) die("error opening ReaScript.cpp");
 
+echo "#ifndef _REASCRIPT_VARARG_H_\n";
+echo "#define _REASCRIPT_VARARG_H_\n\n";
+
 $funcs = array();
 while (($x=fgets($fp,4096)))
 {
@@ -119,5 +122,6 @@ foreach ($funcs as $name => &$rec)
     echo $code;
 }
 
+echo "\n#endif\n";
 
 ?>

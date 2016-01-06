@@ -1,7 +1,7 @@
 /***************************************
 *** REAPER Plug-in API
 **
-** Copyright (C) 2006-2010, Cockos Incorporated
+** Copyright (C) 2006-2015, Cockos Incorporated
 **
 **    This software is provided 'as-is', without any express or implied
 **    warranty.  In no event will the authors be held liable for any damages
@@ -68,20 +68,17 @@ typedef double ReaSample;
 ** Endian-tools and defines (currently only __ppc__ and BIG_ENDIAN is recognized, for OS X -- all other platforms are assumed to be LE)
 */
 
-#if defined(__ppc__)
-
-#define REAPER_BIG_ENDIAN
-static int REAPER_MAKELEINT(int x)
+static int REAPER_BSWAPINT(int x)
 {
-  return ((((x))&0xff)<<24)|((((x))&0xff00)<<8)|((((x))&0xff0000)>>8)|((((x))&0xff000000)>>24);
+  return ((((x))&0xff)<<24)|((((x))&0xff00)<<8)|((((x))&0xff0000)>>8)|(((x)>>24)&0xff);
 }
-static void REAPER_MAKELEINTMEM(void *buf)
+static void REAPER_BSWAPINTMEM(void *buf)
 {
   char *p=(char *)buf;
   char tmp=p[0]; p[0]=p[3]; p[3]=tmp;
   tmp=p[1]; p[1]=p[2]; p[2]=tmp;
 }
-static void REAPER_MAKELEINTMEM8(void *buf)
+static void REAPER_BSWAPINTMEM8(void *buf)
 {
   char *p=(char *)buf;
   char tmp=p[0]; p[0]=p[7]; p[7]=tmp;
@@ -89,7 +86,18 @@ static void REAPER_MAKELEINTMEM8(void *buf)
   tmp=p[2]; p[2]=p[5]; p[5]=tmp;
   tmp=p[3]; p[3]=p[4]; p[4]=tmp;
 }
+
+#if defined(__ppc__)
+
+#define REAPER_BIG_ENDIAN
 #define REAPER_FOURCC(d,c,b,a) (((unsigned int)(d)&0xff)|(((unsigned int)(c)&0xff)<<8)|(((unsigned int)(b)&0xff)<<16)|(((unsigned int)(a)&0xff)<<24))
+
+#define REAPER_MAKEBEINT(x) (x)
+#define REAPER_MAKEBEINTMEM(x)
+#define REAPER_MAKEBEINTMEM8(x)
+#define REAPER_MAKELEINT(x) REAPER_BSWAPINT(x)
+#define REAPER_MAKELEINTMEM(x) REAPER_BSWAPINTMEM(x)
+#define REAPER_MAKELEINTMEM8(x) REAPER_BSWAPINTMEM8(x)
 
 #else
 
@@ -98,6 +106,10 @@ static void REAPER_MAKELEINTMEM8(void *buf)
 #define REAPER_MAKELEINT(x) (x)
 #define REAPER_MAKELEINTMEM(x)
 #define REAPER_MAKELEINTMEM8(x)
+#define REAPER_MAKEBEINT(x) REAPER_BSWAPINT(x)
+#define REAPER_MAKEBEINTMEM(x) REAPER_BSWAPINTMEM(x)
+#define REAPER_MAKEBEINTMEM8(x) REAPER_BSWAPINTMEM8(x)
+
 #endif
 
 
@@ -160,7 +172,11 @@ class ProjectStateContext // this is also defined in WDL, need to keep these int
 public:
   virtual ~ProjectStateContext(){};
 
+#ifdef __GNUC__
+  virtual void  __attribute__ ((format (printf,2,3))) AddLine(const char *fmt, ...) = 0;
+#else
   virtual void AddLine(const char *fmt, ...)=0;
+#endif
   virtual int GetLine(char *buf, int buflen)=0; // returns -1 on eof
 
   virtual INT64 GetOutputSize()=0; // output size written so far, only usable on REAPER 3.14+
@@ -191,8 +207,22 @@ public:
   virtual void DeleteItem(int bpos)=0;
   virtual int GetSize()=0; // size of block in bytes
   virtual void Empty()=0;
+
+protected:
+  // this is only defined in REAPER 4.60+, for 4.591 and earlier you should delete only via the implementation pointer
+  virtual ~MIDI_eventlist() { }
 };
 
+typedef struct
+{
+  double ppqpos;
+  double ppqpos_end; // only for note events
+  char flag; // &1=selected, &2=muted
+  unsigned char msg[3]; // if varmsg is valid, msg[0] is the text event type or 0xF0 for sysex
+  char* varmsg;
+  int varmsglen;
+  int setflag; // &1:selected, &2:muted, &4:ppqpos, &8:endppqpos, &16:msg1 high bits, &32:msg1 low bits, &64:msg2, &128:msg3, &256:varmsg, &512:text/sysex type (msg[0]), &16384:no sort after set
+} MIDI_eventprops;
 
 
 /***************************************************************************************
@@ -232,7 +262,14 @@ typedef struct
   ReaSample *peaks;  // peaks output (caller allocated)
   int peaks_out; // number of points actually output (less than desired means at end)
 
-  enum { PEAKTRANSFER_PEAKS_MODE=0, PEAKTRANSFER_WAVEFORM_MODE=1, PEAKTRANSFER_MIDI_MODE=2 };
+  enum 
+  { 
+    PEAKTRANSFER_PEAKS_MODE=0, 
+    PEAKTRANSFER_WAVEFORM_MODE=1, 
+    PEAKTRANSFER_MIDI_NOTE_MODE=2,
+    PEAKTRANSFER_MIDI_DRUM_MODE=3,
+    PEAKTRANSFER_MIDI_DRUM_TRIANGLE_MODE=4,
+  };
   int output_mode; // see enum above
 
   double absolute_time_s;
@@ -295,7 +332,7 @@ class PCM_source
     virtual void GetPeakInfo(PCM_source_peaktransfer_t *block)=0;
 
     virtual void SaveState(ProjectStateContext *ctx)=0;
-    virtual int LoadState(char *firstline, ProjectStateContext *ctx)=0; // -1 on error
+    virtual int LoadState(const char *firstline, ProjectStateContext *ctx)=0; // -1 on error
 
 
     // these are called by the peaks building UI to build peaks for files.
@@ -310,10 +347,12 @@ class PCM_source
 typedef struct
 {
   int m_id;
-  double m_time, m_endtime;
+  double m_time;
+  double m_endtime;
   bool m_isregion;
   char *m_name; // can be NULL if unnamed
-  char resvd[128]; // future expansion -- should be 0
+  int m_flags; // DEPRECATED, for legacy use only when calling PCM_SOURCE_EXT_ENUMCUES. &1=caller must call Extended(PCM_SOURCE_EXT_ENUMCUES, -1, &cue, 0) when finished
+  char resvd[124]; // future expansion -- should be 0
 } REAPER_cue;
 
 typedef struct
@@ -340,7 +379,7 @@ typedef struct
                                            //  WM_LBUTTON*, WM_RBUTTON*, WM_MOUSEMOVE, WM_MOUSEWHEEL
                                            // parm2=rsvd, parm3= REAPER_inline_positioninfo) -- 
                                            // return REAPER_INLINE_* flags
-                                           // WM_SETCURSOR gets parm3=REAPER_inline_positioninfo*, should return HCURSOR
+                                           // WM_SETCURSOR gets parm3=REAPER_inline_positioninfo*, UPDATED: should set extraParms[0] to HCURSOR
                                            // WM_KEYDOWN gets parm3=REAPER_inline_positioninfo* with extraParms[0] to MSG*
 #define REAPER_INLINE_RETNOTIFY_INVALIDATE 0x1000000 // want refresh of display
 #define REAPER_INLINE_RETNOTIFY_SETCAPTURE 0x2000000 // setcapture
@@ -353,26 +392,29 @@ typedef struct
 #define PCM_SOURCE_EXT_PROJCHANGENOTIFY 0x2000 // parm1 = nonzero if activated project, zero if deactivated project
 
 #define PCM_SOURCE_EXT_OPENEDITOR 0x10001 // parm1=hwnd, parm2=track idx, parm3=item description
-#define PCM_SOURCE_EXT_GETEDITORSTRING 0x10002 // parm1=index (0 or 1), returns desc
-#define PCM_SOURCE_EXT_CLOSESECONDARYSRC 0x10003 // close all secondary srcs that are open in the receiver's editor
-#define PCM_SOURCE_EXT_SETITEMCONTEXT 0x10004 // parm1=pointer to item handle, parm2=pointer to take handle
+#define PCM_SOURCE_EXT_GETEDITORSTRING 0x10002 // parm1=index (0 or 1), parm2=(const char**)desc, optional parm3=(int*)has_had_editor
+#define PCM_SOURCE_EXT_DEPRECATED_1 0x10003 // was PCM_SOURCE_EXT_CLOSESECONDARYSRC 
+#define PCM_SOURCE_EXT_SETITEMCONTEXT 0x10004 // parm1=MediaItem*,  parm2=MediaItem_Take*
 #define PCM_SOURCE_EXT_ADDMIDIEVENTS 0x10005 // parm1=pointer to midi_realtime_write_struct_t, nch=1 for replace, =0 for overdub, parm2=midi_quantize_mode_t* (optional)
 #define PCM_SOURCE_EXT_GETASSOCIATED_RPP 0x10006 // parm1=pointer to char* that will receive a pointer to the string
 #define PCM_SOURCE_EXT_GETMETADATA 0x10007 // parm1=pointer to name string, parm2=pointer to buffer, parm3=(int)buffersizemax . returns length used. Defined strings are "DESC", "ORIG", "ORIGREF", "DATE", "TIME", "UMID", "CODINGHISTORY" (i.e. BWF)
 #define PCM_SOURCE_EXT_SETASSECONDARYSOURCE 0x10008  // parm1=optional pointer to src (same subtype as receiver), if supplied, set the receiver as secondary src for parm1's editor, if not supplied, receiver has to figure out if there is an appropriate editor open to attach to, parm2=trackidx, parm3=itemname
 #define PCM_SOURCE_EXT_SHOWMIDIPREVIEW 0x10009  // parm1=(MIDI_eventlist*), can be NULL for all-notes-off (also to check if this source supports showing preview at this moment)
-#define PCM_SOURCE_EXT_SEND_EDITOR_MSG 0x1000A  // parm1=int: 1=focus editor to primary, 2=focus editor to all
+#define PCM_SOURCE_EXT_SEND_EDITOR_MSG 0x1000A  // parm1=int: 1=focus editor to primary, 2=focus editor to all, 3=focus editor to all selected
 #define PCM_SOURCE_EXT_SETSECONDARYSOURCELIST 0x1000B // parm1=(PCM_source**)sourcelist, parm2=list size, parm3=close any existing src not in the list
+#define PCM_SOURCE_EXT_ISOPENEDITOR 0x1000C // returns 1 if this source is currently open in an editor, parm1=1 to close
+#define PCM_SOURCE_EXT_GETITEMCONTEXT 0x10010 // parm1=MediaItem**, parm2=MediaItem_Take**, parm3=MediaTrack**
 #define PCM_SOURCE_EXT_CONFIGISFILENAME 0x20000
 #define PCM_SOURCE_EXT_GETBPMANDINFO 0x40000 // parm1=pointer to double for bpm. parm2=pointer to double for snap/downbeat offset (seconds).
 #define PCM_SOURCE_EXT_GETNTRACKS 0x80000 // for midi data, returns number of tracks that would have been available
-#define PCM_SOURCE_EXT_GETTITLE   0x80001
+#define PCM_SOURCE_EXT_GETTITLE   0x80001 // parm1=(char**)title (string persists in plugin)
 #define PCM_SOURCE_EXT_GETTEMPOMAP 0x80002
 #define PCM_SOURCE_EXT_WANTOLDBEATSTYLE 0x80003
 #define PCM_SOURCE_EXT_WANTTRIM 0x90002 // bla
 #define PCM_SOURCE_EXT_TRIMITEM 0x90003 // parm1=lrflag, parm2=double *{position,length,startoffs,rate}
 #define PCM_SOURCE_EXT_EXPORTTOFILE 0x90004 // parm1=output filename, only currently supported by MIDI but in theory any source could support this
-#define PCM_SOURCE_EXT_ENUMCUES 0x90005 // parm1=(int) index of cue to get, parm2=REAPER_cue **. returns 0/sets parm2 to NULL when out of cues. return value otherwise is how much to advance parm2 (1, or 2 usually)
+#define PCM_SOURCE_EXT_ENUMCUES 0x90005 // DEPRECATED, use PCM_SOURCE_EXT_ENUMCUES_EX instead.  parm1=(int) index of cue to get (-1 to free cue), parm2=(optional)REAPER_cue **.  Returns 0 and sets parm2 to NULL when out of cues. return value otherwise is how much to advance parm2 (1, or 2 usually)
+#define PCM_SOURCE_EXT_ENUMCUES_EX 0x90016 // parm1=(int) index of cue (source must provide persistent backing store for cue->m_name), parm2=(REAPER_cue*) optional. Returns 0 when out of cues, otherwise returns how much to advance index (1 or 2 usually). 
 // a PCM_source may be the parent of a number of beat-based slices, if so the parent should report length and nchannels only, handle ENUMSLICES, and be deleted after the slices are retrieved
 #define PCM_SOURCE_EXT_ENUMSLICES 0x90006 // parm1=(int*) index of slice to get, parm2=REAPER_slice* (pointing to caller's existing slice struct). if parm2 passed in zero, returns the number of slices. returns 0 if no slices or out of slices. 
 #define PCM_SOURCE_EXT_ENDPLAYNOTIFY 0x90007 // notify a source that it can release any pooled resources
@@ -388,7 +430,22 @@ enum { RAWMIDI_NOTESONLY=1, RAWMIDI_UNFILTERED=2 };
 #define PCM_SOURCE_EXT_ISABNORMALAUDIO  0x9000E // return 1 if rex, video, etc (meaning file export will just copy file directly rather than trim/converting)
 #define PCM_SOURCE_EXT_GETPOOLEDMIDIID 0x9000F // parm1=(char*)id, parm2=(int*)pool user count, parm3=(MediaItem_Take**)firstuser
 #define PCM_SOURCE_EXT_REMOVEFROMMIDIPOOL 0x90010 
-#define PCM_SOURCE_EXT_GETMIDIDATAHASH 0x90011 // parm1=(WDL_UINT64*)hash (64-bit hash of the MIDI source data)
+#define PCM_SOURCE_EXT_GETHASH 0x90011 // parm1=(WDL_UINT64*)hash (64-bit hash of the source data)
+#define PCM_SOURCE_EXT_GETIMAGE 0x90012  // parm1=(LICE_IBitmap**)image. parm2 = NULL or pointer to int, which is (w<<16)|h desired approx
+#define PCM_SOURCE_EXT_NOAUDIO 0x90013 
+#define PCM_SOURCE_EXT_HASMIDI 0x90014 // returns 1 if contains any MIDI data, parm1=(double*)time offset of first event
+#define PCM_SOURCE_EXT_DELETEMIDINOTES 0x90015 // parm1=(double*)minlen (0.125 for 1/8 notes, etc), parm2=1 if only trailing small notes should be deleted, parm3=(bool*)true if any notes were deleted (return)
+#define PCM_SOURCE_EXT_GETGUID 0x90017 // parm1=(GUID*)guid
+#define PCM_SOURCE_EXT_DOPASTEINITEM 0x90100 // no parms used, acts as a paste from clipboard
+#define PCM_SOURCE_EXT_GETNOTERANGE 0x90018 // parm1=(int*)low note, parm2=(int*)high note
+#define PCM_SOURCE_EXT_PPQCONVERT 0x90020 // parm1=(double*)pos, parm2=(int)flag 0=ppq to proj time, 1=proj time to ppq
+#define PCM_SOURCE_EXT_COUNTMIDIEVTS 0x90021 // parm1=(int*)notecnt, parm2=(int*)ccevtcnt, parm3=(int*)metaevtcnt
+#define PCM_SOURCE_EXT_GETSETMIDIEVT 0x90022 // parm1=(MIDI_eventprops*)event properties (NULL to delete); parm2=(int)event index (<0 to insert); parm2=(int)flag: 1=index counts notes only, 2=index counts CC only, 3=index counts meta-events only
+#define PCM_SOURCE_EXT_GETSUGGESTEDTEXT 0x90023 // parm1=char ** which will receive pointer to suggested label text, if any
+#define PCM_SOURCE_EXT_GETSCALE 0x90024 // parm1=unsigned int: &0xF=pitch (0=C), &0x10=root, &0x20=min2, &0x40=maj2, &0x80=min3, &0xF0=maj3, &0x100=4, etc) ; parm2=(char*)name (optional), parm3=int size of name buffer
+#define PCM_SOURCE_EXT_SELECTCONTENT 0x90025 // parm1=1 to select, 0 to deselect
+#define PCM_SOURCE_EXT_GETGRIDINFO 0x90026 // parm1=(double*)snap grid size, parm2=(double*)swing strength, parm3=(double*)note insert length, -1 if follows grid size
+#define PCM_SOURCE_EXT_SORTMIDIEVTS 0x9027
 
 // register with Register("pcmsrc",&struct ... and unregister with "-pcmsrc"
 typedef struct {
@@ -396,7 +453,7 @@ typedef struct {
   PCM_source *(*CreateFromFile)(const char *filename, int priority); // if priority is 5-7, and the file isn't found, open it in an offline state anyway, thanks
 
   // this is used for UI only, not so muc
-  const char *(*EnumFileExtensions)(int i, char **descptr); // call increasing i until returns a string, if descptr's output is NULL, use last description
+  const char *(*EnumFileExtensions)(int i, const char **descptr); // call increasing i until returns a string, if descptr's output is NULL, use last description
 } pcmsrc_register_t;
 
 
@@ -504,7 +561,7 @@ class PCM_sink
 
 typedef struct  // register using "pcmsink"
 {
-  unsigned int (*GetFmt)(char **desc);
+  unsigned int (*GetFmt)(const char **desc);
 
   const char *(*GetExtension)(const void *cfg, int cfg_l);
   HWND (*ShowConfig)(const void *cfg, int cfg_l, HWND parent);
@@ -559,7 +616,7 @@ public:
 **
 ***************************************************************************************/
 
-#define REAPER_PITCHSHIFT_API_VER 0x13
+#define REAPER_PITCHSHIFT_API_VER 0x14
 
 class IReaperPitchShift
 {
@@ -582,7 +639,9 @@ class IReaperPitchShift
     virtual int GetSamples(int requested_output, ReaSample *buffer)=0; // returns number of samplepairs returned
 
     virtual void SetQualityParameter(int parm)=0; // set to: (mode<<16)+(submode), or -1 for "project default" (default)
+    virtual int Extended(int call, void *parm1, void *parm2, void *parm3) { return 0; } // return 0 if unsupported
 };
+#define REAPER_PITCHSHIFT_EXT_GETMINMAXPRODUCTS 0x1
 
 
 /***************************************************************************************
@@ -646,16 +705,17 @@ typedef struct accelerator_register_t
 
 
 /*
-** custom_action_register_t allows you to register ("custom_action") an action into a keyboard section action list
-** register("custom_action",ca) will return the command ID (instance-dependent but unique across all sections), or 0 if failed (e.g. dupe idStr)
-** the related callback should be registered with "hookcommand2"
+** custom_action_register_t allows you to register ("custom_action") an action or a reascript into a section of the action list
+** register("custom_action",ca) will return the command ID (instance-dependent but unique across all sections), 
+** or 0 if failed (e.g dupe idStr for actions, or script not found/supported, etc)
+** for actions, the related callback should be registered with "hookcommand2"
 */
 
 typedef struct
 {
   int uniqueSectionId; // 0/100=main/main alt, 32063=media explorer, 32060=midi editor, 32061=midi event list editor, 32062=midi inline editor, etc
-  const char* idStr; // must be unique accross all sections
-  const char* name;
+  const char* idStr; // must be unique across all sections for actions, NULL for reascripts (automatically generated)
+  const char* name; // name as it is displayed in the action list, or full path to a reascript file
   void *extra; // reserved for future use
 } custom_action_register_t;
 
@@ -764,6 +824,22 @@ typedef struct project_config_extension_t // register with "projectconfig"
 } project_config_extension_t;
 
 
+typedef struct prefs_page_register_t // register useing "prefpage"
+{
+  const char *idstr; // simple id str
+  const char *displayname;
+  HWND (*create)(HWND par);
+  int par_id; 
+  const char *par_idstr;
+
+  int childrenFlag; // 1 for will have children
+
+  void *treeitem;
+  HWND hwndCache;
+
+  char _extra[64]; // 
+
+} prefs_page_register_t;
 
 typedef struct audio_hook_register_t
 {
@@ -794,7 +870,6 @@ typedef struct audio_hook_register_t
 */
 
 struct KbdAccel;
-struct CommandAction;
 
 typedef struct  
 {
@@ -928,21 +1003,16 @@ typedef struct
 enum
 {
   SCREENSET_ACTION_GETHWND = 0,
+
   SCREENSET_ACTION_IS_DOCKED = 1, // returns 1 if docked
-  SCREENSET_ACTION_SHOW = 2, // deprecated in v4, param2 = dock status
-  SCREENSET_ACTION_CLOSE = 3, // deprecated in v4
   SCREENSET_ACTION_SWITCH_DOCK = 4, //dock if undocked and vice-versa
-  SCREENSET_ACTION_NOMOVE = 5, // deprecated in v4, return 1 if no move desired
-  SCREENSET_ACTION_GETHASH = 6, // deprecated in v4, return hash string
-  // v4 actions
+
   SCREENSET_ACTION_LOAD_STATE=0x100, // load state from actionParm (of actionParmSize). if both are NULL, hide.
   SCREENSET_ACTION_SAVE_STATE,  // save state to actionParm, max length actionParmSize (will usually be 4k or greater), return length
 };
-typedef LRESULT (*screensetCallbackFunc)(int action, char *id, void *param, int param2); // deprecated in v4
-typedef LRESULT (*screensetNewCallbackFunc)(int action, char *id, void *param, void *actionParm, int actionParmSize);
+typedef LRESULT (*screensetNewCallbackFunc)(int action, const char *id, void *param, void *actionParm, int actionParmSize);
 
 // This is managed using screenset_registerNew(), screenset_unregister(), etc
-// Use screenset_registerNew for screensetNewCallbackFunc, v4 only!
 
 
 /*
@@ -1018,7 +1088,7 @@ class IReaperControlSurface
     virtual void SetSurfacePan(MediaTrack *trackid, double pan) { }
     virtual void SetSurfaceMute(MediaTrack *trackid, bool mute) { }
     virtual void SetSurfaceSelected(MediaTrack *trackid, bool selected) { }
-    virtual void SetSurfaceSolo(MediaTrack *trackid, bool solo) { }
+    virtual void SetSurfaceSolo(MediaTrack *trackid, bool solo) { } // trackid==master means "any solo"
     virtual void SetSurfaceRecArm(MediaTrack *trackid, bool recarm) { }
     virtual void SetPlayState(bool play, bool pause, bool rec) { }
     virtual void SetRepeatState(bool rep) { }
@@ -1035,6 +1105,28 @@ class IReaperControlSurface
     virtual int Extended(int call, void *parm1, void *parm2, void *parm3) { return 0; } // return 0 if unsupported
 };
 
+#define CSURF_EXT_RESET 0x0001FFFF // clear all surface state and reset (harder reset than SetTrackListChange)
+#define CSURF_EXT_SETINPUTMONITOR 0x00010001 // parm1=(MediaTrack*)track, parm2=(int*)recmonitor
+#define CSURF_EXT_SETMETRONOME 0x00010002 // parm1=0 to disable metronome, !0 to enable
+#define CSURF_EXT_SETAUTORECARM 0x00010003 // parm1=0 to disable autorecarm, !0 to enable
+#define CSURF_EXT_SETRECMODE 0x00010004 // parm1=(int*)record mode: 0=autosplit and create takes, 1=replace (tape) mode
+#define CSURF_EXT_SETSENDVOLUME 0x00010005 // parm1=(MediaTrack*)track, parm2=(int*)sendidx, parm3=(double*)volume
+#define CSURF_EXT_SETSENDPAN 0x00010006 // parm1=(MediaTrack*)track, parm2=(int*)sendidx, parm3=(double*)pan
+#define CSURF_EXT_SETFXENABLED 0x00010007 // parm1=(MediaTrack*)track, parm2=(int*)fxidx, parm3=0 if bypassed, !0 if enabled
+#define CSURF_EXT_SETFXPARAM 0x00010008 // parm1=(MediaTrack*)track, parm2=(int*)(fxidx<<16|paramidx), parm3=(double*)normalized value
+#define CSURF_EXT_SETLASTTOUCHEDFX 0x0001000A // parm1=(MediaTrack*)track, parm2=(int*)mediaitemidx (may be NULL), parm3=(int*)fxidx. all parms NULL=clear last touched FX
+#define CSURF_EXT_SETFOCUSEDFX 0x0001000B // parm1=(MediaTrack*)track, parm2=(int*)mediaitemidx (may be NULL), parm3=(int*)fxidx. all parms NULL=clear focused FX
+#define CSURF_EXT_SETLASTTOUCHEDTRACK 0x0001000C // parm1=(MediaTrack*)track
+#define CSURF_EXT_SETMIXERSCROLL 0x0001000D // parm1=(MediaTrack*)track, leftmost track visible in the mixer
+#define CSURF_EXT_SETBPMANDPLAYRATE 0x00010009 // parm1=*(double*)bpm (may be NULL), parm2=*(double*)playrate (may be NULL)
+#define CSURF_EXT_SETPAN_EX 0x0001000E // parm1=(MediaTrack*)track, parm2=(double*)pan, parm3=(int*)mode 0=v1-3 balance, 3=v4+ balance, 5=stereo pan, 6=dual pan. for modes 5 and 6, (double*)pan points to an array of two doubles.  if a csurf supports CSURF_EXT_SETPAN_EX, it should ignore CSurf_SetSurfacePan.
+#define CSURF_EXT_SETRECVVOLUME 0x00010010 // parm1=(MediaTrack*)track, parm2=(int*)recvidx, parm3=(double*)volume
+#define CSURF_EXT_SETRECVPAN 0x00010011 // parm1=(MediaTrack*)track, parm2=(int*)recvidx, parm3=(double*)pan
+#define CSURF_EXT_SETFXOPEN 0x00010012 // parm1=(MediaTrack*)track, parm2=(int*)fxidx, parm3=0 if UI closed, !0 if open
+#define CSURF_EXT_SETFXCHANGE 0x00010013 // parm1=(MediaTrack*)track, whenever FX are added, deleted, or change order
+#define CSURF_EXT_SETPROJECTMARKERCHANGE 0x00010014 // whenever project markers are changed
+#define CSURF_EXT_SUPPORTS_EXTENDED_TOUCH 0x00080001 // returns nonzero if GetTouchState can take isPan=2 for width, etc
+
 typedef struct
 {
   const char *type_string; // simple unique string with only A-Z, 0-9, no spaces or other chars
@@ -1047,63 +1139,6 @@ typedef struct
 // note you can also add a control surface behind the scenes with "csurf_inst" (IReaperControlSurface*)instance
 
 
-//JFB added ------------------------------------------------------------------>
-// http://forum.cockos.com/showthread.php?t=99616
-#define CSURF_EXT_RESET 0x0001FFFF				// clear all surface state and reset (harder reset than SetTrackListChange)
-#define CSURF_EXT_SETINPUTMONITOR 0x00010001	// parm1=(MediaTrack*)track, parm2=(int*)recmonitor
-#define CSURF_EXT_SETMETRONOME 0x00010002		// parm1=0 to disable metronome, !0 to enable
-#define CSURF_EXT_SETAUTORECARM 0x00010003		// parm1=0 to disable autorecarm, !0 to enable
-#define CSURF_EXT_SETRECMODE 0x00010004			// parm1=(int*)record mode: 0=autosplit and create takes, 1=replace (tape) mode
-#define CSURF_EXT_SETSENDVOLUME 0x00010005		// parm1=(MediaTrack*)track, parm2=(int*)sendidx, parm3=(double*)volume
-#define CSURF_EXT_SETSENDPAN 0x00010006			// parm1=(MediaTrack*)track, parm2=(int*)sendidx, parm3=(double*)pan
-#define CSURF_EXT_SETFXENABLED 0x00010007		// parm1=(MediaTrack*)track, parm2=(int*)fxidx, parm3=0 if bypassed, !0 if enabled
-#define CSURF_EXT_SETFXPARAM 0x00010008			// parm1=(MediaTrack*)track, parm2=(int*)(fxidx<<16|paramidx), parm3=(double*)normalized value
-#define CSURF_EXT_SETLASTTOUCHEDFX 0x0001000A	// parm1=(MediaTrack*)track, parm2=(int*)mediaitemidx (may be NULL), parm3=(int*)fxidx. all parms NULL=clear last touched FX
-#define CSURF_EXT_SETFOCUSEDFX 0x0001000B		// parm1=(MediaTrack*)track, parm2=(int*)mediaitemidx (may be NULL), parm3=(int*)fxidx. all parms NULL=clear focused FX
-#define CSURF_EXT_SETLASTTOUCHEDTRACK 0x0001000C //parm1=(MediaTrack*)track
-#define CSURF_EXT_SETMIXERSCROLL 0x0001000D		// parm1=(MediaTrack*)track, leftmost track visible in the mixer
-#define CSURF_EXT_SETBPMANDPLAYRATE 0x00010009	// parm1=*(double*)bpm (may be NULL), parm2=*(double*)playrate (may be NULL)
-#define CSURF_EXT_SETPAN_EX 0x0001000E			// parm1=(MediaTrack*)track, parm2=(double*)pan, parm3=(int*)mode 0=v1-3 balance, 3=v4+ balance, 5=stereo pan, 6=dual pan. for modes 5 and 6, (double*)pan points to an array of two doubles.  if a csurf supports CSURF_EXT_SETPAN_EX, it should ignore CSurf_SetSurfacePan.
-#define CSURF_EXT_SETRECVVOLUME 0x00010010		// parm1=(MediaTrack*)track, parm2=(int*)recvidx, parm3=(double*)volume
-#define CSURF_EXT_SETRECVPAN 0x00010011			// parm1=(MediaTrack*)track, parm2=(int*)recvidx, parm3=(double*)pan
-#define CSURF_EXT_SETFXOPEN 0x00010012			// parm1=(MediaTrack*)track, parm2=(int*)fxidx, parm3=0 if UI closed, !0 if open
-#define CSURF_EXT_SETFXCHANGE 0x00010013		// parm1=(MediaTrack*)track, whenever FX are added, deleted, or change order
-// JFB <-----------------------------------------------------------------------
-
-
-// --------------------------------------------------------------------------->
-// Registering a timer (direct quote from Justin):
-//
-//  As far as getting notification that everything has finished loading...
-//  I'm not sure that the SaveExtensionConfig method will be reliable in the
-//  current version, or in the future. A good way to do this might be to run
-//  everything from a registered timer, where you do:
-//
-//  void myTimer() {
-//  }
-//
-//  rec->Register("timer",(void*)myTimer);
-//
-//
-//  This timer will only run after initialization has begun (as far as I
-//  remember, might need to test that)...
-// <-----------------------------------------------------------------------
-
-
-// --------------------------------------------------------------------------->
-// Registering files (github.com/Jeff0S/sws/issues/177)
-//
-//  You can register files that are used for a project so that reaper knows
-//  about them, and will copy them if you save as w/ media copy.
-//  Call the Register() function with "file_in_project_ex"
-//  (or "-file_in_project_ex" to remove) and pass it:
-//  void *p[2] = { (void *)filename, (void *)projectptr };
-//
-//
-//   v4.58 - December 16 2013
-//    + API: added file_in_project_ex2, so that plugins tracking media files
-//           can receive copy notifications in save-as-copy etc
-// <-----------------------------------------------------------------------
 
 #ifndef UNDO_STATE_ALL
 #define UNDO_STATE_ALL 0xFFFFFFFF
@@ -1111,6 +1146,7 @@ typedef struct
 #define UNDO_STATE_FX 2  // track/master fx
 #define UNDO_STATE_ITEMS 4  // track items
 #define UNDO_STATE_MISCCFG 8 // loop selection, markers, regions, extensions!
+#define UNDO_STATE_FREEZE 16 // freeze state -- note that isfreeze is used independently, this is only used for the undo system to serialize the already frozen state
 #endif
 
 

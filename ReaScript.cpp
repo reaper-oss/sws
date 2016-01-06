@@ -1,7 +1,7 @@
 /******************************************************************************
 / ReaScript.cpp
 /
-/ Copyright (c) 2012 Jeffos
+/ Copyright (c) 2012 and later Jeffos
 /
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -27,7 +27,6 @@
 
 #include "stdafx.h"
 #include "SnM/SnM_FX.h"
-#include "SnM/SnM_Marker.h"
 #include "SnM/SnM_Misc.h"
 #include "SnM/SnM_Resources.h"
 #include "SnM/SnM_Routing.h"
@@ -35,27 +34,38 @@
 #include "Fingers/RprMidiTake.h"
 #include "Breeder/BR_ReaScript.h"
 
+
+// if _TEST_REASCRIPT_EXPORT is #define'd, you'll need to rename "APITESTFUNC" into "APIFUNC" in g_apidefs too
+// (because our function wrapper generation scripts aren't smart enough to skip #ifdef'ed out lines ATM)
+// you will find also the realed reascript_test.eel and reascript_test.lua in the repo (python: todo).
 //#define _TEST_REASCRIPT_EXPORT
-#include "reascript_test.c"
+#ifdef _TEST_REASCRIPT_EXPORT
+  #include "reascript_test.c" // test all possible parameter/return types
+#endif
 
 #ifdef _WIN32
-#pragma warning(push, 0)
-#pragma warning(disable: 4800) // disable "forcing value to bool..." warnings
+  #pragma warning(push, 0)
+  #pragma warning(disable: 4800) // disable "forcing value to bool..." warnings
 #endif
 #include "reascript_vararg.h"
 #ifdef _WIN32
-#pragma warning(pop)
+  #pragma warning(pop)
 #endif
 
 
-// Important, keep APIFUNC() as it is defined: both scripts reascript_vararg.php
-// and reascript_python.pl parse g_apidefs to generate variable argument wrappers
-// for EEL and Lua (reascript_vararg.h, automatically generated at compilation time
-// on OSX), as well as python wrappers (sws_python.py, automatically generated at
-// compilation time both on Win & OSX).
+// Important, keep APIFUNC() and APIdef as they are defined: the scripts reascript_vararg.php
+// and reascript_python.pl both parse the function definition table (g_apidefs) at compilation
+// time to generate variable argument function wrappers for EEL and Lua (reascript_vararg.h),
+// and python function wrappers (sws_python32.py, sws_python64.py), respectively.
 
-#define APIFUNC(x) (void*)x,#x,(void*)__vararg_ ## x,"APIvararg_" #x "","API_" #x "","APIdef_" #x ""
-#define CAPIFUNC(x) (void*)x,#x,NULL,NULL,"API_" #x "",NULL // export to C/C++ only
+#ifdef _REASCRIPT_VARARG_H_
+  #define APIFUNC(x)  (void*)x,#x,(void*)__vararg_ ## x,"APIvararg_" #x "","API_" #x "","APIdef_" #x ""
+  #define CAPIFUNC(x) (void*)x,#x,NULL,NULL,"API_" #x "",NULL // export to C/C++ only
+#else
+  #pragma message("WARNING: DISABLING FUNCTION EXPORT TO LUA/EEL REASCRIPTS! Probable cause: 'reascript_vararg.php' couldn't generate 'reascript_vararg.h' (PHP installed?)")
+  #define APIFUNC(x)  (void*)x,#x,NULL,NULL,"API_" #x "",NULL // export to C/C++ only
+  #define CAPIFUNC(x) (void*)x,#x,NULL,NULL,"API_" #x "",NULL // export to C/C++ only
+#endif
 
 typedef struct APIdef
 {
@@ -77,9 +87,21 @@ typedef struct APIdef
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Add the functions you want to export here (+ related #include on top)
-// Make sure function names have a prefix like "SWS_", "FNG_", etc..
-// When documenting API function parameters:
+//
+// Add functions you want to export in the table below (+ related #include on
+// top). To distinguish SWS and native functions, make sure function names have
+// a prefix like "SWS_", "FNG_", etc.
+// Your functions must be made dumb-proof, they must not trust any parameter.
+// However, your do not need to ValidatePr() REAPER pointer parameters (such as 
+// MediaTrack*, MediaItem*, etc): REAPER does this for you when a script runs
+// an exported function.
+// REAPER pointer parameters are validated against the prior ReaProject* param,
+// (or the current project if absent/NULL). For ex., in the following function:
+// void bla(ReaProject* p1, MediaTrack* t1, ReaProject* p2, MediaItem* i2),
+// t1 will be validated against p1, but i2 will be validated against p2.
+// Your must interpret NULL ReaProject* params as "the current project".
+//
+// When defining/documenting API function parameters:
 //  - if a (char*,int) pair is encountered, name them buf, buf_sz
 //  - if a (const char*,int) pair is encountered, buf, buf_sz as well
 //  - if a lone basicType *, use varNameOut or varNameIn or
@@ -90,19 +112,20 @@ typedef struct APIdef
 // At the moment (REAPER v5pre6) the supported return types are:
 //  - int, bool, double, const char*
 //  - AnyStructOrClass* (handled as an opaque pointer)
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 APIdef g_apidefs[] =
 {
 #ifdef _TEST_REASCRIPT_EXPORT
-  { APIFUNC(SNM_test1), "int", "int*", "aOut", "", },
-  { APIFUNC(SNM_test2), "double", "double*", "aOut", "", },
-  { APIFUNC(SNM_test3), "bool", "int*,double*,bool*", "aOut,bOut,cOut", "", },
-  { APIFUNC(SNM_test4), "void", "double", "a", "", },
-  { APIFUNC(SNM_test5), "void", "const char*", "a", "", },
-  { APIFUNC(SNM_test6), "const char*", "char*", "a", "", }, // not an "Out" parm
-  { APIFUNC(SNM_test7), "double", "int,int*,double*,bool*,char*,const char*", "i,aOut,bInOptional,cOutOptional,sOutOptional,csInOptional", "", },
-  { APIFUNC(SNM_test8), "const char*", "char*,int,const char*,int,int,char*,int,int*", "buf1,buf1_sz,buf2,buf2_sz,i,buf3,buf3_sz,iOutOptional", "", },
+	{ APITESTFUNC(SNM_test1), "int", "int*", "aOut", "", },
+	{ APITESTFUNC(SNM_test2), "double", "double*", "aOut", "", },
+	{ APITESTFUNC(SNM_test3), "bool", "int*,double*,bool*", "aOut,bOut,cOut", "", },
+	{ APITESTFUNC(SNM_test4), "void", "double", "a", "", },
+	{ APITESTFUNC(SNM_test5), "void", "const char*", "a", "", },
+	{ APITESTFUNC(SNM_test6), "const char*", "char*", "a", "", }, // not an "Out" parm
+	{ APITESTFUNC(SNM_test7), "double", "int,int*,double*,bool*,char*,const char*", "i,aOut,bInOptional,cOutOptional,sOutOptional,csInOptional", "", },
+	{ APITESTFUNC(SNM_test8), "const char*", "char*,int,const char*,int,int,char*,int,int*", "buf1,buf1_sz,buf2,buf2_sz,i,buf3,buf3_sz,iOutOptional", "", },
 #endif
 	{ APIFUNC(SNM_CreateFastString), "WDL_FastString*", "const char*", "str", "[S&M] Instantiates a new \"fast string\". You must delete this string, see SNM_DeleteFastString.", },
 	{ APIFUNC(SNM_DeleteFastString), "void", "WDL_FastString*", "str", "[S&M] Deletes a \"fast string\" instance.", },
@@ -123,7 +146,7 @@ APIdef g_apidefs[] =
 	{ APIFUNC(SNM_SetDoubleConfigVar), "bool", "const char*,double", "varname,newvalue", "[S&M] Sets a double preference (look in project prefs first, then in general prefs). Returns false if failed (e.g. varname not found).", },
 	{ APIFUNC(SNM_MoveOrRemoveTrackFX), "bool", "MediaTrack*,int,int", "tr,fxId,what", "[S&M] Move or removes a track FX. Returns true if tr has been updated.\nfxId: fx index in chain or -1 for the selected fx. what: 0 to remove, -1 to move fx up in chain, 1 to move fx down in chain.", },
 	{ APIFUNC(SNM_GetProjectMarkerName), "bool", "ReaProject*,int,bool,WDL_FastString*", "proj,num,isrgn,name", "[S&M] Gets a marker/region name. Returns true if marker/region found.", },
-	{ APIFUNC(SNM_SetProjectMarker), "bool", "ReaProject*,int,bool,double,double,const char*,int", "proj,num,isrgn,pos,rgnend,name,color", "[S&M] See SetProjectMarker3, it is the same function but this one can set empty names.", },
+	{ APIFUNC(SNM_SetProjectMarker), "bool", "ReaProject*,int,bool,double,double,const char*,int", "proj,num,isrgn,pos,rgnend,name,color", "[S&M] See SetProjectMarker3(), it is the same function but this one can set empty names -- DEPRECATED: you can use the new native function SetProjectMarker4() instead.", },
 	{ APIFUNC(SNM_SelectResourceBookmark), "int", "const char*", "name", "[S&M] Select a bookmark of the Resources window. Returns the related bookmark id (or -1 if failed).", },
 	{ APIFUNC(SNM_TieResourceSlotActions), "void", "int", "bookmarkId", "[S&M] Attach Resources slot actions to a given bookmark.", },
 	{ APIFUNC(SNM_AddTCPFXParm), "bool", "MediaTrack*,int,int", "tr,fxId,prmId", "[S&M] Add an FX parameter knob in the TCP. Returns false if nothing updated (invalid parameters, knob already present, etc..)", },
@@ -238,7 +261,7 @@ void UnregisterExportedFuncs()
 	}
 }
 
-// register exported function definitions (html documentation)
+// register exported function definitions + help text for the reaper api header and html documentation
 bool RegisterExportedAPI(reaper_plugin_info_t* _rec)
 {
 	bool ok = (_rec!=NULL);

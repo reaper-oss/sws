@@ -1,50 +1,5 @@
-static void* __vararg_SNM_test1(void** arglist, int numparms)
-{
-  return (void*)(INT_PTR)SNM_test1((int*)arglist[0]);
-}
-
-static void* __vararg_SNM_test2(void** arglist, int numparms)
-{
-  double* p =(double*)arglist[numparms-1];
-  double d = SNM_test2((double*)arglist[0]);
-  if (p) *p=d;
-  return p;
-}
-
-static void* __vararg_SNM_test3(void** arglist, int numparms)
-{
-  return (void*)(INT_PTR)SNM_test3((int*)arglist[0], (double*)arglist[1], (bool*)arglist[2]);
-}
-
-static void* __vararg_SNM_test4(void** arglist, int numparms)
-{
-  SNM_test4(arglist[0] ? *(double*)arglist[0] : 0.0);
-  return NULL;
-}
-
-static void* __vararg_SNM_test5(void** arglist, int numparms)
-{
-  SNM_test5((const char*)arglist[0]);
-  return NULL;
-}
-
-static void* __vararg_SNM_test6(void** arglist, int numparms)
-{
-  return (void*)(INT_PTR)SNM_test6((char*)arglist[0]);
-}
-
-static void* __vararg_SNM_test7(void** arglist, int numparms)
-{
-  double* p =(double*)arglist[numparms-1];
-  double d = SNM_test7((int)(INT_PTR)arglist[0], (int*)arglist[1], (double*)arglist[2], (bool*)arglist[3], (char*)arglist[4], (const char*)arglist[5]);
-  if (p) *p=d;
-  return p;
-}
-
-static void* __vararg_SNM_test8(void** arglist, int numparms)
-{
-  return (void*)(INT_PTR)SNM_test8((char*)arglist[0], (int)(INT_PTR)arglist[1], (const char*)arglist[2], (int)(INT_PTR)arglist[3], (int)(INT_PTR)arglist[4], (char*)arglist[5], (int)(INT_PTR)arglist[6], (int*)arglist[7]);
-}
+#ifndef _REASCRIPT_VARARG_H_
+#define _REASCRIPT_VARARG_H_
 
 static void* __vararg_SNM_CreateFastString(void** arglist, int numparms)
 {
@@ -575,3 +530,5 @@ static void* __vararg_ULT_SetMediaItemNote(void** arglist, int numparms)
   return NULL;
 }
 
+
+#endif

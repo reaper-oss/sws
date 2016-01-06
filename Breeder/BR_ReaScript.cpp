@@ -39,6 +39,7 @@
 * Globals                                                                     *
 ******************************************************************************/
 static BR_MouseInfo g_mouseInfo(BR_MouseInfo::MODE_ALL, false);
+WDL_PtrList_DeleteOnDestroy<BR_Envelope> g_script_brenvs;  // just to validate function parameters
 
 /******************************************************************************
 * ReaScript export                                                            *
@@ -46,92 +47,79 @@ static BR_MouseInfo g_mouseInfo(BR_MouseInfo::MODE_ALL, false);
 BR_Envelope* BR_EnvAlloc (TrackEnvelope* envelope, bool takeEnvelopesUseProjectTime)
 {
 	if (envelope)
-		return new (nothrow) BR_Envelope(envelope, takeEnvelopesUseProjectTime);
-	else
-		return NULL;
+		return g_script_brenvs.Add(new BR_Envelope(envelope, takeEnvelopesUseProjectTime));
+	return NULL;
 }
 
 int BR_EnvCountPoints (BR_Envelope* envelope)
 {
-	if (envelope)
+	if (envelope && g_script_brenvs.Find(envelope)>=0)
 		return envelope->CountPoints();
-	else
-		return 0;
+	return 0;
 }
 
 bool BR_EnvDeletePoint (BR_Envelope* envelope, int id)
 {
-	if (envelope)
+	if (envelope && g_script_brenvs.Find(envelope)>=0)
 		return envelope->DeletePoint(id);
-	else
-		return false;
+	return false;
 }
 
 int BR_EnvFind (BR_Envelope* envelope, double position, double delta)
 {
-	if (envelope)
+	if (envelope && g_script_brenvs.Find(envelope)>=0)
 	{
 		int id = envelope->Find(position, delta);
 		if (envelope->ValidateId(id))
 			return id;
-		else
-			return -1;
 	}
-	else
-		return -1;
+	return -1;
 }
 
 int BR_EnvFindNext (BR_Envelope* envelope, double position)
 {
-	if (envelope)
+	if (envelope && g_script_brenvs.Find(envelope)>=0)
 	{
 		int id = envelope->FindNext(position);
 		if (envelope->ValidateId(id))
 			return id;
-		else
-			return -1;
 	}
-	else
-		return -1;
+	return -1;
 }
 
 int BR_EnvFindPrevious (BR_Envelope* envelope, double position)
 {
-	if (envelope)
+	if (envelope && g_script_brenvs.Find(envelope)>=0)
 	{
 		int id = envelope->FindPrevious(position);
 		if (envelope->ValidateId(id))
 			return id;
-		else
-			return -1;
 	}
-	else
-		return -1;
+	return -1;
 }
 
 bool BR_EnvFree (BR_Envelope* envelope, bool commit)
 {
-	if (envelope)
+	int idx=g_script_brenvs.Find(envelope);
+	if (envelope && idx>=0)
 	{
 		bool commited = (commit) ? envelope->Commit() : false;
-		delete envelope;
+		g_script_brenvs.Delete(idx, true);
 		return commited;
 	}
-	else
-		return false;
+	return false;
 }
 
 MediaItem_Take* BR_EnvGetParentTake (BR_Envelope* envelope)
 {
-	if (envelope)
+	if (envelope && g_script_brenvs.Find(envelope)>=0)
 		return envelope->GetTake();
-	else
-		return NULL;
+	return NULL;
 }
 
 MediaTrack* BR_EnvGetParentTrack (BR_Envelope* envelope)
 {
-	if (envelope)
+	if (envelope && g_script_brenvs.Find(envelope)>=0)
 	{
 		if (envelope->IsTakeEnvelope())
 			return NULL;
@@ -143,18 +131,17 @@ MediaTrack* BR_EnvGetParentTrack (BR_Envelope* envelope)
 
 bool BR_EnvGetPoint (BR_Envelope* envelope, int id, double* positionOut, double* valueOut, int* shapeOut, bool* selectedOut, double* bezierOut)
 {
-	if (envelope)
+	if (envelope && g_script_brenvs.Find(envelope)>=0)
 	{
 		WritePtr(selectedOut, envelope->GetSelection(id));
 		return envelope->GetPoint(id, positionOut, valueOut, shapeOut, bezierOut);
 	}
-	else
-		return false;
+	return false;
 }
 
 void BR_EnvGetProperties (BR_Envelope* envelope, bool* activeOut, bool* visibleOut, bool* armedOut, bool* inLaneOut, int* laneHeightOut, int* defaultShapeOut, double* minValueOut, double* maxValueOut, double* centerValueOut, int* typeOut, bool* faderScalingOut)
 {
-	if (envelope)
+	if (envelope && g_script_brenvs.Find(envelope)>=0)
 	{
 		WritePtr(activeOut,          envelope->IsActive());
 		WritePtr(visibleOut,         envelope->IsVisible());
@@ -204,15 +191,14 @@ void BR_EnvGetProperties (BR_Envelope* envelope, bool* activeOut, bool* visibleO
 
 bool BR_EnvSetPoint (BR_Envelope* envelope, int id, double position, double value, int shape, bool selected, double bezier)
 {
-	if (envelope)
+	if (envelope && g_script_brenvs.Find(envelope)>=0)
 		return envelope->SetCreatePoint(id, position, value, shape, bezier, selected);
-	else
-		return false;
+	return false;
 }
 
 void BR_EnvSetProperties (BR_Envelope* envelope, bool active, bool visible, bool armed, bool inLane, int laneHeight, int defaultShape, bool faderScaling)
 {
-	if (envelope)
+	if (envelope && g_script_brenvs.Find(envelope)>=0)
 	{
 		envelope->SetActive(active);
 		envelope->SetVisible(visible);
@@ -227,16 +213,15 @@ void BR_EnvSetProperties (BR_Envelope* envelope, bool active, bool visible, bool
 
 void BR_EnvSortPoints (BR_Envelope* envelope)
 {
-	if (envelope)
+	if (envelope && g_script_brenvs.Find(envelope)>=0)
 		envelope->Sort();
 }
 
 double BR_EnvValueAtPos (BR_Envelope* envelope, double position)
 {
-	if (envelope)
+	if (envelope && g_script_brenvs.Find(envelope)>=0)
 		return envelope->ValueAtPosition(position);
-	else
-		return 0;
+	return 0;
 }
 
 void BR_GetArrangeView (ReaProject* proj, double* startPositionOut, double* endPositionOut)

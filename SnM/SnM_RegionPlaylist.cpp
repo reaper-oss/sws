@@ -375,8 +375,12 @@ void RegionPlaylistView::SetItemText(SWS_ListItem* item, int iCol, const char* s
 			case COL_RGN_NAME:
 			{
 				bool isrgn; double pos, end; int num, col;
-				if (str && *str && EnumMarkerRegionById(NULL, pItem->m_rgnId, &isrgn, &pos, &end, NULL, &num, &col)>=0)
-					SNM_SetProjectMarker(NULL, num, isrgn, pos, end, str, col ? col | 0x1000000 : 0); // update notified back through PlaylistMarkerRegionListener
+				if (str && EnumMarkerRegionById(NULL, pItem->m_rgnId, &isrgn, &pos, &end, NULL, &num, &col)>=0)
+				{
+					SetProjectMarker4(NULL, num, isrgn, pos, end, str, col ? col | 0x1000000 : 0, !*str ? 1 : 0);
+					Undo_OnStateChangeEx2(NULL, __LOCALIZE("Edit region name","sws_undo"), UNDO_STATE_MISCCFG, -1);
+					// update notified back through PlaylistMarkerRegionListener
+				}
 				break;
 			}
 		}

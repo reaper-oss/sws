@@ -115,7 +115,7 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 	static vector<pair<GUID,int> >* s_itemMuteState      = NULL;
 
 	static int s_projStateCount = 0;
-	static ReaProject* s_proj   = NULL;
+	static ReaProject* s_proj   = NULL; //JFB bug here: this is "single-project minded", todo: remove this var (or update it on project switches...)
 
 	if (init)
 	{
@@ -1443,7 +1443,7 @@ void SetProjectTrackSelAction (COMMAND_T* ct)
 	if (int cmd = SNM_NamedCommandLookup(g_trackSelActions.Get()->Get()))
 	{
 		WDL_FastString msg;
-		msg.AppendFormatted(256, __LOCALIZE_VERFMT("Are you sure you want to replace current project track selection action: '%s'?","sws_mbox"), kbd_getTextFromCmd(cmd, NULL));
+		msg.AppendFormatted(512, __LOCALIZE_VERFMT("Are you sure you want to replace the project track selection action: '%s'?","sws_startup_action"), kbd_getTextFromCmd(cmd, NULL));
 		if (MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("SWS/BR - Confirmation","sws_mbox"), MB_YESNO) == IDNO)
 			process = false;
 	}
@@ -1453,9 +1453,9 @@ void SetProjectTrackSelAction (COMMAND_T* ct)
 		// localization note: some messages are shared with the CA editor
 
 		char actionString[SNM_MAX_ACTION_CUSTID_LEN];
-		_snprintfSafe(actionString, sizeof(actionString), "%s", __LOCALIZE("Paste command ID or identifier string here","sws_mbox"));
+		_snprintfSafe(actionString, sizeof(actionString), "%s", __LOCALIZE("Paste command ID or identifier string here","sws_startup_action"));
 
-		if (PromptUserForString(GetMainHwnd(), __LOCALIZE("Set project track selection action","sws_mbox"), actionString, sizeof(actionString), true))
+		if (PromptUserForString(GetMainHwnd(), __LOCALIZE("Set project track selection action","sws_startup_action"), actionString, sizeof(actionString), true))
 		{
 			WDL_FastString msg;
 			if (int cmd = SNM_NamedCommandLookup(actionString))
@@ -1463,13 +1463,13 @@ void SetProjectTrackSelAction (COMMAND_T* ct)
 				// more checks: http://forum.cockos.com/showpost.php?p=1252206&postcount=1618
 				if (int tstNum = CheckSwsMacroScriptNumCustomId(actionString))
 				{
-					msg.SetFormatted(256, __LOCALIZE_VERFMT("%s failed: unreliable command ID '%s'!","sws_DLG_161"), __LOCALIZE("Set project track selection action","sws_mbox"), actionString);
+					msg.SetFormatted(512, __LOCALIZE_VERFMT("%s failed: unreliable command ID '%s'!","sws_startup_action"), __LOCALIZE("Set project track selection action","sws_startup_action"), actionString);
 					msg.Append("\n");
 
 					if (tstNum==-1)
-						msg.Append(__LOCALIZE("For SWS actions, you must use identifier strings (e.g. _SWS_ABOUT), not command IDs (e.g. 47145).\nTip: to copy such identifiers, right-click the action in the Actions window > Copy selected action command ID.","sws_mbox"));
+						msg.Append(__LOCALIZE("For SWS actions, you must use identifier strings (e.g. _SWS_ABOUT), not command IDs (e.g. 47145).\nTip: to copy such identifiers, right-click the action in the Actions window > Copy selected action command ID.","sws_startup_action"));
 					else if (tstNum==-2)
-						msg.Append(__LOCALIZE("For macros/scripts, you must use identifier strings (e.g. _f506bc780a0ab34b8fdedb67ed5d3649), not command IDs (e.g. 47145).\nTip: to copy such identifiers, right-click the macro/script in the Actions window > Copy selected action command ID.","sws_mbox"));
+						msg.Append(__LOCALIZE("For macros/scripts, you must use identifier strings (e.g. _f506bc780a0ab34b8fdedb67ed5d3649), not command IDs (e.g. 47145).\nTip: to copy such identifiers, right-click the macro/script in the Actions window > Copy selected action command ID.","sws_startup_action"));
 					MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("SWS/BR - Error","sws_mbox"), MB_OK);
 				}
 				else
@@ -1477,21 +1477,23 @@ void SetProjectTrackSelAction (COMMAND_T* ct)
 					g_trackSelActions.Get()->Set(actionString);
 					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
 
-					msg.SetFormatted(256, __LOCALIZE_VERFMT("'%s' is defined as project track selection action","sws_mbox"), kbd_getTextFromCmd(cmd, NULL));
+					msg.SetFormatted(512, __LOCALIZE_VERFMT("'%s' is defined as project track selection action","sws_startup_action"), kbd_getTextFromCmd(cmd, NULL));
 					char projectPath[SNM_MAX_PATH] = "";
 					EnumProjects(-1, projectPath, sizeof(projectPath));
 					if (*projectPath)
 					{
-						msg.Append("\n");
-						msg.AppendFormatted(SNM_MAX_PATH, __LOCALIZE_VERFMT("for %s","sws_mbox"), projectPath);
+						msg.Append("\r\n");
+						msg.AppendFormatted(SNM_MAX_PATH, __LOCALIZE_VERFMT("for %s","sws_startup_action"), projectPath);
+						msg.Append(".\r\n\r\n");
+						msg.Append(__LOCALIZE("Note: do not forget to save this project","sws_startup_action"));
 					}
 					msg.Append(".");
-					MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("Set project track selection action","sws_mbox"), MB_OK);
+					MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("Set project track selection action","sws_startup_action"), MB_OK);
 				}
 			}
 			else
 			{
-				msg.SetFormatted(256, __LOCALIZE_VERFMT("%s failed: command ID or identifier string '%s' not found in the 'Main' section of the action list!","sws_DLG_161"), __LOCALIZE("Set project track selection action","sws_mbox"), actionString);
+				msg.SetFormatted(512, __LOCALIZE_VERFMT("%s failed: command ID or identifier string '%s' not found in the 'Main' section of the action list!","sws_startup_action"), __LOCALIZE("Set project track selection action","sws_startup_action"), actionString);
 				MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("SWS/BR - Error","sws_mbox"), MB_OK);
 			}
 		}
@@ -1500,18 +1502,18 @@ void SetProjectTrackSelAction (COMMAND_T* ct)
 
 void ShowProjectTrackSelAction (COMMAND_T* ct)
 {
-	WDL_FastString msg(__LOCALIZE("No project track selection action is defined","sws_mbox"));
+	WDL_FastString msg(__LOCALIZE("No project track selection action is defined","sws_startup_action"));
 	if (int cmd = SNM_NamedCommandLookup(g_trackSelActions.Get()->Get()))
-		msg.SetFormatted(256, __LOCALIZE_VERFMT("'%s' is defined as project track selection action", "sws_mbox"), kbd_getTextFromCmd(cmd, NULL));
+		msg.SetFormatted(512, __LOCALIZE_VERFMT("'%s' is defined as project track selection action", "sws_startup_action"), kbd_getTextFromCmd(cmd, NULL));
 
 	char projectPath[SNM_MAX_PATH] = "";
 	EnumProjects(-1, projectPath, sizeof(projectPath));
 	if (*projectPath) {
-		msg.Append("\n");
-		msg.AppendFormatted(SNM_MAX_PATH, __LOCALIZE_VERFMT("for %s", "sws_mbox"), projectPath);
+		msg.Append("\r\n");
+		msg.AppendFormatted(SNM_MAX_PATH, __LOCALIZE_VERFMT("for %s", "sws_startup_action"), projectPath);
 	}
 	msg.Append(".");
-	MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("Project track selection action","sws_mbox"), MB_OK);
+	MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("Project track selection action","sws_startup_action"), MB_OK);
 }
 
 void ClearProjectTrackSelAction (COMMAND_T* ct)
@@ -1519,7 +1521,7 @@ void ClearProjectTrackSelAction (COMMAND_T* ct)
 	if (int cmd = SNM_NamedCommandLookup(g_trackSelActions.Get()->Get()))
 	{
 		WDL_FastString msg;
-		msg.AppendFormatted(256, __LOCALIZE_VERFMT("Are you sure you want to clear current project track selection action: '%s'?","sws_mbox"), kbd_getTextFromCmd(cmd, NULL));
+		msg.AppendFormatted(512, __LOCALIZE_VERFMT("Are you sure you want to clear current project track selection action: '%s'?","sws_startup_action"), kbd_getTextFromCmd(cmd, NULL));
 		if (MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("SWS/BR - Confirmation","sws_mbox"), MB_YESNO) == IDYES)
 		{
 			g_trackSelActions.Get()->Set("");
@@ -1528,8 +1530,8 @@ void ClearProjectTrackSelAction (COMMAND_T* ct)
 	}
 	else
 	{
-		WDL_FastString msg(__LOCALIZE("No project track selection action is defined.","sws_mbox"));
-		MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("Project track selection action","sws_mbox"), MB_OK);
+		WDL_FastString msg(__LOCALIZE("No project track selection action is defined.","sws_startup_action"));
+		MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("Project track selection action","sws_startup_action"), MB_OK);
 		return;
 	}
 }

@@ -276,6 +276,29 @@ int GetEnvelopeOverlapState(TrackEnvelope* envelope, int* laneCount, int* envCou
 	return (WritePtr(laneCount, (visEnvCount > 1) ? visEnvCount : 1), WritePtr(envCount, (visEnvCount > 1) ? visEnvCount : 1), (visEnvCount > 1) ? 4 : 3);
 }
 
+void PutSelectedEnvelopeInLane(COMMAND_T* ct)
+{
+	if (TrackEnvelope* env = GetSelectedEnvelope(NULL))
+	{
+		BR_Envelope brEnv(env);
+		brEnv.SetInLane(!!(int)ct->user);
+		brEnv.Commit();
+	}
+}
+
+bool IsEnvelopeInMediaLane(TrackEnvelope* env)
+{
+	if (!env)
+	{
+		env = GetSelectedEnvelope(NULL);
+		if (!env)
+			return false;
+	}
+
+	BR_Envelope brEnv(env);
+	return !(brEnv.IsInLane());
+}
+
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

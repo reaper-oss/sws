@@ -44,6 +44,7 @@ int IsEnvelopeOverlapEnabled(COMMAND_T* = NULL);
 void ForceEnvelopeOverlap(COMMAND_T* ct);
 
 void ZoomSelectedEnvelopeTimeSelection(COMMAND_T* ct);
+void VerticalZoomSelectedEnvelopeLoUpHalf(COMMAND_T* ct);
 
 void SetVerticalZoomCenter(COMMAND_T* ct);
 void SetHorizontalZoomCenter(COMMAND_T* ct);

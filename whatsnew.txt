@@ -1,3 +1,9 @@
+New actions
++Main:
+ - SWS/wol: Full zoom selected envelope (in media lane only) to upper/lower half in time selection
+ - SWS/wol: Vertical zoom selected envelope (in media lane only) to upper/lower half
+ - SWS/wol: Put selected envelope in media/envelope lane
+
 New global startup action (in addition to per-project startup actions)
 +The new global startup action is performed one time, at REAPER launch (contrary to per-project startup actions which are performed each time a project is loaded)
 +To edit/view/clear startup actions: Main menu/Extenstions/Startup actions

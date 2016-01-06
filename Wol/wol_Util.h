@@ -76,6 +76,9 @@ int CountVisibleTrackEnvelopesInTrackLane(MediaTrack* track);
 			 4 for overlap enabled, envelope height > overlap limit -> multiple lanes, *laneCount = *envCount = number of lanes (same as visible envelopes) */
 int GetEnvelopeOverlapState(TrackEnvelope* envelope, int* laneCount = NULL, int* envCount = NULL);
 
+void PutSelectedEnvelopeInLane(COMMAND_T* ct);
+bool IsEnvelopeInMediaLane(TrackEnvelope* env = NULL);
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Midi
 ///////////////////////////////////////////////////////////////////////////////////////////////////

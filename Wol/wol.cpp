@@ -28,6 +28,7 @@
 
 #include "stdafx.h"
 #include "wol.h"
+#include "wol_Util.h"
 #include "wol_Zoom.h"
 #include "../reaper/localize.h"
 
@@ -67,11 +68,23 @@ static COMMAND_T g_commandTable[] =
 		{ { DEFACCEL, "SWS/wol: Restore previous envelope overlap settings" }, "WOL_RESENVOLSET", ForceEnvelopeOverlap, NULL, 1 },
 		{ { DEFACCEL, "SWS/wol: Horizontal zoom selected envelope in time selection" }, "WOL_HZOOMSELENVTIMESEL", ZoomSelectedEnvelopeTimeSelection, NULL, 0 },
 		{ { DEFACCEL, "SWS/wol: Full zoom selected envelope in time selection" }, "WOL_FZOOMSELENVTIMESEL", ZoomSelectedEnvelopeTimeSelection, NULL, 1 },
+		{ { DEFACCEL, "SWS/wol: Full zoom selected envelope (in media lane only) to upper half in time selection" }, "WOL_FZOOMSELENVUPHTIMESEL", ZoomSelectedEnvelopeTimeSelection, NULL, 2 },
+		{ { DEFACCEL, "SWS/wol: Full zoom selected envelope (in media lane only) to lower half in time selection" }, "WOL_FZOOMSELENVLOHTIMESEL", ZoomSelectedEnvelopeTimeSelection, NULL, 3 },
+		{ { DEFACCEL, "SWS/wol: Vertical zoom selected envelope (in media lane only) to upper half" }, "WOL_VZOOMSELENVUPH", VerticalZoomSelectedEnvelopeLoUpHalf, NULL, 0 },
+		{ { DEFACCEL, "SWS/wol: Vertical zoom selected envelope (in media lane only) to lower half" }, "WOL_VZOOMSELENVLOH", VerticalZoomSelectedEnvelopeLoUpHalf, NULL, 1 },
+
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////
 	// Track
 	///////////////////////////////////////////////////////////////////////////////////////////////////
 		{ { DEFACCEL, "SWS/wol: Select all tracks except folder parents" }, "WOL_SELTREXCFOLDPAR", SelectAllTracksExceptFolderParents, NULL },
+
+	///////////////////////////////////////////////////////////////////////////////////////////////////
+	// Envelope
+	///////////////////////////////////////////////////////////////////////////////////////////////////
+		{ { DEFACCEL, "SWS/wol: Put selected envelope in media lane" }, "WOL_PUTSELENVINMEDIALANE", PutSelectedEnvelopeInLane, NULL, 0 },
+		{ { DEFACCEL, "SWS/wol: Put selected envelope in envelope lane" }, "WOL_PUTSELENVINENVLANE", PutSelectedEnvelopeInLane, NULL, 1 },
+
 
 //!WANT_LOCALIZE_1ST_STRING_END
 

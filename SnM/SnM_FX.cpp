@@ -437,64 +437,90 @@ int GetSelectedTrackFX(MediaTrack* _tr)
 // it is up to the caller to unalloc _presetNames
 int GetUserPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL_FastString>* _presetNames)
 {
-	int nbPresets = 0;
-	if (_fxType && _fxName && _presetNames)
+	const int _fxTypeLen = (int)strlen(_fxType);
+	if (_fxType && _fxTypeLen && _fxName && _presetNames)
 	{
-		char iniFn[SNM_MAX_PATH]="", buf[256]="";
+		char iniFn[SNM_MAX_PATH]="", buf[256]="", fxType[256];
 
 		// *** build ini filename ***
 		lstrcpyn(buf, _fxName, sizeof(buf));
 
-		// remove some file extensions
-		if (!_stricmp(_fxType, "VST"))
-		{
-			const char* p = NULL;
-#ifdef _WIN32
-			p = stristr(buf, ".dll");
-			if (!p) p = stristr(buf, ".vst"); // e.g. vst3
-#else
-			p = stristr(buf, ".vst"); // standard vst, vst3, or ".vst.dylib" (e.g. reaeq)
-#endif
-			if (p)
-				buf[(int)(p-buf)] = '\0';
-		}
-
-		// replace special chars
-		// would have been better to use something like Filenamize() here
-		// but the following code mimics REAPER's behavior => can lead to 
-		// invalid/non-crossplatform filenames, e.g. filenames containing "\"
-		int i=0;
-		while (buf[i]) {
-			if (buf[i] == '.' || buf[i] == '/') buf[i] = '_';
-			i++;
-		}
-
-		char* fxType = _strdup(_fxType);
-		for (int i=0; i < (int)strlen(fxType); i++)
+		lstrcpyn(fxType, _fxType, sizeof(fxType));
+		for (int i=0; i<_fxTypeLen; i++)
 			fxType[i] = tolower(fxType[i]);
-		_snprintfSafe(iniFn, sizeof(iniFn), "%s%cpresets-%s-%s.ini", GetResourcePath(), PATH_SLASH_CHAR, fxType, buf);
+    
+		if (!strcmp(fxType, "vst"))
+		{
+			const char* ext = GetFileExtension(buf, true);
+			if (!stricmp(ext, ".vst3"))
+			{
+				strcpy(fxType, "vst3");
+				buf[(int)(ext-buf)] = '\0';
+			}
+			else
+			{
+				const char *p = NULL;
+#ifdef _WIN32
+				if (!stricmp(ext, ".dll")) p=ext;
+#endif
+				if (!p) p = stristr(buf, ".vst"); // standard vst or ".vst.dylib" (e.g. reaeq)
+				if (p) buf[(int)(p-buf)] = '\0';
+			}
+		}
+		else if (!strcmp(fxType, "js"))
+		{
+			// replace special chars
+			// something like Filenamize() would have been better here but the following code mimics REAPER's behavior
+			// only applicable to JSFX ATM, but other plugin types would have needed this too (e.g. "Apple: AUBandpass"
+			// where ':' is an OS X forbidden filename character but OS X can deal with it...)
+			char *p=buf;
+			while (*p)
+			{
+				if (*p == '.' || *p == '/' ||*p == '\\' || *p == '?' || *p == '*' || *p == ':' || *p == '\"' || *p == '|' || *p == '<' || *p == '>') *p='_';
+				p++;
+			}
+		}
+#ifdef __APPLE__
+		else if (!strcmp(fxType, "au"))
+		{
+			// kind of silly (buf is just the AU name, not a filename) but this mimics REAPER's behavior
+			// (it will have to stick with it now...)
+			const char* ext = GetFileExtension(buf, true);
+			if (*ext=='.') buf[(int)(ext-buf)] = '\0';
+		}
+#endif
+		else
+		{
+			return 0;
+		}
 
+		// deprecated location
+		_snprintfSafe(iniFn, sizeof(iniFn), "%s%cpresets-%s-%s.ini", GetResourcePath(), PATH_SLASH_CHAR, fxType, buf);
 		bool exitTst = FileOrDirExists(iniFn);
+
+		// new location
 		if (!exitTst)
+		{
 			_snprintfSafe(iniFn, sizeof(iniFn), "%s%cpresets%c%s-%s.ini", GetResourcePath(), PATH_SLASH_CHAR, PATH_SLASH_CHAR, fxType, buf);
-		free(fxType);
+			exitTst = FileOrDirExists(iniFn);
+		}
 
 		// *** get presets ***
-		if (exitTst || (!exitTst && FileOrDirExists(iniFn)))
+		if (exitTst)
 		{
-			GetPrivateProfileString("General", "NbPresets", "0", buf, 5, iniFn);
-			nbPresets = atoi(buf);
 			char sec[32];
+			const int nbPresets = GetPrivateProfileInt("General", "NbPresets", 0, iniFn);
 			for (int i=0; i < nbPresets; i++)
 			{
 				*buf = '\0';
-				if (_snprintfStrict(sec, 32, "Preset%d", i) > 0)
-					GetPrivateProfileString(sec, "Name", "", buf, 256, iniFn);
+				if (_snprintfStrict(sec, sizeof(sec), "Preset%d", i) > 0)
+					GetPrivateProfileString(sec, "Name", "", buf, sizeof(buf), iniFn);
 				_presetNames->Add(new WDL_FastString(buf));
 			}
+			return _presetNames->GetSize();
 		}
 	}
-	return nbPresets;
+	return 0;
 }
 
 // wrapper to ease cleanup some day, see API LIMITATION above

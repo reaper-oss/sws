@@ -24,7 +24,9 @@ The SWS extension also relies on WDL from Cockos http://www.cockos.com/wdl (not 
 
 The MIT License (MIT)
 
-Copyright (c) 2009 and later Tim Payne (SWS), Jeffos (S&M), Xenakios, Breeder, Fingers, P Bourdon, Adam Wathan, IXix, Shane StClair and Wol.
+Copyright (c) 2009 and later Tim Payne (SWS), Jeffos (S&M), Xenakios, 
+Fingers (FNG), Dominik Martin Drzic (BR), P. Bourdon (Padre), wol,
+Shane StClair (Autorender), Adam Wathan (AW) and Philip S. Considine (IX). 
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

@@ -15,6 +15,9 @@ Actions
  - Xenakios/SWS : Process item with csound phase vocoder
  - Xenakios/SWS : Process item with RubberBand
 
+Other
++Update win32 installer to NSIS 2.5.0, resolves security issues
+
 !v2.8.2 featured build (November 3, 2015)
 Snapshots
 +Fixed http://forum.cockos.com/showthread.php?t=166652|snapshots with bypassed FX Chains|

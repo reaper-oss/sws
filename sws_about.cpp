@@ -108,9 +108,16 @@ INT_PTR WINAPI doAbout(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case WM_INITDIALOG:
 		{
 			char cVersion[256];
-			sprintf(cVersion, __LOCALIZE_VERFMT("Version %d.%d.%d Build #%d, built on %s","sws_DLG_109"), SWS_VERSION, __DATE__);
-			SetWindowText(GetDlgItem(hwndDlg, IDC_VERSION), cVersion);
-			SetWindowText(GetDlgItem(hwndDlg, IDC_WEBSITE), SWS_URL);	
+			_snprintfSafe(cVersion, sizeof(cVersion), "%s %d.%d.%d #%d", __LOCALIZE("Version","sws_DLG_109"), SWS_VERSION);
+			char *p=strstr(cVersion, " #0");
+			if (p) *p=0;
+
+			char cVersionDate[256];
+			_snprintfSafe(cVersionDate, sizeof(cVersionDate), __LOCALIZE_VERFMT("%s built on %s","sws_DLG_109"), cVersion, __DATE__);
+
+			SetWindowText(GetDlgItem(hwndDlg, IDC_VERSION), cVersionDate);
+			SetWindowText(GetDlgItem(hwndDlg, IDC_WEBSITE), SWS_URL);
+			SetWindowText(GetDlgItem(hwndDlg, IDC_EDIT), LICENSE_TEXT);
 			bool official, beta; GetStartupSearchOptions(&official, &beta, NULL);
 			CheckDlgButton(hwndDlg, IDC_CHECK1, official);
 			CheckDlgButton(hwndDlg, IDC_CHECK2, beta);
@@ -152,8 +159,6 @@ INT_PTR WINAPI doAbout(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 			else if (wParam == IDC_INFO)
 				WhatsNew(NULL);
-			else if (wParam == IDC_LICENSE)
-				DisplayInfoBox(hwndDlg, __LOCALIZE("SWS/S&M Extension - License","sws_DLG_109"), LICENSE_TEXT);
 			else if (wParam == IDC_UPDATE)
 				VersionCheckDialog(hwndDlg);
 			else if (wParam == IDCANCEL) {

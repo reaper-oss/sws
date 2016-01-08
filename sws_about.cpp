@@ -48,7 +48,7 @@ static HWND s_hwndAbout = NULL;
 
 bool IsOfficialVersion()
 {
-	return (stricmp(SWS_VERSION_TYPE, "Featured") == 0); // otherwise: pre-release, beta, etc
+	return (_stricmp(SWS_VERSION_TYPE, "Featured") == 0); // otherwise: pre-release, beta, etc
 }
 
 void WhatsNew(COMMAND_T*)

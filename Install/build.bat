@@ -1,6 +1,6 @@
 @echo off
 
-REM Copyright 2015 Jeffos. All rights reserved.
+REM Copyright 2013 and later Jeffos. All rights reserved.
 
 REM The website is automatically updated thanks to a PHP that reads the (new) 
 REM version.h. At runtime, the version checker reads that file too.
@@ -84,6 +84,8 @@ REM if errorlevel 1 goto error
 REM For MSBuild / Visual Studio 2013
 msbuild /t:rebuild /p:Platform=x64,Configuration=release ..\sws_extension.vcxproj
 if errorlevel 1 goto error
+
+pause
 
 msbuild /t:rebuild /p:Platform=Win32,Configuration=release ..\sws_extension.vcxproj
 if errorlevel 1 goto error
@@ -185,7 +187,6 @@ echo FTP: uploading...
 ftp -v -n -i -s:temp\upload.ftp %ftp_host%
 echo.
 echo Please double-check the above log
-echo.
 pause
 goto success
 
@@ -205,7 +206,6 @@ echo ****************************************
 echo Success!
 ..\BuildUtils\Release\PrintVersion ..\version.h -d
 echo ****************************************
-echo.
 
 :theend
 del /q temp\*.*

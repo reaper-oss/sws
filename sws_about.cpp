@@ -46,18 +46,9 @@
 static HWND s_hwndAbout = NULL;
 
 
-int IsOfficialOrBeta()
+bool IsOfficialVersion()
 {
-	WDL_FastString v;
-	v.SetFormatted(128, "%d.%d.%d #%d; ", SWS_VERSION);
-	const char* p=strrchr(v.Get(),'.');
-	if (p)
-	{
-		p++;
-		if (*p == '0') return 1; // official
-		else return 2; // pre-release
-	}
-	return 0;
+	return (stricmp(SWS_VERSION_TYPE, "Featured") == 0); // otherwise: pre-release, beta, etc
 }
 
 void WhatsNew(COMMAND_T*)
@@ -76,7 +67,7 @@ void WhatsNew(COMMAND_T*)
 		SNM_DeleteFile(fnIn.Get(), false); // lazy cleanup
 	}
 
-	if (IsOfficialOrBeta()==2)
+	if (!IsOfficialVersion())
 	{
 		WDL_FastString url;
 		url.SetFormatted(512, SWS_URL_BETA_WHATSNEW, SWS_VERSION);

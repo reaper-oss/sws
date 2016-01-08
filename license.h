@@ -18,8 +18,8 @@
 "of the Software, and to permit persons to whom the Software is furnished to\r\n" \
 "do so, subject to the following conditions:\r\n" \
 "\r\n" \
-"The above copyright notice and this permission notice shall be included in all\r\n" \
-"copies or substantial portions of the Software.\r\n" \
+"The above copyright notice and this permission notice shall be included in\r\n" \
+"all copies or substantial portions of the Software.\r\n" \
 "\r\n" \
 "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\r\n" \
 "EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\r\n" \

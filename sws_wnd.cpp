@@ -194,6 +194,7 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				AttachWindowResizeGrip(m_hwnd);
 				ShowWindow(m_hwnd, SW_SHOW);
 			}
+			SetWindowText(m_hwnd, m_wndTitle.Get());
 			break;
 		}
 		case WM_TIMER:

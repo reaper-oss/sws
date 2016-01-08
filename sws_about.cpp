@@ -39,7 +39,7 @@
 #ifdef _WIN32
 #define WHATSNEW_TXT			"%s\\Plugins\\reaper_sws_whatsnew.txt"
 #else
-#define WHATSNEW_TXT			"%s/UserPlugins/reaper_sws_whatsnew.txt"
+#define WHATSNEW_TXT			"%s/UserPlugins/reaper_sws_whatsnew.txt" // deprecated, not deployed on OSX anymore
 #endif
 
 

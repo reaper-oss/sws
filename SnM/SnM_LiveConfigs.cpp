@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_LiveConfigs.cpp
 /
-/ Copyright (c) 2010-2013 Jeffos
+/ Copyright (c) 2010 and later Jeffos
 /
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -2776,9 +2776,13 @@ void LiveConfigMonitorWnd::OnInitDlg()
 		char buf[64]="";
 		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Live Config #%d","sws_DLG_169"), m_cfgId+1);
 		m_mons.SetTitles(__LOCALIZE("CURRENT","sws_DLG_169"), buf, __LOCALIZE("PRELOAD","sws_DLG_169"), " "); // " " trick to get a lane
-		_snprintfSafe(buf, sizeof(buf), "#%d", m_cfgId+1);
 		m_mons.SetFontName(g_lcBigFontName);
+
+#ifdef _SNM_MISC
+		// big fonts with alpha doesn't work well ATM (on OS X at least), such overlapped texts look a bit clunky anyway...
+		_snprintfSafe(buf, sizeof(buf), "#%d", m_cfgId+1);
 		m_mons.SetText(0, buf, 0, 16);
+#endif
 	}
 	
 	UpdateMonitoring(

@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_RegionPlaylist.cpp
 /
-/ Copyright (c) 2012-2013 Jeffos
+/ Copyright (c) 2012 and later Jeffos
 /
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -688,10 +688,13 @@ void RegionPlaylistWnd::UpdateMonitoring(WDL_FastString* _curNum, WDL_FastString
 			pl.SetFormatted(128, "#%d \"%s\"", g_playPlaylist+1, curpl->m_name.Get());
 	m_monPl.SetText(g_playPlaylist>=0 ? pl.Get() : __LOCALIZE("(stopped)","sws_DLG_165"));
 
+#ifdef _SNM_MISC
+	// big fonts with alpha doesn't work well ATM (on OS X at least), such overlapped texts look a bit clunky anyway...
 	pl.Set("");
 	if (g_playPlaylist>=0)
 		pl.SetFormatted(16, "#%d", g_playPlaylist+1);
 	m_mons.SetText(0, pl.Get(), 0, 16);
+#endif
 
 	WDL_FastString *cur=_cur, *curNum=_curNum, *next=_next, *nextNum=_nextNum;
 	if (!_cur) cur = new WDL_FastString;
@@ -710,7 +713,6 @@ void RegionPlaylistWnd::UpdateMonitoring(WDL_FastString* _curNum, WDL_FastString
 	if (!_curNum) delete curNum;
 	if (!_next) delete next;
 	if (!_nextNum) delete nextNum;
-
 }
 
 void RegionPlaylistWnd::FillPlaylistCombo()

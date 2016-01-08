@@ -36,7 +36,7 @@ perl reascript_python.pl -x64 > sws_python64.py
 # Uses the pkg-dmg script available here: https://github.com/opichals/osx-pkg-dmg
 chmod 777 Install/pkg-dmg
 if [ -f Install/pkg-dmg ]; then
-  Install/pkg-dmg --volname "SWS_Extension" --source sws_osx --symlink /Library/Application\ Support/REAPER/UserPlugins:/UserPlugins --copy Install/sws_osx_install.dsstore:/.DS_Store --copy FingersExtras/Grooves:/ --copy Install/sws_osx_install.py:/sws_python.py --copy sws_python32.py:/ --copy sws_python64.py:/ --license Install/maclicense.txt --target Install/output/sws_osx.dmg --mkdir /.background --copy Install/sws_osx_install.tiff:/.background/backgroundImage.tiff --attribute V:/.background
+  Install/pkg-dmg --volname "SWS_Extension" --source sws_osx --symlink /Library/Application\ Support/REAPER/UserPlugins:/UserPlugins --copy Install/sws_osx_install.dsstore:/.DS_Store --copy FingersExtras/Grooves:/ --copy Install/sws_osx_install.py:/sws_python.py --copy sws_python32.py:/ --copy sws_python64.py:/ --license Install/license.txt --target Install/output/sws_osx.dmg --mkdir /.background --copy Install/sws_osx_install.tiff:/.background/backgroundImage.tiff --attribute V:/.background
 fi  
 #
 # Upload (optional)

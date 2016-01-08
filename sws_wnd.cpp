@@ -183,7 +183,7 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 			if ((m_state.state & 2))
 			{
-				DockWindowAddEx(m_hwnd, (char*)m_wndTitle.Get(), (char*)m_id.Get(), true);
+				DockWindowAddEx(m_hwnd, m_wndTitle.Get(), m_id.Get(), true);
 			}
 			else
 			{

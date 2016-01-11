@@ -83,7 +83,7 @@ void SaveWindowPos(HWND hwnd, const char* cKey)
 	char str[256];
 	RECT r;
 	GetWindowRect(hwnd, &r);
-	sprintf(str, "%d %d %d %d", r.left, r.top, r.right - r.left, r.bottom - r.top);
+	sprintf(str, "%d %d %d %d", (int)r.left, (int)r.top, (int)(r.right-r.left), (int)(r.bottom-r.top));
 	WritePrivateProfileString(SWS_INI, cKey, str, get_ini_file());
 }
 

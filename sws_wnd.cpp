@@ -164,9 +164,8 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case WM_INITDIALOG:
 		{
 			m_resize.init(m_hwnd);
-
-			// Call derived class initialization
-			OnInitDlg();
+			OnInitDlg(); // derived class initialization
+			SetWindowText(m_hwnd, m_wndTitle.Get());
 
 			if (SWS_THEMING)
 			{
@@ -194,7 +193,6 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				AttachWindowResizeGrip(m_hwnd);
 				ShowWindow(m_hwnd, SW_SHOW);
 			}
-			SetWindowText(m_hwnd, m_wndTitle.Get());
 			break;
 		}
 		case WM_TIMER:

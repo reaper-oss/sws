@@ -1787,7 +1787,6 @@
 				EXECUTABLE_PREFIX = "";
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				INSTALL_PATH = /usr/local/lib;
 				PRODUCT_NAME = reaper_sws_extension;
@@ -1801,7 +1800,6 @@
 				CLANG_LINK_OBJC_RUNTIME = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				EXECUTABLE_PREFIX = "";
-				GCC_MODEL_TUNING = G5;
 				INSTALL_PATH = /Applications/REAPER/REAPER.app/Contents/Plugins;
 				OBJROOT = "$(SYMROOT)";
 				PRODUCT_NAME = reaper_sws_extension;
@@ -1812,21 +1810,20 @@
 		1DEB914F08733D8E0010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(NATIVE_ARCH)";
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/sws_osx";
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = "SWELL_APP_PREFIX=sws";
-				GCC_VERSION = 4.0;
+				GCC_VERSION = "";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/lib";
-				MACOSX_DEPLOYMENT_TARGET = 10.4;
+				MACOSX_DEPLOYMENT_TARGET = 10.5;
 				OBJROOT = "$(SYMROOT)";
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "-ltag";
-				PREBINDING = NO;
 				SDKROOT = macosx10.5;
 				SHARED_PRECOMPS_DIR = "~/Dev/sws-extension/build/PrecompiledHeaders";
 				SYMROOT = "~/Dev/sws-extension";
@@ -1836,68 +1833,27 @@
 		1DEB915008733D8E0010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = (
-					ppc,
-					"$(ARCHS_STANDARD_32_BIT)",
-				);
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/sws_osx";
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = "SWELL_APP_PREFIX=sws";
-				GCC_VERSION = 4.0;
+				GCC_VERSION = "";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_TYPECHECK_CALLS_TO_PRINTF = NO;
 				GCC_WARN_UNUSED_FUNCTION = NO;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/lib";
-				MACOSX_DEPLOYMENT_TARGET = 10.4;
+				MACOSX_DEPLOYMENT_TARGET = 10.5;
 				OBJROOT = "$(SYMROOT)";
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ltag";
-				PREBINDING = NO;
 				SDKROOT = macosx10.5;
 				SHARED_PRECOMPS_DIR = "~/Dev/sws-extension/build/PrecompiledHeaders";
 				SYMROOT = "~/Dev/sws-extension";
 			};
 			name = Release;
-		};
-		33E88C7611EF64F700B0F4BE /* Release x86_64 */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
-				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/sws_osx64";
-				GCC_C_LANGUAGE_STANDARD = c99;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_PREPROCESSOR_DEFINITIONS = "SWELL_APP_PREFIX=sws";
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				GCC_WARN_TYPECHECK_CALLS_TO_PRINTF = NO;
-				GCC_WARN_UNUSED_FUNCTION = NO;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/lib";
-				OBJROOT = "$(SYMROOT)";
-				ONLY_ACTIVE_ARCH = NO;
-				OTHER_LDFLAGS = "-ltag";
-				PREBINDING = NO;
-				SDKROOT = macosx10.5;
-				SHARED_PRECOMPS_DIR = "~/Dev/sws-extension/build/PrecompiledHeaders";
-				SYMROOT = "~/Dev/sws-extension64";
-			};
-			name = "Release x86_64";
-		};
-		33E88C7711EF64F700B0F4BE /* Release x86_64 */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_LINK_OBJC_RUNTIME = NO;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				EXECUTABLE_PREFIX = "";
-				GCC_MODEL_TUNING = G5;
-				INSTALL_PATH = /Applications/REAPER/REAPER.app/Contents/Plugins;
-				OBJROOT = "$(SYMROOT)";
-				PRODUCT_NAME = reaper_sws_extension;
-				SYMROOT = build;
-			};
-			name = "Release x86_64";
 		};
 /* End XCBuildConfiguration section */
 
@@ -1907,7 +1863,6 @@
 			buildConfigurations = (
 				1DEB914B08733D8E0010E9CD /* Debug */,
 				1DEB914C08733D8E0010E9CD /* Release */,
-				33E88C7711EF64F700B0F4BE /* Release x86_64 */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -1917,7 +1872,6 @@
 			buildConfigurations = (
 				1DEB914F08733D8E0010E9CD /* Debug */,
 				1DEB915008733D8E0010E9CD /* Release */,
-				33E88C7611EF64F700B0F4BE /* Release x86_64 */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

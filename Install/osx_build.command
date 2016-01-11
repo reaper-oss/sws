@@ -14,18 +14,9 @@ fi
 # Build
 cd ..
 php reascript_vararg.php > reascript_vararg.h
-xcodebuild clean -configuration "Release x86_64"
-xcodebuild -configuration "Release x86_64"
-read -p "Check build results, then press enter to continue..."
 xcodebuild clean -configuration Release
 xcodebuild -configuration Release
 read -p "Check build results, then press enter to continue..."
-#
-# Make universal binary
-#
-lipo sws_osx/reaper_sws_extension.dylib sws_osx64/reaper_sws_extension.dylib -create -o sws_osx/universal.dylib
-rm sws_osx/reaper_sws_extension.dylib
-mv sws_osx/universal.dylib sws_osx/reaper_sws_extension.dylib
 #
 # Make Reascript wrappers
 #

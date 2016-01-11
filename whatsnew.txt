@@ -15,6 +15,9 @@ Zoom
 ReaScript function export
 +Issue #783: fix BR_GetMouseCursorContext_MIDI return value
 
+Other
++OS X: new compiler, optimized build
+
 !v2.8.3 featured build (January 8, 2016)
 New global startup action (in addition to per-project startup actions)
 +The global startup action is performed one time, when launching REAPER

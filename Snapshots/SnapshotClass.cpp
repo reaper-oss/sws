@@ -88,7 +88,7 @@ FXSnapshot::~FXSnapshot()
 
 void FXSnapshot::GetChunk(WDL_FastString *chunk)
 {
-	chunk->AppendFormatted(chunk->GetLength()+100, "<FX \"%s\" %d\n", m_cName, m_iNumParams);
+	chunk->AppendFormatted(SNM_MAX_CHUNK_LINE_LENGTH, "<FX \"%s\" %d\n", m_cName, m_iNumParams);
 	int iDoublesLeft = m_iNumParams;
 	int iLine = 0;
 	Base64 b64;
@@ -97,7 +97,7 @@ void FXSnapshot::GetChunk(WDL_FastString *chunk)
 		int iDoubles = iDoublesLeft;
 		if (iDoublesLeft >= DOUBLES_PER_LINE)
 			iDoubles = DOUBLES_PER_LINE;
-		chunk->AppendFormatted(chunk->GetLength()+100, "%s", b64.Encode((char*)(&m_dParams[iLine*DOUBLES_PER_LINE]), iDoubles * sizeof(double)));
+		chunk->AppendFormatted(SNM_MAX_CHUNK_LINE_LENGTH, "%s", b64.Encode((char*)(&m_dParams[iLine*DOUBLES_PER_LINE]), iDoubles * sizeof(double)));
 		chunk->Append("\n");
 
 		iDoublesLeft -= iDoubles;
@@ -376,8 +376,8 @@ void TrackSnapshot::GetChunk(WDL_FastString* chunk)
 {
 	char guidStr[64];
 	guidToString(&m_guid, guidStr);
-	chunk->AppendFormatted(chunk->GetLength()+250, "<TRACK %s %.14f %.14f %d %d %d %d %d %d %.14f %.14f %.14f %.14f\n", guidStr, m_dVol, m_dPan, m_bMute ? 1 : 0, m_iSolo, m_iFXEn, m_iVis ^ 2, m_iSel, m_iPanMode, m_dPanWidth, m_dPanL, m_dPanR, m_dPanLaw);
-	chunk->AppendFormatted(chunk->GetLength()+100, "NAME \"%s\" %d\n", m_sName.Get(), m_iTrackNum);
+	chunk->AppendFormatted(SNM_MAX_CHUNK_LINE_LENGTH, "<TRACK %s %.14f %.14f %d %d %d %d %d %d %.14f %.14f %.14f %.14f\n", guidStr, m_dVol, m_dPan, m_bMute ? 1 : 0, m_iSolo, m_iFXEn, m_iVis ^ 2, m_iSel, m_iPanMode, m_dPanWidth, m_dPanL, m_dPanR, m_dPanLaw);
+	chunk->AppendFormatted(SNM_MAX_CHUNK_LINE_LENGTH, "NAME \"%s\" %d\n", m_sName.Get(), m_iTrackNum);
 	
 	m_sends.GetChunk(chunk);
 	for (int i = 0; i < m_fx.GetSize(); i++)
@@ -1075,7 +1075,7 @@ void Snapshot::GetChunk(WDL_FastString* chunk)
 {
 	WDL_FastString notes;
 	makeEscapedConfigString(m_cNotes, &notes);
-	chunk->SetFormatted(chunk->GetLength()+100, "<SWSSNAPSHOT \"%s\" %d %d %d %s\n", m_cName, m_iSlot, m_iMask, m_time, notes.Get());
+	chunk->SetFormatted(SNM_MAX_CHUNK_LINE_LENGTH, "<SWSSNAPSHOT \"%s\" %d %d %d %s\n", m_cName, m_iSlot, m_iMask, m_time, notes.Get());
 	for (int i = 0; i < m_tracks.GetSize(); i++)
 		m_tracks.Get(i)->GetChunk(chunk);
 	chunk->Append(">\n");

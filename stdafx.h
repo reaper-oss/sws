@@ -95,7 +95,7 @@
 // Reaper
 #include "reaper/reaper_plugin.h"
 #include "reaper/sws_rpf_wrapper.h"
-#include "reaper/icontheme.h"		// Must be after sws_rpf_wrapper (reaper_plugin_functions.h) because it includes lice.h
+#include "reaper/icontheme.h"
 
 // Headers that are used "enough" to be worth of being precompiled,
 // at the expense of needing recompile of the headers on change

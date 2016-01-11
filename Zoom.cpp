@@ -50,6 +50,19 @@ void SetReaperWndSize(COMMAND_T* = NULL)
 
 void SetHorizPos(HWND hwnd, double dPos, double dOffset = 0.0)
 {
+	double start = 2.0, end = 1.0; // start>end to detect mordern versions of GetSet_ArrangeView2()
+	GetSet_ArrangeView2(NULL, false, 0, 0, &start, &end); // full arrange view's start/end time -- v5.12pre4+ only
+	if (start < end)
+	{
+		double start_timeOut = dPos - (end-start) * dOffset;
+		double end_timeOut = dPos + (end-start) * (1.0-dOffset);
+		GetSet_ArrangeView2(NULL, true, 0, 0, &start_timeOut, &end_timeOut); // includes UI refresh
+		return;
+	}
+
+	// legacy code, if REAPER < v5.12pre4
+	if (!hwnd) hwnd=GetTrackWnd();
+
 	SCROLLINFO si = { sizeof(SCROLLINFO), };
 	si.fMask = SIF_ALL;
 	CoolSB_GetScrollInfo(hwnd, SB_HORZ, &si);
@@ -385,10 +398,10 @@ void HorizZoomSelItems(bool bTimeSel = false)
 	SaveZoomSlice(true);
 }
 
-// Ct->user is the screen position in %, negative for play cursor (Vs edit cursor)
+// ct->user is the screen position in %, negative for play cursor (vs edit cursor)
 void ScrollToCursor(COMMAND_T* ct)
 {
-	SetHorizPos(GetTrackWnd(), ct->user > 0 ? GetCursorPosition() : GetPlayPosition(), 0.01 * abs((int)ct->user));
+	SetHorizPos(NULL, ct->user<0 && (GetPlayState()&1) ? GetPlayPosition() : GetCursorPosition(), 0.01 * abs((int)ct->user));
 }
 
 void HorizScroll(COMMAND_T* ctx)
@@ -1320,7 +1333,7 @@ LRESULT CALLBACK DragZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 					double dNewPos = dOrigPos - (ptClient.x / GetHZoomLevel());
 					if (dNewPos != dPrevPos)
 					{
-						SetHorizPos(GetTrackWnd(), dNewPos);
+						SetHorizPos(NULL, dNewPos);
 						dPrevPos = dNewPos;
 					}
 

@@ -2371,10 +2371,10 @@ void MoveArrange (double amountTime)
 	double startTime, endTime;
 	GetWindowRect(GetArrangeWnd(), &r);
 
-	GetSet_ArrangeView2(NULL, false, r.left, r.right-SCROLLBAR_W, &startTime, &endTime);
+	GetSetArrangeView(NULL, false, &startTime, &endTime);
 	startTime += amountTime;
 	endTime += amountTime;
-	GetSet_ArrangeView2(NULL, true, r.left, r.right-SCROLLBAR_W, &startTime, &endTime);
+	GetSetArrangeView(NULL, true, &startTime, &endTime);
 }
 
 void GetSetArrangeView (ReaProject* proj, bool set, double* start, double* end)
@@ -2404,11 +2404,11 @@ void CenterArrange (double position)
 	double startTime, endTime;
 	GetWindowRect(GetArrangeWnd(), &r);
 
-	GetSet_ArrangeView2(NULL, false, r.left, r.right-SCROLLBAR_W, &startTime, &endTime);
+	GetSetArrangeView(NULL, false, &startTime, &endTime);
 	double halfSpan = (endTime - startTime) / 2;
 	startTime = position - halfSpan;
 	endTime = position + halfSpan;
-	GetSet_ArrangeView2(NULL, true, r.left, r.right-SCROLLBAR_W, &startTime, &endTime);
+	GetSetArrangeView(NULL, true, &startTime, &endTime);
 }
 
 void SetArrangeStart (double start)

@@ -97,7 +97,7 @@ void FXSnapshot::GetChunk(WDL_FastString *chunk)
 		int iDoubles = iDoublesLeft;
 		if (iDoublesLeft >= DOUBLES_PER_LINE)
 			iDoubles = DOUBLES_PER_LINE;
-		chunk->AppendFormatted(chunk->GetLength()+100, b64.Encode((char*)(&m_dParams[iLine*DOUBLES_PER_LINE]), iDoubles * sizeof(double)));
+		chunk->AppendFormatted(chunk->GetLength()+100, "%s", b64.Encode((char*)(&m_dParams[iLine*DOUBLES_PER_LINE]), iDoubles * sizeof(double)));
 		chunk->Append("\n");
 
 		iDoublesLeft -= iDoubles;

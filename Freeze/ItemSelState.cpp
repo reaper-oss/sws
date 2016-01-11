@@ -140,7 +140,7 @@ char* SelItems::ItemString(char* str, int maxLen, bool* bDone)
 	{
 		*bDone = true;
 		iLine = 0;
-		sprintf(str, ">");
+		lstrcpyn(str, ">", maxLen);
 	}
 	else
 	{
@@ -150,7 +150,7 @@ char* SelItems::ItemString(char* str, int maxLen, bool* bDone)
 		char pGUIDs[GUIDS_PER_LINE*sizeof(GUID)];
 		for (int i = 0; i < iGUIDs; i++)
 			memcpy(pGUIDs+i*sizeof(GUID), m_selItems.Get(iLine*GUIDS_PER_LINE+i), sizeof(GUID));
-		sprintf(str, b64.Encode(pGUIDs, sizeof(GUID)*iGUIDs));
+		lstrcpyn(str, b64.Encode(pGUIDs, sizeof(GUID)*iGUIDs), maxLen);
 		iLine++;
 	}
 	return str;

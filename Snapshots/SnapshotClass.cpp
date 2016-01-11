@@ -427,11 +427,11 @@ void TrackSnapshot::GetDetails(WDL_FastString* details, int iMask)
 		details->AppendFormatted(50, __LOCALIZE_VERFMT("Volume: %.2fdb","sws_DLG_101"), VAL2DB(m_dVol));
 		details->Append("\r\n");
 		if (m_sVolEnv.GetLength()) {
-			details->AppendFormatted(50, __LOCALIZE("Volume (Pre-FX) envelope","sws_DLG_101"));
+			details->Append(__LOCALIZE("Volume (Pre-FX) envelope","sws_DLG_101"));
 			details->Append("\r\n");
 		}
 		if (m_sVolEnv2.GetLength()) {
-			details->AppendFormatted(50, __LOCALIZE("Volume envelope","sws_DLG_101"));
+			details->Append(__LOCALIZE("Volume envelope","sws_DLG_101"));
 			details->Append("\r\n");
 		}
 	}
@@ -472,19 +472,19 @@ void TrackSnapshot::GetDetails(WDL_FastString* details, int iMask)
 			details->Append("\r\n");
 
 		if (m_sPanEnv.GetLength()) {
-			details->AppendFormatted(50, __LOCALIZE("Pan (Pre-FX) envelope","sws_DLG_101"));
+			details->Append(__LOCALIZE("Pan (Pre-FX) envelope","sws_DLG_101"));
 			details->Append("\r\n");
 		}
 		if (m_sPanEnv2.GetLength()) {
-			details->AppendFormatted(50, __LOCALIZE("Pan envelope","sws_DLG_101"));
+			details->Append(__LOCALIZE("Pan envelope","sws_DLG_101"));
 			details->Append("\r\n");
 		}
 		if (m_sWidthEnv.GetLength()) {
-			details->AppendFormatted(50, __LOCALIZE("Width (Pre-FX) envelope","sws_DLG_101"));
+			details->Append(__LOCALIZE("Width (Pre-FX) envelope","sws_DLG_101"));
 			details->Append("\r\n");
 		}
 		if (m_sWidthEnv2.GetLength()) {
-			details->AppendFormatted(50, __LOCALIZE("Width envelope","sws_DLG_101"));
+			details->Append(__LOCALIZE("Width envelope","sws_DLG_101"));
 			details->Append("\r\n");
 		}
 	}
@@ -496,7 +496,7 @@ void TrackSnapshot::GetDetails(WDL_FastString* details, int iMask)
 		details->Append("\r\n");
 
 		if (m_sMuteEnv.GetLength()) {
-			details->AppendFormatted(50, __LOCALIZE("Mute envelope","sws_DLG_101"));
+			details->Append(__LOCALIZE("Mute envelope","sws_DLG_101"));
 			details->Append("\r\n");
 		}
 	}

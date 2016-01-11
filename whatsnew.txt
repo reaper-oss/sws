@@ -1,7 +1,20 @@
+Live Configs
++Improve support of JSFX and AU user presets (.rpl files)
++Improve support of VST3 user presets
++Support VST3 factory preset files (.vstpreset files, REAPER v5.11+ is required)
++Improve monitoring windows (window titles, prevent overlapped texts, misc. tweaks)
+
+Region Playlist
++Improve monitoring (prevent overlapped texts, misc. tweaks)
+
+Zoom actions/features
++Improve many zoom action/features if REAPER v5.12pre4+ is used
++Issue #789: fix actions "Horizontal scroll to put edit/play cursor at x%"
+
 !v2.8.3 featured build (January 8, 2016)
 New global startup action (in addition to per-project startup actions)
 +The global startup action is performed one time, when launching REAPER
-+To edit/view/clear startup actions: Main menu / Extenstions / Startup actions
++To edit/view/clear startup actions: Main menu / Extensions / Startup actions
 +Tip: if you want to perform several actions at launch time, create a macro and set it as the global startup action
 
 Actions
@@ -10,12 +23,12 @@ Actions
  - SWS/wol: Vertical zoom selected envelope (in media lane only) to upper/lower half
  - SWS/wol: Put selected envelope in media/envelope lane
 +Remove outdated actions (issue 787):
- - Xenakios/SWS : Process item with csound phase vocoder
- - Xenakios/SWS : Process item with RubberBand
+ - Xenakios/SWS: Process item with csound phase vocoder
+ - Xenakios/SWS: Process item with RubberBand
 +Prevent various delete take/item/source file actions to delete subproject files
 
 Other
-+Hardened functions exported to ReaScript
++Harden functions exported to ReaScript
 +Support new ReaScript command IDs (REAPER v5.11pre14+)
 +Update win32 installer to NSIS 2.5.0, resolves security issues
 

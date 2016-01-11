@@ -11,6 +11,9 @@ Zoom actions/features
 +Improve many zoom action/features if REAPER v5.12pre4+ is used
 +Issue #789: fix actions "Horizontal scroll to put edit/play cursor at x%"
 
+ReaScript function export
++Issue #783: fix BR_GetMouseCursorContext_MIDI return value
+
 !v2.8.3 featured build (January 8, 2016)
 New global startup action (in addition to per-project startup actions)
 +The global startup action is performed one time, when launching REAPER

@@ -883,7 +883,7 @@ void BR_TrackSoloMuteState::SaveState (ProjectStateContext* ctx)
 		{
 			char guid[64];
 			guidToString(&m_tracks[i].guid, guid);
-			ctx->AddLine("%s %d %d", guid, m_tracks[i].guid, m_tracks[i].solo, m_tracks[i].mute);
+			ctx->AddLine("%s %d %d", guid, m_tracks[i].solo, m_tracks[i].mute);
 		}
 		ctx->AddLine(">");
 	}

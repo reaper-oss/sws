@@ -7,16 +7,17 @@ Live Configs
 Region Playlist
 +Improve monitoring (prevent overlapped texts, misc. tweaks)
 
-Zoom
-+Improve many zoom action/features if REAPER v5.12pre4+ is used
-+Zoom actions: fix "breathing" room (3% on each side)
-+Issue #789: fix actions "Horizontal scroll to put edit/play cursor at x%"
-
 ReaScript function export
 +Issue #783: fix BR_GetMouseCursorContext_MIDI return value
 
+Fixes
++Fix save/restore track solo/mute states actions (SWS/BR)
++Zoom actions: fix "breathing" room (3% on each side)
++Issue #789: fix actions "Horizontal scroll to put edit/play cursor at x%"
+
 Other
 +OS X: new compiler, optimized build
++Improve many zoom action/features if REAPER v5.12pre4+ is used
 
 !v2.8.3 featured build (January 8, 2016)
 New global startup action (in addition to per-project startup actions)

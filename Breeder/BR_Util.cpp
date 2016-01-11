@@ -2379,11 +2379,22 @@ void MoveArrange (double amountTime)
 
 void GetSetArrangeView (ReaProject* proj, bool set, double* start, double* end)
 {
-	if (start && end)
+	if (!start || !end) return;
+
+	double s=2.0, e=1.0; // start>end to detect mordern versions of GetSet_ArrangeView2()
+	GetSet_ArrangeView2(proj, false, 0, 0, &s, &e); // full arrange view's start/end time -- v5.12pre4+ only
+	if (s < e)
+	{
+		if (!set) { *start=s; *end=e; }
+		else GetSet_ArrangeView2(proj, true, 0, 0, start, end);
+		return;
+	}
+
+	// legacy code if REAPER < v5.12pre4
 	{
 		RECT r;
 		GetWindowRect(GetArrangeWnd(), &r);
-		GetSet_ArrangeView2(NULL, set, r.left, r.right-SCROLLBAR_W, start, end);
+		GetSet_ArrangeView2(proj, set, r.left, r.right-SCROLLBAR_W, start, end);
 	}
 }
 

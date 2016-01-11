@@ -227,7 +227,7 @@ double BR_EnvValueAtPos (BR_Envelope* envelope, double position)
 void BR_GetArrangeView (ReaProject* proj, double* startPositionOut, double* endPositionOut)
 {
 	double start, end;
-	GetSetArrangeView(NULL, false, &start, &end);
+	GetSetArrangeView(proj, false, &start, &end);
 
 	WritePtr(startPositionOut, start);
 	WritePtr(endPositionOut, end);

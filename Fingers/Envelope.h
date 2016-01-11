@@ -34,7 +34,7 @@ private:
     double m_parameterValue;
     EnvShape m_envelopeShape;
     int m_selUnknown;
-    bool m_selected;
+    int m_selected;
     int m_bezierUnknown;
     double m_bezierTension;
     RprEnvelope *m_parent;

@@ -36,7 +36,7 @@ RprEnvelopePoint::shape() const
 bool
 RprEnvelopePoint::selected() const
 {
-    return m_selected;
+    return !!m_selected;
 }
 
 double
@@ -100,7 +100,7 @@ nParamIndex(0)
     const char *envPtr = pEnv;
     char title[256];
 
-    status = sscanf(envPtr, "<%s %d %lf %lf %lf", &title, &nParamIndex, &dParamMin,
+    status = sscanf(envPtr, "<%s %d %lf %lf %lf", (char*)&title, &nParamIndex, &dParamMin,
         &dParamMax, &dNeutralVal);
 
     m_szTitle = title;

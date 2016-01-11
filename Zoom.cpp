@@ -48,7 +48,8 @@ void SetReaperWndSize(COMMAND_T* = NULL)
 	SetWindowPos(hwnd, NULL, 0, 0, x, y, SWP_NOMOVE | SWP_NOZORDER);
 }
 
-void SetHorizPos(HWND hwnd, double dPos, double dOffset = 0.0)
+// hwnd: optional, dRoom and dOffset: normalized values (%)
+void SetHorizPos(HWND hwnd, double dPos, double dRoom = 0.0, double dOffset = 0.0)
 {
 	double start = 2.0, end = 1.0; // start>end to detect mordern versions of GetSet_ArrangeView2()
 	GetSet_ArrangeView2(NULL, false, 0, 0, &start, &end); // full arrange view's start/end time -- v5.12pre4+ only
@@ -56,6 +57,8 @@ void SetHorizPos(HWND hwnd, double dPos, double dOffset = 0.0)
 	{
 		double start_timeOut = dPos - (end-start) * dOffset;
 		double end_timeOut = dPos + (end-start) * (1.0-dOffset);
+		start_timeOut -= (end_timeOut-start_timeOut) * dRoom;
+		end_timeOut += (end_timeOut-start_timeOut) * dRoom;
 		GetSet_ArrangeView2(NULL, true, 0, 0, &start_timeOut, &end_timeOut); // includes UI refresh
 		return;
 	}
@@ -401,7 +404,7 @@ void HorizZoomSelItems(bool bTimeSel = false)
 // ct->user is the screen position in %, negative for play cursor (vs edit cursor)
 void ScrollToCursor(COMMAND_T* ct)
 {
-	SetHorizPos(NULL, ct->user<0 && (GetPlayState()&1) ? GetPlayPosition() : GetCursorPosition(), 0.01 * abs((int)ct->user));
+	SetHorizPos(NULL, ct->user<0 && (GetPlayState()&1) ? GetPlayPosition() : GetCursorPosition(), 0.0, 0.01 * abs((int)ct->user));
 }
 
 void HorizScroll(COMMAND_T* ctx)

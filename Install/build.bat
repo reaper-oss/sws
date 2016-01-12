@@ -2,10 +2,6 @@
 
 REM Copyright 2013 and later Jeffos. All rights reserved.
 
-REM The website is automatically updated thanks to a PHP that reads the (new) 
-REM version.h. At runtime, the version checker reads that file too.
-
-
 REM ===========================================================================
 REM You must set these according to your local setup
 REM FTP access is reserved for project owners
@@ -21,10 +17,6 @@ set osx_dmg_path="D:\dev\sws_osx.dmg"
 REM ====== INIT ===============================================================
 if not exist output mkdir output
 if not exist temp mkdir temp
-
-REM == Backup whatsnew.txt and version.h in case the script fails
-copy ..\version.h temp\oldversion.h > NUL
-copy ..\whatsnew.txt temp\oldwhatsnew.txt > NUL
 
 set build_type=
 set /p build_type=Build type? (f[eatured] / p[re-release]) 
@@ -154,16 +146,19 @@ echo cd www/download/%build_type% >> temp\upload.ftp
 echo binary >> temp\upload.ftp
 
 REM Backup current remote files into download/%build_type%/old (except whatsnew.html: common to all versions)
-if exist temp\online_version.h (
-	..\BuildUtils\Release\PrintVersion temp\online_version.h "rename sws-v%%d.%%d.%%d.%%d-install.exe tmp.exe" >> temp\upload.ftp
-	..\BuildUtils\Release\PrintVersion temp\online_version.h "rename tmp.exe old/sws-v%%d.%%d.%%d.%%d-install.exe" >> temp\upload.ftp
-	..\BuildUtils\Release\PrintVersion temp\online_version.h "rename sws-v%%d.%%d.%%d.%%d-x64-install.exe tmp-x64.exe" >> temp\upload.ftp
-	..\BuildUtils\Release\PrintVersion temp\online_version.h "rename tmp-x64.exe old/sws-v%%d.%%d.%%d.%%d-x64-install.exe" >> temp\upload.ftp
-	..\BuildUtils\Release\PrintVersion temp\online_version.h "rename sws-v%%d.%%d.%%d.%%d.dmg tmp.dmg" >> temp\upload.ftp
-	..\BuildUtils\Release\PrintVersion temp\online_version.h "rename tmp.dmg old/sws-v%%d.%%d.%%d.%%d.dmg" >> temp\upload.ftp
-	..\BuildUtils\Release\PrintVersion temp\online_version.h "rename sws-v%%d.%%d.%%d.%%d-template.ReaperLangPack tmp.ReaperLangPack" >> temp\upload.ftp
-	..\BuildUtils\Release\PrintVersion temp\online_version.h "rename tmp.ReaperLangPack old/sws-v%%d.%%d.%%d.%%d-template.ReaperLangPack" >> temp\upload.ftp
+if not exist temp\online_version.h (
+	echo Error: temp\online_version.h not found!
+	goto error
 )
+..\BuildUtils\Release\PrintVersion temp\online_version.h "rename sws-v%%d.%%d.%%d.%%d-install.exe tmp.exe" >> temp\upload.ftp
+..\BuildUtils\Release\PrintVersion temp\online_version.h "rename tmp.exe old/sws-v%%d.%%d.%%d.%%d-install.exe" >> temp\upload.ftp
+..\BuildUtils\Release\PrintVersion temp\online_version.h "rename sws-v%%d.%%d.%%d.%%d-x64-install.exe tmp-x64.exe" >> temp\upload.ftp
+..\BuildUtils\Release\PrintVersion temp\online_version.h "rename tmp-x64.exe old/sws-v%%d.%%d.%%d.%%d-x64-install.exe" >> temp\upload.ftp
+..\BuildUtils\Release\PrintVersion temp\online_version.h "rename sws-v%%d.%%d.%%d.%%d.dmg tmp.dmg" >> temp\upload.ftp
+..\BuildUtils\Release\PrintVersion temp\online_version.h "rename tmp.dmg old/sws-v%%d.%%d.%%d.%%d.dmg" >> temp\upload.ftp
+..\BuildUtils\Release\PrintVersion temp\online_version.h "rename sws-v%%d.%%d.%%d.%%d-template.ReaperLangPack tmp.ReaperLangPack" >> temp\upload.ftp
+..\BuildUtils\Release\PrintVersion temp\online_version.h "rename tmp.ReaperLangPack old/sws-v%%d.%%d.%%d.%%d-template.ReaperLangPack" >> temp\upload.ftp
+
 echo mdelete *.* >> temp\upload.ftp
 
 REM Upload new files
@@ -186,7 +181,6 @@ echo quit >> temp\upload.ftp
 echo FTP: uploading...
 ftp -v -n -i -s:temp\upload.ftp %ftp_host%
 echo.
-echo Please double-check the above log
 pause
 goto success
 
@@ -195,9 +189,6 @@ echo.
 echo ************
 echo   Error!!!
 echo ************
-echo.
-copy /y temp\oldversion.h ..\version.h > NUL
-copy /y temp\oldwhatsnew.txt ..\whatsnew.txt > NUL
 goto theend
 
 :success
@@ -206,8 +197,8 @@ echo ****************************************
 echo Success!
 ..\BuildUtils\Release\PrintVersion ..\version.h -d
 echo ****************************************
-
-:theend
 del /q temp\*.*
 rmdir temp
+
+:theend
 echo.

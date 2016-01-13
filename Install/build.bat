@@ -17,6 +17,15 @@ set osx_dmg_path="D:\dev\sws_osx.dmg"
 REM ====== INIT ===============================================================
 if not exist output mkdir output
 if not exist temp mkdir temp
+del /q temp\*.*
+if not exist ..\version.h (
+	echo Error: version.h not found!
+	goto error
+)
+if not exist ..\whatsnew.txt (
+	echo Error: whatsnew.txt not found!
+	goto error
+)
 
 set build_type=
 set /p build_type=Build type? (f[eatured] / p[re-release]) 
@@ -35,8 +44,12 @@ goto error
 REM ====== WHATSNEW ===========================================================
 :whatsnew
 echo Generating output\whatsnew.htm...
-copy ..\whatsnew.txt output\whatsnew.txt > NUL
-..\BuildUtils\Release\MakeWhatsNew.exe output\whatsnew.txt > output\whatsnew.html
+if %build_type%==pre-release (
+	..\BuildUtils\Release\MakeWhatsNew.exe -h ..\whatsnew.txt > output\whatsnew.html
+)
+if %build_type%==featured (
+	..\BuildUtils\Release\MakeWhatsNew.exe ..\whatsnew.txt > output\whatsnew.html
+)
 
 REM ====== LANGPACK ===========================================================
 :langpack
@@ -47,7 +60,7 @@ if not errorlevel 0 goto error
 cd sws\Install
 
 REM ======BUILD================================================================
-REM Also generates Python function wrapper files!
+REM Note: this will also generate Python function wrapper files
 echo.
 set choice=
 set /p choice=Build (y/n)? 
@@ -125,55 +138,46 @@ if not exist %osx_dmg_path% (
 REM Two FTP steps are required because the "ftp" command
 REM does not release downloaded files while running
 
-REM 1st step ==========================
-REM get the current version as there might be a gap between local and remote versions 
-REM e.g. uploaded a featured version then a pre-release one
+REM 1st FTP step: get the current online version
+
 echo user %ftp_user% > temp\get_version.ftp
 echo %ftp_pwd%>> temp\get_version.ftp
 echo cd download/%build_type% >> temp\get_version.ftp
 echo ascii >> temp\get_version.ftp
 echo get version.h temp\online_version.h >> temp\get_version.ftp
 echo quit >> temp\get_version.ftp
-
 echo FTP: getting current version...
 ftp -v -n -i -s:temp\get_version.ftp %ftp_host%
 
-REM 2nd step ==========================
-REM backup remote files and upload new ones
+
+REM 2nd FTP step: backup remote files and upload new ones
+
 echo user %ftp_user% > temp\upload.ftp
 echo %ftp_pwd%>> temp\upload.ftp
 echo cd www/download/%build_type% >> temp\upload.ftp
 echo binary >> temp\upload.ftp
 
-REM Backup current remote files into download/%build_type%/old (except whatsnew.html: common to all versions)
+REM Backup current remote files into download/old
 if not exist temp\online_version.h (
 	echo Error: temp\online_version.h not found!
 	goto error
 )
 ..\BuildUtils\Release\PrintVersion temp\online_version.h "rename sws-v%%d.%%d.%%d.%%d-install.exe tmp.exe" >> temp\upload.ftp
-..\BuildUtils\Release\PrintVersion temp\online_version.h "rename tmp.exe old/sws-v%%d.%%d.%%d.%%d-install.exe" >> temp\upload.ftp
+..\BuildUtils\Release\PrintVersion temp\online_version.h "rename tmp.exe ../old/sws-v%%d.%%d.%%d.%%d-install.exe" >> temp\upload.ftp
 ..\BuildUtils\Release\PrintVersion temp\online_version.h "rename sws-v%%d.%%d.%%d.%%d-x64-install.exe tmp-x64.exe" >> temp\upload.ftp
-..\BuildUtils\Release\PrintVersion temp\online_version.h "rename tmp-x64.exe old/sws-v%%d.%%d.%%d.%%d-x64-install.exe" >> temp\upload.ftp
+..\BuildUtils\Release\PrintVersion temp\online_version.h "rename tmp-x64.exe ../old/sws-v%%d.%%d.%%d.%%d-x64-install.exe" >> temp\upload.ftp
 ..\BuildUtils\Release\PrintVersion temp\online_version.h "rename sws-v%%d.%%d.%%d.%%d.dmg tmp.dmg" >> temp\upload.ftp
-..\BuildUtils\Release\PrintVersion temp\online_version.h "rename tmp.dmg old/sws-v%%d.%%d.%%d.%%d.dmg" >> temp\upload.ftp
+..\BuildUtils\Release\PrintVersion temp\online_version.h "rename tmp.dmg ../old/sws-v%%d.%%d.%%d.%%d.dmg" >> temp\upload.ftp
 ..\BuildUtils\Release\PrintVersion temp\online_version.h "rename sws-v%%d.%%d.%%d.%%d-template.ReaperLangPack tmp.ReaperLangPack" >> temp\upload.ftp
-..\BuildUtils\Release\PrintVersion temp\online_version.h "rename tmp.ReaperLangPack old/sws-v%%d.%%d.%%d.%%d-template.ReaperLangPack" >> temp\upload.ftp
-
+..\BuildUtils\Release\PrintVersion temp\online_version.h "rename tmp.ReaperLangPack ../old/sws-v%%d.%%d.%%d.%%d-template.ReaperLangPack" >> temp\upload.ftp
 echo mdelete *.* >> temp\upload.ftp
 
 REM Upload new files
-if %build_type%==pre-release (
-    ..\BuildUtils\Release\PrintVersion ..\version.h "put output\whatsnew.html whatsnew-v%%d.%%d.%%d.%%d.html" >> temp\upload.ftp
-)
-if %build_type%==featured (
-    echo put output\whatsnew.html index.html >> temp\upload.ftp
-)
+echo put output\whatsnew.html >> temp\upload.ftp
 ..\BuildUtils\Release\PrintVersion ..\version.h "put output\sws_extension.exe sws-v%%d.%%d.%%d.%%d-install.exe" >> temp\upload.ftp
 ..\BuildUtils\Release\PrintVersion ..\version.h "put output\sws_extension_x64.exe sws-v%%d.%%d.%%d.%%d-x64-install.exe" >> temp\upload.ftp
 ..\BuildUtils\Release\PrintVersion ..\version.h "put %osx_dmg_path% sws-v%%d.%%d.%%d.%%d.dmg" >> temp\upload.ftp
 ..\BuildUtils\Release\PrintVersion ..\version.h "put output\sws_template.ReaperLangPack sws-v%%d.%%d.%%d.%%d-template.ReaperLangPack" >> temp\upload.ftp
-
-REM Upload for PHP website auto-update
 echo ascii >> temp\upload.ftp
 echo put ..\version.h >> temp\upload.ftp
 echo quit >> temp\upload.ftp

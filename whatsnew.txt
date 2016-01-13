@@ -88,7 +88,7 @@ ReaScript
  - BR_TrackFX_GetFXModuleName
 +Issue 764, issue 760: fixed BR_GetMediaTrackLayout/BR_SetMediaTrackLayout issues, requires REAPER v5.02+
 
-!v2.8 featured build (August 13, 2015)
+!v2.8.0 featured build (August 13, 2015)
 <strong>This new SWS version requires and supports REAPER v5.0+!<br>
 Lots of new features/fixes: everything listed below is new, down to v2.6 (all intermediate versions were pre-releases/beta/fixup builds).
 </strong>
@@ -129,10 +129,10 @@ Fixes
 +Fixed SWS/BR actions that show send envelopes. In certain corner cases they didn't work and could potentially remove FXs from receiving track
 +Fixed SWS/BR actions that copy other stuff to envelopes (CC events, envelope points from other envelopes etc...) when dealing with FX envelopes
 
-!v2.7.3 #0 pre-release build (July 8, 2015)
+!v2.7.3 pre-release build (July 8, 2015)
 ReaScript: fixed missing exported functions
 
-!v2.7.2 #0 pre-release build (July 7, 2015)
+!v2.7.2 pre-release build (July 7, 2015)
 <strong>REAPER v5.0rc1+ is required!</strong>
 
 New actions
@@ -201,7 +201,7 @@ Other
 +Disabled Marker Actions while rendering
 +Removed actions to simplify title bar. It wasn't reliable in certain situations and may not be morally right :)
 
-!v2.7.1 #0 pre-release build (May 7, 2015)
+!v2.7.1 pre-release build (May 7, 2015)
 <strong>OSX:</strong>
 +<strong>New installation disk image (.dmg)</strong>
  - The new .dmg proposes to install the SWS Extension in a different directory:
@@ -242,12 +242,12 @@ Fixes
 +Fixed various small usability corner-cases of envelope freehand actions
 +Fixed positions of certain check boxes in Contextual toolbar dialog
 
-!v2.7 featured build (May 7, 2015)
+!v2.7.0 featured build (May 7, 2015)
 OSX: fixed UI issues with listviews on Yosemite and trackpads
 
 Fixed various buglets (Region Playlist, marker/region actions, etc) when some regions/markers end later than the last media item
 
-!v2.6.4 #0 pre-release build (May 1, 2015)
+!v2.6.4 pre-release build (May 1, 2015)
 <strong>REAPER v5.0pre21+ is required!</strong>
 
 <strong>Custom mouse cursors</strong>
@@ -338,7 +338,7 @@ Other
 +Toggle state of all docked SWS dialogs will be set to ON only when the window is visible in the docker (same behavior REAPER is using for its own docked dialogs)
 +When running <em>SWS/BR: Set closest (left side) envelope point's value to mouse cursor (perform until shortcut released)</em> on mute envelope, snap values to top or bottom
 
-!v2.6.3 #0 pre-release build (March 12, 2015)
+!v2.6.3 pre-release build (March 12, 2015)
 <strong>REAPER v5.0pre14b+ is required!</strong>
 
 Contextual toolbars
@@ -377,7 +377,7 @@ Fixes
  - SWS: Save selected track(s) selected item(s), slot x
  - SWS: Save selected item(s)
 +Zooming functionality:
- - Restored behavior of actions that zoom vertically to selected tracks/items so they include track envelopes of the last selected item/track (changed in v2.5.1 #0)
+ - Restored behavior of actions that zoom vertically to selected tracks/items so they include track envelopes of the last selected item/track (changed in v2.5.1)
  - Fixed problems with master track (reported http://forum.cockos.com/showpost.php?p=1458143&postcount=1725|here|)
  - Fixes related to hidden TCP tracks and actions that hide unselected tracks when zooming
  - Make sure zoomed tracks fill TCP completely when appropriate (related only to actions that minimize other tracks)
@@ -386,27 +386,27 @@ Other:
 +Optimized various envelope actions and ReaScript envelope functions using new envelope API (testing showed increase in performance up to x10) (not applicable to tempo envelope)
 +Various fixes for REAPER 5 compatibility (contextual toolbars, envelope actions, MIDI editor actions)
 
-!v2.6.2 #0 pre-release build (January 16, 2015)
+!v2.6.2 pre-release build (January 16, 2015)
 <strong>REAPER v5.0pre6+ is required!</strong> (this REAPER version supports SWS functions exported to EEL and Lua)
 
 Fixes:
 +REAPER 5/Windows OS: fixed crash vs unsupported REAPER versions
 +Hardened SWS initialization, display error messages
 
-!v2.6.1 #0 pre-release build (January 7, 2015)
+!v2.6.1 pre-release build (January 7, 2015)
 <strong>REAPER v5.0pre4+ is required!</strong>
 
 REAPER 5 preliminary support
 +ReaScript function export to EEL and Lua
 +Fixed action selection broken in various places (e.g. Cycle Action editor)
 
-!v2.6.0 #0 featured build (January 7, 2015)
+!v2.6.0 featured build (January 7, 2015)
 Notes window
 +Added "Wrap text" option in the context menu
 +Import SubRip file: name regions with subtitles content
 +Issue 686: fixed new lines added in subtitles when saving the project
 
-!v2.5.2 #0 pre-release build (December 11, 2014)
+!v2.5.2 pre-release build (December 11, 2014)
 <strong>REAPER v4.75+ is required!</strong>
 
 Contextual toolbars
@@ -449,7 +449,7 @@ Fixes
  - SWS/BR: Create project markers from stretch markers in selected items
 +Don't reload FX when undoing certain SWS actions
 
-!v2.5.1 #0 pre-release build (November 24, 2014)
+!v2.5.1 pre-release build (November 24, 2014)
 <strong>REAPER v4.74+ is required!</strong>
 New API functions were introduced in this version, they enable various improvements in the SWS/S&M Extension.
 Thank you Cockos!
@@ -575,7 +575,7 @@ Other
 !v2.5.0 #1 featured build (December 11, 2014)
 +Resources: http://forum.cockos.com/showthread.php?p=1440002|fixed lost bookmarks|
 
-!v2.5 featured build (November 24, 2014)
+!v2.5.0 featured build (November 24, 2014)
 Notes window
 +Added "Wrap text" option in the context menu
 +Import SubRip file: name regions with subtitles content

@@ -2120,12 +2120,12 @@ void MuteAndInitCC123AllConfigs(LiveConfig* _lc, DWORD* _muteTime, WDL_PtrList<v
 // note: no tiny fades for sends unfortunately (last check v4.31) => fade dest tracks instead
 void WaitForMuteAndSendCC123(LiveConfig* _lc, LiveConfigItem* _cfg, DWORD* _muteTime, WDL_PtrList<void>* _muteTracks, WDL_PtrList<void>* _cc123Tracks)
 {
-	WaitForTinyFade(_muteTime); // no-op if muteTime==0
-
 	MediaTrack* inputTr = _lc->GetInputTrack();
-	if (!inputTr || (inputTr && (_cfg->m_track != inputTr)))
+	if (inputTr && _cfg->m_track != inputTr)
 		for (int i=0; i<_muteTracks->GetSize(); i++)
 			MuteSends(inputTr, (MediaTrack*)_muteTracks->Get(i), true);
+
+	WaitForTinyFade(_muteTime); // no-op if muteTime==0  
 
 	if (_lc->m_cc123 && SendAllNotesOff(_cc123Tracks)) {
 		WaitForAllNotesOff();

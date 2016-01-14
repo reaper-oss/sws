@@ -497,7 +497,7 @@ void GetMonitoringInfo(WDL_FastString* _curNum, WDL_FastString* _cur,
 			if (g_unsync)
 			{
 				_curNum->Set("!");
-				_cur->Set(__LOCALIZE("(sync!)","sws_DLG_165"));
+				_cur->Set(__LOCALIZE("<SYNC LOSS>)","sws_DLG_165"));
 			}
 			else if (RgnPlaylistItem* curItem = curpl->Get(g_playCur))
 			{
@@ -524,14 +524,14 @@ void GetMonitoringInfo(WDL_FastString* _curNum, WDL_FastString* _cur,
 			if (g_playNext<0)
 			{
 				_nextNum->Set("-");
-				_next->Set(__LOCALIZE("(end)","sws_DLG_165"));
+				_next->Set(__LOCALIZE("<END>","sws_DLG_165"));
 			}
 			else if (!g_unsync && g_rgnLoop && g_playCur>=0 && g_playCur==g_playNext)
 			{
 				if (g_rgnLoop>0)
 				{
 					_nextNum->Set(_curNum);
-					_next->SetFormatted(32, __LOCALIZE_VERFMT("(loop: %d)","sws_DLG_165"), g_rgnLoop);
+					_next->SetFormatted(32, __LOCALIZE_VERFMT("<LOOP: %d>","sws_DLG_165"), g_rgnLoop);
 				}
 				else if (g_rgnLoop<0)
 				{
@@ -686,7 +686,7 @@ void RegionPlaylistWnd::UpdateMonitoring(WDL_FastString* _curNum, WDL_FastString
 	if (g_playPlaylist>=0)
 		if (RegionPlaylist* curpl = GetPlaylist(g_playPlaylist))
 			pl.SetFormatted(128, "#%d \"%s\"", g_playPlaylist+1, curpl->m_name.Get());
-	m_monPl.SetText(g_playPlaylist>=0 ? pl.Get() : __LOCALIZE("(stopped)","sws_DLG_165"));
+	m_monPl.SetText(g_playPlaylist>=0 ? pl.Get() : __LOCALIZE("<STOPPED>","sws_DLG_165"));
 
 #ifdef _SNM_MISC
 	// big fonts with alpha doesn't work well ATM (on OS X at least), such overlapped texts look a bit clunky anyway...
@@ -1417,7 +1417,7 @@ void PlaylistRun()
 
 		if ((pos+0.01) >= g_nextRgnPos && pos <= g_nextRgnEnd)	//JFB!! +0.01 because 'pos' can be a bit ahead of time
 																// +1 sample block would be better, but no API..
-																// note: sync loss detection could deal with this in the worst case
+																// note: sync loss detection will deal with this in the worst case
 		{
 			// a bunch of calls end here when looping!!
 

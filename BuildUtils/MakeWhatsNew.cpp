@@ -127,7 +127,7 @@ int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML, const c
 	{
 		fputs("<!DOCTYPE html >\n", pOut);
 		fputs("<html lang=\"en\">\n", pOut);
-		fputs("<head><meta charset=\"utf-8\"><title>SWS/S&M Extension - What's new?</title></head>\n", pOut);
+		fputs("<head><meta charset=\"utf-8\"><title>SWS/S&amp;M Extension - What's new?</title></head>\n", pOut);
 		fputs("<body>\n<h1>", pOut);
 		if (_url)
 		{
@@ -135,7 +135,7 @@ int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML, const c
 			fputs(_url, pOut);
 			fputs("\">", pOut);
 		}
-		fputs("SWS/S&M Extension", pOut);
+		fputs("SWS/S&amp;M Extension", pOut);
 		if (_url)
 		{
 			fputs("</a>", pOut);

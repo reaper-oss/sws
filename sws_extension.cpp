@@ -1004,6 +1004,7 @@ error:
 		IMPAPI(SplitMediaItem);
 		IMPAPI(StopPreview);
 		IMPAPI(StopTrackPreview);
+		IMPAPI(StopTrackPreview2);
 		IMPAPI(stringToGuid);
 		IMPAPI(TimeMap_GetDividedBpmAtTime);
 		IMPAPI(TimeMap_GetTimeSigAtTime);

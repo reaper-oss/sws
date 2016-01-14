@@ -387,7 +387,7 @@ void LiveConfigItem::GetInfo(WDL_FastString* _info)
 			{
 				char* name = (char*)GetSetMediaTrackInfo(m_track, "P_NAME", NULL);
 				if (name && *name) _info->Set(name);
-				else _info->SetFormatted(32, "[%d]", CSurf_TrackToID(m_track, false));
+				else _info->SetFormatted(64, __LOCALIZE_VERFMT("[Track %d]","sws_DLG_169"), CSurf_TrackToID(m_track, false));
 			}
 			_info->Ellipsize(ELLIPSIZE, ELLIPSIZE);
 
@@ -405,7 +405,7 @@ void LiveConfigItem::GetInfo(WDL_FastString* _info)
 		}
 	}
 	else
-		_info->Set(__LOCALIZE("<EMPTY>","sws_DLG_169")); // sws_DLG_169 = monitoring wnd
+		_info->Set(__LOCALIZE("<EMPTY>","sws_DLG_169"));
 }
 
 
@@ -848,7 +848,7 @@ void LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 	switch (LOWORD(wParam))
 	{
 		case HELP_MSG:
-			ShellExecute(m_hwnd, "open", "http://www.sws-extension.org/download/S&M_LiveConfigs.pdf" , NULL, NULL, SW_SHOWNORMAL); //JFB! oudated
+			ShellExecute(m_hwnd, "open", SWS_URL "/download/S&M_LiveConfigs.pdf" , NULL, NULL, SW_SHOWNORMAL); //JFB! oudated doc, better than nothing...
 			break;
 		case CREATE_INPUT_MSG:
 		{
@@ -1594,10 +1594,8 @@ HMENU LiveConfigsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 		AddLearnMenu(hMenu, true);
 		AddOptionsMenu(hMenu, true);
 		AddOscCSurfMenu(hMenu, lc->m_osc, OSC_START_MSG, OSC_END_MSG);
-/*JFB!! Live Configs user manual not up-to-date..
 		AddToMenu(hMenu, SWS_SEPARATOR, 0);
 		AddToMenu(hMenu, __LOCALIZE("Online help...","sws_DLG_155"), HELP_MSG);
-*/
 	}
 	return hMenu;
 }
@@ -2739,7 +2737,7 @@ LiveConfigMonitorWnd::LiveConfigMonitorWnd(int _cfgId)
 	m_cfgId = _cfgId;
 
 	char title[64]="", dockId[64]="";
-	_snprintfSafe(title, sizeof(title), __LOCALIZE_VERFMT("Live Config #%d Monitor","sws_DLG_169"), m_cfgId+1);
+	_snprintfSafe(title, sizeof(title), __LOCALIZE_VERFMT("Live Config #%d - Monitor","sws_DLG_169"), m_cfgId+1);
 	_snprintfSafe(dockId, sizeof(dockId), LIVECFG_MON_WND_ID, m_cfgId+1);
 
 	// see SWS_DockWnd(): default init for other member vars

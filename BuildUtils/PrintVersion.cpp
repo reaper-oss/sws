@@ -51,15 +51,14 @@ int main(int argc, char* argv[])
 	}
 
 	// Read the entire file into a buffer
+	char cBuf[4096];
 	fseek(pF, 0L, SEEK_END);
 	int iOrigSize = ftell(pF);
-	if (iOrigSize<7)
+	if (iOrigSize < 7 || (int)sizeof(cBuf) <= iOrigSize)
 	{
 		fprintf(stderr, "PrintVersion: invalid file %s.\n", argv[1]);
 		return 3;
 	}
-
-	char* cBuf = new char[iOrigSize+1];
 	fseek(pF, 0L, SEEK_SET);
 	fread(cBuf, sizeof(char), iOrigSize, pF);
 	fclose(pF);

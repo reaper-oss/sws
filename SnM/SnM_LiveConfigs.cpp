@@ -2042,7 +2042,7 @@ int IsLiveConfigDisplayed(COMMAND_T*) {
 ///////////////////////////////////////////////////////////////////////////////
 
 // muting receives from the input track would be useless: the track is muted anyway
-bool TimedMuteIfNeeded(MediaTrack* _tr, DWORD* _muteTime, int _fadeLen = -1)
+bool TimedMuteIfNeeded(MediaTrack* _tr, double* _muteTime, int _fadeLen = -1)
 {
 	if (_fadeLen<0)
 		if (int* fadeLenPref = (int*)GetConfigVar("mutefadems10"))
@@ -2052,7 +2052,7 @@ bool TimedMuteIfNeeded(MediaTrack* _tr, DWORD* _muteTime, int _fadeLen = -1)
 	if (_fadeLen>0 && _tr && !mute)
 	{
 		GetSetMediaTrackInfo(_tr, "B_MUTE", &g_bTrue);
-		*_muteTime = GetTickCount();
+		*_muteTime = time_precise();
 #ifdef _SNM_DEBUG
 		char dbg[256] = "";
 		_snprintfSafe(dbg, sizeof(dbg), "TimedMuteIfNeeded() - Muted: %s\n", (char*)GetSetMediaTrackInfo(_tr, "P_NAME", NULL));
@@ -2062,17 +2062,17 @@ bool TimedMuteIfNeeded(MediaTrack* _tr, DWORD* _muteTime, int _fadeLen = -1)
 	return mute;
 }
 
-// no-op if _muteTime==0
-void WaitForTinyFade(DWORD* _muteTime)
+// no-op if _muteTime==0.0
+void WaitForTinyFade(double* _muteTime)
 {
-	int fadelen = 0;
+	double fadelen = 0.0;
 	if (int* fadeLenPref = (int*)GetConfigVar("mutefadems10"))
-		fadelen = int(*fadeLenPref/10 + 0.5);
+		fadelen = (*fadeLenPref)/10000.0; // /pref/10, /1000 (ms->s)
 
-	if (fadelen>0 && _muteTime && *_muteTime)
+	if (fadelen>0.0 && _muteTime && *_muteTime>0.0)
 	{
 		int sleeps = 0;
-		while (int(GetTickCount()-*_muteTime) < fadelen)
+		while ((time_precise() - *_muteTime) < fadelen)
 		{
 			if (sleeps > 1000) // timeout safety ~1s
 				break;
@@ -2087,14 +2087,14 @@ void WaitForTinyFade(DWORD* _muteTime)
 		}
 #ifdef _SNM_DEBUG
 		char dbg[256] = "";
-		_snprintfSafe(dbg, sizeof(dbg), "WaitForTrackMuteFade() - Approx wait time: %d ms\n", GetTickCount() - *_muteTime);
+		_snprintfSafe(dbg, sizeof(dbg), "WaitForTrackMuteFade() - Approx wait time: %f ms\n", (time_precise() - *_muteTime)*1000.0);
 		OutputDebugString(dbg);
 #endif
-		*_muteTime = 0;
+		*_muteTime = 0.0;
 	}
 }
 
-void MuteAndInitCC123(LiveConfig* _lc, MediaTrack* _tr, DWORD* _muteTime, WDL_PtrList<void>* _muteTracks, WDL_PtrList<void>* _cc123Tracks, WDL_PtrList<bool>* _muteStates, bool _always = false)
+void MuteAndInitCC123(LiveConfig* _lc, MediaTrack* _tr, double* _muteTime, WDL_PtrList<void>* _muteTracks, WDL_PtrList<void>* _cc123Tracks, WDL_PtrList<bool>* _muteStates, bool _always = false)
 {
 	if (_always || _lc->m_fade>0 || _lc->m_cc123) // also mute before sending all notes off
 	{
@@ -2105,7 +2105,7 @@ void MuteAndInitCC123(LiveConfig* _lc, MediaTrack* _tr, DWORD* _muteTime, WDL_Pt
 	}
 }
 
-void MuteAndInitCC123AllConfigs(LiveConfig* _lc, DWORD* _muteTime, WDL_PtrList<void>* _muteTracks, WDL_PtrList<void>* _cc123Tracks, WDL_PtrList<bool>* _muteStates)
+void MuteAndInitCC123AllConfigs(LiveConfig* _lc, double* _muteTime, WDL_PtrList<void>* _muteTracks, WDL_PtrList<void>* _cc123Tracks, WDL_PtrList<bool>* _muteStates)
 {
 	for (int i=0; i<_lc->m_ccConfs.GetSize(); i++)
 		if (LiveConfigItem* item = _lc->m_ccConfs.Get(i))
@@ -2116,9 +2116,9 @@ void MuteAndInitCC123AllConfigs(LiveConfig* _lc, DWORD* _muteTime, WDL_PtrList<v
 				MuteAndInitCC123(_lc, item->m_track, _muteTime, _muteTracks, _cc123Tracks, _muteStates);
 }
 
-void WaitForMuteAndSendCC123(LiveConfig* _lc, DWORD* _muteTime, WDL_PtrList<void>* _cc123Tracks)
+void WaitForMuteAndSendCC123(LiveConfig* _lc, double* _muteTime, WDL_PtrList<void>* _cc123Tracks)
 {
-	WaitForTinyFade(_muteTime); // no-op if muteTime==0  
+	WaitForTinyFade(_muteTime); // no-op if muteTime==0.0
 
 	if (_lc->m_cc123)
 	{
@@ -2159,7 +2159,7 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 		// 1) mute things a) to trigger tiny fades b) according to options
 		// --------------------------------------------------------------------
 
-		DWORD muteTime=0;
+		double muteTime=0.0;
 		WDL_PtrList<void> muteTracks, cc123Tracks;
 		WDL_PtrList<bool> muteStates;
 

@@ -2096,7 +2096,7 @@ void WaitForTinyFade(DWORD* _muteTime)
 
 void MuteAndInitCC123(LiveConfig* _lc, MediaTrack* _tr, DWORD* _muteTime, WDL_PtrList<void>* _muteTracks, WDL_PtrList<void>* _cc123Tracks, WDL_PtrList<bool>* _muteStates, bool _always = false)
 {
-	if (_always || _lc->m_fade>0 || _lc->m_cc123) // receives from the input track must be muted before sending all notes off
+	if (_always || _lc->m_fade>0 || _lc->m_cc123) // also mute before sending all notes off
 	{
 		_muteStates->Add(TimedMuteIfNeeded(_tr, _muteTime, _always ? -1 : _lc->m_fade) ? &g_bTrue : &g_bFalse);
 		_muteTracks->Add(_tr);
@@ -2110,7 +2110,7 @@ void MuteAndInitCC123AllConfigs(LiveConfig* _lc, DWORD* _muteTime, WDL_PtrList<v
 	for (int i=0; i<_lc->m_ccConfs.GetSize(); i++)
 		if (LiveConfigItem* item = _lc->m_ccConfs.Get(i))
 			if (item->m_track && _muteTracks->Find(item->m_track) < 0)
-/*JFB!! no! use-case ex: just switching fx presets (with all options disabled)
+/*JFB!! no! use-case ex: just switching fx presets (with all options disabled, incl. tiny fades)
 				MuteAndInitCC123(_lc, item->m_track, _muteTime, _muteTracks, _cc123Tracks, _muteStates, true); // always mute
 */
 				MuteAndInitCC123(_lc, item->m_track, _muteTime, _muteTracks, _cc123Tracks, _muteStates);
@@ -2173,7 +2173,7 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 
 		// applying?
 		// kinda repeating code patterns here, but maintaining all
-		// possible combinaitions in a single loop was a nightmare..
+		// possible combinations in a single loop was a nightmare..
 		else 
 		{	
 			// mute things before reconfiguration

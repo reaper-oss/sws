@@ -510,16 +510,15 @@ int LiveConfig::SetInputTrack(MediaTrack* _newInputTr, bool _updateSends)
 	return nbSends;
 }
 
-bool LiveConfig::IsLastConfiguredTrack(MediaTrack* _tr)
+int LiveConfig::CountTrackConfigs(MediaTrack* _tr)
 {
 	int cnt = 0;
 	if (_tr)
 		for (int i=0; i < m_ccConfs.GetSize(); i++)
 			if (LiveConfigItem* cfg = m_ccConfs.Get(i))
 				if (cfg->m_track == _tr)
-					if (++cnt>1)
-						return false;
-	return (cnt==1);
+					cnt++;
+	return cnt;
 }
 
 
@@ -1001,7 +1000,7 @@ void LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			bool updt = false;
 			while (item)
 			{
-				if (lc->m_autoSends && item->m_track && inputTr && lc->IsLastConfiguredTrack(item->m_track))
+				if (lc->m_autoSends && item->m_track && inputTr && lc->CountTrackConfigs(item->m_track)==1)
 					SNM_RemoveReceivesFrom(item->m_track, inputTr);
 				item->Clear();
 				updt = true;
@@ -1167,7 +1166,7 @@ void LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			bool updt = false;
 			while (item)
 			{
-				if (lc->m_autoSends && item->m_track && inputTr && lc->IsLastConfiguredTrack(item->m_track))
+				if (lc->m_autoSends && item->m_track && inputTr && lc->CountTrackConfigs(item->m_track)==1)
 					SNM_RemoveReceivesFrom(item->m_track, inputTr);
 				if (item->m_track) item->Clear(true);
 				else item->m_track = NULL;
@@ -2117,14 +2116,8 @@ void MuteAndInitCC123AllConfigs(LiveConfig* _lc, DWORD* _muteTime, WDL_PtrList<v
 				MuteAndInitCC123(_lc, item->m_track, _muteTime, _muteTracks, _cc123Tracks, _muteStates);
 }
 
-// note: no tiny fades for sends unfortunately (last check v4.31) => fade dest tracks instead
 void WaitForMuteAndSendCC123(LiveConfig* _lc, LiveConfigItem* _cfg, DWORD* _muteTime, WDL_PtrList<void>* _muteTracks, WDL_PtrList<void>* _cc123Tracks)
 {
-	MediaTrack* inputTr = _lc->GetInputTrack();
-	if (inputTr && _cfg->m_track != inputTr)
-		for (int i=0; i<_muteTracks->GetSize(); i++)
-			MuteSends(inputTr, (MediaTrack*)_muteTracks->Get(i), true);
-
 	WaitForTinyFade(_muteTime); // no-op if muteTime==0  
 
 	if (_lc->m_cc123 && SendAllNotesOff(_cc123Tracks)) {
@@ -2388,7 +2381,9 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 		}
 		else
 		{
-			// unmute all sends from the input track except those sending to the new active track
+			// mute sends from the input track, except sends to the new active track
+			// note: no tiny fades when muting sends (REAPER v4.31) but no pb:
+			// both last and new tracks were muted above, during the switch
 			if (inputTr && inputTr!=cfg->m_track)
 			{
 				int sndIdx=0;
@@ -2396,8 +2391,15 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 				while(destTr)
 				{
 					bool mute = (destTr!=cfg->m_track);
-					if (*(bool*)GetSetTrackSendInfo(inputTr, 0, sndIdx, "B_MUTE", NULL) != mute)
+					if ((*(bool*)GetSetTrackSendInfo(inputTr, 0, sndIdx, "B_MUTE", NULL) != mute) && lc->CountTrackConfigs(destTr)) // ignore "out of config" tracks
+					{
 						GetSetTrackSendInfo(inputTr, 0, sndIdx, "B_MUTE", &mute);
+#ifdef _SNM_DEBUG
+						char dbg[256] = "";
+						_snprintfSafe(dbg, sizeof(dbg), "ApplyPreloadLiveConfig() - Muted send to: %s\n", (char*)GetSetMediaTrackInfo(destTr, "P_NAME", NULL));
+						OutputDebugString(dbg);
+#endif
+					}
 					destTr = (MediaTrack*)GetSetTrackSendInfo(inputTr, 0, ++sndIdx, "P_DESTTRACK", NULL);
 				}
 			}

@@ -2,7 +2,7 @@ Live Configs
 +Improve support of JSFX and AU user presets (.rpl files)
 +Improve support of VST3 user presets
 +Support VST3 factory preset files (.vstpreset files, REAPER v5.11+ is required)
-+Improve tiny fades when an input track is defined
++Improve input track management
 +Improve monitoring windows (window titles, prevent overlapped texts, misc. tweaks)
 
 Region Playlist

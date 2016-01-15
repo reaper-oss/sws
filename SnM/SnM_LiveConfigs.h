@@ -65,7 +65,7 @@ public:
 	~LiveConfig() { m_ccConfs.Empty(true); delete m_osc; }
 
 	bool IsDefault(bool _ignoreComment);
-	bool IsLastConfiguredTrack(MediaTrack* _tr);
+	int CountTrackConfigs(MediaTrack* _tr);
 
 	// GUID_NULL means "no track" here not "the master track", see GuidToTrack()
 	MediaTrack* GetInputTrack() { return !GuidsEqual(&m_inputTr, &GUID_NULL) ? GuidToTrack(&m_inputTr) : NULL; }

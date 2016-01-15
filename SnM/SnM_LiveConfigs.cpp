@@ -2120,8 +2120,9 @@ void WaitForMuteAndSendCC123(LiveConfig* _lc, LiveConfigItem* _cfg, DWORD* _mute
 {
 	WaitForTinyFade(_muteTime); // no-op if muteTime==0  
 
-	if (_lc->m_cc123 && SendAllNotesOff(_cc123Tracks)) {
-		WaitForAllNotesOff();
+	if (_lc->m_cc123)
+	{
+		SendAllNotesOff(_cc123Tracks);
 		_cc123Tracks->Empty();
 	}
 }

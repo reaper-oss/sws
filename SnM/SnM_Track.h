@@ -79,9 +79,8 @@ bool SNM_TogglePlaySelTrackPreviews(const char* _fn, bool _pause, bool _loop, do
 void StopTrackPreviews(bool _selTracksOnly);
 void StopTrackPreviews(COMMAND_T*);
 
-void WaitForAllNotesOff();
-bool SendAllNotesOff(MediaTrack* _tr);
-bool SendAllNotesOff(WDL_PtrList<void>* _trs);
+bool SendAllNotesOff(WDL_PtrList<void>* _trs, int _cc_flags = 1|2);
+bool SendAllNotesOff(MediaTrack* _tr, int _cc_flags = 1|2);
 void SendAllNotesOff(COMMAND_T*);
 
 bool SNM_AddTCPFXParm(MediaTrack* _tr, int _fxId, int _prmId);

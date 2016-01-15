@@ -364,32 +364,6 @@ SECTION_INFO_T *SNM_GetActionSectionInfo(int _idx);
 // Misc common data
 ///////////////////////////////////////////////////////////////////////////////
 
-// make sure the last MIDI event is a (dummy) CC123!
-#define SNM_CC123_MID_STATE "HASDATA 1 960 QN\n\
-E 0 b0 7b 00\n\
-E 0 b1 7b 00\n\
-E 0 b2 7b 00\n\
-E 0 b3 7b 00\n\
-E 0 b4 7b 00\n\
-E 0 b5 7b 00\n\
-E 0 b6 7b 00\n\
-E 0 b7 7b 00\n\
-E 0 b8 7b 00\n\
-E 0 b9 7b 00\n\
-E 0 ba 7b 00\n\
-E 0 bb 7b 00\n\
-E 0 bc 7b 00\n\
-E 0 bd 7b 00\n\
-E 0 be 7b 00\n\
-E 0 bf 7b 00\n\
-E 1 b0 7b 00\n\
-IGNTEMPO 0 120.00000000 4 4\n\
->\n"
-
-#define SNM_CC123_MID_FILE "TVRoZAAAAAYAAAABA8BNVHJrAAAASQCwewACsXsAAbJ7AAGzewACtA==\n\
-ewABtXsAAbZ7AAK3ewABuHsAAbl7AAK6ewABu3sAAbx7AAK9ewABvg==\n\
-ewABv3sAhyywewAA/y8A\n"
-
 #define SNM_LOGO_PNG_FILE "iVBORw0KGgoAAAANSUhEUgAAADIAAAAUCAMAAAGPE64+AAAAFXRFWA==\n\
 dENyZWF0aW9uIFRpbWUAB9oHEQEwJvx8Q0oAAAAHdElNRQfaBxAXJA==\n\
 C+Ibk70AAAAJcEhZcwAACvAAAArwAUKsNJgAAAMAUExURQAAAAgICA==\n\

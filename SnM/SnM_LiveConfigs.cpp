@@ -2168,7 +2168,7 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 		{
 			// mute things before reconfiguration (in order to trigger tiny fades, optional)
 			// note: no preload on input track
-			if (!inputTr || (inputTr && cfg->m_track != inputTr))
+			if (!inputTr || cfg->m_track != inputTr)
 				MuteAndInitCC123(lc, cfg->m_track, &muteTime, &muteTracks, &cc123Tracks, &muteStates); 
 		}
 
@@ -2184,9 +2184,7 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 			if (lc->m_offlineOthers)
 				for (int i=0; i<lc->m_ccConfs.GetSize(); i++)
 					if (LiveConfigItem* item = lc->m_ccConfs.Get(i))
-						if (item->m_track && 
-							item->m_track != cfg->m_track && 
-							(!inputTr || (inputTr && item->m_track != inputTr)) &&
+						if (item->m_track && item->m_track != cfg->m_track && (!inputTr || item->m_track != inputTr) &&
 							muteTracks.Find(item->m_track) < 0)
 						{
 							MuteAndInitCC123(lc, item->m_track, &muteTime, &muteTracks, &cc123Tracks, &muteStates); 
@@ -2201,21 +2199,19 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 			{
 				if (_lastCfg->m_track && _lastCfg->m_track != cfg->m_track && muteTracks.Find(_lastCfg->m_track) < 0)
 				{
-					if (!inputTr || (inputTr && _lastCfg->m_track != inputTr))
-						MuteAndInitCC123(lc, _lastCfg->m_track, &muteTime, &muteTracks, &cc123Tracks, &muteStates);
-					else if (inputTr && _lastCfg->m_track == inputTr) // corner case fix
+					if (inputTr && _lastCfg->m_track == inputTr) // conner case fix
 						MuteAndInitCC123AllConfigs(lc, &muteTime, &muteTracks, &cc123Tracks, &muteStates);
+					else
+						MuteAndInitCC123(lc, _lastCfg->m_track, &muteTime, &muteTracks, &cc123Tracks, &muteStates);
 				}
 			}
 
 			// end with mute states that will not be restored (user option)
-			if (lc->m_muteOthers && (!inputTr || (inputTr && cfg->m_track != inputTr)))
+			if (lc->m_muteOthers && (!inputTr || cfg->m_track != inputTr))
 			{
 				for (int i=0; i<lc->m_ccConfs.GetSize(); i++)
 					if (LiveConfigItem* item = lc->m_ccConfs.Get(i))
-						if (item->m_track && 
-							item->m_track != cfg->m_track && 
-							(!inputTr || (inputTr && item->m_track != inputTr)))
+						if (item->m_track && item->m_track != cfg->m_track && (!inputTr || item->m_track != inputTr))
 						{
 							TimedMuteIfNeeded(item->m_track, &muteTime, -1); // -1 => always obey
 							int idx = muteTracks.Find(item->m_track);
@@ -2300,8 +2296,7 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 
 		// make sure fx are online for the activated/preloaded track
 		// done here because fx may have been set offline via state loading above
-		if ((!_apply ||	(_apply && lc->m_offlineOthers)) && 
-			(!inputTr || (inputTr && cfg->m_track!=inputTr)))
+		if ((!_apply || lc->m_offlineOthers) && (!inputTr || cfg->m_track!=inputTr))
 		{
 			if (!preloaded && TrackFX_GetCount(cfg->m_track))
 			{
@@ -2321,7 +2316,7 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 		}
 
 		// offline others but active/preloaded tracks
-		if (_apply && lc->m_offlineOthers && (!inputTr || (inputTr && cfg->m_track!=inputTr)))
+		if (_apply && lc->m_offlineOthers && (!inputTr || cfg->m_track!=inputTr))
 		{
 			MediaTrack* preloadTr = NULL;
 			if (preloaded && _lastCfg)
@@ -2335,8 +2330,8 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 				if (LiveConfigItem* item = lc->m_ccConfs.Get(i))
 					if (item->m_track && 
 						item->m_track != cfg->m_track && // excl. the activated track
-						(!inputTr || (inputTr && item->m_track != inputTr)) && // excl. the input track
-						(!preloadTr || (preloadTr && preloadTr != item->m_track))) // excl. the preloaded track
+						(!inputTr || item->m_track != inputTr) && // excl. the input track
+						(!preloadTr || preloadTr != item->m_track)) // excl. the preloaded track
 					{
 						GetSetMediaTrackInfo(item->m_track, "I_SELECTED", &g_i1);
 					}
@@ -2487,12 +2482,10 @@ void ApplyLiveConfigJob::Perform()
 	bool preloaded = (lc->m_preloadMidiVal>=0 && lc->m_preloadMidiVal==absval);
 
 	LiveConfigItem* cfg = lc->m_ccConfs.Get(absval);
-	if (cfg && lc->m_enable && 
-		absval!=lc->m_activeMidiVal &&
-		(!lc->m_ignoreEmpty || (lc->m_ignoreEmpty && !cfg->IsDefault(true)))) // ignore empty configs
+	if (cfg && lc->m_enable && absval!=lc->m_activeMidiVal && (!lc->m_ignoreEmpty || !cfg->IsDefault(true))) // ignore empty configs
 	{
 		LiveConfigItem* lastCfg = lc->m_ccConfs.Get(lc->m_activeMidiVal); // can be <0
-		if (!lastCfg || (lastCfg && !lastCfg->Equals(cfg, true)))
+		if (!lastCfg || !lastCfg->Equals(cfg, true))
 		{
 			PreventUIRefresh(1);
 			ApplyPreloadLiveConfig(true, m_cfgId, absval, lastCfg);
@@ -2574,19 +2567,18 @@ void PreloadLiveConfigJob::Perform()
 	MediaTrack* inputTr = lc->GetInputTrack();
 	LiveConfigItem* cfg = lc->m_ccConfs.Get(absval);
 	LiveConfigItem* lastCfg = lc->m_ccConfs.Get(lc->m_activeMidiVal); // can be <0
-	if (cfg && lc->m_enable && 
-		absval!=lc->m_preloadMidiVal &&
-		(!lc->m_ignoreEmpty || (lc->m_ignoreEmpty && !cfg->IsDefault(true))) && // ignore empty configs
-		(!lastCfg || (lastCfg && (!cfg->m_track || !lastCfg->m_track || cfg->m_track!=lastCfg->m_track)))) // ignore preload over the active track
+	if (cfg && lc->m_enable &&  absval!=lc->m_preloadMidiVal &&
+		(!lc->m_ignoreEmpty || !cfg->IsDefault(true)) && // ignore empty configs
+		(!lastCfg || (!cfg->m_track || !lastCfg->m_track || cfg->m_track!=lastCfg->m_track))) // ignore preload over the active track
 	{
 		LiveConfigItem* lastPreloadCfg = lc->m_ccConfs.Get(lc->m_preloadMidiVal); // can be <0
 		if (cfg->m_track && // ATM preload only makes sense for configs for which a track is defined
 /*JFB no, always obey!
 			lc->m_offlineOthers &&
 */
-			(!inputTr || (inputTr && cfg->m_track!=inputTr)) && // no preload for the input track
-			(!lastCfg || (lastCfg && !lastCfg->Equals(cfg, true))) &&
-			(!lastPreloadCfg || (lastPreloadCfg && !lastPreloadCfg->Equals(cfg, true))))
+			(!inputTr || cfg->m_track!=inputTr) && // no preload for the input track
+			(!lastCfg || !lastCfg->Equals(cfg, true)) &&
+			(!lastPreloadCfg || !lastPreloadCfg->Equals(cfg, true)))
 		{
 			PreventUIRefresh(1);
 			ApplyPreloadLiveConfig(false, m_cfgId, absval, lastCfg);

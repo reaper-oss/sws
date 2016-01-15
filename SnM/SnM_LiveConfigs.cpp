@@ -2116,7 +2116,7 @@ void MuteAndInitCC123AllConfigs(LiveConfig* _lc, DWORD* _muteTime, WDL_PtrList<v
 				MuteAndInitCC123(_lc, item->m_track, _muteTime, _muteTracks, _cc123Tracks, _muteStates);
 }
 
-void WaitForMuteAndSendCC123(LiveConfig* _lc, LiveConfigItem* _cfg, DWORD* _muteTime, WDL_PtrList<void>* _muteTracks, WDL_PtrList<void>* _cc123Tracks)
+void WaitForMuteAndSendCC123(LiveConfig* _lc, DWORD* _muteTime, WDL_PtrList<void>* _cc123Tracks)
 {
 	WaitForTinyFade(_muteTime); // no-op if muteTime==0  
 
@@ -2239,7 +2239,7 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 		if (_apply && _lastCfg && _lastCfg->m_track && _lastCfg->m_offAction.GetLength())
 			if (int cmd = NamedCommandLookup(_lastCfg->m_offAction.Get()))
 			{
-				WaitForMuteAndSendCC123(lc, cfg, &muteTime, &muteTracks, &cc123Tracks);
+				WaitForMuteAndSendCC123(lc, &muteTime, &cc123Tracks);
 
 				SNM_SetSelectedTrack(NULL, _lastCfg->m_track, true, true);
 				Main_OnCommand(cmd, 0);
@@ -2274,7 +2274,7 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 						char onoff[2]; strcpy(onoff, *(bool*)GetSetMediaTrackInfo(cfg->m_track, "B_MUTE", NULL) ? "1" : "0");
 						p.ParsePatch(SNM_SET_CHUNK_CHAR,1,"TRACK","MUTESOLO",0,1,onoff);
 
-						WaitForMuteAndSendCC123(lc, cfg, &muteTime, &muteTracks, &cc123Tracks);
+						WaitForMuteAndSendCC123(lc, &muteTime, &cc123Tracks);
 					}
 				} // auto-commit
 			}
@@ -2287,7 +2287,7 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 				{
 					SNM_FXChainTrackPatcher p(cfg->m_track); // auto-commit on destroy
 					if (p.SetFXChain(&chunk))
-						WaitForMuteAndSendCC123(lc, cfg, &muteTime, &muteTracks, &cc123Tracks);
+						WaitForMuteAndSendCC123(lc, &muteTime, &cc123Tracks);
 				}
 			} // auto-commit
 
@@ -2308,7 +2308,7 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 				char zero[2] = "0";
 				if (!p.Parse(SNM_GETALL_CHUNK_CHAR_EXCEPT, 2, "FXCHAIN", "BYPASS", 0xFFFF, 2, zero))
 				{
-					WaitForMuteAndSendCC123(lc, cfg, &muteTime, &muteTracks, &cc123Tracks);
+					WaitForMuteAndSendCC123(lc, &muteTime, &cc123Tracks);
 					SNM_SetSelectedTrack(NULL, cfg->m_track, true, true);
 					Main_OnCommand(40536, 0); // online
 				}
@@ -2336,7 +2336,7 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 						GetSetMediaTrackInfo(item->m_track, "I_SELECTED", &g_i1);
 					}
 		
-			WaitForMuteAndSendCC123(lc, cfg, &muteTime, &muteTracks, &cc123Tracks);
+			WaitForMuteAndSendCC123(lc, &muteTime, &cc123Tracks);
 
 			// set all fx offline for sel tracks, no-op if already offline
 			// macro-ish but better than using a SNM_ChunkParserPatcher for each track..
@@ -2349,7 +2349,7 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 		// note: exclusive vs template/fx chain but done here because fx may have been set online just above
 		if (!preloaded && cfg->m_presets.GetLength())
 		{
-			WaitForMuteAndSendCC123(lc, cfg, &muteTime, &muteTracks, &cc123Tracks);
+			WaitForMuteAndSendCC123(lc, &muteTime, &cc123Tracks);
 			TriggerFXPresets(cfg->m_track, &(cfg->m_presets));
 		}
 
@@ -2357,7 +2357,7 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 		if (_apply && cfg->m_onAction.GetLength())
 			if (int cmd = NamedCommandLookup(cfg->m_onAction.Get()))
 			{
-				WaitForMuteAndSendCC123(lc, cfg, &muteTime, &muteTracks, &cc123Tracks);
+				WaitForMuteAndSendCC123(lc, &muteTime, &cc123Tracks);
 				SNM_SetSelectedTrack(NULL, cfg->m_track, true, true);
 				Main_OnCommand(cmd, 0);
 				SNM_GetSelectedTracks(NULL, &selTracks, true); // selection may have changed
@@ -2368,7 +2368,7 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 		// 3) unmute things
 		// --------------------------------------------------------------------
 
-		WaitForMuteAndSendCC123(lc, cfg, &muteTime, &muteTracks, &cc123Tracks);
+		WaitForMuteAndSendCC123(lc, &muteTime, &cc123Tracks);
 
 		if (!_apply)
 		{

@@ -1270,7 +1270,7 @@ void StopTrackPreviewsRun()
 
 	// send all notes off, if needed
 	SendAllNotesOff(&ano_trs, 1|2);
-	ano_trs.Empty(false);
+	ano_trs.Empty();
 }
 
 // from askjf.com:

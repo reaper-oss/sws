@@ -12,7 +12,8 @@ ReaScript function export
 +Issue #783: fix BR_GetMouseCursorContext_MIDI return value
 
 Fixes
-+Fix save/restore track solo/mute states actions (SWS/BR)
++Fix "SWS/BR: Save/restore selected items' mute state" actions (http://forum.cockos.com/showpost.php?p=1625781&postcount=2079|incorrect slots|)
++Fix "SWS/BR: Save/restore track solo/mute states" actions (incorrect states)
 +Zoom actions: fix "breathing" room (3% on each side)
 +Issue #789: fix actions "Horizontal scroll to put edit/play cursor at x%"
 

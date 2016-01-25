@@ -528,7 +528,7 @@ int LiveConfig::CountTrackConfigs(MediaTrack* _tr)
 
 // !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_155
 static SWS_LVColumn s_liveCfgListCols[] = { 
-	{95,2,"Controller value"}, {150,1,"Comment"}, {150,2,"Track"}, {175,2,"Track template"}, {175,2,"FX Chain"}, {150,2,"FX presets"}, {150,1,"Activate action"}, {150,1,"Deactivate action"}};
+	{95,2,"Controller value"}, {150,1,"Comment/OSC output message"}, {150,2,"Track"}, {175,2,"Track template"}, {175,2,"FX Chain"}, {150,2,"FX presets"}, {150,1,"Activate action"}, {150,1,"Deactivate action"}};
 // !WANT_LOCALIZE_STRINGS_END
 
 LiveConfigView::LiveConfigView(HWND hwndList, HWND hwndEdit)
@@ -742,9 +742,9 @@ void LiveConfigsWnd::OnInitDlg()
 	m_vwndCC.AddChild(&m_knobCC);
 
 	m_vwndCC.SetID(WNDID_CC_DELAY);
-	m_vwndCC.SetTitle(__LOCALIZE("Smoothing:","sws_DLG_155"));
+	m_vwndCC.SetTitle(__LOCALIZE("Controller smoothing:","sws_DLG_155"));
 	m_vwndCC.SetSuffix(__LOCALIZE("ms","sws_DLG_155"));
-	m_vwndCC.SetZeroText(__LOCALIZE("immediate","sws_DLG_155"));
+	m_vwndCC.SetZeroText(__LOCALIZE("Off (sticky!)","sws_DLG_155"));
 	m_parentVwnd.AddChild(&m_vwndCC);
 
 	m_knobFade.SetID(KNBID_FADE);
@@ -752,9 +752,9 @@ void LiveConfigsWnd::OnInitDlg()
 	m_vwndFade.AddChild(&m_knobFade);
 
 	m_vwndFade.SetID(WNDID_FADE);
-	m_vwndFade.SetTitle(__LOCALIZE("Tiny fades:","sws_DLG_155"));
+	m_vwndFade.SetTitle(__LOCALIZE("Tiny fade on config switch:","sws_DLG_155"));
 	m_vwndFade.SetSuffix(__LOCALIZE("ms","sws_DLG_155"));
-	m_vwndFade.SetZeroText(__LOCALIZE("disabled","sws_DLG_155"));
+	m_vwndFade.SetZeroText(__LOCALIZE("Off (glitchy!)","sws_DLG_155"));
 	m_parentVwnd.AddChild(&m_vwndFade);
 
 	Update();

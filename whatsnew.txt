@@ -14,7 +14,8 @@ Live Configs
 
 "All notes off" actions/features
 +Fix potential stuck notes vs sustain pedal events (now also reset CC64)
-+Send "All notes off" events in a synchronous way (e.g. can now be reliably used in user macros)
++Send "All notes off" events in a synchronous way (e.g. can now be reliably used in macros)
++Add similar action "SWS/S&M: Send all sounds off to selected tracks" (i.e. http://www.blitter.com/~russtopia/MIDI/~jglatt/tech/midispec/sndoff.htm|CC120| on all tracks)
 
 Fixes
 +Zoom actions: fix "breathing" room (3% on each side)

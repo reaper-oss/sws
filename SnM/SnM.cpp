@@ -507,7 +507,8 @@ static COMMAND_T s_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Insert marker at play cursor" }, "S&M_INS_MARKER_PLAY", InsertMarker, NULL, 1},
 
 	// Other, misc ------------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Send all notes off to selected tracks" }, "S&M_CC123_SEL_TRACKS", SendAllNotesOff, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Send all notes off to selected tracks" }, "S&M_CC123_SEL_TRACKS", SendAllNotesOff, NULL, 1|2},
+	{ { DEFACCEL, "SWS/S&M: Send all sounds off to selected tracks" }, "S&M_CC120_SEL_TRACKS", SendAllNotesOff, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Increase metronome volume" }, "S&M_METRO_VOL_UP", ChangeMetronomeVolume, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Decrease metronome volume" }, "S&M_METRO_VOL_DOWN", ChangeMetronomeVolume, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Show theme helper (all tracks)" }, "S&M_THEME_HELPER_ALL", ShowThemeHelper, NULL, 0},

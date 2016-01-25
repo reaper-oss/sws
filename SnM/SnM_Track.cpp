@@ -1506,7 +1506,7 @@ void SendAllNotesOff(COMMAND_T* _ct)
 		if (MediaTrack* tr = CSurf_TrackFromID(j, false))
 			if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 				trs.Add(tr);
-	SendAllNotesOff(&trs, 1|2);
+	SendAllNotesOff(&trs, (int)_ct->user);
 }
 
 

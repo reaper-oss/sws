@@ -5,27 +5,28 @@ Auto color/icon/layout
 +Various tweaks
 
 Live Configs
++Fix potential stuck notes (vs sustain pedal events, CC64) when switching configs
 +Improve support of JSFX and AU user presets (.rpl files)
 +Improve support of VST3 user presets
 +Support VST3 factory preset files (.vstpreset files, REAPER v5.11+ is required)
 +Improve input track management
 +Improve monitoring windows (window titles, prevent overlapped texts, misc. tweaks)
 
-Region Playlist
-+Improve monitoring (prevent overlapped texts, misc. tweaks)
-
-ReaScript function export
-+Issue #783: fix BR_GetMouseCursorContext_MIDI return value
+"All notes off" actions/features
++Fix potential stuck notes vs sustain pedal events (now also reset CC64)
++Send "All notes off" events in a synchronous way (e.g. can now be reliably used in user macros)
 
 Fixes
++Zoom actions: fix "breathing" room (3% on each side)
++Issue 789: fix actions "Horizontal scroll to put edit/play cursor at x%"
++Issue 783: fix BR_GetMouseCursorContext_MIDI return value
 +Fix "SWS/BR: Save/restore selected items' mute state" actions (http://forum.cockos.com/showpost.php?p=1625781&postcount=2079|incorrect slots|)
 +Fix "SWS/BR: Save/restore track solo/mute states" actions (incorrect states)
-+Zoom actions: fix "breathing" room (3% on each side)
-+Issue #789: fix actions "Horizontal scroll to put edit/play cursor at x%"
 
 Other
-+OS X: new compiler, optimized build
-+Improve many zoom action/features if REAPER v5.12pre4+ is used
++<strong>OS X: new compiler, optimized build</strong>
++Improve many zoom action/features (requires REAPER v5.12pre4+)
++Region Playlist: improve monitoring (prevent overlapped texts, misc. tweaks)
 
 !v2.8.3 featured build (January 8, 2016)
 New global startup action (in addition to per-project startup actions)

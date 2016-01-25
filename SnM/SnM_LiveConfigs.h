@@ -190,15 +190,6 @@ protected:
 	void Perform();
 };
 
-class LiveConfigsUpdateFadeJob : public ScheduledJob {
-public:
-	LiveConfigsUpdateFadeJob(int _value) 
-		: ScheduledJob(SNM_SCHEDJOB_LIVECFG_FADE_UPDATE, SNM_SCHEDJOB_DEFAULT_DELAY), m_value(_value) {}
-protected:
-	void Perform();
-	int m_value;
-};
-
 
 void LiveConfigsSetTrackTitle();
 void LiveConfigsTrackListChange();

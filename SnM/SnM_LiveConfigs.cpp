@@ -145,6 +145,7 @@ int g_configId = 0; // the current *displayed/edited* config id
 
 // prefs
 char g_lcBigFontName[64] = SNM_DYN_FONT_NAME;
+int* g_reaPref_fadeLen = NULL;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1325,7 +1326,6 @@ INT_PTR LiveConfigsWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 					lc->m_fade = m_knobFade.GetSliderPosition();
 					m_vwndFade.SetValue(lc->m_fade);
 					ScheduledJob::Schedule(new UndoJob(UNDO_STR, UNDO_STATE_MISCCFG));
-					ScheduledJob::Schedule(new LiveConfigsUpdateFadeJob(lc->m_fade));
 					break;
 			}
 	return 0;
@@ -1762,14 +1762,6 @@ void LiveConfigsUpdateEditorJob::Perform() {
 		w->Update();
 }
 
-// moderate things a bit
-void LiveConfigsUpdateFadeJob::Perform()
-{
-	if (m_value>0) // let the user pref as it is otherwise
-		if (int* fadeLenPref = (int*)GetConfigVar("mutefadems10"))
-			*fadeLenPref = m_value * 10;
-}
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // project_config_extension_t
@@ -1809,13 +1801,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 			lc->m_ccDelay = lp.gettoken_int(11, &success);
 			if (!success) lc->m_ccDelay = DEF_CC_DELAY;
 			lc->m_fade = lp.gettoken_int(12, &success);
-			if (!success)
-			{
-				if (int* fadeLenPref = (int*)GetConfigVar("mutefadems10"))
-					lc->m_fade = int(*fadeLenPref/10 + 0.5);
-				else
-					lc->m_fade = DEF_FADE;
-			}
+			if (!success) lc->m_fade = DEF_FADE;
 			lc->m_osc = LoadOscCSurfs(NULL, lp.gettoken_str(13)); // NULL on err (e.g. "", token doesn't exist, etc.)
 
 			if (isUndo)
@@ -2001,6 +1987,7 @@ void LiveConfigsTrackListChange()
 
 int LiveConfigInit()
 {
+	g_reaPref_fadeLen = (int*)GetConfigVar("mutefadems10");
 	GetPrivateProfileString("LiveConfigs", "BigFontName", SNM_DYN_FONT_NAME, g_lcBigFontName, sizeof(g_lcBigFontName), g_SNM_IniFn.Get());
 
 	// instanciate the editor if needed, can be NULL
@@ -2041,18 +2028,17 @@ int IsLiveConfigDisplayed(COMMAND_T*) {
 // Apply/preload configs
 ///////////////////////////////////////////////////////////////////////////////
 
-// muting receives from the input track would be useless: the track is muted anyway
-bool TimedMuteIfNeeded(MediaTrack* _tr, double* _muteTime, int _fadeLen = -1)
+// returns the old mute state
+bool TimedMuteIfNeeded(MediaTrack* _tr, double* _muteTime)
 {
-	if (_fadeLen<0)
-		if (int* fadeLenPref = (int*)GetConfigVar("mutefadems10"))
-			_fadeLen = int(*fadeLenPref/10 + 0.5);
-
 	bool mute = *(bool*)GetSetMediaTrackInfo(_tr, "B_MUTE", NULL);
-	if (_fadeLen>0 && _tr && !mute)
+	if (!mute)
 	{
 		GetSetMediaTrackInfo(_tr, "B_MUTE", &g_bTrue);
-		*_muteTime = time_precise();
+
+		if (g_reaPref_fadeLen && *g_reaPref_fadeLen>0)
+				*_muteTime = time_precise();
+
 #ifdef _SNM_DEBUG
 		char dbg[256] = "";
 		_snprintfSafe(dbg, sizeof(dbg), "TimedMuteIfNeeded() - Muted: %s\n", (char*)GetSetMediaTrackInfo(_tr, "P_NAME", NULL));
@@ -2065,14 +2051,14 @@ bool TimedMuteIfNeeded(MediaTrack* _tr, double* _muteTime, int _fadeLen = -1)
 // no-op if _muteTime==0.0
 void WaitForTinyFade(double* _muteTime)
 {
-	double fadelen = 0.0;
-	if (int* fadeLenPref = (int*)GetConfigVar("mutefadems10"))
-		fadelen = (*fadeLenPref)/10000.0; // /pref/10, /1000 (ms->s)
-
-	if (fadelen>0.0 && _muteTime && *_muteTime>0.0)
+	if (_muteTime && *_muteTime>0.0)
 	{
+		double fadelen = 0.0;
+		if (g_reaPref_fadeLen)
+			fadelen = (*g_reaPref_fadeLen)/10000.0; // /pref/10, /1000 (ms->s)
+
 		int sleeps = 0;
-		while ((time_precise() - *_muteTime) < fadelen)
+		if (fadelen>0.0) while ((time_precise() - *_muteTime) < fadelen)
 		{
 			if (sleeps > 1000) // timeout safety ~1s
 				break;
@@ -2098,7 +2084,7 @@ void MuteAndInitCC123(LiveConfig* _lc, MediaTrack* _tr, double* _muteTime, WDL_P
 {
 	if (_always || _lc->m_fade>0 || _lc->m_cc123) // also mute before sending all notes off
 	{
-		_muteStates->Add(TimedMuteIfNeeded(_tr, _muteTime, _always ? -1 : _lc->m_fade) ? &g_bTrue : &g_bFalse);
+		_muteStates->Add(TimedMuteIfNeeded(_tr, _muteTime) ? &g_bTrue : &g_bFalse);
 		_muteTracks->Add(_tr);
 		if (_lc->m_cc123)
 			_cc123Tracks->Add(_tr);
@@ -2213,7 +2199,7 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 					if (LiveConfigItem* item = lc->m_ccConfs.Get(i))
 						if (item->m_track && item->m_track != cfg->m_track && (!inputTr || item->m_track != inputTr))
 						{
-							TimedMuteIfNeeded(item->m_track, &muteTime, -1); // -1 => always obey
+							TimedMuteIfNeeded(item->m_track, &muteTime);
 							int idx = muteTracks.Find(item->m_track);
 							if (idx<0)
 							{
@@ -2487,9 +2473,21 @@ void ApplyLiveConfigJob::Perform()
 		LiveConfigItem* lastCfg = lc->m_ccConfs.Get(lc->m_activeMidiVal); // can be <0
 		if (!lastCfg || !lastCfg->Equals(cfg, true))
 		{
+			int oldfade=50; // i.e. REAPER default, just in case
+			if (g_reaPref_fadeLen)
+			{
+				oldfade=*g_reaPref_fadeLen;
+				*g_reaPref_fadeLen=lc->m_fade*10;
+			}
+
 			PreventUIRefresh(1);
 			ApplyPreloadLiveConfig(true, m_cfgId, absval, lastCfg);
 			PreventUIRefresh(-1);
+
+			if (g_reaPref_fadeLen)
+			{
+				*g_reaPref_fadeLen=oldfade;
+			}
 		} 
 
 		// done
@@ -2580,9 +2578,21 @@ void PreloadLiveConfigJob::Perform()
 			(!lastCfg || !lastCfg->Equals(cfg, true)) &&
 			(!lastPreloadCfg || !lastPreloadCfg->Equals(cfg, true)))
 		{
+			int oldfade=50; // i.e. REAPER default, just in case
+			if (g_reaPref_fadeLen)
+			{
+				oldfade=*g_reaPref_fadeLen;
+				*g_reaPref_fadeLen=lc->m_fade*10;
+			}
+      
 			PreventUIRefresh(1);
 			ApplyPreloadLiveConfig(false, m_cfgId, absval, lastCfg);
 			PreventUIRefresh(-1);
+      
+			if (g_reaPref_fadeLen)
+			{
+				*g_reaPref_fadeLen=oldfade;
+			}
 		}
 
 		// done
@@ -3131,8 +3141,6 @@ void UpdateTinyFadesLiveConfig(COMMAND_T* _ct, int _val)
 	{
 		lc->m_fade = _val<0 ? (lc->m_fade>0 ? 0 : DEF_FADE) : _val;
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_MISCCFG, -1);
-
-		ScheduledJob::Schedule(new LiveConfigsUpdateFadeJob(lc->m_fade));
 
 		if (LiveConfigsWnd* w = g_lcWndMgr.Get())
 			w->Update();

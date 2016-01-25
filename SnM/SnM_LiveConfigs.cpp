@@ -93,7 +93,7 @@
 #define MAX_CC_DELAY				3000
 #define DEF_CC_DELAY				500
 #define MAX_FADE					100
-#define DEF_FADE					25
+#define DEF_FADE					50
 
 #define MAX_PRESET_COUNT			(SET_PRESET_END_MSG - SET_PRESET_START_MSG)
 #define UNDO_STR					__LOCALIZE("Live Configs edition", "sws_undo")

@@ -615,7 +615,10 @@ void ErrMsg(const char* errmsg, bool wantblabla=true)
 	}
 }
 
-#define IMPAPI(x)       if (!errcnt && !((*((void **)&(x)) = (void *)rec->GetFunc(#x)))) errcnt++;
+// IMPAPI: maps mandatory API functions, i.e. forces users to upgrade REAPER if these functions are not found
+// IMPAP_OPT: maps optional API functions. Such function pointers will be NULL otherwise.
+#define IMPAPI(x)       if (!errcnt && !((*(void **)&(x)) = (void *)rec->GetFunc(#x))) errcnt++;
+#define IMPAP_OPT(x)    *((void **)&(x)) = (void *)rec->GetFunc(#x);
 #define ERR_RETURN(a)   { ErrMsg(a); goto error; }
 
 extern "C"
@@ -660,11 +663,11 @@ error:
 			return 0; // makes REAPER unloading us
 		}
 
-
-		int errcnt=0; // IMPAPI failed if >0
-
 		if (rec->caller_version != REAPER_PLUGIN_VERSION)
 			ERR_RETURN("Wrong REAPER_PLUGIN_VERSION!")
+
+		g_hInst = hInstance;
+		g_hwndParent = rec->hwnd_main;
 
 		if (!rec->GetFunc)
 			ERR_RETURN("Null rec->GetFunc ptr.")
@@ -672,6 +675,10 @@ error:
 #ifdef _SWS_LOCALIZATION
 		IMPORT_LOCALIZE_RPLUG(rec);
 #endif
+
+
+		// Mandatory API functions
+		int errcnt=0; // IMPAPI failed if >0
 
 		IMPAPI(plugin_register); // keep those first
 		IMPAPI(IsREAPER);
@@ -869,7 +876,6 @@ error:
 		IMPAPI(InsertEnvelopePoint); // v5pre4+
 		IMPAPI(InsertTrackAtIndex);
 		IMPAPI(IsMediaExtension);
-		(*((void **)&(IsProjectDirty)) = (void *)rec->GetFunc("IsProjectDirty"));
 		IMPAPI(kbd_enumerateActions);
 		IMPAPI(kbd_formatKeyName);
 		IMPAPI(kbd_getCommandName);
@@ -1057,10 +1063,7 @@ error:
 		IMPAPI(UpdateArrange);
 		IMPAPI(UpdateItemInProject);
 		IMPAPI(UpdateTimeline);
-		IMPAPI(ValidatePtr); //JFB!!! todo: check all calls: ValidatePtr2() may be needed instead
-
-		g_hInst = hInstance;
-		g_hwndParent = GetMainHwnd&&GetMainHwnd()?GetMainHwnd():0;
+		IMPAPI(ValidatePtr);
 
 		if (errcnt)
 		{
@@ -1074,7 +1077,11 @@ error:
 			goto error;
 		}
 
-		// check for dupe/clone
+		// Optional API functions
+		IMPAP_OPT(IsProjectDirty);
+
+		
+		// Look for SWS dupe/clone
 		if (rec->GetFunc("SNM_GetIntConfigVar"))
 		{
 			WDL_FastString dir1, dir2, mypath(__LOCALIZE("Unknown","sws_mbox")), conflict;

@@ -32,26 +32,32 @@
 class SWS_RuleItem
 {
 public:
-	SWS_RuleItem(int type, const char* filter, int color, const char* icon)
-		: m_type(type),m_str_filter(filter),m_color(color),m_icon(icon) {}
+	SWS_RuleItem(int type, const char* filter, int color, const char* icon, const char* tcp_layout, const char* mcp_layout)
+		: m_type(type),m_str_filter(filter),m_color(color),m_icon(icon)
+	{
+		m_layout[0].Set(tcp_layout);
+		m_layout[1].Set(mcp_layout);
+	}
 
 	int m_type;
 	WDL_String m_str_filter;
 	int m_color;
-	WDL_String m_icon;
+	WDL_FastString m_icon,m_layout[2];
 };
 
 class SWS_RuleTrack
 {
 public:
 	SWS_RuleTrack(MediaTrack* tr)
-		:m_pTr(tr),m_col(0),m_bColored(false),m_bIconed(false) {}
+		:m_pTr(tr),m_col(0),m_bColored(false),m_bIconed(false)
+	{
+		m_bLayouted[0]=m_bLayouted[1]=false;
+	}
 
 	MediaTrack* m_pTr;
+	bool m_bColored, m_bIconed, m_bLayouted[2];
 	int m_col;
-	bool m_bColored;
-	WDL_String m_icon;
-	bool m_bIconed;
+	WDL_FastString m_icon, m_layout[2];
 };
 
 class SWS_AutoColorView : public SWS_ListView

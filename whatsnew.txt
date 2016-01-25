@@ -9,8 +9,9 @@ Live Configs
 +Improve support of JSFX and AU user presets (.rpl files)
 +Improve support of VST3 user presets
 +Support VST3 factory preset files (.vstpreset files, REAPER v5.11+ is required)
-+Improve input track management
-+Improve monitoring windows (window titles, prevent overlapped texts, misc. tweaks)
++Input track: don't mute sends to out-of-config tracks
++Improve tiny fades: preserve user preferences, fix corner case issues (e.g. the option "mute all but active track" was not working when tiny fades were disabled)
++Improve wordings, improve monitoring windows (better titles, prevent overlapped texts, etc)
 
 "All notes off" actions/features
 +Fix potential stuck notes vs sustain pedal events (now also reset CC64)
@@ -27,7 +28,7 @@ Fixes
 Other
 +<strong>OS X: new compiler, optimized build</strong>
 +Improve many zoom action/features (requires REAPER v5.12pre4+)
-+Region Playlist: improve monitoring (prevent overlapped texts, misc. tweaks)
++Region Playlist: improve monitoring mode (prevent overlapped texts, misc. tweaks)
 
 !v2.8.3 featured build (January 8, 2016)
 New global startup action (in addition to per-project startup actions)

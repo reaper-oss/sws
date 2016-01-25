@@ -1089,7 +1089,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 	if (g_pACTracks.Get()->GetSize())
 	{
 		ctx->AddLine("<SWSAUTOCOLOR");
-		char str[SNM_MAX_CHUNK_LINE_LENGTH];
+		char str[256];
 		for (int i = 0; i < g_pACTracks.Get()->GetSize(); i++)
 		{
 			if (SWS_RuleTrack* rt = g_pACTracks.Get()->Get(i))
@@ -1098,8 +1098,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 				if (CSurf_TrackToID(rt->m_pTr, false))
 					g = *(GUID*)GetSetMediaTrackInfo(rt->m_pTr, "GUID", NULL);
 				guidToString(&g, str);
-				sprintf(str+strlen(str), " %d \"%s\" \"%s\" \"%s\"", rt->m_col, rt->m_icon.Get(), rt->m_layout[0].Get(), rt->m_layout[1].Get());
-				ctx->AddLine("%s", str);
+				ctx->AddLine("%s %d \"%s\" \"%s\" \"%s\"", str, rt->m_col, rt->m_icon.Get(), rt->m_layout[0].Get(), rt->m_layout[1].Get());
 			}
 		}
 		ctx->AddLine(">");

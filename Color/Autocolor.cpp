@@ -793,18 +793,18 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 
 					if (bIcon)
 					{
-						if (strcmp(rule->m_icon.Get(), pACTrack->m_icon.Get()))
+						if (_stricmp(rule->m_icon.Get(), pACTrack->m_icon.Get()))
 						{
 							SNM_ChunkParserPatcher p(tr); // nothing done yet
 							char pIconLine[BUFFER_SIZE] = "";
 							int iconChunkPos = p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKIMGFN", 0, 1, pIconLine, NULL, "TRACKID");
-							if (strcmp(pIconLine, rule->m_icon.Get()))
+							if (_stricmp(pIconLine, rule->m_icon.Get()))
 							{
 								// Only overwrite the icon if there's no icon, or we're forcing, or we set it ourselves earlier
-								if (bForce || iconChunkPos == 0 || strcmp(pIconLine, pACTrack->m_icon.Get()) == 0)
+								if (bForce || iconChunkPos == 0 || _stricmp(pIconLine, pACTrack->m_icon.Get()) == 0)
 								{
 									if (rule->m_icon.GetLength())
-										sprintf(pIconLine, "TRACKIMGFN \"%s\"\n", rule->m_icon.Get());
+										_snprintf(pIconLine, sizeof(pIconLine), "TRACKIMGFN \"%s\"\n", rule->m_icon.Get());
 									else // The code as written will never hit this case, as empty m_icon means "ignore"
 										*pIconLine = 0;
 
@@ -917,7 +917,7 @@ void AutoColorTrack(bool bForce)
 			// Only remove the icon on the track if we set it ourselves
 			char pIconLine[BUFFER_SIZE] = "";
 			int iconChunkPos = p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKIMGFN", 0, 1, pIconLine, NULL, "TRACKID");
-			if (iconChunkPos && strcmp(pACTrack->m_icon.Get(), pIconLine) == 0)
+			if (iconChunkPos && _stricmp(pACTrack->m_icon.Get(), pIconLine) == 0)
 				p.ReplaceLine(--iconChunkPos, "");
 			pACTrack->m_icon.Set("");
 		}

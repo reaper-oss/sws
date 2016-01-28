@@ -452,7 +452,7 @@ int GetUserPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL
 		if (!strcmp(fxType, "vst"))
 		{
 			const char* ext = GetFileExtension(buf, true);
-			if (!stricmp(ext, ".vst3"))
+			if (!_stricmp(ext, ".vst3"))
 			{
 				strcpy(fxType, "vst3");
 				buf[(int)(ext-buf)] = '\0';
@@ -461,7 +461,7 @@ int GetUserPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL
 			{
 				const char *p = NULL;
 #ifdef _WIN32
-				if (!stricmp(ext, ".dll")) p=ext;
+				if (!_stricmp(ext, ".dll")) p=ext;
 #endif
 				if (!p) p = stristr(buf, ".vst"); // standard vst or ".vst.dylib" (e.g. reaeq)
 				if (p) buf[(int)(p-buf)] = '\0';

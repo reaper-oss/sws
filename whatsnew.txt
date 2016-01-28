@@ -2,7 +2,7 @@ Auto color/icon/layout
 +Issue 756: support automatic layouts (e.g. changing track names can automatically change track layouts)
  - Double-click the new columns "TCP Layout" (track panel) and/or "MCP Layout" (mixer panel) to enter layout names
  - Enable the related option in Main menu > Extensions > SWS Options > Enable auto track layout
-+Various tweaks
++Improve performances (more to come), various tweaks
 
 Live Configs
 +Fix potential stuck notes (vs sustain pedal events, CC64) when switching configs
@@ -29,6 +29,7 @@ Other
 +<strong>OS X: new compiler, optimized build</strong>
 +Improve many zoom action/features (requires REAPER v5.12pre4+)
 +Region Playlist: improve monitoring mode (prevent overlapped texts, misc. tweaks)
++Snapshot paste: http://forum.cockos.com/showpost.php?p=1605660&postcount=2051|improve name-matching|
 
 !v2.8.3 featured build (January 8, 2016)
 New global startup action (in addition to per-project startup actions)

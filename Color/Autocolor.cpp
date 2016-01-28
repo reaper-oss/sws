@@ -656,6 +656,7 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 	{
 		if (!bDoColors && !bDoIcons)
 			return;
+		PreventUIRefresh(1);
 
 		int iCount = 0;
 		WDL_PtrList<void> gradientTracks;
@@ -854,6 +855,8 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 				}
 			GetSetMediaTrackInfo((MediaTrack*)gradientTracks.Get(i), "I_CUSTOMCOLOR", &newCol);
 		}
+
+		PreventUIRefresh(-1);
 	}
 }
 
@@ -889,6 +892,8 @@ void AutoColorTrack(bool bForce)
 	bool bDoColors = g_bACEnabled || bForce;
 	bool bDoIcons  = g_bAIEnabled || bForce;
 	bool bDoLayouts  = g_bALEnabled || bForce;
+
+	PreventUIRefresh(1);
 
 	for (int i = 0; i < g_pACItems.GetSize(); i++)
 		ApplyColorRuleToTrack(g_pACItems.Get(i), bDoColors, bDoIcons, bDoLayouts, bForce);
@@ -939,6 +944,8 @@ void AutoColorTrack(bool bForce)
 
 	if (bForce)
 		Undo_OnStateChangeEx(__LOCALIZE("Apply auto color/icon/layout","sws_undo"), UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);
+	PreventUIRefresh(-1);
+
 	bRecurse = false;
 }
 

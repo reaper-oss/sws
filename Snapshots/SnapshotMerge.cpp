@@ -487,7 +487,7 @@ bool MergeSnapshots(Snapshot* ss)
 			if (!mi->m_destTr)
 			{
 				for (int j = 0; j < projTracks.GetSize(); j++)
-					if (strcmp((char*)GetSetMediaTrackInfo((MediaTrack*)projTracks.Get(j), "P_NAME", NULL), mi->m_ts->m_sName.Get()) == 0)
+					if (!strncmp((char*)GetSetMediaTrackInfo((MediaTrack*)projTracks.Get(j), "P_NAME", NULL), mi->m_ts->m_sName.Get(), mi->m_ts->m_sName.GetLength()))
 					{
 						mi->m_destTr = (MediaTrack*)projTracks.Get(j);
 						projTracks.Delete(j);

@@ -687,12 +687,13 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 
 			if (bFound)
 			{
-				// If already colored by a different rule, or ignoring the color ignore this track
+				// If already modified by a different rule, or ignoring the color/icon/layout ignore this track
 				if (pACTrack->m_bColored || rule->m_color == -AC_IGNORE-1)
 					bColor = false;
-				// If already iconed by a different rule, or the icon field is blank (ignore), ignore
 				if (pACTrack->m_bIconed || !rule->m_icon.Get()[0])
 					bIcon = false;
+				if (pACTrack->m_bLayouted || !rule->m_layout[0].Get()[0] || !rule->m_layout[1].Get()[0])
+					bLayout = false;
 			}
 			else
 				pACTrack = g_pACTracks.Get()->Add(new SWS_RuleTrack(tr));

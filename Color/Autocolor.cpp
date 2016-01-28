@@ -1003,6 +1003,8 @@ void AutoColorMarkerRegion(bool _force, int _flags)
 		PreventUIRefresh(-1);
 	}
 
+	if (_force)
+		Undo_OnStateChangeEx(__LOCALIZE("Apply auto marker/region color","sws_undo"), UNDO_STATE_MISCCFG, -1);
 	bRecurse = false;
 }
 

@@ -11,7 +11,7 @@ Live Configs
 +Support VST3 factory preset files (.vstpreset files, REAPER v5.11+ is required)
 +Input track: don't mute sends to out-of-config tracks
 +Improve tiny fades: preserve user preferences, fix corner case issues (e.g. the option "mute all but active track" was not working when tiny fades were disabled)
-+Improve wordings, improve monitoring windows (better titles, prevent overlapped texts, etc)
++Improve performances, wordings, monitoring windows (prevent overlapped texts, etc)
 
 "All notes off" actions/features
 +Fix potential stuck notes vs sustain pedal events (now also reset CC64)

@@ -2122,6 +2122,10 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 	LiveConfigItem* cfg = lc->m_ccConfs.Get(_val);
 	if (!cfg) return;
 
+	static bool s_reent;
+	if (s_reent) return;
+	s_reent=true;
+
 	// save selected tracks
 	WDL_PtrList<MediaTrack> selTracks;
 	SNM_GetSelectedTracks(NULL, &selTracks, true);
@@ -2425,6 +2429,8 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 
 	// restore selected tracks
 	SNM_SetSelectedTracks(NULL, &selTracks, true, true);
+
+	s_reent=false;
 }
 
 

@@ -865,7 +865,7 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 void AutoColorTrack(bool bForce)
 {
 	static bool bRecurse = false;
-	if (bRecurse || (!g_bACEnabled && !g_bAIEnabled && !bForce))
+	if (bRecurse || (!g_bACEnabled && !g_bAIEnabled && !g_bALEnabled && !bForce))
 		return;
 	bRecurse = true;
 
@@ -884,8 +884,11 @@ void AutoColorTrack(bool bForce)
 	// Clear the "colored" bit and "iconed" bit
 	for (int i = 0; i < g_pACTracks.Get()->GetSize(); i++)
 	{
-		g_pACTracks.Get()->Get(i)->m_bColored = false;
-		g_pACTracks.Get()->Get(i)->m_bIconed = false;
+		SWS_RuleTrack* r=g_pACTracks.Get()->Get(i);
+		r->m_bColored = false;
+		r->m_bIconed = false;
+		r->m_bLayouted[0] = false;
+		r->m_bLayouted[1] = false;
 	}
 
 	// Apply the rules

@@ -522,6 +522,111 @@ int LiveConfig::CountTrackConfigs(MediaTrack* _tr)
 	return cnt;
 }
 
+void LiveConfig::cfg_SaveMuteStateAndMuteIfNeeded(MediaTrack* _tr, bool _force)
+{
+	if (_tr && m_cfg_tracks.Find(_tr)<0)
+	{
+		bool mute = *(bool*)GetSetMediaTrackInfo(_tr, "B_MUTE", NULL);
+		if (!mute && (_force || m_fade>0 || m_cc123)) // need to mute before sending all notes off too
+		{
+			GetSetMediaTrackInfo(_tr, "B_MUTE", &g_bTrue);
+			if (g_reaPref_fadeLen && *g_reaPref_fadeLen>0) m_cfg_last_mute_time = time_precise();
+#ifdef _SNM_DEBUG
+			char dbg[256] = "";
+			_snprintfSafe(dbg, sizeof(dbg), "cfg_SaveMuteStateAndMuteIfNeeded() - Muted: %s\n", (char*)GetSetMediaTrackInfo(_tr, "P_NAME", NULL));
+			OutputDebugString(dbg);
+#endif
+		}
+		m_cfg_tracks_states.Add(mute ? &g_bTrue : &g_bFalse);
+		m_cfg_tracks.Add(_tr);
+	}
+}
+
+// force mute and clear any saved mute state
+// i.e. _tr will remain muted after reconfiguration
+void LiveConfig::cfg_Mute(MediaTrack* _tr)
+{
+	if (!_tr) return;
+
+	bool mute = *(bool*)GetSetMediaTrackInfo(_tr, "B_MUTE", NULL);
+	if (!mute)
+	{
+		GetSetMediaTrackInfo(_tr, "B_MUTE", &g_bTrue);
+		if (g_reaPref_fadeLen && *g_reaPref_fadeLen>0) m_cfg_last_mute_time = time_precise();
+	}
+
+	int idx = m_cfg_tracks.Find(_tr);
+	if (idx<0)
+	{
+		m_cfg_tracks.Add(_tr);
+		m_cfg_tracks_states.Add(NULL);
+	}
+	else
+	{
+		m_cfg_tracks_states.Delete(idx, false);
+		m_cfg_tracks_states.Insert(idx, NULL); 
+	}
+}
+
+void LiveConfig::cfg_WaitForMuteSendCC123(MediaTrack* inputTr)
+{
+	if (m_cfg_done) return;
+
+	// wait for tiny fades
+	if (m_cfg_last_mute_time>0.0)
+	{
+		double fadelen = 0.0;
+		if (g_reaPref_fadeLen) fadelen = (*g_reaPref_fadeLen)/10000.0; // /pref/10, /1000 (ms->s)
+    
+		int sleeps = 0;
+		if (fadelen>0.0) while ((time_precise() - m_cfg_last_mute_time) < fadelen)
+		{
+			if (sleeps > 1000) break; // timeout safety ~1s
+			Sleep(1);
+#ifdef _WIN32
+			// keep the UI updating
+			MSG msg;
+			while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessage(&msg);
+#endif
+			sleeps++;
+		}
+#ifdef _SNM_DEBUG
+		char dbg[256] = "";
+		_snprintfSafe(dbg, sizeof(dbg), "cfg_WaitForMuteSendCC123() - Approx wait time: %f ms\n", (time_precise() - m_muteTime)*1000.0);
+		OutputDebugString(dbg);
+#endif
+		m_cfg_last_mute_time = 0.0;
+	}
+
+	// to prevent stuck notes, and since we're in the main thread,
+	// we need to mute sends of the input track too, then we can safely push cc123 events
+	// note: sends to out-of-config-tracks are unchanged
+	if (inputTr)
+		for (int i=0; i<m_cfg_tracks.GetSize(); i++)
+			if (MediaTrack* tr = (MediaTrack*)m_cfg_tracks.Get(i))
+				MuteSends(inputTr, tr, true); // no-op if NULL, loopback, already muted, etc
+
+	if (m_cc123) SendAllNotesOff(&m_cfg_tracks);
+
+	m_cfg_done=true;
+}
+
+void LiveConfig::cfg_RestoreMuteStates(MediaTrack* activeTr, MediaTrack* inputTr)
+{
+	for (int i=0; i<m_cfg_tracks.GetSize(); i++)
+	{
+		if (MediaTrack* tr = (MediaTrack*)m_cfg_tracks.Get(i))
+		{
+			// mute sends from the input track, except sends to the new active track, see WaitForMuteAndSendCC123()
+			MuteSends(inputTr, tr, tr != activeTr); // no-op if NULL, loopback, already muted, etc
+
+			if (bool* mute = ((tr==activeTr || tr==inputTr) ? &g_bFalse : m_cfg_tracks_states.Get(i)))
+				if (*(bool*)GetSetMediaTrackInfo(tr, "B_MUTE", NULL) != *mute)
+					GetSetMediaTrackInfo(tr, "B_MUTE", mute);
+		}
+	}
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // LiveConfigView
@@ -2026,94 +2131,9 @@ int IsLiveConfigDisplayed(COMMAND_T*) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // Apply/preload configs
+// THE MEAT! HANDLE WITH CARE!
 ///////////////////////////////////////////////////////////////////////////////
 
-// returns the old mute state
-bool TimedMuteIfNeeded(MediaTrack* _tr, double* _muteTime)
-{
-	bool mute = *(bool*)GetSetMediaTrackInfo(_tr, "B_MUTE", NULL);
-	if (!mute)
-	{
-		GetSetMediaTrackInfo(_tr, "B_MUTE", &g_bTrue);
-
-		if (g_reaPref_fadeLen && *g_reaPref_fadeLen>0)
-				*_muteTime = time_precise();
-
-#ifdef _SNM_DEBUG
-		char dbg[256] = "";
-		_snprintfSafe(dbg, sizeof(dbg), "TimedMuteIfNeeded() - Muted: %s\n", (char*)GetSetMediaTrackInfo(_tr, "P_NAME", NULL));
-		OutputDebugString(dbg);
-#endif
-	}
-	return mute;
-}
-
-// no-op if _muteTime==0.0
-void WaitForTinyFade(double* _muteTime)
-{
-	if (_muteTime && *_muteTime>0.0)
-	{
-		double fadelen = 0.0;
-		if (g_reaPref_fadeLen)
-			fadelen = (*g_reaPref_fadeLen)/10000.0; // /pref/10, /1000 (ms->s)
-
-		int sleeps = 0;
-		if (fadelen>0.0) while ((time_precise() - *_muteTime) < fadelen)
-		{
-			if (sleeps > 1000) // timeout safety ~1s
-				break;
-#ifdef _WIN32
-			// keep the UI updating
-			MSG msg;
-			while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
-				DispatchMessage(&msg);
-#endif
-			Sleep(1);
-			sleeps++;
-		}
-#ifdef _SNM_DEBUG
-		char dbg[256] = "";
-		_snprintfSafe(dbg, sizeof(dbg), "WaitForTrackMuteFade() - Approx wait time: %f ms\n", (time_precise() - *_muteTime)*1000.0);
-		OutputDebugString(dbg);
-#endif
-		*_muteTime = 0.0;
-	}
-}
-
-void MuteAndInitCC123(LiveConfig* _lc, MediaTrack* _tr, double* _muteTime, WDL_PtrList<void>* _muteTracks, WDL_PtrList<void>* _cc123Tracks, WDL_PtrList<bool>* _muteStates, bool _always = false)
-{
-	if (_always || _lc->m_fade>0 || _lc->m_cc123) // also mute before sending all notes off
-	{
-		_muteStates->Add(TimedMuteIfNeeded(_tr, _muteTime) ? &g_bTrue : &g_bFalse);
-		_muteTracks->Add(_tr);
-		if (_lc->m_cc123)
-			_cc123Tracks->Add(_tr);
-	}
-}
-
-void MuteAndInitCC123AllConfigs(LiveConfig* _lc, double* _muteTime, WDL_PtrList<void>* _muteTracks, WDL_PtrList<void>* _cc123Tracks, WDL_PtrList<bool>* _muteStates)
-{
-	for (int i=0; i<_lc->m_ccConfs.GetSize(); i++)
-		if (LiveConfigItem* item = _lc->m_ccConfs.Get(i))
-			if (item->m_track && _muteTracks->Find(item->m_track) < 0)
-/*JFB!! no! use-case ex: just switching fx presets (with all options disabled, incl. tiny fades)
-				MuteAndInitCC123(_lc, item->m_track, _muteTime, _muteTracks, _cc123Tracks, _muteStates, true); // always mute
-*/
-				MuteAndInitCC123(_lc, item->m_track, _muteTime, _muteTracks, _cc123Tracks, _muteStates);
-}
-
-void WaitForMuteAndSendCC123(LiveConfig* _lc, double* _muteTime, WDL_PtrList<void>* _cc123Tracks)
-{
-	WaitForTinyFade(_muteTime); // no-op if muteTime==0.0
-
-	if (_lc->m_cc123)
-	{
-		SendAllNotesOff(_cc123Tracks);
-		_cc123Tracks->Empty();
-	}
-}
-
-//  THE MEAT! HANDLE WITH CARE!
 void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _lastCfg)
 {
 	LiveConfig* lc = g_liveConfigs.Get()->Get(_cfgId);
@@ -2149,9 +2169,7 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 		// 1) mute things a) to trigger tiny fades b) according to options
 		// --------------------------------------------------------------------
 
-		double muteTime=0.0;
-		WDL_PtrList<void> muteTracks, cc123Tracks;
-		WDL_PtrList<bool> muteStates;
+		lc->cfg_InitWorkingVars();
 
 		// preloading?
 		if (!_apply)
@@ -2159,7 +2177,7 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 			// mute things before reconfiguration (in order to trigger tiny fades, optional)
 			// note: no preload on input track
 			if (!inputTr || cfg->m_track != inputTr)
-				MuteAndInitCC123(lc, cfg->m_track, &muteTime, &muteTracks, &cc123Tracks, &muteStates); 
+				lc->cfg_SaveMuteStateAndMuteIfNeeded(cfg->m_track); 
 		}
 
 		// applying?
@@ -2168,56 +2186,45 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 		else 
 		{	
 			// mute things before reconfiguration
-			MuteAndInitCC123(lc, cfg->m_track, &muteTime, &muteTracks, &cc123Tracks, &muteStates); 
+			lc->cfg_SaveMuteStateAndMuteIfNeeded(cfg->m_track); 
 
 			// mute (and later unmute) tracks to be set offline - optional
 			if (lc->m_offlineOthers)
 				for (int i=0; i<lc->m_ccConfs.GetSize(); i++)
 					if (LiveConfigItem* item = lc->m_ccConfs.Get(i))
-						if (item->m_track && item->m_track != cfg->m_track && (!inputTr || item->m_track != inputTr) &&
-							muteTracks.Find(item->m_track) < 0)
-						{
-							MuteAndInitCC123(lc, item->m_track, &muteTime, &muteTracks, &cc123Tracks, &muteStates); 
-						}
+						if (item->m_track && item->m_track != cfg->m_track && (!inputTr || item->m_track != inputTr))
+							lc->cfg_SaveMuteStateAndMuteIfNeeded(item->m_track); 
 
 			// first activation: cleanup *everything* as we do not know the initial state
 			if (!_lastCfg)
 			{
-				MuteAndInitCC123AllConfigs(lc, &muteTime, &muteTracks, &cc123Tracks, &muteStates);
+				for (int i=0; i<lc->m_ccConfs.GetSize(); i++)
+					if (LiveConfigItem* item = lc->m_ccConfs.Get(i))
+						lc->cfg_SaveMuteStateAndMuteIfNeeded(item->m_track, true);
 			}
 			else
 			{
-				if (_lastCfg->m_track && _lastCfg->m_track != cfg->m_track && muteTracks.Find(_lastCfg->m_track) < 0)
+				if (_lastCfg->m_track /* && _lastCfg->m_track != cfg->m_track*/)
 				{
 					if (inputTr && _lastCfg->m_track == inputTr) // conner case fix
-						MuteAndInitCC123AllConfigs(lc, &muteTime, &muteTracks, &cc123Tracks, &muteStates);
+					{
+						for (int i=0; i<lc->m_ccConfs.GetSize(); i++)
+							if (LiveConfigItem* item = lc->m_ccConfs.Get(i))
+								lc->cfg_SaveMuteStateAndMuteIfNeeded(item->m_track, true);
+					}
 					else
-						MuteAndInitCC123(lc, _lastCfg->m_track, &muteTime, &muteTracks, &cc123Tracks, &muteStates);
+					{
+						lc->cfg_SaveMuteStateAndMuteIfNeeded(_lastCfg->m_track);
+					}
 				}
 			}
 
 			// end with mute states that will not be restored (user option)
 			if (lc->m_muteOthers && (!inputTr || cfg->m_track != inputTr))
-			{
 				for (int i=0; i<lc->m_ccConfs.GetSize(); i++)
 					if (LiveConfigItem* item = lc->m_ccConfs.Get(i))
 						if (item->m_track && item->m_track != cfg->m_track && (!inputTr || item->m_track != inputTr))
-						{
-							TimedMuteIfNeeded(item->m_track, &muteTime);
-							int idx = muteTracks.Find(item->m_track);
-							if (idx<0)
-							{
-								muteTracks.Add(item->m_track);
-								if (lc->m_cc123)
-									cc123Tracks.Add(item->m_track);
-							}
-							else
-							{
-								muteStates.Delete(idx, false);
-								muteStates.Insert(idx, NULL);
-							}
-						}
-			}
+							lc->cfg_Mute(item->m_track);
 		}
 
 		// --------------------------------------------------------------------
@@ -2229,7 +2236,7 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 		if (_apply && _lastCfg && _lastCfg->m_track && _lastCfg->m_offAction.GetLength())
 			if (int cmd = NamedCommandLookup(_lastCfg->m_offAction.Get()))
 			{
-				WaitForMuteAndSendCC123(lc, &muteTime, &cc123Tracks);
+				lc->cfg_WaitForMuteSendCC123(inputTr);
 
 				SNM_SetSelectedTrack(NULL, _lastCfg->m_track, true, true);
 				Main_OnCommand(cmd, 0);
@@ -2297,12 +2304,12 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 				SNM_ChunkParserPatcher p(cfg->m_track);
 				p.SetWantsMinimalState(true); // ok 'cause read-only
 				
-				 // some fx offline on the activated track? 
+				// are some fx offline on the activated track? 
 				// macro-ish but better than pushing a new state
 				char zero[2] = "0";
 				if (!p.Parse(SNM_GETALL_CHUNK_CHAR_EXCEPT, 2, "FXCHAIN", "BYPASS", 0xFFFF, 2, zero))
 				{
-					WaitForMuteAndSendCC123(lc, &muteTime, &cc123Tracks);
+					lc->cfg_WaitForMuteSendCC123(inputTr);
 					SNM_SetSelectedTrack(NULL, cfg->m_track, true, true);
 					Main_OnCommand(40536, 0); // online
 				}
@@ -2330,7 +2337,7 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 						GetSetMediaTrackInfo(item->m_track, "I_SELECTED", &g_i1);
 					}
 		
-			WaitForMuteAndSendCC123(lc, &muteTime, &cc123Tracks);
+			lc->cfg_WaitForMuteSendCC123(inputTr);
 
 			// set all fx offline for sel tracks, no-op if already offline
 			// macro-ish but better than using a SNM_ChunkParserPatcher for each track..
@@ -2343,7 +2350,7 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 		// note: exclusive vs template/fx chain but done here because fx may have been set online just above
 		if (!preloaded && cfg->m_presets.GetLength())
 		{
-			WaitForMuteAndSendCC123(lc, &muteTime, &cc123Tracks);
+			lc->cfg_WaitForMuteSendCC123(inputTr);
 			TriggerFXPresets(cfg->m_track, &(cfg->m_presets));
 		}
 
@@ -2351,7 +2358,7 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 		if (_apply && cfg->m_onAction.GetLength())
 			if (int cmd = NamedCommandLookup(cfg->m_onAction.Get()))
 			{
-				WaitForMuteAndSendCC123(lc, &muteTime, &cc123Tracks);
+				lc->cfg_WaitForMuteSendCC123(inputTr);
 				SNM_SetSelectedTrack(NULL, cfg->m_track, true, true);
 				Main_OnCommand(cmd, 0);
 				SNM_GetSelectedTracks(NULL, &selTracks, true); // selection may have changed
@@ -2362,52 +2369,21 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 		// 3) unmute things
 		// --------------------------------------------------------------------
 
-		WaitForMuteAndSendCC123(lc, &muteTime, &cc123Tracks);
+		lc->cfg_WaitForMuteSendCC123(inputTr);
 
 		if (!_apply)
 		{
-			if (muteStates.Get(0)) // just in case..
-				GetSetMediaTrackInfo(cfg->m_track, "B_MUTE", muteStates.Get(0));
+			lc->cfg_RestoreMuteStates(NULL, inputTr); // NULL to restore the previous mute state
 		}
 		else
 		{
-			// mute sends from the input track, except sends to the new active track
-			// note: no tiny fades when muting sends (REAPER v4.31) but no pb:
-			// both last and new tracks were muted above, during the switch
-			if (inputTr && inputTr!=cfg->m_track)
-			{
-				int sndIdx=0;
-				MediaTrack* destTr = (MediaTrack*)GetSetTrackSendInfo(inputTr, 0, sndIdx, "P_DESTTRACK", NULL);
-				while(destTr)
-				{
-					bool mute = (destTr!=cfg->m_track);
-					if ((*(bool*)GetSetTrackSendInfo(inputTr, 0, sndIdx, "B_MUTE", NULL) != mute) && lc->CountTrackConfigs(destTr)) // ignore "out of config" tracks
-					{
-						GetSetTrackSendInfo(inputTr, 0, sndIdx, "B_MUTE", &mute);
-#ifdef _SNM_DEBUG
-						char dbg[256] = "";
-						_snprintfSafe(dbg, sizeof(dbg), "ApplyPreloadLiveConfig() - Muted send to: %s\n", (char*)GetSetMediaTrackInfo(destTr, "P_NAME", NULL));
-						OutputDebugString(dbg);
-#endif
-					}
-					destTr = (MediaTrack*)GetSetTrackSendInfo(inputTr, 0, ++sndIdx, "P_DESTTRACK", NULL);
-				}
-			}
+			lc->cfg_RestoreMuteStates(cfg->m_track, inputTr);
 
-			// restore mute states, if needed
-			for (int i=0; i < muteTracks.GetSize(); i++)
-				if (MediaTrack* tr = (MediaTrack*)muteTracks.Get(i))
-					if (tr != cfg->m_track && tr != inputTr)
-						if (bool* mute = muteStates.Get(i))
-							if (*(bool*)GetSetMediaTrackInfo(tr, "B_MUTE", NULL) != *mute)
-								GetSetMediaTrackInfo(tr, "B_MUTE", mute);
+			// always unmute the input track, whatever is lc->m_muteOthers
+			if (inputTr && *(bool*)GetSetMediaTrackInfo(inputTr, "B_MUTE", NULL))
+				GetSetMediaTrackInfo(inputTr, "B_MUTE", &g_bFalse);
 
-			// unmute the input track, whatever is lc->m_muteOthers
-			if (inputTr)
-				if (*(bool*)GetSetMediaTrackInfo(inputTr, "B_MUTE", NULL))
-					GetSetMediaTrackInfo(inputTr, "B_MUTE", &g_bFalse);
-
-			// unmute the config track, whatever is lc->m_muteOthers
+			// always unmute the config track
 			if (*(bool*)GetSetMediaTrackInfo(cfg->m_track, "B_MUTE", NULL))
 				GetSetMediaTrackInfo(cfg->m_track, "B_MUTE", &g_bFalse);
 		}

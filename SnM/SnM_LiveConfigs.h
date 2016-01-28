@@ -73,6 +73,18 @@ public:
 	GUID* GetInputTrackGUID() { return &m_inputTr; }
 	void SetInputTrackGUID(GUID* _g) { memcpy(&m_inputTr, _g, sizeof(GUID)); }
 
+	void cfg_InitWorkingVars()
+	{
+		m_cfg_done=false;
+		m_cfg_last_mute_time=0.0;
+		m_cfg_tracks.Empty(false);
+		m_cfg_tracks_states.Empty(false);
+	}  
+	void cfg_SaveMuteStateAndMuteIfNeeded(MediaTrack* _tr, bool _force = false);
+	void cfg_Mute(MediaTrack* _tr);
+	void cfg_WaitForMuteSendCC123(MediaTrack* inputTr);
+	void cfg_RestoreMuteStates(MediaTrack* activeTr, MediaTrack* inputTr);
+
 	WDL_PtrList<LiveConfigItem> m_ccConfs;
 	int m_version, m_ccDelay, m_fade, m_enable, m_muteOthers, m_selScroll, m_offlineOthers, m_cc123, m_ignoreEmpty, m_autoSends;
 	int m_activeMidiVal, m_curMidiVal, m_preloadMidiVal, m_curPreloadMidiVal;
@@ -80,6 +92,12 @@ public:
 
 private:
 	GUID m_inputTr; // GUID rather than MediaTrack* (to handle undo of track deletion, etc)
+
+  // working vars: set while appying/preloading configs
+  WDL_PtrList<void> m_cfg_tracks; // same nb of items as m_cfg_tracks_states
+  WDL_PtrList<bool> m_cfg_tracks_states; // can contain NULL items (mute state unchanged), same nb of items as m_cfg_tracks
+  double m_cfg_last_mute_time;
+  bool m_cfg_done;
 };
 
 

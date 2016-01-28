@@ -1,6 +1,7 @@
 @echo off
 
 REM Copyright 2013 and later Jeffos. All rights reserved.
+REM See https://github.com/Jeff0S/sws-web
 
 REM ===========================================================================
 REM You must set these according to your local setup
@@ -60,7 +61,7 @@ if not errorlevel 0 goto error
 cd sws\Install
 
 REM ======BUILD================================================================
-REM Note: this will also generate Python function wrapper files
+REM Note: building will also generate Python function wrapper files
 echo.
 set choice=
 set /p choice=Build (y/n)? 
@@ -142,7 +143,7 @@ REM 1st FTP step: get the current online version
 
 echo user %ftp_user% > temp\get_version.ftp
 echo %ftp_pwd%>> temp\get_version.ftp
-echo cd download/%build_type% >> temp\get_version.ftp
+echo cd www/download/%build_type% >> temp\get_version.ftp
 echo ascii >> temp\get_version.ftp
 echo get version.h temp\online_version.h >> temp\get_version.ftp
 echo quit >> temp\get_version.ftp
@@ -170,7 +171,12 @@ if not exist temp\online_version.h (
 ..\BuildUtils\Release\PrintVersion temp\online_version.h "rename tmp.dmg ../old/sws-v%%d.%%d.%%d.%%d.dmg" >> temp\upload.ftp
 ..\BuildUtils\Release\PrintVersion temp\online_version.h "rename sws-v%%d.%%d.%%d.%%d-template.ReaperLangPack tmp.ReaperLangPack" >> temp\upload.ftp
 ..\BuildUtils\Release\PrintVersion temp\online_version.h "rename tmp.ReaperLangPack ../old/sws-v%%d.%%d.%%d.%%d-template.ReaperLangPack" >> temp\upload.ftp
-echo mdelete *.* >> temp\upload.ftp
+echo mdelete *.exe >> temp\upload.ftp
+echo mdelete *.dmg >> temp\upload.ftp
+echo mdelete *.ReaperLangPack >> temp\upload.ftp
+echo mdelete *.h >> temp\upload.ftp
+echo mdelete *.html >> temp\upload.ftp
+REM ... but keep .htm files, e.g. index.htm in the "featured" folder
 
 REM Upload new files
 echo put output\whatsnew.html >> temp\upload.ftp

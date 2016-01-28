@@ -63,7 +63,7 @@ enum { AC_TRACK=0, AC_MARKER, AC_REGION, NUM_TYPETYPES }; // keep this order and
 
 // Larger allocs for localized strings..
 // !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_115
-static SWS_LVColumn g_cols[] = { {25, 0, "#" }, {25, 0, "Rule type"}, { 185, 1, "Criterion" }, { 70, 1, "Color" }, { 200, 2, "Icon" }, { 100, 1, "TCP Layout" }, { 100, 1, "MCP Layout" }};
+static SWS_LVColumn g_cols[] = { {25, 0, "#" }, {25, 0, "Rule type"}, { 185, 1, "Filter" }, { 70, 1, "Color" }, { 200, 2, "Icon" }, { 100, 1, "TCP Layout" }, { 100, 1, "MCP Layout" }};
 static const char cTypes[][256] = {"Track", "Marker", "Region" }; // keep this order, see above
 static const char cFilterTypes[][256] = { "(any)", "(unnamed)", "(folder)", "(children)", "(receive)", "(master)" };
 static const char cColorTypes[][256] = { "Custom", "Gradient", "Random", "None", "Parent", "Ignore" };

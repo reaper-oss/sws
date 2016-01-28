@@ -1,3 +1,4 @@
+!v2.8.4 pre-release build (January 28, 2016)
 Auto color/icon/layout
 +Issue 756: support automatic layouts (e.g. changing track names can automatically change track layouts)
  - Double-click the new columns "TCP Layout" (track panel) and/or "MCP Layout" (mixer panel) to enter layout names

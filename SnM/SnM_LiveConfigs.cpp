@@ -2236,44 +2236,48 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 		// reconfiguration via state updates
 		if (!preloaded)
 		{
+			static WDL_FastString chunk; // static for alloc savings (big states, potentially)
+
 			// apply tr template (preserves routings, folder states, etc..)
 			// if the altered track has sends, it'll be glitch free too as me mute this source track
 			if (cfg->m_trTemplate.GetLength()) 
 			{
-				WDL_FastString tmplt; char fn[SNM_MAX_PATH] = "";
+				char fn[SNM_MAX_PATH] = "";
 				GetFullResourcePath("TrackTemplates", cfg->m_trTemplate.Get(), fn, sizeof(fn));
+
+				static WDL_FastString tmplt; 
 				if (LoadChunk(fn, &tmplt) && tmplt.GetLength())
 				{
 					SNM_SendPatcher p(cfg->m_track); // auto-commit on destroy
 					
-					WDL_FastString chunk; MakeSingleTrackTemplateChunk(&tmplt, &chunk, true, true, false);
+					MakeSingleTrackTemplateChunk(&tmplt, &chunk, true, true, false);
 					if (ApplyTrackTemplate(cfg->m_track, &chunk, false, false, &p))
 					{
 						// make sure the track will be restored with its current name 
-						WDL_FastString trNameEsc("");
+						WDL_FastString trNameEsc;
 						if (char* name = (char*)GetSetMediaTrackInfo(cfg->m_track, "P_NAME", NULL))
-							if (*name)
-								makeEscapedConfigString(name, &trNameEsc);
+							makeEscapedConfigString(name, &trNameEsc);
 						p.ParsePatch(SNM_SET_CHUNK_CHAR,1,"TRACK","NAME",0,1,(void*)trNameEsc.Get());
 
 						// make sure the track will be restored with proper mute state
-						char onoff[2]; strcpy(onoff, *(bool*)GetSetMediaTrackInfo(cfg->m_track, "B_MUTE", NULL) ? "1" : "0");
+						char onoff[2];
+						strcpy(onoff, *(bool*)GetSetMediaTrackInfo(cfg->m_track, "B_MUTE", NULL) ? "1" : "0");
 						p.ParsePatch(SNM_SET_CHUNK_CHAR,1,"TRACK","MUTESOLO",0,1,onoff);
 
-						WaitForMuteAndSendCC123(lc, &muteTime, &cc123Tracks);
+						lc->cfg_WaitForMuteSendCC123(inputTr);
 					}
 				} // auto-commit
 			}
 			// fx chain reconfiguration via state chunk update
 			else if (cfg->m_fxChain.GetLength())
 			{
-				char fn[SNM_MAX_PATH]=""; WDL_FastString chunk;
+				char fn[SNM_MAX_PATH]="";
 				GetFullResourcePath("FXChains", cfg->m_fxChain.Get(), fn, sizeof(fn));
 				if (LoadChunk(fn, &chunk) && chunk.GetLength())
 				{
 					SNM_FXChainTrackPatcher p(cfg->m_track); // auto-commit on destroy
 					if (p.SetFXChain(&chunk))
-						WaitForMuteAndSendCC123(lc, &muteTime, &cc123Tracks);
+						lc->cfg_WaitForMuteSendCC123(inputTr);
 				}
 			} // auto-commit
 

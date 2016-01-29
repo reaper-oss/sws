@@ -1,3 +1,4 @@
+!v2.8.5 pre-release build (January 29, 2016)
 <strong>This new SWS version requires REAPER v5.15pre1+!</strong>
 
 Auto color/icon/layout

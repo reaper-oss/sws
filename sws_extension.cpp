@@ -695,8 +695,13 @@ error:
 		IMPAPI(ApplyNudge);
 		IMPAPI(AttachWindowTopmostButton);
 		IMPAPI(AttachWindowResizeGrip);
-		IMPAPI(Audio_RegHardwareHook);
 		IMPAPI(AudioAccessorValidateState);
+		IMPAPI(Audio_Init); // v5.111+
+		IMPAPI(Audio_Quit); // v5.111+
+		IMPAPI(Audio_RegHardwareHook);
+/* unused
+		IMPAPI(Audio_RegHardwareHook);
+*/
 		IMPAPI(CoolSB_GetScrollInfo);
 		IMPAPI(CoolSB_SetScrollInfo);
 		IMPAPI(CountActionShortcuts);
@@ -716,6 +721,7 @@ error:
 		IMPAPI(CreateNewMIDIItemInProj);
 		IMPAPI(CreateTakeAudioAccessor);
 		IMPAPI(CreateTrackAudioAccessor);
+		IMPAPI(CreateTrackSend); // v5.15pre1+
 		IMPAPI(CSurf_FlushUndo);
 		IMPAPI(CSurf_GoEnd);
 		IMPAPI(CSurf_OnMuteChange);
@@ -760,6 +766,7 @@ error:
 		IMPAPI(FreeHeapPtr);
 		IMPAPI(GetActionShortcutDesc);
 		IMPAPI(GetActiveTake);
+		IMPAPI(GetAllProjectPlayStates); // v5.111+
 		IMPAPI(GetAppVersion);
 		IMPAPI(GetAudioAccessorEndTime);
 		IMPAPI(GetAudioAccessorHash);
@@ -835,6 +842,7 @@ error:
 		IMPAPI(GetSetMediaTrackInfo);
 		IMPAPI(GetSetObjectState);
 		IMPAPI(GetSetObjectState2);
+		IMPAPI(GetSetProjectNotes); // v5.15pre1+
 		IMPAPI(GetSetRepeat);
 		IMPAPI(GetTempoTimeSigMarker);
 		IMPAPI(GetTakeEnvelopeByName);
@@ -964,6 +972,7 @@ error:
 		IMPAPI(RenderFileSection);
 		IMPAPI(Resample_EnumModes);
 		IMPAPI(Resampler_Create);
+		IMPAPI(RemoveTrackSend); // v5.15pre1+
 		IMPAPI(ReverseNamedCommandLookup);
 		IMPAPI(ScaleFromEnvelopeMode); // v5pre13+
 		IMPAPI(ScaleToEnvelopeMode); // v5pre13+
@@ -1040,6 +1049,7 @@ error:
 		IMPAPI(TrackFX_GetParamName);
 		IMPAPI(TrackFX_GetPreset);
 		IMPAPI(TrackFX_GetPresetIndex);
+		IMPAPI(TrackFX_GetUserPresetFilename); // v5.15pre1+
 		IMPAPI(TrackFX_NavigatePresets);
 		IMPAPI(TrackFX_SetEnabled);
 		IMPAPI(TrackFX_SetOpen);

@@ -1,3 +1,14 @@
+<strong>This new SWS version requires REAPER v5.15pre1+!</strong>
+
+Auto color/icon/layout
++Fix automatic layout http://forum.cockos.com/showpost.php?p=1629507&postcount=201|issues|, thanks cfillion!
++Major performance improvements (should fix http://forum.cockos.com/showpost.php?p=1628164&postcount=2080|this report|)
+ <strong>Note: requires REAPER v5.15pre6+, automatic track icons will not work otherwise!</strong>
+
+Actions
++Improve performances vs mass item selection
++Improve performances vs track selection
+
 !v2.8.4 pre-release build (January 28, 2016)
 Auto color/icon/layout
 +Issue 756: support automatic layouts (e.g. changing track names can automatically change track layouts)
@@ -17,7 +28,7 @@ Live Configs
 "All notes off" actions/features
 +Fix potential stuck notes vs sustain pedal events (now also reset CC64)
 +Send "All notes off" events in a synchronous way (e.g. can now be reliably used in macros)
-+Add similar action "SWS/S&M: Send all sounds off to selected tracks" (i.e. http://www.blitter.com/~russtopia/MIDI/~jglatt/tech/midispec/sndoff.htm|CC120| on all tracks)
++Add similar action "SWS/S&M: Send all sounds off to selected tracks" (i.e. http://www.blitter.com/~russtopia/MIDI/~jglatt/tech/midispec/sndoff.htm|CC120| on selected tracks)
 
 Fixes
 +Zoom actions: fix "breathing" room (3% on each side)

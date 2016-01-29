@@ -656,6 +656,7 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 	{
 		if (!bDoColors && !bDoIcons)
 			return;
+
 		PreventUIRefresh(1);
 
 		int iCount = 0;
@@ -791,7 +792,9 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 
 						// Only set the color if the user hasn't changed the color manually (but record it as being changed)
 						if ((bForce || iCurColor == pACTrack->m_col) && newCol != iCurColor)
+						{
 							GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", &newCol);
+						}
 
 						pACTrack->m_col = newCol;
 						pACTrack->m_bColored = true;
@@ -801,23 +804,13 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 					{
 						if (_stricmp(rule->m_icon.Get(), pACTrack->m_icon.Get()))
 						{
-							SNM_ChunkParserPatcher p(tr); // nothing done yet
-							char pIconLine[BUFFER_SIZE] = "";
-							int iconChunkPos = p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKIMGFN", 0, 1, pIconLine, NULL, "TRACKID");
-							if (_stricmp(pIconLine, rule->m_icon.Get()))
+							const char *cur = (const char*)GetSetMediaTrackInfo(tr, "P_ICON", NULL); // requires REAPER v5.15pre6+
+							if (cur && _stricmp(cur, rule->m_icon.Get()))
 							{
-								// Only overwrite the icon if there's no icon, or we're forcing, or we set it ourselves earlier
-								if (bForce || iconChunkPos == 0 || _stricmp(pIconLine, pACTrack->m_icon.Get()) == 0)
+								// Only overwrite the icon if there's no iscon, or we're forcing, or we set it ourselves earlier
+								if (bForce || !_stricmp(cur, pACTrack->m_icon.Get()))
 								{
-									if (rule->m_icon.GetLength())
-										_snprintf(pIconLine, sizeof(pIconLine), "TRACKIMGFN \"%s\"\n", rule->m_icon.Get());
-									else // The code as written will never hit this case, as empty m_icon means "ignore"
-										*pIconLine = 0;
-
-									if (iconChunkPos > 0)
-										p.ReplaceLine(--iconChunkPos, pIconLine);
-									else
-										p.InsertAfterBefore(0, pIconLine, "TRACK", "FX", 1, 0, "TRACKID");
+									GetSetMediaTrackInfo(tr, "P_ICON", (void*)rule->m_icon.Get());
 								}
 							}
 							pACTrack->m_icon.Set(rule->m_icon.Get());
@@ -830,7 +823,7 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 						if (_stricmp(rule->m_layout[k].Get(), pACTrack->m_layout[k].Get()))
 						{
 							const char *curlayout = (const char*)GetSetMediaTrackInfo(tr, k ? "P_MCP_LAYOUT" : "P_TCP_LAYOUT", NULL);
-							if (_stricmp(curlayout, rule->m_layout[k].Get()))
+							if (curlayout && _stricmp(curlayout, rule->m_layout[k].Get()))
 							{
 								// Only overwrite the layout if there's no layout, or we're forcing, or we set it ourselves earlier
 								if (bForce || !_stricmp(curlayout, pACTrack->m_layout[k].Get()))
@@ -896,7 +889,6 @@ void AutoColorTrack(bool bForce)
 	}
 
 	// Apply the rules
-	SWS_CacheObjectState(true);
 	bool bDoColors = g_bACEnabled || bForce;
 	bool bDoIcons  = g_bAIEnabled || bForce;
 	bool bDoLayouts  = g_bALEnabled || bForce;
@@ -918,20 +910,21 @@ void AutoColorTrack(bool bForce)
 
 			// Only remove color on tracks that we colored ourselves
 			if (pACTrack->m_col == iCurColor)
+			{
 				GetSetMediaTrackInfo(pACTrack->m_pTr, "I_CUSTOMCOLOR", &g_i0);
+			}
 			pACTrack->m_col = 0;
 		}
 
 		// There's an icon set, but there shouldn't be!
 		if (bDoIcons && !pACTrack->m_bIconed && pACTrack->m_icon.GetLength())
 		{
-			SNM_ChunkParserPatcher p(pACTrack->m_pTr); // Yay for the patcher
-
 			// Only remove the icon on the track if we set it ourselves
-			char pIconLine[BUFFER_SIZE] = "";
-			int iconChunkPos = p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKIMGFN", 0, 1, pIconLine, NULL, "TRACKID");
-			if (iconChunkPos && _stricmp(pACTrack->m_icon.Get(), pIconLine) == 0)
-				p.ReplaceLine(--iconChunkPos, "");
+			const char *cur = (const char*)GetSetMediaTrackInfo(pACTrack->m_pTr, "P_ICON", NULL); // requires REAPER v5.15pre6+
+			if (cur && !_stricmp(pACTrack->m_icon.Get(), cur))
+			{
+				GetSetMediaTrackInfo(pACTrack->m_pTr, "P_ICON", (void*)"");
+			}
 			pACTrack->m_icon.Set("");
 		}
 
@@ -942,13 +935,14 @@ void AutoColorTrack(bool bForce)
 			{
 				// Only remove the layout if we set it ourselves
 				const char *curlayout = (const char*)GetSetMediaTrackInfo(pACTrack->m_pTr, k ? "P_MCP_LAYOUT" : "P_TCP_LAYOUT", NULL);
-				if (!_stricmp(pACTrack->m_layout[k].Get(), curlayout))
+				if (curlayout && !_stricmp(pACTrack->m_layout[k].Get(), curlayout))
+				{
 					GetSetMediaTrackInfo(pACTrack->m_pTr, k ? "P_MCP_LAYOUT" : "P_TCP_LAYOUT", (void*)"");        
+				}
 				pACTrack->m_layout[k].Set("");
       }
     }
 	}
-	SWS_CacheObjectState(false);
 
 	if (bForce)
 		Undo_OnStateChangeEx(__LOCALIZE("Apply auto color/icon/layout","sws_undo"), UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);

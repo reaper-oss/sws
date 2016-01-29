@@ -618,8 +618,9 @@ void DoRandomizePositions2(int obeyGroup)
 	else
 	{
 		WDL_TypedBuf <int> processed;
-		const int cnt=CountSelectedMediaItems(NULL);
-		for (int i = 0; i < cnt; i++)
+		const int itemCount = CountMediaItems(NULL);
+		const int itemSelCount=CountSelectedMediaItems(NULL);
+		for (int i = 0; i < itemSelCount; i++)
 		{
 			MediaItem* mi = GetSelectedMediaItem(NULL, i);
 			double posDiff = -dSpread + (2.0/RAND_MAX)*rand()*dSpread;
@@ -627,7 +628,7 @@ void DoRandomizePositions2(int obeyGroup)
 
 			if (group != 0 && processed.Find(group) == -1)
 			{
-				for (int j = 0; j < CountMediaItems(NULL); j++)
+				for (int j = 0; j < itemCount; j++)
 				{
 					MediaItem* mi = GetMediaItem(NULL, j);
 					if (group == *(int*)GetSetMediaItemInfo(mi, "I_GROUPID", NULL))

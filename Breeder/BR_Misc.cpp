@@ -938,7 +938,8 @@ void SelectItemsByType (COMMAND_T* ct)
 	bool update = false;
 
 	PreventUIRefresh(1);
-	for (int i = 0; i < CountMediaItems(NULL); ++i)
+	const int itemCount = CountMediaItems(NULL);
+	for (int i = 0; i < itemCount; ++i)
 	{
 		MediaItem* item = GetMediaItem(NULL, i);
 		if (!IsItemLocked(item))

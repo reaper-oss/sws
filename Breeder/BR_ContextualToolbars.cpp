@@ -1191,7 +1191,8 @@ bool BR_ContextualToolbar::SelectItem (BR_ContextualToolbar::ExecuteOnToolbarLoa
 	{
 		if (executeOnToolbarLoad.clearItemSelection)
 		{
-			for (int i = 0; i < CountMediaItems(NULL); ++i)
+			const int itemCount = CountMediaItems(NULL);
+			for (int i = 0; i < itemCount; ++i)
 			{
 				MediaItem* item = GetMediaItem(NULL, i);
 				if (item != executeOnToolbarLoad.itemToSelect && GetMediaItemInfo_Value(item, "B_UISEL"))

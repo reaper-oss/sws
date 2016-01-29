@@ -1326,7 +1326,8 @@ MediaItem* GuidToItem (const GUID* guid, ReaProject* proj /*=NULL*/)
 {
 	if (guid)
 	{
-		for (int i = 0; i < CountMediaItems(proj); ++i)
+		const int itemCount = CountMediaItems(proj);
+		for (int i = 0; i < itemCount; ++i)
 		{
 			MediaItem* item = GetMediaItem(proj, i);
 			if (GuidsEqual((GUID*)GetSetMediaItemInfo(item, "GUID", NULL), guid))
@@ -1604,7 +1605,7 @@ bool InsertStretchMarkersInAllItems (const vector<double>& stretchMarkers, bool 
 
 	if (!IsLocked(ITEM_FULL) && !IsLocked(STRETCH_MARKERS) && (!obeySwsOptions || (obeySwsOptions && IsSetAutoStretchMarkersOn(NULL))))
 	{
-		int itemCount = CountMediaItems(NULL);
+		const int itemCount = CountMediaItems(NULL);
 		for (int i = 0; i < itemCount; ++i)
 		{
 			MediaItem* item = GetMediaItem(NULL, i);

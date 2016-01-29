@@ -671,7 +671,8 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 			MediaTrack* tr = CSurf_TrackFromID(i, false);
 			bool bColor = bDoColors;
 			bool bIcon  = bDoIcons;
-			bool bLayout  = bDoLayout;
+			bool bLayout[2];
+			bLayout[0]=bLayout[1]=bDoLayout;
 
 			bool bFound = false;
 			SWS_RuleTrack* pACTrack = NULL;
@@ -690,10 +691,13 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 				// If already modified by a different rule, or ignoring the color/icon/layout ignore this track
 				if (pACTrack->m_bColored || rule->m_color == -AC_IGNORE-1)
 					bColor = false;
+
 				if (pACTrack->m_bIconed || !rule->m_icon.Get()[0])
 					bIcon = false;
-				if (pACTrack->m_bLayouted || !rule->m_layout[0].Get()[0] || !rule->m_layout[1].Get()[0])
-					bLayout = false;
+
+				for (int k=0; k<2; k++)
+					if (pACTrack->m_bLayouted[k] || !rule->m_layout[k].Get()[0])
+						bLayout[k] = false;
 			}
 			else
 				pACTrack = g_pACTracks.Get()->Add(new SWS_RuleTrack(tr));
@@ -820,8 +824,8 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 						}
 						pACTrack->m_bIconed = true;
 					}
-          
-					if (bLayout) for (int k=0; k<2; k++)
+
+					for (int k=0; k<2; k++) if (bLayout[k])
 					{
 						if (_stricmp(rule->m_layout[k].Get(), pACTrack->m_layout[k].Get()))
 						{
@@ -919,7 +923,7 @@ void AutoColorTrack(bool bForce)
 		}
 
 		// There's an icon set, but there shouldn't be!
-		if (bDoIcons && !pACTrack->m_bIconed && *pACTrack->m_icon.Get())
+		if (bDoIcons && !pACTrack->m_bIconed && pACTrack->m_icon.GetLength())
 		{
 			SNM_ChunkParserPatcher p(pACTrack->m_pTr); // Yay for the patcher
 
@@ -934,7 +938,7 @@ void AutoColorTrack(bool bForce)
 		if (bDoLayouts) for (int k=0; k<2; k++)
 		{
 			// There's a layout set, but there shouldn't be!
-			if (!pACTrack->m_bLayouted[k] && *pACTrack->m_layout[k].Get())
+			if (!pACTrack->m_bLayouted[k] && pACTrack->m_layout[k].GetLength())
 			{
 				// Only remove the layout if we set it ourselves
 				const char *curlayout = (const char*)GetSetMediaTrackInfo(pACTrack->m_pTr, k ? "P_MCP_LAYOUT" : "P_TCP_LAYOUT", NULL);

@@ -701,11 +701,11 @@ error:
 		IMPAPI(CoolSB_SetScrollInfo);
 		IMPAPI(CountActionShortcuts);
 		IMPAPI(CountEnvelopePoints); // v5pre4+
-		IMPAPI(CountMediaItems);
+		IMPAPI(CountMediaItems); // O(N): should be banned from the extension, ideally -- don't use it in loops, at least
 		IMPAPI(CountProjectMarkers);
-		IMPAPI(CountSelectedMediaItems);
-		IMPAPI(CountSelectedTracks);
-		IMPAPI(CountTakeEnvelopes) // v5pre12+
+		IMPAPI(CountSelectedMediaItems); // O(MN): should be banned from the extension, ideally -- don't use it in loops, at least
+		IMPAPI(CountSelectedTracks); // exclude master + O(N): should be banned from the extension, ideally -- don't use it in loops, at least
+		IMPAPI(CountTakeEnvelopes) // v5pre12+ -- O(N): don't use it in loops
 		IMPAPI(CountTakes);
 		IMPAPI(CountTCPFXParms);
 		IMPAPI(CountTempoTimeSigMarkers);
@@ -791,7 +791,7 @@ error:
 		IMPAPI(GetMasterMuteSoloFlags);
 		IMPAPI(GetMasterTrackVisibility);
 		IMPAPI(GetMasterTrack);
-		IMPAPI(GetMediaItem);
+		IMPAPI(GetMediaItem); // O(N): should be banned from the extension, ideally
 		IMPAPI(GetMediaItem_Track);
 		IMPAPI(GetMediaItemInfo_Value);
 		IMPAPI(GetMediaItemNumTakes);
@@ -824,8 +824,8 @@ error:
 		IMPAPI(GetProjectTimeSignature2);
 		IMPAPI(GetResourcePath);
 		IMPAPI(GetSelectedEnvelope);
-		IMPAPI(GetSelectedMediaItem);
-		IMPAPI(GetSelectedTrack);
+		IMPAPI(GetSelectedMediaItem); // O(MN): should be banned from the extension, ideally
+		IMPAPI(GetSelectedTrack); // exclude master + O(N): should be banned from the extension, ideally
 		IMPAPI(GetSelectedTrackEnvelope);
 		IMPAPI(GetSet_ArrangeView2);
 		IMPAPI(GetSetEnvelopeState);

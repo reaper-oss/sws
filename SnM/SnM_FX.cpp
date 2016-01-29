@@ -58,7 +58,7 @@ int GetTrackFXIdFromCmd(MediaTrack* _tr, int _fxCmdId)
 
 int IsFXBypassedSelTracks(COMMAND_T* _ct)
 {
-	int selTrCount = SNM_CountSelectedTracks(NULL, true);
+	const int selTrCount = SNM_CountSelectedTracks(NULL, true);
 
 	// single track selection: return a real toggle state
 	if (selTrCount == 1)
@@ -190,7 +190,7 @@ int g_SNM_SupportBuggyPlug = 0; // set by the user in S&M.ini
 
 int IsFXOfflineSelTracks(COMMAND_T * _ct)
 {
-	int selTrCount = SNM_CountSelectedTracks(NULL, true);
+	const int selTrCount = SNM_CountSelectedTracks(NULL, true);
 
 	// single track selection: return a real toggle state
 	if (selTrCount == 1)

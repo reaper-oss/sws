@@ -149,8 +149,9 @@ void MoveItemRightToCursor(COMMAND_T* = NULL)
 void InsertFromTrackName(COMMAND_T*)
 {
 	WDL_PtrList<void> tracks;
-	for (int i = 0; i < CountSelectedTracks(0); i++)
-		tracks.Add(GetSelectedTrack(0, i));
+	const int trSelCnt = CountSelectedTracks(NULL);
+	for (int i = 0; i < trSelCnt; i++)
+		tracks.Add(GetSelectedTrack(NULL, i));
 
 	if (!tracks.GetSize())
 		return;

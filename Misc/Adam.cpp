@@ -2242,10 +2242,10 @@ void AWStretchFill(COMMAND_T* t)
 
 void AWBusDelete(COMMAND_T* t)
 {
-
 	if (GetCursorContext() == 0)
 	{
-		for (int i = 0; i < CountSelectedTracks(NULL); i++)
+		const int cnt = CountSelectedTracks(NULL);
+		for (int i = 0; i < cnt; i++)
 		{
 			if (GetMediaTrackInfo_Value(GetSelectedTrack(0, i), "I_FOLDERDEPTH") == 1)
 				SetMediaTrackInfo_Value(GetSelectedTrack(0, i), "I_FOLDERDEPTH", 0);
@@ -2819,14 +2819,14 @@ void AWRenderStem_Smart_Stereo(COMMAND_T* = NULL)
 
 void AWCascadeInputs(COMMAND_T* t)
 {
-	//int numTracks = CountSelectedTracks(0);
 	char returnString[128] = "1";
 
 	if (GetUserInputs(__LOCALIZE("Cascade Selected Track Inputs","sws_mbox"),1,__LOCALIZE("Start at input:","sws_mbox"), returnString, 128))
 	{
 		MediaTrack* track;
 		int inputOffset = atoi(returnString);
-		for (int iTrack = 0; iTrack < CountSelectedTracks(0); iTrack++)
+		const int cnt = CountSelectedTracks(NULL);
+		for (int iTrack = 0; iTrack < cnt; iTrack++)
 		{
 			track = GetSelectedTrack(0, iTrack);
 			SetMediaTrackInfo_Value(track, "I_RECINPUT", iTrack+inputOffset-1);
@@ -2914,20 +2914,22 @@ void AWSplitXFadeLeft(COMMAND_T* t)
 // Track timebase actions
 void AWSelTracksTimebaseProj(COMMAND_T* t)
 {
-	for (int i = 0; i < CountSelectedTracks(NULL); i++)
+	const int cnt = CountSelectedTracks(NULL);
+	for (int i = 0; i < cnt; i++)
 		SetMediaTrackInfo_Value(GetSelectedTrack(NULL, i), "C_BEATATTACHMODE", -1);
 	UpdateTrackTimebaseToolbar();
 
-	if (CountSelectedTracks(NULL) > 0)
+	if (cnt)
 		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
 }
 
 int IsSelTracksTimebaseProj(COMMAND_T* = NULL)
 {
-	if (CountSelectedTracks(NULL) == 0)
+	const int cnt = CountSelectedTracks(NULL);
+	if (!cnt)
 		return 0;
 
-	for (int i = 0; i < CountSelectedTracks(NULL); i++)
+	for (int i = 0; i < cnt; i++)
 	{
 		if (GetMediaTrackInfo_Value(GetSelectedTrack(NULL, i), "C_BEATATTACHMODE") != -1)
 			return 0;
@@ -2937,20 +2939,22 @@ int IsSelTracksTimebaseProj(COMMAND_T* = NULL)
 
 void AWSelTracksTimebaseTime(COMMAND_T* t)
 {
-	for (int i = 0; i < CountSelectedTracks(NULL); i++)
+	const int cnt = CountSelectedTracks(NULL);
+	for (int i = 0; i < cnt; i++)
 		SetMediaTrackInfo_Value(GetSelectedTrack(NULL, i), "C_BEATATTACHMODE", 0);
 	UpdateTrackTimebaseToolbar();
 
-	if (CountSelectedTracks(NULL) > 0)
+	if (cnt)
 		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
 }
 
 int IsSelTracksTimebaseTime(COMMAND_T* = NULL)
 {
-	if (CountSelectedTracks(NULL) == 0)
+	const int cnt = CountSelectedTracks(NULL);
+	if (!cnt)
 		return 0;
 
-	for (int i = 0; i < CountSelectedTracks(NULL); i++)
+	for (int i = 0; i < cnt; i++)
 	{
 		if (GetMediaTrackInfo_Value(GetSelectedTrack(NULL, i), "C_BEATATTACHMODE") != 0)
 			return 0;
@@ -2960,20 +2964,22 @@ int IsSelTracksTimebaseTime(COMMAND_T* = NULL)
 
 void AWSelTracksTimebaseBeatPos(COMMAND_T* t)
 {
-	for (int i = 0; i < CountSelectedTracks(NULL); i++)
+	const int cnt = CountSelectedTracks(NULL);
+	for (int i = 0; i < cnt; i++)
 		SetMediaTrackInfo_Value(GetSelectedTrack(NULL, i), "C_BEATATTACHMODE", 2);
 	UpdateTrackTimebaseToolbar();
 
-	if (CountSelectedTracks(NULL) > 0)
+	if (cnt)
 		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
 }
 
 int IsSelTracksTimebaseBeatPos(COMMAND_T* = NULL)
 {
-	if (CountSelectedTracks(NULL) == 0)
+	const int cnt = CountSelectedTracks(NULL);
+	if (!cnt)
 		return 0;
 
-	for (int i = 0; i < CountSelectedTracks(NULL); i++)
+	for (int i = 0; i < cnt; i++)
 	{
 		if (GetMediaTrackInfo_Value(GetSelectedTrack(NULL, i), "C_BEATATTACHMODE") != 2)
 			return 0;
@@ -2983,20 +2989,22 @@ int IsSelTracksTimebaseBeatPos(COMMAND_T* = NULL)
 
 void AWSelTracksTimebaseBeatAll(COMMAND_T* t)
 {
-	for (int i = 0; i < CountSelectedTracks(NULL); i++)
+	const int cnt = CountSelectedTracks(NULL);
+	for (int i = 0; i < cnt; i++)
 		SetMediaTrackInfo_Value(GetSelectedTrack(NULL, i), "C_BEATATTACHMODE", 1);
 	UpdateTrackTimebaseToolbar();
 
-	if (CountSelectedTracks(NULL) > 0)
+	if (cnt)
 		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
 }
 
 int IsSelTracksTimebaseBeatAll(COMMAND_T* = NULL)
 {
-	if (CountSelectedTracks(NULL) == 0)
+	const int cnt = CountSelectedTracks(NULL);
+	if (!cnt)
 		return 0;
 
-	for (int i = 0; i < CountSelectedTracks(NULL); i++)
+	for (int i = 0; i < cnt; i++)
 	{
 		if (GetMediaTrackInfo_Value(GetSelectedTrack(NULL, i), "C_BEATATTACHMODE") != 1)
 			return 0;
@@ -3160,8 +3168,8 @@ void AWSelChilOrSelItems(COMMAND_T* t)
 void AWSelTracksPanMode(int mode)
 {
 	MediaTrack* tr;
-
-	for (int i = 0; i < CountSelectedTracks(NULL); i++)
+	const int cnt = CountSelectedTracks(NULL);
+	for (int i = 0; i < cnt; i++)
 	{
 		tr = GetSelectedTrack(NULL, i);
 		SetMediaTrackInfo_Value(tr, "I_PANMODE", mode);
@@ -3171,8 +3179,8 @@ void AWSelTracksPanMode(int mode)
 void AWSelTracksPanLaw(int j)
 {
 	MediaTrack* tr;
-
-	for (int i = 0; i < CountSelectedTracks(NULL); i++)
+	const int cnt = CountSelectedTracks(NULL);
+	for (int i = 0; i < cnt; i++)
 	{
 		tr = GetSelectedTrack(NULL, i);
 		SetMediaTrackInfo_Value(tr, "I_PANLAW", j);

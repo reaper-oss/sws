@@ -66,7 +66,7 @@ unsigned long RprTrack::getColour()
 
 RprTrackCtrPtr RprTrackCollec::getSelected()
 {
-    int count = CountSelectedTracks(0);
+    const int count = CountSelectedTracks(0);
 
     RprTrackCtrPtr ctr(new RprTrackCtr);
     for(int i = 0; i < count; i++) {

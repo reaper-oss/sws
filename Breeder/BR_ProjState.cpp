@@ -893,7 +893,7 @@ void BR_TrackSoloMuteState::Save (bool selectedOnly)
 {
 	m_tracks.clear();
 
-	int count = (selectedOnly) ? CountSelectedTracks(NULL) : CountTracks(NULL);
+	const int count = (selectedOnly) ? CountSelectedTracks(NULL) : CountTracks(NULL);
 	for (int i = 0; i < count; ++i)
 	{
 		MediaTrack* track = (selectedOnly) ? GetSelectedTrack(NULL, i) : GetTrack(NULL, i);

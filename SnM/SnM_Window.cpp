@@ -700,7 +700,7 @@ void ToggleFXChain(COMMAND_T* _ct)
 
 int IsToggleFXChain(COMMAND_T * _ct) 
 {
-	int selTrCount = SNM_CountSelectedTracks(NULL, true);
+	const int selTrCount = SNM_CountSelectedTracks(NULL, true);
 	// single track selection: we can return a toggle state
 	if (selTrCount == 1)
 		return (TrackFX_GetChainVisible(SNM_GetSelectedTrack(NULL, 0, true)) != -1);
@@ -907,7 +907,7 @@ bool FloatOnlyJob(MediaTrack* _tr, int _fx, bool _selectedTracks)
 
 bool CycleFocusFXWnd(int _dir, bool _selectedTracks, bool* _cycled)
 {
-	if (!_selectedTracks || (_selectedTracks && SNM_CountSelectedTracks(NULL, true)))
+	if (!_selectedTracks || SNM_CountSelectedTracks(NULL, true))
 	{
 		MediaTrack* firstTrFound = NULL;
 		int firstFXFound = -1;

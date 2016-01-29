@@ -3967,7 +3967,8 @@ void NormalizeLoudness (COMMAND_T* ct)
 			if (*(int*)GetSetMediaTrackInfo(GetMasterTrack(NULL), "I_SELECTED", NULL))
 				objects.Add(new BR_LoudnessObject(GetMasterTrack(NULL)));
 
-			for (int i = 0; i < CountSelectedTracks(NULL); ++i)
+			const int trSelCnt = CountSelectedTracks(NULL);
+			for (int i = 0; i < trSelCnt; ++i)
 				objects.Add(new BR_LoudnessObject(GetSelectedTrack(NULL, i)));
 		}
 

@@ -1477,7 +1477,8 @@ void CopyEnvPoints (COMMAND_T* ct)
 	}
 	else
 	{
-		for (int i = -1; i < CountSelectedTracks(NULL); ++i)
+		const int trSelCnt = CountSelectedTracks(NULL);
+		for (int i = -1; i < trSelCnt; ++i)
 		{
 			MediaTrack* track = NULL;
 			if (i == -1 && *(int*)GetSetMediaTrackInfo(GetMasterTrack(NULL), "I_SELECTED", NULL))
@@ -1744,7 +1745,8 @@ void ApplyNextCmdToMultiEnvelopes (COMMAND_T* ct)
 
 	PreventUIRefresh(1);
 	Undo_BeginBlock2(NULL);
-	for (int i = -1; i < CountSelectedTracks(NULL); ++i)
+	const int trSelCnt = CountSelectedTracks(NULL);
+	for (int i = -1; i < trSelCnt; ++i)
 	{
 		MediaTrack* track = NULL;
 		if (i == -1 && *(int*)GetSetMediaTrackInfo(GetMasterTrack(NULL), "I_SELECTED", NULL))
@@ -1820,7 +1822,7 @@ void RestoreEnvSelSlot (COMMAND_T* ct)
 void ShowActiveTrackEnvOnly (COMMAND_T* ct)
 {
 	TrackEnvelope* envPtr = GetSelectedTrackEnvelope(NULL);
-	int trackCount = ((int)ct->user > 0) ? (CountTracks(NULL)) : (CountSelectedTracks(NULL));
+	const int trackCount = ((int)ct->user > 0) ? (CountTracks(NULL)) : (CountSelectedTracks(NULL));
 	if (trackCount <= 0)
 		return;
 
@@ -1938,7 +1940,8 @@ void ShowHideFxEnv (COMMAND_T* ct)
 
 	// Get envelopes
 	WDL_PtrList_DeleteOnDestroy<BR_Envelope> envelopes;
-	for (int i = 0; i < CountSelectedTracks(NULL); ++i)
+	const int trSelCnt = CountSelectedTracks(NULL);
+	for (int i = 0; i < trSelCnt; ++i)
 	{
 		MediaTrack* track = GetSelectedTrack(NULL, i);
 		for (int j = 0; j < CountTrackEnvelopes(track); ++j)
@@ -1996,7 +1999,8 @@ void ShowHideSendEnv (COMMAND_T* ct)
 
 	// Get envelopes
 	WDL_PtrList_DeleteOnDestroy<BR_Envelope> envelopes;
-	for (int i = 0; i < CountSelectedTracks(NULL); ++i)
+	const int trSelCnt = CountSelectedTracks(NULL);
+	for (int i = 0; i < trSelCnt; ++i)
 	{
 		MediaTrack* track = GetSelectedTrack(NULL, i);
 		for (int j = 0; j < CountTrackEnvelopes(track); ++j)
@@ -2035,7 +2039,8 @@ void ShowHideSendEnv (COMMAND_T* ct)
 	if (!hide && !activeOnly)
 	{
 		vector<MediaTrack*> selectedTracks;
-		for (int i = 0; i < CountSelectedTracks(NULL); ++i)
+		const int trSelCnt = CountSelectedTracks(NULL);
+		for (int i = 0; i < trSelCnt; ++i)
 			selectedTracks.push_back(GetSelectedTrack(NULL, i));
 		update = ShowSendEnvelopes(selectedTracks, mode);
 	}

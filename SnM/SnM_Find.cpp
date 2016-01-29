@@ -534,7 +534,7 @@ bool FindWnd::FindTrack(int _dir, bool (*job)(MediaTrack*,const char*))
 		bool clearCurrentSelection = false;
 		if (_dir)
 		{
-			if (int selTracksCount = SNM_CountSelectedTracks(NULL, true))
+			if (const int selTracksCount = SNM_CountSelectedTracks(NULL, true))
 			{
 				if (MediaTrack* startTr = SNM_GetSelectedTrack(NULL, _dir > 0 ? 0 : selTracksCount-1, true))
 				{

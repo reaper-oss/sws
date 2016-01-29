@@ -46,7 +46,8 @@ bool SaveSelectedTracks()
 	g_savedSelectedTracks = new (nothrow)vector < MediaTrack* > ;
 	if (g_savedSelectedTracks)
 	{
-		for (int i = 0; i < CountSelectedTracks(NULL); ++i)
+		const int count = CountSelectedTracks(NULL);
+		for (int i = 0; i < count; ++i)
 			if (MediaTrack* tr = GetSelectedTrack(NULL, i))
 				g_savedSelectedTracks->push_back(tr);
 		return true;

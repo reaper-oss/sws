@@ -3054,7 +3054,9 @@ void BR_AnalyzeLoudnessWnd::OnCommand (WPARAM wParam, LPARAM lParam)
 					if (m_properties.clearAnalyzed)
 						m_analyzeQueue.Add(new BR_LoudnessObject(GetMasterTrack(NULL)));
 				}
-				for (int i = 0; i < CountSelectedTracks(NULL); ++i)
+
+				const int cnt=CountSelectedTracks(NULL);
+				for (int i = 0; i < cnt; ++i)
 				{
 					if (BR_LoudnessObject* object = this->IsObjectInList(GetSelectedTrack(NULL, i)))
 						m_analyzeQueue.Add(object);
@@ -3064,7 +3066,8 @@ void BR_AnalyzeLoudnessWnd::OnCommand (WPARAM wParam, LPARAM lParam)
 			}
 			else
 			{
-				for (int i = 0; i < CountSelectedMediaItems(NULL); ++i)
+				const int cnt=CountSelectedMediaItems(NULL);
+				for (int i = 0; i < cnt; ++i)
 				{
 					if (MediaItem_Take* take = GetActiveTake(GetSelectedMediaItem(NULL, i)))
 					{
@@ -3881,12 +3884,14 @@ static WDL_DLGRET NormalizeCommandDialogProc (HWND hwnd, UINT uMsg, WPARAM wPara
 						if (*(int*)GetSetMediaTrackInfo(GetMasterTrack(NULL), "I_SELECTED", NULL))
 							objects.Add(new BR_LoudnessObject(GetMasterTrack(NULL)));
 
-						for (int i = 0; i < CountSelectedTracks(NULL); ++i)
+						const int cnt=CountSelectedTracks(NULL);
+						for (int i = 0; i < cnt; ++i)
 							objects.Add(new BR_LoudnessObject(GetSelectedTrack(NULL, i)));
 					}
 					else
 					{
-						for (int i = 0; i < CountSelectedMediaItems(NULL); ++i)
+						const int cnt=CountSelectedMediaItems(NULL);
+						for (int i = 0; i < cnt; ++i)
 						{
 							if (MediaItem_Take* take = GetActiveTake(GetSelectedMediaItem(NULL, i)))
 								objects.Add(new BR_LoudnessObject(take));
@@ -3949,7 +3954,8 @@ void NormalizeLoudness (COMMAND_T* ct)
 		WDL_PtrList_DeleteOnDestroy<BR_LoudnessObject> objects;
 		if (abs((int)ct->user) == 1)
 		{
-			for (int i = 0; i < CountSelectedMediaItems(NULL); ++i)
+			const int cnt=CountSelectedMediaItems(NULL);
+			for (int i = 0; i < cnt; ++i)
 			{
 				if (MediaItem_Take* take = GetActiveTake(GetSelectedMediaItem(NULL, i)))
 					objects.Add(new BR_LoudnessObject(take));

@@ -550,7 +550,8 @@ void MarkersAtNotes (COMMAND_T* ct)
 	PreventUIRefresh(1);
 
 	bool update = false;
-	for (int i = 0; i < CountSelectedMediaItems(NULL); ++i)
+	const int cnt=CountSelectedMediaItems(NULL);
+	for (int i = 0; i < cnt; ++i)
 	{
 		MediaItem* item      = GetSelectedMediaItem(NULL, i);
 		MediaItem_Take* take = GetActiveTake(item);
@@ -593,7 +594,8 @@ void MarkersAtStretchMarkers (COMMAND_T* ct)
 
 	PreventUIRefresh(1);
 	bool update = false;
-	for (int i = 0; i < CountSelectedMediaItems(NULL); ++i)
+	const int cnt=CountSelectedMediaItems(NULL);
+	for (int i = 0; i < cnt; ++i)
 	{
 		MediaItem_Take* take = GetActiveTake(GetSelectedMediaItem(NULL, i));
 		double iStart     = GetMediaItemInfo_Value(GetSelectedMediaItem(NULL, i), "D_POSITION");
@@ -634,13 +636,14 @@ void MarkerAtMouse (COMMAND_T* ct)
 
 void MarkersRegionsAtItems (COMMAND_T* ct)
 {
-	if (!CountSelectedMediaItems(NULL) || ((int)ct->user == 0 && IsLocked(MARKERS)) || ((int)ct->user == 1 && IsLocked(REGIONS)))
+	const int cnt=CountSelectedMediaItems(NULL);
+	if (!cnt || ((int)ct->user == 0 && IsLocked(MARKERS)) || ((int)ct->user == 1 && IsLocked(REGIONS)))
 		return;
 
 	Undo_BeginBlock2(NULL);
 	PreventUIRefresh(1);
 
-	for (int i = 0; i < CountSelectedMediaItems(NULL); ++i)
+	for (int i = 0; i < cnt; ++i)
 	{
 		MediaItem* item =  GetSelectedMediaItem(NULL, i);
 		double iStart = *(double*)GetSetMediaItemInfo(item, "D_POSITION", NULL);
@@ -693,7 +696,8 @@ void MidiItemTempo (COMMAND_T* ct)
 	PreventUIRefresh(1);
 	bool ignoreTempo = ((int)ct->user == 2 || (int)ct->user == 3);
 	bool update = false;
-	for (int i = 0; i < CountSelectedMediaItems(NULL); ++i)
+	const int cnt=CountSelectedMediaItems(NULL);
+	for (int i = 0; i < cnt; ++i)
 	{
 		MediaItem* item = GetSelectedMediaItem(NULL, i);
 		if (!IsItemLocked(item))
@@ -729,7 +733,8 @@ void MidiItemTrim (COMMAND_T* ct)
 		return;
 
 	bool update = false;
-	for (int i = 0; i < CountSelectedMediaItems(0); ++i)
+	const int cnt=CountSelectedMediaItems(NULL);
+	for (int i = 0; i < cnt; ++i)
 	{
 		MediaItem* item = GetSelectedMediaItem(0, i);
 		if (DoesItemHaveMidiEvents(item) && !IsItemLocked(item))
@@ -821,7 +826,8 @@ void ToggleItemOnline (COMMAND_T* ct)
 	if (IsLocked(ITEM_FULL))
 		return;
 
-	for (int i = 0; i < CountSelectedMediaItems(NULL); ++i)
+	const int cnt=CountSelectedMediaItems(NULL);
+	for (int i = 0; i < cnt; ++i)
 	{
 		MediaItem* item = GetSelectedMediaItem(NULL, i);
 		if (!IsItemLocked(item))
@@ -839,7 +845,8 @@ void ToggleItemOnline (COMMAND_T* ct)
 void ItemSourcePathToClipBoard (COMMAND_T* ct)
 {
 	WDL_FastString sourceList;
-	for (int i = 0; i < CountSelectedMediaItems(NULL); ++i)
+	const int cnt=CountSelectedMediaItems(NULL);
+	for (int i = 0; i < cnt; ++i)
 	{
 		MediaItem* item = GetSelectedMediaItem(NULL, i);
 		if (PCM_source* source = GetMediaItemTake_Source(GetActiveTake(item)))

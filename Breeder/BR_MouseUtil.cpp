@@ -1425,7 +1425,7 @@ int BR_MouseInfo::IsMouseOverEnvelopeLineTake (MediaItem_Take* take, int takeHei
 
 	// Get all visible take envelopes
 	vector<TrackEnvelope*> envelopes;
-	int count = CountTakeEnvelopes(take);
+	const int count = CountTakeEnvelopes(take);
 	for (int i = 0; i < count; ++i)
 	{
 		TrackEnvelope* envelope = GetTakeEnvelope(take, i);

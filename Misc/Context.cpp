@@ -38,7 +38,8 @@ bool AreThereSelItemsInTimeSel()
 	if (t1 != t2)
 	{
 		// see if sel items are in the time selection
-		for (int i = 0; i < CountSelectedMediaItems(0); i++)
+		const int cnt=CountSelectedMediaItems(NULL);
+		for (int i = 0; i < cnt; i++)
 		{
 			MediaItem* item = GetSelectedMediaItem(0, i);
 			double dItemPos = *(double*)GetSetMediaItemInfo(item, "D_POSITION", NULL);
@@ -53,7 +54,8 @@ bool AreThereSelItemsInTimeSel()
 bool AreThereItemsUnderCursor(bool bSel)
 {
 	double dCursor = GetCursorPosition();
-	for (int i = 0; i < (bSel ? CountSelectedMediaItems(0) : CountMediaItems(0)); i++)
+	const int cnt = (bSel ? CountSelectedMediaItems(NULL) : CountMediaItems(NULL));
+	for (int i = 0; i < cnt; i++)
 	{
 		MediaItem* item = bSel ? GetSelectedMediaItem(0, i) : GetMediaItem(0, i);
 		double dItemStart = *(double*)GetSetMediaItemInfo(item, "D_POSITION", NULL);

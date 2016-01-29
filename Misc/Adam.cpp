@@ -3020,20 +3020,22 @@ void UpdateTrackTimebaseToolbar()
 // Item timebase actions
 void AWSelItemsTimebaseProj(COMMAND_T* t)
 {
-	for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
+	const int cnt=CountSelectedMediaItems(NULL);
+	for (int i = 0; i < cnt; i++)
 		SetMediaItemInfo_Value(GetSelectedMediaItem(NULL, i), "C_BEATATTACHMODE", -1);
 	UpdateItemTimebaseToolbar();
 
-	if (CountSelectedMediaItems(NULL) > 0)
+	if (cnt)
 		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
 }
 
 int IsSelItemsTimebaseProj(COMMAND_T* = NULL)
 {
-	if (CountSelectedMediaItems(NULL) == 0)
+	const int cnt=CountSelectedMediaItems(NULL);
+	if (!cnt)
 		return 0;
 
-	for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
+	for (int i = 0; i < cnt; i++)
 	{
 		if (GetMediaItemInfo_Value(GetSelectedMediaItem(NULL, i), "C_BEATATTACHMODE") != -1)
 			return 0;
@@ -3043,20 +3045,22 @@ int IsSelItemsTimebaseProj(COMMAND_T* = NULL)
 
 void AWSelItemsTimebaseTime(COMMAND_T* t)
 {
-	for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
+	const int cnt=CountSelectedMediaItems(NULL);
+	for (int i = 0; i < cnt; i++)
 		SetMediaItemInfo_Value(GetSelectedMediaItem(NULL, i), "C_BEATATTACHMODE", 0);
 	UpdateItemTimebaseToolbar();
 
-	if (CountSelectedMediaItems(NULL) > 0)
+	if (cnt)
 		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
 }
 
 int IsSelItemsTimebaseTime(COMMAND_T* = NULL)
 {
-	if (CountSelectedMediaItems(NULL) == 0)
+	const int cnt=CountSelectedMediaItems(NULL);
+	if (!cnt)
 		return 0;
 
-	for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
+	for (int i = 0; i < cnt; i++)
 	{
 		if (GetMediaItemInfo_Value(GetSelectedMediaItem(NULL, i), "C_BEATATTACHMODE") != 0)
 			return 0;
@@ -3066,20 +3070,22 @@ int IsSelItemsTimebaseTime(COMMAND_T* = NULL)
 
 void AWSelItemsTimebaseBeatPos(COMMAND_T* t)
 {
-	for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
+	const int cnt=CountSelectedMediaItems(NULL);
+	for (int i = 0; i < cnt; i++)
 		SetMediaItemInfo_Value(GetSelectedMediaItem(NULL, i), "C_BEATATTACHMODE", 2);
 	UpdateItemTimebaseToolbar();
 
-	if (CountSelectedMediaItems(NULL) > 0)
+	if (cnt)
 		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
 }
 
 int IsSelItemsTimebaseBeatPos(COMMAND_T* = NULL)
 {
-	if (CountSelectedMediaItems(NULL) == 0)
+	const int cnt=CountSelectedMediaItems(NULL);
+	if (!cnt)
 		return 0;
 
-	for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
+	for (int i = 0; i < cnt; i++)
 	{
 		if (GetMediaItemInfo_Value(GetSelectedMediaItem(NULL, i), "C_BEATATTACHMODE") != 2)
 			return 0;
@@ -3089,20 +3095,22 @@ int IsSelItemsTimebaseBeatPos(COMMAND_T* = NULL)
 
 void AWSelItemsTimebaseBeatAll(COMMAND_T* t)
 {
-	for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
+	const int cnt=CountSelectedMediaItems(NULL);
+	for (int i = 0; i < cnt; i++)
 		SetMediaItemInfo_Value(GetSelectedMediaItem(NULL, i), "C_BEATATTACHMODE", 1);
 	UpdateItemTimebaseToolbar();
 
-	if (CountSelectedMediaItems(NULL) > 0)
+	if (cnt)
 		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
 }
 
 int IsSelItemsTimebaseBeatAll(COMMAND_T* = NULL)
 {
-	if (CountSelectedMediaItems(NULL) == 0)
+	const int cnt=CountSelectedMediaItems(NULL);
+	if (!cnt)
 		return 0;
 
-	for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
+	for (int i = 0; i < cnt; i++)
 	{
 		if (GetMediaItemInfo_Value(GetSelectedMediaItem(NULL, i), "C_BEATATTACHMODE") != 1)
 			return 0;

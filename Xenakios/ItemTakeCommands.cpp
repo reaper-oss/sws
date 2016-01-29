@@ -689,7 +689,8 @@ bool GenerateShuffledTakeRandomTable(int *IntTable,int numItems,int badFirstNumb
 
 void DoShuffleSelectTakesInItems(COMMAND_T* ct)
 {
-	for (int i = 0; i < CountSelectedMediaItems (NULL); ++i)
+	const int cnt=CountSelectedMediaItems(NULL);
+	for (int i = 0; i < cnt; ++i)
 	{
 		MediaItem* item = GetSelectedMediaItem(NULL, i);
 		int takeCount = CountTakes(item);
@@ -720,14 +721,15 @@ void DoShuffleSelectTakesInItems(COMMAND_T* ct)
 void DoMoveItemsToEditCursor(COMMAND_T* ct)
 {
 	double EditCurPos=GetCursorPosition();
-	for (int i = 0; i < CountSelectedMediaItems(0); i++)
+	const int cnt=CountSelectedMediaItems(NULL);
+	for (int i = 0; i < cnt; i++)
 	{
 		MediaItem* CurItem = GetSelectedMediaItem(0, i);
 		double SnapOffset = *(double*)GetSetMediaItemInfo(CurItem, "D_SNAPOFFSET", NULL);
 		double NewPos = EditCurPos - SnapOffset;
 		GetSetMediaItemInfo(CurItem, "D_POSITION", &NewPos);
 	}
-	if (CountSelectedMediaItems(0))
+	if (cnt)
 	{
 		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 		UpdateTimeline();
@@ -737,7 +739,8 @@ void DoMoveItemsToEditCursor(COMMAND_T* ct)
 void DoRemoveItemFades(COMMAND_T* ct)
 {
 	double dFade = 0.0;
-	for (int i = 0; i < CountSelectedMediaItems(0); i++)
+	const int cnt=CountSelectedMediaItems(NULL);
+	for (int i = 0; i < cnt; i++)
 	{
 		MediaItem* item = GetSelectedMediaItem(0, i);
 		GetSetMediaItemInfo(item, "D_FADEINLEN",  &dFade);
@@ -754,7 +757,8 @@ void DoTrimLeftEdgeToEditCursor(COMMAND_T* ct)
 {
 	double NewLeftEdge = GetCursorPosition();
 	bool modified = false;
-	for (int i = 0; i < CountSelectedMediaItems(0); i++)
+	const int cnt=CountSelectedMediaItems(NULL);
+	for (int i = 0; i < cnt; i++)
 	{
 		MediaItem* CurItem = GetSelectedMediaItem(0, i);
 		double OldLeftEdge = *(double*)GetSetMediaItemInfo(CurItem, "D_POSITION", NULL);
@@ -796,7 +800,8 @@ void DoTrimRightEdgeToEditCursor(COMMAND_T* ct)
 {
 	double dRightEdge = GetCursorPosition();
 	bool modified = false;
-	for (int i = 0; i < CountSelectedMediaItems(0); i++)
+	const int cnt=CountSelectedMediaItems(NULL);
+	for (int i = 0; i < cnt; i++)
 	{
 		modified = true;
 		MediaItem* CurItem = GetSelectedMediaItem(0, i);
@@ -824,7 +829,8 @@ void DoApplyTrackFXStereoAndResetVol(COMMAND_T* ct)
 	Undo_BeginBlock();
 	Main_OnCommand(40209,0); // apply track fx in stereo to items
 	double dVol = 1.0;
-	for (int i = 0; i < CountSelectedMediaItems(0); i++)
+	const int cnt=CountSelectedMediaItems(NULL);
+	for (int i = 0; i < cnt; i++)
 		GetSetMediaItemInfo(GetSelectedMediaItem(0, i), "D_VOL", &dVol);
 	Undo_EndBlock(SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS);
 }
@@ -834,7 +840,8 @@ void DoApplyTrackFXMonoAndResetVol(COMMAND_T* ct)
 	Undo_BeginBlock();
 	Main_OnCommand(40361,0); // apply track fx in mono to items
 	double dVol = 1.0;
-	for (int i = 0; i < CountSelectedMediaItems(0); i++)
+	const int cnt=CountSelectedMediaItems(NULL);
+	for (int i = 0; i < cnt; i++)
 		GetSetMediaItemInfo(GetSelectedMediaItem(0, i), "D_VOL", &dVol);
 	Undo_EndBlock(SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS);
 }

@@ -68,7 +68,8 @@ void LoopItemSection(COMMAND_T*)
 {
 	WDL_PtrList<void> items;
 	WDL_PtrList<void> sections;
-	for (int i = 0; i < CountSelectedMediaItems(0); i++)
+	const int cnt=CountSelectedMediaItems(NULL);
+	for (int i = 0; i < cnt; i++)
 	{
 		MediaItem* item = GetSelectedMediaItem(0, i);
 		items.Add(item);
@@ -207,7 +208,8 @@ double QuantizeTime(double dTime, double dMin, double dMax)
 void QuantizeItemEdges(COMMAND_T* t)
 {
 	// Eventually a dialog?  for now quantize to grid
-	for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
+	const int cnt=CountSelectedMediaItems(NULL);
+	for (int i = 0; i < cnt; i++)
 	{
 		MediaItem* item = GetSelectedMediaItem(NULL, i);
 		double dStart = *(double*)GetSetMediaItemInfo(item, "D_POSITION", NULL);
@@ -257,7 +259,8 @@ void QuantizeItemEdges(COMMAND_T* t)
 void SetChanModeAllTakes(COMMAND_T* t)
 {
 	int mode = (int)t->user;
-	for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
+	const int cnt=CountSelectedMediaItems(NULL);
+	for (int i = 0; i < cnt; i++)
 	{
 		MediaItem* item = GetSelectedMediaItem(NULL, i);
 		for (int j = 0; j < CountTakes(item); j++)
@@ -271,7 +274,8 @@ void SetChanModeAllTakes(COMMAND_T* t)
 void SetPreservePitch(COMMAND_T* t)
 {
 	bool bPP = t->user ? true : false;
-	for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
+	const int cnt=CountSelectedMediaItems(NULL);
+	for (int i = 0; i < cnt; i++)
 	{
 		MediaItem* item = GetSelectedMediaItem(NULL, i);
 		for (int j = 0; j < CountTakes(item); j++)
@@ -284,7 +288,8 @@ void SetPreservePitch(COMMAND_T* t)
 
 void SetPitch(COMMAND_T* t)
 {
-	for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
+	const int cnt=CountSelectedMediaItems(NULL);
+	for (int i = 0; i < cnt; i++)
 	{
 		MediaItem* item = GetSelectedMediaItem(NULL, i);
 		for (int j = 0; j < CountTakes(item); j++)
@@ -304,7 +309,8 @@ void SetPitch(COMMAND_T* t)
 // Modified by SWS to change the rate of all takes and to use snap offset
 void NudgePlayrate(COMMAND_T *t)
 {
-	for(int i = 0; i < CountSelectedMediaItems(NULL); i++)
+	const int cnt=CountSelectedMediaItems(NULL);
+	for(int i = 0; i < cnt; i++)
 	{
 		MediaItem* item = GetSelectedMediaItem(NULL, i);
 		double snapOffset = *(double*)GetSetMediaItemInfo(item, "D_SNAPOFFSET", NULL);

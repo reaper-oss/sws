@@ -323,7 +323,8 @@ bool MyTakeSortByTimeFunc (MediaItem_Take *a,MediaItem_Take *b)
 void DoAutoRename(COMMAND_T*)
 {
 	g_VecTakesToRename.clear();
-	for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
+	const int cnt=CountSelectedMediaItems(NULL);
+	for (int i = 0; i < cnt; i++)
 	{
 		MediaItem* item = GetSelectedMediaItem(NULL, i);
 		MediaItem_Take* take = GetMediaItemTake(item, -1);

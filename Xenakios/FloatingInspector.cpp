@@ -75,7 +75,7 @@ WDL_DLGRET MyItemInspectorDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM
 		case WM_TIMER:
 		{
 			ostringstream infoText;
-			int NumSelItems=CountSelectedMediaItems(NULL);
+			const int NumSelItems=CountSelectedMediaItems(NULL);
 			if (g_InspshowMode==0)
 			{
 				if (NumSelItems>0)

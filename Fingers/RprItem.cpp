@@ -128,7 +128,7 @@ void RprItemCtr::doSort()
 
 RprItemCtrPtr RprItemCollec::getSelected()
 {
-    int count = CountSelectedMediaItems(0);
+    const int count = CountSelectedMediaItems(0);
     
     RprItemCtrPtr ctr(new RprItemCtr);
     for(int i = 0; i < count; i++) {

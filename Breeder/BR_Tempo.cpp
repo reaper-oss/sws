@@ -1165,7 +1165,7 @@ void DeleteTempoPreserveItems (COMMAND_T* ct)
 	double firstMarker;
 	tempoMap.GetPoint(tempoMap.GetSelected(0), &firstMarker, NULL, NULL, NULL);
 
-	int itemCount = ((int)ct->user) ? CountSelectedMediaItems(NULL) : CountMediaItems(NULL);
+	const int itemCount = ((int)ct->user) ? CountSelectedMediaItems(NULL) : CountMediaItems(NULL);
 	items.reserve(itemCount);
 	for (int i = 0; i < itemCount; ++i)
 	{

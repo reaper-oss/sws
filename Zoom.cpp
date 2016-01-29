@@ -581,7 +581,7 @@ void TogZoom(int iType, int iOthers, bool includeEnvelopes)
 
 	double d1, d2;
 	GetSet_LoopTimeRange(false, false, &d1, &d2, false);
-	int itemCount = CountSelectedMediaItems(NULL);
+	const int itemCount = CountSelectedMediaItems(NULL);
 
 	if (((iType == 1 || iType == 3) && itemCount == 0 && d1 == d2) ||
 		((iType == 2 || iType == 4) && itemCount == 0)             ||

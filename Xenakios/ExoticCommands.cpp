@@ -43,7 +43,8 @@ void DoJumpEditCursorByRandomAmount(COMMAND_T*)
 
 void DoNudgeSelectedItemsPositions(bool UseConfig, bool Positive, double NudgeTime)
 {
-	for (int i = 0; i < CountSelectedMediaItems(0); i++)
+	const int cnt=CountSelectedMediaItems(NULL);
+	for (int i = 0; i < cnt; i++)
 	{
 		MediaItem* item = GetSelectedMediaItem(0, i);
 		double NewPos;
@@ -222,7 +223,7 @@ void DoSplitItemsAtTransients(COMMAND_T* ct)
 	bool ItemSelected=false;
 
 	int ItemCounter=0;
-	int numItems=CountSelectedMediaItems(NULL);
+	const int numItems=CountSelectedMediaItems(NULL);
 	MediaItem** MediaItemsInProject = new MediaItem*[numItems];
 	int i, j;
 	for (i=0;i<GetNumTracks();i++)
@@ -366,7 +367,8 @@ void DoNudgeTakeVolsUp(COMMAND_T*)
 void DoResetItemVol(COMMAND_T* ct)
 {
 	double NewVol=1.0;
-	for (int i = 0; i < CountSelectedMediaItems(0); i++)
+	const int cnt=CountSelectedMediaItems(NULL);
+	for (int i = 0; i < cnt; i++)
 		GetSetMediaItemInfo(GetSelectedMediaItem(0, i), "D_VOL", &NewVol);
 	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 	UpdateTimeline();
@@ -603,7 +605,8 @@ void DoRandomizePositions2(int obeyGroup)
 
 	if (obeyGroup == 0)
 	{
-		for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
+		const int cnt=CountSelectedMediaItems(NULL);
+		for (int i = 0; i < cnt; i++)
 		{
 			MediaItem* mi = GetSelectedMediaItem(NULL, i);
 			double dItemPos = *(double*)GetSetMediaItemInfo(mi, "D_POSITION", NULL);
@@ -615,7 +618,8 @@ void DoRandomizePositions2(int obeyGroup)
 	else
 	{
 		WDL_TypedBuf <int> processed;
-		for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
+		const int cnt=CountSelectedMediaItems(NULL);
+		for (int i = 0; i < cnt; i++)
 		{
 			MediaItem* mi = GetSelectedMediaItem(NULL, i);
 			double posDiff = -dSpread + (2.0/RAND_MAX)*rand()*dSpread;

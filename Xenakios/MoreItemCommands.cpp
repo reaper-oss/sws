@@ -720,7 +720,8 @@ void DoSetPrevFadeOutShape(COMMAND_T*)
 
 void DoSetFadeToCrossfade(COMMAND_T* ct)
 {
-	for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
+	const int cnt=CountSelectedMediaItems(NULL);
+	for (int i = 0; i < cnt; i++)
 	{
 		MediaItem* item = GetSelectedMediaItem(0, i);
 		double AutoFadeIn  = *(double*)GetSetMediaItemInfo(item, "D_FADEINLEN_AUTO",  NULL);
@@ -736,7 +737,8 @@ void DoSetFadeToDefaultFade(COMMAND_T* ct)
 {
 	double* pdDefFade = (double*)GetConfigVar("deffadelen");
 	double dZero = 0.0;
-	for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
+	const int cnt=CountSelectedMediaItems(NULL);
+	for (int i = 0; i < cnt; i++)
 	{
 		MediaItem* item = GetSelectedMediaItem(0, i);
 		GetSetMediaItemInfo(item, "D_FADEINLEN_AUTO",  &dZero);

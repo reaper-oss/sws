@@ -807,7 +807,7 @@ void BR_ItemMuteState::Save (bool selectedOnly)
 {
 	m_items.clear();
 
-	int count = (selectedOnly) ? CountSelectedMediaItems(NULL) : CountMediaItems(NULL);
+	const int count = (selectedOnly) ? CountSelectedMediaItems(NULL) : CountMediaItems(NULL);
 	for (int i = 0; i < count; ++i)
 	{
 		MediaItem* item = (selectedOnly) ? GetSelectedMediaItem(NULL, i) : GetMediaItem(NULL, i);

@@ -2141,11 +2141,11 @@ MediaItem_Take* GetTakeEnvParent (TrackEnvelope* envelope, BR_EnvType* type)
 {
 	if (envelope)
 	{
-		int itemCount = CountMediaItems(NULL);
+		const int itemCount = CountMediaItems(NULL);
 		for (int i = 0; i < itemCount; ++i)
 		{
 			MediaItem* item = GetMediaItem(NULL, i);
-			int takeCount = CountTakes(item);
+			const int takeCount = CountTakes(item);
 			for (int j = 0; j < takeCount; ++j)
 			{
 				MediaItem_Take* take = GetTake(item, j);
@@ -2157,7 +2157,7 @@ MediaItem_Take* GetTakeEnvParent (TrackEnvelope* envelope, BR_EnvType* type)
 				else if (GetTakeEnv(take, PITCH)  == envelope) returnType = PITCH;
 				else
 				{
-					int envelopeCount = CountTakeEnvelopes(take);
+					const int envelopeCount = CountTakeEnvelopes(take);
 					for (int k = 0; k < envelopeCount; ++k)
 					{
 						if (GetTakeEnvelope(take, k) == envelope)

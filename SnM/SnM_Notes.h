@@ -35,18 +35,19 @@
 
 #define NOTES_UPDATE_FREQ		150
 
-// note types
+// note types (g_notesType)
 enum {
-  SNM_NOTES_PROJECT=0,
+  SNM_NOTES_TRACK=0,
   SNM_NOTES_ITEM,
-  SNM_NOTES_TRACK,
-  SNM_NOTES_MKR_NAME,
+  SNM_NOTES_PROJECT,
+  SNM_NOTES_PROJECT_EXTRA,
+  SNM_NOTES_MKR_NAME,      // these should remain consecutive ---->
   SNM_NOTES_RGN_NAME,
   SNM_NOTES_MKRRGN_NAME,
   SNM_NOTES_MKR_SUB,
   SNM_NOTES_RGN_SUB,
-  SNM_NOTES_MKRRGN_SUB,
-  SNM_NOTES_ACTION_HELP // must remain the last item: no OSX support yet 
+  SNM_NOTES_MKRRGN_SUB,    // <-----
+  SNM_NOTES_ACTION_HELP    // must remain the last item: no OSX support yet 
 };
 
 class SNM_TrackNotes {
@@ -114,7 +115,8 @@ public:
 	void ToggleLock();
 
 	void SaveCurrentText(int _type, bool _wantUndo = true);
-	void SaveCurrentPrjNotes(bool _wantUndo = true);
+	void SaveCurrentProjectNotes(bool _wantUndo = true);
+	void SaveCurrentExtraProjectNotes(bool _wantUndo = true);
 	void SaveCurrentItemNotes(bool _wantUndo = true);
 	void SaveCurrentTrackNotes(bool _wantUndo = true);
 	void SaveCurrentMkrRgnNameOrSub(int _type, bool _wantUndo = true);

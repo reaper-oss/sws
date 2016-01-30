@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Notes.cpp
 /
-/ Copyright (c) 2010-2013 Jeffos
+/ Copyright (c) 2010 and later Jeffos
 /
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -26,17 +26,18 @@
 ******************************************************************************/
 
 //JFB
-// - if REAPER >= v4.55pre2 use MarkProjectDirty(), 
-//   otherwise creates undo point for each key stroke (!) to fix:
+// - if REAPER >= v4.55pre2 use MarkProjectDirty(), otherwise creates undo point for each key stroke (!) to fix:
 //   * SaveExtensionConfig() that is not called when there is no proj mods but some notes have been entered..
 //   * missing updates on project switches
 // - OSX: no action help support (SWELL's GetPrivateProfileSection assumes key=value)
 // - clicking the empty area of the tcp does not remove focus (important for refresh)
-// - if REAPER < v4.55pre2, undo does not restore caret position
+// - undo does not restore caret position
 // TODO?
 // - take changed => title not updated
 // - drag-drop text?
 // - use action_help_t? (not finished according to Cockos)
+// - handle concurent item/project notes updates?
+
 
 #include "stdafx.h"
 #include "SnM.h"
@@ -82,7 +83,7 @@ SNM_WindowManager<NotesWnd> g_notesWndMgr(NOTES_WND_ID);
 
 SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_SNM_TrackNotes;
 SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_RegionSubtitle> > g_pRegionSubs; // for markers too..
-SWSProjConfig<WDL_FastString> g_prjNotes;
+SWSProjConfig<WDL_FastString> g_prjNotes; // extra project notes
 
 int g_notesType = -1;
 int g_prevNotesType = -1;
@@ -146,11 +147,10 @@ void NotesWnd::OnInitDlg()
 
 	m_cbType.SetID(CMBID_TYPE);
 	m_cbType.SetFont(font);
-	m_cbType.AddItem(__LOCALIZE("Project notes","sws_DLG_152"));
-	m_cbType.AddItem("<SEP>");
-	m_cbType.AddItem(__LOCALIZE("Item notes","sws_DLG_152"));
-	m_cbType.AddItem("<SEP>");
 	m_cbType.AddItem(__LOCALIZE("Track notes","sws_DLG_152"));
+	m_cbType.AddItem(__LOCALIZE("Item notes","sws_DLG_152"));
+	m_cbType.AddItem(__LOCALIZE("Project notes","sws_DLG_152"));
+	m_cbType.AddItem(__LOCALIZE("Extra project notes","sws_DLG_152"));
 	m_cbType.AddItem("<SEP>");
 	m_cbType.AddItem(__LOCALIZE("Marker names","sws_DLG_152"));
 	m_cbType.AddItem(__LOCALIZE("Region names","sws_DLG_152"));
@@ -219,8 +219,8 @@ void NotesWnd::SetType(int _type)
 
 void NotesWnd::SetText(const char* _str, bool _addRN) {
 	if (_str) {
-		if (_addRN) GetStringWithRN(_str, g_lastText, MAX_HELP_LENGTH);
-		else lstrcpyn(g_lastText, _str, MAX_HELP_LENGTH);
+		if (_addRN) GetStringWithRN(_str, g_lastText, sizeof(g_lastText));
+		else lstrcpyn(g_lastText, _str, sizeof(g_lastText));
 		SetDlgItemText(m_hwnd, IDC_EDIT, g_lastText);
 	}
 }
@@ -231,6 +231,7 @@ void NotesWnd::RefreshGUI()
 	switch(g_notesType)
 	{
 		case SNM_NOTES_PROJECT:
+		case SNM_NOTES_PROJECT_EXTRA:
 			bHide = false;
 			break;
 		case SNM_NOTES_ITEM:
@@ -489,9 +490,9 @@ void NotesWnd::OnTimer(WPARAM wParam)
 		// no update when editing text or when the view is hidden (e.g. inactive docker tab).
 		// when the view is active: update only for markers and if the view is locked 
 		// => updates during playback, in other cases (e.g. item selection change) the main 
-		// window will be the active one
-		if (g_notesType!=SNM_NOTES_PROJECT && IsWindowVisible(m_hwnd) && (!IsActive() || 
-			(g_locked && (g_notesType>=SNM_NOTES_MKR_NAME && g_notesType<=SNM_NOTES_MKRRGN_SUB))))
+		// window will be the active one, not our NotesWnd
+		if (g_notesType!=SNM_NOTES_PROJECT && g_notesType!=SNM_NOTES_PROJECT_EXTRA && 
+		    IsWindowVisible(m_hwnd) && (!IsActive() || (g_locked && (g_notesType>=SNM_NOTES_MKR_NAME && g_notesType<=SNM_NOTES_MKRRGN_SUB))))
 		{
 			Update();
 		}
@@ -546,21 +547,23 @@ void NotesWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeig
 	IconTheme* it = SNM_GetIconTheme();
 	int x0=_r->left+SNM_GUI_X_MARGIN;
 
-	// lock button
 	SNM_SkinButton(&m_btnLock, it ? &it->toolbar_lock[!g_locked] : NULL, g_locked ? __LOCALIZE("Unlock","sws_DLG_152") : __LOCALIZE("Lock","sws_DLG_152"));
 	if (SNM_AutoVWndPosition(DT_LEFT, &m_btnLock, NULL, _r, &x0, _r->top, h))
 	{
-		// notes type
 		if (SNM_AutoVWndPosition(DT_LEFT, &m_cbType, NULL, _r, &x0, _r->top, h))
 		{
-			// label
 			char str[512];
 			lstrcpyn(str, __LOCALIZE("No selection!","sws_DLG_152"), sizeof(str));
 			switch(g_notesType)
 			{
 				case SNM_NOTES_PROJECT:
-					EnumProjects(-1, str, sizeof(str));
+				case SNM_NOTES_PROJECT_EXTRA:
+				{
+					char buf[SNM_MAX_PATH];
+					EnumProjects(-1, buf, sizeof(buf));
+					lstrcpyn(str, GetFilenameWithExt(buf), sizeof(str));
 					break;
+				}
 				case SNM_NOTES_ITEM:
 					if (g_mediaItemNote)
 					{
@@ -684,7 +687,10 @@ void NotesWnd::SaveCurrentText(int _type, bool _wantUndo)
 	switch(_type) 
 	{
 		case SNM_NOTES_PROJECT:
-			SaveCurrentPrjNotes(_wantUndo);
+			SaveCurrentProjectNotes(_wantUndo);
+			break;
+		case SNM_NOTES_PROJECT_EXTRA:
+			SaveCurrentExtraProjectNotes(_wantUndo);
 			break;
 		case SNM_NOTES_ITEM: 
 			SaveCurrentItemNotes(_wantUndo); 
@@ -706,12 +712,25 @@ void NotesWnd::SaveCurrentText(int _type, bool _wantUndo)
 	}
 }
 
-void NotesWnd::SaveCurrentPrjNotes(bool _wantUndo)
+void NotesWnd::SaveCurrentProjectNotes(bool _wantUndo)
 {
-	GetDlgItemText(m_hwnd, IDC_EDIT, g_lastText, MAX_HELP_LENGTH);
+	GetDlgItemText(m_hwnd, IDC_EDIT, g_lastText, sizeof(g_lastText));
+	GetSetProjectNotes(NULL, true, g_lastText, sizeof(g_lastText));
+/* project notes are out of the undo system's scope, MarkProjectDirty is the best thing we can do...
+	if (_wantUndo)
+		Undo_OnStateChangeEx2(NULL, __LOCALIZE("Edit project notes","sws_undo"), UNDO_STATE_ALL, -1);
+	else
+*/
+	if (MarkProjectDirty)
+		MarkProjectDirty(NULL);
+}
+
+void NotesWnd::SaveCurrentExtraProjectNotes(bool _wantUndo)
+{
+	GetDlgItemText(m_hwnd, IDC_EDIT, g_lastText, sizeof(g_lastText));
 	g_prjNotes.Get()->Set(g_lastText); // CRLF removed only when saving the project..
 	if (_wantUndo)
-		Undo_OnStateChangeEx2(NULL, __LOCALIZE("Edit project notes","sws_undo"), UNDO_STATE_MISCCFG, -1);
+		Undo_OnStateChangeEx2(NULL, __LOCALIZE("Edit exta project notes","sws_undo"), UNDO_STATE_MISCCFG, -1);
 	else
 		MarkProjectDirty(NULL);
 }
@@ -720,7 +739,7 @@ void NotesWnd::SaveCurrentItemNotes(bool _wantUndo)
 {
 	if (g_mediaItemNote && GetMediaItem_Track(g_mediaItemNote))
 	{
-		GetDlgItemText(m_hwnd, IDC_EDIT, g_lastText, MAX_HELP_LENGTH);
+		GetDlgItemText(m_hwnd, IDC_EDIT, g_lastText, sizeof(g_lastText));
 		if (GetSetMediaItemInfo(g_mediaItemNote, "P_NOTES", g_lastText))
 		{
 //				UpdateItemInProject(g_mediaItemNote);
@@ -737,7 +756,7 @@ void NotesWnd::SaveCurrentTrackNotes(bool _wantUndo)
 {
 	if (g_trNote && CSurf_TrackToID(g_trNote, false) >= 0)
 	{
-		GetDlgItemText(m_hwnd, IDC_EDIT, g_lastText, MAX_HELP_LENGTH);
+		GetDlgItemText(m_hwnd, IDC_EDIT, g_lastText, sizeof(g_lastText));
 		bool found = false;
 		for (int i=0; i < g_SNM_TrackNotes.Get()->GetSize(); i++) 
 		{
@@ -761,7 +780,7 @@ void NotesWnd::SaveCurrentMkrRgnNameOrSub(int _type, bool _wantUndo)
 {
 	if (g_lastMarkerRegionId > 0)
 	{
-		GetDlgItemText(m_hwnd, IDC_EDIT, g_lastText, MAX_HELP_LENGTH);
+		GetDlgItemText(m_hwnd, IDC_EDIT, g_lastText, sizeof(g_lastText));
 
 		// set marker/region name?
 		if (_type>=SNM_NOTES_MKR_NAME && _type<=SNM_NOTES_MKRRGN_NAME)
@@ -811,7 +830,7 @@ void NotesWnd::SaveCurrentMkrRgnNameOrSub(int _type, bool _wantUndo)
 void NotesWnd::SaveCurrentHelp()
 {
 	if (*g_lastActionCustId) {
-		GetDlgItemText(m_hwnd, IDC_EDIT, g_lastText, MAX_HELP_LENGTH);
+		GetDlgItemText(m_hwnd, IDC_EDIT, g_lastText, sizeof(g_lastText));
 		SaveHelp(g_lastActionCustId, g_lastText);
 	}
 }
@@ -848,6 +867,14 @@ void NotesWnd::Update(bool _force)
 	switch(g_notesType)
 	{
 		case SNM_NOTES_PROJECT:
+		{
+			char buf[MAX_HELP_LENGTH];
+			GetSetProjectNotes(NULL, false, buf, sizeof(buf));
+			SetText(buf);
+			refreshType = REQUEST_REFRESH;
+			break;
+		}
+		case SNM_NOTES_PROJECT_EXTRA:
 			SetText(g_prjNotes.Get()->Get());
 			refreshType = REQUEST_REFRESH;
 			break;
@@ -930,20 +957,6 @@ int NotesWnd::UpdateItemNotes()
 		SetText("");
 		refreshType = REQUEST_REFRESH;
 	}
-
-/*JFB commented: handles concurent item note updates but kludgy..
-#ifdef _WIN32
-	if (refreshType == NO_REFRESH)
-	{
-		char name[SNM_MAX_PATH] = "";
-		MediaItem_Take* tk = GetActiveTake(g_mediaItemNote);
-		char* tkName = tk ? (char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL) : NULL;
-		_snprintfSafe(name, sizeof(name), "%s \"%s\"", __localizeFunc("Notes for", "notes", 0), tkName ? tkName : __localizeFunc("Empty Item", "common", 0));
-		if (HWND w = GetReaHwndByTitle(name))
-			g_mediaItemNote = NULL; // will force refresh
-	}
-#endif
-*/
 	return refreshType;
 }
 
@@ -1462,30 +1475,6 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 
 	g_pRegionSubs.Cleanup();
 	g_pRegionSubs.Get()->Empty(true);
-
-	// init S&M project notes with REAPER's ones
-	if (!isUndo)
-	{
-		char buf[SNM_MAX_PATH] = "";
-		if (IsActiveProjectInLoadSave(buf, sizeof(buf), true))
-		{
-			WDL_FastString startOfrpp;
-
-			// just read the very begining of the file (where prj notes are, no-op if notes are bigger)
-			// => much faster REAPER startup (based on the parser tolerance..)
-			if (LoadChunk(buf, &startOfrpp, true, 4096) && startOfrpp.GetLength())
-			{
-				SNM_ChunkParserPatcher p(&startOfrpp);
-				WDL_FastString notes;
-				if (p.GetSubChunk("NOTES", 2, 0, &notes, "RIPPLE") >= 0)
-				{
-					char bufNotes[MAX_HELP_LENGTH] = "";
-					if (GetStringFromNotesChunk(&notes, bufNotes, MAX_HELP_LENGTH))
-						g_prjNotes.Get()->Set(bufNotes);
-				}
-			}
-		}
-	}
 }
 
 static project_config_extension_t s_projectconfig = {

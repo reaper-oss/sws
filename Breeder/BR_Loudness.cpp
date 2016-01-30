@@ -2806,8 +2806,8 @@ WDL_DLGRET BR_AnalyzeLoudnessWnd::ExportFormatDialogProc (HWND hwnd, UINT uMsg, 
 
 		case WM_CONTEXTMENU:
 		{
-			int x = LOWORD(lParam);
-			int y = HIWORD(lParam);
+			int x = GET_X_LPARAM(lParam);
+			int y = GET_Y_LPARAM(lParam);
 			RECT r;	GetWindowRect(GetDlgItem(hwnd, IDC_WILDCARDS), &r);
 			POINT pt = {x, y + 3*(SNM_1PIXEL_Y*(-1))};
 

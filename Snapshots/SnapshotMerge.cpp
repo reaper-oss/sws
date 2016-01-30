@@ -172,8 +172,7 @@ INT_PTR WINAPI mergeWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 			return 0;
 		case WM_CONTEXTMENU:
 		{
-			// 
-			int x = LOWORD(lParam), y = HIWORD(lParam);
+			int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
 			if (mv->DoColumnMenu(x, y))
 				return 0;
 

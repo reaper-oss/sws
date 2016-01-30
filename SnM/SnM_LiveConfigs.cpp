@@ -44,51 +44,68 @@
 #define LIVECFG_MON_WND_ID			"SnMLiveConfigMonitor%d"
 #define LIVECFG_VERSION				2
 
-//#define UNUSED					0xF001 
-#define CLEAR_CC_ROW_MSG			0xF002
-#define CLEAR_TRACK_MSG				0xF003
-#define CLEAR_FXCHAIN_MSG			0xF004
-#define CLEAR_TRACK_TEMPLATE_MSG	0xF005
-#define CLEAR_DESC_MSG				0xF006
-#define CLEAR_PRESETS_MSG			0xF007
-#define CLEAR_ON_ACTION_MSG			0xF008
-#define CLEAR_OFF_ACTION_MSG		0xF009 
-#define LOAD_TRACK_TEMPLATE_MSG		0xF00A
-#define LOAD_FXCHAIN_MSG			0xF00B
-#define EDIT_DESC_MSG				0xF00C
-#define EDIT_ON_ACTION_MSG			0xF00D
-#define EDIT_OFF_ACTION_MSG			0xF00E
-#define LEARN_ON_ACTION_MSG			0xF00F
-#define LEARN_OFF_ACTION_MSG		0xF010
-#define MUTE_OTHERS_MSG				0xF011
-#define SELSCROLL_MSG				0xF012
-#define OFFLINE_OTHERS_MSG			0xF013
-#define CC123_MSG					0xF014
-#define IGNORE_EMPTY_MSG			0xF015
-#define AUTOSENDS_MSG				0xF016
-#define LEARN_APPLY_MSG				0xF017
-#define LEARN_PRELOAD_MSG			0xF018
-#define HELP_MSG					0xF019
-#define APPLY_MSG					0xF01A
-#define PRELOAD_MSG					0xF01B
-#define SHOW_FX_MSG					0xF01C
-#define SHOW_IO_MSG					0xF01D
-#define SHOW_FX_INPUT_MSG			0xF01E
-#define SHOW_IO_INPUT_MSG			0xF01F
-#define INS_UP_MSG					0xF020
-#define INS_DOWN_MSG				0xF021
-#define CUT_MSG						0xF022
-#define COPY_MSG					0xF023
-#define PASTE_MSG					0xF024
-#define CREATE_INPUT_MSG			0xF025
-#define OSC_START_MSG				0xF100 // 255 osc curfs max -->
-#define OSC_END_MSG					0xF1FF // <--
-#define LEARN_PRESETS_START_MSG		0xF200 // 255 fx learn max -->
-#define LEARN_PRESETS_END_MSG		0xF2FF // <--
-#define SET_TRACK_START_MSG			0xF300 // 255 track max -->
-#define SET_TRACK_END_MSG			0xF3FF // <--
-#define SET_PRESET_START_MSG		0xF400 // a bunch of presets -->
-#define SET_PRESET_END_MSG			0xFFFE // <-- note: exclude very last LOWROD value to prevent compilation warning
+enum {
+  CLEAR_CC_ROW_MSG=0xF001,
+  CLEAR_TRACK_MSG,
+  CLEAR_FXCHAIN_MSG,
+  CLEAR_TRACK_TEMPLATE_MSG,
+  CLEAR_DESC_MSG,
+  CLEAR_PRESETS_MSG,
+  CLEAR_ON_ACTION_MSG,
+  CLEAR_OFF_ACTION_MSG,
+  LOAD_TRACK_TEMPLATE_MSG,
+  LOAD_FXCHAIN_MSG,
+  EDIT_DESC_MSG,
+  EDIT_ON_ACTION_MSG,
+  EDIT_OFF_ACTION_MSG,
+  LEARN_ON_ACTION_MSG,
+  LEARN_OFF_ACTION_MSG,
+  MUTE_OTHERS_MSG,
+  SELSCROLL_MSG,
+  OFFLINE_OTHERS_MSG,
+  CC123_MSG,
+  IGNORE_EMPTY_MSG,
+  AUTOSENDS_MSG,
+  LEARN_APPLY_MSG,
+  LEARN_PRELOAD_MSG,
+  HELP_MSG,
+  APPLY_MSG,
+  PRELOAD_MSG,
+  SHOW_FX_MSG,
+  SHOW_IO_MSG,
+  SHOW_FX_INPUT_MSG,
+  SHOW_IO_INPUT_MSG,
+  INS_UP_MSG,
+  INS_DOWN_MSG,
+  CUT_MSG,
+  COPY_MSG,
+  PASTE_MSG,
+  CREATE_INPUT_MSG,
+  OSC_START_MSG,                                       // 64 osc curfs max -->
+  OSC_END_MSG = OSC_START_MSG+64,                      // <--
+  LEARN_PRESETS_START_MSG,                             // 255 fx max -->
+  LEARN_PRESETS_END_MSG = LEARN_PRESETS_START_MSG+256, // <--
+  SET_TRACK_START_MSG,                                 // 512 track max -->
+  SET_TRACK_END_MSG = SET_TRACK_START_MSG+512,         // <--
+  SET_PRESET_START_MSG,                                // 2048 presets max -->
+  SET_PRESET_END_MSG = SET_PRESET_START_MSG+2048,      // <--
+
+  LAST_MSG // keep as last item!
+};
+
+enum {
+  BTNID_ENABLE=LAST_MSG,
+  CMBID_CONFIG,
+  TXTID_INPUT_TRACK,
+  CMBID_INPUT_TRACK,
+  BTNID_LEARN,
+  BTNID_OPTIONS,
+  BTNID_MON,
+  WNDID_CC_DELAY,
+  KNBID_CC_DELAY,
+  WNDID_FADE,
+  KNBID_FADE
+};
 
 #define MAX_CC_DELAY				3000
 #define DEF_CC_DELAY				500
@@ -107,21 +124,6 @@
 
 #define APPLY_MASK					1
 #define PRELOAD_MASK				2
-
-
-enum {
-  BTNID_ENABLE=2000, //JFB would be great to have _APS_NEXT_CONTROL_VALUE *always* defined
-  CMBID_CONFIG,
-  TXTID_INPUT_TRACK,
-  CMBID_INPUT_TRACK,
-  BTNID_LEARN,
-  BTNID_OPTIONS,
-  BTNID_MON,
-  WNDID_CC_DELAY,
-  KNBID_CC_DELAY,
-  WNDID_FADE,
-  KNBID_FADE
-};
 
 enum {
   COL_CC=0,

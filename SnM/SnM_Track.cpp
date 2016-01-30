@@ -635,44 +635,6 @@ int WriteEnvExists(COMMAND_T* _ct)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Track icons
-///////////////////////////////////////////////////////////////////////////////
-
-// return false if no track icon has been found
-// note: _fnOutSz is ignored atm
-bool GetTrackIcon(MediaTrack* _tr, char* _fnOut, int _fnOutSz)
-{
-	if (_tr && _fnOut && _tr!=GetMasterTrack(NULL))  // exclude master (icon not supported yet, v4.13) 
-	{
-		SNM_ChunkParserPatcher p(_tr);
-		p.SetWantsMinimalState(true);
-		return (p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKIMGFN", 0, 1, _fnOut, NULL, "TRACKID") > 0);
-	}
-	return false;
-}
-
-// primitive (no undo point), removes track icon if _fn == ""
-bool SetTrackIcon(MediaTrack* _tr, const char* _fn)
-{
-	bool updated = false;
-	if (_tr && _fn && _tr!=GetMasterTrack(NULL)) // exclude master (icon not supported yet, v4.13)
-	{
-		SNM_ChunkParserPatcher p(_tr); // nothing done yet
-		int iconChunkPos = p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKIMGFN", 0, 1, NULL, NULL, "TRACKID");
-		char pIconLine[SNM_MAX_CHUNK_LINE_LENGTH] = "";
-		if (_snprintfStrict(pIconLine, sizeof(pIconLine), "TRACKIMGFN \"%s\"\n", _fn) > 0)
-		{
-			if (iconChunkPos > 0)
-				updated |= p.ReplaceLine(--iconChunkPos, pIconLine); //JFB!! to update with SNM_ChunkParserPatcher v2
-			else 
-				updated |= p.InsertAfterBefore(0, pIconLine, "TRACK", "FX", 1, 0, "TRACKID");
-		}
-	}
-	return updated;
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
 // Loading/applying track templates
 ///////////////////////////////////////////////////////////////////////////////
 

@@ -4468,16 +4468,20 @@ void ShowNextPreviousImageSlot(COMMAND_T* _ct)
 void SetSelTrackIconSlot(int _slotType, const char* _title, int _slot)
 {
 	bool updated = false;
+
+	PreventUIRefresh(1);
 	if (WDL_FastString* fnStr = GetOrPromptOrBrowseSlot(_slotType, &_slot))
 	{
 		for (int j=0; j <= GetNumTracks(); j++)
 			if (MediaTrack* tr = CSurf_TrackFromID(j, false))
 				if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
-					updated |= SetTrackIcon(tr, fnStr->Get());
+					updated |= !!GetSetMediaTrackInfo(tr, "P_ICON", (void*)fnStr->Get());
 		delete fnStr;
 	}
+	PreventUIRefresh(-1);
+
 	if (updated && _title)
-		Undo_OnStateChangeEx2(NULL, _title, UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, _title, UNDO_STATE_TRACKCFG, -1);
 }
 
 void SetSelTrackIconSlot(COMMAND_T* _ct) {

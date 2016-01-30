@@ -58,9 +58,6 @@ bool SNM_SetSelectedTracks(ReaProject* _proj, WDL_PtrList<MediaTrack>* _trs, boo
 bool SNM_SetSelectedTrack(ReaProject* _proj, MediaTrack* _tr, bool _unselOthers, bool _withMaster = true);
 void SNM_ClearSelectedTracks(ReaProject* _proj, bool _withMaster);
 
-bool GetTrackIcon(MediaTrack* _tr, char* _fnOut, int _fnOutSz);
-bool SetTrackIcon(MediaTrack* _tr, const char* _fn);
-
 bool MakeSingleTrackTemplateChunk(WDL_FastString* _in, WDL_FastString* _out, bool _delItems, bool _delEnvs, int _tmpltIdx = 0, bool _obeyOffset = true);
 bool GetItemsSubChunk(WDL_FastString* _in, WDL_FastString* _out, int _tmpltIdx = 0);
 bool ReplacePasteItemsFromTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmpltItems, bool _paste, SNM_ChunkParserPatcher* _p = NULL);

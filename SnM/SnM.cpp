@@ -802,8 +802,8 @@ void SaveDynamicActions(DYN_COMMAND_T* _cmds, const char* _inifn)
 {
 	// no localization here, intentional
 	WDL_FastString iniSection, str;
-	iniSection.Set("; Set the number of actions you want below. Quit REAPER first!\n");
-	iniSection.AppendFormatted(512, "; Unless specified, the maximum number of actions is %d. To hide/remove actions: 0.\n", SNM_MAX_DYN_ACTIONS);
+	iniSection.Set("; Set the number of actions you want below. Quit REAPER first! ===\n");
+	iniSection.AppendFormatted(512, "; Unless specified, the maximum number of actions is %d (0 will hide actions). ===\n", SNM_MAX_DYN_ACTIONS);
 
 	int i=0;
 	WDL_String nameStr; // no fast string here: the buffer gets mangeled..
@@ -1243,12 +1243,16 @@ void IniFileInit()
 
 void IniFileExit()
 {
-	// save general prefs & info
 	WDL_FastString iniSection;
-	iniSection.AppendFormatted(128, "; REAPER v%s\n", GetAppVersion()); 
-	iniSection.AppendFormatted(128, "; SWS/S&M Extension v%d.%d.%d Build %d\n; ", SWS_VERSION); 
+
+	// useful for debug...
+	iniSection.AppendFormatted(128, "; REAPER v%s ===\n", GetAppVersion()); 
+	iniSection.AppendFormatted(128, "; SWS/S&M Extension v%d.%d.%d Build %d ===\n", SWS_VERSION); 
+	iniSection.Append("; "); 
 	iniSection.Append(g_SNM_IniFn.Get()); 
-	iniSection.AppendFormatted(128, "\nIniFileUpgrade=%d\n", g_SNM_IniVersion); 
+	iniSection.Append(" ===\n");
+
+	iniSection.AppendFormatted(128, "IniFileUpgrade=%d\n", g_SNM_IniVersion); 
 	iniSection.AppendFormatted(128, "MediaFileLockAudio=%d\n", g_SNM_MediaFlags&1 ? 1:0); 
 	iniSection.AppendFormatted(128, "ToolbarsAutoRefresh=%d\n", g_SNM_ToolbarRefresh ? 1:0); 
 	iniSection.AppendFormatted(128, "ToolbarsAutoRefreshFreq=%d ; in ms (min: 100, max: 5000)\n", g_SNM_ToolbarRefreshFreq);

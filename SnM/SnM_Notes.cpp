@@ -53,12 +53,16 @@
 #define NOTES_WND_ID				"SnMNotesHelp"
 #define NOTES_INI_SEC				"Notes"
 #define MAX_HELP_LENGTH				(64*1024) //JFB! instead of MAX_INI_SECTION (too large)
-#define SET_ACTION_HELP_FILE_MSG	0xF001
-#define WRAP_MSG                  0xF002
-#define UPDATE_TIMER              1
+#define UPDATE_TIMER				1
 
 enum {
-  BTNID_LOCK=2000, //JFB would be great to have _APS_NEXT_CONTROL_VALUE *always* defined
+  SET_ACTION_HELP_FILE_MSG = 0xF001,
+  WRAP_MSG,
+  LAST_MSG // keep as last item!
+};
+
+enum {
+  BTNID_LOCK=LAST_MSG,
   CMBID_TYPE,
   TXTID_LABEL,
   BTNID_ALR,

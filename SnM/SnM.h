@@ -158,7 +158,7 @@
 #define SNM_MAX_ENV_CHUNKNAME_LEN	32
 #define SNM_MAX_MARKER_NAME_LEN		64     // + regions
 #define SNM_MAX_TRACK_NAME_LEN		128
-#define SNM_MAX_PRESET_NAME_LEN		128
+#define SNM_MAX_PRESET_NAME_LEN		SNM_MAX_PATH // vst3 presets can be full filenames (.vstpreset files)
 #define SNM_MAX_FX_NAME_LEN			128
 #define SNM_MAX_OSC_MSG_LEN			256
 

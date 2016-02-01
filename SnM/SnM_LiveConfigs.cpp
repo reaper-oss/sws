@@ -152,6 +152,10 @@ int* g_reaPref_fadeLen = NULL;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Presets helpers
+// Format of v1 presets (deprecated): 
+//    "fx.preset", both 1-based - e.g. "2.9 3.2" => FX2 preset 9, FX3 preset 2 
+// Format of v2 presets: 
+//    "FX%d: escaped_preset_name", e.g. "FX1 'Default' FX3 'Harsh disto'" 
 ///////////////////////////////////////////////////////////////////////////////
 
 // updates a preset conf string
@@ -217,38 +221,53 @@ void UpdatePresetConf(WDL_FastString* _presetConf, int _fx, const char* _preset)
 		_presetConf->Set(&newConf);
 }
 
-bool GetPresetConf(int _fx, const char* _presetConf, WDL_FastString* _presetName)
+// parses _presetConf to get the preset name for _fx, or a human redable vertsion of _presetConf if _fx<0
+// assumes _presetConf is valid (for better perfs)
+bool ParsePresetConf(int _fx, const char* _presetConf, WDL_FastString* _out, bool _wantshort=false)
 {
-	if (_presetName)
-		_presetName->Set("");
+	if (!_presetConf || !*_presetConf) return false;
+
+	if (!_out) return false;
+	else _out->Set("");
 
 	LineParser lp(false);
-	if (_presetConf && _presetName && !lp.parse(_presetConf))
+	if (!lp.parse(_presetConf))
 	{
-		char fxBuf[32]="";
-		if (_snprintfStrict(fxBuf, sizeof(fxBuf), "FX%d:", _fx+1) > 0)
+		char fxBuf[64]="";
+		if (_fx >= 0) _snprintfSafe(fxBuf, sizeof(fxBuf), "FX%d:", _fx+1);
+
+		int i=0;
+		while (i < lp.getnumtokens())
 		{
-			for (int i=0; i < lp.getnumtokens(); i++)
+			const char* fx= lp.gettoken_str(i);
+			const char* preset=lp.gettoken_str(i+1);
+			if (*preset && !strncmp(fx, "FX", 2))
 			{
-				if (!strcmp(lp.gettoken_str(i), fxBuf))
+				if (_fx < 0)
 				{
-					if (i+1 < lp.getnumtokens()) {
-						_presetName->Set(lp.gettoken_str(i+1));
-						return true;
-					}
-					break;
+					_out->Append(fx);
+					_out->Append(" ");
+				}
+				if (_fx < 0 || !strcmp(lp.gettoken_str(i), fxBuf))
+				{
+					if (_filepartonly && HasFileExtension(preset, "vstpreset")) _out->Append(GetFileRelativePath(preset));
+					else _out->Append(preset);
+					if (_fx >= 0) break;
 				}
 			}
+			i+=2;
 		}
 	}
-	return false;
+	return _out->GetLength()>0;
 }
 
+#ifdef _WIN32 // fx presets were not available on OSX before v2
 int GetPresetFromConfTokenV1(const char* _preset) {
 	if (const char* p = strchr(_preset, '.'))
 		return atoi(p+1);
 	return 0;
 }
+#endif
 
 void UpgradePresetConfV1toV2(MediaTrack* _tr, const char* _confV1, WDL_FastString* _confV2)
 {
@@ -282,7 +301,6 @@ void UpgradePresetConfV1toV2(MediaTrack* _tr, const char* _confV1, WDL_FastStrin
 }
 
 // trigger several track fx presets
-// _presetConf: "fx.preset", both 1-based - e.g. "2.9 3.2" => FX2 preset 9, FX3 preset 2 
 bool TriggerFXPresets(MediaTrack* _tr, WDL_FastString* _presetConf)
 {
 	bool updated = false;
@@ -290,7 +308,7 @@ bool TriggerFXPresets(MediaTrack* _tr, WDL_FastString* _presetConf)
 	{
 		WDL_FastString presetName;
 		for (int i=0; i < nbFx; i++)
-			if (GetPresetConf(i, _presetConf->Get(), &presetName))
+			if (ParsePresetConf(i, _presetConf->Get(), &presetName))
 				updated |= TrackFX_SetPreset(_tr, i, presetName.Get());
 	}
 	return updated;
@@ -647,6 +665,8 @@ LiveConfigView::LiveConfigView(HWND hwndList, HWND hwndEdit)
 void LiveConfigView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax)
 {
 	if (str) *str = '\0';
+  
+	static WDL_FastString tmp;
 	if (LiveConfigItem* pItem = (LiveConfigItem*)item)
 	{
 		switch (iCol)
@@ -674,7 +694,8 @@ void LiveConfigView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iS
 				GetFilenameNoExt(pItem->m_fxChain.Get(), str, iStrMax);
 				break;
 			case COL_PRESET:
-				lstrcpyn(str, pItem->m_presets.Get(), iStrMax);
+				if (ParsePresetConf(-1, pItem->m_presets.Get(), &tmp, true))
+					lstrcpyn(str, tmp.Get(), iStrMax);
 				break;
 			case COL_ACTION_ON:
 			case COL_ACTION_OFF:
@@ -1456,7 +1477,7 @@ void LiveConfigsWnd::AddPresetMenu(HMENU _menu, MediaTrack* _tr, WDL_FastString*
 		if(TrackFX_GetFXName(_tr, fx, fxName, SNM_MAX_FX_NAME_LEN))
 		{
 			HMENU fxSubMenu = CreatePopupMenu();
-			GetPresetConf(fx, _curPresetConf->Get(), &curPresetName);
+			ParsePresetConf(fx, _curPresetConf->Get(), &curPresetName, true);
 
 			// clear current fx preset
 			AddToMenuOrdered(fxSubMenu, __LOCALIZE("Clear FX preset","sws_DLG_155"), SET_PRESET_START_MSG);

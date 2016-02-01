@@ -553,10 +553,6 @@ static COMMAND_T s_cmdTable[] =
 
   // Deprecated, unreleased, etc... -----------------------------------------
 #ifdef _SNM_MISC
-	{ { DEFACCEL, "SWS/S&M: Resources - Project loader/selecter: configuration" }, "S&M_PRJ_LOADER_CONF", ProjectLoaderConf, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Resources - Project loader/selecter: next (cycle)" }, "S&M_PRJ_LOADER_NEXT", LoadOrSelectNextPreviousProjectSlot, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Resources - Project loader/selecter: previous (cycle)" }, "S&M_PRJ_LOADER_PREV", LoadOrSelectNextPreviousProjectSlot, NULL, -1},
-
 	{ { DEFACCEL, "SWS/S&M: Resources - Play media file in selected tracks, prompt for slot" }, "S&M_PLAYMEDIA_SELTRACKp", PlaySelTrackMediaSlot, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Resources - Loop media file in selected tracks, prompt for slot" }, "S&M_LOOPMEDIA_SELTRACKp", LoopSelTrackMediaSlot, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Resources - Play media file in selected tracks (toggle), prompt for slot" }, "S&M_TGL_PLAYMEDIA_SELTRACKp", TogglePlaySelTrackMediaSlot, NULL, -1, GetFakeToggleState},

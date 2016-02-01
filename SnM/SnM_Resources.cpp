@@ -218,10 +218,6 @@ WDL_PtrList<WDL_FastString> g_autoSaveDirs;
 WDL_PtrList<WDL_FastString> g_autoFillDirs;
 WDL_PtrList<WDL_FastString> g_tiedProjects;
 bool g_syncAutoDirPrefs[SNM_MAX_SLOT_TYPES];
-#ifdef _SNM_MISC
-int g_prjLoaderStartPref = -1; // 1-based
-int g_prjLoaderEndPref = -1; // 1-based
-#endif
 
 // auto-save prefs
 int g_asTrTmpltPref = 3; // &1: with items, &2: with envs
@@ -621,15 +617,8 @@ void ResourcesView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iSt
 				if (slot >= 0)
 				{
 					slot++;
-#ifdef _SNM_MISC
-					if (g_resType == SNM_SLOT_PRJ && IsProjectLoaderConfValid())
-						_snprintfSafe(str, iStrMax, "%5.d %s", slot, 
-							slot<g_prjLoaderStartPref || slot>g_prjLoaderEndPref ? "  " : 
-							g_prjLoaderStartPref==slot ? "->" : g_prjLoaderEndPref==slot ? "<-" :  "--");
-#else
 					if (g_resType==g_tiedSlotActions[SNM_SLOT_PRJ] && g_prjCurSlot>=0 && g_prjCurSlot+1==slot)
 						_snprintfSafe(str, iStrMax, "%5.d %s", slot, UTF8_BULLET);
-#endif
 					else
 						_snprintfSafe(str, iStrMax, "%5.d", slot);
 				}
@@ -1561,30 +1550,6 @@ void ResourcesWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			}
 			break;
 		}
-#ifdef _SNM_MISC
-		case PRJ_LOADER_SET_MSG:
-		{
-			int min=fl->GetSize(), max=0;
-			while(item)
-			{
-				slot = fl->Find(item)+1;
-				if (slot>max) max = slot;
-				if (slot<min) min = slot;
-				item = (ResourceItem*)GetListView()->EnumSelected(&x);
-			}
-			if (max>min)
-			{
-				g_prjLoaderStartPref = min;
-				g_prjLoaderEndPref = max;
-				Update();
-			}
-			break;
-		}
-		case PRJ_LOADER_CLEAR_MSG:
-			g_prjLoaderStartPref = g_prjLoaderEndPref = -1;
-			Update();
-			break;
-#endif
 
 			// ***** WDL GUI & others *****
 		case CMBID_TYPE:
@@ -1868,16 +1833,6 @@ HMENU ResourcesWnd::OnContextMenu(int _x, int _y, bool* _wantDefaultItems)
 				msg = PRJ_START_MSG;
 				AddToMenu(hMenu, PRJ_SELECT_LOAD_STR,  msg++, -1, false, enabled);
 				AddToMenu(hMenu, PRJ_SELECT_LOAD_TAB_STR,  msg++, -1, false, enabled);
-#ifdef _SNM_MISC
-				if (g_resType == typeForUser)  // no GetTypeForUser() here: only one loader/selecter config atm..
-				{
-					AddToMenu(hMenu, SWS_SEPARATOR, 0);
-					int x=0, nbsel=0; while(GetListView()->EnumSelected(&x)) nbsel++;
-					AddToMenu(hMenu, __LOCALIZE("Project loader/selecter configuration...","sws_DLG_150"), SWSGetCommandID(ProjectLoaderConf));
-					AddToMenu(hMenu, __LOCALIZE("Set project loader/selecter from selection","sws_DLG_150"), PRJ_LOADER_SET_MSG, -1, false, nbsel>1 ? MF_ENABLED : MF_GRAYED);
-					AddToMenu(hMenu, __LOCALIZE("Clear project loader/selecter configuration","sws_DLG_150"), PRJ_LOADER_CLEAR_MSG, -1, false, IsProjectLoaderConfValid() ? MF_ENABLED : MF_GRAYED);
-				}
-#endif
 				break;
 			}
 			case SNM_SLOT_MEDIA:
@@ -3221,10 +3176,6 @@ int ResourcesInit()
 	g_asFXChainPref = GetPrivateProfileInt(RES_INI_SEC, "AutoSaveFXChain", FXC_AUTOSAVE_PREF_TRACK, g_SNM_IniFn.Get());
 	g_asFXChainNamePref = GetPrivateProfileInt(RES_INI_SEC, "AutoSaveFXChainName", 0, g_SNM_IniFn.Get());
 	g_asTrTmpltPref = GetPrivateProfileInt(RES_INI_SEC, "AutoSaveTrTemplate", 3, g_SNM_IniFn.Get());
-#ifdef _SNM_MISC
-	g_prjLoaderStartPref = GetPrivateProfileInt(RES_INI_SEC, "ProjectLoaderStartSlot", -1, g_SNM_IniFn.Get());
-	g_prjLoaderEndPref = GetPrivateProfileInt(RES_INI_SEC, "ProjectLoaderEndSlot", -1, g_SNM_IniFn.Get());
-#endif
 	g_addMedPref = GetPrivateProfileInt(RES_INI_SEC, "AddMediaFileOptions", 0, g_SNM_IniFn.Get());
 
 	// auto-save, auto-fill directories, etc..
@@ -3390,12 +3341,6 @@ void ResourcesExit()
 			case SNM_SLOT_TR:
 				iniStr.AppendFormatted(256, "AutoSaveTrTemplate=%d\n", g_asTrTmpltPref);
 				break;
-#ifdef _SNM_MISC
-			case SNM_SLOT_PRJ:
-				iniStr.AppendFormatted(256, "ProjectLoaderStartSlot=%d\n", g_prjLoaderStartPref);
-				iniStr.AppendFormatted(256, "ProjectLoaderEndSlot=%d\n", g_prjLoaderEndPref);
-				break;
-#endif
 			case SNM_SLOT_MEDIA:
 				iniStr.AppendFormatted(256, "AddMediaFileOptions=%d\n", g_addMedPref);
 				break;
@@ -4068,83 +4013,16 @@ void LoadOrSelectProjectTabSlot(COMMAND_T* _ct) {
 	LoadOrSelectProjectSlot(g_tiedSlotActions[SNM_SLOT_PRJ], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true);
 }
 
-#ifdef _SNM_MISC
-// *** Project loader/selecter actions ***
-// note: g_tiedSlotActions[] is ignored here, the opener/selecter only deals 
-//       with g_SNM_ResSlots.Get(SNM_SLOT_PRJ): that feature is not available for 
-//       custom project slots
-
-bool IsProjectLoaderConfValid()
-{
-	return (g_prjLoaderStartPref > 0 && 
-		g_prjLoaderEndPref > g_prjLoaderStartPref && 
-		g_prjLoaderEndPref <= g_SNM_ResSlots.Get(SNM_SLOT_PRJ)->GetSize());
-}
-
-void ProjectLoaderConf(COMMAND_T* _ct)
-{
-	bool ok = false;
-	int start, end;
-	WDL_FastString question(__LOCALIZE("Start slot (in Resources view):","sws_mbox"));
-	question.Append(",");
-	question.Append(__LOCALIZE("End slot:","sws_mbox"));
-
-	char reply[64]="";
-	_snprintfSafe(reply, sizeof(reply), "%d,%d", g_prjLoaderStartPref, g_prjLoaderEndPref);
-
-	if (GetUserInputs(__LOCALIZE("S&M - Project loader/selecter","sws_mbox"), 2, question.Get(), reply, sizeof(reply)))
-	{
-		if (*reply && *reply != ',' && strlen(reply) > 2)
-		{
-			if (char* p = strchr(reply, ','))
-			{
-				start = atoi(reply);
-				end = atoi((char*)(p+1));
-				if (start>0 && end>start && end<=g_SNM_ResSlots.Get(SNM_SLOT_PRJ)->GetSize())
-				{
-					g_prjLoaderStartPref = start;
-					g_prjLoaderEndPref = end;
-					ok = true;
-				}
-			}
-		}
-
-		if (ok)
-		{
-			g_prjCurSlot = -1; // reset current prj
-			ResourcesUpdate();
-		}
-		else
-			MessageBox(GetMainHwnd(),
-			__LOCALIZE("Invalid start and/or end slot(s) !\nProbable cause: out of bounds, the Resources view is empty, etc...","sws_mbox"),
-			__LOCALIZE("S&M - Error","sws_mbox"),
-			MB_OK);
-	}
-}
-#endif
-
 void LoadOrSelectNextPreviousProjectSlot(const char* _title, int _dir, bool _newtab)
 {
-	// reminder: legacy start/end slot prefs were 1-based prefs!
-#ifndef _SNM_MISC
 	int slotType = g_tiedSlotActions[SNM_SLOT_PRJ];
-#else
-	int slotType = SNM_SLOT_PRJ;
-#endif
 	ResourceList* slots = g_SNM_ResSlots.Get(slotType);
 	if (!slots)
 		return;
 
-#ifndef _SNM_MISC
 	int startSlot = 1;
 	int endSlot = slots->GetSize();
-#else
-	int startSlot = g_prjLoaderStartPref;
-	int endSlot = g_prjLoaderEndPref;
 
-	// check prefs validity (user configurable..)
-	if (IsProjectLoaderConfValid())
-#endif
 	{
 		int cpt=0, slotCount = endSlot-startSlot+1;
 

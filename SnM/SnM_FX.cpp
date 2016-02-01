@@ -427,121 +427,37 @@ int GetSelectedTrackFX(MediaTrack* _tr)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// FX presets helpers
+// FX presets helpers/actions
 ///////////////////////////////////////////////////////////////////////////////
 
-// API LIMITATION: get can't get preset names without activating them
-// => parse ini files instead => limited to user presets (.rpl) ATM
-// _fxType: as defined in FX chunk ("VST", "AU", etc..)
-// _fxName: as defined in FX chunk ("foo.dll", etc..)
 // it is up to the caller to unalloc _presetNames
-int GetUserPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL_FastString>* _presetNames)
+int GetUserPresetNames(MediaTrack* _tr, int _fx, WDL_PtrList<WDL_FastString>* _presetNames)
 {
-	const int _fxTypeLen = (int)strlen(_fxType);
-	if (_fxType && _fxTypeLen && _fxName && _presetNames)
+	int cnt=0;
+	if (_tr && _fx>=0)
 	{
-		char iniFn[SNM_MAX_PATH]="", buf[256]="", fxType[256];
-
-		// *** build ini filename ***
-		lstrcpyn(buf, _fxName, sizeof(buf));
-
-		lstrcpyn(fxType, _fxType, sizeof(fxType));
-		for (int i=0; i<_fxTypeLen; i++)
-			fxType[i] = tolower(fxType[i]);
-    
-		if (!strcmp(fxType, "vst"))
+		char fn[SNM_MAX_PATH];
+		*fn = '\0';
+		TrackFX_GetUserPresetFilename(_tr, _fx, fn, sizeof(fn));
+		if (*fn && FileOrDirExists(fn))
 		{
-			const char* ext = GetFileExtension(buf, true);
-			if (!_stricmp(ext, ".vst3"))
-			{
-				strcpy(fxType, "vst3");
-				buf[(int)(ext-buf)] = '\0';
-			}
-			else
-			{
-				const char *p = NULL;
-#ifdef _WIN32
-				if (!_stricmp(ext, ".dll")) p=ext;
-#endif
-				if (!p) p = stristr(buf, ".vst"); // standard vst or ".vst.dylib" (e.g. reaeq)
-				if (p) buf[(int)(p-buf)] = '\0';
-			}
-		}
-		else if (!strcmp(fxType, "js"))
-		{
-			// replace special chars
-			// something like Filenamize() would have been better here but the following code mimics REAPER's behavior
-			// only applicable to JSFX ATM, but other plugin types would have needed this too (e.g. "Apple: AUBandpass"
-			// where ':' is an OS X forbidden filename character but OS X can deal with it...)
-			char *p=buf;
-			while (*p)
-			{
-				if (*p == '.' || *p == '/' ||*p == '\\' || *p == '?' || *p == '*' || *p == ':' || *p == '\"' || *p == '|' || *p == '<' || *p == '>') *p='_';
-				p++;
-			}
-		}
-#ifdef __APPLE__
-		else if (!strcmp(fxType, "au"))
-		{
-			// kind of silly (buf is just the AU name, not a filename) but this mimics REAPER's behavior
-			// (it will have to stick with it now...)
-			const char* ext = GetFileExtension(buf, true);
-			if (*ext=='.') buf[(int)(ext-buf)] = '\0';
-		}
-#endif
-		else
-		{
-			return 0;
-		}
-
-		// deprecated location
-		_snprintfSafe(iniFn, sizeof(iniFn), "%s%cpresets-%s-%s.ini", GetResourcePath(), PATH_SLASH_CHAR, fxType, buf);
-		bool exitTst = FileOrDirExists(iniFn);
-
-		// new location
-		if (!exitTst)
-		{
-			_snprintfSafe(iniFn, sizeof(iniFn), "%s%cpresets%c%s-%s.ini", GetResourcePath(), PATH_SLASH_CHAR, PATH_SLASH_CHAR, fxType, buf);
-			exitTst = FileOrDirExists(iniFn);
-		}
-
-		// *** get presets ***
-		if (exitTst)
-		{
-			char sec[32];
-			const int nbPresets = GetPrivateProfileInt("General", "NbPresets", 0, iniFn);
+			char sec[64];
+			char buf[SNM_MAX_PRESET_NAME_LEN];
+			const int nbPresets = GetPrivateProfileInt("General", "NbPresets", 0, fn);
 			for (int i=0; i < nbPresets; i++)
 			{
-				*buf = '\0';
-				if (_snprintfStrict(sec, sizeof(sec), "Preset%d", i) > 0)
-					GetPrivateProfileString(sec, "Name", "", buf, sizeof(buf), iniFn);
-				_presetNames->Add(new WDL_FastString(buf));
+				_snprintfSafe(sec, sizeof(sec), "Preset%d", i);
+				GetPrivateProfileString(sec, "Name", "", buf, sizeof(buf), fn);
+				if (*buf)
+				{
+					if (_presetNames) _presetNames->Add(new WDL_FastString(buf));
+					cnt++;
+				}
 			}
-			return _presetNames->GetSize();
 		}
 	}
-	return 0;
+	return cnt;
 }
-
-// wrapper to ease cleanup some day, see API LIMITATION above
-// it is up to the caller to unalloc _presetNames
-int GetUserPresetNames(MediaTrack* _tr, int _fx, WDL_PtrList<WDL_FastString>* _presetsOut)
-{
-	if (_tr && _fx>=0 && _presetsOut)
-	{
-		//JFB!! removeme some day (+remove SNM_FXSummary, SNM_FXSummaryParser, etc..) if new APIs
-		SNM_FXSummaryParser p(_tr);
-		WDL_PtrList<SNM_FXSummary>* summaries = p.GetSummaries();
-		SNM_FXSummary* sum = summaries ? summaries->Get(_fx) : NULL;
-		return (sum ? GetUserPresetNames(sum->m_type.Get(), sum->m_realName.Get(), _presetsOut) : 0);
-	}
-	return 0;
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-// Trigger, get & set FX presets
-///////////////////////////////////////////////////////////////////////////////
 
 // _presetId: only taken into account when _dir == 0, see below
 // _fxId: fx index

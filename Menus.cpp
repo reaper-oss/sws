@@ -32,9 +32,7 @@
 #include "./reaper/localize.h"
 
 
-// *************************** UTILITY FUNCTIONS ***************************
-
-void AddToMenuOld(HMENU hMenu, const char* text, int id, int iInsertAfter, bool bPos, UINT uiSate)
+void AddToMenuOrdered(HMENU hMenu, const char* text, int id, int iInsertAfter, bool bPos, UINT uiSate)
 {
 	if (!text)
 		return;
@@ -84,7 +82,7 @@ void AddToMenu(HMENU hMenu, const char* text, int id, int iInsertAfter, bool bPo
 		return;
 
 	if(!IsLocalized() || bPos || iInsertAfter != -1) {
-		AddToMenuOld(hMenu, text, id, iInsertAfter, bPos, uiSate);
+		AddToMenuOrdered(hMenu, text, id, iInsertAfter, bPos, uiSate);
 		return;
 	}
 

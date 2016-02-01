@@ -25,6 +25,7 @@
 /
 ******************************************************************************/
 
+void AddToMenuOrdered(HMENU hMenu, const char* text, int id, int iInsertAfter = -1, bool bPos = false, UINT uiSate = MFS_UNCHECKED);
 void AddToMenu(HMENU hMenu, const char* text, int id, int iInsertAfter = -1, bool bPos = false, UINT uiSate = MFS_UNCHECKED);
 void AddSubMenu(HMENU hMenu, HMENU subMenu, const char* text, int iInsertAfter = -1, UINT uiSate = MFS_UNCHECKED);
 int FindSortedPos(HMENU hMenu, const char* text);

@@ -1377,7 +1377,7 @@ void LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				{
 					int fx = (int)LOWORD(wParam)-LEARN_PRESETS_START_MSG;
 					char buf[SNM_MAX_PRESET_NAME_LEN] = "";
-					TrackFX_GetPreset(item->m_track, fx, buf, SNM_MAX_PRESET_NAME_LEN);
+					TrackFX_GetPreset(item->m_track, fx, buf, sizeof(buf));
 					UpdatePresetConf(&item->m_presets, fx+1, buf);
 					item->m_fxChain.Set("");
 					item->m_trTemplate.Set("");
@@ -1448,6 +1448,7 @@ void LiveConfigsWnd::AddPresetMenu(HMENU _menu, MediaTrack* _tr, WDL_FastString*
 		return;
 	}
 	
+	WDL_FastString str, curPresetName;
 	char fxName[SNM_MAX_FX_NAME_LEN] = "";
 	int msgCpt = 0;
 	for(int fx=0; fx<fxCount; fx++) 
@@ -1455,46 +1456,50 @@ void LiveConfigsWnd::AddPresetMenu(HMENU _menu, MediaTrack* _tr, WDL_FastString*
 		if(TrackFX_GetFXName(_tr, fx, fxName, SNM_MAX_FX_NAME_LEN))
 		{
 			HMENU fxSubMenu = CreatePopupMenu();
-			WDL_FastString str, curPresetName;
 			GetPresetConf(fx, _curPresetConf->Get(), &curPresetName);
 
+			// clear current fx preset
+			AddToMenuOrdered(fxSubMenu, __LOCALIZE("Clear FX preset","sws_DLG_155"), SET_PRESET_START_MSG);
+			m_lastPresetMsg.Add(new PresetMsg(fx, ""));
+			msgCpt++;
+      
+			if (GetMenuItemCount(fxSubMenu))
+				AddToMenuOrdered(fxSubMenu, SWS_SEPARATOR, 0);
+    
 			// learn current preset
 			str.Set(__LOCALIZE("[All presets (.fxp, .rpl, etc..)]","sws_DLG_155"));
-			AddToMenu(fxSubMenu, str.Get(), 0, -1, false, MF_GRAYED);
+			AddToMenuOrdered(fxSubMenu, str.Get(), 0, -1, false, MF_GRAYED);
 			if ((LEARN_PRESETS_START_MSG + fx) <= LEARN_PRESETS_END_MSG)
 			{
 				char buf[SNM_MAX_PRESET_NAME_LEN] = "";
-				TrackFX_GetPreset(_tr, fx, buf, SNM_MAX_PRESET_NAME_LEN);
-				str.SetFormatted(256, __LOCALIZE_VERFMT("Learn current preset \"%s\"","sws_DLG_155"), *buf?buf:__LOCALIZE("undefined","sws_DLG_155"));
-				AddToMenu(fxSubMenu, str.Get(), LEARN_PRESETS_START_MSG + fx, -1, false, *buf?0:MF_GRAYED);
+				TrackFX_GetPreset(_tr, fx, buf, sizeof(buf));
+				if (!*buf)
+					str.SetFormatted(256, __LOCALIZE_VERFMT("Learn current preset \"%s\"","sws_DLG_155"), __LOCALIZE("<none>","sws_DLG_155"));
+				else if (!_stricmp(GetFileExtension(buf), "vstpreset"))
+					str.SetFormatted(256, __LOCALIZE_VERFMT("Learn current preset \"%s\"","sws_DLG_155"), GetFilenameWithExt(buf));
+				else
+					str.SetFormatted(256, __LOCALIZE_VERFMT("Learn current preset \"%s\"","sws_DLG_155"), buf);
+				AddToMenuOrdered(fxSubMenu, str.Get(), LEARN_PRESETS_START_MSG + fx, -1, false, *buf?0:MF_GRAYED);
 			}
 
 			if (GetMenuItemCount(fxSubMenu))
-				AddToMenu(fxSubMenu, SWS_SEPARATOR, 0);
+				AddToMenuOrdered(fxSubMenu, SWS_SEPARATOR, 0);
 
 			// user preset list
 			WDL_PtrList_DeleteOnDestroy<WDL_FastString> names;
 			int presetCount = GetUserPresetNames(_tr, fx, &names);
 
 			str.SetFormatted(256, __LOCALIZE_VERFMT("[User presets (.rpl)%s]","sws_DLG_155"), presetCount?"":__LOCALIZE(": no .rpl file loaded","sws_DLG_155"));
-			AddToMenu(fxSubMenu, str.Get(), 0, -1, false, MF_GRAYED);
+			AddToMenuOrdered(fxSubMenu, str.Get(), 0, -1, false, MF_GRAYED);
 
 			for(int j=0; j<presetCount && (SET_PRESET_START_MSG + msgCpt) <= SET_PRESET_END_MSG; j++)
-				if (names.Get(j)->GetLength()) {
-					AddToMenu(fxSubMenu, names.Get(j)->Get(), SET_PRESET_START_MSG + msgCpt, -1, false, !strcmp(curPresetName.Get(), names.Get(j)->Get()) ? MFS_CHECKED : MFS_UNCHECKED);
+			{
+				if (names.Get(j)->GetLength())
+				{
+					AddToMenuOrdered(fxSubMenu, names.Get(j)->Get(), SET_PRESET_START_MSG + msgCpt, -1, false, !strcmp(curPresetName.Get(), names.Get(j)->Get()) ? MFS_CHECKED : MFS_UNCHECKED);
 					m_lastPresetMsg.Add(new PresetMsg(fx, names.Get(j)->Get()));
 					msgCpt++;
 				}
-
-			if (GetMenuItemCount(fxSubMenu))
-				AddToMenu(fxSubMenu, SWS_SEPARATOR, 0);
-
-			// clear current fx preset
-			if ((SET_PRESET_START_MSG + msgCpt) <= SET_PRESET_END_MSG)
-			{
-				AddToMenu(fxSubMenu, __LOCALIZE("None","sws_DLG_155"), SET_PRESET_START_MSG + msgCpt, -1, false, !curPresetName.GetLength() ? MFS_CHECKED : MFS_UNCHECKED);
-				m_lastPresetMsg.Add(new PresetMsg(fx, ""));
-				msgCpt++;
 			}
 
 			// add fx sub menu
@@ -1664,7 +1669,7 @@ HMENU LiveConfigsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 					AddPresetMenu(setPresetMenu, item->m_track, &item->m_presets);
 					AddSubMenu(hMenu, setPresetMenu, __LOCALIZE("Set preset","sws_DLG_155"), -1, grayed ? MF_GRAYED : MFS_UNCHECKED);
 				}
-				AddToMenu(hMenu, __LOCALIZE("Clear FX presets","sws_DLG_155"), CLEAR_PRESETS_MSG, -1, grayed ? MF_GRAYED : MFS_UNCHECKED);
+				AddToMenu(hMenu, __LOCALIZE("Clear all FX presets","sws_DLG_155"), CLEAR_PRESETS_MSG, -1, grayed ? MF_GRAYED : MFS_UNCHECKED);
 				break;
 			case COL_ACTION_ON:
 				AddToMenu(hMenu, __LOCALIZE("Set selected action (in the Actions window)","sws_DLG_155"), LEARN_ON_ACTION_MSG);

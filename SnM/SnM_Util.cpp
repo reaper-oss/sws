@@ -36,13 +36,16 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 // File util
+// Could use WDL functions like WDL_get_filepart, WDL_get_fileext, etc but
+// we do not want to include wdlcstring.h in the extension (too risky now)
 ///////////////////////////////////////////////////////////////////////////////
 
 const char* GetFileRelativePath(const char* _fn)
 {
-	if (const char* p = strrchr(_fn, PATH_SLASH_CHAR))
-		return p+1;
-	return _fn;
+	const char *p = _fn;
+	while (*p) p++;
+	while (p >= _fn && !WDL_IS_DIRCHAR(*p)) --p;
+	return p + 1;
 }
 
 const char* GetFileExtension(const char* _fn, bool _wantdot)
@@ -58,20 +61,14 @@ bool HasFileExtension(const char* _fn, const char* _expectedExt) {
 
 void GetFilenameNoExt(const char* _fullFn, char* _fn, int _fnSz)
 {
-	const char* p = strrchr(_fullFn, PATH_SLASH_CHAR);
-	if (p) p++;
-	else p = _fullFn;
-	lstrcpyn(_fn, p, _fnSz);
+	lstrcpyn(_fn, GetFileRelativePath(_fullFn), _fnSz);
 	_fn = strrchr(_fn, '.');
 	if (_fn) *_fn = '\0';
 }
 
 const char* GetFilenameWithExt(const char* _fullFn)
 {
-	const char* p = strrchr(_fullFn, PATH_SLASH_CHAR);
-	if (p) p++;
-	else p = _fullFn;
-	return p;
+	return GetFileRelativePath(_fullFn);
 }
 
 // check the most restrictive OS forbidden chars (so that filenames are cross-platform)

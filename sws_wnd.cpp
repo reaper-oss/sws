@@ -126,7 +126,8 @@ bool SWS_DockWnd::IsActive(bool bWantEdit)
 		if (m_pLists.Get(i)->IsActive(bWantEdit))
 			return true;
 
-	return GetFocus() == m_hwnd || IsChild(m_hwnd, GetFocus());
+	HWND hfoc = GetFocus();
+	return hfoc == m_hwnd || IsChild(m_hwnd, hfoc);
 }
 
 INT_PTR WINAPI SWS_DockWnd::sWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -1339,7 +1340,7 @@ bool SWS_ListView::DoColumnMenu(int x, int y)
 		AddToMenu(hMenu, SWS_SEPARATOR, 0);
 		AddToMenu(hMenu, __LOCALIZE("Reset","sws_menu"), m_iCols + 1);
 
-		int iCol = TrackPopupMenu(hMenu, TPM_RETURNCMD, x, y, 0, m_hwndList, NULL);
+		iCol = TrackPopupMenu(hMenu, TPM_RETURNCMD, x, y, 0, m_hwndList, NULL);
 		DestroyMenu(hMenu);
 
 		if (iCol)

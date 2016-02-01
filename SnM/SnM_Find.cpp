@@ -45,7 +45,7 @@
 #define MAX_SEARCH_STR_LEN		128
 
 enum {
-  TXTID_SCOPE=2000, //JFB would be great to have _APS_NEXT_CONTROL_VALUE *always* defined
+  TXTID_SCOPE=0xF000,
   BTNID_FIND,
   BTNID_PREV,
   BTNID_NEXT,

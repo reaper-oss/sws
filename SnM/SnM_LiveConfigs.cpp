@@ -2716,7 +2716,7 @@ void UpdateMonitoring(int _cfgId, int _whatFlags, int _commitFlags, int _flags)
 ///////////////////////////////////////////////////////////////////////////////
 
 enum {
-  WNDID_MONITORS=2000, //JFB would be great to have _APS_NEXT_CONTROL_VALUE *always* defined
+  WNDID_MONITORS=0xF000,
   TXTID_MON0,
   TXTID_MON1,
   TXTID_MON2,

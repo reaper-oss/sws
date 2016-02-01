@@ -1357,27 +1357,43 @@ int Cyclaction::GetIndent(WDL_FastString* _cmd)
 // GUI
 ///////////////////////////////////////////////////////////////////////////////
 
-// commands
-#define ADD_CYCLACTION_MSG				0xF001
-#define DEL_CYCLACTION_MSG				0xF002
-#define RUN_CYCLACTION_MSG				0xF003
-#define CUT_CMD_MSG						0xF004
-#define COPY_CMD_MSG					0xF005
-#define PASTE_CMD_MSG					0xF006
-#define LEARN_CMD_MSG					0xF010
-#define DEL_CMD_MSG						0xF011
-#define EXPLODE_CMD_MSG					0xF012
-#define ADD_CMD_MSG						0xF013
-#define ADD_STEP_CMD_MSG				0xF014
-#define ADD_STATEMENT_MSG				0xF015 // --> leave some room here
-#define IMPORT_CUR_SECTION_MSG			0xF030 // <--
-#define IMPORT_ALL_SECTIONS_MSG			0xF031
-#define EXPORT_SEL_MSG					0xF032
-#define EXPORT_CUR_SECTION_MSG			0xF033
-#define EXPORT_ALL_SECTIONS_MSG			0xF034
-#define RESET_CUR_SECTION_MSG			0xF040
-#define RESET_ALL_SECTIONS_MSG			0xF041
-#define LEARN_CYCLACTION_MSG			0xF042
+enum {
+  ADD_CYCLACTION_MSG = 0xF001,
+  DEL_CYCLACTION_MSG,
+  RUN_CYCLACTION_MSG,
+  CUT_CMD_MSG,
+  COPY_CMD_MSG,
+  PASTE_CMD_MSG,
+  LEARN_CMD_MSG,
+  DEL_CMD_MSG,
+  EXPLODE_CMD_MSG,
+  ADD_CMD_MSG,
+  ADD_STEP_CMD_MSG,
+  ADD_STATEMENT_MSG,                                        // --> statement cmds
+  IMPORT_CUR_SECTION_MSG = ADD_STATEMENT_MSG+NB_STATEMENTS, // <--
+  IMPORT_ALL_SECTIONS_MSG,
+  EXPORT_SEL_MSG,
+  EXPORT_CUR_SECTION_MSG,
+  EXPORT_ALL_SECTIONS_MSG,
+  RESET_CUR_SECTION_MSG,
+  RESET_ALL_SECTIONS_MSG,
+  LEARN_CYCLACTION_MSG,
+  LAST_MSG // keep as last item!
+};
+
+enum {
+  CMBID_SECTION = LAST_MSG,
+  TXTID_SECTION,
+  BTNID_UNDO,
+  BTNID_APPLY,
+  BTNID_CANCEL,
+  BTNID_IMPEXP,
+  BTNID_ACTIONLIST,
+  WNDID_LR,
+  BTNID_L,
+  BTNID_R
+};
+
 
 // no default filter text on OSX (cannot catch EN_SETFOCUS/EN_KILLFOCUS)
 #ifndef _SNM_SWELL_ISSUES
@@ -1877,20 +1893,6 @@ void CommandsView::OnItemSelChanged(SWS_ListItem* item, int iState) {
 ///////////////////////////////////////////////////////////////////////////////
 // CyclactionWnd
 ///////////////////////////////////////////////////////////////////////////////
-
-enum
-{
-  CMBID_SECTION=2000, //JFB would be great to have _APS_NEXT_CONTROL_VALUE *always* defined
-  TXTID_SECTION,
-  BTNID_UNDO,
-  BTNID_APPLY,
-  BTNID_CANCEL,
-  BTNID_IMPEXP,
-  BTNID_ACTIONLIST,
-  WNDID_LR,
-  BTNID_L,
-  BTNID_R
-};
 
 // S&M windows lazy init: below's "" prevents registering the SWS' screenset callback
 // (use the S&M one instead - already registered via SNM_WindowManager::Init())

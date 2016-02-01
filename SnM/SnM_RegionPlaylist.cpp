@@ -41,36 +41,39 @@
 #define RGNPL_WND_ID			"SnMRgnPlaylist"
 #define UNDO_PLAYLIST_STR		__LOCALIZE("Region Playlist edition", "sws_undo")
 
-#define DELETE_MSG				0xF000
-#define PERFORM_MSG				0xF001
-#define CROP_PRJ_MSG			0xF002
-#define NEW_PLAYLIST_MSG		0xF003
-#define COPY_PLAYLIST_MSG		0xF004
-#define DEL_PLAYLIST_MSG		0xF005
-#define REN_PLAYLIST_MSG		0xF006
-#define ADD_ALL_REGIONS_MSG		0xF007
-#define CROP_PRJTAB_MSG			0xF008
-#define APPEND_PRJ_MSG			0xF009
-#define PASTE_CURSOR_MSG		0xF00A
-#define APPEND_SEL_RGN_MSG		0xF00B
-#define PASTE_SEL_RGN_MSG		0xF00C
-#define TGL_INFINITE_LOOP_MSG	0xF00D
-#define TGL_SEEK_NOW_MSG		0xF00E
-#define TGL_SEEK_CLICK_MSG		0xF00F
-#define TGL_MOVE_CUR_MSG		0xF010
-#define OSC_START_MSG			0xF011 // 238 osc csurfs max -->
-#define OSC_END_MSG				0xF0FF // <--
-#define ADD_REGION_START_MSG	0xF100 // 1791 marker/region indexes supported (*) --> 
-#define ADD_REGION_END_MSG		0xF7FF // <--
-#define INSERT_REGION_START_MSG	0xF800 // 1791 marker/region indexes supported (*) -->
-#define INSERT_REGION_END_MSG	0xFEFF // <--
-// (*) but no max nb of supported regions/markers, of course
-
 #define OSC_CURRENT_RGN			"/snm/rgnplaylist/current"
 #define OSC_NEXT_RGN			"/snm/rgnplaylist/next"
 
 enum {
-  BTNID_LOCK=2000, //JFB would be great to have _APS_NEXT_CONTROL_VALUE *always* defined
+  DELETE_MSG=0xF000,
+  PERFORM_MSG,
+  CROP_PRJ_MSG,
+  NEW_PLAYLIST_MSG,
+  COPY_PLAYLIST_MSG,
+  DEL_PLAYLIST_MSG,
+  REN_PLAYLIST_MSG,
+  ADD_ALL_REGIONS_MSG,
+  CROP_PRJTAB_MSG,
+  APPEND_PRJ_MSG,
+  PASTE_CURSOR_MSG,
+  APPEND_SEL_RGN_MSG,
+  PASTE_SEL_RGN_MSG,
+  TGL_INFINITE_LOOP_MSG,
+  TGL_SEEK_NOW_MSG,
+  TGL_SEEK_CLICK_MSG,
+  TGL_MOVE_CUR_MSG,
+  OSC_START_MSG,                                        // 64 osc csurfs max -->
+  OSC_END_MSG = OSC_START_MSG+64,                       // <--
+  ADD_REGION_START_MSG,                                 // 1024 marker/region indexes supported (*) --> 
+  ADD_REGION_END_MSG = ADD_REGION_START_MSG+1024,       // <--
+  INSERT_REGION_START_MSG,                              // 1024 marker/region indexes supported (*) -->
+  INSERT_REGION_END_MSG = INSERT_REGION_START_MSG+1024, // <--
+                                                        // (*) but no max nb of supported regions/markers, of course
+  LAST_MSG // keep as last item!
+};
+
+enum {
+  BTNID_LOCK = LAST_MSG,
   BTNID_PLAY,
   BTNID_STOP,
   BTNID_REPEAT,

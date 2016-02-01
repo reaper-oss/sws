@@ -55,85 +55,97 @@
 #define RES_TIE_TAG					" [x]" //UTF8_BULLET
 
 
-// common cmds
-#define AUTOFILL_MSG				0xF000
-#define AUTOFILL_DIR_MSG			0xF001
-#define AUTOFILL_PRJ_MSG			0xF002
-#define AUTOFILL_DEFAULT_MSG		0xF003
-#define AUTOFILL_SYNC_MSG			0xF004
-#define CLR_SLOTS_MSG				0xF005
-#define DEL_SLOTS_MSG				0xF006
-#define DEL_FILES_MSG				0xF007
-#define ADD_SLOT_MSG				0xF008
-#define INSERT_SLOT_MSG				0xF009
-#define EDIT_MSG					0xF00A
-#define EXPLORE_MSG					0xF00B
-#define EXPLORE_SAVEDIR_MSG			0xF00C
-#define EXPLORE_FILLDIR_MSG			0xF00D
-#define LOAD_MSG					0xF00E
-#define AUTOSAVE_MSG				0xF00F
-#define AUTOSAVE_DIR_MSG			0xF010
-#define AUTOSAVE_DIR_PRJ_MSG		0xF011
-#define AUTOSAVE_DIR_PRJ2_MSG		0xF012
-#define AUTOSAVE_DIR_DEFAULT_MSG	0xF013
-#define AUTOSAVE_SYNC_MSG			0xF014
-#define FILTER_BY_NAME_MSG			0xF015
-#define FILTER_BY_PATH_MSG			0xF016
-#define FILTER_BY_COMMENT_MSG		0xF017
-#define RENAME_MSG					0xF018
-#define TIE_ACTIONS_MSG				0xF019
-#define TIE_PROJECT_MSG				0xF01A
-#define UNTIE_PROJECT_MSG			0xF01B
+enum {
+  // common cmds
+  AUTOFILL_MSG = 0xF000,
+  AUTOFILL_DIR_MSG,
+  AUTOFILL_PRJ_MSG,
+  AUTOFILL_DEFAULT_MSG,
+  AUTOFILL_SYNC_MSG,
+  CLR_SLOTS_MSG,
+  DEL_SLOTS_MSG,
+  DEL_FILES_MSG,
+  ADD_SLOT_MSG,
+  INSERT_SLOT_MSG,
+  EDIT_MSG,
+  EXPLORE_MSG,
+  EXPLORE_SAVEDIR_MSG,
+  EXPLORE_FILLDIR_MSG,
+  LOAD_MSG,
+  AUTOSAVE_MSG,
+  AUTOSAVE_DIR_MSG,
+  AUTOSAVE_DIR_PRJ_MSG,
+  AUTOSAVE_DIR_PRJ2_MSG,
+  AUTOSAVE_DIR_DEFAULT_MSG,
+  AUTOSAVE_SYNC_MSG,
+  FILTER_BY_NAME_MSG,
+  FILTER_BY_PATH_MSG,
+  FILTER_BY_COMMENT_MSG,
+  RENAME_MSG,
+  TIE_ACTIONS_MSG,
+  TIE_PROJECT_MSG,
+  UNTIE_PROJECT_MSG,
 #ifdef _WIN32
-#define DIFF_MSG					0xF01C
+  DIFF_MSG,
 #endif
+  // fx chains cmds
+  FXC_START_MSG,                         // 8 cmds --->
+  FXC_END_MSG = FXC_START_MSG+7,         // <---
+  FXC_AUTOSAVE_INPUTFX_MSG,
+  FXC_AUTOSAVE_TR_MSG,
+  FXC_AUTOSAVE_ITEM_MSG,
+  FXC_AUTOSAVE_DEFNAME_MSG,
+  FXC_AUTOSAVE_FX1NAME_MSG,
 
-// fx chains cmds
-#define FXC_START_MSG				0xF030 // reserved, keep cmds order --->
-#define FXC_END_MSG					0xF037 // <---
-#define FXC_AUTOSAVE_INPUTFX_MSG	0xF038
-#define FXC_AUTOSAVE_TR_MSG			0xF039
-#define FXC_AUTOSAVE_ITEM_MSG		0xF03A
-#define FXC_AUTOSAVE_DEFNAME_MSG	0xF03B
-#define FXC_AUTOSAVE_FX1NAME_MSG	0xF03C
+  // track template cmds
+  TRT_START_MSG,                         // 5 cmds --->
+  TRT_END_MSG	= TRT_START_MSG+4,         // <---
+  TRT_AUTOSAVE_WITEMS_MSG,
+  TRT_AUTOSAVE_WENVS_MSG,
 
-// track template cmds
-#define TRT_START_MSG				0xF040 // reserved, keep cmds order --->
-#define TRT_END_MSG					0xF044 // <---
-#define TRT_AUTOSAVE_WITEMS_MSG		0xF045
-#define TRT_AUTOSAVE_WENVS_MSG		0xF046
+  // project template cmds
+  PRJ_START_MSG,                         // 2 cmds --->
+  PRJ_END_MSG = PRJ_START_MSG+1,         // <---
+  PRJ_AUTOFILL_RECENTS_MSG,
 
-// project template cmds
-#define PRJ_START_MSG				0xF050 // reserved, keep cmds order --->
-#define PRJ_END_MSG					0xF051 // <---
-#define PRJ_AUTOFILL_RECENTS_MSG	0xF052
-#ifdef _SNM_MISC //JFB!! removeme some day: "project loader/selecter" is deprecated
-#define PRJ_LOADER_SET_MSG			0xF053
-#define PRJ_LOADER_CLEAR_MSG		0xF054
-#endif
+  // media file cmds
+  MED_START_MSG,                         // 5 cmds --->
+  MED_END_MSG = MED_START_MSG+4,         // <---
+  MED_OPT_START_MSG,                     // 5 options --->
+  MED_OPT_END_MSG = MED_OPT_START_MSG+4, // <---
 
-// media file cmds
-#define MED_START_MSG				0xF060 // reserved, keep cmds order --->
-#define MED_END_MSG					0xF064 // <---
-#define MED_OPT_START_MSG			0xF065 // reserved, keep options order --->
-#define MED_OPT_END_MSG				0xF069 // <---
+  // image file cmds
+  IMG_START_MSG,                         // 3 cmds --->
+  IMG_END_MSG = IMG_START_MSG+2,         // <---
 
-// image file cmds
-#define IMG_START_MSG				0xF070 // reserved, keep cmds order --->
-#define IMG_END_MSG					0xF072 // <---
+  // theme file cmds
+  THM_START_MSG,                         // 2 cmds (only 1 theme cmd used ATM) --->
+  THM_END_MSG = THM_START_MSG+1,         // <---
 
-// theme file cmds
-#define THM_START_MSG				0xF080 // reserved, keep cmds order --->
-#define THM_END_MSG					0xF080 // <--- (== THM_START_MSG because only 1 theme cmd ATM)
+  // (newer) common cmds
+  LOAD_TIED_PRJ_MSG,
+  LOAD_TIED_PRJ_TAB_MSG,
+  COPY_BOOKMARK_MSG,
+  DEL_BOOKMARK_MSG,
+  REN_BOOKMARK_MSG,
+  NEW_BOOKMARK_START_MSG,                            // 512 bookmarks max -->
+  NEW_BOOKMARK_END_MSG = NEW_BOOKMARK_START_MSG+512, // <--
 
-// (newer) common cmds
-#define LOAD_TIED_PRJ_MSG			0xF090
-#define LOAD_TIED_PRJ_TAB_MSG		0xF091
-#define COPY_BOOKMARK_MSG			0xF092
-#define DEL_BOOKMARK_MSG			0xF093
-#define REN_BOOKMARK_MSG			0xF094
-#define NEW_BOOKMARK_START_MSG		0xF095 // leave some room here -->
-#define NEW_BOOKMARK_END_MSG		0xF0BF // <--
+  LAST_MSG // keep as last item!
+};
+
+enum {
+  BTNID_AUTOFILL=LAST_MSG,
+  BTNID_AUTOSAVE,
+  CMBID_TYPE,
+  TXTID_TIED_PRJ,
+  WNDID_ADD_DEL,
+  BTNID_ADD_BOOKMARK,
+  BTNID_DEL_BOOKMARK,
+  BTNID_OFFSET_TR_TEMPLATE,
+  TXTID_DBL_TYPE,
+  CMBID_DBLCLICK_TYPE
+};
 
 
 // labels dropdown box & popup menu items
@@ -173,19 +185,6 @@
 #define AUTOSAVE_ERR_STR		__LOCALIZE("Probable cause: no selection, nothing to save, cannot write file, file in use, invalid filename, etc...","sws_DLG_150")
 #define AUTOFILL_ERR_STR		__LOCALIZE("Probable cause: all files are already present, empty directory, directory not found, etc...","sws_DLG_150")
 // #define NO_SLOT_ERR_STR			__LOCALIZE("No slot found in the bookmark \"%s\" of Resources window!","sws_DLG_150")
-
-enum {
-  BTNID_AUTOFILL=2000, //JFB would be great to have _APS_NEXT_CONTROL_VALUE *always* defined
-  BTNID_AUTOSAVE,
-  CMBID_TYPE,
-  TXTID_TIED_PRJ,
-  WNDID_ADD_DEL,
-  BTNID_ADD_BOOKMARK,
-  BTNID_DEL_BOOKMARK,
-  BTNID_OFFSET_TR_TEMPLATE,
-  TXTID_DBL_TYPE,
-  CMBID_DBLCLICK_TYPE
-};
 
 enum {
   COL_SLOT=0,
@@ -3451,7 +3450,14 @@ int IsResourcesDisplayed(COMMAND_T* _ct) {
 // ImageWnd
 ///////////////////////////////////////////////////////////////////////////////
 
-#define IMGID	2000 //JFB would be great to have _APS_NEXT_CONTROL_VALUE *always* defined
+enum {
+  STRETCH_TO_FIT_MSG = 0xF000,
+  IMGWND_LAST_MSG // keep as last item!
+};
+
+enum {
+  IMGID=IMGWND_LAST_MSG
+};
 
 int g_lastImgSlot = -1;
 bool g_stretchPref = false;
@@ -3486,7 +3492,7 @@ void ImageWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 {
 	switch(LOWORD(wParam))
 	{
-		case 0xF001:
+		case STRETCH_TO_FIT_MSG:
 			m_stretch = !m_stretch;
 			RequestRedraw();
 			break;
@@ -3499,7 +3505,7 @@ void ImageWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 HMENU ImageWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 {
 	HMENU hMenu = CreatePopupMenu();
-	AddToMenu(hMenu, __LOCALIZE("Stretch to fit","sws_DLG_162"), 0xF001, -1, false, m_stretch?MFS_CHECKED:MFS_UNCHECKED);
+	AddToMenu(hMenu, __LOCALIZE("Stretch to fit","sws_DLG_162"), STRETCH_TO_FIT_MSG, -1, false, m_stretch?MFS_CHECKED:MFS_UNCHECKED);
 	return hMenu;
 }
 

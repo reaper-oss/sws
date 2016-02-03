@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Util.cpp
 /
-/ Copyright (c) 2012-2014 Jeffos
+/ Copyright (c) 2012 and later Jeffos
 /
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -836,7 +836,7 @@ int SNM_NamedCommandLookup(const char* _custId, KbdSectionInfo* _section, bool _
 	int cmdId = 0;
 	if (_custId && *_custId)
 	{
-		// NamedCommandLookup() works for all sections (unique comman ids accross sections)
+		// NamedCommandLookup() works for all sections (unique command ids accross sections)
 		if (*_custId == '_')
 			cmdId = NamedCommandLookup(_custId);
 		else
@@ -1094,7 +1094,7 @@ bool GetSectionURL(bool _alr, KbdSectionInfo* _section, char* _sectionURL, int _
 		return false;
   
 	if (!_section)
-		_section=SectionFromUniqueID(0);
+		_section = SNM_GetActionSection(SNM_SEC_IDX_MAIN);
 
 	if (_alr)
 	{

@@ -80,6 +80,7 @@ static bool g_bACMEnabled = false;
 static bool g_bAIEnabled = false;
 static bool g_bALEnabled = false;
 static WDL_String g_ACIni;
+static int s_ignore_update;
 
 // Register to marker/region updates
 class AC_MarkerRegionListener : public SNM_MarkerRegionListener {
@@ -218,7 +219,7 @@ void SWS_AutoColorView::OnItemDblClk(SWS_ListItem* item, int iCol)
 
 void SWS_AutoColorView::OnItemSelChanged(SWS_ListItem* item, int iState)
 {
-	g_pACWnd->Update();
+	g_pACWnd->Update(false);
 }
 
 void SWS_AutoColorView::OnBeginDrag(SWS_ListItem* item)
@@ -260,11 +261,18 @@ void SWS_AutoColorView::OnDrag()
 			g_pACItems.Insert(iNewPriority, draggedItems.Get(i));
 		}
 
-		g_pACWnd->Update();
+		g_pACWnd->Update(false);
 
+		++s_ignore_update;
 		for (int i=0; i < draggedItems.GetSize(); i++)
 			SelectByItem((SWS_ListItem*)draggedItems.Get(i), i==0, i==0);
+		--s_ignore_update;
 	}
+}
+
+void SWS_AutoColorView::OnEndDrag()
+{
+	g_pACWnd->Update();
 }
 
 SWS_AutoColorWnd::SWS_AutoColorWnd()
@@ -277,8 +285,10 @@ SWS_AutoColorWnd::SWS_AutoColorWnd()
 	Init();
 }
 
-void SWS_AutoColorWnd::Update()
+void SWS_AutoColorWnd::Update(bool applyrules)
 {
+	if (s_ignore_update) return;
+
 	if (IsValidWindow())
 	{
 		SetDlgItemText(m_hwnd, IDC_APPLY, (g_bACEnabled||g_bACMEnabled||g_bACREnabled||g_bAIEnabled||g_bALEnabled) ? __LOCALIZE("Force","sws_DLG_115") : __LOCALIZE("Apply","sws_DLG_115"));
@@ -292,12 +302,15 @@ void SWS_AutoColorWnd::Update()
 
 		if (m_pLists.GetSize())
 			m_pLists.Get(0)->Update();
+	}
 
+	if (applyrules)
+	{
 		AutoColorSaveState();
 		AutoColorTrack(false);
 		if (ACRegisterUnregisterToMarkerRegionUpdates())
 			AutoColorMarkerRegion(false);
-	}
+  }
 }
 
 void SWS_AutoColorWnd::OnInitDlg()

@@ -57,8 +57,12 @@
 #define UPDATE_TIMER				1
 
 enum {
+#ifdef WANT_ACTION_HELP
   SET_ACTION_HELP_FILE_MSG = 0xF001,
   WRAP_MSG,
+#else
+  WRAP_MSG = 0xF001,
+#endif
   LAST_MSG // keep as last item!
 };
 
@@ -66,8 +70,10 @@ enum {
   BTNID_LOCK=LAST_MSG,
   CMBID_TYPE,
   TXTID_LABEL,
+#ifdef WANT_ACTION_HELP
   BTNID_ALR,
   BTNID_ACTIONLIST,
+#endif
   BTNID_IMPORT_SUB,
   BTNID_EXPORT_SUB,
   TXTID_BIG_NOTES
@@ -96,12 +102,14 @@ char g_notesBigFontName[64] = SNM_DYN_FONT_NAME;
 bool g_wrapText=false;
 
 // used for action help updates tracking
+#ifdef WANT_ACTION_HELP
 //JFB TODO: cleanup when we'll be able to access all sections & custom ids
 int g_lastActionListSel = -1;
 int g_lastActionListCmd = 0;
 char g_lastActionSection[SNM_MAX_SECTION_NAME_LEN] = "";
 char g_lastActionCustId[SNM_MAX_ACTION_CUSTID_LEN] = "";
 char g_lastActionDesc[SNM_MAX_ACTION_NAME_LEN] = "";
+#endif
 
 // other vars for updates tracking
 double g_lastMarkerPos = -1.0;
@@ -159,7 +167,7 @@ void NotesWnd::OnInitDlg()
 	m_cbType.AddItem(__LOCALIZE("Marker subtitles","sws_DLG_152"));
 	m_cbType.AddItem(__LOCALIZE("Region subtitles","sws_DLG_152"));
 	m_cbType.AddItem(__LOCALIZE("Marker/Region subtitles","sws_DLG_152"));
-#ifdef _WIN32
+#if defined(_WIN32) && defined(WANT_ACTION_HELP)
 	m_cbType.AddItem("<SEP>");
 	m_cbType.AddItem(__LOCALIZE("Action help","sws_DLG_152"));
 #endif
@@ -169,12 +177,13 @@ void NotesWnd::OnInitDlg()
 	m_txtLabel.SetID(TXTID_LABEL);
 	m_txtLabel.SetFont(font);
 	m_parentVwnd.AddChild(&m_txtLabel);
-
+#ifdef WANT_ACTION_HELP
 	m_btnAlr.SetID(BTNID_ALR);
 	m_parentVwnd.AddChild(&m_btnAlr);
 
 	m_btnActionList.SetID(BTNID_ACTIONLIST);
 	m_parentVwnd.AddChild(&m_btnActionList);
+#endif
 
 	m_btnImportSub.SetID(BTNID_IMPORT_SUB);
 	m_parentVwnd.AddChild(&m_btnImportSub);
@@ -251,10 +260,12 @@ void NotesWnd::RefreshGUI()
 			if (g_lastMarkerRegionId > 0)
 				bHide = false;
 			break;
+#ifdef WANT_ACTION_HELP
 		case SNM_NOTES_ACTION_HELP:
 			if (g_lastActionListSel >= 0)
 				bHide = false; // for copy/paste even if "Custom: ..."
 			break;
+#endif
 	}
 	ShowWindow(GetDlgItem(m_hwnd, IDC_EDIT), bHide || g_locked ? SW_HIDE : SW_SHOW);
 	m_parentVwnd.RequestRedraw(NULL); // the meat!
@@ -359,9 +370,11 @@ void NotesWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			if (HIWORD(wParam)==EN_CHANGE)
 				SaveCurrentText(g_notesType, MarkProjectDirty==NULL); // MarkProjectDirty() avail. since v4.55pre2
 			break;
+#ifdef WANT_ACTION_HELP
 		case SET_ACTION_HELP_FILE_MSG:
 			SetActionHelpFilename(NULL);
 			break;
+#endif
 		case WRAP_MSG:
 			SetWrapText(!g_wrapText);
 			break;
@@ -369,6 +382,7 @@ void NotesWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			if (!HIWORD(wParam))
 				ToggleLock();
 			break;
+#ifdef WANT_ACTION_HELP
 		case BTNID_ALR:
 			if (!HIWORD(wParam) && *g_lastActionCustId && !IsMacroOrScript(g_lastActionDesc))
 			{
@@ -384,6 +398,7 @@ void NotesWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case BTNID_ACTIONLIST:
 			Main_OnCommand(40605, 0);
 			break;
+#endif
 		case BTNID_IMPORT_SUB:
 			ImportSubTitleFile(NULL);
 			break;
@@ -412,10 +427,12 @@ HMENU NotesWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 {
   HMENU hMenu = CreatePopupMenu();
   AddToMenu(hMenu, __LOCALIZE("Wrap text","sws_DLG_152"), WRAP_MSG, -1, false, g_wrapText ? MFS_CHECKED : MFS_UNCHECKED);
+#ifdef WANT_ACTION_HELP
 	if (g_notesType == SNM_NOTES_ACTION_HELP)
 	{
 		AddToMenu(hMenu, __LOCALIZE("Set action help file...","sws_DLG_152"), SET_ACTION_HELP_FILE_MSG);
 	}
+#endif
   return hMenu;
 }
 
@@ -504,7 +521,11 @@ void NotesWnd::OnResize()
 	if (g_notesType != g_prevNotesType)
 	{
 		// room for buttons?
-		if (g_notesType==SNM_NOTES_ACTION_HELP || (g_notesType>=SNM_NOTES_MKR_SUB && g_notesType<=SNM_NOTES_MKRRGN_SUB))
+		if (
+#ifdef WANT_ACTION_HELP
+        g_notesType==SNM_NOTES_ACTION_HELP || 
+#endif
+        (g_notesType>=SNM_NOTES_MKR_SUB && g_notesType<=SNM_NOTES_MKRRGN_SUB))
 			m_resize.get_item(IDC_EDIT)->orig.bottom = m_resize.get_item(IDC_EDIT)->real_orig.bottom - 41; //JFB!! 41 is tied to the current .rc!
 		else
 			m_resize.get_item(IDC_EDIT)->orig = m_resize.get_item(IDC_EDIT)->real_orig;
@@ -600,7 +621,7 @@ void NotesWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeig
 					if (g_lastMarkerRegionId <= 0 || EnumMarkerRegionDescById(NULL, g_lastMarkerRegionId, str, sizeof(str), SNM_MARKER_MASK|SNM_REGION_MASK, true, g_notesType==SNM_NOTES_MKRRGN_SUB, true)<0 || !*str)
 						lstrcpyn(str, __LOCALIZE("No marker or region at play/edit cursor!","sws_DLG_152"), sizeof(str));
 					break;
-
+#ifdef WANT_ACTION_HELP
 				case SNM_NOTES_ACTION_HELP:
 					if (*g_lastActionDesc && *g_lastActionSection)
 						_snprintfSafe(str, sizeof(str), " [%s] %s", g_lastActionSection, g_lastActionDesc);
@@ -608,6 +629,7 @@ void NotesWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeig
 						lstrcpyn(str, kbd_getTextFromCmd(g_lastActionListCmd, NULL), 512);
 */
 					break;
+#endif
 			}
 
 			m_txtLabel.SetText(str);
@@ -636,6 +658,7 @@ void NotesWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeig
 			return;
 	}
 
+#ifdef WANT_ACTION_HELP
 	// online help & action list buttons
 	if (g_notesType == SNM_NOTES_ACTION_HELP)
 	{
@@ -647,6 +670,7 @@ void NotesWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeig
 		if (!SNM_AutoVWndPosition(DT_LEFT, &m_btnAlr, NULL, _r, &x0, y0, h))
 			return;
 	}
+#endif
 }
 
 bool NotesWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOutSz)
@@ -706,9 +730,11 @@ void NotesWnd::SaveCurrentText(int _type, bool _wantUndo)
 		case SNM_NOTES_MKRRGN_SUB:
 			SaveCurrentMkrRgnNameOrSub(_type, _wantUndo);
 			break;
+#ifdef WANT_ACTION_HELP
 		case SNM_NOTES_ACTION_HELP:
 			SaveCurrentHelp();
 			break;
+#endif
 	}
 }
 
@@ -827,6 +853,7 @@ void NotesWnd::SaveCurrentMkrRgnNameOrSub(int _type, bool _wantUndo)
 	}
 }
 
+#ifdef WANT_ACTION_HELP
 void NotesWnd::SaveCurrentHelp()
 {
 	if (*g_lastActionCustId) {
@@ -834,7 +861,7 @@ void NotesWnd::SaveCurrentHelp()
 		SaveHelp(g_lastActionCustId, g_lastText);
 	}
 }
-
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -850,11 +877,13 @@ void NotesWnd::Update(bool _force)
 	if (_force || g_notesType != g_prevNotesType)
 	{
 		g_prevNotesType = g_notesType;
+#ifdef WANT_ACTION_HELP
 		g_lastActionListSel = -1;
 		*g_lastActionCustId = '\0';
 		*g_lastActionDesc = '\0';
 		g_lastActionListCmd = 0;
 		*g_lastActionSection = '\0';
+#endif
 		g_mediaItemNote = NULL;
 		g_trNote = NULL;
 		g_lastMarkerPos = -1.0;
@@ -892,9 +921,11 @@ void NotesWnd::Update(bool _force)
 		case SNM_NOTES_MKRRGN_SUB:
 			refreshType = UpdateMkrRgnNameOrSub(g_notesType);
 			break;
+#ifdef WANT_ACTION_HELP
 		case SNM_NOTES_ACTION_HELP:
 			refreshType = UpdateActionHelp();
 			break;
+#endif
 	}
 	
 	if (_force || refreshType == REQUEST_REFRESH)
@@ -903,6 +934,7 @@ void NotesWnd::Update(bool _force)
 	sRecurseCheck = false;
 }
 
+#ifdef WANT_ACTION_HELP
 int NotesWnd::UpdateActionHelp()
 {
 	int refreshType = NO_REFRESH;
@@ -937,6 +969,7 @@ int NotesWnd::UpdateActionHelp()
 	}
 	return refreshType;
 }
+#endif
 
 int NotesWnd::UpdateItemNotes()
 {
@@ -1049,6 +1082,7 @@ int NotesWnd::UpdateMkrRgnNameOrSub(int _type)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef WANT_ACTION_HELP
 // load/save action help (from/to ini file)
 // note: WDL's cfg_encode_textblock() & decode_textblock() will not help here..
 
@@ -1121,7 +1155,7 @@ void SetActionHelpFilename(COMMAND_T*) {
 		free(fn);
 	}
 }
-
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // Encode/decode notes (to/from RPP format)

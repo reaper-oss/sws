@@ -47,7 +47,9 @@ enum {
   SNM_NOTES_MKR_SUB,
   SNM_NOTES_RGN_SUB,
   SNM_NOTES_MKRRGN_SUB,    // <-----
+#ifdef WANT_ACTION_HELP
   SNM_NOTES_ACTION_HELP    // must remain the last item: no OSX support yet 
+#endif
 };
 
 class SNM_TrackNotes {
@@ -120,10 +122,13 @@ public:
 	void SaveCurrentItemNotes(bool _wantUndo = true);
 	void SaveCurrentTrackNotes(bool _wantUndo = true);
 	void SaveCurrentMkrRgnNameOrSub(int _type, bool _wantUndo = true);
+#ifdef WANT_ACTION_HELP
 	void SaveCurrentHelp(); // no undo for action help (saved in a .ini)
-
+#endif
 	void Update(bool _force = false);
+#ifdef WANT_ACTION_HELP
 	int UpdateActionHelp();
+#endif
 	int UpdateItemNotes();
 	int UpdateTrackNotes();
 	int UpdateMkrRgnNameOrSub(int _type);
@@ -141,17 +146,21 @@ protected:
 
 	SNM_VirtualComboBox m_cbType;
 	WDL_VirtualIconButton m_btnLock;
-	SNM_ToolbarButton m_btnAlr, m_btnActionList, m_btnImportSub, m_btnExportSub;
+#ifdef WANT_ACTION_HELP
+	SNM_ToolbarButton m_btnAlr, m_btnActionList;
+#endif
+	SNM_ToolbarButton m_btnImportSub, m_btnExportSub;
 	WDL_VirtualStaticText m_txtLabel;
 	SNM_DynSizedText m_bigNotes;
 
 	NotesMarkerRegionListener m_mkrRgnListener;
 };
 
-
+#ifdef WANT_ACTION_HELP
 void LoadHelp(const char* _cmdName, char* _buf, int _bufSize);
 void SaveHelp(const char* _cmdName, const char* _help);
 void SetActionHelpFilename(COMMAND_T*);
+#endif
 bool GetStringFromNotesChunk(WDL_FastString* _notes, char* _buf, int _bufMaxSize);
 bool GetNotesChunkFromString(const char* _buf, WDL_FastString* _notes, const char* _startLine = NULL);
 

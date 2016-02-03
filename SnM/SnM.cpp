@@ -359,11 +359,11 @@ static COMMAND_T s_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (marker subtitles)" }, "S&M_MKR_SUBTITLES", OpenNotes, NULL, SNM_NOTES_MKR_SUB, IsNotesDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (region subtitles)" }, "S&M_RGN_SUBTITLES", OpenNotes, NULL, SNM_NOTES_RGN_SUB, IsNotesDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (marker/region subtitles)" }, "S&M_MARKERSUBTITLES", OpenNotes, NULL, SNM_NOTES_MKRRGN_SUB, IsNotesDisplayed}, // custom id poorly named for historical reasons...
-#ifdef _WIN32
+#if defined(_WIN32) && defined(WANT_ACTION_HELP)
 	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (action help)" }, "S&M_ACTIONHELP", OpenNotes, NULL, SNM_NOTES_ACTION_HELP, IsNotesDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Notes - Set action help file..." }, "S&M_ACTIONHELPPATH", SetActionHelpFilename, NULL, },
 #endif
 	{ { DEFACCEL, "SWS/S&M: Notes - Toggle lock" }, "S&M_ACTIONHELPTGLOCK", ToggleNotesLock, NULL, NULL, IsNotesLocked},
-	{ { DEFACCEL, "SWS/S&M: Notes - Set action help file..." }, "S&M_ACTIONHELPPATH", SetActionHelpFilename, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Notes - Import subtitle file..." }, "S&M_IMPORT_SUBTITLE", ImportSubTitleFile, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Notes - Export subtitle file..." }, "S&M_EXPORT_SUBTITLE", ExportSubTitleFile, NULL, },
 

@@ -78,6 +78,8 @@ public:
 	void Update();
 #endif
 	void UpdateCompact();
+	void OnDrag();
+	void OnEndDrag();
 protected:
 	void GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax);
 	void GetItemList(SWS_ListItemList* pList);
@@ -86,8 +88,6 @@ protected:
 	void OnItemDblClk(SWS_ListItem* item, int iCol);
 	int OnItemSort(SWS_ListItem* _item1, SWS_ListItem* _item2);
 	void OnBeginDrag(SWS_ListItem* item);
-	void OnDrag();
-	void OnEndDrag();
 	WDL_PtrList<RgnPlaylistItem> m_draggedItems;
 };
 

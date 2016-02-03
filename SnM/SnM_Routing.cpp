@@ -411,35 +411,43 @@ void RemoveRoutings(COMMAND_T* _ct)
 // ReaScript export
 ///////////////////////////////////////////////////////////////////////////////
 
+// _type -1=Default type (user preferences), 0=Post-Fader (Post-Pan), 1=Pre-FX, 2=deprecated, 3=Pre-Fader (Post-FX)
 bool SNM_AddReceive(MediaTrack* _srcTr, MediaTrack* _destTr, int _type)
 {
+	bool ok=false;
+	PreventUIRefresh(1);
 	if (_srcTr && _destTr && _srcTr!=_destTr && _type<=3)
 	{
-		SNM_SendPatcher p = SNM_SendPatcher(_destTr);
-		char vol[32] = "1.00000000000000";
-		char pan[32] = "0.00000000000000";
-		_snprintfSafe(vol, sizeof(vol), "%.14f", *(double*)GetConfigVar("defsendvol"));
-		return (p.AddReceive(_srcTr, _type<0 ? *(int*)GetConfigVar("defsendflag")&0xFF : _type, vol, pan) > 0);
+		int idx=CreateTrackSend(_srcTr, _destTr);
+		if (idx>=0 && _type>=0) GetSetTrackSendInfo(_srcTr, 0, idx, "I_SENDMODE", (void*)&_type);
+		ok = (idx>=0);
 	}
-	return false;
+	PreventUIRefresh(-1);
+	return ok;
 }
 
 bool SNM_RemoveReceive(MediaTrack* _tr, int _rcvIdx)
 {
-	if (_tr && _rcvIdx>=0) 	{
-		SNM_ChunkParserPatcher p(_tr);
-		return p.RemoveLine("TRACK", "AUXRECV", 1, _rcvIdx, "MIDIOUT");
-	}
-	return false;
+	return RemoveTrackSend(_tr, -1, _rcvIdx);
 }
 
 bool SNM_RemoveReceivesFrom(MediaTrack* _tr, MediaTrack* _srcTr)
 {
-	if (_tr && _srcTr) {
-		SNM_SendPatcher p(_tr); 
-		return (p.RemoveReceivesFrom(_srcTr) > 0);
+	bool updated = false;
+	if (const int count = GetTrackNumSends(_tr, -1))
+	{
+		MediaTrack* src;
+		int idx = count-1;
+    
+		PreventUIRefresh(1);
+		while (idx>=0 && (src = (MediaTrack*)GetSetTrackSendInfo(_tr, -1, idx, "P_SRCTRACK", NULL)))
+		{
+			if (src == _srcTr) updated |= RemoveTrackSend(_tr, -1, idx);
+			idx--;
+		}
+		PreventUIRefresh(-1);
 	}
-	return false;
+	return updated;
 }
 
 

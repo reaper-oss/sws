@@ -480,54 +480,33 @@ int LiveConfig::SetInputTrack(MediaTrack* _newInputTr, bool _updateSends)
 	MediaTrack* inputTr = GetInputTrack();
 	if (_updateSends && inputTr != _newInputTr)
 	{
-		WDL_PtrList<void> doneTrs;
-
-		// list used to factorize chunk state updates, auto-destroy => auto-commit when exiting!
-		WDL_PtrList_DeleteOnDestroy<SNM_ChunkParserPatcher> ps;
+		PreventUIRefresh(1);
 
 		// remove sends of the current input track
 		if (inputTr && CSurf_TrackToID(inputTr, false) > 0)
 		{
 			for (int i=0; i < m_ccConfs.GetSize(); i++)
 				if (LiveConfigItem* cfg = m_ccConfs.Get(i))
-					if (cfg->m_track && cfg->m_track != _newInputTr && doneTrs.Find(cfg->m_track)<0)
-					{
-						doneTrs.Add(cfg->m_track);
-						SNM_SendPatcher* p = (SNM_SendPatcher*)SNM_FindCPPbyObject(&ps, cfg->m_track);
-						if (!p) {
-							p = new SNM_SendPatcher(cfg->m_track); 
-							ps.Add(p);
-						}
-						p->RemoveReceivesFrom(inputTr);
-					}
+					if (cfg->m_track && cfg->m_track != _newInputTr)
+						SNM_RemoveReceivesFrom(cfg->m_track, inputTr);
 		}
 
 		// add sends to the new input track
 		if (_newInputTr && CSurf_TrackToID(_newInputTr, false) > 0)
 		{
-			doneTrs.Empty();
 			for (int i=0; i < m_ccConfs.GetSize(); i++)
 				if (LiveConfigItem* cfg = m_ccConfs.Get(i))
 					if (cfg->m_track &&
 						cfg->m_track != _newInputTr && 
 						cfg->m_track != inputTr && // exclude the previous input track 
-						doneTrs.Find(cfg->m_track)<0 && // have to check this (HasReceives() is not aware of chunk updates that are occuring)
 						!HasReceives(_newInputTr, cfg->m_track))
 					{
-						doneTrs.Add(cfg->m_track);
-						SNM_SendPatcher* p = (SNM_SendPatcher*)SNM_FindCPPbyObject(&ps, cfg->m_track);
-						if (!p) {
-							p = new SNM_SendPatcher(cfg->m_track); 
-							ps.Add(p);
-						}
-						char vol[32] = "1.00000000000000";
-						char pan[32] = "0.00000000000000";
-						_snprintfSafe(vol, sizeof(vol), "%.14f", *(double*)GetConfigVar("defsendvol"));
-						if (p->AddReceive(_newInputTr, *(int*)GetConfigVar("defsendflag")&0xFF, vol, pan))
+						if (CreateTrackSend(_newInputTr, cfg->m_track))
 							nbSends++;
 					}
 		}
-		RefreshRoutingsUI();
+
+		PreventUIRefresh(-1);
 	}
 	memcpy(&m_inputTr, _newInputTr ? GetTrackGUID(_newInputTr) : &GUID_NULL, sizeof(GUID));
 	return nbSends;
@@ -1129,6 +1108,7 @@ void LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case CLEAR_CC_ROW_MSG:
 		{
 			bool updt = false;
+			PreventUIRefresh(1);
 			while (item)
 			{
 				if (lc->m_autoSends && item->m_track && inputTr && lc->CountTrackConfigs(item->m_track)==1)
@@ -1137,6 +1117,8 @@ void LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				updt = true;
 				item = (LiveConfigItem*)GetListView()->EnumSelected(&x);
 			}
+			PreventUIRefresh(-1);
+
 			if (updt) {
 				Update();
 				Undo_OnStateChangeEx2(NULL, UNDO_STR, UNDO_STATE_ALL, -1); // UNDO_STATE_ALL: possible routing updates above
@@ -1295,6 +1277,7 @@ void LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case CLEAR_TRACK_MSG:
 		{
 			bool updt = false;
+			PreventUIRefresh(1);
 			while (item)
 			{
 				if (lc->m_autoSends && item->m_track && inputTr && lc->CountTrackConfigs(item->m_track)==1)
@@ -1304,6 +1287,7 @@ void LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				updt = true;
 				item = (LiveConfigItem*)GetListView()->EnumSelected(&x);
 			}
+			PreventUIRefresh(-1);
 			if (updt) {
 				Update();
 				Undo_OnStateChangeEx2(NULL, UNDO_STR, UNDO_STATE_ALL, -1);  // UNDO_STATE_ALL: possible routing updates above
@@ -1376,6 +1360,7 @@ void LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			if (LOWORD(wParam)>=SET_TRACK_START_MSG && LOWORD(wParam)<=SET_TRACK_END_MSG) 
 			{
 				bool updt = false;
+				PreventUIRefresh(1);
 				while (item)
 				{
 					item->m_track = CSurf_TrackFromID((int)LOWORD(wParam) - SET_TRACK_START_MSG, false);
@@ -1389,6 +1374,8 @@ void LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 					updt = true;
 					item = (LiveConfigItem*)GetListView()->EnumSelected(&x);
 				}
+				PreventUIRefresh(-1);
+
 				if (updt) {
 					Update();
 					Undo_OnStateChangeEx2(NULL, UNDO_STR, UNDO_STATE_ALL, -1); // UNDO_STATE_ALL: possible routing updates above

@@ -822,9 +822,8 @@ double SeekPlay(double _pos, bool _moveView)
 // Action helpers
 ///////////////////////////////////////////////////////////////////////////////
 
-// overrides the API's NamedCommandLookup: works for all action sections, and
-// fixes a REAPER BUG: NamedCommandLookup("65534") returns "65534" although 
-// this action does not exist (= noop's cmdId-1)
+// "fixes" the API's NamedCommandLookup, e.g. NamedCommandLookup("65534")
+// returns "65534" although this action doesn't exist
 // _hardCheck: if true, do more tests on the returned command id because the 
 //             API's NamedCommandLookup can return an id although the related 
 //             action is not registered yet, ex: at init time, when an action
@@ -837,9 +836,7 @@ int SNM_NamedCommandLookup(const char* _custId, KbdSectionInfo* _section, bool _
 	int cmdId = 0;
 	if (_custId && *_custId)
 	{
-		//JFB! cool finding (REAPER v4.34rc1):
-		// for macros/scripts, it turns out NamedCommandLookup() works for all sections (!)
-		// ok for 3rd party sections too because they can't register custom ids (yet)
+		// NamedCommandLookup() works for all sections (unique comman ids accross sections)
 		if (*_custId == '_')
 			cmdId = NamedCommandLookup(_custId);
 		else

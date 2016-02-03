@@ -152,7 +152,7 @@
 
 #define SNM_MAX_ACTION_CUSTID_LEN	128
 #define SNM_MAX_MACRO_CUSTID_LEN	32
-#define SNM_MAX_ACTION_NAME_LEN		128
+#define SNM_MAX_ACTION_NAME_LEN		512 // can be localized
 #define SNM_MAX_DYN_ACTIONS			99     // if > 99, the "dynamic action" code must be updated
 #define SNM_MAX_ENV_CHUNKNAME_LEN	32
 #define SNM_MAX_MARKER_NAME_LEN		64     // + regions
@@ -338,7 +338,7 @@ SECTION_INFO_T *SNM_GetActionSectionInfo(int _idx);
 
 #define SNM_NUM_NATIVE_SECTIONS   SNM_NUM_MANAGED_SECTIONS
 #define SNM_MAX_CA_SECTIONS       SNM_NUM_NATIVE_SECTIONS
-#define SNM_MAX_SECTION_NAME_LEN  512 // can be localized names
+#define SNM_MAX_SECTION_NAME_LEN  512 // can be localized
 
 
 ///////////////////////////////////////////////////////////////////////////////

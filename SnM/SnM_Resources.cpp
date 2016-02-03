@@ -2436,7 +2436,7 @@ void AutoSave(int _type, bool _ow, int _flags)
 	if (_ow && selFilledSlots.GetSize())
 	{
 		ow = MessageBox(g_resWndMgr.GetMsgHWND(),
-				__LOCALIZE("Some selected slots are already filled, do you want to overwrite them?\nIf you select No, new slots/files will be added.","sws_DLG_150"),
+				__LOCALIZE("Do you want to overwrite selected slots?\nIf you select No, new slots/files will be added.","sws_DLG_150"),
 				__LOCALIZE("S&M - Confirmation","sws_DLG_150"),
 				MB_YESNOCANCEL);
 	}

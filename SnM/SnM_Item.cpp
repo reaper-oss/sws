@@ -1252,15 +1252,9 @@ bool ShowTakeEnvPitch(MediaItem_Take* _take) {
 
 WDL_PtrList<void> g_toolbarItemSel[SNM_ITEM_SEL_COUNT];
 WDL_PtrList<void> g_toolbarItemSelToggle[SNM_ITEM_SEL_COUNT];
-#ifdef _SNM_MUTEX
-SWS_Mutex g_toolbarItemSelLock;
-#endif
 
 void RefreshOffscreenItems()
 {
-#ifdef _SNM_MUTEX
-	SWS_SectionLock lock(&g_toolbarItemSelLock);
-#endif
 	for(int i=0; i<SNM_ITEM_SEL_COUNT; i++)
 		g_toolbarItemSel[i].Empty();
 
@@ -1335,9 +1329,6 @@ void RefreshOffscreenItems()
 // deselects offscreen items and reselects those items -on toggle-
 bool ToggleOffscreenSelItems(int _dir) // primitive func
 {
-#ifdef _SNM_MUTEX
-	SWS_SectionLock lock(&g_toolbarItemSelLock);
-#endif
 	bool updated = false;
 
 	int dir1=_dir, dir2=_dir+1;
@@ -1405,9 +1396,6 @@ void ToggleOffscreenSelItems(COMMAND_T* _ct)
 // background job done in RefreshOffscreenItems() 
 int HasOffscreenSelItems(COMMAND_T* _ct)
 {
-#ifdef _SNM_MUTEX
-	SWS_SectionLock lock(&g_toolbarItemSelLock);
-#endif
 	// force refresh if not auto
 	if (!g_SNM_ToolbarRefresh) 
 		RefreshOffscreenItems();
@@ -1427,9 +1415,6 @@ int HasOffscreenSelItems(COMMAND_T* _ct)
 // deselects offscreen items
 void UnselectOffscreenItems(COMMAND_T* _ct)
 {
-#ifdef _SNM_MUTEX
-	SWS_SectionLock lock(&g_toolbarItemSelLock);
-#endif
 	// force refresh if not auto
 	if (!g_SNM_ToolbarRefresh) 
 		RefreshOffscreenItems();

@@ -74,9 +74,6 @@ public:
 class RegionPlaylistView : public SWS_ListView {
 public:
 	RegionPlaylistView(HWND hwndList, HWND hwndEdit);
-#ifdef _SNM_MUTEX
-	void Update();
-#endif
 	void UpdateCompact();
 	void OnDrag();
 	void OnEndDrag();

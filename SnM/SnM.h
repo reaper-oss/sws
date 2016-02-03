@@ -44,7 +44,6 @@
 //#define _SNM_WDL				// if my WDL version is used
 #define _SNM_HOST_AW			// host Adam's stuff
 //#define _SNM_OVERLAYS			// look bad with some themes ATM
-//#define _SNM_MUTEX			// un-mutexing since IReaperControlSurface::Run() is called from the main thread
 //#define _SNM_LAZY_SLOTS		// WIP
 
 

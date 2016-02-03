@@ -1193,18 +1193,12 @@ public:
 
 WDL_PtrList_DeleteOnDestroy<preview_register_t> g_playPreviews(DeleteTrackPreview); // DeleteTrackPreview: stop and delete the preview, its src, etc
 WDL_PtrList_DeleteOnDestroy<PausedPreview> g_pausedPreviews;
-#ifdef _SNM_MUTEX
-SWS_Mutex g_playPreviewsMutex; // g_playPreviews + g_pausedItems mutex
-#endif
 
 
 // stop playing track previews if needed
 // polled from the main thread via SNM_CSurfRun()
 void StopTrackPreviewsRun()
 {
-#ifdef _SNM_MUTEX
-	SWS_SectionLock lock(&g_playPreviewsMutex);
-#endif
 	static WDL_PtrList<void> ano_trs;
 	for (int i=g_playPreviews.GetSize()-1; i >=0; i--)
 	{
@@ -1244,9 +1238,6 @@ void StopTrackPreviewsRun()
 // MSI is the measure start interval, which if set to n greater than 0, means start synchronized to playback synchronized to a multiple of n measures
 bool SNM_PlayTrackPreview(MediaTrack* _tr, PCM_source* _src, bool _pause, bool _loop, double _msi)
 {
-#ifdef _SNM_MUTEX
-	SWS_SectionLock lock(&g_playPreviewsMutex);
-#endif
 	bool ok = false;
 	if (_src)
 	{
@@ -1317,10 +1308,6 @@ bool SNM_TogglePlaySelTrackPreviews(const char* _fn, bool _pause, bool _loop, do
 	}
 
 	{
-#ifdef _SNM_MUTEX
-		SWS_SectionLock lock(&g_playPreviewsMutex);
-#endif
-
 		// stop play if needed, store otherwise
 		for (int i=g_playPreviews.GetSize()-1; i >=0; i--)
 		{
@@ -1361,9 +1348,6 @@ bool SNM_TogglePlaySelTrackPreviews(const char* _fn, bool _pause, bool _loop, do
 void StopTrackPreviews(bool _selTracksOnly)
 {
 	TrackPreviewLockUnlockTracks(true); // so that all tracks are stopped together
-#ifdef _SNM_MUTEX
-	SWS_SectionLock lock(&g_playPreviewsMutex);
-#endif
 	for (int i=g_playPreviews.GetSize()-1; i >= 0; i--)
 	{
 		preview_register_t* prev = g_playPreviews.Get(i);

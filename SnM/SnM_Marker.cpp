@@ -36,26 +36,17 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 DWORD g_mkrRgnNotifyTime = 0; // really approx (updated on timer)
-#ifdef _SNM_MUTEX
-SWS_Mutex g_mkrRgnListenersMutex;
-#endif
 WDL_PtrList<MarkerRegion> g_mkrRgnCache;
 WDL_PtrList<SNM_MarkerRegionListener> g_mkrRgnListeners;
 
 void RegisterToMarkerRegionUpdates(SNM_MarkerRegionListener* _listener)
 {
-#ifdef _SNM_MUTEX
-	SWS_SectionLock lock(&g_mkrRgnListenersMutex);
-#endif
 	if (_listener && g_mkrRgnListeners.Find(_listener) < 0)
 		g_mkrRgnListeners.Add(_listener);
 }
 
 void UnregisterToMarkerRegionUpdates(SNM_MarkerRegionListener* _listener)
 {
-#ifdef _SNM_MUTEX
-	SWS_SectionLock lock(&g_mkrRgnListenersMutex);
-#endif
 	int idx = _listener ? g_mkrRgnListeners.Find(_listener) : -1;
 	if (idx >= 0)
 		g_mkrRgnListeners.Delete(idx, false);
@@ -104,9 +95,6 @@ void UpdateMarkerRegionRun()
 	{
 		g_mkrRgnNotifyTime = GetTickCount() + SNM_MKR_RGN_UPDATE_FREQ;
 		
-#ifdef _SNM_MUTEX
-		SWS_SectionLock lock(&g_mkrRgnListenersMutex);
-#endif
 		if (int sz=g_mkrRgnListeners.GetSize())
 			if (int updateFlags = UpdateMarkerRegionCache())
 				for (int i=sz-1; i>=0; i--)

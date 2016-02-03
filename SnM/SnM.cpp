@@ -1065,15 +1065,9 @@ KbdSectionInfo* SNM_GetMySection()
 ///////////////////////////////////////////////////////////////////////////////
 
 WDL_PtrList_DeleteOnDestroy<ScheduledJob> g_jobs;
-#ifdef _SNM_MUTEX
-SWS_Mutex g_jobsMutex;
-#endif
 
 void ScheduledJob::Schedule(ScheduledJob* _job)
 {
-#ifdef _SNM_MUTEX
-	SWS_SectionLock lock(&g_jobsMutex);
-#endif
 	if (!_job)
 		return;
 
@@ -1125,9 +1119,6 @@ void ScheduledJob::Schedule(ScheduledJob* _job)
 // polled from the main thread via SNM_CSurfRun()
 void ScheduledJob::Run()
 {
-#ifdef _SNM_MUTEX
-	SWS_SectionLock lock(&g_jobsMutex);
-#endif
 	for (int i=g_jobs.GetSize()-1; i>=0; i--)
 	{
 		if (ScheduledJob* job = g_jobs.Get(i))

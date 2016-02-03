@@ -245,13 +245,15 @@ bool ParsePresetConf(int _fx, const char* _presetConf, WDL_FastString* _out, boo
 			{
 				if (_fx < 0)
 				{
+					if (_out->GetLength()) _out->Append(", ");
 					_out->Append(fx);
 					_out->Append(" ");
 				}
 				if (_fx < 0 || !strcmp(lp.gettoken_str(i), fxBuf))
 				{
-					if (_filepartonly && HasFileExtension(preset, "vstpreset")) _out->Append(GetFileRelativePath(preset));
+					if (_wantshort && HasFileExtension(preset, "vstpreset")) _out->Append(GetFileRelativePath(preset));
 					else _out->Append(preset);
+
 					if (_fx >= 0) break;
 				}
 			}

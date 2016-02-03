@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Project.cpp
 /
-/ Copyright (c) 2011-2014 Jeffos
+/ Copyright (c) 2011 and later Jeffos
 /
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -204,7 +204,7 @@ double SelectProjectJob::GetMaxValue()
 	return i-1;
 }
 
-void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd) {
+void SelectProject(COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd) {
 	ScheduledJob::Schedule(new SelectProjectJob(SNM_SCHEDJOB_DEFAULT_DELAY, _val, _valhw, _relmode));
 }
 

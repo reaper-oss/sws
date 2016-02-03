@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_FX.cpp
 /
-/ Copyright (c) 2009-2013 Jeffos
+/ Copyright (c) 2009 and later Jeffos
 /
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -573,7 +573,7 @@ double TriggerPresetJob::GetMaxValue()
 	return 0.0;
 }
 
-void TriggerFXPresetSelTrack(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd) {
+void TriggerFXPresetSelTrack(COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd) {
 	ScheduledJob::Schedule(new TriggerPresetJob(SNM_SCHEDJOB_DEFAULT_DELAY, _val, _valhw, _relmode, (int)_ct->user));
 }
 

@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM.h
 /
-/ Copyright (c) 2009-2013 Jeffos
+/ Copyright (c) 2009 and later Jeffos
 /
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -269,7 +269,6 @@ private:
 int SNM_Init(reaper_plugin_info_t* _rec);
 void SNM_Exit();
 
-KbdSectionInfo* SNM_GetMySection();
 bool SNM_GetActionName(const char* _custId, WDL_FastString* _nameOut, int _slot = -1);
 int GetFakeToggleState(COMMAND_T*);
 
@@ -300,18 +299,6 @@ public:
 	int m_int;
 };
 
-typedef struct MIDI_COMMAND_T {
-	gaccel_register_t accel;
-	const char* id;
-	void (*doCommand)(MIDI_COMMAND_T*,int,int,int,HWND);
-	const char* menuText;
-	INT_PTR user;
-#ifdef _SNM_MISC
-	int (*getEnabled)(MIDI_COMMAND_T*);
-	bool fakeToggle;
-#endif
-} MIDI_COMMAND_T;
-
 // unsigned chars are enough ATM..
 typedef struct DYN_COMMAND_T {
 	const char* desc;
@@ -335,9 +322,6 @@ typedef struct SECTION_INFO_T {
 // Action sections
 ///////////////////////////////////////////////////////////////////////////////
 
-#define SNM_SECTION_ID				0x10000101 // "< 0x10000000 for cockos use only plzk thx"
-#define SNM_SECTION_1ST_CMD_ID		40000
-
 // section indexes
 enum {
   SNM_SEC_IDX_MAIN=0,
@@ -346,14 +330,13 @@ enum {
   SNM_SEC_IDX_ME,
   SNM_SEC_IDX_ME_EL,
   SNM_SEC_IDX_ME_INLINE,
-  SNM_SEC_IDX_SNM,
   SNM_NUM_MANAGED_SECTIONS
 };
 
 // various properties indexed with the above enum: keep both in sync!
 SECTION_INFO_T *SNM_GetActionSectionInfo(int _idx);
 
-#define SNM_NUM_NATIVE_SECTIONS   SNM_SEC_IDX_SNM
+#define SNM_NUM_NATIVE_SECTIONS   SNM_NUM_MANAGED_SECTIONS
 #define SNM_MAX_CA_SECTIONS       SNM_NUM_NATIVE_SECTIONS
 #define SNM_MAX_SECTION_NAME_LEN  512 // can be localized names
 

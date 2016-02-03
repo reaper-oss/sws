@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM.cpp
 /
-/ Copyright (c) 2009-2013 Jeffos
+/ Copyright (c) 2009 and later Jeffos
 /
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -120,7 +120,6 @@ static COMMAND_T s_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Float previous FX (and close others) for selected tracks" }, "S&M_WNONLY1", CycleFloatFXWndSelTracks, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Float next FX (and close others) for selected tracks" }, "S&M_WNONLY2", CycleFloatFXWndSelTracks, NULL, 1},
 
-	// see above comment, used to be `... (+ main window on cycle)` => turned into `... (cycle)`
 	{ { DEFACCEL, "SWS/S&M: Focus previous floating FX for selected tracks (cycle)" }, "S&M_WNFOCUS5", CycleFocusFXMainWndSelTracks, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Focus next floating FX for selected tracks (cycle)" }, "S&M_WNFOCUS6", CycleFocusFXMainWndSelTracks, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Focus previous floating FX (cycle)" }, "S&M_WNFOCUS7", CycleFocusFXMainWndAllTracks, NULL, -1},
@@ -179,6 +178,9 @@ static COMMAND_T s_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Bypass all take FX for selected items" }, "S&M_TAKEFX_BYPASS", UpdateAllFXsBypassSelItems, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Unbypass all take FX for selected items" }, "S&M_TAKEFX_UNBYPASS", UpdateAllFXsBypassSelItems, NULL, 0},
 
+	// FX presets -------------------------------------------------------------
+	{ { DEFACCEL, "SWS/S&M: Trigger preset for selected FX of selected track (MIDI/OSC only)" }, "S&M_SELFX_PRESET", NULL, NULL, -1, NULL, 0, TriggerFXPresetSelTrack, },
+
 	// FX Chains (items & tracks) ---------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Copy FX chain from selected item" }, "S&M_COPYFXCHAIN1", CopyTakeFXChain, NULL, }, 
 	{ { DEFACCEL, "SWS/S&M: Cut FX chain from selected items" }, "S&M_COPYFXCHAIN2", CutTakeFXChain, NULL, }, 
@@ -209,6 +211,7 @@ static COMMAND_T s_cmdTable[] =
 
 	// Projects --------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Open project path in explorer/finder" }, "S&M_OPEN_PRJ_PATH", OpenProjectPathInExplorerFinder, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Select project (MIDI/OSC only)" }, "S&M_SELECT_PROJECT", NULL, NULL, 0, NULL, 0, SelectProject, },
 
 	{ { DEFACCEL, "SWS/S&M: Insert silence (seconds)" }, "S&M_INSERT_SILENCE_S", InsertSilence, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Insert silence (measures.beats)" }, "S&M_INSERT_SILENCE_MB", InsertSilence, NULL, 1},
@@ -626,7 +629,6 @@ static COMMAND_T s_cmdTable[] =
 //   and "_DO_STUFF2", repectively.
 ///////////////////////////////////////////////////////////////////////////////
 
-
 void ExclusiveToggle(COMMAND_T*);
 
 static DYN_COMMAND_T s_dynCmdTable[] =
@@ -649,6 +651,8 @@ static DYN_COMMAND_T s_dynCmdTable[] =
 	{ "SWS/S&M: Bypass all FX (except %02d) for selected tracks", "S&M_FXBYP_ALL_ON_EXCPT", BypassAllFXsExceptSelTracks, 8, SNM_MAX_DYN_ACTIONS, NULL},
 	{ "SWS/S&M: Unbypass all FX (except %02d) for selected tracks", "S&M_FXBYP_ALL_OFF_EXCPT", UnypassAllFXsExceptSelTracks, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
 
+	{ "SWS/S&M: Trigger preset for FX %02d of selected track (MIDI/OSC only)", "S&M_PRESET_FX", NULL, SNM_PRESETS_NB_FX, SNM_PRESETS_NB_FX, NULL, 0, TriggerFXPresetSelTrack},
+  
 	{ "SWS/S&M: Resources - Clear FX chain slot %02d", "S&M_CLRFXCHAINSLOT", ResourcesClearFXChainSlot, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
 	{ "SWS/S&M: Resources - Paste (replace) FX chain to selected items, slot %02d", "S&M_TAKEFXCHAIN", LoadSetTakeFXChainSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
 	{ "SWS/S&M: Resources - Paste FX chain to selected items, slot %02d", "S&M_PASTE_TAKEFXCHAIN", LoadPasteTakeFXChainSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
@@ -731,6 +735,9 @@ static DYN_COMMAND_T s_dynCmdTable[] =
 	{ "SWS/S&M: Live Config %02d - Enable tiny fades", "S&M_LIVECFG_FADES_ON", EnableTinyFadesLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
 	{ "SWS/S&M: Live Config %02d - Disable tiny fades", "S&M_LIVECFG_FADES_OFF", DisableTinyFadesLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
 	{ "SWS/S&M: Live Config %02d - Toggle enable tiny fades", "S&M_LIVECFG_FADES_TGL", ToggleTinyFadesLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, IsTinyFadesLiveConfigEnabled},
+
+	{ "SWS/S&M: Live Config %02d - Apply config (MIDI/OSC only)", "S&M_LIVECONFIG", NULL, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL, 0, ApplyLiveConfig },
+	{ "SWS/S&M: Live Config %02d - Preload config (MIDI/OSC only)", "S&M_PRE_LIVECONFIG", NULL, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL, 0, PreloadLiveConfig },
 
 	{ "SWS/S&M: Region Playlist %02d - Play", "S&M_PLAY_RGN_PLAYLIST", PlaylistPlay, 4, SNM_MAX_DYN_ACTIONS, NULL},
 
@@ -889,8 +896,7 @@ SECTION_INFO_T *SNM_GetActionSectionInfo(int _idx)
     {32063,	"S&M_MEDIAEX_CYCLACTION",	"MediaEx_Cyclactions"},
     {32060,	"S&M_ME_PIANO_CYCLACTION",	"ME_Piano_Cyclactions"},
     {32061,	"S&M_ME_LIST_CYCLACTION",	"ME_List_Cyclactions"},
-    {32062,	"S&M_ME_INLINE_CYCLACTION", "ME_Inline_Cyclactions"},
-    {SNM_SECTION_ID, "", ""}
+    {32062,	"S&M_ME_INLINE_CYCLACTION", "ME_Inline_Cyclactions"}
   };  
   return (_idx>=SNM_SEC_IDX_MAIN && _idx<SNM_NUM_MANAGED_SECTIONS ? &sectionInfos[_idx] : NULL);
 }
@@ -952,111 +958,6 @@ void ExclusiveToggle(COMMAND_T* _ct)
 			break;
 	}
 	RefreshToolbar(0); // 0 for tied CAs
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-// "S&M Extension" section
-///////////////////////////////////////////////////////////////////////////////
-
-//JFB very few actions in this section atm => really useful?
-static WDL_IntKeyedArray<MIDI_COMMAND_T*> s_mySectionCmds;
-
-bool OnMidiAction(int _cmd, int _val, int _valhw, int _relmode, HWND _hwnd)
-{
-	static WDL_PtrList<const char> sReentrantCmds;
-
-	// ignore commands that don't have anything to do with us from this point forward
-	if (MIDI_COMMAND_T* ct = s_mySectionCmds.Get(_cmd))
-	{
-		if (ct->doCommand)
-		{
-			if (sReentrantCmds.Find(ct->id)<0)
-			{
-				sReentrantCmds.Add(ct->id);
-#ifdef _SNM_MISC // see MIDI_COMMAND_T declaration
-				ct->fakeToggle = !ct->fakeToggle;
-#endif
-				ct->doCommand(ct, _val, _valhw, _relmode, _hwnd);
-				sReentrantCmds.Delete(sReentrantCmds.Find(ct->id));
-				return true;
-			}
-#ifdef ACTION_DEBUG
-			else
-			{
-				OutputDebugString("S&M Extension - recursive action: ");
-				OutputDebugString(ct->id);
-				OutputDebugString("\n");
-			}
-#endif
-		}
-	}
-	return false;
-}
-
-//JFB default key bindings are not used yet => not fully managed..
-KbdSectionInfo* SNM_GetMySection()
-{
-
-//!WANT_LOCALIZE_1ST_STRING_BEGIN:s&m_section_actions
-
-	static MIDI_COMMAND_T sCmdTable[] = 
-	{
-		// keep these first actions here, keep this order (some learn commands depend on this)
-		// also, keep the following actions in sync with SNM_LIVECFG_NB_CONFIGS
-		{ { DEFACCEL, "SWS/S&M: Apply Live Config 1 (MIDI/OSC only)" }, "S&M_LIVECONFIG1", ApplyLiveConfig, NULL, 0},
-		{ { DEFACCEL, "SWS/S&M: Apply Live Config 2 (MIDI/OSC only)" }, "S&M_LIVECONFIG2", ApplyLiveConfig, NULL, 1},
-		{ { DEFACCEL, "SWS/S&M: Apply Live Config 3 (MIDI/OSC only)" }, "S&M_LIVECONFIG3", ApplyLiveConfig, NULL, 2},
-		{ { DEFACCEL, "SWS/S&M: Apply Live Config 4 (MIDI/OSC only)" }, "S&M_LIVECONFIG4", ApplyLiveConfig, NULL, 3},
-		{ { DEFACCEL, "SWS/S&M: Preload Live Config 1 (MIDI/OSC only)" }, "S&M_PRE_LIVECONFIG1", PreloadLiveConfig, NULL, 0},
-		{ { DEFACCEL, "SWS/S&M: Preload Live Config 2 (MIDI/OSC only)" }, "S&M_PRE_LIVECONFIG2", PreloadLiveConfig, NULL, 1},
-		{ { DEFACCEL, "SWS/S&M: Preload Live Config 3 (MIDI/OSC only)" }, "S&M_PRE_LIVECONFIG3", PreloadLiveConfig, NULL, 2},
-		{ { DEFACCEL, "SWS/S&M: Preload Live Config 4 (MIDI/OSC only)" }, "S&M_PRE_LIVECONFIG4", PreloadLiveConfig, NULL, 3},
-
-		// fom this point, order does not matter anymore..
-
-		{ { DEFACCEL, "SWS/S&M: Select project (MIDI/OSC only)" }, "S&M_SELECT_PROJECT", SelectProject, NULL, 0},
-
-		// keep the nb of following actions consistent with SNM_PRESETS_NB_FX
-		{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 1 of selected track (MIDI/OSC only)" }, "S&M_PRESET_FX1", TriggerFXPresetSelTrack, NULL, 0},
-		{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 2 of selected track (MIDI/OSC only)" }, "S&M_PRESET_FX2", TriggerFXPresetSelTrack, NULL, 1},
-		{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 3 of selected track (MIDI/OSC only)" }, "S&M_PRESET_FX3", TriggerFXPresetSelTrack, NULL, 2},
-		{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 4 of selected track (MIDI/OSC only)" }, "S&M_PRESET_FX4", TriggerFXPresetSelTrack, NULL, 3},
-		{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 5 of selected track (MIDI/OSC only)" }, "S&M_PRESET_FX5", TriggerFXPresetSelTrack, NULL, 4},
-		{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 6 of selected track (MIDI/OSC only)" }, "S&M_PRESET_FX6", TriggerFXPresetSelTrack, NULL, 5},
-		{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 7 of selected track (MIDI/OSC only)" }, "S&M_PRESET_FX7", TriggerFXPresetSelTrack, NULL, 6},
-		{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 8 of selected track (MIDI/OSC only)" }, "S&M_PRESET_FX8", TriggerFXPresetSelTrack, NULL, 7},
-		{ { DEFACCEL, "SWS/S&M: Trigger preset for selected FX of selected track (MIDI/OSC only)" }, "S&M_SELFX_PRESET", TriggerFXPresetSelTrack, NULL, -1}
-	};
-
-//!WANT_LOCALIZE_1ST_STRING_END
-
-	static KbdCmd sKbdCmd[__ARRAY_SIZE(sCmdTable)]={};
-	static bool sInitDone = false;
-	if (!sInitDone)
-	{
-		sInitDone = true;
-		for (int i=0; i<__ARRAY_SIZE(sKbdCmd); i++)
-		{
-			if (MIDI_COMMAND_T* ct = &sCmdTable[i])
-			{
-				sKbdCmd[i].text = GetLocalizedActionName(ct->accel.desc, 0, "s&m_section_actions");
-				sKbdCmd[i].cmd = ct->accel.accel.cmd = SNM_SECTION_1ST_CMD_ID+i;
-				s_mySectionCmds.Insert(ct->accel.accel.cmd, ct);
-			}
-		}
-	}
-
-	static KbdSectionInfo sKbdSection = {
-		SNM_SECTION_ID,
-		__LOCALIZE("S&M Extension","sws_accel_sec"),
-		sKbdCmd, __ARRAY_SIZE(sKbdCmd),
-		NULL, 0,
-		OnMidiAction,
-		NULL, NULL
-	};
-
-	return &sKbdSection;
 }
 
 
@@ -1298,9 +1199,7 @@ int SNM_Init(reaper_plugin_info_t* _rec)
 #endif
 
 	// actions must be registered before views and cycle actions
-	if (!SWSRegisterCommands(s_cmdTable) || 
-		!RegisterDynamicActions(s_dynCmdTable, g_SNM_IniFn.Get()) ||
-		!_rec->Register("accel_section", SNM_GetMySection()))
+	if (!SWSRegisterCommands(s_cmdTable) || !RegisterDynamicActions(s_dynCmdTable, g_SNM_IniFn.Get()))
 	{
 		return 0;
 	}
@@ -1334,7 +1233,6 @@ void SNM_Exit()
 	CyclactionExit();
 	SNM_UIExit();
 	IniFileExit();
-	plugin_register("-accel_section",(void*)SNM_GetMySection());
 #ifdef _SNM_MISC
 	plugin_register("-hookcustommenu", (void*)SNM_Menuhook);
 #endif

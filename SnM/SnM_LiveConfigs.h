@@ -224,8 +224,8 @@ void OpenLiveConfigMonitorWnd(int _idx);
 void OpenLiveConfigMonitorWnd(COMMAND_T*);
 int IsLiveConfigMonitorWndDisplayed(COMMAND_T*);
 
-void ApplyLiveConfig(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
-void PreloadLiveConfig(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
+void ApplyLiveConfig(COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
+void PreloadLiveConfig(COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
 
 void SwapCurrentPreloadLiveConfigs(COMMAND_T*);
 

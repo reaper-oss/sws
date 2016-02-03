@@ -1314,11 +1314,17 @@ void LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				UpdateEnableLiveConfig(g_configId, -1);
 			break;
 		case LEARN_APPLY_MSG:
-			LearnAction(SNM_GetMySection(), SNM_SECTION_1ST_CMD_ID + g_configId);
+		{
+			int cmdId=NamedCommandLookup("_S&M_LIVECONFIG1");
+			LearnAction(NULL, cmdId + g_configId);
 			break;
+		}
 		case LEARN_PRELOAD_MSG:
-			LearnAction(SNM_GetMySection(), SNM_SECTION_1ST_CMD_ID + SNM_LIVECFG_NB_CONFIGS + g_configId);
+		{
+			int cmdId=NamedCommandLookup("_S&M_PRE_LIVECONFIG1");
+			LearnAction(NULL, cmdId + g_configId);
 			break;
+		}
 		case BTNID_LEARN:
 		{
 			RECT r; m_btnLearn.GetPositionInTopVWnd(&r);
@@ -1523,15 +1529,19 @@ void LiveConfigsWnd::AddLearnMenu(HMENU _menu, bool _subItems)
 {
 	if (g_liveConfigs.Get()->Get(g_configId))
 	{
-		char buf[128] = "";
 		HMENU hOptMenu;
 		if (_subItems) hOptMenu = CreatePopupMenu();
 		else hOptMenu = _menu;
 
-		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Apply Live Config %d (MIDI/OSC only)","s&m_section_actions"), g_configId+1);
-		AddToMenu(hOptMenu, buf, LEARN_APPLY_MSG);
-		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Preload Live Config %d (MIDI/OSC only)","s&m_section_actions"), g_configId+1);
-		AddToMenu(hOptMenu, buf, LEARN_PRELOAD_MSG);
+		char custId[SNM_MAX_ACTION_CUSTID_LEN];
+		_snprintfSafe(custId, sizeof(custId), "_S&M_LIVECONFIG%d", g_configId+1);
+		COMMAND_T* ct = SWSGetCommandByID(NamedCommandLookup(custId));
+		if (ct) AddToMenuOrdered(hOptMenu, SWS_CMD_SHORTNAME(ct), LEARN_APPLY_MSG);
+
+		_snprintfSafe(custId, sizeof(custId), "_S&M_PRE_LIVECONFIG%d", g_configId+1);
+		ct = SWSGetCommandByID(NamedCommandLookup(custId));
+		if (ct) AddToMenuOrdered(hOptMenu, SWS_CMD_SHORTNAME(ct), LEARN_PRELOAD_MSG);
+
 		if (_subItems && GetMenuItemCount(hOptMenu))
 			AddSubMenu(_menu, hOptMenu, __LOCALIZE("Learn","sws_DLG_155"));
 	}
@@ -2915,11 +2925,11 @@ int IsLiveConfigMonitorWndDisplayed(COMMAND_T* _ct)
 // Actions
 ///////////////////////////////////////////////////////////////////////////////
 
-void ApplyLiveConfig(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd) {
+void ApplyLiveConfig(COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd) {
 	ApplyLiveConfig((int)_ct->user, _val, false, _valhw, _relmode);
 }
 
-void PreloadLiveConfig(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd) {
+void PreloadLiveConfig(COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd) {
 	PreloadLiveConfig((int)_ct->user, _val, false, _valhw, _relmode);
 }
 

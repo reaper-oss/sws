@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Project.h
 /
-/ Copyright (c) 2012-2013 Jeffos
+/ Copyright (c) 2012 and later Jeffos
 /
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -53,7 +53,7 @@ protected:
 	double GetMaxValue();
 };
 
-void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
+void SelectProject(COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
 
 void GlobalStartupActionTimer();
 void SetStartupAction(COMMAND_T*);

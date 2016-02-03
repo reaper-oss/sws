@@ -46,6 +46,7 @@ void RefreshRoutingsUI() {}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Cut/copy/paste routings + track with routings
+// Note: these functions/actions ignore routing envelopes
 ///////////////////////////////////////////////////////////////////////////////
 
 WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> > g_sndTrackClipboard;

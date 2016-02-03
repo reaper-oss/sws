@@ -125,7 +125,7 @@ bool SNM_SendPatcher::NotifyChunkLine(int _mode,
 	return update; 
 }
 
-int SNM_SendPatcher::AddReceive(MediaTrack* _srcTr, int _sendType, char* _vol, char* _pan) 
+int SNM_SendPatcher::AddReceive(MediaTrack* _srcTr, int _sendType, const char* _vol, const char* _pan) 
 {
 	m_srcId = _srcTr ? CSurf_TrackToID(_srcTr, false) : -1;
 	if (m_srcId <= 0)
@@ -154,6 +154,7 @@ int SNM_SendPatcher::RemoveReceives() {
 	return RemoveLines("AUXRECV");
 */
 	return RemoveLine("TRACK", "AUXRECV", 1, -1, "MIDIOUT");
+	// REAPER will remove related envelopes, if any
 }
 
 int SNM_SendPatcher::RemoveReceivesFrom(MediaTrack* _srcTr) 
@@ -166,6 +167,7 @@ int SNM_SendPatcher::RemoveReceivesFrom(MediaTrack* _srcTr)
 	return _snprintfStrict(buf, sizeof(buf), "AUXRECV %d", srcId-1)>0 && RemoveLines(buf);
 */
 	return ParsePatch(-2, 1, "TRACK", "AUXRECV", -1, -1, NULL, NULL, "MIDIOUT");
+	// REAPER will remove related envelopes, if any
 }
 
 

@@ -71,7 +71,7 @@ public:
 		m_sndRcv = NULL;
 	}
 	~SNM_SendPatcher() {}
-	int AddReceive(MediaTrack* _srcTr, int _sendType, char* _vol, char* _pan);
+	int AddReceive(MediaTrack* _srcTr, int _sendType, const char* _vol, const char* _pan);
 	bool AddReceive(MediaTrack* _srcTr, void* _io);
 	int RemoveReceives();
 	int RemoveReceivesFrom(MediaTrack* _srcTr);
@@ -84,8 +84,8 @@ protected:
 
 	int m_srcId;
 	int m_sendType;
-	char* m_vol;
-	char* m_pan;
+	const char* m_vol;
+	const char* m_pan;
 	void* m_sndRcv;
 };
 

@@ -35,16 +35,6 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// General routing helpers
-///////////////////////////////////////////////////////////////////////////////
-
-//REAPER BUG: tcp/mcp refresh is buggy,
-// see http://forum.cockos.com/project.php?issueid=2642
-// (just to ease replacement the day we can manage that..)
-void RefreshRoutingsUI() {}
-
-
-///////////////////////////////////////////////////////////////////////////////
 // Cut/copy/paste routings + track with routings
 // Note: these functions/actions ignore routing envelopes
 ///////////////////////////////////////////////////////////////////////////////
@@ -188,7 +178,6 @@ void CutWithIOs(COMMAND_T* _ct)
 		Undo_BeginBlock2(NULL);
 		CopySendsReceives(true, &trs, &g_sndTrackClipboard, &g_rcvTrackClipboard); // true: do no copy routings between sel. tracks
 		Main_OnCommand(40337, 0); // cut sel tracks
-		RefreshRoutingsUI();
 		Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL);
 	}
 }
@@ -205,7 +194,6 @@ void PasteWithIOs(COMMAND_T* _ct)
 			SNM_GetSelectedTracks(NULL, &trs, false);
 			PasteSendsReceives(&trs, &g_sndTrackClipboard, &g_rcvTrackClipboard, NULL); // false: we keep intra routings between pasted tracks, see above
 		}
-		RefreshRoutingsUI();
 		Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL);
 	}
 }
@@ -232,20 +220,16 @@ void CutRoutings(COMMAND_T* _ct)
 		updated |= RemoveReceives(&trs, &ps);
 		ps.Empty(true); // auto-commit, if needed
 	}
-	if (updated) {
-		RefreshRoutingsUI();
+	if (updated)
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
-	}
 }
 
 void PasteRoutings(COMMAND_T* _ct)
 {
 	WDL_PtrList<MediaTrack> trs;
 	SNM_GetSelectedTracks(NULL, &trs, false);
-	if (trs.GetSize() && PasteSendsReceives(&trs, &g_sndClipboard, &g_rcvClipboard, NULL)) {
-		RefreshRoutingsUI();
+	if (trs.GetSize() && PasteSendsReceives(&trs, &g_sndClipboard, &g_rcvClipboard, NULL))
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
-	}
 }
 
 // sends cut copy/paste
@@ -266,20 +250,16 @@ void CutSends(COMMAND_T* _ct)
 		CopySendsReceives(false, &trs, &g_sndClipboard, NULL);
 		updated |= RemoveSends(&trs, NULL);
 	}
-	if (updated) {
-		RefreshRoutingsUI();
+	if (updated)
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
-	}
 }
 
 void PasteSends(COMMAND_T* _ct)
 {
 	WDL_PtrList<MediaTrack> trs;
 	SNM_GetSelectedTracks(NULL, &trs, false);
-	if (trs.GetSize() && PasteSendsReceives(&trs, &g_sndClipboard, NULL, NULL)) {
-		RefreshRoutingsUI();
+	if (trs.GetSize() && PasteSendsReceives(&trs, &g_sndClipboard, NULL, NULL))
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
-	}
 }
 
 // receives cut copy/paste
@@ -300,20 +280,16 @@ void CutReceives(COMMAND_T* _ct)
 		CopySendsReceives(false, &trs, NULL, &g_rcvClipboard);
 		updated |= RemoveReceives(&trs, NULL);
 	}
-	if (updated) {
-		RefreshRoutingsUI();
+	if (updated)
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
-	}
 }
 
 void PasteReceives(COMMAND_T* _ct)
 {
 	WDL_PtrList<MediaTrack> trs;
 	SNM_GetSelectedTracks(NULL, &trs, false);
-	if (trs.GetSize() && PasteSendsReceives(&trs, NULL, &g_rcvClipboard, NULL)) {
-		RefreshRoutingsUI();
+	if (trs.GetSize() && PasteSendsReceives(&trs, NULL, &g_rcvClipboard, NULL))
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
-	}
 }
 
 
@@ -351,10 +327,8 @@ void RemoveSends(COMMAND_T* _ct)
 	SNM_GetSelectedTracks(NULL, &trs, false);
 	if (trs.GetSize())
 		updated = RemoveSends(&trs, NULL);
-	if (updated) {
-		RefreshRoutingsUI();
+	if (updated)
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
-	}
 }
 
 // primitive
@@ -383,10 +357,8 @@ void RemoveReceives(COMMAND_T* _ct)
 	SNM_GetSelectedTracks(NULL, &trs, false);
 	if (trs.GetSize())
 		updated = RemoveReceives(&trs, NULL);
-	if (updated) {
-		RefreshRoutingsUI();
+	if (updated)
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
-	}
 }
 
 void RemoveRoutings(COMMAND_T* _ct)
@@ -401,10 +373,8 @@ void RemoveRoutings(COMMAND_T* _ct)
 		updated |= RemoveReceives(&trs, &ps);
 		ps.Empty(true); // auto-commit, if needed
 	}
-	if (updated) {
-		RefreshRoutingsUI();
+	if (updated)
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1); 
-	}
 }
 
 

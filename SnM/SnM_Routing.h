@@ -64,8 +64,6 @@ public:
 };
 
 
-void RefreshRoutingsUI();
-
 void CopySendsReceives(bool _noIntra, WDL_PtrList<MediaTrack>* _trs, WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _snds, WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _rcvs);
 bool PasteSendsReceives(WDL_PtrList<MediaTrack>* _trs, WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _snds, WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _rcvs, WDL_PtrList<SNM_ChunkParserPatcher>* _ps);
 void CopyWithIOs(COMMAND_T*);

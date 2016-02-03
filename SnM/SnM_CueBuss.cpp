@@ -186,7 +186,6 @@ bool CueBuss(const char* _undoMsg, const char* _busName, int _type, bool _showRo
 		{
 			GetSetMediaTrackInfo(cueTr, "I_SELECTED", &g_i1);
 			UpdateTimeline();
-			RefreshRoutingsUI();
 			ScrollSelTrack(true, true);
 			if (_showRouting) 
 				Main_OnCommand(40293, 0);

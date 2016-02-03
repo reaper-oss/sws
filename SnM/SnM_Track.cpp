@@ -454,6 +454,9 @@ static const char s_trackEnvNames[][SNM_MAX_ENV_CHUNKNAME_LEN] =
 	"AUXVOLENV",
 	"AUXPANENV",
 	"AUXMUTEENV",
+	"HWVOLENV",
+	"HWPANENV",
+	"HWMUTEENV",
 /*JFB useless: GetSetObjectState() removes them
 	"TEMPOENVEX",
 	"MASTERPLAYSPEEDENV",

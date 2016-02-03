@@ -198,10 +198,10 @@ double SelectProjectJob::GetCurrentValue()
 
 double SelectProjectJob::GetMaxValue()
 {
-	int i=0;
+	int i=-1;
 	ReaProject *prj;
-	while ((prj = EnumProjects(i++, NULL, 0)));
-	return i;
+	while ((prj = EnumProjects(++i, NULL, 0)));
+	return i-1;
 }
 
 void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd) {

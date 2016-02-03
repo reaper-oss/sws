@@ -89,7 +89,7 @@ const char* SNM_GetActionSectionName(int _idx);
 KbdSectionInfo* SNM_GetActionSection(int _idx);
 
 bool LearnAction(KbdSectionInfo* _section, int _cmdId);
-bool GetSectionURL(bool _alr, const char* _section, char* _sectionURL, int _sectionURLSize);
+bool GetSectionURL(bool _alr, KbdSectionInfo* _section, char* _sectionURL, int _sectionURLSize);
 
 #ifdef _SNM_MISC
 WDL_UINT64 FNV64(WDL_UINT64 h, const unsigned char* data, int sz);

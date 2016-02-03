@@ -517,12 +517,13 @@ static COMMAND_T s_cmdTable[] =
 #ifdef _WIN32
 	{ { DEFACCEL, "SWS/S&M: Left mouse click at cursor position (use w/o modifier)" }, "S&M_MOUSE_L_CLICK", SimulateMouseClick, NULL, 0},
 #endif
-	{ { DEFACCEL, "SWS/S&M: Dump ALR Wiki summary (w/o SWS extension)" }, "S&M_ALRSUMMARY1", DumpWikiActionList, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Dump ALR Wiki summary (SWS extension only)" }, "S&M_ALRSUMMARY2", DumpWikiActionList, NULL, 2},
-	{ { DEFACCEL, "SWS/S&M: Dump action list (w/o SWS extension)" }, "S&M_DUMP_ACTION_LIST", DumpActionList, NULL, 3},
-	{ { DEFACCEL, "SWS/S&M: Dump action list (SWS extension only)" }, "S&M_DUMP_SWS_ACTION_LIST", DumpActionList, NULL, 4},
-	{ { DEFACCEL, "SWS/S&M: Dump action list (custom actions only)" }, "S&M_DUMP_CUST_ACTION_LIST", DumpActionList, NULL, 5},
-
+	{ { DEFACCEL, "SWS/S&M: Dump ALR Wiki summary (native actions only)" }, "S&M_ALRSUMMARY1", DumpWikiActionList, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Dump ALR Wiki summary (SWS actions only)" }, "S&M_ALRSUMMARY2", DumpWikiActionList, NULL, 2},
+	{ { DEFACCEL, "SWS/S&M: Dump action list (native actions only)" }, "S&M_DUMP_ACTION_LIST", DumpActionList, NULL, 4},
+	{ { DEFACCEL, "SWS/S&M: Dump action list (SWS actions only)" }, "S&M_DUMP_SWS_ACTION_LIST", DumpActionList, NULL, 8},
+	{ { DEFACCEL, "SWS/S&M: Dump action list (custom actions only)" }, "S&M_DUMP_CUST_ACTION_LIST", DumpActionList, NULL, 16},
+	{ { DEFACCEL, "SWS/S&M: Dump action list (all but custom actions)" }, "S&M_DUMP_CUST_ACTION_LIST", DumpActionList, NULL, 4|8},
+	{ { DEFACCEL, "SWS/S&M: Dump action list (all actions)" }, "S&M_DUMP_CUST_ACTION_LIST", DumpActionList, NULL, 4|8|16},
 
 	{ { DEFACCEL, "SWS/S&M: Resources - Clear FX chain slot, prompt for slot" }, "S&M_CLRFXCHAINSLOT", ResourcesClearSlotPrompt, NULL, SNM_SLOT_FXC},
 	{ { DEFACCEL, "SWS/S&M: Resources - Clear track template slot, prompt for slot" }, "S&M_CLR_TRTEMPLATE_SLOT", ResourcesClearSlotPrompt, NULL, SNM_SLOT_TR},

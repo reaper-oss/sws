@@ -530,102 +530,91 @@ bool GetSelectedAction(char* _idstrOut, int _idStrSz, KbdSectionInfo* _expectedS
 	return true;
 }
 
-// dump actions or the wiki ALR summary for the current section *as displayed* in the action dlg
+
+#undef SNM_ListView_GetSelectedCount
+#undef SNM_ListView_GetItemCount
+#undef SNM_ListView_GetItem
+#undef SNM_ListView_GetItemText
+#undef SNM_ListView_SetItemState
+
+
+// dump actions or the wiki ALR summary
 // see http://forum.cockos.com/showthread.php?t=61929 and http://wiki.cockos.com/wiki/index.php/Action_List_Reference
 // _type: 1 & 2 for ALR wiki (1=native actions, 2=SWS)
-// _type: 3, 4 & 5 for basic dump (3=native actions, 4=SWS, 5=user macros)
-// API LIMITATION: could be much simplified if we could retrieve string ids fom cmdIds, 
-//                 e.g. if we had: const char* ReverseNamedCommandLookup(int)
+// _type: &4=native, &8=SWS, &16=user macros/script/cycle actions/reaconsole actions
 bool DumpActionList(int _type, const char* _title, const char* _lineFormat, const char* _heading, const char* _ending)
 {
-	// keep the help text on a signle line (for the langpack gen tool..)
-	const char* help = __LOCALIZE("Note: this action needs the action window to be opened (with the section you want to dump).\nIt obeys the action list filter, so to get the full list you need a clear filter.\nExample: to dump a MIDI editor action list the easiest way is to assign a keyboard shortcut or\ntoolbar button, open the MIDI editor section of the action list and fire the shortcut/dump action.","sws_mbox");
-	char currentSection[SNM_MAX_SECTION_NAME_LEN] = "";
-	HWND hList = GetActionListBox(currentSection, SNM_MAX_SECTION_NAME_LEN);
-	if (hList && currentSection)
-	{
-		char sectionURL[SNM_MAX_SECTION_NAME_LEN] = ""; 
-		if (!GetSectionURL(_type==1||_type==2, currentSection, sectionURL, SNM_MAX_SECTION_NAME_LEN))
-		{
-			MessageBox(GetMainHwnd(), __LOCALIZE("Dump failed: unknown section!","sws_mbox"), _title, MB_OK);
-			return false;
-		}
+  char fn[SNM_MAX_PATH];
+  if (!BrowseForSaveFile(_title, GetResourcePath(), "ActionList.txt", SNM_TXT_EXT_LIST, fn, sizeof(fn)))
+    return false;
 
-		char name[SNM_MAX_SECTION_NAME_LEN*2] = "", fn[SNM_MAX_PATH] = "";
-		if (_snprintfStrict(name, sizeof(name), "%s_Section%s.txt", sectionURL, (_type==2||_type==4) ? "_SWS" : _type==5 ? "_Custom" : "") <= 0)
-			*name = '\0';
-		if (!BrowseForSaveFile(_title, GetResourcePath(), name, SNM_TXT_EXT_LIST, fn, sizeof(fn)))
-			return false;
+  int nbWrote=0;
+  if (FILE* f = fopenUTF8(fn, "w"))
+  {
+    // flush
+    fputs("\n", f);
+    fclose(f);
 
-		if (FILE* f = fopenUTF8(fn, "w"))
-		{
-			// flush
-			fputs("\n", f);
-			fclose(f);
+    f = fopenUTF8(fn, "a"); 
+    if (!f)
+      return false; // just in case..
 
-			f = fopenUTF8(fn, "a"); 
-			if (!f)
-				return false; // just in case..
+    if (_heading)
+      fprintf(f, "%s", _heading);
 
-			if (_heading)
-				fprintf(f, "%s", _heading);
+    char custId[SNM_MAX_ACTION_CUSTID_LEN];
+    char sectionURL[SNM_MAX_SECTION_NAME_LEN]; 
+    for (int sec=0; sec<SNM_NUM_MANAGED_SECTIONS; sec++)
+    {
+      if (sec==SNM_SEC_IDX_MAIN_ALT) continue; // skip "Main (alt recording)" section
 
-			int nbWrote=0;
-			LVITEM li;
-			li.mask = LVIF_STATE | LVIF_PARAM;
-			li.iSubItem = 0;
-			for (int i=0; i < SNM_ListView_GetItemCount(hList); i++)
-			{
-				li.iItem = i;
-				SNM_ListView_GetItem(hList, &li);
-				int cmdId = (int)li.lParam;
+      KbdSectionInfo* section = SectionFromUniqueID(SNM_GetActionSectionInfo(sec)->unique_id);
+      if (!GetSectionURL(_type<=2, section, sectionURL, sizeof(sectionURL)))
+      {
+        continue;
+      }
+      
+      int i=0;
+      int cmdId;
+      const char *cmdName;
+      while((cmdId = kbd_enumerateActions(section, i++, &cmdName)))
+      {
+        *custId='\0';
+        {
+          const char *strid=ReverseNamedCommandLookup(cmdId);
+          if (strid) _snprintfStrict(custId, sizeof(custId), "_%s", strid);
+          else _snprintfStrict(custId, sizeof(custId), "%d", cmdId);
+        }
+        bool isCustom = IsMacroOrScript(cmdName);
+        int isSws = IsSwsAction(cmdName);
+        bool isSwsCustom = !IsLocalizableAction(custId);
 
-				char custId[SNM_MAX_ACTION_CUSTID_LEN] = "";
-				char cmdName[SNM_MAX_ACTION_NAME_LEN] = "";
-				SNM_ListView_GetItemText(hList, i, 1, cmdName, SNM_MAX_ACTION_NAME_LEN);
-				SNM_ListView_GetItemText(hList, i, 4, custId, SNM_MAX_ACTION_CUSTID_LEN);
+        if (((_type==1||(_type&4)) && !isSws && !isCustom && !isSwsCustom) || 
+          ((_type==2||(_type&8)) && isSws && !isCustom && !isSwsCustom) ||
+          ((_type&16) && (isCustom||isSwsCustom)))
+        {
+          if (*custId)
+          {
+            fprintf(f, _lineFormat, sectionURL, custId, cmdName, custId);
+            nbWrote++;
+          }
+        }
+      }
+    }
 
-				bool isCustom = IsMacroOrScript(cmdName);
-				int isSws = IsSwsAction(cmdName);
-				bool isSwsCustom = !IsLocalizableAction(custId);
-				if (((_type==1||_type==3) && !isSws && !isCustom && !isSwsCustom) || 
-					((_type==2||_type==4) && isSws  && !isCustom && !isSwsCustom) ||
-					(_type==5 && (isCustom||isSwsCustom)))
-				{
-					if (!*custId && _snprintfStrict(custId, sizeof(custId), "%d", cmdId) <= 0) // for native actions
-						*custId = '\0';
-					if (*custId) {
-						fprintf(f, _lineFormat, sectionURL, custId, cmdName, custId);
-						nbWrote++;
-					}
-				}
-			}
-			if (_ending)
-				fprintf(f, "%s", _ending); 
+    if (_ending)
+      fprintf(f, "%s", _ending); 
 
-			fclose(f);
+    fclose(f);
 
-			WDL_FastString msg;
-			msg.SetFormatted(SNM_MAX_PATH, 
-				nbWrote ? __LOCALIZE_VERFMT("Wrote %s","sws_mbox") :
-				__LOCALIZE_VERFMT("No action wrote in %s!\nProbable cause: filtered action list, no matching actions, etc...","sws_mbox"),
-				fn);
-			msg.Append("\n\n");
-			msg.Append(help);
-			MessageBox(GetMainHwnd(), msg.Get(), _title, MB_OK);
-			return true;
-		}
-		else
-			MessageBox(GetMainHwnd(), __LOCALIZE("Dump failed: unable to write to file!","sws_mbox"), _title, MB_OK);
-	}
-	else
-	{
-		WDL_FastString msg(__LOCALIZE("Dump failed: Actions window not opened!","sws_mbox"));
-		msg.Append("\n\n");
-		msg.Append(help);
-		MessageBox(GetMainHwnd(), msg.Get(), _title, MB_OK);
-	}
-	return false;
+    WDL_FastString msg;
+    msg.SetFormatted(SNM_MAX_PATH, nbWrote ? __LOCALIZE_VERFMT("Wrote %s","sws_mbox") : __LOCALIZE_VERFMT("No action wrote in %s!","sws_mbox"), fn);
+    MessageBox(GetMainHwnd(), msg.Get(), _title, MB_OK);
+    return true;
+  }
+  else
+    MessageBox(GetMainHwnd(), __LOCALIZE("Dump failed: unable to write to file!","sws_mbox"), _title, MB_OK);
+  return false;
 }
 
 void DumpWikiActionList(COMMAND_T* _ct)
@@ -646,13 +635,6 @@ void DumpActionList(COMMAND_T* _ct)
 		"Section\tId\tAction\n",
 		NULL);
 }
-
-
-#undef SNM_ListView_GetSelectedCount
-#undef SNM_ListView_GetItemCount
-#undef SNM_ListView_GetItem
-#undef SNM_ListView_GetItemText
-#undef SNM_ListView_SetItemState
 
 
 ///////////////////////////////////////////////////////////////////////////////

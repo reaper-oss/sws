@@ -1091,28 +1091,42 @@ bool LearnAction(KbdSectionInfo* _section, int _cmdId)
 	return DoActionShortcutDialog(GetMainHwnd(), _section, _cmdId, nbShortcuts);
 }
 
-bool GetSectionURL(bool _alr, const char* _section, char* _sectionURL, int _sectionURLSize)
+bool GetSectionURL(bool _alr, KbdSectionInfo* _section, char* _sectionURL, int _sectionURLSize)
 {
-	if (!_section || !_sectionURL)
+	if (!_sectionURL || _sectionURLSize<=0)
 		return false;
+  
+	if (!_section)
+		_section=SectionFromUniqueID(0);
 
 	if (_alr)
 	{
-		if (!_stricmp(_section, __localizeFunc("Main","accel_sec",0)) || !strcmp(_section, __localizeFunc("Main (alt recording)","accel_sec",0)))
-			lstrcpyn(_sectionURL, "ALR_Main", _sectionURLSize);
-		else if (!_stricmp(_section, __localizeFunc("Media Explorer","accel_sec",0)))
-			lstrcpyn(_sectionURL, "ALR_MediaExplorer", _sectionURLSize);
-		else if (!_stricmp(_section, __localizeFunc("MIDI Editor","accel_sec",0)))
-			lstrcpyn(_sectionURL, "ALR_MIDIEditor", _sectionURLSize);
-		else if (!_stricmp(_section, __localizeFunc("MIDI Event List Editor","accel_sec",0)))
-			lstrcpyn(_sectionURL, "ALR_MIDIEvtList", _sectionURLSize);
-		else if (!_stricmp(_section, __localizeFunc("MIDI Inline Editor","accel_sec",0)))
-			lstrcpyn(_sectionURL, "ALR_MIDIInline", _sectionURLSize);
-		else
-			return false;
+		switch (_section->uniqueID)
+		{
+			case 0:
+			case 100:
+				lstrcpyn(_sectionURL, "ALR_Main", _sectionURLSize);
+				break;
+			case 32060:
+				lstrcpyn(_sectionURL, "ALR_MIDIEditor", _sectionURLSize);
+				break;
+			case 32061:
+				lstrcpyn(_sectionURL, "ALR_MIDIEvtList", _sectionURLSize);
+				break;
+			case 32062:
+				lstrcpyn(_sectionURL, "ALR_MIDIInline", _sectionURLSize);
+				break;
+			case 32063:
+				lstrcpyn(_sectionURL, "ALR_MediaExplorer", _sectionURLSize);
+				break;
+			default:
+				return false;
+		}
 	}
 	else
-		lstrcpyn(_sectionURL, _section, _sectionURLSize);
+	{
+		lstrcpyn(_sectionURL, __localizeFunc(_section->name,"accel_sec",0), _sectionURLSize);
+	}
 	return true;
 }
 

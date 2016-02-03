@@ -1068,8 +1068,8 @@ error:
 		IMPAPI(Undo_OnStateChange);
 		IMPAPI(Undo_OnStateChange_Item);
 		IMPAPI(Undo_OnStateChange2);
-		IMPAPI(Undo_OnStateChangeEx);
-		IMPAPI(Undo_OnStateChangeEx2);
+		IMPAPI(Undo_OnStateChangeEx); // note: the last param "trackparm" is ignored ATM (v5.15pre6)
+		IMPAPI(Undo_OnStateChangeEx2); // note: the last param "trackparm" is ignored ATM (v5.15pre6)
 		IMPAPI(UpdateArrange);
 		IMPAPI(UpdateItemInProject);
 		IMPAPI(UpdateTimeline);

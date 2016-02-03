@@ -354,9 +354,9 @@ enum {
 // various properties indexed with the above enum: keep both in sync!
 SECTION_INFO_T *SNM_GetActionSectionInfo(int _idx);
 
-#define SNM_NUM_NATIVE_SECTIONS		SNM_SEC_IDX_SNM
-#define SNM_MAX_CA_SECTIONS			SNM_NUM_NATIVE_SECTIONS
-#define SNM_MAX_SECTION_NAME_LEN	64
+#define SNM_NUM_NATIVE_SECTIONS   SNM_SEC_IDX_SNM
+#define SNM_MAX_CA_SECTIONS       SNM_NUM_NATIVE_SECTIONS
+#define SNM_MAX_SECTION_NAME_LEN  512 // can be localized names
 
 
 ///////////////////////////////////////////////////////////////////////////////

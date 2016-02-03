@@ -568,7 +568,7 @@ double TriggerPresetJob::GetCurrentValue() {
 double TriggerPresetJob::GetMaxValue()
 { 	
 	int presetCnt=0;
-	if (GetSetFXPresetSelTrack(m_fxId, NULL, &presetCnt))
+	if (GetSetFXPresetSelTrack(m_fxId, NULL, &presetCnt)>=0)
 		return presetCnt-1;
 	return 0.0;
 }

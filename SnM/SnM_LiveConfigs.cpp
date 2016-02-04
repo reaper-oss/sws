@@ -1315,13 +1315,13 @@ void LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			break;
 		case LEARN_APPLY_MSG:
 		{
-			int cmdId=NamedCommandLookup("_S&M_LIVECONFIG1");
+			int cmdId=NamedCommandLookup("_S&M_LIVECFG_APPLY1");
 			LearnAction(NULL, cmdId + g_configId);
 			break;
 		}
 		case LEARN_PRELOAD_MSG:
 		{
-			int cmdId=NamedCommandLookup("_S&M_PRE_LIVECONFIG1");
+			int cmdId=NamedCommandLookup("_S&M_LIVECFG_PRELOAD1");
 			LearnAction(NULL, cmdId + g_configId);
 			break;
 		}
@@ -1537,11 +1537,11 @@ void LiveConfigsWnd::AddLearnMenu(HMENU _menu, bool _subItems)
 		else hOptMenu = _menu;
 
 		char custId[SNM_MAX_ACTION_CUSTID_LEN];
-		_snprintfSafe(custId, sizeof(custId), "_S&M_LIVECONFIG%d", g_configId+1);
+		_snprintfSafe(custId, sizeof(custId), "_S&M_LIVECFG_APPLY%d", g_configId+1);
 		COMMAND_T* ct = SWSGetCommandByID(NamedCommandLookup(custId));
 		if (ct) AddToMenuOrdered(hOptMenu, SWS_CMD_SHORTNAME(ct), LEARN_APPLY_MSG);
 
-		_snprintfSafe(custId, sizeof(custId), "_S&M_PRE_LIVECONFIG%d", g_configId+1);
+		_snprintfSafe(custId, sizeof(custId), "_S&M_LIVECFG_PRELOAD%d", g_configId+1);
 		ct = SWSGetCommandByID(NamedCommandLookup(custId));
 		if (ct) AddToMenuOrdered(hOptMenu, SWS_CMD_SHORTNAME(ct), LEARN_PRELOAD_MSG);
 

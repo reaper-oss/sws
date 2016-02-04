@@ -715,8 +715,8 @@ static DYN_COMMAND_T s_dynCmdTable[] =
 	{ "SWS/S&M: Set selected tracks to group %02d (default flags)", "S&M_SET_TRACK_GROUP", SetTrackGroup, 8, SNM_MAX_TRACK_GROUPS, NULL}, // not all the 32 groups by default!
 
 	{ "SWS/S&M: Live Config %02d - Open/close monitoring window", "S&M_OPEN_LIVECFG_MONITOR", OpenLiveConfigMonitorWnd, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, IsLiveConfigMonitorWndDisplayed},
-	{ "SWS/S&M: Live Config %02d - Apply config (MIDI/OSC only)", "S&M_LIVECONFIG", NULL, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL, 0, ApplyLiveConfig },
-	{ "SWS/S&M: Live Config %02d - Preload config (MIDI/OSC only)", "S&M_PRE_LIVECONFIG", NULL, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL, 0, PreloadLiveConfig },
+	{ "SWS/S&M: Live Config %02d - Apply config (MIDI/OSC only)", "S&M_LIVECFG_APPLY", NULL, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL, 0, ApplyLiveConfig },
+	{ "SWS/S&M: Live Config %02d - Preload config (MIDI/OSC only)", "S&M_LIVECFG_PRELOAD", NULL, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL, 0, PreloadLiveConfig },
 	{ "SWS/S&M: Live Config %02d - Apply next config", "S&M_NEXT_LIVE_CFG", ApplyNextLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL},
 	{ "SWS/S&M: Live Config %02d - Apply previous config", "S&M_PREVIOUS_LIVE_CFG", ApplyPreviousLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL},
 	{ "SWS/S&M: Live Config %02d - Preload next config", "S&M_PRELOAD_NEXT_LIVE_CFG", PreloadNextLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL},

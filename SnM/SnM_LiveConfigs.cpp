@@ -495,15 +495,23 @@ int LiveConfig::SetInputTrack(MediaTrack* _newInputTr, bool _updateSends)
 		if (_newInputTr && CSurf_TrackToID(_newInputTr, false) > 0)
 		{
 			for (int i=0; i < m_ccConfs.GetSize(); i++)
+			{
 				if (LiveConfigItem* cfg = m_ccConfs.Get(i))
+				{
 					if (cfg->m_track &&
 						cfg->m_track != _newInputTr && 
 						cfg->m_track != inputTr && // exclude the previous input track 
 						!HasReceives(_newInputTr, cfg->m_track))
 					{
-						if (CreateTrackSend(_newInputTr, cfg->m_track))
+						int idx=CreateTrackSend(_newInputTr, cfg->m_track);
+						if (idx>=0)
+						{
+							GetSetTrackSendInfo(_newInputTr, 0, idx, "B_MUTE", &g_bTrue);
 							nbSends++;
+						}
 					}
+				}
+			}
 		}
 
 		PreventUIRefresh(-1);
@@ -962,12 +970,8 @@ void LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case CREATE_INPUT_MSG:
 		{
 			char trName[SNM_MAX_TRACK_NAME_LEN] = "";
-			if (PromptUserForString(GetMainHwnd(), __LOCALIZE("S&M - Create input track","sws_DLG_155"), trName, sizeof(trName), true))
+			if (PromptUserForString(GetMainHwnd(), __LOCALIZE("S&M - Input track name:","sws_DLG_155"), trName, sizeof(trName), true))
 			{
-				// no Undo_OnStateChangeEx2() here, rec arm below creates an undo point
-				// (fixed in REAPER v4.5 but kept for older versions..)
-				Undo_BeginBlock2(NULL); 
-
 				InsertTrackAtIndex(GetNumTracks(), false);
 				TrackList_AdjustWindows(false);
 
@@ -983,15 +987,15 @@ void LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				}
 
 				int nbSends = lc->SetInputTrack(inputTr, true); // always obey (ignore lc->m_autoSends)
-				Undo_EndBlock2(NULL, UNDO_STR, UNDO_STATE_ALL);
+				Undo_OnStateChangeEx2(NULL, UNDO_STR, UNDO_STATE_ALL, -1);
 
 				Update();
 
 				char msg[256] = "";
 				if (nbSends > 0) 
-					_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Created track \"%s\" (%d sends, record armed, monitoring enabled, no master sends).\nPlease select a MIDI or audio input for this new track.","sws_DLG_155"), trName, nbSends);
+					_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Created track \"%s\": %d sends (muted), record armed, monitoring enabled, no master send.\r\n\r\nPlease select a MIDI or audio input for this new track.","sws_DLG_155"), trName, nbSends);
 				else
-					_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Created track \"%s\" (record armed, monitoring enabled, no master sends).\nPlease select a MIDI or audio input for this new track.","sws_DLG_155"), trName);
+					_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Created track \"%s\": record armed, monitoring enabled, no master send.\r\n\r\nPlease select a MIDI or audio input for this new track.","sws_DLG_155"), trName);
 				MessageBox(GetHWND(), msg, __LOCALIZE("S&M - Create input track","sws_DLG_155"), MB_OK);
 			}
 			break;
@@ -1376,7 +1380,10 @@ void LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 					}
 					item->m_presets.Set("");
 					if (lc->m_autoSends && item->m_track && inputTr && !HasReceives(inputTr, item->m_track))
-						SNM_AddReceive(inputTr, item->m_track, -1);
+					{
+						int idx=CreateTrackSend(inputTr, item->m_track);
+						if (idx>=0) GetSetTrackSendInfo(inputTr, 0, idx, "B_MUTE", &g_bTrue);
+					}
 					updt = true;
 					item = (LiveConfigItem*)GetListView()->EnumSelected(&x);
 				}

@@ -778,7 +778,7 @@ static DYN_COMMAND_T s_dynCmdTable[] =
 
 
 // for optimization (avoid write accesses to S&M.ini on exit)
-static bool s_newDynActions = true; //JFB!! disabled ATM
+static int s_dynactions_need_save;
 
 int RegisterDynamicActions(DYN_COMMAND_T* _cmds, const char* _inifn)
 {
@@ -789,7 +789,7 @@ int RegisterDynamicActions(DYN_COMMAND_T* _cmds, const char* _inifn)
 		DYN_COMMAND_T* ct = &_cmds[i++];
 
 		int n = GetPrivateProfileInt("NbOfActions", ct->id, -1, _inifn);
-		if (n<0) { n=ct->count; s_newDynActions=true; }
+		if (n<0) { n=ct->count; s_dynactions_need_save=1; }
 		ct->count = BOUNDED(n, 0, ct->max<=0 ? SNM_MAX_DYN_ACTIONS : ct->max);
 
 		for (int j=0; j<ct->count; j++)
@@ -1164,7 +1164,7 @@ void IniFileExit()
 	SaveIniSection("General", &iniSection, g_SNM_IniFn.Get());
 
 	// save dynamic actions, if needed
-	if (s_newDynActions) //JFB!!! a ameliorer
+	if (s_dynactions_need_save)
 		SaveDynamicActions(s_dynCmdTable, g_SNM_IniFn.Get());
 
 #ifdef _WIN32

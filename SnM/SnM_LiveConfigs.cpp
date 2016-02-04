@@ -42,7 +42,7 @@
 
 #define LIVECFG_WND_ID				"SnMLiveConfigs"
 #define LIVECFG_MON_WND_ID			"SnMLiveConfigMonitor%d"
-#define LIVECFG_VERSION				2
+#define LIVECFG_VERSION				3
 
 enum {
   CLEAR_CC_ROW_MSG=0xF001,
@@ -63,6 +63,7 @@ enum {
   MUTE_OTHERS_MSG,
   SELSCROLL_MSG,
   OFFLINE_OTHERS_MSG,
+  DISARM_OTHERS_MSG,
   CC123_MSG,
   IGNORE_EMPTY_MSG,
   AUTOSENDS_MSG,
@@ -438,11 +439,10 @@ void LiveConfigItem::GetInfo(WDL_FastString* _info)
 
 LiveConfig::LiveConfig()
 { 
-	m_version = LIVECFG_VERSION;
 	m_ccDelay = DEF_CC_DELAY;
 	m_fade = DEF_FADE;
-	m_enable = m_cc123 = m_autoSends = m_selScroll = 1;
-	m_ignoreEmpty = m_muteOthers = m_offlineOthers = 0;
+	m_enable = 1;
+	m_options = 8|32|64;
 	memcpy(&m_inputTr, &GUID_NULL, sizeof(GUID));
 	m_activeMidiVal = m_preloadMidiVal = m_curMidiVal = m_curPreloadMidiVal = -1;
 	m_osc = NULL;
@@ -454,13 +454,9 @@ bool LiveConfig::IsDefault(bool _ignoreComment)
 {
 	LiveConfig temp; // trick: no code update when changing default values
 	bool isDefault = 
-		m_version==temp.m_version && m_ccDelay==temp.m_ccDelay &&
-		m_fade==temp.m_fade && m_enable==temp.m_enable && 
-		m_cc123==temp.m_cc123 && m_autoSends==temp.m_autoSends &&
-		m_selScroll==temp.m_selScroll && m_ignoreEmpty==temp.m_ignoreEmpty &&
-		m_muteOthers==temp.m_muteOthers && m_offlineOthers==temp.m_offlineOthers &&
-		GuidsEqual(&m_inputTr, temp.GetInputTrackGUID()) &&
-/* those ones can be ignored (for undo only)
+		m_ccDelay==temp.m_ccDelay && m_fade==temp.m_fade && m_enable==temp.m_enable && 
+		m_options==temp.m_options && GuidsEqual(&m_inputTr, temp.GetInputTrackGUID()) &&
+/* can be ignored, for undo only
 		m_activeMidiVal==temp.m_activeMidiVal && m_preloadMidiVal==temp.m_preloadMidiVal &&
 		m_curMidiVal==temp.m_curMidiVal && m_curPreloadMidiVal==temp.m_curPreloadMidiVal &&
 */
@@ -536,7 +532,7 @@ void LiveConfig::cfg_SaveMuteStateAndMuteIfNeeded(MediaTrack* _tr, bool _force)
 	if (_tr && m_cfg_tracks.Find(_tr)<0)
 	{
 		bool mute = *(bool*)GetSetMediaTrackInfo(_tr, "B_MUTE", NULL);
-		if (!mute && (_force || m_fade>0 || m_cc123)) // need to mute before sending all notes off too
+		if (!mute && (_force || m_fade>0 || (m_options&8))) // need to mute before sending all notes off too
 		{
 			GetSetMediaTrackInfo(_tr, "B_MUTE", &g_bTrue);
 			if (g_reaPref_fadeLen && *g_reaPref_fadeLen>0) m_cfg_last_mute_time = time_precise();
@@ -615,7 +611,7 @@ void LiveConfig::cfg_WaitForMuteSendCC123(MediaTrack* inputTr)
 			if (MediaTrack* tr = (MediaTrack*)m_cfg_tracks.Get(i))
 				MuteSends(inputTr, tr, true); // no-op if NULL, loopback, already muted, etc
 
-	if (m_cc123) SendAllNotesOff(&m_cfg_tracks);
+	if (m_options&8) SendAllNotesOff(&m_cfg_tracks);
 
 	m_cfg_done=true;
 }
@@ -749,15 +745,13 @@ void LiveConfigView::GetItemList(SWS_ListItemList* pList)
 // gotcha! several calls for one selection change (eg. 3 unselected rows + 1 new selection)
 void LiveConfigView::OnItemSelChanged(SWS_ListItem* item, int iState)
 {
-	LiveConfig* lc = g_liveConfigs.Get()->Get(g_configId);
-	if (lc && lc->m_selScroll)
+	if (iState & LVIS_SELECTED)
 	{
-		LiveConfigItem* pItem = (LiveConfigItem*)item;
-		if (pItem && pItem->m_track && CSurf_TrackToID(pItem->m_track, false) > 0)
+		LiveConfig* lc = g_liveConfigs.Get()->Get(g_configId);
+		if (lc && (lc->m_options&64))
 		{
-			if ((iState & LVIS_SELECTED ? true : false) != (*(int*)GetSetMediaTrackInfo(pItem->m_track, "I_SELECTED", NULL) ? true : false))
-				GetSetMediaTrackInfo(pItem->m_track, "I_SELECTED", iState & LVIS_SELECTED ? &g_i1 : &g_i0);
-			if (iState & LVIS_SELECTED)
+			LiveConfigItem* pItem = (LiveConfigItem*)item;
+			if (pItem && pItem->m_track && CSurf_TrackToID(pItem->m_track, false) > 0)
 				ScrollTrack(pItem->m_track, true, true);
 		}
 	}
@@ -780,8 +774,7 @@ void LiveConfigView::OnItemDblClk(SWS_ListItem* item, int iCol)
 						w->OnCommand(LOAD_FXCHAIN_MSG, 0);
 					break;
 				default:
-					if (w)
-						w->OnCommand(APPLY_MSG, 0);
+					w->OnCommand(APPLY_MSG, 0);
 					break;
 			}
 		}
@@ -1018,7 +1011,7 @@ void LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			break;
 		
 		case MUTE_OTHERS_MSG:
-			if (!lc->m_muteOthers) // about to activate?
+			if (!(lc->m_options&1))
 				if (int* dontProcessMutedTrs = (int*)GetConfigVar("norunmute"))
 					if (!*dontProcessMutedTrs)
 					{
@@ -1032,28 +1025,31 @@ void LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 						else if (r==IDCANCEL)
 							break;
 					}
-			lc->m_muteOthers = !lc->m_muteOthers;
+			lc->m_options ^= 1;
 			Undo_OnStateChangeEx2(NULL, UNDO_STR, UNDO_STATE_MISCCFG, -1);
 			break;
 		case SELSCROLL_MSG:
-			lc->m_selScroll = !lc->m_selScroll;
+			lc->m_options ^= 64;
 			Undo_OnStateChangeEx2(NULL, UNDO_STR, UNDO_STATE_MISCCFG, -1);
 			break;
 		case OFFLINE_OTHERS_MSG:
-			if (!lc->m_offlineOthers || lc->m_offlineOthers == 2) lc->m_offlineOthers = 1;
-			else lc->m_offlineOthers = 0;
+			lc->m_options ^= 2;
+			Undo_OnStateChangeEx2(NULL, UNDO_STR, UNDO_STATE_MISCCFG, -1);
+			break;
+		case DISARM_OTHERS_MSG:
+			lc->m_options ^= 4;
 			Undo_OnStateChangeEx2(NULL, UNDO_STR, UNDO_STATE_MISCCFG, -1);
 			break;
 		case CC123_MSG:
-			lc->m_cc123 = !lc->m_cc123;
+			lc->m_options ^= 8;
 			Undo_OnStateChangeEx2(NULL, UNDO_STR, UNDO_STATE_MISCCFG, -1);
 			break;
 		case IGNORE_EMPTY_MSG:
-			lc->m_ignoreEmpty = !lc->m_ignoreEmpty;
+			lc->m_options ^= 16;
 			Undo_OnStateChangeEx2(NULL, UNDO_STR, UNDO_STATE_MISCCFG, -1);
 			break;
 		case AUTOSENDS_MSG:
-			lc->m_autoSends = !lc->m_autoSends;
+			lc->m_options ^= 32;
 			Undo_OnStateChangeEx2(NULL, UNDO_STR, UNDO_STATE_MISCCFG, -1);
 			break;
 
@@ -1115,7 +1111,7 @@ void LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			PreventUIRefresh(1);
 			while (item)
 			{
-				if (lc->m_autoSends && item->m_track && inputTr && lc->CountTrackConfigs(item->m_track)==1)
+				if ((lc->m_options&32) && item->m_track && inputTr && lc->CountTrackConfigs(item->m_track)==1)
 					SNM_RemoveReceivesFrom(item->m_track, inputTr);
 				item->Clear();
 				updt = true;
@@ -1284,7 +1280,7 @@ void LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			PreventUIRefresh(1);
 			while (item)
 			{
-				if (lc->m_autoSends && item->m_track && inputTr && lc->CountTrackConfigs(item->m_track)==1)
+				if ((lc->m_options&32) && item->m_track && inputTr && lc->CountTrackConfigs(item->m_track)==1)
 					SNM_RemoveReceivesFrom(item->m_track, inputTr);
 				if (item->m_track) item->Clear(true);
 				else item->m_track = NULL;
@@ -1351,7 +1347,7 @@ void LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case CMBID_INPUT_TRACK:
 			if (HIWORD(wParam)==CBN_SELCHANGE)
 			{
-				lc->SetInputTrack(m_cbInputTr.GetCurSel() ? CSurf_TrackFromID(m_cbInputTr.GetCurSel(), false) : NULL, lc->m_autoSends==1);
+				lc->SetInputTrack(m_cbInputTr.GetCurSel() ? CSurf_TrackFromID(m_cbInputTr.GetCurSel(), false) : NULL, lc->m_options&32);
 				Undo_OnStateChangeEx2(NULL, UNDO_STR, UNDO_STATE_ALL, -1); // UNDO_STATE_ALL: SetInputTrack() might update the project
 				Update();
 			}
@@ -1379,7 +1375,7 @@ void LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 						item->m_trTemplate.Set("");
 					}
 					item->m_presets.Set("");
-					if (lc->m_autoSends && item->m_track && inputTr && !HasReceives(inputTr, item->m_track))
+					if ((lc->m_options&32) && item->m_track && inputTr && !HasReceives(inputTr, item->m_track))
 					{
 						int idx=CreateTrackSend(inputTr, item->m_track);
 						if (idx>=0) GetSetTrackSendInfo(inputTr, 0, idx, "B_MUTE", &g_bTrue);
@@ -1562,14 +1558,15 @@ void LiveConfigsWnd::AddOptionsMenu(HMENU _menu, bool _subItems)
 		if (_subItems) hOptMenu = CreatePopupMenu();
 		else hOptMenu = _menu;
 
-		AddToMenu(hOptMenu, __LOCALIZE("Mute all but active track (CPU savings)","sws_DLG_155"), MUTE_OTHERS_MSG, -1, false, lc->m_muteOthers ? MFS_CHECKED : MFS_UNCHECKED);
-		AddToMenu(hOptMenu, __LOCALIZE("Offline all but active/preloaded tracks (RAM savings)","sws_DLG_155"), OFFLINE_OTHERS_MSG, -1, false, lc->m_offlineOthers ? MFS_CHECKED : MFS_UNCHECKED);
+		AddToMenu(hOptMenu, __LOCALIZE("Mute all but active track (CPU savings)","sws_DLG_155"), MUTE_OTHERS_MSG, -1, false, (lc->m_options&1) ? MFS_CHECKED : MFS_UNCHECKED);
+		AddToMenu(hOptMenu, __LOCALIZE("Offline all but active/preloaded tracks (RAM savings)","sws_DLG_155"), OFFLINE_OTHERS_MSG, -1, false, (lc->m_options&2) ? MFS_CHECKED : MFS_UNCHECKED);
+		AddToMenu(hOptMenu, __LOCALIZE("Disarm all but active track","sws_DLG_155"), DISARM_OTHERS_MSG, -1, false, lc->GetInputTrack() ? MF_GRAYED : (lc->m_options&4) ? MFS_CHECKED : MFS_UNCHECKED);
 		AddToMenu(hOptMenu, SWS_SEPARATOR, 0);
-		AddToMenu(hOptMenu, __LOCALIZE("Ignore switches to empty configs","sws_DLG_155"), IGNORE_EMPTY_MSG, -1, false, lc->m_ignoreEmpty ? MFS_CHECKED : MFS_UNCHECKED);
-		AddToMenu(hOptMenu, __LOCALIZE("Send all notes off when switching configs","sws_DLG_155"), CC123_MSG, -1, false, lc->m_cc123 ? MFS_CHECKED : MFS_UNCHECKED);
+		AddToMenu(hOptMenu, __LOCALIZE("Ignore switches to empty configs","sws_DLG_155"), IGNORE_EMPTY_MSG, -1, false, (lc->m_options&16) ? MFS_CHECKED : MFS_UNCHECKED);
+		AddToMenu(hOptMenu, __LOCALIZE("Send all notes off when switching configs","sws_DLG_155"), CC123_MSG, -1, false, (lc->m_options&8) ? MFS_CHECKED : MFS_UNCHECKED);
 		AddToMenu(hOptMenu, SWS_SEPARATOR, 0);
-		AddToMenu(hOptMenu, __LOCALIZE("Automatically update sends from the input track (if any)","sws_DLG_155"), AUTOSENDS_MSG, -1, false, lc->m_autoSends ? MFS_CHECKED : MFS_UNCHECKED);
-		AddToMenu(hOptMenu, __LOCALIZE("Select/scroll to track on list view click","sws_DLG_155"), SELSCROLL_MSG, -1, false, lc->m_selScroll ? MFS_CHECKED : MFS_UNCHECKED);
+		AddToMenu(hOptMenu, __LOCALIZE("Automatically update sends from the input track (if any)","sws_DLG_155"), AUTOSENDS_MSG, -1, false, (lc->m_options&32) ? MFS_CHECKED : MFS_UNCHECKED);
+		AddToMenu(hOptMenu, __LOCALIZE("Scroll to track on list view click","sws_DLG_155"), SELSCROLL_MSG, -1, false, (lc->m_options&64) ? MFS_CHECKED : MFS_UNCHECKED);
 
 		if (_subItems && GetMenuItemCount(hOptMenu))
 			AddSubMenu(_menu, hOptMenu, __LOCALIZE("Options","sws_DLG_155"));
@@ -1912,46 +1909,45 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 	if (lp.parse(line) || lp.getnumtokens() < 2)
 		return false;
 
-	if (!strcmp(lp.gettoken_str(0), "<S&M_MIDI_LIVE"))
+	if (!strcmp(lp.gettoken_str(0), "<S&M_LIVE_CONFIG") || !strcmp(lp.gettoken_str(0), "<S&M_MIDI_LIVE"))
 	{
 		GUID g;	
 		int configId = lp.gettoken_int(1) - 1;
 
 		if (LiveConfig* lc = g_liveConfigs.Get()->Get(configId))
 		{
-			// default values should be consistent with the LiveConfig() constructor
-
-			int success; // for asc. compatibility
 			lc->m_enable = lp.gettoken_int(2);
-			lc->m_version = lp.gettoken_int(3);
-			lc->m_muteOthers = lp.gettoken_int(4);
+			int version = lp.gettoken_int(3);
+			lc->m_options = lp.gettoken_int(4);
 			stringToGuid(lp.gettoken_str(5), &g);
 			lc->SetInputTrackGUID(&g);
-			lc->m_selScroll = lp.gettoken_int(6, &success);
-			if (!success) lc->m_selScroll = 1;
-			lc->m_offlineOthers = lp.gettoken_int(7, &success);
-			if (!success) lc->m_offlineOthers = 0;
-			lc->m_cc123 = lp.gettoken_int(8, &success);
-			if (!success) lc->m_cc123 = 1;
-			lc->m_ignoreEmpty = lp.gettoken_int(9, &success);
-			if (!success) lc->m_ignoreEmpty = 0;
-			lc->m_autoSends = lp.gettoken_int(10, &success);
-			if (!success) lc->m_autoSends = 1;
-			lc->m_ccDelay = lp.gettoken_int(11, &success);
+      
+			int token=6;
+			if (version < 3) // <3, not < LIVECFG_VERSION!
+			{
+				if (lp.gettoken_int(token++)) lc->m_options |= 64; // scroll to track on list view click
+				if (lp.gettoken_int(token++)) lc->m_options |= 2;  // offline all but active
+				if (lp.gettoken_int(token++)) lc->m_options |= 8;  // send all-notes-off on config switch
+				if (lp.gettoken_int(token++)) lc->m_options |= 16; // ignore switches to empty configs
+				if (lp.gettoken_int(token++)) lc->m_options |= 32; // auto send updates
+			}
+
+			int success; // for asc. compatibility
+			lc->m_ccDelay = lp.gettoken_int(token++, &success);
 			if (!success) lc->m_ccDelay = DEF_CC_DELAY;
-			lc->m_fade = lp.gettoken_int(12, &success);
+			lc->m_fade = lp.gettoken_int(token++, &success);
 			if (!success) lc->m_fade = DEF_FADE;
-			lc->m_osc = LoadOscCSurfs(NULL, lp.gettoken_str(13)); // NULL on err (e.g. "", token doesn't exist, etc.)
+			lc->m_osc = LoadOscCSurfs(NULL, lp.gettoken_str(token++)); // NULL on err (e.g. "", token doesn't exist, etc.)
 
 			if (isUndo)
 			{
-				lc->m_activeMidiVal = lp.gettoken_int(14, &success);
+				lc->m_activeMidiVal = lp.gettoken_int(token++, &success);
 				if (!success) lc->m_activeMidiVal = -1;
-				lc->m_curMidiVal = lp.gettoken_int(15, &success);
+				lc->m_curMidiVal = lp.gettoken_int(token++, &success);
 				if (!success) lc->m_curMidiVal = -1;
-				lc->m_preloadMidiVal = lp.gettoken_int(16, &success);
+				lc->m_preloadMidiVal = lp.gettoken_int(token++, &success);
 				if (!success) lc->m_preloadMidiVal = -1;
-				lc->m_curPreloadMidiVal = lp.gettoken_int(17, &success);
+				lc->m_curPreloadMidiVal = lp.gettoken_int(token++, &success);
 				if (!success) lc->m_curPreloadMidiVal = -1;
 			}
 
@@ -1975,10 +1971,8 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 						item->m_offAction.Set(lp.gettoken_str(7));
 						
 						// upgrade if needed
-						if (lc->m_version < 2) { // "2", not < LIVECFG_VERSION!
+						if (version < 2) // <2, not < LIVECFG_VERSION!
 							UpgradePresetConfV1toV2(item->m_track, lp.gettoken_str(5), &item->m_presets);
-							lc->m_version = LIVECFG_VERSION;
-						}
 					}
 				}
 				else
@@ -1986,10 +1980,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 			}
 
 			// refresh monitoring window + osc feedback
-			UpdateMonitoring(
-				configId,
-				APPLY_MASK|PRELOAD_MASK,
-				APPLY_MASK|PRELOAD_MASK);
+			UpdateMonitoring(configId, APPLY_MASK|PRELOAD_MASK, APPLY_MASK|PRELOAD_MASK);
 		}
 
 		// refresh editor
@@ -2023,17 +2014,12 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 			else
 				escStrs[0].Set("\"\"");
 
-			ctx->AddLine("<S&M_MIDI_LIVE %d %d %d %d %s %d %d %d %d %d %d %d %s %d %d %d %d", 
+			ctx->AddLine("<S&M_LIVE_CONFIG %d %d %d %d %s %d %d %s %d %d %d %d", 
 				i+1,
 				lc->m_enable,
 				LIVECFG_VERSION,
-				lc->m_muteOthers,
+				lc->m_options,
 				strId,
-				lc->m_selScroll,
-				lc->m_offlineOthers,
-				lc->m_cc123,
-				lc->m_ignoreEmpty,
-				lc->m_autoSends,
 				lc->m_ccDelay,
 				lc->m_fade,
 				escStrs[0].Get(),
@@ -2114,7 +2100,7 @@ void LiveConfigsTrackListChange()
 					if (item->m_track && CSurf_TrackToID(item->m_track, false) <= 0)
 						item->Clear(true);
 
-			lc->SetInputTrack(lc->GetInputTrack(), lc->m_autoSends==1); // lc->GetInputTrack() can be NULL when deleted, etc..
+			lc->SetInputTrack(lc->GetInputTrack(), lc->m_options&32); // lc->GetInputTrack() can be NULL when deleted, etc..
 		}
 	}
 
@@ -2223,7 +2209,7 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 			lc->cfg_SaveMuteStateAndMuteIfNeeded(cfg->m_track); 
 
 			// mute (and later unmute) tracks to be set offline - optional
-			if (lc->m_offlineOthers)
+			if (lc->m_options&2) // option "offline all but active"
 				for (int i=0; i<lc->m_ccConfs.GetSize(); i++)
 					if (LiveConfigItem* item = lc->m_ccConfs.Get(i))
 						if (item->m_track && item->m_track != cfg->m_track && (!inputTr || item->m_track != inputTr))
@@ -2253,8 +2239,8 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 				}
 			}
 
-			// end with mute states that will not be restored (user option)
-			if (lc->m_muteOthers && (!inputTr || cfg->m_track != inputTr))
+			// end with mute states that will not be restored (option "mute all but active")
+			if ((lc->m_options&1) && (!inputTr || cfg->m_track != inputTr))
 				for (int i=0; i<lc->m_ccConfs.GetSize(); i++)
 					if (LiveConfigItem* item = lc->m_ccConfs.Get(i))
 						if (item->m_track && item->m_track != cfg->m_track && (!inputTr || item->m_track != inputTr))
@@ -2331,7 +2317,7 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 
 		// make sure fx are online for the activated/preloaded track
 		// done here because fx may have been set offline via state loading above
-		if ((!_apply || lc->m_offlineOthers) && (!inputTr || cfg->m_track!=inputTr))
+		if ((!_apply || (lc->m_options&2)) && (!inputTr || cfg->m_track!=inputTr))
 		{
 			if (!preloaded && TrackFX_GetCount(cfg->m_track))
 			{
@@ -2351,7 +2337,7 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 		}
 
 		// offline others but active/preloaded tracks
-		if (_apply && lc->m_offlineOthers && (!inputTr || cfg->m_track!=inputTr))
+		if (_apply && (lc->m_options&2) && (!inputTr || cfg->m_track!=inputTr))
 		{
 			MediaTrack* preloadTr = NULL;
 			if (preloaded && _lastCfg)
@@ -2387,6 +2373,19 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 			lc->cfg_WaitForMuteSendCC123(inputTr);
 			TriggerFXPresets(cfg->m_track, &(cfg->m_presets));
 		}
+
+		// disarm all but active track
+		if (_apply && (lc->m_options&4) && !inputTr)
+			for (int i=0; i<lc->m_ccConfs.GetSize(); i++)
+				if (LiveConfigItem* item = lc->m_ccConfs.Get(i))
+					if (item->m_track)
+					{
+						int* p = item->m_track==cfg->m_track ? &g_i1 : &g_i0;
+						if (*(int*)GetSetMediaTrackInfo(item->m_track, "I_RECMON", NULL) != *p)
+							GetSetMediaTrackInfo(item->m_track, "I_RECMON", p);
+						if (*(int*)GetSetMediaTrackInfo(item->m_track, "I_RECARM", NULL) != *p)
+							GetSetMediaTrackInfo(item->m_track, "I_RECARM", p);
+					}
 
 		// perform activate action
 		if (_apply && cfg->m_onAction.GetLength())
@@ -2488,7 +2487,7 @@ void ApplyLiveConfigJob::Perform()
 	bool preloaded = (lc->m_preloadMidiVal>=0 && lc->m_preloadMidiVal==absval);
 
 	LiveConfigItem* cfg = lc->m_ccConfs.Get(absval);
-	if (cfg && lc->m_enable && absval!=lc->m_activeMidiVal && (!lc->m_ignoreEmpty || !cfg->IsDefault(true))) // ignore empty configs
+	if (cfg && lc->m_enable && absval!=lc->m_activeMidiVal && (!(lc->m_options&16) || !cfg->IsDefault(true))) // ignore empty configs
 	{
 		LiveConfigItem* lastCfg = lc->m_ccConfs.Get(lc->m_activeMidiVal); // can be <0
 		if (!lastCfg || !lastCfg->Equals(cfg, true))
@@ -2586,7 +2585,7 @@ void PreloadLiveConfigJob::Perform()
 	LiveConfigItem* cfg = lc->m_ccConfs.Get(absval);
 	LiveConfigItem* lastCfg = lc->m_ccConfs.Get(lc->m_activeMidiVal); // can be <0
 	if (cfg && lc->m_enable &&  absval!=lc->m_preloadMidiVal &&
-		(!lc->m_ignoreEmpty || !cfg->IsDefault(true)) && // ignore empty configs
+		(!(lc->m_options&16) || !cfg->IsDefault(true)) && // ignore empty configs
 		(!lastCfg || (!cfg->m_track || !lastCfg->m_track || cfg->m_track!=lastCfg->m_track))) // ignore preload over the active track
 	{
 		LiveConfigItem* lastPreloadCfg = lc->m_ccConfs.Get(lc->m_preloadMidiVal); // can be <0
@@ -2980,7 +2979,7 @@ bool NextPreviousLiveConfig(int _cfgId, bool _preload, int _step)
 			if (LiveConfigItem* item = lc->m_ccConfs.Get(i))
 			{
 				// IsDefault(false): "comments-only" configs can be useful (osc feedback)
-				if (!lc->m_ignoreEmpty || (lc->m_ignoreEmpty && !item->IsDefault(false)))
+				if (!(lc->m_options&16) || !item->IsDefault(false))
 				{
 					if (_preload) PreloadLiveConfig(_cfgId, i, false);
 					else ApplyLiveConfig(_cfgId, i, false);
@@ -3000,7 +2999,7 @@ bool NextPreviousLiveConfig(int _cfgId, bool _preload, int _step)
 		{
 			if (LiveConfigItem* item = lc->m_ccConfs.Get(i))
 			{
-				if (!lc->m_ignoreEmpty || (lc->m_ignoreEmpty && !item->IsDefault(false)))
+				if (!(lc->m_options&16) || !item->IsDefault(false))
 				{
 					if (_preload) PreloadLiveConfig(_cfgId, i, false);
 					else ApplyLiveConfig(_cfgId, i, false);
@@ -3017,8 +3016,8 @@ bool NextPreviousLiveConfig(int _cfgId, bool _preload, int _step)
 
 int IsLiveConfigEnabled(COMMAND_T* _ct) {
 	if (LiveConfig* lc = g_liveConfigs.Get()->Get((int)_ct->user))
-		return (lc->m_enable == 1);
-	return false;
+		return !!lc->m_enable;
+	return 0;
 }
 
 // _val: 0, 1 or <0 to toggle
@@ -3056,93 +3055,95 @@ void ToggleEnableLiveConfig(COMMAND_T* _ct) {
 
 int IsMuteOthersLiveConfigEnabled(COMMAND_T* _ct) {
 	if (LiveConfig* lc = g_liveConfigs.Get()->Get((int)_ct->user))
-		return (lc->m_muteOthers != 0);
-	return false;
+		return (lc->m_options&1);
+	return 0;
 }
 
 // _val: 0, 1 or <0 to toggle
 // gui refresh not needed (only in ctx menu)
-void UpdateMuteOthers(COMMAND_T* _ct, int _val)
+void UpdateOption(COMMAND_T* _ct, int _val, int _bit)
 {
-	if (LiveConfig* lc = g_liveConfigs.Get()->Get((int)_ct->user)) {
-		lc->m_muteOthers = _val<0 ? !lc->m_muteOthers : _val;
+	if (LiveConfig* lc = g_liveConfigs.Get()->Get((int)_ct->user))
+	{
+		if (_val<0) lc->m_options ^= _bit;
+		else if (_val>0) lc->m_options |= _bit;
+		else lc->m_options &= ~_bit;
+
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_MISCCFG, -1);
 		// RefreshToolbar()) not required..
 	}
 }
 
 void EnableMuteOthersLiveConfig(COMMAND_T* _ct) {
-	UpdateMuteOthers(_ct, 1);
+	UpdateOption(_ct, 1, 1);
 }
 
 void DisableMuteOthersLiveConfig(COMMAND_T* _ct) {
-	UpdateMuteOthers(_ct, 0);
+	UpdateOption(_ct, 0, 1);
 }
 
 void ToggleMuteOthersLiveConfig(COMMAND_T* _ct) {
-	UpdateMuteOthers(_ct, -1);
+	UpdateOption(_ct, -1, 1);
 }
 
 /////
 
 int IsOfflineOthersLiveConfigEnabled(COMMAND_T* _ct) {
 	if (LiveConfig* lc = g_liveConfigs.Get()->Get((int)_ct->user))
-		return (lc->m_offlineOthers == 1);
-	return false;
-}
-
-// _val: 0, 1 or <0 to toggle
-// gui refresh not needed (only in ctx menu)
-void UpdateOfflineOthers(COMMAND_T* _ct, int _val)
-{
-	if (LiveConfig* lc = g_liveConfigs.Get()->Get((int)_ct->user)) {
-		lc->m_offlineOthers = _val<0 ? !lc->m_offlineOthers : _val;
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_MISCCFG, -1);
-		// RefreshToolbar()) not required..
-	}
+		return !!(lc->m_options&2);
+	return 0;
 }
 
 void EnableOfflineOthersLiveConfig(COMMAND_T* _ct) {
-	UpdateOfflineOthers(_ct, 1);
+	UpdateOption(_ct, 1, 2);
 }
 
 void DisableOfflineOthersLiveConfig(COMMAND_T* _ct) {
-	UpdateOfflineOthers(_ct, 0);
+	UpdateOption(_ct, 0, 2);
 }
 
 void ToggleOfflineOthersLiveConfig(COMMAND_T* _ct) {
-	UpdateOfflineOthers(_ct, -1);
+	UpdateOption(_ct, -1, 2);
+}
+
+/////
+
+int IsDisarmOthersLiveConfigEnabled(COMMAND_T* _ct) {
+	if (LiveConfig* lc = g_liveConfigs.Get()->Get((int)_ct->user))
+		return !!(lc->m_options&4);
+	return 0;
+}
+
+void EnableDisarmOthersLiveConfig(COMMAND_T* _ct) {
+	UpdateOption(_ct, 1, 4);
+}
+
+void DisableDisarmOthersLiveConfig(COMMAND_T* _ct) {
+	UpdateOption(_ct, 0, 4);
+}
+
+void ToggleDisarmOthersLiveConfig(COMMAND_T* _ct) {
+	UpdateOption(_ct, -1, 4);
 }
 
 /////
 
 int IsAllNotesOffLiveConfigEnabled(COMMAND_T* _ct) {
 	if (LiveConfig* lc = g_liveConfigs.Get()->Get((int)_ct->user))
-		return (lc->m_cc123 == 1);
-	return false;
-}
-
-// _val: 0, 1 or <0 to toggle
-// gui refresh not needed (only in ctx menu)
-void UpdateAllNotesOff(COMMAND_T* _ct, int _val)
-{
-	if (LiveConfig* lc = g_liveConfigs.Get()->Get((int)_ct->user)) {
-		lc->m_cc123 = _val<0 ? !lc->m_cc123 : _val;
-		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_MISCCFG, -1);
-		// RefreshToolbar()) not required..
-	}
+		return !!(lc->m_options&8);
+	return 0;
 }
 
 void EnableAllNotesOffLiveConfig(COMMAND_T* _ct) {
-	UpdateAllNotesOff(_ct, 1);
+	UpdateOption(_ct, 1, 8);
 }
 
 void DisableAllNotesOffLiveConfig(COMMAND_T* _ct) {
-	UpdateAllNotesOff(_ct, 0);
+	UpdateOption(_ct, 0, 8);
 }
 
 void ToggleAllNotesOffLiveConfig(COMMAND_T* _ct) {
-	UpdateAllNotesOff(_ct, -1);
+	UpdateOption(_ct, -1, 8);
 }
 
 /////
@@ -3150,7 +3151,7 @@ void ToggleAllNotesOffLiveConfig(COMMAND_T* _ct) {
 int IsTinyFadesLiveConfigEnabled(COMMAND_T* _ct) {
 	if (LiveConfig* lc = g_liveConfigs.Get()->Get((int)_ct->user))
 		return (lc->m_fade > 0);
-	return false;
+	return 0;
 }
 
 // _val: 0, 1 or <0 to toggle

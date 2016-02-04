@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_LiveConfigs.h
 /
-/ Copyright (c) 2010-2013 Jeffos
+/ Copyright (c) 2010 and later Jeffos
 /
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -86,7 +86,14 @@ public:
 	void cfg_RestoreMuteStates(MediaTrack* activeTr, MediaTrack* inputTr);
 
 	WDL_PtrList<LiveConfigItem> m_ccConfs;
-	int m_version, m_ccDelay, m_fade, m_enable, m_muteOthers, m_selScroll, m_offlineOthers, m_cc123, m_ignoreEmpty, m_autoSends;
+	int m_options; // &1=mute all but active track
+	               // &2=offline all but active track
+	               // &4=disarm all but active track
+	               // &8=send all-notes-off on config switch
+	               // &16=ignore switches to empty configs
+	               // &32=auto update sends
+	               // &64=scroll to track on list view click
+	int m_ccDelay, m_fade, m_enable;
 	int m_activeMidiVal, m_curMidiVal, m_preloadMidiVal, m_curPreloadMidiVal;
 	SNM_OscCSurf* m_osc;
 
@@ -250,6 +257,11 @@ int IsOfflineOthersLiveConfigEnabled(COMMAND_T*);
 void EnableOfflineOthersLiveConfig(COMMAND_T*);
 void DisableOfflineOthersLiveConfig(COMMAND_T*);
 void ToggleOfflineOthersLiveConfig(COMMAND_T*);
+
+int IsDisarmOthersLiveConfigEnabled(COMMAND_T*);
+void EnableDisarmOthersLiveConfig(COMMAND_T*);
+void DisableDisarmOthersLiveConfig(COMMAND_T*);
+void ToggleDisarmOthersLiveConfig(COMMAND_T*);
 
 int IsAllNotesOffLiveConfigEnabled(COMMAND_T*);
 void EnableAllNotesOffLiveConfig(COMMAND_T*);

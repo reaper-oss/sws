@@ -715,29 +715,37 @@ static DYN_COMMAND_T s_dynCmdTable[] =
 	{ "SWS/S&M: Set selected tracks to group %02d (default flags)", "S&M_SET_TRACK_GROUP", SetTrackGroup, 8, SNM_MAX_TRACK_GROUPS, NULL}, // not all the 32 groups by default!
 
 	{ "SWS/S&M: Live Config %02d - Open/close monitoring window", "S&M_OPEN_LIVECFG_MONITOR", OpenLiveConfigMonitorWnd, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, IsLiveConfigMonitorWndDisplayed},
+	{ "SWS/S&M: Live Config %02d - Apply config (MIDI/OSC only)", "S&M_LIVECONFIG", NULL, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL, 0, ApplyLiveConfig },
+	{ "SWS/S&M: Live Config %02d - Preload config (MIDI/OSC only)", "S&M_PRE_LIVECONFIG", NULL, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL, 0, PreloadLiveConfig },
 	{ "SWS/S&M: Live Config %02d - Apply next config", "S&M_NEXT_LIVE_CFG", ApplyNextLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL},
 	{ "SWS/S&M: Live Config %02d - Apply previous config", "S&M_PREVIOUS_LIVE_CFG", ApplyPreviousLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL},
 	{ "SWS/S&M: Live Config %02d - Preload next config", "S&M_PRELOAD_NEXT_LIVE_CFG", PreloadNextLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL},
 	{ "SWS/S&M: Live Config %02d - Preload previous config", "S&M_PRELOAD_PREVIOUS_LIVE_CFG", PreloadPreviousLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL},
 	{ "SWS/S&M: Live Config %02d - Apply preloaded config (swap preload/current)", "S&M_PRELOAD_LIVE_CFG", SwapCurrentPreloadLiveConfigs, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL},
+
 	{ "SWS/S&M: Live Config %02d - Enable", "S&M_LIVECFG_ON", EnableLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
 	{ "SWS/S&M: Live Config %02d - Disable", "S&M_LIVECFG_OFF", DisableLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
 	{ "SWS/S&M: Live Config %02d - Toggle enable", "S&M_LIVECFG_TGL", ToggleEnableLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, IsLiveConfigEnabled},
+
 	{ "SWS/S&M: Live Config %02d - Enable option 'Mute all but active track'", "S&M_LIVECFG_MUTEBUT_ON", EnableMuteOthersLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
 	{ "SWS/S&M: Live Config %02d - Disable option 'Mute all but active track'", "S&M_LIVECFG_MUTEBUT_OFF", DisableMuteOthersLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
 	{ "SWS/S&M: Live Config %02d - Toggle option 'Mute all but active track'", "S&M_LIVECFG_MUTEBUT_TGL", ToggleMuteOthersLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, IsMuteOthersLiveConfigEnabled},
+
 	{ "SWS/S&M: Live Config %02d - Enable option 'Offline all but active/preloaded tracks'", "S&M_LIVECFG_OFFLINEBUT_ON", EnableOfflineOthersLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
 	{ "SWS/S&M: Live Config %02d - Disable option 'Offline all but active/preloaded tracks'", "S&M_LIVECFG_OFFLINEBUT_OFF", DisableOfflineOthersLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
 	{ "SWS/S&M: Live Config %02d - Toggle option 'Offline all but active/preloaded tracks'", "S&M_LIVECFG_OFFLINEBUT_TGL", ToggleOfflineOthersLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, IsOfflineOthersLiveConfigEnabled},
+
+	{ "SWS/S&M: Live Config %02d - Enable option 'Disarm all but active track'", "S&M_LIVECFG_DISARMBUT_ON", EnableDisarmOthersLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
+	{ "SWS/S&M: Live Config %02d - Disable option 'Disarm all but active track'", "S&M_LIVECFG_DISARMBUT_OFF", DisableDisarmOthersLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
+	{ "SWS/S&M: Live Config %02d - Toggle option 'Disarm all but active track'", "S&M_LIVECFG_DISARMBUT_TGL", ToggleDisarmOthersLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL},
+
 	{ "SWS/S&M: Live Config %02d - Enable option 'Send all notes off when switching configs'", "S&M_LIVECFG_CC123_ON", EnableAllNotesOffLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
 	{ "SWS/S&M: Live Config %02d - Disable option 'Send all notes off when switching configs'", "S&M_LIVECFG_CC123_OFF", DisableAllNotesOffLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
 	{ "SWS/S&M: Live Config %02d - Toggle option 'Send all notes off when switching configs'", "S&M_LIVECFG_CC123_TGL", ToggleAllNotesOffLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, IsAllNotesOffLiveConfigEnabled},
+
 	{ "SWS/S&M: Live Config %02d - Enable tiny fades", "S&M_LIVECFG_FADES_ON", EnableTinyFadesLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
 	{ "SWS/S&M: Live Config %02d - Disable tiny fades", "S&M_LIVECFG_FADES_OFF", DisableTinyFadesLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
 	{ "SWS/S&M: Live Config %02d - Toggle enable tiny fades", "S&M_LIVECFG_FADES_TGL", ToggleTinyFadesLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, IsTinyFadesLiveConfigEnabled},
-
-	{ "SWS/S&M: Live Config %02d - Apply config (MIDI/OSC only)", "S&M_LIVECONFIG", NULL, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL, 0, ApplyLiveConfig },
-	{ "SWS/S&M: Live Config %02d - Preload config (MIDI/OSC only)", "S&M_PRE_LIVECONFIG", NULL, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL, 0, PreloadLiveConfig },
 
 	{ "SWS/S&M: Region Playlist %02d - Play", "S&M_PLAY_RGN_PLAYLIST", PlaylistPlay, 4, SNM_MAX_DYN_ACTIONS, NULL},
 

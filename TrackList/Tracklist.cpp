@@ -170,8 +170,8 @@ void SWS_TrackListView::OnItemSelChanged(SWS_ListItem* item, int iState)
 	MediaTrack* tr = (MediaTrack*)item;
 	if (iState & LVIS_FOCUSED)
 		g_pList->m_trLastTouched = tr;
-	if ((iState & LVIS_SELECTED ? true : false) != (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL) ? true : false))
-		GetSetMediaTrackInfo(tr, "I_SELECTED", iState & LVIS_SELECTED ? &g_i1 : &g_i0);
+	if (!!(iState & LVIS_SELECTED) != !!(*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL)))
+		GetSetMediaTrackInfo(tr, "I_SELECTED", (iState & LVIS_SELECTED) ? &g_i1 : &g_i0);
 }
 
 void SWS_TrackListView::SetItemText(SWS_ListItem* item, int iCol, const char* str)

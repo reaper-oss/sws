@@ -2167,7 +2167,7 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 	s_reent=true;
 
 	// save selected tracks
-	WDL_PtrList<MediaTrack> selTracks;
+	static WDL_PtrList<MediaTrack> selTracks;
 	SNM_GetSelectedTracks(NULL, &selTracks, true);
 
 	// run desactivate action of the previous config *when it has no track*

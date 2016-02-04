@@ -101,7 +101,9 @@ void SNM_GetSelectedTracks(ReaProject* _proj, WDL_PtrList<MediaTrack>* _trs, boo
 bool SNM_SetSelectedTracks(ReaProject* _proj, WDL_PtrList<MediaTrack>* _trs, bool _unselOthers, bool _withMaster)
 {
 	bool updated = false;
-	int count = CountTracks(_proj);
+	const int count = CountTracks(_proj);
+
+	PreventUIRefresh(1);
 	for (int i=_withMaster?0:1; i <= count; i++)
 	{
 		if (MediaTrack* tr = SNM_GetTrack(_proj, i))
@@ -120,10 +122,12 @@ bool SNM_SetSelectedTracks(ReaProject* _proj, WDL_PtrList<MediaTrack>* _trs, boo
 			}
 		}
 	}
+	PreventUIRefresh(-1);
+
 	return updated;
 }
 
-// wrapper func.. 
+// wrapper func
 // note: _tr=NULL + _unselOthers=true will unselect all tracks
 bool SNM_SetSelectedTrack(ReaProject* _proj, MediaTrack* _tr, bool _unselOthers, bool _withMaster)
 {
@@ -133,10 +137,15 @@ bool SNM_SetSelectedTrack(ReaProject* _proj, MediaTrack* _tr, bool _unselOthers,
 }
 
 
-void SNM_ClearSelectedTracks(ReaProject* _proj, bool _withMaster) {
-	int count = CountTracks(_proj);
+void SNM_ClearSelectedTracks(ReaProject* _proj, bool _withMaster)
+{
+	const int count = CountTracks(_proj);
+	PreventUIRefresh(1);
 	for (int i=_withMaster?0:1; i <= count; i++)
-		GetSetMediaTrackInfo(SNM_GetTrack(_proj, i), "I_SELECTED", &g_i0);
+		if (MediaTrack* tr = SNM_GetTrack(_proj, i))
+			if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+				GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i0);
+	PreventUIRefresh(-1);
 }
 
 

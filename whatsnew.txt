@@ -1,9 +1,45 @@
+<strong>Reminder: this new SWS version requires REAPER v5.15pre1+!</strong>
+
+Live Configs
++<strong>Remove the action section "S&M Extension"</strong>
+ This section is useless now (it was introduced to workaround some old API limitations).
+ <strong>All related actions have been moved to to the "Main" section. If you have learned some of these actions, you will need to update these controller bindings (sorry for the trouble!)</strong>
++<strong>Support up to 8 controllers/configs</strong>
++<strong>Add option "Disarm all but active track"</strong>
+ Note: this new option is disabled/grayed if an input track is defined (incompatible)
++Input track: mute sends when creating an input track or when adding new config tracks (prevent sound blast)
++Fix/improve preset display and context menus (esp. for VST3 presets)
++Improve support of user presets: support shell plug-ins (e.g. Waves plug-ins), DX plug-ins, etc
++Internal updates (RPP state)
+
+Notes window
++Properly support project notes
++Add a new type of notes: "Extra project notes"
++Windows OS: remove "Action help"
+
+Fixes
++Fix context menu issues vs multiple monitors
++OS X: make sure comments will be preserved when saving the S&M.ini file
++Fix action "Select project (MIDI/OSC only)" (could stop working)
++Fix action "Trigger preset [...] (MIDI/OSC only)" (could stop working)
++Fix preset actions vs VST3 factory preset files (.vstpreset files)
++Auto color/icon/layout: fix http://forum.cockos.com/showpost.php?p=1628164&postcount=2080|drag-drop slowdown|
+
+Other
++Speed up REAPER exit
++Improve "crossplatform-ability"
++Improve list view sort (logical sort)
++Improve color menus (logical sort)
++Improve some envelope actions (e.g. remove all/arm all envelope actions also take HW send envelopes into account)
++Improve "Dump action list/wiki ALR" actions (don't require the action window to be open anymore)
++ReaScript: tweak documentation
+
 !v2.8.5 pre-release build (January 29, 2016)
 <strong>This new SWS version requires REAPER v5.15pre1+!</strong>
 
 Auto color/icon/layout
 +Fix automatic layout http://forum.cockos.com/showpost.php?p=1629507&postcount=201|issues|, thanks cfillion!
-+Major performance improvements (should fix http://forum.cockos.com/showpost.php?p=1628164&postcount=2080|this report|)
++Major performance improvements
  <strong>Note: requires REAPER v5.15pre6+, automatic track icons will not work otherwise!</strong>
 
 Actions

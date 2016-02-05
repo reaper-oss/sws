@@ -1347,7 +1347,7 @@ void LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case CMBID_INPUT_TRACK:
 			if (HIWORD(wParam)==CBN_SELCHANGE)
 			{
-				lc->SetInputTrack(m_cbInputTr.GetCurSel() ? CSurf_TrackFromID(m_cbInputTr.GetCurSel(), false) : NULL, lc->m_options&32);
+				lc->SetInputTrack(m_cbInputTr.GetCurSel() ? CSurf_TrackFromID(m_cbInputTr.GetCurSel(), false) : NULL, !!(lc->m_options&32));
 				Undo_OnStateChangeEx2(NULL, UNDO_STR, UNDO_STATE_ALL, -1); // UNDO_STATE_ALL: SetInputTrack() might update the project
 				Update();
 			}
@@ -2100,7 +2100,7 @@ void LiveConfigsTrackListChange()
 					if (item->m_track && CSurf_TrackToID(item->m_track, false) <= 0)
 						item->Clear(true);
 
-			lc->SetInputTrack(lc->GetInputTrack(), lc->m_options&32); // lc->GetInputTrack() can be NULL when deleted, etc..
+			lc->SetInputTrack(lc->GetInputTrack(), !!(lc->m_options&32)); // lc->GetInputTrack() can be NULL when deleted, etc..
 		}
 	}
 

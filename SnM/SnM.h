@@ -114,8 +114,9 @@
 
 #endif
 
-#define SNM_LIVECFG_NB_CONFIGS		4		//JFB do not change this value, contact me plz thx!
+#define SNM_LIVECFG_NB_CONFIGS		8		//JFB do not change this value, contact me plz thx!
 #define SNM_LIVECFG_NB_ROWS			128		//JFB do not change this value, contact me plz thx!
+
 #define SNM_PRESETS_NB_FX			8
 #define SNM_CSURF_RUN_TICK_MS		27.0	// monitored average, 1 tick ~= 27ms
 #define SNM_MKR_RGN_UPDATE_FREQ		500		// gentle value (ms) not to stress REAPER

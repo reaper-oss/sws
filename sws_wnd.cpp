@@ -1555,31 +1555,12 @@ int SWS_ListView::OnEditingTimer()
 
 int SWS_ListView::OnItemSort(SWS_ListItem* item1, SWS_ListItem* item2)
 {
-	// Just sort by string
 	char str1[CELL_MAX_LEN];
 	char str2[CELL_MAX_LEN];
 	GetItemText(item1, abs(m_iSortCol)-1, str1, sizeof(str1));
 	GetItemText(item2, abs(m_iSortCol)-1, str2, sizeof(str2));
-
-	// If strings are purely numbers, sort numerically
-	char* pEnd1, *pEnd2;
-	int i1 = strtol(str1, &pEnd1, 0);
-	int i2 = strtol(str2, &pEnd2, 0);
-	int iRet = 0;
-	if ((i1 || i2) && !*pEnd1 && !*pEnd2)
-	{
-		if (i1 > i2)
-			iRet = 1;
-		else if (i1 < i2)
-			iRet = -1;
-	}
-	else
-		iRet = _stricmp(str1, str2);
-
-	if (m_iSortCol < 0)
-		return -iRet;
-	else
-		return iRet;
+  int cmp=WDL_strcmp_logical(str1, str2, false);
+  return (m_iSortCol<0 ? -cmp : cmp);
 }
 
 void SWS_ListView::ShowColumns()

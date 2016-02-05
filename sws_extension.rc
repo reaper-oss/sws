@@ -37,6 +37,7 @@ END
 3 TEXTINCLUDE 
 BEGIN
     "#include ""version.h""\r\n"
+    "#include ""license.h""\r\n"
     "#include ""version.rc2""\r\0"
 END
 
@@ -2047,6 +2048,7 @@ IDC_ZOOM_UNDO           CURSOR                  "Resources\\Cursor\\sws_zoom_und
 // Generated from the TEXTINCLUDE 3 resource.
 //
 #include "version.h"
+#include "license.h"
 #include "version.rc2"
 
 /////////////////////////////////////////////////////////////////////////////

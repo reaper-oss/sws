@@ -117,7 +117,7 @@ INT_PTR WINAPI doAbout(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 			SetWindowText(GetDlgItem(hwndDlg, IDC_VERSION), cVersionDate);
 			SetWindowText(GetDlgItem(hwndDlg, IDC_WEBSITE), SWS_URL);
-			SetWindowText(GetDlgItem(hwndDlg, IDC_EDIT), LICENSE_TEXT);
+			SetWindowText(GetDlgItem(hwndDlg, IDC_EDIT), LICENSE_AUTHORS "\r\n" LICENSE_TEXT);
 			bool official, beta; GetStartupSearchOptions(&official, &beta, NULL);
 			CheckDlgButton(hwndDlg, IDC_CHECK1, official);
 			CheckDlgButton(hwndDlg, IDC_CHECK2, beta);

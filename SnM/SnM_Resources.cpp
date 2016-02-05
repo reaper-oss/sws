@@ -2220,7 +2220,8 @@ bool ResourcesWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bu
 			case BTNID_ADD_BOOKMARK:
 				return (_snprintfStrict(_bufOut, _bufOutSz, __LOCALIZE_VERFMT("New %s bookmark","sws_DLG_150"), g_SNM_ResSlots.Get(typeForUser)->GetName()) > 0);
 			case BTNID_DEL_BOOKMARK:
-				return (lstrcpyn(_bufOut, __LOCALIZE("Delete bookmark","sws_DLG_150"), _bufOutSz) != NULL);
+				lstrcpyn(_bufOut, __LOCALIZE("Delete bookmark","sws_DLG_150"), _bufOutSz);
+				return true;
 			case TXTID_TIED_PRJ:
 				return (g_tiedProjects.Get(g_resType)->GetLength() && 
 					_snprintfStrict(_bufOut, _bufOutSz, __LOCALIZE_VERFMT("Bookmark files attached to:\n%s","sws_DLG_150"), g_tiedProjects.Get(g_resType)->Get()) > 0);

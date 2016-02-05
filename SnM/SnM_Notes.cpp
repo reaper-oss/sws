@@ -680,11 +680,14 @@ bool NotesWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOut
 		switch (v->GetID())
 		{
 			case BTNID_LOCK:
-				return (lstrcpyn(_bufOut, g_locked ? __LOCALIZE("Text locked ('Big font' mode)", "sws_DLG_152") : __LOCALIZE("Text unlocked", "sws_DLG_152"), _bufOutSz) != NULL);
+				lstrcpyn(_bufOut, g_locked ? __LOCALIZE("Text locked ('Big font' mode)", "sws_DLG_152") : __LOCALIZE("Text unlocked", "sws_DLG_152"), _bufOutSz);
+				return true;
 			case CMBID_TYPE:
-				return (lstrcpyn(_bufOut, __LOCALIZE("Notes type","sws_DLG_152"), _bufOutSz) != NULL);
+				lstrcpyn(_bufOut, __LOCALIZE("Notes type","sws_DLG_152"), _bufOutSz);
+				return true;
 			case TXTID_LABEL:
-				return (lstrcpyn(_bufOut, ((WDL_VirtualStaticText*)v)->GetText(), _bufOutSz) != NULL);
+				lstrcpyn(_bufOut, ((WDL_VirtualStaticText*)v)->GetText(), _bufOutSz);
+				return true;
 		}
 	}
 	return false;

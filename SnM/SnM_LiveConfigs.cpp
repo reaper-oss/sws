@@ -659,7 +659,7 @@ void LiveConfigView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iS
 			case COL_CC:
 			{
 				LiveConfig* lc = g_liveConfigs.Get()->Get(g_configId);
-				_snprintfSafe(str, iStrMax, "%03d %s", pItem->m_cc, 
+				_snprintfSafe(str, iStrMax, "%d %s", pItem->m_cc, 
 					lc ? (pItem->m_cc==lc->m_activeMidiVal ? UTF8_BULLET : 
 						(pItem->m_cc == lc->m_preloadMidiVal ? UTF8_CIRCLE : " ")) : " ");
 				break;

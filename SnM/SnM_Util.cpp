@@ -36,23 +36,18 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 // File util
-// Could use WDL functions like WDL_get_filepart, WDL_get_fileext, etc but
-// we do not want to include wdlcstring.h in the extension (too risky now)
 ///////////////////////////////////////////////////////////////////////////////
 
 const char* GetFileRelativePath(const char* _fn)
 {
-	const char *p = _fn;
-	while (*p) p++;
-	while (p >= _fn && !WDL_IS_DIRCHAR(*p)) --p;
-	return p + 1;
+	return WDL_get_filepart(_fn);
 }
 
 const char* GetFileExtension(const char* _fn, bool _wantdot)
 {
-	if (const char* p = strrchr(_fn, '.'))
-		return p+(_wantdot?0:1);
-	return "";
+	const char* p = WDL_get_fileext(_fn);
+	if (*p=='.' && !_wantdot) return p++;
+	return p;
 }
 
 bool HasFileExtension(const char* _fn, const char* _expectedExt) {
@@ -62,8 +57,8 @@ bool HasFileExtension(const char* _fn, const char* _expectedExt) {
 void GetFilenameNoExt(const char* _fullFn, char* _fn, int _fnSz)
 {
 	lstrcpyn(_fn, GetFileRelativePath(_fullFn), _fnSz);
-	_fn = strrchr(_fn, '.');
-	if (_fn) *_fn = '\0';
+	char* p =  (char*)WDL_get_fileext(_fn);
+	if (*p=='.') *p = '\0';
 }
 
 const char* GetFilenameWithExt(const char* _fullFn)
@@ -651,8 +646,7 @@ void SNM_UpgradeIniFiles()
 ///////////////////////////////////////////////////////////////////////////////
 
 // a _snprintf that ensures the string is always null terminated (but truncated if needed)
-// note: WDL_snprintf's return value cannot be trusted, see wdlcstring.h
-//       (using it could break other project members' code)
+// not based on WDL_snprintf: no return value, see wdlcstring.h
 int _snprintfSafe(char* _buf, size_t _n, const char* _fmt, ...)
 {
 	va_list va;
@@ -676,8 +670,7 @@ int _snprintfSafe(char* _buf, size_t _n, const char* _fmt, ...)
 
 // a _snprintf that returns >=0 when the string is null terminated and not truncated
 // => callers must check the returned value 
-// note: WDL_snprintf's return value cannot be trusted, see wdlcstring.h
-//       (using it could break other project members' code)
+// not based on WDL_snprintf: no return value, see wdlcstring.h
 int _snprintfStrict(char* _buf, size_t _n, const char* _fmt, ...)
 {
 	va_list va;

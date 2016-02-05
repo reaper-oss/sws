@@ -6,6 +6,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PrintVersion", "PrintVersio
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MakeWhatsNew", "MakeWhatsNew.vcxproj", "{2D8D3D04-A6A7-45C1-9857-D9D9E9610CB7}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BuildLangpack", "BuildLangpack.vcxproj", "{0B5699DE-4E71-4AFD-AD56-77C225B77B9C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -20,6 +22,10 @@ Global
 		{2D8D3D04-A6A7-45C1-9857-D9D9E9610CB7}.Debug|Win32.Build.0 = Release|Win32
 		{2D8D3D04-A6A7-45C1-9857-D9D9E9610CB7}.Release|Win32.ActiveCfg = Release|Win32
 		{2D8D3D04-A6A7-45C1-9857-D9D9E9610CB7}.Release|Win32.Build.0 = Release|Win32
+		{0B5699DE-4E71-4AFD-AD56-77C225B77B9C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{0B5699DE-4E71-4AFD-AD56-77C225B77B9C}.Debug|Win32.Build.0 = Debug|Win32
+		{0B5699DE-4E71-4AFD-AD56-77C225B77B9C}.Release|Win32.ActiveCfg = Release|Win32
+		{0B5699DE-4E71-4AFD-AD56-77C225B77B9C}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

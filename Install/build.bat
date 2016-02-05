@@ -56,7 +56,7 @@ REM ====== LANGPACK ===========================================================
 :langpack
 echo Generating output\sws_template.ReaperLangPack...
 cd ..\..
-call sws\GenLangPack\sws_build_template_langpack.sh
+call sws\BuildUtils\build_template_langpack.sh
 if not errorlevel 0 goto error
 cd sws\Install
 

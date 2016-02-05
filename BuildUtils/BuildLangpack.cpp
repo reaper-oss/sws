@@ -12,8 +12,6 @@
 #include "../../WDL/ptrlist.h"
 #include "../../WDL/wdlstring.h"
 
-#include "sws_version.h"
-
 #ifdef _WIN32
 #define FNV64_IV ((WDL_UINT64)(0xCBF29CE484222325i64))
 #else
@@ -479,18 +477,16 @@ int main(int argc, char **argv)
   if (casemode==3) 
   {
     // no #NAME: SWS LangPack files have to be merged with the main REAPER one
-    printf("; SWS/S&M Template LangPack"); 
-
-  int version[4];
-  if (GetSWSVersion(version))
-    printf(" v%d.%d.%d Build %d", version[0], version[1], version[2], version[3]); 
-
-  printf(
-      "\n\n; NOTE: As you translate a string, remove the ; from the beginning of\n"
+    printf("; SWS/S&M Template LangPack\n"
+      "; NOTE: As you translate a string, remove the ; from the beginning of\n"
       "; the line. If the line begins with ;^, then it is an optional string,\n"
       "; and you should only modify that line if the definition in [common]\n"
       "; is not accurate for that context.\n"
-      "; Do not change action tags like SWS:, SWS/S&M:, etc.. (such strings\n"
+      "; You can enlarge windows using 5CA1E00000000000=scale, for example:\n"
+      ";     [sws_DLG_109] ; IDD_ABOUT\n"
+	  ";     5CA1E00000000000=1.2\n"
+	  "; This makes the about box 1.2x wider than default.\n"
+      "; Do not change action tags like SWS:, SWS/S&M:, etc (such strings\n"
       "; would be ignored).\n"
       "; Once translated, the SWS LangPack has to be merged with the main REAPER one:\n"
       "; see http://forum.cockos.com/showpost.php?p=941893&postcount=810.\n\n");

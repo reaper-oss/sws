@@ -46,7 +46,7 @@ const char* GetFileRelativePath(const char* _fn)
 const char* GetFileExtension(const char* _fn, bool _wantdot)
 {
 	const char* p = WDL_get_fileext(_fn);
-	if (*p=='.' && !_wantdot) return p++;
+	if (*p=='.' && !_wantdot) return p+1;
 	return p;
 }
 

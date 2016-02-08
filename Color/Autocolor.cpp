@@ -81,6 +81,8 @@ static bool g_bAIEnabled = false;
 static bool g_bALEnabled = false;
 static WDL_String g_ACIni;
 static int s_ignore_update;
+static WDL_FastString s_default_icon_path; // just to optimize things a bit
+
 
 // Register to marker/region updates
 class AC_MarkerRegionListener : public SNM_MarkerRegionListener {
@@ -430,11 +432,12 @@ void SWS_AutoColorWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			SWS_RuleItem* item = (SWS_RuleItem*)m_pLists.Get(0)->EnumSelected(NULL);
 			if (item)
 			{
-				char filename[BUFFER_SIZE], dir[32];
-				sprintf(dir,"Data%ctrack_icons",PATH_SLASH_CHAR);
-				if (BrowseResourcePath(__LOCALIZE("Load icon","sws_DLG_115"), dir, "PNG files (*.PNG)\0*.PNG\0ICO files (*.ICO)\0*.ICO\0JPEG files (*.JPG)\0*.JPG\0BMP files (*.BMP)\0*.BMP\0PCX files (*.PCX)\0*.PCX\0",
-					filename, BUFFER_SIZE))
+				char filename[SNM_MAX_PATH];
+				if (BrowseResourcePath(__LOCALIZE("Load icon","sws_DLG_115"), "Data" WDL_DIRCHAR_STR "track_icons" , "PNG files (*.PNG)\0*.PNG\0ICO files (*.ICO)\0*.ICO\0JPEG files (*.JPG)\0*.JPG\0BMP files (*.BMP)\0*.BMP\0PCX files (*.PCX)\0*.PCX\0",
+					filename, sizeof(filename)))
+				{
 					item->m_icon.Set(filename);
+				}
 			}
 			Update();
 			break;
@@ -818,9 +821,13 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 						if (_stricmp(rule->m_icon.Get(), pACTrack->m_icon.Get()))
 						{
 							const char *cur = (const char*)GetSetMediaTrackInfo(tr, "P_ICON", NULL); // requires REAPER v5.15pre6+
+							if (cur && !_strnicmp(cur, s_default_icon_path.Get(), s_default_icon_path.GetLength()))
+							{
+								cur += s_default_icon_path.GetLength();
+							}
 							if (cur && _stricmp(cur, rule->m_icon.Get()))
 							{
-								// Only overwrite the icon if there's no iscon, or we're forcing, or we set it ourselves earlier
+								// Only overwrite the icon if there's no icon, or we're forcing, or we set it ourselves earlier
 								if (bForce || !_stricmp(cur, pACTrack->m_icon.Get()))
 								{
 									GetSetMediaTrackInfo(tr, "P_ICON", (void*)rule->m_icon.Get());
@@ -934,6 +941,10 @@ void AutoColorTrack(bool bForce)
 		{
 			// Only remove the icon on the track if we set it ourselves
 			const char *cur = (const char*)GetSetMediaTrackInfo(pACTrack->m_pTr, "P_ICON", NULL); // requires REAPER v5.15pre6+
+			if (cur && !_strnicmp(cur, s_default_icon_path.Get(), s_default_icon_path.GetLength()))
+			{
+				cur += s_default_icon_path.GetLength();
+			}
 			if (cur && !_stricmp(pACTrack->m_icon.Get(), cur))
 			{
 				GetSetMediaTrackInfo(pACTrack->m_pTr, "P_ICON", (void*)"");
@@ -1156,6 +1167,12 @@ int AutoColorInit()
 {
 	if (!plugin_register("projectconfig",&g_projectconfig))
 		return 0;
+
+	if (!s_default_icon_path.GetLength())
+	{
+		s_default_icon_path.Set(GetResourcePath());
+		s_default_icon_path.Append(WDL_DIRCHAR_STR "Data" WDL_DIRCHAR_STR "track_icons" WDL_DIRCHAR_STR);
+	}
 
 	SWSRegisterCommands(g_commandTable);
 

@@ -1297,10 +1297,10 @@ void ResourcesWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			ResourceItem* item2 = (ResourceItem*)GetListView()->EnumSelected(&x);
 			if (item && item2 && g_SNM_DiffToolFn.GetLength())
 			{
-				char fn1[SNM_MAX_PATH]="", fn2[SNM_MAX_PATH]="";
+				char fn1[SNM_MAX_PATH], fn2[SNM_MAX_PATH];
 				if (slot>=0 && 
-					fl->GetFullPath(slot, fn1, sizeof(fn1)) &&
-					fl->GetFullPath(fl->Find(item2), fn2, sizeof(fn2)))
+					fl->GetFullPath(slot, fn1, sizeof(fn1)) && FileOrDirExistsErrMsg(fn1) &&
+					fl->GetFullPath(fl->Find(item2), fn2, sizeof(fn2)) && FileOrDirExistsErrMsg(fn2))
 				{
 					WDL_FastString prmStr;
 					prmStr.SetFormatted(sizeof(fn1)*3, " \"%s\" \"%s\"", fn1, fn2);
@@ -1312,7 +1312,7 @@ void ResourcesWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 #endif
 		case EXPLORE_MSG:
 		{
-			char fullPath[SNM_MAX_PATH] = "";
+			char fullPath[SNM_MAX_PATH];
 			if (fl->GetFullPath(slot, fullPath, sizeof(fullPath)))
 				RevealFile(fullPath);
 			break;
@@ -2573,12 +2573,11 @@ bool BrowseSlot(int _type, int _slot, bool _tieUntiePrj, char* _fn, int _fnSz, b
 		if (_slot>=0 && _slot<fl->GetSize())
 		{
 			char untiePath[SNM_MAX_PATH] = "";
-			if (_tieUntiePrj && _type>=SNM_NUM_DEFAULT_SLOTS && g_tiedProjects.Get(_type)->GetLength()) // avoid useless job
+			if (_tieUntiePrj && _type>=SNM_NUM_DEFAULT_SLOTS && g_tiedProjects.Get(_type)->GetLength())
 				fl->GetFullPath(_slot, untiePath, sizeof(untiePath));
 
-			char title[128]="", fileFilter[2048]=""; // room needed for file filters!
+			char title[512], fileFilter[2048]; // room needed for file filters!
 			_snprintfSafe(title, sizeof(title), __LOCALIZE_VERFMT("S&M - Load resource file (slot %d)","sws_DLG_150"), _slot+1);
-
 			fl->GetFileFilter(fileFilter, sizeof(fileFilter));
 
 			if (char* fn = BrowseForFiles(title, g_lastBrowsedFn.GetLength()?g_lastBrowsedFn.Get():GetAutoFillDir(_type), NULL, false, fileFilter)) // single file
@@ -2602,7 +2601,7 @@ bool BrowseSlot(int _type, int _slot, bool _tieUntiePrj, char* _fn, int _fnSz, b
 				else
 				{
 					WDL_FastString msg;
-					msg.SetFormatted(128, 
+					msg.SetFormatted(512, 
 						__LOCALIZE_VERFMT("The file extension \".%s\" is not supported in the bookmark \"%s\"","sws_DLG_150"),
 						GetFileExtension(fn), fl->GetName());
 					MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("S&M - Error","sws_DLG_150"), MB_OK);

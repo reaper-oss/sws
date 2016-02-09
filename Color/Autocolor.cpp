@@ -54,7 +54,7 @@
 #define AC_ITEM_KEY		"AutoColor %d"
 
 
-enum { AC_ANY=0, AC_UNNAMED, AC_FOLDER, AC_CHILDREN, AC_RECEIVE, AC_MASTER, NUM_FILTERTYPES };
+enum { AC_ANY=0, AC_UNNAMED, AC_FOLDER, AC_CHILDREN, AC_RECEIVE, AC_MASTER, AC_REC_ARM, NUM_FILTERTYPES };
 enum { AC_RGNANY=0, AC_RGNUNNAMED, NUM_RGNFILTERTYPES };
 enum { AC_CUSTOM, AC_GRADIENT, AC_RANDOM, AC_NONE, AC_PARENT, AC_IGNORE, NUM_COLORTYPES };
 enum { COL_ID=0, COL_TYPE, COL_FILTER, COL_COLOR, COL_ICON, COL_TCP_LAYOUT, COL_MCP_LAYOUT, COL_COUNT };
@@ -65,7 +65,7 @@ enum { AC_TRACK=0, AC_MARKER, AC_REGION, NUM_TYPETYPES }; // keep this order and
 // !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_115
 static SWS_LVColumn g_cols[] = { {25, 0, "#" }, {25, 0, "Rule type"}, { 185, 1, "Filter" }, { 70, 1, "Color" }, { 200, 2, "Icon" }, { 100, 1, "TCP Layout" }, { 100, 1, "MCP Layout" }};
 static const char cTypes[][256] = {"Track", "Marker", "Region" }; // keep this order, see above
-static const char cFilterTypes[][256] = { "(any)", "(unnamed)", "(folder)", "(children)", "(receive)", "(master)" };
+static const char cFilterTypes[][256] = { "(any)", "(unnamed)", "(folder)", "(children)", "(receive)", "(master)", "(record armed)" };
 static const char cColorTypes[][256] = { "Custom", "Gradient", "Random", "None", "Parent", "Ignore" };
 // !WANT_LOCALIZE_STRINGS_END
 
@@ -748,6 +748,12 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 					{
 						char* cName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
 						if (!cName || !cName[0])
+							bMatch = true;
+					}
+					else if (strcmp(rule->m_str_filter.Get(), cFilterTypes[AC_REC_ARM]) == 0)
+					{
+						int* ra = (int*)GetSetMediaTrackInfo(tr, "I_RECARM", NULL);
+						if (ra && *ra)
 							bMatch = true;
 					}
 					else if (strcmp(rule->m_str_filter.Get(), cFilterTypes[AC_ANY]) == 0)

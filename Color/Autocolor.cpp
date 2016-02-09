@@ -81,7 +81,6 @@ static bool g_bAIEnabled = false;
 static bool g_bALEnabled = false;
 static WDL_String g_ACIni;
 static int s_ignore_update;
-static WDL_FastString s_default_icon_path; // just to optimize things a bit
 
 
 // Register to marker/region updates
@@ -821,10 +820,7 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 						if (_stricmp(rule->m_icon.Get(), pACTrack->m_icon.Get()))
 						{
 							const char *cur = (const char*)GetSetMediaTrackInfo(tr, "P_ICON", NULL); // requires REAPER v5.15pre6+
-							if (cur && !_strnicmp(cur, s_default_icon_path.Get(), s_default_icon_path.GetLength()))
-							{
-								cur += s_default_icon_path.GetLength();
-							}
+							cur = GetShortResourcePath("Data" WDL_DIRCHAR_STR "track_icons", cur);
 							if (cur && _stricmp(cur, rule->m_icon.Get()))
 							{
 								// Only overwrite the icon if there's no icon, or we're forcing, or we set it ourselves earlier
@@ -941,10 +937,7 @@ void AutoColorTrack(bool bForce)
 		{
 			// Only remove the icon on the track if we set it ourselves
 			const char *cur = (const char*)GetSetMediaTrackInfo(pACTrack->m_pTr, "P_ICON", NULL); // requires REAPER v5.15pre6+
-			if (cur && !_strnicmp(cur, s_default_icon_path.Get(), s_default_icon_path.GetLength()))
-			{
-				cur += s_default_icon_path.GetLength();
-			}
+			cur = GetShortResourcePath("Data" WDL_DIRCHAR_STR "track_icons", cur);
 			if (cur && !_stricmp(pACTrack->m_icon.Get(), cur))
 			{
 				GetSetMediaTrackInfo(pACTrack->m_pTr, "P_ICON", (void*)"");
@@ -1167,12 +1160,6 @@ int AutoColorInit()
 {
 	if (!plugin_register("projectconfig",&g_projectconfig))
 		return 0;
-
-	if (!s_default_icon_path.GetLength())
-	{
-		s_default_icon_path.Set(GetResourcePath());
-		s_default_icon_path.Append(WDL_DIRCHAR_STR "Data" WDL_DIRCHAR_STR "track_icons" WDL_DIRCHAR_STR);
-	}
 
 	SWSRegisterCommands(g_commandTable);
 

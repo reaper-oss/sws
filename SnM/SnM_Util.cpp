@@ -66,6 +66,15 @@ const char* GetFilenameWithExt(const char* _fullFn)
 	return GetFileRelativePath(_fullFn);
 }
 
+bool IsFullFileName(const char *p)
+{
+#ifdef _WIN32
+	return (p[0] && p[1] == ':' && (p[2] == '\\' || p[2] == '/')) || (p[0] == '\\' && p[1] == '\\');
+#else
+	return p[0]=='/';
+#endif
+}
+
 // check the most restrictive OS forbidden chars (so that filenames are cross-platform)
 bool Filenamize(char* _fnInOut, bool _checkOnly)
 {
@@ -150,9 +159,9 @@ bool SNM_DeleteFile(const char* _filename, bool _recycleBin)
 	{
 #ifdef _WIN32
 		if (_recycleBin)
-			return (SendFileToRecycleBin(_filename) ? false : true); // avoid warning C4800
+			return (SendFileToRecycleBin(_filename) == 0);
 #endif
-		ok = (DeleteFile(_filename) ? true : false); // avoid warning C4800
+		ok = !!DeleteFile(_filename);
 	}
 	return ok;
 }
@@ -192,9 +201,8 @@ void RevealFile(const char* _fn, bool _errMsg)
 bool BrowseResourcePath(const char* _title, const char* _resSubDir, const char* _fileFilters, char* _fn, int _fnSize, bool _wantFullPath)
 {
 	bool ok = false;
-	char defaultPath[SNM_MAX_PATH] = "";
-	if (_snprintfStrict(defaultPath, sizeof(defaultPath), "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir) < 0)
-		*defaultPath = '\0';
+	char defaultPath[SNM_MAX_PATH];
+	_snprintfSafe(defaultPath, sizeof(defaultPath), "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir);
 	if (char* fn = BrowseForFiles(_title, defaultPath, NULL, false, _fileFilters)) 
 	{
 		lstrcpyn(_fn, _wantFullPath ? fn : GetShortResourcePath(_resSubDir, fn), _fnSize);
@@ -230,34 +238,25 @@ const char* GetShortResourcePath(const char* _resSubDir, const char* _fullFn)
 // get a full resource path from a short filename
 // ex: EQ\JS\test.RfxChain -> C:\Documents and Settings\<user>\Application Data\REAPER\FXChains\EQ\JS\test.RfxChain
 // notes: 
-// - work with non existing files //JFB!! humm.. looks like it fails with non existing files
+// - work with non existing files
 // - no-op for non resource paths (c:\temp\test.RfxChain -> c:\temp\test.RfxChain)
 // - no-op for full resource paths 
 void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fullFn, int _fullFnSize)
 {
-	if (_shortFn && _fullFn) 
+	if (_fullFn && _fullFnSize>0) *_fullFn = '\0';
+	else return;
+
+	if (_shortFn && *_shortFn) 
 	{
-		if (*_shortFn == '\0') {
-			*_fullFn = '\0';
-			return;
-		}
-		if (!strstr(_shortFn, GetResourcePath())) // no stristr: osx + utf-8
+		if (IsFullFileName(_shortFn))
 		{
-			char resFn[SNM_MAX_PATH] = "", resDir[SNM_MAX_PATH];
-			if (_snprintfStrict(resFn, sizeof(resFn), "%s%c%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir, PATH_SLASH_CHAR, _shortFn) > 0)
-			{
-				lstrcpyn(resDir, resFn, sizeof(resDir));
-				if (char* p = strrchr(resDir, PATH_SLASH_CHAR)) *p = '\0';
-				if (FileOrDirExists(resDir)) {
-					lstrcpyn(_fullFn, resFn, _fullFnSize);
-					return;
-				}
-			}
+			lstrcpyn(_fullFn, _shortFn, _fullFnSize);
 		}
-		lstrcpyn(_fullFn, _shortFn, _fullFnSize);
+		else
+		{
+			_snprintfSafe(_fullFn, _fullFnSize, "%s%c%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir, PATH_SLASH_CHAR, _shortFn);
+		}
 	}
-	else if (_fullFn)
-		*_fullFn = '\0';
 }
 
 // _trim: if true, remove empty lines + left trim

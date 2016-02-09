@@ -44,7 +44,7 @@ bool SNM_DeleteFile(const char* _filename, bool _recycleBin);
 bool SNM_CopyFile(const char* _destFn, const char* _srcFn);
 void RevealFile(const char* _fn, bool _errMsg = true);
 bool BrowseResourcePath(const char* _title, const char* _dir, const char* _fileFilters, char* _fn, int _fnSize, bool _wantFullPath = false);
-void GetShortResourcePath(const char* _resSubDir, const char* _fullFn, char* _shortFn, int _shortFnSize);
+const char* GetShortResourcePath(const char* _resSubDir, const char* _fullFn);
 void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fullFn, int _fullFnSize);
 bool LoadChunk(const char* _fn, WDL_FastString* _chunkOut, bool _trim = true, int _approxMaxlen = 0);
 bool SaveChunk(const char* _fn, WDL_FastString* _chunk, bool _indent);

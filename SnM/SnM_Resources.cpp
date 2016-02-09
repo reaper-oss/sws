@@ -433,17 +433,14 @@ ResourceList::ResourceList(const char* _resDir, const char* _name, const char* _
 // _path: short resource path or full path
 ResourceItem* ResourceList::AddSlot(const char* _path, const char* _desc)
 {
-	char shortPath[SNM_MAX_PATH] = "";
-	GetShortResourcePath(m_resDir.Get(), _path, shortPath, sizeof(shortPath));
-	return Add(new ResourceItem(shortPath, _desc));
+	return Add(new ResourceItem(GetShortResourcePath(m_resDir.Get(), _path), _desc));
 }
 
 // _path: short resource path or full path
 ResourceItem* ResourceList::InsertSlot(int _slot, const char* _path, const char* _desc)
 {
 	ResourceItem* item = NULL;
-	char shortPath[SNM_MAX_PATH] = "";
-	GetShortResourcePath(m_resDir.Get(), _path, shortPath, sizeof(shortPath));
+	const char* shortPath = GetShortResourcePath(m_resDir.Get(), _path);
 	if (_slot >=0 && _slot < GetSize())
 		item = Insert(_slot, new ResourceItem(shortPath, _desc));
 	else
@@ -475,9 +472,7 @@ bool ResourceList::SetFromFullPath(int _slot, const char* _fullPath)
 {
 	if (ResourceItem* item = Get(_slot))
 	{
-		char shortPath[SNM_MAX_PATH] = "";
-		GetShortResourcePath(m_resDir.Get(), _fullPath, shortPath, sizeof(shortPath));
-		item->m_shortPath.Set(shortPath);
+		item->m_shortPath.Set(GetShortResourcePath(m_resDir.Get(), _fullPath));
 		return true;
 	}
 	return false;
@@ -2384,8 +2379,7 @@ bool AutoSaveSlot(int _type, const char* _dirPath,
 				if (char* p = strrchr(fn, '.'))
 				{
 					strcpy(p+1, _ext);
-					char shortPath[SNM_MAX_PATH] = "";
-					GetShortResourcePath(g_SNM_ResSlots.Get(_type)->GetResourceDir(), fn, shortPath, sizeof(shortPath));
+					const char* shortPath = GetShortResourcePath(g_SNM_ResSlots.Get(_type)->GetResourceDir(), fn);
 					_owSlots->Get(*_owIdx)->m_shortPath.Set(shortPath);
 				}
 			}
@@ -2408,8 +2402,7 @@ bool AutoSaveSlot(int _type, const char* _dirPath,
 			}
 			else 
 			{
-				char shortPath[SNM_MAX_PATH] = "";
-				GetShortResourcePath(g_SNM_ResSlots.Get(_type)->GetResourceDir(), fn, shortPath, sizeof(shortPath));
+				const char* shortPath = GetShortResourcePath(g_SNM_ResSlots.Get(_type)->GetResourceDir(), fn);
 				_owSlots->Get(*_owIdx-1)->m_shortPath.Set(shortPath);
 			}
 		}

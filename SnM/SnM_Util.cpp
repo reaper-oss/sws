@@ -197,10 +197,7 @@ bool BrowseResourcePath(const char* _title, const char* _resSubDir, const char* 
 		*defaultPath = '\0';
 	if (char* fn = BrowseForFiles(_title, defaultPath, NULL, false, _fileFilters)) 
 	{
-		if(!_wantFullPath)
-			GetShortResourcePath(_resSubDir, fn, _fn, _fnSize);
-		else
-			lstrcpyn(_fn, fn, _fnSize);
+		lstrcpyn(_fn, _wantFullPath ? fn : GetShortResourcePath(_resSubDir, fn), _fnSize);
 		free(fn);
 		ok = true;
 	}
@@ -213,20 +210,21 @@ bool BrowseResourcePath(const char* _title, const char* _resSubDir, const char* 
 // - *must* work with non existing files (just some string processing here)
 // - *must* be no-op for non resource paths (c:\temp\test.RfxChain -> c:\temp\test.RfxChain)
 // - *must* be no-op for short resource paths 
-void GetShortResourcePath(const char* _resSubDir, const char* _fullFn, char* _shortFn, int _shortFnSize)
+const char* GetShortResourcePath(const char* _resSubDir, const char* _fullFn)
 {
 	if (_resSubDir && *_resSubDir && _fullFn && *_fullFn)
 	{
-		char defaultPath[SNM_MAX_PATH] = "";
-		if (_snprintfStrict(defaultPath, sizeof(defaultPath), "%s%c%s%c", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir, PATH_SLASH_CHAR) < 0)
-			*defaultPath = '\0';
-		if (strstr(_fullFn, defaultPath) == _fullFn) // no stristr: osx + utf-8
-			lstrcpyn(_shortFn, (char*)(_fullFn + strlen(defaultPath)), _shortFnSize);
-		else
-			lstrcpyn(_shortFn, _fullFn, _shortFnSize);
+		static int res_path_len=strlen(GetResourcePath());
+		if (!_strnicmp(_fullFn, GetResourcePath(), res_path_len) && _fullFn[res_path_len]==PATH_SLASH_CHAR)
+		{
+			const int subdir_sz = strlen(_resSubDir);
+			if (!_strnicmp(_fullFn+res_path_len+1, _resSubDir, subdir_sz) && _fullFn[res_path_len+1+subdir_sz]==PATH_SLASH_CHAR)
+			{
+				return _fullFn+res_path_len+1+subdir_sz+1;
+			}
+		}
 	}
-	else if (_shortFn)
-		*_shortFn = '\0';
+	return _fullFn;
 }
 
 // get a full resource path from a short filename

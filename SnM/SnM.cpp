@@ -650,9 +650,7 @@ static DYN_COMMAND_T s_dynCmdTable[] =
 	{ "SWS/S&M: Set all FX (except %02d) offline for selected tracks", "S&M_FXOFF_ALL_OFF_EXCPT", SetAllFXsOfflineExceptSelTracks, 8, SNM_MAX_DYN_ACTIONS, NULL},
 	{ "SWS/S&M: Bypass all FX (except %02d) for selected tracks", "S&M_FXBYP_ALL_ON_EXCPT", BypassAllFXsExceptSelTracks, 8, SNM_MAX_DYN_ACTIONS, NULL},
 	{ "SWS/S&M: Unbypass all FX (except %02d) for selected tracks", "S&M_FXBYP_ALL_OFF_EXCPT", UnypassAllFXsExceptSelTracks, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
-
-	{ "SWS/S&M: Trigger preset for FX %02d of selected track (MIDI/OSC only)", "S&M_PRESET_FX", NULL, SNM_PRESETS_NB_FX, SNM_PRESETS_NB_FX, NULL, 0, TriggerFXPresetSelTrack},
-  
+ 
 	{ "SWS/S&M: Resources - Clear FX chain slot %02d", "S&M_CLRFXCHAINSLOT", ResourcesClearFXChainSlot, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
 	{ "SWS/S&M: Resources - Paste (replace) FX chain to selected items, slot %02d", "S&M_TAKEFXCHAIN", LoadSetTakeFXChainSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
 	{ "SWS/S&M: Resources - Paste FX chain to selected items, slot %02d", "S&M_PASTE_TAKEFXCHAIN", LoadPasteTakeFXChainSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
@@ -697,6 +695,7 @@ static DYN_COMMAND_T s_dynCmdTable[] =
 
 	{ "SWS/S&M: Trigger next preset for FX %02d of selected tracks", "S&M_NEXT_PRESET_FX", NextPresetSelTracks, 4, SNM_MAX_DYN_ACTIONS, NULL},
 	{ "SWS/S&M: Trigger previous preset for FX %02d of selected tracks", "S&M_PREVIOUS_PRESET_FX", PrevPresetSelTracks, 4, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Trigger preset for FX %02d of selected track (MIDI/OSC only)", "S&M_PRESET_FX", NULL, SNM_PRESETS_NB_FX, SNM_PRESETS_NB_FX, NULL, 0, TriggerFXPresetSelTrack},
 
 	{ "SWS/S&M: Select FX %02d for selected tracks", "S&M_SELFX", SelectTrackFX, 8, SNM_MAX_DYN_ACTIONS, NULL},
 

@@ -107,31 +107,30 @@ bool IsValidFilenameErrMsg(const char* _fn, bool _errMsg)
 	bool ko = !Filenamize((char*)_fn, true);
 	if (ko && _errMsg)
 	{
-		char buf[SNM_MAX_PATH] = "";
-		lstrcpyn(buf, __LOCALIZE("Empty filename!","sws_mbox"), sizeof(buf));
+		char buf[SNM_MAX_PATH];
 		if (_fn && *_fn)
 			_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Invalid filename: %s\nFilenames cannot contain any of the following characters: / \\ * ? \" < > ' | ^ :","sws_mbox"), _fn);
+		else
+			lstrcpyn(buf, __LOCALIZE("Empty filename!","sws_mbox"), sizeof(buf));
 		MessageBox(GetMainHwnd(), buf, __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
 	}
 	return !ko;
 }
 
-// the API function file_exists() is a bit different, it returns false for folders
+// the API function file_exists() is different, it returns false for folders
 bool FileOrDirExists(const char* _fn)
 {
-	if (_fn && *_fn && *_fn!='.') // valid absolute path (1/2)?
+	if (_fn && *_fn && *_fn!='.')
 	{
-		if (const char* p = strrchr(_fn, PATH_SLASH_CHAR)) // valid absolute path (2/2)?
-		{
-			WDL_FastString fn;
-			fn.Set(_fn, *(p+1)? 0 : (int)(p-_fn)); // // bug fix for directories, skip last PATH_SLASH_CHAR if needed
-			struct stat s;
+		WDL_FastString fn(_fn);
+		fn.remove_trailing_dirchars(); // bug fix for directories
+
+		struct stat s;
 #ifdef _WIN32
-			return (statUTF8(fn.Get(), &s) == 0);
+		return (statUTF8(fn.Get(), &s) == 0);
 #else
-			return (stat(fn.Get(), &s) == 0);
+		return (stat(fn.Get(), &s) == 0);
 #endif
-		}
 	}
 	return false;
 }
@@ -143,10 +142,11 @@ bool FileOrDirExistsErrMsg(const char* _fn, bool _errMsg)
 	bool exists = FileOrDirExists(_fn);
 	if (!exists && _errMsg)
 	{
-		char buf[SNM_MAX_PATH] = "";
-		lstrcpyn(buf, __LOCALIZE("Empty filename!","sws_mbox"), sizeof(buf));
+		char buf[SNM_MAX_PATH];
 		if (_fn && *_fn)
 			_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("File or directory not found:\n%s","sws_mbox"), _fn);
+		else
+			lstrcpyn(buf, __LOCALIZE("Empty filename!","sws_mbox"), sizeof(buf));
 		MessageBox(GetMainHwnd(), buf, __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
 	}
 	return exists;
@@ -223,10 +223,10 @@ const char* GetShortResourcePath(const char* _resSubDir, const char* _fullFn)
 	if (_resSubDir && *_resSubDir && _fullFn && *_fullFn)
 	{
 		static int res_path_len=strlen(GetResourcePath());
-		if (!_strnicmp(_fullFn, GetResourcePath(), res_path_len) && _fullFn[res_path_len]==PATH_SLASH_CHAR)
+		if (!_strnicmp(_fullFn, GetResourcePath(), res_path_len) && WDL_IS_DIRCHAR(_fullFn[res_path_len]))
 		{
 			const int subdir_sz = strlen(_resSubDir);
-			if (!_strnicmp(_fullFn+res_path_len+1, _resSubDir, subdir_sz) && _fullFn[res_path_len+1+subdir_sz]==PATH_SLASH_CHAR)
+			if (!_strnicmp(_fullFn+res_path_len+1, _resSubDir, subdir_sz) && WDL_IS_DIRCHAR(_fullFn[res_path_len+1+subdir_sz]))
 			{
 				return _fullFn+res_path_len+1+subdir_sz+1;
 			}

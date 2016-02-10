@@ -2457,7 +2457,7 @@ void ApplyLiveConfig(int _cfgId, int _val, bool _immediate, int _valhw, int _rel
 
 		// => lc->m_curMidiVal is updated via ApplyLiveConfigJob::Init()
 		//    (cannot do things like lc->m_curMidiVal = job->GetValue();
-		//    as the job may already be destroyed at this point)
+		//    because the job can already be destroyed at this point)
 	}
 }
 
@@ -2468,8 +2468,8 @@ void ApplyLiveConfigJob::Init(ScheduledJob* _replacedJob)
 	{
 		lc->m_curMidiVal = GetIntValue();
 
-		// ui/osc update: value is "changing" (e.g. grayed in monitors)
-		// no editor update though, does not display "changing" values only "solid" ones
+		// ui/osc update: the controller value is "changing" (e.g. grayed in monitors)
+		// no editor update though: it does not display "changing" values, only "solid" ones
 		if (!IsImmediate())
 			UpdateMonitoring(m_cfgId, APPLY_MASK, 0); // ui/osc update: "changing"
 	}

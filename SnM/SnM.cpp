@@ -818,7 +818,7 @@ void SaveDynamicActions(DYN_COMMAND_T* _cmds, const char* _inifn)
 	iniSection.AppendFormatted(512, "; Unless specified, the maximum number of actions is %d (0 will hide actions). ===\n", SNM_MAX_DYN_ACTIONS);
 
 	int i=0;
-	WDL_String nameStr; // no fast string here: the buffer gets mangeled..
+	WDL_String nameStr; // no fast string here: mangled buffer
 	while(_cmds[i].desc != LAST_COMMAND)
 	{
 		DYN_COMMAND_T* ct = &_cmds[i++];
@@ -861,7 +861,7 @@ bool SNM_GetActionName(const char* _custId, WDL_FastString* _nameOut, int _slot)
 
 	// 2nd try: search as dynamic cmd
 	i=-1;
-	WDL_String nameStr; // no fast string here: the buffer gets mangeled..
+	WDL_String nameStr; // no fast string here: mangled buffer
 	while(s_dynCmdTable[++i].desc != LAST_COMMAND)
 	{
 		DYN_COMMAND_T* ct = &s_dynCmdTable[i];
@@ -1142,7 +1142,8 @@ void IniFileExit()
 {
 	WDL_FastString iniSection;
 
-	// useful for debug...
+	// debug info
+	// note: the character '=' is needed, SWELL's WritePrivateProfileSection() would drop these comments otherwise
 	iniSection.AppendFormatted(128, "; REAPER v%s ===\n", GetAppVersion()); 
 	iniSection.AppendFormatted(128, "; SWS/S&M Extension v%d.%d.%d Build %d ===\n", SWS_VERSION); 
 	iniSection.Append("; "); 

@@ -62,7 +62,7 @@ void ExtensionConfigToString(WDL_FastString* _str, ProjectStateContext* _ctx);
 void SaveIniSection(const char* _iniSectionName, WDL_FastString* _iniSection, const char* _iniFn);
 void UpdatePrivateProfileSection(const char* _oldAppName, const char* _newAppName, const char* _iniFn, const char* _newIniFn = NULL);
 void UpdatePrivateProfileString(const char* _appName, const char* _oldKey, const char* _newKey, const char* _iniFn, const char* _newIniFn = NULL);
-void SNM_UpgradeIniFiles();
+void SNM_UpgradeIniFiles(int _iniVersion);
 
 int _snprintfSafe(char* _buf, size_t _n, const char* _fmt, ...);
 int _snprintfStrict(char* _buf, size_t _n, const char* _fmt, ...);

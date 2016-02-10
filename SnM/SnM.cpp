@@ -1104,7 +1104,7 @@ int MidiOscActionJob::AdjustRelative(int _adjmode, int _reladj)
 ///////////////////////////////////////////////////////////////////////////////
 
 WDL_FastString g_SNM_IniFn, g_SNM_CyclIniFn, g_SNM_DiffToolFn;
-int g_SNM_IniVersion=0, g_SNM_Beta=0, g_SNM_LearnPitchAndNormOSC=0;
+int g_SNM_Beta=0, g_SNM_LearnPitchAndNormOSC=0;
 int g_SNM_MediaFlags=0, g_SNM_ToolbarRefreshFreq=SNM_DEF_TOOLBAR_RFRSH_FREQ;
 bool g_SNM_ToolbarRefresh = false;
 
@@ -1114,16 +1114,9 @@ void IniFileInit()
 	g_SNM_IniFn.SetFormatted(SNM_MAX_PATH, SNM_FORMATED_INI_FILE, GetResourcePath());
 	g_SNM_CyclIniFn.SetFormatted(SNM_MAX_PATH, SNM_CYCLACTION_INI_FILE, GetResourcePath());
 
-	// move from old location if needed/possible
-	WDL_String fn; // no fast string here: the buffer gets mangeled..
-	fn.SetFormatted(SNM_MAX_PATH, SNM_OLD_FORMATED_INI_FILE, GetExePath());
-	if (FileOrDirExists(fn.Get()))
-		MoveFile(fn.Get(), g_SNM_IniFn.Get()); // no check: use the new file whatever happens
+	int iniVersion = GetPrivateProfileInt("General", "IniFileUpgrade", 0, g_SNM_IniFn.Get());
+	SNM_UpgradeIniFiles(iniVersion);
 
-	// ini files upgrade, if needed
-	SNM_UpgradeIniFiles();
-
-	// load general prefs
 	g_SNM_MediaFlags |= (GetPrivateProfileInt("General", "MediaFileLockAudio", 0, g_SNM_IniFn.Get()) ? 1:0);
 	g_SNM_ToolbarRefresh = (GetPrivateProfileInt("General", "ToolbarsAutoRefresh", 1, g_SNM_IniFn.Get()) == 1);
 	g_SNM_ToolbarRefreshFreq = BOUNDED(GetPrivateProfileInt("General", "ToolbarsAutoRefreshFreq", SNM_DEF_TOOLBAR_RFRSH_FREQ, g_SNM_IniFn.Get()), 100, 5000);
@@ -1150,7 +1143,8 @@ void IniFileExit()
 	iniSection.Append(g_SNM_IniFn.Get()); 
 	iniSection.Append(" ===\n");
 
-	iniSection.AppendFormatted(128, "IniFileUpgrade=%d\n", g_SNM_IniVersion); 
+	// general prefs
+	iniSection.AppendFormatted(128, "IniFileUpgrade=%d\n", SNM_INI_FILE_VERSION); 
 	iniSection.AppendFormatted(128, "MediaFileLockAudio=%d\n", g_SNM_MediaFlags&1 ? 1:0); 
 	iniSection.AppendFormatted(128, "ToolbarsAutoRefresh=%d\n", g_SNM_ToolbarRefresh ? 1:0); 
 	iniSection.AppendFormatted(128, "ToolbarsAutoRefreshFreq=%d ; in ms (min: 100, max: 5000)\n", g_SNM_ToolbarRefreshFreq);

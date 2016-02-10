@@ -289,7 +289,7 @@ static void deletefaststrptr(WDL_FastString* _p) { DELETE_NULL(_p); }
 ///////////////////////////////////////////////////////////////////////////////
 
 // global/common S&M vars
-extern int g_SNM_IniVersion, g_SNM_Beta, g_SNM_LearnPitchAndNormOSC, g_SNM_MediaFlags, g_SNM_ToolbarRefreshFreq;
+extern int g_SNM_Beta, g_SNM_LearnPitchAndNormOSC, g_SNM_MediaFlags, g_SNM_ToolbarRefreshFreq;
 extern WDL_FastString g_SNM_IniFn, g_SNM_CyclIniFn, g_SNM_DiffToolFn;
 extern bool g_SNM_ToolbarRefresh;
 

@@ -553,12 +553,19 @@ void UpdatePrivateProfileString(const char* _appName, const char* _oldKey, const
 		WritePrivateProfileString(_appName, _newKey, buf, _newIniFn ? _newIniFn : _iniFn);
 }
 
-void SNM_UpgradeIniFiles()
+void SNM_UpgradeIniFiles(int _iniVersion)
 {
-	g_SNM_IniVersion = GetPrivateProfileInt("General", "IniFileUpgrade", 0, g_SNM_IniFn.Get());
-
-	if (g_SNM_IniVersion < 1) // < v2.1.0 #18
+	if (_iniVersion < 1) // < v2.1.0 #18
 	{
+		// move the old S&M.ini if needed/possible
+		WDL_FastString fn;
+		fn.SetFormatted(SNM_MAX_PATH, SNM_OLD_FORMATED_INI_FILE, GetExePath());
+		if (FileOrDirExists(fn.Get()))
+			MoveFile(fn.Get(), g_SNM_IniFn.Get()); // no check, best effort
+    
+		if (!FileOrDirExists(g_SNM_IniFn.Get()))
+			return; // no upgrade needed, e.g. SWS installed for the very first time
+    
 		// upgrade deprecated section names 
 		UpdatePrivateProfileSection("FXCHAIN", "FXChains", g_SNM_IniFn.Get());
 		UpdatePrivateProfileSection("FXCHAIN_VIEW", "RESOURCE_VIEW", g_SNM_IniFn.Get());
@@ -573,7 +580,7 @@ void SNM_UpgradeIniFiles()
 		UpdatePrivateProfileString("RESOURCE_VIEW", "AutoSaveDirPrjTemplate", "AutoSaveDirProjectTemplates", g_SNM_IniFn.Get());
 		UpdatePrivateProfileString("RESOURCE_VIEW", "AutoFillDirPrjTemplate", "AutoFillDirProjectTemplates", g_SNM_IniFn.Get());
 	}
-	if (g_SNM_IniVersion < 2) // < v2.1.0 #21
+	if (_iniVersion < 2) // < v2.1.0 #21
 	{
 		// move cycle actions to a new dedicated file (+ make backup if it already exists)
 		WDL_FastString fn;
@@ -584,12 +591,12 @@ void SNM_UpgradeIniFiles()
 		UpdatePrivateProfileSection("ME_LIST_CYCLACTIONS", "ME_List_Cyclactions", g_SNM_IniFn.Get(), g_SNM_CyclIniFn.Get());
 		UpdatePrivateProfileSection("ME_PIANO_CYCLACTIONS", "ME_Piano_Cyclactions", g_SNM_IniFn.Get(), g_SNM_CyclIniFn.Get());
 	}
-	if (g_SNM_IniVersion < 3) // < v2.1.0 #22
+	if (_iniVersion < 3) // < v2.1.0 #22
 	{
 		WritePrivateProfileString("RESOURCE_VIEW", "DblClick_To", NULL, g_SNM_IniFn.Get()); // remove key
 		UpdatePrivateProfileString("RESOURCE_VIEW", "FilterByPath", "Filter", g_SNM_IniFn.Get());
 	}
-	if (g_SNM_IniVersion < 4) // < v2.2.0
+	if (_iniVersion < 4) // < v2.2.0
 	{
 		UpdatePrivateProfileString("RESOURCE_VIEW", "AutoSaveTrTemplateWithItems", "AutoSaveTrTemplateFlags", g_SNM_IniFn.Get());
 #ifdef _WIN32
@@ -604,11 +611,11 @@ void SNM_UpgradeIniFiles()
 		UpdatePrivateProfileString("RESOURCE_VIEW", "DblClickdata/track_icons", "DblClickTrack_icons", g_SNM_IniFn.Get());
 #endif
 	}
-	if (g_SNM_IniVersion < 5) // < v2.2.0 #3
+	if (_iniVersion < 5) // < v2.2.0 #3
 		UpdatePrivateProfileSection("LAST_CUEBUS", "CueBuss1", g_SNM_IniFn.Get());
-	if (g_SNM_IniVersion < 6) // < v2.2.0 #6
+	if (_iniVersion < 6) // < v2.2.0 #6
 		WritePrivateProfileStruct("RegionPlaylist", NULL, NULL, 0, g_SNM_IniFn.Get()); // flush section
-	if (g_SNM_IniVersion < 7) // < v2.2.0 #16
+	if (_iniVersion < 7) // < v2.2.0 #16
 	{
 		UpdatePrivateProfileSection("RESOURCE_VIEW", "Resources", g_SNM_IniFn.Get());
 		UpdatePrivateProfileSection("NOTES_HELP_VIEW", "Notes", g_SNM_IniFn.Get());
@@ -621,7 +628,7 @@ void SNM_UpgradeIniFiles()
 		WritePrivateProfileString("NbOfActions", "S&M_NEXT_LIVE_CFG", NULL, g_SNM_IniFn.Get());
 		WritePrivateProfileString("NbOfActions", "S&M_PREVIOUS_LIVE_CFG", NULL, g_SNM_IniFn.Get());
 	}
-	if (g_SNM_IniVersion < 8) // < v2.4.0 #4
+	if (_iniVersion < 8) // < v2.4.0 #4
 	{
 		// deprecated
 		WritePrivateProfileString("Resources", "ProjectLoaderStartSlot", NULL, g_SNM_IniFn.Get());
@@ -633,8 +640,6 @@ void SNM_UpgradeIniFiles()
 		if (!GetPrivateProfileInt("NbOfActions", "S&M_EXCL_TGL", 0, g_SNM_IniFn.Get()))
 			WritePrivateProfileString("NbOfActions", "S&M_EXCL_TGL", NULL, g_SNM_IniFn.Get());
 	}
-
-	g_SNM_IniVersion = SNM_INI_FILE_VERSION;
 }
 
 

@@ -455,42 +455,8 @@ static COMMAND_T s_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Open/close Cycle Action editor (piano roll)" }, "S&M_CYCLEDITOR_ME_PIANO", OpenCyclaction, NULL, 2, IsCyclactionDisplayed},
 
 	// REC inputs -------------------------------------------------------------
-	//JFB TODO: configurable dynamic actions *with max* (but ct->user needs to be 0-based first)
-	{ { DEFACCEL, "SWS/S&M: Set selected tracks MIDI input to all channels" }, "S&M_MIDI_INPUT_ALL_CH", SetMIDIInputChannel, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Set selected tracks MIDI input to channel 01" }, "S&M_MIDI_INPUT_CH1", SetMIDIInputChannel, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Set selected tracks MIDI input to channel 02" }, "S&M_MIDI_INPUT_CH2", SetMIDIInputChannel, NULL, 2},
-	{ { DEFACCEL, "SWS/S&M: Set selected tracks MIDI input to channel 03" }, "S&M_MIDI_INPUT_CH3", SetMIDIInputChannel, NULL, 3},
-	{ { DEFACCEL, "SWS/S&M: Set selected tracks MIDI input to channel 04" }, "S&M_MIDI_INPUT_CH4", SetMIDIInputChannel, NULL, 4},
-	{ { DEFACCEL, "SWS/S&M: Set selected tracks MIDI input to channel 05" }, "S&M_MIDI_INPUT_CH5", SetMIDIInputChannel, NULL, 5},
-	{ { DEFACCEL, "SWS/S&M: Set selected tracks MIDI input to channel 06" }, "S&M_MIDI_INPUT_CH6", SetMIDIInputChannel, NULL, 6},
-	{ { DEFACCEL, "SWS/S&M: Set selected tracks MIDI input to channel 07" }, "S&M_MIDI_INPUT_CH7", SetMIDIInputChannel, NULL, 7},
-	{ { DEFACCEL, "SWS/S&M: Set selected tracks MIDI input to channel 08" }, "S&M_MIDI_INPUT_CH8", SetMIDIInputChannel, NULL, 8},
-	{ { DEFACCEL, "SWS/S&M: Set selected tracks MIDI input to channel 09" }, "S&M_MIDI_INPUT_CH9", SetMIDIInputChannel, NULL, 9},
-	{ { DEFACCEL, "SWS/S&M: Set selected tracks MIDI input to channel 10" }, "S&M_MIDI_INPUT_CH10", SetMIDIInputChannel, NULL, 10},
-	{ { DEFACCEL, "SWS/S&M: Set selected tracks MIDI input to channel 11" }, "S&M_MIDI_INPUT_CH11", SetMIDIInputChannel, NULL, 11},
-	{ { DEFACCEL, "SWS/S&M: Set selected tracks MIDI input to channel 12" }, "S&M_MIDI_INPUT_CH12", SetMIDIInputChannel, NULL, 12},
-	{ { DEFACCEL, "SWS/S&M: Set selected tracks MIDI input to channel 13" }, "S&M_MIDI_INPUT_CH13", SetMIDIInputChannel, NULL, 13},
-	{ { DEFACCEL, "SWS/S&M: Set selected tracks MIDI input to channel 14" }, "S&M_MIDI_INPUT_CH14", SetMIDIInputChannel, NULL, 14},
-	{ { DEFACCEL, "SWS/S&M: Set selected tracks MIDI input to channel 15" }, "S&M_MIDI_INPUT_CH15", SetMIDIInputChannel, NULL, 15},
-	{ { DEFACCEL, "SWS/S&M: Set selected tracks MIDI input to channel 16" }, "S&M_MIDI_INPUT_CH16", SetMIDIInputChannel, NULL, 16},
-
-	{ { DEFACCEL, "SWS/S&M: Map selected tracks MIDI input to source channel" }, "S&M_MAP_MIDI_INPUT_CH_SRC", RemapMIDIInputChannel, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Map selected tracks MIDI input to channel 01" }, "S&M_MAP_MIDI_INPUT_CH1", RemapMIDIInputChannel, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Map selected tracks MIDI input to channel 02" }, "S&M_MAP_MIDI_INPUT_CH2", RemapMIDIInputChannel, NULL, 2},
-	{ { DEFACCEL, "SWS/S&M: Map selected tracks MIDI input to channel 03" }, "S&M_MAP_MIDI_INPUT_CH3", RemapMIDIInputChannel, NULL, 3},
-	{ { DEFACCEL, "SWS/S&M: Map selected tracks MIDI input to channel 04" }, "S&M_MAP_MIDI_INPUT_CH4", RemapMIDIInputChannel, NULL, 4},
-	{ { DEFACCEL, "SWS/S&M: Map selected tracks MIDI input to channel 05" }, "S&M_MAP_MIDI_INPUT_CH5", RemapMIDIInputChannel, NULL, 5},
-	{ { DEFACCEL, "SWS/S&M: Map selected tracks MIDI input to channel 06" }, "S&M_MAP_MIDI_INPUT_CH6", RemapMIDIInputChannel, NULL, 6},
-	{ { DEFACCEL, "SWS/S&M: Map selected tracks MIDI input to channel 07" }, "S&M_MAP_MIDI_INPUT_CH7", RemapMIDIInputChannel, NULL, 7},
-	{ { DEFACCEL, "SWS/S&M: Map selected tracks MIDI input to channel 08" }, "S&M_MAP_MIDI_INPUT_CH8", RemapMIDIInputChannel, NULL, 8},
-	{ { DEFACCEL, "SWS/S&M: Map selected tracks MIDI input to channel 09" }, "S&M_MAP_MIDI_INPUT_CH9", RemapMIDIInputChannel, NULL, 9},
-	{ { DEFACCEL, "SWS/S&M: Map selected tracks MIDI input to channel 10" }, "S&M_MAP_MIDI_INPUT_CH10", RemapMIDIInputChannel, NULL, 10},
-	{ { DEFACCEL, "SWS/S&M: Map selected tracks MIDI input to channel 11" }, "S&M_MAP_MIDI_INPUT_CH11", RemapMIDIInputChannel, NULL, 11},
-	{ { DEFACCEL, "SWS/S&M: Map selected tracks MIDI input to channel 12" }, "S&M_MAP_MIDI_INPUT_CH12", RemapMIDIInputChannel, NULL, 12},
-	{ { DEFACCEL, "SWS/S&M: Map selected tracks MIDI input to channel 13" }, "S&M_MAP_MIDI_INPUT_CH13", RemapMIDIInputChannel, NULL, 13},
-	{ { DEFACCEL, "SWS/S&M: Map selected tracks MIDI input to channel 14" }, "S&M_MAP_MIDI_INPUT_CH14", RemapMIDIInputChannel, NULL, 14},
-	{ { DEFACCEL, "SWS/S&M: Map selected tracks MIDI input to channel 15" }, "S&M_MAP_MIDI_INPUT_CH15", RemapMIDIInputChannel, NULL, 15},
-	{ { DEFACCEL, "SWS/S&M: Map selected tracks MIDI input to channel 16" }, "S&M_MAP_MIDI_INPUT_CH16", RemapMIDIInputChannel, NULL, 16},
+	{ { DEFACCEL, "SWS/S&M: Set selected tracks MIDI input to all channels" }, "S&M_MIDI_INPUT_ALL_CH", SetMIDIInputChannel, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Map selected tracks MIDI input to source channel" }, "S&M_MAP_MIDI_INPUT_CH_SRC", RemapMIDIInputChannel, NULL, -1},
 
 	// Region playlist --------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Open/close Region Playlist window" }, "S&M_SHOW_RGN_PLAYLIST", OpenRegionPlaylist, NULL, NULL, IsRegionPlaylistDisplayed},
@@ -760,6 +726,9 @@ static DYN_COMMAND_T s_dynCmdTable[] =
 	{ "SWS/S&M: Exclusive toggle F%d", "S&M_EXCL_TGL_F", ExclusiveToggle, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
 	{ "SWS/S&M: Exclusive toggle G%d", "S&M_EXCL_TGL_G", ExclusiveToggle, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
 	{ "SWS/S&M: Exclusive toggle H%d", "S&M_EXCL_TGL_H", ExclusiveToggle, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
+
+	{ "SWS/S&M: Set selected tracks MIDI input to channel %d", "S&M_MIDI_INPUT_CH", SetMIDIInputChannel, 16, 16, },
+	{ "SWS/S&M: Map selected tracks MIDI input to channel %d", "S&M_MAP_MIDI_INPUT_CH", RemapMIDIInputChannel, 16, 16, },
 
 //!WANT_LOCALIZE_1ST_STRING_END
 

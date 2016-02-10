@@ -1014,7 +1014,7 @@ void SaveSelTrackTemplates(bool _delItems, bool _delEnvs, WDL_FastString* _chunk
 void SetMIDIInputChannel(COMMAND_T* _ct)
 {
 	bool updated = false;
-	int ch = (int)_ct->user; // 0: all channels
+	int ch = ((int)_ct->user)+1; // ch=0: all channels
 	for (int i=1; i <= GetNumTracks(); i++) // skip master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
@@ -1037,7 +1037,7 @@ void SetMIDIInputChannel(COMMAND_T* _ct)
 void RemapMIDIInputChannel(COMMAND_T* _ct)
 {
 	bool updated = false;
-	int ch = (int)_ct->user; // 0: source channel
+	int ch = ((int)_ct->user)+1; // ch=0: source channel
 
 	char pLine[SNM_MAX_CHUNK_LINE_LENGTH] = "";
 	if (ch && _snprintfStrict(pLine, sizeof(pLine), "MIDI_INPUT_CHANMAP %d\n", ch-1) <= 0)

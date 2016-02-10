@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Util.h
 /
-/ Copyright (c) 2012-2013 Jeffos
+/ Copyright (c) 2012 and later Jeffos
 /
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -69,7 +69,7 @@ int _snprintfStrict(char* _buf, size_t _n, const char* _fmt, ...);
 bool GetStringWithRN(const char* _bufSrc, char* _buf, int _bufSize);
 const char* FindFirstRN(const char* _str, bool _anyOrder = false);
 char* ShortenStringToFirstRN(char* _str, bool _anyOrder = false);
-void Replace02d(char* _str, char _replaceCh);
+bool ReplaceWithChar(char* _strInOut, const char* _str, const char _replaceCh);
 void SplitStrings(const char* _list, WDL_PtrList<WDL_FastString>* _outItems, const char* _sep = ",");
 
 int SNM_SnapToMeasure(double _pos);

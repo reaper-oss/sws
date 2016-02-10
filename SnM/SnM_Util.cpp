@@ -741,22 +741,26 @@ const char* FindFirstRN(const char* _str, bool _anyOrder)
 
 char* ShortenStringToFirstRN(char* _str, bool _anyOrder)
 {
-	char* p = NULL;
-	if ((p = (char*)FindFirstRN(_str, _anyOrder)))
-		*p = '\0'; 
+	char* p = (char*)FindFirstRN(_str, _anyOrder);
+	if (p) *p = '\0'; 
 	return p;
 }
 
-// replace "%02d " with _replaceCh in _str
-void Replace02d(char* _str, char _replaceCh)
+// replace the first _str with _replaceCh in _strInOut
+bool ReplaceWithChar(char* _strInOut, const char* _str, const char _replaceCh)
 {
-	if (_str && *_str)
-		if (char* p = strstr(_str, "%02d"))
+	if (_strInOut && *_strInOut)
+	{
+		if (char* p = strstr(_strInOut, _str))
 		{
+			const int str_len = strlen(_str);
 			p[0] = _replaceCh;
-			if (p[4]) memmove((char*)(p+1), p+4, strlen(p+4)+1);
+			if (p[str_len]) memmove((char*)(p+1), p+str_len, strlen(p+str_len)+1);
 			else p[1] = '\0';
+			return true;
 		}
+	}
+	return false;
 }
 
 // _outItems: it's up to the caller to unalloc things

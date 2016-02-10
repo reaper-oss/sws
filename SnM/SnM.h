@@ -154,7 +154,7 @@
 #define SNM_MAX_ACTION_CUSTID_LEN	128
 #define SNM_MAX_MACRO_CUSTID_LEN	32
 #define SNM_MAX_ACTION_NAME_LEN		512 // can be localized
-#define SNM_MAX_DYN_ACTIONS			99     // if > 99, the "dynamic action" code must be updated
+#define SNM_MAX_DYN_ACTIONS			0xFF     // if > 255, DYN_COMMAND_T must be updated
 #define SNM_MAX_ENV_CHUNKNAME_LEN	32
 #define SNM_MAX_MARKER_NAME_LEN		64     // + regions
 #define SNM_MAX_TRACK_NAME_LEN		128

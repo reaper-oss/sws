@@ -617,14 +617,13 @@ static COMMAND_T s_cmdTable[] =
 // In the following table:
 // - a function doCommand(COMMAND_T*) or getEnabled(COMMAND_T*) will be 
 //   triggered with 0-based COMMAND_T.user
-// - action names are formatted strings, they *must* contain "%02d"
-//   (for better sort in the action list, 2 digits because max=99 ATM)
+// - action names are formatted strings, they *must* contain "%d"
 // - custom command ids are not formated strings, but final ids will end with
 //   slot numbers (1-based for display reasons)
 // Example: 
-//   { "Do stuff %02d", "DO_STUFF", doStuff, 2, SNM_MAX_DYN_ACTIONS, NULL }
+//   { "Do stuff %d", "DO_STUFF", doStuff, 2, SNM_MAX_DYN_ACTIONS, NULL }
 //   if not overrided in the S&M.ini file (e.g. "DO_STUFF=32"), 2 actions will 
-//   be created: "Do stuff 01" and "Do stuff 02" both calling doStuff(c) with 
+//   be created: "Do stuff 1" and "Do stuff 2" both calling doStuff(c) with 
 //   c->user=0 and c->user=1, respectively. custom ids will be "_DO_STUFF1"  
 //   and "_DO_STUFF2", repectively.
 ///////////////////////////////////////////////////////////////////////////////
@@ -636,140 +635,140 @@ static DYN_COMMAND_T s_dynCmdTable[] =
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 
-	{ "SWS/S&M: Create cue buss from track selection, settings %02d", "S&M_CUEBUS", CueBuss, SNM_MAX_CUE_BUSS_CONFS, SNM_MAX_CUE_BUSS_CONFS, NULL},
+	{ "SWS/S&M: Create cue buss from track selection, settings %d", "S&M_CUEBUS", CueBuss, SNM_MAX_CUE_BUSS_CONFS, SNM_MAX_CUE_BUSS_CONFS, NULL},
 
-	{ "SWS/S&M: Set FX %02d online for selected tracks", "S&M_FXOFF_SETON", SetFXOnlineSelTracks, 8, SNM_MAX_DYN_ACTIONS, NULL},
-	{ "SWS/S&M: Set FX %02d offline for selected tracks", "S&M_FXOFF_SETOFF", SetFXOfflineSelTracks, 8, SNM_MAX_DYN_ACTIONS, NULL},
-	{ "SWS/S&M: Toggle FX %02d online/offline for selected tracks", "S&M_FXOFF", ToggleFXOfflineSelTracks, 8, SNM_MAX_DYN_ACTIONS, IsFXOfflineSelTracks},
-	{ "SWS/S&M: Bypass FX %02d for selected tracks", "S&M_FXBYP_SETON", BypassFXSelTracks, 8, SNM_MAX_DYN_ACTIONS, NULL},
-	{ "SWS/S&M: Unbypass FX %02d for selected tracks", "S&M_FXBYP_SETOFF", UnbypassFXSelTracks, 8, SNM_MAX_DYN_ACTIONS, NULL},
-	{ "SWS/S&M: Toggle FX %02d bypass for selected tracks", "S&M_FXBYP", ToggleFXBypassSelTracks, 8, SNM_MAX_DYN_ACTIONS, IsFXBypassedSelTracks},
-	{ "SWS/S&M: Toggle all FX (except %02d) online/offline for selected tracks", "S&M_FXOFFEXCPT", ToggleExceptFXOfflineSelTracks, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
-	{ "SWS/S&M: Toggle all FX (except %02d) bypass for selected tracks", "S&M_FXBYPEXCPT", ToggleExceptFXBypassSelTracks, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
-	{ "SWS/S&M: Set all FX (except %02d) online for selected tracks", "S&M_FXOFF_ALL_ON_EXCPT", SetAllFXsOnlineExceptSelTracks, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
-	{ "SWS/S&M: Set all FX (except %02d) offline for selected tracks", "S&M_FXOFF_ALL_OFF_EXCPT", SetAllFXsOfflineExceptSelTracks, 8, SNM_MAX_DYN_ACTIONS, NULL},
-	{ "SWS/S&M: Bypass all FX (except %02d) for selected tracks", "S&M_FXBYP_ALL_ON_EXCPT", BypassAllFXsExceptSelTracks, 8, SNM_MAX_DYN_ACTIONS, NULL},
-	{ "SWS/S&M: Unbypass all FX (except %02d) for selected tracks", "S&M_FXBYP_ALL_OFF_EXCPT", UnypassAllFXsExceptSelTracks, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
+	{ "SWS/S&M: Set FX %d online for selected tracks", "S&M_FXOFF_SETON", SetFXOnlineSelTracks, 8, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Set FX %d offline for selected tracks", "S&M_FXOFF_SETOFF", SetFXOfflineSelTracks, 8, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Toggle FX %d online/offline for selected tracks", "S&M_FXOFF", ToggleFXOfflineSelTracks, 8, SNM_MAX_DYN_ACTIONS, IsFXOfflineSelTracks},
+	{ "SWS/S&M: Bypass FX %d for selected tracks", "S&M_FXBYP_SETON", BypassFXSelTracks, 8, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Unbypass FX %d for selected tracks", "S&M_FXBYP_SETOFF", UnbypassFXSelTracks, 8, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Toggle FX %d bypass for selected tracks", "S&M_FXBYP", ToggleFXBypassSelTracks, 8, SNM_MAX_DYN_ACTIONS, IsFXBypassedSelTracks},
+	{ "SWS/S&M: Toggle all FX (except %d) online/offline for selected tracks", "S&M_FXOFFEXCPT", ToggleExceptFXOfflineSelTracks, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
+	{ "SWS/S&M: Toggle all FX (except %d) bypass for selected tracks", "S&M_FXBYPEXCPT", ToggleExceptFXBypassSelTracks, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
+	{ "SWS/S&M: Set all FX (except %d) online for selected tracks", "S&M_FXOFF_ALL_ON_EXCPT", SetAllFXsOnlineExceptSelTracks, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
+	{ "SWS/S&M: Set all FX (except %d) offline for selected tracks", "S&M_FXOFF_ALL_OFF_EXCPT", SetAllFXsOfflineExceptSelTracks, 8, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Bypass all FX (except %d) for selected tracks", "S&M_FXBYP_ALL_ON_EXCPT", BypassAllFXsExceptSelTracks, 8, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Unbypass all FX (except %d) for selected tracks", "S&M_FXBYP_ALL_OFF_EXCPT", UnypassAllFXsExceptSelTracks, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
  
-	{ "SWS/S&M: Resources - Clear FX chain slot %02d", "S&M_CLRFXCHAINSLOT", ResourcesClearFXChainSlot, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
-	{ "SWS/S&M: Resources - Paste (replace) FX chain to selected items, slot %02d", "S&M_TAKEFXCHAIN", LoadSetTakeFXChainSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
-	{ "SWS/S&M: Resources - Paste FX chain to selected items, slot %02d", "S&M_PASTE_TAKEFXCHAIN", LoadPasteTakeFXChainSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
-	{ "SWS/S&M: Resources - Paste (replace) FX chain to selected items, all takes, slot %02d", "S&M_FXCHAIN_ALLTAKES", LoadSetAllTakesFXChainSlot, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
-	{ "SWS/S&M: Resources - Paste FX chain to selected items, all takes, slot %02d", "S&M_PASTE_FXCHAIN_ALLTAKES", LoadPasteAllTakesFXChainSlot, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
-	{ "SWS/S&M: Resources - Paste (replace) FX chain to selected tracks, slot %02d", "S&M_TRACKFXCHAIN", LoadSetTrackFXChainSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
-	{ "SWS/S&M: Resources - Paste FX chain to selected tracks, slot %02d", "S&M_PASTE_TRACKFXCHAIN", LoadPasteTrackFXChainSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
-	{ "SWS/S&M: Resources - Paste (replace) input FX chain to selected tracks, slot %02d", "S&M_INFXCHAIN", LoadSetTrackInFXChainSlot, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
-	{ "SWS/S&M: Resources - Paste input FX chain to selected tracks, slot %02d", "S&M_PASTE_INFXCHAIN", LoadPasteTrackInFXChainSlot, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
-	{ "SWS/S&M: Resources - Paste (replace) template items to selected tracks, slot %02d", "S&M_REPLACE_TEMPLATE_ITEMS", ReplaceItemsTrackTemplateSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
-	{ "SWS/S&M: Resources - Paste template items to selected tracks, slot %02d", "S&M_PASTE_TEMPLATE_ITEMS", PasteItemsTrackTemplateSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Resources - Clear FX chain slot %d", "S&M_CLRFXCHAINSLOT", ResourcesClearFXChainSlot, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
+	{ "SWS/S&M: Resources - Paste (replace) FX chain to selected items, slot %d", "S&M_TAKEFXCHAIN", LoadSetTakeFXChainSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Resources - Paste FX chain to selected items, slot %d", "S&M_PASTE_TAKEFXCHAIN", LoadPasteTakeFXChainSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Resources - Paste (replace) FX chain to selected items, all takes, slot %d", "S&M_FXCHAIN_ALLTAKES", LoadSetAllTakesFXChainSlot, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
+	{ "SWS/S&M: Resources - Paste FX chain to selected items, all takes, slot %d", "S&M_PASTE_FXCHAIN_ALLTAKES", LoadPasteAllTakesFXChainSlot, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
+	{ "SWS/S&M: Resources - Paste (replace) FX chain to selected tracks, slot %d", "S&M_TRACKFXCHAIN", LoadSetTrackFXChainSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Resources - Paste FX chain to selected tracks, slot %d", "S&M_PASTE_TRACKFXCHAIN", LoadPasteTrackFXChainSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Resources - Paste (replace) input FX chain to selected tracks, slot %d", "S&M_INFXCHAIN", LoadSetTrackInFXChainSlot, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
+	{ "SWS/S&M: Resources - Paste input FX chain to selected tracks, slot %d", "S&M_PASTE_INFXCHAIN", LoadPasteTrackInFXChainSlot, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
+	{ "SWS/S&M: Resources - Paste (replace) template items to selected tracks, slot %d", "S&M_REPLACE_TEMPLATE_ITEMS", ReplaceItemsTrackTemplateSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Resources - Paste template items to selected tracks, slot %d", "S&M_PASTE_TEMPLATE_ITEMS", PasteItemsTrackTemplateSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
 
-	{ "SWS/S&M: Resources - Clear track template slot %02d", "S&M_CLR_TRTEMPLATE_SLOT", ResourcesClearTrTemplateSlot, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
-	{ "SWS/S&M: Resources - Apply track template to selected tracks, slot %02d", "S&M_APPLY_TRTEMPLATE", LoadApplyTrackTemplateSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
-	{ "SWS/S&M: Resources - Apply track template (+envelopes/items) to selected tracks, slot %02d", "S&M_APPLY_TRTEMPLATE_ITEMSENVS", LoadApplyTrackTemplateSlotWithItemsEnvs, 4, SNM_MAX_DYN_ACTIONS, NULL},
-	{ "SWS/S&M: Resources - Import tracks from track template, slot %02d", "S&M_ADD_TRTEMPLATE", LoadImportTrackTemplateSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Resources - Clear track template slot %d", "S&M_CLR_TRTEMPLATE_SLOT", ResourcesClearTrTemplateSlot, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
+	{ "SWS/S&M: Resources - Apply track template to selected tracks, slot %d", "S&M_APPLY_TRTEMPLATE", LoadApplyTrackTemplateSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Resources - Apply track template (+envelopes/items) to selected tracks, slot %d", "S&M_APPLY_TRTEMPLATE_ITEMSENVS", LoadApplyTrackTemplateSlotWithItemsEnvs, 4, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Resources - Import tracks from track template, slot %d", "S&M_ADD_TRTEMPLATE", LoadImportTrackTemplateSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
 
-	{ "SWS/S&M: Resources - Clear project slot %02d", "S&M_CLR_PRJTEMPLATE_SLOT", ResourcesClearPrjTemplateSlot, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
-	{ "SWS/S&M: Resources - Open project, slot %02d", "S&M_APPLY_PRJTEMPLATE", LoadOrSelectProjectSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
-	{ "SWS/S&M: Resources - Open project, slot %02d (new tab)", "S&M_NEWTAB_PRJTEMPLATE", LoadOrSelectProjectTabSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Resources - Clear project slot %d", "S&M_CLR_PRJTEMPLATE_SLOT", ResourcesClearPrjTemplateSlot, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
+	{ "SWS/S&M: Resources - Open project, slot %d", "S&M_APPLY_PRJTEMPLATE", LoadOrSelectProjectSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Resources - Open project, slot %d (new tab)", "S&M_NEWTAB_PRJTEMPLATE", LoadOrSelectProjectTabSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
 
-	{ "SWS/S&M: Resources - Clear media file slot %02d", "S&M_CLR_MEDIA_SLOT", ResourcesClearMediaSlot, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
-	{ "SWS/S&M: Resources - Play media file in selected tracks, slot %02d", "S&M_PLAYMEDIA_SELTRACK", PlaySelTrackMediaSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
-	{ "SWS/S&M: Resources - Loop media file in selected tracks, slot %02d", "S&M_LOOPMEDIA_SELTRACK", LoopSelTrackMediaSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
-	{ "SWS/S&M: Resources - Play media file in selected tracks (sync with next measure), slot %02d", "S&M_PLAYMEDIA_SELTRACK_SYNC", SyncPlaySelTrackMediaSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
-	{ "SWS/S&M: Resources - Loop media file in selected tracks (sync with next measure), slot %02d", "S&M_LOOPMEDIA_SELTRACK_SYNC", SyncLoopSelTrackMediaSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
-	{ "SWS/S&M: Resources - Play media file in selected tracks (toggle), slot %02d", "S&M_TGL_PLAYMEDIA_SELTRACK", TogglePlaySelTrackMediaSlot, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
-	{ "SWS/S&M: Resources - Loop media file in selected tracks (toggle), slot %02d", "S&M_TGL_LOOPMEDIA_SELTRACK", ToggleLoopSelTrackMediaSlot, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
-	{ "SWS/S&M: Resources - Play media file in selected tracks (toggle pause), slot %02d", "S&M_TGLPAUSE_PLAYMEDIA_SELTR", TogglePauseSelTrackMediaSlot, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
-	{ "SWS/S&M: Resources - Loop media file in selected tracks (toggle pause), slot %02d", "S&M_TGLPAUSE_LOOPMEDIA_SELTR", ToggleLoopPauseSelTrackMediaSlot, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
+	{ "SWS/S&M: Resources - Clear media file slot %d", "S&M_CLR_MEDIA_SLOT", ResourcesClearMediaSlot, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
+	{ "SWS/S&M: Resources - Play media file in selected tracks, slot %d", "S&M_PLAYMEDIA_SELTRACK", PlaySelTrackMediaSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Resources - Loop media file in selected tracks, slot %d", "S&M_LOOPMEDIA_SELTRACK", LoopSelTrackMediaSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Resources - Play media file in selected tracks (sync with next measure), slot %d", "S&M_PLAYMEDIA_SELTRACK_SYNC", SyncPlaySelTrackMediaSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Resources - Loop media file in selected tracks (sync with next measure), slot %d", "S&M_LOOPMEDIA_SELTRACK_SYNC", SyncLoopSelTrackMediaSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Resources - Play media file in selected tracks (toggle), slot %d", "S&M_TGL_PLAYMEDIA_SELTRACK", TogglePlaySelTrackMediaSlot, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
+	{ "SWS/S&M: Resources - Loop media file in selected tracks (toggle), slot %d", "S&M_TGL_LOOPMEDIA_SELTRACK", ToggleLoopSelTrackMediaSlot, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
+	{ "SWS/S&M: Resources - Play media file in selected tracks (toggle pause), slot %d", "S&M_TGLPAUSE_PLAYMEDIA_SELTR", TogglePauseSelTrackMediaSlot, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
+	{ "SWS/S&M: Resources - Loop media file in selected tracks (toggle pause), slot %d", "S&M_TGLPAUSE_LOOPMEDIA_SELTR", ToggleLoopPauseSelTrackMediaSlot, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
 
-	{ "SWS/S&M: Resources - Add media file to current track, slot %02d", "S&M_ADDMEDIA_CURTRACK", InsertMediaSlotCurTr, 4, SNM_MAX_DYN_ACTIONS, NULL},
-	{ "SWS/S&M: Resources - Add media file to new track, slot %02d", "S&M_ADDMEDIA_NEWTRACK", InsertMediaSlotNewTr, 4, SNM_MAX_DYN_ACTIONS, NULL},
-	{ "SWS/S&M: Resources - Add media file to selected items as takes, slot %02d", "S&M_ADDMEDIA_SELITEM", InsertMediaSlotTakes, 4, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Resources - Add media file to current track, slot %d", "S&M_ADDMEDIA_CURTRACK", InsertMediaSlotCurTr, 4, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Resources - Add media file to new track, slot %d", "S&M_ADDMEDIA_NEWTRACK", InsertMediaSlotNewTr, 4, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Resources - Add media file to selected items as takes, slot %d", "S&M_ADDMEDIA_SELITEM", InsertMediaSlotTakes, 4, SNM_MAX_DYN_ACTIONS, NULL},
 
-	{ "SWS/S&M: Resources - Clear image slot %02d", "S&M_CLR_IMAGE_SLOT", ResourcesClearImageSlot, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
-	{ "SWS/S&M: Resources - Show image, slot %02d", "S&M_SHOW_IMG", ShowImageSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
-	{ "SWS/S&M: Resources - Set track icon for selected tracks, slot %02d", "S&M_SET_TRACK_ICON", SetSelTrackIconSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Resources - Clear image slot %d", "S&M_CLR_IMAGE_SLOT", ResourcesClearImageSlot, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
+	{ "SWS/S&M: Resources - Show image, slot %d", "S&M_SHOW_IMG", ShowImageSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Resources - Set track icon for selected tracks, slot %d", "S&M_SET_TRACK_ICON", SetSelTrackIconSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
 
-	{ "SWS/S&M: Resources - Clear theme slot %02d", "S&M_CLR_THEME_SLOT", ResourcesClearThemeSlot, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
-	{ "SWS/S&M: Resources - Load theme, slot %02d", "S&M_LOAD_THEME", LoadThemeSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Resources - Clear theme slot %d", "S&M_CLR_THEME_SLOT", ResourcesClearThemeSlot, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
+	{ "SWS/S&M: Resources - Load theme, slot %d", "S&M_LOAD_THEME", LoadThemeSlot, 4, SNM_MAX_DYN_ACTIONS, NULL},
 
-	{ "SWS/S&M: Trigger next preset for FX %02d of selected tracks", "S&M_NEXT_PRESET_FX", NextPresetSelTracks, 4, SNM_MAX_DYN_ACTIONS, NULL},
-	{ "SWS/S&M: Trigger previous preset for FX %02d of selected tracks", "S&M_PREVIOUS_PRESET_FX", PrevPresetSelTracks, 4, SNM_MAX_DYN_ACTIONS, NULL},
-	{ "SWS/S&M: Trigger preset for FX %02d of selected track (MIDI/OSC only)", "S&M_PRESET_FX", NULL, SNM_PRESETS_NB_FX, SNM_PRESETS_NB_FX, NULL, 0, TriggerFXPresetSelTrack},
+	{ "SWS/S&M: Trigger next preset for FX %d of selected tracks", "S&M_NEXT_PRESET_FX", NextPresetSelTracks, 4, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Trigger previous preset for FX %d of selected tracks", "S&M_PREVIOUS_PRESET_FX", PrevPresetSelTracks, 4, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Trigger preset for FX %d of selected track (MIDI/OSC only)", "S&M_PRESET_FX", NULL, SNM_PRESETS_NB_FX, SNM_PRESETS_NB_FX, NULL, 0, TriggerFXPresetSelTrack},
 
-	{ "SWS/S&M: Select FX %02d for selected tracks", "S&M_SELFX", SelectTrackFX, 8, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Select FX %d for selected tracks", "S&M_SELFX", SelectTrackFX, 8, SNM_MAX_DYN_ACTIONS, NULL},
 
-	{ "SWS/S&M: Show FX chain for selected tracks, FX %02d", "S&M_SHOWFXCHAIN", ShowFXChain, 8, SNM_MAX_DYN_ACTIONS, NULL},
-	{ "SWS/S&M: Float FX %02d for selected tracks", "S&M_FLOATFX", FloatFX, 8, SNM_MAX_DYN_ACTIONS, NULL},
-	{ "SWS/S&M: Unfloat FX %02d for selected tracks", "S&M_UNFLOATFX", UnfloatFX, 8, SNM_MAX_DYN_ACTIONS, NULL},
-	{ "SWS/S&M: Toggle float FX %02d for selected tracks", "S&M_TOGLFLOATFX", ToggleFloatFX, 8, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
+	{ "SWS/S&M: Show FX chain for selected tracks, FX %d", "S&M_SHOWFXCHAIN", ShowFXChain, 8, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Float FX %d for selected tracks", "S&M_FLOATFX", FloatFX, 8, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Unfloat FX %d for selected tracks", "S&M_UNFLOATFX", UnfloatFX, 8, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Toggle float FX %d for selected tracks", "S&M_TOGLFLOATFX", ToggleFloatFX, 8, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
 
 	// outdated, kept for asc. compatibility: those versions are registered in the main section
-	{ "SWS/S&M: Active MIDI Editor - Restore displayed CC lanes, slot %02d", "S&M_MESETCCLANES", MainSetCCLanes, 8, SNM_MAX_DYN_ACTIONS, NULL},
-	{ "SWS/S&M: Active MIDI Editor - Save displayed CC lanes, slot %02d", "S&M_MESAVECCLANES", MainSaveCCLanes, 8, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Active MIDI Editor - Restore displayed CC lanes, slot %d", "S&M_MESETCCLANES", MainSetCCLanes, 8, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Active MIDI Editor - Save displayed CC lanes, slot %d", "S&M_MESAVECCLANES", MainSaveCCLanes, 8, SNM_MAX_DYN_ACTIONS, NULL},
 	// those versions are registered in the ME section
-	{ "SWS/S&M: Restore displayed CC lanes, slot %02d", "S&M_SETCCLANES_ME", NULL, 8, SNM_MAX_DYN_ACTIONS, NULL, 32060, MESetCCLanes, },
-	{ "SWS/S&M: Save displayed CC lanes, slot %02d", "S&M_SAVECCLANES_ME", NULL, 8, SNM_MAX_DYN_ACTIONS, NULL, 32060, MESaveCCLanes, },
+	{ "SWS/S&M: Restore displayed CC lanes, slot %d", "S&M_SETCCLANES_ME", NULL, 8, SNM_MAX_DYN_ACTIONS, NULL, 32060, MESetCCLanes, },
+	{ "SWS/S&M: Save displayed CC lanes, slot %d", "S&M_SAVECCLANES_ME", NULL, 8, SNM_MAX_DYN_ACTIONS, NULL, 32060, MESaveCCLanes, },
 
-	{ "SWS/S&M: Set selected tracks to group %02d (default flags)", "S&M_SET_TRACK_GROUP", SetTrackGroup, 8, SNM_MAX_TRACK_GROUPS, NULL}, // not all the 32 groups by default!
+	{ "SWS/S&M: Set selected tracks to group %d (default flags)", "S&M_SET_TRACK_GROUP", SetTrackGroup, 8, SNM_MAX_TRACK_GROUPS, NULL}, // not all the 32 groups by default!
 
-	{ "SWS/S&M: Live Config %02d - Open/close monitoring window", "S&M_OPEN_LIVECFG_MONITOR", OpenLiveConfigMonitorWnd, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, IsLiveConfigMonitorWndDisplayed},
-	{ "SWS/S&M: Live Config %02d - Apply config (MIDI/OSC only)", "S&M_LIVECFG_APPLY", NULL, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL, 0, ApplyLiveConfig },
-	{ "SWS/S&M: Live Config %02d - Preload config (MIDI/OSC only)", "S&M_LIVECFG_PRELOAD", NULL, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL, 0, PreloadLiveConfig },
-	{ "SWS/S&M: Live Config %02d - Apply next config", "S&M_NEXT_LIVE_CFG", ApplyNextLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL},
-	{ "SWS/S&M: Live Config %02d - Apply previous config", "S&M_PREVIOUS_LIVE_CFG", ApplyPreviousLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL},
-	{ "SWS/S&M: Live Config %02d - Preload next config", "S&M_PRELOAD_NEXT_LIVE_CFG", PreloadNextLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL},
-	{ "SWS/S&M: Live Config %02d - Preload previous config", "S&M_PRELOAD_PREVIOUS_LIVE_CFG", PreloadPreviousLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL},
-	{ "SWS/S&M: Live Config %02d - Apply preloaded config (swap preload/current)", "S&M_PRELOAD_LIVE_CFG", SwapCurrentPreloadLiveConfigs, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL},
+	{ "SWS/S&M: Live Config #%d - Open/close monitoring window", "S&M_OPEN_LIVECFG_MONITOR", OpenLiveConfigMonitorWnd, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, IsLiveConfigMonitorWndDisplayed},
+	{ "SWS/S&M: Live Config #%d - Apply config (MIDI/OSC only)", "S&M_LIVECFG_APPLY", NULL, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL, 0, ApplyLiveConfig },
+	{ "SWS/S&M: Live Config #%d - Preload config (MIDI/OSC only)", "S&M_LIVECFG_PRELOAD", NULL, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL, 0, PreloadLiveConfig },
+	{ "SWS/S&M: Live Config #%d - Apply next config", "S&M_NEXT_LIVE_CFG", ApplyNextLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL},
+	{ "SWS/S&M: Live Config #%d - Apply previous config", "S&M_PREVIOUS_LIVE_CFG", ApplyPreviousLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL},
+	{ "SWS/S&M: Live Config #%d - Preload next config", "S&M_PRELOAD_NEXT_LIVE_CFG", PreloadNextLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL},
+	{ "SWS/S&M: Live Config #%d - Preload previous config", "S&M_PRELOAD_PREVIOUS_LIVE_CFG", PreloadPreviousLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL},
+	{ "SWS/S&M: Live Config #%d - Apply preloaded config (swap preload/current)", "S&M_PRELOAD_LIVE_CFG", SwapCurrentPreloadLiveConfigs, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL},
 
-	{ "SWS/S&M: Live Config %02d - Enable", "S&M_LIVECFG_ON", EnableLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
-	{ "SWS/S&M: Live Config %02d - Disable", "S&M_LIVECFG_OFF", DisableLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
-	{ "SWS/S&M: Live Config %02d - Toggle enable", "S&M_LIVECFG_TGL", ToggleEnableLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, IsLiveConfigEnabled},
+	{ "SWS/S&M: Live Config #%d - Enable", "S&M_LIVECFG_ON", EnableLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
+	{ "SWS/S&M: Live Config #%d - Disable", "S&M_LIVECFG_OFF", DisableLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
+	{ "SWS/S&M: Live Config #%d - Toggle enable", "S&M_LIVECFG_TGL", ToggleEnableLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, IsLiveConfigEnabled},
 
-	{ "SWS/S&M: Live Config %02d - Enable option 'Mute all but active track'", "S&M_LIVECFG_MUTEBUT_ON", EnableMuteOthersLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
-	{ "SWS/S&M: Live Config %02d - Disable option 'Mute all but active track'", "S&M_LIVECFG_MUTEBUT_OFF", DisableMuteOthersLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
-	{ "SWS/S&M: Live Config %02d - Toggle option 'Mute all but active track'", "S&M_LIVECFG_MUTEBUT_TGL", ToggleMuteOthersLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, IsMuteOthersLiveConfigEnabled},
+	{ "SWS/S&M: Live Config #%d - Enable option 'Mute all but active track'", "S&M_LIVECFG_MUTEBUT_ON", EnableMuteOthersLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
+	{ "SWS/S&M: Live Config #%d - Disable option 'Mute all but active track'", "S&M_LIVECFG_MUTEBUT_OFF", DisableMuteOthersLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
+	{ "SWS/S&M: Live Config #%d - Toggle option 'Mute all but active track'", "S&M_LIVECFG_MUTEBUT_TGL", ToggleMuteOthersLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, IsMuteOthersLiveConfigEnabled},
 
-	{ "SWS/S&M: Live Config %02d - Enable option 'Offline all but active/preloaded tracks'", "S&M_LIVECFG_OFFLINEBUT_ON", EnableOfflineOthersLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
-	{ "SWS/S&M: Live Config %02d - Disable option 'Offline all but active/preloaded tracks'", "S&M_LIVECFG_OFFLINEBUT_OFF", DisableOfflineOthersLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
-	{ "SWS/S&M: Live Config %02d - Toggle option 'Offline all but active/preloaded tracks'", "S&M_LIVECFG_OFFLINEBUT_TGL", ToggleOfflineOthersLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, IsOfflineOthersLiveConfigEnabled},
+	{ "SWS/S&M: Live Config #%d - Enable option 'Offline all but active/preloaded tracks'", "S&M_LIVECFG_OFFLINEBUT_ON", EnableOfflineOthersLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
+	{ "SWS/S&M: Live Config #%d - Disable option 'Offline all but active/preloaded tracks'", "S&M_LIVECFG_OFFLINEBUT_OFF", DisableOfflineOthersLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
+	{ "SWS/S&M: Live Config #%d - Toggle option 'Offline all but active/preloaded tracks'", "S&M_LIVECFG_OFFLINEBUT_TGL", ToggleOfflineOthersLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, IsOfflineOthersLiveConfigEnabled},
 
-	{ "SWS/S&M: Live Config %02d - Enable option 'Disarm all but active track'", "S&M_LIVECFG_DISARMBUT_ON", EnableDisarmOthersLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
-	{ "SWS/S&M: Live Config %02d - Disable option 'Disarm all but active track'", "S&M_LIVECFG_DISARMBUT_OFF", DisableDisarmOthersLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
-	{ "SWS/S&M: Live Config %02d - Toggle option 'Disarm all but active track'", "S&M_LIVECFG_DISARMBUT_TGL", ToggleDisarmOthersLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL},
+	{ "SWS/S&M: Live Config #%d - Enable option 'Disarm all but active track'", "S&M_LIVECFG_DISARMBUT_ON", EnableDisarmOthersLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
+	{ "SWS/S&M: Live Config #%d - Disable option 'Disarm all but active track'", "S&M_LIVECFG_DISARMBUT_OFF", DisableDisarmOthersLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
+	{ "SWS/S&M: Live Config #%d - Toggle option 'Disarm all but active track'", "S&M_LIVECFG_DISARMBUT_TGL", ToggleDisarmOthersLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, NULL},
 
-	{ "SWS/S&M: Live Config %02d - Enable option 'Send all notes off when switching configs'", "S&M_LIVECFG_CC123_ON", EnableAllNotesOffLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
-	{ "SWS/S&M: Live Config %02d - Disable option 'Send all notes off when switching configs'", "S&M_LIVECFG_CC123_OFF", DisableAllNotesOffLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
-	{ "SWS/S&M: Live Config %02d - Toggle option 'Send all notes off when switching configs'", "S&M_LIVECFG_CC123_TGL", ToggleAllNotesOffLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, IsAllNotesOffLiveConfigEnabled},
+	{ "SWS/S&M: Live Config #%d - Enable option 'Send all notes off when switching configs'", "S&M_LIVECFG_CC123_ON", EnableAllNotesOffLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
+	{ "SWS/S&M: Live Config #%d - Disable option 'Send all notes off when switching configs'", "S&M_LIVECFG_CC123_OFF", DisableAllNotesOffLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
+	{ "SWS/S&M: Live Config #%d - Toggle option 'Send all notes off when switching configs'", "S&M_LIVECFG_CC123_TGL", ToggleAllNotesOffLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, IsAllNotesOffLiveConfigEnabled},
 
-	{ "SWS/S&M: Live Config %02d - Enable tiny fades", "S&M_LIVECFG_FADES_ON", EnableTinyFadesLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
-	{ "SWS/S&M: Live Config %02d - Disable tiny fades", "S&M_LIVECFG_FADES_OFF", DisableTinyFadesLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
-	{ "SWS/S&M: Live Config %02d - Toggle enable tiny fades", "S&M_LIVECFG_FADES_TGL", ToggleTinyFadesLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, IsTinyFadesLiveConfigEnabled},
+	{ "SWS/S&M: Live Config #%d - Enable tiny fades", "S&M_LIVECFG_FADES_ON", EnableTinyFadesLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
+	{ "SWS/S&M: Live Config #%d - Disable tiny fades", "S&M_LIVECFG_FADES_OFF", DisableTinyFadesLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
+	{ "SWS/S&M: Live Config #%d - Toggle enable tiny fades", "S&M_LIVECFG_FADES_TGL", ToggleTinyFadesLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, IsTinyFadesLiveConfigEnabled},
 
-	{ "SWS/S&M: Region Playlist %02d - Play", "S&M_PLAY_RGN_PLAYLIST", PlaylistPlay, 4, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Region Playlist #%d - Play", "S&M_PLAY_RGN_PLAYLIST", PlaylistPlay, 4, SNM_MAX_DYN_ACTIONS, NULL},
 
-	{ "SWS/S&M: Go to marker %02d (obeys smooth seek)", "S&M_GOTO_MARKER", GotoMarker, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
-	{ "SWS/S&M: Go to region %02d (obeys smooth seek)", "S&M_GOTO_REGION", GotoRegion, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
-	{ "SWS/S&M: Go to/select region %02d (obeys smooth seek)", "S&M_GOTO_SEL_REGION", GotoAnsSelectRegion, 4, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Go to marker %d (obeys smooth seek)", "S&M_GOTO_MARKER", GotoMarker, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
+	{ "SWS/S&M: Go to region %d (obeys smooth seek)", "S&M_GOTO_REGION", GotoRegion, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
+	{ "SWS/S&M: Go to/select region %d (obeys smooth seek)", "S&M_GOTO_SEL_REGION", GotoAnsSelectRegion, 4, SNM_MAX_DYN_ACTIONS, NULL},
 
-	{ "SWS/S&M: Dummy toggle %02d", "S&M_DUMMY_TGL", Noop, 8, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
-	{ "SWS/S&M: Exclusive toggle A%02d", "S&M_EXCL_TGL", ExclusiveToggle, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // not "S&M_EXCL_TGL_A" for historical reasons...
-	{ "SWS/S&M: Exclusive toggle B%02d", "S&M_EXCL_TGL_B", ExclusiveToggle, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
-	{ "SWS/S&M: Exclusive toggle C%02d", "S&M_EXCL_TGL_C", ExclusiveToggle, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
-	{ "SWS/S&M: Exclusive toggle D%02d", "S&M_EXCL_TGL_D", ExclusiveToggle, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
-	{ "SWS/S&M: Exclusive toggle E%02d", "S&M_EXCL_TGL_E", ExclusiveToggle, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
-	{ "SWS/S&M: Exclusive toggle F%02d", "S&M_EXCL_TGL_F", ExclusiveToggle, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
-	{ "SWS/S&M: Exclusive toggle G%02d", "S&M_EXCL_TGL_G", ExclusiveToggle, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
-	{ "SWS/S&M: Exclusive toggle H%02d", "S&M_EXCL_TGL_H", ExclusiveToggle, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
+	{ "SWS/S&M: Dummy toggle %d", "S&M_DUMMY_TGL", Noop, 8, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
+	{ "SWS/S&M: Exclusive toggle A%d", "S&M_EXCL_TGL", ExclusiveToggle, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // not "S&M_EXCL_TGL_A" for historical reasons...
+	{ "SWS/S&M: Exclusive toggle B%d", "S&M_EXCL_TGL_B", ExclusiveToggle, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
+	{ "SWS/S&M: Exclusive toggle C%d", "S&M_EXCL_TGL_C", ExclusiveToggle, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
+	{ "SWS/S&M: Exclusive toggle D%d", "S&M_EXCL_TGL_D", ExclusiveToggle, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
+	{ "SWS/S&M: Exclusive toggle E%d", "S&M_EXCL_TGL_E", ExclusiveToggle, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
+	{ "SWS/S&M: Exclusive toggle F%d", "S&M_EXCL_TGL_F", ExclusiveToggle, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
+	{ "SWS/S&M: Exclusive toggle G%d", "S&M_EXCL_TGL_G", ExclusiveToggle, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
+	{ "SWS/S&M: Exclusive toggle H%d", "S&M_EXCL_TGL_H", ExclusiveToggle, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
 
 //!WANT_LOCALIZE_1ST_STRING_END
 
 
 #ifdef _SNM_MISC
-	{ "SWS/S&M: Play media file in selected tracks (toggle, sync with next measure), slot %02d", "S&M_TGL_PLAYMEDIA_SELTRACK_SYNC", SyncTogglePlaySelTrackMediaSlot, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
-	{ "SWS/S&M: Loop media file in selected tracks (toggle, sync with next measure), slot %02d", "S&M_TGL_LOOPMEDIA_SELTRACK_SYNC", SyncToggleLoopSelTrackMediaSlot, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
-	{ "SWS/S&M: Play media file in selected tracks (toggle pause, sync with next measure), slot %02d", "S&M_TGLPAUSE_PLAYMEDIA_SELTR_SYNC", SyncTogglePauseSelTrackMediaSlot, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
-	{ "SWS/S&M: Loop media file in selected tracks (toggle pause, sync with next measure), slot %02d", "S&M_TGLPAUSE_LOOPMEDIA_SELTR_SYNC", SyncToggleLoopPauseSelTrackMediaSlot, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
+	{ "SWS/S&M: Play media file in selected tracks (toggle, sync with next measure), slot %d", "S&M_TGL_PLAYMEDIA_SELTRACK_SYNC", SyncTogglePlaySelTrackMediaSlot, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
+	{ "SWS/S&M: Loop media file in selected tracks (toggle, sync with next measure), slot %d", "S&M_TGL_LOOPMEDIA_SELTRACK_SYNC", SyncToggleLoopSelTrackMediaSlot, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
+	{ "SWS/S&M: Play media file in selected tracks (toggle pause, sync with next measure), slot %d", "S&M_TGLPAUSE_PLAYMEDIA_SELTR_SYNC", SyncTogglePauseSelTrackMediaSlot, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
+	{ "SWS/S&M: Loop media file in selected tracks (toggle pause, sync with next measure), slot %d", "S&M_TGLPAUSE_LOOPMEDIA_SELTR_SYNC", SyncToggleLoopPauseSelTrackMediaSlot, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
 #endif
 
 	{ LAST_COMMAND, }, // denote end of table
@@ -781,7 +780,7 @@ static int s_dynactions_need_save;
 int RegisterDynamicActions(DYN_COMMAND_T* _cmds, const char* _inifn)
 {
 	int i=0;
-	char actionName[SNM_MAX_ACTION_NAME_LEN]="", custId[SNM_MAX_ACTION_CUSTID_LEN]="";
+	char actionName[SNM_MAX_ACTION_NAME_LEN], custId[SNM_MAX_ACTION_CUSTID_LEN];
 	while(_cmds[i].desc != LAST_COMMAND)
 	{
 		DYN_COMMAND_T* ct = &_cmds[i++];
@@ -827,7 +826,7 @@ void SaveDynamicActions(DYN_COMMAND_T* _cmds, const char* _inifn)
 		else nameStr.Set("");
 
 		nameStr.Append(GetLocalizedActionName(ct->desc) + IsSwsAction(ct->desc));
-		Replace02d(nameStr.Get(), 'n');
+		ReplaceWithChar(nameStr.Get(), "%d", 'n');
 		if (ct->max>0 && ct->max!=SNM_MAX_DYN_ACTIONS) // is a specific max value defined?
 			nameStr.AppendFormatted(128, " -- Max. = %d!", ct->max);
 
@@ -869,19 +868,14 @@ bool SNM_GetActionName(const char* _custId, WDL_FastString* _nameOut, int _slot)
 		{
 			nameStr.Set(GetLocalizedActionName(ct->desc) + IsSwsAction(ct->desc));
 
-			if (_slot>=0)
+			if (_slot>=0 && strstr(nameStr.Get(), "%d"))
 			{
-				if (char* p = strstr(nameStr.Get(), "%02d"))
-				{
-					nameStr.DeleteSub((int)(p-nameStr.Get()), 4);
-					nameStr.Insert("%d", (int)(p-nameStr.Get()));
-					_nameOut->SetFormatted(SNM_MAX_ACTION_NAME_LEN, nameStr.Get(), _slot+1);
-					return true;
-				}
+				_nameOut->SetFormatted(SNM_MAX_ACTION_NAME_LEN, nameStr.Get(), _slot+1);
+				return true;
 			}
 
 			// fall back
-			Replace02d(nameStr.Get(), 'x');
+			ReplaceWithChar(nameStr.Get(), "%d", 'x');
 			_nameOut->Set(nameStr.Get());
 			return true;
 		}

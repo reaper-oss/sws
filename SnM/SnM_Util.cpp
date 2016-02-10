@@ -640,6 +640,36 @@ void SNM_UpgradeIniFiles(int _iniVersion)
 		if (!GetPrivateProfileInt("NbOfActions", "S&M_EXCL_TGL", 0, g_SNM_IniFn.Get()))
 			WritePrivateProfileString("NbOfActions", "S&M_EXCL_TGL", NULL, g_SNM_IniFn.Get());
 	}
+	if (_iniVersion < 9) // < v2.8.7 #0
+	{
+		// changed SNM_LIVECFG_NB_CONFIGS (4 -> 8)
+		WritePrivateProfileString("NbOfActions", "S&M_OPEN_LIVECFG_MONITOR", NULL, g_SNM_IniFn.Get());
+		WritePrivateProfileString("NbOfActions", "S&M_LIVECFG_APPLY", NULL, g_SNM_IniFn.Get());
+		WritePrivateProfileString("NbOfActions", "S&M_LIVECFG_PRELOAD", NULL, g_SNM_IniFn.Get());
+		WritePrivateProfileString("NbOfActions", "S&M_NEXT_LIVE_CFG", NULL, g_SNM_IniFn.Get());
+		WritePrivateProfileString("NbOfActions", "S&M_PREVIOUS_LIVE_CFG", NULL, g_SNM_IniFn.Get());
+		WritePrivateProfileString("NbOfActions", "S&M_PRELOAD_NEXT_LIVE_CFG", NULL, g_SNM_IniFn.Get());
+		WritePrivateProfileString("NbOfActions", "S&M_PRELOAD_PREVIOUS_LIVE_CFG", NULL, g_SNM_IniFn.Get());
+		WritePrivateProfileString("NbOfActions", "S&M_PRELOAD_LIVE_CFG", NULL, g_SNM_IniFn.Get());
+		WritePrivateProfileString("NbOfActions", "S&M_LIVECFG_TGL", NULL, g_SNM_IniFn.Get());
+		WritePrivateProfileString("NbOfActions", "S&M_LIVECFG_ON", NULL, g_SNM_IniFn.Get());
+		WritePrivateProfileString("NbOfActions", "S&M_LIVECFG_OFF", NULL, g_SNM_IniFn.Get());
+		WritePrivateProfileString("NbOfActions", "S&M_LIVECFG_MUTEBUT_TGL", NULL, g_SNM_IniFn.Get());
+		WritePrivateProfileString("NbOfActions", "S&M_LIVECFG_MUTEBUT_ON", NULL, g_SNM_IniFn.Get());
+		WritePrivateProfileString("NbOfActions", "S&M_LIVECFG_MUTEBUT_OFF", NULL, g_SNM_IniFn.Get());
+		WritePrivateProfileString("NbOfActions", "S&M_LIVECFG_OFFLINEBUT_TGL", NULL, g_SNM_IniFn.Get());
+		WritePrivateProfileString("NbOfActions", "S&M_LIVECFG_OFFLINEBUT_ON", NULL, g_SNM_IniFn.Get());
+		WritePrivateProfileString("NbOfActions", "S&M_LIVECFG_OFFLINEBUT_OFF", NULL, g_SNM_IniFn.Get());
+		WritePrivateProfileString("NbOfActions", "S&M_LIVECFG_DISARMBUT_TGL", NULL, g_SNM_IniFn.Get());
+		WritePrivateProfileString("NbOfActions", "S&M_LIVECFG_DISARMBUT_ON", NULL, g_SNM_IniFn.Get());
+		WritePrivateProfileString("NbOfActions", "S&M_LIVECFG_DISARMBUT_OFF", NULL, g_SNM_IniFn.Get());
+		WritePrivateProfileString("NbOfActions", "S&M_LIVECFG_CC123_TGL", NULL, g_SNM_IniFn.Get());
+		WritePrivateProfileString("NbOfActions", "S&M_LIVECFG_CC123_ON", NULL, g_SNM_IniFn.Get());
+		WritePrivateProfileString("NbOfActions", "S&M_LIVECFG_CC123_OFF", NULL, g_SNM_IniFn.Get());
+		WritePrivateProfileString("NbOfActions", "S&M_LIVECFG_FADES_TGL", NULL, g_SNM_IniFn.Get());
+		WritePrivateProfileString("NbOfActions", "S&M_LIVECFG_FADES_ON", NULL, g_SNM_IniFn.Get());
+		WritePrivateProfileString("NbOfActions", "S&M_LIVECFG_FADES_OFF", NULL, g_SNM_IniFn.Get());
+	}
 }
 
 

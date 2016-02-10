@@ -776,7 +776,6 @@ static DYN_COMMAND_T s_dynCmdTable[] =
 };
 
 
-// for optimization (avoid write accesses to S&M.ini on exit)
 static int s_dynactions_need_save;
 
 int RegisterDynamicActions(DYN_COMMAND_T* _cmds, const char* _inifn)
@@ -790,6 +789,7 @@ int RegisterDynamicActions(DYN_COMMAND_T* _cmds, const char* _inifn)
 		int n = GetPrivateProfileInt("NbOfActions", ct->id, -1, _inifn);
 		if (n<0) { n=ct->count; s_dynactions_need_save=1; }
 		ct->count = BOUNDED(n, 0, ct->max<=0 ? SNM_MAX_DYN_ACTIONS : ct->max);
+		if (n != ct->count) s_dynactions_need_save=1;
 
 		for (int j=0; j<ct->count; j++)
 		{
@@ -1116,6 +1116,7 @@ void IniFileInit()
 
 	int iniVersion = GetPrivateProfileInt("General", "IniFileUpgrade", 0, g_SNM_IniFn.Get());
 	SNM_UpgradeIniFiles(iniVersion);
+	if (iniVersion != SNM_INI_FILE_VERSION) s_dynactions_need_save=1;
 
 	g_SNM_MediaFlags |= (GetPrivateProfileInt("General", "MediaFileLockAudio", 0, g_SNM_IniFn.Get()) ? 1:0);
 	g_SNM_ToolbarRefresh = (GetPrivateProfileInt("General", "ToolbarsAutoRefresh", 1, g_SNM_IniFn.Get()) == 1);

@@ -826,6 +826,7 @@ error:
 		IMPAPI(GetPlayPosition2Ex);
 		IMPAPI(GetPlayState);
 		IMPAPI(GetPlayStateEx);
+		IMPAPI(GetProjectLength);
 		IMPAPI(GetProjectPath);
 		IMPAPI(GetProjectStateChangeCount);
 		IMPAPI(GetProjectTimeSignature2);

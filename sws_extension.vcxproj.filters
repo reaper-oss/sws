@@ -1037,9 +1037,6 @@
     <ClCompile Include="Snapshots\Snapshots.cpp">
       <Filter>Snapshots</Filter>
     </ClCompile>
-    <ClCompile Include="BuildUtils\MakeWhatsNew.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
     <ClCompile Include="Reascript.cpp">
       <Filter>Core</Filter>
     </ClCompile>

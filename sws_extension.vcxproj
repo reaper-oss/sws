@@ -1348,16 +1348,6 @@ echo Copied to "$(REAPER64_DIR)\plugins\$(TargetFilename)"</Command>
     <ClCompile Include="Snapshots\SnapshotClass.cpp" />
     <ClCompile Include="Snapshots\SnapshotMerge.cpp" />
     <ClCompile Include="Snapshots\Snapshots.cpp" />
-    <ClCompile Include="BuildUtils\MakeWhatsNew.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-      </PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-      </PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">
-      </PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Test|x64'">
-      </PrecompiledHeader>
-    </ClCompile>
     <ClCompile Include="Reascript.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>

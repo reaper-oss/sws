@@ -35,9 +35,9 @@ Section "Extension DLL" extension_id
   Delete "$INSTDIR\Plugins\reaper_fingers.dll"
   Delete "$INSTDIR\Plugins\reaper_dragzoom.dll"
   Delete "$INSTDIR\Plugins\reaper_WT_InTheSky.dll"
+  Delete "$INSTDIR\Plugins\reaper_sws_whatsnew.txt"
   File ${OUT_DLL}
   File ${OUT_PY}
-  File /oname=$INSTDIR\Plugins\reaper_sws_whatsnew.txt ..\whatsnew.txt
   Abort:
 SectionEnd
 

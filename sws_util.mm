@@ -1,7 +1,7 @@
 /******************************************************************************
 / sws_util.mm
 /
-/ Copyright (c) 2010 Tim Payne (SWS), Dominik Martin Drzic
+/ Copyright (c) 2010 ans later Tim Payne (SWS), Jeffos, Dominik Martin Drzic
 
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal

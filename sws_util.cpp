@@ -1,7 +1,7 @@
 /******************************************************************************
 / sws_util.cpp
 /
-/ Copyright (c) 2010 Tim Payne (SWS)
+/ Copyright (c) 2010 and later Tim Payne (SWS), Jeffos
 /
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy

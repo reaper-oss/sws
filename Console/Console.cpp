@@ -1,7 +1,7 @@
 /******************************************************************************
 / Console.cpp
 /
-/ Copyright (c) 2011-2014 Tim Payne (SWS), Jeffos
+/ Copyright (c) 2011 and later Tim Payne (SWS), Jeffos
 /
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy

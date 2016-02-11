@@ -1,6 +1,7 @@
 /******************************************************************************
 / SnM_ChunkParserPatcher.h - v1.34
-/ Copyright (c) 2008-2013 Jeffos
+/
+/ Copyright (c) 2008 and later Jeffos
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -39,7 +40,7 @@
 // Important: 
 // - Chunks can be HUGE! e.g. 4Mb+ is an usual case
 // - The code assumes RPP chunks are consistent, left trimmed, with Unix EOL
-// - A v2.0 with major refactoring is on the way..
+// - A v2.0 with major refactoring is on the way
 
 
 #ifndef _SNM_CHUNKPARSERPATCHER_H_

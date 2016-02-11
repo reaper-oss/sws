@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Find.h
 /
-/ Copyright (c) 2010-2013 Jeffos
+/ Copyright (c) 2010 and later Jeffos
 /
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy

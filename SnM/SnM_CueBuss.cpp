@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_CueBuss.cpp
 /
-/ Copyright (c) 2009-2013 Jeffos
+/ Copyright (c) 2009 and later Jeffos
 /
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy

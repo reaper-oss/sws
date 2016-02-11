@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Cyclactions.h
 /
-/ Copyright (c) 2011-2013 Jeffos
+/ Copyright (c) 2011 and later Jeffos
 /
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy

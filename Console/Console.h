@@ -1,7 +1,7 @@
 /******************************************************************************
 / Console.h
 /
-/ Copyright (c) 2009 Tim Payne (SWS), Jeffos
+/ Copyright (c) 2009 and later Tim Payne (SWS), Jeffos
 /
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy

@@ -1,7 +1,7 @@
 /******************************************************************************
 / BR_Update.cpp
 /
-/ Copyright (c) 2013 Dominik Martin Drzic
+/ Copyright (c) 2013 and later Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
 / http://github.com/Jeff0S/sws
 /

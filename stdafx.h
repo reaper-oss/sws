@@ -1,7 +1,7 @@
 /******************************************************************************
 / stdafx.h
 /
-/ Copyright (c) 2011 Tim Payne (SWS)
+/ Copyright (c) 2011 and later Tim Payne (SWS), Jeffos
 /
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy

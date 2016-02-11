@@ -1,7 +1,7 @@
 /******************************************************************************
 / sws_wnd.cpp
 /
-/ Copyright (c) 2012 Tim Payne (SWS), Jeffos
+/ Copyright (c) 2012 and later Tim Payne (SWS), Jeffos
 /
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy

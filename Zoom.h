@@ -1,7 +1,7 @@
 /******************************************************************************
 / Zoom.h
 /
-/ Copyright (c) 2009 Tim Payne (SWS)
+/ Copyright (c) 2009 and later Tim Payne (SWS)
 /
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy

@@ -78,6 +78,9 @@ void UntieFileFromProject(const char* _fn, ReaProject* _prj) {
 // flags&1=incl. items, &2=incl. markers/regions, &4=incl. envelopes
 double SNM_GetProjectLength(int _flags)
 {
+  // all bits set/default flags (see the .h): make use of the new API
+	if (_flags == 0xFFFF) return GetProjectLength(NULL);
+
 	double prjlen = 0.0, pos, end;
 	if (_flags&2)
 	{

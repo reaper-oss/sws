@@ -418,23 +418,6 @@ HWND GetActionListBox(char* _currentSection, int _sectionSz)
 }
 
 
-// overrides some wdl's list view funcs to avoid cast issues on osx
-// (useful with native list views which are SWELL_ListView but that were not instanciated by the extension..)
-#ifdef _WIN32
-#define SNM_ListView_GetSelectedCount ListView_GetSelectedCount
-#define SNM_ListView_GetItemCount ListView_GetItemCount
-#define SNM_ListView_GetItem ListView_GetItem
-#define SNM_ListView_GetItemText ListView_GetItemText
-#define SNM_ListView_SetItemState ListView_SetItemState
-#else
-#define SNM_ListView_GetSelectedCount ListView_GetSelectedCountCast
-#define SNM_ListView_GetItemCount ListView_GetItemCountCast
-#define SNM_ListView_GetItem ListView_GetItemCast
-#define SNM_ListView_GetItemText ListView_GetItemTextCast
-#define SNM_ListView_SetItemState ListView_SetItemStateCast
-#endif
-
-
 // returns the list view's selected item, or:
 // -1 if the action wnd is not opened
 // deprecated: -2 if the custom id cannot be retrieved (hidden column)
@@ -445,23 +428,23 @@ int GetSelectedAction(char* _section, int _secSize, int* _cmdId, char* _id, int 
 	HWND hList = GetActionListBox(_section, _secSize);
 	if (hList)
 	{
-		if (SNM_ListView_GetSelectedCount(hList))
+		if (ListView_GetSelectedCount(hList))
 		{
 			LVITEM li;
 			li.mask = LVIF_STATE | LVIF_PARAM;
 			li.stateMask = LVIS_SELECTED;
 			li.iSubItem = 0;
-			for (int i=0; i < SNM_ListView_GetItemCount(hList); i++)
+			for (int i=0; i < ListView_GetItemCount(hList); i++)
 			{
 				li.iItem = i;
-				SNM_ListView_GetItem(hList, &li);
+				ListView_GetItem(hList, &li);
 				if (li.state == LVIS_SELECTED)
 				{
 					int cmdId = (int)li.lParam;
 					if (_cmdId) *_cmdId = cmdId;
 
 					char actionName[SNM_MAX_ACTION_NAME_LEN] = "";
-					SNM_ListView_GetItemText(hList, i, 1, actionName, SNM_MAX_ACTION_NAME_LEN); //JFB displaytodata? (ok: columns not re-orderable yet)
+					ListView_GetItemText(hList, i, 1, actionName, SNM_MAX_ACTION_NAME_LEN); //JFB displaytodata? (ok: columns not re-orderable yet)
 					if (_desc && _descSize > 0)
 						lstrcpyn(_desc, actionName, _descSize);
 
@@ -529,14 +512,6 @@ bool GetSelectedAction(char* _idstrOut, int _idStrSz, KbdSectionInfo* _expectedS
 	}
 	return true;
 }
-
-
-#undef SNM_ListView_GetSelectedCount
-#undef SNM_ListView_GetItemCount
-#undef SNM_ListView_GetItem
-#undef SNM_ListView_GetItemText
-#undef SNM_ListView_SetItemState
-
 
 // dump actions or the wiki ALR summary
 // see http://forum.cockos.com/showthread.php?t=61929 and http://wiki.cockos.com/wiki/index.php/Action_List_Reference

@@ -172,28 +172,21 @@ extern MTRand g_MTRand;
 #define LVKF_CONTROL 2
 #define LVKF_SHIFT 4
 extern const GUID GUID_NULL;
-//sws_util.mm
+
+// sws_util.mm
 void SWS_GetDateString(int time, char* buf, int bufsize);
 void SWS_GetTimeString(int time, char* buf, int bufsize);
-void SetColumnArrows(HWND h, int iSortCol);
 int GetCustomColors(COLORREF custColors[]);
 void SetCustomColors(COLORREF custColors[]);
 void ShowColorChooser(COLORREF initialCol);
 bool GetChosenColor(COLORREF* pColor);
 void HideColorChooser();
-void EnableColumnResize(HWND h);
 HCURSOR SWS_LoadCursor(int id);
 #define MOUSEEVENTF_LEFTDOWN    0x0002 /* left button down */
 #define MOUSEEVENTF_LEFTUP      0x0004 /* left button up */
 #define MOUSEEVENTF_RIGHTDOWN   0x0008 /* right button down */
 #define MOUSEEVENTF_RIGHTUP     0x0010 /* right button up */
 void mouse_event(DWORD dwFlags, DWORD dx, DWORD dy, DWORD dwData, ULONG_PTR dwExtraInfo);
-int ListView_GetSelectedCountCast(HWND h);
-int ListView_GetItemCountCast(HWND h);
-bool ListView_GetItemCast(HWND h, LVITEM *item);
-void ListView_GetItemTextCast(HWND hwnd, int item, int subitem, char *text, int textmax);
-void ListView_RedrawItemsCast(HWND h, int startitem, int enditem);
-bool ListView_SetItemStateCast(HWND h, int ipos, int state, int statemask);
 BOOL IsWindowEnabled(HWND hwnd);
 int GetMenuString(HMENU hMenu, UINT uIDItem, char* lpString, int nMaxCount, UINT uFlag);
 #endif

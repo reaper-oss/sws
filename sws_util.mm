@@ -26,8 +26,6 @@
 
 #import <Cocoa/Cocoa.h>
 #include "stdafx.h"
-#include "../WDL/swell/swell-internal.h"
-#include "../WDL/swell/swell-dlggen.h"
 
 
 void SWS_GetDateString(int time, char* buf, int bufsize)
@@ -48,25 +46,6 @@ void SWS_GetTimeString(int time, char* buf, int bufsize)
 	[macTimeFmt setTimeStyle:NSDateFormatterShortStyle];
 	NSString* s = [macTimeFmt stringFromDate:macTime];
 	[s getCString:buf maxLength:bufsize encoding:NSUTF8StringEncoding];
-}
-
-void SetColumnArrows(HWND h, int iSortCol)
-{
-	if (!h || ![(id)h isKindOfClass:[SWELL_ListView class]]) return;
-	SWELL_ListView *v=(SWELL_ListView *)h;
-	if (!v->m_cols) return;
-	for (int i = 0; i < v->m_cols->GetSize(); i++)
-	{
-		if (i == abs(iSortCol)-1)
-		{
-			if (iSortCol > 0)
-				[v setIndicatorImage:[NSImage imageNamed:@"NSAscendingSortIndicator"] inTableColumn:v->m_cols->Get(i)];
-			else
-				[v setIndicatorImage:[NSImage imageNamed:@"NSDescendingSortIndicator"] inTableColumn:v->m_cols->Get(i)];
-		}
-		else
-			[v setIndicatorImage:0 inTableColumn:v->m_cols->Get(i)];
-	}
 }
 
 static int RGBfromNSColor(NSColor *col)
@@ -140,13 +119,6 @@ bool GetChosenColor(COLORREF* pColor)
 void HideColorChooser()
 {
 	ShowWindow((HWND)[NSColorPanel sharedColorPanel], SW_HIDE);
-}
-
-void EnableColumnResize(HWND h)
-{
-	if (!h || ![(id)h isKindOfClass:[SWELL_ListView class]]) return;
-	SWELL_ListView *v=(SWELL_ListView *)h;
-	[v setAllowsColumnResizing:YES];
 }
 
 // Modified MakeCursorFromData from Cockos WDL (supports 32x32 unlike original function which supports 16x16)
@@ -451,179 +423,9 @@ void mouse_event(DWORD dwFlags, DWORD dx, DWORD dy, DWORD dwData, ULONG_PTR dwEx
 	}
 }
 
-
-//JFB List view code here == modified from Cockos WDL!
-// Overrides some wdl's list view funcs to avoid cast issues
-// (useful with native list views which are SWELL_ListView but that were not instanciated by the extension..)
-
-int ListView_GetSelectedCountCast(HWND h)
-{
-    if (!h) return 0;
-//  if (![(id)h isKindOfClass:[SWELL_ListView class]]) return 0;
-
-    SWELL_ListView *tv=(SWELL_ListView*)h;
-    return [tv numberOfSelectedRows];
-}
-
-int ListView_GetItemCountCast(HWND h)
-{
-    if (!h) return 0;
-//    if (![(id)h isKindOfClass:[SWELL_ListView class]]) return 0;
-
-    SWELL_ListView *tv=(SWELL_ListView*)h;
-    if (tv->m_lbMode || !(tv->style & LVS_OWNERDATA))
-    {
-        if (!tv->m_items) return 0;
-
-        return tv->m_items->GetSize();
-    }
-    return tv->ownermode_cnt;
-}
-
-bool ListView_GetItemCast(HWND h, LVITEM *item)
-{
-    if (!item) return false;
-    if ((item->mask&LVIF_TEXT)&&item->pszText && item->cchTextMax > 0) item->pszText[0]=0;
-    item->state=0;
-    if (!h) return false;
-//    if (![(id)h isKindOfClass:[SWELL_ListView class]]) return false;
-
-
-    SWELL_ListView *tv=(SWELL_ListView*)h;
-    if (tv->m_lbMode || !(tv->style & LVS_OWNERDATA))
-    {
-        if (!tv->m_items) return false;
-
-        SWELL_ListView_Row *row=tv->m_items->Get(item->iItem);
-        if (!row) return false;
-
-        if (item->mask & LVIF_PARAM) item->lParam=row->m_param;
-        if (item->mask & LVIF_TEXT) if (item->pszText && item->cchTextMax>0)
-        {
-            char *p=row->m_vals.Get(item->iSubItem);
-            lstrcpyn(item->pszText,p?p:"",item->cchTextMax);
-        }
-        if (item->mask & LVIF_STATE)
-        {
-            if (item->stateMask & (0xff<<16))
-            {
-                item->state|=row->m_imageidx<<16;
-            }
-        }
-    }
-    else
-    {
-        if (item->iItem <0 || item->iItem >= tv->ownermode_cnt) return false;
-    }
-    if (item->mask & LVIF_STATE)
-    {
-        if ((item->stateMask&LVIS_SELECTED) && [tv isRowSelected:item->iItem]) item->state|=LVIS_SELECTED;
-        if ((item->stateMask&LVIS_FOCUSED) && [tv selectedRow] == item->iItem) item->state|=LVIS_FOCUSED;
-    }
-
-    return true;
-}
-
-void ListView_GetItemTextCast(HWND hwnd, int item, int subitem, char *text, int textmax)
-{
-    LVITEM it={LVIF_TEXT,item,subitem,0,0,text,textmax,};
-    ListView_GetItemCast(hwnd,&it);
-}
-
-void ListView_RedrawItemsCast(HWND h, int startitem, int enditem)
-{
-//    if (!h || ![(id)h isKindOfClass:[SWELL_ListView class]]) return;
-    if (!h) return;
-    SWELL_ListView *tv=(SWELL_ListView*)h;
-    if (!tv->m_items) return;
-    [tv reloadData];
-}
-
-bool ListView_SetItemStateCast(HWND h, int ipos, int state, int statemask)
-{
-    int doref=0;
-//    if (!h || ![(id)h isKindOfClass:[SWELL_ListView class]]) return false;
-    if (!h) return false;
-    SWELL_ListView *tv=(SWELL_ListView*)h;
-    static int _is_doing_all;
-
-    if (ipos == -1)
-    {
-        int x;
-        int n=ListView_GetItemCountCast(h);
-        _is_doing_all++;
-        for (x = 0; x < n; x ++)
-            ListView_SetItemStateCast(h,x,state,statemask);
-        _is_doing_all--;
-        ListView_RedrawItemsCast(h,0,n-1);
-        return true;
-    }
-
-    if (tv->m_lbMode || !(tv->style & LVS_OWNERDATA))
-    {
-        if (!tv->m_items) return false;
-        SWELL_ListView_Row *row=tv->m_items->Get(ipos);
-        if (!row) return false;
-        if (statemask & (0xff<<16))
-        {
-            if (row->m_imageidx!=((state>>16)&0xff))
-            {
-                row->m_imageidx=(state>>16)&0xff;
-                doref=1;
-            }
-        }
-    }
-    else
-    {
-        if (ipos<0 || ipos >= tv->ownermode_cnt) return 0;
-    }
-    bool didsel=false;
-    if (statemask & LVIS_SELECTED)
-    {
-        if (state & LVIS_SELECTED)
-        {
-            bool isSingle = tv->m_lbMode ? !(tv->style & LBS_EXTENDEDSEL) : !!(tv->style&LVS_SINGLESEL);
-            if (![tv isRowSelected:ipos]) { didsel=true;  [tv selectRowIndexes:[NSIndexSet indexSetWithIndex:ipos] byExtendingSelection:isSingle?NO:YES]; }
-        }
-        else
-        {
-            if ([tv isRowSelected:ipos]) { didsel=true; [tv deselectRow:ipos];  }
-        }
-    }
-    if (statemask & LVIS_FOCUSED)
-    {
-        if (state&LVIS_FOCUSED)
-        {
-        }
-        else
-        {
-
-        }
-    }
-
-    if (!_is_doing_all)
-    {
-        if (didsel)
-        {
-            static int __rent;
-            if (!__rent)
-            {
-                __rent=1;
-                NMLISTVIEW nm={{(HWND)h,[tv tag],LVN_ITEMCHANGED},ipos,0,state,};
-                SendMessage(GetParent(h),WM_NOTIFY,[tv tag],(LPARAM)&nm);
-                __rent=0;
-            }
-        }
-        if (doref)
-            ListView_RedrawItemsCast(h,ipos,ipos);
-    }
-    return true;
-}
-
 BOOL IsWindowEnabled(HWND hwnd)
 {
     if (!hwnd) return FALSE;
-    SWELL_BEGIN_TRY
     id bla=(id)hwnd;
 
     if ([bla isKindOfClass:[NSWindow class]]) bla = [bla contentView];
@@ -632,7 +434,6 @@ BOOL IsWindowEnabled(HWND hwnd)
     {
         return [bla isEnabled] == YES ? TRUE : FALSE;
     }
-    SWELL_END_TRY(;)
     return FALSE;
 }
 
@@ -645,7 +446,7 @@ void SWS_ShowTextScrollbar(HWND hwnd, bool show)
     else dwStyle |= WS_HSCROLL;
     SetWindowLong(hwnd, GWL_STYLE, dwStyle);
 
-    SWELL_TextView *tv=(SWELL_TextView*)hwnd;
+    NSTextView *tv=(NSTextView*)hwnd;
     [tv setHorizontallyResizable:show?NO:YES];
 
     NSScrollView *sc = [tv enclosingScrollView];

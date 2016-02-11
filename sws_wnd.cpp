@@ -175,7 +175,7 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 #ifndef _WIN32
 					// override list view props for grid line theming
 					ListView_SetExtendedListViewStyleEx(m_pLists.Get(i)->GetHWND(),
-						LVS_EX_GRIDLINES|LVS_EX_HEADERDRAGDROP, LVS_EX_GRIDLINES|LVS_EX_HEADERDRAGDROP);
+						LVS_EX_GRIDLINES|LVS_EX_FULLROWSELECT|LVS_EX_HEADERDRAGDROP, LVS_EX_GRIDLINES|LVS_EX_FULLROWSELECT|LVS_EX_HEADERDRAGDROP);
 #endif
 					SNM_ThemeListView(m_pLists.Get(i)); // initial theming, then ListView_HookThemeColorsMessage() does the job
 				}
@@ -773,9 +773,15 @@ SWS_ListView::SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn
 		}
 	}
 
+	int lvstyle=LVS_EX_FULLROWSELECT|LVS_EX_HEADERDRAGDROP;
 #ifdef _WIN32
-	ListView_SetExtendedListViewStyle(hwndList, LVS_EX_FULLROWSELECT | LVS_EX_HEADERDRAGDROP);
+	lvstyle |= LVS_EX_DOUBLEBUFFER;
+#else
+	// note for osx: style can be overrided in SWS_DockWnd::WndProc() for optional grid line theming
+#endif
+	ListView_SetExtendedListViewStyleEx(hwndList, lvstyle, lvstyle);
 
+#ifdef _WIN32
 	// Setup UTF-8 (see http://forum.cockos.com/showthread.php?t=101547)
 	WDL_UTF8_HookListView(hwndList);
 #if !defined(WDL_NO_SUPPORT_UTF8)
@@ -792,11 +798,6 @@ SWS_ListView::SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn
 			CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, m_hwndList, NULL, g_hInst, NULL );
 		SetWindowPos(m_hwndTooltip, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 	}
-#else
-	EnableColumnResize(hwndList);
-
-	// default list view props (might be overrided in SWS_DockWnd::WndProc() for optional grid line theming)
-	ListView_SetExtendedListViewStyleEx(hwndList, LVS_EX_HEADERDRAGDROP, LVS_EX_HEADERDRAGDROP);
 #endif
 
 	ShowColumns();
@@ -1607,46 +1608,19 @@ void SWS_ListView::Sort()
 
 void SWS_ListView::SetListviewColumnArrows(int iSortCol)
 {
-	if (!m_bDrawArrow)
-		return;
+	if (!m_bDrawArrow) return;
 
-#ifdef _WIN32
-	// Set the column arrows
-	HWND header = ListView_GetHeader(m_hwndList);
-	for (int i = 0; i < Header_GetItemCount(header); i++)
+	HWND hhdr = ListView_GetHeader(m_hwndList);
+	if (!hhdr) return;
+
+	for (int i=0; i < Header_GetItemCount(hhdr); i++)
 	{
-		HDITEM hi;
-		hi.mask = HDI_FORMAT | HDI_BITMAP;
-		Header_GetItem(header, i, &hi);
-		if (hi.hbm)
-			DeleteObject(hi.hbm);
-		hi.fmt &= ~(HDI_BITMAP|HDF_BITMAP_ON_RIGHT|HDF_SORTDOWN|HDF_SORTUP);
-
-		if (IsCommCtrlVersion6())
-		{
-			if (iSortCol == i+1)
-				hi.fmt |= HDF_SORTUP;
-			else if (-iSortCol == i+1)
-				hi.fmt |= HDF_SORTDOWN;
-		}
-		else
-		{
-			if (iSortCol == i+1)
-			{
-				hi.fmt |= HDF_BITMAP|HDF_BITMAP_ON_RIGHT;
-				hi.hbm = (HBITMAP)LoadImage(g_hInst, MAKEINTRESOURCE(IDB_UP), IMAGE_BITMAP, 0,0, LR_LOADMAP3DCOLORS);
-			}
-			else if (-iSortCol == i+1)
-			{
-				hi.fmt |= HDF_BITMAP|HDF_BITMAP_ON_RIGHT;
-				hi.hbm = (HBITMAP)LoadImage(g_hInst, MAKEINTRESOURCE(IDB_DOWN), IMAGE_BITMAP, 0,0, LR_LOADMAP3DCOLORS);
-			}
-		}
-		Header_SetItem(header, i, &hi);
+		HDITEM hi = { HDI_FORMAT, 0, };
+		Header_GetItem(hhdr, i, &hi);
+		hi.fmt &= ~(HDF_SORTUP|HDF_SORTDOWN);
+		if (abs(iSortCol) == i+1) hi.fmt |= (iSortCol > 0 ? HDF_SORTUP : HDF_SORTDOWN);
+		Header_SetItem(hhdr, i, &hi);
 	}
-#else
-	SetColumnArrows(m_hwndList, iSortCol);
-#endif
 }
 
 int SWS_ListView::DisplayToDataCol(int iCol)

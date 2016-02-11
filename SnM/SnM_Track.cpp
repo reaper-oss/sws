@@ -1217,8 +1217,9 @@ void StopTrackPreviewsRun()
 
 			TrackPreviewLockUnlockMutex(prev, true);
 			if (!prev->loop && 
-				(prev->volume < 0.5 || // preview has been stopped
-				prev->curpos > prev->src->GetLength())) // preview has been entirely played
+				(prev->volume < 0.5 || // stop has been requested
+				prev->curpos >= prev->src->GetLength() || // preview has been entirely played
+				fabs(prev->curpos - prev->src->GetLength()) < 0.000001))
 			{
 				// prepare all notes off, if needed (i.e. only for stopped MIDI files)
 				if (prev->volume < 0.5 && // stopped files only, no cc123 is sent when files end normally

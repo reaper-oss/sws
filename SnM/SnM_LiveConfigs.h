@@ -77,8 +77,8 @@ public:
 	{
 		m_cfg_done=false;
 		m_cfg_last_mute_time=0.0;
-		m_cfg_tracks.Empty(false);
-		m_cfg_tracks_states.Empty(false);
+		m_cfg_tracks.Empty();
+		m_cfg_tracks_states.Empty();
 	}  
 	void cfg_SaveMuteStateAndMuteIfNeeded(MediaTrack* _tr, bool _force = false);
 	void cfg_Mute(MediaTrack* _tr);

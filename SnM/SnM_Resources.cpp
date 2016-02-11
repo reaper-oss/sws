@@ -195,18 +195,19 @@ enum {
 };
 
 
-
-// JFB important remark:
-// all WDL_PtrList global vars used to be WDL_PtrList_DeleteOnDestroy ones but
-// something weird could occur when REAPER unloads the extension: hang or crash 
-// (e.g. issues 292 & 380) on Windows 7 while saving ini files (those lists were 
-// already unallocated..)
-// anyway, no prob here because application exit will destroy the entire runtime 
-// context regardless.
+// JFB important remarks!
+//
+// All WDL_PtrList_DOD global vars below used to be WDL_PtrList_DeleteOnDestroy but
+// something weird could occur when REAPER was unloading the extension: hangs or crashes 
+// on Win 7 (e.g. issues 292 & 380, those lists were probably already unallocated when 
+// saving ini files? or unallocated concurrently?).
+//
+// Anyway, with WDL_PtrList_DOD this issue can now only occur in debug builds, which 
+// is "good to have" since I was never able to duplicate it...
 
 SNM_WindowManager<ResourcesWnd> g_resWndMgr(RES_WND_ID);
-WDL_PtrList<ResourceItem> g_dragResourceItems; 
-WDL_PtrList<ResourceList> g_SNM_ResSlots;
+WDL_PtrList_DOD<ResourceList> g_SNM_ResSlots;
+WDL_PtrList_DOD<ResourceItem> g_dragResourceItems; 
 
 // prefs
 int g_resType = -1; // current type (user selection)
@@ -214,9 +215,9 @@ int g_tiedSlotActions[SNM_NUM_DEFAULT_SLOTS]; // slot actions of default type/id
 int g_dblClickPrefs[SNM_MAX_SLOT_TYPES];
 WDL_FastString g_filter; // see init + localization in ResourcesInit()
 int g_filterPref = 1; // bitmask: &1 = filter by name, &2 = filter by path, &4 = filter by comment
-WDL_PtrList<WDL_FastString> g_autoSaveDirs;
-WDL_PtrList<WDL_FastString> g_autoFillDirs;
-WDL_PtrList<WDL_FastString> g_tiedProjects;
+WDL_PtrList_DOD<WDL_FastString> g_autoSaveDirs;
+WDL_PtrList_DOD<WDL_FastString> g_autoFillDirs;
+WDL_PtrList_DOD<WDL_FastString> g_tiedProjects;
 bool g_syncAutoDirPrefs[SNM_MAX_SLOT_TYPES];
 
 // auto-save prefs

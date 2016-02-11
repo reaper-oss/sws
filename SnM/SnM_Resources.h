@@ -173,7 +173,7 @@ protected:
 };
 
 
-extern WDL_PtrList<ResourceList> g_SNM_ResSlots;
+extern WDL_PtrList_DOD<ResourceList> g_SNM_ResSlots;
 extern int g_tiedSlotActions[SNM_NUM_DEFAULT_SLOTS];
 
 

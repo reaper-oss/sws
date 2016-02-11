@@ -1072,64 +1072,6 @@ void RemapMIDIInputChannel(COMMAND_T* _ct)
 // Play track preview
 ///////////////////////////////////////////////////////////////////////////////
 
-// flags&1: send cc#64 messages (reset sustain), flags&2: cc#123 (all notes off), flags&4: cc#120 (all sounds off)
-class AllNoteOffSource : public PCM_source
-{
-public:
-  AllNoteOffSource(int flags) { m_hasdone=0; m_flags=flags; }
-  ~AllNoteOffSource() { }
-  PCM_source *Duplicate() { return new AllNoteOffSource(m_flags); }
-  bool SetFileName(const char *newfn) { return false; } 
-  bool IsAvailable() { return true; }
-  const char *GetType() { return "S&M_ALLNOTEOFFS"; };
-  int GetNumChannels() { return 1; }
-  double GetSampleRate() { return 0.0; }
-  double GetLength() { return 10000000000000.0; }
-  int PropertiesWindow(HWND hwndParent) { return -1; }
-  void SaveState(ProjectStateContext *ctx) {}
-  int LoadState(const char *firstline, ProjectStateContext *ctx) { return -1; }
-  void Peaks_Clear(bool deleteFile) { }
-  int PeaksBuild_Begin() { return 0; }
-  int PeaksBuild_Run() { return 0; }
-  void PeaksBuild_Finish() { }
-  void GetPeakInfo(PCM_source_peaktransfer_t *block) { block->peaks_out=0; }
-  
-  void GetSamples(PCM_source_transfer_t *block)
-  {
-    block->samples_out=0;
-    if (block->midi_events && !m_hasdone)
-    {
-      m_hasdone=1;
-      block->samples_out=block->length;
-      memset(block->samples,0,block->length*block->nch*sizeof(double));
-      int x;
-      for (x = 0; x < 16; x ++)
-      {
-        MIDI_event_t e={0,3, 0xb0+x,};
-        if (m_flags&1)
-        {
-          e.midi_message[1]=64;
-          block->midi_events->AddItem(&e);
-        }
-        if (m_flags&2)
-        {
-          e.midi_message[1]=123;
-          block->midi_events->AddItem(&e);
-        }
-        if (m_flags&4)
-        {
-          e.midi_message[1]=120;
-          block->midi_events->AddItem(&e);
-        }
-      }
-    }
-  }
-
-  int m_hasdone;
-  int m_flags;
-};
-
-
 // helper funcs
 void TrackPreviewInitDeleteMutex(preview_register_t* _prev, bool _init) {
 	if (_init)
@@ -1173,11 +1115,12 @@ void DeleteTrackPreview(void* _prev)
 	}
 }
 
-// can be used to start/pause all track previews in sync
-// such locks should be avoided as far as possible
+// can be used to start/pause all track previews in sync, such a lock should be avoided though
 // => the related pref is intentionally burried in S&M.ini (for very specific use-cases)
-void TrackPreviewLockUnlockTracks(bool _lock) {
-	if (g_SNM_MediaFlags&1) {
+void TrackPreviewLockUnlockTracks(bool _lock)
+{
+	if (g_SNM_MediaFlags&1)
+	{
 		if (_lock) MainThread_LockTracks();
 		else MainThread_UnlockTracks();
 	}
@@ -1293,7 +1236,7 @@ bool SNM_PlayTrackPreview(MediaTrack* _tr, const char* _fn, bool _pause, bool _l
 
 void SNM_PlaySelTrackPreviews(const char* _fn, bool _pause, bool _loop, double _msi)
 {
-	TrackPreviewLockUnlockTracks(true); // so that all tracks are started together
+	TrackPreviewLockUnlockTracks(true);
 	for (int i=1; i <= GetNumTracks(); i++) // skip master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
@@ -1318,7 +1261,7 @@ bool SNM_TogglePlaySelTrackPreviews(const char* _fn, bool _pause, bool _loop, do
 	}
 
 	{
-		// stop play if needed, store otherwise
+		// stop play if needed, store if paused
 		for (int i=g_playPreviews.GetSize()-1; i >=0; i--)
 		{
 			preview_register_t* prev = g_playPreviews.Get(i);
@@ -1334,8 +1277,7 @@ bool SNM_TogglePlaySelTrackPreviews(const char* _fn, bool _pause, bool _loop, do
 					{
 						prev->loop = false;
 						prev->volume = 0.0; // => will be stopped by next call to StopTrackPreviewsRun()
-						if (_pause)
-							g_pausedPreviews.Insert(0, new PausedPreview(_fn, tr, prev->curpos)); 
+						if (_pause) g_pausedPreviews.Insert(0, new PausedPreview(_fn, tr, prev->curpos)); 
 						trsToStart.Delete(trsToStart.Find(tr));
 						done = true;
 					}
@@ -1357,14 +1299,14 @@ bool SNM_TogglePlaySelTrackPreviews(const char* _fn, bool _pause, bool _loop, do
 
 void StopTrackPreviews(bool _selTracksOnly)
 {
-	TrackPreviewLockUnlockTracks(true); // so that all tracks are stopped together
+	TrackPreviewLockUnlockTracks(true);
 	for (int i=g_playPreviews.GetSize()-1; i >= 0; i--)
 	{
 		preview_register_t* prev = g_playPreviews.Get(i);
 		for (int j=1; j <= GetNumTracks(); j++) // skip master
 		{
 			MediaTrack* tr = CSurf_TrackFromID(j, false);
-			if (tr && (!_selTracksOnly || (_selTracksOnly && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))))
+			if (tr && (!_selTracksOnly ||*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL)))
 			{
 				TrackPreviewLockUnlockMutex(prev, true);
 
@@ -1390,10 +1332,66 @@ void StopTrackPreviews(COMMAND_T* _ct) {
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Send CC123 on all channels
+// Send CC123//CC64/CC120 on all channels
 ///////////////////////////////////////////////////////////////////////////////
 
-// _cc_flags: see AllNoteOffSource
+class AllNoteOffSource : public PCM_source
+{
+public:
+  AllNoteOffSource(int flags) { m_hasdone=0; m_flags=flags; }
+  ~AllNoteOffSource() { }
+  PCM_source *Duplicate() { return new AllNoteOffSource(m_flags); }
+  bool SetFileName(const char *newfn) { return false; } 
+  bool IsAvailable() { return true; }
+  const char *GetType() { return "S&M_ALLNOTEOFFS"; };
+  int GetNumChannels() { return 1; }
+  double GetSampleRate() { return 0.0; }
+  double GetLength() { return 10000000000000.0; }
+  int PropertiesWindow(HWND hwndParent) { return -1; }
+  void SaveState(ProjectStateContext *ctx) {}
+  int LoadState(const char *firstline, ProjectStateContext *ctx) { return -1; }
+  void Peaks_Clear(bool deleteFile) { }
+  int PeaksBuild_Begin() { return 0; }
+  int PeaksBuild_Run() { return 0; }
+  void PeaksBuild_Finish() { }
+  void GetPeakInfo(PCM_source_peaktransfer_t *block) { block->peaks_out=0; }
+  
+  void GetSamples(PCM_source_transfer_t *block)
+  {
+    block->samples_out=0;
+    if (block->midi_events && !m_hasdone)
+    {
+      m_hasdone=1;
+      block->samples_out=block->length;
+      memset(block->samples,0,block->length*block->nch*sizeof(double));
+      int x;
+      for (x = 0; x < 16; x ++)
+      {
+        MIDI_event_t e={0,3, 0xb0+x,};
+        if (m_flags&1)
+        {
+          e.midi_message[1]=64;
+          block->midi_events->AddItem(&e);
+        }
+        if (m_flags&2)
+        {
+          e.midi_message[1]=123;
+          block->midi_events->AddItem(&e);
+        }
+        if (m_flags&4)
+        {
+          e.midi_message[1]=120;
+          block->midi_events->AddItem(&e);
+        }
+      }
+    }
+  }
+  
+  int m_hasdone;
+  int m_flags;
+};
+
+// _cc_flags&1=send cc#64 messages (reset sustain), &2=cc#123 (all notes off), &4=cc#120 (all sounds off)
 bool SendAllNotesOff(WDL_PtrList<void>* _trs, int _cc_flags)
 {
 	const int trs_sz=_trs->GetSize();

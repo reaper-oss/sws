@@ -1,4 +1,5 @@
 #pragma once
+
 #define LICENSE_AUTHORS \
 "Copyright (c) 2016 Jeffos (S&M)\r\n" \
 "(c) 2015 Dominik Martin Drzic (BR), wol\r\n" \

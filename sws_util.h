@@ -50,7 +50,6 @@
 #define UTF8_CHECKMARK          "\xE2\x9C\x93"
 #define UTF8_MULTIPLICATION     "\xE2\x9C\x95"
 
-// +IsSwsAction() to skip "SWS: ", "SWS/S&M: ", "SWS/FNG: ", etc...
 #define SWS_CMD_SHORTNAME(_ct)	(_ct ? GetLocalizedActionName(_ct->accel.desc) + IsSwsAction(_ct->accel.desc) : "")
 #define __ARRAY_SIZE(x)			(sizeof(x) / sizeof(x[0]))
 #define BOUNDED(x,lo,hi)		((x) < (lo) ? (lo) : (x) > (hi) ? (hi) : (x))

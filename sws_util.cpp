@@ -410,12 +410,12 @@ wchar_t* WideCharPlz(const char* inChar)
 
 void dprintf(const char* format, ...)
 {
-    va_list args;
-    va_start(args, format);
-    int len = _vscprintf(format, args) + 1;
-    char* buffer = new char[len];
+	va_list args;
+	va_start(args, format);
+	int len = _vscprintf(format, args) + 1;
+	char* buffer = new char[len];
 	vsprintf_s(buffer, len, format, args); // C4996
-    OutputDebugString(buffer);
+	OutputDebugString(buffer);
 	delete[] buffer;
 }
 #endif
@@ -509,7 +509,6 @@ bool SWS_IsWindow(HWND hwnd)
 }
 
 
-
 // Localization
 WDL_FastString* g_LangPack = NULL;
 
@@ -538,7 +537,8 @@ WDL_FastString* GetLangPack()
 	return g_LangPack;
 }
 
-bool IsLocalized() {
+bool IsLocalized()
+{
 #ifdef _SWS_LOCALIZATION
 	return (GetLangPack()->GetLength() > 0);
 #else

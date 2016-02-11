@@ -1195,7 +1195,7 @@ public:
 	{
 		return (_prev && _prev->preview_track == m_tr && 
 			_prev->src && _prev->src->GetFileName() &&
-			!strcmp(_prev->src->GetFileName(), m_fn.Get()));
+			!_stricmp(_prev->src->GetFileName(), m_fn.Get()));
 	}
 	WDL_FastString m_fn; MediaTrack* m_tr; double m_pos;
 };
@@ -1329,7 +1329,7 @@ bool SNM_TogglePlaySelTrackPreviews(const char* _fn, bool _pause, bool _loop, do
 					TrackPreviewLockUnlockMutex(prev, true);
 					if (prev->preview_track == tr && 
 						prev->volume > 0.5 && // playing
-						!strcmp(prev->src->GetFileName(), _fn))
+						!_stricmp(prev->src->GetFileName(), _fn))
 					{
 						prev->loop = false;
 						prev->volume = 0.0; // => will be stopped by next call to StopTrackPreviewsRun()

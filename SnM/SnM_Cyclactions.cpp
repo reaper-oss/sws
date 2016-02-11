@@ -36,6 +36,7 @@
 #include "SnM_Dlg.h"
 #include "SnM_Util.h"
 #include "SnM_Window.h"
+#include "../url.h"
 #include "../Console/Console.h"
 #include "../IX/IX.h"
 #include "../reaper/localize.h"

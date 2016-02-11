@@ -27,15 +27,6 @@
 
 #pragma once
 
-#define SWS_URL					"http://www.sws-extension.org"
-#define SWS_URL_DOWNLOAD		SWS_URL
-#define SWS_URL_VERSION_H		"http://www.sws-extension.org/download/featured/version.h"
-#define SWS_URL_BETA_DOWNLOAD	"http://www.sws-extension.org/download/pre-release/"
-#define SWS_URL_BETA_VERSION_H	"http://www.sws-extension.org/download/pre-release/version.h"
-#define SWS_URL_HELP_DIR		"http://www.sws-extension.org" // e.g. SWS_URL_HELP"/reaconsole.php"
-#define SWS_URL_WHATSNEW        "http://www.sws-extension.org/whatsnew.php"
-#define SWS_URL_BETA_WHATSNEW   "http://www.sws-extension.org/download/pre-release/whatsnew-v%d.%d.%d.%d.html"
-
 #define BUFFER_SIZE				2048
 #define SWS_THEMING				true
 #define SWS_INI					"SWS"

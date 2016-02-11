@@ -32,6 +32,7 @@
 #include "./Breeder/BR_Update.h"
 #include "version.h"
 #include "license.h"
+#include "url.h"
 #include "Prompt.h"
 
 

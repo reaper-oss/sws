@@ -35,6 +35,7 @@
 #include "SnM_Track.h"
 #include "SnM_Util.h"
 #include "SnM_Window.h"
+#include "../url.h"
 #include "../reaper/localize.h"
 #include "../Prompt.h"
 #include "../../WDL/projectcontext.h"

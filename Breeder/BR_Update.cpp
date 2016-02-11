@@ -25,9 +25,11 @@
 / OTHER DEALINGS IN THE SOFTWARE.
 /
 ******************************************************************************/
+
 #include "stdafx.h"
 #include "BR_Update.h"
 #include "BR_Util.h"
+#include "../url.h"
 #include "../version.h"
 #include "../SnM/SnM_Dlg.h"
 #include "../SnM/SnM_Util.h"

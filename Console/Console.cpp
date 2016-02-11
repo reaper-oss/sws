@@ -31,6 +31,7 @@
 
 
 #include "stdafx.h"
+#include "../url.h"
 #include "../reaper/localize.h"
 #include "../Freeze/Freeze.h"
 #include "../SnM/SnM.h"

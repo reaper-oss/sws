@@ -54,7 +54,7 @@ public:
 	int m_iSendToParent;
 };
 
-extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<MuteState> > g_muteStates;
+extern SWSProjConfig<WDL_PtrList_DOD<MuteState> > g_muteStates;
 
 void SaveMutes(COMMAND_T* = NULL);
 void RestoreMutes(COMMAND_T* = NULL);

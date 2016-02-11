@@ -14,7 +14,7 @@
 #include "TimeMap.h"
 #include "RprException.h"
 
-WDL_PtrList_DeleteOnDestroy<RprMidiTake> g_script_miditakes; // just to validate function parameters
+WDL_PtrList_DOD<RprMidiTake> g_script_miditakes; // just to validate function parameters
 
 RprMidiTake* FNG_AllocMidiTake(MediaItem_Take* take)
 {

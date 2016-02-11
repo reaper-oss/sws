@@ -817,7 +817,7 @@ public:
 	//}
 };
 
-static SWSProjConfig<WDL_PtrList_DeleteOnDestroy<ZoomState> > g_zoomStack;
+static SWSProjConfig<WDL_PtrList_DOD<ZoomState> > g_zoomStack;
 static SWSProjConfig<int> g_zoomLevel;
 
 // Undo zoom prefs

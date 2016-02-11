@@ -47,13 +47,13 @@ const char* const SAVED_CC_LANES           = "<BR_SAVED_HIDDEN_CC_LANES";
 /******************************************************************************
 * Globals                                                                     *
 ******************************************************************************/
-SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_EnvSel> >             g_envSel;
-SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_CursorPos> >          g_cursorPos;
-SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_MidiNoteSel> >        g_midiNoteSel;
-SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_MidiCCEvents> >       g_midiCCEvents;
-SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_ItemMuteState> >      g_itemMuteState;
-SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_TrackSoloMuteState> > g_trackSoloMuteState;
-SWSProjConfig<BR_MidiToggleCCLane>                                 g_midiToggleHideCCLanes;
+SWSProjConfig<WDL_PtrList_DOD<BR_EnvSel> >             g_envSel;
+SWSProjConfig<WDL_PtrList_DOD<BR_CursorPos> >          g_cursorPos;
+SWSProjConfig<WDL_PtrList_DOD<BR_MidiNoteSel> >        g_midiNoteSel;
+SWSProjConfig<WDL_PtrList_DOD<BR_MidiCCEvents> >       g_midiCCEvents;
+SWSProjConfig<WDL_PtrList_DOD<BR_ItemMuteState> >      g_itemMuteState;
+SWSProjConfig<WDL_PtrList_DOD<BR_TrackSoloMuteState> > g_trackSoloMuteState;
+SWSProjConfig<BR_MidiToggleCCLane>                     g_midiToggleHideCCLanes;
 
 /******************************************************************************
 * Project state init/exit                                                     *

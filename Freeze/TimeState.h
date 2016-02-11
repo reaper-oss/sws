@@ -42,7 +42,7 @@ public:
 	bool m_bIsLoop;
 };
 
-extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<TimeSelection> > g_timeSel;
+extern SWSProjConfig<WDL_PtrList_DOD<TimeSelection> > g_timeSel;
 
 // "Exported" functions
 void SaveTimeSel(COMMAND_T* cs);

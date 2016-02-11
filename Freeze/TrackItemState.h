@@ -67,7 +67,7 @@ public:
 	int m_iColor;
 };
 
-extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<TrackState> > g_tracks;
+extern SWSProjConfig<WDL_PtrList_DOD<TrackState> > g_tracks;
 
 void SaveTrack(COMMAND_T* ct);
 void RestoreTrack(COMMAND_T* ct);

@@ -31,7 +31,7 @@
 
 //*****************************************************
 //Globals
-SWSProjConfig<WDL_PtrList_DeleteOnDestroy<MuteState> > g_muteStates;
+SWSProjConfig<WDL_PtrList_DOD<MuteState> > g_muteStates;
 
 //*****************************************************
 // MuteItem class

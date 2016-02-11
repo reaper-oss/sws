@@ -51,7 +51,8 @@
 #include "../reaper/localize.h"
 
 
-void Noop(COMMAND_T* _ct) {
+void Noop(COMMAND_T* _ct)
+{
 }
 
 void Noop2(COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd)
@@ -935,7 +936,7 @@ void ExclusiveToggle(COMMAND_T* _ct)
 // ScheduledJob
 ///////////////////////////////////////////////////////////////////////////////
 
-WDL_PtrList_DeleteOnDestroy<ScheduledJob> g_jobs;
+WDL_PtrList_DOD<ScheduledJob> g_jobs;
 
 void ScheduledJob::Schedule(ScheduledJob* _job)
 {

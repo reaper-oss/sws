@@ -333,13 +333,13 @@ int SNM_GetTrackDepth(MediaTrack* _tr)
 }
 
 
-WDL_PtrList_DeleteOnDestroy<SNM_TrackInt> g_trackFolderStates;
-WDL_PtrList_DeleteOnDestroy<SNM_TrackInt> g_trackFolderCompactStates;
+WDL_PtrList_DOD<SNM_TrackInt> g_trackFolderStates;
+WDL_PtrList_DOD<SNM_TrackInt> g_trackFolderCompactStates;
 
 void SaveTracksFolderStates(COMMAND_T* _ct)
 {
 	const char* strState = !_ct->user ? "I_FOLDERDEPTH" : "I_FOLDERCOMPACT";
-	WDL_PtrList_DeleteOnDestroy<SNM_TrackInt>* saveList = !_ct->user ? &g_trackFolderStates : &g_trackFolderCompactStates;
+	WDL_PtrList_DOD<SNM_TrackInt>* saveList = !_ct->user ? &g_trackFolderStates : &g_trackFolderCompactStates;
 	saveList->Empty(true);
 	for (int i=1; i <= GetNumTracks(); i++) // skip master
 	{
@@ -353,7 +353,7 @@ void RestoreTracksFolderStates(COMMAND_T* _ct)
 {
 	bool updated = false;
 	const char* strState = !_ct->user ? "I_FOLDERDEPTH" : "I_FOLDERCOMPACT";
-	WDL_PtrList_DeleteOnDestroy<SNM_TrackInt>* saveList = !_ct->user ? &g_trackFolderStates : &g_trackFolderCompactStates;
+	WDL_PtrList_DOD<SNM_TrackInt>* saveList = !_ct->user ? &g_trackFolderStates : &g_trackFolderCompactStates;
 	for (int i=1; i <= GetNumTracks(); i++) // skip master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
@@ -595,7 +595,7 @@ void RemoveAllEnvsSelTracks(COMMAND_T* _ct)
 // Toolbar track env. write mode toggle
 ///////////////////////////////////////////////////////////////////////////////
 
-WDL_PtrList_DeleteOnDestroy<SNM_TrackInt> g_toolbarAutoModeToggles;
+WDL_PtrList_DOD<SNM_TrackInt> g_toolbarAutoModeToggles;
 
 void ToggleWriteEnvExists(COMMAND_T* _ct)
 {
@@ -1143,8 +1143,9 @@ public:
 	WDL_FastString m_fn; MediaTrack* m_tr; double m_pos;
 };
 
-WDL_PtrList_DeleteOnDestroy<preview_register_t> g_playPreviews(DeleteTrackPreview); // DeleteTrackPreview: stop and delete the preview, its src, etc
-WDL_PtrList_DeleteOnDestroy<PausedPreview> g_pausedPreviews;
+// no WDL_PtrList_DOD here: need to stop the preview (and delete it, delete its src, etc)
+WDL_PtrList_DeleteOnDestroy<preview_register_t> g_playPreviews(DeleteTrackPreview);
+WDL_PtrList_DOD<PausedPreview> g_pausedPreviews;
 
 
 // stop playing track previews if needed

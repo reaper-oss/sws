@@ -52,7 +52,7 @@ public:
 	GUID m_guid;
 };
 
-extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<ActiveTakeTrack> > g_activeTakeTracks;
+extern SWSProjConfig<WDL_PtrList_DOD<ActiveTakeTrack> > g_activeTakeTracks;
 
 void SaveActiveTakes(COMMAND_T* = NULL);
 void RestoreActiveTakes(COMMAND_T* = NULL);

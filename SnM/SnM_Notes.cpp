@@ -87,8 +87,8 @@ enum {
 
 SNM_WindowManager<NotesWnd> g_notesWndMgr(NOTES_WND_ID);
 
-SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_SNM_TrackNotes;
-SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_RegionSubtitle> > g_pRegionSubs; // for markers too..
+SWSProjConfig<WDL_PtrList_DOD<SNM_TrackNotes> > g_SNM_TrackNotes;
+SWSProjConfig<WDL_PtrList_DOD<SNM_RegionSubtitle> > g_pRegionSubs; // for markers too..
 SWSProjConfig<WDL_FastString> g_prjNotes; // extra project notes
 
 int g_notesType = -1;

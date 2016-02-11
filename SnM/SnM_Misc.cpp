@@ -46,7 +46,7 @@
 // Reascript export, funcs made dumb-proof!
 ///////////////////////////////////////////////////////////////////////////////
 
-WDL_PtrList_DeleteOnDestroy<WDL_FastString> g_script_strs; // just to validate function parameters
+WDL_PtrList_DOD<WDL_FastString> g_script_strs; // just to validate function parameters
 
 WDL_FastString* SNM_CreateFastString(const char* _str) {
 	return g_script_strs.Add(new WDL_FastString(_str));

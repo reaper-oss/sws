@@ -165,7 +165,7 @@ bool GetStringFromNotesChunk(WDL_FastString* _notes, char* _buf, int _bufMaxSize
 bool GetNotesChunkFromString(const char* _buf, WDL_FastString* _notes, const char* _startLine = NULL);
 
 
-extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_SNM_TrackNotes;
+extern SWSProjConfig<WDL_PtrList_DOD<SNM_TrackNotes> > g_SNM_TrackNotes;
 
 
 void NotesSetTrackTitle();

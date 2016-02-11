@@ -32,7 +32,7 @@
 //*****************************************************
 //Globals
 
-SWSProjConfig<WDL_PtrList_DeleteOnDestroy<TimeSelection> > g_timeSel;
+SWSProjConfig<WDL_PtrList_DOD<TimeSelection> > g_timeSel;
 
 //*****************************************************
 // TimeSelection class

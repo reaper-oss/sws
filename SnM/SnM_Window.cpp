@@ -896,7 +896,7 @@ bool CycleFocusFXWnd(int _dir, bool _selectedTracks, bool* _cycled)
 }
 
 
-WDL_PtrList_DeleteOnDestroy<SNM_TrackInt> g_hiddenFloatingWindows;
+WDL_PtrList_DOD<SNM_TrackInt> g_hiddenFloatingWindows;
 int g_lastCycleFocusFXDirection = 0; //used for direction change..
 
 void CycleFocusFXMainWnd(int _dir, bool _selectedTracks, bool _showmain) 

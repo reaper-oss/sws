@@ -30,7 +30,7 @@
 
 //*****************************************************
 // Globals
-SWSProjConfig<WDL_PtrList_DeleteOnDestroy<ActiveTakeTrack> > g_activeTakeTracks;
+SWSProjConfig<WDL_PtrList_DOD<ActiveTakeTrack> > g_activeTakeTracks;
 
 //*****************************************************
 // ActiveTake Class

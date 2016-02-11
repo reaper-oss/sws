@@ -143,7 +143,7 @@ enum {
 SNM_WindowManager<LiveConfigsWnd> g_lcWndMgr(LIVECFG_WND_ID);
 SNM_MultiWindowManager<LiveConfigMonitorWnd> g_monWndsMgr(LIVECFG_MON_WND_ID);
 
-SWSProjConfig<WDL_PtrList_DeleteOnDestroy<LiveConfig> > g_liveConfigs;
+SWSProjConfig<WDL_PtrList_DOD<LiveConfig> > g_liveConfigs;
 WDL_PtrList<LiveConfigItem> g_clipboardConfigs; // for cut/copy/paste
 int g_configId = 0; // the current *displayed/edited* config id
 

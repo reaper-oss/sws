@@ -30,7 +30,7 @@
 #include "stdafx.h"
 #include "TrackSel.h"
 
-static SWSProjConfig<WDL_PtrList_DeleteOnDestroy<GUID> > g_pSelTracks;
+static SWSProjConfig<WDL_PtrList_DOD<GUID> > g_pSelTracks;
 void SaveTracks(WDL_TypedBuf<MediaTrack*>* tracks)
 {
 	g_pSelTracks.Cleanup();

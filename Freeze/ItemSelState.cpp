@@ -34,7 +34,7 @@
 //*****************************************************
 //Globals
 
-SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SelItemsTrack> > g_selItemsTrack;
+SWSProjConfig<WDL_PtrList_DOD<SelItemsTrack> > g_selItemsTrack;
 SWSProjConfig<SelItems> g_selItems;
 
 //*****************************************************

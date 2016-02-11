@@ -174,7 +174,7 @@ const int UPDATE_TIMER_FREQ  = 200;
 * Globals                                                                     *
 ******************************************************************************/
 SNM_WindowManager<BR_AnalyzeLoudnessWnd>                              g_loudnessWndManager(LOUDNESS_WND);
-static SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_LoudnessObject> > g_analyzedObjects;
+static SWSProjConfig<WDL_PtrList_DeleteOnDestroy<BR_LoudnessObject> > g_analyzedObjects; // no WDL_PtrList_DOD here (abort analysis)
 static HWND                                                           g_normalizeWnd = NULL;
 
 /******************************************************************************

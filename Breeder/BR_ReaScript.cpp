@@ -39,7 +39,7 @@
 * Globals                                                                     *
 ******************************************************************************/
 static BR_MouseInfo g_mouseInfo(BR_MouseInfo::MODE_ALL, false);
-WDL_PtrList_DeleteOnDestroy<BR_Envelope> g_script_brenvs;  // just to validate function parameters
+WDL_PtrList_DOD<BR_Envelope> g_script_brenvs; // just to validate function parameters
 
 /******************************************************************************
 * ReaScript export                                                            *

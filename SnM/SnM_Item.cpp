@@ -439,7 +439,7 @@ void SplitSelectAllItemsInRegion(COMMAND_T* _ct)
 // Takes
 ///////////////////////////////////////////////////////////////////////////////
 
-WDL_PtrList_DeleteOnDestroy<WDL_FastString> g_takesClipoard;
+WDL_PtrList_DOD<WDL_FastString> g_takesClipoard;
 
 void CopyCutTakes(COMMAND_T* _ct)
 {

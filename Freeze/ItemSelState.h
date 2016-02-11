@@ -66,7 +66,7 @@ public:
 	GUID m_guid;
 };
 
-extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SelItemsTrack> > g_selItemsTrack;
+extern SWSProjConfig<WDL_PtrList_DOD<SelItemsTrack> > g_selItemsTrack;
 extern SWSProjConfig<SelItems> g_selItems;
 
 // "Exported" functions

@@ -27,6 +27,12 @@
 
 #pragma once
 
+#if defined(_SWS_DEBUG)
+  #define WDL_PtrList_DOD WDL_PtrList_DeleteOnDestroy
+#else
+  #define WDL_PtrList_DOD WDL_PtrList
+#endif
+
 #define BUFFER_SIZE				2048
 #define SWS_THEMING				true
 #define SWS_INI					"SWS"

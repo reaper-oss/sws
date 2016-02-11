@@ -1088,9 +1088,10 @@ void IniFileInit()
 	g_SNM_SupportBuggyPlug = GetPrivateProfileInt("General", "BuggyPlugsSupport", 0, g_SNM_IniFn.Get());
 #ifdef _WIN32
 	g_SNM_ClearType = (GetPrivateProfileInt("General", "ClearTypeFont", 1, g_SNM_IniFn.Get()) == 1);
-	fn.SetLen(SNM_MAX_PATH);
-	GetPrivateProfileString("General", "DiffTool", "", fn.Get(), SNM_MAX_PATH, g_SNM_IniFn.Get());
-	g_SNM_DiffToolFn.Set(fn.Get());
+
+	char buf[SNM_MAX_PATH];
+	GetPrivateProfileString("General", "DiffTool", "", buf, sizeof(buf), g_SNM_IniFn.Get());
+	g_SNM_DiffToolFn.Set(buf);
 #endif
 	g_SNM_LearnPitchAndNormOSC = GetPrivateProfileInt("General", "LearnPitchAndNormOSC", 0, g_SNM_IniFn.Get());
 	g_SNM_Beta = GetPrivateProfileInt("General", "Beta", 0, g_SNM_IniFn.Get());

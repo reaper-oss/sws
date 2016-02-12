@@ -365,6 +365,11 @@ SECTION_INFO_T *SNM_GetActionSectionInfo(int _idx);
 int SNM_Init(reaper_plugin_info_t* _rec);
 void SNM_Exit();
 
+DYN_COMMAND_T* GetDynamicAction(int _idx);
+int RegisterDynamicActions(DYN_COMMAND_T* _cmds = NULL, const char* _inifn = NULL);
+int UnregisterDynamicActions(DYN_COMMAND_T* _cmds = NULL);
+void SaveDynamicActions(DYN_COMMAND_T* _cmds = NULL, const char* _inifn = NULL);
+
 bool SNM_GetActionName(const char* _custId, WDL_FastString* _nameOut, int _slot = -1);
 int GetFakeToggleState(COMMAND_T*);
 

@@ -468,6 +468,7 @@ echo Copied to "$(REAPER64_DIR)\plugins\$(TargetFilename)"</Command>
     <ClInclude Include="SnM\SnM_CueBuss.h" />
     <ClInclude Include="SnM\SnM_Cyclactions.h" />
     <ClInclude Include="SnM\SnM_Dlg.h" />
+    <ClInclude Include="SnM\SnM_DynActions.h" />
     <ClInclude Include="SnM\SnM_Find.h" />
     <ClInclude Include="SnM\SnM_FX.h" />
     <ClInclude Include="SnM\SnM_FXChain.h" />
@@ -1289,6 +1290,7 @@ echo Copied to "$(REAPER64_DIR)\plugins\$(TargetFilename)"</Command>
     <ClCompile Include="SnM\SnM_CueBuss.cpp" />
     <ClCompile Include="SnM\SnM_Cyclactions.cpp" />
     <ClCompile Include="SnM\SnM_Dlg.cpp" />
+    <ClCompile Include="SnM\SnM_DynActions.cpp" />
     <ClCompile Include="SnM\SnM_Find.cpp" />
     <ClCompile Include="SnM\SnM_FX.cpp" />
     <ClCompile Include="SnM\SnM_FXChain.cpp" />

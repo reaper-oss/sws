@@ -220,6 +220,9 @@
     <ClInclude Include="SnM\SnM_Dlg.h">
       <Filter>SnM</Filter>
     </ClInclude>
+    <ClInclude Include="SnM\SnM_DynActions.h">
+      <Filter>SnM</Filter>
+    </ClInclude>
     <ClInclude Include="SnM\SnM_Find.h">
       <Filter>SnM</Filter>
     </ClInclude>
@@ -858,6 +861,9 @@
       <Filter>SnM</Filter>
     </ClCompile>
     <ClCompile Include="SnM\SnM_Dlg.cpp">
+      <Filter>SnM</Filter>
+    </ClCompile>
+    <ClCompile Include="SnM\SnM_DynActions.cpp">
       <Filter>SnM</Filter>
     </ClCompile>
     <ClCompile Include="SnM\SnM_Find.cpp">

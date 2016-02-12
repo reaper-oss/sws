@@ -207,7 +207,7 @@ echo Warning: reascript_vararg.h generation failed (PHP installed?)
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <AdditionalIncludeDirectories>$(SolutionDir);$(REAPER64_DIR);$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN64;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -362,7 +362,7 @@ echo Warning: reascript_vararg.h generation failed (PHP installed?)
     </Midl>
     <ClCompile>
       <AdditionalIncludeDirectories>$(SolutionDir);$(REAPER64_DIR);$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS;HEAP_DEBUG;_SWS_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN64;_WINDOWS;_CRT_SECURE_NO_WARNINGS;HEAP_DEBUG;_SWS_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
@@ -592,7 +592,11 @@ echo Copied to "$(REAPER64_DIR)\plugins\$(TargetFilename)"</Command>
     <ClInclude Include="Wol\wol.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="sws_extension.rc" />
+    <ResourceCompile Include="sws_extension.rc">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Test|x64'">_WIN64;_SWS_DEBUG;_VC80_UPGRADE=0x0710;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">_WIN64;_VC80_UPGRADE=0x0710;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">_SWS_DEBUG;_VC80_UPGRADE=0x0710;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Breeder\BR_ContextualToolbars.cpp" />

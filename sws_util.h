@@ -196,7 +196,7 @@ int SWSRegisterCmds(COMMAND_T* pCommands, const char* cFile, bool localize); // 
 
 int SWSCreateRegisterDynamicCmd(int uniqueSectionId, int cmdId, void(*doCommand)(COMMAND_T*), void(*onAction)(COMMAND_T*, int, int, int, HWND), int(*getEnabled)(COMMAND_T*), const char* cID, const char* cDesc, const char* cMenu, INT_PTR user, const char* cFile, bool localize);
 #define SWSRegisterCommandExt(a, b, c, d, e) SWSCreateRegisterDynamicCmd(0, 0, a, NULL, NULL, b, c, "", d, __FILE__, e)
-void SWSFreeUnregisterDynamicCmd(int id);
+bool SWSFreeUnregisterDynamicCmd(int id);
 
 void ActionsList(COMMAND_T*);
 int SWSGetCommandID(void (*cmdFunc)(COMMAND_T*), INT_PTR user = 0, const char** pMenuText = NULL);
@@ -255,9 +255,6 @@ const char* GetLocalizedActionName(const char* _defaultStr, int _flags = 0, cons
 bool IsLocalizableAction(const char* _customId);
 TrackEnvelope* SWS_GetTakeEnvelopeByName(MediaItem_Take* take, const char* envname);
 TrackEnvelope* SWS_GetTrackEnvelopeByName(MediaTrack* track, const char* envname);
-
-// Generate html whatsnew, MakeWhatsNew.cpp
-int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML, const char* _url);
 
 // Functions export to reascript and c++ plugins, Reascript.cpp
 bool RegisterExportedFuncs(reaper_plugin_info_t* _rec);

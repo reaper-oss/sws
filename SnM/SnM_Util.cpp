@@ -669,6 +669,14 @@ void SNM_UpgradeIniFiles(int _iniVersion)
 		WritePrivateProfileString("NbOfActions", "S&M_LIVECFG_FADES_TGL", NULL, g_SNM_IniFn.Get());
 		WritePrivateProfileString("NbOfActions", "S&M_LIVECFG_FADES_ON", NULL, g_SNM_IniFn.Get());
 		WritePrivateProfileString("NbOfActions", "S&M_LIVECFG_FADES_OFF", NULL, g_SNM_IniFn.Get());
+    
+		// reaper_sws_whatsnew.txt is not deployed anymore (replaced with online help)
+		// note: on Win, this file is removed by NSIS installers
+#ifndef _WIN32
+		WDL_FastString fn;
+		fn.SetFormatted(SNM_MAX_PATH, "%s/UserPlugins/reaper_sws_whatsnew.txt", GetResourcePath());
+		SNM_DeleteFile(fn.Get(), false); // lazy cleanup
+#endif    
 	}
 }
 

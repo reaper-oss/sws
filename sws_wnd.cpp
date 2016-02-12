@@ -969,7 +969,7 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 		OnItemClk(GetListItem(s->iItem), iDataCol, iKeys);
 
 		// Then do some extra work for the item button click handler
-		if (s->iItem >= 0 && m_pCols[iDataCol].iType & 2)
+		if (s->iItem >= 0 && (m_pCols[iDataCol].iType & 2))
 		{	// Clicked on an item "button"
 #ifdef _WIN32
 			if ((GetTickCount() - m_dwSavedSelTime < 20 || (iKeys & LVKF_SHIFT)) && m_pSavedSel.GetSize() == ListView_GetItemCount(m_hwndList) && m_pSavedSel.Get()[s->iItem] & LVIS_SELECTED)
@@ -1036,7 +1036,7 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 	else if (s->hdr.code == NM_DBLCLK && s->iItem >= 0)
 	{
 		int iDataCol = DisplayToDataCol(s->iSubItem);
-		if (iDataCol >= 0 && iDataCol < m_iCols && m_pCols[iDataCol].iType & 1 &&
+		if (iDataCol >= 0 && iDataCol < m_iCols && (m_pCols[iDataCol].iType & 1) &&
 			IsEditListItemAllowed(GetListItem(s->iItem), iDataCol))
 		{
 			EditListItem(s->iItem, iDataCol);
@@ -1548,9 +1548,9 @@ bool SWS_ListView::EditListItemEnd(bool bSave, bool bResort)
 
 int SWS_ListView::OnEditingTimer()
 {
-	if (m_iEditingItem == -1 || GetFocus() != m_hwndEdit)
+	HWND hfoc=GetFocus();
+	if (m_iEditingItem == -1 || (hfoc != m_hwndEdit && !IsChild(m_hwndEdit, hfoc)))
 		EditListItemEnd(true);
-
 	return 0;
 }
 

@@ -468,6 +468,7 @@ echo Copied to "$(REAPER64_DIR)\plugins\$(TargetFilename)"</Command>
     <ClInclude Include="SnM\SnM_CueBuss.h" />
     <ClInclude Include="SnM\SnM_Cyclactions.h" />
     <ClInclude Include="SnM\SnM_Dlg.h" />
+    <ClInclude Include="SnM\SnM_DynActions.h" />
     <ClInclude Include="SnM\SnM_Find.h" />
     <ClInclude Include="SnM\SnM_FX.h" />
     <ClInclude Include="SnM\SnM_FXChain.h" />
@@ -1289,6 +1290,7 @@ echo Copied to "$(REAPER64_DIR)\plugins\$(TargetFilename)"</Command>
     <ClCompile Include="SnM\SnM_CueBuss.cpp" />
     <ClCompile Include="SnM\SnM_Cyclactions.cpp" />
     <ClCompile Include="SnM\SnM_Dlg.cpp" />
+    <ClCompile Include="SnM\SnM_DynActions.cpp" />
     <ClCompile Include="SnM\SnM_Find.cpp" />
     <ClCompile Include="SnM\SnM_FX.cpp" />
     <ClCompile Include="SnM\SnM_FXChain.cpp" />
@@ -1348,16 +1350,6 @@ echo Copied to "$(REAPER64_DIR)\plugins\$(TargetFilename)"</Command>
     <ClCompile Include="Snapshots\SnapshotClass.cpp" />
     <ClCompile Include="Snapshots\SnapshotMerge.cpp" />
     <ClCompile Include="Snapshots\Snapshots.cpp" />
-    <ClCompile Include="BuildUtils\MakeWhatsNew.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-      </PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-      </PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">
-      </PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Test|x64'">
-      </PrecompiledHeader>
-    </ClCompile>
     <ClCompile Include="Reascript.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>

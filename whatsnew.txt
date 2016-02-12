@@ -1,3 +1,25 @@
+S&M dynamic actions
++Add window "Dynamic actions settings" to customize the number of slot actions (rather than editing the S&M.ini file)
+ This new window is available via action or Main menu > Extensions > Action settings > Number of actions...
++Increase the maximum number of dynamic actions (from 99 to 255)
+
+Auto color/icon/layout
++Add filter "(record armed)"
++Fix http://forum.cockos.com/showpost.php?p=1634111|rules with icons in sub-folders|
+
+Fixes
++Fix http://forum.cockos.com/showpost.php?p=1633922|Resources window issue| introduced in v2.8.6
++Fix various actions/features vs tempo map
++Media file actions: fix playback stop vs certain media files
++About box: fix pre-release what's new URL
+
+Other
++Speed up REAPER launch and REAPER exit
++OS X: smaller build, internal improvements (SWS imports REAPER's SWELL)
++Windows OS: prevent reaper_sws_whatsnew.txt deployment
++Windows OS: reduce list views flickering
++Windows OS: improve DLL file tags (copyright, authors, etc)
+
 !v2.8.6 pre-release build (February 5, 2016)
 <strong>Reminder: this new SWS version requires REAPER v5.15pre1+!</strong>
 
@@ -5,8 +27,8 @@ Live Configs
 +<strong>Remove the action section "S&M Extension"</strong>
  This section is useless now (it was introduced to workaround some old API limitations).
  <strong>All related actions have been moved to to the "Main" section. If you have learned some of these actions, you will need to update these controller bindings (sorry for the trouble!)</strong>
-+<strong>Support up to 8 controllers/configs</strong>
-+<strong>Add option "Disarm all but active track"</strong>
++Support up to 8 controllers/configs
++Add option "Disarm all but active track"
  Note: this new option is disabled/grayed if an input track is defined (incompatible)
 +Input track: mute sends when creating an input track or when adding new config tracks (prevent sound blast)
 +Fix/improve preset display and context menus (esp. for VST3 presets)
@@ -14,7 +36,7 @@ Live Configs
 +Internal updates (RPP state)
 
 Notes window
-+Properly support project notes
++Properly support REAPER project notes
 +Add a new type of notes: "Extra project notes"
 +Windows OS: remove "Action help"
 
@@ -28,7 +50,7 @@ Fixes
 
 Other
 +Speed up REAPER exit
-+Improve "crossplatform-ability"
++Improve support for files transferred from/to OS X from/to Win
 +Improve list view sort (logical sort)
 +Improve color menus (logical sort)
 +Improve some envelope actions (e.g. remove all/arm all envelope actions also take HW send envelopes into account)

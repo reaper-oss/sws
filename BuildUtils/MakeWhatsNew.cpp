@@ -280,10 +280,14 @@ int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML, const c
 		}
 		else // "Default" case, just write out the character
 		{
-			if (cBuf[iPos] == '\"') // Replace quotes with &quot;
+			if (cBuf[iPos] == '\"')
 				fputs("&quot;", pOut);
-			else if (cBuf[iPos] == '&') // Replace & with &amp;
+			else if (cBuf[iPos] == '&')
 				fputs("&amp;", pOut);
+			else if (cBuf[iPos] == '>')
+				fputs("&gt;", pOut);
+			else if (cBuf[iPos] == '<')
+				fputs("&lt;", pOut);
 			else if (cBuf[iPos] == ' ' && cBuf[iPos+1] == ' ')
 				fputs("&nbsp;", pOut);
 			else

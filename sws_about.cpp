@@ -36,16 +36,7 @@
 #include "Prompt.h"
 
 
-#define WHATSNEW_HTM			"%ssws_whatsnew.html"
-#ifdef _WIN32
-#define WHATSNEW_TXT			"%s\\Plugins\\reaper_sws_whatsnew.txt"
-#else
-#define WHATSNEW_TXT			"%s/UserPlugins/reaper_sws_whatsnew.txt" // deprecated, not deployed on OSX anymore
-#endif
-
-
 static HWND s_hwndAbout = NULL;
-
 
 bool IsOfficialVersion()
 {
@@ -54,49 +45,7 @@ bool IsOfficialVersion()
 
 void WhatsNew(COMMAND_T*)
 {
-	WDL_FastString fnIn;
-	fnIn.SetFormatted(BUFFER_SIZE, WHATSNEW_TXT, 
-#ifdef _WIN32
-		GetExePath());
-#else
-		GetResourcePath());
-#endif
-
-#ifndef _WIN32 // reaper_sws_whatsnew.txt not deployed on OSX anymore, replaced with online help
-	if (FileOrDirExistsErrMsg(fnIn.Get(), false))
-	{
-		SNM_DeleteFile(fnIn.Get(), false); // lazy cleanup
-	}
-
-	if (!IsOfficialVersion())
-	{
-		WDL_FastString url;
-		url.SetFormatted(512, SWS_URL_BETA_WHATSNEW, SWS_VERSION);
-		ShellExecute(GetMainHwnd(), "open", url.Get(), NULL, NULL, SW_SHOWNORMAL);
-	}
-	else
-	{
-		ShellExecute(GetMainHwnd(), "open", SWS_URL_WHATSNEW, NULL, NULL, SW_SHOWNORMAL);
-	}
-#else
-	if (FileOrDirExistsErrMsg(fnIn.Get()))
-	{
-		WDL_FastString fnOut;
-		char tmpDir[BUFFER_SIZE] = "";
-		GetTempPath(sizeof(tmpDir), tmpDir);
-		fnOut.SetFormatted(BUFFER_SIZE, WHATSNEW_HTM, tmpDir);
-
-		if (!GenHtmlWhatsNew(fnIn.Get(), fnOut.Get(), true, SWS_URL))
-		{
-			ShellExecute(GetMainHwnd(), "open", fnOut.Get(), NULL, NULL, SW_SHOWNORMAL);
-		}
-		else
-		{
-			MessageBox(GetMainHwnd(), __LOCALIZE("The generation of the \"What's new?\" HTML page has failed!\nOpening a raw text file instead...","sws_DLG_109"), __LOCALIZE("SWS - Warning","sws_DLG_109"), MB_OK);
-			ShellExecute(GetMainHwnd(), "open", fnIn.Get(), NULL, NULL, SW_SHOWNORMAL);
-		}
-	}
-#endif
+	ShellExecute(GetMainHwnd(), "open", IsOfficialVersion() ? SWS_URL_WHATSNEW : SWS_URL_BETA_WHATSNEW, NULL, NULL, SW_SHOWNORMAL);
 }
 
 INT_PTR WINAPI doAbout(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)

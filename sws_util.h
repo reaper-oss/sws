@@ -196,7 +196,7 @@ int SWSRegisterCmds(COMMAND_T* pCommands, const char* cFile, bool localize); // 
 
 int SWSCreateRegisterDynamicCmd(int uniqueSectionId, int cmdId, void(*doCommand)(COMMAND_T*), void(*onAction)(COMMAND_T*, int, int, int, HWND), int(*getEnabled)(COMMAND_T*), const char* cID, const char* cDesc, const char* cMenu, INT_PTR user, const char* cFile, bool localize);
 #define SWSRegisterCommandExt(a, b, c, d, e) SWSCreateRegisterDynamicCmd(0, 0, a, NULL, NULL, b, c, "", d, __FILE__, e)
-void SWSFreeUnregisterDynamicCmd(int id);
+bool SWSFreeUnregisterDynamicCmd(int id);
 
 void ActionsList(COMMAND_T*);
 int SWSGetCommandID(void (*cmdFunc)(COMMAND_T*), INT_PTR user = 0, const char** pMenuText = NULL);

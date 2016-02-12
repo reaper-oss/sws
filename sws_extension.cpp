@@ -294,14 +294,16 @@ int SWSCreateRegisterDynamicCmd(int uniqueSectionId, int cmdId, void(*doCommand)
 	return SWSRegisterCmd(ct, cFile, cmdId, localize);
 }
 
-void SWSFreeUnregisterDynamicCmd(int id)
+bool SWSFreeUnregisterDynamicCmd(int id)
 {
 	if (COMMAND_T* ct = SWSUnregisterCmd(id))
 	{
 		free((void*)ct->accel.desc);
 		free((void*)ct->id);
 		DELETE_NULL(ct);
+		return true;
 	}
+	return false;
 }
 
 // Returns the COMMAND_T entry (so it can be freed if necessary)

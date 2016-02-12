@@ -54,15 +54,15 @@ void DynActionListView::GetItemText(SWS_ListItem* _item, int _col, char* _str, i
   
 	switch(_col)
 	{
-    case 0:
-      lstrcpyn(_str, item->desc, _strMax);
-      ReplaceWithChar(_str, "%d", 'n');
-      break;
-    case 1:
-      _snprintfSafe(_str, _strMax, "%d", item->count);
+		case 0:
+			lstrcpyn(_str, item->desc, _strMax);
+			ReplaceWithChar(_str, "%d", 'n');
 			break;
-    case 2:
-      _snprintfSafe(_str, _strMax, "%d", item->max);
+		case 1:
+			_snprintfSafe(_str, _strMax, "%d", item->count);
+			break;
+		case 2:
+			_snprintfSafe(_str, _strMax, "%d", item->max);
 			break;
 	}
 }
@@ -70,27 +70,27 @@ void DynActionListView::GetItemText(SWS_ListItem* _item, int _col, char* _str, i
 void DynActionListView::SetItemText(SWS_ListItem* _item, int _col, const char* _str)
 {
 	DYN_COMMAND_T* item = (DYN_COMMAND_T*)_item;  
-  if (item && _col==1 && _str && (!strcmp(_str, "0") || atoi(_str)))
-  {
-    int n = BOUNDED(atoi(_str), item->min, item->max);
-    if (n != item->count)
-    {
-      item->count = n;
-      EnableWindow(GetDlgItem(GetParent(m_hwndList), IDOK), true);
-    }
-  }
+	if (item && _col==1 && _str && (!strcmp(_str, "0") || atoi(_str)))
+	{
+		int n = BOUNDED(atoi(_str), item->min, item->max);
+		if (n != item->count)
+		{
+			item->count = n;
+			EnableWindow(GetDlgItem(GetParent(m_hwndList), IDOK), true);
+		}
+	}
 }
 
 void DynActionListView::GetItemList(SWS_ListItemList* pList)
 {
-  for (int i=0; ; i++)
-  {
-    if (DYN_COMMAND_T* da = GetDynamicAction(i))
-    {
-      if (da->desc == LAST_COMMAND) break;
-      pList->Add((SWS_ListItem*)da);
-    }
-  }
+	for (int i=0; ; i++)
+	{
+		if (DYN_COMMAND_T* da = GetDynamicAction(i))
+		{
+			if (da->desc == LAST_COMMAND) break;
+			pList->Add((SWS_ListItem*)da);
+		}
+	}
 }
 
 INT_PTR WINAPI DynActionWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -98,14 +98,14 @@ INT_PTR WINAPI DynActionWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM l
 	static WDL_WndSizer resize;
 	static DynActionListView* lv = NULL;
 
-  if (SWS_THEMING)
+	if (SWS_THEMING)
 	{
-    if (INT_PTR r = SNM_HookThemeColorsMessage(hwndDlg, uMsg, wParam, lParam))
-		  return r;
+		if (INT_PTR r = SNM_HookThemeColorsMessage(hwndDlg, uMsg, wParam, lParam))
+			return r;
   
-    if (lv && ListView_HookThemeColorsMessage(hwndDlg, uMsg, lParam, lv->GetOldColors(), GetWindowLong(lv->GetHWND(),GWL_ID), 0, lv->HideGridLines() ? 0 : lv->GetColumnCount()))
-      return 1;
-  }
+		if (lv && ListView_HookThemeColorsMessage(hwndDlg, uMsg, lParam, lv->GetOldColors(), GetWindowLong(lv->GetHWND(),GWL_ID), 0, lv->HideGridLines() ? 0 : lv->GetColumnCount()))
+			return 1;
+	}
 
 	switch (uMsg)
 	{
@@ -114,27 +114,27 @@ INT_PTR WINAPI DynActionWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM l
 			resize.init_item(IDC_LIST);
 			resize.init_item(IDCANCEL, 1.0, 1.0, 1.0, 1.0);
 			resize.init_item(IDOK, 1.0, 1.0, 1.0, 1.0);
-      EnableWindow(GetDlgItem(hwndDlg, IDOK), false);
+			EnableWindow(GetDlgItem(hwndDlg, IDOK), false);
 			RestoreWindowPos(hwndDlg, DYNACTIONWND_POS_KEY);
 
 			lv = new DynActionListView(GetDlgItem(hwndDlg, IDC_LIST), GetDlgItem(hwndDlg, IDC_EDIT));
 			if (SWS_THEMING)
 			{
 #ifndef _WIN32
-        // override list view props for grid line theming
-        ListView_SetExtendedListViewStyleEx(lv->GetHWND(), LVS_EX_GRIDLINES|LVS_EX_FULLROWSELECT|LVS_EX_HEADERDRAGDROP, LVS_EX_GRIDLINES|LVS_EX_FULLROWSELECT|LVS_EX_HEADERDRAGDROP);
+				// override list view props for grid line theming
+				ListView_SetExtendedListViewStyleEx(lv->GetHWND(), LVS_EX_GRIDLINES|LVS_EX_FULLROWSELECT|LVS_EX_HEADERDRAGDROP, LVS_EX_GRIDLINES|LVS_EX_FULLROWSELECT|LVS_EX_HEADERDRAGDROP);
 #endif
-        SNM_ThemeListView(lv); // initial theming, then ListView_HookThemeColorsMessage() does the job
+				SNM_ThemeListView(lv); // initial theming, then ListView_HookThemeColorsMessage() does the job
 			}
 			lv->Update();
 			return 0;
 		case WM_TIMER:
 			if (lv && wParam == 0x1000) // 0x1000 == CELL_EDIT_TIMER
-        lv->OnEditingTimer();
-      break;
+				lv->OnEditingTimer();
+			break;
 		case WM_CONTEXTMENU:
 			break;
-    case WM_NOTIFY:
+		case WM_NOTIFY:
 		{
 			NMHDR* hdr = (NMHDR*)lParam;
 			if (lv && hdr->hwndFrom == lv->GetHWND())
@@ -143,18 +143,17 @@ INT_PTR WINAPI DynActionWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM l
 		}
 		case WM_COMMAND:
 			switch (LOWORD(wParam))
-      {
-        case IDOK:
-          UnregisterDynamicActions();
-          SaveDynamicActions();
-          RegisterDynamicActions();
-          // fall through!
-
-        case IDCANCEL:
-          SaveWindowPos(hwndDlg, DYNACTIONWND_POS_KEY);
-          EndDialog(hwndDlg,0);
-          break;
-      }
+			{
+				case IDOK:
+					UnregisterDynamicActions();
+					SaveDynamicActions();
+					RegisterDynamicActions();
+					// fall through!
+				case IDCANCEL:
+					SaveWindowPos(hwndDlg, DYNACTIONWND_POS_KEY);
+					EndDialog(hwndDlg,0);
+					break;
+			}
 			return 0;
 		case WM_SIZE:
 			if (wParam != SIZE_MINIMIZED)
@@ -171,11 +170,11 @@ INT_PTR WINAPI DynActionWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM l
 			break;
 		case WM_DESTROY:
 			if (lv) 
-      {
-        lv->EditListItemEnd(false);
-        lv->OnDestroy();
-      }
-      DELETE_NULL(lv);
+			{
+				lv->EditListItemEnd(false);
+				lv->OnDestroy();
+			}
+			DELETE_NULL(lv);
 			resize.init(NULL);
 			break;
 	}
@@ -186,4 +185,3 @@ void ShowDynActionWnd(COMMAND_T* _ct)
 {
 	DialogBox(g_hInst, MAKEINTRESOURCE(IDD_SNM_DYNACTION), g_hwndParent, DynActionWndProc);
 }
-

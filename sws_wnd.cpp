@@ -1548,9 +1548,9 @@ bool SWS_ListView::EditListItemEnd(bool bSave, bool bResort)
 
 int SWS_ListView::OnEditingTimer()
 {
-	if (m_iEditingItem == -1 || GetFocus() != m_hwndEdit)
+	HWND hfoc=GetFocus();
+	if (m_iEditingItem == -1 || (hfoc != m_hwndEdit && !IsChild(m_hwndEdit, hfoc)))
 		EditListItemEnd(true);
-
 	return 0;
 }
 

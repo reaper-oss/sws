@@ -767,7 +767,7 @@ int RegisterDynamicActions(DYN_COMMAND_T* _cmds, const char* _inifn)
 
 		int n = GetPrivateProfileInt("NbOfActions", ct->id, -1, _inifn);
 		if (n<0) { n=ct->count; s_dynactions_need_save=1; }
-		ct->count = BOUNDED(n, 0, ct->max<=0 ? SNM_MAX_DYN_ACTIONS : ct->max);
+		ct->count = BOUNDED(n, ct->min, ct->max<=0 ? SNM_MAX_DYN_ACTIONS : ct->max);
 		if (n != ct->count) s_dynactions_need_save=1;
 
 		for (int j=0; j<ct->count; j++)

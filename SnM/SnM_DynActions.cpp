@@ -72,7 +72,7 @@ void DynActionListView::SetItemText(SWS_ListItem* _item, int _col, const char* _
 	DYN_COMMAND_T* item = (DYN_COMMAND_T*)_item;  
   if (item && _col==1 && _str && (!strcmp(_str, "0") || atoi(_str)))
   {
-    int n = BOUNDED(atoi(_str), 0, item->max);
+    int n = BOUNDED(atoi(_str), item->min, item->max);
     if (n != item->count)
     {
       item->count = n;

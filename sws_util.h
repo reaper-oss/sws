@@ -232,13 +232,13 @@ bool TrackMatchesGuid(MediaTrack* tr, const GUID* g);
 const char *stristr(const char* a, const char* b);
 
 #ifdef _WIN32
-wchar_t* WideCharPlz(const char* inChar);
-void dprintf(const char* format, ...);
+  wchar_t* WideCharPlz(const char* inChar);
+  void dprintf(const char* format, ...);
 #else
-#define dprintf printf
-#ifndef OutputDebugString
-#define OutputDebugString printf
-#endif
+  #define dprintf printf
+  #ifndef OutputDebugString
+    #define OutputDebugString(x) printf("%s", x)
+  #endif
 #endif
 
 void SWS_GetSelectedTracks(WDL_TypedBuf<MediaTrack*>* buf, bool bMaster = false);

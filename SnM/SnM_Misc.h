@@ -60,5 +60,7 @@ void AutoRefreshToolbarRun();
 // misc actions
 void ChangeMetronomeVolume(COMMAND_T*);
 void SimulateMouseClick(COMMAND_T*);
+void DumpWikiActionList(COMMAND_T*);
+void DumpActionList(COMMAND_T*);
 
 #endif

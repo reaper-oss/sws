@@ -489,8 +489,8 @@ static COMMAND_T s_cmdTable[] =
 #ifdef _WIN32
 	{ { DEFACCEL, "SWS/S&M: Left mouse click at cursor position (use w/o modifier)" }, "S&M_MOUSE_L_CLICK", SimulateMouseClick, NULL, 0},
 #endif
-	{ { DEFACCEL, "SWS/S&M: Dump ALR Wiki summary (native actions only)" }, "S&M_ALRSUMMARY1", DumpWikiActionList, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Dump ALR Wiki summary (SWS actions only)" }, "S&M_ALRSUMMARY2", DumpWikiActionList, NULL, 2},
+	{ { DEFACCEL, "SWS/S&M: Dump ALR Wiki summary (native actions only)" }, "S&M_ALRSUMMARY1", DumpWikiActionList, NULL, 4},
+	{ { DEFACCEL, "SWS/S&M: Dump ALR Wiki summary (SWS actions only)" }, "S&M_ALRSUMMARY2", DumpWikiActionList, NULL, 8},
 	{ { DEFACCEL, "SWS/S&M: Dump action list (native actions only)" }, "S&M_DUMP_ACTION_LIST", DumpActionList, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Dump action list (SWS actions only)" }, "S&M_DUMP_SWS_ACTION_LIST", DumpActionList, NULL, 8},
 	{ { DEFACCEL, "SWS/S&M: Dump action list (custom actions only)" }, "S&M_DUMP_CUST_ACTION_LIST", DumpActionList, NULL, 16},

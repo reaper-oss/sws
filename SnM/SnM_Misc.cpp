@@ -35,6 +35,7 @@
 #ifdef _SNM_HOST_AW
 #include "../Misc/Adam.h"
 #endif
+#include "../reaper/localize.h"
 
 #define TAGLIB_STATIC
 #define TAGLIB_NO_CONFIG
@@ -418,4 +419,101 @@ void SimulateMouseClick(COMMAND_T* _ct)
 	mouse_event(MOUSEEVENTF_LEFTUP, p.x, p.y, 0, 0);
 	WinWaitForEvent(WM_LBUTTONUP);
 }
+
+// dump actions or the wiki ALR summary
+// see http://forum.cockos.com/showthread.php?t=61929 and http://wiki.cockos.com/wiki/index.php/Action_List_Reference
+// _type: &1 ALR wiki (txt dump otherwise), &2=deprecated, &4=native, &8=SWS, &16=user macros/script/cycle actions/reaconsole actions
+bool DumpActionList(int _type, const char* _title, const char* _lineFormat, const char* _heading, const char* _ending)
+{
+  char fn[SNM_MAX_PATH];
+  if (!BrowseForSaveFile(_title, GetResourcePath(), "ActionList.txt", SNM_TXT_EXT_LIST, fn, sizeof(fn)))
+    return false;
+  
+  int nbWrote=0;
+  if (FILE* f = fopenUTF8(fn, "w"))
+  {
+    // flush
+    fputs("\n", f);
+    fclose(f);
+    
+    f = fopenUTF8(fn, "a"); 
+    if (!f)
+      return false; // just in case..
+    
+    if (_heading)
+      fprintf(f, "%s", _heading);
+    
+    char custId[SNM_MAX_ACTION_CUSTID_LEN];
+    char sectionURL[SNM_MAX_SECTION_NAME_LEN]; 
+    for (int sec=0; sec<SNM_NUM_MANAGED_SECTIONS; sec++)
+    {
+      if (sec==SNM_SEC_IDX_MAIN_ALT) continue; // skip "Main (alt recording)" section
+      
+      KbdSectionInfo* section = SectionFromUniqueID(SNM_GetActionSectionInfo(sec)->unique_id);
+      if (!GetSectionURL((_type&1)==1, section, sectionURL, sizeof(sectionURL)))
+      {
+        continue;
+      }
+      
+      int i=0;
+      int cmdId;
+      const char *cmdName;
+      while((cmdId = kbd_enumerateActions(section, i++, &cmdName)))
+      {
+        *custId='\0';
+        {
+          const char *strid=ReverseNamedCommandLookup(cmdId);
+          if (strid) _snprintfStrict(custId, sizeof(custId), "_%s", strid);
+          else _snprintfStrict(custId, sizeof(custId), "%d", cmdId);
+        }
+        bool isCustom = IsMacroOrScript(cmdName);
+        int isSws = IsSwsAction(cmdName);
+        bool isSwsCustom = !IsLocalizableAction(custId);
+        
+        if (((_type&4) && !isSws && !isCustom && !isSwsCustom) || 
+            ((_type&8) && isSws && !isCustom && !isSwsCustom) ||
+            ((_type&16) && (isCustom||isSwsCustom)))
+        {
+          if (*custId)
+          {
+            fprintf(f, _lineFormat, sectionURL, custId, cmdName, custId);
+            nbWrote++;
+          }
+        }
+      }
+    }
+    
+    if (_ending)
+      fprintf(f, "%s", _ending); 
+    
+    fclose(f);
+    
+    WDL_FastString msg;
+    msg.SetFormatted(SNM_MAX_PATH, nbWrote ? __LOCALIZE_VERFMT("Wrote %s","sws_mbox") : __LOCALIZE_VERFMT("No action wrote in %s!","sws_mbox"), fn);
+    MessageBox(GetMainHwnd(), msg.Get(), _title, MB_OK);
+    return true;
+  }
+  else
+    MessageBox(GetMainHwnd(), __LOCALIZE("Dump failed: unable to write to file!","sws_mbox"), _title, MB_OK);
+  return false;
+}
+
+void DumpWikiActionList(COMMAND_T* _ct)
+{
+	DumpActionList(((int)_ct->user)|1,
+                 __LOCALIZE("S&M - Save ALR Wiki summary","sws_mbox"),
+                 "|-\n| [[%s_%s|%s]] || %s\n",
+                 "{| class=\"wikitable\"\n|-\n! Action name !! Cmd ID\n",
+                 "|}\n");
+}
+
+void DumpActionList(COMMAND_T* _ct)
+{
+	DumpActionList((int)_ct->user,
+                 __LOCALIZE("S&M - Dump action list","sws_mbox"),
+                 "%s\t%s\t%s\n",
+                 "Section\tId\tAction\n",
+                 NULL);
+}
+
 

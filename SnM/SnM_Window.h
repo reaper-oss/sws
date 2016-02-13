@@ -47,8 +47,6 @@ void ShowThemeHelper(COMMAND_T*);
 HWND GetActionListBox(char* _currentSection, int _sectionSz);
 int GetSelectedAction(char* _section, int _secSize, int* _cmdId, char* _id, int _idSize, char* _desc = NULL, int _descSize = -1);
 bool GetSelectedAction(char* _idstrOut, int _idStrSz, KbdSectionInfo* _expectedSection = NULL);
-void DumpWikiActionList(COMMAND_T*);
-void DumpActionList(COMMAND_T*);
 
 void ShowFXChain(COMMAND_T*);
 void HideFXChain(COMMAND_T*);

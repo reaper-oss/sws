@@ -117,7 +117,7 @@ bool hookCommandProc(int iCmd, int flag)
 				sReentrantCmds.Delete(sReentrantCmds.Find(cmd->id));
 				return true;
 			}
-#ifdef ACTION_DEBUG
+#ifdef _SWS_DEBUG
 			else
 			{
 				OutputDebugString("hookCommandProc - recursive action: ");
@@ -166,7 +166,7 @@ bool hookCommandProc2(KbdSectionInfo* sec, int cmdId, int val, int valhw, int re
 					sReentrantCmds.Delete(sReentrantCmds.Find(cmd->id));
 					return true;
 				}
-#ifdef ACTION_DEBUG
+#ifdef _SWS_DEBUG
 				else
 				{
 					OutputDebugString("hookCommandProc2 - recursive action: ");
@@ -206,7 +206,7 @@ int toggleActionHook(int iCmd)
 				sReentrantCmds.Delete(sReentrantCmds.Find(cmd->id));
 				return state;
 			}
-#ifdef ACTION_DEBUG
+#ifdef _SWS_DEBUG
 			else
 			{
 				OutputDebugString("toggleActionHook - recursive action: ");
@@ -276,7 +276,7 @@ int SWSRegisterCmds(COMMAND_T* pCommands, const char* cFile, bool localize)
 	return 1;
 }
 
-// Make and register a dynamic action (created at runtime)
+// Make and register a dynamic action (created/removed at runtime)
 // If cmdId==0, get command ID from Reaper (use the provided cmdId otherwise)
 // Note: SWSFreeUnregisterDynamicCmd() can be used to free/unregister such an action
 int SWSCreateRegisterDynamicCmd(int uniqueSectionId, int cmdId, void(*doCommand)(COMMAND_T*), void(*onAction)(COMMAND_T*, int, int, int, HWND), int(*getEnabled)(COMMAND_T*), const char* cID, const char* cDesc, const char* cMenu, INT_PTR user, const char* cFile, bool localize)

@@ -1,15 +1,14 @@
-S&M dynamic actions
-+Add window "Dynamic actions settings" to customize the number of slot actions (rather than editing the S&M.ini file)
- This new window is available via action or Main menu > Extensions > Action settings > Number of actions...
-+Increase the maximum number of dynamic actions (from 99 to 255)
+!v2.8.7 pre-release build (March 26, 2016)
+<strong>Reminder: this new SWS version requires REAPER v5.15pre1+!</strong>
 
 Auto color/icon/layout
 +Add filter "(record armed)"
 +Fix http://forum.cockos.com/showpost.php?p=1634111|rules with icons in sub-folders|
 
 Fixes
-+Fix http://forum.cockos.com/showpost.php?p=1633922|Resources window issue| introduced in v2.8.6
-+Fix various actions/features vs tempo map
++Fix various http://forum.cockos.com/showpost.php?p=1633922|Resources window issues| introduced in v2.8.6
++Fix various BR/FNG/Xenakios envelope issues
++Fix various actions/features vs tempo maps
 +Media file actions: fix playback stop vs certain media files
 +About box: fix pre-release what's new URL
 

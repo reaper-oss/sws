@@ -8,8 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		1F1982681C6BF5E20007E933 /* swell-modstub.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9807642C0F5B237B0091104D /* swell-modstub.mm */; };
-		1F1982751C6D44C50007E933 /* SnM_DynActions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F1982731C6D44C50007E933 /* SnM_DynActions.cpp */; };
-		1F1982761C6D44C50007E933 /* SnM_DynActions.h in Headers */ = {isa = PBXBuildFile; fileRef = 1F1982741C6D44C50007E933 /* SnM_DynActions.h */; };
 		1FD9691D1661424E00DECB50 /* virtwnd-slider.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FD9691C1661424E00DECB50 /* virtwnd-slider.cpp */; };
 		1FE2BC0F16FF72FD008AC14F /* SnM_CSurf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FE2BC0D16FF72FD008AC14F /* SnM_CSurf.cpp */; };
 		1FE2BC1016FF72FD008AC14F /* SnM_CSurf.h in Headers */ = {isa = PBXBuildFile; fileRef = 1FE2BC0E16FF72FD008AC14F /* SnM_CSurf.h */; };
@@ -363,8 +361,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		1F1982731C6D44C50007E933 /* SnM_DynActions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_DynActions.cpp; path = SnM/SnM_DynActions.cpp; sourceTree = "<group>"; };
-		1F1982741C6D44C50007E933 /* SnM_DynActions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_DynActions.h; path = SnM/SnM_DynActions.h; sourceTree = "<group>"; };
 		1FD9691C1661424E00DECB50 /* virtwnd-slider.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "virtwnd-slider.cpp"; path = "../WDL/wingui/virtwnd-slider.cpp"; sourceTree = "<group>"; };
 		1FE2BC0D16FF72FD008AC14F /* SnM_CSurf.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_CSurf.cpp; path = SnM/SnM_CSurf.cpp; sourceTree = "<group>"; };
 		1FE2BC0E16FF72FD008AC14F /* SnM_CSurf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_CSurf.h; path = SnM/SnM_CSurf.h; sourceTree = "<group>"; };
@@ -1046,21 +1042,19 @@
 		22C769F410B0F03900774777 /* SnM */ = {
 			isa = PBXGroup;
 			children = (
+				1FE2BC0D16FF72FD008AC14F /* SnM_CSurf.cpp */,
+				1FE2BC0E16FF72FD008AC14F /* SnM_CSurf.h */,
 				22F7AAB415201D8A00CC1481 /* SnM.cpp */,
 				22F7AAB515201D8A00CC1481 /* SnM.h */,
 				22F7AA8D15201D8A00CC1481 /* SnM_Chunk.cpp */,
 				22F7AA8E15201D8A00CC1481 /* SnM_Chunk.h */,
 				22F7AA8F15201D8A00CC1481 /* SnM_ChunkParserPatcher.h */,
-				1FE2BC0D16FF72FD008AC14F /* SnM_CSurf.cpp */,
-				1FE2BC0E16FF72FD008AC14F /* SnM_CSurf.h */,
 				1FE350C016A8A6D10032F465 /* SnM_CueBuss.cpp */,
 				1FE350C116A8A6D10032F465 /* SnM_CueBuss.h */,
 				22F7AA9015201D8A00CC1481 /* SnM_Cyclactions.cpp */,
 				22F7AA9115201D8A00CC1481 /* SnM_Cyclactions.h */,
 				22F7AA9215201D8A00CC1481 /* SnM_Dlg.cpp */,
 				22F7AA9315201D8A00CC1481 /* SnM_Dlg.h */,
-				1F1982731C6D44C50007E933 /* SnM_DynActions.cpp */,
-				1F1982741C6D44C50007E933 /* SnM_DynActions.h */,
 				1FE350C216A8A6D10032F465 /* SnM_Find.cpp */,
 				1FE350C316A8A6D10032F465 /* SnM_Find.h */,
 				1FE350D416A8AD470032F465 /* SnM_FX.cpp */,
@@ -1378,7 +1372,6 @@
 				22F7AAD415201D8A00CC1481 /* SnM_Routing.h in Headers */,
 				22F7AAD615201D8A00CC1481 /* SnM_Track.h in Headers */,
 				22F7AAD815201D8A00CC1481 /* SnM_Util.h in Headers */,
-				1F1982761C6D44C50007E933 /* SnM_DynActions.h in Headers */,
 				22F7AADA15201D8A00CC1481 /* SnM_VWnd.h in Headers */,
 				22F7AADC15201D8A00CC1481 /* SnM_Window.h in Headers */,
 				22F7AADE15201D8A00CC1481 /* SnM.h in Headers */,
@@ -1582,7 +1575,6 @@
 				22257D9E108BDC6B0058CF75 /* XenUtils.cpp in Sources */,
 				229AC7DE108F880800E4A962 /* reaper.cpp in Sources */,
 				229AC7E8108F891700E4A962 /* sws_wnd.cpp in Sources */,
-				1F1982751C6D44C50007E933 /* SnM_DynActions.cpp in Sources */,
 				229AC7F6108F985C00E4A962 /* MarkerList.cpp in Sources */,
 				229AC7F8108F985C00E4A962 /* MarkerListActions.cpp in Sources */,
 				229AC7FE108FB39600E4A962 /* Color.cpp in Sources */,

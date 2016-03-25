@@ -1,7 +1,7 @@
 /******************************************************************************
 / Menus.cpp
 /
-/ Copyright (c) 2011 and later Tim Payne (SWS), Jeffos
+/ Copyright (c) 2011 Tim Payne (SWS), Jeffos
 /
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -245,12 +245,6 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 		AddToMenu(hMenu, SWS_SEPARATOR, 0);
 
 	AddToMenu(hMenu, __LOCALIZE("About SWS Extension", "sws_ext_menu"), NamedCommandLookup("_SWS_ABOUT"));
-
-	HMENU hConfSubMenu = CreatePopupMenu();
-	AddSubMenu(hMenu, hConfSubMenu, __LOCALIZE("Action settings", "sws_ext_menu"));
-	AddToMenu(hConfSubMenu, __LOCALIZE("Number of actions...", "sws_ext_menu"), NamedCommandLookup("_S&M_DYNACTIONS_OPEN"));
-	AddToMenu(hConfSubMenu, __LOCALIZE("Xenakios' command parameters...", "sws_ext_menu"), NamedCommandLookup("_XENAKIOS_SHOW_COMMANDPARAMS"));
-
 	AddToMenu(hMenu, __LOCALIZE("Auto Color/Icon/Layout", "sws_ext_menu"), NamedCommandLookup("_SWSAUTOCOLOR_OPEN"));
 
 	HMENU hAutoRenderSubMenu = CreatePopupMenu();
@@ -262,6 +256,7 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 	AddToMenu(hAutoRenderSubMenu, SWS_SEPARATOR, 0);
 	AddToMenu(hAutoRenderSubMenu, __LOCALIZE("Show help...", "sws_ext_menu"), NamedCommandLookup("_AUTORENDER_HELP"));
 
+	AddToMenu(hMenu, __LOCALIZE("Command parameters...", "sws_ext_menu"), NamedCommandLookup("_XENAKIOS_SHOW_COMMANDPARAMS"));
 	AddToMenu(hMenu, __LOCALIZE("Contextual toolbars...", "sws_ext_menu"), NamedCommandLookup("_BR_CONTEXTUAL_TOOLBARS_PREF"));
 	AddToMenu(hMenu, __LOCALIZE("Cue Buss generator", "sws_ext_menu"), NamedCommandLookup("_S&M_SENDS4"));
 	AddToMenu(hMenu, __LOCALIZE("Cycle Action editor...", "sws_ext_menu"), NamedCommandLookup("_S&M_CYCLEDITOR"));

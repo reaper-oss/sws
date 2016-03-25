@@ -31,7 +31,6 @@
 #include "SnM_CueBuss.h"
 #include "SnM_Cyclactions.h"
 #include "SnM_Dlg.h"
-#include "SnM_DynActions.h"
 #include "SnM_Find.h"
 #include "SnM_FX.h"
 #include "SnM_FXChain.h"
@@ -70,7 +69,7 @@ void Noop2(COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd)
 static COMMAND_T s_cmdTable[] =
 {
 
-//	{ { DEFACCEL, "SWS/S&M: [Internal] QuickTest1" }, "S&M_QUICKTEST1", Noop, },
+//	{ { DEFACCEL, "SWS/S&M: [Internal] QuickTest1" }, "S&M_QUICKTEST1", Noop, NULL, },
 //	{ { DEFACCEL, "SWS/S&M: [Internal] QuickTest2" }, "S&M_QUICKTEST2", NULL, NULL, 0, NULL, 0, Noop2, },
 
 
@@ -479,7 +478,6 @@ static COMMAND_T s_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Insert marker at play cursor" }, "S&M_INS_MARKER_PLAY", InsertMarker, NULL, 1},
 
 	// Other, misc ------------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Configure dynamic actions..." }, "S&M_DYNACTIONS_OPEN", ShowDynActionWnd, },
 	{ { DEFACCEL, "SWS/S&M: Send all notes off to selected tracks" }, "S&M_CC123_SEL_TRACKS", SendAllNotesOff, NULL, 1|2},
 	{ { DEFACCEL, "SWS/S&M: Send all sounds off to selected tracks" }, "S&M_CC120_SEL_TRACKS", SendAllNotesOff, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Increase metronome volume" }, "S&M_METRO_VOL_UP", ChangeMetronomeVolume, NULL, 1},
@@ -588,7 +586,7 @@ static COMMAND_T s_cmdTable[] =
 //   triggered with 0-based COMMAND_T.user
 // - action names are formatted strings, they *must* contain "%d"
 // - custom command ids are not formated strings, but final ids will end with
-//   slot numbers (1-based)
+//   slot numbers (1-based for display reasons)
 // Example: 
 //   { "Do stuff %d", "DO_STUFF", doStuff, 2, SNM_MAX_DYN_ACTIONS, NULL }
 //   if not overrided in the S&M.ini file (e.g. "DO_STUFF=32"), 2 actions will 
@@ -747,18 +745,10 @@ static DYN_COMMAND_T s_dynCmdTable[] =
 };
 
 
-DYN_COMMAND_T* GetDynamicAction(int _idx)
-{
-  return &s_dynCmdTable[_idx];
-}
-
 static int s_dynactions_need_save;
 
 int RegisterDynamicActions(DYN_COMMAND_T* _cmds, const char* _inifn)
 {
-	if (!_cmds) _cmds = s_dynCmdTable;
-	if (!_inifn) _inifn = g_SNM_IniFn.Get();
-
 	int i=0;
 	char actionName[SNM_MAX_ACTION_NAME_LEN], custId[SNM_MAX_ACTION_CUSTID_LEN];
 	while(_cmds[i].desc != LAST_COMMAND)
@@ -789,42 +779,8 @@ int RegisterDynamicActions(DYN_COMMAND_T* _cmds, const char* _inifn)
 	return 1;
 }
 
-int UnregisterDynamicActions(DYN_COMMAND_T* _cmds)
-{
-	if (!_cmds) _cmds = s_dynCmdTable;
-
-	int i=0;
-	char custId[SNM_MAX_ACTION_CUSTID_LEN];
-	while(_cmds[i].desc != LAST_COMMAND)
-	{
-		DYN_COMMAND_T* ct = &_cmds[i++];
-		for (int j=0; j<ct->max; j++)
-		{
-			if (_snprintfStrict(custId, sizeof(custId), "_%s%d", ct->id, j+1) > 0)
-			{
-        if (SWSFreeUnregisterDynamicCmd(NamedCommandLookup(custId)))
-				{
-#ifdef _SNM_DEBUG
-					OutputDebugString("UnregisterDynamicActions() - Unregistered: ");
-					OutputDebugString(custId);
-					OutputDebugString("\n");
-#endif
-				}
-				else
-				{
-					break;
-				}
-			}
-		}
-	}
-	return 1;
-}
-
 void SaveDynamicActions(DYN_COMMAND_T* _cmds, const char* _inifn)
 {
-	if (!_cmds) _cmds = s_dynCmdTable;
-	if (!_inifn) _inifn = g_SNM_IniFn.Get();
-
 	// no localization here, intentional
 	WDL_FastString iniSection, str;
 	iniSection.Set("; Set the number of actions you want below. Quit REAPER first! ===\n");
@@ -1168,7 +1124,8 @@ void IniFileExit()
 	SaveIniSection("General", &iniSection, g_SNM_IniFn.Get());
 
 	// save dynamic actions, if needed
-	if (s_dynactions_need_save) SaveDynamicActions();
+	if (s_dynactions_need_save)
+		SaveDynamicActions(s_dynCmdTable, g_SNM_IniFn.Get());
 
 #ifdef _WIN32
 	// force ini file's cache flush, see http://support.microsoft.com/kb/68827
@@ -1210,7 +1167,7 @@ int SNM_Init(reaper_plugin_info_t* _rec)
 #endif
 
 	// actions must be registered before views and cycle actions
-	if (!SWSRegisterCommands(s_cmdTable) || !RegisterDynamicActions())
+	if (!SWSRegisterCommands(s_cmdTable) || !RegisterDynamicActions(s_dynCmdTable, g_SNM_IniFn.Get()))
 	{
 		return 0;
 	}

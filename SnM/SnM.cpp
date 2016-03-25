@@ -745,7 +745,8 @@ static DYN_COMMAND_T s_dynCmdTable[] =
 };
 
 
-static int s_dynactions_need_save;
+// for optimization (avoid write accesses to S&M.ini on exit)
+static bool s_newDynActions = true; //JFB!! disabled ATM
 
 int RegisterDynamicActions(DYN_COMMAND_T* _cmds, const char* _inifn)
 {
@@ -756,9 +757,9 @@ int RegisterDynamicActions(DYN_COMMAND_T* _cmds, const char* _inifn)
 		DYN_COMMAND_T* ct = &_cmds[i++];
 
 		int n = GetPrivateProfileInt("NbOfActions", ct->id, -1, _inifn);
-		if (n<0) { n=ct->count; s_dynactions_need_save=1; }
+		if (n<0) { n=ct->count; s_newDynActions=true; }
 		ct->count = BOUNDED(n, 0, ct->max<=0 ? SNM_MAX_DYN_ACTIONS : ct->max);
-		if (n != ct->count) s_dynactions_need_save=1;
+		if (n != ct->count) s_newDynActions=true;
 
 		for (int j=0; j<ct->count; j++)
 		{
@@ -1080,7 +1081,7 @@ void IniFileInit()
 
 	int iniVersion = GetPrivateProfileInt("General", "IniFileUpgrade", 0, g_SNM_IniFn.Get());
 	SNM_UpgradeIniFiles(iniVersion);
-	if (iniVersion != SNM_INI_FILE_VERSION) s_dynactions_need_save=1;
+	if (iniVersion != SNM_INI_FILE_VERSION) s_newDynActions=1;
 
 	g_SNM_MediaFlags |= (GetPrivateProfileInt("General", "MediaFileLockAudio", 0, g_SNM_IniFn.Get()) ? 1:0);
 	g_SNM_ToolbarRefresh = (GetPrivateProfileInt("General", "ToolbarsAutoRefresh", 1, g_SNM_IniFn.Get()) == 1);
@@ -1124,7 +1125,7 @@ void IniFileExit()
 	SaveIniSection("General", &iniSection, g_SNM_IniFn.Get());
 
 	// save dynamic actions, if needed
-	if (s_dynactions_need_save)
+	if (s_newDynActions) //JFB!!! a ameliorer
 		SaveDynamicActions(s_dynCmdTable, g_SNM_IniFn.Get());
 
 #ifdef _WIN32

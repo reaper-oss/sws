@@ -70,15 +70,15 @@ void DynActionListView::GetItemText(SWS_ListItem* _item, int _col, char* _str, i
 void DynActionListView::SetItemText(SWS_ListItem* _item, int _col, const char* _str)
 {
 	DYN_COMMAND_T* item = (DYN_COMMAND_T*)_item;  
-	if (item && _col==1 && _str && (!strcmp(_str, "0") || atoi(_str)))
-	{
-		int n = BOUNDED(atoi(_str), item->min, item->max);
-		if (n != item->count)
-		{
-			item->count = n;
-			EnableWindow(GetDlgItem(GetParent(m_hwndList), IDOK), true);
-		}
-	}
+  if (item && _col==1 && _str && (!strcmp(_str, "0") || atoi(_str)))
+  {
+    int n = BOUNDED(atoi(_str), 0, item->max);
+    if (n != item->count)
+    {
+      item->count = n;
+      EnableWindow(GetDlgItem(GetParent(m_hwndList), IDOK), true);
+    }
+  }
 }
 
 void DynActionListView::GetItemList(SWS_ListItemList* pList)

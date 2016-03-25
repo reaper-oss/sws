@@ -224,7 +224,6 @@ typedef struct DYN_COMMAND_T {
 	int (*getEnabled)(COMMAND_T*);
 	int uniqueSectionId;
 	void(*onAction)(COMMAND_T*, int, int, int, HWND);
-	unsigned char min; // not used ATM
 } DYN_COMMAND_T;
 
 typedef struct SECTION_INFO_T {

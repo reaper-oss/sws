@@ -75,7 +75,7 @@ public:
 				newnode.time=m_lp->gettoken_float(1);
 				newnode.value=m_lp->gettoken_float(2);
 				newnode.shape=m_lp->gettoken_int(3);
-				newnode.selected=m_lp->gettoken_int(5);
+				newnode.selected=(m_lp->gettoken_int(5)&1)==1;
 				newnode.mystery=m_lp->gettoken_int(4);
 				m_envnodes.push_back(newnode);
 			} else

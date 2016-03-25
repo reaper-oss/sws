@@ -2060,7 +2060,7 @@ bool BR_Envelope::EnvPoint::ReadLine (const LineParser& lp)
 		this->value      = lp.gettoken_float(2);
 		this->shape      = lp.gettoken_int(3);
 		this->sig        = lp.gettoken_int(4);
-		this->selected   = !!lp.gettoken_int(5);
+		this->selected   = (lp.gettoken_int(5)&1)==1;
 		this->partial    = lp.gettoken_int(6);
 		this->bezier     = lp.gettoken_float(7);
 		this->metronome1 = lp.gettoken_uint(9);
@@ -2210,7 +2210,7 @@ vector<int> GetSelPoints (TrackEnvelope* envelope)
 		if (!strcmp(lp.gettoken_str(0), "PT"))
 		{
 			++id;
-			if (lp.gettoken_int(5))
+			if ((lp.gettoken_int(5)&1)==1)
 				selectedPoints.push_back(id);
 		}
 		token = strtok(NULL, "\n");

@@ -78,9 +78,11 @@ RprEnvelopePoint::toString() const
 void
 RprEnvelopePoint::fromString(const char *stateData)
 {
+    int selflag=0;
     sscanf(stateData, "PT %lf %lf %d %d %d %d %lf", &m_time,
         &m_parameterValue, &m_envelopeShape, &m_selUnknown,
-        &m_selected, &m_bezierUnknown, &m_bezierTension);
+        &selflag, &m_bezierUnknown, &m_bezierTension);
+    m_selected = (selflag&1)==1;
 }
 
 RprEnvelope::RprEnvelope(TrackEnvelope* env) :

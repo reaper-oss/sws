@@ -55,6 +55,7 @@
 #include "IX/IX.h"
 #include "Breeder/BR.h"
 #include "Wol/wol.h"
+#include "nofish/nofish.h"
 
 #define LOCALIZE_IMPORT_PREFIX "sws_"
 #ifdef LOCALIZE_IMPORT_PREFIX
@@ -1026,6 +1027,7 @@ error:
 		IMPAPI(TrackFX_GetCount);
 		IMPAPI(TrackFX_GetFXName);
 		IMPAPI(TrackFX_GetFXGUID);
+		IMPAPI(TrackFX_GetInstrument);
 		IMPAPI(TrackFX_GetNumParams);
 		IMPAPI(TrackFX_GetOpen);
 		IMPAPI(TrackFX_GetParam);
@@ -1181,6 +1183,8 @@ error:
 			ERR_RETURN("Breeder init error.")
 		if (!WOL_Init())
 			ERR_RETURN("Wol init error.")
+    if (!nofish_Init())
+      ERR_RETURN("nofish init error.")
 		if (!SNM_Init(rec)) // keep it as the last init (for cycle actions)
 			ERR_RETURN("S&M init error.")
 

@@ -1,3 +1,7 @@
+Actions
++New actions (Main section):
+	- SWS/nofish: Bypass FX (except VSTi) for selected tracks (good for VSTi stems export)
+
 !v2.8.3 featured build (January 8, 2016)
 New global startup action (in addition to per-project startup actions)
 +The global startup action is performed one time, when launching REAPER

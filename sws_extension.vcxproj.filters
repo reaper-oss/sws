@@ -107,6 +107,9 @@
     <Filter Include="Wol">
       <UniqueIdentifier>{a28b555f-40ac-457d-9479-d44e5154734c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="nofish">
+      <UniqueIdentifier>{44de5555-4515-4032-ac7d-6086f5e1daa4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -606,6 +609,9 @@
     </ClInclude>
     <ClInclude Include="Breeder\BR_ContextualToolbars.h">
       <Filter>Breeder</Filter>
+    </ClInclude>
+    <ClInclude Include="nofish\nofish.h">
+      <Filter>nofish</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1228,6 +1234,9 @@
     </ClCompile>
     <ClCompile Include="Breeder\BR_ContextualToolbars.cpp">
       <Filter>Breeder</Filter>
+    </ClCompile>
+    <ClCompile Include="nofish\nofish.cpp">
+      <Filter>nofish</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

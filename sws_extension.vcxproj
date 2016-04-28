@@ -429,6 +429,7 @@ echo Copied to "$(REAPER64_DIR)\plugins\$(TargetFilename)"</Command>
     <ClInclude Include="Breeder\BR_MidiUtil.h" />
     <ClInclude Include="Breeder\BR_MouseUtil.h" />
     <ClInclude Include="C:\Program Files (x86)\REAPER\reaper_plugin_functions.h" />
+    <ClInclude Include="nofish\nofish.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Wol\wol_Util.h" />
     <ClInclude Include="Wol\wol_Zoom.h" />
@@ -600,6 +601,7 @@ echo Copied to "$(REAPER64_DIR)\plugins\$(TargetFilename)"</Command>
     <ClCompile Include="Breeder\BR_MidiUtil.cpp" />
     <ClCompile Include="Breeder\BR_MouseUtil.cpp" />
     <ClCompile Include="libebur128\ebur128.cpp" />
+    <ClCompile Include="nofish\nofish.cpp" />
     <ClCompile Include="Wol\wol_Util.cpp" />
     <ClCompile Include="Wol\wol_Zoom.cpp" />
     <ClCompile Include="Xenakios\AutoRename.cpp" />

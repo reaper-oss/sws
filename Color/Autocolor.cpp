@@ -181,7 +181,16 @@ void SWS_AutoColorView::SetItemText(SWS_ListItem* item, int iCol, const char* st
 				break;
 			case COL_COLOR:
 			{
-				int iNewCol = strtol(str, NULL, 0);
+				char newstr[] = "0x"; // common prefix, so the user doesn't have to type it themselves -Kochab
+				int iNewCol = -1;
+
+				// if only 6 characters were typed, then assume the user is typing in a 6 digit hexadecimal value without the preceding "0x" -Kochab
+				if (strlen(str) == 6) {
+					strcat(newstr, str);
+					iNewCol = strtol(newstr, NULL, 0);
+				} else {
+					iNewCol = strtol(str, NULL, 0);
+				}
 				pItem->m_color = RGB((iNewCol >> 16) & 0xFF, (iNewCol >> 8) & 0xFF, iNewCol & 0xFF);
 			}
 			break;

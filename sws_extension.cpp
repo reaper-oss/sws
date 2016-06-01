@@ -847,6 +847,7 @@ error:
 		IMPAPI(GetSetObjectState2);
 		IMPAPI(GetSetProjectNotes); // v5.15pre1+
 		IMPAPI(GetSetRepeat);
+		IMPAPI(GetSetTrackGroupMembership); // v5.21pre5+
 		IMPAPI(GetTempoTimeSigMarker);
 		IMPAPI(GetTakeEnvelopeByName);
 		IMPAPI(GetTakeStretchMarker);

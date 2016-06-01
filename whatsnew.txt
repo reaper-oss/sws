@@ -1,3 +1,6 @@
+Auto color/icon/layout
++Add filter "(vca master)"
+
 !v2.8.7 pre-release build (March 26, 2016)
 <strong>Reminder: this new SWS version requires REAPER v5.15pre1+!</strong>
 

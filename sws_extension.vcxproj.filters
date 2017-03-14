@@ -107,6 +107,9 @@
     <Filter Include="Wol">
       <UniqueIdentifier>{a28b555f-40ac-457d-9479-d44e5154734c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="nofish">
+      <UniqueIdentifier>{fb731ab1-23d5-4439-a9a1-fb1955e56022}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -218,9 +221,6 @@
       <Filter>SnM</Filter>
     </ClInclude>
     <ClInclude Include="SnM\SnM_Dlg.h">
-      <Filter>SnM</Filter>
-    </ClInclude>
-    <ClInclude Include="SnM\SnM_DynActions.h">
       <Filter>SnM</Filter>
     </ClInclude>
     <ClInclude Include="SnM\SnM_Find.h">
@@ -610,6 +610,9 @@
     <ClInclude Include="Breeder\BR_ContextualToolbars.h">
       <Filter>Breeder</Filter>
     </ClInclude>
+    <ClInclude Include="nofish\nofish.h">
+      <Filter>nofish</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="sws_extension.rc">
@@ -861,9 +864,6 @@
       <Filter>SnM</Filter>
     </ClCompile>
     <ClCompile Include="SnM\SnM_Dlg.cpp">
-      <Filter>SnM</Filter>
-    </ClCompile>
-    <ClCompile Include="SnM\SnM_DynActions.cpp">
       <Filter>SnM</Filter>
     </ClCompile>
     <ClCompile Include="SnM\SnM_Find.cpp">
@@ -1231,6 +1231,9 @@
     </ClCompile>
     <ClCompile Include="Breeder\BR_ContextualToolbars.cpp">
       <Filter>Breeder</Filter>
+    </ClCompile>
+    <ClCompile Include="nofish\nofish.cpp">
+      <Filter>nofish</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

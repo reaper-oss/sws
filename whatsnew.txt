@@ -1,3 +1,7 @@
+Actions
++New actions (Main section):
+ - SWS/nofish: Bypass FX (except VSTi) for selected tracks
+
 !v2.8.8 featured build (March 13, 2017)
 <strong>We're back!</strong>
 

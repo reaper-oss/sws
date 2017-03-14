@@ -954,6 +954,7 @@ void BR_MidiToggleCCLane::LoadState (ProjectStateContext* ctx)
 {
 	char line[256];
 	LineParser lp(false);
+	m_ccLanes.clear();
 	while(!ctx->GetLine(line, sizeof(line)) && !lp.parse(line))
 	{
 		if (!strcmp(lp.gettoken_str(0), ">"))

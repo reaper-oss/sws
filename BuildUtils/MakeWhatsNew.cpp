@@ -278,6 +278,17 @@ int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML, const c
 				}
 			}
 		}
+		// Special cases for <strong></strong>
+		else if (_strnicmp(&cBuf[iPos], "<strong>", 8) == 0)
+		{
+			fputs("<strong>", pOut);
+			iPos += 7;
+		}
+		else if (_strnicmp(&cBuf[iPos], "</strong>", 9) == 0)
+		{
+			fputs("</strong>", pOut);
+			iPos += 8;
+		}
 		else // "Default" case, just write out the character
 		{
 			if (cBuf[iPos] == '\"')

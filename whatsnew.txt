@@ -178,7 +178,7 @@ ReaScript
 +Issue 764, issue 760: fixed BR_GetMediaTrackLayout/BR_SetMediaTrackLayout issues, requires REAPER v5.02+
 
 !v2.8.0 featured build (August 13, 2015)
-<strong>This new SWS version requires and supports REAPER v5.0+!<br>
+<strong>This new SWS version requires and supports REAPER v5.0+!</strong><br>
 Lots of new features/fixes: everything listed below is new, down to v2.6 (all intermediate versions were pre-releases/beta/fixup builds).
 </strong>
 

@@ -192,7 +192,7 @@ void GetProjectRealPath( char* prjPath ){
 	ParsePath( rpp, prjPath );	
 }
 
-string GetProjectName(){
+string ARGetProjectName(){
 	char prjPath[MAX_PATH];
 	string prjPathStr = "";
 	EnumProjects(-1, prjPath, MAX_PATH);
@@ -696,7 +696,7 @@ void AutorenderRegions(COMMAND_T*)
 	
 	if( renderTracks.size() == 0 ){
 		//Render entire project with tagging
-		string prjNameStr = GetProjectName();
+		string prjNameStr = ARGetProjectName();
 		WDL_FastString trackPrjStr(prjStr);
 		RenderTrack renderTrack;
 		renderTrack.trackNumber = 1;
@@ -740,7 +740,7 @@ void AutorenderRegions(COMMAND_T*)
 		WDL_FastString trackPrjStr(prjStr);
 
 		string outRenderProjectPath = outRenderProjectPrefix;
-		outRenderProjectPath += GetRenderQueueTimeString() + "_" + GetProjectName() + "_";
+		outRenderProjectPath += GetRenderQueueTimeString() + "_" + ARGetProjectName() + "_";
 		outRenderProjectPath += renderTracks[i].getFileName("rpp", trackNumberPad );
 
 		string renderFilePath = g_render_path + PATH_SLASH_CHAR + renderTracks[i].getFileName( renderFileExtension, prependTrackNumberPad );						

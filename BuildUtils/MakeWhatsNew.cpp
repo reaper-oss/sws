@@ -194,7 +194,7 @@ int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML, const c
 				int iIssue = atol(&cBuf[iPos+6]);
 				if (iIssue != 0)
 				{
-					fprintf(pOut, "<a href=\"https://github.com/Jeff0S/sws/issues/%d\">%cssue %d</a>", iIssue, cBuf[iPos], iIssue);
+					fprintf(pOut, "<a href=\"https://github.com/reaper-oss/sws/issues/%d\">%cssue %d</a>", iIssue, cBuf[iPos], iIssue);
 					iPos += 6;
 					while (isalnum(cBuf[iPos++]));
 					iPos--;
@@ -277,6 +277,17 @@ int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML, const c
 					break;
 				}
 			}
+		}
+		// Special cases for <strong></strong>
+		else if (_strnicmp(&cBuf[iPos], "<strong>", 8) == 0)
+		{
+			fputs("<strong>", pOut);
+			iPos += 7;
+		}
+		else if (_strnicmp(&cBuf[iPos], "</strong>", 9) == 0)
+		{
+			fputs("</strong>", pOut);
+			iPos += 8;
 		}
 		else // "Default" case, just write out the character
 		{

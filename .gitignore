@@ -2,6 +2,13 @@ Release/
 Test/
 x64/
 Release x86_64/
+Install/output/
+Install/temp/
+# Ignore customized build scripts
+Install/build*.bat
+sws_osx/
+sws_python32.py
+sws_python64.py
 *.ncb
 *.opt
 *.rc_mac_dlg
@@ -31,3 +38,4 @@ Release x86_64/
 *xcuserdata*
 *.xcschememanagement.plist
 .DS_Stor*
+*.opendb

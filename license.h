@@ -1,9 +1,11 @@
 #pragma once
 
 #define LICENSE_AUTHORS \
-"Copyright (c) 2016 Jeffos (S&M)\r\n" \
+"Copyrights:"\
+"(c) 2017 Tim Payne (SWS)\r\n" \
+"(c) 2016 Jeffos (S&M)\r\n" \
 "(c) 2015 Dominik Martin Drzic (BR), wol\r\n" \
-"(c) 2014 Tim Payne (SWS), Fingers (FNG)\r\n" \
+"(c) 2014 Fingers (FNG)\r\n" \
 "(c) 2012 Philip S. Considine (IX), Brad Coe\r\n" \
 "(c) 2011 Shane StClair (Autorender), Adam Wathan (AW)\r\n" \
 "(c) 2010 P Bourdon (Padre)\r\n" \

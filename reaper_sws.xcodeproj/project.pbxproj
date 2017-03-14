@@ -161,6 +161,8 @@
 		22B22D6D13FA578100D187A9 /* sws_waitdlg.h in Headers */ = {isa = PBXBuildFile; fileRef = 22B22D6B13FA578100D187A9 /* sws_waitdlg.h */; };
 		22B4C24F0FE311C7009A6731 /* Prompt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22B4C24D0FE311C7009A6731 /* Prompt.cpp */; };
 		22B4C2500FE311C7009A6731 /* Prompt.h in Headers */ = {isa = PBXBuildFile; fileRef = 22B4C24E0FE311C7009A6731 /* Prompt.h */; };
+		22BC765C1D349B4100014323 /* nofish.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22BC765B1D349B4100014323 /* nofish.cpp */; };
+		22BC765E1D349B5B00014323 /* nofish.h in Headers */ = {isa = PBXBuildFile; fileRef = 22BC765D1D349B5B00014323 /* nofish.h */; };
 		22BEA483115F4A7C00B34AE1 /* ProjectList.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22BEA47F115F4A7C00B34AE1 /* ProjectList.cpp */; };
 		22BEA484115F4A7C00B34AE1 /* ProjectList.h in Headers */ = {isa = PBXBuildFile; fileRef = 22BEA480115F4A7C00B34AE1 /* ProjectList.h */; };
 		22BEA485115F4A7C00B34AE1 /* ProjectMgr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22BEA481115F4A7C00B34AE1 /* ProjectMgr.cpp */; };
@@ -508,6 +510,8 @@
 		22B22D6B13FA578100D187A9 /* sws_waitdlg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sws_waitdlg.h; sourceTree = "<group>"; };
 		22B4C24D0FE311C7009A6731 /* Prompt.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Prompt.cpp; sourceTree = "<group>"; };
 		22B4C24E0FE311C7009A6731 /* Prompt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Prompt.h; sourceTree = "<group>"; };
+		22BC765B1D349B4100014323 /* nofish.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = nofish.cpp; path = nofish/nofish.cpp; sourceTree = "<group>"; };
+		22BC765D1D349B5B00014323 /* nofish.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = nofish.h; path = nofish/nofish.h; sourceTree = "<group>"; };
 		22BEA47F115F4A7C00B34AE1 /* ProjectList.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ProjectList.cpp; path = Projects/ProjectList.cpp; sourceTree = "<group>"; };
 		22BEA480115F4A7C00B34AE1 /* ProjectList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ProjectList.h; path = Projects/ProjectList.h; sourceTree = "<group>"; };
 		22BEA481115F4A7C00B34AE1 /* ProjectMgr.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ProjectMgr.cpp; path = Projects/ProjectMgr.cpp; sourceTree = "<group>"; };
@@ -743,6 +747,7 @@
 				22C769F410B0F03900774777 /* SnM */,
 				22257D6D108BDC330058CF75 /* Xenakios */,
 				98B6AAF118E7315B00BACB96 /* Wol */,
+				22BC765A1D349B0D00014323 /* nofish */,
 				08FB7795FE84155DC02AAC07 /* Source */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
 			);
@@ -1037,6 +1042,15 @@
 				22AF6E7212308C810017808F /* zutil.h */,
 			);
 			name = zlib;
+			sourceTree = "<group>";
+		};
+		22BC765A1D349B0D00014323 /* nofish */ = {
+			isa = PBXGroup;
+			children = (
+				22BC765D1D349B5B00014323 /* nofish.h */,
+				22BC765B1D349B4100014323 /* nofish.cpp */,
+			);
+			name = nofish;
 			sourceTree = "<group>";
 		};
 		22C769F410B0F03900774777 /* SnM */ = {
@@ -1435,6 +1449,7 @@
 				98B6CEBA19D5F9BE00631487 /* BR_ContextualToolbars.h in Headers */,
 				98C2C33019F6AF3E00D3DE90 /* BR_EnvelopeUtil.h in Headers */,
 				98C2C33219F6AF3E00D3DE90 /* BR_MidiUtil.h in Headers */,
+				22BC765E1D349B5B00014323 /* nofish.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1465,8 +1480,6 @@
 /* Begin PBXProject section */
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
-			attributes = {
-			};
 			buildConfigurationList = 1DEB914E08733D8E0010E9CD /* Build configuration list for PBXProject "reaper_sws" */;
 			compatibilityVersion = "Xcode 3.1";
 			developmentRegion = English;
@@ -1722,6 +1735,7 @@
 				98B6CEB919D5F9BE00631487 /* BR_ContextualToolbars.cpp in Sources */,
 				98C2C32F19F6AF3E00D3DE90 /* BR_EnvelopeUtil.cpp in Sources */,
 				98C2C33119F6AF3E00D3DE90 /* BR_MidiUtil.cpp in Sources */,
+				22BC765C1D349B4100014323 /* nofish.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

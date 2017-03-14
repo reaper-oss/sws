@@ -2859,7 +2859,6 @@ HWND GetTcpWnd ()
 		int masterVis = 0;
 		if (!track && !IsMasterVisible)
 		{
-			PreventUIRefresh(1);
 			masterVis = SetMasterTrackVisibility(GetMasterTrackVisibility() | 1);
 		}
 
@@ -2889,7 +2888,6 @@ HWND GetTcpWnd ()
 		// Restore TCP master to previous state
 		if (!track && !IsMasterVisible)
 		{
-			PreventUIRefresh(-1);
 			SetMasterTrackVisibility(masterVis);
 		}
 	}

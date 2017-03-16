@@ -151,7 +151,7 @@ copy /y "whatsnew.txt" "$(REAPER_DIR)\plugins\reaper_sws_whatsnew.txt"
 </Command>
     </PreLinkEvent>
     <Link>
-      <AdditionalDependencies>comctl32.lib;lib/vs12_tag32.lib;shlwapi.lib;wsock32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>comctl32.lib;shlwapi.lib;wsock32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)reaper_sws.dll</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <GenerateMapFile>true</GenerateMapFile>
@@ -306,7 +306,7 @@ copy /y "whatsnew.txt" "$(REAPER_DIR)\plugins\reaper_sws_whatsnew.txt"
 </Command>
     </PreLinkEvent>
     <Link>
-      <AdditionalDependencies>comctl32.lib;lib/vs12_tag32.lib;shlwapi.lib;wsock32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>comctl32.lib;shlwapi.lib;wsock32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)reaper_sws.dll</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <GenerateMapFile>true</GenerateMapFile>

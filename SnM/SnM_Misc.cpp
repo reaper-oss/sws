@@ -37,11 +37,6 @@
 #endif
 #include "../reaper/localize.h"
 
-#define TAGLIB_STATIC
-#define TAGLIB_NO_CONFIG
-#include "../taglib/tag.h"
-#include "../taglib/fileref.h"
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // Reascript export, funcs made dumb-proof!
@@ -243,90 +238,13 @@ void ULT_SetMediaItemNote(MediaItem* _item, const char* _str) {
 
 bool SNM_ReadMediaFileTag(const char *fn, const char* tag, char* tagval, int tagval_sz)
 {
-  if (!fn || !*fn || !tagval || tagval_sz<=0) return false;
-  *tagval=0;
-
-#ifdef _WIN32
-  wchar_t* w_fn = WideCharPlz(fn);
-  if (!w_fn) return false;
-  TagLib::FileRef f(w_fn, false);
-#else
-  TagLib::FileRef f(fn, false);
-#endif
-
-  if (!f.isNull() && !f.tag()->isEmpty())
-  {
-    TagLib::String s;
-    if (!_stricmp(tag, "artist")) s=f.tag()->artist();
-    else if (!_stricmp(tag, "album")) s=f.tag()->album();
-    else if (!_stricmp(tag, "genre")) s=f.tag()->genre();
-    else if (!_stricmp(tag, "comment")) s=f.tag()->comment();
-    else if (!_stricmp(tag, "title")) s=f.tag()->title();
-    if (s.length())
-    {
-      const char *p=s.toCString(true);
-      if (strcmp(p,"0")) lstrcpyn(tagval, p, tagval_sz); // must be a taglib bug...
-    }
-    else
-    {
-      if (!_stricmp(tag, "year") && f.tag()->year()) _snprintfSafe(tagval, tagval_sz, "%u", f.tag()->year());
-      else if (!_stricmp(tag, "track") && f.tag()->track()) _snprintfSafe(tagval, tagval_sz, "%u", f.tag()->track());
-    }
-  }
-#ifdef _WIN32
-  delete [] w_fn;
-#endif
-  return !!*tagval;
+	return false;
 }
 
 bool SNM_TagMediaFile(const char *fn, const char* tag, const char* tagval)
 {
-  if (!fn || !*fn || !tagval || !tag) return false;
-
-#ifdef _WIN32
-  wchar_t* w_fn = WideCharPlz(fn);
-  if (!w_fn) return false;
-  TagLib::FileRef f(w_fn, false);
-#else
-  TagLib::FileRef f(fn, false);
-#endif
-
-  bool didsmthg=false;
-  if (!f.isNull())
-  {
-#ifndef _WIN32
-    TagLib::String s(tagval, TagLib::String::UTF8);
-#else
-    wchar_t* s = WideCharPlz(tagval);
-    if (!s) return false;
-#endif
-    if (!_stricmp(tag, "artist")) { f.tag()->setArtist(s); didsmthg=true; }
-    else if (!_stricmp(tag, "album")) { f.tag()->setAlbum(s); didsmthg=true; }
-    else if (!_stricmp(tag, "genre")) { f.tag()->setGenre(s); didsmthg=true; }
-    else if (!_stricmp(tag, "comment") || !_stricmp(tag, "desc")) { f.tag()->setComment(s); didsmthg=true; }
-    else if (!_stricmp(tag, "title")) { f.tag()->setTitle(s); didsmthg=true; }
-    else if (!_stricmp(tag, "year"))
-    {
-      int val=atoi(tagval);
-      if (val>0 || !*tagval) { f.tag()->setYear(val); didsmthg=true; }
-    }
-    else if (!_stricmp(tag, "track"))
-    {
-      int val=atoi(tagval);
-      if (val>0 || !*tagval) { f.tag()->setTrack(val); didsmthg=true; }
-    }
-    if (didsmthg) f.save();
-#ifdef _WIN32
-    delete [] s;
-#endif
-  }
-
-#ifdef _WIN32
-  delete [] w_fn;
-#endif
-  return didsmthg;
+	return false;
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // Toolbars auto refresh option

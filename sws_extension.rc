@@ -510,31 +510,6 @@ BEGIN
     PUSHBUTTON      "Apply",IDC_APPLY,115,50,50,14
 END
 
-IDD_GEN_ENV1 DIALOGEX 0, 0, 177, 153
-STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Generate Random Envelope Points"
-FONT 8, "MS Sans Serif", 0, 0, 0x0
-BEGIN
-    EDITTEXT        IDC_EDIT2,25,15,40,14,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT1,90,15,40,14,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT3,50,35,40,14,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT4,45,70,30,14,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT5,60,110,25,14,ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "OK",IDOK,5,132,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,60,132,50,14
-    LTEXT           "Random range (between 0.0-1.0)",IDC_STATIC,5,5,105,8
-    LTEXT           "Max",IDC_STATIC,70,15,14,8
-    LTEXT           "Min",IDC_STATIC,5,15,12,8
-    LTEXT           "Point shape",IDC_STATIC,5,35,38,8
-    LTEXT           "Rate",IDC_STATIC,5,55,16,8
-    LTEXT           "Randomization",IDC_STATIC,5,110,48,8
-    CONTROL         "hz",IDC_RADIO1,"Button",BS_AUTORADIOBUTTON | WS_GROUP,5,70,23,10
-    CONTROL         "Beats",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,5,90,34,10
-    CONTROL         "Dummy",IDC_RADIO3,"Button",BS_AUTORADIOBUTTON | NOT WS_VISIBLE | WS_GROUP,95,90,39,10
-    COMBOBOX        IDC_COMBO1,45,90,48,30,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "%",IDC_STATIC,90,110,8,8
-END
-
 IDD_TAKEMIXER DIALOGEX 0, 0, 342, 183
 STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Take Mixer"
@@ -1630,14 +1605,6 @@ BEGIN
         BOTTOMMARGIN, 64
     END
 
-    IDD_GEN_ENV1, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 170
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 146
-    END
-
     IDD_TAKEMIXER, DIALOG
     BEGIN
         LEFTMARGIN, 7
@@ -2023,7 +1990,9 @@ END
 //
 
 IDB_DOWN                BITMAP                  "Resources\\Bitmap\\downarrow.bmp"
+
 IDB_UP                  BITMAP                  "Resources\\Bitmap\\uparrow.bmp"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -2031,13 +2000,21 @@ IDB_UP                  BITMAP                  "Resources\\Bitmap\\uparrow.bmp"
 //
 
 IDC_ENV_PEN_GRID        CURSOR                  "Resources\\Cursor\\sws_env_pen_grid.cur"
+
 IDC_ENV_PT_ADJ_VERT     CURSOR                  "Resources\\Cursor\\sws_env_pt_adj_vert.cur"
+
 IDC_GRID_WARP           CURSOR                  "Resources\\Cursor\\sws_grid_warp.cur"
+
 IDC_MISC_SPEAKER        CURSOR                  "Resources\\Cursor\\sws_misc_speaker.cur"
+
 IDC_ZOOM_DRAG           CURSOR                  "Resources\\Cursor\\sws_zoom_drag.cur"
+
 IDC_ZOOM_IN             CURSOR                  "Resources\\Cursor\\sws_zoom_in.cur"
+
 IDC_ZOOM_OUT            CURSOR                  "Resources\\Cursor\\sws_zoom_out.cur"
+
 IDC_ZOOM_UNDO           CURSOR                  "Resources\\Cursor\\sws_zoom_undo.cur"
+
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 
@@ -2051,8 +2028,7 @@ IDC_ZOOM_UNDO           CURSOR                  "Resources\\Cursor\\sws_zoom_und
 #include "version.h"
 #include "license.h"
 #include "url.h"
-#include "version.rc2"
-
+#include "version.rc2"
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

@@ -41,12 +41,6 @@
 #include "../Prompt.h"
 #include "../../WDL/projectcontext.h"
 
-#define TAGLIB_STATIC
-#define TAGLIB_NO_CONFIG
-#include "../taglib/tag.h"
-#include "../taglib/fileref.h"
-
-
 int GetCurrentYear(){
 	time_t t = 0;
 	struct tm *lt = NULL;  
@@ -758,72 +752,6 @@ void AutorenderRegions(COMMAND_T*)
 	}
 
 	Main_OnCommand( 41207, 0 ); //Render all queued renders
-
-	// Tag!
-	for( unsigned int i = 0; i < renderTracks.size(); i++){		
-		string renderedFilePath = g_render_path + PATH_SLASH_CHAR + renderTracks[i].getFileName( renderFileExtension, prependTrackNumberPad );
-#ifdef _WIN32
-		wchar_t* w_rendered_path = WideCharPlz( renderedFilePath.c_str() );
-		TagLib::FileRef f( w_rendered_path );
-#else
-		TagLib::FileRef f( renderedFilePath.c_str() );
-#endif
-		if( !f.isNull() ){
-#ifdef _WIN32
-			wchar_t* w_tag_artist = WideCharPlz( g_tag_artist.c_str() );
-			wchar_t* w_tag_album = WideCharPlz( g_tag_album.c_str() );
-			wchar_t* w_tag_genre = WideCharPlz( g_tag_genre.c_str() );
-			wchar_t* w_tag_comment = WideCharPlz( g_tag_comment.c_str() );
-			wchar_t* w_track_title = WideCharPlz( renderTracks[i].trackName.c_str() );
-
-			if( wcslen( w_tag_artist ) ) f.tag()->setArtist( w_tag_artist );
-			if( wcslen( w_tag_album ) ) f.tag()->setAlbum( w_tag_album );
-			if( wcslen( w_tag_genre ) ) f.tag()->setGenre( w_tag_genre );
-			if( wcslen( w_tag_comment ) ) f.tag()->setComment( w_tag_comment );
-
-			f.tag()->setTitle( w_track_title );
-			
-			delete [] w_tag_artist;
-			delete [] w_tag_album;
-			delete [] w_tag_genre;
-			delete [] w_tag_comment;
-			delete [] w_track_title;
-#else
-      if( !g_tag_artist.empty() )
-      {
-        TagLib::String s(g_tag_artist.c_str(), TagLib::String::UTF8);
-        f.tag()->setArtist(s);
-      }
-      if( !g_tag_album.empty() )
-      {
-        TagLib::String s(g_tag_album.c_str(), TagLib::String::UTF8);
-        f.tag()->setAlbum(s);
-      }
-      if( !g_tag_genre.empty() )
-      {
-        TagLib::String s(g_tag_genre.c_str(), TagLib::String::UTF8);
-        f.tag()->setGenre(s);
-      }
-      if( !g_tag_comment.empty() )
-      {
-        TagLib::String s(g_tag_comment.c_str(), TagLib::String::UTF8);
-        f.tag()->setComment(s);
-      }
-      {
-        TagLib::String s(renderTracks[i].trackName.c_str(), TagLib::String::UTF8);
-        f.tag()->setTitle(s);
-      }
-#endif
-			if( g_tag_year > 0 ) f.tag()->setYear( g_tag_year );
-			f.tag()->setTrack( i + 1 );
-			f.save();
-		} else {
-			//throw error?
-		}
-#ifdef _WIN32
-		delete [] w_rendered_path;
-#endif
-	}
 
 	OpenRenderPath( NULL );
 	g_doing_render = false;

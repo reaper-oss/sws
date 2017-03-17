@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
@@ -27,26 +27,26 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Test|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>NotSet</CharacterSet>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>NotSet</CharacterSet>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Test|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>NotSet</CharacterSet>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>NotSet</CharacterSet>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
@@ -151,7 +151,7 @@ copy /y "whatsnew.txt" "$(REAPER_DIR)\plugins\reaper_sws_whatsnew.txt"
 </Command>
     </PreLinkEvent>
     <Link>
-      <AdditionalDependencies>comctl32.lib;lib/vs12_tag32.lib;shlwapi.lib;wsock32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>comctl32.lib;shlwapi.lib;wsock32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)reaper_sws.dll</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <GenerateMapFile>true</GenerateMapFile>
@@ -306,7 +306,7 @@ copy /y "whatsnew.txt" "$(REAPER_DIR)\plugins\reaper_sws_whatsnew.txt"
 </Command>
     </PreLinkEvent>
     <Link>
-      <AdditionalDependencies>comctl32.lib;lib/vs12_tag32.lib;shlwapi.lib;wsock32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>comctl32.lib;shlwapi.lib;wsock32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)reaper_sws.dll</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <GenerateMapFile>true</GenerateMapFile>
@@ -386,7 +386,7 @@ copy /y "whatsnew.txt" "$(REAPER64_DIR)\plugins\reaper_sws_whatsnew.txt"
 </Command>
     </PreLinkEvent>
     <Link>
-      <AdditionalDependencies>comctl32.lib;lib/vs12_tag64.lib;shlwapi.lib;wsock32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>comctl32.lib;shlwapi.lib;wsock32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)reaper_sws64.dll</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <GenerateMapFile>true</GenerateMapFile>
@@ -429,6 +429,7 @@ echo Copied to "$(REAPER64_DIR)\plugins\$(TargetFilename)"</Command>
     <ClInclude Include="Breeder\BR_MidiUtil.h" />
     <ClInclude Include="Breeder\BR_MouseUtil.h" />
     <ClInclude Include="C:\Program Files (x86)\REAPER\reaper_plugin_functions.h" />
+    <ClInclude Include="nofish\nofish.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Wol\wol_Util.h" />
     <ClInclude Include="Wol\wol_Zoom.h" />
@@ -604,6 +605,7 @@ echo Copied to "$(REAPER64_DIR)\plugins\$(TargetFilename)"</Command>
     <ClCompile Include="Breeder\BR_MidiUtil.cpp" />
     <ClCompile Include="Breeder\BR_MouseUtil.cpp" />
     <ClCompile Include="libebur128\ebur128.cpp" />
+    <ClCompile Include="nofish\nofish.cpp" />
     <ClCompile Include="Wol\wol_Util.cpp" />
     <ClCompile Include="Wol\wol_Zoom.cpp" />
     <ClCompile Include="Xenakios\AutoRename.cpp" />

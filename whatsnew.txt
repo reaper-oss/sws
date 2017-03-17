@@ -1,3 +1,7 @@
+Fixes
++Issue 823: Removed buggy "Insert random points to selected envelopes" action
++Issue 832: Avoid Clear Midi CC Lane Toggle RPP file size runaway
+
 !v2.9.0 pre-release build (March 14, 2017)
 Actions
 +New actions (Main section):

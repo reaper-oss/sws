@@ -352,8 +352,84 @@ void SetHorizontalZoomCenter(COMMAND_T* ct)
 	WritePrivateProfileString("reaper", "zoommode", tmp, get_ini_file());
 }
 
+//---------//
+
+static int EnvH[8];
+void SaveApplyHeightSelectedEnvelopeSlot(COMMAND_T* ct)
+{
+	if (TrackEnvelope* env = GetSelectedEnvelope(NULL))
+	{
+		if ((int)ct->user < 8)
+		{
+			int s = (int)ct->user;
+			BR_Envelope brEnv(env);
+			if (brEnv.IsInLane())
+				//if (brEnv.IsTakeEnvelope())
+				//	EnvH[s] = GetTrackHeight(brEnv.GetParent(), 0);
+				//else
+				EnvH[s] = brEnv.GetLaneHeight();
+			else
+			{
+				int trackGapTop, trackGapBottom, mul, laneCount, envCount;
+				EnvH[s] = GetTrackHeight(brEnv.GetParent(), NULL, &trackGapTop, &trackGapBottom);
+				EnvH[s] -= (trackGapTop + trackGapBottom);
+				GetEnvelopeOverlapState(env, &laneCount, &envCount);
+				mul = g_EnvelopesExtendedZoom ? laneCount : 1;
+				EnvH[s] /= mul;
+			}
+			char key[256] = "";
+			char val[16] = "";
+			sprintf_s(key, 256, "WOLEnvHSlot%d", s);
+			sprintf_s(val, 16, "%d", EnvH[s]);
+			WritePrivateProfileString(SWS_INI, key, val, get_ini_file());
+		}
+		else if (((int)ct->user - 8) < 8)
+		{
+			int s = (int)ct->user - 8;
+			if (EnvH[s] == 0)
+				return;
+			BR_Envelope brEnv(env);
+			if (brEnv.IsInLane())
+			{
+				//if (brEnv.IsTakeEnvelope())
+				//{
+				//	SetTrackHeight(brEnv.GetParent(), EnvH[s]);
+				//	ScrollTo = ScrollToTrackIfNotInArrange;
+				//}
+				//else
+				//{
+				brEnv.SetLaneHeight(EnvH[s]);
+				brEnv.Commit();
+				SetArrangeScrollTo(env);
+				//}
+			}
+			else
+			{
+				int trackGapTop, trackGapBottom, mul, laneCount, envCount;
+				GetTrackHeight(brEnv.GetParent(), NULL, &trackGapTop, &trackGapBottom);
+				GetEnvelopeOverlapState(env, &laneCount, &envCount);
+				mul = g_EnvelopesExtendedZoom ? laneCount : 1;
+				SetTrackHeight(brEnv.GetParent(), SetToBounds(EnvH[s] * mul, GetTcpTrackMinHeight(), (g_EnvelopesExtendedZoom ? GetCurrentTcpMaxHeight() * envCount + trackGapTop + trackGapBottom : GetCurrentTcpMaxHeight())));
+				if (mul == 1)
+					SetArrangeScrollTo(brEnv.GetParent());
+				else
+					SetArrangeScrollTo(env, false);
+			}
+		}
+	}
+}
+
+//---------//
+
 void wol_ZoomInit()
 {
 	g_EnvelopesExtendedZoom = GetPrivateProfileInt(SWS_INI, "WOLExtZoomEnvInTrLane", 0, get_ini_file()) ? true : false;
 	g_SavedEnvelopeOverlapSettings = *(int*)GetConfigVar("env_ol_minh");
+
+	char key[256] = "";
+	for (int i = 0; i < 7; ++i)
+	{
+		sprintf_s(key, 256, "WOLEnvHSlot%d", i);
+		EnvH[i] = GetPrivateProfileInt(SWS_INI, key, 0, get_ini_file());
+	}
 }

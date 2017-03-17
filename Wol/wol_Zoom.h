@@ -49,6 +49,8 @@ void VerticalZoomSelectedEnvelopeLoUpHalf(COMMAND_T* ct);
 void SetVerticalZoomCenter(COMMAND_T* ct);
 void SetHorizontalZoomCenter(COMMAND_T* ct);
 
+void SaveApplyHeightSelectedEnvelopeSlot(COMMAND_T* ct);
+
 
 
 void wol_ZoomInit();

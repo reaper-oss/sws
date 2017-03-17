@@ -220,10 +220,9 @@ void DoItemCueTransform(bool donextcue, int ToCueIndex, bool PreserveItemLen=fal
 	t_cuestruct NewCueStruct;
 	vector<t_cuestruct> VecItemCues;
 
-	MediaItem *CurItem;
-	MediaItem_Take *CurTake;
-	MediaTrack* CurTrack;
-	//REAPER_cue *ItemCues=new REAPER_cue[1000];
+	MediaItem *CurItem = NULL;
+	MediaItem_Take *CurTake = NULL;
+	MediaTrack* CurTrack = NULL;
 	for (int i=0;i<GetNumTracks();i++)
 	{
 		CurTrack=CSurf_TrackFromID(i+1,false);
@@ -241,7 +240,7 @@ void DoItemCueTransform(bool donextcue, int ToCueIndex, bool PreserveItemLen=fal
 				{
 					double TakePlayRate=*(double*)GetSetMediaItemTakeInfo(CurTake,"D_PLAYRATE",NULL);
 					PCM_source *TakeSource=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
-					REAPER_cue *CurCue;
+					REAPER_cue *CurCue = NULL;
 					int cueIndx=0;
 					bool morecues=true;
 					while (TakeSource && morecues)
@@ -305,7 +304,7 @@ void DoItemCueTransform(bool donextcue, int ToCueIndex, bool PreserveItemLen=fal
 						}
 						if (ToCueIndex==-2) // full random
 						{
-							NewCueIndex=rand() % VecItemCues.size();
+							NewCueIndex=g_mtrand.randInt() % VecItemCues.size();
 						}
 						if (ToCueIndex>=0 && ToCueIndex<(int)VecItemCues.size())
 							NewCueIndex=ToCueIndex;
@@ -328,7 +327,6 @@ void DoItemCueTransform(bool donextcue, int ToCueIndex, bool PreserveItemLen=fal
 	}
 	Undo_OnStateChangeEx(__LOCALIZE("Switch item contents based on cue","sws_undo"),UNDO_STATE_ITEMS,-1);
 	UpdateTimeline();
-	//delete ItemCues;
 }
 
 void DoSwitchItemToNextCue(COMMAND_T*)

@@ -30,7 +30,6 @@
 #define IDD_RENDITEMS                   124
 #define IDD_SCALEITEMPOS                125
 #define IDD_RANDTEMPOS                  126
-#define IDD_GEN_ENV1                    127
 #define IDD_TAKEMIXER                   128
 #define IDD_REPOSITEMS                  129
 #define IDD_TAKEFINDER                  130
@@ -122,7 +121,6 @@
 #define IDC_LASTUNDOPROJ                1019
 #define IDC_EDIT3                       1020
 #define IDC_SETTIMESEL                  1020
-#define IDC_EDIT4                       1021
 #define IDC_SEEKPLAY                    1021
 #define IDC_IVOL_NUDGE                  1022
 #define IDC_DRAGUPPER                   1022

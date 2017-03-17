@@ -29,8 +29,11 @@
 #include "../SnM/SnM_Dlg.h"
 #include "../SnM/SnM_Util.h"
 #include "../reaper/localize.h"
+#include "../WDL/MersenneTwister.h"
 
 using namespace std;
+
+MTRand g_mtrand;
 
 void(*g_KeyUpUndoHandler)()=0;
 
@@ -950,15 +953,14 @@ double g_itemseltogprob=0.5;
 vector<MediaItem*> g_vectogSelItems;
 void DoTogSelItemsRandomly(bool isrestore,double togprob)
 {
-	int i;
-	for (i=0;i<(int)g_vectogSelItems.size();i++)
+	for (int i=0;i<(int)g_vectogSelItems.size();i++)
 	{
 		bool uisel=false;
 
 		if (isrestore) uisel=true;
 		if (!isrestore)
 		{
-			double rando=(1.0/RAND_MAX)*rand();
+			double rando = g_mtrand.rand();
 			if (rando<togprob) uisel=true;
 		}
 		GetSetMediaItemInfo(g_vectogSelItems[i],"B_UISEL",&uisel);

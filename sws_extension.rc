@@ -2028,8 +2028,7 @@ IDC_ZOOM_UNDO           CURSOR                  "Resources\\Cursor\\sws_zoom_und
 #include "version.h"
 #include "license.h"
 #include "url.h"
-#include "version.rc2"
-
+#include "version.rc2"
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

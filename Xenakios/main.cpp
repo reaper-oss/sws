@@ -34,8 +34,10 @@
 
 using namespace std;
 
-int *ShuffledNumbers;
-int ShuffledNumbersGenerated=0;
+extern MTRand g_mtrand;
+
+std::vector<int> g_ShuffledNumbers;
+int g_ShuffledNumbersGenerated=0;
 
 int IsRippleOneTrack(COMMAND_T*) { return *(int*)GetConfigVar("projripedit") == 1; }
 int IsRippleAll(COMMAND_T*)      { return *(int*)GetConfigVar("projripedit") == 2; }
@@ -66,27 +68,25 @@ void DoToggleRippleAll(COMMAND_T*)
 
 bool GenerateShuffledRandomTable(int *IntTable,int numItems,int badFirstNumber)
 {
-	int *CheckTable=new int[1024];
-	bool GoodFound=FALSE;
+	std::vector<int> CheckTable(1024);
+	bool GoodFound=false;
 	int IterCount=0;
-	int rndInt;
-	int i;
-	for (i=0;i<1024;i++)
+	int rndInt=0;
+	for (int i=0;i<1024;i++)
 	{
 		CheckTable[i]=0;
 		IntTable[i]=0;
 	}
-
-	for (i=0;i<numItems;i++)
+	for (int i=0;i<numItems;i++)
 	{
-		GoodFound=FALSE;
+		GoodFound=false;
 		while (!GoodFound)
 		{
-			rndInt=rand() % numItems;
+			rndInt=g_mtrand.randInt() % numItems;
 			if ((CheckTable[rndInt]==0) && (rndInt!=badFirstNumber) && (i==0))
-				GoodFound=TRUE;
+				GoodFound=true;
 			if ((CheckTable[rndInt]==0) && (i>0))
-				GoodFound=TRUE;
+				GoodFound=true;
 
 			IterCount++;
 			if (IterCount>10000000)
@@ -98,8 +98,7 @@ bool GenerateShuffledRandomTable(int *IntTable,int numItems,int badFirstNumber)
 			CheckTable[rndInt]=1;
 		}
 	}
-	delete[] CheckTable;
-	return FALSE;
+	return false; // UGH, why does this always return false???
 }
 
 void DoSelectFiles(COMMAND_T*)
@@ -116,21 +115,24 @@ void DoSelectFiles(COMMAND_T*)
 		}
 		free(cFiles);
 	}
-	ShuffledNumbersGenerated=0;
-	GenerateShuffledRandomTable(ShuffledNumbers,g_filenames->GetSize(),-1);
+	g_ShuffledNumbersGenerated=0;
+	GenerateShuffledRandomTable(g_ShuffledNumbers.data(),g_filenames->GetSize(),-1);
 }
 
 void DoInsertRandom(COMMAND_T*)
 {
+	// Using % to limit the random number isn't really correct. Should use the MTRand method
+	// to get a rand int from a range, but should ensure first what is the actual range it will
+	// return since we don't want to be indexing outside the array/list bounds
 	if (g_filenames->GetSize()>0)
-		InsertMedia(g_filenames->Get(rand() % g_filenames->GetSize()), 0);
+		InsertMedia(g_filenames->Get(g_mtrand.randInt() % g_filenames->GetSize()), 0);
 }
 
 void DoInsRndFileEx(bool RndLen,bool RndOffset,bool UseTimeSel)
 {
 	if (g_filenames->GetSize()>0)
 	{
-		int filenameindex=rand() % g_filenames->GetSize();
+		int filenameindex=g_mtrand.randInt() % g_filenames->GetSize();
 
 		t_vect_of_Reaper_tracks TheTracks;
 		XenGetProjectTracks(TheTracks,true);
@@ -150,10 +152,11 @@ void DoInsRndFileEx(bool RndLen,bool RndOffset,bool UseTimeSel)
 			double MediaOffset=0.0;
 			if (RndOffset)
 			{
-				MediaOffset=(NewPCM->GetLength()/RAND_MAX)*rand();
+				MediaOffset=NewPCM->GetLength()*g_mtrand.rand();
 				ItemLen-=MediaOffset;
 			}
-			if (RndLen) ItemLen=((NewPCM->GetLength()-MediaOffset)/RAND_MAX)*rand();
+			if (RndLen)
+				ItemLen = (NewPCM->GetLength() - MediaOffset)*g_mtrand.rand();
 			if (UseTimeSel) ItemLen=TimeSelEnd-TimeSelStart;
 			if (!UseTimeSel) ItemPos=GetCursorPosition();
 			GetSetMediaItemTakeInfo(NewTake,"P_SOURCE",NewPCM);
@@ -261,15 +264,15 @@ void DoInsertShuffledRandomFile(COMMAND_T*)
 {
 	if (g_filenames->GetSize()>2)
 	{
-	 int FileToChoose=ShuffledNumbers[ShuffledNumbersGenerated];
+	 int FileToChoose=g_ShuffledNumbers[g_ShuffledNumbersGenerated];
 	 char* filename;
 	 filename=g_filenames->Get(FileToChoose);
 	 InsertMedia(filename,0);
-	 ShuffledNumbersGenerated++;
-	 if (ShuffledNumbersGenerated==g_filenames->GetSize())
+	 g_ShuffledNumbersGenerated++;
+	 if (g_ShuffledNumbersGenerated==g_filenames->GetSize())
 	 {
-		GenerateShuffledRandomTable(ShuffledNumbers,g_filenames->GetSize(),FileToChoose);
-		ShuffledNumbersGenerated=0;
+		GenerateShuffledRandomTable(g_ShuffledNumbers.data(),g_filenames->GetSize(),FileToChoose);
+		g_ShuffledNumbersGenerated=0;
 	 }
 	}
 	else
@@ -723,7 +726,7 @@ int XenakiosInit()
 		MoveFile(oldIniFilename, iniFilename);
 	g_XenIniFilename.Set(iniFilename);
 
-	ShuffledNumbers=new int[1024];
+	g_ShuffledNumbers.resize(1024);
 
 	SWSRegisterCommands(g_XenCommandTable);
 

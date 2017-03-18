@@ -66,7 +66,7 @@ void DoToggleRippleAll(COMMAND_T*)
 	}
 }
 
-bool GenerateShuffledRandomTable(int *IntTable,int numItems,int badFirstNumber)
+bool GenerateShuffledRandomTable(std::vector<int>& IntTable,int numItems,int badFirstNumber)
 {
 	std::vector<int> CheckTable(1024);
 	bool GoodFound=false;
@@ -116,7 +116,7 @@ void DoSelectFiles(COMMAND_T*)
 		free(cFiles);
 	}
 	g_ShuffledNumbersGenerated=0;
-	GenerateShuffledRandomTable(g_ShuffledNumbers.data(),g_filenames->GetSize(),-1);
+	GenerateShuffledRandomTable(g_ShuffledNumbers,g_filenames->GetSize(),-1);
 }
 
 void DoInsertRandom(COMMAND_T*)
@@ -271,7 +271,7 @@ void DoInsertShuffledRandomFile(COMMAND_T*)
 	 g_ShuffledNumbersGenerated++;
 	 if (g_ShuffledNumbersGenerated==g_filenames->GetSize())
 	 {
-		GenerateShuffledRandomTable(g_ShuffledNumbers.data(),g_filenames->GetSize(),FileToChoose);
+		GenerateShuffledRandomTable(g_ShuffledNumbers,g_filenames->GetSize(),FileToChoose);
 		g_ShuffledNumbersGenerated=0;
 	 }
 	}

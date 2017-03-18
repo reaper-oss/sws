@@ -280,12 +280,15 @@ void DoInsertShuffledRandomFile(COMMAND_T*)
 
 }
 
-bool ItemTimesCompFunc(MediaItem* ita,MediaItem* itb)
+struct ItemTimesCompFunc
 {
-	double itapos=*(double*)GetSetMediaItemInfo(ita,"D_POSITION",0);
-	double itbpos=*(double*)GetSetMediaItemInfo(itb,"D_POSITION",0);
-	return itapos<itbpos;
-}
+	bool operator()(MediaItem* ita, MediaItem* itb) const
+	{
+		double itapos = *(double*)GetSetMediaItemInfo(ita, "D_POSITION", 0);
+		double itbpos = *(double*)GetSetMediaItemInfo(itb, "D_POSITION", 0);
+		return itapos<itbpos;
+	}
+};
 
 double g_FirstSelectedItemPos;
 double g_LastSelectedItemEnd;
@@ -297,7 +300,7 @@ void DoSetLoopPointsToSelectedItems(bool SetTheLoop)
 	if (selitems.size()>0)
 	{
 		double MinItemPos,MaxItemEnd=0.0;
-		sort(selitems.begin(),selitems.end(),ItemTimesCompFunc);
+		sort(selitems.begin(),selitems.end(),ItemTimesCompFunc());
 		MinItemPos=*(double*)GetSetMediaItemInfo(selitems[0],"D_POSITION",0);
 		double MaxItemPos=*(double*)GetSetMediaItemInfo(selitems[selitems.size()-1],"D_POSITION",0);
 		MaxItemEnd=MaxItemPos+*(double*)GetSetMediaItemInfo(selitems[selitems.size()-1],"D_LENGTH",0);
@@ -651,9 +654,9 @@ void DoRenameMarkersWithAscendingNumbers(COMMAND_T* ct)
 {
 	int x=0;
 
-	bool isrgn;
-	double pos, rgnend;
-	int number, color;
+	bool isrgn = false;
+	double pos, rgnend = 0.0;
+	int number, color = 0;
 	char newmarkname[100];
 	int j=1;
 	while ((x = EnumProjectMarkers3(NULL, x, &isrgn, &pos, &rgnend, NULL, &number, &color)))
@@ -711,7 +714,7 @@ void XenakiosExit()
 	plugin_register("-timer",(void*)ItemPreviewTimer);
 	RemoveUndoKeyUpHandler01();
 	DestroyWindow(g_hItemInspector);
-  g_hItemInspector=NULL;
+    g_hItemInspector=NULL;
 }
 
 int XenakiosInit()

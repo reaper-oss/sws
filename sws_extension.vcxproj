@@ -23,6 +23,7 @@
     <ProjectGuid>{FB45A787-C2B0-4784-A418-3429C0FBC42D}</ProjectGuid>
     <RootNamespace>Snapshots</RootNamespace>
     <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Test|Win32'" Label="Configuration">
@@ -42,7 +43,7 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>NotSet</CharacterSet>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -370,6 +371,7 @@ echo Warning: reascript_vararg.h generation failed (PHP installed?)
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <BrowseInformation>true</BrowseInformation>
       <Optimization>Disabled</Optimization>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
     </ClCompile>
     <PreLinkEvent>
       <Message>Generating sws_python.py, copying whatsnew.txt...</Message>
@@ -389,7 +391,7 @@ copy /y "whatsnew.txt" "$(REAPER64_DIR)\plugins\reaper_sws_whatsnew.txt"
       <AdditionalDependencies>comctl32.lib;shlwapi.lib;wsock32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)reaper_sws64.dll</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <GenerateMapFile>true</GenerateMapFile>
+      <GenerateMapFile>false</GenerateMapFile>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -397,11 +399,12 @@ copy /y "whatsnew.txt" "$(REAPER64_DIR)\plugins\reaper_sws_whatsnew.txt"
       <DataExecutionPrevention />
       <TargetMachine>MachineX64</TargetMachine>
       <Profile>true</Profile>
+      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
     </Link>
     <PostBuildEvent>
       <Message>
       </Message>
-      <Command>copy /y "$(OutDir)$(TargetFilename)" "$(REAPER64_DIR)\plugins" &gt; NUL
+      <Command>copy /y "$(OutDir)$(TargetFilename)" "$(REAPER64_DIR)\UserPlugins" &gt; NUL
 echo Copied to "$(REAPER64_DIR)\plugins\$(TargetFilename)"</Command>
     </PostBuildEvent>
     <Bscmake>

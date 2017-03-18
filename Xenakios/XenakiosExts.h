@@ -92,7 +92,6 @@ void DoResetItemVol(COMMAND_T*);
 void DoResetTakeVol(COMMAND_T*);
 void DoScaleItemPosStaticDlg(COMMAND_T*);
 void DoRandomizePositionsDlg(COMMAND_T*);
-void DoInsertRandomEnvelopePoints(COMMAND_T*);
 void DoShowTakeMixerDlg(COMMAND_T*);
 void DoHoldKeyTest1(COMMAND_T*);
 void DoHoldKeyTest2(COMMAND_T*);
@@ -345,7 +344,7 @@ int XenSingleStringQueryDlg(HWND hParent,const char *QueryTitle,char *QueryResul
 
 //===========================================================
 // XenUtils.cpp functions, globals:
-extern WDL_PtrList<char>* g_filenames;
+extern std::vector<std::string> g_filenames;
 extern char g_CurrentScanFile[1024];
 extern bool g_bAbortScan;
 int GetActiveTakes(WDL_PtrList<MediaItem_Take> *MediaTakes);

@@ -104,17 +104,17 @@ void DoSelectFiles(COMMAND_T*)
 	char* cFiles = BrowseForFiles(__LOCALIZE("Select files","sws_mbox"), NULL, NULL, true, "WAV Files\0*.wav\0");
 	if (cFiles)
 	{
-		g_filenames->Empty(true, free);
+		g_filenames.clear();
 		char* pStr = cFiles;
 		while(*pStr)
 		{
-			strcpy(g_filenames->Add((char*)malloc(strlen(pStr)+1)), pStr);
+			g_filenames.push_back(pStr);
 			pStr += strlen(pStr)+1;
 		}
 		free(cFiles);
 	}
 	g_ShuffledNumbersGenerated=0;
-	GenerateShuffledRandomTable(g_ShuffledNumbers,g_filenames->GetSize(),-1);
+	GenerateShuffledRandomTable(g_ShuffledNumbers,g_filenames.size(),-1);
 }
 
 void DoInsertRandom(COMMAND_T*)
@@ -122,21 +122,21 @@ void DoInsertRandom(COMMAND_T*)
 	// Using % to limit the random number isn't really correct. Should use the MTRand method
 	// to get a rand int from a range, but should ensure first what is the actual range it will
 	// return since we don't want to be indexing outside the array/list bounds
-	if (g_filenames->GetSize()>0)
-		InsertMedia(g_filenames->Get(g_mtrand.randInt() % g_filenames->GetSize()), 0);
+	if (g_filenames.size()>0)
+		InsertMedia(g_filenames[g_mtrand.randInt() % g_filenames.size()].c_str(), 0);
 }
 
 void DoInsRndFileEx(bool RndLen,bool RndOffset,bool UseTimeSel)
 {
-	if (g_filenames->GetSize()>0)
+	if (g_filenames.size()>0)
 	{
-		int filenameindex=g_mtrand.randInt() % g_filenames->GetSize();
+		int filenameindex=g_mtrand.randInt() % g_filenames.size();
 
 		t_vect_of_Reaper_tracks TheTracks;
 		XenGetProjectTracks(TheTracks,true);
 		if (TheTracks.size()>0)
 		{
-			PCM_source *NewPCM=PCM_Source_CreateFromFile(g_filenames->Get(filenameindex));
+			PCM_source *NewPCM=PCM_Source_CreateFromFile(g_filenames[filenameindex].c_str());
 			if (!NewPCM)
 				return;
 
@@ -260,16 +260,16 @@ void DoSelectLastTakesInItems(COMMAND_T* ct)
 
 void DoInsertShuffledRandomFile(COMMAND_T*)
 {
-	if (g_filenames->GetSize()>2)
+	if (g_filenames.size()>2)
 	{
 	 int FileToChoose=g_ShuffledNumbers[g_ShuffledNumbersGenerated];
-	 char* filename;
-	 filename=g_filenames->Get(FileToChoose);
+	 char* filename=nullptr;
+	 filename=(char*)g_filenames[FileToChoose].c_str();
 	 InsertMedia(filename,0);
 	 g_ShuffledNumbersGenerated++;
-	 if (g_ShuffledNumbersGenerated==g_filenames->GetSize())
+	 if (g_ShuffledNumbersGenerated==g_filenames.size())
 	 {
-		GenerateShuffledRandomTable(g_ShuffledNumbers,g_filenames->GetSize(),FileToChoose);
+		GenerateShuffledRandomTable(g_ShuffledNumbers,g_filenames.size(),FileToChoose);
 		g_ShuffledNumbersGenerated=0;
 	 }
 	}
@@ -729,8 +729,6 @@ int XenakiosInit()
 	SWSRegisterCommands(g_XenCommandTable);
 
 	InitCommandParams();
-
-	g_filenames = new(WDL_PtrList<char>);
 
 	InitUndoKeyUpHandler01();
 	g_hItemInspector = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_ITEM_INSPECTOR), g_hwndParent, (DLGPROC)MyItemInspectorDlgProc);

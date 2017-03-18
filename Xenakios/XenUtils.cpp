@@ -31,7 +31,7 @@
 using namespace std;
 
 // Globals
-WDL_PtrList<CHAR>* g_filenames;
+std::vector<std::string> g_filenames;
 
 int GetActiveTakes(WDL_PtrList<MediaItem_Take> *MediaTakes)
 {

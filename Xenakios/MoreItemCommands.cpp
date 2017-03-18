@@ -31,6 +31,9 @@
 #include "../reaper/localize.h"
 #include "../WDL/MersenneTwister.h"
 
+#undef min
+#undef max
+
 using namespace std;
 
 MTRand g_mtrand;
@@ -55,10 +58,8 @@ void DoRemapItemPositions(bool bRestorePos)
 	for (int i = 0; i < items.GetSize(); i++)
 	{
 		double dPos = *(double*)GetSetMediaItemInfo(items.Get()[i], "D_POSITION", NULL);
-		if (dPos < dMinTime)
-			dMinTime = dPos;
-		if (dPos > dMaxTime)
-			dMaxTime = dPos;
+		dMinTime = min(dPos, dMinTime);
+		dMaxTime = max(dPos, dMaxTime);
 	}
 
 	for (int i = 0; i < items.GetSize(); i++)

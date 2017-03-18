@@ -212,24 +212,20 @@ void DoRoundRobinSelectTakes(COMMAND_T* ct)
 
 void DoSelectTakeInSelectedItems(int takeIndx) // -1 first -2 last take, otherwise index, if bigger than numtakes in item, the last
 {
-	MediaTrack* CurTrack;
-	MediaItem* CurItem;
-	bool ItemSelected;
-	int numItems;
-	int numTakes;
-	int trackID;
-	int itemID;
-	for (trackID=0;trackID<GetNumTracks();trackID++)
+	MediaTrack* CurTrack=NULL;
+	MediaItem* CurItem=NULL;
+	bool ItemSelected=false;
+	for (int trackID=0;trackID<GetNumTracks();trackID++)
 	{
 		CurTrack=CSurf_TrackFromID(trackID+1,FALSE);
-		numItems=GetTrackNumMediaItems(CurTrack);
-		for (itemID=0;itemID<numItems;itemID++)
+		int numItems=GetTrackNumMediaItems(CurTrack);
+		for (int itemID=0;itemID<numItems;itemID++)
 		{
 			CurItem = GetTrackMediaItem(CurTrack,itemID);
 			ItemSelected=*(bool*)GetSetMediaItemInfo(CurItem,"B_UISEL",NULL);
 			if (ItemSelected==TRUE)
 			{
-				numTakes=GetMediaItemNumTakes(CurItem);
+				int numTakes=GetMediaItemNumTakes(CurItem);
 				if (numTakes>0)
 				{
 					int TakeToSelect;

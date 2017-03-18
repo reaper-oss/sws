@@ -37,11 +37,11 @@ MTRand g_mtrand;
 
 void(*g_KeyUpUndoHandler)()=0;
 
-typedef struct
+struct t_itemposremap_params
 {
 	double dCurve;
-	double *dStoredPositions;
-} t_itemposremap_params;
+	std::vector<double> dStoredPositions;
+};
 
 t_itemposremap_params g_itemposremap_params;
 
@@ -175,12 +175,11 @@ void DoItemPosRemapDlg(COMMAND_T*)
 	// Save the item positions
 	WDL_TypedBuf<MediaItem*> items;
 	SWS_GetSelectedMediaItems(&items);
-	g_itemposremap_params.dStoredPositions = new double[items.GetSize()];
+	g_itemposremap_params.dStoredPositions.resize(items.GetSize());
 	for (int i = 0; i < items.GetSize(); i++)
 		g_itemposremap_params.dStoredPositions[i] = *(double*)GetSetMediaItemInfo(items.Get()[i], "D_POSITION", NULL);
 
 	DialogBox(g_hInst, MAKEINTRESOURCE(IDD_ITEMPOSREMAP), g_hwndParent, ItemPosRemapDlgProc);
-	delete [] g_itemposremap_params.dStoredPositions;
 }
 
 void ExtractFileNameEx(const char *FullFileName,char *Filename,bool StripExtension)

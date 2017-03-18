@@ -33,11 +33,12 @@
 
 using namespace std;
 
+extern MTRand g_mtrand;
+
 void DoJumpEditCursorByRandomAmount(COMMAND_T*)
 {
-	double RandomMean;
-	RandomMean=g_command_params.EditCurRndMean;
-	double RandExp=-log((1.0/RAND_MAX)*rand()) * RandomMean;
+	double RandomMean = g_command_params.EditCurRndMean;
+	double RandExp=-log(g_mtrand.rand()) * RandomMean;
 	double NewCurPos=GetCursorPosition() + RandExp;
 	SetEditCurPos(NewCurPos, false, false);
 }

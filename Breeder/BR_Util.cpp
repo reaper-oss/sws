@@ -1759,6 +1759,7 @@ double GetNextGridDiv (double position)
 		else
 		{
 			double positionBeats = TimeMap2_timeToBeats(0, position, NULL, NULL, NULL, NULL) - TimeMap2_timeToBeats(0, gridDivStart, NULL, NULL, NULL, NULL);
+			//double nextGridBeats = ((int)(positionBeats / gridDiv) + 1) * gridDiv;
 			double nextGridBeats = (int)((positionBeats + gridDiv) / gridDiv) * gridDiv;
 			while (abs(nextGridBeats - positionBeats) < 1E-6) nextGridBeats += gridDiv; // rounding errors, yuck...
 
@@ -1838,8 +1839,8 @@ double GetClosestGridDiv (double position)
 	if (position > 0)
 	{
 		double prevGridDiv = GetPrevGridDiv(position);
-		if (position == GetNextGridDiv(prevGridDiv)) gridDiv = position;
-		else                                         gridDiv = GetClosestVal(position, prevGridDiv, GetNextGridDiv(position));
+		double nextGridDiv = GetNextGridDiv(prevGridDiv);
+		gridDiv = GetClosestVal(position, prevGridDiv, nextGridDiv);
 	}
 	return gridDiv;
 }

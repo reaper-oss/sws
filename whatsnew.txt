@@ -11,6 +11,7 @@ Fixes
 +Issue 823: Removed buggy "Insert random points to selected envelopes" action
 +Issue 831: Fix quanitize items edges not behaving correctly
 +Issue 832: Avoid Clear Midi CC Lane Toggle RPP file size runaway
++Issue 846: Don't add a newline to the end of single filenames for "SWS/BR: Copy take media source file path of selected items to clipboard"
 
 !v2.9.0 pre-release build (March 14, 2017)
 Actions

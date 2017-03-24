@@ -855,9 +855,20 @@ void ItemSourcePathToClipBoard (COMMAND_T* ct)
 			if (!strcmp(source->GetType(), "SECTION"))
 				source = source->GetSource();
 
-			if (const char* fileName = source->GetFileName())
-				if (strcmp(fileName, "")) // skip in-project files
-					sourceList.AppendFormatted(SNM_MAX_PATH, "%s\n", fileName);
+			WDL_String fileName(source->GetFileName());
+			if (fileName.GetLength())
+			{
+#ifdef _WIN32
+				// Reaper returns relative paths with / slash characters on all OSes, replace with \ backslash for external app compatibility.
+				char* pReplace = fileName.Get();
+				while ((pReplace = strchr(pReplace, '/')))
+					*pReplace = '\\';
+#endif
+				// Only add newlines as filename separators 
+				if (i) 
+					sourceList.Append("\n");
+				sourceList.AppendFormatted(SNM_MAX_PATH, "%s", fileName);
+			}
 		}
 	}
 

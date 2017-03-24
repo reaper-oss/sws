@@ -1210,41 +1210,26 @@ int BR_MouseInfo::IsMouseOverStretchMarker (MediaItem* item, MediaItem_Take* tak
 
 	if (takeHeight >= STRETCH_M_MIN_TAKE_HEIGHT)
 	{
-		// Check mouse against Y axis
-		int y1  = takeOffset + (int)(takeHeight * 0.75);
-		int y0  = y1 - STRETCH_M_HIT_POINT;
-		int y2  = y1 + STRETCH_M_HIT_POINT + 1;
-
-		if (CheckBoundsEx(mouseY, y0, y2))
+		double takePlayrate = GetMediaItemTakeInfo_Value(take, "D_PLAYRATE");
+		// Mouse is within stretch marker Y range, look for X axis of a closest stretch marker
+		int id = FindClosestStretchMarker(take, ProjectTimeToItemTime(item, mousePos) * takePlayrate);
+		if (id != -1)
 		{
-			double takePlayrate = GetMediaItemTakeInfo_Value(take, "D_PLAYRATE");
-			// Mouse is within stretch marker Y range, look for X axis of a closest stretch marker
-			int id = FindClosestStretchMarker(take, ProjectTimeToItemTime(item, mousePos) * takePlayrate);
-			if (id != -1)
+			int count = GetTakeNumStretchMarkers(take);
+			while (id < count && !this->IsStretchMarkerVisible(take, id, takePlayrate, arrangeZoom))
+				id++;
+
+			double stretchMarkerPos;
+			GetTakeStretchMarker(take, id, &stretchMarkerPos, NULL);
+			stretchMarkerPos = ItemTimeToProjectTime(item, stretchMarkerPos / takePlayrate) - arrangeStart; // convert to "displayed" time
+
+			if (stretchMarkerPos > 0)
 			{
-				int count = GetTakeNumStretchMarkers(take);
-				while (id < count && !this->IsStretchMarkerVisible(take, id, takePlayrate, arrangeZoom))
-					id++;
-
-				double stretchMarkerPos;
-				GetTakeStretchMarker(take, id, &stretchMarkerPos, NULL);
-				stretchMarkerPos = ItemTimeToProjectTime(item, stretchMarkerPos / takePlayrate) - arrangeStart; // convert to "displayed" time
-
-				if (stretchMarkerPos > 0)
-				{
-					int x1 = RoundToInt(stretchMarkerPos * arrangeZoom);
-					int x0 = x1 - STRETCH_M_HIT_POINT;
-					int x2 = x1 + STRETCH_M_HIT_POINT + 1;
-					if (CheckBounds(mouseDisplayX, x0, x2))
-					{
-						// Find the X coordinates of a straight line connecting right and left side for current mouseY
-						int left  = FindXOnSegment(x0 - 1, y1, x1,     (mouseY < y1) ? y0 : y2, mouseY);
-						int right = FindXOnSegment(x2,     y1, x1 + 1, (mouseY < y1) ? y0 : y2, mouseY);
-
-						if (CheckBounds(mouseDisplayX, left, right))
-							returnId = id;
-					}
-				}
+				int x1 = RoundToInt(stretchMarkerPos * arrangeZoom);
+				int x0 = x1 - STRETCH_M_HIT_POINT;
+				int x2 = x1 + STRETCH_M_HIT_POINT + 1;
+				if (CheckBounds(mouseDisplayX, x0, x2))
+					returnId = id;
 			}
 		}
 	}

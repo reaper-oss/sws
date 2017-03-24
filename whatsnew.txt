@@ -7,6 +7,7 @@ Actions
  - SWS/wol: Apply height to selected envelope, slot n (8 slots)
 
 Fixes
++Issue 771: BR_GetMouseCursorContext now ignores mouse Y position when checking for stretch markers.  This isn't perfect, see issue link for discussion.
 +Issue 823: Removed buggy "Insert random points to selected envelopes" action
 +Issue 831: Fix quanitize items edges not behaving correctly
 +Issue 832: Avoid Clear Midi CC Lane Toggle RPP file size runaway

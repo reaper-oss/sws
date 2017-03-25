@@ -867,7 +867,7 @@ void ItemSourcePathToClipBoard (COMMAND_T* ct)
 				// Only add newlines as filename separators 
 				if (i) 
 					sourceList.Append("\n");
-				sourceList.AppendFormatted(SNM_MAX_PATH, "%s", fileName);
+				sourceList.AppendFormatted(SNM_MAX_PATH, "%s", fileName.Get());
 			}
 		}
 	}

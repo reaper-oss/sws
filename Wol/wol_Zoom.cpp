@@ -377,11 +377,11 @@ void SaveApplyHeightSelectedEnvelopeSlot(COMMAND_T* ct)
 				mul = g_EnvelopesExtendedZoom ? laneCount : 1;
 				EnvH[s] /= mul;
 			}
-			char key[256] = "";
-			char val[16] = "";
-			sprintf_s(key, 256, "WOLEnvHSlot%d", s);
-			sprintf_s(val, 16, "%d", EnvH[s]);
-			WritePrivateProfileString(SWS_INI, key, val, get_ini_file());
+			WDL_FastString key;
+			WDL_FastString val;
+			key.SetFormatted(256, "WOLEnvHSlot%d", s);
+			val.SetFormatted(16, "%d", EnvH[s]);
+			WritePrivateProfileString(SWS_INI, key.Get(), val.Get(), get_ini_file());
 		}
 		else if (((int)ct->user - 8) < 8)
 		{
@@ -426,10 +426,10 @@ void wol_ZoomInit()
 	g_EnvelopesExtendedZoom = GetPrivateProfileInt(SWS_INI, "WOLExtZoomEnvInTrLane", 0, get_ini_file()) ? true : false;
 	g_SavedEnvelopeOverlapSettings = *(int*)GetConfigVar("env_ol_minh");
 
-	char key[256] = "";
+	WDL_FastString key;
 	for (int i = 0; i < 7; ++i)
 	{
-		sprintf_s(key, 256, "WOLEnvHSlot%d", i);
-		EnvH[i] = GetPrivateProfileInt(SWS_INI, key, 0, get_ini_file());
+		key.SetFormatted(256, "WOLEnvHSlot%d", i);
+		EnvH[i] = GetPrivateProfileInt(SWS_INI, key.Get(), 0, get_ini_file());
 	}
 }

@@ -453,7 +453,8 @@ static const char s_trackEnvNames[][SNM_MAX_ENV_CHUNKNAME_LEN] =
 	"PROGRAMENV",
 	// ^^ keep these as first items, see LookupTrackEnvName()
 
-	"VOLENV2",
+	"VOLENV2", // Volume
+	"VOLENV3", // Trim volume
 	"PANENV2",
 	"WIDTHENV2",
 	"VOLENV",

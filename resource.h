@@ -26,7 +26,6 @@
 #define IDD_EXOCOM_PARDLG               120
 #define IDD_ITEMVOLUME                  121
 #define IDD_DISKSPACECALC               122
-#define IDD_CSPVOC_CONF                 123
 #define IDD_RENDITEMS                   124
 #define IDD_SCALEITEMPOS                125
 #define IDD_RANDTEMPOS                  126
@@ -35,7 +34,6 @@
 #define IDD_TAKEFINDER                  130
 #define IDD_ITEM_INSPECTOR              131
 #define IDD_ITEMPOSREMAP                132
-#define IDD_RUBBERBAND                  133
 #define IDD_MEDIADLG                    134
 #define IDD_MULMATCH                    135
 #define IDD_AUTORENAMETAKES             136
@@ -150,9 +148,6 @@
 #define IDC_STATIC1                     1045
 #define IDC_IISTATIC1                   1046
 #define IDC_IPRCURVE                    1047
-#define IDC_RBPEDIT2                    1048
-#define IDC_RBPEDIT3                    1049
-#define IDC_RBPEDIT1                    1050
 #define IDC_EDITPIXAM                   1051
 #define IDC_EDITCURSECS                 1052
 #define IDC_PROJFOLMEDLIST              1053
@@ -190,7 +185,6 @@
 #define IDC_NUDGE_S                     1086
 #define IDC_NUDGE_B                     1087
 #define IDC_PNUDGE_A                    1088
-#define IDC_LICENSE                     1089
 #define IDC_ADD                         1090
 #define IDC_DELETE                      1091
 #define IDC_PREVIEW                     1092

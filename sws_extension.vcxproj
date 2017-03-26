@@ -134,7 +134,6 @@ echo Warning: reascript_vararg.h generation failed (PHP installed?)
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <BrowseInformation>true</BrowseInformation>
     </ClCompile>
     <PreLinkEvent>
       <Message>Generating sws_python.py, copying whatsnew.txt...</Message>
@@ -168,9 +167,7 @@ copy /y "whatsnew.txt" "$(REAPER_DIR)\plugins\reaper_sws_whatsnew.txt"
 echo Copied to "$(REAPER_DIR)\plugins\$(TargetFilename)"
 </Command>
     </PostBuildEvent>
-    <Bscmake>
-      <PreserveSbr>true</PreserveSbr>
-    </Bscmake>
+    <Bscmake />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <PreBuildEvent>

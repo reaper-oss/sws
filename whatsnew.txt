@@ -1,3 +1,6 @@
+Fixes
++Issue 811: Fix "Xenakios/SWS: Reposition selected items" on OSX
+
 !v2.9.1 pre-release build (March 24, 2017)
 Auto color/icon/layout
 +Add filter "(vca master)"

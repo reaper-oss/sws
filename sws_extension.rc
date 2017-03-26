@@ -529,13 +529,12 @@ FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,75,74,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,130,74,50,14
-    CONTROL         "Item start",IDC_RADIO1,"Button",BS_AUTORADIOBUTTON,10,15,45,10
+    CONTROL         "Item start",IDC_RADIO1,"Button",BS_AUTORADIOBUTTON | WS_GROUP,10,15,45,10
+    CONTROL         "Item end",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,10,30,43,10
     EDITTEXT        IDC_EDIT1,55,55,35,14,ES_AUTOHSCROLL
     LTEXT           "Time interval",IDC_STATIC,5,55,41,8
     LTEXT           "seconds",IDC_STATIC,95,55,28,8
-    CONTROL         "Item end",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,10,30,43,10
     GROUPBOX        "Add time interval to",IDC_STATIC,5,5,85,40
-    CONTROL         "",IDC_RADIO3,"Button",BS_AUTORADIOBUTTON | NOT WS_VISIBLE,75,20,39,10
 END
 
 IDD_TAKEFINDER DIALOGEX 0, 0, 186, 95
@@ -2015,6 +2014,17 @@ IDC_ZOOM_OUT            CURSOR                  "Resources\\Cursor\\sws_zoom_out
 
 IDC_ZOOM_UNDO           CURSOR                  "Resources\\Cursor\\sws_zoom_undo.cur"
 
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_REPOSITEMS AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 
@@ -2028,8 +2038,7 @@ IDC_ZOOM_UNDO           CURSOR                  "Resources\\Cursor\\sws_zoom_und
 #include "version.h"
 #include "license.h"
 #include "url.h"
-#include "version.rc2"
-
+#include "version.rc2"
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

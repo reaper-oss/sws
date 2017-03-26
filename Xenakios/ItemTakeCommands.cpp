@@ -1045,81 +1045,32 @@ void DoOpenAssociatedRPP(COMMAND_T*)
 typedef struct
 {
 	double Gap;
-	int ModeA;
-	int ModeB;
-	int ModeC;
+	bool bEnd;
 } t_ReposItemsParams;
 
-t_ReposItemsParams g_ReposItemsParams;
+t_ReposItemsParams g_ReposItemsParams = { 1.0, false };
 
-bool g_FirstReposItemsRun = true;
-
-void RepositionItems(double theGap,int ModeA,int ModeB,int ModeC) // ModeA : gap from item starts/end... ModeB=per track/all items...ModeC=seconds/beats...
+void RepositionItems(double theGap, bool bEnd) // bEnd = true gap from end else start
 {
-	//
-	MediaTrack* MunRaita;
-	MediaItem* CurItem;
+	WDL_TypedBuf<MediaItem*> items;
 
-	int numItems;
-	bool ItemSelected=false;
-	int PrevSelItemInd=-1;
-	int FirstSelItemInd=-1;
-	int i;
-	int j;
-	for (i=0;i<GetNumTracks();i++)
+	int numTracks = CountTracks(NULL);
+	for (int i = 0; i < numTracks; i++)
 	{
-		MunRaita = CSurf_TrackFromID(i+1,FALSE);
-		numItems=GetTrackNumMediaItems(MunRaita);
-		//MediaItem* **MediaItemsOnTrack = new (MediaItem*)[numItems];
-		MediaItem** MediaItemsOnTrack = new MediaItem*[numItems];
+		MediaTrack* track = CSurf_TrackFromID(i + 1, false);
+		SWS_GetSelectedMediaItemsOnTrack(&items, track);
 
-		for (j=0;j<numItems;j++)
+		for (int j = 1; j < items.GetSize(); j++)
 		{
-			CurItem = GetTrackMediaItem(MunRaita,j);
-			MediaItemsOnTrack[j]=CurItem;
-			bool X;
-			X=*(bool*)GetSetMediaItemInfo(CurItem,"B_UISEL",NULL);
-			if ((FirstSelItemInd==-1) && (X==true)) FirstSelItemInd=j;
-		}
-		PrevSelItemInd=FirstSelItemInd;
-		for (j=0;j<numItems;j++)
-		{
-			ItemSelected=*(bool*)GetSetMediaItemInfo(MediaItemsOnTrack[j],"B_UISEL",NULL);
-			if (ItemSelected==TRUE)
-			{
-				//double SnapOffset=*(double*)GetSetMediaItemInfo(CurItem,"D_SNAPOFFSET",NULL);
-				double NewPos;
-				double OldPos=*(double*)GetSetMediaItemInfo(MediaItemsOnTrack[j],"D_POSITION",NULL);
-				//double OldPos=g_StoredPositions[ItemCounter];
-				if (ModeA==0)
-				{
-					if (j==FirstSelItemInd) NewPos=OldPos;
-					if (j>FirstSelItemInd)
-					{
-						OldPos=*(double*)GetSetMediaItemInfo(MediaItemsOnTrack[PrevSelItemInd],"D_POSITION",NULL);
-						NewPos=OldPos+theGap;
-					}
-				}
-				if (ModeA==1)
-				{
-					if (j==FirstSelItemInd) NewPos=OldPos;
-					if (j>FirstSelItemInd)
-					{
-						OldPos=*(double*)GetSetMediaItemInfo(MediaItemsOnTrack[PrevSelItemInd],"D_POSITION",NULL);
-						double PrevLen=*(double*)GetSetMediaItemInfo(MediaItemsOnTrack[PrevSelItemInd],"D_LENGTH",NULL);
-						double PrevEnd=OldPos+PrevLen;
-						NewPos=PrevEnd+theGap;
-					}
-				}
+			double dPrevItemStart = *(double*)GetSetMediaItemInfo(items.Get()[j - 1], "D_POSITION", NULL);
+			double dNewPos = dPrevItemStart + theGap;
+			if (bEnd)  // From the previous selected item end, add the prev item length
+				dNewPos += *(double*)GetSetMediaItemInfo(items.Get()[j-1], "D_LENGTH", NULL);
 
-				GetSetMediaItemInfo(MediaItemsOnTrack[j],"D_POSITION",&NewPos);
-				PrevSelItemInd=j;
-			}
+			GetSetMediaItemInfo(items.Get()[j], "D_POSITION", &dNewPos);
 		}
-		delete[] MediaItemsOnTrack;
 	}
 }
-
 
 WDL_DLGRET ReposItemsDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
@@ -1130,13 +1081,13 @@ WDL_DLGRET ReposItemsDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
     {
 		case WM_INITDIALOG:
 		{
-			if (g_ReposItemsParams.ModeA == 0)
+			if (!g_ReposItemsParams.bEnd)
 				CheckDlgButton(hwnd, IDC_RADIO1, BST_CHECKED);
-			else if (g_ReposItemsParams.ModeA == 1)
+			else
 				CheckDlgButton(hwnd, IDC_RADIO2, BST_CHECKED);
 			char TextBuf[32];
 
-			sprintf(TextBuf,"%.2f",g_ReposItemsParams.Gap);
+			sprintf(TextBuf, "%.2f", g_ReposItemsParams.Gap);
 			SetDlgItemText(hwnd, IDC_EDIT1, TextBuf);
 			SetFocus(GetDlgItem(hwnd, IDC_EDIT1));
 			SendMessage(GetDlgItem(hwnd, IDC_EDIT1), EM_SETSEL, 0, -1);
@@ -1148,24 +1099,20 @@ WDL_DLGRET ReposItemsDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
                 case IDOK:
 				{
 					char textbuf[30];
-					GetDlgItemText(hwnd,IDC_EDIT1,textbuf,30);
-					double theGap=atof(textbuf);
-					int modeA=0;
-					if (IsDlgButtonChecked(hwnd,IDC_RADIO1) == BST_CHECKED) modeA = 0;
-					if (IsDlgButtonChecked(hwnd,IDC_RADIO2) == BST_CHECKED) modeA = 1;
-					RepositionItems(theGap,modeA,0,0);
+					GetDlgItemText(hwnd, IDC_EDIT1, textbuf, 30);
+					double theGap = atof(textbuf);
+					bool bEnd = IsDlgButtonChecked(hwnd, IDC_RADIO2) == BST_CHECKED;
+					RepositionItems(theGap, bEnd);
 					UpdateTimeline();
-					Undo_OnStateChangeEx(__LOCALIZE("Reposition items","sws_undo"),UNDO_STATE_ITEMS,-1);
-					g_ReposItemsParams.Gap=theGap;
-					g_ReposItemsParams.ModeA=modeA;
-					g_ReposItemsParams.ModeB=0;
-					g_ReposItemsParams.ModeC=0;
+					Undo_OnStateChangeEx(__LOCALIZE("Reposition items", "sws_undo"), UNDO_STATE_ITEMS, -1);
+					g_ReposItemsParams.Gap = theGap;
+					g_ReposItemsParams.bEnd = bEnd;
 
-					EndDialog(hwnd,0);
+					EndDialog(hwnd, 0);
 					break;
 				}
 				case IDCANCEL:
-					EndDialog(hwnd,0);
+					EndDialog(hwnd, 0);
 					break;
 			}
 	}
@@ -1174,14 +1121,6 @@ WDL_DLGRET ReposItemsDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 
 void DoReposItemsDlg(COMMAND_T*)
 {
-	if (g_FirstReposItemsRun==true)
-	{
-		g_ReposItemsParams.Gap=1.0;
-		g_ReposItemsParams.ModeA=1; // item starts based
-		g_ReposItemsParams.ModeB=0; // per track based
-		g_ReposItemsParams.ModeC=0; // seconds
-		g_FirstReposItemsRun=false;
-	}
 	DialogBox(g_hInst, MAKEINTRESOURCE(IDD_REPOSITEMS), g_hwndParent, ReposItemsDlgProc);
 }
 

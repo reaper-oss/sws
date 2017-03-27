@@ -453,4 +453,21 @@ void SWS_ShowTextScrollbar(HWND hwnd, bool show)
     [sc setHasHorizontalScroller:show?YES:NO];
 }
 
+void SetMenuItemSwatch(HMENU hMenu, UINT pos, int iSize, COLORREF color)
+{
+  if (!hMenu) return;
+  NSMenu *m=(NSMenu *)hMenu;
+  NSMenuItem *item = [m itemAtIndex:pos];
+  NSSize size = NSMakeSize(iSize, iSize);
+  
+  if (!item)
+    return;
+  if (!item.image)
+    item.image = [[NSImage alloc] initWithSize:(NSSize)size];
 
+  NSColor *nscolor = [NSColor colorWithCalibratedRed:GetRValue(color)/255.0f green:GetGValue(color)/255.0f blue:GetBValue(color)/255.0f alpha:1.0f];
+  [item.image lockFocus];
+  [nscolor set];
+  NSRectFill(NSMakeRect(0, 0, size.width, size.height));
+  [item.image unlockFocus];
+}

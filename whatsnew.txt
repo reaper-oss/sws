@@ -1,4 +1,5 @@
 Fixes
++Issue 533: Add custom color swatches to OSX "Set custom color" menu items
 +Issue 811: Fix "Xenakios/SWS: Reposition selected items" on OSX
 +Issue 839: "Remove all automation envelopes for selected tracks" now removes Trim Volume.
 +Issue 843: Fix snapshots with complicated sets of sends not being saved/replicated properly

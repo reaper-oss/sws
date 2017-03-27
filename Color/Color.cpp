@@ -1108,10 +1108,10 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 		else
 			AddSubMenu(hMenu, hSubMenu, __LOCALIZE("SWS item color","sws_menu"), 40707);
 	}
-#ifdef _WIN32
 	else if (flag == 1)
 	{	// Update the color swatches
 		// Color commands can be anywhere on the menu, so find 'em no matter where
+#ifdef _WIN32
 		static WDL_PtrList<void> pBitmaps;
 		HDC hdcScreen = NULL;
 		HDC hDC = NULL;
@@ -1166,8 +1166,26 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 			DeleteDC(hDC);
 		if (hdcScreen)
 			DeleteDC(hdcScreen);
-	}
+#else
+		UpdateCustomColors();
+
+		int iCommand1 = SWSGetCommandID(TrackCustCol, 0);
+		int iCommand2 = SWSGetCommandID(ItemCustCol, 0);
+
+		for (int i = 0; i < 32; i++)
+		{
+			int iPos;
+			HMENU h;
+			if (i < 16)
+				h = FindMenuItem(hMenu, iCommand1 + i, &iPos);
+			else
+				h = FindMenuItem(hMenu, iCommand2 + i - 16, &iPos);
+
+			if (h)
+				SetMenuItemSwatch(h, iPos, 12, g_custColors[i % 16]);
+		}
 #endif
+	}
 }
 
 int ColorInit()

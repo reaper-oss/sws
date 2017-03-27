@@ -221,7 +221,7 @@ void TrackSends::Build(MediaTrack* tr)
 				break;
 			}
 		if (bParsed)
-			break;
+			continue;
 
 		// We haven't parsed yet!
 		trackStr = SWS_GetSetObjectState(pDest, NULL);

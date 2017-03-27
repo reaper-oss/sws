@@ -1,6 +1,7 @@
 Fixes
 +Issue 811: Fix "Xenakios/SWS: Reposition selected items" on OSX
 +Issue 839: "Remove all automation envelopes for selected tracks" now removes Trim Volume.
++Issue 843: Fix snapshots with complicated sets of sends not being saved/replicated properly
 
 !v2.9.1 pre-release build (March 24, 2017)
 Auto color/icon/layout

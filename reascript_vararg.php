@@ -1,4 +1,4 @@
-<?
+<?php
 
 $fp= fopen("./ReaScript.cpp","r");
 if (!$fp) die("error opening ReaScript.cpp");

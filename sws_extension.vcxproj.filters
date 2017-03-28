@@ -613,6 +613,9 @@
     <ClInclude Include="nofish\nofish.h">
       <Filter>nofish</Filter>
     </ClInclude>
+    <ClInclude Include="reascript_vararg.h">
+      <Filter>Core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="sws_extension.rc">
@@ -1235,5 +1238,13 @@
     <ClCompile Include="nofish\nofish.cpp">
       <Filter>nofish</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="reascript_vararg.php">
+      <Filter>Core</Filter>
+    </CustomBuild>
+    <CustomBuild Include="reascript_python.pl">
+      <Filter>Core</Filter>
+    </CustomBuild>
   </ItemGroup>
 </Project>

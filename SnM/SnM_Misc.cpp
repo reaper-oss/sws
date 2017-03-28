@@ -178,7 +178,7 @@ bool SNM_GetSetObjectState(void* _obj, WDL_FastString* _state, bool _setnewvalue
 	return ok;
 }
 
-// http://github.com/Jeff0S/sws/issues/476
+// http://github.com/reaper-oss/sws/issues/476
 // used to override the old SetProjectMarker3() which cannot set empty names "", but SetProjectMarker4() can do it now
 // (keep SNM_SetProjectMarker() around for scripts that rely on it though...)
 bool SNM_SetProjectMarker(ReaProject* _proj, int _num, bool _isrgn, double _pos, double _rgnend, const char* _name, int _color)

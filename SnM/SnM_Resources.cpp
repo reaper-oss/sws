@@ -3694,7 +3694,7 @@ bool AutoSaveTrackFXChainSlots(int _slotType, const char* _dirPath, WDL_PtrList<
 				RemoveAllIds(&fxChain);
 
 				// add track channels as a comment (so that it does not bother REAPER)
-				// i.e. best effort for http://github.com/Jeff0S/sws/issues/363
+				// i.e. best effort for http://github.com/reaper-oss/sws/issues/363
 				WDL_FastString nbChStr;
 				nbChStr.SetFormatted(32, "#NCHAN %d\n", *(int*)GetSetMediaTrackInfo(tr, "I_NCHAN", NULL));
 				fxChain.Insert(nbChStr.Get(), 0);

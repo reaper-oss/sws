@@ -1281,7 +1281,7 @@ void DoShuffleItemOrder2(COMMAND_T* ct)
 bool MySortItemsByTimeFunc (MediaItem* i,MediaItem* j)
 {
 	double timea=*(double*)GetSetMediaItemInfo(i,"D_POSITION",0);
-	double timeb=*(double*)GetSetMediaItemInfo(i,"D_POSITION",0);
+	double timeb=*(double*)GetSetMediaItemInfo(j,"D_POSITION",0);
 	return (timea<timeb);
 }
 

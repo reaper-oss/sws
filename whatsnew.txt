@@ -1,5 +1,8 @@
 Removed deprecated "SWS/AW: Grid to x" actions (sorry if this breaks your toolbars, please replace with native actions)
 
+Fixes
++Issue 850: "SWS/Xenakios Create markers from selected items..." should now order markers properly
+
 !v2.9.2 pre-release build (March 27, 2017)
 Fixes
 +Issue 533: Add custom color swatches to OSX "Set custom color" menu items

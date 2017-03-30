@@ -34,7 +34,7 @@ Fixes
 !v2.9.0 pre-release build (March 14, 2017)
 Actions
 +New actions (Main section):
- - SWS/nofish: Bypass FX (except VSTi) for selected tracks
+ - SWS/NF: Bypass FX (except VSTi) for selected tracks
 
 Fixes
 +Issue 837: Fix TCP handle lookup from the master track

@@ -42,7 +42,7 @@ static COMMAND_T g_commandTable[] =
 	// conversion of spk77's EEL script								//
 	// http://forum.cockos.com/showpost.php?p=1475585&postcount=6	//
 	//////////////////////////////////////////////////////////////////
-	{ { DEFACCEL, "SWS/nofish: Bypass FX (except VSTi) for selected tracks" }, "NOFISH_BYPASS_FX_EXCEPT_VSTI_FOR_SEL_TRACKS", BypassFXexceptVSTiForSelTracks, NULL },
+	{ { DEFACCEL, "SWS/NF: Bypass FX (except VSTi) for selected tracks" }, "NF_BYPASS_FX_EXCEPT_VSTI_FOR_SEL_TRACKS", BypassFXexceptVSTiForSelTracks, NULL },
 
 	//!WANT_LOCALIZE_1ST_STRING_END
 

@@ -237,8 +237,8 @@ void DoAnalyzeItem(COMMAND_T*)
 // #781
 double GetMediaItemMaxPeak(MediaItem* mi)
 {
-	double curPeak = -150.;
-	double maxPeak = -150.;
+	double curPeak = -150.0;
+	double maxPeak = -150.0;
 	
 	/*
 	I'd like to avoid unnecessary scanning of MIDI items 
@@ -249,7 +249,7 @@ double GetMediaItemMaxPeak(MediaItem* mi)
 	/*
 	PCM_source* src = (PCM_source*)mi;
 	bool isMIDI = (src && !strncmp(src->GetType(), "MIDI", 4));
-	if (isMIDI) return -150;
+	if (isMIDI) return -150.0;
 	*/
 
 	int iChannels = ((PCM_source*)mi)->GetNumChannels();
@@ -269,24 +269,24 @@ double GetMediaItemMaxPeak(MediaItem* mi)
 					maxPeak = curPeak;
 				}
 			}
-			return maxPeak;
 		}
 		delete[] a.dPeakVals;
+		return maxPeak;
 	} else { // empty item or failed for some reason
-		return -150;
+		return -150.0;
 	}
 }
 
 double GetMediaItemAverageRMS(MediaItem* mi)
 {
-	double curAvrgRMS = -150.;
-	double maxAvrgRMS = -150;
+	double curAvrgRMS = -150.0;
+	double maxAvrgRMS = -150.0;
 
 	// see comment in GetMediaItemMaxPeak()
 	/*
 	PCM_source* src = (PCM_source*)mi;
 	bool isMIDI = (src && !strncmp(src->GetType(), "MIDI", 4));
-	if (isMIDI) return -150;
+	if (isMIDI) return -150.0;
 	*/
 
 	int iChannels = ((PCM_source*)mi)->GetNumChannels();
@@ -305,11 +305,11 @@ double GetMediaItemAverageRMS(MediaItem* mi)
 					maxAvrgRMS = curAvrgRMS;
 				}
 			}
-			return maxAvrgRMS;
 		}
 		delete[] a.dRMSs;
+		return maxAvrgRMS;
 	} else {
-		return -150;
+		return -150.0;
 	}
 } // /#781
 

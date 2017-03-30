@@ -240,20 +240,11 @@ double GetMediaItemMaxPeak(MediaItem* mi)
 	double curPeak = -150.0;
 	double maxPeak = -150.0;
 	
-	/*
-	I'd like to avoid unnecessary scanning of MIDI items 
-	(maybe good idea for DoAnalyzeItem() also ?), 
-	found schwa's post below, but doesn't work, hm, why ?
-	http://forum.cockos.com/showpost.php?p=702992&postcount=4
-	*/
-	/*
-	PCM_source* src = (PCM_source*)mi;
-	bool isMIDI = (src && !strncmp(src->GetType(), "MIDI", 4));
-	if (isMIDI) return -150.0;
-	*/
+	// if MIDI item, don't scan
+	int sampleRate = ((PCM_source*)mi)->GetSampleRate(); // will rtn. 0 for MIDI items
+	if (sampleRate == 0) return -150.0;
 
 	int iChannels = ((PCM_source*)mi)->GetNumChannels();
-
 	if (iChannels)
 	{
 		ANALYZE_PCM a;
@@ -282,13 +273,10 @@ double GetMediaItemAverageRMS(MediaItem* mi)
 	double curAvrgRMS = -150.0;
 	double maxAvrgRMS = -150.0;
 
-	// see comment in GetMediaItemMaxPeak()
-	/*
-	PCM_source* src = (PCM_source*)mi;
-	bool isMIDI = (src && !strncmp(src->GetType(), "MIDI", 4));
-	if (isMIDI) return -150.0;
-	*/
-
+	// if MIDI item, don't scan
+	int sampleRate = ((PCM_source*)mi)->GetSampleRate(); // will rtn. 0 for MIDI items
+	if (sampleRate == 0) return -150.0;
+	
 	int iChannels = ((PCM_source*)mi)->GetNumChannels();
 	if (iChannels)
 	{

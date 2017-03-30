@@ -42,13 +42,14 @@ void AnalyzePCMSource(ANALYZE_PCM* a)
 	t.nch = a->pcm->GetNumChannels();
 	t.length = a->dWindowSize == 0.0 ? 16384 : (int)(a->dWindowSize * t.samplerate);
 	t.samples = new ReaSample[t.length * t.nch];
+	t.samples_out = 0;
 	t.time_s = 0.0;
 
 	ReaSample* prevBuf = NULL;
 	if (a->dWindowSize != 0.0)
 	{
 		prevBuf = new ReaSample[t.length * t.nch];
-		memset(prevBuf, 0, t.length * t.nch);
+		memset(prevBuf, 0, t.length * t.nch * sizeof(*prevBuf));
 	}
 
 	double* dSumSquares = new double[t.nch];
@@ -96,6 +97,8 @@ void AnalyzePCMSource(ANALYZE_PCM* a)
 				if (a->dWindowSize != 0.0)
 				{
 					dSumSquares[chan] -= prevBuf[i] * prevBuf[i];
+					if (dSumSquares[chan] < 0.0) // Unlikely but possible with rounding errors
+						dSumSquares[chan] = 0.0;
 					double curRMS = sqrt(dSumSquares[chan] / t.length);
 					if (curRMS > a->dRMS) // Overall
 						a->dRMS = curRMS;
@@ -112,12 +115,12 @@ void AnalyzePCMSource(ANALYZE_PCM* a)
 			prevBuf = temp;
 		}
 
-
 		a->dProgress = (double)a->sampleCount / totalSamples;
 
 		iFrame++;
 		t.time_s = (double)t.length * iFrame / t.samplerate;
 		// Get next block
+		t.samples_out = 0;
 		a->pcm->GetSamples(&t);
 	}
 

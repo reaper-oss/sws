@@ -227,6 +227,10 @@ APIdef g_apidefs[] =
 
 	{ APIFUNC(ULT_GetMediaItemNote), "const char*", "MediaItem*", "item", "[ULT] Get item notes.", },
 	{ APIFUNC(ULT_SetMediaItemNote), "void", "MediaItem*,const char*", "item,note", "[ULT] Set item notes.", },
+	
+	// #781
+	{ APIFUNC(NF_GetMediaItemMaxPeak), "double", "MediaItem*", "item", "Returns the greatest max. peak value of all channels of an audio item. Returns -150 if MIDI item or empty item.", },
+	{ APIFUNC(NF_GetMediaItemAverageRMS), "double", "MediaItem*", "item", "Returns the  greatest average RMS value of all channels of an audio item. Returns -150 if MIDI item or empty item.", },
 
 	{ NULL, } // denote end of table
 };

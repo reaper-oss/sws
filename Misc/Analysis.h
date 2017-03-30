@@ -49,3 +49,7 @@ typedef struct ANALYZE_PCM
 int AnalysisInit();
 
 bool AnalyzeItem(MediaItem* mi, ANALYZE_PCM* a);
+
+// #781
+double GetMediaItemMaxPeak(MediaItem*);
+double GetMediaItemAverageRMS(MediaItem*);

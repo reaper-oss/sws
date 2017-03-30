@@ -35,6 +35,9 @@
 #include "../SnM/SnM_Chunk.h"
 #include "../SnM/SnM_Util.h"
 
+// #781
+#include "../Misc/Analysis.h"
+
 /******************************************************************************
 * Globals                                                                     *
 ******************************************************************************/
@@ -918,3 +921,17 @@ bool BR_Win32_WritePrivateProfileString (const char* sectionName, const char* ke
 {
 	return !!WritePrivateProfileString(sectionName, keyName, value, filePath);
 }
+
+// #781
+double NF_GetMediaItemMaxPeak(MediaItem* item)
+{
+	double maxPeak = GetMediaItemMaxPeak(item);	
+	return maxPeak;
+}
+
+double NF_GetMediaItemAverageRMS(MediaItem* item)
+{
+	double avrgRMS = GetMediaItemAverageRMS(item);
+	return avrgRMS;
+}
+

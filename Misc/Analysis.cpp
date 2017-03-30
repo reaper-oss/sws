@@ -187,6 +187,8 @@ bool AnalyzeItem(MediaItem* mi, ANALYZE_PCM* a)
 	return true;
 }
 
+
+
 void DoAnalyzeItem(COMMAND_T*)
 {
 	WDL_TypedBuf<MediaItem*> items;
@@ -231,6 +233,85 @@ void DoAnalyzeItem(COMMAND_T*)
 		return;
 	}
 }
+
+// #781
+double GetMediaItemMaxPeak(MediaItem* mi)
+{
+	double curPeak = -150.;
+	double maxPeak = -150.;
+	
+	/*
+	I'd like to avoid unnecessary scanning of MIDI items 
+	(maybe good idea for DoAnalyzeItem() also ?), 
+	found schwa's post below, but doesn't work, hm, why ?
+	http://forum.cockos.com/showpost.php?p=702992&postcount=4
+	*/
+	/*
+	PCM_source* src = (PCM_source*)mi;
+	bool isMIDI = (src && !strncmp(src->GetType(), "MIDI", 4));
+	if (isMIDI) return -150;
+	*/
+
+	int iChannels = ((PCM_source*)mi)->GetNumChannels();
+
+	if (iChannels)
+	{
+		ANALYZE_PCM a;
+		memset(&a, 0, sizeof(a));
+		a.iChannels = iChannels;
+		a.dPeakVals = new double[iChannels];
+
+		if (AnalyzeItem(mi, &a))
+		{
+			for (int i = 0; i < iChannels; i++) {
+				curPeak = VAL2DB(a.dPeakVals[i]);
+				if (maxPeak < curPeak) {
+					maxPeak = curPeak;
+				}
+			}
+			return maxPeak;
+		}
+		delete[] a.dPeakVals;
+	} else { // empty item or failed for some reason
+		return -150;
+	}
+}
+
+double GetMediaItemAverageRMS(MediaItem* mi)
+{
+	double curAvrgRMS = -150.;
+	double maxAvrgRMS = -150;
+
+	// see comment in GetMediaItemMaxPeak()
+	/*
+	PCM_source* src = (PCM_source*)mi;
+	bool isMIDI = (src && !strncmp(src->GetType(), "MIDI", 4));
+	if (isMIDI) return -150;
+	*/
+
+	int iChannels = ((PCM_source*)mi)->GetNumChannels();
+	if (iChannels)
+	{
+		ANALYZE_PCM a;
+		memset(&a, 0, sizeof(a));
+		a.iChannels = iChannels;
+		a.dRMSs = new double[iChannels];
+
+		if (AnalyzeItem(mi, &a))
+		{
+			for (int i = 0; i < iChannels; i++) {
+				curAvrgRMS = VAL2DB(a.dRMSs[i]);
+				if (maxAvrgRMS < curAvrgRMS) {
+					maxAvrgRMS = curAvrgRMS;
+				}
+			}
+			return maxAvrgRMS;
+		}
+		delete[] a.dRMSs;
+	} else {
+		return -150;
+	}
+} // /#781
 
 void FindItemPeak(COMMAND_T*)
 {

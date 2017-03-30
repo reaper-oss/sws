@@ -96,6 +96,10 @@ int             BR_Win32_GetPrivateProfileString (const char* sectionName, const
 int             BR_Win32_ShellExecute (const char* operation, const char* file, const char* parameters, const char* directoy, int showFlags);
 bool            BR_Win32_WritePrivateProfileString (const char* sectionName, const char* keyName, const char* value, const char* filePath);
 
+// #781
+double			NF_GetMediaItemMaxPeak(MediaItem* item);
+double			NF_GetMediaItemAverageRMS(MediaItem* item);
+
 /******************************************************************************
 * Big description!                                                            *
 ******************************************************************************/

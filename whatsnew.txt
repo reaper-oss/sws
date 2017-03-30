@@ -1,3 +1,8 @@
+ReaScript:
++Added functions: 
+   - reaper.NF_GetMediaItemMaxPeak()
+   - reaper.NF_GetMediaItemAverageRMS()
+
 Removed deprecated "SWS/AW: Grid to x" actions (sorry if this breaks your toolbars, please replace with native actions)
 
 Fixes

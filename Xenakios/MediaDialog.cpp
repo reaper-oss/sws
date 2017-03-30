@@ -391,7 +391,7 @@ bool g_ScanFinished=false;
 vector<string> FoundMediaFiles;
 char g_FolderName[1024] = "";
 
-DWORD WINAPI DirScanThreadFunc(void*)
+unsigned int WINAPI DirScanThreadFunc(void*)
 {
 	FoundMediaFiles.clear();
 	SearchDirectory(FoundMediaFiles, g_FolderName, NULL, true);
@@ -401,6 +401,8 @@ DWORD WINAPI DirScanThreadFunc(void*)
 
 WDL_DLGRET ScanProgDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
+	static HANDLE hThread = NULL;
+
 	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, Message, wParam, lParam))
 		return r;
 
@@ -410,7 +412,7 @@ WDL_DLGRET ScanProgDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam
 			{
 				g_ScanStatus=1;
 				g_bAbortScan=false;
-				CreateThread(NULL, 0, DirScanThreadFunc, 0, 0, 0);
+				hThread = (HANDLE)_beginthreadex(NULL, 0, DirScanThreadFunc, 0, 0, 0);
 				SetTimer(hwnd,1717,250,NULL);
 				return 0;
 			}
@@ -431,6 +433,8 @@ WDL_DLGRET ScanProgDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam
 			{
 				g_hScanProgressDlg=0;
 				EndDialog(hwnd,0);
+				if (hThread)
+					CloseHandle(hThread);
 				return 0;
 			}
 		case WM_COMMAND:

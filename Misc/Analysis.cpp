@@ -145,7 +145,7 @@ void AnalyzePCMSource(ANALYZE_PCM* a)
 }
 
 
-DWORD WINAPI AnalyzePCMThread(void* pAnalyze)
+unsigned int WINAPI AnalyzePCMThread(void* pAnalyze)
 {
 	AnalyzePCMSource((ANALYZE_PCM*)pAnalyze);
 	return 0;
@@ -173,12 +173,13 @@ bool AnalyzeItem(MediaItem* mi, ANALYZE_PCM* a)
 	if (take)
 		cName = (const char*)GetSetMediaItemTakeInfo(take, "P_NAME", NULL);
 
-	CreateThread(NULL, 0, AnalyzePCMThread, a, 0, NULL);
+	HANDLE hThread = (HANDLE)_beginthreadex(NULL, 0, AnalyzePCMThread, a, 0, NULL);
 
 	WDL_String title;
 	title.AppendFormatted(100, __LOCALIZE_VERFMT("Please wait, analyzing %s...","sws_analysis"), cName ? cName : __LOCALIZE("item","sws_analysis"));
 	SWS_WaitDlg wait(title.Get(), &a->dProgress);
 
+	CloseHandle(hThread);
 	delete a->pcm;
 	return true;
 }

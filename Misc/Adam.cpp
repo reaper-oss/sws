@@ -1105,57 +1105,6 @@ void AWSelectToEnd(COMMAND_T* t)
 }
 
 
-
-
-
-
-/* Sorry this is experimental and sucks right now
-
- void AWRecordQuickPunch(COMMAND_T* t)
- {
- if (GetPlayState() & 4)
- {
- double selStart;
- double selEnd;
- double playPos;
-
- GetSet_LoopTimeRange2(0, 0, 0, &selStart, &selEnd, 0);
-
- playPos = GetPlayPosition();
-
- if (selStart > playPos)
- {
- GetSet_LoopTimeRange2(0, 1, 0, &playPos, &selEnd, 0);
- }
- else if (selStart < playPos)
- {
- GetSet_LoopTimeRange2(0, 1, 0, &selStart, &playPos, 0);
- }
-
- }
- else if (GetPlayState() == 0)
- {
- Main_OnCommand(40076, 0); //Set to time selection punch mode
-
- double selStart = 6000;
- double selEnd = 6001;
-
- GetSet_LoopTimeRange2(0, 1, 0, &selStart, &selEnd, 0);
-
- Main_OnCommand(1013, 0);
- }
-
- UpdateTimeline();
- Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS | UNDO_STATE_MISCCFG, -1);
- }
- */
-
-
-
-
-
-
-
 void AWFadeSelection(COMMAND_T* t)
 {
 	double dFadeLen;
@@ -2392,10 +2341,7 @@ void AWSelectStretched(COMMAND_T* t)
 
 }
 
-
-
 // Metronome actions
-
 void AWMetrPlayOn(COMMAND_T* = NULL)        { *(int*)GetConfigVar("projmetroen") |= 2;}
 void AWMetrPlayOff(COMMAND_T* = NULL)       { *(int*)GetConfigVar("projmetroen") &= ~2;}
 void AWMetrRecOn(COMMAND_T* = NULL)         { *(int*)GetConfigVar("projmetroen") |= 4;}
@@ -2414,24 +2360,10 @@ int IsCountPlayOn(COMMAND_T* = NULL)        { return (*(int*)GetConfigVar("projm
 int IsCountRecOn(COMMAND_T* = NULL)     { return (*(int*)GetConfigVar("projmetroen") & 16) != 0; }
 
 // Editing Preferences
-
-
 void AWRelEdgeOn(COMMAND_T* = NULL)         { *(int*)GetConfigVar("relativeedges") |= 1;}
 void AWRelEdgeOff(COMMAND_T* = NULL)        { *(int*)GetConfigVar("relativeedges") &= ~1;}
 void AWRelEdgeToggle(COMMAND_T* = NULL)     { *(int*)GetConfigVar("relativeedges") ^= 1;}
 bool IsRelEdgeOn(COMMAND_T* = NULL)         { return (*(int*)GetConfigVar("relativeedges") & 1)  != 0; }
-
-/* Deprecated
-void AWSplitFadeOn(COMMAND_T* = NULL)           { *(int*)GetConfigVar("splitautoxfade") |= 1;}
-void AWSplitFadeOff(COMMAND_T* = NULL)          { *(int*)GetConfigVar("splitautoxfade") &= ~1;}
-void AWSplitFadeToggle(COMMAND_T* = NULL)       { *(int*)GetConfigVar("splitautoxfade") ^= 1;}
-bool IsSplitFadeOn(COMMAND_T* = NULL)           { return (*(int*)GetConfigVar("splitautoxfade") & 1)  != 0; }
-
-void AWDefaultFadeOff(COMMAND_T* = NULL)        { *(int*)GetConfigVar("splitautoxfade") |= 8;}
-void AWDefaultFadeOn(COMMAND_T* = NULL)         { *(int*)GetConfigVar("splitautoxfade") &= ~8;}
-void AWDefaultFadeToggle(COMMAND_T* = NULL)     { *(int*)GetConfigVar("splitautoxfade") ^= 8;}
-bool IsDefaultFadeOn(COMMAND_T* = NULL)         { return (*(int*)GetConfigVar("splitautoxfade") & 8)  == 0; }
-*/
 
 void AWClrTimeSelClkOn(COMMAND_T* = NULL)           { *(int*)GetConfigVar("itemclickmovecurs") |= 68;}
 void AWClrTimeSelClkOff(COMMAND_T* = NULL)          { *(int*)GetConfigVar("itemclickmovecurs") &= ~68;}
@@ -2466,16 +2398,17 @@ void UpdateTimebaseToolbar()
 		RefreshToolbar(cmds[i]);
 }
 
-void AWTimebaseTime(COMMAND_T* = NULL)          { *(int*)GetConfigVar("itemtimelock") = 0; UpdateTimebaseToolbar();}
-int IsTimebaseTime(COMMAND_T* = NULL)           { return (*(int*)GetConfigVar("itemtimelock") == 0); }
+void AWProjectTimebase(COMMAND_T* t)
+{
+	*(int*)GetConfigVar("itemtimelock") = (int)t->user;
+	UpdateTimebaseToolbar();
+	// ?Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_MISCCFG, -1);
+}
 
-void AWTimebaseBeatPos(COMMAND_T* = NULL)       { *(int*)GetConfigVar("itemtimelock") = 2; UpdateTimebaseToolbar();}
-int IsTimebaseBeatPos(COMMAND_T* = NULL)        { return (*(int*)GetConfigVar("itemtimelock") == 2); }
-
-void AWTimebaseBeatAll(COMMAND_T* = NULL)       { *(int*)GetConfigVar("itemtimelock") = 1; UpdateTimebaseToolbar();}
-int IsTimebaseBeatAll(COMMAND_T* = NULL)        { return (*(int*)GetConfigVar("itemtimelock") == 1); }
-
-
+int IsProjectTimebase(COMMAND_T* t)
+{
+	return (*(int*)GetConfigVar("itemtimelock") == (int)t->user);
+}
 
 
 int IsGridTriplet(COMMAND_T* = NULL)
@@ -2542,155 +2475,6 @@ void AWToggleDotted(COMMAND_T*)
 
 }
 
-void AWGridWhole(COMMAND_T* = NULL)
-{
-	double* pGridDiv = (double*)GetConfigVar("projgriddiv");
-
-	if (IsGridTriplet())
-		*pGridDiv = 4.0*(2.0/3.0);
-	else if (IsGridDotted())
-		*pGridDiv = 4.0*(3.0/2.0);
-	else
-		*pGridDiv = 4.0;
-
-	UpdateGridToolbar();
-	UpdateTimeline();
-
-}
-
-int IsGridWhole(COMMAND_T* = NULL)      { return (*(double*)GetConfigVar("projgriddiv") == 4.0 || *(double*)GetConfigVar("projgriddiv") == 4.0*(2.0/3.0) || *(double*)GetConfigVar("projgriddiv") == 4.0*(3.0/2.0)); }
-
-void AWGridHalf(COMMAND_T* = NULL)
-{
-	double* pGridDiv = (double*)GetConfigVar("projgriddiv");
-
-	if (IsGridTriplet())
-		*pGridDiv = 2.0*(2.0/3.0);
-	else if (IsGridDotted())
-		*pGridDiv = 2.0*(3.0/2.0);
-	else
-		*pGridDiv = 2.0;
-
-	UpdateGridToolbar();
-	UpdateTimeline();
-
-}
-
-int IsGridHalf(COMMAND_T* = NULL)       { return (*(double*)GetConfigVar("projgriddiv") == 2.0 || *(double*)GetConfigVar("projgriddiv") == 2.0*(2.0/3.0) || *(double*)GetConfigVar("projgriddiv") == 2.0*(3.0/2.0)); }
-
-
-
-
-
-
-
-void AWGrid4(COMMAND_T* = NULL)
-{
-	double* pGridDiv = (double*)GetConfigVar("projgriddiv");
-
-	if (IsGridTriplet())
-		*pGridDiv = 1.0*(2.0/3.0);
-	else if (IsGridDotted())
-		*pGridDiv = 1.0*(3.0/2.0);
-	else
-		*pGridDiv = 1.0;
-
-	UpdateGridToolbar();
-	UpdateTimeline();
-
-}
-
-int IsGrid4(COMMAND_T* = NULL)      { return (*(double*)GetConfigVar("projgriddiv") == 1.0 || *(double*)GetConfigVar("projgriddiv") == 1.0*(2.0/3.0) || *(double*)GetConfigVar("projgriddiv") == 1.0*(3.0/2.0)); }
-
-void AWGrid8(COMMAND_T* = NULL)
-{
-	double* pGridDiv = (double*)GetConfigVar("projgriddiv");
-
-	if (IsGridTriplet())
-		*pGridDiv = 0.5*(2.0/3.0);
-	else if (IsGridDotted())
-		*pGridDiv = 0.5*(3.0/2.0);
-	else
-		*pGridDiv = 0.5;
-
-	UpdateGridToolbar();
-	UpdateTimeline();
-
-}
-
-int IsGrid8(COMMAND_T* = NULL)      { return (*(double*)GetConfigVar("projgriddiv") == 0.5 || *(double*)GetConfigVar("projgriddiv") == 0.5*(2.0/3.0) || *(double*)GetConfigVar("projgriddiv") == 0.5*(3.0/2.0)); }
-
-void AWGrid16(COMMAND_T* = NULL)
-{
-	double* pGridDiv = (double*)GetConfigVar("projgriddiv");
-
-	if (IsGridTriplet())
-		*pGridDiv = 0.25*(2.0/3.0);
-	else if (IsGridDotted())
-		*pGridDiv = 0.25*(3.0/2.0);
-	else
-		*pGridDiv = 0.25;
-
-	UpdateGridToolbar();
-	UpdateTimeline();
-
-}
-
-int IsGrid16(COMMAND_T* = NULL)     { return (*(double*)GetConfigVar("projgriddiv") == 0.25 || *(double*)GetConfigVar("projgriddiv") == 0.25*(2.0/3.0) || *(double*)GetConfigVar("projgriddiv") == 0.25*(3.0/2.0)); }
-
-void AWGrid32(COMMAND_T* = NULL)
-{
-	double* pGridDiv = (double*)GetConfigVar("projgriddiv");
-
-	if (IsGridTriplet())
-		*pGridDiv = 0.125*(2.0/3.0);
-	else if (IsGridDotted())
-		*pGridDiv = 0.125*(3.0/2.0);
-	else
-		*pGridDiv = 0.125;
-
-	UpdateGridToolbar();
-	UpdateTimeline();
-
-}
-
-int IsGrid32(COMMAND_T* = NULL)     { return (*(double*)GetConfigVar("projgriddiv") == 0.125 || *(double*)GetConfigVar("projgriddiv") == 0.125*(2.0/3.0) || *(double*)GetConfigVar("projgriddiv") == 0.125*(3.0/2.0)); }
-
-void AWGrid64(COMMAND_T* = NULL)
-{
-	double* pGridDiv = (double*)GetConfigVar("projgriddiv");
-
-	if (IsGridTriplet())
-		*pGridDiv = 0.0625*(2.0/3.0);
-	else if (IsGridDotted())
-		*pGridDiv = 0.0625*(3.0/2.0);
-	else
-		*pGridDiv = 0.0625;
-
-	UpdateGridToolbar();
-	UpdateTimeline();
-
-}
-
-int IsGrid64(COMMAND_T* = NULL)     { return (*(double*)GetConfigVar("projgriddiv") == 0.0625 || *(double*)GetConfigVar("projgriddiv") == 0.0625*(2.0/3.0) || *(double*)GetConfigVar("projgriddiv") == 0.0625*(3.0/2.0)); }
-
-void AWGrid128(COMMAND_T* = NULL)
-{
-	double* pGridDiv = (double*)GetConfigVar("projgriddiv");
-
-	if (IsGridTriplet())
-		*pGridDiv = 0.03125*(2.0/3.0);
-	else if (IsGridDotted())
-		*pGridDiv = 0.03125*(3.0/2.0);
-	else
-		*pGridDiv = 0.03125;
-
-	UpdateGridToolbar();
-	UpdateTimeline();
-
-}
-
-int IsGrid128(COMMAND_T* = NULL)     { return (*(double*)GetConfigVar("projgriddiv") == 0.03125 || *(double*)GetConfigVar("projgriddiv") == 0.03125*(2.0/3.0) || *(double*)GetConfigVar("projgriddiv") == 0.03125*(3.0/2.0)); }
 
 void AWToggleClickTrack(COMMAND_T*)
 {
@@ -2713,21 +2497,13 @@ void AWToggleClickTrack(COMMAND_T*)
 
 void UpdateGridToolbar()
 {
-	static int cmds[11] =
+	static int cmds[3] =
 	{
 		NamedCommandLookup("_SWS_AWTOGGLETRIPLET"),
 		NamedCommandLookup("_SWS_AWTOGGLEDOTTED"),
-		NamedCommandLookup("_SWS_AWGRIDWHOLE"),
-		NamedCommandLookup("_SWS_AWGRIDHALF"),
-		NamedCommandLookup("_SWS_AWGRID4"),
-		NamedCommandLookup("_SWS_AWGRID8"),
-		NamedCommandLookup("_SWS_AWGRID16"),
-		NamedCommandLookup("_SWS_AWGRID32"),
-		NamedCommandLookup("_SWS_AWGRID64"),
-		NamedCommandLookup("_SWS_AWGRID128"),
 		NamedCommandLookup("_SWS_AWTOGGLECLICKTRACK"),
 	};
-	for (int i = 0; i < 11; ++i)
+	for (int i = 0; i < 3; ++i)
 		RefreshToolbar(cmds[i]);
 }
 
@@ -2912,103 +2688,30 @@ void AWSplitXFadeLeft(COMMAND_T* t)
 
 
 // Track timebase actions
-void AWSelTracksTimebaseProj(COMMAND_T* t)
+void AWSelTracksTimebase(COMMAND_T* t)
 {
-	const int cnt = CountSelectedTracks(NULL);
-	for (int i = 0; i < cnt; i++)
-		SetMediaTrackInfo_Value(GetSelectedTrack(NULL, i), "C_BEATATTACHMODE", -1);
+	WDL_TypedBuf<MediaTrack*> selTracks;
+	SWS_GetSelectedTracks(&selTracks, false);
+	for (int i = 0; i < selTracks.GetSize(); i++)
+		SetMediaTrackInfo_Value(selTracks.Get()[i], "C_BEATATTACHMODE", (double)t->user);
 	UpdateTrackTimebaseToolbar();
 
-	if (cnt)
+	if (selTracks.GetSize())
 		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
 }
 
-int IsSelTracksTimebaseProj(COMMAND_T* = NULL)
+int IsSelTracksTimebase(COMMAND_T* t)
 {
-	const int cnt = CountSelectedTracks(NULL);
-	if (!cnt)
+	WDL_TypedBuf<MediaTrack*> selTracks;
+	SWS_GetSelectedTracks(&selTracks, false);
+	
+	if (!selTracks.GetSize())
 		return 0;
-
-	for (int i = 0; i < cnt; i++)
-	{
-		if (GetMediaTrackInfo_Value(GetSelectedTrack(NULL, i), "C_BEATATTACHMODE") != -1)
+	
+	for (int i = 0; i < selTracks.GetSize(); i++)
+		if ((int)GetMediaTrackInfo_Value(selTracks.Get()[i], "C_BEATATTACHMODE") != t->user)
 			return 0;
-	}
-	return 1;
-}
 
-void AWSelTracksTimebaseTime(COMMAND_T* t)
-{
-	const int cnt = CountSelectedTracks(NULL);
-	for (int i = 0; i < cnt; i++)
-		SetMediaTrackInfo_Value(GetSelectedTrack(NULL, i), "C_BEATATTACHMODE", 0);
-	UpdateTrackTimebaseToolbar();
-
-	if (cnt)
-		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
-}
-
-int IsSelTracksTimebaseTime(COMMAND_T* = NULL)
-{
-	const int cnt = CountSelectedTracks(NULL);
-	if (!cnt)
-		return 0;
-
-	for (int i = 0; i < cnt; i++)
-	{
-		if (GetMediaTrackInfo_Value(GetSelectedTrack(NULL, i), "C_BEATATTACHMODE") != 0)
-			return 0;
-	}
-	return 1;
-}
-
-void AWSelTracksTimebaseBeatPos(COMMAND_T* t)
-{
-	const int cnt = CountSelectedTracks(NULL);
-	for (int i = 0; i < cnt; i++)
-		SetMediaTrackInfo_Value(GetSelectedTrack(NULL, i), "C_BEATATTACHMODE", 2);
-	UpdateTrackTimebaseToolbar();
-
-	if (cnt)
-		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
-}
-
-int IsSelTracksTimebaseBeatPos(COMMAND_T* = NULL)
-{
-	const int cnt = CountSelectedTracks(NULL);
-	if (!cnt)
-		return 0;
-
-	for (int i = 0; i < cnt; i++)
-	{
-		if (GetMediaTrackInfo_Value(GetSelectedTrack(NULL, i), "C_BEATATTACHMODE") != 2)
-			return 0;
-	}
-	return 1;
-}
-
-void AWSelTracksTimebaseBeatAll(COMMAND_T* t)
-{
-	const int cnt = CountSelectedTracks(NULL);
-	for (int i = 0; i < cnt; i++)
-		SetMediaTrackInfo_Value(GetSelectedTrack(NULL, i), "C_BEATATTACHMODE", 1);
-	UpdateTrackTimebaseToolbar();
-
-	if (cnt)
-		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
-}
-
-int IsSelTracksTimebaseBeatAll(COMMAND_T* = NULL)
-{
-	const int cnt = CountSelectedTracks(NULL);
-	if (!cnt)
-		return 0;
-
-	for (int i = 0; i < cnt; i++)
-	{
-		if (GetMediaTrackInfo_Value(GetSelectedTrack(NULL, i), "C_BEATATTACHMODE") != 1)
-			return 0;
-	}
 	return 1;
 }
 
@@ -3026,103 +2729,31 @@ void UpdateTrackTimebaseToolbar()
 }
 
 // Item timebase actions
-void AWSelItemsTimebaseProj(COMMAND_T* t)
+void AWSelItemsTimebase(COMMAND_T* t)
 {
-	const int cnt=CountSelectedMediaItems(NULL);
-	for (int i = 0; i < cnt; i++)
-		SetMediaItemInfo_Value(GetSelectedMediaItem(NULL, i), "C_BEATATTACHMODE", -1);
+	WDL_TypedBuf<MediaItem*> selItems;
+	SWS_GetSelectedMediaItems(&selItems);
+
+	for (int i = 0; i < selItems.GetSize(); i++)
+		SetMediaItemInfo_Value(selItems.Get()[i], "C_BEATATTACHMODE", (double)t->user);
 	UpdateItemTimebaseToolbar();
 
-	if (cnt)
+	if (selItems.GetSize())
 		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
 }
 
-int IsSelItemsTimebaseProj(COMMAND_T* = NULL)
+int IsSelItemsTimebase(COMMAND_T* t)
 {
-	const int cnt=CountSelectedMediaItems(NULL);
-	if (!cnt)
+	WDL_TypedBuf<MediaItem*> selItems;
+	SWS_GetSelectedMediaItems(&selItems);
+
+	if (!selItems.GetSize())
 		return 0;
 
-	for (int i = 0; i < cnt; i++)
-	{
-		if (GetMediaItemInfo_Value(GetSelectedMediaItem(NULL, i), "C_BEATATTACHMODE") != -1)
+	for (int i = 0; i < selItems.GetSize(); i++)
+		if ((int)GetMediaItemInfo_Value(selItems.Get()[i], "C_BEATATTACHMODE") != t->user)
 			return 0;
-	}
-	return 1;
-}
 
-void AWSelItemsTimebaseTime(COMMAND_T* t)
-{
-	const int cnt=CountSelectedMediaItems(NULL);
-	for (int i = 0; i < cnt; i++)
-		SetMediaItemInfo_Value(GetSelectedMediaItem(NULL, i), "C_BEATATTACHMODE", 0);
-	UpdateItemTimebaseToolbar();
-
-	if (cnt)
-		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
-}
-
-int IsSelItemsTimebaseTime(COMMAND_T* = NULL)
-{
-	const int cnt=CountSelectedMediaItems(NULL);
-	if (!cnt)
-		return 0;
-
-	for (int i = 0; i < cnt; i++)
-	{
-		if (GetMediaItemInfo_Value(GetSelectedMediaItem(NULL, i), "C_BEATATTACHMODE") != 0)
-			return 0;
-	}
-	return 1;
-}
-
-void AWSelItemsTimebaseBeatPos(COMMAND_T* t)
-{
-	const int cnt=CountSelectedMediaItems(NULL);
-	for (int i = 0; i < cnt; i++)
-		SetMediaItemInfo_Value(GetSelectedMediaItem(NULL, i), "C_BEATATTACHMODE", 2);
-	UpdateItemTimebaseToolbar();
-
-	if (cnt)
-		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
-}
-
-int IsSelItemsTimebaseBeatPos(COMMAND_T* = NULL)
-{
-	const int cnt=CountSelectedMediaItems(NULL);
-	if (!cnt)
-		return 0;
-
-	for (int i = 0; i < cnt; i++)
-	{
-		if (GetMediaItemInfo_Value(GetSelectedMediaItem(NULL, i), "C_BEATATTACHMODE") != 2)
-			return 0;
-	}
-	return 1;
-}
-
-void AWSelItemsTimebaseBeatAll(COMMAND_T* t)
-{
-	const int cnt=CountSelectedMediaItems(NULL);
-	for (int i = 0; i < cnt; i++)
-		SetMediaItemInfo_Value(GetSelectedMediaItem(NULL, i), "C_BEATATTACHMODE", 1);
-	UpdateItemTimebaseToolbar();
-
-	if (cnt)
-		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
-}
-
-int IsSelItemsTimebaseBeatAll(COMMAND_T* = NULL)
-{
-	const int cnt=CountSelectedMediaItems(NULL);
-	if (!cnt)
-		return 0;
-
-	for (int i = 0; i < cnt; i++)
-	{
-		if (GetMediaItemInfo_Value(GetSelectedMediaItem(NULL, i), "C_BEATATTACHMODE") != 1)
-			return 0;
-	}
 	return 1;
 }
 
@@ -3138,7 +2769,6 @@ void UpdateItemTimebaseToolbar()
 	for (int i = 0; i < 4; ++i)
 		RefreshToolbar(cmds[i]);
 }
-
 
 
 void AWSelChilOrSelItems(COMMAND_T* t)
@@ -3165,52 +2795,16 @@ void AWSelChilOrSelItems(COMMAND_T* t)
 	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS | UNDO_STATE_TRACKCFG, -1);
 }
 
-void AWSelTracksPanMode(int mode)
+void AWSelTracksPanMode(COMMAND_T* t)
 {
-	MediaTrack* tr;
-	const int cnt = CountSelectedTracks(NULL);
-	for (int i = 0; i < cnt; i++)
-	{
-		tr = GetSelectedTrack(NULL, i);
-		SetMediaTrackInfo_Value(tr, "I_PANMODE", mode);
-	}
-}
+	WDL_TypedBuf<MediaTrack*> selTracks;
+	SWS_GetSelectedTracks(&selTracks, false);
+	for (int i = 0; i < selTracks.GetSize(); i++)
+		SetMediaTrackInfo_Value(selTracks.Get()[i], "I_PANMODE", (double)t->user);
 
-void AWSelTracksPanLaw(int j)
-{
-	MediaTrack* tr;
-	const int cnt = CountSelectedTracks(NULL);
-	for (int i = 0; i < cnt; i++)
-	{
-		tr = GetSelectedTrack(NULL, i);
-		SetMediaTrackInfo_Value(tr, "I_PANLAW", j);
-	}
+	if (selTracks.GetSize())
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
 }
-
-void AWSelTracksPanBalanceNew(COMMAND_T* t)
-{
-	AWSelTracksPanMode(3);
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
-}
-
-void AWSelTracksPanBalanceOld(COMMAND_T* t)
-{
-	AWSelTracksPanMode(0);
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
-}
-
-void AWSelTracksPanStereoPan(COMMAND_T* t)
-{
-	AWSelTracksPanMode(5);
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
-}
-
-void AWSelTracksPanDualPan(COMMAND_T* t)
-{
-	AWSelTracksPanMode(6);
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
-}
-
 
 
 
@@ -3274,40 +2868,28 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/AW: Disable clear loop points on click in ruler" },          "SWS_AWCLRLOOPCLKOFF",          AWClrLoopClkOff, },
 	{ { DEFACCEL, "SWS/AW: Toggle clear loop points on click in ruler" },           "SWS_AWCLRLOOPCLKTOG",          AWClrLoopClkToggle, NULL, 0, IsClrLoopClkOn },
 
-	{ { DEFACCEL, "SWS/AW: Set project timebase to time" },                                             "SWS_AWTBASETIME",                  AWTimebaseTime, NULL, 0, IsTimebaseTime},
-	{ { DEFACCEL, "SWS/AW: Set project timebase to beats (position only)" },                            "SWS_AWTBASEBEATPOS",               AWTimebaseBeatPos, NULL, 0, IsTimebaseBeatPos},
-	{ { DEFACCEL, "SWS/AW: Set project timebase to beats (position, length, rate)" },                   "SWS_AWTBASEBEATALL",               AWTimebaseBeatAll, NULL, 0, IsTimebaseBeatAll},
+	{ { DEFACCEL, "SWS/AW: Set project timebase to time" },											"SWS_AWTBASETIME",			AWProjectTimebase, NULL, 0, IsProjectTimebase, },
+	{ { DEFACCEL, "SWS/AW: Set project timebase to beats (position only)" },						"SWS_AWTBASEBEATPOS",		AWProjectTimebase, NULL, 2, IsProjectTimebase, },
+	{ { DEFACCEL, "SWS/AW: Set project timebase to beats (position, length, rate)" },				"SWS_AWTBASEBEATALL",		AWProjectTimebase, NULL, 1, IsProjectTimebase, },
 
-	{ { DEFACCEL, "SWS/AW: Set selected tracks timebase to project default" },                                  "SWS_AWTRACKTBASEPROJ",                 AWSelTracksTimebaseProj, NULL, 0, IsSelTracksTimebaseProj},
-	{ { DEFACCEL, "SWS/AW: Set selected tracks timebase to time" },                                             "SWS_AWTRACKTBASETIME",                 AWSelTracksTimebaseTime, NULL, 0, IsSelTracksTimebaseTime},
-	{ { DEFACCEL, "SWS/AW: Set selected tracks timebase to beats (position only)" },                            "SWS_AWTRACKTBASEBEATPOS",              AWSelTracksTimebaseBeatPos, NULL, 0, IsSelTracksTimebaseBeatPos},
-	{ { DEFACCEL, "SWS/AW: Set selected tracks timebase to beats (position, length, rate)" },                   "SWS_AWTRACKTBASEBEATALL",              AWSelTracksTimebaseBeatAll, NULL, 0, IsSelTracksTimebaseBeatAll},
+	{ { DEFACCEL, "SWS/AW: Set selected tracks timebase to project default" },						"SWS_AWTRACKTBASEPROJ",		AWSelTracksTimebase, NULL, -1, IsSelTracksTimebase, },
+	{ { DEFACCEL, "SWS/AW: Set selected tracks timebase to time" },									"SWS_AWTRACKTBASETIME",		AWSelTracksTimebase, NULL,  0, IsSelTracksTimebase, },
+	{ { DEFACCEL, "SWS/AW: Set selected tracks timebase to beats (position only)" },				"SWS_AWTRACKTBASEBEATPOS",	AWSelTracksTimebase, NULL,  2, IsSelTracksTimebase, },
+	{ { DEFACCEL, "SWS/AW: Set selected tracks timebase to beats (position, length, rate)" },		"SWS_AWTRACKTBASEBEATALL",	AWSelTracksTimebase, NULL,  1, IsSelTracksTimebase, },
 
-	{ { DEFACCEL, "SWS/AW: Set selected items timebase to project/track default" },                                 "SWS_AWITEMTBASEPROJ",                 AWSelItemsTimebaseProj, NULL, 0, IsSelItemsTimebaseProj},
-	{ { DEFACCEL, "SWS/AW: Set selected items timebase to time" },                                             "SWS_AWITEMTBASETIME",                 AWSelItemsTimebaseTime, NULL, 0, IsSelItemsTimebaseTime},
-	{ { DEFACCEL, "SWS/AW: Set selected items timebase to beats (position only)" },                            "SWS_AWITEMTBASEBEATPOS",              AWSelItemsTimebaseBeatPos, NULL, 0, IsSelItemsTimebaseBeatPos},
-	{ { DEFACCEL, "SWS/AW: Set selected items timebase to beats (position, length, rate)" },                   "SWS_AWITEMTBASEBEATALL",              AWSelItemsTimebaseBeatAll, NULL, 0, IsSelItemsTimebaseBeatAll},
+	{ { DEFACCEL, "SWS/AW: Set selected items timebase to project/track default" },					"SWS_AWITEMTBASEPROJ",		AWSelItemsTimebase, NULL, -1, IsSelItemsTimebase, },
+	{ { DEFACCEL, "SWS/AW: Set selected items timebase to time" },									"SWS_AWITEMTBASETIME",		AWSelItemsTimebase, NULL,  0, IsSelItemsTimebase, },
+	{ { DEFACCEL, "SWS/AW: Set selected items timebase to beats (position only)" },					"SWS_AWITEMTBASEBEATPOS",	AWSelItemsTimebase, NULL,  2, IsSelItemsTimebase, },
+	{ { DEFACCEL, "SWS/AW: Set selected items timebase to beats (position, length, rate)" },		"SWS_AWITEMTBASEBEATALL",	AWSelItemsTimebase, NULL,  1, IsSelItemsTimebase, },
 
 	{ { DEFACCEL, "SWS/AW: Toggle triplet grid" },          "SWS_AWTOGGLETRIPLET",              AWToggleTriplet, NULL, 0, IsGridTriplet},
 	{ { DEFACCEL, "SWS/AW: Toggle dotted grid" },           "SWS_AWTOGGLEDOTTED",               AWToggleDotted, NULL, 0, IsGridDotted},
 
-	{ { DEFACCEL, "SWS/AW: Grid to whole notes" },          "SWS_AWGRIDWHOLE",              AWGridWhole, NULL, 0, IsGridWhole},
-	{ { DEFACCEL, "SWS/AW: Grid to half notes" },           "SWS_AWGRIDHALF",               AWGridHalf, NULL, 0, IsGridHalf},
-	{ { DEFACCEL, "SWS/AW: Grid to 1/4 notes" },            "SWS_AWGRID4",              AWGrid4, NULL, 0, IsGrid4},
-	{ { DEFACCEL, "SWS/AW: Grid to 1/8 notes" },            "SWS_AWGRID8",              AWGrid8, NULL, 0, IsGrid8},
-	{ { DEFACCEL, "SWS/AW: Grid to 1/16 notes" },           "SWS_AWGRID16",             AWGrid16, NULL, 0, IsGrid16},
-	{ { DEFACCEL, "SWS/AW: Grid to 1/32 notes" },           "SWS_AWGRID32",             AWGrid32, NULL, 0, IsGrid32},
-	{ { DEFACCEL, "SWS/AW: Grid to 1/64 notes" },           "SWS_AWGRID64",             AWGrid64, NULL, 0, IsGrid64},
-	{ { DEFACCEL, "SWS/AW: Grid to 1/128 notes" },          "SWS_AWGRID128",            AWGrid128, NULL, 0, IsGrid128},
 	{ { DEFACCEL, "SWS/AW: Paste" },        "SWS_AWPASTE",                  AWPaste, },
 	{ { DEFACCEL, "SWS/AW: Remove tracks/items/env, obeying time selection and leaving children" },     "SWS_AWBUSDELETE",                  AWBusDelete, },
 
-
 	{ { DEFACCEL, "SWS/AW: Insert click track" },       "SWS_AWINSERTCLICKTRK",                 AWInsertClickTrack, NULL, },
 	{ { DEFACCEL, "SWS/AW: Toggle click track mute" },      "SWS_AWTOGGLECLICKTRACK",                   AWToggleClickTrack, NULL, 0, IsClickUnmuted},
-
-
-	//*/
 
 
 	{ { DEFACCEL, "SWS/AW: Render tracks to stereo stem tracks, obeying time selection" },          "SWS_AWRENDERSTEREOSMART",      AWRenderStem_Smart_Stereo, },
@@ -3317,10 +2899,10 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/AW: Split selected items at edit cursor w/crossfade on left" },              "SWS_AWSPLITXFADELEFT",     AWSplitXFadeLeft, },
 
 
-	{ { DEFACCEL, "SWS/AW: Set selected tracks pan mode to stereo balance" },           "SWS_AWPANBALANCENEW",      AWSelTracksPanBalanceNew, },
-	{ { DEFACCEL, "SWS/AW: Set selected tracks pan mode to 3.x balance" },          "SWS_AWPANBALANCEOLD",      AWSelTracksPanBalanceOld, },
-	{ { DEFACCEL, "SWS/AW: Set selected tracks pan mode to stereo pan" },           "SWS_AWPANSTEREOPAN",       AWSelTracksPanStereoPan, },
-	{ { DEFACCEL, "SWS/AW: Set selected tracks pan mode to dual pan" },         "SWS_AWPANDUALPAN",     AWSelTracksPanDualPan, },
+	{ { DEFACCEL, "SWS/AW: Set selected tracks pan mode to stereo balance" },						"SWS_AWPANBALANCENEW",		AWSelTracksPanMode, NULL, 3, },
+	{ { DEFACCEL, "SWS/AW: Set selected tracks pan mode to 3.x balance" },							"SWS_AWPANBALANCEOLD",		AWSelTracksPanMode, NULL, 0, },
+	{ { DEFACCEL, "SWS/AW: Set selected tracks pan mode to stereo pan" },							"SWS_AWPANSTEREOPAN",		AWSelTracksPanMode, NULL, 5, },
+	{ { DEFACCEL, "SWS/AW: Set selected tracks pan mode to dual pan" },								"SWS_AWPANDUALPAN",			AWSelTracksPanMode, NULL, 6, },
 
 
 

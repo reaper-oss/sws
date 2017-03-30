@@ -74,56 +74,21 @@
     <_ProjectFileVersion>12.0.21005.1</_ProjectFileVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
-    <IntDir>$(Configuration)\</IntDir>
     <TargetName>reaper_sws</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(Platform)\$(Configuration)\</IntDir>
     <TargetName>reaper_sws64</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">
-    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
-    <IntDir>$(Configuration)\</IntDir>
     <LinkIncremental />
     <TargetName>reaper_sws</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Test|x64'">
-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(Platform)\$(Configuration)\</IntDir>
     <LinkIncremental />
     <TargetName>reaper_sws64</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <PreBuildEvent>
-      <Message>Generating reascript_vararg.h</Message>
-      <Command>php &lt; nul
-if errorlevel==1 goto errphp
-
-php "reascript_vararg.php" &gt; "reascript_vararg_tmp.h"
-if errorlevel==1 goto errphp
-
-:: don't generate directly to reascript_vararg.h because changing that file will trigger linking even if new file is the same, instead compare first
-fc "reascript_vararg.h" "reascript_vararg_tmp.h" | find "FC: no dif" &gt; nul
-if errorlevel==1 goto update
-del "reascript_vararg_tmp.h"
-goto end
-
-:update
-echo Updating reascript_vararg.h
-del "reascript_vararg.h"
-ren "reascript_vararg_tmp.h" "reascript_vararg.h"
-goto end
-
-:errphp
-verify &gt; nul
-echo Warning: reascript_vararg.h generation failed (PHP installed?)
-
-:end
-
-</Command>
-    </PreBuildEvent>
+    <PreBuildEvent />
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <AdditionalIncludeDirectories>$(SolutionDir);$(REAPER_DIR);$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -136,18 +101,8 @@ echo Warning: reascript_vararg.h generation failed (PHP installed?)
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <PreLinkEvent>
-      <Message>Generating sws_python.py, copying whatsnew.txt...</Message>
-      <Command>perl &lt; nul
-if errorlevel==1 goto errperl
-reascript_python.pl &gt; "$(OutDir)sws_python.py" &amp;&amp; copy /y "$(OutDir)sws_python.py" "$(REAPER_DIR)\plugins"
-if errorlevel==1 goto errperl
-goto end
-:errperl
-verify &gt; nul
-echo Warning: sws_python.py generation failed (Perl installed?)
-:end
-copy /y "whatsnew.txt" "$(REAPER_DIR)\plugins\reaper_sws_whatsnew.txt"
-</Command>
+      <Command>
+      </Command>
     </PreLinkEvent>
     <Link>
       <AdditionalDependencies>comctl32.lib;lib/vs12_tag32.lib;shlwapi.lib;wsock32.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -164,40 +119,12 @@ copy /y "whatsnew.txt" "$(REAPER_DIR)\plugins\reaper_sws_whatsnew.txt"
       <Message>
       </Message>
       <Command>copy /y "$(OutDir)$(TargetFilename)" "$(REAPER_DIR)\plugins" &gt; NUL
-echo Copied to "$(REAPER_DIR)\plugins\$(TargetFilename)"
-</Command>
+echo Copied to "$(REAPER_DIR)\plugins\$(TargetFilename)"</Command>
     </PostBuildEvent>
     <Bscmake />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <PreBuildEvent>
-      <Message>Generating reascript_vararg.h</Message>
-      <Command>php &lt; nul
-if errorlevel==1 goto errphp
-
-php "reascript_vararg.php" &gt; "reascript_vararg_tmp.h"
-if errorlevel==1 goto errphp
-
-:: don't generate directly to reascript_vararg.h because changing that file will trigger linking even if new file is the same, instead compare first
-fc "reascript_vararg.h" "reascript_vararg_tmp.h" | find "FC: no dif" &gt; nul
-if errorlevel==1 goto update
-del "reascript_vararg_tmp.h"
-goto end
-
-:update
-echo Updating reascript_vararg.h
-del "reascript_vararg.h"
-ren "reascript_vararg_tmp.h" "reascript_vararg.h"
-goto end
-
-:errphp
-verify &gt; nul
-echo Warning: reascript_vararg.h generation failed (PHP installed?)
-
-:end
-
-</Command>
-    </PreBuildEvent>
+    <PreBuildEvent />
     <Midl>
       <TargetEnvironment>X64</TargetEnvironment>
     </Midl>
@@ -211,21 +138,10 @@ echo Warning: reascript_vararg.h generation failed (PHP installed?)
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <BrowseInformation>true</BrowseInformation>
     </ClCompile>
     <PreLinkEvent>
-      <Message>Generating sws_python.py, copying whatsnew.txt...</Message>
-      <Command>perl &lt; nul
-if errorlevel==1 goto errperl
-reascript_python.pl -x64 &gt; "$(OutDir)sws_python.py" &amp;&amp; copy /y "$(OutDir)sws_python.py" "$(REAPER64_DIR)\plugins"
-if errorlevel==1 goto errperl
-goto end
-:errperl
-verify &gt; nul
-echo Warning: sws_python.py generation failed (Perl installed?)
-:end
-copy /y "whatsnew.txt" "$(REAPER64_DIR)\plugins\reaper_sws_whatsnew.txt"
-</Command>
+      <Command>
+      </Command>
     </PreLinkEvent>
     <Link>
       <AdditionalDependencies>comctl32.lib;lib/vs12_tag64.lib;shlwapi.lib;wsock32.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -244,39 +160,10 @@ copy /y "whatsnew.txt" "$(REAPER64_DIR)\plugins\reaper_sws_whatsnew.txt"
       <Command>copy /y "$(OutDir)$(TargetFilename)" "$(REAPER64_DIR)\plugins" &gt; NUL
 echo Copied to "$(REAPER64_DIR)\plugins\$(TargetFilename)"</Command>
     </PostBuildEvent>
-    <Bscmake>
-      <PreserveSbr>true</PreserveSbr>
-    </Bscmake>
+    <Bscmake />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">
-    <PreBuildEvent>
-      <Message>Generating reascript_vararg.h</Message>
-      <Command>php &lt; nul
-if errorlevel==1 goto errphp
-
-php "reascript_vararg.php" &gt; "reascript_vararg_tmp.h"
-if errorlevel==1 goto errphp
-
-:: don't generate directly to reascript_vararg.h because changing that file will trigger linking even if new file is the same, instead compare first
-fc "reascript_vararg.h" "reascript_vararg_tmp.h" | find "FC: no dif" &gt; nul
-if errorlevel==1 goto update
-del "reascript_vararg_tmp.h"
-goto end
-
-:update
-echo Updating reascript_vararg.h
-del "reascript_vararg.h"
-ren "reascript_vararg_tmp.h" "reascript_vararg.h"
-goto end
-
-:errphp
-verify &gt; nul
-echo Warning: reascript_vararg.h generation failed (PHP installed?)
-
-:end
-
-</Command>
-    </PreBuildEvent>
+    <PreBuildEvent />
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(SolutionDir);$(REAPER_DIR);$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -289,18 +176,8 @@ echo Warning: reascript_vararg.h generation failed (PHP installed?)
       <BrowseInformation>true</BrowseInformation>
     </ClCompile>
     <PreLinkEvent>
-      <Message>Generating sws_python.py, copying whatsnew.txt...</Message>
-      <Command>perl &lt; nul
-if errorlevel==1 goto errperl
-reascript_python.pl &gt; "$(OutDir)sws_python.py" &amp;&amp; copy /y "$(OutDir)sws_python.py" "$(REAPER_DIR)\plugins"
-if errorlevel==1 goto errperl
-goto end
-:errperl
-verify &gt; nul
-echo Warning: sws_python.py generation failed (Perl installed?)
-:end
-copy /y "whatsnew.txt" "$(REAPER_DIR)\plugins\reaper_sws_whatsnew.txt"
-</Command>
+      <Command>
+      </Command>
     </PreLinkEvent>
     <Link>
       <AdditionalDependencies>comctl32.lib;lib/vs12_tag32.lib;shlwapi.lib;wsock32.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -326,34 +203,7 @@ echo Copied to "$(REAPER_DIR)\plugins\$(TargetFilename)"</Command>
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Test|x64'">
-    <PreBuildEvent>
-      <Message>Generating reascript_vararg.h</Message>
-      <Command>php &lt; nul
-if errorlevel==1 goto errphp
-
-php "reascript_vararg.php" &gt; "reascript_vararg_tmp.h"
-if errorlevel==1 goto errphp
-
-:: don't generate directly to reascript_vararg.h because changing that file will trigger linking even if new file is the same, instead compare first
-fc "reascript_vararg.h" "reascript_vararg_tmp.h" | find "FC: no dif" &gt; nul
-if errorlevel==1 goto update
-del "reascript_vararg_tmp.h"
-goto end
-
-:update
-echo Updating reascript_vararg.h
-del "reascript_vararg.h"
-ren "reascript_vararg_tmp.h" "reascript_vararg.h"
-goto end
-
-:errphp
-verify &gt; nul
-echo Warning: reascript_vararg.h generation failed (PHP installed?)
-
-:end
-
-</Command>
-    </PreBuildEvent>
+    <PreBuildEvent />
     <Midl>
       <TargetEnvironment>X64</TargetEnvironment>
     </Midl>
@@ -369,18 +219,8 @@ echo Warning: reascript_vararg.h generation failed (PHP installed?)
       <Optimization>Disabled</Optimization>
     </ClCompile>
     <PreLinkEvent>
-      <Message>Generating sws_python.py, copying whatsnew.txt...</Message>
-      <Command>perl &lt; nul
-if errorlevel==1 goto errperl
-reascript_python.pl -x64 &gt; "$(OutDir)sws_python.py" &amp;&amp; copy /y "$(OutDir)sws_python.py" "$(REAPER64_DIR)\plugins"
-if errorlevel==1 goto errperl
-goto end
-:errperl
-verify &gt; nul
-echo Warning: sws_python.py generation failed (Perl installed?)
-:end
-copy /y "whatsnew.txt" "$(REAPER64_DIR)\plugins\reaper_sws_whatsnew.txt"
-</Command>
+      <Command>
+      </Command>
     </PreLinkEvent>
     <Link>
       <AdditionalDependencies>comctl32.lib;lib/vs12_tag64.lib;shlwapi.lib;wsock32.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -406,6 +246,108 @@ echo Copied to "$(REAPER64_DIR)\plugins\$(TargetFilename)"</Command>
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <CustomBuild Include="reascript_vararg.php">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">php &lt; nul
+if errorlevel==1 goto errphp
+php $(ProjectDir)reascript_vararg.php &gt; $(ProjectDir)reascript_vararg.h
+goto end
+:errphp
+verify &gt; nul
+echo Warning: reascript_vararg.h generation failed (PHP installed?)
+:end
+</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">Generating reascript_vararg.h</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(ProjectDir)reascript_vararg.h</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">php &lt; nul
+if errorlevel==1 goto errphp
+php $(ProjectDir)reascript_vararg.php &gt; $(ProjectDir)reascript_vararg.h
+goto end
+:errphp
+verify &gt; nul
+echo Warning: reascript_vararg.h generation failed (PHP installed?)
+:end
+</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Generating reascript_vararg.h</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)reascript_vararg.h</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|x64'">php &lt; nul
+if errorlevel==1 goto errphp
+php $(ProjectDir)reascript_vararg.php &gt; $(ProjectDir)reascript_vararg.h
+goto end
+:errphp
+verify &gt; nul
+echo Warning: reascript_vararg.h generation failed (PHP installed?)
+:end
+</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Test|x64'">Generating reascript_vararg.h</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|x64'">$(ProjectDir)reascript_vararg.h</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">php &lt; nul
+if errorlevel==1 goto errphp
+php $(ProjectDir)reascript_vararg.php &gt; $(ProjectDir)reascript_vararg.h
+goto end
+:errphp
+verify &gt; nul
+echo Warning: reascript_vararg.h generation failed (PHP installed?)
+:end
+</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating reascript_vararg.h</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)reascript_vararg.h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(ProjectDir)Reascript.cpp</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)Reascript.cpp</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Test|x64'">$(ProjectDir)Reascript.cpp</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)Reascript.cpp</AdditionalInputs>
+    </CustomBuild>
+    <CustomBuild Include="reascript_python.pl">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">perl &lt; nul
+if errorlevel==1 goto errperl
+reascript_python.pl &gt; "$(OutDir)sws_python.py" &amp;&amp; copy /y "$(OutDir)sws_python.py" "$(REAPER_DIR)\plugins"
+if errorlevel==1 goto errperl
+goto end
+:errperl
+verify &gt; nul
+echo Warning: sws_python.py generation failed (Perl installed?)
+:end</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">Building sws_python.py</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(OutDir)sws_python.py</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">perl &lt; nul
+if errorlevel==1 goto errperl
+reascript_python.pl &gt; "$(OutDir)sws_python.py" &amp;&amp; copy /y "$(OutDir)sws_python.py" "$(REAPER_DIR)\plugins"
+if errorlevel==1 goto errperl
+goto end
+:errperl
+verify &gt; nul
+echo Warning: sws_python.py generation failed (Perl installed?)
+:end</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Building sws_python.py</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)sws_python.py</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">$(ProjectDir)Reascript.cpp</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)Reascript.cpp</AdditionalInputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Test|x64'">Building sws_python.py</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Test|x64'">$(OutDir)sws_python.py</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Test|x64'">$(ProjectDir)Reascript.cpp</AdditionalInputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building sws_python.py</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)sws_python.py</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)Reascript.cpp</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Test|x64'">perl &lt; nul
+if errorlevel==1 goto errperl
+reascript_python.pl -x64 &gt; "$(OutDir)sws_python.py" &amp;&amp; copy /y "$(OutDir)sws_python.py" "$(REAPER64_DIR)\plugins"
+if errorlevel==1 goto errperl
+goto end
+:errperl
+verify &gt; nul
+echo Warning: sws_python.py generation failed (Perl installed?)
+:end</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">perl &lt; nul
+if errorlevel==1 goto errperl
+reascript_python.pl -x64 &gt; "$(OutDir)sws_python.py" &amp;&amp; copy /y "$(OutDir)sws_python.py" "$(REAPER64_DIR)\plugins"
+if errorlevel==1 goto errperl
+goto end
+:errperl
+verify &gt; nul
+echo Warning: sws_python.py generation failed (Perl installed?)
+:end</Command>
+    </CustomBuild>
     <None Include="Resources\Bitmap\downarrow.bmp" />
     <None Include="Resources\Bitmap\uparrow.bmp" />
     <None Include="Resources\Cursor\sws_env_pen_grid.cur" />
@@ -427,6 +369,7 @@ echo Copied to "$(REAPER64_DIR)\plugins\$(TargetFilename)"</Command>
     <ClInclude Include="Breeder\BR_MouseUtil.h" />
     <ClInclude Include="C:\Program Files (x86)\REAPER\reaper_plugin_functions.h" />
     <ClInclude Include="nofish\nofish.h" />
+    <ClInclude Include="reascript_vararg.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Wol\wol_Util.h" />
     <ClInclude Include="Wol\wol_Zoom.h" />

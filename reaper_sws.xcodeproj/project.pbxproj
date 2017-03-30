@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1F1982681C6BF5E20007E933 /* swell-modstub.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9807642C0F5B237B0091104D /* swell-modstub.mm */; };
 		1FD9691D1661424E00DECB50 /* virtwnd-slider.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FD9691C1661424E00DECB50 /* virtwnd-slider.cpp */; };
 		1FE2BC0F16FF72FD008AC14F /* SnM_CSurf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FE2BC0D16FF72FD008AC14F /* SnM_CSurf.cpp */; };
 		1FE2BC1016FF72FD008AC14F /* SnM_CSurf.h in Headers */ = {isa = PBXBuildFile; fileRef = 1FE2BC0E16FF72FD008AC14F /* SnM_CSurf.h */; };
@@ -66,6 +65,18 @@
 		225130C9116101670028F26A /* padreMidiItemProcBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 225130BC116101670028F26A /* padreMidiItemProcBase.h */; };
 		225130CA116101670028F26A /* padreUtils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 225130BD116101670028F26A /* padreUtils.cpp */; };
 		225130CB116101670028F26A /* padreUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 225130BE116101670028F26A /* padreUtils.h */; };
+		2264CBC810FEC33100447317 /* swell-dlg.mm in Sources */ = {isa = PBXBuildFile; fileRef = 98B4088D0F5B524D00865A09 /* swell-dlg.mm */; };
+		2264CBC910FEC33200447317 /* swell-dlggen.h in Headers */ = {isa = PBXBuildFile; fileRef = 9882DB870F6D961100BD2BC7 /* swell-dlggen.h */; };
+		2264CBCA10FEC33200447317 /* swell-gdi.mm in Sources */ = {isa = PBXBuildFile; fileRef = 98B4088E0F5B524D00865A09 /* swell-gdi.mm */; };
+		2264CBCB10FEC33300447317 /* swell-ini.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98B408860F5B519500865A09 /* swell-ini.cpp */; };
+		2264CBCC10FEC33300447317 /* swell-internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 22B671331091DD2A00C494D0 /* swell-internal.h */; };
+		2264CBCD10FEC33400447317 /* swell-kb.mm in Sources */ = {isa = PBXBuildFile; fileRef = 98B4088F0F5B524D00865A09 /* swell-kb.mm */; };
+		2264CBCE10FEC33400447317 /* swell-menu.mm in Sources */ = {isa = PBXBuildFile; fileRef = 98DDBE120F5B60F1003E9B2C /* swell-menu.mm */; };
+		2264CBCF10FEC33500447317 /* swell-misc.mm in Sources */ = {isa = PBXBuildFile; fileRef = 22B671361091DDC700C494D0 /* swell-misc.mm */; };
+		2264CBD010FEC33600447317 /* swell-miscdlg.mm in Sources */ = {isa = PBXBuildFile; fileRef = 980764240F5B233C0091104D /* swell-miscdlg.mm */; };
+		2264CBD110FEC33700447317 /* swell-wnd.mm in Sources */ = {isa = PBXBuildFile; fileRef = 980764250F5B233C0091104D /* swell-wnd.mm */; };
+		2264CBD210FEC33800447317 /* swell.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98B408A20F5B544A00865A09 /* swell.cpp */; };
+		2264CBD310FEC33900447317 /* swell.h in Headers */ = {isa = PBXBuildFile; fileRef = 9870F77F0F5B461C0007258C /* swell.h */; };
 		2270FC7112F8551400703F85 /* RecCheck.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2270FC6F12F8551400703F85 /* RecCheck.cpp */; };
 		2270FC7212F8551400703F85 /* RecCheck.h in Headers */ = {isa = PBXBuildFile; fileRef = 2270FC7012F8551400703F85 /* RecCheck.h */; };
 		2273566712910ABF001A1570 /* EditCursor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2273566512910ABF001A1570 /* EditCursor.cpp */; };
@@ -510,6 +521,8 @@
 		22B22D6B13FA578100D187A9 /* sws_waitdlg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sws_waitdlg.h; sourceTree = "<group>"; };
 		22B4C24D0FE311C7009A6731 /* Prompt.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Prompt.cpp; sourceTree = "<group>"; };
 		22B4C24E0FE311C7009A6731 /* Prompt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Prompt.h; sourceTree = "<group>"; };
+		22B671331091DD2A00C494D0 /* swell-internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "swell-internal.h"; path = "../WDL/swell/swell-internal.h"; sourceTree = SOURCE_ROOT; };
+		22B671361091DDC700C494D0 /* swell-misc.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "swell-misc.mm"; path = "../WDL/swell/swell-misc.mm"; sourceTree = SOURCE_ROOT; };
 		22BC765B1D349B4100014323 /* nofish.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = nofish.cpp; path = nofish/nofish.cpp; sourceTree = "<group>"; };
 		22BC765D1D349B5B00014323 /* nofish.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = nofish.h; path = nofish/nofish.h; sourceTree = "<group>"; };
 		22BEA47F115F4A7C00B34AE1 /* ProjectList.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ProjectList.cpp; path = Projects/ProjectList.cpp; sourceTree = "<group>"; };
@@ -640,6 +653,8 @@
 		5A0280AE14216AE300EC8CD1 /* sws_rpf_wrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sws_rpf_wrapper.h; path = reaper/sws_rpf_wrapper.h; sourceTree = "<group>"; };
 		5A2C98F412973A41005ACC49 /* sws_extension.rc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sws_extension.rc; sourceTree = "<group>"; };
 		980764220F5B23180091104D /* wndsize.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = wndsize.cpp; path = ../WDL/wingui/wndsize.cpp; sourceTree = SOURCE_ROOT; };
+		980764240F5B233C0091104D /* swell-miscdlg.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "swell-miscdlg.mm"; path = "../WDL/swell/swell-miscdlg.mm"; sourceTree = SOURCE_ROOT; };
+		980764250F5B233C0091104D /* swell-wnd.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "swell-wnd.mm"; path = "../WDL/swell/swell-wnd.mm"; sourceTree = SOURCE_ROOT; };
 		9807642C0F5B237B0091104D /* swell-modstub.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "swell-modstub.mm"; path = "../WDL/swell/swell-modstub.mm"; sourceTree = SOURCE_ROOT; };
 		981006CF0F4768010072D712 /* TrackItemState.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TrackItemState.cpp; path = Freeze/TrackItemState.cpp; sourceTree = "<group>"; };
 		981006D00F4768010072D712 /* TimeState.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TimeState.cpp; path = Freeze/TimeState.cpp; sourceTree = "<group>"; };
@@ -675,9 +690,16 @@
 		981007030F4768020072D712 /* reaper_sws.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = reaper_sws.xcodeproj; sourceTree = "<group>"; };
 		981007170F4768020072D712 /* sws_extension.rc_mac_menu */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sws_extension.rc_mac_menu; sourceTree = "<group>"; };
 		981007180F4768020072D712 /* sws_extension.rc_mac_dlg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sws_extension.rc_mac_dlg; sourceTree = "<group>"; };
+		9870F77F0F5B461C0007258C /* swell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = swell.h; path = ../WDL/swell/swell.h; sourceTree = SOURCE_ROOT; };
 		9879B3D80F48977C004D98EB /* reaper_plugin_functions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = reaper_plugin_functions.h; path = /Applications/reaper_plugin_functions.h; sourceTree = "<absolute>"; };
 		9879B7340F489BE4004D98EB /* reaper_plugin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = reaper_plugin.h; path = reaper/reaper_plugin.h; sourceTree = "<group>"; };
 		9879B7400F489CE7004D98EB /* stdafx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stdafx.h; sourceTree = "<group>"; };
+		9882DB870F6D961100BD2BC7 /* swell-dlggen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "swell-dlggen.h"; path = "../WDL/swell/swell-dlggen.h"; sourceTree = SOURCE_ROOT; };
+		98B408860F5B519500865A09 /* swell-ini.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "swell-ini.cpp"; path = "../WDL/swell/swell-ini.cpp"; sourceTree = SOURCE_ROOT; };
+		98B4088D0F5B524D00865A09 /* swell-dlg.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "swell-dlg.mm"; path = "../WDL/swell/swell-dlg.mm"; sourceTree = SOURCE_ROOT; };
+		98B4088E0F5B524D00865A09 /* swell-gdi.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "swell-gdi.mm"; path = "../WDL/swell/swell-gdi.mm"; sourceTree = SOURCE_ROOT; };
+		98B4088F0F5B524D00865A09 /* swell-kb.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "swell-kb.mm"; path = "../WDL/swell/swell-kb.mm"; sourceTree = SOURCE_ROOT; };
+		98B408A20F5B544A00865A09 /* swell.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = swell.cpp; path = ../WDL/swell/swell.cpp; sourceTree = SOURCE_ROOT; };
 		98B61A0119D36378004258F3 /* BR_MouseUtil.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BR_MouseUtil.cpp; path = Breeder/BR_MouseUtil.cpp; sourceTree = "<group>"; };
 		98B61A0219D36378004258F3 /* BR_MouseUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BR_MouseUtil.h; path = Breeder/BR_MouseUtil.h; sourceTree = "<group>"; };
 		98B6AAF218E7317900BACB96 /* wol.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = wol.cpp; path = Wol/wol.cpp; sourceTree = "<group>"; };
@@ -715,6 +737,7 @@
 		98D590460F628703003F75B4 /* Tracklist.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Tracklist.cpp; path = TrackList/Tracklist.cpp; sourceTree = "<group>"; };
 		98D590470F628703003F75B4 /* Tracklist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Tracklist.h; path = TrackList/Tracklist.h; sourceTree = "<group>"; };
 		98DDBD280F5B56ED003E9B2C /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
+		98DDBE120F5B60F1003E9B2C /* swell-menu.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "swell-menu.mm"; path = "../WDL/swell/swell-menu.mm"; sourceTree = SOURCE_ROOT; };
 		98E89AC10FC9C02B00A56C44 /* Zoom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Zoom.cpp; sourceTree = "<group>"; };
 		98E89AC30FC9C03700A56C44 /* Zoom.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Zoom.h; sourceTree = "<group>"; };
 		98E89AC60FC9C05C00A56C44 /* TrackEnvelope.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TrackEnvelope.cpp; path = ObjectState/TrackEnvelope.cpp; sourceTree = "<group>"; };
@@ -1239,8 +1262,20 @@
 		98B408960F5B525200865A09 /* SWELL */ = {
 			isa = PBXGroup;
 			children = (
+				22B671361091DDC700C494D0 /* swell-misc.mm */,
+				22B671331091DD2A00C494D0 /* swell-internal.h */,
 				98E8A0AF0F9123F900FC657D /* sws_util.mm */,
+				9882DB870F6D961100BD2BC7 /* swell-dlggen.h */,
+				98DDBE120F5B60F1003E9B2C /* swell-menu.mm */,
+				98B408A20F5B544A00865A09 /* swell.cpp */,
+				98B408860F5B519500865A09 /* swell-ini.cpp */,
+				9870F77F0F5B461C0007258C /* swell.h */,
+				980764240F5B233C0091104D /* swell-miscdlg.mm */,
 				9807642C0F5B237B0091104D /* swell-modstub.mm */,
+				980764250F5B233C0091104D /* swell-wnd.mm */,
+				98B4088D0F5B524D00865A09 /* swell-dlg.mm */,
+				98B4088E0F5B524D00865A09 /* swell-gdi.mm */,
+				98B4088F0F5B524D00865A09 /* swell-kb.mm */,
 			);
 			name = SWELL;
 			sourceTree = "<group>";
@@ -1321,6 +1356,9 @@
 				229AC804108FB3BE00E4A962 /* MarkerListClass.h in Headers */,
 				229AC80D108FBFCB00E4A962 /* SectionLock.h in Headers */,
 				22C769EC10B0F00800774777 /* TrackFX.h in Headers */,
+				2264CBC910FEC33200447317 /* swell-dlggen.h in Headers */,
+				2264CBCC10FEC33300447317 /* swell-internal.h in Headers */,
+				2264CBD310FEC33900447317 /* swell.h in Headers */,
 				22C54FD4111B28450024339F /* ObjectState.h in Headers */,
 				22C54FD6111B28450024339F /* TrackSends.h in Headers */,
 				22C54FE0111B29E10024339F /* SnapshotMerge.h in Headers */,
@@ -1544,7 +1582,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1F1982681C6BF5E20007E933 /* swell-modstub.mm in Sources */,
 				981007190F4768020072D712 /* TrackItemState.cpp in Sources */,
 				9810071A0F4768020072D712 /* TimeState.cpp in Sources */,
 				9810071B0F4768020072D712 /* ActiveTake.cpp in Sources */,
@@ -1597,6 +1634,15 @@
 				22C769EB10B0F00800774777 /* TrackFX.cpp in Sources */,
 				22A664BB10BC6FE100F0B239 /* sha.cpp in Sources */,
 				22A8751F10FEBFA10026F62F /* sws_util.mm in Sources */,
+				2264CBC810FEC33100447317 /* swell-dlg.mm in Sources */,
+				2264CBCA10FEC33200447317 /* swell-gdi.mm in Sources */,
+				2264CBCB10FEC33300447317 /* swell-ini.cpp in Sources */,
+				2264CBCD10FEC33400447317 /* swell-kb.mm in Sources */,
+				2264CBCE10FEC33400447317 /* swell-menu.mm in Sources */,
+				2264CBCF10FEC33500447317 /* swell-misc.mm in Sources */,
+				2264CBD010FEC33600447317 /* swell-miscdlg.mm in Sources */,
+				2264CBD110FEC33700447317 /* swell-wnd.mm in Sources */,
+				2264CBD210FEC33800447317 /* swell.cpp in Sources */,
 				22C54FD3111B28450024339F /* ObjectState.cpp in Sources */,
 				22C54FD5111B28450024339F /* TrackSends.cpp in Sources */,
 				22C54FDF111B29E10024339F /* SnapshotMerge.cpp in Sources */,
@@ -1779,7 +1825,7 @@
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					SWELL_PROVIDED_BY_APP,
+					"SWELL_APP_PREFIX=sws",
 					"_SWS_DEBUG=1",
 				);
 				GCC_VERSION = "";
@@ -1804,7 +1850,7 @@
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_OPTIMIZATION_LEVEL = 3;
-				GCC_PREPROCESSOR_DEFINITIONS = SWELL_PROVIDED_BY_APP;
+				GCC_PREPROCESSOR_DEFINITIONS = "SWELL_APP_PREFIX=sws";
 				GCC_VERSION = "";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_TYPECHECK_CALLS_TO_PRINTF = NO;

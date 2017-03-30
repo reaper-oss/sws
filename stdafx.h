@@ -41,6 +41,7 @@
 #include <crtdbg.h>
 #include <commctrl.h>
 #else
+#define WDL_NO_DEFINE_MINMAX
 #include "../WDL/swell/swell.h"
 #include <sys/time.h>
 #endif

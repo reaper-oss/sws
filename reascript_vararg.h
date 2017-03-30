@@ -530,21 +530,20 @@ static void* __vararg_ULT_SetMediaItemNote(void** arglist, int numparms)
   return NULL;
 }
 
-// #781
 static void* __vararg_NF_GetMediaItemMaxPeak(void** arglist, int numparms)
 {
-	double* p = (double*)arglist[numparms - 1];
-	double d = NF_GetMediaItemMaxPeak((MediaItem*)arglist[0]);
-	if (p) *p = d;
-	return p;
+  double* p =(double*)arglist[numparms-1];
+  double d = NF_GetMediaItemMaxPeak((MediaItem*)arglist[0]);
+  if (p) *p=d;
+  return p;
 }
 
 static void* __vararg_NF_GetMediaItemAverageRMS(void** arglist, int numparms)
 {
-	double* p = (double*)arglist[numparms - 1];
-	double d = NF_GetMediaItemAverageRMS((MediaItem*)arglist[0]);
-	if (p) *p = d;
-	return p;
+  double* p =(double*)arglist[numparms-1];
+  double d = NF_GetMediaItemAverageRMS((MediaItem*)arglist[0]);
+  if (p) *p=d;
+  return p;
 }
 
 

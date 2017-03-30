@@ -1,12 +1,12 @@
-ReaScript:
-+Added functions: 
-   - reaper.NF_GetMediaItemMaxPeak()
-   - reaper.NF_GetMediaItemAverageRMS()
+New ReaScript functions (Issue 781)
++reaper.NF_GetMediaItemMaxPeak()
++reaper.NF_GetMediaItemAverageRMS()
 
 Removed deprecated "SWS/AW: Grid to x" actions (sorry if this breaks your toolbars, please replace with native actions)
 
 Fixes
 +Issue 850: "SWS/Xenakios Create markers from selected items..." should now order markers properly
++Issue 851: Fix odd behavior of "SWS: Normalize item(s) to peak RMS
 
 !v2.9.2 pre-release build (March 27, 2017)
 Fixes

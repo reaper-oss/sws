@@ -42,7 +42,7 @@
 #include "./Breeder/BR_Util.h"
 #include "./reaper/localize.h"
 #ifndef _WIN32
-#include "../WDL/swell/swell-dlggen.h"
+#include "WDL/swell/swell-dlggen.h"
 #endif
 
 

@@ -27,7 +27,7 @@
 
 
 #include "stdafx.h"
-#include "../../WDL/projectcontext.h"
+#include "WDL/projectcontext.h"
 #include "../reaper/localize.h"
 #include "../Utility/Base64.h"
 #include "SnapshotClass.h"

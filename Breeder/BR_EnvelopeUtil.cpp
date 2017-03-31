@@ -28,7 +28,7 @@
 #include "stdafx.h"
 #include "BR_EnvelopeUtil.h"
 #include "BR_Util.h"
-#include "../../WDL/lice/lice_bezier.h"
+#include "WDL/lice/lice_bezier.h"
 #include "../reaper/localize.h"
 
 /******************************************************************************

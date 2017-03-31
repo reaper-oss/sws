@@ -28,7 +28,7 @@
 
 #include "stdafx.h"
 #include "../Utility/SectionLock.h"
-#include "../../WDL/projectcontext.h"
+#include "WDL/projectcontext.h"
 #include "../reaper/localize.h"
 #include "MarkerListClass.h"
 #include "MarkerListActions.h"

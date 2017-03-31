@@ -39,7 +39,7 @@
 #include "../reaper/localize.h"
 #include "../SnM/SnM_Dlg.h"
 #include "../Prompt.h"
-#include "../../WDL/projectcontext.h"
+#include "WDL/projectcontext.h"
 
 #define TAGLIB_STATIC
 #define TAGLIB_NO_CONFIG

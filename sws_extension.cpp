@@ -1238,10 +1238,10 @@ error:
 
 
 #ifndef _WIN32 // MAC resources
-#include "../WDL/swell/swell-dlggen.h"
+#include "WDL/swell/swell-dlggen.h"
 #include "sws_extension.rc_mac_dlg"
 #undef BEGIN
 #undef END
-#include "../WDL/swell/swell-menugen.h"
+#include "WDL/swell/swell-menugen.h"
 #include "sws_extension.rc_mac_menu"
 #endif

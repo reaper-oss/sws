@@ -45,7 +45,7 @@
 #include "../DragDrop.h"
 #endif
 #include "../reaper/localize.h"
-#include "../../WDL/projectcontext.h"
+#include "WDL/projectcontext.h"
 
 
 #define RES_WND_ID					"SnMResources"

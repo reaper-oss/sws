@@ -53,7 +53,7 @@ REAPER_EXTRA_API_DECL bool (*OnColorThemeOpenFile)(const char*);
 
 // Avoid LICE collisions
 #define REAPERAPI_NO_LICE
-#include "../../WDL/lice/lice.h"
+#include "WDL/lice/lice.h"
 
 #include "reaper_plugin_functions.h"
 

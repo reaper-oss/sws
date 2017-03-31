@@ -35,7 +35,7 @@
 #include "SnM_Util.h"
 #include "../Prompt.h"
 #include "../reaper/localize.h"
-#include "../../WDL/projectcontext.h"
+#include "WDL/projectcontext.h"
 
 
 #define RGNPL_WND_ID			"SnMRgnPlaylist"

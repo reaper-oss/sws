@@ -46,7 +46,7 @@
 #include "RecCheck.h"
 #include "TrackParams.h"
 #include "TrackSel.h"
-#include "Zoom.h"
+#include "../Zoom.h"
 #include "Misc.h"
 
 void MiscSlice()

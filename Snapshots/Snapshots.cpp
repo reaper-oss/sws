@@ -31,7 +31,7 @@
 #include "SnapshotMerge.h"
 #include "../Prompt.h"
 #include "../reaper/localize.h"
-#include "../../WDL/projectcontext.h"
+#include "WDL/projectcontext.h"
 
 
 #define SNAP_OPTIONS_KEY "Snapshot Options"

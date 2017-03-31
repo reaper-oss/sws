@@ -5,8 +5,8 @@
 #ifndef _ICONTHEME_
 #define _ICONTHEME_
 
-#include "../../WDL/lice/lice.h"
-#include "../../WDL/wingui/virtwnd-skin.h"
+#include "WDL/lice/lice.h"
+#include "WDL/wingui/virtwnd-skin.h"
 
 
 typedef struct

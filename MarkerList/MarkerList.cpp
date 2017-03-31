@@ -28,7 +28,7 @@
 #include "stdafx.h"
 #include "../reaper/localize.h"
 #include "../SnM/SnM_Dlg.h"
-#include "../../WDL/projectcontext.h"
+#include "WDL/projectcontext.h"
 #include "MarkerListClass.h"
 #include "MarkerList.h"
 #include "MarkerListActions.h"

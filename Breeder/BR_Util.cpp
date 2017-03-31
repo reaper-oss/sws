@@ -37,9 +37,9 @@
 #include "../SnM/SnM_Dlg.h"
 #include "../SnM/SnM_Item.h"
 #include "../SnM/SnM_Util.h"
-#include "../../WDL/lice/lice.h"
-#include "../../WDL/lice/lice_bezier.h"
-#include "../../WDL/projectcontext.h"
+#include "WDL/lice/lice.h"
+#include "WDL/lice/lice_bezier.h"
+#include "WDL/projectcontext.h"
 
 /******************************************************************************
 * Constants                                                                   *

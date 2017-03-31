@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "../reaper/localize.h"
-#include "../../WDL/ptrlist.h"
+#include "WDL/ptrlist.h"
 
 #include <algorithm>
 

@@ -30,8 +30,8 @@
 #include "SnM_Chunk.h"
 #include "SnM_Util.h"
 #include "../reaper/localize.h"
-#include "../../WDL/sha.h"
-#include "../../WDL/projectcontext.h"
+#include "WDL/sha.h"
+#include "WDL/projectcontext.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////

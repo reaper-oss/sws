@@ -34,8 +34,8 @@
 #include "../SnM/SnM_Dlg.h"
 #include "../SnM/SnM_Util.h"
 #include "../reaper/localize.h"
-#include "../../WDL/jnetlib/jnetlib.h"
-#include "../../WDL/jnetlib/httpget.h"
+#include "WDL/jnetlib/jnetlib.h"
+#include "WDL/jnetlib/httpget.h"
 
 /******************************************************************************
 * Constants                                                                   *

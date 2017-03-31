@@ -28,7 +28,7 @@
 
 #include "stdafx.h"
 #include "Breeder/BR_Util.h"
-#include "../WDL/sha.h"
+#include "WDL/sha.h"
 #include "reaper/localize.h"
 
 // Globals

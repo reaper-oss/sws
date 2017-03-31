@@ -20,12 +20,6 @@
     <Filter Include="WDL\lice">
       <UniqueIdentifier>{2a432c79-19cf-4399-95e7-217b4df6e4c8}</UniqueIdentifier>
     </Filter>
-    <Filter Include="WDL\lice\pnglib">
-      <UniqueIdentifier>{1b1faaa3-24b0-4d7f-8c83-43e2f6107b78}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="WDL\lice\zlib">
-      <UniqueIdentifier>{e32596ef-345e-4e32-b0f9-2bdc78d033e4}</UniqueIdentifier>
-    </Filter>
     <Filter Include="WDL\vwnd">
       <UniqueIdentifier>{fc77562d-891c-4e46-acb1-9f95dc4bd1a2}</UniqueIdentifier>
     </Filter>
@@ -110,6 +104,12 @@
     <Filter Include="nofish">
       <UniqueIdentifier>{fb731ab1-23d5-4439-a9a1-fb1955e56022}</UniqueIdentifier>
     </Filter>
+    <Filter Include="WDL\zlib">
+      <UniqueIdentifier>{e32596ef-345e-4e32-b0f9-2bdc78d033e4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="WDL\pnglib">
+      <UniqueIdentifier>{1b1faaa3-24b0-4d7f-8c83-43e2f6107b78}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -120,87 +120,6 @@
     </ClInclude>
     <ClInclude Include="Xenakios\XenakiosExts.h">
       <Filter>Xenakios\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\WDL\projectcontext.h">
-      <Filter>WDL</Filter>
-    </ClInclude>
-    <ClInclude Include="..\WDL\win32_utf8.h">
-      <Filter>WDL</Filter>
-    </ClInclude>
-    <ClInclude Include="..\WDL\lice\lice.h">
-      <Filter>WDL\lice</Filter>
-    </ClInclude>
-    <ClInclude Include="..\WDL\lice\lice_text.h">
-      <Filter>WDL\lice</Filter>
-    </ClInclude>
-    <ClInclude Include="..\WDL\libpng\png.h">
-      <Filter>WDL\lice\pnglib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\WDL\libpng\pngconf.h">
-      <Filter>WDL\lice\pnglib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\WDL\zlib\crc32.h">
-      <Filter>WDL\lice\zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\WDL\zlib\deflate.h">
-      <Filter>WDL\lice\zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\WDL\zlib\inffast.h">
-      <Filter>WDL\lice\zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\WDL\zlib\inffixed.h">
-      <Filter>WDL\lice\zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\WDL\zlib\inflate.h">
-      <Filter>WDL\lice\zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\WDL\zlib\inftrees.h">
-      <Filter>WDL\lice\zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\WDL\zlib\trees.h">
-      <Filter>WDL\lice\zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\WDL\zlib\zconf.h">
-      <Filter>WDL\lice\zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\WDL\zlib\zconf.in.h">
-      <Filter>WDL\lice\zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\WDL\zlib\zlib.h">
-      <Filter>WDL\lice\zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\WDL\zlib\zutil.h">
-      <Filter>WDL\lice\zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\WDL\wingui\virtwnd-controls.h">
-      <Filter>WDL\vwnd</Filter>
-    </ClInclude>
-    <ClInclude Include="..\WDL\wingui\virtwnd-skin.h">
-      <Filter>WDL\vwnd</Filter>
-    </ClInclude>
-    <ClInclude Include="..\WDL\wingui\virtwnd.h">
-      <Filter>WDL\vwnd</Filter>
-    </ClInclude>
-    <ClInclude Include="..\WDL\wingui\wndsize.h">
-      <Filter>WDL\vwnd</Filter>
-    </ClInclude>
-    <ClInclude Include="..\WDL\jnetlib\asyncdns.h">
-      <Filter>WDL\jnetlib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\WDL\jnetlib\connection.h">
-      <Filter>WDL\jnetlib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\WDL\jnetlib\httpget.h">
-      <Filter>WDL\jnetlib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\WDL\jnetlib\jnetlib.h">
-      <Filter>WDL\jnetlib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\WDL\jnetlib\netinc.h">
-      <Filter>WDL\jnetlib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\WDL\jnetlib\util.h">
-      <Filter>WDL\jnetlib</Filter>
     </ClInclude>
     <ClInclude Include="SnM\SnM.h">
       <Filter>SnM</Filter>
@@ -616,6 +535,87 @@
     <ClInclude Include="reascript_vararg.h">
       <Filter>Core</Filter>
     </ClInclude>
+    <ClInclude Include="..\WDL\WDL\jnetlib\asyncdns.h">
+      <Filter>WDL\jnetlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WDL\WDL\jnetlib\connection.h">
+      <Filter>WDL\jnetlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WDL\WDL\zlib\deflate.h">
+      <Filter>WDL\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WDL\WDL\zlib\crc32.h">
+      <Filter>WDL\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WDL\WDL\jnetlib\httpget.h">
+      <Filter>WDL\jnetlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WDL\WDL\zlib\inftrees.h">
+      <Filter>WDL\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WDL\WDL\zlib\inffast.h">
+      <Filter>WDL\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WDL\WDL\zlib\inffixed.h">
+      <Filter>WDL\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WDL\WDL\zlib\inflate.h">
+      <Filter>WDL\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WDL\WDL\jnetlib\jnetlib.h">
+      <Filter>WDL\jnetlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WDL\WDL\lice\lice.h">
+      <Filter>WDL\lice</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WDL\WDL\lice\lice_text.h">
+      <Filter>WDL\lice</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WDL\WDL\jnetlib\netinc.h">
+      <Filter>WDL\jnetlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WDL\WDL\libpng\png.h">
+      <Filter>WDL\pnglib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WDL\WDL\libpng\pngconf.h">
+      <Filter>WDL\pnglib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WDL\WDL\projectcontext.h">
+      <Filter>WDL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WDL\WDL\zlib\trees.h">
+      <Filter>WDL\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WDL\WDL\jnetlib\util.h">
+      <Filter>WDL\jnetlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WDL\WDL\wingui\virtwnd.h">
+      <Filter>WDL\vwnd</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WDL\WDL\wingui\virtwnd-controls.h">
+      <Filter>WDL\vwnd</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WDL\WDL\wingui\virtwnd-skin.h">
+      <Filter>WDL\vwnd</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WDL\WDL\win32_utf8.h">
+      <Filter>WDL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WDL\WDL\wingui\wndsize.h">
+      <Filter>WDL\vwnd</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WDL\WDL\zlib\zutil.h">
+      <Filter>WDL\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WDL\WDL\zlib\zconf.in.h">
+      <Filter>WDL\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WDL\WDL\zlib\zlib.h">
+      <Filter>WDL\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WDL\WDL\zlib\zconf.h">
+      <Filter>WDL\zlib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="sws_extension.rc">
@@ -718,138 +718,6 @@
     </ClCompile>
     <ClCompile Include="Xenakios\XenUtils.cpp">
       <Filter>Xenakios\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\projectcontext.cpp">
-      <Filter>WDL</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\sha.cpp">
-      <Filter>WDL</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\win32_utf8.c">
-      <Filter>WDL</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\lice\lice.cpp">
-      <Filter>WDL\lice</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\lice\lice_arc.cpp">
-      <Filter>WDL\lice</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\lice\lice_image.cpp">
-      <Filter>WDL\lice</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\lice\lice_line.cpp">
-      <Filter>WDL\lice</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\lice\lice_png.cpp">
-      <Filter>WDL\lice</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\lice\lice_textnew.cpp">
-      <Filter>WDL\lice</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\libpng\png.c">
-      <Filter>WDL\lice\pnglib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\libpng\pngerror.c">
-      <Filter>WDL\lice\pnglib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\libpng\pngget.c">
-      <Filter>WDL\lice\pnglib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\libpng\pngmem.c">
-      <Filter>WDL\lice\pnglib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\libpng\pngpread.c">
-      <Filter>WDL\lice\pnglib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\libpng\pngread.c">
-      <Filter>WDL\lice\pnglib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\libpng\pngrio.c">
-      <Filter>WDL\lice\pnglib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\libpng\pngrtran.c">
-      <Filter>WDL\lice\pnglib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\libpng\pngrutil.c">
-      <Filter>WDL\lice\pnglib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\libpng\pngset.c">
-      <Filter>WDL\lice\pnglib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\libpng\pngtrans.c">
-      <Filter>WDL\lice\pnglib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\libpng\pngwio.c">
-      <Filter>WDL\lice\pnglib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\libpng\pngwrite.c">
-      <Filter>WDL\lice\pnglib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\libpng\pngwtran.c">
-      <Filter>WDL\lice\pnglib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\libpng\pngwutil.c">
-      <Filter>WDL\lice\pnglib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\zlib\adler32.c">
-      <Filter>WDL\lice\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\zlib\compress.c">
-      <Filter>WDL\lice\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\zlib\crc32.c">
-      <Filter>WDL\lice\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\zlib\deflate.c">
-      <Filter>WDL\lice\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\zlib\infback.c">
-      <Filter>WDL\lice\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\zlib\inffast.c">
-      <Filter>WDL\lice\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\zlib\inflate.c">
-      <Filter>WDL\lice\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\zlib\inftrees.c">
-      <Filter>WDL\lice\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\zlib\trees.c">
-      <Filter>WDL\lice\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\zlib\uncompr.c">
-      <Filter>WDL\lice\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\zlib\zutil.c">
-      <Filter>WDL\lice\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\wingui\virtwnd-iconbutton.cpp">
-      <Filter>WDL\vwnd</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\wingui\virtwnd-listbox.cpp">
-      <Filter>WDL\vwnd</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\wingui\virtwnd-slider.cpp">
-      <Filter>WDL\vwnd</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\wingui\virtwnd.cpp">
-      <Filter>WDL\vwnd</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\wingui\wndsize.cpp">
-      <Filter>WDL\vwnd</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\jnetlib\asyncdns.cpp">
-      <Filter>WDL\jnetlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\jnetlib\connection.cpp">
-      <Filter>WDL\jnetlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\jnetlib\httpget.cpp">
-      <Filter>WDL\jnetlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WDL\jnetlib\util.cpp">
-      <Filter>WDL\jnetlib</Filter>
     </ClCompile>
     <ClCompile Include="SnM\SnM.cpp">
       <Filter>SnM</Filter>
@@ -1237,6 +1105,138 @@
     </ClCompile>
     <ClCompile Include="nofish\nofish.cpp">
       <Filter>nofish</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\zlib\adler32.c">
+      <Filter>WDL\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\jnetlib\asyncdns.cpp">
+      <Filter>WDL\jnetlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\zlib\compress.c">
+      <Filter>WDL\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\jnetlib\connection.cpp">
+      <Filter>WDL\jnetlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\zlib\crc32.c">
+      <Filter>WDL\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\zlib\deflate.c">
+      <Filter>WDL\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\jnetlib\httpget.cpp">
+      <Filter>WDL\jnetlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\zlib\inftrees.c">
+      <Filter>WDL\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\zlib\infback.c">
+      <Filter>WDL\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\zlib\inffast.c">
+      <Filter>WDL\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\zlib\inflate.c">
+      <Filter>WDL\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\lice\lice.cpp">
+      <Filter>WDL\lice</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\lice\lice_textnew.cpp">
+      <Filter>WDL\lice</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\lice\lice_arc.cpp">
+      <Filter>WDL\lice</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\lice\lice_image.cpp">
+      <Filter>WDL\lice</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\lice\lice_line.cpp">
+      <Filter>WDL\lice</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\lice\lice_png.cpp">
+      <Filter>WDL\lice</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\libpng\pngwutil.c">
+      <Filter>WDL\pnglib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\libpng\png.c">
+      <Filter>WDL\pnglib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\libpng\pngerror.c">
+      <Filter>WDL\pnglib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\libpng\pngget.c">
+      <Filter>WDL\pnglib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\libpng\pngmem.c">
+      <Filter>WDL\pnglib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\libpng\pngpread.c">
+      <Filter>WDL\pnglib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\libpng\pngread.c">
+      <Filter>WDL\pnglib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\libpng\pngrio.c">
+      <Filter>WDL\pnglib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\libpng\pngrtran.c">
+      <Filter>WDL\pnglib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\libpng\pngrutil.c">
+      <Filter>WDL\pnglib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\libpng\pngset.c">
+      <Filter>WDL\pnglib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\libpng\pngtrans.c">
+      <Filter>WDL\pnglib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\libpng\pngwio.c">
+      <Filter>WDL\pnglib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\libpng\pngwrite.c">
+      <Filter>WDL\pnglib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\libpng\pngwtran.c">
+      <Filter>WDL\pnglib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\projectcontext.cpp">
+      <Filter>WDL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\sha.cpp">
+      <Filter>WDL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\zlib\trees.c">
+      <Filter>WDL\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\zlib\uncompr.c">
+      <Filter>WDL\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\jnetlib\util.cpp">
+      <Filter>WDL\jnetlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\wingui\virtwnd-slider.cpp">
+      <Filter>WDL\vwnd</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\wingui\virtwnd.cpp">
+      <Filter>WDL\vwnd</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\wingui\virtwnd-iconbutton.cpp">
+      <Filter>WDL\vwnd</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\wingui\virtwnd-listbox.cpp">
+      <Filter>WDL\vwnd</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\win32_utf8.c">
+      <Filter>WDL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\wingui\wndsize.cpp">
+      <Filter>WDL\vwnd</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WDL\WDL\zlib\zutil.c">
+      <Filter>WDL\zlib</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

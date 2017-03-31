@@ -42,7 +42,7 @@
 #include <commctrl.h>
 #else
 #define WDL_NO_DEFINE_MINMAX
-#include "../WDL/swell/swell.h"
+#include "WDL/swell/swell.h"
 #include <sys/time.h>
 #endif
 #include <stdio.h>
@@ -74,22 +74,22 @@
 #pragma warning(disable : 4996) // POSIX deprecation warnings
 #pragma warning(disable : 4267) // size_t to int warnings
 #pragma warning(disable : 4244) // __int64 to int warnings
-#include "../WDL/wdlcstring.h"
-#include "../WDL/wdltypes.h"
-#include "../WDL/ptrlist.h"
-#include "../WDL/wdlstring.h"
-#include "../WDL/heapbuf.h"
-#include "../WDL/db2val.h"
-#include "../WDL/wingui/wndsize.h"
-#include "../WDL/lice/lice.h"
-#include "../WDL/dirscan.h"
-#include "../WDL/wingui/virtwnd.h"
-#include "../WDL/wingui/virtwnd-controls.h"
-#include "../WDL/assocarray.h"
-#include "../WDL/win32_utf8.h"
-#include "../WDL/lineparse.h"
-#include "../WDL/MersenneTwister.h"
-#include "../WDL/fileread.h"
+#include "WDL/wdlcstring.h"
+#include "WDL/wdltypes.h"
+#include "WDL/ptrlist.h"
+#include "WDL/wdlstring.h"
+#include "WDL/heapbuf.h"
+#include "WDL/db2val.h"
+#include "WDL/wingui/wndsize.h"
+#include "WDL/lice/lice.h"
+#include "WDL/dirscan.h"
+#include "WDL/wingui/virtwnd.h"
+#include "WDL/wingui/virtwnd-controls.h"
+#include "WDL/assocarray.h"
+#include "WDL/win32_utf8.h"
+#include "WDL/lineparse.h"
+#include "WDL/MersenneTwister.h"
+#include "WDL/fileread.h"
 #pragma warning(default : 4996)
 #pragma warning(default : 4267)
 #pragma warning(default : 4244)

@@ -33,7 +33,7 @@
 #include "../SnM/SnM_Marker.h"
 #include "../SnM/SnM_Util.h"
 #include "../reaper/localize.h"
-#include "../../WDL/projectcontext.h"
+#include "WDL/projectcontext.h"
 
 #define PRI_UP_MSG		0x10000
 #define PRI_DOWN_MSG	0x10001

@@ -38,7 +38,7 @@
 #include "../url.h"
 #include "../reaper/localize.h"
 #include "../Prompt.h"
-#include "../../WDL/projectcontext.h"
+#include "WDL/projectcontext.h"
 
 
 #define LIVECFG_WND_ID				"SnMLiveConfigs"

@@ -6,7 +6,7 @@
 #include "FNG_Settings.h"
 #include "RprException.h"
 #include "../reaper/localize.h"
-#include "../../WDL/dirscan.h"
+#include "WDL/dirscan.h"
 
 #ifndef PATH_SEP
 #ifdef _WIN32

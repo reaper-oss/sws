@@ -31,7 +31,7 @@
 #include "SnM_Routing.h"
 #include "SnM_Track.h"
 #include "SnM_Util.h"
-#include "../../WDL/projectcontext.h"
+#include "WDL/projectcontext.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////

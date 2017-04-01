@@ -29,3 +29,6 @@
 #pragma once
 
 int nofish_Init();
+
+// #514
+void UpdateMIDIGridToolbar();

@@ -73,7 +73,7 @@ public:
 		m_font.SetFromHFont(NULL,LICE_FONT_FLAG_OWNS_HFONT);
 	}
 	virtual const char *GetType() { return "SNM_DynSizedText"; }
-	virtual void OnPaint(LICE_IBitmap* _drawbm, int _origin_x, int _origin_y, RECT* _cliprect);
+	virtual void OnPaint(LICE_IBitmap* _drawbm, int _origin_x, int _origin_y, RECT* _cliprect, int rscale);
 	virtual void SetText(const char* _txt, int _col = 0, unsigned char _alpha = 255);
 	virtual void SetTitle(const char* _txt);
 	virtual void SetBorder(bool _b) { m_wantBorder = _b; }
@@ -103,7 +103,7 @@ public:
 	virtual const char *GetType() { return "SNM_FiveMonitors"; }
 	virtual void AddMonitors(SNM_DynSizedText* _m0, SNM_DynSizedText* _m1, SNM_DynSizedText* _m2, SNM_DynSizedText* _m3, SNM_DynSizedText* _m4);
 	virtual bool HasValidChildren();
-	virtual void OnPaint(LICE_IBitmap* _drawbm, int _origin_x, int _origin_y, RECT* _cliprect);
+	virtual void OnPaint(LICE_IBitmap* _drawbm, int _origin_x, int _origin_y, RECT* _cliprect, int rscale);
 	virtual void SetText(int _monNum, const char* _txt, int _col = 0, unsigned char _alpha = 255);
 	virtual void SetTitles(const char* _title1="1", const char* _title2="2", const char* _title3="3", const char* _title4="4");
 	virtual void SetPosition(const RECT* _r);
@@ -122,7 +122,7 @@ public:
 	virtual int GetWidth();
 	virtual int GetHeight();
 	virtual void SetImage(const char* _fn);
-	virtual void OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect);
+	virtual void OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect, int rscale);
 protected:
 	LICE_IBitmap* m_img;
 	WDL_FastString m_fn;
@@ -140,7 +140,7 @@ class SNM_TinyButton : public WDL_VWnd {
 public:
 	SNM_TinyButton() : WDL_VWnd(), m_en(true) {}
 	virtual const char *GetType() { return "SNM_TinyButton"; }
-	virtual void OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect) {}
+	virtual void OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect, int rscale) {}
 	virtual void SetEnabled(bool _en) { m_en=_en; }
 	virtual int OnMouseDown(int xpos, int ypos) { return m_en?1:0;	}
 	virtual void OnMouseUp(int xpos, int ypos) { if (m_en) SendCommand(WM_COMMAND,GetID(),0,this); }
@@ -151,31 +151,31 @@ protected:
 class SNM_TinyPlusButton : public SNM_TinyButton {
 public:
 	SNM_TinyPlusButton() : SNM_TinyButton() {}
-	virtual void OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect);
+	virtual void OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect, int rscale);
 };
 
 class SNM_TinyMinusButton : public SNM_TinyButton {
 public:
 	SNM_TinyMinusButton() : SNM_TinyButton() {}
-	virtual void OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect);
+	virtual void OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect, int rscale);
 };
 
 class SNM_TinyLeftButton : public SNM_TinyButton {
 public:
 	SNM_TinyLeftButton() : SNM_TinyButton() {}
-	virtual void OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect);
+	virtual void OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect, int rscale);
 };
 
 class SNM_TinyRightButton : public SNM_TinyButton {
 public:
 	SNM_TinyRightButton() : SNM_TinyButton() {}
-	virtual void OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect);
+	virtual void OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect, int rscale);
 };
 
 class SNM_TinyTickBox : public SNM_TinyButton {
 public:
 	SNM_TinyTickBox() : SNM_TinyButton(), m_checkstate(0) {}
-	virtual void OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect);
+	virtual void OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect, int rscale);
 	void SetCheckState(char _state); // to mimic WDL_VirtualIconButton (eases replacement), 0=unchecked, 1=checked, -1 is unsupported
 	char GetCheckState() { return m_checkstate; }
 protected:
@@ -216,7 +216,7 @@ public:
 	SNM_KnobCaption() : WDL_VWnd(), m_value(-666) {}
 	virtual void SetPosition(const RECT* _r);
 	void DrawText(LICE_IBitmap* _drawbm, RECT* _rect, UINT _dtFlags);
-	virtual void OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect);
+	virtual void OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect, int rscale);
 	virtual const char *GetType() { return "SNM_KnobCaption"; }
 	virtual void SetTitle(const char* _txt) { m_title.Set(_txt); }
 	virtual void SetSuffix(const char* _txt) { m_suffix.Set(_txt); }

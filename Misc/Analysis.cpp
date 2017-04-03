@@ -241,8 +241,8 @@ double GetMediaItemMaxPeak(MediaItem* mi)
 	double maxPeak = -150.0;
 	
 	// if MIDI item, don't scan
-	int sampleRate = ((PCM_source*)mi)->GetSampleRate(); // will rtn. 0 for MIDI items
-	if (sampleRate == 0) return -150.0;
+	double sampleRate = ((PCM_source*)mi)->GetSampleRate(); // will rtn. 0 for MIDI items
+	if (sampleRate == 0.0) return -150.0;
 
 	int iChannels = ((PCM_source*)mi)->GetNumChannels();
 	if (iChannels)
@@ -274,8 +274,8 @@ double GetMediaItemAverageRMS(MediaItem* mi)
 	double maxAvrgRMS = -150.0;
 
 	// if MIDI item, don't scan
-	int sampleRate = ((PCM_source*)mi)->GetSampleRate(); // will rtn. 0 for MIDI items
-	if (sampleRate == 0) return -150.0;
+	double sampleRate = ((PCM_source*)mi)->GetSampleRate(); // will rtn. 0 for MIDI items
+	if (sampleRate == 0.0) return -150.0;
 	
 	int iChannels = ((PCM_source*)mi)->GetNumChannels();
 	if (iChannels)

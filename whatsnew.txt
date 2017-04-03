@@ -6,8 +6,8 @@ Actions
  (reflect toggle state when used as ME toolbar buttons)
 
 New ReaScript functions (Issue 781)
-+reaper.NF_GetMediaItemMaxPeak()
-+reaper.NF_GetMediaItemAverageRMS()
++NF_GetMediaItemMaxPeak()
++NF_GetMediaItemAverageRMS()
 
 Removed deprecated "SWS/AW: Grid to x" actions (sorry if this breaks your toolbars, please replace with native actions)
 

@@ -1,3 +1,9 @@
+Actions
++New actions (MIDI editor) (Issue 514):
+ - SWS/NF: Toggle dotted grid
+ - SWS/NF: Toggle triplet grid
+ (reflect toggle state when used as ME toolbar buttons)
+
 New ReaScript functions (Issue 781)
 +reaper.NF_GetMediaItemMaxPeak()
 +reaper.NF_GetMediaItemAverageRMS()

@@ -131,7 +131,7 @@ void SWS_ShowTextScrollbar(HWND hwnd, bool show)
 	SetWindowLong(hwnd, GWL_STYLE, dwStyle);
 }
 
-#elif defined(__APPLE__)
+#else
 
 int GetMenuString(HMENU hMenu, UINT uIDItem, char* lpString, int nMaxCount, UINT uFlag)
 {

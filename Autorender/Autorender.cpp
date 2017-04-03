@@ -762,6 +762,7 @@ void AutorenderRegions(COMMAND_T*)
 	// Tag!
 	for( unsigned int i = 0; i < renderTracks.size(); i++){		
 		string renderedFilePath = g_render_path + PATH_SLASH_CHAR + renderTracks[i].getFileName( renderFileExtension, prependTrackNumberPad );
+#ifndef NO_TAGLIB
 #ifdef _WIN32
 		wchar_t* w_rendered_path = WideCharPlz( renderedFilePath.c_str() );
 		TagLib::FileRef f( w_rendered_path );
@@ -822,6 +823,7 @@ void AutorenderRegions(COMMAND_T*)
 		}
 #ifdef _WIN32
 		delete [] w_rendered_path;
+#endif
 #endif
 	}
 

@@ -245,6 +245,9 @@ bool SNM_ReadMediaFileTag(const char *fn, const char* tag, char* tagval, int tag
 {
   if (!fn || !*fn || !tagval || tagval_sz<=0) return false;
   *tagval=0;
+#ifdef NO_TAGLIB
+  return false;
+#else
 
 #ifdef _WIN32
   wchar_t* w_fn = WideCharPlz(fn);
@@ -277,11 +280,16 @@ bool SNM_ReadMediaFileTag(const char *fn, const char* tag, char* tagval, int tag
   delete [] w_fn;
 #endif
   return !!*tagval;
+#endif
 }
 
 bool SNM_TagMediaFile(const char *fn, const char* tag, const char* tagval)
 {
   if (!fn || !*fn || !tagval || !tag) return false;
+
+#ifdef NO_TAGLIB
+  return false;
+#else
 
 #ifdef _WIN32
   wchar_t* w_fn = WideCharPlz(fn);
@@ -325,6 +333,7 @@ bool SNM_TagMediaFile(const char *fn, const char* tag, const char* tagval)
   delete [] w_fn;
 #endif
   return didsmthg;
+#endif
 }
 
 

@@ -16,9 +16,9 @@
 ***********************************/
 
 #include "stdafx.h"
-#include "..\..\jmde\reaper_plugin_functions.h"
-#include "..\sws_util.h"
-#include "..\resource.h"
+#include "../reaper/reaper_plugin_functions.h"
+#include "../sws_util.h"
+#include "../resource.h"
 
 // Well, this isn't ready for primetime without the proper API to get
 // access to macros, so here it sits unlinked.

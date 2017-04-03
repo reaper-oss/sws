@@ -71,9 +71,12 @@
 #include <ctime>
 #include <limits>
 
+#ifndef __GNUC__
 #pragma warning(disable : 4996) // POSIX deprecation warnings
 #pragma warning(disable : 4267) // size_t to int warnings
 #pragma warning(disable : 4244) // __int64 to int warnings
+#endif
+
 #include "WDL/wdlcstring.h"
 #include "WDL/wdltypes.h"
 #include "WDL/ptrlist.h"
@@ -90,9 +93,12 @@
 #include "WDL/lineparse.h"
 #include "WDL/MersenneTwister.h"
 #include "WDL/fileread.h"
+
+#ifndef __GNUC__
 #pragma warning(default : 4996)
 #pragma warning(default : 4267)
 #pragma warning(default : 4244)
+#endif
 
 // Reaper
 #include "reaper/reaper_plugin.h"

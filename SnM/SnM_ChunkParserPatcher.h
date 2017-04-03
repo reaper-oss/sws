@@ -46,7 +46,9 @@
 #ifndef _SNM_CHUNKPARSERPATCHER_H_
 #define _SNM_CHUNKPARSERPATCHER_H_
 
+#ifndef __GNUC__
 #pragma warning(disable : 4267) // size_t to int warnings in x64
+#endif
 
 #define _SWS_EXTENSION
 #ifdef _SWS_EXTENSION

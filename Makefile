@@ -14,17 +14,23 @@ CXXFLAGS = $(CFLAGS)
 
 LINKEXTRA = -lpthread
 
-WDL_OBJS           = ../WDL/WDL/swell/swell-modstub-generic.o ../WDL/WDL/wingui/virtwnd.o ../WDL/WDL/wingui/virtwnd-slider.o \
-                     ../WDL/WDL/wingui/virtwnd-iconbutton.o ../WDL/WDL/wingui/wndsize.o \
-                     ../WDL/WDL/sha.o ../WDL/WDL/projectcontext.o ../WDL/WDL/jnetlib/util.o ../WDL/WDL/jnetlib/connection.o \
-                     ../WDL/WDL/jnetlib/asyncdns.o ../WDL/WDL/jnetlib/httpget.o
+WDL_PATH = ../WDL/WDL
+vpath swell-modstub-generic.cpp $(WDL_PATH)/swell
+vpath lice%.cpp $(WDL_PATH)/lice
+vpath png%.c $(WDL_PATH)/libpng
+vpath %.c $(WDL_PATH)/zlib
+vpath %.cpp $(WDL_PATH)/wingui $(WDL_PATH)/ $(WDL_PATH)/jnetlib/
 
-LICE_OBJS          = ../WDL/WDL/lice/lice_textnew.o ../WDL/WDL/lice/lice.o ../WDL/WDL/lice/lice_arc.o ../WDL/WDL/lice/lice_line.o \
-                     ../WDL/WDL/lice/lice_png.o ../WDL/WDL/libpng/png.o ../WDL/WDL/libpng/pngerror.o ../WDL/WDL/libpng/pngget.o \
-                     ../WDL/WDL/libpng/pngmem.o ../WDL/WDL/libpng/pngpread.o ../WDL/WDL/libpng/pngread.o ../WDL/WDL/libpng/pngrio.o \
-                     ../WDL/WDL/libpng/pngrtran.o ../WDL/WDL/libpng/pngrutil.o ../WDL/WDL/libpng/pngset.o ../WDL/WDL/libpng/pngtrans.o \
-                     ../WDL/WDL/zlib/adler32.o ../WDL/WDL/zlib/crc32.o ../WDL/WDL/zlib/infback.o ../WDL/WDL/zlib/inffast.o \
-                     ../WDL/WDL/zlib/inflate.o ../WDL/WDL/zlib/inftrees.o ../WDL/WDL/zlib/uncompr.o ../WDL/WDL/zlib/zutil.o 
+WDL_OBJS           = swell-modstub-generic.o virtwnd.o virtwnd-slider.o virtwnd-iconbutton.o \
+		     wndsize.o sha.o projectcontext.o \
+		     jnetlib-util.o connection.o asyncdns.o httpget.o
+
+LICE_OBJS          = lice_textnew.o lice.o lice_arc.o lice_line.o \
+                     lice_png.o png.o pngerror.o pngget.o \
+                     pngmem.o pngpread.o pngread.o pngrio.o \
+                     pngrtran.o pngrutil.o pngset.o pngtrans.o \
+                     adler32.o crc32.o infback.o inffast.o \
+                     inflate.o inftrees.o uncompr.o zutil.o 
 
 REAPER_OBJS        = reaper/reaper.o
 SWS_OBJS           = sws_extension.o sws_about.o sws_util.o sws_waitdlg.o sws_wnd.o Menus.o Prompt.o ReaScript.o stdafx.o Zoom.o sws_util_generic.o
@@ -77,13 +83,24 @@ default: reaper_sws64.so
 .PHONY: clean
 
 sws_extension.rc_mac_dlg: sws_extension.rc
-	php ../WDL/WDL/swell/mac_resgen.php $^
+	php $(WDL_PATH)/swell/mac_resgen.php $^
 
 sws_extension.o: sws_extension.cpp sws_extension.rc_mac_dlg
-	$(CXX) -c -o $@ $(CFLAGS) sws_extension.cpp
+	$(CXX) -c -o $@ $(CXXFLAGS) sws_extension.cpp
+
+jnetlib-util.o: $(WDL_PATH)/jnetlib/util.cpp
+	$(CXX) -c -o $@ $(CXXFLAGS) $< 
 
 reaper_sws64.so: $(OBJS)
-	$(CXX) -shared -o $@ $(CFLAGS) $(LFLAGS) $^ $(LINKEXTRA)
+	$(CXX) -shared -o $@ $(CXXFLAGS) $(LFLAGS) $^ $(LINKEXTRA)
 
 clean: 
 	-rm $(OBJS) reaper_sws64.so
+
+install: reaper_sws64.so
+	-mkdir ~/.REAPER/UserPlugins
+	-rm ~/.REAPER/UserPlugins/reaper_sws64.so
+	ln -sf $(shell pwd)/reaper_sws64.so ~/.REAPER/UserPlugins
+
+uninstall:
+	-rm ~/.REAPER/UserPlugins/reaper_sws64.so

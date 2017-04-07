@@ -1301,7 +1301,7 @@ void Cyclaction::UpdateNameAndCmds()
 	m_cmds.EmptySafe(false); // to be deleted by callers (might be used in a list view)
 
 	char actionStr[CA_MAX_LEN] = "";
-	lstrcpyn(actionStr, m_def.Get(), sizeof(actionStr));
+	lstrcpyn_safe(actionStr, m_def.Get(), sizeof(actionStr));
 	char* tok = strtok(actionStr, s_CA_SEP_STR);
 	if (tok)
 	{

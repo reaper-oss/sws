@@ -77,6 +77,7 @@ double          BR_GetPrevGridDivision (double position);
 double          BR_GetSetTrackSendInfo (MediaTrack* track, int category, int sendidx, const char* parmname, bool setNewValue, double newValue);
 int             BR_GetTakeFXCount (MediaItem_Take* take);
 bool            BR_IsTakeMidi (MediaItem_Take* take, bool* inProjectMidiOut);
+bool			BR_IsMidiOpenInInlineEditor(MediaItem_Take* take);
 MediaItem*      BR_ItemAtMouseCursor (double* positionOut);
 bool            BR_MIDI_CCLaneRemove (HWND midiEditor, int laneId);
 bool            BR_MIDI_CCLaneReplace (HWND midiEditor, int laneId, int newCC);

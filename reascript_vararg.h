@@ -424,6 +424,11 @@ static void* __vararg_BR_IsTakeMidi(void** arglist, int numparms)
   return (void*)(INT_PTR)BR_IsTakeMidi((MediaItem_Take*)arglist[0], (bool*)arglist[1]);
 }
 
+static void* __vararg_BR_IsMidiOpenInInlineEditor(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)BR_IsMidiOpenInInlineEditor((MediaItem_Take*)arglist[0]);
+}
+
 static void* __vararg_BR_ItemAtMouseCursor(void** arglist, int numparms)
 {
   return (void*)(INT_PTR)BR_ItemAtMouseCursor((double*)arglist[0]);

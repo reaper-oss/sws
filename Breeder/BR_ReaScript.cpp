@@ -601,6 +601,11 @@ bool BR_IsTakeMidi (MediaItem_Take* take, bool* inProjectMidiOut)
 	return IsMidi(take, inProjectMidiOut);
 }
 
+bool BR_IsMidiOpenInInlineEditor(MediaItem_Take* take)
+{
+	return IsOpenInInlineEditor(take);
+}
+
 MediaItem* BR_ItemAtMouseCursor (double* positionOut)
 {
 	return ItemAtMouseCursor(positionOut);

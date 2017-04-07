@@ -1,7 +1,9 @@
 New ReaScript function:
 +BR_IsMidiOpenInInlineEditor() - Check to see if a midi take has the inline editor open
 
-Fixed some OSX window issues that cropped up since v2.9.2
+Fixes:
++Issue 821: Fix "SWS/BR: Split selected items at stretch markers"
++Fixed some OSX window issues that cropped up since v2.9.2
 
 !v2.9.3 pre-release build (April 2, 2017)
 Actions

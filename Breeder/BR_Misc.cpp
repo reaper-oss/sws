@@ -501,9 +501,7 @@ void SplitItemAtStretchMarkers (COMMAND_T* ct)
 				GetTakeStretchMarker(take, i, &position, NULL);
 				position = (position / playRate) + iStart;
 
-				if (position > iEnd)
-					break;
-				else
+				if (position > iStart && position < iEnd)
 					stretchMarkers.push_back(position);
 			}
 

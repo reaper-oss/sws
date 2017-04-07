@@ -228,6 +228,7 @@
 		22FFD27A114CD8310077F1CA /* Autocolor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22FFD278114CD8310077F1CA /* Autocolor.cpp */; };
 		22FFD27B114CD8310077F1CA /* Autocolor.h in Headers */ = {isa = PBXBuildFile; fileRef = 22FFD279114CD8310077F1CA /* Autocolor.h */; };
 		3327DE920E955E14001FCE4E /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3327DE910E955E14001FCE4E /* Cocoa.framework */; };
+		33D90C531E97398400A64DC9 /* swell-modstub.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9807642C0F5B237B0091104D /* swell-modstub.mm */; };
 		387407D01664177E008626AA /* lice_arc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 387407CF1664177E008626AA /* lice_arc.cpp */; };
 		387938E516202B1E000948B5 /* CommandHandler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 387938B716202B1E000948B5 /* CommandHandler.cpp */; };
 		387938E616202B1E000948B5 /* CommandHandler.h in Headers */ = {isa = PBXBuildFile; fileRef = 387938B816202B1E000948B5 /* CommandHandler.h */; };
@@ -1518,6 +1519,8 @@
 /* Begin PBXProject section */
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+			};
 			buildConfigurationList = 1DEB914E08733D8E0010E9CD /* Build configuration list for PBXProject "reaper_sws" */;
 			compatibilityVersion = "Xcode 3.1";
 			developmentRegion = English;
@@ -1715,6 +1718,7 @@
 				22F7AAC915201D8A00CC1481 /* SnM_Misc.cpp in Sources */,
 				22F7AACD15201D8A00CC1481 /* SnM_Project.cpp in Sources */,
 				22F7AACF15201D8A00CC1481 /* SnM_Resources.cpp in Sources */,
+				33D90C531E97398400A64DC9 /* swell-modstub.mm in Sources */,
 				22F7AAD315201D8A00CC1481 /* SnM_Routing.cpp in Sources */,
 				22F7AAD515201D8A00CC1481 /* SnM_Track.cpp in Sources */,
 				22F7AAD715201D8A00CC1481 /* SnM_Util.cpp in Sources */,
@@ -1825,7 +1829,7 @@
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					"SWELL_APP_PREFIX=sws",
+					SWELL_PROVIDED_BY_APP,
 					"_SWS_DEBUG=1",
 				);
 				GCC_VERSION = "";
@@ -1851,7 +1855,7 @@
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_OPTIMIZATION_LEVEL = 3;
-				GCC_PREPROCESSOR_DEFINITIONS = "SWELL_APP_PREFIX=sws";
+				GCC_PREPROCESSOR_DEFINITIONS = SWELL_PROVIDED_BY_APP;
 				GCC_VERSION = "";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_TYPECHECK_CALLS_TO_PRINTF = NO;

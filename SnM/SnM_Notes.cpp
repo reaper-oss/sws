@@ -90,6 +90,9 @@ SNM_WindowManager<NotesWnd> g_notesWndMgr(NOTES_WND_ID);
 SWSProjConfig<WDL_PtrList_DOD<SNM_TrackNotes> > g_SNM_TrackNotes;
 SWSProjConfig<WDL_PtrList_DOD<SNM_RegionSubtitle> > g_pRegionSubs; // for markers too..
 SWSProjConfig<WDL_FastString> g_prjNotes; // extra project notes
+// #647
+SWSProjConfig<WDL_FastString> g_glbNotes; // global notes
+
 
 int g_notesType = -1;
 int g_prevNotesType = -1;
@@ -159,6 +162,8 @@ void NotesWnd::OnInitDlg()
 	m_cbType.AddItem(__LOCALIZE("Item notes","sws_DLG_152"));
 	m_cbType.AddItem(__LOCALIZE("Project notes","sws_DLG_152"));
 	m_cbType.AddItem(__LOCALIZE("Extra project notes","sws_DLG_152"));
+	//#647
+	m_cbType.AddItem(__LOCALIZE("Global notes", "sws_DLG_152"));
 	m_cbType.AddItem("<SEP>");
 	m_cbType.AddItem(__LOCALIZE("Marker names","sws_DLG_152"));
 	m_cbType.AddItem(__LOCALIZE("Region names","sws_DLG_152"));
@@ -241,6 +246,10 @@ void NotesWnd::RefreshGUI()
 	{
 		case SNM_NOTES_PROJECT:
 		case SNM_NOTES_PROJECT_EXTRA:
+			bHide = false;
+			break;
+		// #647
+		case SNM_NOTES_GLOBAL:
 			bHide = false;
 			break;
 		case SNM_NOTES_ITEM:
@@ -585,6 +594,11 @@ void NotesWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeig
 					lstrcpyn(str, GetFilenameWithExt(buf), sizeof(str));
 					break;
 				}
+
+				// #647
+				case SNM_NOTES_GLOBAL:
+					lstrcpyn(str, "[Global]", sizeof(str));
+					break;
 				case SNM_NOTES_ITEM:
 					if (g_mediaItemNote)
 					{
@@ -719,6 +733,11 @@ void NotesWnd::SaveCurrentText(int _type, bool _wantUndo)
 		case SNM_NOTES_PROJECT_EXTRA:
 			SaveCurrentExtraProjectNotes(_wantUndo);
 			break;
+		// #647
+		case SNM_NOTES_GLOBAL:
+			SaveCurrentGlobalNotes(_wantUndo);
+			break;
+
 		case SNM_NOTES_ITEM: 
 			SaveCurrentItemNotes(_wantUndo); 
 			break;
@@ -763,6 +782,18 @@ void NotesWnd::SaveCurrentExtraProjectNotes(bool _wantUndo)
 	else
 		MarkProjectDirty(NULL);
 }
+
+// #647
+void NotesWnd::SaveCurrentGlobalNotes(bool _wantUndo)
+{
+	GetDlgItemText(m_hwnd, IDC_EDIT, g_lastText, sizeof(g_lastText));
+	g_glbNotes.Get()->Set(g_lastText); // CRLF removed only when saving the project..
+	if (_wantUndo)
+		Undo_OnStateChangeEx2(NULL, __LOCALIZE("Edit global notes", "sws_undo"), UNDO_STATE_MISCCFG, -1);
+	else
+		MarkProjectDirty(NULL);
+}
+
 
 void NotesWnd::SaveCurrentItemNotes(bool _wantUndo)
 {
@@ -908,6 +939,11 @@ void NotesWnd::Update(bool _force)
 		}
 		case SNM_NOTES_PROJECT_EXTRA:
 			SetText(g_prjNotes.Get()->Get());
+			refreshType = REQUEST_REFRESH;
+			break;
+		// #647
+		case SNM_NOTES_GLOBAL:
+			SetText(g_glbNotes.Get()->Get());
 			refreshType = REQUEST_REFRESH;
 			break;
 		case SNM_NOTES_ITEM:
@@ -1419,7 +1455,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 
 		g_prjNotes.Get()->Set(buf);
 		return true;
-	}
+	} 
 	else if (!strcmp(lp.gettoken_str(0), "<S&M_TRACKNOTES"))
 	{
 		WDL_FastString notes;
@@ -1464,6 +1500,22 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 			StringToExtensionConfig(&formatedNotes, ctx);
 	}
 
+	// #647, write to "Global notes.txt" in ResourcePath instead of .rpp
+	if (g_glbNotes.Get()->GetLength())
+	{
+		WDL_FastString filePath; 
+		filePath.SetFormatted(SNM_MAX_PATH, "%s/Global notes.txt", GetResourcePath());
+
+		WDL_FileWrite outfile(filePath.Get()); 
+		if (outfile.IsOpen() == true) {
+			// Tim, is this save to use or would it need async write ?
+			outfile.Write(g_glbNotes.Get()->get_filepart(), g_glbNotes.Get()->GetLength());
+		}
+		else {
+			// error handling ?
+		}
+	}
+		
 	// save track notes
 	for (int i=0; i<g_SNM_TrackNotes.Get()->GetSize(); i++)
 	{
@@ -1506,6 +1558,10 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 {
 	g_prjNotes.Cleanup();
 	g_prjNotes.Get()->Set("");
+
+	// #647
+	g_glbNotes.Cleanup();
+	// g_glbNotes.Get()->Set(""); // commented out because this would override the loaded state from NotesInit()
 
 	g_SNM_TrackNotes.Cleanup();
 	g_SNM_TrackNotes.Get()->Empty(true);
@@ -1553,6 +1609,24 @@ int NotesInit()
 	if (_snprintfStrict(defaultHelpFn, sizeof(defaultHelpFn), SNM_ACTION_HELP_INI_FILE, GetResourcePath()) <= 0)
 		*defaultHelpFn = '\0';
 	GetPrivateProfileString(NOTES_INI_SEC, "Action_help_file", defaultHelpFn, g_actionHelpFn, sizeof(g_actionHelpFn), g_SNM_IniFn.Get());
+
+	// #647 read global notes from "Global notes.txt" (stored in ResourcePath)
+	if (g_glbNotes.Get()->GetLength() <= 0) {
+		WDL_FastString filePath;
+		filePath.SetFormatted(SNM_MAX_PATH, "%s/Global notes.txt", GetResourcePath());
+		WDL_FileRead infile(filePath.Get());
+		
+		if (infile.IsOpen() == true) {
+			std::vector<char> buffer(infile.GetSize() + 1); // +1 to have space for the terminating zero
+			infile.Read(buffer.data(), infile.GetSize());
+			buffer[infile.GetSize()] = '\0'; // put in the string terminating zero
+			g_glbNotes.Get()->Set(&buffer[0]);
+		}
+		else { // reading failed
+			g_glbNotes.Get()->Set("");
+		}
+		
+	}
 
 	// instanciate the window if needed, can be NULL
 	g_notesWndMgr.Init();

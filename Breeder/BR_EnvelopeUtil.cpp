@@ -1456,6 +1456,8 @@ bool BR_Envelope::Commit (bool force /*=false*/)
 		// Prevents reselection of points in time selection
 		int envClickSegMode; GetConfig("envclicksegmode", envClickSegMode);
 		SetConfig("envclicksegmode", ClearBit(envClickSegMode, 6));
+		int pooledenvs; GetConfig("pooledenvs", pooledenvs);
+		SetConfig("pooledenvs", pooledenvs & (~12));
 
 		// Need to commit whole chunk
 		if (m_tempoMap)
@@ -1523,6 +1525,7 @@ bool BR_Envelope::Commit (bool force /*=false*/)
 		}
 
 		SetConfig("envclicksegmode", envClickSegMode);
+		SetConfig("pooledenvs", pooledenvs);
 		UpdateArrange();
 		m_update       = false;
 		m_pointsEdited = false;

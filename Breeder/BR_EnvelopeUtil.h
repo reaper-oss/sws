@@ -184,6 +184,23 @@ private:
 		EnvProperties ();
 		EnvProperties (const EnvProperties& properties);
 		EnvProperties& operator=  (const EnvProperties& properties);
+		vector<WDL_FastString> automationItems;
+		//POOLEDENVINST id pos length offset rate timeBased baseline(.5=0) amplitude loop ? ?
+		// For now we're just storing as strings in properties and not handling parsing of these
+		//struct AutomationItem
+		//{
+		//	int id;
+		//	double position;
+		//	double length;
+		//	double offset;
+		//	double rate;
+		//	bool timeBased;
+		//	double baseline;
+		//	double amplitude;
+		//	bool loop;
+		//	bool extra1; // Not sure what the last 2 parameters are
+		//	bool extra2; 
+		//};
 	};
 	struct EnvPoint
 	{

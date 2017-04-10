@@ -1894,6 +1894,10 @@ bool BR_Envelope::FillProperties () const
 					m_properties.type = TEMPO;
 					m_properties.paramType.Set(token);
 				}
+				else if (strstr(token, "POOLEDENVINST"))
+				{
+					m_properties.automationItems.push_back(WDL_FastString(token));
+				}
 
 				token = strtok(NULL, "\n");
 			}
@@ -1912,12 +1916,18 @@ WDL_FastString BR_Envelope::GetProperties ()
 	if (m_properties.filled || !m_envelope)
 	{
 		WDL_FastString properties;
-		properties.AppendFormatted(256, "%s\n", m_properties.paramType.Get());
+		properties.Append(m_properties.paramType.Get());
+		properties.Append("\n");
 		properties.AppendFormatted(256, "ACT %d\n", m_properties.active);
 		properties.AppendFormatted(256, "VIS %d %d %d\n", m_properties.visible, m_properties.lane, m_properties.visUnknown);
 		properties.AppendFormatted(256, "LANEHEIGHT %d %d\n", m_properties.height, m_properties.heightUnknown);
 		properties.AppendFormatted(256, "ARM %d\n", m_properties.armed);
 		properties.AppendFormatted(256, "DEFSHAPE %d %d %d\n", m_properties.shape, m_properties.shapeUnknown1, m_properties.shapeUnknown2);
+		for (int i = 0; i < (int)m_properties.automationItems.size(); ++i)
+		{
+			properties.Append(m_properties.automationItems[i].Get());
+			properties.Append("\n");
+		}
 		if (m_properties.faderMode != 0) properties.AppendFormatted(256, "VOLTYPE %d\n", 1);
 		return properties;
 	}
@@ -1959,26 +1969,27 @@ changed       (false)
 }
 
 BR_Envelope::EnvProperties::EnvProperties (const EnvProperties& properties) :
-active        (properties.active),
-visible       (properties.visible),
-lane          (properties.lane),
-visUnknown    (properties.visUnknown),
-height        (properties.height),
-heightUnknown (properties.heightUnknown),
-armed         (properties.armed),
-shape         (properties.shape),
-shapeUnknown1 (properties.shapeUnknown1),
-shapeUnknown2 (properties.shapeUnknown2),
-faderMode     (properties.faderMode),
-type          (properties.type),
-minValue      (properties.minValue),
-maxValue      (properties.maxValue),
-centerValue   (properties.centerValue),
-paramId       (properties.paramId),
-fxId          (properties.fxId),
-filled        (properties.filled),
-changed       (properties.changed),
-paramType     (properties.paramType)
+active          (properties.active),
+visible         (properties.visible),
+lane            (properties.lane),
+visUnknown      (properties.visUnknown),
+height          (properties.height),
+heightUnknown   (properties.heightUnknown),
+armed           (properties.armed),
+shape           (properties.shape),
+shapeUnknown1   (properties.shapeUnknown1),
+shapeUnknown2   (properties.shapeUnknown2),
+faderMode       (properties.faderMode),
+type            (properties.type),
+minValue        (properties.minValue),
+maxValue        (properties.maxValue),
+centerValue     (properties.centerValue),
+paramId         (properties.paramId),
+fxId            (properties.fxId),
+filled          (properties.filled),
+changed         (properties.changed),
+paramType       (properties.paramType),
+automationItems (properties.automationItems)
 {
 }
 
@@ -1987,38 +1998,39 @@ BR_Envelope::EnvProperties& BR_Envelope::EnvProperties::operator= (const EnvProp
 	if (this == &properties)
 		return *this;
 
-	active        = properties.active;
-	visible       = properties.visible;
-	lane          = properties.lane;
-	visUnknown    = properties.visUnknown;
-	height        = properties.height;
-	heightUnknown = properties.heightUnknown;
-	armed         = properties.armed;
-	shape         = properties.shape;
-	shapeUnknown1 = properties.shapeUnknown1;
-	shapeUnknown2 = properties.shapeUnknown2;
-	faderMode     = properties.faderMode;
-	type          = properties.type;
-	minValue      = properties.minValue;
-	maxValue      = properties.maxValue;
-	centerValue   = properties.centerValue;
-	paramId       = properties.paramId;
-	fxId          = properties.fxId;
-	filled        = properties.filled;
-	changed       = properties.changed;
+	active          = properties.active;
+	visible         = properties.visible;
+	lane            = properties.lane;
+	visUnknown      = properties.visUnknown;
+	height          = properties.height;
+	heightUnknown   = properties.heightUnknown;
+	armed           = properties.armed;
+	shape           = properties.shape;
+	shapeUnknown1   = properties.shapeUnknown1;
+	shapeUnknown2   = properties.shapeUnknown2;
+	faderMode       = properties.faderMode;
+	type            = properties.type;
+	minValue        = properties.minValue;
+	maxValue        = properties.maxValue;
+	centerValue     = properties.centerValue;
+	paramId         = properties.paramId;
+	fxId            = properties.fxId;
+	filled          = properties.filled;
+	changed         = properties.changed;
+	automationItems = properties.automationItems;
 	paramType.Set(&properties.paramType);
 
 	return *this;
 }
 
 BR_Envelope::EnvPoint::EnvPoint () :
-position (0),
-value    (0),
-bezier   (0),
-selected (false),
-shape    (0),
-sig      (0),
-partial  (0),
+position   (0),
+value      (0),
+bezier     (0),
+selected   (false),
+shape      (0),
+sig        (0),
+partial    (0),
 metronome1 (0),
 metronome2 (0)
 {
@@ -2038,13 +2050,13 @@ metronome2 (0)
 }
 
 BR_Envelope::EnvPoint::EnvPoint (double position) :
-position (position),
-value    (0),
-bezier   (0),
-selected (false),
-shape    (0),
-sig      (0),
-partial  (0),
+position   (position),
+value      (0),
+bezier     (0),
+selected   (false),
+shape      (0),
+sig        (0),
+partial    (0),
 metronome1 (0),
 metronome2 (0)
 {

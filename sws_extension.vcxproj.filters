@@ -657,6 +657,7 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="whatsnew.txt" />
+    <None Include="wdl.natvis" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Xenakios\AutoRename.cpp">

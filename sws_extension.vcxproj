@@ -359,6 +359,7 @@ echo Warning: sws_python.py generation failed (Perl installed?)
     <None Include="Resources\Cursor\sws_zoom_out.cur" />
     <None Include="Resources\Cursor\sws_zoom_undo.cur" />
     <None Include="version.rc2" />
+    <None Include="wdl.natvis" />
     <None Include="whatsnew.txt" />
   </ItemGroup>
   <ItemGroup>

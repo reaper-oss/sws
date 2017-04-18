@@ -2414,6 +2414,7 @@ int IsProjectTimebase(COMMAND_T* t)
 int IsGridTriplet(COMMAND_T* = NULL)
 {
 	double grid = *(double*)GetConfigVar("projgriddiv");
+	if (grid < 1e-8) return 0;
 	double n = 1.0/grid;
 
 	while (n < 3.0) { n *= 2.0; }
@@ -2425,6 +2426,7 @@ int IsGridTriplet(COMMAND_T* = NULL)
 int IsGridDotted(COMMAND_T* = NULL)
 {
 	double grid = *(double*)GetConfigVar("projgriddiv");
+	if (grid < 1e-8) return 0;
 	double n = 1.0/grid;
 
 	while (n < (2.0/3.0)) { n *= 2.0; }

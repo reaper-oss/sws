@@ -56,6 +56,7 @@
 #include "Breeder/BR.h"
 #include "Wol/wol.h"
 #include "nofish/nofish.h"
+#include "snooks/snooks.h"
 
 #define LOCALIZE_IMPORT_PREFIX "sws_"
 #ifdef LOCALIZE_IMPORT_PREFIX
@@ -1208,6 +1209,8 @@ error:
 			ERR_RETURN("Wol init error.")
 		if (!nofish_Init())
 			ERR_RETURN("nofish init error.")
+		if (!snooks_Init())
+			ERR_RETURN("snooks init error.")
 		if (!SNM_Init(rec)) // keep it as the last init (for cycle actions)
 			ERR_RETURN("S&M init error.")
 

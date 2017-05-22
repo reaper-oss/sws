@@ -372,6 +372,8 @@ echo Warning: sws_python.py generation failed (Perl installed?)
     <ClInclude Include="nofish\nofish.h" />
     <ClInclude Include="reascript_vararg.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="snooks\snooks.h" />
+    <ClInclude Include="snooks\SN_ReaScript.h" />
     <ClInclude Include="Wol\wol_Util.h" />
     <ClInclude Include="Wol\wol_Zoom.h" />
     <ClInclude Include="Xenakios\Parameters.h" />
@@ -547,6 +549,8 @@ echo Warning: sws_python.py generation failed (Perl installed?)
     <ClCompile Include="Breeder\BR_MouseUtil.cpp" />
     <ClCompile Include="libebur128\ebur128.cpp" />
     <ClCompile Include="nofish\nofish.cpp" />
+    <ClCompile Include="snooks\snooks.cpp" />
+    <ClCompile Include="snooks\SN_ReaScript.cpp" />
     <ClCompile Include="Wol\wol_Util.cpp" />
     <ClCompile Include="Wol\wol_Zoom.cpp" />
     <ClCompile Include="Xenakios\AutoRename.cpp" />

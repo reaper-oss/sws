@@ -33,6 +33,7 @@
 #include "SnM/SnM_Track.h"
 #include "Fingers/RprMidiTake.h"
 #include "Breeder/BR_ReaScript.h"
+#include "snooks/SN_ReaScript.h"
 
 
 // if _TEST_REASCRIPT_EXPORT is #define'd, you'll need to rename "APITESTFUNC" into "APIFUNC" in g_apidefs too
@@ -232,6 +233,8 @@ APIdef g_apidefs[] =
 	// #781
 	{ APIFUNC(NF_GetMediaItemMaxPeak), "double", "MediaItem*", "item", "Returns the greatest max. peak value of all channels of an audio item. Returns -150.0 if MIDI item or empty item.", },
 	{ APIFUNC(NF_GetMediaItemAverageRMS), "double", "MediaItem*", "item", "Returns the  greatest average RMS value of all channels of an audio item. Returns -150.0 if MIDI item or empty item.", },
+
+	{ APIFUNC(SN_FocusMIDIEditor), "void", "", "", "Focuses the active/open MIDI editor", },
 
 	{ NULL, } // denote end of table
 };

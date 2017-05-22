@@ -1,4 +1,4 @@
 #pragma once
 
 
-bool SN_FocusMIDIEditor();
+void SN_FocusMIDIEditor();

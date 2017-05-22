@@ -3,8 +3,7 @@
 #include "snooks.h"
 
 
-bool SN_FocusMIDIEditor()
+void SN_FocusMIDIEditor()
 {
 	FocusMIDIEditor(NULL);
-	return true;
 }

@@ -28,11 +28,35 @@
 #include "snooks.h"
 
 
+bool FocusWindow(HWND win)
+{
+	if (win != NULL)
+	{
+		if (SetFocus(win) != NULL) return true;
+	}
+	return false;
+}
+
+
 void FocusMIDIEditor(COMMAND_T* ct)
 {
   HWND win = MIDIEditor_GetActive();
   
-  if (win != NULL) SetFocus(win);
+  if (win != NULL)
+  {   
+	  // check if editor is docked
+	  bool* is_floating = false;
+	  int not_docked = -1; 
+	  if (DockIsChildOfDock(win, is_floating) == not_docked)
+	  {
+		  FocusWindow(win);
+	  } else {
+		  // focuses Midi editor in docker, but not
+		  // if docker is docked in main window
+		  DockWindowActivate(win);
+		  FocusWindow(win);
+	  }
+  }
 }
 
 

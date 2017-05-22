@@ -234,7 +234,7 @@ APIdef g_apidefs[] =
 	{ APIFUNC(NF_GetMediaItemMaxPeak), "double", "MediaItem*", "item", "Returns the greatest max. peak value of all channels of an audio item. Returns -150.0 if MIDI item or empty item.", },
 	{ APIFUNC(NF_GetMediaItemAverageRMS), "double", "MediaItem*", "item", "Returns the  greatest average RMS value of all channels of an audio item. Returns -150.0 if MIDI item or empty item.", },
 
-	{ APIFUNC(SN_FocusMIDIEditor), "void", "", "", "Focuses the active/open MIDI editor", },
+	{ APIFUNC(SN_FocusMIDIEditor), "void", "", "", "Focuses the active/open MIDI editor.", },
 
 	{ NULL, } // denote end of table
 };

@@ -1,5 +1,5 @@
 /******************************************************************************
-/ nofish.h
+/ snooks.h
 /
 / Copyright (c) 2016 The Human Race
 /
@@ -30,3 +30,4 @@
 int snooks_Init();
 
 void FocusMIDIEditor(COMMAND_T*);
+bool FocusWindow(HWND);

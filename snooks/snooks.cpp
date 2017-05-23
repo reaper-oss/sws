@@ -28,7 +28,16 @@
 #include "snooks.h"
 
 
-bool FocusWindow(HWND win)
+namespace SnooksStuff {
+	enum DockedState {
+		kNotDocked = -1
+	};
+}
+
+using namespace SnooksStuff;
+
+
+bool Snooks::FocusWindow(HWND win)
 {
 	if (win != NULL)
 	{
@@ -38,16 +47,15 @@ bool FocusWindow(HWND win)
 }
 
 
-void FocusMIDIEditor(COMMAND_T* ct)
+void Snooks::FocusMIDIEditor(COMMAND_T* ct)
 {
   HWND win = MIDIEditor_GetActive();
   
   if (win != NULL)
   {   
 	  // check if editor is docked
-	  bool* is_floating = false;
-	  int not_docked = -1; 
-	  if (DockIsChildOfDock(win, is_floating) == not_docked)
+	  bool is_floating = false;
+	  if (DockIsChildOfDock(win, &is_floating) == DockedState::kNotDocked)
 	  {
 		  FocusWindow(win);
 	  } else {
@@ -60,14 +68,16 @@ void FocusMIDIEditor(COMMAND_T* ct)
 }
 
 
-// Register commands
+// Register commands - must have !WANT_LOCAL... comments!
+
+//!WANT_LOCALIZE_1ST_STRING_BEGIN
 static COMMAND_T g_commandTable[] =
 {
-	{ { DEFACCEL, "SWS/SN: Focus MIDI Editor" }, "SN_FOCUS_MIDI_EDITOR", 
-					FocusMIDIEditor, NULL },
+	{ { DEFACCEL, "SWS/SN: Focus MIDI editor" }, "SN_FOCUS_MIDI_EDITOR", Snooks::FocusMIDIEditor, NULL },
 
 	{ {}, LAST_COMMAND, },
 };
+//!WANT_LOCALIZE_1ST_STRING_END
 
 
 int snooks_Init()

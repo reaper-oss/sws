@@ -24,10 +24,12 @@
 / OTHER DEALINGS IN THE SOFTWARE.
 /
 ******************************************************************************/
-
 #pragma once
 
 int snooks_Init();
 
-void FocusMIDIEditor(COMMAND_T*);
-bool FocusWindow(HWND);
+class Snooks {
+public:
+	static bool FocusWindow(HWND);
+	static void FocusMIDIEditor(COMMAND_T*);
+};

@@ -33,5 +33,5 @@
 
 void SN_FocusMIDIEditor()
 {
-	FocusMIDIEditor(NULL);
+	Snooks::FocusMIDIEditor(NULL);
 }

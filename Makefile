@@ -60,6 +60,7 @@ PADRE_OBJS         = Padre/padreActions.o Padre/padreEnvelopeProcessor.o Padre/p
 # Padre/padreRmeTotalmix.o
 PROJECT_OBJS       = Projects/ProjectList.o Projects/ProjectMgr.o
 SNAPSHOTS_OBJS     = Snapshots/SnapshotClass.o Snapshots/SnapshotMerge.o Snapshots/Snapshots.o
+SNOOKS_OBJS        = snooks/snooks.o snooks/SN_ReaScript.o
 SNM_OBJS           = SnM/SnM.o SnM/SnM_Chunk.o SnM/SnM_CSurf.o SnM/SnM_CueBuss.o SnM/SnM_Cyclactions.o SnM/SnM_Dlg.o SnM/SnM_Find.o \
                      SnM/SnM_FXChain.o SnM/SnM_FX.o SnM/SnM_Item.o SnM/SnM_LiveConfigs.o SnM/SnM_Marker.o SnM/SnM_ME.o SnM/SnM_Misc.o \
                      SnM/SnM_Notes.o SnM/SnM_Project.o SnM/SnM_RegionPlaylist.o SnM/SnM_Resources.o SnM/SnM_Routing.o SnM/SnM_Track.o \
@@ -75,7 +76,7 @@ XENAKIOS_OBJS      = Xenakios/AutoRename.o Xenakios/BroadCastWavCommands.o Xenak
 
 OBJS += $(WDL_OBJS) $(LICE_OBJS) $(REAPER_OBJS) $(SWS_OBJS) $(AUTORENDER_OBJS) $(BREEDER_OBJS) $(COLOR_OBJS) \
 	$(CONSOLE_OBJS) $(FINGERS_OBJS) $(FREEZE_OBJS) $(IX_OBJS) $(LIBEBUR_OBS) $(MARKERACTIONS_OBJS) \
-	$(MARKERLIST_OBJS) $(MISC_OBJS) $(PADRE_OBJS) $(PROJECT_OBJS) $(SNAPSHOTS_OBJS) $(SNM_OBJS) \
+	$(MARKERLIST_OBJS) $(MISC_OBJS) $(PADRE_OBJS) $(PROJECT_OBJS) $(SNAPSHOTS_OBJS) $(SNM_OBJS) $(SNOOKS_OBJ)\
         $(TRACKLIST_OBJS) $(UTILITY_OBJS) $(WOL_OBJS) $(XENAKIOS_OBJS) $(OBJECTSTATE_OBJS) nofish/nofish.o
 
 default: reaper_sws64.so

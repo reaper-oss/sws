@@ -1,7 +1,7 @@
 /******************************************************************************
 / snooks.h
 /
-/ Copyright (c) 2016 The Human Race
+/ Copyright (c) 2017 The Human Race
 /
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy

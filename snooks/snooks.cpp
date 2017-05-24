@@ -26,6 +26,7 @@
 
 #include "stdafx.h"
 #include "snooks.h"
+#include ".\Breeder\BR_Util.h"
 
 
 namespace SnooksStuff {
@@ -39,8 +40,7 @@ using namespace SnooksStuff;
 
 bool Snooks::FocusWindow(HWND win)
 {
-	if (win != NULL)
-	{
+	if (win != NULL) {
 		if (SetFocus(win) != NULL) return true;
 	}
 	return false;
@@ -51,18 +51,21 @@ void Snooks::FocusMIDIEditor(COMMAND_T* ct)
 {
   HWND win = MIDIEditor_GetActive();
   
-  if (win != NULL)
-  {   
+  if (win != NULL) {   
 	  // check if editor is docked
 	  bool is_floating = false;
-	  if (DockIsChildOfDock(win, &is_floating) == DockedState::kNotDocked)
-	  {
+	  if (DockIsChildOfDock(win, &is_floating) == DockedState::kNotDocked) {
 		  FocusWindow(win);
 	  } else {
-		  // focuses Midi editor in docker, but not
-		  // if docker is docked in main window
 		  DockWindowActivate(win);
-		  FocusWindow(win);
+		  if (is_floating) { 
+			  // MIDI editor is docked in another floating docker.
+			  FocusWindow(win);
+		  } else {
+			  // MIDI editor is docked in the main window (yay, tack!)
+			  HWND piano_view = GetPianoView(win);
+			  FocusWindow(piano_view);
+		  }
 	  }
   }
 }

@@ -49,25 +49,11 @@ bool Snooks::FocusWindow(HWND win)
 
 void Snooks::FocusMIDIEditor(COMMAND_T* ct)
 {
-  HWND win = MIDIEditor_GetActive();
-  
-  if (win != NULL) {   
-	  // check if editor is docked
-	  bool is_floating = false;
-	  if (DockIsChildOfDock(win, &is_floating) == DockedState::kNotDocked) {
-		  FocusWindow(win);
-	  } else {
-		  DockWindowActivate(win);
-		  if (is_floating) { 
-			  // MIDI editor is docked in another floating docker.
-			  FocusWindow(win);
-		  } else {
-			  // MIDI editor is docked in the main window (yay, tack!)
-			  HWND piano_view = GetPianoView(win);
-			  FocusWindow(piano_view);
-		  }
-	  }
-  }
+    HWND editor = MIDIEditor_GetActive();
+    if (editor != NULL) {   
+	    DockWindowActivate(editor); // in case it's docked and not visible
+	    FocusWindow(GetPianoView(editor));
+    }
 }
 
 

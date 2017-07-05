@@ -110,6 +110,9 @@
     <Filter Include="WDL\pnglib">
       <UniqueIdentifier>{1b1faaa3-24b0-4d7f-8c83-43e2f6107b78}</UniqueIdentifier>
     </Filter>
+    <Filter Include="cfillion">
+      <UniqueIdentifier>{5d477feb-887c-4b35-8861-9aee9e8e375c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -615,6 +618,9 @@
     </ClInclude>
     <ClInclude Include="..\WDL\WDL\zlib\zconf.h">
       <Filter>WDL\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="cfillion\cfillion.hpp">
+      <Filter>cfillion</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1237,6 +1243,9 @@
     </ClCompile>
     <ClCompile Include="..\WDL\WDL\zlib\zutil.c">
       <Filter>WDL\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="cfillion\cfillion.cpp">
+      <Filter>cfillion</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

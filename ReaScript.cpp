@@ -33,6 +33,7 @@
 #include "SnM/SnM_Track.h"
 #include "Fingers/RprMidiTake.h"
 #include "Breeder/BR_ReaScript.h"
+#include "cfillion/cfillion.hpp"
 
 
 // if _TEST_REASCRIPT_EXPORT is #define'd, you'll need to rename "APITESTFUNC" into "APIFUNC" in g_apidefs too
@@ -232,6 +233,9 @@ APIdef g_apidefs[] =
 	// #781
 	{ APIFUNC(NF_GetMediaItemMaxPeak), "double", "MediaItem*", "item", "Returns the greatest max. peak value of all channels of an audio item. Returns -150.0 if MIDI item or empty item.", },
 	{ APIFUNC(NF_GetMediaItemAverageRMS), "double", "MediaItem*", "item", "Returns the  greatest average RMS value of all channels of an audio item. Returns -150.0 if MIDI item or empty item.", },
+
+	{ APIFUNC(CF_SetClipboard), "void", "const char*", "str", "Write the given string into the system clipboard.", },
+	{ APIFUNC(CF_GetClipboard), "void", "char*,int", "buf,buf_sz", "Read the contents of the system clipboard.", },
 
 	{ NULL, } // denote end of table
 };

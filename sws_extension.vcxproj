@@ -114,6 +114,7 @@
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention />
       <TargetMachine>MachineX86</TargetMachine>
+      <AdditionalOptions>/pdbaltpath:%_PDB%</AdditionalOptions>
     </Link>
     <PostBuildEvent>
       <Message>
@@ -153,6 +154,7 @@ echo Copied to "$(REAPER_DIR)\plugins\$(TargetFilename)"</Command>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention />
       <TargetMachine>MachineX64</TargetMachine>
+      <AdditionalOptions>/pdbaltpath:%_PDB%</AdditionalOptions>
     </Link>
     <PostBuildEvent>
       <Message>

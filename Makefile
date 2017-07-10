@@ -7,7 +7,16 @@ else
 CFLAGS += -O2 -s
 endif
 
+TARGET = reaper_sws64.so
+
+ARCH := $(shell uname -m)
+
 CFLAGS += -I. -I../WDL -DSWELL_PROVIDED_BY_APP 
+
+ifneq ($(filter arm%,$(ARCH)),)
+  CFLAGS += -fsigned-char -mfpu=vfp -march=armv6t2
+  TARGET = reaper_sws_$(ARCH).so
+endif
   
 CFLAGS += -DNO_TAGLIB  #taglib seems to be pre-compiled, need more code?
 CXXFLAGS = $(CFLAGS)
@@ -78,7 +87,7 @@ OBJS += $(WDL_OBJS) $(LICE_OBJS) $(REAPER_OBJS) $(SWS_OBJS) $(AUTORENDER_OBJS) $
 	$(MARKERLIST_OBJS) $(MISC_OBJS) $(PADRE_OBJS) $(PROJECT_OBJS) $(SNAPSHOTS_OBJS) $(SNM_OBJS) \
         $(TRACKLIST_OBJS) $(UTILITY_OBJS) $(WOL_OBJS) $(XENAKIOS_OBJS) $(OBJECTSTATE_OBJS) nofish/nofish.o
 
-default: reaper_sws64.so
+default: $(TARGET)
 
 .PHONY: clean
 
@@ -91,16 +100,16 @@ sws_extension.o: sws_extension.cpp sws_extension.rc_mac_dlg
 jnetlib-util.o: $(WDL_PATH)/jnetlib/util.cpp
 	$(CXX) -c -o $@ $(CXXFLAGS) $< 
 
-reaper_sws64.so: $(OBJS)
+$(TARGET): $(OBJS)
 	$(CXX) -shared -o $@ $(CXXFLAGS) $(LFLAGS) $^ $(LINKEXTRA)
 
 clean: 
-	-rm $(OBJS) reaper_sws64.so
+	-rm $(OBJS) $(TARGET)
 
-install: reaper_sws64.so
+install: $(TARGET)
 	-mkdir ~/.REAPER/UserPlugins
-	-rm ~/.REAPER/UserPlugins/reaper_sws64.so
-	ln -sf $(shell pwd)/reaper_sws64.so ~/.REAPER/UserPlugins
+	-rm ~/.REAPER/UserPlugins/$(TARGET)
+	ln -sf $(shell pwd)/$(TARGET) ~/.REAPER/UserPlugins
 
 uninstall:
-	-rm ~/.REAPER/UserPlugins/reaper_sws64.so
+	-rm ~/.REAPER/UserPlugins/$(TARGET)

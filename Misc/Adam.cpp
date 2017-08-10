@@ -35,6 +35,9 @@
 #include "../Xenakios/XenakiosExts.h"
 #include "../SnM/SnM_Dlg.h"
 
+// #587
+#include "../nofish/nofish.h"
+
 
 //#include "Context.cpp"
 
@@ -893,6 +896,8 @@ void AWRecordConditional2(COMMAND_T* t)
 //Auto Group
 
 bool g_AWAutoGroup = false;
+bool g_AWAutoGroupRndColor = false;
+
 
 void AWToggleAutoGroup(COMMAND_T* = NULL)
 {
@@ -907,8 +912,24 @@ int AWIsAutoGroupEnabled(COMMAND_T* = NULL)
 	return g_AWAutoGroup;
 }
 
-bool g_AWIsRecording = false; // For auto group, remember if it was just recording
+// #587 option to set auto grouped items to random color (applies to takes recording mode only)
 
+void AWToggleAutoGroupRndColor(COMMAND_T* = NULL)
+{
+	g_AWAutoGroupRndColor = !g_AWAutoGroupRndColor;
+	char str[32];
+	sprintf(str, "%d", g_AWAutoGroupRndColor);
+	WritePrivateProfileString(SWS_INI, "AWAutoGroupTakesModeRndColor", str, get_ini_file());
+}
+
+int AWIsAutoGroupRndColorEnabled(COMMAND_T* = NULL)
+{
+	return g_AWAutoGroupRndColor;
+}
+
+// /#587
+
+bool g_AWIsRecording = false; // For auto group, remember if it was just recording
 
 
 void AWDoAutoGroup(bool rec)
@@ -925,25 +946,103 @@ void AWDoAutoGroup(bool rec)
 			WDL_TypedBuf<MediaItem*> items;
 			SWS_GetSelectedMediaItems(&items);
 
-			if (items.GetSize() > 1 && ((*(int*)GetConfigVar("autoxfade") & 4) || (*(int*)GetConfigVar("autoxfade") & 8))) // Don't group if not in tape or overlap record mode, takes mode is messy
+			if (items.GetSize() > 1 && ((*(int*)GetConfigVar("autoxfade") & 4) || (*(int*)GetConfigVar("autoxfade") & 8))) // (Don't group if not in tape or overlap record mode, takes mode is messy) NF: added new auto group in takes mode functionality below
 			{
+				// #587
+				// add undo point otherwise calling MainOnCommand(() below for auto coloring would create separate undo points
+				PreventUIRefresh(1);
+				Undo_BeginBlock();
+
 				//Find highest current group
 				int maxGroupId = AWCountItemGroups();
 
 				//Add one to assign new items to a new group
 				maxGroupId++;
 
-				for (int i = 0; i < items.GetSize(); i++)
+				for (int i = 0; i < items.GetSize(); i++) {
 					GetSetMediaItemInfo(items.Get()[i], "I_GROUPID", &maxGroupId);
 
+					// #587
+					// assign random colors if "Toggle assign random colors..." is enabled
+					if (g_AWAutoGroupRndColor)
+						Main_OnCommand(40706, 0); // set items to one random color
+				}
+					
+				Undo_EndBlock("SWS/AW/NF: Auto group newly recorded items / takes horizontally", -1);
+				PreventUIRefresh(-1);
 				UpdateArrange();
 			}
+
+			// #587 Auto Group in takes mode
+			else if (items.GetSize() > 1 && ((*(int*)GetConfigVar("autoxfade") & 1))) // takes mode
+			{
+				NFDoAutoGroupTakesMode();
+			}
+
 
 			// No longer recording so reset flag to false
 			g_AWIsRecording = false;
 		}
 	}
 }
+
+// #587
+void NFDoAutoGroupTakesMode()
+{
+	
+	PreventUIRefresh(1); // comment out for testing
+	NFTrackItemUtilities trackItemUtility;
+	// vector<int> v_selItemsOnTrack = trackItemUtility.NFGetIntVector();
+
+	trackItemUtility.NFSaveSelectedItems();
+	trackItemUtility.NFSaveSelectedTracks();
+
+	Undo_BeginBlock(); 
+	trackItemUtility.NFUnselectAllTracks();
+	trackItemUtility.NFSelectTracksOfSelectedItems();
+
+	int selected_tracks_count = CountSelectedTracks(0);
+
+	// LOOP TRHOUGH SELECTED TRACKS
+	for (int i = 0; i < selected_tracks_count; i++) {
+		MediaTrack* track = GetSelectedTrack(0, i);
+
+		// v_selItemsOnTrack.push_back(trackItemUtility.NFCountSelectedItems_OnTrack(track));
+		// public access
+		trackItemUtility.count_sel_items_on_track.push_back(trackItemUtility.NFCountSelectedItems_OnTrack(track));
+	}
+
+	int max_sel_item_on_track = trackItemUtility.GetMaxValfromIntVector(trackItemUtility.count_sel_items_on_track);
+
+
+	// LOOP COLUMN OF ITEMS ON TRACK
+	for (int j = 0; j < max_sel_item_on_track; j++) {
+		Main_OnCommand(40289, 0); // unselect all items
+
+		// LOOP TRHOUGH SELECTED TRACKS
+		for (int k = 0; k < selected_tracks_count; k++) {
+			// LOOP THROUGH ITEM IDX
+			MediaItem* item = trackItemUtility.NFGetSelectedItems_OnTrack(k, j); 
+			if (item != nullptr) {
+				SetMediaItemSelected(item, true);
+			}
+		}
+		if (g_AWAutoGroupRndColor)
+			Main_OnCommand(40706, 0); // set items to one random color
+		Main_OnCommand(40032, 0); // Group items
+	}
+	trackItemUtility.NFRestoreSelectedItems();
+	trackItemUtility.NFRestoreSelectedTracks();
+
+	Undo_EndBlock("SWS/AW/NF: Auto group newly recorded items / takes horizontally", -1);
+
+	PreventUIRefresh(-1); // comment out for testing
+	UpdateArrange();
+}
+
+// /#587
+
+
 
 // Deprecated actions, now you can use the native record/play/stop actions and they will obey the Auto Grouping toggle
 
@@ -2830,6 +2929,9 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/AW: Record Conditional (normal or time selection only, automatically group simultaneously recorded items)" },          "SWS_AWRECORDCONDGROUP",            AWRecordConditionalAutoGroup, },
 	{ { DEFACCEL, "SWS/AW: Record Conditional (normal/time selection/item selection, automatically group simultaneously recorded items)" },   "SWS_AWRECORDCONDGROUP2",           AWRecordConditionalAutoGroup2, },
 	{ { DEFACCEL, "SWS/AW: Play/Stop (automatically group simultaneously recorded items)" },                                                  "SWS_AWPLAYSTOPGRP",                AWPlayStopAutoGroup, },
+	// #587
+	{ { DEFACCEL, "SWS/AW/NF: Toggle assign random colors if auto group newly recorded items is enabled" },                                                           "SWS_AWNFAUTOGROUPCOLORSTOG",    AWToggleAutoGroupRndColor, NULL, 0, AWIsAutoGroupRndColorEnabled },
+
 
 	// Misc Item Actions
 	{ { DEFACCEL, "SWS/AW: Select from cursor to end of project (items and time selection)" },          "SWS_AWSELTOEND",                   AWSelectToEnd, },

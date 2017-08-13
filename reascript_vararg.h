@@ -551,5 +551,20 @@ static void* __vararg_NF_GetMediaItemAverageRMS(void** arglist, int numparms)
   return p;
 }
 
+static void* __vararg_NF_AnalyzeTakeLoudness_IntegratedOnly(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)NF_AnalyzeTakeLoudness_IntegratedOnly((MediaItem_Take*)arglist[0], (double*)arglist[1]);
+}
+
+static void* __vararg_NF_AnalyzeTakeLoudness(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)NF_AnalyzeTakeLoudness((MediaItem_Take*)arglist[0], (bool)arglist[1], (double*)arglist[2], (double*)arglist[3], (double*)arglist[4], (double*)arglist[5], (double*)arglist[6], (double*)arglist[7]);
+}
+
+static void* __vararg_NF_AnalyzeTakeLoudness2(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)NF_AnalyzeTakeLoudness2((MediaItem_Take*)arglist[0], (bool)arglist[1], (double*)arglist[2], (double*)arglist[3], (double*)arglist[4], (double*)arglist[5], (double*)arglist[6], (double*)arglist[7], (double*)arglist[8], (double*)arglist[9]);
+}
+
 
 #endif

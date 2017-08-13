@@ -1026,6 +1026,7 @@ error:
 		IMPAPI(StopTrackPreview);
 		IMPAPI(StopTrackPreview2);
 		IMPAPI(stringToGuid);
+		IMPAPI(TakeIsMIDI);
 		IMPAPI(time_precise);
 		IMPAPI(TimeMap_GetDividedBpmAtTime);
 		IMPAPI(TimeMap_GetTimeSigAtTime);

@@ -101,6 +101,14 @@ bool            BR_Win32_WritePrivateProfileString (const char* sectionName, con
 double			NF_GetMediaItemMaxPeak(MediaItem* item);
 double			NF_GetMediaItemAverageRMS(MediaItem* item);
 
+// #880
+bool			NF_AnalyzeTakeLoudness_IntegratedOnly(MediaItem_Take* take, double* lufsIntegratedOut);
+
+bool			NF_AnalyzeTakeLoudness(MediaItem_Take* take, bool analyzeTruePeak, double* lufsOut, double* rangeOut, double* truePeakOut, double* truePeakPosOut, double* shorTermMaxOut, double* momentaryMaxOut);
+
+bool			NF_AnalyzeTakeLoudness2(MediaItem_Take* take, bool analyzeTruePeak, double* lufsOut, double* rangeOut, double* truePeakOut, double* truePeakPosOut, double* shorTermMaxOut, double* momentaryMaxOut, double* shortTermMaxPosOut, double* momentaryMaxPosOut);
+
+
 /******************************************************************************
 * Big description!                                                            *
 ******************************************************************************/

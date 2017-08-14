@@ -912,14 +912,14 @@ int AWIsAutoGroupEnabled(COMMAND_T* = NULL)
 	return g_AWAutoGroup;
 }
 
-// #587 option to set auto grouped items to random color (applies to takes recording mode only)
+// #587 option to set auto grouped items to random color
 
 void AWToggleAutoGroupRndColor(COMMAND_T* = NULL)
 {
 	g_AWAutoGroupRndColor = !g_AWAutoGroupRndColor;
 	char str[32];
 	sprintf(str, "%d", g_AWAutoGroupRndColor);
-	WritePrivateProfileString(SWS_INI, "AWAutoGroupTakesModeRndColor", str, get_ini_file());
+	WritePrivateProfileString(SWS_INI, "AWAutoGroupRndColor", str, get_ini_file());
 }
 
 int AWIsAutoGroupRndColorEnabled(COMMAND_T* = NULL)
@@ -968,7 +968,7 @@ void AWDoAutoGroup(bool rec)
 						Main_OnCommand(40706, 0); // set items to one random color
 				}
 					
-				Undo_EndBlock("SWS/AW/NF: Auto group newly recorded items / takes horizontally", -1);
+				Undo_EndBlock("SWS/AW/NF: Auto group newly recorded items", -1);
 				PreventUIRefresh(-1);
 				UpdateArrange();
 			}
@@ -1035,7 +1035,7 @@ void NFDoAutoGroupTakesMode()
 	trackItemUtility.NFRestoreSelectedItems();
 	trackItemUtility.NFRestoreSelectedTracks();
 
-	Undo_EndBlock("SWS/AW/NF: Auto group newly recorded items / takes horizontally", -1);
+	Undo_EndBlock("SWS/AW/NF: Auto group newly recorded items", -1);
 
 	PreventUIRefresh(-1); // comment out for testing
 	UpdateArrange();
@@ -3021,6 +3021,9 @@ int AdamInit()
 	SWSRegisterCommands(g_commandTable);
 
 	g_AWAutoGroup = GetPrivateProfileInt(SWS_INI, "AWAutoGroup", 0, get_ini_file()) ? true : false;
+
+	// #587
+	g_AWAutoGroupRndColor = GetPrivateProfileInt(SWS_INI, "AWAutoGroupRndColor", 0, get_ini_file()) ? true : false;
 
 	return 1;
 }

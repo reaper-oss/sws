@@ -999,7 +999,7 @@ error:
 		IMPAPI(SetMediaItemInfo_Value);
 		IMPAPI(SetMediaItemLength);
 		IMPAPI(SetMediaItemPosition);
-		IMPAPI(SetMediaItemSelected)
+		IMPAPI(SetMediaItemSelected);
 		IMPAPI(SetMediaItemTakeInfo_Value);
 		IMPAPI(SetMediaTrackInfo_Value);
 		IMPAPI(SetMixerScroll);

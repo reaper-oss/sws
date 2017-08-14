@@ -987,6 +987,7 @@ void AWDoAutoGroup(bool rec)
 }
 
 // #587
+// replication of X-Raym's "Group selected items according to their order in selection per track.lua"
 void NFDoAutoGroupTakesMode()
 {
 	
@@ -1045,6 +1046,7 @@ void NFDoAutoGroupTakesMode()
 
 
 // Deprecated actions, now you can use the native record/play/stop actions and they will obey the Auto Grouping toggle
+// NF: these are now labeled as deprecated 
 
 void AWRecordAutoGroup(COMMAND_T* t)
 {
@@ -2925,10 +2927,10 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/AW: Record Conditional (normal or time selection only)" },                                                             "SWS_AWRECORDCOND",                 AWRecordConditional, },
 	{ { DEFACCEL, "SWS/AW: Record Conditional (normal, time selection or item selection)" },                                                  "SWS_AWRECORDCOND2",                AWRecordConditional2, },
 	{ { DEFACCEL, "SWS/AW: Toggle auto group newly recorded items" },                                                                         "SWS_AWAUTOGROUPTOG",               AWToggleAutoGroup, NULL, 0, AWIsAutoGroupEnabled},
-	{ { DEFACCEL, "SWS/AW: Record (automatically group simultaneously recorded items)" },                                                     "SWS_AWRECORDGROUP",                AWRecordAutoGroup, },
-	{ { DEFACCEL, "SWS/AW: Record Conditional (normal or time selection only, automatically group simultaneously recorded items)" },          "SWS_AWRECORDCONDGROUP",            AWRecordConditionalAutoGroup, },
-	{ { DEFACCEL, "SWS/AW: Record Conditional (normal/time selection/item selection, automatically group simultaneously recorded items)" },   "SWS_AWRECORDCONDGROUP2",           AWRecordConditionalAutoGroup2, },
-	{ { DEFACCEL, "SWS/AW: Play/Stop (automatically group simultaneously recorded items)" },                                                  "SWS_AWPLAYSTOPGRP",                AWPlayStopAutoGroup, },
+	{ { DEFACCEL, "SWS/AW: Record (automatically group simultaneously recorded items) (deprecated)" },                                                     "SWS_AWRECORDGROUP",                AWRecordAutoGroup, },
+	{ { DEFACCEL, "SWS/AW: Record Conditional (normal or time selection only, automatically group simultaneously recorded items) (deprecated)" },          "SWS_AWRECORDCONDGROUP",            AWRecordConditionalAutoGroup, },
+	{ { DEFACCEL, "SWS/AW: Record Conditional (normal/time selection/item selection, automatically group simultaneously recorded items) (deprecated)" },   "SWS_AWRECORDCONDGROUP2",           AWRecordConditionalAutoGroup2, },
+	{ { DEFACCEL, "SWS/AW: Play/Stop (automatically group simultaneously recorded items) (deprecated)" },                                                  "SWS_AWPLAYSTOPGRP",                AWPlayStopAutoGroup, },
 	// #587
 	{ { DEFACCEL, "SWS/AW/NF: Toggle assign random colors if auto group newly recorded items is enabled" },                                                           "SWS_AWNFAUTOGROUPCOLORSTOG",    AWToggleAutoGroupRndColor, NULL, 0, AWIsAutoGroupRndColorEnabled },
 

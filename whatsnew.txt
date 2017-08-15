@@ -1,3 +1,8 @@
+Actions
++New action (Main section):
+ - SWS/NF: Eraser tool (perform until shortcut released)
+   Note: Should be assigned to a shortcut key without modifier, for not clashing with other mouse modifiers
+
 !v2.9.7 featured build (September 28, 2017)
 Fixes:
 +Issue 897: Fix major issues with OSX 10.13 High Sierra

@@ -30,6 +30,11 @@
 #include "stdafx.h"
 #include "nofish.h"
 
+// Eraser Tool (continous action)
+#include "../Breeder/BR_ContinuousActions.h"
+#include "../Breeder/BR_Util.h" // get custom mouse cursor
+#include "../Breeder/BR_ReaScript.h" // BR_GetMouseCursorContext(), BR_ItemAtMouseCursor()
+
 
 //////////////////////////////////////////////////////////////////
 // Bypass FX (except VSTi) for selected tracks					//
@@ -282,6 +287,98 @@ const vector<int>& NFTrackItemUtilities::NFGetIntVector() const
 
 //////////////////////////////////////////////////////////////////
 // 																//
+// 					Eraser tool			            			//
+// 																//
+//////////////////////////////////////////////////////////////////
+
+
+char curMouseMod[32];
+
+// char windowOut[32];
+// char segmentOut[32];
+// char detailsOut[32];
+
+
+// called on start with init = true and on shortcut release with init = false. Return false to abort init.
+static bool EraserToolInit(COMMAND_T* ct, bool init)
+{
+
+	bool initSuccessful = true;
+
+	if (init) {
+		// get the currently assigned mm, store it and restore after this continious action is performed
+		GetMouseModifier("MM_CTX_ITEM", 0, curMouseMod, sizeof(curMouseMod)); // Media item left drag, Default action
+		SetMouseModifier("MM_CTX_ITEM", 0, "28"); // Marquee sel. items and time = 28
+		Undo_BeginBlock();
+		Main_OnCommand(40635, 0); // remove time sel.
+		// Main_OnCommand(40289, 0); // unsel. all items
+
+
+		// select item under mouse
+		// BR_GetMouseCursorContext(windowOut, sizeof(windowOut), segmentOut, sizeof(segmentOut), detailsOut, sizeof(detailsOut));
+		// MediaItem* item = BR_GetMouseCursorContext_Item();
+		MediaItem* item = BR_ItemAtMouseCursor(NULL);
+		if (item != NULL) {
+			Main_OnCommand(40289, 0); // unsel. all items
+			SetMediaItemSelected(item, true);
+			UpdateArrange();
+		}
+			
+	}
+
+	if (!init) {
+		// Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
+
+		Main_OnCommand(40289, 0); // unsel. all items
+		Main_OnCommand(40635, 0); // remove time sel.
+
+		Undo_EndBlock(SWS_CMD_SHORTNAME(ct), 0);
+
+		// set mm back to original when shortcut is released
+		SetMouseModifier("MM_CTX_ITEM", 0, curMouseMod);
+	}
+		
+	return initSuccessful;
+}
+
+static void DoEraserTool(COMMAND_T* ct)
+{
+	// BR_GetMouseCursorContext(windowOut, sizeof(windowOut), segmentOut, sizeof(segmentOut), detailsOut, sizeof(detailsOut));
+	// MediaItem* item = BR_GetMouseCursorContext_Item();
+	MediaItem* item = BR_ItemAtMouseCursor(NULL);
+	if (item != NULL) {
+		SetMediaItemSelected(item, true);
+		UpdateArrange();
+	}
+	
+	Main_OnCommand(40307, 0); // cut sel area of sel items
+}
+
+
+
+// this gets a custom mouse cursor for the action
+static HCURSOR EraserToolCursor(COMMAND_T* ct, int window)
+{
+	// if MAIN_RULER isn't added the custom mouse cursor doesn't appear immediately when pressing the assigned shortcut
+	// not sure why
+	if (window == BR_ContinuousAction::MAIN_ARRANGE || window == BR_ContinuousAction::MAIN_RULER)
+		return GetSwsMouseCursor(CURSOR_ERASER);
+	else
+		return NULL;
+}
+
+
+// called when shortcut is released, return undo flag to create undo point (or 0 for no undo point). If NULL, no undo point will get created
+static int EraserToolUndo(COMMAND_T* ct)
+{
+	return 0; // undo point is created in EraserToolInit() already
+}
+
+
+
+
+//////////////////////////////////////////////////////////////////
+// 																//
 // Register commands											//
 // 																//
 //////////////////////////////////////////////////////////////////
@@ -298,6 +395,26 @@ void Main_NFToggleDottedMIDI(COMMAND_T*)
 void ME_NFToggleTripletMIDI(COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd)
 ME_NFToggleDottedMIDI(COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd)
 */
+
+void NF_RegisterContinuousActions()
+{
+	EraserToolInit();
+}
+
+void EraserToolInit()
+{
+	//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
+	static COMMAND_T s_commandTable[] =
+	{
+		{ { DEFACCEL, "SWS/NF: Eraser tool (perform until shortcut released)" },      "NF_ERASER_TOOL", DoEraserTool, NULL, 0 },
+		{ {}, LAST_COMMAND }
+	};
+	//!WANT_LOCALIZE_1ST_STRING_END
+
+	int i = -1;
+	while (s_commandTable[++i].id != LAST_COMMAND)
+		ContinuousActionRegister(new BR_ContinuousAction(&s_commandTable[i], EraserToolInit, EraserToolUndo, EraserToolCursor));
+}
 
 
 static COMMAND_T g_commandTable[] =

@@ -1,3 +1,8 @@
+New ReaScript functions (Issue 880):
++NF_AnalyzeTakeLoudness_IntegratedOnly()
++NF_AnalyzeTakeLoudness()
++NF_AnalyzeTakeLoudness2()
+
 Fixes:
 +Issue 860: Fix automation item removed after SWS/wol: Set selected envelope height... actions
 

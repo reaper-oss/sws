@@ -113,6 +113,9 @@
     <Filter Include="snooks">
       <UniqueIdentifier>{639b4b57-0873-47f4-b7db-369a56229db6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="cfillion">
+      <UniqueIdentifier>{5d477feb-887c-4b35-8861-9aee9e8e375c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -624,6 +627,9 @@
     </ClInclude>
     <ClInclude Include="snooks\SN_ReaScript.h">
       <Filter>snooks</Filter>
+    </ClInclude>
+    <ClInclude Include="cfillion\cfillion.hpp">
+      <Filter>cfillion</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1253,6 +1259,9 @@
     </ClCompile>
     <ClCompile Include="snooks\SN_ReaScript.cpp">
       <Filter>snooks</Filter>
+    </ClCompile>
+    <ClCompile Include="cfillion\cfillion.cpp">
+      <Filter>cfillion</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

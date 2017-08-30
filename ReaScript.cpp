@@ -34,6 +34,7 @@
 #include "Fingers/RprMidiTake.h"
 #include "Breeder/BR_ReaScript.h"
 #include "snooks/SN_ReaScript.h"
+#include "cfillion/cfillion.hpp"
 
 
 // if _TEST_REASCRIPT_EXPORT is #define'd, you'll need to rename "APITESTFUNC" into "APIFUNC" in g_apidefs too
@@ -240,6 +241,8 @@ APIdef g_apidefs[] =
 	{ APIFUNC(NF_AnalyzeTakeLoudness2), "bool", "MediaItem_Take*,bool,double*,double*,double*,double*,double*,double*,double*,double*", "take,analyzeTruePeak,lufsIntegratedOut,rangeOut, truePeakOut,truePeakPosOut,shortTermMaxOut,momentaryMaxOut,shortTermMaxPosOut,momentaryMaxPosOut", "Same as <a href=\"#NF_AnalyzeTakeLoudness\">NF_AnalyzeTakeLoudness</a> but additionally returns shortTermMaxPos and momentaryMaxPos which can be jumped to with SetEditCurPos(). Note: shortTermMaxPos and momentaryMaxPos actaully indicate the beginning of time  <i>intervalls</i>, (3 sec. and 0.4 sec. resp.). " },
 	
 	{ APIFUNC(SN_FocusMIDIEditor), "void", "", "", "Focuses the active/open MIDI editor.", },
+	{ APIFUNC(CF_SetClipboard), "void", "const char*", "str", "Write the given string into the system clipboard.", },
+	{ APIFUNC(CF_GetClipboard), "void", "char*,int", "buf,buf_sz", "Read the contents of the system clipboard.", },
 	{ NULL, } // denote end of table
 };
 

@@ -1,3 +1,6 @@
++Issue 587: "SWS/AW: Toggle auto group newly recorded items" now also works in takes recording mode
+Added related action "SWS/AW/NF: Toggle assign random colors if auto group newly recorded items is enabled"
+
 Fixes:
 +Issue 865: Fix SWS/FNG: Set selected MIDI items name to first note - Ignores MIDI Octave Name Display Offset
 +Issue 860: Fix automation item removed after SWS/wol: Set selected envelope height... actions

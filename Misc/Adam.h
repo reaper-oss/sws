@@ -34,3 +34,6 @@ void UpdateTrackTimebaseToolbar();
 void UpdateItemTimebaseToolbar();
 void UpdateTimebaseToolbar();
 void AWDoAutoGroup(bool rec);
+
+// #587
+void NFDoAutoGroupTakesMode();

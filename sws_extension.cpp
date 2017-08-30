@@ -889,6 +889,7 @@ error:
 		IMPAPI(InsertEnvelopePoint); // v5pre4+
 		IMPAPI(InsertTrackAtIndex);
 		IMPAPI(IsMediaExtension);
+		IMPAPI(IsMediaItemSelected);
 		IMPAPI(kbd_enumerateActions);
 		IMPAPI(kbd_formatKeyName);
 		IMPAPI(kbd_getCommandName);
@@ -998,6 +999,7 @@ error:
 		IMPAPI(SetMediaItemInfo_Value);
 		IMPAPI(SetMediaItemLength);
 		IMPAPI(SetMediaItemPosition);
+		IMPAPI(SetMediaItemSelected);
 		IMPAPI(SetMediaItemTakeInfo_Value);
 		IMPAPI(SetMediaTrackInfo_Value);
 		IMPAPI(SetMixerScroll);

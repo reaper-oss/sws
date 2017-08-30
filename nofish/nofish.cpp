@@ -167,7 +167,122 @@ void ME_NFToggleTripletMIDI(COMMAND_T* _ct, int _val, int _valhw, int _relmode, 
 void ME_NFToggleDottedMIDI(COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd) {
 	Main_NFToggleDottedMIDI(_ct);
 }
-// /514
+// /#514
+
+
+// #587
+// save / restore selected tracks
+void NFTrackItemUtilities::NFSaveSelectedTracks()
+{
+	for (int i = 0; i < CountSelectedTracks(0); i++) {
+		// selTracks[i] = GetSelectedTrack(0, i);
+		selTracks.push_back(GetSelectedTrack(0, i));
+	}
+}
+
+void NFTrackItemUtilities::NFRestoreSelectedTracks()
+{
+	NFUnselectAllTracks();
+	for (int i = 0; i < selTracks.size(); i++) {
+		SetTrackSelected(selTracks[i], true);
+	}
+}
+
+// save / restore selected items
+void NFTrackItemUtilities::NFSaveSelectedItems()
+{
+	int z = CountSelectedMediaItems(0);
+	for (int i = 0; i < CountSelectedMediaItems(0); i++) {
+		// selItems[i] = GetSelectedMediaItem(0, i);
+		selItems.push_back(GetSelectedMediaItem(0, i));
+	}
+}
+
+void NFTrackItemUtilities::NFRestoreSelectedItems()
+{
+	Main_OnCommand(40289, 0); // Unselect all items
+	for (int i = 0; i < selItems.size(); i++) {
+		SetMediaItemSelected(selItems[i], true);
+	}
+}
+
+void NFTrackItemUtilities::NFUnselectAllTracks()
+{
+	MediaTrack* firstTrack = GetTrack(0, 0);
+	SetOnlyTrackSelected(firstTrack);
+	SetTrackSelected(firstTrack, false);
+}
+
+
+void NFTrackItemUtilities::NFSelectTracksOfSelectedItems()
+{
+	int selectedItemsCount = CountSelectedMediaItems(0);
+	for (int i = 0; i < selectedItemsCount; i++) {
+		MediaItem* item = GetSelectedMediaItem(0, i);
+		MediaTrack* track = GetMediaItem_Track(item);
+		SetTrackSelected(track, true);
+	}
+}
+
+
+int NFTrackItemUtilities::NFCountSelectedItems_OnTrack(MediaTrack* track)
+{
+	int count_items_on_track = CountTrackMediaItems(track);
+
+	int selected_item_on_track = 0;
+
+	for (int i = 0; i < count_items_on_track; i++) {
+		MediaItem* item = GetTrackMediaItem(track, i);
+
+		if (IsMediaItemSelected(item) == true) {
+			selected_item_on_track = selected_item_on_track + 1;
+		}
+	}
+	return selected_item_on_track;
+}
+
+MediaItem * NFTrackItemUtilities::NFGetSelectedItems_OnTrack(int track_sel_id, int idx) 
+{
+	MediaItem* get_sel_item = nullptr;
+	int previous_track_sel = 0;
+
+	if (idx < count_sel_items_on_track[track_sel_id]) {
+		int offset = 0;
+		for (int m = 0; m <= track_sel_id; m++) {
+			if (m > 0) {
+				previous_track_sel = count_sel_items_on_track[m - 1];
+			}
+			offset = offset + previous_track_sel;
+		}
+		
+		if (offset + idx < selItems.size())
+			get_sel_item = selItems[offset + idx]; 
+	}
+	return get_sel_item;
+}
+
+int NFTrackItemUtilities::GetMaxValfromIntVector(vector<int> intVector)
+{
+	int maxVal = 0;
+
+	for (int i = 0; i < intVector.size(); i++) {
+		int val = intVector[i];
+		if (val > maxVal) {
+			maxVal = val;
+		}
+	}
+	return maxVal;
+}
+
+/*
+const vector<int>& NFTrackItemUtilities::NFGetIntVector() const
+{
+	return count_sel_items_on_track;
+}
+*/
+
+// /#587
+
 
 
 //////////////////////////////////////////////////////////////////

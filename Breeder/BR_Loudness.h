@@ -75,6 +75,12 @@ public:
 	int GetTrackNumber ();
 	int GetItemNumber ();
 
+	// #880, pass trough to private functions
+	void NFGetPublicAnalyzeData(double* integrated, double* range, double* truePeak, double* truePeakPos, double* shortTermMax, double* momentaryMax, vector<double>* shortTermValues, vector<double>* momentaryValues);
+	void NFSetPublicDoTruePeak(bool doTruePeak);
+	bool NFGetPublicDoTruePeak();
+
+
 private:
 	struct AudioData
 	{
@@ -197,6 +203,9 @@ struct BR_NormalizeData
 
 void NormalizeAndShowProgress (BR_NormalizeData* normalizeData);
 
+// #880
+void NFAnalyzeItemsLoudnessAndShowProgress(BR_NormalizeData* normalizeData);
+
 /******************************************************************************
 * Analyze loudness list view                                                  *
 ******************************************************************************/
@@ -291,6 +300,12 @@ void LoudnessUpdate (bool updatePreferencesDlg = true);
 void NormalizeLoudness (COMMAND_T*);
 void AnalyzeLoudness (COMMAND_T*);
 void ToggleLoudnessPref (COMMAND_T*);
+
+// #880
+bool NFDoAnalyzeTakeLoudness_IntegratedOnly(MediaItem_Take*, double* lufsIntegrated);
+bool NFDoAnalyzeTakeLoudness(MediaItem_Take*, bool analyzeTruePeak, double* lufsIntegrated, double* range, double* truePeak, double* truePeakPos, double* shortTermMax, double* momentaryMax);
+bool NFDoAnalyzeTakeLoudness2(MediaItem_Take*, bool analyzeTruePeak, double* lufsIntegrated, double* range, double* truePeak, double* truePeakPos, double* shortTermMax, double* momentaryMax, double* shortTermMaxPos, double* momentaryMaxPos); // adds shortTermMaxPos and momentaryMaxPos
+
 
 /******************************************************************************
 * Toggle states                                                               *

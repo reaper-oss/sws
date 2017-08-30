@@ -38,6 +38,9 @@
 // #781
 #include "../Misc/Analysis.h"
 
+// #880
+#include "../Breeder/BR_Loudness.h"
+
 /******************************************************************************
 * Globals                                                                     *
 ******************************************************************************/
@@ -938,5 +941,21 @@ double NF_GetMediaItemAverageRMS(MediaItem* item)
 {
 	double avrgRMS = GetMediaItemAverageRMS(item);
 	return avrgRMS;
+}
+
+// #880
+bool NF_AnalyzeTakeLoudness_IntegratedOnly(MediaItem_Take * take, double* lufsIntegratedOut)
+{
+	return NFDoAnalyzeTakeLoudness_IntegratedOnly(take, lufsIntegratedOut);
+}
+
+bool NF_AnalyzeTakeLoudness(MediaItem_Take * take, bool analyzeTruePeak, double* lufsIntegratedOut, double* rangeOut, double* truePeakOut, double* truePeakPosOut, double* shorTermMaxOut, double* momentaryMaxOut)
+{
+	return NFDoAnalyzeTakeLoudness(take, analyzeTruePeak, lufsIntegratedOut, rangeOut, truePeakOut, truePeakPosOut, shorTermMaxOut, momentaryMaxOut);
+}
+
+bool NF_AnalyzeTakeLoudness2(MediaItem_Take * take, bool analyzeTruePeak, double* lufsIntegratedOut, double* rangeOut, double* truePeakOut, double* truePeakPosOut, double* shorTermMaxOut, double* momentaryMaxOut, double* shortTermMaxPosOut, double* momentaryMaxPosOut)
+{
+	return NFDoAnalyzeTakeLoudness2(take, analyzeTruePeak, lufsIntegratedOut, rangeOut, truePeakOut, truePeakPosOut, shorTermMaxOut, momentaryMaxOut, shortTermMaxPosOut, momentaryMaxPosOut);
 }
 

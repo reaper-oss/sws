@@ -3977,6 +3977,319 @@ void NormalizeLoudness (COMMAND_T* ct)
 	}
 }
 
+
+
+//////////////////////////////////////////////////////////////////
+// 																//
+// 		#880 Export Loudness analysis to ReaScript       		//
+// 																//
+//////////////////////////////////////////////////////////////////
+
+
+
+void BR_LoudnessObject::NFGetPublicAnalyzeData(double * integrated, double * range, double * truePeak, double * truePeakPos, double * shortTermMax, double * momentaryMax, vector<double>* shortTermValues, vector<double>* momentaryValues)
+{
+	GetAnalyzeData(integrated, range, truePeak, truePeakPos, shortTermMax, momentaryMax, shortTermValues, momentaryValues);
+}
+
+void BR_LoudnessObject::NFSetPublicDoTruePeak(bool doTruePeak)
+{
+	SetDoTruePeak(doTruePeak);
+}
+
+bool BR_LoudnessObject::NFGetPublicDoTruePeak()
+{
+	return GetDoTruePeak();
+}
+
+
+static WDL_DLGRET NFAnalyzeLUFSProgressProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, uMsg, wParam, lParam))
+		return r;
+
+	static BR_NormalizeData* s_normalizeData = NULL;
+	static BR_LoudnessObject* s_currentItem = NULL;
+
+	static int  s_currentItemId = 0;
+	static bool s_analyzeInProgress = false;
+	static double s_itemsLen = 0;
+	static double s_currentItemLen = 0;
+	static double s_finishedItemsLen = 0;
+
+#ifndef _WIN32
+	static bool s_positionSet = false;
+#endif
+
+	switch (uMsg)
+	{
+	case WM_INITDIALOG:
+	{
+		// Reset variables
+		s_normalizeData = (BR_NormalizeData*)lParam;
+		if (!s_normalizeData || !s_normalizeData->items)
+		{
+			EndDialog(hwnd, 0);
+			return 0;
+		}
+
+		s_currentItemId = 0;
+		s_analyzeInProgress = false;
+		s_itemsLen = 0;
+		s_currentItemLen = 0;
+		s_finishedItemsLen = 0;
+
+		// Get progress data
+		for (int i = 0; i < s_normalizeData->items->GetSize(); ++i)
+		{
+			if (BR_LoudnessObject* item = s_normalizeData->items->Get(i))
+				s_itemsLen += item->GetAudioLength();
+		}
+		if (s_itemsLen == 0) s_itemsLen = 1; // to prevent division by zero
+
+
+#ifdef _WIN32
+		CenterDialog(hwnd, g_hwndParent, HWND_TOPMOST);
+#else
+		s_positionSet = false;
+#endif
+
+		// Start normalizing
+		SetTimer(hwnd, ANALYZE_TIMER_FREQ, 100, NULL);
+	}
+	break;
+
+#ifndef _WIN32
+	case WM_ACTIVATE:
+	{
+		// SetWindowPos doesn't seem to work in WM_INITDIALOG on OSX
+		// when creating a dialog with DialogBox so call here
+		if (!s_positionSet)
+			CenterDialog(hwnd, GetParent(hwnd), HWND_TOPMOST);
+		s_positionSet = true;
+	}
+	break;
+#endif
+
+	case WM_COMMAND:
+	{
+		switch (LOWORD(wParam))
+		{
+		case IDCANCEL:
+		{
+			KillTimer(hwnd, 1);
+			s_normalizeData = NULL;
+			if (s_currentItem)
+				s_currentItem->AbortAnalyze();
+			EndDialog(hwnd, 0);
+		}
+		break;
+		}
+	}
+	break;
+
+	case WM_TIMER:
+	{
+		if (!s_normalizeData)
+			return 0;
+
+		if (!s_analyzeInProgress)
+		{
+			// No more objects to analyze, normalize them
+			if (s_currentItemId >= s_normalizeData->items->GetSize())
+			
+			{
+				s_normalizeData->normalized = true;
+				UpdateTimeline();
+				EndDialog(hwnd, 0);
+				return 0;
+			}
+			
+
+			// Start analysis of the next item
+			if ((s_currentItem = s_normalizeData->items->Get(s_currentItemId)))
+			{
+				s_currentItemLen = s_currentItem->GetAudioLength();
+				// s_currentItem->Analyze(s_normalizeData->quickMode, false); // actual analyzing
+				s_currentItem->Analyze(s_normalizeData->quickMode, s_normalizeData->items->Get(s_currentItemId)->NFGetPublicDoTruePeak());
+
+				s_analyzeInProgress = true;
+			}
+			else
+				++s_currentItemId;
+		}
+		else
+		{
+			if (s_currentItem->IsRunning())
+			{
+				double progress = (s_finishedItemsLen + s_currentItemLen * s_currentItem->GetProgress()) / s_itemsLen;
+				SendMessage(GetDlgItem(hwnd, IDC_PROGRESS), PBM_SETPOS, (int)(progress * 100), 0);
+			}
+			else
+			{
+				s_finishedItemsLen += s_currentItemLen;
+				double progress = s_finishedItemsLen / s_itemsLen;
+				SendMessage(GetDlgItem(hwnd, IDC_PROGRESS), PBM_SETPOS, (int)(progress * 100), 0);
+
+				s_analyzeInProgress = false;
+				++s_currentItemId;
+			}
+		}
+	}
+	break;
+
+	case WM_DESTROY:
+	{
+		KillTimer(hwnd, 1);
+		s_normalizeData = NULL;
+		if (s_currentItem)
+			s_currentItem->AbortAnalyze();
+		s_analyzeInProgress = false;
+	}
+	break;
+	}
+	return 0;
+}
+
+
+void NFAnalyzeItemsLoudnessAndShowProgress(BR_NormalizeData* analyzeData)
+{
+	static bool s_normalizeInProgress = false;
+
+	if (!s_normalizeInProgress)
+	{
+		// Kill all normalize dialogs prior to normalizing
+		if (BR_AnalyzeLoudnessWnd* dialog = g_loudnessWndManager.Get())
+			dialog->KillNormalizeDlg();
+		if (g_normalizeWnd)
+		{
+			DestroyWindow(g_normalizeWnd);
+			g_normalizeWnd = NULL;
+			// RefreshToolbar(NamedCommandLookup("_BR_NORMALIZE_LOUDNESS_ITEMS"));
+		}
+
+		s_normalizeInProgress = true;
+		DialogBoxParam(g_hInst, MAKEINTRESOURCE(IDD_NF_LOUDNESS_ANALYZE_PROGRESS), g_hwndParent, NFAnalyzeLUFSProgressProc, (LPARAM)analyzeData);
+		s_normalizeInProgress = false;
+	}
+}
+
+bool NFDoAnalyzeTakeLoudness_IntegratedOnly(MediaItem_Take* take, double* lufsIntegrated)
+{
+	bool success = false;
+
+	if (take) {
+		if (TakeIsMIDI(take)) // check for MIDI takes
+			return false;
+
+		WDL_PtrList_DeleteOnDestroy<BR_LoudnessObject> objects;
+		objects.Add(new BR_LoudnessObject(take));
+
+		bool isTargetValid = objects.Get(0)->CheckTarget(take);
+		if (isTargetValid) {
+			BR_NormalizeData analyzeData = { &objects, -23, true, false }; // quick mode, integrated only, targetLUFS isn't used here
+			NFAnalyzeItemsLoudnessAndShowProgress(&analyzeData);
+
+			if (analyzeData.normalized) { // here: checks if analysis is completed, returns false if e.g. user cancels analyse process
+				double returnLUFSintegrated;
+
+				objects.Get(0)->NFGetPublicAnalyzeData(&returnLUFSintegrated, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+				WritePtr(lufsIntegrated, returnLUFSintegrated);
+
+				success = true;
+			}	
+		}
+	}
+	return success;
+}
+
+bool NFDoAnalyzeTakeLoudness(MediaItem_Take* take, bool analyzeTruePeak, double* lufsIntegrated, double* range, double* truePeak, double* truePeakPos, double* shortTermMax, double* momentaryMax)
+{
+	bool success = false;
+
+	if (take) {
+		if (TakeIsMIDI(take)) // check for MIDI takes
+			return false;
+
+		WDL_PtrList_DeleteOnDestroy<BR_LoudnessObject> objects;
+		objects.Add(new BR_LoudnessObject(take));
+
+		bool isTargetValid = objects.Get(0)->CheckTarget(take);
+		if (isTargetValid) {
+			objects.Get(0)->NFSetPublicDoTruePeak(analyzeTruePeak); 
+			BR_NormalizeData analyzeData = { &objects, -23, false, false }; // full analyze mode
+			NFAnalyzeItemsLoudnessAndShowProgress(&analyzeData);
+
+			if (analyzeData.normalized) {
+				double returnLUFSintegrated, returnRange, returnTruePeak, returnTruePeakPos, returnShortTermMax, returnMomentaryMax;
+
+				objects.Get(0)->NFGetPublicAnalyzeData(&returnLUFSintegrated, &returnRange, &returnTruePeak, &returnTruePeakPos, &returnShortTermMax, &returnMomentaryMax, NULL, NULL);
+
+				WritePtr(lufsIntegrated, returnLUFSintegrated);
+				WritePtr(range, returnRange);
+				WritePtr(truePeak, returnTruePeak);
+				WritePtr(truePeakPos, returnTruePeakPos);
+				WritePtr(shortTermMax, returnShortTermMax);
+				WritePtr(momentaryMax, returnMomentaryMax);
+
+				success = true;
+			}
+		}
+	}
+	return success;
+}
+
+bool NFDoAnalyzeTakeLoudness2(MediaItem_Take* take, bool analyzeTruePeak, double* lufsIntegrated, double* range, double* truePeak, double* truePeakPos, double* shortTermMax, double* momentaryMax, double* shortTermMaxPos, double* momentaryMaxPos)
+{
+	bool success = false;
+
+	if (take) {
+		if (TakeIsMIDI(take)) // check for MIDI takes
+			return false;
+
+		WDL_PtrList_DeleteOnDestroy<BR_LoudnessObject> objects;
+		objects.Add(new BR_LoudnessObject(take));
+
+		bool isTargetValid = objects.Get(0)->CheckTarget(take);
+		if (isTargetValid) {
+			objects.Get(0)->NFSetPublicDoTruePeak(analyzeTruePeak);
+			BR_NormalizeData analyzeData = { &objects, -23, false, false }; // full analyze mode
+			NFAnalyzeItemsLoudnessAndShowProgress(&analyzeData);
+
+			if (analyzeData.normalized) {
+				double returnLUFSintegrated, returnRange, returnTruePeak, returnTruePeakPos, returnShortTermMax, returnMomentaryMax, returnShortTermMaxPos, returnMomentaryMaxPos;
+
+				objects.Get(0)->NFGetPublicAnalyzeData(&returnLUFSintegrated, &returnRange, &returnTruePeak, &returnTruePeakPos, &returnShortTermMax, &returnMomentaryMax, NULL, NULL);
+
+				returnShortTermMaxPos = objects.Get(0)->GetMaxShorttermPos(true); // use project time
+				returnMomentaryMaxPos = objects.Get(0)->GetMaxMomentaryPos(true);
+
+
+				WritePtr(lufsIntegrated, returnLUFSintegrated);
+				WritePtr(range, returnRange);
+				WritePtr(truePeak, returnTruePeak);
+				WritePtr(truePeakPos, returnTruePeakPos);
+				WritePtr(shortTermMax, returnShortTermMax);
+				WritePtr(momentaryMax, returnMomentaryMax);
+
+				WritePtr(shortTermMaxPos, returnShortTermMaxPos);
+				WritePtr(momentaryMaxPos, returnMomentaryMaxPos);
+
+				success = true;
+			}
+		}
+	}
+	return success;
+}
+
+
+//////////////////////////////////////////////////////////////////
+// 		E N D													//
+// 		#880 Export Loudness analysis to ReaScript       		//
+// 																//
+//////////////////////////////////////////////////////////////////
+
+
 void AnalyzeLoudness (COMMAND_T* ct)
 {
 	if (BR_AnalyzeLoudnessWnd* dialog = g_loudnessWndManager.Create())
@@ -3988,6 +4301,8 @@ void ToggleLoudnessPref (COMMAND_T* ct)
 	g_pref.ShowPreferenceDlg(!g_pref.IsPreferenceDlgVisible());
 	RefreshToolbar(NamedCommandLookup("_BR_LOUDNESS_PREF"));
 }
+
+
 
 /******************************************************************************
 * Toggle states                                                               *

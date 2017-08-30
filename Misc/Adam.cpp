@@ -1024,7 +1024,7 @@ void NFDoAutoGroupTakesMode()
 		for (int k = 0; k < selected_tracks_count; k++) {
 			// LOOP THROUGH ITEM IDX
 			MediaItem* item = trackItemUtility.NFGetSelectedItems_OnTrack(k, j); 
-			if (item != nullptr) {
+			if (item != NULL) {
 				SetMediaItemSelected(item, true);
 			}
 		}

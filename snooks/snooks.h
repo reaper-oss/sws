@@ -30,6 +30,6 @@ int snooks_Init();
 
 class Snooks {
 public:
-	static bool FocusWindow(HWND);
+	static void FocusWindow(HWND);
 	static void FocusMIDIEditor(COMMAND_T*);
 };

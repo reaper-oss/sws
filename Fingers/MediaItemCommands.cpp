@@ -11,7 +11,7 @@
 #include "RprMidiTake.h"
 
 // #865, for SNM_GetIntConfigVar()
-#include "SnM\SnM_Misc.h"
+#include "../SnM/SnM_Misc.h"
 
 void CmdCleanItemLengths(int flag, void *data);
 void CmdLegatoItemLengths(int flag, void *data);

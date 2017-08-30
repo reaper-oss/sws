@@ -26,7 +26,7 @@
 
 #include "stdafx.h"
 #include "snooks.h"
-#include ".\Breeder\BR_Util.h"
+#include "../Breeder/BR_Util.h"
 
 
 namespace SnooksStuff {
@@ -38,12 +38,10 @@ namespace SnooksStuff {
 using namespace SnooksStuff;
 
 
-bool Snooks::FocusWindow(HWND win)
+void Snooks::FocusWindow(HWND win)
 {
-	if (win != NULL) {
-		if (SetFocus(win) != NULL) return true;
-	}
-	return false;
+	if (win != NULL)
+		SetFocus(win);
 }
 
 

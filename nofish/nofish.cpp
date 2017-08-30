@@ -173,7 +173,6 @@ void NFTrackItemUtilities::NFRestoreSelectedTracks()
 // save / restore selected items
 void NFTrackItemUtilities::NFSaveSelectedItems()
 {
-	int z = CountSelectedMediaItems(0);
 	for (int i = 0; i < CountSelectedMediaItems(0); i++) {
 		// selItems[i] = GetSelectedMediaItem(0, i);
 		selItems.push_back(GetSelectedMediaItem(0, i));
@@ -225,7 +224,7 @@ int NFTrackItemUtilities::NFCountSelectedItems_OnTrack(MediaTrack* track)
 
 MediaItem * NFTrackItemUtilities::NFGetSelectedItems_OnTrack(int track_sel_id, int idx) 
 {
-	MediaItem* get_sel_item = nullptr;
+	MediaItem* get_sel_item = NULL;
 	int previous_track_sel = 0;
 
 	if (idx < count_sel_items_on_track[track_sel_id]) {

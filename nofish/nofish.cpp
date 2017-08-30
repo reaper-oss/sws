@@ -37,39 +37,21 @@
 // http://forum.cockos.com/showpost.php?p=1475585&postcount=6	//
 //////////////////////////////////////////////////////////////////
 
-/*
-remark for SWS: I've just seen now the comment to not use these O(n) actions in loops, sorry
-won't do again
-*/
+// SWS: Fixed O(n) actions, no worries nofish
 void BypassFXexceptVSTiForSelTracks(COMMAND_T* ct)
 {
 	Undo_BeginBlock();
-	for (int i = 0; i < CountSelectedTracks(0); i++) { // loop through sel. tracks
-		MediaTrack* track = GetSelectedTrack(0, i); // get track PTR
-			if (track) { // check for NULLPTR
-			int vsti_index = TrackFX_GetInstrument(track); // Get position of first VSTi on current track
-			for (int j = 0; j < TrackFX_GetCount(track); j++) { // loop through FX on current track
-				if (j != vsti_index) { // if current FX is not a VSTi...
-					TrackFX_SetEnabled(track, j, 0); // ...bypass current FX
-				}
+	WDL_TypedBuf<MediaTrack*> selTracks;
+	SWS_GetSelectedTracks(&selTracks, false);
+	for (int i = 0; i < selTracks.GetSize(); i++) {
+		MediaTrack* track = selTracks.Get()[i];
+		int vsti_index = TrackFX_GetInstrument(track); // Get position of first VSTi on current track
+		for (int j = 0; j < TrackFX_GetCount(track); j++) { // loop through FX on current track
+			if (j != vsti_index) { // if current FX is not a VSTi...
+				TrackFX_SetEnabled(track, j, 0); // ...bypass current FX
 			}
 		}
 	}
-	// a1cab2f6: also check master track
-	MediaTrack* mtrack = GetMasterTrack(0);
-	if (mtrack) 
-	{
-		if (GetMediaTrackInfo_Value(mtrack, "I_SELECTED") != 0) {
-			int vsti_index = TrackFX_GetInstrument(mtrack); // Get position of first VSTi on current track
-			for (int j = 0; j < TrackFX_GetCount(mtrack); j++) { // loop through FX on current track
-				if (j != vsti_index) { // if current FX is not a VSTi...
-					TrackFX_SetEnabled(mtrack, j, 0); // ...bypass current FX
-				}
-			}
-		}
-	}
-	
-
 	Undo_EndBlock(SWS_CMD_SHORTNAME(ct), 0);
 }
 
@@ -183,7 +165,7 @@ void NFTrackItemUtilities::NFSaveSelectedTracks()
 void NFTrackItemUtilities::NFRestoreSelectedTracks()
 {
 	NFUnselectAllTracks();
-	for (int i = 0; i < selTracks.size(); i++) {
+	for (size_t i = 0; i < selTracks.size(); i++) {
 		SetTrackSelected(selTracks[i], true);
 	}
 }
@@ -201,7 +183,7 @@ void NFTrackItemUtilities::NFSaveSelectedItems()
 void NFTrackItemUtilities::NFRestoreSelectedItems()
 {
 	Main_OnCommand(40289, 0); // Unselect all items
-	for (int i = 0; i < selItems.size(); i++) {
+	for (size_t i = 0; i < selItems.size(); i++) {
 		SetMediaItemSelected(selItems[i], true);
 	}
 }
@@ -247,7 +229,7 @@ MediaItem * NFTrackItemUtilities::NFGetSelectedItems_OnTrack(int track_sel_id, i
 	int previous_track_sel = 0;
 
 	if (idx < count_sel_items_on_track[track_sel_id]) {
-		int offset = 0;
+		size_t offset = 0;
 		for (int m = 0; m <= track_sel_id; m++) {
 			if (m > 0) {
 				previous_track_sel = count_sel_items_on_track[m - 1];
@@ -265,7 +247,7 @@ int NFTrackItemUtilities::GetMaxValfromIntVector(vector<int> intVector)
 {
 	int maxVal = 0;
 
-	for (int i = 0; i < intVector.size(); i++) {
+	for (size_t i = 0; i < intVector.size(); i++) {
 		int val = intVector[i];
 		if (val > maxVal) {
 			maxVal = val;

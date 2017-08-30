@@ -33,6 +33,7 @@
 #include "SnM/SnM_Track.h"
 #include "Fingers/RprMidiTake.h"
 #include "Breeder/BR_ReaScript.h"
+#include "snooks/SN_ReaScript.h"
 
 
 // if _TEST_REASCRIPT_EXPORT is #define'd, you'll need to rename "APITESTFUNC" into "APIFUNC" in g_apidefs too
@@ -235,11 +236,10 @@ APIdef g_apidefs[] =
 
 	// #880
 	{ APIFUNC(NF_AnalyzeTakeLoudness_IntegratedOnly), "bool", "MediaItem_Take*,double*", "take,lufsIntegratedOut", "Does LUFS integrated analysis only. Faster than full loudness analysis (<a href=\"#NF_AnalyzeTakeLoudness\">NF_AnalyzeTakeLoudness</a>) . Use this if only LUFS integrated is required." }, 
-
 	{ APIFUNC(NF_AnalyzeTakeLoudness), "bool", "MediaItem_Take*,bool,double*,double*,double*,double*,double*,double*", "take,analyzeTruePeak,lufsIntegratedOut,rangeOut, truePeakOut,truePeakPosOut,shortTermMaxOut,momentaryMaxOut", "Full loudness analysis. retval: returns true on successful analysis, false on MIDI take or when analysis failed for some reason. analyzeTruePeak=true: Also do true peak analysis. Returns true peak value and true peak position which can be jumped to with SetEditCurPos(). Considerably slower than without true peak analysis (since it uses oversampling). Note: Short term uses a time window of 3 sec. for calculation. So for items shorter than this shortTermMaxOut can't be calculated. Momentary uses a time window of 0.4 sec. " }, 
-
 	{ APIFUNC(NF_AnalyzeTakeLoudness2), "bool", "MediaItem_Take*,bool,double*,double*,double*,double*,double*,double*,double*,double*", "take,analyzeTruePeak,lufsIntegratedOut,rangeOut, truePeakOut,truePeakPosOut,shortTermMaxOut,momentaryMaxOut,shortTermMaxPosOut,momentaryMaxPosOut", "Same as <a href=\"#NF_AnalyzeTakeLoudness\">NF_AnalyzeTakeLoudness</a> but additionally returns shortTermMaxPos and momentaryMaxPos which can be jumped to with SetEditCurPos(). Note: shortTermMaxPos and momentaryMaxPos actaully indicate the beginning of time  <i>intervalls</i>, (3 sec. and 0.4 sec. resp.). " },
 	
+	{ APIFUNC(SN_FocusMIDIEditor), "void", "", "", "Focuses the active/open MIDI editor.", },
 	{ NULL, } // denote end of table
 };
 

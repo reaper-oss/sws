@@ -25,9 +25,8 @@
 /
 ******************************************************************************/
 
-#include "cfillion.hpp"
-
 #include "stdafx.h"
+#include "cfillion.hpp"
 
 #ifdef _WIN32
 static const unsigned int FORMAT = CF_UNICODETEXT;

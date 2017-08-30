@@ -107,6 +107,8 @@
 		229AC80D108FBFCB00E4A962 /* SectionLock.h in Headers */ = {isa = PBXBuildFile; fileRef = 229AC80B108FBFCB00E4A962 /* SectionLock.h */; };
 		22A664BB10BC6FE100F0B239 /* sha.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22A664BA10BC6FE100F0B239 /* sha.cpp */; };
 		22A8751F10FEBFA10026F62F /* sws_util.mm in Sources */ = {isa = PBXBuildFile; fileRef = 98E8A0AF0F9123F900FC657D /* sws_util.mm */; };
+		22A8E5861F567AEB00367C27 /* cfillion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22A8E5841F567AEB00367C27 /* cfillion.cpp */; };
+		22A8E5871F567AEB00367C27 /* cfillion.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 22A8E5851F567AEB00367C27 /* cfillion.hpp */; };
 		22AC0E0F112A7DE50067BBE3 /* projectcontext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22AC0E0E112A7DE50067BBE3 /* projectcontext.cpp */; };
 		22AF6E1012308B8D0017808F /* virtwnd-controls.h in Headers */ = {isa = PBXBuildFile; fileRef = 22AF6E0912308B8D0017808F /* virtwnd-controls.h */; };
 		22AF6E1112308B8D0017808F /* virtwnd-iconbutton.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22AF6E0A12308B8D0017808F /* virtwnd-iconbutton.cpp */; };
@@ -460,6 +462,8 @@
 		229AC7F5108F985C00E4A962 /* MarkerListActions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MarkerListActions.h; path = MarkerList/MarkerListActions.h; sourceTree = "<group>"; };
 		229AC80B108FBFCB00E4A962 /* SectionLock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SectionLock.h; path = Utility/SectionLock.h; sourceTree = "<group>"; };
 		22A664BA10BC6FE100F0B239 /* sha.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sha.cpp; path = ../WDL/WDL/sha.cpp; sourceTree = SOURCE_ROOT; };
+		22A8E5841F567AEB00367C27 /* cfillion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cfillion.cpp; path = cfillion/cfillion.cpp; sourceTree = "<group>"; };
+		22A8E5851F567AEB00367C27 /* cfillion.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = cfillion.hpp; path = cfillion/cfillion.hpp; sourceTree = "<group>"; };
 		22AC0E0E112A7DE50067BBE3 /* projectcontext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = projectcontext.cpp; path = ../WDL/WDL/projectcontext.cpp; sourceTree = SOURCE_ROOT; };
 		22AF6E0912308B8D0017808F /* virtwnd-controls.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "virtwnd-controls.h"; path = "../WDL/WDL/wingui/virtwnd-controls.h"; sourceTree = SOURCE_ROOT; };
 		22AF6E0A12308B8D0017808F /* virtwnd-iconbutton.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "virtwnd-iconbutton.cpp"; path = "../WDL/WDL/wingui/virtwnd-iconbutton.cpp"; sourceTree = SOURCE_ROOT; };
@@ -746,6 +750,7 @@
 			isa = PBXGroup;
 			children = (
 				4D859DAC16AB127100E34EAA /* Breeder */,
+				22A8E5791F567AA600367C27 /* cfillion */,
 				22C77E6612D62EE3002F68D5 /* Fingers */,
 				22F7AAE315201E0F00CC1481 /* IX */,
 				225130B11161013E0028F26A /* Padre */,
@@ -961,6 +966,15 @@
 				229A7E8B1165744400325BC2 /* TrackSel.h */,
 			);
 			name = Misc;
+			sourceTree = "<group>";
+		};
+		22A8E5791F567AA600367C27 /* cfillion */ = {
+			isa = PBXGroup;
+			children = (
+				22A8E5841F567AEB00367C27 /* cfillion.cpp */,
+				22A8E5851F567AEB00367C27 /* cfillion.hpp */,
+			);
+			name = cfillion;
 			sourceTree = "<group>";
 		};
 		22AC0E0D112A7DAC0067BBE3 /* WDL */ = {
@@ -1468,6 +1482,7 @@
 				22BC765E1D349B5B00014323 /* nofish.h in Headers */,
 				225597251F56722C00438DE1 /* SN_ReaScript.h in Headers */,
 				225597271F56722C00438DE1 /* snooks.h in Headers */,
+				22A8E5871F567AEB00367C27 /* cfillion.hpp in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1756,6 +1771,7 @@
 				223EACF41E97470B00A32FCE /* swell-modstub.mm in Sources */,
 				225597241F56722C00438DE1 /* SN_ReaScript.cpp in Sources */,
 				225597261F56722C00438DE1 /* snooks.cpp in Sources */,
+				22A8E5861F567AEB00367C27 /* cfillion.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

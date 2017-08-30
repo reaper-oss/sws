@@ -4,10 +4,12 @@ Action
 
 New ReaScript functions:
 +SN_FocusMIDIEditor() - focuses windowed or docked MIDI editor
-+Issue 880:
++Issue 880: (thanks, nofish!)
  - NF_AnalyzeTakeLoudness_IntegratedOnly()
  - NF_AnalyzeTakeLoudness()
  - NF_AnalyzeTakeLoudness2()
++CF_SetClipboard() - Write a given string into the system clipboard
++CF_GetClipboard() - Read the contents of the system clipboard
 
 Fixes:
 +Issue 587: "SWS/AW: Toggle auto group newly recorded items" now also works in takes recording mode

@@ -572,5 +572,17 @@ static void* __vararg_SN_FocusMIDIEditor(void** arglist, int numparms)
   return NULL;
 }
 
+static void* __vararg_CF_SetClipboard(void** arglist, int numparms)
+{
+  CF_SetClipboard((const char*)arglist[0]);
+  return NULL;
+}
+
+static void* __vararg_CF_GetClipboard(void** arglist, int numparms)
+{
+  CF_GetClipboard((char*)arglist[0], (int)(INT_PTR)arglist[1]);
+  return NULL;
+}
+
 
 #endif

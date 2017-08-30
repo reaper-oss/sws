@@ -1,3 +1,4 @@
+!v2.9.5 pre-release build (August 30, 2017)
 Action
 +New action (Main section):
  - SWS/SN: Focus MIDI editor

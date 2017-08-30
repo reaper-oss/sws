@@ -191,9 +191,9 @@ static void MidiTakePreview (int mode, MediaItem_Take* take, MediaTrack* track, 
 				OnPauseButton();
 
 			if (g_ItemPreview.preview_track)
-				g_itemPreviewPlaying = !!PlayTrackPreview2Ex(NULL, &g_ItemPreview, (measureSync) ? (1) : (0), measureSync);
+				g_itemPreviewPlaying = !!PlayTrackPreview2Ex(NULL, &g_ItemPreview, 1, measureSync);
 			else
-				g_itemPreviewPlaying = !!PlayPreviewEx(&g_ItemPreview, (measureSync) ? (1) : (0), measureSync);
+				g_itemPreviewPlaying = !!PlayPreviewEx(&g_ItemPreview, 1, measureSync);
 
 			if (g_itemPreviewPlaying)
 			{

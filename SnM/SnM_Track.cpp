@@ -1223,7 +1223,7 @@ bool SNM_PlayTrackPreview(MediaTrack* _tr, PCM_source* _src, bool _pause, bool _
 
 		// go!
 		g_playPreviews.Add(prev);
-		ok = (PlayTrackPreview2Ex(NULL, prev, _msi>0.0 ? 1:0, _msi>0.0? _msi:0.0) != 0);
+		ok = (PlayTrackPreview2Ex(NULL, prev, 1, _msi>0.0? _msi:0.0) != 0);
 	}
 	return ok;
 }

@@ -1,4 +1,5 @@
 Fixes:
++Issue 865: Fix SWS/FNG: Set selected MIDI items name to first note - Ignores MIDI Octave Name Display Offset
 +Issue 860: Fix automation item removed after SWS/wol: Set selected envelope height... actions
 
 !v2.9.4 pre-release build (April 6, 2017)

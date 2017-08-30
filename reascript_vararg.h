@@ -566,5 +566,11 @@ static void* __vararg_NF_AnalyzeTakeLoudness2(void** arglist, int numparms)
   return (void*)(INT_PTR)NF_AnalyzeTakeLoudness2((MediaItem_Take*)arglist[0], (bool)arglist[1], (double*)arglist[2], (double*)arglist[3], (double*)arglist[4], (double*)arglist[5], (double*)arglist[6], (double*)arglist[7], (double*)arglist[8], (double*)arglist[9]);
 }
 
+static void* __vararg_SN_FocusMIDIEditor(void** arglist, int numparms)
+{
+  SN_FocusMIDIEditor();
+  return NULL;
+}
+
 
 #endif

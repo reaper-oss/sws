@@ -66,6 +66,10 @@
 		225130C9116101670028F26A /* padreMidiItemProcBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 225130BC116101670028F26A /* padreMidiItemProcBase.h */; };
 		225130CA116101670028F26A /* padreUtils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 225130BD116101670028F26A /* padreUtils.cpp */; };
 		225130CB116101670028F26A /* padreUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 225130BE116101670028F26A /* padreUtils.h */; };
+		225597241F56722C00438DE1 /* SN_ReaScript.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 225597201F56722C00438DE1 /* SN_ReaScript.cpp */; };
+		225597251F56722C00438DE1 /* SN_ReaScript.h in Headers */ = {isa = PBXBuildFile; fileRef = 225597211F56722C00438DE1 /* SN_ReaScript.h */; };
+		225597261F56722C00438DE1 /* snooks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 225597221F56722C00438DE1 /* snooks.cpp */; };
+		225597271F56722C00438DE1 /* snooks.h in Headers */ = {isa = PBXBuildFile; fileRef = 225597231F56722C00438DE1 /* snooks.h */; };
 		2270FC7112F8551400703F85 /* RecCheck.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2270FC6F12F8551400703F85 /* RecCheck.cpp */; };
 		2270FC7212F8551400703F85 /* RecCheck.h in Headers */ = {isa = PBXBuildFile; fileRef = 2270FC7012F8551400703F85 /* RecCheck.h */; };
 		2273566712910ABF001A1570 /* EditCursor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2273566512910ABF001A1570 /* EditCursor.cpp */; };
@@ -421,6 +425,10 @@
 		225130BC116101670028F26A /* padreMidiItemProcBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = padreMidiItemProcBase.h; path = Padre/padreMidiItemProcBase.h; sourceTree = "<group>"; };
 		225130BD116101670028F26A /* padreUtils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = padreUtils.cpp; path = Padre/padreUtils.cpp; sourceTree = "<group>"; };
 		225130BE116101670028F26A /* padreUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = padreUtils.h; path = Padre/padreUtils.h; sourceTree = "<group>"; };
+		225597201F56722C00438DE1 /* SN_ReaScript.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SN_ReaScript.cpp; path = snooks/SN_ReaScript.cpp; sourceTree = "<group>"; };
+		225597211F56722C00438DE1 /* SN_ReaScript.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SN_ReaScript.h; path = snooks/SN_ReaScript.h; sourceTree = "<group>"; };
+		225597221F56722C00438DE1 /* snooks.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = snooks.cpp; path = snooks/snooks.cpp; sourceTree = "<group>"; };
+		225597231F56722C00438DE1 /* snooks.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = snooks.h; path = snooks/snooks.h; sourceTree = "<group>"; };
 		2270FC6F12F8551400703F85 /* RecCheck.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RecCheck.cpp; path = Misc/RecCheck.cpp; sourceTree = "<group>"; };
 		2270FC7012F8551400703F85 /* RecCheck.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RecCheck.h; path = Misc/RecCheck.h; sourceTree = "<group>"; };
 		2273566512910ABF001A1570 /* EditCursor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = EditCursor.cpp; path = Misc/EditCursor.cpp; sourceTree = "<group>"; };
@@ -746,6 +754,7 @@
 				22257D6D108BDC330058CF75 /* Xenakios */,
 				98B6AAF118E7315B00BACB96 /* Wol */,
 				22BC765A1D349B0D00014323 /* nofish */,
+				225597161F5671B200438DE1 /* snooks */,
 				08FB7795FE84155DC02AAC07 /* Source */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
 			);
@@ -908,6 +917,17 @@
 				225130BE116101670028F26A /* padreUtils.h */,
 			);
 			name = Padre;
+			sourceTree = "<group>";
+		};
+		225597161F5671B200438DE1 /* snooks */ = {
+			isa = PBXGroup;
+			children = (
+				225597201F56722C00438DE1 /* SN_ReaScript.cpp */,
+				225597211F56722C00438DE1 /* SN_ReaScript.h */,
+				225597221F56722C00438DE1 /* snooks.cpp */,
+				225597231F56722C00438DE1 /* snooks.h */,
+			);
+			name = snooks;
 			sourceTree = "<group>";
 		};
 		229A7E7B1165742C00325BC2 /* Misc */ = {
@@ -1446,6 +1466,8 @@
 				98C2C33019F6AF3E00D3DE90 /* BR_EnvelopeUtil.h in Headers */,
 				98C2C33219F6AF3E00D3DE90 /* BR_MidiUtil.h in Headers */,
 				22BC765E1D349B5B00014323 /* nofish.h in Headers */,
+				225597251F56722C00438DE1 /* SN_ReaScript.h in Headers */,
+				225597271F56722C00438DE1 /* snooks.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1732,6 +1754,8 @@
 				98C2C33119F6AF3E00D3DE90 /* BR_MidiUtil.cpp in Sources */,
 				22BC765C1D349B4100014323 /* nofish.cpp in Sources */,
 				223EACF41E97470B00A32FCE /* swell-modstub.mm in Sources */,
+				225597241F56722C00438DE1 /* SN_ReaScript.cpp in Sources */,
+				225597261F56722C00438DE1 /* snooks.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

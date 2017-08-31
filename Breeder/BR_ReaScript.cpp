@@ -937,10 +937,23 @@ double NF_GetMediaItemMaxPeak(MediaItem* item)
 	return maxPeak;
 }
 
+double NF_GetMediaItemPeakRMS_Windowed(MediaItem* item)
+{
+	double peakRMS = GetMediaItemPeakRMS_Windowed(item);
+	return peakRMS;
+}
+
+double NF_GetMediaItemPeakRMS_NonWindowed(MediaItem* item)
+{
+	double peakRMSperChannel = GetMediaItemPeakRMS_NonWindowed(item);
+	return peakRMSperChannel;
+}
+
 double NF_GetMediaItemAverageRMS(MediaItem* item)
 {
-	double avrgRMS = GetMediaItemAverageRMS(item);
-	return avrgRMS;
+	double averageRMS = GetMediaItemAverageRMS(item);
+	return averageRMS;
+
 }
 
 // #880

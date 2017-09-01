@@ -974,7 +974,8 @@ void AWDoAutoGroup(bool rec)
 			}
 
 			// #587 Auto Group in takes mode
-			else if (items.GetSize() > 1 && ((*(int*)GetConfigVar("autoxfade") & 1))) // takes mode
+			else if (items.GetSize() > 1 && ((*(int*)GetConfigVar("autoxfade") == 0) || (*(int*)GetConfigVar("autoxfade") & 1)))
+			//else if (items.GetSize() > 1 && ((*(int*)GetConfigVar("autoxfade") & 1))) // takes mode
 			{
 				NFDoAutoGroupTakesMode();
 			}

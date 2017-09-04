@@ -15,6 +15,9 @@ CFLAGS += -I. -I../WDL -DSWELL_PROVIDED_BY_APP
 
 ifneq ($(filter arm%,$(ARCH)),)
   CFLAGS += -fsigned-char -mfpu=vfp -march=armv6t2
+endif
+
+ifneq (x86_64, $(ARCH))
   TARGET = reaper_sws_$(ARCH).so
 endif
   

@@ -96,6 +96,9 @@ default: $(TARGET)
 
 .PHONY: clean
 
+reascript_vararg.h: ReaScript.cpp reascript_vararg.php
+	php reascript_vararg.php > $@
+
 sws_extension.rc_mac_dlg: sws_extension.rc
 	php $(WDL_PATH)/swell/mac_resgen.php $^
 

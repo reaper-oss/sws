@@ -255,6 +255,20 @@ int NFTrackItemUtilities::GetMaxValfromIntVector(vector<int> intVector)
 	return maxVal;
 }
 
+bool NFTrackItemUtilities::isMoreThanOneTrackRecArmed()
+{
+	int RecArmedTracks = 0;
+	for (int i = 0; i < GetNumTracks(); i++) {
+		MediaTrack* CurTrack = CSurf_TrackFromID(i + 1, false);
+		if (*(int*)GetSetMediaTrackInfo(CurTrack, "I_RECARM", NULL)) {
+			RecArmedTracks += 1;
+			if (RecArmedTracks > 1)
+				return true;
+		}	
+	}
+	return false;
+}
+
 /*
 const vector<int>& NFTrackItemUtilities::NFGetIntVector() const
 {

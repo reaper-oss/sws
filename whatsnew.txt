@@ -1,3 +1,5 @@
++Fix issue with action "SWS/AW/NF: Toggle assign random colors if auto group newly recorded items is enabled" (p=1882461&postcount=422)
+
 !v2.9.6 featured build (September 4, 2017)
 Fixes:
 +Fix BR Envelope action/ReaScript crashes on Reaper <= 5.4

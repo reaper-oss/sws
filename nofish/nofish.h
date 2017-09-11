@@ -57,6 +57,8 @@ public:
 	
 	int GetMaxValfromIntVector(vector <int>);
 
+	bool isMoreThanOneTrackRecArmed();
+
 private:
 	// vector <int> count_sel_items_on_track;
 

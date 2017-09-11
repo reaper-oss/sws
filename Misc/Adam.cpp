@@ -975,7 +975,6 @@ void AWDoAutoGroup(bool rec)
 
 			// #587 Auto Group in takes mode
 			else if (items.GetSize() > 1 && ((*(int*)GetConfigVar("autoxfade") == 0) || (*(int*)GetConfigVar("autoxfade") & 1)))
-			//else if (items.GetSize() > 1 && ((*(int*)GetConfigVar("autoxfade") & 1))) // takes mode
 			{
 				NFDoAutoGroupTakesMode();
 			}
@@ -991,15 +990,26 @@ void AWDoAutoGroup(bool rec)
 // replication of X-Raym's "Group selected items according to their order in selection per track.lua"
 void NFDoAutoGroupTakesMode()
 {
-	
-	PreventUIRefresh(1); // comment out for testing
+
 	NFTrackItemUtilities trackItemUtility;
 	// vector<int> v_selItemsOnTrack = trackItemUtility.NFGetIntVector();
+
+	// only group if more than one track is rec. armed
+	// otherwise it would group items to itself on same track
+	if (!trackItemUtility.isMoreThanOneTrackRecArmed())
+		return;
+
+	PreventUIRefresh(1); // comment out for testing
 
 	trackItemUtility.NFSaveSelectedItems();
 	trackItemUtility.NFSaveSelectedTracks();
 
 	Undo_BeginBlock(); 
+
+	// fix for p=1882461&postcount=422
+	if (g_AWAutoGroupRndColor)
+		Main_OnCommand(41332, 0); // set active take to one random color
+
 	trackItemUtility.NFUnselectAllTracks();
 	trackItemUtility.NFSelectTracksOfSelectedItems();
 
@@ -1029,8 +1039,6 @@ void NFDoAutoGroupTakesMode()
 				SetMediaItemSelected(item, true);
 			}
 		}
-		if (g_AWAutoGroupRndColor)
-			Main_OnCommand(40706, 0); // set items to one random color
 		Main_OnCommand(40032, 0); // Group items
 	}
 	trackItemUtility.NFRestoreSelectedItems();

@@ -63,13 +63,29 @@ static int RGBfromNSColor(NSColor *col)
 int GetCustomColors(COLORREF custColors[])
 {
 	NSColorPanel* cp = [NSColorPanel sharedColorPanel];
-	[[cp valueForKey:@"_colorSwatch"] performSelector:@selector(readColors)];
+	id cswatch = [cp valueForKey:@"_colorSwatch"];
+	NSArray *colors = NULL;
+	int adv,n=0;
 
-	// Get the NSColorSwatch's internal mutable array of NSColors
-	NSMutableArray *colors = [[cp valueForKey:@"_colorSwatch"] valueForKey:@"colors"];
-	for (int i = 0; i < 16; i++)
+	if ([cswatch respondsToSelector:@selector(readColors)])
 	{
-		NSColor* col = [colors objectAtIndex:i*10];
+		[cswatch performSelector:@selector(readColors)];
+
+		colors = [cswatch valueForKey:@"colors"];
+		adv = 10;
+		n = 16;
+	}
+  	else if ([cswatch respondsToSelector:@selector(savedColors)])
+	{
+		// high sierra
+		colors = [cswatch performSelector:@selector(savedColors)];
+		adv=1;
+		n = [colors count];
+		if (n > 16) n = 16;
+	}
+	if (colors) for (int i = 0; i < n; i++)
+	{
+		NSColor* col = [colors objectAtIndex:i*adv];
 		col = [col colorUsingColorSpaceName:@"NSCalibratedRGBColorSpace"];
 
 		custColors[i] = RGBfromNSColor(col);
@@ -81,16 +97,36 @@ int GetCustomColors(COLORREF custColors[])
 void SetCustomColors(COLORREF custColors[])
 {
 	NSColorPanel* cp = [NSColorPanel sharedColorPanel];
-	[[cp valueForKey:@"_colorSwatch"] performSelector:@selector(readColors)];
+	id cswatch = [cp valueForKey:@"_colorSwatch"];
 
-	// Get the NSColorSwatch's internal mutable array of NSColors
-	NSMutableArray *colors = [[cp valueForKey:@"_colorSwatch"] valueForKey:@"colors"];
-	for (int i = 0; i < 16; i++)
+	if ([cswatch respondsToSelector:@selector(readColors)])
 	{
-		NSColor* col = [NSColor colorWithCalibratedRed:(custColors[i]>>16)/255.0 green:((custColors[i]&0xFF00)>>8)/255.0 blue:(custColors[i]&0xFF)/255.0 alpha:1.0];
-		[colors replaceObjectAtIndex:i*10 withObject:col];
+		[cswatch performSelector:@selector(readColors)];
+
+		// Get the NSColorSwatch's internal mutable array of NSColors
+		NSMutableArray *colors = [cswatch valueForKey:@"colors"];
+		if (colors) for (int i = 0; i < 16; i++)
+		{
+			NSColor* col = [NSColor colorWithCalibratedRed:(custColors[i]>>16)/255.0 green:((custColors[i]&0xFF00)>>8)/255.0 blue:(custColors[i]&0xFF)/255.0 alpha:1.0];
+			[colors replaceObjectAtIndex:i*10 withObject:col];
+		}
+		[cswatch performSelector:@selector(writeColors)];
 	}
-	[[cp valueForKey:@"_colorSwatch"] performSelector:@selector(writeColors)];
+  	else if ([cswatch respondsToSelector:@selector(savedColors)])
+	{
+		// high sierra -- this part doesn't seem to work yet, sadly
+		NSArray *colors = [cswatch performSelector:@selector(savedColors)];
+		NSMutableArray *newColors = colors ? [NSMutableArray arrayWithArray:colors] : [NSMutableArray arrayWithCapacity:16];
+		for (int i = 0; i < 16; i++)
+		{
+			NSColor* col = [NSColor colorWithCalibratedRed:(custColors[i]>>16)/255.0 green:((custColors[i]&0xFF00)>>8)/255.0 blue:(custColors[i]&0xFF)/255.0 alpha:1.0];
+			if (i < [newColors count])
+				[newColors replaceObjectAtIndex:i withObject:col];
+			else
+				[newColors addObject:col];
+		}
+		[cswatch performSelector:@selector(setSavedColors:) withObject:newColors];
+	}
 }
 
 void ShowColorChooser(COLORREF initialCol)

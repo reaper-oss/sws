@@ -1,3 +1,7 @@
+ReaScript RMS functions:
+  +Fix NF_GetMediaItemAverageRMS() calculation
+  +Add NF_GetMediaItemPeakRMS_Windowed(), NF_GetMediaItemPeakRMS_NonWindowed()
+
 +Fix issue with action "SWS/AW/NF: Toggle assign random colors if auto group newly recorded items is enabled" (p=1882461&postcount=422)
 
 !v2.9.6 featured build (September 4, 2017)

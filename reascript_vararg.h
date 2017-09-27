@@ -543,6 +543,22 @@ static void* __vararg_NF_GetMediaItemMaxPeak(void** arglist, int numparms)
   return p;
 }
 
+static void* __vararg_NF_GetMediaItemPeakRMS_Windowed(void** arglist, int numparms)
+{
+  double* p =(double*)arglist[numparms-1];
+  double d = NF_GetMediaItemPeakRMS_Windowed((MediaItem*)arglist[0]);
+  if (p) *p=d;
+  return p;
+}
+
+static void* __vararg_NF_GetMediaItemPeakRMS_NonWindowed(void** arglist, int numparms)
+{
+  double* p =(double*)arglist[numparms-1];
+  double d = NF_GetMediaItemPeakRMS_NonWindowed((MediaItem*)arglist[0]);
+  if (p) *p=d;
+  return p;
+}
+
 static void* __vararg_NF_GetMediaItemAverageRMS(void** arglist, int numparms)
 {
   double* p =(double*)arglist[numparms-1];

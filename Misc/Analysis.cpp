@@ -268,15 +268,16 @@ double GetMediaItemMaxPeak(MediaItem* mi)
 	}
 }
 
-double GetMediaItemAverageRMS(MediaItem* mi)
+double GetMediaItemPeakRMS_Windowed(MediaItem* mi)
 {
-	double curAvrgRMS = -150.0;
-	double maxAvrgRMS = -150.0;
+	// double curPeakRMS = -150.0;
+	// double maxPeakRMS = -150.0;
 
 	// if MIDI item, don't scan
 	double sampleRate = ((PCM_source*)mi)->GetSampleRate(); // will rtn. 0 for MIDI items
 	if (sampleRate == 0.0) return -150.0;
 	
+	/*
 	int iChannels = ((PCM_source*)mi)->GetNumChannels();
 	if (iChannels)
 	{
@@ -285,21 +286,105 @@ double GetMediaItemAverageRMS(MediaItem* mi)
 		a.iChannels = iChannels;
 		a.dRMSs = new double[iChannels];
 
+		// set window size
+		char str[100];
+		GetPrivateProfileString(SWS_INI, SWS_RMS_KEY, "-20,0.1", str, 100, get_ini_file());
+		char* pWindow = strchr(str, ',');
+		a.dWindowSize = pWindow ? atof(pWindow + 1) : 0.1;
+
+
 		if (AnalyzeItem(mi, &a))
 		{
 			for (int i = 0; i < iChannels; i++) {
-				curAvrgRMS = VAL2DB(a.dRMSs[i]);
-				if (maxAvrgRMS < curAvrgRMS) {
-					maxAvrgRMS = curAvrgRMS;
+				curPeakRMS = VAL2DB(a.dRMSs[i]);
+				if (maxPeakRMS < curPeakRMS) {
+					maxPeakRMS = curPeakRMS;
 				}
 			}
 		}
 		delete[] a.dRMSs;
-		return maxAvrgRMS;
+		return maxPeakRMS;
 	} else {
 		return -150.0;
 	}
-} // /#781
+	*/
+
+	ANALYZE_PCM a;
+	memset(&a, 0, sizeof(a));
+
+	char str[100];
+	GetPrivateProfileString(SWS_INI, SWS_RMS_KEY, "-20,0.1", str, 100, get_ini_file());
+	char* pWindow = strchr(str, ',');
+	a.dWindowSize = pWindow ? atof(pWindow + 1) : 0.1;
+
+	if (AnalyzeItem(mi, &a)) {
+		return VAL2DB(a.dRMS);
+	} else {
+		return -150.0;
+	}
+} 
+
+double GetMediaItemPeakRMS_NonWindowed(MediaItem* mi)
+{
+	double curPeakRMS = -150.0;
+	double maxPeakRMS = -150.0;
+
+	// if MIDI item, don't scan
+	double sampleRate = ((PCM_source*)mi)->GetSampleRate(); // will rtn. 0 for MIDI items
+	if (sampleRate == 0.0) return -150.0;
+
+	
+	int iChannels = ((PCM_source*)mi)->GetNumChannels();
+	if (iChannels)
+	{
+	ANALYZE_PCM a;
+	memset(&a, 0, sizeof(a));
+	a.iChannels = iChannels;
+	a.dRMSs = new double[iChannels];
+
+	/*
+	// set window size
+	char str[100];
+	GetPrivateProfileString(SWS_INI, SWS_RMS_KEY, "-20,0.1", str, 100, get_ini_file());
+	char* pWindow = strchr(str, ',');
+	a.dWindowSize = pWindow ? atof(pWindow + 1) : 0.1;
+	*/
+
+	if (AnalyzeItem(mi, &a))
+	{
+		for (int i = 0; i < iChannels; i++) {
+			curPeakRMS = VAL2DB(a.dRMSs[i]);
+			if (maxPeakRMS < curPeakRMS) {
+				maxPeakRMS = curPeakRMS;
+			}
+		}
+	}
+	
+	delete[] a.dRMSs;
+	return maxPeakRMS;
+	} else {
+	return -150.0;
+	}
+}
+
+double GetMediaItemAverageRMS(MediaItem* mi)
+{
+	double sampleRate = ((PCM_source*)mi)->GetSampleRate(); // will rtn. 0 for MIDI items
+	if (sampleRate == 0.0) return -150.0;
+
+	ANALYZE_PCM a;
+	memset(&a, 0, sizeof(a));
+	a.dWindowSize = 0.0; // non-windowed
+
+	
+	if (AnalyzeItem(mi, &a)) {
+		return VAL2DB(a.dRMS);
+	}
+	else {
+		return -150.0;
+	}
+}
+// /#781
 
 void FindItemPeak(COMMAND_T*)
 {

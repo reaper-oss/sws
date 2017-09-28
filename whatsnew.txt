@@ -2,8 +2,13 @@ Fixes:
 +Issue 897: Fix major issues with OSX 10.13 High Sierra
 +Issue 877: Fix ReaConsole default shortcut on Linux and Windows
 +Fix missing null terminator in CF_GetClipboard on Windows when clipboard length >= buffer size
++Fix NF_GetMediaItemAverageRMS() calculation
++Fix issue with action "SWS/AW/NF: Toggle assign random colors if auto group newly recorded items is enabled" (http://forum.cockos.com/showpost.php?p=1882461&postcount=422)
 
-Add CF_GetClipboardBig ReaScript function.  (Thanks cfillion!)
+New ReaScript functions:
++CF_GetClipboardBig (Thanks cfillion!)
++NF_GetMediaItemPeakRMS_Windowed()
++NF_GetMediaItemPeakRMS_NonWindowed()
 
 !v2.9.6 featured build (September 4, 2017)
 Fixes:

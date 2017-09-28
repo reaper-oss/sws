@@ -231,9 +231,11 @@ APIdef g_apidefs[] =
 	{ APIFUNC(ULT_GetMediaItemNote), "const char*", "MediaItem*", "item", "[ULT] Get item notes.", },
 	{ APIFUNC(ULT_SetMediaItemNote), "void", "MediaItem*,const char*", "item,note", "[ULT] Set item notes.", },
 	
-	// #781
-	{ APIFUNC(NF_GetMediaItemMaxPeak), "double", "MediaItem*", "item", "Returns the greatest max. peak value of active channels of an audio item active take, post item gain, post take volume envelope, post-fade, pre fader, pre item FX. Returns -150.0 if MIDI item or empty item.", },
-	{ APIFUNC(NF_GetMediaItemAverageRMS), "double", "MediaItem*", "item", "Returns the RMS peak level of active channels of an audio item active take, post item gain, post take volume envelope, post-fade, pre fader, pre item FX. Returns -150.0 if MIDI item or empty item.", },
+		// #781
+	{ APIFUNC(NF_GetMediaItemMaxPeak), "double", "MediaItem*", "item", "Returns the greatest max. peak value of all active channels of an audio item active take, post item gain, post take volume envelope, post-fade, pre fader, pre item FX. \n Returns -150.0 if MIDI take or empty item.", },
+	{ APIFUNC(NF_GetMediaItemPeakRMS_Windowed), "double", "MediaItem*", "item", "Returns the average RMS peak level of all active channels of an audio item active take, post item gain, post take volume envelope, post-fade, pre fader, pre item FX. \n Obeys 'Window size for peak RMS' setting in 'SWS: Set RMS analysis/normalize options' for calculation. Returns -150.0 if MIDI take or empty item.", },
+	{ APIFUNC(NF_GetMediaItemPeakRMS_NonWindowed), "double", "MediaItem*", "item", "Returns the greatest overall (non-windowed) RMS peak level of all active channels of an audio item active take, post item gain, post take volume envelope, post-fade, pre fader, pre item FX. \n Returns -150.0 if MIDI take or empty item.", },
+	{ APIFUNC(NF_GetMediaItemAverageRMS), "double", "MediaItem*", "item", "Returns the average overall (non-windowed) RMS level of active channels of an audio item active take, post item gain, post take volume envelope, post-fade, pre fader, pre item FX. \n Returns -150.0 if MIDI take or empty item.", },
 
 	// #880
 	{ APIFUNC(NF_AnalyzeTakeLoudness_IntegratedOnly), "bool", "MediaItem_Take*,double*", "take,lufsIntegratedOut", "Does LUFS integrated analysis only. Faster than full loudness analysis (<a href=\"#NF_AnalyzeTakeLoudness\">NF_AnalyzeTakeLoudness</a>) . Use this if only LUFS integrated is required." }, 

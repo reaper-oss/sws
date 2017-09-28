@@ -99,7 +99,9 @@ bool            BR_Win32_WritePrivateProfileString (const char* sectionName, con
 
 // #781
 double			NF_GetMediaItemMaxPeak(MediaItem* item);
+double			NF_GetMediaItemPeakRMS_Windowed(MediaItem* item);
 double			NF_GetMediaItemAverageRMS(MediaItem* item);
+double			NF_GetMediaItemPeakRMS_NonWindowed(MediaItem* item);
 
 // #880
 bool			NF_AnalyzeTakeLoudness_IntegratedOnly(MediaItem_Take* take, double* lufsIntegratedOut);

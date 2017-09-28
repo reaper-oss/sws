@@ -794,7 +794,7 @@ static accelerator_register_t g_ar = { translateAccel, TRUE, NULL };
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] = 
 {
-	{ { { 0, 'C', 0 }, "SWS: Open console" },								"SWSCONSOLE",       ConsoleCommand,  "SWS ReaConsole", 0, IsConsoleDisplayed },
+	{ { { FVIRTKEY, 'C', 0 }, "SWS: Open console" },								"SWSCONSOLE",       ConsoleCommand,  "SWS ReaConsole", 0, IsConsoleDisplayed },
 	{ { DEFACCEL,   "SWS: Open console and copy keystroke" },				"SWSCONSOLE2",      BringKeyCommand, NULL, },
 	{ { DEFACCEL,   "SWS: Open console with 'S' to select track(s)" },		"SWSCONSOLEEXSEL",  ConsoleCommand,  NULL,   'S' },
 	{ { DEFACCEL,   "SWS: Open console with 'n' to name track(s)" },		"SWSCONSOLENAME",   ConsoleCommand,  NULL,   'n' },

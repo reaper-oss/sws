@@ -34,6 +34,8 @@ static const unsigned int FORMAT = CF_UNICODETEXT;
 static const unsigned int FORMAT = CF_TEXT;
 #endif
 
+extern WDL_PtrList_DOD<WDL_FastString> g_script_strs;
+
 void CF_SetClipboard(const char *buf)
 {
 #ifdef _WIN32
@@ -78,4 +80,32 @@ void CF_GetClipboard(char *buf, int bufSize)
   }
 
   CloseClipboard();
+}
+
+const char *CF_GetClipboardBig(WDL_FastString *output)
+{
+  if(g_script_strs.Find(output) == -1)
+    return nullptr;
+
+  OpenClipboard(GetMainHwnd());
+  HANDLE mem = GetClipboardData(FORMAT);
+
+  if(void *data = GlobalLock(mem)) {
+#ifdef _WIN32
+    const int size = WideCharToMultiByte(CP_UTF8, 0,
+      (const wchar_t *)data, -1, nullptr, 0, nullptr, nullptr) - 1;
+
+    output->SetLen(size);
+
+    WideCharToMultiByte(CP_UTF8, 0, (const wchar_t *)data, -1,
+      const_cast<char *>(output->Get()), size, nullptr, nullptr);
+#else
+    output->Set((const char *)data);
+#endif
+    GlobalUnlock(mem);
+  }
+
+  CloseClipboard();
+
+  return output->Get();
 }

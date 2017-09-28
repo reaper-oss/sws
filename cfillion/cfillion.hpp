@@ -29,3 +29,4 @@
 
 void CF_SetClipboard(const char *);
 void CF_GetClipboard(char *buf, int bufSize);
+const char *CF_GetClipboardBig(WDL_FastString *);

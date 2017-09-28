@@ -584,5 +584,10 @@ static void* __vararg_CF_GetClipboard(void** arglist, int numparms)
   return NULL;
 }
 
+static void* __vararg_CF_GetClipboardBig(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)CF_GetClipboardBig((WDL_FastString*)arglist[0]);
+}
+
 
 #endif

@@ -65,7 +65,12 @@ void CF_GetClipboard(char *buf, int bufSize)
   if(void *data = GlobalLock(mem)) {
 #ifdef _WIN32
     WideCharToMultiByte(CP_UTF8, 0, (const wchar_t *)data, -1,
-      buf, bufSize, nullptr, nullptr);
+      buf, bufSize - 1, nullptr, nullptr);
+
+    // Insert a null terminator if the buffer is too small to hold the entire
+    // clipboard data. WideCharToMultiByte inserts it at the end of the string
+    // by itself when the buffer is big enough.
+    buf[bufSize - 1] = 0;
 #else
     snprintf(buf, bufSize, "%s", (const char *)data);
 #endif

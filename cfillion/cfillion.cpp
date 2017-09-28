@@ -85,7 +85,7 @@ void CF_GetClipboard(char *buf, int bufSize)
 const char *CF_GetClipboardBig(WDL_FastString *output)
 {
   if(g_script_strs.Find(output) == -1)
-    return nullptr;
+    return NULL;
 
   OpenClipboard(GetMainHwnd());
   HANDLE mem = GetClipboardData(FORMAT);

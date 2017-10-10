@@ -138,6 +138,7 @@ void PlaylistRun();
 void PlaylistPlay(int _playlistId, int _itemId);
 void PlaylistPlay(COMMAND_T*);
 void PlaylistSeekPrevNext(COMMAND_T*);
+void PlaylistSeekPrevNextCurBased(COMMAND_T*);
 void PlaylistStop();
 void PlaylistStopped(bool _pause = false);
 void PlaylistUnpaused();

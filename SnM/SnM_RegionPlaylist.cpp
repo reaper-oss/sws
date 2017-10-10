@@ -1600,6 +1600,22 @@ void PlaylistSeekPrevNext(COMMAND_T* _ct)
 	}
 }
 
+// Seek prev/next region based on current playing region
+void PlaylistSeekPrevNextCurBased(COMMAND_T* _ct)
+{
+	if (g_playPlaylist<0)
+		PlaylistPlay(NULL);
+	else
+	{
+		int itemId;
+		if ((int)_ct->user>0)
+			itemId = GetNextValidItem(g_playPlaylist, g_playCur, false, true);
+		else
+			itemId = GetPrevValidItem(g_playPlaylist, g_playCur, false, true);
+		PlaylistPlay(g_playPlaylist, itemId);
+	}
+}
+
 void PlaylistStop()
 {
 	if (g_playPlaylist>=0 || (GetPlayStateEx(NULL)&1) == 1)

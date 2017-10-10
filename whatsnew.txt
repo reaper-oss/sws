@@ -1,3 +1,7 @@
+Fixes:
++Loudness: Prevent items going offline during analysis (hopefully fixes cornercase issue with occasionally wrong analysis results)
+ 
+
 !v2.9.7 featured build (September 28, 2017)
 Fixes:
 +Issue 897: Fix major issues with OSX 10.13 High Sierra

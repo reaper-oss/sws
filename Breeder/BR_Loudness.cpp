@@ -34,6 +34,7 @@
 #include "../SnM/SnM.h"
 #include "../libebur128/ebur128.h"
 #include "../reaper/localize.h"
+#include "../SnM/SnM_Misc.h" // NF fix: prevent items going offline, see AnalyzeData()
 
 /******************************************************************************
 * Constants                                                                   *
@@ -956,6 +957,14 @@ int BR_LoudnessObject::GetItemNumber ()
 
 unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 {
+	// NF: prevent items going offline during analysis
+	// fix for when "Prefs->Set media items offline when app. is inactive" is enabled
+	// and user clicks outside REAPER during analysis, resulting in items going offline and giving wrong calculation results
+	int itemsCanGoOffline = SNM_GetIntConfigVar("offlineinact", -666);
+	if (itemsCanGoOffline != -666)
+		SNM_SetIntConfigVar("offlineinact", 0); // disable "Set media items offline when application is not active"
+
+
 	// Analyze results that get saved at the end
 	double integrated   = NEGATIVE_INF;
 	double truePeak     = NEGATIVE_INF;
@@ -1165,6 +1174,11 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 		if (!integratedOnly)
 			_this->SetAnalyzedStatus(true);
 	}
+
+	// NF: set offline pref. back to original value after analysis
+	if (itemsCanGoOffline != -666)
+		SNM_SetIntConfigVar("offlineinact", itemsCanGoOffline);
+
 	return 0;
 }
 

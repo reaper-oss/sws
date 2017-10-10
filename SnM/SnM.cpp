@@ -472,9 +472,9 @@ static COMMAND_T s_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Set repeat off" }, "S&M_PLAYLIST_REPEAT_ON", SetPlaylistRepeat, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Set repeat on" }, "S&M_PLAYLIST_REPEAT_OFF", SetPlaylistRepeat, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Toggle repeat" }, "S&M_PLAYLIST_TGL_REPEAT", SetPlaylistRepeat, NULL, -1, IsPlaylistRepeat},
-  { { DEFACCEL, "SWS/S&M: Region Playlist - Options/Enable smooth seek (only in Region Playlist)" }, "S&M_PLAYLIST_OPT_SMOOTHSEEK_ON", SetPlaylistOptionSmoothSeek, NULL, 0},
-  { { DEFACCEL, "SWS/S&M: Region Playlist - Options/Disable smooth seek (only in Region Playlist)" }, "S&M_PLAYLIST_OPT_SMOOTHSEEK_OFF", SetPlaylistOptionSmoothSeek, NULL, 1},
-  { { DEFACCEL, "SWS/S&M: Region Playlist - Options/Toggle smooth seek (only in Region Playlist)" }, "S&M_PLAYLIST_OPT_TGL_SMOOTHSEEK", SetPlaylistOptionSmoothSeek, NULL, -1, IsPlaylistOptionSmoothSeek},
+	{ { DEFACCEL, "SWS/S&M: Region Playlist - Options/Enable smooth seek (only in Region Playlist)" }, "S&M_PLAYLIST_OPT_SMOOTHSEEK_ON", SetPlaylistOptionSmoothSeek, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Region Playlist - Options/Disable smooth seek (only in Region Playlist)" }, "S&M_PLAYLIST_OPT_SMOOTHSEEK_OFF", SetPlaylistOptionSmoothSeek, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Region Playlist - Options/Toggle smooth seek (only in Region Playlist)" }, "S&M_PLAYLIST_OPT_TGL_SMOOTHSEEK", SetPlaylistOptionSmoothSeek, NULL, -1, IsPlaylistOptionSmoothSeek},
 
 	// Markers & regions ------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Insert marker at edit cursor" }, "S&M_INS_MARKER_EDIT", InsertMarker, NULL, 0},

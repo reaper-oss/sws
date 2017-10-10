@@ -1671,18 +1671,18 @@ int IsPlaylistRepeat(COMMAND_T*) {
 // VT: get/set g_seekImmediate
 void SetPlaylistOptionSmoothSeek(COMMAND_T* _ct)
 {
-  int mode = _ct ? (int)_ct->user : -1; // toggle if no COMMAND_T is specified
-  switch(mode) {
-    case -1: g_seekImmediate=!g_seekImmediate; break;
-    case 0: g_seekImmediate=false; break;
-    case 1: g_seekImmediate=true; break;
-  }
-  if (RegionPlaylistWnd* w = g_rgnplWndMgr.Get())
-    w->Update();
+	int mode = _ct ? (int)_ct->user : -1; // toggle if no COMMAND_T is specified
+	switch(mode) {
+		case -1: g_seekImmediate=!g_seekImmediate; break;
+		case 0: g_seekImmediate=false; break;
+		case 1: g_seekImmediate=true; break;
+	}
+	if (RegionPlaylistWnd* w = g_rgnplWndMgr.Get())
+		w->Update();
 }
 
 int IsPlaylistOptionSmoothSeek(COMMAND_T*) {
-  return g_seekImmediate;
+	return g_seekImmediate;
 }
 
 

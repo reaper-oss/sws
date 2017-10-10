@@ -1,3 +1,10 @@
+New actions (Main section):
++SWS/S&M: Region Playlist - Options/Toggle smooth seek (only in Region Playlist) (Issue 890)
++SWS/S&M: Region Playlist - Options/Enable smooth seek (only in Region Playlist)
++SWS/S&M: Region Playlist - Options/Disable smooth seek (only in Region Playlist)
++SWS/S&M: Region Playlist - Play next region (based on current playing region)
++SWS/S&M: Region Playlist - Play previous region (based on current playing region)
+
 !v2.9.7 featured build (September 28, 2017)
 Fixes:
 +Issue 897: Fix major issues with OSX 10.13 High Sierra

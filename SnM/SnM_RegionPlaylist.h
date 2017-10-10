@@ -145,6 +145,9 @@ void PlaylistResync();
 void SetPlaylistRepeat(COMMAND_T*);
 int IsPlaylistRepeat(COMMAND_T*);
 
+void SetPlaylistOptionSmoothSeek(COMMAND_T*);
+int IsPlaylistOptionSmoothSeek(COMMAND_T*);
+
 void AppendPasteCropPlaylist(RegionPlaylist* _playlist, int _mode);
 void AppendPasteCropPlaylist(COMMAND_T*);
 

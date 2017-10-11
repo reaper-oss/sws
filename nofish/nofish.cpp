@@ -292,7 +292,7 @@ const vector<int>& NFTrackItemUtilities::NFGetIntVector() const
 //////////////////////////////////////////////////////////////////
 
 
-char curMouseMod[32];
+char g_curMouseMod[32];
 
 // char windowOut[32];
 // char segmentOut[32];
@@ -302,17 +302,12 @@ char curMouseMod[32];
 // called on start with init = true and on shortcut release with init = false. Return false to abort init.
 static bool EraserToolInit(COMMAND_T* ct, bool init)
 {
-
 	bool initSuccessful = true;
 
 	if (init) {
 		// get the currently assigned mm, store it and restore after this continious action is performed
-		GetMouseModifier("MM_CTX_ITEM", 0, curMouseMod, sizeof(curMouseMod)); // Media item left drag, Default action
+		GetMouseModifier("MM_CTX_ITEM", 0, g_curMouseMod, sizeof(g_curMouseMod)); // Media item left drag, Default action
 		SetMouseModifier("MM_CTX_ITEM", 0, "28"); // Marquee sel. items and time = 28
-		Undo_BeginBlock();
-		Main_OnCommand(40635, 0); // remove time sel.
-		// Main_OnCommand(40289, 0); // unsel. all items
-
 
 		// select item under mouse
 		// BR_GetMouseCursorContext(windowOut, sizeof(windowOut), segmentOut, sizeof(segmentOut), detailsOut, sizeof(detailsOut));
@@ -323,7 +318,9 @@ static bool EraserToolInit(COMMAND_T* ct, bool init)
 			SetMediaItemSelected(item, true);
 			UpdateArrange();
 		}
-			
+
+		Undo_BeginBlock();
+		Main_OnCommand(40635, 0); // remove time sel.
 	}
 
 	if (!init) {
@@ -335,11 +332,12 @@ static bool EraserToolInit(COMMAND_T* ct, bool init)
 		Undo_EndBlock(SWS_CMD_SHORTNAME(ct), 0);
 
 		// set mm back to original when shortcut is released
-		SetMouseModifier("MM_CTX_ITEM", 0, curMouseMod);
+		SetMouseModifier("MM_CTX_ITEM", 0, g_curMouseMod);
 	}
 		
 	return initSuccessful;
 }
+
 
 static void DoEraserTool(COMMAND_T* ct)
 {

@@ -1,4 +1,7 @@
 Actions:
++New actions (Main section):
+ - SWS: Split items at time selection (if exists), else at edit cursor (also during playback)
++Renamed "SWS: Split items at time selection (if exists), else at edit cursor" to "SWS: Split items at time selection (if exists), play cursor (during playback), else at edit cursor" (Issue 796)
 +Renamed "SWS: Crossfade adjacent selected items (move later items)" to "SWS: Crossfade adjacent selected items (move edges of adjacent items)" (Issue 902)
 
 Fixes:

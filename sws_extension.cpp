@@ -1029,6 +1029,10 @@ error:
 		IMPAPI(StopTrackPreview);
 		IMPAPI(StopTrackPreview2);
 		IMPAPI(stringToGuid);
+		IMPAPI(TakeFX_GetCount);
+		IMPAPI(TakeFX_GetFloatingWindow);
+		IMPAPI(TakeFX_SetOpen);
+		IMPAPI(TakeFX_Show);
 		IMPAPI(TakeIsMIDI);
 		IMPAPI(time_precise);
 		IMPAPI(TimeMap_GetDividedBpmAtTime);
@@ -1052,7 +1056,7 @@ error:
 		IMPAPI(TrackFX_GetCount);
 		IMPAPI(TrackFX_GetFXName);
 		IMPAPI(TrackFX_GetFXGUID);
-		IMPAPI(TrackFX_GetInstrument); // nofish: didn't find when this was added in changelog
+		IMPAPI(TrackFX_GetInstrument); // NF: didn't find when this was added in changelog
 		IMPAPI(TrackFX_GetNumParams);
 		IMPAPI(TrackFX_GetOpen);
 		IMPAPI(TrackFX_GetParam);

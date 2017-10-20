@@ -230,8 +230,9 @@ APIdef g_apidefs[] =
 
 	{ APIFUNC(ULT_GetMediaItemNote), "const char*", "MediaItem*", "item", "[ULT] Get item notes.", },
 	{ APIFUNC(ULT_SetMediaItemNote), "void", "MediaItem*,const char*", "item,note", "[ULT] Set item notes.", },
-	
-		// #781
+
+	// *** nofish stuff ***
+	// #781
 	{ APIFUNC(NF_GetMediaItemMaxPeak), "double", "MediaItem*", "item", "Returns the greatest max. peak value of all active channels of an audio item active take, post item gain, post take volume envelope, post-fade, pre fader, pre item FX. \n Returns -150.0 if MIDI take or empty item.", },
 	{ APIFUNC(NF_GetMediaItemPeakRMS_Windowed), "double", "MediaItem*", "item", "Returns the average RMS peak level of all active channels of an audio item active take, post item gain, post take volume envelope, post-fade, pre fader, pre item FX. \n Obeys 'Window size for peak RMS' setting in 'SWS: Set RMS analysis/normalize options' for calculation. Returns -150.0 if MIDI take or empty item.", },
 	{ APIFUNC(NF_GetMediaItemPeakRMS_NonWindowed), "double", "MediaItem*", "item", "Returns the greatest overall (non-windowed) RMS peak level of all active channels of an audio item active take, post item gain, post take volume envelope, post-fade, pre fader, pre item FX. \n Returns -150.0 if MIDI take or empty item.", },
@@ -241,6 +242,14 @@ APIdef g_apidefs[] =
 	{ APIFUNC(NF_AnalyzeTakeLoudness_IntegratedOnly), "bool", "MediaItem_Take*,double*", "take,lufsIntegratedOut", "Does LUFS integrated analysis only. Faster than full loudness analysis (<a href=\"#NF_AnalyzeTakeLoudness\">NF_AnalyzeTakeLoudness</a>) . Use this if only LUFS integrated is required." }, 
 	{ APIFUNC(NF_AnalyzeTakeLoudness), "bool", "MediaItem_Take*,bool,double*,double*,double*,double*,double*,double*", "take,analyzeTruePeak,lufsIntegratedOut,rangeOut, truePeakOut,truePeakPosOut,shortTermMaxOut,momentaryMaxOut", "Full loudness analysis. retval: returns true on successful analysis, false on MIDI take or when analysis failed for some reason. analyzeTruePeak=true: Also do true peak analysis. Returns true peak value and true peak position which can be jumped to with SetEditCurPos(). Considerably slower than without true peak analysis (since it uses oversampling). Note: Short term uses a time window of 3 sec. for calculation. So for items shorter than this shortTermMaxOut can't be calculated. Momentary uses a time window of 0.4 sec. " }, 
 	{ APIFUNC(NF_AnalyzeTakeLoudness2), "bool", "MediaItem_Take*,bool,double*,double*,double*,double*,double*,double*,double*,double*", "take,analyzeTruePeak,lufsIntegratedOut,rangeOut, truePeakOut,truePeakPosOut,shortTermMaxOut,momentaryMaxOut,shortTermMaxPosOut,momentaryMaxPosOut", "Same as <a href=\"#NF_AnalyzeTakeLoudness\">NF_AnalyzeTakeLoudness</a> but additionally returns shortTermMaxPos and momentaryMaxPos which can be jumped to with SetEditCurPos(). Note: shortTermMaxPos and momentaryMaxPos actaully indicate the beginning of time  <i>intervalls</i>, (3 sec. and 0.4 sec. resp.). " },
+
+	// Offline/Online
+	{ APIFUNC(NF_TrackFX_GetOffline), "bool", "MediaTrack*,int", "track,fx", "See <a href=\"#NF_TrackFX_SetOffline\">NF_TrackFX_SetOffline</a>. " },
+	{ APIFUNC(NF_TrackFX_SetOffline), "void", "MediaTrack*,int,bool", "track,fx,offline", "Set offline state for track FX (zero-based).  If FX are floating when offlining they'll float again when brought back online. Note: no-op if recording. (To set bypass state use native API <a href=\"#TrackFX_SetEnabled\">TrackFX_SetEnabled</a>). " },
+
+	{ APIFUNC(NF_TakeFX_GetOffline), "bool", "MediaItem_Take*,int", "take,fx", "See <a href=\"#NF_TakeFX_SetOffline\">NF_TakeFX_SetOffline</a>. " },
+	{ APIFUNC(NF_TakeFX_SetOffline), "void", "MediaItem_Take*,int,bool", "take,fx,offline", "Set offline state for take FX (zero-based).  If FX are floating when offlining they'll float again when brought back online. Note: no-op if recording. (To set bypass state use native API <a href=\"#TakeFX_SetEnabled\">TakeFX_SetEnabled</a>). " },
+	// /*** nofish stuff ***
 
 	{ APIFUNC(SN_FocusMIDIEditor), "void", "", "", "Focuses the active/open MIDI editor.", },
 

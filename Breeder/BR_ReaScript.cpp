@@ -930,6 +930,8 @@ bool BR_Win32_WritePrivateProfileString (const char* sectionName, const char* ke
 	return !!WritePrivateProfileString(sectionName, keyName, value, filePath);
 }
 
+
+// *** nofish stuff ***
 // #781
 double NF_GetMediaItemMaxPeak(MediaItem* item)
 {
@@ -972,3 +974,164 @@ bool NF_AnalyzeTakeLoudness2(MediaItem_Take * take, bool analyzeTruePeak, double
 	return NFDoAnalyzeTakeLoudness2(take, analyzeTruePeak, lufsIntegratedOut, rangeOut, truePeakOut, truePeakPosOut, shorTermMaxOut, momentaryMaxOut, shortTermMaxPosOut, momentaryMaxPosOut);
 }
 
+// Track/TakeFX_Get/SetOffline
+bool NF_TrackFX_GetOffline(MediaTrack* track, int fx)
+{
+	char state[2] = "0";
+	SNM_ChunkParserPatcher p(track);
+	p.SetWantsMinimalState(true);
+	if (p.Parse(SNM_GET_CHUNK_CHAR, 2, "FXCHAIN", "BYPASS", fx, 2, state) > 0)
+		return !strcmp(state, "1");
+
+	return false;
+}
+
+void NF_TrackFX_SetOffline(MediaTrack* track, int fx, bool offline)
+{
+	SNM_ChunkParserPatcher p(track);
+	p.SetWantsMinimalState(true);
+
+	bool updt = false;
+	if (offline) {
+		updt = (p.ParsePatch(SNM_SET_CHUNK_CHAR, 2, "FXCHAIN", "BYPASS", fx, 2, (void*)"1") > 0);
+
+		// chunk BYPASS 3rd value isn't updated when offlining via chunk. So set it if FX is floating when offlining,
+		// to match REAPER behaviour
+		// https://forum.cockos.com/showpost.php?p=1901608&postcount=12
+		if (updt) {
+			HWND hwnd = NULL;
+			hwnd = TrackFX_GetFloatingWindow(track, fx);
+
+			if (hwnd) // FX is currently floating, set 3rd value
+				p.ParsePatch(SNM_SET_CHUNK_CHAR, 2, "FXCHAIN", "BYPASS", fx, 3, (void*)"1");
+			else // not floating
+				p.ParsePatch(SNM_SET_CHUNK_CHAR, 2, "FXCHAIN", "BYPASS", fx, 3, (void*)"0");
+		}
+
+		// close the GUI for buggy plugins (before chunk update)
+		// http://github.com/reaper-oss/sws/issues/317
+		int supportBuggyPlug = GetPrivateProfileInt("General", "BuggyPlugsSupport", 0, g_SNM_IniFn.Get());
+		if (updt && supportBuggyPlug)
+			TrackFX_SetOpen(track, fx, false);
+	}
+		
+	else { // set online
+		updt = (p.ParsePatch(SNM_SET_CHUNK_CHAR, 2, "FXCHAIN", "BYPASS", fx, 2, (void*)"0") > 0);
+
+		if (updt) {
+			bool committed = false;
+			committed = p.Commit(false); // need to commit immediately, otherwise below making FX float wouldn't work 
+
+			if (committed) {
+				// check if it should float when onlining
+				char state[2] = "0";
+				if ((p.Parse(SNM_GET_CHUNK_CHAR, 2, "FXCHAIN", "BYPASS", fx, 3, state) > 0)) {
+					if (!strcmp(state, "1"))
+						TrackFX_Show(track, fx, 3); // show floating
+				}
+			}
+		}
+	}
+
+}
+
+
+// in chunk take FX Id's are counted consecutively across takes (zero-based)
+bool NF_TakeFX_GetOffline(MediaItem_Take* takeIn, int fxIn)
+{
+	// find chunk fx id
+	MediaItem* parentItem = GetMediaItemTake_Item(takeIn);
+	int takesCount = CountTakes(parentItem);
+	int totalTakeFX = 0; int takeFXId_inChunk = -1;
+
+	for (int i = 0; i < takesCount; i++) {
+		MediaItem_Take* curTake = GetTake(parentItem, i);
+
+		int FXcountCurTake = TakeFX_GetCount(curTake);
+
+		if (curTake == takeIn) {
+			takeFXId_inChunk = totalTakeFX + fxIn;
+			break;
+		}
+
+		totalTakeFX += FXcountCurTake;
+	}
+
+	if (takeFXId_inChunk >= 0) {
+		char state[2] = "0";
+		SNM_ChunkParserPatcher p(parentItem);
+		p.SetWantsMinimalState(true);
+		if (p.Parse(SNM_GET_CHUNK_CHAR, 2, "TAKEFX", "BYPASS", takeFXId_inChunk, 2, state) > 0)
+			return !strcmp(state, "1");
+	}
+
+	return false;
+}
+
+void NF_TakeFX_SetOffline(MediaItem_Take* takeIn, int fxIn, bool offline)
+{
+	// find chunk fx id
+	MediaItem* parentItem = GetMediaItemTake_Item(takeIn);
+
+	int takesCount = CountTakes(parentItem);
+	int totalTakeFX = 0; int takeFXId_inChunk = -1;
+
+	for (int i = 0; i < takesCount; i++) {
+		MediaItem_Take* curTake = GetTake(parentItem, i);
+
+		int FXcountCurTake = TakeFX_GetCount(curTake);
+
+		if (curTake == takeIn) {
+			takeFXId_inChunk = totalTakeFX + fxIn;
+			break;
+		}
+
+		totalTakeFX += FXcountCurTake;
+	}
+	
+	if (takeFXId_inChunk >= 0) {
+		SNM_ChunkParserPatcher p(parentItem);
+		p.SetWantsMinimalState(true);
+		bool updt = false;
+
+		// buggy plugins workaround not necessary for take FX, according to
+		// https://github.com/reaper-oss/sws/blob/b3ad441575f075d9232872f7873a6af83bb9de61/SnM/SnM_FX.cpp#L299
+
+		if (offline) {
+			updt = (p.ParsePatch(SNM_SET_CHUNK_CHAR, 2, "TAKEFX", "BYPASS", takeFXId_inChunk, 2, (void*)"1") >0);
+			if (updt) {
+				// check for BYPASS 3rd value
+				HWND hwnd = NULL;
+				hwnd = TakeFX_GetFloatingWindow(takeIn, fxIn);
+
+				if (hwnd) // FX is currently floating, set 3rd value
+					p.ParsePatch(SNM_SET_CHUNK_CHAR, 2, "TAKEFX", "BYPASS", takeFXId_inChunk, 3, (void*)"1");
+				else // not floating
+					p.ParsePatch(SNM_SET_CHUNK_CHAR, 2, "TAKEFX", "BYPASS", takeFXId_inChunk, 3, (void*)"0");
+			}
+			Main_OnCommand(41204, 0); // fully unload unloaded VSTs
+		}
+
+		else { // set online
+			updt = (p.ParsePatch(SNM_SET_CHUNK_CHAR, 2, "TAKEFX", "BYPASS", takeFXId_inChunk, 2, (void*)"0") > 0);
+
+			if (updt) {
+				bool committed = false;
+				committed = p.Commit(false); // need to commit immediately, otherwise below making FX float wouldn't work 
+
+				if (committed) {
+					// check if it should float when onlining
+					char state[2] = "0";
+					if ((p.Parse(SNM_GET_CHUNK_CHAR, 2, "TAKEFX", "BYPASS", takeFXId_inChunk, 3, state) > 0)) {
+						if (!strcmp(state, "1"))
+							TakeFX_Show(takeIn, fxIn, 3); // show floating
+					}
+				}
+			}
+
+		}
+
+	}
+}
+
+// /*** nofish stuff ***

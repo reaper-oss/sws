@@ -7,6 +7,7 @@ Actions:
 +Renamed "SWS: Crossfade adjacent selected items (move later items)" to "SWS: Crossfade adjacent selected items (move edges of adjacent items)" (Issue 902)
 
 Fixes:
++Issue 864: "SWS/S&M: Float next FX (and close others) for selected tracks" now skips over offline FX
 +Loudness: Prevent items going offline during analysis (hopefully fixes cornercase issue with occasionally wrong analysis results)
  
 

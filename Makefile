@@ -112,7 +112,7 @@ $(TARGET): $(OBJS)
 	$(CXX) -shared -o $@ $(CXXFLAGS) $(LFLAGS) $^ $(LINKEXTRA)
 
 clean: 
-	-rm $(OBJS) $(TARGET)
+	-rm $(OBJS) $(TARGET) sws_extension.rc_mac_dlg sws_extension.rc_mac_menu
 
 install: $(TARGET)
 	-mkdir ~/.REAPER/UserPlugins

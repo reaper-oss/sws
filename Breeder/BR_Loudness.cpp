@@ -2231,6 +2231,7 @@ void BR_AnalyzeLoudnessWnd::AbortAnalyze ()
 	ShowWindow(GetDlgItem(m_hwnd, IDC_PROGRESS), SW_HIDE);
 	SendMessage(GetDlgItem(m_hwnd, IDC_PROGRESS), PBM_SETPOS, 0, 0);
 	EnableWindow(GetDlgItem(m_hwnd, IDC_ANALYZE), true);
+	EnableWindow(GetDlgItem(m_hwnd, IDC_CANCEL), false);
 
 	// Make sure objects already in the list are NOT destroyed
 	for (int i = 0; i < m_analyzeQueue.GetSize(); ++i)
@@ -2250,6 +2251,7 @@ void BR_AnalyzeLoudnessWnd::AbortReanalyze ()
 	ShowWindow(GetDlgItem(m_hwnd, IDC_PROGRESS), SW_HIDE);
 	SendMessage(GetDlgItem(m_hwnd, IDC_PROGRESS), PBM_SETPOS, 0, 0);
 	EnableWindow(GetDlgItem(m_hwnd, IDC_ANALYZE), true);
+	EnableWindow(GetDlgItem(m_hwnd, IDC_CANCEL), false);
 
 	m_reanalyzeQueue.Empty(false);
 	m_analyzeInProgress = false;
@@ -3021,6 +3023,8 @@ void BR_AnalyzeLoudnessWnd::OnInitDlg ()
 	m_pLists.Add(m_list);
 	SetTimer(m_hwnd, UPDATE_TIMER, UPDATE_TIMER_FREQ, NULL);
 
+	EnableWindow(GetDlgItem(m_hwnd, IDC_CANCEL), false);
+
 	this->Update();
 }
 
@@ -3094,6 +3098,7 @@ void BR_AnalyzeLoudnessWnd::OnCommand (WPARAM wParam, LPARAM lParam)
 				SendMessage(GetDlgItem(m_hwnd, IDC_PROGRESS), PBM_SETPOS, 0, 0);
 				ShowWindow(GetDlgItem(m_hwnd, IDC_PROGRESS), SW_SHOW);
 				EnableWindow(GetDlgItem(m_hwnd, IDC_ANALYZE), false);
+				EnableWindow(GetDlgItem(m_hwnd, IDC_CANCEL), true);
 				SetTimer(m_hwnd, ANALYZE_TIMER, ANALYZE_TIMER_FREQ, NULL);
 			}
 		}
@@ -3121,6 +3126,7 @@ void BR_AnalyzeLoudnessWnd::OnCommand (WPARAM wParam, LPARAM lParam)
 				SendMessage(GetDlgItem(m_hwnd, IDC_PROGRESS), PBM_SETPOS, 0, 0);
 				ShowWindow(GetDlgItem(m_hwnd, IDC_PROGRESS), SW_SHOW);
 				EnableWindow(GetDlgItem(m_hwnd, IDC_ANALYZE), false);
+				EnableWindow(GetDlgItem(m_hwnd, IDC_CANCEL), true);
 				SetTimer(m_hwnd, REANALYZE_TIMER, ANALYZE_TIMER_FREQ, NULL);
 			}
 		}
@@ -3438,6 +3444,7 @@ void BR_AnalyzeLoudnessWnd::OnTimer (WPARAM wParam)
 				ShowWindow(GetDlgItem(m_hwnd, IDC_PROGRESS), SW_HIDE);
 				SendMessage(GetDlgItem(m_hwnd, IDC_PROGRESS), PBM_SETPOS, 0, 0);
 				EnableWindow(GetDlgItem(m_hwnd, IDC_ANALYZE), true);
+				EnableWindow(GetDlgItem(m_hwnd, IDC_CANCEL), false);
 				KillTimer(m_hwnd, ANALYZE_TIMER);
 				return;
 			}
@@ -3494,6 +3501,7 @@ void BR_AnalyzeLoudnessWnd::OnTimer (WPARAM wParam)
 				ShowWindow(GetDlgItem(m_hwnd, IDC_PROGRESS), SW_HIDE);
 				SendMessage(GetDlgItem(m_hwnd, IDC_PROGRESS), PBM_SETPOS, 0, 0);
 				EnableWindow(GetDlgItem(m_hwnd, IDC_ANALYZE), true);
+				EnableWindow(GetDlgItem(m_hwnd, IDC_CANCEL), false);
 				KillTimer(m_hwnd, REANALYZE_TIMER);
 				return;
 			}

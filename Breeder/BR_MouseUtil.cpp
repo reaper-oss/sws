@@ -652,12 +652,12 @@ void BR_MouseInfo::GetContext (const POINT& p)
 				POINT rulerP = p; ScreenToClient(ruler, &rulerP);
 				RECT r; GetClientRect(ruler, &r);
 
+				const std::array<int, 4> &lanes = this->GetRulerLanesHeight(r.bottom - r.top);
+
 				int limitL = 0;
 				int limitH = 0;
-				int lanes[4] = {1, 1, 1, 3};
-				this->ScaleRulerLanes(r.bottom - r.top, lanes);
 
-				for (int i = 0; i < 4; ++i)
+				for (int i = 0; i < lanes.size(); ++i)
 				{
 					limitL = limitH;
 					limitH += lanes[i];
@@ -667,9 +667,10 @@ void BR_MouseInfo::GetContext (const POINT& p)
 					else if (i == 2) mouseInfo.segment = "tempo_lane";
 					else if (i == 3) mouseInfo.segment = "timeline";
 
-					if (rulerP.y >= limitL && rulerP.y < limitH )
+					if (rulerP.y >= limitL && rulerP.y < limitH)
 						break;
 				}
+
 				mouseInfo.position = mousePos;
 				found = true;
 			}
@@ -1481,7 +1482,7 @@ int BR_MouseInfo::IsMouseOverEnvelopeLineTake (MediaItem_Take* take, int takeHei
 	return mouseHit;
 }
 
-void BR_MouseInfo::ScaleRulerLanes(const double rulerHeight, int *lanes)
+array<int, 4> BR_MouseInfo::GetRulerLanesHeight(const double rulerHeight)
 {
 	/* lane: 0 -> regions  *
 	*        1 -> markers  *
@@ -1492,22 +1493,21 @@ void BR_MouseInfo::ScaleRulerLanes(const double rulerHeight, int *lanes)
 
 	constexpr int rowMaxHeight = 16;
 
-	int rowCount = 0;
-	for(int i = 0; i < 4; ++i)
-		rowCount += lanes[i];
+	array<int, 4> lanes{1, 1, 1, 3};
 
+	const int rowCount = accumulate(lanes.begin(), lanes.end(), 0);
 	const int rowHeight = min((int)ceil(rulerHeight / rowCount), rowMaxHeight);
 	int availableRows = (int)ceil(rulerHeight / rowHeight) - rowCount;
 
 	int lane = 0, maxLane = 2;
-	while(availableRows > 0) {
+	while (availableRows > 0) {
 		++lanes[lane];
 
 		// grow the tempo lane only once
-		if(lane == 2)
+		if (lane == 2)
 			maxLane = 1;
 
-		if(lane >= maxLane)
+		if (lane >= maxLane)
 			lane = 0;
 		else
 			++lane;
@@ -1516,8 +1516,10 @@ void BR_MouseInfo::ScaleRulerLanes(const double rulerHeight, int *lanes)
 	}
 
 	// convert rows into pixels
-	for(int i = 0; i < 4; ++i)
-		lanes[i] *= rowHeight;
+	for (int &lane : lanes)
+		lane *= rowHeight;
+
+	return lanes;
 }
 
 int BR_MouseInfo::IsHwndMidiEditor (HWND hwnd, HWND* midiEditor, HWND* subView)

@@ -652,13 +652,15 @@ void BR_MouseInfo::GetContext (const POINT& p)
 				POINT rulerP = p; ScreenToClient(ruler, &rulerP);
 				RECT r; GetClientRect(ruler, &r);
 
-				int rulerH = r.bottom-r.top;
 				int limitL = 0;
 				int limitH = 0;
+				int lanes[4] = {1, 1, 1, 3};
+				this->ScaleRulerLanes(r.bottom - r.top, lanes);
+
 				for (int i = 0; i < 4; ++i)
 				{
 					limitL = limitH;
-					limitH += this->GetRulerLaneHeight(rulerH, i);
+					limitH += lanes[i];
 
 					if      (i == 0) mouseInfo.segment = "region_lane";
 					else if (i == 1) mouseInfo.segment = "marker_lane";
@@ -1479,24 +1481,43 @@ int BR_MouseInfo::IsMouseOverEnvelopeLineTake (MediaItem_Take* take, int takeHei
 	return mouseHit;
 }
 
-int BR_MouseInfo::GetRulerLaneHeight (int rulerH, int lane)
+void BR_MouseInfo::ScaleRulerLanes(const double rulerHeight, int *lanes)
 {
 	/* lane: 0 -> regions  *
 	*        1 -> markers  *
 	*        2 -> tempo    *
 	*        3 -> timeline */
 
-	int timeline = RoundToInt((double)rulerH / 2);
-	int markers = TruncToInt((double)timeline / 3) + 1;
+	// Test script for this logic: https://gist.github.com/cfillion/03097fe9e77a77c5e83f137e26dd79eb
 
-	if (lane == 0)
-		return rulerH - markers*2 - timeline;
-	else if (lane == 1 || lane == 2)
-		return markers;
-	else if (lane == 3)
-		return timeline;
+	constexpr int rowMaxHeight = 16;
 
-	return 0;
+	int rowCount = 0;
+	for(int i = 0; i < 4; ++i)
+		rowCount += lanes[i];
+
+	const int rowHeight = min((int)ceil(rulerHeight / rowCount), rowMaxHeight);
+	int availableRows = (int)ceil(rulerHeight / rowHeight) - rowCount;
+
+	int lane = 0, maxLane = 2;
+	while(availableRows > 0) {
+		++lanes[lane];
+
+		// grow the tempo lane only once
+		if(lane == 2)
+			maxLane = 1;
+
+		if(lane >= maxLane)
+			lane = 0;
+		else
+			++lane;
+
+		--availableRows;
+	}
+
+	// convert rows into pixels
+	for(int i = 0; i < 4; ++i)
+		lanes[i] *= rowHeight;
 }
 
 int BR_MouseInfo::IsHwndMidiEditor (HWND hwnd, HWND* midiEditor, HWND* subView)

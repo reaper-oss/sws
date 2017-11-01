@@ -1037,26 +1037,15 @@ void NF_TrackFX_SetOffline(MediaTrack* track, int fx, bool offline)
 
 
 // in chunk take FX Id's are counted consecutively across takes (zero-based)
+int FindTakeFXId_inChunk(MediaItem* parentItem, MediaItem_Take* takeIn, int fxIn);
+
+
 bool NF_TakeFX_GetOffline(MediaItem_Take* takeIn, int fxIn)
 {
 	// find chunk fx id
 	MediaItem* parentItem = GetMediaItemTake_Item(takeIn);
-	int takesCount = CountTakes(parentItem);
-	int totalTakeFX = 0; int takeFXId_inChunk = -1;
-
-	for (int i = 0; i < takesCount; i++) {
-		MediaItem_Take* curTake = GetTake(parentItem, i);
-
-		int FXcountCurTake = TakeFX_GetCount(curTake);
-
-		if (curTake == takeIn) {
-			takeFXId_inChunk = totalTakeFX + fxIn;
-			break;
-		}
-
-		totalTakeFX += FXcountCurTake;
-	}
-
+	int takeFXId_inChunk = FindTakeFXId_inChunk(parentItem, takeIn, fxIn);
+	
 	if (takeFXId_inChunk >= 0) {
 		char state[2] = "0";
 		SNM_ChunkParserPatcher p(parentItem);
@@ -1072,23 +1061,8 @@ void NF_TakeFX_SetOffline(MediaItem_Take* takeIn, int fxIn, bool offline)
 {
 	// find chunk fx id
 	MediaItem* parentItem = GetMediaItemTake_Item(takeIn);
+	int takeFXId_inChunk = FindTakeFXId_inChunk(parentItem, takeIn, fxIn);
 
-	int takesCount = CountTakes(parentItem);
-	int totalTakeFX = 0; int takeFXId_inChunk = -1;
-
-	for (int i = 0; i < takesCount; i++) {
-		MediaItem_Take* curTake = GetTake(parentItem, i);
-
-		int FXcountCurTake = TakeFX_GetCount(curTake);
-
-		if (curTake == takeIn) {
-			takeFXId_inChunk = totalTakeFX + fxIn;
-			break;
-		}
-
-		totalTakeFX += FXcountCurTake;
-	}
-	
 	if (takeFXId_inChunk >= 0) {
 		SNM_ChunkParserPatcher p(parentItem);
 		p.SetWantsMinimalState(true);
@@ -1132,6 +1106,26 @@ void NF_TakeFX_SetOffline(MediaItem_Take* takeIn, int fxIn, bool offline)
 		}
 
 	}
+}
+
+int FindTakeFXId_inChunk(MediaItem* parentItem, MediaItem_Take* takeIn, int fxIn)
+{
+	int takesCount = CountTakes(parentItem);
+	int totalTakeFX = 0; int takeFXId_inChunk = -1;
+
+	for (int i = 0; i < takesCount; i++) {
+		MediaItem_Take* curTake = GetTake(parentItem, i);
+
+		int FXcountCurTake = TakeFX_GetCount(curTake);
+
+		if (curTake == takeIn) {
+			takeFXId_inChunk = totalTakeFX + fxIn;
+			break;
+		}
+
+		totalTakeFX += FXcountCurTake;
+	}
+	return takeFXId_inChunk;
 }
 
 // /*** nofish stuff ***

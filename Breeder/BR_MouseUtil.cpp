@@ -1492,27 +1492,25 @@ array<int, 4> BR_MouseInfo::GetRulerLanesHeight(const double rulerHeight)
 	// Test script for this logic: https://gist.github.com/cfillion/03097fe9e77a77c5e83f137e26dd79eb
 
 	constexpr int rowMaxHeight = 16;
-
+	array<int, 4> limits{255, 255, 2, 3};
 	array<int, 4> lanes{1, 1, 1, 3};
 
-	const int rowCount = accumulate(lanes.begin(), lanes.end(), 0);
-	const int rowHeight = min((int)ceil(rulerHeight / rowCount), rowMaxHeight);
-	int availableRows = (int)ceil(rulerHeight / rowHeight) - rowCount;
+	for (int i = 0; i < 3; ++i) {
+		if (!GetToggleCommandState(42323 + i))
+			limits[i] = lanes[i];
+	}
 
-	int lane = 0, maxLane = 2;
-	while (availableRows > 0) {
-		++lanes[lane];
+	const int minRowCount = accumulate(lanes.begin(), lanes.end(), 0);
+	const int rowHeight = min((int)ceil(rulerHeight / minRowCount), rowMaxHeight);
 
-		// grow the tempo lane only once
-		if (lane == 2)
-			maxLane = 1;
+	int availableRows = (int)ceil(rulerHeight / rowHeight) - minRowCount;
+	availableRows = min(availableRows, accumulate(limits.begin(), limits.end(), 0) - minRowCount);
 
-		if (lane >= maxLane)
-			lane = 0;
-		else
-			++lane;
-
-		--availableRows;
+	for (int lane = 0; availableRows > 0; lane = (lane + 1) % lanes.size()) {
+		if (limits[lane] > lanes[lane]) {
+			++lanes[lane];
+			--availableRows;
+		}
 	}
 
 	// convert rows into pixels

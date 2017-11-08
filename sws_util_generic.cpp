@@ -69,8 +69,3 @@ void SWS_ShowTextScrollbar(HWND hwnd, bool show)
     if (!hwnd) return;
 
 }
-
-void SetMenuItemSwatch(HMENU hMenu, UINT pos, int iSize, COLORREF color)
-{
-  if (!hMenu) return;
-}

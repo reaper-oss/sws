@@ -1178,7 +1178,7 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 			DeleteDC(hDC);
 		if (hdcScreen)
 			DeleteDC(hdcScreen);
-#else
+#elif defined(__APPLE__)
 		UpdateCustomColors();
 
 		int iCommand1 = SWSGetCommandID(TrackCustCol, 0);
@@ -1196,6 +1196,59 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 			if (h)
 				SetMenuItemSwatch(h, iPos, 12, g_custColors[i % 16]);
 		}
+#else
+		int iCommand1 = SWSGetCommandID(TrackCustCol, 0);
+		int iCommand2 = SWSGetCommandID(ItemCustCol, 0);
+		static WDL_PtrList<void> pBitmaps;
+
+		const int h = (SWELL_GetScaling256() * 16)/256;
+		const int w = h + 4;
+
+		if (pBitmaps.GetSize() == 0)
+		{
+			unsigned char *bits = (unsigned char *)calloc(w*h,sizeof(int));
+
+			UpdateCustomColors();
+			if (bits)
+			{
+				for (int i = 0; i < 16; i++)
+					pBitmaps.Add(CreateBitmap(w,h,1,32,bits));
+				free(bits);
+			}
+		}
+
+		for (int i = 0; i < 32; i++)
+		{
+			int iPos;
+			HMENU h;
+			if (i < 16)
+				h = FindMenuItem(hMenu, iCommand1 + i, &iPos);
+			else
+				h = FindMenuItem(hMenu, iCommand2 + i-16, &iPos);
+			if (h)
+			{
+				HBITMAP bm = (HBITMAP) pBitmaps.Get(i%16);
+				if (bm)
+				{
+					BITMAP bmi;
+					GetObject(bm,sizeof(bmi),&bmi);
+					if (bmi.bmBits && bmi.bmPlanes == 1 && bmi.bmBitsPixel == 32)
+					{
+						const int n = (bmi.bmWidthBytes * bmi.bmHeight)/4;
+						const int cc = g_custColors[i%16] | 0xFF000000;
+						int *wr = (int *)bmi.bmBits;
+						for (int j=0;j<n; j ++)
+							wr[j] = cc;
+					}
+
+					MENUITEMINFO mi={sizeof(MENUITEMINFO),};
+					mi.fMask = MIIM_BITMAP;
+					mi.hbmpItem = bm;
+					SetMenuItemInfo(h, iPos, true, &mi);
+				}
+			}
+		}
+
 #endif
 	}
 }

@@ -179,6 +179,7 @@ void SetCustomColors(COLORREF custColors[]);
 void ShowColorChooser(COLORREF initialCol);
 bool GetChosenColor(COLORREF* pColor);
 void HideColorChooser();
+void SetMenuItemSwatch(HMENU hMenu, UINT pos, int size, COLORREF color);
 #endif
 
 HCURSOR SWS_LoadCursor(int id);
@@ -189,7 +190,6 @@ HCURSOR SWS_LoadCursor(int id);
 void mouse_event(DWORD dwFlags, DWORD dx, DWORD dy, DWORD dwData, ULONG_PTR dwExtraInfo);
 BOOL IsWindowEnabled(HWND hwnd);
 int GetMenuString(HMENU hMenu, UINT uIDItem, char* lpString, int nMaxCount, UINT uFlag);
-void SetMenuItemSwatch(HMENU hMenu, UINT pos, int size, COLORREF color);
 #endif
 
 // Command/action handling, sws_extension.cpp

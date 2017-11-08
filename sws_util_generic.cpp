@@ -43,37 +43,6 @@ void SWS_GetTimeString(int time, char* buf, int bufsize)
   else strftime(buf,bufsize,"%X",tm);
 }
 
-int GetCustomColors(COLORREF custColors[])
-{
-  for (int i = 0; i < 16; i++)
-  {
-    custColors[i] = 0;
-  }
-
-  return 0;
-}
-
-void SetCustomColors(COLORREF custColors[])
-{
-	for (int i = 0; i < 16; i++)
-	{
-	}
-}
-
-void ShowColorChooser(COLORREF initialCol)
-{
-}
-
-bool GetChosenColor(COLORREF* pColor)
-{
-	return false;
-}
-
-void HideColorChooser()
-{
-}
-
-
 // Modified LoadCursor from Cockos WDL
 // Supports these cursors:
 // IDC_GRID_WARP

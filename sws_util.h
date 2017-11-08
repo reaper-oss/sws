@@ -172,11 +172,15 @@ extern const GUID GUID_NULL;
 // sws_util.mm
 void SWS_GetDateString(int time, char* buf, int bufsize);
 void SWS_GetTimeString(int time, char* buf, int bufsize);
+
+#ifdef __APPLE__
 int GetCustomColors(COLORREF custColors[]);
 void SetCustomColors(COLORREF custColors[]);
 void ShowColorChooser(COLORREF initialCol);
 bool GetChosenColor(COLORREF* pColor);
 void HideColorChooser();
+#endif
+
 HCURSOR SWS_LoadCursor(int id);
 #define MOUSEEVENTF_LEFTDOWN    0x0002 /* left button down */
 #define MOUSEEVENTF_LEFTUP      0x0004 /* left button up */

@@ -43,7 +43,7 @@ static bool g_bRecRedRuler = false;
 
 void UpdateCustomColors()
 {
-#ifdef _WIN32
+#ifndef __APPLE__
 	GetPrivateProfileStruct("REAPER", "custcolors", g_custColors, sizeof(g_custColors), get_ini_file());
 #else
 	GetCustomColors(g_custColors);
@@ -64,7 +64,7 @@ void PersistColors()
 	char str[256];
 	sprintf(str, "%d %d", g_crGradStart, g_crGradEnd);
 	WritePrivateProfileString(SWS_INI, GRADIENT_COLOR_KEY, str, get_ini_file());
-#ifdef _WIN32
+#ifndef __APPLE__
 	WritePrivateProfileStruct("REAPER", "custcolors", g_custColors, sizeof(g_custColors), get_ini_file());
 #else
 	SetCustomColors(g_custColors);
@@ -73,7 +73,7 @@ void PersistColors()
 
 INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-#ifndef _WIN32
+#ifdef __APPLE__
 	static int iSettingColor = -1;
 #endif
 	if (INT_PTR r = SNM_HookThemeColorsMessage(hwndDlg, uMsg, wParam, lParam))
@@ -102,7 +102,7 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			DeleteObject(hb);
 			return 1;
 		}
-#ifndef _WIN32
+#ifdef __APPLE__
 		case WM_TIMER:
 		{
 			COLORREF cr;
@@ -167,6 +167,18 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					}
 					else if (wParam == IDC_SETCUST && ChooseColor(&cc))
 						PersistColors();
+#elif !defined(__APPLE__)
+					int cc = 0;
+					if (wParam == IDC_COLOR1) cc = g_crGradStart;
+					if (wParam == IDC_COLOR2) cc = g_crGradEnd;
+
+					if (SWELL_ChooseColor(hwndDlg,&cc,16,(int *)g_custColors))
+					{
+						if (wParam == IDC_COLOR1) g_crGradStart = cc;
+						if (wParam == IDC_COLOR2) g_crGradEnd = cc;
+						PersistColors();
+						InvalidateRect(hwndDlg,NULL,FALSE);
+					}
 #else
 					switch(wParam)
 					{
@@ -211,7 +223,7 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					}
 					else if (wParam == IDC_LOADCOL || wParam == IDC_LOADFROMTHEME)
 					{
-#ifndef _WIN32
+#ifdef __APPLE__
 						if (MessageBox(hwndDlg, __LOCALIZE("WARNING: Loading colors from file will overwrite your global personalized color choices.\nIf these are important to you, press press cancel to abort the loading of new colors!","sws_color"), __LOCALIZE("OSX Color Load WARNING","sws_color"), MB_OKCANCEL) == IDCANCEL)
 							break;
 #endif
@@ -267,7 +279,7 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					// Do something ?
 					// fall through!
 				case IDCANCEL:
-#ifndef _WIN32
+#ifdef __APPLE__
 					if (iSettingColor != -1)
 					{
 						HideColorChooser();

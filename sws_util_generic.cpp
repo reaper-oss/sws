@@ -58,12 +58,6 @@ void mouse_event(DWORD dwFlags, DWORD dx, DWORD dy, DWORD dwData, ULONG_PTR dwEx
 {
 }
 
-BOOL IsWindowEnabled(HWND hwnd)
-{
-    if (!hwnd) return FALSE;
-    return TRUE; // todo add SWELL stub?
-}
-
 void SWS_ShowTextScrollbar(HWND hwnd, bool show)
 {
     if (!hwnd) return;

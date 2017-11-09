@@ -86,6 +86,7 @@ inline void ContinuousActionsInitExit (bool init)
 	}
 	else
 	{
-		ContinuousActionStopAll();
+		// if we are exiting, context is already gone, trying to stop anything will likely segfault or access HWND-after-destroy
+		// ContinuousActionStopAll();
 	}
 }

@@ -717,6 +717,7 @@ SWS_ListView::SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn
   m_dwSavedSelTime(0),m_bShiftSel(false)
 #endif
 {
+	memset(m_oldColors,0,sizeof(m_oldColors));
 	SetWindowLongPtr(hwndList, GWLP_USERDATA, (LONG_PTR)this);
 	if (m_hwndEdit)
 		SetWindowLongPtr(m_hwndEdit, GWLP_USERDATA, 0xdeadf00b);

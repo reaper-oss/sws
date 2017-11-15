@@ -652,7 +652,7 @@ void BR_MouseInfo::GetContext (const POINT& p)
 				POINT rulerP = p; ScreenToClient(ruler, &rulerP);
 				RECT r; GetClientRect(ruler, &r);
 
-				const std::array<int, 4> &lanes = this->GetRulerLanesHeight(r.bottom - r.top);
+				const array<int, 4> &lanes = this->GetRulerLanesHeight(r.bottom - r.top);
 
 				int limitL = 0;
 				int limitH = 0;
@@ -1492,8 +1492,8 @@ array<int, 4> BR_MouseInfo::GetRulerLanesHeight(const double rulerHeight)
 	// Test script for this logic: https://gist.github.com/cfillion/03097fe9e77a77c5e83f137e26dd79eb
 
 	constexpr int rowMaxHeight = 16;
-	array<int, 4> limits{255, 255, 2, 3};
 	array<int, 4> lanes{1, 1, 1, 3};
+	array<int, 4> limits{255, 255, 3, 3};
 
 	for (int i = 0; i < 3; ++i) {
 		if (!GetToggleCommandState(42323 + i))

@@ -30,6 +30,7 @@
 #include "../sws_waitdlg.h"
 #include "../reaper/localize.h"
 
+static void GetRMSOptions(double *target, double *windowSize);
 
 void AnalyzePCMSource(ANALYZE_PCM* a)
 {
@@ -286,12 +287,7 @@ double GetMediaItemPeakRMS_Windowed(MediaItem* mi)
 		a.iChannels = iChannels;
 		a.dRMSs = new double[iChannels];
 
-		// set window size
-		char str[100];
-		GetPrivateProfileString(SWS_INI, SWS_RMS_KEY, "-20,0.1", str, 100, get_ini_file());
-		char* pWindow = strchr(str, ',');
-		a.dWindowSize = pWindow ? atof(pWindow + 1) : 0.1;
-
+		GetRMSOptions(nullptr, &a.dWindowSize);
 
 		if (AnalyzeItem(mi, &a))
 		{
@@ -311,11 +307,7 @@ double GetMediaItemPeakRMS_Windowed(MediaItem* mi)
 
 	ANALYZE_PCM a;
 	memset(&a, 0, sizeof(a));
-
-	char str[100];
-	GetPrivateProfileString(SWS_INI, SWS_RMS_KEY, "-20,0.1", str, 100, get_ini_file());
-	char* pWindow = strchr(str, ',');
-	a.dWindowSize = pWindow ? atof(pWindow + 1) : 0.1;
+	GetRMSOptions(nullptr, &a.dWindowSize);
 
 	if (AnalyzeItem(mi, &a)) {
 		return VAL2DB(a.dRMS);
@@ -342,13 +334,7 @@ double GetMediaItemPeakRMS_NonWindowed(MediaItem* mi)
 	a.iChannels = iChannels;
 	a.dRMSs = new double[iChannels];
 
-	/*
-	// set window size
-	char str[100];
-	GetPrivateProfileString(SWS_INI, SWS_RMS_KEY, "-20,0.1", str, 100, get_ini_file());
-	char* pWindow = strchr(str, ',');
-	a.dWindowSize = pWindow ? atof(pWindow + 1) : 0.1;
-	*/
+	// GetRMSOptions(nullptr, &a.dWindowSize);
 
 	if (AnalyzeItem(mi, &a))
 	{
@@ -420,10 +406,7 @@ void OrganizeByVol(COMMAND_T* ct)
 			memset(&a, 0, sizeof(a));
 			if (ct->user == 2)
 			{	// Windowed mode, set the window size
-				char str[100];
-				GetPrivateProfileString(SWS_INI, SWS_RMS_KEY, "-20,0.1", str, 100, get_ini_file());
-				char* pWindow = strchr(str, ',');
-				a.dWindowSize = pWindow ? atof(pWindow+1) : 0.1;
+				GetRMSOptions(nullptr, &a.dWindowSize);
 			}
 			for (int i = 0; i < items.GetSize(); i++)
 			{
@@ -521,11 +504,8 @@ void RMSNormalizeAll(double dTargetDb, double dWindowSize)
 // ct->user == 0 full item, otherwise windowed
 void DoRMSNormalize(COMMAND_T* ct)
 {
-	char str[100];
-	GetPrivateProfileString(SWS_INI, SWS_RMS_KEY, "-20,0.1", str, 100, get_ini_file());
-	char* pWindow = strchr(str, ',');
-	double dTarget = str[0] ? atof(str) : -20;
-	double dWindow = pWindow ? atof(pWindow+1) : 0.1;
+	double dTarget, dWindow;
+	GetRMSOptions(&dTarget, &dWindow);
 
 	if (ct->user != 2)
 		RMSNormalize(dTarget, ct->user ? dWindow : 0.0);
@@ -533,10 +513,29 @@ void DoRMSNormalize(COMMAND_T* ct)
 		RMSNormalizeAll(dTarget, dWindow);
 }
 
-void SetRMSOptions(COMMAND_T*)
+void GetRMSOptions(double *targetOut, double *winSizeOut)
 {
+	char str[100];
+	GetPrivateProfileString(SWS_INI, SWS_RMS_KEY, "-20,0.1", str, sizeof(str), get_ini_file());
+
+	if(targetOut)
+		*targetOut = str[0] ? atof(str) : -20;
+
+	if(winSizeOut) {
+		const char *pWindow = strchr(str, ',');
+		const double winSize = pWindow ? atof(pWindow + 1) : 0;
+		*winSizeOut = winSize > 0 ? winSize : 0.1;
+	}
+}
+
+static void SetRMSOptions(COMMAND_T*)
+{
+	double target, windowSize;
+	GetRMSOptions(&target, &windowSize);
+
 	char reply[100];
-	GetPrivateProfileString(SWS_INI, SWS_RMS_KEY, "-20,0.1", reply, 100, get_ini_file());
+	snprintf(reply, sizeof(reply), "%g,%g", target, windowSize);
+
 	if (GetUserInputs(__LOCALIZE("SWS RMS options","sws_analysis"), 2, __LOCALIZE("Target RMS normalize level (db),Window size for peak RMS (s)","sws_analysis"), reply, 100))
 	{	// Do really basic input check
 		if (strchr(reply, ',') && strlen(reply) > 2)

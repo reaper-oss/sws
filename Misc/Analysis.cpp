@@ -34,9 +34,6 @@ static void GetRMSOptions(double *target, double *windowSize);
 
 static bool AnalyzePCMSource(ANALYZE_PCM* a)
 {
-	if (!a->pcm)
-		return false;
-
 	// Init local transfer block "t" and sum of squares
 	PCM_source_transfer_t t={0,};
 	t.samplerate = a->pcm->GetSampleRate();

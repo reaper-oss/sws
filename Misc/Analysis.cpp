@@ -177,6 +177,10 @@ bool AnalyzeItem(MediaItem* mi, ANALYZE_PCM* a)
 	if (take)
 		cName = (const char*)GetSetMediaItemTakeInfo(take, "P_NAME", NULL);
 
+	const double oldWinSize = a->dWindowSize;
+	if (a->dWindowSize > a->pcm->GetLength())
+		a->dWindowSize = 0;
+
 	HANDLE hThread = (HANDLE)_beginthreadex(NULL, 0, AnalyzePCMThread, a, 0, NULL);
 
 	WDL_String title;
@@ -184,11 +188,13 @@ bool AnalyzeItem(MediaItem* mi, ANALYZE_PCM* a)
 	SWS_WaitDlg wait(title.Get(), &a->dProgress);
 
 	CloseHandle(hThread);
+
+	// restore original window if it was larger than the item's length
+	a->dWindowSize = oldWinSize;
+
 	delete a->pcm;
 	return true;
 }
-
-
 
 void DoAnalyzeItem(COMMAND_T*)
 {

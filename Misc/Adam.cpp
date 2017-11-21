@@ -745,6 +745,10 @@ void AWFillGapsQuickXFade(COMMAND_T* t)
 						double startOffset = GetMediaItemTakeInfo_Value(currentTake, "D_STARTOFFS");
 						startOffset -= item2StartDiff;
 						SetMediaItemTakeInfo_Value(currentTake, "D_STARTOFFS", startOffset);
+
+						// NF: fix / workaround for setting take start offset doesn't work if containing stretch markers
+						UpdateStretchMarkersAfterSetTakeStartOffset(currentTake, item2StartDiff);
+
 					}
 
 					// Finally trim the item to fill the gap and adjust the snap offset

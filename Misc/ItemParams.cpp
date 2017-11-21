@@ -465,6 +465,9 @@ void CrossfadeSelItems(COMMAND_T* t)
 									double dOffset = *(double*)GetSetMediaItemTakeInfo(take, "D_STARTOFFS", NULL);
 									dOffset -= dEdgeAdj;
 									GetSetMediaItemTakeInfo(take, "D_STARTOFFS", &dOffset);
+
+									// NF: fix / workaround for setting take start offset doesn't work if containing stretch markers
+									UpdateStretchMarkersAfterSetTakeStartOffset(take, dEdgeAdj);
 								}
 							}
 							bChanges = true;

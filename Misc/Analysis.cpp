@@ -32,25 +32,28 @@
 
 static void GetRMSOptions(double *target, double *windowSize);
 
-void AnalyzePCMSource(ANALYZE_PCM* a)
+static bool AnalyzePCMSource(ANALYZE_PCM* a)
 {
 	if (!a->pcm)
-		return;
+		return false;
 
 	// Init local transfer block "t" and sum of squares
 	PCM_source_transfer_t t={0,};
 	t.samplerate = a->pcm->GetSampleRate();
 	t.nch = a->pcm->GetNumChannels();
 	t.length = a->dWindowSize == 0.0 ? 16384 : (int)(a->dWindowSize * t.samplerate);
-	t.samples = new ReaSample[t.length * t.nch];
-	t.samples_out = 0;
-	t.time_s = 0.0;
+	t.samples = new (nothrow) ReaSample[t.length * t.nch];
+
+	if(!t.samples)
+		return false;
 
 	ReaSample* prevBuf = NULL;
 	if (a->dWindowSize != 0.0)
 	{
-		prevBuf = new ReaSample[t.length * t.nch];
-		memset(prevBuf, 0, t.length * t.nch * sizeof(*prevBuf));
+		if((prevBuf = new (nothrow) ReaSample[t.length * t.nch]))
+			memset(prevBuf, 0, t.length * t.nch * sizeof(*prevBuf));
+		else
+			return false;
 	}
 
 	double* dSumSquares = new double[t.nch];
@@ -144,14 +147,14 @@ void AnalyzePCMSource(ANALYZE_PCM* a)
 	delete[] prevBuf;
 	delete[] dSumSquares;
 
-	// Ensure dProgress is exactly 1.0
-	a->dProgress = 1.0;
+	return true;
 }
-
 
 unsigned int WINAPI AnalyzePCMThread(void* pAnalyze)
 {
-	AnalyzePCMSource((ANALYZE_PCM*)pAnalyze);
+	ANALYZE_PCM *a = static_cast<ANALYZE_PCM *>(pAnalyze);
+	a->success = AnalyzePCMSource(a);
+	a->dProgress = 1.0; // closes the wait dialog
 	return 0;
 }
 
@@ -193,7 +196,7 @@ bool AnalyzeItem(MediaItem* mi, ANALYZE_PCM* a)
 	a->dWindowSize = oldWinSize;
 
 	delete a->pcm;
-	return true;
+	return a->success;
 }
 
 void DoAnalyzeItem(COMMAND_T*)

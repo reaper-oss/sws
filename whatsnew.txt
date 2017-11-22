@@ -1,3 +1,6 @@
+Fixes:
++Issue 886: Potentially fix occasional skipping of adjacent regions in Region Playlist, needs testing 
+
 !v2.9.7 featured build (September 28, 2017)
 Fixes:
 +Issue 897: Fix major issues with OSX 10.13 High Sierra

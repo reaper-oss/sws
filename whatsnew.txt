@@ -7,7 +7,8 @@ Actions:
 +Renamed "SWS: Crossfade adjacent selected items (move later items)" to "SWS: Crossfade adjacent selected items (move edges of adjacent items)" (Issue 902)
 
 Fixes:
-+ Crossfade actions: Prevent item content movement if takes contain stretch markers (https://forum.cockos.com/showthread.php?t=197584 posts #11, #12)
++Crossfade actions: Prevent item content movement if takes contain stretch markers (https://forum.cockos.com/showthread.php?t=197584 posts #11, #12)
+ (Also fix for  "SWS/AW: Fade in/out/crossfade selected area of selected items" and "SWS/AW: Trim selected items to fill selection")
 +Loudness: 
  - Issue 927: Change relative gating threshold from -10.0 LU to -20.0 LU (to match with EBU TECH3342 notes)
  - Prevent items going offline during analysis (hopefully fixes cornercase issue with occasionally wrong analysis results)

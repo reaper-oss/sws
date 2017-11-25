@@ -1311,6 +1311,8 @@ void AWFadeSelection(COMMAND_T* t)
 										double dOffset = *(double*)GetSetMediaItemTakeInfo(take, "D_STARTOFFS", NULL);
 										dOffset -= dEdgeAdj2;
 										GetSetMediaItemTakeInfo(take, "D_STARTOFFS", &dOffset);
+
+										UpdateStretchMarkersAfterSetTakeStartOffset(take, dEdgeAdj2); // NF fix
 									}
 								}
 								rightFlag=true;
@@ -1363,6 +1365,8 @@ void AWFadeSelection(COMMAND_T* t)
 										double dOffset = *(double*)GetSetMediaItemTakeInfo(take, "D_STARTOFFS", NULL);
 										dOffset -= dEdgeAdj2;
 										GetSetMediaItemTakeInfo(take, "D_STARTOFFS", &dOffset);
+
+										UpdateStretchMarkersAfterSetTakeStartOffset(take, dEdgeAdj2); // NF fix
 									}
 								}
 								rightFlag=true;
@@ -1441,6 +1445,8 @@ void AWFadeSelection(COMMAND_T* t)
 										double dOffset = *(double*)GetSetMediaItemTakeInfo(take, "D_STARTOFFS", NULL);
 										dOffset -= dEdgeAdj2;
 										GetSetMediaItemTakeInfo(take, "D_STARTOFFS", &dOffset);
+
+										UpdateStretchMarkersAfterSetTakeStartOffset(take, dEdgeAdj2); // NF fix
 									}
 								}
 
@@ -1496,6 +1502,8 @@ void AWFadeSelection(COMMAND_T* t)
 										double dOffset = *(double*)GetSetMediaItemTakeInfo(take, "D_STARTOFFS", NULL);
 										dOffset -= dEdgeAdj;
 										GetSetMediaItemTakeInfo(take, "D_STARTOFFS", &dOffset);
+
+										UpdateStretchMarkersAfterSetTakeStartOffset(take, dEdgeAdj); // NF fix
 									}
 								}
 								rightFlag=true;
@@ -1606,6 +1614,8 @@ void AWFadeSelection(COMMAND_T* t)
 										double dOffset = *(double*)GetSetMediaItemTakeInfo(take, "D_STARTOFFS", NULL);
 										dOffset -= dEdgeAdj2;
 										GetSetMediaItemTakeInfo(take, "D_STARTOFFS", &dOffset);
+
+										UpdateStretchMarkersAfterSetTakeStartOffset(take, dEdgeAdj2); // NF fix
 									}
 								}
 								rightFlag=true;
@@ -1908,6 +1918,8 @@ void AWTrimFill(COMMAND_T* t)
 								double dOffset = *(double*)GetSetMediaItemTakeInfo(take, "D_STARTOFFS", NULL);
 								dOffset -= edgeAdj;
 								GetSetMediaItemTakeInfo(take, "D_STARTOFFS", &dOffset);
+
+								UpdateStretchMarkersAfterSetTakeStartOffset(take, edgeAdj); // NF fix
 							}
 						}
 
@@ -2008,6 +2020,8 @@ void AWTrimFill(COMMAND_T* t)
 								double dOffset = *(double*)GetSetMediaItemTakeInfo(take, "D_STARTOFFS", NULL);
 								dOffset -= edgeAdj;
 								GetSetMediaItemTakeInfo(take, "D_STARTOFFS", &dOffset);
+
+								UpdateStretchMarkersAfterSetTakeStartOffset(take, edgeAdj); // NF fix
 							}
 						}
 

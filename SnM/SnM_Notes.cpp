@@ -1500,11 +1500,11 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 			StringToExtensionConfig(&formatedNotes, ctx);
 	}
 
-	// #647, write to "Global notes.txt" in ResourcePath instead of .rpp
+	// #647, write to "SWS_Global notes.txt" in ResourcePath instead of .rpp
 	if (g_glbNotes.Get()->GetLength())
 	{
 		WDL_FastString filePath; 
-		filePath.SetFormatted(SNM_MAX_PATH, "%s/Global notes.txt", GetResourcePath());
+		filePath.SetFormatted(SNM_MAX_PATH, "%s/SWS_Global notes.txt", GetResourcePath());
 
 		WDL_FileWrite outfile(filePath.Get()); 
 		if (outfile.IsOpen() == true) {
@@ -1610,10 +1610,10 @@ int NotesInit()
 		*defaultHelpFn = '\0';
 	GetPrivateProfileString(NOTES_INI_SEC, "Action_help_file", defaultHelpFn, g_actionHelpFn, sizeof(g_actionHelpFn), g_SNM_IniFn.Get());
 
-	// #647 read global notes from "Global notes.txt" (stored in ResourcePath)
+	// #647 read global notes from "SWS_Global notes.txt" (stored in ResourcePath)
 	if (g_glbNotes.Get()->GetLength() <= 0) {
 		WDL_FastString filePath;
-		filePath.SetFormatted(SNM_MAX_PATH, "%s/Global notes.txt", GetResourcePath());
+		filePath.SetFormatted(SNM_MAX_PATH, "%s/SWS_Global notes.txt", GetResourcePath());
 		WDL_FileRead infile(filePath.Get());
 		
 		if (infile.IsOpen() == true) {

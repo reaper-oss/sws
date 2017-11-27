@@ -1,3 +1,9 @@
+New ReaScript functions:
++NF_TrackFX_GetOffline()
++NF_TrackFX_SetOffline()
++NF_TakeFX_GetOffline()
++NF_TakeFX_SetOffline()
+
 !v2.9.7 featured build (September 28, 2017)
 Fixes:
 +Issue 897: Fix major issues with OSX 10.13 High Sierra

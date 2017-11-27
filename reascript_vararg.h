@@ -604,6 +604,17 @@ static void* __vararg_NF_TakeFX_SetOffline(void** arglist, int numparms)
   return NULL;
 }
 
+static void* __vararg_NF_GetSWSTrackNotes(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)NF_GetSWSTrackNotes((MediaTrack*)arglist[0], (WDL_FastString*)arglist[1]);
+}
+
+static void* __vararg_NF_SetSWSTrackNotes(void** arglist, int numparms)
+{
+  NF_SetSWSTrackNotes((MediaTrack*)arglist[0], (const char*)arglist[1]);
+  return NULL;
+}
+
 static void* __vararg_SN_FocusMIDIEditor(void** arglist, int numparms)
 {
   SN_FocusMIDIEditor();

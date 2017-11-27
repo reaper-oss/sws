@@ -1613,3 +1613,40 @@ void ToggleNotesLock(COMMAND_T*) {
 int IsNotesLocked(COMMAND_T*) {
 	return g_locked;
 }
+
+// #755
+const char* NFDoGetSWSTrackNotes(MediaTrack* track, WDL_FastString* trackNoteOut)
+{
+	for (int i = 0; i < g_SNM_TrackNotes.Get()->GetSize(); i++) {
+		if (g_SNM_TrackNotes.Get()->Get(i)->GetTrack() == track) {
+			trackNoteOut->Set(g_SNM_TrackNotes.Get()->Get(i)->m_notes.Get());
+			break;
+		}
+	}
+
+	return trackNoteOut->Get();
+}
+
+void NFDoSetSWSTrackNotes(MediaTrack* track, const char* buf)
+{
+	if (MarkProjectDirty)
+		MarkProjectDirty(NULL);
+
+	for (int i = 0; i < g_SNM_TrackNotes.Get()->GetSize(); i++) {
+
+		if (g_SNM_TrackNotes.Get()->Get(i)->GetTrack() == track) {
+			g_SNM_TrackNotes.Get()->Get(i)->m_notes.Set(buf);
+
+			// update displayed text if Notes window is visible and notes for set track are displayed
+			if (NotesWnd* w = g_notesWndMgr.Get()) {
+				if (w->IsWndVisible() && g_notesType == SNM_NOTES_TRACK && g_trNote == track) {
+					w->SetText(buf);
+				}
+			}
+			return;
+		}		
+	}
+
+	// tracknote for the track doesn't exist yet, add new one 
+	g_SNM_TrackNotes.Get()->Add(new SNM_TrackNotes(TrackToGuid(track), buf));
+}

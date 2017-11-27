@@ -41,6 +41,9 @@
 // #880
 #include "../Breeder/BR_Loudness.h"
 
+// #755
+#include "../SnM/SnM_Notes.h"
+
 /******************************************************************************
 * Globals                                                                     *
 ******************************************************************************/
@@ -1128,4 +1131,13 @@ int FindTakeFXId_inChunk(MediaItem* parentItem, MediaItem_Take* takeIn, int fxIn
 	return takeFXId_inChunk;
 }
 
+const char * NF_GetSWSTrackNotes(MediaTrack* track, WDL_FastString* trackNoteOut)
+{
+	return NFDoGetSWSTrackNotes(track, trackNoteOut);
+}
+
+void NF_SetSWSTrackNotes(MediaTrack* track, const char* buf)
+{
+	NFDoSetSWSTrackNotes(track, buf);
+}
 // /*** nofish stuff ***

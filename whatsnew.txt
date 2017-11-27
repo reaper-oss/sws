@@ -3,6 +3,9 @@ New ReaScript functions:
 +NF_TrackFX_SetOffline()
 +NF_TakeFX_GetOffline()
 +NF_TakeFX_SetOffline()
++ Issue 755 (partly):
+ - NF_GetSWSTrackNotes()
+ - NF_SetSWSTrackNotes()
 
 !v2.9.7 featured build (September 28, 2017)
 Fixes:

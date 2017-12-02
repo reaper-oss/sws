@@ -601,6 +601,7 @@ bool SNM_MoveOrRemoveTrackFX(MediaTrack* _tr, int _fxId, int _what)
 				 (_what == 1  && fxId < (nbFx-1)) || 
 				 (_what == -1 && fxId > 0)))
 			{
+				g_disable_chunk_guid_filtering++;
 				SNM_ChunkParserPatcher p(_tr);
 				WDL_FastString chainChunk;
 				if (p.GetSubChunk("FXCHAIN", 2, 0, &chainChunk, "<ITEM") > 0)
@@ -646,6 +647,7 @@ bool SNM_MoveOrRemoveTrackFX(MediaTrack* _tr, int _fxId, int _what)
 						}
 					}
 				}
+				g_disable_chunk_guid_filtering--;
 			}
 		}
 	}

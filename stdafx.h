@@ -53,6 +53,7 @@
 #include <sys/stat.h>
 
 // stl
+#include <array>
 #include <sstream>
 #include <fstream>
 #include <iostream>

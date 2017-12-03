@@ -652,19 +652,25 @@ void BR_MouseInfo::GetContext (const POINT& p)
 				POINT rulerP = p; ScreenToClient(ruler, &rulerP);
 				RECT r; GetClientRect(ruler, &r);
 
-				int rulerH = r.bottom-r.top;
+				const array<int, 4> &lanes = this->GetRulerLanesHeight(r.bottom - r.top);
+
 				int limitL = 0;
 				int limitH = 0;
-				for (int i = 0; i < 4; ++i)
-				{
-					if      (i == 0) {limitL = limitH; limitH += this->GetRulerLaneHeight(rulerH, i); mouseInfo.segment = "region_lane";}
-					else if (i == 1) {limitL = limitH; limitH += this->GetRulerLaneHeight(rulerH, i); mouseInfo.segment = "marker_lane";}
-					else if (i == 2) {limitL = limitH; limitH += this->GetRulerLaneHeight(rulerH, i); mouseInfo.segment = "tempo_lane"; }
-					else if (i == 3) {limitL = limitH; limitH += this->GetRulerLaneHeight(rulerH, i); mouseInfo.segment = "timeline";   }
 
-					if (rulerP.y >= limitL && rulerP.y < limitH )
+				for (int i = 0; i < lanes.size(); ++i)
+				{
+					limitL = limitH;
+					limitH += lanes[i];
+
+					if      (i == 0) mouseInfo.segment = "region_lane";
+					else if (i == 1) mouseInfo.segment = "marker_lane";
+					else if (i == 2) mouseInfo.segment = "tempo_lane";
+					else if (i == 3) mouseInfo.segment = "timeline";
+
+					if (rulerP.y >= limitL && rulerP.y < limitH)
 						break;
 				}
+
 				mouseInfo.position = mousePos;
 				found = true;
 			}
@@ -1476,23 +1482,42 @@ int BR_MouseInfo::IsMouseOverEnvelopeLineTake (MediaItem_Take* take, int takeHei
 	return mouseHit;
 }
 
-int BR_MouseInfo::GetRulerLaneHeight (int rulerH, int lane)
+array<int, 4> BR_MouseInfo::GetRulerLanesHeight(const double rulerHeight)
 {
 	/* lane: 0 -> regions  *
 	*        1 -> markers  *
 	*        2 -> tempo    *
 	*        3 -> timeline */
 
-	int timeline = RoundToInt((double)rulerH / 2);
-	int markers = TruncToInt((double)timeline / 3) + 1;
+	// Test script for this logic: https://gist.github.com/cfillion/03097fe9e77a77c5e83f137e26dd79eb
 
-	if (lane == 0)
-		return rulerH - markers*2 - timeline;
-	if (lane == 1 || lane == 2)
-		return markers;
-	if (lane == 3)
-		return timeline;
-	return 0;
+	constexpr int rowMaxHeight = 16;
+	array<int, 4> lanes{1, 1, 1, 3};
+	array<int, 4> limits{255, 255, 3, 3};
+
+	for (int i = 0; i < 3; ++i) {
+		if (!GetToggleCommandState(42323 + i))
+			limits[i] = lanes[i];
+	}
+
+	const int minRowCount = accumulate(lanes.begin(), lanes.end(), 0);
+	const int rowHeight = min((int)ceil(rulerHeight / minRowCount), rowMaxHeight);
+
+	int availableRows = (int)ceil(rulerHeight / rowHeight) - minRowCount;
+	availableRows = min(availableRows, accumulate(limits.begin(), limits.end(), 0) - minRowCount);
+
+	for (int lane = 0; availableRows > 0; lane = (lane + 1) % lanes.size()) {
+		if (limits[lane] > lanes[lane]) {
+			++lanes[lane];
+			--availableRows;
+		}
+	}
+
+	// convert rows into pixels
+	for (int &lane : lanes)
+		lane *= rowHeight;
+
+	return lanes;
 }
 
 int BR_MouseInfo::IsHwndMidiEditor (HWND hwnd, HWND* midiEditor, HWND* subView)

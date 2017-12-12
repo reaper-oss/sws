@@ -239,7 +239,7 @@ const char *stristr(const char* a, const char* b);
 // see https://forum.cockos.com/showthread.php?t=180571
 // probably all functions setting take start offset should use this for now, until it's changed in REAPER
 // caller must check for take != NULL
-void UpdateStretchMarkersAfterSetTakeStartOffset(MediaItem_Take* take, double takeStartOffset);
+void UpdateStretchMarkersAfterSetTakeStartOffset(MediaItem_Take* take, double takeStartOffset_multiplyPlayrate);
 
 #ifdef _WIN32
   wchar_t* WideCharPlz(const char* inChar);

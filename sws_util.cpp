@@ -569,12 +569,12 @@ TrackEnvelope* SWS_GetTrackEnvelopeByName(MediaTrack* track, const char* envname
 	return GetTrackEnvelopeByName(track,  __localizeFunc(envname, "envname", 0));
 }
 
-void UpdateStretchMarkersAfterSetTakeStartOffset(MediaItem_Take* take, double takeStartOffset)
+void UpdateStretchMarkersAfterSetTakeStartOffset(MediaItem_Take* take, double takeStartOffset_multiplyPlayrate)
 {
 	for (int i = 0; i < GetTakeNumStretchMarkers(take); i++) {
 		double posOut;
 		GetTakeStretchMarker(take, i, &posOut, NULL);
-		SetTakeStretchMarker(take, i, posOut + takeStartOffset, NULL);
+		SetTakeStretchMarker(take, i, posOut + takeStartOffset_multiplyPlayrate, NULL);
 	}
 	UpdateItemInProject(GetMediaItemTake_Item(take));
 }

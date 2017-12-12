@@ -743,11 +743,14 @@ void AWFillGapsQuickXFade(COMMAND_T* t)
 					{
 						MediaItem_Take* currentTake = GetMediaItemTake(item2, takeIndex);
 						double startOffset = GetMediaItemTakeInfo_Value(currentTake, "D_STARTOFFS");
-						startOffset -= item2StartDiff;
+
+						// NF fix: also take Playrate into account
+						double dPlayrate = GetMediaItemTakeInfo_Value(currentTake, "D_PLAYRATE");
+						startOffset -= (item2StartDiff * dPlayrate);
 						SetMediaItemTakeInfo_Value(currentTake, "D_STARTOFFS", startOffset);
 
 						// NF: fix / workaround for setting take start offset doesn't work if containing stretch markers
-						UpdateStretchMarkersAfterSetTakeStartOffset(currentTake, item2StartDiff);
+						UpdateStretchMarkersAfterSetTakeStartOffset(currentTake, item2StartDiff * dPlayrate);
 
 					}
 
@@ -1309,10 +1312,11 @@ void AWFadeSelection(COMMAND_T* t)
 									if (take)
 									{
 										double dOffset = *(double*)GetSetMediaItemTakeInfo(take, "D_STARTOFFS", NULL);
-										dOffset -= dEdgeAdj2;
+										double dPlayrate = *(double*)GetSetMediaItemTakeInfo(take, "D_PLAYRATE", NULL);
+										dOffset -= (dEdgeAdj2 * dPlayrate);
 										GetSetMediaItemTakeInfo(take, "D_STARTOFFS", &dOffset);
 
-										UpdateStretchMarkersAfterSetTakeStartOffset(take, dEdgeAdj2); // NF fix
+										UpdateStretchMarkersAfterSetTakeStartOffset(take, dEdgeAdj2 * dPlayrate); // NF fix
 									}
 								}
 								rightFlag=true;
@@ -1363,10 +1367,12 @@ void AWFadeSelection(COMMAND_T* t)
 									if (take)
 									{
 										double dOffset = *(double*)GetSetMediaItemTakeInfo(take, "D_STARTOFFS", NULL);
-										dOffset -= dEdgeAdj2;
+										double dPlayrate = *(double*)GetSetMediaItemTakeInfo(take, "D_PLAYRATE", NULL);
+
+										dOffset -= (dEdgeAdj2 * dPlayrate);
 										GetSetMediaItemTakeInfo(take, "D_STARTOFFS", &dOffset);
 
-										UpdateStretchMarkersAfterSetTakeStartOffset(take, dEdgeAdj2); // NF fix
+										UpdateStretchMarkersAfterSetTakeStartOffset(take, dEdgeAdj2 * dPlayrate); // NF fix
 									}
 								}
 								rightFlag=true;
@@ -1443,10 +1449,11 @@ void AWFadeSelection(COMMAND_T* t)
 									if (take)
 									{
 										double dOffset = *(double*)GetSetMediaItemTakeInfo(take, "D_STARTOFFS", NULL);
-										dOffset -= dEdgeAdj2;
+										double dPlayrate = *(double*)GetSetMediaItemTakeInfo(take, "D_PLAYRATE", NULL);
+										dOffset -= (dEdgeAdj2 * dPlayrate);
 										GetSetMediaItemTakeInfo(take, "D_STARTOFFS", &dOffset);
 
-										UpdateStretchMarkersAfterSetTakeStartOffset(take, dEdgeAdj2); // NF fix
+										UpdateStretchMarkersAfterSetTakeStartOffset(take, dEdgeAdj2 * dPlayrate); // NF fix
 									}
 								}
 
@@ -1500,10 +1507,11 @@ void AWFadeSelection(COMMAND_T* t)
 									if (take)
 									{
 										double dOffset = *(double*)GetSetMediaItemTakeInfo(take, "D_STARTOFFS", NULL);
-										dOffset -= dEdgeAdj;
+										double dPlayrate = *(double*)GetSetMediaItemTakeInfo(take, "D_PLAYRATE", NULL);
+										dOffset -= (dEdgeAdj * dPlayrate);
 										GetSetMediaItemTakeInfo(take, "D_STARTOFFS", &dOffset);
 
-										UpdateStretchMarkersAfterSetTakeStartOffset(take, dEdgeAdj); // NF fix
+										UpdateStretchMarkersAfterSetTakeStartOffset(take, dEdgeAdj * dPlayrate); // NF fix
 									}
 								}
 								rightFlag=true;
@@ -1612,10 +1620,11 @@ void AWFadeSelection(COMMAND_T* t)
 									if (take)
 									{
 										double dOffset = *(double*)GetSetMediaItemTakeInfo(take, "D_STARTOFFS", NULL);
-										dOffset -= dEdgeAdj2;
+										double dPlayrate = *(double*)GetSetMediaItemTakeInfo(take, "D_PLAYRATE", NULL);
+										dOffset -= (dEdgeAdj2 * dPlayrate);
 										GetSetMediaItemTakeInfo(take, "D_STARTOFFS", &dOffset);
 
-										UpdateStretchMarkersAfterSetTakeStartOffset(take, dEdgeAdj2); // NF fix
+										UpdateStretchMarkersAfterSetTakeStartOffset(take, dEdgeAdj2 * dPlayrate); // NF fix
 									}
 								}
 								rightFlag=true;
@@ -1916,10 +1925,11 @@ void AWTrimFill(COMMAND_T* t)
 							if (take)
 							{
 								double dOffset = *(double*)GetSetMediaItemTakeInfo(take, "D_STARTOFFS", NULL);
-								dOffset -= edgeAdj;
+								double dPlayrate = *(double*)GetSetMediaItemTakeInfo(take, "D_PLAYRATE", NULL);
+								dOffset -= (edgeAdj * dPlayrate);
 								GetSetMediaItemTakeInfo(take, "D_STARTOFFS", &dOffset);
 
-								UpdateStretchMarkersAfterSetTakeStartOffset(take, edgeAdj); // NF fix
+								UpdateStretchMarkersAfterSetTakeStartOffset(take, edgeAdj * dPlayrate); // NF fix
 							}
 						}
 
@@ -2018,10 +2028,11 @@ void AWTrimFill(COMMAND_T* t)
 							if (take)
 							{
 								double dOffset = *(double*)GetSetMediaItemTakeInfo(take, "D_STARTOFFS", NULL);
-								dOffset -= edgeAdj;
+								double dPlayrate = *(double*)GetSetMediaItemTakeInfo(take, "D_PLAYRATE", NULL);
+								dOffset -= (edgeAdj * dPlayrate);
 								GetSetMediaItemTakeInfo(take, "D_STARTOFFS", &dOffset);
 
-								UpdateStretchMarkersAfterSetTakeStartOffset(take, edgeAdj); // NF fix
+								UpdateStretchMarkersAfterSetTakeStartOffset(take, edgeAdj * dPlayrate); // NF fix
 							}
 						}
 

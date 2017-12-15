@@ -7,6 +7,7 @@ Actions:
 +Renamed "SWS: Crossfade adjacent selected items (move later items)" to "SWS: Crossfade adjacent selected items (move edges of adjacent items)" (Issue 902)
 
 Fixes:
++Issue 936: Auto layout didn't work without also enabling Auto color or Auto icon
 +Issue 802: Disable FXID filtering in SNM_MoveOrRemoveTrackFX() (thanks Justin!)
 +Crossfade actions: Prevent item content movement if takes contain stretch markers (https://forum.cockos.com/showthread.php?t=197584 posts #11, #12) and / or take playrate is other than 1.0
  (Also fix for  "SWS/AW: Fade in/out/crossfade selected area of selected items" and "SWS/AW: Trim selected items to fill selection")

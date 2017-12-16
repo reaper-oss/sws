@@ -39,6 +39,8 @@ static_assert(GetPrivateProfileString == GetPrivateProfileStringUTF8,
 
 using namespace std;
 
+static string g_resourcePath;
+
 static wstring widen(const char *input, const UINT codepage = CP_UTF8, const int size = -1)
 {
   const int wsize = MultiByteToWideChar(codepage, 0, input, size, nullptr, 0) - 1;
@@ -58,6 +60,22 @@ static string narrow(const wchar_t *input)
   WideCharToMultiByte(CP_UTF8, 0, input, -1, &output[0], size, nullptr, nullptr);
 
   return output;
+}
+
+#undef GetResourcePath
+const char *GetResourcePathUTF8()
+{
+  if(g_resourcePath.empty()) {
+    const char *rcPath = GetResourcePath();
+
+    // convert from the current system codepage to UTF-8 for backward compatibility (#934)
+    if(atof(GetAppVersion()) < 5.70 && !WDL_HasUTF8(rcPath))
+      g_resourcePath = narrow(widen(rcPath, CP_ACP).c_str());
+    else
+      g_resourcePath = rcPath;
+  }
+
+  return g_resourcePath.c_str();
 }
 
 DWORD GetPrivateProfileSectionUTF8(LPCTSTR appStr, LPTSTR retStr, DWORD nSize, LPCTSTR fnStr)

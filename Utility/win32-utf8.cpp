@@ -28,13 +28,14 @@
 #include "stdafx.h"
 #include "SnM\SnM.h"
 
-#ifndef _WIN32
+#ifdef _WIN32
+#  define widen_cstr(cstr) widen(cstr).c_str()
+#else
 #  error This file should not be built on non-Windows systems.
 #endif
 
-#ifdef _WIN32
-#  define widen_cstr(cstr) widen(cstr).c_str()
-#endif
+static_assert(GetPrivateProfileString == GetPrivateProfileStringUTF8,
+  "The current version of WDL does not override GetPrivateProfileString to GetPrivateProfileStringUTF8. Update WDL.");
 
 using namespace std;
 

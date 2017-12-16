@@ -94,6 +94,10 @@
 #include "WDL/MersenneTwister.h"
 #include "WDL/fileread.h"
 
+#ifdef _WIN32
+#include "Utility/win32-utf8.h"
+#endif
+
 #ifndef __GNUC__
 #pragma warning(default : 4996)
 #pragma warning(default : 4267)

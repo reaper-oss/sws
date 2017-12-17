@@ -28,14 +28,13 @@
 #include "stdafx.h"
 #include "SnM\SnM.h"
 
-#ifdef _WIN32
-#  define widen_cstr(cstr) widen(cstr).c_str()
-#else
+#ifndef _WIN32
 #  error This file should not be built on non-Windows systems.
 #endif
 
 static_assert(GetPrivateProfileString == GetPrivateProfileStringUTF8,
-  "The current version of WDL does not override GetPrivateProfileString to GetPrivateProfileStringUTF8. Update WDL.");
+  "The current version of WDL does not override GetPrivateProfileString"
+  " to GetPrivateProfileStringUTF8. Update WDL.");
 
 using namespace std;
 
@@ -62,6 +61,20 @@ static string narrow(const wchar_t *input)
   return output;
 }
 
+static int strlistlen(const char *list)
+{
+  int size = 1;
+  const char *p = list;
+
+  while(*p) {
+    const int segmentLen = strlen(p) + 1;
+    p += segmentLen;
+    size += segmentLen;
+  }
+
+  return size;
+}
+
 #undef GetResourcePath
 const char *GetResourcePathUTF8()
 {
@@ -69,6 +82,11 @@ const char *GetResourcePathUTF8()
     const char *rcPath = GetResourcePath();
 
     // convert from the current system codepage to UTF-8 for backward compatibility (#934)
+    //
+    // REAPER 5.70: GetResourcePath is always UTF-8
+    // 5.60 - 5.62: GetResourcePath is ANSI if possible, UTF-8 otherwise
+    // up to 5.52:  GetResourcePath is always ANSI
+
     if(atof(GetAppVersion()) < 5.70 && !WDL_HasUTF8(rcPath))
       g_resourcePath = narrow(widen(rcPath, CP_ACP).c_str());
     else
@@ -78,24 +96,19 @@ const char *GetResourcePathUTF8()
   return g_resourcePath.c_str();
 }
 
-DWORD GetPrivateProfileSectionUTF8(LPCTSTR appStr, LPTSTR retStr, DWORD nSize, LPCTSTR fnStr)
+DWORD GetPrivateProfileSectionUTF8(LPCTSTR appName, LPTSTR ret, DWORD size, LPCTSTR fileName)
 {
-  wchar_t ret[SNM_MAX_INI_SECTION];
-  const int size = GetPrivateProfileSectionW(widen_cstr(appStr), ret,
-    SNM_MAX_INI_SECTION, widen_cstr(fnStr));
+  wchar_t wideRet[SNM_MAX_INI_SECTION];
+  const int wideSize = GetPrivateProfileSectionW(widen(appName).c_str(), wideRet,
+    SNM_MAX_INI_SECTION, widen(fileName).c_str());
 
-  return WideCharToMultiByte(CP_UTF8, 0, ret, size, retStr, nSize, nullptr, nullptr);
+  return WideCharToMultiByte(CP_UTF8, 0, wideRet, wideSize, ret, size, nullptr, nullptr);
 }
 
-BOOL WritePrivateProfileSectionUTF8(LPCTSTR appStr, LPCTSTR str, LPCTSTR fnStr)
+BOOL WritePrivateProfileSectionUTF8(LPCTSTR appName, LPCTSTR string, LPCTSTR fileName)
 {
-  int size = 1;
-  const char *p = str;
-  while(*p) {
-    const int segmentLen = strlen(p) + 1;
-    p += segmentLen;
-    size += segmentLen;
-  }
+  const wstring &wideString = widen(string, CP_UTF8, strlistlen(string));
 
-  return WritePrivateProfileSectionW(widen_cstr(appStr), widen(str, CP_UTF8, size).c_str(), widen_cstr(fnStr));
+  return WritePrivateProfileSectionW(widen(appName).c_str(),
+    wideString.c_str(), widen(fileName).c_str());
 }

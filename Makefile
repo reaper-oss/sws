@@ -92,6 +92,9 @@ OBJS += $(WDL_OBJS) $(LICE_OBJS) $(REAPER_OBJS) $(SWS_OBJS) $(AUTORENDER_OBJS) $
         $(TRACKLIST_OBJS) $(UTILITY_OBJS) $(WOL_OBJS) $(XENAKIOS_OBJS) $(OBJECTSTATE_OBJS) \
         nofish/nofish.o cfillion/cfillion.o
 
+REASCRIPT_PY_FILES = sws_python32.py sws_python64.py sws_python.py
+REASCRIPT_PY_DEPS  = ReaScript.cpp reascript_python.pl reascript_helper.pl
+
 RESOURCE_PATH      = ~/.config/REAPER
 USERPLUGINS_PATH   = $(RESOURCE_PATH)/UserPlugins
 
@@ -103,10 +106,17 @@ default: $(TARGET)
 reascript_vararg.h: ReaScript.cpp reascript_vararg.php
 	php reascript_vararg.php > $@
 
+sws_python32.py: $(REASCRIPT_PY_DEPS)
+	perl reascript_python.pl > $@
+sws_python64.py: $(REASCRIPT_PY_DEPS)
+	perl reascript_python.pl -x64 > $@
+sws_python.py: $(REASCRIPT_PY_DEPS)
+	cp Install/sws_osx_install.py $@
+
 sws_extension.rc_mac_dlg: sws_extension.rc
 	php $(WDL_PATH)/swell/mac_resgen.php $^
 
-sws_extension.o: sws_extension.cpp sws_extension.rc_mac_dlg
+sws_extension.o: sws_extension.cpp sws_extension.rc_mac_dlg $(REASCRIPT_PY_FILES)
 	$(CXX) -c -o $@ $(CXXFLAGS) sws_extension.cpp
 
 jnetlib-util.o: $(WDL_PATH)/jnetlib/util.cpp
@@ -116,12 +126,13 @@ $(TARGET): $(OBJS)
 	$(CXX) -shared -o $@ $(CXXFLAGS) $(LFLAGS) $^ $(LINKEXTRA)
 
 clean: 
-	-rm $(OBJS) $(TARGET)
+	-rm $(OBJS) $(TARGET) $(REASCRIPT_PY_FILES)
 
 install: $(TARGET)
 	-mkdir $(USERPLUGINS_PATH)
 	-rm $(USERPLUGINS_PATH)/$(TARGET)
 	ln -sf $(shell pwd)/$(TARGET) $(USERPLUGINS_PATH)
+	# to install Reascript-Python soft-link all 3 "sws_python*.py" to /<ReaperInstallPath>/Plugins/
 
 uninstall:
 	-rm $(USERPLUGINS_PATH)/$(TARGET)

@@ -92,6 +92,10 @@ OBJS += $(WDL_OBJS) $(LICE_OBJS) $(REAPER_OBJS) $(SWS_OBJS) $(AUTORENDER_OBJS) $
         $(TRACKLIST_OBJS) $(UTILITY_OBJS) $(WOL_OBJS) $(XENAKIOS_OBJS) $(OBJECTSTATE_OBJS) \
         nofish/nofish.o cfillion/cfillion.o
 
+RESOURCE_PATH      = ~/.config/REAPER
+USERPLUGINS_PATH   = $(RESOURCE_PATH)/UserPlugins
+
+
 default: $(TARGET)
 
 .PHONY: clean
@@ -115,9 +119,9 @@ clean:
 	-rm $(OBJS) $(TARGET)
 
 install: $(TARGET)
-	-mkdir ~/.REAPER/UserPlugins
-	-rm ~/.REAPER/UserPlugins/$(TARGET)
-	ln -sf $(shell pwd)/$(TARGET) ~/.REAPER/UserPlugins
+	-mkdir $(USERPLUGINS_PATH)
+	-rm $(USERPLUGINS_PATH)/$(TARGET)
+	ln -sf $(shell pwd)/$(TARGET) $(USERPLUGINS_PATH)
 
 uninstall:
-	-rm ~/.REAPER/UserPlugins/$(TARGET)
+	-rm $(USERPLUGINS_PATH)/$(TARGET)

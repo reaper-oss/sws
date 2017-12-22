@@ -1,5 +1,5 @@
 /******************************************************************************
-/ cfillion.cpp
+/ win32-utf8.cpp
 /
 / Copyright (c) 2017 Christian Fillion
 / https://cfillion.ca
@@ -81,9 +81,10 @@ const char *GetResourcePathUTF8()
   if(g_resourcePath.empty()) {
     const char *rcPath = GetResourcePath();
 
-    // convert from the current system codepage to UTF-8 for backward compatibility (#934)
+    // Convert from the current system codepage to UTF-8 for backward
+    // compatibility with older versions of REAPER (#934).
     //
-    // REAPER 5.70: GetResourcePath is always UTF-8
+    // 5.70 onward: GetResourcePath is always UTF-8
     // 5.60 - 5.62: GetResourcePath is ANSI if possible, UTF-8 otherwise
     // up to 5.52:  GetResourcePath is always ANSI
 
@@ -98,6 +99,20 @@ const char *GetResourcePathUTF8()
 
 DWORD GetPrivateProfileSectionUTF8(LPCTSTR appName, LPTSTR ret, DWORD size, LPCTSTR fileName)
 {
+  // Using the ANSI version of the API when the ini filename doesn't contain
+  // Unicode to allow reading and writing full UTF-8 contents. This matches the
+  // behavior of the other *UTF8 wrappers in WDL's win32-utf8 (and thus REAPER).
+  //
+  // Characters outside of the ANSI code page are replaced with '?' when using
+  // the wide version to the API unless the ini file already contains UTF-16.
+  // Writing ini files as UTF-16 would likely make them unportable with macOS
+  // and Linux.
+  //
+  // See <https://forum.cockos.com/showthread.php?p=1927329>.
+
+  if(!WDL_HasUTF8(fileName))
+    return GetPrivateProfileSectionA(appName, ret, size, fileName);
+
   wchar_t wideRet[SNM_MAX_INI_SECTION];
   const int wideSize = GetPrivateProfileSectionW(widen(appName).c_str(), wideRet,
     SNM_MAX_INI_SECTION, widen(fileName).c_str());
@@ -107,6 +122,9 @@ DWORD GetPrivateProfileSectionUTF8(LPCTSTR appName, LPTSTR ret, DWORD size, LPCT
 
 BOOL WritePrivateProfileSectionUTF8(LPCTSTR appName, LPCTSTR string, LPCTSTR fileName)
 {
+  if(!WDL_HasUTF8(fileName))
+    return WritePrivateProfileSectionA(appName, string, fileName);
+
   const wstring &wideString = widen(string, CP_UTF8, strlistlen(string));
 
   return WritePrivateProfileSectionW(widen(appName).c_str(),

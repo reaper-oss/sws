@@ -2121,7 +2121,7 @@ int BR_AnalyzeLoudnessView::OnItemSort (SWS_ListItem* item1, SWS_ListItem* item2
 {
 	int column = abs(m_iSortCol)-1;
 
-	if ((item1 && item2) && (column == COL_INTEGRATED || column == COL_RANGE || column == COL_SHORTTERM || column == COL_MOMENTARY))
+	if ((item1 && item2) && (column == COL_INTEGRATED || column == COL_RANGE || column == COL_TRUEPEAK || column == COL_SHORTTERM || column == COL_MOMENTARY))
 	{
 		double i1 = ((BR_LoudnessObject*)item1)->GetColumnVal(column, g_loudnessWndManager.Get()->GetProperty(BR_AnalyzeLoudnessWnd::USING_LU));
 		double i2 = ((BR_LoudnessObject*)item2)->GetColumnVal(column, g_loudnessWndManager.Get()->GetProperty(BR_AnalyzeLoudnessWnd::USING_LU));

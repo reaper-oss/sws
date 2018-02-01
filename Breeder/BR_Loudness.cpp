@@ -1911,6 +1911,7 @@ static WDL_DLGRET NormalizeProgressProc (HWND hwnd, UINT uMsg, WPARAM wParam, LP
 				return 0;
 			}
 
+			s_currentItem = NULL;
 			s_currentItemId = 0;
 			s_analyzeInProgress = false;
 			s_itemsLen = 0;

@@ -684,7 +684,7 @@ void BR_SetArrangeView (ReaProject* proj, double startPosition, double endPositi
 
 bool BR_SetItemEdges (MediaItem* item, double startTime, double endTime)
 {
-	return TrimItem(item, startTime, endTime);
+	return TrimItem_UseNativeTrimActions(item, startTime, endTime);
 }
 
 void BR_SetMediaItemImageResource (MediaItem* item, const char* imageIn, int imageFlags)

@@ -375,6 +375,7 @@ echo Warning: sws_python.py generation failed (Perl installed?)
     <ClInclude Include="resource.h" />
     <ClInclude Include="snooks\snooks.h" />
     <ClInclude Include="snooks\SN_ReaScript.h" />
+    <ClInclude Include="Utility\win32-utf8.h" />
     <ClInclude Include="Wol\wol_Util.h" />
     <ClInclude Include="Wol\wol_Zoom.h" />
     <ClInclude Include="Xenakios\Parameters.h" />
@@ -553,6 +554,7 @@ echo Warning: sws_python.py generation failed (Perl installed?)
     <ClCompile Include="nofish\nofish.cpp" />
     <ClCompile Include="snooks\snooks.cpp" />
     <ClCompile Include="snooks\SN_ReaScript.cpp" />
+    <ClCompile Include="Utility\win32-utf8.cpp" />
     <ClCompile Include="Wol\wol_Util.cpp" />
     <ClCompile Include="Wol\wol_Zoom.cpp" />
     <ClCompile Include="Xenakios\AutoRename.cpp" />

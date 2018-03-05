@@ -27,6 +27,7 @@ Fixes:
  - fix potential crash when normalizing and nothing is selected https://forum.cockos.com/showthread.php?t=202718
 +Issue 864: "SWS/S&M: Float next FX (and close others) for selected tracks" now skips over offline FX
 +Issue 918: Fix various issues with "SWS/S&M: Remove all envelopes for selected tracks"
++Support for UTF-8 resource paths on Windows (Issues #934, #935)
  
 New ReaScript functions:
 +CF_ShellExecute

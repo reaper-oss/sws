@@ -101,7 +101,7 @@ USERPLUGINS_PATH   = $(RESOURCE_PATH)/UserPlugins
 
 default: $(TARGET)
 
-.PHONY: clean
+.PHONY: clean install uninstall
 
 reascript_vararg.h: ReaScript.cpp reascript_vararg.php
 	php reascript_vararg.php > $@
@@ -126,7 +126,7 @@ $(TARGET): $(OBJS)
 	$(CXX) -shared -o $@ $(CXXFLAGS) $(LFLAGS) $^ $(LINKEXTRA)
 
 clean: 
-	-rm $(OBJS) $(TARGET) $(REASCRIPT_PY_FILES)
+	-rm $(OBJS) $(TARGET) $(REASCRIPT_PY_FILES) sws_extension.rc_mac_dlg sws_extension.rc_mac_menu
 
 install: $(TARGET)
 	-mkdir $(USERPLUGINS_PATH)

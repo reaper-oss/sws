@@ -46,6 +46,7 @@ void SelOnlyTrackWithSelEnv(COMMAND_T*);
 bool LookupTrackEnvName(const char* _str, bool _allEnvs);
 void ToggleArmTrackEnv(COMMAND_T*);
 void RemoveAllEnvsSelTracks(COMMAND_T*);
+void RemoveAllEnvsSelTracksNoChunk(COMMAND_T*);
 void ToggleWriteEnvExists(COMMAND_T*);
 int WriteEnvExists(COMMAND_T*);
 

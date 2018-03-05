@@ -28,6 +28,15 @@
 
 #pragma once
 
+// Eraser tool
+void NF_RegisterContinuousActions();
+
+void EraserToolInit();
+
+
+
+
+// register SWS actions
 int nofish_Init();
 
 // #514

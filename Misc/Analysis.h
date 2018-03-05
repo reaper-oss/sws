@@ -52,6 +52,7 @@ int AnalysisInit();
 bool AnalyzeItem(MediaItem* mi, ANALYZE_PCM* a);
 
 // #781
+double GetMediaItemMaxPeakAndMaxPeakPos(MediaItem*, double* maxPeakPosOut); // #953
 double GetMediaItemMaxPeak(MediaItem*);
 double GetMediaItemPeakRMS_Windowed(MediaItem*);
 double GetMediaItemAverageRMS(MediaItem*);

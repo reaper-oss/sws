@@ -376,6 +376,41 @@ double GetMediaItemAverageRMS(MediaItem* mi)
 		return -150.0;
 	}
 }
+
+double GetMediaItemMaxPeakAndMaxPeakPos(MediaItem* mi, double* maxPeakPosOut)
+{
+	double curPeak = -150.0;
+	double maxPeak = -150.0;
+
+	// if MIDI item, don't scan
+	double sampleRate = ((PCM_source*)mi)->GetSampleRate(); // will rtn. 0 for MIDI items
+	if (sampleRate == 0.0) return -150.0;
+
+	int iChannels = ((PCM_source*)mi)->GetNumChannels();
+	if (iChannels)
+	{
+		ANALYZE_PCM a;
+		memset(&a, 0, sizeof(a));
+		a.iChannels = iChannels;
+		a.dPeakVals = new double[iChannels];
+
+		if (AnalyzeItem(mi, &a))
+		{
+			for (int i = 0; i < iChannels; i++) {
+				curPeak = VAL2DB(a.dPeakVals[i]);
+				if (maxPeak < curPeak) {
+					maxPeak = curPeak;
+				}
+			}
+			*maxPeakPosOut = a.peakSample / sampleRate; // = relative to item position
+		}
+		delete[] a.dPeakVals;
+		return maxPeak;
+	}
+	else { // empty item or failed for some reason
+		return -150.0;
+	}
+}
 // /#781
 
 void FindItemPeak(COMMAND_T*)

@@ -942,6 +942,12 @@ double NF_GetMediaItemMaxPeak(MediaItem* item)
 	return maxPeak;
 }
 
+double NF_GetMediaItemMaxPeakAndMaxPeakPos(MediaItem* item, double* maxPeakPosOut) // #953
+{
+	double maxPeak = GetMediaItemMaxPeakAndMaxPeakPos(item, maxPeakPosOut);
+	return maxPeak;
+}
+
 double NF_GetMediaItemPeakRMS_Windowed(MediaItem* item)
 {
 	double peakRMS = GetMediaItemPeakRMS_Windowed(item);

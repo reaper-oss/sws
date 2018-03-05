@@ -100,6 +100,7 @@ bool            BR_Win32_WritePrivateProfileString (const char* sectionName, con
 // *** nofish stuff ***, I'll move this to nofish.h/nofish.cpp when doing a clean up
 // #781
 double			NF_GetMediaItemMaxPeak(MediaItem* item);
+double			NF_GetMediaItemMaxPeakAndMaxPeakPos(MediaItem* item, double* maxPeakPosOut); // // #953
 double			NF_GetMediaItemPeakRMS_Windowed(MediaItem* item);
 double			NF_GetMediaItemAverageRMS(MediaItem* item);
 double			NF_GetMediaItemPeakRMS_NonWindowed(MediaItem* item);

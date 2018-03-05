@@ -1,3 +1,8 @@
+Actions
++New action (Main section):
+ - SWS/NF: Eraser tool (perform until shortcut released)
+   Note: Should be assigned to a shortcut key without modifier, for not clashing with other mouse modifiers
+
 New ReaScript functions:
 +CF_ShellExecute
 +CF_LocateInExplorer
@@ -1158,7 +1163,7 @@ Notes window
  - SWS/S&M: Open/close Notes window (marker subtitles)
  - SWS/S&M: Open/close Notes window (region subtitles)
 +If REAPER >= v4.55: Mark project dirty (needing save) rather than creating undo points for each key stroke
-+Potential fix for http://forum.cockos.com/showpost.php?p=1180135&postcount=1595|"things that smells like Pont-l'�v�que"|
++Potential fix for http://forum.cockos.com/showpost.php?p=1180135&postcount=1595|"things that smells like Pont-l'Évêque"|
 +House cleaning: allow notes for macros and scripts (aka "Action help")
  To easy copy/paste, string identifiers used to be displayed in the Notes window for macros/scripts.
  This is now useless since the action list offers "Copy selected action cmdID/identifier string".
@@ -1220,14 +1225,14 @@ Ruler's drag zoom / Issue 540: added actions for better usability
 
 Fixes
 +Issue 603: fixed potential crash when pasting track groups
-+Localization / Windows OS: fixed broken features/actions when the extension was translated (thanks drikssa� & neilerua):
++Localization / Windows OS: fixed broken features/actions when the extension was translated (thanks drikssaï & neilerua):
  - Most of zoom features
  - Xenakios "Scroll track view" actions
  - S&M "Toggle offscreen item selection" actions
 +Issue 595: cut/copy/paste take actions now handle multiple item selection
 +The action "Cut active take" now removes items if needed (rather than leaving empty items)
 +Issue 601: fixed marker <-> region conversion actions (and export actions) that could affect playback
-+Issue 606 / OS X: fixed text display � la "Big Clock" for Notes, Region Playlist and Live Config Monitor windows
++Issue 606 / OS X: fixed text display à la "Big Clock" for Notes, Region Playlist and Live Config Monitor windows
 +S&M actions to switch FX presets now support concurrent use (e.g. tweaking 2 knobs at the same time)
 +Fixed the toggle state reported by some "Toggle offscreen item selection" actions
 
@@ -2045,7 +2050,7 @@ Resources window
 +Creating new bookmarks now sets auto-save and auto-fill directories to the default resource path (i.e. you will not be promped for directories anymore)
 
 Region playlist: added repeat button
-Notes window: re-added marker/region names edition (and display à la "Big clock" when text edition is locked)
+Notes window: re-added marker/region names edition (and display Ã  la "Big clock" when text edition is locked)
 Added actions (for issue 470 & macros based on cue buss actions)
 +SWS/S&M: Save default track send preferences
 +SWS/S&M: Recall default track send preferences
@@ -2312,7 +2317,7 @@ Resources window: bookmark names as defined by the user
 Notes/Help window -> Notes/Subtitles/Help
 +Subtitles support: new mode "Marker/Region subtitles" in the top left dropdown box.
  You can edit notes for regions and/or markers. Such notes are saved in project files.
- When the view/text edition is locked, notes are displayed with a dynamic sized font (display à la "Big clock") and they follow the play cursor position (i.e. subtitles!).
+ When the view/text edition is locked, notes are displayed with a dynamic sized font (display Ã  la "Big clock") and they follow the play cursor position (i.e. subtitles!).
  Useful for lyrics, video stuff (you can display subtitles or even to edit them in REAPER), etc...
  Also added new buttons and actions to import/export SubRip subtitle files (.srt files, this format is supported by most video players) :
 +SWS/S&M: Notes/Subtitles/Help - Import subtitle file... - It adds a region with notes for each subtitle of the loaded file
@@ -2764,7 +2769,7 @@ Other cycle action updates:
 +Consolidated undo points
 
 S&M Notes/help:
-+When the view is locked, the text is now displayed with a dynamic sized font (i.e. display à la "Big clock")
++When the view is locked, the text is now displayed with a dynamic sized font (i.e. display Ã  la "Big clock")
 +Added marker names (in the top left dropdown box). They are edited/displayed according to edit/play cursor position (can be used for lyrics, etc..)
 +Demo http://reaper.mj-s.com/S&M_big_notes.gif|here|
 
@@ -3103,7 +3108,7 @@ Removed "SWS: Toggle auto fades for new items", use native "Toggle enable/disabl
 !v2.0.0 #10 (February 7, 2011)
 Support for v4 empty take lanes:
 +S&M build lanes actions now turn "take mosaics" into lanes using v4 empty takes (rather than v3 empty takes)
- These actions still useful to create take lanes à la v4 from older project saved with "mosaics", for example.
+ These actions still useful to create take lanes Ã  la v4 from older project saved with "mosaics", for example.
 +The action "S&M Remove empty take/item among selected items" now also removes v4 empty takes
  Remark: this action was limited to v3 empty takes before, i.e. takes with empty source
 +The action "S&M Clear active take/items" now clears takes using v4 empty takes (rather than v3 empty takes). If all takes of an item are empty, the item is removed.

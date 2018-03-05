@@ -29,6 +29,10 @@
 
 #include "BR.h"
 
+// NF Eraser Tool
+#include "../nofish/nofish.h"
+
+
 /******************************************************************************
 * Continuous actions                                                          *
 *                                                                             *
@@ -83,6 +87,9 @@ inline void ContinuousActionsInitExit (bool init)
 	if (init)
 	{
 		BR_RegisterContinuousActions();
+
+		// NF Eraser tool
+		NF_RegisterContinuousActions();
 	}
 	else
 	{

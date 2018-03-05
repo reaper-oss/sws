@@ -43,6 +43,12 @@ public:
 	TrackSend(GUID* guid, int iMode, double dVol, double dPan, int iMute, int iMono, int iPhase, int iSrc, int iDest, int iMidi, int iAuto);
 	TrackSend(const char* str);
 	TrackSend(TrackSend& ts);
+
+	// NF: #537, also store the AUXVOL, AUXPAN, AUXMUTE chunks of the receiving tracks in the TrackSend object
+	TrackSend(GUID* guid, const char* str, const char* auxvol, const char* auxpan, const char* auxmute);
+	TrackSend(const char* str, const char* auxvol, const char* auxpan, const char* auxmute); 
+	WDL_FastString GetAuxvolstr(); WDL_FastString GetAuxpanstr(); WDL_FastString GetAuxmutestr();
+
 	WDL_FastString* AuxRecvString(MediaTrack* srcTr, WDL_FastString* str);
 	void GetChunk(WDL_FastString* chunk);
 	const GUID* GetGuid() { return &m_destGuid; }
@@ -51,6 +57,7 @@ public:
 private:
 	GUID m_destGuid;
 	WDL_FastString m_str;
+	WDL_FastString m_auxvolstr, m_auxpanstr, m_auxmutestr;
 };
 
 class TrackSends

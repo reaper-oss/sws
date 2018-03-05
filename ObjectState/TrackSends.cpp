@@ -162,6 +162,34 @@ TrackSend::TrackSend(TrackSend& ts)
 	m_str.Set(ts.m_str.Get());
 }
 
+TrackSend::TrackSend(GUID* guid, const char* str, const char* auxvol, const char* auxpan, const char* auxmute)
+{
+	m_destGuid = *guid;
+	// Strip out the "AUXRECV X" header
+	const char* p = strchr(str + 8, ' ') + 1;
+	m_str.Set(p);
+
+	m_auxvolstr.Set(auxvol);
+	m_auxpanstr.Set(auxpan);
+	m_auxmutestr.Set(auxmute);
+}
+
+// NF: same as TrackSend(const char* str) but additionally set the send env's
+// for building snapshot from XML/RPP chunk etc.
+TrackSend::TrackSend(const char* str, const char* auxvol, const char* auxpan, const char* auxmute)
+{
+	LineParser lp(false);
+	lp.parse(str);
+	stringToGuid(lp.gettoken_str(1), &m_destGuid);
+	// Strip out the "AUXRECV X" header
+	const char* p = strchr(str + 8, ' ') + 1;
+	m_str.Set(p);
+
+	m_auxvolstr.Set(auxvol);
+	m_auxpanstr.Set(auxpan);
+	m_auxmutestr.Set(auxmute);
+}
+
 WDL_FastString* TrackSend::AuxRecvString(MediaTrack* srcTr, WDL_FastString* str)
 {
 	int iSrc = CSurf_TrackToID(srcTr, false) - 1;
@@ -170,11 +198,33 @@ WDL_FastString* TrackSend::AuxRecvString(MediaTrack* srcTr, WDL_FastString* str)
 	return str;
 }
 
+WDL_FastString TrackSend::GetAuxvolstr()
+{
+	return m_auxvolstr;
+}
+
+WDL_FastString TrackSend::GetAuxpanstr()
+{
+	return m_auxpanstr;
+}
+
+WDL_FastString TrackSend::GetAuxmutestr()
+{
+	return m_auxmutestr;
+}
+
 void TrackSend::GetChunk(WDL_FastString* chunk)
 {
 	char guidStr[64];
 	guidToString(&m_destGuid, guidStr);
 	chunk->AppendFormatted(chunk->GetLength() + 150, "AUXSEND %s %s\n", guidStr, m_str.Get());
+
+	if (m_auxvolstr.GetLength())
+		chunk->Append(m_auxvolstr.Get());
+	if (m_auxpanstr.GetLength())
+		chunk->Append(m_auxpanstr.Get());
+	if (m_auxmutestr.GetLength())
+		chunk->Append(m_auxmutestr.Get());
 }
 
 TrackSends::TrackSends(TrackSends& ts)
@@ -212,6 +262,7 @@ void TrackSends::Build(MediaTrack* tr)
 	while ((pDest = (MediaTrack*)GetSetTrackSendInfo(tr, 0, idx++, "P_DESTTRACK", NULL)))
 	{
 		GUID guid = *(GUID*)GetSetMediaTrackInfo(pDest, "GUID", NULL);
+
 		// Have we already parsed this particular dest track string?
 		bool bParsed = false;
 		for (int i = 0; i < m_sends.GetSize(); i++)
@@ -226,10 +277,21 @@ void TrackSends::Build(MediaTrack* tr)
 		// We haven't parsed yet!
 		trackStr = SWS_GetSetObjectState(pDest, NULL);
 		pos = 0;
+
+		int auxEnvsOccurence = -1;
+		SNM_ChunkParserPatcher p(pDest);
 		while (GetChunkLine(trackStr, line, 4096, &pos, false))
 		{
-			if (strncmp(line, searchStr, strlen(searchStr)) == 0)
-				m_sends.Add(new TrackSend(&guid, line));
+			if (strncmp(line, searchStr, strlen(searchStr)) == 0) {
+				auxEnvsOccurence += 1;
+				WDL_FastString AUXVOL, AUXPAN, AUXMUTE;
+				p.GetSubChunk("AUXVOLENV", 2, auxEnvsOccurence, &AUXVOL, "MIDIOUT");
+				p.GetSubChunk("AUXPANENV", 2, auxEnvsOccurence, &AUXPAN, "MIDIOUT");
+				p.GetSubChunk("AUXMUTEENV", 2, auxEnvsOccurence, &AUXMUTE, "MIDIOUT");
+	
+				m_sends.Add(new TrackSend(&guid, line, AUXVOL.Get(), AUXPAN.Get(), AUXMUTE.Get()));
+			}
+				
 		}
 		SWS_FreeHeapPtr(trackStr);
 	}
@@ -327,6 +389,11 @@ void TrackSends::UpdateReaper(MediaTrack* tr, WDL_PtrList<TrackSendFix>* pFix)
 					newTrackStr.Set(trackStr);
 				}
 				AppendChunkLine(&newTrackStr, m_sends.Get(i)->AuxRecvString(tr, &sendStr)->Get());
+
+				// NF: #537, append the stored env's to the track chunk
+				AppendChunkLine(&newTrackStr, m_sends.Get(i)->GetAuxvolstr().Get());
+				AppendChunkLine(&newTrackStr, m_sends.Get(i)->GetAuxpanstr().Get());
+				AppendChunkLine(&newTrackStr, m_sends.Get(i)->GetAuxmutestr().Get());
 			}
 		}
 

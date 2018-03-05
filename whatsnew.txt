@@ -4,6 +4,11 @@ Actions:
    Note: Should be assigned to a shortcut key without modifier, for not clashing with other mouse modifiers
  - SWS: Split items at time selection (if exists), else at edit cursor (also during playback)
  - SWS: Split items at time selection, edit cursor (also during playback), or mouse cursor
+ - SWS/S&M: Region Playlist - Options/Toggle smooth seek (only in Region Playlist) (Issue 890)
+ - SWS/S&M: Region Playlist - Options/Enable smooth seek (only in Region Playlist)
+ - SWS/S&M: Region Playlist - Options/Disable smooth seek (only in Region Playlist)
+ - SWS/S&M: Region Playlist - Play next region (based on current playing region)
+ - SWS/S&M: Region Playlist - Play previous region (based on current playing region)
 +Renamed "SWS: Split items at time selection (if exists), else at edit cursor" to "SWS: Split items at time selection (if exists), play cursor (during playback), else at edit cursor" (Issue 796)
 +Renamed "SWS: Split items at time selection, edit cursor, or mouse cursor" to "SWS: Split items at time selection, edit cursor, play cursor (during playback), or mouse cursor" (Issue 796)
 +Renamed "SWS: Crossfade adjacent selected items (move later items)" to "SWS: Crossfade adjacent selected items (move edges of adjacent items)" (Issue 902)

@@ -652,7 +652,7 @@ void ToggleWriteEnvExists(COMMAND_T* _ct)
 		{
 			MediaTrack* tr = CSurf_TrackFromID(i, false); 
 			int autoMode = tr ? *(int*)GetSetMediaTrackInfo(tr, "I_AUTOMODE", NULL) : -1;
-			if (autoMode >= 2 /* touch */ && autoMode <= 4 /* latch */)
+			if (autoMode >= 2 /* touch */ && autoMode <= 5 /* latch preview */)
 			{
 				GetSetMediaTrackInfo(tr, "I_AUTOMODE", &g_i1); // set read mode
 				g_toolbarAutoModeToggles.Add(new SNM_TrackInt(tr, autoMode));
@@ -673,7 +673,7 @@ int WriteEnvExists(COMMAND_T* _ct)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false); 
 		int autoMode = tr ? *(int*)GetSetMediaTrackInfo(tr, "I_AUTOMODE", NULL) : -1;
-		if (autoMode >= 2 /* touch */ && autoMode <= 4 /* latch */)
+		if (autoMode >= 2 /* touch */ && autoMode <= 5 /* latch preview */)
 			return true;
 	}
 	return false;

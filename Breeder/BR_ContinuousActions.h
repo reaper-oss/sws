@@ -29,6 +29,10 @@
 
 #include "BR.h"
 
+// NF Eraser Tool
+#include "../nofish/nofish.h"
+
+
 /******************************************************************************
 * Continuous actions                                                          *
 *                                                                             *
@@ -83,9 +87,13 @@ inline void ContinuousActionsInitExit (bool init)
 	if (init)
 	{
 		BR_RegisterContinuousActions();
+
+		// NF Eraser tool
+		NF_RegisterContinuousActions();
 	}
 	else
 	{
-		ContinuousActionStopAll();
+		// if we are exiting, context is already gone, trying to stop anything will likely segfault or access HWND-after-destroy
+		// ContinuousActionStopAll();
 	}
 }

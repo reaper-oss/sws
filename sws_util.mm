@@ -459,20 +459,6 @@ void mouse_event(DWORD dwFlags, DWORD dx, DWORD dy, DWORD dwData, ULONG_PTR dwEx
 	}
 }
 
-BOOL IsWindowEnabled(HWND hwnd)
-{
-    if (!hwnd) return FALSE;
-    id bla=(id)hwnd;
-
-    if ([bla isKindOfClass:[NSWindow class]]) bla = [bla contentView];
-
-    if (bla && [bla respondsToSelector:@selector(isEnabled:)])
-    {
-        return [bla isEnabled] == YES ? TRUE : FALSE;
-    }
-    return FALSE;
-}
-
 void SWS_ShowTextScrollbar(HWND hwnd, bool show)
 {
     if (!hwnd) return;

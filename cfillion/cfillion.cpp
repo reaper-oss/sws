@@ -85,7 +85,7 @@ void CF_GetClipboard(char *buf, int bufSize)
 const char *CF_GetClipboardBig(WDL_FastString *output)
 {
   if(g_script_strs.Find(output) == -1)
-    return nullptr;
+    return NULL;
 
   OpenClipboard(GetMainHwnd());
   HANDLE mem = GetClipboardData(FORMAT);
@@ -108,4 +108,29 @@ const char *CF_GetClipboardBig(WDL_FastString *output)
   CloseClipboard();
 
   return output->Get();
+}
+
+bool CF_ShellExecute(const char *file, const char *args)
+{
+  // Windows's implementation of ShellExecute returns a fake HINSTANCE (greater
+  // than 32 on success) while SWELL's implementation returns a BOOL.
+  const auto ret = ShellExecute(nullptr, "open", file, args, nullptr, SW_SHOW);
+
+#ifdef _WIN32
+  static_assert(&ShellExecute == &ShellExecuteUTF8,
+    "ShellExecute is not aliased to ShellExecuteUTF8");
+
+  return ret > (HINSTANCE)32;
+#else
+  return ret;
+#endif
+}
+
+bool CF_LocateInExplorer(const char *file)
+{
+  // Quotes inside the filename must not be escaped for the SWELL implementation
+  WDL_FastString arg;
+  arg.SetFormatted(strlen(file) + 10, R"(/select,"%s")", file);
+
+  return CF_ShellExecute("explorer.exe", arg.Get());
 }

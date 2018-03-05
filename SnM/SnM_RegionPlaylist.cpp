@@ -1355,7 +1355,11 @@ void PlaylistRun()
 		bool updated = false;
 		double pos = GetPlayPosition2Ex(NULL);
 
-		if ((pos+0.01) >= g_nextRgnPos && pos <= g_nextRgnEnd)	//JFB!! +0.01 because 'pos' can be a bit ahead of time
+		// NF: potentially fix #886
+		// it seems that if '+0.01' isn't added to 'pos' below, adjacent regions are no more occassionally skipped
+		// https://forum.cockos.com/showpost.php?p=1935561&postcount=6 and my own tests so far seem to confirm also
+		// but I'm unsure what poetential side effects this might have
+		if ((pos/*+0.01*/) >= g_nextRgnPos && pos <= g_nextRgnEnd)	//JFB!! +0.01 because 'pos' can be a bit ahead of time
 																// +1 sample block would be better, but no API..
 																// note: sync loss detection will deal with this in the worst case
 		{
@@ -1600,6 +1604,22 @@ void PlaylistSeekPrevNext(COMMAND_T* _ct)
 	}
 }
 
+// Seek prev/next region based on current playing region
+void PlaylistSeekPrevNextCurBased(COMMAND_T* _ct)
+{
+	if (g_playPlaylist<0)
+		PlaylistPlay(NULL);
+	else
+	{
+		int itemId;
+		if ((int)_ct->user>0)
+			itemId = GetNextValidItem(g_playPlaylist, g_playCur, false, true);
+		else
+			itemId = GetPrevValidItem(g_playPlaylist, g_playCur, false, true);
+		PlaylistPlay(g_playPlaylist, itemId);
+	}
+}
+
 void PlaylistStop()
 {
 	if (g_playPlaylist>=0 || (GetPlayStateEx(NULL)&1) == 1)
@@ -1666,6 +1686,23 @@ void SetPlaylistRepeat(COMMAND_T* _ct)
 
 int IsPlaylistRepeat(COMMAND_T*) {
 	return g_repeatPlaylist;
+}
+
+// VT: get/set g_seekImmediate
+void SetPlaylistOptionSmoothSeek(COMMAND_T* _ct)
+{
+	int mode = _ct ? (int)_ct->user : -1; // toggle if no COMMAND_T is specified
+	switch(mode) {
+		case -1: g_seekImmediate=!g_seekImmediate; break;
+		case 0: g_seekImmediate=false; break;
+		case 1: g_seekImmediate=true; break;
+	}
+	if (RegionPlaylistWnd* w = g_rgnplWndMgr.Get())
+		w->Update();
+}
+
+int IsPlaylistOptionSmoothSeek(COMMAND_T*) {
+	return g_seekImmediate;
 }
 
 

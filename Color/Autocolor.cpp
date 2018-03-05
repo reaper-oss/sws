@@ -680,7 +680,7 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 {
 	if(rule->m_type == AC_TRACK)
 	{
-		if (!bDoColors && !bDoIcons)
+		if (!bDoColors && !bDoIcons && !bDoLayout) // NF: fix #936
 			return;
 
 		PreventUIRefresh(1);

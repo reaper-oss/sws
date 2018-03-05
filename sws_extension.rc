@@ -2024,6 +2024,9 @@ IDC_ZOOM_OUT            CURSOR                  "Resources\\Cursor\\sws_zoom_out
 
 IDC_ZOOM_UNDO           CURSOR                  "Resources\\Cursor\\sws_zoom_undo.cur"
 
+// NF Eraser tool
+IDC_ERASER              CURSOR                  "Resources\\Cursor\\sws_eraser.cur"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //

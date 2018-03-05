@@ -104,12 +104,34 @@ void SmartSplit(COMMAND_T*)
 		Main_OnCommand(40012, 0); // Std split at cursor
 }
 
+// #796, splits at edit cursor also during playback
+void SmartSplit2(COMMAND_T*)
+{
+	double t1, t2;
+	GetSet_LoopTimeRange(false, false, &t1, &t2, false);
+	if (AreThereSelItemsInTimeSel() || (t1 != t2 && !CountSelectedMediaItems(0)))
+		Main_OnCommand(40061, 0); // Split at time sel
+	else
+		Main_OnCommand(40757, 0); // Split at edit cursor (no change sel)
+}
+
+
 void TripleSplit(COMMAND_T*)
 {
 	if (AreThereSelItemsInTimeSel())
 		Main_OnCommand(40061, 0); // Split at time sel
 	else if (AreThereItemsUnderCursor(false))
 		Main_OnCommand(40012, 0); // Std split at cursor
+	else
+		Main_OnCommand(40746, 0); // Split at mouse cursor
+}
+
+void TripleSplit2(COMMAND_T*) // #796, splits at edit cursor also during playback
+{
+	if (AreThereSelItemsInTimeSel())
+		Main_OnCommand(40061, 0); // Split at time sel
+	else if (AreThereItemsUnderCursor(false))
+		Main_OnCommand(40757, 0); // Split at edit cursor (no change sel)
 	else
 		Main_OnCommand(40746, 0); // Split at mouse cursor
 }
@@ -151,8 +173,14 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Copy items/tracks/env (obey time selection)" },							"SWS_SMARTCOPY",	SmartCopy, NULL, },
 	{ { DEFACCEL, "SWS: Cut items/tracks/env (obey time selection)" },							"SWS_SMARTCUT",		SmartCut, NULL, },
 	{ { DEFACCEL, "SWS: Remove items/tracks/env, (obey time selection)" },						"SWS_SMARTREMOVE",	SmartRemove, NULL, },
-	{ { DEFACCEL, "SWS: Split items at time selection (if exists), else at edit cursor" },		"SWS_SMARTSPLIT",	SmartSplit, NULL, },
-	{ { DEFACCEL, "SWS: Split items at time selection, edit cursor, or mouse cursor" },			"SWS_TRIPLESPLIT",	TripleSplit, NULL, },
+	{ { DEFACCEL, "SWS: Split items at time selection (if exists), play cursor (during playback), else at edit cursor" },		
+																								"SWS_SMARTSPLIT",	SmartSplit, NULL, },
+	{ { DEFACCEL, "SWS: Split items at time selection (if exists), else at edit cursor (also during playback)" },		
+																								"SWS_SMARTSPLIT2",	SmartSplit2, NULL, },
+	{ { DEFACCEL, "SWS: Split items at time selection, edit cursor, play cursor (during playback), or mouse cursor" },			
+																								"SWS_TRIPLESPLIT",	TripleSplit, NULL, },
+	{ { DEFACCEL, "SWS: Split items at time selection, edit cursor (also during playback), or mouse cursor" },
+																								"SWS_TRIPLESPLIT2",	TripleSplit2, NULL, },
 	{ { DEFACCEL, "SWS: Unselect all items/tracks/env points (depending on focus)" },			"SWS_SMARTUNSEL",	SmartUnsel, NULL, },
 	{ { DEFACCEL, "SWS: Unselect all items/tracks/env points" },								"SWS_UNSELALL",		UnselAll, NULL, },
 	{ { DEFACCEL, "SWS: Set time selection to selected items (skip if time selection exists)" },"SWS_SAFETIMESEL",	SafeTiemSel, NULL, },

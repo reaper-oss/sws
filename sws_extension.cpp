@@ -1101,8 +1101,12 @@ error:
 			goto error;
 		}
 
-		// Optional API functions
+		// Optional API functions (check for NULL if using!) 
 		IMPAP_OPT(IsProjectDirty);
+		// AI API optional for now
+		IMPAP_OPT(CountAutomationItems); // v5.50c+
+		IMPAP_OPT(GetSetAutomationItemInfo); // v5.50c+
+		IMPAP_OPT(InsertAutomationItem); // v5.50c+
 
 		
 		// Look for SWS dupe/clone

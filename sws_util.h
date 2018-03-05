@@ -188,7 +188,6 @@ HCURSOR SWS_LoadCursor(int id);
 #define MOUSEEVENTF_RIGHTDOWN   0x0008 /* right button down */
 #define MOUSEEVENTF_RIGHTUP     0x0010 /* right button up */
 void mouse_event(DWORD dwFlags, DWORD dx, DWORD dy, DWORD dwData, ULONG_PTR dwExtraInfo);
-BOOL IsWindowEnabled(HWND hwnd);
 int GetMenuString(HMENU hMenu, UINT uIDItem, char* lpString, int nMaxCount, UINT uFlag);
 #endif
 
@@ -235,6 +234,12 @@ MediaTrack* GuidToTrack(const GUID* guid);
 bool GuidsEqual(const GUID* g1, const GUID* g2);
 bool TrackMatchesGuid(MediaTrack* tr, const GUID* g);
 const char *stristr(const char* a, const char* b);
+
+// NF: fix / workaround for setting take start offset doesn't work if containing stretch markers
+// see https://forum.cockos.com/showthread.php?t=180571
+// probably all functions setting take start offset should use this for now, until it's changed in REAPER
+// caller must check for take != NULL
+void UpdateStretchMarkersAfterSetTakeStartOffset(MediaItem_Take* take, double takeStartOffset_multiplyPlayrate);
 
 #ifdef _WIN32
   wchar_t* WideCharPlz(const char* inChar);

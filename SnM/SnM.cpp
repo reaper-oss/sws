@@ -465,6 +465,8 @@ static COMMAND_T s_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Play" }, "S&M_PLAY_RGN_PLAYLIST", PlaylistPlay, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Play previous region (smooth seek)" }, "S&M_PLAY_PREV_RGN_PLAYLIST", PlaylistSeekPrevNext, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Play next region (smooth seek)" }, "S&M_PLAY_NEXT_RGN_PLAYLIST", PlaylistSeekPrevNext, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Region Playlist - Play previous region (based on current playing region)" }, "S&M_PLAY_PREV_CUR_BASED_RGN_PLAYLIST", PlaylistSeekPrevNextCurBased, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Region Playlist - Play next region (based on current playing region)" }, "S&M_PLAY_NEXT_CUR_BASED_RGN_PLAYLIST", PlaylistSeekPrevNextCurBased, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Crop project to playlist" }, "S&M_CROP_RGN_PLAYLIST1", AppendPasteCropPlaylist, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Crop project to playlist (new project tab)" }, "S&M_CROP_RGN_PLAYLIST2", AppendPasteCropPlaylist, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Append playlist to project" }, "S&M_APPEND_RGN_PLAYLIST", AppendPasteCropPlaylist, NULL, 2},
@@ -472,6 +474,9 @@ static COMMAND_T s_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Set repeat off" }, "S&M_PLAYLIST_REPEAT_ON", SetPlaylistRepeat, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Set repeat on" }, "S&M_PLAYLIST_REPEAT_OFF", SetPlaylistRepeat, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Toggle repeat" }, "S&M_PLAYLIST_TGL_REPEAT", SetPlaylistRepeat, NULL, -1, IsPlaylistRepeat},
+	{ { DEFACCEL, "SWS/S&M: Region Playlist - Options/Enable smooth seek (only in Region Playlist)" }, "S&M_PLAYLIST_OPT_SMOOTHSEEK_ON", SetPlaylistOptionSmoothSeek, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Region Playlist - Options/Disable smooth seek (only in Region Playlist)" }, "S&M_PLAYLIST_OPT_SMOOTHSEEK_OFF", SetPlaylistOptionSmoothSeek, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Region Playlist - Options/Toggle smooth seek (only in Region Playlist)" }, "S&M_PLAYLIST_OPT_TGL_SMOOTHSEEK", SetPlaylistOptionSmoothSeek, NULL, -1, IsPlaylistOptionSmoothSeek},
 
 	// Markers & regions ------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Insert marker at edit cursor" }, "S&M_INS_MARKER_EDIT", InsertMarker, NULL, 0},

@@ -180,4 +180,8 @@ int IsNotesDisplayed(COMMAND_T*);
 void ToggleNotesLock(COMMAND_T*);
 int IsNotesLocked(COMMAND_T*);
 
+// #755
+const char* NFDoGetSWSTrackNotes(MediaTrack* track, WDL_FastString* trackNoteOut);
+void NFDoSetSWSTrackNotes(MediaTrack* track, const char* buf);
+
 #endif

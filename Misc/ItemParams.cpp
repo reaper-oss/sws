@@ -463,8 +463,14 @@ void CrossfadeSelItems(COMMAND_T* t)
 								if (take)
 								{
 									double dOffset = *(double*)GetSetMediaItemTakeInfo(take, "D_STARTOFFS", NULL);
-									dOffset -= dEdgeAdj;
+
+									// NF fix: also take Playrate into account
+									double dPlayrate = *(double*)GetSetMediaItemTakeInfo(take, "D_PLAYRATE", NULL);
+									dOffset -= (dEdgeAdj * dPlayrate);
 									GetSetMediaItemTakeInfo(take, "D_STARTOFFS", &dOffset);
+
+									// NF: fix / workaround for setting take start offset doesn't work if containing stretch markers
+									UpdateStretchMarkersAfterSetTakeStartOffset(take, dEdgeAdj * dPlayrate);
 								}
 							}
 							bChanges = true;
@@ -534,7 +540,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Pitch all takes down one cent" },						"SWS_TAKESPITCH-1C",	SetPitch, NULL, -1 },
 	{ { DEFACCEL, "SWS: Pitch all takes down one semitone" },					"SWS_TAKESPITCH-1S",	SetPitch, NULL, -100 },
 	{ { DEFACCEL, "SWS: Pitch all takes down one octave" },						"SWS_TAKESPITCH-1O",	SetPitch, NULL, -1200 },
-	{ { DEFACCEL, "SWS: Crossfade adjacent selected items (move later items)" },					"SWS_CROSSFADE",		CrossfadeSelItems, },
+	{ { DEFACCEL, "SWS: Crossfade adjacent selected items (move edges of adjacent items)" },					"SWS_CROSSFADE",		CrossfadeSelItems, },
 
 	{ { DEFACCEL, "SWS: Increase item rate by ~0.6% (10 cents) preserving length, clear 'preserve pitch'" },	"FNG_NUDGERATEUP",		NudgePlayrate, NULL, 10 },
 	{ { DEFACCEL, "SWS: Decrease item rate by ~0.6% (10 cents) preserving length, clear 'preserve pitch'" },	"FNG_NUDGERATEDOWN",	NudgePlayrate, NULL, -10 },

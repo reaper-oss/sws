@@ -1096,12 +1096,14 @@ static const char* FindKeyword(const char* _chunk) {
 // Other static helpers
 ///////////////////////////////////////////////////////////////////////////////
 
+extern int g_disable_chunk_guid_filtering;
 static int SNM_PreObjectState(WDL_FastString* _str, bool _wantsMinState)
 {
 	// when altering: remove all ids 
 	if (_str)
 	{
-		RemoveAllIds(_str);
+		if (!g_disable_chunk_guid_filtering)
+			RemoveAllIds(_str);
 	}
 	// when getting: enables/disables the "VST full state" pref (that also minimize AU states, if REAPER >= v4)
 	// it also fixes possible incomplete chunk bug (pref overrided when needed)

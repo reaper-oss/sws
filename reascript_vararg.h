@@ -582,6 +582,39 @@ static void* __vararg_NF_AnalyzeTakeLoudness2(void** arglist, int numparms)
   return (void*)(INT_PTR)NF_AnalyzeTakeLoudness2((MediaItem_Take*)arglist[0], (bool)arglist[1], (double*)arglist[2], (double*)arglist[3], (double*)arglist[4], (double*)arglist[5], (double*)arglist[6], (double*)arglist[7], (double*)arglist[8], (double*)arglist[9]);
 }
 
+static void* __vararg_NF_TrackFX_GetOffline(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)NF_TrackFX_GetOffline((MediaTrack*)arglist[0], (int)(INT_PTR)arglist[1]);
+}
+
+static void* __vararg_NF_TrackFX_SetOffline(void** arglist, int numparms)
+{
+  NF_TrackFX_SetOffline((MediaTrack*)arglist[0], (int)(INT_PTR)arglist[1], (bool)arglist[2]);
+  return NULL;
+}
+
+static void* __vararg_NF_TakeFX_GetOffline(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)NF_TakeFX_GetOffline((MediaItem_Take*)arglist[0], (int)(INT_PTR)arglist[1]);
+}
+
+static void* __vararg_NF_TakeFX_SetOffline(void** arglist, int numparms)
+{
+  NF_TakeFX_SetOffline((MediaItem_Take*)arglist[0], (int)(INT_PTR)arglist[1], (bool)arglist[2]);
+  return NULL;
+}
+
+static void* __vararg_NF_GetSWSTrackNotes(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)NF_GetSWSTrackNotes((MediaTrack*)arglist[0], (WDL_FastString*)arglist[1]);
+}
+
+static void* __vararg_NF_SetSWSTrackNotes(void** arglist, int numparms)
+{
+  NF_SetSWSTrackNotes((MediaTrack*)arglist[0], (const char*)arglist[1]);
+  return NULL;
+}
+
 static void* __vararg_SN_FocusMIDIEditor(void** arglist, int numparms)
 {
   SN_FocusMIDIEditor();
@@ -603,6 +636,16 @@ static void* __vararg_CF_GetClipboard(void** arglist, int numparms)
 static void* __vararg_CF_GetClipboardBig(void** arglist, int numparms)
 {
   return (void*)(INT_PTR)CF_GetClipboardBig((WDL_FastString*)arglist[0]);
+}
+
+static void* __vararg_CF_ShellExecute(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)CF_ShellExecute((const char*)arglist[0]);
+}
+
+static void* __vararg_CF_LocateInExplorer(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)CF_LocateInExplorer((const char*)arglist[0]);
 }
 
 

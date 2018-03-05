@@ -94,7 +94,7 @@ OBJS += $(WDL_OBJS) $(LICE_OBJS) $(REAPER_OBJS) $(SWS_OBJS) $(AUTORENDER_OBJS) $
 
 default: $(TARGET)
 
-.PHONY: clean
+.PHONY: clean install uninstall
 
 reascript_vararg.h: ReaScript.cpp reascript_vararg.php
 	php reascript_vararg.php > $@
@@ -112,7 +112,7 @@ $(TARGET): $(OBJS)
 	$(CXX) -shared -o $@ $(CXXFLAGS) $(LFLAGS) $^ $(LINKEXTRA)
 
 clean: 
-	-rm $(OBJS) $(TARGET)
+	-rm $(OBJS) $(TARGET) sws_extension.rc_mac_dlg sws_extension.rc_mac_menu
 
 install: $(TARGET)
 	-mkdir ~/.REAPER/UserPlugins

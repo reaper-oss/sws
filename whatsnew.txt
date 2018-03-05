@@ -29,6 +29,7 @@ Fixes:
 +Issue 918: Fix various issues with "SWS/S&M: Remove all envelopes for selected tracks"
 +Support for UTF-8 resource paths on Windows (Issues #934, #935)
 +Issue 942: Fix column header context menu when a langpack is used
++Issue 886: Potentially fix occasional skipping of adjacent regions in Region Playlist, needs testing 
  
 New ReaScript functions:
 +CF_ShellExecute

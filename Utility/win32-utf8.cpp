@@ -32,9 +32,9 @@
 #  error This file should not be built on non-Windows systems.
 #endif
 
-static_assert(GetPrivateProfileString == GetPrivateProfileStringUTF8,
-  "The current version of WDL does not override GetPrivateProfileString"
-  " to GetPrivateProfileStringUTF8. Update WDL.");
+//static_assert(GetPrivateProfileString == GetPrivateProfileStringUTF8,
+//  "The current version of WDL does not override GetPrivateProfileString"
+//  " to GetPrivateProfileStringUTF8. Update WDL.");
 
 using namespace std;
 

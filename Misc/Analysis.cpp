@@ -313,7 +313,7 @@ double GetMediaItemPeakRMS_Windowed(MediaItem* mi)
 
 	ANALYZE_PCM a;
 	memset(&a, 0, sizeof(a));
-	GetRMSOptions(nullptr, &a.dWindowSize);
+	GetRMSOptions(NULL, &a.dWindowSize);
 
 	if (AnalyzeItem(mi, &a)) {
 		return VAL2DB(a.dRMS);
@@ -412,7 +412,7 @@ void OrganizeByVol(COMMAND_T* ct)
 			memset(&a, 0, sizeof(a));
 			if (ct->user == 2)
 			{	// Windowed mode, set the window size
-				GetRMSOptions(nullptr, &a.dWindowSize);
+				GetRMSOptions(NULL, &a.dWindowSize);
 			}
 			for (int i = 0; i < items.GetSize(); i++)
 			{

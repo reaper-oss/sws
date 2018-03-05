@@ -1,3 +1,7 @@
+Fixes:
++Issue 537: Snapshots: (Attempt to) Fix longstanding issue with send envelopes not restored when recalling snapshots (thanks ovnis for testing!).
+ - Note: Since snapshots are based on state chunks, changes within AI envelopes are not recalled currently (https://forum.cockos.com/showthread.php?t=205406|FR|), though AI properties (e.g. position) should be recalled correctly. Also note that when deleting an AI and trying to recall a previously stored snapshot which contains this AI it won't be recalled correctly.
+
 !v2.9.8 pre-release build (March 5, 2018)
 Now requires REAPER 5.50+!
 

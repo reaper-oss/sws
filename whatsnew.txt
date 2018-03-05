@@ -1,3 +1,7 @@
+New ReaScript functions:
++CF_ShellExecute
++CF_LocateInExplorer
+
 !v2.9.7 featured build (September 28, 2017)
 Fixes:
 +Issue 897: Fix major issues with OSX 10.13 High Sierra

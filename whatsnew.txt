@@ -22,6 +22,7 @@ Fixes:
  - Issue 927: Change relative gating threshold from -10.0 LU to -20.0 LU (to match with EBU TECH3342 notes)
  - Prevent items going offline during analysis (hopefully fixes cornercase issue with occasionally wrong analysis results)
  - Enable the Cancel button only while analyzing
+ - Fix crashing with bad params/too little memory
 +Issue 864: "SWS/S&M: Float next FX (and close others) for selected tracks" now skips over offline FX
  
 New ReaScript functions:

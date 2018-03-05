@@ -1,3 +1,6 @@
+!v2.9.8 pre-release build (March 5, 2018)
+Now requires REAPER 5.50+!
+
 Actions:
 +New actions (Main section):
  - SWS/NF: Eraser tool (perform until shortcut released)

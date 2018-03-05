@@ -97,6 +97,7 @@ int             BR_Win32_GetPrivateProfileString (const char* sectionName, const
 int             BR_Win32_ShellExecute (const char* operation, const char* file, const char* parameters, const char* directoy, int showFlags);
 bool            BR_Win32_WritePrivateProfileString (const char* sectionName, const char* keyName, const char* value, const char* filePath);
 
+// *** nofish stuff ***, I'll move this to nofish.h/nofish.cpp when doing a clean up
 // #781
 double			NF_GetMediaItemMaxPeak(MediaItem* item);
 double			NF_GetMediaItemPeakRMS_Windowed(MediaItem* item);
@@ -109,6 +110,16 @@ bool			NF_AnalyzeTakeLoudness_IntegratedOnly(MediaItem_Take* take, double* lufsI
 bool			NF_AnalyzeTakeLoudness(MediaItem_Take* take, bool analyzeTruePeak, double* lufsOut, double* rangeOut, double* truePeakOut, double* truePeakPosOut, double* shorTermMaxOut, double* momentaryMaxOut);
 
 bool			NF_AnalyzeTakeLoudness2(MediaItem_Take* take, bool analyzeTruePeak, double* lufsOut, double* rangeOut, double* truePeakOut, double* truePeakPosOut, double* shorTermMaxOut, double* momentaryMaxOut, double* shortTermMaxPosOut, double* momentaryMaxPosOut);
+
+bool			NF_TrackFX_GetOffline(MediaTrack* track, int fx);
+void			NF_TrackFX_SetOffline(MediaTrack* track, int fx, bool enabled);
+bool			NF_TakeFX_GetOffline(MediaItem_Take* take, int fx);
+void			NF_TakeFX_SetOffline(MediaItem_Take* take, int fx, bool enabled);
+
+// #755
+const char*		NF_GetSWSTrackNotes(MediaTrack* track, WDL_FastString* trackNoteOut);
+void			NF_SetSWSTrackNotes(MediaTrack* track, const char* buf);
+// /*** nofish stuff ***
 
 
 /******************************************************************************

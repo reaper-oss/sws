@@ -45,12 +45,12 @@ void DoLaunchExtTool(COMMAND_T* t)
 	if (t->user == 1)
 	{
 		if (!DoLaunchExternalTool(g_external_app_paths.PathToTool1))
-			MessageBox(g_hwndParent, __LOCALIZE("Could not execute external tool!","sws_mbox"),__LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
+			MessageBox(g_hwndParent, __LOCALIZE("Could not execute external tool!\n(Set it in 'Xenakios/SWS: Command parameters')","sws_mbox"),__LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 	}
 	else if (t->user == 2)
 	{
 		if (!DoLaunchExternalTool(g_external_app_paths.PathToTool2))
-			MessageBox(g_hwndParent, __LOCALIZE("Could not execute external tool!","sws_mbox"),__LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
+			MessageBox(g_hwndParent, __LOCALIZE("Could not execute external tool!\n(Set it in 'Xenakios/SWS: Command parameters')","sws_mbox"),__LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 	}
 }
 

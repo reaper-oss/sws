@@ -2241,10 +2241,7 @@ BR_LoudnessObject* BR_AnalyzeLoudnessWnd::IsObjectInList (MediaItem_Take* take)
 
 void BR_AnalyzeLoudnessWnd::AbortAnalyze ()
 {
-	KillTimer(m_hwnd, ANALYZE_TIMER);
-	ShowWindow(GetDlgItem(m_hwnd, IDC_PROGRESS), SW_HIDE);
-	SendMessage(GetDlgItem(m_hwnd, IDC_PROGRESS), PBM_SETPOS, 0, 0);
-	EnableWindow(GetDlgItem(m_hwnd, IDC_ANALYZE), true);
+	SetAnalyzing(false, false);
 
 	// Make sure objects already in the list are NOT destroyed
 	for (int i = 0; i < m_analyzeQueue.GetSize(); ++i)
@@ -2253,22 +2250,35 @@ void BR_AnalyzeLoudnessWnd::AbortAnalyze ()
 			m_analyzeQueue.Delete(i--, false);
 	}
 	m_analyzeQueue.Empty(true);
-	m_analyzeInProgress = false;
 	m_objectsLen      = 0;
 	m_currentObjectId = 0;
 }
 
 void BR_AnalyzeLoudnessWnd::AbortReanalyze ()
 {
-	KillTimer(m_hwnd, REANALYZE_TIMER);
-	ShowWindow(GetDlgItem(m_hwnd, IDC_PROGRESS), SW_HIDE);
-	SendMessage(GetDlgItem(m_hwnd, IDC_PROGRESS), PBM_SETPOS, 0, 0);
-	EnableWindow(GetDlgItem(m_hwnd, IDC_ANALYZE), true);
+	SetAnalyzing(false, true);
 
 	m_reanalyzeQueue.Empty(false);
-	m_analyzeInProgress = false;
 	m_objectsLen      = 0;
 	m_currentObjectId = 0;
+}
+
+void BR_AnalyzeLoudnessWnd::SetAnalyzing (const bool analyzing, const bool reanalyze)
+{
+	ShowWindow(GetDlgItem(m_hwnd, IDC_PROGRESS), analyzing ? SW_SHOW : SW_HIDE);
+	SendMessage(GetDlgItem(m_hwnd, IDC_PROGRESS), PBM_SETPOS, 0, 0);
+	EnableWindow(GetDlgItem(m_hwnd, IDC_ANALYZE), !analyzing);
+	EnableWindow(GetDlgItem(m_hwnd, IDC_CANCEL), analyzing);
+
+	const int timer = reanalyze ? REANALYZE_TIMER : ANALYZE_TIMER;
+
+	if (analyzing)
+		SetTimer(m_hwnd, timer, ANALYZE_TIMER_FREQ, NULL);
+	else {
+		KillTimer(m_hwnd, timer);
+
+		m_analyzeInProgress = false;
+	}
 }
 
 void BR_AnalyzeLoudnessWnd::ClearList ()
@@ -3035,6 +3045,8 @@ void BR_AnalyzeLoudnessWnd::OnInitDlg ()
 	m_pLists.Add(m_list);
 	SetTimer(m_hwnd, UPDATE_TIMER, UPDATE_TIMER_FREQ, NULL);
 
+	EnableWindow(GetDlgItem(m_hwnd, IDC_CANCEL), false);
+
 	this->Update();
 }
 
@@ -3105,10 +3117,7 @@ void BR_AnalyzeLoudnessWnd::OnCommand (WPARAM wParam, LPARAM lParam)
 				if (m_objectsLen == 0) m_objectsLen = 1;
 
 				// Start timer which will analyze each object and finally update the list view
-				SendMessage(GetDlgItem(m_hwnd, IDC_PROGRESS), PBM_SETPOS, 0, 0);
-				ShowWindow(GetDlgItem(m_hwnd, IDC_PROGRESS), SW_SHOW);
-				EnableWindow(GetDlgItem(m_hwnd, IDC_ANALYZE), false);
-				SetTimer(m_hwnd, ANALYZE_TIMER, ANALYZE_TIMER_FREQ, NULL);
+				SetAnalyzing(true, false);
 			}
 		}
 		break;
@@ -3132,10 +3141,7 @@ void BR_AnalyzeLoudnessWnd::OnCommand (WPARAM wParam, LPARAM lParam)
 				if (m_objectsLen == 0) m_objectsLen = 1;
 
 				// Start timer which will analyze each object and finally update the list view
-				SendMessage(GetDlgItem(m_hwnd, IDC_PROGRESS), PBM_SETPOS, 0, 0);
-				ShowWindow(GetDlgItem(m_hwnd, IDC_PROGRESS), SW_SHOW);
-				EnableWindow(GetDlgItem(m_hwnd, IDC_ANALYZE), false);
-				SetTimer(m_hwnd, REANALYZE_TIMER, ANALYZE_TIMER_FREQ, NULL);
+				SetAnalyzing(true, true);
 			}
 		}
 		break;
@@ -3446,13 +3452,10 @@ void BR_AnalyzeLoudnessWnd::OnTimer (WPARAM wParam)
 							g_analyzedObjects.Get()->Delete(i--, true);
 					}
 				}
-				this->Update();
 
-				m_analyzeInProgress = false;
-				ShowWindow(GetDlgItem(m_hwnd, IDC_PROGRESS), SW_HIDE);
-				SendMessage(GetDlgItem(m_hwnd, IDC_PROGRESS), PBM_SETPOS, 0, 0);
-				EnableWindow(GetDlgItem(m_hwnd, IDC_ANALYZE), true);
-				KillTimer(m_hwnd, ANALYZE_TIMER);
+				this->Update();
+				SetAnalyzing(false, false);
+
 				return;
 			}
 			else
@@ -3504,11 +3507,7 @@ void BR_AnalyzeLoudnessWnd::OnTimer (WPARAM wParam)
 			if (!m_reanalyzeQueue.GetSize())
 			{
 				this->Update();
-				m_analyzeInProgress = false;
-				ShowWindow(GetDlgItem(m_hwnd, IDC_PROGRESS), SW_HIDE);
-				SendMessage(GetDlgItem(m_hwnd, IDC_PROGRESS), PBM_SETPOS, 0, 0);
-				EnableWindow(GetDlgItem(m_hwnd, IDC_ANALYZE), true);
-				KillTimer(m_hwnd, REANALYZE_TIMER);
+				SetAnalyzing(false, true);
 				return;
 			}
 			else

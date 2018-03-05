@@ -44,6 +44,7 @@ typedef struct ANALYZE_PCM
 	double dProgress;		// out Analysis progress, 0.0-1.0 for 0-100%
 	INT64 sampleCount;		// out # of samples analyzed
 	double dWindowSize;		// RMS window in seconds.  If this is != 0.0, then RMS is calculated/returned as max within window
+	bool success;
 } ANALYZE_PCM;
 
 int AnalysisInit();

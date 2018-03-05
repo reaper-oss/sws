@@ -138,12 +138,16 @@ void PlaylistRun();
 void PlaylistPlay(int _playlistId, int _itemId);
 void PlaylistPlay(COMMAND_T*);
 void PlaylistSeekPrevNext(COMMAND_T*);
+void PlaylistSeekPrevNextCurBased(COMMAND_T*);
 void PlaylistStop();
 void PlaylistStopped(bool _pause = false);
 void PlaylistUnpaused();
 void PlaylistResync();
 void SetPlaylistRepeat(COMMAND_T*);
 int IsPlaylistRepeat(COMMAND_T*);
+
+void SetPlaylistOptionSmoothSeek(COMMAND_T*);
+int IsPlaylistOptionSmoothSeek(COMMAND_T*);
 
 void AppendPasteCropPlaylist(RegionPlaylist* _playlist, int _mode);
 void AppendPasteCropPlaylist(COMMAND_T*);

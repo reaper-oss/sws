@@ -242,6 +242,7 @@ protected:
 	BR_LoudnessObject* IsObjectInList (MediaItem_Take* take);
 	void AbortAnalyze ();
 	void AbortReanalyze ();
+	void SetAnalyzing (bool, bool reanalyze);
 	void ClearList ();
 	void ShowExportFormatDialog (bool show);
 	void ShowNormalizeDialog (bool show);

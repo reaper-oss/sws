@@ -1600,6 +1600,22 @@ void PlaylistSeekPrevNext(COMMAND_T* _ct)
 	}
 }
 
+// Seek prev/next region based on current playing region
+void PlaylistSeekPrevNextCurBased(COMMAND_T* _ct)
+{
+	if (g_playPlaylist<0)
+		PlaylistPlay(NULL);
+	else
+	{
+		int itemId;
+		if ((int)_ct->user>0)
+			itemId = GetNextValidItem(g_playPlaylist, g_playCur, false, true);
+		else
+			itemId = GetPrevValidItem(g_playPlaylist, g_playCur, false, true);
+		PlaylistPlay(g_playPlaylist, itemId);
+	}
+}
+
 void PlaylistStop()
 {
 	if (g_playPlaylist>=0 || (GetPlayStateEx(NULL)&1) == 1)
@@ -1666,6 +1682,23 @@ void SetPlaylistRepeat(COMMAND_T* _ct)
 
 int IsPlaylistRepeat(COMMAND_T*) {
 	return g_repeatPlaylist;
+}
+
+// VT: get/set g_seekImmediate
+void SetPlaylistOptionSmoothSeek(COMMAND_T* _ct)
+{
+	int mode = _ct ? (int)_ct->user : -1; // toggle if no COMMAND_T is specified
+	switch(mode) {
+		case -1: g_seekImmediate=!g_seekImmediate; break;
+		case 0: g_seekImmediate=false; break;
+		case 1: g_seekImmediate=true; break;
+	}
+	if (RegionPlaylistWnd* w = g_rgnplWndMgr.Get())
+		w->Update();
+}
+
+int IsPlaylistOptionSmoothSeek(COMMAND_T*) {
+	return g_seekImmediate;
 }
 
 

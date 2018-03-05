@@ -91,6 +91,7 @@
 #define IDC_ENV_PT_ADJ_VERT             186
 #define IDC_MISC_SPEAKER                187
 #define IDD_NF_LOUDNESS_ANALYZE_PROGRESS 188 // #880
+#define IDC_ERASER                      189 // NF Eraser tool
 #define IDB_UP                          500
 #define IDB_DOWN                        501
 #define IDC_BUTTON1                     1000

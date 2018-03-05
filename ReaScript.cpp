@@ -260,6 +260,8 @@ APIdef g_apidefs[] =
 	{ APIFUNC(CF_SetClipboard), "void", "const char*", "str", "Write the given string into the system clipboard.", },
 	{ APIFUNC(CF_GetClipboard), "void", "char*,int", "buf,buf_sz", "Read the contents of the system clipboard (limited to 1023 characters in Lua).", },
 	{ APIFUNC(CF_GetClipboardBig), "const char*", "WDL_FastString*", "output", "Read the contents of the system clipboard. See <a href=\"#SNM_CreateFastString\">SNM_CreateFastString</a> and <a href=\"#SNM_DeleteFastString\">SNM_DeleteFastString</a>.", },
+	{ APIFUNC(CF_ShellExecute), "bool", "const char*", "file", "Open the given file or URL in the default application. See also <a href=\"#CF_LocateInExplorer\">CF_LocateInExplorer</a>.", },
+	{ APIFUNC(CF_LocateInExplorer), "bool", "const char*", "file", "Select the given file in explorer/finder.", },
 
 	{ NULL, } // denote end of table
 };

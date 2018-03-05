@@ -638,5 +638,15 @@ static void* __vararg_CF_GetClipboardBig(void** arglist, int numparms)
   return (void*)(INT_PTR)CF_GetClipboardBig((WDL_FastString*)arglist[0]);
 }
 
+static void* __vararg_CF_ShellExecute(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)CF_ShellExecute((const char*)arglist[0]);
+}
+
+static void* __vararg_CF_LocateInExplorer(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)CF_LocateInExplorer((const char*)arglist[0]);
+}
+
 
 #endif

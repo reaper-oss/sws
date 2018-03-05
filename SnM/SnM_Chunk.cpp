@@ -938,3 +938,4 @@ bool SNM_TakeEnvParserPatcher::SetVal(const char* _envKeyWord, int _val) {
 	return (ParsePatch(-1, 1, _envKeyWord) > 0);
 }
 
+int g_disable_chunk_guid_filtering;

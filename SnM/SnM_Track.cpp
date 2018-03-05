@@ -578,6 +578,10 @@ void ToggleArmTrackEnv(COMMAND_T* _ct)
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 
+// Veto: currently several issues (see #918):
+// 1. Doesn't remove send envs of selected tracks
+// 2. Removes send envs of all tracks which have sends to selected tracks
+// 3. Automation items of removed envs remain in project orphaned (on "Track level" (depth 1), see "<POOLEDENV")
 void RemoveAllEnvsSelTracks(COMMAND_T* _ct)
 {
 	bool updated = false;
@@ -586,11 +590,40 @@ void RemoveAllEnvsSelTracks(COMMAND_T* _ct)
 			if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL)) {
 				SNM_TrackEnvParserPatcher p(tr);
 				updated |= p.RemoveEnvelopes();
-		}
+			}
 	if (updated)
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 
+void RemoveAllEnvsSelTracksNoChunk(COMMAND_T* _ct)
+{
+	bool updated = false;
+	for (int i=0; i <= GetNumTracks(); i++) // incl. master
+		if (MediaTrack* tr = CSurf_TrackFromID(i, false))
+			if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL)) {
+				if (!updated) {
+					PreventUIRefresh(1);
+					Undo_BeginBlock2(NULL);
+					Main_OnCommand(41148, 0); // required for env selection: Envelope: Show all envelopes for (selected) tracks.
+					updated = true;
+				}
+				for (int j=0; j < CountTrackEnvelopes(tr) + j; j++)
+					if (TrackEnvelope* env = GetTrackEnvelope(tr, 0)) {
+						if (CountAutomationItems && GetSetAutomationItemInfo) // AI API optional for now
+							for (int k=0; k < CountAutomationItems(env) + k; k++) {
+								GetSetAutomationItemInfo(env, 0, "D_UISEL", 1, true);
+								Main_OnCommand(42086, 0);  // Envelope: Delete (selected) automation items
+							}
+						SetCursorContext(2, env);   // Select envelope
+						DeleteEnvelopePointRange(env, -1000000000, 1000000000);  //  hack to not spawn a dialog on action 40065
+						Main_OnCommand(40065, 0);   // Envelope: Clear (selected) envelope
+					}
+			}
+	if (updated) {
+		PreventUIRefresh(-1);
+		Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL);
+	}
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Toolbar track env. write mode toggle
@@ -619,7 +652,7 @@ void ToggleWriteEnvExists(COMMAND_T* _ct)
 		{
 			MediaTrack* tr = CSurf_TrackFromID(i, false); 
 			int autoMode = tr ? *(int*)GetSetMediaTrackInfo(tr, "I_AUTOMODE", NULL) : -1;
-			if (autoMode >= 2 /* touch */ && autoMode <= 4 /* latch */)
+			if (autoMode >= 2 /* touch */ && autoMode <= 5 /* latch preview */)
 			{
 				GetSetMediaTrackInfo(tr, "I_AUTOMODE", &g_i1); // set read mode
 				g_toolbarAutoModeToggles.Add(new SNM_TrackInt(tr, autoMode));
@@ -640,7 +673,7 @@ int WriteEnvExists(COMMAND_T* _ct)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false); 
 		int autoMode = tr ? *(int*)GetSetMediaTrackInfo(tr, "I_AUTOMODE", NULL) : -1;
-		if (autoMode >= 2 /* touch */ && autoMode <= 4 /* latch */)
+		if (autoMode >= 2 /* touch */ && autoMode <= 5 /* latch preview */)
 			return true;
 	}
 	return false;

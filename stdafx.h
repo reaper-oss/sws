@@ -120,4 +120,8 @@
 #include "Padre/padreUtils.h"
 #include "Padre/padreMidi.h"
 #include "Padre/padreMidiItemProcBase.h"
-#include "Breeder/BR_Timer.h" 
+#include "Breeder/BR_Timer.h"
+
+#ifdef _WIN32
+#  include "Utility/win32-utf8.h"
+#endif

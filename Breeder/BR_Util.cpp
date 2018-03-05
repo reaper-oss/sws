@@ -3477,6 +3477,11 @@ HCURSOR GetSwsMouseCursor (BR_MouseCursor cursor)
 			else if (cursor == CURSOR_ZOOM_OUT)        {idc_resVal = IDC_ZOOM_OUT;          cursorFile = "sws_zoom_out";}
 			else if (cursor == CURSOR_ZOOM_UNDO)       {idc_resVal = IDC_ZOOM_UNDO;         cursorFile = "sws_zoom_undo";}
 
+			// NF Eraser tool
+			else if (cursor == CURSOR_ERASER)          {idc_resVal = IDC_ERASER;            cursorFile = "sws_eraser";}
+
+			
+
 			// Check for custom cursor file first
 			if (cursorFile)
 			{

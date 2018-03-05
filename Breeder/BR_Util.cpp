@@ -1078,7 +1078,7 @@ bool DoesItemHaveMidiEvents (MediaItem* item)
 	return false;
 }
 
-bool TrimItem (MediaItem* item, double start, double end, bool force /*=false*/)
+bool TrimItem (MediaItem* item, double start, double end, bool adjustTakesEnvelopes, bool force /*=false*/)
 {
 	if (!item)
 		return false;
@@ -1116,6 +1116,11 @@ bool TrimItem (MediaItem* item, double start, double end, bool force /*=false*/)
 				if (!itemLooped)
 					MIDI_SetItemExtents(item, TimeMap_timeToQN(start), TimeMap_timeToQN(end)); // this will update source length (but in case of looped midi item we don't want that (it also disabled looping for item)
 			}
+
+			if (adjustTakesEnvelopes) {
+				DoAdjustTakesEnvelopes(take, startDif); 
+			}
+			
 		}
 
 		SetActiveTake(activeTake);
@@ -1123,6 +1128,61 @@ bool TrimItem (MediaItem* item, double start, double end, bool force /*=false*/)
 	}
 	return false;
 }
+
+bool TrimItem_UseNativeTrimActions(MediaItem* item, double start, double end, bool force /*=false*/)
+{
+	if (!item)
+		return false;
+
+	if (start > end)
+		swap(start, end);
+	if (start < 0)
+		start = 0;
+
+	double newLen = end - start;
+	if (newLen <= 0)
+		return false;
+
+	double itemPos = GetMediaItemInfo_Value(item, "D_POSITION");
+	double itemLen = GetMediaItemInfo_Value(item, "D_LENGTH");
+
+	if (force || start != itemPos || newLen != itemLen) {
+		PreventUIRefresh(1);
+		double origCurPos = GetCursorPosition();
+		SetEditCurPos(start, false, false);
+		Main_OnCommand(41305, 0); // Trim left edge of item to edit cursor
+		SetEditCurPos(end, false, false);
+		Main_OnCommand(41311, 0); // Trim right edge of item to edit cursor 
+		SetEditCurPos(origCurPos, false, false);
+		PreventUIRefresh(-1);
+		return true;
+	}
+	return false;
+}
+
+void DoAdjustTakesEnvelopes(MediaItem_Take* take, double offset)
+{
+	int envCount = CountTakeEnvelopes(take);
+	double takeRate = GetMediaItemTakeInfo_Value(take, "D_PLAYRATE");
+
+	for (int i = 0; i < envCount; i++) {
+		TrackEnvelope* env = GetTakeEnvelope(take, i);
+		int envPointsCount = CountEnvelopePoints(env);
+
+		double time; double value; int shape; double tension; bool selected;
+
+		for (int j = 0; j < envPointsCount; j++) {
+			bool isEnvPoint = GetEnvelopePoint(env, j, &time, &value, &shape, &tension, &selected);
+
+			if (isEnvPoint) {
+				double newTime = time - (offset * takeRate);
+				SetEnvelopePoint(env, j, &newTime, &value, &shape, &tension, &selected, &g_bTrue);
+			}
+		}
+		Envelope_SortPoints(env);
+	}
+}
+
 
 bool GetMediaSourceProperties (MediaItem_Take* take, bool* section, double* start, double* length, double* fade, bool* reverse)
 {

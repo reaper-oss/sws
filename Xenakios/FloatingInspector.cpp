@@ -136,6 +136,7 @@ WDL_DLGRET MyItemInspectorDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM
 			break;
 		}
 		case WM_DESTROY:
+			g_hItemInspector = NULL;
 			DestroyMenu(g_hItemInspCtxMenu);
 			break;
 	}

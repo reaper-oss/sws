@@ -172,20 +172,23 @@ extern const GUID GUID_NULL;
 // sws_util.mm
 void SWS_GetDateString(int time, char* buf, int bufsize);
 void SWS_GetTimeString(int time, char* buf, int bufsize);
+
+#ifdef __APPLE__
 int GetCustomColors(COLORREF custColors[]);
 void SetCustomColors(COLORREF custColors[]);
 void ShowColorChooser(COLORREF initialCol);
 bool GetChosenColor(COLORREF* pColor);
 void HideColorChooser();
+void SetMenuItemSwatch(HMENU hMenu, UINT pos, int size, COLORREF color);
+#endif
+
 HCURSOR SWS_LoadCursor(int id);
 #define MOUSEEVENTF_LEFTDOWN    0x0002 /* left button down */
 #define MOUSEEVENTF_LEFTUP      0x0004 /* left button up */
 #define MOUSEEVENTF_RIGHTDOWN   0x0008 /* right button down */
 #define MOUSEEVENTF_RIGHTUP     0x0010 /* right button up */
 void mouse_event(DWORD dwFlags, DWORD dx, DWORD dy, DWORD dwData, ULONG_PTR dwExtraInfo);
-BOOL IsWindowEnabled(HWND hwnd);
 int GetMenuString(HMENU hMenu, UINT uIDItem, char* lpString, int nMaxCount, UINT uFlag);
-void SetMenuItemSwatch(HMENU hMenu, UINT pos, int size, COLORREF color);
 #endif
 
 // Command/action handling, sws_extension.cpp

@@ -278,7 +278,7 @@ void SWS_AutoColorView::OnEndDrag()
 
 SWS_AutoColorWnd::SWS_AutoColorWnd()
 :SWS_DockWnd(IDD_AUTOCOLOR, __LOCALIZE("Auto Color/Icon/Layout","sws_DLG_115"), "SWSAutoColor", SWSGetCommandID(OpenAutoColor))
-#ifndef _WIN32
+#ifdef __APPLE__
 	,m_bSettingColor(false)
 #endif
 {
@@ -385,10 +385,21 @@ void SWS_AutoColorWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 						item->m_color = cc.rgbResult & 0xFFFFFF; // fix for issue 600
 				}
 				Update();
-#else
+#elif defined(__APPLE__)
 				m_bSettingColor = true;
 				ShowColorChooser(item->m_color);
 				SetTimer(m_hwnd, 1, 50, NULL);
+#else
+				UpdateCustomColors();
+
+				int cc = item->m_color;
+				if (SWELL_ChooseColor(m_hwnd,&cc,16,(int *)g_custColors))
+				{
+					int x = 0;
+					while ((item = (SWS_RuleItem*)m_pLists.Get(0)->EnumSelected(&x)))
+						item->m_color = cc & 0xFFFFFF;
+				}
+				Update();
 #endif
 			}
 			break;
@@ -487,7 +498,7 @@ void SWS_AutoColorWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 	}
 }
 
-#ifndef _WIN32
+#ifdef __APPLE__
 void SWS_AutoColorWnd::OnTimer(WPARAM wParam)
 {
 	COLORREF cr;

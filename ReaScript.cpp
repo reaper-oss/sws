@@ -35,6 +35,7 @@
 #include "Breeder/BR_ReaScript.h"
 #include "snooks/SN_ReaScript.h"
 #include "cfillion/cfillion.hpp"
+#include "nofish/NF_ReaScript.h"
 
 
 // if _TEST_REASCRIPT_EXPORT is #define'd, you'll need to rename "APITESTFUNC" into "APIFUNC" in g_apidefs too

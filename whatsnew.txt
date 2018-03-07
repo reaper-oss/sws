@@ -1,3 +1,9 @@
++MouseContext: Initial support for automation items:
+ - Contextual toolbars: Add Automation item context (Issue 915)
+ - ReaScript: 
+  - BR_GetMouseCursorContext(): detailsOut returns "automation_item" when mouse cursor is over automation item
+  - Added function: BR_GetMouseCursorContext_AutomationItem(), returns automation item index
+
 !v2.9.8 pre-release build (March 5, 2018)
 Now requires REAPER 5.50+!
 

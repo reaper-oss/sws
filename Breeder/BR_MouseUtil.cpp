@@ -498,6 +498,12 @@ bool BR_MouseInfo::IsTakeEnvelope ()
 	return m_mouseInfo.takeEnvelope;
 }
 
+// AI context
+int BR_MouseInfo::GetAIid()
+{
+	return m_mouseInfo.AIid;
+}
+
 HWND BR_MouseInfo::GetMidiEditor ()
 {
 	return m_mouseInfo.midiEditor;
@@ -622,7 +628,8 @@ noteRow         (-1),
 ccLaneVal       (-1),
 ccLaneId        (-1),
 ccLane          (-2), // because -1 stands for velocity lane
-pianoRollMode   (-1)
+pianoRollMode   (-1),
+AIid            (-1)
 {
 	/* Note: other parts of the code rely on these *
 	*  default values. Be careful if changing them */
@@ -726,14 +733,20 @@ void BR_MouseInfo::GetContext (const POINT& p)
 						mouseInfo.segment = "envelope";
 
 						int trackEnvHit = 0;
+						int AIhit = 0; // AI context
 						if (!(m_mode & BR_MouseInfo::MODE_IGNORE_ENVELOPE_LANE_SEGMENT))
 						{
 							BR_Envelope envelope(mouseInfo.envelope);
 							trackEnvHit = this->IsMouseOverEnvelopeLine(envelope, height-2*ENV_GAP, offset+ENV_GAP, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, &mouseInfo.envPointId);
+
+							if (trackEnvHit == 0) { // AI context: no env. hit, check for AI
+								AIhit = this->IsMouseOverAI(envelope, height - 2 * ENV_GAP, offset + ENV_GAP, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, &mouseInfo.AIid);
+							}
 						}
 
 						if      (trackEnvHit == 1) mouseInfo.details = "env_point";
 						else if (trackEnvHit == 2) mouseInfo.details = "env_segment";
+						else if (AIhit == 1)       mouseInfo.details = "automation_item";
 						else                       mouseInfo.details = "empty";
 					}
 
@@ -1307,6 +1320,36 @@ int BR_MouseInfo::IsMouseOverEnvelopeLine (BR_Envelope& envelope, int drawableEn
 		}
 	}
 	WritePtr(pointUnderMouse, pointId);
+	return mouseHit;
+}
+
+// AI context
+int BR_MouseInfo::IsMouseOverAI(BR_Envelope & envelope, int drawableEnvHeight, int yOffset, int mouseDisplayX, int mouseY, double mousePos, double arrangeStart, double arrangeZoom, int* AIunderMouse)
+{
+	/*  Return values: 0 -> no hit, 1 -> over AI */
+
+	int mouseHit = 0;
+
+	// this value is returned by BR_GetMouseCursorContext_AutomationItem(), 0-based per track env., to match ReaScript API
+	int AIid = -1;
+
+	// Check if mouse is in drawable part of envelope lane where line resides
+	if (mouseY >= yOffset && mouseY < yOffset + drawableEnvHeight)
+	{
+		size_t nrAI = envelope.CountAI();
+
+		for (size_t i = 0; i < nrAI; i++) {
+			double AIpos = envelope.GetAIposition(i);
+			double AIlength = envelope.GetAIlength(i);
+
+			if (mousePos >= AIpos && mousePos <= AIpos + AIlength) {
+				mouseHit = 1;
+				AIid = i; 
+				break;
+			}
+		}
+	}
+	WritePtr(AIunderMouse, AIid);
 	return mouseHit;
 }
 

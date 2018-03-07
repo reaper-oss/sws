@@ -70,6 +70,7 @@ MediaItem*      BR_GetMouseCursorContext_Item ();
 void*           BR_GetMouseCursorContext_MIDI (bool* inlineEditorOut, int* noteRowOut, int* ccLaneOut, int* ccLaneValOut, int* ccLaneIdOut);
 double          BR_GetMouseCursorContext_Position ();
 int             BR_GetMouseCursorContext_StretchMarker ();
+int             BR_GetMouseCursorContext_AutomationItem(); // AI context
 MediaItem_Take* BR_GetMouseCursorContext_Take ();
 MediaTrack*     BR_GetMouseCursorContext_Track ();
 double          BR_GetNextGridDivision (double position);
@@ -77,7 +78,7 @@ double          BR_GetPrevGridDivision (double position);
 double          BR_GetSetTrackSendInfo (MediaTrack* track, int category, int sendidx, const char* parmname, bool setNewValue, double newValue);
 int             BR_GetTakeFXCount (MediaItem_Take* take);
 bool            BR_IsTakeMidi (MediaItem_Take* take, bool* inProjectMidiOut);
-bool			BR_IsMidiOpenInInlineEditor(MediaItem_Take* take);
+bool            BR_IsMidiOpenInInlineEditor(MediaItem_Take* take);
 MediaItem*      BR_ItemAtMouseCursor (double* positionOut);
 bool            BR_MIDI_CCLaneRemove (HWND midiEditor, int laneId);
 bool            BR_MIDI_CCLaneReplace (HWND midiEditor, int laneId, int newCC);
@@ -143,7 +144,7 @@ BR_GetMouseCursorContext_MIDI, BR_GetMouseCursorContext_Position, BR_GetMouseCur
 <tr><th rowspan=\"2\" align = \"center\"> mcp         </th>    <td> track       </td>   <td> \"\"                                                           </td> </tr>\
 <tr>                                                           <td> empty       </td>   <td> \"\"                                                           </td> </tr>\
 <tr><th rowspan=\"3\" align = \"center\"> arrange     </th>    <td> track       </td>   <td> empty,<br>item, item_stretch_marker,<br>env_point, env_segment </td> </tr>\
-<tr>                                                           <td> envelope    </td>   <td> empty, env_point, env_segment                                  </td> </tr>\
+<tr>                                                           <td> envelope    </td>   <td> empty, env_point, env_segment, automation_item                 </td> </tr>\
 <tr>                                                           <td> empty       </td>   <td> \"\"                                                           </td> </tr>\
 <tr><th rowspan=\"5\" align = \"center\"> midi_editor </th>    <td> unknown     </td>   <td> \"\"                                                           </td> </tr>\
 <tr>                                                           <td> ruler       </td>   <td> \"\"                                                           </td> </tr>\

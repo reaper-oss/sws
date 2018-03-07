@@ -151,6 +151,23 @@ public:
 	double LaneMinValue ();    // Minimum drawable value
 	double LaneMaxValue ();    // Maximum drawable value
 
+	/* Get AI properties *, to do: add AI properties setters */
+	size_t CountAI();
+	// 1-based as in chunk
+	int GetAIid(int AIidx); 
+	double GetAIposition(int AIidx);
+	double GetAIlength(int AIidx);
+	double GetAIoffset(int AIidx);
+	double GetAIrate(int AIidx);
+	int IsAItimeBased(int AIidx);
+	double GetAIbaseline(int AIidx);
+	double GetAIamplitude(int AIidx);
+	int IsAIlooped(int AIidx);
+	// bool GetAIextra1(int AIidx);
+	// bool GetAIextra2(int AIidx);
+	// bool GetAIextra3(int AIidx);
+	// bool GetAIextra4(int AIidx);
+
 	/* Set envelope properties */
 	void SetActive (bool active);
 	void SetVisible (bool visible);
@@ -184,23 +201,29 @@ private:
 		EnvProperties ();
 		EnvProperties (const EnvProperties& properties);
 		EnvProperties& operator=  (const EnvProperties& properties);
-		vector<WDL_FastString> automationItems;
+		// vector<WDL_FastString> automationItems;
 		//POOLEDENVINST id pos length offset rate timeBased baseline(.5=0) amplitude loop ? ?
 		// For now we're just storing as strings in properties and not handling parsing of these
-		//struct AutomationItem
-		//{
-		//	int id;
-		//	double position;
-		//	double length;
-		//	double offset;
-		//	double rate;
-		//	bool timeBased;
-		//	double baseline;
-		//	double amplitude;
-		//	bool loop;
-		//	bool extra1; // Not sure what the last 2 parameters are
-		//	bool extra2; 
-		//};
+		// NF: parsing for MouseContext AI support
+		struct AutomationItem
+		{
+			int id;
+			double position;
+			double length;
+			double offset;
+			double rate;
+			int timeBased; // bool
+			double baseline;
+			double amplitude;
+			int looped; // bool
+			// bool extra1; // Not sure what the last 2 parameters are, NF: extra params not parsed for now
+			// bool extra2; 
+			// NF: meanwhile there are two more
+			// https://forum.cockos.com/showthread.php?t=204184
+			// bool extra3; 
+			// bool extra4;
+		};
+		vector <AutomationItem> automationItems;
 	};
 	struct EnvPoint
 	{

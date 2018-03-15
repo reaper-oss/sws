@@ -985,6 +985,17 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 	bool integratedOnly      = _this->GetIntegratedOnly();
 	bool doTruePeak          = _this->GetDoTruePeak();
 
+	/*
+	  NF: fix for wrong results when analyzing item, item is not at pos 0.0 and contains take vol. env.
+	  https://github.com/reaper-oss/sws/issues/957#issuecomment-371233030
+	  TakeAudioAccesor, unlike TrackAudioAccessor returns relative start/end times
+	  https://forum.cockos.com/showthread.php?t=204397
+	  so in the correction for take volume env. we must add item pos. to get correct env. evaluation
+	*/
+	double itemPos = 0.0;
+	if (_this->m_take) 
+		itemPos = GetMediaItemInfo_Value(_this->GetItem(), "D_POSITION");
+
 	// Prepare ebur123_state
 	ebur128_state* loudnessState = NULL;
 	int mode = (integratedOnly) ? EBUR128_MODE_I : EBUR128_MODE_M | EBUR128_MODE_S | EBUR128_MODE_I | EBUR128_MODE_LRA;
@@ -1063,8 +1074,13 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 
 			// Volume envelopes
 			if (doVolPreFXEnv) adjust *= data.volEnvPreFX.ValueAtPosition(sampleTime, true);
-			if (doVolEnv)      adjust *= data.volEnv.ValueAtPosition(sampleTime, true);
-
+			if (doVolEnv) {
+				if (_this->m_track)
+					adjust *= data.volEnv.ValueAtPosition(sampleTime, true);
+				else
+					adjust *= data.volEnv.ValueAtPosition(sampleTime + itemPos, true);	
+			}
+				
 			// Volume fader
 			adjust *= data.volume;
 

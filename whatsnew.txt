@@ -1,3 +1,6 @@
+Fixes:
+Issue 922: BR_GetMouseCursorContext() - Fix envelope points detection in AIs (needs R5.78+ to work)
+
 !v2.9.8 pre-release build (March 5, 2018)
 Now requires REAPER 5.50+!
 

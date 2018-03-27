@@ -711,6 +711,7 @@ error:
 		IMPAPI(CountActionShortcuts);
 		IMPAPI(CountAutomationItems);
 		IMPAPI(CountEnvelopePoints); // v5pre4+
+		IMPAPI(CountEnvelopePointsEx); // v5.40+
 		IMPAPI(CountMediaItems); // O(N): should be banned from the extension, ideally -- don't use it in loops, at least
 		IMPAPI(CountProjectMarkers);
 		IMPAPI(CountSelectedMediaItems); // O(MN): should be banned from the extension, ideally -- don't use it in loops, at least
@@ -786,7 +787,8 @@ error:
 		IMPAPI(GetCursorPositionEx);
 		IMPAPI(GetEnvelopeName);
 		IMPAPI(GetEnvelopePoint); // v5pre4
-		IMPAPI(GetEnvelopePointByTime) // v5pre4
+		IMPAPI(GetEnvelopePointByTime); // v5pre4
+		IMPAPI(GetEnvelopePointEx); // v5.40+
 		IMPAPI(GetEnvelopeScalingMode); // v5pre13+
 		IMPAPI(GetExePath);
 		IMPAPI(GetFocusedFX);

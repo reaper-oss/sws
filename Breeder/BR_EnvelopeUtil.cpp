@@ -1660,10 +1660,28 @@ void BR_Envelope::Build (bool takeEnvelopesUseProjectTime)
 {
 	if (m_envelope)
 	{
-		int count = CountEnvelopePoints(m_envelope);
+		double runningReaVer = atof(GetAppVersion());
+		
+		int countPointsUnderlyingEnv = CountEnvelopePoints(m_envelope);
+		int countAI = CountAutomationItems(m_envelope);
+		int nrPointsAllAI = 0;
+		vector <int> nrPointsCurAI;
+
+		if (countAI > 0 && runningReaVer >= 5.78) {
+			nrPointsCurAI.reserve(countAI);
+
+			// store pointcount per AI in vector
+			for (int i = 0; i < countAI; i++) {
+				nrPointsCurAI.push_back(CountEnvelopePointsEx(m_envelope, i));
+			}
+
+			// sum up vector
+			nrPointsAllAI = std::accumulate(nrPointsCurAI.begin(), nrPointsCurAI.end(), 0);
+		}
+
 		m_properties.faderMode = (GetEnvelopeScalingMode(m_envelope) == 1) ? 1 : 0;
-		m_points.reserve(count);
-		m_pointsSel.reserve(count);
+		m_points.reserve(countPointsUnderlyingEnv + nrPointsAllAI);
+		m_pointsSel.reserve(countPointsUnderlyingEnv + nrPointsAllAI);
 
 		// Since information on partial measures is missing from the API, we need to parse the chunk for tempo map
 		if (m_tempoMap)
@@ -1694,7 +1712,9 @@ void BR_Envelope::Build (bool takeEnvelopesUseProjectTime)
 		else
 		{
 			double playrate = (m_take) ? (GetMediaItemTakeInfo_Value(m_take, "D_PLAYRATE")) : 1;
-			for (int i = 0; i < count; ++i)
+
+			// build points in underlying env. first
+			for (int i = 0; i < countPointsUnderlyingEnv; ++i)
 			{
 				BR_Envelope::EnvPoint point;
 				GetEnvelopePoint(m_envelope, i, &point.position, &point.value, &point.shape, &point.bezier, &point.selected);
@@ -1706,6 +1726,31 @@ void BR_Envelope::Build (bool takeEnvelopesUseProjectTime)
 				m_points.push_back(point);
 				if (point.selected) m_pointsSel.push_back(i);
 			}
+
+			// then build points in AIs
+			if (runningReaVer >= 5.78) {
+				for (int curAI = 0; curAI < countAI; curAI++) {
+
+					for (int curEnvPt = 0; curEnvPt < nrPointsCurAI[curAI]; ++curEnvPt) {
+						BR_Envelope::EnvPoint point;
+						GetEnvelopePointEx(m_envelope, curAI, curEnvPt, &point.position, &point.value, &point.shape, &point.bezier, &point.selected);
+						point.position /= playrate;
+
+						if (m_properties.faderMode != 0)
+							point.value = ScaleFromEnvelopeMode(m_properties.faderMode, point.value);
+
+						m_points.push_back(point);
+						if (point.selected) m_pointsSel.push_back(curEnvPt);
+					}
+				}
+			}
+
+		
+			if (countAI > 0 && runningReaVer >= 5.78) {
+				m_sorted = false;
+				Sort();
+			}
+
 		}
 	}
 

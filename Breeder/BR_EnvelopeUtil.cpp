@@ -1660,12 +1660,14 @@ void BR_Envelope::Build (bool takeEnvelopesUseProjectTime)
 {
 	if (m_envelope)
 	{
+		double runningReaVer = atof(GetAppVersion());
+		
 		int countPointsUnderlyingEnv = CountEnvelopePoints(m_envelope);
 		int countAI = CountAutomationItems(m_envelope);
 		int nrPointsAllAI = 0;
 		vector <int> nrPointsCurAI;
 
-		if (countAI > 0) {
+		if (countAI > 0 && runningReaVer >= 5.78) {
 			nrPointsCurAI.reserve(countAI);
 
 			// store pointcount per AI in vector
@@ -1677,7 +1679,6 @@ void BR_Envelope::Build (bool takeEnvelopesUseProjectTime)
 			nrPointsAllAI = std::accumulate(nrPointsCurAI.begin(), nrPointsCurAI.end(), 0);
 		}
 
-		
 		m_properties.faderMode = (GetEnvelopeScalingMode(m_envelope) == 1) ? 1 : 0;
 		m_points.reserve(countPointsUnderlyingEnv + nrPointsAllAI);
 		m_pointsSel.reserve(countPointsUnderlyingEnv + nrPointsAllAI);
@@ -1727,22 +1728,25 @@ void BR_Envelope::Build (bool takeEnvelopesUseProjectTime)
 			}
 
 			// then build points in AIs
-			for (int curAI = 0; curAI < countAI; curAI++) {
-	
-				for (int curEnvPt = 0; curEnvPt < nrPointsCurAI[curAI]; ++curEnvPt) {
-					BR_Envelope::EnvPoint point;
-					GetEnvelopePointEx(m_envelope, curAI, curEnvPt, &point.position, &point.value, &point.shape, &point.bezier, &point.selected);
-					point.position /= playrate;
+			if (runningReaVer >= 5.78) {
+				for (int curAI = 0; curAI < countAI; curAI++) {
 
-					if (m_properties.faderMode != 0)
-						point.value = ScaleFromEnvelopeMode(m_properties.faderMode, point.value);
+					for (int curEnvPt = 0; curEnvPt < nrPointsCurAI[curAI]; ++curEnvPt) {
+						BR_Envelope::EnvPoint point;
+						GetEnvelopePointEx(m_envelope, curAI, curEnvPt, &point.position, &point.value, &point.shape, &point.bezier, &point.selected);
+						point.position /= playrate;
 
-					m_points.push_back(point);
-					if (point.selected) m_pointsSel.push_back(curEnvPt);
+						if (m_properties.faderMode != 0)
+							point.value = ScaleFromEnvelopeMode(m_properties.faderMode, point.value);
+
+						m_points.push_back(point);
+						if (point.selected) m_pointsSel.push_back(curEnvPt);
+					}
 				}
 			}
+
 		
-			if (countAI > 0) {
+			if (countAI > 0 && runningReaVer >= 5.78) {
 				m_sorted = false;
 				Sort();
 			}

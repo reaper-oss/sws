@@ -508,6 +508,16 @@ bool SWS_IsWindow(HWND hwnd)
 #endif
 }
 
+bool SWS_IsTrackHeightLocked(MediaTrack* track)
+{
+	char state[2] = "0";
+	SNM_ChunkParserPatcher p(track);
+	if (p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKHEIGHT", 0, 3, state, NULL, "MAINSEND") > 0)
+		return !strcmp(state, "1");
+
+	return false;
+}
+
 
 // Localization
 WDL_FastString* g_LangPack = NULL;

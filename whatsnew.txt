@@ -1,3 +1,6 @@
+Fixes:
++Issue 966: Xenakios track height actions obey track height locking (REAPER 5.78+)
+
 !v2.9.8 pre-release build (March 5, 2018)
 Now requires REAPER 5.50+!
 

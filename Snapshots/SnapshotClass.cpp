@@ -697,6 +697,8 @@ Snapshot::Snapshot(const char* chunk)
 	m_cName = NULL;
 	m_cNotes = NULL;
 
+	int auxEnvsOccurence = -1;
+
 	while(GetChunkLine(chunk, line, 4096, &pos, false))
 	{
 		if (lp.parse(line))
@@ -754,9 +756,24 @@ Snapshot::Snapshot(const char* chunk)
 				ts->m_sends.m_sends.Add(new TrackSend(&guid, lp.gettoken_int(5), lp.gettoken_float(2), lp.gettoken_float(3),
 					lp.gettoken_int(4), 0, 0, lp.gettoken_int(6), lp.gettoken_int(7), lp.gettoken_int(8), -1));
 			}
-			else if (strcmp("AUXSEND", lp.gettoken_str(0)) == 0)
-			// Same format as AUXRECV but on the send track, with second param as recv GUID
-				ts->m_sends.m_sends.Add(new TrackSend(line));
+			// NF: #537, also get the AUXVOLENV etc. sub-chunks
+			else if (strcmp("AUXSEND", lp.gettoken_str(0)) == 0) {
+				// Same format as AUXRECV but on the send track, with second param as recv GUID
+				// ts->m_sends.m_sends.Add(new TrackSend(line));
+
+				auxEnvsOccurence += 1;
+				WDL_FastString chunkStr;
+				chunkStr.Set(chunk);
+				SNM_ChunkParserPatcher p(&chunkStr);
+
+				WDL_FastString AUXVOL, AUXPAN, AUXMUTE;
+				p.GetSubChunk("AUXVOLENV", 3, auxEnvsOccurence, &AUXVOL, "FXCHAIN");
+				p.GetSubChunk("AUXPANENV", 3, auxEnvsOccurence, &AUXPAN, "FXCHAIN");
+				p.GetSubChunk("AUXMUTEENV", 3, auxEnvsOccurence, &AUXMUTE, "FXCHAIN");
+
+				ts->m_sends.m_sends.Add(new TrackSend(line, AUXVOL.Get(), AUXPAN.Get(), AUXMUTE.Get()));
+			}
+
 			else if (strcmp("HWOUT", lp.gettoken_str(0)) == 0)
 				ts->m_sends.m_hwSends.Add(new WDL_FastString(line));
 			else if (strcmp("FX", lp.gettoken_str(0)) == 0) // "One liner"

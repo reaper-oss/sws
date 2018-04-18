@@ -133,3 +133,16 @@ bool CF_LocateInExplorer(const char *file)
 
   return CF_ShellExecute("explorer.exe", arg.Get());
 }
+
+int CF_EnumerateActions(const int section, int idx, char *nameBuf, const int nameBufSize)
+{
+  const char *name = "";
+  const int cmdId = kbd_enumerateActions(SectionFromUniqueID(section), idx, &name);
+  snprintf(nameBuf, nameBufSize, "%s", name);
+  return cmdId;
+}
+
+const char *CF_GetActionText(const int section, int command)
+{
+  return kbd_getTextFromCmd(command, SectionFromUniqueID(section));
+}

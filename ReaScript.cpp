@@ -262,6 +262,8 @@ APIdef g_apidefs[] =
 	{ APIFUNC(CF_GetClipboardBig), "const char*", "WDL_FastString*", "output", "Read the contents of the system clipboard. See <a href=\"#SNM_CreateFastString\">SNM_CreateFastString</a> and <a href=\"#SNM_DeleteFastString\">SNM_DeleteFastString</a>.", },
 	{ APIFUNC(CF_ShellExecute), "bool", "const char*", "file", "Open the given file or URL in the default application. See also <a href=\"#CF_LocateInExplorer\">CF_LocateInExplorer</a>.", },
 	{ APIFUNC(CF_LocateInExplorer), "bool", "const char*", "file", "Select the given file in explorer/finder.", },
+	{ APIFUNC(CF_EnumerateActions), "int", "int,int,char*,int", "section,idx,name,name_sz", "Wrapper for the unexposed kbd_enumerateActions API function.", },
+	{ APIFUNC(CF_GetActionText), "const char*", "int,int", "section,command", "Wrapper for the unexposed kbd_getTextFromCmd API function.", },
 
 	{ NULL, } // denote end of table
 };

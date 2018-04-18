@@ -32,3 +32,4 @@ void CF_GetClipboard(char *buf, int bufSize);
 const char *CF_GetClipboardBig(WDL_FastString *);
 bool CF_ShellExecute(const char *file, const char *args = NULL);
 bool CF_LocateInExplorer(const char *file);
+void CF_GetSWSVersion(char *buf, int bufSize);

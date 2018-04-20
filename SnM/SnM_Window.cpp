@@ -535,12 +535,27 @@ void ShowFXChain(COMMAND_T* _ct)
 // _ct: NULL=all tracks, selected tracks otherwise
 void HideFXChain(COMMAND_T* _ct) 
 {
+	Undo_BeginBlock();
 	for (int i=0; i <= GetNumTracks(); i++) // incl. master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
-		if (tr && (!_ct || (_ct && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))))
-			TrackFX_Show(tr, GetSelectedTrackFX(tr), 0); // includes an undo point
+		if (tr && (!_ct || (_ct && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL)))) 
+		{
+			TrackFX_Show(tr, -1, 0); // no valid index required for closing FX chain
+
+			// take fx
+			for (int j = 0; j < CountTrackMediaItems(tr); j++) 
+			{
+				MediaItem* item = GetTrackMediaItem(tr, j);
+				for (int k = 0; k < CountTakes(item); k++) 
+				{
+					MediaItem_Take* take = GetMediaItemTake(item, k);
+					TakeFX_Show(take, -1, 0);
+				}
+			}
+		}
 	}
+	Undo_EndBlock("SWS/S&M: Close all FX chain windows", -1);
 }
 
 void ToggleFXChain(COMMAND_T* _ct) 
@@ -597,6 +612,19 @@ void ToggleFloatFX(MediaTrack* _tr, int _fx)
 	}
 }
 
+// _fx = -1 for selected FX
+void ToggleFloatTakeFX(MediaItem_Take* _take, int _fx)
+{
+	if (_take && _fx < TakeFX_GetCount(_take))
+	{
+		int currenSel = GetSelectedTakeFX(_take); // avoids several parsings
+		if (TakeFX_GetFloatingWindow(_take, (_fx == -1 ? currenSel : _fx)))
+			TakeFX_Show(_take, (_fx == -1 ? currenSel : _fx), 2);
+		else
+			TakeFX_Show(_take, (_fx == -1 ? currenSel : _fx), 3);
+	}
+}
+
 // _all=true: all FXs for all tracks, false: selected tracks + given _fx
 // _fx=-1: current selected FX. Ignored when _all == true.
 // showflag=0 for toggle, =2 for hide floating window (valid index), =3 for show floating window (valid index)
@@ -617,6 +645,62 @@ void FloatUnfloatFXs(MediaTrack* _tr, bool _all, int _showFlag, int _fx, bool _s
 	}
 }
 
+void FloatUnfloatTakeFXs(MediaTrack * _tr, bool _all, int _showFlag, int _fx, bool _selTracks)
+{
+	bool matchTrack = (_tr && (!_selTracks || (_selTracks && *(int*)GetSetMediaTrackInfo(_tr, "I_SELECTED", NULL))));
+	if (_all && matchTrack)
+	{
+		for (int k = 0; k < CountTrackMediaItems(_tr); k++)
+		{
+			MediaItem* item = GetTrackMediaItem(_tr, k);
+			for (int l = 0; l < CountTakes(item); l++)
+			{
+				MediaItem_Take* take = GetMediaItemTake(item, l);
+				int nbTakeFX = TakeFX_GetCount(take);
+				for (int m = 0; m < nbTakeFX; m++)
+				{
+					if (!_showFlag) ToggleFloatTakeFX(take, m);
+					else TakeFX_Show(take, m, _showFlag);
+				}
+			}
+		}
+	}
+	else if (!_all && matchTrack)
+	{
+		if (!_showFlag) {
+			for (int k = 0; k < CountTrackMediaItems(_tr); k++)
+			{
+				MediaItem* item = GetTrackMediaItem(_tr, k);
+				for (int l = 0; l < CountTakes(item); l++)
+				{
+					MediaItem_Take* take = GetMediaItemTake(item, l);
+					int nbTakeFX = TakeFX_GetCount(take);
+					for (int m = 0; m < nbTakeFX; m++)
+					{
+						ToggleFloatTakeFX(take, (_fx == -1 ? GetSelectedTakeFX(take) : _fx));
+					}
+				}
+			}
+		}
+		else {
+			for (int k = 0; k < CountTrackMediaItems(_tr); k++)
+			{
+				MediaItem* item = GetTrackMediaItem(_tr, k);
+				for (int l = 0; l < CountTakes(item); l++)
+				{
+					MediaItem_Take* take = GetMediaItemTake(item, l);
+					int nbTakeFX = TakeFX_GetCount(take);
+					for (int m = 0; m < nbTakeFX; m++)
+					{
+						TakeFX_Show(take, (_fx == -1 ? GetSelectedTakeFX(take) : _fx), _showFlag);
+					}
+				}
+			}
+		}
+	}
+}
+
+
 // _all: true for all FXs/tracks, false for selected tracks + for given the given _fx
 // _fx = -1, for current selected FX. Ignored when _all == true.
 // showflag=0 for toggle, =2 for hide floating window (index valid), =3 for show floating window (index valid)
@@ -627,6 +711,19 @@ void FloatUnfloatFXs(bool _all, int _showFlag, int _fx, bool _selTracks)
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (tr && (_all || !_selTracks || (_selTracks && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))))
 			FloatUnfloatFXs(tr, _all, _showFlag, _fx, _selTracks);
+	}
+}
+
+// _all: true for all FXs/tracks, false for selected tracks + for given the given _fx
+// _fx = -1, for current selected FX. Ignored when _all == true.
+// showflag=0 for toggle, =2 for hide floating window (index valid), =3 for show floating window (index valid)
+void FloatUnfloatTakeFXs(bool _all, int _showFlag, int _fx, bool _selTracks)
+{
+	for (int i = 1; i <= GetNumTracks(); i++) // skip master
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		if (tr && (_all || !_selTracks || (_selTracks && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))))
+			FloatUnfloatTakeFXs(tr, _all, _showFlag, _fx, _selTracks);
 	}
 }
 
@@ -645,11 +742,14 @@ void ShowAllFXWindows(COMMAND_T * _ct) {
 }
 void CloseAllFXWindows(COMMAND_T * _ct) {
 	FloatUnfloatFXs(true, 2, -1, ((int)_ct->user == 1));
+	FloatUnfloatTakeFXs(true, 2, -1, ((int)_ct->user == 1));
 }
 void ToggleAllFXWindows(COMMAND_T * _ct) {
 	FloatUnfloatFXs(true, 0, -1, ((int)_ct->user == 1));
 }
 
+// NF: action must be run via shortcut to work correctly, duh.
+// (otherwise action list would get focused)
 void CloseAllFXWindowsExceptFocused(COMMAND_T * _ct)
 {
 	HWND w = GetForegroundWindow();
@@ -666,6 +766,24 @@ void CloseAllFXWindowsExceptFocused(COMMAND_T * _ct)
 					FloatUnfloatFXs(tr, false, 2, j, false); // close
 			}
 		}
+
+		// take FX
+		for (int k = 0; k < CountTrackMediaItems(tr); k++)
+		{
+			MediaItem* item = GetTrackMediaItem(tr, k);
+			for (int l = 0; l < CountTakes(item); l++)
+			{
+				MediaItem_Take* take = GetMediaItemTake(item, l);
+				int nbTakeFX = TakeFX_GetCount(take);
+				for (int m = 0; m < nbTakeFX; m++)
+				{
+					HWND w2 = TakeFX_GetFloatingWindow(take, m);
+					if (!SWS_IsWindow(w2) || w != w2)
+						FloatUnfloatTakeFXs(tr, false, 2, m, false); // close
+				}
+			}
+		}
+		
 	}
 }
 

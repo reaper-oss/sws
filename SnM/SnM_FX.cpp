@@ -425,6 +425,29 @@ int GetSelectedTrackFX(MediaTrack* _tr)
 	return -1;
 }
 
+int GetSelectedTakeFX(MediaItem_Take* _take)
+{
+	if (_take)
+	{
+		// avoids useless parsing (1st try)
+		if (TakeFX_GetCount(_take) == 1)
+			return 0;
+
+		// avoids useless parsing (2nd try)
+		int currentFX = TakeFX_GetChainVisible(_take);
+		if (currentFX >= 0)
+			return currentFX;
+
+		// the 2 attempts above failed => no choice: parse to get the selected FX
+		SNM_ChunkParserPatcher p(_take);
+		p.SetWantsMinimalState(true);
+		char pLastSel[4] = ""; // 4: if there are many, many FXs
+		p.Parse(SNM_GET_CHUNK_CHAR, 2, "TAKEFX", "LASTSEL", 0, 1, &pLastSel);
+		return atoi(pLastSel); // return 0 (first FX) if failed
+	}
+	return -1;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // FX presets helpers/actions

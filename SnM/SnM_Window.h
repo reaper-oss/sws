@@ -53,16 +53,17 @@ void HideFXChain(COMMAND_T*);
 void ToggleFXChain(COMMAND_T*);
 int IsToggleFXChain(COMMAND_T*);
 void ShowAllFXChainsWindows(COMMAND_T*);
-void CloseAllFXChainsWindows(COMMAND_T*);
+void CloseAllFXChainsWindows(COMMAND_T*); // NF: includes take FX
 void ToggleAllFXChainsWindows(COMMAND_T*);
 
 void FloatUnfloatFXs(MediaTrack* _tr, bool _all, int _showFlag, int _fx, bool _selTracks);
+void FloatUnfloatTakeFXs(MediaTrack* _tr, bool _all, int _showFlag, int _fx, bool _selTracks);
 void FloatFX(COMMAND_T*);
 void UnfloatFX(COMMAND_T*);
 void ToggleFloatFX(COMMAND_T*);
 void ShowAllFXWindows(COMMAND_T*);
-void CloseAllFXWindows(COMMAND_T*);
-void CloseAllFXWindowsExceptFocused(COMMAND_T*);
+void CloseAllFXWindows(COMMAND_T*); // NF: includes take FX
+void CloseAllFXWindowsExceptFocused(COMMAND_T*); // NF: includes take FX
 void ToggleAllFXWindows(COMMAND_T*);
 int GetFocusedTrackFXWnd(MediaTrack* _tr);
 int GetFirstTrackFXWnd(MediaTrack* _tr, int _dir);

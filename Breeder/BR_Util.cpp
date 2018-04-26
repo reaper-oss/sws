@@ -1147,13 +1147,38 @@ bool TrimItem_UseNativeTrimActions(MediaItem* item, double start, double end, bo
 	double itemLen = GetMediaItemInfo_Value(item, "D_LENGTH");
 
 	if (force || start != itemPos || newLen != itemLen) {
+
+		// NF: ugly code ahead for fixing
+		// https://github.com/reaper-oss/sws/issues/950#issuecomment-384251678
+		// but it avoids having to deal with stretch markers (see other comments in #950)
+
+		// save item selection
+		WDL_TypedBuf<MediaItem*> selItems;
+		SWS_GetSelectedMediaItems(&selItems);
+		
 		PreventUIRefresh(1);
+
+		// unselect all items
+		for (int i = 0; i < selItems.GetSize(); i++) {
+			SetMediaItemInfo_Value(selItems.Get()[i], "B_UISEL", 0);
+		}
+
+		SetMediaItemInfo_Value(item, "B_UISEL", 1); // select item currently being worked on
+
 		double origCurPos = GetCursorPosition();
 		SetEditCurPos(start, false, false);
 		Main_OnCommand(41305, 0); // Trim left edge of item to edit cursor
 		SetEditCurPos(end, false, false);
 		Main_OnCommand(41311, 0); // Trim right edge of item to edit cursor 
 		SetEditCurPos(origCurPos, false, false);
+
+		SetMediaItemInfo_Value(item, "B_UISEL", 0); // unselect previously manually selected item
+
+		// restore original item selection
+		for (int i = 0; i < selItems.GetSize(); i++) {
+			SetMediaItemInfo_Value(selItems.Get()[i], "B_UISEL", 1);
+		}
+
 		PreventUIRefresh(-1);
 		return true;
 	}

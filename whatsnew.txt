@@ -1,3 +1,6 @@
+Fixes:
++Issue 950: Make BR_SetItemEdges() only work on item passed in function (rather than all selected items), refix from v2.9.8
+
 !v2.9.8 pre-release build (March 5, 2018)
 Now requires REAPER 5.50+!
 

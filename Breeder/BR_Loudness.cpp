@@ -65,41 +65,41 @@ const int EXPORT_FORMAT_RECENT_MAX      = 10;
 const int VERSION                       = 1;
 
 // Export format wildcards
-struct WildCardList
+static const struct
 {
 	const char* wildcard;
 	int osxTabs;
 	const char* desc;
-};
-static const WildCardList g_wildcards[] =
-{
-	{"$id",                  5, __LOCALIZE("list view id in analyze loudness dialog", "sws_DLG_180")},
-	{"$integrated",          3, __LOCALIZE("integrated loudness", "sws_DLG_180")},
-	{"$range",               4, __LOCALIZE("loudness range", "sws_DLG_180")},
-	{"$truepeak",            4, __LOCALIZE("true peak", "sws_DLG_180")},
-	{"$maxshort",            4, __LOCALIZE("maximum short-term loudness", "sws_DLG_180")},
-	{"$maxmomentary",        3, __LOCALIZE("maximum momentary loudness", "sws_DLG_180")},
-	{"$target",              4, __LOCALIZE("in case the track is analyzed, set track name, otherwise analyzed item name", "sws_DLG_180")},
-	{"$item",                5, __LOCALIZE("name of the analyzed item", "sws_DLG_180")},
-	{"$track",               4, __LOCALIZE("name of the analyzed track or parent track of the analyzed item", "sws_DLG_180")},
-	{"$targetnumber",        3, __LOCALIZE("in case the track is analyzed, set track number, otherwise media item number in track", "sws_DLG_180")},
-	{"$itemnumber",          3, __LOCALIZE("media item number in track - 1 for the first item on a track, 2 for the second...", "sws_DLG_180")},
-	{"$tracknumber",         3, __LOCALIZE("track number - 1 for the first track, 2 for the second...", "sws_DLG_180")},
-	{"$start",               4, __LOCALIZE("project start time position of the analyzed audio", "sws_DLG_180")},
-	{"$end",                 5, __LOCALIZE("project end time position of the analyzed audio", "sws_DLG_180")},
-	{"$length",              4, __LOCALIZE("time length of the analyzed audio", "sws_DLG_180")},
-	{"$truepeakpos",         3, __LOCALIZE("true peak time position (counting from audio start)", "sws_DLG_180")},
-	{"$maxshortpos",         3, __LOCALIZE("time position of maximum short-term loudness (counting from audio start)", "sws_DLG_180")},
-	{"$maxmomentarypos",     2, __LOCALIZE("time position of maximum momentary loudness (counting from audio start)", "sws_DLG_180")},
-	{"$truepeakposproj",     2, __LOCALIZE("true peak project time position", "sws_DLG_180")},
-	{"$maxshortposproj",     2, __LOCALIZE("project time position of maximum short-term loudness", "sws_DLG_180")},
-	{"$maxmomentaryposproj", 1, __LOCALIZE("project time position of maximum momentary loudness", "sws_DLG_180")},
-	{"$lureference",         3, __LOCALIZE("0 LU reference value set in global preferences", "sws_DLG_180")},
-	{"$luformat",            4, __LOCALIZE("LU unit format set in global preferences", "sws_DLG_180")},
-	{"$t",                   5, __LOCALIZE("inserts tab character (displayed as normal space in preview)", "sws_DLG_180")},
-	{"$n",                   5, __LOCALIZE("inserts newline (displayed as normal space in preview)", "sws_DLG_180")},
-	{"$$",                   5, __LOCALIZE("inserts $ character (normal $ works too, this is to prevent wildcard from being treated as wildcard)", "sws_DLG_180")},
+} g_wildcards[] = {
+	// !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_180
+	{"$id",                  5, "list view id in analyze loudness dialog"},
+	{"$integrated",          3, "integrated loudness"},
+	{"$range",               4, "loudness range"},
+	{"$truepeak",            4, "true peak"},
+	{"$maxshort",            4, "maximum short-term loudness"},
+	{"$maxmomentary",        3, "maximum momentary loudness"},
+	{"$target",              4, "in case the track is analyzed, set track name, otherwise analyzed item name"},
+	{"$item",                5, "name of the analyzed item"},
+	{"$track",               4, "name of the analyzed track or parent track of the analyzed item"},
+	{"$targetnumber",        3, "in case the track is analyzed, set track number, otherwise media item number in track"},
+	{"$itemnumber",          3, "media item number in track - 1 for the first item on a track, 2 for the second..."},
+	{"$tracknumber",         3, "track number - 1 for the first track, 2 for the second..."},
+	{"$start",               4, "project start time position of the analyzed audio"},
+	{"$end",                 5, "project end time position of the analyzed audio"},
+	{"$length",              4, "time length of the analyzed audio"},
+	{"$truepeakpos",         3, "true peak time position (counting from audio start)"},
+	{"$maxshortpos",         3, "time position of maximum short-term loudness (counting from audio start)"},
+	{"$maxmomentarypos",     2, "time position of maximum momentary loudness (counting from audio start)"},
+	{"$truepeakposproj",     2, "true peak project time position"},
+	{"$maxshortposproj",     2, "project time position of maximum short-term loudness"},
+	{"$maxmomentaryposproj", 1, "project time position of maximum momentary loudness"},
+	{"$lureference",         3, "0 LU reference value set in global preferences"},
+	{"$luformat",            4, "LU unit format set in global preferences"},
+	{"$t",                   5, "inserts tab character (displayed as normal space in preview)"},
+	{"$n",                   5, "inserts newline (displayed as normal space in preview)"},
+	{"$$",                   5, "inserts $ character (normal $ works too, this is to prevent wildcard from being treated as wildcard)"},
 	{NULL,                   0, NULL},
+	// !WANT_LOCALIZE_STRINGS_END
 };
 
 // !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_174
@@ -2733,7 +2733,7 @@ WDL_DLGRET BR_AnalyzeLoudnessWnd::ExportFormatDialogProc (HWND hwnd, UINT uMsg, 
 					}
 
 					helpString.Append(string.Get());
-					helpString.Append(g_wildcards[i].desc);
+					helpString.Append(__localizeFunc(g_wildcards[i].desc, "sws_DLG_180", 0));
 					helpString.Append("\r\n");
 				}
 			#else
@@ -2743,7 +2743,7 @@ WDL_DLGRET BR_AnalyzeLoudnessWnd::ExportFormatDialogProc (HWND hwnd, UINT uMsg, 
 					helpString.Append(g_wildcards[i].wildcard);
 					for (int j = 0; j < g_wildcards[i].osxTabs; ++j)
 						helpString.Append("\t");
-					helpString.Append(g_wildcards[i].desc);
+					helpString.Append(__localizeFunc(g_wildcards[i].desc, "sws_DLG_180", 0));
 					helpString.Append("\r\n");
 				}
 			#endif

@@ -2,7 +2,16 @@ Fixes:
 +Issue 957: Fix item Loudness analysis if take contains volume envelope (thanks X-Raym!)
 
 New ReaScript functions:
-+NF_GetMediaItemMaxPeakAndMaxPeakPos() (Issue 953)
++Issue 974 (Lua example https://github.com/reaper-oss/sws/issues/974#issuecomment-386480161|here|):
+ -NF_GetGlobalStartupAction_Desc()
+ -NF_GetGlobalStartupAction_CmdID()
+ -NF_SetGlobalStartupAction()
+ -NF_ClearGlobalStartupAction()
+ -NF_GetProjectStartupAction_Desc()
+ -NF_GetProjectStartupAction_CmdID()
+ -NF_SetProjectStartupAction()
+ -NF_ClearProjectStartupAction()
+ +NF_GetMediaItemMaxPeakAndMaxPeakPos() (Issue 953)
 
 !v2.9.8 pre-release build (March 5, 2018)
 Now requires REAPER 5.50+!

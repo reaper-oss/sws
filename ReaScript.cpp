@@ -255,6 +255,16 @@ APIdef g_apidefs[] =
 	// SWS Notes, #755 (partly)
 	{ APIFUNC(NF_GetSWSTrackNotes), "const char*", "MediaTrack*,WDL_FastString*", "track,trackNote_output", "See <a href=\"#SNM_CreateFastString\">SNM_CreateFastString</a> and <a href=\"#SNM_DeleteFastString\">SNM_DeleteFastString</a>.", },
 	{ APIFUNC(NF_SetSWSTrackNotes), "void", "MediaTrack*,const char*", "track,str", "", },
+
+	// #974 Global/project startup actions
+	{ APIFUNC(NF_GetGlobalStartupAction_Desc), "void", "char*,int", "buf,buf_sz", "Returns action description if global startup action is set, otherwise empty string.", },
+	{ APIFUNC(NF_GetGlobalStartupAction_CmdID), "void", "char*,int", "buf,buf_sz", "Returns command ID number (for native actions) or named command IDs / identifier strings (for extension actions /ReaScripts) if global startup action is set, otherwise \"0\". Named command IDs start with underscore (\"_...\").", },
+	{ APIFUNC(NF_SetGlobalStartupAction), "bool", "const char*", "str", "Returns true if global startup action was set successfully (i.e. valid action ID). Note: For SWS / S & M actions and macros / scripts, you must use identifier strings (e.g. \"_SWS_ABOUT\", \"_f506bc780a0ab34b8fdedb67ed5d3649\"), not command IDs (e.g. \"47145\").\nTip: to copy such identifiers, right - click the action in the Actions window > Copy selected action cmdID / identifier string.\nNOnly works for actions / scripts from Main action section.", },
+	{ APIFUNC(NF_ClearGlobalStartupAction), "bool", "", "", "Returns true if global startup action was cleared successfully.", },
+	{ APIFUNC(NF_GetProjectStartupAction_Desc), "void", "char*,int", "buf,buf_sz", "Returns action description if project startup action is set, otherwise empty string", },
+	{ APIFUNC(NF_GetProjectStartupAction_CmdID), "void", "char*,int", "buf,buf_sz", "Returns command ID number (for native actions) or named command IDs / identifier strings (for extension actions /ReaScripts) if project startup action is set, otherwise \"0\". Named command IDs start with underscore (\"_...\").", },
+	{ APIFUNC(NF_SetProjectStartupAction), "bool", "const char*", "str", "Returns true if project startup action was set successfully (i.e. valid action ID). Note: For SWS / S & M actions and macros / scripts, you must use identifier strings (e.g. \"_SWS_ABOUT\", \"_f506bc780a0ab34b8fdedb67ed5d3649\"), not command IDs (e.g. \"47145\").\nTip: to copy such identifiers, right - click the action in the Actions window > Copy selected action cmdID / identifier string.\nOnly works for actions / scripts from Main action section. Project must be saved after setting project startup action to be persistent.", },
+	{ APIFUNC(NF_ClearProjectStartupAction), "bool", "", "", "Returns true if project startup action was cleared successfully.", },
 	// /*** nofish stuff ***
 
 	{ APIFUNC(SN_FocusMIDIEditor), "void", "", "", "Focuses the active/open MIDI editor.", },

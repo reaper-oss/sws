@@ -36,6 +36,7 @@
 #include "../Misc/Analysis.h" // #781
 #include "../Breeder/BR_Loudness.h" // #880
 #include "../SnM/SnM_Notes.h" // #755
+#include "../SnM/SnM_Project.h" // #974
 
 
 // #781
@@ -70,6 +71,7 @@ double NF_GetMediaItemAverageRMS(MediaItem* item)
 
 }
 
+
 // #880
 bool NF_AnalyzeTakeLoudness_IntegratedOnly(MediaItem_Take * take, double* lufsIntegratedOut)
 {
@@ -85,6 +87,7 @@ bool NF_AnalyzeTakeLoudness2(MediaItem_Take * take, bool analyzeTruePeak, double
 {
 	return NFDoAnalyzeTakeLoudness2(take, analyzeTruePeak, lufsIntegratedOut, rangeOut, truePeakOut, truePeakPosOut, shorTermMaxOut, momentaryMaxOut, shortTermMaxPosOut, momentaryMaxPosOut);
 }
+
 
 // Track/TakeFX_Get/SetOffline
 bool NF_TrackFX_GetOffline(MediaTrack* track, int fx)
@@ -147,10 +150,8 @@ void NF_TrackFX_SetOffline(MediaTrack* track, int fx, bool offline)
 
 }
 
-
 // in chunk take FX Id's are counted consecutively across takes (zero-based)
 int FindTakeFXId_inChunk(MediaItem* parentItem, MediaItem_Take* takeIn, int fxIn);
-
 
 bool NF_TakeFX_GetOffline(MediaItem_Take* takeIn, int fxIn)
 {
@@ -240,7 +241,9 @@ int FindTakeFXId_inChunk(MediaItem* parentItem, MediaItem_Take* takeIn, int fxIn
 	return takeFXId_inChunk;
 }
 
-const char * NF_GetSWSTrackNotes(MediaTrack* track, WDL_FastString* trackNoteOut)
+
+// #755
+const char* NF_GetSWSTrackNotes(MediaTrack* track, WDL_FastString* trackNoteOut)
 {
 	return NFDoGetSWSTrackNotes(track, trackNoteOut);
 }
@@ -248,4 +251,160 @@ const char * NF_GetSWSTrackNotes(MediaTrack* track, WDL_FastString* trackNoteOut
 void NF_SetSWSTrackNotes(MediaTrack* track, const char* buf)
 {
 	NFDoSetSWSTrackNotes(track, buf);
+}
+
+
+// #974
+extern WDL_FastString g_globalAction; extern SWSProjConfig<WDL_FastString> g_prjActions;;
+
+// desc == true: return action text, false: return command ID number (native actions) or named command (extension/ReaScript)
+void NF_GetGlobalStartupAction(char* buf, int bufSize, bool desc)
+{
+	WDL_FastString fs;
+
+	if (!g_globalAction.Get()) 
+	{
+		if (desc)
+			fs.Set("");
+		else
+			fs.Set("0");
+
+		snprintf(buf, bufSize, "%s", fs.Get());
+		return;
+	}
+
+	if  (int cmdId = SNM_NamedCommandLookup(g_globalAction.Get())) 
+	{
+		if (desc)
+			fs.Set(kbd_getTextFromCmd(cmdId, NULL));
+		else
+			fs.Set(g_globalAction.Get());
+	}
+	else
+	{
+		if (desc)
+			fs.Set("");
+		else
+			fs.Set("0");
+	}
+	snprintf(buf, bufSize, "%s", fs.Get());
+}
+
+void NF_GetGlobalStartupAction_Desc(char *buf, int bufSize)
+{
+	NF_GetGlobalStartupAction(buf, bufSize, true);
+}
+void NF_GetGlobalStartupAction_CmdID(char *buf, int bufSize)
+{
+	NF_GetGlobalStartupAction(buf, bufSize, false);
+}
+
+
+bool NF_SetGlobalStartupAction(const char * buf)
+{
+	if (!g_globalAction.Get())
+		return false;
+		
+	if (int cmdId = SNM_NamedCommandLookup(buf))
+	{
+		// more checks: http://forum.cockos.com/showpost.php?p=1252206&postcount=1618
+		if (int tstNum = CheckSwsMacroScriptNumCustomId(buf))
+		{
+			return false;
+		}
+		else
+		{
+			g_globalAction.Set(buf);
+			WritePrivateProfileString("Misc", "GlobalStartupAction", buf, g_SNM_IniFn.Get());
+			return true;
+		}
+	}
+	else
+	{
+		return false;
+	}
+}
+
+bool NF_ClearGlobalStartupAction()
+{
+	if (g_globalAction.Get()) {
+		g_globalAction.Set("");
+		WritePrivateProfileString("Misc", "GlobalStartupAction", NULL, g_SNM_IniFn.Get());
+		return true;
+	}
+	return false;
+}
+
+
+void NF_GetProjectStartupAction(char* buf, int bufSize, bool desc)
+{
+	WDL_FastString fs;
+	if (!g_prjActions.Get()->Get())
+	{
+		if (desc)
+			fs.Set("");
+		else
+			fs.Set("0");
+
+		snprintf(buf, bufSize, "%s", fs.Get());
+		return;
+	}
+
+	if (int cmdId = SNM_NamedCommandLookup(g_prjActions.Get()->Get()))
+	{
+		if (desc)
+			fs.Set(kbd_getTextFromCmd(cmdId, NULL));
+		else
+			fs.Set(g_prjActions.Get()->Get());
+	}
+	else
+	{
+		if (desc)
+			fs.Set("");
+		else
+			fs.Set("0");
+	}
+	snprintf(buf, bufSize, "%s", fs.Get());
+}
+
+void NF_GetProjectStartupAction_Desc(char *buf, int bufSize)
+{
+	NF_GetProjectStartupAction(buf, bufSize, true);
+}
+void NF_GetProjectStartupAction_CmdID(char *buf, int bufSize)
+{
+	NF_GetProjectStartupAction(buf, bufSize, false);
+}
+
+bool NF_SetProjectStartupAction(const char* buf)
+{
+	if (!g_prjActions.Get())
+		return false;
+
+	if (int cmdId = SNM_NamedCommandLookup(buf))
+	{
+		// more checks: http://forum.cockos.com/showpost.php?p=1252206&postcount=1618
+		if (int tstNum = CheckSwsMacroScriptNumCustomId(buf))
+		{
+			return false;
+		}
+		else
+		{
+			g_prjActions.Get()->Set(buf);
+			return true;
+		}
+	}
+	else
+	{
+		return false;
+	}
+}
+
+bool NF_ClearProjectStartupAction()
+{
+	if (g_prjActions.Get()) {
+		g_prjActions.Get()->Set("");
+		return true;
+	}
+	return false;
 }

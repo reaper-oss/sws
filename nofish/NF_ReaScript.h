@@ -51,3 +51,17 @@ void            NF_TakeFX_SetOffline(MediaItem_Take* take, int fx, bool enabled)
 const char*     NF_GetSWSTrackNotes(MediaTrack* track, WDL_FastString* trackNoteOut);
 void            NF_SetSWSTrackNotes(MediaTrack* track, const char* buf);
 
+// #974
+void      	    NF_GetGlobalStartupAction_Desc(char *buf, int bufSize);
+void	          NF_GetGlobalStartupAction_CmdID(char *buf, int bufSize);
+bool            NF_SetGlobalStartupAction(const char* buf);
+bool            NF_ClearGlobalStartupAction();
+
+void      	    NF_GetProjectStartupAction_Desc(char *buf, int bufSize);
+void       	    NF_GetProjectStartupAction_CmdID(char *buf, int bufSize);
+bool            NF_SetProjectStartupAction(const char* buf);
+bool            NF_ClearProjectStartupAction();
+
+
+
+

@@ -452,8 +452,8 @@ static COMMAND_T s_cmdTable[] =
 
 	// Cyclactions ---------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Open/close Cycle Action editor" }, "S&M_CYCLEDITOR", OpenCyclaction, NULL, 0, IsCyclactionDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Open/close Cycle Action editor (event list)" }, "S&M_CYCLEDITOR_ME_LIST", OpenCyclaction, NULL, 1, IsCyclactionDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Open/close Cycle Action editor (piano roll)" }, "S&M_CYCLEDITOR_ME_PIANO", OpenCyclaction, NULL, 2, IsCyclactionDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open/close Cycle Action editor (event list)" }, "S&M_CYCLEDITOR_ME_LIST", OpenCyclaction, NULL, 4, IsCyclactionDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open/close Cycle Action editor (piano roll)" }, "S&M_CYCLEDITOR_ME_PIANO", OpenCyclaction, NULL, 3, IsCyclactionDisplayed},
 
 	// REC inputs -------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Set selected tracks MIDI input to all channels" }, "S&M_MIDI_INPUT_ALL_CH", SetMIDIInputChannel, NULL, -1},

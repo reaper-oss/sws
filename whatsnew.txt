@@ -2,6 +2,7 @@ Fixes:
 +Issue 957: Fix item Loudness analysis if take contains volume envelope (thanks X-Raym!)
 
 New ReaScript functions:
++NF_GetActionDescFromCmdID()
 +Issue 974 (Lua example https://github.com/reaper-oss/sws/issues/974#issuecomment-386480161|here|):
  -NF_GetGlobalStartupAction_Desc()
  -NF_GetGlobalStartupAction_CmdID()

@@ -408,3 +408,40 @@ bool NF_ClearProjectStartupAction()
 	}
 	return false;
 }
+
+/*
+sectionIdx, from SnM.h:
+SNM_SEC_IDX_MAIN=0,
+SNM_SEC_IDX_MAIN_ALT,
+SNM_SEC_IDX_EPXLORER,
+SNM_SEC_IDX_ME,
+SNM_SEC_IDX_ME_EL,
+SNM_SEC_IDX_ME_INLINE,
+SNM_NUM_MANAGED_SECTIONS
+*/
+void NF_GetActionDescFromCmdID(const char* cmdID, int secID, char* buf, int buf_sz)
+{
+	WDL_FastString fs;
+
+	if (secID < 0 || secID > 5) 
+	{
+		fs.Set("0");
+		snprintf(buf, buf_sz, "%s", fs.Get());
+		return;
+	}
+
+	KbdSectionInfo* kbdSec = SNM_GetActionSection(secID);
+
+	if (kbdSec)
+	{
+		if (int cmdIDNr = SNM_NamedCommandLookup(cmdID, kbdSec))
+			fs.Set(kbd_getTextFromCmd(cmdIDNr, kbdSec));
+		else
+			fs.Set("0");
+	} 
+	else
+		fs.Set("0");
+
+	snprintf(buf, buf_sz, "%s", fs.Get());
+}
+

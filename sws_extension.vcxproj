@@ -363,6 +363,7 @@ echo Warning: sws_python.py generation failed (Perl installed?)
     <None Include="whatsnew.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Amagalma\amagalma.hpp" />
     <ClInclude Include="Breeder\BR_ContextualToolbars.h" />
     <ClInclude Include="Breeder\BR_ContinuousActions.h" />
     <ClInclude Include="Breeder\BR_MidiEditor.h" />
@@ -543,6 +544,7 @@ echo Warning: sws_python.py generation failed (Perl installed?)
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Amagalma\amagalma.cpp" />
     <ClCompile Include="Breeder\BR_ContextualToolbars.cpp" />
     <ClCompile Include="Breeder\BR_ContinuousActions.cpp" />
     <ClCompile Include="Breeder\BR_MidiEditor.cpp" />

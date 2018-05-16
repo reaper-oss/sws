@@ -35,7 +35,7 @@
 #include "Breeder/BR_ReaScript.h"
 #include "snooks/SN_ReaScript.h"
 #include "cfillion/cfillion.hpp"
-
+#include "Amagalma/amagalma.hpp"
 
 // if _TEST_REASCRIPT_EXPORT is #define'd, you'll need to rename "APITESTFUNC" into "APIFUNC" in g_apidefs too
 // (because our function wrapper generation scripts aren't smart enough to skip #ifdef'ed out lines ATM)
@@ -248,6 +248,8 @@ APIdef g_apidefs[] =
 	{ APIFUNC(CF_GetClipboard), "void", "char*,int", "buf,buf_sz", "Read the contents of the system clipboard (limited to 1023 characters in Lua).", },
 	{ APIFUNC(CF_GetClipboardBig), "const char*", "WDL_FastString*", "output", "Read the contents of the system clipboard. See <a href=\"#SNM_CreateFastString\">SNM_CreateFastString</a> and <a href=\"#SNM_DeleteFastString\">SNM_DeleteFastString</a>.", },
 
+	{ APIFUNC(AM_GetArrangeSize), "void", "int*,int*", "WidthOut,HeightOut", "Get dimensions of Arrange View in pixels", },
+	
 	{ NULL, } // denote end of table
 };
 

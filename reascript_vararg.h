@@ -623,6 +623,22 @@ static void* __vararg_NF_SetSWSTrackNotes(void** arglist, int numparms)
   return NULL;
 }
 
+static void* __vararg_NF_GetSWSMarkerRegionSub(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)NF_GetSWSMarkerRegionSub((WDL_FastString*)arglist[0], (int)(INT_PTR)arglist[1]);
+}
+
+static void* __vararg_NF_SetSWSMarkerRegionSub(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)NF_SetSWSMarkerRegionSub((WDL_FastString*)arglist[0], (int)(INT_PTR)arglist[1]);
+}
+
+static void* __vararg_NF_UpdateSWSMarkerRegionSubWindow(void** arglist, int numparms)
+{
+  NF_UpdateSWSMarkerRegionSubWindow();
+  return NULL;
+}
+
 static void* __vararg_NF_GetGlobalStartupAction_Desc(void** arglist, int numparms)
 {
   NF_GetGlobalStartupAction_Desc((char*)arglist[0], (int)(INT_PTR)arglist[1]);

@@ -1044,6 +1044,7 @@ int NotesWnd::UpdateMkrRgnNameOrSub(int _type)
 		if (_type!=SNM_NOTES_RGN_NAME && _type!=SNM_NOTES_RGN_SUB)
 			mask |= SNM_MARKER_MASK;
 
+		// NF: could use API GetLastMarkerAndCurRegion() instead
 		int id, idx = FindMarkerRegion(NULL, dPos, mask, &id);
 		if (id > 0)
 		{
@@ -1080,6 +1081,32 @@ int NotesWnd::UpdateMkrRgnNameOrSub(int _type)
 		}
 	}
 	return refreshType;
+}
+
+void NotesWnd::ForceUpdateMkrRgnNameOrSub(int _type)
+{
+	double dPos = GetCursorPositionEx(NULL);
+	if (g_locked && GetPlayStateEx(NULL)) { // playing & update required?
+		dPos = GetPlayPositionEx(NULL);
+	}
+
+	int mask = 0;
+	if (_type != SNM_NOTES_MKR_NAME && _type != SNM_NOTES_MKR_SUB)
+		mask |= SNM_REGION_MASK;
+	if (_type != SNM_NOTES_RGN_NAME && _type != SNM_NOTES_RGN_SUB)
+		mask |= SNM_MARKER_MASK;
+
+	int id, idx = FindMarkerRegion(NULL, dPos, mask, &id);
+	if (id > 0)
+	{
+		for (int i = 0; i < g_pRegionSubs.Get()->GetSize(); i++)
+			if (g_pRegionSubs.Get()->Get(i)->m_id == id) {
+				SetText(g_pRegionSubs.Get()->Get(i)->m_notes.Get());
+				if (g_locked)
+					RefreshGUI();
+				return;
+			}
+	}
 }
 
 
@@ -1649,4 +1676,89 @@ void NFDoSetSWSTrackNotes(MediaTrack* track, const char* buf)
 
 	// tracknote for the track doesn't exist yet, add new one 
 	g_SNM_TrackNotes.Get()->Add(new SNM_TrackNotes(TrackToGuid(track), buf));
+}
+
+const char* NFDoGetSWSMarkerRegionSub(WDL_FastString* mkrRgnSubOut, int mkrRgnIdxNumberIn)
+{
+	mkrRgnSubOut->Set("");
+
+	// maybe more safe version, but below also seems to work and is faster
+	/*
+	int idx = 0, num; 
+
+	while ((idx = EnumProjectMarkers2(NULL, idx, NULL, NULL, NULL, NULL, &num)))
+	{
+		// mkrRgn exists in project
+		if (idx-1 == mkrRgnIdxNumberIn)
+		{
+			int mkrRgnId = GetMarkerRegionIdFromIndex(NULL, idx-1); // takes zero-based idx
+			for (int i = 0; i < g_pRegionSubs.Get()->GetSize(); i++)
+			{
+				// regionSub exists
+				if (mkrRgnId == g_pRegionSubs.Get()->Get(i)->m_id)
+				{
+					mkrRgnSubOut->Set(g_pRegionSubs.Get()->Get(i)->m_notes.Get());
+					return mkrRgnSubOut->Get();
+				}
+			}
+		}
+	}
+	*/
+	
+	int mkrRgnId = GetMarkerRegionIdFromIndex(NULL, mkrRgnIdxNumberIn); // takes zero-based idx
+	if (mkrRgnId == -1) return mkrRgnSubOut->Get();
+
+	for (int i = 0; i < g_pRegionSubs.Get()->GetSize(); i++)
+	{
+		// mkrRgn sub exists
+		if (mkrRgnId == g_pRegionSubs.Get()->Get(i)->m_id)
+		{
+			mkrRgnSubOut->Set(g_pRegionSubs.Get()->Get(i)->m_notes.Get());
+			return mkrRgnSubOut->Get();
+		}
+	}
+
+	return mkrRgnSubOut->Get();
+}
+
+bool NFDoSetSWSMarkerRegionSub(WDL_FastString* mkrRgnSubIn, int mkrRgnIdxNumberIn)
+{
+	int idx = 0; bool mkrRgnExists = false;
+	
+	while ((idx = EnumProjectMarkers2(NULL, idx, NULL, NULL, NULL, NULL, NULL)))
+	{
+		if (idx - 1 == mkrRgnIdxNumberIn) // mkrRegion exists in project
+		{
+			mkrRgnExists = true;
+		
+			int mkrRgnId = GetMarkerRegionIdFromIndex(NULL, idx - 1); // takes zero-based idx
+			for (int i = 0; i < g_pRegionSubs.Get()->GetSize(); i++)
+			{
+				if (mkrRgnId == g_pRegionSubs.Get()->Get(i)->m_id) // mkrRgn sub exists, update it
+				{
+					g_pRegionSubs.Get()->Get(i)->m_notes.Set(mkrRgnSubIn);
+					return true;
+				}
+			}
+
+			// mkrRgn sub doesn't exist but marker/region is present in project, add new mkrRgn sub
+			if (mkrRgnExists)
+			{
+				g_pRegionSubs.Get()->Add(new SNM_RegionSubtitle(mkrRgnId, mkrRgnSubIn->Get()));
+				return true;
+			}
+			else // mkrRgn isn't present in project
+				return false;
+		}
+	}
+	return false; // appease compilers
+}
+
+void NF_DoUpdateSWSMarkerRegionSubWindow()
+{
+	if (NotesWnd* w = g_notesWndMgr.Get()) {
+		if (w->IsWndVisible() && g_notesType <= SNM_NOTES_MKRRGN_SUB && g_notesType >= SNM_NOTES_MKR_SUB) {
+			w->ForceUpdateMkrRgnNameOrSub(g_notesType);
+		}
+	}
 }

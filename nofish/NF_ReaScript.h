@@ -50,6 +50,9 @@ void            NF_TakeFX_SetOffline(MediaItem_Take* take, int fx, bool enabled)
 // #755
 const char*     NF_GetSWSTrackNotes(MediaTrack* track, WDL_FastString* trackNoteOut);
 void            NF_SetSWSTrackNotes(MediaTrack* track, const char* buf);
+const char*     NF_GetSWSMarkerRegionSub(WDL_FastString* mkrRgnSubOut, int mkrRgnIdx);
+bool            NF_SetSWSMarkerRegionSub(WDL_FastString* mkrRgnSubIn, int mkrRgnIdx);
+void            NF_UpdateSWSMarkerRegionSubWindow();
 
 // #974
 void            NF_GetGlobalStartupAction_Desc(char *buf, int bufSize);

@@ -253,6 +253,20 @@ void NF_SetSWSTrackNotes(MediaTrack* track, const char* buf)
 	NFDoSetSWSTrackNotes(track, buf);
 }
 
+const char* NF_GetSWSMarkerRegionSub(WDL_FastString* regionSubOut, int regionIdx)
+{
+	return NFDoGetSWSMarkerRegionSub(regionSubOut, regionIdx);
+}
+
+bool NF_SetSWSMarkerRegionSub(WDL_FastString* regionSub, int regionIdx)
+{
+	return NFDoSetSWSMarkerRegionSub(regionSub, regionIdx);
+}
+
+void NF_UpdateSWSMarkerRegionSubWindow()
+{
+	NF_DoUpdateSWSMarkerRegionSubWindow();
+}
 
 // #974
 extern WDL_FastString g_globalAction; extern SWSProjConfig<WDL_FastString> g_prjActions;;

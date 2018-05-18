@@ -32,5 +32,5 @@ void CF_GetClipboard(char *buf, int bufSize);
 const char *CF_GetClipboardBig(WDL_FastString *);
 bool CF_ShellExecute(const char *file, const char *args = NULL);
 bool CF_LocateInExplorer(const char *file);
-int CF_EnumerateActions(const int section, int idx, char *nameBuf, const int nameBufSize);
-const char *CF_GetActionText(const int section, int command);
+int CF_EnumerateActions(int section, int idx, char *nameBuf, int nameBufSize);
+const char *CF_GetCommandText(int section, int command);

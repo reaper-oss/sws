@@ -134,7 +134,7 @@ bool CF_LocateInExplorer(const char *file)
   return CF_ShellExecute("explorer.exe", arg.Get());
 }
 
-int CF_EnumerateActions(const int section, int idx, char *nameBuf, const int nameBufSize)
+int CF_EnumerateActions(const int section, const int idx, char *nameBuf, const int nameBufSize)
 {
   const char *name = "";
   const int cmdId = kbd_enumerateActions(SectionFromUniqueID(section), idx, &name);
@@ -142,7 +142,7 @@ int CF_EnumerateActions(const int section, int idx, char *nameBuf, const int nam
   return cmdId;
 }
 
-const char *CF_GetActionText(const int section, int command)
+const char *CF_GetCommandText(const int section, const int command)
 {
   return kbd_getTextFromCmd(command, SectionFromUniqueID(section));
 }

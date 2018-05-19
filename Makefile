@@ -54,7 +54,7 @@ BREEDER_OBJS       = Breeder/BR_ContextualToolbars.o Breeder/BR_ContinuousAction
                      Breeder/BR_Update.o Breeder/BR_Util.o libebur128/ebur128.o
 COLOR_OBJS         = Color/Autocolor.o Color/Color.o
 CONSOLE_OBJS       = Console/Console.o
-FINGERS_OBJS       = Fingers/CommandHandler.o Fingers/EnvelopeCommands.o Fingers/Envelope.o Fingers/FNG.o Fingers/GrooveCommands.o \
+FINGERS_OBJS       = Fingers/CommandHandler.o Fingers/EnvelopeCommands.o Fingers/FNG.o Fingers/GrooveCommands.o \
                      Fingers/GrooveDialog.o Fingers/GrooveTemplates.o Fingers/MediaItemCommands.o Fingers/MiscCommands.o Fingers/RprException.o Fingers/RprItem.o Fingers/MidiLaneCommands.o \
                      Fingers/RprMidiCCLane.o Fingers/RprMidiEvent.o Fingers/RprMidiTake.o Fingers/RprMidiTemplate.o Fingers/RprNode.o \
                      Fingers/RprStateChunk.o Fingers/RprTake.o Fingers/RprTrack.o Fingers/StringUtil.o Fingers/TimeMap.o

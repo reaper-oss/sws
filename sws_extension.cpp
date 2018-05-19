@@ -740,6 +740,7 @@ error:
 		IMPAPI(CSurf_TrackToID);
 		IMPAPI(DB2SLIDER);
 		IMPAPI(DeleteEnvelopePointRange); // v5pre5+
+		IMPAPI(DeleteEnvelopePointRangeEx);
 		IMPAPI(DeleteActionShortcut);
 		IMPAPI(DeleteProjectMarker);
 		IMPAPI(DeleteProjectMarkerByIndex);
@@ -786,6 +787,7 @@ error:
 		IMPAPI(GetCursorPositionEx);
 		IMPAPI(GetEnvelopeName);
 		IMPAPI(GetEnvelopePoint); // v5pre4
+		IMPAPI(GetEnvelopePointEx);
 		IMPAPI(GetEnvelopePointByTime) // v5pre4
 		IMPAPI(GetEnvelopeScalingMode); // v5pre13+
 		IMPAPI(GetExePath);
@@ -999,6 +1001,7 @@ error:
 		IMPAPI(SetEditCurPos);
 		IMPAPI(SetEditCurPos2);
 		IMPAPI(SetEnvelopePoint); // v5pre4+
+		IMPAPI(SetEnvelopePointEx);
 		IMPAPI(SetGlobalAutomationOverride);
 		IMPAPI(SetMasterTrackVisibility);
 		IMPAPI(SetMediaItemInfo_Value);

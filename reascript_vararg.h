@@ -683,12 +683,6 @@ static void* __vararg_NF_ClearProjectStartupAction(void** arglist, int numparms)
   return (void*)(INT_PTR)NF_ClearProjectStartupAction();
 }
 
-static void* __vararg_NF_GetActionDescFromCmdID(void** arglist, int numparms)
-{
-  NF_GetActionDescFromCmdID((const char*)arglist[0], (int)(INT_PTR)arglist[1], (char*)arglist[2], (int)(INT_PTR)arglist[3]);
-  return NULL;
-}
-
 static void* __vararg_SN_FocusMIDIEditor(void** arglist, int numparms)
 {
   SN_FocusMIDIEditor();

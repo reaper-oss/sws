@@ -35,9 +35,6 @@
 #include "../Xenakios/XenakiosExts.h"
 #include "../SnM/SnM_Dlg.h"
 
-// #587
-#include "../nofish/nofish.h"
-
 
 //#include "Context.cpp"
 
@@ -950,15 +947,21 @@ void AWDoAutoGroup(bool rec)
 	{
 		if (g_AWAutoGroup)
 		{
-			WDL_TypedBuf<MediaItem*> items;
-			SWS_GetSelectedMediaItems(&items);
+			WDL_TypedBuf<MediaItem*> selItems;
+			SWS_GetSelectedMediaItems(&selItems);
 
-			if (items.GetSize() > 1 && ((*(int*)GetConfigVar("autoxfade") & 4) || (*(int*)GetConfigVar("autoxfade") & 8))) // (Don't group if not in tape or overlap record mode, takes mode is messy) NF: added new auto group in takes mode functionality below
+			if (selItems.GetSize() > 1 && ((*(int*)GetConfigVar("autoxfade") & 4) || (*(int*)GetConfigVar("autoxfade") & 8))) // (Don't group if not in tape or overlap record mode, takes mode is messy) NF: added new auto group in takes mode functionality below
 			{
-				// #587
-				// add undo point otherwise calling MainOnCommand(() below for auto coloring would create separate undo points
+				// check if we're in 'Autopunch selected items' mode
+				// because in this mode sel. items don't get automatically unselected after recording,
+				// so 'simple' grouping would screw things up
+				if ((*(int*)GetConfigVar("projrecmode")) == 0) {
+					NFDoAutoGroupTakesMode(selItems);
+					g_AWIsRecording = false;
+					return;
+				}
+
 				PreventUIRefresh(1);
-				Undo_BeginBlock();
 
 				//Find highest current group
 				int maxGroupId = AWCountItemGroups();
@@ -966,26 +969,33 @@ void AWDoAutoGroup(bool rec)
 				//Add one to assign new items to a new group
 				maxGroupId++;
 
-				for (int i = 0; i < items.GetSize(); i++) {
-					GetSetMediaItemInfo(items.Get()[i], "I_GROUPID", &maxGroupId);
+				int rndColor;
+				if (g_AWAutoGroupRndColor)
+					// use WDL Mersenne Twister
+					rndColor = ColorToNative(g_MTRand.randInt(255), g_MTRand.randInt(255), g_MTRand.randInt(255)) | 0x1000000; 
 
-					// #587
-					// assign random colors if "Toggle assign random colors..." is enabled
-					if (g_AWAutoGroupRndColor)
-						Main_OnCommand(40706, 0); // set items to one random color
+				for (int i = 0; i < selItems.GetSize(); i++) {
+					MediaItem* item = selItems.Get()[i];
+					MediaTrack* parentTrack = GetMediaItem_Track(item);
+
+					if (*(int*)GetSetMediaTrackInfo(parentTrack, "I_RECARM", NULL)) { // only group items on rec. armed tracks
+						GetSetMediaItemInfo(item, "I_GROUPID", &maxGroupId);
+
+						// assign random colors if "Toggle assign random colors..." is enabled
+						if (g_AWAutoGroupRndColor)
+							SetMediaItemInfo_Value(item, "I_CUSTOMCOLOR", rndColor);
+					}
 				}
-					
-				Undo_EndBlock("SWS/AW/NF: Auto group newly recorded items", -1);
+
 				PreventUIRefresh(-1);
 				UpdateArrange();
 			}
 
 			// #587 Auto Group in takes mode
-			else if (items.GetSize() > 1 && ((*(int*)GetConfigVar("autoxfade") == 0) || (*(int*)GetConfigVar("autoxfade") & 1)))
+			else if (selItems.GetSize() > 1 && ((*(int*)GetConfigVar("autoxfade") == 0) || (*(int*)GetConfigVar("autoxfade") & 1)))
 			{
-				NFDoAutoGroupTakesMode();
+				NFDoAutoGroupTakesMode(selItems);
 			}
-
 
 			// No longer recording so reset flag to false
 			g_AWIsRecording = false;
@@ -993,72 +1003,170 @@ void AWDoAutoGroup(bool rec)
 	}
 }
 
-// #587
 // replication of X-Raym's "Group selected items according to their order in selection per track.lua"
-void NFDoAutoGroupTakesMode()
+void NFDoAutoGroupTakesMode(WDL_TypedBuf<MediaItem*> origSelItems)
 {
-
-	NFTrackItemUtilities trackItemUtility;
-	// vector<int> v_selItemsOnTrack = trackItemUtility.NFGetIntVector();
-
 	// only group if more than one track is rec. armed
 	// otherwise it would group items to itself on same track
-	if (!trackItemUtility.isMoreThanOneTrackRecArmed())
+	if (!isMoreThanOneTrackRecArmed())
 		return;
 
-	PreventUIRefresh(1); // comment out for testing
+	WDL_TypedBuf<MediaTrack*> origSelTracks;
+	SWS_GetSelectedTracks(&origSelTracks);
 
-	trackItemUtility.NFSaveSelectedItems();
-	trackItemUtility.NFSaveSelectedTracks();
+	PreventUIRefresh(1);
 
-	Undo_BeginBlock(); 
-
-	// fix for p=1882461&postcount=422
-	if (g_AWAutoGroupRndColor)
-		Main_OnCommand(41332, 0); // set active take to one random color
-
-	trackItemUtility.NFUnselectAllTracks();
-	trackItemUtility.NFSelectTracksOfSelectedItems();
-
-	int selected_tracks_count = CountSelectedTracks(0);
-
-	// LOOP TRHOUGH SELECTED TRACKS
-	for (int i = 0; i < selected_tracks_count; i++) {
-		MediaTrack* track = GetSelectedTrack(0, i);
-
-		// v_selItemsOnTrack.push_back(trackItemUtility.NFCountSelectedItems_OnTrack(track));
-		// public access
-		trackItemUtility.count_sel_items_on_track.push_back(trackItemUtility.NFCountSelectedItems_OnTrack(track));
+	// unselect all tracks
+	for (int i = 0; i < origSelTracks.GetSize(); i++) {
+		SetMediaTrackInfo_Value(origSelTracks.Get()[i], "I_SELECTED", 0);
 	}
 
-	int max_sel_item_on_track = trackItemUtility.GetMaxValfromIntVector(trackItemUtility.count_sel_items_on_track);
+	SelectRecArmedTracksOfSelItems(origSelItems);
 
+	WDL_TypedBuf<MediaTrack*> selTracksOfSelItems;
+	SWS_GetSelectedTracks(&selTracksOfSelItems);
 
-	// LOOP COLUMN OF ITEMS ON TRACK
-	for (int j = 0; j < max_sel_item_on_track; j++) {
-		Main_OnCommand(40289, 0); // unselect all items
+	// get max. of items selected on a track
+	vector<int> selItemsPerTrackCount;
+	selItemsPerTrackCount.resize(selTracksOfSelItems.GetSize());
 
-		// LOOP TRHOUGH SELECTED TRACKS
-		for (int k = 0; k < selected_tracks_count; k++) {
-			// LOOP THROUGH ITEM IDX
-			MediaItem* item = trackItemUtility.NFGetSelectedItems_OnTrack(k, j); 
-			if (item != NULL) {
-				SetMediaItemSelected(item, true);
+	// loop through sel. tracks
+	for (int i = 0; i < selTracksOfSelItems.GetSize(); i++) {
+		MediaTrack* track = selTracksOfSelItems.Get()[i];
+		WDL_TypedBuf<MediaItem*> selItemsOnTrack;
+		SWS_GetSelectedMediaItemsOnTrack(&selItemsOnTrack, track);
+
+		int selItemsOnCurTrackCount = selItemsOnTrack.GetSize();
+
+		selItemsPerTrackCount[i] = selItemsOnCurTrackCount;
+	}
+
+	int maxSelItemsOnTrack = GetMaxSelItemsPerTrackCount(selItemsPerTrackCount);
+
+	int rndColor;
+	if (g_AWAutoGroupRndColor)
+		rndColor = ColorToNative(g_MTRand.randInt(255), g_MTRand.randInt(255), g_MTRand.randInt(255)) | 0x1000000;
+	
+	// do column-wise grouping 
+	// loop through columns of items
+	for (int column = 0; column < maxSelItemsOnTrack; column++) 
+	{
+		int maxGroupId = AWCountItemGroups();
+		maxGroupId++;
+
+		// loop through sel. tracks
+		for (int selTrackIdx = 0; selTrackIdx < selTracksOfSelItems.GetSize(); selTrackIdx++) {
+
+			// get item of cur. track and cur. column
+			MediaItem* item = GetSelectedItemOnTrack_byIndex(origSelItems, selItemsPerTrackCount, selTrackIdx, column);
+
+			if (item) {
+				MediaTrack* parentTrack = GetMediaItem_Track(item);
+				if (GetMediaTrackInfo_Value(parentTrack, "I_RECARM")) { // only group items on rec. armed tracks
+					GetSetMediaItemInfo(item, "I_GROUPID", &maxGroupId);
+
+					if (g_AWAutoGroupRndColor) {
+						MediaItem_Take* take = GetActiveTake(item);
+						SetMediaItemTakeInfo_Value(take, "I_CUSTOMCOLOR", rndColor);
+					}
+				}
 			}
 		}
-		Main_OnCommand(40032, 0); // Group items
 	}
-	trackItemUtility.NFRestoreSelectedItems();
-	trackItemUtility.NFRestoreSelectedTracks();
 
-	Undo_EndBlock("SWS/AW/NF: Auto group newly recorded items", -1);
-
-	PreventUIRefresh(-1); // comment out for testing
+	UnselectAllTracks(); UnselectAllItems();
+	RestoreOrigTracksAndItemsSelection(origSelTracks, origSelItems);
+	PreventUIRefresh(-1);
 	UpdateArrange();
 }
 
-// /#587
+bool isMoreThanOneTrackRecArmed()
+{
+	int RecArmedTracks = 0;
+	for (int i = 0; i < GetNumTracks(); i++) {
+		MediaTrack* CurTrack = CSurf_TrackFromID(i + 1, false); // skip master
+		if (*(int*)GetSetMediaTrackInfo(CurTrack, "I_RECARM", NULL)) {
+			RecArmedTracks += 1;
+			if (RecArmedTracks > 1)
+				return true;
+		}
+	}
+	return false;
+}
 
+MediaItem * GetSelectedItemOnTrack_byIndex(WDL_TypedBuf<MediaItem*> origSelItems, vector<int> selItemsPerTrackCount, 
+	int selTrackIdx, int column)
+{
+	MediaItem* selItem = NULL;
+	int prevSelItemsPerTrackCount = 0;
+
+	if (column <= selItemsPerTrackCount[selTrackIdx]) {
+		int offset = 0;
+
+		for (int i = 0; i <= selTrackIdx; i++) {
+			if (i >= 1) {
+				prevSelItemsPerTrackCount = selItemsPerTrackCount[i - 1];
+			}
+				
+			offset += prevSelItemsPerTrackCount;
+		}
+		if (offset + column < origSelItems.GetSize())
+			selItem = origSelItems.Get()[offset + column];
+	}
+	return selItem;
+}
+
+void SelectRecArmedTracksOfSelItems(WDL_TypedBuf<MediaItem*> selItems)
+{
+	for (int i = 0; i < selItems.GetSize(); i++) {
+		MediaTrack* track = GetMediaItem_Track(selItems.Get()[i]);
+
+		if (*(int*)GetSetMediaTrackInfo(track, "I_RECARM", NULL)) 
+			SetMediaTrackInfo_Value(track, "I_SELECTED", 1);
+	}
+}
+
+int GetMaxSelItemsPerTrackCount(vector <int> selItemsPerTrackCount)
+{
+	int maxVal = 0;
+	for (size_t i = 0; i < selItemsPerTrackCount.size(); i++) {
+		int val = selItemsPerTrackCount[i];
+		if (val > maxVal)
+			maxVal = val;
+	}
+	return maxVal;
+}
+
+void UnselectAllTracks() {
+	WDL_TypedBuf<MediaTrack*> selTracks;
+	SWS_GetSelectedTracks(&selTracks);
+
+	for (int i = 0; i < selTracks.GetSize(); i++) {
+		SetMediaTrackInfo_Value(selTracks.Get()[i], "B_UISEL", 0);
+	}
+}
+
+void UnselectAllItems()
+{
+	WDL_TypedBuf<MediaItem*> selItems;
+	SWS_GetSelectedMediaItems(&selItems);
+
+	for (int i = 0; i < selItems.GetSize(); i++) {
+		SetMediaItemInfo_Value(selItems.Get()[i], "B_UISEL", 0);
+	}
+}
+
+void RestoreOrigTracksAndItemsSelection(WDL_TypedBuf<MediaTrack*> origSelTracks, WDL_TypedBuf<MediaItem*> origSelItems)
+{
+	for (int i = 0; i < origSelTracks.GetSize(); i++) {
+		SetMediaTrackInfo_Value(origSelTracks.Get()[i], "B_UISEL", 1);
+	}
+
+	for (int i = 0; i < origSelItems.GetSize(); i++) {
+		SetMediaItemInfo_Value(origSelItems.Get()[i], "B_UISEL", 1);
+	}
+}
+// /#587
 
 
 // Deprecated actions, now you can use the native record/play/stop actions and they will obey the Auto Grouping toggle

@@ -30,61 +30,16 @@
 
 // Eraser tool
 void NF_RegisterContinuousActions();
-
 void EraserToolInit();
-
-
-
-
-// register SWS actions
-int nofish_Init();
 
 // #514
 void UpdateMIDIGridToolbar();
 
-// #587 utility functions
-class NFTrackItemUtilities
-{
-public:
-	// NFTrackItemUtilities();
-	// ~NFTrackItemUtilities();
+// register SWS actions
+int nofish_Init();
 
-	void NFSaveSelectedTracks();
-	void NFRestoreSelectedTracks();
 
-	void NFSaveSelectedItems();
-	void NFRestoreSelectedItems();
 
-	void NFUnselectAllTracks();
-	void NFSelectTracksOfSelectedItems();
-
-	int NFCountSelectedItems_OnTrack(MediaTrack* track);
-	MediaItem* NFGetSelectedItems_OnTrack(int track_sel_id, int idx);
-
-	// const vector<int>& NFGetIntVector() const;
-	vector <int> count_sel_items_on_track; // should probably be private for good coding practice
-	
-	int GetMaxValfromIntVector(vector <int>);
-
-	bool isMoreThanOneTrackRecArmed();
-
-private:
-	// vector <int> count_sel_items_on_track;
-
-	// save/restore tracks/items
-	vector <MediaItem*> selItems;
-	vector <MediaTrack*> selTracks;
-};
-
-/*
-NFTrackItemUtilities::NFTrackItemUtilities()
-{
-}
-
-NFTrackItemUtilities::~NFTrackItemUtilities()
-{
-}
-*/
 
 
 

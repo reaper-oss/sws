@@ -1141,3 +1141,15 @@ void NF_SetSWSTrackNotes(MediaTrack* track, const char* buf)
 	NFDoSetSWSTrackNotes(track, buf);
 }
 // /*** nofish stuff ***
+
+
+void DO_GetArrangeVertPos(int* MaxHeightOut, int* ViewPosOut) // dopp func 
+{
+	SCROLLINFO si = { sizeof(SCROLLINFO), };
+	si.fMask = SIF_ALL;
+	CoolSB_GetScrollInfo(GetArrangeWnd(), SB_VERT, &si);
+	int areaHeight = si.nMax + 18;
+	int areaPos = si.nPos;
+	WritePtr(MaxHeightOut, areaHeight);
+	WritePtr(ViewPosOut, areaPos);
+}

@@ -6,7 +6,7 @@
 # - gets function pointers with rpr_getfp()
 # - removed "RPR_" prefix
 
-require "reascript_helper.pl";
+require "./reascript_helper.pl";
 
 $arg=shift @ARGV;
 $arg eq "-x64" and $isx64=1;

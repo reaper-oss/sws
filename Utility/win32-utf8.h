@@ -16,3 +16,9 @@ BOOL WritePrivateProfileSectionUTF8(LPCTSTR appName, LPCTSTR str, LPCTSTR fileNa
 #  undef WritePrivateProfileSection
 #endif
 #define WritePrivateProfileSection WritePrivateProfileSectionUTF8
+
+HWND FindWindowExUTF8(HWND parent, HWND after, const char *className, const char *title);
+#ifdef FindWindowEx
+#  undef FindWindowEx
+#endif
+#define FindWindowEx FindWindowExUTF8

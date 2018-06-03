@@ -27,8 +27,12 @@
 
 #pragma once
 
+typedef HWND__ FxChain;
+
 void CF_SetClipboard(const char *);
 void CF_GetClipboard(char *buf, int bufSize);
 const char *CF_GetClipboardBig(WDL_FastString *);
 bool CF_ShellExecute(const char *file, const char *args = NULL);
 bool CF_LocateInExplorer(const char *file);
+HWND CF_GetFocusedFXChain();
+int CF_EnumSelectedFX(HWND chain, int index);

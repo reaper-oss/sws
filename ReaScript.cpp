@@ -262,6 +262,8 @@ APIdef g_apidefs[] =
 	{ APIFUNC(CF_GetClipboardBig), "const char*", "WDL_FastString*", "output", "Read the contents of the system clipboard. See <a href=\"#SNM_CreateFastString\">SNM_CreateFastString</a> and <a href=\"#SNM_DeleteFastString\">SNM_DeleteFastString</a>.", },
 	{ APIFUNC(CF_ShellExecute), "bool", "const char*", "file", "Open the given file or URL in the default application. See also <a href=\"#CF_LocateInExplorer\">CF_LocateInExplorer</a>.", },
 	{ APIFUNC(CF_LocateInExplorer), "bool", "const char*", "file", "Select the given file in explorer/finder.", },
+	{ APIFUNC(CF_GetFocusedFXChain), "FxChain*", "", "", "Return a handle to the currently focused FX chain window. The window is found by title so accuracy is limited for take FX chains.", },
+	{ APIFUNC(CF_EnumSelectedFX), "int", "FxChain*,int", "hwnd,index", "Return the index of the next selected effect in the given FX chain. Start index should be -1. Returns -1 if there are no more selected effects.", },
 
 	{ NULL, } // denote end of table
 };

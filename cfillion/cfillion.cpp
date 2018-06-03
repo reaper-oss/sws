@@ -133,3 +133,42 @@ bool CF_LocateInExplorer(const char *file)
 
   return CF_ShellExecute("explorer.exe", arg.Get());
 }
+
+HWND CF_GetFocusedFXChain()
+{
+  // TODO: Localization support
+
+  int trackIndex, itemIndex, fxIndex;
+  const int focusType = GetFocusedFX(&trackIndex, &itemIndex, &fxIndex);
+
+  char chainTitle[64];
+
+  switch(focusType) {
+  case 1: // track FX
+    if(trackIndex > 0)
+      snprintf(chainTitle, sizeof(chainTitle), "FX: Track %d", trackIndex);
+    else
+      snprintf(chainTitle, sizeof(chainTitle), "FX: Master Track");
+    break;
+  case 2: { // item FX
+    MediaTrack *track = GetTrack(0, trackIndex - 1);
+    MediaItem *item = GetTrackMediaItem(track, itemIndex);
+    const int takeIndex = (fxIndex >> 16) & 0xff;
+    MediaItem_Take *take = GetMediaItemTake(item, takeIndex);
+    snprintf(chainTitle, sizeof(chainTitle), "FX: Item \"%s\"", GetTakeName(take));
+    break;
+  }
+  default:
+    return nullptr;
+  }
+
+  return FindWindowEx(nullptr, nullptr, nullptr, chainTitle);
+}
+
+int CF_EnumSelectedFX(HWND fxChain, int index)
+{
+  const HWND list = GetDlgItem(fxChain, 1076);
+  index = ListView_GetNextItem(list, index, LVNI_SELECTED);
+
+  return index;
+}

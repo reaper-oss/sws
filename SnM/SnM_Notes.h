@@ -56,7 +56,6 @@ class SNM_TrackNotes {
 public:
 	SNM_TrackNotes(const GUID* _guid, const char* _notes) {
 		if (_guid) memcpy(&m_guid, _guid, sizeof(GUID));
-		else genGuid(&m_guid); // just in case
 		m_notes.Set(_notes ? _notes : "");
 	}
 	MediaTrack* GetTrack() { return GuidToTrack(&m_guid); }

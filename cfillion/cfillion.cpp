@@ -165,11 +165,10 @@ HWND CF_GetTakeFXChain(MediaItem_Take *take)
   // attached to it (pointer to an internal FxChain object?) but it does not
   // seem to hint back to the take in any obvious way.
 
-  GUID guid;
-  genGuid(&guid);
+  GUID *guid = static_cast<GUID *>(GetSetMediaItemTakeInfo(take, "GUID", nullptr));
 
   char guidStr[64];
-  guidToString(&guid, guidStr);
+  guidToString(guid, guidStr);
 
   string originalName = GetTakeName(take);
   GetSetMediaItemTakeInfo_String(take, "P_NAME", guidStr, true);

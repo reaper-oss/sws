@@ -769,7 +769,6 @@ error:
 		IMPAPI(format_timestr_pos);
 		IMPAPI(format_timestr_len);
 		IMPAPI(FreeHeapPtr);
-		IMPAPI(genGuid);
 		IMPAPI(GetActionShortcutDesc);
 		IMPAPI(GetActiveTake);
 		IMPAPI(GetAllProjectPlayStates); // v5.111+

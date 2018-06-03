@@ -137,9 +137,9 @@ bool CF_LocateInExplorer(const char *file)
 
 static HWND CF_GetTrackFXChain(const int trackIndex)
 {
-  char chainTitle[64];
+  char chainTitle[128];
 
-  if(trackIndex < 1) // Master track
+  if(trackIndex < 1)
     snprintf(chainTitle, sizeof(chainTitle), "%s%s",
       __LOCALIZE("FX: ", "fx"), __LOCALIZE("Master Track", "fx"));
   else
@@ -151,20 +151,19 @@ static HWND CF_GetTrackFXChain(const int trackIndex)
 
 HWND CF_GetTrackFXChain(MediaTrack *track)
 {
-  if(track == GetMasterTrack(nullptr))
-    return CF_GetTrackFXChain(0);
-  else {
-    const int trackNumber = static_cast<int>(
-      GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER"));
-    return CF_GetTrackFXChain(trackNumber);
-  }
+  int trackNumber = 0;
+
+  if(track != GetMasterTrack(nullptr))
+    trackNumber = static_cast<int>(GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER"));
+
+  return CF_GetTrackFXChain(trackNumber);
 }
 
 HWND CF_GetTakeFXChain(MediaItem_Take *take)
 {
   // Shameful hack follows. The FX chain window does have some user data
   // attached to it (pointer to an internal FxChain object?) but it does not
-  // seem to point back to the take in any obvious way.
+  // seem to hint back to the take in any obvious way.
 
   GUID guid;
   genGuid(&guid);
@@ -175,7 +174,7 @@ HWND CF_GetTakeFXChain(MediaItem_Take *take)
   string originalName = GetTakeName(take);
   GetSetMediaItemTakeInfo_String(take, "P_NAME", guidStr, true);
 
-  char chainTitle[64];
+  char chainTitle[128];
   snprintf(chainTitle, sizeof(chainTitle), "%s%s \"%s\"",
     __LOCALIZE("FX: ", "fx"), __LOCALIZE("Item", "fx"), guidStr);
 

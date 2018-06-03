@@ -37,4 +37,4 @@ bool CF_LocateInExplorer(const char *file);
 HWND CF_GetFocusedFXChain();
 HWND CF_GetTrackFXChain(MediaTrack *);
 HWND CF_GetTakeFXChain(MediaItem_Take *);
-int CF_EnumSelectedFX(HWND chain, int index);
+int CF_EnumSelectedFX(HWND chain, int index = -1);

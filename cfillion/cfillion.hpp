@@ -35,4 +35,6 @@ const char *CF_GetClipboardBig(WDL_FastString *);
 bool CF_ShellExecute(const char *file, const char *args = NULL);
 bool CF_LocateInExplorer(const char *file);
 HWND CF_GetFocusedFXChain();
+HWND CF_GetTrackFXChain(MediaTrack *);
+HWND CF_GetTakeFXChain(MediaItem_Take *);
 int CF_EnumSelectedFX(HWND chain, int index);

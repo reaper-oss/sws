@@ -134,35 +134,54 @@ bool CF_LocateInExplorer(const char *file)
   return CF_ShellExecute("explorer.exe", arg.Get());
 }
 
-HWND CF_GetFocusedFXChain()
+static HWND CF_GetTrackFXChain(const int trackIndex)
 {
   // TODO: Localization support
 
+  char chainTitle[64];
+
+  if(trackIndex < 1) // Master track
+    snprintf(chainTitle, sizeof(chainTitle), "FX: Master Track");
+  else
+    snprintf(chainTitle, sizeof(chainTitle), "FX: Track %d", trackIndex);
+
+  return FindWindowEx(nullptr, nullptr, nullptr, chainTitle);
+}
+
+HWND CF_GetTrackFXChain(MediaTrack *track)
+{
+  if(track == GetMasterTrack(nullptr))
+    return CF_GetTrackFXChain(0);
+  else
+    return CF_GetTrackFXChain(GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER"));
+}
+
+HWND CF_GetTakeFXChain(MediaItem_Take *take)
+{
+  char chainTitle[64];
+  snprintf(chainTitle, sizeof(chainTitle), "FX: Item \"%s\"", GetTakeName(take));
+
+  return FindWindowEx(nullptr, nullptr, nullptr, chainTitle);
+}
+
+HWND CF_GetFocusedFXChain()
+{
   int trackIndex, itemIndex, fxIndex;
   const int focusType = GetFocusedFX(&trackIndex, &itemIndex, &fxIndex);
 
-  char chainTitle[64];
-
   switch(focusType) {
-  case 1: // track FX
-    if(trackIndex > 0)
-      snprintf(chainTitle, sizeof(chainTitle), "FX: Track %d", trackIndex);
-    else
-      snprintf(chainTitle, sizeof(chainTitle), "FX: Master Track");
-    break;
-  case 2: { // item FX
+  case 1:
+    return CF_GetTrackFXChain(trackIndex);
+  case 2: {
     MediaTrack *track = GetTrack(0, trackIndex - 1);
     MediaItem *item = GetTrackMediaItem(track, itemIndex);
     const int takeIndex = (fxIndex >> 16) & 0xff;
     MediaItem_Take *take = GetMediaItemTake(item, takeIndex);
-    snprintf(chainTitle, sizeof(chainTitle), "FX: Item \"%s\"", GetTakeName(take));
-    break;
+    return CF_GetTakeFXChain(take);
   }
   default:
     return nullptr;
   }
-
-  return FindWindowEx(nullptr, nullptr, nullptr, chainTitle);
 }
 
 int CF_EnumSelectedFX(HWND fxChain, int index)

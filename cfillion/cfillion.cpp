@@ -129,7 +129,7 @@ bool CF_LocateInExplorer(const char *file)
 {
   // Quotes inside the filename must not be escaped for the SWELL implementation
   WDL_FastString arg;
-  arg.SetFormatted(strlen(file) + 10, "(/select,\"%s\")", file);
+  arg.SetFormatted(strlen(file) + 10, "/select,\"%s\"", file);
 
   return CF_ShellExecute("explorer.exe", arg.Get());
 }

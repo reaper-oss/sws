@@ -263,8 +263,8 @@ APIdef g_apidefs[] =
 	{ APIFUNC(CF_ShellExecute), "bool", "const char*", "file", "Open the given file or URL in the default application. See also <a href=\"#CF_LocateInExplorer\">CF_LocateInExplorer</a>.", },
 	{ APIFUNC(CF_LocateInExplorer), "bool", "const char*", "file", "Select the given file in explorer/finder.", },
 	{ APIFUNC(CF_GetTrackFXChain), "FxChain*", "MediaTrack*", "track", "Return a handle to the given track FX chain window.", },
-	{ APIFUNC(CF_GetTakeFXChain), "FxChain*", "MediaItem_Take*", "take", "Return a handle to the given take FX chain window.", },
-	{ APIFUNC(CF_GetFocusedFXChain), "FxChain*", "", "", "Return a handle to the currently focused FX chain window. The window is found by title so accuracy is limited for take FX chains.", },
+	{ APIFUNC(CF_GetTakeFXChain), "FxChain*", "MediaItem_Take*", "take", "Return a handle to the given take FX chain window. HACK: This temporarily renames the take in order to disambiguate the take FX chain window from similarily named takes.", },
+	{ APIFUNC(CF_GetFocusedFXChain), "FxChain*", "", "", "Return a handle to the currently focused FX chain window.", },
 	{ APIFUNC(CF_EnumSelectedFX), "int", "FxChain*,int", "hwnd,index", "Return the index of the next selected effect in the given FX chain. Start index should be -1. Returns -1 if there are no more selected effects.", },
 
 	{ NULL, } // denote end of table

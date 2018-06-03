@@ -136,8 +136,6 @@ bool CF_LocateInExplorer(const char *file)
 
 static HWND CF_GetTrackFXChain(const int trackIndex)
 {
-  // TODO: Localization support
-
   char chainTitle[64];
 
   if(trackIndex < 1) // Master track
@@ -153,17 +151,21 @@ HWND CF_GetTrackFXChain(MediaTrack *track)
   if(track == GetMasterTrack(nullptr))
     return CF_GetTrackFXChain(0);
   else {
-    const int trackNumber = static_cast<int>(GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER"));
+    const int trackNumber = static_cast<int>(
+      GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER"));
     return CF_GetTrackFXChain(trackNumber);
   }
 }
 
 HWND CF_GetTakeFXChain(MediaItem_Take *take)
 {
-  // Shameful hack follows. The FX chain window does have some user data attached to it (pointer to an internal FxChain object?) but it does not seem to point back to the take in any obvious way.
+  // Shameful hack follows. The FX chain window does have some user data
+  // attached to it (pointer to an internal FxChain object?) but it does not
+  // seem to point back to the take in any obvious way.
 
   GUID guid;
   genGuid(&guid);
+
   char guidStr[64];
   guidToString(&guid, guidStr);
 
@@ -172,25 +174,28 @@ HWND CF_GetTakeFXChain(MediaItem_Take *take)
 
   char chainTitle[64];
   snprintf(chainTitle, sizeof(chainTitle), "FX: Item \"%s\"", guidStr);
+
   HWND window = FindWindowEx(nullptr, nullptr, nullptr, chainTitle);
-  GetSetMediaItemTakeInfo_String(take, "P_NAME", const_cast<char *>(originalName.c_str()), true);
+
+  GetSetMediaItemTakeInfo_String(take, "P_NAME",
+    const_cast<char *>(originalName.c_str()), true);
 
   return window;
 }
 
 HWND CF_GetFocusedFXChain()
 {
-  int trackIndex, itemIndex, fxIndex;
-  const int focusType = GetFocusedFX(&trackIndex, &itemIndex, &fxIndex);
+  // Original idea by amagalma
+  // https://forum.cockos.com/showthread.php?t=207220
 
-  switch(focusType) {
+  int trackIndex, itemIndex, fxIndex;
+  switch(GetFocusedFX(&trackIndex, &itemIndex, &fxIndex)) {
   case 1:
     return CF_GetTrackFXChain(trackIndex);
   case 2: {
-    MediaTrack *track = GetTrack(0, trackIndex - 1);
+    MediaTrack *track = GetTrack(nullptr, trackIndex - 1);
     MediaItem *item = GetTrackMediaItem(track, itemIndex);
-    const int takeIndex = (fxIndex >> 16) & 0xff;
-    MediaItem_Take *take = GetMediaItemTake(item, takeIndex);
+    MediaItem_Take *take = GetMediaItemTake(item, HIWORD(fxIndex));
     return CF_GetTakeFXChain(take);
   }
   default:
@@ -198,10 +203,8 @@ HWND CF_GetFocusedFXChain()
   }
 }
 
-int CF_EnumSelectedFX(HWND fxChain, int index)
+int CF_EnumSelectedFX(HWND fxChain, const int index)
 {
   const HWND list = GetDlgItem(fxChain, 1076);
-  index = ListView_GetNextItem(list, index, LVNI_SELECTED);
-
-  return index;
+  return ListView_GetNextItem(list, index, LVNI_SELECTED);
 }

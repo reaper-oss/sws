@@ -27,6 +27,7 @@
 
 #include "stdafx.h"
 #include "cfillion.hpp"
+#include "reaper/localize.h"
 
 #ifdef _WIN32
 static const unsigned int FORMAT = CF_UNICODETEXT;
@@ -139,9 +140,11 @@ static HWND CF_GetTrackFXChain(const int trackIndex)
   char chainTitle[64];
 
   if(trackIndex < 1) // Master track
-    snprintf(chainTitle, sizeof(chainTitle), "FX: Master Track");
+    snprintf(chainTitle, sizeof(chainTitle), "%s%s",
+      __LOCALIZE("FX: ", "fx"), __LOCALIZE("Master Track", "fx"));
   else
-    snprintf(chainTitle, sizeof(chainTitle), "FX: Track %d", trackIndex);
+    snprintf(chainTitle, sizeof(chainTitle), "%s%s %d",
+      __LOCALIZE("FX: ", "fx"), __LOCALIZE("Track", "fx"), trackIndex);
 
   return FindWindowEx(nullptr, nullptr, nullptr, chainTitle);
 }
@@ -173,7 +176,8 @@ HWND CF_GetTakeFXChain(MediaItem_Take *take)
   GetSetMediaItemTakeInfo_String(take, "P_NAME", guidStr, true);
 
   char chainTitle[64];
-  snprintf(chainTitle, sizeof(chainTitle), "FX: Item \"%s\"", guidStr);
+  snprintf(chainTitle, sizeof(chainTitle), "%s%s \"%s\"",
+    __LOCALIZE("FX: ", "fx"), __LOCALIZE("Item", "fx"), guidStr);
 
   HWND window = FindWindowEx(nullptr, nullptr, nullptr, chainTitle);
 

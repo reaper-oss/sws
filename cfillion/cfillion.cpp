@@ -152,16 +152,30 @@ HWND CF_GetTrackFXChain(MediaTrack *track)
 {
   if(track == GetMasterTrack(nullptr))
     return CF_GetTrackFXChain(0);
-  else
-    return CF_GetTrackFXChain(GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER"));
+  else {
+    const int trackNumber = static_cast<int>(GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER"));
+    return CF_GetTrackFXChain(trackNumber);
+  }
 }
 
 HWND CF_GetTakeFXChain(MediaItem_Take *take)
 {
-  char chainTitle[64];
-  snprintf(chainTitle, sizeof(chainTitle), "FX: Item \"%s\"", GetTakeName(take));
+  // Shameful hack follows. The FX chain window does have some user data attached to it (pointer to an internal FxChain object?) but it does not seem to point back to the take in any obvious way.
 
-  return FindWindowEx(nullptr, nullptr, nullptr, chainTitle);
+  GUID guid;
+  genGuid(&guid);
+  char guidStr[64];
+  guidToString(&guid, guidStr);
+
+  string originalName = GetTakeName(take);
+  GetSetMediaItemTakeInfo_String(take, "P_NAME", guidStr, true);
+
+  char chainTitle[64];
+  snprintf(chainTitle, sizeof(chainTitle), "FX: Item \"%s\"", guidStr);
+  HWND window = FindWindowEx(nullptr, nullptr, nullptr, chainTitle);
+  GetSetMediaItemTakeInfo_String(take, "P_NAME", const_cast<char *>(originalName.c_str()), true);
+
+  return window;
 }
 
 HWND CF_GetFocusedFXChain()

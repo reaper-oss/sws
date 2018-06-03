@@ -769,6 +769,7 @@ error:
 		IMPAPI(format_timestr_pos);
 		IMPAPI(format_timestr_len);
 		IMPAPI(FreeHeapPtr);
+		IMPAPI(genGuid);
 		IMPAPI(GetActionShortcutDesc);
 		IMPAPI(GetActiveTake);
 		IMPAPI(GetAllProjectPlayStates); // v5.111+
@@ -845,6 +846,7 @@ error:
 		IMPAPI(GetSetEnvelopeState);
 		IMPAPI(GetSetMediaItemInfo);
 		IMPAPI(GetSetMediaItemTakeInfo);
+		IMPAPI(GetSetMediaItemTakeInfo_String);
 		IMPAPI(GetMediaSourceLength); // v5.0pre3+
 		IMPAPI(GetSetMediaTrackInfo);
 		IMPAPI(GetSetObjectState);
@@ -854,6 +856,7 @@ error:
 		IMPAPI(GetSetTrackGroupMembership); // v5.21pre5+
 		IMPAPI(GetTempoTimeSigMarker);
 		IMPAPI(GetTakeEnvelopeByName);
+		IMPAPI(GetTakeName);
 		IMPAPI(GetTakeStretchMarker);
 		IMPAPI(GetSetTrackSendInfo);
 		IMPAPI(GetSetTrackState);

@@ -1071,6 +1071,14 @@ void CopyAllSnapshot(COMMAND_T*)
 	CopySnapshotToClipboard(&ss);
 }
 
+void DeleteCurSnapshot(COMMAND_T*)
+{
+	if(Snapshot *ss = g_ss.Get()->m_pCurSnapshot) {
+		DeleteSnapshot(ss);
+		g_pSSWnd->Update();
+	}
+}
+
 // This function adds the snapshot or deletes it from memory
 void MergeSnapshot(Snapshot* ss)
 {
@@ -1148,7 +1156,7 @@ static COMMAND_T g_commandTable[] =
 
 	{ { DEFACCEL, "SWS: New snapshot (with current settings)" },			"SWSSNAPSHOT_NEW",	     NewSnapshot,		   NULL, 0 },
 	{ { DEFACCEL, "SWS: New snapshot and edit name" },						"SWSSNAPSHOT_NEWEDIT",   NewSnapshotEdit,	   NULL, 1 },
-	//{ { DEFACCEL, "SWS: Delete current snapshot" },						"SWSSNAPSHOT_NEWEDIT",   NewSnapshotEdit,	   NULL, 1 },
+	{ { DEFACCEL, "SWS: Delete current snapshot" },						"SWSSNAPSHOT_DELCUR",   DeleteCurSnapshot },
 	{ { DEFACCEL, "SWS: Save as snapshot 1" },								"SWSSNAPSHOT_SAVE1",	 SaveSnapshot,         NULL, 1 },
 	{ { DEFACCEL, "SWS: Save as snapshot 2" },								"SWSSNAPSHOT_SAVE2",	 SaveSnapshot,         NULL, 2 },
 	{ { DEFACCEL, "SWS: Save as snapshot 3" },								"SWSSNAPSHOT_SAVE3",	 SaveSnapshot,         NULL, 3 },

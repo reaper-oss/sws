@@ -70,6 +70,7 @@ static SWSProjConfig<ProjSnapshot> g_ss;
 SWS_SnapshotsWnd* g_pSSWnd=NULL;
 void PasteSnapshot(COMMAND_T*);
 void MergeSnapshot(Snapshot* ss);
+void DeleteSnapshot(Snapshot* ss);
 
 static int g_iMask = ALL_MASK;
 static bool g_bSelOnly_OnRecall = false;
@@ -327,20 +328,7 @@ void SWS_SnapshotsView::OnItemClk(SWS_ListItem* item, int iCol, int iKeyState)
 	// Delete (alt click)
 	else if (!(iKeyState & LVKF_SHIFT) && !(iKeyState & LVKF_CONTROL) && (iKeyState & LVKF_ALT))
 	{
-		if (g_ss.Get()->m_pCurSnapshot == ss)
-			g_ss.Get()->m_pCurSnapshot = NULL;
-
-		int iSlot = ss->m_iSlot;
-		g_ss.Get()->m_snapshots.Delete(g_ss.Get()->m_snapshots.Find(ss), true);
-
-		//clean up gaps rather than search for them on insert
-		for (int i = 0; i < g_ss.Get()->m_snapshots.GetSize(); i++)
-			if (g_ss.Get()->m_snapshots.Get(i)->m_iSlot > iSlot)
-				g_ss.Get()->m_snapshots.Get(i)->m_iSlot--;
-
-		char undoStr[128]="";
-		_snprintf(undoStr, 128, __LOCALIZE_VERFMT("Delete snapshot %d","sws_DLG_101"), iSlot);
-		Undo_OnStateChangeEx(undoStr, UNDO_STATE_MISCCFG, -1);
+		DeleteSnapshot(ss);
 		Update();
 	}
 }
@@ -617,20 +605,8 @@ void SWS_SnapshotsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		}
 		case DELETE_MSG:
 		{
-			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->EnumSelected(NULL);
-			if (ss)
-			{
-				char undoStr[128]="";
-				_snprintf(undoStr, 128, __LOCALIZE_VERFMT("Delete snapshot %d","sws_DLG_101"), ss->m_iSlot);
-
-				//clean up gaps rather than search for them on insert
-				for (int i = 0; i < g_ss.Get()->m_snapshots.GetSize(); i++)
-					if (g_ss.Get()->m_snapshots.Get(i)->m_iSlot > ss->m_iSlot)
-						g_ss.Get()->m_snapshots.Get(i)->m_iSlot--;
-
-				g_ss.Get()->m_snapshots.Delete(g_ss.Get()->m_snapshots.Find(ss), true);
-				g_ss.Get()->m_pCurSnapshot = NULL;
-				Undo_OnStateChangeEx(undoStr, UNDO_STATE_MISCCFG, -1);
+			if(Snapshot* ss = (Snapshot*)m_pLists.Get(0)->EnumSelected(NULL)) {
+				DeleteSnapshot(ss);
 				Update();
 			}
 			break;
@@ -1129,6 +1105,24 @@ void PasteSnapshot(COMMAND_T*)
 {
 	Snapshot* ss = GetSnapshotFromClipboard();
 	MergeSnapshot(ss);
+}
+
+void DeleteSnapshot(Snapshot *ss)
+{
+	if (g_ss.Get()->m_pCurSnapshot == ss)
+		g_ss.Get()->m_pCurSnapshot = NULL;
+
+	const int iSlot = ss->m_iSlot;
+	g_ss.Get()->m_snapshots.Delete(g_ss.Get()->m_snapshots.Find(ss), true);
+
+	// clean up gaps rather than search for them on insert
+	for (int i = 0; i < g_ss.Get()->m_snapshots.GetSize(); i++)
+		if (g_ss.Get()->m_snapshots.Get(i)->m_iSlot > iSlot)
+			g_ss.Get()->m_snapshots.Get(i)->m_iSlot--;
+
+	char undoStr[128] = "";
+	_snprintf(undoStr, 128, __LOCALIZE_VERFMT("Delete snapshot %d", "sws_DLG_101"), iSlot);
+	Undo_OnStateChangeEx(undoStr, UNDO_STATE_MISCCFG, -1);
 }
 
 //!WANT_LOCALIZE_SWS_CMD_TABLE_BEGIN:sws_actions

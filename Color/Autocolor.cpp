@@ -770,7 +770,13 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 					else if (strcmp(rule->m_str_filter.Get(), cFilterTypes[AC_VCA_MASTER]) == 0)
 					{
 						int iVcaMaster = GetSetTrackGroupMembership(tr, "VOLUME_VCA_MASTER", 0, 0);
-						if (iVcaMaster)
+
+						// check newly added groups 33 - 64
+						int iVcaMasterHigh = 0;
+						if (GetSetTrackGroupMembershipHigh) // added as optional API function for now
+							iVcaMasterHigh = GetSetTrackGroupMembershipHigh(tr, "VOLUME_VCA_MASTER", 0, 0);
+
+						if (iVcaMaster || iVcaMasterHigh)
 							bMatch = true;
 					}
 					else if (strcmp(rule->m_str_filter.Get(), cFilterTypes[AC_ANY]) == 0)

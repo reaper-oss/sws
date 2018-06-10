@@ -717,6 +717,7 @@ SWS_ListView::SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn
   m_dwSavedSelTime(0),m_bShiftSel(false)
 #endif
 {
+	memset(m_oldColors,0,sizeof(m_oldColors));
 	SetWindowLongPtr(hwndList, GWLP_USERDATA, (LONG_PTR)this);
 	if (m_hwndEdit)
 		SetWindowLongPtr(m_hwndEdit, GWLP_USERDATA, 0xdeadf00b);
@@ -1329,17 +1330,17 @@ bool SWS_ListView::DoColumnMenu(int x, int y)
 		EditListItemEnd(true); // fix possible crash
 
 		HMENU hMenu = CreatePopupMenu();
-		AddToMenu(hMenu, __LOCALIZE("Visible columns","sws_menu"), 0);
+		AddToMenuOrdered(hMenu, __LOCALIZE("Visible columns","sws_menu"), 0);
 		EnableMenuItem(hMenu, 0, MF_BYPOSITION | MF_GRAYED);
 
 		for (int i = 0; i < m_iCols; i++)
 		{
-			AddToMenu(hMenu, m_pCols[i].cLabel, i + 1);
+			AddToMenuOrdered(hMenu, m_pCols[i].cLabel, i + 1);
 			if (m_pCols[i].iPos != -1)
 				CheckMenuItem(hMenu, i+1, MF_BYPOSITION | MF_CHECKED);
 		}
-		AddToMenu(hMenu, SWS_SEPARATOR, 0);
-		AddToMenu(hMenu, __LOCALIZE("Reset","sws_menu"), m_iCols + 1);
+		AddToMenuOrdered(hMenu, SWS_SEPARATOR, 0);
+		AddToMenuOrdered(hMenu, __LOCALIZE("Reset","sws_menu"), m_iCols + 1);
 
 		iCol = TrackPopupMenu(hMenu, TPM_RETURNCMD, x, y, 0, m_hwndList, NULL);
 		DestroyMenu(hMenu);

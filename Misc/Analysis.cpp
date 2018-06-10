@@ -30,26 +30,27 @@
 #include "../sws_waitdlg.h"
 #include "../reaper/localize.h"
 
+static void GetRMSOptions(double *target, double *windowSize);
 
-void AnalyzePCMSource(ANALYZE_PCM* a)
+static bool AnalyzePCMSource(ANALYZE_PCM* a)
 {
-	if (!a->pcm)
-		return;
-
 	// Init local transfer block "t" and sum of squares
 	PCM_source_transfer_t t={0,};
 	t.samplerate = a->pcm->GetSampleRate();
 	t.nch = a->pcm->GetNumChannels();
 	t.length = a->dWindowSize == 0.0 ? 16384 : (int)(a->dWindowSize * t.samplerate);
-	t.samples = new ReaSample[t.length * t.nch];
-	t.samples_out = 0;
-	t.time_s = 0.0;
+	t.samples = new (nothrow) ReaSample[t.length * t.nch];
+
+	if(!t.samples)
+		return false;
 
 	ReaSample* prevBuf = NULL;
 	if (a->dWindowSize != 0.0)
 	{
-		prevBuf = new ReaSample[t.length * t.nch];
-		memset(prevBuf, 0, t.length * t.nch * sizeof(*prevBuf));
+		if((prevBuf = new (nothrow) ReaSample[t.length * t.nch]))
+			memset(prevBuf, 0, t.length * t.nch * sizeof(*prevBuf));
+		else
+			return false;
 	}
 
 	double* dSumSquares = new double[t.nch];
@@ -143,14 +144,14 @@ void AnalyzePCMSource(ANALYZE_PCM* a)
 	delete[] prevBuf;
 	delete[] dSumSquares;
 
-	// Ensure dProgress is exactly 1.0
-	a->dProgress = 1.0;
+	return true;
 }
-
 
 unsigned int WINAPI AnalyzePCMThread(void* pAnalyze)
 {
-	AnalyzePCMSource((ANALYZE_PCM*)pAnalyze);
+	ANALYZE_PCM *a = static_cast<ANALYZE_PCM *>(pAnalyze);
+	a->success = AnalyzePCMSource(a);
+	a->dProgress = 1.0; // closes the wait dialog
 	return 0;
 }
 
@@ -176,6 +177,10 @@ bool AnalyzeItem(MediaItem* mi, ANALYZE_PCM* a)
 	if (take)
 		cName = (const char*)GetSetMediaItemTakeInfo(take, "P_NAME", NULL);
 
+	const double oldWinSize = a->dWindowSize;
+	if (a->dWindowSize > a->pcm->GetLength())
+		a->dWindowSize = 0;
+
 	HANDLE hThread = (HANDLE)_beginthreadex(NULL, 0, AnalyzePCMThread, a, 0, NULL);
 
 	WDL_String title;
@@ -183,11 +188,13 @@ bool AnalyzeItem(MediaItem* mi, ANALYZE_PCM* a)
 	SWS_WaitDlg wait(title.Get(), &a->dProgress);
 
 	CloseHandle(hThread);
+
+	// restore original window if it was larger than the item's length
+	a->dWindowSize = oldWinSize;
+
 	delete a->pcm;
-	return true;
+	return a->success;
 }
-
-
 
 void DoAnalyzeItem(COMMAND_T*)
 {
@@ -286,12 +293,7 @@ double GetMediaItemPeakRMS_Windowed(MediaItem* mi)
 		a.iChannels = iChannels;
 		a.dRMSs = new double[iChannels];
 
-		// set window size
-		char str[100];
-		GetPrivateProfileString(SWS_INI, SWS_RMS_KEY, "-20,0.1", str, 100, get_ini_file());
-		char* pWindow = strchr(str, ',');
-		a.dWindowSize = pWindow ? atof(pWindow + 1) : 0.1;
-
+		GetRMSOptions(nullptr, &a.dWindowSize);
 
 		if (AnalyzeItem(mi, &a))
 		{
@@ -311,11 +313,7 @@ double GetMediaItemPeakRMS_Windowed(MediaItem* mi)
 
 	ANALYZE_PCM a;
 	memset(&a, 0, sizeof(a));
-
-	char str[100];
-	GetPrivateProfileString(SWS_INI, SWS_RMS_KEY, "-20,0.1", str, 100, get_ini_file());
-	char* pWindow = strchr(str, ',');
-	a.dWindowSize = pWindow ? atof(pWindow + 1) : 0.1;
+	GetRMSOptions(NULL, &a.dWindowSize);
 
 	if (AnalyzeItem(mi, &a)) {
 		return VAL2DB(a.dRMS);
@@ -342,13 +340,7 @@ double GetMediaItemPeakRMS_NonWindowed(MediaItem* mi)
 	a.iChannels = iChannels;
 	a.dRMSs = new double[iChannels];
 
-	/*
-	// set window size
-	char str[100];
-	GetPrivateProfileString(SWS_INI, SWS_RMS_KEY, "-20,0.1", str, 100, get_ini_file());
-	char* pWindow = strchr(str, ',');
-	a.dWindowSize = pWindow ? atof(pWindow + 1) : 0.1;
-	*/
+	// GetRMSOptions(nullptr, &a.dWindowSize);
 
 	if (AnalyzeItem(mi, &a))
 	{
@@ -420,10 +412,7 @@ void OrganizeByVol(COMMAND_T* ct)
 			memset(&a, 0, sizeof(a));
 			if (ct->user == 2)
 			{	// Windowed mode, set the window size
-				char str[100];
-				GetPrivateProfileString(SWS_INI, SWS_RMS_KEY, "-20,0.1", str, 100, get_ini_file());
-				char* pWindow = strchr(str, ',');
-				a.dWindowSize = pWindow ? atof(pWindow+1) : 0.1;
+				GetRMSOptions(NULL, &a.dWindowSize);
 			}
 			for (int i = 0; i < items.GetSize(); i++)
 			{
@@ -521,11 +510,8 @@ void RMSNormalizeAll(double dTargetDb, double dWindowSize)
 // ct->user == 0 full item, otherwise windowed
 void DoRMSNormalize(COMMAND_T* ct)
 {
-	char str[100];
-	GetPrivateProfileString(SWS_INI, SWS_RMS_KEY, "-20,0.1", str, 100, get_ini_file());
-	char* pWindow = strchr(str, ',');
-	double dTarget = str[0] ? atof(str) : -20;
-	double dWindow = pWindow ? atof(pWindow+1) : 0.1;
+	double dTarget, dWindow;
+	GetRMSOptions(&dTarget, &dWindow);
 
 	if (ct->user != 2)
 		RMSNormalize(dTarget, ct->user ? dWindow : 0.0);
@@ -533,10 +519,29 @@ void DoRMSNormalize(COMMAND_T* ct)
 		RMSNormalizeAll(dTarget, dWindow);
 }
 
-void SetRMSOptions(COMMAND_T*)
+void GetRMSOptions(double *targetOut, double *winSizeOut)
 {
+	char str[100];
+	GetPrivateProfileString(SWS_INI, SWS_RMS_KEY, "-20,0.1", str, sizeof(str), get_ini_file());
+
+	if(targetOut)
+		*targetOut = str[0] ? atof(str) : -20;
+
+	if(winSizeOut) {
+		const char *pWindow = strchr(str, ',');
+		const double winSize = pWindow ? atof(pWindow + 1) : 0;
+		*winSizeOut = winSize > 0 ? winSize : 0.1;
+	}
+}
+
+static void SetRMSOptions(COMMAND_T*)
+{
+	double target, windowSize;
+	GetRMSOptions(&target, &windowSize);
+
 	char reply[100];
-	GetPrivateProfileString(SWS_INI, SWS_RMS_KEY, "-20,0.1", reply, 100, get_ini_file());
+	snprintf(reply, sizeof(reply), "%g,%g", target, windowSize);
+
 	if (GetUserInputs(__LOCALIZE("SWS RMS options","sws_analysis"), 2, __LOCALIZE("Target RMS normalize level (db),Window size for peak RMS (s)","sws_analysis"), reply, 100))
 	{	// Do really basic input check
 		if (strchr(reply, ',') && strlen(reply) > 2)

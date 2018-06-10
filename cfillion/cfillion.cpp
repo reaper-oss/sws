@@ -109,3 +109,27 @@ const char *CF_GetClipboardBig(WDL_FastString *output)
 
   return output->Get();
 }
+
+bool CF_ShellExecute(const char *file, const char *args)
+{
+  // Windows's implementation of ShellExecute returns a fake HINSTANCE (greater
+  // than 32 on success) while SWELL's implementation returns a BOOL.
+
+#ifdef _WIN32
+//  static_assert(&ShellExecute == &ShellExecuteUTF8,
+//    "ShellExecute is not aliased to ShellExecuteUTF8");
+  HINSTANCE ret = ShellExecute(nullptr, "open", file, args, nullptr, SW_SHOW);
+  return ret > (HINSTANCE)32;
+#else
+  return ShellExecute(NULL, "open", file, args, NULL, SW_SHOW);
+#endif
+}
+
+bool CF_LocateInExplorer(const char *file)
+{
+  // Quotes inside the filename must not be escaped for the SWELL implementation
+  WDL_FastString arg;
+  arg.SetFormatted(strlen(file) + 10, "(/select,\"%s\")", file);
+
+  return CF_ShellExecute("explorer.exe", arg.Get());
+}

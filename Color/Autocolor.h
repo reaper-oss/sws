@@ -85,7 +85,7 @@ public:
 	
 protected:
 	void OnInitDlg();
-#ifndef _WIN32
+#ifdef __APPLE__
 	bool m_bSettingColor;
 	void OnTimer(WPARAM wParam=0);
 	void OnDestroy();

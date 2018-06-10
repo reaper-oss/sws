@@ -612,12 +612,12 @@ void BR_MidiItemTimePos::Restore (double timeOffset /*=0*/)
 			MIDI_SetItemExtents(item, TimeMap_timeToQN(loopStart), TimeMap_timeToQN(loopEnd));
 
 			SetMediaItemInfo_Value(item , "B_LOOPSRC", 1); // because MIDI_SetItemExtents() disables looping
-			TrimItem(item, position, position + length, true);
+			TrimItem(item, position, position + length, false, true); // NF: unsure if takes env's should be adjusted here
 			SetMediaItemTakeInfo_Value(take, "D_STARTOFFS", loopedOffset);
 		}
 		else
 		{
-			TrimItem(item, position, position + length, true);
+			TrimItem(item, position, position + length, true, true);
 		}
 
 		for (size_t i = 0; i < midiTake->noteEvents.size(); ++i)

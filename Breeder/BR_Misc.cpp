@@ -760,7 +760,7 @@ void MidiItemTrim (COMMAND_T* ct)
 				}
 			}
 
-			update = TrimItem(item, start, end);
+			update = TrimItem(item, start, end, true);
 		}
 	}
 

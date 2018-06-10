@@ -631,6 +631,9 @@
     <ClInclude Include="cfillion\cfillion.hpp">
       <Filter>cfillion</Filter>
     </ClInclude>
+    <ClInclude Include="Utility\win32-utf8.h">
+      <Filter>Core\Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="sws_extension.rc">
@@ -1262,6 +1265,9 @@
     </ClCompile>
     <ClCompile Include="cfillion\cfillion.cpp">
       <Filter>cfillion</Filter>
+    </ClCompile>
+    <ClCompile Include="Utility\win32-utf8.cpp">
+      <Filter>Core\Utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

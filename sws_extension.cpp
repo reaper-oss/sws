@@ -709,6 +709,7 @@ error:
 		IMPAPI(CoolSB_GetScrollInfo);
 		IMPAPI(CoolSB_SetScrollInfo);
 		IMPAPI(CountActionShortcuts);
+		IMPAPI(CountAutomationItems);
 		IMPAPI(CountEnvelopePoints); // v5pre4+
 		IMPAPI(CountMediaItems); // O(N): should be banned from the extension, ideally -- don't use it in loops, at least
 		IMPAPI(CountProjectMarkers);
@@ -840,6 +841,7 @@ error:
 		IMPAPI(GetSelectedTrack); // exclude master + O(N): should be banned from the extension, ideally
 		IMPAPI(GetSelectedTrackEnvelope);
 		IMPAPI(GetSet_ArrangeView2);
+		IMPAPI(GetSetAutomationItemInfo);
 		IMPAPI(GetSetEnvelopeState);
 		IMPAPI(GetSetMediaItemInfo);
 		IMPAPI(GetSetMediaItemTakeInfo);
@@ -886,11 +888,13 @@ error:
 		IMPAPI(GSC_mainwnd);
 		IMPAPI(guidToString);
 		IMPAPI(Help_Set);
+		IMPAPI(InsertAutomationItem);
 		IMPAPI(InsertMedia);
 		IMPAPI(InsertEnvelopePoint); // v5pre4+
 		IMPAPI(InsertTrackAtIndex);
 		IMPAPI(IsMediaExtension);
 		IMPAPI(IsMediaItemSelected);
+		IMPAPI(IsProjectDirty);
 		IMPAPI(kbd_enumerateActions);
 		IMPAPI(kbd_formatKeyName);
 		IMPAPI(kbd_getCommandName);
@@ -1029,6 +1033,10 @@ error:
 		IMPAPI(StopTrackPreview);
 		IMPAPI(StopTrackPreview2);
 		IMPAPI(stringToGuid);
+		IMPAPI(TakeFX_GetCount);
+		IMPAPI(TakeFX_GetFloatingWindow);
+		IMPAPI(TakeFX_SetOpen);
+		IMPAPI(TakeFX_Show);
 		IMPAPI(TakeIsMIDI);
 		IMPAPI(time_precise);
 		IMPAPI(TimeMap_GetDividedBpmAtTime);
@@ -1052,7 +1060,7 @@ error:
 		IMPAPI(TrackFX_GetCount);
 		IMPAPI(TrackFX_GetFXName);
 		IMPAPI(TrackFX_GetFXGUID);
-		IMPAPI(TrackFX_GetInstrument); // nofish: didn't find when this was added in changelog
+		IMPAPI(TrackFX_GetInstrument); // NF: didn't find when this was added in changelog
 		IMPAPI(TrackFX_GetNumParams);
 		IMPAPI(TrackFX_GetOpen);
 		IMPAPI(TrackFX_GetParam);
@@ -1097,10 +1105,9 @@ error:
 			goto error;
 		}
 
-		// Optional API functions
-		IMPAP_OPT(IsProjectDirty);
+		// Optional API functions (check for NULL if using!) 
+		IMPAP_OPT(GetSetTrackGroupMembershipHigh); // v5.70+
 
-		
 		// Look for SWS dupe/clone
 		if (rec->GetFunc("SNM_GetIntConfigVar"))
 		{

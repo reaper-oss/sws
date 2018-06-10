@@ -707,8 +707,9 @@ void XenakiosExit()
 	plugin_register("-timer", (void*)PlayItemsOnceTimer);
 	plugin_register("-timer",(void*)ItemPreviewTimer);
 	RemoveUndoKeyUpHandler01();
-	DestroyWindow(g_hItemInspector);
-  g_hItemInspector=NULL;
+
+	if (g_hItemInspector) 
+		DestroyWindow(g_hItemInspector);
 }
 
 int XenakiosInit()

@@ -151,7 +151,15 @@ int GetTakeFXCount (MediaItem_Take* take);
 bool GetMidiTakeTempoInfo (MediaItem_Take* take, bool* ignoreProjTempo, double* bpm, int* num, int* den);
 bool SetIgnoreTempo (MediaItem* item, bool ignoreTempo, double bpm, int num, int den, bool skipItemsWithSameIgnoreState);
 bool DoesItemHaveMidiEvents (MediaItem* item);
-bool TrimItem (MediaItem* item, double start, double end, bool force = false);
+
+// NF: fix #950
+// added bool adjustTakesEnvelopes (if true, DoAdjustTakesEnvelopes() is called in TrimItem()
+bool TrimItem (MediaItem* item, double start, double end, bool adjustTakesEnvelopes, bool force = false);
+// use trim actions rather than API to avoid take env's + stretch markers offset
+bool TrimItem_UseNativeTrimActions(MediaItem* item, double start, double end, bool force = false);
+// adjust takes env's after trimming item to prevent offset
+void DoAdjustTakesEnvelopes(MediaItem_Take* take, double offset); 
+
 bool GetMediaSourceProperties (MediaItem_Take* take, bool* section, double* start, double* length, double* fade, bool* reverse);
 bool SetMediaSourceProperties (MediaItem_Take* take, bool section, double start, double length, double fade, bool reverse);
 bool SetTakeSourceFromFile (MediaItem_Take* take, const char* filename, bool inProjectData, bool keepSourceProperties);
@@ -297,6 +305,7 @@ enum BR_MouseCursor
 	CURSOR_ZOOM_IN,
 	CURSOR_ZOOM_OUT,
 	CURSOR_ZOOM_UNDO,
+	CURSOR_ERASER,
 
 	CURSOR_COUNT
 };

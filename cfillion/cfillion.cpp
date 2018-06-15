@@ -133,3 +133,9 @@ bool CF_LocateInExplorer(const char *file)
 
   return CF_ShellExecute("explorer.exe", arg.Get());
 }
+
+int CF_GetMediaSourceBitDepth(PCM_source *source)
+{
+  // parameter validation is already done on the REAPER side, so we're sure source is a valid PCM_source
+  return source->GetBitsPerSample();
+}

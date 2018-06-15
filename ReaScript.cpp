@@ -263,6 +263,8 @@ APIdef g_apidefs[] =
 	{ APIFUNC(CF_ShellExecute), "bool", "const char*", "file", "Open the given file or URL in the default application. See also <a href=\"#CF_LocateInExplorer\">CF_LocateInExplorer</a>.", },
 	{ APIFUNC(CF_LocateInExplorer), "bool", "const char*", "file", "Select the given file in explorer/finder.", },
 	{ APIFUNC(CF_GetMediaSourceBitDepth), "int", "PCM_source*", "src", "Returns the bit depth if available (0 otherwise).", },
+	{ APIFUNC(CF_GetMediaSourceOnline), "bool", "PCM_source*", "src", "Returns the online/offline status of the given source.", },
+	{ APIFUNC(CF_SetMediaSourceOnline), "void", "PCM_source*,bool", "src,set", "Set the online/offline status of the given source (closes files when set=false).", },
 
 	{ NULL, } // denote end of table
 };

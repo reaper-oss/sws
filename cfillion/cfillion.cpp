@@ -139,3 +139,13 @@ int CF_GetMediaSourceBitDepth(PCM_source *source)
   // parameter validation is already done on the REAPER side, so we're sure source is a valid PCM_source
   return source->GetBitsPerSample();
 }
+
+bool CF_GetMediaSourceOnline(PCM_source *source)
+{
+  return source->IsAvailable();
+}
+
+void CF_SetMediaSourceOnline(PCM_source *source, const bool online)
+{
+  source->SetAvailable(online);
+}

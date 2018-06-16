@@ -372,6 +372,60 @@ static int EraserToolUndo(COMMAND_T* ct)
 	return 0; // undo point is created in EraserToolInit() already
 }
 
+void CycleMIDIRecordingModes(COMMAND_T* ct)
+{
+	WDL_TypedBuf<MediaTrack*> selTracks;
+	SWS_GetSelectedTracks(&selTracks, false);
+
+	for (int i = 0; i < selTracks.GetSize(); i++) {
+		MediaTrack* track = selTracks.Get()[i];
+		int recMode = GetMediaTrackInfo_Value(track, "I_RECMODE");
+		int nextRecMode;
+
+		switch (recMode) {
+		case 0: // input (audio or MIDI)
+			nextRecMode = 4;
+			break;
+		case 4: // MIDI output
+			nextRecMode = 7;
+			break;
+		case 7: // MIDI overdub
+			nextRecMode = 8;
+			break;
+		case 8: // MIDI replace
+			nextRecMode = 9;
+			break;
+		case 9: // MIDI touch-replace
+			nextRecMode = 16;
+			break;
+		case 16: // MIDI latch-replace
+			nextRecMode = 0;
+			break;
+		default: // when not in one of the MIDI rec. modes set to 'input (audio or MIDI)'
+			nextRecMode = 0;
+		}
+		SetMediaTrackInfo_Value(track, "I_RECMODE", nextRecMode);
+	}
+}
+
+void ME_CycleMIDIRecordingModes(COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
+{
+	CycleMIDIRecordingModes(NULL);
+}
+
+void CycleTrackAutomationModes(COMMAND_T* ct)
+{
+	WDL_TypedBuf<MediaTrack*> selTracks;
+	SWS_GetSelectedTracks(&selTracks, false);
+
+	for (int i = 0; i < selTracks.GetSize(); i++) {
+		MediaTrack* track = selTracks.Get()[i];
+		int autoMode = GetTrackAutomationMode(track);
+		if (++autoMode > 5) autoMode = 0;
+		SetTrackAutomationMode(track, autoMode);
+	}
+}
+
 
 
 
@@ -430,6 +484,13 @@ static COMMAND_T g_commandTable[] =
 
 	{ { DEFACCEL, "SWS/NF: Toggle triplet grid" }, "NF_ME_TOGGLETRIPLET" , NULL, NULL, 0, Main_IsMIDIGridTriplet, ME_SECTION, ME_NFToggleTripletMIDI },
 	{ { DEFACCEL, "SWS/NF: Toggle dotted grid" }, "NF_ME_TOGGLEDOTTED" , NULL, NULL, 0, Main_IsMIDIGridDotted, ME_SECTION, ME_NFToggleDottedMIDI  },
+
+	// #994, #995
+	{ { DEFACCEL, "SWS/NF: Cycle through MIDI recording modes" }, "NF_CYCLE_MIDI_RECORD_MODES", CycleMIDIRecordingModes },
+	// also register in ME section
+	{ { DEFACCEL, "SWS/NF: Cycle through MIDI recording modes" }, "NF_ME_CYCLE_MIDI_RECORD_MODES", NULL, NULL, 0, NULL, SECTION_MIDI_EDITOR, ME_CycleMIDIRecordingModes },
+	{ { DEFACCEL, "SWS/NF: Cycle through track automation modes" }, "NF_CYCLE_TRACK_AUTOMATION_MODES", CycleTrackAutomationModes },
+
 	
 	//!WANT_LOCALIZE_1ST_STRING_END
 

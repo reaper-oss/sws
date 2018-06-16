@@ -154,3 +154,21 @@ bool CF_GetMediaSourceMetadata(PCM_source *source, const char *name, char *buf, 
 {
   return source->Extended(PCM_SOURCE_EXT_GETMETADATA, (void *)name, (void *)buf, (void *)bufSize) > 0;
 }
+
+int CF_EnumMediaSourceCues(PCM_source *source, const int index, double *time, double *endTime, bool *isRegion, char *name, const int nameSize)
+{
+  REAPER_cue cue{};
+  const int add = source->Extended(PCM_SOURCE_EXT_ENUMCUES_EX, (void *)index, &cue, NULL);
+
+  if(time)
+    *time = cue.m_time;
+  if(endTime)
+    *endTime = cue.m_endtime;
+  if(isRegion)
+    *isRegion = cue.m_isregion;
+
+  if(name && cue.m_name)
+    snprintf(name, nameSize, "%s", cue.m_name);
+
+  return add ? index + add : 0;
+}

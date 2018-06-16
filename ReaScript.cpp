@@ -265,6 +265,7 @@ APIdef g_apidefs[] =
 	{ APIFUNC(CF_GetMediaSourceBitDepth), "int", "PCM_source*", "src", "Returns the bit depth if available (0 otherwise).", },
 	{ APIFUNC(CF_GetMediaSourceOnline), "bool", "PCM_source*", "src", "Returns the online/offline status of the given source.", },
 	{ APIFUNC(CF_SetMediaSourceOnline), "void", "PCM_source*,bool", "src,set", "Set the online/offline status of the given source (closes files when set=false).", },
+	{ APIFUNC(CF_GetMediaSourceMetadata), "bool", "PCM_source*,const char*,char*,int", "src,name,out,out_sz", "Get the value of the given metadata field (eg. DESC, ORIG, ORIGREF, DATE, TIME, UMI, CODINGHISTORY for BWF).", },
 
 	{ NULL, } // denote end of table
 };

@@ -149,3 +149,8 @@ void CF_SetMediaSourceOnline(PCM_source *source, const bool online)
 {
   source->SetAvailable(online);
 }
+
+bool CF_GetMediaSourceMetadata(PCM_source *source, const char *name, char *buf, const int bufSize)
+{
+  return source->Extended(PCM_SOURCE_EXT_GETMETADATA, (void *)name, (void *)buf, (void *)bufSize) > 0;
+}

@@ -35,3 +35,4 @@ bool CF_LocateInExplorer(const char *file);
 int CF_GetMediaSourceBitDepth(PCM_source *);
 bool CF_GetMediaSourceOnline(PCM_source *);
 void CF_SetMediaSourceOnline(PCM_source *, bool set);
+bool CF_GetMediaSourceMetadata(PCM_source *, const char *name, char *buf, int bufSize);

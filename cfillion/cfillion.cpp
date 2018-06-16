@@ -185,3 +185,8 @@ int CF_EnumMediaSourceCues(PCM_source *source, const int index, double *time, do
 
   return add ? index + add : 0;
 }
+
+bool CF_ExportMediaSource(PCM_source *source, const char *file)
+{ 
+  return source->Extended(PCM_SOURCE_EXT_EXPORTTOFILE, (void *)file, NULL, NULL) > 0;
+}

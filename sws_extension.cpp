@@ -895,6 +895,7 @@ error:
 		IMPAPI(IsMediaExtension);
 		IMPAPI(IsMediaItemSelected);
 		IMPAPI(IsProjectDirty);
+		IMPAPI(IsTrackVisible);
 		IMPAPI(kbd_enumerateActions);
 		IMPAPI(kbd_formatKeyName);
 		IMPAPI(kbd_getCommandName);

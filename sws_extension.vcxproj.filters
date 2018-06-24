@@ -298,9 +298,6 @@
     <ClInclude Include="Autorender\Autorender.h">
       <Filter>Autorender</Filter>
     </ClInclude>
-    <ClInclude Include="Autorender\RenderTrack.h">
-      <Filter>Autorender</Filter>
-    </ClInclude>
     <ClInclude Include="MarkerActions\MarkerActions.h">
       <Filter>Markers</Filter>
     </ClInclude>
@@ -634,6 +631,9 @@
     <ClInclude Include="Utility\win32-utf8.h">
       <Filter>Core\Utils</Filter>
     </ClInclude>
+    <ClInclude Include="Autorender\RenderRegion.h">
+      <Filter>Autorender</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="sws_extension.rc">
@@ -895,9 +895,6 @@
       <Filter>Fingers</Filter>
     </ClCompile>
     <ClCompile Include="Autorender\Autorender.cpp">
-      <Filter>Autorender</Filter>
-    </ClCompile>
-    <ClCompile Include="Autorender\RenderTrack.cpp">
       <Filter>Autorender</Filter>
     </ClCompile>
     <ClCompile Include="MarkerActions\MarkerActions.cpp">
@@ -1268,6 +1265,9 @@
     </ClCompile>
     <ClCompile Include="Utility\win32-utf8.cpp">
       <Filter>Core\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Autorender\RenderRegion.cpp">
+      <Filter>Autorender</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

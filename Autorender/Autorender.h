@@ -1,7 +1,7 @@
 /******************************************************************************
 / Autorender.h
 /
-/ Copyright (c) 2011 Shane StClair
+/ Copyright (c) 2011-2018 Shane St Savage
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal

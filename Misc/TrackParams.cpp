@@ -508,6 +508,62 @@ void InputMatch(COMMAND_T* ct)
 	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 }
 
+
+// dopp sht
+BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
+{
+	char title[80];
+	GetWindowText(hwnd, title, sizeof(title));
+	std::string parmt = "Parameter Modulation/Link for";
+	std::string newtitle = title;
+	if (newtitle.compare(0, 29, parmt, 0, 29) == 0)
+	{
+		if (GetParent(hwnd) == GetMainHwnd())
+		{
+			ShowWindow(hwnd, SW_HIDE);
+		}
+	}
+	return TRUE;
+}
+void CloseAllPLinkWnd(COMMAND_T* ct)
+{
+	EnumWindows(EnumWindowsProc, NULL);
+}
+void CloseLastPLinkWnd(COMMAND_T* ct)
+{
+	int trn, fxn, prmn;
+	bool ptouched = GetLastTouchedFX(&trn, &fxn, &prmn);
+	if (ptouched)
+	{
+		char fx_name[128];
+		char prm_name[128];
+		MediaTrack* track = CSurf_TrackFromID(trn, false);
+		TrackFX_GetFXName(track, fxn, fx_name, 128);
+		TrackFX_GetParamName(track, fxn, prmn, prm_name, 128);
+		std::string fxname = fx_name;
+		if (fxname.find(": ") && (fxname.find(": ") <= fxname.length()))
+		{
+			fxname = fxname.substr(fxname.find(": ") + 2);
+		}
+		if (fxname.find(" (") && (fxname.find(" (") <= fxname.length()))
+		{
+			fxname = fxname.erase(fxname.find(" ("));
+		}
+		if (fxname.find("(") && (fxname.find("(") <= fxname.length()))
+		{
+			fxname = fxname.erase(fxname.find("("));
+		}
+		std::stringstream link_title;
+		link_title << "Parameter Modulation/Link for " << prm_name << " / " << fxname << " - (" << trn << ")";
+		HWND hwndplink = FindWindowEx(NULL, NULL, NULL, link_title.str().c_str());
+		if (GetParent(hwndplink) == GetMainHwnd())
+		{ 
+			ShowWindow(hwndplink, SW_HIDE); 
+		}
+	}
+}
+
+
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] =
 {
@@ -589,6 +645,10 @@ static COMMAND_T g_commandTable[] =
 
 	// Mute
 	{ { DEFACCEL, "SWS: Toolbar mute toggle" },									"SWS_MUTETOGGLE", MuteToggle, NULL, (INT_PTR)"B_MUTE", CheckTrackParam, },
+
+	// ParmLink
+	{ { DEFACCEL, "SWS: Hide all parameter modulation/link windows" }, "DOPP_PLINK_ALLWND_CLOSE", CloseAllPLinkWnd, NULL, },
+	{ { DEFACCEL, "SWS: Hide parameter modulation/link for last touched FX parameter" }, "DOPP_PLINK_WND_CLOSE", CloseLastPLinkWnd, NULL, },
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

@@ -598,27 +598,48 @@ void RemoveAllEnvsSelTracks(COMMAND_T* _ct)
 void RemoveAllEnvsSelTracksNoChunk(COMMAND_T* _ct)
 {
 	bool updated = false;
-	for (int i=0; i <= GetNumTracks(); i++) // incl. master
-		if (MediaTrack* tr = CSurf_TrackFromID(i, false))
-			if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL)) {
-				if (!updated) {
-					PreventUIRefresh(1);
-					Undo_BeginBlock2(NULL);
-					Main_OnCommand(41148, 0); // required for env selection: Envelope: Show all envelopes for (selected) tracks.
-					updated = true;
-				}
-				for (int j=0; j < CountTrackEnvelopes(tr) + j; j++)
-					if (TrackEnvelope* env = GetTrackEnvelope(tr, 0)) {
-						if (CountAutomationItems && GetSetAutomationItemInfo) // AI API optional for now
-							for (int k=0; k < CountAutomationItems(env) + k; k++) {
-								GetSetAutomationItemInfo(env, 0, "D_UISEL", 1, true);
-								Main_OnCommand(42086, 0);  // Envelope: Delete (selected) automation items
-							}
-						SetCursorContext(2, env);   // Select envelope
-						DeleteEnvelopePointRange(env, -1000000000, 1000000000);  //  hack to not spawn a dialog on action 40065
-						Main_OnCommand(40065, 0);   // Envelope: Clear (selected) envelope
-					}
+	TrackEnvelope *tempoEnv = NULL;
+
+	const int trackCount = GetNumTracks();
+	for (int ti = 0; ti <= trackCount; ti++) { // incl. master
+		MediaTrack *tr = CSurf_TrackFromID(ti, false);
+
+		if (!tr || *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL) != 1)
+			continue;
+
+		if (!updated) {
+			PreventUIRefresh(1);
+			Undo_BeginBlock2(NULL);
+			Main_OnCommand(41148, 0); // required for env selection: Envelope: Show all envelopes for (selected) tracks.
+			updated = true;
+		}
+
+		if (ti == 0) // Master track
+			tempoEnv = GetTrackEnvelopeByName(tr, "Tempo map");
+
+		int envIndex = 0;
+		while (CountTrackEnvelopes(tr) > envIndex) {
+			TrackEnvelope* env = GetTrackEnvelope(tr, envIndex);
+
+			if (!env || env == tempoEnv) {
+				++envIndex;
+				continue;
 			}
+
+			if (CountAutomationItems && GetSetAutomationItemInfo) { // AI API optional for now
+				if(const int aiCount = CountAutomationItems(env)) {
+					for(int ai = 0; ai < aiCount; ai++)
+						GetSetAutomationItemInfo(env, ai, "D_UISEL", 1, true);
+					Main_OnCommand(42086, 0);  // Envelope: Delete (selected) automation items
+				}
+			}
+
+			SetCursorContext(2, env);   // Select envelope
+			DeleteEnvelopePointRange(env, -1000000000, 1000000000);  //  hack to not spawn a dialog on action 40065
+			Main_OnCommand(40065, 0);   // Envelope: Clear (selected) envelope
+		}
+	}
+
 	if (updated) {
 		PreventUIRefresh(-1);
 		Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL);

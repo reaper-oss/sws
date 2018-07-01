@@ -545,6 +545,10 @@ void CloseLastPLinkWnd(COMMAND_T* ct)
 		{
 			fxname = fxname.substr(fxname.find(": ") + 2);
 		}
+		else if (fxname.find(":") && (fxname.find(":") <= fxname.length()))
+		{
+			fxname = fxname.substr(fxname.find(":") + 1);
+		}
 		if (fxname.find(" (") && (fxname.find(" (") <= fxname.length()))
 		{
 			fxname = fxname.erase(fxname.find(" ("));

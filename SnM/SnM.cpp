@@ -218,12 +218,12 @@ static COMMAND_T s_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Insert silence (measures.beats)" }, "S&M_INSERT_SILENCE_MB", InsertSilence, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Insert silence (samples)" }, "S&M_INSERT_SILENCE_SMP", InsertSilence, NULL, 2},
 
-	{ { DEFACCEL, "SWS/S&M: Set project startup action" }, "S&M_SET_PRJ_ACTION", SetStartupAction, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Clear project startup action" }, "S&M_CLR_PRJ_ACTION", ClearStartupAction, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Set project startup action" }, "S&M_SET_PRJ_ACTION", SetStartupAction, NULL, ProjectStartupAction},
+	{ { DEFACCEL, "SWS/S&M: Clear project startup action" }, "S&M_CLR_PRJ_ACTION", ClearStartupAction, NULL, ProjectStartupAction},
 	{ { DEFACCEL, "SWS/S&M: Show project/global startup actions" }, "S&M_SHOW_PRJ_ACTION", ShowStartupActions, NULL, },
 	// not project actions, but shared code
-	{ { DEFACCEL, "SWS/S&M: Set global startup action" }, "S&M_SET_STARTUP_ACTION", SetStartupAction, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Clear global startup action" }, "S&M_CLR_STARTUP_ACTION", ClearStartupAction, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Set global startup action" }, "S&M_SET_STARTUP_ACTION", SetStartupAction, NULL, GlobalStartupAction},
+	{ { DEFACCEL, "SWS/S&M: Clear global startup action" }, "S&M_CLR_STARTUP_ACTION", ClearStartupAction, NULL, GlobalStartupAction},
 
 	// Images ------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Open/close image window" }, "S&M_OPEN_IMAGEVIEW", OpenImageWnd, NULL, 0, IsImageWndDisplayed},
@@ -1157,7 +1157,7 @@ void OnInitTimer()
 {
 	plugin_register("-timer",(void*)OnInitTimer); // unregister timer (single call)
 	CAsInit();
-	GlobalStartupActionTimer();
+	ExecStartupAction(GlobalStartupAction);
 }
 
 int SNM_Init(reaper_plugin_info_t* _rec)

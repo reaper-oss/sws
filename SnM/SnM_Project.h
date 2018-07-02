@@ -55,7 +55,12 @@ protected:
 
 void SelectProject(COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
 
-void GlobalStartupActionTimer();
+enum StartupActionType {
+	ProjectStartupAction,
+	GlobalStartupAction,
+};
+
+void ExecStartupAction(StartupActionType);
 void SetStartupAction(COMMAND_T*);
 void ClearStartupAction(COMMAND_T*);
 void ShowStartupActions(COMMAND_T*);

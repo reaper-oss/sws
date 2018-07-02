@@ -269,14 +269,14 @@ void NF_UpdateSWSMarkerRegionSubWindow()
 }
 
 // #974
-extern WDL_FastString g_globalAction; extern SWSProjConfig<WDL_FastString> g_prjActions;;
+extern WDL_FastString g_globalStartupAction; extern SWSProjConfig<WDL_FastString> g_prjLoadActions;
 
 // desc == true: return action text, false: return command ID number (native actions) or named command (extension/ReaScript)
 void NF_GetGlobalStartupAction(char* buf, int bufSize, bool desc)
 {
 	WDL_FastString fs;
 
-	if (!g_globalAction.Get()) 
+	if (!g_globalStartupAction.Get()) 
 	{
 		if (desc)
 			fs.Set("");
@@ -287,12 +287,12 @@ void NF_GetGlobalStartupAction(char* buf, int bufSize, bool desc)
 		return;
 	}
 
-	if  (int cmdId = SNM_NamedCommandLookup(g_globalAction.Get())) 
+	if  (int cmdId = SNM_NamedCommandLookup(g_globalStartupAction.Get())) 
 	{
 		if (desc)
 			fs.Set(kbd_getTextFromCmd(cmdId, NULL));
 		else
-			fs.Set(g_globalAction.Get());
+			fs.Set(g_globalStartupAction.Get());
 	}
 	else
 	{
@@ -316,7 +316,7 @@ void NF_GetGlobalStartupAction_CmdID(char *buf, int bufSize)
 
 bool NF_SetGlobalStartupAction(const char * buf)
 {
-	if (!g_globalAction.Get())
+	if (!g_globalStartupAction.Get())
 		return false;
 		
 	if (int cmdId = SNM_NamedCommandLookup(buf))
@@ -328,7 +328,7 @@ bool NF_SetGlobalStartupAction(const char * buf)
 		}
 		else
 		{
-			g_globalAction.Set(buf);
+			g_globalStartupAction.Set(buf);
 			WritePrivateProfileString("Misc", "GlobalStartupAction", buf, g_SNM_IniFn.Get());
 			return true;
 		}
@@ -341,8 +341,8 @@ bool NF_SetGlobalStartupAction(const char * buf)
 
 bool NF_ClearGlobalStartupAction()
 {
-	if (g_globalAction.Get()) {
-		g_globalAction.Set("");
+	if (g_globalStartupAction.Get()) {
+		g_globalStartupAction.Set("");
 		WritePrivateProfileString("Misc", "GlobalStartupAction", NULL, g_SNM_IniFn.Get());
 		return true;
 	}
@@ -353,7 +353,7 @@ bool NF_ClearGlobalStartupAction()
 void NF_GetProjectStartupAction(char* buf, int bufSize, bool desc)
 {
 	WDL_FastString fs;
-	if (!g_prjActions.Get()->Get())
+	if (!g_prjLoadActions.Get()->Get())
 	{
 		if (desc)
 			fs.Set("");
@@ -364,12 +364,12 @@ void NF_GetProjectStartupAction(char* buf, int bufSize, bool desc)
 		return;
 	}
 
-	if (int cmdId = SNM_NamedCommandLookup(g_prjActions.Get()->Get()))
+	if (int cmdId = SNM_NamedCommandLookup(g_prjLoadActions.Get()->Get()))
 	{
 		if (desc)
 			fs.Set(kbd_getTextFromCmd(cmdId, NULL));
 		else
-			fs.Set(g_prjActions.Get()->Get());
+			fs.Set(g_prjLoadActions.Get()->Get());
 	}
 	else
 	{
@@ -392,7 +392,7 @@ void NF_GetProjectStartupAction_CmdID(char *buf, int bufSize)
 
 bool NF_SetProjectStartupAction(const char* buf)
 {
-	if (!g_prjActions.Get())
+	if (!g_prjLoadActions.Get())
 		return false;
 
 	if (int cmdId = SNM_NamedCommandLookup(buf))
@@ -404,7 +404,7 @@ bool NF_SetProjectStartupAction(const char* buf)
 		}
 		else
 		{
-			g_prjActions.Get()->Set(buf);
+			g_prjLoadActions.Get()->Set(buf);
 			return true;
 		}
 	}
@@ -416,8 +416,8 @@ bool NF_SetProjectStartupAction(const char* buf)
 
 bool NF_ClearProjectStartupAction()
 {
-	if (g_prjActions.Get()) {
-		g_prjActions.Get()->Set("");
+	if (g_prjLoadActions.Get()) {
+		g_prjLoadActions.Get()->Set("");
 		return true;
 	}
 	return false;

@@ -220,10 +220,14 @@ static COMMAND_T s_cmdTable[] =
 
 	{ { DEFACCEL, "SWS/S&M: Set project startup action" }, "S&M_SET_PRJ_ACTION", SetStartupAction, NULL, ProjectStartupAction},
 	{ { DEFACCEL, "SWS/S&M: Clear project startup action" }, "S&M_CLR_PRJ_ACTION", ClearStartupAction, NULL, ProjectStartupAction},
+	{ { DEFACCEL, "SWS/S&M: Set project save action" }, "S&M_SET_PRJ_SAVE_ACTION", SetStartupAction, NULL, ProjectSaveAction},
+	{ { DEFACCEL, "SWS/S&M: Clear project save action" }, "S&M_CLR_PRJ_SAVE_ACTION", ClearStartupAction, NULL, ProjectSaveAction},
 	{ { DEFACCEL, "SWS/S&M: Show project/global startup actions" }, "S&M_SHOW_PRJ_ACTION", ShowStartupActions, NULL, },
 	// not project actions, but shared code
 	{ { DEFACCEL, "SWS/S&M: Set global startup action" }, "S&M_SET_STARTUP_ACTION", SetStartupAction, NULL, GlobalStartupAction},
 	{ { DEFACCEL, "SWS/S&M: Clear global startup action" }, "S&M_CLR_STARTUP_ACTION", ClearStartupAction, NULL, GlobalStartupAction},
+	{ { DEFACCEL, "SWS/S&M: Set global save action" }, "S&M_SET_SAVE_ACTION", SetStartupAction, NULL, GlobalSaveAction},
+	{ { DEFACCEL, "SWS/S&M: Clear global save action" }, "S&M_CLR_SAVE_ACTION", ClearStartupAction, NULL, GlobalSaveAction},
 
 	// Images ------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Open/close image window" }, "S&M_OPEN_IMAGEVIEW", OpenImageWnd, NULL, 0, IsImageWndDisplayed},

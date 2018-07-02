@@ -57,14 +57,16 @@ void SelectProject(COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwn
 
 enum StartupActionType {
 	ProjectStartupAction,
+	ProjectSaveAction,
 	GlobalStartupAction,
+	GlobalSaveAction,
 };
 
 void ExecStartupAction(StartupActionType);
 void SetStartupAction(COMMAND_T*);
 void ClearStartupAction(COMMAND_T*);
 void ShowStartupActions(COMMAND_T*);
-int SNM_ProjectInit();
+void SNM_ProjectInit();
 void SNM_ProjectExit();
 
 void InsertSilence(COMMAND_T*);

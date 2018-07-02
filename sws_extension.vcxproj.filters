@@ -116,6 +116,9 @@
     <Filter Include="cfillion">
       <UniqueIdentifier>{5d477feb-887c-4b35-8861-9aee9e8e375c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Julian">
+      <UniqueIdentifier>{92f8d285-f139-425b-8f83-af6f1c562453}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -630,6 +633,9 @@
     </ClInclude>
     <ClInclude Include="cfillion\cfillion.hpp">
       <Filter>cfillion</Filter>
+    </ClInclude>
+    <ClInclude Include="Julian\js_swell_ReaScript.h">
+      <Filter>Julian</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1262,6 +1268,9 @@
     </ClCompile>
     <ClCompile Include="cfillion\cfillion.cpp">
       <Filter>cfillion</Filter>
+    </ClCompile>
+    <ClCompile Include="Julian\js_swell_ReaScript.cpp">
+      <Filter>Julian</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

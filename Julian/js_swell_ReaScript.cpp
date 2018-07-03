@@ -177,10 +177,10 @@ namespace julian
 		const char* target;
 		bool		exact;
 		char*		temp;
-		int			tempLen;
+		unsigned int	tempLen;
 		HWND		hwnd;
 		char*		hwndString;
-		int			hwndLen;
+		unsigned int	hwndLen;
 	};
 	const int TEMP_LEN = 65;	// For temporary storage of pointer strings.
 	const int API_LEN  = 1024;  // Maximum length of strings passed between Lua and API.

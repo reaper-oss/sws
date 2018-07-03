@@ -564,7 +564,7 @@ int  Mouse_GetState(int key)
 	// Least significant bit will be removed from return values, 
 	//		since only interested in buttons that are currently down.
 	if (key)
-		return (GetAsyncKeyState(key)>>1);
+		return (GetAsyncKeyState(key)>>1) ? 1 : 0;
 	else
 	{
 		int state = 0;

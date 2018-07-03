@@ -508,65 +508,52 @@ void InputMatch(COMMAND_T* ct)
 	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 }
 
-
-// dopp sht
-BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
+BOOL CALLBACK PLinkEnumWindowsProc(HWND hwndplink, LPARAM lParam)
 {
-	char title[80];
-	GetWindowText(hwnd, title, sizeof(title));
-	std::string parmt = "Parameter Modulation/Link for";
-	std::string newtitle = title;
-	if (newtitle.compare(0, 29, parmt, 0, 29) == 0)
+	char titleplink[80];
+	GetWindowText(hwndplink, titleplink, sizeof(titleplink));
+	std::string stitleplink = titleplink;
+	if (stitleplink.compare(0, 28, "Parameter Modulation/Link for", 0, 28) == 0)
 	{
-		if (GetParent(hwnd) == GetMainHwnd())
+		if (GetParent(hwndplink) == GetMainHwnd())
 		{
-			ShowWindow(hwnd, SW_HIDE);
+			PostMessage(hwndplink, WM_CLOSE, 0, 0);
 		}
 	}
 	return TRUE;
 }
-void CloseAllPLinkWnd(COMMAND_T* ct)
+void CloseAllPLinkWnd(COMMAND_T* = NULL)
 {
-	EnumWindows(EnumWindowsProc, NULL);
+	EnumWindows(PLinkEnumWindowsProc, 0);
 }
-void CloseLastPLinkWnd(COMMAND_T* ct)
-{
+void CloseLastPLinkWnd(COMMAND_T* = NULL)
+{ 
 	int trn, fxn, prmn;
 	bool ptouched = GetLastTouchedFX(&trn, &fxn, &prmn);
 	if (ptouched)
 	{
-		char fx_name[128];
-		char prm_name[128];
-		MediaTrack* track = CSurf_TrackFromID(trn, false);
-		TrackFX_GetFXName(track, fxn, fx_name, 128);
-		TrackFX_GetParamName(track, fxn, prmn, prm_name, 128);
-		std::string fxname = fx_name;
-		if (fxname.find(": ") && (fxname.find(": ") <= fxname.length()))
-		{
-			fxname = fxname.substr(fxname.find(": ") + 2);
-		}
-		else if (fxname.find(":") && (fxname.find(":") <= fxname.length()))
-		{
-			fxname = fxname.substr(fxname.find(":") + 1);
-		}
-		if (fxname.find(" (") && (fxname.find(" (") <= fxname.length()))
-		{
-			fxname = fxname.erase(fxname.find(" ("));
-		}
-		if (fxname.find("(") && (fxname.find("(") <= fxname.length()))
-		{
-			fxname = fxname.erase(fxname.find("("));
-		}
-		std::stringstream link_title;
-		link_title << "Parameter Modulation/Link for " << prm_name << " / " << fxname << " - (" << trn << ")";
-		HWND hwndplink = FindWindowEx(NULL, NULL, NULL, link_title.str().c_str());
+		char fxname[128];
+		char prmname[128];
+		MediaTrack* ptrack = CSurf_TrackFromID(trn, false);
+		TrackFX_GetFXName(ptrack, fxn, fxname, 128);
+		TrackFX_GetParamName(ptrack, fxn, prmn, prmname, 128)
+		std::string ft = fxname;
+		if (ft.find(":") && (ft.find(":") <= ft.length())) {
+			ft = ft.substr(ft.find(":") + 1);
+			if (ft.find(" (") && (ft.find(" (") <= ft.length())) { ft = ft.erase(ft.find(" (")); }
+			if (ft.find("(") && (ft.find("(") <= ft.length())) { ft = ft.erase(ft.find("(")); }
+		} // if user renamed fx with "(" in the middle of the name, won't work in some cases for now
+		if (ft.length() > 0) { while (ft[0] == ' ') { ft = ft.substr(1); } }
+		std::stringstream stitleplink;
+		if (trn == 0) {	stitleplink << "Parameter Modulation/Link for " << prmname << " / " << ft << " - (Master Track)"; }
+		else if (trn > 0) { stitleplink << "Parameter Modulation/Link for " << prmname << " / " << ft << " - (" << trn << ")"; }
+		HWND hwndplink = FindWindowEx(NULL, NULL, NULL, stitleplink.str().c_str());
 		if (GetParent(hwndplink) == GetMainHwnd())
-		{ 
-			ShowWindow(hwndplink, SW_HIDE); 
+		{
+			PostMessage(hwndplink, WM_CLOSE, 0, 0);
 		}
 	}
 }
-
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] =

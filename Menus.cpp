@@ -304,7 +304,7 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 	AddSubMenu(hMenu, hStartupSubMenu, __LOCALIZE("Startup actions", "sws_ext_menu"));
 	AddToMenu(hStartupSubMenu, __LOCALIZE("Set project startup action...", "sws_ext_menu"), NamedCommandLookup("_S&M_SET_PRJ_ACTION"));
 	AddToMenu(hStartupSubMenu, __LOCALIZE("Clear project startup action", "sws_ext_menu"), NamedCommandLookup("_S&M_CLR_PRJ_ACTION"));
-  AddToMenu(hStartupSubMenu, __LOCALIZE("Set project save action...", "sws_ext_menu"), NamedCommandLookup("_S&M_SET_PRJ_SAVE_ACTION"));
+	AddToMenu(hStartupSubMenu, __LOCALIZE("Set project save action...", "sws_ext_menu"), NamedCommandLookup("_S&M_SET_PRJ_SAVE_ACTION"));
 	AddToMenu(hStartupSubMenu, __LOCALIZE("Clear project save action", "sws_ext_menu"), NamedCommandLookup("_S&M_CLR_PRJ_SAVE_ACTION"));
 	AddToMenu(hStartupSubMenu, SWS_SEPARATOR, 0);
 	AddToMenu(hStartupSubMenu, __LOCALIZE("Set global startup action...", "sws_ext_menu"), NamedCommandLookup("_S&M_SET_STARTUP_ACTION"));

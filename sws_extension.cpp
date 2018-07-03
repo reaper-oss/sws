@@ -788,6 +788,7 @@ error:
 		IMPAPI(GetEnvelopePointByTime) // v5pre4
 		IMPAPI(GetEnvelopeScalingMode); // v5pre13+
 		IMPAPI(GetExePath);
+		IMPAPI(GetExtState);
 		IMPAPI(GetFocusedFX);
 		IMPAPI(GetFXEnvelope); // v5pre5+
 		IMPAPI(GetGlobalAutomationOverride);
@@ -918,6 +919,7 @@ error:
 		IMPAPI(MIDI_EnumSelTextSysexEvts);
 		IMPAPI(MIDI_eventlist_Create);
 		IMPAPI(MIDI_eventlist_Destroy);
+		IMPAPI(MIDI_GetAllEvts);
 		IMPAPI(MIDI_GetCC);
 		IMPAPI(MIDI_GetEvt);
 		IMPAPI(MIDI_GetNote);
@@ -930,6 +932,7 @@ error:
 		IMPAPI(MIDI_InsertEvt);
 		IMPAPI(MIDI_InsertNote);
 		IMPAPI(MIDI_InsertTextSysexEvt);
+		IMPAPI(MIDI_SetAllEvts);
 		IMPAPI(MIDI_SetCC);
 		IMPAPI(MIDI_SetEvt);
 		IMPAPI(MIDI_SetItemExtents); // v5.0pre (no data on exact build in whatsnew, but I'm pretty sure I never saw this in v4)
@@ -995,6 +998,7 @@ error:
 		IMPAPI(SetEditCurPos);
 		IMPAPI(SetEditCurPos2);
 		IMPAPI(SetEnvelopePoint); // v5pre4+
+		IMPAPI(SetExtState);
 		IMPAPI(SetGlobalAutomationOverride);
 		IMPAPI(SetMasterTrackVisibility);
 		IMPAPI(SetMediaItemInfo_Value);

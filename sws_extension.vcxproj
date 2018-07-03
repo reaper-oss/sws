@@ -370,6 +370,7 @@ echo Warning: sws_python.py generation failed (Perl installed?)
     <ClInclude Include="Breeder\BR_MouseUtil.h" />
     <ClInclude Include="C:\Program Files (x86)\REAPER\reaper_plugin_functions.h" />
     <ClInclude Include="cfillion\cfillion.hpp" />
+    <ClInclude Include="Julian\js_swell_ReaScript.h" />
     <ClInclude Include="nofish\nofish.h" />
     <ClInclude Include="reascript_vararg.h" />
     <ClInclude Include="resource.h" />
@@ -549,6 +550,7 @@ echo Warning: sws_python.py generation failed (Perl installed?)
     <ClCompile Include="Breeder\BR_MidiUtil.cpp" />
     <ClCompile Include="Breeder\BR_MouseUtil.cpp" />
     <ClCompile Include="cfillion\cfillion.cpp" />
+    <ClCompile Include="Julian\js_swell_ReaScript.cpp" />
     <ClCompile Include="libebur128\ebur128.cpp" />
     <ClCompile Include="nofish\nofish.cpp" />
     <ClCompile Include="snooks\snooks.cpp" />

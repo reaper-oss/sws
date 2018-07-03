@@ -35,6 +35,7 @@
 #include "Breeder/BR_ReaScript.h"
 #include "snooks/SN_ReaScript.h"
 #include "cfillion/cfillion.hpp"
+#include "Julian/js_swell_ReaScript.h"
 
 
 // if _TEST_REASCRIPT_EXPORT is #define'd, you'll need to rename "APITESTFUNC" into "APIFUNC" in g_apidefs too
@@ -247,6 +248,45 @@ APIdef g_apidefs[] =
 	{ APIFUNC(CF_SetClipboard), "void", "const char*", "str", "Write the given string into the system clipboard.", },
 	{ APIFUNC(CF_GetClipboard), "void", "char*,int", "buf,buf_sz", "Read the contents of the system clipboard (limited to 1023 characters in Lua).", },
 	{ APIFUNC(CF_GetClipboardBig), "const char*", "WDL_FastString*", "output", "Read the contents of the system clipboard. See <a href=\"#SNM_CreateFastString\">SNM_CreateFastString</a> and <a href=\"#SNM_DeleteFastString\">SNM_DeleteFastString</a>.", },
+
+	{ APIFUNC(Window_GetRect), "bool", "void*,int*,int*,int*,int*", "windowHWND,leftOut,topOut,rightOut,bottomOut", "Retrieves the coordinates of the bounding rectangle of the specified window. The dimensions are given in screen coordinates relative to the upper-left corner of the screen.\nNOTE: The pixel at (right, bottom) lies immediately outside the rectangle.", },
+	{ APIFUNC(Window_ScreenToClient), "void", "void*,int,int,int*,int*", "windowHWND,x,y,xOut,yOut", "Converts the screen coordinates of a specified point on the screen to client-area coordinates.", },
+	{ APIFUNC(Window_ClientToScreen), "void", "void*,int,int,int*,int*", "windowHWND,x,y,xOut,yOut", "Converts the client-area coordinates of a specified point to screen coordinates.", },
+	{ APIFUNC(Window_GetClientRect), "void", "void*,int*,int*,int*,int*", "windowHWND,leftOut,topOut,rightOut,bottomOut", "Retrieves the coordinates of the client area rectangle of the specified window. The dimensions are given in screen coordinates relative to the upper-left corner of the screen.\nNOTE 1: Unlike the C++ function GetClientRect, this function returns the actual coordinates, not the width and height.\nNOTE 2: The pixel at (right, bottom) lies immediately outside the rectangle.", },
+
+	{ APIFUNC(Window_FromPoint), "void*", "int,int", "x,y", "Retrieves a HWND to the window that contains the specified point.", },
+	{ APIFUNC(Window_GetParent), "void*", "void*", "windowHWND", "Retrieves a HWND to the specified window's parent or owner.\nReturns NULL if the window is unowned or if the function otherwise fails.", },
+	{ APIFUNC(Window_IsChild), "bool", "void*,void*", "parentHWND,childHWND", "Determines whether a window is a child window or descendant window of a specified parent window.", },
+	{ APIFUNC(Window_GetRelated), "void*", "void*,int", "windowHWND,relation", "Retrieves a handle to a window that has the specified relationship (Z-Order or owner) to the specified window.\nrelation: Refer to documentation for Win32 C++ function GetWindow.", },
+
+	{ APIFUNC(Window_SetFocus), "void", "void*", "windowHWND", "Sets the keyboard focus to the specified window.", },
+	{ APIFUNC(Window_GetFocus), "void*", "", "", "Retrieves a HWND to the window that has the keyboard focus, if the window is attached to the calling thread's message queue.", },
+	{ APIFUNC(Window_SetForeground), "void", "void*", "windowHWND", "Brings the specified window into the foreground, activates the window, and directs keyboard input to it.", },
+	{ APIFUNC(Window_GetForeground), "void*", "", "", "Retrieves a HWND to the foreground window (the window with which the user is currently working).", },
+
+	{ APIFUNC(Window_Enable), "void", "void*,bool", "windowHWND,enable", "Enables or disables mouse and keyboard input to the specified window or control.", },
+	{ APIFUNC(Window_Destroy), "void", "void*", "windowHWND", "Destroys the specified window.", },
+	{ APIFUNC(Window_Show), "void", "void*,int", "windowHWND,state", "Sets the specified window's show state.\nstate: Refer to documentation for Win32 C++ function ShowWindow", },
+
+	{ APIFUNC(Window_Find), "void*", "const char*,bool", "title,exact", "Returns a HWND to the top-level window whose title matches the specified string. This function does not search child window, and is not case sensitive.\nexact: Match entire title exactly, or match substring of title.", },
+	{ APIFUNC(Window_FindChild), "void*", "void*,const char*,bool", "parentHWND,title,exact", "Returns a HWND to the child window whose title matches the specified string. \nexact: Match entire title exactly, or match substring of title.", },
+	{ APIFUNC(Window_ListAllChild), "void", "void*,const char*,const char*", "parentHWND,section,key", "Returns a list of HWNDs of all child windows of the specified parent.\nThe list is formatted as a comma-separated (and terminated) string of hexadecimal values.\nEach value is an address that can be converted to a HWND by the function Window_HandleFromAddress.\nsection, key: Since the list string can sometimes be much longer than the maximum length of strings that can be returned by the Lua API, the list will instead by stored as a temporary ExtState specified by section and key.", },
+	{ APIFUNC(Window_ListAllTop), "void", "const char*,const char*", "section,key", "Returns a list of HWNDs of all top-level windows.\nThe list is formatted as a comma-separated (and terminated) string of hexadecimal values.\nEach value is an address that can be converted to a HWND by the function Window_HandleFromAddress.\nsection, key: Since the list string can sometimes be much longer than the maximum length of strings that can be returned by the Lua API, the list will instead by stored as a temporary ExtState specified by section and key.", },
+	{ APIFUNC(Window_ListFind), "void", "const char*,bool,const char*,const char*", "title,exact,section,key", "Returns a list of HWNDs of all windows (whether top-level or child) whose titles match the specified string.\nThe list is formatted as a comma-separated (and terminated) string of hexadecimal values.\nEach value is an address that can be converted to a HWND by the function Window_HandleFromAddress.\nsection, key: Since the list string can sometimes be much longer than the maximum length of strings that can be returned by the Lua API, the list will instead by stored as a temporary ExtState specified by section and key.\nexact: Match entire title exactly, or match substring of title.", },
+
+	{ APIFUNC(MIDIEditor_ListAll), "void", "char*,int", "buf,buf_sz", "Returns a list of HWNDs of all open MIDI windows, whether docked or not.\nThe list is formatted as a comma-separated (and terminated) string of hexadecimal values.\nEach value is an address that can be converted to a HWND by the function Window_HandleFromAddress.", },
+
+	{ APIFUNC(Window_Resize), "void", "void*,int,int", "windowHWND,width,height", "Changes the dimensions of the specified window, keeping the top left corner position constant.", },
+	{ APIFUNC(Window_Move), "void", "void*,int,int", "windowHWND,left,top", "Changes the position of the specified window, keeping its size constant. For a top-level window, the position is relative to the upper-left corner of the screen. For a child window, they are relative to the upper-left corner of the parent window's client area.", },
+
+	{ APIFUNC(Window_GetTitle), "void", "void*,char*,int", "windowHWND,buf,buf_sz", "Returns the title (if any) of the specified window.", },
+	{ APIFUNC(Window_SetTitle), "bool", "void*,const char*", "windowHWND,title", "Changes the title of the specified window. Returns true if successful.", },
+
+	{ APIFUNC(Window_IsWindow), "bool", "void*", "windowHWND", "Determines whether the specified window handle identifies an existing window.", },
+	{ APIFUNC(Window_HandleFromAddress), "void*", "int", "address", "Converts an address to a handle (such as a HWND) that can be utilized by REAPER and other API functions.", },
+
+	{ APIFUNC(Mouse_GetState), "int", "int", "key", "Retrieves the state of mouse buttons and modifiers keys.\nkey: If key = 0, the state of all buttons and modifiers are returned in the format of gfx.mouse_cap. Otherwise, only the state of the specified button or modifier key is returned.\n0x01 = left mouse button, 0x02 = right mouse button, 0x04 = middle mouse button, 0x10 = shift, 0x11 = control, 0x12 = alt, 0x5B = left Win key.", },
+	{ APIFUNC(Mouse_SetPosition), "bool", "int,int", "x,y", "Moves the mouse cursor to the specified coordinates.", },
 
 	{ NULL, } // denote end of table
 };

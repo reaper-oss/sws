@@ -536,7 +536,7 @@ void CloseLastPLinkWnd(COMMAND_T* = NULL)
 		char prmname[128];
 		MediaTrack* ptrack = CSurf_TrackFromID(trn, false);
 		TrackFX_GetFXName(ptrack, fxn, fxname, 128);
-		TrackFX_GetParamName(ptrack, fxn, prmn, prmname, 128)
+		TrackFX_GetParamName(ptrack, fxn, prmn, prmname, 128);
 		std::string ft = fxname;
 		if (ft.find(":") && (ft.find(":") <= ft.length())) {
 			ft = ft.substr(ft.find(":") + 1);

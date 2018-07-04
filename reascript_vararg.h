@@ -648,5 +648,11 @@ static void* __vararg_CF_LocateInExplorer(void** arglist, int numparms)
   return (void*)(INT_PTR)CF_LocateInExplorer((const char*)arglist[0]);
 }
 
+static void* __vararg_DO_GetArrangeVertPos(void** arglist, int numparms)
+{
+  DO_GetArrangeVertPos((int*)arglist[0], (int*)arglist[1]);
+  return NULL;
+}
+
 
 #endif

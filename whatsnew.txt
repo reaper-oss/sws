@@ -12,6 +12,8 @@ Actions:
  - SWS/S&M: Region Playlist - Options/Disable smooth seek (only in Region Playlist)
  - SWS/S&M: Region Playlist - Play next region (based on current playing region)
  - SWS/S&M: Region Playlist - Play previous region (based on current playing region)
+ - SWS: Hide all parameter modulation/link windows
+ - SWS: Hide parameter modulation/link for last touched FX parameter
 +Renamed "SWS: Split items at time selection (if exists), else at edit cursor" to "SWS: Split items at time selection (if exists), play cursor (during playback), else at edit cursor" (Issue 796)
 +Renamed "SWS: Split items at time selection, edit cursor, or mouse cursor" to "SWS: Split items at time selection, edit cursor, play cursor (during playback), or mouse cursor" (Issue 796)
 +Renamed "SWS: Crossfade adjacent selected items (move later items)" to "SWS: Crossfade adjacent selected items (move edges of adjacent items)" (Issue 902)
@@ -45,6 +47,7 @@ New ReaScript functions:
 +NF_TakeFX_SetOffline()
 +NF_GetSWSTrackNotes() (Issue 755)
 +NF_SetSWSTrackNotes() (Issue 755)
++DO_GetArrangeVertPos
 
 !v2.9.7 featured build (September 28, 2017)
 Fixes:

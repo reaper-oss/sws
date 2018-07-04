@@ -1,4 +1,4 @@
-!v2.9.8 pre-release build (March 5, 2018)
+﻿!v2.9.8 pre-release build (July 4, 2018)
 Now requires REAPER 5.50+!
 
 Actions:
@@ -45,6 +45,39 @@ New ReaScript functions:
 +NF_TakeFX_SetOffline()
 +NF_GetSWSTrackNotes() (Issue 755)
 +NF_SetSWSTrackNotes() (Issue 755)
+
++ Window_GetRect
++ Window_GetClientRect
++ Window_ScreenToClient
++ Window_ClientToScreen
++ Window_FromPoint
++ Window_GetParent
++ Window_IsChild
++ Window_GetRelated
++ Window_Find
++ Window_FindChild
++ Window_ListAllTop
++ Window_ListAllChild
++ Window_ListFind
++ MIDIEditor_ListAll
++ Window_Move
++ Window_Resize
++ Window_SetFocus
++ Window_GetFocus
++ Window_SetForeground
++ Window_GetForeground
++ Window_Enable
++ Window_Destroy
++ Window_Show
++ Window_SetTitle
++ Window_GetTitle
++ Window_HandleFromAddress
++ Window_IsWindow
++ Mouse_GetState
++ Mouse_SetPosition
+
+
+
 
 !v2.9.7 featured build (September 28, 2017)
 Fixes:

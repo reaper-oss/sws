@@ -808,5 +808,21 @@ static void* __vararg_Mouse_SetPosition(void** arglist, int numparms)
   return (void*)(INT_PTR)Mouse_SetPosition((int)(INT_PTR)arglist[0], (int)(INT_PTR)arglist[1]);
 }
 
+static void* __vararg_Mouse_LoadCursor(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)Mouse_LoadCursor((int)(INT_PTR)arglist[0]);
+}
+
+static void* __vararg_Mouse_LoadCursorFromFile(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)Mouse_LoadCursorFromFile((const char*)arglist[0]);
+}
+
+static void* __vararg_Mouse_SetCursor(void** arglist, int numparms)
+{
+  Mouse_SetCursor((void*)arglist[0]);
+  return NULL;
+}
+
 
 #endif

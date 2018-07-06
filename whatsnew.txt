@@ -75,8 +75,9 @@ New ReaScript functions:
 + Window_IsWindow
 + Mouse_GetState
 + Mouse_SetPosition
-
-
++ Mouse_LoadCursor
++ Mouse_LoadCursorFromFile
++ Mouse_SetCursor
 
 
 !v2.9.7 featured build (September 28, 2017)

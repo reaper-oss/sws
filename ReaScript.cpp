@@ -281,7 +281,7 @@ APIdef g_apidefs[] =
 
 	{ APIFUNC(Window_Enable), "void", "void*,bool", "windowHWND,enable", "Enables or disables mouse and keyboard input to the specified window or control.", },
 	{ APIFUNC(Window_Destroy), "void", "void*", "windowHWND", "Destroys the specified window.", },
-	{ APIFUNC(Window_Show), "void", "void*,int", "windowHWND,state", "Sets the specified window's show state.\nstate: Refer to documentation for Win32 C++ function ShowWindow", },
+	{ APIFUNC(Window_Show), "void", "void*,int", "windowHWND,state", "Sets the specified window's show state.\nstate: Refer to documentation for Win32 C++ function ShowWindow.", },
 
 	{ APIFUNC(Window_Find), "void*", "const char*,bool", "title,exact", "Returns a HWND to the top-level window whose title matches the specified string. This function does not search child window, and is not case sensitive.\nexact: Match entire title exactly, or match substring of title.", },
 	{ APIFUNC(Window_FindChild), "void*", "void*,const char*,bool", "parentHWND,title,exact", "Returns a HWND to the child window whose title matches the specified string. \nexact: Match entire title exactly, or match substring of title.", },
@@ -302,6 +302,9 @@ APIdef g_apidefs[] =
 
 	{ APIFUNC(Mouse_GetState), "int", "int", "key", "Retrieves the state of mouse buttons and modifiers keys.\nkey: If key = 0, the state of all buttons and modifiers are returned in the format of gfx.mouse_cap. Otherwise, the state of the specified button or modifier key is returned.\n0x01 = left mouse button, 0x02 = right mouse button, 0x04 = middle mouse button, 0x10 = shift, 0x11 = control, 0x12 = alt, 0x5B = left Win key.", },
 	{ APIFUNC(Mouse_SetPosition), "bool", "int,int", "x,y", "Moves the mouse cursor to the specified coordinates.", },
+	{ APIFUNC(Mouse_LoadCursor), "void*", "int", "cursorNumber", "Loads a cursor by number.\ncursorNumber: Same as used for gfx.setcursor, and includes some of Windows' predefined cursors (with numbers > 32000; refer to documentation for the Win32 C++ function LoadCursor), and REAPER's own cursors (with numbers < 2000). \nIf successful, returns a handle to the cursor, which can be used in Mouse_SetCursor.", },
+	{ APIFUNC(Mouse_LoadCursorFromFile), "void*", "const char*", "pathAndFileName", "Loads a cursor from a .cur file.\nIf successful, returns a handle to the cursor, which can be used in Mouse_SetCursor.", },
+	{ APIFUNC(Mouse_SetCursor), "void", "void*", "cursorHandle", "Sets the mouse cursor.  (Only lasts while script is running.)", },
 
 	{ NULL, } // denote end of table
 };

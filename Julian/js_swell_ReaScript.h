@@ -70,3 +70,6 @@ bool  Window_IsWindow(void* windowHWND);
 
 int   Mouse_GetState(int key);
 bool  Mouse_SetPosition(int x, int y);
+void* Mouse_LoadCursor(int cursorNumber);
+void* Mouse_LoadCursorFromFile(const char* pathAndFileName);
+void  Mouse_SetCursor(void* cursorHandle);

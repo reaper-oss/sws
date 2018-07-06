@@ -566,3 +566,29 @@ bool Mouse_SetPosition(int x, int y)
 {
 	return !!SetCursorPos(x, y);
 }
+
+void* Mouse_LoadCursor(int cursorNumber)
+{
+	// GetModuleHandle isn't implemented in SWELL, but fortunately also not necessary.
+	// In SWELL, LoadCursor ignores hInst and will automatically loads either standard cursor or "registered cursor".
+#ifdef _WIN32
+	HINSTANCE hInst; 
+	if (cursorNumber > 32000) // In Win32, hInst = NULL loads standard Window cursors, with IDs > 32000.
+		hInst = NULL;
+	else
+		hInst = GetModuleHandle(NULL); // REAPER exe file.
+	return LoadCursor(hInst, MAKEINTRESOURCE(cursorNumber));
+#else
+	return SWELL_LoadCursor(MAKEINTRESOURCE(cursorNumber));
+#endif
+}
+
+void* Mouse_LoadCursorFromFile(const char* pathAndFileName)
+{
+	return LoadCursorFromFile(pathAndFileName);
+}
+
+void Mouse_SetCursor(void* cursorHandle)
+{
+	SetCursor((HCURSOR)cursorHandle);
+}

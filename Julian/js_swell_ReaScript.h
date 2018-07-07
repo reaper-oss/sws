@@ -68,7 +68,10 @@ void  Window_GetTitle(void* windowHWND, char* buf, int buf_sz);
 void* Window_HandleFromAddress(int address);
 bool  Window_IsWindow(void* windowHWND);
 
-int   Mouse_GetState(int key);
+bool  Window_PostMessage(void* windowHWND, int message, int wParam, int lParamLow, int lParamHigh);
+
+int   Mouse_GetState(int flags);
+bool  Mouse_SetState(void* windowHWND, int key);
 bool  Mouse_SetPosition(int x, int y);
 void* Mouse_LoadCursor(int cursorNumber);
 void* Mouse_LoadCursorFromFile(const char* pathAndFileName);

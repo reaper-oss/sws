@@ -539,27 +539,25 @@ bool  Window_IsWindow(void* windowHWND)
 
 
 
-int  Mouse_GetState(int key)
+bool Window_PostMessage(void* windowHWND, int message, int wParam, int lParamLow, int lParamHigh)
 {
-	// If key == 0, return all states in same format as gfx.mouse_cap.
-	// Otherwise, use key to return state of single key or button.
-	
-	// Least significant bit will be removed from return values, 
-	//		since only interested in buttons that are currently down.
-	if (key)
-		return (GetAsyncKeyState(key) >> 1) ? 1 : 0;
-	else
-	{
-		int state = 0;
-		if (GetAsyncKeyState(MK_LBUTTON)>>1)	state |= 1;
-		if (GetAsyncKeyState(MK_RBUTTON)>>1)	state |= 2;
-		if (GetAsyncKeyState(MK_MBUTTON)>>1)	state |= 64;
-		if (GetAsyncKeyState(VK_CONTROL)>>1)	state |= 4;
-		if (GetAsyncKeyState(VK_SHIFT)>>1)		state |= 8;
-		if (GetAsyncKeyState(VK_MENU)>>1)		state |= 16;
-		if (GetAsyncKeyState(VK_LWIN)>>1)		state |= 32;
-		return state;
-	}
+	LPARAM lParam = MAKELPARAM((unsigned int)lParamLow, (unsigned int)lParamHigh);
+	return !!PostMessage((HWND)windowHWND, (unsigned int)message, (WPARAM)wParam, lParam);
+}
+
+
+
+int  Mouse_GetState(int flags)
+{
+	int state = 0;
+	if ((flags & 1)  && (GetAsyncKeyState(MK_LBUTTON) >> 1))	state |= 1;
+	if ((flags & 2)  && (GetAsyncKeyState(MK_RBUTTON) >> 1))	state |= 2;
+	if ((flags & 64) && (GetAsyncKeyState(MK_MBUTTON) >> 1))	state |= 64;
+	if ((flags & 4)  && (GetAsyncKeyState(VK_CONTROL) >> 1))	state |= 4;
+	if ((flags & 8)  && (GetAsyncKeyState(VK_SHIFT) >> 1))		state |= 8;
+	if ((flags & 16) && (GetAsyncKeyState(VK_MENU) >> 1))		state |= 16;
+	if ((flags & 32) && (GetAsyncKeyState(VK_LWIN) >> 1))		state |= 32;
+	return state;
 }
 
 bool Mouse_SetPosition(int x, int y)

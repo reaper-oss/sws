@@ -304,7 +304,7 @@ APIdef g_apidefs[] =
 	{ APIFUNC(Mouse_SetPosition), "bool", "int,int", "x,y", "Moves the mouse cursor to the specified coordinates.", },
 	{ APIFUNC(Mouse_LoadCursor), "void*", "int", "cursorNumber", "Loads a cursor by number.\ncursorNumber: Same as used for gfx.setcursor, and includes some of Windows' predefined cursors (with numbers > 32000; refer to documentation for the Win32 C++ function LoadCursor), and REAPER's own cursors (with numbers < 2000). \nIf successful, returns a handle to the cursor, which can be used in Mouse_SetCursor.", },
 	{ APIFUNC(Mouse_LoadCursorFromFile), "void*", "const char*", "pathAndFileName", "Loads a cursor from a .cur file.\nIf successful, returns a handle to the cursor, which can be used in Mouse_SetCursor.", },
-	{ APIFUNC(Mouse_SetCursor), "void", "void*", "cursorHandle", "Sets the mouse cursor.  (Only lasts while script is running.)", },
+	{ APIFUNC(Mouse_SetCursor), "void", "void*", "cursorHandle", "Sets the mouse cursor.  (NOTE: The change only lasts as long as the script is running. The cursor will be reset as soon as the mouse moves after the script terminates, and also during each defer cycle.)", },
 
 	{ NULL, } // denote end of table
 };

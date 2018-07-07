@@ -1,4 +1,4 @@
-﻿!v2.9.8 pre-release build (July 4, 2018)
+﻿!v2.9.8 pre-release build (July 7, 2018)
 Now requires REAPER 5.50+!
 
 Actions:
@@ -73,6 +73,7 @@ New ReaScript functions:
 + Window_GetTitle
 + Window_HandleFromAddress
 + Window_IsWindow
++ Window_PostMessage
 + Mouse_GetState
 + Mouse_SetPosition
 + Mouse_LoadCursor

@@ -798,6 +798,11 @@ static void* __vararg_Window_HandleFromAddress(void** arglist, int numparms)
   return (void*)(INT_PTR)Window_HandleFromAddress((int)(INT_PTR)arglist[0]);
 }
 
+static void* __vararg_Window_PostMessage(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)Window_PostMessage((void*)arglist[0], (int)(INT_PTR)arglist[1], (int)(INT_PTR)arglist[2], (int)(INT_PTR)arglist[3], (int)(INT_PTR)arglist[4]);
+}
+
 static void* __vararg_Mouse_GetState(void** arglist, int numparms)
 {
   return (void*)(INT_PTR)Mouse_GetState((int)(INT_PTR)arglist[0]);

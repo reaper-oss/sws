@@ -32,6 +32,7 @@ bool  Window_GetRect(void* windowHWND, int* leftOut, int* topOut, int* rightOut,
 void  Window_GetClientRect	(void* windowHWND, int* leftOut, int* topOut, int* rightOut, int* bottomOut);
 void  Window_ScreenToClient	(void* windowHWND, int x, int y, int* xOut, int* yOut);
 void  Window_ClientToScreen (void* windowHWND, int x, int y, int* xOut, int* yOut);
+bool  Window_GetScrollInfo(void* windowHWND, const char* bar, int* positionOut, int* pageOut, int* minOut, int* maxOut, int* trackPosOut);
 
 void* Window_FromPoint	(int x, int y);
 

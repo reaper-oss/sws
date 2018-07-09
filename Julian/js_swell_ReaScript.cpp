@@ -27,6 +27,7 @@
 
 
 #include "stdafx.h"
+#include "../Breeder/BR_Util.h"
 #include "js_swell_ReaScript.h"
 
 
@@ -86,6 +87,21 @@ void  Window_GetClientRect(void* windowHWND, int* leftOut, int* topOut, int* rig
 	*rightOut  = (int)p.x + (int)r.right;
 	*topOut    = (int)p.y;
 	*bottomOut = (int)p.y + (int)r.bottom;
+}
+
+bool Window_GetScrollInfo(void* windowHWND, const char* bar, int* positionOut, int* pageOut, int* minOut, int* maxOut, int* trackPosOut)
+{
+	HWND hwnd = (HWND)windowHWND;
+	SCROLLINFO si = { sizeof(SCROLLINFO), };
+	si.fMask = SIF_ALL;
+	int nBar = ((strchr(bar, 'v') || strchr(bar, 'V')) ? SB_VERT : SB_HORZ); // Match strings such as "SB_VERT", "VERT" or "v".
+	bool isOK = !!CoolSB_GetScrollInfo(hwnd, nBar, &si);
+	*pageOut = si.nPage;
+	*positionOut = si.nPos;
+	*minOut = si.nMin;
+	*maxOut = si.nMax;
+	*trackPosOut = si.nTrackPos;
+	return isOK;
 }
 
 void* Window_FromPoint(int x, int y)

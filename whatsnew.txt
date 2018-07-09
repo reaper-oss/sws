@@ -1,4 +1,4 @@
-﻿!v2.9.8 pre-release build (July 7, 2018)
+﻿!v2.9.8 pre-release build (July 10, 2018)
 Now requires REAPER 5.50+!
 
 Actions:
@@ -50,6 +50,7 @@ New ReaScript functions:
 + Window_GetClientRect
 + Window_ScreenToClient
 + Window_ClientToScreen
++ Window_GetScrollInfo
 + Window_FromPoint
 + Window_GetParent
 + Window_IsChild

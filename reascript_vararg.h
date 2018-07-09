@@ -671,6 +671,11 @@ static void* __vararg_Window_GetClientRect(void** arglist, int numparms)
   return NULL;
 }
 
+static void* __vararg_Window_GetScrollInfo(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)Window_GetScrollInfo((void*)arglist[0], (const char*)arglist[1], (int*)arglist[2], (int*)arglist[3], (int*)arglist[4], (int*)arglist[5], (int*)arglist[6]);
+}
+
 static void* __vararg_Window_FromPoint(void** arglist, int numparms)
 {
   return (void*)(INT_PTR)Window_FromPoint((int)(INT_PTR)arglist[0], (int)(INT_PTR)arglist[1]);

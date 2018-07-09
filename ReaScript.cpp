@@ -268,6 +268,7 @@ APIdef g_apidefs[] =
 	{ APIFUNC(Window_ScreenToClient), "void", "void*,int,int,int*,int*", "windowHWND,x,y,xOut,yOut", "Converts the screen coordinates of a specified point on the screen to client-area coordinates.", },
 	{ APIFUNC(Window_ClientToScreen), "void", "void*,int,int,int*,int*", "windowHWND,x,y,xOut,yOut", "Converts the client-area coordinates of a specified point to screen coordinates.", },
 	{ APIFUNC(Window_GetClientRect), "void", "void*,int*,int*,int*,int*", "windowHWND,leftOut,topOut,rightOut,bottomOut", "Retrieves the coordinates of the client area rectangle of the specified window. The dimensions are given in screen coordinates relative to the upper-left corner of the screen.\nNOTE 1: Unlike the C++ function GetClientRect, this function returns the actual coordinates, not the width and height.\nNOTE 2: The pixel at (right, bottom) lies immediately outside the rectangle.", },
+	{ APIFUNC(Window_GetScrollInfo), "bool", "void*,const char*,int*,int*,int*,int*,int*", "windowHWND,bar,positionOut,pageOut,minOut,maxOut,trackPosOut", "Retrieves the scroll information of a window.\nbar: \"v\" (or \"SB_VERT\", or \"VERT\") for vertical scroll, \"h\" (or \"SB_HORZ\" or \"HORZ\") for horizontal.\nReturns: Leftmost or topmost visible pixel position, as well as the page, range minimum and maximum, and scroll box tracking position.", },
 
 	{ APIFUNC(Window_FromPoint), "void*", "int,int", "x,y", "Retrieves a HWND to the window that contains the specified point.", },
 	{ APIFUNC(Window_GetParent), "void*", "void*", "windowHWND", "Retrieves a HWND to the specified window's parent or owner.\nReturns NULL if the window is unowned or if the function otherwise fails.", },
@@ -301,7 +302,7 @@ APIdef g_apidefs[] =
 	{ APIFUNC(Window_HandleFromAddress), "void*", "int", "address", "Converts an address to a handle (such as a HWND) that can be utilized by REAPER and other API functions.", },
 
 	{ APIFUNC(Window_PostMessage), "bool", "void*,int,int,int,int", "windowHWND,message,wParam,lParamLow,lParamHigh", "Posts a message in the message queue associated with the thread that created the specified window, and returns without waiting.\nMessages should only be sent to windows that were created from the main thread.\nFor more information about parameter values, refer to documentation for the Win32 C++ function PostMessage.\nUseful for simulating mouse clicks and calling mouse modifier actions from scripts.", },
-
+	
 	{ APIFUNC(Mouse_GetState), "int", "int", "flags", "Retrieves the states of mouse buttons and modifiers keys.\nflags, state: The parameter and the return value both use the same format as gfx.mouse_cap. I.e., to get the states of the left mouse button and the ctrl key, use flags = 0b00000101.", },
 	{ APIFUNC(Mouse_SetPosition), "bool", "int,int", "x,y", "Moves the mouse cursor to the specified coordinates.", },
 	{ APIFUNC(Mouse_LoadCursor), "void*", "int", "cursorNumber", "Loads a cursor by number.\ncursorNumber: Same as used for gfx.setcursor, and includes some of Windows' predefined cursors (with numbers > 32000; refer to documentation for the Win32 C++ function LoadCursor), and REAPER's own cursors (with numbers < 2000). \nIf successful, returns a handle to the cursor, which can be used in Mouse_SetCursor.", },

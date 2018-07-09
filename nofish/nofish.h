@@ -28,18 +28,12 @@
 
 #pragma once
 
-// Eraser tool
-void NF_RegisterContinuousActions();
+// continuous actions
 void EraserToolInit();
+void NF_RegisterContinuousActions();
 
 // #514
 void UpdateMIDIGridToolbar();
 
-// register SWS actions
+// register actions
 int nofish_Init();
-
-
-
-
-
-

@@ -1,3 +1,9 @@
+Actions:
++"SWS/NF: Eraser tool...":
+ - added 'ignoring snap' variant
+ - changed functionality (now cuts item sections on shortcut release rather than continuous erasing because it didn't work well with Ripple editing), changed action description to reflect this change
+
+
 Fixes:
 +Auto group:
  - Revert creating explicit undo point (match behaviour prior 2.95)

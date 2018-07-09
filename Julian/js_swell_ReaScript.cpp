@@ -599,7 +599,11 @@ void* Mouse_LoadCursor(int cursorNumber)
 
 void* Mouse_LoadCursorFromFile(const char* pathAndFileName)
 {
+#ifdef _WIN32
 	return LoadCursorFromFile(pathAndFileName);
+#else
+	return SWELL_LoadCursorFromFile(pathAndFileName);
+#endif
 }
 
 void Mouse_SetCursor(void* cursorHandle)

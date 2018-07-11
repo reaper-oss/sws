@@ -31,7 +31,9 @@
 #ifdef _WIN32
 static const unsigned int FORMAT = CF_UNICODETEXT;
 #else
-static const unsigned int FORMAT = CF_TEXT;
+  // on SWELL/generic CF_TEXT may be implemented as a function call which 
+  // may not be available until after loading is complete
+#define FORMAT (CF_TEXT)
 #endif
 
 extern WDL_PtrList_DOD<WDL_FastString> g_script_strs;

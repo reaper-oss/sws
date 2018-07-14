@@ -782,6 +782,11 @@ static void* __vararg_Window_Move(void** arglist, int numparms)
   return NULL;
 }
 
+static void* __vararg_Window_SetZOrder(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)Window_SetZOrder((void*)arglist[0], (void*)arglist[1], (int)(INT_PTR)arglist[2]);
+}
+
 static void* __vararg_Window_GetTitle(void** arglist, int numparms)
 {
   Window_GetTitle((void*)arglist[0], (char*)arglist[1], (int)(INT_PTR)arglist[2]);
@@ -800,7 +805,7 @@ static void* __vararg_Window_IsWindow(void** arglist, int numparms)
 
 static void* __vararg_Window_HandleFromAddress(void** arglist, int numparms)
 {
-  return (void*)(INT_PTR)Window_HandleFromAddress((int)(INT_PTR)arglist[0]);
+  return (void*)(INT_PTR)Window_HandleFromAddress((int)(INT_PTR)arglist[0], (int)(INT_PTR)arglist[1]);
 }
 
 static void* __vararg_Window_PostMessage(void** arglist, int numparms)

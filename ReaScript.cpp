@@ -294,13 +294,14 @@ APIdef g_apidefs[] =
 
 	{ APIFUNC(Window_Resize), "void", "void*,int,int", "windowHWND,width,height", "Changes the dimensions of the specified window, keeping the top left corner position constant.", },
 	{ APIFUNC(Window_Move), "void", "void*,int,int", "windowHWND,left,top", "Changes the position of the specified window, keeping its size constant. For a top-level window, the position is relative to the upper-left corner of the screen. For a child window, they are relative to the upper-left corner of the parent window's client area.", },
+	{ APIFUNC(Window_SetZOrder), "bool", "void*,void*,int", "windowHWND,insertAfterHWND,flags", "Changes the position of the specified window, keeping its size constant. For a top-level window, the position is relative to the upper-left corner of the screen. For a child window, they are relative to the upper-left corner of the parent window's client area.", },
 
 	{ APIFUNC(Window_GetTitle), "void", "void*,char*,int", "windowHWND,buf,buf_sz", "Returns the title (if any) of the specified window.", },
 	{ APIFUNC(Window_SetTitle), "bool", "void*,const char*", "windowHWND,title", "Changes the title of the specified window. Returns true if successful.", },
 
 	{ APIFUNC(Window_IsWindow), "bool", "void*", "windowHWND", "Determines whether the specified window handle identifies an existing window.", },
-	{ APIFUNC(Window_HandleFromAddress), "void*", "int", "address", "Converts an address to a handle (such as a HWND) that can be utilized by REAPER and other API functions.", },
-
+	{ APIFUNC(Window_HandleFromAddress), "void*", "int,int", "addressLow32Bits,addressHigh32Bits", "Converts an address to a handle (such as a HWND) that can be utilized by REAPER and other API functions.", },
+	
 	{ APIFUNC(Window_PostMessage), "bool", "void*,int,int,int,int", "windowHWND,message,wParam,lParamLow,lParamHigh", "Posts a message in the message queue associated with the thread that created the specified window, and returns without waiting.\nMessages should only be sent to windows that were created from the main thread.\nFor more information about parameter values, refer to documentation for the Win32 C++ function PostMessage.\nUseful for simulating mouse clicks and calling mouse modifier actions from scripts.", },
 	
 	{ APIFUNC(Mouse_GetState), "int", "int", "flags", "Retrieves the states of mouse buttons and modifiers keys.\nflags, state: The parameter and the return value both use the same format as gfx.mouse_cap. I.e., to get the states of the left mouse button and the ctrl key, use flags = 0b00000101.", },

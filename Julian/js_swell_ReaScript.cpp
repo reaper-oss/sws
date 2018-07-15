@@ -27,8 +27,47 @@
 
 
 #include "stdafx.h"
+#include <unordered_set>
 #include "../Breeder/BR_Util.h"
 #include "js_swell_ReaScript.h"
+
+
+
+namespace julian
+{
+	struct EnumWindowsStruct
+	{
+		const char* target;
+		bool		exact;
+		char*		temp;
+		unsigned int	tempLen;
+		HWND		hwnd;
+		char*		hwndString;
+		unsigned int	hwndLen;
+	};
+	const int TEMP_LEN = 65;	// For temporary storage of pointer strings.
+	const int API_LEN = 1024;  // Maximum length of strings passed between Lua and API.
+	const int EXT_LEN = 16000; // What is the maximum length of ExtState strings? 
+
+	// This map stores the original processes for windows that are being intercepted.
+	// Each window can only be intercepted by one script at a time.
+	struct structOrigProc
+	{
+		WNDPROC origProc;
+		bool passThrough;
+		std::unordered_set<unsigned int> messages;
+	};
+	std::map <HWND, structOrigProc> mapOrigProcs;
+
+	const char key_WM_MOUSEWHEEL[]	= "WM_MOUSEWHEEL";
+	const char key_WM_MOUSEHWHEEL[] = "WM_MOUSEHWHEEL";
+	const char key_WM_LBUTTONDOWN[] = "WM_LBUTTONDOWN";
+	const char key_WM_LBUTTONUP[]	= "WM_LBUTTONUP";
+	const char key_WM_LBUTTONDBLCLK[] = "WM_LBUTTONDBLCLK";
+	const char key_WM_RBUTTONDOWN[] = "WM_RBUTTONDOWN";
+	const char key_WM_RBUTTONUP[]	= "WM_RBUTTONUP";
+}
+
 
 
 bool  Window_GetRect(void* windowHWND, int* leftOut, int* topOut, int* rightOut, int* bottomOut)
@@ -186,24 +225,6 @@ void  Window_ReleaseCapture()
 }
 
 
-namespace julian
-{
-	struct EnumWindowsStruct
-	{
-		const char* target;
-		bool		exact;
-		char*		temp;
-		unsigned int	tempLen;
-		HWND		hwnd;
-		char*		hwndString;
-		unsigned int	hwndLen;
-	};
-	const int TEMP_LEN = 65;	// For temporary storage of pointer strings.
-	const int API_LEN  = 1024;  // Maximum length of strings passed between Lua and API.
-	const int EXT_LEN  = 16000; // What is the maximum length of ExtState strings? 
-}
-
-
 
 BOOL CALLBACK Window_Find_Callback_Child(HWND hwnd, LPARAM structPtr)
 {
@@ -281,15 +302,11 @@ BOOL CALLBACK Window_ListFind_Callback_Child(HWND hwnd, LPARAM structPtr)
 		|| (!(s->exact) && (strstr(s->temp, s->target) != NULL)))
 	{
 		// Convert pointer to string (leaving two spaces for 0x, and add comma separator)
-		sprintf_s(s->temp + 2, s->tempLen - 3, "%p,", hwnd);
-		// Replace leading 0's with 0x
-		int i = 2; while (s->temp[i] == '0') i++;	// Find first non-'0' character
-		s->temp[i - 2] = '0';
-		s->temp[i - 1] = 'x';
+		sprintf_s(s->temp, s->tempLen - 1, "0x%llX,", (unsigned long long int)hwnd);
 		// Concatenate to hwndString
-		if (strlen(s->hwndString) + strlen(s->temp + i - 2) < s->hwndLen)
+		if (strlen(s->hwndString) + strlen(s->temp) < s->hwndLen - 1)
 		{
-			strcat(s->hwndString, s->temp + i - 2);
+			strcat(s->hwndString, s->temp);
 		}
 	}
 	return TRUE;
@@ -308,15 +325,11 @@ BOOL CALLBACK Window_ListFind_Callback_Top(HWND hwnd, LPARAM structPtr)
 		|| (!(s->exact) && (strstr(s->temp, s->target) != NULL)))
 	{
 		// Convert pointer to string (leaving two spaces for 0x, and add comma separator)
-		sprintf_s(s->temp + 2, s->tempLen - 3, "%p,", hwnd);
-		// Replace leading 0's with 0x
-		int i = 2; while (s->temp[i] == '0') i++;	// Find first non-'0' character
-		s->temp[i - 2] = '0';
-		s->temp[i - 1] = 'x';
+		sprintf_s(s->temp, s->tempLen - 1, "0x%llX,", (unsigned long long int)hwnd);
 		// Concatenate to hwndString
-		if (strlen(s->hwndString) + strlen(s->temp + i - 2) < s->hwndLen)
+		if (strlen(s->hwndString) + strlen(s->temp) < s->hwndLen - 1)
 		{
-			strcat(s->hwndString, s->temp + i - 2);
+			strcat(s->hwndString, s->temp);
 		}
 	}
 	// Now search all child windows before returning
@@ -398,14 +411,10 @@ BOOL CALLBACK Window_ListAllChild_Callback(HWND hwnd, LPARAM strPtr)
 	using namespace julian;
 	char* hwndString = reinterpret_cast<char*>(strPtr);
 	char temp[TEMP_LEN] = "";
-	sprintf_s(temp + 2, TEMP_LEN - 3, "%p,", hwnd); // Leave two spaces for 0x, add comma separator
-	// Remove leading 0's
-	int i = 2; while (temp[i] == '0') i++;	// Find first non-'0' character
-	temp[i - 2] = '0';
-	temp[i - 1] = 'x';
-	if (strlen(hwndString) + strlen(temp + i - 2) < EXT_LEN)
+	sprintf_s(temp, TEMP_LEN - 1, "0x%llX,", (unsigned long long int)hwnd); // Print with leading 0x so that Lua tonumber will automatically notice that it is hexadecimal.
+	if (strlen(hwndString) + strlen(temp) < EXT_LEN - 1)
 	{
-		strcat(hwndString, temp + i-2);
+		strcat(hwndString, temp);
 		return TRUE;
 	}
 	else
@@ -428,14 +437,10 @@ BOOL CALLBACK Window_ListAllTop_Callback(HWND hwnd, LPARAM strPtr)
 	using namespace julian;
 	char* hwndString = reinterpret_cast<char*>(strPtr);
 	char temp[TEMP_LEN] = "";
-	sprintf_s(temp + 2, TEMP_LEN - 3, "%p,", hwnd); // Leave two spaces for 0x, add comma separator
-	// Remove leading 0's
-	int i = 2; while (temp[i] == '0') i++;	// Find first non-'0' character
-	temp[i - 2] = '0';
-	temp[i - 1] = 'x';
-	if (strlen(hwndString) + strlen(temp + i-2) < EXT_LEN)
+	sprintf_s(temp, TEMP_LEN - 1, "0x%llX,", (unsigned long long int)hwnd); // Print with leading 0x so that Lua tonumber will automatically notice that it is hexadecimal.
+	if (strlen(hwndString) + strlen(temp) < EXT_LEN - 1)
 	{
-		strcat(hwndString, temp + i-2);
+		strcat(hwndString, temp);
 		return TRUE;
 	}
 	else
@@ -459,16 +464,12 @@ BOOL CALLBACK MIDIEditor_ListAll_Callback_Child(HWND hwnd, LPARAM structPtr)
 	{
 		char* hwndString = reinterpret_cast<char*>(structPtr);
 		char temp[TEMP_LEN] = "";
-		sprintf_s(temp + 2, TEMP_LEN - 3, "%p,", hwnd); // Leave two spaces for 0x, add comma separator
-		// Remove leading 0's
-		int i = 2; while (temp[i] == '0') i++;	// Find first non-'0' character
-		temp[i - 2] = '0';
-		temp[i - 1] = 'x';
-		if (strstr(hwndString, temp + i - 2) == NULL) // Match with bounding 0x and comma
+		sprintf_s(temp, TEMP_LEN - 1, "0xllX,", hwnd); // Print with leading 0x so that Lua tonumber will automatically notice that it is hexadecimal.
+		if (strstr(hwndString, temp) == NULL) // Match with bounding 0x and comma
 		{
-			if ((strlen(hwndString) + strlen(temp + i - 2)) < API_LEN)
+			if ((strlen(hwndString) + strlen(temp)) < API_LEN - 1)
 			{
-				strcat(hwndString, temp + i - 2);
+				strcat(hwndString, temp);
 			}
 			else
 				return FALSE;
@@ -484,16 +485,12 @@ BOOL CALLBACK MIDIEditor_ListAll_Callback_Top(HWND hwnd, LPARAM structPtr)
 	{
 		char* hwndString = reinterpret_cast<char*>(structPtr);
 		char temp[TEMP_LEN] = "";
-		sprintf_s(temp + 2, TEMP_LEN - 3, "%p,", hwnd); // Leave two spaces for 0x, add comma separator
-		// Remove leading 0's
-		int i = 2; while (temp[i] == '0') i++;	// Find first non-'0' character
-		temp[i - 2] = '0';
-		temp[i - 1] = 'x';
-		if (strstr(hwndString, temp + i - 2) == NULL) // Match with bounding 0x and comma
+		sprintf_s(temp, TEMP_LEN - 1, "0x%llX,", (unsigned long long int)hwnd); // Leave two spaces for 0x, add comma separator
+		if (strstr(hwndString, temp) == NULL) // Match with bounding 0x and comma
 		{
-			if ((strlen(hwndString) + strlen(temp+i-2)) < API_LEN)
+			if ((strlen(hwndString) + strlen(temp)) < API_LEN - 1)
 			{
-				strcat(hwndString, temp + i-2);
+				strcat(hwndString, temp);
 			}
 			else
 				return FALSE;
@@ -519,14 +516,41 @@ void MIDIEditor_ListAll(char* buf, int buf_sz)
 
 void Window_Move(void* windowHWND, int left, int top)
 {
+	// WARNING: SetWindowPos is not completely implemented in SWELL.
+	// This API therefore divides SetWindowPos's capabilities into three functions:
+	//		Move, Resize and SetZOrder, only the first two of which are functional in non-Windows systems.
 	HWND hwnd = (HWND)windowHWND;
 	SetWindowPos(hwnd, NULL, left, top, 0, 0, SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOSIZE);
 }
 
 void Window_Resize(void* windowHWND, int width, int height)
 {
+	// WARNING: SetWindowPos is not completely implemented in SWELL.
+	// This API therefore divides SetWindowPos's capabilities into three functions:
+	//		Move, Resize and SetZOrder, only the first two of which are functional in non-Windows systems.
 	HWND hwnd = (HWND)windowHWND;
 	SetWindowPos(hwnd, NULL, 0, 0, width, height, SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOMOVE);
+}
+
+bool Window_SetZOrder(void* windowHWND, const char* ZOrder, void* insertAfterHWND, int flags)
+{
+	// WARNING: SetWindowPos is not completely implemented in SWELL.
+	// This API therefore divides SetWindowPos's capabilities into three functions:
+	//		Move, Resize and SetZOrder, only the first two of which are functional in non-Windows systems.
+	// SetZOrder can do everything that SetWindowPos does, except move and resize windows.
+#ifdef _WIN32
+	unsigned int uFlags = ((unsigned int)flags) | SWP_NOMOVE | SWP_NOSIZE;
+	HWND insertAfter;
+	if      (strchr(ZOrder, 'I') || strchr(ZOrder, 'i')) insertAfter = (HWND)insertAfterHWND; // insertAfter
+	else if (strchr(ZOrder, 'B') || strchr(ZOrder, 'b')) insertAfter = (HWND) 1; // Bottom
+	else if (strchr(ZOrder, 'N') || strchr(ZOrder, 'n')) insertAfter = (HWND)-2; // NoTopmost
+	else if (strchr(ZOrder, 'M') || strchr(ZOrder, 'm')) insertAfter = (HWND)-1; // Topmost
+	else												 insertAfter = (HWND) 0; // Top
+
+	return !!SetWindowPos((HWND)windowHWND, insertAfter, 0, 0, 0, 0, uFlags);
+#else
+	return false;
+#endif
 }
 
 
@@ -543,9 +567,13 @@ void Window_GetTitle(void* windowHWND, char* buf, int buf_sz)
 
 
 
-void* Window_HandleFromAddress(int address)
+void* Window_HandleFromAddress(int addressLow32Bits, int addressHigh32Bits)
 {
-	return (HWND)address;
+	unsigned long long longHigh = (unsigned int)addressHigh32Bits;
+	unsigned long long longLow  = (unsigned int)addressLow32Bits;
+	unsigned long long longAddress = longLow | (longHigh << 32);
+	//unsigned long long longAddress = ((unsigned long long)addressLow32Bits) | (((unsigned long long)addressHigh32Bits) << 32);
+	return (HWND)longAddress;
 }
 
 bool  Window_IsWindow(void* windowHWND)
@@ -609,4 +637,159 @@ void* Mouse_LoadCursorFromFile(const char* pathAndFileName)
 void Mouse_SetCursor(void* cursorHandle)
 {
 	SetCursor((HCURSOR)cursorHandle);
+}
+
+void* Mouse_SetCapture(void* windowHWND)
+{
+	return SetCapture((HWND)windowHWND);
+}
+
+void* Mouse_GetCapture()
+{
+	return GetCapture();
+}
+
+void Mouse_ReleaseCapture()
+{
+	ReleaseCapture();
+}
+
+
+
+
+LRESULT CALLBACK Mouse_Intercept_Callback(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	using namespace julian;
+
+	std::map <HWND, structOrigProc>::iterator i = mapOrigProcs.find(hwnd);
+	if (i == mapOrigProcs.end()) 
+		return 1; // Non-zero probably means that event wasn't handled.
+
+	// Event that should be intercepted?  Vertical and horizontal mousewheel use same wParam and lParam, so do together.
+	if (i->second.messages.count(uMsg)) // "contains" has only been implemented in more recent C++ versions
+	{
+		// All messages use the same "section" parameter for SetExtState
+		char section[32] = "";
+		snprintf(section, sizeof(section) - 1, "0x%llX", (unsigned long long int)hwnd);
+
+		const char* key = nullptr;
+		char value[64] = "";
+
+		int xPos = GET_X_LPARAM(lParam);
+		int yPos = GET_Y_LPARAM(lParam);
+		int fwKeys = GET_KEYSTATE_WPARAM(wParam);
+
+		if (uMsg == WM_LBUTTONDOWN)
+		{
+			key = key_WM_LBUTTONDOWN;
+			snprintf(value, sizeof(value) - 1, "%Lf,%i,%i,%i", time_precise(), xPos, yPos, fwKeys);
+		}
+		else if (uMsg == WM_LBUTTONUP)
+		{
+			key = key_WM_LBUTTONUP;
+			snprintf(value, sizeof(value) - 1, "%Lf,%i,%i,%i", time_precise(), xPos, yPos, fwKeys);
+		}
+		else if (uMsg == WM_LBUTTONDBLCLK)
+		{
+			key = key_WM_LBUTTONDBLCLK;
+			snprintf(value, sizeof(value) - 1, "%Lf,%i,%i,%i", time_precise(), xPos, yPos, fwKeys);
+		}
+		else if (uMsg == WM_RBUTTONDOWN)
+		{
+			key = key_WM_RBUTTONDOWN;
+			snprintf(value, sizeof(value) - 1, "%Lf,%i,%i,%i", time_precise(), xPos, yPos, fwKeys);
+		}
+		else if (uMsg == WM_RBUTTONUP)
+		{
+			key = key_WM_RBUTTONUP;
+			snprintf(value, sizeof(value) - 1, "%Lf,%i,%i,%i", time_precise(), xPos, yPos, fwKeys);
+		}
+		else if (uMsg == WM_MOUSEWHEEL)
+		{
+			int zDelta = GET_WHEEL_DELTA_WPARAM(wParam);
+			key = key_WM_MOUSEWHEEL;
+			snprintf(value, sizeof(value) - 1, "%Lf,%i,%i,%i", time_precise(), xPos, yPos, fwKeys, zDelta);
+		}
+		else if (uMsg == WM_MOUSEHWHEEL)
+		{
+			int zDelta = GET_WHEEL_DELTA_WPARAM(wParam);
+			key = key_WM_MOUSEHWHEEL;
+			snprintf(value, sizeof(value) - 1, "%Lf,%i,%i,%i", time_precise(), xPos, yPos, fwKeys, zDelta);
+		}
+		
+		if (key)
+			SetExtState(section, key, value, false);
+
+		// If event will not be passed through, can quit here.
+		if (i->second.passThrough == false)
+			return 0;
+	}
+
+	// Any other event that isn't intercepted.
+	//WNDPROC origProc = (i->second).origProc;
+	return (i->second).origProc(hwnd, uMsg, wParam, lParam);
+}
+
+bool Mouse_Intercept(void* windowHWND, const char* messages, bool passThrough, char* buf, int buf_sz)
+{
+	using namespace julian;
+	HWND hwnd = (HWND)windowHWND;
+
+	// Each window can only be intercepted by one script. Therefore check if alreay in map.
+	if (mapOrigProcs.find(hwnd) != mapOrigProcs.end()) 
+		return false;
+
+	// Store all the messages that must be intercepted in a set. NOTE: Currently, only WM_MOUSEWHEEL and WM_MOUSEHWHEEL are implemented.
+	unordered_set<unsigned int> messagesToIntercept;
+	if (strstr(messages, "WM_MOUSEWHEEL"))		messagesToIntercept.insert(WM_MOUSEWHEEL);
+	if (strstr(messages, "WM_MOUSEHWHEEL"))		messagesToIntercept.insert(WM_MOUSEHWHEEL);
+	if (strstr(messages, "WM_LBUTTONDOWN"))		messagesToIntercept.insert(WM_LBUTTONDOWN);
+	if (strstr(messages, "WM_LBUTTONUP"))		messagesToIntercept.insert(WM_LBUTTONUP);
+	if (strstr(messages, "WM_LBUTTONDBLCLK"))	messagesToIntercept.insert(WM_LBUTTONDBLCLK);
+	if (strstr(messages, "WM_RBUTTONDOWN"))		messagesToIntercept.insert(WM_RBUTTONDOWN);
+	if (strstr(messages, "WM_RBUTTONUP"))		messagesToIntercept.insert(WM_RBUTTONUP);
+	if (messagesToIntercept.size() == 0) // No messages to intercept?
+		return false;
+
+	// Try to get the original process.
+	WNDPROC origProc = nullptr;
+#ifdef _WIN32
+	origProc = (WNDPROC)SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)Mouse_Intercept_Callback);
+#else
+	origProc = (WNDPROC)SetWindowLong(hwnd, GWL_WNDPROC, (LONG_PTR)Mouse_Intercept_Callback);
+#endif
+	if (!origProc) 
+		return false;
+
+	// Got everything OK.  Finally, store struct.
+	structOrigProc s{ origProc, passThrough, messagesToIntercept };
+	mapOrigProcs.insert(pair<HWND, structOrigProc>(hwnd, s));
+	snprintf(buf, buf_sz - 1, "0x%llX", (unsigned long long int)windowHWND);
+
+	return true;
+}
+
+bool Mouse_InterceptRelease(void* windowHWND)
+{
+	using namespace julian;
+
+	char section[32] = "";
+	snprintf(section, sizeof(section) - 1, "0x%llX", (unsigned long long int)windowHWND);
+	DeleteExtState(section, key_WM_MOUSEWHEEL, true);
+	DeleteExtState(section, key_WM_MOUSEHWHEEL, true);
+
+	std::map <HWND, structOrigProc>::iterator i = mapOrigProcs.find((HWND)windowHWND);
+	if (i != mapOrigProcs.end())
+	{
+		WNDPROC origProc = (i->second).origProc;
+#ifdef _WIN32
+		SetWindowLongPtr((HWND)windowHWND, GWLP_WNDPROC, (LONG_PTR)origProc);
+#else
+		SetWindowLong((HWND)windowHWND, GWL_WNDPROC, (LONG_PTR)origProc);
+#endif
+		mapOrigProcs.erase(i);
+		return true;
+	}
+	else
+		return false;
 }

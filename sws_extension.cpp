@@ -741,6 +741,7 @@ error:
 		IMPAPI(DB2SLIDER);
 		IMPAPI(DeleteEnvelopePointRange); // v5pre5+
 		IMPAPI(DeleteActionShortcut);
+		IMPAPI(DeleteExtState);
 		IMPAPI(DeleteProjectMarker);
 		IMPAPI(DeleteProjectMarkerByIndex);
 		IMPAPI(DeleteTakeStretchMarkers);
@@ -888,6 +889,7 @@ error:
 		IMPAPI(GR_SelectColor);
 		IMPAPI(GSC_mainwnd);
 		IMPAPI(guidToString);
+		IMPAPI(HasExtState);
 		IMPAPI(Help_Set);
 		IMPAPI(InsertAutomationItem);
 		IMPAPI(InsertMedia);

@@ -294,7 +294,7 @@ APIdef g_apidefs[] =
 
 	{ APIFUNC(Window_Resize), "void", "void*,int,int", "windowHWND,width,height", "Changes the dimensions of the specified window, keeping the top left corner position constant.", },
 	{ APIFUNC(Window_Move), "void", "void*,int,int", "windowHWND,left,top", "Changes the position of the specified window, keeping its size constant. For a top-level window, the position is relative to the upper-left corner of the screen. For a child window, they are relative to the upper-left corner of the parent window's client area.", },
-	{ APIFUNC(Window_SetZOrder), "bool", "void*,void*,int", "windowHWND,insertAfterHWND,flags", "Changes the position of the specified window, keeping its size constant. For a top-level window, the position is relative to the upper-left corner of the screen. For a child window, they are relative to the upper-left corner of the parent window's client area.", },
+	{ APIFUNC(Window_SetZOrder), "bool", "void*,const char*,void*,int", "windowHWND,ZOrder,insertAfterHWND,flags", "WARNING: This function only works in Windows, not MacOS or Linux.\nImplements the functionality of the Win32 C++ function SetWindowPos, except for resizing and moving.\nZOrder: \"INSERT_AFTER\", \"HWND_BOTTOM\", \"HWND_NOTOPMOST\", \"HWND_TOPMOST\" or \"HWND_TOP\" (or simply \"bottom\", \"b\", etc).\nIf ZOrder is INSERT_AFTER, insertAfterHWND must be a handle to the window to precede windowHWND in the Z order; otherwise, insertAfterHWND is ignored.\nflags: Refer to documentation for SetWindowPos.", },
 
 	{ APIFUNC(Window_GetTitle), "void", "void*,char*,int", "windowHWND,buf,buf_sz", "Returns the title (if any) of the specified window.", },
 	{ APIFUNC(Window_SetTitle), "bool", "void*,const char*", "windowHWND,title", "Changes the title of the specified window. Returns true if successful.", },
@@ -309,6 +309,10 @@ APIdef g_apidefs[] =
 	{ APIFUNC(Mouse_LoadCursor), "void*", "int", "cursorNumber", "Loads a cursor by number.\ncursorNumber: Same as used for gfx.setcursor, and includes some of Windows' predefined cursors (with numbers > 32000; refer to documentation for the Win32 C++ function LoadCursor), and REAPER's own cursors (with numbers < 2000). \nIf successful, returns a handle to the cursor, which can be used in Mouse_SetCursor.", },
 	{ APIFUNC(Mouse_LoadCursorFromFile), "void*", "const char*", "pathAndFileName", "Loads a cursor from a .cur file.\nIf successful, returns a handle to the cursor, which can be used in Mouse_SetCursor.", },
 	{ APIFUNC(Mouse_SetCursor), "void", "void*", "cursorHandle", "Sets the mouse cursor.  (Only lasts while script is running.)", },
+	{ APIFUNC(Mouse_Intercept), "bool", "void*,const char*,bool,char*,int", "windowHWND,messages,passThrough,buf,buf_sz", "Intercepts mouse events to specified window.\n * Each window can only be intercepted by one script at a time.\n\nAll intercepted events are updated in ExtStates, with format: \n * section = windowHWND in hex format.\n * key = event name such as \"WM_MOUSEWHEEL.\"\n * value = comma-separated list of the following data, where relevant: time_precise, x position, y position, bitfield of keys down, mousewheel movement.\nNote that the bitfield is different than gfx.mouse_cap's.\n\nParameters:\n * messages: string of mouse events that must be intercepted, such as \"WM_MOUSEWHEEL,WM_MOUSEHWHEEL\".\n * passThrough: Pass intercepted events through to window; otherwise block.\n\nReturns: If successful, returns true, as well as the \"section\" string.\n\nFor more information, refer to the documentation for the Win32 C++ function SetWindowLongPtr. \n\nAt present, these events are implemented: WM_MOUSEWHEEL, WM_MOUSEHWHEEL, WM_LBUTTONDOWN, WM_LBUTTONUP, WM_LBUTTONDBLCLK, WM_RBUTTONDOWN, WM_RBUTTONUP.", },
+	{ APIFUNC(Mouse_InterceptRelease), "bool", "void*", "windowHWND", "Release interception of window events.", },
+
+
 
 	{ NULL, } // denote end of table
 };

@@ -1,4 +1,4 @@
-﻿!v2.9.8 pre-release build (July 10, 2018)
+﻿!v2.9.8 pre-release build (July 16, 2018)
 Now requires REAPER 5.50+!
 
 Actions:
@@ -80,6 +80,8 @@ New ReaScript functions:
 + Mouse_LoadCursor
 + Mouse_LoadCursorFromFile
 + Mouse_SetCursor
++ Mouse_Intercept
++ Mouse_InterceptRelease
 
 
 !v2.9.7 featured build (September 28, 2017)

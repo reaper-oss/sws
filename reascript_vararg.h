@@ -784,7 +784,7 @@ static void* __vararg_Window_Move(void** arglist, int numparms)
 
 static void* __vararg_Window_SetZOrder(void** arglist, int numparms)
 {
-  return (void*)(INT_PTR)Window_SetZOrder((void*)arglist[0], (void*)arglist[1], (int)(INT_PTR)arglist[2]);
+  return (void*)(INT_PTR)Window_SetZOrder((void*)arglist[0], (const char*)arglist[1], (void*)arglist[2], (int)(INT_PTR)arglist[3]);
 }
 
 static void* __vararg_Window_GetTitle(void** arglist, int numparms)
@@ -837,6 +837,16 @@ static void* __vararg_Mouse_SetCursor(void** arglist, int numparms)
 {
   Mouse_SetCursor((void*)arglist[0]);
   return NULL;
+}
+
+static void* __vararg_Mouse_Intercept(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)Mouse_Intercept((void*)arglist[0], (const char*)arglist[1], (bool)arglist[2], (char*)arglist[3], (int)(INT_PTR)arglist[4]);
+}
+
+static void* __vararg_Mouse_InterceptRelease(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)Mouse_InterceptRelease((void*)arglist[0]);
 }
 
 

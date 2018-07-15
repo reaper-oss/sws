@@ -708,13 +708,13 @@ LRESULT CALLBACK Mouse_Intercept_Callback(HWND hwnd, UINT uMsg, WPARAM wParam, L
 		{
 			int zDelta = GET_WHEEL_DELTA_WPARAM(wParam);
 			key = key_WM_MOUSEWHEEL;
-			snprintf(value, sizeof(value) - 1, "%Lf,%i,%i,%i", time_precise(), xPos, yPos, fwKeys, zDelta);
+			snprintf(value, sizeof(value) - 1, "%Lf,%i,%i,%i,%i", time_precise(), xPos, yPos, fwKeys, zDelta);
 		}
 		else if (uMsg == WM_MOUSEHWHEEL)
 		{
 			int zDelta = GET_WHEEL_DELTA_WPARAM(wParam);
 			key = key_WM_MOUSEHWHEEL;
-			snprintf(value, sizeof(value) - 1, "%Lf,%i,%i,%i", time_precise(), xPos, yPos, fwKeys, zDelta);
+			snprintf(value, sizeof(value) - 1, "%Lf,%i,%i,%i,%i", time_precise(), xPos, yPos, fwKeys, zDelta);
 		}
 		
 		if (key)

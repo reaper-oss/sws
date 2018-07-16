@@ -151,6 +151,53 @@ void ME_NFToggleDottedMIDI(COMMAND_T* _ct, int _val, int _valhw, int _relmode, H
 
 //////////////////////////////////////////////////////////////////
 //                                                              //
+// Disable / Enable multichannel metering                       //
+//                                                              //
+//////////////////////////////////////////////////////////////////
+
+// ct->user == 0: all tracks, == 1: sel. tracks
+void DisableMultichannelMetering(COMMAND_T* ct)
+{
+	WDL_TypedBuf<MediaTrack*> tracks;
+
+	if (ct->user == 0)
+		SWS_GetAllTracks(&tracks, false); // skip master
+	
+	else if (ct->user == 1)
+		SWS_GetSelectedTracks(&tracks, false); 
+
+	for (int i = 0; i < tracks.GetSize(); i++) {
+		MediaTrack* track = tracks.Get()[i];
+		SNM_ChunkParserPatcher p(track);
+		p.RemoveLine("TRACK", "VU", 1, 0, "TRACKHEIGHT");
+	}
+
+	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+}
+
+// ct->user == 0: all tracks, == 1: sel. tracks
+void EnableMultichannelMetering(COMMAND_T* ct)
+{
+	WDL_TypedBuf<MediaTrack*> tracks;
+
+	if (ct->user == 0)
+		SWS_GetAllTracks(&tracks, false); // skip master
+
+	else if (ct->user == 1) 
+		SWS_GetSelectedTracks(&tracks, false);
+
+	for (int i = 0; i < tracks.GetSize(); i++) {
+		MediaTrack* track = tracks.Get()[i];
+		SNM_ChunkParserPatcher p(track);
+		p.InsertAfterBefore(1, "VU 2", "TRACK", "REC", 1, 0, "TRACKHEIGHT");
+	}
+
+	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+}
+
+
+//////////////////////////////////////////////////////////////////
+//                                                              //
 // Eraser tool (continuous action)                              //
 //                                                              //
 //////////////////////////////////////////////////////////////////
@@ -160,7 +207,7 @@ MediaItem* g_EraserToolLastSelItem = NULL;
 // int g_EraserToolCurRelEdgesMode; 
 
 // called on start with init = true and on shortcut release with init = false. Return false to abort init.
-// ct->user = 0: no snap, = 1:obey snap
+// ct->user = 0: no snap, = 1: obey snap
 static bool EraserToolInit(COMMAND_T* ct, bool init)
 {
 	if (init) {
@@ -264,6 +311,12 @@ static COMMAND_T g_commandTable[] =
 
 	{ { DEFACCEL, "SWS/NF: Toggle triplet grid" }, "NF_ME_TOGGLETRIPLET" , NULL, NULL, 0, Main_IsMIDIGridTriplet, ME_SECTION, ME_NFToggleTripletMIDI },
 	{ { DEFACCEL, "SWS/NF: Toggle dotted grid" }, "NF_ME_TOGGLEDOTTED" , NULL, NULL, 0, Main_IsMIDIGridDotted, ME_SECTION, ME_NFToggleDottedMIDI  },
+
+	// Disable / Enable multichannel metering
+	{ { DEFACCEL, "SWS/NF: Disable multichannel metering (all tracks)" }, "NF_DISABLE_MULTICHAN_MTR_ALL", DisableMultichannelMetering, NULL, 0 },
+	{ { DEFACCEL, "SWS/NF: Disable multichannel metering (selected tracks)" }, "NF_DISABLE_MULTICHAN_MTR_SEL", DisableMultichannelMetering, NULL, 1 },
+	{ { DEFACCEL, "SWS/NF: Enable multichannel metering (all tracks)" }, "NF_ENABLE_MULTICHAN_MTR_ALL", EnableMultichannelMetering, NULL, 0 },
+	{ { DEFACCEL, "SWS/NF: Enable multichannel metering (selected tracks)" }, "NF_ENABLE_MULTICHAN_MTR_SEL", EnableMultichannelMetering, NULL, 1 },
 	
 	//!WANT_LOCALIZE_1ST_STRING_END
 
@@ -289,8 +342,8 @@ void EraserToolInit()
 	static COMMAND_T s_commandTable[] =
 	{
 		{ { DEFACCEL, "SWS/NF: Eraser tool (marquee sel. items and time ignoring snap, cut on shortcut release)" }, "NF_ERASER_TOOL_NOSNAP", DoEraserTool, NULL, 0 },
-	{ { DEFACCEL, "SWS/NF: Eraser tool (marquee sel. items and time, cut on shortcut release)" }, "NF_ERASER_TOOL", DoEraserTool, NULL, 1 },
-	{ {}, LAST_COMMAND }
+		{ { DEFACCEL, "SWS/NF: Eraser tool (marquee sel. items and time, cut on shortcut release)" }, "NF_ERASER_TOOL", DoEraserTool, NULL, 1 },
+		{ {}, LAST_COMMAND }
 	};
 	//!WANT_LOCALIZE_1ST_STRING_END
 

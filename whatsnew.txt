@@ -1,4 +1,10 @@
 Actions:
++New actions (Main section):
+ - SWS/NF: Disable multichannel metering (all tracks)
+ - SWS/NF: Disable multichannel metering (selected tracks)
+ - SWS/NF: Enable multichannel metering (all tracks)
+ - SWS/NF: Enable multichannel metering (selected tracks)
+
 +"SWS/NF: Eraser tool...":
  - added 'ignoring snap' variant
  - changed functionality (now cuts item sections on shortcut release rather than continuous erasing because it didn't work well with Ripple editing), changed action description to reflect this change

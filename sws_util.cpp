@@ -420,6 +420,18 @@ void dprintf(const char* format, ...)
 }
 #endif
 
+void SWS_GetAllTracks(WDL_TypedBuf<MediaTrack*>* buf, bool bMaster)
+{
+	buf->Resize(0);
+	for (int i = (bMaster ? 0 : 1); i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		int pos = buf->GetSize();
+		buf->Resize(pos + 1);
+		buf->Get()[pos] = tr;
+	}
+}
+
 void SWS_GetSelectedTracks(WDL_TypedBuf<MediaTrack*>* buf, bool bMaster)
 {
 	buf->Resize(0);

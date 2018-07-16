@@ -251,6 +251,7 @@ void UpdateStretchMarkersAfterSetTakeStartOffset(MediaItem_Take* take, double ta
   #endif
 #endif
 
+void SWS_GetAllTracks(WDL_TypedBuf<MediaTrack*>* buf, bool bMaster = false);
 void SWS_GetSelectedTracks(WDL_TypedBuf<MediaTrack*>* buf, bool bMaster = false);
 void SWS_GetSelectedMediaItems(WDL_TypedBuf<MediaItem*>* buf);
 void SWS_GetSelectedMediaItemsOnTrack(WDL_TypedBuf<MediaItem*>* buf, MediaTrack* tr);

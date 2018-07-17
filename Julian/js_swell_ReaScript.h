@@ -67,6 +67,9 @@ void* Window_HandleFromAddress(int addressLow32Bits, int addressHigh32Bits);
 bool  Window_IsWindow(void* windowHWND);
 
 bool  Window_PostMessage(void* windowHWND, int message, int wParam, int lParamLow, int lParamHigh);
+bool  Window_Intercept(void* windowHWND, const char* messages);
+bool  Window_InterceptRelease(void* windowHWND);
+bool  Window_InterceptPoll(void* windowHWND, const char* message, double* timeOut, int* xPosOut, int* yPosOut, int* keysOut, int* valueOut);
 
 int   Mouse_GetState(int flags);
 bool  Mouse_SetPosition(int x, int y);

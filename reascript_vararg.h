@@ -813,6 +813,21 @@ static void* __vararg_Window_PostMessage(void** arglist, int numparms)
   return (void*)(INT_PTR)Window_PostMessage((void*)arglist[0], (int)(INT_PTR)arglist[1], (int)(INT_PTR)arglist[2], (int)(INT_PTR)arglist[3], (int)(INT_PTR)arglist[4]);
 }
 
+static void* __vararg_Window_Intercept(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)Window_Intercept((void*)arglist[0], (const char*)arglist[1]);
+}
+
+static void* __vararg_Window_InterceptPoll(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)Window_InterceptPoll((void*)arglist[0], (const char*)arglist[1], (double*)arglist[2], (int*)arglist[3], (int*)arglist[4], (int*)arglist[5], (int*)arglist[6]);
+}
+
+static void* __vararg_Window_InterceptRelease(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)Window_InterceptRelease((void*)arglist[0]);
+}
+
 static void* __vararg_Mouse_GetState(void** arglist, int numparms)
 {
   return (void*)(INT_PTR)Mouse_GetState((int)(INT_PTR)arglist[0]);
@@ -837,16 +852,6 @@ static void* __vararg_Mouse_SetCursor(void** arglist, int numparms)
 {
   Mouse_SetCursor((void*)arglist[0]);
   return NULL;
-}
-
-static void* __vararg_Mouse_Intercept(void** arglist, int numparms)
-{
-  return (void*)(INT_PTR)Mouse_Intercept((void*)arglist[0], (const char*)arglist[1], (bool)arglist[2], (char*)arglist[3], (int)(INT_PTR)arglist[4]);
-}
-
-static void* __vararg_Mouse_InterceptRelease(void** arglist, int numparms)
-{
-  return (void*)(INT_PTR)Mouse_InterceptRelease((void*)arglist[0]);
 }
 
 

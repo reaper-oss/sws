@@ -75,13 +75,14 @@ New ReaScript functions:
 + Window_HandleFromAddress
 + Window_IsWindow
 + Window_PostMessage
++ Window_Intercept
++ Window_InterceptRelease
++ Window_InterceptPoll
 + Mouse_GetState
 + Mouse_SetPosition
 + Mouse_LoadCursor
 + Mouse_LoadCursorFromFile
 + Mouse_SetCursor
-+ Mouse_Intercept
-+ Mouse_InterceptRelease
 
 
 !v2.9.7 featured build (September 28, 2017)

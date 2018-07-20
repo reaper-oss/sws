@@ -75,9 +75,11 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <TargetName>reaper_sws</TargetName>
+    <IncludePath>F:\REAPER extensions\WDL;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <TargetName>reaper_sws64</TargetName>
+    <IncludePath>F:\REAPER extensions;F:\REAPER extensions\WDL;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">
     <LinkIncremental />
@@ -161,6 +163,9 @@ echo Copied to "$(REAPER_DIR)\plugins\$(TargetFilename)"</Command>
 echo Copied to "$(REAPER64_DIR)\plugins\$(TargetFilename)"</Command>
     </PostBuildEvent>
     <Bscmake />
+    <PreBuildEvent>
+      <Command>php reascript_vararg.php &gt; reascript_vararg.h</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">
     <PreBuildEvent />

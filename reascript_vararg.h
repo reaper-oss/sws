@@ -810,7 +810,12 @@ static void* __vararg_Window_HandleFromAddress(void** arglist, int numparms)
 
 static void* __vararg_Window_PostMessage(void** arglist, int numparms)
 {
-  return (void*)(INT_PTR)Window_PostMessage((void*)arglist[0], (int)(INT_PTR)arglist[1], (int)(INT_PTR)arglist[2], (int)(INT_PTR)arglist[3], (int)(INT_PTR)arglist[4]);
+  return (void*)(INT_PTR)Window_PostMessage((void*)arglist[0], (int)(INT_PTR)arglist[1], (int)(INT_PTR)arglist[2], (int)(INT_PTR)arglist[3], (int)(INT_PTR)arglist[4], (int)(INT_PTR)arglist[5]);
+}
+
+static void* __vararg_Window_PollMessage(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)Window_PollMessage((void*)arglist[0], (int)(INT_PTR)arglist[1], (double*)arglist[2], (int*)arglist[3], (int*)arglist[4], (int*)arglist[5], (int*)arglist[6]);
 }
 
 static void* __vararg_Window_Intercept(void** arglist, int numparms)
@@ -818,14 +823,15 @@ static void* __vararg_Window_Intercept(void** arglist, int numparms)
   return (void*)(INT_PTR)Window_Intercept((void*)arglist[0], (const char*)arglist[1]);
 }
 
-static void* __vararg_Window_InterceptPoll(void** arglist, int numparms)
+static void* __vararg_Window_ReleaseIntercept(void** arglist, int numparms)
 {
-  return (void*)(INT_PTR)Window_InterceptPoll((void*)arglist[0], (const char*)arglist[1], (double*)arglist[2], (int*)arglist[3], (int*)arglist[4], (int*)arglist[5], (int*)arglist[6]);
+  return (void*)(INT_PTR)Window_ReleaseIntercept((void*)arglist[0]);
 }
 
-static void* __vararg_Window_InterceptRelease(void** arglist, int numparms)
+static void* __vararg_Window_ReleaseAllIntercepts(void** arglist, int numparms)
 {
-  return (void*)(INT_PTR)Window_InterceptRelease((void*)arglist[0]);
+  Window_ReleaseAllIntercepts();
+  return NULL;
 }
 
 static void* __vararg_Mouse_GetState(void** arglist, int numparms)

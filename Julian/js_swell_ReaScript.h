@@ -32,7 +32,7 @@ bool  Window_GetRect(void* windowHWND, int* leftOut, int* topOut, int* rightOut,
 void  Window_GetClientRect	(void* windowHWND, int* leftOut, int* topOut, int* rightOut, int* bottomOut);
 void  Window_ScreenToClient	(void* windowHWND, int x, int y, int* xOut, int* yOut);
 void  Window_ClientToScreen (void* windowHWND, int x, int y, int* xOut, int* yOut);
-bool  Window_GetScrollInfo(void* windowHWND, const char* bar, int* positionOut, int* pageOut, int* minOut, int* maxOut, int* trackPosOut);
+bool  Window_GetScrollInfo(void* windowHWND, const char* scrollbar, int* positionOut, int* pageOut, int* minOut, int* maxOut, int* trackPosOut);
 
 void* Window_FromPoint	(int x, int y);
 
@@ -66,15 +66,15 @@ void  Window_GetTitle(void* windowHWND, char* buf, int buf_sz);
 void* Window_HandleFromAddress(int addressLow32Bits, int addressHigh32Bits);
 bool  Window_IsWindow(void* windowHWND);
 
-bool  Window_PostMessage(void* windowHWND, int message, int wParam, int lParamLow, int lParamHigh);
-bool  Window_Intercept(void* windowHWND, const char* messages);
-bool  Window_InterceptRelease(void* windowHWND);
-bool  Window_InterceptPoll(void* windowHWND, const char* message, double* timeOut, int* xPosOut, int* yPosOut, int* keysOut, int* valueOut);
+bool  Window_PostMessage(void* windowHWND, int message, int wParamLow, int wParamHigh, int lParamLow, int lParamHigh);
+bool  Window_PollMessage(void* windowHWND, int message, double* timeOut, int* wParamLowOut, int* wParamHighOut, int* lParamLowOut, int* lParamHighOut);
+int   Window_Intercept(void* windowHWND, const char* messages);
+bool  Window_ReleaseIntercept(void* windowHWND);
+void  Window_ReleaseAllIntercepts();
 
 int   Mouse_GetState(int flags);
 bool  Mouse_SetPosition(int x, int y);
 void* Mouse_LoadCursor(int cursorNumber);
 void* Mouse_LoadCursorFromFile(const char* pathAndFileName);
 void  Mouse_SetCursor(void* cursorHandle);
-bool  Mouse_Intercept(void* windowHWND, const char* messages, bool passThrough, char* buf, int buf_sz);
-bool  Mouse_InterceptRelease(void* windowHWND);
+

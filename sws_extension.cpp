@@ -1056,6 +1056,7 @@ error:
 		IMPAPI(TimeMap2_timeToBeats);
 		IMPAPI(TimeMap2_timeToQN);
 		IMPAPI(TimeMap_curFrameRate);
+		IMPAPI(TrackCtl_SetToolTip);
 		IMPAPI(TrackFX_FormatParamValue);
 		IMPAPI(TrackFX_GetByName);
 		IMPAPI(TrackFX_GetChainVisible);

@@ -782,6 +782,12 @@ static void* __vararg_Window_Move(void** arglist, int numparms)
   return NULL;
 }
 
+static void* __vararg_Window_SetPosition(void** arglist, int numparms)
+{
+  Window_SetPosition((void*)arglist[0], (int)(INT_PTR)arglist[1], (int)(INT_PTR)arglist[2], (int)(INT_PTR)arglist[3], (int)(INT_PTR)arglist[4]);
+  return NULL;
+}
+
 static void* __vararg_Window_SetZOrder(void** arglist, int numparms)
 {
   return (void*)(INT_PTR)Window_SetZOrder((void*)arglist[0], (const char*)arglist[1], (void*)arglist[2], (int)(INT_PTR)arglist[3]);
@@ -813,14 +819,14 @@ static void* __vararg_Window_PostMessage(void** arglist, int numparms)
   return (void*)(INT_PTR)Window_PostMessage((void*)arglist[0], (int)(INT_PTR)arglist[1], (int)(INT_PTR)arglist[2], (int)(INT_PTR)arglist[3], (int)(INT_PTR)arglist[4], (int)(INT_PTR)arglist[5]);
 }
 
-static void* __vararg_Window_PollMessage(void** arglist, int numparms)
+static void* __vararg_Window_PeekMessage(void** arglist, int numparms)
 {
-  return (void*)(INT_PTR)Window_PollMessage((void*)arglist[0], (int)(INT_PTR)arglist[1], (double*)arglist[2], (int*)arglist[3], (int*)arglist[4], (int*)arglist[5], (int*)arglist[6]);
+  return (void*)(INT_PTR)Window_PeekMessage((void*)arglist[0], (int)(INT_PTR)arglist[1], (double*)arglist[2], (int*)arglist[3], (int*)arglist[4], (int*)arglist[5], (int*)arglist[6]);
 }
 
 static void* __vararg_Window_Intercept(void** arglist, int numparms)
 {
-  return (void*)(INT_PTR)Window_Intercept((void*)arglist[0], (const char*)arglist[1]);
+  return (void*)(INT_PTR)Window_Intercept((void*)arglist[0], (const char*)arglist[1], (char*)arglist[2], (int)(INT_PTR)arglist[3]);
 }
 
 static void* __vararg_Window_ReleaseIntercept(void** arglist, int numparms)

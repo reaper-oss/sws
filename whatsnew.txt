@@ -63,6 +63,8 @@ New ReaScript functions:
 + MIDIEditor_ListAll
 + Window_Move
 + Window_Resize
++ Window_SetPosition
++ WIndow_SetZOrder
 + Window_SetFocus
 + Window_GetFocus
 + Window_SetForeground
@@ -74,7 +76,7 @@ New ReaScript functions:
 + Window_GetTitle
 + Window_HandleFromAddress
 + Window_IsWindow
-+ Window_PostMessage
++ Window_PeekMessage
 + Window_PollMessage
 + Window_Intercept
 + Window_ReleaseIntercept

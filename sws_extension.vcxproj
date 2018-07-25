@@ -164,7 +164,8 @@ echo Copied to "$(REAPER64_DIR)\plugins\$(TargetFilename)"</Command>
     </PostBuildEvent>
     <Bscmake />
     <PreBuildEvent>
-      <Command>php reascript_vararg.php &gt; reascript_vararg.h</Command>
+      <Command>del reascript_vararg.h
+php reascript_vararg.php &gt; reascript_vararg.h</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">

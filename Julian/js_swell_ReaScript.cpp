@@ -52,6 +52,12 @@ namespace julian
 	const int API_LEN = 1024;	// Maximum length of strings passed between Lua and API.
 	const int EXT_LEN = 16000;	// What is the maximum length of ExtState strings? 
 
+	const int ERR_ALREADY_INTERCEPTED = 0;
+	const int ERR_NOT_WINDOW = -1;
+	const int ERR_PARSING = -2;
+	const int ERR_ORIGPROC = -3;
+
+
 	// This struct is used to store the data of intercepted messages.
 	//		In addition to the standard wParam and lParam, a unique timestamp is added.
 	struct sMsgData
@@ -67,6 +73,7 @@ namespace julian
 	struct sWindowData
 	{
 		WNDPROC origProc;
+		char* reconstructMsg;
 		std::map<UINT, bool>		messagesToIntercept; // passthrough = true, block = false
 		std::map<UINT, sMsgData>	latestMessage;
 		int keysBitfieldBACKtoHOME	= 0; // Virtual key codes VK_BACK (backspace) to VK_HOME
@@ -519,27 +526,38 @@ void MIDIEditor_ListAll(char* buf, int buf_sz)
 
 void Window_Move(void* windowHWND, int left, int top)
 {
-	// WARNING: SetWindowPos is not completely implemented in SWELL.
-	// This API therefore divides SetWindowPos's capabilities into three functions:
-	//		Move, Resize and SetZOrder, only the first two of which are functional in non-Windows systems.
+	// WARNING: SetWindowPos is not completely implemented in SWELL (only NOSIZE and NOMOVE are available).
+	// This API therefore divides SetWindowPos's capabilities into four functions:
+	//		Move, Resize, SetPosition and SetZOrder, only the first three of which are functional in non-Windows systems.
+	// This function moves windows without resizing or requiring any info about window size.
 	HWND hwnd = (HWND)windowHWND;
 	SetWindowPos(hwnd, NULL, left, top, 0, 0, SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOSIZE);
 }
 
 void Window_Resize(void* windowHWND, int width, int height)
 {
-	// WARNING: SetWindowPos is not completely implemented in SWELL.
-	// This API therefore divides SetWindowPos's capabilities into three functions:
-	//		Move, Resize and SetZOrder, only the first two of which are functional in non-Windows systems.
+	// WARNING: SetWindowPos is not completely implemented in SWELL (only NOSIZE and NOMOVE are available).
+	// This API therefore divides SetWindowPos's capabilities into four functions:
+	//		Move, Resize, SetPosition and SetZOrder, only the first three of which are functional in non-Windows systems.
+	// This function resizes windows without moving or requiring any info about window position.
 	HWND hwnd = (HWND)windowHWND;
 	SetWindowPos(hwnd, NULL, 0, 0, width, height, SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOMOVE);
 }
 
+void Window_SetPosition(void* windowHWND, int left, int top, int width, int height)
+{
+	// WARNING: SetWindowPos is not completely implemented in SWELL (only NOSIZE and NOMOVE are available).
+	// This API therefore divides SetWindowPos's capabilities into four functions:
+	//		Move, Resize, SetPosition and SetZOrder, only the first three of which are functional in non-Windows systems.
+	HWND hwnd = (HWND)windowHWND;
+	SetWindowPos(hwnd, NULL, left, top, width, height, SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOOWNERZORDER);
+}
+
 bool Window_SetZOrder(void* windowHWND, const char* ZOrder, void* insertAfterHWND, int flags)
 {
-	// WARNING: SetWindowPos is not completely implemented in SWELL.
-	// This API therefore divides SetWindowPos's capabilities into three functions:
-	//		Move, Resize and SetZOrder, only the first two of which are functional in non-Windows systems.
+	// WARNING: SetWindowPos is not completely implemented in SWELL (only NOSIZE and NOMOVE are available).
+	// This API therefore divides SetWindowPos's capabilities into four functions:
+	//		Move, Resize, SetPosition and SetZOrder, only the first three of which are functional in non-Windows systems.
 	// SetZOrder can do everything that SetWindowPos does, except move and resize windows.
 #ifdef _WIN32
 	unsigned int uFlags = ((unsigned int)flags) | SWP_NOMOVE | SWP_NOSIZE;
@@ -603,7 +621,7 @@ bool Window_PostMessage(void* windowHWND, int message, int wParamLow, int wParam
 	return !!PostMessage((HWND)windowHWND, (UINT)message, wParam, lParam);
 }
 
-bool Window_PollMessage(void* windowHWND, int message, double* timeOut, int* wParamLowOut, int* wParamHighOut, int* lParamLowOut, int* lParamHighOut)
+bool Window_PeekMessage(void* windowHWND, int message, double* timeOut, int* wParamLowOut, int* wParamHighOut, int* lParamLowOut, int* lParamHighOut)
 {
 	// lParamLow, lParamHigh, and wParamHigh are signed, whereas wParamLow is unsigned.
 	using namespace julian;
@@ -676,28 +694,40 @@ LRESULT CALLBACK Window_Intercept_Callback(HWND hwnd, UINT uMsg, WPARAM wParam, 
 	return windowData.origProc(hwnd, uMsg, wParam, lParam);
 }
 
-int Window_Intercept(void* windowHWND, const char* messages)
+int Window_Intercept(void* windowHWND, const char* messages, char* buf, int buf_sz)
 {
 	using namespace julian;
 	HWND hwnd = (HWND)windowHWND;
 
 	// Each window can only be intercepted by one script. Therefore check if alreay in map.
+	// If yes, return string to inform caller of messages that are being intercepted.
 	if (mapWindowToData.count(hwnd) > 0)
-		return -1;
+	{
+		sWindowData windowData = mapWindowToData[hwnd];
+		strcpy_s(buf, buf_sz, windowData.reconstructMsg);
+		return ERR_ALREADY_INTERCEPTED;
+	}
 
 	// According to swell-functions.h, IsWindow is slow in swell. However, Window_Intercept will probably not be called many times per script. 
 	if (!IsWindow(hwnd))
-		return -2;
+		return ERR_NOT_WINDOW;
 
 	char msg[API_LEN];
 	if (strcpy_s(msg, sizeof(msg), messages) != 0)
-		return -3;
+		return ERR_PARSING;
 
 	// messages string will be parsed into uMsg message types and passthrough modifiers 
-	const char delim[] = ":;, ";
+	const char delim[] = ":;,= ";
 	UINT uMsg;
 	bool passthrough;
 	char *token, *next_token, *str_end; // For use in strtok function
+
+	// The parsed info will be reconstructed into a new string with standard delimiters, 
+	//		which can be returned when another script tries to intercept an already-intercepted window.
+	// Why construct reconstructMsg now, instead of when returning ERR_ALREADY_INTERCEPTED?
+	//		Because must make sure *now* that string fits into API_LEN.
+	char reconstructMsg[API_LEN] = "";
+	char temp[32] = "";
 
 	// Parsed info will be stored in these maps
 	std::map<UINT, bool>	messagesToIntercept; // passthrough = true, block = false
@@ -709,18 +739,33 @@ int Window_Intercept(void* windowHWND, const char* messages)
 	{
 		// Get message number
 		uMsg = strtoul(token, &str_end, 16);
-		if (!uMsg || (errno == ERANGE)) return -3;
-
+		if (!uMsg || (errno == ERANGE)) 
+			return ERR_PARSING;
+		
+		sprintf_s(temp, sizeof(temp), ",0x%04X:", uMsg); // Reconstruct with standard delimiters 
+		
 		// Now get passthrough
 		token = strtok_s(NULL, delim, &next_token);
-		if (token == NULL) return -3; // Each message type must be followed by a modifier
-		if (token[0] == 'p' || token[0] == 'P')
-			passthrough = true;
+		if (token == NULL) 
+			return ERR_PARSING; // Each message type must be followed by a modifier
+		else if (token[0] == 'p' || token[0] == 'P')
+		{
+			passthrough = true; strcat_s(temp, API_LEN, "passthrough");
+		}
 		else if (token[0] == 'b' || token[0] == 'B')
-			passthrough = false;
-		else
-			return -3;
+		{
+			passthrough = false; strcat_s(temp, API_LEN, "block");
+		}
+		else // Not block or passthrough
+			return ERR_PARSING;
 
+		// Concatenate to reconstructMsg
+		if (strlen(reconstructMsg) + strlen(temp) < API_LEN)
+			strcat_s(reconstructMsg, API_LEN, temp);
+		else
+			return ERR_PARSING;
+
+		// Save in maps too
 		messagesToIntercept.emplace(uMsg, passthrough);
 		latestMessage.emplace(uMsg, sMsgData{ 0, 0, 0 }); // time = 0 means that this message type is being intercepted OK, but no message has been intercepted yet.
 
@@ -729,7 +774,7 @@ int Window_Intercept(void* windowHWND, const char* messages)
 
 	// Parsing went OK?  Any messages to intercept?
 	if (messagesToIntercept.size() == 0)
-		return -3;
+		return ERR_PARSING;
 
 	// Try to get the original process.
 	WNDPROC origProc = nullptr;
@@ -739,16 +784,18 @@ int Window_Intercept(void* windowHWND, const char* messages)
 	origProc = (WNDPROC)SetWindowLong(hwnd, GWL_WNDPROC, (LONG_PTR)Window_Intercept_Callback);
 #endif
 	if (!origProc)
-		return -4;
+		return ERR_ORIGPROC;
 
 	// Got everything OK.  Finally, store struct.
 	sWindowData s; // { origProc, messagesToIntercept, latestMessage };
 	s.origProc = origProc;
+	s.reconstructMsg = &reconstructMsg[1]; // Skip initial comma.  reconstructMsg+1 ?  What is the most idiomatic?
 	s.messagesToIntercept = messagesToIntercept;
 	s.latestMessage = latestMessage;
 	mapWindowToData.insert(pair<HWND, sWindowData>(hwnd, s));
 
-	return 1;
+	strcpy_s(buf, buf_sz, &reconstructMsg[1]); // Skip initial comma.  reconstructMsg+1 ?  What is the most idiomatic?
+	return TRUE;
 }
 
 bool Window_ReleaseIntercept(void* windowHWND)
@@ -792,9 +839,9 @@ void Window_ReleaseAllIntercepts()
 int Mouse_GetState(int flags)
 {
 	int state = 0;
-	if ((flags & 1)  && (GetAsyncKeyState(MK_LBUTTON) >> 1))	state |= 1;
-	if ((flags & 2)  && (GetAsyncKeyState(MK_RBUTTON) >> 1))	state |= 2;
-	if ((flags & 64) && (GetAsyncKeyState(MK_MBUTTON) >> 1))	state |= 64;
+	if ((flags & 1)  && (GetAsyncKeyState(VK_LBUTTON) >> 1))	state |= 1;
+	if ((flags & 2)  && (GetAsyncKeyState(VK_RBUTTON) >> 1))	state |= 2;
+	if ((flags & 64) && (GetAsyncKeyState(VK_MBUTTON) >> 1))	state |= 64;
 	if ((flags & 4)  && (GetAsyncKeyState(VK_CONTROL) >> 1))	state |= 4;
 	if ((flags & 8)  && (GetAsyncKeyState(VK_SHIFT) >> 1))		state |= 8;
 	if ((flags & 16) && (GetAsyncKeyState(VK_MENU) >> 1))		state |= 16;
@@ -836,20 +883,3 @@ void Mouse_SetCursor(void* cursorHandle)
 {
 	SetCursor((HCURSOR)cursorHandle);
 }
-
-void* Mouse_SetCapture(void* windowHWND)
-{
-	return SetCapture((HWND)windowHWND);
-}
-
-void* Mouse_GetCapture()
-{
-	return GetCapture();
-}
-
-void Mouse_ReleaseCapture()
-{
-	ReleaseCapture();
-}
-
-

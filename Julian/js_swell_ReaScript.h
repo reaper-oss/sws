@@ -49,6 +49,7 @@ void  MIDIEditor_ListAll(char* buf, int buf_sz);
 
 void  Window_Move(void* windowHWND, int left, int top);
 void  Window_Resize(void* windowHWND, int width, int height);
+void  Window_SetPosition(void* windowHWND, int left, int top, int width, int height);
 bool  Window_SetZOrder(void* windowHWND, const char* ZOrder, void* insertAfterHWND, int flags);
 
 void  Window_SetFocus(void* windowHWND);
@@ -67,8 +68,8 @@ void* Window_HandleFromAddress(int addressLow32Bits, int addressHigh32Bits);
 bool  Window_IsWindow(void* windowHWND);
 
 bool  Window_PostMessage(void* windowHWND, int message, int wParamLow, int wParamHigh, int lParamLow, int lParamHigh);
-bool  Window_PollMessage(void* windowHWND, int message, double* timeOut, int* wParamLowOut, int* wParamHighOut, int* lParamLowOut, int* lParamHighOut);
-int   Window_Intercept(void* windowHWND, const char* messages);
+bool  Window_PeekMessage(void* windowHWND, int message, double* timeOut, int* wParamLowOut, int* wParamHighOut, int* lParamLowOut, int* lParamHighOut);
+int   Window_Intercept(void* windowHWND, const char* messages, char* buf, int buf_sz);
 bool  Window_ReleaseIntercept(void* windowHWND);
 void  Window_ReleaseAllIntercepts();
 
@@ -77,4 +78,3 @@ bool  Mouse_SetPosition(int x, int y);
 void* Mouse_LoadCursor(int cursorNumber);
 void* Mouse_LoadCursorFromFile(const char* pathAndFileName);
 void  Mouse_SetCursor(void* cursorHandle);
-

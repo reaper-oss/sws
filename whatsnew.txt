@@ -1,3 +1,6 @@
++ReaScript:
+ - Marked SNM_MoveOrRemoveTrackFX(), NF_TrackFX/TakeFX_ Set/GetOffline() as deprecated (native API equivalents added in REAPER 5.95) 
+
 !v2.9.8 pre-release build (March 5, 2018)
 Now requires REAPER 5.50+!
 

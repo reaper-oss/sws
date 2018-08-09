@@ -920,6 +920,9 @@ bool BR_TrackFX_GetFXModuleName (MediaTrack* track, int fx, char* nameOut, int n
 
 int BR_Win32_GetPrivateProfileString (const char* sectionName, const char* keyName, const char* defaultString, const char* filePath, char* stringOut, int stringOut_sz)
 {
+	if(!strlen(keyName))
+		return 0;
+
 	return (int)GetPrivateProfileString(sectionName, keyName, defaultString, stringOut, stringOut_sz, filePath);
 }
 
@@ -930,6 +933,9 @@ int BR_Win32_ShellExecute (const char* operation, const char* file, const char* 
 
 bool BR_Win32_WritePrivateProfileString (const char* sectionName, const char* keyName, const char* value, const char* filePath)
 {
+	if(!strlen(keyName))
+		return false;
+
 	return !!WritePrivateProfileString(sectionName, keyName, value, filePath);
 }
 

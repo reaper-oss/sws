@@ -1,3 +1,7 @@
+ReaScript:
+ - Marked SNM_MoveOrRemoveTrackFX() as deprecated (native API equivalent added in REAPER 5.95) 
+ - Removed NF_TrackFX/TakeFX_ Set/GetOffline() (native API equivalent added in REAPER 5.95) 
+
 Fixes:
 +Issue 957: Fix item Loudness analysis if take contains volume envelope (thanks X-Raym!)
 

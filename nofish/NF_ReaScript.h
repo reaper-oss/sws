@@ -42,11 +42,6 @@ bool            NF_AnalyzeTakeLoudness(MediaItem_Take* take, bool analyzeTruePea
 
 bool            NF_AnalyzeTakeLoudness2(MediaItem_Take* take, bool analyzeTruePeak, double* lufsOut, double* rangeOut, double* truePeakOut, double* truePeakPosOut, double* shorTermMaxOut, double* momentaryMaxOut, double* shortTermMaxPosOut, double* momentaryMaxPosOut);
 
-bool            NF_TrackFX_GetOffline(MediaTrack* track, int fx);
-void            NF_TrackFX_SetOffline(MediaTrack* track, int fx, bool enabled);
-bool            NF_TakeFX_GetOffline(MediaItem_Take* take, int fx);
-void            NF_TakeFX_SetOffline(MediaItem_Take* take, int fx, bool enabled);
-
 // #755
 const char*     NF_GetSWSTrackNotes(MediaTrack* track, WDL_FastString* trackNoteOut);
 void            NF_SetSWSTrackNotes(MediaTrack* track, const char* buf);

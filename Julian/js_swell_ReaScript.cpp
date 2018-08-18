@@ -820,9 +820,10 @@ bool WindowMessage_Post(void* windowHWND, const char* message, int wParamLow, in
 	else
 	{
 		errno = 0;
-		uMsg = strtoul(message, NULL, 16);
-		if (!uMsg || (errno == ERANGE))
-			return FALSE;
+		char* endPtr;
+		uMsg = strtoul(message, &endPtr, 16);
+		if (endPtr == message || errno != 0) // 0x0000 is a valid message type, so cannot assume 0 is error.
+			return false;
 	}
 
 	WPARAM wParam = MAKEWPARAM(wParamLow, wParamHigh);
@@ -851,8 +852,9 @@ int WindowMessage_Send(void* windowHWND, const char* message, int wParamLow, int
 	else
 	{
 		errno = 0;
-		uMsg = strtoul(message, NULL, 16);
-		if (!uMsg || (errno == ERANGE))
+		char* endPtr;
+		uMsg = strtoul(message, &endPtr, 16);
+		if (endPtr == message || errno != 0) // 0x0000 is a valid message type, so cannot assume 0 is error.
 			return FALSE;
 	}
 
@@ -874,8 +876,9 @@ bool WindowMessage_Peek(void* windowHWND, const char* message, double* timeOut, 
 	else
 	{
 		errno = 0;
-		uMsg = strtoul(message, NULL, 16);
-		if (!uMsg || (errno == ERANGE))
+		char* endPtr;
+		uMsg = strtoul(message, &endPtr, 16);
+		if (endPtr == message || errno != 0) // 0x0000 is a valid message type, so cannot assume 0 is error.
 			return false;
 	}
 
@@ -978,9 +981,12 @@ int WindowMessage_Intercept(void* windowHWND, const char* messages)
 	// messages string will be parsed into uMsg message types and passthrough modifiers 
 	UINT uMsg;
 	bool passthrough;
+
+	// For use while tokenizing messages string
 	char *token;
 	std::string msgString;
 	const char* delim = ":;,= \n\t";
+	char* endPtr; 
 
 	// Parsed info will be stored in these temporary maps
 	std::map<UINT, sMsgData> newMessages;
@@ -994,9 +1000,12 @@ int WindowMessage_Intercept(void* windowHWND, const char* messages)
 		if (mapWM_toMsg.count(msgString))
 			uMsg = mapWM_toMsg[msgString];
 		else
-			uMsg = strtoul(token, NULL, 16);
-		if (!uMsg || (errno == ERANGE))
-			return ERR_PARSING;
+		{
+			errno = 0;
+			uMsg = strtoul(token, &endPtr, 16);
+			if (endPtr == token || errno != 0) // 0x0000 is a valid message type, so cannot assume 0 is error.
+				return ERR_PARSING;
+		}
 
 		// Now get passthrough
 		token = strtok(NULL, delim);

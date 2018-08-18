@@ -39,6 +39,7 @@ int  g_i2 = 2;
 bool g_bTrue  = true;
 bool g_bFalse = false;
 MTRand g_MTRand;
+extern double g_runningReaVer; // SnM_Project.cpp/GlobalStartupActionTimer()
 #ifndef _WIN32
 const GUID GUID_NULL = { 0, 0, 0, "\0\0\0\0\0\0\0" };
 #endif
@@ -511,7 +512,7 @@ bool SWS_IsWindow(HWND hwnd)
 bool SWS_IsTrackHeightLocked(MediaTrack* track)
 {
 	// NF: REAPER version check and chunk parsing could be removed when REAPER 5.95+ becomes required for SWS
-	if (atof(GetAppVersion()) >= 5.95)
+	if (g_runningReaVer >= 5.95)
 		return *(bool*)GetSetMediaTrackInfo(track, "B_HEIGHTLOCK", NULL);
 	
 	char state[2] = "0";
@@ -522,7 +523,6 @@ bool SWS_IsTrackHeightLocked(MediaTrack* track)
 
 	return false;
 }
-
 
 // Localization
 WDL_FastString* g_LangPack = NULL;

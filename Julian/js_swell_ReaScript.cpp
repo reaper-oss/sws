@@ -34,7 +34,7 @@
 
 
 
-namespace julian
+namespace Julian
 {
 	// While windows are being enumerated, this struct stores the information
 	//		such as the title text that must be matched, as well as the list of all matching window HWNDs.
@@ -62,6 +62,7 @@ namespace julian
 	//		In addition to the standard wParam and lParam, a unique timestamp is added.
 	struct sMsgData
 	{
+		bool passthrough;
 		double time;
 		WPARAM wParam;
 		LPARAM lParam;
@@ -69,42 +70,195 @@ namespace julian
 
 	// This struct and map store the data of each HWND that is being intercepted.
 	// (Each window can only be intercepted by one script at a time.)
-	// For each window, three bitfields summarize the up/down states of most of the keyboard.
+	// For each window, three bitfields summarize the up/down states of most of the keyboard. 
+	// UPDATE: Apparently, REAPER's windows don't receive keystrokes via the message queue, and the keyboard can therefore not be intercepted.  
 	struct sWindowData
 	{
 		WNDPROC origProc;
-		char* reconstructMsg;
-		std::map<UINT, bool>		messagesToIntercept; // passthrough = true, block = false
-		std::map<UINT, sMsgData>	latestMessage;
-		int keysBitfieldBACKtoHOME	= 0; // Virtual key codes VK_BACK (backspace) to VK_HOME
-		int keysBitfieldAtoSLEEP	= 0;
-		int keysBitfieldLEFTto9		= 0;
+		std::map<UINT, sMsgData> messages;
+		//int keysBitfieldBACKtoHOME	= 0; // Virtual key codes VK_BACK (backspace) to VK_HOME
+		//int keysBitfieldAtoSLEEP	= 0;
+		//int keysBitfieldLEFTto9		= 0;
 	};
 	const bool BLOCK = false;
 
+	////////////////////////////////////////////////////////////////////////////
+	// THE MAIN MAP FOR ALL INTERCEPTS
 	// Each window that is being intercepted, will be mapped to its data struct.
 	std::map <HWND, sWindowData> mapWindowToData;
-	
+
+
+
+	// This map contains all the WM_ messages in swell-types.h. These can be assumed to be valid cross-platform.
+	std::map<std::string, UINT> mapWM_toMsg
+	{
+		pair<std::string, UINT>("WM_CREATE", 0x0001),
+		pair<std::string, UINT>("WM_DESTROY", 0x0002),
+		pair<std::string, UINT>("WM_MOVE", 0x0003),
+		pair<std::string, UINT>("WM_SIZE", 0x0005),
+		pair<std::string, UINT>("WM_ACTIVATE", 0x0006),
+		//pair<std::string, UINT>("WM_SETREDRAW", 0x000B), // Not implemented cross-platform
+		//pair<std::string, UINT>("WM_SETTEXT", 0x000C),
+		pair<std::string, UINT>("WM_PAINT", 0x000F),
+		pair<std::string, UINT>("WM_CLOSE", 0x0010),
+		pair<std::string, UINT>("WM_ERASEBKGND", 0x0014),
+		pair<std::string, UINT>("WM_SHOWWINDOW", 0x0018),
+		pair<std::string, UINT>("WM_ACTIVATEAPP", 0x001C),
+		pair<std::string, UINT>("WM_SETCURSOR", 0x0020),
+		pair<std::string, UINT>("WM_MOUSEACTIVATE", 0x0021),
+		pair<std::string, UINT>("WM_GETMINMAXINFO", 0x0024),
+		pair<std::string, UINT>("WM_DRAWITEM", 0x002B),
+		pair<std::string, UINT>("WM_SETFONT", 0x0030),
+		pair<std::string, UINT>("WM_GETFONT", 0x0031),
+		//pair<std::string, UINT>("WM_GETOBJECT", 0x003D),
+		pair<std::string, UINT>("WM_COPYDATA", 0x004A),
+		pair<std::string, UINT>("WM_NOTIFY", 0x004E),
+		pair<std::string, UINT>("WM_CONTEXTMENU", 0x007B),
+		pair<std::string, UINT>("WM_STYLECHANGED", 0x007D),
+		pair<std::string, UINT>("WM_DISPLAYCHANGE", 0x007E),
+		pair<std::string, UINT>("WM_NCDESTROY", 0x0082),
+		pair<std::string, UINT>("WM_NCCALCSIZE", 0x0083),
+		pair<std::string, UINT>("WM_NCHITTEST", 0x0084),
+		pair<std::string, UINT>("WM_NCPAINT", 0x0085),
+		pair<std::string, UINT>("WM_NCMOUSEMOVE", 0x00A0),
+		pair<std::string, UINT>("WM_NCLBUTTONDOWN", 0x00A1),
+		pair<std::string, UINT>("WM_NCLBUTTONUP", 0x00A2),
+		pair<std::string, UINT>("WM_NCLBUTTONDBLCLK", 0x00A3),
+		pair<std::string, UINT>("WM_NCRBUTTONDOWN", 0x00A4),
+		pair<std::string, UINT>("WM_NCRBUTTONUP", 0x00A5),
+		pair<std::string, UINT>("WM_NCRBUTTONDBLCLK", 0x00A6),
+		pair<std::string, UINT>("WM_NCMBUTTONDOWN", 0x00A7),
+		pair<std::string, UINT>("WM_NCMBUTTONUP", 0x00A8),
+		pair<std::string, UINT>("WM_NCMBUTTONDBLCLK", 0x00A9),
+		pair<std::string, UINT>("WM_KEYFIRST", 0x0100),
+		pair<std::string, UINT>("WM_KEYDOWN", 0x0100),
+		pair<std::string, UINT>("WM_KEYUP", 0x0101),
+		pair<std::string, UINT>("WM_CHAR", 0x0102),
+		pair<std::string, UINT>("WM_DEADCHAR", 0x0103),
+		pair<std::string, UINT>("WM_SYSKEYDOWN", 0x0104),
+		pair<std::string, UINT>("WM_SYSKEYUP", 0x0105),
+		pair<std::string, UINT>("WM_SYSCHAR", 0x0106),
+		pair<std::string, UINT>("WM_SYSDEADCHAR", 0x0107),
+		pair<std::string, UINT>("WM_KEYLAST", 0x0108),
+		pair<std::string, UINT>("WM_INITDIALOG", 0x0110),
+		pair<std::string, UINT>("WM_COMMAND", 0x0111),
+		pair<std::string, UINT>("WM_SYSCOMMAND", 0x0112),
+		pair<std::string, UINT>("SC_CLOSE", 0xF060),
+		pair<std::string, UINT>("WM_TIMER", 0x0113),
+		pair<std::string, UINT>("WM_HSCROLL", 0x0114),
+		pair<std::string, UINT>("WM_VSCROLL", 0x0115),
+		pair<std::string, UINT>("WM_INITMENUPOPUP", 0x0117),
+		pair<std::string, UINT>("WM_GESTURE", 0x0119),
+		pair<std::string, UINT>("WM_MOUSEFIRST", 0x0200),
+		pair<std::string, UINT>("WM_MOUSEMOVE", 0x0200),
+		pair<std::string, UINT>("WM_LBUTTONDOWN", 0x0201),
+		pair<std::string, UINT>("WM_LBUTTONUP", 0x0202),
+		pair<std::string, UINT>("WM_LBUTTONDBLCLK", 0x0203),
+		pair<std::string, UINT>("WM_RBUTTONDOWN", 0x0204),
+		pair<std::string, UINT>("WM_RBUTTONUP", 0x0205),
+		pair<std::string, UINT>("WM_RBUTTONDBLCLK", 0x0206),
+		pair<std::string, UINT>("WM_MBUTTONDOWN", 0x0207),
+		pair<std::string, UINT>("WM_MBUTTONUP", 0x0208),
+		pair<std::string, UINT>("WM_MBUTTONDBLCLK", 0x0209),
+		pair<std::string, UINT>("WM_MOUSEWHEEL", 0x020A),
+		pair<std::string, UINT>("WM_MOUSEHWHEEL", 0x020E),
+		pair<std::string, UINT>("WM_MOUSELAST", 0x020A),
+		pair<std::string, UINT>("WM_CAPTURECHANGED", 0x0215),
+		pair<std::string, UINT>("WM_DROPFILES", 0x0233),
+		pair<std::string, UINT>("WM_USER", 0x0400)
+	};
+
+	std::map<UINT, std::string> mapMsgToWM_
+	{
+		pair<UINT, std::string>(0x0001, "WM_CREATE"),
+		pair<UINT, std::string>(0x0002, "WM_DESTROY"),
+		pair<UINT, std::string>(0x0003, "WM_MOVE"),
+		pair<UINT, std::string>(0x0005, "WM_SIZE"),
+		pair<UINT, std::string>(0x0006, "WM_ACTIVATE"),
+		pair<UINT, std::string>(0x000F, "WM_PAINT"),
+		pair<UINT, std::string>(0x0010, "WM_CLOSE"),
+		pair<UINT, std::string>(0x0014, "WM_ERASEBKGND"),
+		pair<UINT, std::string>(0x0018, "WM_SHOWWINDOW"),
+		pair<UINT, std::string>(0x001C, "WM_ACTIVATEAPP"),
+		pair<UINT, std::string>(0x0020, "WM_SETCURSOR"),
+		pair<UINT, std::string>(0x0021, "WM_MOUSEACTIVATE"),
+		pair<UINT, std::string>(0x0024, "WM_GETMINMAXINFO"),
+		pair<UINT, std::string>(0x002B, "WM_DRAWITEM"),
+		pair<UINT, std::string>(0x0030, "WM_SETFONT"),
+		pair<UINT, std::string>(0x0031, "WM_GETFONT"),
+		pair<UINT, std::string>(0x004A, "WM_COPYDATA"),
+		pair<UINT, std::string>(0x004E, "WM_NOTIFY"),
+		pair<UINT, std::string>(0x007B, "WM_CONTEXTMENU"),
+		pair<UINT, std::string>(0x007D, "WM_STYLECHANGED"),
+		pair<UINT, std::string>(0x007E, "WM_DISPLAYCHANGE"),
+		pair<UINT, std::string>(0x0082, "WM_NCDESTROY"),
+		pair<UINT, std::string>(0x0083, "WM_NCCALCSIZE"),
+		pair<UINT, std::string>(0x0084, "WM_NCHITTEST"),
+		pair<UINT, std::string>(0x0085, "WM_NCPAINT"),
+		pair<UINT, std::string>(0x00A0, "WM_NCMOUSEMOVE"),
+		pair<UINT, std::string>(0x00A1, "WM_NCLBUTTONDOWN"),
+		pair<UINT, std::string>(0x00A2, "WM_NCLBUTTONUP"),
+		pair<UINT, std::string>(0x00A3, "WM_NCLBUTTONDBLCLK"),
+		pair<UINT, std::string>(0x00A4, "WM_NCRBUTTONDOWN"),
+		pair<UINT, std::string>(0x00A5, "WM_NCRBUTTONUP"),
+		pair<UINT, std::string>(0x00A6, "WM_NCRBUTTONDBLCLK"),
+		pair<UINT, std::string>(0x00A7, "WM_NCMBUTTONDOWN"),
+		pair<UINT, std::string>(0x00A8, "WM_NCMBUTTONUP"),
+		pair<UINT, std::string>(0x00A9, "WM_NCMBUTTONDBLCLK"),
+		pair<UINT, std::string>(0x0100, "WM_KEYFIRST"),
+		pair<UINT, std::string>(0x0100, "WM_KEYDOWN"),
+		pair<UINT, std::string>(0x0101, "WM_KEYUP"),
+		pair<UINT, std::string>(0x0102, "WM_CHAR"),
+		pair<UINT, std::string>(0x0103, "WM_DEADCHAR"),
+		pair<UINT, std::string>(0x0104, "WM_SYSKEYDOWN"),
+		pair<UINT, std::string>(0x0105, "WM_SYSKEYUP"),
+		pair<UINT, std::string>(0x0106, "WM_SYSCHAR"),
+		pair<UINT, std::string>(0x0107, "WM_SYSDEADCHAR"),
+		pair<UINT, std::string>(0x0108, "WM_KEYLAST"),
+		pair<UINT, std::string>(0x0110, "WM_INITDIALOG"),
+		pair<UINT, std::string>(0x0111, "WM_COMMAND"),
+		pair<UINT, std::string>(0x0112, "WM_SYSCOMMAND"),
+		pair<UINT, std::string>(0xF060, "SC_CLOSE"),
+		pair<UINT, std::string>(0x0113, "WM_TIMER"),
+		pair<UINT, std::string>(0x0114, "WM_HSCROLL"),
+		pair<UINT, std::string>(0x0115, "WM_VSCROLL"),
+		pair<UINT, std::string>(0x0117, "WM_INITMENUPOPUP"),
+		pair<UINT, std::string>(0x0119, "WM_GESTURE"),
+		pair<UINT, std::string>(0x0200, "WM_MOUSEFIRST"),
+		pair<UINT, std::string>(0x0200, "WM_MOUSEMOVE"),
+		pair<UINT, std::string>(0x0201, "WM_LBUTTONDOWN"),
+		pair<UINT, std::string>(0x0202, "WM_LBUTTONUP"),
+		pair<UINT, std::string>(0x0203, "WM_LBUTTONDBLCLK"),
+		pair<UINT, std::string>(0x0204, "WM_RBUTTONDOWN"),
+		pair<UINT, std::string>(0x0205, "WM_RBUTTONUP"),
+		pair<UINT, std::string>(0x0206, "WM_RBUTTONDBLCLK"),
+		pair<UINT, std::string>(0x0207, "WM_MBUTTONDOWN"),
+		pair<UINT, std::string>(0x0208, "WM_MBUTTONUP"),
+		pair<UINT, std::string>(0x0209, "WM_MBUTTONDBLCLK"),
+		pair<UINT, std::string>(0x020A, "WM_MOUSEWHEEL"),
+		pair<UINT, std::string>(0x020E, "WM_MOUSEHWHEEL"),
+		pair<UINT, std::string>(0x020A, "WM_MOUSELAST"),
+		pair<UINT, std::string>(0x0215, "WM_CAPTURECHANGED"),
+		pair<UINT, std::string>(0x0233, "WM_DROPFILES"),
+		pair<UINT, std::string>(0x0400, "WM_USER")
+	};
 }
 
 
 
-bool  Window_GetRect(void* windowHWND, int* leftOut, int* topOut, int* rightOut, int* bottomOut)
+bool Window_GetRect(void* windowHWND, int* leftOut, int* topOut, int* rightOut, int* bottomOut)
 {
 	HWND hwnd = (HWND)windowHWND;
 	RECT r{ 0, 0, 0, 0 };
 	bool isOK = !!GetWindowRect(hwnd, &r);
-	if (isOK)
-	{
-		*leftOut   = (int)r.left;
-		*rightOut  = (int)r.right;
-		*topOut	   = (int)r.top;
-		*bottomOut = (int)r.bottom;
-	}
+	*leftOut   = (int)r.left;
+	*rightOut  = (int)r.right;
+	*topOut	   = (int)r.top;
+	*bottomOut = (int)r.bottom;
 	return (isOK);
 }
 
-void  Window_ScreenToClient(void* windowHWND, int x, int y, int* xOut, int* yOut)
+void Window_ScreenToClient(void* windowHWND, int x, int y, int* xOut, int* yOut)
 {
 	// Unlike Win32, Cockos WDL doesn't return a bool to confirm success.
 	POINT p{ x, y };
@@ -114,7 +268,7 @@ void  Window_ScreenToClient(void* windowHWND, int x, int y, int* xOut, int* yOut
 	*yOut = (int)p.y;
 }
 
-void  Window_ClientToScreen(void* windowHWND, int x, int y, int* xOut, int* yOut)
+void Window_ClientToScreen(void* windowHWND, int x, int y, int* xOut, int* yOut)
 {
 	// Unlike Win32, Cockos WDL doesn't return a bool to confirm success.
 	POINT p{ x, y };
@@ -124,42 +278,55 @@ void  Window_ClientToScreen(void* windowHWND, int x, int y, int* xOut, int* yOut
 	*yOut = (int)p.y;
 }
 
-void  Window_GetClientRect(void* windowHWND, int* leftOut, int* topOut, int* rightOut, int* bottomOut)
+
+bool Window_GetClientRect(void* windowHWND, int* leftOut, int* topOut, int* rightOut, int* bottomOut)
 {
 	// Unlike Win32, Cockos WDL doesn't return a bool to confirm success.
+	// However, if hwnd is not a true hwnd, SWELL will return a {0,0,0,0} rect.
 	HWND hwnd = (HWND)windowHWND;
 	RECT r{ 0, 0, 0, 0 };
-	POINT p{ 0, 0 }; 
-	ClientToScreen(hwnd, &p);
+#ifdef _WIN32
+	bool isOK = !!GetClientRect(hwnd, &r);
+#else
 	GetClientRect(hwnd, &r);
-	*leftOut   = (int)p.x;
-	*rightOut  = (int)p.x + (int)r.right;
-	*topOut    = (int)p.y;
-	*bottomOut = (int)p.y + (int)r.bottom;
+	bool isOK = (r.bottom != 0 || r.right != 0);
+#endif
+	if (isOK)
+	{
+		POINT p{ 0, 0 };
+		ClientToScreen(hwnd, &p);
+		*leftOut = (int)p.x;
+		*rightOut = (int)p.x + (int)r.right;
+		*topOut = (int)p.y;
+		*bottomOut = (int)p.y + (int)r.bottom;
+	}
+	return (isOK);
 }
 
-bool Window_GetScrollInfo(void* windowHWND, const char* scrollbar, int* positionOut, int* pageOut, int* minOut, int* maxOut, int* trackPosOut)
+
+/*
+bool Window_GetClientRect(void* windowHWND, int* widthOut, int* heightOut)
 {
-	HWND hwnd = (HWND)windowHWND;
-	SCROLLINFO si = { sizeof(SCROLLINFO), };
-	si.fMask = SIF_ALL;
-	int nBar = ((strchr(scrollbar, 'v') || strchr(scrollbar, 'V')) ? SB_VERT : SB_HORZ); // Match strings such as "SB_VERT", "VERT" or "v".
-	bool isOK = !!CoolSB_GetScrollInfo(hwnd, nBar, &si);
-	*pageOut = si.nPage;
-	*positionOut = si.nPos;
-	*minOut = si.nMin;
-	*maxOut = si.nMax;
-	*trackPosOut = si.nTrackPos;
-	return isOK;
+	// Unlike Win32, Cockos WDL doesn't return a bool to confirm success.
+	// However, if hwnd is not a true hwnd, SWELL will return a {0,0,0,0} rect.
+	RECT r;
+#ifdef _WIN32
+	bool isOK = !!GetClientRect((HWND)windowHWND, &r);
+#else
+	GetClientRect((HWND)windowHWND, &r);
+	bool isOK = (r.bottom != 0 || r.right != 0);
+#endif
+	*widthOut = r.right;
+	*heightOut = r.bottom;
+	return (isOK);
 }
+*/
 
 void* Window_FromPoint(int x, int y)
 {
 	POINT p{ x, y };
 	return WindowFromPoint(p);
 }
-
-
 
 void* Window_GetParent(void* windowHWND)
 {
@@ -217,6 +384,11 @@ void  Window_Show(void* windowHWND, int state)
 	ShowWindow((HWND)windowHWND, state);
 }
 
+bool Window_IsVisible(void* windowHWND)
+{
+	return !!IsWindowVisible((HWND)windowHWND);
+}
+
 
 
 void* Window_SetCapture(void* windowHWND)
@@ -238,7 +410,7 @@ void  Window_ReleaseCapture()
 
 BOOL CALLBACK Window_Find_Callback_Child(HWND hwnd, LPARAM structPtr)
 {
-	using namespace julian;
+	using namespace Julian;
 	EnumWindowsStruct* s = reinterpret_cast<EnumWindowsStruct*>(structPtr);
 	int len = GetWindowText(hwnd, s->temp, s->tempLen);
 	s->temp[s->tempLen - 1] = '\0'; // Make sure that loooong titles are properly terminated.
@@ -255,7 +427,7 @@ BOOL CALLBACK Window_Find_Callback_Child(HWND hwnd, LPARAM structPtr)
 
 BOOL CALLBACK Window_Find_Callback_Top(HWND hwnd, LPARAM structPtr)
 {
-	using namespace julian;
+	using namespace Julian;
 	EnumWindowsStruct* s = reinterpret_cast<EnumWindowsStruct*>(structPtr);
 	int len = GetWindowText(hwnd, s->temp, s->tempLen);
 	s->temp[s->tempLen-1] = '\0'; // Make sure that loooong titles are properly terminated.
@@ -276,7 +448,7 @@ BOOL CALLBACK Window_Find_Callback_Top(HWND hwnd, LPARAM structPtr)
 
 void* Window_Find(const char* title, bool exact)
 {
-	using namespace julian;
+	using namespace Julian;
 	// Cockos SWELL doesn't provide FindWindow, and FindWindowEx doesn't provide the NULL, NULL top-level mode,
 	//		so must code own implementation...
 	// This implemetation adds two features:
@@ -301,7 +473,7 @@ void* Window_Find(const char* title, bool exact)
 
 BOOL CALLBACK Window_ListFind_Callback_Child(HWND hwnd, LPARAM structPtr)
 {
-	using namespace julian;
+	using namespace Julian;
 	EnumWindowsStruct* s = reinterpret_cast<EnumWindowsStruct*>(structPtr);
 	int len = GetWindowText(hwnd, s->temp, s->tempLen);
 	s->temp[s->tempLen - 1] = '\0'; // Make sure that loooong titles are properly terminated.
@@ -324,7 +496,7 @@ BOOL CALLBACK Window_ListFind_Callback_Child(HWND hwnd, LPARAM structPtr)
 
 BOOL CALLBACK Window_ListFind_Callback_Top(HWND hwnd, LPARAM structPtr)
 {
-	using namespace julian;
+	using namespace Julian;
 	EnumWindowsStruct* s = reinterpret_cast<EnumWindowsStruct*>(structPtr);
 	int len = GetWindowText(hwnd, s->temp, s->tempLen);
 	s->temp[s->tempLen - 1] = '\0'; // Make sure that loooong titles are properly terminated.
@@ -349,7 +521,7 @@ BOOL CALLBACK Window_ListFind_Callback_Top(HWND hwnd, LPARAM structPtr)
 
 void Window_ListFind(const char* title, bool exact, const char* section, const char* key)
 {
-	using namespace julian;
+	using namespace Julian;
 	// Cockos SWELL doesn't provide FindWindow, and FindWindowEx doesn't provide the NULL, NULL top-level mode,
 	//		so must code own implementation...
 	// This implemetation adds three features:
@@ -378,7 +550,7 @@ void Window_ListFind(const char* title, bool exact, const char* section, const c
 
 BOOL CALLBACK Window_FindChild_Callback(HWND hwnd, LPARAM structPtr)
 {
-	using namespace julian;
+	using namespace Julian;
 	EnumWindowsStruct* s = reinterpret_cast<EnumWindowsStruct*>(structPtr);
 	int len = GetWindowText(hwnd, s->temp, s->tempLen);
 	for (int i = 0; (s->temp[i] != '\0') && (i < len); i++) s->temp[i] = (char)tolower(s->temp[i]); // Convert to lowercase
@@ -394,7 +566,7 @@ BOOL CALLBACK Window_FindChild_Callback(HWND hwnd, LPARAM structPtr)
 
 void* Window_FindChild(void* parentHWND, const char* title, bool exact)
 {
-	using namespace julian;
+	using namespace Julian;
 	// Cockos SWELL doesn't provide fully-functional FindWindowEx, so rather code own implementation.
 	// This implemetation adds two features:
 	//		* Searches child windows as well, so that script GUIs can be found even if docked.
@@ -418,7 +590,7 @@ void* Window_FindChild(void* parentHWND, const char* title, bool exact)
 
 BOOL CALLBACK Window_ListAllChild_Callback(HWND hwnd, LPARAM strPtr)
 {
-	using namespace julian;
+	using namespace Julian;
 	char* hwndString = reinterpret_cast<char*>(strPtr);
 	char temp[TEMP_LEN] = "";
 	sprintf_s(temp, TEMP_LEN - 1, "0x%llX,", (unsigned long long int)hwnd); // Print with leading 0x so that Lua tonumber will automatically notice that it is hexadecimal.
@@ -433,7 +605,7 @@ BOOL CALLBACK Window_ListAllChild_Callback(HWND hwnd, LPARAM strPtr)
 
 void Window_ListAllChild(void* parentHWND, const char* section, const char* key) //char* buf, int buf_sz)
 {
-	using namespace julian;
+	using namespace Julian;
 	HWND hwnd = (HWND)parentHWND;
 	char hwndString[EXT_LEN] = "";
 	EnumChildWindows(hwnd, Window_ListAllChild_Callback, reinterpret_cast<LPARAM>(hwndString));
@@ -444,7 +616,7 @@ void Window_ListAllChild(void* parentHWND, const char* section, const char* key)
 
 BOOL CALLBACK Window_ListAllTop_Callback(HWND hwnd, LPARAM strPtr)
 {
-	using namespace julian;
+	using namespace Julian;
 	char* hwndString = reinterpret_cast<char*>(strPtr);
 	char temp[TEMP_LEN] = "";
 	sprintf_s(temp, TEMP_LEN - 1, "0x%llX,", (unsigned long long int)hwnd); // Print with leading 0x so that Lua tonumber will automatically notice that it is hexadecimal.
@@ -459,7 +631,7 @@ BOOL CALLBACK Window_ListAllTop_Callback(HWND hwnd, LPARAM strPtr)
 
 void Window_ListAllTop(const char* section, const char* key) //char* buf, int buf_sz)
 {
-	using namespace julian;
+	using namespace Julian;
 	char hwndString[EXT_LEN] = "";
 	EnumWindows(Window_ListAllTop_Callback, reinterpret_cast<LPARAM>(hwndString));
 	SetExtState(section, key, (const char*)hwndString, false);
@@ -469,7 +641,7 @@ void Window_ListAllTop(const char* section, const char* key) //char* buf, int bu
 
 BOOL CALLBACK MIDIEditor_ListAll_Callback_Child(HWND hwnd, LPARAM lParam)
 {
-	using namespace julian;
+	using namespace Julian;
 	if (MIDIEditor_GetMode(hwnd) != -1) // Is MIDI editor?
 	{
 		char* hwndString = reinterpret_cast<char*>(lParam);
@@ -490,7 +662,7 @@ BOOL CALLBACK MIDIEditor_ListAll_Callback_Child(HWND hwnd, LPARAM lParam)
 
 BOOL CALLBACK MIDIEditor_ListAll_Callback_Top(HWND hwnd, LPARAM lParam)
 {
-	using namespace julian;
+	using namespace Julian;
 	if (MIDIEditor_GetMode(hwnd) != -1) // Is MIDI editor?
 	{
 		char* hwndString = reinterpret_cast<char*>(lParam);
@@ -515,7 +687,7 @@ BOOL CALLBACK MIDIEditor_ListAll_Callback_Top(HWND hwnd, LPARAM lParam)
 
 void MIDIEditor_ListAll(char* buf, int buf_sz)
 {
-	using namespace julian;
+	using namespace Julian;
 	char hwndString[API_LEN] = "";
 	// To find docked editors, must also enumerate child windows.
 	EnumWindows(MIDIEditor_ListAll_Callback_Top, reinterpret_cast<LPARAM>(hwndString));
@@ -546,27 +718,28 @@ void Window_Resize(void* windowHWND, int width, int height)
 
 void Window_SetPosition(void* windowHWND, int left, int top, int width, int height)
 {
-	// WARNING: SetWindowPos is not completely implemented in SWELL (only NOSIZE and NOMOVE are available).
-	// This API therefore divides SetWindowPos's capabilities into four functions:
-	//		Move, Resize, SetPosition and SetZOrder, only the first three of which are functional in non-Windows systems.
+	// WARNING: SetWindowPos is not completely implemented in SWELL:
+	//   * Only NOSIZE and NOMOVE flags are available.
+	//   * The documentation is outdated, and Z order *is* implemented. However, only INSERT_AFTER, HWND_BOTTOM and HWND_TOP are available.
+	//     (I think that HWND_NOTOPMOST and HWND_TOPMOST both default to HWND_TOP.)
 	HWND hwnd = (HWND)windowHWND;
-	SetWindowPos(hwnd, NULL, left, top, width, height, SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOOWNERZORDER);
+	SetWindowPos(hwnd, NULL, left, top, width, height, SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOOWNERZORDER );
 }
 
 bool Window_SetZOrder(void* windowHWND, const char* ZOrder, void* insertAfterHWND, int flags)
 {
-	// WARNING: SetWindowPos is not completely implemented in SWELL (only NOSIZE and NOMOVE are available).
-	// This API therefore divides SetWindowPos's capabilities into four functions:
-	//		Move, Resize, SetPosition and SetZOrder, only the first three of which are functional in non-Windows systems.
-	// SetZOrder can do everything that SetWindowPos does, except move and resize windows.
+	// WARNING: SetWindowPos is not completely implemented in SWELL:
+	//   * Only NOSIZE and NOMOVE flags are available.
+	//   * The documentation is outdated, and Z order *is* implemented. However, only INSERT_AFTER, HWND_BOTTOM and HWND_TOP are available.
+	//     I think that HWND_NOTOPMOST and HWND_TOPMOST both default to HWND_TOP, so this function will do the same.
 #ifdef _WIN32
 	unsigned int uFlags = ((unsigned int)flags) | SWP_NOMOVE | SWP_NOSIZE;
 	HWND insertAfter;
 	// Search for single chars that can distinguish the different ZOrder strings.
 	if      (strchr(ZOrder, 'I') || strchr(ZOrder, 'i')) insertAfter = (HWND)insertAfterHWND; // insertAfter
 	else if (strchr(ZOrder, 'B') || strchr(ZOrder, 'b')) insertAfter = (HWND) 1; // Bottom
-	else if (strchr(ZOrder, 'N') || strchr(ZOrder, 'n')) insertAfter = (HWND)-2; // NoTopmost
-	else if (strchr(ZOrder, 'M') || strchr(ZOrder, 'm')) insertAfter = (HWND)-1; // Topmost
+	//else if (strchr(ZOrder, 'N') || strchr(ZOrder, 'n')) insertAfter = (HWND)-2; // NoTopmost // Whoops, bug! "N" is also in "HWND"!
+	//else if (strchr(ZOrder, 'M') || strchr(ZOrder, 'm')) insertAfter = (HWND)-1; // Topmost
 	else												 insertAfter = (HWND) 0; // Top
 
 	return !!SetWindowPos((HWND)windowHWND, insertAfter, 0, 0, 0, 0, uFlags);
@@ -605,34 +778,114 @@ bool  Window_IsWindow(void* windowHWND)
 
 
 
-bool Window_PostMessage(void* windowHWND, int message, int wParamLow, int wParamHigh, int lParamLow, int lParamHigh)
+
+bool WindowMessage_ListIntercepts(void* windowHWND, char* buf, int buf_sz)
 {
+	using namespace Julian;
+	buf[0] = 0;
+	if (mapWindowToData.count((HWND)windowHWND))
+	{
+		auto& messages = mapWindowToData[(HWND)windowHWND].messages;
+		for (const auto& it : messages)
+		{
+			if (strlen(buf) < buf_sz - 32)
+			{
+				if (mapMsgToWM_.count(it.first))
+					sprintf(strchr(buf, 0), "%s:", mapMsgToWM_[it.first]);
+				else
+					sprintf(strchr(buf, 0), "0x%04X:", it.first);
+				if ((it.second).passthrough)
+					strcat(buf, "passthrough,");
+				else
+					strcat(buf, "block,");
+			}
+			else
+				return false;
+		}
+		char* lastComma{ strrchr(buf, ',') }; // Remove final comma
+		if (lastComma)
+			*lastComma = 0;
+		return true;
+	}
+}
+
+bool WindowMessage_Post(void* windowHWND, const char* message, int wParamLow, int wParamHigh, int lParamLow, int lParamHigh)
+{
+	using namespace Julian;
+
+	std::string msgString = message;
+	UINT uMsg = 0;
+	if (mapWM_toMsg.count(msgString))
+		uMsg = mapWM_toMsg[msgString];
+	else
+	{
+		errno = 0;
+		uMsg = strtoul(message, NULL, 16);
+		if (!uMsg || (errno == ERANGE))
+			return FALSE;
+	}
+
+	WPARAM wParam = MAKEWPARAM(wParamLow, wParamHigh);
+	LPARAM lParam = MAKELPARAM(lParamLow, lParamHigh);
+	HWND hwnd = (HWND)windowHWND;
+
+	// Is this window currently being intercepted?
+	if (mapWindowToData.count(hwnd)) {
+		sWindowData& w = mapWindowToData[hwnd];
+		if (w.messages.count(uMsg)) {
+			w.origProc(hwnd, uMsg, wParam, lParam); // WindowProcs usually return 0 if message was handled.  But not always, 
+			return true;
+		}
+	}
+	return !!PostMessage(hwnd, uMsg, wParam, lParam);
+}
+
+int WindowMessage_Send(void* windowHWND, const char* message, int wParamLow, int wParamHigh, int lParamLow, int lParamHigh)
+{
+	using namespace Julian;
+
+	std::string msgString = message;
+	UINT uMsg = 0;
+	if (mapWM_toMsg.count(msgString))
+		uMsg = mapWM_toMsg[msgString];
+	else
+	{
+		errno = 0;
+		uMsg = strtoul(message, NULL, 16);
+		if (!uMsg || (errno == ERANGE))
+			return FALSE;
+	}
+
 	WPARAM wParam = MAKEWPARAM(wParamLow, wParamHigh);
 	LPARAM lParam = MAKELPARAM(lParamLow, lParamHigh);
 
-	// Is this window currently being intercepted?
-	using namespace julian;
-	if (mapWindowToData.count((HWND)windowHWND)) {
-		sWindowData w = mapWindowToData[(HWND)windowHWND];
-		if (w.messagesToIntercept.count((UINT)message)) {
-			return !w.origProc((HWND)windowHWND, (UINT)message, wParam, lParam); // WindowProcs usually return 0 if message was handled.  But not always, 
-		}
-	}
-	return !!PostMessage((HWND)windowHWND, (UINT)message, wParam, lParam);
+	return (int)SendMessage((HWND)windowHWND, uMsg, wParam, lParam);
 }
 
-bool Window_PeekMessage(void* windowHWND, int message, double* timeOut, int* wParamLowOut, int* wParamHighOut, int* lParamLowOut, int* lParamHighOut)
+bool WindowMessage_Peek(void* windowHWND, const char* message, double* timeOut, int* wParamLowOut, int* wParamHighOut, int* lParamLowOut, int* lParamHighOut)
 {
 	// lParamLow, lParamHigh, and wParamHigh are signed, whereas wParamLow is unsigned.
-	using namespace julian;
+	using namespace Julian;
+
+	std::string msgString = message;
+	UINT uMsg = 0;
+	if (mapWM_toMsg.count(msgString))
+		uMsg = mapWM_toMsg[msgString];
+	else
+	{
+		errno = 0;
+		uMsg = strtoul(message, NULL, 16);
+		if (!uMsg || (errno == ERANGE))
+			return false;
+	}
 
 	if (mapWindowToData.count((HWND)windowHWND))
 	{
-		sWindowData w = mapWindowToData[(HWND)windowHWND];
+		sWindowData& w = mapWindowToData[(HWND)windowHWND];
 
-		if (w.latestMessage.count((UINT)message))
+		if (w.messages.count(uMsg))
 		{
-			sMsgData m = w.latestMessage[(UINT)message];
+			sMsgData& m = w.messages[uMsg];
 
 			*timeOut = m.time;
 			*lParamLowOut = GET_X_LPARAM(m.lParam);
@@ -646,9 +899,9 @@ bool Window_PeekMessage(void* windowHWND, int message, double* timeOut, int* wPa
 	return false;
 }
 
-LRESULT CALLBACK Window_Intercept_Callback(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK WindowMessage_Intercept_Callback(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	using namespace julian;
+	using namespace Julian;
 
 	// If not in map, we don't know how to call original process.
 	if (mapWindowToData.count(hwnd) == 0)
@@ -680,148 +933,199 @@ LRESULT CALLBACK Window_Intercept_Callback(HWND hwnd, UINT uMsg, WPARAM wParam, 
 	*/
 
 	// Event that should be intercepted? 
-	if (windowData.messagesToIntercept.count(uMsg)) // ".contains" has only been implemented in more recent C++ versions
+	if (windowData.messages.count(uMsg)) // ".contains" has only been implemented in more recent C++ versions
 	{
-		windowData.latestMessage.erase(uMsg);
-		windowData.latestMessage.emplace(uMsg, sMsgData{ time_precise(), wParam, lParam });
+		windowData.messages[uMsg].time = time_precise();
+		windowData.messages[uMsg].wParam = wParam;
+		windowData.messages[uMsg].lParam = lParam;
 
 		// If event will not be passed through, can quit here.
-		if (windowData.messagesToIntercept[uMsg] == BLOCK)
-			return 0;
+		if (windowData.messages[uMsg].passthrough == false)
+		{
+			// Most WM_ messages return 0 if processed, with only a few exceptions:
+			switch (uMsg)
+			{
+			case WM_SETCURSOR:
+			case WM_DRAWITEM:
+			case WM_COPYDATA:
+				return 1;
+			case WM_MOUSEACTIVATE:
+				return 3;
+			default:
+				return 0;
+			}
+		}
 	}
 
 	// Any other event that isn't intercepted.
 	return windowData.origProc(hwnd, uMsg, wParam, lParam);
 }
 
-int Window_Intercept(void* windowHWND, const char* messages, char* buf, int buf_sz)
+int WindowMessage_Intercept(void* windowHWND, const char* messages)
 {
-	using namespace julian;
+	using namespace Julian;
 	HWND hwnd = (HWND)windowHWND;
-
-	// Each window can only be intercepted by one script. Therefore check if alreay in map.
-	// If yes, return string to inform caller of messages that are being intercepted.
-	if (mapWindowToData.count(hwnd) > 0)
-	{
-		sWindowData windowData = mapWindowToData[hwnd];
-		strcpy_s(buf, buf_sz, windowData.reconstructMsg);
-		return ERR_ALREADY_INTERCEPTED;
-	}
 
 	// According to swell-functions.h, IsWindow is slow in swell. However, Window_Intercept will probably not be called many times per script. 
 	if (!IsWindow(hwnd))
 		return ERR_NOT_WINDOW;
 
+	// strtok *replaces* characters in the string, so better copy messages to new char array.
+	char msg[API_LEN];
+	if (strcpy_s(msg, API_LEN, messages) != 0)
+		return ERR_PARSING;
+
+	// messages string will be parsed into uMsg message types and passthrough modifiers 
+	UINT uMsg;
+	bool passthrough;
+	char *token;
+	std::string msgString;
+	const char* delim = ":;,= \n\t";
+
+	// Parsed info will be stored in these temporary maps
+	std::map<UINT, sMsgData> newMessages;
+
+	// Parse!
+	token = strtok(msg, delim);
+	while (token)
+	{
+		// Get message number
+		msgString = token;
+		if (mapWM_toMsg.count(msgString))
+			uMsg = mapWM_toMsg[msgString];
+		else
+			uMsg = strtoul(token, NULL, 16);
+		if (!uMsg || (errno == ERANGE))
+			return ERR_PARSING;
+
+		// Now get passthrough
+		token = strtok(NULL, delim);
+		if (token == NULL)
+			return ERR_PARSING; // Each message type must be followed by a modifier
+		else if (token[0] == 'p' || token[0] == 'P')
+			passthrough = true;
+		else if (token[0] == 'b' || token[0] == 'B')
+			passthrough = false;
+		else // Not block or passthrough
+			return ERR_PARSING;
+
+		// Save in temporary maps
+		newMessages.emplace(uMsg, sMsgData{ passthrough, 0, 0, 0 }); // time = 0 indicates that this message type is being intercepted OK, but that no message has yet been received.
+
+		token = strtok(NULL, delim);
+	}
+
+	// Parsing went OK?  Any messages to intercept?
+	if (newMessages.size() == 0)
+		return ERR_PARSING;
+
+	// Is this window already being intercepted?
+	if (mapWindowToData.count(hwnd) == 0) // Not yet intercepted
+	{
+		// Try to get the original process.
+		WNDPROC origProc = nullptr;
+#ifdef _WIN32
+		origProc = (WNDPROC)SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)WindowMessage_Intercept_Callback);
+#else
+		origProc = (WNDPROC)SetWindowLong(hwnd, GWL_WNDPROC, (LONG_PTR)WindowMessage_Intercept_Callback);
+#endif
+		if (!origProc)
+			return ERR_ORIGPROC;
+
+		// Got everything OK.  Finally, store struct.
+		Julian::mapWindowToData.emplace(hwnd, sWindowData{ origProc, newMessages }); // Insert into static map of namespace
+		return 1;
+	}
+
+	// Already intercepted.  So add to existing maps.
+	else
+	{
+		// Check that no overlaps: only one script may intercept each message type
+		// Want to update existing map, so use aliases/references
+		auto& existingMsg = Julian::mapWindowToData[hwnd].messages; // Messages that are already being intercepted for this window
+		for (const auto& it : newMessages)
+		{
+			if (existingMsg.count(it.first)) // Oops, already intercepting this message type
+			{
+				return ERR_ALREADY_INTERCEPTED;
+			}
+		}
+		// No overlaps, so add new intercepts to existing messages to intercept
+		existingMsg.insert(newMessages.begin(), newMessages.end());
+		return 1;
+	}
+}
+
+int WindowMessage_Release(void* windowHWND, const char* messages)
+{
+	using namespace Julian;
+	HWND hwnd = (HWND)windowHWND;
+
+	if (mapWindowToData.count(hwnd) == 0)
+		return ERR_NOT_WINDOW;
+
+	// strtok *replaces* characters in the string, so better copy messages to new char array.
 	char msg[API_LEN];
 	if (strcpy_s(msg, sizeof(msg), messages) != 0)
 		return ERR_PARSING;
 
 	// messages string will be parsed into uMsg message types and passthrough modifiers 
-	const char delim[] = ":;,= ";
 	UINT uMsg;
-	bool passthrough;
-	char *token, *next_token, *str_end; // For use in strtok function
-
-	// The parsed info will be reconstructed into a new string with standard delimiters, 
-	//		which can be returned when another script tries to intercept an already-intercepted window.
-	// Why construct reconstructMsg now, instead of when returning ERR_ALREADY_INTERCEPTED?
-	//		Because must make sure *now* that string fits into API_LEN.
-	char reconstructMsg[API_LEN] = "";
-	char temp[32] = "";
-
-	// Parsed info will be stored in these maps
-	std::map<UINT, bool>	messagesToIntercept; // passthrough = true, block = false
-	std::map<UINT, sMsgData>latestMessage;
+	char *token;
+	std::string msgString;
+	const char* delim = ":;,= \n\t";
+	std::set<UINT> messagesToErase;
 
 	// Parse!
-	token = strtok_s(msg, delim, &next_token);
+	token = strtok(msg, delim);
 	while (token)
 	{
 		// Get message number
-		uMsg = strtoul(token, &str_end, 16);
-		if (!uMsg || (errno == ERANGE)) 
-			return ERR_PARSING;
-		
-		sprintf_s(temp, sizeof(temp), ",0x%04X:", uMsg); // Reconstruct with standard delimiters 
-		
-		// Now get passthrough
-		token = strtok_s(NULL, delim, &next_token);
-		if (token == NULL) 
-			return ERR_PARSING; // Each message type must be followed by a modifier
-		else if (token[0] == 'p' || token[0] == 'P')
-		{
-			passthrough = true; strcat_s(temp, API_LEN, "passthrough");
-		}
-		else if (token[0] == 'b' || token[0] == 'B')
-		{
-			passthrough = false; strcat_s(temp, API_LEN, "block");
-		}
-		else // Not block or passthrough
-			return ERR_PARSING;
-
-		// Concatenate to reconstructMsg
-		if (strlen(reconstructMsg) + strlen(temp) < API_LEN)
-			strcat_s(reconstructMsg, API_LEN, temp);
+		msgString = token;
+		if (mapWM_toMsg.count(msgString))
+			uMsg = mapWM_toMsg[msgString];
 		else
+			uMsg = strtoul(token, NULL, 16);
+		if (!uMsg || (errno == ERANGE))
 			return ERR_PARSING;
 
-		// Save in maps too
-		messagesToIntercept.emplace(uMsg, passthrough);
-		latestMessage.emplace(uMsg, sMsgData{ 0, 0, 0 }); // time = 0 means that this message type is being intercepted OK, but no message has been intercepted yet.
+		// Store this parsed uMsg number
+		messagesToErase.insert(uMsg);
 
-		token = strtok_s(NULL, delim, &next_token);
+		token = strtok(NULL, delim);
 	}
 
-	// Parsing went OK?  Any messages to intercept?
-	if (messagesToIntercept.size() == 0)
-		return ERR_PARSING;
+	// Erase all message types that have been parsed
+	auto& existingMessages = Julian::mapWindowToData[hwnd].messages; // Messages that are already being intercepted for this window
+	for (const UINT it : messagesToErase)
+		existingMessages.erase(it);
 
-	// Try to get the original process.
-	WNDPROC origProc = nullptr;
-#ifdef _WIN32
-	origProc = (WNDPROC)SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)Window_Intercept_Callback);
-#else
-	origProc = (WNDPROC)SetWindowLong(hwnd, GWL_WNDPROC, (LONG_PTR)Window_Intercept_Callback);
-#endif
-	if (!origProc)
-		return ERR_ORIGPROC;
+	// If no messages need to be intercepted any more, release this window
+	if (existingMessages.size() == 0)
+		WindowMessage_ReleaseWindow(hwnd);
 
-	// Got everything OK.  Finally, store struct.
-	sWindowData s; // { origProc, messagesToIntercept, latestMessage };
-	s.origProc = origProc;
-	s.reconstructMsg = &reconstructMsg[1]; // Skip initial comma.  reconstructMsg+1 ?  What is the most idiomatic?
-	s.messagesToIntercept = messagesToIntercept;
-	s.latestMessage = latestMessage;
-	mapWindowToData.insert(pair<HWND, sWindowData>(hwnd, s));
-
-	strcpy_s(buf, buf_sz, &reconstructMsg[1]); // Skip initial comma.  reconstructMsg+1 ?  What is the most idiomatic?
 	return TRUE;
 }
 
-bool Window_ReleaseIntercept(void* windowHWND)
+void WindowMessage_ReleaseWindow(void* windowHWND)
 {
-	using namespace julian;
+	using namespace Julian;
 
 	if (mapWindowToData.count((HWND)windowHWND))
 	{
-		sWindowData windowData = mapWindowToData[(HWND)windowHWND];
-		WNDPROC origProc = windowData.origProc;
+		WNDPROC origProc = mapWindowToData[(HWND)windowHWND].origProc;
 #ifdef _WIN32
 		SetWindowLongPtr((HWND)windowHWND, GWLP_WNDPROC, (LONG_PTR)origProc);
 #else
 		SetWindowLong((HWND)windowHWND, GWL_WNDPROC, (LONG_PTR)origProc);
 #endif
 		mapWindowToData.erase((HWND)windowHWND);
-		return true;
 	}
-	else
-		return false;
 }
 
-
-void Window_ReleaseAllIntercepts()
+void WindowMessage_ReleaseAll()
 {
-	using namespace julian;
+	using namespace Julian;
 	for (auto it = mapWindowToData.begin(); it != mapWindowToData.end(); ++it)
 	{
 		HWND hwnd = it->first;
@@ -883,3 +1187,186 @@ void Mouse_SetCursor(void* cursorHandle)
 {
 	SetCursor((HCURSOR)cursorHandle);
 }
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void* GDI_GetDC(void* windowHWND)
+{
+	return GetDC((HWND)windowHWND);
+}
+
+void* GDI_GetWindowDC(void* windowHWND)
+{
+	return GetWindowDC((HWND)windowHWND);
+}
+
+void GDI_ReleaseDC(void* windowHWND, void* deviceHDC)
+{
+	ReleaseDC((HWND)windowHWND, (HDC)deviceHDC);
+}
+
+void GDI_SetPen(void* deviceHDC, int iStyle, int width, int color)
+{
+	HPEN pen = CreatePen(iStyle, width, color);
+	SelectObject((HDC)deviceHDC, pen);
+}
+
+void GDI_SetFont(void* deviceHDC, int height, int weight, int angle, bool italic, bool underline, bool strikeOut, const char* fontName)
+{
+	HFONT font = CreateFont(height, 0, angle, 0, weight, (BOOL)italic, (BOOL)underline, (BOOL)strikeOut, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH|FF_DONTCARE, fontName);
+	SelectObject((HDC)deviceHDC, font);
+}
+
+void GDI_RoundRect(void* deviceHDC, int left, int top, int right, int bottom, int xrnd, int yrnd)
+{
+	RoundRect((HDC)deviceHDC, left, top, right, bottom, xrnd, yrnd);
+}
+
+void GDI_FillRect(void* deviceHDC, int left, int top, int right, int bottom, int color)
+{
+	RECT r{ left, top, right, bottom };
+	FillRect((HDC)deviceHDC, &r, CreateSolidBrush(color));
+}
+
+void GDI_SetBkMode(void* deviceHDC, int mode)
+{
+	SetBkMode((HDC)deviceHDC, mode);
+}
+
+void GDI_SetBkColor(void* deviceHDC, int color)
+{
+	SetBkColor((HDC)deviceHDC, color);
+}
+
+void GDI_SetTextColor(void* deviceHDC, int color)
+{
+	SetTextColor((HDC)deviceHDC, color);
+}
+
+int GDI_GetTextColor(void* deviceHDC)
+{
+	return GetTextColor((HDC)deviceHDC);
+}
+
+int GDI_DrawText(void* deviceHDC, const char *text, int len, int left, int top, int right, int bottom, int align)
+{
+	RECT r{ left, top, right, bottom };
+	return DrawText((HDC)deviceHDC, text, len, &r, align);
+}
+
+void GDI_SetPixel(void* deviceHDC, int x, int y, int color)
+{
+	SetPixel((HDC)deviceHDC, x, y, color);
+}
+
+void GDI_Rectangle(void* deviceHDC, int left, int top, int right, int bottom)
+{
+	Rectangle((HDC)deviceHDC, left, top, right, bottom);
+}
+
+void GDI_MoveTo(void* deviceHDC, int x, int y)
+{
+	MoveToEx((HDC)deviceHDC, x, y, NULL);
+}
+
+void GDI_LineTo(void* deviceHDC, int x, int y)
+{
+	LineTo((HDC)deviceHDC, x, y);
+}
+
+void GDI_Ellipse(void* deviceHDC, int left, int top, int right, int bottom)
+{
+	Ellipse((HDC)deviceHDC, left, top, right, bottom);
+}
+
+void GDI_DrawFocusRect(void* windowHWND, int left, int top, int right, int bottom)
+{
+	RECT r{ left, top, right, bottom };
+#ifdef _WIN32
+	HDC dc = GetDC((HWND)windowHWND);
+	DrawFocusRect(dc, &r);
+#else
+	SWELL_DrawFocusRect((HWND)windowHWND, &r, NULL)
+#endif
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool Window_GetScrollInfo(void* windowHWND, const char* scrollbar, int* positionOut, int* pageSizeOut, int* minOut, int* maxOut, int* trackPosOut)
+{
+	SCROLLINFO si = { sizeof(SCROLLINFO), SIF_ALL, };
+	int nBar = ((strchr(scrollbar, 'v') || strchr(scrollbar, 'V')) ? SB_VERT : SB_HORZ); // Match strings such as "SB_VERT", "VERT" or "v".
+	bool isOK = !!CoolSB_GetScrollInfo((HWND)windowHWND, nBar, &si);
+	*pageSizeOut = si.nPage;
+	*positionOut = si.nPos;
+	*minOut = si.nMin;
+	*maxOut = si.nMax;
+	*trackPosOut = si.nTrackPos;
+	return isOK;
+}
+
+bool Window_SetScrollInfo(void* windowHWND, const char* scrollbar, int position, int min, int max)
+{
+	SCROLLINFO si = { sizeof(SCROLLINFO), SIF_PAGE, min, max, 0, position, 0 }; // Application cannot set trackpos, and SetScrollInfo ignores this value
+
+	if (strchr(scrollbar, 'H') || strchr(scrollbar, 'h')) // Match strings such as "SB_HORZ", "HORZ" or "h".
+	{
+		CoolSB_GetScrollInfo((HWND)windowHWND, SB_HORZ, &si); // Get page size (aka clientrect size, which cannot be changed)
+		si.fMask = SIF_RANGE;
+		bool isOK = !!CoolSB_SetScrollInfo((HWND)windowHWND, SB_HORZ, &si, TRUE);
+		SendMessage((HWND)windowHWND, WM_HSCROLL, MAKEWPARAM(SB_THUMBPOSITION, position), NULL);
+		return isOK;
+	}
+	else
+	{
+		CoolSB_GetScrollInfo((HWND)windowHWND, SB_VERT, &si); // Get page size (aka clientrect size, which cannot be changed)
+		si.fMask = SIF_RANGE;
+		bool isOK = !!SetScrollInfo((HWND)windowHWND, SB_VERT, &si, TRUE);
+		SendMessage((HWND)windowHWND, WM_VSCROLL, MAKEWPARAM(SB_THUMBPOSITION, position), NULL);
+		return isOK;
+	}
+}
+
+int Scroll_GetPos(void* windowHWND, const char* scrollbar)
+{
+	int nBar = ((strchr(scrollbar, 'v') || strchr(scrollbar, 'V')) ? SB_VERT : SB_HORZ); // Match strings such as "SB_VERT", "VERT" or "v".
+	return CoolSB_GetScrollPos((HWND)windowHWND, nBar);
+}
+
+bool Scroll_SetPos(void* windowHWND, const char* scrollbar, int position)
+{
+	HWND hwnd = (HWND)windowHWND;
+	int nBar = ((strchr(scrollbar, 'v') || strchr(scrollbar, 'V')) ? SB_VERT : SB_HORZ); // Match strings such as "SB_VERT", "VERT" or "v".
+	bool isOK = !!CoolSB_SetScrollPos((HWND)windowHWND, nBar, position, TRUE);
+	InvalidateRect(hwnd, NULL, TRUE);
+	UpdateWindow(hwnd);
+	return isOK;
+}
+
+bool Window_Scroll(void* windowHWND, int XAmount, int YAmount)
+{
+	RECT r; GetClientRect((HWND)windowHWND, &r);
+	int XAbs = (XAmount < 0) ? -XAmount : XAmount;
+	int YAbs = (YAmount < 0) ? -YAmount : YAmount;
+	r.left = r.left - XAbs;
+	r.right = r.right + XAbs;
+	r.top = r.top - YAbs;
+	r.bottom = r.bottom + YAbs;
+	return !!ScrollWindow((HWND)windowHWND, XAmount, YAmount, NULL, &r);
+}
+
+bool Window_InvalidateRect(void* windowHWND, int left, int top, int right, int bottom)
+{
+	// SWELL ignores bErase, however I'm not sure whether it defaults to TRUE or FALSE.
+	const RECT r{ left, top, right, bottom };
+	return !!InvalidateRect((HWND)windowHWND, &r, 0);
+}
+
+void Window_Update(void* windowHWND)
+{
+	UpdateWindow((HWND)windowHWND);
+}
+

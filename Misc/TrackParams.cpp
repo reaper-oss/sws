@@ -508,55 +508,6 @@ void InputMatch(COMMAND_T* ct)
 	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 }
 
-#ifdef _WIN32
-BOOL CALLBACK PLinkEnumWindowsProc(HWND hwndplink, LPARAM lParam)
-{
-	char titleplink[128]{};
-	GetWindowText(hwndplink, titleplink, sizeof(titleplink));
-	std::string stitleplink = titleplink;
-	if (stitleplink.compare(0, 28, "Parameter Modulation/Link for", 0, 28) == 0)
-	{
-		if (GetParent(hwndplink) == GetMainHwnd())
-		{
-			PostMessage(hwndplink, WM_CLOSE, 0, 0);
-		}
-	}
-	return TRUE;
-}
-void CloseAllPLinkWnd(COMMAND_T* = NULL)
-{
-	EnumWindows(PLinkEnumWindowsProc, 0);
-}
-
-void CloseLastPLinkWnd(COMMAND_T* = NULL)
-{ 
-	int trn, fxn, prmn;
-	bool ptouched = GetLastTouchedFX(&trn, &fxn, &prmn);
-	if (ptouched)
-	{
-		char fxname[128]{};
-		char prmname[128]{};
-		MediaTrack* ptrack = CSurf_TrackFromID(trn, false);
-		TrackFX_GetFXName(ptrack, fxn, fxname, 128);
-		TrackFX_GetParamName(ptrack, fxn, prmn, prmname, 128);
-		std::string ft = fxname;
-		if (ft.find(":") && (ft.find(":") <= ft.length())) {
-			ft = ft.substr(ft.find(":") + 1);
-			if (ft.find(" (") && (ft.find(" (") <= ft.length())) { ft = ft.erase(ft.find(" (")); }
-			if (ft.find("(") && (ft.find("(") <= ft.length())) { ft = ft.erase(ft.find("(")); }
-		} // if user renamed fx with "(" in the middle of the name, won't work in some cases for now
-		if (ft.length() > 0) { while (ft[0] == ' ') { ft = ft.substr(1); } }
-		std::stringstream stitleplink;
-		if (trn == 0) {	stitleplink << "Parameter Modulation/Link for " << prmname << " / " << ft << " - (Master Track)"; }
-		else if (trn > 0) { stitleplink << "Parameter Modulation/Link for " << prmname << " / " << ft << " - (" << trn << ")"; }
-		HWND hwndplink = FindWindowEx(NULL, NULL, NULL, stitleplink.str().c_str());
-		if (GetParent(hwndplink) == GetMainHwnd())
-		{
-			PostMessage(hwndplink, WM_CLOSE, 0, 0);
-		}
-	}
-}
-#endif
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] =
@@ -639,12 +590,6 @@ static COMMAND_T g_commandTable[] =
 
 	// Mute
 	{ { DEFACCEL, "SWS: Toolbar mute toggle" },									"SWS_MUTETOGGLE", MuteToggle, NULL, (INT_PTR)"B_MUTE", CheckTrackParam, },
-
-#ifdef _WIN32
-	// ParmLink
-	{ { DEFACCEL, "SWS: Hide all parameter modulation/link windows" }, "DOPP_PLINK_ALLWND_CLOSE", CloseAllPLinkWnd, NULL, },
-	{ { DEFACCEL, "SWS: Hide parameter modulation/link for last touched FX parameter" }, "DOPP_PLINK_WND_CLOSE", CloseLastPLinkWnd, NULL, },
-#endif
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

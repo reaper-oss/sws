@@ -263,6 +263,8 @@ APIdef g_apidefs[] =
 	{ APIFUNC(CF_ShellExecute), "bool", "const char*", "file", "Open the given file or URL in the default application. See also <a href=\"#CF_LocateInExplorer\">CF_LocateInExplorer</a>.", },
 	{ APIFUNC(CF_LocateInExplorer), "bool", "const char*", "file", "Select the given file in explorer/finder.", },
 
+	{ APIFUNC(DO_GetArrangeVertPos), "void", "int*,int*", "MaxHeightOut,ViewPosOut", "Get height of arrange area and position of view from scrollbar in pixels.", },
+
 	{ NULL, } // denote end of table
 };
 

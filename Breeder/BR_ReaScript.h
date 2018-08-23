@@ -121,6 +121,7 @@ const char*		NF_GetSWSTrackNotes(MediaTrack* track, WDL_FastString* trackNoteOut
 void			NF_SetSWSTrackNotes(MediaTrack* track, const char* buf);
 // /*** nofish stuff ***
 
+void			DO_GetArrangeVertPos(int* MaxHeightOut, int* ViewPosOut); // dopp func 
 
 /******************************************************************************
 * Big description!                                                            *

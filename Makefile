@@ -1,15 +1,22 @@
-# use make or make DEBUG=1
+# use make or make DEBUG=1 or make DEBUG_INFO=1
 
 CFLAGS = -pipe -fvisibility=hidden -fno-strict-aliasing -fno-math-errno -fPIC -DPIC -Wall -Wno-narrowing -Wno-sign-compare -Wno-unused-function
 ifdef DEBUG
-CFLAGS += -O0 -g 
+CFLAGS += -O0 -g
 else
-CFLAGS += -O2 -s
+CFLAGS += -O2
+ifdef DEBUG_INFO
+  CFLAGS += -g
+else
+  CFLAGS += -s
+endif
 endif
 
 TARGET = reaper_sws64.so
+PYTHONFILE = sws_python64.py
 
-ARCH := $(shell uname -m)
+STRIP = strip
+ARCH = $(shell uname -m)
 
 CFLAGS += -I. -I../WDL -DSWELL_PROVIDED_BY_APP 
 
@@ -19,6 +26,7 @@ endif
 
 ifneq (x86_64, $(ARCH))
   TARGET = reaper_sws_$(ARCH).so
+  PYTHONFILE = sws_python32.py
 endif
   
 CFLAGS += -DNO_TAGLIB  #taglib seems to be pre-compiled, need more code?
@@ -128,7 +136,7 @@ $(TARGET): $(OBJS)
 clean: 
 	-rm $(OBJS) $(TARGET) $(REASCRIPT_PY_FILES) sws_extension.rc_mac_dlg sws_extension.rc_mac_menu
 
-install: $(TARGET)
+install: $(TARGET) $(PYTHONFILE)
 	-mkdir $(USERPLUGINS_PATH)
 	-rm $(USERPLUGINS_PATH)/$(TARGET)
 	ln -sf $(shell pwd)/$(TARGET) $(USERPLUGINS_PATH)
@@ -136,3 +144,11 @@ install: $(TARGET)
 
 uninstall:
 	-rm $(USERPLUGINS_PATH)/$(TARGET)
+
+GITVER := $(shell git rev-parse HEAD | head -c 8)
+
+dist: $(TARGET)
+	cp -f $(TARGET) $(TARGET).debug
+	$(STRIP) --only-keep-debug $(TARGET).debug
+	$(STRIP) --strip-debug --strip-unneeded $(TARGET)
+	tar cvJf reaper_sws_$(ARCH)_$(GITVER).tar.xz $(TARGET) $(TARGET).debug $(PYTHONFILE)

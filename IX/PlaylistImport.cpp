@@ -208,11 +208,20 @@ void ParsePLS(string listpath, vector<SPlaylistEntry> &filelist)
 void PlaylistImport(COMMAND_T* ct)
 {
 	char cPath[256];
-	vector<SPlaylistEntry> filelist;
-
 	GetProjectPath(cPath, 256);
-	string listpath = BrowseForFiles(__LOCALIZE("Import playlist","sws_mbox"), cPath, NULL, false, "Playlist files (*.m3u,*.pls)\0*.m3u;*.pls\0All Files (*.*)\0*.*\0");
-	string ext = ParseFileExtension(listpath);
+
+	string listpath;
+	if(char *path = BrowseForFiles(__LOCALIZE("Import playlist","sws_mbox"), cPath, NULL, false, "Playlist files (*.m3u,*.pls)\0*.m3u;*.pls\0All Files (*.*)\0*.*\0"))
+	{
+		listpath = path;
+		free(path);
+	}
+	else
+		return;
+
+	const string &ext = ParseFileExtension(listpath);
+
+	vector<SPlaylistEntry> filelist;
 
 	// Decide what kind of playlist we have
 	if(ext == "m3u")

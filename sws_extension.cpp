@@ -741,6 +741,7 @@ error:
 		IMPAPI(DB2SLIDER);
 		IMPAPI(DeleteEnvelopePointRange); // v5pre5+
 		IMPAPI(DeleteActionShortcut);
+		IMPAPI(DeleteExtState);
 		IMPAPI(DeleteProjectMarker);
 		IMPAPI(DeleteProjectMarkerByIndex);
 		IMPAPI(DeleteTakeStretchMarkers);
@@ -789,6 +790,7 @@ error:
 		IMPAPI(GetEnvelopePointByTime) // v5pre4
 		IMPAPI(GetEnvelopeScalingMode); // v5pre13+
 		IMPAPI(GetExePath);
+		IMPAPI(GetExtState);
 		IMPAPI(GetFocusedFX);
 		IMPAPI(GetFXEnvelope); // v5pre5+
 		IMPAPI(GetGlobalAutomationOverride);
@@ -887,6 +889,7 @@ error:
 		IMPAPI(GR_SelectColor);
 		IMPAPI(GSC_mainwnd);
 		IMPAPI(guidToString);
+		IMPAPI(HasExtState);
 		IMPAPI(Help_Set);
 		IMPAPI(InsertAutomationItem);
 		IMPAPI(InsertMedia);
@@ -999,6 +1002,7 @@ error:
 		IMPAPI(SetEditCurPos);
 		IMPAPI(SetEditCurPos2);
 		IMPAPI(SetEnvelopePoint); // v5pre4+
+		IMPAPI(SetExtState);
 		IMPAPI(SetGlobalAutomationOverride);
 		IMPAPI(SetMasterTrackVisibility);
 		IMPAPI(SetMediaItemInfo_Value);
@@ -1052,6 +1056,7 @@ error:
 		IMPAPI(TimeMap2_timeToBeats);
 		IMPAPI(TimeMap2_timeToQN);
 		IMPAPI(TimeMap_curFrameRate);
+		IMPAPI(TrackCtl_SetToolTip);
 		IMPAPI(TrackFX_FormatParamValue);
 		IMPAPI(TrackFX_GetByName);
 		IMPAPI(TrackFX_GetChainVisible);

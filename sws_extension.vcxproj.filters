@@ -116,6 +116,9 @@
     <Filter Include="cfillion">
       <UniqueIdentifier>{5d477feb-887c-4b35-8861-9aee9e8e375c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Julian">
+      <UniqueIdentifier>{ec14dd50-4532-41c0-b110-3d7189983623}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -634,6 +637,9 @@
     <ClInclude Include="Utility\win32-utf8.h">
       <Filter>Core\Utils</Filter>
     </ClInclude>
+    <ClInclude Include="Julian\js_swell_ReaScript.h">
+      <Filter>Julian</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="sws_extension.rc">
@@ -932,9 +938,6 @@
     </ClCompile>
     <ClCompile Include="Snapshots\Snapshots.cpp">
       <Filter>Snapshots</Filter>
-    </ClCompile>
-    <ClCompile Include="Reascript.cpp">
-      <Filter>Core</Filter>
     </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <Filter>Core</Filter>
@@ -1268,6 +1271,12 @@
     </ClCompile>
     <ClCompile Include="Utility\win32-utf8.cpp">
       <Filter>Core\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Julian\js_swell_ReaScript.cpp">
+      <Filter>Julian</Filter>
+    </ClCompile>
+    <ClCompile Include="ReaScript.cpp">
+      <Filter>Core</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

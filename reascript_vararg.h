@@ -648,5 +648,357 @@ static void* __vararg_CF_LocateInExplorer(void** arglist, int numparms)
   return (void*)(INT_PTR)CF_LocateInExplorer((const char*)arglist[0]);
 }
 
+static void* __vararg_Window_GetRect(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)Window_GetRect((void*)arglist[0], (int*)arglist[1], (int*)arglist[2], (int*)arglist[3], (int*)arglist[4]);
+}
+
+static void* __vararg_Window_ScreenToClient(void** arglist, int numparms)
+{
+  Window_ScreenToClient((void*)arglist[0], (int)(INT_PTR)arglist[1], (int)(INT_PTR)arglist[2], (int*)arglist[3], (int*)arglist[4]);
+  return NULL;
+}
+
+static void* __vararg_Window_ClientToScreen(void** arglist, int numparms)
+{
+  Window_ClientToScreen((void*)arglist[0], (int)(INT_PTR)arglist[1], (int)(INT_PTR)arglist[2], (int*)arglist[3], (int*)arglist[4]);
+  return NULL;
+}
+
+static void* __vararg_Window_GetClientRect(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)Window_GetClientRect((void*)arglist[0], (int*)arglist[1], (int*)arglist[2], (int*)arglist[3], (int*)arglist[4]);
+}
+
+static void* __vararg_Window_InvalidateRect(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)Window_InvalidateRect((void*)arglist[0], (int)(INT_PTR)arglist[1], (int)(INT_PTR)arglist[2], (int)(INT_PTR)arglist[3], (int)(INT_PTR)arglist[4]);
+}
+
+static void* __vararg_Window_FromPoint(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)Window_FromPoint((int)(INT_PTR)arglist[0], (int)(INT_PTR)arglist[1]);
+}
+
+static void* __vararg_Window_GetParent(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)Window_GetParent((void*)arglist[0]);
+}
+
+static void* __vararg_Window_IsChild(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)Window_IsChild((void*)arglist[0], (void*)arglist[1]);
+}
+
+static void* __vararg_Window_GetRelated(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)Window_GetRelated((void*)arglist[0], (int)(INT_PTR)arglist[1]);
+}
+
+static void* __vararg_Window_SetFocus(void** arglist, int numparms)
+{
+  Window_SetFocus((void*)arglist[0]);
+  return NULL;
+}
+
+static void* __vararg_Window_GetFocus(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)Window_GetFocus();
+}
+
+static void* __vararg_Window_SetForeground(void** arglist, int numparms)
+{
+  Window_SetForeground((void*)arglist[0]);
+  return NULL;
+}
+
+static void* __vararg_Window_GetForeground(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)Window_GetForeground();
+}
+
+static void* __vararg_Window_Enable(void** arglist, int numparms)
+{
+  Window_Enable((void*)arglist[0], (bool)arglist[1]);
+  return NULL;
+}
+
+static void* __vararg_Window_Destroy(void** arglist, int numparms)
+{
+  Window_Destroy((void*)arglist[0]);
+  return NULL;
+}
+
+static void* __vararg_Window_Show(void** arglist, int numparms)
+{
+  Window_Show((void*)arglist[0], (int)(INT_PTR)arglist[1]);
+  return NULL;
+}
+
+static void* __vararg_Window_IsVisible(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)Window_IsVisible((void*)arglist[0]);
+}
+
+static void* __vararg_Window_Find(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)Window_Find((const char*)arglist[0], (bool)arglist[1]);
+}
+
+static void* __vararg_Window_FindChild(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)Window_FindChild((void*)arglist[0], (const char*)arglist[1], (bool)arglist[2]);
+}
+
+static void* __vararg_Window_ListAllChild(void** arglist, int numparms)
+{
+  Window_ListAllChild((void*)arglist[0], (const char*)arglist[1], (const char*)arglist[2]);
+  return NULL;
+}
+
+static void* __vararg_Window_ListAllTop(void** arglist, int numparms)
+{
+  Window_ListAllTop((const char*)arglist[0], (const char*)arglist[1]);
+  return NULL;
+}
+
+static void* __vararg_Window_ListFind(void** arglist, int numparms)
+{
+  Window_ListFind((const char*)arglist[0], (bool)arglist[1], (const char*)arglist[2], (const char*)arglist[3]);
+  return NULL;
+}
+
+static void* __vararg_MIDIEditor_ListAll(void** arglist, int numparms)
+{
+  MIDIEditor_ListAll((char*)arglist[0], (int)(INT_PTR)arglist[1]);
+  return NULL;
+}
+
+static void* __vararg_Window_Resize(void** arglist, int numparms)
+{
+  Window_Resize((void*)arglist[0], (int)(INT_PTR)arglist[1], (int)(INT_PTR)arglist[2]);
+  return NULL;
+}
+
+static void* __vararg_Window_Move(void** arglist, int numparms)
+{
+  Window_Move((void*)arglist[0], (int)(INT_PTR)arglist[1], (int)(INT_PTR)arglist[2]);
+  return NULL;
+}
+
+static void* __vararg_Window_SetPosition(void** arglist, int numparms)
+{
+  Window_SetPosition((void*)arglist[0], (int)(INT_PTR)arglist[1], (int)(INT_PTR)arglist[2], (int)(INT_PTR)arglist[3], (int)(INT_PTR)arglist[4]);
+  return NULL;
+}
+
+static void* __vararg_Window_SetZOrder(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)Window_SetZOrder((void*)arglist[0], (const char*)arglist[1], (void*)arglist[2], (int)(INT_PTR)arglist[3]);
+}
+
+static void* __vararg_Window_GetTitle(void** arglist, int numparms)
+{
+  Window_GetTitle((void*)arglist[0], (char*)arglist[1], (int)(INT_PTR)arglist[2]);
+  return NULL;
+}
+
+static void* __vararg_Window_SetTitle(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)Window_SetTitle((void*)arglist[0], (const char*)arglist[1]);
+}
+
+static void* __vararg_Window_IsWindow(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)Window_IsWindow((void*)arglist[0]);
+}
+
+static void* __vararg_Window_HandleFromAddress(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)Window_HandleFromAddress((int)(INT_PTR)arglist[0], (int)(INT_PTR)arglist[1]);
+}
+
+static void* __vararg_WindowMessage_Post(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)WindowMessage_Post((void*)arglist[0], (const char*)arglist[1], (int)(INT_PTR)arglist[2], (int)(INT_PTR)arglist[3], (int)(INT_PTR)arglist[4], (int)(INT_PTR)arglist[5]);
+}
+
+static void* __vararg_WindowMessage_Send(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)WindowMessage_Send((void*)arglist[0], (const char*)arglist[1], (int)(INT_PTR)arglist[2], (int)(INT_PTR)arglist[3], (int)(INT_PTR)arglist[4], (int)(INT_PTR)arglist[5]);
+}
+
+static void* __vararg_WindowMessage_Peek(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)WindowMessage_Peek((void*)arglist[0], (const char*)arglist[1], (double*)arglist[2], (int*)arglist[3], (int*)arglist[4], (int*)arglist[5], (int*)arglist[6]);
+}
+
+static void* __vararg_WindowMessage_Intercept(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)WindowMessage_Intercept((void*)arglist[0], (const char*)arglist[1]);
+}
+
+static void* __vararg_WindowMessage_ListIntercepts(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)WindowMessage_ListIntercepts((void*)arglist[0], (char*)arglist[1], (int)(INT_PTR)arglist[2]);
+}
+
+static void* __vararg_WindowMessage_Release(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)WindowMessage_Release((void*)arglist[0], (const char*)arglist[1]);
+}
+
+static void* __vararg_WindowMessage_ReleaseWindow(void** arglist, int numparms)
+{
+  WindowMessage_ReleaseWindow((void*)arglist[0]);
+  return NULL;
+}
+
+static void* __vararg_WindowMessage_ReleaseAll(void** arglist, int numparms)
+{
+  WindowMessage_ReleaseAll();
+  return NULL;
+}
+
+static void* __vararg_Mouse_GetState(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)Mouse_GetState((int)(INT_PTR)arglist[0]);
+}
+
+static void* __vararg_Mouse_SetPosition(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)Mouse_SetPosition((int)(INT_PTR)arglist[0], (int)(INT_PTR)arglist[1]);
+}
+
+static void* __vararg_Mouse_LoadCursor(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)Mouse_LoadCursor((int)(INT_PTR)arglist[0]);
+}
+
+static void* __vararg_Mouse_LoadCursorFromFile(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)Mouse_LoadCursorFromFile((const char*)arglist[0]);
+}
+
+static void* __vararg_Mouse_SetCursor(void** arglist, int numparms)
+{
+  Mouse_SetCursor((void*)arglist[0]);
+  return NULL;
+}
+
+static void* __vararg_GDI_GetDC(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)GDI_GetDC((void*)arglist[0]);
+}
+
+static void* __vararg_GDI_GetWindowDC(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)GDI_GetWindowDC((void*)arglist[0]);
+}
+
+static void* __vararg_GDI_ReleaseDC(void** arglist, int numparms)
+{
+  GDI_ReleaseDC((void*)arglist[0], (void*)arglist[1]);
+  return NULL;
+}
+
+static void* __vararg_GDI_DrawFocusRect(void** arglist, int numparms)
+{
+  GDI_DrawFocusRect((void*)arglist[0], (int)(INT_PTR)arglist[1], (int)(INT_PTR)arglist[2], (int)(INT_PTR)arglist[3], (int)(INT_PTR)arglist[4]);
+  return NULL;
+}
+
+static void* __vararg_GDI_SetPen(void** arglist, int numparms)
+{
+  GDI_SetPen((void*)arglist[0], (int)(INT_PTR)arglist[1], (int)(INT_PTR)arglist[2], (int)(INT_PTR)arglist[3]);
+  return NULL;
+}
+
+static void* __vararg_GDI_SetFont(void** arglist, int numparms)
+{
+  GDI_SetFont((void*)arglist[0], (int)(INT_PTR)arglist[1], (int)(INT_PTR)arglist[2], (int)(INT_PTR)arglist[3], (bool)arglist[4], (bool)arglist[5], (bool)arglist[6], (const char*)arglist[7]);
+  return NULL;
+}
+
+static void* __vararg_GDI_Rectangle(void** arglist, int numparms)
+{
+  GDI_Rectangle((void*)arglist[0], (int)(INT_PTR)arglist[1], (int)(INT_PTR)arglist[2], (int)(INT_PTR)arglist[3], (int)(INT_PTR)arglist[4]);
+  return NULL;
+}
+
+static void* __vararg_GDI_RoundRect(void** arglist, int numparms)
+{
+  GDI_RoundRect((void*)arglist[0], (int)(INT_PTR)arglist[1], (int)(INT_PTR)arglist[2], (int)(INT_PTR)arglist[3], (int)(INT_PTR)arglist[4], (int)(INT_PTR)arglist[5], (int)(INT_PTR)arglist[6]);
+  return NULL;
+}
+
+static void* __vararg_GDI_FillRect(void** arglist, int numparms)
+{
+  GDI_FillRect((void*)arglist[0], (int)(INT_PTR)arglist[1], (int)(INT_PTR)arglist[2], (int)(INT_PTR)arglist[3], (int)(INT_PTR)arglist[4], (int)(INT_PTR)arglist[5]);
+  return NULL;
+}
+
+static void* __vararg_GDI_SetBkMode(void** arglist, int numparms)
+{
+  GDI_SetBkMode((void*)arglist[0], (int)(INT_PTR)arglist[1]);
+  return NULL;
+}
+
+static void* __vararg_GDI_SetBkColor(void** arglist, int numparms)
+{
+  GDI_SetBkColor((void*)arglist[0], (int)(INT_PTR)arglist[1]);
+  return NULL;
+}
+
+static void* __vararg_GDI_SetTextColor(void** arglist, int numparms)
+{
+  GDI_SetTextColor((void*)arglist[0], (int)(INT_PTR)arglist[1]);
+  return NULL;
+}
+
+static void* __vararg_GDI_GetTextColor(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)GDI_GetTextColor((void*)arglist[0]);
+}
+
+static void* __vararg_GDI_DrawText(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)GDI_DrawText((void*)arglist[0], (const char*)arglist[1], (int)(INT_PTR)arglist[2], (int)(INT_PTR)arglist[3], (int)(INT_PTR)arglist[4], (int)(INT_PTR)arglist[5], (int)(INT_PTR)arglist[6], (int)(INT_PTR)arglist[7]);
+}
+
+static void* __vararg_GDI_SetPixel(void** arglist, int numparms)
+{
+  GDI_SetPixel((void*)arglist[0], (int)(INT_PTR)arglist[1], (int)(INT_PTR)arglist[2], (int)(INT_PTR)arglist[3]);
+  return NULL;
+}
+
+static void* __vararg_GDI_MoveTo(void** arglist, int numparms)
+{
+  GDI_MoveTo((void*)arglist[0], (int)(INT_PTR)arglist[1], (int)(INT_PTR)arglist[2]);
+  return NULL;
+}
+
+static void* __vararg_GDI_LineTo(void** arglist, int numparms)
+{
+  GDI_LineTo((void*)arglist[0], (int)(INT_PTR)arglist[1], (int)(INT_PTR)arglist[2]);
+  return NULL;
+}
+
+static void* __vararg_GDI_Ellipse(void** arglist, int numparms)
+{
+  GDI_Ellipse((void*)arglist[0], (int)(INT_PTR)arglist[1], (int)(INT_PTR)arglist[2], (int)(INT_PTR)arglist[3], (int)(INT_PTR)arglist[4]);
+  return NULL;
+}
+
+static void* __vararg_Window_GetScrollInfo(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)Window_GetScrollInfo((void*)arglist[0], (const char*)arglist[1], (int*)arglist[2], (int*)arglist[3], (int*)arglist[4], (int*)arglist[5], (int*)arglist[6]);
+}
+
+static void* __vararg_Window_SetScrollInfo(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)Window_SetScrollInfo((void*)arglist[0], (const char*)arglist[1], (int)(INT_PTR)arglist[2], (int)(INT_PTR)arglist[3], (int)(INT_PTR)arglist[4]);
+}
+
 
 #endif

@@ -163,6 +163,7 @@ echo Copied to "$(REAPER64_DIR)\plugins\$(TargetFilename)"</Command>
     <Bscmake />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">
+	<PreBuildEvent />
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir);$(REAPER_DIR);..\WDL;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>

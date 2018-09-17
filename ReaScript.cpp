@@ -35,6 +35,8 @@
 #include "Breeder/BR_ReaScript.h"
 #include "snooks/SN_ReaScript.h"
 #include "cfillion/cfillion.hpp"
+#include "dopp/dopp.h"
+
 
 
 // if _TEST_REASCRIPT_EXPORT is #define'd, you'll need to rename "APITESTFUNC" into "APIFUNC" in g_apidefs too
@@ -262,6 +264,10 @@ APIdef g_apidefs[] =
 	{ APIFUNC(CF_GetClipboardBig), "const char*", "WDL_FastString*", "output", "Read the contents of the system clipboard. See <a href=\"#SNM_CreateFastString\">SNM_CreateFastString</a> and <a href=\"#SNM_DeleteFastString\">SNM_DeleteFastString</a>.", },
 	{ APIFUNC(CF_ShellExecute), "bool", "const char*", "file", "Open the given file or URL in the default application. See also <a href=\"#CF_LocateInExplorer\">CF_LocateInExplorer</a>.", },
 	{ APIFUNC(CF_LocateInExplorer), "bool", "const char*", "file", "Select the given file in explorer/finder.", },
+
+	{ APIFUNC(DO_GetArrangeVPos), "void", "int*", "ViewPosOut", "Get vertical position of arrange view", },
+	{ APIFUNC(DO_GetArrangeHwnd), "void*", "", "", "Get HWND to the arrange window", },
+	{ APIFUNC(DO_GetTCPTrackHwnd), "void*", "MediaTrack*", "track", "Get HWND of track", },
 
 	{ NULL, } // denote end of table
 };

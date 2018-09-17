@@ -98,7 +98,7 @@ OBJS += $(WDL_OBJS) $(LICE_OBJS) $(REAPER_OBJS) $(SWS_OBJS) $(AUTORENDER_OBJS) $
 	$(CONSOLE_OBJS) $(FINGERS_OBJS) $(FREEZE_OBJS) $(IX_OBJS) $(LIBEBUR_OBS) $(MARKERACTIONS_OBJS) \
 	$(MARKERLIST_OBJS) $(MISC_OBJS) $(PADRE_OBJS) $(PROJECT_OBJS) $(SNAPSHOTS_OBJS) $(SNM_OBJS) $(SNOOKS_OBJS)\
         $(TRACKLIST_OBJS) $(UTILITY_OBJS) $(WOL_OBJS) $(XENAKIOS_OBJS) $(OBJECTSTATE_OBJS) \
-        nofish/nofish.o cfillion/cfillion.o
+        nofish/nofish.o cfillion/cfillion.o dopp/dopp.o
 
 REASCRIPT_PY_FILES = sws_python32.py sws_python64.py sws_python.py
 REASCRIPT_PY_DEPS  = ReaScript.cpp reascript_python.pl reascript_helper.pl

@@ -163,7 +163,6 @@ echo Copied to "$(REAPER64_DIR)\plugins\$(TargetFilename)"</Command>
     <Bscmake />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">
-    <PreBuildEvent />
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir);$(REAPER_DIR);..\WDL;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -371,6 +370,7 @@ echo Warning: sws_python.py generation failed (Perl installed?)
     <ClInclude Include="C:\Program Files (x86)\REAPER\reaper_plugin_functions.h" />
     <ClInclude Include="cfillion\cfillion.hpp" />
     <ClInclude Include="nofish\nofish.h" />
+    <ClInclude Include="dopp\dopp.h" />
     <ClInclude Include="reascript_vararg.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="snooks\snooks.h" />
@@ -552,6 +552,7 @@ echo Warning: sws_python.py generation failed (Perl installed?)
     <ClCompile Include="cfillion\cfillion.cpp" />
     <ClCompile Include="libebur128\ebur128.cpp" />
     <ClCompile Include="nofish\nofish.cpp" />
+    <ClCompile Include="dopp\dopp.cpp" />
     <ClCompile Include="snooks\snooks.cpp" />
     <ClCompile Include="snooks\SN_ReaScript.cpp" />
     <ClCompile Include="Utility\win32-utf8.cpp" />
@@ -1303,7 +1304,7 @@ echo Warning: sws_python.py generation failed (Perl installed?)
     <ClCompile Include="Snapshots\SnapshotClass.cpp" />
     <ClCompile Include="Snapshots\SnapshotMerge.cpp" />
     <ClCompile Include="Snapshots\Snapshots.cpp" />
-    <ClCompile Include="Reascript.cpp" />
+    <ClCompile Include="ReaScript.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>

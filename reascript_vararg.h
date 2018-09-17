@@ -648,5 +648,21 @@ static void* __vararg_CF_LocateInExplorer(void** arglist, int numparms)
   return (void*)(INT_PTR)CF_LocateInExplorer((const char*)arglist[0]);
 }
 
+static void* __vararg_DO_GetArrangeVPos(void** arglist, int numparms)
+{
+  DO_GetArrangeVPos((int*)arglist[0]);
+  return NULL;
+}
+
+static void* __vararg_DO_GetArrangeHwnd(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)DO_GetArrangeHwnd();
+}
+
+static void* __vararg_DO_GetTCPTrackHwnd(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)DO_GetTCPTrackHwnd((MediaTrack*)arglist[0]);
+}
+
 
 #endif

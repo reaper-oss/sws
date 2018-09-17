@@ -45,6 +45,9 @@ New ReaScript functions:
 +NF_TakeFX_SetOffline()
 +NF_GetSWSTrackNotes() (Issue 755)
 +NF_SetSWSTrackNotes() (Issue 755)
++DO_GetArrangeVPos
++DO_GetArrangeHwnd
++DO_GetTCPTrackHwnd
 
 !v2.9.7 featured build (September 28, 2017)
 Fixes:

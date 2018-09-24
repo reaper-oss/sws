@@ -101,6 +101,7 @@ protected:
 	void OnInitDlg();
 	HMENU OnContextMenu(int x, int y, bool* wantDefaultItems);
 	int OnKey(MSG* msg, int iKeyState);
+	void OnResize();
 private:
 	char m_strCmd[256];
 	char* m_pTrackId;

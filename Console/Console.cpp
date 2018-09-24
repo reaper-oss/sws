@@ -992,6 +992,13 @@ void ReaConsoleWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 	}
 }
 
+void ReaConsoleWnd::OnResize()
+{
+#ifdef _WIN32
+	InvalidateRect(GetDlgItem(m_hwnd, IDC_STATUS), NULL, 0);
+#endif
+}
+
 void ReaConsoleWnd::ShowConsole()
 {
 	Show(false, true);

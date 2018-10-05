@@ -124,7 +124,7 @@ sws_python.py: $(REASCRIPT_PY_DEPS)
 sws_extension.rc_mac_dlg: sws_extension.rc
 	php $(WDL_PATH)/swell/mac_resgen.php $^
 
-sws_extension.o: sws_extension.cpp sws_extension.rc_mac_dlg $(REASCRIPT_PY_FILES)
+sws_extension.o: sws_extension.cpp sws_extension.rc_mac_dlg $(REASCRIPT_PY_FILES) reascript_vararg.h
 	$(CXX) -c -o $@ $(CXXFLAGS) sws_extension.cpp
 
 jnetlib-util.o: $(WDL_PATH)/jnetlib/util.cpp

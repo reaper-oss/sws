@@ -88,13 +88,11 @@ void RprParentNode::removeChild(int index)
 
 static std::string getTrimmedLine(std::istringstream &iss)
 {
+    while(iss.peek() == '\x20') iss.get();
+
     std::string line;
     std::getline(iss, line);
-    size_t offset = 0;
-    if(line[0] == '\n')
-        offset++;
-    while(line[offset] == ' ') offset++;
-    return line.substr(offset);
+    return line;
 }
 
 void RprParentNode::toReaper(std::ostringstream &oss, int indent)

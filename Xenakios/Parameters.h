@@ -63,8 +63,6 @@ typedef struct t_external_app_paths
 	char *PathToTool2;
 	char *PathToAudioEditor1;
 	char *PathToAudioEditor2;
-	char Tool1MenuText[100];
-	char Tool2MenuText[100];
 } t_external_app_paths;
 
 extern t_command_params g_command_params;

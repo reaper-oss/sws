@@ -8,7 +8,7 @@ void DO_GetArrangeVPos(int* ViewPosOut)
 {
 	HWND arrhwnd = GetArrangeWnd();
 	SCROLLINFO si = { sizeof(SCROLLINFO), };
-	si.fMask = SIF_ALL;
+	si.fMask = SIF_POS;
 	CoolSB_GetScrollInfo(arrhwnd, SB_VERT, &si);
 	*ViewPosOut = si.nPos;
 }

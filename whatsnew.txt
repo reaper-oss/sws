@@ -1,6 +1,7 @@
 Fixes:
++Issue 1054: "SWS/S&M: Show take volume envelopes" - obey volume fader scaling preference if new envelope is created
 +Cycle Action editor: Fix minor issue with not opening with correct section (report https://forum.cockos.com/showpost.php?p=1986045&postcount=3|here|)
-+SWS/S&M: Close all FX chain windows, SWS/S&M: Close all floating FX windows (...) - include take FX (report https://forum.cockos.com/showpost.php?p=1978820&postcount=2425|here|)
++"SWS/S&M: Close all FX chain windows", "SWS/S&M: Close all floating FX windows (...)" - include take FX (report https://forum.cockos.com/showpost.php?p=1978820&postcount=2425|here|)
 
 !v2.9.8 pre-release build (March 5, 2018)
 Now requires REAPER 5.50+!

@@ -33,17 +33,19 @@
 // All array pointers are caller alloc'ed and optional (NULL)
 typedef struct ANALYZE_PCM
 {
-	PCM_source* pcm;		// in  Pointer to zero-based PCM source (required)
-	int iChannels;			// in  Dimension of the channel arrays.  This can be zero to disable, or < number of actual item channels
-	double* dPeakVals;		// i/o Array of channel peaks, caller alloc, iChannel size (optional)
-	double dPeakVal;		// out Maximum peak valume over all channels
-	double* dRMSs;			// i/o Array of channel RMS values
-	double dRMS;			// out RMS of all channels
-	INT64* peakSamples;		// i/o Array of channel peak locations (not calculated if dPeakVals is omitted)
-	INT64 peakSample;		// out Position of max peak
-	double dProgress;		// out Analysis progress, 0.0-1.0 for 0-100%
-	INT64 sampleCount;		// out # of samples analyzed
-	double dWindowSize;		// RMS window in seconds.  If this is != 0.0, then RMS is calculated/returned as max within window
+	PCM_source* pcm;        // in  Pointer to zero-based PCM source (required)
+	int iChannels;          // in  Dimension of the channel arrays.  This can be zero to disable, or < number of actual item channels
+	double* dPeakVals;      // i/o Array of channel peaks, caller alloc, iChannel size (optional)
+	double dPeakVal;        // out Maximum peak valume over all channels
+	double* dRMSs;          // i/o Array of channel RMS values
+	double dRMS;            // out RMS of all channels
+	INT64* peakRMSsamples;  // i/o Array of channel RMS peak locations (not calculated if dRMSs is omitted), -666 if dWindowSize == 0.0 or >= item length 
+	INT64 peakRMSsample;    // out Position of overall peak RMS in windowed mode, -666 if dWindowSize == 0.0 or >= item length 
+	INT64* peakSamples;     // i/o Array of channel peak locations (not calculated if dPeakVals is omitted)
+	INT64 peakSample;       // out Position of max peak
+	double dProgress;       // out Analysis progress, 0.0-1.0 for 0-100%
+	INT64 sampleCount;      // out # of samples analyzed
+	double dWindowSize;     // RMS window in seconds.  If this is != 0.0, then RMS is calculated/returned as max within window
 	bool success;
 } ANALYZE_PCM;
 
@@ -51,9 +53,5 @@ int AnalysisInit();
 
 bool AnalyzeItem(MediaItem* mi, ANALYZE_PCM* a);
 
-// #781
-double GetMediaItemMaxPeakAndMaxPeakPos(MediaItem*, double* maxPeakPosOut); // #953
-double GetMediaItemMaxPeak(MediaItem*);
-double GetMediaItemPeakRMS_Windowed(MediaItem*);
-double GetMediaItemAverageRMS(MediaItem*);
-double GetMediaItemPeakRMS_NonWindowed(MediaItem*);
+// #781 Export to ReaScript
+void NF_GetRMSOptions(double *targetOut, double *winSizeOut);

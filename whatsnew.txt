@@ -6,7 +6,12 @@ Fixes:
 +Issue 957: Fix item Loudness analysis if take contains volume envelope (thanks X-Raym!)
 
 New ReaScript functions:
++Issue 755:
+ - NF_GetSWSMarkerRegionSub()
+ - NF_SetSWSMarkerRegionSub()
+ - NF_UpdateSWSMarkerRegionSubWindow()
  +NF_GetMediaItemMaxPeakAndMaxPeakPos() (Issue 953)
+ +NF_AnalyzeMediaItemPeakAndRMS() (Issue 674)
 
 !v2.9.8 pre-release build (March 5, 2018)
 Now requires REAPER 5.50+!

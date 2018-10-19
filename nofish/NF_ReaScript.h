@@ -31,23 +31,24 @@
 // #781
 double          NF_GetMediaItemMaxPeak(MediaItem* item);
 double          NF_GetMediaItemMaxPeakAndMaxPeakPos(MediaItem* item, double* maxPeakPosOut); // // #953
-double          NF_GetMediaItemPeakRMS_Windowed(MediaItem* item);
 double          NF_GetMediaItemAverageRMS(MediaItem* item);
 double          NF_GetMediaItemPeakRMS_NonWindowed(MediaItem* item);
+double          NF_GetMediaItemPeakRMS_Windowed(MediaItem* item);
+                // combines all above functions
+bool            NF_AnalyzeMediaItemPeakAndRMS(MediaItem* item, double windowSize, void* reaperarray_peaks, void* reaperarray_peakpositions, void* reaperarray_RMSs, void* reaperarray_RMSpositions);
 
 // #880
 bool            NF_AnalyzeTakeLoudness_IntegratedOnly(MediaItem_Take* take, double* lufsIntegratedOut);
-
 bool            NF_AnalyzeTakeLoudness(MediaItem_Take* take, bool analyzeTruePeak, double* lufsOut, double* rangeOut, double* truePeakOut, double* truePeakPosOut, double* shorTermMaxOut, double* momentaryMaxOut);
-
 bool            NF_AnalyzeTakeLoudness2(MediaItem_Take* take, bool analyzeTruePeak, double* lufsOut, double* rangeOut, double* truePeakOut, double* truePeakPosOut, double* shorTermMaxOut, double* momentaryMaxOut, double* shortTermMaxPosOut, double* momentaryMaxPosOut);
 
 // #755
-const char*     NF_GetSWSTrackNotes(MediaTrack* track, WDL_FastString* trackNoteOut);
-void            NF_SetSWSTrackNotes(MediaTrack* track, const char* buf);
-const char*     NF_GetSWSMarkerRegionSub(WDL_FastString* mkrRgnSubOut, int mkrRgnIdx);
-bool            NF_SetSWSMarkerRegionSub(WDL_FastString* mkrRgnSubIn, int mkrRgnIdx);
-void            NF_UpdateSWSMarkerRegionSubWindow();
+const char*    NF_GetSWSTrackNotes(MediaTrack* track, WDL_FastString* trackNoteOut);
+void           NF_SetSWSTrackNotes(MediaTrack* track, const char* buf);
+const char*    NF_GetSWSMarkerRegionSub(WDL_FastString* mkrRgnSubOut, int mkrRgnIdx);
+bool           NF_SetSWSMarkerRegionSub(WDL_FastString* mkrRgnSubIn, int mkrRgnIdx);
+void           NF_UpdateSWSMarkerRegionSubWindow();
+
 
 // #974
 /*

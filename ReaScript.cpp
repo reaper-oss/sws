@@ -36,6 +36,7 @@
 #include "snooks/SN_ReaScript.h"
 #include "cfillion/cfillion.hpp"
 #include "nofish/NF_ReaScript.h"
+#include "Misc/Analysis.h"
 
 
 // if _TEST_REASCRIPT_EXPORT is #define'd, you'll need to rename "APITESTFUNC" into "APIFUNC" in g_apidefs too
@@ -239,6 +240,7 @@ APIdef g_apidefs[] =
 	{ APIFUNC(NF_GetMediaItemPeakRMS_Windowed), "double", "MediaItem*", "item", "Returns the average RMS peak level of all active channels of an audio item active take, post item gain, post take volume envelope, post-fade, pre fader, pre item FX. \n Obeys 'Window size for peak RMS' setting in 'SWS: Set RMS analysis/normalize options' for calculation. Returns -150.0 if MIDI take or empty item.", },
 	{ APIFUNC(NF_GetMediaItemPeakRMS_NonWindowed), "double", "MediaItem*", "item", "Returns the greatest overall (non-windowed) RMS peak level of all active channels of an audio item active take, post item gain, post take volume envelope, post-fade, pre fader, pre item FX. \n Returns -150.0 if MIDI take or empty item.", },
 	{ APIFUNC(NF_GetMediaItemAverageRMS), "double", "MediaItem*", "item", "Returns the average overall (non-windowed) RMS level of active channels of an audio item active take, post item gain, post take volume envelope, post-fade, pre fader, pre item FX. \n Returns -150.0 if MIDI take or empty item.", },
+	{ APIFUNC(NF_AnalyzeMediaItemPeakAndRMS), "bool", "MediaItem*,double,void*,void*,void*,void*", "item,windowSize,reaper.array_peaks,reaper.array_peakpositions,reaper.array_RMSs,reaper.array_RMSpositions", "This function combines all other NF_Peak/RMS functions in a single one and additionally returns peak RMS positions. Lua example code <a href=\"https://forum.cockos.com/showpost.php?p=2050961&postcount=6\">here</a>. Note: It's recommended to use this function with ReaScript/Lua as it provides reaper.array objects. If using this function with other scripting languages, you must provide arrays in the <a href=\"https://forum.cockos.com/showpost.php?p=2039829&postcount=2\">reaper.array</a> format.", },
 
 	// #880
 	{ APIFUNC(NF_AnalyzeTakeLoudness_IntegratedOnly), "bool", "MediaItem_Take*,double*", "take,lufsIntegratedOut", "Does LUFS integrated analysis only. Faster than full loudness analysis (<a href=\"#NF_AnalyzeTakeLoudness\">NF_AnalyzeTakeLoudness</a>) . Use this if only LUFS integrated is required. Take vol. env. is taken into account. See: <a href=\"http://wiki.cockos.com/wiki/index.php/Measure_and_normalize_loudness_with_SWS\">Signal flow</a>", }, 

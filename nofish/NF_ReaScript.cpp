@@ -116,6 +116,7 @@ void NF_UpdateSWSMarkerRegionSubWindow()
 }
 
 // #974
+/*
 extern WDL_FastString g_globalStartupAction; extern SWSProjConfig<WDL_FastString> g_prjLoadActions;
 
 // desc == true: return action text, false: return command ID number (native actions) or named command (extension/ReaScript)
@@ -269,3 +270,4 @@ bool NF_ClearProjectStartupAction()
 	}
 	return false;
 }
+*/

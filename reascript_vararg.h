@@ -617,50 +617,6 @@ static void* __vararg_NF_UpdateSWSMarkerRegionSubWindow(void** arglist, int nump
   return NULL;
 }
 
-static void* __vararg_NF_GetGlobalStartupAction_Desc(void** arglist, int numparms)
-{
-  NF_GetGlobalStartupAction_Desc((char*)arglist[0], (int)(INT_PTR)arglist[1]);
-  return NULL;
-}
-
-static void* __vararg_NF_GetGlobalStartupAction_CmdID(void** arglist, int numparms)
-{
-  NF_GetGlobalStartupAction_CmdID((char*)arglist[0], (int)(INT_PTR)arglist[1]);
-  return NULL;
-}
-
-static void* __vararg_NF_SetGlobalStartupAction(void** arglist, int numparms)
-{
-  return (void*)(INT_PTR)NF_SetGlobalStartupAction((const char*)arglist[0]);
-}
-
-static void* __vararg_NF_ClearGlobalStartupAction(void** arglist, int numparms)
-{
-  return (void*)(INT_PTR)NF_ClearGlobalStartupAction();
-}
-
-static void* __vararg_NF_GetProjectStartupAction_Desc(void** arglist, int numparms)
-{
-  NF_GetProjectStartupAction_Desc((char*)arglist[0], (int)(INT_PTR)arglist[1]);
-  return NULL;
-}
-
-static void* __vararg_NF_GetProjectStartupAction_CmdID(void** arglist, int numparms)
-{
-  NF_GetProjectStartupAction_CmdID((char*)arglist[0], (int)(INT_PTR)arglist[1]);
-  return NULL;
-}
-
-static void* __vararg_NF_SetProjectStartupAction(void** arglist, int numparms)
-{
-  return (void*)(INT_PTR)NF_SetProjectStartupAction((const char*)arglist[0]);
-}
-
-static void* __vararg_NF_ClearProjectStartupAction(void** arglist, int numparms)
-{
-  return (void*)(INT_PTR)NF_ClearProjectStartupAction();
-}
-
 static void* __vararg_SN_FocusMIDIEditor(void** arglist, int numparms)
 {
   SN_FocusMIDIEditor();

@@ -916,8 +916,7 @@ int AWIsAutoGroupEnabled(COMMAND_T* = NULL)
 	return g_AWAutoGroup;
 }
 
-// #587 option to set auto grouped items to random color
-
+// option to set auto grouped items to random color
 void AWToggleAutoGroupRndColor(COMMAND_T* = NULL)
 {
 	g_AWAutoGroupRndColor = !g_AWAutoGroupRndColor;
@@ -931,11 +930,14 @@ int AWIsAutoGroupRndColorEnabled(COMMAND_T* = NULL)
 	return g_AWAutoGroupRndColor;
 }
 
-// /#587
-
 bool g_AWIsRecording = false; // For auto group, remember if it was just recording
 
-
+/* autoxfade
+&4 &8
+0  0, Splits existing items and created new takes (default)
+1  0, Trims existing items behind new recording (tape mode)
+0  1, Creates new media items in separate lanes (layers)
+*/
 void AWDoAutoGroup(bool rec)
 {
 	//If transport changes to recording, set recording flag
@@ -948,8 +950,7 @@ void AWDoAutoGroup(bool rec)
 		if (g_AWAutoGroup)
 		{
 			WDL_TypedBuf<MediaItem*> selItems;
-			SWS_GetSelectedMediaItems(&selItems);
-
+			SWS_GetSelectedMediaItems(&selItems);        
 			if (selItems.GetSize() > 1 && ((*(int*)GetConfigVar("autoxfade") & 4) || (*(int*)GetConfigVar("autoxfade") & 8))) // (Don't group if not in tape or overlap record mode, takes mode is messy) NF: added new auto group in takes mode functionality below
 			{
 				// check if we're in 'Autopunch selected items' mode
@@ -991,8 +992,8 @@ void AWDoAutoGroup(bool rec)
 				UpdateArrange();
 			}
 
-			// #587 Auto Group in takes mode
-			else if (selItems.GetSize() > 1 && ((*(int*)GetConfigVar("autoxfade") == 0) || (*(int*)GetConfigVar("autoxfade") & 1)))
+			// #587 Auto group in takes mode
+			else if (selItems.GetSize() > 1 && !(*(int*)GetConfigVar("autoxfade") & 4) && !(*(int*)GetConfigVar("autoxfade") & 8))
 			{
 				NFDoAutoGroupTakesMode(selItems);
 			}
@@ -1008,7 +1009,7 @@ void NFDoAutoGroupTakesMode(WDL_TypedBuf<MediaItem*> origSelItems)
 {
 	// only group if more than one track is rec. armed
 	// otherwise it would group items to itself on same track
-	if (!isMoreThanOneTrackRecArmed())
+	if (!IsMoreThanOneTrackRecArmed())
 		return;
 
 	WDL_TypedBuf<MediaTrack*> origSelTracks;
@@ -1016,7 +1017,7 @@ void NFDoAutoGroupTakesMode(WDL_TypedBuf<MediaItem*> origSelItems)
 
 	PreventUIRefresh(1);
 
-	// unselect all tracks
+	// unselect cur. sel. tracks
 	for (int i = 0; i < origSelTracks.GetSize(); i++) {
 		SetMediaTrackInfo_Value(origSelTracks.Get()[i], "I_SELECTED", 0);
 	}
@@ -1080,7 +1081,8 @@ void NFDoAutoGroupTakesMode(WDL_TypedBuf<MediaItem*> origSelItems)
 	UpdateArrange();
 }
 
-bool isMoreThanOneTrackRecArmed()
+// Auto group helper functions
+bool IsMoreThanOneTrackRecArmed()
 {
 	int RecArmedTracks = 0;
 	for (int i = 0; i < GetNumTracks(); i++) {

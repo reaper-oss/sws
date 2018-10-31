@@ -38,11 +38,11 @@ void AWDoAutoGroup(bool rec);
 // #587
 void NFDoAutoGroupTakesMode(WDL_TypedBuf<MediaItem*> selItems);
 
-// AutoGroupTakesMode helper functions
+// Auto group in takes mode helper functions
 MediaItem* GetSelectedItemOnTrack_byIndex(WDL_TypedBuf<MediaItem*> origSelItems,  vector<int> selItemsPerTrackCount, 
 	int selTrackIdx, int column);
 void SelectRecArmedTracksOfSelItems(WDL_TypedBuf<MediaItem*> selItems);
 int GetMaxSelItemsPerTrackCount(vector<int> selItemsPerTrackCount);
 void UnselectAllTracks();  void UnselectAllItems();
 void RestoreOrigTracksAndItemsSelection(WDL_TypedBuf<MediaTrack*> origSelTracks, WDL_TypedBuf<MediaItem*> origSelItems);
-bool isMoreThanOneTrackRecArmed();
+bool IsMoreThanOneTrackRecArmed();

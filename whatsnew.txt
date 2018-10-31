@@ -1,4 +1,6 @@
 Fixes:
++ReaScript:
+ - fix BR_MIDI_CCLaneRemove(), BR_MIDI_CCLaneReplace() (report https://forum.cockos.com/showpost.php?p=2002814&postcount=1|here|.)
 +Issue 1054: "SWS/S&M: Show take volume envelopes" - obey volume fader scaling preference if new envelope is created
 +Cycle Action editor: Fix minor issue with not opening with correct section (report https://forum.cockos.com/showpost.php?p=1986045&postcount=3|here|)
 +"SWS/S&M: Close all FX chain windows", "SWS/S&M: Close all floating FX windows (...)" - include take FX (report https://forum.cockos.com/showpost.php?p=1978820&postcount=2425|here|)

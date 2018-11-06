@@ -279,9 +279,9 @@ bool NF_AnalyzeTakeLoudness2(MediaItem_Take * take, bool analyzeTruePeak, double
 }
 
 // #755, Track notes
-const char* NF_GetSWSTrackNotes(MediaTrack* track, WDL_FastString* trackNoteOut)
+const char* NF_GetSWSTrackNotes(MediaTrack* track)
 {
-	return NFDoGetSWSTrackNotes(track, trackNoteOut);
+	return NFDoGetSWSTrackNotes(track);
 }
 
 void NF_SetSWSTrackNotes(MediaTrack* track, const char* buf)
@@ -289,14 +289,14 @@ void NF_SetSWSTrackNotes(MediaTrack* track, const char* buf)
 	NFDoSetSWSTrackNotes(track, buf);
 }
 
-const char* NF_GetSWSMarkerRegionSub(WDL_FastString* regionSubOut, int regionIdx)
+const char* NF_GetSWSMarkerRegionSub(int mkrRgnIdx)
 {
-	return NFDoGetSWSMarkerRegionSub(regionSubOut, regionIdx);
+	return NFDoGetSWSMarkerRegionSub(mkrRgnIdx);
 }
 
-bool NF_SetSWSMarkerRegionSub(WDL_FastString* regionSub, int regionIdx)
+bool NF_SetSWSMarkerRegionSub(const char* mkrRgnSub, int mkrRgnIdx)
 {
-	return NFDoSetSWSMarkerRegionSub(regionSub, regionIdx);
+	return NFDoSetSWSMarkerRegionSub(mkrRgnSub, mkrRgnIdx);
 }
 
 void NF_UpdateSWSMarkerRegionSubWindow()

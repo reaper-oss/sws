@@ -43,10 +43,10 @@ bool            NF_AnalyzeTakeLoudness(MediaItem_Take* take, bool analyzeTruePea
 bool            NF_AnalyzeTakeLoudness2(MediaItem_Take* take, bool analyzeTruePeak, double* lufsOut, double* rangeOut, double* truePeakOut, double* truePeakPosOut, double* shorTermMaxOut, double* momentaryMaxOut, double* shortTermMaxPosOut, double* momentaryMaxPosOut);
 
 // #755
-const char*    NF_GetSWSTrackNotes(MediaTrack* track, WDL_FastString* trackNoteOut);
+const char*    NF_GetSWSTrackNotes(MediaTrack* track);
 void           NF_SetSWSTrackNotes(MediaTrack* track, const char* buf);
-const char*    NF_GetSWSMarkerRegionSub(WDL_FastString* mkrRgnSubOut, int mkrRgnIdx);
-bool           NF_SetSWSMarkerRegionSub(WDL_FastString* mkrRgnSubIn, int mkrRgnIdx);
+const char*    NF_GetSWSMarkerRegionSub(int mkrRgnIdx);
+bool           NF_SetSWSMarkerRegionSub(const char* mkrRgnSub, int mkrRgnIdx);
 void           NF_UpdateSWSMarkerRegionSubWindow();
 
 

@@ -597,7 +597,7 @@ static void* __vararg_NF_AnalyzeTakeLoudness2(void** arglist, int numparms)
 
 static void* __vararg_NF_GetSWSTrackNotes(void** arglist, int numparms)
 {
-  return (void*)(INT_PTR)NF_GetSWSTrackNotes((MediaTrack*)arglist[0], (WDL_FastString*)arglist[1]);
+  return (void*)(INT_PTR)NF_GetSWSTrackNotes((MediaTrack*)arglist[0]);
 }
 
 static void* __vararg_NF_SetSWSTrackNotes(void** arglist, int numparms)
@@ -608,12 +608,12 @@ static void* __vararg_NF_SetSWSTrackNotes(void** arglist, int numparms)
 
 static void* __vararg_NF_GetSWSMarkerRegionSub(void** arglist, int numparms)
 {
-  return (void*)(INT_PTR)NF_GetSWSMarkerRegionSub((WDL_FastString*)arglist[0], (int)(INT_PTR)arglist[1]);
+  return (void*)(INT_PTR)NF_GetSWSMarkerRegionSub((int)(INT_PTR)arglist[0]);
 }
 
 static void* __vararg_NF_SetSWSMarkerRegionSub(void** arglist, int numparms)
 {
-  return (void*)(INT_PTR)NF_SetSWSMarkerRegionSub((WDL_FastString*)arglist[0], (int)(INT_PTR)arglist[1]);
+  return (void*)(INT_PTR)NF_SetSWSMarkerRegionSub((const char*)arglist[0], (int)(INT_PTR)arglist[1]);
 }
 
 static void* __vararg_NF_UpdateSWSMarkerRegionSubWindow(void** arglist, int numparms)

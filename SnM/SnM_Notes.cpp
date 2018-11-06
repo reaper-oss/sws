@@ -1641,17 +1641,19 @@ int IsNotesLocked(COMMAND_T*) {
 	return g_locked;
 }
 
-// #755
-const char* NFDoGetSWSTrackNotes(MediaTrack* track, WDL_FastString* trackNoteOut)
+/******************************************************************************
+* ReaScript export #755                                                       *
+******************************************************************************/
+const char* NFDoGetSWSTrackNotes(MediaTrack* track)
 {
 	for (int i = 0; i < g_SNM_TrackNotes.Get()->GetSize(); i++) {
 		if (g_SNM_TrackNotes.Get()->Get(i)->GetTrack() == track) {
-			trackNoteOut->Set(g_SNM_TrackNotes.Get()->Get(i)->m_notes.Get());
+			return g_SNM_TrackNotes.Get()->Get(i)->m_notes.Get();
 			break;
 		}
 	}
 
-	return trackNoteOut->Get();
+	return "";
 }
 
 void NFDoSetSWSTrackNotes(MediaTrack* track, const char* buf)
@@ -1678,10 +1680,8 @@ void NFDoSetSWSTrackNotes(MediaTrack* track, const char* buf)
 	g_SNM_TrackNotes.Get()->Add(new SNM_TrackNotes(TrackToGuid(track), buf));
 }
 
-const char* NFDoGetSWSMarkerRegionSub(WDL_FastString* mkrRgnSubOut, int mkrRgnIdxNumberIn)
+const char* NFDoGetSWSMarkerRegionSub(int mkrRgnIdxNumberIn)
 {
-	mkrRgnSubOut->Set("");
-
 	// maybe more safe version, but below also seems to work and is faster
 	/*
 	int idx = 0, num; 
@@ -1706,22 +1706,21 @@ const char* NFDoGetSWSMarkerRegionSub(WDL_FastString* mkrRgnSubOut, int mkrRgnId
 	*/
 	
 	int mkrRgnId = GetMarkerRegionIdFromIndex(NULL, mkrRgnIdxNumberIn); // takes zero-based idx
-	if (mkrRgnId == -1) return mkrRgnSubOut->Get();
+	if (mkrRgnId == -1) return "";
 
 	for (int i = 0; i < g_pRegionSubs.Get()->GetSize(); i++)
 	{
 		// mkrRgn sub exists
 		if (mkrRgnId == g_pRegionSubs.Get()->Get(i)->m_id)
 		{
-			mkrRgnSubOut->Set(g_pRegionSubs.Get()->Get(i)->m_notes.Get());
-			return mkrRgnSubOut->Get();
+			return g_pRegionSubs.Get()->Get(i)->m_notes.Get();
 		}
 	}
 
-	return mkrRgnSubOut->Get();
+	return "";
 }
 
-bool NFDoSetSWSMarkerRegionSub(WDL_FastString* mkrRgnSubIn, int mkrRgnIdxNumberIn)
+bool NFDoSetSWSMarkerRegionSub(const char* mkrRgnSubIn, int mkrRgnIdxNumberIn)
 {
 	int idx = 0; bool mkrRgnExists = false;
 	
@@ -1744,7 +1743,7 @@ bool NFDoSetSWSMarkerRegionSub(WDL_FastString* mkrRgnSubIn, int mkrRgnIdxNumberI
 			// mkrRgn sub doesn't exist but marker/region is present in project, add new mkrRgn sub
 			if (mkrRgnExists)
 			{
-				g_pRegionSubs.Get()->Add(new SNM_RegionSubtitle(mkrRgnId, mkrRgnSubIn->Get()));
+				g_pRegionSubs.Get()->Add(new SNM_RegionSubtitle(mkrRgnId, mkrRgnSubIn));
 				return true;
 			}
 			else // mkrRgn isn't present in project
@@ -1757,8 +1756,7 @@ bool NFDoSetSWSMarkerRegionSub(WDL_FastString* mkrRgnSubIn, int mkrRgnIdxNumberI
 void NF_DoUpdateSWSMarkerRegionSubWindow()
 {
 	if (NotesWnd* w = g_notesWndMgr.Get()) {
-		if (w->IsWndVisible() && g_notesType <= SNM_NOTES_MKRRGN_SUB && g_notesType >= SNM_NOTES_MKR_SUB) {
+		if (w->IsWndVisible() && g_notesType <= SNM_NOTES_MKRRGN_SUB && g_notesType >= SNM_NOTES_MKR_SUB)
 			w->ForceUpdateMkrRgnNameOrSub(g_notesType);
-		}
 	}
 }

@@ -454,7 +454,7 @@ double GetPositionFromTimeInfo (int hours, int minutes, int seconds, int frames)
 	WDL_FastString timeString;
 	timeString.AppendFormatted(256, "%d:%d:%d:%d", hours, minutes, seconds, frames);
 
-	return parse_timestr_pos(timeString.Get(), 5);
+	return parse_timestr_len(timeString.Get(), 0, 5);
 }
 
 void GetTimeInfoFromPosition (double position, int* hours, int* minutes, int* seconds, int* frames)

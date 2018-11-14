@@ -212,38 +212,6 @@ void AppendLine (WDL_FastString& str, const char* line)
 	str.Append("\n");
 }
 
-void AdvanceBySecond (int direction, int& hours, int& minutes, int& seconds)
-{
-	if (direction > 0)
-	{
-		++seconds;
-		if (seconds >= 60)
-		{
-			seconds = 0;
-			++minutes;
-			if (minutes >= 60)
-			{
-				minutes = 0;
-				++hours;
-			}
-		}
-
-	}
-	else
-	{
-		--seconds;
-		if (seconds < 0)
-		{
-			seconds = 59;
-			--minutes;
-			if (minutes < 0)
-			{
-				minutes = 59;
-				--hours;
-			}
-		}
-	}
-}
 const char* strstr_last (const char* haystack, const char* needle)
 {
 	if (!haystack || !needle || *needle == '\0')
@@ -475,39 +443,6 @@ void GetTimeInfoFromPosition (double position, int* hours, int* minutes, int* se
 	WritePtr(minutes, ((str[1].GetLength() > 0) ? atoi(str[1].Get()) : 0));
 	WritePtr(seconds, ((str[2].GetLength() > 0) ? atoi(str[2].Get()) : 0));
 	WritePtr(frames,  ((str[3].GetLength() > 0) ? atoi(str[3].Get()) : 0));
-}
-
-void AdvanceByFrame (int direction, int& hours, int& minutes, int& seconds, int& frames)
-{
-	bool dropFrame;
-	int maxFrame = (int)TimeMap_curFrameRate(NULL, &dropFrame);
-
-	if (direction > 0)
-	{
-		++frames;
-		if (frames > maxFrame)
-		{
-			AdvanceBySecond(direction, hours, minutes, seconds);
-			frames = (dropFrame) ? ((seconds == 0 && minutes % 10 != 0) ? 2 : 0) : (0);
-		}
-	}
-	else
-	{
-		if (frames == 0 && seconds == 0 && minutes == 0 && hours == 0)
-		{
-			return;
-		}
-		else
-		{
-			int minFrame = (dropFrame) ? ((seconds == 0 && minutes % 10 != 0) ? 2 : 0) : (0);
-			--frames;
-			if (frames < minFrame)
-			{
-				AdvanceBySecond(direction, hours, minutes, seconds);
-				frames = maxFrame;
-			}
-		}
-	}
 }
 
 void GetSetLastAdjustedSend (bool set, MediaTrack** track, int* sendId, BR_EnvType* type)
@@ -1751,7 +1686,7 @@ double GetNextGridDiv (double position)
 	{
 		int hours, minutes, seconds, frames;
 		GetTimeInfoFromPosition(position, &hours, &minutes, &seconds, &frames);
-		AdvanceByFrame(1, hours, minutes, seconds, frames);
+		++frames;
 
 		nextGridPosition = GetPositionFromTimeInfo(hours, minutes, seconds, frames);
 	}
@@ -1869,7 +1804,7 @@ double GetPrevGridDiv (double position)
 		double currentFramePos = GetPositionFromTimeInfo(hours, minutes, seconds, frames);
 		if (IsEqual(currentFramePos, position, SNM_FUDGE_FACTOR))
 		{
-			AdvanceByFrame(-1, hours, minutes, seconds, frames);
+			--frames;
 			prevGridDivPos = GetPositionFromTimeInfo(hours, minutes, seconds, frames);
 		}
 		else

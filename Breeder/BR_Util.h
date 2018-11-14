@@ -83,7 +83,6 @@ double AltAtof (char* str);
 bool IsFraction (char* str, double& convertedFraction);
 void ReplaceAll (string& str, string oldStr, string newStr);
 void AppendLine (WDL_FastString& str, const char* line);
-void AdvanceBySecond (int direction, int& hours, int& minutes, int& seconds);
 const char* strstr_last (const char* haystack, const char* needle);
 template <typename T> bool WritePtr (T* ptr, T val)  {if (ptr){*ptr = val; return true;} return false;}
 template <typename T> bool ReadPtr  (T* ptr, T& val) {if (ptr){val = *ptr; return true;} return false;}
@@ -107,7 +106,6 @@ double EndOfProject (bool markers, bool regions);
 double GetMidiOscVal (double min, double max, double step, double currentVal, int commandVal, int commandValhw, int commandRelmode);
 double GetPositionFromTimeInfo (int hours, int minutes, int seconds, int frames);
 void GetTimeInfoFromPosition (double position, int* hours, int* minutes, int* seconds, int* frames);
-void AdvanceByFrame (int direction, int& hours, int& minutes, int& seconds, int& frames);
 void GetSetLastAdjustedSend (bool set, MediaTrack** track, int* sendId, BR_EnvType* type);
 void GetSetFocus (bool set, HWND* hwnd, int* context);
 void SetAllCoordsToZero (RECT* r);

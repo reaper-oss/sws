@@ -225,13 +225,17 @@ void GetProjectString(WDL_FastString* prjStr){
 
 void WriteProjectFile( string filename, WDL_FastString* prjStr ){
 	//CheckDirTree( filename, true ); This done in GetQueuedRenders
-	ProjectStateContext* outProject = ProjectCreateFileWrite( filename.c_str() );	
+	ProjectStateContext* outProject = ProjectCreateFileWrite( filename.c_str() );
+
+	if(!outProject)
+		return;
+
 	char line[4096];
-	int pos = 0;	
+	int pos = 0;
 	while( GetChunkLine( prjStr->Get(), line, 4096, &pos, false ) ){
 		outProject->AddLine("%s",line);
 	}
-    delete outProject;
+	delete outProject;
 }
 
 /*
@@ -347,17 +351,7 @@ void RemoveQuotes( string *str ){
 }
 
 void SanitizeFilename( string *fn ){
-
-#ifdef _WIN32
-	//Windows illegal chars
-	const char *illegalChars = "\\/<>|\":?*";
-#else
-	// Mac illegal chars
-	const char *illegalChars = ":";
-	// First char can't be a dot, doens't matter if we're prepending track numbers
-	if( !g_prepend_track_number && fn->substr(0,1) == "." ) fn->replace(0,1,"_");
-#endif
-
+	const char *illegalChars = "\\/<>|\":?*.";
 	ReplaceChars( fn, illegalChars, "_" );
 }
 

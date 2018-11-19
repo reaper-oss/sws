@@ -918,21 +918,356 @@ bool BR_TrackFX_GetFXModuleName (MediaTrack* track, int fx, char* nameOut, int n
 	return found;
 }
 
-int BR_Win32_GetPrivateProfileString (const char* sectionName, const char* keyName, const char* defaultString, const char* filePath, char* stringOut, int stringOut_sz)
+int BR_Win32_CB_FindString(void* comboBoxHwnd, int startId, const char* string)
+{
+	if (comboBoxHwnd && string)
+		return (int)SendMessage((HWND)comboBoxHwnd, CB_FINDSTRING, (WPARAM)startId, (LPARAM)string);
+	else
+		return CB_ERR;
+}
+
+int BR_Win32_CB_FindStringExact(void* comboBoxHwnd, int startId, const char* string)
+{
+	if (comboBoxHwnd && string)
+		return (int)SendMessage((HWND)comboBoxHwnd, CB_FINDSTRINGEXACT, (WPARAM)startId, (LPARAM)string);
+	else
+		return CB_ERR;
+}
+
+void BR_Win32_ClientToScreen(void* hwnd, int xIn, int yIn, int* xOut, int* yOut)
+{
+	POINT p;
+	p.x = xIn;
+	p.y = yIn;
+
+	ClientToScreen((HWND)hwnd, &p);
+	WritePtr(xOut, (int)p.x);
+	WritePtr(yOut, (int)p.y);
+}
+
+void* BR_Win32_FindWindowEx(const char* hwndParent, const char* hwndChildAfter, const char* className, const char* windowName, bool searchClass, bool searchName)
+{
+	return (void*)FindWindowEx((HWND)BR_Win32_StringToHwnd(hwndParent), (HWND)BR_Win32_StringToHwnd(hwndChildAfter), searchClass ? className : NULL, searchName ? windowName : NULL);
+}
+
+int BR_Win32_GET_X_LPARAM(int lParam)
+{
+	return GET_X_LPARAM(lParam);
+}
+
+int BR_Win32_GET_Y_LPARAM(int lParam)
+{
+	return GET_Y_LPARAM(lParam);
+}
+
+int BR_Win32_GetConstant(const char* constantName)
+{
+#ifndef _WIN32
+#define SW_MAXIMIZE         0x3
+#define SWP_NOOWNERZORDER   0x0200
+#define WS_MAXIMIZE         0x01000000L
+#define WS_MAXIMIZEBOX      0x00010000L
+#define WS_MINIMIZEBOX      0x00020000L
+#define WS_OVERLAPPED       0x00000000L
+#define WS_OVERLAPPEDWINDOW WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX
+#endif
+
+	int constant = -1;
+	if (constantName)
+	{
+		if (!strcmp(constantName, "CB_ERR"))              constant = CB_ERR;
+		else if (!strcmp(constantName, "CB_GETCOUNT"))         constant = CB_GETCOUNT;
+		else if (!strcmp(constantName, "CB_GETCURSEL"))        constant = CB_GETCURSEL;
+		else if (!strcmp(constantName, "CB_SETCURSEL"))        constant = CB_SETCURSEL;
+		else if (!strcmp(constantName, "EM_SETSEL"))           constant = EM_SETSEL;
+		else if (!strcmp(constantName, "GW_CHILD"))            constant = GW_CHILD;
+		else if (!strcmp(constantName, "GW_HWNDFIRST"))        constant = GW_HWNDFIRST;
+		else if (!strcmp(constantName, "GW_HWNDLAST"))         constant = GW_HWNDLAST;
+		else if (!strcmp(constantName, "GW_HWNDNEXT"))         constant = GW_HWNDNEXT;
+		else if (!strcmp(constantName, "GW_HWNDPREV"))         constant = GW_HWNDPREV;
+		else if (!strcmp(constantName, "GW_OWNER"))            constant = GW_OWNER;
+		else if (!strcmp(constantName, "GWL_STYLE"))           constant = GWL_STYLE;
+		else if (!strcmp(constantName, "SW_HIDE"))             constant = SW_HIDE;
+		else if (!strcmp(constantName, "SW_MAXIMIZE"))         constant = SW_MAXIMIZE;
+		else if (!strcmp(constantName, "SW_SHOW"))             constant = SW_SHOW;
+		else if (!strcmp(constantName, "SW_SHOWMINIMIZED"))    constant = SW_SHOWMINIMIZED;
+		else if (!strcmp(constantName, "SW_SHOWNA"))           constant = SW_SHOWNA;
+		else if (!strcmp(constantName, "SW_SHOWNOACTIVATE"))   constant = SW_SHOWNOACTIVATE;
+		else if (!strcmp(constantName, "SW_SHOWNORMAL"))       constant = SW_SHOWNORMAL;
+		else if (!strcmp(constantName, "SWP_FRAMECHANGED"))    constant = SWP_FRAMECHANGED;
+		else if (!strcmp(constantName, "SWP_NOACTIVATE"))      constant = SWP_FRAMECHANGED;
+		else if (!strcmp(constantName, "SWP_NOMOVE"))          constant = SWP_NOMOVE;
+		else if (!strcmp(constantName, "SWP_NOOWNERZORDER"))   constant = SWP_NOOWNERZORDER;
+		else if (!strcmp(constantName, "SWP_NOSIZE"))          constant = SWP_NOSIZE;
+		else if (!strcmp(constantName, "SWP_NOZORDER"))        constant = SWP_NOZORDER;
+		else if (!strcmp(constantName, "VK_DOWN"))             constant = VK_DOWN;
+		else if (!strcmp(constantName, "VK_UP"))               constant = VK_UP;
+		else if (!strcmp(constantName, "WM_CLOSE"))            constant = WM_CLOSE;
+		else if (!strcmp(constantName, "WM_KEYDOWN"))          constant = WM_KEYDOWN;
+		else if (!strcmp(constantName, "WS_MAXIMIZE"))         constant = WS_MAXIMIZE;
+		else if (!strcmp(constantName, "WS_OVERLAPPEDWINDOW")) constant = WS_OVERLAPPEDWINDOW;
+		else                                                   constant = -1;
+	}
+
+#ifndef _WIN32
+#undef SW_MAXIMIZE
+#undef SWP_NOOWNERZORDER
+#undef WS_MAXIMIZE
+#undef WS_MAXIMIZE
+#undef WS_MAXIMIZEBOX
+#undef WS_MINIMIZEBOX
+#undef WS_OVERLAPPED
+#undef WS_OVERLAPPEDWINDOW
+#endif
+	return constant;
+}
+
+bool BR_Win32_GetCursorPos(int* xOut, int* yOut)
+{
+	POINT p;
+	bool result;
+#ifdef _WIN32
+	result = !!GetCursorPos(&p);
+#else
+	result = true;
+	GetCursorPos(&p);
+#endif
+
+	WritePtr(xOut, (int)p.x);
+	WritePtr(yOut, (int)p.y);
+	return result;
+}
+
+void* BR_Win32_GetFocus()
+{
+	return (void*)GetFocus();
+}
+
+void* BR_Win32_GetForegroundWindow()
+{
+	return (void*)GetForegroundWindow();
+}
+
+void* BR_Win32_GetMainHwnd()
+{
+	return (void*)g_hwndParent;
+}
+
+void* BR_Win32_GetMixerHwnd(bool* isDockedOut)
+{
+	HWND mixerHwnd = GetMixerWnd();
+
+	WritePtr(isDockedOut, DockIsChildOfDock(mixerHwnd, NULL) != -1);
+	return (void*)mixerHwnd;
+}
+
+void BR_Win32_GetMonitorRectFromRect(bool workingAreaOnly, int leftIn, int topIn, int rightIn, int bottomIn, int* leftOut, int* topOut, int* rightOut, int* bottomOut)
+{
+	RECT r = { leftIn, topIn, rightIn, bottomIn };
+	RECT monitorRect = { 0, 0 ,0 , 0 };
+
+	GetMonitorRectFromRect(r, workingAreaOnly, &monitorRect);
+
+	WritePtr(leftOut, (int)monitorRect.left);
+	WritePtr(topOut, (int)monitorRect.top);
+	WritePtr(rightOut, (int)monitorRect.right);
+	WritePtr(bottomOut, (int)monitorRect.bottom);
+}
+
+void* BR_Win32_GetParent(void* hwnd)
+{
+	return (void*)GetParent((HWND)hwnd);
+}
+
+int BR_Win32_GetPrivateProfileString(const char* sectionName, const char* keyName, const char* defaultString, const char* filePath, char* stringOut, int stringOut_sz)
 {
 	return (int)GetPrivateProfileString(sectionName, keyName, defaultString, stringOut, stringOut_sz, filePath);
 }
 
-int BR_Win32_ShellExecute (const char* operation, const char* file, const char* parameters, const char* directoy, int showFlags)
+void* BR_Win32_GetWindow(void* hwnd, int cmd)
+{
+	return (void*)GetWindow((HWND)hwnd, cmd);
+}
+
+int BR_Win32_GetWindowLong(void* hwnd, int index)
+{
+	return (int)GetWindowLong((HWND)hwnd, index);
+}
+
+bool BR_Win32_GetWindowRect(void* hwnd, int* leftOut, int* topOut, int* rightOut, int* bottomOut)
+{
+	RECT r;
+	bool result = !!GetWindowRect((HWND)hwnd, &r);
+
+	WritePtr(leftOut, (int)r.left);
+	WritePtr(topOut, (int)r.top);
+	WritePtr(rightOut, (int)r.right);
+	WritePtr(bottomOut, (int)r.bottom);
+	return result;
+}
+
+int BR_Win32_GetWindowText(void* hwnd, char* textOut, int textOut_sz)
+{
+	return GetWindowText((HWND)hwnd, textOut, textOut_sz);
+}
+
+int BR_Win32_HIBYTE(int value)
+{
+	return HIBYTE(value);
+}
+
+int BR_Win32_HIWORD(int value)
+{
+	return HIWORD(value);
+}
+
+void BR_Win32_HwndToString(void* hwnd, char* stringOut, int stringOut_sz)
+{
+	_snprintfSafe(stringOut, stringOut_sz, "%lld", (long long)(HWND)hwnd);
+}
+
+bool BR_Win32_IsWindow(void* hwnd)
+{
+	return SWS_IsWindow((HWND)hwnd);
+}
+
+bool BR_Win32_IsWindowVisible(void* hwnd)
+{
+	return !!IsWindowVisible((HWND)hwnd);
+}
+
+int BR_Win32_LOBYTE(int value)
+{
+	return LOBYTE(value);
+}
+
+int BR_Win32_LOWORD(int value)
+{
+	return LOWORD(value);
+}
+
+int BR_Win32_MAKELONG(int low, int high)
+{
+	return MAKELONG(low, high);
+}
+
+int BR_Win32_MAKELPARAM(int low, int high)
+{
+	return MAKELPARAM(low, high);
+}
+
+int BR_Win32_MAKELRESULT(int low, int high)
+{
+	return MAKELRESULT(low, high);
+}
+
+int BR_Win32_MAKEWORD(int low, int high)
+{
+	return MAKEWORD(low, high);
+}
+
+int BR_Win32_MAKEWPARAM(int low, int high)
+{
+	return MAKEWPARAM(low, high);
+}
+
+void* BR_Win32_MIDIEditor_GetActive()
+{
+	return (void*)MIDIEditor_GetActive();
+}
+
+void BR_Win32_ScreenToClient(void* hwnd, int xIn, int yIn, int* xOut, int* yOut)
+{
+	POINT p;
+	p.x = xIn;
+	p.y = yIn;
+
+	ScreenToClient((HWND)hwnd, &p);
+	WritePtr(xOut, (int)p.x);
+	WritePtr(yOut, (int)p.y);
+}
+
+int BR_Win32_SendMessage(void* hwnd, int msg, int lParam, int wParam)
+{
+	return (int)SendMessage((HWND)hwnd, msg, lParam, wParam);
+}
+
+void* BR_Win32_SetFocus(void* hwnd)
+{
+#ifdef _WIN32
+	return (void*)SetFocus((HWND)hwnd);
+#else
+	SetFocus((HWND)hwnd);
+	return hwnd;
+#endif
+}
+
+int BR_Win32_SetForegroundWindow(void* hwnd)
+{
+#ifdef _WIN32
+	return SetForegroundWindow((HWND)hwnd);
+#else
+	SetForegroundWindow((HWND)hwnd);
+	return !!hwnd;
+#endif
+}
+
+int BR_Win32_SetWindowLong(void* hwnd, int index, int newLong)
+{
+	return SetWindowLong((HWND)hwnd, index, newLong);
+}
+
+bool BR_Win32_SetWindowPos(void* hwnd, const char* hwndInsertAfter, int x, int y, int width, int height, int flags)
+{
+	HWND insertAfter = NULL;
+	if (!strcmp(hwndInsertAfter, "HWND_BOTTOM"))    insertAfter = HWND_BOTTOM;
+	else if (!strcmp(hwndInsertAfter, "HWND_NOTOPMOST")) insertAfter = HWND_NOTOPMOST;
+	else if (!strcmp(hwndInsertAfter, "HWND_TOP"))       insertAfter = HWND_TOP;
+	else if (!strcmp(hwndInsertAfter, "HWND_TOPMOST"))   insertAfter = HWND_TOPMOST;
+	else                                                 insertAfter = (HWND)BR_Win32_StringToHwnd(hwndInsertAfter);
+
+#ifdef _WIN32
+	return !!SetWindowPos((HWND)hwnd, insertAfter, x, y, width, height, flags);
+#else
+	SetWindowPos((HWND)hwnd, insertAfter, x, y, width, height, flags);
+	return !!hwnd;
+#endif
+}
+
+int BR_Win32_ShellExecute(const char* operation, const char* file, const char* parameters, const char* directoy, int showFlags)
 {
 	return (int)ShellExecute(g_hwndParent, operation, file, parameters, directoy, showFlags);
 }
 
-bool BR_Win32_WritePrivateProfileString (const char* sectionName, const char* keyName, const char* value, const char* filePath)
+bool BR_Win32_ShowWindow(void* hwnd, int cmdShow)
+{
+#ifdef _WIN32
+	return !!ShowWindow((HWND)hwnd, cmdShow);
+#else
+	ShowWindow((HWND)hwnd, cmdShow);
+	return !!hwnd;
+#endif
+}
+
+void* BR_Win32_StringToHwnd(const char* string)
+{
+	long long hwnd = 0;
+	sscanf(string, "%256lld", &hwnd);
+	return (void*)(HWND)hwnd;
+}
+
+void* BR_Win32_WindowFromPoint(int x, int y)
+{
+	POINT p;
+	p.x = x;
+	p.y = y;
+	return (void*)WindowFromPoint(p);
+}
+
+bool BR_Win32_WritePrivateProfileString(const char* sectionName, const char* keyName, const char* value, const char* filePath)
 {
 	return !!WritePrivateProfileString(sectionName, keyName, value, filePath);
 }
-
 
 // *** nofish stuff ***
 // #781

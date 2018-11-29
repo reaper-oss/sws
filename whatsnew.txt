@@ -1,3 +1,11 @@
+Fixes:
++Loudness:
+ - Revert (mistakenly) changing integrated Loudness relative gate threshold from -10.0 LU to -20.0 LU in SWS v2.9.8 (https://github.com/jiixyj/libebur128/issues/92#issuecomment-426889385|technical explaination|)
+ - Fix getting project sample rate
+ - Don't apply item vol. and pan/vol. envelope correction beyond actual audio data (Issue 1074)
+ - Fix item Loudness analysis if take contains vol. envelope and item position not 0.0 (thanks X-Raym!) (Issue 957, https://github.com/reaper-oss/sws/issues/957#issuecomment-371233030|details|)
+ - Pan/vol. envelope correction is now sample accurate (instead of being processed in blocks)
+
 !v2.9.8 pre-release build (March 5, 2018)
 Now requires REAPER 5.50+!
 

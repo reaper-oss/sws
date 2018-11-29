@@ -91,7 +91,7 @@ struct ebur128_state_internal {
   size_t     resampler_buffer_output_frames;
 };
 
-static double relative_gate = -20.0;
+static double relative_gate = -10.0;
 
 /* Those will be calculated when initializing the library */
 static double relative_gate_factor;

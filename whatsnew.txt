@@ -1,3 +1,7 @@
+Actions:
++New actions (Main section):
+ - SWS/FNG: Apply selected groove (use curent settings from opened groove tool)
+
 !v2.9.8 pre-release build (March 5, 2018)
 Now requires REAPER 5.50+!
 

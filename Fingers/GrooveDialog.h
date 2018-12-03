@@ -6,6 +6,7 @@ class GrooveDialog : public SWS_DockWnd
 public:
 	GrooveDialog();
 	void Refresh() { if (IsValidWindow()) RefreshGrooveList(); }
+	void ApplySelectedGroove(); // NF: made public, so we can call from action list
 	virtual ~GrooveDialog();
 private:
 	// SWS_DockWnd overrides
@@ -18,7 +19,6 @@ private:
 	void OnGrooveFolderButton(WORD wParam, LPARAM lParam);
 	void OnStrengthChange(WORD wParam, LPARAM lParam);
 	void OnVelStrengthChange(WORD wParam, LPARAM lParam);
-	void ApplySelectedGroove();
 	void RefreshGrooveList();
 
 	std::string currentDir;

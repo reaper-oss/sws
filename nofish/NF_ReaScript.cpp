@@ -28,7 +28,9 @@
 
 
 #include "stdafx.h"
-#include <cstdint> // uint32_t
+#ifdef _WIN32
+	#include <cstdint> // uint32_t
+#endif
 
 #include "NF_ReaScript.h"
 #include "../SnM/SnM.h"

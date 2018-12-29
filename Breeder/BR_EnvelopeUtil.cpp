@@ -1409,10 +1409,10 @@ double BR_Envelope::GetAIrate(int AIidx)
 	return m_properties.automationItems[AIidx].rate;
 }
 
-int BR_Envelope::IsAItimeBased(int AIidx)
+int BR_Envelope::IsAIselected(int AIidx)
 {
 	this->FillProperties();
-	return m_properties.automationItems[AIidx].timeBased;
+	return m_properties.automationItems[AIidx].selected;
 }
 
 double BR_Envelope::GetAIbaseline(int AIidx)
@@ -1433,6 +1433,35 @@ int BR_Envelope::IsAIlooped(int AIidx)
 	return m_properties.automationItems[AIidx].looped;
 }
 
+int BR_Envelope::GetAIunknown1(int AIidx)
+{
+	this->FillProperties();
+	return m_properties.automationItems[AIidx].unknown1;
+}
+
+int BR_Envelope::GetAIunknown2(int AIidx)
+{
+	this->FillProperties();
+	return m_properties.automationItems[AIidx].unknown2;
+}
+
+int BR_Envelope::GetAIpoolID(int AIidx)
+{
+	this->FillProperties();
+	return m_properties.automationItems[AIidx].pool_id;
+}
+
+int BR_Envelope::IsAImuted(int AIidx)
+{
+	this->FillProperties();
+	return m_properties.automationItems[AIidx].mute;
+}
+
+int BR_Envelope::GetAIunknown3(int AIidx)
+{
+	this->FillProperties();
+	return m_properties.automationItems[AIidx].unknown3;
+}
 
 void BR_Envelope::SetActive (bool active)
 {
@@ -1961,8 +1990,6 @@ bool BR_Envelope::FillProperties () const
 				}
 				else if (strstr(token, "POOLEDENVINST"))
 				{
-					// m_properties.automationItems.push_back(WDL_FastString(token));
-
 					lp.parse(token);
 					BR_Envelope::EnvProperties::AutomationItem AI;
 					AI.id = lp.gettoken_int(1);
@@ -1970,14 +1997,15 @@ bool BR_Envelope::FillProperties () const
 					AI.length = lp.gettoken_float(3);
 					AI.offset = lp.gettoken_float(4);
 					AI.rate = lp.gettoken_float(5);
-					AI.timeBased = lp.gettoken_int(6);
+					AI.selected = lp.gettoken_int(6);
 					AI.baseline = lp.gettoken_float(7);
 					AI.amplitude = lp.gettoken_float(8);
 					AI.looped = lp.gettoken_int(9);
-					// AI.extra1 = lp.gettoken_int(10);
-					// AI.extra2 = lp.gettoken_int(11);
-					// AI.extra3 = lp.gettoken_int(12);
-					// AI.extra4 = lp.gettoken_int(13);
+					AI.unknown1 = lp.gettoken_int(10);
+					AI.unknown2 = lp.gettoken_int(11);
+					AI.pool_id = lp.gettoken_int(12);
+					AI.mute = lp.gettoken_int(13);
+					AI.unknown3 = lp.gettoken_int(14);
 
 					m_properties.automationItems.push_back(AI);
 				}

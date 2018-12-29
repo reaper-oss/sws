@@ -1342,7 +1342,7 @@ int BR_MouseInfo::IsMouseOverAI(BR_Envelope & envelope, int drawableEnvHeight, i
 			double AIpos = envelope.GetAIposition(i);
 			double AIlength = envelope.GetAIlength(i);
 
-			if (mousePos >= AIpos && mousePos <= AIpos + AIlength) {
+			if (mousePos >= AIpos && mousePos < AIpos + AIlength) {
 				mouseHit = 1;
 				AIid = i; 
 				break;

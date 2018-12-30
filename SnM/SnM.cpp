@@ -355,6 +355,8 @@ static COMMAND_T s_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Open/close Notes window" }, "S&M_SHOW_NOTES_VIEW", OpenNotes, NULL, -1, IsNotesDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (project notes)" }, "S&M_SHOWNOTESHELP", OpenNotes, NULL, SNM_NOTES_PROJECT, IsNotesDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (extra project notes)" }, "S&M_EXTRAPROJECTNOTES", OpenNotes, NULL, SNM_NOTES_PROJECT_EXTRA, IsNotesDisplayed},
+	// #647
+	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (global notes)" }, "S&M_GLOBALNOTES", OpenNotes, NULL, SNM_NOTES_GLOBAL, IsNotesDisplayed },
 	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (item notes)" }, "S&M_ITEMNOTES", OpenNotes, NULL, SNM_NOTES_ITEM, IsNotesDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (track notes)" }, "S&M_TRACKNOTES", OpenNotes, NULL, SNM_NOTES_TRACK, IsNotesDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (marker names)" }, "S&M_MKR_NAMES", OpenNotes, NULL, SNM_NOTES_MKR_NAME, IsNotesDisplayed},

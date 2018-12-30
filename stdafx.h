@@ -93,6 +93,7 @@
 #include "WDL/lineparse.h"
 #include "WDL/MersenneTwister.h"
 #include "WDL/fileread.h"
+#include "WDL/filewrite.h" // #647
 
 #ifndef __GNUC__
 #pragma warning(default : 4996)

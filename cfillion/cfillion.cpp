@@ -27,7 +27,11 @@
 
 #include "stdafx.h"
 #include "cfillion.hpp"
+
 #include "version.h"
+
+#include "reaper/localize.h"
+
 
 #ifdef _WIN32
 static const unsigned int FORMAT = CF_UNICODETEXT;
@@ -137,7 +141,6 @@ bool CF_LocateInExplorer(const char *file)
   return CF_ShellExecute("explorer.exe", arg.Get());
 }
 
-
 void CF_GetSWSVersion(char *buf, const int bufSize)
 {
   snprintf(buf, bufSize, "%d.%d.%d.%d", SWS_VERSION);
@@ -154,4 +157,78 @@ const char *CF_GetCommandText(const int section, const int command)
 {
   return kbd_getTextFromCmd(command, SectionFromUniqueID(section));
 
+static HWND CF_GetTrackFXChain(const int trackIndex)
+{
+  char chainTitle[128];
+
+  if(trackIndex < 1)
+    snprintf(chainTitle, sizeof(chainTitle), "%s%s",
+      __LOCALIZE("FX: ", "fx"), __LOCALIZE("Master Track", "fx"));
+  else
+    snprintf(chainTitle, sizeof(chainTitle), "%s%s %d",
+      __LOCALIZE("FX: ", "fx"), __LOCALIZE("Track", "fx"), trackIndex);
+
+  return FindWindowEx(nullptr, nullptr, nullptr, chainTitle);
+}
+
+HWND CF_GetTrackFXChain(MediaTrack *track)
+{
+  int trackNumber = 0;
+
+  if(track != GetMasterTrack(nullptr))
+    trackNumber = static_cast<int>(GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER"));
+
+  return CF_GetTrackFXChain(trackNumber);
+}
+
+HWND CF_GetTakeFXChain(MediaItem_Take *take)
+{
+  // Shameful hack follows. The FX chain window does have some user data
+  // attached to it (pointer to an internal FxChain object?) but it does not
+  // seem to hint back to the take in any obvious way.
+
+  GUID *guid = static_cast<GUID *>(GetSetMediaItemTakeInfo(take, "GUID", nullptr));
+
+  char guidStr[64];
+  guidToString(guid, guidStr);
+
+  string originalName = GetTakeName(take);
+  GetSetMediaItemTakeInfo_String(take, "P_NAME", guidStr, true);
+
+  char chainTitle[128];
+  snprintf(chainTitle, sizeof(chainTitle), "%s%s \"%s\"",
+    __LOCALIZE("FX: ", "fx"), __LOCALIZE("Item", "fx"), guidStr);
+
+  HWND window = FindWindowEx(nullptr, nullptr, nullptr, chainTitle);
+
+  GetSetMediaItemTakeInfo_String(take, "P_NAME",
+    const_cast<char *>(originalName.c_str()), true);
+
+  return window;
+}
+
+HWND CF_GetFocusedFXChain()
+{
+  // Original idea by amagalma
+  // https://forum.cockos.com/showthread.php?t=207220
+
+  int trackIndex, itemIndex, fxIndex;
+  switch(GetFocusedFX(&trackIndex, &itemIndex, &fxIndex)) {
+  case 1:
+    return CF_GetTrackFXChain(trackIndex);
+  case 2: {
+    MediaTrack *track = GetTrack(nullptr, trackIndex - 1);
+    MediaItem *item = GetTrackMediaItem(track, itemIndex);
+    MediaItem_Take *take = GetMediaItemTake(item, HIWORD(fxIndex));
+    return CF_GetTakeFXChain(take);
+  }
+  default:
+    return nullptr;
+  }
+}
+
+int CF_EnumSelectedFX(HWND fxChain, const int index)
+{
+  const HWND list = GetDlgItem(fxChain, 1076);
+  return ListView_GetNextItem(list, index, LVNI_SELECTED);
 }

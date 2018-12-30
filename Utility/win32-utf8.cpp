@@ -130,3 +130,9 @@ BOOL WritePrivateProfileSectionUTF8(LPCTSTR appName, LPCTSTR string, LPCTSTR fil
   return WritePrivateProfileSectionW(widen(appName).c_str(),
     wideString.c_str(), widen(fileName).c_str());
 }
+
+HWND FindWindowExUTF8(HWND parent, HWND after, const char *className, const char *title)
+{
+  return FindWindowExW(parent, after,
+    className ? widen(className).c_str() : nullptr, title ? widen(title).c_str() : nullptr);
+}

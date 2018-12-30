@@ -27,6 +27,7 @@
 
 #include "stdafx.h"
 #include "cfillion.hpp"
+#include "version.h"
 
 #ifdef _WIN32
 static const unsigned int FORMAT = CF_UNICODETEXT;
@@ -134,4 +135,9 @@ bool CF_LocateInExplorer(const char *file)
   arg.SetFormatted(strlen(file) + 10, "(/select,\"%s\")", file);
 
   return CF_ShellExecute("explorer.exe", arg.Get());
+}
+
+void CF_GetSWSVersion(char *buf, const int bufSize)
+{
+  snprintf(buf, bufSize, "%d.%d.%d.%d", SWS_VERSION);
 }

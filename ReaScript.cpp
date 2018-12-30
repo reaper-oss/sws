@@ -96,7 +96,7 @@ typedef struct APIdef
 // top). To distinguish SWS and native functions, make sure function names have
 // a prefix like "SWS_", "FNG_", etc.
 // Your functions must be made dumb-proof, they must not trust any parameter.
-// However, your do not need to ValidatePr() REAPER pointer parameters (such as 
+// However, your do not need to ValidatePr() REAPER pointer parameters (such as
 // MediaTrack*, MediaItem*, etc): REAPER does this for you when a script runs
 // an exported function.
 // REAPER pointer parameters are validated against the prior ReaProject* param,
@@ -244,8 +244,8 @@ APIdef g_apidefs[] =
 	{ APIFUNC(NF_AnalyzeMediaItemPeakAndRMS), "bool", "MediaItem*,double,void*,void*,void*,void*", "item,windowSize,reaper.array_peaks,reaper.array_peakpositions,reaper.array_RMSs,reaper.array_RMSpositions", "This function combines all other NF_Peak/RMS functions in a single one and additionally returns peak RMS positions. Lua example code <a href=\"https://forum.cockos.com/showpost.php?p=2050961&postcount=6\">here</a>. Note: It's recommended to use this function with ReaScript/Lua as it provides reaper.array objects. If using this function with other scripting languages, you must provide arrays in the <a href=\"https://forum.cockos.com/showpost.php?p=2039829&postcount=2\">reaper.array</a> format.", },
 
 	// #880
-	{ APIFUNC(NF_AnalyzeTakeLoudness_IntegratedOnly), "bool", "MediaItem_Take*,double*", "take,lufsIntegratedOut", "Does LUFS integrated analysis only. Faster than full loudness analysis (<a href=\"#NF_AnalyzeTakeLoudness\">NF_AnalyzeTakeLoudness</a>) . Use this if only LUFS integrated is required. Take vol. env. is taken into account. See: <a href=\"http://wiki.cockos.com/wiki/index.php/Measure_and_normalize_loudness_with_SWS\">Signal flow</a>", }, 
-	{ APIFUNC(NF_AnalyzeTakeLoudness), "bool", "MediaItem_Take*,bool,double*,double*,double*,double*,double*,double*", "take,analyzeTruePeak,lufsIntegratedOut,rangeOut, truePeakOut,truePeakPosOut,shortTermMaxOut,momentaryMaxOut", "Full loudness analysis. retval: returns true on successful analysis, false on MIDI take or when analysis failed for some reason. analyzeTruePeak=true: Also do true peak analysis. Returns true peak value and true peak position (relative to item position). Considerably slower than without true peak analysis (since it uses oversampling). Note: Short term uses a time window of 3 sec. for calculation. So for items shorter than this shortTermMaxOut can't be calculated correctly. Momentary uses a time window of 0.4 sec. ", }, 
+	{ APIFUNC(NF_AnalyzeTakeLoudness_IntegratedOnly), "bool", "MediaItem_Take*,double*", "take,lufsIntegratedOut", "Does LUFS integrated analysis only. Faster than full loudness analysis (<a href=\"#NF_AnalyzeTakeLoudness\">NF_AnalyzeTakeLoudness</a>) . Use this if only LUFS integrated is required. Take vol. env. is taken into account. See: <a href=\"http://wiki.cockos.com/wiki/index.php/Measure_and_normalize_loudness_with_SWS\">Signal flow</a>", },
+	{ APIFUNC(NF_AnalyzeTakeLoudness), "bool", "MediaItem_Take*,bool,double*,double*,double*,double*,double*,double*", "take,analyzeTruePeak,lufsIntegratedOut,rangeOut, truePeakOut,truePeakPosOut,shortTermMaxOut,momentaryMaxOut", "Full loudness analysis. retval: returns true on successful analysis, false on MIDI take or when analysis failed for some reason. analyzeTruePeak=true: Also do true peak analysis. Returns true peak value and true peak position (relative to item position). Considerably slower than without true peak analysis (since it uses oversampling). Note: Short term uses a time window of 3 sec. for calculation. So for items shorter than this shortTermMaxOut can't be calculated correctly. Momentary uses a time window of 0.4 sec. ", },
 	{ APIFUNC(NF_AnalyzeTakeLoudness2), "bool", "MediaItem_Take*,bool,double*,double*,double*,double*,double*,double*,double*,double*", "take,analyzeTruePeak,lufsIntegratedOut,rangeOut, truePeakOut,truePeakPosOut,shortTermMaxOut,momentaryMaxOut,shortTermMaxPosOut,momentaryMaxPosOut", "Same as <a href=\"#NF_AnalyzeTakeLoudness\">NF_AnalyzeTakeLoudness</a> but additionally returns shortTermMaxPos and momentaryMaxPos (in absolute project time). Note: shortTermMaxPos and momentaryMaxPos actaully indicate the beginning of time <i>intervalls</i>, (3 sec. and 0.4 sec. resp.). ", },
 
 	// #755 SWS Notes, MarkerRegionSubs
@@ -263,7 +263,12 @@ APIdef g_apidefs[] =
 	{ APIFUNC(CF_GetClipboardBig), "const char*", "WDL_FastString*", "output", "Read the contents of the system clipboard. See <a href=\"#SNM_CreateFastString\">SNM_CreateFastString</a> and <a href=\"#SNM_DeleteFastString\">SNM_DeleteFastString</a>.", },
 	{ APIFUNC(CF_ShellExecute), "bool", "const char*", "file", "Open the given file or URL in the default application. See also <a href=\"#CF_LocateInExplorer\">CF_LocateInExplorer</a>.", },
 	{ APIFUNC(CF_LocateInExplorer), "bool", "const char*", "file", "Select the given file in explorer/finder.", },
+
 	{ APIFUNC(CF_GetSWSVersion), "void", "char*,int", "buf,buf_sz", "Return the current SWS version number.", },
+
+	{ APIFUNC(CF_EnumerateActions), "int", "int,int,char*,int", "section,index,name,name_sz", "Wrapper for the unexposed kbd_enumerateActions API function.\nMain=0, Main (alt recording)=100, MIDI Editor=32060, MIDI Event List Editor=32061, MIDI Inline Editor=32062, Media Explorer=32063", },
+	{ APIFUNC(CF_GetCommandText), "const char*", "int,int", "section,command", "Wrapper for the unexposed kbd_getTextFromCmd API function. See <a href='#CF_EnumerateActions'>CF_EnumerateActions</a> for common section IDs.", },
+
 
 	{ NULL, } // denote end of table
 };

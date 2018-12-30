@@ -32,7 +32,7 @@
 #ifdef _WIN32
 static const unsigned int FORMAT = CF_UNICODETEXT;
 #else
-  // on SWELL/generic CF_TEXT may be implemented as a function call which 
+  // on SWELL/generic CF_TEXT may be implemented as a function call which
   // may not be available until after loading is complete
 #define FORMAT (CF_TEXT)
 #endif
@@ -137,7 +137,21 @@ bool CF_LocateInExplorer(const char *file)
   return CF_ShellExecute("explorer.exe", arg.Get());
 }
 
+
 void CF_GetSWSVersion(char *buf, const int bufSize)
 {
   snprintf(buf, bufSize, "%d.%d.%d.%d", SWS_VERSION);
+
+int CF_EnumerateActions(const int section, const int idx, char *nameBuf, const int nameBufSize)
+{
+  const char *name = "";
+  const int cmdId = kbd_enumerateActions(SectionFromUniqueID(section), idx, &name);
+  snprintf(nameBuf, nameBufSize, "%s", name);
+  return cmdId;
+}
+
+const char *CF_GetCommandText(const int section, const int command)
+{
+  return kbd_getTextFromCmd(command, SectionFromUniqueID(section));
+
 }

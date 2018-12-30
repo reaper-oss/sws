@@ -88,14 +88,10 @@ void RprParentNode::removeChild(int index)
 
 static std::string getTrimmedLine(std::istringstream &iss)
 {
-    char lineBuffer[256];
-    iss.getline(lineBuffer, 256);
+    while(iss.peek() == '\x20') iss.get();
+
     std::string line;
-    int offset = 0;
-    if(lineBuffer[0] == '\n')
-        offset++;
-    while(lineBuffer[offset] == ' ') offset++;
-    line = std::string(lineBuffer + offset);
+    std::getline(iss, line);
     return line;
 }
 

@@ -35,23 +35,25 @@
 #include "../reaper/localize.h"
 #include "WDL/projectcontext.h"
 
-#define PRI_UP_MSG		0x10000
-#define PRI_DOWN_MSG	0x10001
-#define TYPETYPE_MSG	0x100F0
-#define FILTERTYPE_MSG	0x10100
-#define COLORTYPE_MSG	0x10110
-#define LOAD_ICON_MSG	0x110000
-#define CLEAR_ICON_MSG	0x110001
+#define PRI_UP_MSG         0x10000
+#define PRI_DOWN_MSG       0x10001
+#define TYPETYPE_MSG       0x100F0
+#define FILTERTYPE_MSG     0x10100
+#define COLORTYPE_MSG      0x10110
+#define LOAD_ICON_MSG      0x110000
+#define CLEAR_ICON_MSG     0x110001
+#define LAYOUTTYPE_TCP_MSG 0x110002
+#define LAYOUTTYPE_MCP_MSG 0x110003
 
 
 // INI params
-#define AC_ENABLE_KEY	"AutoColorEnable"
-#define ACM_ENABLE_KEY	"AutoColorMarkerEnable"
-#define ACR_ENABLE_KEY	"AutoColorRegionEnable"
-#define AI_ENABLE_KEY	"AutoIconEnable"
-#define AL_ENABLE_KEY	"AutoLayoutEnable"
-#define AC_COUNT_KEY	"AutoColorCount"
-#define AC_ITEM_KEY		"AutoColor %d"
+#define AC_ENABLE_KEY  "AutoColorEnable"
+#define ACM_ENABLE_KEY "AutoColorMarkerEnable"
+#define ACR_ENABLE_KEY "AutoColorRegionEnable"
+#define AI_ENABLE_KEY  "AutoIconEnable"
+#define AL_ENABLE_KEY  "AutoLayoutEnable"
+#define AC_COUNT_KEY   "AutoColorCount"
+#define AC_ITEM_KEY    "AutoColor %d"
 
 
 enum { AC_ANY=0, AC_UNNAMED, AC_FOLDER, AC_CHILDREN, AC_RECEIVE, AC_MASTER, AC_REC_ARM, AC_VCA_MASTER, NUM_FILTERTYPES };
@@ -60,6 +62,8 @@ enum { AC_CUSTOM, AC_GRADIENT, AC_RANDOM, AC_NONE, AC_PARENT, AC_IGNORE, NUM_COL
 enum { COL_ID=0, COL_TYPE, COL_FILTER, COL_COLOR, COL_ICON, COL_TCP_LAYOUT, COL_MCP_LAYOUT, COL_COUNT };
 enum { AC_TRACK=0, AC_MARKER, AC_REGION, NUM_TYPETYPES }; // keep this order and 2^ values
                                                           // (values used as masks => adding a 4th type would require another solution)
+enum { AC_HIDE_TCP=0, NUM_TCP_LAYOUTTYPES };
+enum { AC_HIDE_MCP=0, NUM_MCP_LAYOUTTYPES };
 
 // Larger allocs for localized strings..
 // !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_115
@@ -67,6 +71,7 @@ static SWS_LVColumn g_cols[] = { {25, 0, "#" }, {25, 0, "Rule type"}, { 185, 1, 
 static const char cTypes[][256] = {"Track", "Marker", "Region" }; // keep this order, see above
 static const char cFilterTypes[][256] = { "(any)", "(unnamed)", "(folder)", "(children)", "(receive)", "(master)", "(record armed)", "(vca master)" };
 static const char cColorTypes[][256] = { "Custom", "Gradient", "Random", "None", "Parent", "Ignore" };
+static const char cLayoutTypes[][256] = { "(hide)" }; // #1008, additional '(hide)' layout, same for TCP and MCP
 // !WANT_LOCALIZE_STRINGS_END
 
 
@@ -493,6 +498,20 @@ void SWS_AutoColorWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 					item->m_color = -1 - ((int)wParam - COLORTYPE_MSG);
 				Update();
 			}
+			else if (wParam >= LAYOUTTYPE_TCP_MSG && wParam < LAYOUTTYPE_TCP_MSG + NUM_TCP_LAYOUTTYPES)
+			{
+				SWS_RuleItem* item = (SWS_RuleItem*)m_pLists.Get(0)->EnumSelected(NULL);
+				if (item)
+					item->m_layout[0].Set(cLayoutTypes[wParam - LAYOUTTYPE_TCP_MSG]);
+				Update();
+			}
+			else if (wParam >= LAYOUTTYPE_MCP_MSG && wParam < LAYOUTTYPE_MCP_MSG + NUM_MCP_LAYOUTTYPES)
+			{
+				SWS_RuleItem* item = (SWS_RuleItem*)m_pLists.Get(0)->EnumSelected(NULL);
+				if (item)
+					item->m_layout[1].Set(cLayoutTypes[wParam - LAYOUTTYPE_MCP_MSG]);
+				Update();
+			}
 			else
 				Main_OnCommand((int)wParam, (int)lParam);
 	}
@@ -641,7 +660,16 @@ HMENU SWS_AutoColorWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 				break;
 			}
 			case COL_TCP_LAYOUT:
+				for (int i = 0; i < NUM_TCP_LAYOUTTYPES; i++)
+					AddToMenu(hMenu, __localizeFunc(cLayoutTypes[i], "sws_DLG_115", LOCALIZE_FLAG_NOCACHE), LAYOUTTYPE_TCP_MSG + i);
+
+				AddToMenu(hMenu, __LOCALIZE("(Double-click to edit layout name)", "sws_DLG_115"), 0, -1, false, MF_GRAYED);
+				AddToMenu(hMenu, SWS_SEPARATOR, 0);
+				break;
 			case COL_MCP_LAYOUT:
+				for (int i = 0; i < NUM_MCP_LAYOUTTYPES; i++)
+					AddToMenu(hMenu, __localizeFunc(cLayoutTypes[i], "sws_DLG_115", LOCALIZE_FLAG_NOCACHE), LAYOUTTYPE_MCP_MSG + i);
+				
 				AddToMenu(hMenu, __LOCALIZE("(Double-click to edit layout name)","sws_DLG_115"), 0, -1, false, MF_GRAYED);
 				AddToMenu(hMenu, SWS_SEPARATOR, 0);
 				break;
@@ -863,9 +891,11 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 						pACTrack->m_bIconed = true;
 					}
 
+					// Set the layout
 					for (int k=0; k<2; k++) if (bLayout[k])
 					{
-						if (_stricmp(rule->m_layout[k].Get(), pACTrack->m_layout[k].Get()))
+						// 'normal' track layout
+						if (_stricmp(rule->m_layout[k].Get(), pACTrack->m_layout[k].Get()) && _stricmp(rule->m_layout[k].Get(), "(hide)")) 
 						{
 							const char *curlayout = (const char*)GetSetMediaTrackInfo(tr, k ? "P_MCP_LAYOUT" : "P_TCP_LAYOUT", NULL);
 							if (curlayout && _stricmp(curlayout, rule->m_layout[k].Get()))
@@ -878,11 +908,27 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 							}
 							pACTrack->m_layout[k].Set(rule->m_layout[k].Get());
 						}
+						// '(hide)' layout 
+						if (_stricmp(rule->m_layout[k].Get(), pACTrack->m_layout[k].Get()) && !_stricmp(rule->m_layout[k].Get(), "(hide)")) 
+						{
+							bool isTrackVisible = IsTrackVisible(tr, k ? true : false);
+
+							if (isTrackVisible && !_stricmp(rule->m_layout[k].Get(), "(hide)"))
+							{	
+								// Only hide the track if visible, or we're forcing, or we hid it ourselves earlier
+								if (bForce || isTrackVisible == IsTrackVisible(pACTrack->m_pTr, k ? true : false))
+								{
+									GetSetMediaTrackInfo(tr, k ? "B_SHOWINMIXER" : "B_SHOWINTCP", &g_i0); // hide the track
+									TrackList_AdjustWindows(k ? false : true); // https://forum.cockos.com/showthread.php?t=208275
+								}
+							}
+							pACTrack->m_layout[k].Set(rule->m_layout[k].Get());
+						}
 						pACTrack->m_bLayouted[k] = true;
 					}
-				}
-			}
-		}
+				} // /if (bMatch)
+			} // /Do the track rule matching
+		} // /iterate through all tracks
 
 		// Handle gradients
 		for (int i = 0; i < gradientTracks.GetSize(); i++)
@@ -977,7 +1023,8 @@ void AutoColorTrack(bool bForce)
 		if (bDoLayouts) for (int k=0; k<2; k++)
 		{
 			// There's a layout set, but there shouldn't be!
-			if (!pACTrack->m_bLayouted[k] && pACTrack->m_layout[k].GetLength())
+			// 'normal' track layout
+			if (!pACTrack->m_bLayouted[k] && pACTrack->m_layout[k].GetLength() && _stricmp(pACTrack->m_layout[k].Get(), "(hide)"))
 			{
 				// Only remove the layout if we set it ourselves
 				const char *curlayout = (const char*)GetSetMediaTrackInfo(pACTrack->m_pTr, k ? "P_MCP_LAYOUT" : "P_TCP_LAYOUT", NULL);
@@ -987,6 +1034,18 @@ void AutoColorTrack(bool bForce)
 				}
 				pACTrack->m_layout[k].Set("");
       }
+			// '(hide)' layout 
+			if (!pACTrack->m_bLayouted[k] && pACTrack->m_layout[k].GetLength() && !_stricmp(pACTrack->m_layout[k].Get(), "(hide)"))
+			{
+				// Only unhide the track if we hid it ourselves
+				bool isTrackVisible = IsTrackVisible(pACTrack->m_pTr, k ? true : false);
+				if (!isTrackVisible && !_stricmp(pACTrack->m_layout[k].Get(), "(hide)"))
+				{
+					GetSetMediaTrackInfo(pACTrack->m_pTr, k ? "B_SHOWINMIXER" : "B_SHOWINTCP", &g_i1); // show the track
+					TrackList_AdjustWindows((k ? false : true));
+				}
+				pACTrack->m_layout[k].Set("");
+			}
     }
 	}
 

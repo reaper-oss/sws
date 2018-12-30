@@ -135,7 +135,7 @@ $(TARGET): $(OBJS)
 	$(CXX) -shared -o $@ $(CXXFLAGS) $(LFLAGS) $^ $(LINKEXTRA)
 
 clean: 
-	-rm $(OBJS) $(TARGET) $(REASCRIPT_PY_FILES) sws_extension.rc_mac_dlg sws_extension.rc_mac_menu
+	-rm $(OBJS) $(TARGET) $(REASCRIPT_PY_FILES) sws_extension.rc_mac_dlg sws_extension.rc_mac_menu reascript_vararg.h
 
 install: $(TARGET) $(PYTHONFILE)
 	-mkdir $(USERPLUGINS_PATH)

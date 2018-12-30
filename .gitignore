@@ -1,3 +1,13 @@
+reaper_plugin_functions.h
+
+reascript_vararg.h
+*.rc_mac_dlg
+*.rc_mac_menu
+
+sws_python.py
+sws_python32.py
+sws_python64.py
+
 Release/
 Test/
 x64/
@@ -7,12 +17,8 @@ Install/temp/
 # Ignore customized build scripts
 Install/build*.bat
 sws_osx/
-sws_python32.py
-sws_python64.py
 *.ncb
 *.opt
-*.rc_mac_dlg
-*.rc_mac_menu
 *.plg
 *.sdf
 *.o
@@ -39,3 +45,5 @@ sws_python64.py
 *.xcschememanagement.plist
 .DS_Stor*
 *.opendb
+reaper_sws*.so*
+reaper_sws*.tar.xz

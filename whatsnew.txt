@@ -115,6 +115,7 @@ Actions:
 +New actions (Main section):
  - SWS/FNG: Apply selected groove (use curent settings from opened groove tool)
 
++Renamed "SWS: Analyze and display item peak and RMS" to "SWS: Analyze and display item peak and RMS (entire item)" (https://forum.cockos.com/showthread.php?p=2074089#post2074089|background|)
 
 !v2.9.8 pre-release build (March 5, 2018)
 Now requires REAPER 5.50+!

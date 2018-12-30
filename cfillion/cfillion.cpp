@@ -231,4 +231,59 @@ int CF_EnumSelectedFX(HWND fxChain, const int index)
 {
   const HWND list = GetDlgItem(fxChain, 1076);
   return ListView_GetNextItem(list, index, LVNI_SELECTED);
+int CF_GetMediaSourceBitDepth(PCM_source *source)
+{
+  // parameter validation is already done on the REAPER side, so we're sure source is a valid PCM_source
+  return source->GetBitsPerSample();
+}
+
+bool CF_GetMediaSourceOnline(PCM_source *source)
+{
+  return source->IsAvailable();
+}
+
+void CF_SetMediaSourceOnline(PCM_source *source, const bool online)
+{
+  source->SetAvailable(online);
+}
+
+bool CF_GetMediaSourceMetadata(PCM_source *source, const char *name, char *buf, const int bufSize)
+{
+  return source->Extended(PCM_SOURCE_EXT_GETMETADATA, (void *)name, (void *)buf, (void *)bufSize) > 0;
+}
+
+bool CF_GetMediaSourceRPP(PCM_source *source, char *buf, const int bufSize)
+{
+  char *rpp = NULL;
+  source->Extended(PCM_SOURCE_EXT_GETASSOCIATED_RPP, &rpp, NULL, NULL);
+
+  if(rpp && buf) {
+    snprintf(buf, bufSize, "%s", rpp);
+    return true;
+  }
+  else
+    return false;
+}
+
+int CF_EnumMediaSourceCues(PCM_source *source, const int index, double *time, double *endTime, bool *isRegion, char *name, const int nameSize)
+{
+  REAPER_cue cue{};
+  const int add = source->Extended(PCM_SOURCE_EXT_ENUMCUES_EX, (void *)index, &cue, NULL);
+
+  if(time)
+    *time = cue.m_time;
+  if(endTime)
+    *endTime = cue.m_endtime;
+  if(isRegion)
+    *isRegion = cue.m_isregion;
+
+  if(name && cue.m_name)
+    snprintf(name, nameSize, "%s", cue.m_name);
+
+  return add ? index + add : 0;
+}
+
+bool CF_ExportMediaSource(PCM_source *source, const char *file)
+{
+  return source->Extended(PCM_SOURCE_EXT_EXPORTTOFILE, (void *)file, NULL, NULL) > 0;
 }

@@ -273,6 +273,13 @@ APIdef g_apidefs[] =
 	{ APIFUNC(CF_EnumerateActions), "int", "int,int,char*,int", "section,index,name,name_sz", "Wrapper for the unexposed kbd_enumerateActions API function.\nMain=0, Main (alt recording)=100, MIDI Editor=32060, MIDI Event List Editor=32061, MIDI Inline Editor=32062, Media Explorer=32063", },
 	{ APIFUNC(CF_GetCommandText), "const char*", "int,int", "section,command", "Wrapper for the unexposed kbd_getTextFromCmd API function. See <a href='#CF_EnumerateActions'>CF_EnumerateActions</a> for common section IDs.", },
 
+	{ APIFUNC(CF_GetMediaSourceBitDepth), "int", "PCM_source*", "src", "Returns the bit depth if available (0 otherwise).", },
+	{ APIFUNC(CF_GetMediaSourceOnline), "bool", "PCM_source*", "src", "Returns the online/offline status of the given source.", },
+	{ APIFUNC(CF_SetMediaSourceOnline), "void", "PCM_source*,bool", "src,set", "Set the online/offline status of the given source (closes files when set=false).", },
+	{ APIFUNC(CF_GetMediaSourceMetadata), "bool", "PCM_source*,const char*,char*,int", "src,name,out,out_sz", "Get the value of the given metadata field (eg. DESC, ORIG, ORIGREF, DATE, TIME, UMI, CODINGHISTORY for BWF).", },
+	{ APIFUNC(CF_GetMediaSourceRPP), "bool", "PCM_source*,char*,int", "src,fn,fn_sz", "Get the project associated with this source (BWF, subproject...).", },
+	{ APIFUNC(CF_EnumMediaSourceCues), "int", "PCM_source*,int,double*,double*,bool*,char*,int", "src,index,timeOut,endTimeOut,isRegionOut,nameOut,nameOut_sz", "Enumerate the source's media cues. Returns the next index or 0 when finished.", },
+	{ APIFUNC(CF_ExportMediaSource), "bool", "PCM_source*,const char*", "src,fn", "Export the source to the given file (MIDI only).", },
 
 	{ NULL, } // denote end of table
 };

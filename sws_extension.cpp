@@ -1115,6 +1115,10 @@ error:
 			goto error;
 		}
 
+		// Optional API functions (check for NULL if using!) 
+		IMPAP_OPT(GetSetTrackGroupMembershipHigh); // v5.70+
+		IMPAP_OPT(TrackFX_GetOffline); // v5.95+
+
 		// Look for SWS dupe/clone
 		if (rec->GetFunc("SNM_GetIntConfigVar"))
 		{

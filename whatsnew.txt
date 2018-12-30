@@ -1,4 +1,5 @@
 
+
 +MouseContext: Initial support for automation items:
  - Contextual toolbars: Add Automation item context (Issue 915)
  - ReaScript:
@@ -51,6 +52,10 @@ Fixes:
 +Auto group:
  - Revert creating explicit undo point (match behaviour prior 2.95)
  - Prevent grouping of selected items on not record armed tracks
+
+
+Fixes:
++Auto color/icon/layout: "(vca master)" filter - also apply rules to groups 33 - 64 (report https://forum.cockos.com/showthread.php?t=207722|here|) (REAPER 5.70+)
 
 
 !v2.9.8 pre-release build (March 5, 2018)

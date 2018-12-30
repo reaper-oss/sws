@@ -30,24 +30,22 @@
 #include "stdafx.h"
 #include "nofish.h"
 
-// Eraser Tool (continous action)
 #include "../Breeder/BR_ContinuousActions.h"
-#include "../Breeder/BR_Util.h" // get custom mouse cursor
+#include "../Breeder/BR_Util.h"
 #include "../Breeder/BR_ReaScript.h" // BR_GetMouseCursorContext(), BR_ItemAtMouseCursor()
 
 
 //////////////////////////////////////////////////////////////////
-// Bypass FX (except VSTi) for selected tracks					//
-// conversion of spk77's EEL script								//
-// http://forum.cockos.com/showpost.php?p=1475585&postcount=6	//
+//                                                              //
+// Bypass FX (except VSTi) for selected tracks                  //
+//                                                              //
 //////////////////////////////////////////////////////////////////
 
-// SWS: Fixed O(n) actions, no worries nofish
 void BypassFXexceptVSTiForSelTracks(COMMAND_T* ct)
 {
 	Undo_BeginBlock();
 	WDL_TypedBuf<MediaTrack*> selTracks;
-	SWS_GetSelectedTracks(&selTracks, false);
+	SWS_GetSelectedTracks(&selTracks, true); // incl. master
 	for (int i = 0; i < selTracks.GetSize(); i++) {
 		MediaTrack* track = selTracks.Get()[i];
 		int vsti_index = TrackFX_GetInstrument(track); // Get position of first VSTi on current track
@@ -62,30 +60,27 @@ void BypassFXexceptVSTiForSelTracks(COMMAND_T* ct)
 
 
 //////////////////////////////////////////////////////////////////
-// 																//
-// 	#514 Toggle triplet and dotted grid in MIDI editor			//
-// 																//
+//                                                              //
+// #514 Toggle triplet and dotted grid in MIDI editor           //
+//                                                              //
 //////////////////////////////////////////////////////////////////
 
 const int ME_SECTION = 32060;
 
 int Main_IsMIDIGridTriplet(COMMAND_T* = NULL)
 {
-	int toggleState = GetToggleCommandStateEx(ME_SECTION, 41004); // action 41004 = Grid: Set grid type to triplet;
+	int toggleState = GetToggleCommandStateEx(ME_SECTION, 41004); // Grid: Set grid type to triplet
 	return toggleState;
 }
 
 
 int Main_IsMIDIGridDotted(COMMAND_T* = NULL)
 {
-	int toggleState = GetToggleCommandStateEx(ME_SECTION, 41005); // action 41005 = Grid: Set grid type to dotted;
+	int toggleState = GetToggleCommandStateEx(ME_SECTION, 41005); // Grid: Set grid type to dotted
 	return toggleState;
 }
 
-
-// fwd. decl.
 void Main_NFToggleDottedMIDI(COMMAND_T* = NULL);
-
 
 void Main_NFToggleTripletMIDI(COMMAND_T* = NULL)
 {
@@ -110,8 +105,6 @@ void Main_NFToggleTripletMIDI(COMMAND_T* = NULL)
 	UpdateMIDIGridToolbar();
 }
 	
-
-
 void Main_NFToggleDottedMIDI(COMMAND_T*)
 {
 	if (Main_IsMIDIGridTriplet())
@@ -141,7 +134,6 @@ void UpdateMIDIGridToolbar()
 		NamedCommandLookup("_NF_ME_TOGGLEDOTTED_"),
 	};
 	for (int i = 0; i < 2; ++i) {
-		// RefreshToolbar(cmds[i]); 
 		RefreshToolbar2(ME_SECTION, cmds[i]); // when registered in ME
 	}
 }
@@ -157,204 +149,130 @@ void ME_NFToggleDottedMIDI(COMMAND_T* _ct, int _val, int _valhw, int _relmode, H
 // /#514
 
 
-// #587
-// save / restore selected tracks
-void NFTrackItemUtilities::NFSaveSelectedTracks()
+//////////////////////////////////////////////////////////////////
+//                                                              //
+// Disable / Enable multichannel metering                       //
+//                                                              //
+//////////////////////////////////////////////////////////////////
+
+// ct->user == 0: all tracks, == 1: sel. tracks
+void DisableMultichannelMetering(COMMAND_T* ct)
 {
-	for (int i = 0; i < CountSelectedTracks(0); i++) {
-		// selTracks[i] = GetSelectedTrack(0, i);
-		selTracks.push_back(GetSelectedTrack(0, i));
+	WDL_TypedBuf<MediaTrack*> tracks;
+
+	if (ct->user == 0)
+		SWS_GetAllTracks(&tracks, false); // skip master
+	
+	else if (ct->user == 1)
+		SWS_GetSelectedTracks(&tracks, false); 
+
+	for (int i = 0; i < tracks.GetSize(); i++) {
+		MediaTrack* track = tracks.Get()[i];
+		SNM_ChunkParserPatcher p(track);
+		p.RemoveLine("TRACK", "VU", 1, 0, "TRACKHEIGHT");
 	}
+
+	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 }
 
-void NFTrackItemUtilities::NFRestoreSelectedTracks()
+// ct->user == 0: all tracks, == 1: sel. tracks
+void EnableMultichannelMetering(COMMAND_T* ct)
 {
-	NFUnselectAllTracks();
-	for (size_t i = 0; i < selTracks.size(); i++) {
-		SetTrackSelected(selTracks[i], true);
+	WDL_TypedBuf<MediaTrack*> tracks;
+
+	if (ct->user == 0)
+		SWS_GetAllTracks(&tracks, false); // skip master
+
+	else if (ct->user == 1) 
+		SWS_GetSelectedTracks(&tracks, false);
+
+	for (int i = 0; i < tracks.GetSize(); i++) {
+		MediaTrack* track = tracks.Get()[i];
+		SNM_ChunkParserPatcher p(track);
+		p.InsertAfterBefore(1, "VU 2", "TRACK", "REC", 1, 0, "TRACKHEIGHT");
 	}
+
+	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 }
-
-// save / restore selected items
-void NFTrackItemUtilities::NFSaveSelectedItems()
-{
-	for (int i = 0; i < CountSelectedMediaItems(0); i++) {
-		// selItems[i] = GetSelectedMediaItem(0, i);
-		selItems.push_back(GetSelectedMediaItem(0, i));
-	}
-}
-
-void NFTrackItemUtilities::NFRestoreSelectedItems()
-{
-	Main_OnCommand(40289, 0); // Unselect all items
-	for (size_t i = 0; i < selItems.size(); i++) {
-		SetMediaItemSelected(selItems[i], true);
-	}
-}
-
-void NFTrackItemUtilities::NFUnselectAllTracks()
-{
-	MediaTrack* firstTrack = GetTrack(0, 0);
-	SetOnlyTrackSelected(firstTrack);
-	SetTrackSelected(firstTrack, false);
-}
-
-
-void NFTrackItemUtilities::NFSelectTracksOfSelectedItems()
-{
-	int selectedItemsCount = CountSelectedMediaItems(0);
-	for (int i = 0; i < selectedItemsCount; i++) {
-		MediaItem* item = GetSelectedMediaItem(0, i);
-		MediaTrack* track = GetMediaItem_Track(item);
-		SetTrackSelected(track, true);
-	}
-}
-
-
-int NFTrackItemUtilities::NFCountSelectedItems_OnTrack(MediaTrack* track)
-{
-	int count_items_on_track = CountTrackMediaItems(track);
-
-	int selected_item_on_track = 0;
-
-	for (int i = 0; i < count_items_on_track; i++) {
-		MediaItem* item = GetTrackMediaItem(track, i);
-
-		if (IsMediaItemSelected(item) == true) {
-			selected_item_on_track = selected_item_on_track + 1;
-		}
-	}
-	return selected_item_on_track;
-}
-
-MediaItem * NFTrackItemUtilities::NFGetSelectedItems_OnTrack(int track_sel_id, int idx) 
-{
-	MediaItem* get_sel_item = NULL;
-	int previous_track_sel = 0;
-
-	if (idx < count_sel_items_on_track[track_sel_id]) {
-		size_t offset = 0;
-		for (int m = 0; m <= track_sel_id; m++) {
-			if (m > 0) {
-				previous_track_sel = count_sel_items_on_track[m - 1];
-			}
-			offset = offset + previous_track_sel;
-		}
-		
-		if (offset + idx < selItems.size())
-			get_sel_item = selItems[offset + idx]; 
-	}
-	return get_sel_item;
-}
-
-int NFTrackItemUtilities::GetMaxValfromIntVector(vector<int> intVector)
-{
-	int maxVal = 0;
-
-	for (size_t i = 0; i < intVector.size(); i++) {
-		int val = intVector[i];
-		if (val > maxVal) {
-			maxVal = val;
-		}
-	}
-	return maxVal;
-}
-
-bool NFTrackItemUtilities::isMoreThanOneTrackRecArmed()
-{
-	int RecArmedTracks = 0;
-	for (int i = 0; i < GetNumTracks(); i++) {
-		MediaTrack* CurTrack = CSurf_TrackFromID(i + 1, false);
-		if (*(int*)GetSetMediaTrackInfo(CurTrack, "I_RECARM", NULL)) {
-			RecArmedTracks += 1;
-			if (RecArmedTracks > 1)
-				return true;
-		}	
-	}
-	return false;
-}
-
-/*
-const vector<int>& NFTrackItemUtilities::NFGetIntVector() const
-{
-	return count_sel_items_on_track;
-}
-*/
-
-// /#587
-
 
 
 //////////////////////////////////////////////////////////////////
-// 																//
-// 					Eraser tool			            			//
-// 																//
+//                                                              //
+// Eraser tool (continuous action)                              //
+//                                                              //
 //////////////////////////////////////////////////////////////////
 
-
-char g_curMouseMod[32];
-
-// char windowOut[32];
-// char segmentOut[32];
-// char detailsOut[32];
-
+char g_EraserToolCurMouseMod[32];
+MediaItem* g_EraserToolLastSelItem = NULL;
+// int g_EraserToolCurRelEdgesMode; 
 
 // called on start with init = true and on shortcut release with init = false. Return false to abort init.
+// ct->user = 0: no snap, = 1: obey snap
 static bool EraserToolInit(COMMAND_T* ct, bool init)
 {
-	bool initSuccessful = true;
-
 	if (init) {
-		// get the currently assigned mm, store it and restore after this continious action is performed
-		GetMouseModifier("MM_CTX_ITEM", 0, g_curMouseMod, sizeof(g_curMouseMod)); // Media item left drag, Default action
-		SetMouseModifier("MM_CTX_ITEM", 0, "28"); // Marquee sel. items and time = 28
+		// get the currently assigned mm for Media Item - left drag, store it and restore after this continious action is performed
+		GetMouseModifier("MM_CTX_ITEM", 0, g_EraserToolCurMouseMod, sizeof(g_EraserToolCurMouseMod));
 
-		// select item under mouse
-		// BR_GetMouseCursorContext(windowOut, sizeof(windowOut), segmentOut, sizeof(segmentOut), detailsOut, sizeof(detailsOut));
-		// MediaItem* item = BR_GetMouseCursorContext_Item();
-		MediaItem* item = BR_ItemAtMouseCursor(NULL);
-		if (item != NULL) {
-			Main_OnCommand(40289, 0); // unsel. all items
-			SetMediaItemSelected(item, true);
-			UpdateArrange();
-		}
+	
+		if (ct->user == 1)
+			SetMouseModifier("MM_CTX_ITEM", 0, "28"); // Marquee sel. items and time = 28
+		else if (ct->user == 0)
+			SetMouseModifier("MM_CTX_ITEM", 0, "29"); // Marquee sel. items and time ignoring snap = 29
+
+		// temp. disable Prefs->"Editing Behaviour -> If no items are selected..."
+		// only needed when doing immediate erase which is disabled currently
+		// GetConfig("relativeedges", g_EraserToolCurRelEdgesMode);
+		// SetConfig("relativeedges", SetBit(g_EraserToolCurRelEdgesMode, 8)); 
 
 		Undo_BeginBlock();
 		Main_OnCommand(40635, 0); // remove time sel.
+		Main_OnCommand(40289, 0); // unsel. all items
 	}
 
 	if (!init) {
-		// Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
-
-		Main_OnCommand(40289, 0); // unsel. all items
+		
+		Main_OnCommand(40307, 0); // cut sel area of sel items
 		Main_OnCommand(40635, 0); // remove time sel.
-
+		Main_OnCommand(40289, 0); // unsel. all items
 		Undo_EndBlock(SWS_CMD_SHORTNAME(ct), 0);
 
+		g_EraserToolLastSelItem = NULL;
+
 		// set mm back to original when shortcut is released
-		SetMouseModifier("MM_CTX_ITEM", 0, g_curMouseMod);
+		SetMouseModifier("MM_CTX_ITEM", 0, g_EraserToolCurMouseMod);
+
+		// set Prefs -> Editing Behaviour -> If no items are selected... back to original value
+		// SetConfig("relativeedges", g_EraserToolCurRelEdgesMode);
 	}
 		
-	return initSuccessful;
+	return true;
 }
-
 
 static void DoEraserTool(COMMAND_T* ct)
 {
 	// BR_GetMouseCursorContext(windowOut, sizeof(windowOut), segmentOut, sizeof(segmentOut), detailsOut, sizeof(detailsOut));
 	// MediaItem* item = BR_GetMouseCursorContext_Item();
+
+	SetCursor(GetSwsMouseCursor(CURSOR_ERASER)); // set custom cursor during action
+
+	// select items on hover
 	MediaItem* item = BR_ItemAtMouseCursor(NULL);
-	if (item != NULL) {
-		SetMediaItemSelected(item, true);
-		UpdateArrange();
+	if (item != NULL && item != g_EraserToolLastSelItem) {
+		if (!IsMediaItemSelected(item)) {
+			SetMediaItemSelected(item, true);
+			g_EraserToolLastSelItem = item;
+			UpdateArrange();
+		}
 	}
 	
-	Main_OnCommand(40307, 0); // cut sel area of sel items
+	// immediate erase doesn't work well with Ripple edit
+	// https://forum.cockos.com/showthread.php?t=208712
+	// Main_OnCommand(40307, 0); // cut sel area of sel items
 }
 
-
-
-// this gets a custom mouse cursor for the action
+/*
+// get a custom mouse cursor for the action
 static HCURSOR EraserToolCursor(COMMAND_T* ct, int window)
 {
 	// if MAIN_RULER isn't added the custom mouse cursor doesn't appear immediately when pressing the assigned shortcut
@@ -364,7 +282,7 @@ static HCURSOR EraserToolCursor(COMMAND_T* ct, int window)
 	else
 		return NULL;
 }
-
+*/
 
 // called when shortcut is released, return undo flag to create undo point (or 0 for no undo point). If NULL, no undo point will get created
 static int EraserToolUndo(COMMAND_T* ct)
@@ -373,47 +291,11 @@ static int EraserToolUndo(COMMAND_T* ct)
 }
 
 
-
-
 //////////////////////////////////////////////////////////////////
-// 																//
-// Register commands											//
-// 																//
+//                                                              //
+// Register commands                                            //
+//                                                              //
 //////////////////////////////////////////////////////////////////
-
-
-// COMMAND SIGNATURES
-
-/*
-void BypassFXexceptVSTiForSelTracks(COMMAND_T* ct);
-
-#514
-void Main_NFToggleTripletMIDI(COMMAND_T* = NULL)
-void Main_NFToggleDottedMIDI(COMMAND_T*)
-void ME_NFToggleTripletMIDI(COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd)
-ME_NFToggleDottedMIDI(COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd)
-*/
-
-void NF_RegisterContinuousActions()
-{
-	EraserToolInit();
-}
-
-void EraserToolInit()
-{
-	//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
-	static COMMAND_T s_commandTable[] =
-	{
-		{ { DEFACCEL, "SWS/NF: Eraser tool (perform until shortcut released)" },      "NF_ERASER_TOOL", DoEraserTool, NULL, 0 },
-		{ {}, LAST_COMMAND }
-	};
-	//!WANT_LOCALIZE_1ST_STRING_END
-
-	int i = -1;
-	while (s_commandTable[++i].id != LAST_COMMAND)
-		ContinuousActionRegister(new BR_ContinuousAction(&s_commandTable[i], EraserToolInit, EraserToolUndo, EraserToolCursor));
-}
-
 
 static COMMAND_T g_commandTable[] =
 {
@@ -422,7 +304,6 @@ static COMMAND_T g_commandTable[] =
 	// Bypass FX(except VSTi) for selected tracks
 	{ { DEFACCEL, "SWS/NF: Bypass FX (except VSTi) for selected tracks" }, "NF_BYPASS_FX_EXCEPT_VSTI_FOR_SEL_TRACKS", BypassFXexceptVSTiForSelTracks, NULL },
 
-
 	// #514
 	// don't register in Main
 	// { { DEFACCEL, "SWS/NF: Toggle triplet grid" },	"NF_MAIN_TOGGLETRIPLET_MIDI",   Main_NFToggleTripletMIDI, NULL, 0, Main_IsMIDIGridTriplet },
@@ -430,15 +311,52 @@ static COMMAND_T g_commandTable[] =
 
 	{ { DEFACCEL, "SWS/NF: Toggle triplet grid" }, "NF_ME_TOGGLETRIPLET" , NULL, NULL, 0, Main_IsMIDIGridTriplet, ME_SECTION, ME_NFToggleTripletMIDI },
 	{ { DEFACCEL, "SWS/NF: Toggle dotted grid" }, "NF_ME_TOGGLEDOTTED" , NULL, NULL, 0, Main_IsMIDIGridDotted, ME_SECTION, ME_NFToggleDottedMIDI  },
+
+	// Disable / Enable multichannel metering
+	{ { DEFACCEL, "SWS/NF: Disable multichannel metering (all tracks)" }, "NF_DISABLE_MULTICHAN_MTR_ALL", DisableMultichannelMetering, NULL, 0 },
+	{ { DEFACCEL, "SWS/NF: Disable multichannel metering (selected tracks)" }, "NF_DISABLE_MULTICHAN_MTR_SEL", DisableMultichannelMetering, NULL, 1 },
+	{ { DEFACCEL, "SWS/NF: Enable multichannel metering (all tracks)" }, "NF_ENABLE_MULTICHAN_MTR_ALL", EnableMultichannelMetering, NULL, 0 },
+	{ { DEFACCEL, "SWS/NF: Enable multichannel metering (selected tracks)" }, "NF_ENABLE_MULTICHAN_MTR_SEL", EnableMultichannelMetering, NULL, 1 },
 	
 	//!WANT_LOCALIZE_1ST_STRING_END
 
 	{ {}, LAST_COMMAND, },
 };
 
-
 int nofish_Init()
 {
 	SWSRegisterCommands(g_commandTable);
 	return 1;
+}
+
+
+//////////////////////////////////////////////////////////////////
+//                                                              //
+// Register commands - continuous actions                       //
+//                                                              //
+//////////////////////////////////////////////////////////////////
+
+void EraserToolInit()
+{
+	//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
+	static COMMAND_T s_commandTable[] =
+	{
+		{ { DEFACCEL, "SWS/NF: Eraser tool (marquee sel. items and time ignoring snap, cut on shortcut release)" }, "NF_ERASER_TOOL_NOSNAP", DoEraserTool, NULL, 0 },
+		{ { DEFACCEL, "SWS/NF: Eraser tool (marquee sel. items and time, cut on shortcut release)" }, "NF_ERASER_TOOL", DoEraserTool, NULL, 1 },
+		{ {}, LAST_COMMAND }
+	};
+	//!WANT_LOCALIZE_1ST_STRING_END
+
+	int i = -1;
+	while (s_commandTable[++i].id != LAST_COMMAND) {
+		// ContinuousActionRegister(new BR_ContinuousAction(&s_commandTable[i], EraserToolInit, EraserToolUndo, EraserToolCursor));
+		// set cursor in DoEraserTool(), otherwise it would get changed back by Reaper
+		ContinuousActionRegister(new BR_ContinuousAction(&s_commandTable[i], EraserToolInit, EraserToolUndo, NULL));
+	}
+		
+}
+
+void NF_RegisterContinuousActions()
+{
+	EraserToolInit();
 }

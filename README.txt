@@ -5,7 +5,7 @@ The SWS extension is a collection of features that seamlessly integrate into REA
 For more information on the capabilities of the SWS extension or to download it, please visit the end-user website http://www.sws-extension.org.
 For more information on REAPER itself or to download the latest version, go to http://www.reaper.fm.
 
-You are welcome to contribute! Just fork the repo and send us a pull request on the 'next' branch. For building details see https://github.com/reaper-oss/sws/wiki/Building-the-SWS-Extension.
+You are welcome to contribute! Just fork the repo and send us a pull request on the 'next' branch (also see [Submitting pull requests](https://github.com/reaper-oss/sws/wiki/Submitting-pull-requests) in the [SWS Wiki](https://github.com/reaper-oss/sws/wiki)). For building details see [Building the SWS Extension](https://github.com/reaper-oss/sws/wiki/Building-the-SWS-Extension).
 
 While not strictly required by the license, if you use the code in your own project we would like definitely like to hear from you.
 

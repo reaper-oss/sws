@@ -114,6 +114,15 @@ int IsGrooveDialogOpen()
     return me->GetGrooveDialog()->IsWndVisible();
 }
 
+static void ApplySelectedGroove(COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
+{
+	GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
+	if (!me->GetGrooveDialog()->IsWndVisible())
+		return;
+
+	me->GetGrooveDialog()->ApplySelectedGroove();
+}
+
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 void GrooveCommands::Init()
 {
@@ -139,6 +148,7 @@ void GrooveCommands::Init()
 	{
 		{ { DEFACCEL, "SWS/FNG: Apply groove to selected MIDI notes (within 16th)" }, "FNG_ME_APPLY_MIDI_GROOVE_16",  NULL, NULL, 16, NULL, 32060, ApplyGrooveInMidiEditor},
 		{ { DEFACCEL, "SWS/FNG: Apply groove to selected MIDI notes (within 32nd)" }, "FNG_ME_APPLY_MIDI_GROOVE_32",  NULL, NULL, 32, NULL, 32060, ApplyGrooveInMidiEditor},
+		{ { DEFACCEL, "SWS/FNG: Apply selected groove (use curent settings from opened groove tool)" }, "FNG_APPLY_SEL_GROOVE",  NULL, NULL, NULL, NULL, NULL, ApplySelectedGroove},
 		{ {}, LAST_COMMAND, },
 	};
 	SWSRegisterCommands(g_commandTable);

@@ -985,6 +985,17 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 	bool integratedOnly      = _this->GetIntegratedOnly();
 	bool doTruePeak          = _this->GetDoTruePeak();
 
+	/*
+	NF: fix for wrong results when analyzing item, item is not at pos 0.0 and contains take vol. env.
+	https://github.com/reaper-oss/sws/issues/957#issuecomment-371233030
+	TakeAudioAccesor, unlike TrackAudioAccessor returns relative start/end times
+	https://forum.cockos.com/showthread.php?t=204397
+	so in the correction for take volume env. we must add item pos. to get correct env. evaluation
+	*/
+	double itemPos = 0.0;
+	if (_this->m_take)
+		itemPos = GetMediaItemInfo_Value(_this->GetItem(), "D_POSITION");
+
 	// Prepare ebur123_state
 	ebur128_state* loudnessState = NULL;
 	int mode = (integratedOnly) ? EBUR128_MODE_I : EBUR128_MODE_M | EBUR128_MODE_S | EBUR128_MODE_I | EBUR128_MODE_LRA;
@@ -1024,18 +1035,20 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 	// This lets us get integrated reading even if the target is too short
 	bool doShortTerm = true;
 	bool doMomentary = true;
+	bool newAudioEndSet = false;  bool correctForVolAndPanVolEnvs = true; // #1074
 	double effectiveEndTime = data.audioEnd;
 	if (data.audioEnd - data.audioStart < 3)
 	{
 		doShortTerm = false; // doMomentary is set during calculation
 		data.audioEnd = data.audioStart + 3;
+		newAudioEndSet = true;
 	}
 
 	// Fill loudnessState with samples and get momentary/short-term measurements
 	int sampleCount = data.samplerate/5;
 	int bufSz = sampleCount * data.channels;
 	int processedSamples = 0;
-	double sampleTimeLen = 1 / data.samplerate;
+	double sampleTimeLen = 1.0 / data.samplerate; // NF fix: 1 / data.samplerate (int / int) always resulted in 0.0
 	double currentTime   = data.audioStart;
 	int i = 0;
 	int momentaryFilled = 1;
@@ -1054,38 +1067,61 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 		double* buf = new double[bufSz];
 		GetAudioAccessorSamples(data.audio, data.samplerate, data.channels, currentTime, sampleCount, buf);
 
-		// Correct for volume and pan/volume envelopes
-		int currentChannel = 1;
-		double sampleTime = currentTime;
-		for (int j = 0; j < bufSz; ++j)
+		if (correctForVolAndPanVolEnvs)
 		{
-			double adjust = 1;
+			// NF: #1074 If data.audioEnd got expanded for short items to get integrated reading (see above)
+			// make sure we apply volume and pan/volume envelopes correction only to actual audio data
+			int nrSamplesToCorrect = bufSz;
 
-			// Volume envelopes
-			if (doVolPreFXEnv) adjust *= data.volEnvPreFX.ValueAtPosition(sampleTime, true);
-			if (doVolEnv)      adjust *= data.volEnv.ValueAtPosition(sampleTime, true);
-
-			// Volume fader
-			adjust *= data.volume;
-
-			// Pan fader (takes only)
-			if (doPan)
+			// samples in buffer crossed actual audio end (effectiveEndTime)?
+			if (newAudioEndSet && effectiveEndTime - currentTime < 0.2 + numeric_limits<double>::epsilon()) 
 			{
-				if (data.pan > 0 && (currentChannel % 2 == 1))
-					adjust *= 1 - data.pan;                         // takes have no pan law!
-				else if (data.pan < 0 && (currentChannel % 2 == 0))
-					adjust *= 1 + data.pan;
+				nrSamplesToCorrect = (int)(data.samplerate * (effectiveEndTime - currentTime));
+				correctForVolAndPanVolEnvs = false;
 			}
+		
+			// Correct for volume and pan/volume envelopes
+			int currentChannel = 1;
+			double sampleTime = currentTime;
 
-			buf[j] *= adjust;
+			for (int j = 0; j < nrSamplesToCorrect; ++j)
+			{
+				double adjust = 1;
 
-			if (++currentChannel > data.channels)
-				currentChannel = 1;
+				// Volume envelopes
+				if (doVolPreFXEnv) adjust *= data.volEnvPreFX.ValueAtPosition(sampleTime, true);
+				
+				if (doVolEnv) 
+				{
+					if (_this->m_track)
+						adjust *= data.volEnv.ValueAtPosition(sampleTime, true);
+					else
+						adjust *= data.volEnv.ValueAtPosition(sampleTime + itemPos, true);
+				}
 
-			double nextSampleTime = (currentChannel+1 > data.channels) ? (sampleTime + sampleTimeLen) : (-1);
-			if (nextSampleTime != -1)
-				sampleTime = nextSampleTime;
+				// Volume fader
+				adjust *= data.volume;
+
+				// Pan fader (takes only)
+				if (doPan)
+				{
+					if (data.pan > 0 && (currentChannel % 2 == 1))
+						adjust *= 1 - data.pan;                         // takes have no pan law!
+					else if (data.pan < 0 && (currentChannel % 2 == 0))
+						adjust *= 1 + data.pan;
+				}
+
+				buf[j] *= adjust;
+
+				if (++currentChannel > data.channels)
+					currentChannel = 1;
+
+				double nextSampleTime = (currentChannel + 1 > data.channels) ? (sampleTime + sampleTimeLen) : (-1);
+				if (nextSampleTime != -1)
+					sampleTime = nextSampleTime;
+			}
 		}
+
 		ebur128_add_frames_double(loudnessState, buf, sampleCount);
 		delete[] buf;
 
@@ -1197,7 +1233,7 @@ int BR_LoudnessObject::CheckSetAudioData ()
 	double audioEnd   = GetAudioAccessorEndTime(audioData.audio);
 	int channels    = (this->GetTrack()) ? ((int)GetMediaTrackInfo_Value(this->GetTrack(), "I_NCHAN")) : ((GetMediaItemTake_Source(this->GetTake()))->GetNumChannels());
 	int channelMode = (this->GetTrack()) ? (0) : (*(int*)GetSetMediaItemTakeInfo(this->GetTake(), "I_CHANMODE", NULL));
-	int samplerate; GetConfig("projsrate", samplerate);
+	int samplerate = (int)(1 / parse_timestr_len("1", 0, 4)); // NF: https://forum.cockos.com/showpost.php?p=2060657&postcount=15
 
 	BR_Envelope volEnv, volEnvPreFX;
 	double volume = 0, pan = 0;

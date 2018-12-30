@@ -335,7 +335,7 @@ COMMAND_T g_XenCommandTable[] =
 	{ { DEFACCEL, "Xenakios/SWS: Set selected track as reference track" }, "XENAKIOS_SETSELTKREFTRACK", DoSetSelTrackAsRefTrack, NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Shift all points in selected envelope to right by 1 second" }, "XEN_ENV_SHIFTRIGHT", DoShiftEnvelope, NULL, 1 },
 	{ { DEFACCEL, "Xenakios/SWS: Shift all points in selected envelope to left by 1 second" }, "XEN_ENV_SHIFTLEFT", DoShiftEnvelope, NULL, -1},
-	{ { DEFACCEL, "Xenakios/SWS: Toggle stop playback at end of time selection" }, "XEN_PREF_STOPATENDLOOP", DoToggleSTopAtEndOfTimeSel, NULL, 0, IsStopAtEndOfTimeSel },
+	{ { DEFACCEL, "Xenakios/SWS: [Deprecated] Toggle stop playback at end of loop" }, "XEN_PREF_STOPATENDLOOP", DoToggleSTopAtEndOfTimeSel, NULL, 0, IsStopAtEndOfTimeSel },
 
 	{ { DEFACCEL, "Xenakios/SWS: Rename project markers with ascending numbers" }, "XEN_RENNMARKERSASCNUMBERS", DoRenameMarkersWithAscendingNumbers, NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Set fades of selected items to configuration C" }, "XEN_ITEMFADESTOCONF_C", DoFadesOfSelItemsToConfC, NULL, },

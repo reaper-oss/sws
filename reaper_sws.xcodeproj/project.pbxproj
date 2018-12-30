@@ -221,6 +221,8 @@
 		22F7AAEB15201E2600CC1481 /* PlaylistImport.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22F7AAE715201E2600CC1481 /* PlaylistImport.cpp */; };
 		22FFD27A114CD8310077F1CA /* Autocolor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22FFD278114CD8310077F1CA /* Autocolor.cpp */; };
 		22FFD27B114CD8310077F1CA /* Autocolor.h in Headers */ = {isa = PBXBuildFile; fileRef = 22FFD279114CD8310077F1CA /* Autocolor.h */; };
+		2446217121BC2B2200C2E00F /* NF_ReaScript.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2446217021BC2B2200C2E00F /* NF_ReaScript.cpp */; };
+		24A51E5F21BC291200100DC2 /* NF_ReaScript.h in Headers */ = {isa = PBXBuildFile; fileRef = 24A51E5E21BC291200100DC2 /* NF_ReaScript.h */; };
 		3327DE920E955E14001FCE4E /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3327DE910E955E14001FCE4E /* Cocoa.framework */; };
 		387407D01664177E008626AA /* lice_arc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 387407CF1664177E008626AA /* lice_arc.cpp */; };
 		387938E516202B1E000948B5 /* CommandHandler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 387938B716202B1E000948B5 /* CommandHandler.cpp */; };
@@ -576,6 +578,8 @@
 		22F7AAE715201E2600CC1481 /* PlaylistImport.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PlaylistImport.cpp; path = IX/PlaylistImport.cpp; sourceTree = "<group>"; };
 		22FFD278114CD8310077F1CA /* Autocolor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Autocolor.cpp; path = Color/Autocolor.cpp; sourceTree = "<group>"; };
 		22FFD279114CD8310077F1CA /* Autocolor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Autocolor.h; path = Color/Autocolor.h; sourceTree = "<group>"; };
+		2446217021BC2B2200C2E00F /* NF_ReaScript.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NF_ReaScript.cpp; path = nofish/NF_ReaScript.cpp; sourceTree = "<group>"; };
+		24A51E5E21BC291200100DC2 /* NF_ReaScript.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NF_ReaScript.h; path = nofish/NF_ReaScript.h; sourceTree = "<group>"; };
 		3327DE910E955E14001FCE4E /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		387407CF1664177E008626AA /* lice_arc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lice_arc.cpp; path = ../WDL/WDL/lice/lice_arc.cpp; sourceTree = SOURCE_ROOT; };
 		387938B716202B1E000948B5 /* CommandHandler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CommandHandler.cpp; path = Fingers/CommandHandler.cpp; sourceTree = "<group>"; };
@@ -1078,6 +1082,8 @@
 		22BC765A1D349B0D00014323 /* nofish */ = {
 			isa = PBXGroup;
 			children = (
+				2446217021BC2B2200C2E00F /* NF_ReaScript.cpp */,
+				24A51E5E21BC291200100DC2 /* NF_ReaScript.h */,
 				22BC765D1D349B5B00014323 /* nofish.h */,
 				22BC765B1D349B4100014323 /* nofish.cpp */,
 			);
@@ -1332,6 +1338,7 @@
 				980765340F5B430B0091104D /* reaper_plugin.h in Headers */,
 				98DDBDFB0F5B5A49003E9B2C /* Console.h in Headers */,
 				98DDBDFC0F5B5A4B003E9B2C /* Freeze.h in Headers */,
+				24A51E5F21BC291200100DC2 /* NF_ReaScript.h in Headers */,
 				98DDBDFD0F5B5A4F003E9B2C /* ItemSelState.h in Headers */,
 				98DDBDFE0F5B5A51003E9B2C /* MarkerActions.h in Headers */,
 				98DDBDFF0F5B5A5A003E9B2C /* TimeState.h in Headers */,
@@ -1513,6 +1520,8 @@
 /* Begin PBXProject section */
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+			};
 			buildConfigurationList = 1DEB914E08733D8E0010E9CD /* Build configuration list for PBXProject "reaper_sws" */;
 			compatibilityVersion = "Xcode 3.1";
 			developmentRegion = English;
@@ -1726,6 +1735,7 @@
 				387938FF16202B1E000948B5 /* RprMidiCCLane.cpp in Sources */,
 				3879390116202B1E000948B5 /* RprMidiEvent.cpp in Sources */,
 				3879390316202B1E000948B5 /* RprMidiTake.cpp in Sources */,
+				2446217121BC2B2200C2E00F /* NF_ReaScript.cpp in Sources */,
 				3879390516202B1E000948B5 /* RprMidiTemplate.cpp in Sources */,
 				3879390716202B1E000948B5 /* RprNode.cpp in Sources */,
 				3879390916202B1E000948B5 /* RprStateChunk.cpp in Sources */,

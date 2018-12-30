@@ -634,6 +634,9 @@
     <ClInclude Include="Utility\win32-utf8.h">
       <Filter>Core\Utils</Filter>
     </ClInclude>
+    <ClInclude Include="nofish\NF_ReaScript.h">
+      <Filter>nofish</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="sws_extension.rc">
@@ -1268,6 +1271,9 @@
     </ClCompile>
     <ClCompile Include="Utility\win32-utf8.cpp">
       <Filter>Core\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="nofish\NF_ReaScript.cpp">
+      <Filter>nofish</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

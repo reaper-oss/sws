@@ -74,6 +74,7 @@ MARKERACTIONS_OBJS = MarkerActions/MarkerActions.o
 MARKERLIST_OBJS    = MarkerList/MarkerListActions.o MarkerList/MarkerListClass.o MarkerList/MarkerList.o
 MISC_OBJS          = Misc/Adam.o Misc/Analysis.o Misc/Context.o Misc/FolderActions.o Misc/ItemParams.o Misc/ItemSel.o Misc/Macros.o \
                      Misc/Misc.o Misc/ProjPrefs.o Misc/RecCheck.o Misc/TrackParams.o Misc/TrackSel.o Misc/EditCursor.o
+NF_OBS             = nofish/nofish.o nofish/NF_ReaScript.o
 OBJECTSTATE_OBJS   = ObjectState/ObjectState.o ObjectState/TrackEnvelope.o ObjectState/TrackFX.o ObjectState/TrackSends.o 
 PADRE_OBJS         = Padre/padreActions.o Padre/padreEnvelopeProcessor.o Padre/padreMidiItemFilters.o Padre/padreMidiItemGenerators.o \
                      Padre/padreMidiItemProcBase.o Padre/padreUtils.o
@@ -96,9 +97,9 @@ XENAKIOS_OBJS      = Xenakios/AutoRename.o Xenakios/BroadCastWavCommands.o Xenak
 
 OBJS += $(WDL_OBJS) $(LICE_OBJS) $(REAPER_OBJS) $(SWS_OBJS) $(AUTORENDER_OBJS) $(BREEDER_OBJS) $(COLOR_OBJS) \
 	$(CONSOLE_OBJS) $(FINGERS_OBJS) $(FREEZE_OBJS) $(IX_OBJS) $(LIBEBUR_OBS) $(MARKERACTIONS_OBJS) \
-	$(MARKERLIST_OBJS) $(MISC_OBJS) $(PADRE_OBJS) $(PROJECT_OBJS) $(SNAPSHOTS_OBJS) $(SNM_OBJS) $(SNOOKS_OBJS)\
+	$(MARKERLIST_OBJS) $(MISC_OBJS) $(NF_OBS) $(PADRE_OBJS) $(PROJECT_OBJS) $(SNAPSHOTS_OBJS) $(SNM_OBJS) $(SNOOKS_OBJS)\
         $(TRACKLIST_OBJS) $(UTILITY_OBJS) $(WOL_OBJS) $(XENAKIOS_OBJS) $(OBJECTSTATE_OBJS) \
-        nofish/nofish.o cfillion/cfillion.o
+        cfillion/cfillion.o
 
 REASCRIPT_PY_FILES = sws_python32.py sws_python64.py sws_python.py
 REASCRIPT_PY_DEPS  = ReaScript.cpp reascript_python.pl reascript_helper.pl

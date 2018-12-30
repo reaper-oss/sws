@@ -797,6 +797,7 @@ error:
 		IMPAPI(GetIconThemeStruct);
 		IMPAPI(GetInputChannelName);
 		IMPAPI(GetItemEditingTime2);
+		IMPAPI(GetLastMarkerAndCurRegion); // v4.60+
 		IMPAPI(GetLastTouchedFX);
 		IMPAPI(GetLastTouchedTrack);
 		IMPAPI(GetMainHwnd);

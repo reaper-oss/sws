@@ -136,6 +136,7 @@ public:
 	int UpdateItemNotes();
 	int UpdateTrackNotes();
 	int UpdateMkrRgnNameOrSub(int _type);
+	void ForceUpdateMkrRgnNameOrSub(int _type); // NF: trigger update after setting sub from ReaScript
 
 protected:
 	void OnInitDlg();
@@ -184,8 +185,12 @@ int IsNotesDisplayed(COMMAND_T*);
 void ToggleNotesLock(COMMAND_T*);
 int IsNotesLocked(COMMAND_T*);
 
-// #755
-const char* NFDoGetSWSTrackNotes(MediaTrack* track, WDL_FastString* trackNoteOut);
+// ReaScript export
+const char* NFDoGetSWSTrackNotes(MediaTrack* track);
 void NFDoSetSWSTrackNotes(MediaTrack* track, const char* buf);
+
+const char* NFDoGetSWSMarkerRegionSub(int mkrRgnIdx);
+bool NFDoSetSWSMarkerRegionSub(const char* mkrRgnSubIn, int mkrRgnIdx);
+void NF_DoUpdateSWSMarkerRegionSubWindow();
 
 #endif

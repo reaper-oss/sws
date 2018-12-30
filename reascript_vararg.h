@@ -548,6 +548,14 @@ static void* __vararg_NF_GetMediaItemMaxPeak(void** arglist, int numparms)
   return p;
 }
 
+static void* __vararg_NF_GetMediaItemMaxPeakAndMaxPeakPos(void** arglist, int numparms)
+{
+  double* p =(double*)arglist[numparms-1];
+  double d = NF_GetMediaItemMaxPeakAndMaxPeakPos((MediaItem*)arglist[0], (double*)arglist[1]);
+  if (p) *p=d;
+  return p;
+}
+
 static void* __vararg_NF_GetMediaItemPeakRMS_Windowed(void** arglist, int numparms)
 {
   double* p =(double*)arglist[numparms-1];
@@ -572,6 +580,11 @@ static void* __vararg_NF_GetMediaItemAverageRMS(void** arglist, int numparms)
   return p;
 }
 
+static void* __vararg_NF_AnalyzeMediaItemPeakAndRMS(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)NF_AnalyzeMediaItemPeakAndRMS((MediaItem*)arglist[0], arglist[1] ? *(double*)arglist[1] : 0.0, (void*)arglist[2], (void*)arglist[3], (void*)arglist[4], (void*)arglist[5]);
+}
+
 static void* __vararg_NF_AnalyzeTakeLoudness_IntegratedOnly(void** arglist, int numparms)
 {
   return (void*)(INT_PTR)NF_AnalyzeTakeLoudness_IntegratedOnly((MediaItem_Take*)arglist[0], (double*)arglist[1]);
@@ -587,36 +600,30 @@ static void* __vararg_NF_AnalyzeTakeLoudness2(void** arglist, int numparms)
   return (void*)(INT_PTR)NF_AnalyzeTakeLoudness2((MediaItem_Take*)arglist[0], (bool)arglist[1], (double*)arglist[2], (double*)arglist[3], (double*)arglist[4], (double*)arglist[5], (double*)arglist[6], (double*)arglist[7], (double*)arglist[8], (double*)arglist[9]);
 }
 
-static void* __vararg_NF_TrackFX_GetOffline(void** arglist, int numparms)
-{
-  return (void*)(INT_PTR)NF_TrackFX_GetOffline((MediaTrack*)arglist[0], (int)(INT_PTR)arglist[1]);
-}
-
-static void* __vararg_NF_TrackFX_SetOffline(void** arglist, int numparms)
-{
-  NF_TrackFX_SetOffline((MediaTrack*)arglist[0], (int)(INT_PTR)arglist[1], (bool)arglist[2]);
-  return NULL;
-}
-
-static void* __vararg_NF_TakeFX_GetOffline(void** arglist, int numparms)
-{
-  return (void*)(INT_PTR)NF_TakeFX_GetOffline((MediaItem_Take*)arglist[0], (int)(INT_PTR)arglist[1]);
-}
-
-static void* __vararg_NF_TakeFX_SetOffline(void** arglist, int numparms)
-{
-  NF_TakeFX_SetOffline((MediaItem_Take*)arglist[0], (int)(INT_PTR)arglist[1], (bool)arglist[2]);
-  return NULL;
-}
-
 static void* __vararg_NF_GetSWSTrackNotes(void** arglist, int numparms)
 {
-  return (void*)(INT_PTR)NF_GetSWSTrackNotes((MediaTrack*)arglist[0], (WDL_FastString*)arglist[1]);
+  return (void*)(INT_PTR)NF_GetSWSTrackNotes((MediaTrack*)arglist[0]);
 }
 
 static void* __vararg_NF_SetSWSTrackNotes(void** arglist, int numparms)
 {
   NF_SetSWSTrackNotes((MediaTrack*)arglist[0], (const char*)arglist[1]);
+  return NULL;
+}
+
+static void* __vararg_NF_GetSWSMarkerRegionSub(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)NF_GetSWSMarkerRegionSub((int)(INT_PTR)arglist[0]);
+}
+
+static void* __vararg_NF_SetSWSMarkerRegionSub(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)NF_SetSWSMarkerRegionSub((const char*)arglist[0], (int)(INT_PTR)arglist[1]);
+}
+
+static void* __vararg_NF_UpdateSWSMarkerRegionSubWindow(void** arglist, int numparms)
+{
+  NF_UpdateSWSMarkerRegionSubWindow();
   return NULL;
 }
 

@@ -70,6 +70,8 @@ static SWSProjConfig<ProjSnapshot> g_ss;
 SWS_SnapshotsWnd* g_pSSWnd=NULL;
 void PasteSnapshot(COMMAND_T*);
 void MergeSnapshot(Snapshot* ss);
+void DeleteSnapshot(Snapshot* ss);
+void DeleteAllSnapshots(COMMAND_T* = NULL);
 
 static int g_iMask = ALL_MASK;
 static bool g_bSelOnly_OnRecall = false;
@@ -327,20 +329,7 @@ void SWS_SnapshotsView::OnItemClk(SWS_ListItem* item, int iCol, int iKeyState)
 	// Delete (alt click)
 	else if (!(iKeyState & LVKF_SHIFT) && !(iKeyState & LVKF_CONTROL) && (iKeyState & LVKF_ALT))
 	{
-		if (g_ss.Get()->m_pCurSnapshot == ss)
-			g_ss.Get()->m_pCurSnapshot = NULL;
-
-		int iSlot = ss->m_iSlot;
-		g_ss.Get()->m_snapshots.Delete(g_ss.Get()->m_snapshots.Find(ss), true);
-
-		//clean up gaps rather than search for them on insert
-		for (int i = 0; i < g_ss.Get()->m_snapshots.GetSize(); i++)
-			if (g_ss.Get()->m_snapshots.Get(i)->m_iSlot > iSlot)
-				g_ss.Get()->m_snapshots.Get(i)->m_iSlot--;
-
-		char undoStr[128]="";
-		_snprintf(undoStr, 128, __LOCALIZE_VERFMT("Delete snapshot %d","sws_DLG_101"), iSlot);
-		Undo_OnStateChangeEx(undoStr, UNDO_STATE_MISCCFG, -1);
+		DeleteSnapshot(ss);
 		Update();
 	}
 }
@@ -617,20 +606,8 @@ void SWS_SnapshotsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		}
 		case DELETE_MSG:
 		{
-			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->EnumSelected(NULL);
-			if (ss)
-			{
-				char undoStr[128]="";
-				_snprintf(undoStr, 128, __LOCALIZE_VERFMT("Delete snapshot %d","sws_DLG_101"), ss->m_iSlot);
-
-				//clean up gaps rather than search for them on insert
-				for (int i = 0; i < g_ss.Get()->m_snapshots.GetSize(); i++)
-					if (g_ss.Get()->m_snapshots.Get(i)->m_iSlot > ss->m_iSlot)
-						g_ss.Get()->m_snapshots.Get(i)->m_iSlot--;
-
-				g_ss.Get()->m_snapshots.Delete(g_ss.Get()->m_snapshots.Find(ss), true);
-				g_ss.Get()->m_pCurSnapshot = NULL;
-				Undo_OnStateChangeEx(undoStr, UNDO_STATE_MISCCFG, -1);
+			if(Snapshot* ss = (Snapshot*)m_pLists.Get(0)->EnumSelected(NULL)) {
+				DeleteSnapshot(ss);
 				Update();
 			}
 			break;
@@ -746,6 +723,7 @@ HMENU SWS_SnapshotsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 	AddToMenu(contextMenu, __LOCALIZE("Import snapshot...","sws_DLG_101"), IMPORT_MSG);
 	AddToMenu(contextMenu, __LOCALIZE("New snapshot","sws_DLG_101"), SWSGetCommandID(NewSnapshot));
 	AddToMenu(contextMenu, __LOCALIZE("Paste snapshot","sws_DLG_101"), SWSGetCommandID(PasteSnapshot));
+	AddToMenu(contextMenu, __LOCALIZE("Delete all snapshots","sws_DLG_101"), SWSGetCommandID(DeleteAllSnapshots));
 
 	return contextMenu;
 }
@@ -1095,6 +1073,25 @@ void CopyAllSnapshot(COMMAND_T*)
 	CopySnapshotToClipboard(&ss);
 }
 
+void DeleteCurSnapshot(COMMAND_T*)
+{
+	if(Snapshot *ss = g_ss.Get()->m_pCurSnapshot) {
+		DeleteSnapshot(ss);
+		g_pSSWnd->Update();
+	}
+}
+
+void DeleteAllSnapshots(COMMAND_T *action)
+{
+	g_ss.Get()->m_pCurSnapshot = NULL;
+	g_ss.Get()->m_snapshots.Empty(true);
+
+	if(action) { // was this user-initiated?
+		Undo_OnStateChangeEx(action->menuText, UNDO_STATE_MISCCFG, -1);
+		g_pSSWnd->Update();
+	}
+}
+
 // This function adds the snapshot or deletes it from memory
 void MergeSnapshot(Snapshot* ss)
 {
@@ -1131,6 +1128,24 @@ void PasteSnapshot(COMMAND_T*)
 	MergeSnapshot(ss);
 }
 
+void DeleteSnapshot(Snapshot *ss)
+{
+	if (g_ss.Get()->m_pCurSnapshot == ss)
+		g_ss.Get()->m_pCurSnapshot = NULL;
+
+	const int iSlot = ss->m_iSlot;
+	g_ss.Get()->m_snapshots.Delete(g_ss.Get()->m_snapshots.Find(ss), true);
+
+	// clean up gaps rather than search for them on insert
+	for (int i = 0; i < g_ss.Get()->m_snapshots.GetSize(); i++)
+		if (g_ss.Get()->m_snapshots.Get(i)->m_iSlot > iSlot)
+			g_ss.Get()->m_snapshots.Get(i)->m_iSlot--;
+
+	char undoStr[128] = "";
+	_snprintf(undoStr, 128, __LOCALIZE_VERFMT("Delete snapshot %d", "sws_DLG_101"), iSlot);
+	Undo_OnStateChangeEx(undoStr, UNDO_STATE_MISCCFG, -1);
+}
+
 //!WANT_LOCALIZE_SWS_CMD_TABLE_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] =
 {
@@ -1154,7 +1169,8 @@ static COMMAND_T g_commandTable[] =
 
 	{ { DEFACCEL, "SWS: New snapshot (with current settings)" },			"SWSSNAPSHOT_NEW",	     NewSnapshot,		   NULL, 0 },
 	{ { DEFACCEL, "SWS: New snapshot and edit name" },						"SWSSNAPSHOT_NEWEDIT",   NewSnapshotEdit,	   NULL, 1 },
-	//{ { DEFACCEL, "SWS: Delete current snapshot" },						"SWSSNAPSHOT_NEWEDIT",   NewSnapshotEdit,	   NULL, 1 },
+	{ { DEFACCEL, "SWS: Delete current snapshot" },						"SWSSNAPSHOT_DELCUR",   DeleteCurSnapshot },
+	{ { DEFACCEL, "SWS: Delete all snapshots" },							"SWSSNAPSHOT_DELALL",   DeleteAllSnapshots, "Delete all snapshots" },
 	{ { DEFACCEL, "SWS: Save as snapshot 1" },								"SWSSNAPSHOT_SAVE1",	 SaveSnapshot,         NULL, 1 },
 	{ { DEFACCEL, "SWS: Save as snapshot 2" },								"SWSSNAPSHOT_SAVE2",	 SaveSnapshot,         NULL, 2 },
 	{ { DEFACCEL, "SWS: Save as snapshot 3" },								"SWSSNAPSHOT_SAVE3",	 SaveSnapshot,         NULL, 3 },
@@ -1219,8 +1235,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 
 static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t *reg)
 {
-	g_ss.Get()->m_snapshots.Empty(true);
-	g_ss.Get()->m_pCurSnapshot = NULL;
+	DeleteAllSnapshots();
 	g_ss.Cleanup();
 	UpdateSnapshotsDialog();
 }

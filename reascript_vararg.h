@@ -380,6 +380,11 @@ static void* __vararg_BR_GetMouseCursorContext_StretchMarker(void** arglist, int
   return (void*)(INT_PTR)BR_GetMouseCursorContext_StretchMarker();
 }
 
+static void* __vararg_BR_GetMouseCursorContext_AutomationItem(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)BR_GetMouseCursorContext_AutomationItem();
+}
+
 static void* __vararg_BR_GetMouseCursorContext_Take(void** arglist, int numparms)
 {
   return (void*)(INT_PTR)BR_GetMouseCursorContext_Take();

@@ -74,6 +74,16 @@ int CopyTakeFXChain(WDL_FastString* _fxChain, int _startSelItem)
 				removedKeywords.Add("DOCKED");
 				RemoveChunkLines(fxChain, &removedKeywords, true);
 
+				// NF: fix #938
+				char TAKEFX_NCH_state[8] = "0";
+				if (p.Parse(SNM_GET_CHUNK_CHAR, 1, "ITEM", "TAKEFX_NCH", _startSelItem, 1, TAKEFX_NCH_state, NULL, NULL)) {
+					if (atoi(TAKEFX_NCH_state) > 0) {
+						fxChain->Append(">\nTAKEFX_NCH ");
+						fxChain->Append(TAKEFX_NCH_state);
+						fxChain->Append("\n");
+					}
+				}
+
 				// check fx chain consistency 
 				// note: testing the length is not enough since RemoveChunkLines() does not delete but blanks lines
 				if (FindKeyword(fxChain->Get())) {

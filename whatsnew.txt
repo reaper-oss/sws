@@ -1,9 +1,11 @@
 +MouseContext: Initial support for automation items:
  - Contextual toolbars: Add Automation item context (Issue 915)
- - ReaScript: 
+ - ReaScript:
   - BR_GetMouseCursorContext(): detailsOut returns "automation_item" when mouse cursor is over automation item
   - Added function: BR_GetMouseCursorContext_AutomationItem(), returns automation item index
 
+  Fixes:
+  +Issue 938: SWS/S&M: Copy FX Chain (Depending on Focus) - if take FX chain, also copy take FX chain channel count
 !v2.9.8 pre-release build (March 5, 2018)
 Now requires REAPER 5.50+!
 
@@ -27,7 +29,7 @@ Fixes:
 +Issue 802: Disable FXID filtering in SNM_MoveOrRemoveTrackFX() (thanks Justin!)
 +Crossfade actions: Prevent item content movement if takes contain stretch markers (https://forum.cockos.com/showthread.php?t=197584 posts #11, #12) and / or take playrate is other than 1.0
  (Also fix for  "SWS/AW: Fade in/out/crossfade selected area of selected items" and "SWS/AW: Trim selected items to fill selection")
-+Loudness: 
++Loudness:
  - Issue 927: Change relative gating threshold from -10.0 LU to -20.0 LU (to match with EBU TECH3342 notes)
  - Prevent items going offline during analysis (hopefully fixes cornercase issue with occasionally wrong analysis results)
  - Enable the Cancel button only while analyzing
@@ -38,10 +40,10 @@ Fixes:
 +Issue 918: Fix various issues with "SWS/S&M: Remove all envelopes for selected tracks"
 +Support for UTF-8 resource paths on Windows (Issues #934, #935)
 +Issue 942: Fix column header context menu when a langpack is used
-+Issue 886: Potentially fix occasional skipping of adjacent regions in Region Playlist, needs testing 
-+Issue 945: "SWS/S&M: Toolbar - Toggle track envelopes in touch/latch/write" - add latch preview 
++Issue 886: Potentially fix occasional skipping of adjacent regions in Region Playlist, needs testing
++Issue 945: "SWS/S&M: Toolbar - Toggle track envelopes in touch/latch/write" - add latch preview
 +Issue 950: Prevent takes envelopes and stretch markers offset with  BR_SetItemEdges() and "SWS/BR: Trim MIDI item to active content"
- 
+
 New ReaScript functions:
 +CF_ShellExecute
 +CF_LocateInExplorer
@@ -3429,4 +3431,3 @@ Issue 225: Fixed selected text in Notes/help view when switching between docker 
 
 !SWS v1.x.x
 Goto http://sws-extension.org/download/whatsnew_v1.txt|here| for older changes
-

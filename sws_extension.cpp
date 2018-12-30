@@ -878,6 +878,7 @@ error:
 		IMPAPI(GetToggleCommandStateThroughHooks);
 		IMPAPI(GetTooltipWindow);
 		IMPAPI(GetTrack);
+		IMPAPI(GetTrackAutomationMode);
 		IMPAPI(GetTrackGUID);
 		IMPAPI(GetTrackEnvelope);
 		IMPAPI(GetTrackEnvelopeByName);
@@ -1027,6 +1028,7 @@ error:
 		IMPAPI(SetProjectMarker4);
 		IMPAPI(SetTempoTimeSigMarker);
 		IMPAPI(SetTakeStretchMarker);
+		IMPAPI(SetTrackAutomationMode);
 		IMPAPI(SetTrackSelected);
 		IMPAPI(SetTrackSendUIPan);
 		IMPAPI(SetTrackSendUIVol);

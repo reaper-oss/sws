@@ -94,17 +94,17 @@ void Main_NFToggleTripletMIDI(COMMAND_T* = NULL)
 		midiEditor = MIDIEditor_GetActive();
 		MIDIEditor_OnCommand(midiEditor, 41003); // null ptr. check is handled by REAPER
 	}
-		
+
 	else {
 		// set to triplet
 		HWND midiEditor;
 		midiEditor = MIDIEditor_GetActive();
 		MIDIEditor_OnCommand(midiEditor, 41004);
 	}
-		
+
 	UpdateMIDIGridToolbar();
 }
-	
+
 void Main_NFToggleDottedMIDI(COMMAND_T*)
 {
 	if (Main_IsMIDIGridTriplet())
@@ -122,7 +122,7 @@ void Main_NFToggleDottedMIDI(COMMAND_T*)
 		midiEditor = MIDIEditor_GetActive();
 		MIDIEditor_OnCommand(midiEditor, 41005);
 	}
-	
+
 	UpdateMIDIGridToolbar();
 }
 
@@ -162,9 +162,9 @@ void DisableMultichannelMetering(COMMAND_T* ct)
 
 	if (ct->user == 0)
 		SWS_GetAllTracks(&tracks, false); // skip master
-	
+
 	else if (ct->user == 1)
-		SWS_GetSelectedTracks(&tracks, false); 
+		SWS_GetSelectedTracks(&tracks, false);
 
 	for (int i = 0; i < tracks.GetSize(); i++) {
 		MediaTrack* track = tracks.Get()[i];
@@ -183,7 +183,7 @@ void EnableMultichannelMetering(COMMAND_T* ct)
 	if (ct->user == 0)
 		SWS_GetAllTracks(&tracks, false); // skip master
 
-	else if (ct->user == 1) 
+	else if (ct->user == 1)
 		SWS_GetSelectedTracks(&tracks, false);
 
 	for (int i = 0; i < tracks.GetSize(); i++) {
@@ -204,7 +204,7 @@ void EnableMultichannelMetering(COMMAND_T* ct)
 
 char g_EraserToolCurMouseMod[32];
 MediaItem* g_EraserToolLastSelItem = NULL;
-// int g_EraserToolCurRelEdgesMode; 
+// int g_EraserToolCurRelEdgesMode;
 
 // called on start with init = true and on shortcut release with init = false. Return false to abort init.
 // ct->user = 0: no snap, = 1: obey snap
@@ -214,7 +214,7 @@ static bool EraserToolInit(COMMAND_T* ct, bool init)
 		// get the currently assigned mm for Media Item - left drag, store it and restore after this continious action is performed
 		GetMouseModifier("MM_CTX_ITEM", 0, g_EraserToolCurMouseMod, sizeof(g_EraserToolCurMouseMod));
 
-	
+
 		if (ct->user == 1)
 			SetMouseModifier("MM_CTX_ITEM", 0, "28"); // Marquee sel. items and time = 28
 		else if (ct->user == 0)
@@ -223,7 +223,7 @@ static bool EraserToolInit(COMMAND_T* ct, bool init)
 		// temp. disable Prefs->"Editing Behaviour -> If no items are selected..."
 		// only needed when doing immediate erase which is disabled currently
 		// GetConfig("relativeedges", g_EraserToolCurRelEdgesMode);
-		// SetConfig("relativeedges", SetBit(g_EraserToolCurRelEdgesMode, 8)); 
+		// SetConfig("relativeedges", SetBit(g_EraserToolCurRelEdgesMode, 8));
 
 		Undo_BeginBlock();
 		Main_OnCommand(40635, 0); // remove time sel.
@@ -231,7 +231,7 @@ static bool EraserToolInit(COMMAND_T* ct, bool init)
 	}
 
 	if (!init) {
-		
+
 		Main_OnCommand(40307, 0); // cut sel area of sel items
 		Main_OnCommand(40635, 0); // remove time sel.
 		Main_OnCommand(40289, 0); // unsel. all items
@@ -245,7 +245,7 @@ static bool EraserToolInit(COMMAND_T* ct, bool init)
 		// set Prefs -> Editing Behaviour -> If no items are selected... back to original value
 		// SetConfig("relativeedges", g_EraserToolCurRelEdgesMode);
 	}
-		
+
 	return true;
 }
 
@@ -265,7 +265,7 @@ static void DoEraserTool(COMMAND_T* ct)
 			UpdateArrange();
 		}
 	}
-	
+
 	// immediate erase doesn't work well with Ripple edit
 	// https://forum.cockos.com/showthread.php?t=208712
 	// Main_OnCommand(40307, 0); // cut sel area of sel items
@@ -288,6 +288,60 @@ static HCURSOR EraserToolCursor(COMMAND_T* ct, int window)
 static int EraserToolUndo(COMMAND_T* ct)
 {
 	return 0; // undo point is created in EraserToolInit() already
+}
+
+void CycleMIDIRecordingModes(COMMAND_T* ct)
+{
+	WDL_TypedBuf<MediaTrack*> selTracks;
+	SWS_GetSelectedTracks(&selTracks, false);
+
+	for (int i = 0; i < selTracks.GetSize(); i++) {
+		MediaTrack* track = selTracks.Get()[i];
+		int recMode = GetMediaTrackInfo_Value(track, "I_RECMODE");
+		int nextRecMode;
+
+		switch (recMode) {
+		case 0: // input (audio or MIDI)
+			nextRecMode = 4;
+			break;
+		case 4: // MIDI output
+			nextRecMode = 7;
+			break;
+		case 7: // MIDI overdub
+			nextRecMode = 8;
+			break;
+		case 8: // MIDI replace
+			nextRecMode = 9;
+			break;
+		case 9: // MIDI touch-replace
+			nextRecMode = 16;
+			break;
+		case 16: // MIDI latch-replace
+			nextRecMode = 0;
+			break;
+		default: // when not in one of the MIDI rec. modes set to 'input (audio or MIDI)'
+			nextRecMode = 0;
+		}
+		SetMediaTrackInfo_Value(track, "I_RECMODE", nextRecMode);
+	}
+}
+
+void ME_CycleMIDIRecordingModes(COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
+{
+	CycleMIDIRecordingModes(NULL);
+}
+
+void CycleTrackAutomationModes(COMMAND_T* ct)
+{
+	WDL_TypedBuf<MediaTrack*> selTracks;
+	SWS_GetSelectedTracks(&selTracks, false);
+
+	for (int i = 0; i < selTracks.GetSize(); i++) {
+		MediaTrack* track = selTracks.Get()[i];
+		int autoMode = GetTrackAutomationMode(track);
+		if (++autoMode > 5) autoMode = 0;
+		SetTrackAutomationMode(track, autoMode);
+	}
 }
 
 
@@ -317,7 +371,13 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/NF: Disable multichannel metering (selected tracks)" }, "NF_DISABLE_MULTICHAN_MTR_SEL", DisableMultichannelMetering, NULL, 1 },
 	{ { DEFACCEL, "SWS/NF: Enable multichannel metering (all tracks)" }, "NF_ENABLE_MULTICHAN_MTR_ALL", EnableMultichannelMetering, NULL, 0 },
 	{ { DEFACCEL, "SWS/NF: Enable multichannel metering (selected tracks)" }, "NF_ENABLE_MULTICHAN_MTR_SEL", EnableMultichannelMetering, NULL, 1 },
-	
+	// #994, #995
+	{ { DEFACCEL, "SWS/NF: Cycle through MIDI recording modes" }, "NF_CYCLE_MIDI_RECORD_MODES", CycleMIDIRecordingModes },
+	// also register in ME section
+	{ { DEFACCEL, "SWS/NF: Cycle through MIDI recording modes" }, "NF_ME_CYCLE_MIDI_RECORD_MODES", NULL, NULL, 0, NULL, SECTION_MIDI_EDITOR, ME_CycleMIDIRecordingModes },
+	{ { DEFACCEL, "SWS/NF: Cycle through track automation modes" }, "NF_CYCLE_TRACK_AUTOMATION_MODES", CycleTrackAutomationModes },
+
+
 	//!WANT_LOCALIZE_1ST_STRING_END
 
 	{ {}, LAST_COMMAND, },
@@ -353,7 +413,7 @@ void EraserToolInit()
 		// set cursor in DoEraserTool(), otherwise it would get changed back by Reaper
 		ContinuousActionRegister(new BR_ContinuousAction(&s_commandTable[i], EraserToolInit, EraserToolUndo, NULL));
 	}
-		
+
 }
 
 void NF_RegisterContinuousActions()

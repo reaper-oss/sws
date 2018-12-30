@@ -1,7 +1,7 @@
 /******************************************************************************
 / Autorender.cpp
 /
-/ Copyright (c) 2011 Shane StClair
+/ Copyright (c) 2011-2018 Shane St Savage
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -34,7 +34,7 @@
 //#define UNICODE
 #include <time.h>
 
-#include "RenderTrack.h"
+#include "RenderRegion.h"
 
 #include "../reaper/localize.h"
 #include "../SnM/SnM_Dlg.h"
@@ -77,19 +77,13 @@ string g_tag_album;
 string g_tag_genre;
 int g_tag_year = GetCurrentYear();
 string g_tag_comment;
-bool g_prepend_track_number = false;
-string g_region_prefix;
-bool g_remove_region_prefix = true;
 bool g_doing_render = false;
 
 //Pref globals
-bool g_pref_allow_stems = false;
-bool g_pref_allow_addtoproj = false;
 string g_pref_default_render_path;
 
 #define METADATA_WINDOWPOS_KEY "AutorenderWindowPos"
 #define PREFS_WINDOWPOS_KEY "AutorenderPrefsWindowPos"
-#define ALLOW_STEMS_KEY "AutorenderAllowStemRender"
 #define DEFAULT_RENDER_PATH_KEY "AutorenderDefaultRenderPath"
 
 //#define TESTCODE
@@ -168,11 +162,10 @@ void TrimString( string &str ){
 	}
 }
 
-
-string ParseFileExtension( string path ){
-    if( path.find_last_of(".") != string::npos )
-        return path.substr( path.find_last_of(".") + 1 );
-    return "";
+string ParseFileExtension(string path){
+	if (path.find_last_of(".") != string::npos)
+		return path.substr(path.find_last_of(".") + 1);
+	return "";
 }
 
 void ParsePath( const char* path, char* parentDir ){
@@ -234,13 +227,6 @@ void WriteProjectFile( string filename, WDL_FastString* prjStr ){
     delete outProject;
 }
 
-/*
- void GetHeapBufFromChar(WDL_HeapBuf* buf, const char *str)
-{
-	strcpy((char*)buf->Resize(strlen(str)+1), str);
-}
-*/
-
 void WDLStringReplaceLine( WDL_FastString *prjStr, int pos, const char *oldLine, const char *newLine ){
 	//if newLine does't have a trailing \n, things will break because WDL_FastString will insert > at the wrong place!
 	//maybe should check for this here?
@@ -250,20 +236,38 @@ void WDLStringReplaceLine( WDL_FastString *prjStr, int pos, const char *oldLine,
 	prjStr->Insert( newLine, startPos );
 }
 
-void SetProjectParameter( WDL_FastString *prjStr, string param, string paramValue ){
+void SetProjectParameter( WDL_FastString *prjStr, string param, string paramValue, string insertAfterParam ){
 	char line[4096];
 	int pos = 0;
 	LineParser lp(false);
+	string paramString = param + string(" ") + paramValue + string("\n");
 
-	while( GetChunkLine( prjStr->Get(), line, 4096, &pos, false ) ){
+	while (GetChunkLine(prjStr->Get(), line, 4096, &pos, false)){
 		if( !lp.parse( line ) && lp.getnumtokens() ) {		
 			if ( strcmp( lp.gettoken_str(0), param.c_str() ) == 0) {
-				string replacementStr = param + string( " " ) + paramValue + string( "\n" );				
-				WDLStringReplaceLine( prjStr, pos, line, replacementStr.c_str() );
-				break;
+				WDLStringReplaceLine(prjStr, pos, line, paramString.c_str());
+				return;
 			}
 		}
-	}	
+	}
+
+	if (!insertAfterParam.empty()) {
+		//param wasn't found, insert after insertAfterParam
+		pos = 0;
+		while (GetChunkLine(prjStr->Get(), line, 4096, &pos, false)){
+			if (!lp.parse(line) && lp.getnumtokens()) {
+				if (strcmp(lp.gettoken_str(0), insertAfterParam.c_str()) == 0) {
+					string replacementStr = line + string("\n") + paramString;
+					WDLStringReplaceLine(prjStr, pos, line, replacementStr.c_str());
+					return;
+				}
+			}
+		}
+	}
+}
+
+void SetProjectParameter(WDL_FastString *prjStr, string param, string paramValue){
+	SetProjectParameter(prjStr, param, paramValue, "");
 }
 
 string GetProjectParameterValueStr( WDL_FastString *prjStr, string param, int token = 1 ){
@@ -282,50 +286,12 @@ string GetProjectParameterValueStr( WDL_FastString *prjStr, string param, int to
 	return "";
 }
 
-/*
-string GetProjectNotesParameter( WDL_FastString *prjStr, string param ){
-	char line[4096];
-	int pos = 0;
-	LineParser lp(false);
-	param = "|" + param; //Project note lines have a | prefix
-
-	bool inProjectNotes = false;
-
-	while( GetChunkLine( prjStr->Get(), line, 4096, &pos, false ) ){
-		if( !lp.parse( line ) && lp.getnumtokens() ) {	
-			if( inProjectNotes ){
-				if ( strcmp( lp.gettoken_str(0), ">" ) == 0) {
-					//end of project notes
-					return "";
-				} else if ( strcmp( lp.gettoken_str(0), param.c_str() ) == 0 ){
-					string paramVal = "";
-					for( int i = 1; i <= lp.getnumtokens(); i++ ){
-						if( i > 1 ) paramVal += " ";
-					}
-					TrimString( paramVal );
-					return paramVal;
-				}				
-			} else if ( strcmp( lp.gettoken_str(0), "<NOTES" ) == 0) {
-				inProjectNotes = true;
-				continue;
-			}
-		}
-	}
-
-	return "";
-}
-*/
-
 string GetQueuedRendersDir(){
 	ostringstream qrStream;
 	qrStream << GetResourcePath() << PATH_SLASH_CHAR << "QueuedRenders";
 	string qDir = qrStream.str();
 	CheckDirTree( qDir );
 	return qDir;
-}
-
-string GetCurrentRenderExtension( WDL_FastString *prjStr ){
-	return ParseFileExtension( GetProjectParameterValueStr( prjStr, "RENDER_FILE" ) );
 }
 
 void ReplaceChars( string *str, const char *illegalChars, const char *replaceChar = "" ){
@@ -354,13 +320,12 @@ void SanitizeFilename( string *fn ){
 #else
 	// Mac illegal chars
 	const char *illegalChars = ":";
-	// First char can't be a dot, doens't matter if we're prepending track numbers
-	if( !g_prepend_track_number && fn->substr(0,1) == "." ) fn->replace(0,1,"_");
+	// First char can't be a dot, doens't matter if we're prepending region numbers
+	if( !g_prepend_region_number && fn->substr(0,1) == "." ) fn->replace(0,1,"_");
 #endif
 
 	ReplaceChars( fn, illegalChars, "_" );
 }
-
 
 void ShowAutorenderHelp(COMMAND_T*) {
 	string helpText = __LOCALIZE("This is how it's done:\r\n\r\n","sws_DLG_158");
@@ -377,7 +342,6 @@ void ShowAutorenderHelp(COMMAND_T*) {
 	helpText.append(__LOCALIZE("will be rendered and tagged.\r\n\r\n","sws_DLG_158"));
 	DisplayInfoBox(GetMainHwnd(), __LOCALIZE("Autorender usage","sws_DLG_158"), helpText.c_str());
 }
-
 
 void EnsureStrEndsWith( string &str, const char endChar ){
 	if( str.c_str()[ str.length() - 1 ] != endChar ){
@@ -403,18 +367,6 @@ bool BrowseForRenderPath( char *renderPathChar ){
 	result = BrowseForDirectory(__LOCALIZE("Select render output directory","sws_DLG_158"), NULL, renderPathChar, 1024 );
 	return result;
 }
-
-/*#ifdef _WIN32
-void ExecuteWindowsProcess( char* cmd ){
-	STARTUPINFO info={sizeof(info)};
-	PROCESS_INFORMATION processInfo;
-	if (CreateProcess(NULL, cmd, NULL, NULL, TRUE, 0, NULL, NULL, &info, &processInfo)){
-		::WaitForSingleObject(processInfo.hProcess, INFINITE);
-		CloseHandle(processInfo.hProcess);
-		CloseHandle(processInfo.hThread);
-	}
-}
-#endif*/
 
 void OpenPathInFindplorer( const char* path ){
 	if( strlen( path ) ){
@@ -482,6 +434,31 @@ void NukeDirFiles( string dir, string ext = "" ){
 		}
 	}
 	closedir( dp );	
+}
+
+void GetRenderedFiles(string dir, vector<RenderRegion> regions, map <string, RenderRegion> &files){
+	DIR *dp;
+	struct dirent *dirp;
+	if ((dp = opendir(dir.c_str())) != NULL){
+		while ((dirp = readdir(dp)) != NULL){
+			string fileName = string(dirp->d_name);
+
+			if (!fileName.compare(".") || !fileName.compare("..")) {
+				continue;
+			}
+
+			for (std::vector<RenderRegion>::iterator region = regions.begin(); region != regions.end(); ++region) {
+				string regionFileNamePrefix = region->getFileName("", 2);
+				//TODO make sure filename sanitizing works as expected (REAPER internally handling during region rendering
+				if (!fileName.compare(0, regionFileNamePrefix.length(), regionFileNamePrefix)) {
+					string path = string(dir + PATH_SLASH_CHAR + fileName);
+					files.insert(pair <string, RenderRegion>(path, *region));
+					break;
+				}
+			}
+		}
+	}
+	closedir(dp);
 }
 
 void MakePathAbsolute( char* path, char* basePath ){
@@ -629,20 +606,7 @@ void AutorenderRegions(COMMAND_T*)
 		ForceSaveAndLoad( &prjStr );
 	}
 
-	string renderFileExtension = GetCurrentRenderExtension( &prjStr );
-	if( renderFileExtension.empty() ){
-/*JFB commented: fallback to wav
-		//have to have a renderFileExtension, show error and exit
-		MessageBox( GetMainHwnd(), __LOCALIZE("Couldn't get render extension. Manually render a dummy file with the desired settings and run again.","sws_mbox"), __LOCALIZE("Autorender - Error","sws_mbox"), MB_OK );
-		g_doing_render = false;
-		return;
-*/
-    renderFileExtension="wav";
-	}
-
 	//Project tweaks - only do after render path check! (Don't want to overwrite users settings in the original file)
-	SetProjectParameter( &prjStr, "RENDER_ADDTOPROJ", "0" );	
-	if( !g_pref_allow_stems ) SetProjectParameter( &prjStr, "RENDER_STEMS", "0" );
 	MakeMediaFilesAbsolute( &prjStr );
 
 	string queuedRendersDir = GetQueuedRendersDir(); // This also checks to make sure that the dir exists
@@ -655,113 +619,93 @@ void AutorenderRegions(COMMAND_T*)
 	string outRenderProjectPrefix = outRenderProjectPrefixStream.str();
 	
 	//init the stuff we need for the region loop
-	int marker_index = 0, track_index = 0, idx;
+	int marker_index = 0, region_index = 0, idx;
 	bool isrgn;
 	double pos, rgnend;
-	const char* track_name;
-	vector<RenderTrack> renderTracks;
+	const char* region_name;
+	vector<RenderRegion> renderRegions;
 	map<int,bool> foundIdx;
 
-	//Loop through regions, build RenderTrack vector
-	while( EnumProjectMarkers( marker_index++, &isrgn, &pos, &rgnend, &track_name, &idx) > 0 ){
+	//Loop through regions, build RenderRegion vector (this is just for tracking what to tag)
+	while( EnumProjectMarkers( marker_index++, &isrgn, &pos, &rgnend, &region_name, &idx) > 0 ){
 		if( isrgn == true && foundIdx.find( idx ) == foundIdx.end() ){
 			foundIdx[ idx ] = true;
 
-			RenderTrack renderTrack;
-			if( strlen( track_name ) > 0 ){
-				renderTrack.trackName = track_name;
-				// If a region prefix has been specified, check to see if this region has it and skip if not
-				if( !g_region_prefix.empty() ){
-					if( !hasPrefix( renderTrack.trackName, g_region_prefix ) ) continue;
-					if( g_remove_region_prefix ){
-						renderTrack.trackName.erase( 0, g_region_prefix.length() );
-					}
-				}
-
-				renderTrack.sanitizedTrackName = renderTrack.trackName;
-				SanitizeFilename( &renderTrack.sanitizedTrackName );
-			} else {
-				// If a region prefix has been specified, skip this track
-				if( !g_region_prefix.empty() ) continue;
+			RenderRegion renderRegion;
+			if( strlen( region_name ) > 0 ){
+				renderRegion.regionName = region_name;
+				renderRegion.sanitizedRegionName = region_name;
+				SanitizeFilename( &renderRegion.sanitizedRegionName );
 			}
 
-			renderTrack.trackNumber = ++track_index;
-			renderTrack.trackStartTime = pos;
-			renderTrack.trackEndTime = rgnend;
-			renderTracks.push_back( renderTrack );
+			renderRegion.regionNumber = ++region_index;
+			renderRegions.push_back( renderRegion );
 		}
 	}
 
 	foundIdx.clear(); 
 	
-	if( renderTracks.size() == 0 ){
+	if( renderRegions.size() == 0 ){
 		//Render entire project with tagging
 		string prjNameStr = ARGetProjectName();
-		WDL_FastString trackPrjStr(prjStr);
-		RenderTrack renderTrack;
-		renderTrack.trackNumber = 1;
-		renderTrack.trackName = prjNameStr;
-		renderTrack.sanitizedTrackName = prjNameStr;
-		SanitizeFilename( &renderTrack.sanitizedTrackName );
-		renderTrack.entireProject = true;
-		renderTracks.push_back( renderTrack );
+		RenderRegion renderRegion;
+		renderRegion.regionNumber = 1;
+		renderRegion.regionName = prjNameStr;
+		renderRegion.sanitizedRegionName = prjNameStr;
+		SanitizeFilename( &renderRegion.sanitizedRegionName );
+		renderRegion.entireProject = true;
+		renderRegions.push_back( renderRegion );
 	}
 
-	// Get number of digits to pad the track numbers with...at least two
-	int trackNumberPad = (int) max( 2, floor( log10( (double) renderTracks.size() ) ) + 1 );
+	// Get number of digits to pad the region numbers with...at least two
+	int regionNumberPad = (int) max( 2, floor( log10( (double) renderRegions.size() ) ) + 1 );
 
-	// Set to zero if prepending track numbers is turned off
-	int prependTrackNumberPad = g_prepend_track_number ? trackNumberPad : 0;
-
-	//Set nameless tracks to Track XX
-	for( unsigned int i = 0; i < renderTracks.size(); i++){		
-		if( renderTracks[i].trackName.empty() ){
-			renderTracks[i].trackName = "Track " + renderTracks[i].getPaddedTrackNumber( trackNumberPad );
-			renderTracks[i].sanitizedTrackName = renderTracks[i].trackName;
+	//Set nameless regions to region_XX
+	for( unsigned int i = 0; i < renderRegions.size(); i++){
+		if( renderRegions[i].regionName.empty() ){
+			renderRegions[i].regionName = "region_" + renderRegions[i].getPaddedRegionNumber( regionNumberPad );
+			renderRegions[i].sanitizedRegionName = renderRegions[i].regionName;
 		}
-	}
-
-	if( !g_prepend_track_number ){
-		//Set duplicate numbers so that tracks can't overwrite each other when track number prepending is off
-		//Although, this could still happen (e.g. if two tracks were named Song and another was named Song(2) )
-		map<string,int> trackDuplicates;
-		for( unsigned int i = 0; i < renderTracks.size(); i++){		
-			if( trackDuplicates[ renderTracks[i].trackName ] ){
-				renderTracks[i].duplicateNumber = ++trackDuplicates[ renderTracks[i].trackName ];
-			} else {
-				trackDuplicates[ renderTracks[i].trackName ] = 1;
-			}
-		}
-		trackDuplicates.clear();
 	}
 
 	//Build render queue
-	for( unsigned int i = 0; i < renderTracks.size(); i++){		
-		WDL_FastString trackPrjStr(prjStr);
+	//a single project with fixed render parameters is added to the queue, which renders all regions
+	string outRenderProjectPath = outRenderProjectPrefix;
+	outRenderProjectPath += GetRenderQueueTimeString() + "_" + ARGetProjectName() + "_autorender.rpp";
 
-		string outRenderProjectPath = outRenderProjectPrefix;
-		outRenderProjectPath += GetRenderQueueTimeString() + "_" + ARGetProjectName() + "_";
-		outRenderProjectPath += renderTracks[i].getFileName("rpp", trackNumberPad );
-
-		string renderFilePath = g_render_path + PATH_SLASH_CHAR + renderTracks[i].getFileName( renderFileExtension, prependTrackNumberPad );						
-		SetProjectParameter( &trackPrjStr, "RENDER_FILE", "\"" + renderFilePath + "\"" );
-
-		if( renderTracks[i].entireProject ){
-			SetProjectParameter( &trackPrjStr, "RENDER_RANGE", "1 0 0" ); //Render entire project			
+	if (renderRegions.size() == 1 && renderRegions[0].entireProject) {
+		string regionFilename = renderRegions[0].getFileName("", 2);
+		if (g_render_path.empty()){
+			SetProjectParameter(&prjStr, "RENDER_FILE", "\"" + regionFilename + "\"");
 		} else {
-			ostringstream renderRange;
-			renderRange << "0 " << renderTracks[i].trackStartTime << " " << renderTracks[i].trackEndTime;
-			SetProjectParameter( &trackPrjStr, "RENDER_RANGE", renderRange.str() );	
+			SetProjectParameter(&prjStr, "RENDER_FILE", "\"" + g_render_path + PATH_SLASH_CHAR + regionFilename + "\"");
 		}
-		
-		WriteProjectFile( outRenderProjectPath, &trackPrjStr );
+
+		SetProjectParameter(&prjStr, "RENDER_RANGE", "1 0 0 18 1000");
+	} else {
+		if (!g_render_path.empty()){
+			SetProjectParameter(&prjStr, "RENDER_FILE", "\"" + g_render_path + "\"");
+		}
+
+		SetProjectParameter(&prjStr, "RENDER_PATTERN", "\"$timelineorder $region\"", "RENDER_FILE");
+		SetProjectParameter(&prjStr, "RENDER_RANGE", "3 0 0 18 1000");
 	}
+
+	SetProjectParameter(&prjStr, "RENDER_STEMS", "0");
+	SetProjectParameter(&prjStr, "RENDER_ADDTOPROJ", "0");
+
+	WriteProjectFile(outRenderProjectPath, &prjStr);
 
 	Main_OnCommand( 41207, 0 ); //Render all queued renders
 
+	map<string, RenderRegion> renderedFiles;
+	GetRenderedFiles(g_render_path, renderRegions, renderedFiles);
+
 	// Tag!
-	for( unsigned int i = 0; i < renderTracks.size(); i++){		
-		string renderedFilePath = g_render_path + PATH_SLASH_CHAR + renderTracks[i].getFileName( renderFileExtension, prependTrackNumberPad );
+	for (std::map<string, RenderRegion>::iterator renderedFile = renderedFiles.begin(); renderedFile != renderedFiles.end(); ++renderedFile){
+		string renderedFilePath = renderedFile->first;
+		RenderRegion renderRegion = renderedFile->second;
+
 #ifndef NO_TAGLIB
 #ifdef _WIN32
 		wchar_t* w_rendered_path = WideCharPlz( renderedFilePath.c_str() );
@@ -775,20 +719,20 @@ void AutorenderRegions(COMMAND_T*)
 			wchar_t* w_tag_album = WideCharPlz( g_tag_album.c_str() );
 			wchar_t* w_tag_genre = WideCharPlz( g_tag_genre.c_str() );
 			wchar_t* w_tag_comment = WideCharPlz( g_tag_comment.c_str() );
-			wchar_t* w_track_title = WideCharPlz( renderTracks[i].trackName.c_str() );
+			wchar_t* w_region_title = WideCharPlz( renderRegion.regionName.c_str() );
 
 			if( wcslen( w_tag_artist ) ) f.tag()->setArtist( w_tag_artist );
 			if( wcslen( w_tag_album ) ) f.tag()->setAlbum( w_tag_album );
 			if( wcslen( w_tag_genre ) ) f.tag()->setGenre( w_tag_genre );
 			if( wcslen( w_tag_comment ) ) f.tag()->setComment( w_tag_comment );
 
-			f.tag()->setTitle( w_track_title );
+			f.tag()->setTitle( w_region_title );
 			
 			delete [] w_tag_artist;
 			delete [] w_tag_album;
 			delete [] w_tag_genre;
 			delete [] w_tag_comment;
-			delete [] w_track_title;
+			delete [] w_region_title;
 #else
       if( !g_tag_artist.empty() )
       {
@@ -800,7 +744,7 @@ void AutorenderRegions(COMMAND_T*)
         TagLib::String s(g_tag_album.c_str(), TagLib::String::UTF8);
         f.tag()->setAlbum(s);
       }
-      if( !g_tag_genre.empty() )
+      if( !g_.tag_genre.empty() )
       {
         TagLib::String s(g_tag_genre.c_str(), TagLib::String::UTF8);
         f.tag()->setGenre(s);
@@ -811,12 +755,12 @@ void AutorenderRegions(COMMAND_T*)
         f.tag()->setComment(s);
       }
       {
-        TagLib::String s(renderTracks[i].trackName.c_str(), TagLib::String::UTF8);
+		  TagLib::String s(renderRegion.regionName.c_str(), TagLib::String::UTF8);
         f.tag()->setTitle(s);
       }
 #endif
 			if( g_tag_year > 0 ) f.tag()->setYear( g_tag_year );
-			f.tag()->setTrack( i + 1 );
+			f.tag()->setTrack( renderRegion.regionNumber);
 			f.save();
 		} else {
 			//throw error?
@@ -832,7 +776,6 @@ void AutorenderRegions(COMMAND_T*)
 	
 	//NukeDirFiles( queuedRendersDir, "rpp" ); //Maybe cleanup .rpp here too?
 }
-
 
 void processDialogFieldStr( HWND hwndDlg, WPARAM wParam, string &target, bool &hasChanged ){
 	char dlg_field[512];
@@ -868,7 +811,6 @@ void processDialogFieldCheck( HWND hwndDlg, WPARAM wParam, bool &target, bool &h
 }
 
 void loadPrefs(){
-	g_pref_allow_stems = GetPrivateProfileInt( SWS_INI, ALLOW_STEMS_KEY, 0, get_ini_file() ) != 0;
 	char def_render_path[MAX_PATH];
 	GetPrivateProfileString( SWS_INI, DEFAULT_RENDER_PATH_KEY, "", def_render_path, MAX_PATH, get_ini_file() );
 	g_pref_default_render_path = def_render_path;
@@ -889,9 +831,6 @@ INT_PTR WINAPI doAutorenderMetadata(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 				SetDlgItemInt(hwndDlg, IDC_YEAR, g_tag_year, false );
 				SetDlgItemText(hwndDlg, IDC_COMMENT, g_tag_comment.c_str() );
 				SetDlgItemText(hwndDlg, IDC_RENDER_PATH, g_render_path.c_str() );
-				SetDlgItemText(hwndDlg, IDC_REGION_PREFIX, g_region_prefix.c_str() );
-				CheckDlgButton(hwndDlg, IDC_REMOVE_PREFIX_FROM_TRACK_NAME, g_remove_region_prefix);
-				CheckDlgButton(hwndDlg, IDC_PREPEND_TRACK_NUMBER, g_prepend_track_number);
 				return 0;
             case WM_COMMAND:
 				switch (LOWORD(wParam)){
@@ -901,11 +840,6 @@ INT_PTR WINAPI doAutorenderMetadata(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 						browseResult = BrowseForRenderPath(renderPathChar);
 						if( browseResult ) SetDlgItemText(hwndDlg, IDC_RENDER_PATH, renderPathChar );
 						break;
-					case IDC_REGION_PREFIX:
-						char prefixChar[256];
-						GetDlgItemText(hwndDlg, IDC_REGION_PREFIX, prefixChar, 256);
-						EnableWindow( GetDlgItem(hwndDlg, IDC_REMOVE_PREFIX_FROM_TRACK_NAME), strlen( prefixChar ) > 0 );
-						break;
                     case IDOK:
 						processDialogFieldStr( hwndDlg, IDC_ARTIST, g_tag_artist, hasChanged );
 						processDialogFieldStr( hwndDlg, IDC_ALBUM, g_tag_album, hasChanged );
@@ -913,9 +847,6 @@ INT_PTR WINAPI doAutorenderMetadata(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 						processDialogFieldInt( hwndDlg, IDC_YEAR, g_tag_year, hasChanged );
 						processDialogFieldStr( hwndDlg, IDC_COMMENT, g_tag_comment, hasChanged );
 						processDialogFieldStr( hwndDlg, IDC_RENDER_PATH, g_render_path, hasChanged );
-						processDialogFieldStr( hwndDlg, IDC_REGION_PREFIX, g_region_prefix, hasChanged );
-						processDialogFieldCheck( hwndDlg, IDC_REMOVE_PREFIX_FROM_TRACK_NAME, g_remove_region_prefix, hasChanged );
-						processDialogFieldCheck( hwndDlg, IDC_PREPEND_TRACK_NUMBER, g_prepend_track_number, hasChanged );						
 
 						if( hasChanged ) Undo_OnStateChangeEx(__LOCALIZE("Set autorender metadata","sws_undo"), UNDO_STATE_MISCCFG, -1);
                         // fall through!
@@ -946,7 +877,6 @@ INT_PTR WINAPI doAutorenderPreferences(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
             case WM_INITDIALOG:
 				loadPrefs();
 				RestoreWindowPos(hwndDlg, METADATA_WINDOWPOS_KEY, false);
-				CheckDlgButton(hwndDlg, IDC_ALLOW_STEMS, g_pref_allow_stems);
 				SetDlgItemText(hwndDlg, IDC_DEFAULT_RENDER_PATH, g_pref_default_render_path.c_str() );
 				return 0;
             case WM_COMMAND:
@@ -960,9 +890,6 @@ INT_PTR WINAPI doAutorenderPreferences(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
 						}
 						break;
                     case IDOK:
-						g_pref_allow_stems = IsDlgButtonChecked(hwndDlg, IDC_ALLOW_STEMS) != 0;
-						WritePrivateProfileString(SWS_INI, ALLOW_STEMS_KEY, bool_to_char( g_pref_allow_stems ), get_ini_file());
-
 						processDialogFieldStr( hwndDlg, IDC_DEFAULT_RENDER_PATH, g_pref_default_render_path, hasChangedDontCare );
 						WritePrivateProfileString(SWS_INI, DEFAULT_RENDER_PATH_KEY, g_pref_default_render_path.c_str(), get_ini_file());
                         // fall through!
@@ -1016,16 +943,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 					g_tag_comment = lp.gettoken_str(1);
 				} else if ( !strcmp(lp.gettoken_str(0), "RENDER_PATH") ){
 					g_render_path = lp.gettoken_str(1);
-				} else if ( !strcmp(lp.gettoken_str(0), "REGION_PREFIX") ){
-					g_region_prefix = lp.gettoken_str(1);
-				} else if ( !strcmp(lp.gettoken_str(0), "REMOVE_REGION_PREFIX") ){
-					g_remove_region_prefix = lp.gettoken_int(1) != 0;
-				} else if ( !strcmp(lp.gettoken_str(0), "PREPEND_TRACK_NUMBER") ){
-					g_prepend_track_number = lp.gettoken_int(1) != 0;
 				}
-
-				
-
 			} else {
 				break;
 			}
@@ -1058,8 +976,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 	// then there will be a warning with every project file about unknown ext data
 	// If only the year is set, don't write anything either.
 	if (!g_tag_artist.empty() || !g_tag_album.empty() || !g_tag_genre.empty() ||
-		!g_tag_comment.empty() || !g_render_path.empty() || !g_region_prefix.empty()
-		|| !g_prepend_track_number || !g_remove_region_prefix )
+		!g_tag_comment.empty() || !g_render_path.empty() )
 	{
 		ctx->AddLine("<AUTORENDER");
 	
@@ -1087,14 +1004,6 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 			writeAutorenderSettingString( ctx, "RENDER_PATH", g_render_path );
 		}
 
-		if( !g_region_prefix.empty() ){
-			writeAutorenderSettingString( ctx, "REGION_PREFIX", g_region_prefix );
-		}
-		
-		writeAutorenderSettingInt( ctx, "REMOVE_REGION_PREFIX", int( g_remove_region_prefix ) );
-
-		writeAutorenderSettingInt( ctx, "PREPEND_TRACK_NUMBER", int( g_prepend_track_number ) );
-
 		ctx->AddLine(">");
 	}
 }
@@ -1108,9 +1017,6 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 	g_tag_year = GetCurrentYear();
 	g_tag_comment.clear();
 	g_render_path.clear();	
-	g_prepend_track_number = true;
-	g_region_prefix.clear();
-	g_remove_region_prefix = true;
 }
 
 static project_config_extension_t g_projectconfig = { ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL };

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Resource Files">
@@ -296,9 +296,6 @@
       <Filter>Fingers</Filter>
     </ClInclude>
     <ClInclude Include="Autorender\Autorender.h">
-      <Filter>Autorender</Filter>
-    </ClInclude>
-    <ClInclude Include="Autorender\RenderTrack.h">
       <Filter>Autorender</Filter>
     </ClInclude>
     <ClInclude Include="MarkerActions\MarkerActions.h">
@@ -636,6 +633,8 @@
     </ClInclude>
     <ClInclude Include="nofish\NF_ReaScript.h">
       <Filter>nofish</Filter>
+    <ClInclude Include="Autorender\RenderRegion.h">
+      <Filter>Autorender</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -898,9 +897,6 @@
       <Filter>Fingers</Filter>
     </ClCompile>
     <ClCompile Include="Autorender\Autorender.cpp">
-      <Filter>Autorender</Filter>
-    </ClCompile>
-    <ClCompile Include="Autorender\RenderTrack.cpp">
       <Filter>Autorender</Filter>
     </ClCompile>
     <ClCompile Include="MarkerActions\MarkerActions.cpp">
@@ -1274,6 +1270,8 @@
     </ClCompile>
     <ClCompile Include="nofish\NF_ReaScript.cpp">
       <Filter>nofish</Filter>
+    <ClCompile Include="Autorender\RenderRegion.cpp">
+      <Filter>Autorender</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -464,7 +464,7 @@ echo Warning: sws_python.py generation failed (Perl installed?)
     <ClInclude Include="Fingers\StringUtil.h" />
     <ClInclude Include="Fingers\TimeMap.h" />
     <ClInclude Include="Autorender\Autorender.h" />
-    <ClInclude Include="Autorender\RenderTrack.h" />
+    <ClInclude Include="Autorender\RenderRegion.h" />
     <ClInclude Include="MarkerActions\MarkerActions.h" />
     <ClInclude Include="MarkerList\MarkerList.h" />
     <ClInclude Include="MarkerList\MarkerListActions.h" />
@@ -1291,7 +1291,7 @@ echo Warning: sws_python.py generation failed (Perl installed?)
     <ClCompile Include="Fingers\StringUtil.cpp" />
     <ClCompile Include="Fingers\TimeMap.cpp" />
     <ClCompile Include="Autorender\Autorender.cpp" />
-    <ClCompile Include="Autorender\RenderTrack.cpp" />
+    <ClCompile Include="Autorender\RenderRegion.cpp" />
     <ClCompile Include="MarkerActions\MarkerActions.cpp" />
     <ClCompile Include="MarkerList\MarkerList.cpp" />
     <ClCompile Include="MarkerList\MarkerListActions.cpp" />

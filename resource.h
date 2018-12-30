@@ -311,17 +311,12 @@
 #define IDC_RENDER_PATH                 1213
 #define IDC_BROWSE                      1214
 #define IDC_DONTSHOW                    1215
-#define IDC_ALLOW_STEMS                 1219
 #define IDC_DEFAULT_RENDER_PATH         1221
-#define IDC_PREPEND_TRACK_NUMBER        1222
-#define IDC_REGION_PREFIX               1223
 #define IDC_STATIC_ARTIST               1224
 #define IDC_STATIC_ALBUM                1225
 #define IDC_STATIC_GENRE                1226
 #define IDC_STATIC_YEAR                 1227
 #define IDC_STATIC_COMMENT              1228
-#define IDC_STATIC_REGION_PREFIX        1229
-#define IDC_REMOVE_PREFIX_FROM_TRACK_NAME 1230
 #define IDC_DRAGSCALE                   1230
 #define IDC_LIST1                       1231
 #define IDC_LIST2                       1232

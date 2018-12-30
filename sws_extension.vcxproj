@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Release|Win32">
@@ -441,7 +441,6 @@ echo Warning: sws_python.py generation failed (Perl installed?)
     <ClInclude Include="Padre\padreRmeTotalmix.h" />
     <ClInclude Include="Padre\padreUtils.h" />
     <ClInclude Include="Fingers\CommandHandler.h" />
-    <ClInclude Include="Fingers\Envelope.h" />
     <ClInclude Include="Fingers\EnvelopeCommands.h" />
     <ClInclude Include="Fingers\FNG_client.h" />
     <ClInclude Include="Fingers\FNG_Settings.h" />
@@ -1271,7 +1270,6 @@ echo Warning: sws_python.py generation failed (Perl installed?)
     <ClCompile Include="Padre\padreRmeTotalmix.cpp" />
     <ClCompile Include="Padre\padreUtils.cpp" />
     <ClCompile Include="Fingers\CommandHandler.cpp" />
-    <ClCompile Include="Fingers\Envelope.cpp" />
     <ClCompile Include="Fingers\EnvelopeCommands.cpp" />
     <ClCompile Include="Fingers\FNG.cpp" />
     <ClCompile Include="Fingers\GrooveCommands.cpp" />

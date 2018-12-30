@@ -920,7 +920,168 @@ bool BR_TrackFX_GetFXModuleName (MediaTrack* track, int fx, char* nameOut, int n
 	return found;
 }
 
-int BR_Win32_GetPrivateProfileString (const char* sectionName, const char* keyName, const char* defaultString, const char* filePath, char* stringOut, int stringOut_sz)
+int BR_Win32_CB_FindString(void* comboBoxHwnd, int startId, const char* string)
+{
+	if (comboBoxHwnd && string)
+		return (int)SendMessage((HWND)comboBoxHwnd, CB_FINDSTRING, (WPARAM)startId, (LPARAM)string);
+	else
+		return CB_ERR;
+}
+
+int BR_Win32_CB_FindStringExact(void* comboBoxHwnd, int startId, const char* string)
+{
+	if (comboBoxHwnd && string)
+		return (int)SendMessage((HWND)comboBoxHwnd, CB_FINDSTRINGEXACT, (WPARAM)startId, (LPARAM)string);
+	else
+		return CB_ERR;
+}
+
+void BR_Win32_ClientToScreen(void* hwnd, int xIn, int yIn, int* xOut, int* yOut)
+{
+	POINT p;
+	p.x = xIn;
+	p.y = yIn;
+
+	ClientToScreen((HWND)hwnd, &p);
+	WritePtr(xOut, (int)p.x);
+	WritePtr(yOut, (int)p.y);
+}
+
+void* BR_Win32_FindWindowEx(const char* hwndParent, const char* hwndChildAfter, const char* className, const char* windowName, bool searchClass, bool searchName)
+{
+	return (void*)FindWindowEx((HWND)BR_Win32_StringToHwnd(hwndParent), (HWND)BR_Win32_StringToHwnd(hwndChildAfter), searchClass ? className : NULL, searchName ? windowName : NULL);
+}
+
+int BR_Win32_GET_X_LPARAM(int lParam)
+{
+	return GET_X_LPARAM(lParam);
+}
+
+int BR_Win32_GET_Y_LPARAM(int lParam)
+{
+	return GET_Y_LPARAM(lParam);
+}
+
+int BR_Win32_GetConstant(const char* constantName)
+{
+#ifndef _WIN32
+#define SW_MAXIMIZE         0x3
+#define SWP_NOOWNERZORDER   0x0200
+#define WS_MAXIMIZE         0x01000000L
+#define WS_MAXIMIZEBOX      0x00010000L
+#define WS_MINIMIZEBOX      0x00020000L
+#define WS_OVERLAPPED       0x00000000L
+#define WS_OVERLAPPEDWINDOW WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX
+#endif
+
+	int constant = -1;
+	if (constantName)
+	{
+		if (!strcmp(constantName, "CB_ERR"))              constant = CB_ERR;
+		else if (!strcmp(constantName, "CB_GETCOUNT"))         constant = CB_GETCOUNT;
+		else if (!strcmp(constantName, "CB_GETCURSEL"))        constant = CB_GETCURSEL;
+		else if (!strcmp(constantName, "CB_SETCURSEL"))        constant = CB_SETCURSEL;
+		else if (!strcmp(constantName, "EM_SETSEL"))           constant = EM_SETSEL;
+		else if (!strcmp(constantName, "GW_CHILD"))            constant = GW_CHILD;
+		else if (!strcmp(constantName, "GW_HWNDFIRST"))        constant = GW_HWNDFIRST;
+		else if (!strcmp(constantName, "GW_HWNDLAST"))         constant = GW_HWNDLAST;
+		else if (!strcmp(constantName, "GW_HWNDNEXT"))         constant = GW_HWNDNEXT;
+		else if (!strcmp(constantName, "GW_HWNDPREV"))         constant = GW_HWNDPREV;
+		else if (!strcmp(constantName, "GW_OWNER"))            constant = GW_OWNER;
+		else if (!strcmp(constantName, "GWL_STYLE"))           constant = GWL_STYLE;
+		else if (!strcmp(constantName, "SW_HIDE"))             constant = SW_HIDE;
+		else if (!strcmp(constantName, "SW_MAXIMIZE"))         constant = SW_MAXIMIZE;
+		else if (!strcmp(constantName, "SW_SHOW"))             constant = SW_SHOW;
+		else if (!strcmp(constantName, "SW_SHOWMINIMIZED"))    constant = SW_SHOWMINIMIZED;
+		else if (!strcmp(constantName, "SW_SHOWNA"))           constant = SW_SHOWNA;
+		else if (!strcmp(constantName, "SW_SHOWNOACTIVATE"))   constant = SW_SHOWNOACTIVATE;
+		else if (!strcmp(constantName, "SW_SHOWNORMAL"))       constant = SW_SHOWNORMAL;
+		else if (!strcmp(constantName, "SWP_FRAMECHANGED"))    constant = SWP_FRAMECHANGED;
+		else if (!strcmp(constantName, "SWP_NOACTIVATE"))      constant = SWP_FRAMECHANGED;
+		else if (!strcmp(constantName, "SWP_NOMOVE"))          constant = SWP_NOMOVE;
+		else if (!strcmp(constantName, "SWP_NOOWNERZORDER"))   constant = SWP_NOOWNERZORDER;
+		else if (!strcmp(constantName, "SWP_NOSIZE"))          constant = SWP_NOSIZE;
+		else if (!strcmp(constantName, "SWP_NOZORDER"))        constant = SWP_NOZORDER;
+		else if (!strcmp(constantName, "VK_DOWN"))             constant = VK_DOWN;
+		else if (!strcmp(constantName, "VK_UP"))               constant = VK_UP;
+		else if (!strcmp(constantName, "WM_CLOSE"))            constant = WM_CLOSE;
+		else if (!strcmp(constantName, "WM_KEYDOWN"))          constant = WM_KEYDOWN;
+		else if (!strcmp(constantName, "WS_MAXIMIZE"))         constant = WS_MAXIMIZE;
+		else if (!strcmp(constantName, "WS_OVERLAPPEDWINDOW")) constant = WS_OVERLAPPEDWINDOW;
+		else                                                   constant = -1;
+	}
+
+#ifndef _WIN32
+#undef SW_MAXIMIZE
+#undef SWP_NOOWNERZORDER
+#undef WS_MAXIMIZE
+#undef WS_MAXIMIZE
+#undef WS_MAXIMIZEBOX
+#undef WS_MINIMIZEBOX
+#undef WS_OVERLAPPED
+#undef WS_OVERLAPPEDWINDOW
+#endif
+	return constant;
+}
+
+bool BR_Win32_GetCursorPos(int* xOut, int* yOut)
+{
+	POINT p;
+	bool result;
+#ifdef _WIN32
+	result = !!GetCursorPos(&p);
+#else
+	result = true;
+	GetCursorPos(&p);
+#endif
+
+	WritePtr(xOut, (int)p.x);
+	WritePtr(yOut, (int)p.y);
+	return result;
+}
+
+void* BR_Win32_GetFocus()
+{
+	return (void*)GetFocus();
+}
+
+void* BR_Win32_GetForegroundWindow()
+{
+	return (void*)GetForegroundWindow();
+}
+
+void* BR_Win32_GetMainHwnd()
+{
+	return (void*)g_hwndParent;
+}
+
+void* BR_Win32_GetMixerHwnd(bool* isDockedOut)
+{
+	HWND mixerHwnd = GetMixerWnd();
+
+	WritePtr(isDockedOut, DockIsChildOfDock(mixerHwnd, NULL) != -1);
+	return (void*)mixerHwnd;
+}
+
+void BR_Win32_GetMonitorRectFromRect(bool workingAreaOnly, int leftIn, int topIn, int rightIn, int bottomIn, int* leftOut, int* topOut, int* rightOut, int* bottomOut)
+{
+	RECT r = { leftIn, topIn, rightIn, bottomIn };
+	RECT monitorRect = { 0, 0 ,0 , 0 };
+
+	GetMonitorRectFromRect(r, workingAreaOnly, &monitorRect);
+
+	WritePtr(leftOut, (int)monitorRect.left);
+	WritePtr(topOut, (int)monitorRect.top);
+	WritePtr(rightOut, (int)monitorRect.right);
+	WritePtr(bottomOut, (int)monitorRect.bottom);
+}
+
+void* BR_Win32_GetParent(void* hwnd)
+{
+	return (void*)GetParent((HWND)hwnd);
+}
+
+int BR_Win32_GetPrivateProfileString(const char* sectionName, const char* keyName, const char* defaultString, const char* filePath, char* stringOut, int stringOut_sz)
 {
 	if(!strlen(keyName))
 		return 0;
@@ -928,16 +1089,389 @@ int BR_Win32_GetPrivateProfileString (const char* sectionName, const char* keyNa
 	return (int)GetPrivateProfileString(sectionName, keyName, defaultString, stringOut, stringOut_sz, filePath);
 }
 
-int BR_Win32_ShellExecute (const char* operation, const char* file, const char* parameters, const char* directoy, int showFlags)
+void* BR_Win32_GetWindow(void* hwnd, int cmd)
+{
+	return (void*)GetWindow((HWND)hwnd, cmd);
+}
+
+int BR_Win32_GetWindowLong(void* hwnd, int index)
+{
+	return (int)GetWindowLong((HWND)hwnd, index);
+}
+
+bool BR_Win32_GetWindowRect(void* hwnd, int* leftOut, int* topOut, int* rightOut, int* bottomOut)
+{
+	RECT r;
+	bool result = !!GetWindowRect((HWND)hwnd, &r);
+
+	WritePtr(leftOut, (int)r.left);
+	WritePtr(topOut, (int)r.top);
+	WritePtr(rightOut, (int)r.right);
+	WritePtr(bottomOut, (int)r.bottom);
+	return result;
+}
+
+int BR_Win32_GetWindowText(void* hwnd, char* textOut, int textOut_sz)
+{
+	return GetWindowText((HWND)hwnd, textOut, textOut_sz);
+}
+
+int BR_Win32_HIBYTE(int value)
+{
+	return HIBYTE(value);
+}
+
+int BR_Win32_HIWORD(int value)
+{
+	return HIWORD(value);
+}
+
+void BR_Win32_HwndToString(void* hwnd, char* stringOut, int stringOut_sz)
+{
+	_snprintfSafe(stringOut, stringOut_sz, "%lld", (long long)(HWND)hwnd);
+}
+
+bool BR_Win32_IsWindow(void* hwnd)
+{
+	return SWS_IsWindow((HWND)hwnd);
+}
+
+bool BR_Win32_IsWindowVisible(void* hwnd)
+{
+	return !!IsWindowVisible((HWND)hwnd);
+}
+
+int BR_Win32_LOBYTE(int value)
+{
+	return LOBYTE(value);
+}
+
+int BR_Win32_LOWORD(int value)
+{
+	return LOWORD(value);
+}
+
+int BR_Win32_MAKELONG(int low, int high)
+{
+	return MAKELONG(low, high);
+}
+
+int BR_Win32_MAKELPARAM(int low, int high)
+{
+	return MAKELPARAM(low, high);
+}
+
+int BR_Win32_MAKELRESULT(int low, int high)
+{
+	return MAKELRESULT(low, high);
+}
+
+int BR_Win32_MAKEWORD(int low, int high)
+{
+	return MAKEWORD(low, high);
+}
+
+int BR_Win32_MAKEWPARAM(int low, int high)
+{
+	return MAKEWPARAM(low, high);
+}
+
+void* BR_Win32_MIDIEditor_GetActive()
+{
+	return (void*)MIDIEditor_GetActive();
+}
+
+void BR_Win32_ScreenToClient(void* hwnd, int xIn, int yIn, int* xOut, int* yOut)
+{
+	POINT p;
+	p.x = xIn;
+	p.y = yIn;
+
+	ScreenToClient((HWND)hwnd, &p);
+	WritePtr(xOut, (int)p.x);
+	WritePtr(yOut, (int)p.y);
+}
+
+int BR_Win32_SendMessage(void* hwnd, int msg, int lParam, int wParam)
+{
+	return (int)SendMessage((HWND)hwnd, msg, lParam, wParam);
+}
+
+void* BR_Win32_SetFocus(void* hwnd)
+{
+#ifdef _WIN32
+	return (void*)SetFocus((HWND)hwnd);
+#else
+	SetFocus((HWND)hwnd);
+	return hwnd;
+#endif
+}
+
+int BR_Win32_SetForegroundWindow(void* hwnd)
+{
+#ifdef _WIN32
+	return SetForegroundWindow((HWND)hwnd);
+#else
+	SetForegroundWindow((HWND)hwnd);
+	return !!hwnd;
+#endif
+}
+
+int BR_Win32_SetWindowLong(void* hwnd, int index, int newLong)
+{
+	return SetWindowLong((HWND)hwnd, index, newLong);
+}
+
+bool BR_Win32_SetWindowPos(void* hwnd, const char* hwndInsertAfter, int x, int y, int width, int height, int flags)
+{
+	HWND insertAfter = NULL;
+	if (!strcmp(hwndInsertAfter, "HWND_BOTTOM"))    insertAfter = HWND_BOTTOM;
+	else if (!strcmp(hwndInsertAfter, "HWND_NOTOPMOST")) insertAfter = HWND_NOTOPMOST;
+	else if (!strcmp(hwndInsertAfter, "HWND_TOP"))       insertAfter = HWND_TOP;
+	else if (!strcmp(hwndInsertAfter, "HWND_TOPMOST"))   insertAfter = HWND_TOPMOST;
+	else                                                 insertAfter = (HWND)BR_Win32_StringToHwnd(hwndInsertAfter);
+
+#ifdef _WIN32
+	return !!SetWindowPos((HWND)hwnd, insertAfter, x, y, width, height, flags);
+#else
+	SetWindowPos((HWND)hwnd, insertAfter, x, y, width, height, flags);
+	return !!hwnd;
+#endif
+}
+
+int BR_Win32_ShellExecute(const char* operation, const char* file, const char* parameters, const char* directoy, int showFlags)
 {
 	return (int)ShellExecute(g_hwndParent, operation, file, parameters, directoy, showFlags);
 }
 
-bool BR_Win32_WritePrivateProfileString (const char* sectionName, const char* keyName, const char* value, const char* filePath)
+bool BR_Win32_ShowWindow(void* hwnd, int cmdShow)
 {
 	if(!strlen(keyName))
 		return false;
+#ifdef _WIN32
+	return !!ShowWindow((HWND)hwnd, cmdShow);
+#else
+	ShowWindow((HWND)hwnd, cmdShow);
+	return !!hwnd;
+#endif
+}
 
+void* BR_Win32_StringToHwnd(const char* string)
+{
+	long long hwnd = 0;
+	sscanf(string, "%256lld", &hwnd);
+	return (void*)(HWND)hwnd;
+}
+
+void* BR_Win32_WindowFromPoint(int x, int y)
+{
+	POINT p;
+	p.x = x;
+	p.y = y;
+	return (void*)WindowFromPoint(p);
+}
+
+bool BR_Win32_WritePrivateProfileString(const char* sectionName, const char* keyName, const char* value, const char* filePath)
+{
 	return !!WritePrivateProfileString(sectionName, keyName, value, filePath);
 }
 
+// *** nofish stuff ***
+// #781
+double NF_GetMediaItemMaxPeak(MediaItem* item)
+{
+	double maxPeak = GetMediaItemMaxPeak(item);
+	return maxPeak;
+}
+
+double NF_GetMediaItemPeakRMS_Windowed(MediaItem* item)
+{
+	double peakRMS = GetMediaItemPeakRMS_Windowed(item);
+	return peakRMS;
+}
+
+double NF_GetMediaItemPeakRMS_NonWindowed(MediaItem* item)
+{
+	double peakRMSperChannel = GetMediaItemPeakRMS_NonWindowed(item);
+	return peakRMSperChannel;
+}
+
+double NF_GetMediaItemAverageRMS(MediaItem* item)
+{
+	double averageRMS = GetMediaItemAverageRMS(item);
+	return averageRMS;
+
+}
+
+// #880
+bool NF_AnalyzeTakeLoudness_IntegratedOnly(MediaItem_Take * take, double* lufsIntegratedOut)
+{
+	return NFDoAnalyzeTakeLoudness_IntegratedOnly(take, lufsIntegratedOut);
+}
+
+bool NF_AnalyzeTakeLoudness(MediaItem_Take * take, bool analyzeTruePeak, double* lufsIntegratedOut, double* rangeOut, double* truePeakOut, double* truePeakPosOut, double* shorTermMaxOut, double* momentaryMaxOut)
+{
+	return NFDoAnalyzeTakeLoudness(take, analyzeTruePeak, lufsIntegratedOut, rangeOut, truePeakOut, truePeakPosOut, shorTermMaxOut, momentaryMaxOut);
+}
+
+bool NF_AnalyzeTakeLoudness2(MediaItem_Take * take, bool analyzeTruePeak, double* lufsIntegratedOut, double* rangeOut, double* truePeakOut, double* truePeakPosOut, double* shorTermMaxOut, double* momentaryMaxOut, double* shortTermMaxPosOut, double* momentaryMaxPosOut)
+{
+	return NFDoAnalyzeTakeLoudness2(take, analyzeTruePeak, lufsIntegratedOut, rangeOut, truePeakOut, truePeakPosOut, shorTermMaxOut, momentaryMaxOut, shortTermMaxPosOut, momentaryMaxPosOut);
+}
+
+// Track/TakeFX_Get/SetOffline
+bool NF_TrackFX_GetOffline(MediaTrack* track, int fx)
+{
+	char state[2] = "0";
+	SNM_ChunkParserPatcher p(track);
+	p.SetWantsMinimalState(true);
+	if (p.Parse(SNM_GET_CHUNK_CHAR, 2, "FXCHAIN", "BYPASS", fx, 2, state) > 0)
+		return !strcmp(state, "1");
+
+	return false;
+}
+
+void NF_TrackFX_SetOffline(MediaTrack* track, int fx, bool offline)
+{
+	SNM_ChunkParserPatcher p(track);
+	p.SetWantsMinimalState(true);
+
+	bool updt = false;
+	if (offline) {
+		updt = (p.ParsePatch(SNM_SET_CHUNK_CHAR, 2, "FXCHAIN", "BYPASS", fx, 2, (void*)"1") > 0);
+
+		// chunk BYPASS 3rd value isn't updated when offlining via chunk. So set it if FX is floating when offlining,
+		// to match REAPER behaviour
+		// https://forum.cockos.com/showpost.php?p=1901608&postcount=12
+		if (updt) {
+			HWND hwnd = NULL;
+			hwnd = TrackFX_GetFloatingWindow(track, fx);
+
+			if (hwnd) // FX is currently floating, set 3rd value
+				p.ParsePatch(SNM_SET_CHUNK_CHAR, 2, "FXCHAIN", "BYPASS", fx, 3, (void*)"1");
+			else // not floating
+				p.ParsePatch(SNM_SET_CHUNK_CHAR, 2, "FXCHAIN", "BYPASS", fx, 3, (void*)"0");
+		}
+
+		// close the GUI for buggy plugins (before chunk update)
+		// http://github.com/reaper-oss/sws/issues/317
+		int supportBuggyPlug = GetPrivateProfileInt("General", "BuggyPlugsSupport", 0, g_SNM_IniFn.Get());
+		if (updt && supportBuggyPlug)
+			TrackFX_SetOpen(track, fx, false);
+	}
+
+	else { // set online
+		updt = (p.ParsePatch(SNM_SET_CHUNK_CHAR, 2, "FXCHAIN", "BYPASS", fx, 2, (void*)"0") > 0);
+
+		if (updt) {
+			bool committed = false;
+			committed = p.Commit(false); // need to commit immediately, otherwise below making FX float wouldn't work
+
+			if (committed) {
+				// check if it should float when onlining
+				char state[2] = "0";
+				if ((p.Parse(SNM_GET_CHUNK_CHAR, 2, "FXCHAIN", "BYPASS", fx, 3, state) > 0)) {
+					if (!strcmp(state, "1"))
+						TrackFX_Show(track, fx, 3); // show floating
+				}
+			}
+		}
+	}
+
+}
+
+
+// in chunk take FX Id's are counted consecutively across takes (zero-based)
+int FindTakeFXId_inChunk(MediaItem* parentItem, MediaItem_Take* takeIn, int fxIn);
+
+
+bool NF_TakeFX_GetOffline(MediaItem_Take* takeIn, int fxIn)
+{
+	// find chunk fx id
+	MediaItem* parentItem = GetMediaItemTake_Item(takeIn);
+	int takeFXId_inChunk = FindTakeFXId_inChunk(parentItem, takeIn, fxIn);
+
+	if (takeFXId_inChunk >= 0) {
+		char state[2] = "0";
+		SNM_ChunkParserPatcher p(parentItem);
+		p.SetWantsMinimalState(true);
+		if (p.Parse(SNM_GET_CHUNK_CHAR, 2, "TAKEFX", "BYPASS", takeFXId_inChunk, 2, state) > 0)
+			return !strcmp(state, "1");
+	}
+
+	return false;
+}
+
+void NF_TakeFX_SetOffline(MediaItem_Take* takeIn, int fxIn, bool offline)
+{
+	// find chunk fx id
+	MediaItem* parentItem = GetMediaItemTake_Item(takeIn);
+	int takeFXId_inChunk = FindTakeFXId_inChunk(parentItem, takeIn, fxIn);
+
+	if (takeFXId_inChunk >= 0) {
+		SNM_ChunkParserPatcher p(parentItem);
+		p.SetWantsMinimalState(true);
+		bool updt = false;
+
+		// buggy plugins workaround not necessary for take FX, according to
+		// https://github.com/reaper-oss/sws/blob/b3ad441575f075d9232872f7873a6af83bb9de61/SnM/SnM_FX.cpp#L299
+
+		if (offline) {
+			updt = (p.ParsePatch(SNM_SET_CHUNK_CHAR, 2, "TAKEFX", "BYPASS", takeFXId_inChunk, 2, (void*)"1") >0);
+			if (updt) {
+				// check for BYPASS 3rd value
+				HWND hwnd = NULL;
+				hwnd = TakeFX_GetFloatingWindow(takeIn, fxIn);
+
+				if (hwnd) // FX is currently floating, set 3rd value
+					p.ParsePatch(SNM_SET_CHUNK_CHAR, 2, "TAKEFX", "BYPASS", takeFXId_inChunk, 3, (void*)"1");
+				else // not floating
+					p.ParsePatch(SNM_SET_CHUNK_CHAR, 2, "TAKEFX", "BYPASS", takeFXId_inChunk, 3, (void*)"0");
+			}
+			Main_OnCommand(41204, 0); // fully unload unloaded VSTs
+		}
+
+		else { // set online
+			updt = (p.ParsePatch(SNM_SET_CHUNK_CHAR, 2, "TAKEFX", "BYPASS", takeFXId_inChunk, 2, (void*)"0") > 0);
+
+			if (updt) {
+				bool committed = false;
+				committed = p.Commit(false); // need to commit immediately, otherwise below making FX float wouldn't work
+
+				if (committed) {
+					// check if it should float when onlining
+					char state[2] = "0";
+					if ((p.Parse(SNM_GET_CHUNK_CHAR, 2, "TAKEFX", "BYPASS", takeFXId_inChunk, 3, state) > 0)) {
+						if (!strcmp(state, "1"))
+							TakeFX_Show(takeIn, fxIn, 3); // show floating
+					}
+				}
+			}
+
+		}
+
+	}
+}
+
+int FindTakeFXId_inChunk(MediaItem* parentItem, MediaItem_Take* takeIn, int fxIn)
+{
+	int takesCount = CountTakes(parentItem);
+	int totalTakeFX = 0; int takeFXId_inChunk = -1;
+
+	for (int i = 0; i < takesCount; i++) {
+		MediaItem_Take* curTake = GetTake(parentItem, i);
+
+		int FXcountCurTake = TakeFX_GetCount(curTake);
+
+		if (curTake == takeIn) {
+			takeFXId_inChunk = totalTakeFX + fxIn;
+			break;
+		}
+
+		totalTakeFX += FXcountCurTake;
+	}
+	return takeFXId_inChunk;
+}
+
+	return !!WritePrivateProfileString(sectionName, keyName, value, filePath);
+}

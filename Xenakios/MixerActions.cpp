@@ -247,7 +247,7 @@ void DoSelTraxHeightA(COMMAND_T*)
 	for (int i=0;i<GetNumTracks();i++)
 	{
 		MediaTrack* CurTrack=CSurf_TrackFromID(i+1,false);
-		if (*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL))
+		if (*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL) && !SWS_IsTrackHeightLocked(CurTrack))
 			GetSetMediaTrackInfo(CurTrack,"I_HEIGHTOVERRIDE",&g_command_params.TrackHeightA);
 	}
 	TrackList_AdjustWindows(false);
@@ -259,7 +259,7 @@ void DoSelTraxHeightB(COMMAND_T*)
 	for (int i=0;i<GetNumTracks();i++)
 	{
 		MediaTrack* CurTrack=CSurf_TrackFromID(i+1,false);
-		if (*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL))
+		if (*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL) && !SWS_IsTrackHeightLocked(CurTrack))
 			GetSetMediaTrackInfo(CurTrack,"I_HEIGHTOVERRIDE",&g_command_params.TrackHeightB);
 	}
 	TrackList_AdjustWindows(false);
@@ -288,7 +288,7 @@ void DoRecallSelectedTrackHeights(COMMAND_T*)
 	for (int i=0;i<GetNumTracks();i++)
 	{
 		MediaTrack* CurTrack = CSurf_TrackFromID(i+1,false);
-		if (*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL))
+		if (*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL) && !SWS_IsTrackHeightLocked(CurTrack))
 		{
 			GUID curGUID=*(GUID*)GetSetMediaTrackInfo(CurTrack,"GUID",NULL);
 			for (int j=0;j<(int)g_vec_trackheighs.size();j++)
@@ -710,8 +710,8 @@ void DoToggleTrackHeightAB(COMMAND_T*)
 		}
 	for (i=0;i<(int)TheTracks.size();i++)
 	{
-		
-		GetSetMediaTrackInfo(TheTracks[i],"I_HEIGHTOVERRIDE",&newHei);
+		if (!SWS_IsTrackHeightLocked(TheTracks[i]))
+			GetSetMediaTrackInfo(TheTracks[i],"I_HEIGHTOVERRIDE",&newHei);
 	}
 	TrackList_AdjustWindows(false);
 	UpdateTimeline();

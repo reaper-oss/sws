@@ -235,6 +235,7 @@ void ProjectStartupActionTimer()
 	}
 }
 
+double g_runningReaVer;
 // global action timer armed via SNM_Init()/OnInitTimer()
 void GlobalStartupActionTimer()
 {
@@ -247,6 +248,7 @@ void GlobalStartupActionTimer()
 		OutputDebugString("'\n");
 #endif
 	}
+	g_runningReaVer = atof(GetAppVersion());
 }
 
 int PromptClearStartupAction(int _type, bool _clear)

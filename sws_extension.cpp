@@ -1034,6 +1034,7 @@ error:
 		IMPAPI(StopTrackPreview);
 		IMPAPI(StopTrackPreview2);
 		IMPAPI(stringToGuid);
+		IMPAPI(TakeFX_GetChainVisible);
 		IMPAPI(TakeFX_GetCount);
 		IMPAPI(TakeFX_GetFloatingWindow);
 		IMPAPI(TakeFX_SetOpen);

@@ -618,9 +618,9 @@ MediaItem* BR_ItemAtMouseCursor (double* positionOut)
 	return ItemAtMouseCursor(positionOut);
 }
 
-bool BR_MIDI_CCLaneRemove (HWND midiEditor, int laneId)
+bool BR_MIDI_CCLaneRemove (void* midiEditor, int laneId)
 {
-	MediaItem_Take* take = MIDIEditor_GetTake(midiEditor);
+	MediaItem_Take* take = MIDIEditor_GetTake((HWND)midiEditor);
 	if (take)
 	{
 		MediaItem* item = GetMediaItemTake_Item(take);
@@ -634,7 +634,8 @@ bool BR_MIDI_CCLaneRemove (HWND midiEditor, int laneId)
 			{
 				SNM_ChunkParserPatcher ptk(&takeChunk, false);
 
-				if (ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "SOURCE", "VELLANE", laneId, -1))
+				// NF: prevent trying to remove the only visible one, results in weird behaviour
+				if (ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "SOURCE", "VELLANE", laneId  == 0 ? 1 : laneId, -1))
 				{
 					ptk.RemoveLine("SOURCE", "VELLANE", 1, laneId);
 					return p.ReplaceTake(tkPos, tklen, ptk.GetChunk());
@@ -645,9 +646,9 @@ bool BR_MIDI_CCLaneRemove (HWND midiEditor, int laneId)
 	return false;
 }
 
-bool BR_MIDI_CCLaneReplace (HWND midiEditor, int laneId, int newCC)
+bool BR_MIDI_CCLaneReplace (void* midiEditor, int laneId, int newCC)
 {
-	MediaItem_Take* take = MIDIEditor_GetTake(midiEditor);
+	MediaItem_Take* take = MIDIEditor_GetTake((HWND)midiEditor);
 	int newLane = MapReaScriptCCToVelLane(newCC);
 
 	if (take && IsVelLaneValid(newLane))

@@ -441,12 +441,12 @@ static void* __vararg_BR_ItemAtMouseCursor(void** arglist, int numparms)
 
 static void* __vararg_BR_MIDI_CCLaneRemove(void** arglist, int numparms)
 {
-  return (void*)(INT_PTR)BR_MIDI_CCLaneRemove((HWND)arglist[0], (int)(INT_PTR)arglist[1]);
+  return (void*)(INT_PTR)BR_MIDI_CCLaneRemove((void*)arglist[0], (int)(INT_PTR)arglist[1]);
 }
 
 static void* __vararg_BR_MIDI_CCLaneReplace(void** arglist, int numparms)
 {
-  return (void*)(INT_PTR)BR_MIDI_CCLaneReplace((HWND)arglist[0], (int)(INT_PTR)arglist[1], (int)(INT_PTR)arglist[2]);
+  return (void*)(INT_PTR)BR_MIDI_CCLaneReplace((void*)arglist[0], (int)(INT_PTR)arglist[1], (int)(INT_PTR)arglist[2]);
 }
 
 static void* __vararg_BR_PositionAtMouseCursor(void** arglist, int numparms)

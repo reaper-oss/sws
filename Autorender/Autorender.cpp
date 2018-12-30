@@ -9,7 +9,7 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
 /
@@ -49,7 +49,7 @@
 
 int GetCurrentYear(){
 	time_t t = 0;
-	struct tm *lt = NULL;  
+	struct tm *lt = NULL;
 	t = time(NULL);
 	lt = localtime( &t );
 	int curYear = lt->tm_year;
@@ -65,7 +65,7 @@ string GetRenderQueueTimeString(){
   timeinfo = localtime ( &rawtime );
 
   strftime( buffer,14,"%y%m%d_%H%M%S",timeinfo);
-  
+
   //if this hasn't been made clear before, i suck at c++
   return string( buffer );
 }
@@ -153,7 +153,7 @@ void TrimString( string &str ){
     // Trim Both leading and trailing spaces
     size_t startpos = str.find_first_not_of(" \t"); // Find the first character position after excluding leading blank spaces
     size_t endpos = str.find_last_not_of(" \t"); // Find the first character position from reverse af
- 
+
     // if all spaces or empty return an empty string
     if(( string::npos == startpos ) || ( string::npos == endpos)){
         str = "";
@@ -181,8 +181,8 @@ void ParsePath( const char* path, char* parentDir ){
 
 void GetProjectRealPath( char* prjPath ){
 	char rpp[MAX_PATH];
-	EnumProjects(-1, rpp, MAX_PATH);	
-	ParsePath( rpp, prjPath );	
+	EnumProjects(-1, rpp, MAX_PATH);
+	ParsePath( rpp, prjPath );
 }
 
 string ARGetProjectName(){
@@ -200,7 +200,7 @@ string ARGetProjectName(){
 
 void GetProjectString(WDL_FastString* prjStr){
 	char str[4096];
-	EnumProjects(-1, str, MAX_PATH);	
+	EnumProjects(-1, str, MAX_PATH);
 
 	ProjectStateContext* prj = ProjectCreateFileRead( str );
 
@@ -218,13 +218,17 @@ void GetProjectString(WDL_FastString* prjStr){
 
 void WriteProjectFile( string filename, WDL_FastString* prjStr ){
 	//CheckDirTree( filename, true ); This done in GetQueuedRenders
-	ProjectStateContext* outProject = ProjectCreateFileWrite( filename.c_str() );	
+	ProjectStateContext* outProject = ProjectCreateFileWrite( filename.c_str() );
+
+	if(!outProject)
+		return;
+
 	char line[4096];
-	int pos = 0;	
+	int pos = 0;
 	while( GetChunkLine( prjStr->Get(), line, 4096, &pos, false ) ){
 		outProject->AddLine("%s",line);
 	}
-    delete outProject;
+	delete outProject;
 }
 
 void WDLStringReplaceLine( WDL_FastString *prjStr, int pos, const char *oldLine, const char *newLine ){
@@ -243,7 +247,7 @@ void SetProjectParameter( WDL_FastString *prjStr, string param, string paramValu
 	string paramString = param + string(" ") + paramValue + string("\n");
 
 	while (GetChunkLine(prjStr->Get(), line, 4096, &pos, false)){
-		if( !lp.parse( line ) && lp.getnumtokens() ) {		
+		if( !lp.parse( line ) && lp.getnumtokens() ) {
 			if ( strcmp( lp.gettoken_str(0), param.c_str() ) == 0) {
 				WDLStringReplaceLine(prjStr, pos, line, paramString.c_str());
 				return;
@@ -276,7 +280,7 @@ string GetProjectParameterValueStr( WDL_FastString *prjStr, string param, int to
 	LineParser lp(false);
 
 	while( GetChunkLine( prjStr->Get(), line, 4096, &pos, false ) ){
-		if( !lp.parse( line ) && lp.getnumtokens() ) {		
+		if( !lp.parse( line ) && lp.getnumtokens() ) {
 			if ( strcmp( lp.gettoken_str(0), param.c_str() ) == 0) {
 				return lp.gettoken_str( token );
 			}
@@ -433,7 +437,7 @@ void NukeDirFiles( string dir, string ext = "" ){
 				DeleteFile( thisFile.c_str() );  //Delete any file except . and ..
 		}
 	}
-	closedir( dp );	
+	closedir( dp );
 }
 
 void GetRenderedFiles(string dir, vector<RenderRegion> regions, map <string, RenderRegion> &files){
@@ -493,7 +497,7 @@ void MakeMediaFilesAbsolute( WDL_FastString *prjStr ){
 	//Reaper API's GetProjectPath() returns the path to the project's audio dir, not to .rpp!
 	char projPath[MAX_PATH];
 	GetProjectRealPath( projPath );
-	
+
 	while( GetChunkLine( prjStr->Get(), line, 4096, &pos, false ) ){
 		lineNum++;
 		if( !lp.parse( line ) && lp.getnumtokens() ) {
@@ -552,10 +556,10 @@ void MakeMediaFilesAbsolute( WDL_FastString *prjStr ){
 					trackIgnoreChunks++;
 				}
 			} else if ( strcmp( lp.gettoken_str(0), "<TRACK" ) == 0 ){
-				inTrack = true; 
+				inTrack = true;
 			}
 		}
-	}	
+	}
 }
 
 
@@ -564,7 +568,7 @@ void AutorenderRegions(COMMAND_T*)
   if (IsProjectDirty && IsProjectDirty(NULL))
   {
     // keep this msg on a single line for the langpack generator
-		int r=MessageBox(GetMainHwnd(), __LOCALIZE("The current project is not saved.\r\nDo you want to save it?\r\n\r\nNote: if you have changed render settings, you need to run a dummy render and save the project first (last settings will not be taken into account otherwise).","sws_mbox"), 
+		int r=MessageBox(GetMainHwnd(), __LOCALIZE("The current project is not saved.\r\nDo you want to save it?\r\n\r\nNote: if you have changed render settings, you need to run a dummy render and save the project first (last settings will not be taken into account otherwise).","sws_mbox"),
       __LOCALIZE("Autorender","sws_mbox"), MB_YESNOCANCEL);
     if (r==IDCANCEL) return;
     if (r==IDYES) Main_OnCommand(40026,0);
@@ -602,7 +606,7 @@ void AutorenderRegions(COMMAND_T*)
 			g_doing_render = false;
 			return;
 		}
-		g_render_path = renderPathChar;		
+		g_render_path = renderPathChar;
 		ForceSaveAndLoad( &prjStr );
 	}
 
@@ -615,9 +619,9 @@ void AutorenderRegions(COMMAND_T*)
 	ostringstream outRenderProjectPrefixStream;
 	outRenderProjectPrefixStream << queuedRendersDir << PATH_SLASH_CHAR;
 	outRenderProjectPrefixStream << "qrender_";
-	
+
 	string outRenderProjectPrefix = outRenderProjectPrefixStream.str();
-	
+
 	//init the stuff we need for the region loop
 	int marker_index = 0, region_index = 0, idx;
 	bool isrgn;
@@ -643,8 +647,8 @@ void AutorenderRegions(COMMAND_T*)
 		}
 	}
 
-	foundIdx.clear(); 
-	
+	foundIdx.clear();
+
 	if( renderRegions.size() == 0 ){
 		//Render entire project with tagging
 		string prjNameStr = ARGetProjectName();
@@ -727,7 +731,7 @@ void AutorenderRegions(COMMAND_T*)
 			if( wcslen( w_tag_comment ) ) f.tag()->setComment( w_tag_comment );
 
 			f.tag()->setTitle( w_region_title );
-			
+
 			delete [] w_tag_artist;
 			delete [] w_tag_album;
 			delete [] w_tag_genre;
@@ -773,7 +777,7 @@ void AutorenderRegions(COMMAND_T*)
 
 	OpenRenderPath( NULL );
 	g_doing_render = false;
-	
+
 	//NukeDirFiles( queuedRendersDir, "rpp" ); //Maybe cleanup .rpp here too?
 }
 
@@ -930,7 +934,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 				if (lp.gettoken_str(0)[0] == '>'){
 					break;
 				}
-				
+
 				if( !strcmp(lp.gettoken_str(0), "ARTIST") ){
 					g_tag_artist = lp.gettoken_str(1);
 				} else if ( !strcmp(lp.gettoken_str(0), "ALBUM") ){
@@ -979,11 +983,11 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 		!g_tag_comment.empty() || !g_render_path.empty() )
 	{
 		ctx->AddLine("<AUTORENDER");
-	
+
 		if( !g_tag_artist.empty() ){
 			writeAutorenderSettingString( ctx, "ARTIST", g_tag_artist );
 		}
-	
+
 		if( !g_tag_album.empty() ){
 			writeAutorenderSettingString( ctx, "ALBUM", g_tag_album );
 		}
@@ -1016,7 +1020,7 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 	g_tag_genre.clear();
 	g_tag_year = GetCurrentYear();
 	g_tag_comment.clear();
-	g_render_path.clear();	
+	g_render_path.clear();
 }
 
 static project_config_extension_t g_projectconfig = { ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL };
@@ -1025,7 +1029,7 @@ static project_config_extension_t g_projectconfig = { ProcessExtensionLine, Save
 static COMMAND_T g_commandTable[] = {
 	{ { DEFACCEL, "SWS/Shane: Batch Render Regions" },	"AUTORENDER", AutorenderRegions, "Batch Render Regions" },
 	{ { DEFACCEL, "SWS/Shane: Autorender: Edit Project Metadata" }, "AUTORENDER_METADATA", ShowAutorenderMetadata, "Edit Project Metadata" },
-	{ { DEFACCEL, "SWS/Shane: Autorender: Open Render Path" }, "AUTORENDER_OPEN_RENDER_PATH", OpenRenderPath, "Open Render Path" },	
+	{ { DEFACCEL, "SWS/Shane: Autorender: Open Render Path" }, "AUTORENDER_OPEN_RENDER_PATH", OpenRenderPath, "Open Render Path" },
 	{ { DEFACCEL, "SWS/Shane: Autorender: Show Instructions" }, "AUTORENDER_HELP", ShowAutorenderHelp, "Show Instructions" },
 	{ { DEFACCEL, "SWS/Shane: Autorender: Global Preferences" }, "AUTORENDER_PREFERENCES", AutorenderPreferences, "Global Preferences" },
 #ifdef TESTCODE

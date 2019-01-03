@@ -442,6 +442,7 @@ static preview_register_t g_ItemPreview = { {}, 0, };
 static bool g_itemPreviewPlaying = false;
 static bool g_itemPreviewPaused = false;
 static bool g_itemPreviewSendCC123 = false;
+static ReaProject *g_itemPreviewProject = NULL;
 
 void ItemPreviewTimer()
 {
@@ -500,7 +501,7 @@ void ItemPreview(int mode, MediaItem* item, MediaTrack* track, double volume, do
 	{
 		if (g_ItemPreview.preview_track)
 		{
-			StopTrackPreview(&g_ItemPreview);
+			StopTrackPreview2(g_itemPreviewProject, &g_ItemPreview);
 			if (g_itemPreviewSendCC123)
 				SendAllNotesOff((MediaTrack*)g_ItemPreview.preview_track);
 		}
@@ -569,7 +570,8 @@ void ItemPreview(int mode, MediaItem* item, MediaTrack* track, double volume, do
 			{
 				if (isMidi)
 					g_itemPreviewSendCC123 = true;
-				g_itemPreviewPlaying = !!PlayTrackPreview2Ex(NULL, &g_ItemPreview, 1, measureSync);
+				g_itemPreviewProject = EnumProjects(-1, NULL, 0);
+				g_itemPreviewPlaying = !!PlayTrackPreview2Ex(g_itemPreviewProject, &g_ItemPreview, 1, measureSync);
 			}
 			else
 				g_itemPreviewPlaying = !!PlayPreviewEx(&g_ItemPreview, 1, measureSync);

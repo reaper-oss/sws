@@ -99,10 +99,16 @@ void DeleteTakeAndMedia(COMMAND_T*);
 
 int GetPitchTakeEnvRangeFromPrefs();
 void PanTakeEnvelope(COMMAND_T*);
-void ShowHideTakeVolEnvelope(COMMAND_T*); 
+void BypassUnbypassShowHideTakeVolEnvelope(COMMAND_T*); 
+void BypassUnbypassShowHideTakePanEnvelope(COMMAND_T*);
+void BypassUnbypassShowHideTakeMuteEnvelope(COMMAND_T*);
+void BypassUnbypassShowHideTakePitchEnvelope(COMMAND_T*);
+
+void ShowHideTakeVolEnvelope(COMMAND_T*);
 void ShowHideTakePanEnvelope(COMMAND_T*);
 void ShowHideTakeMuteEnvelope(COMMAND_T*);
 void ShowHideTakePitchEnvelope(COMMAND_T*);
+
 bool ShowTakeEnvVol(MediaItem_Take* _take);
 bool ShowTakeEnvPan(MediaItem_Take* _take);
 bool ShowTakeEnvMute(MediaItem_Take* _take);

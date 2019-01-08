@@ -1,3 +1,5 @@
+- Issue 1078: Renamed "Show/Hide take ... envelopes" actions to "Show/Hide and unbypass/bypass take ... envelopes", added "Show/Hide take ... envelopes" actions 
+
 !v2.9.8 pre-release build (March 5, 2018)
 Now requires REAPER 5.50+!
 

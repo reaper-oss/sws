@@ -925,7 +925,7 @@ bool SNM_TakeEnvParserPatcher::NotifyChunkLine(int _mode,
 		if (!m_patchVisibilityOnly)
 			updated = (!strcmp(_lp->gettoken_str(0), "ACT") || !strcmp(_lp->gettoken_str(0), "VIS"));
 		else
-			updated = (!strcmp(_lp->gettoken_str(0), "VIS"));
+			updated = !strcmp(_lp->gettoken_str(0), "VIS");
 		arm = (strcmp(_lp->gettoken_str(0), "ARM") == 0);
 		updated |= arm;
 		if (updated) {

@@ -1,4 +1,7 @@
-- Issue 1078: Renamed "Show/Hide take ... envelopes" actions to "Show/Hide and unbypass/bypass take ... envelopes", added "Show/Hide take ... envelopes" actions 
+Fixes:
++ Issue 1078: Renamed "SWS/S&M: Show/Hide take ... envelope" actions to "SWS/S&M: Show/Hide and unbypass/bypass take ... envelope", added "SWS/S&M: Show/Hide take ... envelope" actions 
+ - Added "SWS/S&M: Toggle show take ... envelope" actions (unlike the native "Take: Toggle take ... envelope" actions these toggle visibility only)
+ - Renamed 'take ... envelopes' to 'take ... envelope' to be consistent with native actions
 
 !v2.9.8 pre-release build (March 5, 2018)
 Now requires REAPER 5.50+!

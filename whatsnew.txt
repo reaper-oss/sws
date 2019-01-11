@@ -1,3 +1,6 @@
+Fixes:
++Issue 1082: BR_GetMouseCursorContext_MIDI() - add support for Notation Events lane
+
 !v2.9.8 pre-release build (March 5, 2018)
 Now requires REAPER 5.50+!
 

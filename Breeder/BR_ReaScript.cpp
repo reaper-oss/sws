@@ -1246,8 +1246,6 @@ int BR_Win32_ShellExecute(const char* operation, const char* file, const char* p
 
 bool BR_Win32_ShowWindow(void* hwnd, int cmdShow)
 {
-	if(!strlen(keyName))
-		return false;
 #ifdef _WIN32
 	return !!ShowWindow((HWND)hwnd, cmdShow);
 #else
@@ -1274,49 +1272,6 @@ void* BR_Win32_WindowFromPoint(int x, int y)
 bool BR_Win32_WritePrivateProfileString(const char* sectionName, const char* keyName, const char* value, const char* filePath)
 {
 	return !!WritePrivateProfileString(sectionName, keyName, value, filePath);
-}
-
-// *** nofish stuff ***
-// #781
-double NF_GetMediaItemMaxPeak(MediaItem* item)
-{
-	double maxPeak = GetMediaItemMaxPeak(item);
-	return maxPeak;
-}
-
-double NF_GetMediaItemPeakRMS_Windowed(MediaItem* item)
-{
-	double peakRMS = GetMediaItemPeakRMS_Windowed(item);
-	return peakRMS;
-}
-
-double NF_GetMediaItemPeakRMS_NonWindowed(MediaItem* item)
-{
-	double peakRMSperChannel = GetMediaItemPeakRMS_NonWindowed(item);
-	return peakRMSperChannel;
-}
-
-double NF_GetMediaItemAverageRMS(MediaItem* item)
-{
-	double averageRMS = GetMediaItemAverageRMS(item);
-	return averageRMS;
-
-}
-
-// #880
-bool NF_AnalyzeTakeLoudness_IntegratedOnly(MediaItem_Take * take, double* lufsIntegratedOut)
-{
-	return NFDoAnalyzeTakeLoudness_IntegratedOnly(take, lufsIntegratedOut);
-}
-
-bool NF_AnalyzeTakeLoudness(MediaItem_Take * take, bool analyzeTruePeak, double* lufsIntegratedOut, double* rangeOut, double* truePeakOut, double* truePeakPosOut, double* shorTermMaxOut, double* momentaryMaxOut)
-{
-	return NFDoAnalyzeTakeLoudness(take, analyzeTruePeak, lufsIntegratedOut, rangeOut, truePeakOut, truePeakPosOut, shorTermMaxOut, momentaryMaxOut);
-}
-
-bool NF_AnalyzeTakeLoudness2(MediaItem_Take * take, bool analyzeTruePeak, double* lufsIntegratedOut, double* rangeOut, double* truePeakOut, double* truePeakPosOut, double* shorTermMaxOut, double* momentaryMaxOut, double* shortTermMaxPosOut, double* momentaryMaxPosOut)
-{
-	return NFDoAnalyzeTakeLoudness2(take, analyzeTruePeak, lufsIntegratedOut, rangeOut, truePeakOut, truePeakPosOut, shorTermMaxOut, momentaryMaxOut, shortTermMaxPosOut, momentaryMaxPosOut);
 }
 
 // Track/TakeFX_Get/SetOffline
@@ -1471,7 +1426,4 @@ int FindTakeFXId_inChunk(MediaItem* parentItem, MediaItem_Take* takeIn, int fxIn
 		totalTakeFX += FXcountCurTake;
 	}
 	return takeFXId_inChunk;
-}
-
-	return !!WritePrivateProfileString(sectionName, keyName, value, filePath);
 }

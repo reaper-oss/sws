@@ -143,7 +143,8 @@ bool CF_LocateInExplorer(const char *file)
 
 void CF_GetSWSVersion(char *buf, const int bufSize)
 {
-  snprintf(buf, bufSize, "%d.%d.%d.%d", SWS_VERSION);
+	snprintf(buf, bufSize, "%d.%d.%d.%d", SWS_VERSION);
+}
 
 int CF_EnumerateActions(const int section, const int idx, char *nameBuf, const int nameBufSize)
 {
@@ -155,7 +156,8 @@ int CF_EnumerateActions(const int section, const int idx, char *nameBuf, const i
 
 const char *CF_GetCommandText(const int section, const int command)
 {
-  return kbd_getTextFromCmd(command, SectionFromUniqueID(section));
+	return kbd_getTextFromCmd(command, SectionFromUniqueID(section));
+}
 
 static HWND CF_GetTrackFXChain(const int trackIndex)
 {
@@ -229,8 +231,10 @@ HWND CF_GetFocusedFXChain()
 
 int CF_EnumSelectedFX(HWND fxChain, const int index)
 {
-  const HWND list = GetDlgItem(fxChain, 1076);
-  return ListView_GetNextItem(list, index, LVNI_SELECTED);
+	const HWND list = GetDlgItem(fxChain, 1076);
+	return ListView_GetNextItem(list, index, LVNI_SELECTED);
+}
+
 int CF_GetMediaSourceBitDepth(PCM_source *source)
 {
   // parameter validation is already done on the REAPER side, so we're sure source is a valid PCM_source

@@ -864,5 +864,77 @@ static void* __vararg_CF_LocateInExplorer(void** arglist, int numparms)
   return (void*)(INT_PTR)CF_LocateInExplorer((const char*)arglist[0]);
 }
 
+static void* __vararg_CF_GetTrackFXChain(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)CF_GetTrackFXChain((MediaTrack*)arglist[0]);
+}
+
+static void* __vararg_CF_GetTakeFXChain(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)CF_GetTakeFXChain((MediaItem_Take*)arglist[0]);
+}
+
+static void* __vararg_CF_GetFocusedFXChain(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)CF_GetFocusedFXChain();
+}
+
+static void* __vararg_CF_EnumSelectedFX(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)CF_EnumSelectedFX((FxChain*)arglist[0], (int)(INT_PTR)arglist[1]);
+}
+
+static void* __vararg_CF_GetSWSVersion(void** arglist, int numparms)
+{
+  CF_GetSWSVersion((char*)arglist[0], (int)(INT_PTR)arglist[1]);
+  return NULL;
+}
+
+static void* __vararg_CF_EnumerateActions(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)CF_EnumerateActions((int)(INT_PTR)arglist[0], (int)(INT_PTR)arglist[1], (char*)arglist[2], (int)(INT_PTR)arglist[3]);
+}
+
+static void* __vararg_CF_GetCommandText(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)CF_GetCommandText((int)(INT_PTR)arglist[0], (int)(INT_PTR)arglist[1]);
+}
+
+static void* __vararg_CF_GetMediaSourceBitDepth(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)CF_GetMediaSourceBitDepth((PCM_source*)arglist[0]);
+}
+
+static void* __vararg_CF_GetMediaSourceOnline(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)CF_GetMediaSourceOnline((PCM_source*)arglist[0]);
+}
+
+static void* __vararg_CF_SetMediaSourceOnline(void** arglist, int numparms)
+{
+  CF_SetMediaSourceOnline((PCM_source*)arglist[0], (bool)arglist[1]);
+  return NULL;
+}
+
+static void* __vararg_CF_GetMediaSourceMetadata(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)CF_GetMediaSourceMetadata((PCM_source*)arglist[0], (const char*)arglist[1], (char*)arglist[2], (int)(INT_PTR)arglist[3]);
+}
+
+static void* __vararg_CF_GetMediaSourceRPP(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)CF_GetMediaSourceRPP((PCM_source*)arglist[0], (char*)arglist[1], (int)(INT_PTR)arglist[2]);
+}
+
+static void* __vararg_CF_EnumMediaSourceCues(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)CF_EnumMediaSourceCues((PCM_source*)arglist[0], (int)(INT_PTR)arglist[1], (double*)arglist[2], (double*)arglist[3], (bool*)arglist[4], (char*)arglist[5], (int)(INT_PTR)arglist[6]);
+}
+
+static void* __vararg_CF_ExportMediaSource(void** arglist, int numparms)
+{
+  return (void*)(INT_PTR)CF_ExportMediaSource((PCM_source*)arglist[0], (const char*)arglist[1]);
+}
+
 
 #endif

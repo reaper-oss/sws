@@ -33,6 +33,7 @@
 namespace TagLib {
 
   class StringList;
+  class PropertyMap;
 
   namespace ID3v2 {
 
@@ -56,6 +57,14 @@ namespace TagLib {
       friend class FrameFactory;
 
     public:
+
+      /*!
+       * Creates a textual frame which corresponds to a single key in the PropertyMap
+       * interface. These are all (User)TextIdentificationFrames except TIPL and TMCL,
+       * all (User)URLLinkFrames, CommentsFrames, and UnsynchronizedLyricsFrame.
+       */
+      static Frame *createTextualFrame(const String &key, const StringList &values);
+
       /*!
        * Destroys this Frame instance.
        */
@@ -70,7 +79,7 @@ namespace TagLib {
       /*!
        * Returns the size of the frame.
        */
-      uint size() const;
+      unsigned int size() const;
 
       /*!
        * Returns the size of the frame header
@@ -80,14 +89,14 @@ namespace TagLib {
        * non-binary compatible release this will be made into a non-static
        * member that checks the internal ID3v2 version.
        */
-      static uint headerSize(); // BIC: remove and make non-static
+      static unsigned int headerSize(); // BIC: remove and make non-static
 
       /*!
        * Returns the size of the frame header for the given ID3v2 version.
        *
        * \deprecated Please see the explanation above.
        */
-      static uint headerSize(uint version); // BIC: remove and make non-static
+      static unsigned int headerSize(unsigned int version); // BIC: remove and make non-static
 
       /*!
        * Sets the data that will be used as the frame.  Since the length is not
@@ -126,6 +135,28 @@ namespace TagLib {
        */
       static ByteVector textDelimiter(String::Type t);
 
+      /*!
+       * The string with which an instrument name is prefixed to build a key in a PropertyMap;
+       * used to translate PropertyMaps to TMCL frames. In the current implementation, this
+       * is "PERFORMER:".
+       */
+      static const String instrumentPrefix;
+      /*!
+       * The PropertyMap key prefix which triggers the use of a COMM frame instead of a TXXX
+       * frame for a non-standard key. In the current implementation, this is "COMMENT:".
+       */
+      static const String commentPrefix;
+      /*!
+       * The PropertyMap key prefix which triggers the use of a USLT frame instead of a TXXX
+       * frame for a non-standard key. In the current implementation, this is "LYRICS:".
+       */
+      static const String lyricsPrefix;
+      /*!
+       * The PropertyMap key prefix which triggers the use of a WXXX frame instead of a TXX
+       * frame for a non-standard key. In the current implementation, this is "URL:".
+       */
+      static const String urlPrefix;
+
     protected:
       class Header;
 
@@ -134,7 +165,7 @@ namespace TagLib {
        * All other processing of \a data should be handled in a subclass.
        *
        * \note This need not contain anything more than a frame ID, but
-       * \e must constain at least that.
+       * \e must contain at least that.
        */
       explicit Frame(const ByteVector &data);
 
@@ -187,9 +218,9 @@ namespace TagLib {
       ByteVector fieldData(const ByteVector &frameData) const;
 
       /*!
-       * Reads a String of type \a encodiong from the ByteVector \a data.  If \a
+       * Reads a String of type \a encoding from the ByteVector \a data.  If \a
        * position is passed in it is used both as the starting point and is
-       * updated to replect the position just after the string that has been read.
+       * updated to return the position just after the string that has been read.
        * This is useful for reading strings sequentially.
        */
       String readStringField(const ByteVector &data, String::Type encoding,
@@ -199,8 +230,75 @@ namespace TagLib {
        * Checks a the list of string values to see if they can be used with the
        * specified encoding and returns the recommended encoding.
        */
+      // BIC: remove and make non-static
       static String::Type checkEncoding(const StringList &fields,
                                         String::Type encoding);
+
+      /*!
+       * Checks a the list of string values to see if they can be used with the
+       * specified encoding and returns the recommended encoding. This method
+       * also checks the ID3v2 version and makes sure the encoding can be used
+       * in the specified version.
+       */
+      // BIC: remove and make non-static
+      static String::Type checkEncoding(const StringList &fields,
+                                        String::Type encoding, unsigned int version);
+
+      /*!
+       * Checks a the list of string values to see if they can be used with the
+       * specified encoding and returns the recommended encoding. This method
+       * also checks the ID3v2 version and makes sure the encoding can be used
+       * in the version specified by the frame's header.
+       */
+      String::Type checkTextEncoding(const StringList &fields,
+                                     String::Type encoding) const;
+
+
+      /*!
+       * Parses the contents of this frame as PropertyMap. If that fails, the returend
+       * PropertyMap will be empty, and its unsupportedData() will contain this frame's
+       * ID.
+       * BIC: Will be a virtual function in future releases.
+       */
+      PropertyMap asProperties() const;
+
+      /*!
+       * Returns an appropriate ID3 frame ID for the given free-form tag key. This method
+       * will return an empty ByteVector if no specialized translation is found.
+       */
+      static ByteVector keyToFrameID(const String &);
+
+      /*!
+       * Returns a free-form tag name for the given ID3 frame ID. Note that this does not work
+       * for general frame IDs such as TXXX or WXXX; in such a case an empty string is returned.
+       */
+      static String frameIDToKey(const ByteVector &);
+
+      /*!
+       * Returns an appropriate TXXX frame description for the given free-form tag key.
+       */
+      static String keyToTXXX(const String &);
+
+      /*!
+       * Returns a free-form tag name for the given ID3 frame description.
+       */
+      static String txxxToKey(const String &);
+
+      /*!
+       * This helper function splits the PropertyMap \a original into three ProperytMaps
+       * \a singleFrameProperties, \a tiplProperties, and \a tmclProperties, such that:
+       * - \a singleFrameProperties contains only of keys which can be represented with
+       *   exactly one ID3 frame per key. In the current implementation
+       *   this is everything except for the fixed "involved people" keys and keys of the
+       *   form "TextIdentificationFrame::instrumentPrefix" + "instrument", which are
+       *   mapped to a TMCL frame.
+       * - \a tiplProperties will consist of those keys that are present in
+       *   TextIdentificationFrame::involvedPeopleMap()
+       * - \a tmclProperties contains the "musician credits" keys which should be mapped
+       *   to a TMCL frame
+       */
+      static void splitProperties(const PropertyMap &original, PropertyMap &singleFrameProperties,
+          PropertyMap &tiplProperties, PropertyMap &tmclProperties);
 
     private:
       Frame(const Frame &);
@@ -245,7 +343,7 @@ namespace TagLib {
        *
        * \a version should be the ID3v2 version of the tag.
        */
-      explicit Header(const ByteVector &data, uint version = 4);
+      explicit Header(const ByteVector &data, unsigned int version = 4);
 
       /*!
        * Destroys this Header instance.
@@ -264,7 +362,7 @@ namespace TagLib {
        * Sets the data for the Header.  \a version should indicate the ID3v2
        * version number of the tag that this frame is contained in.
        */
-      void setData(const ByteVector &data, uint version = 4);
+      void setData(const ByteVector &data, unsigned int version = 4);
 
       /*!
        * Returns the Frame ID (Structure, <a href="id3v2-structure.html#4">4</a>)
@@ -286,18 +384,24 @@ namespace TagLib {
        * Returns the size of the frame data portion, as set when setData() was
        * called or set explicitly via setFrameSize().
        */
-      uint frameSize() const;
+      unsigned int frameSize() const;
 
       /*!
        * Sets the size of the frame data portion.
        */
-      void setFrameSize(uint size);
+      void setFrameSize(unsigned int size);
 
       /*!
-       * Returns the ID3v2 version of the header (as passed in from the
-       * construction of the header).
+       * Returns the ID3v2 version of the header, as passed in from the
+       * construction of the header or set via setVersion().
        */
-      uint version() const;
+      unsigned int version() const;
+
+      /*!
+       * Sets the ID3v2 version of the header, changing has impact on the
+       * correct parsing/rendering of frame data.
+       */
+      void setVersion(unsigned int version);
 
       /*!
        * Returns the size of the frame header in bytes.
@@ -307,7 +411,7 @@ namespace TagLib {
        * removed in the next binary incompatible release (2.0) and will be
        * replaced with a non-static method that checks the frame version.
        */
-      static uint size();
+      static unsigned int size();
 
       /*!
        * Returns the size of the frame header in bytes for the ID3v2 version
@@ -315,7 +419,7 @@ namespace TagLib {
        *
        * \deprecated Please see the explanation in the version above.
        */
-      static uint size(uint version);
+      static unsigned int size(unsigned int version);
 
       /*!
        * Returns true if the flag for tag alter preservation is set.
@@ -356,7 +460,7 @@ namespace TagLib {
       bool readOnly() const;
 
       /*!
-       * Returns true if the flag for the grouping identifity is set.
+       * Returns true if the flag for the grouping identity is set.
        *
        * \note This flag is currently ignored internally in TagLib.
        */

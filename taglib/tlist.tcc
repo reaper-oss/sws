@@ -24,6 +24,7 @@
  ***************************************************************************/
 
 #include <algorithm>
+#include "trefcounter.h"
 
 namespace TagLib {
 
@@ -38,7 +39,8 @@ namespace TagLib {
 // A base for the generic and specialized private class types.  New
 // non-templatized members should be added here.
 
-class ListPrivateBase : public RefCounter
+// BIC change to RefCounter
+class ListPrivateBase : public RefCounterOld
 {
 public:
   ListPrivateBase() : autoDelete(false) {}
@@ -192,7 +194,7 @@ List<T> &List<T>::clear()
 }
 
 template <class T>
-TagLib::uint List<T>::size() const
+unsigned int List<T>::size() const
 {
   return d->list.size();
 }
@@ -206,6 +208,7 @@ bool List<T>::isEmpty() const
 template <class T>
 typename List<T>::Iterator List<T>::find(const T &value)
 {
+  detach();
   return std::find(d->list.begin(), d->list.end(), value);
 }
 
@@ -260,23 +263,19 @@ T &List<T>::back()
 }
 
 template <class T>
-T &List<T>::operator[](uint i)
+T &List<T>::operator[](unsigned int i)
 {
   Iterator it = d->list.begin();
-
-  for(uint j = 0; j < i; j++)
-    ++it;
+  std::advance(it, i);
 
   return *it;
 }
 
 template <class T>
-const T &List<T>::operator[](uint i) const
+const T &List<T>::operator[](unsigned int i) const
 {
   ConstIterator it = d->list.begin();
-
-  for(uint j = 0; j < i; j++)
-    ++it;
+  std::advance(it, i);
 
   return *it;
 }
@@ -298,6 +297,12 @@ template <class T>
 bool List<T>::operator==(const List<T> &l) const
 {
   return d->list == l.d->list;
+}
+
+template <class T>
+bool List<T>::operator!=(const List<T> &l) const
+{
+  return d->list != l.d->list;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

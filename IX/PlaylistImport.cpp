@@ -9,10 +9,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -42,7 +42,7 @@ void ParseM3U(string listpath, vector<SPlaylistEntry> &filelist)
 {
 	char buf[1024] = {0};
 	ifstream file(listpath.c_str(), ios_base::in);
-	
+
 	if(file.is_open())
 	{
 		// m3u playlist file should start with the string "#EXTM3U"
@@ -54,7 +54,7 @@ void ParseM3U(string listpath, vector<SPlaylistEntry> &filelist)
 		}
 
 		string pathroot = listpath.substr(0, listpath.find_last_of("\\") + 1);
-		
+
 		// Each entry in the playlist consists of two lines.
 		// The first contains the length in seconds and the title, the second should be the file path relative to the playlist location.
 		//	#EXTINF:331,Bernard Pretty Purdie - Hap'nin'
@@ -99,7 +99,7 @@ void ParsePLS(string listpath, vector<SPlaylistEntry> &filelist)
 {
 	char buf[1024] = {0};
 	ifstream file(listpath.c_str(), ios_base::in);
-	
+
 	if(file.is_open())
 	{
 		// pls playlist file should start with the string "[playlist]"
@@ -127,7 +127,7 @@ void ParsePLS(string listpath, vector<SPlaylistEntry> &filelist)
 		}
 
 		if(count == 0) return;
-		
+
 		// Each entry in the playlist consists of three lines:
 		//	File1=E:\Music\James Brown\20 all time greatest hits!\13 - Get On The Good Foot.mp3
 		//	Title1=James Brown - Get On The Good Foot
@@ -236,7 +236,7 @@ void PlaylistImport(COMMAND_T* ct)
 	// If files can't be found, ask user what to do.
 	if(badfiles > 0)
 	{
-		const size_t limit = min(badfiles, 9); // avoid enormous messagebox
+		const size_t limit = min<size_t>(badfiles, 9); // avoid enormous messagebox
 
 		stringstream ss;
 		ss << __LOCALIZE("The following files cannot be found. Create items for them anyway?\n","sws_mbox");
@@ -310,7 +310,7 @@ void PlaylistImport(COMMAND_T* ct)
 }
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
-static COMMAND_T g_commandTable[] = 
+static COMMAND_T g_commandTable[] =
 {
 	{ { DEFACCEL, "SWS/IX: Import m3u/pls playlist" },	"IX_PLAYLIST_IMPORT",	PlaylistImport,	NULL, 0},
 

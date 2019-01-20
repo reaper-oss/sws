@@ -439,14 +439,16 @@ static COMMAND_T g_commandTable[] =
 	/******************************************************************************
 	* Loudness                                                                    *
 	******************************************************************************/
-	{ { DEFACCEL, "SWS/BR: Global loudness preferences..." },                    "BR_LOUDNESS_PREF",                ToggleLoudnessPref, NULL, 0, IsLoudnessPrefVisible},
-	{ { DEFACCEL, "SWS/BR: Analyze loudness..." },                               "BR_ANALAYZE_LOUDNESS_DLG",        AnalyzeLoudness,    NULL, 0, IsAnalyzeLoudnessVisible},
+	{ { DEFACCEL, "SWS/BR: Global loudness preferences..." },                           "BR_LOUDNESS_PREF",                ToggleLoudnessPref,         NULL, 0, IsLoudnessPrefVisible},
+	{ { DEFACCEL, "SWS/BR: Analyze loudness..." },                                      "BR_ANALAYZE_LOUDNESS_DLG",        AnalyzeLoudness,            NULL, 0, IsAnalyzeLoudnessVisible},
 
-	{ { DEFACCEL, "SWS/BR: Normalize loudness of selected items/tracks..." },    "BR_NORMALIZE_LOUDNESS_ITEMS",     NormalizeLoudness,  NULL, 0, IsNormalizeLoudnessVisible},
-	{ { DEFACCEL, "SWS/BR: Normalize loudness of selected items to -23 LUFS" },  "BR_NORMALIZE_LOUDNESS_ITEMS23",   NormalizeLoudness,  NULL, 1, },
-	{ { DEFACCEL, "SWS/BR: Normalize loudness of selected items to 0 LU" },      "BR_NORMALIZE_LOUDNESS_ITEMS_LU",  NormalizeLoudness,  NULL, -1, },
-	{ { DEFACCEL, "SWS/BR: Normalize loudness of selected tracks to -23 LUFS" }, "BR_NORMALIZE_LOUDNESS_TRACKS23",  NormalizeLoudness,  NULL, 2, },
-	{ { DEFACCEL, "SWS/BR: Normalize loudness of selected tracks to 0 LU" },     "BR_NORMALIZE_LOUDNESS_TRACKS_LU", NormalizeLoudness,  NULL, -2, },
+	{ { DEFACCEL, "SWS/BR: Normalize loudness of selected items/tracks..." },           "BR_NORMALIZE_LOUDNESS_ITEMS",     NormalizeLoudness,          NULL, 0, IsNormalizeLoudnessVisible},
+	{ { DEFACCEL, "SWS/BR: Normalize loudness of selected items to -23 LUFS" },         "BR_NORMALIZE_LOUDNESS_ITEMS23",   NormalizeLoudness,          NULL, 1, },
+	{ { DEFACCEL, "SWS/BR: Normalize loudness of selected items to 0 LU" },             "BR_NORMALIZE_LOUDNESS_ITEMS_LU",  NormalizeLoudness,          NULL, -1, },
+	{ { DEFACCEL, "SWS/BR: Normalize loudness of selected tracks to -23 LUFS" },        "BR_NORMALIZE_LOUDNESS_TRACKS23",  NormalizeLoudness,          NULL, 2, },
+	{ { DEFACCEL, "SWS/BR: Normalize loudness of selected tracks to 0 LU" },            "BR_NORMALIZE_LOUDNESS_TRACKS_LU", NormalizeLoudness,          NULL, -2, },
+
+	{ { DEFACCEL, "SWS/BR/NF: Toggle use high precision mode for loudness analyzing" }, "BR_NF_TOGGLE_LOUDNESS_HIGH_PREC", ToggleHighPrecisionOption,  NULL, 0, IsHighPrecisionOptionEnabled},
 
 	/******************************************************************************
 	* MIDI editor - Item preview                                                  *

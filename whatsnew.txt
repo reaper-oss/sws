@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 
 +MouseContext: Initial support for automation items:
@@ -117,6 +118,18 @@ Actions:
 
 +Renamed "SWS: Analyze and display item peak and RMS" to "SWS: Analyze and display item peak and RMS (entire item)" (https://forum.cockos.com/showthread.php?p=2074089#post2074089|background|)
 
+=======
++Loudness:
+ - Add 'high precision' analyzing mode (set in 'SWS/BR: Analyze loudness...' window -> Options or via action, see below), to ensure full compliance with BS.1770-4. Off by default.
+   Notes: This mode is slower than the 'normal' analyzing mode and should only be needed when ensuring exact results of max. momentary values in certain (corner) cases is required.
+   All other results should be compliant with BS.1770-4 also in 'normal' analyzing mode.
+   Technically this mode uses 100 Hz refresh rate / 10 ms buffer rather than default 5 Hz refresh rate / 200 ms buffer for analyzing.
+   For background see https://github.com/reaper-oss/sws/issues/1046#issuecomment-428914818|here| and https://github.com/jiixyj/libebur128/issues/93#issuecomment-429043548|here|.
+   ReScript Loudness functions respect this preference.
+ - Add action 'SWS/BR/NF: Toggle use high precision mode for loudness analyzing'
+ - Harden 'prevent items going offline during analysis' (also prevent during quick reanalyze)
+ 
+>>>>>>> github-desktop-nofishonfriday/Loudness_-_add_'high_precision'_analyzing_mode
 !v2.9.8 pre-release build (March 5, 2018)
 Now requires REAPER 5.50+!
 

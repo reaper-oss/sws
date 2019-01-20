@@ -40,7 +40,7 @@ public:
 	~BR_LoudnessObject ();
 
 	/* Analyze */
-	bool Analyze (bool integratedOnly, bool doTruePeak);
+	bool Analyze (bool integratedOnly, bool doTruePeak, bool doHighPrecisionMode);
 	void AbortAnalyze ();
 	bool IsRunning ();
 	double GetProgress ();
@@ -75,11 +75,15 @@ public:
 	int GetTrackNumber ();
 	int GetItemNumber ();
 
-	// #880, pass trough to private functions
-	void NFGetPublicAnalyzeData(double* integrated, double* range, double* truePeak, double* truePeakPos, double* shortTermMax, double* momentaryMax, vector<double>* shortTermValues, vector<double>* momentaryValues);
-	void NFSetPublicDoTruePeak(bool doTruePeak);
-	bool NFGetPublicDoTruePeak();
-
+	// NF: functions made public for ReaScript access
+	void GetAnalyzeData(double* integrated, double* range, double* truePeak, double* truePeakPos, double* shortTermMax, double* momentaryMax, vector<double>* shortTermValues, vector<double>* momentaryValues);
+	void SetDoTruePeak(bool doTruePeak);
+	bool GetDoTruePeak();
+	// 'high precision' analyzing mode
+	// 100 Hz refresh rate / 10 ms buffer  (rather than 5 Hz / 200 ms) for BS.1770-4 compliance (correct max. momentary calc.),
+	// see https://github.com/jiixyj/libebur128/issues/93#issuecomment-429043548
+	void SetDoHighPrecisionMode(bool doHighPrecisionMode);
+	bool GetDoHighPrecisionMode();
 
 private:
 	struct AudioData
@@ -99,14 +103,11 @@ private:
 	AudioData GetAudioData ();
 	void SetRunning (bool running);
 	void SetProgress (double progress);
-	void SetAnalyzeData (double integrated, double range, double truePeak, double truePeakPos, double shortTermMax, double momentaryMax, const vector<double>& shortTermValues, const vector<double>& momentaryValues);
-	void GetAnalyzeData (double* integrated, double* range, double* truePeak, double* truePeakPos, double* shortTermMax, double* momentaryMax, vector<double>* shortTermValues, vector<double>* momentaryValues);
+	void SetAnalyzeData (double integrated, double range, double truePeak, double truePeakPos, double shortTermMax, double momentaryMax, const vector<double>& shortTermValues, const vector<double>& momentaryValues);	
 	void SetAnalyzedStatus (bool analyzed);
 	bool GetAnalyzedStatus ();
 	void SetIntegratedOnly (bool integratedOnly);
 	bool GetIntegratedOnly ();
-	void SetDoTruePeak (bool doTruePeak);
-	bool GetDoTruePeak ();
 	void SetTruePeakAnalyzed (bool analyzed);
 	bool GetTruePeakAnalyzeStatus ();
 	void SetKillFlag (bool killFlag);
@@ -131,7 +132,7 @@ private:
 	GUID m_guid;
 	double m_integrated, m_truePeak, m_truePeakPos, m_shortTermMax, m_momentaryMax, m_range;
 	double m_progress;
-	bool m_running, m_analyzed, m_killFlag, m_integratedOnly, m_doTruePeak, m_truePeakAnalyzed;
+	bool m_running, m_analyzed, m_killFlag, m_integratedOnly, m_doTruePeak, m_truePeakAnalyzed, m_doHighPrecisionMode;
 	HANDLE m_process;
 	SWS_Mutex m_mutex;
 	vector<double> m_shortTermValues;
@@ -235,15 +236,20 @@ public:
 	void Update (bool updateList = true);
 	void KillNormalizeDlg ();
 	bool GetProperty (int propertySpecifier);
-	enum PropertySpecifier {TIME_SEL_OVER_MAX, DOUBLECLICK_GOTO_TARGET, USING_LU, MIRROR_PROJ_SELECTION};
-
+	enum PropertySpecifier { TIME_SEL_OVER_MAX, DOUBLECLICK_GOTO_TARGET, USING_LU, MIRROR_PROJ_SELECTION, DO_HIGH_PRECISION_MODE };
+	// NF: for setting 'use high precision mode' (or other Loudness options) from actions (or ReaScript in future)
+	// returns true if Property is set successfully
+	bool SetProperty (int propertySpecifier, bool newVal); 
+	void LoadProperties();
+	void SaveProperties();
+	void ClearList(); // NF: made public to be callable when toggling high precision mode via action to force re-analyzing
+	
 protected:
 	BR_LoudnessObject* IsObjectInList (MediaTrack* track);
 	BR_LoudnessObject* IsObjectInList (MediaItem_Take* take);
 	void AbortAnalyze ();
 	void AbortReanalyze ();
 	void SetAnalyzing (bool, bool reanalyze);
-	void ClearList ();
 	void ShowExportFormatDialog (bool show);
 	void ShowNormalizeDialog (bool show);
 	void SaveRecentFormatPattern (WDL_FastString pattern);
@@ -273,6 +279,7 @@ protected:
 		bool clearAnalyzed;
 		bool doTruePeak;
 		bool usingLU;
+		bool doHighPrecisionMode;
 		WDL_FastString exportFormat;
 		Properties ();
 		void Load ();
@@ -301,6 +308,7 @@ void LoudnessUpdate (bool updatePreferencesDlg = true);
 void NormalizeLoudness (COMMAND_T*);
 void AnalyzeLoudness (COMMAND_T*);
 void ToggleLoudnessPref (COMMAND_T*);
+void ToggleHighPrecisionOption(COMMAND_T*);
 
 // #880
 bool NFDoAnalyzeTakeLoudness_IntegratedOnly(MediaItem_Take*, double* lufsIntegrated);
@@ -314,3 +322,4 @@ bool NFDoAnalyzeTakeLoudness2(MediaItem_Take*, bool analyzeTruePeak, double* luf
 int IsNormalizeLoudnessVisible (COMMAND_T*);
 int IsAnalyzeLoudnessVisible (COMMAND_T*);
 int IsLoudnessPrefVisible (COMMAND_T*);
+int IsHighPrecisionOptionEnabled(COMMAND_T*);

@@ -317,18 +317,8 @@ void RemoveQuotes( string *str ){
 }
 
 void SanitizeFilename( string *fn ){
-
-#ifdef _WIN32
-	//Windows illegal chars
-	const char *illegalChars = "\\/<>|\":?*";
-#else
-	// Mac illegal chars
-	const char *illegalChars = ":";
-	// First char can't be a dot, doens't matter if we're prepending region numbers
-	if( !g_prepend_region_number && fn->substr(0,1) == "." ) fn->replace(0,1,"_");
-#endif
-
-	ReplaceChars( fn, illegalChars, "_" );
+	const char *illegalChars = "\\/<>|\":?*.";
+	ReplaceChars(fn, illegalChars, "_");
 }
 
 void ShowAutorenderHelp(COMMAND_T*) {

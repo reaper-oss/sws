@@ -297,7 +297,7 @@ void CycleMIDIRecordingModes(COMMAND_T* ct)
 
 	for (int i = 0; i < selTracks.GetSize(); i++) {
 		MediaTrack* track = selTracks.Get()[i];
-		int recMode = GetMediaTrackInfo_Value(track, "I_RECMODE");
+		int recMode = (int)GetMediaTrackInfo_Value(track, "I_RECMODE");
 		int nextRecMode;
 
 		switch (recMode) {

@@ -323,6 +323,48 @@ void SelPrevFolder(COMMAND_T* = NULL)
 	}
 }
 
+void SelNearestNextFolder(COMMAND_T* = NULL) // #981
+{
+	MediaTrack* selTr = GetSelectedTrack(0, 0);
+	if (selTr)
+	{
+		int nextTrID = (int)GetMediaTrackInfo_Value(selTr, "IP_TRACKNUMBER") + 1;
+
+		for (nextTrID; nextTrID <= GetNumTracks(); nextTrID++)
+		{
+			MediaTrack* tr = CSurf_TrackFromID(nextTrID, false);
+			if ((int)GetMediaTrackInfo_Value(tr, "I_FOLDERDEPTH") == 1)
+			{
+				ClearSelected();
+				GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i1);
+				return;
+			}
+		}
+	}
+}
+
+void SelNearestPrevFolder(COMMAND_T* = NULL) // #981
+{
+	{
+		MediaTrack* selTr = GetSelectedTrack(0, 0);
+		if (selTr)
+		{
+			int prevTrID = (int)GetMediaTrackInfo_Value(selTr, "IP_TRACKNUMBER") - 1;
+
+			for (prevTrID; prevTrID > 0; prevTrID--)
+			{
+				MediaTrack* tr = CSurf_TrackFromID(prevTrID, false);
+				if ((int)GetMediaTrackInfo_Value(tr, "I_FOLDERDEPTH") == 1)
+				{
+					ClearSelected();
+					GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i1);
+					return;
+				}
+			}
+		}
+	}
+}
+
 // ct->user: 0 == sel unmuted tracks, 1 = sel muted tracks
 void SelMutedTracks(COMMAND_T* ct)
 {
@@ -467,6 +509,8 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Select all non-folders" },								"SWS_SELNOTFOLDER",		SelNotFolder,		},
 	{ { DEFACCEL, "SWS: Select next folder" },									"SWS_SELNEXTFOLDER",	SelNextFolder,		},
 	{ { DEFACCEL, "SWS: Select previous folder" },								"SWS_SELPREVFOLDER",	SelPrevFolder,		},
+	{ { DEFACCEL, "SWS: Select nearest next folder" },									"SWS_SELNEARESTNEXTFOLDER",	SelNearestNextFolder, },
+	{ { DEFACCEL, "SWS: Select nearest previous folder" },									"SWS_SELNEARESTPREVFOLDER",	SelNearestPrevFolder, },
 	
 	// Sel based on states
 	{ { DEFACCEL, "SWS: Select muted tracks" },										"SWS_SELMUTEDTRACKS",	SelMutedTracks, NULL, 1 },

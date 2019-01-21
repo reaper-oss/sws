@@ -1,7 +1,3 @@
-Actions:
-+New actions (Main section):
- - SWS: Select nearest previous folder, SWS: Select nearest next folder (Issue 981)
-
 !v2.9.8 pre-release build (March 5, 2018)
 Now requires REAPER 5.50+!
 

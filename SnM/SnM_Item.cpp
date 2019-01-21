@@ -1059,7 +1059,7 @@ int GetPitchTakeEnvRangeFromPrefs()
 }
 
 // callers must use UpdateArrange() at some point if it returns true..
-bool PatchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeyword, const char* _vis, const WDL_FastString* _defaultPoint, bool _reset)
+bool PatchTakeEnvelopeActVis(MediaItem* _item, int _takeIdx, const char* _envKeyword, const char* _vis, const WDL_FastString* _defaultPoint, bool _reset, bool patchVisibilityOnly)
 {
 	bool updated = false;
 	if (_item)
@@ -1104,6 +1104,8 @@ bool PatchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeywor
 					// prepare the new visibility (in one go)
 					{
 						SNM_TakeEnvParserPatcher pEnv(&takeChunk);
+						if (patchVisibilityOnly)
+							pEnv.SetPatchVisibilityOnly(true);
 						takeUpdate = pEnv.SetVal(_envKeyword, atoi(vis));
 					}
 				}
@@ -1145,7 +1147,7 @@ bool PatchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeywor
 	return updated;
 }
 
-bool PatchTakeEnvelopeVis(const char* _undoTitle, const char* _envKeyword, const char* _vis, const WDL_FastString* _defaultPoint, bool _reset) 
+bool PatchTakeEnvelopeActVis(const char* _undoTitle, const char* _envKeyword, const char* _vis, const WDL_FastString* _defaultPoint, bool _reset, bool patchVisibilityOnly) 
 {
 	bool updated = false;
 	for (int i = 1; i <= GetNumTracks(); i++) // skip master
@@ -1155,7 +1157,7 @@ bool PatchTakeEnvelopeVis(const char* _undoTitle, const char* _envKeyword, const
 		{
 			MediaItem* item = GetTrackMediaItem(tr,j);
 			if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
-				updated |= PatchTakeEnvelopeVis(item, *(int*)GetSetMediaItemInfo(item,"I_CURTAKE",NULL), _envKeyword, _vis, _defaultPoint, _reset);
+				updated |= PatchTakeEnvelopeActVis(item, *(int*)GetSetMediaItemInfo(item,"I_CURTAKE",NULL), _envKeyword, _vis, _defaultPoint, _reset, patchVisibilityOnly);
 		}
 	}
 
@@ -1172,47 +1174,88 @@ void PanTakeEnvelope(COMMAND_T* _ct)
 {
 	WDL_FastString defaultPoint("PT 0.000000 ");
 	defaultPoint.AppendFormatted(128, "%d.000000 0", (int)_ct->user);
-	PatchTakeEnvelopeVis(SWS_CMD_SHORTNAME(_ct), "PANENV", "1", &defaultPoint, true);
+	PatchTakeEnvelopeActVis(SWS_CMD_SHORTNAME(_ct), "PANENV", "1", &defaultPoint, true, false);
 }
 
-void ShowHideTakeVolEnvelope(COMMAND_T* _ct) 
+void BypassUnbypassShowHideTakeVolEnvelope(COMMAND_T* _ct) 
 {
 	char cVis[2] = ""; // empty means toggle
 	int value = (int)_ct->user;
 	if (value >= 0 && _snprintfStrict(cVis, sizeof(cVis), "%d", value) < 0)
 		return;
 	WDL_FastString defaultPoint("PT 0.000000 1.000000 0");
-	PatchTakeEnvelopeVis(SWS_CMD_SHORTNAME(_ct), "VOLENV", cVis, &defaultPoint, false);
+	PatchTakeEnvelopeActVis(SWS_CMD_SHORTNAME(_ct), "VOLENV", cVis, &defaultPoint, false, false);
 }
 
-void ShowHideTakePanEnvelope(COMMAND_T* _ct) 
+void BypassUnbypassShowHideTakePanEnvelope(COMMAND_T* _ct) 
 {
 	char cVis[2] = ""; // empty means toggle
 	int value = (int)_ct->user;
 	if (value >= 0 && _snprintfStrict(cVis, sizeof(cVis), "%d", value) < 0)
 		return;
 	WDL_FastString defaultPoint("PT 0.000000 0.000000 0");
-	PatchTakeEnvelopeVis(SWS_CMD_SHORTNAME(_ct), "PANENV", cVis, &defaultPoint, false);
+	PatchTakeEnvelopeActVis(SWS_CMD_SHORTNAME(_ct), "PANENV", cVis, &defaultPoint, false, false);
 }
 
-void ShowHideTakeMuteEnvelope(COMMAND_T* _ct) 
+void BypassUnbypassShowHideTakeMuteEnvelope(COMMAND_T* _ct) 
 {
 	char cVis[2] = ""; // empty means toggle
 	int value = (int)_ct->user;
 	if (value >= 0 && _snprintfStrict(cVis, sizeof(cVis), "%d", value) < 0)
 		return;
 	WDL_FastString defaultPoint("PT 0.000000 1.000000 1");
-	PatchTakeEnvelopeVis(SWS_CMD_SHORTNAME(_ct), "MUTEENV", cVis, &defaultPoint, false);
+	PatchTakeEnvelopeActVis(SWS_CMD_SHORTNAME(_ct), "MUTEENV", cVis, &defaultPoint, false, false);
 }
 
-void ShowHideTakePitchEnvelope(COMMAND_T* _ct) 
+void BypassUnbypassShowHideTakePitchEnvelope(COMMAND_T* _ct) 
 {
 	char cVis[2] = ""; // empty means toggle
 	int value = (int)_ct->user;
 	if (value >= 0 && _snprintfStrict(cVis, sizeof(cVis), "%d", value) < 0)
 		return;
 	WDL_FastString defaultPoint("PT 0.000000 0.000000 0");
-	PatchTakeEnvelopeVis(SWS_CMD_SHORTNAME(_ct), "PITCHENV", cVis, &defaultPoint, false);
+	PatchTakeEnvelopeActVis(SWS_CMD_SHORTNAME(_ct), "PITCHENV", cVis, &defaultPoint, false, false);
+}
+
+// NF: these *only* show/hide (no bypass/unbypass), #1078
+void ShowHideTakeVolEnvelope(COMMAND_T* _ct)
+{
+	char cVis[2] = ""; // empty means toggle
+	int value = (int)_ct->user;
+	if (value >= 0 && _snprintfStrict(cVis, sizeof(cVis), "%d", value) < 0)
+		return;
+	WDL_FastString defaultPoint("PT 0.000000 1.000000 0");
+	PatchTakeEnvelopeActVis(SWS_CMD_SHORTNAME(_ct), "VOLENV", cVis, &defaultPoint, false, true);
+}
+
+void ShowHideTakePanEnvelope(COMMAND_T* _ct)
+{
+	char cVis[2] = ""; // empty means toggle
+	int value = (int)_ct->user;
+	if (value >= 0 && _snprintfStrict(cVis, sizeof(cVis), "%d", value) < 0)
+		return;
+	WDL_FastString defaultPoint("PT 0.000000 0.000000 0");
+	PatchTakeEnvelopeActVis(SWS_CMD_SHORTNAME(_ct), "PANENV", cVis, &defaultPoint, false, true);
+}
+
+void ShowHideTakeMuteEnvelope(COMMAND_T* _ct)
+{
+	char cVis[2] = ""; // empty means toggle
+	int value = (int)_ct->user;
+	if (value >= 0 && _snprintfStrict(cVis, sizeof(cVis), "%d", value) < 0)
+		return;
+	WDL_FastString defaultPoint("PT 0.000000 1.000000 1");
+	PatchTakeEnvelopeActVis(SWS_CMD_SHORTNAME(_ct), "MUTEENV", cVis, &defaultPoint, false, true);
+}
+
+void ShowHideTakePitchEnvelope(COMMAND_T* _ct)
+{
+	char cVis[2] = ""; // empty means toggle
+	int value = (int)_ct->user;
+	if (value >= 0 && _snprintfStrict(cVis, sizeof(cVis), "%d", value) < 0)
+		return;
+	WDL_FastString defaultPoint("PT 0.000000 0.000000 0");
+	PatchTakeEnvelopeActVis(SWS_CMD_SHORTNAME(_ct), "PITCHENV", cVis, &defaultPoint, false, true);
 }
 
 // *** some wrappers for Padre ***
@@ -1224,7 +1267,7 @@ bool ShowTakeEnv(MediaItem_Take* _take, const char* _envKeyword, const WDL_FastS
 	{
 		int idx = GetTakeIndex(item, _take);
 		if (idx >= 0) 
-			shown = PatchTakeEnvelopeVis(item, idx, _envKeyword , "1", _defaultPoint, false);
+			shown = PatchTakeEnvelopeActVis(item, idx, _envKeyword , "1", _defaultPoint, false, false);
 	}
 	return shown;
 }

@@ -922,7 +922,10 @@ bool SNM_TakeEnvParserPatcher::NotifyChunkLine(int _mode,
 	if (_mode == -1)
 	{
 		bool arm = false;
-		updated = (!strcmp(_lp->gettoken_str(0), "ACT") || !strcmp(_lp->gettoken_str(0), "VIS"));
+		if (!m_patchVisibilityOnly)
+			updated = (!strcmp(_lp->gettoken_str(0), "ACT") || !strcmp(_lp->gettoken_str(0), "VIS"));
+		else
+			updated = !strcmp(_lp->gettoken_str(0), "VIS");
 		arm = (strcmp(_lp->gettoken_str(0), "ARM") == 0);
 		updated |= arm;
 		if (updated) {
@@ -936,6 +939,11 @@ bool SNM_TakeEnvParserPatcher::NotifyChunkLine(int _mode,
 bool SNM_TakeEnvParserPatcher::SetVal(const char* _envKeyWord, int _val) {
 	m_val = _val;
 	return (ParsePatch(-1, 1, _envKeyWord) > 0);
+}
+
+void SNM_TakeEnvParserPatcher::SetPatchVisibilityOnly(bool visibilityOnly)
+{
+	m_patchVisibilityOnly = visibilityOnly;;
 }
 
 int g_disable_chunk_guid_filtering;

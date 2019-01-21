@@ -373,9 +373,12 @@ class SNM_TakeEnvParserPatcher : public SNM_ChunkParserPatcher
 {
 public:
 	SNM_TakeEnvParserPatcher(WDL_FastString* _tkChunk, bool _autoCommit = true) 
-		: SNM_ChunkParserPatcher(_tkChunk, _autoCommit) {m_val = -1;}
+		: SNM_ChunkParserPatcher(_tkChunk, _autoCommit) {m_val = -1; m_patchVisibilityOnly = false;}
 	~SNM_TakeEnvParserPatcher() {}
 	bool SetVal(const char* _envKeyWord, int _val);
+	// NF: #1078, if true, only env. visibilty (show/hide) is patched
+	// (as opposed to also patching env. unbypass/bypass, resp. active/not active)
+	void SetPatchVisibilityOnly(bool patchVisibilityOnly); 
 protected:
 	bool NotifyChunkLine(int _mode, 
 		LineParser* _lp, const char* _parsedLine, int _linePos,
@@ -383,6 +386,7 @@ protected:
 		WDL_FastString* _newChunk, int _updates);
 private:
 	int m_val;
+	bool m_patchVisibilityOnly;
 };
 
 #endif

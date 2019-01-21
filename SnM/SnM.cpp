@@ -404,19 +404,36 @@ static COMMAND_T s_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Restore selected tracks folder compact states" }, "S&M_RESTOREFOLDERSTATE2", RestoreTracksFolderStates, NULL, 1},
 
 	// Take envelopes ---------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Show take volume envelopes" }, "S&M_TAKEENV1", ShowHideTakeVolEnvelope, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Show take pan envelopes" }, "S&M_TAKEENV2", ShowHideTakePanEnvelope, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Show take mute envelopes" }, "S&M_TAKEENV3", ShowHideTakeMuteEnvelope, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Hide take volume envelopes" }, "S&M_TAKEENV4", ShowHideTakeVolEnvelope, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Hide take pan envelopes" }, "S&M_TAKEENV5", ShowHideTakePanEnvelope, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Hide take mute envelopes" }, "S&M_TAKEENV6", ShowHideTakeMuteEnvelope, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Show and unbypass take volume envelope" }, "S&M_TAKEENV1", BypassUnbypassShowHideTakeVolEnvelope, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Show and unbypass take pan envelope" }, "S&M_TAKEENV2", BypassUnbypassShowHideTakePanEnvelope, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Show and unbypass take mute envelope" }, "S&M_TAKEENV3", BypassUnbypassShowHideTakeMuteEnvelope, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Hide and bypass take volume envelope" }, "S&M_TAKEENV4", BypassUnbypassShowHideTakeVolEnvelope, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Hide and bypass take pan envelope" }, "S&M_TAKEENV5", BypassUnbypassShowHideTakePanEnvelope, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Hide and bypass take mute envelope" }, "S&M_TAKEENV6", BypassUnbypassShowHideTakeMuteEnvelope, NULL, 0},
 
-	{ { DEFACCEL, "SWS/S&M: Set active take pan envelopes to 100% right" }, "S&M_TAKEENV_100R", PanTakeEnvelope, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Set active take pan envelopes to 100% left" }, "S&M_TAKEENV_100L", PanTakeEnvelope, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Set active take pan envelopes to center" }, "S&M_TAKEENV_CENTER", PanTakeEnvelope, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Show take volume envelope" }, "S&M_TAKEENVSHOW1", ShowHideTakeVolEnvelope, NULL, 1 },
+	{ { DEFACCEL, "SWS/S&M: Show take pan envelope" }, "S&M_TAKEENVSHOW2", ShowHideTakePanEnvelope, NULL, 1 },
+	{ { DEFACCEL, "SWS/S&M: Show take mute envelope" }, "S&M_TAKEENVSHOW3", ShowHideTakeMuteEnvelope, NULL, 1 },
+	{ { DEFACCEL, "SWS/S&M: Hide take volume envelope" }, "S&M_TAKEENVSHOW4", ShowHideTakeVolEnvelope, NULL, 0 },
+	{ { DEFACCEL, "SWS/S&M: Hide take pan envelope" }, "S&M_TAKEENVSHOW5", ShowHideTakePanEnvelope, NULL, 0 },
+	{ { DEFACCEL, "SWS/S&M: Hide take mute envelope" }, "S&M_TAKEENVSHOW6", ShowHideTakeMuteEnvelope, NULL, 0 },
 
-	{ { DEFACCEL, "SWS/S&M: Show take pitch envelope" }, "S&M_TAKEENV10", ShowHideTakePitchEnvelope, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Hide take pitch envelope" }, "S&M_TAKEENV11", ShowHideTakePitchEnvelope, NULL, 0},
+
+	{ { DEFACCEL, "SWS/S&M: Set active take pan envelope to 100% right" }, "S&M_TAKEENV_100R", PanTakeEnvelope, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Set active take pan envelope to 100% left" }, "S&M_TAKEENV_100L", PanTakeEnvelope, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Set active take pan envelope to center" }, "S&M_TAKEENV_CENTER", PanTakeEnvelope, NULL, 0},
+
+	{ { DEFACCEL, "SWS/S&M: Show and unbypass take pitch envelope" }, "S&M_TAKEENV10", BypassUnbypassShowHideTakePitchEnvelope, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Hide and bypass take pitch envelope" }, "S&M_TAKEENV11", BypassUnbypassShowHideTakePitchEnvelope, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Show take pitch envelope" }, "S&M_TAKEENVSHOW7", ShowHideTakePitchEnvelope, NULL, 1 },
+	{ { DEFACCEL, "SWS/S&M: Hide take pitch envelope" }, "S&M_TAKEENVSHOW8", ShowHideTakePitchEnvelope, NULL, 0 },
+
+	// NF: unlike the deactivated "SWS/S&M: Toggle show take ... envelope" actions below
+	// these *only* toggle visibility (no bypass/unbypass) and aren't available natively
+	{ { DEFACCEL, "SWS/S&M: Toggle show take volume envelope" }, "S&M_TAKEENVSHOW9", ShowHideTakeVolEnvelope, NULL, -1, GetFakeToggleState },
+	{ { DEFACCEL, "SWS/S&M: Toggle show take pan envelope" }, "S&M_TAKEENVSHOW10", ShowHideTakePanEnvelope, NULL, -1, GetFakeToggleState },
+	{ { DEFACCEL, "SWS/S&M: Toggle show take mute envelope" }, "S&M_TAKEENVSHOW11", ShowHideTakeMuteEnvelope, NULL, -1, GetFakeToggleState },
+	{ { DEFACCEL, "SWS/S&M: Toggle show take pitch envelope" }, "S&M_TAKEENVSHOW12", ShowHideTakePitchEnvelope, NULL, -1, GetFakeToggleState },
 
 	// Track envelopes --------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Remove all envelopes for selected tracks" }, "S&M_REMOVE_ALLENVS", RemoveAllEnvsSelTracksNoChunk, NULL, },
@@ -576,9 +593,9 @@ static COMMAND_T s_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Split selected items at edit or play cursor (ignoring grouping)" }, "S&M_SPLIT9", SplitSelectedItems, NULL, 40186},
 
 	// exist natively..
-	{ { DEFACCEL, "SWS/S&M: Toggle show take volume envelope" }, "S&M_TAKEENV7", ShowHideTakeVolEnvelope, NULL, -1, GetFakeToggleState},
-	{ { DEFACCEL, "SWS/S&M: Toggle show take pan envelope" }, "S&M_TAKEENV8", ShowHideTakePanEnvelope, NULL, -1, GetFakeToggleState},
-	{ { DEFACCEL, "SWS/S&M: Toggle show take mute envelope" }, "S&M_TAKEENV9", ShowHideTakeMuteEnvelope, NULL, -1, GetFakeToggleState},
+	{ { DEFACCEL, "SWS/S&M: Toggle show take volume envelope" }, "S&M_TAKEENV7", BypassUnbypassShowHideTakeVolEnvelope, NULL, -1, GetFakeToggleState},
+	{ { DEFACCEL, "SWS/S&M: Toggle show take pan envelope" }, "S&M_TAKEENV8", BypassUnbypassShowHideTakePanEnvelope, NULL, -1, GetFakeToggleState},
+	{ { DEFACCEL, "SWS/S&M: Toggle show take mute envelope" }, "S&M_TAKEENV9", BypassUnbypassShowHideTakeMuteEnvelope, NULL, -1, GetFakeToggleState},
 #endif
 
 	{ {}, LAST_COMMAND, } // denote end of table

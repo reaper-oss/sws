@@ -61,7 +61,8 @@ enum BR_MidiVelLanes
 	CC_BANK_SELECT      = 131,
 	CC_TEXT_EVENTS      = 132,
 	CC_SYSEX            = 133,
-	CC_14BIT_START      = 134
+	CC_14BIT_START      = 134,
+	CC_NOTATION_EVENTS  = 166
 };
 
 /******************************************************************************

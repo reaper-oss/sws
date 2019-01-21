@@ -1,3 +1,8 @@
+Fixes:
++ Issue 1078: Renamed "SWS/S&M: Show/Hide take ... envelope" actions to "SWS/S&M: Show/Hide and unbypass/bypass take ... envelope", added "SWS/S&M: Show/Hide take ... envelope" actions
+ - Added "SWS/S&M: Toggle show take ... envelope" actions (unlike the native "Take: Toggle take ... envelope" actions these toggle visibility only)
+ - Renamed 'take ... envelopes' to 'take ... envelope' to be consistent with native actions
+
 +Loudness:
  - Add 'high precision' analyzing mode (set in 'SWS/BR: Analyze loudness...' window -> Options or via action, see below), to ensure full compliance with BS.1770-4. Off by default.
    Notes: This mode is slower than the 'normal' analyzing mode and should only be needed when ensuring exact results of max. momentary values in certain (corner) cases is required.
@@ -130,11 +135,9 @@ Actions:
 
 =======
 Fixes:
-+ Issue 1078: Renamed "SWS/S&M: Show/Hide take ... envelope" actions to "SWS/S&M: Show/Hide and unbypass/bypass take ... envelope", added "SWS/S&M: Show/Hide take ... envelope" actions
- - Added "SWS/S&M: Toggle show take ... envelope" actions (unlike the native "Take: Toggle take ... envelope" actions these toggle visibility only)
- - Renamed 'take ... envelopes' to 'take ... envelope' to be consistent with native actions
++Issue 1082: BR_GetMouseCursorContext_MIDI() - add support for Notation Events lane
 
->>>>>>> github-desktop-nofishonfriday/rename-hide-take-envelopes-add-hide-take-envelopes-#1078
+>>>>>>> github-desktop-nofishonfriday/br_getmousecursorcontext_midi-add-notation-lane-#1082
 !v2.9.8 pre-release build (March 5, 2018)
 Now requires REAPER 5.50+!
 

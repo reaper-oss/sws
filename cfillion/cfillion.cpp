@@ -152,7 +152,7 @@ void CF_SetMediaSourceOnline(PCM_source *source, const bool online)
 
 bool CF_GetMediaSourceMetadata(PCM_source *source, const char *name, char *buf, const int bufSize)
 {
-  return source->Extended(PCM_SOURCE_EXT_GETMETADATA, (void *)name, (void *)buf, (void *)bufSize) > 0;
+  return source->Extended(PCM_SOURCE_EXT_GETMETADATA, (void *)name, (void *)buf, (void *)(intptr_t)bufSize) > 0;
 }
 
 bool CF_GetMediaSourceRPP(PCM_source *source, char *buf, const int bufSize)
@@ -171,7 +171,7 @@ bool CF_GetMediaSourceRPP(PCM_source *source, char *buf, const int bufSize)
 int CF_EnumMediaSourceCues(PCM_source *source, const int index, double *time, double *endTime, bool *isRegion, char *name, const int nameSize)
 {
   REAPER_cue cue = {};
-  const int add = source->Extended(PCM_SOURCE_EXT_ENUMCUES_EX, (void *)index, &cue, NULL);
+  const int add = source->Extended(PCM_SOURCE_EXT_ENUMCUES_EX, (void *)(intptr_t)index, &cue, NULL);
 
   if(time)
     *time = cue.m_time;

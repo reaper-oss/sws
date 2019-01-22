@@ -51,8 +51,6 @@
 		223EACF41E97470B00A32FCE /* swell-modstub.mm in Sources */ = {isa = PBXBuildFile; fileRef = 223EACF31E97470B00A32FCE /* swell-modstub.mm */; };
 		2246D05D12F1622400EEDBD5 /* Autorender.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2246D05912F1622400EEDBD5 /* Autorender.cpp */; };
 		2246D05E12F1622400EEDBD5 /* Autorender.h in Headers */ = {isa = PBXBuildFile; fileRef = 2246D05A12F1622400EEDBD5 /* Autorender.h */; };
-		2246D05F12F1622400EEDBD5 /* RenderTrack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2246D05B12F1622400EEDBD5 /* RenderTrack.cpp */; };
-		2246D06012F1622400EEDBD5 /* RenderTrack.h in Headers */ = {isa = PBXBuildFile; fileRef = 2246D05C12F1622400EEDBD5 /* RenderTrack.h */; };
 		225130BF116101670028F26A /* padreActions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 225130B2116101670028F26A /* padreActions.cpp */; };
 		225130C0116101670028F26A /* padreActions.h in Headers */ = {isa = PBXBuildFile; fileRef = 225130B3116101670028F26A /* padreActions.h */; };
 		225130C1116101670028F26A /* padreEnvelopeProcessor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 225130B4116101670028F26A /* padreEnvelopeProcessor.cpp */; };
@@ -223,6 +221,8 @@
 		22FFD27B114CD8310077F1CA /* Autocolor.h in Headers */ = {isa = PBXBuildFile; fileRef = 22FFD279114CD8310077F1CA /* Autocolor.h */; };
 		2446217121BC2B2200C2E00F /* NF_ReaScript.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2446217021BC2B2200C2E00F /* NF_ReaScript.cpp */; };
 		24A51E5F21BC291200100DC2 /* NF_ReaScript.h in Headers */ = {isa = PBXBuildFile; fileRef = 24A51E5E21BC291200100DC2 /* NF_ReaScript.h */; };
+		24F0441B21F68FBB00302066 /* RenderRegion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24F0441A21F68FBB00302066 /* RenderRegion.cpp */; };
+		24F0441D21F68FC900302066 /* RenderRegion.h in Headers */ = {isa = PBXBuildFile; fileRef = 24F0441C21F68FC900302066 /* RenderRegion.h */; };
 		3327DE920E955E14001FCE4E /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3327DE910E955E14001FCE4E /* Cocoa.framework */; };
 		387407D01664177E008626AA /* lice_arc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 387407CF1664177E008626AA /* lice_arc.cpp */; };
 		387938E516202B1E000948B5 /* CommandHandler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 387938B716202B1E000948B5 /* CommandHandler.cpp */; };
@@ -412,8 +412,6 @@
 		223EACF31E97470B00A32FCE /* swell-modstub.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "swell-modstub.mm"; path = "../WDL/WDL/swell/swell-modstub.mm"; sourceTree = SOURCE_ROOT; };
 		2246D05912F1622400EEDBD5 /* Autorender.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Autorender.cpp; path = Autorender/Autorender.cpp; sourceTree = "<group>"; };
 		2246D05A12F1622400EEDBD5 /* Autorender.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Autorender.h; path = Autorender/Autorender.h; sourceTree = "<group>"; };
-		2246D05B12F1622400EEDBD5 /* RenderTrack.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RenderTrack.cpp; path = Autorender/RenderTrack.cpp; sourceTree = "<group>"; };
-		2246D05C12F1622400EEDBD5 /* RenderTrack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RenderTrack.h; path = Autorender/RenderTrack.h; sourceTree = "<group>"; };
 		225130B2116101670028F26A /* padreActions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = padreActions.cpp; path = Padre/padreActions.cpp; sourceTree = "<group>"; };
 		225130B3116101670028F26A /* padreActions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = padreActions.h; path = Padre/padreActions.h; sourceTree = "<group>"; };
 		225130B4116101670028F26A /* padreEnvelopeProcessor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = padreEnvelopeProcessor.cpp; path = Padre/padreEnvelopeProcessor.cpp; sourceTree = "<group>"; };
@@ -578,6 +576,8 @@
 		22FFD279114CD8310077F1CA /* Autocolor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Autocolor.h; path = Color/Autocolor.h; sourceTree = "<group>"; };
 		2446217021BC2B2200C2E00F /* NF_ReaScript.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NF_ReaScript.cpp; path = nofish/NF_ReaScript.cpp; sourceTree = "<group>"; };
 		24A51E5E21BC291200100DC2 /* NF_ReaScript.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NF_ReaScript.h; path = nofish/NF_ReaScript.h; sourceTree = "<group>"; };
+		24F0441A21F68FBB00302066 /* RenderRegion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RenderRegion.cpp; path = Autorender/RenderRegion.cpp; sourceTree = "<group>"; };
+		24F0441C21F68FC900302066 /* RenderRegion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RenderRegion.h; path = Autorender/RenderRegion.h; sourceTree = "<group>"; };
 		3327DE910E955E14001FCE4E /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		387407CF1664177E008626AA /* lice_arc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lice_arc.cpp; path = ../WDL/WDL/lice/lice_arc.cpp; sourceTree = SOURCE_ROOT; };
 		387938B716202B1E000948B5 /* CommandHandler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CommandHandler.cpp; path = Fingers/CommandHandler.cpp; sourceTree = "<group>"; };
@@ -896,10 +896,10 @@
 		2246D06112F1622800EEDBD5 /* Autorender */ = {
 			isa = PBXGroup;
 			children = (
+				24F0441C21F68FC900302066 /* RenderRegion.h */,
+				24F0441A21F68FBB00302066 /* RenderRegion.cpp */,
 				2246D05912F1622400EEDBD5 /* Autorender.cpp */,
 				2246D05A12F1622400EEDBD5 /* Autorender.h */,
-				2246D05B12F1622400EEDBD5 /* RenderTrack.cpp */,
-				2246D05C12F1622400EEDBD5 /* RenderTrack.h */,
 			);
 			name = Autorender;
 			sourceTree = "<group>";
@@ -1396,7 +1396,6 @@
 				22C31F24125EF71A0072434F /* Adam.h in Headers */,
 				2273566812910ABF001A1570 /* EditCursor.h in Headers */,
 				2246D05E12F1622400EEDBD5 /* Autorender.h in Headers */,
-				2246D06012F1622400EEDBD5 /* RenderTrack.h in Headers */,
 				2270FC7212F8551400703F85 /* RecCheck.h in Headers */,
 				22284D48130C4A65007DC680 /* Menus.h in Headers */,
 				22B22D6413FA575C00D187A9 /* Analysis.h in Headers */,
@@ -1459,6 +1458,7 @@
 				4D859DD516AB133D00E34EAA /* asyncdns.h in Headers */,
 				4D859DD716AB133D00E34EAA /* connection.h in Headers */,
 				4D859DD916AB133D00E34EAA /* httpget.h in Headers */,
+				24F0441D21F68FC900302066 /* RenderRegion.h in Headers */,
 				4D859DDA16AB133D00E34EAA /* jnetlib.h in Headers */,
 				4D859DDB16AB133D00E34EAA /* netinc.h in Headers */,
 				4D859DDD16AB133D00E34EAA /* util.h in Headers */,
@@ -1652,6 +1652,7 @@
 				229A7E961165744400325BC2 /* ProjPrefs.cpp in Sources */,
 				229A7E981165744400325BC2 /* TrackParams.cpp in Sources */,
 				229A7E9A1165744400325BC2 /* TrackSel.cpp in Sources */,
+				24F0441B21F68FBB00302066 /* RenderRegion.cpp in Sources */,
 				22AF6E1112308B8D0017808F /* virtwnd-iconbutton.cpp in Sources */,
 				22AF6E1212308B8D0017808F /* virtwnd-listbox.cpp in Sources */,
 				22AF6E1412308B8D0017808F /* virtwnd.cpp in Sources */,
@@ -1688,7 +1689,6 @@
 				22C31F23125EF71A0072434F /* Adam.cpp in Sources */,
 				2273566712910ABF001A1570 /* EditCursor.cpp in Sources */,
 				2246D05D12F1622400EEDBD5 /* Autorender.cpp in Sources */,
-				2246D05F12F1622400EEDBD5 /* RenderTrack.cpp in Sources */,
 				2270FC7112F8551400703F85 /* RecCheck.cpp in Sources */,
 				22284D47130C4A65007DC680 /* Menus.cpp in Sources */,
 				22B22D6313FA575C00D187A9 /* Analysis.cpp in Sources */,

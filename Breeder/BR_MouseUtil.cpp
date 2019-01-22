@@ -34,7 +34,7 @@
 /******************************************************************************
 * Constants                                                                   *
 ******************************************************************************/
-const int ITEM_LABEL_MIN_HEIGHT     = 28;
+// const int ITEM_LABEL_MIN_HEIGHT     = 28; NF: not referenced currently
 
 const int ENV_GAP                   = 4; // bottom gap may seem like 3 when selected, but that
 const int ENV_LINE_WIDTH            = 1; // first pixel is used to "bold" selected envelope

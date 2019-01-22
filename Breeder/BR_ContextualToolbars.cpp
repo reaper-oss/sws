@@ -82,7 +82,7 @@ const int POSITION_H_RIGHT       = 0x800;
 const int POSITION_V_TOP         = 0x2000;
 const int POSITION_V_MIDDLE      = 0x4000;
 const int POSITION_V_BOTTOM      = 0x8000;
-const int SET_FOREGROUND         = 0x1000;
+// const int SET_FOREGROUND         = 0x1000; NF: not referenced currently
 
 /******************************************************************************
 * Globals                                                                     *

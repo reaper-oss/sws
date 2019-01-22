@@ -2437,7 +2437,7 @@ void BR_AnalyzeLoudnessWnd::ShowNormalizeDialog (bool show)
 
 void BR_AnalyzeLoudnessWnd::LoadProperties()
 {
-	if (BR_AnalyzeLoudnessWnd* dialog = g_loudnessWndManager.Create())
+	if (g_loudnessWndManager.Create())
 	{
 		m_properties.Load();
 	}
@@ -2445,7 +2445,7 @@ void BR_AnalyzeLoudnessWnd::LoadProperties()
 
 void BR_AnalyzeLoudnessWnd::SaveProperties()
 {
-	if (BR_AnalyzeLoudnessWnd* dialog = g_loudnessWndManager.Create())
+	if (g_loudnessWndManager.Create())
 	{
 		m_properties.Save();
 	}

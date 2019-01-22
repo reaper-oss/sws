@@ -1132,7 +1132,7 @@ void NotesWnd::ForceUpdateMkrRgnNameOrSub(int _type)
 	if (_type != SNM_NOTES_RGN_NAME && _type != SNM_NOTES_RGN_SUB)
 		mask |= SNM_MARKER_MASK;
 
-	int id, idx = FindMarkerRegion(NULL, dPos, mask, &id);
+	int id; FindMarkerRegion(NULL, dPos, mask, &id);
 	if (id > 0)
 	{
 		for (int i = 0; i < g_pRegionSubs.Get()->GetSize(); i++)
@@ -1645,7 +1645,8 @@ int NotesInit()
 		
 		if (infile.IsOpen() == true) {
 			std::vector<char> buffer(infile.GetSize() + 1); // +1 to have space for the terminating zero
-			infile.Read(buffer.data(), infile.GetSize());
+			// infile.Read(buffer.data(), infile.GetSize()); // C++11
+            infile.Read(&buffer.front(), infile.GetSize());
 			buffer[infile.GetSize()] = '\0'; // put in the string terminating zero
 			g_glbNotes.Get()->Set(&buffer[0]);
 		}

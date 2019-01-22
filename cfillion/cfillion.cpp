@@ -30,7 +30,7 @@
 
 #include "version.h"
 
-#include "reaper/localize.h"
+#include "../reaper/localize.h"
 
 
 #ifdef _WIN32
@@ -170,14 +170,14 @@ static HWND CF_GetTrackFXChain(const int trackIndex)
     snprintf(chainTitle, sizeof(chainTitle), "%s%s %d",
       __LOCALIZE("FX: ", "fx"), __LOCALIZE("Track", "fx"), trackIndex);
 
-  return FindWindowEx(nullptr, nullptr, nullptr, chainTitle);
+  return FindWindowEx(NULL, NULL, NULL, chainTitle);
 }
 
 HWND CF_GetTrackFXChain(MediaTrack *track)
 {
   int trackNumber = 0;
 
-  if(track != GetMasterTrack(nullptr))
+  if(track != GetMasterTrack(NULL))
     trackNumber = static_cast<int>(GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER"));
 
   return CF_GetTrackFXChain(trackNumber);
@@ -189,7 +189,7 @@ HWND CF_GetTakeFXChain(MediaItem_Take *take)
   // attached to it (pointer to an internal FxChain object?) but it does not
   // seem to hint back to the take in any obvious way.
 
-  GUID *guid = static_cast<GUID *>(GetSetMediaItemTakeInfo(take, "GUID", nullptr));
+  GUID *guid = static_cast<GUID *>(GetSetMediaItemTakeInfo(take, "GUID", NULL));
 
   char guidStr[64];
   guidToString(guid, guidStr);
@@ -201,7 +201,7 @@ HWND CF_GetTakeFXChain(MediaItem_Take *take)
   snprintf(chainTitle, sizeof(chainTitle), "%s%s \"%s\"",
     __LOCALIZE("FX: ", "fx"), __LOCALIZE("Item", "fx"), guidStr);
 
-  HWND window = FindWindowEx(nullptr, nullptr, nullptr, chainTitle);
+  HWND window = FindWindowEx(NULL, NULL, NULL, chainTitle);
 
   GetSetMediaItemTakeInfo_String(take, "P_NAME",
     const_cast<char *>(originalName.c_str()), true);
@@ -219,13 +219,13 @@ HWND CF_GetFocusedFXChain()
   case 1:
     return CF_GetTrackFXChain(trackIndex);
   case 2: {
-    MediaTrack *track = GetTrack(nullptr, trackIndex - 1);
+    MediaTrack *track = GetTrack(NULL, trackIndex - 1);
     MediaItem *item = GetTrackMediaItem(track, itemIndex);
     MediaItem_Take *take = GetMediaItemTake(item, HIWORD(fxIndex));
     return CF_GetTakeFXChain(take);
   }
   default:
-    return nullptr;
+    return NULL;
   }
 }
 

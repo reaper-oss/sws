@@ -738,7 +738,7 @@ void AutorenderRegions(COMMAND_T*)
         TagLib::String s(g_tag_album.c_str(), TagLib::String::UTF8);
         f.tag()->setAlbum(s);
       }
-      if( !g_.tag_genre.empty() )
+      if(!g_tag_genre.empty() )
       {
         TagLib::String s(g_tag_genre.c_str(), TagLib::String::UTF8);
         f.tag()->setGenre(s);

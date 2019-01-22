@@ -123,8 +123,8 @@ bool CF_ShellExecute(const char *file, const char *args)
   // than 32 on success) while SWELL's implementation returns a BOOL.
 
 #ifdef _WIN32
-//  static_assert(&ShellExecute == &ShellExecuteUTF8,
-//    "ShellExecute is not aliased to ShellExecuteUTF8");
+  static_assert(&ShellExecute == &ShellExecuteUTF8,
+    "ShellExecute is not aliased to ShellExecuteUTF8");
   HINSTANCE ret = ShellExecute(nullptr, "open", file, args, nullptr, SW_SHOW);
   return ret > (HINSTANCE)32;
 #else

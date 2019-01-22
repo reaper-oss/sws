@@ -55,7 +55,7 @@ LICE_OBJS          = lice_textnew.o lice.o lice_arc.o lice_line.o \
 REAPER_OBJS        = reaper/reaper.o
 SWS_OBJS           = sws_extension.o sws_about.o sws_util.o sws_waitdlg.o sws_wnd.o Menus.o Prompt.o ReaScript.o stdafx.o Zoom.o sws_util_generic.o
 # DragDrop.o
-AUTORENDER_OBJS    = Autorender/Autorender.o Autorender/RenderTrack.o
+AUTORENDER_OBJS    = Autorender/Autorender.o Autorender/RenderRegion.o
 BREEDER_OBJS       = Breeder/BR_ContextualToolbars.o Breeder/BR_ContinuousActions.o Breeder/BR.o Breeder/BR_Envelope.o Breeder/BR_EnvelopeUtil.o \
                      Breeder/BR_Loudness.o Breeder/BR_MidiEditor.o Breeder/BR_MidiUtil.o Breeder/BR_Misc.o Breeder/BR_MouseUtil.o \
                      Breeder/BR_ProjState.o Breeder/BR_ReaScript.o Breeder/BR_Tempo.o Breeder/BR_TempoDlg.o Breeder/BR_Timer.o \

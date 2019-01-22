@@ -330,7 +330,7 @@ void SelNearestNextFolder(COMMAND_T* = NULL) // #981
 	{
 		int nextTrID = (int)GetMediaTrackInfo_Value(selTr, "IP_TRACKNUMBER") + 1;
 
-		for (int i = nextTrID; i <= GetNumTracks(); i++)
+		for (; nextTrID <= GetNumTracks(); nextTrID++)
 		{
 			MediaTrack* tr = CSurf_TrackFromID(nextTrID, false);
 			if ((int)GetMediaTrackInfo_Value(tr, "I_FOLDERDEPTH") == 1)
@@ -351,7 +351,7 @@ void SelNearestPrevFolder(COMMAND_T* = NULL) // #981
 		{
 			int prevTrID = (int)GetMediaTrackInfo_Value(selTr, "IP_TRACKNUMBER") - 1;
 
-			for (int i = prevTrID; i > 0; i--)
+			for (; prevTrID > 0; prevTrID--)
 			{
 				MediaTrack* tr = CSurf_TrackFromID(prevTrID, false);
 				if ((int)GetMediaTrackInfo_Value(tr, "I_FOLDERDEPTH") == 1)

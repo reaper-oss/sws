@@ -32,9 +32,9 @@ typedef HWND__ FxChain;
 void CF_SetClipboard(const char *);
 void CF_GetClipboard(char *buf, int bufSize);
 const char *CF_GetClipboardBig(WDL_FastString *);
+
 bool CF_ShellExecute(const char *file, const char *args = NULL);
 bool CF_LocateInExplorer(const char *file);
-
 
 void CF_GetSWSVersion(char *buf, int bufSize);
 
@@ -45,6 +45,7 @@ HWND CF_GetFocusedFXChain();
 HWND CF_GetTrackFXChain(MediaTrack *);
 HWND CF_GetTakeFXChain(MediaItem_Take *);
 int CF_EnumSelectedFX(HWND chain, int index = -1);
+
 int CF_GetMediaSourceBitDepth(PCM_source *);
 bool CF_GetMediaSourceOnline(PCM_source *);
 void CF_SetMediaSourceOnline(PCM_source *, bool set);

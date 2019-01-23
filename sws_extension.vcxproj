@@ -106,7 +106,7 @@
       </Command>
     </PreLinkEvent>
     <Link>
-      <AdditionalDependencies>comctl32.lib;lib/vs12_tag32.lib;shlwapi.lib;wsock32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>comctl32.lib;lib/vs15_tag32.lib;shlwapi.lib;wsock32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)reaper_sws.dll</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <GenerateMapFile>true</GenerateMapFile>
@@ -145,7 +145,7 @@ echo Copied to "$(REAPER_DIR)\plugins\$(TargetFilename)"</Command>
       </Command>
     </PreLinkEvent>
     <Link>
-      <AdditionalDependencies>comctl32.lib;lib/vs12_tag64.lib;shlwapi.lib;wsock32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>comctl32.lib;lib/vs15_tag64.lib;shlwapi.lib;wsock32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)reaper_sws64.dll</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <GenerateMapFile>true</GenerateMapFile>
@@ -181,7 +181,7 @@ echo Copied to "$(REAPER64_DIR)\plugins\$(TargetFilename)"</Command>
       </Command>
     </PreLinkEvent>
     <Link>
-      <AdditionalDependencies>comctl32.lib;lib/vs12_tag32.lib;shlwapi.lib;wsock32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>comctl32.lib;lib/vs15_tag32.lib;shlwapi.lib;wsock32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)reaper_sws.dll</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <GenerateMapFile>true</GenerateMapFile>
@@ -224,7 +224,7 @@ echo Copied to "$(REAPER_DIR)\plugins\$(TargetFilename)"</Command>
       </Command>
     </PreLinkEvent>
     <Link>
-      <AdditionalDependencies>comctl32.lib;lib/vs12_tag64.lib;shlwapi.lib;wsock32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>comctl32.lib;lib/vs15_tag64.lib;shlwapi.lib;wsock32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)reaper_sws64.dll</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <GenerateMapFile>true</GenerateMapFile>

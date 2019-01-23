@@ -1,84 +1,72 @@
-Fixes:
-+ Issue 1078: Renamed "SWS/S&M: Show/Hide take ... envelope" actions to "SWS/S&M: Show/Hide and unbypass/bypass take ... envelope", added "SWS/S&M: Show/Hide take ... envelope" actions
- - Added "SWS/S&M: Toggle show take ... envelope" actions (unlike the native "Take: Toggle take ... envelope" actions these toggle visibility only)
- - Renamed 'take ... envelopes' to 'take ... envelope' to be consistent with native actions
-
-+Loudness:
- - Add 'high precision' analyzing mode (set in 'SWS/BR: Analyze loudness...' window -> Options or via action, see below), to ensure full compliance with BS.1770-4. Off by default.
-   Notes: This mode is slower than the 'normal' analyzing mode and should only be needed when ensuring exact results of max. momentary values in certain (corner) cases is required.
-   All other results should be compliant with BS.1770-4 also in 'normal' analyzing mode.
-   Technically this mode uses 100 Hz refresh rate / 10 ms buffer rather than default 5 Hz refresh rate / 200 ms buffer for analyzing.
-   For background see https://github.com/reaper-oss/sws/issues/1046#issuecomment-428914818|here| and https://github.com/jiixyj/libebur128/issues/93#issuecomment-429043548|here|.
-   ReScript Loudness functions respect this preference.
+!v2.10.0 featured build (January 24, 2019)
+New features:
++Auto color/icon/layout: Add '(hide)' Layout to auto hide TCP / MCP of tracks (rightclick in "TCP Layout" / "MCP Layout" fields to set) (Issue 1008)
++Global notes
++Loudness: Add 'high precision' analyzing mode
+ Set in 'SWS/BR: Analyze loudness...' window -> Options or via action, see below), to ensure full compliance with BS.1770-4. Off by default.
+ Notes: This mode is slower than the 'normal' analyzing mode and should only be needed when ensuring exact results of max. momentary values in certain (corner) cases is required.
+ All other results should be compliant with BS.1770-4 also in 'normal' analyzing mode.
+ Technically this mode uses 100 Hz refresh rate / 10 ms buffer rather than default 5 Hz refresh rate / 200 ms buffer for analyzing.
+ For background see https://github.com/reaper-oss/sws/issues/1046#issuecomment-428914818|here| and https://github.com/jiixyj/libebur128/issues/93#issuecomment-429043548|here|.
+ ReScript Loudness functions respect this preference.
  - Add action 'SWS/BR/NF: Toggle use high precision mode for loudness analyzing'
- - Harden 'prevent items going offline during analysis' (also prevent during quick reanalyze)
-
-<<<<<<< HEAD
-
-
-+MouseContext: Initial support for automation items:
++Mouse context: Initial support for automation items:
  - Contextual toolbars: Add Automation item context (Issue 915)
  - ReaScript:
   - BR_GetMouseCursorContext(): detailsOut returns "automation_item" when mouse cursor is over automation item
-  - Added function: BR_GetMouseCursorContext_AutomationItem(), returns automation item index
-
-  Fixes:
-  +Issue 938: SWS/S&M: Copy FX Chain (Depending on Focus) - if take FX chain, also copy take FX chain channel count
-
-  ReaScript:
-   - Marked SNM_MoveOrRemoveTrackFX() as deprecated (native API equivalent added in REAPER 5.95)
-   - Removed NF_TrackFX/TakeFX_ Set/GetOffline() (native API equivalent added in REAPER 5.95)
-
-  New ReaScript functions:
-  +Issue 755:
-   - NF_GetSWSMarkerRegionSub()
-   - NF_SetSWSMarkerRegionSub()
-   - NF_UpdateSWSMarkerRegionSubWindow()
-   +NF_GetMediaItemMaxPeakAndMaxPeakPos() (Issue 953)
-   +NF_AnalyzeMediaItemPeakAndRMS() (Issue 674)
-   Fixes:
-   +Issue 966: Track height actions and vertical zoom actions obey track height locking (REAPER 5.78+)
-   Fixes:
-   +ReaScript:
-    - fix BR_MIDI_CCLaneRemove(), BR_MIDI_CCLaneReplace() (report https://forum.cockos.com/showpost.php?p=2002814&postcount=1|here|.)
-   +Issue 1054: "SWS/S&M: Show take volume envelopes" - obey volume fader scaling preference if new envelope is created
-   +Cycle Action editor: Fix minor issue with not opening with correct section (report https://forum.cockos.com/showpost.php?p=1986045&postcount=3|here|)
-   +"SWS/S&M: Close all FX chain windows", "SWS/S&M: Close all floating FX windows (...)" - include take FX (report https://forum.cockos.com/showpost.php?p=1978820&postcount=2425|here|)
-
-   Fixes:
-   +Issue 950: Make BR_SetItemEdges() only work on item passed in function (rather than all selected items), refix from v2.9.8
-
-   Fixes:
-   +Issue 537: Snapshots: (Attempt to) Fix longstanding issue with send envelopes not restored when recalling snapshots (thanks ovnis for testing!).
-    - Note: Since snapshots are based on state chunks, changes within AI envelopes are not recalled currently (https://forum.cockos.com/showthread.php?t=205406|FR|), though AI properties (e.g. position) should be recalled correctly. Also note that when deleting an AI and trying to recall a previously stored snapshot which contains this AI it won't be recalled correctly.
+  - Add function: BR_GetMouseCursorContext_AutomationItem(), returns automation item index
 
 Actions:
 +New actions (Main section):
+ - Snapshots: Add actions to delete current/all snapshots (request https://forum.cockos.com/showthread.php?p=1997530|here|)
+ - SWS: Select nearest previous folder, SWS: Select nearest next folder (Issue 981)
+ - SWS/FNG: Apply selected groove (use curent settings from opened groove tool)
  - SWS/NF: Disable multichannel metering (all tracks)
  - SWS/NF: Disable multichannel metering (selected tracks)
  - SWS/NF: Enable multichannel metering (all tracks)
  - SWS/NF: Enable multichannel metering (selected tracks)
-
-+"SWS/NF: Eraser tool...":
- - added 'ignoring snap' variant
- - changed functionality (now cuts item sections on shortcut release rather than continuous erasing because it didn't work well with Ripple editing), changed action description to reflect this change
-
+ - SWS/NF: Cycle through MIDI recording modes (also available in ME section) (Issue 994)
+ - SWS/NF: Cycle through track automation modes (Issue 995)
+ - SWS/S&M: Show/Hide take ... envelope, SWS/S&M: Toggle show take ... envelope (unlike the native "Take: Toggle take ... envelope" actions these change visibility only) (Issue 1078)
 
 Fixes:
-+Auto group:
- - Revert creating explicit undo point (match behaviour prior 2.95)
- - Prevent grouping of selected items on not record armed tracks
-
-
-Fixes:
++Issue 537: Snapshots: (Attempt to) Fix longstanding issue with send envelopes not restored when recalling snapshots (thanks ovnis for testing!)
+ Note: Since snapshots are based on state chunks, changes within AI envelopes are not recalled currently (https://forum.cockos.com/showthread.php?t=205406|FR|), though AI properties (e.g. position) should be recalled correctly. Also note that when deleting an AI and trying to recall a previously stored snapshot which contains this AI it won't be recalled correctly.
++Issue 938: SWS/S&M: Copy FX Chain (Depending on Focus) - if take FX chain, also copy take FX chain channel count
++Issue 966: Track height actions and vertical zoom actions obey track height locking (REAPER 5.78+)
++Issue 1041: m3u/pls playlist import 
+ - Fix crash when cancelling playlist import
+ - Fix items always being created for missing files when importing playlists
++Issue 1047: ReaConsole: Redraw the status label when resizing the window on Windows 
++Issue 1054: "SWS/S&M: Show take volume envelopes" - obey volume fader scaling preference if new envelope is created
++Issue 1057: Fix quantize actions moving items to incorrect positions or hanging in some cases when the grid line spacing is set to Frames, typically when a project start time offset is used 
++Issue 1060: Fix "SWS/Shane: Batch Render Regions" crashing when a region contains a slash on Linux and macOS 
++Issue 1077: Fix crash after stopping the active track preview from another project tab 
 +Auto color/icon/layout: "(vca master)" filter - also apply rules to groups 33 - 64 (report https://forum.cockos.com/showthread.php?t=207722|here|) (REAPER 5.70+)
++Cycle Action editor: Fix minor issue with not opening with correct section (report https://forum.cockos.com/showpost.php?p=1986045&postcount=3|here|)
++Fix hang when parsing item chunks containing lines bigger than 255 characters (https://github.com/reaper-oss/sws/issues/912#issuecomment-426892230|Issue 912 (comment)|)
++Fix freeze when running "SWS/S&M: Remove all envelopes for selected tracks" with the master track selected (regression from v2.9.8)
++"SWS/S&M: Close all FX chain windows", "SWS/S&M: Close all floating FX windows (...)" - include take FX (report https://forum.cockos.com/showpost.php?p=1978820&postcount=2425|here|)
++Auto group:
+ - Revert creating explicit undo point (match behaviour prior v2.95)
+ - Prevent grouping of selected items on not record armed tracks
++Loudness:
+ - Revert (mistakenly) changing integrated Loudness relative gate threshold from -10.0 LU to -20.0 LU in SWS v2.9.8 (https://github.com/jiixyj/libebur128/issues/92#issuecomment-426889385|technical explaination|)
+ - Fix getting project sample rate
+ - Don't apply item vol. and pan/vol. envelope correction beyond actual audio data (Issue 1074)
+ - Fix item Loudness analysis if take contains vol. envelope and item position not 0.0 (thanks X-Raym!) (Issue 957, https://github.com/reaper-oss/sws/issues/957#issuecomment-371233030|details|)
+ - Pan/vol. envelope correction is now sample accurate (instead of being processed in blocks)
+ - Fix export format wildcard descriptions not being translated (report https://forum.cockos.com/showthread.php?t=206229|here|)
+ - Harden 'prevent items going offline during analysis' (also prevent during quick reanalyze)
++ReaScript:
+ +Issue 950: Make BR_SetItemEdges() only work on item passed in function (rather than all selected items), refix from v2.9.8
+ - Avoid crashing in BR_Win32{Get,Write}PrivateProfileString when keyName is empty
+ - BR_GetMouseCursorContext_MIDI() - add support for Notation Events lane (Issue 1082) (Note: currently returning 0x208, maybe this is due to change, see https://forum.cockos.com/showthread.php?p=2081634#post2081634|here|)
+ - Fix BR_MIDI_CCLaneRemove(), BR_MIDI_CCLaneReplace() (report https://forum.cockos.com/showpost.php?p=2002814&postcount=1|here|.)
+ - Repair CF_LocateInExplorer()
 
-Actions:
-+New actions (Main section):
- - Issue 994: SWS/NF: Cycle through MIDI recording modes (also available in ME section)
- - Issue 995: SWS/NF: Cycle through track automation modes
-+Auto color/icon/layout: Add '(hide)' Layout to auto hide TCP / MCP of tracks (rightclick in "TCP Layout" / "MCP Layout" fields to set) (Issue 1008)
 New ReaScript functions:
+(thanks Breeder!)
 +BR_Win32_CB_FindString()
 +BR_Win32_CB_FindStringExact()
 +BR_Win32_ClientToScreen()
@@ -119,25 +107,41 @@ New ReaScript functions:
 +BR_Win32_ShowWindow()
 +BR_Win32_StringToHwnd()
 +BR_Win32_WindowFromPoint()
-Fixes:
-+Loudness:
- - Revert (mistakenly) changing integrated Loudness relative gate threshold from -10.0 LU to -20.0 LU in SWS v2.9.8 (https://github.com/jiixyj/libebur128/issues/92#issuecomment-426889385|technical explaination|)
- - Fix getting project sample rate
- - Don't apply item vol. and pan/vol. envelope correction beyond actual audio data (Issue 1074)
- - Fix item Loudness analysis if take contains vol. envelope and item position not 0.0 (thanks X-Raym!) (Issue 957, https://github.com/reaper-oss/sws/issues/957#issuecomment-371233030|details|)
- - Pan/vol. envelope correction is now sample accurate (instead of being processed in blocks)
++CF_EnumMediaSourceCues()
++CF_ExportMediaSource()
++CF_GetMediaSourceMetadata()
++CF_GetMediaSourceRPP()
++CF_GetMediaSourceBitDepth() (Issue 1010)
++CF_GetMediaSourceOnline()
++CF_SetMediaSourceOnline()
++CF_EnumerateActions()
++CF_EnumSelectedFX()
++CF_GetCommandText()
++CF_GetFocusedFXChain()
++CF_GetTakeFXChain()
++CF_GetTrackFXChain()
++CF_GetSWSVersion() (Issue 975)
++NF_AnalyzeMediaItemPeakAndRMS() (Issue 674)
++NF_GetMediaItemMaxPeakAndMaxPeakPos() (Issue 953)
++Issue 755:
+ - NF_GetSWSMarkerRegionSub()
+ - NF_SetSWSMarkerRegionSub()
+ - NF_UpdateSWSMarkerRegionSubWindow()
 
-Actions:
-+New actions (Main section):
- - SWS/FNG: Apply selected groove (use curent settings from opened groove tool)
-
-+Renamed "SWS: Analyze and display item peak and RMS" to "SWS: Analyze and display item peak and RMS (entire item)" (https://forum.cockos.com/showthread.php?p=2074089#post2074089|background|)
-
-=======
-Fixes:
-+Issue 1082: BR_GetMouseCursorContext_MIDI() - add support for Notation Events lane
-
->>>>>>> github-desktop-nofishonfriday/br_getmousecursorcontext_midi-add-notation-lane-#1082
+Other changes:
+- Rename "SWS: Analyze and display item peak and RMS" to "SWS: Analyze and display item peak and RMS (entire item)" (https://forum.cockos.com/showthread.php?p=2074089#post2074089|background|)
+- Rename and deprecate "Xenakios/SWS: Toggle stop playback at end of time selection" (Issue 1066)
+- Rename "SWS/S&M: Show/Hide take ... envelope" actions to "SWS/S&M: Show/Hide and unbypass/bypass take ... envelope" (Issue 1078) 
+- Rename 'take ... envelopes' to 'take ... envelope' (to be consistent with native actions)
+- Remove useless code vulnerable to buffer overflows
++"SWS/NF: Eraser tool...":
+ - Add 'ignoring snap' variant
+ - Change functionality (now cuts item sections on shortcut release rather than continuous erasing because it didn't work well with Ripple editing), changed action description to reflect this change
++ReaScript:
+ - Mark SNM_MoveOrRemoveTrackFX() as deprecated (native API equivalent added in REAPER 5.95)
+ - Remove NF_TrackFX/TakeFX_ Set/GetOffline() (native API equivalent added in REAPER 5.95)
+ - TagLib VS 2017 update for Windows
+ 
 !v2.9.8 pre-release build (March 5, 2018)
 Now requires REAPER 5.50+!
 
@@ -161,7 +165,7 @@ Fixes:
 +Issue 802: Disable FXID filtering in SNM_MoveOrRemoveTrackFX() (thanks Justin!)
 +Crossfade actions: Prevent item content movement if takes contain stretch markers (https://forum.cockos.com/showthread.php?t=197584 posts #11, #12) and / or take playrate is other than 1.0
  (Also fix for  "SWS/AW: Fade in/out/crossfade selected area of selected items" and "SWS/AW: Trim selected items to fill selection")
-+Loudness:
++Loudness: 
  - Issue 927: Change relative gating threshold from -10.0 LU to -20.0 LU (to match with EBU TECH3342 notes)
  - Prevent items going offline during analysis (hopefully fixes cornercase issue with occasionally wrong analysis results)
  - Enable the Cancel button only while analyzing
@@ -172,10 +176,10 @@ Fixes:
 +Issue 918: Fix various issues with "SWS/S&M: Remove all envelopes for selected tracks"
 +Support for UTF-8 resource paths on Windows (Issues #934, #935)
 +Issue 942: Fix column header context menu when a langpack is used
-+Issue 886: Potentially fix occasional skipping of adjacent regions in Region Playlist, needs testing
-+Issue 945: "SWS/S&M: Toolbar - Toggle track envelopes in touch/latch/write" - add latch preview
++Issue 886: Potentially fix occasional skipping of adjacent regions in Region Playlist, needs testing 
++Issue 945: "SWS/S&M: Toolbar - Toggle track envelopes in touch/latch/write" - add latch preview 
 +Issue 950: Prevent takes envelopes and stretch markers offset with  BR_SetItemEdges() and "SWS/BR: Trim MIDI item to active content"
-
+ 
 New ReaScript functions:
 +CF_ShellExecute
 +CF_LocateInExplorer
@@ -1342,7 +1346,7 @@ Notes window
  - SWS/S&M: Open/close Notes window (marker subtitles)
  - SWS/S&M: Open/close Notes window (region subtitles)
 +If REAPER >= v4.55: Mark project dirty (needing save) rather than creating undo points for each key stroke
-+Potential fix for http://forum.cockos.com/showpost.php?p=1180135&postcount=1595|"things that smells like Pont-l'Évêque"|
++Potential fix for http://forum.cockos.com/showpost.php?p=1180135&postcount=1595|"things that smells like Pont-l'�v�que"|
 +House cleaning: allow notes for macros and scripts (aka "Action help")
  To easy copy/paste, string identifiers used to be displayed in the Notes window for macros/scripts.
  This is now useless since the action list offers "Copy selected action cmdID/identifier string".
@@ -1404,14 +1408,14 @@ Ruler's drag zoom / Issue 540: added actions for better usability
 
 Fixes
 +Issue 603: fixed potential crash when pasting track groups
-+Localization / Windows OS: fixed broken features/actions when the extension was translated (thanks drikssaï & neilerua):
++Localization / Windows OS: fixed broken features/actions when the extension was translated (thanks drikssa� & neilerua):
  - Most of zoom features
  - Xenakios "Scroll track view" actions
  - S&M "Toggle offscreen item selection" actions
 +Issue 595: cut/copy/paste take actions now handle multiple item selection
 +The action "Cut active take" now removes items if needed (rather than leaving empty items)
 +Issue 601: fixed marker <-> region conversion actions (and export actions) that could affect playback
-+Issue 606 / OS X: fixed text display à la "Big Clock" for Notes, Region Playlist and Live Config Monitor windows
++Issue 606 / OS X: fixed text display � la "Big Clock" for Notes, Region Playlist and Live Config Monitor windows
 +S&M actions to switch FX presets now support concurrent use (e.g. tweaking 2 knobs at the same time)
 +Fixed the toggle state reported by some "Toggle offscreen item selection" actions
 
@@ -2229,7 +2233,7 @@ Resources window
 +Creating new bookmarks now sets auto-save and auto-fill directories to the default resource path (i.e. you will not be promped for directories anymore)
 
 Region playlist: added repeat button
-Notes window: re-added marker/region names edition (and display Ã  la "Big clock" when text edition is locked)
+Notes window: re-added marker/region names edition (and display à la "Big clock" when text edition is locked)
 Added actions (for issue 470 & macros based on cue buss actions)
 +SWS/S&M: Save default track send preferences
 +SWS/S&M: Recall default track send preferences
@@ -2496,7 +2500,7 @@ Resources window: bookmark names as defined by the user
 Notes/Help window -> Notes/Subtitles/Help
 +Subtitles support: new mode "Marker/Region subtitles" in the top left dropdown box.
  You can edit notes for regions and/or markers. Such notes are saved in project files.
- When the view/text edition is locked, notes are displayed with a dynamic sized font (display Ã  la "Big clock") and they follow the play cursor position (i.e. subtitles!).
+ When the view/text edition is locked, notes are displayed with a dynamic sized font (display à la "Big clock") and they follow the play cursor position (i.e. subtitles!).
  Useful for lyrics, video stuff (you can display subtitles or even to edit them in REAPER), etc...
  Also added new buttons and actions to import/export SubRip subtitle files (.srt files, this format is supported by most video players) :
 +SWS/S&M: Notes/Subtitles/Help - Import subtitle file... - It adds a region with notes for each subtitle of the loaded file
@@ -2948,7 +2952,7 @@ Other cycle action updates:
 +Consolidated undo points
 
 S&M Notes/help:
-+When the view is locked, the text is now displayed with a dynamic sized font (i.e. display Ã  la "Big clock")
++When the view is locked, the text is now displayed with a dynamic sized font (i.e. display à la "Big clock")
 +Added marker names (in the top left dropdown box). They are edited/displayed according to edit/play cursor position (can be used for lyrics, etc..)
 +Demo http://reaper.mj-s.com/S&M_big_notes.gif|here|
 
@@ -3287,7 +3291,7 @@ Removed "SWS: Toggle auto fades for new items", use native "Toggle enable/disabl
 !v2.0.0 #10 (February 7, 2011)
 Support for v4 empty take lanes:
 +S&M build lanes actions now turn "take mosaics" into lanes using v4 empty takes (rather than v3 empty takes)
- These actions still useful to create take lanes Ã  la v4 from older project saved with "mosaics", for example.
+ These actions still useful to create take lanes à la v4 from older project saved with "mosaics", for example.
 +The action "S&M Remove empty take/item among selected items" now also removes v4 empty takes
  Remark: this action was limited to v3 empty takes before, i.e. takes with empty source
 +The action "S&M Clear active take/items" now clears takes using v4 empty takes (rather than v3 empty takes). If all takes of an item are empty, the item is removed.
@@ -3563,3 +3567,4 @@ Issue 225: Fixed selected text in Notes/help view when switching between docker 
 
 !SWS v1.x.x
 Goto http://sws-extension.org/download/whatsnew_v1.txt|here| for older changes
+

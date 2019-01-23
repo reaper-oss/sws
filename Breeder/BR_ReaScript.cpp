@@ -1089,6 +1089,14 @@ int BR_Win32_GetPrivateProfileString(const char* sectionName, const char* keyNam
 	return (int)GetPrivateProfileString(sectionName, keyName, defaultString, stringOut, stringOut_sz, filePath);
 }
 
+bool BR_Win32_WritePrivateProfileString(const char* sectionName, const char* keyName, const char* value, const char* filePath)
+{
+	if (!strlen(keyName))
+		return 0;
+
+	return !!WritePrivateProfileString(sectionName, keyName, value, filePath);
+}
+
 void* BR_Win32_GetWindow(void* hwnd, int cmd)
 {
 	return (void*)GetWindow((HWND)hwnd, cmd);
@@ -1267,12 +1275,4 @@ void* BR_Win32_WindowFromPoint(int x, int y)
 	p.x = x;
 	p.y = y;
 	return (void*)WindowFromPoint(p);
-}
-
-bool BR_Win32_WritePrivateProfileString(const char* sectionName, const char* keyName, const char* value, const char* filePath)
-{
-	if (!strlen(keyName))
-		return 0;
-
-	return !!WritePrivateProfileString(sectionName, keyName, value, filePath);
 }

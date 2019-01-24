@@ -241,6 +241,8 @@ APIdef g_apidefs[] =
 	{ APIFUNC(BR_Win32_GetMonitorRectFromRect), "void", "bool,int,int,int,int,int*,int*,int*,int*", "workingAreaOnly,leftIn,topIn,rightIn,bottomIn,leftOut,topOut,rightOut,bottomOut", "[BR] Get coordinates for screen which is nearest to supplied coordinates. Pass workingAreaOnly as true to get screen coordinates excluding taskbar (or menu bar on OSX).", },
 	{ APIFUNC(BR_Win32_GetParent), "void*", "void*", "hwnd", "[BR] Equivalent to win32 API GetParent().", },
 	{ APIFUNC(BR_Win32_GetPrivateProfileString), "int", "const char*,const char*,const char*,const char*,char*,int", "sectionName,keyName,defaultString,filePath,stringOut,stringOut_sz", "[BR] Equivalent to win32 API GetPrivateProfileString(). For example, you can use this to get values from REAPER.ini", },
+	{ APIFUNC(BR_Win32_WritePrivateProfileString), "bool", "const char*,const char*,const char*,const char*", "sectionName,keyName,value,filePath", "[BR] Equivalent to win32 API WritePrivateProfileString(). For example, you can use this to write to REAPER.ini", },
+
 	{ APIFUNC(BR_Win32_GetWindow), "void*", "void*,int", "hwnd,cmd", "[BR] Equivalent to win32 API GetWindow().", },
 	{ APIFUNC(BR_Win32_GetWindowLong), "int", "void*,int", "hwnd,index", "[BR] Equivalent to win32 API GetWindowLong().", },
 	{ APIFUNC(BR_Win32_GetWindowRect), "bool", "void*,int*,int*,int*,int*", "hwnd,leftOut,topOut,rightOut,bottomOut", "[BR] Equivalent to win32 API GetWindowRect().", },
@@ -268,7 +270,6 @@ APIdef g_apidefs[] =
 	{ APIFUNC(BR_Win32_ShowWindow), "bool", "void*,int", "hwnd,cmdShow", "[BR] Equivalent to win32 API ShowWindow().", },
 	{ APIFUNC(BR_Win32_StringToHwnd), "void*", "const char*", "string", "[BR] Convert string to HWND. To convert HWND back to string, see BR_Win32_HwndToString.", },
 	{ APIFUNC(BR_Win32_WindowFromPoint), "void*", "int,int", "x,y", "[BR] Equivalent to win32 API WindowFromPoint().", },
-	{ APIFUNC(BR_Win32_WritePrivateProfileString), "bool", "const char*,const char*,const char*,const char*", "sectionName,keyName,value,filePath", "[BR] Equivalent to win32 API WritePrivateProfileString(). For example, you can use this to write to REAPER.ini", },
 
 	{ APIFUNC(ULT_GetMediaItemNote), "const char*", "MediaItem*", "item", "[ULT] Get item notes.", },
 	{ APIFUNC(ULT_SetMediaItemNote), "void", "MediaItem*,const char*", "item,note", "[ULT] Set item notes.", },

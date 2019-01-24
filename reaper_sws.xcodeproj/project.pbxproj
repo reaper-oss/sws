@@ -227,6 +227,8 @@
 		387407D01664177E008626AA /* lice_arc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 387407CF1664177E008626AA /* lice_arc.cpp */; };
 		387938E516202B1E000948B5 /* CommandHandler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 387938B716202B1E000948B5 /* CommandHandler.cpp */; };
 		387938E616202B1E000948B5 /* CommandHandler.h in Headers */ = {isa = PBXBuildFile; fileRef = 387938B816202B1E000948B5 /* CommandHandler.h */; };
+		387938E716202B1E000948B5 /* Envelope.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 387938B916202B1E000948B5 /* Envelope.cpp */; };
+		387938E816202B1E000948B5 /* Envelope.h in Headers */ = {isa = PBXBuildFile; fileRef = 387938BA16202B1E000948B5 /* Envelope.h */; };
 		387938E916202B1E000948B5 /* EnvelopeCommands.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 387938BB16202B1E000948B5 /* EnvelopeCommands.cpp */; };
 		387938EA16202B1E000948B5 /* EnvelopeCommands.h in Headers */ = {isa = PBXBuildFile; fileRef = 387938BC16202B1E000948B5 /* EnvelopeCommands.h */; };
 		387938EB16202B1E000948B5 /* FNG_client.h in Headers */ = {isa = PBXBuildFile; fileRef = 387938BD16202B1E000948B5 /* FNG_client.h */; };
@@ -582,6 +584,8 @@
 		387407CF1664177E008626AA /* lice_arc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lice_arc.cpp; path = ../WDL/WDL/lice/lice_arc.cpp; sourceTree = SOURCE_ROOT; };
 		387938B716202B1E000948B5 /* CommandHandler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CommandHandler.cpp; path = Fingers/CommandHandler.cpp; sourceTree = "<group>"; };
 		387938B816202B1E000948B5 /* CommandHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CommandHandler.h; path = Fingers/CommandHandler.h; sourceTree = "<group>"; };
+		387938B916202B1E000948B5 /* Envelope.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Envelope.cpp; path = Fingers/Envelope.cpp; sourceTree = "<group>"; };
+		387938BA16202B1E000948B5 /* Envelope.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Envelope.h; path = Fingers/Envelope.h; sourceTree = "<group>"; };
 		387938BB16202B1E000948B5 /* EnvelopeCommands.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = EnvelopeCommands.cpp; path = Fingers/EnvelopeCommands.cpp; sourceTree = "<group>"; };
 		387938BC16202B1E000948B5 /* EnvelopeCommands.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EnvelopeCommands.h; path = Fingers/EnvelopeCommands.h; sourceTree = "<group>"; };
 		387938BD16202B1E000948B5 /* FNG_client.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FNG_client.h; path = Fingers/FNG_client.h; sourceTree = "<group>"; };
@@ -1145,6 +1149,8 @@
 			children = (
 				387938B716202B1E000948B5 /* CommandHandler.cpp */,
 				387938B816202B1E000948B5 /* CommandHandler.h */,
+				387938B916202B1E000948B5 /* Envelope.cpp */,
+				387938BA16202B1E000948B5 /* Envelope.h */,
 				387938BB16202B1E000948B5 /* EnvelopeCommands.cpp */,
 				387938BC16202B1E000948B5 /* EnvelopeCommands.h */,
 				387938BD16202B1E000948B5 /* FNG_client.h */,
@@ -1421,6 +1427,7 @@
 				22F7AADE15201D8A00CC1481 /* SnM.h in Headers */,
 				22F7AAE915201E2600CC1481 /* IX.h in Headers */,
 				387938E616202B1E000948B5 /* CommandHandler.h in Headers */,
+				387938E816202B1E000948B5 /* Envelope.h in Headers */,
 				387938EA16202B1E000948B5 /* EnvelopeCommands.h in Headers */,
 				387938EB16202B1E000948B5 /* FNG_client.h in Headers */,
 				387938EC16202B1E000948B5 /* FNG_Settings.h in Headers */,
@@ -1714,6 +1721,7 @@
 				22F7AAEB15201E2600CC1481 /* PlaylistImport.cpp in Sources */,
 				38B8AD451601269E001F3F3C /* ReaScript.cpp in Sources */,
 				387938E516202B1E000948B5 /* CommandHandler.cpp in Sources */,
+				387938E716202B1E000948B5 /* Envelope.cpp in Sources */,
 				387938E916202B1E000948B5 /* EnvelopeCommands.cpp in Sources */,
 				387938ED16202B1E000948B5 /* FNG.cpp in Sources */,
 				387938EE16202B1E000948B5 /* GrooveCommands.cpp in Sources */,

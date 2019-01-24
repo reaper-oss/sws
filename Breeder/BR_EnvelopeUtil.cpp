@@ -49,13 +49,12 @@ m_height        (-1),
 m_yOffset       (-1),
 m_count         (0),
 m_countSel      (0),
-m_autoItemIdx   (-1),
 m_takeEnvType   (UNKNOWN),
 m_data          (NULL)
 {
 }
 
-BR_Envelope::BR_Envelope (TrackEnvelope* envelope, bool takeEnvelopesUseProjectTime /*=true*/, int autoItemIdx /* = -1 */) :
+BR_Envelope::BR_Envelope (TrackEnvelope* envelope, bool takeEnvelopesUseProjectTime /*=true*/) :
 m_envelope      (envelope),
 m_parent        (GetEnvParent(m_envelope)),
 m_take          (NULL),
@@ -70,7 +69,6 @@ m_height        (-1),
 m_yOffset       (-1),
 m_count         (0),
 m_countSel      (0),
-m_autoItemIdx   (autoItemIdx),
 m_takeEnvType   (UNKNOWN),
 m_data          (NULL)
 {
@@ -79,7 +77,7 @@ m_data          (NULL)
 	this->Build(takeEnvelopesUseProjectTime);
 }
 
-BR_Envelope::BR_Envelope (MediaTrack* track, int envelopeId, bool takeEnvelopesUseProjectTime /*=true*/, int autoItemIdx /* = -1 */) :
+BR_Envelope::BR_Envelope (MediaTrack* track, int envelopeId, bool takeEnvelopesUseProjectTime /*=true*/) :
 m_envelope      (GetTrackEnvelope(track, envelopeId)),
 m_parent        (track),
 m_take          (NULL),
@@ -94,7 +92,6 @@ m_height        (-1),
 m_yOffset       (-1),
 m_count         (0),
 m_countSel      (0),
-m_autoItemIdx   (autoItemIdx),
 m_takeEnvType   (UNKNOWN),
 m_data          (NULL)
 {
@@ -116,7 +113,6 @@ m_height        (-1),
 m_yOffset       (-1),
 m_count         (0),
 m_countSel      (0),
-m_autoItemIdx   (-1),
 m_takeEnvType   (m_envelope ? envType : UNKNOWN),
 m_data          (NULL)
 {
@@ -138,7 +134,6 @@ m_height          (envelope.m_height),
 m_yOffset         (envelope.m_yOffset),
 m_count           (envelope.m_count),
 m_countSel        (envelope.m_countSel),
-m_autoItemIdx     (envelope.m_autoItemIdx),
 m_takeEnvType     (envelope.m_takeEnvType),
 m_data            (envelope.m_data),
 m_points          (envelope.m_points),
@@ -173,7 +168,6 @@ BR_Envelope& BR_Envelope::operator= (const BR_Envelope& envelope)
 	m_yOffset       = envelope.m_yOffset;
 	m_count         = envelope.m_count;
 	m_countSel      = envelope.m_countSel;
-	m_autoItemIdx   = envelope.m_autoItemIdx;
 	m_takeEnvType   = envelope.m_takeEnvType;
 	m_data          = envelope.m_data;
 	m_points        = envelope.m_points;
@@ -1591,14 +1585,14 @@ bool BR_Envelope::Commit (bool force /*=false*/)
 			if (currentCount > m_count)
 			{
 				double startTime, endTime;
-				if (m_count      > 0) GetEnvelopePointEx(m_envelope, m_autoItemIdx, m_count      - 1, &startTime, NULL, NULL, NULL, NULL);
+				if (m_count      > 0) GetEnvelopePoint(m_envelope, m_count      - 1, &startTime, NULL, NULL, NULL, NULL);
 				else                  startTime = 0;
-				if (currentCount > 0) GetEnvelopePointEx(m_envelope, m_autoItemIdx, currentCount - 1, &endTime,   NULL, NULL, NULL, NULL);
+				if (currentCount > 0) GetEnvelopePoint(m_envelope, currentCount - 1, &endTime,   NULL, NULL, NULL, NULL);
 				else                  endTime = 0;
 
 				startTime -= 1;
 				endTime   += 1;
-				DeleteEnvelopePointRangeEx(m_envelope, m_autoItemIdx, startTime, endTime);
+				DeleteEnvelopePointRange(m_envelope, startTime, endTime);
 			}
 
 			// Edit/insert cached points
@@ -1608,7 +1602,7 @@ bool BR_Envelope::Commit (bool force /*=false*/)
 			{
 				double value = (m_properties.faderMode != 0) ? ScaleToEnvelopeMode(m_properties.faderMode, m_points[i].value) : m_points[i].value;
 				double position = m_points[i].position * playrate;
-				SetEnvelopePointEx(m_envelope, m_autoItemIdx, i, &position, &value, &m_points[i].shape, &m_points[i].bezier, &m_points[i].selected, &g_bTrue);
+				SetEnvelopePoint(m_envelope, i, &position, &value, &m_points[i].shape, &m_points[i].bezier, &m_points[i].selected, &g_bTrue);
 			}
 			for (int i = currentCount; i < m_count; ++i)
 			{
@@ -1794,7 +1788,7 @@ void BR_Envelope::Build (bool takeEnvelopesUseProjectTime)
 			for (int i = 0; i < count; ++i)
 			{
 				BR_Envelope::EnvPoint point;
-				GetEnvelopePointEx(m_envelope, m_autoItemIdx, i, &point.position, &point.value, &point.shape, &point.bezier, &point.selected);
+				GetEnvelopePoint(m_envelope, i, &point.position, &point.value, &point.shape, &point.bezier, &point.selected);
 				point.position /=  playrate;
 
 				if (m_properties.faderMode != 0)

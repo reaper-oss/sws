@@ -70,8 +70,8 @@ class BR_Envelope
 {
 public:
 	BR_Envelope ();
-	BR_Envelope (TrackEnvelope* envelope, bool takeEnvelopesUseProjectTime = true, int autoItemIdx = -1); // for takeEnvelopesUseProjectTime explanation see declaration of SetTakeEnvelopeTimebase()
-	BR_Envelope (MediaTrack* track, int envelopeId, bool takeEnvelopesUseProjectTime = true, int autoItemIdx = -1);
+	BR_Envelope (TrackEnvelope* envelope, bool takeEnvelopesUseProjectTime = true); // for takeEnvelopesUseProjectTime explanation see declaration of SetTakeEnvelopeTimebase()
+	BR_Envelope (MediaTrack* track, int envelopeId, bool takeEnvelopesUseProjectTime = true);
 	BR_Envelope (MediaItem_Take* take, BR_EnvType envType, bool takeEnvelopesUseProjectTime = true);
 	BR_Envelope (const BR_Envelope& envelope);
 	~BR_Envelope ();
@@ -271,7 +271,6 @@ private:
 	int m_yOffset;
 	int m_count;
 	int m_countSel;
-	int m_autoItemIdx;
 	BR_EnvType m_takeEnvType;
 	void* m_data;
 	vector<BR_Envelope::EnvPoint> m_points;

@@ -140,7 +140,7 @@ Other changes:
 +ReaScript:
  - Mark SNM_MoveOrRemoveTrackFX() as deprecated (native API equivalent added in REAPER 5.95)
  - Remove NF_TrackFX/TakeFX_ Set/GetOffline() (native API equivalent added in REAPER 5.95)
- - TagLib VS 2017 update for Windows
+ - TagLib VS 2017 update for Windows (from v1.6.3. to v1.11.1)
  
 !v2.9.8 pre-release build (March 5, 2018)
 Now requires REAPER 5.50+!

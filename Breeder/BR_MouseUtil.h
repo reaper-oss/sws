@@ -69,9 +69,7 @@ MediaTrack* TrackAtMouseCursor (int* context, double* position); // context: 0->
 *   |______________|_______________|_____________________________________|    *
 *   | arrange      | track         | empty,                              |    *
 *   |              |               | item, item_stretch_marker,          |    *
-*   |              |               | env_point, env_segment,             |    *
-*   |              |               | automation_item                     |    *
-*   |______________|_______________|_____________________________________|    *
+*   |              |               | env_point, env_segment              |    *
 *   |              | envelope      | empty, env_point, env_segment       |    *
 *   |              | empty         | ""                                  |    *
 *   |______________|_______________|_____________________________________|    *
@@ -107,7 +105,6 @@ public:
 	int GetEnvelopePoint (); // returns -1 if there is no envelope point under mouse cursor
 	int GetStretchMarker (); // returns -1 if there is no stretch marker under mouse cursor
 	bool IsTakeEnvelope ();  // returns true if envelope under mouse cursor is take envelope
-	int GetAIid();           // returns -1 if there's no AI under mouse cursor, env. segments and env. points in AI take precedence
 
 	// MIDI editor
 	HWND  GetMidiEditor ();
@@ -150,7 +147,7 @@ private:
 		HWND midiEditor;
 		bool takeEnvelope, inlineMidi;
 		double position;
-		int takeId, envPointId, stretchMarkerId, noteRow, ccLaneVal, ccLaneId, ccLane, pianoRollMode, AIid;
+		int takeId, envPointId, stretchMarkerId, noteRow, ccLaneVal, ccLaneId, ccLane, pianoRollMode;
 		MouseInfo ();
 	};
 
@@ -160,7 +157,6 @@ private:
 	bool IsStretchMarkerVisible (MediaItem_Take* take, int id, double takePlayrate, double arrangeZoom);
 	int IsMouseOverStretchMarker (MediaItem* item, MediaItem_Take* take, int takeHeight, int takeOffset, int mouseDisplayX, int mouseY, double mousePos, double arrangeStart, double arrangeZoom);
 	int IsMouseOverEnvelopeLine (BR_Envelope& envelope, int drawableEnvHeight, int yOffset, int mouseDisplayX, int mouseY, double mousePos, double arrangeStart, double arrangeZoom, int* pointUnderMouse);
-	int IsMouseOverAI(BR_Envelope& envelope, int drawableEnvHeight, int yOffset, int mouseDisplayX, int mouseY, double mousePos, double arrangeStart, double arrangeZoom, int* AIunderMouse); // AI context
 	int IsMouseOverEnvelopeLineTrackLane (MediaTrack* track, int trackHeight, int trackOffset, list<TrackEnvelope*>& laneEnvs, int mouseDisplayX, int mouseY, double mousePos, double arrangeStart, double arrangeZoom, TrackEnvelope** trackEnvelope, int* pointUnderMouse);
 	int IsMouseOverEnvelopeLineTake (MediaItem_Take* take, int takeHeight, int takeOffset, int mouseDisplayX, int mouseY, double mousePos, double arrangeStart, double arrangeZoom, TrackEnvelope** trackEnvelope, int* pointUnderMouse);
 	int GetRulerLaneHeight (int rulerH, int lane);

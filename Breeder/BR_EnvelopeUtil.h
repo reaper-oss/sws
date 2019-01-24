@@ -151,23 +151,6 @@ public:
 	double LaneMinValue ();    // Minimum drawable value
 	double LaneMaxValue ();    // Maximum drawable value
 
-	/* Get AI properties *, to do: add AI properties setters */
-	size_t CountAI();
-	int GetAIid(int AIidx);
-	double GetAIposition(int AIidx);
-	double GetAIlength(int AIidx);
-	double GetAIoffset(int AIidx);
-	double GetAIrate(int AIidx);
-	int IsAIselected(int AIidx);
-	double GetAIbaseline(int AIidx);
-	double GetAIamplitude(int AIidx);
-	int IsAIlooped(int AIidx);
-	int GetAIunknown1(int AIidx);
-	int GetAIunknown2(int AIidx);
-	int GetAIpoolID(int AIidx);
-	int IsAImuted(int AIidx);
-	int GetAIunknown3(int AIidx);
-
 	/* Set envelope properties */
 	void SetActive (bool active);
 	void SetVisible (bool visible);
@@ -201,24 +184,23 @@ private:
 		EnvProperties ();
 		EnvProperties (const EnvProperties& properties);
 		EnvProperties& operator=  (const EnvProperties& properties);
-		struct AutomationItem
-		{	// https://github.com/Ultraschall/ultraschall-and-reaper-docs/blob/master/Docs/Reaper-Envelope-StateChunk-Doku.txt#L93
-			int id; // AI counter *1-based*
-			double position; // pos in sec
-			double length; // length in sec
-			double offset; // offset in sec
-			double rate; // min. 0.001; default 1.000
-			int selected; // bool, 1 is sel., 0 not sel.
-			double baseline; // 0(-100) to 1(+100); default 0.5(0)
-			double amplitude; // -2(-200) to 2(+200); default 1 (100)
-			int looped; // bool, default 1
-			int unknown1; // default 0
-			int unknown2; // default 0
-			int pool_id; // AI instances in project counter, including deleted ones, *1-based*
-			int mute; // 1 muted, 0 unmuted
-			int unknown3; // default 0
-		};
-		vector <AutomationItem> automationItems;
+		vector<WDL_FastString> automationItems;
+		//POOLEDENVINST id pos length offset rate timeBased baseline(.5=0) amplitude loop ? ?
+		// For now we're just storing as strings in properties and not handling parsing of these
+		//struct AutomationItem
+		//{
+		//	int id;
+		//	double position;
+		//	double length;
+		//	double offset;
+		//	double rate;
+		//	bool timeBased;
+		//	double baseline;
+		//	double amplitude;
+		//	bool loop;
+		//	bool extra1; // Not sure what the last 2 parameters are
+		//	bool extra2; 
+		//};
 	};
 	struct EnvPoint
 	{

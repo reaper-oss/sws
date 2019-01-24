@@ -1372,97 +1372,6 @@ double BR_Envelope::LaneMaxValue ()
 	return this->MaxValueAbs();
 }
 
-/* Get AI properties */
-size_t BR_Envelope::CountAI()
-{
-	this->FillProperties();
-	return m_properties.automationItems.size();
-}
-
-int BR_Envelope::GetAIid(int AIidx) 
-{
-	this->FillProperties();
-	return m_properties.automationItems[AIidx].id;
-}
-
-double BR_Envelope::GetAIposition(int AIidx)
-{
-	this->FillProperties();
-	return m_properties.automationItems[AIidx].position;
-}
-
-double BR_Envelope::GetAIlength(int AIidx)
-{
-	this->FillProperties();
-	return m_properties.automationItems[AIidx].length;
-}
-
-double BR_Envelope::GetAIoffset(int AIidx)
-{
-	this->FillProperties();
-	return m_properties.automationItems[AIidx].offset;
-}
-
-double BR_Envelope::GetAIrate(int AIidx)
-{
-	this->FillProperties();
-	return m_properties.automationItems[AIidx].rate;
-}
-
-int BR_Envelope::IsAIselected(int AIidx)
-{
-	this->FillProperties();
-	return m_properties.automationItems[AIidx].selected;
-}
-
-double BR_Envelope::GetAIbaseline(int AIidx)
-{
-	this->FillProperties();
-	return m_properties.automationItems[AIidx].baseline;
-}
-
-double BR_Envelope::GetAIamplitude(int AIidx)
-{
-	this->FillProperties();
-	return m_properties.automationItems[AIidx].amplitude;
-}
-
-int BR_Envelope::IsAIlooped(int AIidx)
-{
-	this->FillProperties();
-	return m_properties.automationItems[AIidx].looped;
-}
-
-int BR_Envelope::GetAIunknown1(int AIidx)
-{
-	this->FillProperties();
-	return m_properties.automationItems[AIidx].unknown1;
-}
-
-int BR_Envelope::GetAIunknown2(int AIidx)
-{
-	this->FillProperties();
-	return m_properties.automationItems[AIidx].unknown2;
-}
-
-int BR_Envelope::GetAIpoolID(int AIidx)
-{
-	this->FillProperties();
-	return m_properties.automationItems[AIidx].pool_id;
-}
-
-int BR_Envelope::IsAImuted(int AIidx)
-{
-	this->FillProperties();
-	return m_properties.automationItems[AIidx].mute;
-}
-
-int BR_Envelope::GetAIunknown3(int AIidx)
-{
-	this->FillProperties();
-	return m_properties.automationItems[AIidx].unknown3;
-}
-
 void BR_Envelope::SetActive (bool active)
 {
 	if (this->FillProperties() && !!m_properties.active != active)
@@ -1990,24 +1899,7 @@ bool BR_Envelope::FillProperties () const
 				}
 				else if (strstr(token, "POOLEDENVINST"))
 				{
-					lp.parse(token);
-					BR_Envelope::EnvProperties::AutomationItem AI;
-					AI.id = lp.gettoken_int(1);
-					AI.position = lp.gettoken_float(2);
-					AI.length = lp.gettoken_float(3);
-					AI.offset = lp.gettoken_float(4);
-					AI.rate = lp.gettoken_float(5);
-					AI.selected = lp.gettoken_int(6);
-					AI.baseline = lp.gettoken_float(7);
-					AI.amplitude = lp.gettoken_float(8);
-					AI.looped = lp.gettoken_int(9);
-					AI.unknown1 = lp.gettoken_int(10);
-					AI.unknown2 = lp.gettoken_int(11);
-					AI.pool_id = lp.gettoken_int(12);
-					AI.mute = lp.gettoken_int(13);
-					AI.unknown3 = lp.gettoken_int(14);
-
-					m_properties.automationItems.push_back(AI);
+					m_properties.automationItems.push_back(WDL_FastString(token));
 				}
 
 				token = strtok(NULL, "\n");
@@ -2034,13 +1926,11 @@ WDL_FastString BR_Envelope::GetProperties ()
 		properties.AppendFormatted(256, "LANEHEIGHT %d %d\n", m_properties.height, m_properties.heightUnknown);
 		properties.AppendFormatted(256, "ARM %d\n", m_properties.armed);
 		properties.AppendFormatted(256, "DEFSHAPE %d %d %d\n", m_properties.shape, m_properties.shapeUnknown1, m_properties.shapeUnknown2);
-		/*
 		for (int i = 0; i < (int)m_properties.automationItems.size(); ++i)
 		{
 			properties.Append(m_properties.automationItems[i].Get());
 			properties.Append("\n");
 		}
-		*/
 		if (m_properties.faderMode != 0) properties.AppendFormatted(256, "VOLTYPE %d\n", 1);
 		return properties;
 	}

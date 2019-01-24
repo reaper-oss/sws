@@ -767,7 +767,6 @@ void BR_ContextualToolbar::UpdateInternals ()
 	context = ARRANGE_ENVELOPE_TRACK_PITCH;       if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_ARRANGE;     m_activeContexts.insert(context);}
 	context = ARRANGE_ENVELOPE_TRACK_PLAYRATE;    if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_ARRANGE;     m_activeContexts.insert(context);}
 	context = ARRANGE_ENVELOPE_TRACK_TEMPO;       if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_ARRANGE;     m_activeContexts.insert(context);}
-	context = ARRANGE_ENVELOPE_TRACK_AI;          if (this->IsToolbarAction(this->GetMouseAction(context))) { m_mode |= BR_MouseInfo::MODE_ARRANGE;     m_activeContexts.insert(context); } // AI context
 	context = MIDI_EDITOR;                        if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_MIDI_EDITOR; m_activeContexts.insert(context);}
 	context = MIDI_EDITOR_RULER;                  if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_MIDI_EDITOR; m_activeContexts.insert(context);}
 	context = MIDI_EDITOR_PIANO;                  if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_MIDI_EDITOR; m_activeContexts.insert(context);}
@@ -963,41 +962,29 @@ int BR_ContextualToolbar::FindArrangeToolbar (BR_MouseInfo& mouseInfo, BR_Contex
 			}
 		}
 		else
-		{ // track env.
-			// AI context
-			// optimization mode is set to MODE_IGNORE_ENVELOPE_LANE_SEGMENT in constr., but we need to detect details for AI
-			mouseInfo.SetMode(BR_MouseInfo::MODE_ARRANGE);
-			mouseInfo.Update();
-			if ((!strcmp(mouseInfo.GetSegment(), "envelope")) && (!strcmp(mouseInfo.GetDetails(), "automation_item")))
-			{
-				context = (this->GetMouseAction(ARRANGE_ENVELOPE_TRACK_AI) == INHERIT_PARENT) ? ARRANGE_ENVELOPE_TRACK : ARRANGE_ENVELOPE_TRACK_AI;
-			}
-			else
-			{
-				context = ARRANGE_ENVELOPE_TRACK;
-				BR_EnvType type = GetEnvType(mouseInfo.GetEnvelope(), NULL, NULL);
+		{
+			context  = ARRANGE_ENVELOPE_TRACK;
+			BR_EnvType type = GetEnvType(mouseInfo.GetEnvelope(), NULL, NULL);
 
-				if (type == VOLUME || type == VOLUME_PREFX) context = (this->GetMouseAction(ARRANGE_ENVELOPE_TRACK_VOLUME) == INHERIT_PARENT) ? ARRANGE_ENVELOPE_TRACK : ARRANGE_ENVELOPE_TRACK_VOLUME;
-				else if (type == PAN || type == PAN_PREFX)    context = (this->GetMouseAction(ARRANGE_ENVELOPE_TRACK_PAN) == INHERIT_PARENT) ? ARRANGE_ENVELOPE_TRACK : ARRANGE_ENVELOPE_TRACK_PAN;
-				else if (type == WIDTH || type == WIDTH_PREFX)  context = (this->GetMouseAction(ARRANGE_ENVELOPE_TRACK_WIDTH) == INHERIT_PARENT) ? ARRANGE_ENVELOPE_TRACK : ARRANGE_ENVELOPE_TRACK_WIDTH;
-				else if (type == MUTE)                           context = (this->GetMouseAction(ARRANGE_ENVELOPE_TRACK_MUTE) == INHERIT_PARENT) ? ARRANGE_ENVELOPE_TRACK : ARRANGE_ENVELOPE_TRACK_MUTE;
-				else if (type == PITCH)                          context = (this->GetMouseAction(ARRANGE_ENVELOPE_TRACK_PITCH) == INHERIT_PARENT) ? ARRANGE_ENVELOPE_TRACK : ARRANGE_ENVELOPE_TRACK_PITCH;
-				else if (type == PLAYRATE)                       context = (this->GetMouseAction(ARRANGE_ENVELOPE_TRACK_PLAYRATE) == INHERIT_PARENT) ? ARRANGE_ENVELOPE_TRACK : ARRANGE_ENVELOPE_TRACK_PLAYRATE;
-				else if (type == TEMPO)                          context = (this->GetMouseAction(ARRANGE_ENVELOPE_TRACK_TEMPO) == INHERIT_PARENT) ? ARRANGE_ENVELOPE_TRACK : ARRANGE_ENVELOPE_TRACK_TEMPO;
+			if      (type == VOLUME || type == VOLUME_PREFX) context = (this->GetMouseAction(ARRANGE_ENVELOPE_TRACK_VOLUME)   == INHERIT_PARENT) ? ARRANGE_ENVELOPE_TRACK : ARRANGE_ENVELOPE_TRACK_VOLUME;
+			else if (type == PAN    || type == PAN_PREFX)    context = (this->GetMouseAction(ARRANGE_ENVELOPE_TRACK_PAN)      == INHERIT_PARENT) ? ARRANGE_ENVELOPE_TRACK : ARRANGE_ENVELOPE_TRACK_PAN;
+			else if (type == WIDTH  || type == WIDTH_PREFX)  context = (this->GetMouseAction(ARRANGE_ENVELOPE_TRACK_WIDTH)    == INHERIT_PARENT) ? ARRANGE_ENVELOPE_TRACK : ARRANGE_ENVELOPE_TRACK_WIDTH;
+			else if (type == MUTE)                           context = (this->GetMouseAction(ARRANGE_ENVELOPE_TRACK_MUTE)     == INHERIT_PARENT) ? ARRANGE_ENVELOPE_TRACK : ARRANGE_ENVELOPE_TRACK_MUTE;
+			else if (type == PITCH)                          context = (this->GetMouseAction(ARRANGE_ENVELOPE_TRACK_PITCH)    == INHERIT_PARENT) ? ARRANGE_ENVELOPE_TRACK : ARRANGE_ENVELOPE_TRACK_PITCH;
+			else if (type == PLAYRATE)                       context = (this->GetMouseAction(ARRANGE_ENVELOPE_TRACK_PLAYRATE) == INHERIT_PARENT) ? ARRANGE_ENVELOPE_TRACK : ARRANGE_ENVELOPE_TRACK_PLAYRATE;
+			else if (type == TEMPO)                          context = (this->GetMouseAction(ARRANGE_ENVELOPE_TRACK_TEMPO)    == INHERIT_PARENT) ? ARRANGE_ENVELOPE_TRACK : ARRANGE_ENVELOPE_TRACK_TEMPO;
 
-				// Check envelope options
-				if (this->GetMouseAction(context) != DO_NOTHING)
+			// Check envelope options
+			if (this->GetMouseAction(context) != DO_NOTHING)
+			{
+				if ((m_options.arrangeTrackEnvelope & OPTION_ENABLED))
 				{
-					if ((m_options.arrangeTrackEnvelope & OPTION_ENABLED))
-					{
-						if ((m_options.arrangeTrackEnvelope & SELECT_ENVELOPE)) executeOnToolbarLoad.envelopeToSelect = mouseInfo.GetEnvelope();
-						if ((m_options.arrangeTrackEnvelope & SELECT_TRACK))    executeOnToolbarLoad.trackToSelect = mouseInfo.GetTrack();
+					if ((m_options.arrangeTrackEnvelope & SELECT_ENVELOPE)) executeOnToolbarLoad.envelopeToSelect = mouseInfo.GetEnvelope();
+					if ((m_options.arrangeTrackEnvelope & SELECT_TRACK))    executeOnToolbarLoad.trackToSelect    = mouseInfo.GetTrack();
 
-						executeOnToolbarLoad.clearTrackSelection = !!(m_options.arrangeTrackEnvelope & CLEAR_TRACK_SELECTION);
-					}
+					executeOnToolbarLoad.clearTrackSelection = !!(m_options.arrangeTrackEnvelope & CLEAR_TRACK_SELECTION);
 				}
 			}
-			mouseInfo.SetMode(BR_MouseInfo::MODE_IGNORE_ENVELOPE_LANE_SEGMENT); // AI context, set mode back
 		}
 	}
 	// Stretch markers
@@ -1477,7 +1464,7 @@ int BR_ContextualToolbar::GetContextFromIniIndex (int index)
 		case 48: return MIDI_EDITOR_PIANO;                case 49: return MIDI_EDITOR_PIANO_NAMED;            case 50: return MIDI_EDITOR_NOTES;
 		case 51: return MIDI_EDITOR_CC_LANE;              case 52: return MIDI_EDITOR_CC_SELECTOR;            case 53: return INLINE_MIDI_EDITOR;
 		case 54: return INLINE_MIDI_EDITOR_PIANO;         case 55: return UNUSED_CONTEXT;                     case 56: return INLINE_MIDI_EDITOR_NOTES;
-		case 57: return INLINE_MIDI_EDITOR_CC_LANE;       case 58: return ARRANGE_ENVELOPE_TRACK_AI; // AI context
+		case 57: return INLINE_MIDI_EDITOR_CC_LANE;
 	}
 
 	return -666;
@@ -1876,8 +1863,6 @@ void BR_ContextualToolbarsView::GetItemText (SWS_ListItem* item, int iCol, char*
 			else if (context == ARRANGE_ENVELOPE_TRACK_PITCH)       {description = __LOCALIZE("Pitch envelope",          "sws_DLG_181"); indentation = 2;}
 			else if (context == ARRANGE_ENVELOPE_TRACK_PLAYRATE)    {description = __LOCALIZE("Playrate envelope",       "sws_DLG_181"); indentation = 2;}
 			else if (context == ARRANGE_ENVELOPE_TRACK_TEMPO)       {description = __LOCALIZE("Tempo envelope",          "sws_DLG_181"); indentation = 2;}
-			// AI context
-			else if (context == ARRANGE_ENVELOPE_TRACK_AI)          {description = __LOCALIZE("Automation item",         "sws_DLG_181"); indentation = 2;} 
 			else if (context == END_ARRANGE)                        {description = "";                                                   indentation = 0;}
 
 			else if (context == MIDI_EDITOR)                        {description = __LOCALIZE("MIDI editor",             "sws_DLG_181"); indentation = 0;}

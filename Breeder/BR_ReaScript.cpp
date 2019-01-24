@@ -484,16 +484,6 @@ int BR_GetMouseCursorContext_StretchMarker ()
 		return id;
 }
 
-// AI context
-int	BR_GetMouseCursorContext_AutomationItem()
-{
-	int AIid = g_mouseInfo.GetAIid();
-	if (AIid == -1)
-		return -1;
-	else
-		return AIid;
-}
-
 MediaItem_Take* BR_GetMouseCursorContext_Take ()
 {
 	return g_mouseInfo.GetTake();

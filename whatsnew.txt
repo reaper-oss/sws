@@ -1,4 +1,4 @@
-﻿!v2.10.0 featured build (January 24, 2019)
+﻿!v2.10.0 pre-release build (January 26, 2019)
 New features:
 +Auto color/icon/layout: Add '(hide)' Layout to auto hide TCP / MCP of tracks (rightclick in "TCP Layout" / "MCP Layout" fields to set) (Issue 1008)
 +Global notes

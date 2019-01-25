@@ -1,4 +1,4 @@
-!v2.10.0 featured build (January 24, 2019)
+﻿!v2.10.0 featured build (January 24, 2019)
 New features:
 +Auto color/icon/layout: Add '(hide)' Layout to auto hide TCP / MCP of tracks (rightclick in "TCP Layout" / "MCP Layout" fields to set) (Issue 1008)
 +Global notes
@@ -10,11 +10,6 @@ New features:
  For background see https://github.com/reaper-oss/sws/issues/1046#issuecomment-428914818|here| and https://github.com/jiixyj/libebur128/issues/93#issuecomment-429043548|here|.
  ReScript Loudness functions respect this preference.
  - Add action 'SWS/BR/NF: Toggle use high precision mode for loudness analyzing'
-+Mouse context: Initial support for automation items:
- - Contextual toolbars: Add Automation item context (Issue 915)
- - ReaScript:
-  - BR_GetMouseCursorContext(): detailsOut returns "automation_item" when mouse cursor is over automation item
-  - Add function: BR_GetMouseCursorContext_AutomationItem(), returns automation item index
 
 Actions:
 +New actions (Main section):

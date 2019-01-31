@@ -1093,6 +1093,12 @@ bool TrimItem_UseNativeTrimActions(MediaItem* item, double start, double end, bo
 		
 		PreventUIRefresh(1);
 
+		// disable item grouping
+		// https://github.com/reaper-oss/sws/pull/979#issuecomment-457760578
+		int*  projgroupover = (int*)GetConfigVar("projgroupover");
+		int curProjgroupover = *projgroupover;
+		*projgroupover = 1; // disable
+
 		// unselect all items
 		for (int i = 0; i < selItems.GetSize(); i++) {
 			SetMediaItemInfo_Value(selItems.Get()[i], "B_UISEL", 0);
@@ -1108,6 +1114,10 @@ bool TrimItem_UseNativeTrimActions(MediaItem* item, double start, double end, bo
 		SetEditCurPos(origCurPos, false, false);
 
 		SetMediaItemInfo_Value(item, "B_UISEL", 0); // unselect previously manually selected item
+
+		// reenable item grouping (if necessary)
+		if (curProjgroupover == 0)
+			*projgroupover = 0;
 
 		// restore original item selection
 		for (int i = 0; i < selItems.GetSize(); i++) {

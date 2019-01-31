@@ -1,4 +1,4 @@
-﻿!v2.10.0 pre-release build (January 26, 2019)
+!v2.10.0 pre-release build (January 26, 2019)
 New features:
 +Auto color/icon/layout: Add '(hide)' Layout to auto hide TCP / MCP of tracks (rightclick in "TCP Layout" / "MCP Layout" fields to set) (Issue 1008)
 +Global notes
@@ -29,14 +29,14 @@ Fixes:
  Note: Since snapshots are based on state chunks, changes within AI envelopes are not recalled currently (https://forum.cockos.com/showthread.php?t=205406|FR|), though AI properties (e.g. position) should be recalled correctly. Also note that when deleting an AI and trying to recall a previously stored snapshot which contains this AI it won't be recalled correctly.
 +Issue 938: SWS/S&M: Copy FX Chain (Depending on Focus) - if take FX chain, also copy take FX chain channel count
 +Issue 966: Track height actions and vertical zoom actions obey track height locking (REAPER 5.78+)
-+Issue 1041: m3u/pls playlist import 
++Issue 1041: m3u/pls playlist import
  - Fix crash when cancelling playlist import
  - Fix items always being created for missing files when importing playlists
-+Issue 1047: ReaConsole: Redraw the status label when resizing the window on Windows 
++Issue 1047: ReaConsole: Redraw the status label when resizing the window on Windows
 +Issue 1054: "SWS/S&M: Show take volume envelopes" - obey volume fader scaling preference if new envelope is created
-+Issue 1057: Fix quantize actions moving items to incorrect positions or hanging in some cases when the grid line spacing is set to Frames, typically when a project start time offset is used 
-+Issue 1060: Fix "SWS/Shane: Batch Render Regions" crashing when a region contains a slash on Linux and macOS 
-+Issue 1077: Fix crash after stopping the active track preview from another project tab 
++Issue 1057: Fix quantize actions moving items to incorrect positions or hanging in some cases when the grid line spacing is set to Frames, typically when a project start time offset is used
++Issue 1060: Fix "SWS/Shane: Batch Render Regions" crashing when a region contains a slash on Linux and macOS
++Issue 1077: Fix crash after stopping the active track preview from another project tab
 +Auto color/icon/layout: "(vca master)" filter - also apply rules to groups 33 - 64 (report https://forum.cockos.com/showthread.php?t=207722|here|) (REAPER 5.70+)
 +Cycle Action editor: Fix minor issue with not opening with correct section (report https://forum.cockos.com/showpost.php?p=1986045&postcount=3|here|)
 +Fix hang when parsing item chunks containing lines bigger than 255 characters (https://github.com/reaper-oss/sws/issues/912#issuecomment-426892230|Issue 912 (comment)|)
@@ -126,7 +126,7 @@ New ReaScript functions:
 Other changes:
 - Rename "SWS: Analyze and display item peak and RMS" to "SWS: Analyze and display item peak and RMS (entire item)" (https://forum.cockos.com/showthread.php?p=2074089#post2074089|background|)
 - Rename and deprecate "Xenakios/SWS: Toggle stop playback at end of time selection" (Issue 1066)
-- Rename "SWS/S&M: Show/Hide take ... envelope" actions to "SWS/S&M: Show/Hide and unbypass/bypass take ... envelope" (Issue 1078) 
+- Rename "SWS/S&M: Show/Hide take ... envelope" actions to "SWS/S&M: Show/Hide and unbypass/bypass take ... envelope" (Issue 1078)
 - Rename 'take ... envelopes' to 'take ... envelope' (to be consistent with native actions)
 - Remove useless code vulnerable to buffer overflows
 +"SWS/NF: Eraser tool...":
@@ -136,7 +136,7 @@ Other changes:
  - Mark SNM_MoveOrRemoveTrackFX() as deprecated (native API equivalent added in REAPER 5.95)
  - Remove NF_TrackFX/TakeFX_ Set/GetOffline() (native API equivalent added in REAPER 5.95)
  - TagLib VS 2017 update for Windows (from v1.6.3. to v1.11.1)
- 
+
 !v2.9.8 pre-release build (March 5, 2018)
 Now requires REAPER 5.50+!
 
@@ -160,7 +160,7 @@ Fixes:
 +Issue 802: Disable FXID filtering in SNM_MoveOrRemoveTrackFX() (thanks Justin!)
 +Crossfade actions: Prevent item content movement if takes contain stretch markers (https://forum.cockos.com/showthread.php?t=197584 posts #11, #12) and / or take playrate is other than 1.0
  (Also fix for  "SWS/AW: Fade in/out/crossfade selected area of selected items" and "SWS/AW: Trim selected items to fill selection")
-+Loudness: 
++Loudness:
  - Issue 927: Change relative gating threshold from -10.0 LU to -20.0 LU (to match with EBU TECH3342 notes)
  - Prevent items going offline during analysis (hopefully fixes cornercase issue with occasionally wrong analysis results)
  - Enable the Cancel button only while analyzing
@@ -171,10 +171,10 @@ Fixes:
 +Issue 918: Fix various issues with "SWS/S&M: Remove all envelopes for selected tracks"
 +Support for UTF-8 resource paths on Windows (Issues #934, #935)
 +Issue 942: Fix column header context menu when a langpack is used
-+Issue 886: Potentially fix occasional skipping of adjacent regions in Region Playlist, needs testing 
-+Issue 945: "SWS/S&M: Toolbar - Toggle track envelopes in touch/latch/write" - add latch preview 
++Issue 886: Potentially fix occasional skipping of adjacent regions in Region Playlist, needs testing
++Issue 945: "SWS/S&M: Toolbar - Toggle track envelopes in touch/latch/write" - add latch preview
 +Issue 950: Prevent takes envelopes and stretch markers offset with  BR_SetItemEdges() and "SWS/BR: Trim MIDI item to active content"
- 
+
 New ReaScript functions:
 +CF_ShellExecute
 +CF_LocateInExplorer
@@ -3562,4 +3562,3 @@ Issue 225: Fixed selected text in Notes/help view when switching between docker 
 
 !SWS v1.x.x
 Goto http://sws-extension.org/download/whatsnew_v1.txt|here| for older changes
-

@@ -44,11 +44,9 @@ m_sorted        (true),
 m_pointsEdited  (false),
 m_takeEnvOffset (0),
 m_sampleRate    (-1),
-m_countConseq   (-1),
+m_rebuildConseq (true),
 m_height        (-1),
 m_yOffset       (-1),
-m_count         (0),
-m_countSel      (0),
 m_takeEnvType   (UNKNOWN),
 m_data          (NULL)
 {
@@ -64,11 +62,9 @@ m_sorted        (true),
 m_pointsEdited  (false),
 m_takeEnvOffset (0),
 m_sampleRate    (-1),
-m_countConseq   (-1),
+m_rebuildConseq (true),
 m_height        (-1),
 m_yOffset       (-1),
-m_count         (0),
-m_countSel      (0),
 m_takeEnvType   (UNKNOWN),
 m_data          (NULL)
 {
@@ -87,11 +83,9 @@ m_sorted        (true),
 m_pointsEdited  (false),
 m_takeEnvOffset (0),
 m_sampleRate    (-1),
-m_countConseq   (-1),
+m_rebuildConseq (true),
 m_height        (-1),
 m_yOffset       (-1),
-m_count         (0),
-m_countSel      (0),
 m_takeEnvType   (UNKNOWN),
 m_data          (NULL)
 {
@@ -108,11 +102,9 @@ m_sorted        (true),
 m_pointsEdited  (false),
 m_takeEnvOffset (0),
 m_sampleRate    (-1),
-m_countConseq   (-1),
+m_rebuildConseq (true),
 m_height        (-1),
 m_yOffset       (-1),
-m_count         (0),
-m_countSel      (0),
 m_takeEnvType   (m_envelope ? envType : UNKNOWN),
 m_data          (NULL)
 {
@@ -129,11 +121,9 @@ m_sorted          (envelope.m_sorted),
 m_pointsEdited    (envelope.m_pointsEdited),
 m_takeEnvOffset   (envelope.m_takeEnvOffset),
 m_sampleRate      (envelope.m_sampleRate),
-m_countConseq     (envelope.m_countConseq),
+m_rebuildConseq   (true),
 m_height          (envelope.m_height),
 m_yOffset         (envelope.m_yOffset),
-m_count           (envelope.m_count),
-m_countSel        (envelope.m_countSel),
 m_takeEnvType     (envelope.m_takeEnvType),
 m_data            (envelope.m_data),
 m_points          (envelope.m_points),
@@ -163,11 +153,9 @@ BR_Envelope& BR_Envelope::operator= (const BR_Envelope& envelope)
 	m_pointsEdited  = envelope.m_pointsEdited;
 	m_takeEnvOffset = envelope.m_takeEnvOffset;
 	m_sampleRate    = envelope.m_sampleRate;
-	m_countConseq   = envelope.m_countConseq;
+	m_rebuildConseq = envelope.m_rebuildConseq;
 	m_height        = envelope.m_height;
 	m_yOffset       = envelope.m_yOffset;
-	m_count         = envelope.m_count;
-	m_countSel      = envelope.m_countSel;
 	m_takeEnvType   = envelope.m_takeEnvType;
 	m_data          = envelope.m_data;
 	m_points        = envelope.m_points;
@@ -181,32 +169,20 @@ BR_Envelope& BR_Envelope::operator= (const BR_Envelope& envelope)
 	return *this;
 }
 
-bool BR_Envelope::operator== (const BR_Envelope& envelope)
+bool BR_Envelope::operator== (const BR_Envelope& envelope) const
 {
-	if (this->m_tempoMap != envelope.m_tempoMap) return false;
-	if (this->m_count    != envelope.m_count)    return false;
-	if (this->m_countSel != envelope.m_countSel) return false;
+	if (this->m_tempoMap  != envelope.m_tempoMap)  return false;
+	if (this->m_points    != envelope.m_points)    return false;
+	if (this->m_pointsSel != envelope.m_pointsSel) return false;
 
 	if (!this->m_properties.filled)    this->FillProperties();
 	if (!envelope.m_properties.filled) envelope.FillProperties();
+	if (this->m_properties.active != envelope.m_properties.active) return false;
 
-	if (this->m_properties.active != envelope.m_properties.active)
-		return false;
-
-	for (int i = 0 ; i < this->m_count; ++i)
-	{
-		if (this->m_points[i].position != envelope.m_points[i].position) return false;
-		if (this->m_points[i].value    != envelope.m_points[i].value)    return false;
-		if (this->m_points[i].bezier   != envelope.m_points[i].bezier)   return false;
-		if (this->m_points[i].shape    != envelope.m_points[i].shape)    return false;
-		if (this->m_points[i].sig      != envelope.m_points[i].sig)      return false;
-		if (this->m_points[i].selected != envelope.m_points[i].selected) return false;
-		if (this->m_points[i].partial  != envelope.m_points[i].partial)  return false;
-	}
 	return true;
 }
 
-bool BR_Envelope::operator!= (const BR_Envelope& envelope)
+bool BR_Envelope::operator!= (const BR_Envelope& envelope) const
 {
 	return !(*this == envelope);
 }
@@ -280,10 +256,10 @@ bool BR_Envelope::SetSelection (int id, bool selected)
 
 bool BR_Envelope::CreatePoint (int id, double position, double value, int shape, double bezier, bool selected, bool checkPosition /*=false*/, bool snapValue /*= false*/)
 {
-	if (this->ValidateId(id) || id >= m_count)
+	if (id >= 0)
 	{
-		if (id >= m_count)
-			id = m_count;
+		if (id >= m_points.size())
+			id = m_points.size();
 
 		position -= m_takeEnvOffset;
 
@@ -293,7 +269,6 @@ bool BR_Envelope::CreatePoint (int id, double position, double value, int shape,
 		BR_Envelope::EnvPoint newPoint(position, (snapValue) ? (this->SnapValue(value)) : (value), shape, 0, selected, 0, bezier);
 		m_points.insert(m_points.begin() + id, newPoint);
 
-		++m_count;
 		m_update       = true;
 		m_sorted       = false;
 		m_pointsEdited = true;
@@ -309,7 +284,6 @@ bool BR_Envelope::DeletePoint (int id)
 	{
 		m_points.erase(m_points.begin() + id);
 
-		--m_count;
 		m_update       = true;
 		m_pointsEdited = true;
 		return true;
@@ -386,14 +360,14 @@ bool BR_Envelope::SetCreatePoint (int id, double position, double value, int sha
 
 	if (id == -1)
 	{
-		BR_Envelope::EnvPoint newPoint(position, value, (shape < MIN_SHAPE || shape > MAX_SHAPE) ? this->GetDefaultShape() : shape, 0, selected, 0, (shape == 5) ? bezier : 0);
-		m_points.insert(m_points.begin() + m_count, newPoint);
-
-		++m_count;
 		m_update       = true;
 		m_pointsEdited = true;
-		if (m_sorted && this->ValidateId(m_count - 2) && position < m_points[m_count - 2].position)
+
+		if (m_sorted && !m_points.empty() && position < m_points.back().position)
 			m_sorted = false;
+
+		BR_Envelope::EnvPoint newPoint(position, value, (shape < MIN_SHAPE || shape > MAX_SHAPE) ? this->GetDefaultShape() : shape, 0, selected, 0, (shape == 5) ? bezier : 0);
+		m_points.push_back(newPoint);
 
 		return true;
 	}
@@ -429,13 +403,12 @@ int BR_Envelope::DeletePoints (int startId, int endId)
 		swap(startId, endId);
 
 	if (startId < 0)        startId = 0;
-	if (endId   >= m_count) endId = m_count - 1;
+	if (endId >= m_points.size()) endId = m_points.size() - 1;
 	if (!this->ValidateId(startId) || !this->ValidateId(endId))
 		return 0;
 
 	m_points.erase(m_points.begin() + startId, m_points.begin() + endId+1);
 
-	m_count -= endId - startId + 1;
 	m_update       = true;
 	m_pointsEdited = true;
 	return (endId - startId + 1);
@@ -450,7 +423,7 @@ int BR_Envelope::DeletePointsInRange (double start, double end)
 	if (m_sorted)
 	{
 		int startId = FindPrevious(start, 0);
-		while (startId < m_count)
+		while (startId < m_points.size())
 		{
 			if (this->ValidateId(startId) && m_points[startId].position >= start)
 				break;
@@ -472,7 +445,7 @@ int BR_Envelope::DeletePointsInRange (double start, double end)
 			return 0;
 
 		if (!this->ValidateId(endId))
-			endId = m_count -1;
+			endId = m_points.size() - 1;
 		pointsErased = this->DeletePoints(startId, endId);
 	}
 	else
@@ -491,13 +464,12 @@ int BR_Envelope::DeletePointsInRange (double start, double end)
 		}
 	}
 
-	m_count = m_points.size();
 	return pointsErased;
 }
 
 void BR_Envelope::UnselectAll ()
 {
-	for (int i = 0; i < m_count; ++i)
+	for (size_t i = 0; i < m_points.size(); ++i)
 		m_points[i].selected = 0;
 	m_update = true;
 }
@@ -505,19 +477,18 @@ void BR_Envelope::UnselectAll ()
 void BR_Envelope::UpdateSelected ()
 {
 	m_pointsSel.clear();
-	m_pointsSel.reserve(m_count);
+	m_pointsSel.reserve(m_points.size());
 
-	for (int i = 0; i < m_count; ++i)
+	for (size_t i = 0; i < m_points.size(); ++i)
 		if (m_points[i].selected)
 			m_pointsSel.push_back(i);
 
-	m_countSel = (int)m_pointsSel.size();
-	m_countConseq = -1;
+	m_rebuildConseq = true;
 }
 
 int BR_Envelope::CountSelected ()
 {
-	return m_countSel;
+	return m_pointsSel.size();
 }
 
 int BR_Envelope::GetSelected (int id)
@@ -527,9 +498,9 @@ int BR_Envelope::GetSelected (int id)
 
 int BR_Envelope::CountConseq ()
 {
-	if (m_countConseq == -1)
+	if (m_rebuildConseq)
 		this->UpdateConsequential();
-	return m_countConseq;
+	return m_pointsConseq.size();
 }
 
 bool BR_Envelope::GetConseq (int idx, int* startId, int* endId)
@@ -548,7 +519,7 @@ bool BR_Envelope::GetConseq (int idx, int* startId, int* endId)
 
 bool BR_Envelope::ValidateId (int id)
 {
-	if (id < 0 || id >= m_count)
+	if (id < 0 || id >= m_points.size())
 		return false;
 	else
 		return true;
@@ -559,7 +530,6 @@ void BR_Envelope::DeleteAllPoints ()
 	m_points.clear();
 	m_sorted = true;
 	m_update = true;
-	m_count = 0;
 }
 
 void BR_Envelope::Sort ()
@@ -573,7 +543,7 @@ void BR_Envelope::Sort ()
 
 int BR_Envelope::CountPoints ()
 {
-	return m_count;
+	return m_points.size();
 }
 
 int BR_Envelope::Find (double position, double surroundingRange /*=0*/)
@@ -1459,70 +1429,16 @@ bool BR_Envelope::Commit (bool force /*=false*/)
 		int pooledenvs; GetConfig("pooledenvs", pooledenvs);
 		SetConfig("pooledenvs", pooledenvs & (~12));
 
-		// Need to commit whole chunk
+		const double playrate = m_take ? GetMediaItemTakeInfo_Value(m_take, "D_PLAYRATE") : 1;
+
+		WDL_FastString chunkStart = this->GetProperties();
+		for (vector<BR_Envelope::EnvPoint>::iterator i = m_points.begin(); i != m_points.end(); ++i)
+			i->Append(chunkStart, m_tempoMap, playrate, m_properties.faderMode);
+		chunkStart.Append(">");
+		GetSetObjectState(m_envelope, chunkStart.Get());
+
 		if (m_tempoMap)
-		{
-			WDL_FastString chunkStart = this->GetProperties();
-			for (vector<BR_Envelope::EnvPoint>::iterator i = m_points.begin(); i != m_points.end(); ++i)
-				i->Append(chunkStart, true);
-			chunkStart.Append(">");
-			GetSetObjectState(m_envelope, chunkStart.Get());
 			UpdateTempoTimeline();
-		}
-		// We can update through API (faster)
-		else
-		{
-			PreventUIRefresh(1);
-
-			// If properties were changed, first commit chunk with properties only and one point (one point prevents REAPER
-			// from removing envelope completely) (creating points later using API instead of supplying full chunk is faster)
-			bool firstPointDone = false;
-			if (m_properties.changed || force)
-			{
-				WDL_FastString chunkStart = this->GetProperties();
-				if (m_count > 0)
-				{
-					m_points[0].Append(chunkStart, false);
-					firstPointDone = true;
-				}
-				chunkStart.Append(">");
-				GetSetObjectState(m_envelope, chunkStart.Get());
-			}
-
-			// Delete excess points
-			int currentCount = CountEnvelopePoints(m_envelope);
-			if (currentCount > m_count)
-			{
-				double startTime, endTime;
-				if (m_count      > 0) GetEnvelopePoint(m_envelope, m_count      - 1, &startTime, NULL, NULL, NULL, NULL);
-				else                  startTime = 0;
-				if (currentCount > 0) GetEnvelopePoint(m_envelope, currentCount - 1, &endTime,   NULL, NULL, NULL, NULL);
-				else                  endTime = 0;
-
-				startTime -= 1;
-				endTime   += 1;
-				DeleteEnvelopePointRange(m_envelope, startTime, endTime);
-			}
-
-			// Edit/insert cached points
-			currentCount = CountEnvelopePoints(m_envelope);
-			double playrate = (m_take) ? (GetMediaItemTakeInfo_Value(m_take, "D_PLAYRATE")) : 1;
-			for (int i = firstPointDone ? 1 : 0; i < currentCount; ++i)
-			{
-				double value = (m_properties.faderMode != 0) ? ScaleToEnvelopeMode(m_properties.faderMode, m_points[i].value) : m_points[i].value;
-				double position = m_points[i].position * playrate;
-				SetEnvelopePoint(m_envelope, i, &position, &value, &m_points[i].shape, &m_points[i].bezier, &m_points[i].selected, &g_bTrue);
-			}
-			for (int i = currentCount; i < m_count; ++i)
-			{
-				double value = (m_properties.faderMode != 0) ? ScaleToEnvelopeMode(m_properties.faderMode, m_points[i].value) : m_points[i].value;
-				double position = m_points[i].position * playrate;
-				InsertEnvelopePoint(m_envelope, position, value, m_points[i].shape, m_points[i].bezier, m_points[i].selected, &g_bTrue);
-			}
-			Envelope_SortPoints(m_envelope);
-
-			PreventUIRefresh(-1);
-		}
 
 		SetConfig("envclicksegmode", envClickSegMode);
 		SetConfig("pooledenvs", pooledenvs);
@@ -1536,7 +1452,7 @@ bool BR_Envelope::Commit (bool force /*=false*/)
 
 int BR_Envelope::FindFirstPoint ()
 {
-	if (m_count <= 0)
+	if (m_points.empty())
 		return -1;
 
 	if (m_sorted)
@@ -1665,52 +1581,33 @@ void BR_Envelope::Build (bool takeEnvelopesUseProjectTime)
 		m_points.reserve(count);
 		m_pointsSel.reserve(count);
 
+		const double playrate = m_take ? GetMediaItemTakeInfo_Value(m_take, "D_PLAYRATE") : 1;
+
 		// Since information on partial measures is missing from the API, we need to parse the chunk for tempo map
-		if (m_tempoMap)
+		char* envState = GetSetObjectState(m_envelope, "");
+		char* token = strtok(envState, "\n");
+		LineParser lp(false);
+		bool start = false;
+		int id = -1;
+		while (token != NULL)
 		{
-			char* envState = GetSetObjectState(m_envelope, "");
-			char* token = strtok(envState, "\n");
-			LineParser lp(false);
-			bool start = false;
-			int id = -1;
-			while (token != NULL)
+			lp.parse(token);
+			BR_Envelope::EnvPoint point;
+			if (point.ReadLine(lp, playrate, m_properties.faderMode))
 			{
-				lp.parse(token);
-				BR_Envelope::EnvPoint point;
-				if (point.ReadLine(lp))
-				{
-					++id;
-					start = true;
-					m_points.push_back(point);
-					if (point.selected == 1)
-						m_pointsSel.push_back(id);
-				}
-				else if (!start)
-					AppendLine(m_chunkProperties, token);
-				token = strtok(NULL, "\n");
-			}
-			FreeHeapPtr(envState);
-		}
-		else
-		{
-			double playrate = (m_take) ? (GetMediaItemTakeInfo_Value(m_take, "D_PLAYRATE")) : 1;
-			for (int i = 0; i < count; ++i)
-			{
-				BR_Envelope::EnvPoint point;
-				GetEnvelopePoint(m_envelope, i, &point.position, &point.value, &point.shape, &point.bezier, &point.selected);
-				point.position /=  playrate;
-
-				if (m_properties.faderMode != 0)
-					point.value = ScaleFromEnvelopeMode(m_properties.faderMode, point.value);
-
+				++id;
+				start = true;
 				m_points.push_back(point);
-				if (point.selected) m_pointsSel.push_back(i);
+				if (point.selected == 1)
+					m_pointsSel.push_back(id);
 			}
+			else if (!start)
+				AppendLine(m_chunkProperties, token);
+			token = strtok(NULL, "\n");
 		}
+		FreeHeapPtr(envState);
 	}
 
-	m_count    = (int)m_points.size();
-	m_countSel = (int)m_pointsSel.size();
 	if (takeEnvelopesUseProjectTime && m_take)
 		m_takeEnvOffset = GetMediaItemInfo_Value(GetMediaItemTake_Item(m_take), "D_POSITION");
 }
@@ -1734,8 +1631,9 @@ void BR_Envelope::UpdateConsequential ()
 				}
 			}
 		}
-		m_countConseq = (int)m_pointsConseq.size();
 	}
+
+	m_rebuildConseq = false;
 }
 
 void BR_Envelope::FillFxInfo ()
@@ -2065,14 +1963,27 @@ metronome2 (0)
 {
 }
 
-bool BR_Envelope::EnvPoint::ReadLine (const LineParser& lp)
+bool BR_Envelope::EnvPoint::operator==(const EnvPoint &point) const
+{
+	return
+		this->position == point.position &&
+		this->value == point.value &&
+		this->bezier == point.bezier &&
+		this->shape == point.shape &&
+		this->sig == point.sig &&
+		this->selected == point.selected &&
+		this->partial == point.partial
+	;
+}
+
+bool BR_Envelope::EnvPoint::ReadLine (const LineParser& lp, const double playrate, const int faderMode)
 {
 	if (strcmp(lp.gettoken_str(0), "PT"))
 		return false;
 	else
 	{
-		this->position   = lp.gettoken_float(1);
-		this->value      = lp.gettoken_float(2);
+		this->position   = lp.gettoken_float(1) / playrate;
+		this->value      = ScaleFromEnvelopeMode(faderMode, lp.gettoken_float(2));
 		this->shape      = lp.gettoken_int(3);
 		this->sig        = lp.gettoken_int(4);
 		this->selected   = (lp.gettoken_int(5)&1)==1;
@@ -2086,7 +1997,7 @@ bool BR_Envelope::EnvPoint::ReadLine (const LineParser& lp)
 	}
 }
 
-void BR_Envelope::EnvPoint::Append (WDL_FastString& string, bool tempoPoint)
+void BR_Envelope::EnvPoint::Append (WDL_FastString& string, const bool tempoPoint, const double playrate, const int faderMode)
 {
 	if (tempoPoint)
 	{
@@ -2112,8 +2023,8 @@ void BR_Envelope::EnvPoint::Append (WDL_FastString& string, bool tempoPoint)
 		(
 			256,
 			"PT %.12lf %.10lf %d %d %d %d %.8lf\n",
-			this->position,
-			this->value,
+			this->position * playrate,
+			ScaleToEnvelopeMode(faderMode, this->value),
 			this->shape,
 			this->sig,
 			this->selected ? 1 : 0,

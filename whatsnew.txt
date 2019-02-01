@@ -37,6 +37,7 @@ Fixes:
 +Issue 1057: Fix quantize actions moving items to incorrect positions or hanging in some cases when the grid line spacing is set to Frames, typically when a project start time offset is used
 +Issue 1060: Fix "SWS/Shane: Batch Render Regions" crashing when a region contains a slash on Linux and macOS
 +Issue 1077: Fix crash after stopping the active track preview from another project tab
++Issue 1086: Fix envelope reconstitution when automation items are connected to the underlying envelope
 +Auto color/icon/layout: "(vca master)" filter - also apply rules to groups 33 - 64 (report https://forum.cockos.com/showthread.php?t=207722|here|) (REAPER 5.70+)
 +Cycle Action editor: Fix minor issue with not opening with correct section (report https://forum.cockos.com/showpost.php?p=1986045&postcount=3|here|)
 +Fix hang when parsing item chunks containing lines bigger than 255 characters (https://github.com/reaper-oss/sws/issues/912#issuecomment-426892230|Issue 912 (comment)|)

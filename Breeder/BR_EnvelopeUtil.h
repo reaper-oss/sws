@@ -76,8 +76,8 @@ public:
 	BR_Envelope (const BR_Envelope& envelope);
 	~BR_Envelope ();
 	BR_Envelope& operator=  (const BR_Envelope& envelope);
-	bool         operator== (const BR_Envelope& envelope); // This only compares points and if envelope is active (aka things that affect playback) - other
-	bool         operator!= (const BR_Envelope& envelope); // properties like type, envelope pointer, height, armed, default shape etc... are ignored)
+	bool         operator== (const BR_Envelope& envelope) const; // This only compares points and if envelope is active (aka things that affect playback) - other
+	bool         operator!= (const BR_Envelope& envelope) const; // properties like type, envelope pointer, height, armed, default shape etc... are ignored)
 
 	/* Direct point manipulation (returns false if id does not exist) (checkPosition only works for take envelopes, snapValue only for pitch envelopes) */
 	bool GetPoint (int id, double* position, double* value, int* shape, double* bezier);
@@ -218,6 +218,7 @@ private:
 		EnvPoint ();
 		EnvPoint (double position, double value, int shape, int sig, bool selected, int partial, double bezier);
 		explicit EnvPoint (double position);
+		bool operator==(const EnvPoint &) const;
 		bool ReadLine (const LineParser& lp, double playrate, int faderMode); // use only once per object (for efficiency, tempoStr is never deleted, only appended too)
 		void Append (WDL_FastString& string, bool tempoPoint, double playrate, int faderMode);
 		struct ComparePoints
@@ -248,15 +249,13 @@ private:
 	bool m_pointsEdited; // tells us if we can use Envelope_Evaluate() in this->ValueAtPosition()
 	double m_takeEnvOffset;
 	int m_sampleRate;
-	int m_countConseq;
 	int m_height;
 	int m_yOffset;
-	int m_count;
-	int m_countSel;
 	BR_EnvType m_takeEnvType;
 	void* m_data;
 	vector<BR_Envelope::EnvPoint> m_points;
-	vector<int> m_pointsSel;
+	bool m_rebuildConseq;
+	vector<size_t> m_pointsSel;
 	vector<IdPair> m_pointsConseq;
 	WDL_FastString m_chunkProperties;
 	WDL_FastString m_envName;

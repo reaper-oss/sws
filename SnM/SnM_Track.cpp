@@ -1420,10 +1420,9 @@ public:
       m_hasdone=1;
       block->samples_out=block->length;
       memset(block->samples,0,block->length*block->nch*sizeof(double));
-      int x;
-      for (x = 0; x < 16; x ++)
+      for (int x = 0; x < 16; x ++)
       {
-        MIDI_event_t e={0,3, 0xb0+x,};
+        MIDI_event_t e={0, 3, (unsigned char)(0xb0 + x), };
         if (m_flags&1)
         {
           e.midi_message[1]=64;

@@ -1239,7 +1239,7 @@ bool BR_Win32_SetWindowPos(void* hwnd, const char* hwndInsertAfter, int x, int y
 
 int BR_Win32_ShellExecute(const char* operation, const char* file, const char* parameters, const char* directoy, int showFlags)
 {
-	return (int)ShellExecute(g_hwndParent, operation, file, parameters, directoy, showFlags);
+	return (int)(UINT_PTR)ShellExecute(g_hwndParent, operation, file, parameters, directoy, showFlags);
 }
 
 bool BR_Win32_ShowWindow(void* hwnd, int cmdShow)

@@ -329,7 +329,7 @@ HWND replacecontrol(HWND h,const int idc,FNCHANGESTYLE fnchange)
     rc.right-rc.left,
     rc.bottom-rc.top,
     h,
-    (HMENU)idc,
+    (HMENU)(UINT_PTR)idc,
     hinst,
     0
   );
@@ -1644,10 +1644,10 @@ int NotesInit()
 		WDL_FileRead infile(filePath.Get());
 		
 		if (infile.IsOpen() == true) {
-			std::vector<char> buffer(infile.GetSize() + 1); // +1 to have space for the terminating zero
+			std::vector<char> buffer((size_t)infile.GetSize() + 1); // +1 to have space for the terminating zero
 			// infile.Read(buffer.data(), infile.GetSize()); // C++11
-            infile.Read(&buffer.front(), infile.GetSize());
-			buffer[infile.GetSize()] = '\0'; // put in the string terminating zero
+            infile.Read(&buffer.front(), (int)infile.GetSize());
+			buffer[(size_t)infile.GetSize()] = '\0'; // put in the string terminating zero
 			g_glbNotes.Get()->Set(&buffer[0]);
 		}
 		else { // reading failed

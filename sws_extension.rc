@@ -2044,7 +2044,8 @@ END
 #include "version.h"
 #include "license.h"
 #include "url.h"
-#include "version.rc2"
+#include "version.rc2"
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

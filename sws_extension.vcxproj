@@ -355,6 +355,7 @@ echo Warning: sws_python.py generation failed (Perl installed?)
     <None Include="Resources\Bitmap\uparrow.bmp" />
     <None Include="Resources\Cursor\sws_env_pen_grid.cur" />
     <None Include="Resources\Cursor\sws_env_pt_adj_vert.cur" />
+    <None Include="Resources\Cursor\sws_eraser.cur" />
     <None Include="Resources\Cursor\sws_grid_warp.cur" />
     <None Include="Resources\Cursor\sws_misc_speaker.cur" />
     <None Include="Resources\Cursor\sws_zoom_drag.cur" />
@@ -366,6 +367,7 @@ echo Warning: sws_python.py generation failed (Perl installed?)
     <None Include="whatsnew.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Autorender\dirent.h" />
     <ClInclude Include="Breeder\BR_ContextualToolbars.h" />
     <ClInclude Include="Breeder\BR_ContinuousActions.h" />
     <ClInclude Include="Breeder\BR_MidiEditor.h" />
@@ -379,6 +381,7 @@ echo Warning: sws_python.py generation failed (Perl installed?)
     <ClInclude Include="resource.h" />
     <ClInclude Include="snooks\snooks.h" />
     <ClInclude Include="snooks\SN_ReaScript.h" />
+    <ClInclude Include="url.h" />
     <ClInclude Include="Utility\win32-utf8.h" />
     <ClInclude Include="Wol\wol_Util.h" />
     <ClInclude Include="Wol\wol_Zoom.h" />
@@ -398,7 +401,6 @@ echo Warning: sws_python.py generation failed (Perl installed?)
     <ClInclude Include="..\WDL\WDL\zlib\inftrees.h" />
     <ClInclude Include="..\WDL\WDL\zlib\trees.h" />
     <ClInclude Include="..\WDL\WDL\zlib\zconf.h" />
-    <ClInclude Include="..\WDL\WDL\zlib\zconf.in.h" />
     <ClInclude Include="..\WDL\WDL\zlib\zlib.h" />
     <ClInclude Include="..\WDL\WDL\zlib\zutil.h" />
     <ClInclude Include="..\WDL\WDL\wingui\virtwnd-controls.h" />

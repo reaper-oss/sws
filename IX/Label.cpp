@@ -41,7 +41,7 @@ WDL_DLGRET doLabelProcDlg(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, uMsg, wParam, lParam))
 		return r;
 
-	WDL_FastString *pStr = (WDL_FastString*) GetWindowLong(hwnd, GWLP_USERDATA);
+	WDL_FastString *pStr = (WDL_FastString*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 	switch(uMsg)
 	{
 		case WM_INITDIALOG:

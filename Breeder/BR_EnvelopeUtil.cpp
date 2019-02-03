@@ -258,7 +258,7 @@ bool BR_Envelope::CreatePoint (int id, double position, double value, int shape,
 {
 	if (id >= 0)
 	{
-		if (id >= m_points.size())
+		if (id >= (int)m_points.size())
 			id = m_points.size();
 
 		position -= m_takeEnvOffset;
@@ -403,7 +403,7 @@ int BR_Envelope::DeletePoints (int startId, int endId)
 		swap(startId, endId);
 
 	if (startId < 0)        startId = 0;
-	if (endId >= m_points.size()) endId = m_points.size() - 1;
+	if (endId >= (int)m_points.size()) endId = m_points.size() - 1;
 	if (!this->ValidateId(startId) || !this->ValidateId(endId))
 		return 0;
 
@@ -423,7 +423,7 @@ int BR_Envelope::DeletePointsInRange (double start, double end)
 	if (m_sorted)
 	{
 		int startId = FindPrevious(start, 0);
-		while (startId < m_points.size())
+		while (startId < (int)m_points.size())
 		{
 			if (this->ValidateId(startId) && m_points[startId].position >= start)
 				break;
@@ -519,7 +519,7 @@ bool BR_Envelope::GetConseq (int idx, int* startId, int* endId)
 
 bool BR_Envelope::ValidateId (int id)
 {
-	if (id < 0 || id >= m_points.size())
+	if (id < 0 || id >= (int)m_points.size())
 		return false;
 	else
 		return true;

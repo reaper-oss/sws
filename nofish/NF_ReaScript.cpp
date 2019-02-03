@@ -212,7 +212,7 @@ bool NF_AnalyzeMediaItemPeakAndRMS(MediaItem* item, double windowSize, void* rea
 
 		// write analyzed values to reaperarrays
 		// never write to [0] in reaperarrays!!!
-		for (auto i = 1; i <= a.iChannels; i++) {
+		for (int i = 1; i <= a.iChannels; i++) {
 			if (d_reaperarray_peaksCurSize < ((uint32_t*)(d_reaperarray_peaks))[1]) { // higher 32 bits in 1st entry: max alloc. size
 				d_reaperarray_peaks[i] = VAL2DB(a.dPeakVals[i - 1]);
 				d_reaperarray_peaksCurSize++;
@@ -221,7 +221,7 @@ bool NF_AnalyzeMediaItemPeakAndRMS(MediaItem* item, double windowSize, void* rea
 				break;
 		}
 
-		for (auto i = 1; i <= a.iChannels; i++) {
+		for (int i = 1; i <= a.iChannels; i++) {
 			if (d_reaperarray_peakpositionsCurSize < ((uint32_t*)(d_reaperarray_peakpositions))[1]) {
 				d_reaperarray_peakpositions[i] = GetPosInItem(a.peakSamples[i - 1], samplerate);
 				d_reaperarray_peakpositionsCurSize++;
@@ -230,7 +230,7 @@ bool NF_AnalyzeMediaItemPeakAndRMS(MediaItem* item, double windowSize, void* rea
 				break;
 		}
 
-		for (auto i = 1; i <= a.iChannels; i++) {
+		for (int i = 1; i <= a.iChannels; i++) {
 			if (d_reaperarray_RMSsCurSize < ((uint32_t*)(d_reaperarray_RMSs))[1]) {
 				d_reaperarray_RMSs[i] = VAL2DB(a.dRMSs[i - 1]);
 				d_reaperarray_RMSsCurSize++;
@@ -239,7 +239,7 @@ bool NF_AnalyzeMediaItemPeakAndRMS(MediaItem* item, double windowSize, void* rea
 				break;
 		}
 
-		for (auto i = 1; i <= a.iChannels; i++) {
+		for (int i = 1; i <= a.iChannels; i++) {
 			if (d_reaperarray_RMSpositionsCurSize < ((uint32_t*)(d_reaperarray_RMSpositions))[1]) {
 				d_reaperarray_RMSpositions[i] = GetPosInItem(a.peakRMSsamples[i - 1], samplerate);
 				d_reaperarray_RMSpositionsCurSize++;

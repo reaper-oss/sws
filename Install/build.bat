@@ -1,7 +1,7 @@
 @echo off
 
-REM Copyright 2013 and later Jeffos. All rights reserved.
-REM See https://github.com/Jeff0S/sws-web
+REM Copyright 2019 and later SWS team. All rights reserved.
+REM See https://github.com/reaper-oss/sws-web
 
 REM ===========================================================================
 REM You must set these according to your local setup
@@ -10,7 +10,7 @@ REM ===========================================================================
 set ftp_path="C:\bin\putty\psftp.exe"
 set ftp_host=sws
 set ftp_root=/var/www/standingwaterstudios.com/public_html
-set vcvars_path="C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat"
+set vcvars_path="C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\Common7\Tools\VsDevCmd.bat"
 set makensis_path="C:\bin\NSIS\makensis.exe"
 set bash_path="c:\Program Files (x86)\Git\bin\bash.exe"
 set osx_dmg_path="output\sws_osx.dmg"
@@ -88,7 +88,7 @@ REM if errorlevel 1 goto error
 REM vcbuild /r /platform:Win32 ..\sws_extension.vcproj release
 REM if errorlevel 1 goto error
 
-REM For MSBuild / Visual Studio 2013
+REM For MSBuild / Visual Studio 2017
 msbuild /t:rebuild /m /p:Platform=x64,Configuration=release ..\sws_extension.vcxproj
 if errorlevel 1 goto error
 

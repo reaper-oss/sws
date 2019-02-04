@@ -1,3 +1,5 @@
+"SWS/NF: Enable / Disable multichannel metering (...)" actions: Improve performance (report https://forum.cockos.com/showthread.php?p=2090523#post2090523|here|, thanks Edgemeal!)
+
 !v2.10.0 pre-release build (February 2, 2019)
 Mega thanks to X-Raym and cfillion for getting this ready, and to everyone who's submitted pull requests!  This will transition to "official release" status as long as there are no major issues found in the next few days.
 

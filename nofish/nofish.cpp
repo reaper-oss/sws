@@ -156,43 +156,59 @@ void ME_NFToggleDottedMIDI(COMMAND_T* _ct, int _val, int _valhw, int _relmode, H
 //////////////////////////////////////////////////////////////////
 
 // ct->user == 0: all tracks, == 1: sel. tracks
-void DisableMultichannelMetering(COMMAND_T* ct)
+void EnableDisableMultichannelMetering(COMMAND_T* ct, bool enable)
 {
-	WDL_TypedBuf<MediaTrack*> tracks;
+	WDL_TypedBuf<MediaTrack*> selTracks;
+	SWS_GetSelectedTracks(&selTracks, false);
+
+	PreventUIRefresh(1);
+	Undo_BeginBlock();
 
 	if (ct->user == 0)
-		SWS_GetAllTracks(&tracks, false); // skip master
-
+	{
+		for (int i = 1; i <= GetNumTracks(); ++i) {
+			MediaTrack* track = CSurf_TrackFromID(i, false);
+			SNM_ChunkParserPatcher p(track);
+			int VUlineFound = p.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "TRACK", "VU", 0, -1, NULL, NULL, "TRACKHEIGHT");
+			if (enable && VUlineFound == 0 || !enable && VUlineFound > 0) {
+				SetOnlyTrackSelected(track);
+				Main_OnCommand(41726, 0); // Track: Toggle full multichannel metering
+			}
+		}
+	}
 	else if (ct->user == 1)
-		SWS_GetSelectedTracks(&tracks, false);
-
-	for (int i = 0; i < tracks.GetSize(); i++) {
-		MediaTrack* track = tracks.Get()[i];
-		SNM_ChunkParserPatcher p(track);
-		p.RemoveLine("TRACK", "VU", 1, 0, "TRACKHEIGHT");
+	{
+		for (int i = 0; i < selTracks.GetSize(); ++i) {
+			MediaTrack* track = selTracks.Get()[i];
+			SNM_ChunkParserPatcher p(track);
+			int VUlineFound = p.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "TRACK", "VU", 0, -1, NULL, NULL, "TRACKHEIGHT");
+			if (enable && VUlineFound == 0 || !enable && VUlineFound > 0) {
+				SetOnlyTrackSelected(track);
+				Main_OnCommand(41726, 0); // Track: Toggle full multichannel metering
+			}
+		}
 	}
 
-	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+	Undo_EndBlock(SWS_CMD_SHORTNAME(ct), 1);
+
+	// restore initial track selection
+	ClearSelected();
+	int iSel = 1;
+	for (int i = 0; i < selTracks.GetSize(); ++i) {
+		GetSetMediaTrackInfo(selTracks.Get()[i], "I_SELECTED", &iSel);
+	}
+
+	PreventUIRefresh(-1);
 }
 
-// ct->user == 0: all tracks, == 1: sel. tracks
+void DisableMultichannelMetering(COMMAND_T* ct)
+{
+	EnableDisableMultichannelMetering(ct, false);
+}
+
 void EnableMultichannelMetering(COMMAND_T* ct)
 {
-	WDL_TypedBuf<MediaTrack*> tracks;
-
-	if (ct->user == 0)
-		SWS_GetAllTracks(&tracks, false); // skip master
-
-	else if (ct->user == 1)
-		SWS_GetSelectedTracks(&tracks, false);
-
-	for (int i = 0; i < tracks.GetSize(); i++) {
-		MediaTrack* track = tracks.Get()[i];
-		SNM_ChunkParserPatcher p(track);
-		p.InsertAfterBefore(1, "VU 2", "TRACK", "REC", 1, 0, "TRACKHEIGHT");
-	}
-
-	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+	EnableDisableMultichannelMetering(ct, true);
 }
 
 

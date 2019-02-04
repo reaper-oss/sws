@@ -1084,12 +1084,12 @@ void NFDoAutoGroupTakesMode(WDL_TypedBuf<MediaItem*> origSelItems)
 // Auto group helper functions
 bool IsMoreThanOneTrackRecArmed()
 {
-	int RecArmedTracks = 0;
-	for (int i = 0; i < GetNumTracks(); i++) {
-		MediaTrack* CurTrack = CSurf_TrackFromID(i + 1, false); // skip master
+	int recArmedTracks = 0;
+	for (int i = 1; i <= GetNumTracks(); ++i) { // skip master
+		MediaTrack* CurTrack = CSurf_TrackFromID(i, false); 
 		if (*(int*)GetSetMediaTrackInfo(CurTrack, "I_RECARM", NULL)) {
-			RecArmedTracks += 1;
-			if (RecArmedTracks > 1)
+			recArmedTracks += 1;
+			if (recArmedTracks > 1)
 				return true;
 		}
 	}

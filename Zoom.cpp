@@ -127,12 +127,8 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers, bo
 	if (bMinimizeOthers)
 	{
 		*(int*)GetConfigVar("vzoom2") = 0;
-		for (int i = 0; i <= GetNumTracks(); i++) {
-			MediaTrack* tr = CSurf_TrackFromID(i, false);
-			if (!SWS_IsTrackHeightLocked(tr))
-				GetSetMediaTrackInfo(tr, "I_HEIGHTOVERRIDE", &g_i0);
-		}
-			
+		for (int i = 0; i <= GetNumTracks(); i++)
+			GetSetMediaTrackInfo(CSurf_TrackFromID(i, false), "I_HEIGHTOVERRIDE", &g_i0);
 		Main_OnCommand(40112, 0); // Zoom out vert to minimize envelope lanes too (since vZoom is now 0) (calls refresh)
 		//TrackList_AdjustWindows(false);
 		//UpdateTimeline();
@@ -144,7 +140,7 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers, bo
 		for (int i = 0; i < iNum; i++)
 		{
 			MediaTrack* tr = CSurf_TrackFromID(i+iFirst, false);
-			if (bZoomed[i] && !SWS_IsTrackHeightLocked(tr))
+			if (bZoomed[i])
 			{
 				iZoomed++;
 				if (tr == masterTrack && TcpVis(tr) && iNum > 1) iNotZoomedSize += GetMasterTcpGap();
@@ -263,12 +259,8 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers, bo
 		} while (iHeight > iTotalHeight && iZoom > 0);
 
 		// Reset custom track sizes
-		for (int i = 0; i <= GetNumTracks(); i++) {
-			MediaTrack* tr = CSurf_TrackFromID(i, false);
-			if (!SWS_IsTrackHeightLocked(tr))
-				GetSetMediaTrackInfo(tr, "I_HEIGHTOVERRIDE", &g_i0);
-		}
-			
+		for (int i = 0; i <= GetNumTracks(); i++)
+			GetSetMediaTrackInfo(CSurf_TrackFromID(i, false), "I_HEIGHTOVERRIDE", &g_i0);
 		*(int*)GetConfigVar("vzoom2") = iZoom;
 		TrackList_AdjustWindows(false);
 		UpdateTimeline();

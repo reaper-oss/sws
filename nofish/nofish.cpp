@@ -170,7 +170,7 @@ void EnableDisableMultichannelMetering(COMMAND_T* ct, bool enable)
 			MediaTrack* track = CSurf_TrackFromID(i, false);
 			SNM_ChunkParserPatcher p(track);
 			int VUlineFound = p.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "TRACK", "VU", 0, -1, NULL, NULL, "TRACKHEIGHT");
-			if (enable && VUlineFound == 0 || !enable && VUlineFound > 0) {
+			if ((enable && VUlineFound == 0) || (!enable && VUlineFound > 0)) {
 				SetOnlyTrackSelected(track);
 				Main_OnCommand(41726, 0); // Track: Toggle full multichannel metering
 			}
@@ -182,7 +182,7 @@ void EnableDisableMultichannelMetering(COMMAND_T* ct, bool enable)
 			MediaTrack* track = selTracks.Get()[i];
 			SNM_ChunkParserPatcher p(track);
 			int VUlineFound = p.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "TRACK", "VU", 0, -1, NULL, NULL, "TRACKHEIGHT");
-			if (enable && VUlineFound == 0 || !enable && VUlineFound > 0) {
+			if ((enable && VUlineFound == 0) || (!enable && VUlineFound > 0)) {
 				SetOnlyTrackSelected(track);
 				Main_OnCommand(41726, 0); // Track: Toggle full multichannel metering
 			}

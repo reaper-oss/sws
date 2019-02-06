@@ -1,3 +1,4 @@
+Revert 'Track height actions and vertical zoom actions obey track height locking' (for not breaking existing workflows, may come back as optional later on)
 "SWS/NF: Enable / Disable multichannel metering (...)" actions: Improve performance (report https://forum.cockos.com/showthread.php?p=2090523#post2090523|here|, thanks Edgemeal!)
 
 !v2.10.0 pre-release build (February 2, 2019)
@@ -61,7 +62,7 @@ Fixes:
 +ReaScript:
  +Issue 950: Make BR_SetItemEdges() only work on item passed in function (rather than all selected items), refix from v2.9.8
  - Avoid crashing in BR_Win32{Get,Write}PrivateProfileString when keyName is empty
- - BR_GetMouseCursorContext_MIDI() - add support for Notation Events lane (Issue 1082) (Note: currently returning 0x208, maybe this is due to change, see https://forum.cockos.com/showthread.php?p=2081634#post2081634|here|)
+ - BR_GetMouseCursorContext_MIDI() - add support for Notation Events lane (Issue 1082)
  - Fix BR_MIDI_CCLaneRemove(), BR_MIDI_CCLaneReplace() (report https://forum.cockos.com/showpost.php?p=2002814&postcount=1|here|.)
  - Repair CF_LocateInExplorer()
 
@@ -140,7 +141,7 @@ Other changes:
 +ReaScript:
  - Mark SNM_MoveOrRemoveTrackFX() as deprecated (native API equivalent added in REAPER 5.95)
  - Remove NF_TrackFX/TakeFX_ Set/GetOffline() (native API equivalent added in REAPER 5.95)
- - TagLib VS 2017 update for Windows (from v1.6.3. to v1.11.1)
++TagLib VS 2017 update for Windows (from v1.6.3. to v1.11.1)
 
 !v2.9.8 pre-release build (March 5, 2018)
 Now requires REAPER 5.50+!

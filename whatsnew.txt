@@ -1,9 +1,11 @@
+!v2.10.0 #1 Featured build (February 6, 2019)
+Mega thanks to nofish and cfillion for their many contributions, and X-Raym for doing the tedious work of merging everything into a release.
+Recommended use of REAPER 5.965.
+
 Revert 'Track height actions and vertical zoom actions obey track height locking' (for not breaking existing workflows, may come back as optional later on)
 "SWS/NF: Enable / Disable multichannel metering (...)" actions: Improve performance (report https://forum.cockos.com/showthread.php?p=2090523#post2090523|here|, thanks Edgemeal!)
 
 !v2.10.0 pre-release build (February 2, 2019)
-Mega thanks to X-Raym and cfillion for getting this ready, and to everyone who's submitted pull requests!  This will transition to "official release" status as long as there are no major issues found in the next few days.
-
 New features:
 +Auto color/icon/layout: Add '(hide)' Layout to auto hide TCP / MCP of tracks (rightclick in "TCP Layout" / "MCP Layout" fields to set) (Issue 1008)
 +Global notes
@@ -48,6 +50,7 @@ Fixes:
 +Fix hang when parsing item chunks containing lines bigger than 255 characters (https://github.com/reaper-oss/sws/issues/912#issuecomment-426892230|Issue 912 (comment)|)
 +Fix freeze when running "SWS/S&M: Remove all envelopes for selected tracks" with the master track selected (regression from v2.9.8)
 +"SWS/S&M: Close all FX chain windows", "SWS/S&M: Close all floating FX windows (...)" - include take FX (report https://forum.cockos.com/showpost.php?p=1978820&postcount=2425|here|)
++"SWS/NF: Enable / Disable multichannel metering (...)" actions: Improve performance (report https://forum.cockos.com/showthread.php?p=2090523#post2090523|here|, thanks Edgemeal!)
 +Auto group:
  - Revert creating explicit undo point (match behaviour prior v2.95)
  - Prevent grouping of selected items on not record armed tracks

@@ -37,7 +37,7 @@
 #include "../Misc/Analysis.h" // #781
 #include "../Breeder/BR_Loudness.h" // #880
 #include "../SnM/SnM_Notes.h" // #755
-#include "../SnM/SnM_Project.h" // #974
+#include "../SnM/SnM_Util.h" // #974, SNM_NamedCommandLookup(), CheckSwsMacroScriptNumCustomId()
 
 
 // #781, peak/RMS
@@ -212,6 +212,7 @@ bool NF_AnalyzeMediaItemPeakAndRMS(MediaItem* item, double windowSize, void* rea
 
 		// write analyzed values to reaperarrays
 		// never write to [0] in reaperarrays!!!
+		// https://forum.cockos.com/showpost.php?p=2039829&postcount=2
 		for (int i = 1; i <= a.iChannels; i++) {
 			if (d_reaperarray_peaksCurSize < ((uint32_t*)(d_reaperarray_peaks))[1]) { // higher 32 bits in 1st entry: max alloc. size
 				d_reaperarray_peaks[i] = VAL2DB(a.dPeakVals[i - 1]);
@@ -306,17 +307,15 @@ void NF_UpdateSWSMarkerRegionSubWindow()
 	NF_DoUpdateSWSMarkerRegionSubWindow();
 }
 
-
-// #974
-/*
-extern WDL_FastString g_globalStartupAction; extern SWSProjConfig<WDL_FastString> g_prjLoadActions;
+// #974 Global/project startup actions
+extern WDL_FastString g_globalAction; extern SWSProjConfig<WDL_FastString> g_prjActions; // SnM_Project.cpp
 
 // desc == true: return action text, false: return command ID number (native actions) or named command (extension/ReaScript)
 void NF_GetGlobalStartupAction(char* buf, int bufSize, bool desc)
 {
 	WDL_FastString fs;
 
-	if (!g_globalStartupAction.Get()) 
+	if (!g_globalAction.Get()) 
 	{
 		if (desc)
 			fs.Set("");
@@ -327,12 +326,12 @@ void NF_GetGlobalStartupAction(char* buf, int bufSize, bool desc)
 		return;
 	}
 
-	if  (int cmdId = SNM_NamedCommandLookup(g_globalStartupAction.Get())) 
+	if  (int cmdId = SNM_NamedCommandLookup(g_globalAction.Get())) 
 	{
 		if (desc)
 			fs.Set(kbd_getTextFromCmd(cmdId, NULL));
 		else
-			fs.Set(g_globalStartupAction.Get());
+			fs.Set(g_globalAction.Get());
 	}
 	else
 	{
@@ -353,10 +352,9 @@ void NF_GetGlobalStartupAction_CmdID(char *buf, int bufSize)
 	NF_GetGlobalStartupAction(buf, bufSize, false);
 }
 
-
 bool NF_SetGlobalStartupAction(const char * buf)
 {
-	if (!g_globalStartupAction.Get())
+	if (!g_globalAction.Get())
 		return false;
 		
 	if (int cmdId = SNM_NamedCommandLookup(buf))
@@ -368,7 +366,7 @@ bool NF_SetGlobalStartupAction(const char * buf)
 		}
 		else
 		{
-			g_globalStartupAction.Set(buf);
+			g_globalAction.Set(buf);
 			WritePrivateProfileString("Misc", "GlobalStartupAction", buf, g_SNM_IniFn.Get());
 			return true;
 		}
@@ -381,19 +379,18 @@ bool NF_SetGlobalStartupAction(const char * buf)
 
 bool NF_ClearGlobalStartupAction()
 {
-	if (g_globalStartupAction.Get()) {
-		g_globalStartupAction.Set("");
+	if (g_globalAction.Get()) {
+		g_globalAction.Set("");
 		WritePrivateProfileString("Misc", "GlobalStartupAction", NULL, g_SNM_IniFn.Get());
 		return true;
 	}
 	return false;
 }
 
-
 void NF_GetProjectStartupAction(char* buf, int bufSize, bool desc)
 {
 	WDL_FastString fs;
-	if (!g_prjLoadActions.Get()->Get())
+	if (!g_prjActions.Get()->Get())
 	{
 		if (desc)
 			fs.Set("");
@@ -404,12 +401,12 @@ void NF_GetProjectStartupAction(char* buf, int bufSize, bool desc)
 		return;
 	}
 
-	if (int cmdId = SNM_NamedCommandLookup(g_prjLoadActions.Get()->Get()))
+	if (int cmdId = SNM_NamedCommandLookup(g_prjActions.Get()->Get()))
 	{
 		if (desc)
 			fs.Set(kbd_getTextFromCmd(cmdId, NULL));
 		else
-			fs.Set(g_prjLoadActions.Get()->Get());
+			fs.Set(g_prjActions.Get()->Get());
 	}
 	else
 	{
@@ -432,7 +429,7 @@ void NF_GetProjectStartupAction_CmdID(char *buf, int bufSize)
 
 bool NF_SetProjectStartupAction(const char* buf)
 {
-	if (!g_prjLoadActions.Get())
+	if (!g_prjActions.Get())
 		return false;
 
 	if (int cmdId = SNM_NamedCommandLookup(buf))
@@ -444,7 +441,7 @@ bool NF_SetProjectStartupAction(const char* buf)
 		}
 		else
 		{
-			g_prjLoadActions.Get()->Set(buf);
+			g_prjActions.Get()->Set(buf);
 			return true;
 		}
 	}
@@ -456,12 +453,9 @@ bool NF_SetProjectStartupAction(const char* buf)
 
 bool NF_ClearProjectStartupAction()
 {
-	if (g_prjLoadActions.Get()) {
-		g_prjLoadActions.Get()->Set("");
+	if (g_prjActions.Get()) {
+		g_prjActions.Get()->Set("");
 		return true;
 	}
 	return false;
 }
-*/
-
-

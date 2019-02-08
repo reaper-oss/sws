@@ -1,3 +1,8 @@
+Fixes:
+Loudness - 'high precision' mode:
+ - Disable creating graph, disable go to max. short-term / momentary (Issue 1120) (as this mode works with overlapping measurements, results wouldn't make sense)
+ - ReaScript: automatically disable 'high precision' mode for NF_AnalyzeTakeLoudness2() (to ensure correct max. short-term / momentary positions)
+
 !v2.10.0 #1 Featured build (February 6, 2019)
 Mega thanks to nofish and cfillion for their many contributions, and X-Raym for doing the tedious work of merging everything into a release.
 Recommended use of REAPER 5.965.

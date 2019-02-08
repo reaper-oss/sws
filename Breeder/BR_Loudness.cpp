@@ -757,13 +757,19 @@ bool BR_LoudnessObject::IsSelectedInProject ()
 		return *(bool*)GetSetMediaItemInfo(this->GetItem(), "B_UISEL", NULL);
 }
 
-bool BR_LoudnessObject::CreateGraph (BR_Envelope& envelope, double minLUFS, double maxLUFS, bool momentary, HWND warningHwnd /*=g_hwndParent*/)
+bool BR_LoudnessObject::CreateGraph (BR_Envelope& envelope, double minLUFS, double maxLUFS, bool momentary, bool highPrecisionMode, HWND warningHwnd /*=g_hwndParent*/)
 {
 	SWS_SectionLock lock(&m_mutex);
 	if (!this->IsTargetValid() || envelope.IsTempo())
 	{
 		if (envelope.IsTempo())
 			MessageBox(warningHwnd, __LOCALIZE("Can't create loudness graph in tempo map.","sws_mbox"), __LOCALIZE("SWS/BR - Error","sws_mbox"), 0);
+		return false;
+	}
+
+	if (highPrecisionMode)
+	{
+		MessageBox(warningHwnd, __LOCALIZE("Creating graph in high precision mode\nis currently not implemented.", "sws_mbox"), __LOCALIZE("SWS/BR - Error", "sws_mbox"), 0);
 		return false;
 	}
 
@@ -903,6 +909,12 @@ void BR_LoudnessObject::GoToMomentaryMax (bool timeSelection)
 	if (!this->IsTargetValid())
 		return;
 
+	if (g_loudnessWndManager.Get()->GetProperty(BR_AnalyzeLoudnessWnd::DO_HIGH_PRECISION_MODE))
+	{
+		MessageBox(g_loudnessWndManager.GetMsgHWND(), __LOCALIZE("Going to maximum momentary in high precision mode\nis currently not implemented.", "sws_mbox"), __LOCALIZE("SWS/BR - Error", "sws_mbox"), 0);
+		return;
+	}
+		
 	PreventUIRefresh(1);
 
 	double position = this->GetMaxMomentaryPos(true);
@@ -922,6 +934,12 @@ void BR_LoudnessObject::GoToShortTermMax (bool timeSelection)
 	SWS_SectionLock lock(&m_mutex);
 	if (!this->IsTargetValid())
 		return;
+
+	if (g_loudnessWndManager.Get()->GetProperty(BR_AnalyzeLoudnessWnd::DO_HIGH_PRECISION_MODE))
+	{
+		MessageBox(g_loudnessWndManager.GetMsgHWND(), __LOCALIZE("Going to maximum short-term in high precision mode\nis currently not implemented.", "sws_mbox"), __LOCALIZE("SWS/BR - Error", "sws_mbox"), 0);
+		return;
+	}
 
 	PreventUIRefresh(1);
 
@@ -1093,7 +1111,7 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 			int nrSamplesToCorrect = bufSz;
 
 			// samples in buffer crossed actual audio end (effectiveEndTime)?
-			if (newAudioEndSet && effectiveEndTime - currentTime < 0.2 + numeric_limits<double>::epsilon()) 
+			if (newAudioEndSet && effectiveEndTime - currentTime < (doHighPrecisionMode ? 0.01 : 0.2) + numeric_limits<double>::epsilon())
 			{
 				nrSamplesToCorrect = (int)(data.samplerate * (effectiveEndTime - currentTime));
 				correctForVolAndPanVolEnvs = false;
@@ -3301,7 +3319,7 @@ void BR_AnalyzeLoudnessWnd::OnCommand (WPARAM wParam, LPARAM lParam)
 				int x = 0;
 				while (BR_LoudnessObject* listItem = (BR_LoudnessObject*)m_list->EnumSelected(&x))
 				{
-					if (listItem->CreateGraph(envelope, g_pref.GetGraphMin(), g_pref.GetGraphMax(), (wParam == DRAW_MOMENTARY) ? (true) : (false), m_hwnd))
+					if (listItem->CreateGraph(envelope, g_pref.GetGraphMin(), g_pref.GetGraphMax(), (wParam == DRAW_MOMENTARY) ? (true) : (false), this->GetProperty(DO_HIGH_PRECISION_MODE), m_hwnd))
 						update = true;
 				}
 
@@ -4435,9 +4453,8 @@ bool NFDoAnalyzeTakeLoudness2(MediaItem_Take* take, bool analyzeTruePeak, double
 		if (isTargetValid) {
 			objects.Get(0)->SetDoTruePeak(analyzeTruePeak);
 
-			// check if user set high precision mode 
-			bool doHighPrecisionMode = !!IsHighPrecisionOptionEnabled(NULL);
-			objects.Get(0)->SetDoHighPrecisionMode(doHighPrecisionMode);
+			// don't use high precision mode here to ensure correct max. short-term / momentary positions
+			objects.Get(0)->SetDoHighPrecisionMode(false);
 
 			BR_NormalizeData analyzeData = { &objects, -23, false, false }; // full analyze mode
 			NFAnalyzeItemsLoudnessAndShowProgress(&analyzeData);

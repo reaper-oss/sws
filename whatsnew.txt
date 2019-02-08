@@ -1,3 +1,6 @@
+Fixes:
+Loudness: Disable creating graph in 'high precision' analyzing mode (as the refresh rate is higher than in 'normal' mode this wouldn't result in a correct short-term / momentary graph)
+
 !v2.10.0 #1 Featured build (February 6, 2019)
 Mega thanks to nofish and cfillion for their many contributions, and X-Raym for doing the tedious work of merging everything into a release.
 Recommended use of REAPER 5.965.

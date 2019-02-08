@@ -757,13 +757,19 @@ bool BR_LoudnessObject::IsSelectedInProject ()
 		return *(bool*)GetSetMediaItemInfo(this->GetItem(), "B_UISEL", NULL);
 }
 
-bool BR_LoudnessObject::CreateGraph (BR_Envelope& envelope, double minLUFS, double maxLUFS, bool momentary, HWND warningHwnd /*=g_hwndParent*/)
+bool BR_LoudnessObject::CreateGraph (BR_Envelope& envelope, double minLUFS, double maxLUFS, bool momentary, bool highPrecisionMode, HWND warningHwnd /*=g_hwndParent*/)
 {
 	SWS_SectionLock lock(&m_mutex);
 	if (!this->IsTargetValid() || envelope.IsTempo())
 	{
 		if (envelope.IsTempo())
 			MessageBox(warningHwnd, __LOCALIZE("Can't create loudness graph in tempo map.","sws_mbox"), __LOCALIZE("SWS/BR - Error","sws_mbox"), 0);
+		return false;
+	}
+
+	if (highPrecisionMode)
+	{
+		MessageBox(warningHwnd, __LOCALIZE("Can't create loudness graph in high precision mode.", "sws_mbox"), __LOCALIZE("SWS/BR - Error", "sws_mbox"), 0);
 		return false;
 	}
 
@@ -3301,7 +3307,7 @@ void BR_AnalyzeLoudnessWnd::OnCommand (WPARAM wParam, LPARAM lParam)
 				int x = 0;
 				while (BR_LoudnessObject* listItem = (BR_LoudnessObject*)m_list->EnumSelected(&x))
 				{
-					if (listItem->CreateGraph(envelope, g_pref.GetGraphMin(), g_pref.GetGraphMax(), (wParam == DRAW_MOMENTARY) ? (true) : (false), m_hwnd))
+					if (listItem->CreateGraph(envelope, g_pref.GetGraphMin(), g_pref.GetGraphMax(), (wParam == DRAW_MOMENTARY) ? (true) : (false), this->GetProperty(DO_HIGH_PRECISION_MODE), m_hwnd))
 						update = true;
 				}
 

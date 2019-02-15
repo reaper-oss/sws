@@ -1,4 +1,4 @@
-reaper_plugin_functions.h
+reaper/reaper_plugin_functions.h
 
 reascript_vararg.h
 *.rc_mac_dlg

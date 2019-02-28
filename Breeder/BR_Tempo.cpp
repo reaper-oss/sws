@@ -281,7 +281,7 @@ static bool MoveGridInit (COMMAND_T* ct, bool init)
 	if (init)
 	{
 		int projgridframe; GetConfig("projgridframe", projgridframe);
-		if (((int)ct->user == 1 || (int)ct->user == 2) && projgridframe > 0)
+		if (((int)ct->user == 1 || (int)ct->user == 2) && projgridframe&1) // frames grid line spacing
 		{
 			initSuccessful = false;
 			static bool s_warnUser = true;

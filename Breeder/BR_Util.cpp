@@ -1717,7 +1717,7 @@ double GetNextGridDiv (double position)
 	double nextGridPosition = position;
 
 	int projgridframe; GetConfig("projgridframe", projgridframe);
-	if (projgridframe > 0)
+	if (projgridframe&1) // frames grid line spacing
 	{
 		int hours, minutes, seconds, frames;
 		GetTimeInfoFromPosition(position, &hours, &minutes, &seconds, &frames);
@@ -1751,9 +1751,15 @@ double GetNextGridDiv (double position)
 		// Get grid division translated into current time signature
 		int gridDivStartMeasure, num, den;
 		TimeMap2_timeToBeats(0, gridDivStart, &gridDivStartMeasure, &num, NULL, &den);
-		double gridDiv = GetGridDivSafe();
-		gridDiv = (den*gridDiv) / 4;
-
+		double gridDiv;
+		if (projgridframe&64) // measure grid line spacing
+			gridDiv = num;
+		else
+		{
+			gridDiv = GetGridDivSafe();
+			gridDiv = (den*gridDiv) / 4;
+		}
+		
 		// How much measures must pass for grid diving to start anew? (again, obvious when grid division spans more measures)
 		int measureStep = (int)(gridDiv/num);
 		if (measureStep == 0) measureStep = 1;
@@ -1830,7 +1836,7 @@ double GetPrevGridDiv (double position)
 	double prevGridDivPos = position;
 
 	int projgridframe; GetConfig("projgridframe", projgridframe);
-	if (projgridframe > 0)
+	if (projgridframe&1) // frames grid line spacing
 	{
 		int hours, minutes, seconds, frames;
 		GetTimeInfoFromPosition(position, &hours, &minutes, &seconds, &frames);

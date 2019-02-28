@@ -1,3 +1,6 @@
+Fixes:
+Issue 1117, Issue 1058: Support Measure grid line spacing
+
 !v2.10.0 #1 Featured build (February 6, 2019)
 Mega thanks to nofish and cfillion for their many contributions, and X-Raym for doing the tedious work of merging everything into a release.
 Recommended use of REAPER 5.965.

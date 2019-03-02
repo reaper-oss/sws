@@ -800,9 +800,7 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 						int iVcaMaster = GetSetTrackGroupMembership(tr, "VOLUME_VCA_MASTER", 0, 0);
 
 						// check newly added groups 33 - 64
-						int iVcaMasterHigh = 0;
-						if (GetSetTrackGroupMembershipHigh) // added as optional API function for now
-							iVcaMasterHigh = GetSetTrackGroupMembershipHigh(tr, "VOLUME_VCA_MASTER", 0, 0);
+						int iVcaMasterHigh = GetSetTrackGroupMembershipHigh(tr, "VOLUME_VCA_MASTER", 0, 0);
 
 						if (iVcaMaster || iVcaMasterHigh)
 							bMatch = true;

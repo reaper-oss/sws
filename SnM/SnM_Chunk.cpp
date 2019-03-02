@@ -947,3 +947,152 @@ void SNM_TakeEnvParserPatcher::SetPatchVisibilityOnly(bool visibilityOnly)
 }
 
 int g_disable_chunk_guid_filtering;
+
+// _chunk: the track template or track/input/take FX chain which is to be applied
+// _tr/_item: the target track / item
+void SetFXofflineIfAvoidLoadingUndoStatesEnabled(MediaTrack* _tr, MediaItem* _item, bool _activeTakeOnly, WDL_FastString _chunk, bool _inputFX)
+{
+	if (!_tr && !_item || _chunk.GetLength() == 0)
+		return;
+
+	WDL_FastString iniPath;
+	iniPath.SetFormatted(2048, "%s/reaper-fxoptions.ini", GetResourcePath());
+	std::vector<WDL_FastString> keyNames;
+	bool fxoptions_iniParsed = false;
+	
+	// get the FX names in the chunk
+	SNM_FXSummaryParser chunkFXparser(&_chunk);
+	WDL_PtrList<SNM_FXSummary>* chunkFXsummaries = chunkFXparser.GetSummaries();
+	if (!chunkFXsummaries->GetSize())
+		return;
+
+	// get the target track/input/take FX names
+	WDL_PtrList_DeleteOnDestroy<SNM_FXSummaryParser> p_targetFXparser;
+	WDL_PtrList<SNM_FXSummary>* targetFXsSummaries;
+	if (_tr)
+	{ 
+		if (_inputFX)
+		{
+			WDL_FastString fxChain("");
+			int trackNumber = (int)GetMediaTrackInfo_Value(_tr, "IP_TRACKNUMBER");
+			if (CopyTrackFXChain(&fxChain, true, trackNumber) == trackNumber)
+			{
+				p_targetFXparser.Add(new SNM_FXSummaryParser(&fxChain));
+			}
+			else // parsing input FX chain failed
+				return;
+		}
+		else // track FX
+		{
+			p_targetFXparser.Add(new SNM_FXSummaryParser(_tr));
+		}
+	}
+	else // take FX
+	{
+		p_targetFXparser.Add(new SNM_FXSummaryParser(_item));
+	}
+		
+	targetFXsSummaries = p_targetFXparser.Get(0)->GetSummaries();
+	if (!targetFXsSummaries->GetSize())
+		return;
+
+	// check if FX in chunk and target track/input/take FX matches
+	// loop through FXs in chunk
+	for (int chunkFXid = 0; chunkFXid < chunkFXsummaries->GetSize(); ++chunkFXid)
+	{
+		// loop through target FXs
+		for (int targetFXid = 0; targetFXid < targetFXsSummaries->GetSize(); ++targetFXid)
+		{
+			WDL_FastString realTargetFXname = targetFXsSummaries->Get(targetFXid)->m_realName;
+			if (!strcmp(chunkFXsummaries->Get(chunkFXid)->m_realName.Get(), realTargetFXname.Get()))
+			{
+				// fx in chunk matches a target track/input/take FX, check if we need to set it offline
+				// no API (as of REAPER v5.971) to get the 'Avoid loading undo states when possible' setting
+				// so parse reaper-fxoptions.ini
+				if (!fxoptions_iniParsed)
+				{
+					// get keynames in reaper-fxoptions.ini
+					keyNames = Parsefxoptions_ini_keynames(iniPath); 
+					fxoptions_iniParsed = true;
+
+					if (!keyNames.size())
+						return;
+				}
+
+				// loop through keynames in reaper-fxoptions.ini
+				for (int i = 0; i < keyNames.size(); ++i)
+				{
+					if (!strcmp(keyNames[i].Get(), realTargetFXname.Get())) // keyname in reaper-fxoptions.ini matches a target FX
+					{
+						// check if FX is set to 'Avoid loading undo states when possible' 
+						// -> reaper-fxoptions.ini, section [safemode], value&256
+						int safemodeVal = GetPrivateProfileInt("safemode", keyNames[i].Get(), -666, iniPath.Get());
+						if (safemodeVal&256)
+						{
+							if (_tr) // set matching target track or input FX offline
+							{
+								// TrackFX_SetOffline(_tr, targetFXid, &g_bTrue); // API creates undo point, so use chunk patching
+								SNM_ChunkParserPatcher p(_tr);
+								p.SetWantsMinimalState(true);
+
+								if (_inputFX)
+									p.ParsePatch(SNM_SET_CHUNK_CHAR, 2, "FXCHAIN_REC", "BYPASS", targetFXid, 2, (void*)"1");
+								else // track FX
+								{
+									bool updt = (p.ParsePatch(SNM_SET_CHUNK_CHAR, 2, "FXCHAIN", "BYPASS", targetFXid, 2, (void*)"1") > 0);
+
+									// close the GUI for buggy plugins (before chunk update)
+									// http://github.com/reaper-oss/sws/issues/317
+									int supportBuggyPlug = GetPrivateProfileInt("General", "BuggyPlugsSupport", 0, g_SNM_IniFn.Get());
+									if (updt && supportBuggyPlug)
+										TrackFX_SetOpen(_tr, targetFXid, false);
+								}
+							}	
+							else // take FX
+							{	
+								int takesCount = CountTakes(_item);
+								int fxInAllTakesCount = 0; // SNM_FXSummaryParser gets take FXs of *all* takes at once, so keep track of fx id
+								for (int takeId = 0; takeId < takesCount; takeId++)
+								{
+									MediaItem_Take* take = GetTake(_item, takeId);
+									int takeFXcount = TakeFX_GetCount(take);
+									for (int takeFXid = 0; takeFXid < takeFXcount; ++takeFXid)
+									{
+										if (fxInAllTakesCount == targetFXid) // current FX matches the one we need to set offline
+											if (!_activeTakeOnly || (_activeTakeOnly && take == GetActiveTake(_item)))
+											{
+												// TakeFX_SetOffline(take, takeFXid, g_bTrue);
+												SNM_ChunkParserPatcher p(_item);
+												p.SetWantsMinimalState(true);
+												p.ParsePatch(SNM_SET_CHUNK_CHAR, 2, "TAKEFX", "BYPASS", targetFXid, 2, (void*)"1");
+											}
+													
+										fxInAllTakesCount += 1;
+									} // loop through take FXs
+								} // loop through takes
+							}
+						}
+								
+					}
+				} // loop through keynames in reaper-fxoptions.ini
+			}
+		} // // loop through target FXs
+	} // loop through FXs in chunk
+}
+
+std::vector<WDL_FastString> Parsefxoptions_ini_keynames(WDL_FastString iniPath)
+{
+	char buf[4096];
+	const char* pbuf = buf;
+	std::vector<WDL_FastString> keyNames;
+	GetPrivateProfileString("safemode", NULL, "", buf, sizeof(buf), iniPath.Get()); // keyname == NULL:  get all key names in section in one go (consisting of \0 terminated substrings)
+
+	// split substrings
+	while (*pbuf != '\0') {
+		keyNames.push_back(WDL_FastString(pbuf));
+		pbuf += strlen(pbuf) + 1; // skip current string incl. \0
+	}
+
+	return keyNames;
+}
+

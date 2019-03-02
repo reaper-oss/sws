@@ -850,6 +850,8 @@ bool ApplyTrackTemplatePrimitive(MediaTrack* _tr, WDL_FastString* _tmplt, bool _
 			}
 		}
 
+		SetFXofflineIfAvoidLoadingUndoStatesEnabled(_tr, NULL, NULL, tmplt, false);
+
 		// the meat, apply template!
 		p->SetChunk(tmplt.Get());
 		updated = true;

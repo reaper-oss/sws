@@ -165,6 +165,8 @@ void SetTakeFXChain(const char* _title, WDL_FastString* _chain, bool _activeOnly
 			MediaItem* item = GetTrackMediaItem(tr,j);
 			if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
 			{
+				SetFXofflineIfAvoidLoadingUndoStatesEnabled(NULL, item, _activeOnly, _chain, false);
+
 				SNM_FXChainTakePatcher p(item);
 				updated |= p.SetFXChain(_chain, _activeOnly);
 			}
@@ -249,6 +251,8 @@ void SetTrackFXChain(const char* _title, WDL_FastString* _chain, bool _inputFX)
 		{
 			// (try to) set track channels
 			updated |= SetTrackChannelsForFXChain(tr, _chain);
+
+			SetFXofflineIfAvoidLoadingUndoStatesEnabled(tr, NULL, NULL, _chain, _inputFX);
 
 			// the meat
 			SNM_FXChainTrackPatcher p(tr);

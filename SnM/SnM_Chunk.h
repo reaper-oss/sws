@@ -353,6 +353,7 @@ class SNM_FXSummaryParser : public SNM_ChunkParserPatcher
 {
 public:
 	SNM_FXSummaryParser(MediaTrack* _tr) : SNM_ChunkParserPatcher(_tr) { SetWantsMinimalState(true); }
+	SNM_FXSummaryParser(MediaItem* _item) : SNM_ChunkParserPatcher(_item) { SetWantsMinimalState(true); }
 	SNM_FXSummaryParser(WDL_FastString* _str) : SNM_ChunkParserPatcher(_str) {}
 	~SNM_FXSummaryParser() {}
 	WDL_PtrList<SNM_FXSummary>* GetSummaries();
@@ -389,4 +390,15 @@ private:
 	bool m_patchVisibilityOnly;
 };
 
+/*
+	NF: fix / workaround for #1109
+	sets FX offline before chunk patching if 'Avoid loading undo states when possible' is enabled
+	https://github.com/reaper-oss/sws/issues/1109#issuecomment-467054017
+	until it maybe gets fixed in Reaper one day
+	https://forum.cockos.com/showthread.php?t=217691
+*/
+void SetFXofflineIfAvoidLoadingUndoStatesEnabled(MediaTrack* _tr, MediaItem* _item, bool _activeTakeOnly, WDL_FastString _chunk, bool _inputFX);
+std::vector<WDL_FastString> Parsefxoptions_ini_keynames(WDL_FastString iniPath);
 #endif
+
+

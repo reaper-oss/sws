@@ -353,6 +353,7 @@ class SNM_FXSummaryParser : public SNM_ChunkParserPatcher
 {
 public:
 	SNM_FXSummaryParser(MediaTrack* _tr) : SNM_ChunkParserPatcher(_tr) { SetWantsMinimalState(true); }
+	SNM_FXSummaryParser(MediaItem* _item) : SNM_ChunkParserPatcher(_item) { SetWantsMinimalState(true); }
 	SNM_FXSummaryParser(WDL_FastString* _str) : SNM_ChunkParserPatcher(_str) {}
 	~SNM_FXSummaryParser() {}
 	WDL_PtrList<SNM_FXSummary>* GetSummaries();

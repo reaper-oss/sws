@@ -38,6 +38,8 @@
 #include "../Breeder/BR_Loudness.h" // #880
 #include "../SnM/SnM_Notes.h" // #755
 #include "../SnM/SnM_Project.h" // #974
+#include "../SnM/SnM_Chunk.h" // SNM_FXSummaryParser
+#include "../SnM/SnM_Util.h" // _snprintfSafe
 
 
 // #781, peak/RMS
@@ -304,6 +306,25 @@ bool NF_SetSWSMarkerRegionSub(const char* mkrRgnSub, int mkrRgnIdx)
 void NF_UpdateSWSMarkerRegionSubWindow()
 {
 	NF_DoUpdateSWSMarkerRegionSubWindow();
+}
+
+bool NF_TakeFX_GetModuleName(MediaItem * item, int fx, char * nameOut, int nameOutSz)
+{
+	WDL_FastString module;
+	bool found = false;
+
+	if (item)
+	{
+		SNM_FXSummaryParser takeFxs(item);
+		if (SNM_FXSummary* summary = takeFxs.GetSummaries()->Get(fx))
+		{
+			module = summary->m_realName;
+			found = true;
+		}
+	}
+
+	_snprintfSafe(nameOut, nameOutSz, "%s", module.Get());
+	return found;
 }
 
 

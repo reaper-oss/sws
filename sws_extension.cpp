@@ -856,6 +856,7 @@ error:
 		IMPAPI(GetSetProjectNotes); // v5.15pre1+
 		IMPAPI(GetSetRepeat);
 		IMPAPI(GetSetTrackGroupMembership); // v5.21pre5+
+		IMPAPI(GetSetTrackGroupMembershipHigh); // v5.70+
 		IMPAPI(GetTempoTimeSigMarker);
 		IMPAPI(GetTakeEnvelopeByName);
 		IMPAPI(GetTakeName);
@@ -1045,6 +1046,8 @@ error:
 		IMPAPI(TakeFX_GetChainVisible);
 		IMPAPI(TakeFX_GetCount);
 		IMPAPI(TakeFX_GetFloatingWindow);
+		IMPAPI(TakeFX_GetOffline); // v5.95+
+		IMPAPI(TakeFX_SetOffline); // v5.95+
 		IMPAPI(TakeFX_SetOpen);
 		IMPAPI(TakeFX_Show);
 		IMPAPI(TakeIsMIDI);
@@ -1079,6 +1082,8 @@ error:
 		IMPAPI(TrackFX_GetPresetIndex);
 		IMPAPI(TrackFX_GetUserPresetFilename); // v5.15pre1+
 		IMPAPI(TrackFX_NavigatePresets);
+		IMPAPI(TrackFX_GetOffline); // v5.95+
+		IMPAPI(TrackFX_SetOffline); // v5.95+
 		IMPAPI(TrackFX_SetEnabled);
 		IMPAPI(TrackFX_SetOpen);
 		IMPAPI(TrackFX_SetParam);
@@ -1114,10 +1119,6 @@ error:
 			ErrMsg(txt,false);
 			goto error;
 		}
-
-		// Optional API functions (check for NULL if using!) 
-		IMPAP_OPT(GetSetTrackGroupMembershipHigh); // v5.70+
-		IMPAP_OPT(TrackFX_GetOffline); // v5.95+
 
 		// Look for SWS dupe/clone
 		if (rec->GetFunc("SNM_GetIntConfigVar"))

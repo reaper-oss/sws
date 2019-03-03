@@ -36,6 +36,7 @@
 #include "../Prompt.h"
 #include "../reaper/localize.h"
 #include "WDL/projectcontext.h"
+#include "../cfillion/configvaroverride.hpp"
 
 
 #define RGNPL_WND_ID			"SnMRgnPlaylist"
@@ -1762,17 +1763,11 @@ void AppendPasteCropPlaylist(RegionPlaylist* _playlist, const AppendPasteCropPla
 
 //	OnStopButton();
 
-	// make sure some envelope options are enabled: move with items + add edge points
-	int oldOpt[2] = {-1,-1};
-	int* options[2] = {NULL,NULL};
-	if ((options[0] = (int*)GetConfigVar("envattach"))) {
-		oldOpt[0] = *options[0];
-		*options[0] = 1;
-	}
-	if ((options[1] = (int*)GetConfigVar("env_reduce"))) {
-		oldOpt[1] = *options[1];
-		*options[1] = 2;
-	}
+	ConfigVarOverride<int> options[] = {
+		{"envattach",     1}, // move with items
+		{"env_reduce",    2}, // add edge points
+		{"projgroupover", 1}, // disable item grouping
+	};
 
 	WDL_PtrList_DeleteOnDestroy<MarkerRegion> rgns;
 	for (int i=0; i < _playlist->GetSize(); i++)
@@ -1842,10 +1837,6 @@ void AppendPasteCropPlaylist(RegionPlaylist* _playlist, const AppendPasteCropPla
 			}
 		}
 	}
-
-	// restore options
-	if (options[0]) *options[0] = oldOpt[0];
-	if (options[1]) *options[1] = oldOpt[1];
 
 	// nothing done..
 	if (!updated)

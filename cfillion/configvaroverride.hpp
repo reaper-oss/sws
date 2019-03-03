@@ -1,7 +1,7 @@
 /******************************************************************************
-/ cfillion.hpp
+/ configvaroverride.hpp
 /
-/ Copyright (c) 2017 Christian Fillion
+/ Copyright (c) 2019 Christian Fillion
 / https://cfillion.ca
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -27,29 +27,27 @@
 
 #pragma once
 
-typedef HWND__ FxChain;
+#include "sws_util.h"
 
-void CF_SetClipboard(const char *);
-void CF_GetClipboard(char *buf, int bufSize);
-const char *CF_GetClipboardBig(WDL_FastString *);
+template<typename T>
+class ConfigVarOverride {
+public:
+  ConfigVarOverride(const char *name, const T tempValue)
+    : m_configvar(static_cast<T *>(GetConfigVar(name)))
+  {
+    if(m_configvar) {
+      m_originalValue = *m_configvar;
+      *m_configvar = tempValue;
+    }
+  }
 
-bool CF_ShellExecute(const char *file, const char *args = NULL);
-bool CF_LocateInExplorer(const char *file);
+  ~ConfigVarOverride()
+  {
+    if(m_configvar)
+      *m_configvar = m_originalValue;
+  }
 
-void CF_GetSWSVersion(char *buf, int bufSize);
-
-int CF_EnumerateActions(int section, int idx, char *nameBuf, int nameBufSize);
-const char *CF_GetCommandText(int section, int command);
-
-HWND CF_GetFocusedFXChain();
-HWND CF_GetTrackFXChain(MediaTrack *);
-HWND CF_GetTakeFXChain(MediaItem_Take *);
-int CF_EnumSelectedFX(HWND chain, int index = -1);
-
-int CF_GetMediaSourceBitDepth(PCM_source *);
-bool CF_GetMediaSourceOnline(PCM_source *);
-void CF_SetMediaSourceOnline(PCM_source *, bool set);
-bool CF_GetMediaSourceMetadata(PCM_source *, const char *name, char *buf, int bufSize);
-bool CF_GetMediaSourceRPP(PCM_source *source, char *buf, const int bufSize);
-int CF_EnumMediaSourceCues(PCM_source *source, const int index, double *time, double *endTime, bool *isRegion, char *name, const int nameSize);
-bool CF_ExportMediaSource(PCM_source *source, const char *file);
+private:
+  T *m_configvar;
+  T m_originalValue;
+};

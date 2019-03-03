@@ -640,6 +640,9 @@
     <ClInclude Include="reaper\reaper_plugin_functions.h">
       <Filter>Core\Reaper</Filter>
     </ClInclude>
+    <ClInclude Include="cfillion\configvaroverride.hpp">
+      <Filter>cfillion</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="sws_extension.rc">

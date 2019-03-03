@@ -228,7 +228,6 @@ int AboutBoxInit(); // Not worth its own .h
 void* GetConfigVar(const char* cVar);
 HWND GetTrackWnd();
 HWND GetRulerWnd();
-char* GetHashString(const char* in, char* out);
 const GUID* TrackToGuid(MediaTrack* tr);
 MediaTrack* GuidToTrack(const GUID* guid);
 bool GuidsEqual(const GUID* g1, const GUID* g2);

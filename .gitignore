@@ -1,49 +1,21 @@
-reaper_plugin_functions.h
+# External files
+/vendor/*
+!/vendor/WDL
+!/vendor/CMakeLists.txt
 
+# CMake files
+CMakeCache.txt
+CMakeFiles/
+*.cmake
+
+# Generated build files
+Makefile
+
+# Build artifacts
+/lib/
+/bin/
 reascript_vararg.h
-*.rc_mac_dlg
-*.rc_mac_menu
-
-sws_python.py
+sws_extension.rc_mac_dlg
+sws_extension.rc_mac_menu
 sws_python32.py
 sws_python64.py
-
-Release/
-Test/
-x64/
-Release x86_64/
-Install/output/
-Install/temp/
-# Ignore customized build scripts
-Install/build*.bat
-sws_osx/
-*.ncb
-*.opt
-*.plg
-*.sdf
-*.o
-*.mode1*
-*.pbxuser
-*.aps
-*.user
-*.suo
-*.opensdf
-*~
-*.ilk
-*.ipch
-*.lnk
-*.exe
-*.pkg
-*.dmg
-*.cache
-*.depend
-*.layout
-*.db
-*.LSOverride
-*.xcworkspace
-*xcuserdata*
-*.xcschememanagement.plist
-.DS_Stor*
-*.opendb
-reaper_sws*.so*
-reaper_sws*.tar.xz

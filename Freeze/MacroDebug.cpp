@@ -16,7 +16,7 @@
 ***********************************/
 
 #include "stdafx.h"
-#include "../reaper/reaper_plugin_functions.h"
+#include <reaper_plugin_functions.h>
 #include "../sws_util.h"
 #include "../resource.h"
 

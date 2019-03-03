@@ -7,3 +7,10 @@ PRIVATE
   padreMidiItemProcBase.cpp
   padreUtils.cpp
 )
+
+if(WIN32)
+  target_sources(sws
+  PRIVATE
+    padreRmeTotalmix.cpp
+  )
+endif()

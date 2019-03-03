@@ -1,15 +1,21 @@
 set(WDL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/WDL/WDL)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 add_library(WDL STATIC
   ${WDL_DIR}/projectcontext.cpp
 )
+
 if(APPLE)
   target_sources(WDL
   PRIVATE
     ${WDL_DIR}/SWELL/swell-modstub.mm
   )
+elseif(WIN32)
+  target_sources(WDL
+  PRIVATE
+    ${WDL_DIR}/win32_utf8.c
+  )
 endif()
-target_link_libraries(sws WDL)
 
 add_library(jnetlib STATIC
   ${WDL_DIR}/jnetlib/httpget.cpp
@@ -17,7 +23,6 @@ add_library(jnetlib STATIC
   ${WDL_DIR}/jnetlib/connection.cpp
   ${WDL_DIR}/jnetlib/asyncdns.cpp
 )
-target_link_libraries(sws jnetlib)
 
 add_library(LICE STATIC
   ${WDL_DIR}/lice/lice.cpp
@@ -26,7 +31,6 @@ add_library(LICE STATIC
   ${WDL_DIR}/lice/lice_png.cpp
   ${WDL_DIR}/lice/lice_textnew.cpp
 )
-target_link_libraries(sws LICE)
 
 add_library(wingui STATIC
   ${WDL_DIR}/wingui/virtwnd-iconbutton.cpp
@@ -35,7 +39,6 @@ add_library(wingui STATIC
   ${WDL_DIR}/wingui/virtwnd.h
   ${WDL_DIR}/wingui/wndsize.cpp
 )
-target_link_libraries(sws wingui)
 
 add_library(libpng STATIC
   ${WDL_DIR}/libpng/png.c
@@ -50,7 +53,6 @@ add_library(libpng STATIC
   ${WDL_DIR}/libpng/pngset.c
   ${WDL_DIR}/libpng/pngtrans.c
 )
-target_link_libraries(sws libpng)
 
 add_library(zlib STATIC
   ${WDL_DIR}/zlib/adler32.c
@@ -60,4 +62,3 @@ add_library(zlib STATIC
   ${WDL_DIR}/zlib/inftrees.c
   ${WDL_DIR}/zlib/zutil.c
 )
-target_link_libraries(sws zlib)

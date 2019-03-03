@@ -3,17 +3,9 @@
 !/vendor/WDL
 !/vendor/CMakeLists.txt
 
-# CMake files
-CMakeCache.txt
-CMakeFiles/
-*.cmake
-
-# Generated build files
-Makefile
-
 # Build artifacts
-/lib/
-/bin/
+/build/
+
 reascript_vararg.h
 sws_extension.rc_mac_dlg
 sws_extension.rc_mac_menu

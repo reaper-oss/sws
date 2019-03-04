@@ -51,15 +51,20 @@ endif()
 if(MSVC)
   add_compile_definitions(sws _CRT_SECURE_NO_WARNINGS _CRT_NONSTDC_NO_DEPRECATE)
 
-  function(set_static_runtime)
+  function(fix_default_flags)
     foreach(arg IN LISTS ARGN)
+      # Use the static CRT runtime library
       string(REPLACE "/MD" "/MT" ${arg} "${${arg}}")
+
+      # Embed debug information in the object files
+      string(REPLACE "/Zi" "/Z7" ${arg} "${${arg}}")
+
+      # Save changes
       set(${arg} "${${arg}}" PARENT_SCOPE)
     endforeach()
   endfunction()
 
-  # Use the static CRT runtime library
-  set_static_runtime(
+  fix_default_flags(
     CMAKE_C_FLAGS_DEBUG CMAKE_CXX_FLAGS_DEBUG
     CMAKE_C_FLAGS_RELEASE CMAKE_CXX_FLAGS_RELEASE
     CMAKE_C_FLAGS_RELWITHDEBINFO CMAKE_CXX_FLAGS_RELWITHDEBINFO
@@ -68,9 +73,6 @@ if(MSVC)
 
   # Global compiler flags (all targets)
   add_compile_options(
-    # Embed debug information in the object files
-    /Z7
-
     # Buffer security check
     /GS
 

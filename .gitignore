@@ -4,10 +4,7 @@
 !/vendor/CMakeLists.txt
 
 # Build artifacts
-/build/
-
+/build
 reascript_vararg.h
 sws_extension.rc_mac_dlg
 sws_extension.rc_mac_menu
-sws_python32.py
-sws_python64.py

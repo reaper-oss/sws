@@ -2,8 +2,8 @@
 version: "{build}-{branch}"
 
 image:
-  - &linux   Ubuntu1804
   - &windows Visual Studio 2017
+  - &linux   Ubuntu1804
 
 platform:
   - x64
@@ -13,7 +13,7 @@ configuration: RelWithDebInfo
 
 before_build:
   - curl -fsSL https://gist.github.com/cfillion/da355e8278048de08ae065d6fe6031c1/raw/reaper_plugin_functions.h -o vendor/reaper_plugin_functions.h
-  - git submodule update --init --recursive
+  - git submodule update --init
 
 build_script:
   - mkdir build && cd build
@@ -28,6 +28,7 @@ for:
       - sudo apt-get install php -qq
     artifacts:
       - path: build/reaper_sws*.so
+      - path: build/sws_python.py
 
   - matrix: { only: [ image: *windows ] }
     install:
@@ -38,3 +39,4 @@ for:
     artifacts:
       - path: build\reaper_sws*.dll
       - path: build\reaper_sws*.pdb
+      - path: build\sws_python.py

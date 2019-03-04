@@ -1,0 +1,19 @@
+---
+language: cpp
+os: osx
+env:
+  - ARCH=x86_64
+  - ARCH=i386
+install:
+  - curl -fsSL https://gist.github.com/cfillion/da355e8278048de08ae065d6fe6031c1/raw/reaper_plugin_functions.h -o vendor/reaper_plugin_functions.h
+script:
+  - mkdir build && cd build
+  - cmake ..
+      -DCMAKE_OSX_ARCHITECTURES="$ARCH"
+      -DCMAKE_OSX_DEPLOYMENT_TARGET=10.5
+  - cmake --build .
+addons:
+  homebrew:
+    packages:
+      - cmake # must have version 3.13 or newer
+    update: true

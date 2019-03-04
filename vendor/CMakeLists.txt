@@ -1,17 +1,17 @@
 set(WDL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/WDL/WDL)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-add_library(WDL STATIC
+add_library(wdl STATIC
   ${WDL_DIR}/projectcontext.cpp
 )
 
 if(APPLE)
-  target_sources(WDL
+  target_sources(wdl
   PRIVATE
     ${WDL_DIR}/SWELL/swell-modstub.mm
   )
 elseif(WIN32)
-  target_sources(WDL
+  target_sources(wdl
   PRIVATE
     ${WDL_DIR}/win32_utf8.c
   )
@@ -24,7 +24,7 @@ add_library(jnetlib STATIC
   ${WDL_DIR}/jnetlib/asyncdns.cpp
 )
 
-add_library(LICE STATIC
+add_library(lice STATIC
   ${WDL_DIR}/lice/lice.cpp
   ${WDL_DIR}/lice/lice_arc.cpp
   ${WDL_DIR}/lice/lice_line.cpp
@@ -40,7 +40,7 @@ add_library(wingui STATIC
   ${WDL_DIR}/wingui/wndsize.cpp
 )
 
-add_library(libpng STATIC
+add_library(png STATIC
   ${WDL_DIR}/libpng/png.c
   ${WDL_DIR}/libpng/pngerror.c
   ${WDL_DIR}/libpng/pngget.c

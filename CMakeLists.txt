@@ -32,6 +32,11 @@ if(UNIX)
   # a copy in SWS
   add_compile_definitions(SWELL_PROVIDED_BY_APP)
 
+  add_compile_options(
+    -fstack-protector-strong -fvisibility=hidden
+    -fdata-sections -ffunction-sections
+  )
+
   # Transpile the Win32 resource file
   set(WDL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor/WDL/WDL)
   add_custom_command(
@@ -129,6 +134,8 @@ if(APPLE)
     # almost every source file via stdafx.h
     -Wno-deprecated-register
   )
+
+  target_link_options(sws PRIVATE -Wl,-dead_strip)
 
   find_library(APPKIT AppKit)
   target_link_libraries(sws ${APPKIT})

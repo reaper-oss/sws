@@ -4,7 +4,12 @@
 !/vendor/CMakeLists.txt
 
 # Build artifacts
-/build
-reascript_vararg.h
-sws_extension.rc_mac_dlg
-sws_extension.rc_mac_menu
+/build/
+/reascript_vararg.h
+/sws_extension.rc_mac_dlg
+/sws_extension.rc_mac_menu
+
+# Visual Studio leftovers
+.vs/
+CMakeSettings.json
+launch.js.json

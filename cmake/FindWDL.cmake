@@ -17,13 +17,19 @@ add_library(WDL
   $<$<BOOL:${WIN32}>:${WDL_DIR}/win32_utf8.c>
 )
 
-target_compile_options(WDL PUBLIC
-  # Disable annoying warnings from MersenneTwister.h
-  -Wno-deprecated-register
+include(CheckCCompilerFlag)
+check_c_compiler_flag(-Wno-deprecated-register "-Wdeprecated-register")
 
-  # Ignore deprecated stat64 from dirscan.h
-  -Wno-deprecated-declarations
-)
+if(Wdeprecated-register)
+  target_compile_options(WDL PUBLIC
+    # Disable annoying warnings from MersenneTwister.h
+    -Wno-deprecated-register
+
+    # Ignore deprecated stat64 from dirscan.h
+    -Wno-deprecated-declarations
+  )
+endif()
+
 target_compile_definitions(WDL INTERFACE WDL_NO_DEFINE_MINMAX)
 target_include_directories(WDL INTERFACE ${WDL_INCLUDE_DIR})
 

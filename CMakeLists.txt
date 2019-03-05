@@ -165,6 +165,10 @@ if(MSVC)
     OBJECT_OUTPUTS "${PCH_OUTPUT}"
   )
   add_library(pch OBJECT stdafx.cpp)
+  target_include_directories(pch PRIVATE
+    ${CMAKE_SOURCE_DIR}/vendor
+    ${WDL_INCLUDE_DIR}
+  )
   add_dependencies(sws pch)
   target_link_libraries(sws pch)
 endif()

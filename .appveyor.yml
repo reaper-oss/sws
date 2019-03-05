@@ -1,41 +1,37 @@
 ---
 version: "{build}-{branch}"
-
 image:
   - &windows Visual Studio 2017
   - &linux   Ubuntu1804
-
 platform:
   - x64
   - x86
-
-configuration: RelWithDebInfo
-
 before_build:
   - curl -fsSL https://gist.github.com/cfillion/da355e8278048de08ae065d6fe6031c1/raw/reaper_plugin_functions.h -o vendor/reaper_plugin_functions.h
   - git submodule update --init
-
 build_script:
   - mkdir build && cd build
-  - sh:  cmake .. -DCMAKE_BUILD_TYPE="$CONFIGURATION"
+  - sh:  cmake .. -DCMAKE_BUILD_TYPE="$CONFIGURATION" -DARCH="$ARCH"
   - cmd: cmake .. -DCMAKE_BUILD_TYPE="%CONFIGURATION%" -G Ninja # Windows
   - cmake --build .
-
 for:
   - matrix: { only: [ image: *linux ] }
+    configuration: Release
     install:
       - sudo apt-get update -qq
       - sudo apt-get install php -qq
+      - [ "$PLATFORM" == "x86" ] && export CFLAGS=-m32 CXXFLAGS=-m32
     artifacts:
       - path: build/reaper_sws*.so
       - path: build/sws_python.py
 
   - matrix: { only: [ image: *windows ] }
+    configuration: RelWithDebInfo
     install:
       - choco install -y php
       - refreshenv
-      - if "%PLATFORM%"=="x64" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
-      - if "%PLATFORM%"=="x86" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
+      - if "%PLATFORM%" == "x64" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
+      - if "%PLATFORM%" == "x86" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
     artifacts:
       - path: build\reaper_sws*.dll
       - path: build\reaper_sws*.pdb

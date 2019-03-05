@@ -3,10 +3,10 @@ project(sws VERSION 1 LANGUAGES C CXX)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
-if("${CMAKE_SIZEOF_VOID_P}" STREQUAL "8")
+if(CMAKE_SIZEOF_VOID_P EQUAL "8")
   set(ARCH_SUFFIX "64")
   set(REASCRIPT_PYTHON_FLAGS, "-x64")
-elseif("${CMAKE_SIZEOF_VOID_P}" STREQUAL "4")
+elseif(CMAKE_SIZEOF_VOID_P EQUAL "4")
   set(ARCH_SUFFIX "32")
 else()
   message(FATAL_ERROR "Unknown architecture with sizeof(void*) == ${CMAKE_SIZEOF_VOID_P}")

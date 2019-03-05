@@ -1,75 +1,52 @@
 cmake_minimum_required(VERSION 3.13)
 project(sws VERSION 1 LANGUAGES C CXX)
 
-add_compile_definitions(NO_TAGLIB)
 
 if("${CMAKE_SIZEOF_VOID_P}" STREQUAL "8")
-  set(arch_suffix "64")
+  set(ARCH_SUFFIX "64")
   set(reascript_python_flags, "-x64")
 elseif("${CMAKE_SIZEOF_VOID_P}" STREQUAL "4")
-  set(arch_suffix "32")
+  set(ARCH_SUFFIX "32")
 else()
   message(FATAL_ERROR "Unknown architecture with sizeof(void*) == ${CMAKE_SIZEOF_VOID_P}")
 endif()
 
 add_custom_command(
-  OUTPUT reascript_vararg.h
+  OUTPUT  reascript_vararg.h
   COMMAND php reascript_vararg.php > reascript_vararg.h
   DEPENDS ReaScript.cpp reascript_vararg.php
+
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 add_custom_command(
-  OUTPUT ${CMAKE_BINARY_DIR}/sws_python.py
+  OUTPUT  ${CMAKE_BINARY_DIR}/sws_python.py
   COMMAND perl reascript_python.pl ${reascript_python_flags} >
     ${CMAKE_BINARY_DIR}/sws_python.py
   DEPENDS ReaScript.cpp reascript_python.pl reascript_helper.pl
+
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 if(UNIX)
-  # Use the SWELL functions provided at runtime by REAPER rather than building
-  # a copy in SWS
-  add_compile_definitions(SWELL_PROVIDED_BY_APP)
-
   add_compile_options(
-    -fstack-protector-strong -fvisibility=hidden
-    -fdata-sections -ffunction-sections
+    -fstack-protector-strong
   )
-
-  # Transpile the Win32 resource file
-  set(WDL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor/WDL/WDL)
-  add_custom_command(
-    OUTPUT sws_extension.rc_mac_dlg sws_extension.rc_mac_menu
-    COMMAND php ${WDL_DIR}/swell/mac_resgen.php sws_extension.rc
-    MAIN_DEPENDENCY sws_extension.rc
-    DEPENDS ${WDL_DIR}/swell/mac_resgen.php
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  )
-endif()
-
-if(MSVC)
+elseif(MSVC)
   add_compile_definitions(sws _CRT_SECURE_NO_WARNINGS _CRT_NONSTDC_NO_DEPRECATE)
 
-  function(fix_default_flags)
-    foreach(arg IN LISTS ARGN)
-      # Use the static CRT runtime library
-      string(REPLACE "/MD" "/MT" ${arg} "${${arg}}")
-
-      # Embed debug information in the object files
-      string(REPLACE "/Zi" "/Z7" ${arg} "${${arg}}")
-
-      # Save changes
-      set(${arg} "${${arg}}" PARENT_SCOPE)
-    endforeach()
-  endfunction()
-
-  fix_default_flags(
+  foreach(arg
     CMAKE_C_FLAGS_DEBUG CMAKE_CXX_FLAGS_DEBUG
     CMAKE_C_FLAGS_RELEASE CMAKE_CXX_FLAGS_RELEASE
     CMAKE_C_FLAGS_RELWITHDEBINFO CMAKE_CXX_FLAGS_RELWITHDEBINFO
     CMAKE_C_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_MINSIZEREL
   )
+    # Use the static CRT runtime library
+    string(REPLACE "/MD" "/MT" ${arg} "${${arg}}")
+
+    # Embed debug information in the object files
+    string(REPLACE "/Zi" "/Z7" ${arg} "${${arg}}")
+  endforeach()
 
   # Global compiler flags (all targets)
   add_compile_options(
@@ -110,48 +87,53 @@ add_library(sws SHARED
 
   Utility/Base64.cpp
 
+  # Platform-specific code
+  $<$<BOOL:${APPLE}>:sws_util.mm>
+  $<$<BOOL:${WIN32}>:
+    Utility/win32-utf8.cpp
+    DragDrop.cpp
+  >
+
   # Generated files
   reascript_vararg.h
   ${CMAKE_BINARY_DIR}/sws_python.py
 )
 
-include_directories(
-  ${CMAKE_CURRENT_SOURCE_DIR}
-  ${CMAKE_CURRENT_SOURCE_DIR}/vendor
-  ${CMAKE_CURRENT_SOURCE_DIR}/vendor/WDL
-)
-
 target_compile_features(sws PRIVATE cxx_std_11)
 
-target_link_libraries(sws jnetlib png lice wdl wingui zlib)
+target_compile_definitions(sws PRIVATE NO_TAGLIB)
 
-if(APPLE)
-  target_sources(sws
-  PRIVATE
-    sws_util.mm
+set_target_properties(sws PROPERTIES
+  INTERPROCEDURAL_OPTIMIZATION_RELEASE        TRUE
+  INTERPROCEDURAL_OPTIMIZATION_RELWITHDEBINFO TRUE
+  INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL     TRUE
+)
+
+target_include_directories(sws PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}/vendor
+)
+
+target_link_libraries(sws WDL LICE jnetlib)
+
+if(TARGET SWELL)
+  target_link_libraries(sws SWELL)
+
+  # Transpile the Win32 resource file
+  set(WDL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor/WDL/WDL)
+  add_custom_command(
+    OUTPUT  sws_extension.rc_mac_dlg sws_extension.rc_mac_menu
+    COMMAND php ${WDL_DIR}/swell/mac_resgen.php sws_extension.rc
+    MAIN_DEPENDENCY sws_extension.rc
+    DEPENDS ${WDL_DIR}/swell/mac_resgen.php
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   )
+endif()
 
-  target_compile_options(sws PRIVATE
-    # Disable annoying warnings from WDL/MersenneTwister.h which is included into
-    # almost every source file via stdafx.h
-    -Wno-deprecated-register
-  )
-
-  target_link_options(sws PRIVATE -Wl,-dead_strip)
-
-  find_library(APPKIT AppKit)
-  target_link_libraries(sws ${APPKIT})
-elseif(WIN32)
-  target_sources(sws
-  PRIVATE
-    Utility/win32-utf8.cpp
-    DragDrop.cpp
-  )
+if(MSVC)
+  target_link_libraries(sws Shlwapi)
 
   target_link_options(sws PRIVATE $<$<NOT:$<CONFIG:DEBUG>>:
-    # Link-time code generation
-    /LTCG /INCREMENTAL:NO
-
     # Remove unreferenced code
     /OPT:REF
 
@@ -159,13 +141,10 @@ elseif(WIN32)
     /OPT:ICF
   >)
 
+  # Use the precompiled header for all files
   set(PCH_INPUT  "stdafx.h")
   set(PCH_OUTPUT "stdafx.pch")
-
-  # Use the precompiled header for all files
-  target_compile_options(sws BEFORE PRIVATE
-    /Yu${PCH_INPUT} /Fp${PCH_OUTPUT}
-  )
+  target_compile_options(sws PRIVATE /Yu${PCH_INPUT} /Fp${PCH_OUTPUT})
 
   # ...except for these files
   set_source_files_properties(
@@ -174,19 +153,19 @@ elseif(WIN32)
   )
 
   # Build the precompiled header
-  set_source_files_properties(stdafx.cpp PROPERTIES
+  set_source_files_properties(stdafx.cpp
+  PROPERTIES
     COMPILE_OPTIONS "/Yc${PCH_INPUT};/Fp${PCH_OUTPUT}"
     OBJECT_OUTPUTS "${PCH_OUTPUT}"
   )
-  add_library(pch OBJECT stdafx.cpp)
-  add_dependencies(sws pch)
-
-  target_link_libraries(sws pch Shlwapi)
+  add_library(sws::pch OBJECT stdafx.cpp)
+  add_dependencies(sws sws::pch)
+  target_link_libraries(sws sws::pch)
 endif()
 
 set_target_properties(sws PROPERTIES
   PREFIX "" # disable 'lib' prefix
-  OUTPUT_NAME "reaper_sws${arch_suffix}"
+  OUTPUT_NAME "reaper_sws${ARCH_SUFFIX}"
 )
 
 # Install the .dylib/.so/.dll directly in CMAKE_INSTALL_PREFIX without creating

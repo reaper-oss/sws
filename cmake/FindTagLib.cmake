@@ -3,12 +3,12 @@ find_library(TagLib_LIBRARY tag)
 mark_as_advanced(TagLib_INCLUDE_DIR TagLib_LIBRARY)
 
 if(EXISTS "${TagLib_INCLUDE_DIR}/taglib.h")
-  set(TagLib_VERSION_REGEX "#define TAGLIB_([^_]+)_VERSION ([0-9]+)$")
   file(STRINGS "${TagLib_INCLUDE_DIR}/taglib.h" TagLib_H REGEX "${TagLib_VERSION_REGEX}")
 
-  foreach(define ${TagLib_H})
-    string(REGEX REPLACE "${TagLib_VERSION_REGEX}" "\\1" type "${define}")
-    string(REGEX REPLACE "${TagLib_VERSION_REGEX}" "\\2" TagLib_VERSION_${type} "${define}")
+  foreach(segment MAJOR MINOR PATCH)
+    set(regex "#define TAGLIB_${segment}_VERSION ([0-9]+)")
+    string(REGEX MATCH "${regex}" match "${TagLib_H}")
+    string(REGEX REPLACE "${regex}" "\\1" TagLib_VERSION_${segment} "${match}")
   endforeach()
 
   set(TagLib_VERSION

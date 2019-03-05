@@ -19,7 +19,7 @@ for:
     install:
       - sudo apt-get update -qq
       - sudo apt-get install php -qq
-      - sudo apt-get upgrade cmake -qq
+      - sudo apt-get install cmake -qq
       - if [ "$PLATFORM" = "x86" ]; then
           sudo apt-get install g++-multilib -qq &&
           export CFLAGS=-m32 CXXFLAGS=-m32;

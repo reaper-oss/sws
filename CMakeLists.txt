@@ -18,6 +18,8 @@ set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE        ON)
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELWITHDEBINFO ON)
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL     ON)
 
+set(CMAKE_CXX_VISIBILITY_PRESET "hidden")
+
 add_custom_command(
   OUTPUT  reascript_vararg.h
   COMMAND php reascript_vararg.php > ${CMAKE_BINARY_DIR}/reascript_vararg.h
@@ -59,16 +61,16 @@ elseif(MSVC)
     /GS
 
     # Enhance optimized debugging
-    $<$<NOT:$<CONFIG:DEBUG>>:/Zo>
+    $<$<NOT:$<CONFIG:Debug>>:/Zo>
 
     # Eliminate duplicate strings
-    $<$<NOT:$<CONFIG:DEBUG>>:/GF>
+    $<$<NOT:$<CONFIG:Debug>>:/GF>
 
     # Enable function-level linking
-    $<$<NOT:$<CONFIG:DEBUG>>:/Gy>
+    $<$<NOT:$<CONFIG:Debug>>:/Gy>
 
     # Remove unreferenced COMDAT
-    $<$<NOT:$<CONFIG:DEBUG>>:/Zc:inline>
+    $<$<NOT:$<CONFIG:Debug>>:/Zc:inline>
   )
 endif()
 
@@ -111,14 +113,24 @@ target_include_directories(sws PRIVATE
   ${CMAKE_BINARY_DIR}
 )
 
+if(APPLE)
+  target_compile_options(sws PRIVATE
+    # Disable annoying warnings from including WDL/MersenneTwister.h
+    -Wno-deprecated-register
+
+    # Ignore deprecated stat64 from including WDL/dirscan.h
+    -Wno-deprecated-declarations
+  )
+endif()
+
 find_package(WDL REQUIRED)
 find_package(LICE REQUIRED)
 find_package(JNetLib REQUIRED)
-target_link_libraries(sws WDL LICE JNetLib)
+target_link_libraries(sws jnetlib lice wdl)
 
 find_package(SWELL)
-if(TARGET SWELL)
-  target_link_libraries(sws SWELL)
+if(SWELL_FOUND)
+  target_link_libraries(sws swell)
 
   # Transpile the Win32 resource file
   set(WDL_DIR ${CMAKE_SOURCE_DIR}/vendor/WDL/WDL)
@@ -134,7 +146,7 @@ endif()
 if(MSVC)
   target_link_libraries(sws Shlwapi)
 
-  target_link_options(sws PRIVATE $<$<NOT:$<CONFIG:DEBUG>>:
+  target_link_options(sws PRIVATE $<$<NOT:$<CONFIG:Debug>>:
     # Remove unreferenced code
     /OPT:REF
 

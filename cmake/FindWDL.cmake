@@ -1,11 +1,18 @@
 find_path(WDL_INCLUDE_DIR
   NAMES WDL/wdltypes.h
   PATHS vendor/WDL
+  NO_DEFAULT_PATH
 )
+mark_as_advanced(WDL_INCLUDE_DIR)
 
 set(WDL_DIR "${WDL_INCLUDE_DIR}/WDL")
 
-add_library(WDL
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(WDL
+  REQUIRED_VARS WDL_DIR WDL_INCLUDE_DIR
+)
+
+add_library(wdl
   ${WDL_DIR}/projectcontext.cpp
 
   ${WDL_DIR}/wingui/virtwnd-iconbutton.cpp
@@ -17,23 +24,10 @@ add_library(WDL
   $<$<BOOL:${WIN32}>:${WDL_DIR}/win32_utf8.c>
 )
 
-include(CheckCCompilerFlag)
-check_c_compiler_flag(-Wno-deprecated-register "-Wdeprecated-register")
-
-if(Wdeprecated-register)
-  target_compile_options(WDL PUBLIC
-    # Disable annoying warnings from MersenneTwister.h
-    -Wno-deprecated-register
-
-    # Ignore deprecated stat64 from dirscan.h
-    -Wno-deprecated-declarations
-  )
-endif()
-
-target_compile_definitions(WDL INTERFACE WDL_NO_DEFINE_MINMAX)
-target_include_directories(WDL INTERFACE ${WDL_INCLUDE_DIR})
+target_compile_definitions(wdl INTERFACE WDL_NO_DEFINE_MINMAX)
+target_include_directories(wdl INTERFACE ${WDL_INCLUDE_DIR})
 
 find_package(SWELL)
-if(TARGET SWELL)
-  target_link_libraries(WDL SWELL)
+if(SWELL_FOUND)
+  target_link_libraries(wdl swell)
 endif()

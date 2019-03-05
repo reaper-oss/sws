@@ -20,7 +20,10 @@ for:
     install:
       - sudo apt-get update -qq
       - sudo apt-get install php -qq
-      - [ "$PLATFORM" == "x86" ] && export CFLAGS=-m32 CXXFLAGS=-m32
+      - if [ "$PLATFORM" = "x86" ]; then
+          sudo apt-get install g++-multilib -qq &&
+          export CFLAGS=-m32 CXXFLAGS=-m32;
+        fi
     artifacts:
       - path: build/reaper_sws*.so
       - path: build/sws_python.py

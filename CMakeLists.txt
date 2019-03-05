@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 project(sws VERSION 1 LANGUAGES C CXX)
 
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 if("${CMAKE_SIZEOF_VOID_P}" STREQUAL "8")
@@ -13,6 +11,12 @@ elseif("${CMAKE_SIZEOF_VOID_P}" STREQUAL "4")
 else()
   message(FATAL_ERROR "Unknown architecture with sizeof(void*) == ${CMAKE_SIZEOF_VOID_P}")
 endif()
+
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE        ON)
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELWITHDEBINFO ON)
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL     ON)
 
 add_custom_command(
   OUTPUT  reascript_vararg.h
@@ -65,9 +69,6 @@ elseif(MSVC)
 
     # Remove unreferenced COMDAT
     $<$<NOT:$<CONFIG:DEBUG>>:/Zc:inline>
-
-    # Whole program optimization
-    $<$<NOT:$<CONFIG:DEBUG>>:/GL>
   )
 endif()
 
@@ -103,12 +104,6 @@ add_library(sws SHARED
 target_compile_features(sws PRIVATE cxx_std_11)
 
 target_compile_definitions(sws PRIVATE NO_TAGLIB)
-
-set_target_properties(sws PROPERTIES
-  INTERPROCEDURAL_OPTIMIZATION_RELEASE        TRUE
-  INTERPROCEDURAL_OPTIMIZATION_RELWITHDEBINFO TRUE
-  INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL     TRUE
-)
 
 target_include_directories(sws PRIVATE
   ${CMAKE_SOURCE_DIR}

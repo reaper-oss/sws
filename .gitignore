@@ -1,13 +1,8 @@
 # External files
-/vendor/*
-!/vendor/WDL
-!/vendor/CMakeLists.txt
+/vendor
 
 # Build artifacts
 /build/
-/reascript_vararg.h
-/sws_extension.rc_mac_dlg
-/sws_extension.rc_mac_menu
 
 # Visual Studio leftovers
 .vs/

@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 3.13)
 project(sws VERSION 1 LANGUAGES C CXX)
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 if("${CMAKE_SIZEOF_VOID_P}" STREQUAL "8")
   set(ARCH_SUFFIX "64")
-  set(reascript_python_flags, "-x64")
+  set(REASCRIPT_PYTHON_FLAGS, "-x64")
 elseif("${CMAKE_SIZEOF_VOID_P}" STREQUAL "4")
   set(ARCH_SUFFIX "32")
 else()
@@ -14,19 +14,17 @@ endif()
 
 add_custom_command(
   OUTPUT  reascript_vararg.h
-  COMMAND php reascript_vararg.php > reascript_vararg.h
+  COMMAND php reascript_vararg.php > ${CMAKE_BINARY_DIR}/reascript_vararg.h
   DEPENDS ReaScript.cpp reascript_vararg.php
-
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
 
 add_custom_command(
   OUTPUT  ${CMAKE_BINARY_DIR}/sws_python.py
-  COMMAND perl reascript_python.pl ${reascript_python_flags} >
+  COMMAND perl reascript_python.pl ${REASCRIPT_PYTHON_FLAGS} >
     ${CMAKE_BINARY_DIR}/sws_python.py
   DEPENDS ReaScript.cpp reascript_python.pl reascript_helper.pl
-
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
 
 if(UNIX)
@@ -111,8 +109,9 @@ set_target_properties(sws PROPERTIES
 )
 
 target_include_directories(sws PRIVATE
-  ${CMAKE_CURRENT_SOURCE_DIR}
-  ${CMAKE_CURRENT_SOURCE_DIR}/vendor
+  ${CMAKE_SOURCE_DIR}
+  ${CMAKE_SOURCE_DIR}/vendor
+  ${CMAKE_BINARY_DIR}
 )
 
 find_package(WDL REQUIRED)
@@ -125,13 +124,13 @@ if(TARGET SWELL)
   target_link_libraries(sws SWELL)
 
   # Transpile the Win32 resource file
-  set(WDL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor/WDL/WDL)
+  set(WDL_DIR ${CMAKE_SOURCE_DIR}/vendor/WDL/WDL)
   add_custom_command(
     OUTPUT  sws_extension.rc_mac_dlg sws_extension.rc_mac_menu
+    COMMAND cmake -E copy ${CMAKE_SOURCE_DIR}/sws_extension.rc ${CMAKE_BINARY_DIR}
     COMMAND ${SWELL_RESGEN} sws_extension.rc
+    DEPENDS ${SWELL_RESGEN}
     MAIN_DEPENDENCY sws_extension.rc
-    DEPENDS ${WDL_DIR}/swell/mac_resgen.php
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   )
 endif()
 

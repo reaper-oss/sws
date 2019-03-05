@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.13)
 project(sws VERSION 1 LANGUAGES C CXX)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 if("${CMAKE_SIZEOF_VOID_P}" STREQUAL "8")
   set(ARCH_SUFFIX "64")
@@ -114,8 +115,12 @@ target_include_directories(sws PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/vendor
 )
 
-target_link_libraries(sws WDL LICE jnetlib)
+find_package(WDL REQUIRED)
+find_package(LICE REQUIRED)
+find_package(JNetLib REQUIRED)
+target_link_libraries(sws WDL LICE JNetLib)
 
+find_package(SWELL)
 if(TARGET SWELL)
   target_link_libraries(sws SWELL)
 
@@ -123,7 +128,7 @@ if(TARGET SWELL)
   set(WDL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor/WDL/WDL)
   add_custom_command(
     OUTPUT  sws_extension.rc_mac_dlg sws_extension.rc_mac_menu
-    COMMAND php ${WDL_DIR}/swell/mac_resgen.php sws_extension.rc
+    COMMAND ${SWELL_RESGEN} sws_extension.rc
     MAIN_DEPENDENCY sws_extension.rc
     DEPENDS ${WDL_DIR}/swell/mac_resgen.php
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
@@ -158,9 +163,9 @@ if(MSVC)
     COMPILE_OPTIONS "/Yc${PCH_INPUT};/Fp${PCH_OUTPUT}"
     OBJECT_OUTPUTS "${PCH_OUTPUT}"
   )
-  add_library(sws::pch OBJECT stdafx.cpp)
-  add_dependencies(sws sws::pch)
-  target_link_libraries(sws sws::pch)
+  add_library(pch OBJECT stdafx.cpp)
+  add_dependencies(sws pch)
+  target_link_libraries(sws pch)
 endif()
 
 set_target_properties(sws PROPERTIES
@@ -194,6 +199,5 @@ add_subdirectory(Snapshots)
 add_subdirectory(SnM)
 add_subdirectory(snooks)
 add_subdirectory(TrackList)
-add_subdirectory(vendor)
 add_subdirectory(Wol)
 add_subdirectory(Xenakios)

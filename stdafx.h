@@ -76,6 +76,10 @@
 #pragma warning(disable : 4244) // __int64 to int warnings
 #endif
 
+#include "reaper/reaper_plugin.h"
+#include "reaper/sws_rpf_wrapper.h"
+#include "reaper/icontheme.h"
+
 #include "WDL/wdlcstring.h"
 #include "WDL/wdltypes.h"
 #include "WDL/ptrlist.h"
@@ -99,11 +103,6 @@
 #pragma warning(default : 4267)
 #pragma warning(default : 4244)
 #endif
-
-// Reaper
-#include "reaper/reaper_plugin.h"
-#include "reaper/sws_rpf_wrapper.h"
-#include "reaper/icontheme.h"
 
 // Headers that are used "enough" to be worth of being precompiled,
 // at the expense of needing recompile of the headers on change

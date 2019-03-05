@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.13)
 project(sws VERSION 1 LANGUAGES C CXX)
 
+option(USE_TAGLIB "Link with taglib to add tagging support" ON)
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 if(CMAKE_SIZEOF_VOID_P EQUAL "8")
@@ -105,22 +107,20 @@ add_library(sws SHARED
 
 target_compile_features(sws PRIVATE cxx_std_11)
 
-target_compile_definitions(sws PRIVATE NO_TAGLIB)
-
 target_include_directories(sws PRIVATE
   ${CMAKE_SOURCE_DIR}
   ${CMAKE_SOURCE_DIR}/vendor
   ${CMAKE_BINARY_DIR}
 )
 
-if(APPLE)
-  target_compile_options(sws PRIVATE
-    # Disable annoying warnings from including WDL/MersenneTwister.h
-    -Wno-deprecated-register
+if(USE_TAGLIB)
+  find_package(TagLib)
+endif()
 
-    # Ignore deprecated stat64 from including WDL/dirscan.h
-    -Wno-deprecated-declarations
-  )
+if(TagLib_FOUND)
+  target_link_libraries(sws TagLib::TagLib)
+else()
+  target_compile_definitions(sws PRIVATE NO_TAGLIB)
 endif()
 
 find_package(WDL REQUIRED)
@@ -140,6 +140,16 @@ if(SWELL_FOUND)
     COMMAND ${SWELL_RESGEN} sws_extension.rc
     DEPENDS ${SWELL_RESGEN}
     MAIN_DEPENDENCY sws_extension.rc
+  )
+endif()
+
+if(APPLE)
+  target_compile_options(sws PRIVATE
+    # Disable annoying warnings from including WDL/MersenneTwister.h
+    -Wno-deprecated-register
+
+    # Ignore deprecated stat64 from including WDL/dirscan.h
+    -Wno-deprecated-declarations
   )
 endif()
 

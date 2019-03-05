@@ -41,11 +41,10 @@
 #include "../Prompt.h"
 #include "WDL/projectcontext.h"
 
-#define TAGLIB_STATIC
-#define TAGLIB_NO_CONFIG
-#include "../taglib/tag.h"
-#include "../taglib/fileref.h"
-
+#ifndef NO_TAGLIB
+#  include <taglib/tag.h>
+#  include <taglib/fileref.h>
+#endif
 
 int GetCurrentYear(){
 	time_t t = 0;

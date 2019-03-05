@@ -37,10 +37,10 @@
 #endif
 #include "../reaper/localize.h"
 
-#define TAGLIB_STATIC
-#define TAGLIB_NO_CONFIG
-#include "../taglib/tag.h"
-#include "../taglib/fileref.h"
+#ifndef NO_TAGLIB
+#  include <taglib/tag.h>
+#  include <taglib/fileref.h>
+#endif
 
 
 ///////////////////////////////////////////////////////////////////////////////

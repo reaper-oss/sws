@@ -11,15 +11,15 @@ before_build:
   - git submodule update --init
 build_script:
   - mkdir build && cd build
-  - sh:  cmake .. -DCMAKE_BUILD_TYPE="$CONFIGURATION" -DARCH="$ARCH"
-  - cmd: cmake .. -DCMAKE_BUILD_TYPE="%CONFIGURATION%" -G Ninja # Windows
+  - sh:  cmake .. -DCMAKE_BUILD_TYPE=Release
+  - cmd: cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -G Ninja
   - cmake --build .
 for:
   - matrix: { only: [ image: *linux ] }
-    configuration: Release
     install:
       - sudo apt-get update -qq
       - sudo apt-get install php -qq
+      - sudo apt-get upgrade cmake -qq
       - if [ "$PLATFORM" = "x86" ]; then
           sudo apt-get install g++-multilib -qq &&
           export CFLAGS=-m32 CXXFLAGS=-m32;
@@ -29,7 +29,6 @@ for:
       - path: build/sws_python.py
 
   - matrix: { only: [ image: *windows ] }
-    configuration: RelWithDebInfo
     install:
       - choco install -y php
       - refreshenv

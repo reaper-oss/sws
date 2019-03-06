@@ -1,9 +1,10 @@
 cmake_minimum_required(VERSION 3.13)
 project(sws VERSION 1 LANGUAGES C CXX)
 
-option(USE_TAGLIB "Link with taglib to add tagging support" ON)
+option(USE_TAGLIB    "Link with TagLib to add tagging support"     ON)
+option(SYSTEM_TAGLIB "Try to use the system-provided TagLib first" ON)
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 if(CMAKE_SIZEOF_VOID_P EQUAL "8")
   set(ARCH_SUFFIX "64")
@@ -24,17 +25,17 @@ set(CMAKE_CXX_VISIBILITY_PRESET "hidden")
 
 add_custom_command(
   OUTPUT  reascript_vararg.h
-  COMMAND php reascript_vararg.php > ${CMAKE_BINARY_DIR}/reascript_vararg.h
+  COMMAND php reascript_vararg.php > ${CMAKE_CURRENT_BINARY_DIR}/reascript_vararg.h
   DEPENDS ReaScript.cpp reascript_vararg.php
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 add_custom_command(
-  OUTPUT  ${CMAKE_BINARY_DIR}/sws_python.py
+  OUTPUT  ${CMAKE_CURRENT_BINARY_DIR}/sws_python.py
   COMMAND perl reascript_python.pl ${REASCRIPT_PYTHON_FLAGS} >
-    ${CMAKE_BINARY_DIR}/sws_python.py
+    ${CMAKE_CURRENT_BINARY_DIR}/sws_python.py
   DEPENDS ReaScript.cpp reascript_python.pl reascript_helper.pl
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 if(UNIX)
@@ -102,15 +103,15 @@ add_library(sws SHARED
 
   # Generated files
   reascript_vararg.h
-  ${CMAKE_BINARY_DIR}/sws_python.py
+  ${CMAKE_CURRENT_BINARY_DIR}/sws_python.py
 )
 
 target_compile_features(sws PRIVATE cxx_std_11)
 
 target_include_directories(sws PRIVATE
-  ${CMAKE_SOURCE_DIR}
-  ${CMAKE_SOURCE_DIR}/vendor
-  ${CMAKE_BINARY_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}/vendor
+  ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 if(USE_TAGLIB)
@@ -133,10 +134,11 @@ if(SWELL_FOUND)
   target_link_libraries(sws swell)
 
   # Transpile the Win32 resource file
-  set(WDL_DIR ${CMAKE_SOURCE_DIR}/vendor/WDL/WDL)
+  set(WDL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor/WDL/WDL)
   add_custom_command(
     OUTPUT  sws_extension.rc_mac_dlg sws_extension.rc_mac_menu
-    COMMAND cmake -E copy ${CMAKE_SOURCE_DIR}/sws_extension.rc ${CMAKE_BINARY_DIR}
+    COMMAND ${CMAKE_COMMAND} -E copy
+      ${CMAKE_CURRENT_SOURCE_DIR}/sws_extension.rc ${CMAKE_CURRENT_BINARY_DIR}
     COMMAND ${SWELL_RESGEN} sws_extension.rc
     DEPENDS ${SWELL_RESGEN}
     MAIN_DEPENDENCY sws_extension.rc
@@ -183,7 +185,7 @@ if(MSVC)
   )
   add_library(pch OBJECT stdafx.cpp)
   target_include_directories(pch PRIVATE
-    ${CMAKE_SOURCE_DIR}/vendor
+    ${CMAKE_CURRENT_SOURCE_DIR}/vendor
     ${WDL_INCLUDE_DIR}
   )
   add_dependencies(sws pch)

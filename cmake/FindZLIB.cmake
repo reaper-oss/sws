@@ -1,20 +1,22 @@
-find_path(ZLIB_DIR
+find_path(ZLIB_INCLUDE_DIR
   NAMES zlib.h
-  PATHS vendor/WDL/WDL/zlib
+  PATHS ${CMAKE_SOURCE_DIR}/vendor/WDL/WDL/zlib
   NO_DEFAULT_PATH
 )
-mark_as_advanced(ZLIB_DIR)
+mark_as_advanced(ZLIB_INCLUDE_DIR)
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(ZLIB
-  REQUIRED_VARS ZLIB_DIR
+  REQUIRED_VARS ZLIB_INCLUDE_DIR
 )
 
-add_library(z
-  ${WDL_DIR}/zlib/adler32.c
-  ${WDL_DIR}/zlib/crc32.c
-  ${WDL_DIR}/zlib/inffast.c
-  ${WDL_DIR}/zlib/inflate.c
-  ${WDL_DIR}/zlib/inftrees.c
-  ${WDL_DIR}/zlib/zutil.c
-)
+if(NOT TARGET z)
+  add_library(z
+    ${ZLIB_INCLUDE_DIR}/adler32.c
+    ${ZLIB_INCLUDE_DIR}/crc32.c
+    ${ZLIB_INCLUDE_DIR}/inffast.c
+    ${ZLIB_INCLUDE_DIR}/inflate.c
+    ${ZLIB_INCLUDE_DIR}/inftrees.c
+    ${ZLIB_INCLUDE_DIR}/zutil.c
+  )
+endif()

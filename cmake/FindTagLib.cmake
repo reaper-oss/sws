@@ -9,8 +9,7 @@ if(NOT TagLib_INCLUDE_DIR OR NOT EXISTS ${TagLib_INCLUDE_DIR})
   set(BUILD_BINDINGS OFF CACHE BOOL "Build TagLib C bindings")
 
   # Prevent TagLib v1.11.1 and older from attempting to linking against boost
-  set(Boost_NO_SYSTEM_PATHS ON)
-  set(Boost_INCLUDE_DIR     "")
+  set(CMAKE_DISABLE_FIND_PACKAGE_Boost ON)
 
   include(FetchContent)
   FetchContent_Declare(taglib

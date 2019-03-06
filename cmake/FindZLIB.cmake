@@ -10,7 +10,7 @@ find_package_handle_standard_args(ZLIB
   REQUIRED_VARS ZLIB_INCLUDE_DIR
 )
 
-if(NOT TARGET z)
+if(NOT TARGET ZLIB::ZLIB)
   add_library(z
     ${ZLIB_INCLUDE_DIR}/adler32.c
     ${ZLIB_INCLUDE_DIR}/crc32.c
@@ -19,4 +19,6 @@ if(NOT TARGET z)
     ${ZLIB_INCLUDE_DIR}/inftrees.c
     ${ZLIB_INCLUDE_DIR}/zutil.c
   )
+
+  add_library(ZLIB::ZLIB ALIAS z)
 endif()

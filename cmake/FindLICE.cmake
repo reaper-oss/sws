@@ -24,9 +24,11 @@ add_library(lice
 target_include_directories(lice INTERFACE ${lice_INCLUDE_DIR})
 
 find_package(PNG REQUIRED)
-target_link_libraries(lice png)
+target_link_libraries(lice PNG::PNG)
 
 find_package(SWELL)
 if(SWELL_FOUND)
-  target_link_libraries(lice swell)
+  target_link_libraries(lice SWELL::swell)
 endif()
+
+add_library(LICE::LICE ALIAS lice)

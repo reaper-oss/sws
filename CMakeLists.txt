@@ -138,11 +138,11 @@ endif()
 find_package(WDL REQUIRED)
 find_package(LICE REQUIRED)
 find_package(JNetLib REQUIRED)
-target_link_libraries(sws jnetlib lice wdl)
+target_link_libraries(sws JNetLib::JNetLib LICE::LICE WDL::WDL)
 
 find_package(SWELL)
 if(SWELL_FOUND)
-  target_link_libraries(sws swell)
+  target_link_libraries(sws SWELL::swell)
 
   # Transpile the Win32 resource file
   set(WDL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor/WDL/WDL)

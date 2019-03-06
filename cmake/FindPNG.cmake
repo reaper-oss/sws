@@ -25,4 +25,6 @@ add_library(png
 )
 
 find_package(ZLIB REQUIRED)
-target_link_libraries(png PUBLIC z)
+target_link_libraries(png PUBLIC ZLIB::ZLIB)
+
+add_library(PNG::PNG ALIAS png)

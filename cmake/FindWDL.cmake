@@ -29,5 +29,7 @@ target_include_directories(wdl INTERFACE ${WDL_INCLUDE_DIR})
 
 find_package(SWELL)
 if(SWELL_FOUND)
-  target_link_libraries(wdl swell)
+  target_link_libraries(wdl SWELL::swell)
 endif()
+
+add_library(WDL::WDL ALIAS wdl)

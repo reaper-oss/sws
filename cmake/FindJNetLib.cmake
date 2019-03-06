@@ -21,3 +21,5 @@ add_library(jnetlib
 )
 
 target_include_directories(jnetlib INTERFACE ${JNetLib_INCLUDE_DIR})
+
+add_library(JNetLib::JNetLib ALIAS jnetlib)

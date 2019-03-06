@@ -29,3 +29,5 @@ endif()
 
 target_compile_definitions(swell PUBLIC SWELL_PROVIDED_BY_APP)
 target_include_directories(swell INTERFACE ${SWELL_INCLUDE_DIR})
+
+add_library(SWELL::swell ALIAS swell)

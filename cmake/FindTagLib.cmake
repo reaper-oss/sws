@@ -18,9 +18,6 @@ if(NOT TagLib_INCLUDE_DIR OR NOT EXISTS ${TagLib_INCLUDE_DIR})
     GIT_TAG        v1.11.1
   )
 
-  # FIXME: CMake 3.14+
-  # FetchContent_MakeAvailable(TagLib)
-
   FetchContent_GetProperties(taglib)
   if(NOT taglib_POPULATED)
     FetchContent_Populate(taglib)
@@ -28,7 +25,7 @@ if(NOT TagLib_INCLUDE_DIR OR NOT EXISTS ${TagLib_INCLUDE_DIR})
     set(CMAKE_POLICY_DEFAULT_CMP0048 NEW)
     set(CMAKE_POLICY_DEFAULT_CMP0063 NEW)
     set(CMAKE_POLICY_DEFAULT_CMP0069 NEW)
-    add_subdirectory(${taglib_SOURCE_DIR} ${taglib_BINARY_DIR})
+    add_subdirectory(${taglib_SOURCE_DIR} ${taglib_BINARY_DIR} EXCLUDE_FROM_ALL)
 
     # TagLib does not export its CMake targets, so we must do it ourselves.
     set(TagLib_INCLUDE_DIR "${taglib_SOURCE_DIR}/taglib/toolkit") # path to taglib.h

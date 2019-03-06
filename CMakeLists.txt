@@ -6,6 +6,19 @@ option(SYSTEM_TAGLIB "Try to use the system-provided TagLib first" ON)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  if(WIN32)
+    set(DEFAULT_INSTALL_DIR "$ENV{APPDATA}/REAPER/UserPlugins")
+  elseif(APPLE)
+    set(DEFAULT_INSTALL_DIR "~/Library/Application Support/REAPER/UserPlugins")
+  else()
+    set(DEFAULT_INSTALL_DIR "~/.config/REAPER/UserPlugins")
+  endif()
+
+  set(CMAKE_INSTALL_PREFIX "${DEFAULT_INSTALL_DIR}" CACHE PATH
+    "Install SWS in this directory" FORCE)
+endif()
+
 if(CMAKE_SIZEOF_VOID_P EQUAL "8")
   set(ARCH_SUFFIX "64")
   set(REASCRIPT_PYTHON_FLAGS, "-x64")
@@ -89,10 +102,8 @@ add_library(sws SHARED
   sws_waitdlg.cpp
   sws_wnd.cpp
   Zoom.cpp
-
-  libebur128/ebur128.cpp
-
   Utility/Base64.cpp
+  libebur128/ebur128.cpp
 
   # Platform-specific code
   $<$<BOOL:${APPLE}>:sws_util.mm>

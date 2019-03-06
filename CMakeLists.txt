@@ -125,16 +125,6 @@ target_include_directories(sws PRIVATE
   ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-if(USE_TAGLIB)
-  find_package(TagLib)
-endif()
-
-if(TagLib_FOUND)
-  target_link_libraries(sws TagLib::TagLib)
-else()
-  target_compile_definitions(sws PRIVATE NO_TAGLIB)
-endif()
-
 find_package(WDL REQUIRED)
 find_package(LICE REQUIRED)
 find_package(JNetLib REQUIRED)
@@ -154,6 +144,16 @@ if(SWELL_FOUND)
     DEPENDS ${SWELL_RESGEN}
     MAIN_DEPENDENCY sws_extension.rc
   )
+endif()
+
+if(USE_TAGLIB)
+  find_package(TagLib)
+endif()
+
+if(TagLib_FOUND)
+  target_link_libraries(sws TagLib::TagLib)
+else()
+  target_compile_definitions(sws PRIVATE NO_TAGLIB)
 endif()
 
 if(APPLE)

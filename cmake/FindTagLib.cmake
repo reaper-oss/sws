@@ -5,40 +5,35 @@ if(SYSTEM_TAGLIB)
 endif()
 
 # Build TagLib from source
-if(NOT TagLib_INCLUDE_DIR OR NOT EXISTS ${TagLib_INCLUDE_DIR})
+if(NOT TagLib_INCLUDE_DIR)
+  set(TagLib_SOURCE_DIR "${CMAKE_SOURCE_DIR}/vendor/taglib")
+endif()
+
+if(TagLib_SOURCE_DIR AND EXISTS "${TagLib_SOURCE_DIR}/CMakeLists.txt")
   set(BUILD_BINDINGS OFF CACHE BOOL "Build TagLib C bindings")
 
-  # Prevent TagLib v1.11.1 and older from attempting to linking against boost
+  # Prevent TagLib from attempting to link against boost (v1.11.1 and older)
   set(CMAKE_DISABLE_FIND_PACKAGE_Boost ON)
 
-  include(FetchContent)
-  FetchContent_Declare(taglib
-    GIT_REPOSITORY https://github.com/taglib/taglib.git
-    GIT_TAG        v1.11.1
+  set(CMAKE_POLICY_DEFAULT_CMP0048 NEW)
+  set(CMAKE_POLICY_DEFAULT_CMP0063 NEW)
+  set(CMAKE_POLICY_DEFAULT_CMP0069 NEW)
+  add_subdirectory(${TagLib_SOURCE_DIR} EXCLUDE_FROM_ALL)
+
+  # TagLib does not export its CMake targets, so we must do it ourselves.
+  set(TagLib_INCLUDE_DIR "${TagLib_SOURCE_DIR}/taglib/toolkit") # path to taglib.h
+
+  # just for a prettier find_package_handle_standard_args's default "found" message
+  set(TagLib_LIBRARY "${TagLib_SOURCE_DIR}")
+
+  target_compile_definitions(tag INTERFACE TAGLIB_STATIC)
+
+  get_target_property(TagLib_INCLUDE_DIR_INTERFACE tag INCLUDE_DIRECTORIES)
+  target_include_directories(tag INTERFACE
+    ${TagLib_SOURCE_DIR}
+    ${TagLib_SOURCE_DIR}/taglib
+    ${TagLib_INCLUDE_DIR_INTERFACE}
   )
-
-  FetchContent_GetProperties(taglib)
-  if(NOT taglib_POPULATED)
-    FetchContent_Populate(taglib)
-
-    set(CMAKE_POLICY_DEFAULT_CMP0048 NEW)
-    set(CMAKE_POLICY_DEFAULT_CMP0063 NEW)
-    set(CMAKE_POLICY_DEFAULT_CMP0069 NEW)
-    add_subdirectory(${taglib_SOURCE_DIR} ${taglib_BINARY_DIR} EXCLUDE_FROM_ALL)
-
-    # TagLib does not export its CMake targets, so we must do it ourselves.
-    set(TagLib_INCLUDE_DIR "${taglib_SOURCE_DIR}/taglib/toolkit") # path to taglib.h
-    set(TagLib_LIBRARY "<from source>")
-
-    target_compile_definitions(tag INTERFACE TAGLIB_STATIC)
-
-    get_target_property(TagLib_INCLUDE_DIR_INTERFACE tag INCLUDE_DIRECTORIES)
-    target_include_directories(tag INTERFACE
-      ${taglib_SOURCE_DIR}
-      ${taglib_SOURCE_DIR}/taglib
-      ${TagLib_INCLUDE_DIR_INTERFACE}
-    )
-  endif()
 endif()
 
 # Detect TagLib's version
@@ -62,7 +57,7 @@ find_package_handle_standard_args(TagLib
 )
 
 if(TagLib_FOUND AND NOT TARGET TagLib::TagLib)
-  if(taglib_POPULATED)
+  if(TagLib_SOURCE_DIR)
     add_library(TagLib::TagLib ALIAS tag)
   else()
     add_library(TagLib::TagLib UNKNOWN IMPORTED)

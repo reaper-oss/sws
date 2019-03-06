@@ -1,10 +1,5 @@
+# Build artifacts
+/build
+
 # External files
 /vendor
-
-# Build artifacts
-/build/
-
-# Visual Studio leftovers
-.vs/
-CMakeSettings.json
-launch.js.json

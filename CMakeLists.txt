@@ -8,15 +8,15 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   if(WIN32)
-    set(DEFAULT_INSTALL_DIR "$ENV{APPDATA}/REAPER/UserPlugins")
+    set(USER_CONFIG_DIR "$ENV{APPDATA}")
   elseif(APPLE)
-    set(DEFAULT_INSTALL_DIR "~/Library/Application Support/REAPER/UserPlugins")
+    set(USER_CONFIG_DIR "~/Library/Application Support")
   else()
-    set(DEFAULT_INSTALL_DIR "~/.config/REAPER/UserPlugins")
+    set(USER_CONFIG_DIR "~/.config")
   endif()
 
-  set(CMAKE_INSTALL_PREFIX "${DEFAULT_INSTALL_DIR}" CACHE PATH
-    "Install SWS in this directory" FORCE)
+  set(CMAKE_INSTALL_PREFIX "${USER_CONFIG_DIR}/REAPER" CACHE PATH
+    "REAPER resource path where to install SWS" FORCE)
 endif()
 
 if(CMAKE_SIZEOF_VOID_P EQUAL "8")
@@ -189,8 +189,7 @@ if(MSVC)
   )
 
   # Build the precompiled header
-  set_source_files_properties(stdafx.cpp
-  PROPERTIES
+  set_source_files_properties(stdafx.cpp PROPERTIES
     COMPILE_OPTIONS "/Yc${PCH_INPUT};/Fp${PCH_OUTPUT}"
     OBJECT_OUTPUTS "${PCH_OUTPUT}"
   )
@@ -208,12 +207,12 @@ set_target_properties(sws PROPERTIES
   OUTPUT_NAME "reaper_sws${ARCH_SUFFIX}"
 )
 
-# Install the .dylib/.so/.dll directly in CMAKE_INSTALL_PREFIX without creating
-# additional bin/lib subdirectories
 install(TARGETS sws
-  RUNTIME DESTINATION "."
-  LIBRARY DESTINATION "."
+  RUNTIME DESTINATION "UserPlugins" # Windows .dll
+  LIBRARY DESTINATION "UserPlugins" # macOS .dylib/Linux .so
 )
+
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/sws_python.py" DESTINATION "Scripts")
 
 add_subdirectory(Autorender)
 add_subdirectory(Breeder)

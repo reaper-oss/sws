@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13)
-project(sws VERSION 1 LANGUAGES C CXX)
+project(sws LANGUAGES C CXX)
 
 option(USE_TAGLIB    "Link with TagLib to add tagging support"     ON)
 option(SYSTEM_TAGLIB "Try to use the system-provided TagLib first" ON)
@@ -35,21 +35,6 @@ set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELWITHDEBINFO ON)
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL     ON)
 
 set(CMAKE_CXX_VISIBILITY_PRESET "hidden")
-
-add_custom_command(
-  OUTPUT  reascript_vararg.h
-  COMMAND php reascript_vararg.php > ${CMAKE_CURRENT_BINARY_DIR}/reascript_vararg.h
-  DEPENDS ReaScript.cpp reascript_vararg.php
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-)
-
-add_custom_command(
-  OUTPUT  ${CMAKE_CURRENT_BINARY_DIR}/sws_python.py
-  COMMAND perl reascript_python.pl ${REASCRIPT_PYTHON_FLAGS} >
-    ${CMAKE_CURRENT_BINARY_DIR}/sws_python.py
-  DEPENDS ReaScript.cpp reascript_python.pl reascript_helper.pl
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-)
 
 if(UNIX)
   add_compile_options(
@@ -89,6 +74,21 @@ elseif(MSVC)
     $<$<NOT:$<CONFIG:Debug>>:/Zc:inline>
   )
 endif()
+
+add_custom_command(
+  OUTPUT  reascript_vararg.h
+  COMMAND php reascript_vararg.php > ${CMAKE_CURRENT_BINARY_DIR}/reascript_vararg.h
+  DEPENDS ReaScript.cpp reascript_vararg.php
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+add_custom_command(
+  OUTPUT  ${CMAKE_CURRENT_BINARY_DIR}/sws_python.py
+  COMMAND perl reascript_python.pl ${REASCRIPT_PYTHON_FLAGS} >
+    ${CMAKE_CURRENT_BINARY_DIR}/sws_python.py
+  DEPENDS ReaScript.cpp reascript_python.pl reascript_helper.pl
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+)
 
 add_library(sws SHARED
   Menus.cpp
@@ -207,12 +207,32 @@ set_target_properties(sws PROPERTIES
   OUTPUT_NAME "reaper_sws${ARCH_SUFFIX}"
 )
 
+set(REAPER_USER_PLUGINS "UserPlugins")
+set(REAPER_SCRIPTS      "Scripts")
+
+if(INSTALL_NO_SUFFIX)
+  # Used for .dmg generation to avoid getting directories
+  # Maybe there's a better way?
+  set(REAPER_USER_PLUGINS ".")
+  set(REAPER_SCRIPTS      ".")
+endif()
+
 install(TARGETS sws
-  RUNTIME DESTINATION "UserPlugins" # Windows .dll
-  LIBRARY DESTINATION "UserPlugins" # macOS .dylib/Linux .so
+  COMPONENT "SWS extension"
+  RUNTIME DESTINATION "${REAPER_USER_PLUGINS}" # Windows .dll
+  LIBRARY DESTINATION "${REAPER_USER_PLUGINS}" # macOS .dylib/Linux .so
 )
 
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/sws_python.py" DESTINATION "Scripts")
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/sws_python.py"
+  COMPONENT   "Python ReaScript API wrapper"
+  DESTINATION "${REAPER_SCRIPTS}"
+)
+
+install(DIRECTORY "FingersExtras/Grooves"
+  COMPONENT   "Groove templates"
+  DESTINATION "."
+  EXCLUDE_FROM_ALL
+)
 
 add_subdirectory(Autorender)
 add_subdirectory(Breeder)
@@ -235,3 +255,32 @@ add_subdirectory(snooks)
 add_subdirectory(TrackList)
 add_subdirectory(Wol)
 add_subdirectory(Xenakios)
+
+set(SWS_VERSION_REGEX "^#define SWS_VERSION ([0-9]+),([0-9]+),([0-9]+),([0-9]+)$")
+file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/version.h" SWS_VERSION_DEF REGEX
+  "${SWS_VERSION_REGEX}")
+foreach(pair "1;MAJOR" "2;MINOR" "3;PATCH" "4;TWEAK")
+  list(GET pair 0 capture)
+  list(GET pair 1 segment)
+  string(REGEX REPLACE "${SWS_VERSION_REGEX}" "\\${capture}"
+    sws_VERSION_${segment} "${SWS_VERSION_DEF}")
+endforeach()
+
+get_target_property(CPACK_PACKAGE_NAME sws OUTPUT_NAME)
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/setup/license.txt")
+set(CPACK_PACKAGE_VERSION
+  "${sws_VERSION_MAJOR}.${sws_VERSION_MINOR}.${sws_VERSION_PATCH}.${sws_VERSION_TWEAK}")
+set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-v${CPACK_PACKAGE_VERSION}")
+
+if(APPLE)
+  set(CPACK_GENERATOR DragNDrop)
+endif()
+
+set(CPACK_DMG_FORMAT "UDBZ") # bzip2-compressed
+set(CPACK_DMG_DS_STORE_SETUP_SCRIPT
+  "${CMAKE_CURRENT_SOURCE_DIR}/setup/macos/DS_Store.scpt")
+set(CPACK_DMG_BACKGROUND_IMAGE
+  "${CMAKE_CURRENT_SOURCE_DIR}/setup/macos/background.tiff")
+set(CPACK_DMG_DISABLE_APPLICATIONS_SYMLINK ON)
+
+include(CPack)

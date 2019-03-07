@@ -12,7 +12,9 @@ script:
       -DCMAKE_BUILD_TYPE=RelWithDebInfo
       -DCMAKE_OSX_ARCHITECTURES="$ARCH"
       -DCMAKE_OSX_DEPLOYMENT_TARGET=10.5
+      -DINSTALL_NO_SUFFIX=YES
   - cmake --build .
+  - cpack
 addons:
   homebrew:
     packages:

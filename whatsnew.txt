@@ -1,3 +1,6 @@
+Fixes:
++Issue 455: Snapshots: Include track phase (polarity) in Full Track Mix, add separate Phase tickbox as custom filter
+
 New features:
 +Snapshots: Add option to (not) prompt for deleting abandoned items when recalling snapshots which contain deleted tracks (snapshots will be recalled and abandoned items deleted without confirmation with this option disabled) (Issue 1073)
 

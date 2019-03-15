@@ -444,7 +444,8 @@
 #define IDC_ALL_POS_H_COMBO             1356
 #define IDC_ALL_POS_V_COMBO             1357
 #define IDC_ALL_FOREGROUND              1358
-#define IDC_DELTRACKSPROMPT             1359
+#define IDC_DELTRACKSPROMPT             1359 // snapshots
+#define IDC_PHASE                       1360 // snapshots
 
 // Next default values for new objects
 // 
@@ -452,7 +453,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        189
 #define _APS_NEXT_COMMAND_VALUE         40000
-#define _APS_NEXT_CONTROL_VALUE         1360
+#define _APS_NEXT_CONTROL_VALUE         1361
 #define _APS_NEXT_SYMED_VALUE           100
 #endif
 #endif

@@ -1068,8 +1068,8 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 	// This lets us get integrated reading even if the target is too short
 	bool doShortTerm = true;
 	bool doMomentary = true;
-	bool newAudioEndSet = false;  bool correctForVolAndPanVolEnvs = true; // #1074
 	double effectiveEndTime = data.audioEnd;
+	bool newAudioEndSet = false;
 	if (data.audioEnd - data.audioStart < 3)
 	{
 		doShortTerm = false; // doMomentary is set during calculation
@@ -1081,6 +1081,7 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 	int refreshRateinHz = 5; // NF: orig. mode, 5 Hz refresh rate / 200 ms buffer
 	if (!integratedOnly && doHighPrecisionMode)
 		refreshRateinHz = 100; // NF: high precision mode, 100 Hz refresh rate / 10 ms buffer
+	const double bufLengthNormalMode = 0.2; const double bufLengthHighPrecisionMode = 0.01;
 
 	int sampleCount = data.samplerate/refreshRateinHz;
 	int bufSz = sampleCount * data.channels;
@@ -1093,7 +1094,7 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 	{
 		// Make sure we always fill our buffer exactly to audio end (and skip momentary/short-term intervals if not enough new samples)
 		bool skipIntervals = false;
-		if (data.audioEnd - currentTime < (doHighPrecisionMode ? 0.01 : 0.2) + numeric_limits<double>::epsilon())
+		if (data.audioEnd - currentTime < (doHighPrecisionMode ? bufLengthHighPrecisionMode : bufLengthNormalMode) + numeric_limits<double>::epsilon())
 		{
 			sampleCount = (int)(data.samplerate * (data.audioEnd - currentTime));
 			bufSz = sampleCount * data.channels;
@@ -1101,62 +1102,55 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 		}
 
 		// Get new 200 ms (10 ms in high precision mode) of samples
-		double* buf = new double[bufSz];
+		// GetAudioAccessorSamples() stops writing to the buffer once it reaches the item's end, everything from that point to sampleCount is garbage
+		// so check if we enlarged data.audioEnd beyond actual item end above
+		// and zero-init buffer in this case (probably faster than zero-init it always?)
+		double* buf;
+		if (newAudioEndSet)
+			buf = new double[bufSz](); // value-initialization
+		else
+			buf = new double[bufSz];
 		GetAudioAccessorSamples(data.audio, data.samplerate, data.channels, currentTime, sampleCount, buf);
 
-		if (correctForVolAndPanVolEnvs)
+		// Correct for volume and pan/volume envelopes
+		int currentChannel = 1;
+		double sampleTime = currentTime;
+
+		for (int j = 0; j < bufSz; ++j)
 		{
-			// NF: #1074 If data.audioEnd got expanded for short items to get integrated reading (see above)
-			// make sure we apply volume and pan/volume envelopes correction only to actual audio data
-			int nrSamplesToCorrect = bufSz;
+			double adjust = 1;
 
-			// samples in buffer crossed actual audio end (effectiveEndTime)?
-			if (newAudioEndSet && effectiveEndTime - currentTime < (doHighPrecisionMode ? 0.01 : 0.2) + numeric_limits<double>::epsilon())
-			{
-				nrSamplesToCorrect = (int)(data.samplerate * (effectiveEndTime - currentTime));
-				correctForVolAndPanVolEnvs = false;
-			}
-		
-			// Correct for volume and pan/volume envelopes
-			int currentChannel = 1;
-			double sampleTime = currentTime;
-
-			for (int j = 0; j < nrSamplesToCorrect; ++j)
-			{
-				double adjust = 1;
-
-				// Volume envelopes
-				if (doVolPreFXEnv) adjust *= data.volEnvPreFX.ValueAtPosition(sampleTime, true);
+			// Volume envelopes
+			if (doVolPreFXEnv) adjust *= data.volEnvPreFX.ValueAtPosition(sampleTime, true);
 				
-				if (doVolEnv) 
-				{
-					if (_this->m_track)
-						adjust *= data.volEnv.ValueAtPosition(sampleTime, true);
-					else
-						adjust *= data.volEnv.ValueAtPosition(sampleTime + itemPos, true);
-				}
-
-				// Volume fader
-				adjust *= data.volume;
-
-				// Pan fader (takes only)
-				if (doPan)
-				{
-					if (data.pan > 0 && (currentChannel % 2 == 1))
-						adjust *= 1 - data.pan;                         // takes have no pan law!
-					else if (data.pan < 0 && (currentChannel % 2 == 0))
-						adjust *= 1 + data.pan;
-				}
-
-				buf[j] *= adjust;
-
-				if (++currentChannel > data.channels)
-					currentChannel = 1;
-
-				double nextSampleTime = (currentChannel + 1 > data.channels) ? (sampleTime + sampleTimeLen) : (-1);
-				if (nextSampleTime != -1)
-					sampleTime = nextSampleTime;
+			if (doVolEnv) 
+			{
+				if (_this->m_track)
+					adjust *= data.volEnv.ValueAtPosition(sampleTime, true);
+				else
+					adjust *= data.volEnv.ValueAtPosition(sampleTime + itemPos, true);
 			}
+
+			// Volume fader
+			adjust *= data.volume;
+
+			// Pan fader (takes only)
+			if (doPan)
+			{
+				if (data.pan > 0 && (currentChannel % 2 == 1))
+					adjust *= 1 - data.pan;                         // takes have no pan law!
+				else if (data.pan < 0 && (currentChannel % 2 == 0))
+					adjust *= 1 + data.pan;
+			}
+
+			buf[j] *= adjust;
+
+			if (++currentChannel > data.channels)
+				currentChannel = 1;
+
+			double nextSampleTime = (currentChannel + 1 > data.channels) ? (sampleTime + sampleTimeLen) : (-1);
+			if (nextSampleTime != -1)
+				sampleTime = nextSampleTime;
 		}
 
 		ebur128_add_frames_double(loudnessState, buf, sampleCount);
@@ -1166,7 +1160,7 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 		{
 			if (!doShortTerm && doMomentary)
 			{
-				if (currentTime + 0.2 >= effectiveEndTime + numeric_limits<double>::epsilon())
+				if (currentTime + (doHighPrecisionMode ? bufLengthHighPrecisionMode : bufLengthNormalMode) >= effectiveEndTime + numeric_limits<double>::epsilon())
 					doMomentary = false;
 			}
 

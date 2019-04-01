@@ -144,6 +144,7 @@ protected:
 	HMENU BookmarkContextMenu(HMENU _menu);
 	HMENU AddMediaOptionsContextMenu(HMENU _menu);
 	HMENU OnContextMenu(int x, int y, bool* wantDefaultItems);
+	HWND IDC_FILTER_GetFocus(HWND _hwnd, MSG* _msg);
 	int OnKey(MSG* msg, int iKeyState);
 	int GetValidDroppedFilesCount(HDROP _h);
 	void OnDroppedFiles(HDROP _h);

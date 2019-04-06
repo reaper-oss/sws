@@ -91,6 +91,9 @@ KbdSectionInfo* SNM_GetActionSection(int _idx);
 bool LearnAction(KbdSectionInfo* _section, int _cmdId);
 bool GetSectionURL(bool _alr, KbdSectionInfo* _section, char* _sectionURL, int _sectionURLSize);
 
+// Get/SetMediaItemTakeInfo_Value(*,"D_VOL") uses negative value (sign flip) if take polarity is flipped
+bool IsTakePolarityFlipped(MediaItem_Take* take);
+
 #ifdef _SNM_MISC
 WDL_UINT64 FNV64(WDL_UINT64 h, const unsigned char* data, int sz);
 bool FNV64(const char* _strIn, char* _strOut);

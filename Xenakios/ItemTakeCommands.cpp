@@ -30,6 +30,7 @@
 #include "../reaper/localize.h"
 #include "Parameters.h"
 #include "../Breeder/BR_Util.h"
+#include "../SnM/SnM_Util.h"
 
 using namespace std;
 
@@ -114,7 +115,7 @@ void DoToggleTakesNormalize(COMMAND_T* ct)
 	{
 		if (TheTakes->Get(i))
 		{
-			double TakeVol=*(double*)GetSetMediaItemTakeInfo(TheTakes->Get(i),"D_VOL",NULL);
+			double TakeVol=abs(*(double*)GetSetMediaItemTakeInfo(TheTakes->Get(i),"D_VOL",NULL));
 			if (TakeVol!=1.0) NumNormalizedTakes++;
 		}
 	}
@@ -122,10 +123,10 @@ void DoToggleTakesNormalize(COMMAND_T* ct)
 	{
 		for (int i=0;i<NumActiveTakes;i++)
 		{
-			if (TheTakes->Get(i))
+			if (MediaItem_Take* take = TheTakes->Get(i))
 			{
-				double TheGain=1.0;
-				GetSetMediaItemTakeInfo(TheTakes->Get(i),"D_VOL",&TheGain);
+				double TheGain = IsTakePolarityFlipped(take) ? -1.0 : 1.0;
+				GetSetMediaItemTakeInfo(take,"D_VOL",&TheGain);
 			}
 		}
 		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_ITEMS,-1);
@@ -150,7 +151,13 @@ void DoSetVolPan(double Vol, double Pan, bool SetVol, bool SetPan)
 	double NewPan=Pan;
 	for (int i=0;i<(int)TheTakes.size();i++)
 	{
-		if (SetVol) GetSetMediaItemTakeInfo(TheTakes[i],"D_VOL",&NewVol);
+		if (SetVol)
+		{
+			MediaItem_Take* take = TheTakes[i];
+			if (IsTakePolarityFlipped(take))
+				NewVol = -NewVol;
+			GetSetMediaItemTakeInfo(take, "D_VOL", &NewVol);
+		}
 		if (SetPan) GetSetMediaItemTakeInfo(TheTakes[i],"D_PAN",&NewPan);
 
 	}

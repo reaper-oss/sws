@@ -1164,6 +1164,14 @@ bool GetSectionURL(bool _alr, KbdSectionInfo* _section, char* _sectionURL, int _
 	return true;
 }
 
+bool IsTakePolarityFlipped(MediaItem_Take* take)
+{
+	if (*(double*)GetSetMediaItemTakeInfo(take, "D_VOL", NULL) < 0.0)
+		return true;
+	else
+		return false;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Other util funcs

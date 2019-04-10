@@ -204,14 +204,35 @@ bool SNM_GetProjectMarkerName(ReaProject* _proj, int _num, bool _isrgn, WDL_Fast
 	return false;
 }
 
+// https://forum.cockos.com/showthread.php?p=2119594#post2119594
+template <typename T>
+void* GetConfigVar_CheckSize(const char* cVar, T var)
+{
+	int sztmp;
+	void* p = NULL;
+	if (int iOffset = projectconfig_var_getoffs(cVar, &sztmp))
+	{
+		p = projectconfig_var_addr(EnumProjects(-1, NULL, 0), iOffset);
+	}
+	else
+	{
+		p = get_config_var(cVar, &sztmp);
+	}
+
+	if (p && (sztmp == sizeof(var)))
+		return p;
+	else
+		return NULL;
+}
+
 int SNM_GetIntConfigVar(const char* _varName, int _errVal) {
-	if (int* pVar = (int*)(GetConfigVar(_varName)))
+	if (int* pVar = (int*)(GetConfigVar_CheckSize(_varName, _errVal)))
 		return *pVar;
 	return _errVal;
 }
 
 bool SNM_SetIntConfigVar(const char* _varName, int _newVal) {
-	if (int* pVar = (int*)(GetConfigVar(_varName))) {
+	if (int* pVar = (int*)(GetConfigVar_CheckSize(_varName, _newVal))) {
 		*pVar = _newVal;
 		return true;
 	}
@@ -219,13 +240,13 @@ bool SNM_SetIntConfigVar(const char* _varName, int _newVal) {
 }
 
 double SNM_GetDoubleConfigVar(const char* _varName, double _errVal) {
-	if (double* pVar = (double*)(GetConfigVar(_varName)))
+	if (double* pVar = (double*)(GetConfigVar_CheckSize(_varName, _errVal)))
 		return *pVar;
 	return _errVal;
 }
 
 bool SNM_SetDoubleConfigVar(const char* _varName, double _newVal) {
-	if (double* pVar = (double*)(GetConfigVar(_varName))) {
+	if (double* pVar = (double*)(GetConfigVar_CheckSize(_varName, _newVal))) {
 		*pVar = _newVal;
 		return true;
 	}

@@ -31,8 +31,9 @@
 #include "nofish.h"
 
 #include "../Breeder/BR_ContinuousActions.h"
-#include "../Breeder/BR_Util.h"
 #include "../Breeder/BR_ReaScript.h" // BR_GetMouseCursorContext(), BR_ItemAtMouseCursor()
+#include "../Breeder/BR_Util.h"
+#include "../SnM/SnM_Util.h" // _snprintfSafe
 
 
 //////////////////////////////////////////////////////////////////
@@ -360,6 +361,27 @@ void CycleTrackAutomationModes(COMMAND_T* ct)
 	}
 }
 
+// #1065, toggle Limit apply FX / render stems to realtime
+int IsRenderSpeedRealtime(COMMAND_T* = NULL) 
+{
+	int option; GetConfig("workrender", option);
+	return (GetBit(option, 3));
+}
+
+void ToggleRenderSpeedRealtimeNotLim(COMMAND_T* = NULL)
+{
+	const char* configStr = "workrender";
+	int option; GetConfig(configStr, option);
+
+	option = ToggleBit(option, 3);
+	SetConfig(configStr, option);
+
+	char tmp[256];
+	_snprintfSafe(tmp, sizeof(tmp), "%d", option);
+	WritePrivateProfileString("reaper", configStr, tmp, get_ini_file());
+}
+
+
 
 //////////////////////////////////////////////////////////////////
 //                                                              //
@@ -393,6 +415,8 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/NF: Cycle through MIDI recording modes" }, "NF_ME_CYCLE_MIDI_RECORD_MODES", NULL, NULL, 0, NULL, SECTION_MIDI_EDITOR, ME_CycleMIDIRecordingModes },
 	{ { DEFACCEL, "SWS/NF: Cycle through track automation modes" }, "NF_CYCLE_TRACK_AUTOMATION_MODES", CycleTrackAutomationModes },
 
+	// #1065, toggle Limit apply FX/render stems to realtime
+	{ { DEFACCEL, "SWS/NF: Toggle render speed (apply FX/render stems) realtime/not limited" }, "NF_TOGGLERENDERSPEED_RT_NL", ToggleRenderSpeedRealtimeNotLim, NULL, 0,  IsRenderSpeedRealtime},
 
 	//!WANT_LOCALIZE_1ST_STRING_END
 

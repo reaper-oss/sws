@@ -106,7 +106,7 @@ add_library(sws SHARED
   libebur128/ebur128.cpp
 
   # Platform-specific code
-  $<$<BOOL:${APPLE}>:sws_util.mm>
+  $<$<BOOL:${UNIX}>:sws_util$<IF:$<BOOL:${APPLE}>,.mm,_generic.cpp>>
   $<$<BOOL:${WIN32}>:
     Utility/win32-utf8.cpp
     DragDrop.cpp

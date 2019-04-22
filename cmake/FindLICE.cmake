@@ -1,3 +1,7 @@
+if(LICE_FOUND)
+  return()
+endif()
+
 find_path(LICE_INCLUDE_DIR
   NAMES lice/lice.h
   PATHS vendor/WDL

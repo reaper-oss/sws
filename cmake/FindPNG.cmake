@@ -1,3 +1,7 @@
+if(PNG_FOUND)
+  return()
+endif()
+
 find_path(PNG_DIR
   NAMES png.h
   PATHS vendor/WDL/WDL/libpng

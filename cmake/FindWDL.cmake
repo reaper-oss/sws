@@ -1,3 +1,7 @@
+if(WDL_FOUND)
+  return()
+endif()
+
 find_path(WDL_INCLUDE_DIR
   NAMES WDL/wdltypes.h
   PATHS vendor/WDL
@@ -26,6 +30,9 @@ add_library(wdl
 
 target_compile_definitions(wdl INTERFACE WDL_NO_DEFINE_MINMAX)
 target_include_directories(wdl INTERFACE ${WDL_INCLUDE_DIR})
+
+find_package(LICE REQUIRED)
+target_link_libraries(wdl LICE::LICE)
 
 find_package(SWELL)
 if(SWELL_FOUND)

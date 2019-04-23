@@ -126,7 +126,7 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers, bo
 
 	if (bMinimizeOthers)
 	{
-		*(int*)GetConfigVar("vzoom2") = 0;
+		*ConfigVar<int>("vzoom2") = 0;
 		for (int i = 0; i <= GetNumTracks(); i++)
 			GetSetMediaTrackInfo(CSurf_TrackFromID(i, false), "I_HEIGHTOVERRIDE", &g_i0);
 		Main_OnCommand(40112, 0); // Zoom out vert to minimize envelope lanes too (since vZoom is now 0) (calls refresh)
@@ -261,7 +261,7 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers, bo
 		// Reset custom track sizes
 		for (int i = 0; i <= GetNumTracks(); i++)
 			GetSetMediaTrackInfo(CSurf_TrackFromID(i, false), "I_HEIGHTOVERRIDE", &g_i0);
-		*(int*)GetConfigVar("vzoom2") = iZoom;
+		*ConfigVar<int>("vzoom2") = iZoom;
 		TrackList_AdjustWindows(false);
 		UpdateTimeline();
 	}
@@ -476,7 +476,7 @@ public:
 		// Vert
 		if (m_bVert)
 		{
-			iVZoom = *(int*)GetConfigVar("vzoom2");
+			iVZoom = *ConfigVar<int>("vzoom2");
 			hbTrackHeights.Resize(GetNumTracks()+1, false);
 			hbTrackVis.Resize(GetNumTracks()+1, false);
 			hbEnvHeights.Resize(0, false);
@@ -521,7 +521,7 @@ public:
 		// Vert zoom
 		if (m_bVert)
 		{
-			*(int*)GetConfigVar("vzoom2") = iVZoom;
+			*ConfigVar<int>("vzoom2") = iVZoom;
 			int iSaved = hbTrackHeights.GetSize();
 			int iEnvPtr = 0;
 			for (int i = 0; i <= GetNumTracks(); i++)
@@ -745,7 +745,7 @@ public:
 			pHeights[i] = *(int*)GetSetMediaTrackInfo(CSurf_TrackFromID(i, false), "I_HEIGHTOVERRIDE", NULL);
 
 		m_dHZoom = GetHZoomLevel();
-		m_iVZoom = *(int*)GetConfigVar("vzoom2");
+		m_iVZoom = *ConfigVar<int>("vzoom2");
 		m_bProjExtents = false;
 	}
 	void ZoomToProject()
@@ -781,7 +781,7 @@ public:
 			return;
 
 		adjustZoom(m_dHZoom, 1, false, -1);
-		*(int*)GetConfigVar("vzoom2") = m_iVZoom;
+		*ConfigVar<int>("vzoom2") = m_iVZoom;
 
 		// Restore track heights, ignoring the fact that tracks could have been added/removed
 		for (int i = 0; i < m_iTrackHeights.GetSize() && i <= GetNumTracks(); i++)

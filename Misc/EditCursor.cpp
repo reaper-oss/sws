@@ -94,17 +94,18 @@ void MoveCursorAndSel(COMMAND_T* ct)
 void MoveCursorSample(COMMAND_T* ct)
 {
 	double dPos = GetCursorPosition();
-	int* pSrate = (int*)GetConfigVar("projsrate");
-	if (!pSrate)
+
+	const ConfigVar<int> projsrate("projsrate");
+	if (!projsrate)
 		return;
-	double dSrate = (double)*pSrate;
-	INT64 iCurSample = (INT64)(dPos * dSrate + 0.5);
-	if (ct->user == -1 && (dPos == (double)(iCurSample / dSrate)))
+
+	INT64 iCurSample = (INT64)(dPos * *projsrate + 0.5);
+	if (ct->user == -1 && (dPos == (double)(iCurSample / *projsrate)))
 		iCurSample--;
 	else if (ct->user == 1)
 		iCurSample++;
 
-	double dNewPos = (double)(iCurSample / dSrate);
+	double dNewPos = (double)(iCurSample / *projsrate);
 
 	SetEditCurPos(dNewPos, true, false);
 }
@@ -121,7 +122,7 @@ void MoveCursorMs(COMMAND_T* ct)
 void MoveCursorFade(COMMAND_T* ct)
 {
 	double dPos = GetCursorPosition();
-	dPos += fabs(*(double*)GetConfigVar("deffadelen")) * (double)ct->user; // Abs because neg value means "not auto"
+	dPos += fabs(*ConfigVar<double>("deffadelen")) * (double)ct->user; // Abs because neg value means "not auto"
 	SetEditCurPos(dPos, true, false);
 }
 

@@ -33,34 +33,45 @@ static int g_prevautoxfade = 0;
 #define SAVED_DEF_FADE_LEN_KEY "deffadelen"
 static double g_dDefFadeLen = 0.01;
 
-void SaveXFade(COMMAND_T* = NULL)    { if (GetConfigVar("autoxfade")) g_prevautoxfade = *(int*)GetConfigVar("autoxfade"); }
-void RestoreXFade(COMMAND_T* = NULL) { if (GetConfigVar("autoxfade") && g_prevautoxfade != *(int*)GetConfigVar("autoxfade")) Main_OnCommand(40041, 0); }
+void SaveXFade(COMMAND_T* = NULL)
+{
+	if (const ConfigVar<int> autoxfade = "autoxfade")
+		g_prevautoxfade = *autoxfade;
+}
+
+void RestoreXFade(COMMAND_T* = NULL)
+{
+	const ConfigVar<int> autoxfade("autoxfade");
+	if (autoxfade && g_prevautoxfade != *autoxfade)
+		Main_OnCommand(40041, 0);
+}
+
 void XFadeOn(COMMAND_T* = NULL)      { if (!GetToggleCommandState(40041)) Main_OnCommand(40041, 0); }
 void XFadeOff(COMMAND_T* = NULL)     { if (GetToggleCommandState(40041)) Main_OnCommand(40041, 0); }
 void MEPWIXOn(COMMAND_T* = NULL)     { if (!GetToggleCommandState(40070)) Main_OnCommand(40070, 0); }
 void MEPWIXOff(COMMAND_T* = NULL)    { if (GetToggleCommandState(40070)) Main_OnCommand(40070, 0); }
 
-int IsOnRecStopMoveCursor(COMMAND_T*)  { int* p = (int*)GetConfigVar("itemclickmovecurs"); return p && (*p & 16); }
-void TogOnRecStopMoveCursor(COMMAND_T*) { int* p = (int*)GetConfigVar("itemclickmovecurs"); if (p) *p ^= 16; }
+void TogOnRecStopMoveCursor(COMMAND_T*) { if(ConfigVar<int> cv = "itemclickmovecurs") *cv ^= 16; }
+int IsOnRecStopMoveCursor(COMMAND_T*)   { return ConfigVar<int>("itemclickmovecurs").value_or(0) & 16; }
 
-void TogSeekMode(COMMAND_T* ct)	{ int* p = (int*)GetConfigVar("seekmodes"); if (p) *p ^= ct->user; }
-int IsSeekMode(COMMAND_T* ct)	{ int* p = (int*)GetConfigVar("seekmodes"); return p && (*p & ct->user); }
+void TogSeekMode(COMMAND_T* ct) { if(ConfigVar<int> cv = "seekmodes") *cv ^= ct->user; }
+int IsSeekMode(COMMAND_T* ct)   { return ConfigVar<int>("seekmodes").value_or(0) & ct->user; }
 
-void TogAutoAddEnvs(COMMAND_T*) { int* p = (int*)GetConfigVar("env_autoadd"); if (p) *p ^= 1; }
-int IsAutoAddEnvs(COMMAND_T*)  { int* p = (int*)GetConfigVar("env_autoadd"); return p && (*p & 1); }
+void TogAutoAddEnvs(COMMAND_T*) { if (ConfigVar<int> cv = "env_autoadd") *cv ^= 1; }
+int IsAutoAddEnvs(COMMAND_T*)   { return ConfigVar<int>("env_autoadd").value_or(0) & 1; }
 
-void TogGridOverUnder(COMMAND_T*) { int* p = (int*)GetConfigVar("gridinbg"); if (p) *p = *p == 2 ? 0 : 2; UpdateArrange(); }
-int IsGridOver(COMMAND_T*)  { int* p = (int*)GetConfigVar("gridinbg"); return p && !*p; }
+void TogGridOverUnder(COMMAND_T*) { if (ConfigVar<int> cv = "gridinbg") { *cv = *cv == 2 ? 0 : 2; UpdateArrange(); } }
+int IsGridOver(COMMAND_T*)        { return !ConfigVar<int>("gridinbg").value_or(1); }
 
-void TogSelGroupMode(COMMAND_T*) { int* p = (int*)GetConfigVar("projgroupsel"); if (p) *p = !*p; }
-int IsSelGroupMode(COMMAND_T*)  { int* p = (int*)GetConfigVar("projgroupsel"); return p && *p; }
+void TogSelGroupMode(COMMAND_T*) { if (ConfigVar<int> cv = "projgroupsel") *cv = !*cv; }
+int IsSelGroupMode(COMMAND_T*)   { return ConfigVar<int>("projgroupsel").value_or(0); }
 
 void SwitchGridSpacing(COMMAND_T*)
 {
 	// TODO
 	/*
 	const double dSpacings[] = { 0.0208331, };
-	double div = *(double*)GetConfigVar("projgriddiv");
+	double div = *ConfigVar<double>("projgriddiv");
 	char debugStr[64];
 	sprintf(debugStr, "Div is %.14f\n", div);
 	OutputDebugString(debugStr);
@@ -97,19 +108,19 @@ void HideDock(COMMAND_T* = NULL)
 
 void ShowMaster(COMMAND_T* = NULL)
 {
-	if (GetConfigVar("showmaintrack") && !*(int*)GetConfigVar("showmaintrack"))
+	if (!ConfigVar<int>("showmaintrack").value_or(1))
 		Main_OnCommand(40075, 0);
 }
 
 void HideMaster(COMMAND_T* = NULL)
 {
-	if (GetConfigVar("showmaintrack") && *(int*)GetConfigVar("showmaintrack"))
+	if (ConfigVar<int>("showmaintrack").value_or(0))
 		Main_OnCommand(40075, 0);
 }
 
 void TogDefFadeZero(COMMAND_T*)
 {
-	double* pdDefFade = (double*)GetConfigVar("deffadelen");
+	ConfigVar<double> pdDefFade("deffadelen");
 	if (*pdDefFade != 0.0)
 	{
 		if (*pdDefFade != g_dDefFadeLen)
@@ -129,19 +140,19 @@ void TogDefFadeZero(COMMAND_T*)
 
 int IsDefFadeOverriden(COMMAND_T*)
 {
-	double dDefFade = *(double*)GetConfigVar("deffadelen");
+	double dDefFade = *ConfigVar<double>("deffadelen");
 	return g_dDefFadeLen != 0.0 && dDefFade != g_dDefFadeLen;
 }
 
 void MetronomeOn(COMMAND_T*)
 {
-	if (!(*(int*)GetConfigVar("projmetroen") & 1))
+	if (!(*ConfigVar<int>("projmetroen") & 1))
 		Main_OnCommand(40364, 0);
 }
 
 void MetronomeOff(COMMAND_T*)
 {
-	if (*(int*)GetConfigVar("projmetroen") & 1)
+	if (*ConfigVar<int>("projmetroen") & 1)
 		Main_OnCommand(40364, 0);
 }
 
@@ -185,12 +196,12 @@ int ProjPrefsInit()
 {
 	SWSRegisterCommands(g_commandTable);
 
-	g_prevautoxfade = *(int*)GetConfigVar("autoxfade");
+	g_prevautoxfade = *ConfigVar<int>("autoxfade");
 
 	// Get saved default fade length
 	char str[64];
 	char strDef[64];
-	sprintf(strDef, "%.8f", *(double*)GetConfigVar("deffadelen"));
+	sprintf(strDef, "%.8f", *ConfigVar<double>("deffadelen"));
 	GetPrivateProfileString(SWS_INI, SAVED_DEF_FADE_LEN_KEY, strDef, str, 64, get_ini_file());
 	g_dDefFadeLen = atof(str);
 

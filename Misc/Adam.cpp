@@ -431,19 +431,20 @@ void AWFillGapsAdv(const char* title, char* retVals)
 							// (don't need take loop to adjust all start offsets)
 							double splitPoint = item1TransPos + presTrans - transFade;
 
-							// Check for default item fades
-							int fadeStateStore = fadeStateStore = *(int*)(GetConfigVar("splitautoxfade"));
-							*(int*)(GetConfigVar("splitautoxfade")) = 12;
+							MediaItem *item1B;
 
-							// Split item1 at the split point
-							MediaItem* item1B = SplitMediaItem(item1, splitPoint);
+							{
+								// Check for default item fades
+								ConfigVarOverride<int> fadeState("splitautoxfade", 12);
 
-							int item1Group = (int)GetMediaItemInfo_Value(item1, "I_GROUPID");
+								// Split item1 at the split point
+								item1B = SplitMediaItem(item1, splitPoint);
 
-							if (item1Group)
-								SetMediaItemInfo_Value(item1B, "I_GROUPID", item1Group + maxGroupID);
+								int item1Group = (int)GetMediaItemInfo_Value(item1, "I_GROUPID");
 
-							*(int*)(GetConfigVar("splitautoxfade")) = fadeStateStore;
+								if (item1Group)
+									SetMediaItemInfo_Value(item1B, "I_GROUPID", item1Group + maxGroupID);
+							}
 
 							// Get new item1 length after split
 							item1Length = GetMediaItemInfo_Value(item1, "D_LENGTH") + transFade;
@@ -671,7 +672,7 @@ void AWFillGapsQuick(COMMAND_T* t)
 
 void AWFillGapsQuickXFade(COMMAND_T* t)
 {
-	double fadeLength = fabs(*(double*)GetConfigVar("deffadelen"));
+	double fadeLength = fabs(*ConfigVar<double>("deffadelen"));
 
 	// Run loop for every track in project
 	for (int trackIndex = 0; trackIndex < GetNumTracks(); trackIndex++)
@@ -844,7 +845,7 @@ void AWRecordConditional(COMMAND_T* t)
 	double t1, t2;
 	GetSet_LoopTimeRange(false, false, &t1, &t2, false);
 
-	if (*(int*)GetConfigVar("projrecmode") != 0) // 0 is item punch mode
+	if (*ConfigVar<int>("projrecmode") != 0) // 0 is item punch mode
 	{
 		if (t1 != t2)
 		{
@@ -951,12 +952,12 @@ void AWDoAutoGroup(bool rec)
 		{
 			WDL_TypedBuf<MediaItem*> selItems;
 			SWS_GetSelectedMediaItems(&selItems);        
-			if (selItems.GetSize() > 1 && ((*(int*)GetConfigVar("autoxfade") & 4) || (*(int*)GetConfigVar("autoxfade") & 8))) // (Don't group if not in tape or overlap record mode, takes mode is messy) NF: added new auto group in takes mode functionality below
+			if (selItems.GetSize() > 1 && ((*ConfigVar<int>("autoxfade") & 4) || (*ConfigVar<int>("autoxfade") & 8))) // (Don't group if not in tape or overlap record mode, takes mode is messy) NF: added new auto group in takes mode functionality below
 			{
 				// check if we're in 'Autopunch selected items' mode
 				// because in this mode sel. items don't get automatically unselected after recording,
 				// so 'simple' grouping would screw things up
-				if ((*(int*)GetConfigVar("projrecmode")) == 0) {
+				if ((*ConfigVar<int>("projrecmode")) == 0) {
 					NFDoAutoGroupTakesMode(selItems);
 					g_AWIsRecording = false;
 					return;
@@ -993,7 +994,7 @@ void AWDoAutoGroup(bool rec)
 			}
 
 			// #587 Auto group in takes mode
-			else if (selItems.GetSize() > 1 && !(*(int*)GetConfigVar("autoxfade") & 4) && !(*(int*)GetConfigVar("autoxfade") & 8))
+			else if (selItems.GetSize() > 1 && !(*ConfigVar<int>("autoxfade") & 4) && !(*ConfigVar<int>("autoxfade") & 8))
 			{
 				NFDoAutoGroupTakesMode(selItems);
 			}
@@ -1241,7 +1242,7 @@ void AWRecordConditionalAutoGroup(COMMAND_T* t)
 	double t1, t2;
 	GetSet_LoopTimeRange(false, false, &t1, &t2, false);
 
-	if (*(int*)GetConfigVar("projrecmode") != 0) // 0 is item punch mode for projrecmode
+	if (*ConfigVar<int>("projrecmode") != 0) // 0 is item punch mode for projrecmode
 	{
 		if (t1 != t2)
 		{
@@ -1280,7 +1281,7 @@ void AWPlayStopAutoGroup(COMMAND_T* t)
 		Main_OnCommand(1016, 0); //If recording, Stop
 		int numItems = CountSelectedMediaItems(0);
 
-		if ((numItems > 1) && ((*(int*)GetConfigVar("autoxfade") & 4) || (*(int*)GetConfigVar("autoxfade") & 8))) // Don't group if not in tape or overlap record mode, takes mode is messy
+		if ((numItems > 1) && ((*ConfigVar<int>("autoxfade") & 4) || (*ConfigVar<int>("autoxfade") & 8))) // Don't group if not in tape or overlap record mode, takes mode is messy
 		{
 			Main_OnCommand(40032, 0); //Group selected items
 		}
@@ -1439,7 +1440,7 @@ void AWFadeSelection(COMMAND_T* t)
 
 							else
 							{
-								dFadeLen = fabs(*(double*)GetConfigVar("defsplitxfadelen")); // Abs because neg value means "not auto"
+								dFadeLen = fabs(*ConfigVar<double>("defsplitxfadelen")); // Abs because neg value means "not auto"
 								dEdgeAdj1 = dFadeLen / 2.0;
 								dEdgeAdj2 = dFadeLen / 2.0;
 
@@ -1792,7 +1793,7 @@ void AWFadeSelection(COMMAND_T* t)
 
 					else if (selStart <= dStart1 && selEnd >= dEnd1)
 					{
-						fadeLength = fabs(*(double*)GetConfigVar("deffadelen")); // Abs because neg value means "not auto"
+						fadeLength = fabs(*ConfigVar<double>("deffadelen")); // Abs because neg value means "not auto"
 						SetMediaItemInfo_Value(item1, "D_FADEINLEN", fadeLength);
 
 					}
@@ -1837,7 +1838,7 @@ void AWFadeSelection(COMMAND_T* t)
 					}
 					else if (selStart <= dStart1 && selEnd >= dEnd1)
 					{
-						fadeLength = fabs(*(double*)GetConfigVar("deffadelen")); // Abs because neg value means "not auto"
+						fadeLength = fabs(*ConfigVar<double>("deffadelen")); // Abs because neg value means "not auto"
 						SetMediaItemInfo_Value(item1, "D_FADEOUTLEN", fadeLength);
 					}
 
@@ -2457,18 +2458,15 @@ void AWPaste(COMMAND_T* t)
 {
 	Undo_BeginBlock();
 
-	int* pTrimMode = (int*)GetConfigVar("autoxfade");
+	const int pTrimMode = *ConfigVar<int>("autoxfade");
 
 	if (GetCursorContext() == 1)
 	{
-		int* pCursorMode = (int*)GetConfigVar("itemclickmovecurs");
-		int savedMode = *pCursorMode;
-		*pCursorMode &= ~8; // Enable "move edit cursor on paste" so that the time selection can be set properly
+		// Enable "move edit cursor on paste" so that the time selection can be set properly
+		const ConfigVar<int> pCursorMode("itemclickmovecurs");
+		ConfigVarOverride<int> tmpCursorMode("itemclickmodecurs", *pCursorMode & ~8);
 
-
-
-
-		if (*pTrimMode & 2)
+		if (pTrimMode & 2)
 		{
 			double cursorPos = GetCursorPosition();
 
@@ -2486,10 +2484,9 @@ void AWPaste(COMMAND_T* t)
 			// Go to beginning of selection, this is smoother than using actual action and easier
 			SetEditCurPos(cursorPos, 0, 0);
 
-
 			DoSelectFirstOfSelectedTracks(NULL);
 
-			*pCursorMode = savedMode;
+			tmpCursorMode.rollback();
 
 			Main_OnCommand(40058, 0); // Paste items
 			Main_OnCommand(40380, 0); // Set item timebase to project default (wish could copy time base from source item but too hard)
@@ -2499,7 +2496,6 @@ void AWPaste(COMMAND_T* t)
 		}
 		else
 			Main_OnCommand(40058, 0); // Std paste
-
 	}
 
 	else
@@ -2508,7 +2504,6 @@ void AWPaste(COMMAND_T* t)
 	UpdateTimeline();
 
 	Undo_EndBlock(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL);
-
 }
 
 
@@ -2528,17 +2523,13 @@ void AWConsolidateSelection(COMMAND_T* t)
 
 	int trackOn = 1;
 
-	// Save trim mode state
-	int* pTrimMode = (int*)GetConfigVar("autoxfade");
-	int savedMode = *pTrimMode;
-
 	// Turn trim mode off
-	*pTrimMode &= ~2;
+	const ConfigVar<int> autoxfade("autoxfade");
+	ConfigVarOverride<int> pTrimMode(autoxfade, *autoxfade & ~2);
 
 	SelTracksWItems();
 
 	SaveSelected();
-
 
 	for (int iTrack = 1; iTrack <= GetNumTracks(); iTrack++)
 	{
@@ -2560,12 +2551,9 @@ void AWConsolidateSelection(COMMAND_T* t)
 		}
 	}
 
-	*pTrimMode = savedMode;
-
 	RestoreSelected();
 
 	Undo_EndBlock(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL);
-
 }
 
 
@@ -2591,49 +2579,49 @@ void AWSelectStretched(COMMAND_T* t)
 }
 
 // Metronome actions
-void AWMetrPlayOn(COMMAND_T* = NULL)        { *(int*)GetConfigVar("projmetroen") |= 2;}
-void AWMetrPlayOff(COMMAND_T* = NULL)       { *(int*)GetConfigVar("projmetroen") &= ~2;}
-void AWMetrRecOn(COMMAND_T* = NULL)         { *(int*)GetConfigVar("projmetroen") |= 4;}
-void AWMetrRecOff(COMMAND_T* = NULL)        { *(int*)GetConfigVar("projmetroen") &= ~4;}
-void AWCountPlayOn(COMMAND_T* = NULL)       { *(int*)GetConfigVar("projmetroen") |= 8;}
-void AWCountPlayOff(COMMAND_T* = NULL)      { *(int*)GetConfigVar("projmetroen") &= ~8;}
-void AWCountRecOn(COMMAND_T* = NULL)        { *(int*)GetConfigVar("projmetroen") |= 16;}
-void AWCountRecOff(COMMAND_T* = NULL)       { *(int*)GetConfigVar("projmetroen") &= ~16;}
-void AWMetrPlayToggle(COMMAND_T* = NULL)    { *(int*)GetConfigVar("projmetroen") ^= 2;}
-void AWMetrRecToggle(COMMAND_T* = NULL)     { *(int*)GetConfigVar("projmetroen") ^= 4;}
-void AWCountPlayToggle(COMMAND_T* = NULL)   { *(int*)GetConfigVar("projmetroen") ^= 8;}
-void AWCountRecToggle(COMMAND_T* = NULL)    { *(int*)GetConfigVar("projmetroen") ^= 16;}
-int IsMetrPlayOn(COMMAND_T* = NULL)     { return (*(int*)GetConfigVar("projmetroen") & 2)  != 0; }
-int IsMetrRecOn(COMMAND_T* = NULL)          { return (*(int*)GetConfigVar("projmetroen") & 4)  != 0; }
-int IsCountPlayOn(COMMAND_T* = NULL)        { return (*(int*)GetConfigVar("projmetroen") & 8)  != 0; }
-int IsCountRecOn(COMMAND_T* = NULL)     { return (*(int*)GetConfigVar("projmetroen") & 16) != 0; }
+void AWMetrPlayOn(COMMAND_T* = NULL)        { *ConfigVar<int>("projmetroen") |= 2;}
+void AWMetrPlayOff(COMMAND_T* = NULL)       { *ConfigVar<int>("projmetroen") &= ~2;}
+void AWMetrRecOn(COMMAND_T* = NULL)         { *ConfigVar<int>("projmetroen") |= 4;}
+void AWMetrRecOff(COMMAND_T* = NULL)        { *ConfigVar<int>("projmetroen") &= ~4;}
+void AWCountPlayOn(COMMAND_T* = NULL)       { *ConfigVar<int>("projmetroen") |= 8;}
+void AWCountPlayOff(COMMAND_T* = NULL)      { *ConfigVar<int>("projmetroen") &= ~8;}
+void AWCountRecOn(COMMAND_T* = NULL)        { *ConfigVar<int>("projmetroen") |= 16;}
+void AWCountRecOff(COMMAND_T* = NULL)       { *ConfigVar<int>("projmetroen") &= ~16;}
+void AWMetrPlayToggle(COMMAND_T* = NULL)    { *ConfigVar<int>("projmetroen") ^= 2;}
+void AWMetrRecToggle(COMMAND_T* = NULL)     { *ConfigVar<int>("projmetroen") ^= 4;}
+void AWCountPlayToggle(COMMAND_T* = NULL)   { *ConfigVar<int>("projmetroen") ^= 8;}
+void AWCountRecToggle(COMMAND_T* = NULL)    { *ConfigVar<int>("projmetroen") ^= 16;}
+int IsMetrPlayOn(COMMAND_T* = NULL)     { return (*ConfigVar<int>("projmetroen") & 2)  != 0; }
+int IsMetrRecOn(COMMAND_T* = NULL)          { return (*ConfigVar<int>("projmetroen") & 4)  != 0; }
+int IsCountPlayOn(COMMAND_T* = NULL)        { return (*ConfigVar<int>("projmetroen") & 8)  != 0; }
+int IsCountRecOn(COMMAND_T* = NULL)     { return (*ConfigVar<int>("projmetroen") & 16) != 0; }
 
 // Editing Preferences
-void AWRelEdgeOn(COMMAND_T* = NULL)         { *(int*)GetConfigVar("relativeedges") |= 1;}
-void AWRelEdgeOff(COMMAND_T* = NULL)        { *(int*)GetConfigVar("relativeedges") &= ~1;}
-void AWRelEdgeToggle(COMMAND_T* = NULL)     { *(int*)GetConfigVar("relativeedges") ^= 1;}
-bool IsRelEdgeOn(COMMAND_T* = NULL)         { return (*(int*)GetConfigVar("relativeedges") & 1)  != 0; }
+void AWRelEdgeOn(COMMAND_T* = NULL)         { *ConfigVar<int>("relativeedges") |= 1;}
+void AWRelEdgeOff(COMMAND_T* = NULL)        { *ConfigVar<int>("relativeedges") &= ~1;}
+void AWRelEdgeToggle(COMMAND_T* = NULL)     { *ConfigVar<int>("relativeedges") ^= 1;}
+bool IsRelEdgeOn(COMMAND_T* = NULL)         { return (*ConfigVar<int>("relativeedges") & 1)  != 0; }
 
-void AWClrTimeSelClkOn(COMMAND_T* = NULL)           { *(int*)GetConfigVar("itemclickmovecurs") |= 68;}
-void AWClrTimeSelClkOff(COMMAND_T* = NULL)          { *(int*)GetConfigVar("itemclickmovecurs") &= ~68;}
+void AWClrTimeSelClkOn(COMMAND_T* = NULL)           { *ConfigVar<int>("itemclickmovecurs") |= 68;}
+void AWClrTimeSelClkOff(COMMAND_T* = NULL)          { *ConfigVar<int>("itemclickmovecurs") &= ~68;}
 
 void AWClrTimeSelClkToggle(COMMAND_T* = NULL)
 {
 	// If "click to clear" and "move cursor on time change" are both ON or both OFF, just toggle
-	if ((*(int*)GetConfigVar("itemclickmovecurs") & 64 && *(int*)GetConfigVar("itemclickmovecurs") & 4) || (!(*(int*)GetConfigVar("itemclickmovecurs") & 64) && !(*(int*)GetConfigVar("itemclickmovecurs") & 4)))
-		*(int*)GetConfigVar("itemclickmovecurs") ^= 68;
+	if ((*ConfigVar<int>("itemclickmovecurs") & 64 && *ConfigVar<int>("itemclickmovecurs") & 4) || (!(*ConfigVar<int>("itemclickmovecurs") & 64) && !(*ConfigVar<int>("itemclickmovecurs") & 4)))
+		*ConfigVar<int>("itemclickmovecurs") ^= 68;
 
 	// If one of them is different than the other, turn them both ON
 	else
-		*(int*)GetConfigVar("itemclickmovecurs") |= 68;
+		*ConfigVar<int>("itemclickmovecurs") |= 68;
 }
 
-int IsClrTimeSelClkOn(COMMAND_T* = NULL)        { return (*(int*)GetConfigVar("itemclickmovecurs") & 68)  != 0; }
+int IsClrTimeSelClkOn(COMMAND_T* = NULL)        { return (*ConfigVar<int>("itemclickmovecurs") & 68)  != 0; }
 
-void AWClrLoopClkOn(COMMAND_T* = NULL)          { *(int*)GetConfigVar("itemclickmovecurs") |= 32;}
-void AWClrLoopClkOff(COMMAND_T* = NULL)         { *(int*)GetConfigVar("itemclickmovecurs") &= ~32;}
-void AWClrLoopClkToggle(COMMAND_T* = NULL)      { *(int*)GetConfigVar("itemclickmovecurs") ^= 32;}
-int IsClrLoopClkOn(COMMAND_T* = NULL)           { return (*(int*)GetConfigVar("itemclickmovecurs") & 32)  != 0; }
+void AWClrLoopClkOn(COMMAND_T* = NULL)          { *ConfigVar<int>("itemclickmovecurs") |= 32;}
+void AWClrLoopClkOff(COMMAND_T* = NULL)         { *ConfigVar<int>("itemclickmovecurs") &= ~32;}
+void AWClrLoopClkToggle(COMMAND_T* = NULL)      { *ConfigVar<int>("itemclickmovecurs") ^= 32;}
+int IsClrLoopClkOn(COMMAND_T* = NULL)           { return (*ConfigVar<int>("itemclickmovecurs") & 32)  != 0; }
 
 void UpdateTimebaseToolbar()
 {
@@ -2649,20 +2637,20 @@ void UpdateTimebaseToolbar()
 
 void AWProjectTimebase(COMMAND_T* t)
 {
-	*(int*)GetConfigVar("itemtimelock") = (int)t->user;
+	*ConfigVar<int>("itemtimelock") = (int)t->user;
 	UpdateTimebaseToolbar();
 	// ?Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_MISCCFG, -1);
 }
 
 int IsProjectTimebase(COMMAND_T* t)
 {
-	return (*(int*)GetConfigVar("itemtimelock") == (int)t->user);
+	return (*ConfigVar<int>("itemtimelock") == (int)t->user);
 }
 
 
 int IsGridTriplet(COMMAND_T* = NULL)
 {
-	double grid = *(double*)GetConfigVar("projgriddiv");
+	double grid = *ConfigVar<double>("projgriddiv");
 	if (grid < 1e-8) return 0;
 	double n = 1.0/grid;
 
@@ -2674,7 +2662,7 @@ int IsGridTriplet(COMMAND_T* = NULL)
 
 int IsGridDotted(COMMAND_T* = NULL)
 {
-	double grid = *(double*)GetConfigVar("projgriddiv");
+	double grid = *ConfigVar<double>("projgriddiv");
 	if (grid < 1e-8) return 0;
 	double n = 1.0/grid;
 
@@ -2690,7 +2678,7 @@ void AWToggleDotted(COMMAND_T* = NULL);
 
 void AWToggleTriplet(COMMAND_T* = NULL)
 {
-	double* pGridDiv = (double*)GetConfigVar("projgriddiv");
+	ConfigVar<double> pGridDiv("projgriddiv");
 
 	if (IsGridDotted())
 		AWToggleDotted();
@@ -2710,7 +2698,7 @@ void AWToggleTriplet(COMMAND_T* = NULL)
 
 void AWToggleDotted(COMMAND_T*)
 {
-	double* pGridDiv = (double*)GetConfigVar("projgriddiv");
+	ConfigVar<double> pGridDiv("projgriddiv");
 
 	if (IsGridTriplet())
 		AWToggleTriplet();
@@ -2806,7 +2794,7 @@ int IsClickUnmuted(COMMAND_T* = NULL)
 		}
 
 	}
-	if (*(int*)GetConfigVar("projmetroen") & 1)
+	if (*ConfigVar<int>("projmetroen") & 1)
 		return 1;
 	return 0;
 }
@@ -2865,7 +2853,7 @@ void AWCascadeInputs(COMMAND_T* t)
 
 void AWSelectGroupIfGrouping(COMMAND_T* = NULL)
 {
-	bool groupOverride = *(bool*)GetConfigVar("projgroupover");
+	const bool groupOverride = *ConfigVar<int>("projgroupover");
 
 	if (!groupOverride)
 		Main_OnCommand(40034, 0); //Select all items in groups
@@ -2876,15 +2864,13 @@ void AWSplitXFadeLeft(COMMAND_T* t)
 	Undo_BeginBlock();
 
 	double cursorPos = GetCursorPositionEx(0);
-	double dFadeLen;
-	int fadeShape;
-	dFadeLen = fabs(*(double*)GetConfigVar("defsplitxfadelen")); // Abs because neg value means "not auto"
-	fadeShape = *(int*)GetConfigVar("defxfadeshape");
+
+	// Abs because neg value means "not auto"
+	const double dFadeLen = fabs(*ConfigVar<double>("defsplitxfadelen"));
+	const int fadeShape = *ConfigVar<int>("defxfadeshape");
 
 	//turn OFF autocrossfades on split
-
-	int fadeStateStore = *(int*)(GetConfigVar("splitautoxfade"));
-	*(int*)(GetConfigVar("splitautoxfade")) = 12;
+	ConfigVarOverride<int> tmpXfade("splitautoxfade", 12);
 
 	WDL_TypedBuf<MediaItem*> items;
 	SWS_GetSelectedMediaItems(&items);
@@ -2929,9 +2915,6 @@ void AWSplitXFadeLeft(COMMAND_T* t)
 		SetMediaItemInfo_Value(items.Get()[i], "B_UISEL", 0);
 	}
 	PreventUIRefresh(-1);
-
-	// restore xfade setting
-	*(int*)(GetConfigVar("splitautoxfade")) = fadeStateStore;
 
 	UpdateArrange();
 	Undo_EndBlock(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS);

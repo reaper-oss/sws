@@ -220,6 +220,7 @@
 		22FFD27A114CD8310077F1CA /* Autocolor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22FFD278114CD8310077F1CA /* Autocolor.cpp */; };
 		22FFD27B114CD8310077F1CA /* Autocolor.h in Headers */ = {isa = PBXBuildFile; fileRef = 22FFD279114CD8310077F1CA /* Autocolor.h */; };
 		2446217121BC2B2200C2E00F /* NF_ReaScript.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2446217021BC2B2200C2E00F /* NF_ReaScript.cpp */; };
+		2499C58222665F9A0091D9E3 /* configvar.h in Headers */ = {isa = PBXBuildFile; fileRef = 2499C58122665F9A0091D9E3 /* configvar.h */; };
 		24A51E5F21BC291200100DC2 /* NF_ReaScript.h in Headers */ = {isa = PBXBuildFile; fileRef = 24A51E5E21BC291200100DC2 /* NF_ReaScript.h */; };
 		24F0441B21F68FBB00302066 /* RenderRegion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24F0441A21F68FBB00302066 /* RenderRegion.cpp */; };
 		24F0441D21F68FC900302066 /* RenderRegion.h in Headers */ = {isa = PBXBuildFile; fileRef = 24F0441C21F68FC900302066 /* RenderRegion.h */; };
@@ -577,6 +578,7 @@
 		22FFD278114CD8310077F1CA /* Autocolor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Autocolor.cpp; path = Color/Autocolor.cpp; sourceTree = "<group>"; };
 		22FFD279114CD8310077F1CA /* Autocolor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Autocolor.h; path = Color/Autocolor.h; sourceTree = "<group>"; };
 		2446217021BC2B2200C2E00F /* NF_ReaScript.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NF_ReaScript.cpp; path = nofish/NF_ReaScript.cpp; sourceTree = "<group>"; };
+		2499C58122665F9A0091D9E3 /* configvar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = configvar.h; path = Utility/configvar.h; sourceTree = "<group>"; };
 		24A51E5E21BC291200100DC2 /* NF_ReaScript.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NF_ReaScript.h; path = nofish/NF_ReaScript.h; sourceTree = "<group>"; };
 		24F0441A21F68FBB00302066 /* RenderRegion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RenderRegion.cpp; path = Autorender/RenderRegion.cpp; sourceTree = "<group>"; };
 		24F0441C21F68FC900302066 /* RenderRegion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RenderRegion.h; path = Autorender/RenderRegion.h; sourceTree = "<group>"; };
@@ -946,6 +948,7 @@
 				22C31F22125EF71A0072434F /* Adam.h */,
 				22B22D6113FA575C00D187A9 /* Analysis.cpp */,
 				22B22D6213FA575C00D187A9 /* Analysis.h */,
+				2499C58122665F9A0091D9E3 /* configvar.h */,
 				229A7E7C1165744400325BC2 /* Context.cpp */,
 				229A7E7D1165744400325BC2 /* Context.h */,
 				2273566512910ABF001A1570 /* EditCursor.cpp */,
@@ -1447,6 +1450,7 @@
 				3879390816202B1E000948B5 /* RprNode.h in Headers */,
 				3879390A16202B1E000948B5 /* RprStateChunk.h in Headers */,
 				3879390C16202B1E000948B5 /* RprTake.h in Headers */,
+				2499C58222665F9A0091D9E3 /* configvar.h in Headers */,
 				3879390E16202B1E000948B5 /* RprTrack.h in Headers */,
 				3879391016202B1E000948B5 /* StringUtil.h in Headers */,
 				3879391216202B1E000948B5 /* TimeMap.h in Headers */,

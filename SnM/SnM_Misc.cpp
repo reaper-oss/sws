@@ -32,6 +32,7 @@
 #include "SnM_Misc.h"
 #include "SnM_Track.h"
 #include "SnM_Util.h"
+#include "../Utility/configvar.h"
 #ifdef _SNM_HOST_AW
 #include "../Misc/Adam.h"
 #endif
@@ -205,31 +206,19 @@ bool SNM_GetProjectMarkerName(ReaProject* _proj, int _num, bool _isrgn, WDL_Fast
 }
 
 int SNM_GetIntConfigVar(const char* _varName, int _errVal) {
-	if (int* pVar = (int*)(GetConfigVar(_varName)))
-		return *pVar;
-	return _errVal;
+	return GetConfigVar(_varName, _errVal);
 }
 
-bool SNM_SetIntConfigVar(const char* _varName, int _newVal) {
-	if (int* pVar = (int*)(GetConfigVar(_varName))) {
-		*pVar = _newVal;
-		return true;
-	}
-	return false;
+int SNM_SetIntConfigVar(const char* _varName, int _newVal) {
+	return SetConfigVar(_varName, _newVal); 
 }
 
 double SNM_GetDoubleConfigVar(const char* _varName, double _errVal) {
-	if (double* pVar = (double*)(GetConfigVar(_varName)))
-		return *pVar;
-	return _errVal;
+	return GetConfigVar(_varName, _errVal);
 }
 
 bool SNM_SetDoubleConfigVar(const char* _varName, double _newVal) {
-	if (double* pVar = (double*)(GetConfigVar(_varName))) {
-		*pVar = _newVal;
-		return true;
-	}
-	return false;
+	return SetConfigVar(_varName, _newVal);
 }
 
 // host some funcs from Ultraschall, https://github.com/Ultraschall

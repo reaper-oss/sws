@@ -44,7 +44,7 @@ bool SNM_GetSetObjectState(void* _obj, WDL_FastString* _state, bool _setnewvalue
 bool SNM_SetProjectMarker(ReaProject* _proj, int _num, bool _isrgn, double _pos, double _rgnend, const char* _name, int _color);
 bool SNM_GetProjectMarkerName(ReaProject* _proj, int _num, bool _isrgn, WDL_FastString* _name);
 int SNM_GetIntConfigVar(const char* _varName, int _errVal);
-bool SNM_SetIntConfigVar(const char* _varName, int _newVal);
+int SNM_SetIntConfigVar(const char* _varName, int _newVal);
 double SNM_GetDoubleConfigVar(const char* _varName, double _errVal);
 bool SNM_SetDoubleConfigVar(const char* _varName, double _newVal);
 const char* ULT_GetMediaItemNote(MediaItem* _item);

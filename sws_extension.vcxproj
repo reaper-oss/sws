@@ -382,6 +382,7 @@ echo Warning: sws_python.py generation failed (Perl installed?)
     <ClInclude Include="snooks\snooks.h" />
     <ClInclude Include="snooks\SN_ReaScript.h" />
     <ClInclude Include="url.h" />
+    <ClInclude Include="Utility\configvar.h" />
     <ClInclude Include="Utility\win32-utf8.h" />
     <ClInclude Include="Wol\wol_Util.h" />
     <ClInclude Include="Wol\wol_Zoom.h" />

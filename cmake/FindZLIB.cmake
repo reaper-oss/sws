@@ -1,3 +1,7 @@
+if(ZLIB_FOUND)
+  return()
+endif()
+
 find_path(ZLIB_INCLUDE_DIR
   NAMES zlib.h
   PATHS ${CMAKE_SOURCE_DIR}/vendor/WDL/WDL/zlib

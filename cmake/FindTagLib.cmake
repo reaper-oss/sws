@@ -1,3 +1,7 @@
+if(TagLib_FOUND)
+  return()
+endif()
+
 if(SYSTEM_TAGLIB)
   find_path(TagLib_INCLUDE_DIR NAMES taglib.h PATH_SUFFIXES taglib)
   find_library(TagLib_LIBRARY tag)

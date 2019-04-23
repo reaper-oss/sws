@@ -1,3 +1,7 @@
+if(JNetLib_FOUND)
+  return()
+endif()
+
 find_path(JNetLib_INCLUDE_DIR
   NAMES jnetlib/jnetlib.h
   PATHS vendor/WDL

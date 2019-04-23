@@ -1051,7 +1051,7 @@ void DeleteTakeAndMedia(COMMAND_T* _ct) {
 
 int GetPitchTakeEnvRangeFromPrefs()
 {
-	int range = *(int*)GetConfigVar("pitchenvrange");
+	int range = *ConfigVar<int>("pitchenvrange");
 	// "snap to semitones" bit set ?
 	if (range > 0xFF)
 		range &= 0xFF;
@@ -1130,8 +1130,8 @@ bool PatchTakeEnvelopeActVis(MediaItem* _item, int _takeIdx, const char* _envKey
 					takeChunk.Append(vis);
 					takeChunk.Append("\nDEFSHAPE 0\n");
 					// NF: #1054, obey volume fader scaling pref.
-					int sz = 0; int *volenvrange = (int *)get_config_var("volenvrange", &sz);
-					if (sz == sizeof(int) && *volenvrange & (1 << 1))
+					const ConfigVar<int> volenvrange("volenvrange");
+					if (volenvrange && *volenvrange & (1 << 1))
 						takeChunk.Append("VOLTYPE 1\n");
 					takeChunk.Append(_defaultPoint);
 					takeChunk.Append("\n>\n");

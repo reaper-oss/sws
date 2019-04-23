@@ -226,7 +226,8 @@ static void KillNativeTooltip ()
 {
 	if (g_actionInProgress && !g_removedNativeTooltip)
 	{
-		SetConfig("tooltips", SetBit(SetBit(SetBit(g_tooltips, 0), 1), 2));
+		ConfigVar<int>("tooltips").try_set(SetBit(SetBit(SetBit(g_tooltips, 0), 1), 2));
+
 		for (list<HWND>::const_iterator it = g_registeredWindows.begin(), end = g_registeredWindows.end(); it != end; ++it)
 			InvalidateRect(*it,  NULL, TRUE);
 		g_removedNativeTooltip = true;
@@ -379,7 +380,7 @@ static bool ContinuousActionInit (bool init, COMMAND_T* ct, HWND hwnd, BR_Contin
 	if (initSuccessful)
 	{
 		// Reset variables
-		GetConfig("tooltips", g_tooltips);
+		g_tooltips = ConfigVar<int>("tooltips").value_or(0);
 		g_actionInProgress     = action;
 		g_removedNativeTooltip = false;
 		g_midiEditorWnd        = (action && action->ct->uniqueSectionId == SECTION_MIDI_EDITOR) ? hwnd                          : NULL;
@@ -476,7 +477,7 @@ static bool ContinuousActionInit (bool init, COMMAND_T* ct, HWND hwnd, BR_Contin
 		// Reset tooltips options in case they were changed and remove our tooltip
 		if (g_removedNativeTooltip)
 		{
-			SetConfig("tooltips", g_tooltips);
+			ConfigVar<int>("tooltips").try_set(g_tooltips);
 
 			// Make sure native tooltip is draw before hiding our tooltip
 			POINT p; GetCursorPos(&p);

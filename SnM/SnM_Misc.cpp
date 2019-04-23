@@ -204,32 +204,20 @@ bool SNM_GetProjectMarkerName(ReaProject* _proj, int _num, bool _isrgn, WDL_Fast
 	return false;
 }
 
-int SNM_GetIntConfigVar(const char* _varName, int _errVal) {
-	if (int* pVar = (int*)(GetConfigVar(_varName)))
-		return *pVar;
-	return _errVal;
+int SNM_GetIntConfigVar(const char *varName, const int fallback) {
+	return ConfigVar<int>(varName).value_or(fallback);
 }
 
-bool SNM_SetIntConfigVar(const char* _varName, int _newVal) {
-	if (int* pVar = (int*)(GetConfigVar(_varName))) {
-		*pVar = _newVal;
-		return true;
-	}
-	return false;
+bool SNM_SetIntConfigVar(const char *varName, const int newValue) {
+	return ConfigVar<int>(varName).try_set(newValue);
 }
 
-double SNM_GetDoubleConfigVar(const char* _varName, double _errVal) {
-	if (double* pVar = (double*)(GetConfigVar(_varName)))
-		return *pVar;
-	return _errVal;
+double SNM_GetDoubleConfigVar(const char *varName, double fallback) {
+	return ConfigVar<double>(varName).value_or(fallback);
 }
 
-bool SNM_SetDoubleConfigVar(const char* _varName, double _newVal) {
-	if (double* pVar = (double*)(GetConfigVar(_varName))) {
-		*pVar = _newVal;
-		return true;
-	}
-	return false;
+bool SNM_SetDoubleConfigVar(const char *varName, double newValue) {
+	return ConfigVar<double>(varName).try_set(newValue);
 }
 
 // host some funcs from Ultraschall, https://github.com/Ultraschall

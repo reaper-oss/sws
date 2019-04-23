@@ -312,12 +312,15 @@ static void SetEnvPointMouseValue (COMMAND_T* ct)
 		swap(endDisplayVal, startDisplayVal);
 		oppositeDirection = true;
 	}
-	double endPosQN = (isTempo) ? TimeMap_timeToQN_abs(NULL, endPosition) : 0;
+	double endPosQN = isTempo ? TimeMap_timeToQN_abs(NULL, endPosition) : 0;
 
-	int envClickSegMode; GetConfig("envclicksegmode", envClickSegMode);
-	int editCursorUndo;  GetConfig("undomask",        editCursorUndo);
-	SetConfig("undomask",        ClearBit(editCursorUndo, 3));  // prevent edit cursor undo
-	SetConfig("envclicksegmode", ClearBit(envClickSegMode, 6)); // prevent reselection
+	// prevent edit cursor undo
+	const ConfigVar<int> editCursorUndo("undomask");
+	ConfigVarOverride<int> tempMask(editCursorUndo, ClearBit(editCursorUndo.value_or(0), 3));
+
+	// prevent reselection
+	const ConfigVar<int> envClickSegMode("envclicksegmode");
+	ConfigVarOverride<int> tempSegMode(envClickSegMode, ClearBit(envClickSegMode.value_or(0), 6));
 
 	// In case of tempo freehand drawing we simultaneously add/remove points and edit them (because editing tempo map makes things move and me must not allow any changes to anything in front of mouse cursor)
 	if (user == 3 && isTempo)
@@ -608,9 +611,6 @@ static void SetEnvPointMouseValue (COMMAND_T* ct)
 		g_envMouseDidOnce = true;
 	}
 
-	SetConfig("undomask",        editCursorUndo);
-	SetConfig("envclicksegmode", envClickSegMode);
-
 	// Swap values back before storing them
 	if (oppositeDirection)
 	{
@@ -744,8 +744,10 @@ void CursorToEnv1 (COMMAND_T* ct)
 			GetSet_LoopTimeRange2(NULL, false, false, &tStart, &tEnd, false);
 
 			// Enable selection of points in time selection
-			int envClickSegMode; GetConfig("envclicksegmode", envClickSegMode);
-			SetConfig("envclicksegmode", SetBit(envClickSegMode, 6));
+			ConfigVar<int> envClickSegMode("envclicksegmode");
+			const int oldEnvClickSegMode = envClickSegMode.value_or(0);
+			ConfigVarOverride<int> tmpEnvClickSegMode("envclicksegmode",
+				SetBit(oldEnvClickSegMode, 6));
 
 			// Set time selection that in turn sets new envelope selection
 			nStart = (cTime + pTime) / 2 + takeEnvStartPos;
@@ -753,11 +755,8 @@ void CursorToEnv1 (COMMAND_T* ct)
 			GetSet_LoopTimeRange2(NULL, true, false, &nStart, &nEnd, false);
 
 			// Preserve point when previous time selection gets restored
-			SetConfig("envclicksegmode", ClearBit(envClickSegMode, 6));
+			envClickSegMode.try_set(ClearBit(oldEnvClickSegMode, 6));
 			GetSet_LoopTimeRange2(NULL, true, false, &tStart, &tEnd, false);
-
-			// Restore preferences
-			SetConfig("envclicksegmode", envClickSegMode);
 
 			PreventUIRefresh(-1);
 		}
@@ -986,7 +985,7 @@ void EnvPointsGrid (COMMAND_T* ct)
 	// Readjust tempo points
 	if (deletePoints && pointsToDelete.size() > 0)
 	{
-		int timeBase; GetConfig("tempoenvtimelock", timeBase);
+		const int timeBase = ConfigVar<int>("tempoenvtimelock").value_or(0);
 		if ((envelope.IsTempo() && timeBase != 0))
 		{
 			double offset = 0;
@@ -2056,7 +2055,7 @@ void ShowHideSendEnv (COMMAND_T* ct)
 				if (!envelope->IsVisible() && envelope->CountPoints() <= 1)
 				{
 					double value;
-					int trimMode; GetConfig("envtrimadjmode", trimMode);
+					const int trimMode = ConfigVar<int>("envtrimadjmode").value_or(0);
 					if (envelope->GetPoint(0, NULL, &value, NULL, NULL) && (trimMode == 0 || (trimMode == 1 && GetEffectiveAutomationMode(envelope->GetParent()) != 0)))
 					{
 						if      (envelope->Type() == VOLUME) SetTrackSendUIVol(envelope->GetParent(), envelope->GetSendId(), value, 0); // don't do mute (REAPER skips it too)

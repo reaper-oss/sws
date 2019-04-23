@@ -1308,7 +1308,7 @@ bool SeekItem(int _plId, int _nextItemId, int _curItemId)
 		if (_nextItemId<0)
 		{
 			// temp override of the "stop play at project end" option
-			if (int* opt = (int*)GetConfigVar("stopprojlen")) {
+			if (ConfigVar<int> opt = "stopprojlen") {
 				g_oldStopprojlenPref = *opt;
 				*opt = 1;
 			}
@@ -1544,7 +1544,7 @@ void PlaylistPlay(int _plId, int _itemId)
 				PlaylistStop();
 
 			// temp override of the "smooth seek" option
-			if (int* opt = (int*)GetConfigVar("smoothseek")) {
+			if (ConfigVar<int> opt = "smoothseek") {
 				g_oldSeekPref = *opt;
 				*opt = 3;
 			}
@@ -1639,12 +1639,12 @@ void PlaylistStopped(bool _pause)
 
 		// restore options
 		if (g_oldSeekPref >= 0)
-			if (int* opt = (int*)GetConfigVar("smoothseek")) {
+			if (ConfigVar<int> opt = "smoothseek") {
 				*opt = g_oldSeekPref;
 				g_oldSeekPref = -1;
 			}
 		if (g_oldStopprojlenPref >= 0)
-			if (int* opt = (int*)GetConfigVar("stopprojlen")) {
+			if (ConfigVar<int> opt = "stopprojlen") {
 				*opt = g_oldStopprojlenPref;
 				g_oldStopprojlenPref = -1;
 			}
@@ -1762,17 +1762,10 @@ void AppendPasteCropPlaylist(RegionPlaylist* _playlist, int _mode)
 
 //	OnStopButton();
 
-	// make sure some envelope options are enabled: move with items + add edge points
-	int oldOpt[2] = {-1,-1};
-	int* options[2] = {NULL,NULL};
-	if ((options[0] = (int*)GetConfigVar("envattach"))) {
-		oldOpt[0] = *options[0];
-		*options[0] = 1;
-	}
-	if ((options[1] = (int*)GetConfigVar("env_reduce"))) {
-		oldOpt[1] = *options[1];
-		*options[1] = 2;
-	}
+	ConfigVarOverride<int> options[] = {
+		{"envattach",     1}, // move with items
+		{"env_reduce",    2}, // add edge points
+	};
 
 	WDL_PtrList_DeleteOnDestroy<MarkerRegion> rgns;
 	for (int i=0; i<_playlist->GetSize(); i++)
@@ -1838,10 +1831,6 @@ void AppendPasteCropPlaylist(RegionPlaylist* _playlist, int _mode)
 			}
 		}
 	}
-
-	// restore options
-	if (options[0]) *options[0] = oldOpt[0];
-	if (options[1]) *options[1] = oldOpt[1];
 
 	// nothing done..
 	if (!updated)

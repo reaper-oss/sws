@@ -197,7 +197,7 @@ void DoNudgeItemsRightBeatsAndConfBased(COMMAND_T*)
 
 void DoNudgeSamples(COMMAND_T* ct)
 {
-	double dSrate = (double)(*(int*)GetConfigVar("projsrate"));
+	double dSrate = (double)(*ConfigVar<int>("projsrate"));
 	for (int i = 1; i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);

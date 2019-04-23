@@ -38,7 +38,7 @@ set(CMAKE_CXX_VISIBILITY_PRESET "hidden")
 
 if(UNIX)
   add_compile_options(
-    -fstack-protector-strong
+    -fstack-protector-strong -fdiagnostics-color
   )
 elseif(MSVC)
   add_compile_definitions(sws _CRT_SECURE_NO_WARNINGS _CRT_NONSTDC_NO_DEPRECATE)

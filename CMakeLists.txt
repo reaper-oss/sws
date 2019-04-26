@@ -175,6 +175,9 @@ if(MSVC)
 
     # Remove duplicate sections
     /OPT:ICF
+
+    # Use relative path to the PDB file to avoid exposing the full path
+    /PDBALTPATH:%_PDB%
   >)
 
   # Use the precompiled header for all files

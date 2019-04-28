@@ -1,3 +1,11 @@
+Fixes:
++Issue 1140: "Xenakios/SWS: Rename takes and source files..."
+ - automatically delete old .reapeaks files (also for "Xenakios/SWS: Rename take source files...")
+ - don't double-append file extension if already contained in new filename/takename
+
+ Other changes:
+ "Xenakios/SWS: Rename takes and source files...", "Xenakios/SWS: Rename take source files...": add '(no undo)' in action name
+
 !v2.10.0 #1 Featured build (February 6, 2019)
 Mega thanks to nofish and cfillion for their many contributions, and X-Raym for doing the tedious work of merging everything into a release.
 Recommended use of REAPER 5.965.

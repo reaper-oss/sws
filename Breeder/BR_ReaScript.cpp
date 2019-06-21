@@ -139,7 +139,7 @@ bool BR_EnvGetPoint (BR_Envelope* envelope, int id, double* positionOut, double*
 	return false;
 }
 
-void BR_EnvGetProperties (BR_Envelope* envelope, bool* activeOut, bool* visibleOut, bool* armedOut, bool* inLaneOut, int* laneHeightOut, int* defaultShapeOut, double* minValueOut, double* maxValueOut, double* centerValueOut, int* typeOut, bool* faderScalingOut)
+void BR_EnvGetProperties (BR_Envelope* envelope, bool* activeOut, bool* visibleOut, bool* armedOut, bool* inLaneOut, int* laneHeightOut, int* defaultShapeOut, double* minValueOut, double* maxValueOut, double* centerValueOut, int* typeOut, bool* faderScalingOut, int* AIoptionsOut)
 {
 	if (envelope && g_script_brenvs.Find(envelope)>=0)
 	{
@@ -153,6 +153,7 @@ void BR_EnvGetProperties (BR_Envelope* envelope, bool* activeOut, bool* visibleO
 		WritePtr(maxValueOut,        envelope->LaneMaxValue());
 		WritePtr(centerValueOut,     envelope->LaneCenterValue());
 		WritePtr(faderScalingOut,    envelope->IsScaledToFader());
+		WritePtr(AIoptionsOut,       envelope->GetAIoptions());
 
 		if (typeOut)
 		{
@@ -186,6 +187,7 @@ void BR_EnvGetProperties (BR_Envelope* envelope, bool* activeOut, bool* visibleO
 		WritePtr(centerValueOut,     0.0);
 		WritePtr(typeOut,            -1);
 		WritePtr(faderScalingOut,    false);
+		WritePtr(AIoptionsOut,       -1);
 	}
 }
 
@@ -196,7 +198,7 @@ bool BR_EnvSetPoint (BR_Envelope* envelope, int id, double position, double valu
 	return false;
 }
 
-void BR_EnvSetProperties (BR_Envelope* envelope, bool active, bool visible, bool armed, bool inLane, int laneHeight, int defaultShape, bool faderScaling)
+void BR_EnvSetProperties (BR_Envelope* envelope, bool active, bool visible, bool armed, bool inLane, int laneHeight, int defaultShape, bool faderScaling, int* AIoptionsOptional)
 {
 	if (envelope && g_script_brenvs.Find(envelope)>=0)
 	{
@@ -208,6 +210,15 @@ void BR_EnvSetProperties (BR_Envelope* envelope, bool active, bool visible, bool
 		envelope->SetScalingToFader(faderScaling);
 		if (defaultShape >= 0 && defaultShape <= 5)
 			envelope->SetDefaultShape(defaultShape);
+
+		double runningReaVer = atof(GetAppVersion());
+		if (runningReaVer >= 5.979)
+		{
+			// optional param, != NULL -> caller provided this param
+			// works properly since REAPER v5.979
+			if (AIoptionsOptional != NULL && *AIoptionsOptional >= -1 && *AIoptionsOptional <= 6) 
+				envelope->SetAIoptions(*AIoptionsOptional);
+		}
 	}
 }
 

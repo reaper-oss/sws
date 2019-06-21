@@ -1211,6 +1211,12 @@ bool BR_Envelope::IsScaledToFader ()
 	return (m_properties.faderMode == 1);
 }
 
+int BR_Envelope::GetAIoptions()
+{
+	this->FillProperties();
+	return m_properties.AIoptions;
+}
+
 int BR_Envelope::GetLaneHeight ()
 {
 	this->FillProperties();
@@ -1349,6 +1355,16 @@ void BR_Envelope::SetActive (bool active)
 		m_properties.active  = active;
 		m_properties.changed = true;
 		m_update             = true;
+	}
+}
+
+void BR_Envelope::SetAIoptions(int AIoptions)
+{
+	if (this->FillProperties() && m_properties.AIoptions != AIoptions)
+	{
+		m_properties.AIoptions = AIoptions;
+		m_properties.changed = true;
+		m_update = true;
 	}
 }
 
@@ -1698,7 +1714,8 @@ bool BR_Envelope::FillProperties () const
 				else if (!strncmp(token, "ACT ", sizeof("ACT ")-1))
 				{
 					lp.parse(token);
-					m_properties.active = lp.gettoken_int(1);
+					m_properties.active    = lp.gettoken_int(1);
+					m_properties.AIoptions = lp.gettoken_int(2);
 				}
 				else if (!strncmp(token, "VIS ", sizeof("VIS ")-1))
 				{
@@ -1819,7 +1836,7 @@ WDL_FastString BR_Envelope::GetProperties ()
 		WDL_FastString properties;
 		properties.Append(m_properties.paramType.Get());
 		properties.Append("\n");
-		properties.AppendFormatted(256, "ACT %d\n", m_properties.active);
+		properties.AppendFormatted(256, "ACT %d %d\n", m_properties.active, m_properties.AIoptions);
 		properties.AppendFormatted(256, "VIS %d %d %d\n", m_properties.visible, m_properties.lane, m_properties.visUnknown);
 		properties.AppendFormatted(256, "LANEHEIGHT %d %d\n", m_properties.height, m_properties.heightUnknown);
 		properties.AppendFormatted(256, "ARM %d\n", m_properties.armed);
@@ -1848,6 +1865,7 @@ WDL_FastString BR_Envelope::GetProperties ()
 
 BR_Envelope::EnvProperties::EnvProperties () :
 active        (0),
+AIoptions     (-1),
 visible       (0),
 lane          (0),
 visUnknown    (0),
@@ -1871,6 +1889,7 @@ changed       (false)
 
 BR_Envelope::EnvProperties::EnvProperties (const EnvProperties& properties) :
 active          (properties.active),
+AIoptions       (-1),
 visible         (properties.visible),
 lane            (properties.lane),
 visUnknown      (properties.visUnknown),
@@ -1900,7 +1919,9 @@ BR_Envelope::EnvProperties& BR_Envelope::EnvProperties::operator= (const EnvProp
 		return *this;
 
 	active          = properties.active;
+	AIoptions       = properties.AIoptions;
 	visible         = properties.visible;
+
 	lane            = properties.lane;
 	visUnknown      = properties.visUnknown;
 	height          = properties.height;

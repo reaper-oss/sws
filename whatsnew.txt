@@ -1,3 +1,10 @@
+Fixes:
++Issue 1170, Global notes:
+ - fix global notes only appearing in first project tab
+ - internal tweaks (more efficient load/save)
+ - display [modified] in notes window if global notes dirty
+ - additionally to saving when project is saved, can be saved via notes window context menu (global notes are stored in <REAPER resource path>/SWS_global notes.txt)
+
 !v2.10.0 #1 Featured build (February 6, 2019)
 Mega thanks to nofish and cfillion for their many contributions, and X-Raym for doing the tedious work of merging everything into a release.
 Recommended use of REAPER 5.965.

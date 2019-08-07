@@ -2158,7 +2158,12 @@ int GetTrackHeight (MediaTrack* track, int* offsetY, int* topGap /*=NULL*/, int*
 
 	// Get track height
 	int height = (int)GetMediaTrackInfo_Value(track, "I_HEIGHTOVERRIDE");
-	if (height == 0)
+	void *chk = GetSetMediaTrackInfo(track,"I_TCPH",NULL);
+	if (chk) // should always be supported on 5.982+
+	{
+		height = *(int *)chk;
+	}
+	else if (height == 0)
 	{
 		const int vZoom = ConfigVar<int>("vzoom2").value_or(0);
 		height = GetTrackHeightFromVZoomIndex(track, vZoom);

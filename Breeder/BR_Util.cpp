@@ -3155,9 +3155,14 @@ MediaTrack* HwndToTrack (HWND hwnd, int* hwndContext, POINT ptScreen)
 					}
 				}
 			}
+			else if (mixerMaster && (hwnd == mixerMaster || hwndParent == mixerMaster))
+				track = GetMasterTrack(NULL);
 		}
 		else if (hwndParent == mcp || hwndParent == mixer || hwndParent == mixerMaster)         // hwnd is a track
+		{
 			track = (MediaTrack*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+			if (hwndParent == mixerMaster && !track) track = GetMasterTrack(NULL);
+		}
 		else if (hwndPParent == mcp || hwndPParent == mixer || hwndPParent == mixerMaster) // hwnd is vu meter inside track
 			track = (MediaTrack*)GetWindowLongPtr(hwndParent, GWLP_USERDATA);
 

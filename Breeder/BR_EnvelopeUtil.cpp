@@ -2582,6 +2582,29 @@ int GetEffectiveAutomationMode (MediaTrack* track)
 
 int CountTrackEnvelopePanels (MediaTrack* track)
 {
+	if (GetEnvelopeInfo_Value)
+	{
+		const int tcp_h_no_envs = (int)GetMediaTrackInfo_Value(track, "I_TCPH");
+		const int tcp_h = (int)GetMediaTrackInfo_Value(track, "I_WNDH");
+		if (tcp_h <= tcp_h_no_envs) return 0;
+
+		const int fullEnvCount = CountTrackEnvelopes(track);
+		int count = 0;
+		for (int i = 0; i < fullEnvCount; ++i)
+		{
+			TrackEnvelope *env = GetTrackEnvelope(track,i);
+			if (GetEnvelopeInfo_Value(env,"I_TCPY") >= tcp_h_no_envs)
+			{
+				if (GetEnvelopeInfo_Value(env,"I_TCPH") > 0)
+					count++;
+			}
+		}
+
+		return count;
+	}
+
+	// legacy - REAPER v5.981 and earlier
+
 	/* Much faster than getting each envelope's chunk */
 
 	int count  = 0;

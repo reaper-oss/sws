@@ -2617,7 +2617,10 @@ int CountTrackEnvelopePanels (MediaTrack* track)
 	if (TcpVis(track))
 	{
 		// Get first envelope's lane hwnd and cycle through the rest
-		HWND hwnd = GetWindow(GetTcpTrackWnd(track), GW_HWNDNEXT);
+		bool is_container;
+		HWND hwnd = GetWindow(GetTcpTrackWnd(track,is_container), GW_HWNDNEXT);
+		if (is_container) return 0; // container windows should be handled by the GetEnvelopeInfo_Value
+
 		MediaTrack* nextTrack = CSurf_TrackFromID(1 + CSurf_TrackToID(track, false), false);
 		while (true)
 		{
@@ -2635,7 +2638,8 @@ int CountTrackEnvelopePanels (MediaTrack* track)
 			if ((MediaTrack*)hwndData == nextTrack)
 				break;
 
-			if (HwndToEnvelope(hwnd))
+			POINT pt = { 0, 0 } ; // ignored, versions of REAPER that require this should have GetEnvelopeInfo_Value
+			if (HwndToEnvelope(hwnd,pt))
 				++count;
 			else
 				break;

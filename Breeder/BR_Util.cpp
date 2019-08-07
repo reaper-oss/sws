@@ -2252,6 +2252,18 @@ int GetTrackEnvHeight (TrackEnvelope* envelope, int* offsetY, bool drawableRange
 		return 0;
 	}
 
+	if (GetEnvelopeInfo_Value)
+	{
+		WritePtr(offsetY, 
+			(int) GetMediaTrackInfo_Value(parent,"I_TCPY") + 
+			(int)GetEnvelopeInfo_Value(envelope,drawableRangeOnly ? "I_TCPY_USED" : "I_TCPY") 
+			);
+
+		return (int)GetEnvelopeInfo_Value(envelope,drawableRangeOnly ? "I_TCPH_USED" : "I_TCPH");
+	}
+
+	// legacy - REAPER v5.981 and earlier
+
 	// Prepare return variables and get track's height and offset
 	int envOffset = 0;
 	int envHeight = 0;

@@ -392,7 +392,7 @@ MediaTrack* TrackAtMouseCursor (int* context, double* position)
 
 	// Check TCP/MCP
 	int tcp;
-	track = HwndToTrack(hwnd, &tcp);
+	track = HwndToTrack(hwnd, &tcp, p);
 	if (track)
 		trackContext = (tcp == 1) ? (0) : (1);
 
@@ -684,13 +684,13 @@ void BR_MouseInfo::GetContext (const POINT& p)
 		if (!found && ((m_mode & BR_MouseInfo::MODE_ALL) || (m_mode & BR_MouseInfo::MODE_MCP_TCP)))
 		{
 			int context;
-			if ((mouseInfo.track = HwndToTrack(hwnd, &context)))
+			if ((mouseInfo.track = HwndToTrack(hwnd, &context, p)))
 			{
 				mouseInfo.window = (context == 1) ? "tcp" : "mcp";
 				mouseInfo.segment = "track";
 				found = true;
 			}
-			else if ((mouseInfo.envelope = HwndToEnvelope(hwnd)))
+			else if ((mouseInfo.envelope = HwndToEnvelope(hwnd, p)))
 			{
 				mouseInfo.window = "tcp";
 				mouseInfo.segment = "envelope";
@@ -1553,7 +1553,8 @@ void BR_MouseInfo::GetTrackOrEnvelopeFromY (int y, TrackEnvelope** _envelope, Me
 		if (!GetEnvelopeInfo_Value)
 		{
 			// legacy - REAPER v5.981 and earlier
-			hwnd = ::GetWindow(GetTcpTrackWnd(track), GW_HWNDNEXT);
+			bool is_container;
+			hwnd = ::GetWindow(GetTcpTrackWnd(track, is_container), GW_HWNDNEXT);
 			nextTrack = CSurf_TrackFromID(1 + CSurf_TrackToID(track, false), false);
 			while (true)
 			{

@@ -245,14 +245,14 @@ HWND GetTransportWnd ();
 HWND GetMixerWnd ();
 HWND GetMixerMasterWnd ();
 HWND GetMediaExplorerWnd ();
-HWND GetMcpWnd ();
-HWND GetTcpWnd ();
-HWND GetTcpTrackWnd (MediaTrack* track);
+HWND GetMcpWnd (bool &isContainer);
+HWND GetTcpWnd (bool &isContainer);
+HWND GetTcpTrackWnd (MediaTrack* track, bool &isContainer);
 HWND GetNotesView (HWND midiEditor);
 HWND GetPianoView (HWND midiEditor);
 HWND GetTrackView (HWND midiEditor);
-MediaTrack* HwndToTrack (HWND hwnd, int* hwndContext);  // context: 0->unknown, 1->TCP, 2->MCP (works even if hwnd is not a track but something else in mcp/tcp)
-TrackEnvelope* HwndToEnvelope (HWND hwnd);
+MediaTrack* HwndToTrack (HWND hwnd, int* hwndContext, POINT ptScreen);  // context: 0->unknown, 1->TCP, 2->MCP (works even if hwnd is not a track but something else in mcp/tcp). 
+TrackEnvelope* HwndToEnvelope (HWND hwnd, POINT ptScreen);
 void CenterDialog (HWND hwnd, HWND target, HWND zOrder);
 void GetMonitorRectFromPoint (const POINT& p, bool workingAreaOnly, RECT* monitorRect);
 void GetMonitorRectFromRect (const RECT& r, bool workingAreaOnly, RECT* monitorRect);

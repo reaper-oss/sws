@@ -787,7 +787,8 @@ void MoveActiveWndToMouse (COMMAND_T* ct)
 	if (HWND hwnd = GetForegroundWindow())
 	{
 		#ifndef _WIN32
-			if (hwnd == GetArrangeWnd() || hwnd == GetRulerWndAlt() || hwnd == GetTcpWnd())
+			bool __tcp_ctmp;
+			if (hwnd == GetArrangeWnd() || hwnd == GetRulerWndAlt() || hwnd == GetTcpWnd(__tcp_ctmp))
 				hwnd = g_hwndParent;
 
 			if (hwnd != g_hwndParent)

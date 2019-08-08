@@ -3207,10 +3207,13 @@ TrackEnvelope* HwndToEnvelope (HWND hwnd, POINT ptScreen)
 				for (int e = 0; e < envs; ++e)
 				{
 					TrackEnvelope* env = GetTrackEnvelope(chktrack,e);
-					double y = GetEnvelopeInfo_Value(env,"I_TCPY");
-					double h = GetEnvelopeInfo_Value(env,"I_TCPH");
-					if (ptloc.y >= ypos + y && ptloc.y < ypos + y + h)
-						return env;
+					if (GetEnvelopeInfo_Value) // should always be true if a container
+					{
+						double y = GetEnvelopeInfo_Value(env,"I_TCPY");
+						double h = GetEnvelopeInfo_Value(env,"I_TCPH");
+						if (ptloc.y >= ypos + y && ptloc.y < ypos + y + h)
+							return env;
+					}
 				}
 
 				break;

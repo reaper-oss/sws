@@ -217,19 +217,19 @@ void SelectProject(COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwn
 // Based on a registered timer so that everything has been initialized
 ///////////////////////////////////////////////////////////////////////////////
 
-SWSProjConfig<WDL_FastString> g_prjActions;
-WDL_FastString g_globalAction;
+SWSProjConfig<WDL_FastString> g_prjLoadActions;
+WDL_FastString g_globalStartupAction;
 
 // per-project action timer armed via ProcessExtensionLine()
 void ProjectStartupActionTimer()
 {
 	plugin_register("-timer",(void*)ProjectStartupActionTimer);
-	if (int cmdId = NamedCommandLookup(g_prjActions.Get()->Get()))
+	if (int cmdId = NamedCommandLookup(g_prjLoadActions.Get()->Get()))
 	{
 		Main_OnCommand(cmdId, 0);
 #ifdef _SNM_DEBUG
 		OutputDebugString("ProjectStartupActionTimer() - Performed project startup action '");
-		OutputDebugString(g_prjActions.Get()->Get());
+		OutputDebugString(g_prjLoadActions.Get()->Get());
 		OutputDebugString("'\n");
 #endif
 	}
@@ -239,12 +239,12 @@ double g_runningReaVer;
 // global action timer armed via SNM_Init()/OnInitTimer()
 void GlobalStartupActionTimer()
 {
-	if (int cmdId = NamedCommandLookup(g_globalAction.Get()))
+	if (int cmdId = NamedCommandLookup(g_globalStartupAction.Get()))
 	{
 		Main_OnCommand(cmdId, 0);
 #ifdef _SNM_DEBUG
 		OutputDebugString("GlobalStartupActionTimer() - Performed global startup action '");
-		OutputDebugString(g_globalAction.Get());
+		OutputDebugString(g_globalStartupAction.Get());
 		OutputDebugString("'\n");
 #endif
 	}
@@ -253,7 +253,7 @@ void GlobalStartupActionTimer()
 
 int PromptClearStartupAction(int _type, bool _clear)
 {
-	int r=0, cmdId=SNM_NamedCommandLookup(_type ? g_globalAction.Get() : g_prjActions.Get()->Get());
+	int r=0, cmdId=SNM_NamedCommandLookup(_type ? g_globalStartupAction.Get() : g_prjLoadActions.Get()->Get());
 	if (cmdId)
 	{
 		WDL_FastString msg;
@@ -307,7 +307,7 @@ void SetStartupAction(COMMAND_T* _ct)
 			{
 				if (!type)
 				{
-					g_prjActions.Get()->Set(idstr);
+					g_prjLoadActions.Get()->Set(idstr);
 					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_MISCCFG, -1);
 
 					msg.SetFormatted(512, __LOCALIZE_VERFMT("'%s' is defined as project startup action","sws_startup_action"), kbd_getTextFromCmd(cmdId, NULL));          
@@ -323,7 +323,7 @@ void SetStartupAction(COMMAND_T* _ct)
 				}
 				else
 				{
-					g_globalAction.Set(idstr);
+					g_globalStartupAction.Set(idstr);
 					WritePrivateProfileString("Misc", "GlobalStartupAction", idstr, g_SNM_IniFn.Get()); 
 
 					msg.SetFormatted(512, __LOCALIZE_VERFMT("'%s' is defined as global startup action","sws_startup_action"), kbd_getTextFromCmd(cmdId, NULL));
@@ -348,12 +348,12 @@ void ClearStartupAction(COMMAND_T* _ct)
 	{
 		if (!type)
 		{
-			g_prjActions.Get()->Set("");
+			g_prjLoadActions.Get()->Set("");
 			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_MISCCFG, -1);
 		}
 		else
 		{
-			g_globalAction.Set("");
+			g_globalStartupAction.Set("");
 			WritePrivateProfileString("Misc", "GlobalStartupAction", NULL, g_SNM_IniFn.Get()); 
 		}
 	}
@@ -362,7 +362,7 @@ void ClearStartupAction(COMMAND_T* _ct)
 void ShowStartupActions(COMMAND_T* _ct)
 {
 	WDL_FastString msg(__LOCALIZE("No project startup action is defined","sws_startup_action"));
-	if (int cmdId = SNM_NamedCommandLookup(g_prjActions.Get()->Get()))
+	if (int cmdId = SNM_NamedCommandLookup(g_prjLoadActions.Get()->Get()))
 		msg.SetFormatted(512, __LOCALIZE_VERFMT("'%s' is defined as project startup action", "sws_startup_action"), kbd_getTextFromCmd(cmdId, NULL));
 
 	char prjFn[SNM_MAX_PATH] = "";
@@ -375,7 +375,7 @@ void ShowStartupActions(COMMAND_T* _ct)
 	msg.Append(".");
 	msg.Append("\r\n\r\n");
 
-	if (int cmdId = SNM_NamedCommandLookup(g_globalAction.Get()))
+	if (int cmdId = SNM_NamedCommandLookup(g_globalStartupAction.Get()))
 	{
 		msg.AppendFormatted(512, __LOCALIZE_VERFMT("'%s' is defined as global startup action", "sws_startup_action"), kbd_getTextFromCmd(cmdId, NULL));
 	}
@@ -396,9 +396,9 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 
 	if (!strcmp(lp.gettoken_str(0), "S&M_PROJACTION"))
 	{
-		g_prjActions.Get()->Set(lp.gettoken_str(1));
+		g_prjLoadActions.Get()->Set(lp.gettoken_str(1));
 
-		if (!isUndo && g_prjActions.Get()->GetLength() && IsActiveProjectInLoadSave())
+		if (!isUndo && g_prjLoadActions.Get()->GetLength() && IsActiveProjectInLoadSave())
 			plugin_register("timer",(void*)ProjectStartupActionTimer);
 		return true;
 	}
@@ -408,14 +408,14 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
 {
 	char line[SNM_MAX_CHUNK_LINE_LENGTH] = "";
-	if (ctx && g_prjActions.Get()->GetLength())
-		if (_snprintfStrict(line, sizeof(line), "S&M_PROJACTION %s", g_prjActions.Get()->Get()) > 0)
+	if (ctx && g_prjLoadActions.Get()->GetLength())
+		if (_snprintfStrict(line, sizeof(line), "S&M_PROJACTION %s", g_prjLoadActions.Get()->Get()) > 0)
 			ctx->AddLine("%s", line);
 }
 
 static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t *reg) {
-	g_prjActions.Cleanup();
-	g_prjActions.Get()->Set("");
+	g_prjLoadActions.Cleanup();
+	g_prjLoadActions.Get()->Set("");
 }
 
 static project_config_extension_t s_projectconfig = {
@@ -426,7 +426,7 @@ int SNM_ProjectInit()
 {
   char buf[SNM_MAX_ACTION_CUSTID_LEN]="";
   GetPrivateProfileString("Misc", "GlobalStartupAction", "", buf, sizeof(buf), g_SNM_IniFn.Get());
-  g_globalAction.Set(buf);
+  g_globalStartupAction.Set(buf);
   return plugin_register("projectconfig", &s_projectconfig);
 }
 

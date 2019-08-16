@@ -37,7 +37,7 @@
 #include "../Misc/Analysis.h" // #781
 #include "../Breeder/BR_Loudness.h" // #880
 #include "../SnM/SnM_Notes.h" // #755
-#include "../SnM/SnM_Project.h" // #974
+#include "../SnM/SnM_Util.h" // #974, SNM_NamedCommandLookup(), CheckSwsMacroScriptNumCustomId()
 
 
 // #781, peak/RMS
@@ -212,6 +212,7 @@ bool NF_AnalyzeMediaItemPeakAndRMS(MediaItem* item, double windowSize, void* rea
 
 		// write analyzed values to reaperarrays
 		// never write to [0] in reaperarrays!!!
+		// https://forum.cockos.com/showpost.php?p=2039829&postcount=2
 		for (int i = 1; i <= a.iChannels; i++) {
 			if (d_reaperarray_peaksCurSize < ((uint32_t*)(d_reaperarray_peaks))[1]) { // higher 32 bits in 1st entry: max alloc. size
 				d_reaperarray_peaks[i] = VAL2DB(a.dPeakVals[i - 1]);
@@ -306,10 +307,8 @@ void NF_UpdateSWSMarkerRegionSubWindow()
 	NF_DoUpdateSWSMarkerRegionSubWindow();
 }
 
-
-// #974
-/*
-extern WDL_FastString g_globalStartupAction; extern SWSProjConfig<WDL_FastString> g_prjLoadActions;
+// #974 Global/project startup actions
+extern WDL_FastString g_globalStartupAction; extern SWSProjConfig<WDL_FastString> g_prjLoadActions; // SnM_Project.cpp
 
 // desc == true: return action text, false: return command ID number (native actions) or named command (extension/ReaScript)
 void NF_GetGlobalStartupAction(char* buf, int bufSize, bool desc)
@@ -353,7 +352,6 @@ void NF_GetGlobalStartupAction_CmdID(char *buf, int bufSize)
 	NF_GetGlobalStartupAction(buf, bufSize, false);
 }
 
-
 bool NF_SetGlobalStartupAction(const char * buf)
 {
 	if (!g_globalStartupAction.Get())
@@ -388,7 +386,6 @@ bool NF_ClearGlobalStartupAction()
 	}
 	return false;
 }
-
 
 void NF_GetProjectStartupAction(char* buf, int bufSize, bool desc)
 {
@@ -462,6 +459,3 @@ bool NF_ClearProjectStartupAction()
 	}
 	return false;
 }
-*/
-
-

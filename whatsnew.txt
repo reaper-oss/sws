@@ -5,19 +5,24 @@ New features:
  - SWS/NF: Toggle render speed (apply FX/render stems) realtime/not limited (Issue 1065)
 
 Fixes:
-+Loudness - high precision mode:
- - Fix potential crash when analyzing items shorter than 3 seconds
- - Disable creating graph, disable go to max. short-term / momentary (Issue 1120) (these are currently not implemented for high precision mode)
- - ReaScript: automatically disable high precision mode for NF_AnalyzeTakeLoudness2() (to ensure correct max. short-term / momentary positions)
 +Issue 455: Snapshots: Include track phase (polarity) in Full Track Mix, add separate Phase tickbox as custom filter
 +Issue 1117, Issue 1058: Support Measure grid line spacing
 +Issue 1119: Don't block Del key in Filter textbox (Marker list, Track list, Resources)
 +Issue 1140: "Xenakios/SWS: Rename takes and source files..."
  - automatically delete old .reapeaks files (also for "Xenakios/SWS: Rename take source files...")
  - don't double-append file extension if already contained in new filename/takename
++Issue 1170, Global notes:
+ - fix global notes only appearing in first project tab
+ - internal tweaks (more efficient load/save)
+ - display [modified] in notes window if global notes dirty
+ - additionally to saving when project is saved, can be saved via notes window context menu (global notes are stored in <REAPER resource path>/SWS_global notes.txt)
 +Fix flickering in some vertical zooming actions
 +Fix 'Xenakios/SWS: Normalize selected takes to dB value...' if take polarity is flipped (report https://forum.cockos.com/showthread.php?t=219269|here|)
 +Fix various other Xenakios take volume actions if take polarity is flipped
++Loudness - high precision mode:
+ - Fix potential crash when analyzing items shorter than 3 seconds
+ - Disable creating graph, disable go to max. short-term / momentary (Issue 1120) (these are currently not implemented for high precision mode)
+ - ReaScript: automatically disable high precision mode for NF_AnalyzeTakeLoudness2() (to ensure correct max. short-term / momentary positions)
  
 New ReaScript functions:
 +Issue 974 (Lua example https://github.com/reaper-oss/sws/issues/974#issuecomment-386480161|here|):

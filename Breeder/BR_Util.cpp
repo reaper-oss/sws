@@ -2164,7 +2164,12 @@ int GetTrackHeight (MediaTrack* track, int* offsetY, int* topGap /*=NULL*/, int*
 
 	// Get track height
 	int height = (int)GetMediaTrackInfo_Value(track, "I_HEIGHTOVERRIDE");
-	if (height == 0)
+	void *chk = GetSetMediaTrackInfo(track,"I_TCPH",NULL);
+	if (chk) // should always be supported on 5.982+
+	{
+		height = *(int *)chk;
+	}
+	else if (height == 0)
 	{
 		int vZoom; GetConfig("vzoom2", vZoom);
 		height = GetTrackHeightFromVZoomIndex(track, vZoom);
@@ -2178,7 +2183,8 @@ int GetTrackHeight (MediaTrack* track, int* offsetY, int* topGap /*=NULL*/, int*
 		if (compact == 1)
 		{
 			RECT r;
-			GetClientRect(GetTcpTrackWnd(track), &r);
+			bool is_container;
+			GetClientRect(GetTcpTrackWnd(track,is_container), &r);
 			height = r.bottom - r.top;
 		}
 		// Check I_HEIGHTOVERRIDE against minimum height (i.e. changing theme resizes tracks that are below
@@ -2253,6 +2259,18 @@ int GetTrackEnvHeight (TrackEnvelope* envelope, int* offsetY, bool drawableRange
 		return 0;
 	}
 
+	if (GetEnvelopeInfo_Value)
+	{
+		WritePtr(offsetY, 
+			(int) GetMediaTrackInfo_Value(parent,"I_TCPY") + 
+			(int)GetEnvelopeInfo_Value(envelope,drawableRangeOnly ? "I_TCPY_USED" : "I_TCPY") 
+			);
+
+		return (int)GetEnvelopeInfo_Value(envelope,drawableRangeOnly ? "I_TCPH_USED" : "I_TCPH");
+	}
+
+	// legacy - REAPER v5.981 and earlier
+
 	// Prepare return variables and get track's height and offset
 	int envOffset = 0;
 	int envHeight = 0;
@@ -2260,7 +2278,8 @@ int GetTrackEnvHeight (TrackEnvelope* envelope, int* offsetY, bool drawableRange
 	int trackHeight = GetTrackHeight(track, (offsetY) ? (&trackOffset) : (NULL));
 
 	// Get first envelope's lane hwnd and cycle through the rest
-	HWND hwnd = GetWindow(GetTcpTrackWnd(track), GW_HWNDNEXT);
+	bool is_container;
+	HWND hwnd = GetWindow(GetTcpTrackWnd(track,is_container), GW_HWNDNEXT);
 	MediaTrack* nextTrack = CSurf_TrackFromID(1 + CSurf_TrackToID(track, false), false);
 	while (true)
 	{
@@ -2280,7 +2299,8 @@ int GetTrackEnvHeight (TrackEnvelope* envelope, int* offsetY, bool drawableRange
 		if ((MediaTrack*)hwndData == nextTrack)
 			break;
 
-		if (TrackEnvelope* currentEnvelope = HwndToEnvelope(hwnd))
+		POINT pt={0,0}; // ignored
+		if (TrackEnvelope* currentEnvelope = HwndToEnvelope(hwnd,pt))
 		{
 			if (currentEnvelope == envelope)
 			{
@@ -2858,11 +2878,26 @@ HWND GetMediaExplorerWnd ()
 	return FindReaperWndByPreparedString(s_name);
 }
 
-HWND GetMcpWnd ()
+HWND GetMcpWnd (bool &isContainer)
 {
+	isContainer = false;
 	if (HWND mixer = GetMixerWnd())
 	{
-		HWND hwnd = FindWindowEx(mixer, NULL, NULL, NULL);
+		HWND hwnd = FindWindowEx(mixer, NULL, "REAPERMCPDisplay", "");
+#ifdef __APPLE__
+		// workaround: old macOS swell FindWindowEx() is broken when searching by classname
+		char buf[1024];
+		if (hwnd && (!GetClassName(hwnd,buf,sizeof(buf)) || strcmp(buf,"REAPERMCPDisplay")))
+			hwnd=NULL;
+#endif
+		if (hwnd)
+		{
+			isContainer = true;
+			return hwnd;
+		}
+
+		// legacy - 5.x releases
+		hwnd = FindWindowEx(mixer, NULL, NULL, NULL);
 		while (hwnd)
 		{
 			if ((MediaTrack*)GetWindowLongPtr(hwnd, GWLP_USERDATA) != GetMasterTrack(NULL)) // skip master track
@@ -2873,11 +2908,26 @@ HWND GetMcpWnd ()
 	return NULL;
 }
 
-HWND GetTcpWnd ()
+HWND GetTcpWnd (bool &isContainer)
 {
+	static bool s_is_container;
 	static HWND s_hwnd = NULL;
+
 	if (!s_hwnd)
 	{
+		s_hwnd = FindWindowEx(g_hwndParent, NULL, "REAPERTCPDisplay", NULL);
+#ifdef __APPLE__
+		// workaround: old macOS swell FindWindowEx() is broken when searching by classname
+		char buf[1024];
+		if (s_hwnd && (!GetClassName(s_hwnd,buf,sizeof(buf)) || strcmp(buf,"REAPERTCPDisplay")))
+			s_hwnd=NULL;
+#endif
+		if (s_hwnd) s_is_container = true;
+	}
+
+	if (!s_hwnd)
+	{
+		// legacy - 5.x releases
 		MediaTrack* track = GetTrack(NULL, 0);
 		for (int i = 0; i < CountTracks(NULL); ++i)
 		{
@@ -2928,12 +2978,18 @@ HWND GetTcpWnd ()
 			SetMasterTrackVisibility(masterVis);
 		}
 	}
+
+	isContainer = s_is_container;
 	return s_hwnd;
 }
 
-HWND GetTcpTrackWnd (MediaTrack* track)
+HWND GetTcpTrackWnd (MediaTrack* track, bool &isContainer)
 {
-	HWND hwnd = GetWindow(GetTcpWnd(), GW_CHILD);
+	HWND par = GetTcpWnd(isContainer);
+	if (isContainer)
+		return par;
+
+	HWND hwnd = GetWindow(par, GW_CHILD);
 	do
 	{
 		if ((MediaTrack*)GetWindowLongPtr(hwnd, GWLP_USERDATA) == track)
@@ -3020,7 +3076,7 @@ HWND GetTrackView (HWND midiEditor)
 	return trackListHwnd;
 }
 
-MediaTrack* HwndToTrack (HWND hwnd, int* hwndContext)
+MediaTrack* HwndToTrack (HWND hwnd, int* hwndContext, POINT ptScreen)
 {
 	MediaTrack* track = NULL;
 	HWND hwndParent = GetParent(hwnd);
@@ -3028,8 +3084,35 @@ MediaTrack* HwndToTrack (HWND hwnd, int* hwndContext)
 
 	if (!track)
 	{
-		HWND tcp = GetTcpWnd();
-		if (hwndParent == tcp)                                               // hwnd is a track
+		bool is_container;
+		HWND tcp = GetTcpWnd(is_container);
+		if (is_container)
+		{
+			if (hwnd == tcp)
+			{
+				POINT ptloc = ptScreen;
+				ScreenToClient(hwnd,&ptloc);
+				int tracks = GetNumTracks();
+				for (int i = -1; i < tracks; ++i)
+				{
+					MediaTrack* chktrack = i<0 ? GetMasterTrack(NULL) : GetTrack(NULL, i);
+					void *p;
+					if (!(p=GetSetMediaTrackInfo(chktrack,"B_SHOWINTCP",NULL)) || !*(bool *)p) 
+						continue;
+					p = GetSetMediaTrackInfo(chktrack,"I_TCPY",NULL);
+					int ypos = p ? *(int *)p : 0;
+					p = GetSetMediaTrackInfo(chktrack,"I_TCPH",NULL);
+					int h = p ? *(int *)p : 0;
+					if (ptloc.y >= ypos && ptloc.y < ypos + h)
+					{
+						track = chktrack;
+						break;
+					}
+
+				}
+			}
+		}
+		else if (hwndParent == tcp)                                               // hwnd is a track
 			track = (MediaTrack*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 		else if (GetParent(hwndParent) == tcp)                               // hwnd is vu meter inside track
 			track = (MediaTrack*)GetWindowLongPtr(hwndParent, GWLP_USERDATA);
@@ -3042,13 +3125,50 @@ MediaTrack* HwndToTrack (HWND hwnd, int* hwndContext)
 
 	if (!track)
 	{
-		HWND mcp = GetMcpWnd();
+		bool is_container;
+		HWND mcp = GetMcpWnd(is_container);
 		HWND mixer = GetParent(mcp);
 		HWND mixerMaster = GetMixerMasterWnd();
 		HWND hwndPParent = GetParent(hwndParent);
 
-		if (hwndParent == mcp || hwndParent == mixer || hwndParent == mixerMaster)         // hwnd is a track
+		if (is_container)
+		{
+			if (hwnd == mcp)
+			{
+				POINT ptloc = ptScreen;
+				ScreenToClient(hwnd,&ptloc);
+				int tracks = GetNumTracks();
+				for (int i = 0; i < tracks; ++i)
+				{
+					MediaTrack* chktrack = GetTrack(NULL, i);
+					void *p;
+					if (!(p=GetSetMediaTrackInfo(chktrack,"B_SHOWINMIXER",NULL)) || !*(bool *)p) 
+						continue;
+					p = GetSetMediaTrackInfo(chktrack,"I_MCPX",NULL);
+					const int xpos = p ? *(int *)p : 0;
+					p = GetSetMediaTrackInfo(chktrack,"I_MCPW",NULL);
+					const int w = p ? *(int *)p : 0;
+					if (ptloc.x < xpos || ptloc.x >= xpos + w) 
+						continue;
+					p = GetSetMediaTrackInfo(chktrack,"I_MCPY",NULL);
+					const int ypos = p ? *(int *)p : 0;
+					p = GetSetMediaTrackInfo(chktrack,"I_MCPH",NULL);
+					const int h = p ? *(int *)p : 0;
+					if (ptloc.y >= ypos && ptloc.y < ypos + h)
+					{
+						track = chktrack;
+						break;
+					}
+				}
+			}
+			else if (mixerMaster && (hwnd == mixerMaster || hwndParent == mixerMaster))
+				track = GetMasterTrack(NULL);
+		}
+		else if (hwndParent == mcp || hwndParent == mixer || hwndParent == mixerMaster)         // hwnd is a track
+		{
 			track = (MediaTrack*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+			if (hwndParent == mixerMaster && !track) track = GetMasterTrack(NULL);
+		}
 		else if (hwndPParent == mcp || hwndPParent == mixer || hwndPParent == mixerMaster) // hwnd is vu meter inside track
 			track = (MediaTrack*)GetWindowLongPtr(hwndParent, GWLP_USERDATA);
 
@@ -3065,9 +3185,48 @@ MediaTrack* HwndToTrack (HWND hwnd, int* hwndContext)
 	return track;
 }
 
-TrackEnvelope* HwndToEnvelope (HWND hwnd)
+TrackEnvelope* HwndToEnvelope (HWND hwnd, POINT ptScreen)
 {
-	if (GetParent(hwnd) == GetTcpWnd())
+	bool is_container;
+	HWND tcp = GetTcpWnd(is_container);
+	if (is_container)
+	{
+		if (hwnd == tcp)
+		{
+			POINT ptloc = ptScreen;
+			ScreenToClient(hwnd,&ptloc);
+			const int tracks = GetNumTracks();
+			for (int i = -1; i < tracks; ++i)
+			{
+				MediaTrack* chktrack = i<0 ? GetMasterTrack(NULL) : GetTrack(NULL, i);
+				void *p;
+				if (!(p=GetSetMediaTrackInfo(chktrack,"B_SHOWINTCP",NULL)) || !*(bool *)p) 
+					continue;
+				p = GetSetMediaTrackInfo(chktrack,"I_TCPY",NULL);
+				int ypos = p ? *(int *)p : 0;
+				p = GetSetMediaTrackInfo(chktrack,"I_WNDH",NULL); // includes env lanes
+				int h = p ? *(int *)p : 0;
+				if (ptloc.y < ypos || ptloc.y >= ypos + h) continue;
+
+				// enumerate track envelopes
+				const int envs = CountTrackEnvelopes(chktrack);
+				for (int e = 0; e < envs; ++e)
+				{
+					TrackEnvelope* env = GetTrackEnvelope(chktrack,e);
+					if (GetEnvelopeInfo_Value) // should always be true if a container
+					{
+						double y = GetEnvelopeInfo_Value(env,"I_TCPY");
+						double h = GetEnvelopeInfo_Value(env,"I_TCPH");
+						if (ptloc.y >= ypos + y && ptloc.y < ypos + y + h)
+							return env;
+					}
+				}
+
+				break;
+			}
+		}
+	}
+	else if (GetParent(hwnd) == tcp)
 	{
 		TrackEnvelope* envelope = (TrackEnvelope*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 		if (ValidatePtr(envelope, "TrackEnvelope*"))

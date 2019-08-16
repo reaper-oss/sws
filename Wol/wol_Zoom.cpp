@@ -1,7 +1,7 @@
 /******************************************************************************
 / wol_Zoom.cpp
 /
-/ Copyright (c) 2014-2015 wol
+/ Copyright (c) 2014 and later wol
 / http://forum.cockos.com/member.php?u=70153
 / http://github.com/reaper-oss/sws
 /
@@ -45,6 +45,8 @@ void AdjustSelectedEnvelopeOrTrackHeight(COMMAND_T* ct, int val, int valhw, int 
 {
 	if (relmode > 0)
 	{
+		PreventUIRefresh(1);
+
 		VerticalZoomCenter scrollCenter = static_cast<VerticalZoomCenter>((int)ct->user > 2 ? (int)ct->user - 3 : (int)ct->user);
 		int height = AdjustRelative(relmode, (valhw == -1) ? BOUNDED(val, 0, 127) : (int)BOUNDED(16384.0 - (valhw | val << 7), 0.0, 16383.0));
 		if (TrackEnvelope* env = GetSelectedEnvelope(NULL))
@@ -82,6 +84,8 @@ void AdjustSelectedEnvelopeOrTrackHeight(COMMAND_T* ct, int val, int valhw, int 
 			SetTrackHeight(tr, SetToBounds(height + GetTrackHeight(tr, NULL), GetTcpTrackMinHeight(), GetCurrentTcpMaxHeight()));
 			SetArrangeScrollTo(tr, scrollCenter);
 		}
+
+		PreventUIRefresh(-1);
 	}
 }
 
@@ -89,6 +93,8 @@ void AdjustEnvelopeOrTrackHeightUnderMouse(COMMAND_T* ct, int val, int valhw, in
 {
 	if (relmode > 0)
 	{
+		PreventUIRefresh(1);
+
 		int height = AdjustRelative(relmode, (valhw == -1) ? BOUNDED(val, 0, 127) : (int)BOUNDED(16384.0 - (valhw | val << 7), 0.0, 16383.0));
 
 		TrackEnvelope* env = NULL;
@@ -143,6 +149,8 @@ void AdjustEnvelopeOrTrackHeightUnderMouse(COMMAND_T* ct, int val, int valhw, in
 
 		if (sEnv != GetSelectedEnvelope(NULL))
 			SetCursorContext(2, sEnv);
+
+		PreventUIRefresh(-1);
 	}
 }
 

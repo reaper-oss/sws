@@ -5,6 +5,8 @@ Loudness - high precision mode:
  - ReaScript: automatically disable high precision mode for NF_AnalyzeTakeLoudness2() (to ensure correct max. short-term / momentary positions)
  
 Issue 1117, Issue 1058: Support Measure grid line spacing
+
++Issue 455: Snapshots: Include track phase (polarity) in Full Track Mix, add separate Phase tickbox as custom filter
  
 New ReaScript functions:
 +Issue 974 (Lua example https://github.com/reaper-oss/sws/issues/974#issuecomment-386480161|here|):
@@ -16,6 +18,9 @@ New ReaScript functions:
  -NF_GetProjectStartupAction_CmdID()
  -NF_SetProjectStartupAction()
  -NF_ClearProjectStartupAction()
+
+New features:
++Snapshots: Add option to (not) prompt for deleting abandoned items when recalling snapshots which contain deleted tracks (snapshots will be recalled and abandoned items deleted without confirmation with this option disabled) (Issue 1073)
 
 !v2.10.0 #1 Featured build (February 6, 2019)
 Mega thanks to nofish and cfillion for their many contributions, and X-Raym for doing the tedious work of merging everything into a release.

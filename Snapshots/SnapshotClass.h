@@ -74,6 +74,7 @@ public:
     int m_iFXEn;
 	int m_iVis;
 	int m_iSel;
+	bool m_bPhase;
     WDL_PtrList<FXSnapshot> m_fx;
 	WDL_TypedBuf<char> m_sFXChain;
 	TrackSends m_sends;
@@ -101,19 +102,20 @@ public:
 #define PAN_MASK        0x002
 #define MUTE_MASK       0x004
 #define SOLO_MASK       0x008
-#define FXATM_MASK		0x010
-#define SENDS_MASK		0x020
-//#define SELONLY_MASK	0x040
-#define VIS_MASK		0x080
-#define SEL_MASK		0x100
-#define FXCHAIN_MASK	0x200
+#define FXATM_MASK      0x010
+#define SENDS_MASK      0x020
+//#define SELONLY_MASK  0x040
+#define VIS_MASK        0x080
+#define SEL_MASK        0x100
+#define FXCHAIN_MASK    0x200
+#define PHASE_MASK      0x400
 #define ALL_MASK        0xFEF // large enough for forward compat, leave out FXATM
-#define MIX_MASK		(VOL_MASK | PAN_MASK | MUTE_MASK | SOLO_MASK | FXCHAIN_MASK | SENDS_MASK)
+#define MIX_MASK        (VOL_MASK | PAN_MASK | MUTE_MASK | SOLO_MASK | FXCHAIN_MASK | SENDS_MASK | PHASE_MASK)
 
 // Map controls to mask elements
-const int cSSMasks[] = { VOL_MASK, PAN_MASK, MUTE_MASK, SOLO_MASK, SENDS_MASK, VIS_MASK,       SEL_MASK,      FXCHAIN_MASK };
-const int cSSCtrls[] = { IDC_VOL,  IDC_PAN,  IDC_MUTE,  IDC_SOLO,  IDC_SENDS,  IDC_VISIBILITY, IDC_SELECTION, IDC_FXCHAIN }; 
-#define MASK_CTRLS 8
+const int cSSMasks[] = { VOL_MASK, PAN_MASK, MUTE_MASK, SOLO_MASK, SENDS_MASK, VIS_MASK,       SEL_MASK,      FXCHAIN_MASK, PHASE_MASK };
+const int cSSCtrls[] = { IDC_VOL,  IDC_PAN,  IDC_MUTE,  IDC_SOLO,  IDC_SENDS,  IDC_VISIBILITY, IDC_SELECTION, IDC_FXCHAIN,  IDC_PHASE }; 
+#define MASK_CTRLS 9
 
 class Snapshot
 {

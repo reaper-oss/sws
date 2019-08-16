@@ -59,6 +59,7 @@ public:
 	void RenameCurrent();
 	void SetFilterType(int iType) { m_iSelType = iType; }
 	int  GetFilterType() { return m_iSelType; }
+	static bool GetPromptOnDeleted(); // NF: #1073
 	
 protected:
 	void OnInitDlg();

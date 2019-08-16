@@ -1929,6 +1929,19 @@ HMENU ResourcesWnd::OnContextMenu(int _x, int _y, bool* _wantDefaultItems)
 	return hMenu;
 }
 
+HWND ResourcesWnd::IDC_FILTER_GetFocus(HWND _hwnd, MSG* _msg)
+{
+	HWND h = GetDlgItem(_hwnd, IDC_FILTER);
+#ifdef _WIN32
+	if (_msg->hwnd == h)
+#else
+	if (GetFocus() == h)
+#endif
+		return h;
+	else
+		return NULL;
+}
+
 int ResourcesWnd::OnKey(MSG* _msg, int _iKeyState) 
 {
 	if (_msg->message == WM_KEYDOWN)
@@ -1941,25 +1954,40 @@ int ResourcesWnd::OnKey(MSG* _msg, int _iKeyState)
 					OnCommand(RENAME_MSG, 0);
 					return 1;
 				case VK_DELETE:
-					ClearDeleteSlotsFiles(g_resType, 1);
-					return 1;
+				{
+					// #1119, don't block Del key in Filter
+					if (IDC_FILTER_GetFocus(m_hwnd, _msg))
+						return 0;
+					else
+					{
+						ClearDeleteSlotsFiles(g_resType, 1);
+						return 1;
+					}
+				}
 				case VK_INSERT:
 					InsertAtSelectedSlot();
 					return 1;
 				case VK_RETURN:
-					((ResourcesView*)GetListView())->Perform(g_dblClickPrefs[g_resType]);
-					return 1;
+				{
+					// #1119, Enter key in Filter -> Focus list
+					if (IDC_FILTER_GetFocus(m_hwnd, _msg))
+					{
+						(SetFocus(GetListView()->GetHWND()));
+						return 1;
+					}
+					else
+					{
+						((ResourcesView*)GetListView())->Perform(g_dblClickPrefs[g_resType]);
+						return 1;
+					}
+				}
+
 			}
 		}
 		// ctrl+A => select all
 		else if (_iKeyState == LVKF_CONTROL && _msg->wParam == 'A')
 		{
-			HWND h = GetDlgItem(m_hwnd, IDC_FILTER);
-#ifdef _WIN32
-			if (_msg->hwnd == h)
-#else
-			if (GetFocus() == h)
-#endif
+			if (HWND h = IDC_FILTER_GetFocus(m_hwnd, _msg))
 			{
 				SetFocus(h);
 				SendMessage(h, EM_SETSEL, 0, -1);

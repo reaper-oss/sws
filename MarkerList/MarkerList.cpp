@@ -404,8 +404,19 @@ int SWS_MarkerListWnd::OnKey(MSG* msg, int iKeyState)
 	{
 		if (msg->wParam == VK_DELETE)
 		{
-			OnCommand(DELETE_MSG, 0);
-			return 1;
+			// #1119, don't block Del key in Filter textbox
+			HWND h = GetDlgItem(m_hwnd, IDC_FILTER);
+#ifdef _WIN32
+			if (msg->hwnd == h)
+#else
+			if (GetFocus() == h)
+#endif
+				return 0;
+			else
+			{ 
+				OnCommand(DELETE_MSG, 0);
+				return 1;
+			}
 		}
 		else if (msg->wParam == VK_RETURN)
 		{

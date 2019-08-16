@@ -32,6 +32,7 @@
 #include "SnM_Track.h"
 #include "SnM_Util.h"
 #include "WDL/projectcontext.h"
+#include "../reaper/localize.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -597,6 +598,18 @@ void RemoveAllEnvsSelTracks(COMMAND_T* _ct)
 
 void RemoveAllEnvsSelTracksNoChunk(COMMAND_T* _ct)
 {
+	// #1175
+	bool prompt = GetPrivateProfileInt("Misc", "RemoveAllEnvsSelTracksPrompt", 0, g_SNM_IniFn.Get()) ? true : false;
+	if (prompt && SNM_CountSelectedTracks(NULL, true)) 
+	{
+		int r = MessageBox(GetMainHwnd(),
+			__LOCALIZE("All envelopes for selected tracks will be removed.\nDo you want to continue?", "sws_DLG_155"),
+			__LOCALIZE("S&M - Question", "sws_DLG_155"),
+			MB_OKCANCEL);
+		if (r == IDCANCEL)
+			return;
+	}
+
 	bool updated = false;
 	TrackEnvelope *tempoEnv = NULL;
 

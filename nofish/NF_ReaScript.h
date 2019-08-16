@@ -49,6 +49,9 @@ const char*    NF_GetSWSMarkerRegionSub(int mkrRgnIdx);
 bool           NF_SetSWSMarkerRegionSub(const char* mkrRgnSub, int mkrRgnIdx);
 void           NF_UpdateSWSMarkerRegionSubWindow();
 
+bool           NF_TakeFX_GetModuleName(MediaItem* item, int fx, char* nameOut, int nameOutSz);
+
+
 // #974
 void            NF_GetGlobalStartupAction_Desc(char *buf, int bufSize);
 void            NF_GetGlobalStartupAction_CmdID(char *buf, int bufSize);
@@ -59,3 +62,6 @@ void            NF_GetProjectStartupAction_Desc(char *buf, int bufSize);
 void            NF_GetProjectStartupAction_CmdID(char *buf, int bufSize);
 bool            NF_SetProjectStartupAction(const char* buf);
 bool            NF_ClearProjectStartupAction();
+
+
+

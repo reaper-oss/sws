@@ -37,7 +37,9 @@
 #include "../Misc/Analysis.h" // #781
 #include "../Breeder/BR_Loudness.h" // #880
 #include "../SnM/SnM_Notes.h" // #755
-#include "../SnM/SnM_Util.h" // #974, SNM_NamedCommandLookup(), CheckSwsMacroScriptNumCustomId()
+#include "../SnM/SnM_Project.h" // #974
+#include "../SnM/SnM_Chunk.h" // SNM_FXSummaryParser
+#include "../SnM/SnM_Util.h" // _snprintfSafe
 
 
 // #781, peak/RMS
@@ -307,9 +309,27 @@ void NF_UpdateSWSMarkerRegionSubWindow()
 	NF_DoUpdateSWSMarkerRegionSubWindow();
 }
 
-// #974 Global/project startup actions
-extern WDL_FastString g_globalStartupAction; extern SWSProjConfig<WDL_FastString> g_prjLoadActions; // SnM_Project.cpp
 
+bool NF_TakeFX_GetModuleName(MediaItem * item, int fx, char * nameOut, int nameOutSz)
+{
+	WDL_FastString module;
+	bool found = false;
+
+	if (item)
+	{
+		SNM_FXSummaryParser takeFxs(item);
+		if (SNM_FXSummary* summary = takeFxs.GetSummaries()->Get(fx))
+		{
+			module = summary->m_realName;
+			found = true;
+		}
+	}
+
+	_snprintfSafe(nameOut, nameOutSz, "%s", module.Get());
+	return found;
+}
+
+extern WDL_FastString g_globalStartupAction; extern SWSProjConfig<WDL_FastString> g_prjLoadActions;
 // desc == true: return action text, false: return command ID number (native actions) or named command (extension/ReaScript)
 void NF_GetGlobalStartupAction(char* buf, int bufSize, bool desc)
 {
@@ -352,6 +372,7 @@ void NF_GetGlobalStartupAction_CmdID(char *buf, int bufSize)
 	NF_GetGlobalStartupAction(buf, bufSize, false);
 }
 
+
 bool NF_SetGlobalStartupAction(const char * buf)
 {
 	if (!g_globalStartupAction.Get())
@@ -386,6 +407,7 @@ bool NF_ClearGlobalStartupAction()
 	}
 	return false;
 }
+
 
 void NF_GetProjectStartupAction(char* buf, int bufSize, bool desc)
 {
@@ -459,3 +481,5 @@ bool NF_ClearProjectStartupAction()
 	}
 	return false;
 }
+
+

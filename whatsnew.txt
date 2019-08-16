@@ -34,6 +34,7 @@ New ReaScript functions:
  -NF_GetProjectStartupAction_CmdID()
  -NF_SetProjectStartupAction()
  -NF_ClearProjectStartupAction()
++NF_TakeFX_GetModuleName() (take version of already existing BR_TrackFX_GetModuleName())
 
 Other changes:
 - Enter key in Resources Filter textbox focuses list (Issue 1119)

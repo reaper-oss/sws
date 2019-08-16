@@ -1,3 +1,9 @@
+Fixes:
+Loudness - high precision mode:
+ - Fix potential crash when analyzing items shorter than 3 seconds
+ - Disable creating graph, disable go to max. short-term / momentary (Issue 1120) (these are currently not implemented for high precision mode)
+ - ReaScript: automatically disable high precision mode for NF_AnalyzeTakeLoudness2() (to ensure correct max. short-term / momentary positions)
+ 
 New ReaScript functions:
 +Issue 974 (Lua example https://github.com/reaper-oss/sws/issues/974#issuecomment-386480161|here|):
  -NF_GetGlobalStartupAction_Desc()

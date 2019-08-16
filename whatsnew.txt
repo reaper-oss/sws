@@ -15,7 +15,9 @@ Fixes:
 +Issue 1140: "Xenakios/SWS: Rename takes and source files..."
  - automatically delete old .reapeaks files (also for "Xenakios/SWS: Rename take source files...")
  - don't double-append file extension if already contained in new filename/takename
- +Fixed flickering in some vertical zooming actions.
++Fix flickering in some vertical zooming actions
++Fix 'Xenakios/SWS: Normalize selected takes to dB value...' if take polarity is flipped (report https://forum.cockos.com/showthread.php?t=219269|here|)
++Fix various other Xenakios take volume actions if take polarity is flipped
  
 New ReaScript functions:
 +Issue 974 (Lua example https://github.com/reaper-oss/sws/issues/974#issuecomment-386480161|here|):

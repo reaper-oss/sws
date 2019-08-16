@@ -1,8 +1,11 @@
 New features:
 +Snapshots: Add option to (not) prompt for deleting abandoned items when recalling snapshots which contain deleted tracks (snapshots will be recalled and abandoned items deleted without confirmation with this option disabled) (Issue 1073)
 
++New actions (Main section):
+ - SWS/NF: Toggle render speed (apply FX/render stems) realtime/not limited (Issue 1065)
+
 Fixes:
-Loudness - high precision mode:
++Loudness - high precision mode:
  - Fix potential crash when analyzing items shorter than 3 seconds
  - Disable creating graph, disable go to max. short-term / momentary (Issue 1120) (these are currently not implemented for high precision mode)
  - ReaScript: automatically disable high precision mode for NF_AnalyzeTakeLoudness2() (to ensure correct max. short-term / momentary positions)

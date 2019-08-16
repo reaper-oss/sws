@@ -999,12 +999,7 @@ bool DeleteTakeAndMedia(int _mode)
 								// set all media offline (yeah, EACH TIME! Fails otherwise: http://github.com/reaper-oss/sws/issues/175#c3)
 								Main_OnCommand(40100,0); 
 								if (SNM_DeleteFile(pcm->GetFileName(), true))
-								{
-									char peakFn[SNM_MAX_PATH] = "";
-									GetPeakFileName(pcm->GetFileName(), peakFn, sizeof(peakFn));
-									if (peakFn && *peakFn != '\0')
-										SNM_DeleteFile(peakFn, true); // no delete check (peaks files can be absent)
-								}
+									SNM_DeletePeakFile(pcm->GetFileName(), true); // no delete check (peaks files can be absent)
 								else
 									deleteFileOK = false;
 							}

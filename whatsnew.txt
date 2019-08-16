@@ -13,6 +13,9 @@ Fixes:
 +Issue 455: Snapshots: Include track phase (polarity) in Full Track Mix, add separate Phase tickbox as custom filter
 +Issue 1117, Issue 1058: Support Measure grid line spacing
 +Issue 1119: Don't block Del key in Filter textbox (Marker list, Track list, Resources)
++Issue 1140: "Xenakios/SWS: Rename takes and source files..."
+ - automatically delete old .reapeaks files (also for "Xenakios/SWS: Rename take source files...")
+ - don't double-append file extension if already contained in new filename/takename
  
 New ReaScript functions:
 +Issue 974 (Lua example https://github.com/reaper-oss/sws/issues/974#issuecomment-386480161|here|):
@@ -27,6 +30,9 @@ New ReaScript functions:
 
 Other changes:
 - Enter key in Resources Filter textbox focuses list (Issue 1119)
+- "Xenakios/SWS: Rename takes and source files...", "Xenakios/SWS: Rename take source files...": add '(no undo)' in action name
+
+!v2.10.0 #1 Featured build (
 
 !v2.10.0 #1 Featured build (February 6, 2019)
 Mega thanks to nofish and cfillion for their many contributions, and X-Raym for doing the tedious work of merging everything into a release.

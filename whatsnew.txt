@@ -17,12 +17,11 @@ Fixes:
  - display [modified] in notes window if global notes dirty
  - additionally to saving when project is saved, can be saved via notes window context menu (global notes are stored in <REAPER resource path>/SWS_global notes.txt)
 + fix flickering in some vertical zooming actions
-+ update various BR_ APIs for new TCP/EnvCP/MCP architecture -- requires 5.981+dev0807 or later (thanks Justin!)
 + fix 'Xenakios/SWS: Normalize selected takes to dB value...' if take polarity is flipped (report https://forum.cockos.com/showthread.php?t=219269|here|)
 + fix various other Xenakios take volume actions if take polarity is flipped
 + Loudness - high precision mode:
- - Fix potential crash when analyzing items shorter than 3 seconds
- - Disable creating graph, disable go to max. short-term / momentary (Issue 1120) (these are currently not implemented for high precision mode)
+ - fix potential crash when analyzing items shorter than 3 seconds
+ - disable creating graph, disable go to max. short-term / momentary (Issue 1120) (these are currently not implemented for high precision mode)
  - ReaScript: automatically disable high precision mode for NF_AnalyzeTakeLoudness2() (to ensure correct max. short-term / momentary positions)
  
 New ReaScript functions:
@@ -38,9 +37,10 @@ New ReaScript functions:
 + NF_TakeFX_GetModuleName() (take version of already existing BR_TrackFX_GetModuleName())
 
 Other changes:
-- update various BR_ APIs for new TCP/EnvCP/MCP architecture (thanks Justin!)
-- Enter key in Resources Filter textbox focuses list (Issue 1119)
-- "Xenakios/SWS: Rename takes and source files...", "Xenakios/SWS: Rename take source files...": add '(no undo)' in action name
++ update various BR_ APIs for new TCP/EnvCP/MCP architecture (thanks Justin!)
++ Issue 1119: Enter key in Resources Filter textbox focuses list
++ Issue 1175: "SWS/S&M: Remove all envelopes for selected tracks" - prompt before executing action, may be overridden by setting <REAPER resource path>/S&M.ini/[Misc]/RemoveAllEnvsSelTracksPrompt=0
++ "Xenakios/SWS: Rename takes and source files...", "Xenakios/SWS: Rename take source files...": add '(no undo)' in action name
 
 !v2.10.0 #1 Featured build (February 6, 2019)
 Mega thanks to nofish and cfillion for their many contributions, and X-Raym for doing the tedious work of merging everything into a release.

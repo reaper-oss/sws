@@ -1120,6 +1120,9 @@ error:
 			goto error;
 		}
 
+		// Optional API functions (check for NULL if using!) 
+		IMPAP_OPT(GetEnvelopeInfo_Value); // 5.982+
+
 		// Look for SWS dupe/clone
 		if (rec->GetFunc("SNM_GetIntConfigVar"))
 		{

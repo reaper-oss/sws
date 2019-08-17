@@ -68,7 +68,8 @@ static int  g_mousePlaybackReaperOptions    = 0;
 
 static void MousePlaybackTimer ()
 {
-	PreventUIRefresh(-1);
+	// do not do this, it is generally unsafe: PreventUIRefresh(-1);
+	// (is this timer necessary with this removed?)
 	SetConfig("viewadvance", g_mousePlaybackReaperOptions);
 	plugin_register("-timer", (void*)MousePlaybackTimer);
 }
@@ -95,7 +96,10 @@ static void MousePlaybackPlayState (bool play, bool pause, bool rec)
 		{
 			g_mousePlaybackForceMoveView = false;
 
-			PreventUIRefresh(1);
+			// see https://forum.cockos.com/showthread.php?t=224214
+			//do not do this, it is generally unsafe: PreventUIRefresh(1);
+
+
 			SetConfig("viewadvance", ClearBit(g_mousePlaybackReaperOptions, 3));
 			plugin_register("timer", (void*)MousePlaybackTimer);
 		}

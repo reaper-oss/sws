@@ -219,8 +219,8 @@ private:
 		EnvPoint (double position, double value, int shape, int sig, bool selected, int partial, double bezier);
 		explicit EnvPoint (double position);
 		bool operator==(const EnvPoint &) const;
-		bool ReadLine (const LineParser& lp, double playrate, int faderMode); // use only once per object (for efficiency, tempoStr is never deleted, only appended too)
-		void Append (WDL_FastString& string, bool tempoPoint, double playrate, int faderMode);
+		bool ReadLine (const LineParser& lp, double playrate); // use only once per object (for efficiency, tempoStr is never deleted, only appended too)
+		void Append (WDL_FastString& string, bool tempoPoint, double playrate);
 		struct ComparePoints
 		{
 			bool operator() (const EnvPoint& first, const EnvPoint& second)

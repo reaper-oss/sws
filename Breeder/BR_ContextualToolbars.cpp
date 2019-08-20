@@ -1647,6 +1647,9 @@ LRESULT CALLBACK BR_ContextualToolbar::ToolbarWndCallback (HWND hwnd, UINT uMsg,
 					Main_OnCommand(toolbarWndData->toggleAction, 0);
 
 					SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)wndProc);
+					// focus last focused window when toolbar is auto closed, p=2171694
+					if (toolbarWndData->lastFocusedHwnd)
+						::SetFocus(toolbarWndData->lastFocusedHwnd);
 					m_callbackToolbars.Delete(id, true);
 				}
 			}

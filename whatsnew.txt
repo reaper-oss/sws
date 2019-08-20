@@ -20,6 +20,7 @@ Fixes:
 + fix flickering in some vertical zooming actions
 + fix 'Xenakios/SWS: Normalize selected takes to dB value...' if take polarity is flipped (report https://forum.cockos.com/showthread.php?t=219269|here|)
 + fix various other Xenakios take volume actions if take polarity is flipped
+- Contextual toolbars: restore focus to last focused window when toolbar is auto closed (report https://forum.cockos.com/showthread.php?t=218978|here|)
 + Loudness - high precision mode:
  - fix potential crash when analyzing items shorter than 3 seconds
  - disable creating graph, disable go to max. short-term / momentary (Issue 1120) (these are currently not implemented for high precision mode)

@@ -378,10 +378,10 @@ bool NF_SetGlobalStartupAction(const char * buf)
 	if (!g_globalStartupAction.Get())
 		return false;
 		
-	if (int cmdId = SNM_NamedCommandLookup(buf))
+	if (SNM_NamedCommandLookup(buf))
 	{
 		// more checks: http://forum.cockos.com/showpost.php?p=1252206&postcount=1618
-		if (int tstNum = CheckSwsMacroScriptNumCustomId(buf))
+		if (CheckSwsMacroScriptNumCustomId(buf))
 		{
 			return false;
 		}
@@ -454,10 +454,10 @@ bool NF_SetProjectStartupAction(const char* buf)
 	if (!g_prjLoadActions.Get())
 		return false;
 
-	if (int cmdId = SNM_NamedCommandLookup(buf))
+	if (SNM_NamedCommandLookup(buf))
 	{
 		// more checks: http://forum.cockos.com/showpost.php?p=1252206&postcount=1618
-		if (int tstNum = CheckSwsMacroScriptNumCustomId(buf))
+		if (CheckSwsMacroScriptNumCustomId(buf))
 		{
 			return false;
 		}

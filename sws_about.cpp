@@ -58,7 +58,7 @@ INT_PTR WINAPI doAbout(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case WM_INITDIALOG:
 		{
 			char cVersion[256];
-			_snprintfSafe(cVersion, sizeof(cVersion), "%s %d.%d.%d #%d", __LOCALIZE("Version","sws_DLG_109"), SWS_VERSION);
+			_snprintfSafe(cVersion, sizeof(cVersion), "%s %d.%d.%d #%d %s", __LOCALIZE("Version","sws_DLG_109"), SWS_VERSION, "+dev0820");
 			char *p=strstr(cVersion, " #0");
 			if (p) *p=0;
 

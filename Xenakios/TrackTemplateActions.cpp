@@ -72,11 +72,15 @@ void DoOpenTemplate(int iNum, bool bProject)
 		MessageBox(g_hwndParent, __LOCALIZE("No templates at all were found!","sws_mbox"),__LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 		return;
 	}
+	double runningReaVersion = atof(GetAppVersion());
 	for (int i = 0; i < (int)templates.size(); i++)
 	{
 		const char* pFilename = strrchr(templates[i].c_str(), PATH_SLASH_CHAR);
 		if (pFilename && pFilename[1] && iNum == atol(pFilename+1))
 		{
+			//  Main_openProject() supports noprompt: and template: prefixes since R5.983
+			if (bProject && (runningReaVersion >= 5.983))
+				templates[i].insert(0, "template:");
 			Main_openProject((char*)templates[i].c_str());
 			return;
 		}

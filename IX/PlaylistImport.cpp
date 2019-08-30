@@ -31,16 +31,10 @@
 
 struct SPlaylistEntry
 {
-	SPlaylistEntry() : length(0), exists(false) { }
-	~SPlaylistEntry() { }
-
 	double length;
 	string title;
 	string path;
 	bool exists;
-
-	static bool isMissing(const SPlaylistEntry &e) { return !e.exists; }
-	static bool isStreaming(const SPlaylistEntry &e) { return e.length < 0; }
 };
 
 // Fill outbuf with filenames retrieved from playlist
@@ -68,7 +62,7 @@ void ParseM3U(string listpath, vector<SPlaylistEntry> &filelist)
 		// Streaming media should have length -1
 		while(!file.eof())
 		{
-			SPlaylistEntry e;
+			SPlaylistEntry e{};
 
 			file.getline(buf, sizeof(buf));
 			string str = buf;
@@ -192,7 +186,8 @@ void ParsePLS(string listpath, vector<SPlaylistEntry> &filelist)
 	}
 
 	// Remove streaming media
-	filelist.erase(remove_if(filelist.begin(), filelist.end(), &SPlaylistEntry::isStreaming), filelist.end());
+	filelist.erase(remove_if(filelist.begin(), filelist.end(),
+		[](const SPlaylistEntry &e) { return e.length < 0; }), filelist.end());
 
 	file.close();
 }
@@ -230,9 +225,8 @@ void PlaylistImport(COMMAND_T* ct)
 
 	// Validate files
 	size_t badfiles = 0;
-	for(size_t i = 0; i < filelist.size(); i++)
+	for(SPlaylistEntry &e : filelist)
 	{
-		SPlaylistEntry &e = filelist[i];
 		e.exists = file_exists(e.path.c_str());
 
 		if(!e.exists)
@@ -248,12 +242,13 @@ void PlaylistImport(COMMAND_T* ct)
 		ss << __LOCALIZE("The following files cannot be found. Create items for them anyway?\n","sws_mbox");
 
 		size_t n = 0;
-		for(vector<SPlaylistEntry>::const_iterator it = filelist.begin(); it != filelist.end() && n < limit; ++it)
-		{
-			if(!it->exists)
+		for(const SPlaylistEntry &e : filelist) {
+			if(!e.exists)
 			{
-				ss << "\n " << it->path;
-				++n;
+				ss << "\n " << e.path;
+
+				if(++n >= limit)
+					break;
 			}
 		}
 
@@ -264,7 +259,8 @@ void PlaylistImport(COMMAND_T* ct)
 		case IDCANCEL:
 			return;
 		case IDNO:
-			filelist.erase(remove_if(filelist.begin(), filelist.end(), &SPlaylistEntry::isMissing), filelist.end());
+			filelist.erase(remove_if(filelist.begin(), filelist.end(),
+				[](const SPlaylistEntry &e) { return !e.exists; }), filelist.end());
 			break;
 		}
 	}
@@ -284,10 +280,8 @@ void PlaylistImport(COMMAND_T* ct)
 
 	// Add new items to track
 	double pos = 0.0;
-	for(size_t i = 0; i < filelist.size(); i++)
+	for(const SPlaylistEntry &e : filelist)
 	{
-		const SPlaylistEntry &e = filelist[i];
-
 		PCM_source *pSrc = PCM_Source_CreateFromFile(e.path.c_str());
 		if(!pSrc)
 			continue;

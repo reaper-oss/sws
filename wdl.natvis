@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?> 
-<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
-  <Type Name="WDL_FastString">
-    <DisplayString Condition="m_hb.m_buf == 0">empty</DisplayString>
-    <DisplayString>{((const char*)m_hb.m_buf),s}</DisplayString>
-    <StringView>(const char*)m_hb.m_buf</StringView>
-  </Type>
-</AutoVisualizer>

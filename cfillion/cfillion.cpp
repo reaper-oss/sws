@@ -28,7 +28,7 @@
 #include "stdafx.h"
 #include "cfillion.hpp"
 
-#include "../reaper/localize.h"
+#include "reaper/localize.h"
 #include "version.h"
 
 #ifdef _WIN32

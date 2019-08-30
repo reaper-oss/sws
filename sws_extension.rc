@@ -186,7 +186,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "&What's new...",IDC_INFO,236,7,52,14
     LTEXT           "SWS/S&&M Extension, a REAPER plugin.",IDC_STATIC,7,7,150,8
-    LTEXT           "Version String",IDC_VERSION,7,15,150,8
+    LTEXT           "Version String",IDC_VERSION,7,15,200,8
     EDITTEXT        IDC_EDIT,7,25,281,82,ES_MULTILINE | ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL | WS_HSCROLL
     LTEXT           "For more information and latest downloads, visit the SWS website:",IDC_STATIC,7,112,214,8
     CONTROL         "",IDC_WEBSITE,"Button",BS_OWNERDRAW | WS_TABSTOP,7,120,241,11

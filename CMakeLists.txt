@@ -285,7 +285,7 @@ add_subdirectory(Xenakios)
 add_subdirectory(BuildUtils)
 
 set(SWS_VERSION_REGEX "^#define SWS_VERSION ([0-9]+),([0-9]+),([0-9]+),([0-9]+)$")
-file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/version.h" SWS_VERSION_DEF REGEX
+file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/version.h.in" SWS_VERSION_DEF REGEX
   "${SWS_VERSION_REGEX}")
 foreach(pair "1;MAJOR" "2;MINOR" "3;PATCH" "4;TWEAK")
   list(GET pair 0 capture)
@@ -334,3 +334,5 @@ set(CPACK_NSIS_PACKAGE_NAME "SWS Extension v${CPACK_PACKAGE_VERSION} ${ARCH_NAME
 set(CPACK_NSIS_CPUBITS ${CPUBITS})
 
 include(CPack)
+
+configure_file(version.h.in version.h)

@@ -30,7 +30,7 @@
 #include "BR_Update.h"
 #include "BR_Util.h"
 #include "../url.h"
-#include "../version.h"
+#include "version.h"
 #include "../SnM/SnM_Dlg.h"
 #include "../SnM/SnM_Util.h"
 #include "../reaper/localize.h"

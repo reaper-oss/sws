@@ -1,0 +1,26 @@
+target_sources(sws
+PRIVATE
+  SnM.cpp
+  SnM_Chunk.cpp
+  SnM_CSurf.cpp
+  SnM_CueBuss.cpp
+  SnM_Cyclactions.cpp
+  SnM_Dlg.cpp
+  SnM_Find.cpp
+  SnM_FX.cpp
+  SnM_FXChain.cpp
+  SnM_Item.cpp
+  SnM_LiveConfigs.cpp
+  SnM_Marker.cpp
+  SnM_ME.cpp
+  SnM_Misc.cpp
+  SnM_Notes.cpp
+  SnM_Project.cpp
+  SnM_RegionPlaylist.cpp
+  SnM_Resources.cpp
+  SnM_Routing.cpp
+  SnM_Track.cpp
+  SnM_Util.cpp
+  SnM_VWnd.cpp
+  SnM_Window.cpp
+)

@@ -932,7 +932,7 @@ typedef struct
 MediaTrack* g_ReferenceTrack=0;
 bool g_ReferenceTrackSolo=false;
 double g_RefMasterVolume=1.0;
-GUID g_RefTrackGUID={ -1, }; // Set to invalid GUID
+GUID g_RefTrackGUID={}; // Set to invalid GUID
 vector<t_track_solostate> g_RefTrackSolostates;
 
 void DoSetSelTrackAsRefTrack(COMMAND_T*)

@@ -1,0 +1,25 @@
+target_sources(sws
+PRIVATE
+  CommandHandler.cpp
+  Envelope.cpp
+  EnvelopeCommands.cpp
+  FNG.cpp
+  GrooveCommands.cpp
+  GrooveDialog.cpp
+  GrooveTemplates.cpp
+  MediaItemCommands.cpp
+  MidiLaneCommands.cpp
+  MiscCommands.cpp
+  RprException.cpp
+  RprItem.cpp
+  RprMidiCCLane.cpp
+  RprMidiEvent.cpp
+  RprMidiTake.cpp
+  RprMidiTemplate.cpp
+  RprNode.cpp
+  RprStateChunk.cpp
+  RprTake.cpp
+  RprTrack.cpp
+  StringUtil.cpp
+  TimeMap.cpp
+)

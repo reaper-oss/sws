@@ -327,19 +327,6 @@ HWND GetRulerWnd()
 	return GetRulerWndAlt(); // BR: will take care of any localization issues
 }
 
-// Output string must be 41 bytes minimum.  out is returned as a convenience.
-char* GetHashString(const char* in, char* out)
-{
-	WDL_SHA1 sha;
-	sha.add(in, (int)strlen(in));
-	char hash[20];
-	sha.result(hash);
-	for (int i = 0; i < 20; i++)
-		sprintf(out + i*2, "%02X", (unsigned char)(hash[i] & 0xFF));
-	out[40] = 0;
-	return out;
-}
-
 // overrides the native GetTrackGUID(): returns a special GUID for the master track
 // (useful for persistence as no GUID is stored in RPP files for the master..)
 // note: TrackToGuid(NULL) will return also NULL, contrary to GetTrackGUID(NULL)

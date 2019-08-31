@@ -32,8 +32,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include "WDL/ptrlist.h"
-#include "WDL/wdlstring.h"
+#include <WDL/ptrlist.h>
+#include <WDL/wdlstring.h>
 
 class IntStack
 {

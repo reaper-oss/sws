@@ -1,0 +1,16 @@
+target_sources(sws
+PRIVATE
+  Adam.cpp
+  Analysis.cpp
+  Context.cpp
+  EditCursor.cpp
+  FolderActions.cpp
+  ItemParams.cpp
+  ItemSel.cpp
+  Macros.cpp
+  Misc.cpp
+  ProjPrefs.cpp
+  RecCheck.cpp
+  TrackParams.cpp
+  TrackSel.cpp
+)

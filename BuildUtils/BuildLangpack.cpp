@@ -1,21 +1,21 @@
-
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
+
 #ifndef _WIN32
-#define stricmp strcasecmp
+#  define stricmp strcasecmp
 #endif
 
-#include "../../WDL/wdltypes.h"
-#include "../../WDL/assocarray.h"
-#include "../../WDL/ptrlist.h"
-#include "../../WDL/wdlstring.h"
+#include <WDL/wdltypes.h>
+#include <WDL/assocarray.h>
+#include <WDL/ptrlist.h>
+#include <WDL/wdlstring.h>
 
 #ifdef _WIN32
-#define FNV64_IV ((WDL_UINT64)(0xCBF29CE484222325i64))
+#  define FNV64_IV ((WDL_UINT64)(0xCBF29CE484222325i64))
 #else
-#define FNV64_IV ((WDL_UINT64)(0xCBF29CE484222325LL))
+#  define FNV64_IV ((WDL_UINT64)(0xCBF29CE484222325LL))
 #endif
 
 WDL_UINT64 FNV64(WDL_UINT64 h, const unsigned char* data, int sz)
@@ -130,7 +130,7 @@ WDL_UINT64 outputLine(const char *strv, int casemode)
       else 
       {
         fprintf(stderr,"ERROR: unknown escape seq in '%s' at '%s'\n",strv,p);
-      	exit(1);
+        exit(1);
       }
       p++;
     }
@@ -484,8 +484,8 @@ int main(int argc, char **argv)
       "; is not accurate for that context.\n"
       "; You can enlarge windows using 5CA1E00000000000=scale, for example:\n"
       ";     [sws_DLG_109] ; IDD_ABOUT\n"
-	  ";     5CA1E00000000000=1.2\n"
-	  "; This makes the about box 1.2x wider than default.\n"
+      ";     5CA1E00000000000=1.2\n"
+      "; This makes the about box 1.2x wider than default.\n"
       "; Do not change action tags like SWS:, SWS/S&M:, etc (such strings\n"
       "; would be ignored).\n"
       "; Once translated, the SWS LangPack has to be merged with the main REAPER one:\n"
@@ -522,9 +522,9 @@ int main(int argc, char **argv)
       {
         const char *secname;
         WDL_StringKeyedArray<bool> *l = translations_indexed.Enumerate(x,&secname);
-	      int sz=l->GetSize();
+        int sz=l->GetSize();
         if (!str)
-	      {
+        {
           if (x>minpos) 
           {
             memset(pos,0,sizeof(pos)); // start over
@@ -537,25 +537,25 @@ int main(int argc, char **argv)
           }
           if (str) matchlist.Set(secname); 
         }
-	      else 
+        else 
         {
           while (pos[x] < sz)
-	        {
-      	    const char *tv=NULL;
-	          l->Enumerate(pos[x],&tv);
-      	    int c = strcmp(tv,str);
-      	    if (c>0) break; 
-      	    pos[x]++;
-      	    if (!c)
-	          {
+          {
+            const char *tv=NULL;
+            l->Enumerate(pos[x],&tv);
+            int c = strcmp(tv,str);
+            if (c>0) break; 
+            pos[x]++;
+            if (!c)
+            {
               matchlist.Append(", ");
-	            matchlist.Append(secname);
-	            matchcnt++;
-	            break;
-	          }
-	        }
+              matchlist.Append(secname);
+              matchcnt++;
+              break;
+            }
+          }
         }
-	    }
+      }
       if (matchcnt>0)
       {
         common_found.Insert(str,true);

@@ -25,6 +25,7 @@
 /
 ******************************************************************************/
 
+#include "stdafx.h"
 #include <stdlib.h>
 #include <string.h>
 #include "Base64.h"

@@ -1,0 +1,9 @@
+target_sources(sws
+PRIVATE
+  ActiveTake.cpp
+  Freeze.cpp
+  ItemSelState.cpp
+  MuteState.cpp
+  TimeState.cpp
+  TrackItemState.cpp
+)

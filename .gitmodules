@@ -1,0 +1,6 @@
+[submodule "vendor/WDL"]
+	path = vendor/WDL
+	url = https://github.com/justinfrankel/WDL
+[submodule "vendor/taglib"]
+	path = vendor/taglib
+	url = https://github.com/taglib/taglib

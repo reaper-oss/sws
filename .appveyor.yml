@@ -36,8 +36,8 @@ for:
     install:
       - choco install -y nsis php
       - refreshenv
-      - curl -fsSLO https://nsis.sourceforge.io/mediawiki/images/3/3c/FindProc.zip
-      - 7z e FindProc.zip -o"%ProgramFiles(x86)%\NSIS\Plugins\x86-unicode" FindProcDLL.dll
+      - curl -fsSLO https://nsis.sourceforge.io/mediawiki/images/1/18/NsProcess.zip
+      - 7z e nsProcess.zip -o"%ProgramFiles(x86)%\NSIS\Plugins\x86-unicode" nsProcessW.dll -r
       - if "%PLATFORM%" == "x64" call "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
       - if "%PLATFORM%" == "x86" call "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat"
     build_script:

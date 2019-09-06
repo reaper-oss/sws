@@ -982,6 +982,7 @@ error:
 		IMPAPI(PreventUIRefresh);
 		IMPAPI(projectconfig_var_addr);
 		IMPAPI(projectconfig_var_getoffs);
+		IMPAPI(realloc_cmd_ptr); // v5.965+
 		IMPAPI(RefreshToolbar);
 		IMPAPI(RefreshToolbar2); // v5pre8+
 #ifdef _WIN32

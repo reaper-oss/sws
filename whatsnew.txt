@@ -56,6 +56,8 @@ Other changes:
  - Make installing the Python ReaScript support optional
  - Fix the install path being initially empty when launching the Windows installer if REAPER is not installed
  - Fix nonworking check for running REAPER processes
++Extend CF_GetClipboard to allow reading more than 1023 characters
++Deprecate CF_GetClipboardBig (use CF_GetClipboard instead)
 
 !v2.10.0 #1 Featured build (February 6, 2019)
 Mega thanks to nofish and cfillion for their many contributions, and X-Raym for doing the tedious work of merging everything into a release.

@@ -26,10 +26,10 @@
 ******************************************************************************/
 
 #include "stdafx.h"
-#include "./reaper/localize.h"
-#include "./SnM/SnM_Dlg.h"
-#include "./SnM/SnM_Util.h"
-#include "./Breeder/BR_Update.h"
+#include "reaper/localize.h"
+#include "SnM/SnM_Dlg.h"
+#include "SnM/SnM_Util.h"
+#include "Breeder/BR_Update.h"
 #include "version.h"
 #include "license.h"
 #include "url.h"
@@ -58,7 +58,7 @@ INT_PTR WINAPI doAbout(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case WM_INITDIALOG:
 		{
 			char cVersion[256];
-			_snprintfSafe(cVersion, sizeof(cVersion), "%s %d.%d.%d #%d", __LOCALIZE("Version","sws_DLG_109"), SWS_VERSION);
+			_snprintfSafe(cVersion, sizeof(cVersion), "%s %d.%d.%d.%d-%s", __LOCALIZE("Version","sws_DLG_109"), SWS_VERSION, SWS_COMMIT);
 			char *p=strstr(cVersion, " #0");
 			if (p) *p=0;
 

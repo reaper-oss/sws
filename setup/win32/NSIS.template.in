@@ -1,0 +1,103 @@
+!include MUI2.nsh
+
+Unicode true
+
+AllowSkipFiles off
+Name "@CPACK_NSIS_PACKAGE_NAME@"
+OutFile "@CPACK_TOPLEVEL_DIRECTORY@\@CPACK_OUTPUT_FILE_NAME@"
+RequestExecutionLevel highest
+SetCompressor @CPACK_NSIS_COMPRESSOR@
+
+!insertmacro MUI_PAGE_LICENSE "@CPACK_RESOURCE_FILE_LICENSE@"
+!define MUI_DIRECTORYPAGE_TEXT_TOP "Please select a valid REAPER installation folder."
+!define MUI_DIRECTORYPAGE_TEXT_DESTINATION "REAPER Installation Folder"
+!define MUI_PAGE_CUSTOMFUNCTION_LEAVE SetOutputDir
+!insertmacro MUI_PAGE_DIRECTORY
+!define MUI_COMPONENTSPAGE_SMALLDESC
+!define MUI_PAGE_CUSTOMFUNCTION_LEAVE CheckNotRunning
+!insertmacro MUI_PAGE_COMPONENTS
+!insertmacro MUI_PAGE_INSTFILES
+
+!insertmacro MUI_LANGUAGE "English"
+
+!macro ComponentFiles name
+  File /r "@CPACK_TEMPORARY_DIRECTORY@\${name}\*.*"
+!macroend
+
+Section "SWS Extension" sws
+  ; remove legacy filenames
+  Delete "$INSTDIR\Plugins\reaper_console.dll"
+  Delete "$INSTDIR\Plugins\reaper_freeze.dll"
+  Delete "$INSTDIR\Plugins\reaper_markeractions.dll"
+  Delete "$INSTDIR\Plugins\reaper_markerlist.dll"
+  Delete "$INSTDIR\Plugins\reaper_snapshot.dll"
+  Delete "$INSTDIR\Plugins\reaper_xenakios_commands.dll"
+  Delete "$INSTDIR\Plugins\reaper_SnMExtension.dll"
+  Delete "$INSTDIR\Plugins\reaper_FNG_Extension.dll"
+  Delete "$INSTDIR\Plugins\reaper_fingers.dll"
+  Delete "$INSTDIR\Plugins\reaper_dragzoom.dll"
+  Delete "$INSTDIR\Plugins\reaper_WT_InTheSky.dll"
+  Delete "$INSTDIR\Plugins\reaper_sws_whatsnew.txt"
+  Delete "$INSTDIR\Plugins\reaper_sws.dll"
+  Delete "$INSTDIR\Plugins\reaper_sws64.dll"
+  Delete "$INSTDIR\Plugins\sws_python.py"
+
+  !insertmacro ComponentFiles sws
+SectionEnd
+
+Section "Python ReaScript support" sws_python
+  !insertmacro ComponentFiles sws_python
+SectionEnd
+
+Section "Grooves" grooves
+  !insertmacro ComponentFiles grooves
+SectionEnd
+
+!insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
+  !insertmacro MUI_DESCRIPTION_TEXT ${sws} \
+    "The main extension file (required). Installed in $OUTDIR\UserPlugins."
+
+  !insertmacro MUI_DESCRIPTION_TEXT ${sws_python} \
+    "Allow Python ReaScripts to use SWS functions. Installed in $OUTDIR\Scripts"
+
+  !insertmacro MUI_DESCRIPTION_TEXT ${grooves} \
+    "Grooves are used with the groove tool. Installed in $OUTDIR."
+!insertmacro MUI_FUNCTION_DESCRIPTION_END
+
+Function .onInit
+  SetRegView @CPACK_NSIS_CPUBITS@
+  ReadRegStr $0 HKLM Software\REAPER ""
+
+  StrCmp $0 "" 0 FoundREAPER
+    StrCpy $INSTDIR "$PROGRAMFILES@CPACK_NSIS_CPUBITS@\REAPER\"
+    Goto +2
+  FoundREAPER:
+    StrCpy $INSTDIR $0
+
+  SetOutPath "" ; enables "Output folder" lines in the log
+
+  IntOp $0 ${SF_SELECTED} | ${SF_RO}
+  SectionSetFlags ${sws} $0
+FunctionEnd
+
+Function .onVerifyInstDir
+  IfFileExists $INSTDIR\reaper.exe +2
+    Abort ; if $INSTDIR is not a reaper install directory
+FunctionEnd
+
+Function SetOutputDir
+  IfFileExists $INSTDIR\reaper.ini PortableInstall
+    StrCpy $OUTDIR $APPDATA\REAPER
+    Return
+  PortableInstall:
+    StrCpy $OUTDIR $INSTDIR
+FunctionEnd
+
+Function CheckNotRunning
+  nsProcessW::_FindProcess "reaper.exe"
+  Pop $R0
+
+  StrCmp $R0 "0" 0 +3
+    MessageBox MB_OK "Please close all instances of REAPER before continuing the installation."
+    Abort
+FunctionEnd

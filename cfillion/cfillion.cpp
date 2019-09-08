@@ -28,7 +28,7 @@
 #include "stdafx.h"
 #include "cfillion.hpp"
 
-#include "../reaper/localize.h"
+#include "reaper/localize.h"
 #include "version.h"
 
 #ifdef _WIN32
@@ -269,7 +269,7 @@ bool CF_GetMediaSourceRPP(PCM_source *source, char *buf, const int bufSize)
 
 int CF_EnumMediaSourceCues(PCM_source *source, const int index, double *time, double *endTime, bool *isRegion, char *name, const int nameSize)
 {
-  REAPER_cue cue = {};
+  REAPER_cue cue{};
   const int add = source->Extended(PCM_SOURCE_EXT_ENUMCUES_EX, (void *)(intptr_t)index, &cue, NULL);
 
   if(time)

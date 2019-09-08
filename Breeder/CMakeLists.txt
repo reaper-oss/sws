@@ -1,0 +1,20 @@
+target_sources(sws
+PRIVATE
+  BR.cpp
+  BR_ContextualToolbars.cpp
+  BR_ContinuousActions.cpp
+  BR_Envelope.cpp
+  BR_EnvelopeUtil.cpp
+  BR_Loudness.cpp
+  BR_MidiEditor.cpp
+  BR_MidiUtil.cpp
+  BR_Misc.cpp
+  BR_MouseUtil.cpp
+  BR_ProjState.cpp
+  BR_ReaScript.cpp
+  BR_Tempo.cpp
+  BR_TempoDlg.cpp
+  BR_Timer.cpp
+  BR_Update.cpp
+  BR_Util.cpp
+)

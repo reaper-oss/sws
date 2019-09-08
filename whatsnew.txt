@@ -47,6 +47,15 @@ Other changes:
 + Issue 1119: Enter key in Resources Filter textbox focuses list
 + Issue 1175: "SWS/S&M: Remove all envelopes for selected tracks" - prompt before executing action, may be overridden by setting <REAPER resource path>/S&M.ini/[Misc]/RemoveAllEnvsSelTracksPrompt=0
 + "Xenakios/SWS: Rename takes and source files...", "Xenakios/SWS: Rename take source files...": add '(no undo)' in action name
++Enable media file tagging features on Linux
++Update TagLib on macOS to v1.11.1
++Split the macOS release into 32-bit and 64-bit versions, delete reaper_sws_extension.dylib
++Reworked the Windows installer
+ - Allow installing SWS to paths containing characters outside of the system's ANSI codepage
+ - Migrate the extension DLL to <resource path>\UserPlugins, reaper_sws.py to <resource path>\Scripts
+ - Make installing the Python ReaScript support optional
+ - Fix the install path being initially empty when launching the Windows installer if REAPER is not installed
+ - Fix nonworking check for running REAPER processes
 
 !v2.10.0 #1 Featured build (February 6, 2019)
 Mega thanks to nofish and cfillion for their many contributions, and X-Raym for doing the tedious work of merging everything into a release.

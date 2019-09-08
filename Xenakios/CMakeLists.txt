@@ -1,0 +1,23 @@
+target_sources(sws
+PRIVATE
+  AutoRename.cpp
+  BroadCastWavCommands.cpp
+  CommandRegistering.cpp
+  CreateTrax.cpp
+  DiskSpaceCalculator.cpp
+  Envelope_actions.cpp
+  ExoticCommands.cpp
+  FloatingInspector.cpp
+  fractions.cpp
+  ItemTakeCommands.cpp
+  main.cpp
+  MediaDialog.cpp
+  MixerActions.cpp
+  MoreItemCommands.cpp
+  Parameters.cpp
+  PropertyInterpolator.cpp
+  TakeRenaming.cpp
+  TrackTemplateActions.cpp
+  XenQueryDlg.cpp
+  XenUtils.cpp
+)

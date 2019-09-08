@@ -1,0 +1,61 @@
+---
+version: "{build}-{branch}"
+
+before_build:
+  - curl -fsSL https://gist.github.com/cfillion/da355e8278048de08ae065d6fe6031c1/raw/reaper_plugin_functions.h -o vendor/reaper_plugin_functions.h
+  - git submodule update --init
+
+for:
+  - matrix: { only: [ APPVEYOR_BUILD_WORKER_IMAGE: &linux Ubuntu1804 ] }
+    install:
+      - sudo apt-get update -qq
+      - sudo apt-get install php -qq
+      - if [ "$PLATFORM" = "i686" ]; then
+          sudo apt-get install g++-multilib -qq &&
+          export CFLAGS=-m32 CXXFLAGS=-m32;
+        fi
+      - if [ "$PLATFORM" = "armv7l" ]; then
+          sudo apt-get install g++-arm-linux-gnueabihf -qq &&
+          export TOOLCHAIN=../cmake/gcc-cross.cmake
+                 TOOLCHAIN_PREFIX=arm-linux-gnueabihf;
+        fi
+      - if [ "$PLATFORM" = "aarch64" ]; then
+          sudo apt-get install g++-aarch64-linux-gnu -qq &&
+          export TOOLCHAIN=../cmake/gcc-cross.cmake
+                 TOOLCHAIN_PREFIX=aarch64-linux-gnu;
+        fi
+    build_script:
+      - mkdir build && cd build
+      - cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$TOOLCHAIN
+      - cmake --build .
+      - cpack
+    artifacts:
+      - path: build/sws*.tar.xz
+
+  - matrix: { only: [ APPVEYOR_BUILD_WORKER_IMAGE: &windows Visual Studio 2019 ] }
+    install:
+      - choco install -y nsis php
+      - refreshenv
+      - curl -fsSLO https://nsis.sourceforge.io/mediawiki/images/1/18/NsProcess.zip
+      - 7z e nsProcess.zip -o"%ProgramFiles(x86)%\NSIS\Plugins\x86-unicode" nsProcessW.dll -r
+      - if "%PLATFORM%" == "x64" call "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+      - if "%PLATFORM%" == "x86" call "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat"
+    build_script:
+      - mkdir build && cd build
+      - cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -G Ninja
+      - cmake --build . --target all langpack
+      - cpack
+    artifacts:
+      - path: build\sws*.exe
+      - path: build\reaper_sws*.pdb
+      - path: build\BuildUtils\SWS_Template.ReaperLangPack
+
+environment:
+  matrix:
+    - { APPVEYOR_BUILD_WORKER_IMAGE: *windows, PLATFORM: x64     }
+    - { APPVEYOR_BUILD_WORKER_IMAGE: *windows, PLATFORM: x86     }
+
+    - { APPVEYOR_BUILD_WORKER_IMAGE: *linux,   PLATFORM: x86_64  }
+    - { APPVEYOR_BUILD_WORKER_IMAGE: *linux,   PLATFORM: i686    }
+    - { APPVEYOR_BUILD_WORKER_IMAGE: *linux,   PLATFORM: armv7l  }
+    - { APPVEYOR_BUILD_WORKER_IMAGE: *linux,   PLATFORM: aarch64 }

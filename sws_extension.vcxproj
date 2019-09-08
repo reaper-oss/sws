@@ -373,6 +373,7 @@ echo Warning: sws_python.py generation failed (Perl installed?)
     <ClInclude Include="Breeder\BR_MidiEditor.h" />
     <ClInclude Include="Breeder\BR_MidiUtil.h" />
     <ClInclude Include="Breeder\BR_MouseUtil.h" />
+    <ClInclude Include="cfillion\configvaroverride.hpp" />
     <ClInclude Include="reaper\reaper_plugin_functions.h" />
     <ClInclude Include="cfillion\cfillion.hpp" />
     <ClInclude Include="nofish\NF_ReaScript.h" />

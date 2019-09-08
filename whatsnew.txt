@@ -7,6 +7,7 @@ New features:
 Fixes:
 + Issue 455: Snapshots: include track phase (polarity) in Full Track Mix, add separate Phase tickbox as custom filter
 + Issue 1117, Issue 1058: support Measure grid line spacing
++ Issue 1118: fix pasting region playlists containing grouped items
 + Issue 1119: don't block Del key in Filter textbox (Marker list, Track list, Resources)
 + Issue 1140: "Xenakios/SWS: Rename takes and source files..."
  - automatically delete old .reapeaks files (also for "Xenakios/SWS: Rename take source files...")

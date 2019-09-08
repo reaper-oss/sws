@@ -149,7 +149,14 @@ int IsPlaylistRepeat(COMMAND_T*);
 void SetPlaylistOptionSmoothSeek(COMMAND_T*);
 int IsPlaylistOptionSmoothSeek(COMMAND_T*);
 
-void AppendPasteCropPlaylist(RegionPlaylist* _playlist, int _mode);
+
+enum AppendPasteCropPlaylist_Mode {
+  CROP_PROJECT,     // crop current project
+  CROP_PROJECT_TAB, // crop to new project tab
+  PASTE_PROJECT,    // append to current project
+  PASTE_CURSOR,     // paste at cursor position
+};
+void AppendPasteCropPlaylist(RegionPlaylist* _playlist, const AppendPasteCropPlaylist_Mode _mode);
 void AppendPasteCropPlaylist(COMMAND_T*);
 
 void RegionPlaylistSetTrackListChange();

@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 3.13)
 project(sws LANGUAGES C CXX)
 
-option(USE_TAGLIB    "Link with TagLib to enable tagging features" ON)
-option(SYSTEM_TAGLIB "Try to use the system-provided TagLib first" ON)
+option(BUILD_SWS_PYTHON "Generate sws_python(32|64).py (requires Perl)" ON)
+option(SYSTEM_TAGLIB    "Try to use the system-provided TagLib first"   ON)
+option(USE_TAGLIB       "Link with TagLib to enable tagging features"   ON)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/setup/win32") # NSIS
 
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   if(WIN32)
@@ -49,8 +49,6 @@ if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/vendor/reaper_plugin_functions.h")
   )
 endif()
 
-set(REASCRIPT_PYTHON_OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/sws_python${CPUBITS}.py)
-
 set(CMAKE_CXX_VISIBILITY_PRESET "hidden")
 set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME sws) # avoid an empty "Unspecified" component
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -60,9 +58,7 @@ set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELWITHDEBINFO ON)
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL     ON)
 
 if(UNIX)
-  add_compile_options(
-    -fstack-protector-strong -fdiagnostics-color
-  )
+  add_compile_options(-fstack-protector-strong -fdiagnostics-color)
 elseif(MSVC)
   add_compile_definitions(sws _CRT_SECURE_NO_WARNINGS _CRT_NONSTDC_NO_DEPRECATE)
 
@@ -98,9 +94,7 @@ elseif(MSVC)
   )
 endif()
 
-find_package(Perl REQUIRED)
 find_package(PHP REQUIRED)
-
 add_custom_command(
   OUTPUT  reascript_vararg.h
   COMMAND ${PHP_EXECUTABLE} reascript_vararg.php
@@ -109,15 +103,28 @@ add_custom_command(
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-add_custom_command(
-  OUTPUT  ${REASCRIPT_PYTHON_OUTPUT}
-  COMMAND ${PERL_EXECUTABLE} reascript_python.pl ${REASCRIPT_PYTHON_FLAGS}
-    > ${REASCRIPT_PYTHON_OUTPUT}
-  DEPENDS ReaScript.cpp reascript_python.pl reascript_helper.pl
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-)
+if(BUILD_SWS_PYTHON)
+  find_package(Perl)
 
-add_custom_target(sws_python ALL DEPENDS ${REASCRIPT_PYTHON_OUTPUT})
+  if(NOT Perl_FOUND)
+    message(FATAL_ERROR
+      "Perl is required for generating sws_python${CPUBITS}.py.\n"
+
+      "You may disable this by passing -DBUILD_SWS_PYTHON=NO to cmake."
+    )
+  endif()
+
+  set(REASCRIPT_PYTHON_OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/sws_python${CPUBITS}.py)
+  add_custom_command(
+    OUTPUT  ${REASCRIPT_PYTHON_OUTPUT}
+    COMMAND ${PERL_EXECUTABLE} reascript_python.pl ${REASCRIPT_PYTHON_FLAGS}
+      > ${REASCRIPT_PYTHON_OUTPUT}
+    DEPENDS ReaScript.cpp reascript_python.pl reascript_helper.pl
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  )
+
+  add_custom_target(sws_python ALL DEPENDS ${REASCRIPT_PYTHON_OUTPUT})
+endif()
 
 add_library(sws SHARED
   libebur128/ebur128.cpp
@@ -160,12 +167,11 @@ if(SWELL_FOUND)
   target_link_libraries(sws SWELL::swell)
 
   # Transpile the Win32 resource file
-  set(WDL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor/WDL/WDL)
   add_custom_command(
     OUTPUT  sws_extension.rc_mac_dlg sws_extension.rc_mac_menu
     COMMAND ${CMAKE_COMMAND} -E copy
       ${CMAKE_CURRENT_SOURCE_DIR}/sws_extension.rc ${CMAKE_CURRENT_BINARY_DIR}
-    COMMAND ${PHP} ${SWELL_RESGEN} sws_extension.rc
+    COMMAND ${PHP_EXECUTABLE} ${SWELL_RESGEN} sws_extension.rc
     DEPENDS ${SWELL_RESGEN}
     MAIN_DEPENDENCY sws_extension.rc
   )
@@ -189,9 +195,7 @@ if(APPLE)
     # Ignore deprecated stat64 from including WDL/dirscan.h
     -Wno-deprecated-declarations
   )
-endif()
-
-if(MSVC)
+elseif(MSVC)
   target_link_libraries(sws Shlwapi)
 
   target_link_options(sws PRIVATE $<$<NOT:$<CONFIG:Debug>>:
@@ -228,7 +232,7 @@ if(MSVC)
 endif()
 
 set_target_properties(sws PROPERTIES
-  PREFIX "" # disable 'lib' prefix
+  PREFIX "" # disable the "lib" prefix
   OUTPUT_NAME "reaper_sws-${ARCH_NAME}"
 )
 
@@ -248,10 +252,12 @@ install(TARGETS sws
   LIBRARY DESTINATION "${REAPER_USER_PLUGINS}" # macOS .dylib/Linux .so
 )
 
-install(FILES sws_python.py "${REASCRIPT_PYTHON_OUTPUT}"
-  COMPONENT   sws_python
-  DESTINATION "${REAPER_SCRIPTS}"
-)
+if(BUILD_SWS_PYTHON)
+  install(FILES sws_python.py "${REASCRIPT_PYTHON_OUTPUT}"
+    COMPONENT   sws_python
+    DESTINATION "${REAPER_SCRIPTS}"
+  )
+endif()
 
 install(DIRECTORY "FingersExtras/Grooves"
   COMPONENT   grooves
@@ -320,8 +326,8 @@ else()
   set(CPACK_GENERATOR TXZ)
 endif()
 
-set(CPACK_ARCHIVE_COMPONENT_INSTALL ON)
-set(CPACK_COMPONENTS_GROUPING ALL_COMPONENTS_IN_ONE) # make a single archive
+set(CPACK_ARCHIVE_COMPONENT_INSTALL ON) # include all components
+set(CPACK_COMPONENTS_GROUPING ALL_COMPONENTS_IN_ONE) # ...into a single archive
 
 set(CPACK_DMG_FORMAT "UDBZ") # bzip2-compressed
 set(CPACK_DMG_DS_STORE_SETUP_SCRIPT
@@ -330,6 +336,7 @@ set(CPACK_DMG_BACKGROUND_IMAGE
   "${CMAKE_CURRENT_SOURCE_DIR}/setup/macos/background.tiff")
 set(CPACK_DMG_DISABLE_APPLICATIONS_SYMLINK ON)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/setup/win32") # NSIS script
 set(CPACK_NSIS_PACKAGE_NAME "SWS Extension v${CPACK_PACKAGE_VERSION} ${ARCH_NAME}")
 set(CPACK_NSIS_CPUBITS ${CPUBITS})
 

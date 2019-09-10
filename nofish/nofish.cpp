@@ -362,6 +362,7 @@ void CycleTrackAutomationModes(COMMAND_T* ct)
 }
 
 // #1065, toggle Limit apply FX / render stems to realtime
+/*
 int IsRenderSpeedRealtime(COMMAND_T* = NULL) 
 {
 	int option; GetConfig("workrender", option);
@@ -380,6 +381,7 @@ void ToggleRenderSpeedRealtimeNotLim(COMMAND_T* = NULL)
 	_snprintfSafe(tmp, sizeof(tmp), "%d", option);
 	WritePrivateProfileString("reaper", configStr, tmp, get_ini_file());
 }
+*/
 
 
 
@@ -416,7 +418,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/NF: Cycle through track automation modes" }, "NF_CYCLE_TRACK_AUTOMATION_MODES", CycleTrackAutomationModes },
 
 	// #1065, toggle Limit apply FX/render stems to realtime
-	{ { DEFACCEL, "SWS/NF: Toggle render speed (apply FX/render stems) realtime/not limited" }, "NF_TOGGLERENDERSPEED_RT_NL", ToggleRenderSpeedRealtimeNotLim, NULL, 0,  IsRenderSpeedRealtime},
+	// { { DEFACCEL, "SWS/NF: Toggle render speed (apply FX/render stems) realtime/not limited" }, "NF_TOGGLERENDERSPEED_RT_NL", ToggleRenderSpeedRealtimeNotLim, NULL, 0,  IsRenderSpeedRealtime},
 
 	//!WANT_LOCALIZE_1ST_STRING_END
 

@@ -36,7 +36,6 @@
 #include "../Prompt.h"
 #include "../reaper/localize.h"
 #include "WDL/projectcontext.h"
-#include "../cfillion/configvaroverride.hpp"
 
 
 #define RGNPL_WND_ID			"SnMRgnPlaylist"

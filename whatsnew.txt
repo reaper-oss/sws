@@ -19,7 +19,6 @@ Fixes:
  - additionally to saving when project is saved, can be saved via notes window context menu (global notes are stored in <REAPER resource path>/SWS_global notes.txt)
 + Issue 1180: prevent UI updates from being disabled when stopping BR mouse playback via ReaScript (thanks Justin!)
 + Issue 1183: fix hiding send envelopes accidentally removing the subsequent send/receive
-+ fix wrong point values when using envelope-related actions with fader scaling mode (regression from 2.10.0, report https://forum.cockos.com/showthread.php?p=2094872|here|)
 + fix flickering in some vertical zooming actions
 + fix 'Xenakios/SWS: Normalize selected takes to dB value...' if take polarity is flipped (report https://forum.cockos.com/showthread.php?t=219269|here|)
 + fix various other Xenakios take volume actions if take polarity is flipped

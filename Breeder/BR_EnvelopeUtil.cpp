@@ -1433,7 +1433,7 @@ bool BR_Envelope::Commit (bool force /*=false*/)
 
 		WDL_FastString chunkStart = this->GetProperties();
 		for (vector<BR_Envelope::EnvPoint>::iterator i = m_points.begin(); i != m_points.end(); ++i)
-			i->Append(chunkStart, m_tempoMap, playrate);
+			i->Append(chunkStart, m_tempoMap, playrate, m_properties.faderMode);
 		chunkStart.Append(">");
 		GetSetObjectState(m_envelope, chunkStart.Get());
 
@@ -1593,7 +1593,7 @@ void BR_Envelope::Build (bool takeEnvelopesUseProjectTime)
 		{
 			lp.parse(token);
 			BR_Envelope::EnvPoint point;
-			if (point.ReadLine(lp, playrate))
+			if (point.ReadLine(lp, playrate, m_properties.faderMode))
 			{
 				++id;
 				start = true;
@@ -1976,14 +1976,14 @@ bool BR_Envelope::EnvPoint::operator==(const EnvPoint &point) const
 	;
 }
 
-bool BR_Envelope::EnvPoint::ReadLine (const LineParser& lp, const double playrate)
+bool BR_Envelope::EnvPoint::ReadLine (const LineParser& lp, const double playrate, const int faderMode)
 {
 	if (strcmp(lp.gettoken_str(0), "PT"))
 		return false;
 	else
 	{
 		this->position   = lp.gettoken_float(1) / playrate;
-		this->value      = lp.gettoken_float(2);
+		this->value      = ScaleFromEnvelopeMode(faderMode, lp.gettoken_float(2));
 		this->shape      = lp.gettoken_int(3);
 		this->sig        = lp.gettoken_int(4);
 		this->selected   = (lp.gettoken_int(5)&1)==1;
@@ -1997,7 +1997,7 @@ bool BR_Envelope::EnvPoint::ReadLine (const LineParser& lp, const double playrat
 	}
 }
 
-void BR_Envelope::EnvPoint::Append (WDL_FastString& string, const bool tempoPoint, const double playrate)
+void BR_Envelope::EnvPoint::Append (WDL_FastString& string, const bool tempoPoint, const double playrate, const int faderMode)
 {
 	if (tempoPoint)
 	{
@@ -2024,7 +2024,7 @@ void BR_Envelope::EnvPoint::Append (WDL_FastString& string, const bool tempoPoin
 			256,
 			"PT %.12lf %.10lf %d %d %d %d %.8lf\n",
 			this->position * playrate,
-			this->value,
+			ScaleToEnvelopeMode(faderMode, this->value),
 			this->shape,
 			this->sig,
 			this->selected ? 1 : 0,

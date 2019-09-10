@@ -2,24 +2,22 @@ if(WIN32 OR SWELL_FOUND)
   return()
 endif()
 
+find_package(WDL REQUIRED)
 find_path(SWELL_INCLUDE_DIR
-  NAMES swell/swell.h
-  PATHS vendor/WDL
-  PATH_SUFFIXES WDL
+  NAMES swell.h
+  PATHS ${WDL_DIR}
+  PATH_SUFFIXES swell
   NO_DEFAULT_PATH
 )
 mark_as_advanced(SWELL_INCLUDE_DIR)
 
-set(SWELL_DIR "${SWELL_INCLUDE_DIR}/swell")
-set(SWELL_RESGEN "${SWELL_DIR}/mac_resgen.php")
+set(SWELL_RESGEN "${SWELL_INCLUDE_DIR}/mac_resgen.php")
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(SWELL
-  REQUIRED_VARS SWELL_DIR SWELL_INCLUDE_DIR
-)
+find_package_handle_standard_args(SWELL REQUIRED_VARS SWELL_INCLUDE_DIR)
 
 add_library(swell
-  ${WDL_DIR}/swell/swell-modstub$<IF:$<BOOL:${APPLE}>,.mm,-generic.cpp>
+  ${SWELL_INCLUDE_DIR}/swell-modstub$<IF:$<BOOL:${APPLE}>,.mm,-generic.cpp>
 )
 
 if(APPLE)

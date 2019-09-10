@@ -4,7 +4,7 @@ endif()
 
 find_path(WDL_INCLUDE_DIR
   NAMES WDL/wdltypes.h
-  PATHS vendor/WDL
+  PATHS ${CMAKE_SOURCE_DIR}/vendor/WDL
   NO_DEFAULT_PATH
 )
 mark_as_advanced(WDL_INCLUDE_DIR)
@@ -12,9 +12,7 @@ mark_as_advanced(WDL_INCLUDE_DIR)
 set(WDL_DIR "${WDL_INCLUDE_DIR}/WDL")
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(WDL
-  REQUIRED_VARS WDL_DIR WDL_INCLUDE_DIR
-)
+find_package_handle_standard_args(WDL REQUIRED_VARS WDL_INCLUDE_DIR)
 
 add_library(wdl
   ${WDL_DIR}/projectcontext.cpp

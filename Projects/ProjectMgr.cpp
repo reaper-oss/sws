@@ -88,11 +88,8 @@ void OpenProjectsFromList(COMMAND_T*)
 		if (f)
 		{
 			// Save "prompt on new project" variable
-			int iNewProjOpts;
-			int sztmp;
-			int* pNewProjOpts = (int*)get_config_var("newprojdo", &sztmp);
-			iNewProjOpts = *pNewProjOpts;
-			*pNewProjOpts = 0;
+			ConfigVarOverride<int> newprojdo("newprojdo", 0);
+
 			int i = 0;
 
 			int iProjects = -1;
@@ -121,8 +118,6 @@ void OpenProjectsFromList(COMMAND_T*)
 				}
 			}
 			fclose(f);
-
-			*pNewProjOpts = iNewProjOpts;
 		}
 		else
 			MessageBox(g_hwndParent, __LOCALIZE("Unable to open file.","sws_mbox"), __LOCALIZE("SWS Project List Open","sws_mbox"), MB_OK);
@@ -181,11 +176,7 @@ void OpenRelatedProject(COMMAND_T* pCmd)
 
 	// Nope, open in new tab
 	// Save "prompt on new project" variable
-	int iNewProjOpts;
-	int sztmp;
-	int* pNewProjOpts = (int*)get_config_var("newprojdo", &sztmp);
-	iNewProjOpts = *pNewProjOpts;
-	*pNewProjOpts = 0;
+	ConfigVarOverride<int> newprojdo("newprojdo", 0);
 	pProj = EnumProjects(-1, NULL, 0);
 	Main_OnCommand(41929, 0); // New project tab (ignore default template)
 	Main_openProject(pStr->Get());
@@ -196,7 +187,6 @@ void OpenRelatedProject(COMMAND_T* pCmd)
 		SelectProjectInstance(pProj);
 		g_relatedProjects.Get()->Delete((int)pCmd->user, true);
 	}
-	*pNewProjOpts = iNewProjOpts;
 }
 
 void OpenLastProject(COMMAND_T*)

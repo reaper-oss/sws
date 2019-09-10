@@ -1031,7 +1031,7 @@ void ME_EnvPointsToCC (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd
 				bool beatsTimebase = (midiEditor.GetTimebase() == PROJECT_BEATS || midiEditor.GetTimebase() == SOURCE_BEATS);
 
 				double stepSize = 0;
-				int midiCcDensity; GetConfig("midiccdensity", midiCcDensity);
+				const int midiCcDensity = ConfigVar<int>("midiccdensity").value_or(0);
 				if (midiCcDensity > 0)
 				{
 					stepSize = (double)midiEditor.GetPPQ() / (double)midiCcDensity;

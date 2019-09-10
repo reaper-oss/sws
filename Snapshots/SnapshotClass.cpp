@@ -447,7 +447,7 @@ void TrackSnapshot::GetDetails(WDL_FastString* details, int iMask)
 	{
 		int iPanMode = m_iPanMode;
 		if (iPanMode == -1)
-			iPanMode = *(int*)GetConfigVar("panmode"); // display pan in project format
+			iPanMode = *ConfigVar<int>("panmode"); // display pan in project format
 
 		if (iPanMode != 6)
 		{

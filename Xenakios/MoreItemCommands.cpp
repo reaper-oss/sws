@@ -736,7 +736,7 @@ void DoSetFadeToCrossfade(COMMAND_T* ct)
 
 void DoSetFadeToDefaultFade(COMMAND_T* ct)
 {
-	double* pdDefFade = (double*)GetConfigVar("deffadelen");
+	double* pdDefFade = ConfigVar<double>("deffadelen").get();
 	double dZero = 0.0;
 	const int cnt=CountSelectedMediaItems(NULL);
 	for (int i = 0; i < cnt; i++)

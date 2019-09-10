@@ -411,7 +411,7 @@ void SetItemChannels(COMMAND_T* t)
 
 void CrossfadeSelItems(COMMAND_T* t)
 {
-	double dFadeLen = fabs(*(double*)GetConfigVar("deffadelen")); // Abs because neg value means "not auto"
+	double dFadeLen = fabs(*ConfigVar<double>("deffadelen")); // Abs because neg value means "not auto"
 	double dEdgeAdj = dFadeLen / 2.0;
 	bool bChanges = false;
 

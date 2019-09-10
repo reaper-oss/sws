@@ -177,7 +177,7 @@ void SetVerticalZoomSelectedEnvelope(COMMAND_T* ct)
 		{
 			bool ScrollToEnv = true;
 			int height, trackGapTop, trackGapBottom;
-			int overlapMinHeight = *(int*)GetConfigVar("env_ol_minh");
+			int overlapMinHeight = *ConfigVar<int>("env_ol_minh");
 			int mul = CountVisibleTrackEnvelopesInTrackLane(brEnv.GetParent());
 			GetTrackHeight(brEnv.GetParent(), NULL, &trackGapTop, &trackGapBottom);
 			if ((int)ct->user == 2)
@@ -244,28 +244,31 @@ int IsEnvelopesExtendedZoomEnabled(COMMAND_T*)
 
 void ToggleEnableEnvelopeOverlap(COMMAND_T*)
 {
-	SetConfig("env_ol_minh", -((*(int*)GetConfigVar("env_ol_minh")) + 1));
+	ConfigVar<int> env_ol_minh("env_ol_minh");
+	*env_ol_minh = -((*env_ol_minh) + 1);
 	TrackList_AdjustWindows(false);
 	UpdateTimeline();
 }
 
 int IsEnvelopeOverlapEnabled(COMMAND_T*)
 {
-	return (*(int*)GetConfigVar("env_ol_minh") >= 0);
+	return (*ConfigVar<int>("env_ol_minh") >= 0);
 }
 
 void ForceEnvelopeOverlap(COMMAND_T* ct)
 {
+	ConfigVar<int> env_ol_minh("env_ol_minh");
+
 	if ((int)ct->user == 0)
 	{
 		if (TrackEnvelope* env = GetSelectedTrackEnvelope(NULL))
 		{
-			g_SavedEnvelopeOverlapSettings = *(int*)GetConfigVar("env_ol_minh");
+			g_SavedEnvelopeOverlapSettings = *env_ol_minh;
 			bool lane; EnvVis(env, &lane);
 			if ((CountVisibleTrackEnvelopesInTrackLane(GetEnvParent(env)) > 1) && !lane)
 			{
 				int envHeight = GetTrackEnvHeight(env, NULL, false);
-				SetConfig("env_ol_minh", envHeight + 1);
+				*env_ol_minh = envHeight + 1;
 				TrackList_AdjustWindows(false);
 				UpdateTimeline();
 				RefreshToolbar(SWSGetCommandID(ToggleEnableEnvelopeOverlap));
@@ -274,7 +277,7 @@ void ForceEnvelopeOverlap(COMMAND_T* ct)
 	}
 	else
 	{
-		SetConfig("env_ol_minh", g_SavedEnvelopeOverlapSettings);
+		*env_ol_minh = g_SavedEnvelopeOverlapSettings;
 		TrackList_AdjustWindows(false);
 		UpdateTimeline();
 		RefreshToolbar(SWSGetCommandID(ToggleEnableEnvelopeOverlap));
@@ -344,7 +347,7 @@ void VerticalZoomSelectedEnvelopeLoUpHalf(COMMAND_T* ct)
 
 void SetVerticalZoomCenter(COMMAND_T* ct)
 {
-	SetConfig("vzoommode", (int)ct->user);
+	*ConfigVar<int>("vzoommode") = (int)ct->user;
 
 	char tmp[256];
 	_snprintfSafe(tmp, sizeof(tmp), "%d", (int)ct->user);
@@ -353,7 +356,7 @@ void SetVerticalZoomCenter(COMMAND_T* ct)
 
 void SetHorizontalZoomCenter(COMMAND_T* ct)
 {
-	SetConfig("zoommode", (int)ct->user);
+	*ConfigVar<int>("zoommode") = (int)ct->user;
 
 	char tmp[256];
 	_snprintfSafe(tmp, sizeof(tmp), "%d", (int)ct->user);
@@ -432,7 +435,7 @@ void SaveApplyHeightSelectedEnvelopeSlot(COMMAND_T* ct)
 void wol_ZoomInit()
 {
 	g_EnvelopesExtendedZoom = GetPrivateProfileInt(SWS_INI, "WOLExtZoomEnvInTrLane", 0, get_ini_file()) ? true : false;
-	g_SavedEnvelopeOverlapSettings = *(int*)GetConfigVar("env_ol_minh");
+	g_SavedEnvelopeOverlapSettings = *ConfigVar<int>("env_ol_minh");
 
 	WDL_FastString key;
 	for (int i = 0; i < 7; ++i)

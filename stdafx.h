@@ -100,6 +100,7 @@
 
 // Headers that are used "enough" to be worth of being precompiled,
 // at the expense of needing recompile of the headers on change
+#include "Utility/configvar.h"
 #include "Utility/SectionLock.h"
 #include "sws_util.h"
 #include "sws_wnd.h"

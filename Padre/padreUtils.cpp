@@ -309,7 +309,7 @@ void GetTimeSegmentPositions(TimeSegment timeSegment, double &dStartPos, double 
 			dEndPos = GetCursorPositionEx(0);
 			//Main_OnCommandEx(ID_GOTO_PROJECT_START, 0, 0);
 			//dStartPos = GetCursorPositionEx(0);
-			dStartPos = *(int*)GetConfigVar("projtimeoffs");
+			dStartPos = *ConfigVar<int>("projtimeoffs");
 			bRefreshCurPos = true;
 		break;
 		//case eTIMESEGMENT_CURRENTMEASURE:

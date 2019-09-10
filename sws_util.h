@@ -225,7 +225,6 @@ int GetFolderDepth(MediaTrack* tr, int* iType, MediaTrack** nextTr);
 int GetTrackVis(MediaTrack* tr); // &1 == mcp, &2 == tcp
 void SetTrackVis(MediaTrack* tr, int vis); // &1 == mcp, &2 == tcp
 int AboutBoxInit(); // Not worth its own .h
-void* GetConfigVar(const char* cVar);
 HWND GetTrackWnd();
 HWND GetRulerWnd();
 const GUID* TrackToGuid(MediaTrack* tr);

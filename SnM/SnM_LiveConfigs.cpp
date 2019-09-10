@@ -1013,7 +1013,7 @@ void LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		
 		case MUTE_OTHERS_MSG:
 			if (!(lc->m_options&1))
-				if (int* dontProcessMutedTrs = (int*)GetConfigVar("norunmute"))
+				if (ConfigVar<int> dontProcessMutedTrs = "norunmute")
 					if (!*dontProcessMutedTrs)
 					{
 						// do not enable in the user's back:
@@ -2113,7 +2113,7 @@ void LiveConfigsTrackListChange()
 
 int LiveConfigInit()
 {
-	g_reaPref_fadeLen = (int*)GetConfigVar("mutefadems10");
+	g_reaPref_fadeLen = ConfigVar<int>("mutefadems10").get();
 	GetPrivateProfileString("LiveConfigs", "BigFontName", SNM_DYN_FONT_NAME, g_lcBigFontName, sizeof(g_lcBigFontName), g_SNM_IniFn.Get());
 
 	// instanciate the editor if needed, can be NULL

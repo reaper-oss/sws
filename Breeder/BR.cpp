@@ -96,11 +96,12 @@ void BR_MenuHook (COMMAND_T* ct, HMENU menu, int id)
 	{
 		// Disable the action "Flush FX on stop" if the option "Run FX when stopped" is turned off
 		if ((int)ct->user == 1)
-			EnableMenuItem(menu, id, (GetBit(*static_cast<int*>(GetConfigVar("runallonstop")), 0) ? MF_ENABLED : MF_GRAYED) | MF_BYPOSITION);
+			EnableMenuItem(menu, id,
+				(GetBit(*ConfigVar<int>("runallonstop"), 0) ? MF_ENABLED : MF_GRAYED) | MF_BYPOSITION);
 
 		// Disable the action to set "Run FX after stopping for" if the option "Run FX when stopped" is turned on
 		else if ((int)ct->user <= 0)
-			EnableMenuItem(menu, id, (!GetBit(*static_cast<int*>(GetConfigVar("runallonstop")), 0) ? MF_ENABLED : MF_GRAYED) | MF_BYPOSITION);
+			EnableMenuItem(menu, id, (!GetBit(*ConfigVar<int>("runallonstop"), 0) ? MF_ENABLED : MF_GRAYED) | MF_BYPOSITION);
 	}
 }
 

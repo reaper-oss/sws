@@ -1497,7 +1497,7 @@ void ResourcesWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 
 		// ***** Track template *****
 		case BTNID_OFFSET_TR_TEMPLATE:
-			if (int* offsPref = (int*)GetConfigVar("templateditcursor")) { // >= REAPER v4.15
+			if (ConfigVar<int> offsPref = "templateditcursor") { // >= REAPER v4.15
 				if (*offsPref) *offsPref = 0;
 				else *offsPref = 1;
 			}
@@ -2189,7 +2189,7 @@ void ResourcesWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltip
 
 		if (GetTypeForUser() == SNM_SLOT_TR)
 		{
-			if (int* offsPref = (int*)GetConfigVar("templateditcursor")) // >= REAPER v4.15
+			if (const ConfigVar<int> offsPref = "templateditcursor") // >= REAPER v4.15
 			{
 				if (g_dblClickPrefs[g_resType] != 1) // propose offset option except if "apply to sel tracks"
 				{

@@ -224,9 +224,9 @@ void SWS_MarkerListWnd::Update(bool bForce)
 	// Change the time string if the project time mode changes
 	static int prevTimeMode = -1;
 	bool bChanged = bForce;
-	if (*(int*)GetConfigVar("projtimemode") != prevTimeMode)
+	if (*ConfigVar<int>("projtimemode") != prevTimeMode)
 	{
-		prevTimeMode = *(int*)GetConfigVar("projtimemode");
+		prevTimeMode = *ConfigVar<int>("projtimemode");
 		bChanged = true;
 	}
 

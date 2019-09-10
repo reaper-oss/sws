@@ -116,16 +116,6 @@ bool IsPaused (ReaProject* proj);
 bool IsRecording (ReaProject* proj);
 bool AreAllCoordsZero (RECT& r);
 PCM_source* DuplicateSource (PCM_source* source); // if the option "Toggle pooled (ghost) MIDI source data when copying media items", using PCM_source->Duplicate() will pool original and new source...use this function to escape this when necessary
-template <typename T> void GetConfig (const char* key, T& val) 
-{
-  void *p = GetConfigVar(key);
-  val = p ? *static_cast<T*>(p) : (T)0;
-}
-template <typename T> void SetConfig (const char* key, T  val) 
-{
-  void *p = GetConfigVar(key);
-  if (p) *static_cast<T*>(p) = val;
-}
 
 /******************************************************************************
 * Tracks                                                                      *

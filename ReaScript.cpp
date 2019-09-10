@@ -56,7 +56,6 @@
   #pragma warning(pop)
 #endif
 
-
 // Important, keep APIFUNC() and APIdef as they are defined: the scripts reascript_vararg.php
 // and reascript_python.pl both parse the function definition table (g_apidefs) at compilation
 // time to generate variable argument function wrappers for EEL and Lua (reascript_vararg.h),

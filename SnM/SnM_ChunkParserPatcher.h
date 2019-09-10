@@ -1107,7 +1107,7 @@ static int SNM_PreObjectState(WDL_FastString* _str, bool _wantsMinState)
 	}
 	// when getting: enables/disables the "VST full state" pref (that also minimize AU states, if REAPER >= v4)
 	// it also fixes possible incomplete chunk bug (pref overrided when needed)
-	else if (int* fxstate = (int*)GetConfigVar("vstfullstate")) {
+	else if (ConfigVar<int> fxstate = "vstfullstate") {
 		int old = *fxstate;
 		int tmp = _wantsMinState ? *fxstate&0xFFFFFFFE : *fxstate|1;
 		if (old != tmp) // prevents useless RW access to REAPER.ini
@@ -1121,7 +1121,7 @@ static void SNM_PostObjectState(int _oldfxstate)
 {
 	// restore the "VST full state" pref, if needed
 	if (_oldfxstate >= 0)
-		if (int* fxstate = (int*)GetConfigVar("vstfullstate"))
+		if (ConfigVar<int> fxstate = "vstfullstate")
 			if (*fxstate != _oldfxstate)
 				*fxstate = _oldfxstate;
 }

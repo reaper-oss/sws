@@ -649,7 +649,7 @@ double BR_Envelope::ValueAtPosition (double position, bool fastMode /*= false*/)
 	if (!m_pointsEdited && !fastMode)
 	{
 		if (m_sampleRate == -1)
-			GetConfig("projsrate", m_sampleRate);
+			m_sampleRate = ConfigVar<int>("projsrate").value_or(-1);
 
 		double value;
 		Envelope_Evaluate(m_envelope, position, m_sampleRate, 1, &value, NULL, NULL, NULL); // slower than our way with high point count (probably because we use binary search while Cockos uses linear) but more accurate
@@ -817,7 +817,7 @@ double BR_Envelope::SnapValue (double value)
 {
 	if (this->Type() == PITCH)
 	{
-		int pitchenvrange; GetConfig("pitchenvrange", pitchenvrange);
+		const int pitchenvrange = ConfigVar<int>("pitchenvrange").value_or(0);
 		int mode = pitchenvrange >> 8; // range is in high 8 bits
 
 		if      (mode == 0) return value;
@@ -1305,12 +1305,12 @@ double BR_Envelope::LaneMinValue ()
 {
 	if (m_tempoMap)
 	{
-		int min; GetConfig("tempoenvmin", min);
+		const int min = ConfigVar<int>("tempoenvmin").value_or(0);
 		return (double)min;
 	}
 	else if (this->Type() == PITCH)
 	{
-		int min; GetConfig("pitchenvrange", min);
+		const int min = ConfigVar<int>("pitchenvrange").value_or(0);
 		return -(min & 0x0F); // range is in low 8 bits
 	}
 	return this->MinValueAbs();
@@ -1320,14 +1320,14 @@ double BR_Envelope::LaneMaxValue ()
 {
 	if (m_tempoMap)
 	{
-		int max; GetConfig("tempoenvmax", max);
+		const int max = ConfigVar<int>("tempoenvmax").value_or(0);
 		return (double)max;
 	}
 	else if (this->Type() == VOLUME || this->Type() == VOLUME_PREFX)
 	{
 		static int s_max = -666;
 		static int s_val = -666;
-		int max; GetConfig("volenvrange", max);
+		const int max = ConfigVar<int>("volenvrange").value_or(0);
 
 		// LaneMaxValue tends to get called a lot so instead of doing all comparisons each time, rather cache value and do one comparison only
 		if (max != s_max)
@@ -1342,7 +1342,7 @@ double BR_Envelope::LaneMaxValue ()
 	}
 	else if (this->Type() == PITCH)
 	{
-		int max; GetConfig("pitchenvrange", max);
+		const int max = ConfigVar<int>("pitchenvrange").value_or(0);
 		return max & 0x0F; // range is in low 8 bits
 	}
 	return this->MaxValueAbs();
@@ -1440,10 +1440,12 @@ bool BR_Envelope::Commit (bool force /*=false*/)
 	if ((force || (m_update && !this->IsLocked())) && m_envelope)
 	{
 		// Prevents reselection of points in time selection
-		int envClickSegMode; GetConfig("envclicksegmode", envClickSegMode);
-		SetConfig("envclicksegmode", ClearBit(envClickSegMode, 6));
-		int pooledenvs; GetConfig("pooledenvs", pooledenvs);
-		SetConfig("pooledenvs", pooledenvs & (~12));
+		const ConfigVar<int> envClickSegMode("envclicksegmode");
+		ConfigVarOverride<int> tempEnvClickSegMode(envClickSegMode,
+			ClearBit(envClickSegMode.value_or(0), 6));
+
+		const ConfigVar<int> pooledenvs("pooledenvs");
+		ConfigVarOverride<int> tempPooledEnvs(pooledenvs, pooledenvs.value_or(0) & (~12));
 
 		// Need to commit whole chunk
 		if (m_tempoMap)
@@ -1510,8 +1512,6 @@ bool BR_Envelope::Commit (bool force /*=false*/)
 			PreventUIRefresh(-1);
 		}
 
-		SetConfig("envclicksegmode", envClickSegMode);
-		SetConfig("pooledenvs", pooledenvs);
 		UpdateArrange();
 		m_update       = false;
 		m_pointsEdited = false;
@@ -2244,8 +2244,8 @@ WDL_FastString ConstructReceiveEnv (BR_EnvType type, double firstPointValue, boo
 	if (type != VOLUME && type != PAN && type != MUTE)
 		return envelope;
 
-	int defAutoMode; GetConfig("defautomode", defAutoMode);
-	int envLanes;    GetConfig("envlanes", envLanes);
+	const int defAutoMode = ConfigVar<int>("defautomode").value_or(0);
+	const int envLanes = ConfigVar<int>("envlanes").value_or(0);
 
 	BR_EnvShape defShape = (type == MUTE) ? SQUARE : GetDefaultPointShape();
 
@@ -2253,7 +2253,7 @@ WDL_FastString ConstructReceiveEnv (BR_EnvType type, double firstPointValue, boo
 	else if (type == PAN)    (hardwareSend) ? AppendLine(envelope, "<HWPANENV")  : AppendLine(envelope, "<AUXPANENV");
 	else if (type == MUTE)   (hardwareSend) ? AppendLine(envelope, "<HWMUTEENV") : AppendLine(envelope, "<AUXMUTEENV");
 
-	int volenvrange; GetConfig("volenvrange", volenvrange);
+	const int volenvrange = ConfigVar<int>("volenvrange").value_or(0);
 	envelope.AppendFormatted(128, "%s %d\n",             "ACT", 1);
 	envelope.AppendFormatted(128, "%s %d %d %d\n",       "VIS", 1, GetBit(envLanes, 0), 1);
 	envelope.AppendFormatted(128, "%s %d %d\n",          "LANEHEIGHT", 0, 0);
@@ -2394,7 +2394,7 @@ bool ToggleShowSendEnvelope (MediaTrack* track, int sendId, BR_EnvType type)
 						}
 
 						bool trim = false;
-						int trimMode; GetConfig("envtrimadjmode", trimMode);
+						const int trimMode = ConfigVar<int>("envtrimadjmode").value_or(0);
 						if (trimMode == 0 || (trimMode == 1 && GetEffectiveAutomationMode(hwSend ? track : CSurf_TrackFromID(sendTrackId + 1, false)) != 0))
 						{
 							trim = true;
@@ -2578,7 +2578,7 @@ bool ShowSendEnvelopes (vector<MediaTrack*>& tracks, BR_EnvType envelopeTypes)
 						}
 
 						bool trim = false;
-						int trimMode; GetConfig("envtrimadjmode", trimMode);
+						const int trimMode = ConfigVar<int>("envtrimadjmode").value_or(0);
 						if (trimMode == 0 || (trimMode == 1 && GetEffectiveAutomationMode(hwSend ? track : CSurf_TrackFromID(sendTrackId + 1, false)) != 0))
 						{
 							trim = true;
@@ -2741,7 +2741,7 @@ int CountTrackEnvelopePanels (MediaTrack* track)
 
 BR_EnvShape GetDefaultPointShape ()
 {
-	int defEnvs; GetConfig("defenvs", defEnvs);
+	const int defEnvs = ConfigVar<int>("defenvs").value_or(0);
 	return static_cast<BR_EnvShape>(defEnvs >> 16);
 }
 

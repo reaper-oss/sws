@@ -70,7 +70,7 @@ static void MousePlaybackTimer ()
 {
 	// do not do this, it is generally unsafe: PreventUIRefresh(-1);
 	// (is this timer necessary with this removed?)
-	SetConfig("viewadvance", g_mousePlaybackReaperOptions);
+	ConfigVar<int>("viewadvance").try_set(g_mousePlaybackReaperOptions);
 	plugin_register("-timer", (void*)MousePlaybackTimer);
 }
 
@@ -84,7 +84,7 @@ static void MousePlaybackPlayState (bool play, bool pause, bool rec)
 	{
 		if (g_mousePlaybackRestoreView && g_activeCommand && (int)g_activeCommand->user > 0)
 		{
-			GetConfig("viewadvance", g_mousePlaybackReaperOptions);
+			g_mousePlaybackReaperOptions = ConfigVar<int>("viewadvance").value_or(0);
 			if (GetBit(g_mousePlaybackReaperOptions, 3))
 				g_mousePlaybackForceMoveView = true;
 		}
@@ -100,7 +100,7 @@ static void MousePlaybackPlayState (bool play, bool pause, bool rec)
 			//do not do this, it is generally unsafe: PreventUIRefresh(1);
 
 
-			SetConfig("viewadvance", ClearBit(g_mousePlaybackReaperOptions, 3));
+			ConfigVar<int>("viewadvance").try_set(ClearBit(g_mousePlaybackReaperOptions, 3));
 			plugin_register("timer", (void*)MousePlaybackTimer);
 		}
 	}
@@ -290,8 +290,7 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 
 		if (g_mousePlaybackRestoreView)
 		{
-			int viewAdvance;
-			GetConfig("viewadvance", viewAdvance);
+			const int viewAdvance = ConfigVar<int>("viewadvance").value_or(0);
 			if ((GetBit(viewAdvance, 3) || g_mousePlaybackForceMoveView) && (int)ct->user > 0) // Move view to edit cursor on stop (analogously applied here when starting playback from mouse cursor)
 			{
 				double arrangeStart, arrangeEnd;
@@ -1092,30 +1091,29 @@ void RestoreTrackSoloMuteStateSlot (COMMAND_T* ct)
 ******************************************************************************/
 void SnapFollowsGridVis (COMMAND_T* ct)
 {
-	int option;
-	GetConfig("projshowgrid", option);
-	SetConfig("projshowgrid", ToggleBit(option, 15));
+	if(ConfigVar<int> projshowgrid = "projshowgrid")
+		*projshowgrid = ToggleBit(*projshowgrid, 15);
 	RefreshToolbar(0);
 }
 
 void PlaybackFollowsTempoChange (COMMAND_T* ct)
 {
 	const char* configStr = "seekmodes";
-	int option; GetConfig(configStr, option);
+	ConfigVar<int> option(configStr);
+	if(!option) return;
 
-	option = ToggleBit(option, 5);
-	SetConfig(configStr, option);
+	*option = ToggleBit(*option, 5);
 	RefreshToolbar(0);
 
 	char tmp[256];
-	_snprintfSafe(tmp, sizeof(tmp), "%d", option);
+	_snprintfSafe(tmp, sizeof(tmp), "%d", *option);
 	WritePrivateProfileString("reaper", configStr, tmp, get_ini_file());
 }
 
 void TrimNewVolPanEnvs (COMMAND_T* ct)
 {
 	const char* configStr = "envtrimadjmode";
-	SetConfig(configStr, (int)ct->user);
+	ConfigVar<int>(configStr).try_set((int)ct->user);
 	RefreshToolbar(0);
 
 	char tmp[256];
@@ -1127,12 +1125,12 @@ void ToggleDisplayItemLabels (COMMAND_T* ct)
 {
 	const char* configStr = "labelitems2";
 
-	int option; GetConfig(configStr, option);
-	option = ToggleBit(option, (int)ct->user);
-	SetConfig(configStr, option);
+	ConfigVar<int> option(configStr);
+	if(!option) return;
+	*option = ToggleBit(*option, (int)ct->user);
 
 	char tmp[256];
-	_snprintfSafe(tmp, sizeof(tmp), "%d", option);
+	_snprintfSafe(tmp, sizeof(tmp), "%d", *option);
 	WritePrivateProfileString("reaper", configStr, tmp, get_ini_file());
 
 	UpdateArrange();
@@ -1141,13 +1139,13 @@ void ToggleDisplayItemLabels (COMMAND_T* ct)
 void SetMidiResetOnPlayStop (COMMAND_T* ct)
 {
 	const char* configStr = "midisendflags";
-	int option; GetConfig(configStr, option);
 
-	option = ToggleBit(option, (int)ct->user);
-	SetConfig(configStr, option);
+	ConfigVar<int> option(configStr);
+	if(!option) return;
+	*option = ToggleBit(*option, (int)ct->user);
 
 	char tmp[256];
-	_snprintfSafe(tmp, sizeof(tmp), "%d", option);
+	_snprintfSafe(tmp, sizeof(tmp), "%d", *option);
 	WritePrivateProfileString("reaper", configStr, tmp, get_ini_file());
 }
 
@@ -1156,41 +1154,39 @@ void SetOptionsFX (COMMAND_T* ct)
 	if ((int)ct->user == 1)
 	{
 		const char* configStr = "runallonstop";
-		int option; GetConfig(configStr, option);
+		ConfigVar<int> option(configStr);
 
 		// Set only if "Run FX when stopped" is turned on (otherwise the option is disabled so we don't allow the user to change it)
-		if (GetBit(option, 0))
+		if (option && GetBit(*option, 0))
 		{
-			option = ToggleBit(option, 3);
-			SetConfig(configStr, option);
+			*option = ToggleBit(*option, 3);
 
 			char tmp[256];
-			_snprintfSafe(tmp, sizeof(tmp), "%d", option);
+			_snprintfSafe(tmp, sizeof(tmp), "%d", *option);
 			WritePrivateProfileString("reaper", configStr, tmp, get_ini_file());
 		}
 	}
 	else if ((int)ct->user == 2)
 	{
 		const char* configStr = "loopstopfx";
-		int option; GetConfig(configStr, option);
+		ConfigVar<int> option(configStr);
+		if(!option) return;
 
-		option = ToggleBit(option, 0);
-		SetConfig(configStr, option);
+		*option = ToggleBit(*option, 0);
 
 		char tmp[256];
-		_snprintfSafe(tmp, sizeof(tmp), "%d", option);
+		_snprintfSafe(tmp, sizeof(tmp), "%d", *option);
 		WritePrivateProfileString("reaper", configStr, tmp, get_ini_file());
 	}
 	else
 	{
-		const char* configStr = "runallonstop";
-		int runallonstop; GetConfig(configStr, runallonstop);
+		const ConfigVar<int> runallonstop("runallonstop");
 
 		// Set only if "Run FX when stopped" is turned of (otherwise the option is disabled so we don't allow the user to change it)
-		if (!GetBit(runallonstop, 0))
+		if (runallonstop && !GetBit(*runallonstop, 0))
 		{
 			const char* configStr = "runafterstop";
-			SetConfig(configStr, abs((int)ct->user));
+			*ConfigVar<int>(configStr) = abs((int)ct->user);
 			char tmp[256];
 			_snprintfSafe(tmp, sizeof(tmp), "%d", abs((int)ct->user));
 			WritePrivateProfileString("reaper", configStr, tmp, get_ini_file());
@@ -1201,26 +1197,26 @@ void SetOptionsFX (COMMAND_T* ct)
 void SetMoveCursorOnPaste (COMMAND_T* ct)
 {
 	const char* configStr = "itemclickmovecurs";
-	int option; GetConfig(configStr, option);
 
-	option = ToggleBit(option, abs((int)ct->user));
-	SetConfig(configStr, option);
+	ConfigVar<int> option(configStr);
+	if(!option) return;
+	*option = ToggleBit(*option, abs((int)ct->user));
 
 	char tmp[256];
-	_snprintfSafe(tmp, sizeof(tmp), "%d", option);
+	_snprintfSafe(tmp, sizeof(tmp), "%d", *option);
 	WritePrivateProfileString("reaper", configStr, tmp, get_ini_file());
 }
 
 void SetPlaybackStopOptions (COMMAND_T* ct)
 {
-	const char* configStr = (((int)ct->user == 0) ? "stopprojlen" : "viewadvance");
-	int option; GetConfig(configStr, option);
+	const char* configStr = (int)ct->user == 0 ? "stopprojlen" : "viewadvance";
 
-	option = ToggleBit(option, ((int)ct->user));
-	SetConfig(configStr, option);
+	ConfigVar<int> option(configStr);
+	if(!option) return;
+	*option = ToggleBit(*option, (int)ct->user);
 
 	char tmp[256];
-	_snprintfSafe(tmp, sizeof(tmp), "%d", option);
+	_snprintfSafe(tmp, sizeof(tmp), "%d", *option);
 	WritePrivateProfileString("reaper", configStr, tmp, get_ini_file());
 }
 
@@ -1229,7 +1225,7 @@ void SetGridMarkerZOrder (COMMAND_T* ct)
 	const char* configStr = (((int)ct->user > 0) ? "gridinbg" : "gridinbg2");
 
 	int option = abs((int)ct->user) - 1;
-	SetConfig(configStr, option);
+	ConfigVar<int>(configStr).try_set(option);
 
 	char tmp[256];
 	_snprintfSafe(tmp, sizeof(tmp), "%d", option);
@@ -1247,13 +1243,13 @@ void SetAutoStretchMarkers(COMMAND_T* ct)
 
 void CycleRecordModes (COMMAND_T* ct)
 {
-	const char* configStr = "projrecmode";
-	int mode; GetConfig(configStr, mode);
-	if (++mode > 2) mode = 0;
+	ConfigVar<int> mode("projrecmode");
+	if(!mode) return;
+	if (++*mode > 2) mode = 0;
 
-	if      (mode == 0) Main_OnCommandEx(40253, 0, NULL);
-	else if (mode == 1) Main_OnCommandEx(40252, 0, NULL);
-	else if (mode == 2) Main_OnCommandEx(40076, 0, NULL);
+	if      (*mode == 0) Main_OnCommandEx(40253, 0, NULL);
+	else if (*mode == 1) Main_OnCommandEx(40252, 0, NULL);
+	else if (*mode == 2) Main_OnCommandEx(40076, 0, NULL);
 }
 
 /******************************************************************************
@@ -1563,31 +1559,31 @@ void ClearProjectTrackSelAction (COMMAND_T* ct)
 ******************************************************************************/
 int IsSnapFollowsGridVisOn (COMMAND_T* ct)
 {
-	int option; GetConfig("projshowgrid", option);
+	const int option = ConfigVar<int>("projshowgrid").value_or(0);
 	return !GetBit(option, 15);
 }
 
 int IsPlaybackFollowsTempoChangeOn (COMMAND_T* ct)
 {
-	int option; GetConfig("seekmodes", option);
+	const int option = ConfigVar<int>("seekmodes").value_or(0);
 	return GetBit(option, 5);
 }
 
 int IsTrimNewVolPanEnvsOn (COMMAND_T* ct)
 {
-	int option; GetConfig("envtrimadjmode", option);
+	const int option = ConfigVar<int>("envtrimadjmode").value_or(0);
 	return (option == (int)ct->user);
 }
 
 int IsToggleDisplayItemLabelsOn (COMMAND_T* ct)
 {
-	int option; GetConfig("labelitems2", option);
+	const int option = ConfigVar<int>("labelitems2").value_or(0);
 	return ((int)ct->user == 4) ? !GetBit(option, (int)ct->user) : GetBit(option, (int)ct->user);
 }
 
 int IsSetMidiResetOnPlayStopOn (COMMAND_T* ct)
 {
-	int option; GetConfig("midisendflags", option);
+	const int option = ConfigVar<int>("midisendflags").value_or(0);
 	return !GetBit(option, (int)ct->user);
 }
 
@@ -1595,37 +1591,37 @@ int IsSetOptionsFXOn (COMMAND_T* ct)
 {
 	if ((int)ct->user == 1)
 	{
-		int option; GetConfig("runallonstop", option);
+		const int option = ConfigVar<int>("runallonstop").value_or(0);
 		return GetBit(option, 0) ? GetBit(option, 3) : 0; // report as false if "Run FX when stopped" is turned off (because the option is then disabled in the preferences)
 	}
 	else if ((int)ct->user == 2)
 	{
-		int option; GetConfig("loopstopfx", option);
+		const int option = ConfigVar<int>("loopstopfx").value_or(0);
 		return GetBit(option, 0);
 	}
 	else
 	{
-		int runallonstop; GetConfig("runallonstop", runallonstop);
-		int option; GetConfig("runafterstop", option);
+		const int runallonstop = ConfigVar<int>("runallonstop").value_or(0);
+		const int option = ConfigVar<int>("runafterstop").value_or(0);
 		return GetBit(runallonstop, 0) ? 0 : option == abs((int)ct->user) ; // report as false if "Run FX when stopped" is turned on (because the option is then disabled in the preferences)
 	}
 }
 
 int IsSetMoveCursorOnPasteOn (COMMAND_T* ct)
 {
-	int option; GetConfig("itemclickmovecurs", option);
+	const int option = ConfigVar<int>("itemclickmovecurs").value_or(0);
 	return ((int)ct->user < 0) ? !GetBit(option, abs((int)ct->user)) : GetBit(option, abs((int)ct->user));
 }
 
 int IsSetPlaybackStopOptionsOn (COMMAND_T* ct)
 {
-	int option; GetConfig((((int)ct->user == 0) ? "stopprojlen" : "viewadvance"), option);
+	const int option = ConfigVar<int>((int)ct->user == 0 ? "stopprojlen" : "viewadvance").value_or(0);
 	return !!GetBit(option, (int)ct->user);
 }
 
 int IsSetGridMarkerZOrderOn (COMMAND_T* ct)
 {
-	int option; GetConfig((((int)ct->user > 0) ? "gridinbg" : "gridinbg2"), option);
+	const int option = ConfigVar<int>((int)ct->user > 0 ? "gridinbg" : "gridinbg2").value_or(0);
 
 	return option == abs((int)ct->user) - 1;
 }

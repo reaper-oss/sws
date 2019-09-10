@@ -81,7 +81,7 @@ bool SNM_SendPatcher::NotifyChunkLine(int _mode,
 		// add rcv
 		case -1:
 		{
-			int defSndFlags = *(int*)GetConfigVar("defsendflag");
+			int defSndFlags = *ConfigVar<int>("defsendflag");
 			bool audioSnd = ((defSndFlags & 512) != 512);
 			bool midiSnd =  ((defSndFlags & 256) != 256);
 			_newChunk->AppendFormatted(

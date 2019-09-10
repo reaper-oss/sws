@@ -674,13 +674,8 @@ void DoMaxMixFxPanHeight(COMMAND_T*)
 
 void DoRemoveTimeSelectionLeaveLoop(COMMAND_T*)
 {
-	int sz=0; int *locklooptotime = (int *)get_config_var("locklooptotime",&sz);
-    int OldLockLoopToTime=*locklooptotime;
-	if (sz==sizeof(int) && locklooptotime) 
-	{ 
-		int newLockLooptotime=0;
-		*locklooptotime=newLockLooptotime; /* update reaper's copy */
-	}
+	ConfigVarOverride<int> locklooptotime("locklooptotime", 0);
+
 	double a=0.0;
 	double b=0.0;
 	GetSet_LoopTimeRange(false, true, &a,&b,false); // get current loop
@@ -688,7 +683,6 @@ void DoRemoveTimeSelectionLeaveLoop(COMMAND_T*)
 	double d=0;
 	GetSet_LoopTimeRange(true, false, &c,&d,false); // set time sel to 0 and 0
 	GetSet_LoopTimeRange(true, true, &a,&b,false); // restore loop
-	*locklooptotime=OldLockLoopToTime;
 }
 
 int g_CurTrackHeightIdx=0;
@@ -872,10 +866,9 @@ void DoRenderReceivesAsStems(COMMAND_T*)
 
 void DoSetRenderSpeedToRealtime2(COMMAND_T*)
 {
-	int sz=0; int *renderspeedmode = (int *)get_config_var("workrender",&sz);
-    if (sz==sizeof(int) && renderspeedmode) 
+	if (ConfigVar<int> renderspeedmode = "workrender")
 	{ 
-		bitset<32> blah(*renderspeedmode);	
+		bitset<32> blah(*renderspeedmode);
 		blah.set(3);
 		*renderspeedmode=blah.to_ulong();
 	}
@@ -885,10 +878,9 @@ void DoSetRenderSpeedToRealtime2(COMMAND_T*)
 
 void DoSetRenderSpeedToNonLim(COMMAND_T*)
 {
-	int sz=0; int *renderspeedmode = (int *)get_config_var("workrender",&sz);
-    if (sz==sizeof(int) && renderspeedmode) 
+	if (ConfigVar<int> renderspeedmode = "workrender")
 	{ 
-		bitset<32> blah(*renderspeedmode);	
+		bitset<32> blah(*renderspeedmode);
 		blah.reset(3);
 		*renderspeedmode=blah.to_ulong();
 	}
@@ -900,8 +892,7 @@ int g_renderspeed=-1;
 
 void DoStoreRenderSpeed(COMMAND_T*)
 {
-	int sz=0; int *renderspeedmode = (int *)get_config_var("workrender",&sz);
-    if (sz==sizeof(int) && renderspeedmode) 
+	if (const ConfigVar<int> renderspeedmode = "workrender")
 	{ 
 		g_renderspeed=*renderspeedmode;
 	}
@@ -911,8 +902,7 @@ void DoStoreRenderSpeed(COMMAND_T*)
 
 void DoRecallRenderSpeed(COMMAND_T*)
 {
-	int sz=0; int *renderspeedmode = (int *)get_config_var("workrender",&sz);
-    if (sz==sizeof(int) && renderspeedmode) 
+	if (ConfigVar<int> renderspeedmode = "workrender")
 	{ 
 		if (g_renderspeed>=0)
 			*renderspeedmode=g_renderspeed;

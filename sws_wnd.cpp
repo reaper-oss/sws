@@ -416,7 +416,7 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 					if (*m_tooltip)
 					{
-						if (!(*(int*)GetConfigVar("tooltips")&2)) // obeys the "Tooltip for UI elements" pref
+						if (!(*ConfigVar<int>("tooltips")&2)) // obeys the "Tooltip for UI elements" pref
 						{
 							POINT p = { m_tooltip_pt.x + xo, m_tooltip_pt.y + yo };
 							RECT rr = { r.left+xo,r.top+yo,r.right+xo,r.bottom+yo };

@@ -1309,7 +1309,7 @@ bool SeekItem(int _plId, int _nextItemId, int _curItemId)
 		if (_nextItemId<0)
 		{
 			// temp override of the "stop play at project end" option
-			if (int* opt = (int*)GetConfigVar("stopprojlen")) {
+			if (ConfigVar<int> opt = "stopprojlen") {
 				g_oldStopprojlenPref = *opt;
 				*opt = 1;
 			}
@@ -1545,7 +1545,7 @@ void PlaylistPlay(int _plId, int _itemId)
 				PlaylistStop();
 
 			// temp override of the "smooth seek" option
-			if (int* opt = (int*)GetConfigVar("smoothseek")) {
+			if (ConfigVar<int> opt = "smoothseek") {
 				g_oldSeekPref = *opt;
 				*opt = 3;
 			}
@@ -1640,12 +1640,12 @@ void PlaylistStopped(bool _pause)
 
 		// restore options
 		if (g_oldSeekPref >= 0)
-			if (int* opt = (int*)GetConfigVar("smoothseek")) {
+			if (ConfigVar<int> opt = "smoothseek") {
 				*opt = g_oldSeekPref;
 				g_oldSeekPref = -1;
 			}
 		if (g_oldStopprojlenPref >= 0)
-			if (int* opt = (int*)GetConfigVar("stopprojlen")) {
+			if (ConfigVar<int> opt = "stopprojlen") {
 				*opt = g_oldStopprojlenPref;
 				g_oldStopprojlenPref = -1;
 			}
@@ -1746,7 +1746,7 @@ void AppendPasteCropPlaylist(RegionPlaylist* _playlist, const AppendPasteCropPla
 					__LOCALIZE("S&M - Error","sws_DLG_165"), MB_OK);
 				return;
 			}
-			if (int usedId = IsInPlaylists(startPos) >= 0)
+			if (int usedId = IsInPlaylists(startPos) >=0)
 			{
 				char msg[256] = "";
 				_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Warning: pasting inside a region that belongs to playlist #%d!\nAre you sure you want to continue?","sws_DLG_165"), usedId+1);
@@ -1826,7 +1826,7 @@ void AppendPasteCropPlaylist(RegionPlaylist* _playlist, const AppendPasteCropPla
 					}
 				}
 
-				DeleteMediaItemsByName("<S&M Region Playlist - TEMP>");
+					DeleteMediaItemsByName("<S&M Region Playlist - TEMP>");
 
 				for (int j=0; j < splitItems.GetSize(); j++)
 				{

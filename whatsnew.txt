@@ -28,7 +28,8 @@ Fixes:
  - disable creating graph, disable go to max. short-term / momentary (Issue 1120) (these are currently not implemented for high precision mode)
  - ReaScript: automatically disable high precision mode for NF_AnalyzeTakeLoudness2() (to ensure correct max. short-term / momentary positions)
 + "Xenakios/SWS: [Deprecated] Load project template ..": don't change default save path, REAPER 5.983+ (report https://forum.cockos.com/showpost.php?p=2140690&postcount=2605|here|)
- 
++ Fix wrong point values when using envelope-related actions with fader scaling mode (regression from 2.10.0, report https://forum.cockos.com/showthread.php?p=2094872|here|)
+
 New ReaScript functions:
 + Issue 974 (Lua example https://github.com/reaper-oss/sws/issues/974#issuecomment-386480161|here|):
  -NF_GetGlobalStartupAction_Desc()
@@ -40,23 +41,25 @@ New ReaScript functions:
  -NF_SetProjectStartupAction()
  -NF_ClearProjectStartupAction()
 + NF_TakeFX_GetModuleName() (take version of already existing BR_TrackFX_GetModuleName())
-
++ other ReaScript changes:
+ + update various BR_ APIs for new TCP/EnvCP/MCP architecture (thanks Justin!)
+ + Extend CF_GetClipboard to allow reading more than 1023 characters
+ + Deprecate CF_GetClipboardBig (use CF_GetClipboard instead)
+ + BR_EnvGet/SetProperties(): add optional parameter automationItemsOptions
+ + Issue 1153 (partly): BR_Envelope: EnvProperties - add second ACT token from track envelope state chunk (automation items options)
+ 
 Other changes:
-+ update various BR_ APIs for new TCP/EnvCP/MCP architecture (thanks Justin!)
-+ Issue 1119: Enter key in Resources Filter textbox focuses list
 + Issue 1175: "SWS/S&M: Remove all envelopes for selected tracks" - prompt before executing action, may be overridden by setting <REAPER resource path>/S&M.ini/[Misc]/RemoveAllEnvsSelTracksPrompt=0
 + "Xenakios/SWS: Rename takes and source files...", "Xenakios/SWS: Rename take source files...": add '(no undo)' in action name
-+Enable media file tagging features on Linux
-+Update TagLib on macOS to v1.11.1
-+Split the macOS release into 32-bit and 64-bit versions, delete reaper_sws_extension.dylib
-+Reworked the Windows installer
++ Enable media file tagging features on Linux
++ Update TagLib on macOS to v1.11.1
++ Split the macOS release into 32-bit and 64-bit versions, delete reaper_sws_extension.dylib
++ Reworked the Windows installer
  - Allow installing SWS to paths containing characters outside of the system's ANSI codepage
  - Migrate the extension DLL to <resource path>\UserPlugins, reaper_sws.py to <resource path>\Scripts
  - Make installing the Python ReaScript support optional
  - Fix the install path being initially empty when launching the Windows installer if REAPER is not installed
  - Fix nonworking check for running REAPER processes
-+Extend CF_GetClipboard to allow reading more than 1023 characters
-+Deprecate CF_GetClipboardBig (use CF_GetClipboard instead)
 
 !v2.10.0 #1 Featured build (February 6, 2019)
 Mega thanks to nofish and cfillion for their many contributions, and X-Raym for doing the tedious work of merging everything into a release.

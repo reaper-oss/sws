@@ -23,6 +23,12 @@ Fixes:
 New features:
 +Snapshots: Add option to (not) prompt for deleting abandoned items when recalling snapshots which contain deleted tracks (snapshots will be recalled and abandoned items deleted without confirmation with this option disabled) (Issue 1073)
 
+Fixes:
++Don't block Del key in Filter textbox (Marker list, Track list, Resources) (Issue 1119)
+
+Other changes:
+- Enter key in Resources Filter textbox focuses list (Issue 1119)
+
 !v2.10.0 #1 Featured build (February 6, 2019)
 Mega thanks to nofish and cfillion for their many contributions, and X-Raym for doing the tedious work of merging everything into a release.
 Recommended use of REAPER 5.965.

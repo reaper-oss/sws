@@ -391,8 +391,21 @@ int SWS_TrackListWnd::OnKey(MSG* msg, int iKeyState)
 			TogInMCP();
 			return 1;
 		case VK_DELETE:
-			Main_OnCommand(40005, 0); // remove selected tracks
-			return 1;
+		{
+			// #1119, don't block Del key in Filter textbox
+			HWND h = GetDlgItem(m_hwnd, IDC_FILTER);
+#ifdef _WIN32
+			if (msg->hwnd == h)
+#else
+			if (GetFocus() == h)
+#endif
+				return 0;
+			else
+			{
+				Main_OnCommand(40005, 0); // remove selected tracks
+				return 1;
+			}
+		}
 		case VK_F2:
 			OnCommand(RENAME_MSG, 0);
 			return 1;

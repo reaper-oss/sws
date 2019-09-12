@@ -53,6 +53,9 @@ Fixes:
 New ReaScript functions:
 +NF_TakeFX_GetModuleName() (take version of already existing BR_TrackFX_GetModuleName())
 
+Other changes:
+Issue 1175: "SWS/S&M: Remove all envelopes for selected tracks" - prompt before executing action, may be overridden by setting <REAPER resource path>/S&M.ini/[Misc]/RemoveAllEnvsSelTracksPrompt=0
+
 !v2.10.0 #1 Featured build (February 6, 2019)
 Mega thanks to nofish and cfillion for their many contributions, and X-Raym for doing the tedious work of merging everything into a release.
 Recommended use of REAPER 5.965.

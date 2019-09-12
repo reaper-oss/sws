@@ -1111,6 +1111,11 @@ void IniFileInit()
 	g_SNM_ToolbarRefresh = (GetPrivateProfileInt("General", "ToolbarsAutoRefresh", 1, g_SNM_IniFn.Get()) == 1);
 	g_SNM_ToolbarRefreshFreq = BOUNDED(GetPrivateProfileInt("General", "ToolbarsAutoRefreshFreq", SNM_DEF_TOOLBAR_RFRSH_FREQ, g_SNM_IniFn.Get()), 100, 5000);
 	g_SNM_SupportBuggyPlug = GetPrivateProfileInt("General", "BuggyPlugsSupport", 0, g_SNM_IniFn.Get());
+
+	// #1175, prompt by default, may be overridden
+	if (GetPrivateProfileInt("Misc", "RemoveAllEnvsSelTracksPrompt", -666, g_SNM_IniFn.Get()) == -666)
+		WritePrivateProfileString("Misc", "RemoveAllEnvsSelTracksPrompt", "1", g_SNM_IniFn.Get());
+		
 #ifdef _WIN32
 	g_SNM_ClearType = (GetPrivateProfileInt("General", "ClearTypeFont", 1, g_SNM_IniFn.Get()) == 1);
 

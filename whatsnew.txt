@@ -50,6 +50,8 @@ Fixes:
  - internal tweaks (more efficient load/save)
  - display [modified] in notes window if global notes dirty
  - additionally to saving when project is saved, can be saved via notes window context menu (global notes are stored in <REAPER resource path>/SWS_global notes.txt)
+New ReaScript functions:
++NF_TakeFX_GetModuleName() (take version of already existing BR_TrackFX_GetModuleName())
 
 !v2.10.0 #1 Featured build (February 6, 2019)
 Mega thanks to nofish and cfillion for their many contributions, and X-Raym for doing the tedious work of merging everything into a release.

@@ -49,6 +49,8 @@ const char*    NF_GetSWSMarkerRegionSub(int mkrRgnIdx);
 bool           NF_SetSWSMarkerRegionSub(const char* mkrRgnSub, int mkrRgnIdx);
 void           NF_UpdateSWSMarkerRegionSubWindow();
 
+bool           NF_TakeFX_GetModuleName(MediaItem* item, int fx, char* nameOut, int nameOutSz);
+
 
 // #974
 /*

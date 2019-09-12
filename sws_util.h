@@ -256,11 +256,6 @@ void SWS_GetSelectedMediaItemsOnTrack(WDL_TypedBuf<MediaItem*>* buf, MediaTrack*
 int SWS_GetModifiers();
 bool SWS_IsWindow(HWND hwnd);
 
-// NF: #966, no API currently (R5.78) to get/set track height lock state
-// so use chunk parsing for now
-// update: native API GetSetMediaTrackInfo*(B_HEIGHTLOCK) added in R5.95pre4
-bool SWS_IsTrackHeightLocked(MediaTrack* track);
-
 // Localization, sws_util.cpp
 #define _SWS_LOCALIZATION
 WDL_FastString* GetLangPack();

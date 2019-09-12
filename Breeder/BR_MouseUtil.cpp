@@ -110,8 +110,7 @@ static MediaItem_Take* GetTakeFromItemY (MediaItem* item, int itemY, MediaTrack*
 	MediaItem_Take* take = NULL;
 	WritePtr(takeId, -1);
 
-	int takeLanes;
-	GetConfig("projtakelane", takeLanes);
+	const int takeLanes = ConfigVar<int>("projtakelane").value_or(0);
 
 	// Take lanes displayed
 	if (GetBit(takeLanes, 0))
@@ -550,7 +549,7 @@ bool BR_MouseInfo::SetDetectedCCLaneAsLastClicked ()
 		{
 			POINT point = m_ccLaneClickPoint;
 
-			int lockSettings; GetConfig("projsellock", lockSettings);
+			const int lockSettings = ConfigVar<int>("projsellock").value_or(0);
 			char itemLock = m_mouseInfo.inlineMidi ? (char)GetMediaItemInfo_Value(GetMediaItemTake_Item(m_mouseInfo.take), "C_LOCK") : 0;
 
 			// Get HWND and update point if needed
@@ -578,7 +577,7 @@ bool BR_MouseInfo::SetDetectedCCLaneAsLastClicked ()
 				}
 				else
 				{
-					SetConfig("projsellock", 23492); // lock item edges, fades, volume handles, stretch markers, item movement, take and track envelopes
+					ConfigVar<int>("projsellock").try_set(23492); // lock item edges, fades, volume handles, stretch markers, item movement, take and track envelopes
 					SetMediaItemInfo_Value(GetMediaItemTake_Item(m_mouseInfo.take), "C_LOCK", 0);
 				}
 			}
@@ -593,7 +592,7 @@ bool BR_MouseInfo::SetDetectedCCLaneAsLastClicked ()
 				SimulateMouseClick(hwnd, point, true);
 				if (m_mouseInfo.inlineMidi)
 				{
-					SetConfig("projsellock", lockSettings);
+					ConfigVar<int>("projsellock").try_set(lockSettings);
 					SetMediaItemInfo_Value(GetMediaItemTake_Item(m_mouseInfo.take), "C_LOCK", (double)itemLock);
 				}
 				update = true;
@@ -1344,7 +1343,7 @@ int BR_MouseInfo::IsMouseOverEnvelopeLineTrackLane (MediaTrack* track, int track
 	if (envLaneCount > 0)
 	{
 		int overlapLimit,trackGapTop, trackGapBottom;
-		GetConfig("env_ol_minh", overlapLimit);
+		overlapLimit = ConfigVar<int>("env_ol_minh").value_or(0);
 		GetTrackGap(trackHeight, &trackGapTop, &trackGapBottom);
 
 		int envLaneFull = trackHeight - trackGapTop - trackGapBottom;
@@ -1422,8 +1421,7 @@ int BR_MouseInfo::IsMouseOverEnvelopeLineTake (MediaItem_Take* take, int takeHei
 	int envelopeCount = (int)envelopes.size();
 	if (envelopeCount > 0)
 	{
-		int overlapLimit;
-		GetConfig("env_ol_minh", overlapLimit);
+		const int overlapLimit = ConfigVar<int>("env_ol_minh").value_or(0);
 		bool envelopesOverlapping = (overlapLimit >= 0 && takeHeight / envelopeCount < overlapLimit) ? (true) : (false);
 
 		// Each envelope has it's own lane, find the right one

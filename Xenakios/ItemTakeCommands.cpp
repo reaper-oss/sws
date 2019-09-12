@@ -280,7 +280,7 @@ void PasteMultipletimes(int NumPastes, double TimeIntervalQN, int RepeatMode)
 {
 	if (NumPastes > 0)
 	{
-		int* pCursorMode = (int*)GetConfigVar("itemclickmovecurs");
+		const ConfigVar<int> pCursorMode("itemclickmovecurs");
 		double dStartTime = GetCursorPosition();
 
 		Undo_BeginBlock();
@@ -291,11 +291,9 @@ void PasteMultipletimes(int NumPastes, double TimeIntervalQN, int RepeatMode)
 			{
 				// Cursor mode must set to move the cursor after paste
 				// Clear bit 8 of itemclickmovecurs
-				int savedMode = *pCursorMode;
-				*pCursorMode &= ~8;
+				ConfigVarOverride<int> tmpCursorMode(pCursorMode, *pCursorMode & ~8);
 				for (int i = 0; i < NumPastes; i++)
 					Main_OnCommand(40058,0); // Paste
-				*pCursorMode = savedMode; // Restore the cursor mode
 				break;
 			}
 			case 1: // Time interval
@@ -936,43 +934,26 @@ double g_lastTailLen;
 void DoWorkForRenderItemsWithTail(double TailLen)
 {
 	// Unselect all tracks
-
-	MediaTrack* MunRaita;
-	MediaItem* CurItem;
-
-	int numItems;;
-
-	char textbuf[100];
-	int sz=0; int *fxtail = (int *)get_config_var("itemfxtail",&sz);
-    int OldTail=*fxtail;
-	if (sz==sizeof(int) && fxtail)
-	{
-
-		int msTail=int(1000*TailLen);
-		*fxtail=msTail;
-		sprintf(textbuf,"%d",msTail);
-	}
+	const int msTail=1000*TailLen;
+	ConfigVarOverride<int> fxtail("itemfxtail", msTail);
 
 	bool ItemSelected=false;
-	int i;
-	int j;
-	for (i=0;i<GetNumTracks();i++)
+	for (int i=0;i<GetNumTracks();i++)
 	{
-		MunRaita = CSurf_TrackFromID(i+1,FALSE);
-		numItems=GetTrackNumMediaItems(MunRaita);
+		MediaTrack *MunRaita = CSurf_TrackFromID(i+1,false);
+		const int numItems=GetTrackNumMediaItems(MunRaita);
 		Main_OnCommand(40635,0);
-		for (j=0;j<numItems;j++)
+		for (int j=0;j<numItems;j++)
 		{
-			CurItem = GetTrackMediaItem(MunRaita,j);
+			MediaItem *CurItem = GetTrackMediaItem(MunRaita,j);
 			//propertyName="D_";
 			ItemSelected=*(bool*)GetSetMediaItemInfo(CurItem,"B_UISEL",NULL);
-			if (ItemSelected==TRUE)
+			if (ItemSelected)
 			{
 				Main_OnCommand(40601,0); // render items as new take
 			}
 		}
 	}
-	*fxtail=OldTail;
 	UpdateTimeline();
 }
 

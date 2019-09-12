@@ -267,7 +267,7 @@ int GetEnvelopeOverlapState(TrackEnvelope* envelope, int* laneCount, int* envCou
 		return -1;
 
 	int visEnvCount = CountVisibleTrackEnvelopesInTrackLane(GetEnvParent(envelope));
-	int overlapMinHeight = *(int*)GetConfigVar("env_ol_minh");
+	int overlapMinHeight = *ConfigVar<int>("env_ol_minh");
 	if (overlapMinHeight < 0)
 		return (WritePtr(laneCount, visEnvCount), WritePtr(envCount, visEnvCount), 0);
 

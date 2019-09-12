@@ -72,7 +72,7 @@ bool AddReceiveWithVolPan(MediaTrack * _srcTr, MediaTrack * _destTr, int _type, 
 	}
 
 	// default volume
-	if (!update && _snprintfStrict(vol, sizeof(vol), "%.14f", *(double*)GetConfigVar("defsendvol")) > 0)
+	if (!update && _snprintfStrict(vol, sizeof(vol), "%.14f", *ConfigVar<double>("defsendvol")) > 0)
 		update = (_p->AddReceive(_srcTr, _type, vol, pan) > 0);
 	return update;
 }
@@ -167,7 +167,7 @@ bool CueBuss(const char* _undoMsg, const char* _busName, int _type, bool _showRo
 							mainSend.AppendFormatted(32, "HWOUT %d ", _hwOuts[i]-1);
 
 						mainSend.Append("0 ");
-						mainSend.AppendFormatted(20, "%.14f ", *(double*)GetConfigVar("defhwvol"));
+						mainSend.AppendFormatted(20, "%.14f ", *ConfigVar<double>("defhwvol"));
 						mainSend.Append("0.00000000000000 0 0 0 -1.00000000000000 -1\n");
 					}
 				}

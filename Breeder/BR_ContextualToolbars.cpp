@@ -246,7 +246,7 @@ void BR_ContextualToolbar::LoadToolbar (bool exclusive)
 				bool undoTake  = this->ActivateTake(executeOnToolbarLoad);
 
 				// Create undo point
-				int undoMask; GetConfig("undomask", undoMask);
+				const int undoMask = ConfigVar<int>("undomask").value_or(0);
 				if (!GetBit(undoMask, 0)) // "Create undo points for item/track selection" is off
 				{
 					undoTrack = false;

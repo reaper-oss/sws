@@ -1,7 +1,7 @@
 /******************************************************************************
 / wol_Util.cpp
 /
-/ Copyright (c) 2014-2015 wol
+/ Copyright (c) 2014 and later wol
 / http://forum.cockos.com/member.php?u=70153
 / http://github.com/reaper-oss/sws
 /
@@ -72,10 +72,7 @@ void SetTrackHeight(MediaTrack* track, int height, bool useChunk)
 	{
 		GetSetMediaTrackInfo(track, "I_HEIGHTOVERRIDE", &height);
 
-		PreventUIRefresh(1);
-		Main_OnCommand(41327, 0);
-		Main_OnCommand(41328, 0);
-		PreventUIRefresh(-1);
+		TrackList_AdjustWindows(false);
 	}
 	else
 	{

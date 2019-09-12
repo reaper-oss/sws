@@ -1646,7 +1646,7 @@ int NotesInit()
 		if (infile.IsOpen() == true) {
 			std::vector<char> buffer((size_t)infile.GetSize() + 1); // +1 to have space for the terminating zero
 			// infile.Read(buffer.data(), infile.GetSize()); // C++11
-            infile.Read(&buffer.front(), (int)infile.GetSize());
+			infile.Read(&buffer.front(), (int)infile.GetSize());
 			buffer[(size_t)infile.GetSize()] = '\0'; // put in the string terminating zero
 			g_glbNotes.Get()->Set(&buffer[0]);
 		}

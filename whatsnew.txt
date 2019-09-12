@@ -8,6 +8,11 @@
  - Fix the install path being initially empty when launching the Windows installer if REAPER is not installed
  - Fix nonworking check for running REAPER processes
 +Issue 1131: harden configvar against invalid type interpretation
+Fixes:
+Loudness - high precision mode:
+ - Fix potential crash when analyzing items shorter than 3 seconds
+ - Disable creating graph, disable go to max. short-term / momentary (Issue 1120) (these are currently not implemented for high precision mode)
+ - ReaScript: automatically disable high precision mode for NF_AnalyzeTakeLoudness2() (to ensure correct max. short-term / momentary positions)
 
 !v2.10.0 #1 Featured build (February 6, 2019)
 Mega thanks to nofish and cfillion for their many contributions, and X-Raym for doing the tedious work of merging everything into a release.

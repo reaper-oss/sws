@@ -1382,7 +1382,6 @@ void DoSelectItemUnderEditCursorOnSelTrack(COMMAND_T* _ct)
 
 void DoNormalizeSelTakesTodB(COMMAND_T* ct)
 {
-	// 40108 // normalize takes
 	vector<MediaItem_Take*> seltakes;
 	XenGetProjectTakes(seltakes,true,true);
 	if (seltakes.size()>0)
@@ -1393,14 +1392,15 @@ void DoNormalizeSelTakesTodB(COMMAND_T* ct)
 		{
 			double relgain=atof(buf);
 			Undo_BeginBlock();
-			Main_OnCommand(40108,0);
+			Main_OnCommand(40108,0); // Normalize items
 			int i;
 			for (i=0;i<(int)seltakes.size();i++)
 			{
-				double curgain=*(double*)GetSetMediaItemTakeInfo(seltakes[i],"D_VOL",0);
+				MediaItem_Take* take = seltakes[i];
+				double curgain=abs(*(double*)GetSetMediaItemTakeInfo(take,"D_VOL",0));
 				double newdb=VAL2DB(curgain)+relgain;
-				double newgain=DB2VAL(newdb);
-				GetSetMediaItemTakeInfo(seltakes[i],"D_VOL",&newgain);
+				double newgain=IsTakePolarityFlipped(take) ? -DB2VAL(newdb) : DB2VAL(newdb);
+				GetSetMediaItemTakeInfo(take,"D_VOL",&newgain);
 			}
 			Undo_EndBlock(SWS_CMD_SHORTNAME(ct),0);
 			UpdateTimeline();

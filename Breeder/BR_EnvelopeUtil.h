@@ -272,7 +272,7 @@ TrackEnvelope* GetTakeEnv (MediaItem_Take* take, BR_EnvType envelope);
 MediaItem_Take* GetTakeEnvParent (TrackEnvelope* envelope, BR_EnvType* type);
 MediaTrack* GetEnvParent (TrackEnvelope* envelope);
 vector<int> GetSelPoints (TrackEnvelope* envelope);
-WDL_FastString ConstructReceiveEnv (BR_EnvType type, double firstPointValue, bool hardwareSend, bool addNewLinePrefix = true);
+WDL_FastString ConstructReceiveEnv (BR_EnvType type, double firstPointValue, bool hardwareSend);
 bool ToggleShowSendEnvelope (MediaTrack* track, int sendId, BR_EnvType type);
 bool ShowSendEnvelopes (vector<MediaTrack*>& tracks, BR_EnvType envelopeTypes);
 bool EnvVis (TrackEnvelope* envelope, bool* lane);

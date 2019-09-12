@@ -2145,7 +2145,7 @@ vector<int> GetSelPoints (TrackEnvelope* envelope)
 	return selectedPoints;
 }
 
-WDL_FastString ConstructReceiveEnv (BR_EnvType type, double firstPointValue, bool hardwareSend, bool addNewLinePrefix /*=true*/)
+WDL_FastString ConstructReceiveEnv (BR_EnvType type, double firstPointValue, bool hardwareSend)
 {
 	WDL_FastString envelope;
 
@@ -2156,9 +2156,6 @@ WDL_FastString ConstructReceiveEnv (BR_EnvType type, double firstPointValue, boo
 	const int envLanes = ConfigVar<int>("envlanes").value_or(0);
 
 	BR_EnvShape defShape = (type == MUTE) ? SQUARE : GetDefaultPointShape();
-
-	if (addNewLinePrefix)
-		envelope.Append("\n");
 
 	if      (type == VOLUME) (hardwareSend) ? AppendLine(envelope, "<HWVOLENV")  : AppendLine(envelope, "<AUXVOLENV");
 	else if (type == PAN)    (hardwareSend) ? AppendLine(envelope, "<HWPANENV")  : AppendLine(envelope, "<AUXPANENV");
@@ -2254,7 +2251,6 @@ bool ToggleShowSendEnvelope (MediaTrack* track, int sendId, BR_EnvType type)
 								else if (!strcmp(lp.gettoken_str(0), "<AUXMUTEENV") || !strcmp(lp.gettoken_str(0), "<HWMUTEENV")) {currentEnv = MUTE;   currentEnvState = &muteEnv;}
 
 								// Save current send envelope
-								currentEnvState->Append("\n");
 								while (token != NULL)
 								{
 									lp.parse(token);
@@ -2339,11 +2335,11 @@ bool ToggleShowSendEnvelope (MediaTrack* track, int sendId, BR_EnvType type)
 
 								newReceiveLine.Append(" ");
 							}
-							newReceiveLine.Append("\n");
-							newState.Append(newReceiveLine.Get());
+
+							AppendLine(newState, newReceiveLine.Get());
 						}
 						else
-							newState.Append(receiveLine.Get());
+							AppendLine(newState, receiveLine.Get());
 
 						if ((type & VOLUME) && !volEnv.GetLength())  {volEnv  = ConstructReceiveEnv(VOLUME, trim ? sendVolume : 1, hwSend); stateUpdated = true;}
 						if ((type & PAN)    && !panEnv.GetLength())  {panEnv  = ConstructReceiveEnv(PAN,    trim ? sendPan : 0,    hwSend); stateUpdated = true;}
@@ -2454,7 +2450,6 @@ bool ShowSendEnvelopes (vector<MediaTrack*>& tracks, BR_EnvType envelopeTypes)
 								else if (!strcmp(lp.gettoken_str(0), "<AUXMUTEENV") || !strcmp(lp.gettoken_str(0), "<HWMUTEENV")) {currentEnv = MUTE;   currentEnvState = &muteEnv;}
 
 								// Save current send envelope
-								currentEnvState->Append("\n");
 								while (token != NULL)
 								{
 									lp.parse(token);
@@ -2505,12 +2500,11 @@ bool ShowSendEnvelopes (vector<MediaTrack*>& tracks, BR_EnvType envelopeTypes)
 
 								newReceiveLine.Append(" ");
 							}
-							newReceiveLine.Append("\n");
 
-							newState.Append(newReceiveLine.Get());
+							AppendLine(newState, newReceiveLine.Get());
 						}
 						else
-							newState.Append(receiveLine.Get());
+							AppendLine(newState, receiveLine.Get());
 
 						if ((envelopeTypes & VOLUME) && !volEnv.GetLength())  {volEnv  = ConstructReceiveEnv(VOLUME, trim ? sendVolume : 1, hwSend); stateUpdated = true;}
 						if ((envelopeTypes & PAN)    && !panEnv.GetLength())  {panEnv  = ConstructReceiveEnv(PAN,    trim ? sendPan : 0,    hwSend); stateUpdated = true;}

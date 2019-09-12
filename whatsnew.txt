@@ -58,6 +58,7 @@ Issue 1175: "SWS/S&M: Remove all envelopes for selected tracks" - prompt before 
 
 Fixes:
 - Contextual toolbars: restore focus to last focused window when toolbar is auto closed (report https://forum.cockos.com/showthread.php?t=218978|here|)
+Fix hiding send envelopes accidentally removing the subsequent send/receive (Issue 1183)
 
 !v2.10.0 #1 Featured build (February 6, 2019)
 Mega thanks to nofish and cfillion for their many contributions, and X-Raym for doing the tedious work of merging everything into a release.

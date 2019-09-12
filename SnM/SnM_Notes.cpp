@@ -1642,7 +1642,7 @@ int NotesInit()
 	g_notesType = GetPrivateProfileInt(NOTES_INI_SEC, "Type", 0, g_SNM_IniFn.Get());
 	g_locked = (GetPrivateProfileInt(NOTES_INI_SEC, "Lock", 0, g_SNM_IniFn.Get()) == 1);
 	GetPrivateProfileString(NOTES_INI_SEC, "BigFontName", SNM_DYN_FONT_NAME, g_notesBigFontName, sizeof(g_notesBigFontName), g_SNM_IniFn.Get());
-  g_wrapText=(GetPrivateProfileInt(NOTES_INI_SEC, "WrapText", 0, g_SNM_IniFn.Get()) == 1);
+	g_wrapText=(GetPrivateProfileInt(NOTES_INI_SEC, "WrapText", 0, g_SNM_IniFn.Get()) == 1);
 
 	// get the action help filename
 	char defaultHelpFn[SNM_MAX_PATH] = "";
@@ -1655,11 +1655,9 @@ int NotesInit()
 	filePath.SetFormatted(SNM_MAX_PATH, "%s/SWS_Global notes.txt", GetResourcePath());
 	WDL_FileRead infile(filePath.Get(), 0, 65536); // NF: not sure about these params, taken from
 	//https://github.com/justinfrankel/licecap/blob/3721ce33ac72ff05ef89d2e92ca58a0f96164134/WDL/lice/lice_gif.cpp#L130
-	std::vector<char> buffer((size_t)infile.GetSize() + 1); // +1 to have space for the terminating zero
-	// infile.Read(buffer.data(), infile.GetSize()); // C++11
-	infile.Read(&buffer.front(), (int)infile.GetSize());
-	buffer[(size_t)infile.GetSize()] = '\0'; // put in the string terminating zero
-	g_globalNotes.Set(&buffer[0]);
+	const int infileSize = infile.GetSize();
+	if(infileSize >= 0 && g_globalNotes.SetLen(infileSize, true))
+		infile.Read(const_cast<char *>(g_globalNotes.Get()), infileSize);
 	
 	// instanciate the window if needed, can be NULL
 	g_notesWndMgr.Init();

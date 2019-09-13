@@ -69,6 +69,9 @@ Fixes:
 Issue 1173: update various BR_ APIs for new TCP/EnvCP/MCP architecture (thanks Justin!)
 Issue 1180: prevent UI updates from being disabled when stopping BR mouse playback via ReaScript (thanks Justin!)
 
++New actions (Main section):
+ - SWS/NF: Toggle render speed (apply FX/render stems) realtime/not limited (Issue 1065)
+
 !v2.10.0 #1 Featured build (February 6, 2019)
 Mega thanks to nofish and cfillion for their many contributions, and X-Raym for doing the tedious work of merging everything into a release.
 Recommended use of REAPER 5.965.

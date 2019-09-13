@@ -1,5 +1,5 @@
 /******************************************************************************
-/ cfillion.cpp
+/ cfillion.hpp
 /
 / Copyright (c) 2017 Christian Fillion
 / https://cfillion.ca

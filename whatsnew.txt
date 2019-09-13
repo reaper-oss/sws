@@ -8,6 +8,9 @@
  - Fix the install path being initially empty when launching the Windows installer if REAPER is not installed
  - Fix nonworking check for running REAPER processes
 
++New actions (Main section):
+ - SWS/NF: Toggle render speed (apply FX/render stems) realtime/not limited (Issue 1065)
+
 !v2.10.0 #1 Featured build (February 6, 2019)
 Mega thanks to nofish and cfillion for their many contributions, and X-Raym for doing the tedious work of merging everything into a release.
 Recommended use of REAPER 5.965.

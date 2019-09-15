@@ -1211,6 +1211,12 @@ bool BR_Envelope::IsScaledToFader ()
 	return (m_properties.faderMode == 1);
 }
 
+int BR_Envelope::GetAIoptions()
+{
+	this->FillProperties();
+	return m_properties.AIoptions;
+}
+
 int BR_Envelope::GetLaneHeight ()
 {
 	this->FillProperties();
@@ -1352,6 +1358,16 @@ void BR_Envelope::SetActive (bool active)
 	}
 }
 
+void BR_Envelope::SetAIoptions(int AIoptions)
+{
+	if (this->FillProperties() && m_properties.AIoptions != AIoptions)
+	{
+		m_properties.AIoptions = AIoptions;
+		m_properties.changed = true;
+		m_update = true;
+	}
+}
+
 void BR_Envelope::SetVisible (bool visible)
 {
 	if (this->FillProperties() && !!m_properties.visible != visible)
@@ -1431,16 +1447,70 @@ bool BR_Envelope::Commit (bool force /*=false*/)
 		const ConfigVar<int> pooledenvs("pooledenvs");
 		ConfigVarOverride<int> tempPooledEnvs(pooledenvs, pooledenvs.value_or(0) & (~12));
 
-		const double playrate = m_take ? GetMediaItemTakeInfo_Value(m_take, "D_PLAYRATE") : 1;
-
-		WDL_FastString chunkStart = this->GetProperties();
-		for (vector<BR_Envelope::EnvPoint>::iterator i = m_points.begin(); i != m_points.end(); ++i)
-			i->Append(chunkStart, m_tempoMap, playrate, m_properties.faderMode);
-		chunkStart.Append(">");
-		GetSetObjectState(m_envelope, chunkStart.Get());
-
+		// Need to commit whole chunk
 		if (m_tempoMap)
+		{
+			WDL_FastString chunkStart = this->GetProperties();
+			for (vector<BR_Envelope::EnvPoint>::iterator i = m_points.begin(); i != m_points.end(); ++i)
+				i->Append(chunkStart, true);
+			chunkStart.Append(">");
+			GetSetObjectState(m_envelope, chunkStart.Get());
 			UpdateTempoTimeline();
+		}
+		// We can update through API (faster)
+		else
+		{
+			PreventUIRefresh(1);
+
+			// If properties were changed, first commit chunk with properties only and one point (one point prevents REAPER
+			// from removing envelope completely) (creating points later using API instead of supplying full chunk is faster)
+			bool firstPointDone = false;
+			if (m_properties.changed || force)
+			{
+				WDL_FastString chunkStart = this->GetProperties();
+				if (!m_points.empty())
+				{
+					m_points[0].Append(chunkStart, false);
+					firstPointDone = true;
+				}
+				chunkStart.Append(">");
+				GetSetObjectState(m_envelope, chunkStart.Get());
+			}
+
+			// Delete excess points
+			int currentCount = CountEnvelopePoints(m_envelope);
+			if (currentCount > m_points.size())
+			{
+				double startTime, endTime;
+				if (m_points.size() > 0) GetEnvelopePoint(m_envelope, m_points.size() - 1, &startTime, NULL, NULL, NULL, NULL);
+				else                  startTime = 0;
+				if (currentCount    > 0) GetEnvelopePoint(m_envelope, currentCount - 1, &endTime,   NULL, NULL, NULL, NULL);
+				else                  endTime = 0;
+
+				startTime -= 1;
+				endTime   += 1;
+				DeleteEnvelopePointRange(m_envelope, startTime, endTime);
+			}
+
+			// Edit/insert cached points
+			currentCount = CountEnvelopePoints(m_envelope);
+			double playrate = (m_take) ? (GetMediaItemTakeInfo_Value(m_take, "D_PLAYRATE")) : 1;
+			for (int i = firstPointDone ? 1 : 0; i < currentCount; ++i)
+			{
+				double value = (m_properties.faderMode != 0) ? ScaleToEnvelopeMode(m_properties.faderMode, m_points[i].value) : m_points[i].value;
+				double position = m_points[i].position * playrate;
+				SetEnvelopePoint(m_envelope, i, &position, &value, &m_points[i].shape, &m_points[i].bezier, &m_points[i].selected, &g_bTrue);
+			}
+			for (int i = currentCount; i < m_points.size(); ++i)
+			{
+				double value = (m_properties.faderMode != 0) ? ScaleToEnvelopeMode(m_properties.faderMode, m_points[i].value) : m_points[i].value;
+				double position = m_points[i].position * playrate;
+				InsertEnvelopePoint(m_envelope, position, value, m_points[i].shape, m_points[i].bezier, m_points[i].selected, &g_bTrue);
+			}
+			Envelope_SortPoints(m_envelope);
+
+			PreventUIRefresh(-1);
+		}
 
 		UpdateArrange();
 		m_update       = false;
@@ -1581,31 +1651,48 @@ void BR_Envelope::Build (bool takeEnvelopesUseProjectTime)
 		m_points.reserve(count);
 		m_pointsSel.reserve(count);
 
-		const double playrate = m_take ? GetMediaItemTakeInfo_Value(m_take, "D_PLAYRATE") : 1;
-
 		// Since information on partial measures is missing from the API, we need to parse the chunk for tempo map
-		char* envState = GetSetObjectState(m_envelope, "");
-		char* token = strtok(envState, "\n");
-		LineParser lp(false);
-		bool start = false;
-		int id = -1;
-		while (token != NULL)
+		if (m_tempoMap)
 		{
-			lp.parse(token);
-			BR_Envelope::EnvPoint point;
-			if (point.ReadLine(lp, playrate, m_properties.faderMode))
+			char* envState = GetSetObjectState(m_envelope, "");
+			char* token = strtok(envState, "\n");
+			LineParser lp(false);
+			bool start = false;
+			int id = -1;
+			while (token != NULL)
 			{
-				++id;
-				start = true;
-				m_points.push_back(point);
-				if (point.selected == 1)
-					m_pointsSel.push_back(id);
+				lp.parse(token);
+				BR_Envelope::EnvPoint point;
+				if (point.ReadLine(lp))
+				{
+					++id;
+					start = true;
+					m_points.push_back(point);
+					if (point.selected == 1)
+						m_pointsSel.push_back(id);
+				}
+				else if (!start)
+					AppendLine(m_chunkProperties, token);
+				token = strtok(NULL, "\n");
 			}
-			else if (!start)
-				AppendLine(m_chunkProperties, token);
-			token = strtok(NULL, "\n");
+			FreeHeapPtr(envState);
 		}
-		FreeHeapPtr(envState);
+		else
+		{
+			double playrate = (m_take) ? (GetMediaItemTakeInfo_Value(m_take, "D_PLAYRATE")) : 1;
+			for (int i = 0; i < count; ++i)
+			{
+				BR_Envelope::EnvPoint point;
+				GetEnvelopePoint(m_envelope, i, &point.position, &point.value, &point.shape, &point.bezier, &point.selected);
+				point.position /=  playrate;
+
+				if (m_properties.faderMode != 0)
+					point.value = ScaleFromEnvelopeMode(m_properties.faderMode, point.value);
+
+				m_points.push_back(point);
+				if (point.selected) m_pointsSel.push_back(i);
+			}
+		}
 	}
 
 	if (takeEnvelopesUseProjectTime && m_take)
@@ -1698,7 +1785,8 @@ bool BR_Envelope::FillProperties () const
 				else if (!strncmp(token, "ACT ", sizeof("ACT ")-1))
 				{
 					lp.parse(token);
-					m_properties.active = lp.gettoken_int(1);
+					m_properties.active    = lp.gettoken_int(1);
+					m_properties.AIoptions = lp.gettoken_int(2);
 				}
 				else if (!strncmp(token, "VIS ", sizeof("VIS ")-1))
 				{
@@ -1819,7 +1907,7 @@ WDL_FastString BR_Envelope::GetProperties ()
 		WDL_FastString properties;
 		properties.Append(m_properties.paramType.Get());
 		properties.Append("\n");
-		properties.AppendFormatted(256, "ACT %d\n", m_properties.active);
+		properties.AppendFormatted(256, "ACT %d %d\n", m_properties.active, m_properties.AIoptions);
 		properties.AppendFormatted(256, "VIS %d %d %d\n", m_properties.visible, m_properties.lane, m_properties.visUnknown);
 		properties.AppendFormatted(256, "LANEHEIGHT %d %d\n", m_properties.height, m_properties.heightUnknown);
 		properties.AppendFormatted(256, "ARM %d\n", m_properties.armed);
@@ -1848,6 +1936,7 @@ WDL_FastString BR_Envelope::GetProperties ()
 
 BR_Envelope::EnvProperties::EnvProperties () :
 active        (0),
+AIoptions     (-1),
 visible       (0),
 lane          (0),
 visUnknown    (0),
@@ -1871,6 +1960,7 @@ changed       (false)
 
 BR_Envelope::EnvProperties::EnvProperties (const EnvProperties& properties) :
 active          (properties.active),
+AIoptions       (-1),
 visible         (properties.visible),
 lane            (properties.lane),
 visUnknown      (properties.visUnknown),
@@ -1900,7 +1990,9 @@ BR_Envelope::EnvProperties& BR_Envelope::EnvProperties::operator= (const EnvProp
 		return *this;
 
 	active          = properties.active;
+	AIoptions       = properties.AIoptions;
 	visible         = properties.visible;
+
 	lane            = properties.lane;
 	visUnknown      = properties.visUnknown;
 	height          = properties.height;
@@ -1973,17 +2065,17 @@ bool BR_Envelope::EnvPoint::operator==(const EnvPoint &point) const
 		this->sig == point.sig &&
 		this->selected == point.selected &&
 		this->partial == point.partial
-	;
+		;
 }
 
-bool BR_Envelope::EnvPoint::ReadLine (const LineParser& lp, const double playrate, const int faderMode)
+bool BR_Envelope::EnvPoint::ReadLine (const LineParser& lp)
 {
 	if (strcmp(lp.gettoken_str(0), "PT"))
 		return false;
 	else
 	{
-		this->position   = lp.gettoken_float(1) / playrate;
-		this->value      = ScaleFromEnvelopeMode(faderMode, lp.gettoken_float(2));
+		this->position   = lp.gettoken_float(1);
+		this->value      = lp.gettoken_float(2);
 		this->shape      = lp.gettoken_int(3);
 		this->sig        = lp.gettoken_int(4);
 		this->selected   = (lp.gettoken_int(5)&1)==1;
@@ -1997,7 +2089,7 @@ bool BR_Envelope::EnvPoint::ReadLine (const LineParser& lp, const double playrat
 	}
 }
 
-void BR_Envelope::EnvPoint::Append (WDL_FastString& string, const bool tempoPoint, const double playrate, const int faderMode)
+void BR_Envelope::EnvPoint::Append (WDL_FastString& string, bool tempoPoint)
 {
 	if (tempoPoint)
 	{
@@ -2023,8 +2115,8 @@ void BR_Envelope::EnvPoint::Append (WDL_FastString& string, const bool tempoPoin
 		(
 			256,
 			"PT %.12lf %.10lf %d %d %d %d %.8lf\n",
-			this->position * playrate,
-			ScaleToEnvelopeMode(faderMode, this->value),
+			this->position,
+			this->value,
 			this->shape,
 			this->sig,
 			this->selected ? 1 : 0,

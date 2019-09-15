@@ -712,6 +712,7 @@ error:
 		IMPAPI(CountActionShortcuts);
 		IMPAPI(CountAutomationItems);
 		IMPAPI(CountEnvelopePoints); // v5pre4+
+		IMPAPI(CountEnvelopePointsEx) // v5.40+
 		IMPAPI(CountMediaItems); // O(N): should be banned from the extension, ideally -- don't use it in loops, at least
 		IMPAPI(CountProjectMarkers);
 		IMPAPI(CountSelectedMediaItems); // O(MN): should be banned from the extension, ideally -- don't use it in loops, at least
@@ -741,6 +742,7 @@ error:
 		IMPAPI(CSurf_TrackToID);
 		IMPAPI(DB2SLIDER);
 		IMPAPI(DeleteEnvelopePointRange); // v5pre5+
+		IMPAPI(DeleteEnvelopePointRangeEx); // v5.4pre3+
 		IMPAPI(DeleteActionShortcut);
 		IMPAPI(DeleteProjectMarker);
 		IMPAPI(DeleteProjectMarkerByIndex);
@@ -765,6 +767,7 @@ error:
 		IMPAPI(EnumProjects);
 		IMPAPI(Envelope_Evaluate); // v5pre4+
 		IMPAPI(Envelope_SortPoints); // v5pre4+
+		IMPAPI(Envelope_SortPointsEx) // v5.4pre3+
 		IMPAPI(file_exists);
 		IMPAPI(format_timestr);
 		IMPAPI(format_timestr_pos);
@@ -787,7 +790,9 @@ error:
 		IMPAPI(GetCursorPositionEx);
 		IMPAPI(GetEnvelopeName);
 		IMPAPI(GetEnvelopePoint); // v5pre4
-		IMPAPI(GetEnvelopePointByTime) // v5pre4
+		IMPAPI(GetEnvelopePointEx); // v5.40+
+		IMPAPI(GetEnvelopePointByTime); // v5pre4
+		IMPAPI(GetEnvelopePointByTimeEx); // v5.40+
 		IMPAPI(GetEnvelopeScalingMode); // v5pre13+
 		IMPAPI(GetEnvelopeStateChunk);
 		IMPAPI(GetExePath);
@@ -898,6 +903,7 @@ error:
 		IMPAPI(InsertAutomationItem);
 		IMPAPI(InsertMedia);
 		IMPAPI(InsertEnvelopePoint); // v5pre4+
+		IMPAPI(InsertEnvelopePointEx); // v5.4pre3+
 		IMPAPI(InsertTrackAtIndex);
 		IMPAPI(IsMediaExtension);
 		IMPAPI(IsMediaItemSelected);
@@ -1008,6 +1014,7 @@ error:
 		IMPAPI(SetEditCurPos);
 		IMPAPI(SetEditCurPos2);
 		IMPAPI(SetEnvelopePoint); // v5pre4+
+		IMPAPI(SetEnvelopePointEx) // v5.40pre3
 		IMPAPI(SetEnvelopeStateChunk);
 		IMPAPI(SetGlobalAutomationOverride);
 		IMPAPI(SetMasterTrackVisibility);

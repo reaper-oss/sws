@@ -70,6 +70,11 @@ Issue 1173: update various BR_ APIs for new TCP/EnvCP/MCP architecture (thanks J
 Issue 1180: prevent UI updates from being disabled when stopping BR mouse playback via ReaScript (thanks Justin!)
 +Fix pasting region playlists containing grouped items (Issue 1118)
 
+Other changes:
+(internal): BR_Envelope::Build(), BR_Envelope::Commit(): go back to using API envelope code (rather than chunking)
++ReaScript:
+ - Issue 1153 (partly): BR_EnvGet/SetProperties(): add optional parameter automationItemsOptions (REAPER v5.979+), BR_Envelope: EnvProperties - add second ACT token from track envelope state chunk (automation items options)
+
 !v2.10.0 #1 Featured build (February 6, 2019)
 Mega thanks to nofish and cfillion for their many contributions, and X-Raym for doing the tedious work of merging everything into a release.
 Recommended use of REAPER 5.965.

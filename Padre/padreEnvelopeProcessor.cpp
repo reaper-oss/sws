@@ -713,9 +713,16 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTakeLfo(MediaItem_Take* 
 	//	return eERRORCODE_NULLTIMESELECTION;
 
 	string newState;
-	char* envState = PadresGetEnvelopeState(envelope);
-	if(!envState)
+	string envStateStr;
+	try {
+		envStateStr = envelope::GetEnvelopeStateChunkBig(envelope);
+	}
+	catch (envelope::bad_get_env_chunk_big) {
+
 		return eERRORCODE_NOOBJSTATE;
+	}
+	
+	char* envState = &envStateStr[0];
 	double dTmp[2];
 	int iTmp;
 	char* token = strtok(envState, "\n");
@@ -790,7 +797,6 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTakeLfo(MediaItem_Take* 
 writeLfoPoints(newState, dStartPos, dEndPos, dValMin, dValMax, dFreq, dStrength, dOffset, dDelay, tWaveShape, dPrecision);
 	newState.append(">\n");
 */
-	free(envState);
 	if(!newState.size() || !GetSetEnvelopeState(envelope, (char*)newState.c_str(), (int)newState.size()))
 		return eERRORCODE_UNKNOWN;
 
@@ -1085,10 +1091,10 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::processTakeEnv(MediaItem_Take* t
 	if(!envelope)
 		return eERRORCODE_NOENVELOPE;
 
-	char* envState = PadresGetEnvelopeState(envelope);
+	string envStateStr = envelope::GetEnvelopeStateChunkBig(envelope);
+	char* envState = &envStateStr[0];
 	string newState;
 	ErrorCode res = processPoints(envState, newState, dStartPos, dEndPos, dValMin, dValMax, envModType, dStrength, dOffset);
-	free(envState);
 
 	if(!newState.size() || !GetSetEnvelopeState(envelope, (char*)newState.c_str(), (int)newState.size()))
 		res = eERRORCODE_UNKNOWN;

@@ -114,6 +114,7 @@
 #include "Padre/padreMidi.h"
 #include "Padre/padreMidiItemProcBase.h"
 #include "Breeder/BR_Timer.h"
+#include "Utility/envelope.hpp"
 
 #ifdef _WIN32
 #  include "Utility/win32-utf8.h"

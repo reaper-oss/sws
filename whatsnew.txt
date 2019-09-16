@@ -75,6 +75,9 @@ Other changes:
 +ReaScript:
  - Issue 1153 (partly): BR_EnvGet/SetProperties(): add optional parameter automationItemsOptions (REAPER v5.979+), BR_Envelope: EnvProperties - add second ACT token from track envelope state chunk (automation items options)
 
+Fixed:
++Loudness: Fix potentially invalid max. short-term/momentary measurements in high precision mode
+
 !v2.10.0 #1 Featured build (February 6, 2019)
 Mega thanks to nofish and cfillion for their many contributions, and X-Raym for doing the tedious work of merging everything into a release.
 Recommended use of REAPER 5.965.

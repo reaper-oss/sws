@@ -78,6 +78,9 @@ Other changes:
 Fixed:
 +Loudness: Fix potentially invalid max. short-term/momentary measurements in high precision mode
 
+Fixed:
++Fix media item preview through track when transport is paused (Issue 1189)
+
 !v2.10.0 #1 Featured build (February 6, 2019)
 Mega thanks to nofish and cfillion for their many contributions, and X-Raym for doing the tedious work of merging everything into a release.
 Recommended use of REAPER 5.965.

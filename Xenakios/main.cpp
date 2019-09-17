@@ -571,10 +571,10 @@ void ItemPreview(int mode, MediaItem* item, MediaTrack* track, double volume, do
 				if (isMidi)
 					g_itemPreviewSendCC123 = true;
 				g_itemPreviewProject = EnumProjects(-1, NULL, 0);
-				g_itemPreviewPlaying = !!PlayTrackPreview2Ex(g_itemPreviewProject, &g_ItemPreview, 1, measureSync);
+				g_itemPreviewPlaying = !!PlayTrackPreview2Ex(g_itemPreviewProject, &g_ItemPreview, !!measureSync, measureSync);
 			}
 			else
-				g_itemPreviewPlaying = !!PlayPreviewEx(&g_ItemPreview, 1, measureSync);
+				g_itemPreviewPlaying = !!PlayPreviewEx(&g_ItemPreview, !!measureSync, measureSync);
 
 			if (g_itemPreviewPlaying)
 				plugin_register("timer",(void*)ItemPreviewTimer);

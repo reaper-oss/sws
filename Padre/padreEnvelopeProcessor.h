@@ -135,7 +135,7 @@ ErrorCode processSelectedTakes();
 	protected:
 		static void getFreqDelay(LfoWaveParams &waveParams, double &dFreq, double &dDelay);
 		static ErrorCode getTrackEnvelopeMinMax(TrackEnvelope* envelope, double &dEnvMinVal, double &dEnvMaxVal);
-		static void writeLfoPoints(string &envState, double dStartTime, double dEndTime, double dValMin, double dValMax, LfoWaveParams &waveParams, double dPrecision = 0.1, LfoWaveParams* freqModulator = NULL);
+		static void writeLfoPoints(MediaItem_Take* take, string &envState, double dStartTime, double dEndTime, double dValMin, double dValMax, LfoWaveParams &waveParams, double dPrecision = 0.1, LfoWaveParams* freqModulator = NULL);
 
 		static ErrorCode processPoints(char* envState, string &newState, double dStartPos, double dEndPos, double dValMin, double dValMax, EnvModType envModType, double dStrength = 1.0, double dOffset = 0.0);
 

@@ -94,8 +94,6 @@ double WaveformGeneratorRandom(double t, double dFreq, double dDelay);
 
 double EnvSignalProcessorFade(double dPos, double dLength, double dStrength, bool bFadeIn);
 
-char* PadresGetEnvelopeState(TrackEnvelope* envelope);
-
 void ShowConsoleMsgEx(const char* format, ...);
 
 void GetTimeSegmentPositions(TimeSegment timeSegment, double &dStartPos, double &dEndPos, MediaItem* item = NULL);

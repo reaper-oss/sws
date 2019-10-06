@@ -81,6 +81,17 @@ Fixed:
 Fixed:
 +Fix media item preview through track when transport is paused (Issue 1189)
 
+Fixes:
+PADRE Envelope LFO generator: (Issue #1158)
+ - allow for generating more points
+ - account for take playrate
+
+Snapshots:
+ - harden getting send envelopes (displays error message in case of failure)
+ Reminder from SWS v2.10.0 change log:
+ Send envelops should now be stored/recalled correctly with Snapshots (long standing bug), thogh it hasn't been tested much
+ Since snapshots are based on state chunks, changes within AI envelopes are not stored/recalled currently (https://forum.cockos.com/showthread.php?t=205406|FR|), though AI properties (e.g. position) should be recalled correctly. Also note that when deleting an AI and trying to recall a previously stored snapshot which contains this AI it won't be recalled correctly.
+
 !v2.10.0 #1 Featured build (February 6, 2019)
 Mega thanks to nofish and cfillion for their many contributions, and X-Raym for doing the tedious work of merging everything into a release.
 Recommended use of REAPER 5.965.

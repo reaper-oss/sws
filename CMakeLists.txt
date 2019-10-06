@@ -343,3 +343,4 @@ set(CPACK_NSIS_CPUBITS ${CPUBITS})
 include(CPack)
 
 configure_file(version.h.in version.h)
+configure_file(version.rc2.in version.rc2)

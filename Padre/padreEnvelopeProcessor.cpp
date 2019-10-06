@@ -222,10 +222,13 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::getTrackEnvelopeMinMax(TrackEnve
 	return eERRORCODE_OK;
 }
 
-void EnvelopeProcessor::writeLfoPoints(string &envState, double dStartTime, double dEndTime, double dValMin, double dValMax, LfoWaveParams &waveParams, double dPrecision, LfoWaveParams* freqModulator)
+void EnvelopeProcessor::writeLfoPoints(MediaItem_Take* take, string &envState, double dStartTime, double dEndTime, double dValMin, double dValMax, LfoWaveParams &waveParams, double dPrecision, LfoWaveParams* freqModulator)
 {
 	double dFreq, dDelay;
 	getFreqDelay(waveParams, dFreq, dDelay);
+
+	if (take) // account for take playrate, #1158
+		dFreq /= GetMediaItemTakeInfo_Value(take, "D_PLAYRATE");
 
 	double dMagnitude = waveParams.strength * (1.0 - fabs(waveParams.offset));
 	double dOff = 0.5*(dValMax+dValMin);
@@ -613,7 +616,7 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTrackLfo(TrackEnvelope* 
 		token = strtok(NULL, "\n");
 	}
 
-	writeLfoPoints(newState, dStartPos, dEndPos, dValMin, dValMax, waveParams, dPrecision);
+	writeLfoPoints(nullptr, newState, dStartPos, dEndPos, dValMin, dValMax, waveParams, dPrecision);
 
 	newState.append(token);
 	newState.append("\n");
@@ -748,7 +751,7 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTakeLfo(MediaItem_Take* 
 		token = strtok(NULL, "\n");
 	}
 
-	writeLfoPoints(newState, dStartPos, dEndPos, dValMin, dValMax, waveParams, dPrecision);
+	writeLfoPoints(take, newState, dStartPos, dEndPos, dValMin, dValMax, waveParams, dPrecision);
 
 	newState.append(token);
 	newState.append("\n");

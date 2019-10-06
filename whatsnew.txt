@@ -11,6 +11,7 @@
 Fixes:
 PADRE Envelope LFO generator: (Issue #1158)
  - allow for generating more points
+ - account for take playrate
 
 Snapshots:
  - harden getting send envelopes (displays error message in case of failure)

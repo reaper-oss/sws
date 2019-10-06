@@ -53,6 +53,7 @@ Fixes:
 Other changes:
 +added Linux ARM builds (32-bit and 64-bit)
 +enable media file tagging features on Linux
++split the macOS release into 32-bit and 64-bit versions
 +update TagLib on macOS to v1.11.1
 +reworked the Windows installer
  - allow installing SWS to paths containing characters outside of the system's ANSI codepage

@@ -1256,11 +1256,14 @@ void SWS_ListView::Update()
 				{
 					item.iSubItem = iCol;
 					GetItemText(pItem, k, str, sizeof(str));
-					if (!iCol && !bFound)
+					if (!bFound)
 					{
 						item.mask |= LVIF_PARAM | LVIF_TEXT;
 						item.lParam = (LPARAM)pItem;
-						ListView_InsertItem(m_hwndList, &item);
+						if(iCol == 0)
+							ListView_InsertItem(m_hwndList, &item);
+						else
+							ListView_SetItem(m_hwndList, &item);
 						bResort = true;
 					}
 					else

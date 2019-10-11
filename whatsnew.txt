@@ -1,3 +1,6 @@
+New ReaScript functions:
++NF_ReadID3v2Tag() (request https://forum.cockos.com/showpost.php?p=2175039&postcount=2653|here|)
+
 +Enable media file tagging features on Linux
 +Update TagLib on macOS to v1.11.1
 +Split the macOS release into 32-bit and 64-bit versions, delete reaper_sws_extension.dylib

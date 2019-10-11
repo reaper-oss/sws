@@ -49,6 +49,8 @@ const char*    NF_GetSWSMarkerRegionSub(int mkrRgnIdx);
 bool           NF_SetSWSMarkerRegionSub(const char* mkrRgnSub, int mkrRgnIdx);
 void           NF_UpdateSWSMarkerRegionSubWindow();
 
+bool           NF_ReadID3v2Tag(const char* fn, const char* tag, char* tagval, int tagval_sz);
+
 
 // #974
 /*

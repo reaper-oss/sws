@@ -38,7 +38,6 @@ static_assert(GetPrivateProfileString == GetPrivateProfileStringUTF8,
 
 using namespace std;
 
-static string g_resourcePath;
 
 static wstring widen(const char *input, const UINT codepage = CP_UTF8, const int size = -1)
 {
@@ -73,28 +72,6 @@ static int strlistlen(const char *list)
   }
 
   return size;
-}
-
-#undef GetResourcePath
-const char *GetResourcePathUTF8()
-{
-  if(g_resourcePath.empty()) {
-    const char *rcPath = GetResourcePath();
-
-    // Convert from the current system codepage to UTF-8 for backward
-    // compatibility with older versions of REAPER (#934).
-    //
-    // 5.70 onward: GetResourcePath is always UTF-8
-    // 5.60 - 5.62: GetResourcePath is ANSI if possible, UTF-8 otherwise
-    // up to 5.52:  GetResourcePath is always ANSI
-
-    if(atof(GetAppVersion()) < 5.70 && !WDL_HasUTF8(rcPath))
-      g_resourcePath = narrow(widen(rcPath, CP_ACP).c_str());
-    else
-      g_resourcePath = rcPath;
-  }
-
-  return g_resourcePath.c_str();
 }
 
 DWORD GetPrivateProfileSectionUTF8(LPCTSTR appName, LPTSTR ret, DWORD size, LPCTSTR fileName)

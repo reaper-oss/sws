@@ -14,7 +14,7 @@
 #define IDD_TRACKLIST                   108
 #define IDD_ABOUT                       109
 #define IDD_PROMPT                      110
-#define IDD_MEDIAPOOL                   111
+// unused                               111
 #define IDD_SSMERGE                     112
 #define IDD_INFO                        113
 #define IDD_RECVMISSING                 114
@@ -191,7 +191,7 @@
 #define IDC_DELETE                      1091
 #define IDC_PREVIEW                     1092
 #define IDC_REMOVE                      1093
-#define IDC_ADDGROUP                    1094
+// unused                               1094
 #define IDC_LIST                        1095
 #define IDC_EDIT                        1096
 #define IDC_COMBO                       1097
@@ -234,7 +234,7 @@
 #define IDC_CURVIS                      1133
 #define IDC_CUSTOM                      1134
 #define IDC_INFO                        1135
-#define IDC_GROUPS                      1136
+// unused                               1136
 #define IDC_FILES                       1137
 #define IDC_NAME                        1138
 #define IDC_SNAME                       1139

@@ -697,67 +697,26 @@ void AutorenderRegions(COMMAND_T*)
 		string renderedFilePath = renderedFile->first;
 		RenderRegion renderRegion = renderedFile->second;
 
-#ifdef _WIN32
-		wchar_t* w_rendered_path = WideCharPlz( renderedFilePath.c_str() );
-		TagLib::FileRef f( w_rendered_path );
-#else
-		TagLib::FileRef f( renderedFilePath.c_str() );
-#endif
-		if( !f.isNull() ){
-#ifdef _WIN32
-			wchar_t* w_tag_artist = WideCharPlz( g_tag_artist.c_str() );
-			wchar_t* w_tag_album = WideCharPlz( g_tag_album.c_str() );
-			wchar_t* w_tag_genre = WideCharPlz( g_tag_genre.c_str() );
-			wchar_t* w_tag_comment = WideCharPlz( g_tag_comment.c_str() );
-			wchar_t* w_region_title = WideCharPlz( renderRegion.regionName.c_str() );
+		TagLib::FileRef f( win32::widen(renderedFilePath).c_str() );
 
-			if( wcslen( w_tag_artist ) ) f.tag()->setArtist( w_tag_artist );
-			if( wcslen( w_tag_album ) ) f.tag()->setAlbum( w_tag_album );
-			if( wcslen( w_tag_genre ) ) f.tag()->setGenre( w_tag_genre );
-			if( wcslen( w_tag_comment ) ) f.tag()->setComment( w_tag_comment );
+		if( !f.isNull() ) {
+			if( !g_tag_artist.empty() )
+			  f.tag()->setArtist( {g_tag_artist, TagLib::String::UTF8} );
+			if( !g_tag_album.empty() )
+			  f.tag()->setAlbum( {g_tag_album, TagLib::String::UTF8} );
+			if( !g_tag_genre.empty() )
+			  f.tag()->setGenre( {g_tag_genre, TagLib::String::UTF8} );
+			if( !g_tag_comment.empty() )
+			  f.tag()->setComment( {g_tag_comment, TagLib::String::UTF8} );
+			f.tag()->setTitle( {renderRegion.regionName, TagLib::String::UTF8} );
 
-			f.tag()->setTitle( w_region_title );
-
-			delete [] w_tag_artist;
-			delete [] w_tag_album;
-			delete [] w_tag_genre;
-			delete [] w_tag_comment;
-			delete [] w_region_title;
-#else
-      if( !g_tag_artist.empty() )
-      {
-        TagLib::String s(g_tag_artist.c_str(), TagLib::String::UTF8);
-        f.tag()->setArtist(s);
-      }
-      if( !g_tag_album.empty() )
-      {
-        TagLib::String s(g_tag_album.c_str(), TagLib::String::UTF8);
-        f.tag()->setAlbum(s);
-      }
-      if(!g_tag_genre.empty() )
-      {
-        TagLib::String s(g_tag_genre.c_str(), TagLib::String::UTF8);
-        f.tag()->setGenre(s);
-      }
-      if( !g_tag_comment.empty() )
-      {
-        TagLib::String s(g_tag_comment.c_str(), TagLib::String::UTF8);
-        f.tag()->setComment(s);
-      }
-      {
-		  TagLib::String s(renderRegion.regionName.c_str(), TagLib::String::UTF8);
-        f.tag()->setTitle(s);
-      }
-#endif
 			if( g_tag_year > 0 ) f.tag()->setYear( g_tag_year );
-			f.tag()->setTrack( renderRegion.regionNumber);
+
+			f.tag()->setTrack( renderRegion.regionNumber );
 			f.save();
 		} else {
 			//throw error?
 		}
-#ifdef _WIN32
-		delete [] w_rendered_path;
-#endif
 	}
 
 	OpenRenderPath( NULL );

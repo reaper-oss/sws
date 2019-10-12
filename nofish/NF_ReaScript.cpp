@@ -336,13 +336,7 @@ bool NF_ReadID3v2Tag(const char* fn, const char* tag, char* tagval, int tagval_s
 	if (stricmp(strrchr(fn, '\0') - 4, ".mp3")) return false;
 	*tagval = 0;
 
-#ifdef _WIN32
-	wchar_t* w_fn = WideCharPlz(fn);
-	if (!w_fn) return false;
-	TagLib::MPEG::File f(w_fn, false);
-#else
-	TagLib::MPEG::File f(fn, false);
-#endif
+	TagLib::MPEG::File f(win32::widen(fn).c_str(), false);
 
 	if (f.isValid() && !f.ID3v2Tag()->isEmpty())
 	{
@@ -358,9 +352,7 @@ bool NF_ReadID3v2Tag(const char* fn, const char* tag, char* tagval, int tagval_s
 			tagval[tagval_sz - 1] = '\0'; // null-terminate in case of buffer overflow (probably unlikely)
 		}
 	}
-#ifdef _WIN32
-	delete[] w_fn;
-#endif
+
 	return !!*tagval;
 }
 

@@ -372,15 +372,6 @@ const char *stristr(const char* a, const char* b)
 }
 
 #ifdef _WIN32
-wchar_t* WideCharPlz(const char* inChar)
-{
-	DWORD dwNum = MultiByteToWideChar(CP_UTF8, 0, inChar, -1, NULL, 0);
-	wchar_t *wChar;
-	wChar = new wchar_t[ dwNum ];
-	MultiByteToWideChar(CP_UTF8, 0, inChar, -1, wChar, dwNum );
-	return wChar;
-}
-
 void dprintf(const char* format, ...)
 {
 	va_list args;

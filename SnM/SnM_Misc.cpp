@@ -230,13 +230,8 @@ bool SNM_ReadMediaFileTag(const char *fn, const char* tag, char* tagval, int tag
 {
   if (!fn || !*fn || !tagval || tagval_sz<=0) return false;
   *tagval=0;
-#ifdef _WIN32
-  wchar_t* w_fn = WideCharPlz(fn);
-  if (!w_fn) return false;
-  TagLib::FileRef f(w_fn, false);
-#else
-  TagLib::FileRef f(fn, false);
-#endif
+
+  TagLib::FileRef f(win32::widen(fn).c_str(), false);
 
   if (!f.isNull() && !f.tag()->isEmpty())
   {
@@ -257,9 +252,7 @@ bool SNM_ReadMediaFileTag(const char *fn, const char* tag, char* tagval, int tag
       else if (!_stricmp(tag, "track") && f.tag()->track()) _snprintfSafe(tagval, tagval_sz, "%u", f.tag()->track());
     }
   }
-#ifdef _WIN32
-  delete [] w_fn;
-#endif
+
   return !!*tagval;
 }
 
@@ -267,23 +260,12 @@ bool SNM_TagMediaFile(const char *fn, const char* tag, const char* tagval)
 {
   if (!fn || !*fn || !tagval || !tag) return false;
 
-#ifdef _WIN32
-  wchar_t* w_fn = WideCharPlz(fn);
-  if (!w_fn) return false;
-  TagLib::FileRef f(w_fn, false);
-#else
-  TagLib::FileRef f(fn, false);
-#endif
+  TagLib::FileRef f(win32::widen(fn).c_str(), false);
 
   bool didsmthg=false;
   if (!f.isNull())
   {
-#ifndef _WIN32
     TagLib::String s(tagval, TagLib::String::UTF8);
-#else
-    wchar_t* s = WideCharPlz(tagval);
-    if (!s) return false;
-#endif
     if (!_stricmp(tag, "artist")) { f.tag()->setArtist(s); didsmthg=true; }
     else if (!_stricmp(tag, "album")) { f.tag()->setAlbum(s); didsmthg=true; }
     else if (!_stricmp(tag, "genre")) { f.tag()->setGenre(s); didsmthg=true; }
@@ -300,14 +282,8 @@ bool SNM_TagMediaFile(const char *fn, const char* tag, const char* tagval)
       if (val>0 || !*tagval) { f.tag()->setTrack(val); didsmthg=true; }
     }
     if (didsmthg) f.save();
-#ifdef _WIN32
-    delete [] s;
-#endif
   }
 
-#ifdef _WIN32
-  delete [] w_fn;
-#endif
   return didsmthg;
 }
 

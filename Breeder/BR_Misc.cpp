@@ -1109,7 +1109,7 @@ void PlaybackFollowsTempoChange (COMMAND_T* ct)
 	RefreshToolbar(0);
 
 	char tmp[256];
-	_snprintfSafe(tmp, sizeof(tmp), "%d", *option);
+	snprintf(tmp, sizeof(tmp), "%d", *option);
 	WritePrivateProfileString("reaper", configStr, tmp, get_ini_file());
 }
 
@@ -1120,7 +1120,7 @@ void TrimNewVolPanEnvs (COMMAND_T* ct)
 	RefreshToolbar(0);
 
 	char tmp[256];
-	_snprintfSafe(tmp, sizeof(tmp), "%d", (int)ct->user);
+	snprintf(tmp, sizeof(tmp), "%d", (int)ct->user);
 	WritePrivateProfileString("reaper", configStr, tmp, get_ini_file());
 }
 
@@ -1133,7 +1133,7 @@ void ToggleDisplayItemLabels (COMMAND_T* ct)
 	*option = ToggleBit(*option, (int)ct->user);
 
 	char tmp[256];
-	_snprintfSafe(tmp, sizeof(tmp), "%d", *option);
+	snprintf(tmp, sizeof(tmp), "%d", *option);
 	WritePrivateProfileString("reaper", configStr, tmp, get_ini_file());
 
 	UpdateArrange();
@@ -1148,7 +1148,7 @@ void SetMidiResetOnPlayStop (COMMAND_T* ct)
 	*option = ToggleBit(*option, (int)ct->user);
 
 	char tmp[256];
-	_snprintfSafe(tmp, sizeof(tmp), "%d", *option);
+	snprintf(tmp, sizeof(tmp), "%d", *option);
 	WritePrivateProfileString("reaper", configStr, tmp, get_ini_file());
 }
 
@@ -1165,7 +1165,7 @@ void SetOptionsFX (COMMAND_T* ct)
 			*option = ToggleBit(*option, 3);
 
 			char tmp[256];
-			_snprintfSafe(tmp, sizeof(tmp), "%d", *option);
+			snprintf(tmp, sizeof(tmp), "%d", *option);
 			WritePrivateProfileString("reaper", configStr, tmp, get_ini_file());
 		}
 	}
@@ -1178,7 +1178,7 @@ void SetOptionsFX (COMMAND_T* ct)
 		*option = ToggleBit(*option, 0);
 
 		char tmp[256];
-		_snprintfSafe(tmp, sizeof(tmp), "%d", *option);
+		snprintf(tmp, sizeof(tmp), "%d", *option);
 		WritePrivateProfileString("reaper", configStr, tmp, get_ini_file());
 	}
 	else
@@ -1191,7 +1191,7 @@ void SetOptionsFX (COMMAND_T* ct)
 			const char* configStr = "runafterstop";
 			*ConfigVar<int>(configStr) = abs((int)ct->user);
 			char tmp[256];
-			_snprintfSafe(tmp, sizeof(tmp), "%d", abs((int)ct->user));
+			snprintf(tmp, sizeof(tmp), "%d", abs((int)ct->user));
 			WritePrivateProfileString("reaper", configStr, tmp, get_ini_file());
 		}
 	}
@@ -1206,7 +1206,7 @@ void SetMoveCursorOnPaste (COMMAND_T* ct)
 	*option = ToggleBit(*option, abs((int)ct->user));
 
 	char tmp[256];
-	_snprintfSafe(tmp, sizeof(tmp), "%d", *option);
+	snprintf(tmp, sizeof(tmp), "%d", *option);
 	WritePrivateProfileString("reaper", configStr, tmp, get_ini_file());
 }
 
@@ -1219,7 +1219,7 @@ void SetPlaybackStopOptions (COMMAND_T* ct)
 	*option = ToggleBit(*option, (int)ct->user);
 
 	char tmp[256];
-	_snprintfSafe(tmp, sizeof(tmp), "%d", *option);
+	snprintf(tmp, sizeof(tmp), "%d", *option);
 	WritePrivateProfileString("reaper", configStr, tmp, get_ini_file());
 }
 
@@ -1231,7 +1231,7 @@ void SetGridMarkerZOrder (COMMAND_T* ct)
 	ConfigVar<int>(configStr).try_set(option);
 
 	char tmp[256];
-	_snprintfSafe(tmp, sizeof(tmp), "%d", option);
+	snprintf(tmp, sizeof(tmp), "%d", option);
 	WritePrivateProfileString("reaper", configStr, tmp, get_ini_file());
 	UpdateArrange();
 }
@@ -1311,9 +1311,9 @@ WDL_DLGRET AdjustPlayrateOptionsProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 			rangeValues = (pair<double,pair<double,double> >*)lParam;
 
 			char tmp[128];
-			_snprintfSafe(tmp, sizeof(tmp), "%.6g", rangeValues->second.first);  SetDlgItemText(hwnd, IDC_EDIT1, tmp);
-			_snprintfSafe(tmp, sizeof(tmp), "%.6g", rangeValues->second.second); SetDlgItemText(hwnd, IDC_EDIT2, tmp);
-			_snprintfSafe(tmp, sizeof(tmp), "%.6g", rangeValues->first);         SetDlgItemText(hwnd, IDC_EDIT3, tmp);
+			snprintf(tmp, sizeof(tmp), "%.6g", rangeValues->second.first);  SetDlgItemText(hwnd, IDC_EDIT1, tmp);
+			snprintf(tmp, sizeof(tmp), "%.6g", rangeValues->second.second); SetDlgItemText(hwnd, IDC_EDIT2, tmp);
+			snprintf(tmp, sizeof(tmp), "%.6g", rangeValues->first);         SetDlgItemText(hwnd, IDC_EDIT3, tmp);
 
 			RestoreWindowPos(hwnd, ADJUST_PLAYRATE_WND, false);
 			ShowWindow(hwnd, SW_SHOW);
@@ -1332,7 +1332,7 @@ WDL_DLGRET AdjustPlayrateOptionsProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 					GetDlgItemText(hwnd, IDC_EDIT2, tmp, 128); rangeValues->second.second = SetToBounds(AltAtof(tmp), 0.25, 4.0);
 					GetDlgItemText(hwnd, IDC_EDIT3, tmp, 128); rangeValues->first         = SetToBounds(AltAtof(tmp), 0.00001, 4.0);
 
-					_snprintfSafe(tmp, sizeof(tmp), "%lf %lf %lf", rangeValues->first, rangeValues->second.first, rangeValues->second.second);
+					snprintf(tmp, sizeof(tmp), "%lf %lf %lf", rangeValues->first, rangeValues->second.first, rangeValues->second.second);
 					WritePrivateProfileString("SWS", ADJUST_PLAYRATE_KEY, tmp, get_ini_file());
 
 					DestroyWindow(hwnd);
@@ -1421,7 +1421,7 @@ static void SaveExtensionConfigTrackSel (ProjectStateContext *ctx, bool isUndo, 
 	if (ctx && g_trackSelActions.Get()->GetLength())
 	{
 		char line[SNM_MAX_CHUNK_LINE_LENGTH] = "";
-		if (_snprintfStrict(line, sizeof(line), "BR_PROJ_TRACK_SEL_ACTION %s", g_trackSelActions.Get()->Get()) > 0)
+		if (snprintfStrict(line, sizeof(line), "BR_PROJ_TRACK_SEL_ACTION %s", g_trackSelActions.Get()->Get()) > 0)
 			ctx->AddLine("%s", line);
 	}
 }
@@ -1474,7 +1474,7 @@ void SetProjectTrackSelAction (COMMAND_T* ct)
 		// localization note: some messages are shared with the CA editor
 
 		char actionString[SNM_MAX_ACTION_CUSTID_LEN];
-		_snprintfSafe(actionString, sizeof(actionString), "%s", __LOCALIZE("Paste command ID or identifier string here","sws_startup_action"));
+		snprintf(actionString, sizeof(actionString), "%s", __LOCALIZE("Paste command ID or identifier string here","sws_startup_action"));
 
 		if (PromptUserForString(GetMainHwnd(), __LOCALIZE("Set project track selection action","sws_startup_action"), actionString, sizeof(actionString), true))
 		{

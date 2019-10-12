@@ -254,8 +254,8 @@ void BR_GetCurrentTheme (char* themePathOut, int themePathOut_sz, char* themeNam
 	WDL_FastString fullThemePath;
 	WDL_FastString themeName = GetCurrentThemeName(&fullThemePath);
 
-	_snprintfSafe(themePathOut, themePathOut_sz, "%s", fullThemePath.Get());
-	_snprintfSafe(themeNameOut, themeNameOut_sz, "%s", themeName.Get());
+	snprintf(themePathOut, themePathOut_sz, "%s", fullThemePath.Get());
+	snprintf(themeNameOut, themeNameOut_sz, "%s", themeName.Get());
 }
 
 MediaItem* BR_GetMediaItemByGUID (ReaProject* proj, const char* guidStringIn)
@@ -277,7 +277,7 @@ void BR_GetMediaItemGUID (MediaItem* item, char* guidStringOut, int guidStringOu
 		char guid[64];
 		if (item) guidToString((GUID*)GetSetMediaItemInfo(item, "GUID", NULL), guid);
 		else      guidToString(&GUID_NULL, guid);
-		_snprintfSafe(guidStringOut, guidStringOut_sz, "%s", guid);
+		snprintf(guidStringOut, guidStringOut_sz, "%s", guid);
 	}
 }
 
@@ -295,7 +295,7 @@ bool BR_GetMediaItemImageResource (MediaItem* item, char* imageOut, int imageOut
 		resourceFound =  !!p.Parse(SNM_GET_CHUNK_CHAR, 1, "ITEM", "RESOURCEFN",       0, 1, image,      NULL, "VOLPAN");
 		if (resourceFound) p.Parse(SNM_GET_CHUNK_CHAR, 1, "ITEM", "IMGRESOURCEFLAGS", 0, 1, imageFlags, NULL, "VOLPAN");
 
-		if (imageOut && imageOut_sz > 0) _snprintfSafe(imageOut, imageOut_sz, "%s", image);
+		if (imageOut && imageOut_sz > 0) snprintf(imageOut, imageOut_sz, "%s", image);
 		WritePtr(imageFlagsOut, atoi(imageFlags));
 	}
 	return resourceFound;
@@ -308,7 +308,7 @@ void BR_GetMediaItemTakeGUID (MediaItem_Take* take, char* guidStringOut, int gui
 		char guid[64];
 		if (take) guidToString((GUID*)GetSetMediaItemTakeInfo(take, "GUID", NULL), guid);
 		else      guidToString(&GUID_NULL, guid);
-		_snprintfSafe(guidStringOut, guidStringOut_sz, "%s", guid);
+		snprintf(guidStringOut, guidStringOut_sz, "%s", guid);
 	}
 }
 
@@ -345,7 +345,7 @@ void BR_GetMediaTrackGUID (MediaTrack* track, char* guidStringOut, int guidStrin
 		char guid[64];
 		if (track) guidToString(TrackToGuid(track), guid);
 		else       guidToString(&GUID_NULL, guid);
-		_snprintfSafe(guidStringOut, guidStringOut_sz, "%s", guid);
+		snprintf(guidStringOut, guidStringOut_sz, "%s", guid);
 	}
 }
 
@@ -358,12 +358,12 @@ void BR_GetMediaTrackLayouts (MediaTrack* track, char* mcpLayoutNameOut, int mcp
 		if (mcpLayoutNameOut)
 		{
 			const char *l = (const char*)GetSetMediaTrackInfo(track, "P_MCP_LAYOUT", NULL);
-			if (l) _snprintfSafe(mcpLayoutNameOut, mcpLayoutNameOut_sz, "%s", l);
+			if (l) snprintf(mcpLayoutNameOut, mcpLayoutNameOut_sz, "%s", l);
 		}
 		if (tcpLayoutNameOut)
 		{
 			const char *l = (const char*)GetSetMediaTrackInfo(track, "P_TCP_LAYOUT", NULL);
-			if (l) _snprintfSafe(tcpLayoutNameOut, tcpLayoutNameOut_sz, "%s", l);
+			if (l) snprintf(tcpLayoutNameOut, tcpLayoutNameOut_sz, "%s", l);
 		}
 	}
 }
@@ -417,7 +417,7 @@ bool BR_GetMidiTakePoolGUID (MediaItem_Take* take, char* guidStringOut, int guid
 				{
 					LineParser lp(false);
 					lp.parse(pooledEventsLine.Get());
-					_snprintfSafe(guidStringOut, guidStringOut_sz, "%s", lp.gettoken_str(1));
+					snprintf(guidStringOut, guidStringOut_sz, "%s", lp.gettoken_str(1));
 				}
 			}
 		}
@@ -438,9 +438,9 @@ void BR_GetMouseCursorContext (char* windowOut, int windowOut_sz, char* segmentO
 {
 	g_mouseInfo.Update();
 
-	if (windowOut  && windowOut_sz  > 0) _snprintfSafe(windowOut,  windowOut_sz,  "%s", g_mouseInfo.GetWindow());
-	if (segmentOut && segmentOut_sz > 0) _snprintfSafe(segmentOut, segmentOut_sz, "%s", g_mouseInfo.GetSegment());
-	if (detailsOut && detailsOut_sz > 0) _snprintfSafe(detailsOut, detailsOut_sz, "%s", g_mouseInfo.GetDetails());
+	if (windowOut  && windowOut_sz  > 0) snprintf(windowOut,  windowOut_sz,  "%s", g_mouseInfo.GetWindow());
+	if (segmentOut && segmentOut_sz > 0) snprintf(segmentOut, segmentOut_sz, "%s", g_mouseInfo.GetSegment());
+	if (detailsOut && detailsOut_sz > 0) snprintf(detailsOut, detailsOut_sz, "%s", g_mouseInfo.GetDetails());
 }
 
 TrackEnvelope* BR_GetMouseCursorContext_Envelope (bool* takeEnvelopeOut)
@@ -917,7 +917,7 @@ bool BR_TrackFX_GetFXModuleName (MediaTrack* track, int fx, char* nameOut, int n
 		}
 	}
 
-	_snprintfSafe(nameOut, nameOutSz, "%s", module.Get());
+	snprintf(nameOut, nameOutSz, "%s", module.Get());
 	return found;
 }
 
@@ -1137,7 +1137,7 @@ int BR_Win32_HIWORD(int value)
 
 void BR_Win32_HwndToString(void* hwnd, char* stringOut, int stringOut_sz)
 {
-	_snprintfSafe(stringOut, stringOut_sz, "%lld", (long long)(HWND)hwnd);
+	snprintf(stringOut, stringOut_sz, "%lld", (long long)(HWND)hwnd);
 }
 
 bool BR_Win32_IsWindow(void* hwnd)

@@ -495,7 +495,7 @@ int PerformSingleCommand(int _section, const char* _cmdStr, int _val, int _valhw
 			if (!g_undos)
 			{
 				char undo[128];
-				_snprintfSafe(undo, sizeof(undo), __LOCALIZE("ReaConsole command '%s'","sws_undo"), _cmdStr+strlen(STATEMENT_CONSOLE)+1);
+				snprintf(undo, sizeof(undo), __LOCALIZE("ReaConsole command '%s'","sws_undo"), _cmdStr+strlen(STATEMENT_CONSOLE)+1);
 				Undo_OnStateChangeEx2(NULL, undo, UNDO_STATE_ALL, -1);
 			}
 			return 1;
@@ -508,7 +508,7 @@ int PerformSingleCommand(int _section, const char* _cmdStr, int _val, int _valhw
 			if (!g_undos)
 			{
 				char undo[128];
-				_snprintfSafe(undo, sizeof(undo), __LOCALIZE("Label Processor command '%s'","sws_undo"), _cmdStr+strlen(STATEMENT_LABEL)+1);
+				snprintf(undo, sizeof(undo), __LOCALIZE("Label Processor command '%s'","sws_undo"), _cmdStr+strlen(STATEMENT_LABEL)+1);
 				Undo_OnStateChangeEx2(NULL, undo, UNDO_STATE_ALL, -1); // do not use UNDO_STATE_ITEMS here
 			}
 			return 1;
@@ -1013,7 +1013,7 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a,
 int RegisterCyclation(const char* _name, int _section, int _cycleId, int _cmdId)
 {
 	char custId[SNM_MAX_ACTION_CUSTID_LEN]="";
-	if (_snprintfStrict(custId, sizeof(custId), "%s%d", GetCACustomId(_section), _cycleId) > 0)
+	if (snprintfStrict(custId, sizeof(custId), "%s%d", GetCACustomId(_section), _cycleId) > 0)
 	{
 		return SWSCreateRegisterDynamicCmd(
 			SNM_GetActionSectionUniqueId(_section),
@@ -1095,7 +1095,7 @@ void LoadCyclactions(bool _wantMsg, WDL_PtrList<Cyclaction>* _cyclactions = NULL
 			int ver = GetPrivateProfileInt(GetCAIniSection(sec), "Version", 1, _iniFn ? _iniFn : g_SNM_CyclIniFn.Get());
 			for (int j=0; j<nb; j++)
 			{
-				if (_snprintfStrict(buf, sizeof(buf), "Action%d", j+1) > 0)
+				if (snprintfStrict(buf, sizeof(buf), "Action%d", j+1) > 0)
 				{
 					GetPrivateProfileString(GetCAIniSection(sec), buf, CA_EMPTY, actionBuf, sizeof(actionBuf), _iniFn ? _iniFn : g_SNM_CyclIniFn.Get());
 					
@@ -1591,9 +1591,9 @@ void CyclactionsView::GetItemText(SWS_ListItem* item, int iCol, char* str, int i
 					if (cycleId >= 0)
 					{
 						if (a->m_cmdId)
-							_snprintfSafe(str, iStrMax, "%5.d", cycleId+1);
+							snprintf(str, iStrMax, "%5.d", cycleId+1);
 						else
-							_snprintfSafe(str, iStrMax, "(%d)", cycleId+1);
+							snprintf(str, iStrMax, "(%d)", cycleId+1);
 					}
 				}
 				else
@@ -2443,12 +2443,12 @@ void CyclactionWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _toolti
 void CyclactionWnd::AddImportExportMenu(HMENU _menu, bool _wantReset)
 {
 	char buf[128] = "";
-	_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Import in section '%s'...","sws_DLG_161"), SNM_GetActionSectionName(g_editedSection));
+	snprintf(buf, sizeof(buf), __LOCALIZE_VERFMT("Import in section '%s'...","sws_DLG_161"), SNM_GetActionSectionName(g_editedSection));
 	AddToMenu(_menu, buf, IMPORT_CUR_SECTION_MSG, -1, false, IsCAFiltered() ? MF_GRAYED : MF_ENABLED);
 	AddToMenu(_menu, __LOCALIZE("Import all sections...","sws_DLG_161"), IMPORT_ALL_SECTIONS_MSG, -1, false, IsCAFiltered() ? MF_GRAYED : MF_ENABLED);
 	AddToMenu(_menu, SWS_SEPARATOR, 0);
 	AddToMenu(_menu, __LOCALIZE("Export selected cycle actions...","sws_DLG_161"), EXPORT_SEL_MSG);
-	_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Export section '%s'...","sws_DLG_161"), SNM_GetActionSectionName(g_editedSection));
+	snprintf(buf, sizeof(buf), __LOCALIZE_VERFMT("Export section '%s'...","sws_DLG_161"), SNM_GetActionSectionName(g_editedSection));
 	AddToMenu(_menu, buf, EXPORT_CUR_SECTION_MSG);
 	AddToMenu(_menu, __LOCALIZE("Export all sections...","sws_DLG_161"), EXPORT_ALL_SECTIONS_MSG);
 	if (_wantReset) {
@@ -2460,7 +2460,7 @@ void CyclactionWnd::AddImportExportMenu(HMENU _menu, bool _wantReset)
 void CyclactionWnd::AddResetMenu(HMENU _menu)
 {
 	char buf[128] = "";
-	_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Reset section '%s'...","sws_DLG_161"), SNM_GetActionSectionName(g_editedSection));
+	snprintf(buf, sizeof(buf), __LOCALIZE_VERFMT("Reset section '%s'...","sws_DLG_161"), SNM_GetActionSectionName(g_editedSection));
 	AddToMenu(_menu, buf, RESET_CUR_SECTION_MSG);
 	AddToMenu(_menu, __LOCALIZE("Reset all sections","sws_DLG_161"), RESET_ALL_SECTIONS_MSG);
 }
@@ -2736,8 +2736,8 @@ int CyclactionInit()
 	s_EMPTY_R.Set(__LOCALIZE("<- Select a cycle action","sws_DLG_161"));
 	s_DEFAULT_R.Set(__LOCALIZE("Right click here to add commands","sws_DLG_161"));
 
-	_snprintfSafe(g_lastExportFn, sizeof(g_lastExportFn), SNM_CYCLACTION_EXPORT_FILE, GetResourcePath());
-	_snprintfSafe(g_lastImportFn, sizeof(g_lastImportFn), SNM_CYCLACTION_EXPORT_FILE, GetResourcePath());
+	snprintf(g_lastExportFn, sizeof(g_lastExportFn), SNM_CYCLACTION_EXPORT_FILE, GetResourcePath());
+	snprintf(g_lastImportFn, sizeof(g_lastImportFn), SNM_CYCLACTION_EXPORT_FILE, GetResourcePath());
 
 	// consolidate undo pref, default==enabled for ascendant compatibility
 	// local pref: comes from the S&M.ini file

@@ -401,7 +401,7 @@ void NotesWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				char link[256] = "";
 				char sectionURL[SNM_MAX_SECTION_NAME_LEN] = "";
 				if (GetSectionURL(true, g_lastActionSection, sectionURL, SNM_MAX_SECTION_NAME_LEN))
-					if (_snprintfStrict(link, sizeof(link), "http://www.cockos.com/wiki/index.php/%s_%s", sectionURL, g_lastActionCustId) > 0)
+					if (snprintfStrict(link, sizeof(link), "http://www.cockos.com/wiki/index.php/%s_%s", sectionURL, g_lastActionCustId) > 0)
 						ShellExecute(m_hwnd, "open", link , NULL, NULL, SW_SHOWNORMAL);
 			}
 			else
@@ -613,7 +613,7 @@ void NotesWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeig
 						int id = CSurf_TrackToID(g_trNote, false);
 						if (id > 0) {
 							char* trName = (char*)GetSetMediaTrackInfo(g_trNote, "P_NAME", NULL);
-							_snprintfSafe(str, sizeof(str), "[%d] \"%s\"", id, trName?trName:"");
+							snprintf(str, sizeof(str), "[%d] \"%s\"", id, trName?trName:"");
 						}
 						else if (id == 0)
 							strcpy(str, __LOCALIZE("[MASTER]","sws_DLG_152"));
@@ -644,7 +644,7 @@ void NotesWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeig
 #ifdef WANT_ACTION_HELP
 				case SNM_NOTES_ACTION_HELP:
 					if (*g_lastActionDesc && *g_lastActionSection)
-						_snprintfSafe(str, sizeof(str), " [%s] %s", g_lastActionSection, g_lastActionDesc);
+						snprintf(str, sizeof(str), " [%s] %s", g_lastActionSection, g_lastActionDesc);
 /*JFB!!! API LIMITATION: use smthg like that when we will be able to access all sections
 						lstrcpyn(str, kbd_getTextFromCmd(g_lastActionListCmd, NULL), 512);
 */
@@ -1561,7 +1561,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 				tr && CSurf_TrackToID(tr, false) >= 0) // valid track?
 			{
 				guidToString((GUID*)tn->GetGUID(), strId);
-				if (_snprintfStrict(line, sizeof(line), "<S&M_TRACKNOTES %s\n|", strId) > 0)
+				if (snprintfStrict(line, sizeof(line), "<S&M_TRACKNOTES %s\n|", strId) > 0)
 					if (GetNotesChunkFromString(tn->m_notes.Get(), &formatedNotes, line))
 						StringToExtensionConfig(&formatedNotes, ctx);
 			}
@@ -1584,7 +1584,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 		{
 			if (sub->m_notes.GetLength() && GetMarkerRegionIndexFromId(NULL, sub->m_id) >= 0) // valid mkr/rgn?
 			{
-				if (_snprintfStrict(line, sizeof(line), "<S&M_SUBTITLE %d\n|", sub->m_id) > 0)
+				if (snprintfStrict(line, sizeof(line), "<S&M_SUBTITLE %d\n|", sub->m_id) > 0)
 					if (GetNotesChunkFromString(sub->m_notes.Get(), &formatedNotes, line))
 						StringToExtensionConfig(&formatedNotes, ctx);
 			}
@@ -1646,7 +1646,7 @@ int NotesInit()
 
 	// get the action help filename
 	char defaultHelpFn[SNM_MAX_PATH] = "";
-	if (_snprintfStrict(defaultHelpFn, sizeof(defaultHelpFn), SNM_ACTION_HELP_INI_FILE, GetResourcePath()) <= 0)
+	if (snprintfStrict(defaultHelpFn, sizeof(defaultHelpFn), SNM_ACTION_HELP_INI_FILE, GetResourcePath()) <= 0)
 		*defaultHelpFn = '\0';
 	GetPrivateProfileString(NOTES_INI_SEC, "Action_help_file", defaultHelpFn, g_actionHelpFn, sizeof(g_actionHelpFn), g_SNM_IniFn.Get());
 
@@ -1673,7 +1673,7 @@ void NotesExit()
 	plugin_register("-projectconfig", &s_projectconfig);
 
 	char tmp[4] = "";
-	if (_snprintfStrict(tmp, sizeof(tmp), "%d", g_notesType) > 0)
+	if (snprintfStrict(tmp, sizeof(tmp), "%d", g_notesType) > 0)
 		WritePrivateProfileString(NOTES_INI_SEC, "Type", tmp, g_SNM_IniFn.Get()); 
 	WritePrivateProfileString(NOTES_INI_SEC, "Lock", g_locked?"1":"0", g_SNM_IniFn.Get()); 
 	WritePrivateProfileString(NOTES_INI_SEC, "BigFontName", g_notesBigFontName, g_SNM_IniFn.Get());

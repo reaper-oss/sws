@@ -161,7 +161,6 @@ extern MTRand g_MTRand;
 #define BS_MULTILINE 0
 #define _strdup strdup
 #define _strndup strndup
-#define _snprintf snprintf
 #define _stricmp stricmp
 #define _strnicmp strnicmp
 #define LVKF_ALT 1

@@ -208,7 +208,7 @@ void FindWnd::OnDestroy()
 {
 	// save prefs
 	char type[4] = "";
-	if (_snprintfStrict(type, sizeof(type), "%d", m_type) > 0)
+	if (snprintfStrict(type, sizeof(type), "%d", m_type) > 0)
 		WritePrivateProfileString(FIND_INI_SEC, "Type", type, g_SNM_IniFn.Get());
 	WritePrivateProfileString(FIND_INI_SEC, "ZoomScrollToFoundItems", m_zoomSrollItems ? "1" : "0", g_SNM_IniFn.Get());
 

@@ -133,7 +133,7 @@ void SWS_AutoColorView::GetItemText(SWS_ListItem* item, int iCol, char* str, int
 	switch (iCol)
 	{
 	case COL_ID:
-		_snprintf(str, iStrMax, "%d", g_pACItems.Find(pItem) + 1);
+		snprintf(str, iStrMax, "%d", g_pACItems.Find(pItem) + 1);
 		break;
 	case COL_TYPE:
 		lstrcpyn(str, __localizeFunc(cTypes[pItem->m_type],"sws_DLG_115",LOCALIZE_FLAG_NOCACHE), iStrMax);
@@ -155,9 +155,9 @@ void SWS_AutoColorView::GetItemText(SWS_ListItem* item, int iCol, char* str, int
 			lstrcpyn(str, __localizeFunc(cColorTypes[-pItem->m_color-1],"sws_DLG_115",LOCALIZE_FLAG_NOCACHE), iStrMax);
 		else
 #ifdef _WIN32
-			_snprintf(str, iStrMax, "0x%02x%02x%02x", pItem->m_color & 0xFF, (pItem->m_color >> 8) & 0xFF, (pItem->m_color >> 16) & 0xFF); //Brado: I think this is in reverse. Ini file dec to hex conversion (correct value for color) shows opposite of what this outputs to screen. e.g. 0xFFFF80 instead of 0x80FFFF
+			snprintf(str, iStrMax, "0x%02x%02x%02x", pItem->m_color & 0xFF, (pItem->m_color >> 8) & 0xFF, (pItem->m_color >> 16) & 0xFF); //Brado: I think this is in reverse. Ini file dec to hex conversion (correct value for color) shows opposite of what this outputs to screen. e.g. 0xFFFF80 instead of 0x80FFFF
 #else
-			_snprintf(str, iStrMax, "0x%06x", pItem->m_color);
+			snprintf(str, iStrMax, "0x%06x", pItem->m_color);
 #endif
 		break;
 	case COL_ICON:
@@ -1274,7 +1274,7 @@ int AutoColorInit()
 	char key[32];
 	for (int i = 0; i < iCount; i++)
 	{
-		_snprintf(key, 32, AC_ITEM_KEY, i+1);
+		snprintf(key, 32, AC_ITEM_KEY, i+1);
 		GetPrivateProfileString(SWS_INI, key, "", str, BUFFER_SIZE, ini.Get()); // Read in AutoColor line (stored in str)
 		if (bUpgrade) // Remove old lines
 			WritePrivateProfileString(SWS_INI, key, NULL, get_ini_file());
@@ -1325,13 +1325,13 @@ void AutoColorSaveState()
 		makeEscapedConfigString(g_pACItems.Get(i)->m_icon.Get(), &tmp[1]);
 		makeEscapedConfigString(g_pACItems.Get(i)->m_layout[0].Get(), &tmp[2]);
 		makeEscapedConfigString(g_pACItems.Get(i)->m_layout[1].Get(), &tmp[3]);
-		_snprintf(str, BUFFER_SIZE, "%d %s %d %s %s %s", g_pACItems.Get(i)->m_type, tmp[0].Get(), g_pACItems.Get(i)->m_color, tmp[1].Get(), tmp[2].Get(), tmp[3].Get());
+		snprintf(str, BUFFER_SIZE, "%d %s %d %s %s %s", g_pACItems.Get(i)->m_type, tmp[0].Get(), g_pACItems.Get(i)->m_color, tmp[1].Get(), tmp[2].Get(), tmp[3].Get());
 
-		_snprintf(key, 32, AC_ITEM_KEY, i+1);
+		snprintf(key, 32, AC_ITEM_KEY, i+1);
 		WritePrivateProfileString(SWS_INI, key, str, g_ACIni.Get());
 	}
 	// Erase the n+1 entry
-	_snprintf(key, 32, AC_ITEM_KEY, g_pACItems.GetSize() + 1);
+	snprintf(key, 32, AC_ITEM_KEY, g_pACItems.GetSize() + 1);
 	WritePrivateProfileString(SWS_INI, key, NULL, g_ACIni.Get());
 }
 

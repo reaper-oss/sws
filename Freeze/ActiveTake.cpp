@@ -66,7 +66,7 @@ char* ActiveTake::ItemString(char* str, int maxLen)
 	char g1[64], g2[64];
 	guidToString(&m_item, g1);
 	guidToString(&m_activeTake, g2);
-	_snprintf(str, maxLen, "ITEM %s %s", g1, g2);
+	snprintf(str, maxLen, "ITEM %s %s", g1, g2);
 	return str;
 }
 
@@ -128,7 +128,7 @@ char* ActiveTakeTrack::ItemString(char* str, int maxLen)
 {
 	char guidStr[64];
 	guidToString(&m_guid, guidStr);
-	_snprintf(str, maxLen, "<ACTIVETAKESTRACK %s", guidStr);
+	snprintf(str, maxLen, "<ACTIVETAKESTRACK %s", guidStr);
 	return str;
 }
 

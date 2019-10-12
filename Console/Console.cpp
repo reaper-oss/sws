@@ -398,7 +398,7 @@ void ProcessCommand(CONSOLE_COMMAND command, const char* args)
 		case MARKER_ADD:
 			{
 				char markerStr[64];
-				_snprintf(markerStr, sizeof(markerStr), "!%s", args);
+				snprintf(markerStr, sizeof(markerStr), "!%s", args);
 				AddProjectMarker(NULL, false, GetCursorPosition(), 0.0, markerStr, -1);
 				UpdateTimeline();
 				break;
@@ -406,7 +406,7 @@ void ProcessCommand(CONSOLE_COMMAND command, const char* args)
 		case OSC_CMD:
 			{
 				char oscStr[256];
-				_snprintf(oscStr, sizeof(oscStr), "/%s", args);
+				snprintf(oscStr, sizeof(oscStr), "/%s", args);
 				SNM_SendLocalOscMessage(oscStr);
 				break;
 			}
@@ -515,14 +515,14 @@ void ProcessCommand(CONSOLE_COMMAND command, const char* args)
 			case NAME_PREFIX:
 			{
 				char cName[256];
-				_snprintf(cName, 256, "%s %s", args, (char*)GetSetMediaTrackInfo(pMt, "P_NAME", NULL));
+				snprintf(cName, 256, "%s %s", args, (char*)GetSetMediaTrackInfo(pMt, "P_NAME", NULL));
 				GetSetMediaTrackInfo(pMt, "P_NAME", cName);
 				break;
 			}
 			case NAME_SUFFIX:
 			{
 				char cName[256];
-				_snprintf(cName, 256, "%s %s", (char*)GetSetMediaTrackInfo(pMt, "P_NAME", NULL), args);
+				snprintf(cName, 256, "%s %s", (char*)GetSetMediaTrackInfo(pMt, "P_NAME", NULL), args);
 				GetSetMediaTrackInfo(pMt, "P_NAME", cName);
 				break;
 			}
@@ -731,7 +731,7 @@ void RunConsoleCommand(COMMAND_T* ct)
 	RunConsoleCommand(strCommand);
 
 	char cUndo[256];
-	_snprintf(cUndo, sizeof(cUndo), __LOCALIZE("ReaConsole custom command %s","sws_undo"), strCommand);
+	snprintf(cUndo, sizeof(cUndo), __LOCALIZE("ReaConsole custom command %s","sws_undo"), strCommand);
 	Undo_OnStateChangeEx(cUndo, UNDO_STATE_ALL, -1); // UNDO_STATE_TRACKCFG is not enough (marker, osc, ..)
 }
 
@@ -753,7 +753,7 @@ void EditCustomCommands(COMMAND_T*)
 	char* cWindir = getenv("windir");
 	if (!cWindir)
 		return;
-	_snprintf(cNotepad, sizeof(cNotepad), "%s\\notepad.exe", cWindir);
+	snprintf(cNotepad, sizeof(cNotepad), "%s\\notepad.exe", cWindir);
 	_spawnl(_P_NOWAIT, cNotepad, cNotepad, cArg, NULL);
 #endif
 }
@@ -843,8 +843,8 @@ int ConsoleInit()
 		char desc[SNM_MAX_ACTION_NAME_LEN];
 		for (int i=0; i<custCmds.GetSize(); i++)
 			if (custCmds.Get(i) && custCmds.Get(i)->GetLength())
-				if (_snprintfStrict(id, sizeof(id), "SWSCONSOLE_CUST%d", i+1) > 0) {
-					_snprintfSafe(desc, sizeof(desc), __LOCALIZE_VERFMT("SWS: Run console command: %s","sws_actions"), custCmds.Get(i)->Get());
+				if (snprintfStrict(id, sizeof(id), "SWSCONSOLE_CUST%d", i+1) > 0) {
+					snprintf(desc, sizeof(desc), __LOCALIZE_VERFMT("SWS: Run console command: %s","sws_actions"), custCmds.Get(i)->Get());
 					SWSRegisterCommandExt(RunConsoleCommand, id, desc, (INT_PTR)_strdup(custCmds.Get(i)->Get()), false);
 				}
 	}
@@ -866,7 +866,7 @@ void ConsoleExit()
 bool LoadConsoleCmds(WDL_PtrList<WDL_FastString>* _outCmds)
 {
 	char buf[SNM_MAX_PATH] = "";
-	if (_outCmds && _snprintfStrict(buf, sizeof(buf), SNM_CONSOLE_FILE, GetResourcePath()) > 0)
+	if (_outCmds && snprintfStrict(buf, sizeof(buf), SNM_CONSOLE_FILE, GetResourcePath()) > 0)
 	{
 		char* c;
 		_outCmds->Empty(true);
@@ -966,7 +966,7 @@ void ReaConsoleWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			ProcessCommand(m_cmd, m_pArgs);
 
 			char cUndo[256];
-			_snprintf(cUndo, sizeof(cUndo), __LOCALIZE("ReaConsole command %s","sws_undo"), m_strCmd);
+			snprintf(cUndo, sizeof(cUndo), __LOCALIZE("ReaConsole command %s","sws_undo"), m_strCmd);
 			Undo_OnStateChangeEx(cUndo, UNDO_STATE_ALL, -1); // UNDO_STATE_TRACKCFG is not enough (marker, osc, ..)
 
 			// close the window? if ctrl-enter was pressed by default, or enter if g_bCloseOnReturnPref is true (issue 588)

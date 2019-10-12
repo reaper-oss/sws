@@ -480,7 +480,7 @@ const char* SNM_GetSetObjectState(void* _obj, WDL_FastString* _str)
 #endif
 #ifdef _SNM_DEBUG
 	char fn[SNM_MAX_PATH] = "";
-	int l = _snprintf(fn, sizeof(fn), "%s%cSNM_CPP_last%s.log", GetExePath(), PATH_SLASH_CHAR, _str ? "Set" : "Get");
+	int l = snprintf(fn, sizeof(fn), "%s%cSNM_CPP_last%s.log", GetExePath(), PATH_SLASH_CHAR, _str ? "Set" : "Get");
 	if (l>0 && l<SNM_MAX_PATH)
 		if (FILE* f = fopenUTF8(fn, "w")) {
 			fputs(_str ? _str->Get() : (p?p:"NULL"), f);
@@ -829,7 +829,7 @@ int ParsePatchCore(
 						case SNM_TOGGLE_CHUNK_INT:
 						{
 							char bufConv[16] = "";
-							int l = _snprintf(bufConv, sizeof(bufConv), "%d", !lp.gettoken_int(_tokenPos));
+							int l = snprintf(bufConv, sizeof(bufConv), "%d", !lp.gettoken_int(_tokenPos));
 							if (l<=0 || l>=16) break;
 							alter |= WriteChunkLine(newChunk, bufConv, _tokenPos, &lp); 
 							m_breakParsePatch = (_occurence != -1);
@@ -873,7 +873,7 @@ int ParsePatchCore(
 								if (_mode == SNM_D_ADD) d += *(double*)_value;
 								else d *= *(double*)_value;
 								char bufConv[64] = "";
-								int l = _snprintf(bufConv, sizeof(bufConv), "%.14f", d);
+								int l = snprintf(bufConv, sizeof(bufConv), "%.14f", d);
 								if (l<=0 || l>=64) break;
 								alter |= WriteChunkLine(newChunk, bufConv, _tokenPos, &lp); 
 								m_breakParsePatch = (_occurence != -1);
@@ -904,7 +904,7 @@ int ParsePatchCore(
 						case SNM_TOGGLE_CHUNK_INT_EXCEPT:
 						{
 							char bufConv[16] = "";
-							int l = _snprintf(bufConv, sizeof(bufConv), "%d", !lp.gettoken_int(_tokenPos));
+							int l = snprintf(bufConv, sizeof(bufConv), "%d", !lp.gettoken_int(_tokenPos));
 							if (l<=0 || l>=16) break;
 							alter |= WriteChunkLine(newChunk, bufConv, _tokenPos, &lp); 
 						}

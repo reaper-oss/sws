@@ -259,7 +259,7 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 							if (!bFound)
 							{
 								char cMsg[512];
-								_snprintf(cMsg, 512, __LOCALIZE_VERFMT("No SWS custom colors found in %s.","sws_color"), cPath);
+								snprintf(cMsg, 512, __LOCALIZE_VERFMT("No SWS custom colors found in %s.","sws_color"), cPath);
 								MessageBox(hwndDlg, cMsg, __LOCALIZE("SWS Color Load","sws_color"), MB_OK);
 							}
 

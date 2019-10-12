@@ -355,7 +355,7 @@ void UnregisterExportedFuncs()
 	int i=-1;
 	while (g_apidefs[++i].func)
 	{
-		_snprintf(tmp, sizeof(tmp), "-%s", g_apidefs[i].regkey_func);
+		snprintf(tmp, sizeof(tmp), "-%s", g_apidefs[i].regkey_func);
 		plugin_register(tmp, g_apidefs[i].func);
 	}
 }
@@ -371,7 +371,7 @@ bool RegisterExportedAPI(reaper_plugin_info_t* _rec)
 		if (g_apidefs[i].regkey_def)
 		{
 			memset(tmp, 0, sizeof(tmp));
-			_snprintf(tmp, sizeof(tmp), "%s\r%s\r%s\r%s", g_apidefs[i].ret_val, g_apidefs[i].parm_types, g_apidefs[i].parm_names, g_apidefs[i].help);
+			snprintf(tmp, sizeof(tmp), "%s\r%s\r%s\r%s", g_apidefs[i].ret_val, g_apidefs[i].parm_types, g_apidefs[i].parm_names, g_apidefs[i].help);
 			char* p = g_apidefs[i].dyn_def = _strdup(tmp);
 			while (*p) { if (*p=='\r') *p='\0'; p++; }
 			ok &= (_rec->Register(g_apidefs[i].regkey_def, g_apidefs[i].dyn_def) != 0);

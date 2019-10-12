@@ -972,13 +972,13 @@ bool DeleteTakeAndMedia(int _mode)
 							{
 								char buf[SNM_MAX_PATH];
 								if (pcm && pcm->GetFileName() && *pcm->GetFileName() && _stricmp(GetFileExtension(pcm->GetFileName()), "rpp"))
-									_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("[Track %d, item %d, take %d] Delete take '%s' and its media file '%s'?","sws_mbox"), i, j+1, originalTkIdx+1, tkName, tkDisplayName);
+									snprintf(buf, sizeof(buf), __LOCALIZE_VERFMT("[Track %d, item %d, take %d] Delete take '%s' and its media file '%s'?","sws_mbox"), i, j+1, originalTkIdx+1, tkName, tkDisplayName);
 								else if (pcm && pcm->GetFileName() && *pcm->GetFileName() && !_stricmp(GetFileExtension(pcm->GetFileName()), "rpp"))
-									_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("[Track %d, item %d, take %d] Delete take '%s'?\r\nNote: the media file '%s' will not be deleted (project within project)","sws_mbox"), i, j+1, originalTkIdx+1, tkName, tkDisplayName);
+									snprintf(buf, sizeof(buf), __LOCALIZE_VERFMT("[Track %d, item %d, take %d] Delete take '%s'?\r\nNote: the media file '%s' will not be deleted (project within project)","sws_mbox"), i, j+1, originalTkIdx+1, tkName, tkDisplayName);
 								else if (pcm && pcm->GetFileName() && !*(pcm->GetFileName())) 
-									_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("[Track %d, item %d, take %d] Delete take '%s' (MIDI in-project)?","sws_mbox"), i, j+1, originalTkIdx+1, tkName);
+									snprintf(buf, sizeof(buf), __LOCALIZE_VERFMT("[Track %d, item %d, take %d] Delete take '%s' (MIDI in-project)?","sws_mbox"), i, j+1, originalTkIdx+1, tkName);
 								else 
-									_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("[Track %d, item %d] Delete take %d (empty take) ?","sws_mbox"), i, j+1, originalTkIdx+1); // v3 or v4 empty takes
+									snprintf(buf, sizeof(buf), __LOCALIZE_VERFMT("[Track %d, item %d] Delete take %d (empty take) ?","sws_mbox"), i, j+1, originalTkIdx+1); // v3 or v4 empty takes
 
 								rc = MessageBox(GetMainHwnd(), buf, __LOCALIZE("S&M - Delete take and source files (no undo!)","sws_mbox"), MB_YESNOCANCEL);
 								if (rc == IDCANCEL) {
@@ -1176,7 +1176,7 @@ void BypassUnbypassShowHideTakeVolEnvelope(COMMAND_T* _ct)
 {
 	char cVis[2] = ""; // empty means toggle
 	int value = (int)_ct->user;
-	if (value >= 0 && _snprintfStrict(cVis, sizeof(cVis), "%d", value) < 0)
+	if (value >= 0 && snprintfStrict(cVis, sizeof(cVis), "%d", value) < 0)
 		return;
 	WDL_FastString defaultPoint("PT 0.000000 1.000000 0");
 	PatchTakeEnvelopeActVis(SWS_CMD_SHORTNAME(_ct), "VOLENV", cVis, &defaultPoint, false, false);
@@ -1186,7 +1186,7 @@ void BypassUnbypassShowHideTakePanEnvelope(COMMAND_T* _ct)
 {
 	char cVis[2] = ""; // empty means toggle
 	int value = (int)_ct->user;
-	if (value >= 0 && _snprintfStrict(cVis, sizeof(cVis), "%d", value) < 0)
+	if (value >= 0 && snprintfStrict(cVis, sizeof(cVis), "%d", value) < 0)
 		return;
 	WDL_FastString defaultPoint("PT 0.000000 0.000000 0");
 	PatchTakeEnvelopeActVis(SWS_CMD_SHORTNAME(_ct), "PANENV", cVis, &defaultPoint, false, false);
@@ -1196,7 +1196,7 @@ void BypassUnbypassShowHideTakeMuteEnvelope(COMMAND_T* _ct)
 {
 	char cVis[2] = ""; // empty means toggle
 	int value = (int)_ct->user;
-	if (value >= 0 && _snprintfStrict(cVis, sizeof(cVis), "%d", value) < 0)
+	if (value >= 0 && snprintfStrict(cVis, sizeof(cVis), "%d", value) < 0)
 		return;
 	WDL_FastString defaultPoint("PT 0.000000 1.000000 1");
 	PatchTakeEnvelopeActVis(SWS_CMD_SHORTNAME(_ct), "MUTEENV", cVis, &defaultPoint, false, false);
@@ -1206,7 +1206,7 @@ void BypassUnbypassShowHideTakePitchEnvelope(COMMAND_T* _ct)
 {
 	char cVis[2] = ""; // empty means toggle
 	int value = (int)_ct->user;
-	if (value >= 0 && _snprintfStrict(cVis, sizeof(cVis), "%d", value) < 0)
+	if (value >= 0 && snprintfStrict(cVis, sizeof(cVis), "%d", value) < 0)
 		return;
 	WDL_FastString defaultPoint("PT 0.000000 0.000000 0");
 	PatchTakeEnvelopeActVis(SWS_CMD_SHORTNAME(_ct), "PITCHENV", cVis, &defaultPoint, false, false);
@@ -1217,7 +1217,7 @@ void ShowHideTakeVolEnvelope(COMMAND_T* _ct)
 {
 	char cVis[2] = ""; // empty means toggle
 	int value = (int)_ct->user;
-	if (value >= 0 && _snprintfStrict(cVis, sizeof(cVis), "%d", value) < 0)
+	if (value >= 0 && snprintfStrict(cVis, sizeof(cVis), "%d", value) < 0)
 		return;
 	WDL_FastString defaultPoint("PT 0.000000 1.000000 0");
 	PatchTakeEnvelopeActVis(SWS_CMD_SHORTNAME(_ct), "VOLENV", cVis, &defaultPoint, false, true);
@@ -1227,7 +1227,7 @@ void ShowHideTakePanEnvelope(COMMAND_T* _ct)
 {
 	char cVis[2] = ""; // empty means toggle
 	int value = (int)_ct->user;
-	if (value >= 0 && _snprintfStrict(cVis, sizeof(cVis), "%d", value) < 0)
+	if (value >= 0 && snprintfStrict(cVis, sizeof(cVis), "%d", value) < 0)
 		return;
 	WDL_FastString defaultPoint("PT 0.000000 0.000000 0");
 	PatchTakeEnvelopeActVis(SWS_CMD_SHORTNAME(_ct), "PANENV", cVis, &defaultPoint, false, true);
@@ -1237,7 +1237,7 @@ void ShowHideTakeMuteEnvelope(COMMAND_T* _ct)
 {
 	char cVis[2] = ""; // empty means toggle
 	int value = (int)_ct->user;
-	if (value >= 0 && _snprintfStrict(cVis, sizeof(cVis), "%d", value) < 0)
+	if (value >= 0 && snprintfStrict(cVis, sizeof(cVis), "%d", value) < 0)
 		return;
 	WDL_FastString defaultPoint("PT 0.000000 1.000000 1");
 	PatchTakeEnvelopeActVis(SWS_CMD_SHORTNAME(_ct), "MUTEENV", cVis, &defaultPoint, false, true);
@@ -1247,7 +1247,7 @@ void ShowHideTakePitchEnvelope(COMMAND_T* _ct)
 {
 	char cVis[2] = ""; // empty means toggle
 	int value = (int)_ct->user;
-	if (value >= 0 && _snprintfStrict(cVis, sizeof(cVis), "%d", value) < 0)
+	if (value >= 0 && snprintfStrict(cVis, sizeof(cVis), "%d", value) < 0)
 		return;
 	WDL_FastString defaultPoint("PT 0.000000 0.000000 0");
 	PatchTakeEnvelopeActVis(SWS_CMD_SHORTNAME(_ct), "PITCHENV", cVis, &defaultPoint, false, true);

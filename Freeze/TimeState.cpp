@@ -58,7 +58,7 @@ void TimeSelection::Restore()
 
 char* TimeSelection::ItemString(char* str, int maxLen)
 {
-	_snprintf(str, maxLen, "TIMESEL %d %d %.14f %.14f", m_bIsLoop ? 1 : 0, m_iSlot, m_dStart, m_dEnd);
+	snprintf(str, maxLen, "TIMESEL %d %d %.14f %.14f", m_bIsLoop ? 1 : 0, m_iSlot, m_dStart, m_dEnd);
 	return str;
 }
 

@@ -75,6 +75,9 @@
 #include "reaper/icontheme.h"
 
 #include "WDL/wdlcstring.h"
+#undef snprintf
+#undef vsnprintf
+
 #include "WDL/wdltypes.h"
 #include "WDL/ptrlist.h"
 #include "WDL/wdlstring.h"

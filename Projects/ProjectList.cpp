@@ -53,7 +53,7 @@ void SWS_ProjectListView::GetItemText(SWS_ListItem* item, int iCol, char* str, i
 	switch (iCol)
 	{
 	case 0: // #
-		_snprintf(str, iStrMax, "%d", i+1);
+		snprintf(str, iStrMax, "%d", i+1);
 		break;
 	case 1: // Name
 		{

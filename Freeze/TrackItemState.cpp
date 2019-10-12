@@ -111,7 +111,7 @@ char* ItemState::ItemString(char* str, int maxLen)
 {
 	char guidStr[64];
 	guidToString(&m_guid, guidStr);
-	_snprintf(str, maxLen, "ITEMSTATE %s %d %.5f %.5f %d %d %.14f %.6f %.6f", guidStr, m_bMute ? 1 : 0, m_fFIPMy, m_fFIPMh, m_bSel ? 1 : 0, m_iColor, m_dVol, m_dFadeIn, m_dFadeOut);
+	snprintf(str, maxLen, "ITEMSTATE %s %d %.5f %.5f %d %d %.14f %.6f %.6f", guidStr, m_bMute ? 1 : 0, m_fFIPMy, m_fFIPMh, m_bSel ? 1 : 0, m_iColor, m_dVol, m_dFadeIn, m_dFadeOut);
 	return str;
 }
 
@@ -203,7 +203,7 @@ char* TrackState::ItemString(char* str, int maxLen)
 {
 	char guidStr[64];
 	guidToString(&m_guid, guidStr);
-	_snprintf(str, maxLen, "<TRACKSTATE %s %d %d", guidStr, m_bFIPM, m_iColor);
+	snprintf(str, maxLen, "<TRACKSTATE %s %d %d", guidStr, m_bFIPM, m_iColor);
 	return str;
 }
 

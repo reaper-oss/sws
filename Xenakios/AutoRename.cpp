@@ -154,7 +154,7 @@ void InitPresets()
 {
 	char file[512];
 	FILE* f;
-	_snprintf(file, 512, "%s%cSWS-RenamePresets.txt", GetResourcePath(), PATH_SLASH_CHAR);
+	snprintf(file, 512, "%s%cSWS-RenamePresets.txt", GetResourcePath(), PATH_SLASH_CHAR);
 	if (!FileExists(file))
 	{	// Generate defaults
 		f = fopen(file, "w");

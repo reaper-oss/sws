@@ -261,7 +261,7 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 				// Add std menu items
 				char str[128];
-				if (_snprintf(str, sizeof(str), __LOCALIZE_VERFMT("Dock %s in Docker","sws_menu"), m_wndTitle.Get()) > 0)
+				if (snprintf(str, sizeof(str), __LOCALIZE_VERFMT("Dock %s in Docker","sws_menu"), m_wndTitle.Get()) > 0)
 				{
 					if (!NotifyOnContextMenu())
 						dockId = GetUnusedMenuId(hMenu);
@@ -745,7 +745,7 @@ SWS_ListView::SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn
 	sprintf(cDefaults, "%d", m_iSortCol);
 	int iPos = 0;
 	for (int i = 0; i < m_iCols; i++)
-		_snprintf(cDefaults + strlen(cDefaults), 64-strlen(cDefaults), " %d %d", m_pCols[i].iWidth, m_pCols[i].iPos != -1 ? iPos++ : -1);
+		snprintf(cDefaults + strlen(cDefaults), 64-strlen(cDefaults), " %d %d", m_pCols[i].iWidth, m_pCols[i].iPos != -1 ? iPos++ : -1);
 	char str[256];
 	GetPrivateProfileString(SWS_INI, m_cINIKey, cDefaults, str, 256, get_ini_file());
 	LineParser lp(false);
@@ -1092,9 +1092,9 @@ void SWS_ListView::OnDestroy()
 	iCols = 0;
 	for (int i = 0; i < m_iCols; i++)
 		if (m_pCols[i].iPos >= 0)
-			_snprintf(str + strlen(str), 256-strlen(str), " %d %d", ListView_GetColumnWidth(m_hwndList, iCols++), m_pCols[i].iPos);
+			snprintf(str + strlen(str), 256-strlen(str), " %d %d", ListView_GetColumnWidth(m_hwndList, iCols++), m_pCols[i].iPos);
 		else
-			_snprintf(str + strlen(str), 256-strlen(str), " %d %d", m_pCols[i].iWidth, m_pCols[i].iPos);
+			snprintf(str + strlen(str), 256-strlen(str), " %d %d", m_pCols[i].iWidth, m_pCols[i].iPos);
 
 	WritePrivateProfileString(SWS_INI, m_cINIKey, str, get_ini_file());
 

@@ -176,7 +176,7 @@ void UpdatePresetConf(WDL_FastString* _presetConf, int _fx, const char* _preset)
 	{
 		bool found = false;
 		char fxBuf[32]="";
-		if (_snprintfStrict(fxBuf, sizeof(fxBuf), "FX%d:", _fx) > 0)
+		if (snprintfStrict(fxBuf, sizeof(fxBuf), "FX%d:", _fx) > 0)
 		{
 			for (int i=0; i < lp.getnumtokens(); i++)
 			{
@@ -236,7 +236,7 @@ bool ParsePresetConf(int _fx, const char* _presetConf, WDL_FastString* _out, boo
 	if (!lp.parse(_presetConf))
 	{
 		char fxBuf[64]="";
-		if (_fx >= 0) _snprintfSafe(fxBuf, sizeof(fxBuf), "FX%d:", _fx+1);
+		if (_fx >= 0) snprintf(fxBuf, sizeof(fxBuf), "FX%d:", _fx+1);
 
 		int i=0;
 		while (i < lp.getnumtokens())
@@ -539,7 +539,7 @@ void LiveConfig::cfg_SaveMuteStateAndMuteIfNeeded(MediaTrack* _tr, bool _force)
 			if (g_reaPref_fadeLen && *g_reaPref_fadeLen>0) m_cfg_last_mute_time = time_precise();
 #ifdef _SNM_DEBUG
 			char dbg[256] = "";
-			_snprintfSafe(dbg, sizeof(dbg), "cfg_SaveMuteStateAndMuteIfNeeded() - Muted: %s\n", (char*)GetSetMediaTrackInfo(_tr, "P_NAME", NULL));
+			snprintf(dbg, sizeof(dbg), "cfg_SaveMuteStateAndMuteIfNeeded() - Muted: %s\n", (char*)GetSetMediaTrackInfo(_tr, "P_NAME", NULL));
 			OutputDebugString(dbg);
 #endif
 		}
@@ -598,7 +598,7 @@ void LiveConfig::cfg_WaitForMuteSendCC123(MediaTrack* inputTr)
 		}
 #ifdef _SNM_DEBUG
 		char dbg[256] = "";
-		_snprintfSafe(dbg, sizeof(dbg), "cfg_WaitForMuteSendCC123() - Approx wait time: %f ms\n", (time_precise() - m_muteTime)*1000.0);
+		snprintf(dbg, sizeof(dbg), "cfg_WaitForMuteSendCC123() - Approx wait time: %f ms\n", (time_precise() - m_muteTime)*1000.0);
 		OutputDebugString(dbg);
 #endif
 		m_cfg_last_mute_time = 0.0;
@@ -660,7 +660,7 @@ void LiveConfigView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iS
 			case COL_CC:
 			{
 				LiveConfig* lc = g_liveConfigs.Get()->Get(g_configId);
-				_snprintfSafe(str, iStrMax, "%d %s", pItem->m_cc, 
+				snprintf(str, iStrMax, "%d %s", pItem->m_cc, 
 					lc ? (pItem->m_cc==lc->m_activeMidiVal ? UTF8_BULLET : 
 						(pItem->m_cc == lc->m_preloadMidiVal ? UTF8_CIRCLE : " ")) : " ");
 				break;
@@ -671,7 +671,7 @@ void LiveConfigView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iS
 			case COL_TR:
 				if (pItem->m_track && CSurf_TrackToID(pItem->m_track, false) > 0)
 					if (char* name = (char*)GetSetMediaTrackInfo(pItem->m_track, "P_NAME", NULL))
-						_snprintfSafe(str, iStrMax, "[%d] \"%s\"", CSurf_TrackToID(pItem->m_track, false), name);
+						snprintf(str, iStrMax, "[%d] \"%s\"", CSurf_TrackToID(pItem->m_track, false), name);
 				break;
 			case COL_TRT:
 				GetFilenameNoExt(pItem->m_trTemplate.Get(), str, iStrMax);
@@ -825,7 +825,7 @@ void LiveConfigsWnd::OnInitDlg()
 	m_cbConfig.SetFont(font);
 	char cfg[4] = "";
 	for (int i=0; i<SNM_LIVECFG_NB_CONFIGS; i++) {
-		_snprintfSafe(cfg, sizeof(cfg), "%d", i+1);
+		snprintf(cfg, sizeof(cfg), "%d", i+1);
 		m_cbConfig.AddItem(cfg);
 	}
 	m_cbConfig.SetCurSel(g_configId);
@@ -987,9 +987,9 @@ void LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 
 				char msg[256] = "";
 				if (nbSends > 0) 
-					_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Created track \"%s\": %d sends (muted), record armed, monitoring enabled, no master send.\r\n\r\nPlease select a MIDI or audio input for this new track.","sws_DLG_155"), trName, nbSends);
+					snprintf(msg, sizeof(msg), __LOCALIZE_VERFMT("Created track \"%s\": %d sends (muted), record armed, monitoring enabled, no master send.\r\n\r\nPlease select a MIDI or audio input for this new track.","sws_DLG_155"), trName, nbSends);
 				else
-					_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Created track \"%s\": record armed, monitoring enabled, no master send.\r\n\r\nPlease select a MIDI or audio input for this new track.","sws_DLG_155"), trName);
+					snprintf(msg, sizeof(msg), __LOCALIZE_VERFMT("Created track \"%s\": record armed, monitoring enabled, no master send.\r\n\r\nPlease select a MIDI or audio input for this new track.","sws_DLG_155"), trName);
 				MessageBox(GetHWND(), msg, __LOCALIZE("S&M - Create input track","sws_DLG_155"), MB_OK);
 			}
 			break;
@@ -1538,11 +1538,11 @@ void LiveConfigsWnd::AddLearnMenu(HMENU _menu, bool _subItems)
 		else hOptMenu = _menu;
 
 		char custId[SNM_MAX_ACTION_CUSTID_LEN];
-		_snprintfSafe(custId, sizeof(custId), "_S&M_LIVECFG_APPLY%d", g_configId+1);
+		snprintf(custId, sizeof(custId), "_S&M_LIVECFG_APPLY%d", g_configId+1);
 		COMMAND_T* ct = SWSGetCommandByID(NamedCommandLookup(custId));
 		if (ct) AddToMenuOrdered(hOptMenu, SWS_CMD_SHORTNAME(ct), LEARN_APPLY_MSG);
 
-		_snprintfSafe(custId, sizeof(custId), "_S&M_LIVECFG_PRELOAD%d", g_configId+1);
+		snprintf(custId, sizeof(custId), "_S&M_LIVECFG_PRELOAD%d", g_configId+1);
 		ct = SWSGetCommandByID(NamedCommandLookup(custId));
 		if (ct) AddToMenuOrdered(hOptMenu, SWS_CMD_SHORTNAME(ct), LEARN_PRELOAD_MSG);
 
@@ -1629,7 +1629,7 @@ HMENU LiveConfigsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 						for (int i=1; i<=trackCnt; i++)
 						{
 							char* name = (char*)GetSetMediaTrackInfo(CSurf_TrackFromID(i,false), "P_NAME", NULL);
-							_snprintfSafe(trName, sizeof(trName), "[%d] \"%s\"", i, name?name:"");
+							snprintf(trName, sizeof(trName), "[%d] \"%s\"", i, name?name:"");
 							AddToMenu(hTracksMenu, trName, SET_TRACK_START_MSG + i);
 						}
 					}
@@ -1724,7 +1724,7 @@ HMENU LiveConfigsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 	if (*wantDefaultItems)
 	{
 		char buf[64]="";
-		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("[Live Config #%d]","sws_DLG_155"), g_configId+1);
+		snprintf(buf, sizeof(buf), __LOCALIZE_VERFMT("[Live Config #%d]","sws_DLG_155"), g_configId+1);
 		AddToMenu(hMenu, buf, 0, -1, false, MF_GRAYED);
 		AddToMenu(hMenu, __LOCALIZE("Create input track...","sws_DLG_155"), CREATE_INPUT_MSG);
 		AddLearnMenu(hMenu, true);
@@ -1822,11 +1822,11 @@ bool LiveConfigsWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _
 		{
 			case BTNID_ENABLE:
 				if (LiveConfig* lc = g_liveConfigs.Get()->Get(g_configId))
-					_snprintfSafe(_bufOut, _bufOutSz, __LOCALIZE_VERFMT("Live Config #%d: %s","sws_DLG_155"), g_configId+1, lc->m_enable?__LOCALIZE("on","sws_DLG_155"):__LOCALIZE("off","sws_DLG_155"));
+					snprintf(_bufOut, _bufOutSz, __LOCALIZE_VERFMT("Live Config #%d: %s","sws_DLG_155"), g_configId+1, lc->m_enable?__LOCALIZE("on","sws_DLG_155"):__LOCALIZE("off","sws_DLG_155"));
 				return true;
 			case TXTID_INPUT_TRACK:
 			case CMBID_INPUT_TRACK:
-				_snprintfSafe(_bufOut, _bufOutSz, __LOCALIZE_VERFMT("Input track for Live Config #%d (optional)","sws_DLG_155"), g_configId+1);
+				snprintf(_bufOut, _bufOutSz, __LOCALIZE_VERFMT("Input track for Live Config #%d (optional)","sws_DLG_155"), g_configId+1);
 				return true;
 			case WNDID_CC_DELAY:
 			case KNBID_CC_DELAY:
@@ -2521,7 +2521,7 @@ void ApplyLiveConfigJob::Perform()
 
 	{
 		char buf[SNM_MAX_ACTION_NAME_LEN]="";
-		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Apply Live Config %d, value %d","sws_undo"), m_cfgId+1, absval);
+		snprintf(buf, sizeof(buf), __LOCALIZE_VERFMT("Apply Live Config %d, value %d","sws_undo"), m_cfgId+1, absval);
 		Undo_EndBlock2(NULL, buf, UNDO_STATE_ALL);
 	}
 
@@ -2621,7 +2621,7 @@ void PreloadLiveConfigJob::Perform()
 
 	{
 		char buf[SNM_MAX_ACTION_NAME_LEN]="";
-		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Preload Live Config %d, value: %d","sws_undo"), m_cfgId+1, absval);
+		snprintf(buf, sizeof(buf), __LOCALIZE_VERFMT("Preload Live Config %d, value: %d","sws_undo"), m_cfgId+1, absval);
 		Undo_EndBlock2(NULL, buf, UNDO_STATE_ALL);
 	}
 
@@ -2762,8 +2762,8 @@ LiveConfigMonitorWnd::LiveConfigMonitorWnd(int _cfgId)
 	m_cfgId = _cfgId;
 
 	char title[64]="", dockId[64]="";
-	_snprintfSafe(title, sizeof(title), __LOCALIZE_VERFMT("Live Config #%d - Monitor","sws_DLG_169"), m_cfgId+1);
-	_snprintfSafe(dockId, sizeof(dockId), LIVECFG_MON_WND_ID, m_cfgId+1);
+	snprintf(title, sizeof(title), __LOCALIZE_VERFMT("Live Config #%d - Monitor","sws_DLG_169"), m_cfgId+1);
+	snprintf(dockId, sizeof(dockId), LIVECFG_MON_WND_ID, m_cfgId+1);
 
 	// see SWS_DockWnd(): default init for other member vars
 	m_iResource=IDD_SNM_LIVE_CONFIG_MON;
@@ -2797,13 +2797,13 @@ void LiveConfigMonitorWnd::OnInitDlg()
 
 	{
 		char buf[64]="";
-		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Live Config #%d","sws_DLG_169"), m_cfgId+1);
+		snprintf(buf, sizeof(buf), __LOCALIZE_VERFMT("Live Config #%d","sws_DLG_169"), m_cfgId+1);
 		m_mons.SetTitles(__LOCALIZE("CURRENT","sws_DLG_169"), buf, __LOCALIZE("PRELOAD","sws_DLG_169"), " "); // " " trick to get a lane
 		m_mons.SetFontName(g_lcBigFontName);
 
 #ifdef _SNM_MISC
 		// big fonts with alpha doesn't work well ATM (on OS X at least), such overlapped texts look a bit clunky anyway...
-		_snprintfSafe(buf, sizeof(buf), "#%d", m_cfgId+1);
+		snprintf(buf, sizeof(buf), "#%d", m_cfgId+1);
 		m_mons.SetText(0, buf, 0, 16);
 #endif
 	}
@@ -2829,7 +2829,7 @@ INT_PTR LiveConfigMonitorWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lP
 			int val = (short)HIWORD(wParam);
 #ifdef _SNM_DEBUG
 			char dbg[256] = "";
-			_snprintfSafe(dbg, sizeof(dbg), "WM_MOUSEWHEEL - val: %d\n", val);
+			snprintf(dbg, sizeof(dbg), "WM_MOUSEWHEEL - val: %d\n", val);
 			OutputDebugString(dbg);
 #endif
 			if (WDL_VWnd* mon0 = m_parentVwnd.GetChildByID(TXTID_MON0))

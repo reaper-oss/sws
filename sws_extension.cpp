@@ -1119,7 +1119,7 @@ error:
 		if (errcnt)
 		{
 			char txt[2048]="";
-			_snprintfSafe(txt, sizeof(txt),
+			snprintf(txt, sizeof(txt),
 					// keep the message on a single line (for the LangPack generator)
 					__LOCALIZE_VERFMT("The version of SWS extension you have installed is incompatible with your version of REAPER. You probably have a REAPER version less than v%d.%d%.0d installed.\r\nPlease install the latest version of REAPER from www.reaper.fm.","sws_mbox"),
 					REA_VERSION);
@@ -1174,7 +1174,7 @@ error:
 #endif
 
 			char txt[8192]="";
-			_snprintfSafe(txt, sizeof(txt),
+			snprintf(txt, sizeof(txt),
 			// keep the message on a single line (for the LangPack generator)
 			__LOCALIZE_VERFMT("Several versions of the SWS extension (or SWS clones) are installed!\n\nThis SWS extension instance will not be loaded:\n- Version: %d.%d.%d #%d\n- Location: %s\n\nPlease quit REAPER and remove the conflicting extension %s.\n\nNote: REAPER will look for extension plugins in the following order/folders:\n\t%s\n\t%s","sws_mbox"),
 				SWS_VERSION,

@@ -177,14 +177,14 @@ bool IsFraction (char* str, double& convertedFraction)
 	if (!buf)
 	{
 		convertedFraction = atof(str);
-		_snprintfSafe(str, size + 1, "%g", convertedFraction);
+		snprintf(str, size + 1, "%g", convertedFraction);
 		return false;
 	}
 	else
 	{
 		int num = atoi(str);
 		int den = atoi(buf+1);
-		_snprintfSafe(str, size + 1, "%d/%d", num, den);
+		snprintf(str, size + 1, "%d/%d", num, den);
 		if (den != 0)
 			convertedFraction = (double)num/(double)den;
 		else

@@ -329,13 +329,13 @@ void ToggleAllFXsBypassSelItems(COMMAND_T* _ct) {
 
 void UpdateAllFXsOfflineSelItems(COMMAND_T* _ct) {
 	char pInt[4] = "";
-	if (_snprintfStrict(pInt, sizeof(pInt), "%d", (int)_ct->user) > 0)
+	if (snprintfStrict(pInt, sizeof(pInt), "%d", (int)_ct->user) > 0)
 		PatchSelItemsFXState(SWS_CMD_SHORTNAME(_ct), SNM_SETALL_CHUNK_CHAR_EXCEPT, 2, 0xFFFF, pInt); // trick: unreachable fx number
 }
 
 void UpdateAllFXsBypassSelItems(COMMAND_T* _ct) {
 	char pInt[4] = "";
-	if (_snprintfStrict(pInt, sizeof(pInt), "%d", (int)_ct->user) > 0)
+	if (snprintfStrict(pInt, sizeof(pInt), "%d", (int)_ct->user) > 0)
 		PatchSelItemsFXState(SWS_CMD_SHORTNAME(_ct), SNM_SETALL_CHUNK_CHAR_EXCEPT, 1, 0xFFFF, pInt); // trick: unreachable fx number
 }
 
@@ -351,12 +351,12 @@ int SelectTrackFX(MediaTrack* _tr, int _fx)
 	{
 		SNM_ChunkParserPatcher p(_tr);
 		char pLastSel[4]="", pShow[4]=""; // 4 should be enough..
-		if (_snprintfStrict(pLastSel, sizeof(pLastSel), "%d", _fx) > 0)
+		if (snprintfStrict(pLastSel, sizeof(pLastSel), "%d", _fx) > 0)
 		{
 			if (p.Parse(SNM_GET_CHUNK_CHAR,2,"FXCHAIN","SHOW",0,1,pShow) > 0)
 			{
 				// patch the shown FX if the fx chain dlg is opened
-				if (strcmp(pShow, "0") && _snprintfStrict(pShow, sizeof(pShow), "%d", _fx+1) > 0)
+				if (strcmp(pShow, "0") && snprintfStrict(pShow, sizeof(pShow), "%d", _fx+1) > 0)
 					updates += (p.ParsePatch(SNM_SET_CHUNK_CHAR,2,"FXCHAIN","SHOW",0,1,pShow) > 0 ? 1:0);
 				updates += (p.ParsePatch(SNM_SET_CHUNK_CHAR,2,"FXCHAIN","LASTSEL",0,1,pLastSel) > 0 ? 1:0);
 			}
@@ -469,7 +469,7 @@ int GetUserPresetNames(MediaTrack* _tr, int _fx, WDL_PtrList<WDL_FastString>* _p
 			const int nbPresets = GetPrivateProfileInt("General", "NbPresets", 0, fn);
 			for (int i=0; i < nbPresets; i++)
 			{
-				_snprintfSafe(sec, sizeof(sec), "Preset%d", i);
+				snprintf(sec, sizeof(sec), "Preset%d", i);
 				GetPrivateProfileString(sec, "Name", "", buf, sizeof(buf), fn);
 				if (*buf)
 				{
@@ -490,7 +490,7 @@ bool TriggerFXPreset(MediaTrack* _tr, int _fxId, int _presetId, int _dir)
 {
 #ifdef _SNM_DEBUG
 	char dbg[256]="";
-	_snprintfSafe(dbg, sizeof(dbg), "TriggerFXPreset() - tr: %p, fx: %d, preset: %d, dir: %d\n", _tr, _fxId, _presetId, _dir);
+	snprintf(dbg, sizeof(dbg), "TriggerFXPreset() - tr: %p, fx: %d, preset: %d, dir: %d\n", _tr, _fxId, _presetId, _dir);
 	OutputDebugString(dbg);
 #endif
 	int nbFx = _tr ? TrackFX_GetCount(_tr) : 0;

@@ -33,7 +33,6 @@
 #include "../Breeder/BR_ContinuousActions.h"
 #include "../Breeder/BR_Util.h"
 #include "../Breeder/BR_ReaScript.h" // BR_GetMouseCursorContext(), BR_ItemAtMouseCursor()
-#include "../SnM/SnM_Util.h" // _snprintfSafe
 #include "../Utility/configvar.h"
 
 //////////////////////////////////////////////////////////////////
@@ -377,7 +376,7 @@ void ToggleRenderSpeedRealtimeNotLim(COMMAND_T* = nullptr)
 	RefreshToolbar(0);
 
 	char tmp[256];
-	_snprintfSafe(tmp, sizeof(tmp), "%d", *option);
+	snprintf(tmp, sizeof(tmp), "%d", *option);
 	WritePrivateProfileString("reaper", configStr, tmp, get_ini_file());
 }
 

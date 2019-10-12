@@ -152,7 +152,7 @@ HWND GetReaHwndByTitle(const char* _title)
 			// in a floating docker (w/o other hwnds)?
 			else {
 				char dockerName[256]="";
-				if (_snprintfStrict(dockerName, sizeof(dockerName), "%s%s", _title, __localizeFunc(" (docked)", "docker", 0)) > 0 && !strcmp(dockerName, buf))
+				if (snprintfStrict(dockerName, sizeof(dockerName), "%s%s", _title, __localizeFunc(" (docked)", "docker", 0)) > 0 && !strcmp(dockerName, buf))
 					if (w = GetReaChildWindowByTitle(w, _title))
 						return w;
 			}
@@ -199,7 +199,7 @@ HWND GetReaHwndByTitle(const char* _title)
 	// in a floating docker (w/o other hwnds)?
 	{
 		char dockerName[256]="";
-		if (_snprintfStrict(dockerName, sizeof(dockerName), "%s%s", _title, __localizeFunc(" (docked)", "docker", 0)) > 0)
+		if (snprintfStrict(dockerName, sizeof(dockerName), "%s%s", _title, __localizeFunc(" (docked)", "docker", 0)) > 0)
 			if ((w = GetReaHwndByTitleInFloatingDocker(_title, dockerName)))
 				return w;
 	}
@@ -451,8 +451,8 @@ int GetSelectedAction(char* _section, int _secSize, int* _cmdId, char* _id, int 
 					if (_id && _idSize > 0)
 					{
 						const char *custid=ReverseNamedCommandLookup(cmdId);
-						if (custid) _snprintfStrict(_id, _idSize, "_%s", custid);
-						else _snprintfStrict(_id, _idSize, "%d", cmdId);
+						if (custid) snprintfStrict(_id, _idSize, "_%s", custid);
+						else snprintfStrict(_id, _idSize, "%d", cmdId);
 					}
 					return i;
 				}
@@ -477,7 +477,7 @@ bool GetSelectedAction(char* _idstrOut, int _idStrSz, KbdSectionInfo* _expectedS
 	{
 		case -4: {
 			char msg[256]="";
-			_snprintfSafe(msg,
+			snprintf(msg,
 				sizeof(msg),
 				__LOCALIZE_VERFMT("The section \"%s\" is not selected in the Actions window!\nDo you want to select it?","sws_mbox"),
 				__localizeFunc(_expectedSection->name,"accel_sec",0));

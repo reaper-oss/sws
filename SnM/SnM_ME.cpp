@@ -70,7 +70,7 @@ void MainCreateCCLane(COMMAND_T* _ct)
 					// find the first unused index
 					i=1; while(lanes[i] && i <= SNM_MAX_CC_LANE_ID) i++;
 					char newLane[SNM_MAX_CHUNK_LINE_LENGTH] = "";
-					if (_snprintfStrict(newLane, sizeof(newLane), "VELLANE %d 50 0\n", i) > 0)
+					if (snprintfStrict(newLane, sizeof(newLane), "VELLANE %d 50 0\n", i) > 0)
 						ptk.GetChunk()->Insert(newLane, tkFirstPos);
 
 					// "update" take
@@ -142,7 +142,7 @@ void MainSetCCLanes(COMMAND_T* _ct)
 	{
 		// recall lanes
 		char laneSlot[SNM_MAX_CC_LANES_LEN], slot[32] = "";
-		if (_snprintfStrict(slot, sizeof(slot), "cc_lanes_slot%d", (int)_ct->user + 1) > 0)
+		if (snprintfStrict(slot, sizeof(slot), "cc_lanes_slot%d", (int)_ct->user + 1) > 0)
 		{
 			GetPrivateProfileString("MidiEditor", slot, "", laneSlot, SNM_MAX_CC_LANES_LEN, g_SNM_IniFn.Get());
 
@@ -212,7 +212,7 @@ void MainSaveCCLanes(COMMAND_T* _ct)
 
 					// store lanes
 					char slot[32] = "";
-					if (_snprintfStrict(slot, sizeof(slot), "cc_lanes_slot%d", (int)_ct->user + 1) > 0)
+					if (snprintfStrict(slot, sizeof(slot), "cc_lanes_slot%d", (int)_ct->user + 1) > 0)
 						WritePrivateProfileString("MidiEditor", slot, laneSlot, g_SNM_IniFn.Get());
 				}
 			}

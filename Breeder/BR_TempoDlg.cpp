@@ -315,7 +315,7 @@ static void SaveOptionsConversion (HWND hwnd)
 	int split = IsDlgButtonChecked(hwnd, IDC_BR_CON_SPLIT);
 
 	char tmp[512];
-	_snprintfSafe(tmp, sizeof(tmp), "%d %d %d %d %d %d %d %s", markers, num, den, removeMarkers, timeSel, gradual, split, splitRatio);
+	snprintf(tmp, sizeof(tmp), "%d %d %d %d %d %d %d %s", markers, num, den, removeMarkers, timeSel, gradual, split, splitRatio);
 	WritePrivateProfileString("SWS", CONVERT_KEY, tmp, get_ini_file());
 }
 
@@ -374,9 +374,9 @@ WDL_DLGRET ConvertMarkersToTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 			int markers, num, den, removeMarkers, timeSel, gradual, split;
 			char eNum[128], eDen[128] , eMarkers[128], splitRatio[128];
 			LoadOptionsConversion(markers, num, den, removeMarkers, timeSel, gradual, split, splitRatio, sizeof(splitRatio));
-			_snprintfSafe(eNum,     sizeof(eNum),     "%d", num);
-			_snprintfSafe(eDen,     sizeof(eDen),     "%d", den);
-			_snprintfSafe(eMarkers, sizeof(eMarkers), "%d", markers);
+			snprintf(eNum,     sizeof(eNum),     "%d", num);
+			snprintf(eDen,     sizeof(eDen),     "%d", den);
+			snprintf(eMarkers, sizeof(eMarkers), "%d", markers);
 
 			// Set controls
 			SetDlgItemText(hwnd, IDC_BR_CON_MARKERS, eMarkers);
@@ -459,9 +459,9 @@ WDL_DLGRET ConvertMarkersToTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 					bool split = !!IsDlgButtonChecked(hwnd, IDC_BR_CON_SPLIT);
 
 					// Update edit boxes and dropdown to show "atoied" value
-					_snprintfSafe(eNum,     sizeof(eNum),     "%d", num);
-					_snprintfSafe(eDen,     sizeof(eDen),     "%d", den);
-					_snprintfSafe(eMarkers, sizeof(eMarkers), "%d", markers);
+					snprintf(eNum,     sizeof(eNum),     "%d", num);
+					snprintf(eDen,     sizeof(eDen),     "%d", den);
+					snprintf(eMarkers, sizeof(eMarkers), "%d", markers);
 					SetDlgItemText(hwnd, IDC_BR_CON_NUM, eNum);
 					SetDlgItemText(hwnd, IDC_BR_CON_DEN, eDen);
 					SetDlgItemText(hwnd, IDC_BR_CON_MARKERS, eMarkers);
@@ -766,9 +766,9 @@ static void UpdateTargetBpm (HWND hwnd, int doFirst, int doCursor, int doLast)
 
 	if (AltAtof(bpm1Cur) == 0)
 	{
-		_snprintfSafe(bpm1Cur, sizeof(bpm1Cur), "%d", 0);
-		_snprintfSafe(bpm2Cur, sizeof(bpm2Cur), "%d", 0);
-		_snprintfSafe(bpm3Cur, sizeof(bpm3Cur), "%d", 0);
+		snprintf(bpm1Cur, sizeof(bpm1Cur), "%d", 0);
+		snprintf(bpm2Cur, sizeof(bpm2Cur), "%d", 0);
+		snprintf(bpm3Cur, sizeof(bpm3Cur), "%d", 0);
 	}
 	else
 	{
@@ -790,9 +790,9 @@ static void UpdateTargetBpm (HWND hwnd, int doFirst, int doCursor, int doLast)
 			bpm3Tar = AltAtof(bpmAdj) + AltAtof(bpm3Cur);
 		}
 
-		_snprintfSafe(bpm1Cur, sizeof(bpm1Cur), "%.6g", SetToBounds(bpm1Tar, (double)MIN_BPM, (double)MAX_BPM));
-		_snprintfSafe(bpm2Cur, sizeof(bpm2Cur), "%.6g", SetToBounds(bpm2Tar, (double)MIN_BPM, (double)MAX_BPM));
-		_snprintfSafe(bpm3Cur, sizeof(bpm3Cur), "%.6g", SetToBounds(bpm3Tar, (double)MIN_BPM, (double)MAX_BPM));
+		snprintf(bpm1Cur, sizeof(bpm1Cur), "%.6g", SetToBounds(bpm1Tar, (double)MIN_BPM, (double)MAX_BPM));
+		snprintf(bpm2Cur, sizeof(bpm2Cur), "%.6g", SetToBounds(bpm2Tar, (double)MIN_BPM, (double)MAX_BPM));
+		snprintf(bpm3Cur, sizeof(bpm3Cur), "%.6g", SetToBounds(bpm3Tar, (double)MIN_BPM, (double)MAX_BPM));
 	}
 
 	if (doFirst)  SetDlgItemText(hwnd, IDC_BR_ADJ_BPM_TAR_1, bpm1Cur);
@@ -812,9 +812,9 @@ static void UpdateCurrentBpm (HWND hwnd, const vector<int>& selectedPoints)
 		GetTempoTimeSigMarker(NULL, selectedPoints.back(), NULL, NULL, NULL, &bpmLast, NULL, NULL, NULL);
 	}
 	bpmCursor = TempoAtPosition(GetCursorPositionEx(NULL));
-	_snprintfSafe(eBpmFirst,  sizeof(eBpmFirst),  "%.6g", bpmFirst);
-	_snprintfSafe(eBpmCursor, sizeof(eBpmCursor), "%.6g", bpmCursor);
-	_snprintfSafe(eBpmLast,   sizeof(eBpmLast),   "%.6g", bpmLast);
+	snprintf(eBpmFirst,  sizeof(eBpmFirst),  "%.6g", bpmFirst);
+	snprintf(eBpmCursor, sizeof(eBpmCursor), "%.6g", bpmCursor);
+	snprintf(eBpmLast,   sizeof(eBpmLast),   "%.6g", bpmLast);
 
 	GetDlgItemText(hwnd, IDC_BR_ADJ_BPM_CUR_1, eBpmFirstChk, 128);
 	GetDlgItemText(hwnd, IDC_BR_ADJ_BPM_CUR_2, eBpmCursorChk, 128);
@@ -847,10 +847,10 @@ static void UpdateSelectionFields (HWND hwnd)
 	int den = atoi(eDen); if (den < MIN_SIG){den = MIN_SIG;} else if (den > MAX_SIG){den = MAX_SIG;}
 
 	// Update edit boxes with "atoied/atofed" values
-	_snprintfSafe(eBpmStart, sizeof(eBpmStart), "%.19g", bpmStart);
-	_snprintfSafe(eBpmEnd,   sizeof(eBpmEnd),   "%.19g", bpmEnd);
-	_snprintfSafe(eNum,      sizeof(eNum),      "%d", num);
-	_snprintfSafe(eDen,      sizeof(eDen),      "%d", den);
+	snprintf(eBpmStart, sizeof(eBpmStart), "%.19g", bpmStart);
+	snprintf(eBpmEnd,   sizeof(eBpmEnd),   "%.19g", bpmEnd);
+	snprintf(eNum,      sizeof(eNum),      "%d", num);
+	snprintf(eDen,      sizeof(eDen),      "%d", den);
 	SetDlgItemText(hwnd, IDC_BR_SEL_BPM_START, eBpmStart);
 	SetDlgItemText(hwnd, IDC_BR_SEL_BPM_END, eBpmEnd);
 	SetDlgItemText(hwnd, IDC_BR_SEL_SIG_NUM, eNum);
@@ -922,8 +922,8 @@ static void AdjustTempoCase (HWND hwnd)
 
 	// Update edit boxes
 	UpdateTargetBpm(hwnd, 1, 1, 1);
-	_snprintfSafe(eBpmVal,  sizeof(eBpmVal),  "%.6g", bpmVal);
-	_snprintfSafe(eBpmPerc, sizeof(eBpmPerc), "%.6g", bpmPerc);
+	snprintf(eBpmVal,  sizeof(eBpmVal),  "%.6g", bpmVal);
+	snprintf(eBpmPerc, sizeof(eBpmPerc), "%.6g", bpmPerc);
 	SetDlgItemText(hwnd, IDC_BR_ADJ_BPM_VAL, eBpmVal);
 	SetDlgItemText(hwnd, IDC_BR_ADJ_BPM_PERC, eBpmPerc);
 
@@ -972,7 +972,7 @@ static void SaveOptionsSelAdj (HWND hwnd)
 	int adjustShape = (int)SendDlgItemMessage(hwnd, IDC_BR_ADJ_SHAPE, CB_GETCURSEL, 0, 0);
 
 	char tmp[512];
-	_snprintfSafe(tmp, sizeof(tmp), "%lf %lf %d %d %d %d %d %d %d %d %d %d %d", bpmStart, bpmEnd, num, den, bpmEnb, sigEnb, timeSel, shape, type, selPref, invertPref, adjustType, adjustShape);
+	snprintf(tmp, sizeof(tmp), "%lf %lf %d %d %d %d %d %d %d %d %d %d %d", bpmStart, bpmEnd, num, den, bpmEnb, sigEnb, timeSel, shape, type, selPref, invertPref, adjustType, adjustShape);
 	WritePrivateProfileString("SWS", SEL_ADJ_KEY, tmp, get_ini_file());
 }
 
@@ -1064,7 +1064,7 @@ static void SaveOptionsUnselectNth (HWND hwnd)
 	int criteria = IsDlgButtonChecked(hwnd, IDC_BR_UNSEL_CRITERIA);
 
 	char tmp[512];
-	_snprintfSafe(tmp, sizeof(tmp), "%d %d", Nth, criteria);
+	snprintf(tmp, sizeof(tmp), "%d %d", Nth, criteria);
 	WritePrivateProfileString("SWS", UNSEL_KEY, tmp, get_ini_file());
 }
 
@@ -1198,14 +1198,14 @@ WDL_DLGRET SelectAdjustTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			char eBpmStart[128], eBpmEnd[128], eNum[128], eDen[128];
 			int num, den, bpmEnb, sigEnb, timeSel, shape, type, selPref, invertPref, adjustType, adjustShape;
 			LoadOptionsSelAdj(bpmStart, bpmEnd, num, den, bpmEnb, sigEnb, timeSel, shape, type, selPref, invertPref, adjustType, adjustShape);
-			_snprintfSafe(eBpmStart, sizeof(eBpmStart), "%.6g", bpmStart);
-			_snprintfSafe(eBpmEnd,   sizeof(eBpmEnd),   "%.6g", bpmEnd);
-			_snprintfSafe(eNum,      sizeof(eNum),      "%d", num);
-			_snprintfSafe(eDen,      sizeof(eDen),      "%d", den);
+			snprintf(eBpmStart, sizeof(eBpmStart), "%.6g", bpmStart);
+			snprintf(eBpmEnd,   sizeof(eBpmEnd),   "%.6g", bpmEnd);
+			snprintf(eNum,      sizeof(eNum),      "%d", num);
+			snprintf(eDen,      sizeof(eDen),      "%d", den);
 
 			double effBpmCursor = effBpmCursor = TempoAtPosition(GetCursorPositionEx(NULL));
 			char bpmCursor[128];
-			_snprintfSafe(bpmCursor, sizeof(bpmCursor), "%.6g", effBpmCursor);
+			snprintf(bpmCursor, sizeof(bpmCursor), "%.6g", effBpmCursor);
 
 			// Set controls
 			SetDlgItemText(hwnd, IDC_BR_SEL_BPM_START, eBpmStart);
@@ -1372,8 +1372,8 @@ WDL_DLGRET SelectAdjustTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 						else
 							bpmPerc = 0;
 
-						_snprintfSafe(bpmTar, sizeof(bpmTar), "%.6g", bpmVal);
-						_snprintfSafe(bpmCur, sizeof(bpmCur), "%.6g", bpmPerc);
+						snprintf(bpmTar, sizeof(bpmTar), "%.6g", bpmVal);
+						snprintf(bpmCur, sizeof(bpmCur), "%.6g", bpmPerc);
 						SetDlgItemText(hwnd, IDC_BR_ADJ_BPM_VAL, bpmTar);
 						SetDlgItemText(hwnd, IDC_BR_ADJ_BPM_PERC, bpmCur);
 						UpdateTargetBpm(hwnd, 0, 1, 1);
@@ -1396,8 +1396,8 @@ WDL_DLGRET SelectAdjustTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 						else
 							bpmPerc = 0;
 
-						_snprintfSafe(bpmTar, sizeof(bpmTar), "%.6g", bpmVal);
-						_snprintfSafe(bpmCur, sizeof(bpmCur), "%.6g", bpmPerc);
+						snprintf(bpmTar, sizeof(bpmTar), "%.6g", bpmVal);
+						snprintf(bpmCur, sizeof(bpmCur), "%.6g", bpmPerc);
 						SetDlgItemText(hwnd, IDC_BR_ADJ_BPM_VAL, bpmTar);
 						SetDlgItemText(hwnd, IDC_BR_ADJ_BPM_PERC, bpmCur);
 						UpdateTargetBpm(hwnd, 1, 0, 1);
@@ -1420,8 +1420,8 @@ WDL_DLGRET SelectAdjustTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 						else
 							bpmPerc = 0;
 
-						_snprintfSafe(bpmTar, sizeof(bpmTar), "%.6g", bpmVal);
-						_snprintfSafe(bpmCur, sizeof(bpmCur), "%.6g", bpmPerc);
+						snprintf(bpmTar, sizeof(bpmTar), "%.6g", bpmVal);
+						snprintf(bpmCur, sizeof(bpmCur), "%.6g", bpmPerc);
 						SetDlgItemText(hwnd, IDC_BR_ADJ_BPM_VAL, bpmTar);
 						SetDlgItemText(hwnd, IDC_BR_ADJ_BPM_PERC, bpmCur);
 						UpdateTargetBpm(hwnd, 1, 1, 0);
@@ -1461,7 +1461,7 @@ WDL_DLGRET SelectAdjustTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			{
 				vector<int> selectedPoints = GetSelPoints(GetTempoEnv());
 				char pointCount[512];
-				_snprintf(pointCount, sizeof(pointCount), s_title->Get(), selectedPoints.size(), CountTempoTimeSigMarkers(NULL) );
+				snprintf(pointCount, sizeof(pointCount), s_title->Get(), selectedPoints.size(), CountTempoTimeSigMarkers(NULL) );
 				SetWindowText(hwnd, pointCount);
 				UpdateCurrentBpm(hwnd, selectedPoints);
 			}
@@ -1556,7 +1556,7 @@ static void SaveOptionsRandomizeTempo (HWND hwnd)
 	int limit = IsDlgButtonChecked(hwnd, IDC_BR_RAND_LIMIT);
 
 	char tmp[512];
-	_snprintfSafe(tmp, sizeof(tmp), "%lf %lf %d %lf %lf %d %d", min, max, unit, minLimit, maxLimit, unitLimit, limit);
+	snprintf(tmp, sizeof(tmp), "%lf %lf %d %lf %lf %d %d", min, max, unit, minLimit, maxLimit, unitLimit, limit);
 	WritePrivateProfileString("SWS", RAND_KEY, tmp, get_ini_file());
 }
 
@@ -1622,10 +1622,10 @@ WDL_DLGRET RandomizeTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 			char eMin[128], eMax[128], eMinLimit[128], eMaxLimit[128];
 			int unit, unitLimit, limit;
 			LoadOptionsRandomizeTempo (min, max, unit, minLimit, maxLimit, unitLimit, limit);
-			_snprintfSafe(eMin,      sizeof(eMin),      "%.19g", min);
-			_snprintfSafe(eMax,      sizeof(eMax),      "%.19g", max);
-			_snprintfSafe(eMinLimit, sizeof(eMinLimit), "%.19g", minLimit);
-			_snprintfSafe(eMaxLimit, sizeof(eMaxLimit), "%.19g", maxLimit);
+			snprintf(eMin,      sizeof(eMin),      "%.19g", min);
+			snprintf(eMax,      sizeof(eMax),      "%.19g", max);
+			snprintf(eMinLimit, sizeof(eMinLimit), "%.19g", minLimit);
+			snprintf(eMaxLimit, sizeof(eMaxLimit), "%.19g", maxLimit);
 
 			// Set controls
 			SetDlgItemText(hwnd, IDC_BR_RAND_MIN, eMin);
@@ -1699,10 +1699,10 @@ WDL_DLGRET RandomizeTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 					int unitLimit = (int)SendDlgItemMessage(hwnd, IDC_BR_RAND_LIMIT_UNIT, CB_GETCURSEL, 0, 0);
 
 					// Update edit boxes with "atofed" values
-					_snprintfSafe(eMin,      sizeof(eMin),      "%.19g", min);
-					_snprintfSafe(eMax,      sizeof(eMax),      "%.19g", max);
-					_snprintfSafe(eMinLimit, sizeof(eMinLimit), "%.19g", minLimit);
-					_snprintfSafe(eMaxLimit, sizeof(eMaxLimit), "%.19g", maxLimit);
+					snprintf(eMin,      sizeof(eMin),      "%.19g", min);
+					snprintf(eMax,      sizeof(eMax),      "%.19g", max);
+					snprintf(eMinLimit, sizeof(eMinLimit), "%.19g", minLimit);
+					snprintf(eMaxLimit, sizeof(eMaxLimit), "%.19g", maxLimit);
 					SetDlgItemText(hwnd, IDC_BR_RAND_MIN, eMin);
 					SetDlgItemText(hwnd, IDC_BR_RAND_MAX, eMax);
 					SetDlgItemText(hwnd, IDC_BR_RAND_LIMIT_MIN, eMinLimit);
@@ -1755,7 +1755,7 @@ static void SaveOptionsTempoShape (HWND hwnd)
 	char splitRatio[128]; GetDlgItemText(hwnd, IDC_BR_SHAPE_SPLIT_RATIO, splitRatio, 128);
 
 	char tmp[512];
-	_snprintfSafe(tmp, sizeof(tmp), "%d %s", split, splitRatio);
+	snprintf(tmp, sizeof(tmp), "%d %s", split, splitRatio);
 	WritePrivateProfileString("SWS", SHAPE_KEY, tmp, get_ini_file());
 }
 

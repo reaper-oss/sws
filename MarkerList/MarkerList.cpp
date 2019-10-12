@@ -66,19 +66,19 @@ void SWS_MarkerListView::GetItemText(SWS_ListItem* item, int iCol, char* str, in
 			format_timestr_pos(mi->GetPos(), str, iStrMax, -1);
 			break;
 		case 1:
-			_snprintf(str, iStrMax, "%s", mi->IsRegion() ? __LOCALIZE("Region","sws_DLG_102") : __LOCALIZE("Marker","sws_DLG_102"));
+			snprintf(str, iStrMax, "%s", mi->IsRegion() ? __LOCALIZE("Region","sws_DLG_102") : __LOCALIZE("Marker","sws_DLG_102"));
 			break;
 		case 2:
-			_snprintf(str, iStrMax, "%d", mi->GetNum());
+			snprintf(str, iStrMax, "%d", mi->GetNum());
 			break;
 		case 3:
 			lstrcpyn(str, mi->GetName(), iStrMax);
 			break;
 		case 4:
 #ifdef _WIN32
-			_snprintf(str, iStrMax, "0x%02x%02x%02x", mi->GetColor() & 0xFF, (mi->GetColor() >> 8) & 0xFF, (mi->GetColor() >> 16) & 0xFF);
+			snprintf(str, iStrMax, "0x%02x%02x%02x", mi->GetColor() & 0xFF, (mi->GetColor() >> 8) & 0xFF, (mi->GetColor() >> 16) & 0xFF);
 #else
-			_snprintf(str, iStrMax, "0x%06x", mi->GetColor());
+			snprintf(str, iStrMax, "0x%06x", mi->GetColor());
 #endif
 			break;
 		}

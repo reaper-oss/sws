@@ -64,7 +64,7 @@ void TieFileToProject(const char* _fn, ReaProject* _prj, bool _tie)
 			plugin_register(_tie ? "file_in_project_ex" : "-file_in_project_ex", p);
 #ifdef _SNM_DEBUG
 			char dbg[256]="";
-			_snprintfSafe(dbg, sizeof(dbg), "TieFileToProject() - ReaProject: %p, %s %s\n", prj, _tie ? "Added" : "Removed", _fn);
+			snprintf(dbg, sizeof(dbg), "TieFileToProject() - ReaProject: %p, %s %s\n", prj, _tie ? "Added" : "Removed", _fn);
 			OutputDebugString(dbg);
 #endif
 		}
@@ -409,7 +409,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 {
 	char line[SNM_MAX_CHUNK_LINE_LENGTH] = "";
 	if (ctx && g_prjActions.Get()->GetLength())
-		if (_snprintfStrict(line, sizeof(line), "S&M_PROJACTION %s", g_prjActions.Get()->Get()) > 0)
+		if (snprintfStrict(line, sizeof(line), "S&M_PROJACTION %s", g_prjActions.Get()->Get()) > 0)
 			ctx->AddLine("%s", line);
 }
 

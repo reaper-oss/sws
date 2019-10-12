@@ -787,8 +787,8 @@ int RegisterDynamicActions(DYN_COMMAND_T* _cmds, const char* _inifn)
 
 		for (int j=0; j<ct->count; j++)
 		{
-			if (_snprintfStrict(actionName, sizeof(actionName), GetLocalizedActionName(ct->desc, LOCALIZE_FLAG_VERIFY_FMTS), j+1) > 0 &&
-				_snprintfStrict(custId, sizeof(custId), "%s%d", ct->id, j+1) > 0)
+			if (snprintfStrict(actionName, sizeof(actionName), GetLocalizedActionName(ct->desc, LOCALIZE_FLAG_VERIFY_FMTS), j+1) > 0 &&
+				snprintfStrict(custId, sizeof(custId), "%s%d", ct->id, j+1) > 0)
 			{
 				if (SWSCreateRegisterDynamicCmd(ct->uniqueSectionId, 0, ct->doCommand, ct->onAction, ct->getEnabled, custId, actionName, "", j, __FILE__, false)) // already localized
 				{
@@ -974,7 +974,7 @@ void ScheduledJob::Schedule(ScheduledJob* _job)
 		_job->PerformSafe();
 #ifdef _SNM_DEBUG
 		char dbg[256]="";
-		_snprintfSafe(dbg, sizeof(dbg), "ScheduledJob::Schedule() - Performed job #%d\n", _job->m_id);
+		snprintf(dbg, sizeof(dbg), "ScheduledJob::Schedule() - Performed job #%d\n", _job->m_id);
 		OutputDebugString(dbg);
 #endif
 		DELETE_NULL(_job);
@@ -993,7 +993,7 @@ void ScheduledJob::Schedule(ScheduledJob* _job)
 				DELETE_NULL(job);
 #ifdef _SNM_DEBUG
 				char dbg[256]="";
-				_snprintfSafe(dbg, sizeof(dbg), "ScheduledJob::Schedule() - Replaced job #%d\n", _job->m_id);
+				snprintf(dbg, sizeof(dbg), "ScheduledJob::Schedule() - Replaced job #%d\n", _job->m_id);
 				OutputDebugString(dbg);
 #endif
 				return;
@@ -1007,7 +1007,7 @@ void ScheduledJob::Schedule(ScheduledJob* _job)
 
 #ifdef _SNM_DEBUG
 	char dbg[256]="";
-	_snprintfSafe(dbg, sizeof(dbg), "ScheduledJob::Schedule() - Added job #%d\n", _job->m_id);
+	snprintf(dbg, sizeof(dbg), "ScheduledJob::Schedule() - Added job #%d\n", _job->m_id);
 	OutputDebugString(dbg);
 #endif
 }
@@ -1026,7 +1026,7 @@ void ScheduledJob::Run()
 				job->PerformSafe();
 #ifdef _SNM_DEBUG
 				char dbg[256]="";
-				_snprintfSafe(dbg, sizeof(dbg), "ScheduledJob::Run() - Performed job %d\n", job->m_id);
+				snprintf(dbg, sizeof(dbg), "ScheduledJob::Run() - Performed job %d\n", job->m_id);
 				OutputDebugString(dbg);
 #endif
 				DELETE_NULL(job);
@@ -1070,7 +1070,7 @@ void MidiOscActionJob::Init(ScheduledJob* _replacedJob)
 
 #ifdef _SNM_DEBUG
 	char dbg[256]="";
-	_snprintfSafe(dbg, sizeof(dbg), 
+	snprintf(dbg, sizeof(dbg), 
 		"MidiOscActionJob::Init() - val: %d, valhw: %d, relmode: %d ===> value: %f\n", 
 		m_val, m_valhw, m_relmode, m_absval);
 	OutputDebugString(dbg);

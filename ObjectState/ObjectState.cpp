@@ -125,7 +125,7 @@ const char* SWS_GetSetObjectState(void* obj, WDL_FastString* str, bool wantsMini
 
 #ifdef GOS_DEBUG
 	char debugStr[4096];
-	_snprintf(debugStr, 4096, "GetSetObjectState call, obj %08X, IN:\n%s\n\nOUT:\n%s\n\n", obj, str ? str->Get() : "NULL", ret ? ret : "NULL");
+	snprintf(debugStr, 4096, "GetSetObjectState call, obj %08X, IN:\n%s\n\nOUT:\n%s\n\n", obj, str ? str->Get() : "NULL", ret ? ret : "NULL");
 	OutputDebugString(debugStr);
 #endif
 

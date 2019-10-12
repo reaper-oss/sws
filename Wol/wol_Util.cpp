@@ -81,7 +81,7 @@ void SetTrackHeight(MediaTrack* track, int height, bool useChunk)
 
 		if (p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKHEIGHT", 0, 1, pTrackLine))
 		{
-			_snprintfSafe(pTrackLine, BUFFER_SIZE, "%d", height);
+			snprintf(pTrackLine, BUFFER_SIZE, "%d", height);
 			p.ParsePatch(SNM_SET_CHUNK_CHAR, 1, "TRACK", "TRACKHEIGHT", 0, 1, pTrackLine);
 		}
 	}

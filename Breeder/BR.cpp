@@ -1251,7 +1251,7 @@ void BR_Exit ()
 {
 	// Load various global variables
 	char tmp[512];
-	_snprintfSafe(tmp, sizeof(tmp), "%d", IsSetAutoStretchMarkersOn(NULL));
+	snprintf(tmp, sizeof(tmp), "%d", IsSetAutoStretchMarkersOn(NULL));
 	WritePrivateProfileString("common", "autoStretchMarkersTempo", tmp, GetIniFileBR());
 
 	// Run various exit functions

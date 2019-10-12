@@ -289,7 +289,7 @@ void GetIniSectionName(int _type, char* _bufOut, size_t _bufOutSz)
 	if (_type >= SNM_NUM_DEFAULT_SLOTS)
 	{
 		*_bufOut = '\0';
-		_snprintfSafe(_bufOut, _bufOutSz, "CustomSlotType%d", _type-SNM_NUM_DEFAULT_SLOTS+1);
+		snprintf(_bufOut, _bufOutSz, "CustomSlotType%d", _type-SNM_NUM_DEFAULT_SLOTS+1);
 		return;
 	}
 	// relative path needed, for ex: data\track_icons
@@ -614,9 +614,9 @@ void ResourcesView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iSt
 				{
 					slot++;
 					if (g_resType==g_tiedSlotActions[SNM_SLOT_PRJ] && g_prjCurSlot>=0 && g_prjCurSlot+1==slot)
-						_snprintfSafe(str, iStrMax, "%5.d %s", slot, UTF8_BULLET);
+						snprintf(str, iStrMax, "%5.d %s", slot, UTF8_BULLET);
 					else
-						_snprintfSafe(str, iStrMax, "%5.d", slot);
+						snprintf(str, iStrMax, "%5.d", slot);
 				}
 				break;
 			}
@@ -682,12 +682,12 @@ void ResourcesView::SetItemText(SWS_ListItem* item, int iCol, const char* str)
 					else
 						break; // safety
 
-					if (_snprintfStrict(newFn, sizeof(newFn), "%s%c%s.%s", path, PATH_SLASH_CHAR, str, ext) > 0)
+					if (snprintfStrict(newFn, sizeof(newFn), "%s%c%s.%s", path, PATH_SLASH_CHAR, str, ext) > 0)
 					{
 						if (FileOrDirExists(newFn)) 
 						{
 							char msg[SNM_MAX_PATH]="";
-							_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("File already exists. Overwrite ?\n%s","sws_mbox"), newFn);
+							snprintf(msg, sizeof(msg), __LOCALIZE_VERFMT("File already exists. Overwrite ?\n%s","sws_mbox"), newFn);
 							int res = MessageBox(g_resWndMgr.GetMsgHWND(), msg, __LOCALIZE("S&M - Warning","sws_DLG_150"), MB_YESNO);
 							if (res == IDYES)
 							{
@@ -1346,7 +1346,7 @@ void ResourcesWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case AUTOFILL_DEFAULT_MSG:
 		{
 			char path[SNM_MAX_PATH] = "";
-			if (_snprintfStrict(path, sizeof(path), "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, fl->GetResourceDir()) > 0)
+			if (snprintfStrict(path, sizeof(path), "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, fl->GetResourceDir()) > 0)
 			{
 				if (!FileOrDirExists(path))
 					CreateDirectory(path, NULL);
@@ -1377,7 +1377,7 @@ void ResourcesWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			GetProjectPath(prjPath, sizeof(prjPath));
 
 			// see GetFileRelativePath..
-			if (_snprintfStrict(path, sizeof(path), "%s%c%s", prjPath, PATH_SLASH_CHAR, GetFileRelativePath(fl->GetResourceDir())) > 0)
+			if (snprintfStrict(path, sizeof(path), "%s%c%s", prjPath, PATH_SLASH_CHAR, GetFileRelativePath(fl->GetResourceDir())) > 0)
 			{
 				if (!FileOrDirExists(path))
 					CreateDirectory(path, NULL);
@@ -1395,7 +1395,7 @@ void ResourcesWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case AUTOSAVE_DIR_DEFAULT_MSG:
 		{
 			char path[SNM_MAX_PATH] = "";
-			if (_snprintfStrict(path, sizeof(path), "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, fl->GetResourceDir()) > 0) {
+			if (snprintfStrict(path, sizeof(path), "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, fl->GetResourceDir()) > 0) {
 				if (!FileOrDirExists(path))
 					CreateDirectory(path, NULL);
 				SetAutoSaveDir(path);
@@ -1522,7 +1522,7 @@ void ResourcesWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				char key[16], path[SNM_MAX_PATH];
 				WDL_PtrList_DeleteOnDestroy<WDL_FastString> prjs;
 				for (int i=0; i < nbRecents; i++) {
-					if (_snprintfStrict(key, sizeof(key), "recent%02d", i+1) > 0) {
+					if (snprintfStrict(key, sizeof(key), "recent%02d", i+1) > 0) {
 						GetPrivateProfileString("Recent", key, "", path, sizeof(path), get_ini_file());
 						if (*path)
 							prjs.Add(new WDL_FastString(path));
@@ -1541,7 +1541,7 @@ void ResourcesWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			else 
 			{
 				char msg[SNM_MAX_PATH] = "";
-				_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("No new recent projects found!\n%s","sws_DLG_150"), AUTOFILL_ERR_STR);
+				snprintf(msg, sizeof(msg), __LOCALIZE_VERFMT("No new recent projects found!\n%s","sws_DLG_150"), AUTOFILL_ERR_STR);
 				MessageBox(m_hwnd, msg, __LOCALIZE("S&M - Warning","sws_DLG_150"), MB_OK);
 			}
 			break;
@@ -1609,7 +1609,7 @@ HMENU ResourcesWnd::AutoSaveContextMenu(HMENU _menu, bool _saveItem)
 {
 	int typeForUser = GetTypeForUser();
 	char autoPath[SNM_MAX_PATH] = "";
-	_snprintfSafe(autoPath, sizeof(autoPath), __LOCALIZE_VERFMT("[Current auto-save path: %s]","sws_DLG_150"), *GetAutoSaveDir() ? GetAutoSaveDir() : __LOCALIZE("undefined","sws_DLG_150"));
+	snprintf(autoPath, sizeof(autoPath), __LOCALIZE_VERFMT("[Current auto-save path: %s]","sws_DLG_150"), *GetAutoSaveDir() ? GetAutoSaveDir() : __LOCALIZE("undefined","sws_DLG_150"));
 	AddToMenu(_menu, autoPath, 0, -1, false, MF_GRAYED);
 	AddToMenu(_menu, __LOCALIZE("Show auto-save path in explorer/finder...","sws_DLG_150"), EXPLORE_SAVEDIR_MSG, -1, false, *GetAutoSaveDir() ? MF_ENABLED : MF_GRAYED);
 
@@ -1653,7 +1653,7 @@ HMENU ResourcesWnd::AutoFillContextMenu(HMENU _menu, bool _fillItem)
 {
 	int typeForUser = GetTypeForUser();
 	char autoPath[SNM_MAX_PATH] = "";
-	_snprintfSafe(autoPath, sizeof(autoPath), __LOCALIZE_VERFMT("[Current auto-fill path: %s]","sws_DLG_150"), *GetAutoFillDir() ? GetAutoFillDir() : __LOCALIZE("undefined","sws_DLG_150"));
+	snprintf(autoPath, sizeof(autoPath), __LOCALIZE_VERFMT("[Current auto-fill path: %s]","sws_DLG_150"), *GetAutoFillDir() ? GetAutoFillDir() : __LOCALIZE("undefined","sws_DLG_150"));
 	AddToMenu(_menu, autoPath, 0, -1, false, MF_GRAYED);
 	AddToMenu(_menu, __LOCALIZE("Show auto-fill path in explorer/finder...","sws_DLG_150"), EXPLORE_FILLDIR_MSG, -1, false, *GetAutoFillDir() ? MF_ENABLED : MF_GRAYED);
 
@@ -1688,9 +1688,9 @@ HMENU ResourcesWnd::AttachPrjContextMenu(HMENU _menu, bool _openSelPrj)
 		{
 			if (GetMenuItemCount(_menu))
 				AddToMenu(_menu, SWS_SEPARATOR, 0);
-			_snprintfSafe(buf, sizeof(buf), TIED_PRJ_SELECT_LOAD_STR, GetFileRelativePath(g_tiedProjects.Get(g_resType)->Get()));
+			snprintf(buf, sizeof(buf), TIED_PRJ_SELECT_LOAD_STR, GetFileRelativePath(g_tiedProjects.Get(g_resType)->Get()));
 			AddToMenu(_menu, buf, LOAD_TIED_PRJ_MSG);
-			_snprintfSafe(buf, sizeof(buf), TIED_PRJ_SELECT_LOADTAB_STR, GetFileRelativePath(g_tiedProjects.Get(g_resType)->Get()));
+			snprintf(buf, sizeof(buf), TIED_PRJ_SELECT_LOADTAB_STR, GetFileRelativePath(g_tiedProjects.Get(g_resType)->Get()));
 			AddToMenu(_menu, buf, LOAD_TIED_PRJ_TAB_MSG);
 		}
 
@@ -1700,10 +1700,10 @@ HMENU ResourcesWnd::AttachPrjContextMenu(HMENU _menu, bool _openSelPrj)
 		// make sure g_curProjectFn is up to date
 		AttachResourceFiles();
 
-		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Attach bookmark files to %s","sws_DLG_150"), *g_curProjectFn ? GetFileRelativePath(g_curProjectFn) : __LOCALIZE("(unsaved project?)","sws_DLG_150"));
+		snprintf(buf, sizeof(buf), __LOCALIZE_VERFMT("Attach bookmark files to %s","sws_DLG_150"), *g_curProjectFn ? GetFileRelativePath(g_curProjectFn) : __LOCALIZE("(unsaved project?)","sws_DLG_150"));
 		AddToMenu(_menu, buf, TIE_PROJECT_MSG, -1, false, *g_curProjectFn && !curPrjTied ? MF_ENABLED : MF_GRAYED);
 
-		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Detach bookmark files from %s","sws_DLG_150"), GetFileRelativePath(g_tiedProjects.Get(g_resType)->Get()));
+		snprintf(buf, sizeof(buf), __LOCALIZE_VERFMT("Detach bookmark files from %s","sws_DLG_150"), GetFileRelativePath(g_tiedProjects.Get(g_resType)->Get()));
 		AddToMenu(_menu, g_tiedProjects.Get(g_resType)->GetLength() ? buf : __LOCALIZE("Detach bookmark files","sws_DLG_150"), UNTIE_PROJECT_MSG, -1, false, g_tiedProjects.Get(g_resType)->GetLength() ? MF_ENABLED : MF_GRAYED);
 	}
 	return _menu;
@@ -1733,7 +1733,7 @@ HMENU ResourcesWnd::BookmarkContextMenu(HMENU _menu)
 	{
 		char buf[128] = "";
 		AddToMenu(_menu, SWS_SEPARATOR, 0);
-		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Attach %s slot actions to this bookmark","sws_DLG_150"), g_SNM_ResSlots.Get(typeForUser)->GetName());
+		snprintf(buf, sizeof(buf), __LOCALIZE_VERFMT("Attach %s slot actions to this bookmark","sws_DLG_150"), g_SNM_ResSlots.Get(typeForUser)->GetName());
 		AddToMenu(_menu, buf, TIE_ACTIONS_MSG, -1, false, g_tiedSlotActions[typeForUser] == g_resType ? MFS_CHECKED : MFS_UNCHECKED);
 	}
 	return _menu;
@@ -2147,7 +2147,7 @@ void ResourcesWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltip
 					{
 						char buf[128] = "";
 						// "Bookmark files attached to %s" would be more consistent, but too long...
-						_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Files attached to %s","sws_DLG_150"), GetFileRelativePath(g_tiedProjects.Get(g_resType)->Get()));
+						snprintf(buf, sizeof(buf), __LOCALIZE_VERFMT("Files attached to %s","sws_DLG_150"), GetFileRelativePath(g_tiedProjects.Get(g_resType)->Get()));
 						m_txtTiedPrj.SetText(buf);
 
 						// plain text if current project == tied project, alpha otherwise
@@ -2210,7 +2210,7 @@ bool ResourcesWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bu
 		switch (v->GetID())
 		{
 			case BTNID_AUTOFILL:
-				return (_snprintfStrict(_bufOut, _bufOutSz, 
+				return (snprintfStrict(_bufOut, _bufOutSz, 
 					__LOCALIZE_VERFMT("Auto-fill %s slots (right-click for options)\nfrom %s","sws_DLG_150"), 
 					g_SNM_ResSlots.Get(typeForUser)->GetName(), 
 					*GetAutoFillDir() ? GetAutoFillDir() : __LOCALIZE("undefined","sws_DLG_150")) > 0);
@@ -2220,19 +2220,19 @@ bool ResourcesWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bu
 					switch (typeForUser)
 					{
 						case SNM_SLOT_FXC:
-							return (_snprintfStrict(_bufOut, _bufOutSz, __LOCALIZE_VERFMT("%s (right-click for options)\nto %s","sws_DLG_150"),
+							return (snprintfStrict(_bufOut, _bufOutSz, __LOCALIZE_VERFMT("%s (right-click for options)\nto %s","sws_DLG_150"),
 								g_asFXChainPref == FXC_AUTOSAVE_PREF_TRACK ? __LOCALIZE("Auto-save FX chains for selected tracks","sws_DLG_150") :
 								g_asFXChainPref == FXC_AUTOSAVE_PREF_ITEM ? __LOCALIZE("Auto-save FX chains for selected items","sws_DLG_150") :
 								g_asFXChainPref == FXC_AUTOSAVE_PREF_INPUT_FX ? __LOCALIZE("Auto-save input FX chains for selected tracks","sws_DLG_150")
 									: __LOCALIZE("Auto-save FX chain slots","sws_DLG_150"),
 								*GetAutoSaveDir() ? GetAutoSaveDir() : __LOCALIZE("undefined","sws_DLG_150")) > 0);
 						case SNM_SLOT_TR:
-							return (_snprintfStrict(_bufOut, _bufOutSz, __LOCALIZE_VERFMT("Auto-save track templates%s%s for selected tracks (right-click for options)\nto %s","sws_DLG_150"),
+							return (snprintfStrict(_bufOut, _bufOutSz, __LOCALIZE_VERFMT("Auto-save track templates%s%s for selected tracks (right-click for options)\nto %s","sws_DLG_150"),
 								(g_asTrTmpltPref&1) ? __LOCALIZE(" w/ items","sws_DLG_150") : "",
 								(g_asTrTmpltPref&2) ? __LOCALIZE(" w/ envs","sws_DLG_150") : "",
 								*GetAutoSaveDir() ? GetAutoSaveDir() : __LOCALIZE("undefined","sws_DLG_150")) > 0);
 						default:
-							return (_snprintfStrict(_bufOut, _bufOutSz,
+							return (snprintfStrict(_bufOut, _bufOutSz,
 								__LOCALIZE_VERFMT("Auto-save %s slots (right-click for options)\nto %s","sws_DLG_150"), 
 								g_SNM_ResSlots.Get(typeForUser)->GetName(), 
 								*GetAutoSaveDir() ? GetAutoSaveDir() : __LOCALIZE("undefined","sws_DLG_150")) > 0);
@@ -2240,15 +2240,15 @@ bool ResourcesWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bu
 				}
 				break;
 			case CMBID_TYPE:
-				return (_snprintfStrict(_bufOut, _bufOutSz, __LOCALIZE_VERFMT("Bookmarks (right-click for options)\nA bookmark name ends with%s when slot actions are attached to it","sws_DLG_150"), RES_TIE_TAG) > 0);
+				return (snprintfStrict(_bufOut, _bufOutSz, __LOCALIZE_VERFMT("Bookmarks (right-click for options)\nA bookmark name ends with%s when slot actions are attached to it","sws_DLG_150"), RES_TIE_TAG) > 0);
 			case BTNID_ADD_BOOKMARK:
-				return (_snprintfStrict(_bufOut, _bufOutSz, __LOCALIZE_VERFMT("New %s bookmark","sws_DLG_150"), g_SNM_ResSlots.Get(typeForUser)->GetName()) > 0);
+				return (snprintfStrict(_bufOut, _bufOutSz, __LOCALIZE_VERFMT("New %s bookmark","sws_DLG_150"), g_SNM_ResSlots.Get(typeForUser)->GetName()) > 0);
 			case BTNID_DEL_BOOKMARK:
 				lstrcpyn(_bufOut, __LOCALIZE("Delete bookmark","sws_DLG_150"), _bufOutSz);
 				return true;
 			case TXTID_TIED_PRJ:
 				return (g_tiedProjects.Get(g_resType)->GetLength() && 
-					_snprintfStrict(_bufOut, _bufOutSz, __LOCALIZE_VERFMT("Bookmark files attached to:\n%s","sws_DLG_150"), g_tiedProjects.Get(g_resType)->Get()) > 0);
+					snprintfStrict(_bufOut, _bufOutSz, __LOCALIZE_VERFMT("Bookmark files attached to:\n%s","sws_DLG_150"), g_tiedProjects.Get(g_resType)->Get()) > 0);
 		}
 	}
 	return false;
@@ -2362,7 +2362,7 @@ bool CheckSetAutoDirectory(const char* _title, int _type, bool _autoSave)
 	if (!FileOrDirExists(dir->Get()))
 	{
 		char buf[SNM_MAX_PATH] = "";
-		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("%s directory not found!\n%s%sDo you want to define one ?","sws_DLG_150"), _title, dir->Get(), dir->GetLength()?"\n":"");
+		snprintf(buf, sizeof(buf), __LOCALIZE_VERFMT("%s directory not found!\n%s%sDo you want to define one ?","sws_DLG_150"), _title, dir->Get(), dir->GetLength()?"\n":"");
 		if (IDYES == MessageBox(g_resWndMgr.GetMsgHWND(), buf, __LOCALIZE("S&M - Warning","sws_DLG_150"), MB_YESNO)) {
 			if (BrowseForDirectory(_autoSave ? __LOCALIZE("Set auto-save directory","sws_DLG_150") : __LOCALIZE("Set auto-fill directory","sws_DLG_150"), GetResourcePath(), buf, sizeof(buf))) {
 				if (_autoSave) SetAutoSaveDir(buf, _type);
@@ -2539,7 +2539,7 @@ void AutoSave(int _type, bool _ow, int _flags)
 	else
 	{
 		char msg[SNM_MAX_PATH];
-		_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Auto-save failed!\n%s","sws_DLG_150"), AUTOSAVE_ERR_STR);
+		snprintf(msg, sizeof(msg), __LOCALIZE_VERFMT("Auto-save failed!\n%s","sws_DLG_150"), AUTOSAVE_ERR_STR);
 		MessageBox(g_resWndMgr.GetMsgHWND(), msg, __LOCALIZE("S&M - Error","sws_DLG_150"), MB_OK);
 	}
 }
@@ -2580,8 +2580,8 @@ void AutoFill(int _type)
 	{
 		const char* path = GetAutoFillDir(_type);
 		char msg[SNM_MAX_PATH]="";
-		if (path && *path) _snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("No slot added from: %s\n%s","sws_DLG_150"), path, AUTOFILL_ERR_STR);
-		else _snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("No slot added!\n%s","sws_DLG_150"), AUTOFILL_ERR_STR);
+		if (path && *path) snprintf(msg, sizeof(msg), __LOCALIZE_VERFMT("No slot added from: %s\n%s","sws_DLG_150"), path, AUTOFILL_ERR_STR);
+		else snprintf(msg, sizeof(msg), __LOCALIZE_VERFMT("No slot added!\n%s","sws_DLG_150"), AUTOFILL_ERR_STR);
 		MessageBox(g_resWndMgr.GetMsgHWND(), msg, __LOCALIZE("S&M - Warning","sws_DLG_150"), MB_OK);
 	}
 }
@@ -2606,7 +2606,7 @@ bool BrowseSlot(int _type, int _slot, bool _tieUntiePrj, char* _fn, int _fnSz, b
 				fl->GetFullPath(_slot, untiePath, sizeof(untiePath));
 
 			char title[512], fileFilter[2048]; // room needed for file filters!
-			_snprintfSafe(title, sizeof(title), __LOCALIZE_VERFMT("S&M - Load resource file (slot %d)","sws_DLG_150"), _slot+1);
+			snprintf(title, sizeof(title), __LOCALIZE_VERFMT("S&M - Load resource file (slot %d)","sws_DLG_150"), _slot+1);
 			fl->GetFileFilter(fileFilter, sizeof(fileFilter));
 
 			if (char* fn = BrowseForFiles(title, g_lastBrowsedFn.GetLength()?g_lastBrowsedFn.Get():GetAutoFillDir(_type), NULL, false, fileFilter)) // single file
@@ -2806,9 +2806,9 @@ void FlushCustomTypesIniFile()
 void ReadSlotIniFile(const char* _key, int _slot, char* _path, int _pathSize, char* _desc, int _descSize)
 {
 	char buf[32];
-	if (_snprintfStrict(buf, sizeof(buf), "Slot%d", _slot+1) > 0)
+	if (snprintfStrict(buf, sizeof(buf), "Slot%d", _slot+1) > 0)
 		GetPrivateProfileString(_key, buf, "", _path, _pathSize, g_SNM_IniFn.Get());
-	if (_snprintfStrict(buf, sizeof(buf), "Desc%d", _slot+1) > 0)
+	if (snprintfStrict(buf, sizeof(buf), "Desc%d", _slot+1) > 0)
 		GetPrivateProfileString(_key, buf, "", _desc, _descSize, g_SNM_IniFn.Get());
 }
 
@@ -2870,7 +2870,7 @@ int AddCustomBookmark(char* _definition)
 
 					// (very) default inits
 					char path[SNM_MAX_PATH]="";
-					if (_snprintfStrict(path, sizeof(path), "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, tokenStrs[0].Get()) <= 0)
+					if (snprintfStrict(path, sizeof(path), "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, tokenStrs[0].Get()) <= 0)
 						*path = '\0';
 					g_autoSaveDirs.Add(new WDL_FastString(path));
 					g_autoFillDirs.Add(new WDL_FastString(path));
@@ -2898,7 +2898,7 @@ void NewBookmark(int _type, bool _copyCurrent)
 		char input[128] = "";
 		if (_type>=0)
 		{
-			_snprintfSafe(input, sizeof(input), 
+			snprintf(input, sizeof(input), 
 				__LOCALIZE_VERFMT("My %s slots","sws_DLG_150"), 
 				g_SNM_ResSlots.Get(GetTypeForUser(_type))->GetName());
 		}
@@ -2985,7 +2985,7 @@ void NewBookmark(int _type, bool _copyCurrent)
 			else if (_type>=0)
 			{
 				char path[SNM_MAX_PATH]="";
-				if (_snprintfStrict(path, sizeof(path), "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, g_SNM_ResSlots.Get(_type)->GetResourceDir()) > 0) {
+				if (snprintfStrict(path, sizeof(path), "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, g_SNM_ResSlots.Get(_type)->GetResourceDir()) > 0) {
 					if (!FileOrDirExists(path))
 						CreateDirectory(path, NULL);
 				}
@@ -3038,7 +3038,7 @@ void DeleteBookmark(int _bookmarkType)
 		if (g_SNM_ResSlots.Get(_bookmarkType)->GetNonEmptySize()) // do not ask if empty
 		{
 			char title[128] = "";
-			_snprintfSafe(title, sizeof(title),
+			snprintf(title, sizeof(title),
 				__LOCALIZE_VERFMT("S&M - Delete bookmark \"%s\"","sws_DLG_150"),
 				g_SNM_ResSlots.Get(_bookmarkType)->GetName());
 
@@ -3214,7 +3214,7 @@ int ResourcesInit()
 	for (int i=0; i < g_SNM_ResSlots.GetSize(); i++)
 	{
 		GetIniSectionName(i, iniSec, sizeof(iniSec));
-		if (_snprintfStrict(defaultPath, sizeof(defaultPath), "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, g_SNM_ResSlots.Get(i)->GetResourceDir()) < 0)
+		if (snprintfStrict(defaultPath, sizeof(defaultPath), "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, g_SNM_ResSlots.Get(i)->GetResourceDir()) < 0)
 			*defaultPath = '\0';
 
 		// g_autoFillDirs, g_autoSaveDirs and g_tiedProjects must always be filled
@@ -3222,27 +3222,27 @@ int ResourcesInit()
 		WDL_FastString *fillPath, *savePath, *tiedPrj;
 
 		savePath = new WDL_FastString(defaultPath);
-		if (_snprintfStrict(iniKey, sizeof(iniKey), "AutoSaveDir%s", iniSec) > 0) {
+		if (snprintfStrict(iniKey, sizeof(iniKey), "AutoSaveDir%s", iniSec) > 0) {
 			GetPrivateProfileString(RES_INI_SEC, iniKey, defaultPath, path, sizeof(path), g_SNM_IniFn.Get());
 			savePath->Set(path);
 		}
 		g_autoSaveDirs.Add(savePath);
 
 		fillPath = new WDL_FastString(defaultPath);
-		if (_snprintfStrict(iniKey, sizeof(iniKey), "AutoFillDir%s", iniSec) > 0) {
+		if (snprintfStrict(iniKey, sizeof(iniKey), "AutoFillDir%s", iniSec) > 0) {
 			GetPrivateProfileString(RES_INI_SEC, iniKey, defaultPath, path, sizeof(path), g_SNM_IniFn.Get());
 			fillPath->Set(path);
 		}
 		g_autoFillDirs.Add(fillPath);
 
 		g_syncAutoDirPrefs[i] = true;
-		if (_snprintfStrict(iniKey, sizeof(iniKey), "SyncAutoDirs%s", iniSec) > 0)
+		if (snprintfStrict(iniKey, sizeof(iniKey), "SyncAutoDirs%s", iniSec) > 0)
 			g_syncAutoDirPrefs[i] = (GetPrivateProfileInt(RES_INI_SEC, iniKey, 1, g_SNM_IniFn.Get()) == 1);
 		if (g_syncAutoDirPrefs[i]) // consistency check (e.g. after sws upgrade)
 			g_syncAutoDirPrefs[i] = (strcmp(savePath->Get(), fillPath->Get()) == 0);
 
 		g_dblClickPrefs[i] = 0;
-		if (g_SNM_ResSlots.Get(i)->IsDblClick() && _snprintfStrict(iniKey, sizeof(iniKey), "DblClick%s", iniSec) > 0)
+		if (g_SNM_ResSlots.Get(i)->IsDblClick() && snprintfStrict(iniKey, sizeof(iniKey), "DblClick%s", iniSec) > 0)
 			g_dblClickPrefs[i] = LOWORD(GetPrivateProfileInt(RES_INI_SEC, iniKey, 0, g_SNM_IniFn.Get())); // LOWORD() for histrical reason..
 
 		tiedPrj = new WDL_FastString;
@@ -3253,14 +3253,14 @@ int ResourcesInit()
 		{
 			// load tied actions
 			g_tiedSlotActions[i] = i;
-			if (_snprintfStrict(iniKey, sizeof(iniKey), "TiedActions%s", iniSec) > 0)
+			if (snprintfStrict(iniKey, sizeof(iniKey), "TiedActions%s", iniSec) > 0)
 				g_tiedSlotActions[i] = GetPrivateProfileInt(RES_INI_SEC, iniKey, i, g_SNM_IniFn.Get());
 		}
 		// bookmark, custom type?
 		else
 		{
 			// load tied project
-			if (_snprintfStrict(iniKey, sizeof(iniKey), "TiedProject%s", iniSec) > 0) {
+			if (snprintfStrict(iniKey, sizeof(iniKey), "TiedProject%s", iniSec) > 0) {
 				GetPrivateProfileString(RES_INI_SEC, iniKey, "", path, sizeof(path), g_SNM_IniFn.Get());
 				tiedPrj->Set(path);
 			}
@@ -3499,7 +3499,7 @@ bool ImageWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOut
 {
 	if (WDL_VWnd* v = m_parentVwnd.VirtWndFromPoint(_xpos,_ypos,1))
 		if (v->GetID()==IMGID && g_lastImgSlot>=0 && *GetFilename())
-			return (_snprintfStrict(_bufOut, _bufOutSz, __LOCALIZE_VERFMT("Image slot %d: %s","sws_DLG_162"), g_lastImgSlot+1, GetFilename()) > 0);
+			return (snprintfStrict(_bufOut, _bufOutSz, __LOCALIZE_VERFMT("Image slot %d: %s","sws_DLG_162"), g_lastImgSlot+1, GetFilename()) > 0);
 	return false;
 }
 
@@ -4209,7 +4209,7 @@ void SetMediaOption(int _opt)
 
 	char custId[SNM_MAX_ACTION_CUSTID_LEN];
 	for (int i=0; i <= (MED_OPT_END_MSG-MED_OPT_START_MSG); i++)
-		if (_snprintfStrict(custId, sizeof(custId), "_S&M_ADDMEDIA_OPT%d", i) > 0)
+		if (snprintfStrict(custId, sizeof(custId), "_S&M_ADDMEDIA_OPT%d", i) > 0)
 			RefreshToolbar(NamedCommandLookup(custId));
 }
 

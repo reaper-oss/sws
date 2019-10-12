@@ -39,7 +39,6 @@
 #include "../SnM/SnM_Notes.h" // #755
 #include "../SnM/SnM_Project.h" // #974
 #include "../SnM/SnM_Chunk.h" // SNM_FXSummaryParser
-#include "../SnM/SnM_Util.h" // _snprintfSafe
 
 # include <taglib/taglib/mpeg/id3v2/id3v2tag.h>
 # include <taglib/mpeg/mpegfile.h>
@@ -326,7 +325,7 @@ bool NF_TakeFX_GetModuleName(MediaItem * item, int fx, char * nameOut, int nameO
 		}
 	}
 
-	_snprintfSafe(nameOut, nameOutSz, "%s", module.Get());
+	snprintf(nameOut, nameOutSz, "%s", module.Get());
 	return found;
 }
 
@@ -513,5 +512,3 @@ bool NF_ClearProjectStartupAction()
 	return false;
 }
 */
-
-

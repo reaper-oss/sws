@@ -1334,7 +1334,7 @@ void DoSaveItemAsFile1(COMMAND_T*)
 			PCM_source *src=(PCM_source*)GetSetMediaItemTakeInfo(ptake,"P_SOURCE",0);
 			if (src && src->GetFileName())
 			{
-				_snprintf(savedlgtitle, 2048, __LOCALIZE_VERFMT("Save item \"%s\" as","sws_mbox"), (char*)GetSetMediaItemTakeInfo(ptake, "P_NAME", 0));
+				snprintf(savedlgtitle, 2048, __LOCALIZE_VERFMT("Save item \"%s\" as","sws_mbox"), (char*)GetSetMediaItemTakeInfo(ptake, "P_NAME", 0));
 				if (BrowseForSaveFile(savedlgtitle, ppath, NULL, "WAV files\0*.wav\0", newfilename, 512))
 				{
 					Main_OnCommand(40440,0); // set selected media offline

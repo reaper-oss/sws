@@ -1506,9 +1506,9 @@ bool BR_ContextualToolbar::GetReaperToolbar (int id, int* mouseAction, int* togg
 		{
 			if (id >= 0 && id <= 2)
 			{
-				if      (id == 0) _snprintfSafe(toolbarName, toolbarNameSz, "%s", __LOCALIZE("Do nothing", "sws_DLG_181"));
-				else if (id == 1) _snprintfSafe(toolbarName, toolbarNameSz, "%s", __LOCALIZE("Inherit parent", "sws_DLG_181"));
-				else if (id == 2) _snprintfSafe(toolbarName, toolbarNameSz, "%s", __LOCALIZE("Follow item context", "sws_DLG_181"));
+				if      (id == 0) snprintf(toolbarName, toolbarNameSz, "%s", __LOCALIZE("Do nothing", "sws_DLG_181"));
+				else if (id == 1) snprintf(toolbarName, toolbarNameSz, "%s", __LOCALIZE("Inherit parent", "sws_DLG_181"));
+				else if (id == 2) snprintf(toolbarName, toolbarNameSz, "%s", __LOCALIZE("Follow item context", "sws_DLG_181"));
 			}
 			else
 			{
@@ -1891,7 +1891,7 @@ void BR_ContextualToolbarsView::GetItemText (SWS_ListItem* item, int iCol, char*
 					else if (i == 1 && indentation == 2) indentationString.AppendFormatted(128, "%s%s%s", "  ", UTF8_CIRCLE, "  ");
 					else                                 indentationString.Append("    ");
 				}
-				_snprintfSafe(str, iStrMax, "%s%s", indentationString.Get(), description);
+				snprintf(str, iStrMax, "%s%s", indentationString.Get(), description);
 			}
 		}
 		break;
@@ -1915,16 +1915,16 @@ void BR_ContextualToolbarsView::GetItemText (SWS_ListItem* item, int iCol, char*
 						else if (iCol == COL_AUTOCLOSE)
 						{
 							if (contextualToolbar->GetToolbarType(toolbarId) == 3)
-								_snprintfSafe(str, iStrMax, "%s", autoClose ? UTF8_CHECKMARK : UTF8_MULTIPLICATION);
+								snprintf(str, iStrMax, "%s", autoClose ? UTF8_CHECKMARK : UTF8_MULTIPLICATION);
 							else
-								_snprintfSafe(str, iStrMax, "%s", "-");
+								snprintf(str, iStrMax, "%s", "-");
 						}
 						else if (iCol == COL_POSITION)
 						{
 							if (contextualToolbar->GetToolbarType(toolbarId) == 3 && (positionX != 0 || positionY != 0))
-								_snprintfSafe(str, iStrMax, "%s%d; %s%d", __LOCALIZE("X:","sws_DLG_181"), positionX, __LOCALIZE("Y:","sws_DLG_181"), positionY);
+								snprintf(str, iStrMax, "%s%d; %s%d", __LOCALIZE("X:","sws_DLG_181"), positionX, __LOCALIZE("Y:","sws_DLG_181"), positionY);
 							else
-								_snprintfSafe(str, iStrMax, "%s", "-");
+								snprintf(str, iStrMax, "%s", "-");
 						}
 					}
 				}
@@ -2189,8 +2189,8 @@ WDL_DLGRET BR_ContextualToolbarsWnd::PositionOffsetDialogProc (HWND hwnd, UINT u
 			#endif
 
 			char tmp[128];
-			_snprintfSafe(tmp, sizeof(tmp), "%d", s_positionOffset->first); SetDlgItemText(hwnd, IDC_EDIT1, tmp);
-			_snprintfSafe(tmp, sizeof(tmp), "%d", s_positionOffset->second); SetDlgItemText(hwnd, IDC_EDIT2, tmp);
+			snprintf(tmp, sizeof(tmp), "%d", s_positionOffset->first); SetDlgItemText(hwnd, IDC_EDIT1, tmp);
+			snprintf(tmp, sizeof(tmp), "%d", s_positionOffset->second); SetDlgItemText(hwnd, IDC_EDIT2, tmp);
 		}
 		break;
 
@@ -2563,7 +2563,7 @@ bool BR_ContextualToolbarsWnd::CloseOnCancel ()
 void BR_ContextualToolbarsWnd::OnDestroy ()
 {
 	char currentPresetStr[512];
-	_snprintfSafe(currentPresetStr, sizeof(currentPresetStr), "%d", m_currentPreset);
+	snprintf(currentPresetStr, sizeof(currentPresetStr), "%d", m_currentPreset);
 	WritePrivateProfileString(INI_SECTION, INI_KEY_CURRENT_PRESET, currentPresetStr, GetIniFileBR());
 }
 

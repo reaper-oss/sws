@@ -350,7 +350,7 @@ void SetVerticalZoomCenter(COMMAND_T* ct)
 	*ConfigVar<int>("vzoommode") = (int)ct->user;
 
 	char tmp[256];
-	_snprintfSafe(tmp, sizeof(tmp), "%d", (int)ct->user);
+	snprintf(tmp, sizeof(tmp), "%d", (int)ct->user);
 	WritePrivateProfileString("reaper", "vzoommode", tmp, get_ini_file());
 }
 
@@ -359,7 +359,7 @@ void SetHorizontalZoomCenter(COMMAND_T* ct)
 	*ConfigVar<int>("zoommode") = (int)ct->user;
 
 	char tmp[256];
-	_snprintfSafe(tmp, sizeof(tmp), "%d", (int)ct->user);
+	snprintf(tmp, sizeof(tmp), "%d", (int)ct->user);
 	WritePrivateProfileString("reaper", "zoommode", tmp, get_ini_file());
 }
 

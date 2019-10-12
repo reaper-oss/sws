@@ -594,7 +594,7 @@ void MoveTempo (COMMAND_T* ct)
 	if (s_warnUser && skipped != 0 && !tempoMap.IsLocked())
 	{
 		char buffer[512];
-		_snprintfSafe(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
+		snprintf(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
 		int userAnswer = MessageBox(g_hwndParent, buffer, __LOCALIZE("SWS/BR - Warning", "sws_mbox"), MB_YESNO);
 		if (userAnswer == IDNO)
 			s_warnUser = false;
@@ -929,7 +929,7 @@ void EditTempo (COMMAND_T* ct)
 	if (s_warnUser && skipped != 0 && tempoMap.CountSelected() > 1 && !tempoMap.IsLocked())
 	{
 		char buffer[512];
-		_snprintfSafe(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
+		snprintf(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
 		int userAnswer = MessageBox(g_hwndParent ,buffer, __LOCALIZE("SWS/BR - Warning", "sws_mbox"), MB_YESNO);
 		if (userAnswer == IDNO)
 			s_warnUser = false;
@@ -1103,7 +1103,7 @@ void EditTempoGradual (COMMAND_T* ct)
 	if (s_warnUser && skipped != 0 && tempoMap.CountSelected() > 1 && !tempoMap.IsLocked())
 	{
 		char buffer[512];
-		_snprintfSafe(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
+		snprintf(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
 		int userAnswer = MessageBox(g_hwndParent ,buffer, __LOCALIZE("SWS/BR - Warning", "sws_mbox"), MB_YESNO);
 		if (userAnswer == IDNO)
 			s_warnUser = false;
@@ -1149,7 +1149,7 @@ void DeleteTempo (COMMAND_T* ct)
 	if (s_warnUser && skipped != 0)
 	{
 		char buffer[512];
-		_snprintfSafe(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
+		snprintf(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
 		int userAnswer = MessageBox(g_hwndParent, buffer, __LOCALIZE("SWS/BR - Warning", "sws_mbox"), MB_YESNO);
 		if (userAnswer == IDNO)
 			s_warnUser = false;
@@ -1471,7 +1471,7 @@ void TempoShapeLinear (COMMAND_T* ct)
 	if (s_warnUser && skipped != 0 && !tempoMap.IsLocked())
 	{
 		char buffer[512];
-		_snprintfSafe(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
+		snprintf(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
 		int userAnswer = MessageBox(g_hwndParent, buffer, __LOCALIZE("SWS/BR - Warning", "sws_mbox"), MB_YESNO);
 		if (userAnswer == IDNO)
 			s_warnUser = false;
@@ -1597,7 +1597,7 @@ void TempoShapeSquare (COMMAND_T* ct)
 	if (s_warnUser && skipped != 0 && !tempoMap.IsLocked())
 	{
 		char buffer[512];
-		_snprintfSafe(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
+		snprintf(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
 		int userAnswer = MessageBox(g_hwndParent, buffer, __LOCALIZE("SWS/BR - Warning", "sws_mbox"), MB_YESNO);
 		if (userAnswer == IDNO)
 			s_warnUser = false;

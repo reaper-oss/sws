@@ -64,7 +64,7 @@ void SplitFileNameComponents(string FullFileName,vector<string>& FNComponents)
 void DoOpenTemplate(int iNum, bool bProject)
 {
 	char cPath[BUFFER_SIZE];
-	_snprintf(cPath, BUFFER_SIZE, "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, bProject ? "ProjectTemplates" : "TrackTemplates");
+	snprintf(cPath, BUFFER_SIZE, "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, bProject ? "ProjectTemplates" : "TrackTemplates");
 	vector<string> templates;
 	SearchDirectory(templates, cPath, bProject ? "RPP" : "RTRACKTEMPLATE", true);
 	if (templates.size() == 0)

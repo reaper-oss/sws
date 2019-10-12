@@ -274,7 +274,7 @@ void SWS_SnapshotsView::GetItemText(SWS_ListItem* item, int iCol, char* str, int
 	switch(iCol)
 	{
 	case 0:
-		_snprintf(str, iStrMax, "%d", ss->m_iSlot);
+		snprintf(str, iStrMax, "%d", ss->m_iSlot);
 		break;
 	case 1:
 		if (ss->m_cName)
@@ -722,7 +722,7 @@ HMENU SWS_SnapshotsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 		{
 			int iCmd = SWSGetCommandID(GetSnapshot, i+1);
 			char cName[50];
-			_snprintf(cName, 50, __LOCALIZE_VERFMT("Recall %s","sws_DLG_101"), g_ss.Get()->m_snapshots.Get(i)->m_cName);
+			snprintf(cName, 50, __LOCALIZE_VERFMT("Recall %s","sws_DLG_101"), g_ss.Get()->m_snapshots.Get(i)->m_cName);
 			if (!iCmd)
 				iCmd = LOAD_MSG + i;
 			AddToMenu(contextMenu, cName, iCmd);
@@ -1155,7 +1155,7 @@ void DeleteSnapshot(Snapshot *ss)
 			g_ss.Get()->m_snapshots.Get(i)->m_iSlot--;
 
 	char undoStr[128] = "";
-	_snprintf(undoStr, 128, __LOCALIZE_VERFMT("Delete snapshot %d", "sws_DLG_101"), iSlot);
+	snprintf(undoStr, 128, __LOCALIZE_VERFMT("Delete snapshot %d", "sws_DLG_101"), iSlot);
 	Undo_OnStateChangeEx(undoStr, UNDO_STATE_MISCCFG, -1);
 }
 

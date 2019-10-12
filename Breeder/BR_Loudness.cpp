@@ -357,19 +357,19 @@ void BR_LoudnessObject::GetColumnStr (int column, char* str, int strSz, int mode
 	{
 		case COL_ID:
 		{
-			_snprintfSafe(str, strSz, "%d", g_analyzedObjects.Get()->Find(this) + 1);
+			snprintf(str, strSz, "%d", g_analyzedObjects.Get()->Find(this) + 1);
 		}
 		break;
 
 		case COL_TRACK:
 		{
-			_snprintfSafe(str, strSz, "%s", (this->GetTrackName()).Get());
+			snprintf(str, strSz, "%s", (this->GetTrackName()).Get());
 		}
 		break;
 
 		case COL_TAKE:
 		{
-			_snprintfSafe(str, strSz, "%s", (this->GetTakeName()).Get());
+			snprintf(str, strSz, "%s", (this->GetTakeName()).Get());
 		}
 		break;
 
@@ -379,9 +379,9 @@ void BR_LoudnessObject::GetColumnStr (int column, char* str, int strSz, int mode
 			this->GetAnalyzeData(NULL, &range, NULL, NULL, NULL, NULL, NULL, NULL);
 
 			if (range <= NEGATIVE_INF)
-				_snprintfSafe(str, strSz, "%s", __localizeFunc("-inf", "vol", 0));
+				snprintf(str, strSz, "%s", __localizeFunc("-inf", "vol", 0));
 			else
-				_snprintfSafe(str, strSz, "%.1lf %s", RoundToN(range, 1) , __LOCALIZE("LU", "sws_loudness"));
+				snprintf(str, strSz, "%.1lf %s", RoundToN(range, 1) , __LOCALIZE("LU", "sws_loudness"));
 		}
 		break;
 
@@ -391,9 +391,9 @@ void BR_LoudnessObject::GetColumnStr (int column, char* str, int strSz, int mode
 			this->GetAnalyzeData(NULL, NULL, &truePeak, NULL, NULL, NULL, NULL, NULL);
 
 			if (truePeak <= NEGATIVE_INF)
-				_snprintfSafe(str, strSz, "%s", __localizeFunc("-inf", "vol", 0));
+				snprintf(str, strSz, "%s", __localizeFunc("-inf", "vol", 0));
 			else
-				_snprintfSafe(str, strSz, "%.1lf %s", RoundToN(truePeak, 1), __LOCALIZE("dBTP", "sws_loudness"));
+				snprintf(str, strSz, "%.1lf %s", RoundToN(truePeak, 1), __LOCALIZE("dBTP", "sws_loudness"));
 		}
 		break;
 
@@ -410,9 +410,9 @@ void BR_LoudnessObject::GetColumnStr (int column, char* str, int strSz, int mode
 			const char* unit = (mode == 1) ? unitLU.Get() : __LOCALIZE("LUFS", "sws_loudness");
 
 			if (value <= NEGATIVE_INF)
-				_snprintfSafe(str, strSz, "%s", __localizeFunc("-inf", "vol", 0));
+				snprintf(str, strSz, "%s", __localizeFunc("-inf", "vol", 0));
 			else
-				_snprintfSafe(str, strSz, "%.1lf %s", RoundToN((mode == 1) ? g_pref.LUFStoLU(value) : value, 1), unit);
+				snprintf(str, strSz, "%.1lf %s", RoundToN((mode == 1) ? g_pref.LUFStoLU(value) : value, 1), unit);
 		}
 		break;
 	}
@@ -1697,7 +1697,7 @@ void BR_LoudnessPref::SaveGlobalPref ()
 	else                                                   luFormat = 0;
 
 	char tmp[256];
-	_snprintfSafe(tmp, sizeof(tmp), "%lf %d %lf %lf", m_valueLU, luFormat, m_graphMin, m_graphMax);
+	snprintf(tmp, sizeof(tmp), "%lf %d %lf %lf", m_valueLU, luFormat, m_graphMin, m_graphMax);
 	WritePrivateProfileString("SWS", PREF_KEY, tmp, get_ini_file());
 }
 
@@ -1872,12 +1872,12 @@ WDL_DLGRET BR_LoudnessPref::GlobalLoudnessPrefProc (HWND hwnd, UINT uMsg, WPARAM
 				case BR_LoudnessPref::READ_PROJDATA:
 				{
 					char tmp[256];
-					_snprintfSafe(tmp, sizeof(tmp), "%g", g_pref.m_valueLU);                  SetDlgItemText(hwnd, IDC_GLOBAL_LU, tmp);
-					_snprintfSafe(tmp, sizeof(tmp), "%g", g_pref.m_graphMin);                 SetDlgItemText(hwnd, IDC_MIN, tmp);
-					_snprintfSafe(tmp, sizeof(tmp), "%g", g_pref.m_graphMax);                 SetDlgItemText(hwnd, IDC_MAX, tmp);
-					_snprintfSafe(tmp, sizeof(tmp), "%g", g_pref.m_projData.Get()->valueLU);  SetDlgItemText(hwnd, IDC_PROJ_LU, tmp);
-					_snprintfSafe(tmp, sizeof(tmp), "%g", g_pref.m_projData.Get()->graphMin); SetDlgItemText(hwnd, IDC_MIN_PROJ, tmp);
-					_snprintfSafe(tmp, sizeof(tmp), "%g", g_pref.m_projData.Get()->graphMax); SetDlgItemText(hwnd, IDC_MAX_PROJ, tmp);
+					snprintf(tmp, sizeof(tmp), "%g", g_pref.m_valueLU);                  SetDlgItemText(hwnd, IDC_GLOBAL_LU, tmp);
+					snprintf(tmp, sizeof(tmp), "%g", g_pref.m_graphMin);                 SetDlgItemText(hwnd, IDC_MIN, tmp);
+					snprintf(tmp, sizeof(tmp), "%g", g_pref.m_graphMax);                 SetDlgItemText(hwnd, IDC_MAX, tmp);
+					snprintf(tmp, sizeof(tmp), "%g", g_pref.m_projData.Get()->valueLU);  SetDlgItemText(hwnd, IDC_PROJ_LU, tmp);
+					snprintf(tmp, sizeof(tmp), "%g", g_pref.m_projData.Get()->graphMin); SetDlgItemText(hwnd, IDC_MIN_PROJ, tmp);
+					snprintf(tmp, sizeof(tmp), "%g", g_pref.m_projData.Get()->graphMax); SetDlgItemText(hwnd, IDC_MAX_PROJ, tmp);
 
 					CheckDlgButton(hwnd, IDC_ENB_PROJ_LU,    g_pref.m_projData.Get()->useProjLU);
 					CheckDlgButton(hwnd, IDC_ENB_PROJ_GRAPH, g_pref.m_projData.Get()->useProjGraph);
@@ -3045,7 +3045,7 @@ WDL_DLGRET BR_AnalyzeLoudnessWnd::NormalizeDialogProc (HWND hwnd, UINT uMsg, WPA
 			SendDlgItemMessage(hwnd, IDC_UNIT, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("LUFS", "sws_loudness"));
 			SendDlgItemMessage(hwnd, IDC_UNIT, CB_ADDSTRING, 0, (LPARAM)g_pref.GetFormatedLUString().Get());
 			SendDlgItemMessage(hwnd, IDC_UNIT, CB_SETCURSEL, unit, 0);
-			_snprintfSafe(tmp, sizeof(tmp), "%.6g", value); SetDlgItemText(hwnd, IDC_VALUE, tmp);
+			snprintf(tmp, sizeof(tmp), "%.6g", value); SetDlgItemText(hwnd, IDC_VALUE, tmp);
 			SetFocus(GetDlgItem(hwnd, IDC_VALUE));
 			SendMessage(GetDlgItem(hwnd, IDC_VALUE), EM_SETSEL, 0, -1);
 
@@ -3075,7 +3075,7 @@ WDL_DLGRET BR_AnalyzeLoudnessWnd::NormalizeDialogProc (HWND hwnd, UINT uMsg, WPA
 						int unit = (int)SendDlgItemMessage(hwnd, IDC_UNIT, CB_GETCURSEL, 0, 0);
 						char value[256]; GetDlgItemText(hwnd, IDC_VALUE, value, sizeof(value));
 
-						_snprintfSafe(value, sizeof(value), "%.6g", (unit == 1) ? g_pref.LUFStoLU(AltAtof(value)) : g_pref.LUtoLUFS(AltAtof(value)));
+						snprintf(value, sizeof(value), "%.6g", (unit == 1) ? g_pref.LUFStoLU(AltAtof(value)) : g_pref.LUtoLUFS(AltAtof(value)));
 						SetDlgItemText(hwnd, IDC_VALUE, value);
 					}
 				}
@@ -3132,7 +3132,7 @@ WDL_DLGRET BR_AnalyzeLoudnessWnd::NormalizeDialogProc (HWND hwnd, UINT uMsg, WPA
 			lp.parse(tmp);
 			int target = (lp.getnumtokens() > 2) ? lp.gettoken_int(2) : 0;
 
-			_snprintfSafe(tmp, sizeof(tmp), "%lf %d %d", AltAtof(value), unit, target);
+			snprintf(tmp, sizeof(tmp), "%lf %d %d", AltAtof(value), unit, target);
 			WritePrivateProfileString("SWS", NORMALIZE_KEY, tmp, get_ini_file());
 
 			SaveWindowPos(hwnd, NORMALIZE_WND);
@@ -3759,9 +3759,9 @@ HMENU BR_AnalyzeLoudnessWnd::OnContextMenu (int x, int y, bool* wantDefaultItems
 			char menuEntry[512];
 			WDL_FastString unit = g_pref.GetFormatedLUString();
 			if (!strcmp(unit.Get(), __LOCALIZE("LU", "sws_loudness")))
-				_snprintfSafe(menuEntry, sizeof(menuEntry), __LOCALIZE_VERFMT("Normalize to 0 %s (%g LUFS)", "sws_DLG_174"), unit.Get(), g_pref.LUtoLUFS(0));
+				snprintf(menuEntry, sizeof(menuEntry), __LOCALIZE_VERFMT("Normalize to 0 %s (%g LUFS)", "sws_DLG_174"), unit.Get(), g_pref.LUtoLUFS(0));
 			else
-				_snprintfSafe(menuEntry, sizeof(menuEntry), __LOCALIZE_VERFMT("Normalize to 0 %s", "sws_DLG_174"), unit.Get());
+				snprintf(menuEntry, sizeof(menuEntry), __LOCALIZE_VERFMT("Normalize to 0 %s", "sws_DLG_174"), unit.Get());
 			AddToMenu(menu, menuEntry, NORMALIZE_TO_0LU, -1, false);
 		}
 		else
@@ -3903,7 +3903,7 @@ void BR_AnalyzeLoudnessWnd::Properties::Save ()
 	int doHighPrecisionModeInt   = doHighPrecisionMode;
 
 	char tmp[512];
-	_snprintfSafe(tmp, sizeof(tmp), "%d %d %d %d %d %d %d %d %d %d", analyzeTracksInt, analyzeOnNormalizeInt, mirrorProjSelectionInt, doubleClickGoToTargetInt, timeSelOverMaxInt, clearEnvelopeInt, clearAnalyzedInt, doTruePeakInt, usingLUInt, doHighPrecisionModeInt);
+	snprintf(tmp, sizeof(tmp), "%d %d %d %d %d %d %d %d %d %d", analyzeTracksInt, analyzeOnNormalizeInt, mirrorProjSelectionInt, doubleClickGoToTargetInt, timeSelOverMaxInt, clearEnvelopeInt, clearAnalyzedInt, doTruePeakInt, usingLUInt, doHighPrecisionModeInt);
 	WritePrivateProfileString("SWS", LOUDNESS_KEY, tmp, get_ini_file());
 
 	WritePrivateProfileString("SWS", EXPORT_FORMAT_KEY, exportFormat.Get(), get_ini_file());
@@ -3970,7 +3970,7 @@ static WDL_DLGRET NormalizeCommandDialogProc (HWND hwnd, UINT uMsg, WPARAM wPara
 			SendDlgItemMessage(hwnd, IDC_UNIT, CB_ADDSTRING, 0, (LPARAM)g_pref.GetFormatedLUString().Get());
 			SendDlgItemMessage(hwnd, IDC_UNIT, CB_SETCURSEL, unit, 0);
 
-			_snprintfSafe(tmp, sizeof(tmp), "%.6g", value); SetDlgItemText(hwnd, IDC_VALUE, tmp);
+			snprintf(tmp, sizeof(tmp), "%.6g", value); SetDlgItemText(hwnd, IDC_VALUE, tmp);
 			SetFocus(GetDlgItem(hwnd, IDC_VALUE));
 			SendMessage(GetDlgItem(hwnd, IDC_VALUE), EM_SETSEL, 0, -1);
 
@@ -4005,7 +4005,7 @@ static WDL_DLGRET NormalizeCommandDialogProc (HWND hwnd, UINT uMsg, WPARAM wPara
 						int unit = (int)SendDlgItemMessage(hwnd, IDC_UNIT, CB_GETCURSEL, 0, 0);
 						char value[256]; GetDlgItemText(hwnd, IDC_VALUE, value, sizeof(value));
 
-						_snprintfSafe(value, sizeof(value), "%.6g", (unit == 1) ? g_pref.LUFStoLU(AltAtof(value)) : g_pref.LUtoLUFS(AltAtof(value)));
+						snprintf(value, sizeof(value), "%.6g", (unit == 1) ? g_pref.LUFStoLU(AltAtof(value)) : g_pref.LUtoLUFS(AltAtof(value)));
 						SetDlgItemText(hwnd, IDC_VALUE, value);
 					}
 				}
@@ -4065,7 +4065,7 @@ static WDL_DLGRET NormalizeCommandDialogProc (HWND hwnd, UINT uMsg, WPARAM wPara
 			char value[256]; GetDlgItemText(hwnd, IDC_VALUE, value, sizeof(value));
 
 			char tmp[256];
-			_snprintfSafe(tmp, sizeof(tmp), "%lf %d %d", AltAtof(value), unit, target);
+			snprintf(tmp, sizeof(tmp), "%lf %d %d", AltAtof(value), unit, target);
 			WritePrivateProfileString("SWS", NORMALIZE_KEY, tmp, get_ini_file());
 
 			SaveWindowPos(hwnd, NORMALIZE_WND);

@@ -248,8 +248,8 @@ bool SNM_ReadMediaFileTag(const char *fn, const char* tag, char* tagval, int tag
     }
     else
     {
-      if (!_stricmp(tag, "year") && f.tag()->year()) _snprintfSafe(tagval, tagval_sz, "%u", f.tag()->year());
-      else if (!_stricmp(tag, "track") && f.tag()->track()) _snprintfSafe(tagval, tagval_sz, "%u", f.tag()->track());
+      if (!_stricmp(tag, "year") && f.tag()->year()) snprintf(tagval, tagval_sz, "%u", f.tag()->year());
+      else if (!_stricmp(tag, "track") && f.tag()->track()) snprintf(tagval, tagval_sz, "%u", f.tag()->track());
     }
   }
 
@@ -423,8 +423,8 @@ bool DumpActionList(int _type, const char* _title, const char* _lineFormat, cons
         *custId='\0';
         {
           const char *strid=ReverseNamedCommandLookup(cmdId);
-          if (strid) _snprintfStrict(custId, sizeof(custId), "_%s", strid);
-          else _snprintfStrict(custId, sizeof(custId), "%d", cmdId);
+          if (strid) snprintfStrict(custId, sizeof(custId), "_%s", strid);
+          else snprintfStrict(custId, sizeof(custId), "%d", cmdId);
         }
         bool isCustom = IsMacroOrScript(cmdName);
         int isSws = IsSwsAction(cmdName);

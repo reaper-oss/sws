@@ -102,7 +102,7 @@ int SNM_CSurfExtended(int _call, void* _parm1, void* _parm2, void* _parm3)
 {
 #ifdef _SNM_DEBUG
 //	char dbg[256] = "";
-//	_snprintfSafe(dbg, sizeof(dbg), "SNM_CSurfExtended() - Call: %d, prm1: %p, prm2: %p prm3: %p\n", _call, _parm1, _parm2, _parm3);
+//	snprintf(dbg, sizeof(dbg), "SNM_CSurfExtended() - Call: %d, prm1: %p, prm2: %p prm3: %p\n", _call, _parm1, _parm2, _parm3);
 //	OutputDebugString(dbg);
 #endif
 	return 0; // i.e. unsupported
@@ -207,7 +207,7 @@ SNM_OscCSurf* LoadOscCSurfs(WDL_PtrList<SNM_OscCSurf>* _out, const char* _name)
 	int cnt = atoi(buf);
 	for (int i=0; i<cnt; i++)
 	{
-		if (_snprintfStrict(buf, sizeof(buf), "csurf_%d", i) > 0)
+		if (snprintfStrict(buf, sizeof(buf), "csurf_%d", i) > 0)
 		{
 			LineParser lp(false);
 			GetPrivateProfileString("REAPER", buf, "", bufline, sizeof(bufline), get_ini_file()); 

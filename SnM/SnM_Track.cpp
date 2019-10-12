@@ -1107,7 +1107,7 @@ void RemapMIDIInputChannel(COMMAND_T* _ct)
 	int ch = ((int)_ct->user)+1; // ch=0: source channel
 
 	char pLine[SNM_MAX_CHUNK_LINE_LENGTH] = "";
-	if (ch && _snprintfStrict(pLine, sizeof(pLine), "MIDI_INPUT_CHANMAP %d\n", ch-1) <= 0)
+	if (ch && snprintfStrict(pLine, sizeof(pLine), "MIDI_INPUT_CHANMAP %d\n", ch-1) <= 0)
 		return;
 
 	for (int i=1; i <= GetNumTracks(); i++) // skip master
@@ -1561,7 +1561,7 @@ bool SNM_AddTCPFXParm(MediaTrack* _tr, int _fxId, int _prmId)
 			if (pos>0)
 			{
 				char line[SNM_MAX_CHUNK_LINE_LENGTH] = "";
-				if (_snprintfStrict(line, sizeof(line), "PARM_TCP %d\n", _prmId) > 0)
+				if (snprintfStrict(line, sizeof(line), "PARM_TCP %d\n", _prmId) > 0)
 				{
 					pfxc.GetChunk()->Insert(line, --pos);
 					if (p.ReplaceSubChunk("FXCHAIN", 2, 0, pfxc.GetChunk()->Get(), "<ITEM")) {

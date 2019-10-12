@@ -365,7 +365,7 @@ void OpenPathInFindplorer( const char* path ){
 		ShellExecute(NULL, "explore", path, NULL, NULL, SW_SHOWNORMAL);
 #else
 		char cmd[512];
-		_snprintf(cmd, 512, "open \"%s\"", path);
+		snprintf(cmd, 512, "open \"%s\"", path);
 		system( cmd );
 #endif
 	}

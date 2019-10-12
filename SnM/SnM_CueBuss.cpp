@@ -67,13 +67,13 @@ bool AddReceiveWithVolPan(MediaTrack * _srcTr, MediaTrack * _destTr, int _type, 
 		if (p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "VOLPAN", 0, 1, vol, NULL, "MUTESOLO") > 0 &&
 			p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "VOLPAN", 0, 2, pan, NULL, "MUTESOLO") > 0)
 		{
-			update = (_p->AddReceive(_srcTr, _type, vol, pan) > 0);
+			update = _p->AddReceive(_srcTr, _type, vol, pan) > 0;
 		}
 	}
 
 	// default volume
-	if (!update && _snprintfStrict(vol, sizeof(vol), "%.14f", *ConfigVar<double>("defsendvol")) > 0)
-		update = (_p->AddReceive(_srcTr, _type, vol, pan) > 0);
+	if (!update && snprintfStrict(vol, sizeof(vol), "%.14f", *ConfigVar<double>("defsendvol")) > 0)
+		update = _p->AddReceive(_srcTr, _type, vol, pan) > 0;
 	return update;
 }
 
@@ -91,7 +91,7 @@ bool CueBuss(const char* _undoMsg, const char* _busName, int _type, bool _showRo
 		char msg[SNM_MAX_PATH] = "";
 		lstrcpyn(msg, __LOCALIZE("Cue buss not created!\nNo track template file defined","sws_DLG_149"), sizeof(msg));
 		if (*_trTemplatePath)
-			_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Cue buss not created!\nTrack template not found (or empty): %s","sws_DLG_149"), _trTemplatePath);
+			snprintf(msg, sizeof(msg), __LOCALIZE_VERFMT("Cue buss not created!\nTrack template not found (or empty): %s","sws_DLG_149"), _trTemplatePath);
 		MessageBox(GetMainHwnd(), msg, __LOCALIZE("S&M - Error","sws_DLG_149"), MB_OK);
 		return false;
 	}
@@ -218,7 +218,7 @@ void ReadCueBusIniFile(int _confId, char* _busName, int _busNameSz, int* _reaTyp
 	if (_confId>=0 && _confId<SNM_MAX_CUE_BUSS_CONFS && _busName && _reaType && _trTemplate && _trTemplatePath && _showRouting && _soloDefeat && _sendToMaster && _hwOuts)
 	{
 		char iniSection[64]="";
-		if (_snprintfStrict(iniSection, sizeof(iniSection), "CueBuss%d", _confId+1) > 0)
+		if (snprintfStrict(iniSection, sizeof(iniSection), "CueBuss%d", _confId+1) > 0)
 		{
 			char buf[16]="", slot[16]="";
 			GetPrivateProfileString(iniSection,"name","",_busName,_busNameSz,g_SNM_IniFn.Get());
@@ -235,7 +235,7 @@ void ReadCueBusIniFile(int _confId, char* _busName, int _busNameSz, int* _reaTyp
 			*_soloDefeat = atoi(buf);
 			for (int i=0; i<SNM_MAX_HW_OUTS; i++)
 			{
-				if (_snprintfStrict(slot, sizeof(slot), "hwout%d", i+1) > 0)
+				if (snprintfStrict(slot, sizeof(slot), "hwout%d", i+1) > 0)
 					GetPrivateProfileString(iniSection,slot,"0",buf,sizeof(buf),g_SNM_IniFn.Get());
 				else
 					*buf = '\0';
@@ -250,23 +250,23 @@ void SaveCueBusIniFile(int _confId, const char* _busName, int _type, bool _trTem
 	if (_confId>=0 && _confId<SNM_MAX_CUE_BUSS_CONFS && _busName && _trTemplatePath && _hwOuts)
 	{
 		char iniSection[64]="";
-		if (_snprintfStrict(iniSection, sizeof(iniSection), "CueBuss%d", _confId+1) > 0)
+		if (snprintfStrict(iniSection, sizeof(iniSection), "CueBuss%d", _confId+1) > 0)
 		{
 			char buf[16]="", slot[16]="";
 			WDL_FastString escapedStr;
 			escapedStr.SetFormatted(256, "\"%s\"", _busName);
 			WritePrivateProfileString(iniSection,"name",escapedStr.Get(),g_SNM_IniFn.Get());
-			if (_snprintfStrict(buf, sizeof(buf), "%d" ,_type) > 0)
+			if (snprintfStrict(buf, sizeof(buf), "%d" ,_type) > 0)
 				WritePrivateProfileString(iniSection,"reatype",buf,g_SNM_IniFn.Get());
 			WritePrivateProfileString(iniSection,"track_template_enabled",_trTemplate ? "1" : "0",g_SNM_IniFn.Get());
 			escapedStr.SetFormatted(SNM_MAX_PATH, "\"%s\"", _trTemplatePath);
 			WritePrivateProfileString(iniSection,"track_template_path",escapedStr.Get(),g_SNM_IniFn.Get());
 			WritePrivateProfileString(iniSection,"show_routing",_showRouting ? "1" : "0",g_SNM_IniFn.Get());
 			WritePrivateProfileString(iniSection,"send_to_masterparent",_sendToMaster ? "1" : "0",g_SNM_IniFn.Get());
-			if (_snprintfStrict(buf, sizeof(buf), "%d", _soloDefeat) > 0)
+			if (snprintfStrict(buf, sizeof(buf), "%d", _soloDefeat) > 0)
 				WritePrivateProfileString(iniSection,"solo_defeat",buf,g_SNM_IniFn.Get());
 			for (int i=0; i<SNM_MAX_HW_OUTS; i++) 
-				if (_snprintfStrict(slot, sizeof(slot), "hwout%d", i+1) > 0 && _snprintfStrict(buf, sizeof(buf), "%d", _hwOuts[i]) > 0)
+				if (snprintfStrict(slot, sizeof(slot), "hwout%d", i+1) > 0 && snprintfStrict(buf, sizeof(buf), "%d", _hwOuts[i]) > 0)
 					WritePrivateProfileString(iniSection,slot,_hwOuts[i]?buf:NULL,g_SNM_IniFn.Get());
 		}
 	}
@@ -431,7 +431,7 @@ WDL_DLGRET CueBussDlgProc(HWND _hwnd, UINT _uMsg, WPARAM _wParam, LPARAM _lParam
 			RestoreWindowPos(_hwnd, cWndPosKey, false);
 			char buf[16] = "";
 			for(int i=0; i < SNM_MAX_CUE_BUSS_CONFS; i++)
-				if (_snprintfStrict(buf,sizeof(buf),"%d",i+1) > 0)
+				if (snprintfStrict(buf,sizeof(buf),"%d",i+1) > 0)
 					SendDlgItemMessage(_hwnd,IDC_COMBO,CB_ADDSTRING,0,(LPARAM)buf);
 			SendDlgItemMessage(_hwnd,IDC_COMBO,CB_SETCURSEL,0,0);
 			FillCueBussDlg(_hwnd);
@@ -467,7 +467,7 @@ WDL_DLGRET CueBussDlgProc(HWND _hwnd, UINT _uMsg, WPARAM _wParam, LPARAM _lParam
 					char curPath[SNM_MAX_PATH]="";
 					GetDlgItemText(_hwnd, IDC_SNM_CUEBUS_TEMPLATE, curPath, sizeof(curPath));
 					if (!*curPath || !FileOrDirExists(curPath))
-						if (_snprintfStrict(curPath, sizeof(curPath), "%s%cTrackTemplates", GetResourcePath(), PATH_SLASH_CHAR) <= 0)
+						if (snprintfStrict(curPath, sizeof(curPath), "%s%cTrackTemplates", GetResourcePath(), PATH_SLASH_CHAR) <= 0)
 							*curPath = '\0';
 					if (char* fn = BrowseForFiles(__LOCALIZE("S&M - Load track template","sws_DLG_149"), curPath, NULL, false, "REAPER Track Template (*.RTrackTemplate)\0*.RTrackTemplate\0")) {
 						SetDlgItemText(_hwnd,IDC_SNM_CUEBUS_TEMPLATE,fn);

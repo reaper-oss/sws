@@ -61,7 +61,7 @@ INT_PTR WINAPI doResolve(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				if (tr != g_send)
 				{
 					char cName[80];
-					_snprintf(cName, 80, "%d: %s", i, (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL));
+					snprintf(cName, 80, "%d: %s", i, (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL));
 					SendMessage(hTracks, CB_ADDSTRING, 0, (LPARAM)cName);
 				}
 			}

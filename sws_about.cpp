@@ -58,12 +58,12 @@ INT_PTR WINAPI doAbout(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case WM_INITDIALOG:
 		{
 			char cVersion[256];
-			_snprintfSafe(cVersion, sizeof(cVersion), "%s %d.%d.%d.%d-%s", __LOCALIZE("Version","sws_DLG_109"), SWS_VERSION, SWS_COMMIT);
+			snprintf(cVersion, sizeof(cVersion), "%s %d.%d.%d.%d-%s", __LOCALIZE("Version","sws_DLG_109"), SWS_VERSION, SWS_COMMIT);
 			char *p=strstr(cVersion, " #0");
 			if (p) *p=0;
 
 			char cVersionDate[256];
-			_snprintfSafe(cVersionDate, sizeof(cVersionDate), __LOCALIZE_VERFMT("%s built on %s","sws_DLG_109"), cVersion, __DATE__);
+			snprintf(cVersionDate, sizeof(cVersionDate), __LOCALIZE_VERFMT("%s built on %s","sws_DLG_109"), cVersion, __DATE__);
 
 			SetWindowText(GetDlgItem(hwndDlg, IDC_VERSION), cVersionDate);
 			SetWindowText(GetDlgItem(hwndDlg, IDC_WEBSITE), SWS_URL);

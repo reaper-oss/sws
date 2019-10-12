@@ -84,7 +84,7 @@ void SWS_TrackListView::GetItemText(SWS_ListItem* item, int iCol, char* str, int
 		switch (iCol)
 		{
 		case COL_NUM: // #
-			_snprintf(str, iStrMax, "%d", CSurf_TrackToID(tr, false));
+			snprintf(str, iStrMax, "%d", CSurf_TrackToID(tr, false));
 			break;
 		case COL_NAME: // Name
 			lstrcpyn(str, (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL), iStrMax);
@@ -105,7 +105,7 @@ void SWS_TrackListView::GetItemText(SWS_ListItem* item, int iCol, char* str, int
 			lstrcpyn(str, *(int*)GetSetMediaTrackInfo(tr, "I_SOLO", NULL) ? UTF8_BULLET : UTF8_CIRCLE, iStrMax);
 			break;
 //		case COL_INPUT:
-//			_snprintf(str, iStrMax, "%d", *(int*)GetSetMediaTrackInfo(tr, "I_RECINPUT", NULL) + 1);
+//			snprintf(str, iStrMax, "%d", *(int*)GetSetMediaTrackInfo(tr, "I_RECINPUT", NULL) + 1);
 //			break;
 		}
 	}
@@ -315,7 +315,7 @@ HMENU SWS_TrackListWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 			int iCmd = SWSGetCommandID(GetSnapshot, s->m_iSlot);
 			if (!iCmd)
 				iCmd = LOADSNAP_MSG + s->m_iSlot;
-			_snprintf(cMenu, 50, __LOCALIZE_VERFMT("Recall snapshot %s","tracklistmenu"), s->m_cName);
+			snprintf(cMenu, 50, __LOCALIZE_VERFMT("Recall snapshot %s","tracklistmenu"), s->m_cName);
 			AddToMenu(contextMenu, cMenu, iCmd);
 		}
 	}
@@ -365,7 +365,7 @@ void SWS_TrackListWnd::OnDestroy()
 	KillTimer(m_hwnd, 1);
 
 	char str[10];
-	_snprintf(str, 10, "%d %d", m_bHideFiltered ? 1 : 0, m_bLink ? 1 : 0);
+	snprintf(str, 10, "%d %d", m_bHideFiltered ? 1 : 0, m_bLink ? 1 : 0);
 	WritePrivateProfileString(SWS_INI, m_cOptionsKey, str, get_ini_file());
 }
 

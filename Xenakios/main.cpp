@@ -715,8 +715,8 @@ int XenakiosInit()
 		return 0;
 	// Move Xenakios_commands.ini to a new location
 	char oldIniFilename[BUFFER_SIZE], iniFilename[BUFFER_SIZE];
-	_snprintf(oldIniFilename, BUFFER_SIZE, XEN_INIFILE_OLD, GetExePath()); // old location
-	_snprintf(iniFilename, BUFFER_SIZE, XEN_INIFILE_NEW, GetResourcePath());
+	snprintf(oldIniFilename, BUFFER_SIZE, XEN_INIFILE_OLD, GetExePath()); // old location
+	snprintf(iniFilename, BUFFER_SIZE, XEN_INIFILE_NEW, GetResourcePath());
 	if (FileExists(oldIniFilename))
 		MoveFile(oldIniFilename, iniFilename);
 	g_XenIniFilename.Set(iniFilename);
@@ -738,7 +738,7 @@ int XenakiosInit()
 
 	// Add track template actions
 	char cPath[BUFFER_SIZE];
-	_snprintf(cPath, BUFFER_SIZE, "%s%cTrackTemplates", GetResourcePath(), PATH_SLASH_CHAR);
+	snprintf(cPath, BUFFER_SIZE, "%s%cTrackTemplates", GetResourcePath(), PATH_SLASH_CHAR);
 	vector<string> templates;
 	SearchDirectory(templates, cPath, "RTRACKTEMPLATE", true);
 	for (int i = 0; i < (int)templates.size(); i++)
@@ -751,15 +751,15 @@ int XenakiosInit()
 			{
 				char cDesc[BUFFER_SIZE];
 				char cID[BUFFER_SIZE];
-				_snprintf(cID, BUFFER_SIZE, "XENAKIOS_LOADTRACKTEMPLATE%d", iNum);
-				_snprintf(cDesc, BUFFER_SIZE, __LOCALIZE_VERFMT("Xenakios/SWS: [Deprecated] Load track template %d","sws_actions"), iNum);
+				snprintf(cID, BUFFER_SIZE, "XENAKIOS_LOADTRACKTEMPLATE%d", iNum);
+				snprintf(cDesc, BUFFER_SIZE, __LOCALIZE_VERFMT("Xenakios/SWS: [Deprecated] Load track template %d","sws_actions"), iNum);
 				SWSRegisterCommandExt(DoOpenTrackTemplate, cID, cDesc, iNum, false);
 			}
 		}
 	}
 
 	// Add project template actions
-	_snprintf(cPath, BUFFER_SIZE, "%s%cProjectTemplates", GetResourcePath(), PATH_SLASH_CHAR);
+	snprintf(cPath, BUFFER_SIZE, "%s%cProjectTemplates", GetResourcePath(), PATH_SLASH_CHAR);
 	templates.clear();
 	SearchDirectory(templates, cPath, "RPP", true);
 	for (int i = 0; i < (int)templates.size(); i++)
@@ -772,8 +772,8 @@ int XenakiosInit()
 			{
 				char cID[BUFFER_SIZE];
 				char cDesc[BUFFER_SIZE];
-				_snprintf(cID, BUFFER_SIZE, "XENAKIOS_LOADPROJTEMPL%d", iNum);
-				_snprintf(cDesc, BUFFER_SIZE, __LOCALIZE_VERFMT("Xenakios/SWS: [Deprecated] Load project template %d","sws_actions"), iNum);
+				snprintf(cID, BUFFER_SIZE, "XENAKIOS_LOADPROJTEMPL%d", iNum);
+				snprintf(cDesc, BUFFER_SIZE, __LOCALIZE_VERFMT("Xenakios/SWS: [Deprecated] Load project template %d","sws_actions"), iNum);
 				SWSRegisterCommandExt(DoOpenProjectTemplate, cID, cDesc, iNum, false);
 			}
 		}

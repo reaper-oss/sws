@@ -932,49 +932,49 @@ char* Snapshot::Tooltip(char* str, int maxLen)
 			break;
 
 	if (i < m_tracks.GetSize())
-		n = _snprintf(str, maxLen, __LOCALIZE_VERFMT("Master + %d track(s)","sws_DLG_101"), m_tracks.GetSize() - 1);
+		n = snprintf(str, maxLen, __LOCALIZE_VERFMT("Master + %d track(s)","sws_DLG_101"), m_tracks.GetSize() - 1);
 	else
-		n = _snprintf(str + n, maxLen - n, __LOCALIZE_VERFMT("%d track(s)","sws_DLG_101"), m_tracks.GetSize());
+		n = snprintf(str + n, maxLen - n, __LOCALIZE_VERFMT("%d track(s)","sws_DLG_101"), m_tracks.GetSize());
 
 	if (m_iMask & VOL_MASK && n < maxLen) {
-		n += _snprintf(str + n, maxLen - n, "%s", ", ");
-		n += _snprintf(str + n, maxLen - n, "%s", __LOCALIZE("vol","sws_DLG_101"));
+		n += snprintf(str + n, maxLen - n, "%s", ", ");
+		n += snprintf(str + n, maxLen - n, "%s", __LOCALIZE("vol","sws_DLG_101"));
 	}
 	if (m_iMask & PAN_MASK && n < maxLen) {
-		n += _snprintf(str + n, maxLen - n, "%s", ", ");
-		n += _snprintf(str + n, maxLen - n, "%s", __LOCALIZE("pan","sws_DLG_101"));
+		n += snprintf(str + n, maxLen - n, "%s", ", ");
+		n += snprintf(str + n, maxLen - n, "%s", __LOCALIZE("pan","sws_DLG_101"));
 	}
 	if (m_iMask & MUTE_MASK && n < maxLen) {
-		n += _snprintf(str + n, maxLen - n, "%s", ", ");
-		n += _snprintf(str + n, maxLen - n, "%s", __LOCALIZE("mute","sws_DLG_101"));
+		n += snprintf(str + n, maxLen - n, "%s", ", ");
+		n += snprintf(str + n, maxLen - n, "%s", __LOCALIZE("mute","sws_DLG_101"));
 	}
 	if (m_iMask & SOLO_MASK && n < maxLen) {
-		n += _snprintf(str + n, maxLen - n, "%s", ", ");
-		n += _snprintf(str + n, maxLen - n, "%s", __LOCALIZE("solo","sws_DLG_101"));
+		n += snprintf(str + n, maxLen - n, "%s", ", ");
+		n += snprintf(str + n, maxLen - n, "%s", __LOCALIZE("solo","sws_DLG_101"));
 	}
 	if (m_iMask & FXATM_MASK && n < maxLen) {
-		n += _snprintf(str + n, maxLen - n, "%s", ", ");
-		n += _snprintf(str + n, maxLen - n, "%s", __LOCALIZE("fx (old style)","sws_DLG_101"));
+		n += snprintf(str + n, maxLen - n, "%s", ", ");
+		n += snprintf(str + n, maxLen - n, "%s", __LOCALIZE("fx (old style)","sws_DLG_101"));
 	}
 	if (m_iMask & FXCHAIN_MASK && n < maxLen) {
-		n += _snprintf(str + n, maxLen - n, "%s", ", ");
-		n += _snprintf(str + n, maxLen - n, "%s", __LOCALIZE("fx","sws_DLG_101"));
+		n += snprintf(str + n, maxLen - n, "%s", ", ");
+		n += snprintf(str + n, maxLen - n, "%s", __LOCALIZE("fx","sws_DLG_101"));
 	}
 	if (m_iMask & SENDS_MASK && n < maxLen) {
-		n += _snprintf(str + n, maxLen - n, "%s", ", ");
-		n += _snprintf(str + n, maxLen - n, "%s", __LOCALIZE("sends","sws_DLG_101"));
+		n += snprintf(str + n, maxLen - n, "%s", ", ");
+		n += snprintf(str + n, maxLen - n, "%s", __LOCALIZE("sends","sws_DLG_101"));
 	}
 	if (m_iMask & VIS_MASK && n < maxLen) {
-		n += _snprintf(str + n, maxLen - n, "%s", ", ");
-		n += _snprintf(str + n, maxLen - n, "%s", __LOCALIZE("visibility","sws_DLG_101"));
+		n += snprintf(str + n, maxLen - n, "%s", ", ");
+		n += snprintf(str + n, maxLen - n, "%s", __LOCALIZE("visibility","sws_DLG_101"));
 	}
 	if (m_iMask & SEL_MASK && n < maxLen) {
-		n += _snprintf(str + n, maxLen - n, "%s", ", ");
-		n += _snprintf(str + n, maxLen - n, "%s", __LOCALIZE("selection","sws_DLG_101"));
+		n += snprintf(str + n, maxLen - n, "%s", ", ");
+		n += snprintf(str + n, maxLen - n, "%s", __LOCALIZE("selection","sws_DLG_101"));
 	}
 	if (m_iMask & PHASE_MASK && n < maxLen) {
-		n += _snprintf(str + n, maxLen - n, "%s", ", ");
-		n += _snprintf(str + n, maxLen - n, "%s", __LOCALIZE("phase", "sws_DLG_101"));
+		n += snprintf(str + n, maxLen - n, "%s", ", ");
+		n += snprintf(str + n, maxLen - n, "%s", __LOCALIZE("phase", "sws_DLG_101"));
 	}
 	return str;
 }
@@ -1069,8 +1069,8 @@ void Snapshot::RegisterGetCommand(int iSlot) // Slot is 1-based index.
 	{
 		char cID[BUFFER_SIZE];
 		char cDesc[BUFFER_SIZE];
-		_snprintf(cID, BUFFER_SIZE, "SWSSNAPSHOT_GET%d", iSlot);
-		_snprintf(cDesc, BUFFER_SIZE, __LOCALIZE_VERFMT("SWS: Recall snapshot %d","sws_actions"), iSlot);
+		snprintf(cID, BUFFER_SIZE, "SWSSNAPSHOT_GET%d", iSlot);
+		snprintf(cDesc, BUFFER_SIZE, __LOCALIZE_VERFMT("SWS: Recall snapshot %d","sws_actions"), iSlot);
 		SWSRegisterCommandExt(GetSnapshot, cID, cDesc, iSlot, false);
 		iLastRegistered = iSlot;
 	}

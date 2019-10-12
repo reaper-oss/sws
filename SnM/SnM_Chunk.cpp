@@ -166,7 +166,7 @@ int SNM_SendPatcher::RemoveReceivesFrom(MediaTrack* _srcTr)
 		return 0;
 /* can fail since v4.1: freeze
 	char buf[32];
-	return _snprintfStrict(buf, sizeof(buf), "AUXRECV %d", srcId-1)>0 && RemoveLines(buf);
+	return snprintfStrict(buf, sizeof(buf), "AUXRECV %d", srcId-1)>0 && RemoveLines(buf);
 */
 	return ParsePatch(-2, 1, "TRACK", "AUXRECV", -1, -1, NULL, NULL, "MIDIOUT");
 	// REAPER will remove related envelopes, if any
@@ -748,7 +748,7 @@ bool SNM_TrackEnvParserPatcher::NotifyChunkLine(int _mode,
 			if (success) {
 				d += m_addDelta;
 				char buf[64] = "";
-				int l = _snprintf(buf, sizeof(buf), "%.6f", d);
+				int l = snprintf(buf, sizeof(buf), "%.6f", d);
 				if (l<=0 || l>=64) return update;
 				update |= WriteChunkLine(_newChunk, buf, 1, _lp); 
 			}

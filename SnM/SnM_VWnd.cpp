@@ -173,7 +173,7 @@ void SNM_DynSizedText::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y,
 		{
 			RECT tr = {r.left,r.top,r.right,r.top+laneHeight};
 			char buf[64] = "";
-			_snprintfSafe(buf, sizeof(buf), " %s ", m_title.Get()); // trick for better display when left/right align
+			snprintf(buf, sizeof(buf), " %s ", m_title.Get()); // trick for better display when left/right align
 			sFont.DrawText(drawbm, buf, -1, &tr, DT_SINGLELINE|DT_NOPREFIX|DT_VCENTER|m_titleAlign);
 		}
 
@@ -245,7 +245,7 @@ void SNM_DynSizedText::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y,
 		}
 #ifdef _SNM_DYN_FONT_DEBUG
 		char dbg[256];
-		_snprintfSafe(dbg, sizeof(dbg), "SNM_DynSizedText::OnPaint() - %d tries, estim: %d, real: %d\n", dbgTries, estimFontH, m_lastFontH);
+		snprintf(dbg, sizeof(dbg), "SNM_DynSizedText::OnPaint() - %d tries, estim: %d, real: %d\n", dbgTries, estimFontH, m_lastFontH);
 		OutputDebugString(dbg);
 #endif
 	}
@@ -691,9 +691,9 @@ void SNM_KnobCaption::DrawText(LICE_IBitmap* _drawbm, RECT* _rect, UINT _dtFlags
 	{
 		char buf[64] = "";
 		if (m_value || !m_zeroTxt.GetLength())
-			_snprintfSafe(buf, sizeof(buf), "%s\n%d %s", m_title.Get(), m_value, m_suffix.Get());
+			snprintf(buf, sizeof(buf), "%s\n%d %s", m_title.Get(), m_value, m_suffix.Get());
 		else
-			_snprintfSafe(buf, sizeof(buf), "%s\n%s", m_title.Get(), m_zeroTxt.Get());
+			snprintf(buf, sizeof(buf), "%s\n%s", m_title.Get(), m_zeroTxt.Get());
 		font->DrawText(_drawbm, buf, -1, _rect, _dtFlags);
 	}
 }

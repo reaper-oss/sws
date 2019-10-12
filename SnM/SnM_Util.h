@@ -65,8 +65,7 @@ void UpdatePrivateProfileSection(const char* _oldAppName, const char* _newAppNam
 void UpdatePrivateProfileString(const char* _appName, const char* _oldKey, const char* _newKey, const char* _iniFn, const char* _newIniFn = NULL);
 void SNM_UpgradeIniFiles(int _iniVersion);
 
-int _snprintfSafe(char* _buf, size_t _n, const char* _fmt, ...);
-int _snprintfStrict(char* _buf, size_t _n, const char* _fmt, ...);
+int snprintfStrict(char* _buf, size_t _n, const char* _fmt, ...);
 bool GetStringWithRN(const char* _bufSrc, char* _buf, int _bufSize);
 const char* FindFirstRN(const char* _str, bool _anyOrder = false);
 char* ShortenStringToFirstRN(char* _str, bool _anyOrder = false);

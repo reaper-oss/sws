@@ -109,7 +109,7 @@ bool IsValidFilenameErrMsg(const char* _fn, bool _errMsg)
 	{
 		char buf[SNM_MAX_PATH];
 		if (_fn && *_fn)
-			_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Invalid filename: %s\nFilenames cannot contain any of the following characters: / \\ * ? \" < > ' | ^ :","sws_mbox"), _fn);
+			snprintf(buf, sizeof(buf), __LOCALIZE_VERFMT("Invalid filename: %s\nFilenames cannot contain any of the following characters: / \\ * ? \" < > ' | ^ :","sws_mbox"), _fn);
 		else
 			lstrcpyn(buf, __LOCALIZE("Empty filename!","sws_mbox"), sizeof(buf));
 		MessageBox(GetMainHwnd(), buf, __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
@@ -144,7 +144,7 @@ bool FileOrDirExistsErrMsg(const char* _fn, bool _errMsg)
 	{
 		char buf[SNM_MAX_PATH];
 		if (_fn && *_fn)
-			_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("File or directory not found:\n%s","sws_mbox"), _fn);
+			snprintf(buf, sizeof(buf), __LOCALIZE_VERFMT("File or directory not found:\n%s","sws_mbox"), _fn);
 		else
 			lstrcpyn(buf, __LOCALIZE("Empty filename!","sws_mbox"), sizeof(buf));
 		MessageBox(GetMainHwnd(), buf, __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
@@ -212,7 +212,7 @@ bool BrowseResourcePath(const char* _title, const char* _resSubDir, const char* 
 {
 	bool ok = false;
 	char defaultPath[SNM_MAX_PATH];
-	_snprintfSafe(defaultPath, sizeof(defaultPath), "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir);
+	snprintf(defaultPath, sizeof(defaultPath), "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir);
 	if (char* fn = BrowseForFiles(_title, defaultPath, NULL, false, _fileFilters)) 
 	{
 		lstrcpyn(_fn, _wantFullPath ? fn : GetShortResourcePath(_resSubDir, fn), _fnSize);
@@ -264,7 +264,7 @@ void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fu
 		}
 		else
 		{
-			_snprintfSafe(_fullFn, _fullFnSize, "%s%c%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir, PATH_SLASH_CHAR, _shortFn);
+			snprintf(_fullFn, _fullFnSize, "%s%c%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir, PATH_SLASH_CHAR, _shortFn);
 		}
 	}
 }
@@ -404,10 +404,10 @@ bool GenerateFilename(const char* _dir, const char* _name, const char* _ext, cha
 		char fn[SNM_MAX_PATH] = "";
 		bool slash = _dir[strlen(_dir)-1] == PATH_SLASH_CHAR;
 		if (slash) {
-			if (_snprintfStrict(fn, sizeof(fn), "%s%s.%s", _dir, _name, _ext) <= 0)
+			if (snprintfStrict(fn, sizeof(fn), "%s%s.%s", _dir, _name, _ext) <= 0)
 				return false;
 		} else {
-			if (_snprintfStrict(fn, sizeof(fn), "%s%c%s.%s", _dir, PATH_SLASH_CHAR, _name, _ext) <= 0)
+			if (snprintfStrict(fn, sizeof(fn), "%s%c%s.%s", _dir, PATH_SLASH_CHAR, _name, _ext) <= 0)
 				return false;
 		}
 
@@ -415,10 +415,10 @@ bool GenerateFilename(const char* _dir, const char* _name, const char* _ext, cha
 		while(FileOrDirExists(fn))
 		{
 			if (slash) {
-				if (_snprintfStrict(fn, sizeof(fn), "%s%s_%03d.%s", _dir, _name, ++i, _ext) <= 0)
+				if (snprintfStrict(fn, sizeof(fn), "%s%s_%03d.%s", _dir, _name, ++i, _ext) <= 0)
 					return false;
 			} else {
-				if (_snprintfStrict(fn, sizeof(fn), "%s%c%s_%03d.%s", _dir, PATH_SLASH_CHAR, _name, ++i, _ext) <= 0)
+				if (snprintfStrict(fn, sizeof(fn), "%s%c%s_%03d.%s", _dir, PATH_SLASH_CHAR, _name, ++i, _ext) <= 0)
 					return false;
 			}
 		}
@@ -695,49 +695,15 @@ void SNM_UpgradeIniFiles(int _iniVersion)
 // String helpers
 ///////////////////////////////////////////////////////////////////////////////
 
-// a _snprintf that ensures the string is always null terminated (but truncated if needed)
-// not based on WDL_snprintf: no return value, see wdlcstring.h
-int _snprintfSafe(char* _buf, size_t _n, const char* _fmt, ...)
-{
-	va_list va;
-	va_start(va, _fmt);
-	*_buf='\0';
-#if defined(_WIN32) && defined(_MSC_VER)
-	int l = _vsnprintf(_buf, _n, _fmt, va);
-	if (l < 0 || l >= (int)_n) {
-		_buf[_n-1]=0;
-		l = strlen(_buf);
-	}
-#else
-	// vsnprintf() on non-win32, always null terminates
-	int l = vsnprintf(_buf, _n, _fmt, va);
-	if (l>=(int)_n)
-		l=_n-1;
-#endif
-	va_end(va);
-	return l;
-}
-
-// a _snprintf that returns >=0 when the string is null terminated and not truncated
+// a snprintf that returns >=0 when the string is null terminated and not truncated
 // => callers must check the returned value 
-// not based on WDL_snprintf: no return value, see wdlcstring.h
-int _snprintfStrict(char* _buf, size_t _n, const char* _fmt, ...)
+int snprintfStrict(char* _buf, size_t _n, const char* _fmt, ...)
 {
 	va_list va;
 	va_start(va, _fmt);
-	*_buf='\0';
-#if defined(_WIN32) && defined(_MSC_VER)
-	int l = _vsnprintf(_buf, _n, _fmt, va);
-	if (l < 0 || l >= (int)_n) {
-		_buf[_n-1]=0;
-		l = -1;
-	}
-#else
-	// vsnprintf() on non-win32, always null terminates
 	int l = vsnprintf(_buf, _n, _fmt, va);
 	if (l>=(int)_n)
 		l = -1;
-#endif
 	va_end(va);
 	return l;
 }
@@ -858,7 +824,7 @@ double SeekPlay(double _pos, bool _moveView)
 	PreventUIRefresh(-1);
 #ifdef _SNM_DEBUG
 	char dbg[256] = "";
-	_snprintfSafe(dbg, sizeof(dbg), "SeekPlay() - Pos: %f\n", _pos);
+	snprintf(dbg, sizeof(dbg), "SeekPlay() - Pos: %f\n", _pos);
 	OutputDebugString(dbg);
 #endif
 	return cursorpos;
@@ -924,7 +890,7 @@ const char* SNM_GetTextFromCmd(int _cmdId, KbdSectionInfo* _section)
 bool LoadKbIni(WDL_PtrList<WDL_FastString>* _out)
 {
 	char buf[SNM_MAX_PATH] = "";
-	if (_out && _snprintfStrict(buf, sizeof(buf), SNM_KB_INI_FILE, GetResourcePath()) > 0)
+	if (_out && snprintfStrict(buf, sizeof(buf), SNM_KB_INI_FILE, GetResourcePath()) > 0)
 	{
 		_out->Empty(true);
 		if (FILE* f = fopenUTF8(buf, "r"))
@@ -1232,7 +1198,7 @@ bool FNV64(const char* _strIn, char* _strOut)
 			h=FNV64(h,(unsigned char *)&c,1);
 	}
 	h=FNV64(h,(unsigned char *)"",1);
-	return (_snprintfStrict(_strOut, 65, "%08X%08X",(int)(h>>32),(int)(h&0xffffffff)) > 0);
+	return (snprintfStrict(_strOut, 65, "%08X%08X",(int)(h>>32),(int)(h&0xffffffff)) > 0);
 }
 
 #endif

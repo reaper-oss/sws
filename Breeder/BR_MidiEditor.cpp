@@ -431,7 +431,7 @@ void ME_CreateCCLaneLastClicked (COMMAND_T* ct, int val, int valhw, int relmode,
 					while (i <= SNM_MAX_CC_LANE_ID && lanes[i])
 						i++;
 					char newLane[SNM_MAX_CHUNK_LINE_LENGTH] = "";
-					if (_snprintfStrict(newLane, sizeof(newLane), "VELLANE %d 50 0\n", i) > 0)
+					if (snprintfStrict(newLane, sizeof(newLane), "VELLANE %d 50 0\n", i) > 0)
 						ptk.GetChunk()->Insert(newLane, tkFirstPos);
 
 					updated = p.ReplaceTake(tkPos, tklen, ptk.GetChunk());
@@ -755,7 +755,7 @@ void ME_HideCCLanes (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd)
 					if (firstPos && laneCount == 0)
 					{
 						char newLane[512] = "";
-						if (_snprintfSafe(newLane, sizeof(newLane), "VELLANE -1 0 0\n"))
+						if (snprintf(newLane, sizeof(newLane), "VELLANE -1 0 0\n"))
 							ptk.GetChunk()->Insert(newLane, firstPos);
 					}
 

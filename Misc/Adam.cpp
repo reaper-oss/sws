@@ -238,7 +238,7 @@ WDL_DLGRET AWFillGapsProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					if(wParam == IDOK)
 					{
 						char prms[128];
-						_snprintf(prms, 128, "%s,%s,%s,%s,%s,%s,%d,%d",
+						snprintf(prms, 128, "%s,%s,%s,%s,%s,%s,%d,%d",
 							triggerPad, fadeLength, maxGap, !stretch ? "1.0" : maxStretch, (!stretch || !trans) ? "0" : presTrans,
 							transFade, fadeShape, markErrors);
 						AWFillGapsAdv(__LOCALIZE("Fill gaps between selected items","sws_DLG_156"), prms);

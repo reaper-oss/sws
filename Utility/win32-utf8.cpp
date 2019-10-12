@@ -36,25 +36,24 @@ static_assert(GetPrivateProfileString == GetPrivateProfileStringUTF8,
  "The current version of WDL does not override GetPrivateProfileString"
  " to GetPrivateProfileStringUTF8. Update WDL.");
 
-using namespace std;
+#define widen_cstr(cstr) win32::widen(cstr).c_str()
 
-
-static wstring widen(const char *input, const UINT codepage = CP_UTF8, const int size = -1)
+std::wstring win32::widen(const char *input, const UINT codepage, const int size)
 {
   const int wsize = MultiByteToWideChar(codepage, 0, input, size, nullptr, 0) - 1;
 
-  wstring output(wsize, 0);
+  std::wstring output(wsize, 0);
   MultiByteToWideChar(codepage, 0, input, size, &output[0], wsize);
 
   return output;
 }
 
-static string narrow(const wchar_t *input)
+std::string win32::narrow(const wchar_t *input)
 {
   const int size = WideCharToMultiByte(CP_UTF8, 0,
     input, -1, nullptr, 0, nullptr, nullptr) - 1;
 
-  string output(size, 0);
+  std::string output(size, 0);
   WideCharToMultiByte(CP_UTF8, 0, input, -1, &output[0], size, nullptr, nullptr);
 
   return output;
@@ -91,8 +90,8 @@ DWORD GetPrivateProfileSectionUTF8(LPCTSTR appName, LPTSTR ret, DWORD size, LPCT
     return GetPrivateProfileSectionA(appName, ret, size, fileName);
 
   wchar_t wideRet[SNM_MAX_INI_SECTION];
-  const int wideSize = GetPrivateProfileSectionW(widen(appName).c_str(), wideRet,
-    SNM_MAX_INI_SECTION, widen(fileName).c_str());
+  const int wideSize = GetPrivateProfileSectionW(widen_cstr(appName), wideRet,
+    SNM_MAX_INI_SECTION, widen_cstr(fileName));
 
   return WideCharToMultiByte(CP_UTF8, 0, wideRet, wideSize, ret, size, nullptr, nullptr);
 }
@@ -102,14 +101,14 @@ BOOL WritePrivateProfileSectionUTF8(LPCTSTR appName, LPCTSTR string, LPCTSTR fil
   if(!WDL_HasUTF8(fileName))
     return WritePrivateProfileSectionA(appName, string, fileName);
 
-  const wstring &wideString = widen(string, CP_UTF8, strlistlen(string));
+  const std::wstring &wideString = win32::widen(string, CP_UTF8, strlistlen(string));
 
   return WritePrivateProfileSectionW(widen(appName).c_str(),
-    wideString.c_str(), widen(fileName).c_str());
+    wideString.c_str(), widen_cstr(fileName));
 }
 
 HWND FindWindowExUTF8(HWND parent, HWND after, const char *className, const char *title)
 {
   return FindWindowExW(parent, after,
-    className ? widen(className).c_str() : nullptr, title ? widen(title).c_str() : nullptr);
+    className ? widen_cstr(className) : nullptr, title ? widen_cstr(title) : nullptr);
 }

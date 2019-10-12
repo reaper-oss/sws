@@ -32,17 +32,17 @@
 
 #define STRICT
 #ifdef _WIN32
-#include <winsock2.h> // must be inculded before windows.h, see OscPkt/udp.h
-#include <windows.h>
-#include <windowsx.h>
-#include <process.h>
-#include <shlwapi.h>
-#include <shlobj.h>
-#include <crtdbg.h>
-#include <commctrl.h>
+#  include <winsock2.h> // must be inculded before windows.h, see OscPkt/udp.h
+#  include <windows.h>
+#  include <windowsx.h>
+#  include <process.h>
+#  include <shlwapi.h>
+#  include <shlobj.h>
+#  include <crtdbg.h>
+#  include <commctrl.h>
 #else
-#include "WDL/swell/swell.h"
-#include <sys/time.h>
+#  include <WDL/swell/swell.h>
+#  include <sys/time.h>
 #endif
 #include <stdio.h>
 #include <math.h>
@@ -114,7 +114,4 @@
 #include "Padre/padreMidi.h"
 #include "Padre/padreMidiItemProcBase.h"
 #include "Breeder/BR_Timer.h"
-
-#ifdef _WIN32
-#  include "Utility/win32-utf8.h"
-#endif
+#include "Utility/win32-utf8.h"

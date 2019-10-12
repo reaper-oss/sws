@@ -19,23 +19,6 @@ struct subtract : public std::unary_function <T, T>
     T _rhs;
 };
 
-template <typename T>
-static void openFileStream(const std::string &fileName, T &fileStream)
-{
-    /* Call wchar version of open for ifstream or ofstream to
-    * handle unicode chars in file name. OSX is utf8 so just call open.
-    */
-#ifdef _WIN32
-    int stringSize = MultiByteToWideChar(CP_UTF8, 0, fileName.c_str(), -1, NULL, 0);
-    std::vector<wchar_t> wideCharFileName(stringSize);
-    MultiByteToWideChar(CP_UTF8, 0, fileName.c_str(), -1, &wideCharFileName[0],
-                        (int)wideCharFileName.size());
-    fileStream.open(&wideCharFileName[0]);
-#else
-    fileStream.open(fileName.c_str());
-#endif
-}
-
 bool GrooveTemplateHandler::GrooveMarker::operator== (const GrooveMarker &rhs)
 {
     return index == rhs.index;
@@ -534,7 +517,7 @@ bool GrooveTemplateHandler::LoadGroove(std::string &fileName, std::string &error
     f.exceptions ( std::ifstream::failbit | std::ifstream::badbit );
     try
     {
-        openFileStream(fileName, f);
+        f.open(win32::widen(fileName).c_str());
         if(!f.is_open())
         {
                         errorMessage = __LOCALIZE("Unable to open file","sws_mbox");
@@ -609,7 +592,7 @@ bool GrooveTemplateHandler::SaveGroove(std::string &fileName, std::string &error
     }
 
     std::ofstream f;
-    openFileStream(fileName, f);
+    f.open(win32::widen(fileName).c_str());
     if(!f.is_open())
     {
                 errorMessage = __LOCALIZE("Unable to open file","sws_mbox");

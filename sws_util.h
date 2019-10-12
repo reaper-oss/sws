@@ -241,7 +241,6 @@ const char *stristr(const char* a, const char* b);
 void UpdateStretchMarkersAfterSetTakeStartOffset(MediaItem_Take* take, double takeStartOffset_multiplyPlayrate);
 
 #ifdef _WIN32
-  wchar_t* WideCharPlz(const char* inChar);
   void dprintf(const char* format, ...);
 #else
   #define dprintf printf

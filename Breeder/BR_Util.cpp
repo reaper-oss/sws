@@ -3456,8 +3456,8 @@ HCURSOR GetSwsMouseCursor (BR_MouseCursor cursor)
 			if (cursorFile)
 			{
 				#ifdef _WIN32
-					wchar_t* resourcePathWide = WideCharPlz(GetResourcePath());
-					wchar_t* cursorFileWide   = WideCharPlz(cursorFile);
+					const wstring &resourcePathWide = win32::widen(GetResourcePath());
+					const wstring &cursorFileWide   = win32::widen(cursorFile);
 
 					wstring cursorPath(resourcePathWide);
 					cursorPath.append(L"\\Cursors\\");
@@ -3467,9 +3467,6 @@ HCURSOR GetSwsMouseCursor (BR_MouseCursor cursor)
 					DWORD fileAttributes = GetFileAttributesW(cursorPath.c_str());
 					if (fileAttributes != INVALID_FILE_ATTRIBUTES && !(fileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 						s_cursors[cursor] = LoadCursorFromFileW(cursorPath.c_str());
-
-					delete[] resourcePathWide;
-					delete[] cursorFileWide;
 				#else
 					WDL_FastString cursorPath;
 					cursorPath.SetFormatted(SNM_MAX_PATH, "%s/Cursors/%s.cur", GetResourcePath(), cursorFile);

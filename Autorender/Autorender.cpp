@@ -41,10 +41,8 @@
 #include "../Prompt.h"
 #include "WDL/projectcontext.h"
 
-#ifndef NO_TAGLIB
-#  include <taglib/tag.h>
-#  include <taglib/fileref.h>
-#endif
+#include <taglib/tag.h>
+#include <taglib/fileref.h>
 
 int GetCurrentYear(){
 	time_t t = 0;
@@ -699,7 +697,6 @@ void AutorenderRegions(COMMAND_T*)
 		string renderedFilePath = renderedFile->first;
 		RenderRegion renderRegion = renderedFile->second;
 
-#ifndef NO_TAGLIB
 #ifdef _WIN32
 		wchar_t* w_rendered_path = WideCharPlz( renderedFilePath.c_str() );
 		TagLib::FileRef f( w_rendered_path );
@@ -760,7 +757,6 @@ void AutorenderRegions(COMMAND_T*)
 		}
 #ifdef _WIN32
 		delete [] w_rendered_path;
-#endif
 #endif
 	}
 

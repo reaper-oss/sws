@@ -2,8 +2,6 @@
 
 #include <windows.h>
 
-const char *GetResourcePathUTF8();
-#define GetResourcePath() GetResourcePathUTF8()
 
 DWORD GetPrivateProfileSectionUTF8(LPCTSTR appName, LPTSTR retStr, DWORD nSize, LPCTSTR fileName);
 #ifdef GetPrivateProfileSection

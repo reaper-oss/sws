@@ -758,7 +758,7 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 				pACTrack = g_pACTracks.Get()->Add(new SWS_RuleTrack(tr));
 
 			// Do the track rule matching
-			if (bColor || bIcon || bLayout)
+			if (bColor || bIcon || bLayout[0] || bLayout[1])
 			{
 				bool bMatch = false;
 

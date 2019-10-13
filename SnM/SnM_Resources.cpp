@@ -4053,7 +4053,7 @@ void LoadOrSelectNextPreviousProjectSlot(const char* _title, int _dir, bool _new
 		{
 			char pCurPrj[SNM_MAX_PATH] = "";
 			EnumProjects(-1, pCurPrj, sizeof(pCurPrj));
-			if (pCurPrj && *pCurPrj)
+			if (*pCurPrj)
 				for (int i=startSlot-1; g_prjCurSlot < 0 && i < endSlot; i++)
 					if (!slots->Get(i)->IsDefault() && strstr(pCurPrj, slots->Get(i)->m_shortPath.Get()))
 						g_prjCurSlot = i;

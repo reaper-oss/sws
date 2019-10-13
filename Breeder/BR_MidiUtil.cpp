@@ -1325,7 +1325,7 @@ void SetSelectedNotes (MediaItem_Take* take, const vector<int>& selectedNotes, b
 			++selectedId;
 		}
 
-		MIDI_SetNote(take, i, ((unselectOthers) ? (&selected) : ((&selected) ? &selected : NULL)), NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+		MIDI_SetNote(take, i, unselectOthers ? &selected : (selected ? &selected : NULL), NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 	}
 }
 

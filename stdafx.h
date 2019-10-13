@@ -95,12 +95,6 @@
 #include "WDL/fileread.h"
 #include "WDL/filewrite.h" // #647
 
-#ifndef __GNUC__
-#pragma warning(default : 4996)
-#pragma warning(default : 4267)
-#pragma warning(default : 4244)
-#endif
-
 // Headers that are used "enough" to be worth of being precompiled,
 // at the expense of needing recompile of the headers on change
 #include "Utility/configvar.h"

@@ -1494,8 +1494,8 @@ bool BR_Envelope::Commit (bool force /*=false*/)
 
 			// Edit/insert cached points
 			currentCount = CountEnvelopePoints(m_envelope);
-			double playrate = (m_take) ? (GetMediaItemTakeInfo_Value(m_take, "D_PLAYRATE")) : 1;
-			for (int i = firstPointDone ? 1 : 0; i < currentCount; ++i)
+			const double playrate = m_take ? GetMediaItemTakeInfo_Value(m_take, "D_PLAYRATE") : 1;
+			for (size_t i = firstPointDone; i < currentCount; ++i)
 			{
 				double value = (m_properties.faderMode != 0) ? ScaleToEnvelopeMode(m_properties.faderMode, m_points[i].value) : m_points[i].value;
 				double position = m_points[i].position * playrate;

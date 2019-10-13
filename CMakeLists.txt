@@ -6,6 +6,8 @@ option(USE_SYSTEM_TAGLIB "Link against the system-provided TagLib"       OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
+include(CheckCXXCompilerFlag)
+
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   if(WIN32)
     set(USER_CONFIG_DIR "$ENV{APPDATA}")
@@ -56,10 +58,8 @@ set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE        ON)
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELWITHDEBINFO ON)
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL     ON)
 
-if(UNIX)
-  add_compile_options(-fstack-protector-strong -fdiagnostics-color)
-elseif(MSVC)
-  add_compile_definitions(sws _CRT_SECURE_NO_WARNINGS _CRT_NONSTDC_NO_DEPRECATE)
+if(MSVC)
+  add_compile_definitions(_CRT_SECURE_NO_WARNINGS _CRT_NONSTDC_NO_DEPRECATE)
 
   foreach(arg
     CMAKE_C_FLAGS_DEBUG CMAKE_CXX_FLAGS_DEBUG
@@ -91,6 +91,8 @@ elseif(MSVC)
     # Remove unreferenced COMDAT
     $<$<NOT:$<CONFIG:Debug>>:/Zc:inline>
   )
+else()
+  add_compile_options(-fstack-protector-strong -fdiagnostics-color)
 endif()
 
 find_package(PHP REQUIRED)
@@ -178,15 +180,9 @@ if(SWELL_FOUND)
   )
 endif()
 
-if(APPLE)
-  target_compile_options(sws PRIVATE
-    # Disable annoying warnings from including WDL/MersenneTwister.h
-    -Wno-deprecated-register
+if(MSVC)
+  target_compile_options(sws PRIVATE /EHsc /W3)
 
-    # Ignore deprecated stat64 from including WDL/dirscan.h
-    -Wno-deprecated-declarations
-  )
-elseif(MSVC)
   target_link_libraries(sws Shlwapi)
 
   target_link_options(sws PRIVATE $<$<NOT:$<CONFIG:Debug>>:
@@ -220,6 +216,26 @@ elseif(MSVC)
   )
   add_dependencies(sws pch)
   target_link_libraries(sws pch)
+else()
+  target_compile_options(sws PRIVATE
+    -Wall
+    -Wno-reorder -Wno-sign-compare -Wno-unused-function -Wno-unused-parameter
+
+    # Ignore deprecated std::auto_ptr from Fingers and stat64 from WDL/dirscan.h
+    -Wno-deprecated-declarations
+  )
+
+  # Better [s][n]printf diagnostics (GCC 7)
+  check_cxx_compiler_flag(-Wformat-overflow HAVE_WFORMAT_OVERFLOW)
+  if(HAVE_WFORMAT_OVERFLOW)
+    target_compile_options(sws PRIVATE -Wformat-overflow=2 -Wformat-truncation=2)
+  endif()
+
+  # Ignore deprecated register keyword from WDL/MersenneTwister.h (Clang)
+  check_cxx_compiler_flag(-Wdeprecated-register HAVE_WDEPRECATED_REGISTER)
+  if(HAVE_WDEPRECATED_REGISTER)
+    target_compile_options(sws PRIVATE -Wno-deprecated-register)
+  endif()
 endif()
 
 set_target_properties(sws PROPERTIES

@@ -44,8 +44,8 @@ void SaveProjectList(COMMAND_T*)
 {
 	int i = 0;
 	bool bValid = false;
-	char filename[256] = { 0, };
-	while (EnumProjects(i++, filename, 256))
+	char filename[MAX_PATH + 2]{}; // room for \r\n
+	while (EnumProjects(i++, filename, MAX_PATH))
 		if (filename[0])
 			bValid = true;
 	if (!bValid)
@@ -54,19 +54,19 @@ void SaveProjectList(COMMAND_T*)
 		return;
 	}
 
-	char cPath[256];
-	GetProjectPath(cPath, 256);
-	if (BrowseForSaveFile(__LOCALIZE("Select project list","sws_mbox"), cPath, NULL, "Reaper Project List (*.RPL)\0*.RPL\0All Files\0*.*\0", filename, 256))
+	char cPath[MAX_PATH];
+	GetProjectPath(cPath, sizeof(cPath));
+	if (BrowseForSaveFile(__LOCALIZE("Select project list","sws_mbox"), cPath, NULL, "Reaper Project List (*.RPL)\0*.RPL\0All Files\0*.*\0", filename, MAX_PATH))
 	{
 		FILE* f = fopenUTF8(filename, "w");
 		if (f)
 		{
 			i = 0;
-			while (EnumProjects(i++, filename, 256))
+			while (EnumProjects(i++, filename, MAX_PATH))
 			{
 				if (filename[0])
 				{
-					strncat(filename, "\r\n", 256);
+					strcat(filename, "\r\n");
 					fwrite(filename, strlen(filename), 1, f);
 				}
 			}

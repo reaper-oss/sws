@@ -941,7 +941,7 @@ double g_lastTailLen;
 void DoWorkForRenderItemsWithTail(double TailLen)
 {
 	// Unselect all tracks
-	const int msTail=1000*TailLen;
+	const int msTail = static_cast<int>(1000 * TailLen);
 	ConfigVarOverride<int> fxtail("itemfxtail", msTail);
 
 	bool ItemSelected=false;

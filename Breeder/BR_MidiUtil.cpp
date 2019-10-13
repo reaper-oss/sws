@@ -1370,7 +1370,7 @@ void UnselectAllEvents (MediaItem_Take* take, int lane)
 			{
 				int type = 0;
 				if (MIDI_GetTextSysexEvt(take, id, NULL, NULL, NULL, &type, NULL, NULL) && ((lane == CC_SYSEX && type == -1) || (lane == CC_TEXT_EVENTS && type != -1)))
-					MIDI_SetTextSysexEvt(take, id, &g_bFalse, NULL, NULL, NULL, NULL, NULL, NULL);
+					MIDI_SetTextSysexEvt(take, id, &g_bFalse, NULL, NULL, NULL, NULL, 0, NULL);
 			}
 		}
 		else if (lane >= CC_14BIT_START)

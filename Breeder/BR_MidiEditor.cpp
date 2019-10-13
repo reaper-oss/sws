@@ -146,7 +146,7 @@ static void MidiTakePreview (int mode, MediaItem_Take* take, MediaTrack* track, 
 			itemStart = GetMediaItemInfo_Value(item, "D_POSITION");
 			itemEnd   = itemStart + GetMediaItemInfo_Value(item, "D_LENGTH");
 			takeOffset = GetMediaItemTakeInfo_Value(take, "D_STARTOFFS");
-			double sourceLenPPQ = GetMidiSourceLengthPPQ(take, NULL);
+			double sourceLenPPQ = GetMidiSourceLengthPPQ(take, false);
 
 			if (takeOffset != 0)
 				SetMediaItemTakeInfo_Value(take, "D_STARTOFFS", 0);

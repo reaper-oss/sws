@@ -295,7 +295,7 @@ static void ShowGradualOptions (bool show, HWND hwnd)
 	#ifdef _WIN32
 		SetWindowPos(hwnd, NULL, 0, 0, r.right-r.left, r.bottom-r.top+c, SWP_NOMOVE);
 	#else
-		SetWindowPos(hwnd, NULL, r.left, r.top-c,  r.right-r.left, r.bottom-r.top+c, NULL);
+		SetWindowPos(hwnd, NULL, r.left, r.top-c,  r.right-r.left, r.bottom-r.top+c, 0);
 	#endif
 }
 

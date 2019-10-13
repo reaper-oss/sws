@@ -43,7 +43,7 @@ WDL_StringKeyedArray<char *> section_descs;
 WDL_StringKeyedArray< WDL_PtrList<char> * > translations;
 WDL_StringKeyedArray< WDL_StringKeyedArray<bool> * > translations_indexed;
 
-void gotString(const char *str, int len, const char *secname)
+void gotString(const char *str, size_t len, const char *secname)
 {
   WDL_PtrList<char> *sec=translations.Get(secname);
   if (!sec)
@@ -76,9 +76,9 @@ void gotString(const char *str, int len, const char *secname)
   sec2->Insert(buf,true);
   sec->Add(strdup(buf));
 }
-int length_of_quoted_string(char *p, bool convertRCquotesToSlash)
+size_t length_of_quoted_string(char *p, bool convertRCquotesToSlash)
 {
-  int l=0;
+  size_t l=0;
   while (p[l])
   {
     if (convertRCquotesToSlash && p[l] == '\"' && p[l+1] == '\"')  p[l]='\\';
@@ -249,7 +249,7 @@ void processRCfile(FILE *fp, const char *dirprefix)
     {
       if (*second_tok == '"')
       {
-        int l = length_of_quoted_string(second_tok+1,true);
+        size_t l = length_of_quoted_string(second_tok+1,true);
         if (l>0)
         {
           gotString(second_tok+1,l,sname);
@@ -258,7 +258,7 @@ void processRCfile(FILE *fp, const char *dirprefix)
           // note: relies on length_of_quoted_string() pre-conversion above
           if (depth && strstr(sname, "MENU_"))
           {
-            int j=0;
+            size_t j=0;
             char* m=second_tok+1;
             for(;;)
             {
@@ -323,7 +323,7 @@ void processCPPfile(FILE *fp)
           fprintf(stderr,"Error: missing \" on '%s'\n",buf);
           exit(1);
         }
-        int l = length_of_quoted_string(p,false);
+        size_t l = length_of_quoted_string(p,false);
         char *sp = p;
         p+=l+1;
         while (isblank(*p)) p++;
@@ -338,7 +338,7 @@ void processCPPfile(FILE *fp)
           fprintf(stderr,"Error: missing second \" on '%s'\n",buf);
           exit(1);
         }
-        int l2 = length_of_quoted_string(p,false);
+        size_t l2 = length_of_quoted_string(p,false);
         char sec[512];
         memcpy(sec,p,l2);
         sec[l2]=0;
@@ -356,7 +356,7 @@ void processCPPfile(FILE *fp)
       {
         if (*p == '"')
         {
-          int l = length_of_quoted_string(p+1,false);
+          size_t l = length_of_quoted_string(p+1,false);
           if (l >= 7 && !strncmp(p+1,"MM_CTX_",7))
           {
             // ignore MM_CTX_* since these are internal strings
@@ -440,7 +440,7 @@ int main(int argc, char **argv)
       fprintf(stderr,"Error opening %s\n",argv[x]);
       return 1;
     }
-    int alen =strlen(argv[x]);
+    size_t alen = strlen(argv[x]);
     if (alen>3 && !stricmp(argv[x]+alen-3,".rc"))
     {
       WDL_String s(argv[x]);

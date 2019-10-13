@@ -686,7 +686,7 @@ void MoveClosestMarker (COMMAND_T* ct)
 			int markerId;
 			EnumProjectMarkers3(NULL, id, NULL, NULL, NULL, NULL, &markerId, NULL);
 
-			SetProjectMarkerByIndex(NULL, id, NULL, position, NULL, markerId, NULL, NULL);
+			SetProjectMarkerByIndex(NULL, id, false, position, 0, markerId, NULL, 0);
 			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
 		}
 	}

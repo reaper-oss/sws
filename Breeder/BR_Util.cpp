@@ -2471,7 +2471,7 @@ void SetArrangeStart (double start)
 
 	si.nPos = RoundToInt(start * GetHZoomLevel()); // OCD alert: GetSet_ArrangeView2() can sometimes be off for one pixel (probably round vs trunc issue)
 	CoolSB_SetScrollInfo(GetArrangeWnd(), SB_HORZ, &si, true);
-	SendMessage(GetArrangeWnd(), WM_HSCROLL, SB_THUMBPOSITION, NULL);
+	SendMessage(GetArrangeWnd(), WM_HSCROLL, SB_THUMBPOSITION, 0);
 }
 
 void MoveArrangeToTarget (double target, double reference)
@@ -2502,7 +2502,7 @@ void ScrollToTrackIfNotInArrange (MediaTrack* track)
 	{
 		si.nPos = offsetY;
 		CoolSB_SetScrollInfo(hwnd, SB_VERT, &si, true);
-		SendMessage(hwnd, WM_VSCROLL, si.nPos << 16 | SB_THUMBPOSITION, NULL);
+		SendMessage(hwnd, WM_VSCROLL, si.nPos << 16 | SB_THUMBPOSITION, 0);
 	}
 }
 

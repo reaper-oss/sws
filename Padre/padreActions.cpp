@@ -121,7 +121,7 @@ WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				if(i == EnvelopeProcessor::getInstance()->_parameters.envType)
 					SendDlgItemMessage(hwnd,IDC_PADRELFO_TARGET,CB_SETCURSEL,x,0);
 			}
-			SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(IDC_PADRELFO_TARGET, CBN_SELCHANGE), NULL);
+			SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(IDC_PADRELFO_TARGET, CBN_SELCHANGE), 0);
 
 			if(EnvelopeProcessor::getInstance()->_parameters.activeTakeOnly)
 				CheckDlgButton(hwnd, IDC_PADRELFO_ACTIVETAKES, TRUE);
@@ -147,7 +147,7 @@ WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				if(i == EnvelopeProcessor::getInstance()->_parameters.waveParams.freqBeat)
 					SendDlgItemMessage(hwnd,IDC_PADRELFO_SYNCFREQUENCY,CB_SETCURSEL,x,0);
 			}
-			SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(IDC_PADRELFO_SYNCFREQUENCY, CBN_SELCHANGE), NULL);
+			SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(IDC_PADRELFO_SYNCFREQUENCY, CBN_SELCHANGE), 0);
 
 			for(int i=eGRID_OFF; i<eGRID_LAST; i++)
 			{
@@ -158,7 +158,7 @@ WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				if(i == EnvelopeProcessor::getInstance()->_parameters.waveParams.delayBeat)
 					SendDlgItemMessage(hwnd,IDC_PADRELFO_SYNCDELAY,CB_SETCURSEL,x,0);
 			}
-			SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(IDC_PADRELFO_SYNCDELAY, CBN_SELCHANGE), NULL);
+			SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(IDC_PADRELFO_SYNCDELAY, CBN_SELCHANGE), 0);
 
 			char buffer[BUFFER_SIZE];
 
@@ -301,7 +301,7 @@ WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 								break;
 							}
 
-							SendDlgItemMessage(hwnd,IDC_PADRELFO_TIMESEGMENT,CB_RESETCONTENT,0,NULL);
+							SendDlgItemMessage(hwnd,IDC_PADRELFO_TIMESEGMENT,CB_RESETCONTENT,0,0);
 							for(int i=eTIMESEGMENT_TIMESEL; i<eTIMESEGMENT_LAST; i++)
 							{
 								if( (envType == eENVTYPE_TRACK) && (i == eTIMESEGMENT_SELITEM) )
@@ -432,7 +432,7 @@ WDL_DLGRET EnvelopeProcessorDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
 				if(i == EnvelopeProcessor::getInstance()->_envModParams.envType)
 					SendDlgItemMessage(hwnd,IDC_PADREENVPROC_TARGET,CB_SETCURSEL,x,0);
 			}
-			SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(IDC_PADREENVPROC_TARGET, CBN_SELCHANGE), NULL);
+			SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(IDC_PADREENVPROC_TARGET, CBN_SELCHANGE), 0);
 
 			if(EnvelopeProcessor::getInstance()->_envModParams.activeTakeOnly)
 				CheckDlgButton(hwnd, IDC_PADREENVPROC_ACTIVETAKES, TRUE);
@@ -548,7 +548,7 @@ WDL_DLGRET EnvelopeProcessorDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
 								break;
 							}
 
-							SendDlgItemMessage(hwnd,IDC_PADREENVPROC_TIMESEGMENT,CB_RESETCONTENT,0,NULL);
+							SendDlgItemMessage(hwnd,IDC_PADREENVPROC_TIMESEGMENT,CB_RESETCONTENT,0,0);
 							for(int i=eTIMESEGMENT_TIMESEL; i<eTIMESEGMENT_LAST; i++)
 							{
 								if( (envType == eENVTYPE_TRACK) && (i == eTIMESEGMENT_SELITEM) )

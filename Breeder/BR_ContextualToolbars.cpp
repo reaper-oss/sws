@@ -237,7 +237,7 @@ void BR_ContextualToolbar::LoadToolbar (bool exclusive)
 
 				// Set up toolbar window process for various options
 				int toggleAction;
-				this->GetReaperToolbar(this->GetToolbarId(mouseAction), NULL, &toggleAction, NULL, NULL);
+				this->GetReaperToolbar(this->GetToolbarId(mouseAction), NULL, &toggleAction, NULL, 0);
 				this->SetToolbarWndProc(executeOnToolbarLoad, toolbarHwnd, toggleAction, toolbarParent);
 
 				// Continue executing options
@@ -598,7 +598,7 @@ void BR_ContextualToolbar::ImportConfig (const char* contextToolbars, const char
 				mouseAction = DO_NOTHING;
 
 			int toggleAction;
-			this->GetReaperToolbar(this->GetToolbarId(mouseAction), NULL, &toggleAction, NULL, NULL);
+			this->GetReaperToolbar(this->GetToolbarId(mouseAction), NULL, &toggleAction, NULL, 0);
 
 			this->SetMouseAction(context, mouseAction);
 			this->SetToggleAction(context, toggleAction);

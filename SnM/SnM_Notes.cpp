@@ -1655,7 +1655,7 @@ int NotesInit()
 	filePath.SetFormatted(SNM_MAX_PATH, "%s/SWS_Global notes.txt", GetResourcePath());
 	WDL_FileRead infile(filePath.Get(), 0, 65536); // NF: not sure about these params, taken from
 	//https://github.com/justinfrankel/licecap/blob/3721ce33ac72ff05ef89d2e92ca58a0f96164134/WDL/lice/lice_gif.cpp#L130
-	const int infileSize = infile.GetSize();
+	const int infileSize = static_cast<int>(infile.GetSize());
 	if(infileSize >= 0 && g_globalNotes.SetLen(infileSize, true))
 		infile.Read(const_cast<char *>(g_globalNotes.Get()), infileSize);
 	

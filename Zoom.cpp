@@ -73,7 +73,7 @@ void SetHorizPos(HWND hwnd, double dPos, double dRoom = 0.0, double dOffset = 0.
 	if (dOffset)
 		si.nPos -= (int)(dOffset * si.nPage);
 	CoolSB_SetScrollInfo(hwnd, SB_HORZ, &si, true);
-	SendMessage(hwnd, WM_HSCROLL, SB_THUMBPOSITION, NULL);
+	SendMessage(hwnd, WM_HSCROLL, SB_THUMBPOSITION, 0);
 	UpdateTimeline();
 }
 
@@ -108,7 +108,7 @@ void SetVertPos(HWND hwnd, int iTrack, bool bPixels, int iExtra = 0) // 1 based 
 		si.nMax = si.nPage;
 
 	CoolSB_SetScrollInfo(hwnd, SB_VERT, &si, true);
-	SendMessage(hwnd, WM_VSCROLL, si.nPos << 16 | SB_THUMBPOSITION, NULL);
+	SendMessage(hwnd, WM_VSCROLL, si.nPos << 16 | SB_THUMBPOSITION, 0);
 }
 
 void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers, bool includeEnvelopes)
@@ -417,7 +417,7 @@ void HorizScroll(COMMAND_T* ctx)
 	if (si.nPos < 0) si.nPos = 0;
 	else if (si.nPos > si.nMax) si.nPos = si.nMax;
 	CoolSB_SetScrollInfo(hwnd, SB_HORZ, &si, true);
-	SendMessage(hwnd, WM_HSCROLL, SB_THUMBPOSITION, NULL);
+	SendMessage(hwnd, WM_HSCROLL, SB_THUMBPOSITION, 0);
 }
 
 void ZoomToSelItems(COMMAND_T* ct)			{ VertZoomSelItems(0, ct ? (int)ct->user == 0 : false); HorizZoomSelItems(); }

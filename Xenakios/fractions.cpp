@@ -35,7 +35,7 @@ typedef struct t_Notevalue_struct
 
 t_Notevalue_struct g_NoteValues[]=
 {
-	
+
 	{"2",8},
 	{"1",4},
 	{"1/2",2},
@@ -46,7 +46,7 @@ t_Notevalue_struct g_NoteValues[]=
 	{"1/32",1.0/8},
 	{"1/64",1.0/16},
 	{"1/128",1.0/32},
-	{NULL,NULL}
+	{NULL,0}
 
 };
 

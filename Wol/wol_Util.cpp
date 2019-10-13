@@ -171,7 +171,7 @@ void SetArrangeScroll(int offsetY, int height, VerticalZoomCenter center)
 
 	si.nPos = newPos;
 	CoolSB_SetScrollInfo(hwnd, SB_VERT, &si, true);
-	SendMessage(hwnd, WM_VSCROLL, si.nPos << 16 | SB_THUMBPOSITION, NULL);
+	SendMessage(hwnd, WM_VSCROLL, si.nPos << 16 | SB_THUMBPOSITION, 0);
 }
 
 void SetArrangeScrollTo(MediaTrack* track, VerticalZoomCenter center)

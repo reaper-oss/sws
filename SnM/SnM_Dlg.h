@@ -117,7 +117,7 @@ private:
 			switch(_action)
 			{
 				case SCREENSET_ACTION_GETHWND:
-					return wnd ? (LRESULT)wnd->GetHWND() : NULL;
+					return wnd ? (LRESULT)wnd->GetHWND() : 0;
 				case SCREENSET_ACTION_IS_DOCKED:
 					return wnd ? (LRESULT)wnd->IsDocked() : 0;
 				case SCREENSET_ACTION_SWITCH_DOCK:

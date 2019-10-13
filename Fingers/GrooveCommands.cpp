@@ -148,7 +148,7 @@ void GrooveCommands::Init()
 	{
 		{ { DEFACCEL, "SWS/FNG: Apply groove to selected MIDI notes (within 16th)" }, "FNG_ME_APPLY_MIDI_GROOVE_16",  NULL, NULL, 16, NULL, 32060, ApplyGrooveInMidiEditor},
 		{ { DEFACCEL, "SWS/FNG: Apply groove to selected MIDI notes (within 32nd)" }, "FNG_ME_APPLY_MIDI_GROOVE_32",  NULL, NULL, 32, NULL, 32060, ApplyGrooveInMidiEditor},
-		{ { DEFACCEL, "SWS/FNG: Apply selected groove (use curent settings from opened groove tool)" }, "FNG_APPLY_SEL_GROOVE",  NULL, NULL, NULL, NULL, NULL, ApplySelectedGroove},
+		{ { DEFACCEL, "SWS/FNG: Apply selected groove (use curent settings from opened groove tool)" }, "FNG_APPLY_SEL_GROOVE",  NULL, NULL, 0, NULL, 0, ApplySelectedGroove},
 		{ {}, LAST_COMMAND, },
 	};
 	SWSRegisterCommands(g_commandTable);

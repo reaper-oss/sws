@@ -78,7 +78,7 @@ static COMMAND_T s_cmdTable[] =
 
 	// Routing & cue buss -----------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Create cue buss from track selection (use last settings)" }, "S&M_CUEBUS", CueBuss, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Open/close Cue Buss generator" }, "S&M_SENDS4", OpenCueBussDlg, NULL, NULL, IsCueBussDlgDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open/close Cue Buss generator" }, "S&M_SENDS4", OpenCueBussDlg, NULL, 0, IsCueBussDlgDisplayed},
 
 	{ { DEFACCEL, "SWS/S&M: Remove receives from selected tracks" }, "S&M_SENDS5", RemoveReceives, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Remove sends from selected tracks" }, "S&M_SENDS6", RemoveSends, NULL, },
@@ -369,7 +369,7 @@ static COMMAND_T s_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (action help)" }, "S&M_ACTIONHELP", OpenNotes, NULL, SNM_NOTES_ACTION_HELP, IsNotesDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Notes - Set action help file..." }, "S&M_ACTIONHELPPATH", SetActionHelpFilename, NULL, },
 #endif
-	{ { DEFACCEL, "SWS/S&M: Notes - Toggle lock" }, "S&M_ACTIONHELPTGLOCK", ToggleNotesLock, NULL, NULL, IsNotesLocked},
+	{ { DEFACCEL, "SWS/S&M: Notes - Toggle lock" }, "S&M_ACTIONHELPTGLOCK", ToggleNotesLock, NULL, 0, IsNotesLocked},
 	{ { DEFACCEL, "SWS/S&M: Notes - Import subtitle file..." }, "S&M_IMPORT_SUBTITLE", ImportSubTitleFile, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Notes - Export subtitle file..." }, "S&M_EXPORT_SUBTITLE", ExportSubTitleFile, NULL, },
 
@@ -462,12 +462,12 @@ static COMMAND_T s_cmdTable[] =
 
 	// Find -------------------------------------------------------------------
 	//JFB removed default shortcut ctrl+F: more future proof..
-	{ {/*{FCONTROL|FVIRTKEY,'F',0}*/ DEFACCEL, "SWS/S&M: Find" }, "S&M_SHOWFIND", OpenFind, NULL, NULL, IsFindDisplayed},
+	{ {/*{FCONTROL|FVIRTKEY,'F',0}*/ DEFACCEL, "SWS/S&M: Find" }, "S&M_SHOWFIND", OpenFind, NULL, 0, IsFindDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Find next" }, "S&M_FIND_NEXT", FindNextPrev, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Find previous" }, "S&M_FIND_PREVIOUS", FindNextPrev, NULL, -1},
 
 	// Live Configs -----------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Open/close Live Configs window" }, "S&M_SHOWMIDILIVE", OpenLiveConfig, NULL, NULL, IsLiveConfigDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open/close Live Configs window" }, "S&M_SHOWMIDILIVE", OpenLiveConfig, NULL, 0, IsLiveConfigDisplayed},
 
 	// Cyclactions ---------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Open/close Cycle Action editor" }, "S&M_CYCLEDITOR", OpenCyclaction, NULL, 0, IsCyclactionDisplayed},
@@ -479,8 +479,8 @@ static COMMAND_T s_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Map selected tracks MIDI input to source channel" }, "S&M_MAP_MIDI_INPUT_CH_SRC", RemapMIDIInputChannel, NULL, -1},
 
 	// Region playlist --------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Open/close Region Playlist window" }, "S&M_SHOW_RGN_PLAYLIST", OpenRegionPlaylist, NULL, NULL, IsRegionPlaylistDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Region Playlist - Toggle monitoring/edition mode" }, "S&M_TGL_RGN_PLAYLIST_MODE", ToggleRegionPlaylistLock, NULL, NULL, IsRegionPlaylistMonitoring},
+	{ { DEFACCEL, "SWS/S&M: Open/close Region Playlist window" }, "S&M_SHOW_RGN_PLAYLIST", OpenRegionPlaylist, NULL, 0, IsRegionPlaylistDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Region Playlist - Toggle monitoring/edition mode" }, "S&M_TGL_RGN_PLAYLIST_MODE", ToggleRegionPlaylistLock, NULL, 0, IsRegionPlaylistMonitoring},
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Play" }, "S&M_PLAY_RGN_PLAYLIST", PlaylistPlay, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Play previous region (smooth seek)" }, "S&M_PLAY_PREV_RGN_PLAYLIST", PlaylistSeekPrevNext, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Play next region (smooth seek)" }, "S&M_PLAY_NEXT_RGN_PLAYLIST", PlaylistSeekPrevNext, NULL, 1},

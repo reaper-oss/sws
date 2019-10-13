@@ -533,7 +533,7 @@ void AWFillGapsAdv(const char* title, char* retVals)
 						// If gap is big and mark errors is enabled, add a marker
 						if (markErrors == 1)
 						{
-							AddProjectMarker(NULL, false, item1End, NULL, __LOCALIZE("Possible Artifact","sws_DLG_156"), NULL);
+							AddProjectMarker(NULL, false, item1End, 0, __LOCALIZE("Possible Artifact","sws_DLG_156"), 0);
 						}
 
 					}

@@ -41,7 +41,7 @@ int FNG_CountMidiNotes(RprMidiTake* midiTake)
     {
         return midiTake->countNotes();
     }
-    return NULL;
+    return 0;
 }
 
 // Get MIDI note from MIDI take at specified index

@@ -11,6 +11,7 @@ New actions (Main section):
  
 New ReaScript functions:
 +NF_TakeFX_GetModuleName() (take version of already existing BR_TrackFX_GetModuleName())
++NF_ReadID3v2Tag() (request https://forum.cockos.com/showpost.php?p=2175039&postcount=2653|here|)
 
 Fixes:
 +update various BR_ APIs for new TCP/EnvCP/MCP architecture (thanks Justin!) (Issue 1173)

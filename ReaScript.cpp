@@ -298,6 +298,7 @@ APIdef g_apidefs[] =
 	{ APIFUNC(NF_UpdateSWSMarkerRegionSubWindow), "void", "", "", "Redraw the Notes window (call if you've changed a subtitle via <a href=\"NF_SetSWSMarkerRegionSub\">NF_SetSWSMarkerRegionSub</a> which is currently displayed in the Notes window and you want to appear the new subtitle immediately.)", },
 
 	{ APIFUNC(NF_TakeFX_GetModuleName), "bool", "MediaItem*,int,char*,int", "item,fx, nameOut, nameOutSz", "See <a href=\"#BR_TrackFX_GetFXModuleName\">BR_TrackFX_GetFXModuleName</a>. fx: counted consecutively across all takes (zero-based).", },
+	{ APIFUNC(NF_ReadID3v2Tag), "bool", "const char*,const char*,char*,int", "fn,tag,tagval,tagval_sz", "Reads an ID3v2 tag ('text information frame'), works with mp3 only. Supported tags e.g.: \"TBPM\" (BPM), \"TCOP\" (Copyright). For other possibly supported tags see <a href=\"http://id3.org/id3v2.4.0-frames\">id3v2.4.0-frames.txt</a> Returns false if tag was not found.", },
 	// /*** nofish stuff ***
 
 	{ APIFUNC(SN_FocusMIDIEditor), "void", "", "", "Focuses the active/open MIDI editor.", },

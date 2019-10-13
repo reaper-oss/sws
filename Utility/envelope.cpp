@@ -28,12 +28,11 @@
 #include "../reaper/localize.h"
 #include "envelope.hpp"
 
-
 // wraps GetEnvelopeStateChunk() to make it more save
 // until maybe it gets enhanced one day
 // https://forum.cockos.com/showthread.php?p=2142245#post2142245
 // throws envelope::bad_get_env_chunk_big on failure
-std::string envelope::GetEnvelopeStateChunkBig(TrackEnvelope* envelope, bool isUndo /*= false*/)
+std::string envelope::GetEnvelopeStateChunkBig(TrackEnvelope *envelope, bool isUndo /*= false*/)
 {
 	std::string buffer(1024, '\0');
 
@@ -59,7 +58,7 @@ std::string envelope::GetEnvelopeStateChunkBig(TrackEnvelope* envelope, bool isU
 		try {
 			buffer.resize(buffer.size() * 2);
 		}
-		catch (const std::bad_alloc) {
+		catch (const std::bad_alloc &) {
 			throw bad_get_env_chunk_big(__LOCALIZE("std::bad_alloc thrown.", "sws_mbox"));
 		}
 	}

@@ -25,16 +25,15 @@
 ******************************************************************************/
 
 #pragma once
+
 #include <stdexcept>
 
 namespace envelope
 {
-std::string GetEnvelopeStateChunkBig(TrackEnvelope* envelope, bool isUndo = false);
+std::string GetEnvelopeStateChunkBig(TrackEnvelope *, bool isUndo = false);
 
 class bad_get_env_chunk_big : public std::runtime_error {
 public:
 	using runtime_error::runtime_error;
 };
 }
-
-

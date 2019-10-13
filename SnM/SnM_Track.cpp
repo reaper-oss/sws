@@ -1434,7 +1434,7 @@ public:
       memset(block->samples,0,block->length*block->nch*sizeof(double));
       for (int x = 0; x < 16; x ++)
       {
-        MIDI_event_t e={0, 3, (unsigned char)(0xb0 + x), };
+        MIDI_event_t e={0, 3, {static_cast<unsigned char>(0xb0 + x)}};
         if (m_flags&1)
         {
           e.midi_message[1]=64;

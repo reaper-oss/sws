@@ -540,7 +540,7 @@ void ProcessCommand(CONSOLE_COMMAND command, const char* args)
 				if (strchr(args, 'r'))
 					i |= 512;
 				else if (strchr(args, 'm'))
-					i += 4096 | (63 << 5) + 1;
+					i += 4096 | ((63 << 5) + 1);
 				GetSetMediaTrackInfo(pMt, "I_RECINPUT", &i);
 				break;
 			case COLOR_SET:

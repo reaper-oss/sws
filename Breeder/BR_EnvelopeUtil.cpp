@@ -1478,7 +1478,7 @@ bool BR_Envelope::Commit (bool force /*=false*/)
 			}
 
 			// Delete excess points
-			int currentCount = CountEnvelopePoints(m_envelope);
+			size_t currentCount = CountEnvelopePoints(m_envelope);
 			if (currentCount > m_points.size())
 			{
 				double startTime, endTime;
@@ -1501,7 +1501,7 @@ bool BR_Envelope::Commit (bool force /*=false*/)
 				double position = m_points[i].position * playrate;
 				SetEnvelopePoint(m_envelope, i, &position, &value, &m_points[i].shape, &m_points[i].bezier, &m_points[i].selected, &g_bTrue);
 			}
-			for (int i = currentCount; i < m_points.size(); ++i)
+			for (size_t i = currentCount; i < m_points.size(); ++i)
 			{
 				double value = (m_properties.faderMode != 0) ? ScaleToEnvelopeMode(m_properties.faderMode, m_points[i].value) : m_points[i].value;
 				double position = m_points[i].position * playrate;

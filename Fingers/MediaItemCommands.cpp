@@ -284,8 +284,8 @@ void CmdPitchUpMidi::doCommand(int flag)
         return;
 
     for(int i = 0; i < ctr->size(); i++) {
-    if (!ctr->getAt(i).getActiveTake().isMIDI())
-        continue;
+        if (!ctr->getAt(i).getActiveTake().isMIDI())
+            continue;
         RprMidiTake midiItem(ctr->getAt(i).getActiveTake());
         for(int j = 0; j < midiItem.countNotes(); j++) {
             RprMidiNote *note = midiItem.getNoteAt(j);
@@ -363,8 +363,8 @@ void CmdVelChangeMidi::doCommand(int flag)
         return;
 
     for(int i = 0; i < ctr->size(); i++) {
-    if (!ctr->getAt(i).getActiveTake().isMIDI())
-        continue;
+        if (!ctr->getAt(i).getActiveTake().isMIDI())
+            continue;
         RprMidiTake midiItem(ctr->getAt(i).getActiveTake());
         for(int j = 0; j < midiItem.countNotes(); j++) {
             RprMidiNote *note = midiItem.getNoteAt(j);

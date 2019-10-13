@@ -561,7 +561,7 @@ void ItemPreview(int mode, MediaItem* item, MediaTrack* track, double volume, do
 
 			// Pause before preview otherwise ItemPreviewPlayState will stop it
 			g_itemPreviewPaused = pauseDuringPrev;
-			if (g_itemPreviewPaused && (GetPlayStateEx(NULL)&1) == 1 && (GetPlayStateEx(NULL)&2) != 1)
+			if (g_itemPreviewPaused && GetPlayState() & 1)
 				OnPauseButton();
 
 			if (g_ItemPreview.preview_track)

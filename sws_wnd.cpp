@@ -1924,8 +1924,8 @@ bool ListView_HookThemeColorsMessage(HWND hwndDlg, int uMsg, LPARAM lParam, int 
 // From Justin: "this should likely go into WDL"
 void DrawTooltipForPoint(LICE_IBitmap *bm, POINT mousePt, RECT *wndr, const char *text)
 {
-  if (!bm || !text || !text[0])
-	return;
+	if (!bm || !text || !text[0])
+		return;
 
 	static LICE_CachedFont tmpfont;
 	if (!tmpfont.GetHFont())

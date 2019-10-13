@@ -720,8 +720,7 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTakeLfo(MediaItem_Take* 
 	try {
 		envStateStr = envelope::GetEnvelopeStateChunkBig(envelope);
 	}
-	catch (envelope::bad_get_env_chunk_big) {
-
+	catch (const envelope::bad_get_env_chunk_big &) {
 		return eERRORCODE_NOOBJSTATE;
 	}
 	

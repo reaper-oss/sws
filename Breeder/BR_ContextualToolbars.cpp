@@ -937,7 +937,7 @@ int BR_ContextualToolbar::FindArrangeToolbar (BR_MouseInfo& mouseInfo, BR_Contex
 		}
 	}
 	// Envelope (take and track)
-	else if (!strcmp(mouseInfo.GetSegment(), "envelope") || (!strcmp(mouseInfo.GetSegment(), "track") && (!strcmp(mouseInfo.GetDetails(), "env_point")) || (!strcmp(mouseInfo.GetDetails(), "env_segment"))))
+	else if (!strcmp(mouseInfo.GetSegment(), "envelope") || ((!strcmp(mouseInfo.GetSegment(), "track") && (!strcmp(mouseInfo.GetDetails(), "env_point"))) || (!strcmp(mouseInfo.GetDetails(), "env_segment"))))
 	{
 		if (mouseInfo.IsTakeEnvelope())
 		{

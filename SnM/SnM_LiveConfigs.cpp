@@ -178,7 +178,7 @@ void UpdatePresetConf(WDL_FastString* _presetConf, int _fx, const char* _preset)
 		char fxBuf[32]="";
 		if (snprintfStrict(fxBuf, sizeof(fxBuf), "FX%d:", _fx) > 0)
 		{
-			for (int i=0; i < lp.getnumtokens(); i++)
+			for (int i=0; i < lp.getnumtokens(); i += 2)
 			{
 				if (!strcmp(lp.gettoken_str(i), fxBuf))
 				{
@@ -208,7 +208,6 @@ void UpdatePresetConf(WDL_FastString* _presetConf, int _fx, const char* _preset)
 						newConf.Append(escStr.Get());
 					}
 				}
-				i++; // skip next token
 			}
 		}
 

@@ -278,7 +278,6 @@ void DoItemCueTransform(bool donextcue, int ToCueIndex, bool PreserveItemLen=fal
 
 						int CurrentCueIndex=0;
 						double MediaOffset=*(double*)GetSetMediaItemTakeInfo(CurTake,"D_STARTOFFS",NULL);
-						MediaOffset=MediaOffset;
 						for (int idiot=0;idiot<(int)VecItemCues.size();idiot++)
 						{
 							if (MediaOffset>=VecItemCues[idiot].StartTime && MediaOffset<VecItemCues[idiot].EndTime)

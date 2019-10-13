@@ -727,8 +727,11 @@ int GetLoopCount (MediaItem_Take* take, double position, int* loopIterationForPo
 				double sourceLenPPQ  = GetMidiSourceLengthPPQ(take, true);
 				double itemLenPPQ = itemEndPPQ; // gotcha: the same cause PPQ starts counting from 0 from item start, making it mover obvious this way
 
-				loopCount = (int)(itemLenPPQ/sourceLenPPQ);
-				loopCount += (abs(fmod(itemLenPPQ, sourceLenPPQ) == 0) ? (-1) : (0)); // fmod works great here because ppq are always rounded to whole numbers
+				loopCount = static_cast<int>(itemLenPPQ / sourceLenPPQ);
+
+				// fmod works great here because ppq are always rounded to whole numbers
+				if(fmod(itemLenPPQ, sourceLenPPQ) == 0)
+					loopCount--;
 
 				if (loopIterationForPosition && CheckBounds(position, itemStart, itemEnd))
 				{

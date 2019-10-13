@@ -68,7 +68,7 @@ static void ConvertMarkersToTempo (int markers, int num, int den, bool removeMar
 			MessageBox(g_hwndParent, __LOCALIZE("Not enough project markers in the time selection to perform conversion.", "sws_DLG_166"), __LOCALIZE("SWS/BR - Error", "sws_mbox"), MB_OK);
 		else
 			MessageBox(g_hwndParent, __LOCALIZE("Not enough project markers in the project to perform conversion.", "sws_DLG_166"), __LOCALIZE("SWS/BR - Error", "sws_mbox"), MB_OK);
-			return;
+		return;
 	}
 
 	if (CountTempoTimeSigMarkers(NULL) > 0)
@@ -1203,7 +1203,7 @@ WDL_DLGRET SelectAdjustTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			snprintf(eNum,      sizeof(eNum),      "%d", num);
 			snprintf(eDen,      sizeof(eDen),      "%d", den);
 
-			double effBpmCursor = effBpmCursor = TempoAtPosition(GetCursorPositionEx(NULL));
+			double effBpmCursor = TempoAtPosition(GetCursorPositionEx(NULL));
 			char bpmCursor[128];
 			snprintf(bpmCursor, sizeof(bpmCursor), "%.6g", effBpmCursor);
 

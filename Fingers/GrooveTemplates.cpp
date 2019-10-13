@@ -567,7 +567,7 @@ bool GrooveTemplateHandler::LoadGroove(std::string &fileName, std::string &error
             return false;
         }
     }
-    catch (std::ifstream::failure e)
+    catch (std::ifstream::failure &)
     {
                 errorMessage = __LOCALIZE("Error reading file","sws_mbox");
         return false;

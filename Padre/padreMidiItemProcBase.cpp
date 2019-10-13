@@ -240,36 +240,22 @@ void MidiItemProcessor::getSelectedMidiNotes(MediaItem* item, MIDI_eventlist* ev
 	char* state = GetSetObjectState(item, NULL);
 //ShowConsoleMsg(state);
 	int iTicksPerQuarterNote = 960;
-	int iHasData = 0;
 	int iCurrentTick = 0;
 	int iTranspose = 0;
-	int iIgnoreTempo = 0;
-	double dIgnTempoBpm = 0.0;
-	int iIgnTempoNum = 0;
-	int iIgnTempoDenum = 0;
 
 	int tmpi[4];
-	double tmpd[4];
 	char* token = strtok(state, "\n");
 	while(token != NULL)
 	{
 		if(sscanf(token, "HASDATA %d %d QN\n", &tmpi[0], &tmpi[1]) == 2)
 		{
-			iHasData = tmpi[0];
+			// iHasData = tmpi[0];
 			iTicksPerQuarterNote = tmpi[1];
 		}
 
 		else if(sscanf(token, "TRANSPOSE %d\n", &tmpi[0]) == 1)
 		{
 			iTranspose = tmpi[0];
-		}
-
-		else if(sscanf(token, "IGNTEMPO %d %lf %d %d\n", &tmpi[0], &tmpd[0], &tmpi[1], &tmpi[2]) == 4)
-		{
-			iIgnoreTempo = tmpi[0];
-			dIgnTempoBpm = tmpd[0];
-			iIgnTempoNum = tmpi[1];
-			iIgnTempoDenum = tmpi[2];
 		}
 
 		token = strtok(NULL, "\n");

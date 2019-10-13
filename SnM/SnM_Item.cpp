@@ -423,14 +423,13 @@ bool SplitSelectItemsInInterval(const char* _undoTitle, double _pos1, double _po
 void SplitSelectAllItemsInRegion(COMMAND_T* _ct)
 {
 	double cursorPos = GetCursorPositionEx(NULL);
-	int x=0, lastx=0; double dPos, dEnd; bool isRgn;
+	int x=0; double dPos, dEnd; bool isRgn;
 	while ((x = EnumProjectMarkers2(NULL, x, &isRgn, &dPos, &dEnd, NULL, NULL)))
 	{
 		if (isRgn && cursorPos >= dPos && cursorPos <= dEnd) {
 			SplitSelectItemsInInterval(SWS_CMD_SHORTNAME(_ct), dPos, dEnd);
 			return;
 		}
-		lastx=x;
 	}
 }
 

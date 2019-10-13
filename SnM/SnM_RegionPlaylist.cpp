@@ -1766,6 +1766,7 @@ void AppendPasteCropPlaylist(RegionPlaylist* _playlist, const AppendPasteCropPla
 		{"env_reduce",    2}, // add edge points
 		{"projgroupover", 1}, // disable item grouping
 	};
+	(void)options;
 
 	WDL_PtrList_DeleteOnDestroy<MarkerRegion> rgns;
 	for (int i=0; i < _playlist->GetSize(); i++)

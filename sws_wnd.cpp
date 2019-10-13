@@ -1317,6 +1317,8 @@ void SWS_ListView::Update()
 		// Fixes a grid line redraw glitch when removing items, eek
 		if (SWS_THEMING && bRemovedItems)
 			InvalidateRect(GetHWND(), NULL, TRUE);
+#else
+		(void)bRemovedItems;
 #endif
 
 		m_bDisableUpdates = false;

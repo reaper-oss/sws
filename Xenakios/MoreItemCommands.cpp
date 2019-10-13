@@ -1210,19 +1210,11 @@ void DoShuffleItemOrder(COMMAND_T* ct)
 	XenGetProjectItems(theitems,true,true);
 	vector<double> origtimes;
 	int i;
-	double prevtime=0.0;
 	vector<t_itemorderstruct> vec_yeah;
-	t_itemorderstruct uh;
 	for (i=0;i<(int)theitems.size();i++)
 	{
 		double itempos=*(double*)GetSetMediaItemInfo(theitems[i],"D_POSITION",0);
 		origtimes.push_back(itempos);
-		double deltatime=itempos-prevtime;
-		uh.deltatimepos=deltatime;
-		uh.timepos=itempos;
-		uh.pitem=theitems[i];
-		//vec_yeah.push_back(uh);
-		prevtime=itempos;
 	}
 	MediaItem* pItem=0;
 	i=0;

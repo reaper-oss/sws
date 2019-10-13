@@ -98,11 +98,10 @@ nParamIndex(0)
     RprStateChunk chunk(GetSetObjectState(m_env, ""));
     const char *pEnv = chunk.get();
 
-    int status;
     const char *envPtr = pEnv;
     char title[256];
 
-    status = sscanf(envPtr, "<%s %d %lf %lf %lf", (char*)&title, &nParamIndex, &dParamMin,
+    sscanf(envPtr, "<%s %d %lf %lf %lf", (char*)&title, &nParamIndex, &dParamMin,
         &dParamMax, &dNeutralVal);
 
     m_szTitle = title;
@@ -119,7 +118,7 @@ nParamIndex(0)
         dParamMin = -1.0;
     }
     
-	if (m_szTitle.find("PLAYSPEEDENV") != std::string::npos)
+    if (m_szTitle.find("PLAYSPEEDENV") != std::string::npos)
     {
         dParamMax = 4.0;
         dParamMin = 0.1;
@@ -137,7 +136,7 @@ nParamIndex(0)
         return;
     }
 
-    status = sscanf(envPtr, "ACT %d", &nActive);
+    sscanf(envPtr, "ACT %d", &nActive);
 
     envPtr = strchr(envPtr, '\n') + 1;
 
@@ -146,7 +145,7 @@ nParamIndex(0)
         return;
     }
 
-    status = sscanf(envPtr, "VIS %d %d %lf", &nVisible, &nAutomationInLane, &dVISUnknown);
+    sscanf(envPtr, "VIS %d %d %lf", &nVisible, &nAutomationInLane, &dVISUnknown);
 
     envPtr = strchr(envPtr, '\n') + 1;
     if (envPtr[0] == '\0')
@@ -154,7 +153,7 @@ nParamIndex(0)
         return;
     }
 
-    status = sscanf(envPtr, "LANEHEIGHT %d %d", &nLaneHeight, &nLHUnknown);
+    sscanf(envPtr, "LANEHEIGHT %d %d", &nLaneHeight, &nLHUnknown);
 
     envPtr = strchr(envPtr, '\n') + 1;
     if(envPtr[0] == '\0')
@@ -162,7 +161,7 @@ nParamIndex(0)
         return;
     }
 
-    status = sscanf(envPtr, "ARM %d", &nArm);
+    sscanf(envPtr, "ARM %d", &nArm);
 
     envPtr = strchr(envPtr, '\n') + 1;
     if(envPtr[0] == '\0')
@@ -170,7 +169,7 @@ nParamIndex(0)
         return;
     }
 
-    status = sscanf(envPtr, "DEFSHAPE %d", &nDefaultShape);
+    sscanf(envPtr, "DEFSHAPE %d", &nDefaultShape);
 
     envPtr = strchr(envPtr, '\n') + 1;
 

@@ -653,17 +653,8 @@ WDL_DLGRET ProjMediaDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 				SNM_ThemeListView(GetDlgItem(hwnd,IDC_PROJFOLMEDLIST));
 			}
 
-			RECT r;
-			r.left=10;
-			r.right=300;
-			r.top=50;
-			r.bottom=300;
 			resizer.init(hwnd);
 			//resizer.init_item(IDOK,0.0,1.0,0.0f,1.0f);
-			r.left=10;
-			r.right=20;
-			r.top=5;
-			r.bottom=60;
 
 			//SendMessage(GetDlgItem(hwnd,IDC_SHOWUNUS),WM_CHANGEUISTATE,
 			//SetParent(GetDlgItem(hwnd,IDC_SHOWUNUS), GetDlgItem(hwnd,IDC_GROUP2));

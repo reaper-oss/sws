@@ -49,6 +49,7 @@ Fixes:
 +fix pasting region playlists containing grouped items (Issue 1118)
 +fix media item preview through track when transport is paused (Issue 1189)
 +fix wrong point values when using envelope-related actions with fader scaling mode (regression from 2.10.0, report https://forum.cockos.com/showthread.php?p=2094872|here|)
++Fix empty list cells leading to misaligned columns on Linux (Issue 1147)
 
 Other changes:
 +added Linux ARM builds (32-bit and 64-bit)

@@ -373,8 +373,7 @@ void RegionPlaylistView::OnItemClk(SWS_ListItem* item, int iCol, int iKeyState)
 	if (RgnPlaylistItem* pItem = (RgnPlaylistItem*)item)
 	{
 		if (g_optionFlags&2)
-			if (RgnPlaylistItem* pItem = (RgnPlaylistItem*)item)
-				SetEditCurPos2(NULL, pItem->GetPos(), true, false); // move edit curdor, seek done below
+			SetEditCurPos2(NULL, pItem->GetPos(), true, false); // move edit curdor, seek done below
 
 		// do not use PERFORM_MSG here: depends on play state in this case
 		if ((g_optionFlags&1) && GetPlaylist() && (GetPlayState()&1))

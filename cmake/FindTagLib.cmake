@@ -30,6 +30,16 @@ else()
   set(CMAKE_POLICY_DEFAULT_CMP0069 NEW)
   add_subdirectory(${TagLib_SOURCE_DIR} EXCLUDE_FROM_ALL)
 
+  mark_as_advanced(
+    # TagLib options
+    BUILD_SHARED_LIBS ENABLE_STATIC_RUNTIME ENABLE_CCACHE VISIBILITY_HIDDEN
+    BUILD_TESTS BUILD_EXAMPLES BUILD_BINDINGS NO_ITUNES_HACKS
+
+    # Cached variables
+    BUILD_FRAMEWORK TRACE_IN_RELEASE EXEC_INSTALL_PREFIX LIB_SUFFIX
+    BIN_INSTALL_DIR LIB_INSTALL_DIR INCLUDE_INSTALL_DIR FRAMEWORK_INSTALL_DIR
+  )
+
   # TagLib does not export its CMake targets, so we must do it ourselves.
   set(TagLib_INCLUDE_DIR "${TagLib_SOURCE_DIR}/taglib/toolkit") # path to taglib.h
 
@@ -66,14 +76,12 @@ find_package_handle_standard_args(TagLib
   VERSION_VAR   TagLib_VERSION
 )
 
-if(TagLib_FOUND AND NOT TARGET TagLib::TagLib)
-  if(TagLib_SOURCE_DIR)
-    add_library(TagLib::TagLib ALIAS tag)
-  else()
-    add_library(TagLib::TagLib UNKNOWN IMPORTED)
-    set_target_properties(TagLib::TagLib PROPERTIES
-      IMPORTED_LOCATION             "${TagLib_LIBRARY}"
-      INTERFACE_INCLUDE_DIRECTORIES "${TagLib_INCLUDE_DIR}"
-    )
-  endif()
+if(TagLib_SOURCE_DIR)
+  add_library(TagLib::TagLib ALIAS tag)
+else()
+  add_library(TagLib::TagLib UNKNOWN IMPORTED)
+  set_target_properties(TagLib::TagLib PROPERTIES
+    IMPORTED_LOCATION             "${TagLib_LIBRARY}"
+    INTERFACE_INCLUDE_DIRECTORIES "${TagLib_INCLUDE_DIR}"
+  )
 endif()

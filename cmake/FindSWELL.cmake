@@ -22,6 +22,7 @@ add_library(swell
 
 if(APPLE)
   find_library(APPKIT AppKit)
+  mark_as_advanced(APPKIT)
   target_link_libraries(swell PUBLIC ${APPKIT})
 endif()
 

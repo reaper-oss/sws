@@ -32,6 +32,7 @@
 #include "SnM_Track.h"
 #include "SnM_Util.h"
 #include "WDL/projectcontext.h"
+#include "../reaper/localize.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -597,6 +598,18 @@ void RemoveAllEnvsSelTracks(COMMAND_T* _ct)
 
 void RemoveAllEnvsSelTracksNoChunk(COMMAND_T* _ct)
 {
+	// #1175
+	bool prompt = GetPrivateProfileInt("Misc", "RemoveAllEnvsSelTracksPrompt", 0, g_SNM_IniFn.Get()) ? true : false;
+	if (prompt && SNM_CountSelectedTracks(NULL, true)) 
+	{
+		int r = MessageBox(GetMainHwnd(),
+			__LOCALIZE("All envelopes for selected tracks will be removed.\nDo you want to continue?", "sws_DLG_155"),
+			__LOCALIZE("S&M - Question", "sws_DLG_155"),
+			MB_OKCANCEL);
+		if (r == IDCANCEL)
+			return;
+	}
+
 	bool updated = false;
 	TrackEnvelope *tempoEnv = NULL;
 
@@ -715,7 +728,7 @@ bool MakeSingleTrackTemplateChunk(WDL_FastString* _in, WDL_FastString* _out, boo
 		SNM_ChunkParserPatcher pin(_in);
 		if (pin.GetSubChunk("TRACK", 1, _tmpltIdx, _out) >= 0)
 		{
-			int* offsOpt = _obeyOffset ? (int*)GetConfigVar("templateditcursor") : NULL; // >= REAPER v4.15
+			const int offsOpt = _obeyOffset ? ConfigVar<int>("templateditcursor").value_or(0) : 0; // >= REAPER v4.15
 
 			// remove receives from the template as we deal with a single track
 			// note: possible with multiple tracks in a same template file (w/ routings between those tracks)
@@ -724,14 +737,14 @@ bool MakeSingleTrackTemplateChunk(WDL_FastString* _in, WDL_FastString* _out, boo
 
 			if (_delItems) // remove items from template (in one go)
 				pout.RemoveSubChunk("ITEM", 2, -1);
-			else if (offsOpt && *offsOpt) { // or offset them if needed
+			else if (offsOpt) { // or offset them if needed
 				double add = GetCursorPositionEx(NULL);
 				pout.ParsePatch(SNM_D_ADD, 2, "ITEM", "POSITION", -1, 1, &add);
 			}
 
 			if (_delEnvs) // remove all envs from template (in one go)
 				pout.RemoveEnvelopes();
-			else if (offsOpt && *offsOpt) // or offset them if needed
+			else if (offsOpt) // or offset them if needed
 				pout.OffsetEnvelopes(GetCursorPositionEx(NULL));
 			return true;
 		}
@@ -782,8 +795,7 @@ bool ReplacePasteItemsFromTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmpltI
 			WDL_FastString tmpltItems(_tmpltItems); // do not alter _tmpltItems!
 
 			// offset items if needed
-			int* offsOpt = (int*)GetConfigVar("templateditcursor"); // >= REAPER v4.15
-			if (offsOpt && *offsOpt)
+			if (ConfigVar<int>("templateeditcursor").value_or(0)) // >= REAPER v4.15
 			{
 				double add = GetCursorPositionEx(NULL);
 				SNM_ChunkParserPatcher pitems(&tmpltItems);
@@ -1277,7 +1289,7 @@ bool SNM_PlayTrackPreview(MediaTrack* _tr, PCM_source* _src, bool _pause, bool _
 
 		// go!
 		g_playPreviews.Add(prev);
-		ok = (PlayTrackPreview2Ex(NULL, prev, 1, _msi>0.0? _msi:0.0) != 0);
+		ok = (PlayTrackPreview2Ex(NULL, prev, !!_msi, _msi) != 0);
 	}
 	return ok;
 }

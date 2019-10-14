@@ -140,6 +140,7 @@ public:
 	bool IsInLane ();
 	bool IsArmed ();
 	bool IsScaledToFader ();
+	int GetAIoptions();
 	int GetLaneHeight ();
 	int GetDefaultShape ();
 	int GetFxId ();    // Returns -1 if not FX envelope
@@ -153,6 +154,7 @@ public:
 
 	/* Set envelope properties */
 	void SetActive (bool active);
+	void SetAIoptions (int AIoptions);
 	void SetVisible (bool visible);
 	void SetInLane (bool lane);
 	void SetArmed (bool armed);
@@ -170,7 +172,7 @@ private:
 	};
 	struct EnvProperties
 	{
-		int active;
+		int active, AIoptions; // automation items options, second ACT token in track env. chunk
 		int visible, lane, visUnknown;
 		int height, heightUnknown;
 		int armed;
@@ -219,8 +221,8 @@ private:
 		EnvPoint (double position, double value, int shape, int sig, bool selected, int partial, double bezier);
 		explicit EnvPoint (double position);
 		bool operator==(const EnvPoint &) const;
-		bool ReadLine (const LineParser& lp, double playrate, int faderMode); // use only once per object (for efficiency, tempoStr is never deleted, only appended too)
-		void Append (WDL_FastString& string, bool tempoPoint, double playrate, int faderMode);
+		bool ReadLine (const LineParser& lp); // use only once per object (for efficiency, tempoStr is never deleted, only appended too)
+		void Append (WDL_FastString& string, bool tempoPoint);
 		struct ComparePoints
 		{
 			bool operator() (const EnvPoint& first, const EnvPoint& second)
@@ -272,7 +274,7 @@ TrackEnvelope* GetTakeEnv (MediaItem_Take* take, BR_EnvType envelope);
 MediaItem_Take* GetTakeEnvParent (TrackEnvelope* envelope, BR_EnvType* type);
 MediaTrack* GetEnvParent (TrackEnvelope* envelope);
 vector<int> GetSelPoints (TrackEnvelope* envelope);
-WDL_FastString ConstructReceiveEnv (BR_EnvType type, double firstPointValue, bool hardwareSend, bool addNewLinePrefix = true);
+WDL_FastString ConstructReceiveEnv (BR_EnvType type, double firstPointValue, bool hardwareSend);
 bool ToggleShowSendEnvelope (MediaTrack* track, int sendId, BR_EnvType type);
 bool ShowSendEnvelopes (vector<MediaTrack*>& tracks, BR_EnvType envelopeTypes);
 bool EnvVis (TrackEnvelope* envelope, bool* lane);

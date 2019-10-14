@@ -214,7 +214,7 @@ void CompressExpandPoints::doCommand(int flag)
 
     double m = m_dGradientFactor * (m_dAmount - 1) * (pN - p0);
 
-    if (envelope.IsTempo() && *(int*)GetConfigVar("tempoenvtimelock") == 1)
+    if (envelope.IsTempo() && *ConfigVar<int>("tempoenvtimelock") == 1)
     {
         double t0, b0; int s0;
         envelope.GetPoint(0, &t0, &b0, &s0, NULL);

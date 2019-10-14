@@ -280,8 +280,8 @@ static bool MoveGridInit (COMMAND_T* ct, bool init)
 	bool initSuccessful = true;
 	if (init)
 	{
-		int projgridframe; GetConfig("projgridframe", projgridframe);
-		if (((int)ct->user == 1 || (int)ct->user == 2) && projgridframe > 0)
+		const int projgridframe = ConfigVar<int>("projgridframe").value_or(0);
+		if (((int)ct->user == 1 || (int)ct->user == 2) && projgridframe&1) // frames grid line spacing
 		{
 			initSuccessful = false;
 			static bool s_warnUser = true;
@@ -294,15 +294,16 @@ static bool MoveGridInit (COMMAND_T* ct, bool init)
 		}
 		else
 		{
-			GetConfig("undomask", s_editCursorUndo);
+			ConfigVar<int> undomask("undomask");
+			s_editCursorUndo = undomask.value_or(0);
 			initSuccessful = PositionAtMouseCursor(true) != -1;
 			if (initSuccessful)
-				SetConfig("undomask", ClearBit(s_editCursorUndo, 3));
+				undomask.try_set(ClearBit(s_editCursorUndo, 3));
 		}
 	}
 	else
 	{
-		SetConfig("undomask", s_editCursorUndo);
+		ConfigVar<int>("undomask").try_set(s_editCursorUndo);
 		delete g_moveGridTempoMap;
 		g_moveGridTempoMap = NULL;
 	}
@@ -475,9 +476,10 @@ void MoveGridToEditPlayCursor (COMMAND_T* ct)
 	BR_Envelope tempoMap(GetTempoEnv());
 
 	// Prevent play cursor from jumping
-	int seekmodes; GetConfig("seekmodes", seekmodes);
+	ConfigVar<int> seekmodes("seekmodes");
+	const int originalSeekmodes = seekmodes.value_or(0);
 	if ((int)ct->user == 1 || (int)ct->user == 3)
-		SetConfig("seekmodes", ClearBit(seekmodes, 5));
+		seekmodes.try_set(ClearBit(originalSeekmodes, 5));
 
 	// Find closest grid
 	double grid = 0;
@@ -530,7 +532,7 @@ void MoveGridToEditPlayCursor (COMMAND_T* ct)
 		RemoveTempoMap();
 
 	PreventUIRefresh(-1);
-	SetConfig("seekmodes", seekmodes);
+	seekmodes.try_set(originalSeekmodes);
 }
 
 void MoveTempo (COMMAND_T* ct)
@@ -1179,7 +1181,7 @@ void DeleteTempoPreserveItems (COMMAND_T* ct)
 	}
 
 	// Readjust unselected tempo markers if needed
-	int timeBase; GetConfig("tempoenvtimelock", timeBase);
+	const int timeBase = ConfigVar<int>("tempoenvtimelock").value_or(0);
 	if (timeBase != 0)
 	{
 		double offset = 0;
@@ -1293,8 +1295,8 @@ void SelectMovePartialTimeSig (COMMAND_T* ct)
 {
 	PreventUIRefresh(1);
 
-	int tempoTimeBase; GetConfig("tempoenvtimelock", tempoTimeBase); // always work with tempo timbase beats
-	SetConfig("tempoenvtimelock", 1);                                // when running these actions
+	// always work with tempo timbase beats when running these actions
+	ConfigVarOverride<int> tempoTimeBase("tempoenvtimelock", 1);
 
 	bool update = false;
 	BR_Envelope tempoMap(GetTempoEnv());
@@ -1359,7 +1361,6 @@ void SelectMovePartialTimeSig (COMMAND_T* ct)
 		}
 	}
 
-	SetConfig("tempoenvtimelock", tempoTimeBase);
 	if (tempoMap.Commit() || update)
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 
@@ -1617,11 +1618,11 @@ void ConvertMarkersToTempoDialog (COMMAND_T* ct)
 	{
 		// Detect timebase
 		bool cancel = false;
-		int timebase; GetConfig("itemtimelock", timebase);
-		if (timebase)
+		ConfigVar<int> timebase("itemtimelock");
+		if (timebase && *timebase != 0)
 		{
 			int answer = MessageBox(g_hwndParent, __LOCALIZE("Project timebase is not set to time. Do you want to set it now?","sws_DLG_166"), __LOCALIZE("SWS/BR - Warning", "sws_mbox"), MB_YESNOCANCEL);
-			if      (answer == 6) SetConfig("itemtimelock", 0);
+			if      (answer == 6) *timebase = 0;
 			else if (answer == 2) cancel = true;
 		}
 

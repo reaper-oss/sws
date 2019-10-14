@@ -432,19 +432,18 @@ bool SNM_RemoveReceivesFrom(MediaTrack* _tr, MediaTrack* _srcTr)
 int g_defSndFlags = -1;
 
 void SaveDefaultTrackSendPrefs(COMMAND_T*) {
-	if (int* flags = (int*)GetConfigVar("defsendflag"))
+	if (const ConfigVar<int> flags = "defsendflag")
 		g_defSndFlags = *flags;
 }
 
 void RecallDefaultTrackSendPrefs(COMMAND_T*) {
 	if (g_defSndFlags>=0)
-		if (int* flags = (int*)GetConfigVar("defsendflag"))
-			*flags = g_defSndFlags;
+		ConfigVar<int>("defsendflag").try_set(g_defSndFlags);
 }
 
 // flags != _ct->user because of the weird state of midi+audio which is not 0x300 but 0 (!)
 void SetDefaultTrackSendPrefs(COMMAND_T* _ct) {
-	if (int* flags = (int*)GetConfigVar("defsendflag")) {
+	if (ConfigVar<int> flags = "defsendflag") {
 		switch((int)_ct->user) {
 			case 0: *flags&=0xFF; break; // both
 			case 1: *flags&=0xF0FF; *flags|=0x100; break; // audio

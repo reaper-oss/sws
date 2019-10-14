@@ -28,6 +28,7 @@
 #include "stdafx.h"
 #include "../SnM/SnM_Dlg.h"	
 #include "../reaper/localize.h"
+#include "../SnM/SnM_Util.h" // SNM_DeletePeakFile()
 
 using namespace std;
 
@@ -161,6 +162,9 @@ void DoRenameSourceFileDialog666(COMMAND_T* ct)
 							{
 								GetSetMediaItemTakeInfo(alltakes[j],"P_SOURCE",newsrc);
 								delete thesrc;
+
+								// delete old .reapeaks file, #1140
+								SNM_DeletePeakFile(oldname.c_str(), true); // no delete check (peaks files can be absent) 
 							}
 						}
 					}
@@ -210,7 +214,13 @@ void DoRenameTakeAndSourceFileDialog(COMMAND_T* ct)
 					string newfilename;
 					newfilename.append(fnsplit[0]);
 					newfilename.append(g_renameparams.NewName);
-					newfilename.append(fnsplit[2]);
+
+					// only append file extension if not already contained in new filename, #1140
+					vector<string> newfnsplit;
+					SplitFileNameComponents(newfilename, newfnsplit);
+					if (newfnsplit[2].compare(fnsplit[2])!=0)
+						newfilename.append(fnsplit[2]);
+
 					MoveFile(oldname.c_str(),newfilename.c_str());
 					AddToRenameLog(oldname,newfilename);
 
@@ -229,6 +239,8 @@ void DoRenameTakeAndSourceFileDialog(COMMAND_T* ct)
 									GetSetMediaItemTakeInfo(alltakes[j],"P_SOURCE",newsrc);
 									GetSetMediaItemTakeInfo(alltakes[j],"P_NAME",(char*)g_renameparams.NewName.c_str());
 									delete thesrc;
+
+									SNM_DeletePeakFile(oldname.c_str(), true); // no delete check (peaks files can be absent)
 								}
 							}
 						}

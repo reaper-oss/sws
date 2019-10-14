@@ -1,9 +1,8 @@
 cmake_minimum_required(VERSION 3.13)
 project(sws LANGUAGES C CXX)
 
-option(BUILD_SWS_PYTHON "Generate sws_python(32|64).py (requires Perl)" ON)
-option(SYSTEM_TAGLIB    "Try to use the system-provided TagLib first"   ON)
-option(USE_TAGLIB       "Link with TagLib to enable tagging features"   ON)
+option(BUILD_SWS_PYTHON  "Generate sws_python(32|64).py (requires Perl)" ON)
+option(USE_SYSTEM_TAGLIB "Link against the system-provided TagLib"       OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
@@ -140,6 +139,7 @@ add_library(sws SHARED
   sws_waitdlg.cpp
   sws_wnd.cpp
   Utility/Base64.cpp
+  Utility/envelope.cpp
   Zoom.cpp
 )
 
@@ -157,10 +157,11 @@ target_include_directories(sws PRIVATE
   ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-find_package(WDL REQUIRED)
-find_package(LICE REQUIRED)
 find_package(JNetLib REQUIRED)
-target_link_libraries(sws JNetLib::JNetLib LICE::LICE WDL::WDL)
+find_package(LICE REQUIRED)
+find_package(TagLib REQUIRED)
+find_package(WDL REQUIRED)
+target_link_libraries(sws JNetLib::JNetLib LICE::LICE TagLib::TagLib WDL::WDL)
 
 find_package(SWELL)
 if(SWELL_FOUND)
@@ -175,16 +176,6 @@ if(SWELL_FOUND)
     DEPENDS ${SWELL_RESGEN}
     MAIN_DEPENDENCY sws_extension.rc
   )
-endif()
-
-if(USE_TAGLIB)
-  find_package(TagLib)
-endif()
-
-if(TagLib_FOUND)
-  target_link_libraries(sws TagLib::TagLib)
-else()
-  target_compile_definitions(sws PRIVATE NO_TAGLIB)
 endif()
 
 if(APPLE)
@@ -343,3 +334,4 @@ set(CPACK_NSIS_CPUBITS ${CPUBITS})
 include(CPack)
 
 configure_file(version.h.in version.h)
+configure_file(version.rc2.in version.rc2)

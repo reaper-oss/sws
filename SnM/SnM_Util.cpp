@@ -166,6 +166,16 @@ bool SNM_DeleteFile(const char* _filename, bool _recycleBin)
 	return ok;
 }
 
+bool SNM_DeletePeakFile(const char* _fn, bool _recycleBin)
+{
+	char peakFn[SNM_MAX_PATH] = "";
+	GetPeakFileName(_fn, peakFn, sizeof(peakFn));
+	if (*peakFn != '\0')
+		return SNM_DeleteFile(peakFn, _recycleBin);
+
+	return false;	
+}
+
 bool SNM_CopyFile(const char* _destFn, const char* _srcFn)
 {
 	bool ok = false;
@@ -1162,6 +1172,14 @@ bool GetSectionURL(bool _alr, KbdSectionInfo* _section, char* _sectionURL, int _
 		lstrcpyn(_sectionURL, __localizeFunc(_section->name,"accel_sec",0), _sectionURLSize);
 	}
 	return true;
+}
+
+bool IsTakePolarityFlipped(MediaItem_Take* take)
+{
+	if (*(double*)GetSetMediaItemTakeInfo(take, "D_VOL", NULL) < 0.0)
+		return true;
+	else
+		return false;
 }
 
 

@@ -110,8 +110,7 @@ static MediaItem_Take* GetTakeFromItemY (MediaItem* item, int itemY, MediaTrack*
 	MediaItem_Take* take = NULL;
 	WritePtr(takeId, -1);
 
-	int takeLanes;
-	GetConfig("projtakelane", takeLanes);
+	const int takeLanes = ConfigVar<int>("projtakelane").value_or(0);
 
 	// Take lanes displayed
 	if (GetBit(takeLanes, 0))
@@ -393,7 +392,7 @@ MediaTrack* TrackAtMouseCursor (int* context, double* position)
 
 	// Check TCP/MCP
 	int tcp;
-	track = HwndToTrack(hwnd, &tcp);
+	track = HwndToTrack(hwnd, &tcp, p);
 	if (track)
 		trackContext = (tcp == 1) ? (0) : (1);
 
@@ -550,7 +549,7 @@ bool BR_MouseInfo::SetDetectedCCLaneAsLastClicked ()
 		{
 			POINT point = m_ccLaneClickPoint;
 
-			int lockSettings; GetConfig("projsellock", lockSettings);
+			const int lockSettings = ConfigVar<int>("projsellock").value_or(0);
 			char itemLock = m_mouseInfo.inlineMidi ? (char)GetMediaItemInfo_Value(GetMediaItemTake_Item(m_mouseInfo.take), "C_LOCK") : 0;
 
 			// Get HWND and update point if needed
@@ -578,7 +577,7 @@ bool BR_MouseInfo::SetDetectedCCLaneAsLastClicked ()
 				}
 				else
 				{
-					SetConfig("projsellock", 23492); // lock item edges, fades, volume handles, stretch markers, item movement, take and track envelopes
+					ConfigVar<int>("projsellock").try_set(23492); // lock item edges, fades, volume handles, stretch markers, item movement, take and track envelopes
 					SetMediaItemInfo_Value(GetMediaItemTake_Item(m_mouseInfo.take), "C_LOCK", 0);
 				}
 			}
@@ -593,7 +592,7 @@ bool BR_MouseInfo::SetDetectedCCLaneAsLastClicked ()
 				SimulateMouseClick(hwnd, point, true);
 				if (m_mouseInfo.inlineMidi)
 				{
-					SetConfig("projsellock", lockSettings);
+					ConfigVar<int>("projsellock").try_set(lockSettings);
 					SetMediaItemInfo_Value(GetMediaItemTake_Item(m_mouseInfo.take), "C_LOCK", (double)itemLock);
 				}
 				update = true;
@@ -685,13 +684,13 @@ void BR_MouseInfo::GetContext (const POINT& p)
 		if (!found && ((m_mode & BR_MouseInfo::MODE_ALL) || (m_mode & BR_MouseInfo::MODE_MCP_TCP)))
 		{
 			int context;
-			if ((mouseInfo.track = HwndToTrack(hwnd, &context)))
+			if ((mouseInfo.track = HwndToTrack(hwnd, &context, p)))
 			{
 				mouseInfo.window = (context == 1) ? "tcp" : "mcp";
 				mouseInfo.segment = "track";
 				found = true;
 			}
-			else if ((mouseInfo.envelope = HwndToEnvelope(hwnd)))
+			else if ((mouseInfo.envelope = HwndToEnvelope(hwnd, p)))
 			{
 				mouseInfo.window = "tcp";
 				mouseInfo.segment = "envelope";
@@ -1344,7 +1343,7 @@ int BR_MouseInfo::IsMouseOverEnvelopeLineTrackLane (MediaTrack* track, int track
 	if (envLaneCount > 0)
 	{
 		int overlapLimit,trackGapTop, trackGapBottom;
-		GetConfig("env_ol_minh", overlapLimit);
+		overlapLimit = ConfigVar<int>("env_ol_minh").value_or(0);
 		GetTrackGap(trackHeight, &trackGapTop, &trackGapBottom);
 
 		int envLaneFull = trackHeight - trackGapTop - trackGapBottom;
@@ -1422,8 +1421,7 @@ int BR_MouseInfo::IsMouseOverEnvelopeLineTake (MediaItem_Take* take, int takeHei
 	int envelopeCount = (int)envelopes.size();
 	if (envelopeCount > 0)
 	{
-		int overlapLimit;
-		GetConfig("env_ol_minh", overlapLimit);
+		const int overlapLimit = ConfigVar<int>("env_ol_minh").value_or(0);
 		bool envelopesOverlapping = (overlapLimit >= 0 && takeHeight / envelopeCount < overlapLimit) ? (true) : (false);
 
 		// Each envelope has it's own lane, find the right one
@@ -1550,45 +1548,84 @@ void BR_MouseInfo::GetTrackOrEnvelopeFromY (int y, TrackEnvelope** _envelope, Me
 		bool yInTrack = (y < elementOffset + elementHeight) ? true : false;
 
 		// Get first envelope's lane hwnd and cycle through the rest
-		HWND hwnd = ::GetWindow(GetTcpTrackWnd(track), GW_HWNDNEXT);
-		MediaTrack* nextTrack = CSurf_TrackFromID(1 + CSurf_TrackToID(track, false), false);
-		while (true)
+		HWND hwnd = NULL;
+		MediaTrack* nextTrack = NULL;
+		if (!GetEnvelopeInfo_Value)
 		{
-			if (!nextTrack || GetMediaTrackInfo_Value(nextTrack, "B_SHOWINTCP"))
-				break;
-			else
-				nextTrack = CSurf_TrackFromID(1 + CSurf_TrackToID(nextTrack, false), false);
+			// legacy - REAPER v5.981 and earlier
+			bool is_container;
+			hwnd = ::GetWindow(GetTcpTrackWnd(track, is_container), GW_HWNDNEXT);
+			nextTrack = CSurf_TrackFromID(1 + CSurf_TrackToID(track, false), false);
+			while (true)
+			{
+				if (!nextTrack || GetMediaTrackInfo_Value(nextTrack, "B_SHOWINTCP"))
+					break;
+				else
+					nextTrack = CSurf_TrackFromID(1 + CSurf_TrackToID(nextTrack, false), false);
+			}
 		}
 
 		int count = CountTrackEnvelopes(track);
 		for (int i = 0; i < count; ++i)
 		{
-			LONG_PTR hwndData = GetWindowLongPtr(hwnd, GWLP_USERDATA);
-			if ((MediaTrack*)hwndData == nextTrack)
-				break;
+			TrackEnvelope *env = NULL;
+			if (GetEnvelopeInfo_Value)
+			{
+				env = GetTrackEnvelope(track,i);
+
+				if (GetEnvelopeInfo_Value(env,"I_TCPH") < 1.0) continue;
+				if (GetEnvelopeInfo_Value(env,"I_TCPY") < elementHeight) continue; // does not have an envcp
+
+			}
+			else
+			{
+				// legacy - REAPER v5.981 and earlier
+				LONG_PTR hwndData = GetWindowLongPtr(hwnd, GWLP_USERDATA);
+				if ((MediaTrack*)hwndData == nextTrack)
+					break;
+				env = (TrackEnvelope *)hwndData;
+			}
 
 			if (yInTrack)
 			{
 				if (envelopes)
-					envelopes->push_back((TrackEnvelope*)hwndData);
+					envelopes->push_back(env);
 			}
 			else
 			{
-				RECT r; GetClientRect(hwnd, &r);
-				int envHeight = r.bottom - r.top;
-				int envId = GetEnvId((TrackEnvelope*)hwndData, track);
+				int envHeight, envId;
+				if (GetEnvelopeInfo_Value)
+				{
+					envHeight = (int) GetEnvelopeInfo_Value(env,"I_TCPH");
+					envId = i;
+				}
+				else
+				{
+					// legacy - REAPER v5.981 and earlier
+					RECT r; GetClientRect(hwnd, &r);
+					envHeight = r.bottom - r.top;
+					envId = GetEnvId(env, track);
+				}
 				envHeights.push_back(make_pair(envHeight, envId));
 			}
 
-			hwnd = ::GetWindow(hwnd, GW_HWNDNEXT);
-			if (!hwnd)
-				break;
+			if (!GetEnvelopeInfo_Value)
+			{
+				// legacy - REAPER v5.981 and earlier
+				hwnd = ::GetWindow(hwnd, GW_HWNDNEXT);
+				if (!hwnd)
+					break;
+			}
 		}
 
 		if (!yInTrack)
 		{
-			// Envelopes hwnds don't have to be in order they are drawn so need to sort them by id before searching
-			std::sort(envHeights.begin(), envHeights.end(), BR_MouseInfo::SortEnvHeightsById);
+			if (!GetEnvelopeInfo_Value)
+			{
+				// legacy - REAPER v5.981 and earlier
+				// Envelopes hwnds don't have to be in order they are drawn so need to sort them by id before searching
+				std::sort(envHeights.begin(), envHeights.end(), BR_MouseInfo::SortEnvHeightsById);
+			}
 			int envelopeStart = elementOffset + elementHeight;
 			for (size_t i = 0; i < envHeights.size(); ++i)
 			{

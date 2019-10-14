@@ -275,7 +275,7 @@ int GetTrackVis(MediaTrack* tr) // &1 == mcp, &2 == tcp
 {
 	int iTrack = CSurf_TrackToID(tr, false);
 	if (iTrack == 0)
-		return *(int*)GetConfigVar("showmaintrack") ? 3 : 1; // For now, always return master vis in MCP
+		return *ConfigVar<int>("showmaintrack") ? 3 : 1; // For now, always return master vis in MCP
 	else if (iTrack < 0)
 		return 0;
 
@@ -289,7 +289,7 @@ void SetTrackVis(MediaTrack* tr, int vis) // &1 == mcp, &2 == tcp
 	int iTrack = CSurf_TrackToID(tr, false);
 	if (iTrack == 0)
 	{	// TODO - obey master in mcp
-		if ((vis & 2) != (*(int*)GetConfigVar("showmaintrack") ? 2 : 0))
+		if ((vis & 2) != (*ConfigVar<int>("showmaintrack") ? 2 : 0))
 			Main_OnCommand(40075, 0);
 	}
 	else if (iTrack > 0)
@@ -300,21 +300,6 @@ void SetTrackVis(MediaTrack* tr, int vis) // &1 == mcp, &2 == tcp
 			GetSetMediaTrackInfo(tr, "B_SHOWINMIXER", vis & 1 ? &g_bTrue : &g_bFalse);
 		}
 	}
-}
-
-void* GetConfigVar(const char* cVar)
-{
-	int sztmp;
-	void* p = NULL;
-	if (int iOffset = projectconfig_var_getoffs(cVar, &sztmp))
-	{
-		p = projectconfig_var_addr(EnumProjects(-1, NULL, 0), iOffset);
-	}
-	else
-	{
-		p = get_config_var(cVar, &sztmp);
-	}
-	return p;
 }
 
 HWND GetTrackWnd()
@@ -506,21 +491,6 @@ bool SWS_IsWindow(HWND hwnd)
 	//   Maybe could replace with return hwnd != NULL;
 	return (bool)IsWindow(hwnd) ? true : (DockIsChildOfDock(hwnd, NULL) != -1);
 #endif
-}
-
-bool SWS_IsTrackHeightLocked(MediaTrack* track)
-{
-	// NF: REAPER version check and chunk parsing could be removed when REAPER 5.95+ becomes required for SWS
-	if (g_runningReaVer >= 5.95)
-		return *(bool*)GetSetMediaTrackInfo(track, "B_HEIGHTLOCK", NULL);
-	
-	char state[2] = "0";
-	SNM_ChunkParserPatcher p(track);
-	p.SetWantsMinimalState(true);
-	if (p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKHEIGHT", 0, 3, state, NULL, "MAINSEND") > 0)
-		return !strcmp(state, "1");
-
-	return false;
 }
 
 // Localization

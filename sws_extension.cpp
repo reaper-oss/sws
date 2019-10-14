@@ -712,6 +712,7 @@ error:
 		IMPAPI(CountActionShortcuts);
 		IMPAPI(CountAutomationItems);
 		IMPAPI(CountEnvelopePoints); // v5pre4+
+		IMPAPI(CountEnvelopePointsEx) // v5.40+
 		IMPAPI(CountMediaItems); // O(N): should be banned from the extension, ideally -- don't use it in loops, at least
 		IMPAPI(CountProjectMarkers);
 		IMPAPI(CountSelectedMediaItems); // O(MN): should be banned from the extension, ideally -- don't use it in loops, at least
@@ -741,6 +742,7 @@ error:
 		IMPAPI(CSurf_TrackToID);
 		IMPAPI(DB2SLIDER);
 		IMPAPI(DeleteEnvelopePointRange); // v5pre5+
+		IMPAPI(DeleteEnvelopePointRangeEx); // v5.4pre3+
 		IMPAPI(DeleteActionShortcut);
 		IMPAPI(DeleteProjectMarker);
 		IMPAPI(DeleteProjectMarkerByIndex);
@@ -765,6 +767,7 @@ error:
 		IMPAPI(EnumProjects);
 		IMPAPI(Envelope_Evaluate); // v5pre4+
 		IMPAPI(Envelope_SortPoints); // v5pre4+
+		IMPAPI(Envelope_SortPointsEx) // v5.4pre3+
 		IMPAPI(file_exists);
 		IMPAPI(format_timestr);
 		IMPAPI(format_timestr_pos);
@@ -787,7 +790,9 @@ error:
 		IMPAPI(GetCursorPositionEx);
 		IMPAPI(GetEnvelopeName);
 		IMPAPI(GetEnvelopePoint); // v5pre4
-		IMPAPI(GetEnvelopePointByTime) // v5pre4
+		IMPAPI(GetEnvelopePointEx); // v5.40+
+		IMPAPI(GetEnvelopePointByTime); // v5pre4
+		IMPAPI(GetEnvelopePointByTimeEx); // v5.40+
 		IMPAPI(GetEnvelopeScalingMode); // v5pre13+
 		IMPAPI(GetEnvelopeStateChunk);
 		IMPAPI(GetExePath);
@@ -856,6 +861,7 @@ error:
 		IMPAPI(GetSetProjectNotes); // v5.15pre1+
 		IMPAPI(GetSetRepeat);
 		IMPAPI(GetSetTrackGroupMembership); // v5.21pre5+
+		IMPAPI(GetSetTrackGroupMembershipHigh); // v5.70+
 		IMPAPI(GetTempoTimeSigMarker);
 		IMPAPI(GetTakeEnvelopeByName);
 		IMPAPI(GetTakeName);
@@ -897,6 +903,7 @@ error:
 		IMPAPI(InsertAutomationItem);
 		IMPAPI(InsertMedia);
 		IMPAPI(InsertEnvelopePoint); // v5pre4+
+		IMPAPI(InsertEnvelopePointEx); // v5.4pre3+
 		IMPAPI(InsertTrackAtIndex);
 		IMPAPI(IsMediaExtension);
 		IMPAPI(IsMediaItemSelected);
@@ -982,6 +989,7 @@ error:
 		IMPAPI(PreventUIRefresh);
 		IMPAPI(projectconfig_var_addr);
 		IMPAPI(projectconfig_var_getoffs);
+		IMPAPI(realloc_cmd_ptr); // v5.965+
 		IMPAPI(RefreshToolbar);
 		IMPAPI(RefreshToolbar2); // v5pre8+
 #ifdef _WIN32
@@ -1006,6 +1014,7 @@ error:
 		IMPAPI(SetEditCurPos);
 		IMPAPI(SetEditCurPos2);
 		IMPAPI(SetEnvelopePoint); // v5pre4+
+		IMPAPI(SetEnvelopePointEx) // v5.40pre3
 		IMPAPI(SetEnvelopeStateChunk);
 		IMPAPI(SetGlobalAutomationOverride);
 		IMPAPI(SetMasterTrackVisibility);
@@ -1045,6 +1054,8 @@ error:
 		IMPAPI(TakeFX_GetChainVisible);
 		IMPAPI(TakeFX_GetCount);
 		IMPAPI(TakeFX_GetFloatingWindow);
+		IMPAPI(TakeFX_GetOffline); // v5.95+
+		IMPAPI(TakeFX_SetOffline); // v5.95+
 		IMPAPI(TakeFX_SetOpen);
 		IMPAPI(TakeFX_Show);
 		IMPAPI(TakeIsMIDI);
@@ -1079,6 +1090,8 @@ error:
 		IMPAPI(TrackFX_GetPresetIndex);
 		IMPAPI(TrackFX_GetUserPresetFilename); // v5.15pre1+
 		IMPAPI(TrackFX_NavigatePresets);
+		IMPAPI(TrackFX_GetOffline); // v5.95+
+		IMPAPI(TrackFX_SetOffline); // v5.95+
 		IMPAPI(TrackFX_SetEnabled);
 		IMPAPI(TrackFX_SetOpen);
 		IMPAPI(TrackFX_SetParam);
@@ -1116,8 +1129,7 @@ error:
 		}
 
 		// Optional API functions (check for NULL if using!) 
-		IMPAP_OPT(GetSetTrackGroupMembershipHigh); // v5.70+
-		IMPAP_OPT(TrackFX_GetOffline); // v5.95+
+		IMPAP_OPT(GetEnvelopeInfo_Value); // 5.982+
 
 		// Look for SWS dupe/clone
 		if (rec->GetFunc("SNM_GetIntConfigVar"))

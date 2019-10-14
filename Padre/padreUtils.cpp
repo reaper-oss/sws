@@ -230,34 +230,6 @@ double EnvSignalProcessorFade(double dPos, double dLength, double dStrength, boo
 		return pow(((dLength - dPos)/dLength), dStrength);
 }
 
-char* PadresGetEnvelopeState(TrackEnvelope* envelope)
-{
-	//! \note GetSetObjectState() does not work for take envelopes
-	// While loop shamelessly stolen from SWS! :)
-	if(!envelope)
-		return NULL;
-
-	char* envState = NULL;
-	int iEnvStateMaxSize = 65536;
-	int iEnvStateSize = 256;
-	while(true)
-	{
-		envState = (char*)realloc(envState, iEnvStateSize);
-		envState[0] = 0;
-		bool bRes = GetSetEnvelopeState(envelope, envState, iEnvStateSize);
-		if(bRes && (strlen(envState)!=iEnvStateSize-1))
-			break;
-		if (!bRes || (iEnvStateSize>=iEnvStateMaxSize))
-		{
-			free(envState);
-			return NULL;
-		}
-		iEnvStateSize *= 2;
-	}
-	return envState;
-
-}
-
 void ShowConsoleMsgEx(const char* format, ...)
 {
 	va_list args;
@@ -309,7 +281,7 @@ void GetTimeSegmentPositions(TimeSegment timeSegment, double &dStartPos, double 
 			dEndPos = GetCursorPositionEx(0);
 			//Main_OnCommandEx(ID_GOTO_PROJECT_START, 0, 0);
 			//dStartPos = GetCursorPositionEx(0);
-			dStartPos = *(int*)GetConfigVar("projtimeoffs");
+			dStartPos = *ConfigVar<int>("projtimeoffs");
 			bRefreshCurPos = true;
 		break;
 		//case eTIMESEGMENT_CURRENTMEASURE:

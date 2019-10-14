@@ -90,7 +90,7 @@ static void ConvertMarkersToTempo (int markers, int num, int den, bool removeMar
 			if (position > markerPositions.back())
 			{
 				// When tempo envelope timebase is time, these tempo markers can't be moved so there is no need to warn user
-				int timeBase; GetConfig("tempoenvtimelock", timeBase);
+				const int timeBase = ConfigVar<int>("tempoenvtimelock").value_or(0);
 				if (timeBase == 0)
 					break;
 				else
@@ -708,7 +708,7 @@ static void AdjustTempo (int mode, double bpm, int shape)
 	*/
 
 	BR_Envelope tempoMap(GetTempoEnv());
-	int timeBase; GetConfig("tempoenvtimelock", timeBase);
+	const int timeBase = ConfigVar<int>("tempoenvtimelock").value_or(0);
 
 	double prevOldTime  = 0;
 	double prevOldBpm   = 0;
@@ -1486,7 +1486,7 @@ WDL_DLGRET SelectAdjustTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 static void SetRandomTempo (HWND hwnd, BR_Envelope* oldTempo, double min, double max, int unit, double minLimit, double maxLimit, int unitLimit, int limit)
 {
 	BR_Envelope tempoMap = *oldTempo;
-	int timeBase; GetConfig("tempoenvtimelock", timeBase); // TEMPO MARKERS timebase (not project timebase)
+	const int timeBase = ConfigVar<int>("tempoenvtimelock").value_or(0); // TEMPO MARKERS timebase (not project timebase)
 
 	// Hold value for previous point
 	double t0, b0;
@@ -1603,8 +1603,10 @@ WDL_DLGRET RandomizeTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 			s_oldTempo = new (nothrow) BR_Envelope(GetTempoEnv());
 
 			// Save and set preferences
-			GetConfig("undomask", s_undoMask);
-			SetConfig("undomask", ClearBit(s_undoMask, 3));                // turn off undo for edit cursor
+			if(ConfigVar<int> undomask = "undomask") {
+				s_undoMask = *undomask;
+				*undomask = ClearBit(s_undoMask, 3); // turn off undo for edit cursor
+			}
 
 			// Drop lists
 			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_BR_RAND_UNIT));
@@ -1713,7 +1715,7 @@ WDL_DLGRET RandomizeTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 				case IDOK:
 				{
-					SetConfig("undomask", s_undoMask); // treat undo behavior of edit cursor per user preference
+					ConfigVar<int>("undomask").try_set(s_undoMask); // treat undo behavior of edit cursor per user preference
 					Undo_OnStateChangeEx2(NULL, __LOCALIZE("Randomize selected tempo markers", "sws_undo"), UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);
 					EndDialog(hwnd, 0);
 				}
@@ -1737,7 +1739,7 @@ WDL_DLGRET RandomizeTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 			SaveWindowPos(hwnd, RAND_WND);
 
 			// Restore preferences
-			SetConfig("undomask", s_undoMask);
+			ConfigVar<int>("undomask").try_set(s_undoMask);
 		}
 		break;
 	}

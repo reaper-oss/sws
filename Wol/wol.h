@@ -1,7 +1,7 @@
 /******************************************************************************
 / wol.h
 /
-/ Copyright (c) 2014-2015 wol
+/ Copyright (c) 2014 and later wol
 / http://forum.cockos.com/member.php?u=70153
 / http://github.com/reaper-oss/sws
 /

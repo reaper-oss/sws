@@ -191,9 +191,9 @@ static void MidiTakePreview (int mode, MediaItem_Take* take, MediaTrack* track, 
 				OnPauseButton();
 
 			if (g_ItemPreview.preview_track)
-				g_itemPreviewPlaying = !!PlayTrackPreview2Ex(NULL, &g_ItemPreview, 1, measureSync);
+				g_itemPreviewPlaying = !!PlayTrackPreview2Ex(NULL, &g_ItemPreview, !!measureSync, measureSync);
 			else
-				g_itemPreviewPlaying = !!PlayPreviewEx(&g_ItemPreview, 1, measureSync);
+				g_itemPreviewPlaying = !!PlayPreviewEx(&g_ItemPreview, !!measureSync, measureSync);
 
 			if (g_itemPreviewPlaying)
 			{
@@ -1031,7 +1031,7 @@ void ME_EnvPointsToCC (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd
 				bool beatsTimebase = (midiEditor.GetTimebase() == PROJECT_BEATS || midiEditor.GetTimebase() == SOURCE_BEATS);
 
 				double stepSize = 0;
-				int midiCcDensity; GetConfig("midiccdensity", midiCcDensity);
+				const int midiCcDensity = ConfigVar<int>("midiccdensity").value_or(0);
 				if (midiCcDensity > 0)
 				{
 					stepSize = (double)midiEditor.GetPPQ() / (double)midiCcDensity;

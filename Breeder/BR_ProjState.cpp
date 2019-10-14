@@ -622,7 +622,7 @@ bool BR_MidiCCEvents::Restore (BR_MidiEditor& midiEditor, int lane, bool allVisi
 			if (!loopedItem)
 			{
 				// Extend item if needed
-				int midiVu; GetConfig("midivu", midiVu);
+				const int midiVu = ConfigVar<int>("midivu").value_or(0);
 				if (GetBit(midiVu, 14))
 				{
 					double itemStart = GetMediaItemInfo_Value(item, "D_POSITION");

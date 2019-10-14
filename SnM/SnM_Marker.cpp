@@ -77,9 +77,9 @@ int UpdateMarkerRegionCache()
 		g_mkrRgnCache.Delete(j, true);
 	}
 	// project time mode update?
-	static int sPrevTimemode = *(int*)GetConfigVar("projtimemode");
+	static int sPrevTimemode = *ConfigVar<int>("projtimemode");
 	if (updateFlags != (SNM_MARKER_MASK|SNM_REGION_MASK))
-		if (int* timemode = (int*)GetConfigVar("projtimemode"))
+		if (const ConfigVar<int> timemode = "projtimemode")
 			if (*timemode != sPrevTimemode) {
 				sPrevTimemode = *timemode;
 				return SNM_MARKER_MASK|SNM_REGION_MASK;
@@ -313,8 +313,8 @@ bool GotoMarkerRegion(ReaProject* _proj, int _num, int _flags, bool _select = fa
 			if (_select && isrgn && (_flags&SNM_REGION_MASK))
 				GetSet_LoopTimeRange2(NULL, true, true, &pos, &end, false); // seek is managed below
 
-			int* opt = (int*)GetConfigVar("smoothseek"); // obeys smooth seek
-			SetEditCurPos2(_proj, pos, true, opt && *opt); // includes an undo point, if enabled in prefs
+			const int opt = ConfigVar<int>("smoothseek").value_or(0); // obeys smooth seek
+			SetEditCurPos2(_proj, pos, true, opt); // includes an undo point, if enabled in prefs
 
 			PreventUIRefresh(-1);
 

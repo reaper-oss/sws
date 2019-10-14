@@ -2,18 +2,24 @@ if(TagLib_FOUND)
   return()
 endif()
 
-if(SYSTEM_TAGLIB)
+if(USE_SYSTEM_TAGLIB)
   find_path(TagLib_INCLUDE_DIR NAMES taglib.h PATH_SUFFIXES taglib)
   find_library(TagLib_LIBRARY tag)
   mark_as_advanced(TagLib_INCLUDE_DIR TagLib_LIBRARY)
-endif()
-
-# Build TagLib from source
-if(NOT TagLib_INCLUDE_DIR)
+else()
   set(TagLib_SOURCE_DIR "${CMAKE_SOURCE_DIR}/vendor/taglib")
-endif()
 
-if(TagLib_SOURCE_DIR AND EXISTS "${TagLib_SOURCE_DIR}/CMakeLists.txt")
+  if(NOT EXISTS "${TagLib_SOURCE_DIR}/CMakeLists.txt")
+    message(FATAL_ERROR
+      "TagLib cannnot be found in ${TagLib_SOURCE_DIR}.\n"
+
+      "Run the following command to fetch TagLib and build from source "
+      "or set -DUSE_SYSTEM_TAGLIB=ON to use the system library:\n"
+
+      "git submodule update --init vendor/taglib"
+    )
+  endif()
+
   set(BUILD_BINDINGS OFF CACHE BOOL "Build TagLib C bindings")
 
   # Prevent TagLib from attempting to link against boost (v1.11.1 and older)

@@ -37,13 +37,12 @@ using namespace std;
 int *ShuffledNumbers;
 int ShuffledNumbersGenerated=0;
 
-int IsRippleOneTrack(COMMAND_T*) { return *(int*)GetConfigVar("projripedit") == 1; }
-int IsRippleAll(COMMAND_T*)      { return *(int*)GetConfigVar("projripedit") == 2; }
+int IsRippleOneTrack(COMMAND_T*) { return *ConfigVar<int>("projripedit") == 1; }
+int IsRippleAll(COMMAND_T*)      { return *ConfigVar<int>("projripedit") == 2; }
 
 void DoToggleRippleOneTrack(COMMAND_T*)
 {
-	int* ripplemode = (int*)GetConfigVar("projripedit");
-	if (ripplemode)
+	if (const ConfigVar<int> ripplemode = "projripedit")
 	{
 		if (*ripplemode == 1)
 			Main_OnCommand(40309, 0);
@@ -54,8 +53,7 @@ void DoToggleRippleOneTrack(COMMAND_T*)
 
 void DoToggleRippleAll(COMMAND_T*)
 {
-	int* ripplemode = (int*)GetConfigVar("projripedit");
-	if (ripplemode)
+	if (const ConfigVar<int> ripplemode = "projripedit")
 	{
 		if (*ripplemode == 2)
 			Main_OnCommand(40309, 0);
@@ -412,16 +410,16 @@ void DoPlayItemsOnce(COMMAND_T*)
 
 void DoMoveCurNextTransMinusFade(COMMAND_T*)
 {
-	int sz=0; double *defFadeLen = (double *)get_config_var("deffadelen",&sz);
+	const double defFadeLen = *ConfigVar<double>("deffadelen");
 	static double prevCurPos = -666.0;
 	double CurPos=GetCursorPosition();
 	if (CurPos==prevCurPos)
 	{
-		CurPos=GetCursorPosition()+*defFadeLen;
+		CurPos=GetCursorPosition()+defFadeLen;
 		SetEditCurPos(CurPos,false,false);
 	}
 	Main_OnCommand(40375,0);
-	CurPos=GetCursorPosition()-*defFadeLen;
+	CurPos=GetCursorPosition()-defFadeLen;
 	SetEditCurPos(CurPos,false,false);
 	prevCurPos=CurPos;
 }
@@ -571,10 +569,10 @@ void ItemPreview(int mode, MediaItem* item, MediaTrack* track, double volume, do
 				if (isMidi)
 					g_itemPreviewSendCC123 = true;
 				g_itemPreviewProject = EnumProjects(-1, NULL, 0);
-				g_itemPreviewPlaying = !!PlayTrackPreview2Ex(g_itemPreviewProject, &g_ItemPreview, 1, measureSync);
+				g_itemPreviewPlaying = !!PlayTrackPreview2Ex(g_itemPreviewProject, &g_ItemPreview, !!measureSync, measureSync);
 			}
 			else
-				g_itemPreviewPlaying = !!PlayPreviewEx(&g_ItemPreview, 1, measureSync);
+				g_itemPreviewPlaying = !!PlayPreviewEx(&g_ItemPreview, !!measureSync, measureSync);
 
 			if (g_itemPreviewPlaying)
 				plugin_register("timer",(void*)ItemPreviewTimer);
@@ -669,10 +667,7 @@ void DoRenameMarkersWithAscendingNumbers(COMMAND_T* ct)
 
 void DoSetStopAtEndOfTimeSel(int enabled) // -1 toggle 0 unset 1 set
 {
-	// stopendofloop
-	int sz=0;
-	int *stopatend = (int *)get_config_var("stopendofloop",&sz);
-	if (stopatend)
+	if (ConfigVar<int> stopatend = "stopendofloop")
 	{
 		if (enabled==-1)
 		{
@@ -686,7 +681,7 @@ void DoSetStopAtEndOfTimeSel(int enabled) // -1 toggle 0 unset 1 set
 	}
 }
 
-int IsStopAtEndOfTimeSel(COMMAND_T*) { return *(int*)GetConfigVar("stopendofloop") ? true : false; }
+int IsStopAtEndOfTimeSel(COMMAND_T*) { return *ConfigVar<int>("stopendofloop") ? true : false; }
 
 void DoToggleSTopAtEndOfTimeSel(COMMAND_T*)
 {

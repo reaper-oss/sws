@@ -840,27 +840,13 @@ bool CycleTracksAndFXs(int _trStart, int _fxStart, int _dir, bool _selectedTrack
 				if (j >= fxCount || j < 0)
 					break; // implies track cycle
 
-				// NF fix #864: check for offline FX and skip them
-				if (TrackFX_GetOffline) { // we can use API, added in R5.95, optional for now
-					if (!TrackFX_GetOffline(tr, j)) { // FX is online, perform job, otherwise skip to next
-						// perform custom stuff
-						if (job(tr, j, _selectedTracks))
-							return true;
-					}
+				// NF fix #864: check for offline FX and skip them. We can use API, added in R5.95
+				if (!TrackFX_GetOffline(tr, j)) // FX is online, perform job, otherwise skip to next
+				{ 
+					// perform custom stuff
+					if (job(tr, j, _selectedTracks))
+						return true;
 				}
-				else {
-					char state[2] = "0";
-					SNM_ChunkParserPatcher p(tr);
-					p.SetWantsMinimalState(true);
-					p.Parse(SNM_GET_CHUNK_CHAR, 2, "FXCHAIN", "BYPASS", j, 2, state);
-
-					if (strcmp(state, "0") == 0) { // FX is online, perform job, otherwise skip to next
-						// perform custom stuff
-						if (job(tr, j, _selectedTracks))
-							return true;
-					}
-				}
-
 				cpt2++;
 				j += _dir;
 			}

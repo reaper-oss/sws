@@ -225,7 +225,6 @@ int GetFolderDepth(MediaTrack* tr, int* iType, MediaTrack** nextTr);
 int GetTrackVis(MediaTrack* tr); // &1 == mcp, &2 == tcp
 void SetTrackVis(MediaTrack* tr, int vis); // &1 == mcp, &2 == tcp
 int AboutBoxInit(); // Not worth its own .h
-void* GetConfigVar(const char* cVar);
 HWND GetTrackWnd();
 HWND GetRulerWnd();
 const GUID* TrackToGuid(MediaTrack* tr);
@@ -256,11 +255,6 @@ void SWS_GetSelectedMediaItems(WDL_TypedBuf<MediaItem*>* buf);
 void SWS_GetSelectedMediaItemsOnTrack(WDL_TypedBuf<MediaItem*>* buf, MediaTrack* tr);
 int SWS_GetModifiers();
 bool SWS_IsWindow(HWND hwnd);
-
-// NF: #966, no API currently (R5.78) to get/set track height lock state
-// so use chunk parsing for now
-// update: native API GetSetMediaTrackInfo*(B_HEIGHTLOCK) added in R5.95pre4
-bool SWS_IsTrackHeightLocked(MediaTrack* track);
 
 // Localization, sws_util.cpp
 #define _SWS_LOCALIZATION

@@ -41,7 +41,6 @@ enum {
   SNM_NOTES_ITEM,
   SNM_NOTES_PROJECT,
   SNM_NOTES_PROJECT_EXTRA,
-  // #647
   SNM_NOTES_GLOBAL,
   SNM_NOTES_MKR_NAME,      // these should remain consecutive ---->
   SNM_NOTES_RGN_NAME,
@@ -120,10 +119,9 @@ public:
 	void SaveCurrentText(int _type, bool _wantUndo = true);
 	void SaveCurrentProjectNotes(bool _wantUndo = true);
 	void SaveCurrentExtraProjectNotes(bool _wantUndo = true);
-	// #647
-	void SaveCurrentGlobalNotes(bool _wantUndo = true);
 	void SaveCurrentItemNotes(bool _wantUndo = true);
 	void SaveCurrentTrackNotes(bool _wantUndo = true);
+	void SaveCurrentGlobalNotes(bool _wantUndo = true);
 	void SaveCurrentMkrRgnNameOrSub(int _type, bool _wantUndo = true);
 #ifdef WANT_ACTION_HELP
 	void SaveCurrentHelp(); // no undo for action help (saved in a .ini)
@@ -183,6 +181,7 @@ void OpenNotes(COMMAND_T*);
 int IsNotesDisplayed(COMMAND_T*);
 void ToggleNotesLock(COMMAND_T*);
 int IsNotesLocked(COMMAND_T*);
+void WriteGlobalNotesToFile();
 
 // ReaScript export
 const char* NFDoGetSWSTrackNotes(MediaTrack* track);

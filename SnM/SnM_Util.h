@@ -41,6 +41,7 @@ bool IsValidFilenameErrMsg(const char* _fn, bool _errMsg);
 bool FileOrDirExists(const char* _fn);
 bool FileOrDirExistsErrMsg(const char* _fn, bool _errMsg = true);
 bool SNM_DeleteFile(const char* _filename, bool _recycleBin);
+bool SNM_DeletePeakFile(const char* _fn, bool _recycleBin);
 bool SNM_CopyFile(const char* _destFn, const char* _srcFn);
 void RevealFile(const char* _fn, bool _errMsg = true);
 bool BrowseResourcePath(const char* _title, const char* _dir, const char* _fileFilters, char* _fn, int _fnSize, bool _wantFullPath = false);
@@ -90,6 +91,9 @@ KbdSectionInfo* SNM_GetActionSection(int _idx);
 
 bool LearnAction(KbdSectionInfo* _section, int _cmdId);
 bool GetSectionURL(bool _alr, KbdSectionInfo* _section, char* _sectionURL, int _sectionURLSize);
+
+// Get/SetMediaItemTakeInfo_Value(*,"D_VOL") uses negative value (sign flip) if take polarity is flipped
+bool IsTakePolarityFlipped(MediaItem_Take* take);
 
 #ifdef _SNM_MISC
 WDL_UINT64 FNV64(WDL_UINT64 h, const unsigned char* data, int sz);

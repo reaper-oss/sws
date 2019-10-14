@@ -169,18 +169,19 @@ TrackSnapshot::TrackSnapshot(MediaTrack* tr, int mask)
 	else
 		m_guid = *(GUID*)GetSetMediaTrackInfo(tr, "GUID", NULL);
 
-	m_dVol = *((double*)GetSetMediaTrackInfo(tr, "D_VOL", NULL));
-	m_dPan = *((double*)GetSetMediaTrackInfo(tr, "D_PAN", NULL));
-	m_bMute = *((bool*)GetSetMediaTrackInfo(tr, "B_MUTE", NULL));
-	m_iSolo = *((int*)GetSetMediaTrackInfo(tr, "I_SOLO", NULL));
-	m_iFXEn = *((int*)GetSetMediaTrackInfo(tr, "I_FXEN", NULL));
-	m_iVis  = GetTrackVis(tr);
-	m_iSel  = *((int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL));
-	m_iPanMode	= *((int*)GetSetMediaTrackInfo(tr, "I_PANMODE", NULL));
-	m_dPanWidth	= *((double*)GetSetMediaTrackInfo(tr, "D_WIDTH", NULL));
-	m_dPanL		= *((double*)GetSetMediaTrackInfo(tr, "D_DUALPANL", NULL));
-	m_dPanR		= *((double*)GetSetMediaTrackInfo(tr, "D_DUALPANR", NULL));
-	m_dPanLaw = *((double*)GetSetMediaTrackInfo(tr, "D_PANLAW", NULL));
+	m_dVol      = *((double*)GetSetMediaTrackInfo(tr, "D_VOL", NULL));
+	m_dPan      = *((double*)GetSetMediaTrackInfo(tr, "D_PAN", NULL));
+	m_bMute     = *((bool*)GetSetMediaTrackInfo(tr, "B_MUTE", NULL));
+	m_iSolo     = *((int*)GetSetMediaTrackInfo(tr, "I_SOLO", NULL));
+	m_iFXEn     = *((int*)GetSetMediaTrackInfo(tr, "I_FXEN", NULL));
+	m_iVis      = GetTrackVis(tr);
+	m_iSel      = *((int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL));
+	m_iPanMode  = *((int*)GetSetMediaTrackInfo(tr, "I_PANMODE", NULL));
+	m_dPanWidth = *((double*)GetSetMediaTrackInfo(tr, "D_WIDTH", NULL));
+	m_dPanL     = *((double*)GetSetMediaTrackInfo(tr, "D_DUALPANL", NULL));
+	m_dPanR     = *((double*)GetSetMediaTrackInfo(tr, "D_DUALPANR", NULL));
+	m_dPanLaw   = *((double*)GetSetMediaTrackInfo(tr, "D_PANLAW", NULL));
+	m_bPhase    = *((bool*)GetSetMediaTrackInfo(tr, "B_PHASE", NULL));
 
 	// Don't bother storing the sends if it's masked
 	if (mask & SENDS_MASK)
@@ -217,14 +218,15 @@ TrackSnapshot::TrackSnapshot(MediaTrack* tr, int mask)
 // "Copy" constructor with mask large items don't get copied too
 TrackSnapshot::TrackSnapshot(TrackSnapshot& ts):m_sends(ts.m_sends)
 {
-	m_guid = ts.m_guid;
-	m_dVol = ts.m_dVol;
-	m_dPan = ts.m_dPan;
-	m_bMute = ts.m_bMute;
-	m_iSolo = ts.m_iSolo;
-	m_iFXEn = ts.m_iFXEn;
-	m_iVis = ts.m_iVis;
-	m_iSel = ts.m_iSel;
+	m_guid   = ts.m_guid;
+	m_dVol   = ts.m_dVol;
+	m_dPan   = ts.m_dPan;
+	m_bMute  = ts.m_bMute;
+	m_iSolo  = ts.m_iSolo;
+	m_iFXEn  = ts.m_iFXEn;
+	m_iVis   = ts.m_iVis;
+	m_iSel   = ts.m_iSel;
+	m_bPhase = ts.m_bPhase;
 	for (int i = 0; i < ts.m_fx.GetSize(); i++)
 		m_fx.Add(new FXSnapshot(*ts.m_fx.Get(i)));
 	if (ts.m_sFXChain.GetSize())
@@ -234,29 +236,31 @@ TrackSnapshot::TrackSnapshot(TrackSnapshot& ts):m_sends(ts.m_sends)
 	}
 	m_sName.Set(ts.m_sName.Get());
 	m_iTrackNum = ts.m_iTrackNum;
-	m_iPanMode	= ts.m_iPanMode;
-	m_dPanWidth	= ts.m_dPanWidth;
-	m_dPanL		= ts.m_dPanL;
-	m_dPanR		= ts.m_dPanR;
-	m_dPanLaw	= ts.m_dPanLaw;
+	m_iPanMode  = ts.m_iPanMode;
+	m_dPanWidth = ts.m_dPanWidth;
+	m_dPanL     = ts.m_dPanL;
+	m_dPanR     = ts.m_dPanR;
+	m_dPanLaw   = ts.m_dPanLaw;
+	m_bPhase    = ts.m_bPhase;
 }
 
 TrackSnapshot::TrackSnapshot(LineParser* lp)
 {
 	stringToGuid(lp->gettoken_str(1), &m_guid);
-	m_dVol =  lp->gettoken_float(2);
-	m_dPan =  lp->gettoken_float(3);
-	m_bMute = lp->gettoken_int(4) ? true : false;
-	m_iSolo = lp->gettoken_int(5);
-	m_iFXEn = lp->gettoken_int(6);
+	m_dVol       = lp->gettoken_float(2);
+	m_dPan       = lp->gettoken_float(3);
+	m_bMute      = lp->gettoken_int(4) ? true : false;
+	m_iSolo      = lp->gettoken_int(5);
+	m_iFXEn      = lp->gettoken_int(6);
 	// For backward compat, flip the TCP vis bit
-	m_iVis = lp->gettoken_int(7) ^ 2;
-	m_iSel = lp->gettoken_int(8);
-	m_iPanMode	= lp->getnumtokens() < 10 ? -1 : lp->gettoken_int(9); // If loading old format, set pan mode to -1 for proj default
-	m_dPanWidth	= lp->gettoken_float(10);
-	m_dPanL		= lp->gettoken_float(11);
-	m_dPanR		= lp->gettoken_float(12);
+	m_iVis      = lp->gettoken_int(7) ^ 2;
+	m_iSel      = lp->gettoken_int(8);
+	m_iPanMode  = lp->getnumtokens() < 10 ? -1 : lp->gettoken_int(9); // If loading old format, set pan mode to -1 for proj default
+	m_dPanWidth = lp->gettoken_float(10);
+	m_dPanL     = lp->gettoken_float(11);
+	m_dPanR     = lp->gettoken_float(12);
 	m_dPanLaw   = lp->getnumtokens() < 14 ? -100.0 : lp->gettoken_float(13); // If loading old format, set law to -2 for "ignore"
+	m_bPhase    = lp->gettoken_int(14) ? true : false;
 
 	// Set the track name "early" for backward compat
 	MediaTrack* tr = GuidToTrack(&m_guid);
@@ -349,6 +353,10 @@ bool TrackSnapshot::UpdateReaper(int mask, bool bSelOnly, int* fxErr, bool wantC
 	{
 		if (wantChunk) m_sends.UpdateReaper(tr, pFix);
 	}
+	if (mask & PHASE_MASK)
+	{
+		GetSetMediaTrackInfo(tr, "B_PHASE", &m_bPhase);
+	}
 
 	PreventUIRefresh(-1);
 
@@ -376,7 +384,7 @@ void TrackSnapshot::GetChunk(WDL_FastString* chunk)
 {
 	char guidStr[64];
 	guidToString(&m_guid, guidStr);
-	chunk->AppendFormatted(SNM_MAX_CHUNK_LINE_LENGTH, "<TRACK %s %.14f %.14f %d %d %d %d %d %d %.14f %.14f %.14f %.14f\n", guidStr, m_dVol, m_dPan, m_bMute ? 1 : 0, m_iSolo, m_iFXEn, m_iVis ^ 2, m_iSel, m_iPanMode, m_dPanWidth, m_dPanL, m_dPanR, m_dPanLaw);
+	chunk->AppendFormatted(SNM_MAX_CHUNK_LINE_LENGTH, "<TRACK %s %.14f %.14f %d %d %d %d %d %d %.14f %.14f %.14f %.14f %d\n", guidStr, m_dVol, m_dPan, m_bMute ? 1 : 0, m_iSolo, m_iFXEn, m_iVis ^ 2, m_iSel, m_iPanMode, m_dPanWidth, m_dPanL, m_dPanR, m_dPanLaw, m_bPhase ? 1 : 0);
 	chunk->AppendFormatted(SNM_MAX_CHUNK_LINE_LENGTH, "NAME \"%s\" %d\n", m_sName.Get(), m_iTrackNum);
 	
 	m_sends.GetChunk(chunk);
@@ -439,7 +447,7 @@ void TrackSnapshot::GetDetails(WDL_FastString* details, int iMask)
 	{
 		int iPanMode = m_iPanMode;
 		if (iPanMode == -1)
-			iPanMode = *(int*)GetConfigVar("panmode"); // display pan in project format
+			iPanMode = *ConfigVar<int>("panmode"); // display pan in project format
 
 		if (iPanMode != 6)
 		{
@@ -608,6 +616,17 @@ void TrackSnapshot::GetDetails(WDL_FastString* details, int iMask)
 			details->Append(__LOCALIZE("No sends","sws_DLG_101"));
 			details->Append("\r\n");
 		}
+	}
+	if (iMask & PHASE_MASK)
+	{
+		if (m_iTrackNum != 0) // no phase switch on master
+		{
+			details->Append(__LOCALIZE("Phase", "sws_DLG_101"));
+			details->Append(": ");
+			details->Append(m_bPhase ? __LOCALIZE("inverted", "sws_DLG_101") : __LOCALIZE("normal", "sws_DLG_101"));
+			details->Append("\r\n");
+		}
+
 	}
 }
 
@@ -888,7 +907,8 @@ bool Snapshot::UpdateReaper(int mask, bool bSelOnly, bool bHideNewVis)
 		if (fxErr)
 			n += sprintf(errString + n, __LOCALIZE_VERFMT("%s%d FX from snapshot not found.","sws_DLG_101"), n ? "\n" : "", fxErr);
 		sprintf(errString + n, "%s", __LOCALIZE("\nDelete abandonded items from snapshot? (You cannot undo this operation!)","sws_DLG_101"));
-		if (MessageBox(g_hwndParent, errString, __LOCALIZE("Snapshot recall error","sws_DLG_101"), MB_YESNO) == IDYES)
+		bool prompt = SWS_SnapshotsWnd::GetPromptOnDeleted();
+		if ((prompt && MessageBox(g_hwndParent, errString, __LOCALIZE("Snapshot recall error","sws_DLG_101"), MB_YESNO) == IDYES) || !prompt)
 		{
 			for (int i = 0; i < m_tracks.GetSize(); i++)
 				if (m_tracks.Get(i)->Cleanup())
@@ -952,6 +972,10 @@ char* Snapshot::Tooltip(char* str, int maxLen)
 		n += _snprintf(str + n, maxLen - n, "%s", ", ");
 		n += _snprintf(str + n, maxLen - n, "%s", __LOCALIZE("selection","sws_DLG_101"));
 	}
+	if (m_iMask & PHASE_MASK && n < maxLen) {
+		n += _snprintf(str + n, maxLen - n, "%s", ", ");
+		n += _snprintf(str + n, maxLen - n, "%s", __LOCALIZE("phase", "sws_DLG_101"));
+	}
 	return str;
 }
 
@@ -963,16 +987,17 @@ void Snapshot::SetName(const char* name)
 		char newName[20];
 		switch(m_iMask)
 		{
-			case VOL_MASK:		sprintf(newName, "%s %d", __LOCALIZE("Vol","sws_DLG_101"), m_iSlot);	break;
-			case PAN_MASK:		sprintf(newName, "%s %d", __LOCALIZE("Pan","sws_DLG_101"), m_iSlot);	break;
-			case MUTE_MASK:		sprintf(newName, "%s %d", __LOCALIZE("Mute","sws_DLG_101"), m_iSlot);	break;
-			case SOLO_MASK:		sprintf(newName, "%s %d", __LOCALIZE("Solo","sws_DLG_101"), m_iSlot);	break;
+			case VOL_MASK:      sprintf(newName, "%s %d", __LOCALIZE("Vol","sws_DLG_101"), m_iSlot);	break;
+			case PAN_MASK:      sprintf(newName, "%s %d", __LOCALIZE("Pan","sws_DLG_101"), m_iSlot);	break;
+			case MUTE_MASK:     sprintf(newName, "%s %d", __LOCALIZE("Mute","sws_DLG_101"), m_iSlot);	break;
+			case SOLO_MASK:     sprintf(newName, "%s %d", __LOCALIZE("Solo","sws_DLG_101"), m_iSlot);	break;
 			case FXATM_MASK: // fallthrough
-			case FXCHAIN_MASK:	sprintf(newName, "%s %d", __LOCALIZE("FX","sws_DLG_101"), m_iSlot);		break;
-			case SENDS_MASK:	sprintf(newName, "%s %d", __LOCALIZE("Sends","sws_DLG_101"), m_iSlot);	break;
-			case VIS_MASK:		sprintf(newName, "%s %d", __LOCALIZE("Vis","sws_DLG_101"), m_iSlot);	break;
-			case SEL_MASK:		sprintf(newName, "%s %d", __LOCALIZE("Sel","sws_DLG_101"), m_iSlot);	break;
-			default:			sprintf(newName, "%s %d", __LOCALIZE("Mix","sws_DLG_101"), m_iSlot);	break;
+			case FXCHAIN_MASK:  sprintf(newName, "%s %d", __LOCALIZE("FX","sws_DLG_101"), m_iSlot);		break;
+			case SENDS_MASK:    sprintf(newName, "%s %d", __LOCALIZE("Sends","sws_DLG_101"), m_iSlot);	break;
+			case VIS_MASK:      sprintf(newName, "%s %d", __LOCALIZE("Vis","sws_DLG_101"), m_iSlot);	break;
+			case SEL_MASK:      sprintf(newName, "%s %d", __LOCALIZE("Sel","sws_DLG_101"), m_iSlot);	break;
+			case PHASE_MASK:    sprintf(newName, "%s %d", __LOCALIZE("Phase", "sws_DLG_101"), m_iSlot);	break;
+			default:            sprintf(newName, "%s %d", __LOCALIZE("Mix","sws_DLG_101"), m_iSlot);	break;
 		}
 		m_cName = new char[strlen(newName)+1];
 		strcpy(m_cName, newName);

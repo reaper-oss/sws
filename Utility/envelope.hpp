@@ -1,8 +1,7 @@
 /******************************************************************************
-/ cfillion.hpp
+/ envelope.hpp
 /
-/ Copyright (c) 2017 Christian Fillion
-/ https://cfillion.ca
+/ Copyright (c) 2019
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -26,30 +25,16 @@
 ******************************************************************************/
 
 #pragma once
+#include <stdexcept>
 
-typedef HWND__ FxChain;
+namespace envelope
+{
+std::string GetEnvelopeStateChunkBig(TrackEnvelope* envelope, bool isUndo = false);
 
-void CF_SetClipboard(const char *);
-void CF_GetClipboard(char *buf, int bufSize);
-const char *CF_GetClipboardBig(WDL_FastString *);
+class bad_get_env_chunk_big : public std::runtime_error {
+public:
+	using runtime_error::runtime_error;
+};
+}
 
-bool CF_ShellExecute(const char *file, const char *args = NULL);
-bool CF_LocateInExplorer(const char *file);
 
-void CF_GetSWSVersion(char *buf, int bufSize);
-
-int CF_EnumerateActions(int section, int idx, char *nameBuf, int nameBufSize);
-const char *CF_GetCommandText(int section, int command);
-
-HWND CF_GetFocusedFXChain();
-HWND CF_GetTrackFXChain(MediaTrack *);
-HWND CF_GetTakeFXChain(MediaItem_Take *);
-int CF_EnumSelectedFX(HWND chain, int index = -1);
-
-int CF_GetMediaSourceBitDepth(PCM_source *);
-bool CF_GetMediaSourceOnline(PCM_source *);
-void CF_SetMediaSourceOnline(PCM_source *, bool set);
-bool CF_GetMediaSourceMetadata(PCM_source *, const char *name, char *buf, int bufSize);
-bool CF_GetMediaSourceRPP(PCM_source *source, char *buf, const int bufSize);
-int CF_EnumMediaSourceCues(PCM_source *source, const int index, double *time, double *endTime, bool *isRegion, char *name, const int nameSize);
-bool CF_ExportMediaSource(PCM_source *source, const char *file);

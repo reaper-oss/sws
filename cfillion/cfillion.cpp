@@ -32,11 +32,11 @@
 #include "version.h"
 
 #ifdef _WIN32
-static const unsigned int FORMAT = CF_UNICODETEXT;
+  static const unsigned int CLIPBOARD_FORMAT = CF_UNICODETEXT;
 #else
-  // on SWELL/generic CF_TEXT may be implemented as a function call which
-  // may not be available until after loading is complete
-#define FORMAT (CF_TEXT)
+// on SWELL/generic CF_TEXT may be implemented as a function call which
+// may not be available until after loading is complete
+#  define CLIPBOARD_FORMAT (CF_TEXT)
 #endif
 
 extern WDL_PtrList_DOD<WDL_FastString> g_script_strs;
@@ -60,57 +60,77 @@ void CF_SetClipboard(const char *buf)
 
   OpenClipboard(GetMainHwnd());
   EmptyClipboard();
-  SetClipboardData(FORMAT, mem);
+  SetClipboardData(CLIPBOARD_FORMAT, mem);
   CloseClipboard();
 }
 
-void CF_GetClipboard(char *buf, int bufSize)
-{
-  OpenClipboard(GetMainHwnd());
-  HANDLE mem = GetClipboardData(FORMAT);
+class ClipboardReader {
+public:
+  ClipboardReader()
+  {
+    OpenClipboard(GetMainHwnd());
+    m_mem = GetClipboardData(CLIPBOARD_FORMAT);
+    m_data = reinterpret_cast<decltype(m_data)>(GlobalLock(m_mem));
 
-  if(void *data = GlobalLock(mem)) {
 #ifdef _WIN32
-    WideCharToMultiByte(CP_UTF8, 0, (const wchar_t *)data, -1,
-      buf, bufSize - 1, nullptr, nullptr);
-
-    // Insert a null terminator if the buffer is too small to hold the entire
-    // clipboard data. WideCharToMultiByte inserts it at the end of the string
-    // by itself when the buffer is big enough.
-    buf[bufSize - 1] = 0;
+    m_size = WideCharToMultiByte(CP_UTF8, 0, m_data, -1, nullptr, 0, nullptr, nullptr) - 1;
 #else
-    snprintf(buf, bufSize, "%s", (const char *)data);
+    m_size = strlen(m_data);
 #endif
-    GlobalUnlock(mem);
   }
 
-  CloseClipboard();
+  // does not null-terminate the output buffer unless its bigger than the
+  // clipboard data
+  void read(char *buf, int bufSize)
+  {
+    if(bufSize > m_size) {
+      bufSize = m_size;
+      buf[m_size] = 0;
+    }
+
+#ifdef _WIN32
+    WideCharToMultiByte(CP_UTF8, 0, m_data, -1, buf, bufSize, nullptr, nullptr);
+#else
+    std::copy(m_data, m_data + bufSize, buf);
+#endif
+  }
+
+  ~ClipboardReader()
+  {
+    GlobalUnlock(m_mem);
+    CloseClipboard();
+  }
+
+  int size() const { return m_size; }
+  operator bool() const { return m_data != nullptr; }
+
+private:
+  HANDLE m_mem;
+#ifdef _WIN32
+  const wchar_t *m_data;
+#else
+  const char *m_data;
+#endif
+  int m_size;
+};
+
+void CF_GetClipboard(char *buf, int bufSize)
+{
+  if(ClipboardReader clipboard{}) {
+    realloc_cmd_ptr(&buf, &bufSize, clipboard.size());
+    clipboard.read(buf, bufSize);
+  }
 }
 
 const char *CF_GetClipboardBig(WDL_FastString *output)
 {
-  if(g_script_strs.Find(output) == -1)
-    return NULL;
+  ClipboardReader clipboard;
 
-  OpenClipboard(GetMainHwnd());
-  HANDLE mem = GetClipboardData(FORMAT);
+  if(!clipboard || g_script_strs.Find(output) == -1)
+    return nullptr;
 
-  if(void *data = GlobalLock(mem)) {
-#ifdef _WIN32
-    const int size = WideCharToMultiByte(CP_UTF8, 0,
-      (const wchar_t *)data, -1, nullptr, 0, nullptr, nullptr) - 1;
-
-    output->SetLen(size);
-
-    WideCharToMultiByte(CP_UTF8, 0, (const wchar_t *)data, -1,
-      const_cast<char *>(output->Get()), size, nullptr, nullptr);
-#else
-    output->Set((const char *)data);
-#endif
-    GlobalUnlock(mem);
-  }
-
-  CloseClipboard();
+  output->SetLen(clipboard.size());
+  clipboard.read(const_cast<char *>(output->Get()), output->GetLength());
 
   return output->Get();
 }
@@ -126,7 +146,7 @@ bool CF_ShellExecute(const char *file, const char *args)
   HINSTANCE ret = ShellExecute(nullptr, "open", file, args, nullptr, SW_SHOW);
   return ret > (HINSTANCE)32;
 #else
-  return ShellExecute(NULL, "open", file, args, NULL, SW_SHOW);
+  return ShellExecute(nullptr, "open", file, args, nullptr, SW_SHOW);
 #endif
 }
 
@@ -134,7 +154,7 @@ bool CF_LocateInExplorer(const char *file)
 {
   // Quotes inside the filename must not be escaped for the SWELL implementation
   WDL_FastString arg;
-  arg.SetFormatted(strlen(file) + 10, "/select,\"%s\"", file);
+  arg.SetFormatted(strlen(file) + 10, R"(/select,"%s")", file);
 
   return CF_ShellExecute("explorer.exe", arg.Get());
 }
@@ -168,14 +188,14 @@ static HWND CF_GetTrackFXChain(const int trackIndex)
     snprintf(chainTitle, sizeof(chainTitle), "%s%s %d",
       __LOCALIZE("FX: ", "fx"), __LOCALIZE("Track", "fx"), trackIndex);
 
-  return FindWindowEx(NULL, NULL, NULL, chainTitle);
+  return FindWindowEx(nullptr, nullptr, nullptr, chainTitle);
 }
 
 HWND CF_GetTrackFXChain(MediaTrack *track)
 {
   int trackNumber = 0;
 
-  if(track != GetMasterTrack(NULL))
+  if(track != GetMasterTrack(nullptr))
     trackNumber = static_cast<int>(GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER"));
 
   return CF_GetTrackFXChain(trackNumber);
@@ -187,7 +207,7 @@ HWND CF_GetTakeFXChain(MediaItem_Take *take)
   // attached to it (pointer to an internal FxChain object?) but it does not
   // seem to hint back to the take in any obvious way.
 
-  GUID *guid = static_cast<GUID *>(GetSetMediaItemTakeInfo(take, "GUID", NULL));
+  GUID *guid = static_cast<GUID *>(GetSetMediaItemTakeInfo(take, "GUID", nullptr));
 
   char guidStr[64];
   guidToString(guid, guidStr);
@@ -199,7 +219,7 @@ HWND CF_GetTakeFXChain(MediaItem_Take *take)
   snprintf(chainTitle, sizeof(chainTitle), "%s%s \"%s\"",
     __LOCALIZE("FX: ", "fx"), __LOCALIZE("Item", "fx"), guidStr);
 
-  HWND window = FindWindowEx(NULL, NULL, NULL, chainTitle);
+  HWND window = FindWindowEx(nullptr, nullptr, nullptr, chainTitle);
 
   GetSetMediaItemTakeInfo_String(take, "P_NAME",
     const_cast<char *>(originalName.c_str()), true);
@@ -217,13 +237,13 @@ HWND CF_GetFocusedFXChain()
   case 1:
     return CF_GetTrackFXChain(trackIndex);
   case 2: {
-    MediaTrack *track = GetTrack(NULL, trackIndex - 1);
+    MediaTrack *track = GetTrack(nullptr, trackIndex - 1);
     MediaItem *item = GetTrackMediaItem(track, itemIndex);
     MediaItem_Take *take = GetMediaItemTake(item, HIWORD(fxIndex));
     return CF_GetTakeFXChain(take);
   }
   default:
-    return NULL;
+    return nullptr;
   }
 }
 
@@ -256,8 +276,8 @@ bool CF_GetMediaSourceMetadata(PCM_source *source, const char *name, char *buf, 
 
 bool CF_GetMediaSourceRPP(PCM_source *source, char *buf, const int bufSize)
 {
-  char *rpp = NULL;
-  source->Extended(PCM_SOURCE_EXT_GETASSOCIATED_RPP, &rpp, NULL, NULL);
+  char *rpp = nullptr;
+  source->Extended(PCM_SOURCE_EXT_GETASSOCIATED_RPP, &rpp, nullptr, nullptr);
 
   if(rpp && buf) {
     snprintf(buf, bufSize, "%s", rpp);
@@ -270,7 +290,7 @@ bool CF_GetMediaSourceRPP(PCM_source *source, char *buf, const int bufSize)
 int CF_EnumMediaSourceCues(PCM_source *source, const int index, double *time, double *endTime, bool *isRegion, char *name, const int nameSize)
 {
   REAPER_cue cue{};
-  const int add = source->Extended(PCM_SOURCE_EXT_ENUMCUES_EX, (void *)(intptr_t)index, &cue, NULL);
+  const int add = source->Extended(PCM_SOURCE_EXT_ENUMCUES_EX, (void *)(intptr_t)index, &cue, nullptr);
 
   if(time)
     *time = cue.m_time;
@@ -287,5 +307,5 @@ int CF_EnumMediaSourceCues(PCM_source *source, const int index, double *time, do
 
 bool CF_ExportMediaSource(PCM_source *source, const char *file)
 {
-  return source->Extended(PCM_SOURCE_EXT_EXPORTTOFILE, (void *)file, NULL, NULL) > 0;
+  return source->Extended(PCM_SOURCE_EXT_EXPORTTOFILE, (void *)file, nullptr, nullptr) > 0;
 }

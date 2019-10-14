@@ -373,8 +373,7 @@ void RegionPlaylistView::OnItemClk(SWS_ListItem* item, int iCol, int iKeyState)
 	if (RgnPlaylistItem* pItem = (RgnPlaylistItem*)item)
 	{
 		if (g_optionFlags&2)
-			if (RgnPlaylistItem* pItem = (RgnPlaylistItem*)item)
-				SetEditCurPos2(NULL, pItem->GetPos(), true, false); // move edit curdor, seek done below
+			SetEditCurPos2(NULL, pItem->GetPos(), true, false); // move edit curdor, seek done below
 
 		// do not use PERFORM_MSG here: depends on play state in this case
 		if ((g_optionFlags&1) && GetPlaylist() && (GetPlayState()&1))
@@ -790,16 +789,16 @@ void RegionPlaylistWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			SendMessage(m_hwnd, WM_CONTEXTMENU, 0, MAKELPARAM((UINT)(r.left), (UINT)(r.bottom+SNM_1PIXEL_Y)));
 			break;
 		case CROP_PRJ_MSG:
-			AppendPasteCropPlaylist(GetPlaylist(), 0);
+			AppendPasteCropPlaylist(GetPlaylist(), CROP_PROJECT);
 			break;
 		case CROP_PRJTAB_MSG:
-			AppendPasteCropPlaylist(GetPlaylist(), 1);
+			AppendPasteCropPlaylist(GetPlaylist(), CROP_PROJECT_TAB);
 			break;
 		case APPEND_PRJ_MSG:
-			AppendPasteCropPlaylist(GetPlaylist(), 2);
+			AppendPasteCropPlaylist(GetPlaylist(), PASTE_PROJECT);
 			break;
 		case PASTE_CURSOR_MSG:
-			AppendPasteCropPlaylist(GetPlaylist(), 3);
+			AppendPasteCropPlaylist(GetPlaylist(), PASTE_CURSOR);
 			break;
 		case DELETE_MSG:
 		{
@@ -856,7 +855,7 @@ void RegionPlaylistWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			int x=0;
 			while(RgnPlaylistItem* item = (RgnPlaylistItem*)GetListView()->EnumSelected(&x))
 				p.Add(new RgnPlaylistItem(item->m_rgnId, item->m_cnt));
-			AppendPasteCropPlaylist(&p, LOWORD(wParam)==PASTE_SEL_RGN_MSG ? 3:2);
+			AppendPasteCropPlaylist(&p, LOWORD(wParam) == PASTE_SEL_RGN_MSG ? PASTE_CURSOR : PASTE_PROJECT);
 			break;
 		}
 		case PERFORM_MSG:
@@ -1308,7 +1307,7 @@ bool SeekItem(int _plId, int _nextItemId, int _curItemId)
 		if (_nextItemId<0)
 		{
 			// temp override of the "stop play at project end" option
-			if (int* opt = (int*)GetConfigVar("stopprojlen")) {
+			if (ConfigVar<int> opt = "stopprojlen") {
 				g_oldStopprojlenPref = *opt;
 				*opt = 1;
 			}
@@ -1544,7 +1543,7 @@ void PlaylistPlay(int _plId, int _itemId)
 				PlaylistStop();
 
 			// temp override of the "smooth seek" option
-			if (int* opt = (int*)GetConfigVar("smoothseek")) {
+			if (ConfigVar<int> opt = "smoothseek") {
 				g_oldSeekPref = *opt;
 				*opt = 3;
 			}
@@ -1639,12 +1638,12 @@ void PlaylistStopped(bool _pause)
 
 		// restore options
 		if (g_oldSeekPref >= 0)
-			if (int* opt = (int*)GetConfigVar("smoothseek")) {
+			if (ConfigVar<int> opt = "smoothseek") {
 				*opt = g_oldSeekPref;
 				g_oldSeekPref = -1;
 			}
 		if (g_oldStopprojlenPref >= 0)
-			if (int* opt = (int*)GetConfigVar("stopprojlen")) {
+			if (ConfigVar<int> opt = "stopprojlen") {
 				*opt = g_oldStopprojlenPref;
 				g_oldStopprojlenPref = -1;
 			}
@@ -1712,16 +1711,15 @@ int IsPlaylistOptionSmoothSeek(COMMAND_T*) {
 
 //JFB nothing to see here.. please move on :)
 // (doing things that are not really possible with the API (v4.3) => macro-ish, etc..)
-// _mode: 0=crop current project, 1=crop to new project tab, 2=append to current project, 3=paste at cursor position
 // note: moves/copies env points too, makes polled items, etc.. according to user prefs
 //JFB TODO? crop => markers removed
-void AppendPasteCropPlaylist(RegionPlaylist* _playlist, int _mode)
+void AppendPasteCropPlaylist(RegionPlaylist* _playlist, const AppendPasteCropPlaylist_Mode _mode)
 {
 	if (!_playlist || !_playlist->GetSize())
 		return;
 
 	int rgnNum = _playlist->IsInfinite();
-	if (rgnNum>=0)
+	if (rgnNum >= 0)
 	{
 		char msg[256] = "";
 		_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Paste/crop aborted: infinite loop (for region %d at least)!","sws_DLG_165"), rgnNum);
@@ -1733,19 +1731,20 @@ void AppendPasteCropPlaylist(RegionPlaylist* _playlist, int _mode)
 	double prjlen=SNM_GetProjectLength(), startPos=prjlen, endPos=prjlen;
 
 	// insert empty space?
-	if (_mode==3)
+	if (_mode == PASTE_CURSOR)
 	{
 		startPos = endPos = GetCursorPositionEx(NULL);
-		if (startPos<prjlen)
+		if (startPos < prjlen)
 		{
 			// not _playlist->IsInPlaylist()!
-			if (GetPlaylist()->IsInPlaylist(startPos, false, 0) >=0 ) {
+			if (GetPlaylist()->IsInPlaylist(startPos, false, 0) >= 0)
+			{
 				MessageBox(g_rgnplWndMgr.GetMsgHWND(), 
 					__LOCALIZE("Aborted: pasting inside a region which is used in the playlist!","sws_DLG_165"),
 					__LOCALIZE("S&M - Error","sws_DLG_165"), MB_OK);
 				return;
 			}
-			if (int usedId = IsInPlaylists(startPos) >=0)
+			if (int usedId = IsInPlaylists(startPos) >= 0)
 			{
 				char msg[256] = "";
 				_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Warning: pasting inside a region that belongs to playlist #%d!\nAre you sure you want to continue?","sws_DLG_165"), usedId+1);
@@ -1762,20 +1761,14 @@ void AppendPasteCropPlaylist(RegionPlaylist* _playlist, int _mode)
 
 //	OnStopButton();
 
-	// make sure some envelope options are enabled: move with items + add edge points
-	int oldOpt[2] = {-1,-1};
-	int* options[2] = {NULL,NULL};
-	if ((options[0] = (int*)GetConfigVar("envattach"))) {
-		oldOpt[0] = *options[0];
-		*options[0] = 1;
-	}
-	if ((options[1] = (int*)GetConfigVar("env_reduce"))) {
-		oldOpt[1] = *options[1];
-		*options[1] = 2;
-	}
+	ConfigVarOverride<int> options[] = {
+		{"envattach",     1}, // move with items
+		{"env_reduce",    2}, // add edge points
+		{"projgroupover", 1}, // disable item grouping
+	};
 
 	WDL_PtrList_DeleteOnDestroy<MarkerRegion> rgns;
-	for (int i=0; i<_playlist->GetSize(); i++)
+	for (int i=0; i < _playlist->GetSize(); i++)
 	{
 		if (RgnPlaylistItem* plItem = _playlist->Get(i))
 		{
@@ -1795,53 +1788,53 @@ void AppendPasteCropPlaylist(RegionPlaylist* _playlist, int _mode)
 
 				WDL_PtrList<void> itemsToKeep;
 				GetItemsInInterval(&itemsToKeep, rgnpos, rgnend, false);
+				// store regions
+				bool found = false;
+				for (int k = 0; !found && k<rgns.GetSize(); k++)
+					found |= (rgns.Get(k)->GetNum() == rgnnum);
+				if (!found)
+					rgns.Add(new MarkerRegion(true, endPos-startPos, endPos+rgnend-rgnpos-startPos, rgnname, rgnnum, rgncol));
+
+				// store data needed to "unsplit"
+				// note: not needed when croping as those items will get removed
+				WDL_PtrList_DeleteOnDestroy<SNM_ItemChunk> itemSates;
+				if (_mode == PASTE_PROJECT || _mode == PASTE_CURSOR)
 				{
-					// store regions
-					bool found = false;
-					for (int k=0; !found && k<rgns.GetSize(); k++)
-						found |= (rgns.Get(k)->GetNum() == rgnnum);
-					if (!found)
-						rgns.Add(new MarkerRegion(true, endPos-startPos, endPos+rgnend-rgnpos-startPos, rgnname, rgnnum, rgncol));
+					for (int j = 0; j < itemsToKeep.GetSize(); j++)
+						itemSates.Add(new SNM_ItemChunk((MediaItem*)itemsToKeep.Get(j)));
+				}
 
-					// store data needed to "unsplit"
-					// note: not needed when croping as those items will get removed
-					WDL_PtrList_DeleteOnDestroy<SNM_ItemChunk> itemSates;
-					if (_mode==2 || _mode==3)
-						for (int j=0; j < itemsToKeep.GetSize(); j++)
-							itemSates.Add(new SNM_ItemChunk((MediaItem*)itemsToKeep.Get(j)));
+				WDL_PtrList<void> splitItems;
+				SplitSelectItemsInInterval(NULL, rgnpos, rgnend, false, _mode == PASTE_PROJECT || _mode == PASTE_CURSOR ? &splitItems : NULL);
 
-					WDL_PtrList<void> splitItems;
-					SplitSelectItemsInInterval(NULL, rgnpos, rgnend, false, _mode==2 || _mode==3 ? &splitItems : NULL);
+				// REAPER "bug": the last param of ApplyNudge() is ignored although
+				// it is used in duplicate mode => use a loop instead
+				for (int k = 0; k < plItem->m_cnt; k++)
+				{
+					DupSelItems(NULL, endPos-rgnpos, &itemsToKeep); // overrides the native ApplyNudge()
+					endPos += (rgnend-rgnpos);
+				}
 
-					// REAPER "bug": the last param of ApplyNudge() is ignored although
-					// it is used in duplicate mode => use a loop instead
-					if (plItem->m_cnt>0)
-						for (int k=0; k < plItem->m_cnt; k++) {
-							DupSelItems(NULL, endPos-rgnpos, &itemsToKeep); // overrides the native ApplyNudge()
-							endPos += (rgnend-rgnpos);
-						}
+				// "unsplit" items
+				for (int j = 0; j < itemSates.GetSize(); j++)
+				{
+					if (SNM_ItemChunk* ic = itemSates.Get(j)) {
+						SNM_ChunkParserPatcher p(ic->m_item);
+						p.SetChunk(ic->m_chunk.Get());
+					}
+				}
 
-					// "unsplit" items
-					for (int j=0; j < itemSates.GetSize(); j++)
-						if (SNM_ItemChunk* ic = itemSates.Get(j)) {
-								SNM_ChunkParserPatcher p(ic->m_item);
-								p.SetChunk(ic->m_chunk.Get());
-							}
+				DeleteMediaItemsByName("<S&M Region Playlist - TEMP>");
 
-					DeleteMediaItemsByName("<S&M Region Playlist - TEMP>");
-
-					for (int j=0; j < splitItems.GetSize(); j++)
-						if (MediaItem* item = (MediaItem*)splitItems.Get(j))
-							if (itemsToKeep.Find(item) < 0)
-								DeleteTrackMediaItem(GetMediaItem_Track(item), item); // might have been deleted above already (no-op)
+				for (int j=0; j < splitItems.GetSize(); j++)
+				{
+					if (MediaItem* item = (MediaItem*)splitItems.Get(j))
+						if (itemsToKeep.Find(item) < 0)
+							DeleteTrackMediaItem(GetMediaItem_Track(item), item); // might have been deleted above already (no-op)
 				}
 			}
 		}
 	}
-
-	// restore options
-	if (options[0]) *options[0] = oldOpt[0];
-	if (options[1]) *options[1] = oldOpt[1];
 
 	// nothing done..
 	if (!updated)
@@ -1852,7 +1845,7 @@ void AppendPasteCropPlaylist(RegionPlaylist* _playlist, int _mode)
 
 	///////////////////////////////////////////////////////////////////////////
 	// append/paste to current project
-	if (_mode == 2 || _mode == 3)
+	if (_mode == PASTE_PROJECT || _mode == PASTE_CURSOR)
 	{
 //		Main_OnCommand(40289, 0); // unselect all items
 		SetEditCurPos2(NULL, endPos, true, false);
@@ -1891,8 +1884,7 @@ void AppendPasteCropPlaylist(RegionPlaylist* _playlist, int _mode)
 	if (g_pls.Get()->m_editId < 0)
 		g_pls.Get()->m_editId = 0; // just in case..
 
-	// crop current proj?
-	if (!_mode)
+	if (_mode == CROP_PROJECT)
 	{
 		// clear time sel + edit cursor position
 		GetSet_LoopTimeRange(true, false, &g_d0, &g_d0, false);
@@ -1973,7 +1965,7 @@ void AppendPasteCropPlaylist(RegionPlaylist* _playlist, int _mode)
 }
 
 void AppendPasteCropPlaylist(COMMAND_T* _ct) {
-	AppendPasteCropPlaylist(GetPlaylist(), (int)_ct->user);
+	AppendPasteCropPlaylist(GetPlaylist(), static_cast<AppendPasteCropPlaylist_Mode>(_ct->user));
 }
 
 

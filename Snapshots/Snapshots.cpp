@@ -83,6 +83,7 @@ static bool g_bHideNewOnRecall = true;
 static bool g_bPromptOnNew = false;
 static bool g_bHideOptions = false;
 static bool g_bShowSelOnly = false;
+static bool g_bPromptOnDeleted = true;
 
 void UpdateSnapshotsDialog(bool bSelChange)
 {
@@ -360,7 +361,7 @@ SWS_SnapshotsWnd::SWS_SnapshotsWnd()
 {
 	// Restore state
 	char str[32];
-	GetPrivateProfileString(SWS_INI, SNAP_OPTIONS_KEY, "559 0 0 0 1 0 0 0 0", str, 32, get_ini_file());
+	GetPrivateProfileString(SWS_INI, SNAP_OPTIONS_KEY, "559 0 0 0 1 0 0 0 0 1", str, 32, get_ini_file());
 	LineParser lp(false);
 	if (!lp.parse(str))
 	{
@@ -373,6 +374,7 @@ SWS_SnapshotsWnd::SWS_SnapshotsWnd()
 		m_iSelType = lp.gettoken_int(6);
 		g_bSelOnly_OnRecall = lp.gettoken_int(7) ? true : false;
 		g_bShowSelOnly = lp.gettoken_int(8) ? true : false;
+		g_bPromptOnDeleted = lp.gettoken_int(9) ? true : false;
 	}
 	// Remove deprecated FXATM
 	if (g_iMask & FXATM_MASK)
@@ -413,6 +415,7 @@ void SWS_SnapshotsWnd::Update()
 	CheckDlgButton(m_hwnd, IDC_NAMEPROMPT,			g_bPromptOnNew			? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(m_hwnd, IDC_HIDENEW,				g_bHideNewOnRecall		? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(m_hwnd, IDC_SHOWSELONLY,			g_bShowSelOnly			? BST_CHECKED : BST_UNCHECKED);
+	CheckDlgButton(m_hwnd, IDC_DELTRACKSPROMPT,		g_bPromptOnDeleted		? BST_CHECKED : BST_UNCHECKED);
 	for (int i = 0; i < MASK_CTRLS; i++)
 	{
 		CheckDlgButton(m_hwnd, cSSCtrls[i], g_iMask & cSSMasks[i] ? BST_CHECKED : BST_UNCHECKED);
@@ -433,6 +436,11 @@ void SWS_SnapshotsWnd::RenameCurrent()
 		if (g_ss.Get()->m_snapshots.Get(i) == g_ss.Get()->m_pCurSnapshot)
 			break;
 	m_pLists.Get(0)->EditListItem((SWS_ListItem*)g_ss.Get()->m_snapshots.Get(i), 1);
+}
+
+bool SWS_SnapshotsWnd::GetPromptOnDeleted()
+{
+	return g_bPromptOnDeleted;
 }
 
 void SWS_SnapshotsWnd::OnInitDlg()
@@ -456,6 +464,7 @@ void SWS_SnapshotsWnd::OnInitDlg()
 	m_resize.init_item(IDC_APPLYRECALL, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_NAMEPROMPT, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_HIDENEW, 1.0, 0.0, 1.0, 0.0);
+	m_resize.init_item(IDC_DELTRACKSPROMPT, 1.0, 0.0, 1.0, 0.0);
 #ifndef _SNAP_TINY_BUTTONS
 	m_resize.init_item(IDC_OPTIONS, 1.0, 1.0, 1.0, 1.0);
 #endif
@@ -667,6 +676,7 @@ void SWS_SnapshotsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case IDC_NAMEPROMPT:
 		case IDC_HIDENEW:
 		case IDC_SHOWSELONLY:
+		case IDC_DELTRACKSPROMPT:
 			// Filter controls are handled in the default case
 			GetOptions();
 			Update();
@@ -774,7 +784,7 @@ void SWS_SnapshotsWnd::OnDestroy()
 	char str[256];
 
 	// Save window state
-	sprintf(str, "%d %d %d %d %d %d %d %d %d",
+	sprintf(str, "%d %d %d %d %d %d %d %d %d %d",
 		g_iMask,
 		g_bApplyFilterOnRecall ? 1 : 0,
 		g_bHideOptions ? 1 : 0,
@@ -783,7 +793,8 @@ void SWS_SnapshotsWnd::OnDestroy()
 		g_bSelOnly_OnSave ? 1 : 0,
 		m_iSelType,
 		g_bSelOnly_OnRecall ? 1 : 0,
-		g_bShowSelOnly ? 1 : 0);
+		g_bShowSelOnly ? 1 : 0,
+		g_bPromptOnDeleted ? 1 : 0);
 	WritePrivateProfileString(SWS_INI, SNAP_OPTIONS_KEY, str, get_ini_file());
 
 #ifdef _SNAP_TINY_BUTTONS
@@ -841,6 +852,7 @@ void SWS_SnapshotsWnd::GetOptions()
 	g_bShowSelOnly = IsDlgButtonChecked(m_hwnd, IDC_SHOWSELONLY) == BST_CHECKED;
 	g_bApplyFilterOnRecall = IsDlgButtonChecked(m_hwnd, IDC_APPLYRECALL) == BST_CHECKED;
 	g_bPromptOnNew = IsDlgButtonChecked(m_hwnd, IDC_NAMEPROMPT) == BST_CHECKED;
+	g_bPromptOnDeleted = IsDlgButtonChecked(m_hwnd, IDC_DELTRACKSPROMPT) == BST_CHECKED;
 }
 
 void SWS_SnapshotsWnd::ShowControls(bool bShow)
@@ -863,6 +875,7 @@ void SWS_SnapshotsWnd::ShowControls(bool bShow)
 	ShowWindow(GetDlgItem(m_hwnd, IDC_APPLYRECALL), bShow);
 	ShowWindow(GetDlgItem(m_hwnd, IDC_NAMEPROMPT), bShow);
 	ShowWindow(GetDlgItem(m_hwnd, IDC_HIDENEW), bShow);
+	ShowWindow(GetDlgItem(m_hwnd, IDC_DELTRACKSPROMPT), bShow);
 }
 
 #ifdef _SNAP_TINY_BUTTONS

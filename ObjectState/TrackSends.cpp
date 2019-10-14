@@ -222,6 +222,34 @@ TrackSends::~TrackSends()
 	m_sends.Empty(true);
 }
 
+enum class EnvTypes {
+	AUXVOL = 0,
+	AUXPAN,
+	AUXMUTE
+};
+
+static void DisplayStoreSendEnvError(MediaTrack* tr, EnvTypes envType, const envelope::bad_get_env_chunk_big& ex)
+{
+	std::ostringstream ss;
+	ss << "Track " << static_cast<int>(GetMediaTrackInfo_Value(tr, "IP_TRACKNUMBER")) << ":\n";
+
+	switch (envType)
+	{
+	case EnvTypes::AUXVOL:
+		ss << __LOCALIZE("Error storing send volume envelope!\n", "sws_mbox");
+		break;
+	case EnvTypes::AUXPAN:
+		ss << __LOCALIZE("Error storing send pan envelope!\n", "sws_mbox");
+		break;
+	case EnvTypes::AUXMUTE:
+		ss << __LOCALIZE("Error storing send mute envelope!\n", "sws_mbox");
+		break;
+	}
+	ss << ex.what(); // localized in envelope.cpp
+
+	MessageBox(g_hwndParent, ss.str().c_str(), __LOCALIZE("SWS Snapshots - Error", "sws_mbox"), MB_OK);
+}
+
 void TrackSends::Build(MediaTrack* tr)
 {
 	// Get the HW sends from the track object string
@@ -270,30 +298,47 @@ void TrackSends::Build(MediaTrack* tr)
 			if (strncmp(line, searchStr, strlen(searchStr)) == 0) {
 	
 				// get the AUXVOL, AUXPAN, AUXMUTE subchunks
-				// note: chunks don't work properly with AIs currently
+				// note: envelope points in automations items aren't included in envelope chunks
 				// https://forum.cockos.com/showthread.php?t=205279
-				char AUXVOLchunk[4096]; char AUXPANchunk[4096]; char AUXMUTEchunk[4096];
-				WDL_FastString AUXVOLstr, AUXPANstr, AUXMUTEstr;
+				std::string AUXVOLstr, AUXPANstr, AUXMUTEstr;
 
 				TrackEnvelope* auxrcvVolEnv = (TrackEnvelope*)GetSetTrackSendInfo(pDest, -1, receiveIdx, "P_ENV", (void*)"<VOLENV");
 				TrackEnvelope* auxrcvPanEnv = (TrackEnvelope*)GetSetTrackSendInfo(pDest, -1, receiveIdx, "P_ENV", (void*)"<PANENV");
 				TrackEnvelope* auxrcvMuteEnv = (TrackEnvelope*)GetSetTrackSendInfo(pDest, -1, receiveIdx, "P_ENV", (void*)"<MUTEENV");
 
-				if (auxrcvVolEnv) {
-					GetEnvelopeStateChunk(auxrcvVolEnv, AUXVOLchunk, sizeof(AUXVOLchunk), true);
-					AUXVOLstr.Set(AUXVOLchunk);
+				if (auxrcvVolEnv) 
+				{
+					try {
+						AUXVOLstr = envelope::GetEnvelopeStateChunkBig(auxrcvVolEnv);
+					} 
+					catch (const envelope::bad_get_env_chunk_big &ex) {
+						
+						DisplayStoreSendEnvError(tr, EnvTypes::AUXVOL, ex);
+					}
 				}
 
-				if (auxrcvPanEnv) {
-					GetEnvelopeStateChunk(auxrcvPanEnv, AUXPANchunk, sizeof(AUXPANchunk), true);
-					AUXPANstr.Set(AUXPANchunk);
+				if (auxrcvPanEnv) 
+				{
+					try {
+						AUXPANstr = envelope::GetEnvelopeStateChunkBig(auxrcvPanEnv);
+					}
+					catch (const envelope::bad_get_env_chunk_big& ex) {
+						DisplayStoreSendEnvError(tr, EnvTypes::AUXPAN, ex);
+					}
+					
 				}
 
-				if (auxrcvMuteEnv) {
-					GetEnvelopeStateChunk(auxrcvMuteEnv, AUXMUTEchunk, sizeof(AUXMUTEchunk), true);
-					AUXMUTEstr.Set(AUXMUTEchunk);
+				if (auxrcvMuteEnv) 
+				{
+					try {
+						AUXMUTEstr = envelope::GetEnvelopeStateChunkBig(auxrcvMuteEnv);
+					}
+					catch (const envelope::bad_get_env_chunk_big& ex) {
+						DisplayStoreSendEnvError(tr, EnvTypes::AUXMUTE, ex);
+					}
+					
 				}
-				m_sends.Add(new TrackSend(&guid, line, AUXVOLstr.Get(), AUXPANstr.Get(), AUXMUTEstr.Get()));
+				m_sends.Add(new TrackSend(&guid, line, AUXVOLstr.c_str(), AUXPANstr.c_str(), AUXMUTEstr.c_str()));
 			}
 		}
 		SWS_FreeHeapPtr(trackStr);

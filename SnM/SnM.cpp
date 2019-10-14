@@ -486,10 +486,10 @@ static COMMAND_T s_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Play next region (smooth seek)" }, "S&M_PLAY_NEXT_RGN_PLAYLIST", PlaylistSeekPrevNext, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Play previous region (based on current playing region)" }, "S&M_PLAY_PREV_CUR_BASED_RGN_PLAYLIST", PlaylistSeekPrevNextCurBased, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Play next region (based on current playing region)" }, "S&M_PLAY_NEXT_CUR_BASED_RGN_PLAYLIST", PlaylistSeekPrevNextCurBased, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Region Playlist - Crop project to playlist" }, "S&M_CROP_RGN_PLAYLIST1", AppendPasteCropPlaylist, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Region Playlist - Crop project to playlist (new project tab)" }, "S&M_CROP_RGN_PLAYLIST2", AppendPasteCropPlaylist, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Region Playlist - Append playlist to project" }, "S&M_APPEND_RGN_PLAYLIST", AppendPasteCropPlaylist, NULL, 2},
-	{ { DEFACCEL, "SWS/S&M: Region Playlist - Paste playlist at edit cursor" }, "S&M_PASTE_RGN_PLAYLIST", AppendPasteCropPlaylist, NULL, 3},
+	{ { DEFACCEL, "SWS/S&M: Region Playlist - Crop project to playlist" }, "S&M_CROP_RGN_PLAYLIST1", AppendPasteCropPlaylist, NULL, CROP_PROJECT},
+	{ { DEFACCEL, "SWS/S&M: Region Playlist - Crop project to playlist (new project tab)" }, "S&M_CROP_RGN_PLAYLIST2", AppendPasteCropPlaylist, NULL, CROP_PROJECT_TAB},
+	{ { DEFACCEL, "SWS/S&M: Region Playlist - Append playlist to project" }, "S&M_APPEND_RGN_PLAYLIST", AppendPasteCropPlaylist, NULL, PASTE_PROJECT},
+	{ { DEFACCEL, "SWS/S&M: Region Playlist - Paste playlist at edit cursor" }, "S&M_PASTE_RGN_PLAYLIST", AppendPasteCropPlaylist, NULL, PASTE_CURSOR},
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Set repeat off" }, "S&M_PLAYLIST_REPEAT_ON", SetPlaylistRepeat, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Set repeat on" }, "S&M_PLAYLIST_REPEAT_OFF", SetPlaylistRepeat, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Toggle repeat" }, "S&M_PLAYLIST_TGL_REPEAT", SetPlaylistRepeat, NULL, -1, IsPlaylistRepeat},
@@ -1111,6 +1111,11 @@ void IniFileInit()
 	g_SNM_ToolbarRefresh = (GetPrivateProfileInt("General", "ToolbarsAutoRefresh", 1, g_SNM_IniFn.Get()) == 1);
 	g_SNM_ToolbarRefreshFreq = BOUNDED(GetPrivateProfileInt("General", "ToolbarsAutoRefreshFreq", SNM_DEF_TOOLBAR_RFRSH_FREQ, g_SNM_IniFn.Get()), 100, 5000);
 	g_SNM_SupportBuggyPlug = GetPrivateProfileInt("General", "BuggyPlugsSupport", 0, g_SNM_IniFn.Get());
+
+	// #1175, prompt by default, may be overridden
+	if (GetPrivateProfileInt("Misc", "RemoveAllEnvsSelTracksPrompt", -666, g_SNM_IniFn.Get()) == -666)
+		WritePrivateProfileString("Misc", "RemoveAllEnvsSelTracksPrompt", "1", g_SNM_IniFn.Get());
+		
 #ifdef _WIN32
 	g_SNM_ClearType = (GetPrivateProfileInt("General", "ClearTypeFont", 1, g_SNM_IniFn.Get()) == 1);
 

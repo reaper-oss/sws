@@ -416,7 +416,7 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 					if (*m_tooltip)
 					{
-						if (!(*(int*)GetConfigVar("tooltips")&2)) // obeys the "Tooltip for UI elements" pref
+						if (!(*ConfigVar<int>("tooltips")&2)) // obeys the "Tooltip for UI elements" pref
 						{
 							POINT p = { m_tooltip_pt.x + xo, m_tooltip_pt.y + yo };
 							RECT rr = { r.left+xo,r.top+yo,r.right+xo,r.bottom+yo };
@@ -1256,11 +1256,14 @@ void SWS_ListView::Update()
 				{
 					item.iSubItem = iCol;
 					GetItemText(pItem, k, str, sizeof(str));
-					if (!iCol && !bFound)
+					if (!bFound)
 					{
 						item.mask |= LVIF_PARAM | LVIF_TEXT;
 						item.lParam = (LPARAM)pItem;
-						ListView_InsertItem(m_hwndList, &item);
+						if(iCol == 0)
+							ListView_InsertItem(m_hwndList, &item);
+						else
+							ListView_SetItem(m_hwndList, &item);
 						bResort = true;
 					}
 					else

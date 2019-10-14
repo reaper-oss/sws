@@ -224,9 +224,9 @@ void SWS_MarkerListWnd::Update(bool bForce)
 	// Change the time string if the project time mode changes
 	static int prevTimeMode = -1;
 	bool bChanged = bForce;
-	if (*(int*)GetConfigVar("projtimemode") != prevTimeMode)
+	if (*ConfigVar<int>("projtimemode") != prevTimeMode)
 	{
-		prevTimeMode = *(int*)GetConfigVar("projtimemode");
+		prevTimeMode = *ConfigVar<int>("projtimemode");
 		bChanged = true;
 	}
 
@@ -404,8 +404,19 @@ int SWS_MarkerListWnd::OnKey(MSG* msg, int iKeyState)
 	{
 		if (msg->wParam == VK_DELETE)
 		{
-			OnCommand(DELETE_MSG, 0);
-			return 1;
+			// #1119, don't block Del key in Filter textbox
+			HWND h = GetDlgItem(m_hwnd, IDC_FILTER);
+#ifdef _WIN32
+			if (msg->hwnd == h)
+#else
+			if (GetFocus() == h)
+#endif
+				return 0;
+			else
+			{ 
+				OnCommand(DELETE_MSG, 0);
+				return 1;
+			}
 		}
 		else if (msg->wParam == VK_RETURN)
 		{

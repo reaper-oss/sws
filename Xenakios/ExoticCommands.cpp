@@ -29,6 +29,7 @@
 #include "../SnM/SnM_Dlg.h"
 #include "../reaper/localize.h"
 #include "Parameters.h"
+#include "../SnM/SnM_Util.h"
 
 using namespace std;
 
@@ -197,7 +198,7 @@ void DoNudgeItemsRightBeatsAndConfBased(COMMAND_T*)
 
 void DoNudgeSamples(COMMAND_T* ct)
 {
-	double dSrate = (double)(*(int*)GetConfigVar("projsrate"));
+	double dSrate = (double)(*ConfigVar<int>("projsrate"));
 	for (int i = 1; i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
@@ -340,7 +341,7 @@ void DoNudgeTakeVols(bool UseConf,bool Positive,double TheNudgeAmount)
 	{
 		CurTake=ProjectTakes[i];
 		double NewVol;
-		double OldVol=*(double*)GetSetMediaItemTakeInfo(CurTake,"D_VOL",NULL);
+		double OldVol=abs(*(double*)GetSetMediaItemTakeInfo(CurTake,"D_VOL",NULL));
 		double OldVolDB=20*(log10(OldVol));
 		if (Positive)
 			NewVol=OldVolDB+NudgeAmount; else NewVol=OldVolDB-NudgeAmount;
@@ -348,6 +349,8 @@ void DoNudgeTakeVols(bool UseConf,bool Positive,double TheNudgeAmount)
 		if (NewVol>-144.0)
 			NewVolGain=exp(NewVol*0.115129254);
 			else NewVolGain=0;
+		if (IsTakePolarityFlipped(CurTake))
+			NewVolGain = -NewVolGain;
 		GetSetMediaItemTakeInfo(CurTake,"D_VOL",&NewVolGain);
 	}
 	Undo_OnStateChangeEx(__LOCALIZE("Nudge take volume","sws_undo"),4,-1);
@@ -379,9 +382,13 @@ void DoResetTakeVol(COMMAND_T* ct)
 	vector<MediaItem_Take*> ProjectTakes;
 	XenGetProjectTakes(ProjectTakes,true,true);
 	int i;
-	double NewVol=1.0;
-	for (i=0;i<(int)ProjectTakes.size();i++)
-		GetSetMediaItemTakeInfo(ProjectTakes[i],"D_VOL",&NewVol);
+	double NewVol;
+	for (i = 0; i < (int)ProjectTakes.size(); i++)
+	{
+		MediaItem_Take* take = ProjectTakes[i];
+		IsTakePolarityFlipped(take) ? NewVol = -1.0 : NewVol = 1.0;
+		GetSetMediaItemTakeInfo(take, "D_VOL", &NewVol);
+	}
 	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);
 	UpdateTimeline();
 }
@@ -775,7 +782,16 @@ void On_SliderMove(HWND theHwnd,WPARAM wParam,LPARAM lParam,HWND SliderHandle,in
 		{
 			double NewVol=( 2.0/1000*TheSlipos);
 			if (CurTake)
-				GetSetMediaItemTakeInfo(CurTake,"D_VOL",&NewVol);
+			{
+				if (IsTakePolarityFlipped(CurTake))
+				{
+					if (TheSlipos == 0)
+						NewVol = -0.00000001; // trick to prevent polarity reset if take vol. is set to 0.0 (-inf)
+					else 
+						NewVol = -NewVol;
+				}
+				GetSetMediaItemTakeInfo(CurTake, "D_VOL", &NewVol);
+			}
 		}
 		if (movedParam==1)
 		{
@@ -799,7 +815,7 @@ void TakeMixerResetTakes(bool ResetVol=false,bool ResetPan=false)
 	for (int i = 0; i < GetMediaItemNumTakes(g_TargetItem); i++)
 	{
 		CurTake=GetMediaItemTake(g_TargetItem,i);
-		double NewVolume=1.0;
+		double NewVolume = IsTakePolarityFlipped(CurTake) ? -1.0 : 1.0;
 		double NewPan=0.0;
 		if (CurTake && ResetVol==true)
 			GetSetMediaItemTakeInfo(CurTake,"D_VOL",&NewVolume);
@@ -911,7 +927,12 @@ WDL_DLGRET TakeMixerDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 						CurTake=GetMediaItemTake(g_TargetItem,i);
 						double NewVol=g_TakeMixerState.StoredVolumes[i];
 						if (CurTake)
-							GetSetMediaItemTakeInfo(CurTake,"D_VOL",&NewVol);
+						{
+							if (IsTakePolarityFlipped(CurTake)) // we stored absolute value in DoShowTakeMixerDlg()
+								NewVol = -NewVol;
+							GetSetMediaItemTakeInfo(CurTake, "D_VOL", &NewVol);
+						}
+							
 						double NewPan=g_TakeMixerState.StoredPans[i];
 						if (CurTake)
 							GetSetMediaItemTakeInfo(CurTake,"D_PAN",&NewPan);
@@ -972,7 +993,7 @@ void DoShowTakeMixerDlg(COMMAND_T*)
 	for (int i = 0; i < g_TakeMixerState.NumTakes; i++)
 	{
 		MediaItem_Take* CurTake = GetMediaItemTake(g_TargetItem, i);
-		g_TakeMixerState.StoredVolumes[i]= CurTake ? *(double*)GetSetMediaItemTakeInfo(CurTake,"D_VOL",NULL) : 0.0;
+		g_TakeMixerState.StoredVolumes[i]= CurTake ? abs(*(double*)GetSetMediaItemTakeInfo(CurTake,"D_VOL",NULL)) : 0.0;
 		g_TakeMixerState.StoredPans[i]= CurTake ? *(double*)GetSetMediaItemTakeInfo(CurTake,"D_PAN",NULL) : 0.0;
 	}
 

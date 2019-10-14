@@ -33,15 +33,12 @@
 #include "SnM_Track.h"
 #include "SnM_Util.h"
 #ifdef _SNM_HOST_AW
-#include "../Misc/Adam.h"
+#  include "../Misc/Adam.h"
 #endif
 #include "../reaper/localize.h"
 
-#ifndef NO_TAGLIB
-#  include <taglib/tag.h>
-#  include <taglib/fileref.h>
-#endif
-
+#include <taglib/tag.h>
+#include <taglib/fileref.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 // Reascript export, funcs made dumb-proof!
@@ -204,32 +201,20 @@ bool SNM_GetProjectMarkerName(ReaProject* _proj, int _num, bool _isrgn, WDL_Fast
 	return false;
 }
 
-int SNM_GetIntConfigVar(const char* _varName, int _errVal) {
-	if (int* pVar = (int*)(GetConfigVar(_varName)))
-		return *pVar;
-	return _errVal;
+int SNM_GetIntConfigVar(const char *varName, const int fallback) {
+	return ConfigVar<int>(varName).value_or(fallback);
 }
 
-bool SNM_SetIntConfigVar(const char* _varName, int _newVal) {
-	if (int* pVar = (int*)(GetConfigVar(_varName))) {
-		*pVar = _newVal;
-		return true;
-	}
-	return false;
+bool SNM_SetIntConfigVar(const char *varName, const int newValue) {
+	return ConfigVar<int>(varName).try_set(newValue);
 }
 
-double SNM_GetDoubleConfigVar(const char* _varName, double _errVal) {
-	if (double* pVar = (double*)(GetConfigVar(_varName)))
-		return *pVar;
-	return _errVal;
+double SNM_GetDoubleConfigVar(const char *varName, double fallback) {
+	return ConfigVar<double>(varName).value_or(fallback);
 }
 
-bool SNM_SetDoubleConfigVar(const char* _varName, double _newVal) {
-	if (double* pVar = (double*)(GetConfigVar(_varName))) {
-		*pVar = _newVal;
-		return true;
-	}
-	return false;
+bool SNM_SetDoubleConfigVar(const char *varName, double newValue) {
+	return ConfigVar<double>(varName).try_set(newValue);
 }
 
 // host some funcs from Ultraschall, https://github.com/Ultraschall
@@ -245,10 +230,6 @@ bool SNM_ReadMediaFileTag(const char *fn, const char* tag, char* tagval, int tag
 {
   if (!fn || !*fn || !tagval || tagval_sz<=0) return false;
   *tagval=0;
-#ifdef NO_TAGLIB
-  return false;
-#else
-
 #ifdef _WIN32
   wchar_t* w_fn = WideCharPlz(fn);
   if (!w_fn) return false;
@@ -280,16 +261,11 @@ bool SNM_ReadMediaFileTag(const char *fn, const char* tag, char* tagval, int tag
   delete [] w_fn;
 #endif
   return !!*tagval;
-#endif
 }
 
 bool SNM_TagMediaFile(const char *fn, const char* tag, const char* tagval)
 {
   if (!fn || !*fn || !tagval || !tag) return false;
-
-#ifdef NO_TAGLIB
-  return false;
-#else
 
 #ifdef _WIN32
   wchar_t* w_fn = WideCharPlz(fn);
@@ -333,7 +309,6 @@ bool SNM_TagMediaFile(const char *fn, const char* tag, const char* tagval)
   delete [] w_fn;
 #endif
   return didsmthg;
-#endif
 }
 
 

@@ -104,7 +104,7 @@ void AddToRenameLog(string &oldfilename,string &newfilename)
 	{
 		//std::ofstream os(OutFileName);	
 		char logfilename[1024];
-		sprintf(logfilename,"%s/Plugins/XC_Rename.log",GetExePath());
+		snprintf(logfilename,sizeof(logfilename),"%s/Plugins/XC_Rename.log",GetExePath());
 		g_renamelogstream=new ofstream(logfilename,ios_base::app);
 	}
 	if (g_renamelogstream)

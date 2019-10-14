@@ -266,7 +266,7 @@ void TrackSends::Build(MediaTrack* tr)
 	// Get the track sends from the cooresponding track object string
 	MediaTrack* pDest;
 	int idx = 0;
-	char searchStr[20];
+	char searchStr[21];
 	sprintf(searchStr, "AUXRECV %d ", CSurf_TrackToID(tr, false) - 1);
 	while ((pDest = (MediaTrack*)GetSetTrackSendInfo(tr, 0, idx++, "P_DESTTRACK", NULL)))
 	{

@@ -91,7 +91,7 @@ WDL_DLGRET CreateTxDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam
 				{
 					idxfirstcreated=CSurf_TrackToID(vectk[0],false);
 				}
-				sprintf(buf,"%s %.2d",g_newtrackparams.basename.c_str(),i+1);
+				snprintf(buf,sizeof(buf),"%s %.2d",g_newtrackparams.basename.c_str(),i+1);
 				GetSetMediaTrackInfo(vectk[0],"P_NAME",&buf);
 			}
 		}

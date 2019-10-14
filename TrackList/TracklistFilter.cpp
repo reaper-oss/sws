@@ -63,7 +63,7 @@ char* FilteredVisState::ItemString(char* str, int maxLen, bool* bDone)
 	*bDone = false;
 	if (iState == 0)
 	{
-		sprintf(str, "<SWSTRACKFILTER %s", m_sFilter.Get());
+		snprintf(str, maxLen, "<SWSTRACKFILTER %s", m_sFilter.Get());
 		iState = 1;
 		iIndex = 0;
 	}
@@ -71,18 +71,18 @@ char* FilteredVisState::ItemString(char* str, int maxLen, bool* bDone)
 	{
 		if (iIndex < m_filteredOut.GetSize())
 		{
-			sprintf(str, "%d %d", CSurf_TrackToID(m_filteredOut.Get(iIndex)->tr, false), m_filteredOut.Get(iIndex)->iVis);
+			snprintf(str, maxLen, "%d %d", CSurf_TrackToID(m_filteredOut.Get(iIndex)->tr, false), m_filteredOut.Get(iIndex)->iVis);
 			iIndex++;
 		}
 		else
 		{
 			*bDone = true;
 			iState = 0;
-			sprintf(str, ">");
+			snprintf(str, maxLen, ">");
 		}
 	}
 	return str;
-}		
+}
 
 WDL_PtrList<void>* FilteredVisState::GetFilteredTracks()
 {

@@ -872,7 +872,7 @@ int ParsePatchCore(
 							if (success) {
 								if (_mode == SNM_D_ADD) d += *(double*)_value;
 								else d *= *(double*)_value;
-								char bufConv[64] = "";
+								char bufConv[326]{};
 								int l = snprintf(bufConv, sizeof(bufConv), "%.14f", d);
 								if (l<=0 || l>=64) break;
 								alter |= WriteChunkLine(newChunk, bufConv, _tokenPos, &lp); 

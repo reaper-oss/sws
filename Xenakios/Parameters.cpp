@@ -230,7 +230,7 @@ WDL_DLGRET ExoticParamsDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		case WM_INITDIALOG:
 		{
 			ReadINIfile();
-			char textBuf[100];
+			char textBuf[316];
 		
 			sprintf(textBuf,"%.2f",g_command_params.TrackVolumeNudge);
 			SetDlgItemText(hwnd, IDC_TVOL_NUDGE, textBuf);

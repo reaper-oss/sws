@@ -1327,10 +1327,10 @@ WDL_DLGRET AdjustPlayrateOptionsProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 			{
 				case IDOK:
 				{
-					char tmp [256];
-					GetDlgItemText(hwnd, IDC_EDIT1, tmp, 128); rangeValues->second.first  = SetToBounds(AltAtof(tmp), 0.25, 4.0);
-					GetDlgItemText(hwnd, IDC_EDIT2, tmp, 128); rangeValues->second.second = SetToBounds(AltAtof(tmp), 0.25, 4.0);
-					GetDlgItemText(hwnd, IDC_EDIT3, tmp, 128); rangeValues->first         = SetToBounds(AltAtof(tmp), 0.00001, 4.0);
+					char tmp[954]{};
+					GetDlgItemText(hwnd, IDC_EDIT1, tmp, sizeof(tmp)); rangeValues->second.first  = SetToBounds(AltAtof(tmp), 0.25, 4.0);
+					GetDlgItemText(hwnd, IDC_EDIT2, tmp, sizeof(tmp)); rangeValues->second.second = SetToBounds(AltAtof(tmp), 0.25, 4.0);
+					GetDlgItemText(hwnd, IDC_EDIT3, tmp, sizeof(tmp)); rangeValues->first         = SetToBounds(AltAtof(tmp), 0.00001, 4.0);
 
 					snprintf(tmp, sizeof(tmp), "%lf %lf %lf", rangeValues->first, rangeValues->second.first, rangeValues->second.second);
 					WritePrivateProfileString("SWS", ADJUST_PLAYRATE_KEY, tmp, get_ini_file());

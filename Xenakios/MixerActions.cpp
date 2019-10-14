@@ -464,7 +464,7 @@ WDL_DLGRET RenameTraxDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 			EnableWindow(GetDlgItem(hwnd, IDC_CHECK1), g_MultipleSelected);
 			CheckDlgButton(hwnd, IDC_CHECK1, g_RenaTraxDialogSetAutorename ? BST_CHECKED : BST_UNCHECKED);
 			char buf[500];
-			sprintf(buf,__LOCALIZE_VERFMT("Rename track %d / %d","sws_DLG_139"),g_RenaCurTrack,g_RenaSelTrax);
+			snprintf(buf,sizeof(buf),__LOCALIZE_VERFMT("Rename track %d / %d","sws_DLG_139"),g_RenaCurTrack,g_RenaSelTrax);
 			SetWindowText(hwnd,buf);
 			break;
 		}
@@ -534,7 +534,7 @@ void DoRenameTracksDlg(COMMAND_T* ct)
 		for (i=0;i<(int)VecSelTracks.size();i++)
 		{
 			//
-			char argh[10];
+			char argh[13];
 			sprintf(argh,"-%.2d",i+1);
 			AutogenName.assign(g_NewTrackName);
 			AutogenName.append(argh);

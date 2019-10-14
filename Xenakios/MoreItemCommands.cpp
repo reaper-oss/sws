@@ -91,7 +91,7 @@ WDL_DLGRET ItemPosRemapDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lP
     {
         case WM_INITDIALOG:
 		{
-			char labtxt[256];
+			char labtxt[314];
 			sprintf(labtxt,"%.2f",g_itemposremap_params.dCurve);
 			SetDlgItemText(hwnd,IDC_IPRCURVE,labtxt);
 #ifdef _WIN32
@@ -112,7 +112,7 @@ WDL_DLGRET ItemPosRemapDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lP
 		}
         case WM_HSCROLL:
 		{
-			char TextBuf[128];
+			char TextBuf[314];
 			int SliderPos=(int)SendMessage((HWND)lParam,TBM_GETPOS,0,0);
 			double PosScalFact=.1+1.9*SliderPos/1000.0;
 			sprintf(TextBuf,"%.2f",PosScalFact);
@@ -465,7 +465,7 @@ void DoDeleteItemAndMedia(COMMAND_T*)
 					if (CurPCM && CurPCM->GetFileName() && FileExists(CurPCM->GetFileName()) && _stricmp(GetFileExtension(CurPCM->GetFileName()), "rpp"))
 					{
 						char buf[2000];
-						sprintf(buf,__LOCALIZE_VERFMT("Do you really want to immediately delete file (NO UNDO) %s?","sws_mbox"),CurPCM->GetFileName());
+						snprintf(buf,sizeof(buf),__LOCALIZE_VERFMT("Do you really want to immediately delete file (NO UNDO) %s?","sws_mbox"),CurPCM->GetFileName());
 
 						int rc=MessageBox(g_hwndParent,buf,__LOCALIZE("Xenakios - Info","sws_mbox"),MB_OKCANCEL);
 						if (rc==IDOK)
@@ -570,7 +570,7 @@ void DoNukeTakeAndSourceMedia(COMMAND_T*)
 				if (CurPCM && CurPCM->GetFileName() && FileExists(CurPCM->GetFileName()) && _stricmp(GetFileExtension(CurPCM->GetFileName()), "rpp"))
 				{
 					char buf[2000];
-					sprintf(buf,__LOCALIZE_VERFMT("Do you really want to immediately delete file (NO UNDO) %s?","sws_mbox"),CurPCM->GetFileName());
+					snprintf(buf,sizeof(buf),__LOCALIZE_VERFMT("Do you really want to immediately delete file (NO UNDO) %s?","sws_mbox"),CurPCM->GetFileName());
 
 					int rc=MessageBox(g_hwndParent,buf,__LOCALIZE("Xenakios - Info","sws_mbox"),MB_OKCANCEL);
 					if (rc==IDOK)

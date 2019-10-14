@@ -360,7 +360,7 @@ void ActionsList(COMMAND_T*)
 				if (COMMAND_T* cmd = g_commands.Enumerate(i, NULL, NULL))
 				{
 					WDL_String* pFn = g_cmdFiles.Get(cmd->accel.accel.cmd, NULL);
-					sprintf(cBuf, "\"%s\",%s,%d,_%s\n", cmd->accel.desc, pFn ? pFn->Get() : "", cmd->accel.accel.cmd, cmd->id);
+					snprintf(cBuf, sizeof(cBuf), "\"%s\",%s,%d,_%s\n", cmd->accel.desc, pFn ? pFn->Get() : "", cmd->accel.accel.cmd, cmd->id);
 					fputs(cBuf, f);
 				}
 			}

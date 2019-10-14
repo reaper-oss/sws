@@ -125,7 +125,7 @@ void TogDefFadeZero(COMMAND_T*)
 	{
 		if (*pdDefFade != g_dDefFadeLen)
 		{
-			char str[64];
+			char str[320];
 			sprintf(str, "%.8f", *pdDefFade);
 			WritePrivateProfileString(SWS_INI, SAVED_DEF_FADE_LEN_KEY, str, get_ini_file());
 			g_dDefFadeLen = *pdDefFade;
@@ -199,10 +199,9 @@ int ProjPrefsInit()
 	g_prevautoxfade = *ConfigVar<int>("autoxfade");
 
 	// Get saved default fade length
-	char str[64];
-	char strDef[64];
+	char str[320], strDef[320];
 	sprintf(strDef, "%.8f", *ConfigVar<double>("deffadelen"));
-	GetPrivateProfileString(SWS_INI, SAVED_DEF_FADE_LEN_KEY, strDef, str, 64, get_ini_file());
+	GetPrivateProfileString(SWS_INI, SAVED_DEF_FADE_LEN_KEY, strDef, str, sizeof(str), get_ini_file());
 	g_dDefFadeLen = atof(str);
 
 	return 1;

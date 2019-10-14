@@ -234,7 +234,7 @@ char* SelItemsTrack::ItemString(char* str, int maxLen, bool* bDone)
 	{
 	case 0: // Track GUID
 		guidToString(&m_guid, guidStr);
-		sprintf(str, "<SELTRACKITEMSELSTATE %s", guidStr);
+		snprintf(str, maxLen, "<SELTRACKITEMSELSTATE %s", guidStr);
 		iState = 1;
 		break;
 	case 1: // Slot text
@@ -245,11 +245,11 @@ char* SelItemsTrack::ItemString(char* str, int maxLen, bool* bDone)
 			*bDone = true;
 			iSlot  = 0;
 			iState = 0;
-			sprintf(str, ">");
+			snprintf(str, maxLen, ">");
 		}
 		else
 		{
-			sprintf(str, "<SLOT %d", iSlot+1);
+			snprintf(str, maxLen, "<SLOT %d", iSlot+1);
 			iState = 2;
 		}
 		break;
@@ -311,7 +311,7 @@ void RestoreSelTrackSelItems(int iSlot)
 	PreventUIRefresh(-1);
 
 	char cUndoText[256];
-	sprintf(cUndoText, __LOCALIZE_VERFMT("Restore selected track(s) selected item(s), slot %d","sws_undo"), iSlot+1);
+	snprintf(cUndoText, sizeof(cUndoText), __LOCALIZE_VERFMT("Restore selected track(s) selected item(s), slot %d","sws_undo"), iSlot+1);
 	Undo_OnStateChangeEx(cUndoText, UNDO_STATE_ITEMS, -1);
 	UpdateArrange();
 }

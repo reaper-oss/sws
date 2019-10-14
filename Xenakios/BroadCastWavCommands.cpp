@@ -138,7 +138,7 @@ WDL_DLGRET NewRenameDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 				char wintitle[200];
 				SetFocus(GetDlgItem(hwnd, IDC_TAKENAME_EDIT));
 				SendMessage(GetDlgItem(hwnd, IDC_TAKENAME_EDIT), EM_SETSEL, 0, -1);
-				sprintf(wintitle, __LOCALIZE_VERFMT("Rename take %d / %d","sws_DLG_116"),g_takerenameParams.RenameTakeNumber,g_takerenameParams.TakesToRename);
+				snprintf(wintitle, sizeof(wintitle), __LOCALIZE_VERFMT("Rename take %d / %d","sws_DLG_116"),g_takerenameParams.RenameTakeNumber, g_takerenameParams.TakesToRename);
 				SetWindowText(hwnd,wintitle);
 				EnableWindow(GetDlgItem(hwnd,ID_TAKEANDSOURCE), 0);
 				EnableWindow(GetDlgItem(hwnd,IDC_RENAMEMEDIA), 0);
@@ -313,7 +313,7 @@ void DoOpenRPPofBWAVdesc(COMMAND_T*)
 			if (FileExists(RPPFileName.c_str()))
 			{
 				char RPPFileNameBuf[1024];
-				sprintf(RPPFileNameBuf,"%s\\reaper.exe \"%s\"", GetExePath(), RPPFileName.c_str());
+				snprintf(RPPFileNameBuf, sizeof(RPPFileNameBuf), "%s\\reaper.exe \"%s\"", GetExePath(), RPPFileName.c_str());
 				if (!DoLaunchExternalTool(RPPFileNameBuf))
 					MessageBox(g_hwndParent, __LOCALIZE("Could not launch REAPER.","sws_mbox"), __LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 			}
@@ -333,7 +333,7 @@ void DoOpenRPPofBWAVdesc(COMMAND_T*)
 						if (x != string::npos)
 						{
 							char RPPFileNameBuf[1024];
- 							sprintf(RPPFileNameBuf, "%s\\reaper.exe \"%s\"", GetExePath(), FoundRPPs[i].c_str());
+							snprintf(RPPFileNameBuf, sizeof(RPPFileNameBuf), "%s\\reaper.exe \"%s\"", GetExePath(), FoundRPPs[i].c_str());
 							if (!DoLaunchExternalTool(RPPFileNameBuf))
 								MessageBox(g_hwndParent, __LOCALIZE("Could not launch REAPER.","sws_mbox"), __LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 							bRppFound = true;

@@ -165,14 +165,14 @@ char* MuteState::ItemString(char* str, int maxLen, bool* bDone)
 	{
 	case 0: // Track GUID
 		guidToString(&m_guid, guidStr);
-		sprintf(str, "<MUTESTATE %s %d %d", guidStr, m_bMute, m_iSendToParent);
+		snprintf(str, maxLen, "<MUTESTATE %s %d %d", guidStr, m_bMute, m_iSendToParent);
 		iState = 1;
 		break;
 	case 1: // Children GUIDs/states
 		if (iIndex < m_children.GetSize())
 		{
 			guidToString(&m_children.Get(iIndex)->m_guid, guidStr);
-			sprintf(str, "CHILD %s %d", guidStr, m_children.Get(iIndex)->m_bState);
+			snprintf(str, maxLen, "CHILD %s %d", guidStr, m_children.Get(iIndex)->m_bState);
 			iIndex++;
 			break;
 		}
@@ -185,7 +185,7 @@ char* MuteState::ItemString(char* str, int maxLen, bool* bDone)
 		if (iIndex < m_receives.GetSize())
 		{
 			guidToString(&m_receives.Get(iIndex)->m_guid, guidStr);
-			sprintf(str, "RECEIVE %s %d", guidStr, m_receives.Get(iIndex)->m_bState);
+			snprintf(str, maxLen, "RECEIVE %s %d", guidStr, m_receives.Get(iIndex)->m_bState);
 			iIndex++;
 			break;
 		}
@@ -194,7 +194,7 @@ char* MuteState::ItemString(char* str, int maxLen, bool* bDone)
 			*bDone = true;
 			iIndex = 0;
 			iState = 0;
-			sprintf(str, ">");
+			snprintf(str, maxLen, ">");
 		}
 	}
 	return str;

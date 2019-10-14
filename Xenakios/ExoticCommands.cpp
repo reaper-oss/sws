@@ -492,7 +492,7 @@ WDL_DLGRET ScaleItemPosDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lP
 #endif
 			SendMessage(hPosScaler,TBM_SETTIC,0,473);
 			SendMessage(hLenScaler,TBM_SETTIC,0,473);
-			char TextBuf[32];
+			char TextBuf[314];
 			sprintf(TextBuf,"%.2f",g_last_ScaleItemPosParams.dScaling);
 			SetDlgItemText(hwnd, IDC_EDIT1, TextBuf);
 			sprintf(TextBuf,"%.2f",g_last_ScaleItemPosParams.dLengthScaling);
@@ -503,7 +503,7 @@ WDL_DLGRET ScaleItemPosDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lP
 		}
         case WM_HSCROLL:
 		{
-			char TextBuf[128];
+			char TextBuf[314];
 			int SliderPos = (int)SendMessage((HWND)lParam, TBM_GETPOS, 0, 0);
 			double dPosScalFact = 10+((190.0/1000)*SliderPos);
 			if ((HWND)lParam == hPosScaler)
@@ -671,7 +671,7 @@ WDL_DLGRET RandomizeItemPosDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARA
     {
         case WM_INITDIALOG:
 		{
-			char TextBuf[32];
+			char TextBuf[314];
 
 			sprintf(TextBuf,"%.2f",g_last_RandomizeItemPosParams.RandRange);
 			SetDlgItemText(hwnd, IDC_EDIT1, TextBuf);
@@ -1219,7 +1219,7 @@ WDL_DLGRET TakeFinderDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 			char labtxt[256];
 			SetFocus(GetDlgItem(hwnd, IDC_EDIT1));
 			SendMessage(GetDlgItem(hwnd, IDC_EDIT1), EM_SETSEL, 0, -1);
-			sprintf(labtxt,__LOCALIZE_VERFMT("Search from %d items","sws_DLG_130"),g_NumProjectItems);
+			snprintf(labtxt,sizeof(labtxt),__LOCALIZE_VERFMT("Search from %d items","sws_DLG_130"),g_NumProjectItems);
 			SetDlgItemText(hwnd,IDC_STATIC1,labtxt);
 			SetFocus(GetDlgItem(hwnd, IDC_EDIT1));
 			SendMessage(GetDlgItem(hwnd, IDC_EDIT1), EM_SETSEL, 0, -1);
@@ -1235,7 +1235,7 @@ WDL_DLGRET TakeFinderDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 				if (len>0)
 				{
 					int NumMatches=PerformTakeSearch(labtxt);
-					sprintf(labtxt,__LOCALIZE_VERFMT("Found %d matching items","sws_DLG_130"),NumMatches);
+					snprintf(labtxt,sizeof(labtxt),__LOCALIZE_VERFMT("Found %d matching items","sws_DLG_130"),NumMatches);
 					SetDlgItemText(hwnd,IDC_STATIC1,labtxt);
 					if (NumMatches>0)
 					{

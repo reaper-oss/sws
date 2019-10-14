@@ -345,7 +345,7 @@ WDL_DLGRET RepeatPasteDialogProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM 
     {
 		case WM_INITDIALOG:
 		{
-			char TextBuf[32];
+			char TextBuf[314];
 			sprintf(TextBuf,"%.2f", dTimeInterval);
 			SetDlgItemText(hwnd, IDC_EDIT1, TextBuf);
 
@@ -973,7 +973,7 @@ WDL_DLGRET RenderItemsWithTailDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LP
     {
         case WM_INITDIALOG:
 		{
-			char TextBuf[32];
+			char TextBuf[314];
 
 			sprintf(TextBuf,"%.2f",g_lastTailLen);
 			SetDlgItemText(hwnd, IDC_EDIT1, TextBuf);
@@ -987,7 +987,7 @@ WDL_DLGRET RenderItemsWithTailDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LP
                 case IDOK:
 				{
 					char textbuf[100];
-					GetDlgItemText(hwnd,IDC_EDIT1,textbuf,100);
+					GetDlgItemText(hwnd,IDC_EDIT1,textbuf,sizeof(textbuf));
 					g_lastTailLen=atof(textbuf);
 					DoWorkForRenderItemsWithTail(g_lastTailLen);
 					EndDialog(hwnd,0);
@@ -1020,7 +1020,7 @@ void DoOpenAssociatedRPP(COMMAND_T*)
 		if (ThePCMSource && ThePCMSource->GetFileName())
 		{
 			char RPPFileNameBuf[1024];
-			sprintf(RPPFileNameBuf,"%s\\reaper.exe \"%s.RPP\"",GetExePath(), ThePCMSource->GetFileName());
+			snprintf(RPPFileNameBuf,sizeof(RPPFileNameBuf),"%s\\reaper.exe \"%s.RPP\"",GetExePath(), ThePCMSource->GetFileName());
 			if (!DoLaunchExternalTool(RPPFileNameBuf))
 				MessageBox(g_hwndParent, __LOCALIZE("Could not launch REAPER!","sws_mbox"), __LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 		}
@@ -1073,7 +1073,7 @@ WDL_DLGRET ReposItemsDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 				CheckDlgButton(hwnd, IDC_RADIO1, BST_CHECKED);
 			else
 				CheckDlgButton(hwnd, IDC_RADIO2, BST_CHECKED);
-			char TextBuf[32];
+			char TextBuf[314];
 
 			sprintf(TextBuf, "%.2f", g_ReposItemsParams.Gap);
 			SetDlgItemText(hwnd, IDC_EDIT1, TextBuf);
@@ -1168,9 +1168,9 @@ int OpenInExtEditor(int editorIdx)
 		{
 			char ExeString[2048];
 			if (editorIdx==0 && g_external_app_paths.PathToAudioEditor1)
-				sprintf(ExeString,"\"%s\" \"%s\"",g_external_app_paths.PathToAudioEditor1,ThePCM->GetFileName());
+				snprintf(ExeString,sizeof(ExeString),"\"%s\" \"%s\"",g_external_app_paths.PathToAudioEditor1,ThePCM->GetFileName());
 			else if (editorIdx==1 && g_external_app_paths.PathToAudioEditor2)
-				sprintf(ExeString,"\"%s\" \"%s\"",g_external_app_paths.PathToAudioEditor2,ThePCM->GetFileName());
+				snprintf(ExeString,sizeof(ExeString),"\"%s\" \"%s\"",g_external_app_paths.PathToAudioEditor2,ThePCM->GetFileName());
 			DoLaunchExternalTool(ExeString);
 		}
 	}
@@ -1255,7 +1255,7 @@ void PerformSwingItemPositions(double swingBase,double swingAmt)
 
 WDL_DLGRET SwingItemsDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-	char tbuf[200];
+	char tbuf[314];
 
 	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, Message, wParam, lParam))
 		return r;

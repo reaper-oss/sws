@@ -364,8 +364,8 @@ void SWS_TrackListWnd::OnDestroy()
 
 	KillTimer(m_hwnd, 1);
 
-	char str[10];
-	snprintf(str, 10, "%d %d", m_bHideFiltered ? 1 : 0, m_bLink ? 1 : 0);
+	char str[24];
+	snprintf(str, sizeof(str), "%d %d", m_bHideFiltered ? 1 : 0, m_bLink ? 1 : 0);
 	WritePrivateProfileString(SWS_INI, m_cOptionsKey, str, get_ini_file());
 }
 

@@ -151,7 +151,7 @@ void MacroDebug()
 		char cCommandText[256];
 		for (int i = 0; i < g_selectedMacro->m_iNumActions; i++)
 		{
-			sprintf(cCommandText, "Run %s?", kbd_getTextFromCmd(g_selectedMacro->m_pActions[i], NULL));
+			snprintf(cCommandText, sizeof(cCommandText), "Run %s?", kbd_getTextFromCmd(g_selectedMacro->m_pActions[i], NULL));
 			int iRet = MessageBox(g_hwndParent, cCommandText, g_selectedMacro->m_cName, MB_YESNOCANCEL);
 			if (iRet == IDYES)
 				Main_OnCommand(g_selectedMacro->m_pActions[i], 0);

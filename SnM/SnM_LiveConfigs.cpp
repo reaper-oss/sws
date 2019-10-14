@@ -822,7 +822,7 @@ void LiveConfigsWnd::OnInitDlg()
 
 	m_cbConfig.SetID(CMBID_CONFIG);
 	m_cbConfig.SetFont(font);
-	char cfg[4] = "";
+	char cfg[12]{};
 	for (int i=0; i<SNM_LIVECFG_NB_CONFIGS; i++) {
 		snprintf(cfg, sizeof(cfg), "%d", i+1);
 		m_cbConfig.AddItem(cfg);

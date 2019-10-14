@@ -456,7 +456,7 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::processPoints(char* envState, st
 
 	//string newState;
 	newState.clear();
-	char cPtValue[128];
+	char cPtValue[318];
 
 	double position, value;
 	int iTmp;

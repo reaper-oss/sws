@@ -1696,7 +1696,7 @@ void BR_LoudnessPref::SaveGlobalPref ()
 	else if (m_globalLUFormat == BR_LoudnessPref::K)       luFormat = 3;
 	else                                                   luFormat = 0;
 
-	char tmp[256];
+	char tmp[966];
 	snprintf(tmp, sizeof(tmp), "%lf %d %lf %lf", m_valueLU, luFormat, m_graphMin, m_graphMax);
 	WritePrivateProfileString("SWS", PREF_KEY, tmp, get_ini_file());
 }
@@ -3125,7 +3125,7 @@ WDL_DLGRET BR_AnalyzeLoudnessWnd::NormalizeDialogProc (HWND hwnd, UINT uMsg, WPA
 			char value[256]; GetDlgItemText(hwnd, IDC_VALUE, value, sizeof(value));
 
 			// Third parameter is used by dialog invoked by normalize command, get it before storing new data
-			char tmp[256];
+			char tmp[342];
 			GetPrivateProfileString("SWS", NORMALIZE_KEY, "", tmp, sizeof(tmp), get_ini_file());
 
 			LineParser lp(false);
@@ -4064,7 +4064,7 @@ static WDL_DLGRET NormalizeCommandDialogProc (HWND hwnd, UINT uMsg, WPARAM wPara
 
 			char value[256]; GetDlgItemText(hwnd, IDC_VALUE, value, sizeof(value));
 
-			char tmp[256];
+			char tmp[342];
 			snprintf(tmp, sizeof(tmp), "%lf %d %d", AltAtof(value), unit, target);
 			WritePrivateProfileString("SWS", NORMALIZE_KEY, tmp, get_ini_file());
 

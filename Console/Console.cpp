@@ -641,7 +641,7 @@ const char* StatusString(CONSOLE_COMMAND command, const char* args)
 	if (command >= NUM_COMMANDS)
 		return __LOCALIZE("Internal error, contact SWS","sws_DLG_100");
 
-	int n = sprintf(status, "%s", __localizeFunc(g_commands[command].cHelpPrefix, "sws_DLG_100", LOCALIZE_FLAG_NOCACHE));
+	int n = snprintf(status, sizeof(status), "%s", __localizeFunc(g_commands[command].cHelpPrefix, "sws_DLG_100", LOCALIZE_FLAG_NOCACHE));
 
 	// add space if localized (trailing ' ' cannot be retrieved from LangPack files)
 	if (IsLocalized() && n>0 && n<(sizeof(status)-1) && status[n-1] != ' ')
@@ -665,7 +665,7 @@ const char* StatusString(CONSOLE_COMMAND command, const char* args)
 			}
 		if (all)
 		{
-			n += sprintf(status + n, "all");
+			n += snprintf(status + n, sizeof(status) - n, "all");
 		}
 		else
 		{
@@ -677,13 +677,13 @@ const char* StatusString(CONSOLE_COMMAND command, const char* args)
 						// Really grunge string overflow check.  Can't see the status string past two lines anyway.
 						return status;
 					if (cName && cName[0])
-						n += sprintf(status + n, "[%d] %s, ", i+1, cName);
+						n += snprintf(status + n, sizeof(status) - n, "[%d] %s, ", i+1, cName);
 					else
-						n += sprintf(status + n, "[%d], ", i+1);
+						n += snprintf(status + n, sizeof(status) - n, "[%d], ", i+1);
 				}
 
 			if (n == previous_n)
-				n += sprintf(status + n, "%s", __LOCALIZE("nothing","sws_DLG_100"));
+				n += snprintf(status + n, sizeof(status) - n, "%s", __LOCALIZE("nothing","sws_DLG_100"));
 			else
 			{
 				status[n-2] = 0; // take off last ", "
@@ -693,7 +693,7 @@ const char* StatusString(CONSOLE_COMMAND command, const char* args)
 	}
 
 	if (args && args[0] && g_commands[command].iNumArgs > 0 && g_commands[command].cHelpSuffix)
-		n += sprintf(status + n, __localizeFunc(g_commands[command].cHelpSuffix, "sws_DLG_100", LOCALIZE_FLAG_VERIFY_FMTS), args);
+		n += snprintf(status + n, sizeof(status) - n, __localizeFunc(g_commands[command].cHelpSuffix, "sws_DLG_100", LOCALIZE_FLAG_VERIFY_FMTS), args);
 
 	return status;
 }

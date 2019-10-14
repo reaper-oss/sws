@@ -496,9 +496,9 @@ void SetItemLen(COMMAND_T* t)
 		return;
 
 	static double dLen = 1.0;
-	char reply[50];
+	char reply[318];
 	sprintf(reply, "%f", dLen);
-	if (GetUserInputs(__LOCALIZE("Set selected items length","sws_mbox"), 1, __LOCALIZE("New item length (s)","sws_mbox"), reply, 50))
+	if (GetUserInputs(__LOCALIZE("Set selected items length","sws_mbox"), 1, __LOCALIZE("New item length (s)","sws_mbox"), reply, sizeof(reply)))
 	{
 		dLen = atof(reply);
 		if (dLen <= 0.0)

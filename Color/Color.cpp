@@ -597,7 +597,7 @@ void TrackCustomColor(int iCustColor)
 			GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", &cr);
 	}
 	char cUndoText[100];
-	sprintf(cUndoText, __LOCALIZE_VERFMT("Set track(s) to custom color %d","sws_undo"), iCustColor+1);
+	snprintf(cUndoText, sizeof(cUndoText), __LOCALIZE_VERFMT("Set track(s) to custom color %d","sws_undo"), iCustColor+1);
 	Undo_OnStateChangeEx(cUndoText, UNDO_STATE_TRACKCFG, -1);
 }
 
@@ -617,7 +617,7 @@ void ItemCustomColor(int iCustColor)
 		}
 	}
 	char cUndoText[100];
-	sprintf(cUndoText, __LOCALIZE_VERFMT("Set item(s) to custom color %d","sws_undo"), iCustColor+1);
+	snprintf(cUndoText, sizeof(cUndoText), __LOCALIZE_VERFMT("Set item(s) to custom color %d","sws_undo"), iCustColor+1);
 	Undo_OnStateChange(cUndoText);
 	UpdateTimeline();
 }
@@ -642,7 +642,7 @@ void TakeCustomColor(int iCustColor)
 		}
 	}
 	char cUndoText[100];
-	sprintf(cUndoText, __LOCALIZE_VERFMT("Set take(s) to custom color %d","sws_undo"), iCustColor+1);
+	snprintf(cUndoText, sizeof(cUndoText), __LOCALIZE_VERFMT("Set take(s) to custom color %d","sws_undo"), iCustColor+1);
 	Undo_OnStateChange(cUndoText);
 	UpdateTimeline();
 }

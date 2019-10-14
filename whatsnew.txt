@@ -52,6 +52,7 @@ Fixes:
 +fix wrong point values when using envelope-related actions with fader scaling mode (regression from 2.10.0, report https://forum.cockos.com/showthread.php?p=2094872|here|)
 +Fix empty list cells leading to misaligned columns on Linux (Issue 1147)
 +BR 'Toggle play .. and solo ..' actions: obey 'Solo defaults to in-place solo' preference (Issue 1181)
++harden against various potential crashes (eg. unexpectedly long translations in language packs)
 
 Other changes:
 +added Linux ARM builds (32-bit and 64-bit)

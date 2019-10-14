@@ -747,7 +747,7 @@ bool SNM_TrackEnvParserPatcher::NotifyChunkLine(int _mode,
 			int success; double d = _lp->gettoken_float(1, &success);
 			if (success) {
 				d += m_addDelta;
-				char buf[64] = "";
+				char buf[318]{};
 				int l = snprintf(buf, sizeof(buf), "%.6f", d);
 				if (l<=0 || l>=64) return update;
 				update |= WriteChunkLine(_newChunk, buf, 1, _lp); 

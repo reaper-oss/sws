@@ -49,7 +49,7 @@ void PrintGuids(COMMAND_T* = NULL)
 		char guidStr[64];
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		guidToString((GUID*)GetSetMediaTrackInfo(tr, "GUID", NULL), guidStr);
-		sprintf(debugStr, "Track %d %s GUID %s\n", i, (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL), guidStr);
+		snprintf(debugStr, sizeof(debugStr), "Track %d %s GUID %s\n", i, (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL), guidStr);
 #ifdef _WIN32
 		OutputDebugString(debugStr);
 #endif
@@ -76,7 +76,7 @@ void PrintSubMenu(HMENU subMenu)
 			OutputDebugString("---------------------\n");
 		else if (mi.hSubMenu)
 		{
-			sprintf(debugStr, "%s\n", mi.dwTypeData ? mi.dwTypeData : "<null>");
+			snprintf(debugStr, sizeof(debugStr), "%s\n", mi.dwTypeData ? mi.dwTypeData : "<null>");
 			OutputDebugString(debugStr);
 			iDepth++;
 			PrintSubMenu(mi.hSubMenu);
@@ -84,7 +84,7 @@ void PrintSubMenu(HMENU subMenu)
 		}
 		else
 		{
-			sprintf(debugStr, "%5d %s %s\n", mi.wID, mi.fState == MFS_CHECKED ? "*" : (mi.fState == MFS_DISABLED ? "-" : " "), mi.dwTypeData ? mi.dwTypeData : "<null>");
+			snprintf(debugStr, sizeof(debugStr), "%5d %s %s\n", mi.wID, mi.fState == MFS_CHECKED ? "*" : (mi.fState == MFS_DISABLED ? "-" : " "), mi.dwTypeData ? mi.dwTypeData : "<null>");
 			OutputDebugString(debugStr);
 		}
 	}
@@ -117,7 +117,7 @@ void DumpItems(COMMAND_T* = NULL)
 		double dEnd   = *(double*)GetSetMediaItemInfo(item, "D_LENGTH", NULL) + dStart;
 		double dBStart = TimeMap_timeToQN(dStart);
 		double dBEnd   = TimeMap_timeToQN(dEnd);
-		char str[256];
+		char str[1953];
 		double dSnapOffset = *(double*)GetSetMediaItemInfo(item, "D_SNAPOFFSET", NULL);
 		double dSourceOffset = 0.0;
 		MediaItem_Take* take = GetMediaItemTake(item, -1);

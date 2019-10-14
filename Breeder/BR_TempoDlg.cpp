@@ -971,7 +971,7 @@ static void SaveOptionsSelAdj (HWND hwnd)
 	int adjustType = IsDlgButtonChecked(hwnd, IDC_BR_ADJ_BPM_VAL_ENB);
 	int adjustShape = (int)SendDlgItemMessage(hwnd, IDC_BR_ADJ_SHAPE, CB_GETCURSEL, 0, 0);
 
-	char tmp[512];
+	char tmp[768];
 	snprintf(tmp, sizeof(tmp), "%lf %lf %d %d %d %d %d %d %d %d %d %d %d", bpmStart, bpmEnd, num, den, bpmEnb, sigEnb, timeSel, shape, type, selPref, invertPref, adjustType, adjustShape);
 	WritePrivateProfileString("SWS", SEL_ADJ_KEY, tmp, get_ini_file());
 }
@@ -1555,7 +1555,7 @@ static void SaveOptionsRandomizeTempo (HWND hwnd)
 	int unitLimit = (int)SendDlgItemMessage(hwnd, IDC_BR_RAND_LIMIT_UNIT, CB_GETCURSEL, 0, 0);
 	int limit = IsDlgButtonChecked(hwnd, IDC_BR_RAND_LIMIT);
 
-	char tmp[512];
+	char tmp[1308];
 	snprintf(tmp, sizeof(tmp), "%lf %lf %d %lf %lf %d %d", min, max, unit, minLimit, maxLimit, unitLimit, limit);
 	WritePrivateProfileString("SWS", RAND_KEY, tmp, get_ini_file());
 }

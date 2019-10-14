@@ -701,7 +701,7 @@ Snapshot::Snapshot(int slot, int mask, bool bSelOnly, const char* name, const ch
 	SWS_CacheObjectState(false);
 
 	char undoStr[128];
-	sprintf(undoStr, __LOCALIZE_VERFMT("Save snapshot %d","sws_undo"), slot);
+	snprintf(undoStr, sizeof(undoStr), __LOCALIZE_VERFMT("Save snapshot %d","sws_undo"), slot);
 	Undo_OnStateChangeEx(undoStr, UNDO_STATE_MISCCFG, -1);
 	RegisterGetCommand(slot);
 }
@@ -895,20 +895,19 @@ bool Snapshot::UpdateReaper(int mask, bool bSelOnly, bool bHideNewVis)
 
 	PreventUIRefresh(-1);
 
-	sprintf(str, __LOCALIZE_VERFMT("Load snapshot %s","sws_undo"), m_cName);
+	snprintf(str, sizeof(str), __LOCALIZE_VERFMT("Load snapshot %s","sws_undo"), m_cName);
 	Undo_OnStateChangeEx(str, UNDO_STATE_ALL, -1);
 
 	if (trackErr || fxErr)
 	{
-		char errString[512];
+		WDL_FastString errString;
 		int n = 0;
 		if (trackErr)
-			n += sprintf(errString + n, __LOCALIZE_VERFMT("%d track(s) from snapshot not found.","sws_DLG_101"), trackErr);
+			errString.AppendFormatted(512, __LOCALIZE_VERFMT("%d track(s) from snapshot not found.","sws_DLG_101"), trackErr);
 		if (fxErr)
-			n += sprintf(errString + n, __LOCALIZE_VERFMT("%s%d FX from snapshot not found.","sws_DLG_101"), n ? "\n" : "", fxErr);
-		sprintf(errString + n, "%s", __LOCALIZE("\nDelete abandonded items from snapshot? (You cannot undo this operation!)","sws_DLG_101"));
-		bool prompt = SWS_SnapshotsWnd::GetPromptOnDeleted();
-		if ((prompt && MessageBox(g_hwndParent, errString, __LOCALIZE("Snapshot recall error","sws_DLG_101"), MB_YESNO) == IDYES) || !prompt)
+			errString.AppendFormatted(512, __LOCALIZE_VERFMT("%s%d FX from snapshot not found.","sws_DLG_101"), n ? "\n" : "", fxErr);
+		errString.AppendFormatted(512, "%s", __LOCALIZE("\nDelete abandonded items from snapshot? (You cannot undo this operation!)","sws_DLG_101"));
+		if (MessageBox(g_hwndParent, errString.Get(), __LOCALIZE("Snapshot recall error","sws_DLG_101"), MB_YESNO) == IDYES)
 		{
 			for (int i = 0; i < m_tracks.GetSize(); i++)
 				if (m_tracks.Get(i)->Cleanup())
@@ -987,17 +986,17 @@ void Snapshot::SetName(const char* name)
 		char newName[20];
 		switch(m_iMask)
 		{
-			case VOL_MASK:      sprintf(newName, "%s %d", __LOCALIZE("Vol","sws_DLG_101"), m_iSlot);	break;
-			case PAN_MASK:      sprintf(newName, "%s %d", __LOCALIZE("Pan","sws_DLG_101"), m_iSlot);	break;
-			case MUTE_MASK:     sprintf(newName, "%s %d", __LOCALIZE("Mute","sws_DLG_101"), m_iSlot);	break;
-			case SOLO_MASK:     sprintf(newName, "%s %d", __LOCALIZE("Solo","sws_DLG_101"), m_iSlot);	break;
+			case VOL_MASK:      snprintf(newName, sizeof(newName), "%s %d", __LOCALIZE("Vol","sws_DLG_101"), m_iSlot);    break;
+			case PAN_MASK:      snprintf(newName, sizeof(newName), "%s %d", __LOCALIZE("Pan","sws_DLG_101"), m_iSlot);    break;
+			case MUTE_MASK:     snprintf(newName, sizeof(newName), "%s %d", __LOCALIZE("Mute","sws_DLG_101"), m_iSlot);   break;
+			case SOLO_MASK:     snprintf(newName, sizeof(newName), "%s %d", __LOCALIZE("Solo","sws_DLG_101"), m_iSlot);   break;
 			case FXATM_MASK: // fallthrough
-			case FXCHAIN_MASK:  sprintf(newName, "%s %d", __LOCALIZE("FX","sws_DLG_101"), m_iSlot);		break;
-			case SENDS_MASK:    sprintf(newName, "%s %d", __LOCALIZE("Sends","sws_DLG_101"), m_iSlot);	break;
-			case VIS_MASK:      sprintf(newName, "%s %d", __LOCALIZE("Vis","sws_DLG_101"), m_iSlot);	break;
-			case SEL_MASK:      sprintf(newName, "%s %d", __LOCALIZE("Sel","sws_DLG_101"), m_iSlot);	break;
-			case PHASE_MASK:    sprintf(newName, "%s %d", __LOCALIZE("Phase", "sws_DLG_101"), m_iSlot);	break;
-			default:            sprintf(newName, "%s %d", __LOCALIZE("Mix","sws_DLG_101"), m_iSlot);	break;
+			case FXCHAIN_MASK:  snprintf(newName, sizeof(newName), "%s %d", __LOCALIZE("FX","sws_DLG_101"), m_iSlot);     break;
+			case SENDS_MASK:    snprintf(newName, sizeof(newName), "%s %d", __LOCALIZE("Sends","sws_DLG_101"), m_iSlot);  break;
+			case VIS_MASK:      snprintf(newName, sizeof(newName), "%s %d", __LOCALIZE("Vis","sws_DLG_101"), m_iSlot);    break;
+			case SEL_MASK:      snprintf(newName, sizeof(newName), "%s %d", __LOCALIZE("Sel","sws_DLG_101"), m_iSlot);    break;
+			case PHASE_MASK:    snprintf(newName, sizeof(newName), "%s %d", __LOCALIZE("Phase", "sws_DLG_101"), m_iSlot); break;
+			default:            snprintf(newName, sizeof(newName), "%s %d", __LOCALIZE("Mix","sws_DLG_101"), m_iSlot);    break;
 		}
 		m_cName = new char[strlen(newName)+1];
 		strcpy(m_cName, newName);

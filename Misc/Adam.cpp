@@ -219,15 +219,15 @@ WDL_DLGRET AWFillGapsProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				case IDOK:
 				case IDC_SAVE:
 				{
-					char triggerPad[128], fadeLength[128], maxGap[128], maxStretch[128], presTrans[128], transFade[128];
+					char triggerPad[128], fadeLength[128], maxGap[128], maxStretch[314], presTrans[128], transFade[128];
 					int fadeShape, markErrors, stretch, trans;
-					GetDlgItemText(hwnd,IDC_TRIG_PAD,triggerPad,128);
-					GetDlgItemText(hwnd,IDC_XFADE_LEN1,fadeLength,128);
-					GetDlgItemText(hwnd,IDC_MAX_GAP,maxGap,128);
-					GetDlgItemText(hwnd,IDC_TRANS_LEN,presTrans,128);
-					GetDlgItemText(hwnd,IDC_XFADE_LEN2,transFade,128);
+					GetDlgItemText(hwnd,IDC_TRIG_PAD,triggerPad,sizeof(triggerPad));
+					GetDlgItemText(hwnd,IDC_XFADE_LEN1,fadeLength,sizeof(fadeLength));
+					GetDlgItemText(hwnd,IDC_MAX_GAP,maxGap,sizeof(maxGap));
+					GetDlgItemText(hwnd,IDC_TRANS_LEN,presTrans,sizeof(presTrans));
+					GetDlgItemText(hwnd,IDC_XFADE_LEN2,transFade,sizeof(transFade));
 					if (g_strtchHFader)
-						sprintf(maxStretch, "%.2f", g_strtchHFaderValue);
+						snprintf(maxStretch, sizeof(maxStretch), "%.2f", g_strtchHFaderValue);
 					markErrors = IsDlgButtonChecked(hwnd, IDC_CHECK1);
 					stretch = IsDlgButtonChecked(hwnd, IDC_CHECK2);
 					trans = IsDlgButtonChecked(hwnd, IDC_CHECK3);

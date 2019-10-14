@@ -1420,7 +1420,7 @@ static INT_PTR WINAPI ZoomPrefsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 			CheckDlgButton(hwndDlg, IDC_SETTIMESEL, g_bSetTimesel);
 			CheckDlgButton(hwndDlg, IDC_DRAGUPPER, g_bDragZoomUpper);
 			CheckDlgButton(hwndDlg, IDC_DRAGLOWER, g_bDragZoomLower);
-			char str[32];
+			char str[314];
 			sprintf(str, "%.2f", g_dDragZoomScale);
 			SetWindowText(GetDlgItem(hwndDlg, IDC_DRAGSCALE), str);
 			EnableWindow(GetDlgItem(hwndDlg, IDC_DRAGSCALE), g_bDragZoomUpper || g_bDragZoomLower);
@@ -1670,7 +1670,7 @@ void ZoomExit()
 	plugin_register("-projectconfig",&g_projectconfig);
 
 	// Write the zoom prefs
-	char str[32];
+	char str[314];
 	sprintf(str, "%d", (g_bMidMouseButton ? 1 : 0) + (g_bItemZoom ? 2 : 0) + (g_bUndoZoom ? 4 : 0) +
 		(g_bUnzoomMode ? 8 : 0) + (g_bUndoSWSOnly ? 16 : 0) + (g_bLastUndoProj ? 32 : 0) +
 		(g_bDragUpUndo ? 64 : 0) + (g_iMidMouseModifier << 8) + (g_bSetCursor ? 2048 : 0) +

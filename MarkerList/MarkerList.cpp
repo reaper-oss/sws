@@ -359,7 +359,7 @@ HMENU SWS_MarkerListWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 	char str[256];
 	for (int i = 0; i < g_savedLists.Get()->GetSize(); i++)
 	{
-		sprintf(str, __LOCALIZE_VERFMT("Load %s","sws_DLG_102"), g_savedLists.Get()->Get(i)->m_name);
+		snprintf(str, sizeof(str), __LOCALIZE_VERFMT("Load %s","sws_DLG_102"), g_savedLists.Get()->Get(i)->m_name);
 		AddToMenu(hMenu, str, FIRST_LOAD_MSG+i);
 	}
 

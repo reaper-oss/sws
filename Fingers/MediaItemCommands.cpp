@@ -326,10 +326,10 @@ void CmdSetItemNameMidi::doCommand(int flag)
                 "E", "F", "F#", "G", "G#", "A", "A#", "B"};
             int nameIndex = pitch % 12;
 
-            char octave[8];
-            snprintf(octave, 8, "%d", pitch / 12 - 1);
+            char octave[12];
+            snprintf(octave, sizeof(octave), "%d", pitch / 12 - 1);
 
-            char noteName[8];
+            char noteName[2 + sizeof(octave)];
             strcpy(noteName, noteNames[nameIndex]);
             strcat(noteName, octave);
 

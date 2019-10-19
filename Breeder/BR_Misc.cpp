@@ -176,6 +176,9 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 				return false;
 
 			int count = CountTracks(s_proj);
+			// check if 'Prefs (-> Audio) -> Mute/Solo: "Solo default to in place solo.." is set, #1181
+			int soloMode = GetBit(*ConfigVar<int>("soloip"), 0) & 1 ? 2 : 1;
+
 			for (int i = 0; i < count; ++i)
 			{
 				MediaTrack* track = GetTrack(s_proj, i);
@@ -188,7 +191,7 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 					trackState.second = solo << 8 | mute;
 					s_trackSoloMuteState->push_back(trackState);
 
-					SetMediaTrackInfo_Value(track, "I_SOLO", ((track == trackToSolo) ? 1 : 0));
+					SetMediaTrackInfo_Value(track, "I_SOLO", ((track == trackToSolo) ? soloMode : 0));
 					SetMediaTrackInfo_Value(track, "B_MUTE", 0);
 				}
 			}

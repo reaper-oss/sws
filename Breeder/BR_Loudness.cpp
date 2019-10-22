@@ -1011,12 +1011,12 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 	BR_LoudnessObject* _this = (BR_LoudnessObject*)loudnessObject;
 	BR_LoudnessObject::AudioData data = _this->GetAudioData();
 
-	bool doPan               = (data.channels > 1              && data.pan != 0)               ? (true) : (false); // tracks will always get false here (see CheckSetAudioData())
-	bool doVolEnv            = (data.volEnv.CountPoints()      && data.volEnv.IsActive())      ? (true) : (false);
-	bool doVolPreFXEnv       = (data.volEnvPreFX.CountPoints() && data.volEnvPreFX.IsActive()) ? (true) : (false);
-	bool integratedOnly      = _this->GetIntegratedOnly();
-	bool doTruePeak          = _this->GetDoTruePeak();
-	bool doHighPrecisionMode = _this->GetDoHighPrecisionMode();
+	const bool doPan               = data.channels > 1              && data.pan != 0; // tracks will always get false here (see CheckSetAudioData())
+	const bool doVolEnv            = data.volEnv.CountPoints()      && data.volEnv.IsActive();
+	const bool doVolPreFXEnv       = data.volEnvPreFX.CountPoints() && data.volEnvPreFX.IsActive();
+	const bool integratedOnly      = _this->GetIntegratedOnly();
+	const bool doTruePeak          = _this->GetDoTruePeak();
+	const bool doHighPrecisionMode = _this->GetDoHighPrecisionMode() && !integratedOnly;
 
 	/*
 	NF: fix for wrong results when analyzing item, item is not at pos 0.0 and contains take vol. env.
@@ -1025,13 +1025,12 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 	https://forum.cockos.com/showthread.php?t=204397
 	so in the correction for take volume env. we must add item pos. to get correct env. evaluation
 	*/
-	double itemPos = 0.0;
-	if (_this->m_take)
-		itemPos = GetMediaItemInfo_Value(_this->GetItem(), "D_POSITION");
+	const double itemPos = _this->m_take ?
+		GetMediaItemInfo_Value(_this->GetItem(), "D_POSITION") : 0.0;
 
 	// Prepare ebur123_state
 	ebur128_state* loudnessState = NULL;
-	int mode = (integratedOnly) ? EBUR128_MODE_I : EBUR128_MODE_M | EBUR128_MODE_S | EBUR128_MODE_I | EBUR128_MODE_LRA;
+	int mode = integratedOnly ? EBUR128_MODE_I : EBUR128_MODE_M | EBUR128_MODE_S | EBUR128_MODE_I | EBUR128_MODE_LRA;
 	if (!integratedOnly && doTruePeak)
 		mode |= EBUR128_MODE_TRUE_PEAK;
 	loudnessState = ebur128_init((size_t)data.channels, (size_t)data.samplerate, mode);
@@ -1065,11 +1064,12 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 		ebur128_set_channel(loudnessState, 4, EBUR128_RIGHT_SURROUND);
 	}
 
-	// This lets us get integrated reading even if the target is too short
 	bool doShortTerm = true;
 	bool doMomentary = true;
-	double effectiveEndTime = data.audioEnd;
+
+	// This lets us get integrated reading even if the target is too short
 	bool newAudioEndSet = false;
+	const double effectiveEndTime = data.audioEnd;
 	if (data.audioEnd - data.audioStart < 3)
 	{
 		doShortTerm = false; // doMomentary is set during calculation
@@ -1078,30 +1078,33 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 	}
 
 	// Fill loudnessState with samples and get momentary/short-term measurements
-	int refreshRateinHz = 5; // NF: orig. mode, 5 Hz refresh rate / 200 ms buffer
-	if (!integratedOnly && doHighPrecisionMode)
-		refreshRateinHz = 100; // NF: high precision mode, 100 Hz refresh rate / 10 ms buffer
-	const double bufLengthNormalMode = 0.2; const double bufLengthHighPrecisionMode = 0.01;
+	// standard mode       =   5 Hz refresh rate (200 ms buffer)
+	// high precision mode = 100 Hz refresh rate ( 10 ms buffer)
+	const int refreshRateInHz = doHighPrecisionMode ? 100 : 5;
+	const double bufferTime = 1.0 / refreshRateInHz; // how many seconds in a buffer
+	const double sampleTimeLen = 1.0 / data.samplerate;
+	const double audioLength = data.audioEnd - data.audioStart;
 
-	int sampleCount = data.samplerate/refreshRateinHz;
+	int sampleCount = data.samplerate / refreshRateInHz;
 	int bufSz = sampleCount * data.channels;
+	double currentTime = data.audioStart;
+	bool momentaryFilled = true;
 	int processedSamples = 0;
-	double sampleTimeLen = 1.0 / data.samplerate; // NF fix: 1 / data.samplerate (int / int) always resulted in 0.0
-	double currentTime   = data.audioStart;
 	int i = 0;
-	int momentaryFilled = 1;
+
 	while (currentTime < data.audioEnd && !_this->GetKillFlag())
 	{
 		// Make sure we always fill our buffer exactly to audio end (and skip momentary/short-term intervals if not enough new samples)
 		bool skipIntervals = false;
-		if (data.audioEnd - currentTime < (doHighPrecisionMode ? bufLengthHighPrecisionMode : bufLengthNormalMode) + numeric_limits<double>::epsilon())
+		const double remainingTime = data.audioEnd - currentTime; // how many seconds until the end of the audio source
+		if (remainingTime < bufferTime + numeric_limits<double>::epsilon())
 		{
-			sampleCount = (int)(data.samplerate * (data.audioEnd - currentTime));
+			sampleCount = static_cast<int>(data.samplerate * remainingTime);
 			bufSz = sampleCount * data.channels;
 			skipIntervals = true;
 		}
 
-		// Get new 200 ms (10 ms in high precision mode) of samples
+		// Get new 200 ms (or 10 ms in high precision mode) of samples
 		// GetAudioAccessorSamples() stops writing to the buffer once it reaches the item's end, everything from that point to sampleCount is garbage
 		// so check if we enlarged data.audioEnd beyond actual item end above
 		// and zero-init buffer in this case (probably faster than zero-init it always?)
@@ -1121,15 +1124,10 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 			double adjust = 1;
 
 			// Volume envelopes
-			if (doVolPreFXEnv) adjust *= data.volEnvPreFX.ValueAtPosition(sampleTime, true);
-				
+			if (doVolPreFXEnv)
+				adjust *= data.volEnvPreFX.ValueAtPosition(sampleTime, true);
 			if (doVolEnv) 
-			{
-				if (_this->m_track)
-					adjust *= data.volEnv.ValueAtPosition(sampleTime, true);
-				else
-					adjust *= data.volEnv.ValueAtPosition(sampleTime + itemPos, true);
-			}
+				adjust *= data.volEnv.ValueAtPosition(sampleTime + itemPos, true);
 
 			// Volume fader
 			adjust *= data.volume;
@@ -1138,7 +1136,7 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 			if (doPan)
 			{
 				if (data.pan > 0 && (currentChannel % 2 == 1))
-					adjust *= 1 - data.pan;                         // takes have no pan law!
+					adjust *= 1 - data.pan; // takes have no pan law!
 				else if (data.pan < 0 && (currentChannel % 2 == 0))
 					adjust *= 1 + data.pan;
 			}
@@ -1148,9 +1146,8 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 			if (++currentChannel > data.channels)
 				currentChannel = 1;
 
-			double nextSampleTime = (currentChannel + 1 > data.channels) ? (sampleTime + sampleTimeLen) : (-1);
-			if (nextSampleTime != -1)
-				sampleTime = nextSampleTime;
+			if (currentChannel + 1 > data.channels)
+				sampleTime = sampleTime + sampleTimeLen;
 		}
 
 		ebur128_add_frames_double(loudnessState, buf, sampleCount);
@@ -1160,12 +1157,12 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 		{
 			if (!doShortTerm && doMomentary)
 			{
-				if (currentTime + (doHighPrecisionMode ? bufLengthHighPrecisionMode : bufLengthNormalMode) >= effectiveEndTime + numeric_limits<double>::epsilon())
+				if (currentTime + bufferTime >= effectiveEndTime + numeric_limits<double>::epsilon())
 					doMomentary = false;
 			}
 
 			// Momentary buffer (400 ms) filled
-			if (i % 2 == momentaryFilled && doMomentary)
+			if (i % 2 && momentaryFilled && doMomentary)
 			{
 				double momentary;
 				ebur128_loudness_momentary(loudnessState, &momentary);
@@ -1193,11 +1190,11 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 		processedSamples += sampleCount;
 		currentTime = data.audioStart + ((double)processedSamples / (double)data.samplerate);
 
-		_this->SetProgress ((currentTime - data.audioStart) / (data.audioEnd - data.audioStart) * 0.95); // loudness_global and loudness_range seem rather fast and since we currently
-		if (++i == 15)                                                                                   // can't monitor their progress, leave last 10% of progress for them
+		_this->SetProgress ((currentTime - data.audioStart) / audioLength * 0.95); // loudness_global and loudness_range seem rather fast and since we currently
+		if (++i == 15)                                                             // can't monitor their progress, leave last 10% of progress for them
 		{
 			i = 0;
-			momentaryFilled = (momentaryFilled == 1) ? (0) : (1);
+			momentaryFilled = !momentaryFilled;
 		}
 
 		// We reached the end of the file, break without checking currentTime against endTime (rounding errors could make us go through loop one more time)
@@ -1220,7 +1217,7 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 					ebur128_true_peak(loudnessState, i, &channelTruePeak, &channelTruePeakPos);
 					if (channelTruePeak > truePeak)
 					{
-						truePeak   = channelTruePeak;
+						truePeak    = channelTruePeak;
 						truePeakPos = channelTruePeakPos;
 					}
 				}

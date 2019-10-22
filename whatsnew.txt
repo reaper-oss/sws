@@ -22,6 +22,7 @@ Fixes:
  - fix potentially invalid max. short-term/momentary measurements
  - disable creating graph, disable go to max. short-term / momentary (Issue 1120) (these are currently not implemented for high precision mode)
  Note: info about high precision mode use case https://forum.cockos.com/showthread.php?p=2118098#post2118098|here|
++Loudness: improve handling of incomplete sample buffers when analyzing video items (Issue 1210)
 +Snapshots:
  - include track phase (polarity) in Full Track Mix, add separate Phase tickbox as custom filter (Issue 455)
  - harden getting send envelopes (displays error message in case of failure)

@@ -1068,13 +1068,11 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 	bool doMomentary = true;
 
 	// This lets us get integrated reading even if the target is too short
-	bool newAudioEndSet = false;
 	const double effectiveEndTime = data.audioEnd;
 	if (data.audioEnd - data.audioStart < 3)
 	{
 		doShortTerm = false; // doMomentary is set during calculation
 		data.audioEnd = data.audioStart + 3;
-		newAudioEndSet = true;
 	}
 
 	// Fill loudnessState with samples and get momentary/short-term measurements
@@ -1106,20 +1104,14 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 
 		// Get new 200 ms (or 10 ms in high precision mode) of samples
 		// GetAudioAccessorSamples() stops writing to the buffer once it reaches the item's end, everything from that point to sampleCount is garbage
-		// so check if we enlarged data.audioEnd beyond actual item end above
-		// and zero-init buffer in this case (probably faster than zero-init it always?)
-		double* buf;
-		if (newAudioEndSet)
-			buf = new double[bufSz](); // value-initialization
-		else
-			buf = new double[bufSz];
-		GetAudioAccessorSamples(data.audio, data.samplerate, data.channels, currentTime, sampleCount, buf);
+		std::vector<double> samples(bufSz);
+		GetAudioAccessorSamples(data.audio, data.samplerate, data.channels, currentTime, sampleCount, &samples[0]);
 
 		// Correct for volume and pan/volume envelopes
 		int currentChannel = 1;
 		double sampleTime = currentTime;
 
-		for (int j = 0; j < bufSz; ++j)
+		for (double &sample : samples)
 		{
 			double adjust = 1;
 
@@ -1141,7 +1133,7 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 					adjust *= 1 + data.pan;
 			}
 
-			buf[j] *= adjust;
+			sample *= adjust;
 
 			if (++currentChannel > data.channels)
 				currentChannel = 1;
@@ -1150,8 +1142,7 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 				sampleTime = sampleTime + sampleTimeLen;
 		}
 
-		ebur128_add_frames_double(loudnessState, buf, sampleCount);
-		delete[] buf;
+		ebur128_add_frames_double(loudnessState, &samples[0], sampleCount);
 
 		if (!integratedOnly && !skipIntervals)
 		{

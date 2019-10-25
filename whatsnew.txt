@@ -47,7 +47,7 @@ Fixes:
 +Contextual toolbars: restore focus to last focused window when toolbar is auto closed (report https://forum.cockos.com/showthread.php?t=218978|here|)
 +fix hiding send envelopes accidentally removing the subsequent send/receive (Issue 1183)
 +"Xenakios/SWS: [Deprecated] Load project template ..": don't change default save path, REAPER 5.983+ (report https://forum.cockos.com/showpost.php?p=2140690&postcount=2605|here|)
-+fix pasting region playlists containing grouped items (Issue 1118)
++fix pasting region playlists containing grouped items or when "Overlap and crossfade items when splitting" is enabled (Issue 1118 and Issue 1204)
 +fix media item preview through track when transport is paused (Issue 1189)
 +fix wrong point values when using envelope-related actions with fader scaling mode (regression from 2.10.0, report https://forum.cockos.com/showthread.php?p=2094872|here|)
 +Fix empty list cells leading to misaligned columns on Linux (Issue 1147)

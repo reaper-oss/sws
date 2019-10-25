@@ -1761,10 +1761,11 @@ void AppendPasteCropPlaylist(RegionPlaylist* _playlist, const AppendPasteCropPla
 
 //	OnStopButton();
 
-	ConfigVarOverride<int> options[] = {
-		{"envattach",     1}, // move with items
-		{"env_reduce",    2}, // add edge points
-		{"projgroupover", 1}, // disable item grouping
+	ConfigVarOverride<int> options[] {
+		{"env_reduce",     2}, // add edge points
+		{"envattach",      1}, // move with items
+		{"projgroupover",  1}, // disable item grouping
+		{"splitautoxfade", 0}, // disable overlapping items when splitting
 	};
 	(void)options;
 

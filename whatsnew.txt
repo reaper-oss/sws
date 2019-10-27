@@ -53,6 +53,7 @@ Fixes:
 +Fix empty list cells leading to misaligned columns on Linux (Issue 1147)
 +BR 'Toggle play .. and solo ..' actions: obey 'Solo defaults to in-place solo' preference (Issue 1181)
 +harden against various potential crashes (eg. unexpectedly long translations in language packs)
++fix "show in explorer/finder" and edit file actions on Linux and harden them against command injection on macOS
 
 Other changes:
 +added Linux ARM builds (32-bit and 64-bit)

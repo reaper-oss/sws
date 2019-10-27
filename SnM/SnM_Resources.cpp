@@ -1278,16 +1278,9 @@ void ResourcesWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				{
 					if (fl->IsText())
 					{
-						WDL_FastString syscmd;
-#ifdef _WIN32
 						// do not use ShellExecute's "edit" mode here as some file would be opened in
 						// REAPER instead of the default text editor (e.g. .RTrackTemplate files)
-						syscmd.SetFormatted(SNM_MAX_PATH, "\"%s\"", fullPath);
-						ShellExecute(GetMainHwnd(), "open", "notepad", syscmd.Get(), NULL, SW_SHOWNORMAL);
-#else
-						syscmd.SetFormatted(SNM_MAX_PATH, "open -t \"%s\"", fullPath);
-						system(syscmd.Get());
-#endif
+						ShellExecute(GetMainHwnd(), "open", "notepad", fullPath, NULL, SW_SHOWNORMAL);
 					}
 				}
 			}

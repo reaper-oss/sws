@@ -29,10 +29,10 @@
 #include "SnM.h"
 #include "SnM_Chunk.h"
 #include "SnM_Util.h"
+#include "../cfillion/cfillion.hpp" // CF_LocateInExplorer
 #include "../reaper/localize.h"
-#include "WDL/sha.h"
-#include "WDL/projectcontext.h"
-
+#include <WDL/sha.h>
+#include <WDL/projectcontext.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 // File util
@@ -193,17 +193,7 @@ bool SNM_CopyFile(const char* _destFn, const char* _srcFn)
 void RevealFile(const char* _fn, bool _errMsg)
 {
 	if (FileOrDirExistsErrMsg(_fn, _errMsg))
-	{
-		WDL_FastString cmd;
-#ifdef _WIN32
-		cmd.Set("/select,");
-		cmd.Append(_fn);
-		ShellExecute(NULL, "", "explorer", cmd.Get(), NULL, SW_SHOWNORMAL);
-#else
-		cmd.SetFormatted(SNM_MAX_PATH, "open -R \"%s\"", _fn);
-		system(cmd.Get());
-#endif
-	}
+		CF_LocateInExplorer(_fn);
 }
 
 // browse + return short resource filename (if possible and if _wantFullPath == false)

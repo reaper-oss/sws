@@ -36,6 +36,7 @@
 
 #include "RenderRegion.h"
 
+#include "../cfillion/cfillion.hpp" // CF_ShellExecute
 #include "../reaper/localize.h"
 #include "../SnM/SnM_Dlg.h"
 #include "../Prompt.h"
@@ -359,22 +360,9 @@ bool BrowseForRenderPath( char *renderPathChar ){
 	return result;
 }
 
-void OpenPathInFindplorer( const char* path ){
-	if( strlen( path ) ){
-#ifdef _WIN32
-		ShellExecute(NULL, "explore", path, NULL, NULL, SW_SHOWNORMAL);
-#else
-		char cmd[512];
-		snprintf(cmd, 512, "open \"%s\"", path);
-		system( cmd );
-#endif
-	}
-}
-
-
 void OpenRenderPath(COMMAND_T *){
 	if( !g_render_path.empty() && FileExists( g_render_path.c_str() ) ){
-		OpenPathInFindplorer( g_render_path.c_str() );
+		CF_ShellExecute( g_render_path.c_str() );
 	} else {
 		MessageBox( GetMainHwnd(), __LOCALIZE("Render path not set or invalid. Set render path in Autorender metadata.","sws_mbox"), __LOCALIZE("Autorender - Error","sws_mbox"), MB_OK );
 	}

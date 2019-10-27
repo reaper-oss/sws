@@ -1258,10 +1258,12 @@ void SWS_ListView::Update()
 					GetItemText(pItem, k, str, sizeof(str));
 					if (!bFound)
 					{
-						item.mask |= LVIF_PARAM | LVIF_TEXT;
-						item.lParam = (LPARAM)pItem;
-						if(iCol == 0)
+						item.mask |= LVIF_TEXT;
+						if(iCol == 0) {
+							item.mask |= LVIF_PARAM | LVIF_TEXT;
+							item.lParam = reinterpret_cast<LPARAM>(pItem);
 							ListView_InsertItem(m_hwndList, &item);
+						}
 						else
 							ListView_SetItem(m_hwndList, &item);
 						bResort = true;

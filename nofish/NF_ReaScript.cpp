@@ -26,10 +26,9 @@
 /
 ******************************************************************************/
 
-
 #include "stdafx.h"
 #ifdef _WIN32
-	#include <cstdint> // uint32_t
+#  include <cstdint> // uint32_t
 #endif
 
 #include "NF_ReaScript.h"
@@ -40,9 +39,13 @@
 #include "../SnM/SnM_Project.h" // #974
 #include "../SnM/SnM_Chunk.h" // SNM_FXSummaryParser
 
-# include <taglib/taglib/mpeg/id3v2/id3v2tag.h>
-# include <taglib/mpeg/mpegfile.h>
-
+#ifdef USE_SYSTEM_TAGLIB
+#  include <taglib/id3v2tag.h>
+#  include <taglib/mpegfile.h>
+#else
+#  include <taglib/mpeg/id3v2/id3v2tag.h>
+#  include <taglib/mpeg/mpegfile.h>
+#endif
 
 // #781, peak/RMS
 double DoGetMediaItemMaxPeakAndMaxPeakPos(MediaItem* item, double* maxPeakPosOut) // maxPeakPosOut == NULL: peak only

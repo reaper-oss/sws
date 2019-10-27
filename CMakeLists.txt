@@ -165,6 +165,11 @@ find_package(TagLib REQUIRED)
 find_package(WDL REQUIRED)
 target_link_libraries(sws JNetLib::JNetLib LICE::LICE TagLib::TagLib WDL::WDL)
 
+if(USE_SYSTEM_TAGLIB)
+  # maybe replace this with a proper install of taglib (eg. via vcpkg)?
+  target_compile_definitions(sws PRIVATE USE_SYSTEM_TAGLIB)
+endif()
+
 find_package(SWELL)
 if(SWELL_FOUND)
   target_link_libraries(sws SWELL::swell)

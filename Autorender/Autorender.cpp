@@ -649,7 +649,7 @@ void AutorenderRegions(COMMAND_T*)
 	}
 
 	// Get number of digits to pad the region numbers with...at least two
-	int regionNumberPad = (int) max( 2, floor( log10( (double) renderRegions.size() ) ) + 1 );
+	int regionNumberPad = (int) max( 2.0, floor( log10( (double) renderRegions.size() ) ) + 1 );
 
 	//Set nameless regions to region_XX
 	for( unsigned int i = 0; i < renderRegions.size(); i++){

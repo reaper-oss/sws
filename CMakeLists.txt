@@ -59,7 +59,7 @@ set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELWITHDEBINFO ON)
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL     ON)
 
 if(MSVC)
-  add_compile_definitions(_CRT_SECURE_NO_WARNINGS _CRT_NONSTDC_NO_DEPRECATE)
+  add_compile_definitions(NOMINMAX _CRT_SECURE_NO_WARNINGS _CRT_NONSTDC_NO_DEPRECATE)
 
   foreach(arg
     CMAKE_C_FLAGS_DEBUG CMAKE_CXX_FLAGS_DEBUG
@@ -182,9 +182,7 @@ endif()
 
 if(MSVC)
   target_compile_options(sws PRIVATE /EHsc /W3)
-
   target_link_libraries(sws Shlwapi)
-
   target_link_options(sws PRIVATE $<$<NOT:$<CONFIG:Debug>>:
     # Remove unreferenced code
     /OPT:REF

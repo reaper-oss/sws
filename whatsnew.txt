@@ -1,80 +1,98 @@
 !v2.11.0 pre-release build
 <strong>Reminder: this new SWS version requires REAPER v5.979+!</strong>
 
-<strong>Update notice:</strong> The SWS extension filenames have changed in this release. Linux and macOS users should remove the previous version before installing this SWS version.
+<strong>Update notice:</strong> The SWS extension filenames have changed in this release. Linux and macOS users should remove the previous version before updating.
 
-New features:
-+Snapshots: add option to (not) prompt for deleting abandoned items when recalling snapshots which contain deleted tracks (snapshots will be recalled and abandoned items deleted without confirmation with this option disabled) (Issue 1073)
+Envelopes:
++Fix hiding send envelopes accidentally removing the subsequent send/receive (Issue 1183)
++Fix wrong point values when using envelope-related actions with fader scaling mode (regression from 2.10.0, report https://forum.cockos.com/showthread.php?p=2094872|here|)
++LFO Generator: allow for generating more points and account for take playrate (Issue 1158)
++Prompt before executing "SWS/S&M: Remove all envelopes for selected tracks" (may be disabled by setting <REAPER resource path>/S&M.ini/[Misc]/RemoveAllEnvsSelTracksPrompt=0) (Issue 1175)
 
-New actions (Main section):
-+SWS/NF: Toggle render speed (apply FX/render stems) realtime/not limited (Issue 1065)
- 
-New ReaScript functions:
-+NF_TakeFX_GetModuleName() (take version of already existing BR_TrackFX_GetModuleName())
-+NF_ReadID3v2Tag() (request https://forum.cockos.com/showpost.php?p=2175039&postcount=2653|here|)
+Contextual toolbars:
++Restore focus to last focused window when toolbar is auto closed (report https://forum.cockos.com/showthread.php?t=218978|here|)
 
-Fixes:
-+update various BR_ APIs for new TCP/EnvCP/MCP architecture (thanks Justin!) (Issue 1173)
-+prevent UI updates from being disabled when stopping BR mouse playback via ReaScript (thanks Justin!) (Issue 1180)
-+harden configvar against invalid type interpretation (Issue 1131)
-+Loudness - high precision mode:
- - fix potential crash when analyzing items shorter than 3 seconds
- - fix potentially invalid max. short-term/momentary measurements
- - disable creating graph, disable go to max. short-term / momentary (Issue 1120) (these are currently not implemented for high precision mode)
- Note: info about high precision mode use case https://forum.cockos.com/showthread.php?p=2118098#post2118098|here|
-+Loudness: improve handling of incomplete sample buffers when analyzing video items (Issue 1210)
-+Snapshots:
- - include track phase (polarity) in Full Track Mix, add separate Phase tickbox as custom filter (Issue 455)
- - harden getting send envelopes (displays error message in case of failure)
- Reminder from SWS v2.10.0 change log:
- send envelopes should now be stored/recalled correctly with Snapshots (long standing bug), though it hasn't been tested much
- since snapshots are based on state chunks, changes within automation items (AI) envelopes are not stored/recalled currently (https://forum.cockos.com/showthread.php?t=205406|FR|), though AI properties (e.g. position) should be recalled correctly. Also note that when deleting an AI and trying to recall a previously stored snapshot which contains this AI it won't be recalled correctly.
-+PADRE Envelope LFO generator: (Issue 1158)
- - allow for generating more points
- - account for take playrate
-+quantize actions / BR_Env actions / grid line API: support Measure grid line spacing (Issue 1117, Issue 1058)
-+Marker list, Track list, Resources windows: Don't block Del key (Issue 1119)
-+"Xenakios/SWS: Rename takes and source files...": (Issue 1140)
- - automatically delete old .reapeaks files (also for "Xenakios/SWS: Rename take source files...")
- - don't double-append file extension if already contained in new filename/takename
-+fix flickering in some vertical zooming actions
-+fix 'Xenakios/SWS: Normalize selected takes to dB value...' if take polarity is flipped (report https://forum.cockos.com/showthread.php?t=219269|here|)
-+fix various other Xenakios take volume actions if take polarity is flipped
-+Global notes: (Issue 1170)
- - fix global notes only appearing in first project tab
- - internal tweaks (more efficient load/save)
- - display [modified] in notes window if global notes dirty
- - additionally to saving when project is saved, can be saved via notes window context menu (global notes are stored in <REAPER resource path>/SWS_global notes.txt)
-+Contextual toolbars: restore focus to last focused window when toolbar is auto closed (report https://forum.cockos.com/showthread.php?t=218978|here|)
-+fix hiding send envelopes accidentally removing the subsequent send/receive (Issue 1183)
-+"Xenakios/SWS: [Deprecated] Load project template ..": don't change default save path, REAPER 5.983+ (report https://forum.cockos.com/showpost.php?p=2140690&postcount=2605|here|)
-+fix pasting region playlists containing grouped items or when "Overlap and crossfade items when splitting" is enabled (Issue 1118 and Issue 1204)
-+fix media item preview through track when transport is paused (Issue 1189)
-+fix wrong point values when using envelope-related actions with fader scaling mode (regression from 2.10.0, report https://forum.cockos.com/showthread.php?p=2094872|here|)
-+Fix empty list cells leading to misaligned columns on Linux (Issue 1147)
-+BR 'Toggle play .. and solo ..' actions: obey 'Solo defaults to in-place solo' preference (Issue 1181)
-+harden against various potential crashes (eg. unexpectedly long translations in language packs)
-+fix "show in explorer/finder" and edit file actions on Linux and harden them against command injection on macOS
+Global notes: (Issue 1170)
++Display [modified] in notes window if global notes dirty
++Fix global notes only appearing in first project tab
++Internal tweaks (more efficient load/save)
++Additionally to saving when project is saved, can be saved via notes window context menu (global notes are stored in <REAPER resource path>/SWS_global notes.txt)
 
-Other changes:
-+added Linux ARM builds (32-bit and 64-bit)
-+enable media file tagging features on Linux
-+split the macOS release into 32-bit and 64-bit versions
-+update TagLib on macOS to v1.11.1
-+reworked the Windows installer
- - allow installing SWS to paths containing characters outside of the system's ANSI codepage
- - migrate the extension DLL to <resource path>\UserPlugins, reaper_sws.py to <resource path>\Scripts
- - make installing the Python ReaScript support optional
- - fix the install path being initially empty when launching the Windows installer if REAPER is not installed
- - fix nonworking check for running REAPER processes
-+Resources window: Enter key in Filter textbox focuses list (Issue 1119)
-+Actions:
- - "Xenakios/SWS: Rename takes and source files...", "Xenakios/SWS: Rename take source files...": add '(no undo)' in action name
- - "SWS/S&M: Remove all envelopes for selected tracks" - prompt before executing action, may be overridden by setting <REAPER resource path>/S&M.ini/[Misc]/RemoveAllEnvsSelTracksPrompt=0 (Issue 1175)
-+ReaScript:
- - extend CF_GetClipboard to allow reading more than 1023 characters
- - deprecate CF_GetClipboardBig (use CF_GetClipboard instead)
- - BR_EnvGet/SetProperties(): add optional parameter automationItemsOptions (REAPER v5.979+), BR_Envelope: EnvProperties - add second ACT token from track envelope state chunk (automation items options) (Issue 1153, partly)
+Linux:
++Added official Linux ARM builds (32-bit and 64-bit)
++Enable media file tagging features
++Fix "show in explorer/finder" and edit file actions
++Fix empty list cells leading to misaligned columns (Issue 1147)
+
+Loudness:
++Improve handling of incomplete sample buffers when analyzing video items (Issue 1210)
++High precision mode:
+ - Disable creating graph, disable go to max. short-term / momentary (Issue 1120) (these are currently not implemented for high precision mode)
+ - Fix potential crash when analyzing items shorter than 3 seconds
+ - Fix potentially invalid max. short-term/momentary measurements
+
+Note: details about high precision mode use case https://forum.cockos.com/showthread.php?p=2118098#post2118098|here|
+
+macOS:
++Harden "show in explorer/finder" and edit file actions against command injection
++Split the extension file into 32-bit and 64-bit versions
++Update TagLib to v1.11.1
+
+Marker List and Track List:
++Don't block the Del key (Issue 1119)
+
+Miscellaneous:
++Fix 'Xenakios/SWS: Normalize selected takes to dB value...' if take polarity is flipped (report https://forum.cockos.com/showthread.php?t=219269|here|)
++Fix flickering in some vertical zooming actions
++Fix various Xenakios take volume actions if take polarity is flipped
++Harden against various potential crashes (eg. unexpectedly long translations in language packs)
++Quantize actions / BR_Env actions / grid line API: support Measure grid line spacing (Issue 1117, Issue 1058)
++"Xenakios/SWS: [Deprecated] Load project template ...": don't change default save path, REAPER 5.983+ (report https://forum.cockos.com/showpost.php?p=2140690&postcount=2605|here|)
+
+New actions:
++Add SWS/NF: Toggle render speed (apply FX/render stems) realtime/not limited (Issue 1065)
+
+Play from edit/mouse cursor actions:
++Obey 'Solo defaults to in-place solo' preference (Issue 1181)
++Prevent UI updates from being disabled when stopping BR mouse playback via ReaScript (thanks Justin!) (Issue 1180)
+
+Preview media item/take under mouse cursor actions:
++Fix media item preview through track when transport is paused (Issue 1189)
+
+ReaScript API:
++Added NF_ReadID3v2Tag (request https://forum.cockos.com/showpost.php?p=2175039|here|)
++Added NF_TakeFX_GetModuleName (take version of already existing BR_TrackFX_GetModuleName)
++BR_EnvGet/SetProperties: add optional parameter automationItemsOptions (REAPER v5.979+), add second ACT token from track envelope state chunk (automation items options) (Issue 1153, partly)
++Deprecate CF_GetClipboardBig (use CF_GetClipboard instead)
++Extend CF_GetClipboard to allow reading more than 1023 characters
++Harden ConfigVar functions against invalid type interpretation (Issue 1131)
++Update various BR_ functions for REAPER's new TCP/EnvCP/MCP architecture (thanks Justin!) (Issue 1173)
+
+Region Playlist:
++Fix pasting region playlists containing grouped items (Issue 1118)
++Fix pasting region playlists when "Overlap and crossfade items when splitting" is enabled in Preferences > Project > Media Item Defaults (Issue 1204)
+
+Resources:
++Enter key in Filter textbox focuses list and don't block Del key (Issue 1119)
+
+Snapshots:
++Add option to (not) prompt for deleting abandoned items when recalling snapshots which contain deleted tracks (snapshots will be recalled and abandoned items deleted without confirmation with this option disabled) (Issue 1073)
++Harden getting send envelopes (displays error message in case of failure)
++Include track phase (polarity) in Full Track Mix, add separate Phase tickbox as custom filter (Issue 455)
+
+Note: Send envelopes should now be stored/recalled correctly with Snapshots (long standing bug) as of SWS v2.10.0, though it hasn't been tested much. Since snapshots are based on state chunks, changes within automation items (AI) envelopes are not stored/recalled currently (https://forum.cockos.com/showthread.php?t=205406|FR|), though AI properties (e.g. position) should be recalled correctly. Also note that when deleting an AI and trying to recall a previously stored snapshot which contains this AI it won't be recalled correctly.
+
+Windows installer:
++Allow installing SWS to paths containing characters outside of the system's ANSI codepage
++Fix nonworking check for running REAPER processes
++Fix the install path being initially empty when launching the Windows installer if REAPER is not installed
++Make installing the Python ReaScript support optional
++Migrate the extension DLL to <resource path>\UserPlugins, reaper_sws.py to <resource path>\Scripts
+
+"Xenakios/SWS: Rename takes and source files...": (Issue 1140)
++Add '(no undo)' to the action name
++Automatically delete old .reapeaks files (also for "Xenakios/SWS: Rename take source files...")
++Don't double-append file extension if already contained in new filename/takename
 
 !v2.10.0 #1 Featured build (February 6, 2019)
 Mega thanks to nofish and cfillion for their many contributions, and X-Raym for doing the tedious work of merging everything into a release.

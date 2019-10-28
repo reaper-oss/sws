@@ -26,13 +26,7 @@ if(APPLE)
   target_link_libraries(swell PUBLIC ${APPKIT})
 endif()
 
-target_compile_definitions(swell
-  PUBLIC SWELL_PROVIDED_BY_APP
-
-  # Disable strict checking of objc_msgSend calls
-  # Required for building swell-modstub.mm on Xcode 11+
-  PRIVATE OBJC_OLD_DISPATCH_PROTOTYPES
-)
+target_compile_definitions(swell PUBLIC SWELL_PROVIDED_BY_APP)
 target_include_directories(swell INTERFACE ${SWELL_INCLUDE_DIR})
 
 add_library(SWELL::swell ALIAS swell)

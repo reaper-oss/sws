@@ -47,6 +47,7 @@ Miscellaneous:
 +Fix various Xenakios take volume actions if take polarity is flipped
 +Harden against various potential crashes (eg. unexpectedly long translations in language packs)
 +Quantize actions / BR_Env actions / grid line API: support Measure grid line spacing (Issue 1117, Issue 1058)
++"SWS/S&M: Select FX x for selected tracks": fix creating undo point (create if at least one track is updated, rather than only if last track is updated), improve performance when the FX chain is open
 +"Xenakios/SWS: [Deprecated] Load project template ...": don't change default save path, REAPER 5.983+ (report https://forum.cockos.com/showpost.php?p=2140690&postcount=2605|here|)
 
 New actions:

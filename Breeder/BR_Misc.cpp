@@ -177,7 +177,7 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 
 			int count = CountTracks(s_proj);
 			// check if 'Prefs (-> Audio) -> Mute/Solo: "Solo default to in place solo.." is set, #1181
-			int soloMode = GetBit(*ConfigVar<int>("soloip"), 0) & 1 ? 2 : 1;
+			int soloMode = (*ConfigVar<int>("soloip") & 1) + 1;
 
 			for (int i = 0; i < count; ++i)
 			{

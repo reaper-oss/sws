@@ -1793,7 +1793,7 @@ bool BR_Envelope::FillProperties () const
 					lp.parse(token);
 					m_properties.visible    = lp.gettoken_int(1);
 					m_properties.lane       = lp.gettoken_int(2);
-					// 3rd field is a deprecated value, always 1.0, see p=2198426&postcount=118
+					// 3rd field is a deprecated value, always 1.0, see p=2198426
 				}
 				else if (!strncmp(token, "LANEHEIGHT ", sizeof("LANEHEIGHT ")-1))
 				{
@@ -1810,8 +1810,10 @@ bool BR_Envelope::FillProperties () const
 				{
 					lp.parse(token);
 					m_properties.shape         = lp.gettoken_int(1);
-					m_properties.shapeUnknown1 = lp.gettoken_int(2);
-					m_properties.shapeUnknown2 = lp.gettoken_int(3);
+					// 2nd and 3rd fields are pitch env range/snap settings, -1 = global default, 
+					// otherwise these are the LSBand MSB of the "pitchenvrange" config variable, see p=2198426
+					m_properties.pitchEnvRange = lp.gettoken_int(2);
+					m_properties.pitchEnvSnap  = lp.gettoken_int(3);
 				}
 				else if (!strncmp(token, "VOLTYPE ", sizeof("VOLTYPE ")-1))
 				{
@@ -1908,10 +1910,10 @@ WDL_FastString BR_Envelope::GetProperties ()
 		properties.Append(m_properties.paramType.Get());
 		properties.Append("\n");
 		properties.AppendFormatted(256, "ACT %d %d\n", m_properties.active, m_properties.AIoptions);
-		properties.AppendFormatted(256, "VIS %d %d %d\n", m_properties.visible, m_properties.lane, 1.0);
+		properties.AppendFormatted(256, "VIS %d %d 1\n", m_properties.visible, m_properties.lane);
 		properties.AppendFormatted(256, "LANEHEIGHT %d %d\n", m_properties.height, m_properties.heightUnknown);
 		properties.AppendFormatted(256, "ARM %d\n", m_properties.armed);
-		properties.AppendFormatted(256, "DEFSHAPE %d %d %d\n", m_properties.shape, m_properties.shapeUnknown1, m_properties.shapeUnknown2);
+		properties.AppendFormatted(256, "DEFSHAPE %d %d %d\n", m_properties.shape, m_properties.pitchEnvRange, m_properties.pitchEnvSnap);
 		for (int i = 0; i < (int)m_properties.automationItems.size(); ++i)
 		{
 			properties.Append(m_properties.automationItems[i].Get());
@@ -1943,8 +1945,8 @@ height        (0),
 heightUnknown (0),
 armed         (0),
 shape         (0),
-shapeUnknown1 (0),
-shapeUnknown2 (0),
+pitchEnvRange (0),
+pitchEnvSnap  (0),
 faderMode     (0),
 type          (UNKNOWN),
 minValue      (0),
@@ -1966,8 +1968,8 @@ height          (properties.height),
 heightUnknown   (properties.heightUnknown),
 armed           (properties.armed),
 shape           (properties.shape),
-shapeUnknown1   (properties.shapeUnknown1),
-shapeUnknown2   (properties.shapeUnknown2),
+pitchEnvRange   (properties.pitchEnvRange),
+pitchEnvSnap    (properties.pitchEnvSnap),
 faderMode       (properties.faderMode),
 type            (properties.type),
 minValue        (properties.minValue),
@@ -1996,8 +1998,8 @@ BR_Envelope::EnvProperties& BR_Envelope::EnvProperties::operator= (const EnvProp
 	heightUnknown   = properties.heightUnknown;
 	armed           = properties.armed;
 	shape           = properties.shape;
-	shapeUnknown1   = properties.shapeUnknown1;
-	shapeUnknown2   = properties.shapeUnknown2;
+	pitchEnvRange   = properties.pitchEnvRange;
+	pitchEnvSnap    = properties.pitchEnvSnap;
 	faderMode       = properties.faderMode;
 	type            = properties.type;
 	minValue        = properties.minValue;

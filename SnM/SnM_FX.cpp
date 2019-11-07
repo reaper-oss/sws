@@ -344,25 +344,27 @@ void UpdateAllFXsBypassSelItems(COMMAND_T* _ct) {
 // Track FX selection
 ///////////////////////////////////////////////////////////////////////////////
 
-int SelectTrackFX(MediaTrack* _tr, int _fx)
+bool SelectTrackFX(MediaTrack* _tr, int _fx)
 {
-	int updates = 0;
-	if (_tr && _fx >=0 && _fx < TrackFX_GetCount(_tr))
+	if (_tr && _fx >= 0 && _fx < TrackFX_GetCount(_tr))
 	{
-		SNM_ChunkParserPatcher p(_tr);
-		char pLastSel[4]="", pShow[4]=""; // 4 should be enough..
-		if (snprintfStrict(pLastSel, sizeof(pLastSel), "%d", _fx) > 0)
+		if (TrackFX_GetChainVisible(_tr) != -1) // FX chain is open, can use API
 		{
-			if (p.Parse(SNM_GET_CHUNK_CHAR,2,"FXCHAIN","SHOW",0,1,pShow) > 0)
+			TrackFX_Show(_tr, _fx, 1);
+			return true;
+		}
+		else // FX chain is closed, can't use API because it would open the FX chain, use chunking
+		{
+			char pLastSel[4] = "";
+			if (snprintfStrict(pLastSel, sizeof(pLastSel), "%d", _fx) > 0)
 			{
-				// patch the shown FX if the fx chain dlg is opened
-				if (strcmp(pShow, "0") && snprintfStrict(pShow, sizeof(pShow), "%d", _fx+1) > 0)
-					updates += (p.ParsePatch(SNM_SET_CHUNK_CHAR,2,"FXCHAIN","SHOW",0,1,pShow) > 0 ? 1:0);
-				updates += (p.ParsePatch(SNM_SET_CHUNK_CHAR,2,"FXCHAIN","LASTSEL",0,1,pLastSel) > 0 ? 1:0);
+				SNM_ChunkParserPatcher p(_tr);
+				if (p.ParsePatch(SNM_SET_CHUNK_CHAR, 2, "FXCHAIN", "LASTSEL", 0, 1, pLastSel) > 0)
+					return true;
 			}
 		}
 	}
-	return updates;
+	return false;
 }
 
 void SelectTrackFX(COMMAND_T* _ct) 
@@ -395,7 +397,7 @@ void SelectTrackFX(COMMAND_T* _ct)
 					break;
 			}
 			if (sel >=0)
-				updated = (SelectTrackFX(tr, sel) > 0);
+				updated |= SelectTrackFX(tr, sel);
 		}
 	}
 	if (updated)

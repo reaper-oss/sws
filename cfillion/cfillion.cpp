@@ -177,28 +177,26 @@ const char *CF_GetCommandText(const int section, const int command)
   return kbd_getTextFromCmd(command, SectionFromUniqueID(section));
 }
 
-static HWND CF_GetTrackFXChain(const int trackIndex)
-{
-  char chainTitle[128];
-
-  if(trackIndex < 1)
-    snprintf(chainTitle, sizeof(chainTitle), "%s%s",
-      __LOCALIZE("FX: ", "fx"), __LOCALIZE("Master Track", "fx"));
-  else
-    snprintf(chainTitle, sizeof(chainTitle), "%s%s %d",
-      __LOCALIZE("FX: ", "fx"), __LOCALIZE("Track", "fx"), trackIndex);
-
-  return FindWindowEx(nullptr, nullptr, nullptr, chainTitle);
-}
-
 HWND CF_GetTrackFXChain(MediaTrack *track)
 {
-  int trackNumber = 0;
+  std::ostringstream chainTitle;
+  chainTitle << __LOCALIZE("FX: ", "fx");
 
-  if(track != GetMasterTrack(nullptr))
-    trackNumber = static_cast<int>(GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER"));
+  if(track == GetMasterTrack(nullptr))
+    chainTitle << __LOCALIZE("Master Track", "fx");
+  else {
+    const int trackNumber = static_cast<int>(
+      GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER"));
+    const char *trackName = static_cast<char *>(
+      GetSetMediaTrackInfo(track, "P_NAME", nullptr));
 
-  return CF_GetTrackFXChain(trackNumber);
+    chainTitle << __LOCALIZE("Track", "fx") << ' ' << trackNumber;
+
+    if(strlen(trackName) > 0)
+      chainTitle << " \"" << trackName << '"';
+  }
+
+  return FindWindowEx(nullptr, nullptr, nullptr, chainTitle.str().c_str());
 }
 
 HWND CF_GetTakeFXChain(MediaItem_Take *take)
@@ -216,7 +214,7 @@ HWND CF_GetTakeFXChain(MediaItem_Take *take)
   GetSetMediaItemTakeInfo_String(take, "P_NAME", guidStr, true);
 
   char chainTitle[128];
-  snprintf(chainTitle, sizeof(chainTitle), "%s%s \"%s\"",
+  snprintf(chainTitle, sizeof(chainTitle), R"(%s%s "%s")",
     __LOCALIZE("FX: ", "fx"), __LOCALIZE("Item", "fx"), guidStr);
 
   HWND window = FindWindowEx(nullptr, nullptr, nullptr, chainTitle);
@@ -234,8 +232,10 @@ HWND CF_GetFocusedFXChain()
 
   int trackIndex, itemIndex, fxIndex;
   switch(GetFocusedFX(&trackIndex, &itemIndex, &fxIndex)) {
-  case 1:
-    return CF_GetTrackFXChain(trackIndex);
+  case 1: {
+    MediaTrack *track = GetTrack(nullptr, trackIndex - 1);
+    return CF_GetTrackFXChain(track);
+  }
   case 2: {
     MediaTrack *track = GetTrack(nullptr, trackIndex - 1);
     MediaItem *item = GetTrackMediaItem(track, itemIndex);

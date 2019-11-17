@@ -1,7 +1,7 @@
 /******************************************************************************
 / cfillion.cpp
 /
-/ Copyright (c) 2017 Christian Fillion
+/ Copyright (c) 2017-2019 Christian Fillion
 / https://cfillion.ca
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -179,6 +179,9 @@ const char *CF_GetCommandText(const int section, const int command)
 
 HWND CF_GetTrackFXChain(MediaTrack *track)
 {
+  if(!track)
+    return nullptr;
+
   std::ostringstream chainTitle;
   chainTitle << __LOCALIZE("FX: ", "fx");
 
@@ -204,6 +207,9 @@ HWND CF_GetTakeFXChain(MediaItem_Take *take)
   // Shameful hack follows. The FX chain window does have some user data
   // attached to it (pointer to an internal FxChain object?) but it does not
   // seem to hint back to the take in any obvious way.
+
+  if(!take)
+    return nullptr;
 
   GUID *guid = static_cast<GUID *>(GetSetMediaItemTakeInfo(take, "GUID", nullptr));
 
@@ -255,42 +261,54 @@ int CF_EnumSelectedFX(HWND fxChain, const int index)
 
 int CF_GetMediaSourceBitDepth(PCM_source *source)
 {
-  // parameter validation is already done on the REAPER side, so we're sure source is a valid PCM_source
-  return source->GetBitsPerSample();
+  // parameter validation is already done on the REAPER side, so we're sure
+  // source is a valid PCM_source (unless it's null)
+  return source ? source->GetBitsPerSample() : 0;
 }
 
 bool CF_GetMediaSourceOnline(PCM_source *source)
 {
-  return source->IsAvailable();
+  return source && source->IsAvailable();
 }
 
 void CF_SetMediaSourceOnline(PCM_source *source, const bool online)
 {
-  source->SetAvailable(online);
+  if(source)
+    source->SetAvailable(online);
 }
 
-bool CF_GetMediaSourceMetadata(PCM_source *source, const char *name, char *buf, const int bufSize)
+bool CF_GetMediaSourceMetadata(PCM_source *source, const char *name,
+  char *buf, const int bufSize)
 {
-  return source->Extended(PCM_SOURCE_EXT_GETMETADATA, (void *)name, (void *)buf, (void *)(intptr_t)bufSize) > 0;
+  if(!source)
+    return false;
+
+  return source->Extended(PCM_SOURCE_EXT_GETMETADATA, const_cast<char *>(name),
+    buf, reinterpret_cast<void *>(static_cast<intptr_t>(bufSize))) > 0;
 }
 
 bool CF_GetMediaSourceRPP(PCM_source *source, char *buf, const int bufSize)
 {
   char *rpp = nullptr;
-  source->Extended(PCM_SOURCE_EXT_GETASSOCIATED_RPP, &rpp, nullptr, nullptr);
 
-  if(rpp && buf) {
-    snprintf(buf, bufSize, "%s", rpp);
-    return true;
-  }
-  else
+  if(source)
+    source->Extended(PCM_SOURCE_EXT_GETASSOCIATED_RPP, &rpp, nullptr, nullptr);
+  if(!rpp)
     return false;
+
+  snprintf(buf, bufSize, "%s", rpp);
+  return true;
 }
 
-int CF_EnumMediaSourceCues(PCM_source *source, const int index, double *time, double *endTime, bool *isRegion, char *name, const int nameSize)
+int CF_EnumMediaSourceCues(PCM_source *source, const int index, double *time,
+  double *endTime, bool *isRegion, char *name, const int nameSize)
 {
+  if(!source)
+    return 0;
+
   REAPER_cue cue{};
-  const int add = source->Extended(PCM_SOURCE_EXT_ENUMCUES_EX, (void *)(intptr_t)index, &cue, nullptr);
+  const int add = source->Extended(PCM_SOURCE_EXT_ENUMCUES_EX,
+    reinterpret_cast<void *>(static_cast<intptr_t>(index)), &cue, nullptr);
 
   if(time)
     *time = cue.m_time;
@@ -307,5 +325,9 @@ int CF_EnumMediaSourceCues(PCM_source *source, const int index, double *time, do
 
 bool CF_ExportMediaSource(PCM_source *source, const char *file)
 {
-  return source->Extended(PCM_SOURCE_EXT_EXPORTTOFILE, (void *)file, nullptr, nullptr) > 0;
+  if(!source)
+    return false;
+
+  return source->Extended(PCM_SOURCE_EXT_EXPORTTOFILE,
+    const_cast<char *>(file), nullptr, nullptr) > 0;
 }

@@ -182,53 +182,63 @@ HWND CF_GetTrackFXChain(MediaTrack *track)
   if(!track)
     return nullptr;
 
-  std::ostringstream chainTitle;
-  chainTitle << __LOCALIZE("FX: ", "fx");
+  char chainTitle[128];
 
-  if(track == GetMasterTrack(nullptr))
-    chainTitle << __LOCALIZE("Master Track", "fx");
-  else {
-    const int trackNumber = static_cast<int>(
-      GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER"));
-    const char *trackName = static_cast<char *>(
-      GetSetMediaTrackInfo(track, "P_NAME", nullptr));
+  if(track == GetMasterTrack(nullptr)) {
+    snprintf(chainTitle, sizeof(chainTitle), "%s%s",
+      __LOCALIZE("FX: ", "fx"), __LOCALIZE("Master Track", "fx"));
 
-    chainTitle << __LOCALIZE("Track", "fx") << ' ' << trackNumber;
-
-    if(strlen(trackName) > 0)
-      chainTitle << " \"" << trackName << '"';
+    return FindWindowEx(nullptr, nullptr, nullptr, chainTitle);
   }
 
-  return FindWindowEx(nullptr, nullptr, nullptr, chainTitle.str().c_str());
+  const int trackNumber =
+    static_cast<int>(GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER"));
+  const std::string trackName =
+    static_cast<char *>(GetSetMediaTrackInfo(track, "P_NAME", nullptr));
+
+  // HACK: rename the track to uniquely identify its FX chain window across all
+  // opened projects
+  char guid[64];
+  GetSetMediaTrackInfo_String(track, "GUID", guid, false);
+  GetSetMediaTrackInfo_String(track, "P_NAME", guid, true);
+  TrackList_AdjustWindows(true); // update title of opened FX chain windows
+
+  snprintf(chainTitle, sizeof(chainTitle), R"(%s%s %d "%s")",
+    __LOCALIZE("FX: ", "fx"), __LOCALIZE("Track", "fx"), trackNumber, guid);
+
+  HWND match = FindWindowEx(nullptr, nullptr, nullptr, chainTitle);
+
+  // restore the original track name
+  GetSetMediaTrackInfo_String(track, "P_NAME",
+    const_cast<char *>(trackName.c_str()), true);
+  TrackList_AdjustWindows(true);
+
+  return match;
 }
 
 HWND CF_GetTakeFXChain(MediaItem_Take *take)
 {
-  // Shameful hack follows. The FX chain window does have some user data
-  // attached to it (pointer to an internal FxChain object?) but it does not
-  // seem to hint back to the take in any obvious way.
-
   if(!take)
     return nullptr;
 
-  GUID *guid = static_cast<GUID *>(GetSetMediaItemTakeInfo(take, "GUID", nullptr));
+  const std::string takeName = GetTakeName(take);
 
-  char guidStr[64];
-  guidToString(guid, guidStr);
-
-  string originalName = GetTakeName(take);
-  GetSetMediaItemTakeInfo_String(take, "P_NAME", guidStr, true);
+  // HACK: Using the GUID to uniquely identify the take's FX chain window. The
+  // FX chain window does have some user data attached to it but it does not
+  // seem to hint back to the take in any obvious way.
+  char guid[64];
+  GetSetMediaItemTakeInfo_String(take, "GUID", guid, false);
+  GetSetMediaItemTakeInfo_String(take, "P_NAME", guid, true);
 
   char chainTitle[128];
   snprintf(chainTitle, sizeof(chainTitle), R"(%s%s "%s")",
-    __LOCALIZE("FX: ", "fx"), __LOCALIZE("Item", "fx"), guidStr);
+    __LOCALIZE("FX: ", "fx"), __LOCALIZE("Item", "fx"), guid);
 
-  HWND window = FindWindowEx(nullptr, nullptr, nullptr, chainTitle);
-
+  HWND match = FindWindowEx(nullptr, nullptr, nullptr, chainTitle);
   GetSetMediaItemTakeInfo_String(take, "P_NAME",
-    const_cast<char *>(originalName.c_str()), true);
+    const_cast<char *>(takeName.c_str()), true);
 
-  return window;
+  return match;
 }
 
 HWND CF_GetFocusedFXChain()

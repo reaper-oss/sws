@@ -856,6 +856,7 @@ error:
 		IMPAPI(GetSetMediaItemTakeInfo_String);
 		IMPAPI(GetMediaSourceLength); // v5.0pre3+
 		IMPAPI(GetSetMediaTrackInfo);
+		IMPAPI(GetSetMediaTrackInfo_String);
 		IMPAPI(GetSetObjectState);
 		IMPAPI(GetSetObjectState2);
 		IMPAPI(GetSetProjectNotes); // v5.15pre1+

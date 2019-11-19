@@ -66,6 +66,7 @@ ReaScript API:
 +BR_EnvGet/SetProperties: add optional parameter automationItemsOptions (REAPER v5.979+), add second ACT token from track envelope state chunk (automation items options) (Issue 1153, partly)
 +Deprecate CF_GetClipboardBig (use CF_GetClipboard instead)
 +Extend CF_GetClipboard to allow reading more than 1023 characters
++Fix CF_GetTrackFXChain with named tracks (Issue 1222) and disambiguate FX chains across all opened projects
 +Harden ConfigVar functions against invalid type interpretation (Issue 1131)
 +Update various BR_ functions for REAPER's new TCP/EnvCP/MCP architecture (thanks Justin!) (Issue 1173)
 

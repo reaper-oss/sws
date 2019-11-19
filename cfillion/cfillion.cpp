@@ -1,7 +1,7 @@
 /******************************************************************************
 / cfillion.cpp
 /
-/ Copyright (c) 2017 Christian Fillion
+/ Copyright (c) 2017-2019 Christian Fillion
 / https://cfillion.ca
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -177,54 +177,68 @@ const char *CF_GetCommandText(const int section, const int command)
   return kbd_getTextFromCmd(command, SectionFromUniqueID(section));
 }
 
-static HWND CF_GetTrackFXChain(const int trackIndex)
-{
-  char chainTitle[128];
-
-  if(trackIndex < 1)
-    snprintf(chainTitle, sizeof(chainTitle), "%s%s",
-      __LOCALIZE("FX: ", "fx"), __LOCALIZE("Master Track", "fx"));
-  else
-    snprintf(chainTitle, sizeof(chainTitle), "%s%s %d",
-      __LOCALIZE("FX: ", "fx"), __LOCALIZE("Track", "fx"), trackIndex);
-
-  return FindWindowEx(nullptr, nullptr, nullptr, chainTitle);
-}
-
 HWND CF_GetTrackFXChain(MediaTrack *track)
 {
-  int trackNumber = 0;
+  if(!track)
+    return nullptr;
 
-  if(track != GetMasterTrack(nullptr))
-    trackNumber = static_cast<int>(GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER"));
+  char chainTitle[128];
 
-  return CF_GetTrackFXChain(trackNumber);
+  if(track == GetMasterTrack(nullptr)) {
+    snprintf(chainTitle, sizeof(chainTitle), "%s%s",
+      __LOCALIZE("FX: ", "fx"), __LOCALIZE("Master Track", "fx"));
+
+    return FindWindowEx(nullptr, nullptr, nullptr, chainTitle);
+  }
+
+  const int trackNumber =
+    static_cast<int>(GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER"));
+  const std::string trackName =
+    static_cast<char *>(GetSetMediaTrackInfo(track, "P_NAME", nullptr));
+
+  // HACK: rename the track to uniquely identify its FX chain window across all
+  // opened projects
+  char guid[64];
+  GetSetMediaTrackInfo_String(track, "GUID", guid, false);
+  GetSetMediaTrackInfo_String(track, "P_NAME", guid, true);
+  TrackList_AdjustWindows(true); // update title of opened FX chain windows
+
+  snprintf(chainTitle, sizeof(chainTitle), R"(%s%s %d "%s")",
+    __LOCALIZE("FX: ", "fx"), __LOCALIZE("Track", "fx"), trackNumber, guid);
+
+  HWND match = FindWindowEx(nullptr, nullptr, nullptr, chainTitle);
+
+  // restore the original track name
+  GetSetMediaTrackInfo_String(track, "P_NAME",
+    const_cast<char *>(trackName.c_str()), true);
+  TrackList_AdjustWindows(true);
+
+  return match;
 }
 
 HWND CF_GetTakeFXChain(MediaItem_Take *take)
 {
-  // Shameful hack follows. The FX chain window does have some user data
-  // attached to it (pointer to an internal FxChain object?) but it does not
+  if(!take)
+    return nullptr;
+
+  const std::string takeName = GetTakeName(take);
+
+  // HACK: Using the GUID to uniquely identify the take's FX chain window. The
+  // FX chain window does have some user data attached to it but it does not
   // seem to hint back to the take in any obvious way.
-
-  GUID *guid = static_cast<GUID *>(GetSetMediaItemTakeInfo(take, "GUID", nullptr));
-
-  char guidStr[64];
-  guidToString(guid, guidStr);
-
-  string originalName = GetTakeName(take);
-  GetSetMediaItemTakeInfo_String(take, "P_NAME", guidStr, true);
+  char guid[64];
+  GetSetMediaItemTakeInfo_String(take, "GUID", guid, false);
+  GetSetMediaItemTakeInfo_String(take, "P_NAME", guid, true);
 
   char chainTitle[128];
-  snprintf(chainTitle, sizeof(chainTitle), "%s%s \"%s\"",
-    __LOCALIZE("FX: ", "fx"), __LOCALIZE("Item", "fx"), guidStr);
+  snprintf(chainTitle, sizeof(chainTitle), R"(%s%s "%s")",
+    __LOCALIZE("FX: ", "fx"), __LOCALIZE("Item", "fx"), guid);
 
-  HWND window = FindWindowEx(nullptr, nullptr, nullptr, chainTitle);
-
+  HWND match = FindWindowEx(nullptr, nullptr, nullptr, chainTitle);
   GetSetMediaItemTakeInfo_String(take, "P_NAME",
-    const_cast<char *>(originalName.c_str()), true);
+    const_cast<char *>(takeName.c_str()), true);
 
-  return window;
+  return match;
 }
 
 HWND CF_GetFocusedFXChain()
@@ -234,8 +248,10 @@ HWND CF_GetFocusedFXChain()
 
   int trackIndex, itemIndex, fxIndex;
   switch(GetFocusedFX(&trackIndex, &itemIndex, &fxIndex)) {
-  case 1:
-    return CF_GetTrackFXChain(trackIndex);
+  case 1: {
+    MediaTrack *track = GetTrack(nullptr, trackIndex - 1);
+    return CF_GetTrackFXChain(track);
+  }
   case 2: {
     MediaTrack *track = GetTrack(nullptr, trackIndex - 1);
     MediaItem *item = GetTrackMediaItem(track, itemIndex);
@@ -255,42 +271,54 @@ int CF_EnumSelectedFX(HWND fxChain, const int index)
 
 int CF_GetMediaSourceBitDepth(PCM_source *source)
 {
-  // parameter validation is already done on the REAPER side, so we're sure source is a valid PCM_source
-  return source->GetBitsPerSample();
+  // parameter validation is already done on the REAPER side, so we're sure
+  // source is a valid PCM_source (unless it's null)
+  return source ? source->GetBitsPerSample() : 0;
 }
 
 bool CF_GetMediaSourceOnline(PCM_source *source)
 {
-  return source->IsAvailable();
+  return source && source->IsAvailable();
 }
 
 void CF_SetMediaSourceOnline(PCM_source *source, const bool online)
 {
-  source->SetAvailable(online);
+  if(source)
+    source->SetAvailable(online);
 }
 
-bool CF_GetMediaSourceMetadata(PCM_source *source, const char *name, char *buf, const int bufSize)
+bool CF_GetMediaSourceMetadata(PCM_source *source, const char *name,
+  char *buf, const int bufSize)
 {
-  return source->Extended(PCM_SOURCE_EXT_GETMETADATA, (void *)name, (void *)buf, (void *)(intptr_t)bufSize) > 0;
+  if(!source)
+    return false;
+
+  return source->Extended(PCM_SOURCE_EXT_GETMETADATA, const_cast<char *>(name),
+    buf, reinterpret_cast<void *>(static_cast<intptr_t>(bufSize))) > 0;
 }
 
 bool CF_GetMediaSourceRPP(PCM_source *source, char *buf, const int bufSize)
 {
   char *rpp = nullptr;
-  source->Extended(PCM_SOURCE_EXT_GETASSOCIATED_RPP, &rpp, nullptr, nullptr);
 
-  if(rpp && buf) {
-    snprintf(buf, bufSize, "%s", rpp);
-    return true;
-  }
-  else
+  if(source)
+    source->Extended(PCM_SOURCE_EXT_GETASSOCIATED_RPP, &rpp, nullptr, nullptr);
+  if(!rpp)
     return false;
+
+  snprintf(buf, bufSize, "%s", rpp);
+  return true;
 }
 
-int CF_EnumMediaSourceCues(PCM_source *source, const int index, double *time, double *endTime, bool *isRegion, char *name, const int nameSize)
+int CF_EnumMediaSourceCues(PCM_source *source, const int index, double *time,
+  double *endTime, bool *isRegion, char *name, const int nameSize)
 {
+  if(!source)
+    return 0;
+
   REAPER_cue cue{};
-  const int add = source->Extended(PCM_SOURCE_EXT_ENUMCUES_EX, (void *)(intptr_t)index, &cue, nullptr);
+  const int add = source->Extended(PCM_SOURCE_EXT_ENUMCUES_EX,
+    reinterpret_cast<void *>(static_cast<intptr_t>(index)), &cue, nullptr);
 
   if(time)
     *time = cue.m_time;
@@ -307,5 +335,9 @@ int CF_EnumMediaSourceCues(PCM_source *source, const int index, double *time, do
 
 bool CF_ExportMediaSource(PCM_source *source, const char *file)
 {
-  return source->Extended(PCM_SOURCE_EXT_EXPORTTOFILE, (void *)file, nullptr, nullptr) > 0;
+  if(!source)
+    return false;
+
+  return source->Extended(PCM_SOURCE_EXT_EXPORTTOFILE,
+    const_cast<char *>(file), nullptr, nullptr) > 0;
 }

@@ -5,7 +5,7 @@
 
 Envelopes:
 +Fix hiding send envelopes accidentally removing the subsequent send/receive (Issue 1183)
-+Fix wrong point values when using envelope-related actions with fader scaling mode (regression from 2.10.0, report https://forum.cockos.com/showthread.php?p=2094872|here|)
++Fix wrong point values when using envelope-related actions with fader scaling mode (regression from 2.10.0, report https://forum.cockos.com/showthread.php?p=2094872|here|, requires REAPER 5.979 or newer)
 +LFO Generator: allow for generating more points and account for take playrate (Issue 1158)
 +Prompt before executing "SWS/S&M: Remove all envelopes for selected tracks" (may be disabled by setting <REAPER resource path>/S&M.ini/[Misc]/RemoveAllEnvsSelTracksPrompt=0) (Issue 1175)
 

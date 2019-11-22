@@ -42,6 +42,7 @@ Marker List and Track List:
 +Don't block the Del key (Issue 1119)
 
 Miscellaneous:
++Add support for REAPER v6's new TCP/EnvCP/MCP architecture (thanks Justin!)
 +Fix 'Xenakios/SWS: Normalize selected takes to dB value...' if take polarity is flipped (report https://forum.cockos.com/showthread.php?t=219269|here|)
 +Fix flickering in some vertical zooming actions
 +Fix various Xenakios take volume actions if take polarity is flipped
@@ -68,7 +69,6 @@ ReaScript API:
 +Extend CF_GetClipboard to allow reading more than 1023 characters
 +Fix CF_GetTrackFXChain with named tracks (Issue 1222) and disambiguate FX chains across all opened projects
 +Harden ConfigVar functions against invalid type interpretation (Issue 1131)
-+Update various BR_ functions for REAPER's new TCP/EnvCP/MCP architecture (thanks Justin!) (Issue 1173)
 
 Region Playlist:
 +Fix pasting region playlists containing grouped items (Issue 1118)

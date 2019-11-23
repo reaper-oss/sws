@@ -11,20 +11,21 @@ for:
       - sudo apt-get update -qq
       - sudo apt-get install -qq --no-install-recommends php
 
-      - case $PLATFORM in
+      - |-
+        case $PLATFORM in
         i686)
           sudo apt-get install -qq g++-multilib &&
-          export TOOLCHAIN=../cmake/linux-cross.cmake
+          export TOOLCHAIN=../cmake/linux-cross.cmake \
                  TOOLCHAIN_PREFIX=i386-linux-gnu
           ;;
         armv7l)
           sudo apt-get install -qq g++-arm-linux-gnueabihf &&
-          export TOOLCHAIN=../cmake/linux-cross.cmake
+          export TOOLCHAIN=../cmake/linux-cross.cmake \
                  TOOLCHAIN_PREFIX=arm-linux-gnueabihf
           ;;
         aarch64)
           sudo apt-get install -qq g++-aarch64-linux-gnu &&
-          export TOOLCHAIN=../cmake/linux-cross.cmake
+          export TOOLCHAIN=../cmake/linux-cross.cmake \
                  TOOLCHAIN_PREFIX=aarch64-linux-gnu
           ;;
         esac

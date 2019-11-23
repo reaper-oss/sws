@@ -1,11 +1,11 @@
-if(NOT DEFINED ENV{PLATFORM})
-  message(FATAL_ERROR "The PLATFORM environment variable is not set.")
+if(NOT DEFINED ENV{ARCH})
+  message(FATAL_ERROR "The ARCH environment variable is not set.")
 endif()
 
 set(CMAKE_SYSTEM_NAME Linux)
-set(CMAKE_SYSTEM_PROCESSOR $ENV{PLATFORM})
+set(CMAKE_SYSTEM_PROCESSOR $ENV{ARCH})
 
-if($ENV{PLATFORM} STREQUAL "i686")
+if($ENV{ARCH} STREQUAL "i686")
   set(CMAKE_C_FLAGS -m32)
   set(CMAKE_CXX_FLAGS -m32)
 elseif(NOT DEFINED ENV{TOOLCHAIN_PREFIX})

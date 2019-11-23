@@ -12,7 +12,7 @@ for:
       - sudo apt-get install -qq --no-install-recommends php
 
       - |-
-        case $PLATFORM in
+        case $ARCH in
         i686)
           sudo apt-get install -qq g++-multilib &&
           export TOOLCHAIN=../cmake/linux-cross.cmake \
@@ -43,8 +43,8 @@ for:
       - refreshenv
       - curl -fsSLO https://nsis.sourceforge.io/mediawiki/images/1/18/NsProcess.zip
       - 7z e nsProcess.zip -o"%ProgramFiles(x86)%\NSIS\Plugins\x86-unicode" nsProcessW.dll -r
-      - if "%PLATFORM%" == "x64" call "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
-      - if "%PLATFORM%" == "x86" call "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat"
+      - if "%ARCH%" == "x64" call "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+      - if "%ARCH%" == "x86" call "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat"
     build_script:
       - mkdir build && cd build
       - cmake .. -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo
@@ -57,9 +57,9 @@ for:
 
 environment:
   matrix:
-    - { APPVEYOR_BUILD_WORKER_IMAGE: *windows, PLATFORM: x64     }
-    - { APPVEYOR_BUILD_WORKER_IMAGE: *windows, PLATFORM: x86     }
-    - { APPVEYOR_BUILD_WORKER_IMAGE: *linux,   PLATFORM: x86_64  }
-    - { APPVEYOR_BUILD_WORKER_IMAGE: *linux,   PLATFORM: i686    }
-    - { APPVEYOR_BUILD_WORKER_IMAGE: *linux,   PLATFORM: armv7l  }
-    - { APPVEYOR_BUILD_WORKER_IMAGE: *linux,   PLATFORM: aarch64 }
+    - { APPVEYOR_BUILD_WORKER_IMAGE: *windows, ARCH: x64     }
+    - { APPVEYOR_BUILD_WORKER_IMAGE: *windows, ARCH: x86     }
+    - { APPVEYOR_BUILD_WORKER_IMAGE: *linux,   ARCH: x86_64  }
+    - { APPVEYOR_BUILD_WORKER_IMAGE: *linux,   ARCH: i686    }
+    - { APPVEYOR_BUILD_WORKER_IMAGE: *linux,   ARCH: armv7l  }
+    - { APPVEYOR_BUILD_WORKER_IMAGE: *linux,   ARCH: aarch64 }

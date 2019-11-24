@@ -63,3 +63,18 @@ environment:
     - { APPVEYOR_BUILD_WORKER_IMAGE: *linux,   ARCH: i686    }
     - { APPVEYOR_BUILD_WORKER_IMAGE: *linux,   ARCH: armv7l  }
     - { APPVEYOR_BUILD_WORKER_IMAGE: *linux,   ARCH: aarch64 }
+
+notifications:
+  - provider: GitHubPullRequest
+    template: |-
+      {{#passed}}:white_check_mark:{{/passed}}{{#failed}}:x:{{/failed}} [Build {{&projectName}} {{buildVersion}} {{status}}]({{buildUrl}}) (commit {{commitUrl}} by @{{&commitAuthorUsername}})
+      {{#passed}}{{#jobs}}
+
+      <details>
+      <summary>{{name}}</summary>
+
+      {{#artifacts}}
+      - [{{fileName}}]({{permalink}})
+      {{/artifacts}}
+      </details>
+      {{/jobs}}{{/passed}}

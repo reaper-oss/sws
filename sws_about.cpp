@@ -58,7 +58,17 @@ INT_PTR WINAPI doAbout(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case WM_INITDIALOG:
 		{
 			char cVersion[256];
-			snprintf(cVersion, sizeof(cVersion), "%s %d.%d.%d.%d-%s", __LOCALIZE("Version","sws_DLG_109"), SWS_VERSION, SWS_COMMIT);
+			snprintf(cVersion, sizeof(cVersion),
+#ifdef GIT_BRANCH
+					"%s %d.%d.%d.%d %s (%s)",
+#else
+					"%s %d.%d.%d.%d %s",
+#endif
+				__LOCALIZE("Version","sws_DLG_109"), SWS_VERSION, GIT_COMMIT
+#ifdef GIT_BRANCH
+				, GIT_BRANCH
+#endif
+			);
 			char *p=strstr(cVersion, " #0");
 			if (p) *p=0;
 

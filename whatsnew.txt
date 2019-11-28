@@ -15,6 +15,7 @@ Contextual toolbars:
 Global notes: (Issue 1170)
 +Display a [modified] indicator in the notes window after editing global notes until saving
 +Fix global notes only appearing in first project tab
++Fix text flickering (report https://forum.cockos.com/showpost.php?p=2141877&postcount=2611|here|)
 +Internal tweaks (more efficient load/save)
 +Additionally to saving when project is saved, can be saved via notes window context menu (global notes are stored in <REAPER resource path>/SWS_global notes.txt)
 

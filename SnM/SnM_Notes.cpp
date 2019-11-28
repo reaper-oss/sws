@@ -522,7 +522,7 @@ void NotesWnd::OnTimer(WPARAM wParam)
 		// when the view is active: update only for markers and if the view is locked 
 		// => updates during playback, in other cases (e.g. item selection change) the main 
 		// window will be the active one, not our NotesWnd
-		if (g_notesType!=SNM_NOTES_PROJECT && g_notesType!=SNM_NOTES_PROJECT_EXTRA && 
+		if (g_notesType!=SNM_NOTES_PROJECT && g_notesType!=SNM_NOTES_PROJECT_EXTRA && g_notesType!=SNM_NOTES_GLOBAL && 
 		    IsWindowVisible(m_hwnd) && (!IsActive() || (g_locked && (g_notesType>=SNM_NOTES_MKR_NAME && g_notesType<=SNM_NOTES_MKRRGN_SUB))))
 		{
 			Update();

@@ -48,12 +48,13 @@ for:
     build_script:
       - mkdir build && cd build
       - cmake .. -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo
-      - cmake --build . --target all langpack
+      - cmake --build . --target all langpack whatsnew
       - cpack
     artifacts:
       - path: build\sws*.exe
       - path: build\reaper_sws*.pdb
       - path: build\BuildUtils\SWS_Template.ReaperLangPack
+      - path: build\BuildUtils\whatsnew.html
 
 environment:
   matrix:

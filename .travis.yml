@@ -1,6 +1,8 @@
 ---
 language: cpp
 os: osx
+git:
+  depth: false
 env:
   - ARCH=x86_64
   - ARCH=i386

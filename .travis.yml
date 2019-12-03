@@ -9,7 +9,7 @@ install:
 script:
   - mkdir build && cd build
   - cmake ..
-      -DCMAKE_BUILD_TYPE=RelWithDebInfo
+      -DCMAKE_BUILD_TYPE=Release
       -DCMAKE_OSX_ARCHITECTURES="$ARCH"
       -DCMAKE_OSX_DEPLOYMENT_TARGET=10.5
       -DNO_INSTALL_PREFIX=YES

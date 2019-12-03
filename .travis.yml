@@ -17,6 +17,13 @@ script:
       -DNO_INSTALL_PREFIX=YES
   - cmake --build .
   - cpack
+
+  - |-
+    if [ "$TRAVIS_BRANCH" == "master" ] && [ -n ${DEPLOY_KEY+x} ]; then
+      echo "$DEPLOY_KEY" | base64 -D > deploy_key && chmod 600 deploy_key &&
+      scp -i deploy_key -o StrictHostKeyChecking=NO -q sws*.dmg \
+        swsci@sws-extension.org:/var/www/standingwaterstudios.com/public_html/download/pre-release
+    fi
 addons:
   homebrew:
     packages:

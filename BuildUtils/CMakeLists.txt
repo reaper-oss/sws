@@ -35,7 +35,4 @@ if(WIN32)
 
   add_custom_target(whatsnew DEPENDS ${WHATSNEW_OUTPUT})
   add_dependencies(whatsnew makewhatsnew)
-
-  add_executable(printversion EXCLUDE_FROM_ALL PrintVersion.cpp)
-  target_include_directories(printversion PRIVATE ${WDL_INCLUDE_DIR})
 endif()

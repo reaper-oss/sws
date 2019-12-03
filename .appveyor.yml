@@ -61,7 +61,7 @@ for:
           if($env:APPVEYOR_REPO_BRANCH -eq "master" -And $env:DEPLOY_KEY -ne $null) {
             $bytes = [System.Convert]::FromBase64String($env:DEPLOY_KEY)
             [System.IO.File]::WriteAllBytes("$($PWD)\deploy_key", $bytes)
-            scp -i deploy_key -o StrictHostKeyChecking=NO -q sws*.exe `
+            scp -i deploy_key -o StrictHostKeyChecking=NO -q sws*.exe version.h `
               BuildUtils/SWS_Template.ReaperLangPack BuildUtils/whatsnew.html `
               swsci@sws-extension.org:/var/www/standingwaterstudios.com/public_html/download/pre-release
           }

@@ -53,7 +53,8 @@ Miscellaneous:
 +"Xenakios/SWS: [Deprecated] Load project template ...": don't change default save path, REAPER 5.983+ (report https://forum.cockos.com/showpost.php?p=2140690&postcount=2605|here|)
 
 New actions:
-+Add SWS/NF: Toggle render speed (apply FX/render stems) realtime/not limited (Issue 1065)
++SWS/NF: Force media online (all takes), use to bring back media online which was set to forced offline using native actions Force media offline, Force inactive take media offline
++SWS/NF: Toggle render speed (apply FX/render stems) realtime/not limited (Issue 1065)
 
 Play from edit/mouse cursor actions:
 +Obey 'Solo defaults to in-place solo' preference (Issue 1181)

@@ -30,10 +30,15 @@
 #include "stdafx.h"
 #include "nofish.h"
 
+#include <regex>
+
 #include "../Breeder/BR_ContinuousActions.h"
-#include "../Breeder/BR_Util.h"
 #include "../Breeder/BR_ReaScript.h" // BR_GetMouseCursorContext(), BR_ItemAtMouseCursor()
+#include "../Breeder/BR_Util.h"
+#include "../SnM/SnM_Chunk.h" // SNM_ChunkParserPatcher
+#include "../sws_util.h" // SWS_GetSelectedMediaItems()
 #include "../Utility/configvar.h"
+
 
 //////////////////////////////////////////////////////////////////
 //                                                              //
@@ -380,6 +385,28 @@ void ToggleRenderSpeedRealtimeNotLim(COMMAND_T* = nullptr)
 	WritePrivateProfileString("reaper", configStr, tmp, get_ini_file());
 }
 
+void ForceMediaOnlineAllTakes(COMMAND_T* ct = nullptr)
+{
+	WDL_TypedBuf<MediaItem*> items;
+	SWS_GetSelectedMediaItems(&items);
+	if (!items.GetSize())
+		return;
+	PreventUIRefresh(1);
+	for (int i = 0; i < items.GetSize(); i++)
+	{
+		MediaItem* item = items.Get()[i];
+		SNM_ChunkParserPatcher p(item);
+		p.SetWantsMinimalState(true);
+		std::string itemChunkStr = p.GetChunk()->Get();
+		std::string itemChunkStrNew = regex_replace(itemChunkStr, regex("_OFFLINE_"), "");
+		if (itemChunkStrNew.length() != itemChunkStr.length())
+			p.SetChunk(itemChunkStrNew.c_str());
+	}
+	PreventUIRefresh(-1);
+	UpdateArrange();
+	Undo_OnStateChange("SWS/NF: Force item media online (all takes");
+}
+
 //////////////////////////////////////////////////////////////////
 //                                                              //
 // Register commands                                            //
@@ -414,6 +441,9 @@ static COMMAND_T g_commandTable[] =
 
 	// toggle Limit apply FX/render stems to realtime
 	{ { DEFACCEL, "SWS/NF: Toggle render speed (apply FX/render stems) realtime/not limited" }, "NF_TOGGLERENDERSPEED_RT_NL", ToggleRenderSpeedRealtimeNotLim, NULL, 0,  IsRenderSpeedRealtime},
+
+	// Force media online (all takes)
+	{ { DEFACCEL, "SWS/NF: Force media online (all takes)" }, "NF_FORCE_MEDIA_ONLINE_ALL_TAKES", ForceMediaOnlineAllTakes},
 
 	//!WANT_LOCALIZE_1ST_STRING_END
 

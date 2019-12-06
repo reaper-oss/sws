@@ -1,6 +1,9 @@
 !include MUI2.nsh
+!include Sections.nsh
 
-Unicode true
+!ifndef NSIS_UNICODE
+  Unicode true
+!endif
 
 AllowSkipFiles off
 Name "@CPACK_NSIS_PACKAGE_NAME@"

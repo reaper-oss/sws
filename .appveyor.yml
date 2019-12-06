@@ -45,10 +45,11 @@ for:
 
   - matrix: { only: [ APPVEYOR_BUILD_WORKER_IMAGE: &windows Visual Studio 2019 ] }
     install:
-      - choco install -y nsis php
+      - '"%ProgramFiles(x86)%\NSIS\uninst-nsis.exe" /S'
+      - choco install -y nsis-unicode php
       - refreshenv
       - curl -fsSLO https://nsis.sourceforge.io/mediawiki/images/1/18/NsProcess.zip
-      - 7z e nsProcess.zip -o"%ProgramFiles(x86)%\NSIS\Plugins\x86-unicode" nsProcessW.dll -r
+      - 7z e nsProcess.zip -o"%ProgramFiles(x86)%\NSIS\Unicode\Plugins" nsProcessW.dll -r
       - if "%ARCH%" == "x64" call "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
       - if "%ARCH%" == "x86" call "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat"
     build_script:

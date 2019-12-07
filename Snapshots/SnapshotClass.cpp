@@ -848,6 +848,18 @@ Snapshot::~Snapshot()
 	m_tracks.Empty(true);
 }
 
+void DeleteTracksFromSnapshotOnError(WDL_PtrList<TrackSnapshot>& m_tracks)
+{
+	for (int i = 0; i < m_tracks.GetSize(); i++)
+	{
+		if (m_tracks.Get(i)->Cleanup())
+		{
+			m_tracks.Delete(i, true);
+			i--;
+		}
+	}
+}
+
 bool Snapshot::UpdateReaper(int mask, bool bSelOnly, bool bHideNewVis)
 {
 	char str[256];
@@ -898,7 +910,7 @@ bool Snapshot::UpdateReaper(int mask, bool bSelOnly, bool bHideNewVis)
 	snprintf(str, sizeof(str), __LOCALIZE_VERFMT("Load snapshot %s","sws_undo"), m_cName);
 	Undo_OnStateChangeEx(str, UNDO_STATE_ALL, -1);
 
-	if (trackErr || fxErr)
+	if ((trackErr && SWS_SnapshotsWnd::GetPromptOnDeletedTracks()) || fxErr)
 	{
 		WDL_FastString errString;
 		int n = 0;
@@ -909,14 +921,14 @@ bool Snapshot::UpdateReaper(int mask, bool bSelOnly, bool bHideNewVis)
 		errString.AppendFormatted(512, "%s", __LOCALIZE("\nDelete abandonded items from snapshot? (You cannot undo this operation!)","sws_DLG_101"));
 		if (MessageBox(g_hwndParent, errString.Get(), __LOCALIZE("Snapshot recall error","sws_DLG_101"), MB_YESNO) == IDYES)
 		{
-			for (int i = 0; i < m_tracks.GetSize(); i++)
-				if (m_tracks.Get(i)->Cleanup())
-				{
-					m_tracks.Delete(i, true);
-					i--;
-				}
+			DeleteTracksFromSnapshotOnError(m_tracks);
 			return true;
 		}
+	}
+	else if (trackErr) // prompt on recall deleted tracks disabled
+	{
+		DeleteTracksFromSnapshotOnError(m_tracks);
+		return true;
 	}
 	return false;
 }

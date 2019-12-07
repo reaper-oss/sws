@@ -2132,24 +2132,13 @@ int GetMasterTcpGap ()
 
 int GetTrackHeight (MediaTrack* track, int* offsetY, int* topGap /*=NULL*/, int* bottomGap /*=NULL*/)
 {
-	bool master = (GetMasterTrack(NULL) == track) ? (true) : (false);
-
-	// Get track's start Y coordinate
 	if (offsetY)
 	{
-		int offset = 0;
-		if (!master)
-		{
-			int count = CSurf_TrackToID(track, false) - 1;
-			if (count >= -1)
-			{
-				for (int i = 0; i < count; ++i)
-					offset += (int)GetMediaTrackInfo_Value(GetTrack(NULL, i), "I_WNDH"); // I_WNDH counts both track lane and any visible envelope lanes
-				if (TcpVis(GetMasterTrack(NULL)))
-					offset += (int)GetMediaTrackInfo_Value(GetMasterTrack(NULL), "I_WNDH") + GetMasterTcpGap();
-			}
-		}
-		*offsetY = offset;
+		// Get track's start Y coordinate
+		SCROLLINFO si{sizeof(SCROLLINFO), SIF_POS};
+		CoolSB_GetScrollInfo(GetArrangeWnd(), SB_VERT, &si);
+
+		*offsetY = si.nPos + static_cast<int>(GetMediaTrackInfo_Value(track, "I_TCPY"));
 	}
 
 	if (!TcpVis(track))
@@ -2159,52 +2148,11 @@ int GetTrackHeight (MediaTrack* track, int* offsetY, int* topGap /*=NULL*/, int*
 	if (compact == 2)                              // wrong value if track was resized prior to compacting so return here
 		return SNM_GetIconTheme()->tcp_supercollapsed_height;
 
-	// Get track height
-	int height = (int)GetMediaTrackInfo_Value(track, "I_HEIGHTOVERRIDE");
-	void *chk = GetSetMediaTrackInfo(track,"I_TCPH",NULL);
-	if (chk) // should always be supported on 5.982+
-	{
-		height = *(int *)chk;
-	}
-	else if (height == 0)
-	{
-		const int vZoom = ConfigVar<int>("vzoom2").value_or(0);
-		height = GetTrackHeightFromVZoomIndex(track, vZoom);
-	}
-	else
-	{
-		// If track is compacted by 1 level and it was manually resized just prior to compacting, I_HEIGHTOVERRIDE
-		// will return previous size and not 0 even though track is behaving as so. Then again, user could have
-		// resized track in compact mode so returned I_HEIGHTOVERRIDE would be correct in that case.
-		// So get track's HWND in TCP and get height from it
-		if (compact == 1)
-		{
-			RECT r;
-			bool is_container;
-			GetClientRect(GetTcpTrackWnd(track,is_container), &r);
-			height = r.bottom - r.top;
-		}
-		// Check I_HEIGHTOVERRIDE against minimum height (i.e. changing theme resizes tracks that are below
-		// minimum, but I_HEIGHTOVERRIDE doesn't get updated)
-		else
-		{
-			IconTheme* theme = SNM_GetIconTheme();
-
-			if (master)
-			{
-				if (height < theme->tcp_master_min_height)
-					height = theme->tcp_master_min_height;
-			}
-			else
-			{
-				if (height < theme->tcp_small_height)
-					height = theme->tcp_small_height;
-			}
-		}
-	}
+	const int height = static_cast<int>(GetMediaTrackInfo_Value(track, "I_TCPH"));
 
 	if (topGap || bottomGap)
 		GetTrackGap(height, topGap, bottomGap);
+
 	return height;
 }
 
@@ -2249,182 +2197,29 @@ int GetTakeEnvHeight (MediaItem* item, int id, int* offsetY)
 
 int GetTrackEnvHeight (TrackEnvelope* envelope, int* offsetY, bool drawableRangeOnly, MediaTrack* parent /*=NULL*/)
 {
-	MediaTrack* track = (parent) ? (parent) : (GetEnvParent(envelope));
+	MediaTrack* track = parent ? parent : GetEnvParent(envelope);
 	if (!track || !envelope)
 	{
 		WritePtr(offsetY, 0);
 		return 0;
 	}
 
-	if (GetEnvelopeInfo_Value)
-	{
-		if (offsetY) {
-			SCROLLINFO si{sizeof(SCROLLINFO), SIF_POS};
-			CoolSB_GetScrollInfo(GetArrangeWnd(), SB_VERT, &si);
+	if (offsetY) {
+		SCROLLINFO si{sizeof(SCROLLINFO), SIF_POS};
+		CoolSB_GetScrollInfo(GetArrangeWnd(), SB_VERT, &si);
 
-			const int trackY = si.nPos + static_cast<int>(GetMediaTrackInfo_Value(track, "I_TCPY"));
+		const int trackY = si.nPos + static_cast<int>(GetMediaTrackInfo_Value(track, "I_TCPY"));
 
-			const int envelopeY = static_cast<int>(
-				GetEnvelopeInfo_Value(envelope, drawableRangeOnly ? "I_TCPY_USED" : "I_TCPY") );
+		const int envelopeY = static_cast<int>(
+			GetEnvelopeInfo_Value(envelope, drawableRangeOnly ? "I_TCPY_USED" : "I_TCPY") );
 
-			*offsetY = trackY + envelopeY;
-		}
-
-		const int envelopeHeight = static_cast<int>(
-			GetEnvelopeInfo_Value(envelope, drawableRangeOnly ? "I_TCPH_USED" : "I_TCPH"));
-
-		return envelopeHeight;
+		*offsetY = trackY + envelopeY;
 	}
 
-	// legacy - REAPER v5.981 and earlier
+	const int envelopeHeight = static_cast<int>(
+		GetEnvelopeInfo_Value(envelope, drawableRangeOnly ? "I_TCPH_USED" : "I_TCPH"));
 
-	// Prepare return variables and get track's height and offset
-	int envOffset = 0;
-	int envHeight = 0;
-	int trackOffset = 0;
-	int trackHeight = GetTrackHeight(track, (offsetY) ? (&trackOffset) : (NULL));
-
-	// Get first envelope's lane hwnd and cycle through the rest
-	bool is_container;
-	HWND hwnd = GetWindow(GetTcpTrackWnd(track,is_container), GW_HWNDNEXT);
-	MediaTrack* nextTrack = CSurf_TrackFromID(1 + CSurf_TrackToID(track, false), false);
-	while (true)
-	{
-		if (!nextTrack || GetMediaTrackInfo_Value(nextTrack, "B_SHOWINTCP"))
-			break;
-		else
-			nextTrack = CSurf_TrackFromID(1 + CSurf_TrackToID(nextTrack, false), false);
-	}
-
-	list<TrackEnvelope*> checkedEnvs;
-	bool found = false;
-	int envelopeId = GetEnvId(envelope, track);
-	int count = CountTrackEnvelopes(track);
-	for (int i = 0; i < count; ++i)
-	{
-		LONG_PTR hwndData = GetWindowLongPtr(hwnd, GWLP_USERDATA);
-		if ((MediaTrack*)hwndData == nextTrack)
-			break;
-
-		POINT pt={0,0}; // ignored
-		if (TrackEnvelope* currentEnvelope = HwndToEnvelope(hwnd,pt))
-		{
-			if (currentEnvelope == envelope)
-			{
-				RECT r; GetClientRect(hwnd, &r);
-				envHeight = r.bottom - r.top - ((drawableRangeOnly) ? 2*ENV_GAP : 0);
-				envOffset = trackOffset + trackHeight + envOffset + ((drawableRangeOnly) ? ENV_GAP : 0);
-				found = true;
-			}
-			else
-			{
-				// In certain cases (depending if user scrolled up or down), envelope
-				// hwnds (got by GW_HWNDNEXT) won't be in order they are drawn, so make
-				// sure requested envelope is drawn under envelope currently in loop
-				if (envelopeId > GetEnvId(currentEnvelope, track))
-				{
-					RECT r; GetClientRect(hwnd, &r);
-					envOffset += r.bottom-r.top;
-				}
-				checkedEnvs.push_back(currentEnvelope);
-			}
-		}
-
-		hwnd = GetWindow(hwnd, GW_HWNDNEXT);
-		if (!hwnd)
-			break;
-	}
-
-	// Envelope is either hidden or drawn in track lane
-	if (!found)
-	{
-		if (!EnvVis(envelope, NULL))
-		{
-			envHeight = 0;
-			envOffset = 0;
-		}
-		else
-		{
-			const int overlapLimit = ConfigVar<int>("env_ol_minh").value_or(0);
-			bool overlapEnv = (overlapLimit >= 0) ? (true) : (false);
-
-			int trackGapTop, trackGapBottom;
-			GetTrackGap(trackHeight, &trackGapTop, &trackGapBottom);
-
-			int envLaneFull = trackHeight - trackGapTop - trackGapBottom;
-			int envLaneCount = 0;
-			int envLanePos = 0;
-			bool foundEnv = false;
-
-			int count = CountTrackEnvelopes(track);
-			for (int i = 0; i < count; ++i)
-			{
-				TrackEnvelope* currentEnv = GetTrackEnvelope(track, i);
-				std::list<TrackEnvelope*>::iterator it = find(checkedEnvs.begin(), checkedEnvs.end(), currentEnv);
-
-				// Envelope was already encountered, no need to check visibility (chunks are expensive!) so just skip it
-				if (it != checkedEnvs.end())
-					checkedEnvs.erase(it); // and this is why we use list
-				else
-				{
-					if (currentEnv != envelope)
-					{
-						if (EnvVis(currentEnv, NULL))
-						{
-							++envLaneCount;
-							if (!foundEnv)
-								++envLanePos;
-						}
-					}
-					else
-					{
-						++envLaneCount;
-						foundEnv = true;
-					}
-				}
-
-				// Check current height
-				if (envLaneCount != 0)
-				{
-					int envLaneH = envLaneFull / envLaneCount; // div reminder isn't important
-					if (overlapEnv && envLaneH < overlapLimit)
-					{
-						if (drawableRangeOnly)
-						{
-							envHeight = envLaneFull - 2*ENV_GAP ;
-							envOffset = trackOffset + trackGapTop + ENV_GAP;
-						}
-						else
-						{
-							envHeight = (envLaneFull - 2*ENV_GAP <= ENV_LINE_WIDTH) ? 0 : envLaneH;
-							envOffset = (envLaneFull - 2*ENV_GAP <= ENV_LINE_WIDTH) ? 0 : trackOffset + trackGapTop + envLanePos*envLaneH;
-						}
-						break;
-					}
-
-					// No need to calculate return values every iteration
-					if (i == count-1)
-					{
-						if (drawableRangeOnly)
-						{
-							envHeight = envLaneH - 2*ENV_GAP;
-							envOffset = trackOffset + trackGapTop + envLanePos*envLaneH + ENV_GAP;
-						}
-						else
-						{
-							envHeight = (envLaneFull - 2*ENV_GAP <= ENV_LINE_WIDTH) ? 0 : envLaneH;
-							envOffset = (envLaneFull - 2*ENV_GAP <= ENV_LINE_WIDTH) ? 0 : trackOffset + trackGapTop + envLanePos*envLaneH;
-						}
-					}
-				}
-			}
-		}
-	}
-
-	if (drawableRangeOnly && envHeight <= ENV_LINE_WIDTH)
-		envHeight = 0;
-	WritePtr (offsetY, envOffset);
-	return envHeight;
+	return envelopeHeight;
 }
 
 /******************************************************************************

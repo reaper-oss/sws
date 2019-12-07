@@ -1544,47 +1544,16 @@ void BR_MouseInfo::GetTrackOrEnvelopeFromY (int y, TrackEnvelope** _envelope, Me
 	if (track)
 	{
 		elementHeight = GetTrackHeight(track, NULL);
-		vector<pair<int,int> > envHeights;
+		vector<pair<int,int>> envHeights;
 		bool yInTrack = (y < elementOffset + elementHeight) ? true : false;
-
-		// Get first envelope's lane hwnd and cycle through the rest
-		HWND hwnd = NULL;
-		MediaTrack* nextTrack = NULL;
-		if (!GetEnvelopeInfo_Value)
-		{
-			// legacy - REAPER v5.981 and earlier
-			bool is_container;
-			hwnd = ::GetWindow(GetTcpTrackWnd(track, is_container), GW_HWNDNEXT);
-			nextTrack = CSurf_TrackFromID(1 + CSurf_TrackToID(track, false), false);
-			while (true)
-			{
-				if (!nextTrack || GetMediaTrackInfo_Value(nextTrack, "B_SHOWINTCP"))
-					break;
-				else
-					nextTrack = CSurf_TrackFromID(1 + CSurf_TrackToID(nextTrack, false), false);
-			}
-		}
 
 		int count = CountTrackEnvelopes(track);
 		for (int i = 0; i < count; ++i)
 		{
-			TrackEnvelope *env = NULL;
-			if (GetEnvelopeInfo_Value)
-			{
-				env = GetTrackEnvelope(track,i);
+			TrackEnvelope *env = GetTrackEnvelope(track, i);
 
-				if (GetEnvelopeInfo_Value(env,"I_TCPH") < 1.0) continue;
-				if (GetEnvelopeInfo_Value(env,"I_TCPY") < elementHeight) continue; // does not have an envcp
-
-			}
-			else
-			{
-				// legacy - REAPER v5.981 and earlier
-				LONG_PTR hwndData = GetWindowLongPtr(hwnd, GWLP_USERDATA);
-				if ((MediaTrack*)hwndData == nextTrack)
-					break;
-				env = (TrackEnvelope *)hwndData;
-			}
+			if (GetEnvelopeInfo_Value(env,"I_TCPH") < 1.0) continue;
+			if (GetEnvelopeInfo_Value(env,"I_TCPY") < elementHeight) continue; // does not have an envcp
 
 			if (yInTrack)
 			{
@@ -1593,39 +1562,14 @@ void BR_MouseInfo::GetTrackOrEnvelopeFromY (int y, TrackEnvelope** _envelope, Me
 			}
 			else
 			{
-				int envHeight, envId;
-				if (GetEnvelopeInfo_Value)
-				{
-					envHeight = (int) GetEnvelopeInfo_Value(env,"I_TCPH");
-					envId = i;
-				}
-				else
-				{
-					// legacy - REAPER v5.981 and earlier
-					RECT r; GetClientRect(hwnd, &r);
-					envHeight = r.bottom - r.top;
-					envId = GetEnvId(env, track);
-				}
+				const int envHeight = static_cast<int>(GetEnvelopeInfo_Value(env,"I_TCPH"));
+				const int envId = i;
 				envHeights.push_back(make_pair(envHeight, envId));
-			}
-
-			if (!GetEnvelopeInfo_Value)
-			{
-				// legacy - REAPER v5.981 and earlier
-				hwnd = ::GetWindow(hwnd, GW_HWNDNEXT);
-				if (!hwnd)
-					break;
 			}
 		}
 
 		if (!yInTrack)
 		{
-			if (!GetEnvelopeInfo_Value)
-			{
-				// legacy - REAPER v5.981 and earlier
-				// Envelopes hwnds don't have to be in order they are drawn so need to sort them by id before searching
-				std::sort(envHeights.begin(), envHeights.end(), BR_MouseInfo::SortEnvHeightsById);
-			}
 			int envelopeStart = elementOffset + elementHeight;
 			for (size_t i = 0; i < envHeights.size(); ++i)
 			{

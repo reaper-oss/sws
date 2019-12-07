@@ -2674,65 +2674,19 @@ int GetEffectiveAutomationMode (MediaTrack* track)
 
 int CountTrackEnvelopePanels (MediaTrack* track)
 {
-	if (GetEnvelopeInfo_Value)
+	const int tcp_h_no_envs = (int)GetMediaTrackInfo_Value(track, "I_TCPH");
+	const int tcp_h = (int)GetMediaTrackInfo_Value(track, "I_WNDH");
+	if (tcp_h <= tcp_h_no_envs) return 0;
+
+	const int fullEnvCount = CountTrackEnvelopes(track);
+	int count = 0;
+	for (int i = 0; i < fullEnvCount; ++i)
 	{
-		const int tcp_h_no_envs = (int)GetMediaTrackInfo_Value(track, "I_TCPH");
-		const int tcp_h = (int)GetMediaTrackInfo_Value(track, "I_WNDH");
-		if (tcp_h <= tcp_h_no_envs) return 0;
-
-		const int fullEnvCount = CountTrackEnvelopes(track);
-		int count = 0;
-		for (int i = 0; i < fullEnvCount; ++i)
+		TrackEnvelope *env = GetTrackEnvelope(track,i);
+		if (GetEnvelopeInfo_Value(env,"I_TCPY") >= tcp_h_no_envs)
 		{
-			TrackEnvelope *env = GetTrackEnvelope(track,i);
-			if (GetEnvelopeInfo_Value(env,"I_TCPY") >= tcp_h_no_envs)
-			{
-				if (GetEnvelopeInfo_Value(env,"I_TCPH") > 0)
-					count++;
-			}
-		}
-
-		return count;
-	}
-
-	// legacy - REAPER v5.981 and earlier
-
-	/* Much faster than getting each envelope's chunk */
-
-	int count  = 0;
-	if (TcpVis(track))
-	{
-		// Get first envelope's lane hwnd and cycle through the rest
-		bool is_container;
-		HWND hwnd = GetWindow(GetTcpTrackWnd(track,is_container), GW_HWNDNEXT);
-		if (is_container) return 0; // container windows should be handled by the GetEnvelopeInfo_Value
-
-		MediaTrack* nextTrack = CSurf_TrackFromID(1 + CSurf_TrackToID(track, false), false);
-		while (true)
-		{
-			if (!nextTrack || GetMediaTrackInfo_Value(nextTrack, "B_SHOWINTCP"))
-				break;
-			else
-				nextTrack = CSurf_TrackFromID(1 + CSurf_TrackToID(nextTrack, false), false);
-		}
-		list<TrackEnvelope*> checkedEnvs;
-
-		int fullEnvCount = CountTrackEnvelopes(track);
-		for (int i = 0; i < fullEnvCount; ++i)
-		{
-			LONG_PTR hwndData = GetWindowLongPtr(hwnd, GWLP_USERDATA);
-			if ((MediaTrack*)hwndData == nextTrack)
-				break;
-
-			POINT pt = { 0, 0 } ; // ignored, versions of REAPER that require this should have GetEnvelopeInfo_Value
-			if (HwndToEnvelope(hwnd,pt))
-				++count;
-			else
-				break;
-
-			hwnd = GetWindow(hwnd, GW_HWNDNEXT);
-			if (!hwnd)
-				break;
+			if (GetEnvelopeInfo_Value(env,"I_TCPH") > 0)
+				count++;
 		}
 	}
 

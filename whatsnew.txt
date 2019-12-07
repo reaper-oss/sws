@@ -1,3 +1,5 @@
+<strong>Reminder: this new SWS version requires REAPER v5.982+!</strong>
+
 Miscellaneous:
 +Fix scrolling the arrange view to track envelopes (2.11.0 regression, report https://forum.cockos.com/showthread.php?p=2212495|here|)
 +Fix inserting new envelope point at mouse cursor when the arrange view is scrolled (2.11.0 regression, Issue 1266)

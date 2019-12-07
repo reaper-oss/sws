@@ -2258,12 +2258,22 @@ int GetTrackEnvHeight (TrackEnvelope* envelope, int* offsetY, bool drawableRange
 
 	if (GetEnvelopeInfo_Value)
 	{
-		WritePtr(offsetY, 
-			(int) GetMediaTrackInfo_Value(parent,"I_TCPY") + 
-			(int)GetEnvelopeInfo_Value(envelope,drawableRangeOnly ? "I_TCPY_USED" : "I_TCPY") 
-			);
+		if (offsetY) {
+			SCROLLINFO si{sizeof(SCROLLINFO), SIF_POS};
+			CoolSB_GetScrollInfo(GetArrangeWnd(), SB_VERT, &si);
 
-		return (int)GetEnvelopeInfo_Value(envelope,drawableRangeOnly ? "I_TCPH_USED" : "I_TCPH");
+			const int trackY = si.nPos + static_cast<int>(GetMediaTrackInfo_Value(track, "I_TCPY"));
+
+			const int envelopeY = static_cast<int>(
+				GetEnvelopeInfo_Value(envelope, drawableRangeOnly ? "I_TCPY_USED" : "I_TCPY") );
+
+			*offsetY = trackY + envelopeY;
+		}
+
+		const int envelopeHeight = static_cast<int>(
+			GetEnvelopeInfo_Value(envelope, drawableRangeOnly ? "I_TCPH_USED" : "I_TCPH"));
+
+		return envelopeHeight;
 	}
 
 	// legacy - REAPER v5.981 and earlier

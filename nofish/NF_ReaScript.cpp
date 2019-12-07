@@ -358,6 +358,10 @@ bool NF_ReadID3v2Tag(const char* fn, const char* tag, char* tagval, int tagval_s
 	return !!*tagval;
 }
 
+int NF_Win32_GetSystemMetrics(int nIndex)
+{
+	return GetSystemMetrics(nIndex);
+}
 
 // #974
 /*

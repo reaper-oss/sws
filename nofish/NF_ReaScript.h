@@ -51,6 +51,7 @@ void           NF_UpdateSWSMarkerRegionSubWindow();
 
 bool           NF_TakeFX_GetModuleName(MediaItem* item, int fx, char* nameOut, int nameOutSz);
 bool           NF_ReadID3v2Tag(const char* fn, const char* tag, char* tagval, int tagval_sz);
+int            NF_Win32_GetSystemMetrics(int nIndex);
 
 
 // #974

@@ -1,3 +1,6 @@
+ReaScript API:
++Added NF_Win32_GetSystemMetrics (Issue 1235)
+
 !v2.11.0 pre-release build
 <strong>Reminder: this new SWS version requires REAPER v5.979+!</strong>
 

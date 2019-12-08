@@ -1,3 +1,5 @@
++Add support for REAPER v6's new auto-stretch item timebase in "SWS/AW: Set selected items timebase" actions (report https://forum.cockos.com/showthread.php?p=2210126|here|, REAPER v6.01+ only)
+
 !v2.11.0 pre-release build
 <strong>Reminder: this new SWS version requires REAPER v5.979+!</strong>
 

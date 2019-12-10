@@ -1,3 +1,6 @@
+Region Playlist:
++Add toggle action to enable shuffling of region playlists
+
 Snapshots:
 #Fix 'Prompt on recalling deleted tracks' option (report https://github.com/reaper-oss/sws/issues/1073#issuecomment-562705617|here|)
 ReaScript API:

@@ -36,6 +36,7 @@
 #include "../Prompt.h"
 #include "../reaper/localize.h"
 #include "WDL/projectcontext.h"
+#include "WDL/xsrand.h"
 
 
 #define RGNPL_WND_ID			"SnMRgnPlaylist"
@@ -45,51 +46,52 @@
 #define OSC_NEXT_RGN			"/snm/rgnplaylist/next"
 
 enum {
-  DELETE_MSG=0xF000,
-  PERFORM_MSG,
-  CROP_PRJ_MSG,
-  NEW_PLAYLIST_MSG,
-  COPY_PLAYLIST_MSG,
-  DEL_PLAYLIST_MSG,
-  REN_PLAYLIST_MSG,
-  ADD_ALL_REGIONS_MSG,
-  CROP_PRJTAB_MSG,
-  APPEND_PRJ_MSG,
-  PASTE_CURSOR_MSG,
-  APPEND_SEL_RGN_MSG,
-  PASTE_SEL_RGN_MSG,
-  TGL_INFINITE_LOOP_MSG,
-  TGL_SEEK_NOW_MSG,
-  TGL_SEEK_CLICK_MSG,
-  TGL_MOVE_CUR_MSG,
-  OSC_START_MSG,                                        // 64 osc csurfs max -->
-  OSC_END_MSG = OSC_START_MSG+64,                       // <--
-  ADD_REGION_START_MSG,                                 // 1024 marker/region indexes supported (*) --> 
-  ADD_REGION_END_MSG = ADD_REGION_START_MSG+1024,       // <--
-  INSERT_REGION_START_MSG,                              // 1024 marker/region indexes supported (*) -->
-  INSERT_REGION_END_MSG = INSERT_REGION_START_MSG+1024, // <--
-                                                        // (*) but no max nb of supported regions/markers, of course
-  LAST_MSG // keep as last item!
+	DELETE_MSG=0xF000,
+	PERFORM_MSG,
+	CROP_PRJ_MSG,
+	NEW_PLAYLIST_MSG,
+	COPY_PLAYLIST_MSG,
+	DEL_PLAYLIST_MSG,
+	REN_PLAYLIST_MSG,
+	ADD_ALL_REGIONS_MSG,
+	CROP_PRJTAB_MSG,
+	APPEND_PRJ_MSG,
+	PASTE_CURSOR_MSG,
+	APPEND_SEL_RGN_MSG,
+	PASTE_SEL_RGN_MSG,
+	TGL_INFINITE_LOOP_MSG,
+	TGL_SEEK_NOW_MSG,
+	TGL_SEEK_CLICK_MSG,
+	TGL_MOVE_CUR_MSG,
+	TGL_SHUFFLE_MSG,
+	OSC_START_MSG,                                        // 64 osc csurfs max -->
+	OSC_END_MSG = OSC_START_MSG+64,                       // <--
+	ADD_REGION_START_MSG,                                 // 1024 marker/region indexes supported (*) -->
+	ADD_REGION_END_MSG = ADD_REGION_START_MSG+1024,       // <--
+	INSERT_REGION_START_MSG,                              // 1024 marker/region indexes supported (*) -->
+	INSERT_REGION_END_MSG = INSERT_REGION_START_MSG+1024, // <--
+							      // (*) but no max nb of supported regions/markers, of course
+	LAST_MSG // keep as last item!
 };
 
 enum {
-  BTNID_LOCK = LAST_MSG,
-  BTNID_PLAY,
-  BTNID_STOP,
-  BTNID_REPEAT,
-  TXTID_PLAYLIST,
-  CMBID_PLAYLIST,
-  WNDID_ADD_DEL,
-  BTNID_NEW_PLAYLIST,
-  BTNID_DEL_PLAYLIST,
-  BTNID_PASTE,
-  TXTID_MONITOR_PL,
-  WNDID_MONITORS,
-  TXTID_MON0,
-  TXTID_MON1,
-  TXTID_MON2,
-  TXTID_MON3,
-  TXTID_MON4
+	BTNID_LOCK = LAST_MSG,
+	BTNID_PLAY,
+	BTNID_STOP,
+	BTNID_REPEAT,
+	TXTID_PLAYLIST,
+	CMBID_PLAYLIST,
+	WNDID_ADD_DEL,
+	BTNID_NEW_PLAYLIST,
+	BTNID_DEL_PLAYLIST,
+	BTNID_PASTE,
+	TXTID_MONITOR_PL,
+	WNDID_MONITORS,
+	TXTID_MON0,
+	TXTID_MON1,
+	TXTID_MON2,
+	TXTID_MON3,
+	TXTID_MON4
 };
 
 
@@ -104,6 +106,7 @@ bool g_monitorMode = false;
 bool g_repeatPlaylist = false;	// playlist repeat state
 bool g_seekImmediate = false;
 int g_optionFlags = false;
+bool g_shufflePlaylist = false;  // Playlist shuffle state.
 
 // see PlaylistRun()
 int g_playPlaylist = -1;		// -1: stopped, playlist id otherwise
@@ -774,7 +777,7 @@ void RegionPlaylistWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			}
 			break;
 		case BTNID_PLAY:
-			PlaylistPlay(g_pls.Get()->m_editId, GetNextValidItem(g_pls.Get()->m_editId, 0, true, g_repeatPlaylist));
+			PlaylistPlay(g_pls.Get()->m_editId, GetNextValidItem(g_pls.Get()->m_editId, 0, true, g_repeatPlaylist, g_shufflePlaylist));
 			break;
 		case BTNID_STOP:
 			OnStopButton();
@@ -839,6 +842,9 @@ void RegionPlaylistWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		}
 		case TGL_SEEK_NOW_MSG:
 			g_seekImmediate = !g_seekImmediate;
+			break;
+		case TGL_SHUFFLE_MSG:
+			SetPlaylistOptionShuffle(nullptr);
 			break;
 		case TGL_SEEK_CLICK_MSG:
 			if (g_optionFlags&1) g_optionFlags &= ~1;
@@ -1098,6 +1104,7 @@ void RegionPlaylistWnd::OptionsMenu(HMENU _menu)
 	AddToMenu(_menu, __LOCALIZE("Seek playback when clicking regions","sws_DLG_165"), TGL_SEEK_CLICK_MSG, -1, false, g_optionFlags&1 ? MF_CHECKED : MF_UNCHECKED);
 	AddToMenu(_menu, __LOCALIZE("Seek/start playback when double-clicking regions","sws_DLG_165"), -1, -1, false, MF_CHECKED|MF_GRAYED); // just a helper item..
 	AddToMenu(_menu, __LOCALIZE("Smooth seek (seek immediately if disabled)","sws_DLG_165"), TGL_SEEK_NOW_MSG, -1, false, !g_seekImmediate ? MF_CHECKED : MF_UNCHECKED);
+	AddToMenu(_menu, __LOCALIZE("Shuffle playlist items","sws_DLG_165"), TGL_SHUFFLE_MSG, -1, false, g_shufflePlaylist ? MF_CHECKED : MF_UNCHECKED);
 //	AddToMenu(_menu, SWS_SEPARATOR, 0);
 //	AddToMenu(_menu, __LOCALIZE("Repeat playlist","sws_DLG_165"), BTNID_REPEAT, -1, false, g_repeatPlaylist ? MF_CHECKED : MF_UNCHECKED);	
 }
@@ -1255,13 +1262,42 @@ int IsInPlaylists(double _pos)
 // Polling on play: PlaylistRun() and related funcs
 ///////////////////////////////////////////////////////////////////////////////
 
+namespace {
+
+	int GetShuffledItem(RegionPlaylist* playlist) {
+		// Returns -1 if no item is found.
+		int numItems = playlist->GetSize();
+		int attempts = 0;
+		int timestamp = static_cast<int>(time_precise() * 1000);
+		while (attempts < 10 && numItems > 1) {
+			WDL_UINT64 randomIndex = XS64Rand(timestamp).rand64();
+			int candidateItem = static_cast<int>(randomIndex % numItems);
+			if (playlist->IsValidIem(candidateItem)) {
+				return candidateItem;
+			}
+			attempts++;
+		}
+		return -1;
+	}
+}
+
 // never use things like playlist->Get(i+1) but this func!
-int GetNextValidItem(int _plId, int _itemId, bool _startWith, bool _repeat)
+// _startWith == True can be used to get the very first region as opposed to the region after the currently playing
+// region.
+int GetNextValidItem(int _plId, int _itemId, bool _startWith, bool _repeat, bool _shuffle)
 {
 	if (_plId>=0 && _itemId>=0)
 	{
 		if (RegionPlaylist* pl = GetPlaylist(_plId))
 		{
+			if (_shuffle)
+			{
+				int candidateItem = GetShuffledItem(pl);
+				if (candidateItem >= 0) {
+					return candidateItem;
+				}
+				// Fall back on default behavior if shuffling fails...
+			}
 			for (int i=_itemId+(_startWith?0:1); i<pl->GetSize(); i++)
 				if (pl->IsValidIem(i))
 					return i;
@@ -1278,17 +1314,25 @@ int GetNextValidItem(int _plId, int _itemId, bool _startWith, bool _repeat)
 }
 
 // never use things like playlist->Get(i-1) but this func!
-int GetPrevValidItem(int _plId, int _itemId, bool _startWith, bool _repeat)
+int GetPrevValidItem(int _plId, int _itemId, bool _startWith, bool _repeat, bool _shuffle)
 {
 	if (_plId>=0 && _itemId>=0)
 	{
 		if (RegionPlaylist* pl = GetPlaylist(_plId))
 		{
-			for (int i=_itemId-(_startWith?0:1); i>=0; i--)
+			if (_shuffle)
+			{
+				int candidateItem = GetShuffledItem(pl);
+				if (candidateItem >= 0) {
+					return candidateItem;
+				}
+				// Fall back on default behavior if shuffling fails...
+			}
+			for (int i = _itemId - (_startWith ? 0 : 1); i >= 0; i--)
 				if (pl->IsValidIem(i))
 					return i;
 			if (_repeat)
-				for (int i=pl->GetSize()-1; i>=0 && i>(_itemId-(_startWith?1:0)); i--)
+				for (int i = pl->GetSize() - 1; i >= 0 && i > (_itemId - (_startWith ? 1 : 0)); i--)
 					if (pl->IsValidIem(i))
 						return i;
 			// not found if we are here..
@@ -1355,9 +1399,9 @@ void PlaylistRun()
 		double pos = GetPlayPosition2Ex(NULL);
 
 		// NF: potentially fix #886
-		// it seems that if '+0.01' isn't added to 'pos' below, adjacent regions are no more occassionally skipped
+		// it seems that if '+0.01' isn't added to 'pos' below, adjacent regions are no more occasionally skipped
 		// https://forum.cockos.com/showpost.php?p=1935561&postcount=6 and my own tests so far seem to confirm also
-		// but I'm unsure what poetential side effects this might have
+		// but I'm unsure what potential side effects this might have
 		if ((pos/*+0.01*/) >= g_nextRgnPos && pos <= g_nextRgnEnd)	//JFB!! +0.01 because 'pos' can be a bit ahead of time
 																// +1 sample block would be better, but no API..
 																// note: sync loss detection will deal with this in the worst case
@@ -1401,7 +1445,7 @@ void PlaylistRun()
 
 				if (!g_rgnLoop) // if, not else if!
 				{
-					int nextId = GetNextValidItem(g_playPlaylist, g_playCur, false, g_repeatPlaylist);
+					int nextId = GetNextValidItem(g_playPlaylist, g_playCur, false, g_repeatPlaylist, g_shufflePlaylist);
 
 					// loop corner cases
 					// ex: 1 item in the playlist + repeat on, or repeat on + last region == first region,
@@ -1580,24 +1624,34 @@ void PlaylistPlay(COMMAND_T* _ct)
 {
 	int plId = _ct ? (int)_ct->user : -1;
 	plId = plId>=0 ? plId : g_pls.Get()->m_editId;
-	PlaylistPlay(plId, GetNextValidItem(plId, 0, true, g_repeatPlaylist));
+	PlaylistPlay(plId, GetNextValidItem(plId, 0, true, g_repeatPlaylist, g_shufflePlaylist));
 }
 
 // always cycle (whatever is g_repeatPlaylist)
 void PlaylistSeekPrevNext(COMMAND_T* _ct)
 {
-	if (g_playPlaylist<0)
+	if (g_playPlaylist < 0)
+	{
 		PlaylistPlay(NULL);
-	else
+	} else if (g_shufflePlaylist)
+	{
+		if ((int) _ct->user > 0)
+		{
+			PlaylistPlay(g_playPlaylist, g_playNext);
+		} else
+		{
+			PlaylistPlay(g_playPlaylist, g_playCur);
+		}
+	} else
 	{
 		int itemId;
-		if ((int)_ct->user>0)
-			itemId = GetNextValidItem(g_playPlaylist, g_playNext, false, true);
+		if ((int) _ct->user > 0)
+			itemId = GetNextValidItem(g_playPlaylist, g_playNext, false, true, g_shufflePlaylist);
 		else
 		{
-			itemId = GetPrevValidItem(g_playPlaylist, g_playNext, false, true);
+			itemId = GetPrevValidItem(g_playPlaylist, g_playNext, false, true, g_shufflePlaylist);
 			if (itemId == g_playCur)
-				itemId = GetPrevValidItem(g_playPlaylist, g_playCur, false, true);
+				itemId = GetPrevValidItem(g_playPlaylist, g_playCur, false, true, g_shufflePlaylist);
 		}
 		PlaylistPlay(g_playPlaylist, itemId);
 	}
@@ -1606,15 +1660,19 @@ void PlaylistSeekPrevNext(COMMAND_T* _ct)
 // Seek prev/next region based on current playing region
 void PlaylistSeekPrevNextCurBased(COMMAND_T* _ct)
 {
-	if (g_playPlaylist<0)
+	if (g_playPlaylist < 0)
+	{
 		PlaylistPlay(NULL);
-	else
+	} else if (g_shufflePlaylist)
+	{
+		PlaylistPlay(g_playPlaylist, g_playNext);
+	} else
 	{
 		int itemId;
-		if ((int)_ct->user>0)
-			itemId = GetNextValidItem(g_playPlaylist, g_playCur, false, true);
+		if ((int) _ct->user > 0)
+			itemId = GetNextValidItem(g_playPlaylist, g_playCur, false, true, g_shufflePlaylist);
 		else
-			itemId = GetPrevValidItem(g_playPlaylist, g_playCur, false, true);
+			itemId = GetPrevValidItem(g_playPlaylist, g_playCur, false, true, g_shufflePlaylist);
 		PlaylistPlay(g_playPlaylist, itemId);
 	}
 }
@@ -1666,7 +1724,7 @@ void PlaylistResync()
 {
 	if (RegionPlaylist* pl = GetPlaylist(g_playPlaylist))
 		if (RgnPlaylistItem* item = pl->Get(g_playCur))
-			SeekItem(g_playPlaylist, GetNextValidItem(g_playPlaylist, g_playCur, item->m_cnt<0 || item->m_cnt>1, g_repeatPlaylist), g_playCur);
+			SeekItem(g_playPlaylist, GetNextValidItem(g_playPlaylist, g_playCur, item->m_cnt<0 || item->m_cnt>1, g_repeatPlaylist, g_shufflePlaylist), g_playCur);
 }
 
 void SetPlaylistRepeat(COMMAND_T* _ct)
@@ -1685,6 +1743,24 @@ void SetPlaylistRepeat(COMMAND_T* _ct)
 
 int IsPlaylistRepeat(COMMAND_T*) {
 	return g_repeatPlaylist;
+}
+
+void SetPlaylistOptionShuffle(COMMAND_T* _ct)
+{
+	int mode = _ct ? (int)_ct->user : -1; // toggle if no COMMAND_T is specified
+	switch(mode) {
+		case -1: g_shufflePlaylist=!g_shufflePlaylist; break;
+		case 0: g_shufflePlaylist=false; break;
+		case 1: g_shufflePlaylist=true; break;
+	}
+	RefreshToolbar(SWSGetCommandID(SetPlaylistRepeat, -1));
+	PlaylistResync();
+	if (RegionPlaylistWnd* w = g_rgnplWndMgr.Get())
+		w->Update();
+}
+
+int IsPlaylistOptionShuffle(COMMAND_T*) {
+	return g_shufflePlaylist;
 }
 
 // VT: get/set g_seekImmediate
@@ -2085,6 +2161,7 @@ int RegionPlaylistInit()
 	g_monitorMode = (GetPrivateProfileInt("RegionPlaylist", "MonitorMode", 0, g_SNM_IniFn.Get()) == 1);
 	g_repeatPlaylist = (GetPrivateProfileInt("RegionPlaylist", "Repeat", 0, g_SNM_IniFn.Get()) == 1);
 	g_seekImmediate = (GetPrivateProfileInt("RegionPlaylist", "SeekImmediate", 0, g_SNM_IniFn.Get()) == 1);
+	g_shufflePlaylist = (GetPrivateProfileInt("RegionPlaylist", "ShufflePlaylist", 0, g_SNM_IniFn.Get()) == 1);
 	g_optionFlags = (GetPrivateProfileInt("RegionPlaylist", "SeekPlay", 0, g_SNM_IniFn.Get()) == 1);
 	GetPrivateProfileString("RegionPlaylist", "BigFontName", SNM_DYN_FONT_NAME, g_rgnplBigFontName, sizeof(g_rgnplBigFontName), g_SNM_IniFn.Get());
 	GetPrivateProfileString("RegionPlaylist", "OscFeedback", "", buf, sizeof(buf), g_SNM_IniFn.Get());
@@ -2108,7 +2185,8 @@ void RegionPlaylistExit()
 	WritePrivateProfileString("RegionPlaylist", "Repeat", g_repeatPlaylist?"1":"0", g_SNM_IniFn.Get()); 
 	WritePrivateProfileString("RegionPlaylist", "ScrollView", NULL, g_SNM_IniFn.Get()); // deprecated
 	WritePrivateProfileString("RegionPlaylist", "SeekImmediate", g_seekImmediate?"1":"0", g_SNM_IniFn.Get());
-	WritePrivateProfileString("RegionPlaylist", "SeekPlay", g_optionFlags?"1":"0", g_SNM_IniFn.Get()); 
+	WritePrivateProfileString("RegionPlaylist", "ShufflePlaylist", g_shufflePlaylist?"1":"0", g_SNM_IniFn.Get());
+	WritePrivateProfileString("RegionPlaylist", "SeekPlay", g_optionFlags?"1":"0", g_SNM_IniFn.Get());
 	WritePrivateProfileString("RegionPlaylist", "BigFontName", g_rgnplBigFontName, g_SNM_IniFn.Get());
 	if (g_osc)
 	{

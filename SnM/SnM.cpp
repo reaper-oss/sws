@@ -27,7 +27,6 @@
 
 #include "stdafx.h"
 #include "SnM.h"
-#include "SnM_CSurf.h"
 #include "SnM_CueBuss.h"
 #include "SnM_Cyclactions.h"
 #include "SnM_Dlg.h"
@@ -496,6 +495,9 @@ static COMMAND_T s_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Options/Enable smooth seek (only in Region Playlist)" }, "S&M_PLAYLIST_OPT_SMOOTHSEEK_ON", SetPlaylistOptionSmoothSeek, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Options/Disable smooth seek (only in Region Playlist)" }, "S&M_PLAYLIST_OPT_SMOOTHSEEK_OFF", SetPlaylistOptionSmoothSeek, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Options/Toggle smooth seek (only in Region Playlist)" }, "S&M_PLAYLIST_OPT_TGL_SMOOTHSEEK", SetPlaylistOptionSmoothSeek, NULL, -1, IsPlaylistOptionSmoothSeek},
+	{{ DEFACCEL, "SWS/S&M: Region Playlist - Options/Enable shuffle (only in Region Playlist)" }, "S&M_PLAYLIST_OPT_SHUFFLE_ON", SetPlaylistOptionShuffle, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Region Playlist - Options/Disable shuffle (only in Region Playlist)" }, "S&M_PLAYLIST_OPT_SHUFFLE_OFF", SetPlaylistOptionShuffle, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Region Playlist - Options/Toggle shuffle (only in Region Playlist)" }, "S&M_PLAYLIST_OPT_TGL_SHUFFLE", SetPlaylistOptionShuffle, NULL, -1, IsPlaylistOptionShuffle},
 
 	// Markers & regions ------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Insert marker at edit cursor" }, "S&M_INS_MARKER_EDIT", InsertMarker, NULL, 0},

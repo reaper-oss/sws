@@ -131,8 +131,8 @@ protected:
 	void Perform();
 };
 
-int GetNextValidItem(int _playlistId, int _itemId, bool _startWith, bool _repeat);
-int GetPrevValidItem(int _playlistId, int _itemId, bool _startWith, bool _repeat);
+int GetNextValidItem(int _playlistId, int _itemId, bool _startWith, bool _repeat, bool _shuffle);
+int GetPrevValidItem(int _playlistId, int _itemId, bool _startWith, bool _repeat, bool _shuffle);
 bool SeekItem(int _plId, int _nextItemId, int _curItemId);
 void PlaylistRun();
 void PlaylistPlay(int _playlistId, int _itemId);
@@ -146,6 +146,8 @@ void PlaylistResync();
 void SetPlaylistRepeat(COMMAND_T*);
 int IsPlaylistRepeat(COMMAND_T*);
 
+void SetPlaylistOptionShuffle(COMMAND_T* _ct);
+int IsPlaylistOptionShuffle(COMMAND_T* _ct);
 void SetPlaylistOptionSmoothSeek(COMMAND_T*);
 int IsPlaylistOptionSmoothSeek(COMMAND_T*);
 

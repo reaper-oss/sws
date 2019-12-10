@@ -57,7 +57,7 @@ void Snooks::FocusMIDIEditor(COMMAND_T* ct)
 
 // Register commands - must have !WANT_LOCAL... comments!
 
-//!WANT_LOCALIZE_1ST_STRING_BEGIN
+//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] =
 {
 	{ { DEFACCEL, "SWS/SN: Focus MIDI editor" }, "SN_FOCUS_MIDI_EDITOR", Snooks::FocusMIDIEditor, NULL },

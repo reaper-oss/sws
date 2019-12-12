@@ -1,3 +1,6 @@
+Envelopes:
+ #SWS/S&M: Remove all envelopes for selected tracks: if prompt enabled, prompt only if there are envelopes present (report https://forum.cockos.com/showthread.php?p=2215029#post2215029|here|) 
+
 !v2.11.0 pre-release build
 <strong>Reminder: this new SWS version requires REAPER v5.979+!</strong>
 

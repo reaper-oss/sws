@@ -281,21 +281,20 @@ void NotesWnd::RefreshGUI()
 
 
 #ifdef _WIN32
-
 typedef void (*FNCHANGESTYLE)(long&,long&);
 HWND replacecontrol(HWND h,const int idc,FNCHANGESTYLE fnchange)
 {
   HWND      hwnd;
   HWND      prev;
   RECT      rc;
-  POINT      pt = {0,0};
-  HINSTANCE  hinst;
+  POINT     pt = {0,0};
+  HINSTANCE hinst;
   long      style;
   long      exstyle;
-  TCHAR      text[256];
-  TCHAR      scls[256];
-  HFONT      hfont;
-  int        focus;
+  wchar_t   text[256];
+  wchar_t   scls[256];
+  HFONT     hfont;
+  int       focus;
 
   hwnd    = GetDlgItem(h,idc);
 
@@ -311,13 +310,13 @@ HWND replacecontrol(HWND h,const int idc,FNCHANGESTYLE fnchange)
 
   ClientToScreen(h,&pt);
   GetWindowRect(hwnd,&rc);
-  GetClassName(hwnd,scls,sizeof(scls)/sizeof(scls[0]));
-  GetWindowText(hwnd,text,sizeof(text)/sizeof(text[0]));
+  GetClassNameW(hwnd,scls,sizeof(scls)/sizeof(scls[0]));
+  GetWindowTextW(hwnd,text,sizeof(text)/sizeof(text[0]));
 
   DestroyWindow(hwnd);
   fnchange(style,exstyle);
 
-  hwnd = CreateWindowEx
+  hwnd = CreateWindowExW
   (
     exstyle,
     scls,
@@ -338,13 +337,6 @@ HWND replacecontrol(HWND h,const int idc,FNCHANGESTYLE fnchange)
   if(focus) SetFocus(hwnd);
   return hwnd;
 }
-
-void modES_AUTOHSCROLL(long& style,long& exstyle)
-{
-  if (g_wrapText) style &= ~ES_AUTOHSCROLL;
-  else style |= ES_AUTOHSCROLL;
-}
-
 #endif
 
 
@@ -356,7 +348,11 @@ void NotesWnd::SetWrapText(bool _wrap, bool _isInit)
   RECT r1 = m_resize.get_item(IDC_EDIT)->real_orig;
   RECT r2 = m_resize.get_item(IDC_EDIT)->orig;
   m_resize.remove_item(IDC_EDIT);
-  replacecontrol(m_hwnd,IDC_EDIT,modES_AUTOHSCROLL);
+  replacecontrol(m_hwnd, IDC_EDIT, [](long& style, long& exstyle) {
+    if (g_wrapText) style &= ~ES_AUTOHSCROLL;
+    else style |= ES_AUTOHSCROLL;
+  });
+
   m_resize.init_item(IDC_EDIT, 0.0, 0.0, 1.0, 1.0);
   m_resize.get_item(IDC_EDIT)->real_orig = r1;
   m_resize.get_item(IDC_EDIT)->orig = r2;

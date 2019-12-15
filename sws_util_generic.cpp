@@ -57,9 +57,3 @@ HCURSOR SWS_LoadCursor(int id)
 void mouse_event(DWORD dwFlags, DWORD dx, DWORD dy, DWORD dwData, ULONG_PTR dwExtraInfo)
 {
 }
-
-void SWS_ShowTextScrollbar(HWND hwnd, bool show)
-{
-    if (!hwnd) return;
-
-}

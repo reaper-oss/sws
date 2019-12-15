@@ -89,13 +89,6 @@ protected:
 };
 #endif
 
-class ReopenNotesJob : public ScheduledJob {
-public:
-	ReopenNotesJob() : ScheduledJob(SNM_SCHEDJOB_REOPEN_NOTES, 50) {}
-protected:
-	void Perform();
-};
-
 class NotesMarkerRegionListener : public SNM_MarkerRegionListener {
 public:
 	NotesMarkerRegionListener() : SNM_MarkerRegionListener() {}
@@ -111,7 +104,7 @@ public:
 	void SetType(int _type);
 	void SetText(const char* _str, bool _addRN = true);
 	void RefreshGUI();
-	void SetWrapText(bool _wrap, bool _isInit=false);
+	void SetWrapText(bool wrap);
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 	void GetMinSize(int* _w, int* _h) { *_w=MIN_DOCKWND_WIDTH; *_h=140; }
 	void ToggleLock();
@@ -134,6 +127,7 @@ public:
 	int UpdateTrackNotes();
 	int UpdateMkrRgnNameOrSub(int _type);
 	void ForceUpdateMkrRgnNameOrSub(int _type); // NF: trigger update after setting sub from ReaScript
+	HWND GetEditControl() const { return m_edit; }
 
 protected:
 	void OnInitDlg();
@@ -146,6 +140,7 @@ protected:
 	void DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight = NULL);
 	bool GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOutSz);
 
+private:
 	SNM_VirtualComboBox m_cbType;
 	WDL_VirtualIconButton m_btnLock;
 #ifdef WANT_ACTION_HELP
@@ -156,6 +151,7 @@ protected:
 	SNM_DynSizedText m_bigNotes;
 
 	NotesMarkerRegionListener m_mkrRgnListener;
+	HWND m_edit;
 };
 
 #ifdef WANT_ACTION_HELP

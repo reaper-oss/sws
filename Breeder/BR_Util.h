@@ -99,7 +99,7 @@ template <typename T> T    GetClosestVal (T val, T targetVal1, T targetVal2) {if
 ******************************************************************************/
 vector<double> GetProjectMarkers (bool timeSel, double timeSelDelta = 0);
 WDL_FastString FormatTime (double position, int mode = -1); // same as format_timestr_pos but handles "measures.beats + time" properly
-WDL_FastString GetCurrentThemeName (WDL_FastString* fullThemePath);
+const char *GetCurrentTheme (std::string* themeName);
 int FindClosestProjMarkerIndex (double position);
 int CountProjectTabs ();
 double EndOfProject (bool markers, bool regions);

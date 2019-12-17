@@ -292,19 +292,17 @@ WDL_FastString FormatTime (double position, int mode /*=-1*/)
 	return string;
 }
 
-WDL_FastString GetCurrentThemeName (WDL_FastString* fullThemePath)
+const char *GetCurrentTheme (std::string* themeNameOut)
 {
-	char path[SNM_MAX_PATH] = "";
-	char name[SNM_MAX_PATH] = "";
-	GetPrivateProfileString("reaper", "lastthemefn4", "", path, sizeof(path), get_ini_file());
-	GetFilenameNoExt(path, name, sizeof(name));
+	const char *fullThemePath = GetLastColorThemeFile();
 
-	if (fullThemePath)
-		fullThemePath->Set(path);
+	if (themeNameOut) {
+		std::string fileName(strlen(fullThemePath), '\0');
+		GetFilenameNoExt(fullThemePath, &fileName[0], fileName.size()+1);
+		std::swap(fileName, *themeNameOut);
+	}
 
-	WDL_FastString themeName;
-	themeName.Set(name);
-	return themeName;
+	return fullThemePath;
 }
 
 int FindClosestProjMarkerIndex (double position)

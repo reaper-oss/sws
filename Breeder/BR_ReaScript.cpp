@@ -251,11 +251,11 @@ double BR_GetClosestGridDivision (double position)
 
 void BR_GetCurrentTheme (char* themePathOut, int themePathOut_sz, char* themeNameOut, int themeNameOut_sz)
 {
-	WDL_FastString fullThemePath;
-	WDL_FastString themeName = GetCurrentThemeName(&fullThemePath);
+	std::string themeName;
+	const char *fullThemePath = GetCurrentTheme(&themeName);
 
-	snprintf(themePathOut, themePathOut_sz, "%s", fullThemePath.Get());
-	snprintf(themeNameOut, themeNameOut_sz, "%s", themeName.Get());
+	snprintf(themePathOut, themePathOut_sz, "%s", fullThemePath);
+	snprintf(themeNameOut, themeNameOut_sz, "%s", themeName.c_str());
 }
 
 MediaItem* BR_GetMediaItemByGUID (ReaProject* proj, const char* guidStringIn)

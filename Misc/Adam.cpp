@@ -34,6 +34,7 @@
 #include "ProjPrefs.h"
 #include "../Xenakios/XenakiosExts.h"
 #include "../SnM/SnM_Dlg.h"
+#include "../Breeder/BR_Util.h"
 
 
 //#include "Context.cpp"
@@ -951,7 +952,7 @@ void AWDoAutoGroup(bool rec)
 		if (g_AWAutoGroup)
 		{
 			WDL_TypedBuf<MediaItem*> selItems;
-			SWS_GetSelectedMediaItems(&selItems);        
+			SWS_GetSelectedMediaItems(&selItems);
 			if (selItems.GetSize() > 1 && ((*ConfigVar<int>("autoxfade") & 4) || (*ConfigVar<int>("autoxfade") & 8))) // (Don't group if not in tape or overlap record mode, takes mode is messy) NF: added new auto group in takes mode functionality below
 			{
 				// check if we're in 'Autopunch selected items' mode
@@ -974,7 +975,7 @@ void AWDoAutoGroup(bool rec)
 				int rndColor;
 				if (g_AWAutoGroupRndColor)
 					// use WDL Mersenne Twister
-					rndColor = ColorToNative(g_MTRand.randInt(255), g_MTRand.randInt(255), g_MTRand.randInt(255)) | 0x1000000; 
+					rndColor = ColorToNative(g_MTRand.randInt(255), g_MTRand.randInt(255), g_MTRand.randInt(255)) | 0x1000000;
 
 				for (int i = 0; i < selItems.GetSize(); i++) {
 					MediaItem* item = selItems.Get()[i];
@@ -1048,10 +1049,10 @@ void NFDoAutoGroupTakesMode(WDL_TypedBuf<MediaItem*> origSelItems)
 	int rndColor;
 	if (g_AWAutoGroupRndColor)
 		rndColor = ColorToNative(g_MTRand.randInt(255), g_MTRand.randInt(255), g_MTRand.randInt(255)) | 0x1000000;
-	
-	// do column-wise grouping 
+
+	// do column-wise grouping
 	// loop through columns of items
-	for (int column = 0; column < maxSelItemsOnTrack; column++) 
+	for (int column = 0; column < maxSelItemsOnTrack; column++)
 	{
 		int maxGroupId = AWCountItemGroups();
 		maxGroupId++;
@@ -1087,7 +1088,7 @@ bool IsMoreThanOneTrackRecArmed()
 {
 	int recArmedTracks = 0;
 	for (int i = 1; i <= GetNumTracks(); ++i) { // skip master
-		MediaTrack* CurTrack = CSurf_TrackFromID(i, false); 
+		MediaTrack* CurTrack = CSurf_TrackFromID(i, false);
 		if (*(int*)GetSetMediaTrackInfo(CurTrack, "I_RECARM", NULL)) {
 			recArmedTracks += 1;
 			if (recArmedTracks > 1)
@@ -1097,7 +1098,7 @@ bool IsMoreThanOneTrackRecArmed()
 	return false;
 }
 
-MediaItem * GetSelectedItemOnTrack_byIndex(WDL_TypedBuf<MediaItem*> origSelItems, vector<int> selItemsPerTrackCount, 
+MediaItem * GetSelectedItemOnTrack_byIndex(WDL_TypedBuf<MediaItem*> origSelItems, vector<int> selItemsPerTrackCount,
 	int selTrackIdx, int column)
 {
 	MediaItem* selItem = NULL;
@@ -1110,7 +1111,7 @@ MediaItem * GetSelectedItemOnTrack_byIndex(WDL_TypedBuf<MediaItem*> origSelItems
 			if (i >= 1) {
 				prevSelItemsPerTrackCount = selItemsPerTrackCount[i - 1];
 			}
-				
+
 			offset += prevSelItemsPerTrackCount;
 		}
 		if (offset + column < origSelItems.GetSize())
@@ -1124,7 +1125,7 @@ void SelectRecArmedTracksOfSelItems(WDL_TypedBuf<MediaItem*> selItems)
 	for (int i = 0; i < selItems.GetSize(); i++) {
 		MediaTrack* track = GetMediaItem_Track(selItems.Get()[i]);
 
-		if (*(int*)GetSetMediaTrackInfo(track, "I_RECARM", NULL)) 
+		if (*(int*)GetSetMediaTrackInfo(track, "I_RECARM", NULL))
 			SetMediaTrackInfo_Value(track, "I_SELECTED", 1);
 	}
 }
@@ -1173,7 +1174,7 @@ void RestoreOrigTracksAndItemsSelection(WDL_TypedBuf<MediaTrack*> origSelTracks,
 
 
 // Deprecated actions, now you can use the native record/play/stop actions and they will obey the Auto Grouping toggle
-// NF: these are now labeled as deprecated 
+// NF: these are now labeled as deprecated
 
 void AWRecordAutoGroup(COMMAND_T* t)
 {
@@ -2673,8 +2674,43 @@ int IsGridDotted(COMMAND_T* = NULL)
 	return r < 0.000001 || r > 0.66666;
 }
 
+int IsGridSwing(COMMAND_T* = NULL)
+{
+	return GetToggleCommandStateEx(0, 42304); // Grid: Toggle swing grid
+}
+
+int IsAWSetGridPreserveType(COMMAND_T* ct)
+{
+	int toggleState = 0;
+
+	double normalizedGrid = 0;
+	if ((int)ct->user < 0)
+		normalizedGrid = static_cast<double>(abs((int)ct->user)) * 4.0;
+	else
+		normalizedGrid = 4.0 / static_cast<double>((int)ct->user);
+
+	ConfigVar<double> pGridDiv("projgriddiv");
+	if (IsGridTriplet())
+	{
+		if (*pGridDiv == normalizedGrid * (2.0 / 3.0))
+			toggleState = 1;
+	}
+	else if (IsGridDotted())
+	{
+		if (*pGridDiv == normalizedGrid * (3.0 / 2.0))
+			toggleState = 1;
+	}
+	else
+	{
+		if (*pGridDiv == normalizedGrid)
+			toggleState = 1;
+	}
+
+	return toggleState;
+}
 
 void AWToggleDotted(COMMAND_T* = NULL);
+void AWToggleSwing(COMMAND_T* = NULL);
 
 void AWToggleTriplet(COMMAND_T* = NULL)
 {
@@ -2682,19 +2718,22 @@ void AWToggleTriplet(COMMAND_T* = NULL)
 
 	if (IsGridDotted())
 		AWToggleDotted();
+	if (IsGridSwing())
+		AWToggleSwing();
 
 	if (IsGridTriplet())
 		*pGridDiv *= 3.0/2.0;
 	else
 		*pGridDiv *= 2.0/3.0;
 
-
+	if (MIDIEditor_GetActive() && GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41022))     // Grid: Use the same grid division in arrange view and MIDI editor
+		if (IsGridTriplet() && !GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41004))       // Grid: Set grid type to triplet
+			MIDIEditor_LastFocused_OnCommand(41004, false);                                // Grid: Set grid type to triplet
+		else if (!IsGridTriplet() && !GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41003)) // Grid: Set grid type to straight
+			MIDIEditor_LastFocused_OnCommand(41003, false);                                // Grid: Set grid type to straight
 	UpdateGridToolbar();
 	UpdateTimeline();
-
 }
-
-
 
 void AWToggleDotted(COMMAND_T*)
 {
@@ -2702,18 +2741,109 @@ void AWToggleDotted(COMMAND_T*)
 
 	if (IsGridTriplet())
 		AWToggleTriplet();
+	if (IsGridSwing())
+		AWToggleSwing();
 
 	if (IsGridDotted())
 		*pGridDiv *= 2.0/3.0;
 	else
 		*pGridDiv *= 3.0/2.0;
 
+	if (MIDIEditor_GetActive() && GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41022))    // Grid: Use the same grid division in arrange view and MIDI editor
+		if (IsGridDotted() && !GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41005))       // Grid: Set grid type to dotted
+			MIDIEditor_LastFocused_OnCommand(41005, false);                               // Grid: Set grid type to dotted
+		else if (!IsGridDotted() && !GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41003)) // Grid: Set grid type to straight
+			MIDIEditor_LastFocused_OnCommand(41003, false);                               // Grid: Set grid type to straight
 
 	UpdateGridToolbar();
 	UpdateTimeline();
 
 }
 
+void AWToggleSwing(COMMAND_T*)
+{
+	if (IsGridTriplet())
+		AWToggleTriplet();
+	if (IsGridDotted())
+		AWToggleDotted();
+
+	// Grid: Toggle swing grid
+	Main_OnCommand(42304, 0);
+
+	if (MIDIEditor_GetActive() && GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41022)) // Grid: Use the same grid division in arrange view and MIDI editor
+	{
+		// BR: It seems REAPER doesn't report toggle state for swing grid so instead check all other three grid types
+		if (GetToggleCommandStateEx(0, 42304)) // Grid: Toggle swing grid
+		{
+			if (   GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41005) == 1 // Grid: Set grid type to dotted
+				|| GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41004) == 1 // Grid: Set grid type to triplet
+				|| GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41003) == 1 // Grid: Set grid type to straight
+			)
+			{
+				MIDIEditor_LastFocused_OnCommand(41006, false); // Grid: Set grid type to swing
+			}
+		}
+		else
+		{
+			if (   GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41005) == 1 // Grid: Set grid type to dotted
+				|| GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41004) == 1 // Grid: Set grid type to triplet
+				|| GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41003) != 1 // Grid: Set grid type to straight
+			)
+			{
+				MIDIEditor_LastFocused_OnCommand(41003, false); // Grid: Set grid type to straight
+			}
+		}
+	}
+	UpdateGridToolbar();
+}
+
+void AWSetGridPreserveType(COMMAND_T* ct)
+{
+	double normalizedGrid = static_cast<double>(abs((int)ct->user));
+	if ((int)ct->user > 0)
+		normalizedGrid = 1 / normalizedGrid ;
+
+	int    swingMode = 0;
+	double newGrid   = normalizedGrid;
+	if (IsGridTriplet())
+		newGrid = newGrid * (2.0 / 3.0);
+	else if (IsGridDotted())
+		newGrid = newGrid * (3.0 / 2.0);
+	else if (IsGridSwing())
+		swingMode = 1;
+	GetSetProjectGrid(NULL, true, &newGrid, &swingMode, NULL);
+
+	if (MIDIEditor_GetActive() && GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41022)) // Grid: Use the same grid division in arrange view and MIDI editor
+	{
+		// Turn off - Grid: Use the same grid division in arrange view and MIDI editor
+		MIDIEditor_LastFocused_OnCommand(41022, false);
+
+		if (normalizedGrid >= 1) // BR: For some reason, whenever setting grid type over 1 measure REAPER acts strange so first set grid as straight and then change grid type
+		{
+			// BR: Get grid types for later check before setting grid type to straight
+			int isTriplet = IsGridTriplet();
+			int isDotted  = IsGridDotted();
+			int isSwing   = IsGridSwing();
+
+			if (GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41003) != 1) // Grid: Set grid type to straight
+				MIDIEditor_LastFocused_OnCommand(41003, false);           // Grid: Set grid type to straight
+			SetMIDIEditorGrid(NULL, normalizedGrid);
+
+			if (isTriplet > 0) MIDIEditor_LastFocused_OnCommand(41004, false); // Grid: Set grid type to triplet
+			if (isDotted > 0) MIDIEditor_LastFocused_OnCommand(41005, false); // Grid: Set grid type to dotted
+			if (isSwing > 0) MIDIEditor_LastFocused_OnCommand(41006, false); // Grid: Set grid type to swing
+		}
+		else
+			SetMIDIEditorGrid(NULL, newGrid);
+
+		// Turn on - Grid: Use the same grid division in arrange view and MIDI editor
+		MIDIEditor_LastFocused_OnCommand(41022, false);
+
+	}
+
+	UpdateGridToolbar();
+	UpdateTimeline();
+}
 
 void AWToggleClickTrack(COMMAND_T*)
 {
@@ -2736,14 +2866,34 @@ void AWToggleClickTrack(COMMAND_T*)
 
 void UpdateGridToolbar()
 {
-	static int cmds[3] =
+	static int cmds[14] =
 	{
 		NamedCommandLookup("_SWS_AWTOGGLETRIPLET"),
 		NamedCommandLookup("_SWS_AWTOGGLEDOTTED"),
+		NamedCommandLookup("_SWS_AWTOGGLESWING"),
 		NamedCommandLookup("_SWS_AWTOGGLECLICKTRACK"),
+		NamedCommandLookup("_SWS_SETGRID_PRESERVE_TYPE_4"),
+		NamedCommandLookup("_SWS_SETGRID_PRESERVE_TYPE_2"),
+		NamedCommandLookup("_SWS_SETGRID_PRESERVE_TYPE_1"),
+		NamedCommandLookup("_SWS_SETGRID_PRESERVE_TYPE_1_2"),
+		NamedCommandLookup("_SWS_SETGRID_PRESERVE_TYPE_1_4"),
+		NamedCommandLookup("_SWS_SETGRID_PRESERVE_TYPE_1_8"),
+		NamedCommandLookup("_SWS_SETGRID_PRESERVE_TYPE_1_16"),
+		NamedCommandLookup("_SWS_SETGRID_PRESERVE_TYPE_1_32"),
+		NamedCommandLookup("_SWS_SETGRID_PRESERVE_TYPE_1_64"),
+		NamedCommandLookup("_SWS_SETGRID_PRESERVE_TYPE_1_128")
+	};
+	for (int i = 0; i < 14; ++i)
+		RefreshToolbar(cmds[i]);
+
+	static int midiCmds[3] =
+	{
+		NamedCommandLookup("_NF_ME_TOGGLETRIPLET"),
+		NamedCommandLookup("_NF_ME_TOGGLEDOTTED"),
+		NamedCommandLookup("_NF_ME_TOGGLESWING")
 	};
 	for (int i = 0; i < 3; ++i)
-		RefreshToolbar(cmds[i]);
+		RefreshToolbar2(SECTION_MIDI_EDITOR, midiCmds[i]); // when registered in ME
 }
 
 void AWInsertClickTrack(COMMAND_T* t)
@@ -2938,10 +3088,10 @@ int IsSelTracksTimebase(COMMAND_T* t)
 {
 	WDL_TypedBuf<MediaTrack*> selTracks;
 	SWS_GetSelectedTracks(&selTracks, false);
-	
+
 	if (!selTracks.GetSize())
 		return 0;
-	
+
 	for (int i = 0; i < selTracks.GetSize(); i++)
 		if ((int)GetMediaTrackInfo_Value(selTracks.Get()[i], "C_BEATATTACHMODE") != t->user)
 			return 0;
@@ -3121,6 +3271,18 @@ static COMMAND_T g_commandTable[] =
 
 	{ { DEFACCEL, "SWS/AW: Toggle triplet grid" },          "SWS_AWTOGGLETRIPLET",              AWToggleTriplet, NULL, 0, IsGridTriplet},
 	{ { DEFACCEL, "SWS/AW: Toggle dotted grid" },           "SWS_AWTOGGLEDOTTED",               AWToggleDotted, NULL, 0, IsGridDotted},
+	{ { DEFACCEL, "SWS/AW: Toggle swing grid" },            "SWS_AWTOGGLESWING",                AWToggleSwing, NULL, 0, IsGridSwing},
+
+	{ { DEFACCEL, "SWS/AW: Set grid to 4 preserving grid type" },            "SWS_SETGRID_PRESERVE_TYPE_4",                  AWSetGridPreserveType, NULL, -4, IsAWSetGridPreserveType},
+	{ { DEFACCEL, "SWS/AW: Set grid to 2 preserving grid type" },            "SWS_SETGRID_PRESERVE_TYPE_2",                  AWSetGridPreserveType, NULL, -2, IsAWSetGridPreserveType},
+	{ { DEFACCEL, "SWS/AW: Set grid to 1 preserving grid type" },            "SWS_SETGRID_PRESERVE_TYPE_1",                  AWSetGridPreserveType, NULL, 1, IsAWSetGridPreserveType},
+	{ { DEFACCEL, "SWS/AW: Set grid to 1/2 preserving grid type" },          "SWS_SETGRID_PRESERVE_TYPE_1_2",                AWSetGridPreserveType, NULL, 2, IsAWSetGridPreserveType},
+	{ { DEFACCEL, "SWS/AW: Set grid to 1/4 preserving grid type" },          "SWS_SETGRID_PRESERVE_TYPE_1_4",                AWSetGridPreserveType, NULL, 4, IsAWSetGridPreserveType},
+	{ { DEFACCEL, "SWS/AW: Set grid to 1/8 preserving grid type" },          "SWS_SETGRID_PRESERVE_TYPE_1_8",                AWSetGridPreserveType, NULL, 8, IsAWSetGridPreserveType},
+	{ { DEFACCEL, "SWS/AW: Set grid to 1/16 preserving grid type" },         "SWS_SETGRID_PRESERVE_TYPE_1_16",               AWSetGridPreserveType, NULL, 16, IsAWSetGridPreserveType},
+	{ { DEFACCEL, "SWS/AW: Set grid to 1/32 preserving grid type" },         "SWS_SETGRID_PRESERVE_TYPE_1_32",               AWSetGridPreserveType, NULL, 32, IsAWSetGridPreserveType},
+	{ { DEFACCEL, "SWS/AW: Set grid to 1/64 preserving grid type" },         "SWS_SETGRID_PRESERVE_TYPE_1_64",               AWSetGridPreserveType, NULL, 64, IsAWSetGridPreserveType},
+	{ { DEFACCEL, "SWS/AW: Set grid to 1/128 preserving grid type" },        "SWS_SETGRID_PRESERVE_TYPE_1_128",              AWSetGridPreserveType, NULL, 128, IsAWSetGridPreserveType},
 
 	{ { DEFACCEL, "SWS/AW: Paste" },        "SWS_AWPASTE",                  AWPaste, },
 	{ { DEFACCEL, "SWS/AW: Remove tracks/items/env, obeying time selection and leaving children" },     "SWS_AWBUSDELETE",                  AWBusDelete, },

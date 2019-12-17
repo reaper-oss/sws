@@ -526,15 +526,15 @@ public:
 	}
 
 	void OnTrackSelection(MediaTrack *tr) // 3 problems with this (last check v5.0pre28): doesn't work if Mixer option "Scroll view when tracks activated" is disabled
-	{                                     //                                              gets called before CSurf->Extended(CSURF_EXT_SETLASTTOUCHEDTRACK)   
+	{                                     //                                              gets called before CSurf->Extended(CSURF_EXT_SETLASTTOUCHEDTRACK)
 	                                      //                                              only gets called when track is selected by clicking it in TCP/MCP (and not when track is selected via action)...bug or feature?
 
 		// while OnTrackSelection appears to be broken, putting this in SetSurfaceSelected() would mean it gets called multiple times (because SetSurfaceSelected() gets called once for each track whose
 		// selection state changed, and then once more for every track in the project). We could theoretically try and deduct when SetSurfaceSelected() got called the last time (but it's arguable if we could
 		// do this with 100% accuracy because when only master track is selected, SetSurfaceSelected() gets called only once, and in case new track is inserted, it gets called 3 times for the last track (once for unselecting
 		// prior to inserting new track, once for new track's selection state, and then once more when it iterates through all tracks)
-		// 
-		// Besides these complications, it would also mean we would have to check all of these things a lot of times, thus clogging the Csurf just to execute one simple thing. So just leave it here and hope the 
+		//
+		// Besides these complications, it would also mean we would have to check all of these things a lot of times, thus clogging the Csurf just to execute one simple thing. So just leave it here and hope the
 		// OnTrackSelection() gets fixed at some point :)
 		BR_CSurf_OnTrackSelection(tr);
 	}
@@ -857,6 +857,7 @@ error:
 		IMPAPI(GetMediaSourceLength); // v5.0pre3+
 		IMPAPI(GetSetMediaTrackInfo);
 		IMPAPI(GetSetMediaTrackInfo_String);
+		IMPAPI(GetSetProjectGrid);
 		IMPAPI(GetSetObjectState);
 		IMPAPI(GetSetObjectState2);
 		IMPAPI(GetSetProjectNotes); // v5.15pre1+
@@ -939,6 +940,7 @@ error:
 		IMPAPI(MIDI_eventlist_Destroy);
 		IMPAPI(MIDI_GetCC);
 		IMPAPI(MIDI_GetEvt);
+		IMPAPI(MIDI_GetGrid)
 		IMPAPI(MIDI_GetNote);
 		IMPAPI(MIDI_GetPPQPos_EndOfMeasure);
 		IMPAPI(MIDI_GetPPQPos_StartOfMeasure);
@@ -1025,6 +1027,7 @@ error:
 		IMPAPI(SetMediaItemSelected);
 		IMPAPI(SetMediaItemTakeInfo_Value);
 		IMPAPI(SetMediaTrackInfo_Value);
+		IMPAPI(SetMIDIEditorGrid);
 		IMPAPI(SetMixerScroll);
 		IMPAPI(SetMouseModifier);
 		IMPAPI(SetOnlyTrackSelected);
@@ -1129,7 +1132,7 @@ error:
 			goto error;
 		}
 
-		// Optional API functions (check for NULL if using!) 
+		// Optional API functions (check for NULL if using!)
 		IMPAP_OPT(GetEnvelopeInfo_Value); // 5.982+
 
 		// Look for SWS dupe/clone
@@ -1139,14 +1142,14 @@ error:
 #ifdef _WIN32
 			dir1.SetFormatted(2048, "%s\\%s", GetExePath(), "Plugins");
 			dir2.SetFormatted(2048, "%s\\%s", GetResourcePath(), "UserPlugins");
-			
+
 			HMODULE hm = NULL;
 			if (GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
 								   (LPCWSTR)&hookCommandProc, &hm))
 			{
 				wchar_t wpath[2048];
 				GetModuleFileNameW(hm, wpath, sizeof(wpath));
-				
+
 				char path[2048]="";
 				WideCharToMultiByte(CP_UTF8, 0, wpath, -1, path, sizeof(path), NULL, NULL);
 				mypath.Set(path);
@@ -1182,7 +1185,7 @@ error:
 				mypath.Get(),
 				conflict.Get()[0] ? conflict.Get() : __LOCALIZE("(see version in Main menu > Extensions > About SWS Extension)","sws_mbox"),
 				dir1.Get(), dir2.Get());
-			
+
 			ErrMsg(txt,false);
 			return 0; // do not unregister stuff of the conflicting plugin!
 		}

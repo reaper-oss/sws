@@ -1638,33 +1638,27 @@ LRESULT CALLBACK BR_ContextualToolbar::ToolbarWndCallback (HWND hwnd, UINT uMsg,
 		{
 			plugin_register("timer",(void*)BR_ContextualToolbar::TooltipTimer);
 		}
-		else if (uMsg == WM_COMMAND)
+		else if (toolbarWndData->autoClose && uMsg == WM_ACTIVATE && LOWORD(wParam) == WA_INACTIVE)
 		{
-			if (toolbarWndData->autoClose)
-			{
-				if (HIWORD(wParam) == 0)
-				{
-					Main_OnCommand(toolbarWndData->toggleAction, 0);
+			Main_OnCommand(toolbarWndData->toggleAction, 0);
 
-					SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)wndProc);
-					// focus last focused window when toolbar is auto closed, p=2171694
-					if (toolbarWndData->lastFocusedHwnd)
-						::SetFocus(toolbarWndData->lastFocusedHwnd);
-					m_callbackToolbars.Delete(id, true);
-				}
-			}
+			SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)wndProc);
+			// focus last focused window when toolbar is auto closed, p=2171694
+			if (toolbarWndData->lastFocusedHwnd)
+				::SetFocus(toolbarWndData->lastFocusedHwnd);
+			m_callbackToolbars.Delete(id, true);
 		}
 		else if (uMsg == WM_ACTIVATE)
 		{
-			if (LOWORD(wParam) != WA_INACTIVE)
-			{
-				if (!toolbarWndData->lastFocusedHwnd)
-					toolbarWndData->lastFocusedHwnd = (HWND)lParam;
-			}
-			else
+			if (LOWORD(wParam) == WA_INACTIVE)
 			{
 				if (IsWindowVisible(hwnd))
 					toolbarWndData->lastFocusedHwnd = NULL;
+			}
+			else
+			{
+				if (!toolbarWndData->lastFocusedHwnd)
+					toolbarWndData->lastFocusedHwnd = (HWND)lParam;
 			}
 		}
 		else if (uMsg == WM_DESTROY)

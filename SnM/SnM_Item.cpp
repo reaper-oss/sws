@@ -1314,7 +1314,7 @@ void RefreshOffscreenItems()
 		}
 
 		// up/down item sel.
-		WDL_PtrList<void> trList;
+		WDL_PtrList<MediaTrack> trList;
 		GetVisibleTCPTracks(&trList);
 		bool vertical = (trList.GetSize() > 0);
 
@@ -1351,7 +1351,7 @@ void RefreshOffscreenItems()
 						if (minVis <= maxVis)
 						{
 							MediaTrack* tr = GetMediaItem_Track(item);
-							if (tr && trList.Find((void*)tr) == -1)
+							if (tr && trList.Find(tr) == -1)
 							{
 								int trIdx = CSurf_TrackToID(tr, false);
 								if (trIdx <= minVis)

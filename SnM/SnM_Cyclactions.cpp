@@ -827,7 +827,10 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a,
 			{
 				if (!_strnicmp(STATEMENT_CONSOLE, cmd, strlen(STATEMENT_CONSOLE)))
 				{
-					if (cmd[strlen(STATEMENT_CONSOLE)] != ' ' || strlen((char*)cmd+strlen(STATEMENT_CONSOLE)+1)<2) {
+					// make a copy because ParseConsoleCommand modifies its input
+					std::string cmdline{cmd + strlen(STATEMENT_CONSOLE)};
+					char *trackid, *args;
+					if (cmdline[0] != '\x20' || ParseConsoleCommand(&cmdline[1], &trackid, &args) == UNKNOWN_COMMAND) {
 						str.SetFormatted(256, __LOCALIZE_VERFMT("%s must be followed by a valid ReaConsole command\nSee %s","sws_DLG_161"), STATEMENT_CONSOLE, SWS_URL_HELP_DIR"/reaconsole.php");
 						return AppendErrMsg(_section, _a, _applyMsg, str.Get());
 					}

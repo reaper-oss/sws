@@ -121,12 +121,43 @@ enum BR_ToolbarContexts
 	REMOVED_CONTEXTS = 1
 };
 
+// never change values - used for state saving to .ini
+enum OptionFlags {
+	OPTION_ENABLED         = 0x1,
+	SELECT_ITEM            = 0x2,
+	SELECT_TRACK           = 0x4,
+	SELECT_ENVELOPE        = 0x8,
+	CLEAR_ITEM_SELECTION   = 0x10,
+	CLEAR_TRACK_SELECTION  = 0x20,
+	FOCUS_ALL              = 0x40,
+	FOCUS_MAIN             = 0x80,
+	FOCUS_MIDI             = 0x100,
+	POSITION_H_LEFT        = 0x200,
+	POSITION_H_MIDDLE      = 0x400,
+	POSITION_H_RIGHT       = 0x800,
+	POSITION_V_TOP         = 0x2000,
+	POSITION_V_MIDDLE      = 0x4000,
+	POSITION_V_BOTTOM      = 0x8000,
+};
+
 /******************************************************************************
 * Contextual toolbar                                                          *
 ******************************************************************************/
 class BR_ContextualToolbar
 {
 public:
+	struct Options
+	{
+		int focus = OPTION_ENABLED | FOCUS_ALL, topmost, position,
+				setToolbarToForeground;
+		int tcpTrack, tcpEnvelope;
+		int mcpTrack;
+		int arrangeTrack, arrangeItem, arrangeStretchMarker, arrangeTakeEnvelope,
+				arrangeTrackEnvelope, arrangeActTake;
+		int midiSetCCLane;
+		int inlineItem, inlineSetCCLane;
+	};
+
 	BR_ContextualToolbar ();
 	BR_ContextualToolbar (const BR_ContextualToolbar& contextualToolbar);
 	~BR_ContextualToolbar ();
@@ -155,18 +186,7 @@ public:
 	bool CanContextFollowItem (int context);    // Check if context can follow item contexts
 
 	/* Get and set options for toolbar loading */
-	void SetOptionsAll (int* focus, int* topmost, int* position, int* setToolbarToForeground);
-	void GetOptionsAll (int* focus, int* topmost, int* position, int* setToolbarToForeground);
-	void SetOptionsTcp (int* track, int* envelope);
-	void GetOptionsTcp (int* track, int* envelope);
-	void SetOptionsMcp (int* track);
-	void GetOptionsMcp (int* track);
-	void SetOptionsArrange (int* track, int* item, int* stretchMarker, int* takeEnvelope, int* trackEnvelope, int* activateTake);
-	void GetOptionsArrange (int* track, int* item, int* stretchMarker, int* takeEnvelope, int* trackEnvelope, int* activateTake);
-	void SetOptionsMIDI (int* setCCLaneAsClicked);
-	void GetOptionsMIDI (int* setCCLaneAsClicked);
-	void SetOptionsInline (int* item, int* setCCLaneAsClicked);
-	void GetOptionsInline (int* item, int* setCCLaneAsClicked);
+	Options &GetOptions() { return m_options; }
 
 	/* For serializing */
 	void ExportConfig (WDL_FastString& contextToolbars, WDL_FastString& contextAutoClose, WDL_FastString& contextPosition, WDL_FastString& options);
@@ -178,17 +198,9 @@ public:
 private:
 	struct ContextInfo
 	{
-		int mouseAction, toggleAction, positionOffsetX, positionOffsetY;
+		int mouseAction = DO_NOTHING, toggleAction = DO_NOTHING;
+		int positionOffsetX, positionOffsetY;
 		bool autoClose;
-		ContextInfo ();
-	};
-	struct Options
-	{
-		int focus, setToolbarToForeground, position, topmost, tcpTrack, tcpEnvelope, mcpTrack;
-		int arrangeTrack, arrangeItem, arrangeStretchMarker, arrangeTakeEnvelope, arrangeTrackEnvelope, arrangeActTake;
-		int midiSetCCLane;
-		int inlineItem, inlineSetCCLane;
-		Options ();
 	};
 	struct ExecuteOnToolbarLoad
 	{
@@ -197,9 +209,8 @@ private:
 		TrackEnvelope* envelopeToSelect;
 		MediaItem* itemToSelect;
 		MediaItem* takeParent;
-		int takeIdToActivate, focusContext, positionOffsetX, positionOffsetY, positionOrientation;
+		int takeIdToActivate = -1, focusContext = -1, positionOffsetX, positionOffsetY, positionOrientation;
 		bool positionOverride, setFocus, clearTrackSelection, clearItemSelection, setCCLaneAsClicked, autoCloseToolbar, makeTopMost, setToolbarToForeground;
-		ExecuteOnToolbarLoad ();
 	};
 	struct ToolbarWndData
 	{
@@ -207,11 +218,10 @@ private:
 		HWND lastFocusedHwnd;
 		WNDPROC wndProc;
 		bool keepOnTop, autoClose;
-		int toggleAction;
+		int toggleAction = -1;
 		#ifndef _WIN32
 			int level;
 		#endif
-		ToolbarWndData ();
 	};
 	enum ToolbarActions
 	{
@@ -325,10 +335,10 @@ private:
 	static LRESULT CALLBACK ToolbarWndCallback (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	static void TooltipTimer ();
 
-	BR_ContextualToolbar::ContextInfo m_contexts[CONTEXT_COUNT];
-	BR_ContextualToolbar::Options m_options;
+	ContextInfo m_contexts[CONTEXT_COUNT];
+	Options m_options;
 	int m_mode;
-	set<int> m_activeContexts;
+	std::set<int> m_activeContexts;
 	static WDL_PtrList<BR_ContextualToolbar::ToolbarWndData> m_callbackToolbars;
 	static bool tooltipTimerActive;
 };

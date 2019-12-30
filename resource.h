@@ -234,7 +234,7 @@
 #define IDC_CURVIS                      1133
 #define IDC_CUSTOM                      1134
 #define IDC_INFO                        1135
-// unused                               1136
+#define IDC_AUTOCLOSE_INACTIVE          1136
 #define IDC_FILES                       1137
 #define IDC_NAME                        1138
 #define IDC_SNAME                       1139

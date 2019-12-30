@@ -149,7 +149,7 @@ public:
 	struct Options
 	{
 		int focus = OPTION_ENABLED | FOCUS_ALL, topmost, position,
-				setToolbarToForeground;
+				setToolbarToForeground, autocloseInactive;
 		int tcpTrack, tcpEnvelope;
 		int mcpTrack;
 		int arrangeTrack, arrangeItem, arrangeStretchMarker, arrangeTakeEnvelope,
@@ -196,6 +196,9 @@ public:
 	static void Cleaup ();
 
 private:
+	enum class AutoClose {
+		Disabled, Command, Inactive,
+	};
 	struct ContextInfo
 	{
 		int mouseAction = DO_NOTHING, toggleAction = DO_NOTHING;
@@ -210,14 +213,16 @@ private:
 		MediaItem* itemToSelect;
 		MediaItem* takeParent;
 		int takeIdToActivate = -1, focusContext = -1, positionOffsetX, positionOffsetY, positionOrientation;
-		bool positionOverride, setFocus, clearTrackSelection, clearItemSelection, setCCLaneAsClicked, autoCloseToolbar, makeTopMost, setToolbarToForeground;
+		bool positionOverride, setFocus, clearTrackSelection, clearItemSelection, setCCLaneAsClicked, makeTopMost, setToolbarToForeground;
+		AutoClose autoCloseToolbar;
 	};
 	struct ToolbarWndData
 	{
 		HWND hwnd;
 		HWND lastFocusedHwnd;
 		WNDPROC wndProc;
-		bool keepOnTop, autoClose;
+		bool keepOnTop;
+		AutoClose autoClose;
 		int toggleAction = -1;
 		#ifndef _WIN32
 			int level;
@@ -312,7 +317,7 @@ private:
 	int GetToggleAction (int context);
 	int GetPositionOffsetX (int context);
 	int GetPositionOffsetY (int context);
-	bool GetAutoClose (int context);
+	AutoClose GetAutoClose (int context);
 	void SetMouseAction (int context, int mouseAction);
 	void SetToggleAction (int context, int toggleAction);
 	void SetPositionOffset (int context, int x, int y);

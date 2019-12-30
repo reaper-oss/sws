@@ -1,5 +1,5 @@
 Contextual toolbars:
-+Change behavior of the auto-close option to close the toolbar when losing focus rather than on button click (Issue 1260)
++Add an option to auto-close toolbars when losing focus rather than on button click (Issue 1260)
 
 !v2.11.0 pre-release build
 <strong>Reminder: this new SWS version requires REAPER v5.979+!</strong>

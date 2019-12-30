@@ -125,6 +125,7 @@ bool BR_ContextualToolbar::operator== (const BR_ContextualToolbar& contextualToo
 		contextualToolbar.m_options.focus                  == m_options.focus                  &&
 		contextualToolbar.m_options.position               == m_options.position               &&
 		contextualToolbar.m_options.setToolbarToForeground == m_options.setToolbarToForeground &&
+		contextualToolbar.m_options.autocloseInactive      == m_options.autocloseInactive      &&
 		contextualToolbar.m_options.tcpTrack               == m_options.tcpTrack               &&
 		contextualToolbar.m_options.tcpEnvelope            == m_options.tcpEnvelope            &&
 		contextualToolbar.m_options.mcpTrack               == m_options.mcpTrack               &&
@@ -362,7 +363,7 @@ bool BR_ContextualToolbar::GetContext (int context, int* toolbarId, bool* autoCl
 		int mouseAction = this->GetMouseAction(context);
 
 		WritePtr(toolbarId,       this->GetToolbarId(mouseAction));
-		WritePtr(autoClose,       this->IsToolbarAction(mouseAction) ? this->GetAutoClose(context)       : false);
+		WritePtr(autoClose,       this->IsToolbarAction(mouseAction) ? m_contexts[context].autoClose     : false);
 		WritePtr(positionOffsetX, this->IsToolbarAction(mouseAction) ? this->GetPositionOffsetX(context) : 0);
 		WritePtr(positionOffsetY, this->IsToolbarAction(mouseAction) ? this->GetPositionOffsetY(context) : 0);
 		return true;
@@ -428,7 +429,7 @@ void BR_ContextualToolbar::ExportConfig (WDL_FastString& contextToolbars, WDL_Fa
 		if (context != UNUSED_CONTEXT && context != -666)
 		{
 			contextToolbars.AppendFormatted(128,  "%d ",    this->TranslateAction(this->GetMouseAction(context), true));
-			contextAutoClose.AppendFormatted(128, "%d ",    this->GetAutoClose(context) ? -1 : 0); // why -1 ? this option may one day get replaced with "action on button press" which could also close the toolbar, so use negative numbers for future proofness
+			contextAutoClose.AppendFormatted(128, "%d ",    m_contexts[context].autoClose ? -1 : 0); // why -1 ? this option may one day get replaced with "action on button press" which could also close the toolbar, so use negative numbers for future proofness
 			contextPosition.AppendFormatted(128,  "%d %d ", this->GetPositionOffsetX(context), this->GetPositionOffsetY(context));
 		}
 		else if (context == UNUSED_CONTEXT)
@@ -445,7 +446,7 @@ void BR_ContextualToolbar::ExportConfig (WDL_FastString& contextToolbars, WDL_Fa
 	contextPosition.DeleteSub(contextPosition.GetLength()   - 1, 1);
 
 	options.AppendFormatted(1024,
-		"%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d",
+		"%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d",
 		m_options.focus,
 		m_options.topmost,
 		m_options.tcpTrack,
@@ -461,7 +462,8 @@ void BR_ContextualToolbar::ExportConfig (WDL_FastString& contextToolbars, WDL_Fa
 		m_options.inlineItem,
 		m_options.inlineSetCCLane,
 		m_options.position,
-		m_options.setToolbarToForeground
+		m_options.setToolbarToForeground,
+		m_options.autocloseInactive
 	);
 }
 
@@ -522,6 +524,7 @@ void BR_ContextualToolbar::ImportConfig (const char* contextToolbars, const char
 	if (lp.getnumtokens() > ++i) m_options.inlineSetCCLane        = lp.gettoken_int(i);
 	if (lp.getnumtokens() > ++i) m_options.position               = lp.gettoken_int(i);
 	if (lp.getnumtokens() > ++i) m_options.setToolbarToForeground = lp.gettoken_int(i);
+	if (lp.getnumtokens() > ++i) m_options.autocloseInactive      = lp.gettoken_int(i);
 
 	this->UpdateInternals();
 }
@@ -1169,9 +1172,12 @@ int BR_ContextualToolbar::GetPositionOffsetY (int context)
 	return m_contexts[context].positionOffsetY;
 }
 
-bool BR_ContextualToolbar::GetAutoClose (int context)
+auto BR_ContextualToolbar::GetAutoClose (int context) -> AutoClose
 {
-	return m_contexts[context].autoClose;
+	if (!m_contexts[context].autoClose)
+		return AutoClose::Disabled;
+
+	return m_options.autocloseInactive ? AutoClose::Inactive : AutoClose::Command;
 }
 
 void BR_ContextualToolbar::SetMouseAction (int context, int mouseAction)
@@ -1464,7 +1470,8 @@ LRESULT CALLBACK BR_ContextualToolbar::ToolbarWndCallback (HWND hwnd, UINT uMsg,
 		{
 			plugin_register("timer",(void*)BR_ContextualToolbar::TooltipTimer);
 		}
-		else if (toolbarWndData->autoClose && uMsg == WM_ACTIVATE && LOWORD(wParam) == WA_INACTIVE)
+		else if ((toolbarWndData->autoClose == AutoClose::Command  && uMsg == WM_COMMAND) ||
+		         (toolbarWndData->autoClose == AutoClose::Inactive && uMsg == WM_ACTIVATE && LOWORD(wParam) == WA_INACTIVE))
 		{
 			Main_OnCommand(toolbarWndData->toggleAction, 0);
 
@@ -1881,6 +1888,7 @@ void BR_ContextualToolbarsWnd::Update ()
 		// Process check boxes without paired combos
 		{ IDC_ALL_TOPMOST,            {}, options.topmost                },
 		{ IDC_ALL_FOREGROUND,         {}, options.setToolbarToForeground },
+		{ IDC_AUTOCLOSE_INACTIVE,     {}, options.autocloseInactive      },
 		{ IDC_ARG_TAKE_ACTIVATE,      {}, options.arrangeActTake         },
 		{ IDC_MIDI_CC_LANE_CLICKED,   {}, options.midiSetCCLane          },
 		{ IDC_INLINE_CC_LANE_CLICKED, {}, options.inlineSetCCLane        },
@@ -2068,40 +2076,23 @@ void BR_ContextualToolbarsWnd::OnInitDlg ()
 
 	m_resize.init_item(IDC_LIST, 0.0, 0.0, 1.0, 1.0);
 	m_resize.init_item(IDC_PRESET, 0.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ALL_BOX, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ALL_FOCUS, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ALL_FOCUS_COMBO, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ALL_POS, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ALL_POS_H_COMBO, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ALL_POS_V_COMBO, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ALL_TOPMOST, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ALL_FOREGROUND, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_TCP_BOX, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_TCP_TRACK, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_TCP_TRACK_COMBO, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_TCP_ENV, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_TCP_ENV_COMBO, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_MCP_BOX, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_MCP_TRACK, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_MCP_TRACK_COMBO, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ARG_BOX, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ARG_TRACK, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ARG_TRACK_COMBO, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ARG_ITEM, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ARG_ITEM_COMBO, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ARG_STRETCH, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ARG_STRETCH_COMBO, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ARG_TAKE_ENV, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ARG_TAKE_ENV_COMBO, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ARG_TRACK_ENV, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ARG_TRACK_ENV_COMBO, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ARG_TAKE_ACTIVATE, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_MIDI_BOX, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_MIDI_CC_LANE_CLICKED, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_INLINE_BOX, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_INLINE_ITEM, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_INLINE_ITEM_COMBO, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_INLINE_CC_LANE_CLICKED, 1.0, 0.0, 1.0, 0.0);
+
+	const int fixedControls[] {
+		IDC_ALL_BOX, IDC_ALL_FOCUS, IDC_ALL_FOCUS_COMBO, IDC_ALL_POS,
+		IDC_ALL_POS_H_COMBO, IDC_ALL_POS_V_COMBO, IDC_ALL_TOPMOST,
+		IDC_ALL_FOREGROUND, IDC_AUTOCLOSE_INACTIVE, IDC_TCP_BOX, IDC_TCP_TRACK,
+		IDC_TCP_TRACK_COMBO, IDC_TCP_ENV, IDC_TCP_ENV_COMBO, IDC_MCP_BOX,
+		IDC_MCP_TRACK, IDC_MCP_TRACK_COMBO, IDC_ARG_BOX, IDC_ARG_TRACK,
+		IDC_ARG_TRACK_COMBO, IDC_ARG_ITEM, IDC_ARG_ITEM_COMBO, IDC_ARG_STRETCH,
+		IDC_ARG_STRETCH_COMBO, IDC_ARG_TAKE_ENV, IDC_ARG_TAKE_ENV_COMBO,
+		IDC_ARG_TRACK_ENV, IDC_ARG_TRACK_ENV_COMBO, IDC_ARG_TAKE_ACTIVATE,
+		IDC_MIDI_BOX, IDC_MIDI_CC_LANE_CLICKED, IDC_INLINE_BOX, IDC_INLINE_ITEM,
+		IDC_INLINE_ITEM_COMBO, IDC_INLINE_CC_LANE_CLICKED,
+	};
+
+	for (const int control : fixedControls)
+		m_resize.init_item(control, 1.0, 0.0, 1.0, 0.0);
+
 	m_resize.init_item(IDC_HELP_WIKI, 1.0, 1.0, 1.0, 1.0);
 	m_resize.init_item(IDC_SAVE, 1.0, 1.0, 1.0, 1.0);
 
@@ -2289,6 +2280,7 @@ void BR_ContextualToolbarsWnd::OnCommand (WPARAM wParam, LPARAM lParam)
 
 			if      (ctrl == IDC_ALL_TOPMOST)            option = { ctrl, {}, &options.topmost                };
 			else if (ctrl == IDC_ALL_FOREGROUND)         option = { ctrl, {}, &options.setToolbarToForeground };
+			else if (ctrl == IDC_AUTOCLOSE_INACTIVE)     option = { ctrl, {}, &options.autocloseInactive      };
 			else if (ctrl == IDC_ARG_TAKE_ACTIVATE)      option = { ctrl, {}, &options.arrangeActTake         };
 			else if (ctrl == IDC_MIDI_CC_LANE_CLICKED)   option = { ctrl, {}, &options.midiSetCCLane          };
 			else if (ctrl == IDC_INLINE_CC_LANE_CLICKED) option = { ctrl, {}, &options.inlineSetCCLane        };

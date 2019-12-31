@@ -47,31 +47,32 @@
 #define OSC_NEXT_RGN			"/snm/rgnplaylist/next"
 
 enum {
-  DELETE_MSG=0xF000,
-  PERFORM_MSG,
-  CROP_PRJ_MSG,
-  NEW_PLAYLIST_MSG,
-  COPY_PLAYLIST_MSG,
-  DEL_PLAYLIST_MSG,
-  REN_PLAYLIST_MSG,
-  ADD_ALL_REGIONS_MSG,
-  CROP_PRJTAB_MSG,
-  APPEND_PRJ_MSG,
-  PASTE_CURSOR_MSG,
-  APPEND_SEL_RGN_MSG,
-  PASTE_SEL_RGN_MSG,
-  TGL_INFINITE_LOOP_MSG,
-  TGL_SEEK_NOW_MSG,
-  TGL_SEEK_CLICK_MSG,
-  TGL_MOVE_CUR_MSG,
-  OSC_START_MSG,                                        // 64 osc csurfs max -->
-  OSC_END_MSG = OSC_START_MSG+64,                       // <--
-  ADD_REGION_START_MSG,                                 // 1024 marker/region indexes supported (*) --> 
-  ADD_REGION_END_MSG = ADD_REGION_START_MSG+1024,       // <--
-  INSERT_REGION_START_MSG,                              // 1024 marker/region indexes supported (*) -->
-  INSERT_REGION_END_MSG = INSERT_REGION_START_MSG+1024, // <--
-                                                        // (*) but no max nb of supported regions/markers, of course
-  LAST_MSG // keep as last item!
+	DELETE_MSG=0xF000,
+	PERFORM_MSG,
+	CROP_PRJ_MSG,
+	NEW_PLAYLIST_MSG,
+	COPY_PLAYLIST_MSG,
+	DEL_PLAYLIST_MSG,
+	REN_PLAYLIST_MSG,
+	ADD_ALL_REGIONS_MSG,
+	CROP_PRJTAB_MSG,
+	APPEND_PRJ_MSG,
+	PASTE_CURSOR_MSG,
+	APPEND_SEL_RGN_MSG,
+	PASTE_SEL_RGN_MSG,
+	TGL_INFINITE_LOOP_MSG,
+	TGL_SEEK_NOW_MSG,
+	TGL_SEEK_CLICK_MSG,
+	TGL_MOVE_CUR_MSG,
+	TGL_SHUFFLE_MSG,
+	OSC_START_MSG,                                        // 64 osc csurfs max -->
+	OSC_END_MSG = OSC_START_MSG+64,                       // <--
+	ADD_REGION_START_MSG,                                 // 1024 marker/region indexes supported (*) -->
+	ADD_REGION_END_MSG = ADD_REGION_START_MSG+1024,       // <--
+	INSERT_REGION_START_MSG,                              // 1024 marker/region indexes supported (*) -->
+	INSERT_REGION_END_MSG = INSERT_REGION_START_MSG+1024, // <--
+							      // (*) but no max nb of supported regions/markers, of course
+	LAST_MSG // keep as last item!
 };
 
 enum {
@@ -79,7 +80,6 @@ enum {
 	BTNID_PLAY,
 	BTNID_STOP,
 	BTNID_REPEAT,
-	BTNID_SHUFFLE,
 	TXTID_PLAYLIST,
 	CMBID_PLAYLIST,
 	WNDID_ADD_DEL,
@@ -845,6 +845,9 @@ void RegionPlaylistWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case TGL_SEEK_NOW_MSG:
 			g_seekImmediate = !g_seekImmediate;
 			break;
+		case TGL_SHUFFLE_MSG:
+			g_shufflePlaylist = !g_shufflePlaylist;
+			break;
 		case TGL_SEEK_CLICK_MSG:
 			if (g_optionFlags&1) g_optionFlags &= ~1;
 			else g_optionFlags |= 1;
@@ -1103,6 +1106,7 @@ void RegionPlaylistWnd::OptionsMenu(HMENU _menu)
 	AddToMenu(_menu, __LOCALIZE("Seek playback when clicking regions","sws_DLG_165"), TGL_SEEK_CLICK_MSG, -1, false, g_optionFlags&1 ? MF_CHECKED : MF_UNCHECKED);
 	AddToMenu(_menu, __LOCALIZE("Seek/start playback when double-clicking regions","sws_DLG_165"), -1, -1, false, MF_CHECKED|MF_GRAYED); // just a helper item..
 	AddToMenu(_menu, __LOCALIZE("Smooth seek (seek immediately if disabled)","sws_DLG_165"), TGL_SEEK_NOW_MSG, -1, false, !g_seekImmediate ? MF_CHECKED : MF_UNCHECKED);
+	AddToMenu(_menu, __LOCALIZE("Shuffle playlist items","sws_DLG_165"), TGL_SHUFFLE_MSG, -1, false, g_shufflePlaylist ? MF_CHECKED : MF_UNCHECKED);
 //	AddToMenu(_menu, SWS_SEPARATOR, 0);
 //	AddToMenu(_menu, __LOCALIZE("Repeat playlist","sws_DLG_165"), BTNID_REPEAT, -1, false, g_repeatPlaylist ? MF_CHECKED : MF_UNCHECKED);	
 }
@@ -2141,6 +2145,7 @@ int RegionPlaylistInit()
 	g_monitorMode = (GetPrivateProfileInt("RegionPlaylist", "MonitorMode", 0, g_SNM_IniFn.Get()) == 1);
 	g_repeatPlaylist = (GetPrivateProfileInt("RegionPlaylist", "Repeat", 0, g_SNM_IniFn.Get()) == 1);
 	g_seekImmediate = (GetPrivateProfileInt("RegionPlaylist", "SeekImmediate", 0, g_SNM_IniFn.Get()) == 1);
+	g_shufflePlaylist = (GetPrivateProfileInt("RegionPlaylist", "ShufflePlaylist", 0, g_SNM_IniFn.Get()) == 1);
 	g_optionFlags = (GetPrivateProfileInt("RegionPlaylist", "SeekPlay", 0, g_SNM_IniFn.Get()) == 1);
 	GetPrivateProfileString("RegionPlaylist", "BigFontName", SNM_DYN_FONT_NAME, g_rgnplBigFontName, sizeof(g_rgnplBigFontName), g_SNM_IniFn.Get());
 	GetPrivateProfileString("RegionPlaylist", "OscFeedback", "", buf, sizeof(buf), g_SNM_IniFn.Get());
@@ -2164,7 +2169,8 @@ void RegionPlaylistExit()
 	WritePrivateProfileString("RegionPlaylist", "Repeat", g_repeatPlaylist?"1":"0", g_SNM_IniFn.Get()); 
 	WritePrivateProfileString("RegionPlaylist", "ScrollView", NULL, g_SNM_IniFn.Get()); // deprecated
 	WritePrivateProfileString("RegionPlaylist", "SeekImmediate", g_seekImmediate?"1":"0", g_SNM_IniFn.Get());
-	WritePrivateProfileString("RegionPlaylist", "SeekPlay", g_optionFlags?"1":"0", g_SNM_IniFn.Get()); 
+	WritePrivateProfileString("RegionPlaylist", "ShufflePlaylist", g_shufflePlaylist?"1":"0", g_SNM_IniFn.Get());
+	WritePrivateProfileString("RegionPlaylist", "SeekPlay", g_optionFlags?"1":"0", g_SNM_IniFn.Get());
 	WritePrivateProfileString("RegionPlaylist", "BigFontName", g_rgnplBigFontName, g_SNM_IniFn.Get());
 	if (g_osc)
 	{

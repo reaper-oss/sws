@@ -1004,7 +1004,7 @@ done:
 // S&M windows lazy init: below's "" prevents registering the SWS' screenset callback
 // (use the S&M one instead - already registered via SNM_WindowManager::Init())
 ResourcesWnd::ResourcesWnd()
-	: SWS_DockWnd(IDD_SNM_RESOURCES, __LOCALIZE("Resources","sws_DLG_150"), "", SWSGetCommandID(OpenResources))
+	: SWS_DockWnd(IDD_SNM_RESOURCES, __LOCALIZE("Resources","sws_DLG_150"), "")
 {
 	m_id.Set(RES_WND_ID);
 	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
@@ -3428,7 +3428,7 @@ SNM_WindowManager<ImageWnd> g_imgWndMgr(IMG_WND_ID);
 // S&M windows lazy init: below's "" prevents registering the SWS' screenset callback
 // (use the S&M one instead - already registered via SNM_WindowManager::Init())
 ImageWnd::ImageWnd()
-	: SWS_DockWnd(IDD_SNM_IMAGE, __LOCALIZE("Image","sws_DLG_162"), "", SWSGetCommandID(OpenImageWnd))
+	: SWS_DockWnd(IDD_SNM_IMAGE, __LOCALIZE("Image","sws_DLG_162"), "")
 {
 	m_id.Set(IMG_WND_ID);
 	m_stretch = g_stretchPref;

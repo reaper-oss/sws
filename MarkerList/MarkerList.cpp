@@ -213,7 +213,7 @@ int SWS_MarkerListView::GetItemState(SWS_ListItem* item)
 }
 
 SWS_MarkerListWnd::SWS_MarkerListWnd()
-:SWS_DockWnd(IDD_MARKERLIST, __LOCALIZE("Marker List","sws_DLG_102"), "SWSMarkerList", SWSGetCommandID(OpenMarkerList)), m_dCurPos(DBL_MAX)
+:SWS_DockWnd(IDD_MARKERLIST, __LOCALIZE("Marker List","sws_DLG_102"), "SWSMarkerList"), m_dCurPos(DBL_MAX)
 {
 	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();

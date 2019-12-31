@@ -282,7 +282,7 @@ void SWS_AutoColorView::OnEndDrag()
 }
 
 SWS_AutoColorWnd::SWS_AutoColorWnd()
-:SWS_DockWnd(IDD_AUTOCOLOR, __LOCALIZE("Auto Color/Icon/Layout","sws_DLG_115"), "SWSAutoColor", SWSGetCommandID(OpenAutoColor))
+:SWS_DockWnd(IDD_AUTOCOLOR, __LOCALIZE("Auto Color/Icon/Layout","sws_DLG_115"), "SWSAutoColor")
 #ifdef __APPLE__
 	,m_bSettingColor(false)
 #endif

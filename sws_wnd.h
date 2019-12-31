@@ -175,8 +175,8 @@ typedef struct SWS_DockWnd_State // Converted to little endian on store
 class SWS_DockWnd
 {
 public:
-	// Unless you need the default contructor (new SWS_DockWnd()), you must provide all parameters
-	SWS_DockWnd(int iResource=0, const char* cWndTitle="", const char* cId="", int iCmdID=0);
+	// Unless you need the default constructor (new SWS_DockWnd()), you must provide all parameters
+	explicit SWS_DockWnd(int iResource=0, const char* cWndTitle="", const char* cId="");
 	virtual ~SWS_DockWnd();
 
 	virtual bool IsActive(bool bWantEdit = false);
@@ -229,7 +229,6 @@ protected:
 	virtual void KillTooltip(bool doRefresh=false);
 
 	HWND m_hwnd;
-	int m_iCmdID;
 	int m_iResource;
 	WDL_FastString m_wndTitle;
 	WDL_FastString m_id;

@@ -1898,7 +1898,7 @@ void CommandsView::OnItemSelChanged(SWS_ListItem* item, int iState) {
 // S&M windows lazy init: below's "" prevents registering the SWS' screenset callback
 // (use the S&M one instead - already registered via SNM_WindowManager::Init())
 CyclactionWnd::CyclactionWnd()
-	: SWS_DockWnd(IDD_SNM_CYCLACTION, __LOCALIZE("Cycle Actions","sws_DLG_161"), "", SWSGetCommandID(OpenCyclaction))
+	: SWS_DockWnd(IDD_SNM_CYCLACTION, __LOCALIZE("Cycle Actions","sws_DLG_161"), "")
 {
 	m_id.Set(CA_WND_ID);
 

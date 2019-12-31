@@ -529,7 +529,7 @@ void GetMonitoringInfo(WDL_FastString* _curNum, WDL_FastString* _cur,
 // S&M windows lazy init: below's "" prevents registering the SWS' screenset callback
 // (use the S&M one instead - already registered via SNM_WindowManager::Init())
 RegionPlaylistWnd::RegionPlaylistWnd()
-	: SWS_DockWnd(IDD_SNM_RGNPLAYLIST, __LOCALIZE("Region Playlist","sws_DLG_165"), "", SWSGetCommandID(OpenRegionPlaylist))
+	: SWS_DockWnd(IDD_SNM_RGNPLAYLIST, __LOCALIZE("Region Playlist","sws_DLG_165"), "")
 {
 	m_id.Set(RGNPL_WND_ID);
 	// must call SWS_DockWnd::Init() to restore parameters and open the window if necessary

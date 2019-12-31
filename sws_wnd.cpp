@@ -52,8 +52,8 @@
 #define TOOLTIP_TIMEOUT		350
 
 
-SWS_DockWnd::SWS_DockWnd(int iResource, const char* cWndTitle, const char* cId, int iCmdID)
-:m_hwnd(NULL), m_iResource(iResource), m_wndTitle(cWndTitle), m_id(cId), m_bUserClosed(false), m_iCmdID(iCmdID), m_bSaveStateOnDestroy(true)
+SWS_DockWnd::SWS_DockWnd(int iResource, const char* cWndTitle, const char* cId)
+		: m_hwnd(NULL), m_iResource(iResource), m_wndTitle(cWndTitle), m_id(cId), m_bUserClosed(false), m_bSaveStateOnDestroy(true)
 {
 	if (cId && *cId) // e.g. default constructor
 	{

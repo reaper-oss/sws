@@ -40,7 +40,7 @@ static const int FNG_REFRESH     = 0xFF01;
 void ShowGrooveDialog(int flags, void *data);
 
 GrooveDialog::GrooveDialog()
-:SWS_DockWnd(IDD_GROOVEDIALOG, __LOCALIZE("Groove","sws_DLG_157"), "FNGGroove", RprCommandManager::getCommandId("FNG_GROOVE_TOOL"))
+:SWS_DockWnd(IDD_GROOVEDIALOG, __LOCALIZE("Groove","sws_DLG_157"), "FNGGroove")
 {
 #ifdef _WIN32
     CoInitializeEx(NULL, 0);

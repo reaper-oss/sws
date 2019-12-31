@@ -74,6 +74,7 @@ ReaScript API:
 Region Playlist:
 +Fix pasting region playlists containing grouped items (Issue 1118)
 +Fix pasting region playlists when "Overlap and crossfade items when splitting" is enabled in Preferences > Project > Media Item Defaults (Issue 1204)
++Add toggle action to enable shuffling of region playlists
 
 Resources:
 +Enter key in Filter textbox focuses list and don't block Del key (Issue 1119)

@@ -1296,16 +1296,15 @@ int GetNextValidItem(int _plId, int _itemId, bool _startWith, bool _repeat, bool
 				if (candidateItem >= 0) {
 					return candidateItem;
 				}
-			} else
-			{
-				for (int i=_itemId+(_startWith?0:1); i<pl->GetSize(); i++)
+				// Fall back on default behavior if shuffling fails...
+			}
+			for (int i=_itemId+(_startWith?0:1); i<pl->GetSize(); i++)
+				if (pl->IsValidIem(i))
+					return i;
+			if (_repeat)
+				for (int i=0; i<pl->GetSize() && i<(_itemId+(_startWith?1:0)); i++)
 					if (pl->IsValidIem(i))
 						return i;
-				if (_repeat)
-					for (int i=0; i<pl->GetSize() && i<(_itemId+(_startWith?1:0)); i++)
-						if (pl->IsValidIem(i))
-							return i;
-			}
 			// not found if we are here..
 			if (_repeat && pl->IsValidIem(_itemId))
 				return _itemId;
@@ -1315,17 +1314,25 @@ int GetNextValidItem(int _plId, int _itemId, bool _startWith, bool _repeat, bool
 }
 
 // never use things like playlist->Get(i-1) but this func!
-int GetPrevValidItem(int _plId, int _itemId, bool _startWith, bool _repeat, bool shuffle)
+int GetPrevValidItem(int _plId, int _itemId, bool _startWith, bool _repeat, bool _shuffle)
 {
 	if (_plId>=0 && _itemId>=0)
 	{
 		if (RegionPlaylist* pl = GetPlaylist(_plId))
 		{
-			for (int i=_itemId-(_startWith?0:1); i>=0; i--)
+			if (_shuffle)
+			{
+				int candidateItem = GetShuffledItem(pl);
+				if (candidateItem >= 0) {
+					return candidateItem;
+				}
+				// Fall back on default behavior if shuffling fails...
+			}
+			for (int i = _itemId - (_startWith ? 0 : 1); i >= 0; i--)
 				if (pl->IsValidIem(i))
 					return i;
 			if (_repeat)
-				for (int i=pl->GetSize()-1; i>=0 && i>(_itemId-(_startWith?1:0)); i--)
+				for (int i = pl->GetSize() - 1; i >= 0 && i > (_itemId - (_startWith ? 1 : 0)); i--)
 					if (pl->IsValidIem(i))
 						return i;
 			// not found if we are here..
@@ -1623,12 +1630,22 @@ void PlaylistPlay(COMMAND_T* _ct)
 // always cycle (whatever is g_repeatPlaylist)
 void PlaylistSeekPrevNext(COMMAND_T* _ct)
 {
-	if (g_playPlaylist<0)
+	if (g_playPlaylist < 0)
+	{
 		PlaylistPlay(NULL);
-	else
+	} else if (g_shufflePlaylist)
+	{
+		if ((int) _ct->user > 0)
+		{
+			PlaylistPlay(g_playPlaylist, g_playNext);
+		} else
+		{
+			PlaylistPlay(g_playPlaylist, g_playCur);
+		}
+	} else
 	{
 		int itemId;
-		if ((int)_ct->user>0)
+		if ((int) _ct->user > 0)
 			itemId = GetNextValidItem(g_playPlaylist, g_playNext, false, true, g_shufflePlaylist);
 		else
 		{
@@ -1643,12 +1660,16 @@ void PlaylistSeekPrevNext(COMMAND_T* _ct)
 // Seek prev/next region based on current playing region
 void PlaylistSeekPrevNextCurBased(COMMAND_T* _ct)
 {
-	if (g_playPlaylist<0)
+	if (g_playPlaylist < 0)
+	{
 		PlaylistPlay(NULL);
-	else
+	} else if (g_shufflePlaylist)
+	{
+		PlaylistPlay(g_playPlaylist, g_playNext);
+	} else
 	{
 		int itemId;
-		if ((int)_ct->user>0)
+		if ((int) _ct->user > 0)
 			itemId = GetNextValidItem(g_playPlaylist, g_playCur, false, true, g_shufflePlaylist);
 		else
 			itemId = GetPrevValidItem(g_playPlaylist, g_playCur, false, true, g_shufflePlaylist);

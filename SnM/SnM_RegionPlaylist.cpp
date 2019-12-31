@@ -37,7 +37,6 @@
 #include "../reaper/localize.h"
 #include "WDL/projectcontext.h"
 #include "WDL/xsrand.h"
-#include <iostream>
 
 
 #define RGNPL_WND_ID			"SnMRgnPlaylist"
@@ -108,7 +107,6 @@ bool g_repeatPlaylist = false;	// playlist repeat state
 bool g_seekImmediate = false;
 int g_optionFlags = false;
 bool g_shufflePlaylist = false;  // Playlist shuffle state.
-int g_shuffleSeed = 666;
 
 // see PlaylistRun()
 int g_playPlaylist = -1;		// -1: stopped, playlist id otherwise
@@ -846,7 +844,7 @@ void RegionPlaylistWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			g_seekImmediate = !g_seekImmediate;
 			break;
 		case TGL_SHUFFLE_MSG:
-			g_shufflePlaylist = !g_shufflePlaylist;
+			SetPlaylistOptionShuffle(nullptr);
 			break;
 		case TGL_SEEK_CLICK_MSG:
 			if (g_optionFlags&1) g_optionFlags &= ~1;
@@ -1268,15 +1266,12 @@ namespace {
 
 	int GetShuffledItem(RegionPlaylist* playlist) {
 		// Returns -1 if no item is found.
-		// TODO: Repeat and shuffle should work together to only play each item once.
 		int numItems = playlist->GetSize();
 		int attempts = 0;
 		int timestamp = static_cast<int>(time_precise() * 1000);
 		while (attempts < 10 && numItems > 1) {
-			WDL_UINT64 randomIndex = XS64Rand(g_shuffleSeed + timestamp).rand64();
+			WDL_UINT64 randomIndex = XS64Rand(timestamp).rand64();
 			int candidateItem = static_cast<int>(randomIndex % numItems);
-			// TODO: Remove this.
-			std::cout << attempts << " " << candidateItem << " " << randomIndex << " " << numItems << std::endl;
 			if (playlist->IsValidIem(candidateItem)) {
 				return candidateItem;
 			}

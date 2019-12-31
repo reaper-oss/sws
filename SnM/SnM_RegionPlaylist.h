@@ -145,9 +145,9 @@ void PlaylistUnpaused();
 void PlaylistResync();
 void SetPlaylistRepeat(COMMAND_T*);
 int IsPlaylistRepeat(COMMAND_T*);
+
 void SetPlaylistOptionShuffle(COMMAND_T* _ct);
 int IsPlaylistOptionShuffle(COMMAND_T* _ct);
-
 void SetPlaylistOptionSmoothSeek(COMMAND_T*);
 int IsPlaylistOptionSmoothSeek(COMMAND_T*);
 

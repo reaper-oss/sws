@@ -823,6 +823,7 @@ void BR_MouseInfo::GetContext (const POINT& p)
 				else
 				{
 					mouseInfo.envelope = NULL; // in case GetTrackOrEnvelopeFromY() found something
+					GetItemFromY(mouseY, mousePos, &mouseInfo.take, nullptr);
 					if (mouseInfo.track && IsOpenInInlineEditor(mouseInfo.take))
 					{
 						int takeOffset;

@@ -49,10 +49,10 @@ template<class T> class SNM_WindowManager
 {
 public:
 	SNM_WindowManager(const char* _id) : m_id(_id), m_wnd(NULL) {}
-	virtual ~SNM_WindowManager() { Delete(); }
-	virtual T* Get() { return reinterpret_cast<T *>(m_wnd); }
+	~SNM_WindowManager() { Delete(); }
+	T* Get() { return reinterpret_cast<T *>(m_wnd); }
 
-	virtual T* Init()
+	T* Init()
 	{ 
 #ifdef _SNM_SCREENSET_DEBUG
 		char dbg[256]="";
@@ -63,8 +63,11 @@ public:
 		return GetWithLazyInit();
 	}
 
+	T* Create() { return Create(nullptr); }
+
 	// creates the wnd *if needed*
-	virtual T* Create(bool* _isNew = NULL)
+	template<class... Args>
+	T* Create(bool* _isNew, Args&&... args)
 	{
 		if (_isNew)
 			*_isNew = !m_wnd;
@@ -80,13 +83,13 @@ public:
 			// allocate memory before construction so that m_wnd is valid when
 			// constructing the window
 			m_wnd = new char[sizeof(T)];
-			new(m_wnd) T;
+			new(m_wnd) T(args...);
 		}
 
 		return Get();
 	}
 
-	virtual void Delete()
+	void Delete()
 	{
 		if (!m_wnd)
 			return;
@@ -97,13 +100,12 @@ public:
 		// screenset_registerNew((char*)m_id.Get(), SNM_ScreensetCallback, this);
 	}
 
-	virtual HWND GetMsgHWND() {
+	HWND GetMsgHWND() {
 		return m_wnd ? Get()->GetHWND() : GetMainHwnd();
 	}
 
 protected:
 	WDL_FastString m_id;
-	char *m_wnd;
 
 private:
 	// the trick
@@ -153,6 +155,8 @@ private:
 			Create();
 		return Get();
 	}
+
+	char *m_wnd;
 };
 
 
@@ -166,29 +170,14 @@ public:
 		SNM_WindowManager<T>::m_id.SetFormatted(64, _wndId, _idx+1);
 	}
 
-	virtual ~SNM_DynWindowManager() {
+	~SNM_DynWindowManager() {
 		SNM_WindowManager<T>::Delete();
 	}
 
 	// creates the wnd *if needed*
-	virtual T* Create(bool* _isNew = NULL)
+	T* Create(bool* _isNew = NULL)
 	{
-		if (_isNew)
-			*_isNew = !SNM_WindowManager<T>::m_wnd;
-
-		if (!SNM_WindowManager<T>::m_wnd)
-		{
-#ifdef _SNM_SCREENSET_DEBUG
-			char dbg[256]="";
-			_snprintfSafe(dbg, sizeof(dbg), "SNM_DynWindowManager::Create() >>>>>>>>>>>>>>>>> %s\n", SNM_WindowManager<T>::m_id.Get());
-			OutputDebugString(dbg);
-#endif
-
-			SNM_WindowManager<T>::m_wnd = new char[sizeof(T)];
-			new(SNM_WindowManager<T>::m_wnd) T(m_idx);
-		}
-
-		return SNM_WindowManager<T>::Get();
+		return SNM_WindowManager<T>::Create(_isNew, m_idx);
 	}
 
 private:
@@ -202,12 +191,12 @@ template<class T> class SNM_MultiWindowManager
 public:
 	// _id is as formatted string (%d style)
 	SNM_MultiWindowManager(const char* _id) : m_id(_id) {}
-	virtual ~SNM_MultiWindowManager() { DeleteAll(); }
-	virtual T* Get(int _idx) {
+	~SNM_MultiWindowManager() { DeleteAll(); }
+	T* Get(int _idx) {
 		if (SNM_DynWindowManager<T>* mgr = m_mgrs.Get(_idx, NULL)) return mgr->Get();
 		return NULL;
 	}
-	virtual T* Init(int _idx)
+	T* Init(int _idx)
 	{
 		SNM_DynWindowManager<T>* mgr = m_mgrs.Get(_idx, NULL);
 		if (!mgr) {
@@ -217,7 +206,7 @@ public:
 		return mgr ? mgr->Init() : NULL;
 	}
 	// creates the wnd *if needed*
-	virtual T* Create(int _idx, bool* _isNew = NULL)
+	T* Create(int _idx, bool* _isNew = NULL)
 	{
 		SNM_DynWindowManager<T>* mgr = m_mgrs.Get(_idx, NULL);
 		if (!mgr) {
@@ -226,7 +215,7 @@ public:
 		}
 		return mgr ? mgr->Create(_isNew) : NULL;
 	}
-	virtual void DeleteAll()
+	void DeleteAll()
 	{
 		for (int i=m_mgrs.GetSize()-1; i>=0; i--) 
 		{
@@ -235,14 +224,14 @@ public:
 			m_mgrs.DeleteByIndex(i);
 		}
 	}
-	virtual HWND GetMsgHWND(int _idx) {
+	HWND GetMsgHWND(int _idx) {
 		if (SNM_DynWindowManager<T>* mgr = m_mgrs.Get(_idx, NULL))
 			return mgr->GetMsgHWND();
 		return GetMainHwnd();
 	}
 
-protected:
-	WDL_IntKeyedArray<SNM_DynWindowManager<T>* > m_mgrs; // no valdispose(), intentional
+private:
+	WDL_IntKeyedArray<SNM_DynWindowManager<T>*> m_mgrs; // no valdispose(), intentional
 	WDL_FastString m_id;
 };
 

@@ -50,7 +50,7 @@ template<class T> class SNM_WindowManager
 public:
 	SNM_WindowManager(const char* _id) : m_id(_id), m_wnd(NULL) {}
 	virtual ~SNM_WindowManager() { Delete(); }
-	virtual T* Get() { return m_wnd; }
+	virtual T* Get() { return reinterpret_cast<T *>(m_wnd); }
 
 	virtual T* Init()
 	{ 
@@ -67,7 +67,7 @@ public:
 	virtual T* Create(bool* _isNew = NULL)
 	{
 		if (_isNew)
-			*_isNew = false;
+			*_isNew = !m_wnd;
 
 		if (!m_wnd)
 		{
@@ -76,29 +76,34 @@ public:
 			_snprintfSafe(dbg, sizeof(dbg), "SNM_WindowManager::Create() >>>>>>>>>>>>>>>>> %s\n", m_id.Get());
 			OutputDebugString(dbg);
 #endif
-			m_wnd = new T;
-			if (_isNew)
-				*_isNew = (m_wnd!=NULL);
+
+			// allocate memory before construction so that m_wnd is valid when
+			// constructing the window
+			m_wnd = new char[sizeof(T)];
+			new(m_wnd) T;
 		}
-		return m_wnd;
+
+		return Get();
 	}
 
 	virtual void Delete()
 	{
-		if (m_wnd)
-		{
-			DELETE_NULL(m_wnd); // also unregisters screenset callbacks..
-//			screenset_registerNew((char*)m_id.Get(), SNM_ScreensetCallback, this);
-		}
+		if (!m_wnd)
+			return;
+
+		Get()->~T(); // also unregisters screenset callbacks..
+		delete[] m_wnd;
+		m_wnd = nullptr;
+		// screenset_registerNew((char*)m_id.Get(), SNM_ScreensetCallback, this);
 	}
 
 	virtual HWND GetMsgHWND() {
-		return m_wnd ? m_wnd->GetHWND() : GetMainHwnd();
+		return m_wnd ? Get()->GetHWND() : GetMainHwnd();
 	}
 
 protected:
 	WDL_FastString m_id;
-	T* m_wnd;
+	char *m_wnd;
 
 private:
 	// the trick
@@ -145,8 +150,8 @@ private:
 	T* GetWithLazyInit(const char* _actionParm = NULL)
 	{
 		if (!m_wnd && (SWS_GetDockWndState(m_id.Get(), _actionParm) & 1)) 
-			m_wnd = Create();
-		return m_wnd;
+			Create();
+		return Get();
 	}
 };
 
@@ -169,7 +174,7 @@ public:
 	virtual T* Create(bool* _isNew = NULL)
 	{
 		if (_isNew)
-			*_isNew = false;
+			*_isNew = !SNM_WindowManager<T>::m_wnd;
 
 		if (!SNM_WindowManager<T>::m_wnd)
 		{
@@ -178,11 +183,12 @@ public:
 			_snprintfSafe(dbg, sizeof(dbg), "SNM_DynWindowManager::Create() >>>>>>>>>>>>>>>>> %s\n", SNM_WindowManager<T>::m_id.Get());
 			OutputDebugString(dbg);
 #endif
-			SNM_WindowManager<T>::m_wnd = new T(m_idx);
-			if (_isNew)
-				*_isNew = (SNM_WindowManager<T>::m_wnd!=NULL);
+
+			SNM_WindowManager<T>::m_wnd = new char[sizeof(T)];
+			new(SNM_WindowManager<T>::m_wnd) T(m_idx);
 		}
-		return SNM_WindowManager<T>::m_wnd;
+
+		return SNM_WindowManager<T>::Get();
 	}
 
 private:

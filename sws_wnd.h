@@ -88,6 +88,7 @@ public:
 	int LVKeyHandler(MSG *msg, int iKeyState);
 	virtual void Update();
 	bool DoColumnMenu(int x, int y);
+	bool HeaderHitTest(const POINT &) const;
 	SWS_ListItem* GetHitItem(int x, int y, int* iCol);
 	void EditListItem(SWS_ListItem* item, int iCol);
 	int GetEditingItem() { return m_iEditingItem; }

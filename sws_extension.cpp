@@ -918,6 +918,9 @@ error:
 		IMPAPI(kbd_reprocessMenu);
 		IMPAPI(kbd_RunCommandThroughHooks);
 		IMPAPI(kbd_translateAccelerator);
+#ifdef __APPLE__
+		IMPAPI(ListView_HeaderHitTest); // undocumented
+#endif
 		IMPAPI(Main_OnCommand);
 		IMPAPI(Main_OnCommandEx);
 		IMPAPI(Main_openProject);

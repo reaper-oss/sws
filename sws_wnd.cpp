@@ -1408,23 +1408,36 @@ bool SWS_ListView::DoColumnMenu(int x, int y)
 	return false;
 }
 
+bool SWS_ListView::HeaderHitTest(const POINT &point) const
+{
+	// extracted from ReaPack
+#ifdef _WIN32
+	RECT rect;
+	GetWindowRect(ListView_GetHeader(m_hwndList), &rect);
+
+	const int headerHeight = rect.bottom - rect.top;
+#elif !defined(__APPLE__)
+	const int headerHeight = SWELL_GetListViewHeaderHeight(m_hwndList);
+#endif
+
+#ifdef __APPLE__
+	// This was broken on Linux and used a hard-coded header height on Windows
+	// Fixed in REAPER v6.03
+	return ListView_HeaderHitTest(m_hwndList, point);
+#else
+	return point.y <= headerHeight;
+#endif
+}
+
 SWS_ListItem* SWS_ListView::GetHitItem(int x, int y, int* iCol)
 {
 	LVHITTESTINFO ht;
-	POINT pt = { x, y };
-	ht.pt = pt;
+	ht.pt = { x, y };
 	ht.flags = LVHT_ONITEM;
 	ScreenToClient(m_hwndList, &ht.pt);
 	int iItem = ListView_SubItemHitTest(m_hwndList, &ht);
 
-#ifdef _WIN32
-	RECT r;
-	HWND header = ListView_GetHeader(m_hwndList);
-	GetWindowRect(header, &r);
-	if (PtInRect(&r, pt))
-#else
-	if (ht.pt.y>(-1*SWELL_GetListViewHeaderHeight(m_hwndList)) && ht.pt.y<0)
-#endif
+	if (HeaderHitTest(ht.pt))
 	{
 		if (iCol)
 			*iCol = ht.iSubItem != -1 ? DisplayToDataCol(ht.iSubItem) : 0; // iCol != -1 means "header", set 0 for "unknown column"

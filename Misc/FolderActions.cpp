@@ -112,58 +112,51 @@ void MakeFolder(COMMAND_T* = NULL)
 		Undo_OnStateChangeEx(__LOCALIZE("Make folder from selected tracks","sws_undo"), UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);
 }
 
-void IndentTracks(COMMAND_T* = NULL)
+void IndentTracks(const int increment)
 {
-	bool bUndo = false;
-	MediaTrack* prevTr = CSurf_TrackFromID(1, false);
+	bool undo = false;
+	int i = 1, depthChange = increment;
+	double depth = 0, delta;
+	MediaTrack *tracks[2];
+	MediaTrack **prevTrack = &tracks[0], **track = &tracks[1];
 
-	for (int i = 2; i <= GetNumTracks(); i++)
-	{
-		MediaTrack* tr = CSurf_TrackFromID(i, false);
-		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
-		{
-			int iDepth = *(int*)GetSetMediaTrackInfo(prevTr, "I_FOLDERDEPTH", NULL) + 1;
-			if (iDepth < 2)
-			{
-				bUndo = true;
-				GetSetMediaTrackInfo(prevTr, "I_FOLDERDEPTH", &iDepth);
-				iDepth = *(int*)GetSetMediaTrackInfo(tr, "I_FOLDERDEPTH", NULL) - 1;
-				GetSetMediaTrackInfo(tr, "I_FOLDERDEPTH", &iDepth);
-			}
-		}
-		prevTr = tr;
+	if (increment < 0) {
+		// the previous track's depth must be set last to avoid issue #1275
+		std::swap(prevTrack, track);
+		depthChange = increment * -1;
 	}
 
-	if (bUndo)
-		Undo_OnStateChangeEx(__LOCALIZE("Indent selected tracks","sws_undo"), UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);
+	for (
+		*prevTrack = GetTrack(nullptr, 0);
+		(*track = GetTrack(nullptr, i++));
+		*prevTrack = *track
+	) {
+		depth += GetMediaTrackInfo_Value(*prevTrack, "I_FOLDERDEPTH");
+
+		if (!GetMediaTrackInfo_Value(*track, "I_SELECTED"))
+			continue;
+		else if (increment < 0 && depth < 1) // the track is not indented, cannot unindent more
+			continue;
+
+		delta = GetMediaTrackInfo_Value(tracks[0], "I_FOLDERDEPTH") + depthChange;
+		if (increment > 0 && delta > 1) // the track is already indented, it must not be indented more
+			continue;
+		SetMediaTrackInfo_Value(tracks[0], "I_FOLDERDEPTH", delta);
+
+		delta = GetMediaTrackInfo_Value(tracks[1], "I_FOLDERDEPTH") - depthChange;
+		SetMediaTrackInfo_Value(tracks[1], "I_FOLDERDEPTH", delta);
+
+		depth += increment;
+		undo = true;
+	}
+
+	if (undo)
+		Undo_OnStateChangeEx(__LOCALIZE("Unindent selected tracks","sws_undo"), UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);
 }
 
-void UnindentTracks(COMMAND_T* = NULL)
+void IndentTracks(COMMAND_T *cmd)
 {
-	bool bUndo = false;
-	MediaTrack* prevTr = CSurf_TrackFromID(1, false);
-	MediaTrack* gfd = NULL;
-	for (int i = 2; i <= GetNumTracks(); i++)
-	{
-		MediaTrack* tr = CSurf_TrackFromID(i, false);
-		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
-		{
-			int iDelta;
-			int iDepth = GetFolderDepth(tr, &iDelta, &gfd);
-			if (iDepth > 0 && iDelta < 1)
-			{
-				bUndo = true;
-				iDepth = *(int*)GetSetMediaTrackInfo(prevTr, "I_FOLDERDEPTH", NULL) - 1;
-				GetSetMediaTrackInfo(prevTr, "I_FOLDERDEPTH", &iDepth);
-				iDelta++;
-				GetSetMediaTrackInfo(tr, "I_FOLDERDEPTH", &iDelta);
-			}
-		}
-		prevTr = tr;
-	}
-
-	if (bUndo)
-		Undo_OnStateChangeEx(__LOCALIZE("Unindent selected tracks","sws_undo"), UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);
+	IndentTracks(static_cast<int>(cmd->user));
 }
 
 void CollapseFolder(COMMAND_T* ct)
@@ -190,8 +183,8 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Toggle mute of children of selected folder(s)" },			"SWS_TOGMUTECHILDRN",	TogMuteChildren,  },
 	{ { DEFACCEL, "SWS: Set selected track(s) to same folder as previous track" },	"SWS_FOLDERPREV",		FolderLikePrev,   },
 	{ { DEFACCEL, "SWS: Make folder from selected tracks" },						"SWS_MAKEFOLDER",		MakeFolder,       },
-	{ { DEFACCEL, "SWS: Indent selected track(s)" },								"SWS_INDENT",			IndentTracks,     "SWS Indent track(s)", },
-	{ { DEFACCEL, "SWS: Unindent selected track(s)" },								"SWS_UNINDENT",			UnindentTracks,   "SWS Unindent track(s)", },
+	{ { DEFACCEL, "SWS: Indent selected track(s)" },								"SWS_INDENT",			IndentTracks,     "SWS Indent track(s)", 1 },
+	{ { DEFACCEL, "SWS: Unindent selected track(s)" },								"SWS_UNINDENT",			IndentTracks,   "SWS Unindent track(s)", -1 },
 	{ { DEFACCEL, "SWS: Set selected folder(s) collapsed" },						"SWS_COLLAPSE",			CollapseFolder, NULL, 2, },
 	{ { DEFACCEL, "SWS: Set selected folder(s) uncollapsed" },						"SWS_UNCOLLAPSE",		CollapseFolder, NULL, 0, },
 	{ { DEFACCEL, "SWS: Set selected folder(s) small" },							"SWS_FOLDSMALL",		CollapseFolder, NULL, 1, },

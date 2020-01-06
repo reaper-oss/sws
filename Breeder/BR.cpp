@@ -50,6 +50,8 @@ static int        g_nextActionLoCmd   = 0;
 static int        g_nextActionHiCmd   = 0;
 static set<int>   g_nextActionApplyers;
 
+int SCROLLBAR_W = 0; // legacy
+
 /******************************************************************************
 * Command hook                                                                *
 ******************************************************************************/
@@ -1238,6 +1240,13 @@ int BR_Init ()
 	g_nextActionApplyers.insert(NamedCommandLookup("_BR_NEXT_CMD_SEL_TK_REC_ENVS_NOSEL"));
 	g_nextActionLoCmd  = (g_nextActionApplyers.size() > 0) ? *g_nextActionApplyers.begin()  : 0;
 	g_nextActionHiCmd  = (g_nextActionApplyers.size() > 0) ? *g_nextActionApplyers.rbegin() : 0;
+
+	if (atof(GetAppVersion()) < 6) {
+		// The scrollbar size is now included in the scrollinfo page size
+		// since REAPER v6. This restores the previous scrollbar compensation for
+		// compatibility with REAPER v5. See issue #1279.
+		SCROLLBAR_W = 17; // legacy
+	}
 
 	return 1;
 }

@@ -1,3 +1,6 @@
+Miscellaneous:
++Disable scrollbar size compensation in REAPER v6 (Issue #1279)
+
 !v2.11.0 pre-release build
 <strong>Reminder: this new SWS version requires REAPER v5.979+!</strong>
 

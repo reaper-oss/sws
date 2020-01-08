@@ -85,6 +85,7 @@ public:
 	
 protected:
 	void OnInitDlg();
+	void GetMinSize(int* w, int* h);
 #ifdef __APPLE__
 	bool m_bSettingColor;
 	void OnTimer(WPARAM wParam=0);

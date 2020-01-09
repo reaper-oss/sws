@@ -717,6 +717,7 @@ error:
 		IMPAPI(CountProjectMarkers);
 		IMPAPI(CountSelectedMediaItems); // O(MN): should be banned from the extension, ideally -- don't use it in loops, at least
 		IMPAPI(CountSelectedTracks); // exclude master + O(N): should be banned from the extension, ideally -- don't use it in loops, at least
+		IMPAPI(CountSelectedTracks2);
 		IMPAPI(CountTakeEnvelopes) // v5pre12+ -- O(N): don't use it in loops
 		IMPAPI(CountTakes);
 		IMPAPI(CountTCPFXParms);
@@ -847,6 +848,7 @@ error:
 		IMPAPI(GetSelectedEnvelope);
 		IMPAPI(GetSelectedMediaItem); // O(MN): should be banned from the extension, ideally
 		IMPAPI(GetSelectedTrack); // exclude master + O(N): should be banned from the extension, ideally
+		IMPAPI(GetSelectedTrack2);
 		IMPAPI(GetSelectedTrackEnvelope);
 		IMPAPI(GetSet_ArrangeView2);
 		IMPAPI(GetSetAutomationItemInfo);

@@ -397,36 +397,28 @@ void SWS_GetAllTracks(WDL_TypedBuf<MediaTrack*>* buf, bool bMaster)
 }
 
 void SWS_GetSelectedTracks(WDL_TypedBuf<MediaTrack*>* buf, bool bMaster)
-{
-	buf->Resize(0);
-	for (int i = (bMaster ? 0 : 1); i <= GetNumTracks(); i++)
+{	
+	int selTracksCount = CountSelectedTracks2(nullptr, bMaster);
+	if (selTracksCount == 0)
+		return;
+
+	buf->Resize(selTracksCount);
+	for (int i = 0; i < selTracksCount; i++)
 	{
-		MediaTrack* tr = CSurf_TrackFromID(i, false);
-		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
-		{
-			int pos = buf->GetSize();
-			buf->Resize(pos + 1);
-			buf->Get()[pos] = tr;
-		}
+		buf->Get()[i] = GetSelectedTrack2(nullptr, i, bMaster);
 	}
 }
 
 void SWS_GetSelectedMediaItems(WDL_TypedBuf<MediaItem*>* buf)
 {
-	buf->Resize(0);
-	for (int i = 1; i <= GetNumTracks(); i++)
+	int selItemsCount = CountSelectedMediaItems(nullptr);
+	if (selItemsCount == 0)
+		return;
+
+	buf->Resize(selItemsCount);
+	for (int i = 0; i < selItemsCount; i++)
 	{
-		MediaTrack* tr = CSurf_TrackFromID(i, false);
-		for (int j = 0; j < GetTrackNumMediaItems(tr); j++)
-		{
-			MediaItem* item = GetTrackMediaItem(tr, j);
-			if (*(bool*)GetSetMediaItemInfo(item, "B_UISEL", NULL))
-			{
-				int pos = buf->GetSize();
-				buf->Resize(pos + 1);
-				buf->Get()[pos] = item;
-			}
-		}
+		buf->Get()[i] = GetSelectedMediaItem(nullptr, i);
 	}
 }
 

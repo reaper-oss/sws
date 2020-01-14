@@ -47,6 +47,9 @@ Implement the list column customization context menu when right-clicking on the 
 
 macOS:
 Fix the list column customization context menu not being displayed when the list is scrolled
+Unindent selected track(s):
++Allow unindending folder tracks
++Fix subsequent unintented tracks becoming mistakenly indented (Issue 1275)
 
 !v2.11.0 pre-release build
 <strong>Reminder: this new SWS version requires REAPER v5.979+!</strong>

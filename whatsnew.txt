@@ -11,6 +11,8 @@ Miscellaneous:
 ReaScript API:
 +Fix crash in CF_GetClipboard and CF_GetClipboardBig when the text clipboard does not have data (regression from v2.11.0)
 +Add support for REAPER v6's new auto-stretch item timebase in "SWS/AW: Set selected items timebase" actions (report https://forum.cockos.com/showthread.php?p=2210126|here|, REAPER v6.01+ only)
+Localization:
++Fix SWS/SN: Focus MIDI editor localization
 
 !v2.11.0 pre-release build
 <strong>Reminder: this new SWS version requires REAPER v5.979+!</strong>

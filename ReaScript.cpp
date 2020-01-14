@@ -157,7 +157,7 @@ APIdef g_apidefs[] =
 	{ APIFUNC(SNM_TieResourceSlotActions), "void", "int", "bookmarkId", "[S&M] Attach Resources slot actions to a given bookmark.", },
 	{ APIFUNC(SNM_AddTCPFXParm), "bool", "MediaTrack*,int,int", "tr,fxId,prmId", "[S&M] Add an FX parameter knob in the TCP. Returns false if nothing updated (invalid parameters, knob already present, etc..)", },
 	{ APIFUNC(SNM_TagMediaFile), "bool", "const char*,const char*,const char*", "fn,tag,tagval", "[S&M] Tags a media file thanks to <a href=\"https://taglib.github.io\">TagLib</a>. Supported tags: \"artist\", \"album\", \"genre\", \"comment\", \"title\", or \"year\". Use an empty tagval to clear a tag. When a file is opened in REAPER, turn it offline before using this function. Returns false if nothing updated. See SNM_ReadMediaFileTag.", },
-	{ APIFUNC(SNM_ReadMediaFileTag), "bool", "const char*,const char*,char*,int", "fn,tag,tagval,tagval_sz", "[S&M] Reads a media file tag. Supported tags: \"artist\", \"album\", \"genre\", \"comment\", \"title\", or \"year\". Returns false if tag was not found. See SNM_TagMediaFile.", },
+	{ APIFUNC(SNM_ReadMediaFileTag), "bool", "const char*,const char*,char*,int", "fn,tag,tagvalOut,tagvalOut_sz", "[S&M] Reads a media file tag. Supported tags: \"artist\", \"album\", \"genre\", \"comment\", \"title\", or \"year\". Returns false if tag was not found. See SNM_TagMediaFile.", },
 
 	{ APIFUNC(FNG_AllocMidiTake), "RprMidiTake*", "MediaItem_Take*", "take", "[FNG] Allocate a RprMidiTake from a take pointer. Returns a NULL pointer if the take is not an in-project MIDI take", },
 	{ APIFUNC(FNG_FreeMidiTake), "void", "RprMidiTake*", "midiTake", "[FNG] Commit changes to MIDI take and free allocated memory", },
@@ -184,7 +184,7 @@ APIdef g_apidefs[] =
 	{ APIFUNC(BR_EnvValueAtPos), "double", "BR_Envelope*,double", "envelope,position", "[BR] Get envelope value at time position for the envelope object allocated with <a href=\"#BR_EnvAlloc\">BR_EnvAlloc</a>.", },
 	{ APIFUNC(BR_GetArrangeView), "void", "ReaProject*,double*,double*", "proj,startTimeOut,endTimeOut", "[BR] Deprecated, see GetSet_ArrangeView2 (REAPER v5.12pre4+) -- Get start and end time position of arrange view. To set arrange view instead, see BR_SetArrangeView.", },
 	{ APIFUNC(BR_GetClosestGridDivision), "double", "double", "position", "[BR] Get closest grid division to position. Note that this functions is different from <a href=\"#SnapToGrid\">SnapToGrid</a> in two regards. SnapToGrid() needs snap enabled to work and this one works always. Secondly, grid divisions are different from grid lines because some grid lines may be hidden due to zoom level - this function ignores grid line visibility and always searches for the closest grid division at given position. For more grid division functions, see <a href=\"#BR_GetNextGridDivision\">BR_GetNextGridDivision</a> and <a href=\"#BR_GetPrevGridDivision\">BR_GetPrevGridDivision</a>.", },
-	{ APIFUNC(BR_GetCurrentTheme), "void", "char*,int,char*,int", "themePathOut,themePathOut_sz,themeNameOut,themeNameOut_sz", "[BR] [DEPRECATED: See <a href=\"#GetLastColorThemeFile\">GetLastColorThemeFile</a>] Get current theme information. themePathOut is set to full theme path and themeNameOut is set to theme name excluding any path info and extension", },
+	{ APIFUNC(BR_GetCurrentTheme), "void", "char*,int,char*,int", "themePathOut,themePathOut_sz,themeNameOut,themeNameOut_sz", "[BR] Get current theme information. themePathOut is set to full theme path and themeNameOut is set to theme name excluding any path info and extension", },
 	{ APIFUNC(BR_GetMediaItemByGUID), "MediaItem*", "ReaProject*,const char*", "proj,guidStringIn", "[BR] Get media item from GUID string. Note that the GUID must be enclosed in braces {}. To get item's GUID as a string, see BR_GetMediaItemGUID.", },
 	{ APIFUNC(BR_GetMediaItemGUID), "void", "MediaItem*,char*,int", "item,guidStringOut,guidStringOut_sz", "[BR] Get media item GUID as a string (guidStringOut_sz should be at least 64). To get media item back from GUID string, see BR_GetMediaItemByGUID.", },
 	{ APIFUNC(BR_GetMediaItemImageResource), "bool", "MediaItem*,char*,int,int*", "item,imageOut,imageOut_sz,imageFlagsOut", "[BR] Get currently loaded image resource and its flags for a given item. Returns false if there is no image resource set. To set image resource, see BR_SetMediaItemImageResource.", },
@@ -227,7 +227,7 @@ APIdef g_apidefs[] =
 	{ APIFUNC(BR_SetTakeSourceFromFile2), "bool", "MediaItem_Take*,const char*,bool,bool", "take,filenameIn,inProjectData,keepSourceProperties", "[BR] Differs from <a href=\"#BR_SetTakeSourceFromFile\">BR_SetTakeSourceFromFile</a> only that it can also preserve existing take media source properties.", },
 	{ APIFUNC(BR_TakeAtMouseCursor), "MediaItem_Take*", "double*", "positionOut", "[BR] Get take under mouse cursor. Position is mouse cursor position in arrange.", },
 	{ APIFUNC(BR_TrackAtMouseCursor), "MediaTrack*", "int*,double*", "contextOut,positionOut", "[BR] Get track under mouse cursor.\nContext signifies where the track was found: 0 = TCP, 1 = MCP, 2 = Arrange.\nPosition will hold mouse cursor position in arrange if applicable.", },
-	{ APIFUNC(BR_TrackFX_GetFXModuleName), "bool", "MediaTrack*,int,char*,int", "track,fx, nameOut, nameOutSz", "[BR] Get the exact name (like effect.dll, effect.vst3, etc...) of an FX.", },
+	{ APIFUNC(BR_TrackFX_GetFXModuleName), "bool", "MediaTrack*,int,char*,int", "track,fx,nameOut,nameOut_sz", "[BR] Get the exact name (like effect.dll, effect.vst3, etc...) of an FX.", },
 	{ APIFUNC(BR_Win32_CB_FindString), "int", "void*,int,const char*", "comboBoxHwnd,startId,string", "[BR] Equivalent to win32 API ComboBox_FindString().", },
 	{ APIFUNC(BR_Win32_CB_FindStringExact), "int", "void*,int,const char*", "comboBoxHwnd,startId,string", "[BR] Equivalent to win32 API ComboBox_FindStringExact().", },
 	{ APIFUNC(BR_Win32_ClientToScreen), "void", "void*,int,int,int*,int*", "hwnd,xIn,yIn,xOut,yOut", "[BR] Equivalent to win32 API ClientToScreen().", },
@@ -297,15 +297,15 @@ APIdef g_apidefs[] =
 	{ APIFUNC(NF_SetSWSMarkerRegionSub), "bool", "const char*,int", "markerRegionSub,markerRegionIdx", "Set SWS/S&M marker/region subtitle. markerRegionIdx: Refers to index that can be passed to <a href=\"#EnumProjectMarkers\">EnumProjectMarkers</a> (not displayed marker/region index). Returns true if subtitle is set successfully (i.e. marker/region with specified index is present in project). Lua code example <a href=\"https://github.com/ReaTeam/ReaScripts-Templates/blob/master/Markers%20and%20Regions/NF_Get%20SWS%20markers%20and%20regions%20notes.lua\">here</a>.", },
 	{ APIFUNC(NF_UpdateSWSMarkerRegionSubWindow), "void", "", "", "Redraw the Notes window (call if you've changed a subtitle via <a href=\"NF_SetSWSMarkerRegionSub\">NF_SetSWSMarkerRegionSub</a> which is currently displayed in the Notes window and you want to appear the new subtitle immediately.)", },
 
-	{ APIFUNC(NF_TakeFX_GetModuleName), "bool", "MediaItem*,int,char*,int", "item,fx, nameOut, nameOutSz", "See <a href=\"#BR_TrackFX_GetFXModuleName\">BR_TrackFX_GetFXModuleName</a>. fx: counted consecutively across all takes (zero-based).", },
-	{ APIFUNC(NF_ReadID3v2Tag), "bool", "const char*,const char*,char*,int", "fn,tag,tagval,tagval_sz", "Reads an ID3v2 tag ('text information frame'), works with mp3 only. Supported tags e.g.: \"TBPM\" (BPM), \"TCOP\" (Copyright). For other possibly supported tags see <a href=\"http://id3.org/id3v2.4.0-frames\">id3v2.4.0-frames.txt</a> Returns false if tag was not found.", },
+	{ APIFUNC(NF_TakeFX_GetModuleName), "bool", "MediaItem*,int,char*,int", "item,fx,nameOut,nameOut_sz", "See <a href=\"#BR_TrackFX_GetFXModuleName\">BR_TrackFX_GetFXModuleName</a>. fx: counted consecutively across all takes (zero-based).", },
+	{ APIFUNC(NF_ReadID3v2Tag), "bool", "const char*,const char*,char*,int", "fn,tag,tagvalOut,tagvalOut_sz", "Reads an ID3v2 tag ('text information frame'), works with mp3 only. Supported tags e.g.: \"TBPM\" (BPM), \"TCOP\" (Copyright). For other possibly supported tags see <a href=\"http://id3.org/id3v2.4.0-frames\">id3v2.4.0-frames.txt</a> Returns false if tag was not found.", },
 	{ APIFUNC(NF_Win32_GetSystemMetrics), "int", "int", "nIndex", "Equivalent to win32 API GetSystemMetrics().", },
 	// /*** nofish stuff ***
 
 	{ APIFUNC(SN_FocusMIDIEditor), "void", "", "", "Focuses the active/open MIDI editor.", },
 
 	{ APIFUNC(CF_SetClipboard), "void", "const char*", "str", "Write the given string into the system clipboard.", },
-	{ APIFUNC(CF_GetClipboard), "void", "char*,int", "bufNeedBig,buf_sz", "Read the contents of the system clipboard.", },
+	{ APIFUNC(CF_GetClipboard), "void", "char*,int", "textOut,textOut_sz", "Read the contents of the system clipboard.", },
 	{ APIFUNC(CF_GetClipboardBig), "const char*", "WDL_FastString*", "output", "[DEPRECATED: Use <a href=\"#CF_GetClipboard\">CF_GetClipboard</a>] Read the contents of the system clipboard. See <a href=\"#SNM_CreateFastString\">SNM_CreateFastString</a> and <a href=\"#SNM_DeleteFastString\">SNM_DeleteFastString</a>.", },
 	{ APIFUNC(CF_ShellExecute), "bool", "const char*", "file", "Open the given file or URL in the default application. See also <a href=\"#CF_LocateInExplorer\">CF_LocateInExplorer</a>.", },
 	{ APIFUNC(CF_LocateInExplorer), "bool", "const char*", "file", "Select the given file in explorer/finder.", },
@@ -315,16 +315,16 @@ APIdef g_apidefs[] =
 	{ APIFUNC(CF_GetFocusedFXChain), "FxChain*", "", "", "Return a handle to the currently focused FX chain window.", },
 	{ APIFUNC(CF_EnumSelectedFX), "int", "FxChain*,int", "hwnd,index", "Return the index of the next selected effect in the given FX chain. Start index should be -1. Returns -1 if there are no more selected effects.", },
 
-	{ APIFUNC(CF_GetSWSVersion), "void", "char*,int", "buf,buf_sz", "Return the current SWS version number.", },
+	{ APIFUNC(CF_GetSWSVersion), "void", "char*,int", "versionOut,versionOut_sz", "Return the current SWS version number.", },
 
-	{ APIFUNC(CF_EnumerateActions), "int", "int,int,char*,int", "section,index,name,name_sz", "Wrapper for the unexposed kbd_enumerateActions API function.\nMain=0, Main (alt recording)=100, MIDI Editor=32060, MIDI Event List Editor=32061, MIDI Inline Editor=32062, Media Explorer=32063", },
+	{ APIFUNC(CF_EnumerateActions), "int", "int,int,char*,int", "section,index,nameOut,nameOut_sz", "Wrapper for the unexposed kbd_enumerateActions API function.\nMain=0, Main (alt recording)=100, MIDI Editor=32060, MIDI Event List Editor=32061, MIDI Inline Editor=32062, Media Explorer=32063", },
 	{ APIFUNC(CF_GetCommandText), "const char*", "int,int", "section,command", "Wrapper for the unexposed kbd_getTextFromCmd API function. See <a href='#CF_EnumerateActions'>CF_EnumerateActions</a> for common section IDs.", },
 
 	{ APIFUNC(CF_GetMediaSourceBitDepth), "int", "PCM_source*", "src", "Returns the bit depth if available (0 otherwise).", },
 	{ APIFUNC(CF_GetMediaSourceOnline), "bool", "PCM_source*", "src", "Returns the online/offline status of the given source.", },
 	{ APIFUNC(CF_SetMediaSourceOnline), "void", "PCM_source*,bool", "src,set", "Set the online/offline status of the given source (closes files when set=false).", },
 	{ APIFUNC(CF_GetMediaSourceMetadata), "bool", "PCM_source*,const char*,char*,int", "src,name,out,out_sz", "Get the value of the given metadata field (eg. DESC, ORIG, ORIGREF, DATE, TIME, UMI, CODINGHISTORY for BWF).", },
-	{ APIFUNC(CF_GetMediaSourceRPP), "bool", "PCM_source*,char*,int", "src,fn,fn_sz", "Get the project associated with this source (BWF, subproject...).", },
+	{ APIFUNC(CF_GetMediaSourceRPP), "bool", "PCM_source*,char*,int", "src,fnOut,fnOut_sz", "Get the project associated with this source (BWF, subproject...).", },
 	{ APIFUNC(CF_EnumMediaSourceCues), "int", "PCM_source*,int,double*,double*,bool*,char*,int", "src,index,timeOut,endTimeOut,isRegionOut,nameOut,nameOut_sz", "Enumerate the source's media cues. Returns the next index or 0 when finished.", },
 	{ APIFUNC(CF_ExportMediaSource), "bool", "PCM_source*,const char*", "src,fn", "Export the source to the given file (MIDI only).", },
 

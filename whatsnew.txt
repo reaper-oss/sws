@@ -58,6 +58,17 @@ New actions:
 Auto color/icon/layout:
 +Limit the minimum width of the window to prevent overlapping buttons
 
+ReaScript API:
++Allow omitting the buffer/buffer_sz arguments of the following functions in Lua:
+ - BR_TrackFX_GetFXModuleName
+ - CF_EnumerateActions
+ - CF_GetClipboard
+ - CF_GetMediaSourceRPP
+ - CF_GetSWSVersion
+ - NF_ReadID3v2Tag
+ - NF_TakeFX_GetModuleName
+ - SNM_ReadMediaFileTag
+
 !v2.11.0 pre-release build
 <strong>Reminder: this new SWS version requires REAPER v5.979+!</strong>
 

@@ -94,7 +94,7 @@ void SWS_ProjectListView::GetItemList(SWS_ListItemList* pList)
 }
 
 SWS_ProjectListWnd::SWS_ProjectListWnd()
-:SWS_DockWnd(IDD_PROJLIST, __LOCALIZE("Project List","sws_DLG_157"), "SWSProjectList", SWSGetCommandID(OpenProjectList))
+:SWS_DockWnd(IDD_PROJLIST, __LOCALIZE("Project List","sws_DLG_157"), "SWSProjectList")
 {
 	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();

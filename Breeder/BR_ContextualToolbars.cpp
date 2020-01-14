@@ -1859,7 +1859,7 @@ int BR_ContextualToolbarsView::OnItemSort (SWS_ListItem* item1, SWS_ListItem* it
 * Contextual toolbars window                                                  *
 ******************************************************************************/
 BR_ContextualToolbarsWnd::BR_ContextualToolbarsWnd () :
-SWS_DockWnd(IDD_BR_CONTEXTUAL_TOOLBARS, __LOCALIZE("Contextual toolbars","sws_DLG_181"), "", SWSGetCommandID(ContextualToolbarsOptions)),
+SWS_DockWnd(IDD_BR_CONTEXTUAL_TOOLBARS, __LOCALIZE("Contextual toolbars","sws_DLG_181"), ""),
 m_list           (NULL),
 m_currentPreset  (0),
 m_contextMenuCol (0)

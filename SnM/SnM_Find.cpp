@@ -134,7 +134,7 @@ bool TrackNotesMatch(MediaTrack* _tr, const char* _searchStr)
 // S&M windows lazy init: below's "" prevents registering the SWS' screenset callback
 // (use the S&M one instead - already registered via SNM_WindowManager::Init())
 FindWnd::FindWnd()
-	: SWS_DockWnd(IDD_SNM_FIND, __LOCALIZE("Find","sws_DLG_154"), "", SWSGetCommandID(OpenFind))
+	: SWS_DockWnd(IDD_SNM_FIND, __LOCALIZE("Find","sws_DLG_154"), "")
 {
 	m_id.Set(FIND_WND_ID);
 	m_type = 0;

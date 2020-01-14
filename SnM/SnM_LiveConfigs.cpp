@@ -789,7 +789,7 @@ void LiveConfigView::OnItemDblClk(SWS_ListItem* item, int iCol)
 // S&M windows lazy init: below's "" prevents registering the SWS' screenset callback
 // (use the S&M one instead - already registered via SNM_WindowManager::Init())
 LiveConfigsWnd::LiveConfigsWnd()
-	: SWS_DockWnd(IDD_SNM_LIVE_CONFIGS, __LOCALIZE("Live Configs","sws_DLG_155"), "", SWSGetCommandID(OpenLiveConfig))
+	: SWS_DockWnd(IDD_SNM_LIVE_CONFIGS, __LOCALIZE("Live Configs","sws_DLG_155"), "")
 {
 	m_id.Set(LIVECFG_WND_ID);
 	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
@@ -2768,7 +2768,6 @@ LiveConfigMonitorWnd::LiveConfigMonitorWnd(int _cfgId)
 	m_iResource=IDD_SNM_LIVE_CONFIG_MON;
 	m_wndTitle.Set(title);
 	m_id.Set(dockId);
-	m_iCmdID = SWSGetCommandID(OpenLiveConfigMonitorWnd, (INT_PTR)m_cfgId);
 
 	// screensets: already registered via SNM_WindowManager::Init()
 

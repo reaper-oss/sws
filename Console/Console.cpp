@@ -890,7 +890,7 @@ bool LoadConsoleCmds(WDL_PtrList<WDL_FastString>* _outCmds)
 ///////////////////////////////////////////////////////////////////////////////
 
 ReaConsoleWnd::ReaConsoleWnd()
-	: SWS_DockWnd(IDD_CONSOLE, "ReaConsole", "ReaConsole", SWSGetCommandID(ConsoleCommand))
+	: SWS_DockWnd(IDD_CONSOLE, "ReaConsole", "ReaConsole")
 {
 	*m_strCmd = '\0';
 	m_pTrackId = m_strCmd;

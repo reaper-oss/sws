@@ -2234,7 +2234,7 @@ void BR_AnalyzeLoudnessView::OnItemSortEnd ()
 * Analyze loudness window                                                     *
 ******************************************************************************/
 BR_AnalyzeLoudnessWnd::BR_AnalyzeLoudnessWnd () :
-SWS_DockWnd(IDD_BR_LOUDNESS_ANALYZER, __LOCALIZE("Loudness", "sws_DLG_174"), "", SWSGetCommandID(AnalyzeLoudness)),
+SWS_DockWnd(IDD_BR_LOUDNESS_ANALYZER, __LOCALIZE("Loudness", "sws_DLG_174"), ""),
 m_objectsLen        (0),
 m_currentObjectId   (0),
 m_analyzeInProgress (false),

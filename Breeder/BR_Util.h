@@ -32,7 +32,7 @@
 /******************************************************************************
 * Constants                                                                   *
 ******************************************************************************/
-const int SCROLLBAR_W     = 17;
+extern int SCROLLBAR_W;
 const int NEGATIVE_INF    = -150;
 const double VOLUME_DELTA = 0.0000000000001;
 const double PAN_DELTA    = 0.001;

@@ -55,6 +55,8 @@ Miscellaneous:
 +Disable scrollbar size compensation in REAPER v6 (Issue #1279)
 New actions:
 +Xenakios/SWS/NF: Set selected tracks heights to A/B, respect height locked tracks (report https://forum.cockos.com/showthread.php?t=229948|here|)
+Auto color/icon/layout:
++Limit the minimum width of the window to prevent overlapping buttons
 
 !v2.11.0 pre-release build
 <strong>Reminder: this new SWS version requires REAPER v5.979+!</strong>

@@ -332,6 +332,11 @@ void SWS_AutoColorWnd::OnInitDlg()
 	Update();
 }
 
+void SWS_AutoColorWnd::GetMinSize(int* w, int* h)
+{
+  *w=350; *h=MIN_DOCKWND_HEIGHT;
+}
+
 //JFB TODO? handle multi-selection
 void SWS_AutoColorWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 {

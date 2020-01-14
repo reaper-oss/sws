@@ -3077,11 +3077,15 @@ void AWSelTracksPanMode(COMMAND_T* t)
 {
 	WDL_TypedBuf<MediaTrack*> selTracks;
 	SWS_GetSelectedTracks(&selTracks, false);
+
+	if (!selTracks.GetSize())
+		return;
+
 	for (int i = 0; i < selTracks.GetSize(); i++)
 		SetMediaTrackInfo_Value(selTracks.Get()[i], "I_PANMODE", (double)t->user);
 
-	if (selTracks.GetSize())
-		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
+	TrackList_AdjustWindows(false);
 }
 
 

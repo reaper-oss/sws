@@ -36,6 +36,9 @@ Cycle actions:
 Contextual toolbars:
 +Fix the MIDI Inline Editor context not being detected unless the Arrange context has a toolbar assigned (Issue 1261)
 
+Cycle actions:
++Allow using scripts with a toggle state in conditions (Note: the toggle state is not refreshed while the cycle action is running)
+
 !v2.11.0 pre-release build
 <strong>Reminder: this new SWS version requires REAPER v5.979+!</strong>
 

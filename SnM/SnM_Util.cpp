@@ -951,7 +951,7 @@ int GetMacroOrScript(const char* _custId, int _sectionUniqueId, WDL_PtrList<WDL_
 // test if an action name or a custom id is a macro/script one
 // *not* based on NamedCommandLookup() so that it works even if _cmd is not registered yet
 // note: a bit hacky but we definitely need this..
-bool IsMacroOrScript(const char* _cmd, bool _cmdIsName)
+ActionType GetActionType(const char* _cmd, bool _cmdIsName)
 {
 	if (_cmd && *_cmd)
 	{
@@ -960,11 +960,11 @@ bool IsMacroOrScript(const char* _cmd, bool _cmdIsName)
 		{
 			const char* tag = __localizeFunc("Custom","actions",0);
 			int len = strlen(tag);
-			if (!_strnicmp(_cmd, tag, len) && _cmd[len] == ':') return true;
+			if (!_strnicmp(_cmd, tag, len) && _cmd[len] == ':') return ActionType::Custom;
 			tag = __localizeFunc("Script","actions",0);
 			len = strlen(tag);
-			if (!_strnicmp(_cmd, tag, len) && _cmd[len] == ':') return true;
-			return false;
+			if (!_strnicmp(_cmd, tag, len) && _cmd[len] == ':') return ActionType::ReaScript;
+			return ActionType::Unknown;
 		}
 		// _cmd is a custom id (both formats are allowed: "bla" and "_bla")
 		else
@@ -983,19 +983,27 @@ bool IsMacroOrScript(const char* _cmd, bool _cmdIsName)
 				{
 					if ((*_cmd>='0' && *_cmd<='9') ||  (*_cmd>='a' && *_cmd<='f')) _cmd++;
 					else if (*_cmd=='_') { _cmd++; break; }
-					else return false;
+					else return ActionType::Unknown;
 				}
 			}
 
 			while (*_cmd)
 			{
 				if ((*_cmd>='0' && *_cmd<='9') ||  (*_cmd>='a' && *_cmd<='f')) { _cmd++; len++; }
-				else return false;
+				else return ActionType::Unknown;
 			}
-			return len == (probably_new_script_id ? WDL_SHA1SIZE*2 : SNM_MAX_MACRO_CUSTID_LEN);
+
+			if(len == (probably_new_script_id ? WDL_SHA1SIZE*2 : SNM_MAX_MACRO_CUSTID_LEN))
+				return ActionType::ReaScript;
 		}
 	}
-	return false;
+	return ActionType::Unknown;
+}
+
+bool IsMacroOrScript(const char* cmd, const bool cmdIsName)
+{
+	const ActionType type = GetActionType(cmd, cmdIsName);
+	return type == ActionType::Custom || type == ActionType::ReaScript;
 }
 
 // check numeric ids

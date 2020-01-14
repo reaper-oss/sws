@@ -728,23 +728,26 @@ bool CheckToggle(int _section, Cyclaction* _a, int _cmdIdx)
 	const char* nextCmd = _a ? _a->GetCmd(_cmdIdx) : "";
 	if (*nextCmd)
 	{
+		const auto actionType = GetActionType(nextCmd, false);
+
 		if (strstr(nextCmd, "_CYCLACTION"))
 		{
 			if (Cyclaction* nextAction = GetCAFromCustomId(_section, nextCmd))
 				tglOk = (nextAction->IsToggle() >= 0);
 		}
-		else if (IsMacroOrScript(nextCmd, false) || strstr(nextCmd, "_SWSCONSOLE_CUST"))
+		else if (actionType == ActionType::Custom || strstr(nextCmd, "_SWSCONSOLE_CUST"))
 		{
-			// script, macros & console cmds do not report any toggle state
+			// macros & console cmds do not report any toggle state
 		}
 		else
 		{
-			if (!_section)
+			if (!_section && actionType != ActionType::ReaScript)
 			{
 				KbdSectionInfo* kbdSec = SNM_GetActionSection(_section);
 				tglOk = (GetToggleCommandState2(kbdSec, SNM_NamedCommandLookup(nextCmd, kbdSec)) >= 0);
 			}
 			// for other sections the toggle state can depend on focus, etc..
+			// script set their toggle state at runtime...
 			// => in doubt, we authorize it
 			else
 				tglOk = true;

@@ -80,6 +80,8 @@ int SNM_NamedCommandLookup(const char* _custId, KbdSectionInfo* _section = NULL,
 const char* SNM_GetTextFromCmd(int _cmdId, KbdSectionInfo* _section);
 bool LoadKbIni(WDL_PtrList<WDL_FastString>* _out);
 int GetMacroOrScript(const char* _customId, int _sectionUniqueId, WDL_PtrList<WDL_FastString>* _inMacroScripts, WDL_PtrList<WDL_FastString>* _outCmds, WDL_FastString* _outName = NULL);
+enum class ActionType { Unknown, Custom, ReaScript };
+ActionType GetActionType(const char* _cmd, bool _cmdIsName = true);
 bool IsMacroOrScript(const char* _cmd, bool _cmdIsName = true);
 int CheckSwsMacroScriptNumCustomId(const char* _custId, int _secIdx = 0);
 

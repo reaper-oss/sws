@@ -122,17 +122,7 @@ void SetWindowPosAtMouse(HWND hwnd)
 	SetWindowPos(hwnd, NULL, r.left, r.top, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
-#ifdef _WIN32
-
-void SWS_ShowTextScrollbar(HWND hwnd, bool show)
-{
-	DWORD dwStyle = GetWindowLong(hwnd, GWL_STYLE);
-	if (!show) dwStyle &= ~WS_HSCROLL;
-	else dwStyle |= WS_HSCROLL;
-	SetWindowLong(hwnd, GWL_STYLE, dwStyle);
-}
-
-#else
+#ifndef _WIN32
 
 int GetMenuString(HMENU hMenu, UINT uIDItem, char* lpString, int nMaxCount, UINT uFlag)
 {

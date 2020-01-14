@@ -459,22 +459,6 @@ void mouse_event(DWORD dwFlags, DWORD dx, DWORD dy, DWORD dwData, ULONG_PTR dwEx
 	}
 }
 
-void SWS_ShowTextScrollbar(HWND hwnd, bool show)
-{
-    if (!hwnd) return;
-
-    DWORD dwStyle = GetWindowLong(hwnd, GWL_STYLE);
-    if (!show) dwStyle &= ~WS_HSCROLL;
-    else dwStyle |= WS_HSCROLL;
-    SetWindowLong(hwnd, GWL_STYLE, dwStyle);
-
-    NSTextView *tv=(NSTextView*)hwnd;
-    [tv setHorizontallyResizable:show?NO:YES];
-
-    NSScrollView *sc = [tv enclosingScrollView];
-    [sc setHasHorizontalScroller:show?YES:NO];
-}
-
 void SetMenuItemSwatch(HMENU hMenu, UINT pos, int iSize, COLORREF color)
 {
   if (!hMenu) return;

@@ -141,15 +141,21 @@ NotesWnd::NotesWnd()
 	Init();
 }
 
-NotesWnd::~NotesWnd()
-{
-}
+NotesWnd::~NotesWnd() = default;
 
 void NotesWnd::OnInitDlg()
 {
-	m_resize.init_item(IDC_EDIT, 0.0, 0.0, 1.0, 1.0);
-	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_EDIT), GWLP_USERDATA, 0xdeadf00b);
-	SetWrapText(g_wrapText, true);
+	m_edit = GetDlgItem(m_hwnd, IDC_EDIT1);
+
+	// don't passthrough input to the main window
+	// https://forum.cockos.com/showthread.php?p=1208961
+	SetWindowLongPtr(m_edit, GWLP_USERDATA, 0xdeadf00b);
+	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_EDIT2), GWLP_USERDATA, 0xdeadf00b);
+
+	m_resize.init_item(IDC_EDIT1, 0.0, 0.0, 1.0, 1.0);
+	m_resize.init_item(IDC_EDIT2, 0.0, 0.0, 1.0, 1.0);
+
+	SetWrapText(g_wrapText);
 
 	LICE_CachedFont* font = SNM_GetThemeFont();
 
@@ -237,7 +243,7 @@ void NotesWnd::SetText(const char* _str, bool _addRN) {
 	if (_str) {
 		if (_addRN) GetStringWithRN(_str, g_lastText, sizeof(g_lastText));
 		else lstrcpyn(g_lastText, _str, sizeof(g_lastText));
-		SetDlgItemText(m_hwnd, IDC_EDIT, g_lastText);
+		SetWindowText(m_edit, g_lastText);
 	}
 }
 
@@ -275,98 +281,28 @@ void NotesWnd::RefreshGUI()
 			break;
 #endif
 	}
-	ShowWindow(GetDlgItem(m_hwnd, IDC_EDIT), bHide || g_locked ? SW_HIDE : SW_SHOW);
+	ShowWindow(m_edit, bHide || g_locked ? SW_HIDE : SW_SHOW);
 	m_parentVwnd.RequestRedraw(NULL); // the meat!
 }
 
+void NotesWnd::SetWrapText(const bool wrap)
+{
+	g_wrapText = wrap;
+
+	char buf[sizeof(g_lastText)]{};
+	GetWindowText(m_edit, buf, sizeof(buf));
+	m_edit = GetDlgItem(m_hwnd, wrap ? IDC_EDIT2 : IDC_EDIT1);
+	SetWindowText(m_edit, buf);
 
 #ifdef _WIN32
-
-typedef void (*FNCHANGESTYLE)(long&,long&);
-HWND replacecontrol(HWND h,const int idc,FNCHANGESTYLE fnchange)
-{
-  HWND      hwnd;
-  HWND      prev;
-  RECT      rc;
-  POINT      pt = {0,0};
-  HINSTANCE  hinst;
-  long      style;
-  long      exstyle;
-  TCHAR      text[256];
-  TCHAR      scls[256];
-  HFONT      hfont;
-  int        focus;
-
-  hwnd    = GetDlgItem(h,idc);
-
-  // control not exist
-  if(!IsWindow(hwnd)) return 0;
-
-  prev    = GetWindow(hwnd,GW_HWNDPREV);
-  hinst   = (HINSTANCE)GetWindowLongPtr(hwnd,GWLP_HINSTANCE);
-  style   = GetWindowLong(hwnd,GWL_STYLE);
-  exstyle = GetWindowLong(hwnd,GWL_EXSTYLE);
-  focus   = hwnd == GetFocus();
-  hfont   = (HFONT)SendMessage(hwnd,WM_GETFONT,0,0);
-
-  ClientToScreen(h,&pt);
-  GetWindowRect(hwnd,&rc);
-  GetClassName(hwnd,scls,sizeof(scls)/sizeof(scls[0]));
-  GetWindowText(hwnd,text,sizeof(text)/sizeof(text[0]));
-
-  DestroyWindow(hwnd);
-  fnchange(style,exstyle);
-
-  hwnd = CreateWindowEx
-  (
-    exstyle,
-    scls,
-    text,
-    style,
-    rc.left-pt.x,
-    rc.top-pt.y,
-    rc.right-rc.left,
-    rc.bottom-rc.top,
-    h,
-    (HMENU)(UINT_PTR)idc,
-    hinst,
-    0
-  );
-
-  SendMessage(hwnd,WM_SETFONT,(WPARAM)hfont,1);
-  SetWindowPos(hwnd,prev,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
-  if(focus) SetFocus(hwnd);
-  return hwnd;
-}
-
-void modES_AUTOHSCROLL(long& style,long& exstyle)
-{
-  if (g_wrapText) style &= ~ES_AUTOHSCROLL;
-  else style |= ES_AUTOHSCROLL;
-}
-
+	// avoid flickering on Windows
+	SendMessage(m_hwnd, WM_SETREDRAW, 0, 0);
 #endif
-
-
-void NotesWnd::SetWrapText(bool _wrap, bool _isInit)
-{
-  g_wrapText = _wrap;
-  SWS_ShowTextScrollbar(GetDlgItem(m_hwnd, IDC_EDIT), !g_wrapText);
+	ShowWindow(GetDlgItem(m_hwnd, IDC_EDIT1), wrap ? SW_HIDE : SW_SHOW);
+	ShowWindow(GetDlgItem(m_hwnd, IDC_EDIT2), wrap ? SW_SHOW : SW_HIDE);
 #ifdef _WIN32
-  RECT r1 = m_resize.get_item(IDC_EDIT)->real_orig;
-  RECT r2 = m_resize.get_item(IDC_EDIT)->orig;
-  m_resize.remove_item(IDC_EDIT);
-  replacecontrol(m_hwnd,IDC_EDIT,modES_AUTOHSCROLL);
-  m_resize.init_item(IDC_EDIT, 0.0, 0.0, 1.0, 1.0);
-  m_resize.get_item(IDC_EDIT)->real_orig = r1;
-  m_resize.get_item(IDC_EDIT)->orig = r2;
-  SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_EDIT), GWLP_USERDATA, 0xdeadf00b);
-#else
-  if (!_isInit)
-  {
-    SendMessage(m_hwnd, WM_COMMAND, IDCANCEL, 0);
-    ScheduledJob::Schedule(new ReopenNotesJob());
-  }
+	SendMessage(m_hwnd, WM_SETREDRAW, 1, 0);
+	InvalidateRect(m_hwnd, nullptr, 0);
 #endif
 }
 
@@ -374,7 +310,8 @@ void NotesWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 {
 	switch (LOWORD(wParam))
 	{
-		case IDC_EDIT:
+		case IDC_EDIT1:
+		case IDC_EDIT2:
 			if (HIWORD(wParam)==EN_CHANGE)
 				SaveCurrentText(g_notesType, MarkProjectDirty==NULL); // MarkProjectDirty() avail. since v4.55pre2
 			break;
@@ -421,7 +358,7 @@ void NotesWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			if (HIWORD(wParam)==CBN_SELCHANGE) {
 				SetType(m_cbType.GetCurSel2());
 				if (!g_locked)
-					SetFocus(GetDlgItem(m_hwnd, IDC_EDIT));
+					SetFocus(m_edit);
 			}
 			break;
 		default:
@@ -432,7 +369,7 @@ void NotesWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 
 // bWantEdit ignored: no list view in there
 bool NotesWnd::IsActive(bool bWantEdit) {
-	return (IsValidWindow() && (GetForegroundWindow() == m_hwnd || GetFocus() == GetDlgItem(m_hwnd, IDC_EDIT)));
+	return (IsValidWindow() && (GetForegroundWindow() == m_hwnd || GetFocus() == m_edit));
 }
 
 HMENU NotesWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
@@ -454,13 +391,9 @@ HMENU NotesWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 #ifdef _SNM_SWELL_ISSUES
 void OSXForceTxtChangeJob::Perform() {
 	if (NotesWnd* w = g_notesWndMgr.Get())
-		SendMessage(w->GetHWND(), WM_COMMAND, MAKEWPARAM(IDC_EDIT, EN_CHANGE), 0);
+		SendMessage(w->GetHWND(), WM_COMMAND, MAKEWPARAM(IDC_EDIT1, EN_CHANGE), 0);
 }
 #endif
-
-void ReopenNotesJob::Perform() {
-	if (NotesWnd* w = g_notesWndMgr.Get()) w->Show(false, true);
-}
 
 
 // returns: 
@@ -469,12 +402,11 @@ void ReopenNotesJob::Perform() {
 //  1 = eat
 int NotesWnd::OnKey(MSG* _msg, int _iKeyState)
 {
-	HWND h = GetDlgItem(m_hwnd, IDC_EDIT);
 /*JFB not needed: IDC_EDIT is the single control of this window..
 #ifdef _WIN32
-	if (_msg->hwnd == h)
+	if (_msg->hwnd == m_edit)
 #else
-	if (GetFocus() == h)
+	if (GetFocus() == m_edit)
 #endif
 */
 	{
@@ -488,8 +420,8 @@ int NotesWnd::OnKey(MSG* _msg, int _iKeyState)
 			// ctrl+A => select all
 			if (_msg->wParam == 'A' && _iKeyState == LVKF_CONTROL)
 			{
-				SetFocus(h);
-				SendMessage(h, EM_SETSEL, 0, -1);
+				SetFocus(m_edit);
+				SendMessage(m_edit, EM_SETSEL, 0, -1);
 				return 1;
 			}
 			else
@@ -539,10 +471,14 @@ void NotesWnd::OnResize()
 #ifdef WANT_ACTION_HELP
         g_notesType==SNM_NOTES_ACTION_HELP || 
 #endif
-        (g_notesType>=SNM_NOTES_MKR_SUB && g_notesType<=SNM_NOTES_MKRRGN_SUB))
-			m_resize.get_item(IDC_EDIT)->orig.bottom = m_resize.get_item(IDC_EDIT)->real_orig.bottom - 41; //JFB!! 41 is tied to the current .rc!
-		else
-			m_resize.get_item(IDC_EDIT)->orig = m_resize.get_item(IDC_EDIT)->real_orig;
+        (g_notesType>=SNM_NOTES_MKR_SUB && g_notesType<=SNM_NOTES_MKRRGN_SUB)) {
+			m_resize.get_item(IDC_EDIT1)->orig.bottom = m_resize.get_item(IDC_EDIT1)->real_orig.bottom - 41; //JFB!! 41 is tied to the current .rc!
+			m_resize.get_item(IDC_EDIT2)->orig.bottom = m_resize.get_item(IDC_EDIT2)->real_orig.bottom - 41; //JFB!! 41 is tied to the current .rc!
+		}
+		else {
+			m_resize.get_item(IDC_EDIT1)->orig = m_resize.get_item(IDC_EDIT1)->real_orig;
+			m_resize.get_item(IDC_EDIT2)->orig = m_resize.get_item(IDC_EDIT2)->real_orig;
+		}
 		InvalidateRect(m_hwnd, NULL, 0);
 	}
 }
@@ -558,8 +494,8 @@ void NotesWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeig
 	if (g_locked)
 	{
 		// work on a copy rather than g_lastText (will get modified)
-		char buf[MAX_HELP_LENGTH] = "";
-		GetDlgItemText(m_hwnd, IDC_EDIT, buf, MAX_HELP_LENGTH);
+		char buf[sizeof(g_lastText)]{};
+		GetWindowText(m_edit, buf, sizeof(buf));
 		if (*buf)
 		{
 			if (g_notesType>=SNM_NOTES_MKR_NAME && g_notesType<=SNM_NOTES_MKRRGN_NAME)
@@ -723,7 +659,7 @@ void NotesWnd::ToggleLock()
 		RefreshGUI();
 
 	if (!g_locked)
-		SetFocus(GetDlgItem(m_hwnd, IDC_EDIT));
+		SetFocus(m_edit);
 }
 
 
@@ -766,7 +702,7 @@ void NotesWnd::SaveCurrentText(int _type, bool _wantUndo)
 
 void NotesWnd::SaveCurrentProjectNotes(bool _wantUndo)
 {
-	GetDlgItemText(m_hwnd, IDC_EDIT, g_lastText, sizeof(g_lastText));
+	GetWindowText(m_edit, g_lastText, sizeof(g_lastText));
 	GetSetProjectNotes(NULL, true, g_lastText, sizeof(g_lastText));
 /* project notes are out of the undo system's scope, MarkProjectDirty is the best thing we can do...
 	if (_wantUndo)
@@ -779,7 +715,7 @@ void NotesWnd::SaveCurrentProjectNotes(bool _wantUndo)
 
 void NotesWnd::SaveCurrentExtraProjectNotes(bool _wantUndo)
 {
-	GetDlgItemText(m_hwnd, IDC_EDIT, g_lastText, sizeof(g_lastText));
+	GetWindowText(m_edit, g_lastText, sizeof(g_lastText));
 	g_prjNotes.Get()->Set(g_lastText); // CRLF removed only when saving the project..
 	if (_wantUndo)
 		Undo_OnStateChangeEx2(NULL, __LOCALIZE("Edit exta project notes","sws_undo"), UNDO_STATE_MISCCFG, -1);
@@ -791,7 +727,7 @@ void NotesWnd::SaveCurrentItemNotes(bool _wantUndo)
 {
 	if (g_mediaItemNote && GetMediaItem_Track(g_mediaItemNote))
 	{
-		GetDlgItemText(m_hwnd, IDC_EDIT, g_lastText, sizeof(g_lastText));
+		GetWindowText(m_edit, g_lastText, sizeof(g_lastText));
 		if (GetSetMediaItemInfo(g_mediaItemNote, "P_NOTES", g_lastText))
 		{
 //				UpdateItemInProject(g_mediaItemNote);
@@ -808,7 +744,7 @@ void NotesWnd::SaveCurrentTrackNotes(bool _wantUndo)
 {
 	if (g_trNote && CSurf_TrackToID(g_trNote, false) >= 0)
 	{
-		GetDlgItemText(m_hwnd, IDC_EDIT, g_lastText, sizeof(g_lastText));
+		GetWindowText(m_edit, g_lastText, sizeof(g_lastText));
 		bool found = false;
 		for (int i=0; i < g_SNM_TrackNotes.Get()->GetSize(); i++) 
 		{
@@ -830,7 +766,7 @@ void NotesWnd::SaveCurrentTrackNotes(bool _wantUndo)
 
 void NotesWnd::SaveCurrentGlobalNotes(bool _wantUndo)
 {
-	GetDlgItemText(m_hwnd, IDC_EDIT, g_lastText, sizeof(g_lastText));
+	GetWindowText(m_edit, g_lastText, sizeof(g_lastText));
 	g_globalNotes.Set(g_lastText);
 	/* dirty / modified status is displayed directly in notes window
 	if (_wantUndo)
@@ -847,7 +783,7 @@ void NotesWnd::SaveCurrentMkrRgnNameOrSub(int _type, bool _wantUndo)
 {
 	if (g_lastMarkerRegionId > 0)
 	{
-		GetDlgItemText(m_hwnd, IDC_EDIT, g_lastText, sizeof(g_lastText));
+		GetWindowText(m_edit, g_lastText, sizeof(g_lastText));
 
 		// set marker/region name?
 		if (_type>=SNM_NOTES_MKR_NAME && _type<=SNM_NOTES_MKRRGN_NAME)
@@ -898,7 +834,7 @@ void NotesWnd::SaveCurrentMkrRgnNameOrSub(int _type, bool _wantUndo)
 void NotesWnd::SaveCurrentHelp()
 {
 	if (*g_lastActionCustId) {
-		GetDlgItemText(m_hwnd, IDC_EDIT, g_lastText, sizeof(g_lastText));
+		GetWindowText(m_edit, g_lastText, sizeof(g_lastText));
 		SaveHelp(g_lastActionCustId, g_lastText);
 	}
 }
@@ -1699,7 +1635,7 @@ void OpenNotes(COMMAND_T* _ct)
 		w->SetType(newType);
 
 		if (!g_locked)
-			SetFocus(GetDlgItem(w->GetHWND(), IDC_EDIT));
+			SetFocus(w->GetEditControl());
 	}
 }
 

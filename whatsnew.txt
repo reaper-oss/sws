@@ -23,6 +23,8 @@ Windows installer:
 
 ReaScript API:
 +Fix BR_GetCurrentTheme (was broken since REAPER 5) and mark as deprecated (use REAPER's GetLastColorThemeFile instead) (report https://forum.cockos.com/showthread.php?p=2218974|here|)
+Contextual toolbars:
++Add an option to auto-close toolbars when losing focus rather than on button click (Issue 1260)
 
 !v2.11.0 pre-release build
 <strong>Reminder: this new SWS version requires REAPER v5.979+!</strong>

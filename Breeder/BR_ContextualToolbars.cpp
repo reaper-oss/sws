@@ -66,24 +66,6 @@ enum
 	COL_COUNT
 };
 
-// Options flags (never change values - used for state saving to .ini)
-const int OPTION_ENABLED         = 0x1;
-const int SELECT_ITEM            = 0x2;
-const int SELECT_TRACK           = 0x4;
-const int SELECT_ENVELOPE        = 0x8;
-const int CLEAR_ITEM_SELECTION   = 0x10;
-const int CLEAR_TRACK_SELECTION  = 0x20;
-const int FOCUS_ALL              = 0x40;
-const int FOCUS_MAIN             = 0x80;
-const int FOCUS_MIDI             = 0x100;
-const int POSITION_H_LEFT        = 0x200;
-const int POSITION_H_MIDDLE      = 0x400;
-const int POSITION_H_RIGHT       = 0x800;
-const int POSITION_V_TOP         = 0x2000;
-const int POSITION_V_MIDDLE      = 0x4000;
-const int POSITION_V_BOTTOM      = 0x8000;
-// const int SET_FOREGROUND         = 0x1000; NF: not referenced currently
-
 /******************************************************************************
 * Globals                                                                     *
 ******************************************************************************/
@@ -95,22 +77,20 @@ static int                                  g_listViewContexts[CONTEXT_COUNT];
 * Context toolbars                                                            *
 ******************************************************************************/
 BR_ContextualToolbar::BR_ContextualToolbar () :
-m_mode (0)
+m_contexts {}, m_options {}, m_mode (0)
 {
 	this->UpdateInternals();
 }
 
 BR_ContextualToolbar::BR_ContextualToolbar (const BR_ContextualToolbar& contextualToolbar) :
-m_mode (contextualToolbar.m_mode)
+m_options (contextualToolbar.m_options),
+m_mode (contextualToolbar.m_mode),
+m_activeContexts (contextualToolbar.m_activeContexts)
 {
 	std::copy(contextualToolbar.m_contexts, contextualToolbar.m_contexts + CONTEXT_COUNT, m_contexts);
-	m_options        = contextualToolbar.m_options;
-	m_activeContexts = contextualToolbar.m_activeContexts;
 }
 
-BR_ContextualToolbar::~BR_ContextualToolbar ()
-{
-}
+BR_ContextualToolbar::~BR_ContextualToolbar () = default;
 
 BR_ContextualToolbar& BR_ContextualToolbar::operator= (const BR_ContextualToolbar& contextualToolbar)
 {
@@ -132,30 +112,33 @@ bool BR_ContextualToolbar::operator== (const BR_ContextualToolbar& contextualToo
 			continue;
 		else
 		{
-			if (contextualToolbar.m_contexts[i].mouseAction     != m_contexts[i].mouseAction)     return false;
-		    if (contextualToolbar.m_contexts[i].toggleAction    != m_contexts[i].toggleAction)    return false;
-		    if (contextualToolbar.m_contexts[i].positionOffsetX != m_contexts[i].positionOffsetX) return false;
-		    if (contextualToolbar.m_contexts[i].positionOffsetY != m_contexts[i].positionOffsetY) return false;
-		    if (contextualToolbar.m_contexts[i].autoClose       != m_contexts[i].autoClose)       return false;
+			if (contextualToolbar.m_contexts[i].mouseAction     != m_contexts[i].mouseAction     ||
+			    contextualToolbar.m_contexts[i].toggleAction    != m_contexts[i].toggleAction    ||
+			    contextualToolbar.m_contexts[i].positionOffsetX != m_contexts[i].positionOffsetX ||
+			    contextualToolbar.m_contexts[i].positionOffsetY != m_contexts[i].positionOffsetY ||
+			    contextualToolbar.m_contexts[i].autoClose       != m_contexts[i].autoClose)
+			  return false;
 		}
 	}
-	if (contextualToolbar.m_options.focus                  != m_options.focus)                  return false;
-	if (contextualToolbar.m_options.position               != m_options.position)               return false;
-	if (contextualToolbar.m_options.setToolbarToForeground != m_options.setToolbarToForeground) return false;
-	if (contextualToolbar.m_options.tcpTrack               != m_options.tcpTrack)               return false;
-	if (contextualToolbar.m_options.tcpEnvelope            != m_options.tcpEnvelope)            return false;
-	if (contextualToolbar.m_options.mcpTrack               != m_options.mcpTrack)               return false;
-	if (contextualToolbar.m_options.arrangeTrack           != m_options.arrangeTrack)           return false;
-	if (contextualToolbar.m_options.arrangeItem            != m_options.arrangeItem)            return false;
-	if (contextualToolbar.m_options.arrangeTakeEnvelope    != m_options.arrangeTakeEnvelope)    return false;
-	if (contextualToolbar.m_options.arrangeStretchMarker   != m_options.arrangeStretchMarker)   return false;
-	if (contextualToolbar.m_options.arrangeTrackEnvelope   != m_options.arrangeTrackEnvelope)   return false;
-	if (contextualToolbar.m_options.arrangeActTake         != m_options.arrangeActTake)         return false;
-	if (contextualToolbar.m_options.midiSetCCLane          != m_options.midiSetCCLane)          return false;
-	if (contextualToolbar.m_options.inlineItem             != m_options.inlineItem)             return false;
-	if (contextualToolbar.m_options.inlineSetCCLane        != m_options.inlineSetCCLane)        return false;
 
-	return true;
+	return
+		contextualToolbar.m_options.focus                  == m_options.focus                  &&
+		contextualToolbar.m_options.position               == m_options.position               &&
+		contextualToolbar.m_options.setToolbarToForeground == m_options.setToolbarToForeground &&
+		contextualToolbar.m_options.autocloseInactive      == m_options.autocloseInactive      &&
+		contextualToolbar.m_options.tcpTrack               == m_options.tcpTrack               &&
+		contextualToolbar.m_options.tcpEnvelope            == m_options.tcpEnvelope            &&
+		contextualToolbar.m_options.mcpTrack               == m_options.mcpTrack               &&
+		contextualToolbar.m_options.arrangeTrack           == m_options.arrangeTrack           &&
+		contextualToolbar.m_options.arrangeItem            == m_options.arrangeItem            &&
+		contextualToolbar.m_options.arrangeTakeEnvelope    == m_options.arrangeTakeEnvelope    &&
+		contextualToolbar.m_options.arrangeStretchMarker   == m_options.arrangeStretchMarker   &&
+		contextualToolbar.m_options.arrangeTrackEnvelope   == m_options.arrangeTrackEnvelope   &&
+		contextualToolbar.m_options.arrangeActTake         == m_options.arrangeActTake         &&
+		contextualToolbar.m_options.midiSetCCLane          == m_options.midiSetCCLane          &&
+		contextualToolbar.m_options.inlineItem             == m_options.inlineItem             &&
+		contextualToolbar.m_options.inlineSetCCLane        == m_options.inlineSetCCLane
+	;
 }
 
 bool BR_ContextualToolbar::operator!= (const BR_ContextualToolbar& contextualToolbar)
@@ -176,7 +159,7 @@ void BR_ContextualToolbar::LoadToolbar (bool exclusive)
 	if (!toolbarsOpen || exclusive)
 	{
 		BR_MouseInfo mouseInfo(m_mode, true);
-		BR_ContextualToolbar::ExecuteOnToolbarLoad executeOnToolbarLoad;
+		ExecuteOnToolbarLoad executeOnToolbarLoad{};
 
 		int context = -1;
 		if      (!strcmp(mouseInfo.GetWindow(), "transport"))   context = this->FindTransportToolbar(mouseInfo, executeOnToolbarLoad);
@@ -380,7 +363,7 @@ bool BR_ContextualToolbar::GetContext (int context, int* toolbarId, bool* autoCl
 		int mouseAction = this->GetMouseAction(context);
 
 		WritePtr(toolbarId,       this->GetToolbarId(mouseAction));
-		WritePtr(autoClose,       this->IsToolbarAction(mouseAction) ? this->GetAutoClose(context)       : false);
+		WritePtr(autoClose,       this->IsToolbarAction(mouseAction) ? m_contexts[context].autoClose     : false);
 		WritePtr(positionOffsetX, this->IsToolbarAction(mouseAction) ? this->GetPositionOffsetX(context) : 0);
 		WritePtr(positionOffsetY, this->IsToolbarAction(mouseAction) ? this->GetPositionOffsetY(context) : 0);
 		return true;
@@ -392,17 +375,16 @@ bool BR_ContextualToolbar::IsContextValid (int context)
 {
 	if (context >= CONTEXT_START && context < CONTEXT_COUNT)
 	{
-		if (context != END_TRANSPORT   &&
-		    context != END_RULER       &&
-		    context != END_TCP         &&
-		    context != END_MCP         &&
-		    context != END_ARRANGE     &&
-		    context != END_MIDI_EDITOR
-		)
-		{
-			return true;
-		}
+		return
+			context != END_TRANSPORT   &&
+			context != END_RULER       &&
+			context != END_TCP         &&
+			context != END_MCP         &&
+			context != END_ARRANGE     &&
+			context != END_MIDI_EDITOR
+		;
 	}
+
 	return false;
 }
 
@@ -410,21 +392,15 @@ bool BR_ContextualToolbar::CanContextInheritParent (int context)
 {
 	if (this->IsContextValid(context))
 	{
-		if (context == TRANSPORT          ||
-		    context == RULER              ||
-		    context == TCP                ||
-		    context == MCP                ||
-		    context == ARRANGE            ||
-		    context == MIDI_EDITOR        ||
-		    context == INLINE_MIDI_EDITOR
-		)
-		{
-			return false;
-		}
-		else
-		{
-			return true;
-		}
+		return
+			context != TRANSPORT          &&
+			context != RULER              &&
+			context != TCP                &&
+			context != MCP                &&
+			context != ARRANGE            &&
+			context != MIDI_EDITOR        &&
+			context != INLINE_MIDI_EDITOR
+		;
 	}
 	return false;
 }
@@ -433,102 +409,16 @@ bool BR_ContextualToolbar::CanContextFollowItem (int context)
 {
 	if (this->IsContextValid(context))
 	{
-		if (context == ARRANGE_TRACK_ITEM_STRETCH_MARKER  ||
-		    context == ARRANGE_TRACK_TAKE_ENVELOPE        ||
-		    context == ARRANGE_TRACK_TAKE_ENVELOPE_VOLUME ||
-		    context == ARRANGE_TRACK_TAKE_ENVELOPE_PAN    ||
-		    context == ARRANGE_TRACK_TAKE_ENVELOPE_MUTE   ||
-		    context == ARRANGE_TRACK_TAKE_ENVELOPE_PITCH
-		)
-		{
-			return true;
-		}
-		else
-		{
-			return false;
-		}
+		return
+			context == ARRANGE_TRACK_ITEM_STRETCH_MARKER  ||
+			context == ARRANGE_TRACK_TAKE_ENVELOPE        ||
+			context == ARRANGE_TRACK_TAKE_ENVELOPE_VOLUME ||
+			context == ARRANGE_TRACK_TAKE_ENVELOPE_PAN    ||
+			context == ARRANGE_TRACK_TAKE_ENVELOPE_MUTE   ||
+			context == ARRANGE_TRACK_TAKE_ENVELOPE_PITCH
+		;
 	}
 	return false;
-}
-
-void BR_ContextualToolbar::SetOptionsAll (int* focus, int* topmost, int* position, int* setToolbarToForeground)
-{
-	ReadPtr(focus,                  m_options.focus);
-	ReadPtr(topmost,                m_options.topmost);
-	ReadPtr(position,               m_options.position);
-	ReadPtr(setToolbarToForeground, m_options.setToolbarToForeground);
-}
-
-void BR_ContextualToolbar::GetOptionsAll (int* focus, int* topmost, int* position, int* setToolbarToForeground)
-{
-	WritePtr(focus,                  m_options.focus);
-	WritePtr(topmost,                m_options.topmost);
-	WritePtr(position,               m_options.position);
-	WritePtr(setToolbarToForeground, m_options.setToolbarToForeground);
-}
-
-void BR_ContextualToolbar::SetOptionsTcp (int* track, int* envelope)
-{
-	ReadPtr(track,    m_options.tcpTrack);
-	ReadPtr(envelope, m_options.tcpEnvelope);
-}
-
-void BR_ContextualToolbar::GetOptionsTcp (int* track, int* envelope)
-{
-	WritePtr(track,    m_options.tcpTrack);
-	WritePtr(envelope, m_options.tcpEnvelope);
-}
-
-void BR_ContextualToolbar::SetOptionsMcp (int* track)
-{
-	ReadPtr(track, m_options.mcpTrack);
-}
-
-void BR_ContextualToolbar::GetOptionsMcp (int* track)
-{
-	WritePtr(track, m_options.mcpTrack);
-}
-
-void BR_ContextualToolbar::SetOptionsArrange (int* track, int* item, int* stretchMarker, int* takeEnvelope, int* trackEnvelope, int* activateTake)
-{
-	ReadPtr(track,           m_options.arrangeTrack);
-	ReadPtr(item,            m_options.arrangeItem);
-	ReadPtr(stretchMarker,   m_options.arrangeStretchMarker);
-	ReadPtr(takeEnvelope,    m_options.arrangeTakeEnvelope);
-	ReadPtr(trackEnvelope,   m_options.arrangeTrackEnvelope);
-	ReadPtr(activateTake,    m_options.arrangeActTake);
-}
-
-void BR_ContextualToolbar::GetOptionsArrange (int* track, int* item, int* stretchMarker, int* takeEnvelope, int* trackEnvelope, int* activateTake)
-{
-	WritePtr(track,           m_options.arrangeTrack);
-	WritePtr(item,            m_options.arrangeItem);
-	WritePtr(stretchMarker,   m_options.arrangeStretchMarker);
-	WritePtr(takeEnvelope,    m_options.arrangeTakeEnvelope);
-	WritePtr(trackEnvelope,   m_options.arrangeTrackEnvelope);
-	WritePtr(activateTake,    m_options.arrangeActTake);
-}
-
-void BR_ContextualToolbar::SetOptionsMIDI (int* setCCLaneAsClicked)
-{
-	ReadPtr(setCCLaneAsClicked, m_options.midiSetCCLane);
-}
-
-void BR_ContextualToolbar::GetOptionsMIDI (int* setCCLaneAsClicked)
-{
-	WritePtr(setCCLaneAsClicked, m_options.midiSetCCLane);
-}
-
-void BR_ContextualToolbar::SetOptionsInline (int* item, int* setCCLaneAsClicked)
-{
-	ReadPtr(item,               m_options.inlineItem);
-	ReadPtr(setCCLaneAsClicked, m_options.inlineSetCCLane);
-}
-
-void BR_ContextualToolbar::GetOptionsInline (int* item, int* setCCLaneAsClicked)
-{
-	WritePtr(item,               m_options.inlineItem);
-	WritePtr(setCCLaneAsClicked, m_options.inlineSetCCLane);
 }
 
 void BR_ContextualToolbar::ExportConfig (WDL_FastString& contextToolbars, WDL_FastString& contextAutoClose, WDL_FastString& contextPosition, WDL_FastString& options)
@@ -539,7 +429,7 @@ void BR_ContextualToolbar::ExportConfig (WDL_FastString& contextToolbars, WDL_Fa
 		if (context != UNUSED_CONTEXT && context != -666)
 		{
 			contextToolbars.AppendFormatted(128,  "%d ",    this->TranslateAction(this->GetMouseAction(context), true));
-			contextAutoClose.AppendFormatted(128, "%d ",    this->GetAutoClose(context) ? -1 : 0); // why -1 ? this option may one day get replaced with "action on button press" which could also close the toolbar, so use negative numbers for future proofness
+			contextAutoClose.AppendFormatted(128, "%d ",    m_contexts[context].autoClose ? -1 : 0); // why -1 ? this option may one day get replaced with "action on button press" which could also close the toolbar, so use negative numbers for future proofness
 			contextPosition.AppendFormatted(128,  "%d %d ", this->GetPositionOffsetX(context), this->GetPositionOffsetY(context));
 		}
 		else if (context == UNUSED_CONTEXT)
@@ -556,23 +446,24 @@ void BR_ContextualToolbar::ExportConfig (WDL_FastString& contextToolbars, WDL_Fa
 	contextPosition.DeleteSub(contextPosition.GetLength()   - 1, 1);
 
 	options.AppendFormatted(1024,
-	                        "%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d",
-	                        m_options.focus,
-	                        m_options.topmost,
-	                        m_options.tcpTrack,
-	                        m_options.tcpEnvelope,
-	                        m_options.mcpTrack,
-	                        m_options.arrangeTrack,
-	                        m_options.arrangeItem,
-	                        m_options.arrangeStretchMarker,
-	                        m_options.arrangeTakeEnvelope,
-	                        m_options.arrangeTrackEnvelope,
-	                        m_options.arrangeActTake,
-	                        m_options.midiSetCCLane,
-	                        m_options.inlineItem,
-	                        m_options.inlineSetCCLane,
-	                        m_options.position,
-							m_options.setToolbarToForeground
+		"%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d",
+		m_options.focus,
+		m_options.topmost,
+		m_options.tcpTrack,
+		m_options.tcpEnvelope,
+		m_options.mcpTrack,
+		m_options.arrangeTrack,
+		m_options.arrangeItem,
+		m_options.arrangeStretchMarker,
+		m_options.arrangeTakeEnvelope,
+		m_options.arrangeTrackEnvelope,
+		m_options.arrangeActTake,
+		m_options.midiSetCCLane,
+		m_options.inlineItem,
+		m_options.inlineSetCCLane,
+		m_options.position,
+		m_options.setToolbarToForeground,
+		m_options.autocloseInactive
 	);
 }
 
@@ -615,23 +506,25 @@ void BR_ContextualToolbar::ImportConfig (const char* contextToolbars, const char
 
 	LineParser lp(false);
 	lp.parse(options);
-	BR_ContextualToolbar::Options cleanOptions;
-	m_options.focus                  = (lp.getnumtokens() > 0)  ? lp.gettoken_int(0)  : cleanOptions.focus;
-	m_options.topmost                = (lp.getnumtokens() > 1)  ? lp.gettoken_int(1)  : cleanOptions.topmost;
-	m_options.tcpTrack               = (lp.getnumtokens() > 2)  ? lp.gettoken_int(2)  : cleanOptions.tcpTrack;
-	m_options.tcpEnvelope            = (lp.getnumtokens() > 3)  ? lp.gettoken_int(3)  : cleanOptions.tcpEnvelope;
-	m_options.mcpTrack               = (lp.getnumtokens() > 4)  ? lp.gettoken_int(4)  : cleanOptions.mcpTrack;
-	m_options.arrangeTrack           = (lp.getnumtokens() > 5)  ? lp.gettoken_int(5)  : cleanOptions.arrangeTrack;
-	m_options.arrangeItem            = (lp.getnumtokens() > 6)  ? lp.gettoken_int(6)  : cleanOptions.arrangeItem;
-	m_options.arrangeStretchMarker   = (lp.getnumtokens() > 7)  ? lp.gettoken_int(7)  : cleanOptions.arrangeStretchMarker;
-	m_options.arrangeTakeEnvelope    = (lp.getnumtokens() > 8)  ? lp.gettoken_int(8)  : cleanOptions.arrangeTakeEnvelope;
-	m_options.arrangeTrackEnvelope   = (lp.getnumtokens() > 9)  ? lp.gettoken_int(9)  : cleanOptions.arrangeTrackEnvelope;
-	m_options.arrangeActTake         = (lp.getnumtokens() > 10) ? lp.gettoken_int(10) : cleanOptions.arrangeActTake;
-	m_options.midiSetCCLane          = (lp.getnumtokens() > 11) ? lp.gettoken_int(11) : cleanOptions.midiSetCCLane;
-	m_options.inlineItem             = (lp.getnumtokens() > 12) ? lp.gettoken_int(12) : cleanOptions.inlineItem;
-	m_options.inlineSetCCLane        = (lp.getnumtokens() > 13) ? lp.gettoken_int(13) : cleanOptions.inlineSetCCLane;
-	m_options.position               = (lp.getnumtokens() > 14) ? lp.gettoken_int(14) : cleanOptions.position;
-	m_options.setToolbarToForeground = (lp.getnumtokens() > 15) ? lp.gettoken_int(15) : cleanOptions.setToolbarToForeground;
+	int i = -1;
+	m_options = {};
+	if (lp.getnumtokens() > ++i) m_options.focus                  = lp.gettoken_int(i);
+	if (lp.getnumtokens() > ++i) m_options.topmost                = lp.gettoken_int(i);
+	if (lp.getnumtokens() > ++i) m_options.tcpTrack               = lp.gettoken_int(i);
+	if (lp.getnumtokens() > ++i) m_options.tcpEnvelope            = lp.gettoken_int(i);
+	if (lp.getnumtokens() > ++i) m_options.mcpTrack               = lp.gettoken_int(i);
+	if (lp.getnumtokens() > ++i) m_options.arrangeTrack           = lp.gettoken_int(i);
+	if (lp.getnumtokens() > ++i) m_options.arrangeItem            = lp.gettoken_int(i);
+	if (lp.getnumtokens() > ++i) m_options.arrangeStretchMarker   = lp.gettoken_int(i);
+	if (lp.getnumtokens() > ++i) m_options.arrangeTakeEnvelope    = lp.gettoken_int(i);
+	if (lp.getnumtokens() > ++i) m_options.arrangeTrackEnvelope   = lp.gettoken_int(i);
+	if (lp.getnumtokens() > ++i) m_options.arrangeActTake         = lp.gettoken_int(i);
+	if (lp.getnumtokens() > ++i) m_options.midiSetCCLane          = lp.gettoken_int(i);
+	if (lp.getnumtokens() > ++i) m_options.inlineItem             = lp.gettoken_int(i);
+	if (lp.getnumtokens() > ++i) m_options.inlineSetCCLane        = lp.gettoken_int(i);
+	if (lp.getnumtokens() > ++i) m_options.position               = lp.gettoken_int(i);
+	if (lp.getnumtokens() > ++i) m_options.setToolbarToForeground = lp.gettoken_int(i);
+	if (lp.getnumtokens() > ++i) m_options.autocloseInactive      = lp.gettoken_int(i);
 
 	this->UpdateInternals();
 }
@@ -649,70 +542,6 @@ void BR_ContextualToolbar::Cleaup ()
 			SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)wndProc);
 	}
 	m_callbackToolbars.EmptySafe(true);
-}
-
-BR_ContextualToolbar::ContextInfo::ContextInfo () :
-mouseAction     (DO_NOTHING),
-toggleAction    (DO_NOTHING),
-positionOffsetX (0),
-positionOffsetY (0),
-autoClose       (false)
-{
-}
-
-BR_ContextualToolbar::Options::Options () :
-focus                  (OPTION_ENABLED|FOCUS_ALL),
-setToolbarToForeground (0),
-position               (0),
-topmost                (0),
-tcpTrack               (0),
-tcpEnvelope            (0),
-mcpTrack               (0),
-arrangeTrack           (0),
-arrangeItem            (0),
-arrangeStretchMarker   (0),
-arrangeTakeEnvelope    (0),
-arrangeTrackEnvelope   (0),
-arrangeActTake         (false),
-midiSetCCLane          (false),
-inlineItem             (0),
-inlineSetCCLane        (false)
-{
-}
-
-BR_ContextualToolbar::ExecuteOnToolbarLoad::ExecuteOnToolbarLoad () :
-focusHwnd              (NULL),
-trackToSelect          (NULL),
-envelopeToSelect       (NULL),
-itemToSelect           (NULL),
-takeParent             (NULL),
-takeIdToActivate       (-1),
-focusContext           (-1),
-positionOrientation    (0),
-positionOffsetX        (0),
-positionOffsetY        (0),
-positionOverride       (false),
-setFocus               (false),
-clearTrackSelection    (false),
-clearItemSelection     (false),
-setCCLaneAsClicked     (false),
-autoCloseToolbar       (false),
-makeTopMost            (false),
-setToolbarToForeground (false)
-{
-}
-
-BR_ContextualToolbar::ToolbarWndData::ToolbarWndData () :
-hwnd            (NULL),
-lastFocusedHwnd (NULL),
-wndProc         (NULL),
-keepOnTop       (false),
-autoClose       (false),
-toggleAction    (-1)
-{
-	#ifndef _WIN32
-		level = 0;
-	#endif
 }
 
 void BR_ContextualToolbar::UpdateInternals ()
@@ -782,7 +611,7 @@ void BR_ContextualToolbar::UpdateInternals ()
 	m_mode |= BR_MouseInfo::MODE_IGNORE_ENVELOPE_LANE_SEGMENT;
 }
 
-int BR_ContextualToolbar::FindRulerToolbar (BR_MouseInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad)
+int BR_ContextualToolbar::FindRulerToolbar (BR_MouseInfo& mouseInfo, ExecuteOnToolbarLoad& executeOnToolbarLoad)
 {
 	int context = -1;
 
@@ -804,7 +633,7 @@ int BR_ContextualToolbar::FindRulerToolbar (BR_MouseInfo& mouseInfo, BR_Contextu
 	return context;
 }
 
-int BR_ContextualToolbar::FindTransportToolbar (BR_MouseInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad)
+int BR_ContextualToolbar::FindTransportToolbar (BR_MouseInfo& mouseInfo, ExecuteOnToolbarLoad& executeOnToolbarLoad)
 {
 	int context = TRANSPORT;
 
@@ -819,7 +648,7 @@ int BR_ContextualToolbar::FindTransportToolbar (BR_MouseInfo& mouseInfo, BR_Cont
 	return context;
 }
 
-int BR_ContextualToolbar::FindTcpToolbar (BR_MouseInfo& mouseInfo,  BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad)
+int BR_ContextualToolbar::FindTcpToolbar (BR_MouseInfo& mouseInfo, ExecuteOnToolbarLoad& executeOnToolbarLoad)
 {
 	int context = -1;
 
@@ -878,7 +707,7 @@ int BR_ContextualToolbar::FindTcpToolbar (BR_MouseInfo& mouseInfo,  BR_Contextua
 	return context;
 }
 
-int BR_ContextualToolbar::FindMcpToolbar (BR_MouseInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad)
+int BR_ContextualToolbar::FindMcpToolbar (BR_MouseInfo& mouseInfo, ExecuteOnToolbarLoad& executeOnToolbarLoad)
 {
 	int context = -1;
 
@@ -915,7 +744,7 @@ int BR_ContextualToolbar::FindMcpToolbar (BR_MouseInfo& mouseInfo, BR_Contextual
 	return context;
 }
 
-int BR_ContextualToolbar::FindArrangeToolbar (BR_MouseInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad)
+int BR_ContextualToolbar::FindArrangeToolbar (BR_MouseInfo& mouseInfo, ExecuteOnToolbarLoad& executeOnToolbarLoad)
 {
 	int context = -1;
 
@@ -1061,7 +890,7 @@ int BR_ContextualToolbar::FindArrangeToolbar (BR_MouseInfo& mouseInfo, BR_Contex
 	return context;
 }
 
-int BR_ContextualToolbar::FindMidiToolbar (BR_MouseInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad)
+int BR_ContextualToolbar::FindMidiToolbar (BR_MouseInfo& mouseInfo, ExecuteOnToolbarLoad& executeOnToolbarLoad)
 {
 	int context = -1;
 
@@ -1091,7 +920,7 @@ int BR_ContextualToolbar::FindMidiToolbar (BR_MouseInfo& mouseInfo, BR_Contextua
 	return context;
 }
 
-int BR_ContextualToolbar::FindInlineMidiToolbar (BR_MouseInfo& mouseInfo, BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad)
+int BR_ContextualToolbar::FindInlineMidiToolbar (BR_MouseInfo& mouseInfo, ExecuteOnToolbarLoad& executeOnToolbarLoad)
 {
 	int context = -1;
 
@@ -1128,7 +957,7 @@ int BR_ContextualToolbar::FindInlineMidiToolbar (BR_MouseInfo& mouseInfo, BR_Con
 	return context;
 }
 
-bool BR_ContextualToolbar::SelectTrack (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad)
+bool BR_ContextualToolbar::SelectTrack (ExecuteOnToolbarLoad& executeOnToolbarLoad)
 {
 	bool undo = false;
 	if (executeOnToolbarLoad.trackToSelect)
@@ -1160,7 +989,7 @@ bool BR_ContextualToolbar::SelectTrack (BR_ContextualToolbar::ExecuteOnToolbarLo
 	return undo;
 }
 
-bool BR_ContextualToolbar::SelectEnvelope (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad)
+bool BR_ContextualToolbar::SelectEnvelope (ExecuteOnToolbarLoad& executeOnToolbarLoad)
 {
 	bool undo = false;
 	if (executeOnToolbarLoad.envelopeToSelect)
@@ -1184,7 +1013,7 @@ bool BR_ContextualToolbar::SelectEnvelope (BR_ContextualToolbar::ExecuteOnToolba
 	return undo;
 }
 
-bool BR_ContextualToolbar::SelectItem (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad)
+bool BR_ContextualToolbar::SelectItem (ExecuteOnToolbarLoad& executeOnToolbarLoad)
 {
 	bool undo = false;
 	if (executeOnToolbarLoad.itemToSelect)
@@ -1212,7 +1041,7 @@ bool BR_ContextualToolbar::SelectItem (BR_ContextualToolbar::ExecuteOnToolbarLoa
 	return undo;
 }
 
-bool BR_ContextualToolbar::ActivateTake (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad)
+bool BR_ContextualToolbar::ActivateTake (ExecuteOnToolbarLoad& executeOnToolbarLoad)
 {
 	bool undo = false;
 	if (executeOnToolbarLoad.takeIdToActivate != -1 && (int)GetMediaItemInfo_Value(executeOnToolbarLoad.takeParent, "I_CURTAKE") != executeOnToolbarLoad.takeIdToActivate)
@@ -1224,19 +1053,19 @@ bool BR_ContextualToolbar::ActivateTake (BR_ContextualToolbar::ExecuteOnToolbarL
 	return undo;
 }
 
-void BR_ContextualToolbar::SetFocus (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad)
+void BR_ContextualToolbar::SetFocus (ExecuteOnToolbarLoad& executeOnToolbarLoad)
 {
 	if (executeOnToolbarLoad.setFocus)
 		GetSetFocus(true, &executeOnToolbarLoad.focusHwnd, &executeOnToolbarLoad.focusContext);
 }
 
-void BR_ContextualToolbar::SetCCLaneClicked (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad, BR_MouseInfo& mouseInfo)
+void BR_ContextualToolbar::SetCCLaneClicked (ExecuteOnToolbarLoad& executeOnToolbarLoad, BR_MouseInfo& mouseInfo)
 {
 	if (executeOnToolbarLoad.setCCLaneAsClicked)
 		mouseInfo.SetDetectedCCLaneAsLastClicked();
 }
 
-void BR_ContextualToolbar::RepositionToolbar (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad, HWND toolbarHwnd)
+void BR_ContextualToolbar::RepositionToolbar (ExecuteOnToolbarLoad& executeOnToolbarLoad, HWND toolbarHwnd)
 {
 	if (toolbarHwnd)
 	{
@@ -1265,7 +1094,7 @@ void BR_ContextualToolbar::RepositionToolbar (BR_ContextualToolbar::ExecuteOnToo
 	}
 }
 
-void BR_ContextualToolbar::SetToolbarWndProc (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad, HWND toolbarHwnd, int toggleAction, HWND toolbarParent)
+void BR_ContextualToolbar::SetToolbarWndProc (ExecuteOnToolbarLoad& executeOnToolbarLoad, HWND toolbarHwnd, int toggleAction, HWND toolbarParent)
 {
 	if (toolbarHwnd)
 	{
@@ -1281,10 +1110,10 @@ void BR_ContextualToolbar::SetToolbarWndProc (BR_ContextualToolbar::ExecuteOnToo
 		}
 
 		// Assign callback or just enable functionality if already has callback
-		BR_ContextualToolbar::ToolbarWndData* toolbarWndData  = NULL;
+		ToolbarWndData* toolbarWndData  = NULL;
 		if (id == -1)
 		{
-			if ((toolbarWndData = m_callbackToolbars.Add(new BR_ContextualToolbar::ToolbarWndData)))
+			if ((toolbarWndData = m_callbackToolbars.Add(new ToolbarWndData())))
 			{
 				if (WNDPROC wndProc = (WNDPROC)SetWindowLongPtr(toolbarHwnd, GWLP_WNDPROC, (LONG_PTR)BR_ContextualToolbar::ToolbarWndCallback))
 				{
@@ -1343,9 +1172,12 @@ int BR_ContextualToolbar::GetPositionOffsetY (int context)
 	return m_contexts[context].positionOffsetY;
 }
 
-bool BR_ContextualToolbar::GetAutoClose (int context)
+auto BR_ContextualToolbar::GetAutoClose (int context) -> AutoClose
 {
-	return m_contexts[context].autoClose;
+	if (!m_contexts[context].autoClose)
+		return AutoClose::Disabled;
+
+	return m_options.autocloseInactive ? AutoClose::Inactive : AutoClose::Command;
 }
 
 void BR_ContextualToolbar::SetMouseAction (int context, int mouseAction)
@@ -1592,7 +1424,7 @@ LRESULT CALLBACK BR_ContextualToolbar::ToolbarWndCallback (HWND hwnd, UINT uMsg,
 	int id = -1;
 	for (int i = 0; i < m_callbackToolbars.GetSize(); ++i)
 	{
-		if (BR_ContextualToolbar::ToolbarWndData* toolbarWndData = m_callbackToolbars.Get(i))
+		if (ToolbarWndData* toolbarWndData = m_callbackToolbars.Get(i))
 		{
 			if (toolbarWndData->hwnd == hwnd)
 			{
@@ -1608,7 +1440,7 @@ LRESULT CALLBACK BR_ContextualToolbar::ToolbarWndCallback (HWND hwnd, UINT uMsg,
 	}
 	else
 	{
-		BR_ContextualToolbar::ToolbarWndData* toolbarWndData = m_callbackToolbars.Get(id);
+		ToolbarWndData* toolbarWndData = m_callbackToolbars.Get(id);
 		WNDPROC wndProc = toolbarWndData->wndProc; // save wndProc in case toolbarWndData gets deleted before returning
 
 		if (uMsg == WM_SHOWWINDOW || uMsg == WM_ACTIVATEAPP)
@@ -1638,33 +1470,28 @@ LRESULT CALLBACK BR_ContextualToolbar::ToolbarWndCallback (HWND hwnd, UINT uMsg,
 		{
 			plugin_register("timer",(void*)BR_ContextualToolbar::TooltipTimer);
 		}
-		else if (uMsg == WM_COMMAND)
+		else if ((toolbarWndData->autoClose == AutoClose::Command  && uMsg == WM_COMMAND) ||
+		         (toolbarWndData->autoClose == AutoClose::Inactive && uMsg == WM_ACTIVATE && LOWORD(wParam) == WA_INACTIVE))
 		{
-			if (toolbarWndData->autoClose)
-			{
-				if (HIWORD(wParam) == 0)
-				{
-					Main_OnCommand(toolbarWndData->toggleAction, 0);
+			Main_OnCommand(toolbarWndData->toggleAction, 0);
 
-					SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)wndProc);
-					// focus last focused window when toolbar is auto closed, p=2171694
-					if (toolbarWndData->lastFocusedHwnd)
-						::SetFocus(toolbarWndData->lastFocusedHwnd);
-					m_callbackToolbars.Delete(id, true);
-				}
-			}
+			SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)wndProc);
+			// focus last focused window when toolbar is auto closed, p=2171694
+			if (toolbarWndData->lastFocusedHwnd)
+				::SetFocus(toolbarWndData->lastFocusedHwnd);
+			m_callbackToolbars.Delete(id, true);
 		}
 		else if (uMsg == WM_ACTIVATE)
 		{
-			if (LOWORD(wParam) != WA_INACTIVE)
-			{
-				if (!toolbarWndData->lastFocusedHwnd)
-					toolbarWndData->lastFocusedHwnd = (HWND)lParam;
-			}
-			else
+			if (LOWORD(wParam) == WA_INACTIVE)
 			{
 				if (IsWindowVisible(hwnd))
 					toolbarWndData->lastFocusedHwnd = NULL;
+			}
+			else
+			{
+				if (!toolbarWndData->lastFocusedHwnd)
+					toolbarWndData->lastFocusedHwnd = (HWND)lParam;
 			}
 		}
 		else if (uMsg == WM_DESTROY)
@@ -2048,83 +1875,74 @@ BR_ContextualToolbarsWnd::~BR_ContextualToolbarsWnd ()
 void BR_ContextualToolbarsWnd::Update ()
 {
 	int currentPreset = (int)SendDlgItemMessage(m_hwnd, IDC_PRESET, CB_GETCURSEL, 0, 0);
-	if (BR_ContextualToolbar* currentToolbar = g_toolbarsManager.GetContextualToolbar(currentPreset))
-	{
-		m_currentToolbar = *currentToolbar;
-		m_currentPreset = currentPreset;
-		m_list->Update();
+	BR_ContextualToolbar* currentToolbar = g_toolbarsManager.GetContextualToolbar(currentPreset);
+	if (!currentToolbar)
+		return;
+
+	m_currentToolbar = *currentToolbar;
+	m_currentPreset = currentPreset;
+	m_list->Update();
+
+	const auto &options = m_currentToolbar.GetOptions();
+	const struct { int checkbox; int combo[2]; int value; } uiOptions[]{
+		// Process check boxes without paired combos
+		{ IDC_ALL_TOPMOST,            {}, options.topmost                },
+		{ IDC_ALL_FOREGROUND,         {}, options.setToolbarToForeground },
+		{ IDC_AUTOCLOSE_INACTIVE,     {}, options.autocloseInactive      },
+		{ IDC_ARG_TAKE_ACTIVATE,      {}, options.arrangeActTake         },
+		{ IDC_MIDI_CC_LANE_CLICKED,   {}, options.midiSetCCLane          },
+		{ IDC_INLINE_CC_LANE_CLICKED, {}, options.inlineSetCCLane        },
 
 		// Process check boxes paired with combos
-		int x = 0;
-		while (true)
+		{ IDC_ALL_FOCUS,     { IDC_ALL_FOCUS_COMBO                      }, options.focus                },
+		{ IDC_ALL_POS,       { IDC_ALL_POS_H_COMBO, IDC_ALL_POS_V_COMBO }, options.position             },
+		{ IDC_TCP_TRACK,     { IDC_TCP_TRACK_COMBO                      }, options.tcpTrack             },
+		{ IDC_TCP_ENV,       { IDC_TCP_ENV_COMBO                        }, options.tcpEnvelope          },
+		{ IDC_MCP_TRACK,     { IDC_MCP_TRACK_COMBO                      }, options.mcpTrack             },
+		{ IDC_ARG_TRACK,     { IDC_ARG_TRACK_COMBO                      }, options.arrangeTrack         },
+		{ IDC_ARG_ITEM,      { IDC_ARG_ITEM_COMBO                       }, options.arrangeItem          },
+		{ IDC_ARG_STRETCH,   { IDC_ARG_STRETCH_COMBO                    }, options.arrangeStretchMarker },
+		{ IDC_ARG_TAKE_ENV,  { IDC_ARG_TAKE_ENV_COMBO                   }, options.arrangeTakeEnvelope  },
+		{ IDC_ARG_TRACK_ENV, { IDC_ARG_TRACK_ENV_COMBO                  }, options.arrangeTrackEnvelope },
+		{ IDC_INLINE_ITEM,   { IDC_INLINE_ITEM_COMBO                    }, options.inlineItem           },
+	};
+
+	for (const auto &option : uiOptions)
+	{
+		CheckDlgButton(m_hwnd, option.checkbox, option.value & OPTION_ENABLED);
+
+		for (const int &currentCombo : option.combo)
 		{
-			int checkBox = 0;
-			int combo1   = 0;
-			int combo2   = 0;
-			int option   = 0;
+			if (!currentCombo)
+				continue;
 
-			if      (x == 0)  {checkBox = IDC_ALL_FOCUS;     combo1 = IDC_ALL_FOCUS_COMBO;     combo2 = 0;                   m_currentToolbar.GetOptionsAll(&option, NULL, NULL, NULL);}
-			else if (x == 1)  {checkBox = IDC_ALL_POS;       combo1 = IDC_ALL_POS_H_COMBO;     combo2 = IDC_ALL_POS_V_COMBO; m_currentToolbar.GetOptionsAll(NULL, NULL, &option, NULL);}
-			else if (x == 2)  {checkBox = IDC_TCP_TRACK;     combo1 = IDC_TCP_TRACK_COMBO;     combo2 = 0;                   m_currentToolbar.GetOptionsTcp(&option, NULL);}
-			else if (x == 3)  {checkBox = IDC_TCP_ENV;       combo1 = IDC_TCP_ENV_COMBO;       combo2 = 0;                   m_currentToolbar.GetOptionsTcp(NULL, &option);}
-			else if (x == 4)  {checkBox = IDC_MCP_TRACK;     combo1 = IDC_MCP_TRACK_COMBO;     combo2 = 0;                   m_currentToolbar.GetOptionsMcp(&option);}
-			else if (x == 5)  {checkBox = IDC_ARG_TRACK;     combo1 = IDC_ARG_TRACK_COMBO;     combo2 = 0;                   m_currentToolbar.GetOptionsArrange(&option, NULL, NULL, NULL, NULL, NULL);}
-			else if (x == 6)  {checkBox = IDC_ARG_ITEM;      combo1 = IDC_ARG_ITEM_COMBO;      combo2 = 0;                   m_currentToolbar.GetOptionsArrange(NULL, &option, NULL, NULL, NULL, NULL);}
-			else if (x == 7)  {checkBox = IDC_ARG_STRETCH;   combo1 = IDC_ARG_STRETCH_COMBO;   combo2 = 0;                   m_currentToolbar.GetOptionsArrange(NULL, NULL, &option, NULL, NULL, NULL);}
-			else if (x == 8)  {checkBox = IDC_ARG_TAKE_ENV;  combo1 = IDC_ARG_TAKE_ENV_COMBO;  combo2 = 0;                   m_currentToolbar.GetOptionsArrange(NULL, NULL, NULL, &option, NULL, NULL);}
-			else if (x == 9)  {checkBox = IDC_ARG_TRACK_ENV; combo1 = IDC_ARG_TRACK_ENV_COMBO; combo2 = 0;                   m_currentToolbar.GetOptionsArrange(NULL, NULL, NULL, NULL, &option, NULL);}
-			else if (x == 10) {checkBox = IDC_INLINE_ITEM;   combo1 = IDC_INLINE_ITEM_COMBO;   combo2 = 0;                   m_currentToolbar.GetOptionsInline(&option, NULL);}
+			EnableWindow(GetDlgItem(m_hwnd, currentCombo), option.value & OPTION_ENABLED);
 
-			if (checkBox && (combo1 || combo2))
+			// Drop downs never contain information if option is enabled so remove it before comparing
+			int currentOption = option.value & (~OPTION_ENABLED);
+
+			// In case of two combos, eliminate options that belong to the other combo
+			if (option.combo[0] && option.combo[1])
 			{
-				CheckDlgButton(m_hwnd, checkBox, (option & OPTION_ENABLED));
-				if (combo1) EnableWindow(GetDlgItem(m_hwnd, combo1), (option & OPTION_ENABLED));
-				if (combo2) EnableWindow(GetDlgItem(m_hwnd, combo2), (option & OPTION_ENABLED));
-
-				for (int i = 0; i < 2; ++i)
-				{
-					int currentCombo = (i == 0) ? combo1 : combo2;
-					if (currentCombo)
-					{
-						// Drop downs never contain information if option is enabled so remove it before comparing
-						int currentOption = option & (~OPTION_ENABLED);
-
-						// In case of two combos, eliminate options that belong to the other combo
-						if (combo1 && combo2)
-						{
-							int comboOptionsToRemove = (currentCombo == combo1) ? combo2 : combo1;
-							int count = (int)SendDlgItemMessage(m_hwnd, comboOptionsToRemove, CB_GETCOUNT, 0, 0);
-							for (int i = 0; i < count; ++i)
-								currentOption &= ~((int)SendDlgItemMessage(m_hwnd, comboOptionsToRemove, CB_GETITEMDATA, i, 0));
-						}
-
-						// Finally find the appropriate selection
-						int count = (int)SendDlgItemMessage(m_hwnd, currentCombo, CB_GETCOUNT, 0, 0);
-						for (int i = 0; i < count; ++i)
-						{
-							if (currentOption == (int)SendDlgItemMessage(m_hwnd, currentCombo, CB_GETITEMDATA, i, 0))
-							{
-								SendDlgItemMessage(m_hwnd, currentCombo, CB_SETCURSEL, i, 0);
-								break;
-							}
-							else if (i == count - 1)
-								SendDlgItemMessage(m_hwnd, currentCombo, CB_SETCURSEL, 0, 0); // in case nothing is found, default to first entry
-						}
-					}
-				}
+				int comboOptionsToRemove = option.combo[&currentCombo == &option.combo[0] ? 1 : 0];
+				int count = (int)SendDlgItemMessage(m_hwnd, comboOptionsToRemove, CB_GETCOUNT, 0, 0);
+				for (int i = 0; i < count; ++i)
+					currentOption &= ~((int)SendDlgItemMessage(m_hwnd, comboOptionsToRemove, CB_GETITEMDATA, i, 0));
 			}
-			else
-				break;
-			++x;
-		}
 
-		// Process check boxes without paired combos
-		int option;
-		m_currentToolbar.GetOptionsAll(NULL, &option, NULL, NULL);                 CheckDlgButton(m_hwnd, IDC_ALL_TOPMOST,            (option & OPTION_ENABLED));
-		m_currentToolbar.GetOptionsAll(NULL, NULL, NULL, &option);                 CheckDlgButton(m_hwnd, IDC_ALL_FOREGROUND,         (option & OPTION_ENABLED));
-		m_currentToolbar.GetOptionsArrange(NULL, NULL, NULL, NULL, NULL, &option); CheckDlgButton(m_hwnd, IDC_ARG_TAKE_ACTIVATE,      (option & OPTION_ENABLED));
-		m_currentToolbar.GetOptionsMIDI(&option);                                  CheckDlgButton(m_hwnd, IDC_MIDI_CC_LANE_CLICKED,   (option & OPTION_ENABLED)),
-		m_currentToolbar.GetOptionsInline(NULL, &option);                          CheckDlgButton(m_hwnd, IDC_INLINE_CC_LANE_CLICKED, (option & OPTION_ENABLED));
+			// Finally find the appropriate selection
+			int count = (int)SendDlgItemMessage(m_hwnd, currentCombo, CB_GETCOUNT, 0, 0);
+			for (int i = 0; i < count; ++i)
+			{
+				if (currentOption == (int)SendDlgItemMessage(m_hwnd, currentCombo, CB_GETITEMDATA, i, 0))
+				{
+					SendDlgItemMessage(m_hwnd, currentCombo, CB_SETCURSEL, i, 0);
+					break;
+				}
+				else if (i == count - 1)
+					SendDlgItemMessage(m_hwnd, currentCombo, CB_SETCURSEL, 0, 0); // in case nothing is found, default to first entry
+			}
+		}
 	}
 }
 
@@ -2258,40 +2076,23 @@ void BR_ContextualToolbarsWnd::OnInitDlg ()
 
 	m_resize.init_item(IDC_LIST, 0.0, 0.0, 1.0, 1.0);
 	m_resize.init_item(IDC_PRESET, 0.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ALL_BOX, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ALL_FOCUS, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ALL_FOCUS_COMBO, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ALL_POS, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ALL_POS_H_COMBO, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ALL_POS_V_COMBO, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ALL_TOPMOST, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ALL_FOREGROUND, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_TCP_BOX, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_TCP_TRACK, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_TCP_TRACK_COMBO, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_TCP_ENV, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_TCP_ENV_COMBO, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_MCP_BOX, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_MCP_TRACK, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_MCP_TRACK_COMBO, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ARG_BOX, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ARG_TRACK, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ARG_TRACK_COMBO, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ARG_ITEM, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ARG_ITEM_COMBO, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ARG_STRETCH, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ARG_STRETCH_COMBO, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ARG_TAKE_ENV, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ARG_TAKE_ENV_COMBO, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ARG_TRACK_ENV, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ARG_TRACK_ENV_COMBO, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_ARG_TAKE_ACTIVATE, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_MIDI_BOX, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_MIDI_CC_LANE_CLICKED, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_INLINE_BOX, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_INLINE_ITEM, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_INLINE_ITEM_COMBO, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_INLINE_CC_LANE_CLICKED, 1.0, 0.0, 1.0, 0.0);
+
+	const int fixedControls[] {
+		IDC_ALL_BOX, IDC_ALL_FOCUS, IDC_ALL_FOCUS_COMBO, IDC_ALL_POS,
+		IDC_ALL_POS_H_COMBO, IDC_ALL_POS_V_COMBO, IDC_ALL_TOPMOST,
+		IDC_ALL_FOREGROUND, IDC_AUTOCLOSE_INACTIVE, IDC_TCP_BOX, IDC_TCP_TRACK,
+		IDC_TCP_TRACK_COMBO, IDC_TCP_ENV, IDC_TCP_ENV_COMBO, IDC_MCP_BOX,
+		IDC_MCP_TRACK, IDC_MCP_TRACK_COMBO, IDC_ARG_BOX, IDC_ARG_TRACK,
+		IDC_ARG_TRACK_COMBO, IDC_ARG_ITEM, IDC_ARG_ITEM_COMBO, IDC_ARG_STRETCH,
+		IDC_ARG_STRETCH_COMBO, IDC_ARG_TAKE_ENV, IDC_ARG_TAKE_ENV_COMBO,
+		IDC_ARG_TRACK_ENV, IDC_ARG_TRACK_ENV_COMBO, IDC_ARG_TAKE_ACTIVATE,
+		IDC_MIDI_BOX, IDC_MIDI_CC_LANE_CLICKED, IDC_INLINE_BOX, IDC_INLINE_ITEM,
+		IDC_INLINE_ITEM_COMBO, IDC_INLINE_CC_LANE_CLICKED,
+	};
+
+	for (const int control : fixedControls)
+		m_resize.init_item(control, 1.0, 0.0, 1.0, 0.0);
+
 	m_resize.init_item(IDC_HELP_WIKI, 1.0, 1.0, 1.0, 1.0);
 	m_resize.init_item(IDC_SAVE, 1.0, 1.0, 1.0, 1.0);
 
@@ -2444,7 +2245,9 @@ void BR_ContextualToolbarsWnd::OnInitDlg ()
 
 void BR_ContextualToolbarsWnd::OnCommand (WPARAM wParam, LPARAM lParam)
 {
-	switch (LOWORD(wParam))
+	const int ctrl = LOWORD(wParam);
+
+	switch (ctrl)
 	{
 		case IDC_PRESET:
 		{
@@ -2469,87 +2272,42 @@ void BR_ContextualToolbarsWnd::OnCommand (WPARAM wParam, LPARAM lParam)
 		}
 		break;
 
-		case IDC_ALL_FOCUS:
-		case IDC_ALL_FOCUS_COMBO:
-		case IDC_ALL_POS:
-		case IDC_ALL_POS_H_COMBO:
-		case IDC_ALL_POS_V_COMBO:
-		case IDC_TCP_TRACK:
-		case IDC_TCP_TRACK_COMBO:
-		case IDC_TCP_ENV:
-		case IDC_TCP_ENV_COMBO:
-		case IDC_MCP_TRACK:
-		case IDC_MCP_TRACK_COMBO:
-		case IDC_ARG_TRACK:
-		case IDC_ARG_TRACK_COMBO:
-		case IDC_ARG_ITEM:
-		case IDC_ARG_ITEM_COMBO:
-		case IDC_ARG_STRETCH:
-		case IDC_ARG_STRETCH_COMBO:
-		case IDC_ARG_TAKE_ENV:
-		case IDC_ARG_TAKE_ENV_COMBO:
-		case IDC_ARG_TRACK_ENV:
-		case IDC_ARG_TRACK_ENV_COMBO:
-		case IDC_INLINE_ITEM:
-		case IDC_INLINE_ITEM_COMBO:
+		default:
 		{
-			int checkBox = 0;
-			int combo1   = 0;
-			int combo2   = 0;
-			if      (LOWORD(wParam) == IDC_ALL_FOCUS     || (LOWORD(wParam) == IDC_ALL_FOCUS_COMBO     && HIWORD(wParam) == CBN_SELCHANGE)) {checkBox = IDC_ALL_FOCUS;     combo1 = IDC_ALL_FOCUS_COMBO;}
-			else if (LOWORD(wParam) == IDC_TCP_TRACK     || (LOWORD(wParam) == IDC_TCP_TRACK_COMBO     && HIWORD(wParam) == CBN_SELCHANGE)) {checkBox = IDC_TCP_TRACK;     combo1 = IDC_TCP_TRACK_COMBO;}
-			else if (LOWORD(wParam) == IDC_TCP_ENV       || (LOWORD(wParam) == IDC_TCP_ENV_COMBO       && HIWORD(wParam) == CBN_SELCHANGE)) {checkBox = IDC_TCP_ENV;       combo1 = IDC_TCP_ENV_COMBO;}
-			else if (LOWORD(wParam) == IDC_MCP_TRACK     || (LOWORD(wParam) == IDC_MCP_TRACK_COMBO     && HIWORD(wParam) == CBN_SELCHANGE)) {checkBox = IDC_MCP_TRACK;     combo1 = IDC_MCP_TRACK_COMBO;}
-			else if (LOWORD(wParam) == IDC_ARG_TRACK     || (LOWORD(wParam) == IDC_ARG_TRACK_COMBO     && HIWORD(wParam) == CBN_SELCHANGE)) {checkBox = IDC_ARG_TRACK;     combo1 = IDC_ARG_TRACK_COMBO;}
-			else if (LOWORD(wParam) == IDC_ARG_ITEM      || (LOWORD(wParam) == IDC_ARG_ITEM_COMBO      && HIWORD(wParam) == CBN_SELCHANGE)) {checkBox = IDC_ARG_ITEM;      combo1 = IDC_ARG_ITEM_COMBO;}
-			else if (LOWORD(wParam) == IDC_ARG_STRETCH   || (LOWORD(wParam) == IDC_ARG_STRETCH_COMBO   && HIWORD(wParam) == CBN_SELCHANGE)) {checkBox = IDC_ARG_STRETCH;   combo1 = IDC_ARG_STRETCH_COMBO;}
-			else if (LOWORD(wParam) == IDC_ARG_TAKE_ENV  || (LOWORD(wParam) == IDC_ARG_TAKE_ENV_COMBO  && HIWORD(wParam) == CBN_SELCHANGE)) {checkBox = IDC_ARG_TAKE_ENV;  combo1 = IDC_ARG_TAKE_ENV_COMBO;}
-			else if (LOWORD(wParam) == IDC_ARG_TRACK_ENV || (LOWORD(wParam) == IDC_ARG_TRACK_ENV_COMBO && HIWORD(wParam) == CBN_SELCHANGE)) {checkBox = IDC_ARG_TRACK_ENV; combo1 = IDC_ARG_TRACK_ENV_COMBO;}
-			else if (LOWORD(wParam) == IDC_INLINE_ITEM   || (LOWORD(wParam) == IDC_INLINE_ITEM_COMBO   && HIWORD(wParam) == CBN_SELCHANGE)) {checkBox = IDC_INLINE_ITEM;   combo1 = IDC_INLINE_ITEM_COMBO;}
-			else if (LOWORD(wParam) == IDC_ALL_POS       || (LOWORD(wParam) == IDC_ALL_POS_H_COMBO     && HIWORD(wParam) == CBN_SELCHANGE)) {checkBox = IDC_ALL_POS;       combo1 = IDC_ALL_POS_H_COMBO; combo2 = IDC_ALL_POS_V_COMBO;}
-			else if (LOWORD(wParam) == IDC_ALL_POS       || (LOWORD(wParam) == IDC_ALL_POS_V_COMBO     && HIWORD(wParam) == CBN_SELCHANGE)) {checkBox = IDC_ALL_POS;       combo1 = IDC_ALL_POS_H_COMBO; combo2 = IDC_ALL_POS_V_COMBO;}
+			const bool selChange = HIWORD(wParam) == CBN_SELCHANGE;
+			auto &options = m_currentToolbar.GetOptions();
+			struct { int checkbox; int combo[2]; int *value; } option{};
 
-			if (checkBox && (combo1 || combo2))
-			{
-				if (combo1) EnableWindow(GetDlgItem(m_hwnd, combo1), IsDlgButtonChecked(m_hwnd, checkBox));
-				if (combo2) EnableWindow(GetDlgItem(m_hwnd, combo2), IsDlgButtonChecked(m_hwnd, checkBox));
+			if      (ctrl == IDC_ALL_TOPMOST)            option = { ctrl, {}, &options.topmost                };
+			else if (ctrl == IDC_ALL_FOREGROUND)         option = { ctrl, {}, &options.setToolbarToForeground };
+			else if (ctrl == IDC_AUTOCLOSE_INACTIVE)     option = { ctrl, {}, &options.autocloseInactive      };
+			else if (ctrl == IDC_ARG_TAKE_ACTIVATE)      option = { ctrl, {}, &options.arrangeActTake         };
+			else if (ctrl == IDC_MIDI_CC_LANE_CLICKED)   option = { ctrl, {}, &options.midiSetCCLane          };
+			else if (ctrl == IDC_INLINE_CC_LANE_CLICKED) option = { ctrl, {}, &options.inlineSetCCLane        };
+			else if (ctrl == IDC_ALL_FOCUS     || (ctrl == IDC_ALL_FOCUS_COMBO     && selChange)) option = { IDC_ALL_FOCUS,     { IDC_ALL_FOCUS_COMBO     }, &options.focus                     };
+			else if (ctrl == IDC_TCP_TRACK     || (ctrl == IDC_TCP_TRACK_COMBO     && selChange)) option = { IDC_TCP_TRACK,     { IDC_TCP_TRACK_COMBO     }, &options.tcpTrack                  };
+			else if (ctrl == IDC_TCP_ENV       || (ctrl == IDC_TCP_ENV_COMBO       && selChange)) option = { IDC_TCP_ENV,       { IDC_TCP_ENV_COMBO       }, &options.tcpEnvelope               };
+			else if (ctrl == IDC_MCP_TRACK     || (ctrl == IDC_MCP_TRACK_COMBO     && selChange)) option = { IDC_MCP_TRACK,     { IDC_MCP_TRACK_COMBO     }, &options.mcpTrack                  };
+			else if (ctrl == IDC_ARG_TRACK     || (ctrl == IDC_ARG_TRACK_COMBO     && selChange)) option = { IDC_ARG_TRACK,     { IDC_ARG_TRACK_COMBO     }, &options.arrangeTrack              };
+			else if (ctrl == IDC_ARG_ITEM      || (ctrl == IDC_ARG_ITEM_COMBO      && selChange)) option = { IDC_ARG_ITEM,      { IDC_ARG_ITEM_COMBO      }, &options.arrangeItem               };
+			else if (ctrl == IDC_ARG_STRETCH   || (ctrl == IDC_ARG_STRETCH_COMBO   && selChange)) option = { IDC_ARG_STRETCH,   { IDC_ARG_STRETCH_COMBO   }, &options.arrangeStretchMarker      };
+			else if (ctrl == IDC_ARG_TAKE_ENV  || (ctrl == IDC_ARG_TAKE_ENV_COMBO  && selChange)) option = { IDC_ARG_TAKE_ENV,  { IDC_ARG_TAKE_ENV_COMBO  }, &options.arrangeTakeEnvelope       };
+			else if (ctrl == IDC_ARG_TRACK_ENV || (ctrl == IDC_ARG_TRACK_ENV_COMBO && selChange)) option = { IDC_ARG_TRACK_ENV, { IDC_ARG_TRACK_ENV_COMBO }, &options.arrangeTrackEnvelope      };
+			else if (ctrl == IDC_INLINE_ITEM   || (ctrl == IDC_INLINE_ITEM_COMBO   && selChange)) option = { IDC_INLINE_ITEM,   { IDC_INLINE_ITEM_COMBO   }, &options.inlineItem                };
+			else if (ctrl == IDC_ALL_POS       || (ctrl == IDC_ALL_POS_H_COMBO     && selChange)
+			                                   || (ctrl == IDC_ALL_POS_V_COMBO     && selChange)) option = { IDC_ALL_POS,       { IDC_ALL_POS_H_COMBO, IDC_ALL_POS_V_COMBO }, &options.position };
+			else
+				break;
 
-				int option = 0;
-				option |= (!!IsDlgButtonChecked(m_hwnd, checkBox)) ? OPTION_ENABLED : 0;
+			*option.value = !!IsDlgButtonChecked(m_hwnd, option.checkbox) ? OPTION_ENABLED : 0;
 
-				if (combo1) option |= SendDlgItemMessage(m_hwnd, combo1, CB_GETITEMDATA, SendDlgItemMessage(m_hwnd, combo1, CB_GETCURSEL, 0, 0), 0);
-				if (combo2) option |= SendDlgItemMessage(m_hwnd, combo2, CB_GETITEMDATA, SendDlgItemMessage(m_hwnd, combo2, CB_GETCURSEL, 0, 0), 0);
+			for (const int combo : option.combo) {
+				if (!combo)
+					continue;
 
-				if      (checkBox == IDC_ALL_FOCUS)     m_currentToolbar.SetOptionsAll(&option, NULL, NULL, NULL);
-				else if (checkBox == IDC_ALL_POS)       m_currentToolbar.SetOptionsAll(NULL, NULL, &option, NULL);
-				else if (checkBox == IDC_TCP_TRACK)     m_currentToolbar.SetOptionsTcp(&option, NULL);
-				else if (checkBox == IDC_TCP_ENV)       m_currentToolbar.SetOptionsTcp(NULL, &option);
-				else if (checkBox == IDC_MCP_TRACK)     m_currentToolbar.SetOptionsMcp(&option);
-				else if (checkBox == IDC_ARG_TRACK)     m_currentToolbar.SetOptionsArrange(&option, NULL, NULL, NULL, NULL, NULL);
-				else if (checkBox == IDC_ARG_ITEM)      m_currentToolbar.SetOptionsArrange(NULL, &option, NULL, NULL, NULL, NULL);
-				else if (checkBox == IDC_ARG_STRETCH)   m_currentToolbar.SetOptionsArrange(NULL, NULL, &option, NULL, NULL, NULL);
-				else if (checkBox == IDC_ARG_TAKE_ENV)  m_currentToolbar.SetOptionsArrange(NULL, NULL, NULL, &option, NULL, NULL);
-				else if (checkBox == IDC_ARG_TRACK_ENV) m_currentToolbar.SetOptionsArrange(NULL, NULL, NULL, NULL, &option, NULL);
-				else if (checkBox == IDC_INLINE_ITEM)   m_currentToolbar.SetOptionsInline(&option, NULL);
+				EnableWindow(GetDlgItem(m_hwnd, combo), IsDlgButtonChecked(m_hwnd, option.checkbox));
+				*option.value |= SendDlgItemMessage(m_hwnd, combo, CB_GETITEMDATA, SendDlgItemMessage(m_hwnd, combo, CB_GETCURSEL, 0, 0), 0);
 			}
-		}
-		break;
-
-		case IDC_ALL_TOPMOST:
-		case IDC_ALL_FOREGROUND:
-		case IDC_ARG_TAKE_ACTIVATE:
-		case IDC_MIDI_CC_LANE_CLICKED:
-		case IDC_INLINE_CC_LANE_CLICKED:
-		{
-			int checkBox = LOWORD(wParam);
-			int option = (IsDlgButtonChecked(m_hwnd, checkBox)) ? OPTION_ENABLED : 0;
-
-			if      (checkBox == IDC_ALL_TOPMOST)            m_currentToolbar.SetOptionsAll(NULL, &option, NULL, NULL);
-			else if (checkBox == IDC_ALL_FOREGROUND)         m_currentToolbar.SetOptionsAll(NULL, NULL, NULL, &option);
-			else if (checkBox == IDC_ARG_TAKE_ACTIVATE)      m_currentToolbar.SetOptionsArrange(NULL, NULL, NULL, NULL, NULL, &option);
-			else if (checkBox == IDC_MIDI_CC_LANE_CLICKED)   m_currentToolbar.SetOptionsMIDI(&option);
-			else if (checkBox == IDC_INLINE_CC_LANE_CLICKED) m_currentToolbar.SetOptionsInline(NULL, &option);
-
 		}
 		break;
 	}

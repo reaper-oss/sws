@@ -42,6 +42,12 @@ Cycle actions:
 Contextual toolbars:
 +Fix empty toolbar/auto close/position offset columns when the window is restored at REAPER startup
 
+Linux:
+Implement the list column customization context menu when right-clicking on the column header
+
+macOS:
+Fix the list column customization context menu not being displayed when the list is scrolled
+
 !v2.11.0 pre-release build
 <strong>Reminder: this new SWS version requires REAPER v5.979+!</strong>
 

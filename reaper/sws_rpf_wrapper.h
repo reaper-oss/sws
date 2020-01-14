@@ -47,6 +47,9 @@ REAPER_EXTRA_API_DECL void (*MainThread_LockTracks)();
 REAPER_EXTRA_API_DECL void (*MainThread_UnlockTracks)();
 REAPER_EXTRA_API_DECL bool (*OnColorThemeOpenFile)(const char*);
 
+// https://forum.cockos.com/showthread.php?t=227910
+REAPER_EXTRA_API_DECL bool (*ListView_HeaderHitTest)(HWND, POINT);
+
 // Avoid VWnd collisions
 #define WDL_VirtualWnd_ScaledBlitBG WDL_VirtualWnd_ScaledBlitBG_fptr
 #define WDL_VirtualWnd_BGCfg WDL_VirtualWnd_BGCfg_stub

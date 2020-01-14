@@ -47,7 +47,6 @@ static DWORD g_dwLastKeyMsg = 0;
 #define CONSOLE_WINDOWPOS_KEY "ReaConsoleWindowPos"
 bool g_bCloseOnReturnPref = false;
 
-CONSOLE_COMMAND Tokenize(char* strCommand, const char** trackid, const char** args);
 void ParseTrackId(char* strId, bool bReset = true);
 void ProcessCommand(CONSOLE_COMMAND command, const char* args);
 const char* StatusString(CONSOLE_COMMAND command, const char* args);
@@ -110,7 +109,7 @@ static console_COMMAND_T g_commands[NUM_COMMANDS] =
 
 // Split into various categories, independent of actually having a correct and/or finished command string
 // Basically just a fancy tokenizer
-CONSOLE_COMMAND Tokenize(char* strCommand, char** trackid, char** args)
+CONSOLE_COMMAND ParseConsoleCommand(char* strCommand, char** trackid, char** args)
 {
 	*trackid = *args = (char*)"";
 	char* p;
@@ -720,7 +719,7 @@ void RunConsoleCommand(const char* cmd)
 	lstrcpyn(strCommand, cmd, sizeof(strCommand));
 	char* pTrackId = strCommand;
 	char* pArgs = strCommand;
-	CONSOLE_COMMAND command = Tokenize(strCommand, &pTrackId, &pArgs);
+	CONSOLE_COMMAND command = ParseConsoleCommand(strCommand, &pTrackId, &pArgs);
 	ParseTrackId(pTrackId);
 	ProcessCommand(command, pArgs);
 }
@@ -1012,7 +1011,7 @@ void ReaConsoleWnd::ShowConsole()
 	SetFocus(h);
 	SendMessage(h, EM_SETSEL, 1, 1);
 
-	m_cmd = Tokenize(m_strCmd, &m_pTrackId, &m_pArgs);
+	m_cmd = ParseConsoleCommand(m_strCmd, &m_pTrackId, &m_pArgs);
 	ParseTrackId(m_pTrackId);
 	SetDlgItemText(m_hwnd, IDC_STATUS, StatusString(m_cmd, m_pArgs));
 }
@@ -1020,7 +1019,7 @@ void ReaConsoleWnd::ShowConsole()
 void ReaConsoleWnd::Update()
 {
 	GetDlgItemText(m_hwnd, IDC_COMMAND, m_strCmd, 100);
-	m_cmd = Tokenize(m_strCmd, &m_pTrackId, &m_pArgs);
+	m_cmd = ParseConsoleCommand(m_strCmd, &m_pTrackId, &m_pArgs);
 	ParseTrackId(m_pTrackId);
 	SetDlgItemText(m_hwnd, IDC_STATUS, StatusString(m_cmd, m_pArgs));
 }

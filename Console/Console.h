@@ -86,6 +86,7 @@ typedef struct {
 
 int ConsoleInit();
 void ConsoleExit();
+CONSOLE_COMMAND ParseConsoleCommand(char *strCommand, char **trackid, char **args);
 void RunConsoleCommand(const char* cmd);
 bool LoadConsoleCmds(WDL_PtrList<WDL_FastString>* _outCmds);
 

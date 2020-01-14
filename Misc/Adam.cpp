@@ -2962,14 +2962,55 @@ void UpdateTrackTimebaseToolbar()
 		RefreshToolbar(cmds[i]);
 }
 
+class ItemTimebase {
+public:
+	enum {
+		// C_BEATATTACHMODE
+		Default     = -1,
+		Time        =  0,
+		PosLenRate  =  1,
+		Position    =  2,
+
+		// REAPER v6.01+: C_BEATATTACHMODE=1 C_AUTOSTRETCH=1
+		AutoStretch = -2,
+	};
+
+	ItemTimebase(int timebase) : m_beatAttachMode(timebase), m_autoStretch(false)
+	{
+		if(m_beatAttachMode == AutoStretch) {
+			m_beatAttachMode = PosLenRate;
+			m_autoStretch = true;
+		}
+	}
+
+	bool match(MediaItem *item) const
+	{
+		return GetMediaItemInfo_Value(item, "C_BEATATTACHMODE") == m_beatAttachMode &&
+			(m_beatAttachMode != PosLenRate || (GetMediaItemInfo_Value(item, "C_AUTOSTRETCH") > 0) == m_autoStretch);
+	}
+
+	void apply(MediaItem *item) const
+	{
+		SetMediaItemInfo_Value(item, "C_BEATATTACHMODE", m_beatAttachMode);
+		SetMediaItemInfo_Value(item, "C_AUTOSTRETCH", m_autoStretch);
+	}
+
+private:
+	int m_beatAttachMode;
+	bool m_autoStretch;
+};
+
 // Item timebase actions
 void AWSelItemsTimebase(COMMAND_T* t)
 {
+	const ItemTimebase timebase{static_cast<int>(t->user)};
+
 	WDL_TypedBuf<MediaItem*> selItems;
 	SWS_GetSelectedMediaItems(&selItems);
 
 	for (int i = 0; i < selItems.GetSize(); i++)
-		SetMediaItemInfo_Value(selItems.Get()[i], "C_BEATATTACHMODE", (double)t->user);
+		timebase.apply(selItems.Get()[i]);
+
 	UpdateItemTimebaseToolbar();
 
 	if (selItems.GetSize())
@@ -2978,15 +3019,18 @@ void AWSelItemsTimebase(COMMAND_T* t)
 
 int IsSelItemsTimebase(COMMAND_T* t)
 {
+	const ItemTimebase timebase{static_cast<int>(t->user)};
+
 	WDL_TypedBuf<MediaItem*> selItems;
 	SWS_GetSelectedMediaItems(&selItems);
 
 	if (!selItems.GetSize())
 		return 0;
 
-	for (int i = 0; i < selItems.GetSize(); i++)
-		if ((int)GetMediaItemInfo_Value(selItems.Get()[i], "C_BEATATTACHMODE") != t->user)
+	for (int i = 0; i < selItems.GetSize(); i++) {
+		if (!timebase.match(selItems.Get()[i]))
 			return 0;
+	}
 
 	return 1;
 }
@@ -3114,10 +3158,10 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/AW: Set selected tracks timebase to beats (position only)" },				"SWS_AWTRACKTBASEBEATPOS",	AWSelTracksTimebase, NULL,  2, IsSelTracksTimebase, },
 	{ { DEFACCEL, "SWS/AW: Set selected tracks timebase to beats (position, length, rate)" },		"SWS_AWTRACKTBASEBEATALL",	AWSelTracksTimebase, NULL,  1, IsSelTracksTimebase, },
 
-	{ { DEFACCEL, "SWS/AW: Set selected items timebase to project/track default" },					"SWS_AWITEMTBASEPROJ",		AWSelItemsTimebase, NULL, -1, IsSelItemsTimebase, },
-	{ { DEFACCEL, "SWS/AW: Set selected items timebase to time" },									"SWS_AWITEMTBASETIME",		AWSelItemsTimebase, NULL,  0, IsSelItemsTimebase, },
-	{ { DEFACCEL, "SWS/AW: Set selected items timebase to beats (position only)" },					"SWS_AWITEMTBASEBEATPOS",	AWSelItemsTimebase, NULL,  2, IsSelItemsTimebase, },
-	{ { DEFACCEL, "SWS/AW: Set selected items timebase to beats (position, length, rate)" },		"SWS_AWITEMTBASEBEATALL",	AWSelItemsTimebase, NULL,  1, IsSelItemsTimebase, },
+	{ { DEFACCEL, "SWS/AW: Set selected items timebase to project/track default" },					"SWS_AWITEMTBASEPROJ",		AWSelItemsTimebase, NULL, ItemTimebase::Default, IsSelItemsTimebase, },
+	{ { DEFACCEL, "SWS/AW: Set selected items timebase to time" },									"SWS_AWITEMTBASETIME",		AWSelItemsTimebase, NULL,  ItemTimebase::Time, IsSelItemsTimebase, },
+	{ { DEFACCEL, "SWS/AW: Set selected items timebase to beats (position only)" },					"SWS_AWITEMTBASEBEATPOS",	AWSelItemsTimebase, NULL,  ItemTimebase::Position, IsSelItemsTimebase, },
+	{ { DEFACCEL, "SWS/AW: Set selected items timebase to beats (position, length, rate)" },		"SWS_AWITEMTBASEBEATALL",	AWSelItemsTimebase, NULL,  ItemTimebase::PosLenRate, IsSelItemsTimebase, },
 
 	{ { DEFACCEL, "SWS/AW: Toggle triplet grid" },          "SWS_AWTOGGLETRIPLET",              AWToggleTriplet, NULL, 0, IsGridTriplet},
 	{ { DEFACCEL, "SWS/AW: Toggle dotted grid" },           "SWS_AWTOGGLEDOTTED",               AWToggleDotted, NULL, 0, IsGridDotted},
@@ -3142,14 +3186,24 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/AW: Set selected tracks pan mode to dual pan" },								"SWS_AWPANDUALPAN",			AWSelTracksPanMode, NULL, 6, },
 
 
-
 	{ {}, LAST_COMMAND, }, // Denote end of table
+};
+
+static COMMAND_T g_commandTable_REAPER6[] =
+{
+	{ { DEFACCEL, "SWS/AW: Set selected items timebase to beats (auto-stretch at tempo changes)" },		"SWS_AWITEMTBASEBEATSTRETCH",	AWSelItemsTimebase, NULL,  ItemTimebase::AutoStretch, IsSelItemsTimebase, },
+
+	{ {}, LAST_COMMAND, },
 };
 //!WANT_LOCALIZE_1ST_STRING_END
 
 int AdamInit()
 {
 	SWSRegisterCommands(g_commandTable);
+
+	// legacy - v5 compatibility
+	if(atof(GetAppVersion()) >= 6.01)
+		SWSRegisterCommands(g_commandTable_REAPER6);
 
 	g_AWAutoGroup = GetPrivateProfileInt(SWS_INI, "AWAutoGroup", 0, get_ini_file()) ? true : false;
 

@@ -68,6 +68,30 @@ SectionEnd
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
 
 Function .onInit
+  StrCmp $INSTDIR "" 0 +2
+    Call GuessInstallDir
+
+  SetOutPath "" ; enables "Output folder" lines in the log
+
+  IfSilent 0 NotSilent
+    IfFileExists $INSTDIR\reaper.exe ValidInstDir
+      MessageBox MB_OK "Cannot find a valid install of REAPER in $INSTDIR. Aborting."
+      Abort
+    ValidInstDir:
+      Call SetOutputDir
+      Call CheckNotRunning
+  NotSilent:
+    IntOp $0 ${SF_SELECTED} | ${SF_RO}
+    SectionSetFlags ${sws} $0
+FunctionEnd
+
+Function .onVerifyInstDir
+  IfFileExists $INSTDIR\reaper.exe ValidInstDir
+    Abort ; if $INSTDIR is not a reaper install directory
+  ValidInstDir:
+FunctionEnd
+
+Function GuessInstallDir
   SetRegView @CPACK_NSIS_CPUBITS@
   ReadRegStr $0 HKLM Software\REAPER ""
 
@@ -76,16 +100,6 @@ Function .onInit
     Goto +2
   FoundREAPER:
     StrCpy $INSTDIR $0
-
-  SetOutPath "" ; enables "Output folder" lines in the log
-
-  IntOp $0 ${SF_SELECTED} | ${SF_RO}
-  SectionSetFlags ${sws} $0
-FunctionEnd
-
-Function .onVerifyInstDir
-  IfFileExists $INSTDIR\reaper.exe +2
-    Abort ; if $INSTDIR is not a reaper install directory
 FunctionEnd
 
 Function SetOutputDir

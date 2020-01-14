@@ -18,6 +18,8 @@ Envelopes:
 Notes:
 +Fix bad encoding conversion and truncation to 256 characters when toggling "Wrap text" on Windows (Issue 1252)
 +Fix non-working word wrapping on Linux and macOS
+Windows installer:
++Add support for silent installs and setting the REAPER install path from the command line (Issue 1247)
 
 !v2.11.0 pre-release build
 <strong>Reminder: this new SWS version requires REAPER v5.979+!</strong>

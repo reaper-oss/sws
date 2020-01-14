@@ -72,6 +72,11 @@ public:
     m_mem = GetClipboardData(CLIPBOARD_FORMAT);
     m_data = reinterpret_cast<decltype(m_data)>(GlobalLock(m_mem));
 
+    if(!m_data) {
+      m_size = 0;
+      return;
+    }
+
 #ifdef _WIN32
     m_size = WideCharToMultiByte(CP_UTF8, 0, m_data, -1, nullptr, 0, nullptr, nullptr) - 1;
 #else
@@ -87,6 +92,9 @@ public:
       bufSize = m_size;
       buf[m_size] = 0;
     }
+
+    if(!bufSize)
+      return;
 
 #ifdef _WIN32
     WideCharToMultiByte(CP_UTF8, 0, m_data, -1, buf, bufSize, nullptr, nullptr);

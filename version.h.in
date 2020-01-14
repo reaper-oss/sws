@@ -3,4 +3,4 @@
 #define SWS_VERSION_TYPE "Pre-release"
 #define GIT_COMMIT "@GIT_COMMIT@"
 #cmakedefine GIT_BRANCH "@GIT_BRANCH@"
-#define REA_VERSION 5,9,7,9
+#define REA_VERSION 5,9,8,2

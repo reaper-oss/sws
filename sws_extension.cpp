@@ -788,11 +788,12 @@ error:
 		IMPAPI(GetCursorContext2);
 		IMPAPI(GetCursorPosition);
 		IMPAPI(GetCursorPositionEx);
+		IMPAPI(GetEnvelopeInfo_Value); // 5.982+
 		IMPAPI(GetEnvelopeName);
 		IMPAPI(GetEnvelopePoint); // v5pre4
-		IMPAPI(GetEnvelopePointEx); // v5.40+
 		IMPAPI(GetEnvelopePointByTime); // v5pre4
 		IMPAPI(GetEnvelopePointByTimeEx); // v5.40+
+		IMPAPI(GetEnvelopePointEx); // v5.40+
 		IMPAPI(GetEnvelopeScalingMode); // v5pre13+
 		IMPAPI(GetEnvelopeStateChunk);
 		IMPAPI(GetExePath);
@@ -1129,8 +1130,6 @@ error:
 			goto error;
 		}
 
-		// Optional API functions (check for NULL if using!) 
-		IMPAP_OPT(GetEnvelopeInfo_Value); // 5.982+
 
 		// Look for SWS dupe/clone
 		if (rec->GetFunc("SNM_GetIntConfigVar"))

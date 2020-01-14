@@ -313,7 +313,7 @@ void processCPPfile(FILE *fp)
     p=buf;
     while (*p && (!commentp || p < commentp)) // ignore __LOCALIZE after //
     {
-      if ((p==buf || (!isalnum(p[-1]) && p[-1] != '_')) && isLocalizeCall(p))
+      if ((p==buf || (!isalnum(static_cast<unsigned char>(p[-1])) && p[-1] != '_')) && isLocalizeCall(p))
       {
         while (*p != '(') p++;
         p++;

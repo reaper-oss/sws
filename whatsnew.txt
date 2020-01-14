@@ -21,6 +21,9 @@ Notes:
 Windows installer:
 +Add support for silent installs and setting the REAPER install path from the command line (Issue 1247)
 
+ReaScript API:
++Fix BR_GetCurrentTheme (was broken since REAPER 5) and mark as deprecated (use REAPER's GetLastColorThemeFile instead) (report https://forum.cockos.com/showthread.php?p=2218974|here|)
+
 !v2.11.0 pre-release build
 <strong>Reminder: this new SWS version requires REAPER v5.979+!</strong>
 

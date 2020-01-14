@@ -546,69 +546,77 @@ void BR_ContextualToolbar::Cleaup ()
 
 void BR_ContextualToolbar::UpdateInternals ()
 {
-	m_mode = 0;
+	const std::pair<BR_ToolbarContexts, BR_MouseInfo::Modes> modes[] {
+		{ TRANSPORT,                          BR_MouseInfo::MODE_TRANSPORT   },
+		{ RULER,                              BR_MouseInfo::MODE_RULER       },
+		{ RULER_REGIONS,                      BR_MouseInfo::MODE_RULER       },
+		{ RULER_MARKERS,                      BR_MouseInfo::MODE_RULER       },
+		{ RULER_TEMPO,                        BR_MouseInfo::MODE_RULER       },
+		{ RULER_TIMELINE,                     BR_MouseInfo::MODE_RULER       },
+		{ TCP,                                BR_MouseInfo::MODE_MCP_TCP     },
+		{ TCP_EMPTY,                          BR_MouseInfo::MODE_MCP_TCP     },
+		{ TCP_TRACK,                          BR_MouseInfo::MODE_MCP_TCP     },
+		{ TCP_TRACK_MASTER,                   BR_MouseInfo::MODE_MCP_TCP     },
+		{ TCP_ENVELOPE,                       BR_MouseInfo::MODE_MCP_TCP     },
+		{ TCP_ENVELOPE_VOLUME,                BR_MouseInfo::MODE_MCP_TCP     },
+		{ TCP_ENVELOPE_PAN,                   BR_MouseInfo::MODE_MCP_TCP     },
+		{ TCP_ENVELOPE_WIDTH,                 BR_MouseInfo::MODE_MCP_TCP     },
+		{ TCP_ENVELOPE_MUTE,                  BR_MouseInfo::MODE_MCP_TCP     },
+		{ TCP_ENVELOPE_PLAYRATE,              BR_MouseInfo::MODE_MCP_TCP     },
+		{ TCP_ENVELOPE_TEMPO,                 BR_MouseInfo::MODE_MCP_TCP     },
+		{ MCP,                                BR_MouseInfo::MODE_MCP_TCP     },
+		{ MCP_EMPTY,                          BR_MouseInfo::MODE_MCP_TCP     },
+		{ MCP_TRACK,                          BR_MouseInfo::MODE_MCP_TCP     },
+		{ MCP_TRACK_MASTER,                   BR_MouseInfo::MODE_MCP_TCP     },
+		{ ARRANGE,                            BR_MouseInfo::MODE_ARRANGE     },
+		{ ARRANGE_EMPTY,                      BR_MouseInfo::MODE_ARRANGE     },
+		{ ARRANGE_TRACK,                      BR_MouseInfo::MODE_ARRANGE     },
+		{ ARRANGE_TRACK_EMPTY,                BR_MouseInfo::MODE_ARRANGE     },
+		{ ARRANGE_TRACK_ITEM,                 BR_MouseInfo::MODE_ARRANGE     },
+		{ ARRANGE_TRACK_ITEM_AUDIO,           BR_MouseInfo::MODE_ARRANGE     },
+		{ ARRANGE_TRACK_ITEM_MIDI,            BR_MouseInfo::MODE_ARRANGE     },
+		{ ARRANGE_TRACK_ITEM_VIDEO,           BR_MouseInfo::MODE_ARRANGE     },
+		{ ARRANGE_TRACK_ITEM_EMPTY,           BR_MouseInfo::MODE_ARRANGE     },
+		{ ARRANGE_TRACK_ITEM_CLICK,           BR_MouseInfo::MODE_ARRANGE     },
+		{ ARRANGE_TRACK_ITEM_TIMECODE,        BR_MouseInfo::MODE_ARRANGE     },
+		{ ARRANGE_TRACK_ITEM_STRETCH_MARKER,  BR_MouseInfo::MODE_ARRANGE     },
+		{ ARRANGE_TRACK_TAKE_ENVELOPE,        BR_MouseInfo::MODE_ARRANGE     },
+		{ ARRANGE_TRACK_TAKE_ENVELOPE_VOLUME, BR_MouseInfo::MODE_ARRANGE     },
+		{ ARRANGE_TRACK_TAKE_ENVELOPE_PAN,    BR_MouseInfo::MODE_ARRANGE     },
+		{ ARRANGE_TRACK_TAKE_ENVELOPE_MUTE,   BR_MouseInfo::MODE_ARRANGE     },
+		{ ARRANGE_TRACK_TAKE_ENVELOPE_PITCH,  BR_MouseInfo::MODE_ARRANGE     },
+		{ ARRANGE_ENVELOPE_TRACK,             BR_MouseInfo::MODE_ARRANGE     },
+		{ ARRANGE_ENVELOPE_TRACK_VOLUME,      BR_MouseInfo::MODE_ARRANGE     },
+		{ ARRANGE_ENVELOPE_TRACK_PAN,         BR_MouseInfo::MODE_ARRANGE     },
+		{ ARRANGE_ENVELOPE_TRACK_WIDTH,       BR_MouseInfo::MODE_ARRANGE     },
+		{ ARRANGE_ENVELOPE_TRACK_MUTE,        BR_MouseInfo::MODE_ARRANGE     },
+		{ ARRANGE_ENVELOPE_TRACK_PITCH,       BR_MouseInfo::MODE_ARRANGE     },
+		{ ARRANGE_ENVELOPE_TRACK_PLAYRATE,    BR_MouseInfo::MODE_ARRANGE     },
+		{ ARRANGE_ENVELOPE_TRACK_TEMPO,       BR_MouseInfo::MODE_ARRANGE     },
+		{ MIDI_EDITOR,                        BR_MouseInfo::MODE_MIDI_EDITOR },
+		{ MIDI_EDITOR_RULER,                  BR_MouseInfo::MODE_MIDI_EDITOR },
+		{ MIDI_EDITOR_PIANO,                  BR_MouseInfo::MODE_MIDI_EDITOR },
+		{ MIDI_EDITOR_PIANO_NAMED,            BR_MouseInfo::MODE_MIDI_EDITOR },
+		{ MIDI_EDITOR_NOTES,                  BR_MouseInfo::MODE_MIDI_EDITOR },
+		{ MIDI_EDITOR_CC_LANE,                BR_MouseInfo::MODE_MIDI_EDITOR },
+		{ MIDI_EDITOR_CC_SELECTOR,            BR_MouseInfo::MODE_MIDI_EDITOR },
+		{ INLINE_MIDI_EDITOR,                 BR_MouseInfo::MODE_MIDI_INLINE },
+		{ INLINE_MIDI_EDITOR_PIANO,           BR_MouseInfo::MODE_MIDI_INLINE },
+		{ INLINE_MIDI_EDITOR_NOTES,           BR_MouseInfo::MODE_MIDI_INLINE },
+		{ INLINE_MIDI_EDITOR_CC_LANE,         BR_MouseInfo::MODE_MIDI_INLINE },
+		{ INLINE_MIDI_EDITOR_CC_LANE,         BR_MouseInfo::MODE_MIDI_INLINE },
+	};
+
+	m_mode = BR_MouseInfo::MODE_IGNORE_ENVELOPE_LANE_SEGMENT;
 	m_activeContexts.clear();
 
-	int context = 0;
-	context = TRANSPORT;                          if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_TRANSPORT;   m_activeContexts.insert(context);}
-	context = RULER;                              if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_RULER;       m_activeContexts.insert(context);}
-	context = RULER_REGIONS;                      if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_RULER;       m_activeContexts.insert(context);}
-	context = RULER_MARKERS;                      if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_RULER;       m_activeContexts.insert(context);}
-	context = RULER_TEMPO;                        if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_RULER;       m_activeContexts.insert(context);}
-	context = RULER_TIMELINE;                     if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_RULER;       m_activeContexts.insert(context);}
-	context = TCP;                                if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_MCP_TCP;     m_activeContexts.insert(context);}
-	context = TCP_EMPTY;                          if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_MCP_TCP;     m_activeContexts.insert(context);}
-	context = TCP_TRACK;                          if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_MCP_TCP;     m_activeContexts.insert(context);}
-	context = TCP_TRACK_MASTER;                   if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_MCP_TCP;     m_activeContexts.insert(context);}
-	context = TCP_ENVELOPE;                       if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_MCP_TCP;     m_activeContexts.insert(context);}
-	context = TCP_ENVELOPE_VOLUME;                if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_MCP_TCP;     m_activeContexts.insert(context);}
-	context = TCP_ENVELOPE_PAN;                   if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_MCP_TCP;     m_activeContexts.insert(context);}
-	context = TCP_ENVELOPE_WIDTH;                 if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_MCP_TCP;     m_activeContexts.insert(context);}
-	context = TCP_ENVELOPE_MUTE;                  if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_MCP_TCP;     m_activeContexts.insert(context);}
-	context = TCP_ENVELOPE_PLAYRATE;              if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_MCP_TCP;     m_activeContexts.insert(context);}
-	context = TCP_ENVELOPE_TEMPO;                 if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_MCP_TCP;     m_activeContexts.insert(context);}
-	context = MCP;                                if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_MCP_TCP;     m_activeContexts.insert(context);}
-	context = MCP_EMPTY;                          if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_MCP_TCP;     m_activeContexts.insert(context);}
-	context = MCP_TRACK;                          if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_MCP_TCP;     m_activeContexts.insert(context);}
-	context = MCP_TRACK_MASTER;                   if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_MCP_TCP;     m_activeContexts.insert(context);}
-	context = ARRANGE;                            if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_ARRANGE;     m_activeContexts.insert(context);}
-	context = ARRANGE_EMPTY;                      if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_ARRANGE;     m_activeContexts.insert(context);}
-	context = ARRANGE_TRACK;                      if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_ARRANGE;     m_activeContexts.insert(context);}
-	context = ARRANGE_TRACK_EMPTY;                if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_ARRANGE;     m_activeContexts.insert(context);}
-	context = ARRANGE_TRACK_ITEM;                 if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_ARRANGE;     m_activeContexts.insert(context);}
-	context = ARRANGE_TRACK_ITEM_AUDIO;           if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_ARRANGE;     m_activeContexts.insert(context);}
-	context = ARRANGE_TRACK_ITEM_MIDI;            if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_ARRANGE;     m_activeContexts.insert(context);}
-	context = ARRANGE_TRACK_ITEM_VIDEO;           if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_ARRANGE;     m_activeContexts.insert(context);}
-	context = ARRANGE_TRACK_ITEM_EMPTY;           if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_ARRANGE;     m_activeContexts.insert(context);}
-	context = ARRANGE_TRACK_ITEM_CLICK;           if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_ARRANGE;     m_activeContexts.insert(context);}
-	context = ARRANGE_TRACK_ITEM_TIMECODE;        if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_ARRANGE;     m_activeContexts.insert(context);}
-	context = ARRANGE_TRACK_ITEM_STRETCH_MARKER;  if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_ARRANGE;     m_activeContexts.insert(context);}
-	context = ARRANGE_TRACK_TAKE_ENVELOPE;        if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_ARRANGE;     m_activeContexts.insert(context);}
-	context = ARRANGE_TRACK_TAKE_ENVELOPE_VOLUME; if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_ARRANGE;     m_activeContexts.insert(context);}
-	context = ARRANGE_TRACK_TAKE_ENVELOPE_PAN;    if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_ARRANGE;     m_activeContexts.insert(context);}
-	context = ARRANGE_TRACK_TAKE_ENVELOPE_MUTE;   if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_ARRANGE;     m_activeContexts.insert(context);}
-	context = ARRANGE_TRACK_TAKE_ENVELOPE_PITCH;  if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_ARRANGE;     m_activeContexts.insert(context);}
-	context = ARRANGE_ENVELOPE_TRACK;             if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_ARRANGE;     m_activeContexts.insert(context);}
-	context = ARRANGE_ENVELOPE_TRACK_VOLUME;      if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_ARRANGE;     m_activeContexts.insert(context);}
-	context = ARRANGE_ENVELOPE_TRACK_PAN;         if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_ARRANGE;     m_activeContexts.insert(context);}
-	context = ARRANGE_ENVELOPE_TRACK_WIDTH;       if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_ARRANGE;     m_activeContexts.insert(context);}
-	context = ARRANGE_ENVELOPE_TRACK_MUTE;        if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_ARRANGE;     m_activeContexts.insert(context);}
-	context = ARRANGE_ENVELOPE_TRACK_PITCH;       if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_ARRANGE;     m_activeContexts.insert(context);}
-	context = ARRANGE_ENVELOPE_TRACK_PLAYRATE;    if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_ARRANGE;     m_activeContexts.insert(context);}
-	context = ARRANGE_ENVELOPE_TRACK_TEMPO;       if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_ARRANGE;     m_activeContexts.insert(context);}
-	context = MIDI_EDITOR;                        if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_MIDI_EDITOR; m_activeContexts.insert(context);}
-	context = MIDI_EDITOR_RULER;                  if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_MIDI_EDITOR; m_activeContexts.insert(context);}
-	context = MIDI_EDITOR_PIANO;                  if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_MIDI_EDITOR; m_activeContexts.insert(context);}
-	context = MIDI_EDITOR_PIANO_NAMED;            if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_MIDI_EDITOR; m_activeContexts.insert(context);}
-	context = MIDI_EDITOR_NOTES;                  if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_MIDI_EDITOR; m_activeContexts.insert(context);}
-	context = MIDI_EDITOR_CC_LANE;                if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_MIDI_EDITOR; m_activeContexts.insert(context);}
-	context = MIDI_EDITOR_CC_SELECTOR;            if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_MIDI_EDITOR; m_activeContexts.insert(context);}
-	context = INLINE_MIDI_EDITOR;                 if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_MIDI_INLINE; m_activeContexts.insert(context);}
-	context = INLINE_MIDI_EDITOR_PIANO;           if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_MIDI_INLINE; m_activeContexts.insert(context);}
-	context = INLINE_MIDI_EDITOR_NOTES;           if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_MIDI_INLINE; m_activeContexts.insert(context);}
-	context = INLINE_MIDI_EDITOR_CC_LANE;         if (this->IsToolbarAction(this->GetMouseAction(context))) {m_mode |= BR_MouseInfo::MODE_MIDI_INLINE; m_activeContexts.insert(context);}
-
-	m_mode |= BR_MouseInfo::MODE_IGNORE_ENVELOPE_LANE_SEGMENT;
+	// C++17: for (const auto [context, mode] : modes) {
+	for (const auto &pair : modes) {
+		if (IsToolbarAction(GetMouseAction(pair.first))) {
+			m_mode |= pair.second;
+			m_activeContexts.insert(pair.first);
+		}
+	}
 }
 
 int BR_ContextualToolbar::FindRulerToolbar (BR_MouseInfo& mouseInfo, ExecuteOnToolbarLoad& executeOnToolbarLoad)

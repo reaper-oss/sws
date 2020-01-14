@@ -33,6 +33,9 @@ Cycle actions:
 +Fix single-letter ReaConsole commands being recognized as invalid (report https://forum.cockos.com/showpost.php?p=2223834|here|)
 +Fix the "SWS/AW: Set selected tracks pan mode" actions not redrawing the MCP in REAPER v6 (Issue 1267)
 
+Contextual toolbars:
++Fix the MIDI Inline Editor context not being detected unless the Arrange context has a toolbar assigned (Issue 1261)
+
 !v2.11.0 pre-release build
 <strong>Reminder: this new SWS version requires REAPER v5.979+!</strong>
 

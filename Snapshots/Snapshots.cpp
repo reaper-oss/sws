@@ -438,7 +438,7 @@ void SWS_SnapshotsWnd::RenameCurrent()
 	m_pLists.Get(0)->EditListItem((SWS_ListItem*)g_ss.Get()->m_snapshots.Get(i), 1);
 }
 
-bool SWS_SnapshotsWnd::GetPromptOnDeleted()
+bool SWS_SnapshotsWnd::GetPromptOnDeletedTracks()
 {
 	return g_bPromptOnDeleted;
 }

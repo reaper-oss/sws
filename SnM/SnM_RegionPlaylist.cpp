@@ -103,7 +103,7 @@ char g_rgnplBigFontName[64] = SNM_DYN_FONT_NAME;
 bool g_monitorMode = false;
 bool g_repeatPlaylist = false;	// playlist repeat state
 bool g_seekImmediate = false;
-int g_optionFlags = false;
+int g_optionFlags = 0;
 
 // see PlaylistRun()
 int g_playPlaylist = -1;		// -1: stopped, playlist id otherwise
@@ -2082,10 +2082,10 @@ int RegionPlaylistInit()
 {
 	// load prefs
 	char buf[64]="";
-	g_monitorMode = (GetPrivateProfileInt("RegionPlaylist", "MonitorMode", 0, g_SNM_IniFn.Get()) == 1);
-	g_repeatPlaylist = (GetPrivateProfileInt("RegionPlaylist", "Repeat", 0, g_SNM_IniFn.Get()) == 1);
-	g_seekImmediate = (GetPrivateProfileInt("RegionPlaylist", "SeekImmediate", 0, g_SNM_IniFn.Get()) == 1);
-	g_optionFlags = (GetPrivateProfileInt("RegionPlaylist", "SeekPlay", 0, g_SNM_IniFn.Get()) == 1);
+	g_monitorMode = GetPrivateProfileInt("RegionPlaylist", "MonitorMode", 0, g_SNM_IniFn.Get());
+	g_repeatPlaylist = GetPrivateProfileInt("RegionPlaylist", "Repeat", 0, g_SNM_IniFn.Get());
+	g_seekImmediate = GetPrivateProfileInt("RegionPlaylist", "SeekImmediate", 0, g_SNM_IniFn.Get());
+	g_optionFlags = GetPrivateProfileInt("RegionPlaylist", "SeekPlay", 0, g_SNM_IniFn.Get());
 	GetPrivateProfileString("RegionPlaylist", "BigFontName", SNM_DYN_FONT_NAME, g_rgnplBigFontName, sizeof(g_rgnplBigFontName), g_SNM_IniFn.Get());
 	GetPrivateProfileString("RegionPlaylist", "OscFeedback", "", buf, sizeof(buf), g_SNM_IniFn.Get());
 	g_osc = LoadOscCSurfs(NULL, buf); // NULL on err (e.g. "", token doesn't exist, etc.)
@@ -2103,18 +2103,26 @@ void RegionPlaylistExit()
 {
 	plugin_register("-projectconfig", &s_projectconfig);
 
+	char format[SNM_MAX_PATH];
+
 	// save prefs
-	WritePrivateProfileString("RegionPlaylist", "MonitorMode", g_monitorMode?"1":"0", g_SNM_IniFn.Get()); 
-	WritePrivateProfileString("RegionPlaylist", "Repeat", g_repeatPlaylist?"1":"0", g_SNM_IniFn.Get()); 
+	const std::pair<const char *, int> intOptions[] = {
+		{ "MonitorMode",   g_monitorMode    },
+		{ "Repeat",        g_repeatPlaylist },
+		{ "SeekImmediate", g_seekImmediate  },
+		{ "SeekPlay",      g_optionFlags    },
+	};
+	for(const auto &pair : intOptions) {
+		snprintf(format, sizeof(format), "%d", pair.second);
+		WritePrivateProfileString("RegionPlaylist", pair.first, format, g_SNM_IniFn.Get());
+	}
+
 	WritePrivateProfileString("RegionPlaylist", "ScrollView", NULL, g_SNM_IniFn.Get()); // deprecated
-	WritePrivateProfileString("RegionPlaylist", "SeekImmediate", g_seekImmediate?"1":"0", g_SNM_IniFn.Get());
-	WritePrivateProfileString("RegionPlaylist", "SeekPlay", g_optionFlags?"1":"0", g_SNM_IniFn.Get()); 
 	WritePrivateProfileString("RegionPlaylist", "BigFontName", g_rgnplBigFontName, g_SNM_IniFn.Get());
 	if (g_osc)
 	{
-		WDL_FastString escStr;
-		escStr.SetFormatted(SNM_MAX_PATH, "\"%s\"", g_osc->m_name.Get());
-		WritePrivateProfileString("RegionPlaylist", "OscFeedback", escStr.Get(), g_SNM_IniFn.Get());
+		snprintf(format, sizeof(format), R"("%s")", g_osc->m_name.Get());
+		WritePrivateProfileString("RegionPlaylist", "OscFeedback", format, g_SNM_IniFn.Get());
 	}
 	else
 		WritePrivateProfileString("RegionPlaylist", "OscFeedback", NULL, g_SNM_IniFn.Get());

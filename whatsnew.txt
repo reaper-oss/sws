@@ -1,6 +1,6 @@
 New actions:
 +Added SWS/NF: Toggle swing grid (Issue 1243)
-+Added SWS/AW: Toggle swing grid (Issue 1244) (difference between and native action is that this will obey MIDI editor setting to sync grid changes with arrange)
++Added SWS/AW: Toggle swing grid (Issue 1244) (unlike the native action, this one obeys the MIDI editor setting to sync grid changes with arrange)
 +Added SWS/AW: Set grid to X preserving grid type (Issue 1244)
 
 Fixes:

@@ -66,33 +66,24 @@ void BypassFXexceptVSTiForSelTracks(COMMAND_T* ct)
 //                                                              //
 //////////////////////////////////////////////////////////////////
 
-const int ME_SECTION = 32060;
-
 int Main_IsMIDIGridTriplet(COMMAND_T* = NULL)
 {
-	int toggleState = GetToggleCommandStateEx(ME_SECTION, 41004); // Grid: Set grid type to triplet
-	return toggleState;
+	return GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41004); // Grid: Set grid type to triplet
 }
 
 
 int Main_IsMIDIGridDotted(COMMAND_T* = NULL)
 {
-	int toggleState = GetToggleCommandStateEx(ME_SECTION, 41005); // Grid: Set grid type to dotted
-	return toggleState;
+	return GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41005); // Grid: Set grid type to dotted
 }
 
 int Main_IsMIDIGridSwing(COMMAND_T* = NULL)
 {
 	// BR: It seems REAPER doesn't report toggle state for swing grid so instead check all other three grid types
-	if (   GetToggleCommandStateEx(ME_SECTION, 41005) == 0 // Grid: Set grid type to dotted
-		&& GetToggleCommandStateEx(ME_SECTION, 41004) == 0 // Grid: Set grid type to triplet
-		&& GetToggleCommandStateEx(ME_SECTION, 41003) == 0 // Grid: Set grid type to straight
-		) {
-		return 1;
-	}
-	else {
-		return 0;
-	}
+	return GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41005) == 0 // Grid: Set grid type to dotted
+	    && GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41004) == 0 // Grid: Set grid type to triplet
+	    && GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41003) == 0 // Grid: Set grid type to straight
+	;
 }
 
 void Main_NFToggleDottedMIDI(COMMAND_T* = NULL);
@@ -149,7 +140,7 @@ void Main_NFToggleSwingMIDI(COMMAND_T*)
 		MIDIEditor_OnCommand(midiEditor, 41006);
 
 		// BR: REAPER doesn't obey 'Grid: Use the same grid division in arrange view and MIDI editor' when setting swing grid via action so make sure to set it here manually
-		if (GetToggleCommandStateEx(ME_SECTION, 41022)) // Grid: Use the same grid division in arrange view and MIDI editor
+		if (GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41022)) // Grid: Use the same grid division in arrange view and MIDI editor
 			GetSetProjectGrid(NULL, true, NULL, &g_i1, NULL);
 	}
 
@@ -426,9 +417,9 @@ static COMMAND_T g_commandTable[] =
 	// { { DEFACCEL, "SWS/NF: Toggle triplet grid" },	"NF_MAIN_TOGGLETRIPLET_MIDI",   Main_NFToggleTripletMIDI, NULL, 0, Main_IsMIDIGridTriplet },
 	// { { DEFACCEL, "SWS/NF: Toggle dotted grid" },   "NF_MAIN_TOGGLEDOTTED_MIDI",    Main_NFToggleDottedMIDI, NULL, 0, Main_IsMIDIGridDotted },
 
-	{ { DEFACCEL, "SWS/NF: Toggle triplet grid" }, "NF_ME_TOGGLETRIPLET" , NULL, NULL, 0, Main_IsMIDIGridTriplet, ME_SECTION, ME_NFToggleTripletMIDI },
-	{ { DEFACCEL, "SWS/NF: Toggle dotted grid" }, "NF_ME_TOGGLEDOTTED" , NULL, NULL, 0, Main_IsMIDIGridDotted, ME_SECTION, ME_NFToggleDottedMIDI  },
-	{ { DEFACCEL, "SWS/NF: Toggle swing grid" }, "NF_ME_TOGGLESWING" , NULL, NULL, 0, Main_IsMIDIGridSwing, ME_SECTION, ME_NFToggleSwingMIDI  },
+	{ { DEFACCEL, "SWS/NF: Toggle triplet grid" }, "NF_ME_TOGGLETRIPLET" , NULL, NULL, 0, Main_IsMIDIGridTriplet, SECTION_MIDI_EDITOR, ME_NFToggleTripletMIDI },
+	{ { DEFACCEL, "SWS/NF: Toggle dotted grid" }, "NF_ME_TOGGLEDOTTED" , NULL, NULL, 0, Main_IsMIDIGridDotted, SECTION_MIDI_EDITOR, ME_NFToggleDottedMIDI  },
+	{ { DEFACCEL, "SWS/NF: Toggle swing grid" }, "NF_ME_TOGGLESWING" , NULL, NULL, 0, Main_IsMIDIGridSwing, SECTION_MIDI_EDITOR, ME_NFToggleSwingMIDI  },
 
 	// Disable / Enable multichannel metering
 	{ { DEFACCEL, "SWS/NF: Disable multichannel metering (all tracks)" }, "NF_DISABLE_MULTICHAN_MTR_ALL", DisableMultichannelMetering, NULL, 0 },

@@ -2681,32 +2681,15 @@ int IsGridSwing(COMMAND_T* = NULL)
 
 int IsAWSetGridPreserveType(COMMAND_T* ct)
 {
-	int toggleState = 0;
+	auto grid = static_cast<double>(ct->user);
+	grid = grid < 0 ? abs(grid) * 4.0 : 4.0 / grid;
 
-	double normalizedGrid = 0;
-	if ((int)ct->user < 0)
-		normalizedGrid = static_cast<double>(abs((int)ct->user)) * 4.0;
-	else
-		normalizedGrid = 4.0 / static_cast<double>((int)ct->user);
-
-	ConfigVar<double> pGridDiv("projgriddiv");
 	if (IsGridTriplet())
-	{
-		if (*pGridDiv == normalizedGrid * (2.0 / 3.0))
-			toggleState = 1;
-	}
+		grid *= 2.0 / 3.0;
 	else if (IsGridDotted())
-	{
-		if (*pGridDiv == normalizedGrid * (3.0 / 2.0))
-			toggleState = 1;
-	}
-	else
-	{
-		if (*pGridDiv == normalizedGrid)
-			toggleState = 1;
-	}
+		grid *= 3.0 / 2.0;
 
-	return toggleState;
+	return grid == *ConfigVar<double>("projgriddiv");
 }
 
 void AWToggleDotted(COMMAND_T* = NULL);
@@ -2714,50 +2697,44 @@ void AWToggleSwing(COMMAND_T* = NULL);
 
 void AWToggleTriplet(COMMAND_T* = NULL)
 {
-	ConfigVar<double> pGridDiv("projgriddiv");
-
 	if (IsGridDotted())
 		AWToggleDotted();
 	if (IsGridSwing())
 		AWToggleSwing();
 
-	if (IsGridTriplet())
-		*pGridDiv *= 3.0/2.0;
-	else
-		*pGridDiv *= 2.0/3.0;
+	*ConfigVar<double>("projgriddiv") *= IsGridTriplet() ? 3.0/2.0 : 2.0/3.0;
 
-	if (MIDIEditor_GetActive() && GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41022))     // Grid: Use the same grid division in arrange view and MIDI editor
-		if (IsGridTriplet() && !GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41004))       // Grid: Set grid type to triplet
-			MIDIEditor_LastFocused_OnCommand(41004, false);                                // Grid: Set grid type to triplet
+	if (MIDIEditor_GetActive() && GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41022)) // Grid: Use the same grid division in arrange view and MIDI editor
+	{
+		if (IsGridTriplet() && !GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41004)) // Grid: Set grid type to triplet
+			MIDIEditor_LastFocused_OnCommand(41004, false); // Grid: Set grid type to triplet
 		else if (!IsGridTriplet() && !GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41003)) // Grid: Set grid type to straight
-			MIDIEditor_LastFocused_OnCommand(41003, false);                                // Grid: Set grid type to straight
+			MIDIEditor_LastFocused_OnCommand(41003, false); // Grid: Set grid type to straight
+	}
+
 	UpdateGridToolbar();
 	UpdateTimeline();
 }
 
 void AWToggleDotted(COMMAND_T*)
 {
-	ConfigVar<double> pGridDiv("projgriddiv");
-
 	if (IsGridTriplet())
 		AWToggleTriplet();
 	if (IsGridSwing())
 		AWToggleSwing();
 
-	if (IsGridDotted())
-		*pGridDiv *= 2.0/3.0;
-	else
-		*pGridDiv *= 3.0/2.0;
+	*ConfigVar<double>("projgriddiv") *= IsGridDotted() ? 2.0/3.0 : 3.0/2.0;
 
-	if (MIDIEditor_GetActive() && GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41022))    // Grid: Use the same grid division in arrange view and MIDI editor
-		if (IsGridDotted() && !GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41005))       // Grid: Set grid type to dotted
-			MIDIEditor_LastFocused_OnCommand(41005, false);                               // Grid: Set grid type to dotted
+	if (MIDIEditor_GetActive() && GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41022)) // Grid: Use the same grid division in arrange view and MIDI editor
+	{
+		if (IsGridDotted() && !GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41005)) // Grid: Set grid type to dotted
+			MIDIEditor_LastFocused_OnCommand(41005, false); // Grid: Set grid type to dotted
 		else if (!IsGridDotted() && !GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41003)) // Grid: Set grid type to straight
-			MIDIEditor_LastFocused_OnCommand(41003, false);                               // Grid: Set grid type to straight
+			MIDIEditor_LastFocused_OnCommand(41003, false); // Grid: Set grid type to straight
+	}
 
 	UpdateGridToolbar();
 	UpdateTimeline();
-
 }
 
 void AWToggleSwing(COMMAND_T*)
@@ -2775,23 +2752,19 @@ void AWToggleSwing(COMMAND_T*)
 		// BR: It seems REAPER doesn't report toggle state for swing grid so instead check all other three grid types
 		if (GetToggleCommandStateEx(0, 42304)) // Grid: Toggle swing grid
 		{
-			if (   GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41005) == 1 // Grid: Set grid type to dotted
-				|| GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41004) == 1 // Grid: Set grid type to triplet
-				|| GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41003) == 1 // Grid: Set grid type to straight
+			if (GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41005) == 1 // Grid: Set grid type to dotted
+			 || GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41004) == 1 // Grid: Set grid type to triplet
+			 || GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41003) == 1 // Grid: Set grid type to straight
 			)
-			{
 				MIDIEditor_LastFocused_OnCommand(41006, false); // Grid: Set grid type to swing
-			}
 		}
 		else
 		{
-			if (   GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41005) == 1 // Grid: Set grid type to dotted
-				|| GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41004) == 1 // Grid: Set grid type to triplet
-				|| GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41003) != 1 // Grid: Set grid type to straight
+			if (GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41005) == 1 // Grid: Set grid type to dotted
+			 || GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41004) == 1 // Grid: Set grid type to triplet
+			 || GetToggleCommandStateEx(SECTION_MIDI_EDITOR, 41003) != 1 // Grid: Set grid type to straight
 			)
-			{
 				MIDIEditor_LastFocused_OnCommand(41003, false); // Grid: Set grid type to straight
-			}
 		}
 	}
 	UpdateGridToolbar();
@@ -2866,8 +2839,7 @@ void AWToggleClickTrack(COMMAND_T*)
 
 void UpdateGridToolbar()
 {
-	static int cmds[14] =
-	{
+	static const int cmds[] {
 		NamedCommandLookup("_SWS_AWTOGGLETRIPLET"),
 		NamedCommandLookup("_SWS_AWTOGGLEDOTTED"),
 		NamedCommandLookup("_SWS_AWTOGGLESWING"),
@@ -2881,19 +2853,18 @@ void UpdateGridToolbar()
 		NamedCommandLookup("_SWS_SETGRID_PRESERVE_TYPE_1_16"),
 		NamedCommandLookup("_SWS_SETGRID_PRESERVE_TYPE_1_32"),
 		NamedCommandLookup("_SWS_SETGRID_PRESERVE_TYPE_1_64"),
-		NamedCommandLookup("_SWS_SETGRID_PRESERVE_TYPE_1_128")
+		NamedCommandLookup("_SWS_SETGRID_PRESERVE_TYPE_1_128"),
 	};
-	for (int i = 0; i < 14; ++i)
-		RefreshToolbar(cmds[i]);
+	for (const int cmd : cmds)
+		RefreshToolbar(cmd);
 
-	static int midiCmds[3] =
-	{
+	static const int midiCmds[] {
 		NamedCommandLookup("_NF_ME_TOGGLETRIPLET"),
 		NamedCommandLookup("_NF_ME_TOGGLEDOTTED"),
-		NamedCommandLookup("_NF_ME_TOGGLESWING")
+		NamedCommandLookup("_NF_ME_TOGGLESWING"),
 	};
-	for (int i = 0; i < 3; ++i)
-		RefreshToolbar2(SECTION_MIDI_EDITOR, midiCmds[i]); // when registered in ME
+	for (const int midiCmd : midiCmds)
+		RefreshToolbar2(SECTION_MIDI_EDITOR, midiCmd);
 }
 
 void AWInsertClickTrack(COMMAND_T* t)

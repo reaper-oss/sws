@@ -4,3 +4,5 @@
 
 # External files
 /vendor
+/.vs
+/CMakeSettings.json

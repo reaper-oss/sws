@@ -112,7 +112,7 @@ Project Set List:
  - [Y] If "Auto load" was enabled, "Y" will auto play the next song.
  - [Enter] Load song. If song is playing and "Auto Load" is enabled, hitting [Enter] will flag the song as the next song to play.
  - Mouse Drag - Move song(s) in the list.
- - Windows user will be able to insert add songs from the open file dialog.
+ - Windows user will be able to insert multiple songs from the open file dialog.
  - [Shift+Up / Dn] - Select multiple songs.
 
 !v2.10.0 #1 Featured build (February 6, 2019)

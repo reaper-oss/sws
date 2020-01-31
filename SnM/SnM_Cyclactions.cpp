@@ -649,8 +649,12 @@ void RunCycleAction(COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hw
 				if (g_undos)
 					Undo_BeginBlock2(NULL);
 
+				PreventUIRefresh(1);
+
 				for (int i=0; i<allCmds.GetSize(); i++)
 					PerformSingleCommand(sec, allCmds.Get(i)->Get(), _val, _valhw, _relmode, _hwnd);
+
+				PreventUIRefresh(-1);
 
 				if (g_undos)
 					Undo_EndBlock2(NULL, undoStr, UNDO_STATE_ALL);

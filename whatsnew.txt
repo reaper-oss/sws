@@ -81,6 +81,9 @@ Notes:
 ReaScript API:
 +Fix crash in NF_GetPeak/RMS functions when passing null pointer (nil) (Issue 1295) 
 
+Miscellaneous:
++Fix opening projects from list not creating new tabs if active tabs were closed (v2.11 regression, Issue 1293)
+
 !v2.11.0 pre-release build
 <strong>Reminder: this new SWS version requires REAPER v5.979+!</strong>
 

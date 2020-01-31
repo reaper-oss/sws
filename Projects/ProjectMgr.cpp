@@ -98,29 +98,32 @@ void OpenProjectsFromList(COMMAND_T*)
 	// Save "prompt on new project" variable
 	ConfigVarOverride<int> newprojdo("newprojdo", 0);
 
-	int projectCount = 0;
-	while (EnumProjects(projectCount++, nullptr, 0)); // Count projects
+	int projectCount = -1;
+	while (EnumProjects(++projectCount, nullptr, 0));
 
 	char projectfn[10];
 	EnumProjects(-1, projectfn, sizeof(projectfn));
 
+	bool newTab = false;
+
 	if (projectCount > 1 || projectfn[0] || GetNumTracks() > 0)
 	{
 		if (MessageBox(g_hwndParent, __LOCALIZE("Close active tabs first?","sws_mbox"), __LOCALIZE("SWS Project List Open","sws_mbox"), MB_YESNO) == IDYES)
-		{
 			Main_OnCommand(40886, 0); // File: Close all projects
-			projectCount = 0;
-		}
+		else
+			newTab = true;
 	}
 
 	std::string line;
 	while (std::getline(file, line))
 	{
-		if(line.empty())
+		if (line.empty())
 			continue;
 
-		if (projectCount > 0)
+		if (newTab)
 			Main_OnCommand(41929, 0); // New project tab (ignore default template)
+		else
+			newTab = true;
 
 		Main_openProject(line.c_str());
 	}

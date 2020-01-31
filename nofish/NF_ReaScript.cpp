@@ -50,8 +50,9 @@
 // #781, peak/RMS
 double DoGetMediaItemMaxPeakAndMaxPeakPos(MediaItem* item, double* maxPeakPosOut) // maxPeakPosOut == NULL: peak only
 {
-	double sampleRate = ((PCM_source*)item)->GetSampleRate();
-	if (sampleRate == 0.0) return -150.0;
+	if (!item) return -150.0;
+	double sampleRate = ((PCM_source*)item)->GetSampleRate(); // = 0.0 for MIDI/empty item
+	if (!sampleRate) return -150.0;
 
 	double curPeak = -150.0;
 	double maxPeak = -150.0;
@@ -84,7 +85,7 @@ double DoGetMediaItemMaxPeakAndMaxPeakPos(MediaItem* item, double* maxPeakPosOut
 
 double DoGetMediaItemAverageRMS(MediaItem* item) // average RMS of all channels combined over entire item
 {
-	if (!((PCM_source*)item)->GetSampleRate())
+	if (!item || !((PCM_source*)item)->GetSampleRate())
 		return -150;
 
 	int iChannels = ((PCM_source*)item)->GetNumChannels();
@@ -105,7 +106,7 @@ double DoGetMediaItemAverageRMS(MediaItem* item) // average RMS of all channels 
 
 double DoGetMediaItemPeakRMS_NonWindowed(MediaItem* item) // highest RMS of all channels over entire item
 {
-	if (!((PCM_source*)item)->GetSampleRate())
+	if (!item || !((PCM_source*)item)->GetSampleRate())
 		return -150.0;
 
 	double curPeakRMS = -150.0;
@@ -138,7 +139,7 @@ double DoGetMediaItemPeakRMS_NonWindowed(MediaItem* item) // highest RMS of all 
 
 double DoGetMediaItemPeakRMS_Windowed(MediaItem* item) // highest RMS window of all channels
 {
-	if (!((PCM_source*)item)->GetSampleRate())
+	if (!item || !((PCM_source*)item)->GetSampleRate())
 		return -150.0;
 
 	ANALYZE_PCM a;
@@ -181,9 +182,9 @@ double NF_GetMediaItemPeakRMS_NonWindowed(MediaItem* item)
 double GetPosInItem(INT64 peakSample, double sampleRate); // fwd. decl.
 bool NF_AnalyzeMediaItemPeakAndRMS(MediaItem* item, double windowSize, void* reaperarray_peaks, void* reaperarray_peakpositions, void* reaperarray_RMSs, void* reaperarray_RMSpositions)
 {
+	if (!item) return false;
 	double samplerate = ((PCM_source*)item)->GetSampleRate();
-	if (samplerate == 0.0)
-		return false;
+	if (!samplerate) return false;
 
 	bool success = false;
 	ANALYZE_PCM a;
@@ -214,8 +215,6 @@ bool NF_AnalyzeMediaItemPeakAndRMS(MediaItem* item, double windowSize, void* rea
 		uint32_t& d_reaperarray_peakpositionsCurSize = ((uint32_t*)(d_reaperarray_peakpositions))[0];
 		uint32_t& d_reaperarray_RMSsCurSize = ((uint32_t*)(d_reaperarray_RMSs))[0];
 		uint32_t& d_reaperarray_RMSpositionsCurSize = ((uint32_t*)(d_reaperarray_RMSpositions))[0];
-
-
 
 		// write analyzed values to reaperarrays
 		// never write to [0] in reaperarrays!!!

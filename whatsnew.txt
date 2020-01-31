@@ -78,6 +78,9 @@ Notes:
 +Fix potential crash/writing garbage when saving
 +Prevent creating SWS_Global notes.txt if global notes feature isn't used (report https://forum.cockos.com/showpost.php?p=2233645&postcount=2755|here|)
 
+ReaScript API:
++Fix crash in NF_GetPeak/RMS functions when passing null pointer (nil) (Issue 1295) 
+
 !v2.11.0 pre-release build
 <strong>Reminder: this new SWS version requires REAPER v5.979+!</strong>
 

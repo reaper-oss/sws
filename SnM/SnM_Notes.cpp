@@ -95,7 +95,7 @@ SWSProjConfig<WDL_FastString> g_prjNotes; // extra project notes
 // global notes #647, saved in <REAPER Resource Path>/SWS_GlobalNotes.txt 
 // (no SWSProjConfig, one instance across all projects, i.e. global)
 WDL_FastString g_globalNotes; 
-bool g_IsGlobalNotesDirty = false;
+bool g_globalNotesDirty = false;
 
 int g_notesType = -1;
 int g_prevNotesType = -1;
@@ -556,7 +556,7 @@ void NotesWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeig
 					}
 					break;
 				case SNM_NOTES_GLOBAL:
-					if (g_IsGlobalNotesDirty)
+					if (g_globalNotesDirty)
 						lstrcpyn(str, "[modified]", sizeof(str));
 					else
 						lstrcpyn(str, "", sizeof(str));
@@ -775,7 +775,7 @@ void NotesWnd::SaveCurrentGlobalNotes(bool _wantUndo)
 		MarkProjectDirty(NULL);
 	*/
 
-	g_IsGlobalNotesDirty = true;
+	g_globalNotesDirty = true;
 	RefreshGUI(); // to display [modified] in notes window immediately
 }
 
@@ -1406,14 +1406,19 @@ void ExportSubTitleFile(COMMAND_T* _ct)
 void WriteGlobalNotesToFile()
 {
 	// write global notes to <REAPER resource path>/SWS_Global notes.txt
+	if (!g_globalNotesDirty) return;
+	
 	WDL_FastString filePath;
 	filePath.SetFormatted(SNM_MAX_PATH, "%s/SWS_Global notes.txt", GetResourcePath());
 	WDL_FileWrite outfile(filePath.Get(), 1, 65536, 16, 16); // NF: not sure about these params, taken from 
 	//https://github.com/justinfrankel/licecap/blob/3721ce33ac72ff05ef89d2e92ca58a0f96164134/WDL/lice/lice_gif_write.cpp#L386
-	int wrtPos = outfile.Write(g_globalNotes.get_filepart(), g_globalNotes.GetLength());
-	if (wrtPos == g_globalNotes.GetLength()) // writing OK
+	const int globalNotesLength = g_globalNotes.GetLength();
+	const int wrtPos = outfile.Write(g_globalNotes.Get(), globalNotesLength);
+	if (wrtPos == globalNotesLength) // writing OK
 	{
-		g_IsGlobalNotesDirty = false;
+		g_globalNotesDirty = false;
+		if (NotesWnd* w = g_notesWndMgr.Get())
+			w->RefreshGUI();
 	}
 	else // writing failed
 	{

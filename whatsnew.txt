@@ -84,6 +84,10 @@ ReaScript API:
 Miscellaneous:
 +Fix opening projects from list not creating new tabs if active tabs were closed (v2.11 regression, Issue 1293)
 
+ReaConsole:
++Fix corrupted track colors when the green channel is higher than 127 (report https://forum.cockos.com/showthread.php?p=2225496|here|)
++Fix inverted red and blue channels when coloring tracks on Linux and macOS
+
 !v2.11.0 pre-release build
 <strong>Reminder: this new SWS version requires REAPER v5.979+!</strong>
 

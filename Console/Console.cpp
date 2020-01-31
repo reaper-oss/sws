@@ -566,10 +566,10 @@ void ProcessCommand(CONSOLE_COMMAND command, const char* args)
 					i = RGB(255, 128, 0);
 				else if (_stricmp(args, __LOCALIZE("magenta","sws_DLG_100")) == 0)
 					i = RGB(255, 0, 128);
-				else if (strstr(args, "0x"))
+				else if (strstr(args, "0x") == args)
 				{
-					unsigned int newcol = strtol(args, NULL, 16);
-					i = (newcol & 0xFF0000) >> 16 | (newcol & 0xFF00) | newcol << 16;
+					const long color = strtol(args, NULL, 16);
+					i = RGB((color >> 16) & 0xFF, (color >> 8) & 0xFF, color & 0xFF);
 				}
 				else
 				{

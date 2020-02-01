@@ -32,6 +32,7 @@
 #include "SnM_Track.h"
 #include "SnM_Util.h"
 #include "SnM_Window.h"
+#include "Breeder/BR_Util.h" // GetTcpWnd()
 #include "../reaper/localize.h"
 
 
@@ -371,8 +372,8 @@ void ShowThemeHelper(WDL_FastString* _report, HWND _hwnd, bool _mcp, bool _sel)
 							1024,
 							__LOCALIZE_VERFMT("%s Track #%d '%s': W=%d, H=%d\n","theme_helper"),
 							_mcp ? __LOCALIZE("MCP","theme_helper") : __LOCALIZE("TCP","theme_helper"),
-							trIdx==-1 ? 0 : trIdx,
-							trIdx==-1 ? __LOCALIZE("[MASTER]","theme_helper") : (trName?trName:""),
+							trIdx,
+							trIdx==0 ? __LOCALIZE("[MASTER]","theme_helper") : (trName?trName:""),
 							(int)(r.right-r.left),
 							(int)(r.bottom-r.top));
 					}
@@ -382,20 +383,70 @@ void ShowThemeHelper(WDL_FastString* _report, HWND _hwnd, bool _mcp, bool _sel)
 	}
 }
 
+static int GetTcpWidth()
+{
+	bool isContainer;
+	HWND tcpWnd = GetTcpWnd(isContainer);
+	RECT r;	GetClientRect(tcpWnd, &r);
+	return r.right - r.left;
+}
+
+
+void ShowThemeHelperREAPERv6(WDL_FastString* _report, bool _mcp, bool _sel)
+{
+	const int tcpWidth = _mcp ? 0 : GetTcpWidth();
+
+	for (int trIdx = 0; trIdx <= GetNumTracks(); ++trIdx)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(trIdx, false);
+
+		if (_sel && !GetMediaTrackInfo_Value(tr, "I_SELECTED"))
+			continue;
+
+		const int trHeight = static_cast<int>(GetMediaTrackInfo_Value(tr, _mcp ? "I_MCPH" : "I_TCPH"));
+		if (!trHeight) continue; // master not visible or track hidden
+
+		const int trWidth = _mcp ? static_cast<int>(GetMediaTrackInfo_Value(tr, "I_MCPW")) : tcpWidth;
+
+		const char* trName = static_cast<const char*>(GetSetMediaTrackInfo(tr, "P_NAME", nullptr));
+		if (!trName) trName = "";
+
+		_report->AppendFormatted(1024,
+			__LOCALIZE_VERFMT("%s Track #%d '%s' : W=%d, H=%d\n", "theme_helper"),
+			_mcp ? __LOCALIZE("MCP", "theme_helper") : __LOCALIZE("TCP", "theme_helper"),
+			trIdx, trIdx == 0 ? __LOCALIZE("[MASTER]", "theme_helper") : trName,
+			trWidth, trHeight
+		);
+	}
+}
+
 void ShowThemeHelper(COMMAND_T* _ct)
 {
 	WDL_FastString report("");
-	ShowThemeHelper(&report, GetMainHwnd(), false, (int)_ct->user == 1);
-	if ((int)_ct->user != 1 && report.GetLength())
-		report.Append("\n");
+	if (atof(GetAppVersion()) < 6)
+	{
+		// legacy, doesn't work anymore with REAPER v6.0+ due to changed TCP/MCP architecture
+		// could be removed if REA_VERSION == 6.0+
+		ShowThemeHelper(&report, GetMainHwnd(), false, (int)_ct->user == 1);
+		if ((int)_ct->user != 1 && report.GetLength())
+			report.Append("\n");
 
-	HWND w = GetReaHwndByTitle(__localizeFunc("Mixer Master", "mixer", 0));
-	if (w && IsWindowVisible(w)) 
-		ShowThemeHelper(&report, w, true, (int)_ct->user == 1);
+		HWND w = GetReaHwndByTitle(__localizeFunc("Mixer Master", "mixer", 0));
+		if (w && IsWindowVisible(w))
+			ShowThemeHelper(&report, w, true, (int)_ct->user == 1);
 
-	w = GetReaHwndByTitle(__localizeFunc("Mixer", "DLG_151", 0));
-	if (w && IsWindowVisible(w)) 
-		ShowThemeHelper(&report, w, true, (int)_ct->user == 1);
+		w = GetReaHwndByTitle(__localizeFunc("Mixer", "DLG_151", 0));
+		if (w && IsWindowVisible(w))
+			ShowThemeHelper(&report, w, true, (int)_ct->user == 1);
+	} 
+	else
+	{
+		ShowThemeHelperREAPERv6(&report, false, (int)_ct->user == 1);
+		if (report.GetLength())
+			report.Append("\n");
+
+		ShowThemeHelperREAPERv6(&report, true, (int)_ct->user == 1);
+	}
 
 	SNM_ShowMsg(report.Get(), __LOCALIZE("S&M - Theme Helper","theme_helper"));
 }

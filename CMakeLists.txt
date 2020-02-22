@@ -146,6 +146,7 @@ add_library(sws SHARED
   sws_wnd.cpp
   Utility/Base64.cpp
   Utility/envelope.cpp
+  Utility/hidpi.cpp
   Zoom.cpp
 )
 

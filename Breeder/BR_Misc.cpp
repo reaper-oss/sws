@@ -787,43 +787,56 @@ void FocusArrangeTracks (COMMAND_T* ct)
 
 void MoveActiveWndToMouse (COMMAND_T* ct)
 {
-	if (HWND hwnd = GetForegroundWindow())
+	HWND hwnd = GetForegroundWindow();
+	if (!hwnd)
+		return;
+
+#ifndef _WIN32
+	bool __tcp_ctmp;
+	if (hwnd == GetArrangeWnd() || hwnd == GetRulerWndAlt() || hwnd == GetTcpWnd(__tcp_ctmp))
+		hwnd = g_hwndParent;
+
+	if (hwnd != g_hwndParent)
 	{
-		#ifndef _WIN32
-			bool __tcp_ctmp;
-			if (hwnd == GetArrangeWnd() || hwnd == GetRulerWndAlt() || hwnd == GetTcpWnd(__tcp_ctmp))
-				hwnd = g_hwndParent;
-
-			if (hwnd != g_hwndParent)
-			{
-				while (GetParent(hwnd) != g_hwndParent && hwnd)
-					hwnd = GetParent(hwnd);
-				if (!hwnd)
-					return;
-
-				bool floating;
-				int dockerIndex = DockIsChildOfDock(hwnd, &floating);
-				if (dockerIndex != -1 && !floating)
-					hwnd = g_hwndParent;
-			}
-		#endif
-
-		if (GetBit((int)ct->user, 4) && !IsFloatingTrackFXWindow(hwnd))
+		while (GetParent(hwnd) != g_hwndParent && hwnd)
+			hwnd = GetParent(hwnd);
+		if (!hwnd)
 			return;
 
-		RECT r;  GetWindowRect(hwnd, &r);
-		POINT p; GetCursorPos(&p);
-
-		int horz = GetBit((int)ct->user, 2) * ((GetBit((int)ct->user, 3)) ? 1 : -1);
-		int vert = GetBit((int)ct->user, 0) * ((GetBit((int)ct->user, 1)) ? 1 : -1);
-		CenterOnPoint(&r, p, horz, vert, 0, 0);
-
-		RECT screen;
-		GetMonitorRectFromPoint(p, true, &screen);
-		BoundToRect(screen, &r);
-
-		SetWindowPos(hwnd, NULL, r.left, r.top, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE);
+		bool floating;
+		int dockerIndex = DockIsChildOfDock(hwnd, &floating);
+		if (dockerIndex != -1 && !floating)
+			hwnd = g_hwndParent;
 	}
+#endif
+
+	if (GetBit((int)ct->user, 4) && !IsFloatingTrackFXWindow(hwnd))
+		return;
+
+	POINT curpos; GetCursorPos(&curpos);
+	RECT screen; GetMonitorRectFromPoint(curpos, true, &screen);
+
+	const unsigned int originDpi = hidpi::GetDpiForWindow(hwnd),
+	                   targetDpi = hidpi::GetDpiForPoint(curpos);
+
+	// Manually scaling the window rect to the destination DPI or using
+	// WM_GETDPISCALEDSIZE results in a different size than when dragging
+	// the window to the new screen.
+
+	// Moving it to the destination screen first (letting the window resize
+	// itself) solves this. However the window is then briefly shown at the
+	// wrong location before being moved into place.
+
+	if (hidpi::IsDifferentDpi(originDpi, targetDpi))
+		SetWindowPos(hwnd, nullptr, screen.left, screen.top, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE);
+
+	const int horz = GetBit((int)ct->user, 2) * ((GetBit((int)ct->user, 3)) ? 1 : -1),
+	          vert = GetBit((int)ct->user, 0) * ((GetBit((int)ct->user, 1)) ? 1 : -1);
+
+	RECT r; GetWindowRect(hwnd, &r);
+	CenterOnPoint(&r, curpos, horz, vert, 0, 0);
+	BoundToRect(screen, &r);
+	SetWindowPos(hwnd, nullptr, r.left, r.top, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE);
 }
 
 void ToggleItemOnline (COMMAND_T* ct)

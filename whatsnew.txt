@@ -94,6 +94,8 @@ Cycle actions:
 ReaScript API:
 +Add "track" to tags supported by SNM_ReadMediaFileTag/SNM_TagMediaFile in ReaScript documentation (it was undocumented previously) (Issue 1302)
 
++Fix crash in "SWS/BR: Options - Cycle through record modes" when the record mode is set to time selection auto punch (regression from 2.11, report https://forum.cockos.com/showthread.php?p=2251882|here|)
+
 !v2.11.0 pre-release build
 <strong>Reminder: this new SWS version requires REAPER v5.979+!</strong>
 

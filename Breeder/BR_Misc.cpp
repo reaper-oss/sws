@@ -1246,13 +1246,14 @@ void SetAutoStretchMarkers(COMMAND_T* ct)
 
 void CycleRecordModes (COMMAND_T* ct)
 {
-	ConfigVar<int> mode("projrecmode");
-	if(!mode) return;
-	if (++*mode > 2) mode = 0;
+	unsigned int mode = 0;
+	if(ConfigVar<int> projrecmode{"projrecmode"})
+		mode = *projrecmode;
 
-	if      (*mode == 0) Main_OnCommandEx(40253, 0, NULL);
-	else if (*mode == 1) Main_OnCommandEx(40252, 0, NULL);
-	else if (*mode == 2) Main_OnCommandEx(40076, 0, NULL);
+	if (++mode > 2) mode = 0;
+
+	const int actions[] {40253, 40252, 40076};
+	Main_OnCommand(actions[mode], 0);
 }
 
 /******************************************************************************

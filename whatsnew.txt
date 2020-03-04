@@ -91,6 +91,9 @@ ReaConsole:
 Cycle actions:
 +Prevent UI from flickering when running cycle actions
 
+ReaScript API:
++Add "track" to tags supported by SNM_ReadMediaFileTag/SNM_TagMediaFile in ReaScript documentation (it was undocumented previously) (Issue 1302)
+
 !v2.11.0 pre-release build
 <strong>Reminder: this new SWS version requires REAPER v5.979+!</strong>
 

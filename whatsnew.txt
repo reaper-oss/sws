@@ -1,3 +1,6 @@
+ReaScript API:
++Let CF_GetTrackFXChain find the floating FX chain of folder tracks (Issue 1305)
+
 !v2.11.0 pre-release build
 <strong>Reminder: this new SWS version requires REAPER v5.979+!</strong>
 

@@ -96,6 +96,10 @@ ReaScript API:
 
 +Fix crash in "SWS/BR: Options - Cycle through record modes" when the record mode is set to time selection auto punch (regression from 2.11, report https://forum.cockos.com/showthread.php?p=2251882|here|)
 
+ReaScript API:
++Let CF_GetTrackFXChain and CF_GetTakeFXChain find docked FX chains (Issue 1305)
++Let CF_GetTrackFXChain find the floating FX chain of folder tracks (Issue 1305)
+
 !v2.11.0 pre-release build
 <strong>Reminder: this new SWS version requires REAPER v5.979+!</strong>
 

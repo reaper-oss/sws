@@ -29,6 +29,7 @@
 #include "cfillion.hpp"
 
 #include "reaper/localize.h"
+#include "SnM/SnM_Window.h"
 #include "version.h"
 
 #ifdef _WIN32
@@ -203,6 +204,7 @@ HWND CF_GetTrackFXChain(MediaTrack *track)
     static_cast<int>(GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER"));
   const std::string trackName =
     static_cast<char *>(GetSetMediaTrackInfo(track, "P_NAME", nullptr));
+  const bool isFolder = GetMediaTrackInfo_Value(track, "I_FOLDERDEPTH") > 0;
 
   // HACK: rename the track to uniquely identify its FX chain window across all
   // opened projects
@@ -211,10 +213,11 @@ HWND CF_GetTrackFXChain(MediaTrack *track)
   GetSetMediaTrackInfo_String(track, "P_NAME", guid, true);
   TrackList_AdjustWindows(true); // update title of opened FX chain windows
 
-  snprintf(chainTitle, sizeof(chainTitle), R"(%s%s %d "%s")",
-    __LOCALIZE("FX: ", "fx"), __LOCALIZE("Track", "fx"), trackNumber, guid);
+  snprintf(chainTitle, sizeof(chainTitle), R"(%s%s %d "%s"%s)",
+    __LOCALIZE("FX: ", "fx"), __LOCALIZE("Track", "fx"), trackNumber, guid,
+    isFolder ? __LOCALIZE(" (folder)", "fx") : "");
 
-  HWND match = FindWindowEx(nullptr, nullptr, nullptr, chainTitle);
+  HWND match = GetReaHwndByTitle(chainTitle);
 
   // restore the original track name
   GetSetMediaTrackInfo_String(track, "P_NAME",
@@ -242,7 +245,7 @@ HWND CF_GetTakeFXChain(MediaItem_Take *take)
   snprintf(chainTitle, sizeof(chainTitle), R"(%s%s "%s")",
     __LOCALIZE("FX: ", "fx"), __LOCALIZE("Item", "fx"), guid);
 
-  HWND match = FindWindowEx(nullptr, nullptr, nullptr, chainTitle);
+  HWND match = GetReaHwndByTitle(chainTitle);
   GetSetMediaItemTakeInfo_String(take, "P_NAME",
     const_cast<char *>(takeName.c_str()), true);
 

@@ -29,6 +29,7 @@
 #include "cfillion.hpp"
 
 #include "reaper/localize.h"
+#include "SnM/SnM_Window.h"
 #include "version.h"
 
 #ifdef _WIN32
@@ -208,7 +209,7 @@ HWND CF_GetTrackFXChain(MediaTrack *track)
     __LOCALIZE("FX: ", "fx"), __LOCALIZE("Track", "fx"), trackNumber, guid,
     isFolder ? __LOCALIZE(" (folder)", "fx") : "");
 
-  HWND match = FindWindowEx(nullptr, nullptr, nullptr, chainTitle);
+  HWND match = GetReaHwndByTitle(chainTitle);
 
   // restore the original track name
   GetSetMediaTrackInfo_String(track, "P_NAME",
@@ -236,7 +237,7 @@ HWND CF_GetTakeFXChain(MediaItem_Take *take)
   snprintf(chainTitle, sizeof(chainTitle), R"(%s%s "%s")",
     __LOCALIZE("FX: ", "fx"), __LOCALIZE("Item", "fx"), guid);
 
-  HWND match = FindWindowEx(nullptr, nullptr, nullptr, chainTitle);
+  HWND match = GetReaHwndByTitle(chainTitle);
   GetSetMediaItemTakeInfo_String(take, "P_NAME",
     const_cast<char *>(takeName.c_str()), true);
 

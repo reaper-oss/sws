@@ -1,4 +1,5 @@
 ReaScript API:
++Let CF_GetTrackFXChain and CF_GetTakeFXChain find docked FX chains (Issue 1305)
 +Let CF_GetTrackFXChain find the floating FX chain of folder tracks (Issue 1305)
 
 !v2.11.0 pre-release build

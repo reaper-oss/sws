@@ -169,19 +169,21 @@ TrackSnapshot::TrackSnapshot(MediaTrack* tr, int mask)
 	else
 		m_guid = *(GUID*)GetSetMediaTrackInfo(tr, "GUID", NULL);
 
-	m_dVol      = *((double*)GetSetMediaTrackInfo(tr, "D_VOL", NULL));
-	m_dPan      = *((double*)GetSetMediaTrackInfo(tr, "D_PAN", NULL));
-	m_bMute     = *((bool*)GetSetMediaTrackInfo(tr, "B_MUTE", NULL));
-	m_iSolo     = *((int*)GetSetMediaTrackInfo(tr, "I_SOLO", NULL));
-	m_iFXEn     = *((int*)GetSetMediaTrackInfo(tr, "I_FXEN", NULL));
-	m_iVis      = GetTrackVis(tr);
-	m_iSel      = *((int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL));
-	m_iPanMode  = *((int*)GetSetMediaTrackInfo(tr, "I_PANMODE", NULL));
-	m_dPanWidth = *((double*)GetSetMediaTrackInfo(tr, "D_WIDTH", NULL));
-	m_dPanL     = *((double*)GetSetMediaTrackInfo(tr, "D_DUALPANL", NULL));
-	m_dPanR     = *((double*)GetSetMediaTrackInfo(tr, "D_DUALPANR", NULL));
-	m_dPanLaw   = *((double*)GetSetMediaTrackInfo(tr, "D_PANLAW", NULL));
-	m_bPhase    = *((bool*)GetSetMediaTrackInfo(tr, "B_PHASE", NULL));
+	m_dVol            = *((double*)GetSetMediaTrackInfo(tr, "D_VOL", NULL));
+	m_dPan            = *((double*)GetSetMediaTrackInfo(tr, "D_PAN", NULL));
+	m_bMute           = *((bool*)GetSetMediaTrackInfo(tr, "B_MUTE", NULL));
+	m_iSolo           = *((int*)GetSetMediaTrackInfo(tr, "I_SOLO", NULL));
+	m_iFXEn           = *((int*)GetSetMediaTrackInfo(tr, "I_FXEN", NULL));
+	m_iVis            = GetTrackVis(tr);
+	m_iSel            = *((int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL));
+	m_iPanMode        = *((int*)GetSetMediaTrackInfo(tr, "I_PANMODE", NULL));
+	m_dPanWidth       = *((double*)GetSetMediaTrackInfo(tr, "D_WIDTH", NULL));
+	m_dPanL           = *((double*)GetSetMediaTrackInfo(tr, "D_DUALPANL", NULL));
+	m_dPanR           = *((double*)GetSetMediaTrackInfo(tr, "D_DUALPANR", NULL));
+	m_dPanLaw         = *((double*)GetSetMediaTrackInfo(tr, "D_PANLAW", NULL));
+	m_bPhase          = *((bool*)GetSetMediaTrackInfo(tr, "B_PHASE", NULL));
+	m_iPlayOffsetFlag = static_cast<int>(GetMediaTrackInfo_Value(tr, "I_PLAY_OFFSET_FLAG"));
+	m_dPlayOffset     = GetMediaTrackInfo_Value(tr, "D_PLAY_OFFSET");
 
 	// Don't bother storing the sends if it's masked
 	if (mask & SENDS_MASK)
@@ -218,15 +220,14 @@ TrackSnapshot::TrackSnapshot(MediaTrack* tr, int mask)
 // "Copy" constructor with mask large items don't get copied too
 TrackSnapshot::TrackSnapshot(TrackSnapshot& ts):m_sends(ts.m_sends)
 {
-	m_guid   = ts.m_guid;
-	m_dVol   = ts.m_dVol;
-	m_dPan   = ts.m_dPan;
-	m_bMute  = ts.m_bMute;
-	m_iSolo  = ts.m_iSolo;
-	m_iFXEn  = ts.m_iFXEn;
-	m_iVis   = ts.m_iVis;
-	m_iSel   = ts.m_iSel;
-	m_bPhase = ts.m_bPhase;
+	m_guid            = ts.m_guid;
+	m_dVol            = ts.m_dVol;
+	m_dPan            = ts.m_dPan;
+	m_bMute           = ts.m_bMute;
+	m_iSolo           = ts.m_iSolo;
+	m_iFXEn           = ts.m_iFXEn;
+	m_iVis            = ts.m_iVis;
+	m_iSel            = ts.m_iSel;
 	for (int i = 0; i < ts.m_fx.GetSize(); i++)
 		m_fx.Add(new FXSnapshot(*ts.m_fx.Get(i)));
 	if (ts.m_sFXChain.GetSize())
@@ -235,32 +236,37 @@ TrackSnapshot::TrackSnapshot(TrackSnapshot& ts):m_sends(ts.m_sends)
 		memcpy(m_sFXChain.Get(), ts.m_sFXChain.Get(), m_sFXChain.GetSize());
 	}
 	m_sName.Set(ts.m_sName.Get());
-	m_iTrackNum = ts.m_iTrackNum;
-	m_iPanMode  = ts.m_iPanMode;
-	m_dPanWidth = ts.m_dPanWidth;
-	m_dPanL     = ts.m_dPanL;
-	m_dPanR     = ts.m_dPanR;
-	m_dPanLaw   = ts.m_dPanLaw;
-	m_bPhase    = ts.m_bPhase;
+	m_iTrackNum       = ts.m_iTrackNum;
+	m_iPanMode        = ts.m_iPanMode;
+	m_dPanWidth       = ts.m_dPanWidth;
+	m_dPanL           = ts.m_dPanL;
+	m_dPanR           = ts.m_dPanR;
+	m_dPanLaw         = ts.m_dPanLaw;
+	m_bPhase          = ts.m_bPhase;
+	m_iPlayOffsetFlag = ts.m_iPlayOffsetFlag;
+	m_dPlayOffset     = ts.m_dPlayOffset;
 }
 
 TrackSnapshot::TrackSnapshot(LineParser* lp)
 {
 	stringToGuid(lp->gettoken_str(1), &m_guid);
-	m_dVol       = lp->gettoken_float(2);
-	m_dPan       = lp->gettoken_float(3);
-	m_bMute      = lp->gettoken_int(4) ? true : false;
-	m_iSolo      = lp->gettoken_int(5);
-	m_iFXEn      = lp->gettoken_int(6);
+	m_dVol            = lp->gettoken_float(2);
+	m_dPan            = lp->gettoken_float(3);
+	m_bMute           = lp->gettoken_int(4) ? true : false;
+	m_iSolo           = lp->gettoken_int(5);
+	m_iFXEn           = lp->gettoken_int(6);
 	// For backward compat, flip the TCP vis bit
-	m_iVis      = lp->gettoken_int(7) ^ 2;
-	m_iSel      = lp->gettoken_int(8);
-	m_iPanMode  = lp->getnumtokens() < 10 ? -1 : lp->gettoken_int(9); // If loading old format, set pan mode to -1 for proj default
-	m_dPanWidth = lp->gettoken_float(10);
-	m_dPanL     = lp->gettoken_float(11);
-	m_dPanR     = lp->gettoken_float(12);
-	m_dPanLaw   = lp->getnumtokens() < 14 ? -100.0 : lp->gettoken_float(13); // If loading old format, set law to -2 for "ignore"
-	m_bPhase    = lp->gettoken_int(14) ? true : false;
+	m_iVis            = lp->gettoken_int(7) ^ 2;
+	m_iSel            = lp->gettoken_int(8);
+	m_iPanMode        = lp->getnumtokens() < 10 ? -1 : lp->gettoken_int(9); // If loading old format, set pan mode to -1 for proj default
+	m_dPanWidth       = lp->gettoken_float(10);
+	m_dPanL           = lp->gettoken_float(11);
+	m_dPanR           = lp->gettoken_float(12);
+	m_dPanLaw         = lp->getnumtokens() < 14 ? -100.0 : lp->gettoken_float(13); // If loading old format, set law to -2 for "ignore"
+	m_bPhase          = lp->gettoken_int(14) ? true : false;
+	m_iPlayOffsetFlag = lp->gettoken_int(15);
+	m_dPlayOffset     = lp->gettoken_float(16);
+
 
 	// Set the track name "early" for backward compat
 	MediaTrack* tr = GuidToTrack(&m_guid);
@@ -357,6 +363,11 @@ bool TrackSnapshot::UpdateReaper(int mask, bool bSelOnly, int* fxErr, bool wantC
 	{
 		GetSetMediaTrackInfo(tr, "B_PHASE", &m_bPhase);
 	}
+	if (mask & PLAY_OFFSET_MASK)
+	{
+		SetMediaTrackInfo_Value(tr, "I_PLAY_OFFSET_FLAG", m_iPlayOffsetFlag);
+		SetMediaTrackInfo_Value(tr, "D_PLAY_OFFSET", m_dPlayOffset);
+	}
 
 	PreventUIRefresh(-1);
 
@@ -384,7 +395,8 @@ void TrackSnapshot::GetChunk(WDL_FastString* chunk)
 {
 	char guidStr[64];
 	guidToString(&m_guid, guidStr);
-	chunk->AppendFormatted(SNM_MAX_CHUNK_LINE_LENGTH, "<TRACK %s %.14f %.14f %d %d %d %d %d %d %.14f %.14f %.14f %.14f %d\n", guidStr, m_dVol, m_dPan, m_bMute ? 1 : 0, m_iSolo, m_iFXEn, m_iVis ^ 2, m_iSel, m_iPanMode, m_dPanWidth, m_dPanL, m_dPanR, m_dPanLaw, m_bPhase ? 1 : 0);
+	chunk->AppendFormatted(SNM_MAX_CHUNK_LINE_LENGTH, "<TRACK %s %.14f %.14f %d %d %d %d %d %d %.14f %.14f %.14f %.14f %d %d %.14f\n", 
+		guidStr, m_dVol, m_dPan, m_bMute ? 1 : 0, m_iSolo, m_iFXEn, m_iVis ^ 2, m_iSel, m_iPanMode, m_dPanWidth, m_dPanL, m_dPanR, m_dPanLaw, m_bPhase ? 1 : 0, m_iPlayOffsetFlag, m_dPlayOffset);
 	chunk->AppendFormatted(SNM_MAX_CHUNK_LINE_LENGTH, "NAME \"%s\" %d\n", m_sName.Get(), m_iTrackNum);
 	
 	m_sends.GetChunk(chunk);
@@ -627,6 +639,23 @@ void TrackSnapshot::GetDetails(WDL_FastString* details, int iMask)
 			details->Append("\r\n");
 		}
 
+	}
+	if (iMask & PLAY_OFFSET_MASK)
+	{
+		details->Append(__LOCALIZE("Playback offset", "sws_DLG_101"));
+		details->Append(": ");
+		if (m_iPlayOffsetFlag & 1)
+			details->Append(__LOCALIZE("bypassed, ", "sws_DLG_101"));
+
+		if (m_iPlayOffsetFlag & 2)
+			details->Append(__LOCALIZE("samples: ", "sws_DLG_101"));
+		else 
+			details->Append(__LOCALIZE("ms: ", "sws_DLG_101"));	
+		// it's possible to type in (lots of) decimals in the playback offset textbox
+		// would be cluttery in the snapshot details so truncate to 2 decimals
+		std::stringstream ss;
+		ss << std::fixed << std::setprecision(2) << (m_iPlayOffsetFlag & 2 ? m_dPlayOffset : m_dPlayOffset*1000);
+		details->Append(ss.str().c_str());
 	}
 }
 
@@ -975,6 +1004,10 @@ char* Snapshot::Tooltip(char* str, int maxLen)
 		n += snprintf(str + n, maxLen - n, "%s", ", ");
 		n += snprintf(str + n, maxLen - n, "%s", __LOCALIZE("phase", "sws_DLG_101"));
 	}
+	if (m_iMask & PLAY_OFFSET_MASK && n < maxLen) {
+		n += snprintf(str + n, maxLen - n, "%s", ", ");
+		n += snprintf(str + n, maxLen - n, "%s", __LOCALIZE("playback offset", "sws_DLG_101"));
+	}
 	return str;
 }
 
@@ -986,17 +1019,18 @@ void Snapshot::SetName(const char* name)
 		char newName[20];
 		switch(m_iMask)
 		{
-			case VOL_MASK:      snprintf(newName, sizeof(newName), "%s %d", __LOCALIZE("Vol","sws_DLG_101"), m_iSlot);    break;
-			case PAN_MASK:      snprintf(newName, sizeof(newName), "%s %d", __LOCALIZE("Pan","sws_DLG_101"), m_iSlot);    break;
-			case MUTE_MASK:     snprintf(newName, sizeof(newName), "%s %d", __LOCALIZE("Mute","sws_DLG_101"), m_iSlot);   break;
-			case SOLO_MASK:     snprintf(newName, sizeof(newName), "%s %d", __LOCALIZE("Solo","sws_DLG_101"), m_iSlot);   break;
+			case VOL_MASK:         snprintf(newName, sizeof(newName), "%s %d", __LOCALIZE("Vol","sws_DLG_101"), m_iSlot);    break;
+			case PAN_MASK:         snprintf(newName, sizeof(newName), "%s %d", __LOCALIZE("Pan","sws_DLG_101"), m_iSlot);    break;
+			case MUTE_MASK:        snprintf(newName, sizeof(newName), "%s %d", __LOCALIZE("Mute","sws_DLG_101"), m_iSlot);   break;
+			case SOLO_MASK:        snprintf(newName, sizeof(newName), "%s %d", __LOCALIZE("Solo","sws_DLG_101"), m_iSlot);   break;
 			case FXATM_MASK: // fallthrough
-			case FXCHAIN_MASK:  snprintf(newName, sizeof(newName), "%s %d", __LOCALIZE("FX","sws_DLG_101"), m_iSlot);     break;
-			case SENDS_MASK:    snprintf(newName, sizeof(newName), "%s %d", __LOCALIZE("Sends","sws_DLG_101"), m_iSlot);  break;
-			case VIS_MASK:      snprintf(newName, sizeof(newName), "%s %d", __LOCALIZE("Vis","sws_DLG_101"), m_iSlot);    break;
-			case SEL_MASK:      snprintf(newName, sizeof(newName), "%s %d", __LOCALIZE("Sel","sws_DLG_101"), m_iSlot);    break;
-			case PHASE_MASK:    snprintf(newName, sizeof(newName), "%s %d", __LOCALIZE("Phase", "sws_DLG_101"), m_iSlot); break;
-			default:            snprintf(newName, sizeof(newName), "%s %d", __LOCALIZE("Mix","sws_DLG_101"), m_iSlot);    break;
+			case FXCHAIN_MASK:     snprintf(newName, sizeof(newName), "%s %d", __LOCALIZE("FX","sws_DLG_101"), m_iSlot);     break;
+			case SENDS_MASK:       snprintf(newName, sizeof(newName), "%s %d", __LOCALIZE("Sends","sws_DLG_101"), m_iSlot);  break;
+			case VIS_MASK:         snprintf(newName, sizeof(newName), "%s %d", __LOCALIZE("Vis","sws_DLG_101"), m_iSlot);    break;
+			case SEL_MASK:         snprintf(newName, sizeof(newName), "%s %d", __LOCALIZE("Sel","sws_DLG_101"), m_iSlot);    break;
+			case PHASE_MASK:       snprintf(newName, sizeof(newName), "%s %d", __LOCALIZE("Phase", "sws_DLG_101"), m_iSlot); break;
+			case PLAY_OFFSET_MASK: snprintf(newName, sizeof(newName), "%s %d", __LOCALIZE("Playback offset", "sws_DLG_101"), m_iSlot); break;
+			default:               snprintf(newName, sizeof(newName), "%s %d", __LOCALIZE("Mix","sws_DLG_101"), m_iSlot);    break;
 		}
 		m_cName = new char[strlen(newName)+1];
 		strcpy(m_cName, newName);

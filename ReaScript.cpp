@@ -313,6 +313,7 @@ APIdef g_apidefs[] =
 	{ APIFUNC(CF_GetTakeFXChain), "FxChain*", "MediaItem_Take*", "take", "Return a handle to the given take FX chain window. HACK: This temporarily renames the take in order to disambiguate the take FX chain window from similarily named takes.", },
 	{ APIFUNC(CF_GetFocusedFXChain), "FxChain*", "", "", "Return a handle to the currently focused FX chain window.", },
 	{ APIFUNC(CF_EnumSelectedFX), "int", "FxChain*,int", "hwnd,index", "Return the index of the next selected effect in the given FX chain. Start index should be -1. Returns -1 if there are no more selected effects.", },
+	{ APIFUNC(CF_SelectTrackFX), "bool", "MediaTrack*,int", "track,index", "Set which track effect is active in the track's FX chain. The FX chain window does not have to be open.", },
 
 	{ APIFUNC(CF_GetSWSVersion), "void", "char*,int", "buf,buf_sz", "Return the current SWS version number.", },
 

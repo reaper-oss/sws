@@ -45,6 +45,7 @@ HWND CF_GetFocusedFXChain();
 HWND CF_GetTrackFXChain(MediaTrack *);
 HWND CF_GetTakeFXChain(MediaItem_Take *);
 int CF_EnumSelectedFX(HWND chain, int index = -1);
+bool CF_SelectTrackFX(MediaTrack *, int index);
 
 int CF_GetMediaSourceBitDepth(PCM_source *);
 bool CF_GetMediaSourceOnline(PCM_source *);

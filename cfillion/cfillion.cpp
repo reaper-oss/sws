@@ -29,6 +29,7 @@
 #include "cfillion.hpp"
 
 #include "reaper/localize.h"
+#include "SnM/SnM_FX.h"
 #include "version.h"
 
 #ifdef _WIN32
@@ -267,6 +268,12 @@ int CF_EnumSelectedFX(HWND fxChain, const int index)
 {
   const HWND list = GetDlgItem(fxChain, 1076);
   return ListView_GetNextItem(list, index, LVNI_SELECTED);
+}
+
+bool CF_SelectTrackFX(MediaTrack *track, const int index)
+{
+  // track and index are validated in SelectTrackFX
+  return SelectTrackFX(track, index);
 }
 
 int CF_GetMediaSourceBitDepth(PCM_source *source)

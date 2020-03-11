@@ -47,6 +47,7 @@
 #include "SnM_Track.h"
 #include "SnM_Util.h"
 #include "SnM_Window.h"
+#include "Snapshots/Snapshots.h"
 #include "version.h"
 #include "reaper/localize.h"
 
@@ -621,7 +622,7 @@ static COMMAND_T s_cmdTable[] =
 
 void ExclusiveToggle(COMMAND_T*);
 
-static DYN_COMMAND_T s_dynCmdTable[] =
+static DYN_COMMAND_T s_dynCmdTable[]
 {
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
@@ -755,8 +756,10 @@ static DYN_COMMAND_T s_dynCmdTable[] =
 	{ "SWS/S&M: Set selected tracks MIDI input to channel %d", "S&M_MIDI_INPUT_CH", SetMIDIInputChannel, 16, 16, },
 	{ "SWS/S&M: Map selected tracks MIDI input to channel %d", "S&M_MAP_MIDI_INPUT_CH", RemapMIDIInputChannel, 16, 16, },
 
-//!WANT_LOCALIZE_1ST_STRING_END
+	{ "SWS: Recall snapshot %d", "SWSSNAPSHOT_GET", GetSnapshot, 12, SNM_MAX_DYN_ACTIONS, },
+	{ "SWS: Save as snapshot %d", "SWSSNAPSHOT_SAVE", SaveSnapshot, 12, SNM_MAX_DYN_ACTIONS, },
 
+//!WANT_LOCALIZE_1ST_STRING_END
 
 #ifdef _SNM_MISC
 	{ "SWS/S&M: Play media file in selected tracks (toggle, sync with next measure), slot %d", "S&M_TGL_PLAYMEDIA_SELTRACK_SYNC", SyncTogglePlaySelTrackMediaSlot, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
@@ -765,75 +768,83 @@ static DYN_COMMAND_T s_dynCmdTable[] =
 	{ "SWS/S&M: Loop media file in selected tracks (toggle pause, sync with next measure), slot %d", "S&M_TGLPAUSE_LOOPMEDIA_SELTR_SYNC", SyncToggleLoopPauseSelTrackMediaSlot, 0, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // default: none
 #endif
 
-	{ LAST_COMMAND, }, // denote end of table
 };
 
 
-// for optimization (avoid write accesses to S&M.ini on exit)
-static bool s_newDynActions = true; //JFB!! disabled ATM
-
-int RegisterDynamicActions(DYN_COMMAND_T* _cmds, const char* _inifn)
+bool RegisterDynamicActions()
 {
-	int i=0;
-	char actionName[SNM_MAX_ACTION_NAME_LEN], custId[SNM_MAX_ACTION_CUSTID_LEN];
-	while(_cmds[i].desc != LAST_COMMAND)
+	for (DYN_COMMAND_T &ct : s_dynCmdTable)
 	{
-		DYN_COMMAND_T* ct = &_cmds[i++];
+		int n = GetPrivateProfileInt("NbOfActions", ct.id, -1, g_SNM_IniFn.Get());
+		if (n < 0) n = ct.count;
+		ct.count = BOUNDED(n, 0, ct.max<=0 ? SNM_MAX_DYN_ACTIONS : ct.max);
 
-		int n = GetPrivateProfileInt("NbOfActions", ct->id, -1, _inifn);
-		if (n<0) { n=ct->count; s_newDynActions=true; }
-		ct->count = BOUNDED(n, 0, ct->max<=0 ? SNM_MAX_DYN_ACTIONS : ct->max);
-		if (n != ct->count) s_newDynActions=true;
-
-		for (int j=0; j<ct->count; j++)
-		{
-			if (snprintfStrict(actionName, sizeof(actionName), GetLocalizedActionName(ct->desc, LOCALIZE_FLAG_VERIFY_FMTS), j+1) > 0 &&
-				snprintfStrict(custId, sizeof(custId), "%s%d", ct->id, j+1) > 0)
-			{
-				if (SWSCreateRegisterDynamicCmd(ct->uniqueSectionId, 0, ct->doCommand, ct->onAction, ct->getEnabled, custId, actionName, "", j, __FILE__, false)) // already localized
-				{
-#ifdef _SNM_DEBUG
-					OutputDebugString("RegisterDynamicActions() - Registered: ");
-					OutputDebugString(actionName);
-					OutputDebugString("\n");
-#endif
-				}
-			}
-		}
+		for (int j = 0; j < ct.count; ++j)
+			ct.Register(j);
 	}
-	return 1;
+
+	return true;
 }
 
-void SaveDynamicActions(DYN_COMMAND_T* _cmds, const char* _inifn)
+bool DYN_COMMAND_T::Register(const int slot) const
+{
+	char actionName[SNM_MAX_ACTION_NAME_LEN], custId[SNM_MAX_ACTION_CUSTID_LEN];
+
+	if (snprintfStrict(actionName, sizeof(actionName), GetLocalizedActionName(desc, LOCALIZE_FLAG_VERIFY_FMTS), slot+1) <= 0
+			|| snprintfStrict(custId, sizeof(custId), "%s%d", id, slot+1) <= 0)
+		return false;
+
+	if (SWSCreateRegisterDynamicCmd(uniqueSectionId, 0, doCommand, onAction, getEnabled, custId, actionName, "", slot, __FILE__, false)) // already localized
+	{
+#ifdef _SNM_DEBUG
+		OutputDebugString("DYN_COMMAND_T::Register() - Registered: ");
+		OutputDebugString(actionName);
+		OutputDebugString("\n");
+#endif
+	}
+
+	return true;
+}
+
+void SaveDynamicActions()
 {
 	// no localization here, intentional
 	WDL_FastString iniSection, str;
 	iniSection.Set("; Set the number of actions you want below. Quit REAPER first! ===\n");
 	iniSection.AppendFormatted(512, "; Unless specified, the maximum number of actions is %d (0 will hide actions). ===\n", SNM_MAX_DYN_ACTIONS);
 
-	int i=0;
 	WDL_String nameStr; // no fast string here: mangled buffer
-	while(_cmds[i].desc != LAST_COMMAND)
+	for (const DYN_COMMAND_T &ct : s_dynCmdTable)
 	{
-		DYN_COMMAND_T* ct = &_cmds[i++];
-		KbdSectionInfo* sec = SectionFromUniqueID(ct->uniqueSectionId);
+		KbdSectionInfo* sec = SectionFromUniqueID(ct.uniqueSectionId);
 		if (sec) nameStr.SetFormatted(512, "[%s] ",  __localizeFunc(sec->name,"accel_sec",0));
 		else nameStr.Set("");
 
-		nameStr.Append(GetLocalizedActionName(ct->desc) + IsSwsAction(ct->desc));
+		nameStr.Append(GetLocalizedActionName(ct.desc) + IsSwsAction(ct.desc));
 		ReplaceWithChar(nameStr.Get(), "%d", 'n');
-		if (ct->max>0 && ct->max!=SNM_MAX_DYN_ACTIONS) // is a specific max value defined?
-			nameStr.AppendFormatted(128, " -- Max. = %d!", ct->max);
+		if (ct.max>0 && ct.max!=SNM_MAX_DYN_ACTIONS) // is a specific max value defined?
+			nameStr.AppendFormatted(128, " -- Max. = %d!", ct.max);
 
 		// indent things (a \t solution would suck here)
-		str.SetFormatted(256, "%s=%d", ct->id, ct->count);
+		str.SetFormatted(256, "%s=%d", ct.id, ct.count);
 		while (str.GetLength() < 40) str.Append(" ");
 		str.Append(" ; ");
 		iniSection.Append(str.Get());
 		iniSection.Append(nameStr.Get());
 		iniSection.Append("\n");
 	}
-	SaveIniSection("NbOfActions", &iniSection, _inifn);
+	SaveIniSection("NbOfActions", &iniSection, g_SNM_IniFn.Get());
+}
+
+DYN_COMMAND_T *FindDynamicAction(void (*doCommand)(COMMAND_T*))
+{
+	for (DYN_COMMAND_T &ct : s_dynCmdTable)
+	{
+		if (ct.doCommand == doCommand)
+			return &ct;
+	}
+
+	return nullptr;
 }
 
 bool SNM_GetActionName(const char* _custId, WDL_FastString* _nameOut, int _slot)
@@ -856,12 +867,11 @@ bool SNM_GetActionName(const char* _custId, WDL_FastString* _nameOut, int _slot)
 	// 2nd try: search as dynamic cmd
 	i=-1;
 	WDL_String nameStr; // no fast string here: mangled buffer
-	while(s_dynCmdTable[++i].desc != LAST_COMMAND)
+	for (const DYN_COMMAND_T &ct : s_dynCmdTable)
 	{
-		DYN_COMMAND_T* ct = &s_dynCmdTable[i];
-		if (ct && !strcmp(ct->id, _custId))
+		if (!strcmp(ct.id, _custId))
 		{
-			nameStr.Set(GetLocalizedActionName(ct->desc) + IsSwsAction(ct->desc));
+			nameStr.Set(GetLocalizedActionName(ct.desc) + IsSwsAction(ct.desc));
 
 			if (_slot>=0 && strstr(nameStr.Get(), "%d"))
 			{
@@ -1105,7 +1115,6 @@ void IniFileInit()
 
 	int iniVersion = GetPrivateProfileInt("General", "IniFileUpgrade", 0, g_SNM_IniFn.Get());
 	SNM_UpgradeIniFiles(iniVersion);
-	if (iniVersion != SNM_INI_FILE_VERSION) s_newDynActions=1;
 
 	g_SNM_MediaFlags |= (GetPrivateProfileInt("General", "MediaFileLockAudio", 0, g_SNM_IniFn.Get()) ? 1:0);
 	g_SNM_ToolbarRefresh = (GetPrivateProfileInt("General", "ToolbarsAutoRefresh", 1, g_SNM_IniFn.Get()) == 1);
@@ -1154,8 +1163,7 @@ void IniFileExit()
 	SaveIniSection("General", &iniSection, g_SNM_IniFn.Get());
 
 	// save dynamic actions, if needed
-	if (s_newDynActions) //JFB!!! a ameliorer
-		SaveDynamicActions(s_dynCmdTable, g_SNM_IniFn.Get());
+	SaveDynamicActions();
 
 #ifdef _WIN32
 	// force ini file's cache flush, see http://support.microsoft.com/kb/68827
@@ -1197,7 +1205,7 @@ int SNM_Init(reaper_plugin_info_t* _rec)
 #endif
 
 	// actions must be registered before views and cycle actions
-	if (!SWSRegisterCommands(s_cmdTable) || !RegisterDynamicActions(s_dynCmdTable, g_SNM_IniFn.Get()))
+	if (!SWSRegisterCommands(s_cmdTable) || !RegisterDynamicActions())
 	{
 		return 0;
 	}

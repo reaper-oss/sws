@@ -83,13 +83,16 @@ private:
 #endif
 };
 
+class Snapshot;
 
 int SnapshotsInit();
+void RegisterSnapshotSlot(int);
 void SnapshotsExit();
 void OpenSnapshotsDialog(COMMAND_T* = NULL);
 void NewSnapshot(int iMask, bool bSelOnly);
 void NewSnapshot(COMMAND_T* = NULL);
 Snapshot* GetSnapshotPtr(int i);
-void GetSnapshot(COMMAND_T* ct);
+void GetSnapshot(COMMAND_T*);
 void GetSnapshot(int slot, int iMask, bool bSelOnly);
+void SaveSnapshot(COMMAND_T*);
 void UpdateSnapshotsDialog(bool bSelChange = false);

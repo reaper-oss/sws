@@ -36,6 +36,8 @@ double          NF_GetMediaItemPeakRMS_NonWindowed(MediaItem* item);
 double          NF_GetMediaItemPeakRMS_Windowed(MediaItem* item);
                 // combines all above functions
 bool            NF_AnalyzeMediaItemPeakAndRMS(MediaItem* item, double windowSize, void* reaperarray_peaks, void* reaperarray_peakpositions, void* reaperarray_RMSs, void* reaperarray_RMSpositions);
+void            NF_GetSWS_RMSoptions(double* targetOut, double* windowSizeOut);
+bool            NF_SetSWS_RMSoptions(double target, double windowSize);
 
 // #880
 bool            NF_AnalyzeTakeLoudness_IntegratedOnly(MediaItem_Take* take, double* lufsIntegratedOut);

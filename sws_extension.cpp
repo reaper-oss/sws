@@ -1216,7 +1216,7 @@ error:
 			ERR_RETURN("ReaConsole init error.")
 		if (!FreezeInit())
 			ERR_RETURN("Freeze init error.")
-		if (!SnapshotsInit())
+		if (!SnapshotsInit()) // must be called before SNM_Init registers dynamic actions
 			ERR_RETURN("Snapshots init error.")
 		if (!TrackListInit())
 			ERR_RETURN("Tracklist init error.")

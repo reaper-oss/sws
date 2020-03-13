@@ -732,7 +732,7 @@ Snapshot::Snapshot(int slot, int mask, bool bSelOnly, const char* name, const ch
 	char undoStr[128];
 	snprintf(undoStr, sizeof(undoStr), __LOCALIZE_VERFMT("Save snapshot %d","sws_undo"), slot);
 	Undo_OnStateChangeEx(undoStr, UNDO_STATE_MISCCFG, -1);
-	RegisterGetCommand(slot);
+	RegisterSnapshotSlot(slot);
 }
 
 // Build a snapshot from an XML/RPP chunk from the clipboard/RPP/undo/etc
@@ -867,7 +867,7 @@ Snapshot::Snapshot(const char* chunk)
 			else if (ts->ProcessEnv(chunk, line, 4096, &pos, "<MUTEENV", &ts->m_sMuteEnv)) {}
 		}
 	}
-	RegisterGetCommand(m_iSlot);
+	RegisterSnapshotSlot(m_iSlot);
 }
 
 Snapshot::~Snapshot()
@@ -1105,20 +1105,6 @@ int Snapshot::Find(MediaTrack* tr)
 		if (tr == GuidToTrack(&m_tracks.Get(i)->m_guid))
 			return i;
 	return -1;
-}
-
-void Snapshot::RegisterGetCommand(int iSlot) // Slot is 1-based index.
-{
-	static int iLastRegistered = 0;
-	if (iSlot > iLastRegistered)
-	{
-		char cID[BUFFER_SIZE];
-		char cDesc[BUFFER_SIZE];
-		snprintf(cID, BUFFER_SIZE, "SWSSNAPSHOT_GET%d", iSlot);
-		snprintf(cDesc, BUFFER_SIZE, __LOCALIZE_VERFMT("SWS: Recall snapshot %d","sws_actions"), iSlot);
-		SWSRegisterCommandExt(GetSnapshot, cID, cDesc, iSlot, false);
-		iLastRegistered = iSlot;
-	}
 }
 
 char* Snapshot::GetTimeString(char* str, int iStrMax, bool bDate)

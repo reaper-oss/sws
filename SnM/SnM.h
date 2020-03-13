@@ -224,6 +224,8 @@ typedef struct DYN_COMMAND_T {
 	int (*getEnabled)(COMMAND_T*);
 	int uniqueSectionId;
 	void(*onAction)(COMMAND_T*, int, int, int, HWND);
+
+	bool Register(const int slot) const;
 } DYN_COMMAND_T;
 
 typedef struct SECTION_INFO_T {
@@ -366,6 +368,8 @@ void SNM_Exit();
 
 bool SNM_GetActionName(const char* _custId, WDL_FastString* _nameOut, int _slot = -1);
 int GetFakeToggleState(COMMAND_T*);
+
+DYN_COMMAND_T *FindDynamicAction(void (*doCommand)(COMMAND_T*));
 
 static void freecharptr(char* _p) { FREE_NULL(_p); }
 static void deleteintptr(int* _p) { DELETE_NULL(_p); }

@@ -32,7 +32,7 @@
 #include "../Prompt.h"
 #include "../reaper/localize.h"
 #include "WDL/projectcontext.h"
-
+#include "SnM/SnM.h" // dynamic actions
 
 #define SNAP_OPTIONS_KEY "Snapshot Options"
 #define RENAME_MSG	0x10001
@@ -1025,11 +1025,11 @@ void SelSnapshotTracks(COMMAND_T*)
 }
 
 void SaveCurSnapshot(COMMAND_T*) { if (g_ss.Get()->m_pCurSnapshot) SaveSnapshot(g_ss.Get()->m_pCurSnapshot->m_iSlot); }
-void SaveSnapshot(COMMAND_T* ct) { SaveSnapshot((int)ct->user); }
+void SaveSnapshot(COMMAND_T* ct) { SaveSnapshot((int)ct->user + 1); }
 void GetCurSnapshot(COMMAND_T*)	 { if (g_ss.Get()->m_pCurSnapshot) GetSnapshot(g_ss.Get()->m_pCurSnapshot->m_iSlot, ALL_MASK, false); }
 void GetPreviousSnapshot(COMMAND_T*) { if ((g_ss.Get()->m_pCurSnapshot) && (g_ss.Get()->m_pCurSnapshot)->m_iSlot >= 0) GetSnapshot(((g_ss.Get()->m_pCurSnapshot->m_iSlot) - 1), ALL_MASK, false); }
 void GetNextSnapshot(COMMAND_T*)	 { if (g_ss.Get()->m_pCurSnapshot) GetSnapshot(((g_ss.Get()->m_pCurSnapshot->m_iSlot) + 1), ALL_MASK, false); }
-void GetSnapshot(COMMAND_T* ct)	 { GetSnapshot((int)ct->user, ALL_MASK, false); }
+void GetSnapshot(COMMAND_T* ct)	 { GetSnapshot((int)ct->user + 1, ALL_MASK, false); }
 void SetSnapType(COMMAND_T* ct)
 {
 	int type=(int)ct->user;
@@ -1185,18 +1185,6 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: New snapshot and edit name" },						"SWSSNAPSHOT_NEWEDIT",   NewSnapshotEdit,	   NULL, 1 },
 	{ { DEFACCEL, "SWS: Delete current snapshot" },						"SWSSNAPSHOT_DELCUR",   DeleteCurSnapshot },
 	{ { DEFACCEL, "SWS: Delete all snapshots" },							"SWSSNAPSHOT_DELALL",   DeleteAllSnapshots, "Delete all snapshots" },
-	{ { DEFACCEL, "SWS: Save as snapshot 1" },								"SWSSNAPSHOT_SAVE1",	 SaveSnapshot,         NULL, 1 },
-	{ { DEFACCEL, "SWS: Save as snapshot 2" },								"SWSSNAPSHOT_SAVE2",	 SaveSnapshot,         NULL, 2 },
-	{ { DEFACCEL, "SWS: Save as snapshot 3" },								"SWSSNAPSHOT_SAVE3",	 SaveSnapshot,         NULL, 3 },
-	{ { DEFACCEL, "SWS: Save as snapshot 4" },								"SWSSNAPSHOT_SAVE4",	 SaveSnapshot,         NULL, 4 },
-	{ { DEFACCEL, "SWS: Save as snapshot 5" },								"SWSSNAPSHOT_SAVE5",	 SaveSnapshot,         NULL, 5 },
-	{ { DEFACCEL, "SWS: Save as snapshot 6" },								"SWSSNAPSHOT_SAVE6",	 SaveSnapshot,         NULL, 6 },
-	{ { DEFACCEL, "SWS: Save as snapshot 7" },								"SWSSNAPSHOT_SAVE7",	 SaveSnapshot,         NULL, 7 },
-	{ { DEFACCEL, "SWS: Save as snapshot 8" },								"SWSSNAPSHOT_SAVE8",	 SaveSnapshot,         NULL, 8 },
-	{ { DEFACCEL, "SWS: Save as snapshot 9" },								"SWSSNAPSHOT_SAVE9",	 SaveSnapshot,         NULL, 9 },
-	{ { DEFACCEL, "SWS: Save as snapshot 10" },								"SWSSNAPSHOT_SAVE10",	 SaveSnapshot,         NULL, 10 },
-	{ { DEFACCEL, "SWS: Save as snapshot 11" },								"SWSSNAPSHOT_SAVE11",	 SaveSnapshot,         NULL, 11 },
-	{ { DEFACCEL, "SWS: Save as snapshot 12" },								"SWSSNAPSHOT_SAVE12",	 SaveSnapshot,         NULL, 12 },
 
 	{ { DEFACCEL, "SWS: Set snapshots to 'mix' mode" },						"SWSSNAPSHOT_MIXMODE",   SetSnapType,    NULL, 0 },
 	{ { DEFACCEL, "SWS: Set snapshots to 'visibility' mode" },				"SWSSNAPSHOT_VISMODE",   SetSnapType,    NULL, 1 },
@@ -1265,8 +1253,6 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 	}
 }
 
-int g_nbRecallPref = 12;
-
 int SnapshotsInit()
 {
 	if (!plugin_register("projectconfig",&g_projectconfig))
@@ -1274,13 +1260,14 @@ int SnapshotsInit()
 
 	SWSRegisterCommands(g_commandTable);
 
-	// Add gets by default, more actions are added dynamically as needed
-	g_nbRecallPref = GetPrivateProfileInt(SWS_INI, "DefaultNbSnapsRecall", 12, get_ini_file());
-	for (int i = 0; i < g_nbRecallPref; i++)
-		Snapshot::RegisterGetCommand(i+1);
-
 	if (!plugin_register("hookcustommenu", (void*)menuhook))
 		return 0;
+
+	// DEPRECATED: DefaultNbSnapsRecall is replaced by [NbOfActions] in S&M.ini
+	// This migrates the old setting to the new one (SNM_Init is called later)
+	const int nbrecall = GetPrivateProfileInt(SWS_INI, "DefaultNbSnapsRecall", -1, get_ini_file());
+	if (nbrecall >= 0)
+		FindDynamicAction(GetSnapshot)->count = nbrecall;
 
 	g_pSSWnd = new SWS_SnapshotsWnd;
 
@@ -1291,14 +1278,27 @@ int SnapshotsInit()
 	return 1;
 }
 
+void RegisterSnapshotSlot(const int slot) // slot is a 1-based index
+{
+	static int lastRegistered = 0;
+	static const DYN_COMMAND_T *cmd = FindDynamicAction(GetSnapshot);
+
+	if (slot <= lastRegistered)
+		return;
+
+	if (slot > cmd->count) // only register new slots above the configured amount
+		cmd->Register(slot - 1);
+
+	lastRegistered = slot;
+}
+
 void SnapshotsExit()
 {
 	plugin_register("-projectconfig",&g_projectconfig);
 	plugin_register("-hookcustommenu", (void*)menuhook);
 
-	char buf[64];
-	sprintf(buf, "%d", g_nbRecallPref);
-	WritePrivateProfileString(SWS_INI, "DefaultNbSnapsRecall", buf, get_ini_file());
+	// deletes the old setting key (see SnapshotsInit)
+	WritePrivateProfileString(SWS_INI, "DefaultNbSnapsRecall", nullptr, get_ini_file());
 
 	delete g_pSSWnd;
 }

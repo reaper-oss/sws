@@ -135,7 +135,6 @@ public:
 	void DelSelTracks();
 	void SelectTracks();
 	int Find(MediaTrack* tr);
-	static void RegisterGetCommand(int iSlot);
 	char* GetTimeString(char* str, int iStrMax, bool bDate);
 	void GetChunk(WDL_FastString* chunk);
 	void GetDetails(WDL_FastString* details);

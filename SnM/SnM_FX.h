@@ -61,6 +61,7 @@ void ToggleAllFXsBypassSelItems(COMMAND_T*);
 void UpdateAllFXsBypassSelItems(COMMAND_T*);
 
 void SelectTrackFX(COMMAND_T*);
+bool SelectTrackFX(MediaTrack* _tr, int _fx);
 int GetSelectedTrackFX(MediaTrack* _tr);
 int GetSelectedTakeFX(MediaItem_Take* _take);
 

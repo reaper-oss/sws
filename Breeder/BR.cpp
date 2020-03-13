@@ -44,10 +44,11 @@
 /******************************************************************************
 * Globals                                                                     *
 ******************************************************************************/
-static COMMAND_T* g_nextActionApplyer = NULL;
-static int        g_nextActionToApply = 0;
-static int        g_nextActionLoCmd   = 0;
-static int        g_nextActionHiCmd   = 0;
+static bool       g_deferRefreshToolbar = false;
+static COMMAND_T* g_nextActionApplyer   = NULL;
+static int        g_nextActionToApply   = 0;
+static int        g_nextActionLoCmd     = 0;
+static int        g_nextActionHiCmd     = 0;
 static set<int>   g_nextActionApplyers;
 
 int SCROLLBAR_W = 0; // legacy
@@ -55,8 +56,25 @@ int SCROLLBAR_W = 0; // legacy
 /******************************************************************************
 * Command hook                                                                *
 ******************************************************************************/
+static void DeferRefreshToolbar()
+{
+	if (!g_deferRefreshToolbar)
+	{
+		RefreshToolbar2(SECTION_MIDI_EDITOR, 0);
+		plugin_register("-timer", (void*)DeferRefreshToolbar);
+	}
+	else
+		g_deferRefreshToolbar = false;
+}
+
 bool BR_GlobalActionHook (int cmd, int val, int valhw, int relmode, HWND hwnd)
 {
+	if (cmd == 40153) // Item: Open in built-in MIDI editor (set default behavior in preferences)
+	{
+		g_deferRefreshToolbar = true;
+		plugin_register("timer", (void*)DeferRefreshToolbar); // Make sure to refresh various SWS/NF grid actions in MIDI editor
+	}
+
 	if (g_nextActionApplyer)
 	{
 		COMMAND_T* nextActionApplyer = g_nextActionApplyer;

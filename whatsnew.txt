@@ -112,6 +112,9 @@ Snapshots:
 +Support store/recall track playback offset (REAPER v6.0+) (Issue 1313)
 +Add Phase (was missing previously) and Offset checkboxes to Snapshot Paste dialog
 
+ReaScript API:
++Added NF_GetSWS_RMSoptions, NF_SetSWS_RMSoptions
+
 !v2.11.0 pre-release build
 <strong>Reminder: this new SWS version requires REAPER v5.979+!</strong>
 

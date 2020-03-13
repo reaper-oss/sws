@@ -300,6 +300,8 @@ APIdef g_apidefs[] =
 	{ APIFUNC(NF_TakeFX_GetModuleName), "bool", "MediaItem*,int,char*,int", "item,fx,nameOut,nameOut_sz", "See <a href=\"#BR_TrackFX_GetFXModuleName\">BR_TrackFX_GetFXModuleName</a>. fx: counted consecutively across all takes (zero-based).", },
 	{ APIFUNC(NF_ReadID3v2Tag), "bool", "const char*,const char*,char*,int", "fn,tag,tagvalOut,tagvalOut_sz", "Reads an ID3v2 tag ('text information frame'), works with mp3 only. Supported tags e.g.: \"TBPM\" (BPM), \"TCOP\" (Copyright). For other possibly supported tags see <a href=\"http://id3.org/id3v2.4.0-frames\">id3v2.4.0-frames.txt</a> Returns false if tag was not found.", },
 	{ APIFUNC(NF_Win32_GetSystemMetrics), "int", "int", "nIndex", "Equivalent to win32 API GetSystemMetrics().", },
+	{ APIFUNC(NF_GetSWS_RMSoptions), "void", "double*,double*", "targetOut,windowSizeOut", "Get SWS analysis/normalize options. See <a href=\"#NF_SetSWS_RMSoptions\">NF_SetSWS_RMSoptions</a>.", },
+	{ APIFUNC(NF_SetSWS_RMSoptions), "bool", "double,double", "targetLevel,windowSize", "Set SWS analysis/normalize options (same as running action 'SWS: Set RMS analysis/normalize options'). targetLevel: target RMS normalize level (dB), windowSize: window size for peak RMS (sec.)", },
 	// /*** nofish stuff ***
 
 	{ APIFUNC(SN_FocusMIDIEditor), "void", "", "", "Focuses the active/open MIDI editor.", },

@@ -262,6 +262,16 @@ bool NF_AnalyzeMediaItemPeakAndRMS(MediaItem* item, double windowSize, void* rea
 	return success;
 }
 
+void NF_GetSWS_RMSoptions(double* targetOut, double* windowSizeOut)
+{
+	NF_GetRMSOptions(targetOut, windowSizeOut);
+}
+
+bool NF_SetSWS_RMSoptions(double target, double windowSize)
+{
+	return NF_SetRMOptions(target, windowSize);
+}
+
 double GetPosInItem(INT64 peakSample, double sampleRate) // relative to item start
 {	
 	if (peakSample == -666)

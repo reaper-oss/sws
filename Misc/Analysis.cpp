@@ -434,9 +434,23 @@ static void SetRMSOptions(COMMAND_T*)
 	}
 }
 
+// ReaScript export
 void NF_GetRMSOptions(double *targetOut, double *winSizeOut)
 {
 	return GetRMSOptions(targetOut, winSizeOut);
+}
+
+bool NF_SetRMOptions(double target, double windowSize)
+{
+	if (target > 0.0 || windowSize < 0.0)
+		return false;
+	// more thorough windowSize sanity check is done in AnalyzePCMSource()
+	char buf[100];
+	snprintf(buf, sizeof(buf), "%g,%g", target, windowSize);
+	if (WritePrivateProfileString(SWS_INI, SWS_RMS_KEY, buf, get_ini_file()))
+		return true;
+	
+	return false;
 }
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions

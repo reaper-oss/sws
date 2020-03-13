@@ -55,3 +55,4 @@ bool AnalyzeItem(MediaItem* mi, ANALYZE_PCM* a);
 
 // #781 Export to ReaScript
 void NF_GetRMSOptions(double *targetOut, double *winSizeOut);
+bool NF_SetRMOptions(double target, double windowSize);

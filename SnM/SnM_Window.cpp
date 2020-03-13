@@ -32,6 +32,8 @@
 #include "SnM_Track.h"
 #include "SnM_Util.h"
 #include "SnM_Window.h"
+#include "Breeder/BR_Util.h" // GetTrackGap()
+#include "Wol/wol_Util.h" // GetCurrentTcpMaxHeight()
 #include "../reaper/localize.h"
 
 
@@ -222,14 +224,19 @@ static BOOL CALLBACK EnumXCPWindows(HWND _hwnd, LPARAM _lParam)
 	return TRUE;
 }
 
-void GetVisibleTCPTracks(WDL_PtrList<void>* _trList)
+void GetVisibleTCPTracks(WDL_PtrList<MediaTrack>* _trList)
 {
-	WDL_PtrList<HWND__> hwnds;
-	EnumChildWindows(GetMainHwnd(), EnumXCPWindows, (LPARAM)&hwnds);
-	for (int i=0; i < hwnds.GetSize(); i++)
-		if (HWND hwnd = hwnds.Get(i))
-			if (IsWindowVisible(hwnd) && !IsChildOf(hwnd, __localizeFunc("Mixer", "DLG_151", 0)))
-				_trList->Add((void*)GetWindowLongPtr(hwnd, GWLP_USERDATA));
+	int arrangeHeight = GetCurrentTcpMaxHeight();
+	int TCPY, TCPH, topGap, bottomGap;
+	for (int i = 1; i <= GetNumTracks(); i++) // skip master
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		TCPY = static_cast<int>(GetMediaTrackInfo_Value(tr, "I_TCPY"));
+		TCPH = static_cast<int>(GetMediaTrackInfo_Value(tr, "I_TCPH"));
+		GetTrackGap(TCPH, &topGap, &bottomGap);
+		if ((TCPY + TCPH - bottomGap > 0) && (TCPY + topGap < arrangeHeight))
+			_trList->Add(tr);
+	}
 }
 
 

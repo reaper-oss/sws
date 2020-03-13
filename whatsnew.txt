@@ -104,6 +104,10 @@ Miscellaneous:
 Fix 'SWS/S&M: Unselect offscreen items' for items that are vertically offscreen, 'SWS/S&M: Toolbar - Toggle offscreen item selection (top)/(bottom)'  (Issue 1250)
 Note that these work on horizontal track borders, so it may not be totally reliable when track is set to free item positioning mode (not a new issue though)
 
+Theme helper:
++Add support for REAPER v6 (report https://forum.cockos.com/showthread.php?t=230558|here|)
++Fix master track showing empty track name instead of "[MASTER]" in REAPER v5 implementation
+
 !v2.11.0 pre-release build
 <strong>Reminder: this new SWS version requires REAPER v5.979+!</strong>
 

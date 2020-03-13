@@ -74,6 +74,7 @@ void DeleteSnapshot(Snapshot* ss);
 void DeleteAllSnapshots(COMMAND_T* = NULL);
 
 static int g_iMask = ALL_MASK;
+static int g_compatMask = ALL_MASK; // // for disabling features unavailable in the running version of REAPER
 static bool g_bSelOnly_OnRecall = false;
 static bool g_bSelOnly_OnSave = false;
 static int g_iSavedMask;
@@ -418,8 +419,8 @@ void SWS_SnapshotsWnd::Update()
 	CheckDlgButton(m_hwnd, IDC_DELTRACKSPROMPT,		g_bPromptOnDeleted		? BST_CHECKED : BST_UNCHECKED);
 	for (int i = 0; i < MASK_CTRLS; i++)
 	{
-		CheckDlgButton(m_hwnd, cSSCtrls[i], g_iMask & cSSMasks[i] ? BST_CHECKED : BST_UNCHECKED);
-		EnableWindow(GetDlgItem(m_hwnd,  cSSCtrls[i]), m_iSelType == 2);
+		CheckDlgButton(m_hwnd, cSSCtrls[i], g_iMask & cSSMasks[i] & g_compatMask ? BST_CHECKED : BST_UNCHECKED);
+		EnableWindow(GetDlgItem(m_hwnd,  cSSCtrls[i]), m_iSelType == 2 && cSSMasks[i] & g_compatMask);
 	}
 
 	m_pLists.Get(0)->Update();
@@ -831,7 +832,7 @@ void SWS_SnapshotsWnd::GetOptions()
 	if (IsDlgButtonChecked(m_hwnd, IDC_MIX) == BST_CHECKED)
 	{
 		m_iSelType = 0;
-		g_iMask = MIX_MASK;
+		g_iMask = MIX_MASK & g_compatMask;
 	}
 	else if (IsDlgButtonChecked(m_hwnd, IDC_CURVIS) == BST_CHECKED)
 	{
@@ -1033,7 +1034,7 @@ void SetSnapType(COMMAND_T* ct)
 {
 	int type=(int)ct->user;
 	g_pSSWnd->SetFilterType(type);
-	if (type==0) g_iMask = MIX_MASK;
+	if (type==0) g_iMask = MIX_MASK & g_compatMask;
 	else if (type==1) g_iMask = VIS_MASK;
 	// use current g_iMask otherwise
 	UpdateSnapshotsDialog();
@@ -1282,6 +1283,10 @@ int SnapshotsInit()
 		return 0;
 
 	g_pSSWnd = new SWS_SnapshotsWnd;
+
+	// disable features unavailable in the running version of REAPER
+	if (atof(GetAppVersion()) < 6)
+		g_compatMask &= ~PLAY_OFFSET_MASK;
 
 	return 1;
 }

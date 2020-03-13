@@ -108,6 +108,10 @@ Theme helper:
 +Add support for REAPER v6 (report https://forum.cockos.com/showthread.php?t=230558|here|)
 +Fix master track showing empty track name instead of "[MASTER]" in REAPER v5 implementation
 
+Snapshots:
++Support store/recall track playback offset (REAPER v6.0+) (Issue 1313)
++Add Phase (was missing previously) and Offset checkboxes to Snapshot Paste dialog
+
 !v2.11.0 pre-release build
 <strong>Reminder: this new SWS version requires REAPER v5.979+!</strong>
 

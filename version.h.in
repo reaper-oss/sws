@@ -1,5 +1,5 @@
-#define SWS_VERSION 2,11,0,0
-#define SWS_VERSION_STR "2, 11, 0, 0\0"
+#define SWS_VERSION 2,12,0,0
+#define SWS_VERSION_STR "2, 12, 0, 0\0"
 #define SWS_VERSION_TYPE "Pre-release"
 #define GIT_COMMIT "@GIT_COMMIT@"
 #cmakedefine GIT_BRANCH "@GIT_BRANCH@"

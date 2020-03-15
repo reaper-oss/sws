@@ -1,3 +1,6 @@
+!v2.12.0 pre-release build
+<strong>Reminder: this new SWS version requires REAPER v5.982+!</strong>
+
 Auto color/icon/layout:
 +Limit the minimum width of the window to prevent overlapping buttons
 

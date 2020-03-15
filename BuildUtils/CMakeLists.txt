@@ -19,20 +19,18 @@ add_custom_command(
 add_custom_target(langpack DEPENDS ${LANGPACK_OUTPUT})
 add_dependencies(langpack buildlangpack)
 
-if(WIN32)
-  set(WHATSNEW_OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/whatsnew.html)
-  set(WHATSNEW_SOURCE ${CMAKE_SOURCE_DIR}/whatsnew.txt)
+set(WHATSNEW_OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/whatsnew.html)
+set(WHATSNEW_SOURCE ${CMAKE_SOURCE_DIR}/whatsnew.txt)
 
-  add_executable(makewhatsnew EXCLUDE_FROM_ALL MakeWhatsNew.cpp)
-  target_include_directories(makewhatsnew PRIVATE ${WDL_INCLUDE_DIR})
+add_executable(makewhatsnew EXCLUDE_FROM_ALL MakeWhatsNew.cpp)
+target_include_directories(makewhatsnew PRIVATE ${WDL_INCLUDE_DIR})
 
-  add_custom_command(
-    OUTPUT ${WHATSNEW_OUTPUT}
-    COMMAND $<TARGET_FILE:makewhatsnew> -h ${WHATSNEW_SOURCE} ${WHATSNEW_OUTPUT}
-    DEPENDS $<TARGET_FILE:makewhatsnew> ${WHATSNEW_SOURCE}
-    COMMAND_EXPAND_LISTS
-  )
+add_custom_command(
+  OUTPUT ${WHATSNEW_OUTPUT}
+  COMMAND $<TARGET_FILE:makewhatsnew> -h ${WHATSNEW_SOURCE} ${WHATSNEW_OUTPUT}
+  DEPENDS $<TARGET_FILE:makewhatsnew> ${WHATSNEW_SOURCE}
+  COMMAND_EXPAND_LISTS
+)
 
-  add_custom_target(whatsnew DEPENDS ${WHATSNEW_OUTPUT})
-  add_dependencies(whatsnew makewhatsnew)
-endif()
+add_custom_target(whatsnew DEPENDS ${WHATSNEW_OUTPUT})
+add_dependencies(whatsnew makewhatsnew)

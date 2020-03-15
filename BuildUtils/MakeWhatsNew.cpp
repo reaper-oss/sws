@@ -68,7 +68,7 @@ int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML, const c
 	if (*fnOut)
 	{
 #ifdef _WIN32
-		fopen_s(&pOut, fnOut, "w");
+		fopen_s(&pOut, fnOut, "wb");
 #else
 		pOut = fopen(fnOut, "w");
 #endif

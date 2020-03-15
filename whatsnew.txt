@@ -1,67 +1,69 @@
-Region Playlist:
-+Add toggle action to enable shuffling of region playlists
-
-Snapshots:
-#Fix 'Prompt on recalling deleted tracks' option (report https://github.com/reaper-oss/sws/issues/1073#issuecomment-562705617|here|)
-ReaScript API:
-+Added NF_Win32_GetSystemMetrics (Issue 1235)
-<strong>Reminder: this new SWS version requires REAPER v5.982+!</strong>
-
-Miscellaneous:
-+Fix scrolling the arrange view to track envelopes (2.11.0 regression, report https://forum.cockos.com/showthread.php?p=2212495|here|)
-+Fix inserting new envelope point at mouse cursor when the arrange view is scrolled (2.11.0 regression, Issue 1266)
-
-ReaScript API:
-+Fix crash in CF_GetClipboard and CF_GetClipboardBig when the text clipboard does not have data (regression from v2.11.0)
-+Add support for REAPER v6's new auto-stretch item timebase in "SWS/AW: Set selected items timebase" actions (report https://forum.cockos.com/showthread.php?p=2210126|here|, REAPER v6.01+ only)
-Localization:
-+Fix SWS/SN: Focus MIDI editor localization
-Envelopes:
- #SWS/S&M: Remove all envelopes for selected tracks: if prompt enabled, prompt only if there are envelopes present (report https://forum.cockos.com/showthread.php?p=2215029#post2215029|here|) 
-Notes:
-+Fix bad encoding conversion and truncation to 256 characters when toggling "Wrap text" on Windows (Issue 1252)
-+Fix non-working word wrapping on Linux and macOS
-Windows installer:
-+Add support for silent installs and setting the REAPER install path from the command line (Issue 1247)
-
-ReaScript API:
-+Fix BR_GetCurrentTheme (was broken since REAPER 5) and mark as deprecated (use REAPER's GetLastColorThemeFile instead) (report https://forum.cockos.com/showthread.php?p=2218974|here|)
-Contextual toolbars:
-+Add an option to auto-close toolbars when losing focus rather than on button click (Issue 1260)
-Cycle actions:
-+Check whether CONSOLE statements are valid ReaConsole commands
-+Fix single-letter ReaConsole commands being recognized as invalid (report https://forum.cockos.com/showpost.php?p=2223834|here|)
-+Fix the "SWS/AW: Set selected tracks pan mode" actions not redrawing the MCP in REAPER v6 (Issue 1267)
-
-Contextual toolbars:
-+Fix the MIDI Inline Editor context not being detected unless the Arrange context has a toolbar assigned (Issue 1261)
-
-Cycle actions:
-+Allow using scripts with a toggle state in conditions (Note: the toggle state is not refreshed while the cycle action is running)
-
-Contextual toolbars:
-+Fix empty toolbar/auto close/position offset columns when the window is restored at REAPER startup
-
-Linux:
-Implement the list column customization context menu when right-clicking on the column header
-
-List View:
-+Optimize redraws when deleting/updating a large number of items on Windows (issue 1323)
-
-macOS:
-Fix the list column customization context menu not being displayed when the list is scrolled
-Unindent selected track(s):
-+Allow unindending folder tracks
-+Fix subsequent unintented tracks becoming mistakenly indented (Issue 1275)
-
-Miscellaneous:
-+Disable scrollbar size compensation in REAPER v6 (Issue #1279)
-New actions:
-+Xenakios/SWS/NF: Set selected tracks heights to A/B, respect height locked tracks (report https://forum.cockos.com/showthread.php?t=229948|here|)
 Auto color/icon/layout:
 +Limit the minimum width of the window to prevent overlapping buttons
 
+Autorender:
++Fix writing metadata (report https://forum.cockos.com/showthread.php?p=2280226#post2280226|here|)
+
+Contextual toolbars:
++Add an option to auto-close toolbars when losing focus rather than on button click (issue 1260)
++Fix empty toolbar/auto close/position offset columns when the window is restored at REAPER startup
++Fix the MIDI Inline Editor context not being detected unless the Arrange context has a toolbar assigned (issue 1261)
+
+Cycle actions:
++Allow using scripts with a toggle state in conditions (note: the toggle state is not refreshed while the cycle action is running)
++Check whether CONSOLE statements are valid ReaConsole commands
++Fix single-letter ReaConsole commands being recognized as invalid (report https://forum.cockos.com/showpost.php?p=2223834|here|)
++Optimize execution performance of cycle actions (they can now be used as a faster and https://forum.cockos.com/showthread.php?t=166151|flicker-free| alternative to custom actions)
+
+Envelopes:
++Fix inserting new envelope point at the mouse cursor when the arrange view is scrolled (regression from v2.11.0, issue 1266)
++Fix scrolling the arrange view to track envelopes in REAPER 5.982 and newer (regression from v2.11.0, report https://forum.cockos.com/showthread.php?p=2212495|here|)
++SWS/S&M: Remove all envelopes for selected tracks: if prompt enabled, prompt only if there are envelopes present (report https://forum.cockos.com/showthread.php?p=2215029#post2215029|here|)
+
+List View:
++Fix the list column customization context menu not being displayed when the list is scrolled on macOS
++Implement the list column customization context menu when right-clicking on the column header on Linux
++Optimize redraws when deleting/updating a large number of items on Windows (issue 1323)
+
+Localization:
++Fix "SWS/SN: Focus MIDI editor" localization (report https://forum.cockos.com/showpost.php?p=2214670|here|)
+
+Loudness:
++Fix momentary calculation (regression from v2.11.0)
+
+Miscellaneous:
++Add support for REAPER v6's new auto-stretch item timebase in "SWS/AW: Set selected items timebase" actions (report https://forum.cockos.com/showthread.php?p=2210126|here|, REAPER v6.01+ only)
++Disable scrollbar size compensation in REAPER v6 (issue 1279)
++Fix crash in "SWS/BR: Options - Cycle through record modes" when the record mode is set to time selection auto punch (regression from v2.11.0, report https://forum.cockos.com/showthread.php?p=2251882|here|)
++Fix opening projects from list not creating new tabs if active tabs were closed (regression from v2.11.0, issue 1293)
++Fix reference track defaulting to the master track (regression from v2.11.0, report https://forum.cockos.com/showthread.php?p=2233601|here|)
++Fix "SWS/S&M: Unselect offscreen items" for items that are vertically offscreen, "SWS/S&M: Toolbar - Toggle offscreen item selection (top)/(bottom)" (issue 1250)
+ Note that these work on horizontal track borders, so it may not be totally reliable when the track is set to free item positioning mode (not a new issue though)
++Fix the "SWS/AW: Set selected tracks pan mode" actions not redrawing the MCP in REAPER v6 (issue 1267)
++SWS/AW: Toggle dotted/triplet grid actions now obey MIDI editor setting to sync grid changes with arrange
+
+New actions:
++SWS/AW: Set grid to X preserving grid type (issue 1244)
++SWS/NF: Toggle swing grid (issue 1243)
++SWS/AW: Toggle swing grid (issue 1244) (unlike the native action, this one obeys the MIDI editor setting to sync grid changes with arrange)
++Xenakios/SWS/NF: Set selected tracks heights to A/B, respect height locked tracks (report https://forum.cockos.com/showthread.php?t=229948|here|)
+
+Notes:
++Fix bad encoding conversion and truncation to 256 characters when toggling "Wrap text" on Windows (issue 1252)
++Fix non-working line wrapping on Linux and macOS
++Global notes: Fix potential crash/writing garbage when saving
++Global notes: Prevent creating SWS_Global notes.txt if global notes feature isn't used (report https://forum.cockos.com/showpost.php?p=2233645|here|)
+
+ReaConsole:
++Fix corrupted track colors when the green channel is higher than 127 (report https://forum.cockos.com/showthread.php?p=2225496|here|)
++Fix inverted red and blue channels when coloring tracks on Linux and macOS
+
 ReaScript API:
++Add CF_SelectTrackFX
++Add NF_GetSWS_RMSoptions, NF_SetSWS_RMSoptions
++Add NF_Win32_GetSystemMetrics (issue 1235)
++Add support for video processor effects to BR_TrackFX_GetFXModuleName and NF_TakeFX_GetModuleName (fixing shifting of subsequent effect indexes) (issue 1326)
++Add "track" to the tags supported by SNM_ReadMediaFileTag/SNM_TagMediaFile in ReaScript documentation (it was undocumented previously) (issue 1302)
 +Allow omitting the buffer/buffer_sz arguments of the following functions in Lua:
  - BR_TrackFX_GetFXModuleName
  - CF_EnumerateActions
@@ -69,81 +71,37 @@ ReaScript API:
  - CF_GetMediaSourceRPP
  - CF_GetSWSVersion
  - NF_ReadID3v2Tag
- - NF_TakeFX_GetModuleName
+ - NF_TakeFX_GetFXModuleName
  - SNM_ReadMediaFileTag
-Region playlist:
-+Fix the "Move edit cursor when clicking regions" option being persisted as "Seek playback when clicking regions" (Issue 1289)
++Fix BR_GetCurrentTheme (was broken since REAPER v5) and mark as deprecated (use REAPER's GetLastColorThemeFile instead) (report https://forum.cockos.com/showthread.php?p=2218974|here|)
++Fix crash in CF_GetClipboard and CF_GetClipboardBig when the text clipboard does not have data (regression from v2.11.0)
++Fix crash in NF_GetPeak/RMS functions when passing a null pointer (nil) (issue 1295)
++Let CF_GetTrackFXChain and CF_GetTakeFXChain find docked FX chains (report https://github.com/reaper-oss/sws/issues/1305#issuecomment-594666494|here|)
++Let CF_GetTrackFXChain find the floating FX chain of folder tracks (issue 1305)
++Rename NF_TakeFX_GetModuleName to NF_TakeFX_GetFXModuleName (for consistency with BR_TrackFX_GetFXModuleName)
 
-Miscellaneous:
-+Fix reference track defaulting to the master track (v2.11 regression, report https://forum.cockos.com/showthread.php?p=2233601|here|)
+Region Playlist:
++Add toggle action to enable shuffling of region playlists
++Fix the "Move edit cursor when clicking regions" option being persisted as "Seek playback when clicking regions" (issue 1289)
 
-Notes:
-+Fix potential crash/writing garbage when saving
-+Prevent creating SWS_Global notes.txt if global notes feature isn't used (report https://forum.cockos.com/showpost.php?p=2233645&postcount=2755|here|)
-
-ReaScript API:
-+Fix crash in NF_GetPeak/RMS functions when passing null pointer (nil) (Issue 1295) 
-
-Miscellaneous:
-+Fix opening projects from list not creating new tabs if active tabs were closed (v2.11 regression, Issue 1293)
-
-ReaConsole:
-+Fix corrupted track colors when the green channel is higher than 127 (report https://forum.cockos.com/showthread.php?p=2225496|here|)
-+Fix inverted red and blue channels when coloring tracks on Linux and macOS
-
-Cycle actions:
-+Prevent UI from flickering when running cycle actions
-
-ReaScript API:
-+Add "track" to tags supported by SNM_ReadMediaFileTag/SNM_TagMediaFile in ReaScript documentation (it was undocumented previously) (Issue 1302)
-
-+Fix crash in "SWS/BR: Options - Cycle through record modes" when the record mode is set to time selection auto punch (regression from 2.11, report https://forum.cockos.com/showthread.php?p=2251882|here|)
-
-ReaScript API:
-+Let CF_GetTrackFXChain and CF_GetTakeFXChain find docked FX chains (Issue 1305)
-+Let CF_GetTrackFXChain find the floating FX chain of folder tracks (Issue 1305)
-
-Miscellaneous:
-Fix 'SWS/S&M: Unselect offscreen items' for items that are vertically offscreen, 'SWS/S&M: Toolbar - Toggle offscreen item selection (top)/(bottom)'  (Issue 1250)
-Note that these work on horizontal track borders, so it may not be totally reliable when track is set to free item positioning mode (not a new issue though)
+Snapshots:
++Add Phase (was missing previously) and Offset checkboxes to Snapshot Paste dialog
++Allow customizing the amount of "Save as snapshot n" actions via [NbOfActions]/SWSSNAPSHOT_SAVE in S&M.ini (issue 1310)
++Fix "Prompt on recalling deleted tracks" option (report https://github.com/reaper-oss/sws/issues/1073#issuecomment-562705617|here|)
++Replace the setting [SWS]/DefaultNbSnapsRecall in reaper.ini by [NbOfActions]/SWSSNAPSHOT_GET in S&M.ini
++Support store/recall track playback offset (REAPER v6.0+) (issue 1313)
 
 Theme helper:
 +Add support for REAPER v6 (report https://forum.cockos.com/showthread.php?t=230558|here|)
-+Fix master track showing empty track name instead of "[MASTER]" in REAPER v5 implementation
++Fix master track showing empty track name instead of "[MASTER]" in REAPER v5 implementation (regression from v2.3.0)
 
-Snapshots:
-+Support store/recall track playback offset (REAPER v6.0+) (Issue 1313)
-+Add Phase (was missing previously) and Offset checkboxes to Snapshot Paste dialog
+Unindent selected track(s):
++Allow unindending folder tracks
++Fix subsequent unindented tracks becoming mistakenly indented (issue 1275)
 
-ReaScript API:
-+Added NF_GetSWS_RMSoptions, NF_SetSWS_RMSoptions
-
-ReaScript API:
-+Add CF_SelectTrackFX
-
-Snapshots:
-+Allow customizing the amount of "Save as snapshot n" actions via [NbOfActions]/SWSSNAPSHOT_SAVE in S&M.ini (Issue 1310)
-+Replace the setting [SWS]/DefaultNbSnapsRecall in reaper.ini by [NbOfActions]/SWSSNAPSHOT_GET in S&M.ini
-
-New actions:
-+Added SWS/NF: Toggle swing grid (Issue 1243)
-+Added SWS/AW: Toggle swing grid (Issue 1244) (unlike the native action, this one obeys the MIDI editor setting to sync grid changes with arrange)
-+Added SWS/AW: Set grid to X preserving grid type (Issue 1244)
-
-Fixes:
-+SWS/AW: Toggle dotted/triplet grid actions now obey MIDI editor setting to sync grid changes with arrange
-
-ReaScript API:
-+BR_TrackFX_GetFXModuleName and NF_TakeFX_GetModuleName: add support for video processor effects (fix shifting of subsequent effect indexes) (issue 1326)
-
+Windows:
++Add support for silent installs and setting the REAPER install path from the command line (issue 1247)
 +Fix various crashes occuring on Windows XP since v2.10.0 (issue 1332)
-
-ReaScript API:
-+Rename NF_TakeFX_GetModuleName to NF_TakeFX_GetModuleName (for consistency with BR_TrackFX_GetFXModuleName)
-
-Loudness: fix momentary calculation (regression from v2.11.0)
-
-Autorender: fix writing metadata (report https://forum.cockos.com/showthread.php?p=2280226#post2280226|here|)
 
 !v2.11.0 pre-release build
 <strong>Reminder: this new SWS version requires REAPER v5.979+!</strong>

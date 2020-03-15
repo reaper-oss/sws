@@ -33,6 +33,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <WDL/ptrlist.h>
+#include <WDL/wdlcstring.h>
 #include <WDL/wdlstring.h>
 
 class IntStack
@@ -185,11 +186,7 @@ int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML, const c
 				url.SetLen(0);
 			}
 
-#ifdef _WIN32
-			if (_strnicmp(&cBuf[iPos], "issue ", 6) == 0)
-#else
-			if (strncasecmp(&cBuf[iPos], "issue ", 6) == 0)
-#endif
+			if (strnicmp(&cBuf[iPos], "issue ", 6) == 0)
 			{
 				int iIssue = atol(&cBuf[iPos+6]);
 				if (iIssue != 0)
@@ -279,12 +276,12 @@ int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML, const c
 			}
 		}
 		// Special cases for <strong></strong>
-		else if (_strnicmp(&cBuf[iPos], "<strong>", 8) == 0)
+		else if (strnicmp(&cBuf[iPos], "<strong>", 8) == 0)
 		{
 			fputs("<strong>", pOut);
 			iPos += 7;
 		}
-		else if (_strnicmp(&cBuf[iPos], "</strong>", 9) == 0)
+		else if (strnicmp(&cBuf[iPos], "</strong>", 9) == 0)
 		{
 			fputs("</strong>", pOut);
 			iPos += 8;
@@ -322,7 +319,6 @@ int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML, const c
 	return 0;
 }
 
-#ifdef _WIN32
 int main(int argc, char* argv[])
 {
 	if (argc < 2)
@@ -341,12 +337,11 @@ int main(int argc, char* argv[])
 	}
 
 	char fnIn[2048]="", fnOut[2048]="";
-	lstrcpyn(fnIn, argv[iNextArg], sizeof(fnIn));
+	lstrcpyn_safe(fnIn, argv[iNextArg], sizeof(fnIn));
 	iNextArg++;
 
 	if (argc == iNextArg + 1)
-		lstrcpyn(fnOut, argv[iNextArg], sizeof(fnOut));
+		lstrcpyn_safe(fnOut, argv[iNextArg], sizeof(fnOut));
 
 	return GenHtmlWhatsNew(fnIn, fnOut, bFullHTML, NULL);
 }
-#endif

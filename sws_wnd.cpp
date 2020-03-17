@@ -1174,9 +1174,9 @@ void SWS_ListView::Update()
 	if (m_iEditingItem == -1 && !m_bDisableUpdates)
 	{
 		m_bDisableUpdates = true;
+		SendMessage(m_hwndList, WM_SETREDRAW, 0, 0);
 
 		char str[CELL_MAX_LEN]="";
-		bool bRemovedItems = false;
 
 		bool bResort = false;
 		static int iLastSortCol = -999;
@@ -1207,7 +1207,6 @@ void SWS_ListView::Update()
 				{
 					// Delete items from listview that aren't in the item list
 					ListView_DeleteItem(m_hwndList, i);
-					bRemovedItems = true;
 					i--;
 					lvItemCount--;
 					newIndex--;
@@ -1315,14 +1314,12 @@ void SWS_ListView::Update()
 				SendMessage(m_hwndTooltip, TTM_ADDTOOL, 0, (LPARAM)&ti);
 			}
 		}
-
-		// Fixes a grid line redraw glitch when removing items, eek
-		if (SWS_THEMING && bRemovedItems)
-			InvalidateRect(GetHWND(), NULL, TRUE);
-#else
-		(void)bRemovedItems;
 #endif
 
+		SendMessage(m_hwndList, WM_SETREDRAW, 1, 0);
+#ifdef _WIN32
+		RedrawWindow(m_hwndList, nullptr, nullptr, RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
+#endif
 		m_bDisableUpdates = false;
 	}
 }

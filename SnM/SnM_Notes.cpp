@@ -225,6 +225,7 @@ void NotesWnd::OnDestroy()
 */
 	g_prevNotesType = -1;
 	m_cbType.Empty();
+	m_edit = nullptr;
 }
 
 // note: no diff with current type, init would fail otherwise

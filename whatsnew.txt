@@ -45,6 +45,9 @@ Contextual toolbars:
 Linux:
 Implement the list column customization context menu when right-clicking on the column header
 
+List View:
++Optimize redraws when deleting/updating a large number of items on Windows (issue 1323)
+
 macOS:
 Fix the list column customization context menu not being displayed when the list is scrolled
 Unindent selected track(s):

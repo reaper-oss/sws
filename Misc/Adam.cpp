@@ -2695,12 +2695,14 @@ int IsAWSetGridPreserveType(COMMAND_T* ct)
 void AWToggleDotted(COMMAND_T* = NULL);
 void AWToggleSwing(COMMAND_T* = NULL);
 
-void AWToggleTriplet(COMMAND_T* = NULL)
+void AWToggleTriplet(COMMAND_T* ct = NULL)
 {
-	if (IsGridDotted())
-		AWToggleDotted();
-	if (IsGridSwing())
-		AWToggleSwing();
+	if (ct) {
+		if (IsGridDotted())
+			AWToggleDotted();
+		if (IsGridSwing())
+			AWToggleSwing();
+	}
 
 	*ConfigVar<double>("projgriddiv") *= IsGridTriplet() ? 3.0/2.0 : 2.0/3.0;
 
@@ -2716,12 +2718,14 @@ void AWToggleTriplet(COMMAND_T* = NULL)
 	UpdateTimeline();
 }
 
-void AWToggleDotted(COMMAND_T*)
+void AWToggleDotted(COMMAND_T* ct)
 {
-	if (IsGridTriplet())
-		AWToggleTriplet();
-	if (IsGridSwing())
-		AWToggleSwing();
+	if (ct) {
+		if (IsGridTriplet())
+			AWToggleTriplet();
+		if (IsGridSwing())
+			AWToggleSwing();
+	}
 
 	*ConfigVar<double>("projgriddiv") *= IsGridDotted() ? 2.0/3.0 : 3.0/2.0;
 
@@ -2737,12 +2741,14 @@ void AWToggleDotted(COMMAND_T*)
 	UpdateTimeline();
 }
 
-void AWToggleSwing(COMMAND_T*)
+void AWToggleSwing(COMMAND_T* ct)
 {
-	if (IsGridTriplet())
-		AWToggleTriplet();
-	if (IsGridDotted())
-		AWToggleDotted();
+	if (ct) {
+		if (IsGridTriplet())
+			AWToggleTriplet();
+		if (IsGridDotted())
+			AWToggleDotted();
+	}
 
 	// Grid: Toggle swing grid
 	Main_OnCommand(42304, 0);

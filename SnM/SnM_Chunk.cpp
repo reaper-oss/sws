@@ -893,7 +893,7 @@ bool SNM_FXSummaryParser::NotifyStartElement(int _mode,
 			// process all fx types (in case rpp files were exchanged osx <-> win)
 			if (!strcmp(_lp->gettoken_str(0), "<VST") || !strcmp(_lp->gettoken_str(0), "<AU"))
 				m_summaries.Add(new SNM_FXSummary(_lp->gettoken_str(0)+1, _lp->gettoken_str(1), _lp->gettoken_str(2)));
-			else if (!strcmp(_lp->gettoken_str(0), "<JS") || !strcmp(_lp->gettoken_str(0), "<DX"))
+			else if (!strcmp(_lp->gettoken_str(0), "<JS") || !strcmp(_lp->gettoken_str(0), "<DX") || !strcmp(_lp->gettoken_str(0), "<VIDEO_EFFECT"))
 				m_summaries.Add(new SNM_FXSummary(_lp->gettoken_str(0)+1, _lp->gettoken_str(1), _lp->gettoken_str(1)));
 		}
 	}

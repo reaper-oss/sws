@@ -322,7 +322,7 @@ void NF_UpdateSWSMarkerRegionSubWindow()
 	NF_DoUpdateSWSMarkerRegionSubWindow();
 }
 
-bool NF_TakeFX_GetModuleName(MediaItem * item, int fx, char * nameOut, int nameOutSz)
+bool NF_TakeFX_GetFXModuleName(MediaItem * item, int fx, char * nameOut, int nameOutSz)
 {
 	WDL_FastString module;
 	bool found = false;

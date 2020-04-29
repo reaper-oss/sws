@@ -138,6 +138,9 @@ ReaScript API:
 
 +Fix various crashes occuring on Windows XP since v2.10.0 (issue 1332)
 
+ReaScript API:
++Rename NF_TakeFX_GetModuleName to NF_TakeFX_GetModuleName (for consistency with BR_TrackFX_GetFXModuleName)
+
 !v2.11.0 pre-release build
 <strong>Reminder: this new SWS version requires REAPER v5.979+!</strong>
 
@@ -204,7 +207,7 @@ Preview media item/take under mouse cursor actions:
 
 ReaScript API:
 +Added NF_ReadID3v2Tag (request https://forum.cockos.com/showpost.php?p=2175039|here|)
-+Added NF_TakeFX_GetModuleName (take version of already existing BR_TrackFX_GetModuleName)
++Added NF_TakeFX_GetModuleName (take version of already existing BR_TrackFX_GetFXModuleName)
 +BR_EnvGet/SetProperties: add optional parameter automationItemsOptions (REAPER v5.979+), add second ACT token from track envelope state chunk (automation items options) (Issue 1153, partly)
 +Deprecate CF_GetClipboardBig (use CF_GetClipboard instead)
 +Extend CF_GetClipboard to allow reading more than 1023 characters

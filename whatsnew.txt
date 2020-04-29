@@ -133,6 +133,9 @@ New actions:
 Fixes:
 +SWS/AW: Toggle dotted/triplet grid actions now obey MIDI editor setting to sync grid changes with arrange
 
+ReaScript API:
++BR_TrackFX_GetFXModuleName and NF_TakeFX_GetModuleName: add support for video processor effects (fix shifting of subsequent effect indexes) (issue 1326)
+
 !v2.11.0 pre-release build
 <strong>Reminder: this new SWS version requires REAPER v5.979+!</strong>
 

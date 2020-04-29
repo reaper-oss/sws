@@ -3722,17 +3722,7 @@ bool AutoSaveTrackFXChainSlots(int _slotType, const char* _dirPath, WDL_PtrList<
 
 				char name[SNM_MAX_FX_NAME_LEN] = "";
 				if (_nameFromFx)
-				{
-					if (_inputFX) // no API yet => parse
-					{
-						SNM_FXSummaryParser p(&fxChain);
-						WDL_PtrList<SNM_FXSummary>* summaries = p.GetSummaries();
-						SNM_FXSummary* sum = summaries ? summaries->Get(0) : NULL;
-						if (sum) lstrcpyn(name, sum->m_name.Get(), SNM_MAX_FX_NAME_LEN);
-					}
-					else
-						TrackFX_GetFXName(tr, 0, name, SNM_MAX_FX_NAME_LEN);
-				}
+					TrackFX_GetFXName(tr, _inputFX ? 0x1000000 : 0, name, SNM_MAX_FX_NAME_LEN);
 				else if (char* trName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL))
 					lstrcpyn(name, trName, SNM_MAX_FX_NAME_LEN);
 

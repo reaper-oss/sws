@@ -90,6 +90,10 @@ if(MSVC)
 
     # Remove unreferenced COMDAT
     $<$<NOT:$<CONFIG:Debug>>:/Zc:inline>
+
+    # Disable thread-safe initialization of local static variables for XP compatibility
+    # https://web.archive.org/web/20151123133638/https://connect.microsoft.com/VisualStudio/feedback/details/1789709/visual-c-2015-runtime-broken-on-windows-server-2003-c-11-magic-statics
+    /Zc:threadSafeInit-
   )
 else()
   add_compile_options(-fstack-protector-strong -fdiagnostics-color)

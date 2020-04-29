@@ -45,8 +45,12 @@ for:
 
   - matrix: { only: [ APPVEYOR_BUILD_WORKER_IMAGE: &windows Visual Studio 2019 ] }
     install:
+      # Use NSIS v2.46 to reduce AV false positives
       - '"%ProgramFiles(x86)%\NSIS\uninst-nsis.exe" /S'
-      - choco install -y nsis-unicode php
+      - choco install -y nsis-unicode
+      # CMake 3.17+ requires NSIS 3
+      - choco install -y cmake --version 3.16.6
+      - choco install -y php
       - refreshenv
       - curl -fsSLO https://nsis.sourceforge.io/mediawiki/images/1/18/NsProcess.zip
       - 7z e nsProcess.zip -o"%ProgramFiles(x86)%\NSIS\Unicode\Plugins" nsProcessW.dll -r
@@ -56,7 +60,7 @@ for:
       - mkdir build && cd build
       - cmake .. -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo
       - cmake --build . --target all langpack whatsnew
-      - cpack
+      - '"C:\Program Files\CMake\bin\cpack"'
     deploy_script:
       - ps: |-
           if($env:APPVEYOR_REPO_BRANCH -eq "master" -And $env:DEPLOY_KEY -ne $null) {

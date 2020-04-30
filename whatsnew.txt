@@ -1,3 +1,5 @@
+Loudness: fix momentary calculation (regression from v2.11.0)
+
 !v2.11.0 pre-release build
 <strong>Reminder: this new SWS version requires REAPER v5.979+!</strong>
 

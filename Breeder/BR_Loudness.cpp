@@ -1153,7 +1153,7 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 			}
 
 			// Momentary buffer (400 ms) filled
-			if (i % 2 && momentaryFilled && doMomentary)
+			if ((i % 2 > 0) == momentaryFilled && doMomentary)
 			{
 				double momentary;
 				ebur128_loudness_momentary(loudnessState, &momentary);
